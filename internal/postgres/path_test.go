@@ -188,6 +188,7 @@ func TestGetUnitMeta(t *testing.T) {
 			}
 			opts := []cmp.Option{
 				cmpopts.IgnoreFields(licenses.Metadata{}, "Coverage"),
+				cmpopts.IgnoreFields(internal.UnitMeta{}, "HasGoMod"),
 				cmp.AllowUnexported(source.Info{}, safehtml.HTML{}),
 			}
 			if diff := cmp.Diff(test.want, got, opts...); diff != "" {
@@ -380,6 +381,7 @@ func TestGetUnitMetaBypass(t *testing.T) {
 				}
 				opts := []cmp.Option{
 					cmpopts.IgnoreFields(licenses.Metadata{}, "Coverage"),
+					cmpopts.IgnoreFields(internal.UnitMeta{}, "HasGoMod"),
 					cmp.AllowUnexported(source.Info{}, safehtml.HTML{}),
 				}
 				if diff := cmp.Diff(test.want, got, opts...); diff != "" {

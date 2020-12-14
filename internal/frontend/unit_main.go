@@ -15,6 +15,7 @@ import (
 
 	"github.com/google/safehtml"
 	"github.com/google/safehtml/template"
+	"golang.org/x/mod/semver"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/experiment"
@@ -23,6 +24,7 @@ import (
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/middleware"
 	"golang.org/x/pkgsite/internal/postgres"
+	"golang.org/x/pkgsite/internal/version"
 )
 
 // MainDetails contains data needed to render the unit template.
@@ -89,6 +91,15 @@ type MainDetails struct {
 
 	// ExpandReadme is holds the expandable readme state.
 	ExpandReadme bool
+
+	// ModFileURL is an URL to the mod file.
+	ModFileURL string
+
+	// IsTaggedVersion is true if the version is not a psuedorelease.
+	IsTaggedVersion bool
+
+	// IsStableVersion is true if the major version is v1 or greater.
+	IsStableVersion bool
 }
 
 // File is a source file for a package.
@@ -185,6 +196,12 @@ func fetchMainDetails(ctx context.Context, ds internal.DataSource, um *internal.
 		}
 	}
 
+	versionType, err := version.ParseType(um.Version)
+	if err != nil {
+		return nil, err
+	}
+	isTaggedVersion := versionType != version.TypePseudo
+
 	return &MainDetails{
 		ExpandReadme:      expandReadme,
 		NestedModules:     nestedModules,
@@ -206,6 +223,9 @@ func fetchMainDetails(ctx context.Context, ds internal.DataSource, um *internal.
 		NumImports:        unit.NumImports,
 		ImportedByCount:   importedByCount,
 		IsPackage:         unit.IsPackage(),
+		ModFileURL:        um.SourceInfo.ModuleURL() + "/go.mod",
+		IsTaggedVersion:   isTaggedVersion,
+		IsStableVersion:   semver.Major(um.Version) != "v0",
 	}, nil
 }
 

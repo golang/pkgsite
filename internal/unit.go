@@ -26,6 +26,7 @@ type UnitMeta struct {
 	ModulePath string
 	CommitTime time.Time
 	SourceInfo *source.Info
+	HasGoMod   bool
 }
 
 // IsPackage reports whether the path represents a package path.

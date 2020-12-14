@@ -145,6 +145,7 @@ func TestFetchAndUpdateState(t *testing.T) {
 	myModuleV100 := &internal.Unit{
 		UnitMeta: internal.UnitMeta{
 			ModulePath:        "github.com/my/module",
+			HasGoMod:          true,
 			Version:           sample.VersionString,
 			CommitTime:        testProxyCommitTime,
 			SourceInfo:        source.NewGitHubInfo("https://github.com/my/module", "", sample.VersionString),
@@ -198,6 +199,7 @@ func TestFetchAndUpdateState(t *testing.T) {
 				UnitMeta: internal.UnitMeta{
 					ModulePath:        "nonredistributable.mod/module",
 					Version:           "v1.0.0",
+					HasGoMod:          true,
 					CommitTime:        testProxyCommitTime,
 					SourceInfo:        nil,
 					IsRedistributable: true,
@@ -224,6 +226,7 @@ func TestFetchAndUpdateState(t *testing.T) {
 				UnitMeta: internal.UnitMeta{
 					ModulePath:        "nonredistributable.mod/module",
 					Version:           sample.VersionString,
+					HasGoMod:          true,
 					CommitTime:        testProxyCommitTime,
 					SourceInfo:        nil,
 					IsRedistributable: false,
@@ -244,6 +247,7 @@ func TestFetchAndUpdateState(t *testing.T) {
 				UnitMeta: internal.UnitMeta{
 					ModulePath:        "std",
 					Version:           "v1.12.5",
+					HasGoMod:          true,
 					CommitTime:        stdlib.TestCommitTime,
 					SourceInfo:        source.NewGitHubInfo(goRepositoryURLPrefix+"/go", "src", "go1.12.5"),
 					IsRedistributable: true,
@@ -272,6 +276,7 @@ func TestFetchAndUpdateState(t *testing.T) {
 				UnitMeta: internal.UnitMeta{
 					ModulePath:        "std",
 					Version:           "v1.12.5",
+					HasGoMod:          true,
 					CommitTime:        stdlib.TestCommitTime,
 					SourceInfo:        source.NewGitHubInfo(goRepositoryURLPrefix+"/go", "src", "go1.12.5"),
 					IsRedistributable: true,
@@ -299,6 +304,7 @@ func TestFetchAndUpdateState(t *testing.T) {
 				UnitMeta: internal.UnitMeta{
 					ModulePath:        "std",
 					Version:           "v1.12.5",
+					HasGoMod:          true,
 					CommitTime:        stdlib.TestCommitTime,
 					SourceInfo:        source.NewGitHubInfo(goRepositoryURLPrefix+"/go", "src", "go1.12.5"),
 					IsRedistributable: true,
@@ -340,6 +346,7 @@ func TestFetchAndUpdateState(t *testing.T) {
 				UnitMeta: internal.UnitMeta{
 					ModulePath:        buildConstraintsMod.ModulePath,
 					Version:           buildConstraintsMod.Version,
+					HasGoMod:          false,
 					CommitTime:        testProxyCommitTime,
 					IsRedistributable: true,
 					Path:              buildConstraintsMod.ModulePath + "/cpu",
