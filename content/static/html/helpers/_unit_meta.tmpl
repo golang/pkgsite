@@ -5,7 +5,7 @@
 -->
 
 {{define "unit_meta"}}
-  {{if (.Experiments.IsActive "unit-meta-details")}}
+  {{if (.Experiments.IsActive "unit-sidebar-details")}}
     {{template "unit_meta_details" .}}
   {{end}}
   <div class="UnitMeta">
@@ -52,7 +52,7 @@
 
 {{define "unit_meta_details"}}
   <div class="UnitMetaDetails">
-    <div class="UnitMetaDetails-header">DETAILS<a href="/about">Learn more</a></div>
+    <div class="UnitMetaDetails-header">DETAILS<a href="/about#best-practices-h2">Learn more</a></div>
     <ul>
       <li>
         {{template "unit_meta_details_check" .Unit.HasGoMod}}
