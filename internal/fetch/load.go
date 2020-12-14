@@ -51,7 +51,6 @@ var goEnvs = []struct{ GOOS, GOARCH string }{
 	{"windows", "amd64"},
 	{"darwin", "amd64"},
 	{"js", "wasm"},
-	{"linux", "js"},
 }
 
 // loadPackage loads a Go package by calling loadPackageWithBuildContext, trying
