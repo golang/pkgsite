@@ -13,7 +13,6 @@ import (
 	"regexp"
 	"time"
 
-	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/testing/htmlcheck"
 )
 
@@ -39,70 +38,12 @@ type Page struct {
 }
 
 var (
-	in                 = htmlcheck.In
-	inAll              = htmlcheck.InAll
-	text               = htmlcheck.HasText
-	exactText          = htmlcheck.HasExactText
-	exactTextCollapsed = htmlcheck.HasExactTextCollapsed
-	attr               = htmlcheck.HasAttr
-	href               = htmlcheck.HasHref
+	in        = htmlcheck.In
+	text      = htmlcheck.HasText
+	exactText = htmlcheck.HasExactText
+	attr      = htmlcheck.HasAttr
+	href      = htmlcheck.HasHref
 )
-
-// PackageHeader checks a details page header for a package.
-func PackageHeader(p *Page, versionedURL bool) htmlcheck.Checker {
-	fv := p.FormattedVersion
-	if fv == "" {
-		fv = p.Version
-	}
-	curBreadcrumb := path.Base(p.Suffix)
-	if p.Suffix == "" {
-		curBreadcrumb = p.ModulePath
-	}
-	return in("",
-		in("span.DetailsHeader-breadcrumbCurrent", exactText(curBreadcrumb)),
-		in("h1.DetailsHeader-title", exactTextCollapsed(p.Title)),
-		in("div.DetailsHeader-version", exactText(fv)),
-		versionBadge(p),
-		licenseInfo(p, packageURLPath(p, versionedURL)),
-		packageTabLinks(p, versionedURL),
-		moduleInHeader(p, versionedURL))
-}
-
-// ModuleHeader checks a details page header for a module.
-func ModuleHeader(p *Page, versionedURL bool) htmlcheck.Checker {
-	fv := p.FormattedVersion
-	if fv == "" {
-		fv = p.Version
-	}
-	curBreadcrumb := p.ModulePath
-	if p.ModulePath == stdlib.ModulePath {
-		curBreadcrumb = "Standard library"
-	}
-	return in("",
-		in("span.DetailsHeader-breadcrumbCurrent", exactText(curBreadcrumb)),
-		in("h1.DetailsHeader-title", exactTextCollapsed(p.Title)),
-		in("div.DetailsHeader-version", exactText(fv)),
-		versionBadge(p),
-		licenseInfo(p, moduleURLPath(p, versionedURL)),
-		moduleTabLinks(p, versionedURL))
-}
-
-// DirectoryHeader checks a details page header for a directory.
-func DirectoryHeader(p *Page, versionedURL bool) htmlcheck.Checker {
-	fv := p.FormattedVersion
-	if fv == "" {
-		fv = p.Version
-	}
-	return in("",
-		in("span.DetailsHeader-breadcrumbCurrent", exactText(path.Base(p.Suffix))),
-		in("h1.DetailsHeader-title", exactTextCollapsed(p.Title)),
-		in("div.DetailsHeader-version", exactText(fv)),
-		// directory pages don't show a header badge
-		in("div.DetailsHeader-version", exactText(fv)),
-		licenseInfo(p, packageURLPath(p, versionedURL)),
-		// Directory module links are always versioned. (See https://golang.org/issue/39630.)
-		moduleInHeader(p, true))
-}
 
 // UnitHeader checks a main page header for a unit.
 func UnitHeader(p *Page, versionedURL bool, isPackage bool) htmlcheck.Checker {
@@ -241,49 +182,10 @@ func versionBadge(p *Page) htmlcheck.Checker {
 		in("a", href(p.LatestLink), exactText("Go to latest")))
 }
 
-// licenseInfo checks the license part of the info label in the header.
-func licenseInfo(p *Page, urlPath string) htmlcheck.Checker {
-	if p.LicenseType == "" {
-		return in("[data-test-id=DetailsHeader-infoLabelLicense]", text("None detected"))
-	}
-	return in("[data-test-id=DetailsHeader-infoLabelLicense] a",
-		href(fmt.Sprintf("%s?tab=licenses#lic-0", urlPath)),
-		exactText(p.LicenseType))
-}
-
-// moduleInHeader checks the module part of the info label in the header.
-func moduleInHeader(p *Page, versionedURL bool) htmlcheck.Checker {
-	modURL := moduleURLPath(p, versionedURL)
-	text := p.ModulePath
-	if p.ModulePath == stdlib.ModulePath {
-		text = "Standard library"
-	}
-	return in("a[data-test-id=DetailsHeader-infoLabelModule]", href(modURL), exactText(text))
-}
-
-// Check that all the navigation tabs link to the same package at the same version.
-func packageTabLinks(p *Page, versionedURL bool) htmlcheck.Checker {
-	return inAll("a.DetailsNav-link[href]",
-		attr("href", "^"+regexp.QuoteMeta(packageURLPath(p, versionedURL))))
-}
-
-// Check that all the navigation tabs link to the same module at the same version.
-func moduleTabLinks(p *Page, versionedURL bool) htmlcheck.Checker {
-	return inAll("a.DetailsNav-link[href]",
-		attr("href", "^"+regexp.QuoteMeta(moduleURLPath(p, versionedURL))))
-}
-
 func packageURLPath(p *Page, versioned bool) string {
 	v := ""
 	if versioned {
 		v = "@" + p.Version
 	}
 	return fmt.Sprintf(p.PackageURLFormat, v)
-}
-
-func moduleURLPath(p *Page, versioned bool) string {
-	if versioned {
-		return p.ModuleURL + "@" + p.Version
-	}
-	return p.ModuleURL
 }
