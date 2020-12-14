@@ -29,6 +29,7 @@ type Module struct {
 	ModulePath string
 	Version    string
 	Files      map[string]string
+	NotCached  bool // if true, behaves like it's uncached
 	zip        []byte
 }
 
@@ -45,9 +46,13 @@ func NewServer(modules []*Module) *Server {
 }
 
 // handleInfo creates an info endpoint for the specified module version.
-func (s *Server) handleInfo(modulePath, resolvedVersion string) {
+func (s *Server) handleInfo(modulePath, resolvedVersion string, uncached bool) {
 	urlPath := fmt.Sprintf("/%s/@v/%s.info", modulePath, resolvedVersion)
 	s.mux.HandleFunc(urlPath, func(w http.ResponseWriter, r *http.Request) {
+		if uncached && r.Header.Get(disableFetchHeader) == "true" {
+			http.Error(w, "not found: temporarily unavailable", http.StatusGone)
+			return
+		}
 		http.ServeContent(w, r, modulePath, time.Now(), defaultInfo(resolvedVersion))
 	})
 }
@@ -122,7 +127,7 @@ func (s *Server) AddModule(m *Module) {
 		s.handleLatest(m.ModulePath, fmt.Sprintf("/%s/@v/master.info", m.ModulePath))
 		s.handleLatest(m.ModulePath, fmt.Sprintf("/%s/@v/main.info", m.ModulePath))
 	}
-	s.handleInfo(m.ModulePath, m.Version)
+	s.handleInfo(m.ModulePath, m.Version, m.NotCached)
 	s.handleMod(m)
 	s.handleZip(m)
 

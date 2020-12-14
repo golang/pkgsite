@@ -21,6 +21,12 @@ var (
 
 	// NotFound indicates that a requested entity was not found (HTTP 404).
 	NotFound = errors.New("not found")
+
+	// NotFetched means that the proxy returned "not found" with the
+	// Disable-Module-Fetch header set. We don't know if the module really
+	// doesn't exist, or the proxy just didn't fetch it.
+	NotFetched = errors.New("not fetched by proxy")
+
 	// InvalidArgument indicates that the input into the request is invalid in
 	// some way (HTTP 400).
 	InvalidArgument = errors.New("invalid argument")
@@ -107,6 +113,7 @@ var codes = []struct {
 	// Since the following aren't HTTP statuses, pick unused codes.
 	{HasIncompletePackages, 290},
 	{DBModuleInsertInvalid, 480},
+	{NotFetched, 481},
 	{BadModule, 490},
 	{AlternativeModule, 491},
 	{ModuleTooLarge, 492},

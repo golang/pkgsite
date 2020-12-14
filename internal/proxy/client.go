@@ -42,6 +42,10 @@ type VersionInfo struct {
 	Time    time.Time
 }
 
+// Setting this header to true prevents the proxy from fetching uncached
+// modules.
+const disableFetchHeader = "Disable-Module-Fetch"
+
 // New constructs a *Client using the provided url, which is expected to
 // be an absolute URI that can be directly passed to http.Get.
 func New(u string) (_ *Client, err error) {
@@ -55,8 +59,19 @@ func New(u string) (_ *Client, err error) {
 // GetInfo makes a request to $GOPROXY/<module>/@v/<requestedVersion>.info and
 // transforms that data into a *VersionInfo.
 func (c *Client) GetInfo(ctx context.Context, modulePath, requestedVersion string) (_ *VersionInfo, err error) {
+	return c.getInfo(ctx, modulePath, requestedVersion, false)
+}
+
+// GetInfoNoFetch behaves like GetInfo, except that it sets the
+// Disable-Module-Fetch header so that the proxy does not fetch a module it
+// doesn't already know about.
+func (c *Client) GetInfoNoFetch(ctx context.Context, modulePath, requestedVersion string) (_ *VersionInfo, err error) {
+	return c.getInfo(ctx, modulePath, requestedVersion, true)
+}
+
+func (c *Client) getInfo(ctx context.Context, modulePath, requestedVersion string, disableFetch bool) (_ *VersionInfo, err error) {
 	defer derrors.Wrap(&err, "proxy.Client.GetInfo(%q, %q)", modulePath, requestedVersion)
-	data, err := c.readBody(ctx, modulePath, requestedVersion, "info")
+	data, err := c.readBody(ctx, modulePath, requestedVersion, "info", disableFetch)
 	if err != nil {
 		return nil, err
 	}
@@ -70,7 +85,7 @@ func (c *Client) GetInfo(ctx context.Context, modulePath, requestedVersion strin
 // GetMod makes a request to $GOPROXY/<module>/@v/<resolvedVersion>.mod and returns the raw data.
 func (c *Client) GetMod(ctx context.Context, modulePath, resolvedVersion string) (_ []byte, err error) {
 	defer derrors.Wrap(&err, "proxy.Client.GetMod(%q, %q)", modulePath, resolvedVersion)
-	return c.readBody(ctx, modulePath, resolvedVersion, "mod")
+	return c.readBody(ctx, modulePath, resolvedVersion, "mod", false)
 }
 
 // GetZip makes a request to $GOPROXY/<modulePath>/@v/<resolvedVersion>.zip and
@@ -81,7 +96,7 @@ func (c *Client) GetMod(ctx context.Context, modulePath, resolvedVersion string)
 func (c *Client) GetZip(ctx context.Context, modulePath, resolvedVersion string) (_ *zip.Reader, err error) {
 	defer derrors.Wrap(&err, "proxy.Client.GetZip(ctx, %q, %q)", modulePath, resolvedVersion)
 
-	bodyBytes, err := c.readBody(ctx, modulePath, resolvedVersion, "zip")
+	bodyBytes, err := c.readBody(ctx, modulePath, resolvedVersion, "zip", false)
 	if err != nil {
 		return nil, err
 	}
@@ -106,7 +121,7 @@ func (c *Client) GetZipSize(ctx context.Context, modulePath, resolvedVersion str
 		return 0, fmt.Errorf("ctxhttp.Head(ctx, client, %q): %v", url, err)
 	}
 	defer res.Body.Close()
-	if err := responseError(res); err != nil {
+	if err := responseError(res, false); err != nil {
 		return 0, err
 	}
 	if res.ContentLength < 0 {
@@ -140,7 +155,7 @@ func (c *Client) escapedURL(modulePath, requestedVersion, suffix string) (_ stri
 	return fmt.Sprintf("%s/%s/@v/%s.%s", c.url, escapedPath, escapedVersion, suffix), nil
 }
 
-func (c *Client) readBody(ctx context.Context, modulePath, requestedVersion, suffix string) (_ []byte, err error) {
+func (c *Client) readBody(ctx context.Context, modulePath, requestedVersion, suffix string, disableFetch bool) (_ []byte, err error) {
 	defer derrors.Wrap(&err, "Client.readBody(%q, %q, %q)", modulePath, requestedVersion, suffix)
 
 	u, err := c.escapedURL(modulePath, requestedVersion, suffix)
@@ -148,7 +163,7 @@ func (c *Client) readBody(ctx context.Context, modulePath, requestedVersion, suf
 		return nil, err
 	}
 	var data []byte
-	err = c.executeRequest(ctx, u, func(body io.Reader) error {
+	err = c.executeRequest(ctx, u, disableFetch, func(body io.Reader) error {
 		var err error
 		data, err = ioutil.ReadAll(body)
 		return err
@@ -175,7 +190,7 @@ func (c *Client) ListVersions(ctx context.Context, modulePath string) ([]string,
 		}
 		return scanner.Err()
 	}
-	if err := c.executeRequest(ctx, u, collect); err != nil {
+	if err := c.executeRequest(ctx, u, false, collect); err != nil {
 		return nil, err
 	}
 	return versions, nil
@@ -183,26 +198,34 @@ func (c *Client) ListVersions(ctx context.Context, modulePath string) ([]string,
 
 // executeRequest executes an HTTP GET request for u, then calls the bodyFunc
 // on the response body, if no error occurred.
-func (c *Client) executeRequest(ctx context.Context, u string, bodyFunc func(body io.Reader) error) (err error) {
+func (c *Client) executeRequest(ctx context.Context, u string, disableFetch bool, bodyFunc func(body io.Reader) error) (err error) {
 	defer func() {
 		if ctx.Err() != nil {
 			err = fmt.Errorf("%v: %w", err, derrors.ProxyTimedOut)
 		}
 		derrors.Wrap(&err, "executeRequest(ctx, %q)", u)
 	}()
-	r, err := ctxhttp.Get(ctx, c.httpClient, u)
+
+	req, err := http.NewRequest("GET", u, nil)
 	if err != nil {
-		return fmt.Errorf("ctxhttp.Get(ctx, client, %q): %v", u, err)
+		return err
+	}
+	if disableFetch {
+		req.Header.Set(disableFetchHeader, "true")
+	}
+	r, err := ctxhttp.Do(ctx, c.httpClient, req)
+	if err != nil {
+		return fmt.Errorf("ctxhttp.Do(ctx, client, %q): %v", u, err)
 	}
 	defer r.Body.Close()
-	if err := responseError(r); err != nil {
+	if err := responseError(r, disableFetch); err != nil {
 		return err
 	}
 	return bodyFunc(r.Body)
 }
 
 // responseError translates the response status code to an appropriate error.
-func responseError(r *http.Response) error {
+func responseError(r *http.Response, fetchDisabled bool) error {
 	switch {
 	case 200 <= r.StatusCode && r.StatusCode < 300:
 		return nil
@@ -213,15 +236,23 @@ func responseError(r *http.Response) error {
 		// If the response body contains "fetch timed out", treat this
 		// as a 504 response so that we retry fetching the module version again
 		// later.
+		//
+		// If the Disable-Module-Fetch header was set, use a different
+		// error code so we can tell the difference.
 		data, err := ioutil.ReadAll(r.Body)
 		if err != nil {
 			return fmt.Errorf("ioutil.readall: %v", err)
 		}
 		d := string(data)
-		if strings.Contains(d, "fetch timed out") {
-			return fmt.Errorf("%q: %w", d, derrors.ProxyTimedOut)
+		switch {
+		case strings.Contains(d, "fetch timed out"):
+			err = derrors.ProxyTimedOut
+		case fetchDisabled:
+			err = derrors.NotFetched
+		default:
+			err = derrors.NotFound
 		}
-		return fmt.Errorf("%q: %w", d, derrors.NotFound)
+		return fmt.Errorf("%q: %w", d, err)
 	default:
 		return fmt.Errorf("unexpected status %d %s", r.StatusCode, r.Status)
 	}

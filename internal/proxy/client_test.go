@@ -55,6 +55,14 @@ var testModule = &Module{
 	},
 }
 
+const uncachedModulePath = "example.com/uncached"
+
+var uncachedModule = &Module{
+	ModulePath: uncachedModulePath,
+	Version:    sample.VersionString,
+	NotCached:  true,
+}
+
 func TestGetLatestInfo(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
@@ -122,7 +130,7 @@ func TestGetInfo(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
-	client, teardownProxy := SetupTestClient(t, []*Module{testModule})
+	client, teardownProxy := SetupTestClient(t, []*Module{testModule, uncachedModule})
 	defer teardownProxy()
 
 	info, err := client.GetInfo(ctx, sample.ModulePath, sample.VersionString)
@@ -137,6 +145,17 @@ func TestGetInfo(t *testing.T) {
 	expectedTime := time.Date(2019, 1, 30, 0, 0, 0, 0, time.UTC)
 	if info.Time != expectedTime {
 		t.Errorf("VersionInfo.Time for GetInfo(ctx, %q, %q) = %v, want %v", sample.ModulePath, sample.VersionString, info.Time, expectedTime)
+	}
+
+	// GetInfoNoFetch returns "NotFetched" error on uncached module.
+	_, err = client.GetInfoNoFetch(ctx, uncachedModulePath, sample.VersionString)
+	if !errors.Is(err, derrors.NotFetched) {
+		t.Fatalf("got %v, want NotFetched", err)
+	}
+	// GetInfoNoFetch succeeds on cached module.
+	_, err = client.GetInfoNoFetch(ctx, sample.ModulePath, sample.VersionString)
+	if err != nil {
+		t.Fatal(err)
 	}
 }
 
