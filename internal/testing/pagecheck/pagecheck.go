@@ -142,6 +142,7 @@ func UnitHeader(p *Page, versionedURL bool, isPackage bool) htmlcheck.Checker {
 	}
 
 	return in("header.UnitHeader",
+		versionBadge(p),
 		in(`[data-test-id="UnitHeader-breadcrumbCurrent"]`, text(curBreadcrumb)),
 		in(`[data-test-id="UnitHeader-title"]`, text(p.Title)),
 		in(`[data-test-id="UnitHeader-majorVersionBanner"]`,
@@ -235,7 +236,7 @@ func versionBadge(p *Page) htmlcheck.Checker {
 	} else {
 		class += "--goToLatest"
 	}
-	return in("div.DetailsHeader-badge",
+	return in(`[data-test-id="UnitHeader-minorVersionBanner"]`,
 		attr("class", `\b`+regexp.QuoteMeta(class)+`\b`), // the badge has this class too
 		in("a", href(p.LatestLink), exactText("Go to latest")))
 }

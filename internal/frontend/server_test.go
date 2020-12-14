@@ -325,7 +325,7 @@ func serverTestCases() []serverTestCase {
 		Suffix:                 sample.Suffix,
 		IsLatestMinor:          true,
 		IsLatestMajor:          true,
-		LatestLink:             "/" + sample.ModulePath + "@" + sample.VersionString + "/" + sample.Suffix,
+		LatestLink:             "/" + sample.ModulePath + "/" + sample.Suffix,
 		LatestMajorVersionLink: "/" + sample.ModulePath + "/" + sample.Suffix,
 		LicenseType:            sample.LicenseType,
 		LicenseFilePath:        sample.LicenseFilePath,
@@ -341,7 +341,7 @@ func serverTestCases() []serverTestCase {
 		Suffix:                 "bar",
 		IsLatestMinor:          true,
 		IsLatestMajor:          false,
-		LatestLink:             "/github.com/v2major/module_name@v1.0.0/bar",
+		LatestLink:             "/github.com/v2major/module_name/bar",
 		LatestMajorVersion:     "v2",
 		LatestMajorVersionLink: "/github.com/v2major/module_name/v2/bar",
 		LicenseType:            sample.LicenseType,
@@ -355,7 +355,7 @@ func serverTestCases() []serverTestCase {
 	v2pkgV1Buz.Suffix = "buz"
 	v2pkgV1Buz.IsLatestMajor = false
 	v2pkgV1Buz.IsLatestMinor = true
-	v2pkgV1Buz.LatestLink = "/github.com/v2major/module_name@v1.0.0/buz"
+	v2pkgV1Buz.LatestLink = "/github.com/v2major/module_name/buz"
 	v2pkgV1Buz.LatestMajorVersionLink = "/github.com/v2major/module_name/v2"
 	v2pkgV1Buz.PackageURLFormat = "/github.com/v2major/module_name%s/buz"
 
@@ -367,7 +367,7 @@ func serverTestCases() []serverTestCase {
 		Suffix:                 "bar",
 		IsLatestMinor:          true,
 		IsLatestMajor:          true,
-		LatestLink:             "/github.com/v2major/module_name/v2@v2.0.0/bar",
+		LatestLink:             "/github.com/v2major/module_name/v2/bar",
 		LatestMajorVersion:     "v2",
 		LatestMajorVersionLink: "/github.com/v2major/module_name/v2/bar",
 		LicenseType:            sample.LicenseType,
@@ -398,7 +398,7 @@ func serverTestCases() []serverTestCase {
 		Suffix:                 "dir/inc",
 		IsLatestMinor:          true,
 		IsLatestMajor:          true,
-		LatestLink:             "/github.com/incompatible@v1.0.0+incompatible/dir/inc",
+		LatestLink:             "/github.com/incompatible/dir/inc",
 		LatestMajorVersionLink: "/github.com/incompatible/dir/inc",
 		LicenseType:            "MIT",
 		LicenseFilePath:        "LICENSE",
@@ -414,7 +414,7 @@ func serverTestCases() []serverTestCase {
 		Suffix:                 "bar",
 		IsLatestMinor:          true,
 		IsLatestMajor:          true,
-		LatestLink:             "/github.com/non_redistributable@v1.0.0/bar",
+		LatestLink:             "/github.com/non_redistributable/bar",
 		LatestMajorVersionLink: "/github.com/non_redistributable/bar",
 		LicenseType:            "",
 		PackageURLFormat:       "/github.com/non_redistributable%s/bar",
@@ -434,6 +434,7 @@ func serverTestCases() []serverTestCase {
 		ModuleURL:              "/" + sample.ModulePath,
 		PackageURLFormat:       "/" + sample.ModulePath + "%s/foo/directory",
 		LatestMajorVersionLink: "/github.com/valid/module_name/foo/directory",
+		LatestLink:             "/github.com/valid/module_name/foo/directory",
 	}
 
 	mod := &pagecheck.Page{
@@ -459,7 +460,7 @@ func serverTestCases() []serverTestCase {
 		ModulePath:             "github.com/pseudo",
 		Title:                  "dir/",
 		ModuleURL:              "/github.com/pseudo",
-		LatestLink:             "/github.com/pseudo@" + pseudoVersion + "/dir",
+		LatestLink:             "/github.com/pseudo/dir",
 		LatestMajorVersionLink: "/github.com/pseudo/dir",
 		Suffix:                 "dir",
 		Version:                pseudoVersion,
@@ -482,6 +483,7 @@ func serverTestCases() []serverTestCase {
 		IsLatestMajor:          true,
 		IsLatestMinor:          true,
 		ModuleURL:              "/std",
+		LatestLink:             "/cmd",
 		PackageURLFormat:       "/cmd%s",
 		LatestMajorVersionLink: "/cmd",
 	}
@@ -497,7 +499,7 @@ func serverTestCases() []serverTestCase {
 		PackageURLFormat:       "/net/http%s",
 		IsLatestMinor:          true,
 		IsLatestMajor:          true,
-		LatestLink:             "/net/http@go1.13",
+		LatestLink:             "/net/http",
 		LatestMajorVersionLink: "/net/http",
 	}
 

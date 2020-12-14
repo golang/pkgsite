@@ -42,19 +42,26 @@
           The highest tagged major version is <a href="/$$GODISCOVERY_LATESTMAJORVERSIONURL$$">$$GODISCOVERY_LATESTMAJORVERSION$$</a>.
         </span>
       </div>
+
       <div class="js-fixedHeaderSentinel"></div>
       {{if (eq .SelectedTab.Name "")}}
         <div class="UnitHeader-detail">
+
           <span class="UnitHeader-detailItem" data-test-id="UnitHeader-version">
             <img class="UnitHeader-detailItemLarge" height="16px" width="16px" src="/static/img/pkg-icon-arrowBranch_16x16.svg" alt="">
             <a href="?tab=versions">Version {{.DisplayVersion}}</a>
             <!-- Do not reformat the data attributes of the following div: the server uses a regexp to extract them. -->
             <div class="DetailsHeader-badge $$GODISCOVERY_LATESTMINORCLASS$$"
-                data-version="{{.LinkVersion}}" data-mpath="{{.Unit.ModulePath}}" data-ppath="{{.Unit.Path}}" data-pagetype="{{.PageType}}">
+                data-test-id="UnitHeader-minorVersionBanner"
+                data-version="{{.LinkVersion}}"
+                data-mpath="{{.Unit.ModulePath}}"
+                data-ppath="{{.Unit.Path}}"
+                data-pagetype="{{.PageType}}">
               <span>Latest</span>
               <a href="{{.LatestURL}}">Go to latest</a>
             </div>
           </span>
+
           <span class="UnitHeader-detailItem" data-test-id="UnitHeader-commitTime">
             <img height="16px" width="16px" src="/static/img/pkg-icon-circularArrows_16x16.svg" alt="">
             {{.Details.CommitTime}}
