@@ -329,7 +329,7 @@ func serverTestCases() []serverTestCase {
 		LatestMajorVersionLink: "/" + sample.ModulePath + "/" + sample.Suffix,
 		LicenseType:            sample.LicenseType,
 		LicenseFilePath:        sample.LicenseFilePath,
-		PackageURLFormat:       "/" + sample.ModulePath + "%s/" + sample.Suffix,
+		UnitURLFormat:          "/" + sample.ModulePath + "%s/" + sample.Suffix,
 		ModuleURL:              "/" + sample.ModulePath,
 	}
 
@@ -346,7 +346,7 @@ func serverTestCases() []serverTestCase {
 		LatestMajorVersionLink: "/github.com/v2major/module_name/v2/bar",
 		LicenseType:            sample.LicenseType,
 		LicenseFilePath:        sample.LicenseFilePath,
-		PackageURLFormat:       "/github.com/v2major/module_name%s/bar",
+		UnitURLFormat:          "/github.com/v2major/module_name%s/bar",
 		ModuleURL:              "/github.com/v2major/module_name",
 	}
 
@@ -357,7 +357,7 @@ func serverTestCases() []serverTestCase {
 	v2pkgV1Buz.IsLatestMinor = true
 	v2pkgV1Buz.LatestLink = "/github.com/v2major/module_name/buz"
 	v2pkgV1Buz.LatestMajorVersionLink = "/github.com/v2major/module_name/v2"
-	v2pkgV1Buz.PackageURLFormat = "/github.com/v2major/module_name%s/buz"
+	v2pkgV1Buz.UnitURLFormat = "/github.com/v2major/module_name%s/buz"
 
 	v2pkgV200 := &pagecheck.Page{
 		Title:                  "bar",
@@ -372,7 +372,7 @@ func serverTestCases() []serverTestCase {
 		LatestMajorVersionLink: "/github.com/v2major/module_name/v2/bar",
 		LicenseType:            sample.LicenseType,
 		LicenseFilePath:        sample.LicenseFilePath,
-		PackageURLFormat:       "/github.com/v2major/module_name/v2%s/bar",
+		UnitURLFormat:          "/github.com/v2major/module_name/v2%s/bar",
 		ModuleURL:              "/github.com/v2major/module_name/v2",
 	}
 
@@ -402,7 +402,7 @@ func serverTestCases() []serverTestCase {
 		LatestMajorVersionLink: "/github.com/incompatible/dir/inc",
 		LicenseType:            "MIT",
 		LicenseFilePath:        "LICENSE",
-		PackageURLFormat:       "/github.com/incompatible%s/dir/inc",
+		UnitURLFormat:          "/github.com/incompatible%s/dir/inc",
 		ModuleURL:              "/github.com/incompatible",
 	}
 
@@ -417,7 +417,7 @@ func serverTestCases() []serverTestCase {
 		LatestLink:             "/github.com/non_redistributable/bar",
 		LatestMajorVersionLink: "/github.com/non_redistributable/bar",
 		LicenseType:            "",
-		PackageURLFormat:       "/github.com/non_redistributable%s/bar",
+		UnitURLFormat:          "/github.com/non_redistributable%s/bar",
 		ModuleURL:              "/github.com/non_redistributable",
 	}
 
@@ -432,7 +432,7 @@ func serverTestCases() []serverTestCase {
 		IsLatestMinor:          true,
 		IsLatestMajor:          true,
 		ModuleURL:              "/" + sample.ModulePath,
-		PackageURLFormat:       "/" + sample.ModulePath + "%s/foo/directory",
+		UnitURLFormat:          "/" + sample.ModulePath + "%s/foo/directory",
 		LatestMajorVersionLink: "/github.com/valid/module_name/foo/directory",
 		LatestLink:             "/github.com/valid/module_name/foo/directory",
 	}
@@ -469,7 +469,7 @@ func serverTestCases() []serverTestCase {
 		LicenseFilePath:        "LICENSE",
 		IsLatestMinor:          true,
 		IsLatestMajor:          true,
-		PackageURLFormat:       "/github.com/pseudo%s/dir",
+		UnitURLFormat:          "/github.com/pseudo%s/dir",
 	}
 
 	dirCmd := &pagecheck.Page{
@@ -484,7 +484,7 @@ func serverTestCases() []serverTestCase {
 		IsLatestMinor:          true,
 		ModuleURL:              "/std",
 		LatestLink:             "/cmd",
-		PackageURLFormat:       "/cmd%s",
+		UnitURLFormat:          "/cmd%s",
 		LatestMajorVersionLink: "/cmd",
 	}
 
@@ -496,7 +496,7 @@ func serverTestCases() []serverTestCase {
 		LicenseType:            sample.LicenseType,
 		LicenseFilePath:        sample.LicenseFilePath,
 		ModuleURL:              "/net/http",
-		PackageURLFormat:       "/net/http%s",
+		UnitURLFormat:          "/net/http%s",
 		IsLatestMinor:          true,
 		IsLatestMajor:          true,
 		LatestLink:             "/net/http",

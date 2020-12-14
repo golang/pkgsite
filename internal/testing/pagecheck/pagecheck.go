@@ -32,7 +32,7 @@ type Page struct {
 	// link to the latest major version for this package, or if the package does not exist
 	// link to the latest major version
 	LatestMajorVersionLink string
-	PackageURLFormat       string // the relative package URL, with one %s for "@version"; also used for dirs
+	UnitURLFormat          string // the relative unit URL, with one %s for "@version"
 	ModuleURL              string // the relative module URL
 	CommitTime             string
 }
@@ -187,5 +187,5 @@ func unitURLPath(p *Page, versioned bool) string {
 	if versioned {
 		v = "@" + p.Version
 	}
-	return fmt.Sprintf(p.PackageURLFormat, v)
+	return fmt.Sprintf(p.UnitURLFormat, v)
 }
