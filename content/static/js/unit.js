@@ -6,6 +6,7 @@
  */
 
 import { AccordionController } from './accordion.js';
+import './toggle-tip.js';
 
 /**
  * Instantiates accordion controller for the left sidebar.

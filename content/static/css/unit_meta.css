@@ -24,3 +24,60 @@
   margin-bottom: 0.5rem;
   text-transform: uppercase;
 }
+
+.UnitMetaDetails-header {
+  border-bottom: 0.0625rem solid var(--gray-8);
+  display: flex;
+  font-size: 0.75rem;
+  justify-content: space-between;
+  line-height: 1rem;
+  margin-bottom: 0.5rem;
+  margin-top: 1.85rem;
+  padding-bottom: 0.5rem;
+  text-transform: uppercase;
+}
+.UnitMetaDetails ul {
+  list-style: none;
+  padding-inline-start: 0;
+}
+.UnitMetaDetails li {
+  font-size: 0.875rem;
+  margin-bottom: 0.75rem;
+}
+.UnitMetaDetails a {
+  font-size: 0.8125rem;
+  text-transform: none;
+}
+.UnitMetaDetails-icon {
+  height: auto;
+  margin-right: 0.25rem;
+  position: relative;
+  width: 0.875rem;
+  top: 0.125rem;
+  z-index: -1;
+}
+.UnitMetaDetails-toggletip button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  width: 1.625rem;
+}
+.UnitMetaDetails [role='status'] {
+  height: 0;
+  position: absolute;
+  width: 0;
+}
+.UnitMetaDetails-toggletipBubble {
+  background: var(--white) 80%;
+  border: 0.0625rem solid var(--gray-8);
+  border-radius: 0.25rem;
+  display: block;
+  font-size: 0.75rem;
+  left: -6rem;
+  letter-spacing: 0.01875rem;
+  line-height: 1rem;
+  padding: 0.5rem;
+  position: relative;
+  top: 1.5rem;
+  width: 12rem;
+}

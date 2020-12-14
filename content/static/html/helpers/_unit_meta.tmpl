@@ -5,6 +5,9 @@
 -->
 
 {{define "unit_meta"}}
+  {{if (.Experiments.IsActive "unit-meta-details")}}
+    {{template "unit_meta_details" .}}
+  {{end}}
   <div class="UnitMeta">
     <div class="UnitMeta-header">Links</div>
     <div class="UnitMeta-repo">Repository</div>
@@ -26,4 +29,51 @@
     <div class="UnitMeta-repo">{{.Body}}</div>
     <a href="{{.Href}}" title="{{.Href}}" target="_blank" rel="noopener">{{.Href}}</a>
   {{end}}
+{{end}}
+
+{{define "unit_meta_details_toggletip"}}
+  <span class="UnitMetaDetails-toggletip">
+    <button type="button" aria-label="more info" data-toggletip-content="{{.}}">
+      <img class="UnitMetaDetails-icon" src="/static/img/pkg-icon-help_24x24.svg" alt="" height="24" width="24">
+    </button>
+    <span role="status"></span>
+  </span>
+{{end}}
+
+{{define "unit_meta_details_check"}}
+  <img class="UnitMetaDetails-icon"
+    {{- if . -}}
+      src="/static/img/pkg-icon-checkCircleOutline_24x24.svg" alt="checked"
+    {{- else -}}
+      src="/static/img/pkg-icon-cancel_24x24.svg" alt="unchecked"
+    {{- end -}}
+  height="24" width="24">
+{{end}}
+
+{{define "unit_meta_details"}}
+  <div class="UnitMetaDetails">
+    <div class="UnitMetaDetails-header">DETAILS<a href="/about">Learn more</a></div>
+    <ul>
+      <li>
+        {{template "unit_meta_details_check" .Unit.HasGoMod}}
+        Has <a href="{{.Details.ModFileURL}}" target="_blank">go.mod</a> file
+        {{template "unit_meta_details_toggletip" "The Go module system was introduced in Go 1.11 and is the official dependency management solution for Go."}}
+      </li>
+      <li>
+        {{template "unit_meta_details_check" .Unit.IsRedistributable}}
+        Permissive license
+        {{template "unit_meta_details_toggletip" "Permissive licenses place minimal restrictions on how software can be used, modified, and redistributed."}}
+      </li>
+      <li>
+        {{template "unit_meta_details_check" .Details.IsTaggedVersion}}
+        Tagged version
+        {{template "unit_meta_details_toggletip" "Modules with tagged versions give importers more predictable builds."}}
+      </li>
+      <li>
+        {{template "unit_meta_details_check"  .Details.IsStableVersion}}
+        Stable version
+        {{template "unit_meta_details_toggletip" "When a project reaches major version v1 it is considered stable."}}
+      </li>
+    </ul>
+  </div>
 {{end}}
