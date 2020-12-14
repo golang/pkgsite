@@ -21,9 +21,16 @@ All issues related to x/pkgsite are labeled with the
 In particular, we would love your help on issues tagged with the
 [`help wanted` label](https://github.com/golang/go/issues?q=is%3Aissue+is%3Aopen+label%3Apkgsite+label%3A%22help+wanted%22+).
 
+If this is your first time contributing to x/pkgsite, take a look at the
+[`Suggested` issues](https://github.com/golang/go/issues?q=is%3Aissue+is%3Aopen+label%3Apkgsite+label%3A%22Suggested%22+label%3A%22help+wanted%22) for a good first issue.
+
 Before you begin working on an issue, please leave a comment that you are claiming it.
 
 ## Getting started
+
+We accept contributions through
+[Gerrit](https://golang.org/doc/contribute.html#sending_a_change_gerrit) or
+[GitHub PRs](https://golang.org/doc/contribute.html#sending_a_change_github). To get started:
 
 1. Complete the steps in the
    [Go Contribution Guide](https://golang.org/doc/contribute.html).
