@@ -249,6 +249,28 @@ var testModules = []testModule{
 			},
 		},
 	},
+	{
+		path:            "cloud.google.com/go",
+		redistributable: true,
+		versions:        []string{"v0.69.0"},
+		packages: []testPackage{
+			{
+				name:   "pubsublite",
+				suffix: "pubsublite",
+			},
+		},
+	},
+	{
+		path:            "cloud.google.com/go/pubsublite",
+		redistributable: true,
+		versions:        []string{"v0.4.0"},
+		packages: []testPackage{
+			{
+				name:   "pubsublite",
+				suffix: "",
+			},
+		},
+	},
 }
 
 func insertTestModules(ctx context.Context, t *testing.T, mods []testModule) {
@@ -501,6 +523,37 @@ func serverTestCases() []serverTestCase {
 		IsLatestMajor:          true,
 		LatestLink:             "/net/http",
 		LatestMajorVersionLink: "/net/http",
+	}
+
+	pubsubliteDir := &pagecheck.Page{
+		ModulePath:             "cloud.google.com/go",
+		ModuleURL:              "cloud.google.com/go",
+		Title:                  "pubsublite",
+		Suffix:                 "pubsublite",
+		Version:                "v0.69.0",
+		FormattedVersion:       "v0.69.0",
+		LicenseType:            "MIT",
+		LicenseFilePath:        "LICENSE",
+		IsLatestMinor:          true,
+		IsLatestMajor:          true,
+		UnitURLFormat:          "/cloud.google.com/go%s/pubsublite",
+		LatestLink:             "/cloud.google.com/go/pubsublite",
+		LatestMajorVersionLink: "/cloud.google.com/go/pubsublite",
+	}
+
+	pubsubliteMod := &pagecheck.Page{
+		ModulePath:             "cloud.google.com/go/pubsublite",
+		Title:                  "pubsublite",
+		ModuleURL:              "cloud.google.com/go/pubsublite",
+		Version:                "v0.4.0",
+		FormattedVersion:       "v0.4.0",
+		LicenseType:            "MIT",
+		LicenseFilePath:        "LICENSE",
+		IsLatestMinor:          true,
+		IsLatestMajor:          true,
+		UnitURLFormat:          "/cloud.google.com/go/pubsublite%s",
+		LatestLink:             "/cloud.google.com/go/pubsublite",
+		LatestMajorVersionLink: "/cloud.google.com/go/pubsublite",
 	}
 
 	return []serverTestCase{
@@ -842,6 +895,27 @@ func serverTestCases() []serverTestCase {
 			wantStatusCode: http.StatusOK,
 			want: in("",
 				pagecheck.LicenseDetails("MIT", "Lorem Ipsum", "go.googlesource.com/go/+/refs/tags/go1.13/LICENSE")),
+		},
+		{
+			name:           "pubsublite unversioned",
+			urlPath:        "/cloud.google.com/go/pubsublite",
+			wantStatusCode: http.StatusOK,
+			want: in("",
+				pagecheck.UnitHeader(pubsubliteDir, unversioned, isPackage)),
+		},
+		{
+			name:           "pubsublite module",
+			urlPath:        "/cloud.google.com/go/pubsublite@v0.4.0",
+			wantStatusCode: http.StatusOK,
+			want: in("",
+				pagecheck.UnitHeader(pubsubliteMod, versioned, isPackage)),
+		},
+		{
+			name:           "pubsublite directory",
+			urlPath:        "/cloud.google.com/go@v0.69.0/pubsublite",
+			wantStatusCode: http.StatusOK,
+			want: in("",
+				pagecheck.UnitHeader(pubsubliteDir, versioned, isDirectory)),
 		},
 	}
 }
