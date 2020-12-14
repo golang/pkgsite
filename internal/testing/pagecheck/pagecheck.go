@@ -47,7 +47,7 @@ var (
 
 // UnitHeader checks a main page header for a unit.
 func UnitHeader(p *Page, versionedURL bool, isPackage bool) htmlcheck.Checker {
-	urlPath := packageURLPath(p, versionedURL)
+	urlPath := unitURLPath(p, versionedURL)
 	curBreadcrumb := path.Base(p.Suffix)
 	if p.Suffix == "" {
 		curBreadcrumb = p.ModulePath
@@ -182,7 +182,7 @@ func versionBadge(p *Page) htmlcheck.Checker {
 		in("a", href(p.LatestLink), exactText("Go to latest")))
 }
 
-func packageURLPath(p *Page, versioned bool) string {
+func unitURLPath(p *Page, versioned bool) string {
 	v := ""
 	if versioned {
 		v = "@" + p.Version
