@@ -253,16 +253,7 @@ func ModuleInfo(ctx context.Context, client *Client, modulePath, version string)
 	defer span.End()
 
 	if modulePath == stdlib.ModulePath {
-		commit, err := stdlib.TagForVersion(version)
-		if err != nil {
-			return nil, err
-		}
-		return &Info{
-			repoURL:   stdlib.GoSourceRepoURL,
-			moduleDir: stdlib.Directory(version),
-			commit:    commit,
-			templates: githubURLTemplates,
-		}, nil
+		return newStdlibInfo(version)
 	}
 	repo, relativeModulePath, templates, transformCommit, err := matchStatic(modulePath)
 	if err != nil {
@@ -286,6 +277,24 @@ func ModuleInfo(ctx context.Context, client *Client, modulePath, version string)
 	return info, nil
 	// TODO(golang/go#39627): support launchpad.net, including the special case
 	// in cmd/go/internal/get/vcs.go.
+}
+
+func newStdlibInfo(version string) (_ *Info, err error) {
+	defer derrors.Wrap(&err, "newStdlibInfo(%q)", version)
+
+	commit, err := stdlib.TagForVersion(version)
+	if err != nil {
+		return nil, err
+	}
+
+	templates := googlesourceURLTemplates
+	templates.Raw = "https://github.com/golang/go/raw/{commit}/{file}"
+	return &Info{
+		repoURL:   stdlib.GoSourceRepoURL,
+		moduleDir: stdlib.Directory(version),
+		commit:    commit,
+		templates: templates,
+	}, nil
 }
 
 // matchStatic matches the given module or repo path against a list of known
@@ -550,13 +559,8 @@ var patterns = []struct {
 	// a ".git" repo suffix in an import path. If matching a repo URL from a meta tag,
 	// there is no ".git".
 	{
-		pattern: `^(?P<repo>[^.]+\.googlesource\.com/[^.]+)(\.git|$)`,
-		templates: urlTemplates{
-			Directory: "{repo}/+/{commit}/{dir}",
-			File:      "{repo}/+/{commit}/{file}",
-			Line:      "{repo}/+/{commit}/{file}#{line}",
-			// Gitiles has no support for serving raw content at this time.
-		},
+		pattern:   `^(?P<repo>[^.]+\.googlesource\.com/[^.]+)(\.git|$)`,
+		templates: googlesourceURLTemplates,
 	},
 	{
 		pattern:   `^(?P<repo>git\.apache\.org/[^.]+)(\.git|$)`,
@@ -640,6 +644,12 @@ var (
 		Line:      "{repo}/src/{commit}/{file}#L{line}",
 		Raw:       "{repo}/raw/{commit}/{file}",
 	}
+	googlesourceURLTemplates = urlTemplates{
+		Directory: "{repo}/+/{commit}/{dir}",
+		File:      "{repo}/+/{commit}/{file}",
+		Line:      "{repo}/+/{commit}/{file}#{line}",
+		// Gitiles has no support for serving raw content at this time.
+	}
 )
 
 // commitFromVersion returns a string that refers to a commit corresponding to version.
@@ -686,4 +696,15 @@ func NewGitHubInfo(repoURL, moduleDir, commit string) *Info {
 		commit:    commit,
 		templates: githubURLTemplates,
 	}
+}
+
+// NewStdlibInfo returns a source.Info for the standard library at the given
+// semantic version. It panics if the version does not correspond to a Go release
+// tag. It is for testing only.
+func NewStdlibInfo(version string) *Info {
+	info, err := newStdlibInfo(version)
+	if err != nil {
+		panic(err)
+	}
+	return info
 }

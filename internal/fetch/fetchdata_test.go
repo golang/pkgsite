@@ -654,7 +654,7 @@ var moduleStd = &testModule{
 				Version:    "v1.12.5",
 				CommitTime: stdlib.TestCommitTime,
 				HasGoMod:   true,
-				SourceInfo: source.NewGitHubInfo("https://github.com/golang/go", "src", "go1.12.5"),
+				SourceInfo: source.NewStdlibInfo("v1.12.5"),
 			},
 			Units: []*internal.Unit{
 				{
