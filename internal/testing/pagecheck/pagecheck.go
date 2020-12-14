@@ -18,23 +18,55 @@ import (
 
 // Page describes a discovery site web page for a package, module or directory.
 type Page struct {
-	ModulePath         string
-	Suffix             string // package or directory path after module path; empty for a module
-	Version            string
-	FormattedVersion   string
-	Title              string
-	LicenseType        string
-	LicenseFilePath    string
-	IsLatestMinor      bool   // path is in the latest minor version of this module
-	IsLatestMajor      bool   // path is in the latest major version of this series
-	LatestLink         string // href of "Go to latest" link
-	LatestMajorVersion string // is the suffix of the latest major version, empty if v0 or v1
-	// link to the latest major version for this package, or if the package does not exist
-	// link to the latest major version
+	// ModulePath is the module path for the unit page.
+	ModulePath string
+
+	// Suffix is the unit path element after module path; empty for a module
+	Suffix string
+
+	// Version is the full version of the module, or the go tag if it is the
+	// stdlib.
+	Version string
+
+	// FormattedVersion is the version of the module, or go tag if it is the
+	// stdlib. The version string may be truncated if it is a pseudoversion.
+	FormattedVersion string
+
+	// Title is output of frontend.pageTitle.
+	Title string
+
+	// LicenseType is name of the license.
+	LicenseType string
+
+	// LicenseFilePath is the path of the license relative to the module directory.
+	LicenseFilePath string
+
+	// IsLatestMinor is the latest minor version of this module.
+	IsLatestMinor bool
+
+	// IsLatestMajor is the latest major version of this series.
+	IsLatestMajor bool
+
+	// LatestLink is the href of "Go to latest" link.
+	LatestLink string
+
+	// LatestMajorVersion is the suffix of the latest major version, empty if
+	// v0 or v1.
+	LatestMajorVersion string
+
+	// LatestMajorVersionLink is the link to the latest major version of the
+	// unit. If the unit does not exist at the latest major version, it is a
+	// link to the latest major version of the module.
 	LatestMajorVersionLink string
-	UnitURLFormat          string // the relative unit URL, with one %s for "@version"
-	ModuleURL              string // the relative module URL
-	CommitTime             string
+
+	// UnitURLFormat is the relative unit URL, with one %s for "@version".
+	UnitURLFormat string
+
+	// ModuleURL is the relative module URL.
+	ModuleURL string
+
+	// CommitTime is the output of frontend.absoluteTime for the commit time.
+	CommitTime string
 }
 
 var (
