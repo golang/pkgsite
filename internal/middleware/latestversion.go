@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"golang.org/x/mod/module"
+	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/log"
 )
 
@@ -47,7 +48,7 @@ func LatestVersions(latestMinor latestMinorFunc, latestMajor latestMajorFunc) Mi
 				_, majorVersion, _ := module.SplitPathVersion(modulePath)
 				packagePath := string(matches[3])
 				pageType := string(matches[4])
-				latestMinorVersion := latestMinor(r.Context(), packagePath, modulePath, pageType)
+				latestMinorVersion := latestMinor(r.Context(), packagePath, internal.UnknownModulePath, pageType)
 				latestMinorClass := "DetailsHeader-badge"
 				switch {
 				case latestMinorVersion == "":
@@ -57,6 +58,7 @@ func LatestVersions(latestMinor latestMinorFunc, latestMajor latestMajorFunc) Mi
 				default:
 					latestMinorClass += "--goToLatest"
 				}
+
 				latestModulePath, latestPackagePath := latestMajor(r.Context(), packagePath, modulePath)
 				_, latestMajorVersion, ok := module.SplitPathVersion(latestModulePath)
 				var latestMajorVersionText string

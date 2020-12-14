@@ -559,7 +559,7 @@ func serverTestCases() []serverTestCase {
 		FormattedVersion:       "v0.4.0",
 		LicenseType:            "MIT",
 		LicenseFilePath:        "LICENSE",
-		IsLatestMinor:          true,
+		IsLatestMinor:          false,
 		IsLatestMajor:          true,
 		UnitURLFormat:          "/cloud.google.com/go/pubsublite%s",
 		LatestLink:             "/cloud.google.com/go/pubsublite",
