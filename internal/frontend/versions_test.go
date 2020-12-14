@@ -181,6 +181,16 @@ func TestFetchPackageVersionsDetails(t *testing.T) {
 			if err != nil {
 				t.Fatalf("fetchVersionsDetails(ctx, db, %q, %q): %v", tc.pkg.Path, tc.pkg.ModulePath, err)
 			}
+			for _, vl := range tc.wantDetails.ThisModule {
+				for _, v := range vl.Versions {
+					v.CommitTime = absoluteTime(tc.modules[0].CommitTime)
+				}
+			}
+			for _, vl := range tc.wantDetails.OtherModules {
+				for _, v := range vl.Versions {
+					v.CommitTime = absoluteTime(tc.modules[0].CommitTime)
+				}
+			}
 			if diff := cmp.Diff(tc.wantDetails, got); diff != "" {
 				t.Errorf("mismatch (-want +got):\n%s", diff)
 			}

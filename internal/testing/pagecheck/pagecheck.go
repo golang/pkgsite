@@ -11,7 +11,6 @@ import (
 	"fmt"
 	"path"
 	"regexp"
-	"time"
 
 	"golang.org/x/pkgsite/internal/testing/htmlcheck"
 )
@@ -104,11 +103,6 @@ func UnitHeader(p *Page, versionedURL bool, isPackage bool) htmlcheck.Checker {
 		importsDetails = nil
 	}
 
-	commitTime := p.CommitTime
-	if commitTime == "" {
-		commitTime = time.Now().In(time.UTC).Format("Jan _2, 2006")
-	}
-
 	majorVersionBannerClass := "UnitHeader-majorVersionBanner"
 	if p.IsLatestMajor {
 		majorVersionBannerClass += "  DetailsHeader-banner--latest"
@@ -133,7 +127,7 @@ func UnitHeader(p *Page, versionedURL bool, isPackage bool) htmlcheck.Checker {
 				href("?tab=versions"),
 				exactText("Version "+p.FormattedVersion))),
 		in(`[data-test-id="UnitHeader-commitTime"]`,
-			text(commitTime)),
+			text(p.CommitTime)),
 		in(`[data-test-id="UnitHeader-licenses"]`,
 			in("a",
 				href(licenseLink),

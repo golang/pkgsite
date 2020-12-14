@@ -160,6 +160,7 @@ func TestGetUnit(t *testing.T) {
 				test.want.Name,
 				test.want.IsRedistributable,
 			)
+			test.want.CommitTime = um.CommitTime
 			checkUnit(ctx, t, um, test.want)
 		})
 	}
@@ -180,8 +181,7 @@ func checkUnit(ctx context.Context, t *testing.T, um *internal.UnitMeta, want *i
 	want.SourceInfo = um.SourceInfo
 	want.NumImports = len(want.Imports)
 	opts = append(opts,
-		cmpopts.IgnoreFields(internal.Unit{}, "Imports"),
-		cmpopts.IgnoreFields(internal.Unit{}, "LicenseContents"),
+		cmpopts.IgnoreFields(internal.Unit{}, "Imports", "LicenseContents"),
 	)
 	if diff := cmp.Diff(want, got, opts...); diff != "" {
 		t.Errorf("mismatch (-want, +got):\n%s", diff)
@@ -252,14 +252,14 @@ func TestGetUnitFieldSet(t *testing.T) {
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			pathInfo := sample.UnitMeta(
+			um := sample.UnitMeta(
 				test.want.Path,
 				test.want.ModulePath,
 				test.want.Version,
 				test.want.Name,
 				test.want.IsRedistributable,
 			)
-			got, err := testDB.GetUnit(ctx, pathInfo, test.fields)
+			got, err := testDB.GetUnit(ctx, um, test.fields)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -268,7 +268,8 @@ func TestGetUnitFieldSet(t *testing.T) {
 				// The packages table only includes partial license information; it omits the Coverage field.
 				cmpopts.IgnoreFields(licenses.Metadata{}, "Coverage"),
 			}
-			test.want.SourceInfo = pathInfo.SourceInfo
+			test.want.CommitTime = um.CommitTime
+			test.want.SourceInfo = um.SourceInfo
 			cleanFields(test.want, test.fields)
 			if diff := cmp.Diff(test.want, got, opts...); diff != "" {
 				t.Errorf("mismatch (-want, +got):\n%s", diff)

@@ -353,6 +353,7 @@ func serverTestCases() []serverTestCase {
 		LicenseFilePath:        sample.LicenseFilePath,
 		UnitURLFormat:          "/" + sample.ModulePath + "%s/" + sample.Suffix,
 		ModuleURL:              "/" + sample.ModulePath,
+		CommitTime:             absoluteTime(sample.NowTruncated()),
 	}
 
 	v2pkgV100 := &pagecheck.Page{
@@ -370,6 +371,7 @@ func serverTestCases() []serverTestCase {
 		LicenseFilePath:        sample.LicenseFilePath,
 		UnitURLFormat:          "/github.com/v2major/module_name%s/bar",
 		ModuleURL:              "/github.com/v2major/module_name",
+		CommitTime:             absoluteTime(sample.NowTruncated()),
 	}
 
 	v2pkgV1Buz := *v2pkgV100
@@ -396,6 +398,7 @@ func serverTestCases() []serverTestCase {
 		LicenseFilePath:        sample.LicenseFilePath,
 		UnitURLFormat:          "/github.com/v2major/module_name/v2%s/bar",
 		ModuleURL:              "/github.com/v2major/module_name/v2",
+		CommitTime:             absoluteTime(sample.NowTruncated()),
 	}
 
 	p9 := *pkgV100
@@ -426,6 +429,7 @@ func serverTestCases() []serverTestCase {
 		LicenseFilePath:        "LICENSE",
 		UnitURLFormat:          "/github.com/incompatible%s/dir/inc",
 		ModuleURL:              "/github.com/incompatible",
+		CommitTime:             absoluteTime(sample.NowTruncated()),
 	}
 
 	pkgNonRedist := &pagecheck.Page{
@@ -441,6 +445,7 @@ func serverTestCases() []serverTestCase {
 		LicenseType:            "",
 		UnitURLFormat:          "/github.com/non_redistributable%s/bar",
 		ModuleURL:              "/github.com/non_redistributable",
+		CommitTime:             absoluteTime(sample.NowTruncated()),
 	}
 
 	dir := &pagecheck.Page{
@@ -457,6 +462,7 @@ func serverTestCases() []serverTestCase {
 		UnitURLFormat:          "/" + sample.ModulePath + "%s/foo/directory",
 		LatestMajorVersionLink: "/github.com/valid/module_name/foo/directory",
 		LatestLink:             "/github.com/valid/module_name/foo/directory",
+		CommitTime:             absoluteTime(sample.NowTruncated()),
 	}
 
 	mod := &pagecheck.Page{
@@ -471,6 +477,7 @@ func serverTestCases() []serverTestCase {
 		IsLatestMajor:          true,
 		LatestLink:             "/" + sample.ModulePath + "@v1.0.0",
 		LatestMajorVersionLink: "/" + sample.ModulePath,
+		CommitTime:             absoluteTime(sample.NowTruncated()),
 	}
 	mp := *mod
 	mp.Version = pseudoVersion
@@ -492,6 +499,7 @@ func serverTestCases() []serverTestCase {
 		IsLatestMinor:          true,
 		IsLatestMajor:          true,
 		UnitURLFormat:          "/github.com/pseudo%s/dir",
+		CommitTime:             absoluteTime(sample.NowTruncated()),
 	}
 
 	dirCmd := &pagecheck.Page{
@@ -508,6 +516,7 @@ func serverTestCases() []serverTestCase {
 		LatestLink:             "/cmd",
 		UnitURLFormat:          "/cmd%s",
 		LatestMajorVersionLink: "/cmd",
+		CommitTime:             absoluteTime(sample.NowTruncated()),
 	}
 
 	netHttp := &pagecheck.Page{
@@ -523,6 +532,7 @@ func serverTestCases() []serverTestCase {
 		IsLatestMajor:          true,
 		LatestLink:             "/net/http",
 		LatestMajorVersionLink: "/net/http",
+		CommitTime:             absoluteTime(sample.NowTruncated()),
 	}
 
 	pubsubliteDir := &pagecheck.Page{

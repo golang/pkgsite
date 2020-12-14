@@ -243,6 +243,7 @@ func UnitMeta(path, modulePath, version, name string, isRedistributable bool) *i
 		Version:           version,
 		Path:              path,
 		Name:              name,
+		CommitTime:        NowTruncated(),
 		IsRedistributable: isRedistributable,
 		Licenses:          LicenseMetadata,
 		SourceInfo:        source.NewGitHubInfo("https://"+modulePath, "", version),
