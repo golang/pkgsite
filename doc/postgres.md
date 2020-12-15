@@ -8,8 +8,8 @@ For additional information on our architecture, see the
 
 ## Local development database
 
-1. Install PostgreSQL on your machine for local development.
-   It should use the default Postgres port of 5432.
+1. Install PostgreSQL (version 11 or higher) on your machine for local
+   development. It should use the default Postgres port of 5432.
 
    If you use a Mac, the easiest way to do that is through installing
    https://postgresapp.com.
