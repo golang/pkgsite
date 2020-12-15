@@ -12,25 +12,7 @@ import (
 
 	"github.com/alicebob/miniredis/v2"
 	"github.com/go-redis/redis/v8"
-	"go.opencensus.io/stats/view"
 )
-
-func collectViewData(t *testing.T) map[bool]int {
-	m := map[bool]int{}
-	rows, err := view.RetrieveData(QuotaResultCount.Name)
-	if err != nil {
-		t.Fatal(err)
-	}
-	for _, row := range rows {
-		blocked := row.Tags[0].Value == "blocked"
-		if err != nil {
-			t.Fatalf("collectViewData: %v", err)
-		}
-		count := int(row.Data.(*view.CountData).Value)
-		m[blocked] = count
-	}
-	return m
-}
 
 func TestIPKey(t *testing.T) {
 	for _, test := range []struct {
@@ -49,8 +31,6 @@ func TestIPKey(t *testing.T) {
 		}
 	}
 }
-
-func boolptr(b bool) *bool { return &b }
 
 func TestEnforceQuota(t *testing.T) {
 	// This test is inherently time-dependent, so inherently flaky, especially on CI.

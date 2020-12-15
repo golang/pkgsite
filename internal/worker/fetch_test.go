@@ -57,8 +57,6 @@ func TestFetchAndUpdateState(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
-	const goRepositoryURLPrefix = "https://github.com/golang"
-
 	stdlib.UseTestData = true
 	defer func() { stdlib.UseTestData = false }()
 
