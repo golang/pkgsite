@@ -7,7 +7,6 @@ package internal
 
 const (
 	ExperimentAutocomplete       = "autocomplete"
-	ExperimentFasterDecoding     = "faster-decoding"
 	ExperimentGoldmark           = "goldmark"
 	ExperimentReadmeOutline      = "readme-outline"
 	ExperimentUnitSidebarDetails = "unit-sidebar-details"
@@ -17,7 +16,6 @@ const (
 // a description of each experiment.
 var Experiments = map[string]string{
 	ExperimentAutocomplete:       "Enable autocomplete with search.",
-	ExperimentFasterDecoding:     "Decode ASTs faster.",
 	ExperimentGoldmark:           "Enable the usage of rendering markdown using goldmark instead of blackfriday.",
 	ExperimentReadmeOutline:      "Enable the readme outline in the side nav.",
 	ExperimentUnitSidebarDetails: "Enable the details section in the right sidebar.",

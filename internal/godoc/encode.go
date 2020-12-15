@@ -8,16 +8,13 @@ import (
 	"bytes"
 	"context"
 	"encoding/gob"
-	"errors"
 	"fmt"
 	"go/ast"
 	"go/token"
 	"io"
 	"sort"
 
-	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
-	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/godoc/codec"
 )
 
@@ -102,37 +99,7 @@ func init() {
 // rendering before it returns.
 func (p *Package) Encode(ctx context.Context) (_ []byte, err error) {
 	defer derrors.Wrap(&err, "godoc.Package.Encode()")
-
-	if experiment.IsActive(ctx, internal.ExperimentFasterDecoding) {
-		return p.fastEncode()
-	} else {
-		return p.gobEncode()
-	}
-}
-
-func (p *Package) gobEncode() (_ []byte, err error) {
-	if p.renderCalled {
-		return nil, errors.New("can't Encode after Render")
-	}
-
-	for _, f := range p.Files {
-		removeCycles(f)
-	}
-
-	var buf bytes.Buffer
-	io.WriteString(&buf, gobEncodingType)
-	enc := gob.NewEncoder(&buf)
-	// Encode the fset using the Write method it provides.
-	if err := p.Fset.Write(enc.Encode); err != nil {
-		return nil, fmt.Errorf("p.Fset.Write: %v", err)
-	}
-	if err := enc.Encode(p.encPackage); err != nil {
-		return nil, fmt.Errorf("enc.Encode: %v", err)
-	}
-	for _, f := range p.Files {
-		fixupObjects(f)
-	}
-	return buf.Bytes(), nil
+	return p.fastEncode()
 }
 
 // DecodPackage decodes a byte slice encoded with Package.Encode into a Package.

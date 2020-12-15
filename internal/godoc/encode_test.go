@@ -7,6 +7,8 @@ package godoc
 import (
 	"bytes"
 	"context"
+	"encoding/gob"
+	"errors"
 	"fmt"
 	"go/ast"
 	"go/parser"
@@ -20,19 +22,17 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"golang.org/x/pkgsite/internal"
-	"golang.org/x/pkgsite/internal/experiment"
 )
 
 var packageToTest string = filepath.Join(runtime.GOROOT(), "src", "net", "http")
 
 func TestEncodeDecodePackage(t *testing.T) {
-	// Verify that we can encode and decode the Go files in this directory.
-	p, err := packageForDir(".", true)
+	p, err := packageForDir(packageToTest, true)
 	if err != nil {
 		t.Fatal(err)
 	}
-
+	var want, got bytes.Buffer
+	printPackage(&want, p)
 	data, err := p.Encode(context.Background())
 	if err != nil {
 		t.Fatal(err)
@@ -41,12 +41,11 @@ func TestEncodeDecodePackage(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	data2, err := p2.Encode(context.Background())
-	if err != nil {
-		t.Fatal(err)
-	}
-	if !bytes.Equal(data, data2) {
-		t.Fatal("datas unequal")
+	printPackage(&got, p2)
+	// Diff the textual output of printPackage, because cmp.Diff takes too long
+	// on the Packages themselves.
+	if diff := cmp.Diff(want.String(), got.String()); diff != "" {
+		t.Errorf("package differs after decoding (-want, +got):\n%s", diff)
 	}
 }
 
@@ -130,29 +129,6 @@ func BenchmarkRemovingAST(b *testing.B) {
 				}
 			}
 		})
-	}
-}
-
-func TestFastEncode(t *testing.T) {
-	p, err := packageForDir(packageToTest, true)
-	if err != nil {
-		t.Fatal(err)
-	}
-	var want, got bytes.Buffer
-	printPackage(&want, p)
-	data, err := p.Encode(experiment.NewContext(context.Background(), internal.ExperimentFasterDecoding))
-	if err != nil {
-		t.Fatal(err)
-	}
-	p2, err := DecodePackage(data)
-	if err != nil {
-		t.Fatal(err)
-	}
-	printPackage(&got, p2)
-	// Diff the textual output of printPackage, because cmp.Diff takes too long
-	// on the Packages themselves.
-	if diff := cmp.Diff(want.String(), got.String()); diff != "" {
-		t.Errorf("package differs after decoding (-want, +got):\n%s", diff)
 	}
 }
 
@@ -344,4 +320,29 @@ func printFileSet(w io.Writer, fset *token.FileSet) error {
 		return err == nil
 	})
 	return err
+}
+
+func (p *Package) gobEncode() (_ []byte, err error) {
+	if p.renderCalled {
+		return nil, errors.New("can't Encode after Render")
+	}
+
+	for _, f := range p.Files {
+		removeCycles(f)
+	}
+
+	var buf bytes.Buffer
+	io.WriteString(&buf, gobEncodingType)
+	enc := gob.NewEncoder(&buf)
+	// Encode the fset using the Write method it provides.
+	if err := p.Fset.Write(enc.Encode); err != nil {
+		return nil, fmt.Errorf("p.Fset.Write: %v", err)
+	}
+	if err := enc.Encode(p.encPackage); err != nil {
+		return nil, fmt.Errorf("enc.Encode: %v", err)
+	}
+	for _, f := range p.Files {
+		fixupObjects(f)
+	}
+	return buf.Bytes(), nil
 }

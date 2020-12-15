@@ -12,8 +12,6 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/safehtml/template"
-	"golang.org/x/pkgsite/internal"
-	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/godoc/dochtml"
 	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/testing/sample"
@@ -24,15 +22,6 @@ var templateSource = template.TrustedSourceFromConstant("../../content/static/ht
 func TestRender(t *testing.T) {
 	dochtml.LoadTemplates(templateSource)
 	ctx := context.Background()
-	t.Run("gob", func(t *testing.T) {
-		testRender(t, ctx)
-	})
-	t.Run("fast", func(t *testing.T) {
-		testRender(t, experiment.NewContext(ctx, internal.ExperimentFasterDecoding))
-	})
-}
-
-func testRender(t *testing.T, ctx context.Context) {
 	si := source.NewGitHubInfo(sample.ModulePath, "", "abcde")
 	mi := &ModuleInfo{
 		ModulePath:      sample.ModulePath,
