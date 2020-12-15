@@ -1280,6 +1280,9 @@ pre {
   padding-top: 1.5rem;
   text-align: right;
 }
+.Documentation-declarationLink {
+  display: none;
+}
 .Documentation-exampleButtonsContainer {
   align-items: center;
   display: flex;
