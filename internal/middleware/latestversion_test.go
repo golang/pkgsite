@@ -22,7 +22,7 @@ func TestLatestMinorVersion(t *testing.T) {
 	}{
 		{
 			name:   "package version is not latest",
-			latest: func(context.Context, string, string, string) string { return "v1.2.3" },
+			latest: func(context.Context, string, string) string { return "v1.2.3" },
 			in: `
                 <div class="DetailsHeader-badge $$GODISCOVERY_LATESTMINORCLASS$$"
 					 data-version="v1.0.0" data-mpath="p1/p2" data-ppath="p1/p2/p3" data-pagetype="pkg">
@@ -38,7 +38,7 @@ func TestLatestMinorVersion(t *testing.T) {
 		},
 		{
 			name:   "package version is latest",
-			latest: func(context.Context, string, string, string) string { return "v1.2.3" },
+			latest: func(context.Context, string, string) string { return "v1.2.3" },
 			in: `
                 <div class="DetailsHeader-badge $$GODISCOVERY_LATESTMINORCLASS$$"
 					 data-version="v1.2.3" data-mpath="p1/p2" data-ppath="p1/p2/p3" data-pagetype="pkg">
@@ -54,7 +54,7 @@ func TestLatestMinorVersion(t *testing.T) {
 		},
 		{
 			name:   "package version with build is latest",
-			latest: func(context.Context, string, string, string) string { return "v1.2.3+build" },
+			latest: func(context.Context, string, string) string { return "v1.2.3+build" },
 			in: `
                 <div class="DetailsHeader-badge $$GODISCOVERY_LATESTMINORCLASS$$"
 					 data-version="v1.2.3&#43;build" data-mpath="p1/p2" data-ppath="p1/p2/p3" data-pagetype="pkg">
@@ -70,7 +70,7 @@ func TestLatestMinorVersion(t *testing.T) {
 		},
 		{
 			name:   "module version is not latest",
-			latest: func(context.Context, string, string, string) string { return "v1.2.3" },
+			latest: func(context.Context, string, string) string { return "v1.2.3" },
 			in: `
                 <div class="DetailsHeader-badge $$GODISCOVERY_LATESTMINORCLASS$$"
 					 data-version="v1.0.0" data-mpath="p1/p2" data-ppath="" data-pagetype="pkg">
@@ -86,7 +86,7 @@ func TestLatestMinorVersion(t *testing.T) {
 		},
 		{
 			name:   "module version is latest",
-			latest: func(context.Context, string, string, string) string { return "v1.2.3" },
+			latest: func(context.Context, string, string) string { return "v1.2.3" },
 			in: `
                 <div class="DetailsHeader-badge $$GODISCOVERY_LATESTMINORCLASS$$"
 					 data-version="v1.2.3" data-mpath="p1/p2" data-ppath="" data-pagetype="pkg">
@@ -102,7 +102,7 @@ func TestLatestMinorVersion(t *testing.T) {
 		},
 		{
 			name:   "latest func returns empty string",
-			latest: func(context.Context, string, string, string) string { return "" },
+			latest: func(context.Context, string, string) string { return "" },
 			in: `
                 <div class="DetailsHeader-badge $$GODISCOVERY_LATESTMINORCLASS$$"
 					 data-version="v1.2.3" data-mpath="p1/p2" data-ppath="" data-pagetype="pkg">
@@ -118,7 +118,7 @@ func TestLatestMinorVersion(t *testing.T) {
 		},
 		{
 			name:   "no regexp match",
-			latest: func(context.Context, string, string, string) string { return "v1.2.3" },
+			latest: func(context.Context, string, string) string { return "v1.2.3" },
 			in: `
                 <div class="DetailsHeader-badge $$GODISCOVERY_LATESTMINORCLASS$$">
                     <span>Latest</span>
@@ -238,7 +238,7 @@ func TestLatestMajorVersion(t *testing.T) {
 			handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				fmt.Fprint(w, test.in)
 			})
-			latestMinor := func(context.Context, string, string, string) string { return "" }
+			latestMinor := func(context.Context, string, string) string { return "" }
 			ts := httptest.NewServer(LatestVersions(latestMinor, test.latest)(handler))
 			defer ts.Close()
 			resp, err := ts.Client().Get(ts.URL)

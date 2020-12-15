@@ -535,6 +535,22 @@ func serverTestCases() []serverTestCase {
 		CommitTime:             absoluteTime(sample.NowTruncated()),
 	}
 
+	cloudMod := &pagecheck.Page{
+		ModulePath:             "cloud.google.com/go",
+		ModuleURL:              "cloud.google.com/go",
+		Title:                  "go",
+		Suffix:                 "go",
+		Version:                "v0.69.0",
+		FormattedVersion:       "v0.69.0",
+		LicenseType:            "MIT",
+		LicenseFilePath:        "LICENSE",
+		IsLatestMinor:          true,
+		IsLatestMajor:          true,
+		UnitURLFormat:          "/cloud.google.com/go%s",
+		LatestLink:             "/cloud.google.com/go",
+		LatestMajorVersionLink: "/cloud.google.com/go",
+	}
+
 	pubsubliteDir := &pagecheck.Page{
 		ModulePath:             "cloud.google.com/go",
 		ModuleURL:              "cloud.google.com/go",
@@ -926,6 +942,13 @@ func serverTestCases() []serverTestCase {
 			wantStatusCode: http.StatusOK,
 			want: in("",
 				pagecheck.UnitHeader(pubsubliteDir, versioned, isDirectory)),
+		},
+		{
+			name:           "cloud.google.com/go module",
+			urlPath:        "/cloud.google.com/go",
+			wantStatusCode: http.StatusOK,
+			want: in("",
+				pagecheck.UnitHeader(cloudMod, unversioned, isDirectory)),
 		},
 	}
 }

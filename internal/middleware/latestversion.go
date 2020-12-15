@@ -27,7 +27,7 @@ const (
 // latestInfoRegexp extracts values needed to determine the latest-version badge from a page's HTML.
 var latestInfoRegexp = regexp.MustCompile(`data-version="([^"]*)" data-mpath="([^"]*)" data-ppath="([^"]*)" data-pagetype="([^"]*)"`)
 
-type latestMinorFunc func(ctx context.Context, packagePath, modulePath, pageType string) string
+type latestMinorFunc func(ctx context.Context, packagePath, modulePath string) string
 type latestMajorFunc func(ctx context.Context, fullPath, modulePath string) (string, string)
 
 // LatestVersions replaces the HTML placeholder values for the badge and banner
@@ -47,8 +47,7 @@ func LatestVersions(latestMinor latestMinorFunc, latestMajor latestMajorFunc) Mi
 				modulePath := string(matches[2])
 				_, majorVersion, _ := module.SplitPathVersion(modulePath)
 				packagePath := string(matches[3])
-				pageType := string(matches[4])
-				latestMinorVersion := latestMinor(r.Context(), packagePath, internal.UnknownModulePath, pageType)
+				latestMinorVersion := latestMinor(r.Context(), packagePath, internal.UnknownModulePath)
 				latestMinorClass := "DetailsHeader-badge"
 				switch {
 				case latestMinorVersion == "":
