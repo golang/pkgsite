@@ -8,9 +8,11 @@ package postgres
 
 import (
 	"context"
+	"database/sql"
 	"time"
 
 	"golang.org/x/pkgsite/internal/database"
+	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/poller"
 )
@@ -63,4 +65,44 @@ func (db *DB) Close() error {
 // Underlying returns the *database.DB inside db.
 func (db *DB) Underlying() *database.DB {
 	return db.db
+}
+
+// StalenessTimestamp returns the index timestamp of the oldest
+// module that is newer than the index timestamp of the youngest module we have
+// processed. That is, let T be the maximum index timestamp of all processed
+// modules. Then this function return the minimum index timestamp of unprocessed
+// modules that is no less than T, or an error that wraps derrors.NotFound if
+// there is none.
+//
+// The name of the function is imprecise: there may be an older unprocessed
+// module, if one newer than it has been processed.
+//
+// We use this function to compute a metric that is a lower bound on the time
+// it takes to process a module since it appeared in the index.
+func (db *DB) StalenessTimestamp(ctx context.Context) (time.Time, error) {
+	var ts time.Time
+	err := db.db.QueryRow(ctx, `
+		SELECT m.index_timestamp
+		FROM module_version_states m
+		CROSS JOIN (
+			-- the index timestamp of the youngest processed module
+			SELECT index_timestamp
+			FROM module_version_states
+			WHERE last_processed_at IS NOT NULL
+			ORDER BY 1 DESC
+			LIMIT 1
+		) yp
+		WHERE m.index_timestamp > yp.index_timestamp
+		AND last_processed_at IS NULL
+		ORDER BY m.index_timestamp ASC
+		LIMIT 1
+	`).Scan(&ts)
+	switch err {
+	case nil:
+		return ts, nil
+	case sql.ErrNoRows:
+		return time.Time{}, derrors.NotFound
+	default:
+		return time.Time{}, err
+	}
 }
