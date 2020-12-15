@@ -36,7 +36,7 @@
 }
 @media only screen and (min-width: 64rem) {
   .UnitDetails {
-    grid-template-columns: 15.5rem minmax(32.5rem, 43.125rem) minmax(10rem, 15.5rem);
+    grid-template-columns: 15.5rem minmax(30.5rem, 43.125rem) minmax(10rem, 15.5rem);
   }
 }
 @media only screen and (min-width: 80rem) {

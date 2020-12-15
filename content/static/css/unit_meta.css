@@ -43,6 +43,7 @@
 .UnitMetaDetails li {
   font-size: 0.875rem;
   margin-bottom: 0.75rem;
+  white-space: nowrap;
 }
 .UnitMetaDetails a {
   font-size: 0.8125rem;
@@ -73,11 +74,27 @@
   border-radius: 0.25rem;
   display: block;
   font-size: 0.75rem;
-  left: -6rem;
+  left: -12rem;
   letter-spacing: 0.01875rem;
   line-height: 1rem;
   padding: 0.5rem;
   position: relative;
   top: 1.5rem;
+  white-space: initial;
   width: 12rem;
+}
+@media only screen and (min-width: 65rem) {
+  .UnitMetaDetails-toggletipBubble {
+    left: -10rem;
+  }
+}
+@media only screen and (min-width: 70rem) {
+  .UnitMetaDetails-toggletipBubble {
+    left: -8rem;
+  }
+}
+@media only screen and (min-width: 82rem) {
+  .UnitMetaDetails-toggletipBubble {
+    left: -6rem;
+  }
 }
