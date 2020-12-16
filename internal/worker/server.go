@@ -22,9 +22,6 @@ import (
 	"cloud.google.com/go/errorreporting"
 	"github.com/go-redis/redis/v8"
 	"github.com/google/safehtml/template"
-	"go.opencensus.io/stats"
-	"go.opencensus.io/stats/view"
-	"go.opencensus.io/tag"
 	"go.opencensus.io/trace"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/config"
@@ -342,25 +339,6 @@ func (s *Server) handlePollIndex(w http.ResponseWriter, r *http.Request) (err er
 	return nil
 }
 
-var (
-	// keyEnqueueStatus is a census tag used to keep track of the status
-	// of the modules being enqueued.
-	keyEnqueueStatus = tag.MustNewKey("enqueue.status")
-	enqueueStatus    = stats.Int64(
-		"go-discovery/worker_enqueue_count",
-		"The status of a module version enqueued to Cloud Tasks.",
-		stats.UnitDimensionless,
-	)
-	// EnqueueResponseCount counts worker enqueue responses by response type.
-	EnqueueResponseCount = &view.View{
-		Name:        "go-discovery/worker-enqueue/count",
-		Measure:     enqueueStatus,
-		Aggregation: view.Count(),
-		Description: "Worker enqueue request count",
-		TagKeys:     []tag.Key{keyEnqueueStatus},
-	}
-)
-
 // handleEnqueue queries the module_version_states table for the next batch of
 // module versions to process, and enqueues them for processing. Note that this
 // may cause duplicate processing.
@@ -399,9 +377,7 @@ func (s *Server) handleEnqueue(w http.ResponseWriter, r *http.Request) (err erro
 				nErrors++
 			} else if enqueued {
 				nEnqueued++
-				stats.RecordWithTags(r.Context(),
-					[]tag.Mutator{tag.Upsert(keyEnqueueStatus, strconv.Itoa(m.Status))},
-					enqueueStatus.M(int64(m.Status)))
+				recordEnqueue(r.Context(), m.Status)
 			}
 			mu.Unlock()
 		}()
