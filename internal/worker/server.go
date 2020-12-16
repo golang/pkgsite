@@ -387,7 +387,8 @@ func (s *Server) handleEnqueue(w http.ResponseWriter, r *http.Request) (err erro
 		sem <- struct{}{}
 		go func() {
 			defer func() { <-sem }()
-			enqueued, err := s.queue.ScheduleFetch(ctx, m.ModulePath, m.Version, suffixParam)
+			enqueued, err := s.queue.ScheduleFetch(ctx, m.ModulePath, m.Version, suffixParam,
+				shouldDisableProxyFetch(m))
 			mu.Lock()
 			if err != nil {
 				log.Errorf(ctx, "enqueuing: %v", err)
@@ -405,6 +406,12 @@ func (s *Server) handleEnqueue(w http.ResponseWriter, r *http.Request) (err erro
 	}
 	log.Infof(ctx, "Successfully scheduled modules to be fetched: %d modules enqueued, %d errors", nEnqueued, nErrors)
 	return nil
+}
+
+func shouldDisableProxyFetch(m *internal.ModuleVersionState) bool {
+	// Don't ask the proxy to fetch if this module is being reprocessed.
+	// We use codes 52x and 54x for reprocessing.
+	return m.Status/10 == 52 || m.Status/10 == 54
 }
 
 // handleHTMLPage returns an HTML page using a template from s.templates.
@@ -434,7 +441,7 @@ func (s *Server) doPopulateStdLib(ctx context.Context, suffix string) (string, e
 		return "", err
 	}
 	for _, v := range versions {
-		if _, err := s.queue.ScheduleFetch(ctx, stdlib.ModulePath, v, suffix); err != nil {
+		if _, err := s.queue.ScheduleFetch(ctx, stdlib.ModulePath, v, suffix, false); err != nil {
 			return "", fmt.Errorf("error scheduling fetch for %s: %w", v, err)
 		}
 	}

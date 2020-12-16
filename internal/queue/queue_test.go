@@ -60,9 +60,17 @@ func TestNewTaskRequest(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	got := gcp.newTaskRequest("mod", "v1.2.3", "suf")
+	got := gcp.newTaskRequest("mod", "v1.2.3", "suf", false)
 	want.Task.Name = got.Task.Name
 	if diff := cmp.Diff(want, got, cmp.Comparer(proto.Equal)); diff != "" {
 		t.Errorf("mismatch (-want, +got):\n%s", diff)
 	}
+
+	want.Task.MessageType.(*taskspb.Task_HttpRequest).HttpRequest.Url += "?proxyfetch=off"
+	got = gcp.newTaskRequest("mod", "v1.2.3", "suf", true)
+	want.Task.Name = got.Task.Name
+	if diff := cmp.Diff(want, got, cmp.Comparer(proto.Equal)); diff != "" {
+		t.Errorf("mismatch (-want, +got):\n%s", diff)
+	}
+
 }

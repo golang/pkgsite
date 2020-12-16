@@ -108,7 +108,7 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 		go func() {
 			ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
 			defer cancel()
-			if _, err := s.queue.ScheduleFetch(ctx, info.modulePath, info.requestedVersion, ""); err != nil {
+			if _, err := s.queue.ScheduleFetch(ctx, info.modulePath, info.requestedVersion, "", false); err != nil {
 				log.Errorf(ctx, "serveDetails(%q): %v", r.URL.Path, err)
 			}
 		}()

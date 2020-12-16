@@ -324,6 +324,31 @@ func TestParseModulePathAndVersion(t *testing.T) {
 	}
 }
 
+func TestShouldDisableProxyFetch(t *testing.T) {
+	for _, test := range []struct {
+		status int
+		want   bool
+	}{
+		{200, false},
+		{490, false},
+		{500, false},
+		{520, true},
+		{542, true},
+		{580, false},
+	} {
+
+		got := shouldDisableProxyFetch(&internal.ModuleVersionState{
+			ModulePath: "m",
+			Version:    "v1.2.3",
+			Status:     test.status,
+		})
+		if got != test.want {
+			t.Errorf("status %d: got %t, want %t", test.status, got, test.want)
+		}
+
+	}
+}
+
 type fakeTransport struct{}
 
 func (fakeTransport) RoundTrip(*http.Request) (*http.Response, error) {
