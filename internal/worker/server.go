@@ -336,7 +336,24 @@ func (s *Server) handlePollIndex(w http.ResponseWriter, r *http.Request) (err er
 		return err
 	}
 	log.Infof(ctx, "Inserted %d modules from the index", len(modules))
+	s.computeProcessingLag(ctx)
 	return nil
+}
+
+func (s *Server) computeProcessingLag(ctx context.Context) {
+	ot, err := s.db.StalenessTimestamp(ctx)
+	if errors.Is(err, derrors.NotFound) {
+		recordProcessingLag(ctx, 0)
+	} else if err != nil {
+		log.Warningf(ctx, "StalenessTimestamp: %v", err)
+		return
+	} else {
+		// If the times on this machine and the machine that wrote the index
+		// timestamp into the DB are out of sync, then the difference we compute
+		// here will be off. But that is unlikely since both machines are
+		// running on GCP.
+		recordProcessingLag(ctx, time.Since(ot))
+	}
 }
 
 // handleEnqueue queries the module_version_states table for the next batch of

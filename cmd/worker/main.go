@@ -114,6 +114,7 @@ func main() {
 
 	views := append(dcensus.ServerViews,
 		worker.EnqueueResponseCount,
+		worker.ProcessingLag,
 		fetch.FetchLatencyDistribution,
 		fetch.FetchResponseCount,
 		fetch.SheddedFetchCount,
