@@ -84,7 +84,7 @@ func TestEndToEndProcessing(t *testing.T) {
 			SourceClient: source.NewClient(1 * time.Second),
 			DB:           testDB,
 		}
-		code, _, err := f.FetchAndUpdateState(ctx, mpath, version, "test")
+		code, _, err := f.FetchAndUpdateState(ctx, mpath, version, "test", false)
 		return code, err
 	})
 	workerServer, err := worker.NewServer(&config.Config{}, worker.ServerConfig{

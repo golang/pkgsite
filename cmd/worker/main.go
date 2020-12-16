@@ -88,7 +88,7 @@ func main() {
 				SourceClient: sourceClient,
 				DB:           db,
 			}
-			code, _, err := f.FetchAndUpdateState(ctx, modulePath, version, cfg.AppVersionLabel())
+			code, _, err := f.FetchAndUpdateState(ctx, modulePath, version, cfg.AppVersionLabel(), false)
 			return code, err
 		})
 	if err != nil {

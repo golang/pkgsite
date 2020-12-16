@@ -178,7 +178,7 @@ func TestWorker(t *testing.T) {
 
 			// Use 10 workers to have parallelism consistent with the worker binary.
 			q := queue.NewInMemory(ctx, 10, nil, func(ctx context.Context, mpath, version string) (int, error) {
-				code, _, err := f.FetchAndUpdateState(ctx, mpath, version, "")
+				code, _, err := f.FetchAndUpdateState(ctx, mpath, version, "", false)
 				return code, err
 			})
 

@@ -46,8 +46,8 @@ type Fetcher struct {
 // the module_version_states table according to the result. It returns an HTTP
 // status code representing the result of the fetch operation, and a non-nil
 // error if this status code is not 200.
-func (f *Fetcher) FetchAndUpdateState(ctx context.Context, modulePath, requestedVersion, appVersionLabel string) (_ int, resolvedVersion string, err error) {
-	defer derrors.Wrap(&err, "FetchAndUpdateState(%q, %q)", modulePath, requestedVersion)
+func (f *Fetcher) FetchAndUpdateState(ctx context.Context, modulePath, requestedVersion, appVersionLabel string, disableProxyFetch bool) (_ int, resolvedVersion string, err error) {
+	defer derrors.Wrap(&err, "FetchAndUpdateState(%q, %q, %q, %t)", modulePath, requestedVersion, appVersionLabel, disableProxyFetch)
 
 	tctx, span := trace.StartSpan(ctx, "FetchAndUpdateState")
 	ctx = experiment.NewContext(tctx, experiment.FromContext(ctx).Active()...)
@@ -63,7 +63,7 @@ func (f *Fetcher) FetchAndUpdateState(ctx context.Context, modulePath, requested
 		trace.StringAttribute("version", requestedVersion))
 	defer span.End()
 
-	ft := f.fetchAndInsertModule(ctx, modulePath, requestedVersion)
+	ft := f.fetchAndInsertModule(ctx, modulePath, requestedVersion, disableProxyFetch)
 	span.AddAttributes(trace.Int64Attribute("numPackages", int64(len(ft.PackageVersionStates))))
 
 	// If there were any errors processing the module then we didn't insert it.
@@ -128,7 +128,7 @@ func (f *Fetcher) FetchAndUpdateState(ctx context.Context, modulePath, requested
 // The given parentCtx is used for tracing, but fetches actually execute in a
 // detached context with fixed timeout, so that fetches are allowed to complete
 // even for short-lived requests.
-func (f *Fetcher) fetchAndInsertModule(ctx context.Context, modulePath, requestedVersion string) *fetchTask {
+func (f *Fetcher) fetchAndInsertModule(ctx context.Context, modulePath, requestedVersion string, disableProxyFetch bool) *fetchTask {
 	ft := &fetchTask{
 		FetchResult: fetch.FetchResult{
 			ModulePath:       modulePath,
@@ -161,7 +161,7 @@ func (f *Fetcher) fetchAndInsertModule(ctx context.Context, modulePath, requeste
 	}
 
 	start := time.Now()
-	fr := fetch.FetchModule(ctx, modulePath, requestedVersion, f.ProxyClient, f.SourceClient, false)
+	fr := fetch.FetchModule(ctx, modulePath, requestedVersion, f.ProxyClient, f.SourceClient, disableProxyFetch)
 	if fr == nil {
 		panic("fetch.FetchModule should never return a nil FetchResult")
 	}

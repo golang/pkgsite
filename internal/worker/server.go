@@ -288,13 +288,13 @@ func (s *Server) doFetch(r *http.Request) (string, int) {
 	if err != nil {
 		return err.Error(), http.StatusBadRequest
 	}
-
+	disableProxyFetch := r.FormValue(queue.DisableProxyFetchParam) == queue.DisableProxyFetchValue
 	f := &Fetcher{
 		ProxyClient:  s.proxyClient,
 		SourceClient: s.sourceClient,
 		DB:           s.db,
 	}
-	code, resolvedVersion, err := f.FetchAndUpdateState(r.Context(), modulePath, requestedVersion, s.cfg.AppVersionLabel())
+	code, resolvedVersion, err := f.FetchAndUpdateState(r.Context(), modulePath, requestedVersion, s.cfg.AppVersionLabel(), disableProxyFetch)
 	if err != nil {
 		return err.Error(), code
 	}

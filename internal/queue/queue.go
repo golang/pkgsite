@@ -137,11 +137,16 @@ func (q *GCP) ScheduleFetch(ctx context.Context, modulePath, version, suffix str
 // See https://cloud.google.com/tasks/docs/creating-http-target-tasks.
 const maxCloudTasksTimeout = 30 * time.Minute
 
+const (
+	DisableProxyFetchParam = "proxyfetch"
+	DisableProxyFetchValue = "off"
+)
+
 func (q *GCP) newTaskRequest(modulePath, version, suffix string, disableProxyFetch bool) *taskspb.CreateTaskRequest {
 	taskID := newTaskID(modulePath, version)
 	relativeURI := fmt.Sprintf("/fetch/%s/@v/%s", modulePath, version)
 	if disableProxyFetch {
-		relativeURI += "?proxyfetch=off"
+		relativeURI += fmt.Sprintf("?%s=%s", DisableProxyFetchParam, DisableProxyFetchValue)
 	}
 	task := &taskspb.Task{
 		Name:             fmt.Sprintf("%s/tasks/%s", q.queueName, taskID),
