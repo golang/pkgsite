@@ -154,7 +154,7 @@ func fetchAndInsertModule(ctx context.Context, modulePath, requestedVersion stri
 	}
 
 	start := time.Now()
-	fr := fetch.FetchModule(ctx, modulePath, requestedVersion, proxyClient, sourceClient)
+	fr := fetch.FetchModule(ctx, modulePath, requestedVersion, proxyClient, sourceClient, false)
 	if fr == nil {
 		panic("fetch.FetchModule should never return a nil FetchResult")
 	}

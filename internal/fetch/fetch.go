@@ -109,7 +109,7 @@ type FetchResult struct {
 // Callers of FetchModule must
 //   defer fr.Defer()
 // immediately after the call.
-func FetchModule(ctx context.Context, modulePath, requestedVersion string, proxyClient *proxy.Client, sourceClient *source.Client) (fr *FetchResult) {
+func FetchModule(ctx context.Context, modulePath, requestedVersion string, proxyClient *proxy.Client, sourceClient *source.Client, disableProxyFetch bool) (fr *FetchResult) {
 	start := time.Now()
 	fr = &FetchResult{
 		ModulePath:       modulePath,
@@ -152,7 +152,11 @@ func FetchModule(ctx context.Context, modulePath, requestedVersion string, proxy
 		}
 		fr.ResolvedVersion = resolvedVersion
 	} else {
-		info, err := proxyClient.GetInfo(ctx, modulePath, requestedVersion)
+		getInfo := proxyClient.GetInfo
+		if disableProxyFetch {
+			getInfo = proxyClient.GetInfoNoFetch
+		}
+		info, err := getInfo(ctx, modulePath, requestedVersion)
 		if err != nil {
 			fr.Error = err
 			return fr

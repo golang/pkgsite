@@ -137,7 +137,7 @@ func proxyFetcher(t *testing.T, withLicenseDetector bool, ctx context.Context, m
 		Files:      mod.mod.Files,
 	}})
 	defer teardownProxy()
-	got := FetchModule(ctx, modulePath, fetchVersion, proxyClient, sourceClient)
+	got := FetchModule(ctx, modulePath, fetchVersion, proxyClient, sourceClient, false)
 	if !withLicenseDetector {
 		return got, nil
 	}
