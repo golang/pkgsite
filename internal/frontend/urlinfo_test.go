@@ -192,6 +192,7 @@ func TestIsValidPath(t *testing.T) {
 		{"github.com/foo/bar", true},
 		{"github.com/foo/bar/baz", true},
 		{"golang.org/dl", true},
+		{"golang.org/dl/go1.2.3", true},
 		{"golang.org/x", false},
 		{"golang.org/x/tools", true},
 		{"golang.org/x/tools/go/packages", true},

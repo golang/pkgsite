@@ -143,13 +143,19 @@ func isValidPath(fullPath string) bool {
 	if err := module.CheckImportPath(fullPath); err != nil {
 		return false
 	}
-	if fullPath == "golang.org/dl" {
-		// The only golang.org repo that doesn't start with "golang.org/x".
-		return true
-	}
 	parts := strings.Split(fullPath, "/")
 	if parts[0] == "golang.org" {
-		return len(parts) >= 3 && parts[1] == "x"
+		if len(parts) < 2 {
+			return false
+		}
+		switch parts[1] {
+		case "dl":
+			return true
+		case "x":
+			return len(parts) >= 3
+		default:
+			return false
+		}
 	}
 	if vcsHostsWithThreeElementRepoName[parts[0]] && len(parts) < 3 {
 		return false
