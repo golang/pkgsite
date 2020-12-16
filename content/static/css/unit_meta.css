@@ -20,33 +20,33 @@
   margin: 1.125rem 0;
 }
 .UnitMeta-repo {
-  font-size: 0.75rem;
+  font-size: 1rem;
   margin-bottom: 0.5rem;
-  text-transform: uppercase;
 }
 
 .UnitMetaDetails-header {
   border-bottom: 0.0625rem solid var(--gray-8);
   display: flex;
-  font-size: 0.75rem;
+  font-size: 1rem;
+  font-weight: bold;
   justify-content: space-between;
   line-height: 1rem;
   margin-bottom: 0.5rem;
   margin-top: 1.85rem;
   padding-bottom: 0.5rem;
-  text-transform: uppercase;
 }
 .UnitMetaDetails ul {
   list-style: none;
   padding-inline-start: 0;
 }
 .UnitMetaDetails li {
-  font-size: 0.875rem;
+  font-size: 1rem;
   margin-bottom: 0.75rem;
   white-space: nowrap;
 }
 .UnitMetaDetails a {
-  font-size: 0.8125rem;
+  font-size: 1rem;
+  font-weight: normal;
   text-transform: none;
 }
 .UnitMetaDetails-icon {

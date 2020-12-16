@@ -953,13 +953,10 @@ func serverTestCases() []serverTestCase {
 	}
 }
 
-func checkLink(n int, title, url, body string) htmlcheck.Checker {
-	// The first div under .UnitMeta is "Links" and the second is the
-	// repository, so div numbers below start with 3. There is no "a" for
-	// "Links", so the "a" numbers are off by one.
-	return in("",
-		in(fmt.Sprintf("div:nth-of-type(%d)", n+2), hasText(title)),
-		in(fmt.Sprintf("a:nth-of-type(%d)", n+1), href(url), hasText(body)))
+func checkLink(n int, title, url string) htmlcheck.Checker {
+	// The first div under .UnitMeta is "Repository", the second is "Links",
+	// and each subsequent div contains a <a> tag with a custom link.
+	return in(fmt.Sprintf("div:nth-of-type(%d) > a", n+2), href(url), hasText(title))
 }
 
 var linksTestCases = []serverTestCase{
@@ -969,8 +966,8 @@ var linksTestCases = []serverTestCase{
 		wantStatusCode: http.StatusOK,
 		want: in(".UnitMeta",
 			// Module readme links.
-			checkLink(1, "title1", "http://url1", "http://url1"),
-			checkLink(2, "title2", "about:invalid#zGoSafez", "javascript://pwned"),
+			checkLink(1, "title1", "http://url1"),
+			checkLink(2, "title2", "about:invalid#zGoSafez"),
 		),
 	},
 	{
@@ -979,10 +976,10 @@ var linksTestCases = []serverTestCase{
 		wantStatusCode: http.StatusOK,
 		want: in(".UnitMeta",
 			// Package doc links are first.
-			checkLink(1, "pkg.go.dev", "https://pkg.go.dev", "https://pkg.go.dev"),
+			checkLink(1, "pkg.go.dev", "https://pkg.go.dev"),
 			// Then module readmes.
-			checkLink(2, "title1", "http://url1", "http://url1"),
-			checkLink(3, "title2", "about:invalid#zGoSafez", "javascript://pwned"),
+			checkLink(2, "title1", "http://url1"),
+			checkLink(3, "title2", "about:invalid#zGoSafez"),
 		),
 	},
 	{
@@ -991,12 +988,12 @@ var linksTestCases = []serverTestCase{
 		wantStatusCode: http.StatusOK,
 		want: in(".UnitMeta",
 			// Package readme links are first.
-			checkLink(1, "pkg title", "http://url2", "http://url2"),
+			checkLink(1, "pkg title", "http://url2"),
 			// Package doc links are second.
-			checkLink(2, "pkg.go.dev", "https://pkg.go.dev", "https://pkg.go.dev"),
+			checkLink(2, "pkg.go.dev", "https://pkg.go.dev"),
 			// Module readme links are third.
-			checkLink(3, "title1", "http://url1", "http://url1"),
-			checkLink(4, "title2", "about:invalid#zGoSafez", "javascript://pwned"),
+			checkLink(3, "title1", "http://url1"),
+			checkLink(4, "title2", "about:invalid#zGoSafez"),
 		),
 	},
 }

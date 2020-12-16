@@ -9,8 +9,7 @@
     {{template "unit_meta_details" .}}
   {{end}}
   <div class="UnitMeta">
-    <div class="UnitMeta-header">Links</div>
-    <div class="UnitMeta-repo">Repository</div>
+    <div class="UnitMeta-header">Repository</div>
     {{if .Details.RepositoryURL}}
       <a href="{{.Details.RepositoryURL}}" title="{{.Details.RepositoryURL}}" target="_blank" rel="noopener">
         {{.Details.RepositoryURL}}
@@ -18,6 +17,7 @@
     {{else}}
       Repository URL not available.
     {{end}}
+    <div class="UnitMeta-header">Links</div>
     {{template "unit_meta_links" .Details.ReadmeLinks}}
     {{template "unit_meta_links" .Details.DocLinks}}
     {{template "unit_meta_links" .Details.ModuleReadmeLinks}}
@@ -26,8 +26,9 @@
 
 {{define "unit_meta_links"}}
   {{range .}}
-    <div class="UnitMeta-repo">{{.Body}}</div>
-    <a href="{{.Href}}" title="{{.Href}}" target="_blank" rel="noopener">{{.Href}}</a>
+    <div class="UnitMeta-repo">
+      <a href="{{.Href}}" title="{{.Href}}" target="_blank" rel="noopener">{{.Body}}</a>
+    </div>
   {{end}}
 {{end}}
 
@@ -52,7 +53,7 @@
 
 {{define "unit_meta_details"}}
   <div class="UnitMetaDetails">
-    <div class="UnitMetaDetails-header">DETAILS<a href="/about#best-practices-h2">Learn more</a></div>
+    <div class="UnitMetaDetails-header">Details<a href="/about#best-practices-h2">Learn more</a></div>
     <ul>
       <li>
         {{template "unit_meta_details_check" .Unit.HasGoMod}}
