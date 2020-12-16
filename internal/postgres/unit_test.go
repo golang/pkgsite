@@ -161,7 +161,13 @@ func TestGetUnit(t *testing.T) {
 				test.want.IsRedistributable,
 			)
 			test.want.CommitTime = um.CommitTime
-			checkUnit(ctx, t, um, test.want)
+			t.Run("no experiment", func(t *testing.T) {
+				checkUnit(ctx, t, um, test.want)
+			})
+			t.Run("with experiment", func(t *testing.T) {
+				ctx := experiment.NewContext(ctx, internal.ExperimentGetUnitMetaQuery)
+				checkUnit(ctx, t, um, test.want)
+			})
 		})
 	}
 }

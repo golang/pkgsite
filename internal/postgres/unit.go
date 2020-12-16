@@ -86,6 +86,7 @@ func getUnitMetaQuery(fullPath, requestedModulePath, requestedVersion string) sq
 		"m.version",
 		"m.commit_time",
 		"m.source_info",
+		"m.has_go_mod",
 		"u.name",
 		"u.redistributable",
 		"u.license_types",
@@ -114,6 +115,7 @@ func getUnitMetaQuery(fullPath, requestedModulePath, requestedVersion string) sq
 		"m.version",
 		"m.commit_time",
 		"m.source_info",
+		"m.has_go_mod",
 		"u.id AS unit_id",
 	).From("modules m").
 		Join("units u ON u.module_id = m.id").

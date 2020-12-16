@@ -13,6 +13,7 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/google/safehtml"
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/testing/sample"
@@ -57,11 +58,28 @@ func TestGetUnitMeta(t *testing.T) {
 		}
 	}
 
-	for _, test := range []struct {
+	type teststruct struct {
 		name                  string
 		path, module, version string
 		want                  *internal.UnitMeta
-	}{
+	}
+
+	checkUnitMeta := func(ctx context.Context, test teststruct) {
+		got, err := testDB.GetUnitMeta(ctx, test.path, test.module, test.version)
+		if err != nil {
+			t.Fatal(err)
+		}
+		opts := []cmp.Option{
+			cmpopts.IgnoreFields(licenses.Metadata{}, "Coverage"),
+			cmpopts.IgnoreFields(internal.UnitMeta{}, "HasGoMod"),
+			cmp.AllowUnexported(source.Info{}, safehtml.HTML{}),
+		}
+		if diff := cmp.Diff(test.want, got, opts...); diff != "" {
+			t.Errorf("mismatch (-want +got):\n%s", diff)
+		}
+	}
+
+	for _, test := range []teststruct{
 		{
 			name:    "known module and version",
 			path:    "m.com/a",
@@ -205,18 +223,13 @@ func TestGetUnitMeta(t *testing.T) {
 				test.want.IsRedistributable,
 			)
 			test.want.CommitTime = sample.CommitTime
-			got, err := testDB.GetUnitMeta(ctx, test.path, test.module, test.version)
-			if err != nil {
-				t.Fatal(err)
-			}
-			opts := []cmp.Option{
-				cmpopts.IgnoreFields(licenses.Metadata{}, "Coverage"),
-				cmpopts.IgnoreFields(internal.UnitMeta{}, "HasGoMod"),
-				cmp.AllowUnexported(source.Info{}, safehtml.HTML{}),
-			}
-			if diff := cmp.Diff(test.want, got, opts...); diff != "" {
-				t.Errorf("mismatch (-want +got):\n%s", diff)
-			}
+			t.Run("no experiment", func(t *testing.T) {
+				checkUnitMeta(ctx, test)
+			})
+			t.Run("with experiment", func(t *testing.T) {
+				ctx := experiment.NewContext(ctx, internal.ExperimentGetUnitMetaQuery)
+				checkUnitMeta(ctx, test)
+			})
 		})
 	}
 }
