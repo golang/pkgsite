@@ -367,13 +367,12 @@ func TestFetchAndUpdateState(t *testing.T) {
 		},
 	}
 
+	sourceClient := source.NewClient(sourceTimeout)
+	f := &Fetcher{proxyClient, sourceClient, testDB}
 	for _, test := range testCases {
 		t.Run(test.pkg, func(t *testing.T) {
 			defer postgres.ResetTestDB(testDB, t)
-
-			sourceClient := source.NewClient(sourceTimeout)
-
-			if _, _, err := FetchAndUpdateState(ctx, test.modulePath, test.version, proxyClient, sourceClient, testDB, testAppVersion); err != nil {
+			if _, _, err := f.FetchAndUpdateState(ctx, test.modulePath, test.version, testAppVersion); err != nil {
 				t.Fatalf("FetchAndUpdateState(%q, %q, %v, %v, %v): %v", test.modulePath, test.version, proxyClient, sourceClient, testDB, err)
 			}
 

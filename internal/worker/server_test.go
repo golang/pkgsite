@@ -173,13 +173,12 @@ func TestWorker(t *testing.T) {
 
 			proxyClient, teardownProxy := proxy.SetupTestClient(t, test.proxy)
 			defer teardownProxy()
-			sourceClient := source.NewClient(sourceTimeout)
-
 			defer postgres.ResetTestDB(testDB, t)
+			f := &Fetcher{proxyClient, source.NewClient(sourceTimeout), testDB}
 
 			// Use 10 workers to have parallelism consistent with the worker binary.
 			q := queue.NewInMemory(ctx, 10, nil, func(ctx context.Context, mpath, version string) (int, error) {
-				code, _, err := FetchAndUpdateState(ctx, mpath, version, proxyClient, sourceClient, testDB, "")
+				code, _, err := f.FetchAndUpdateState(ctx, mpath, version, "")
 				return code, err
 			})
 
@@ -187,7 +186,7 @@ func TestWorker(t *testing.T) {
 				DB:           testDB,
 				IndexClient:  indexClient,
 				ProxyClient:  proxyClient,
-				SourceClient: sourceClient,
+				SourceClient: f.SourceClient,
 				Queue:        q,
 			})
 			if err != nil {

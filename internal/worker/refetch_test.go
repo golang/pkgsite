@@ -60,8 +60,9 @@ func TestReFetch(t *testing.T) {
 	})
 	defer teardownProxy()
 	sourceClient := source.NewClient(sourceTimeout)
-	if _, _, err := FetchAndUpdateState(ctx, sample.ModulePath, version, proxyClient, sourceClient, testDB, testAppVersion); err != nil {
-		t.Fatalf("FetchAndUpdateState(%q, %q, %v, %v, %v): %v", sample.ModulePath, version, proxyClient, sourceClient, testDB, err)
+	f := &Fetcher{proxyClient, sourceClient, testDB}
+	if _, _, err := f.FetchAndUpdateState(ctx, sample.ModulePath, version, testAppVersion); err != nil {
+		t.Fatalf("FetchAndUpdateState(%q, %q): %v", sample.ModulePath, version, err)
 	}
 
 	if _, err := testDB.GetUnitMeta(ctx, pkgFoo, internal.UnknownModulePath, version); err != nil {
@@ -78,8 +79,9 @@ func TestReFetch(t *testing.T) {
 	})
 	defer teardownProxy()
 
-	if _, _, err := FetchAndUpdateState(ctx, sample.ModulePath, version, proxyClient, sourceClient, testDB, testAppVersion); err != nil {
-		t.Fatalf("FetchAndUpdateState(%q, %q, %v, %v, %v): %v", modulePath, version, proxyClient, sourceClient, testDB, err)
+	f = &Fetcher{proxyClient, sourceClient, testDB}
+	if _, _, err := f.FetchAndUpdateState(ctx, sample.ModulePath, version, testAppVersion); err != nil {
+		t.Fatalf("FetchAndUpdateState(%q, %q): %v", modulePath, version, err)
 	}
 	want := &internal.Unit{
 		UnitMeta: internal.UnitMeta{
@@ -120,7 +122,7 @@ func TestReFetch(t *testing.T) {
 	if diff := cmp.Diff(want.UnitMeta, *got,
 		cmp.AllowUnexported(source.Info{}),
 		cmpopts.IgnoreFields(licenses.Metadata{}, "Coverage"),
-		cmpopts.IgnoreFields(internal.UnitMeta{}, "HasGoMod"),); diff != "" {
+		cmpopts.IgnoreFields(internal.UnitMeta{}, "HasGoMod")); diff != "" {
 		t.Fatalf("testDB.GetUnitMeta(ctx, %q, %q) mismatch (-want +got):\n%s", want.ModulePath, want.Version, diff)
 	}
 
@@ -151,7 +153,8 @@ func TestReFetch(t *testing.T) {
 		},
 	})
 	defer teardownProxy()
-	if _, _, err := FetchAndUpdateState(ctx, modulePath, version, proxyClient, sourceClient, testDB, testAppVersion); !errors.Is(err, derrors.DBModuleInsertInvalid) {
-		t.Fatalf("FetchAndUpdateState(%q, %q, %v, %v, %v): %v", modulePath, version, proxyClient, sourceClient, testDB, err)
+	f = &Fetcher{proxyClient, sourceClient, testDB}
+	if _, _, err := f.FetchAndUpdateState(ctx, modulePath, version, testAppVersion); !errors.Is(err, derrors.DBModuleInsertInvalid) {
+		t.Fatalf("FetchAndUpdateState(%q, %q): %v", modulePath, version, err)
 	}
 }

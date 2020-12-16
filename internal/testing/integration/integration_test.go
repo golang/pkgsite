@@ -78,9 +78,13 @@ func TestEndToEndProcessing(t *testing.T) {
 
 	// TODO: it would be better if InMemory made http requests
 	// back to worker, rather than calling fetch itself.
-	sourceClient := source.NewClient(1 * time.Second)
 	queue := queue.NewInMemory(ctx, 10, nil, func(ctx context.Context, mpath, version string) (int, error) {
-		code, _, err := worker.FetchAndUpdateState(ctx, mpath, version, proxyClient, sourceClient, testDB, "test")
+		f := &worker.Fetcher{
+			ProxyClient:  proxyClient,
+			SourceClient: source.NewClient(1 * time.Second),
+			DB:           testDB,
+		}
+		code, _, err := f.FetchAndUpdateState(ctx, mpath, version, "test")
 		return code, err
 	})
 	workerServer, err := worker.NewServer(&config.Config{}, worker.ServerConfig{

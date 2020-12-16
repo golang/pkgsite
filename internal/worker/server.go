@@ -289,7 +289,12 @@ func (s *Server) doFetch(r *http.Request) (string, int) {
 		return err.Error(), http.StatusBadRequest
 	}
 
-	code, resolvedVersion, err := FetchAndUpdateState(r.Context(), modulePath, requestedVersion, s.proxyClient, s.sourceClient, s.db, s.cfg.AppVersionLabel())
+	f := &Fetcher{
+		ProxyClient:  s.proxyClient,
+		SourceClient: s.sourceClient,
+		DB:           s.db,
+	}
+	code, resolvedVersion, err := f.FetchAndUpdateState(r.Context(), modulePath, requestedVersion, s.cfg.AppVersionLabel())
 	if err != nil {
 		return err.Error(), code
 	}

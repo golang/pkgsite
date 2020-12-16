@@ -83,7 +83,12 @@ func main() {
 	expg := cmdconfig.ExperimentGetter(ctx, cfg)
 	fetchQueue, err := queue.New(ctx, cfg, queueName, *workers, expg,
 		func(ctx context.Context, modulePath, version string) (int, error) {
-			code, _, err := worker.FetchAndUpdateState(ctx, modulePath, version, proxyClient, sourceClient, db, cfg.AppVersionLabel())
+			f := &worker.Fetcher{
+				ProxyClient:  proxyClient,
+				SourceClient: sourceClient,
+				DB:           db,
+			}
+			code, _, err := f.FetchAndUpdateState(ctx, modulePath, version, cfg.AppVersionLabel())
 			return code, err
 		})
 	if err != nil {
