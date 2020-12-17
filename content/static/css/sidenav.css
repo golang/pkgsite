@@ -30,6 +30,11 @@
   transition: box-shadow 0.2s linear;
   z-index: 4;
 }
+@media print {
+  .DocNavMobile {
+    display: none;
+  }
+}
 .DocNavMobile--withShadow {
   box-shadow: 0 0.1875rem 0.1875rem rgba(0, 0, 0, 0.2);
 }

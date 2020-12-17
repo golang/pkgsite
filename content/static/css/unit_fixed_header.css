@@ -16,6 +16,11 @@
   width: 100%;
   z-index: 1000;
 }
+@media print {
+  .UnitFixedHeader {
+    display: none;
+  }
+}
 .UnitFixedHeader--visible {
   transform: unset;
 }
