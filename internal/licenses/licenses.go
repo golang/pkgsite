@@ -136,6 +136,7 @@ var (
 		"BSD-2-Clause":         true,
 		"BSD-2-Clause-FreeBSD": true,
 		"BSD-3-Clause":         true,
+		"BSD-3-Clause-Clear":   true,
 		"BSL-1.0":              true,
 		"CC-BY-3.0":            true,
 		"CC-BY-4.0":            true,
