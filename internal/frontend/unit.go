@@ -75,7 +75,7 @@ type UnitPage struct {
 // modules, documentation, readmes, licenses, and package_imports tables.
 func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *http.Request,
 	ds internal.DataSource, info *urlPathInfo) (err error) {
-	defer derrors.Wrap(&err, "serveUnitPage(ctx, w, r, ds, %v)", info)
+	defer derrors.WrapAndReport(&err, "serveUnitPage(ctx, w, r, ds, %v)", info)
 
 	tab := r.FormValue("tab")
 	if tab == "" {

@@ -61,7 +61,7 @@ type Readme struct {
 //
 // This function is exported for use by external tools.
 func ProcessReadme(ctx context.Context, u *internal.Unit) (_ *Readme, err error) {
-	defer derrors.Wrap(&err, "ProcessReadme(%q, %q, %q)", u.Path, u.ModulePath, u.Version)
+	defer derrors.WrapAndReport(&err, "ProcessReadme(%q, %q, %q)", u.Path, u.ModulePath, u.Version)
 	return processReadme(u.Readme, u.SourceInfo)
 }
 

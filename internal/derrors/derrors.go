@@ -10,6 +10,8 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+
+	"cloud.google.com/go/errorreporting"
 )
 
 //lint:file-ignore ST1012 prefixing error values with Err would stutter
@@ -221,5 +223,27 @@ func Add(errp *error, format string, args ...interface{}) {
 func Wrap(errp *error, format string, args ...interface{}) {
 	if *errp != nil {
 		*errp = fmt.Errorf("%s: %w", fmt.Sprintf(format, args...), *errp)
+	}
+}
+
+// WrapAndReport calls Wrap followed by Report.
+func WrapAndReport(errp *error, format string, args ...interface{}) {
+	Wrap(errp, format, args...)
+	if *errp != nil {
+		Report(*errp)
+	}
+}
+
+var repClient *errorreporting.Client
+
+// SetReportingClient sets an errorreporting client, for use by Report.
+func SetReportingClient(c *errorreporting.Client) {
+	repClient = c
+}
+
+// Report uses the errorreporting API to report an error.
+func Report(err error) {
+	if repClient != nil {
+		repClient.Report(errorreporting.Entry{Error: err})
 	}
 }

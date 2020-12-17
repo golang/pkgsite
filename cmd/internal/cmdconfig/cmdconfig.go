@@ -50,6 +50,7 @@ func ReportingClient(ctx context.Context, cfg *config.Config) *errorreporting.Cl
 	if err != nil {
 		log.Fatal(ctx, err)
 	}
+	derrors.SetReportingClient(reporter)
 	return reporter
 }
 

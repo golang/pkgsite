@@ -70,7 +70,7 @@ func (c *Client) GetInfoNoFetch(ctx context.Context, modulePath, requestedVersio
 }
 
 func (c *Client) getInfo(ctx context.Context, modulePath, requestedVersion string, disableFetch bool) (_ *VersionInfo, err error) {
-	defer derrors.Wrap(&err, "proxy.Client.GetInfo(%q, %q)", modulePath, requestedVersion)
+	defer derrors.WrapAndReport(&err, "proxy.Client.GetInfo(%q, %q)", modulePath, requestedVersion)
 	data, err := c.readBody(ctx, modulePath, requestedVersion, "info", disableFetch)
 	if err != nil {
 		return nil, err
@@ -84,7 +84,7 @@ func (c *Client) getInfo(ctx context.Context, modulePath, requestedVersion strin
 
 // GetMod makes a request to $GOPROXY/<module>/@v/<resolvedVersion>.mod and returns the raw data.
 func (c *Client) GetMod(ctx context.Context, modulePath, resolvedVersion string) (_ []byte, err error) {
-	defer derrors.Wrap(&err, "proxy.Client.GetMod(%q, %q)", modulePath, resolvedVersion)
+	defer derrors.WrapAndReport(&err, "proxy.Client.GetMod(%q, %q)", modulePath, resolvedVersion)
 	return c.readBody(ctx, modulePath, resolvedVersion, "mod", false)
 }
 
@@ -94,7 +94,7 @@ func (c *Client) GetMod(ctx context.Context, modulePath, resolvedVersion string)
 // $GOPROXY/<modulePath>/@v/<requestedVersion>.info to obtained the valid
 // semantic version.
 func (c *Client) GetZip(ctx context.Context, modulePath, resolvedVersion string) (_ *zip.Reader, err error) {
-	defer derrors.Wrap(&err, "proxy.Client.GetZip(ctx, %q, %q)", modulePath, resolvedVersion)
+	defer derrors.WrapAndReport(&err, "proxy.Client.GetZip(ctx, %q, %q)", modulePath, resolvedVersion)
 
 	bodyBytes, err := c.readBody(ctx, modulePath, resolvedVersion, "zip", false)
 	if err != nil {
@@ -110,7 +110,7 @@ func (c *Client) GetZip(ctx context.Context, modulePath, resolvedVersion string)
 // GetZipSize gets the size in bytes of the zip from the proxy, without downloading it.
 // The version must be resolved, as by a call to Client.GetInfo.
 func (c *Client) GetZipSize(ctx context.Context, modulePath, resolvedVersion string) (_ int64, err error) {
-	defer derrors.Wrap(&err, "proxy.Client.GetZipSize(ctx, %q, %q)", modulePath, resolvedVersion)
+	defer derrors.WrapAndReport(&err, "proxy.Client.GetZipSize(ctx, %q, %q)", modulePath, resolvedVersion)
 
 	url, err := c.escapedURL(modulePath, resolvedVersion, "zip")
 	if err != nil {
