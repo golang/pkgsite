@@ -17,7 +17,9 @@
     {{else}}
       Repository URL not available.
     {{end}}
-    <div class="UnitMeta-header">Links</div>
+    {{if or .Details.ReadmeLinks .Details.DocLinks .Details.ModuleReadmeLinks}}
+      <div class="UnitMeta-header">Links</div>
+    {{end}}
     {{template "unit_meta_links" .Details.ReadmeLinks}}
     {{template "unit_meta_links" .Details.DocLinks}}
     {{template "unit_meta_links" .Details.ModuleReadmeLinks}}
