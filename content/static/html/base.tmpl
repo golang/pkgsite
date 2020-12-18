@@ -218,10 +218,3 @@
   </iframe>
 </noscript>
 {{end}}
-
-{{if (.Experiments.IsActive "autocomplete")}}
-<script>
-  loadScript("/third_party/autoComplete.js/autoComplete.min.js");
-  loadScript("/static/js/completion.min.js");
-</script>
-{{end}}

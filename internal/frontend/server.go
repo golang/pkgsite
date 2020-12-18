@@ -147,7 +147,6 @@ func (s *Server) Install(handle func(string, http.Handler), redisClient *redis.C
 		handle("/detail-stats/",
 			middleware.Stats()(http.StripPrefix("/detail-stats", s.errorHandler(s.serveDetails))))
 	}
-	handle("/autocomplete", http.HandlerFunc(s.handleAutoCompletion))
 	handle("/robots.txt", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		http.ServeContent(w, r, "", time.Time{}, strings.NewReader(`User-agent: *

@@ -138,10 +138,6 @@ func (s *Server) Install(handle func(string, http.Handler)) {
 	// This endpoint is intended to be invoked periodically by a scheduler.
 	handle("/update-imported-by-count", rmw(s.errorHandler(s.handleUpdateImportedByCount)))
 
-	// scheduled: download search document data and update the redis sorted
-	// set(s) used in auto-completion.
-	handle("/update-redis-indexes", rmw(s.errorHandler(s.handleUpdateRedisIndexes)))
-
 	// task-queue: fetch fetches a module version from the Module Mirror, and
 	// processes the contents, and inserts it into the database. If a fetch
 	// request fails for any reason other than an http.StatusInternalServerError,
