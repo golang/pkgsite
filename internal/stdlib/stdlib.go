@@ -48,12 +48,15 @@ var (
 )
 
 // VersionForTag returns the semantic version for the Go tag, or "" if
-// tag doesn't correspond to a Go release or beta tag.
+// tag doesn't correspond to a Go release or beta tag. In special cases,
+// when the tag specified is either `latest` or `master` it will return the tag.
 // Examples:
 //   "go1" => "v1.0.0"
 //   "go1.2" => "v1.2.0"
 //   "go1.13beta1" => "v1.13.0-beta.1"
 //   "go1.9rc2" => "v1.9.0-rc.2"
+//   "latest" => "latest"
+//   "master" => "master"
 func VersionForTag(tag string) string {
 	// Special cases for go1.
 	if tag == "go1" {
@@ -62,9 +65,9 @@ func VersionForTag(tag string) string {
 	if tag == "go1.0" {
 		return ""
 	}
-	// Special case for latest.
-	if tag == "latest" {
-		return "latest"
+	// Special case for latest and master.
+	if tag == "latest" || tag == "master" {
+		return tag
 	}
 	m := tagRegexp.FindStringSubmatch(tag)
 	if m == nil {
@@ -87,6 +90,11 @@ func VersionForTag(tag string) string {
 // such as beginning with "go" instead of "v".
 func TagForVersion(version string) (_ string, err error) {
 	defer derrors.Wrap(&err, "TagForVersion(%q)", version)
+
+	// Special case: master => master
+	if version == "master" {
+		return version, nil
+	}
 
 	// Special case: v1.0.0 => go1.
 	if version == "v1.0.0" {
@@ -238,9 +246,6 @@ func Versions() (_ []string, err error) {
 
 	var versions []string
 	for _, name := range refNames {
-		if !name.IsTag() {
-			continue
-		}
 		v := VersionForTag(name.Short())
 		if v != "" {
 			versions = append(versions, v)
@@ -251,11 +256,11 @@ func Versions() (_ []string, err error) {
 
 // Directory returns the directory of the standard library relative to the repo root.
 func Directory(version string) string {
-	// For versions older than v1.4.0-beta.1, the stdlib is in src/pkg.
-	if semver.Compare(version, "v1.4.0-beta.1") < 0 {
-		return "src/pkg"
+	if semver.Compare(version, "v1.4.0-beta.1") >= 0 || version == "master" {
+		return "src"
 	}
-	return "src"
+	// For versions older than v1.4.0-beta.1, the stdlib is in src/pkg.
+	return "src/pkg"
 }
 
 // Approximate size of Zip("v1.15.2").
@@ -346,9 +351,14 @@ func semanticVersion(requestedVersion string) (_ string, err error) {
 	if err != nil {
 		return "", err
 	}
-	if requestedVersion == "latest" {
+
+	switch requestedVersion {
+	case "latest":
 		var latestVersion string
 		for _, v := range knownVersions {
+			if !strings.HasPrefix(v, "v") {
+				continue
+			}
 			versionType, err := version.ParseType(v)
 			if err != nil {
 				return "", err
@@ -362,13 +372,16 @@ func semanticVersion(requestedVersion string) (_ string, err error) {
 			}
 		}
 		return latestVersion, nil
-	}
-
-	for _, v := range knownVersions {
-		if v == requestedVersion {
-			return requestedVersion, nil
+	case "master":
+		return requestedVersion, nil
+	default:
+		for _, v := range knownVersions {
+			if v == requestedVersion {
+				return requestedVersion, nil
+			}
 		}
 	}
+
 	return "", fmt.Errorf("%w: requested version unknown: %q", derrors.InvalidArgument, requestedVersion)
 }
 
@@ -484,6 +497,7 @@ var testRefs = []plumbing.ReferenceName{
 	"refs/tags/go1.13",
 	"refs/tags/go1.13beta1",
 	"refs/tags/go1.14.6",
+	"refs/heads/master",
 	// other tags
 	"refs/changes/56/93156/13",
 	"refs/tags/release.r59",

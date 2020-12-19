@@ -56,6 +56,11 @@ func TestTagForVersion(t *testing.T) {
 			want:    "go1.13",
 		},
 		{
+			name:    "master branch",
+			version: "master",
+			want:    "master",
+		},
+		{
 			name:    "bad std semver",
 			version: "v1.x",
 			wantErr: true,
@@ -114,8 +119,7 @@ func TestMajorVersionForVersion(t *testing.T) {
 func TestZip(t *testing.T) {
 	UseTestData = true
 	defer func() { UseTestData = false }()
-
-	for _, resolvedVersion := range []string{"v1.14.6", "v1.12.5", "v1.3.2"} {
+	for _, resolvedVersion := range []string{"v1.14.6", "v1.12.5", "v1.3.2", "master"} {
 		t.Run(resolvedVersion, func(t *testing.T) {
 			zr, gotTime, err := Zip(resolvedVersion)
 			if err != nil {
@@ -129,12 +133,12 @@ func TestZip(t *testing.T) {
 				"errors/errors.go":      true,
 				"errors/errors_test.go": true,
 			}
-			if semver.Compare(resolvedVersion, "v1.4.0") > 0 {
+			if semver.Compare(resolvedVersion, "v1.4.0") > 0 || resolvedVersion == "master" {
 				wantFiles["README.md"] = true
 			} else {
 				wantFiles["README"] = true
 			}
-			if semver.Compare(resolvedVersion, "v1.13.0") > 0 {
+			if semver.Compare(resolvedVersion, "v1.13.0") > 0 || resolvedVersion == "master" {
 				wantFiles["cmd/README.vendor"] = true
 			}
 
@@ -178,15 +182,29 @@ func TestZipInfo(t *testing.T) {
 	UseTestData = true
 	defer func() { UseTestData = false }()
 
-	gotVersion, gotSize, err := ZipInfo("latest")
-	if err != nil {
-		t.Fatal(err)
-	}
-	if want := "v1.14.6"; gotVersion != want {
-		t.Errorf("version: got %q, want %q", gotVersion, want)
-	}
-	if want := int64(estimatedZipSize); gotSize != want {
-		t.Errorf("size: got %d, want %d", gotSize, want)
+	for _, tc := range []struct {
+		requestedVersion string
+		want             string
+	}{
+		{
+			requestedVersion: "latest",
+			want:             "v1.14.6",
+		},
+		{
+			requestedVersion: "master",
+			want:             "master",
+		},
+	} {
+		gotVersion, gotSize, err := ZipInfo(tc.requestedVersion)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if want := tc.want; gotVersion != want {
+			t.Errorf("version: got %q, want %q", gotVersion, want)
+		}
+		if want := int64(estimatedZipSize); gotSize != want {
+			t.Errorf("size: got %d, want %d", gotSize, want)
+		}
 	}
 }
 
@@ -252,6 +270,31 @@ func TestContains(t *testing.T) {
 		got := Contains(test.in)
 		if got != test.want {
 			t.Errorf("Contains(%q) = %t, want %t", test.in, got, test.want)
+		}
+	}
+}
+
+func TestDirectory(t *testing.T) {
+	for _, tc := range []struct {
+		version string
+		want    string
+	}{
+		{
+			version: "v1.3.0-beta2",
+			want:    "src/pkg",
+		},
+		{
+			version: "v1.16.0-beta1",
+			want:    "src",
+		},
+		{
+			version: "master",
+			want:    "src",
+		},
+	} {
+		got := Directory(tc.version)
+		if got != tc.want {
+			t.Errorf("Directory(%s) = %s, want %s", tc.version, got, tc.want)
 		}
 	}
 }
