@@ -191,9 +191,9 @@ func main() {
 		middleware.RequestLog(cmdconfig.Logger(ctx, cfg, "frontend-log")),
 		middleware.AcceptRequests(http.MethodGet, http.MethodPost), // accept only GETs and POSTs
 		middleware.Quota(cfg.Quota, cacheClient),
-		middleware.GodocURL(),                                                                 // potentially redirects so should be early in chain
-		middleware.SecureHeaders(!*disableCSP),                                                // must come before any caching for nonces to work
-		middleware.LatestVersions(server.GetLatestMinorVersion, server.GetLatestMajorVersion), // must come before caching for version badge to work
+		middleware.GodocURL(),                           // potentially redirects so should be early in chain
+		middleware.SecureHeaders(!*disableCSP),          // must come before any caching for nonces to work
+		middleware.LatestVersions(server.GetLatestInfo), // must come before caching for version badge to work
 		middleware.Panic(panicHandler),
 		ermw,
 		middleware.Timeout(54*time.Second),

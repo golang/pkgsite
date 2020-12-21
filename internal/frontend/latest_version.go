@@ -11,12 +11,19 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/log"
+	"golang.org/x/pkgsite/internal/middleware"
 )
 
-// GetLatestMajorVersion returns the latest module path and the full package path
+func (s *Server) GetLatestInfo(ctx context.Context, fullPath, modulePath string) (latest middleware.LatestInfo) {
+	latest.MinorVersion = s.getLatestMinorVersion(ctx, fullPath, internal.UnknownModulePath)
+	latest.MajorModulePath, latest.MajorPackagePath = s.getLatestMajorVersion(ctx, fullPath, modulePath)
+	return latest
+}
+
+// getLatestMajorVersion returns the latest module path and the full package path
 // of any major version found given the fullPath and the modulePath.
 // It is intended to be used as an argument to middleware.LatestVersions.
-func (s *Server) GetLatestMajorVersion(ctx context.Context, fullPath, modulePath string) (_ string, _ string) {
+func (s *Server) getLatestMajorVersion(ctx context.Context, fullPath, modulePath string) (_ string, _ string) {
 	latestModulePath, latestPackagePath, err := s.getDataSource(ctx).GetLatestMajorVersion(ctx, fullPath, modulePath)
 	if err != nil {
 		if !errors.Is(err, derrors.NotFound) {
@@ -27,10 +34,10 @@ func (s *Server) GetLatestMajorVersion(ctx context.Context, fullPath, modulePath
 	return latestModulePath, latestPackagePath
 }
 
-// GetLatestMinorVersion returns the latest minor version of the package or module.
+// getLatestMinorVersion returns the latest minor version of the package or module.
 // The linkable form of the minor version is returned and is an empty string on error.
 // It is intended to be used as an argument to middleware.LatestVersions.
-func (s *Server) GetLatestMinorVersion(ctx context.Context, packagePath, modulePath string) string {
+func (s *Server) getLatestMinorVersion(ctx context.Context, packagePath, modulePath string) string {
 	// It is okay to use a different DataSource (DB connection) than the rest of the
 	// request, because this makes a self-contained call on the DB.
 	v, err := latestMinorVersion(ctx, s.getDataSource(ctx), packagePath, modulePath)
