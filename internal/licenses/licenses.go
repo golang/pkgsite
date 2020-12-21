@@ -148,6 +148,7 @@ var (
 		"EUPL-1.2":             true,
 		"GPL2":                 true,
 		"GPL3":                 true,
+		"HPND":                 true,
 		"ISC":                  true,
 		"JSON":                 true,
 		"LGPL-2.1":             true,
