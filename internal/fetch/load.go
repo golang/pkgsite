@@ -59,7 +59,7 @@ var goEnvs = []struct{ GOOS, GOARCH string }{
 // loadPackage returns nil, nil.
 //
 // If the package is fine except that its documentation is too large, loadPackage
-// returns both a package and a non-nil error with godoc.ErrTooLarge in its chain.
+// returns a package whose err field is a non-nil error with godoc.ErrTooLarge in its chain.
 func loadPackage(ctx context.Context, zipGoFiles []*zip.File, innerPath string, sourceInfo *source.Info, modInfo *godoc.ModuleInfo) (_ *goPackage, err error) {
 	defer derrors.Wrap(&err, "loadPackage(ctx, zipGoFiles, %q, sourceInfo, modInfo)", innerPath)
 	ctx, span := trace.StartSpan(ctx, "fetch.loadPackage")
@@ -70,7 +70,8 @@ func loadPackage(ctx context.Context, zipGoFiles []*zip.File, innerPath string, 
 			return nil, err
 		}
 		if pkg != nil {
-			return pkg, err
+			pkg.err = err
+			return pkg, nil
 		}
 	}
 	return nil, nil
@@ -88,9 +89,9 @@ var httpPost = http.Post
 // zipGoFiles must contain only .go files that have been verified
 // to be of reasonable size.
 //
-// The returned Package.Licenses field is not populated.
+// The returned goPackage.licenses field is not populated.
 //
-// It returns a nil Package if the directory doesn't contain a Go package
+// It returns a nil goPackage if the directory doesn't contain a Go package
 // or all .go files have been excluded by constraints.
 // A *BadPackageError error is returned if the directory
 // contains .go files but do not make up a valid package.
@@ -115,8 +116,7 @@ func loadPackageWithBuildContext(ctx context.Context, goos, goarch string, zipGo
 		docPkg.AddFile(pf, removeNodes)
 	}
 
-	// Encode before rendering: both operations mess with the AST, but Encode restores
-	// it enough to make Render work.
+	// Encode first, because Render messes with the AST.
 	src, err := docPkg.Encode(ctx)
 	if err != nil {
 		return nil, err

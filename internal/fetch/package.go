@@ -43,6 +43,7 @@ type goPackage struct {
 	// series.
 	v1path string
 	source []byte // the source files of the package, for generating doc at serving time
+	err    error  // non-fatal error when loading the package (e.g. documentation is too large)
 }
 
 // extractPackagesFromZip returns a slice of packages from the module zip r.
@@ -197,13 +198,9 @@ func extractPackagesFromZip(ctx context.Context, modulePath, resolvedVersion str
 			incompleteDirs[innerPath] = true
 			status = derrors.PackageInvalidContents
 			errMsg = err.Error()
-		} else if errors.Is(err, godoc.ErrTooLarge) {
-			status = derrors.PackageDocumentationHTMLTooLarge
-			errMsg = err.Error()
 		} else if err != nil {
 			return nil, nil, fmt.Errorf("unexpected error loading package: %v", err)
 		}
-
 		var pkgPath string
 		if pkg == nil {
 			// No package.
@@ -214,6 +211,10 @@ func extractPackagesFromZip(ctx context.Context, modulePath, resolvedVersion str
 			}
 			pkgPath = path.Join(modulePath, innerPath)
 		} else {
+			if errors.Is(pkg.err, godoc.ErrTooLarge) {
+				status = derrors.PackageDocumentationHTMLTooLarge
+				errMsg = pkg.err.Error()
+			}
 			if d != nil { //  should only be nil for tests
 				isRedist, lics := d.PackageInfo(innerPath)
 				pkg.isRedistributable = isRedist
