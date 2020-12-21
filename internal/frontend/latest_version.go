@@ -7,6 +7,7 @@ package frontend
 import (
 	"context"
 	"errors"
+	"sync"
 
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
@@ -14,42 +15,42 @@ import (
 	"golang.org/x/pkgsite/internal/middleware"
 )
 
-func (s *Server) GetLatestInfo(ctx context.Context, fullPath, modulePath string) (latest middleware.LatestInfo) {
-	latest.MinorVersion = s.getLatestMinorVersion(ctx, fullPath, internal.UnknownModulePath)
-	latest.MajorModulePath, latest.MajorUnitPath = s.getLatestMajorVersion(ctx, fullPath, modulePath)
-	return latest
-}
-
-// getLatestMajorVersion returns the latest module path and the full unit path
-// of any major version found given the fullPath and the modulePath.
+// GetLatestInfo returns various pieces of information about the latest
+// versions of a unit and module:
+// -  The linkable form of the minor version of the unit.
+// -  The latest module path and the full unit path of any major version found given the
+//    fullPath and the modulePath.
+// It returns empty strings on error.
 // It is intended to be used as an argument to middleware.LatestVersions.
-func (s *Server) getLatestMajorVersion(ctx context.Context, unitPath, modulePath string) (_ string, _ string) {
-	latestModulePath, latestPackagePath, err := s.getDataSource(ctx).GetLatestMajorVersion(ctx, unitPath, modulePath)
-	if err != nil {
-		if !errors.Is(err, derrors.NotFound) {
+func (s *Server) GetLatestInfo(ctx context.Context, unitPath, modulePath string) (latest middleware.LatestInfo) {
+	// It is okay to use a different DataSource (DB connection) than the rest of the
+	// request, because this makes self-contained calls on the DB.
+	ds := s.getDataSource(ctx)
+
+	var wg sync.WaitGroup
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		var err error
+		latest.MinorVersion, err = latestMinorVersion(ctx, ds, unitPath, internal.UnknownModulePath)
+		if err != nil {
+			log.Errorf(ctx, "latestMinorVersion: %v", err)
+		}
+	}()
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		var err error
+		latest.MajorModulePath, latest.MajorUnitPath, err = ds.GetLatestMajorVersion(ctx, unitPath, modulePath)
+		if err != nil && !errors.Is(err, derrors.NotFound) {
 			log.Errorf(ctx, "GetLatestMajorVersion: %v", err)
 		}
-		return "", ""
-	}
-	return latestModulePath, latestPackagePath
-}
+	}()
 
-// getLatestMinorVersion returns the latest minor version of the unit.
-// The linkable form of the minor version is returned and is an empty string on error.
-// It is intended to be used as an argument to middleware.LatestVersions.
-func (s *Server) getLatestMinorVersion(ctx context.Context, unitPath, modulePath string) string {
-	// It is okay to use a different DataSource (DB connection) than the rest of the
-	// request, because this makes a self-contained call on the DB.
-	v, err := latestMinorVersion(ctx, s.getDataSource(ctx), unitPath, modulePath)
-	if err != nil {
-		// We get NotFound errors from directories; they clutter the log.
-		if !errors.Is(err, derrors.NotFound) {
-			log.Errorf(ctx, "GetLatestMinorVersion: %v", err)
-		}
-		return ""
-	}
-
-	return v
+	wg.Wait()
+	return latest
 }
 
 // TODO(https://github.com/golang/go/issues/40107): this is currently tested in server_test.go, but
