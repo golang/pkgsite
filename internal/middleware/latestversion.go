@@ -28,12 +28,12 @@ var latestInfoRegexp = regexp.MustCompile(`data-version="([^"]*)" data-mpath="([
 
 // LatestInfo holds information about the latest versions and paths of a unit.
 type LatestInfo struct {
-	MinorVersion     string // latest minor version for unit path, regardless of module
-	MajorModulePath  string // path of latest version of module
-	MajorPackagePath string // path of unit in latest version of module
+	MinorVersion    string // latest minor version for unit path, regardless of module
+	MajorModulePath string // path of latest version of module
+	MajorUnitPath   string // path of unit in latest version of module
 }
 
-type latestFunc func(ctx context.Context, packagePath, modulePath string) LatestInfo
+type latestFunc func(ctx context.Context, unitPath, modulePath string) LatestInfo
 
 // LatestVersions replaces the HTML placeholder values for the badge and banner
 // that displays whether the version of the package or module being served is
@@ -51,8 +51,8 @@ func LatestVersions(getLatest latestFunc) Middleware {
 				version = strings.Replace(version, "&#43;", "+", -1)
 				modulePath := string(matches[2])
 				_, majorVersion, _ := module.SplitPathVersion(modulePath)
-				packagePath := string(matches[3])
-				latest := getLatest(r.Context(), packagePath, modulePath)
+				unitPath := string(matches[3])
+				latest := getLatest(r.Context(), unitPath, modulePath)
 				latestMinorClass := "DetailsHeader-badge"
 				switch {
 				case latest.MinorVersion == "":
@@ -80,7 +80,7 @@ func LatestVersions(getLatest latestFunc) Middleware {
 				body = bytes.ReplaceAll(body, []byte(LatestMinorVersionPlaceholder), []byte(latest.MinorVersion))
 				body = bytes.ReplaceAll(body, []byte(latestMajorClassPlaceholder), []byte(latestMajorClass))
 				body = bytes.ReplaceAll(body, []byte(LatestMajorVersionPlaceholder), []byte(latestMajorVersionText))
-				body = bytes.ReplaceAll(body, []byte(LatestMajorVersionURL), []byte(latest.MajorPackagePath))
+				body = bytes.ReplaceAll(body, []byte(LatestMajorVersionURL), []byte(latest.MajorUnitPath))
 			}
 			if _, err := w.Write(body); err != nil {
 				log.Errorf(r.Context(), "LatestVersions, writing: %v", err)
