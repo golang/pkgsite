@@ -85,12 +85,14 @@ func samplePackage(modulePath, suffix string) *goPackage {
 		name:              path.Base(p),
 		path:              p,
 		v1path:            internal.V1Path(p, modulePath),
-		synopsis:          sample.Synopsis,
 		isRedistributable: true,
 		licenseMeta:       sample.LicenseMetadata,
 		imports:           sample.Imports,
-		goos:              sample.GOOS,
-		goarch:            sample.GOARCH,
+		docs: []*internal.Documentation{{
+			GOOS:     sample.GOOS,
+			GOARCH:   sample.GOARCH,
+			Synopsis: sample.Synopsis,
+		}},
 	}
 }
 

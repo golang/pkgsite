@@ -30,20 +30,14 @@ import (
 type goPackage struct {
 	path              string
 	name              string
-	synopsis          string
 	imports           []string
 	isRedistributable bool
 	licenseMeta       []*licenses.Metadata // metadata of applicable licenses
-	// goos and goarch are environment variables used to parse the
-	// package.
-	goos   string
-	goarch string
-
 	// v1path is the package path of a package with major version 1 in a given
 	// series.
 	v1path string
-	source []byte // the source files of the package, for generating doc at serving time
-	err    error  // non-fatal error when loading the package (e.g. documentation is too large)
+	docs   []*internal.Documentation // doc for different build contexts
+	err    error                     // non-fatal error when loading the package (e.g. documentation is too large)
 }
 
 // extractPackagesFromZip returns a slice of packages from the module zip r.

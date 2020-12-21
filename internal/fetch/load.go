@@ -54,16 +54,18 @@ var goEnvs = []struct{ GOOS, GOARCH string }{
 }
 
 // loadPackage loads a Go package by calling loadPackageWithBuildContext, trying
-// several build contexts in turn. The first build context in the list to produce
-// a non-empty package is used. If none of them result in a package, then
-// loadPackage returns nil, nil.
+// several build contexts in turn. It returns a goPackage with documentation
+// information for each build context that results in a valid package, in the
+// same order that the build contexts are listed. If none of them result in a
+// package, then loadPackage returns nil, nil.
 //
-// If the package is fine except that its documentation is too large, loadPackage
-// returns a package whose err field is a non-nil error with godoc.ErrTooLarge in its chain.
+// If a package is fine except that its documentation is too large, loadPackage
+// returns a goPackage whose err field is a non-nil error with godoc.ErrTooLarge in its chain.
 func loadPackage(ctx context.Context, zipGoFiles []*zip.File, innerPath string, sourceInfo *source.Info, modInfo *godoc.ModuleInfo) (_ *goPackage, err error) {
 	defer derrors.Wrap(&err, "loadPackage(ctx, zipGoFiles, %q, sourceInfo, modInfo)", innerPath)
 	ctx, span := trace.StartSpan(ctx, "fetch.loadPackage")
 	defer span.End()
+	var pkgs []*goPackage
 	for _, env := range goEnvs {
 		pkg, err := loadPackageWithBuildContext(ctx, env.GOOS, env.GOARCH, zipGoFiles, innerPath, sourceInfo, modInfo)
 		if err != nil && !errors.Is(err, godoc.ErrTooLarge) && !errors.Is(err, derrors.NotFound) {
@@ -71,10 +73,39 @@ func loadPackage(ctx context.Context, zipGoFiles []*zip.File, innerPath string, 
 		}
 		if pkg != nil {
 			pkg.err = err
+			pkgs = append(pkgs, pkg)
+		}
+	}
+	return mergePackages(pkgs)
+}
+
+// mergePackages combines multiple packages from different build contexts into
+// one.
+func mergePackages(pkgs []*goPackage) (*goPackage, error) {
+	if len(pkgs) == 0 {
+		return nil, nil
+	}
+	// If any build context has an error, return that one.
+	for _, pkg := range pkgs {
+		if pkg.err != nil {
 			return pkg, nil
 		}
 	}
-	return nil, nil
+
+	// Use everything from the first package, just merge the docs.
+	result := pkgs[0]
+	for _, pkg := range pkgs[1:] {
+		if pkg.name != result.name {
+			// All the build environments should use the same package name. Although
+			// it's technically legal for different build tags to result in different
+			// package names, it's not something we support.
+			return nil, &BadPackageError{
+				Err: fmt.Errorf("more than one package name (%q and %q)", result.name, pkg.name),
+			}
+		}
+		result.docs = append(result.docs, pkg.docs[0])
+	}
+	return result, nil
 }
 
 // httpPost allows package fetch tests to stub out playground URL fetches.
@@ -132,14 +163,16 @@ func loadPackageWithBuildContext(ctx context.Context, goos, goarch string, zipGo
 	}
 	v1path := internal.V1Path(importPath, modulePath)
 	return &goPackage{
-		path:     importPath,
-		name:     packageName,
-		synopsis: synopsis,
-		v1path:   v1path,
-		imports:  imports,
-		goos:     goos,
-		goarch:   goarch,
-		source:   src,
+		path:    importPath,
+		name:    packageName,
+		v1path:  v1path,
+		imports: imports,
+		docs: []*internal.Documentation{{
+			GOOS:     goos,
+			GOARCH:   goarch,
+			Synopsis: synopsis,
+			Source:   src,
+		}},
 	}, err
 }
 

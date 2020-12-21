@@ -19,7 +19,6 @@ import (
 
 	"golang.org/x/mod/modfile"
 	"golang.org/x/pkgsite/internal/derrors"
-	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/source"
 )
 
@@ -55,8 +54,6 @@ func FetchLocalModule(ctx context.Context, modulePath, localPath string, sourceC
 		if fi != nil {
 			finishFetchInfo(fi, fr.Status, fr.Error)
 		}
-		log.Debugf(ctx, "memory after fetch of %s: %dM", fr.ModulePath, allocMeg())
-
 	}()
 
 	info, err := os.Stat(localPath)

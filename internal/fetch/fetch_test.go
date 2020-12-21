@@ -88,13 +88,13 @@ func TestFetchModule(t *testing.T) {
 			}
 			t.Run(fmt.Sprintf("%s:%s", fetcher.name, test.name), func(t *testing.T) {
 				ctx := context.Background()
-				ctx, cancel := context.WithTimeout(ctx, 60*time.Second)
+				ctx, cancel := context.WithTimeout(ctx, 150*time.Second)
 				defer cancel()
 
 				got, d := fetcher.fetch(t, true, ctx, test.mod, test.fetchVersion)
 				defer got.Defer()
 				if got.Error != nil {
-					t.Fatal("fetching failed: %w", got.Error)
+					t.Fatalf("fetching failed: %v", got.Error)
 				}
 				if !test.cleaned {
 					test.mod.fr = cleanFetchResult(t, test.mod.fr, d)
