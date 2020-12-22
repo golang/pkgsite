@@ -298,3 +298,43 @@ func TestGetLatestMajorVersion(t *testing.T) {
 		}
 	}
 }
+
+func TestGetLatestMinorModuleVersion(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
+	defer ResetTestDB(testDB, t)
+
+	const (
+		modulePath    = "foo.com/M"
+		latestVersion = "v1.2.0"
+	)
+
+	for _, m := range []*internal.Module{
+		sample.Module(modulePath, "v1.1.0", "p1", "p2"),
+		sample.Module(modulePath, latestVersion, "p1"),
+		sample.Module(modulePath+"/v2", "v2.0.5", "p1", "p2"),
+	} {
+		if err := testDB.InsertModule(ctx, m); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	for _, test := range []struct {
+		unitSuffix  string
+		wantPresent bool
+	}{
+		{"p1", true},
+		{"p2", false},
+	} {
+		gotVersion, gotPresent, err := testDB.GetLatestMinorModuleVersion(ctx, modulePath+"/"+test.unitSuffix, modulePath)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if gotVersion != latestVersion {
+			t.Errorf("%s: got version %q, want %q", test.unitSuffix, gotVersion, latestVersion)
+		}
+		if gotPresent != test.wantPresent {
+			t.Errorf("%s: got present %t, want %t", test.unitSuffix, gotPresent, test.wantPresent)
+		}
+	}
+}

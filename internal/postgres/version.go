@@ -133,12 +133,45 @@ func (db *DB) GetLatestMajorVersion(ctx context.Context, fullPath, modulePath st
 	v1Path := internal.V1Path(fullPath, modulePath)
 	row = db.db.QueryRow(ctx, `SELECT path FROM units WHERE v1_path = $1 AND module_id = $2;`, v1Path, modID)
 	var path string
-	switch row.Scan(&path) {
+	switch err := row.Scan(&path); err {
 	case nil:
 		return modPath, path, nil
 	case sql.ErrNoRows:
 		return modPath, modPath, nil
 	default:
 		return "", "", err
+	}
+}
+
+// GetLatestMinorModuleVersion returns the latest minor version of modulePath,
+// and whether unitPath exists at that version.
+func (db *DB) GetLatestMinorModuleVersion(ctx context.Context, unitPath, modulePath string) (version string, unitExists bool, err error) {
+	defer derrors.Wrap(&err, "DB.GetLatestMinorVersion(ctx, %q, %q)", unitPath, modulePath)
+
+	// Find the latest version of the module path.
+	var modID int
+	q, args, err := orderByLatest(squirrel.Select("m.version", "m.id").
+		From("modules m").
+		Where(squirrel.Eq{"m.module_path": modulePath})).
+		Limit(1).
+		ToSql()
+	if err != nil {
+		return "", false, err
+	}
+	row := db.db.QueryRow(ctx, q, args...)
+	if err := row.Scan(&version, &modID); err != nil {
+		return "", false, err
+	}
+
+	// See if the unit path exists at that version.
+	var x int
+	err = db.db.QueryRow(ctx, `SELECT 1 FROM units WHERE path = $1 AND module_id = $2`, unitPath, modID).Scan(&x)
+	switch err {
+	case nil:
+		return version, true, nil
+	case sql.ErrNoRows:
+		return version, false, nil
+	default:
+		return "", false, err
 	}
 }
