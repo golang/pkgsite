@@ -19,7 +19,10 @@ import (
 // that are README files.
 func extractReadmesFromZip(modulePath, resolvedVersion string, r *zip.Reader) (_ []*internal.Readme, err error) {
 	defer derrors.Wrap(&err, "extractReadmesFromZip(ctx, %q, %q, r)", modulePath, resolvedVersion)
-	var readmes []*internal.Readme
+
+	// The key is the README directory. Since we only store one README file per
+	// directory, we use this below to prioritize READMEs in markdown.
+	readmes := map[string]*internal.Readme{}
 	for _, zipFile := range r.File {
 		if isReadme(zipFile.Name) {
 			if zipFile.UncompressedSize64 > MaxFileSize {
@@ -29,14 +32,29 @@ func extractReadmesFromZip(modulePath, resolvedVersion string, r *zip.Reader) (_
 			if err != nil {
 				return nil, err
 			}
-			readmes = append(readmes, &internal.Readme{
-				Filepath: strings.TrimPrefix(zipFile.Name, moduleVersionDir(modulePath, resolvedVersion)+"/"),
-				Contents: string(c),
-			})
 
+			f := strings.TrimPrefix(zipFile.Name, moduleVersionDir(modulePath, resolvedVersion)+"/")
+			key := path.Dir(f)
+			if r, ok := readmes[key]; ok {
+				// Prefer READMEs written in markdown, since we style these on
+				// the frontend.
+				ext := path.Ext(r.Filepath)
+				if ext == ".md" || ext == ".markdown" {
+					continue
+				}
+			}
+			readmes[key] = &internal.Readme{
+				Filepath: f,
+				Contents: string(c),
+			}
 		}
 	}
-	return readmes, nil
+
+	var rs []*internal.Readme
+	for _, r := range readmes {
+		rs = append(rs, r)
+	}
+	return rs, nil
 }
 
 var excludedReadmeExts = map[string]bool{".go": true, ".vendor": true}

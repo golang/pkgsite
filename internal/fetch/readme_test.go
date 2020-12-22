@@ -29,11 +29,12 @@ func TestExtractReadmesFromZip(t *testing.T) {
 	}
 
 	for _, test := range []struct {
-		modulePath, version string
-		files               map[string]string
-		want                []*internal.Readme
+		name, modulePath, version string
+		files                     map[string]string
+		want                      []*internal.Readme
 	}{
 		{
+			name:       "README at root and README in unit",
 			modulePath: stdlib.ModulePath,
 			version:    "v1.12.5",
 			want: []*internal.Readme{
@@ -48,30 +49,43 @@ func TestExtractReadmesFromZip(t *testing.T) {
 			},
 		},
 		{
+			name:       "prefer README.md",
 			modulePath: "github.com/my/module",
 			version:    "v1.0.0",
 			files: map[string]string{
-				"README.md":  "README FILE FOR TESTING.",
-				"foo/README": "Another README",
+				"foo/README":    "README",
+				"foo/README.md": "README",
 			},
 			want: []*internal.Readme{
 				{
-					Filepath: "README.md",
-					Contents: "README FILE FOR TESTING.",
-				},
-				{
-					Filepath: "foo/README",
-					Contents: "Another README",
+					Filepath: "foo/README.md",
+					Contents: "README",
 				},
 			},
 		},
 		{
+			name:       "prefer readme.markdown",
+			modulePath: "github.com/my/module",
+			version:    "v1.0.0",
+			files: map[string]string{
+				"foo/README.markdown": "README",
+				"foo/readme.rst":      "README",
+			},
+			want: []*internal.Readme{
+				{
+					Filepath: "foo/README.markdown",
+					Contents: "README",
+				},
+			},
+		},
+		{
+			name:       "no readme",
 			modulePath: "emp.ty/module",
 			version:    "v1.0.0",
 			files:      map[string]string{},
 		},
 	} {
-		t.Run(test.modulePath, func(t *testing.T) {
+		t.Run(test.name, func(t *testing.T) {
 			var (
 				reader *zip.Reader
 				err    error
