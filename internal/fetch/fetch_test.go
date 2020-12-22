@@ -56,6 +56,7 @@ func TestFetchModule(t *testing.T) {
 		mod          *testModule
 		fetchVersion string
 		proxyOnly    bool
+		cleaned      bool
 	}{
 		{name: "basic", mod: moduleNoGoMod},
 		{name: "wasm", mod: moduleWasm},
@@ -98,9 +99,9 @@ func TestFetchModule(t *testing.T) {
 				if got.Error != nil {
 					t.Fatal("fetching failed: %w", got.Error)
 				}
-
-				if fetcher.name == "proxy" {
+				if !test.cleaned {
 					test.mod.fr = cleanFetchResult(t, test.mod.fr, d)
+					test.cleaned = true
 				}
 				fr := updateFetchResultVersions(t, test.mod.fr, fetcher.name == "local")
 				sortFetchResult(fr)
