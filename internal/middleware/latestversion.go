@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"golang.org/x/mod/module"
+	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/log"
 )
 
@@ -26,14 +27,7 @@ const (
 // latestInfoRegexp extracts values needed to determine the latest-version badge from a page's HTML.
 var latestInfoRegexp = regexp.MustCompile(`data-version="([^"]*)" data-mpath="([^"]*)" data-ppath="([^"]*)" data-pagetype="([^"]*)"`)
 
-// LatestInfo holds information about the latest versions and paths of a unit.
-type LatestInfo struct {
-	MinorVersion    string // latest minor version for unit path, regardless of module
-	MajorModulePath string // path of latest version of module
-	MajorUnitPath   string // path of unit in latest version of module
-}
-
-type latestFunc func(ctx context.Context, unitPath, modulePath string) LatestInfo
+type latestFunc func(ctx context.Context, unitPath, modulePath string) internal.LatestInfo
 
 // LatestVersions replaces the HTML placeholder values for the badge and banner
 // that displays whether the version of the package or module being served is

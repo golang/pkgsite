@@ -197,24 +197,36 @@ func TestDataSource_Bypass(t *testing.T) {
 	}
 }
 
-func TestDataSource_GetLatestMajorVersion(t *testing.T) {
+func TestDataSource_GetLatestInfo(t *testing.T) {
 	t.Helper()
 	testModules := []*proxy.Module{
 		{
 			ModulePath: "foo.com/bar",
+			Version:    "v1.1.0",
+			Files: map[string]string{
+				"baz.go": "package bar",
+			},
 		},
 		{
 			ModulePath: "foo.com/bar/v2",
+			Version:    "v2.0.5",
 		},
 		{
 			ModulePath: "foo.com/bar/v3",
 		},
 		{
 			ModulePath: "bar.com/foo",
+			Version:    "v1.1.0",
+			Files: map[string]string{
+				"baz.go": "package foo",
+			},
 		},
 		{
 			ModulePath: "incompatible.com/bar",
 			Version:    "v2.1.1+incompatible",
+			Files: map[string]string{
+				"baz.go": "package bar",
+			},
 		},
 		{
 			ModulePath: "incompatible.com/bar/v3",
@@ -263,7 +275,7 @@ func TestDataSource_GetLatestMajorVersion(t *testing.T) {
 			wantPackagePath: "incompatible.com/bar/v3",
 		},
 	} {
-		gotVersion, gotPath, err := ds.GetLatestMajorVersion(ctx, test.fullPath, test.modulePath)
+		gotLatest, err := ds.GetLatestInfo(ctx, test.fullPath, test.modulePath)
 		if err != nil {
 			if test.wantErr == nil {
 				t.Fatalf("got unexpected error %v", err)
@@ -272,8 +284,9 @@ func TestDataSource_GetLatestMajorVersion(t *testing.T) {
 				t.Errorf("got err = %v, want Is(%v)", err, test.wantErr)
 			}
 		}
-		if gotVersion != test.wantModulePath || gotPath != test.wantPackagePath {
-			t.Errorf("ds.GetLatestMajorVersion(%v, %v) = (%v, %v), want = (%v, %v)", test.fullPath, test.modulePath, gotVersion, gotPath, test.wantModulePath, test.wantPackagePath)
+		if gotLatest.MajorModulePath != test.wantModulePath || gotLatest.MajorUnitPath != test.wantPackagePath {
+			t.Errorf("ds.GetLatestMajorVersion(%v, %v) = (%v, %v), want = (%v, %v)",
+				test.fullPath, test.modulePath, gotLatest.MajorModulePath, gotLatest.MajorUnitPath, test.wantModulePath, test.wantPackagePath)
 		}
 	}
 }

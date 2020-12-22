@@ -176,11 +176,31 @@ func (ds *DataSource) getUnit(ctx context.Context, fullPath, modulePath, version
 	return nil, fmt.Errorf("%q missing from module %s: %w", fullPath, m.ModulePath, derrors.NotFound)
 }
 
-// GetLatestMajorVersion returns the latest module path and the full package path
+// GetLatestInfo returns latest information for unitPath and modulePath.
+func (ds *DataSource) GetLatestInfo(ctx context.Context, unitPath, modulePath string) (latest internal.LatestInfo, err error) {
+	defer derrors.Wrap(&err, "GetLatestInfo(ctx, %q, %q)", unitPath, modulePath)
+
+	um, err := ds.GetUnitMeta(ctx, unitPath, internal.UnknownModulePath, internal.LatestVersion)
+	if err != nil {
+		return latest, err
+	}
+	latest.MinorVersion = um.Version
+	latest.MinorModulePath = um.ModulePath
+
+	latest.MajorModulePath, latest.MajorUnitPath, err = ds.getLatestMajorVersion(ctx, unitPath, modulePath)
+	if err != nil {
+		return latest, err
+	}
+	// Do not try to discover whether the unit is in the latest minor version; assume it is.
+	latest.UnitExistsAtMinor = true
+	return latest, nil
+}
+
+// getLatestMajorVersion returns the latest module path and the full package path
 // of the latest version found in the proxy by iterating through vN versions.
 // This function does not attempt to find whether the full path exists
 // in the new major version.
-func (ds *DataSource) GetLatestMajorVersion(ctx context.Context, fullPath, modulePath string) (_ string, _ string, err error) {
+func (ds *DataSource) getLatestMajorVersion(ctx context.Context, fullPath, modulePath string) (_ string, _ string, err error) {
 	// We are checking if the full path is valid so that we can forward the error if not.
 	seriesPath := internal.SeriesPathForModule(modulePath)
 	info, err := ds.proxyClient.GetInfo(ctx, seriesPath, internal.LatestVersion)

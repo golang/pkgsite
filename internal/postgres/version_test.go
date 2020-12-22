@@ -6,8 +6,6 @@ package postgres
 
 import (
 	"context"
-	"database/sql"
-	"errors"
 	"fmt"
 	"testing"
 
@@ -231,16 +229,17 @@ func TestGetVersions(t *testing.T) {
 	}
 }
 
-func TestGetLatestMajorVersion(t *testing.T) {
+func TestGetLatestInfo(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
-
 	defer ResetTestDB(testDB, t)
+
 	for _, m := range []*internal.Module{
-		sample.Module("foo.com/bar", "v1.1.1", "baz", "faz"),
-		sample.Module("foo.com/bar/v2", "v2.0.5", "baz", "faz"),
-		sample.Module("foo.com/bar/v3", "v3.0.1", "baz"),
-		sample.Module("bar.com/foo", sample.VersionString, sample.Suffix),
+		sample.Module("a.com/M", "v1.1.1", "all", "most", "some", "one", "D/other"),
+		sample.Module("a.com/M", "v1.2.0", "all", "most"),
+		sample.Module("a.com/M/v2", "v2.0.5", "all", "most"),
+		sample.Module("a.com/M/v3", "v3.0.1", "all", "some"),
+		sample.Module("a.com/M/D", "v1.3.0", "other"),
 	} {
 		if err := testDB.InsertModule(ctx, m); err != nil {
 			t.Fatal(err)
@@ -248,93 +247,84 @@ func TestGetLatestMajorVersion(t *testing.T) {
 	}
 
 	for _, test := range []struct {
-		fullPath        string
-		modulePath      string
-		wantModulePath  string
-		wantPackagePath string
-		wantErr         error
+		unit string
+		want internal.LatestInfo
 	}{
 		{
-			fullPath:        "foo.com/bar",
-			modulePath:      "foo.com/bar",
-			wantModulePath:  "foo.com/bar/v3",
-			wantPackagePath: "foo.com/bar/v3",
+			// A unit that is the module.
+			"a.com/M",
+			internal.LatestInfo{
+				MinorVersion:      "v1.2.0",
+				MinorModulePath:   "a.com/M",
+				UnitExistsAtMinor: true,
+				MajorModulePath:   "a.com/M/v3",
+				MajorUnitPath:     "a.com/M/v3",
+			},
 		},
 		{
-			fullPath:        "bar.com/foo",
-			modulePath:      "bar.com/foo",
-			wantModulePath:  "bar.com/foo",
-			wantPackagePath: "bar.com/foo",
+			// A unit that exists in all versions of the module.
+			"a.com/M/all",
+			internal.LatestInfo{
+				MinorVersion:      "v1.2.0",
+				MinorModulePath:   "a.com/M",
+				UnitExistsAtMinor: true,
+				MajorModulePath:   "a.com/M/v3",
+				MajorUnitPath:     "a.com/M/v3/all",
+			},
 		},
 		{
-			fullPath:   "boo.com/far",
-			modulePath: "boo.com/far",
-			wantErr:    sql.ErrNoRows,
+			// A unit that exists in most versions, but not the latest major.
+			"a.com/M/most",
+			internal.LatestInfo{
+				MinorVersion:      "v1.2.0",
+				MinorModulePath:   "a.com/M",
+				UnitExistsAtMinor: true,
+				MajorModulePath:   "a.com/M/v3",
+				MajorUnitPath:     "a.com/M/v3",
+			},
 		},
 		{
-			fullPath:        "foo.com/bar/baz",
-			modulePath:      "foo.com/bar",
-			wantModulePath:  "foo.com/bar/v3",
-			wantPackagePath: "foo.com/bar/v3/baz",
+			// A unit that does not exist at the latest minor version, but does at the latest major.
+			"a.com/M/some",
+			internal.LatestInfo{
+				MinorVersion:      "v1.1.1",
+				MinorModulePath:   "a.com/M",
+				UnitExistsAtMinor: false,
+				MajorModulePath:   "a.com/M/v3",
+				MajorUnitPath:     "a.com/M/v3/some",
+			},
 		},
 		{
-			fullPath:        "foo.com/bar/faz",
-			modulePath:      "foo.com/bar",
-			wantModulePath:  "foo.com/bar/v3",
-			wantPackagePath: "foo.com/bar/v3",
+			// A unit that does not exist at the latest minor or major versions.
+			"a.com/M/one",
+			internal.LatestInfo{
+				MinorVersion:      "v1.1.1",
+				MinorModulePath:   "a.com/M",
+				UnitExistsAtMinor: false,
+				MajorModulePath:   "a.com/M/v3",
+				MajorUnitPath:     "a.com/M/v3",
+			},
+		},
+		{
+			// A unit whose latest minor version is in a different module.
+			"a.com/M/D/other",
+			internal.LatestInfo{
+				MinorVersion:      "v1.3.0",
+				MinorModulePath:   "a.com/M/D",
+				UnitExistsAtMinor: false,
+				MajorModulePath:   "a.com/M/v3",
+				MajorUnitPath:     "a.com/M/v3",
+			},
 		},
 	} {
-		gotVersion, gotPath, err := testDB.GetLatestMajorVersion(ctx, test.fullPath, test.modulePath)
-		if err != nil {
-			if test.wantErr == nil {
-				t.Fatalf("got unexpected error %v", err)
+		t.Run(test.unit, func(t *testing.T) {
+			got, err := testDB.GetLatestInfo(ctx, test.unit, "a.com/M")
+			if err != nil {
+				t.Fatal(err)
 			}
-			if !errors.Is(err, test.wantErr) {
-				t.Errorf("got err = %v, want Is(%v)", err, test.wantErr)
+			if diff := cmp.Diff(test.want, got); diff != "" {
+				t.Errorf("mismatch (-want, +got):\n%s", diff)
 			}
-		}
-		if gotVersion != test.wantModulePath || gotPath != test.wantPackagePath {
-			t.Errorf("testDB.GetLatestMajorVersion(%v, %v) = (%v, %v), want = (%v, %v)", test.fullPath, test.modulePath, gotVersion, gotPath, test.wantModulePath, test.wantPackagePath)
-		}
-	}
-}
-
-func TestGetLatestMinorModuleVersion(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	defer cancel()
-	defer ResetTestDB(testDB, t)
-
-	const (
-		modulePath    = "foo.com/M"
-		latestVersion = "v1.2.0"
-	)
-
-	for _, m := range []*internal.Module{
-		sample.Module(modulePath, "v1.1.0", "p1", "p2"),
-		sample.Module(modulePath, latestVersion, "p1"),
-		sample.Module(modulePath+"/v2", "v2.0.5", "p1", "p2"),
-	} {
-		if err := testDB.InsertModule(ctx, m); err != nil {
-			t.Fatal(err)
-		}
-	}
-
-	for _, test := range []struct {
-		unitSuffix  string
-		wantPresent bool
-	}{
-		{"p1", true},
-		{"p2", false},
-	} {
-		gotVersion, gotPresent, err := testDB.GetLatestMinorModuleVersion(ctx, modulePath+"/"+test.unitSuffix, modulePath)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if gotVersion != latestVersion {
-			t.Errorf("%s: got version %q, want %q", test.unitSuffix, gotVersion, latestVersion)
-		}
-		if gotPresent != test.wantPresent {
-			t.Errorf("%s: got present %t, want %t", test.unitSuffix, gotPresent, test.wantPresent)
-		}
+		})
 	}
 }

@@ -14,6 +14,7 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/version"
+	"golang.org/x/sync/errgroup"
 )
 
 // GetVersionsForPath returns a list of tagged versions sorted in
@@ -102,15 +103,46 @@ func versionTypeExpr(vts []version.Type) string {
 	return strings.Join(vs, ", ")
 }
 
-// GetLatestMajorVersion returns the latest module path and the full package path
+// GetLatestInfo returns the latest information about the unit in the module.
+// See internal.LatestInfo for documentation about the returned values.
+func (db *DB) GetLatestInfo(ctx context.Context, unitPath, modulePath string) (latest internal.LatestInfo, err error) {
+	defer derrors.Wrap(&err, "DB.GetLatestInfo(ctx, %q, %q)", unitPath, modulePath)
+
+	group, gctx := errgroup.WithContext(ctx)
+
+	group.Go(func() error {
+		um, err := db.GetUnitMeta(gctx, unitPath, internal.UnknownModulePath, internal.LatestVersion)
+		if err != nil {
+			return err
+		}
+		latest.MinorVersion = um.Version
+		latest.MinorModulePath = um.ModulePath
+		return nil
+	})
+	group.Go(func() (err error) {
+		latest.MajorModulePath, latest.MajorUnitPath, err = db.getLatestMajorVersion(gctx, unitPath, modulePath)
+		return err
+	})
+	group.Go(func() (err error) {
+		latest.UnitExistsAtMinor, err = db.getLatestMinorModuleVersionInfo(gctx, unitPath, modulePath)
+		return err
+	})
+
+	if err := group.Wait(); err != nil {
+		return internal.LatestInfo{}, err
+	}
+	return latest, nil
+}
+
+// getLatestMajorVersion returns the latest module path and the full package path
 // of the latest version found, given the fullPath and the modulePath.
 // For example, in the module path "github.com/casbin/casbin", there
 // is another module path with a greater major version "github.com/casbin/casbin/v3".
 // This function will return "github.com/casbin/casbin/v3" or the input module path
 // if no later module path was found. It also returns the full package path at the
 // latest module version if it exists. If not, it returns the module path.
-func (db *DB) GetLatestMajorVersion(ctx context.Context, fullPath, modulePath string) (_ string, _ string, err error) {
-	defer derrors.Wrap(&err, "DB.GetLatestMajorVersion(ctx, %q, %q)", fullPath, modulePath)
+func (db *DB) getLatestMajorVersion(ctx context.Context, fullPath, modulePath string) (_ string, _ string, err error) {
+	defer derrors.Wrap(&err, "DB.getLatestMajorVersion(ctx, %q, %q)", fullPath, modulePath)
 
 	var (
 		modID   int
@@ -143,24 +175,23 @@ func (db *DB) GetLatestMajorVersion(ctx context.Context, fullPath, modulePath st
 	}
 }
 
-// GetLatestMinorModuleVersion returns the latest minor version of modulePath,
-// and whether unitPath exists at that version.
-func (db *DB) GetLatestMinorModuleVersion(ctx context.Context, unitPath, modulePath string) (version string, unitExists bool, err error) {
-	defer derrors.Wrap(&err, "DB.GetLatestMinorVersion(ctx, %q, %q)", unitPath, modulePath)
+// getLatestMinorModuleVersion reports whether unitPath exists at the latest version of modulePath.
+func (db *DB) getLatestMinorModuleVersionInfo(ctx context.Context, unitPath, modulePath string) (unitExists bool, err error) {
+	defer derrors.Wrap(&err, "DB.getLatestMinorVersion(ctx, %q, %q)", unitPath, modulePath)
 
 	// Find the latest version of the module path.
 	var modID int
-	q, args, err := orderByLatest(squirrel.Select("m.version", "m.id").
+	q, args, err := orderByLatest(squirrel.Select("m.id").
 		From("modules m").
 		Where(squirrel.Eq{"m.module_path": modulePath})).
 		Limit(1).
 		ToSql()
 	if err != nil {
-		return "", false, err
+		return false, err
 	}
 	row := db.db.QueryRow(ctx, q, args...)
-	if err := row.Scan(&version, &modID); err != nil {
-		return "", false, err
+	if err := row.Scan(&modID); err != nil {
+		return false, err
 	}
 
 	// See if the unit path exists at that version.
@@ -168,10 +199,10 @@ func (db *DB) GetLatestMinorModuleVersion(ctx context.Context, unitPath, moduleP
 	err = db.db.QueryRow(ctx, `SELECT 1 FROM units WHERE path = $1 AND module_id = $2`, unitPath, modID).Scan(&x)
 	switch err {
 	case nil:
-		return version, true, nil
+		return true, nil
 	case sql.ErrNoRows:
-		return version, false, nil
+		return false, nil
 	default:
-		return "", false, err
+		return false, err
 	}
 }

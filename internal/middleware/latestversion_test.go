@@ -11,6 +11,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"golang.org/x/pkgsite/internal"
 )
 
 func TestLatestMinorVersion(t *testing.T) {
@@ -154,8 +156,13 @@ func TestLatestMinorVersion(t *testing.T) {
 }
 
 func constLatestFunc(minorVersion, majorModPath, majorPackagePath string) latestFunc {
-	return func(context.Context, string, string) LatestInfo {
-		return LatestInfo{minorVersion, majorModPath, majorPackagePath}
+	return func(context.Context, string, string) internal.LatestInfo {
+		return internal.LatestInfo{
+			MinorVersion:    minorVersion,
+			MinorModulePath: "",
+			MajorModulePath: majorModPath,
+			MajorUnitPath:   majorPackagePath,
+		}
 	}
 }
 
