@@ -303,7 +303,6 @@ func (pdb *DB) insertUnits(ctx context.Context, db *database.DB, m *internal.Mod
 		return err
 	}
 
-	log.Debugf(ctx, "insertUnits(%q): read %d paths", m.ModulePath, len(pathToID))
 	// Insert any unit paths that we don't already have.
 	var pathValues []interface{}
 	for _, u := range m.Units {
@@ -312,7 +311,6 @@ func (pdb *DB) insertUnits(ctx context.Context, db *database.DB, m *internal.Mod
 		}
 	}
 	if len(pathValues) > 0 {
-		log.Debugf(ctx, "insertUnits(%q): upserting %d paths", m.ModulePath, len(pathValues))
 		// Insert data into the paths table.
 		pathCols := []string{"path"}
 		uniquePathCols := []string{"path"}

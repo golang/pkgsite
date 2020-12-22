@@ -133,7 +133,6 @@ func FetchModule(ctx context.Context, modulePath, requestedVersion string, proxy
 		if fi != nil {
 			finishFetchInfo(fi, fr.Status, fr.Error)
 		}
-		log.Debugf(ctx, "memory after fetch of %s@%s: %dM", modulePath, requestedVersion, allocMeg())
 	}()
 
 	var (
