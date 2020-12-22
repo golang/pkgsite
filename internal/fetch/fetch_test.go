@@ -28,10 +28,7 @@ import (
 	"golang.org/x/pkgsite/internal/testing/sample"
 )
 
-var (
-	testTimeout   = 30 * time.Second
-	sourceTimeout = 1 * time.Second
-)
+var testTimeout = 30 * time.Second
 
 var templateSource = template.TrustedSourceFromConstant("../../content/static/html/doc")
 

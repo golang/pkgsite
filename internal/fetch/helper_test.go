@@ -130,14 +130,13 @@ func proxyFetcher(t *testing.T, withLicenseDetector bool, ctx context.Context, m
 		fetchVersion = version
 	}
 
-	sourceClient := source.NewClient(sourceTimeout)
 	proxyClient, teardownProxy := proxy.SetupTestClient(t, []*proxy.Module{{
 		ModulePath: modulePath,
 		Version:    version,
 		Files:      mod.mod.Files,
 	}})
 	defer teardownProxy()
-	got := FetchModule(ctx, modulePath, fetchVersion, proxyClient, sourceClient, false)
+	got := FetchModule(ctx, modulePath, fetchVersion, proxyClient, source.NewClientForTesting(), false)
 	if !withLicenseDetector {
 		return got, nil
 	}
@@ -159,8 +158,7 @@ func localFetcher(t *testing.T, withLicenseDetector bool, ctx context.Context, m
 	defer os.RemoveAll(directory)
 
 	modulePath := mod.mod.ModulePath
-	sourceClient := source.NewClient(sourceTimeout)
-	got := FetchLocalModule(ctx, modulePath, directory, sourceClient)
+	got := FetchLocalModule(ctx, modulePath, directory, source.NewClientForTesting())
 	if !withLicenseDetector {
 		return got, nil
 	}

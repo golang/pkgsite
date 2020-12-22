@@ -205,6 +205,7 @@ func (i *Info) UnmarshalJSON(data []byte) (err error) {
 
 type Client struct {
 	// client used for HTTP requests. It is mutable for testing purposes.
+	// If nil, then moduleInfoDynamic will return nil, nil; also for testing.
 	httpClient *http.Client
 }
 
@@ -216,6 +217,13 @@ func NewClient(timeout time.Duration) *Client {
 			Timeout:   timeout,
 		},
 	}
+}
+
+// NewClientForTesting returns a Client suitable for testing. It returns the
+// same results as an ordinary client for statically recognizable paths, but
+// always returns a nil *Info for dynamic paths (those requiring HTTP requests).
+func NewClientForTesting() *Client {
+	return &Client{}
 }
 
 // doURL makes an HTTP request using the given url and method. It returns an
@@ -273,7 +281,9 @@ func ModuleInfo(ctx context.Context, client *Client, modulePath, version string)
 			templates: templates,
 		}
 	}
-	adjustVersionedModuleDirectory(ctx, client, info)
+	if info != nil {
+		adjustVersionedModuleDirectory(ctx, client, info)
+	}
 	return info, nil
 	// TODO(golang/go#39627): support launchpad.net, including the special case
 	// in cmd/go/internal/get/vcs.go.
@@ -349,6 +359,10 @@ func matchStatic(moduleOrRepoPath string) (repo, relativeModulePath string, _ ur
 // moduleInfoDynamic uses the go-import and go-source meta tags to construct an Info.
 func moduleInfoDynamic(ctx context.Context, client *Client, modulePath, version string) (_ *Info, err error) {
 	defer derrors.Wrap(&err, "source.moduleInfoDynamic(ctx, client, %q, %q)", modulePath, version)
+
+	if client.httpClient == nil {
+		return nil, nil // for testing
+	}
 
 	sourceMeta, err := fetchMeta(ctx, client, modulePath)
 	if err != nil {
