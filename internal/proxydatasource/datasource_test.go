@@ -59,7 +59,7 @@ func setup(t *testing.T) (context.Context, *DataSource, func()) {
 	}
 	client, teardownProxy := proxy.SetupTestClient(t, testModules)
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
-	return ctx, New(client), func() {
+	return ctx, NewForTesting(client), func() {
 		teardownProxy()
 		cancel()
 	}
@@ -236,7 +236,7 @@ func TestDataSource_GetLatestInfo(t *testing.T) {
 	defer teardownProxy()
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	ds := New(client)
+	ds := NewForTesting(client)
 
 	for _, test := range []struct {
 		fullPath        string

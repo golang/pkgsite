@@ -29,9 +29,17 @@ var _ internal.DataSource = (*DataSource)(nil)
 
 // New returns a new direct proxy datasource.
 func New(proxyClient *proxy.Client) *DataSource {
+	return newDataSource(proxyClient, source.NewClient(1*time.Minute))
+}
+
+func NewForTesting(proxyClient *proxy.Client) *DataSource {
+	return newDataSource(proxyClient, source.NewClientForTesting())
+}
+
+func newDataSource(proxyClient *proxy.Client, sourceClient *source.Client) *DataSource {
 	return &DataSource{
 		proxyClient:          proxyClient,
-		sourceClient:         source.NewClient(1 * time.Minute),
+		sourceClient:         sourceClient,
 		versionCache:         make(map[versionKey]*versionEntry),
 		modulePathToVersions: make(map[string][]string),
 		packagePathToModules: make(map[string][]string),
