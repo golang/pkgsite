@@ -190,6 +190,7 @@ func main() {
 	mw := middleware.Chain(
 		middleware.RequestLog(cmdconfig.Logger(ctx, cfg, "frontend-log")),
 		middleware.AcceptRequests(http.MethodGet, http.MethodPost, http.MethodHead), // accept only GETs, POSTs and HEADs
+		middleware.BetaPkgGoDevRedirect(),
 		middleware.Quota(cfg.Quota, cacheClient),
 		middleware.RedirectedFrom(),
 		middleware.SecureHeaders(!*disableCSP), // must come before any caching for nonces to work
