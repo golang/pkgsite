@@ -57,7 +57,13 @@
                 data-mpath="{{.Unit.ModulePath}}"
                 data-ppath="{{.Unit.Path}}"
                 data-pagetype="{{.PageType}}">
-              <span>Latest</span>
+              <span class="DetailsHeader-span--latest">Latest</span>
+              {{if (.Experiments.IsActive "not-at-latest")}}
+                <span class="DetailsHeader-span--notAtLatest">
+                    Latest
+                    {{template "unit_meta_details_toggletip" "This package is not in the latest version of its module."}}
+                </span>
+              {{end}}
               <a href="{{.LatestURL}}">Go to latest</a>
             </div>
           </span>

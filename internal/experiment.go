@@ -8,6 +8,7 @@ package internal
 const (
 	ExperimentGetUnitMetaQuery   = "get-unit-meta-query"
 	ExperimentGoldmark           = "goldmark"
+	ExperimentNotAtLatest        = "not-at-latest"
 	ExperimentReadmeOutline      = "readme-outline"
 	ExperimentUnitSidebarDetails = "unit-sidebar-details"
 )
@@ -17,6 +18,7 @@ const (
 var Experiments = map[string]string{
 	ExperimentGetUnitMetaQuery:   "Enable the new get unit meta query, which reads from the paths table.",
 	ExperimentGoldmark:           "Enable the usage of rendering markdown using goldmark instead of blackfriday.",
+	ExperimentNotAtLatest:        "Enable the display of a 'not at latest' badge.",
 	ExperimentReadmeOutline:      "Enable the readme outline in the side nav.",
 	ExperimentUnitSidebarDetails: "Enable the details section in the right sidebar.",
 }

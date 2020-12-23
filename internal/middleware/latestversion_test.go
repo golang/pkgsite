@@ -13,34 +13,35 @@ import (
 	"testing"
 
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/experiment"
 )
 
 func TestLatestMinorVersion(t *testing.T) {
 	for _, test := range []struct {
 		name   string
-		latest latestFunc
+		latest internal.LatestInfo
 		in     string
 		want   string
 	}{
 		{
 			name:   "package version is not latest",
-			latest: constLatestFunc("v1.2.3", "", ""),
+			latest: internal.LatestInfo{MinorVersion: "v1.2.3"},
 			in: `
                 <div class="DetailsHeader-badge $$GODISCOVERY_LATESTMINORCLASS$$"
-					 data-version="v1.0.0" data-mpath="p1/p2" data-ppath="p1/p2/p3" data-pagetype="pkg">
+                    data-version="v1.0.0" data-mpath="p1/p2" data-ppath="p1/p2/p3" data-pagetype="pkg">
                     <span>Latest</span>
                     <a href="p1/p2@$$GODISCOVERY_LATESTMINORVERSION$$/p3">Go to latest</a>
                 </div>`,
 			want: `
                 <div class="DetailsHeader-badge DetailsHeader-badge--goToLatest"
-					 data-version="v1.0.0" data-mpath="p1/p2" data-ppath="p1/p2/p3" data-pagetype="pkg">
+                    data-version="v1.0.0" data-mpath="p1/p2" data-ppath="p1/p2/p3" data-pagetype="pkg">
                     <span>Latest</span>
                     <a href="p1/p2@v1.2.3/p3">Go to latest</a>
                 </div>`,
 		},
 		{
 			name:   "package version is latest",
-			latest: constLatestFunc("v1.2.3", "", ""),
+			latest: internal.LatestInfo{MinorVersion: "v1.2.3", UnitExistsAtMinor: true},
 			in: `
                 <div class="DetailsHeader-badge $$GODISCOVERY_LATESTMINORCLASS$$"
 					 data-version="v1.2.3" data-mpath="p1/p2" data-ppath="p1/p2/p3" data-pagetype="pkg">
@@ -56,7 +57,7 @@ func TestLatestMinorVersion(t *testing.T) {
 		},
 		{
 			name:   "package version with build is latest",
-			latest: constLatestFunc("v1.2.3+build", "", ""),
+			latest: internal.LatestInfo{MinorVersion: "v1.2.3+build", UnitExistsAtMinor: true},
 			in: `
                 <div class="DetailsHeader-badge $$GODISCOVERY_LATESTMINORCLASS$$"
 					 data-version="v1.2.3&#43;build" data-mpath="p1/p2" data-ppath="p1/p2/p3" data-pagetype="pkg">
@@ -72,7 +73,7 @@ func TestLatestMinorVersion(t *testing.T) {
 		},
 		{
 			name:   "module version is not latest",
-			latest: constLatestFunc("v1.2.3", "", ""),
+			latest: internal.LatestInfo{MinorVersion: "v1.2.3"},
 			in: `
                 <div class="DetailsHeader-badge $$GODISCOVERY_LATESTMINORCLASS$$"
 					 data-version="v1.0.0" data-mpath="p1/p2" data-ppath="" data-pagetype="pkg">
@@ -88,56 +89,77 @@ func TestLatestMinorVersion(t *testing.T) {
 		},
 		{
 			name:   "module version is latest",
-			latest: constLatestFunc("v1.2.3", "", ""),
+			latest: internal.LatestInfo{MinorVersion: "v1.2.3", UnitExistsAtMinor: true},
 			in: `
-                <div class="DetailsHeader-badge $$GODISCOVERY_LATESTMINORCLASS$$"
+		        <div class="DetailsHeader-badge $$GODISCOVERY_LATESTMINORCLASS$$"
 					 data-version="v1.2.3" data-mpath="p1/p2" data-ppath="" data-pagetype="pkg">
-                    <span>Latest</span>
-                    <a href="mod/p1/p2@$$GODISCOVERY_LATESTMINORVERSION$$">Go to latest</a>
-                </div>`,
+		            <span>Latest</span>
+		            <a href="mod/p1/p2@$$GODISCOVERY_LATESTMINORVERSION$$">Go to latest</a>
+		        </div>`,
 			want: `
-                <div class="DetailsHeader-badge DetailsHeader-badge--latest"
+		        <div class="DetailsHeader-badge DetailsHeader-badge--latest"
 					 data-version="v1.2.3" data-mpath="p1/p2" data-ppath="" data-pagetype="pkg">
-                    <span>Latest</span>
-                    <a href="mod/p1/p2@v1.2.3">Go to latest</a>
-                </div>`,
+		            <span>Latest</span>
+		            <a href="mod/p1/p2@v1.2.3">Go to latest</a>
+		        </div>`,
+		},
+		{
+			name:   "package not in module latest",
+			latest: internal.LatestInfo{MinorVersion: "v1.2.3", UnitExistsAtMinor: false},
+			in: `
+		        <div class="DetailsHeader-badge $$GODISCOVERY_LATESTMINORCLASS$$"
+					 data-version="v1.2.3" data-mpath="p1/p2" data-ppath="" data-pagetype="pkg">
+		            <span>Latest</span>
+		            <a href="mod/p1/p2@$$GODISCOVERY_LATESTMINORVERSION$$">Go to latest</a>
+		        </div>`,
+			want: `
+		        <div class="DetailsHeader-badge DetailsHeader-badge--notAtLatest"
+					 data-version="v1.2.3" data-mpath="p1/p2" data-ppath="" data-pagetype="pkg">
+		            <span>Latest</span>
+		            <a href="mod/p1/p2@v1.2.3">Go to latest</a>
+		        </div>`,
 		},
 		{
 			name:   "latest func returns empty string",
-			latest: constLatestFunc("", "", ""),
+			latest: internal.LatestInfo{},
 			in: `
-                <div class="DetailsHeader-badge $$GODISCOVERY_LATESTMINORCLASS$$"
+		        <div class="DetailsHeader-badge $$GODISCOVERY_LATESTMINORCLASS$$"
 					 data-version="v1.2.3" data-mpath="p1/p2" data-ppath="" data-pagetype="pkg">
-                    <span>Latest</span>
-                    <a href="mod/p1/p2@$$GODISCOVERY_LATESTMINORVERSION$$">Go to latest</a>
-                </div>`,
+		            <span>Latest</span>
+		            <a href="mod/p1/p2@$$GODISCOVERY_LATESTMINORVERSION$$">Go to latest</a>
+		        </div>`,
 			want: `
-                <div class="DetailsHeader-badge DetailsHeader-badge--unknown"
+		        <div class="DetailsHeader-badge DetailsHeader-badge--unknown"
 					 data-version="v1.2.3" data-mpath="p1/p2" data-ppath="" data-pagetype="pkg">
-                    <span>Latest</span>
-                    <a href="mod/p1/p2@">Go to latest</a>
-                </div>`,
+		            <span>Latest</span>
+		            <a href="mod/p1/p2@">Go to latest</a>
+		        </div>`,
 		},
 		{
 			name:   "no regexp match",
-			latest: constLatestFunc("v1.2.3", "", ""),
+			latest: internal.LatestInfo{MinorVersion: "v1.2.3"},
 			in: `
-                <div class="DetailsHeader-badge $$GODISCOVERY_LATESTMINORCLASS$$">
-                    <span>Latest</span>
-                    <a href="mod/p1/p2@$$GODISCOVERY_LATESTMINORVERSION$$">Go to latest</a>
-                </div>`,
+		        <div class="DetailsHeader-badge $$GODISCOVERY_LATESTMINORCLASS$$">
+		            <span>Latest</span>
+		            <a href="mod/p1/p2@$$GODISCOVERY_LATESTMINORVERSION$$">Go to latest</a>
+		        </div>`,
 			want: `
-                <div class="DetailsHeader-badge $$GODISCOVERY_LATESTMINORCLASS$$">
-                    <span>Latest</span>
-                    <a href="mod/p1/p2@$$GODISCOVERY_LATESTMINORVERSION$$">Go to latest</a>
-                </div>`,
+		        <div class="DetailsHeader-badge $$GODISCOVERY_LATESTMINORCLASS$$">
+		            <span>Latest</span>
+		            <a href="mod/p1/p2@$$GODISCOVERY_LATESTMINORVERSION$$">Go to latest</a>
+		        </div>`,
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				fmt.Fprint(w, test.in)
 			})
-			ts := httptest.NewServer(LatestVersions(test.latest)(handler))
+			lfunc := func(context.Context, string, string) internal.LatestInfo { return test.latest }
+			lv := LatestVersions(lfunc)(handler)
+			addExp := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				lv.ServeHTTP(w, r.WithContext(experiment.NewContext(r.Context(), internal.ExperimentNotAtLatest)))
+			})
+			ts := httptest.NewServer(addExp)
 			defer ts.Close()
 			resp, err := ts.Client().Get(ts.URL)
 			if err != nil {
@@ -155,28 +177,17 @@ func TestLatestMinorVersion(t *testing.T) {
 	}
 }
 
-func constLatestFunc(minorVersion, majorModPath, majorPackagePath string) latestFunc {
-	return func(context.Context, string, string) internal.LatestInfo {
-		return internal.LatestInfo{
-			MinorVersion:    minorVersion,
-			MinorModulePath: "",
-			MajorModulePath: majorModPath,
-			MajorUnitPath:   majorPackagePath,
-		}
-	}
-}
-
 func TestLatestMajorVersion(t *testing.T) {
 	for _, test := range []struct {
 		name        string
-		latest      latestFunc
+		latest      internal.LatestInfo
 		modulePaths []string
 		in          string
 		want        string
 	}{
 		{
 			name:   "module path is not at latest",
-			latest: constLatestFunc("", "foo.com/bar/v3", "foo.com/bar/v3"),
+			latest: internal.LatestInfo{MajorModulePath: "foo.com/bar/v3", MajorUnitPath: "foo.com/bar/v3"},
 			modulePaths: []string{
 				"foo.com/bar",
 				"foo.com/bar/v2",
@@ -199,7 +210,7 @@ func TestLatestMajorVersion(t *testing.T) {
 		},
 		{
 			name:   "module path is at latest",
-			latest: constLatestFunc("", "foo.com/bar/v3", "foo.com/bar/v3"),
+			latest: internal.LatestInfo{MajorModulePath: "foo.com/bar/v3", MajorUnitPath: "foo.com/bar/v3"},
 			modulePaths: []string{
 				"foo.com/bar",
 				"foo.com/bar/v2",
@@ -222,7 +233,7 @@ func TestLatestMajorVersion(t *testing.T) {
 		},
 		{
 			name:   "full path is not at the latest",
-			latest: constLatestFunc("", "foo.com/bar/v3", "foo.com/bar/v3/far"),
+			latest: internal.LatestInfo{MajorModulePath: "foo.com/bar/v3", MajorUnitPath: "foo.com/bar/v3/far"},
 			modulePaths: []string{
 				"foo.com/bar",
 				"foo.com/bar/v2",
@@ -248,7 +259,8 @@ func TestLatestMajorVersion(t *testing.T) {
 			handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				fmt.Fprint(w, test.in)
 			})
-			ts := httptest.NewServer(LatestVersions(test.latest)(handler))
+			lfunc := func(context.Context, string, string) internal.LatestInfo { return test.latest }
+			ts := httptest.NewServer(LatestVersions(lfunc)(handler))
 			defer ts.Close()
 			resp, err := ts.Client().Get(ts.URL)
 			if err != nil {

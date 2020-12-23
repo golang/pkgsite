@@ -63,7 +63,7 @@
   cursor: pointer;
   width: 1.625rem;
 }
-.UnitMetaDetails [role='status'] {
+.UnitMetaDetails-toggletip [role='status'] {
   height: 0;
   position: absolute;
   width: 0;
