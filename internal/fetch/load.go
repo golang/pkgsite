@@ -66,8 +66,19 @@ func loadPackage(ctx context.Context, zipGoFiles []*zip.File, innerPath string, 
 	ctx, span := trace.StartSpan(ctx, "fetch.loadPackage")
 	defer span.End()
 	var pkgs []*goPackage
+	// Make a map with all the zip file contents.
+	files := make(map[string][]byte)
+	for _, f := range zipGoFiles {
+		_, name := path.Split(f.Name)
+		b, err := readZipFile(f, MaxFileSize)
+		if err != nil {
+			return nil, err
+		}
+		files[name] = b
+	}
+
 	for _, env := range goEnvs {
-		pkg, err := loadPackageWithBuildContext(ctx, env.GOOS, env.GOARCH, zipGoFiles, innerPath, sourceInfo, modInfo)
+		pkg, err := loadPackageWithBuildContext(ctx, env.GOOS, env.GOARCH, files, innerPath, sourceInfo, modInfo)
 		if err != nil && !errors.Is(err, godoc.ErrTooLarge) && !errors.Is(err, derrors.NotFound) {
 			return nil, err
 		}
@@ -126,12 +137,12 @@ var httpPost = http.Post
 // or all .go files have been excluded by constraints.
 // A *BadPackageError error is returned if the directory
 // contains .go files but do not make up a valid package.
-func loadPackageWithBuildContext(ctx context.Context, goos, goarch string, zipGoFiles []*zip.File, innerPath string, sourceInfo *source.Info, modInfo *godoc.ModuleInfo) (_ *goPackage, err error) {
+func loadPackageWithBuildContext(ctx context.Context, goos, goarch string, files map[string][]byte, innerPath string, sourceInfo *source.Info, modInfo *godoc.ModuleInfo) (_ *goPackage, err error) {
 	modulePath := modInfo.ModulePath
-	defer derrors.Wrap(&err, "loadPackageWithBuildContext(%q, %q, zipGoFiles, %q, %q, %+v)",
+	defer derrors.Wrap(&err, "loadPackageWithBuildContext(%q, %q, files, %q, %q, %+v)",
 		goos, goarch, innerPath, modulePath, sourceInfo)
 
-	packageName, goFiles, fset, err := loadFilesWithBuildContext(innerPath, goos, goarch, zipGoFiles)
+	packageName, goFiles, fset, err := loadFilesWithBuildContext(innerPath, goos, goarch, files)
 	if err != nil {
 		return nil, err
 	}
@@ -180,9 +191,9 @@ func loadPackageWithBuildContext(ctx context.Context, goos, goarch string, zipGo
 // and goarch in the zip. It returns the package name as it occurs in the
 // source, a map of the ASTs of all the Go files, and the token.FileSet used for
 // parsing.
-func loadFilesWithBuildContext(innerPath, goos, goarch string, zipGoFiles []*zip.File) (pkgName string, fileMap map[string]*ast.File, _ *token.FileSet, _ error) {
+func loadFilesWithBuildContext(innerPath, goos, goarch string, allFiles map[string][]byte) (pkgName string, fileMap map[string]*ast.File, _ *token.FileSet, _ error) {
 	// Apply build constraints to get a map from matching file names to their contents.
-	files, err := matchingFiles(goos, goarch, zipGoFiles)
+	files, err := matchingFiles(goos, goarch, allFiles)
 	if err != nil {
 		return "", nil, nil, err
 	}
@@ -232,18 +243,8 @@ func loadFilesWithBuildContext(innerPath, goos, goarch string, zipGoFiles []*zip
 
 // matchingFiles returns a map from file names to their contents, read from zipGoFiles.
 // It includes only those files that match the build context determined by goos and goarch.
-func matchingFiles(goos, goarch string, zipGoFiles []*zip.File) (files map[string][]byte, err error) {
+func matchingFiles(goos, goarch string, allFiles map[string][]byte) (matchedFiles map[string][]byte, err error) {
 	defer derrors.Wrap(&err, "matchingFiles(%q, %q, zipGoFiles)", goos, goarch)
-	// Populate the map with all the zip files.
-	files = make(map[string][]byte)
-	for _, f := range zipGoFiles {
-		_, name := path.Split(f.Name)
-		b, err := readZipFile(f, MaxFileSize)
-		if err != nil {
-			return nil, err
-		}
-		files[name] = b
-	}
 
 	// bctx is used to make decisions about which of the .go files are included
 	// by build constraints.
@@ -256,7 +257,7 @@ func matchingFiles(goos, goarch string, zipGoFiles []*zip.File) (files map[strin
 
 		JoinPath: path.Join,
 		OpenFile: func(name string) (io.ReadCloser, error) {
-			return ioutil.NopCloser(bytes.NewReader(files[name])), nil
+			return ioutil.NopCloser(bytes.NewReader(allFiles[name])), nil
 		},
 
 		// If left nil, the default implementations of these read from disk,
@@ -270,17 +271,21 @@ func matchingFiles(goos, goarch string, zipGoFiles []*zip.File) (files map[strin
 		ReadDir:       func(string) ([]os.FileInfo, error) { panic("internal error: unexpected call to ReadDir") },
 	}
 
-	for name := range files {
+	// Copy the input map so we don't modify it.
+	matchedFiles = map[string][]byte{}
+	for n, c := range allFiles {
+		matchedFiles[n] = c
+	}
+	for name := range allFiles {
 		match, err := bctx.MatchFile(".", name) // This will access the file we just added to files map above.
 		if err != nil {
 			return nil, &BadPackageError{Err: fmt.Errorf(`bctx.MatchFile(".", %q): %w`, name, err)}
 		}
 		if !match {
-			// Excluded by build context.
-			delete(files, name)
+			delete(matchedFiles, name)
 		}
 	}
-	return files, nil
+	return matchedFiles, nil
 }
 
 // readZipFile decompresses zip file f and returns its uncompressed contents.

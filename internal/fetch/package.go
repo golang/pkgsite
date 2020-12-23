@@ -108,7 +108,7 @@ func extractPackagesFromZip(ctx context.Context, modulePath, resolvedVersion str
 	// only after we're sure this phase passed without errors.
 	for _, f := range r.File {
 		if f.Mode().IsDir() {
-			// While "go mod download" will never put a directory in a zip, any can serve their
+			// While "go mod download" will never put a directory in a zip, anyone can serve their
 			// own zips. Example: go.felesatra.moe/binpack@v0.1.0.
 			// Directory entries are harmless, so we just ignore them.
 			continue

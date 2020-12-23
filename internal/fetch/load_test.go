@@ -5,8 +5,6 @@
 package fetch
 
 import (
-	"archive/zip"
-	"bytes"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -28,15 +26,15 @@ func TestMatchingFiles(t *testing.T) {
 		type Value int`
 
 	plainContents := map[string]string{
-		"README.md":      "THIS IS A README",
-		"LICENSE.md":     testhelper.MITLicense,
-		"plain/plain.go": plainGoBody,
+		"README.md":  "THIS IS A README",
+		"LICENSE.md": testhelper.MITLicense,
+		"plain.go":   plainGoBody,
 	}
 
 	jsContents := map[string]string{
 		"README.md":  "THIS IS A README",
 		"LICENSE.md": testhelper.MITLicense,
-		"js/js.go":   jsGoBody,
+		"js.go":      jsGoBody,
 	}
 	for _, test := range []struct {
 		name         string
@@ -80,15 +78,11 @@ func TestMatchingFiles(t *testing.T) {
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			data, err := testhelper.ZipContents(test.contents)
-			if err != nil {
-				t.Fatal(err)
+			files := map[string][]byte{}
+			for n, c := range test.contents {
+				files[n] = []byte(c)
 			}
-			r, err := zip.NewReader(bytes.NewReader(data), int64(len(data)))
-			if err != nil {
-				t.Fatal(err)
-			}
-			got, err := matchingFiles(test.goos, test.goarch, r.File)
+			got, err := matchingFiles(test.goos, test.goarch, files)
 			if err != nil {
 				t.Fatal(err)
 			}
