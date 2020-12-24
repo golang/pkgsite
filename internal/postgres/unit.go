@@ -297,11 +297,12 @@ func (db *DB) getPackagesInUnit(ctx context.Context, fullPath, modulePath, resol
 		FROM modules m
 		INNER JOIN units u
 		ON u.module_id = m.id
-		INNER JOIN documentation d
+		LEFT JOIN documentation d
 		ON d.unit_id = u.id
 		WHERE
 			m.module_path = $1
 			AND m.version = $2
+			AND u.name != ''
 		ORDER BY path;`
 	var packages []*internal.PackageMeta
 	collect := func(rows *sql.Rows) error {
@@ -314,7 +315,7 @@ func (db *DB) getPackagesInUnit(ctx context.Context, fullPath, modulePath, resol
 			&pkg.Path,
 			&pkg.Name,
 			&pkg.IsRedistributable,
-			&pkg.Synopsis,
+			database.NullIsEmpty(&pkg.Synopsis),
 			pq.Array(&licenseTypes),
 			pq.Array(&licensePaths),
 		); err != nil {

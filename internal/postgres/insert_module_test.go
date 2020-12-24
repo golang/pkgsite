@@ -89,8 +89,7 @@ func checkModule(ctx context.Context, t *testing.T, want *internal.Module) {
 		wantu.LicenseContents = sample.Licenses
 		var subdirectories []*internal.PackageMeta
 		for _, u := range want.Units {
-			if u.IsPackage() && (strings.HasPrefix(u.Path, wantu.Path) ||
-				wantu.Path == stdlib.ModulePath) {
+			if u.IsPackage() && (strings.HasPrefix(u.Path, wantu.Path) || wantu.Path == stdlib.ModulePath) {
 				subdirectories = append(subdirectories, sample.PackageMeta(u.Path))
 			}
 		}

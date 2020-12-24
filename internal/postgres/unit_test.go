@@ -194,6 +194,20 @@ func checkUnit(ctx context.Context, t *testing.T, um *internal.UnitMeta, want *i
 	}
 }
 
+func TestGetUnit_SubdirectoriesShowNonRedistPackages(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
+
+	defer ResetTestDB(testDB, t)
+
+	m := sample.DefaultModule()
+	m.IsRedistributable = false
+	m.Packages()[0].IsRedistributable = false
+	if err := testDB.InsertModule(ctx, m); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestGetUnitFieldSet(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
