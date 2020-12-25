@@ -399,7 +399,7 @@ func checkForPath(ctx context.Context, db *postgres.DB,
 		}
 		// All remaining non-200 statuses will be in the 40x range.
 		// In that case, just return a not found error.
-		if fr.status > 400 {
+		if fr.status >= 400 {
 			fr.status = http.StatusNotFound
 			fr.err = errModuleDoesNotExist
 			return
