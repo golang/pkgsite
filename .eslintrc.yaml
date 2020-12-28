@@ -1,0 +1,17 @@
+root: true
+parser: '@typescript-eslint/parser'
+parserOptions:
+  project: './tsconfig.json'
+env:
+  browser: true
+plugins:
+  - '@typescript-eslint'
+extends:
+  - eslint:recommended
+  - plugin:@typescript-eslint/recommended
+  - plugin:prettier/recommended
+  - prettier/@typescript-eslint
+overrides:
+  - files:
+    - "*.test.ts"
+    extends: plugin:jest/recommended
