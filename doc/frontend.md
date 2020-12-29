@@ -49,6 +49,15 @@ If you add, change or remove any inline scripts in templates, run
 `devtools/cmd/csphash` to update the hashes. Running `all.bash`
 will do that as well.
 
+### Testing
+
+Pages on pkg.go.dev have accessibility tree and image snapshot tests. These tests
+will create diffs for inspection on failure. Timeouts and diff thresholds are
+configurable for image snapshots if adjustments are needed to prevent test flake.
+See the [API](https://github.com/americanexpress/jest-image-snapshot#%EF%B8%8F-api) for jest image snapshots for more information.
+
+To run the tests locally, start the pkgsite server and then run
+`./devtools/npm.sh run test-e2e`
 ### Compiling JS sources
 
 The frontend serves compiled and minified JS. If you're modifying any JS code, make
