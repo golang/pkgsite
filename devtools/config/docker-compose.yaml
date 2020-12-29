@@ -8,11 +8,13 @@ services:
     build:
       context: ../../
       dockerfile: devtools/config/Dockerfile.npm
+    environment:
+      FRONTEND_URL: http://host.docker.internal:8080
     image: pkgsite_npm
     init: true
     volumes:
       - ../..:/pkgsite
       # Mounts empty volumes in place of git directories so they can't
-      # be written to during npm package installs. 
+      # be written to during npm package installs.
       - /pkgsite/.git
       - /pkgsite/private/.git
