@@ -6,6 +6,7 @@
  */
 
 import { AccordionController } from './accordion.js';
+import { CopyToClipboardController } from './clipboard.js';
 import './toggle-tip.js';
 
 /**
@@ -16,6 +17,14 @@ const accordion = document.querySelector('.js-accordion');
 if (accordion) {
   new AccordionController(accordion);
 }
+
+/**
+ * Instantiates CopyToClipboardController controller copy buttons
+ * on the unit page.
+ */
+document.querySelectorAll('.js-copyToClipboard').forEach(el => {
+  new CopyToClipboardController(el);
+});
 
 /**
  * Event handlers for expanding and collapsing the readme section.
