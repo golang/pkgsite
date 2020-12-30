@@ -39,33 +39,32 @@ func TestLatestMinorVersion(t *testing.T) {
 		wantErr          error
 	}{
 		{
-			name:             "get latest minor version for a persisted module",
-			fullPath:         "github.com/mymodule/av1module",
-			modulePath:       internal.UnknownModulePath,
+			name:             "package",
+			fullPath:         "github.com/mymodule/av1module/bar",
+			modulePath:       "github.com/mymodule/av1module",
 			wantMinorVersion: "v1.0.1",
-			wantErr:          nil,
 		},
 		{
-			name:             "module does not exist",
-			fullPath:         "github.com/mymodule/doesnotexist",
-			modulePath:       internal.UnknownModulePath,
-			wantMinorVersion: "",
-			wantErr:          fmt.Errorf("error while retriving minor version"),
+			name:             "module",
+			fullPath:         "github.com/mymodule/av1module",
+			modulePath:       "github.com/mymodule/av1module",
+			wantMinorVersion: "v1.0.1",
+		},
+		{
+			name:       "module does not exist",
+			fullPath:   "github.com/mymodule/doesnotexist",
+			modulePath: internal.UnknownModulePath,
+			wantErr:    fmt.Errorf("error while retriving minor version"),
 		},
 	}
 	ctx := context.Background()
 	insertTestModules(ctx, t, persistedModules)
+	svr := &Server{getDataSource: func(context.Context) internal.DataSource { return testDB }}
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
-			v, err := latestMinorVersion(ctx, testDB, tc.fullPath, tc.modulePath)
-			if err != nil {
-				if tc.wantErr == nil {
-					t.Fatalf("got %v, want no error", err)
-				}
-				return
-			}
-			if v != tc.wantMinorVersion {
-				t.Fatalf("got %q, want %q", tc.wantMinorVersion, v)
+			got := svr.GetLatestInfo(ctx, tc.fullPath, tc.modulePath)
+			if got.MinorVersion != tc.wantMinorVersion {
+				t.Fatalf("got %q, want %q", tc.wantMinorVersion, got.MinorVersion)
 			}
 		})
 	}
