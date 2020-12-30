@@ -70,15 +70,6 @@ var probes = []*Probe{
 		BypassCache: true,
 	},
 	{
-		Name:        "pkg-firestore-readme",
-		RelativeURL: "cloud.google.com/go/firestore?tab=readme",
-	},
-	{
-		Name:        "pkg-firestore-readme-nocache",
-		RelativeURL: "cloud.google.com/go/firestore?tab=readme",
-		BypassCache: true,
-	},
-	{
 		Name:        "pkg-firestore-versions",
 		RelativeURL: "cloud.google.com/go/firestore?tab=versions",
 	},
@@ -134,18 +125,18 @@ var probes = []*Probe{
 		BypassCache: true,
 	},
 	{
-		Name:        "mod-xtools-nocache",
-		RelativeURL: "mod/golang.org/x/tools",
+		Name:        "xtools-nocache",
+		RelativeURL: "golang.org/x/tools",
 		BypassCache: true,
 	},
 	{
-		Name:        "mod-xtools-packages-nocache",
-		RelativeURL: "mod/golang.org/x/tools?tab=packages",
+		Name:        "xtools-versions-nocache",
+		RelativeURL: "golang.org/x/tools?tab=versions",
 		BypassCache: true,
 	},
 	{
-		Name:        "mod-xtools-versions-nocache",
-		RelativeURL: "mod/golang.org/x/tools?tab=versions",
+		Name:        "xtools-licenses-nocache",
+		RelativeURL: "golang.org/x/tools?tab=licenses",
 		BypassCache: true,
 	},
 	{
