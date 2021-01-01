@@ -15,7 +15,6 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/derrors"
-	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/middleware"
 	"golang.org/x/pkgsite/internal/stdlib"
 )
@@ -37,11 +36,7 @@ func (db *DB) GetUnitMeta(ctx context.Context, fullPath, requestedModulePath, re
 		q    string
 		args []interface{}
 	)
-	if experiment.IsActive(ctx, internal.ExperimentGetUnitMetaQuery) {
-		q, args, err = getUnitMetaQuery(fullPath, requestedModulePath, requestedVersion).PlaceholderFormat(squirrel.Dollar).ToSql()
-	} else {
-		q, args, err = legacyGetUnitMetaQuery(fullPath, requestedModulePath, requestedVersion).PlaceholderFormat(squirrel.Dollar).ToSql()
-	}
+	q, args, err = getUnitMetaQuery(fullPath, requestedModulePath, requestedVersion).PlaceholderFormat(squirrel.Dollar).ToSql()
 	if err != nil {
 		return nil, fmt.Errorf("squirrel.ToSql: %v", err)
 	}
