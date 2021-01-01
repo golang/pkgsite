@@ -357,9 +357,15 @@ func insertPaths(ctx context.Context, db *database.DB, m *internal.Module) (path
 	// Read all existing paths for this module, to avoid a large bulk upsert.
 	// (We've seen these bulk upserts hang for so long that they time out (10
 	// minutes)).
-	var curPaths []string
+	curPathsSet := map[string]bool{}
 	for _, u := range m.Units {
-		curPaths = append(curPaths, u.Path)
+		curPathsSet[u.Path] = true
+		curPathsSet[internal.V1Path(u.Path, m.ModulePath)] = true
+		curPathsSet[internal.SeriesPathForModule(m.ModulePath)] = true
+	}
+	var curPaths []string
+	for p := range curPathsSet {
+		curPaths = append(curPaths, p)
 	}
 	if err := db.RunQuery(ctx, `SELECT id, path FROM paths WHERE path = ANY($1)`,
 		collect, pq.Array(curPaths)); err != nil {
@@ -367,18 +373,18 @@ func insertPaths(ctx context.Context, db *database.DB, m *internal.Module) (path
 	}
 
 	// Insert any unit paths that we don't already have.
-	var pathValues []interface{}
-	for _, u := range m.Units {
-		if _, ok := pathToID[u.Path]; !ok {
-			pathValues = append(pathValues, u.Path)
+	var values []interface{}
+	for _, v := range curPaths {
+		if _, ok := pathToID[v]; !ok {
+			values = append(values, v)
 		}
 	}
-	if len(pathValues) > 0 {
+	if len(values) > 0 {
 		// Insert data into the paths table.
 		pathCols := []string{"path"}
-		uniquePathCols := []string{"path"}
 		returningPathCols := []string{"id", "path"}
-		if err := db.BulkUpsertReturning(ctx, "paths", pathCols, pathValues, uniquePathCols, returningPathCols, collect); err != nil {
+		if err := db.BulkInsertReturning(ctx, "paths", pathCols, values,
+			database.OnConflictDoNothing, returningPathCols, collect); err != nil {
 			return nil, err
 		}
 	}
