@@ -93,7 +93,9 @@ func getUnitMetaQuery(fullPath, requestedModulePath, requestedVersion string) sq
 		"u.license_paths",
 	)
 	if requestedVersion != internal.LatestVersion {
-		query = query.From("modules m").Join("units u on u.module_id = m.id").Where(squirrel.Eq{"u.path": fullPath})
+		query = query.From("modules m").
+			Join("units u on u.module_id = m.id").
+			Join("paths p ON p.id = u.path_id").Where(squirrel.Eq{"p.path": fullPath})
 		if requestedModulePath != internal.UnknownModulePath {
 			query = query.Where(squirrel.Eq{"m.module_path": requestedModulePath})
 		}
