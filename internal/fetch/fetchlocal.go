@@ -25,7 +25,7 @@ import (
 // Version and commit time are pre specified when fetching a local module, as these
 // fields are normally obtained from a proxy.
 var (
-	LocalVersion    = "latest"
+	LocalVersion    = "v0.0.0"
 	LocalCommitTime = time.Time{}
 )
 
