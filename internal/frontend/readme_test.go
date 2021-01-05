@@ -18,7 +18,7 @@ import (
 )
 
 func TestReadme(t *testing.T) {
-	ctx := experiment.NewContext(context.Background(), internal.ExperimentGoldmark)
+	ctx := experiment.NewContext(context.Background())
 	unit := sample.UnitEmpty(sample.PackagePath, sample.ModulePath, sample.VersionString)
 	for _, test := range []struct {
 		name        string
@@ -396,7 +396,7 @@ func TestReadme(t *testing.T) {
 }
 
 func TestReadmeLinks(t *testing.T) {
-	ctx := experiment.NewContext(context.Background(), internal.ExperimentGoldmark)
+	ctx := experiment.NewContext(context.Background())
 	unit := sample.UnitEmpty(sample.PackagePath, sample.ModulePath, sample.VersionString)
 	for _, test := range []struct {
 		name     string

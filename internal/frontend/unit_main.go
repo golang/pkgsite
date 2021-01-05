@@ -18,7 +18,6 @@ import (
 	"golang.org/x/mod/semver"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
-	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/godoc"
 	"golang.org/x/pkgsite/internal/godoc/dochtml"
 	"golang.org/x/pkgsite/internal/log"
@@ -182,7 +181,7 @@ func fetchMainDetails(ctx context.Context, ds internal.DataSource, um *internal.
 	// links.
 	// In the unlikely event that the module is redistributable but the unit is
 	// not, we will not show the module links on the unit page.
-	if unit.Path != unit.ModulePath && unit.IsRedistributable && experiment.IsActive(ctx, internal.ExperimentGoldmark) {
+	if unit.Path != unit.ModulePath && unit.IsRedistributable {
 		modReadme, err := ds.GetModuleReadme(ctx, unit.ModulePath, unit.Version)
 		if err != nil && !errors.Is(err, derrors.NotFound) {
 			return nil, err
@@ -243,28 +242,14 @@ func moduleInfo(um *internal.UnitMeta) *internal.ModuleInfo {
 }
 
 // readmeContent renders the readme to html and collects the headings
-// into an outline when the goldmark experiment active.
+// into an outline.
 func readmeContent(ctx context.Context, u *internal.Unit) (_ *Readme, err error) {
 	defer derrors.Wrap(&err, "readmeContent(%q, %q, %q)", u.Path, u.ModulePath, u.Version)
 	defer middleware.ElapsedStat(ctx, "readmeContent")()
 	if !u.IsRedistributable {
 		return &Readme{}, nil
 	}
-	mi := moduleInfo(&u.UnitMeta)
-	var readme *Readme
-	if experiment.IsActive(ctx, internal.ExperimentGoldmark) {
-		readme, err = ProcessReadme(ctx, u)
-	} else {
-		var h safehtml.HTML
-		h, err = LegacyReadmeHTML(ctx, mi, u.Readme)
-		if err == nil {
-			readme = &Readme{HTML: h}
-		}
-	}
-	if err != nil {
-		return nil, err
-	}
-	return readme, nil
+	return ProcessReadme(ctx, u)
 }
 
 func getNestedModules(ctx context.Context, ds internal.DataSource, um *internal.UnitMeta, sds []*Subdirectory) ([]*NestedModule, error) {

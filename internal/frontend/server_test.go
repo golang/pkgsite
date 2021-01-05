@@ -1065,11 +1065,11 @@ func TestServer(t *testing.T) {
 			testCasesFunc: serverTestCases,
 		},
 		{
-			name: "goldmark and readme outline experiments",
+			name: "with experiment not-at-latest",
 			testCasesFunc: func() []serverTestCase {
 				return append(serverTestCases(), linksTestCases...)
 			},
-			experiments: []string{internal.ExperimentReadmeOutline, internal.ExperimentGoldmark, internal.ExperimentNotAtLatest},
+			experiments: []string{internal.ExperimentNotAtLatest},
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
@@ -1294,7 +1294,7 @@ func TestCheckTemplates(t *testing.T) {
 		{"unit_details", nil, UnitPage{}},
 		{
 			"unit_details",
-			[]string{"unit_outline", "legacy_unit_outline", "unit_readme", "unit_doc", "unit_files", "unit_directories"},
+			[]string{"unit_outline", "unit_readme", "unit_doc", "unit_files", "unit_directories"},
 			MainDetails{},
 		},
 		{"unit_importedby", nil, UnitPage{}},

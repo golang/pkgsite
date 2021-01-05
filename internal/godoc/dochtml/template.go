@@ -34,7 +34,6 @@ func LoadTemplates(dir template.TrustedSource) {
 			ParseFilesFromTrustedSources(
 				join(dir, tc("unit.tmpl")),
 				join(dir, tc("outline.tmpl")),
-				join(dir, tc("sidenav.tmpl")),
 				join(dir, tc("sidenav-mobile.tmpl")),
 				join(dir, tc("body.tmpl")),
 				example,

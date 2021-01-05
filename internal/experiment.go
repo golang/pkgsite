@@ -6,18 +6,14 @@
 package internal
 
 const (
-	ExperimentGoldmark           = "goldmark"
 	ExperimentNotAtLatest        = "not-at-latest"
-	ExperimentReadmeOutline      = "readme-outline"
 	ExperimentUnitSidebarDetails = "unit-sidebar-details"
 )
 
 // Experiments represents all of the active experiments in the codebase and
 // a description of each experiment.
 var Experiments = map[string]string{
-	ExperimentGoldmark:           "Enable the usage of rendering markdown using goldmark instead of blackfriday.",
 	ExperimentNotAtLatest:        "Enable the display of a 'not at latest' badge.",
-	ExperimentReadmeOutline:      "Enable the readme outline in the side nav.",
 	ExperimentUnitSidebarDetails: "Enable the details section in the right sidebar.",
 }
 

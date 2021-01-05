@@ -5,18 +5,8 @@
  * license that can be found in the LICENSE file.
  */
 
-import { AccordionController } from './accordion.js';
 import { CopyToClipboardController } from './clipboard.js';
 import './toggle-tip.js';
-
-/**
- * Instantiates accordion controller for the left sidebar.
- * Can be removed when readme-outline experiment is turned on.
- */
-const accordion = document.querySelector('.js-accordion');
-if (accordion) {
-  new AccordionController(accordion);
-}
 
 /**
  * Instantiates CopyToClipboardController controller copy buttons

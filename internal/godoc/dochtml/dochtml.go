@@ -25,9 +25,7 @@ import (
 	"github.com/google/safehtml/legacyconversions"
 	"github.com/google/safehtml/template"
 	"github.com/google/safehtml/uncheckedconversions"
-	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
-	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/godoc/dochtml/internal/render"
 	"golang.org/x/pkgsite/internal/godoc/internal/doc"
 )
@@ -144,16 +142,9 @@ func RenderParts(ctx context.Context, fset *token.FileSet, p *doc.Package, opt R
 		return html
 	}
 
-	var outline safehtml.HTML
-	if experiment.IsActive(ctx, internal.ExperimentReadmeOutline) {
-		outline = exec("outline.tmpl")
-	} else {
-		outline = exec("sidenav.tmpl")
-	}
-
 	parts := &Parts{
 		Body:          exec("body.tmpl"),
-		Outline:       outline,
+		Outline:       exec("outline.tmpl"),
 		MobileOutline: exec("sidenav-mobile.tmpl"),
 		// links must be called after body, because the call to
 		// render_doc_extract_links in body.tmpl creates the links.

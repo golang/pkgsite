@@ -30,6 +30,7 @@ var (
 	in           = htmlcheck.In
 	hasAttr      = htmlcheck.HasAttr
 	hasHref      = htmlcheck.HasHref
+	hasText 		 = htmlcheck.HasText
 	hasExactText = htmlcheck.HasExactText
 )
 
@@ -72,7 +73,7 @@ func TestRender(t *testing.T) {
 	}
 
 	checker = in(".DocNav-notes",
-		in("#nav-group-notes", in("li", in("a", hasHref("#pkg-note-BUG"), hasExactText("Bugs")))))
+		in("#nav-group-notes", in("li", in("a", hasHref("#pkg-note-BUG"), hasText("Bugs")))))
 	if err := checker(htmlDoc); err != nil {
 		t.Errorf("note check: %v", err)
 	}
@@ -131,7 +132,7 @@ func TestRenderParts(t *testing.T) {
 	}
 
 	checker = in(".DocNav-notes",
-		in("#nav-group-notes", in("li", in("a", hasHref("#pkg-note-BUG"), hasExactText("Bugs")))))
+		in("#nav-group-notes", in("li", in("a", hasHref("#pkg-note-BUG"), hasText("Bugs")))))
 	if err := checker(sidenavDoc); err != nil {
 		t.Errorf("note check: %v", err)
 	}
