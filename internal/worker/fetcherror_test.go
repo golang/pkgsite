@@ -287,7 +287,7 @@ func TestFetchAndUpdateState_ProxyTimedOut(t *testing.T) {
 // This makes it viable for us to show documentation for packages that
 // would otherwise exceed HTML size limit and not get shown at all.
 func TestTrimLargeCode(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout*2)
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout*3)
 	defer cancel()
 	defer postgres.ResetTestDB(testDB, t)
 	trimmedModule := map[string]string{
