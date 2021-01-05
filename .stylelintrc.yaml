@@ -1,3 +1,6 @@
 extends:
   - stylelint-config-recommended
   - stylelint-prettier/recommended
+rules:
+  unit-disallowed-list:
+    - "px"
