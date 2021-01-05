@@ -51,16 +51,45 @@ will do that as well.
 
 ### Testing
 
-Pages on pkg.go.dev have accessibility tree and image snapshot tests. These tests
-will create diffs for inspection on failure. Timeouts and diff thresholds are
-configurable for image snapshots if adjustments are needed to prevent test flake.
-See the [API](https://github.com/americanexpress/jest-image-snapshot#%EF%B8%8F-api) for jest image snapshots for more information.
+In addition to tests inside internal/frontend and internal/testing/integration,
+pages on pkg.go.dev may have accessibility tree and image snapshot tests. These
+tests will create diffs for inspection on failure. Timeouts and diff thresholds
+are configurable for image snapshots if adjustments are needed to prevent test
+flakiness. See the
+[API](https://github.com/americanexpress/jest-image-snapshot#%EF%B8%8F-api) for
+jest image snapshots for more information.
 
 To run the tests locally, start the pkgsite server and then run
 `./devtools/npm.sh run test-e2e`
 
-### Compiling JS sources
+## Static Assets
 
-The frontend serves compiled and minified JS. If you're modifying any JS code, make
-sure to run `devtools/compile_js.sh` for the changes to take effect. This script will
+A migration to TypeScript for pkg.go.dev is underway. See
+[#43359](https://github.com/golang/go/issues/43359) for tracking info.
+
+JavaScript assets for pkg.go.dev are built from TypeScript files in the
+content/static/js directory. All new scripts and updates to existing
+scripts should be written with TypeScript.
+
+### Building
+
+If you're modifying any TypeScript code, you must run
+`devtools/npm.sh run build` for the changes to take effect. This script will
 require Docker to be installed.
+
+### Development
+
+To watch the source files for changes and have them rebuilt automatically
+you can run `devtools/npm.sh run develop`.
+
+### Testing
+
+You can test html and static asset changes by running `devtools/npm.sh test`.
+This will run the TypeScript type checker, unit tests, and end-to-end tests.
+For end-to-end tests to run you must be running the frontend server locally.
+
+### Linting
+
+Lint your changes by running `devtools/npm.sh run lint`. This will run stylelint
+and eslint on CSS and TS files in content/static. You can autofix some errors by
+running `devtools/npm.sh run lint -- --fix`.
