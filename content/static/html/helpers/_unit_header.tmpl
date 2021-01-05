@@ -61,7 +61,7 @@
               {{if (.Experiments.IsActive "not-at-latest")}}
                 <span class="DetailsHeader-span--notAtLatest">
                     Latest
-                    {{template "unit_meta_details_toggletip" "This package is not in the latest version of its module."}}
+                    {{template "severity_toggletip" "This package is not in the latest version of its module."}}
                 </span>
               {{end}}
               <a href="{{.LatestURL}}">Go to latest</a>
@@ -124,4 +124,13 @@
       {{end}}
     </div>
   </header>
+{{end}}
+
+{{define "severity_toggletip"}}
+  <span class="UnitMetaDetails-toggletip">
+    <button type="button" aria-label="more info" data-toggletip-content="{{.}}">
+      <img class="UnitMetaDetails-icon" src="/static/img/severity.svg" alt="" height="24" width="24">
+    </button>
+    <span role="status"></span>
+  </span>
 {{end}}
