@@ -304,11 +304,13 @@ func (pdb *DB) insertUnits(ctx context.Context, db *database.DB, m *internal.Mod
 				}
 			}
 		}
+		v1path := internal.V1Path(u.Path, m.ModulePath)
 		unitValues = append(unitValues,
 			u.Path,
 			pathToID[u.Path],
 			moduleID,
-			internal.V1Path(u.Path, m.ModulePath),
+			pathToID[v1path],
+			v1path,
 			u.Name,
 			pq.Array(licenseTypes),
 			pq.Array(licensePaths),
@@ -399,6 +401,7 @@ func insertUnits(ctx context.Context, db *database.DB, unitValues []interface{})
 		"path",
 		"path_id",
 		"module_id",
+		"v1path_id",
 		"v1_path",
 		"name",
 		"license_types",
