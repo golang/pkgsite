@@ -32,27 +32,23 @@ func TestBadgeHandler_ServeBadgeTool(t *testing.T) {
 		},
 		{
 			"/badge/?path=net/http",
-			`<a href="https://example.com/net/http"><img src="https://example.com/badge/net/http.svg" alt="Go Reference"></a>`,
+			`<a href="https://pkg.go.dev/net/http"><img src="https://pkg.go.dev/badge/net/http.svg" alt="Go Reference"></a>`,
 		},
 		{
 			"/badge/?path=https://pkg.go.dev/net/http",
-			`<a href="https://example.com/net/http"><img src="https://example.com/badge/net/http.svg" alt="Go Reference"></a>`,
+			`<a href="https://pkg.go.dev/net/http"><img src="https://pkg.go.dev/badge/net/http.svg" alt="Go Reference"></a>`,
 		},
 		{
 			"/badge/?path=github.com/google/uuid",
-			"[![Go Reference](https://example.com/badge/github.com/google/uuid.svg)](https://example.com/github.com/google/uuid)",
+			"[![Go Reference](https://pkg.go.dev/badge/github.com/google/uuid.svg)](https://pkg.go.dev/github.com/google/uuid)",
 		},
 		{
 			"/badge/?path=https://pkg.go.dev/github.com/google/uuid",
-			"[![Go Reference](https://example.com/badge/github.com/google/uuid.svg)](https://example.com/github.com/google/uuid)",
+			"[![Go Reference](https://pkg.go.dev/badge/github.com/google/uuid.svg)](https://pkg.go.dev/github.com/google/uuid)",
 		},
 		{
-			"/badge/?path=https://google.com",
-			"<p>Type a pkg.go.dev URL above to create a badge link.</p>",
-		},
-		{
-			"/badge/?path=https://google.com/github.com/google/uuid",
-			"[![Go Reference](https://example.com/badge/github.com/google/uuid.svg)](https://example.com/github.com/google/uuid)",
+			"/badge/?path=https://github.com/google/uuid",
+			"[![Go Reference](https://pkg.go.dev/badge/github.com/google/uuid.svg)](https://pkg.go.dev/github.com/google/uuid)",
 		},
 	}
 
