@@ -1152,7 +1152,7 @@ func TestServerErrors(t *testing.T) {
 	alternativeModule := &internal.VersionMap{
 		ModulePath:       "module.path/alternative",
 		GoModPath:        sample.ModulePath,
-		RequestedVersion: sample.VersionString,
+		RequestedVersion: internal.LatestVersion,
 		ResolvedVersion:  sample.VersionString,
 		Status:           derrors.ToStatus(derrors.AlternativeModule),
 	}
@@ -1167,7 +1167,7 @@ func TestServerErrors(t *testing.T) {
 	}{
 		{"not found", "/invalid-page", http.StatusNotFound},
 		{"bad request", "/gocloud.dev/@latest/blob", http.StatusBadRequest},
-		{"alternative module", "/" + alternativeModule.ModulePath, http.StatusNotFound},
+		{"alternative module", "/" + alternativeModule.ModulePath, http.StatusFound},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			w := httptest.NewRecorder()
