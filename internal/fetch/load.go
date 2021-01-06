@@ -21,7 +21,6 @@ import (
 	"net/http"
 	"os"
 	"path"
-	"runtime"
 	"strings"
 
 	"go.opencensus.io/trace"
@@ -309,12 +308,6 @@ func readZipFile(f *zip.File, limit int64) (_ []byte, err error) {
 		return nil, fmt.Errorf("closing: %v", err)
 	}
 	return b, nil
-}
-
-func allocMeg() int {
-	var ms runtime.MemStats
-	runtime.ReadMemStats(&ms)
-	return int(ms.Alloc / (1024 * 1024))
 }
 
 // mib is the number of bytes in a mebibyte (Mi).
