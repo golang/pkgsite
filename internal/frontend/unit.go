@@ -67,6 +67,10 @@ type UnitPage struct {
 	// Settings contains settings for the selected tab.
 	SelectedTab TabSettings
 
+	// RedirectedFrom is the unit path that this request was redirected from.
+	// It is set as a flash cookie.
+	RedirectedFrom string
+
 	// Details contains data specific to the type of page being rendered.
 	Details interface{}
 }
@@ -146,6 +150,13 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 	main, ok := d.(*MainDetails)
 	if ok {
 		page.MetaDescription = metaDescription(main.ImportedByCount)
+	}
+
+	msg, err := getFlashMessage(w, r, alternativeModuleFlash)
+	if err != nil {
+		log.Errorf(ctx, "serveUnitPage(ctx, w, r, ds, %v): %v", info, err)
+	} else if msg != "" {
+		page.RedirectedFrom = msg
 	}
 	s.servePage(ctx, w, tabSettings.TemplateName, page)
 	return nil

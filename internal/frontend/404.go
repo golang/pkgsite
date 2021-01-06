@@ -64,7 +64,9 @@ func (s *Server) servePathNotFoundPage(w http.ResponseWriter, r *http.Request, d
 		return pathNotFoundError(fullPath, requestedVersion)
 	}
 	if fr.goModPath != fr.modulePath && fr.status == derrors.ToStatus(derrors.AlternativeModule) {
-		http.Redirect(w, r, constructUnitURL(fr.goModPath, fr.goModPath, internal.LatestVersion), http.StatusFound)
+		u := constructUnitURL(fr.goModPath, fr.goModPath, internal.LatestVersion)
+		setFlashMessage(w, alternativeModuleFlash, fullPath, u)
+		http.Redirect(w, r, u, http.StatusFound)
 		return
 	}
 	return &serverError{
