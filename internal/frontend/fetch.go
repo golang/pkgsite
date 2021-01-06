@@ -119,10 +119,11 @@ func (s *Server) serveFetch(w http.ResponseWriter, r *http.Request, ds internal.
 }
 
 type fetchResult struct {
-	modulePath string
-	goModPath  string
-	status     int
-	err        error
+	modulePath   string
+	goModPath    string
+	status       int
+	err          error
+	responseText string
 }
 
 func (s *Server) fetchAndPoll(ctx context.Context, ds internal.DataSource, modulePath, fullPath, requestedVersion string) (status int, responseText string) {
@@ -152,7 +153,12 @@ func (s *Server) fetchAndPoll(ctx context.Context, ds internal.DataSource, modul
 		return http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError)
 	}
 	results := s.checkPossibleModulePaths(ctx, db, fullPath, requestedVersion, modulePaths, true)
-	return fetchRequestStatusAndResponseText(results, fullPath, requestedVersion)
+	fr, err := resultFromFetchRequest(results, fullPath, requestedVersion)
+	if err != nil {
+		log.Errorf(ctx, "fetchAndPoll(ctx, ds, q, %q, %q, %q): %v", modulePath, fullPath, requestedVersion, err)
+		return http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError)
+	}
+	return fr.status, fr.responseText
 }
 
 // checkPossibleModulePaths checks all modulePaths at the requestedVersion, to see
@@ -209,7 +215,7 @@ func (s *Server) checkPossibleModulePaths(ctx context.Context, db *postgres.DB,
 	return results
 }
 
-// fetchRequestStatusAndResponseText returns the HTTP status code and response
+// resultFromFetchRequest returns the HTTP status code and response
 // text from the results of fetching possible module paths for fullPath at the
 // requestedVersion. It is assumed the results are sorted in order of
 // decreasing modulePath length, so the first result that is not a
@@ -217,7 +223,12 @@ func (s *Server) checkPossibleModulePaths(ctx context.Context, db *postgres.DB,
 // path was found that shares the path prefix of fullPath, the responseText will
 // contain that information. The status and responseText will be displayed to the
 // user.
-func fetchRequestStatusAndResponseText(results []*fetchResult, fullPath, requestedVersion string) (int, string) {
+func resultFromFetchRequest(results []*fetchResult, fullPath, requestedVersion string) (_ *fetchResult, err error) {
+	defer derrors.Wrap(&err, "resultFromFetchRequest(results, %q, %q)", fullPath, requestedVersion)
+	if len(results) == 0 {
+		return nil, fmt.Errorf("no results")
+	}
+
 	var moduleMatchingPathPrefix string
 	for _, fr := range results {
 		switch fr.status {
@@ -225,25 +236,32 @@ func fetchRequestStatusAndResponseText(results []*fetchResult, fullPath, request
 		// appropriate result is found, return. Otherwise, look at the next
 		// path.
 		case http.StatusOK:
-			return fr.status, ""
+			return fr, nil
 		case http.StatusRequestTimeout:
 			// If the context timed out or was canceled before all of the requests
 			// finished, return an error letting the user to check back later. The
 			// worker will still be processing the modules in the background.
-			return fr.status, fmt.Sprintf("We're still working on “%s”. Check back in a few minutes!", displayPath(fullPath, requestedVersion))
+			fr.responseText = fmt.Sprintf("We're still working on “%s”. Check back in a few minutes!", displayPath(fullPath, requestedVersion))
+			return fr, nil
 		case http.StatusInternalServerError:
-			return fr.status, "Oops! Something went wrong."
+			fr.responseText = "Oops! Something went wrong."
+			return fr, nil
 		case derrors.ToStatus(derrors.AlternativeModule):
 			if err := module.CheckImportPath(fr.goModPath); err != nil {
-				return http.StatusNotFound, fmt.Sprintf(`%q does not have a valid module path (%q).`, fullPath, fr.goModPath)
+				fr.status = http.StatusNotFound
+				fr.responseText = fmt.Sprintf(`%q does not have a valid module path (%q).`, fullPath, fr.goModPath)
+				return fr, nil
 			}
 			t := template.Must(template.New("").Parse(`{{.}}`))
 			h, err := t.ExecuteToHTML(fmt.Sprintf("%s is not a valid path. Were you looking for “<a href='https://pkg.go.dev/%s'>%s</a>”?",
 				displayPath(fullPath, requestedVersion), fr.goModPath, fr.goModPath))
 			if err != nil {
-				return http.StatusInternalServerError, err.Error()
+				fr.status = http.StatusInternalServerError
+				return fr, err
 			}
-			return http.StatusNotFound, h.String()
+			fr.status = http.StatusNotFound
+			fr.responseText = h.String()
+			return fr, nil
 		}
 
 		// A module was found for a prefix of the path, but the path did not exist
@@ -256,6 +274,8 @@ func fetchRequestStatusAndResponseText(results []*fetchResult, fullPath, request
 			moduleMatchingPathPrefix = fr.modulePath
 		}
 	}
+
+	fr := results[0]
 	if moduleMatchingPathPrefix != "" {
 		t := template.Must(template.New("").Parse(`{{.}}`))
 		h, err := t.ExecuteToHTML(fmt.Sprintf("Package %s could not be found, but you can view module “%s” at <a href='https://pkg.go.dev/%s'>pkg.go.dev/%s</a>.",
@@ -265,15 +285,20 @@ func fetchRequestStatusAndResponseText(results []*fetchResult, fullPath, request
 			displayPath(moduleMatchingPathPrefix, requestedVersion),
 		))
 		if err != nil {
-			return http.StatusInternalServerError, err.Error()
+			fr.status = http.StatusInternalServerError
+			return fr, err
 		}
-		return http.StatusNotFound, h.String()
+		fr.status = http.StatusNotFound
+		fr.responseText = h.String()
+		return fr, nil
 	}
 	p := fullPath
 	if requestedVersion != internal.LatestVersion {
 		p = fullPath + "@" + requestedVersion
 	}
-	return http.StatusNotFound, fmt.Sprintf("%q could not be found.", p)
+	fr.status = http.StatusNotFound
+	fr.responseText = fmt.Sprintf("%q could not be found.", p)
+	return fr, nil
 }
 
 func displayPath(path, version string) string {
@@ -361,11 +386,9 @@ func checkForPath(ctx context.Context, db *postgres.DB,
 	}
 
 	switch fr.status {
-	case http.StatusInternalServerError:
-		fr.err = fmt.Errorf("%q: %v", http.StatusText(fr.status), vm.Error)
-		return fr
 	case http.StatusNotFound,
-		derrors.ToStatus(derrors.DBModuleInsertInvalid):
+		derrors.ToStatus(derrors.DBModuleInsertInvalid),
+		http.StatusInternalServerError:
 		if time.Since(vm.UpdatedAt) > taskIDChangeInterval {
 			// If the duration of taskIDChangeInterval has passed since
 			// a module_path was last inserted into version_map with a failed status,
@@ -383,8 +406,12 @@ func checkForPath(ctx context.Context, db *postgres.DB,
 			fr.status = statusNotFoundInVersionMap
 			return fr
 		}
-		// The version_map indicates that the proxy returned a 404/410.
-		fr.err = errModuleDoesNotExist
+		if fr.status == http.StatusInternalServerError {
+			fr.err = fmt.Errorf("%q: %v", http.StatusText(fr.status), vm.Error)
+		} else {
+			// The version_map indicates that the proxy returned a 404/410.
+			fr.err = errModuleDoesNotExist
+		}
 		return fr
 	case derrors.ToStatus(derrors.AlternativeModule):
 		// The row indicates that the provided module path did not match the
