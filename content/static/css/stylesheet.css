@@ -491,7 +491,7 @@ pre {
   top: -0.125rem;
 }
 .DetailsHeader-badge--latest {
-  background: var(--blue);
+  background: var(--turq-dark);
 }
 .DetailsHeader-badge--latest a {
   display: none;
@@ -501,7 +501,7 @@ pre {
 }
 
 .DetailsHeader-badge--notAtLatest {
-  background: var(--blue);
+  background: var(--turq-dark);
 }
 .DetailsHeader-badge--notAtLatest a {
   display: none;
@@ -515,6 +515,16 @@ pre {
 .DetailsHeader-badge--notAtLatest .UnitMetaDetails-toggletipBubble {
   color: black;
   text-transform: none;
+}
+.DetailsHeader-span--notAtLatest .UnitMetaDetails-toggletip {
+  height: 0;
+}
+.DetailsHeader-span--notAtLatest .UnitMetaDetails-toggletip button {
+  height: 0.8125rem;
+  line-height: 0;
+}
+.DetailsHeader-span--notAtLatest .UnitMetaDetails-toggletip img {
+  vertical-align: middle;
 }
 
 .DetailsHeader-badge--goToLatest {
