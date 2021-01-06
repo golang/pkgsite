@@ -28,7 +28,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/google/licensecheck"
+	oldlicensecheck "github.com/google/licensecheck/old"
 	"golang.org/x/mod/module"
 	modzip "golang.org/x/mod/zip"
 )
@@ -62,8 +62,8 @@ type Metadata struct {
 	// FilePath is the '/'-separated path to the license file in the module zip,
 	// relative to the contents directory.
 	FilePath string
-	// The output of licensecheck.Cover.
-	Coverage licensecheck.Coverage
+	// The output of oldlicensecheck.Cover.
+	Coverage oldlicensecheck.Coverage
 }
 
 // A License is a classified license file path and its contents.
@@ -233,7 +233,7 @@ func AcceptedLicenses() []AcceptedLicenseInfo {
 	return lics
 }
 
-var checker *licensecheck.Checker = licensecheck.New(licensecheck.BuiltinLicenses())
+var checker *oldlicensecheck.Checker = oldlicensecheck.New(oldlicensecheck.BuiltinLicenses())
 
 // A Detector detects licenses in a module and its packages.
 type Detector struct {
@@ -440,18 +440,18 @@ func (d *Detector) detectFiles(files []*zip.File) []*License {
 // DetectFile return the set of license types for the given file contents. It
 // also returns the licensecheck coverage information. The filename is used
 // solely for logging.
-func DetectFile(contents []byte, filename string, logf func(string, ...interface{})) ([]string, licensecheck.Coverage) {
+func DetectFile(contents []byte, filename string, logf func(string, ...interface{})) ([]string, oldlicensecheck.Coverage) {
 	if logf == nil {
 		logf = func(string, ...interface{}) {}
 	}
 	if types := exceptionFileTypes(contents); types != nil {
 		logf("%s is an exception", filename)
-		return types, licensecheck.Coverage{}
+		return types, oldlicensecheck.Coverage{}
 	}
-	cov, ok := checker.Cover(contents, licensecheck.Options{})
+	cov, ok := checker.Cover(contents, oldlicensecheck.Options{})
 	if !ok {
 		logf("%s checker.Cover failed, skipping", filename)
-		return []string{unknownLicenseType}, licensecheck.Coverage{}
+		return []string{unknownLicenseType}, oldlicensecheck.Coverage{}
 	}
 	if cov.Percent < float64(coverageThreshold) {
 		logf("%s license coverage too low (%+v), skipping", filename, cov)

@@ -25,7 +25,7 @@ require (
 	github.com/gomodule/redigo v2.0.0+incompatible // indirect
 	github.com/google/go-cmp v0.5.2
 	github.com/google/go-replayers/httpreplay v0.1.0
-	github.com/google/licensecheck v0.0.0-20200805042302-c54f297c3b57
+	github.com/google/licensecheck v0.3.1
 	github.com/google/safehtml v0.0.2
 	github.com/jackc/pgconn v1.7.2
 	github.com/jackc/pgx/v4 v4.9.2

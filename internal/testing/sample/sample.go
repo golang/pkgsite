@@ -17,6 +17,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/google/licensecheck"
+	oldlicensecheck "github.com/google/licensecheck/old"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/source"
@@ -37,9 +38,9 @@ var (
 		{
 			Types:    []string{LicenseType},
 			FilePath: LicenseFilePath,
-			Coverage: licensecheck.Coverage{
+			Coverage: oldlicensecheck.Coverage{
 				Percent: 100,
-				Match:   []licensecheck.Match{{Name: LicenseType, Type: licensecheck.MIT, Percent: 100}},
+				Match:   []oldlicensecheck.Match{{Name: LicenseType, Type: oldlicensecheck.MIT, Percent: 100}},
 			},
 		},
 	}

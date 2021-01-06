@@ -21,7 +21,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	lc "github.com/google/licensecheck"
+	oldlc "github.com/google/licensecheck/old"
 )
 
 const (
@@ -223,9 +223,9 @@ THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH RE
 	unknownLicense = `THIS IS A LICENSE THAT I JUST MADE UP. YOU CAN DO WHATEVER YOU WANT WITH THIS CODE, TRUST ME.`
 )
 
-var mitCoverage = lc.Coverage{
+var mitCoverage = oldlc.Coverage{
 	Percent: 100,
-	Match:   []lc.Match{{Name: "MIT", Type: lc.MIT, Percent: 100}},
+	Match:   []oldlc.Match{{Name: "MIT", Type: oldlc.MIT, Percent: 100}},
 }
 
 // testDataPath returns a path corresponding to a path relative to the calling
@@ -424,9 +424,9 @@ func TestDetectFiles(t *testing.T) {
 				"COPYING":        bsd0License,
 			},
 			want: []*Metadata{
-				{Types: []string{"BSD-0-Clause"}, FilePath: "COPYING", Coverage: lc.Coverage{
+				{Types: []string{"BSD-0-Clause"}, FilePath: "COPYING", Coverage: oldlc.Coverage{
 					Percent: 100,
-					Match:   []lc.Match{{Name: "BSD-0-Clause", Type: lc.BSD, Percent: 100}},
+					Match:   []oldlc.Match{{Name: "BSD-0-Clause", Type: oldlc.BSD, Percent: 100}},
 				}},
 				{Types: []string{"MIT"}, FilePath: "LICENSE", Coverage: mitCoverage},
 				{Types: []string{"MIT"}, FilePath: "foo/LICENSE.md", Coverage: mitCoverage},
@@ -438,11 +438,11 @@ func TestDetectFiles(t *testing.T) {
 				"LICENSE": mitLicense + "\n" + bsd0License,
 			},
 			want: []*Metadata{
-				{Types: []string{"BSD-0-Clause", "MIT"}, FilePath: "LICENSE", Coverage: lc.Coverage{
+				{Types: []string{"BSD-0-Clause", "MIT"}, FilePath: "LICENSE", Coverage: oldlc.Coverage{
 					Percent: 100,
-					Match: []lc.Match{
-						{Name: "MIT", Type: lc.MIT, Percent: 100},
-						{Name: "BSD-0-Clause", Type: lc.BSD, Percent: 100},
+					Match: []oldlc.Match{
+						{Name: "MIT", Type: oldlc.MIT, Percent: 100},
+						{Name: "BSD-0-Clause", Type: oldlc.BSD, Percent: 100},
 					},
 				}},
 			},
@@ -472,9 +472,9 @@ func TestDetectFiles(t *testing.T) {
 				{
 					Types:    []string{"UNKNOWN"},
 					FilePath: "foo/LICENSE",
-					Coverage: lc.Coverage{
+					Coverage: oldlc.Coverage{
 						Percent: 69.361,
-						Match:   []lc.Match{{Name: "MIT", Type: lc.MIT, Percent: 100}},
+						Match:   []oldlc.Match{{Name: "MIT", Type: oldlc.MIT, Percent: 100}},
 					},
 				},
 			},
@@ -513,11 +513,11 @@ func TestDetectFiles(t *testing.T) {
 				{
 					Types:    []string{"Apache-2.0"},
 					FilePath: "LICENSE",
-					Coverage: lc.Coverage{
+					Coverage: oldlc.Coverage{
 						Percent: 100,
-						Match: []lc.Match{{
+						Match: []oldlc.Match{{
 							Name:    "Apache-2.0-Short",
-							Type:    lc.Apache,
+							Type:    oldlc.Apache,
 							Percent: 99,
 						}},
 					},
@@ -540,7 +540,7 @@ func TestDetectFiles(t *testing.T) {
 
 			opts := []cmp.Option{
 				cmp.Comparer(coveragePercentEqual),
-				cmpopts.IgnoreFields(lc.Match{}, "Start", "End"),
+				cmpopts.IgnoreFields(oldlc.Match{}, "Start", "End"),
 			}
 			if diff := cmp.Diff(test.want, got, opts...); diff != "" {
 				t.Errorf("mismatch (-want +got):\n%s", diff)
