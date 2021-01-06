@@ -125,31 +125,6 @@ func getUnitMetaQuery(fullPath, requestedModulePath, requestedVersion string) sq
 	return query.From("units u").JoinClause(nestedSelect.Prefix("JOIN (").Suffix(") m ON u.id = m.unit_id"))
 }
 
-func legacyGetUnitMetaQuery(fullPath, requestedModulePath, requestedVersion string) squirrel.SelectBuilder {
-	query := squirrel.Select(
-		"m.module_path",
-		"m.version",
-		"m.commit_time",
-		"m.source_info",
-		"m.has_go_mod",
-		"u.name",
-		"u.redistributable",
-		"u.license_types",
-		"u.license_paths",
-	).From("modules m").
-		Join("units u on u.module_id = m.id").
-		Where(squirrel.Eq{"u.path": fullPath})
-	if requestedModulePath != internal.UnknownModulePath {
-		query = query.Where(squirrel.Eq{"m.module_path": requestedModulePath})
-	}
-	if _, ok := internal.DefaultBranches[requestedVersion]; ok {
-		query = query.Join("version_map vm ON m.id = vm.module_id").Where("vm.requested_version = ? ", requestedVersion)
-	} else if requestedVersion != internal.LatestVersion {
-		query = query.Where(squirrel.Eq{"version": requestedVersion})
-	}
-	return orderByLatest(query)
-}
-
 // orderByLatest orders paths according to the go command.
 // Versions are ordered by:
 // (1) release (non-incompatible)
