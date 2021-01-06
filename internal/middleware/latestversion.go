@@ -13,6 +13,7 @@ import (
 
 	"golang.org/x/mod/module"
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/log"
 )
 
@@ -51,6 +52,8 @@ func LatestVersions(getLatest latestFunc) Middleware {
 				switch {
 				case latest.MinorVersion == "":
 					latestMinorClass += "--unknown"
+				case latest.MinorVersion == version && !latest.UnitExistsAtMinor && experiment.IsActive(r.Context(), internal.ExperimentNotAtLatest):
+					latestMinorClass += "--notAtLatest"
 				case latest.MinorVersion == version:
 					latestMinorClass += "--latest"
 				default:

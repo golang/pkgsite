@@ -271,6 +271,26 @@ var testModules = []testModule{
 			},
 		},
 	},
+	// A module with a package that is not in the module's latest version. Since
+	// our testModule struct can only describe modules where all packages are at
+	// all versions, we need two of them.
+	{
+		path:            "golang.org/x/tools",
+		redistributable: true,
+		versions:        []string{"v1.1.0"},
+		packages: []testPackage{
+			{name: "blog", suffix: "blog"},
+			{name: "vet", suffix: "cmd/vet"},
+		},
+	},
+	{
+		path:            "golang.org/x/tools",
+		redistributable: true,
+		versions:        []string{"v1.2.0"},
+		packages: []testPackage{
+			{name: "blog", suffix: "blog"},
+		},
+	},
 }
 
 func insertTestModules(ctx context.Context, t *testing.T, mods []testModule) {
@@ -326,6 +346,22 @@ var (
 		return attr("href", "^"+regexp.QuoteMeta(val)+"$")
 	}
 )
+
+var notAtLatestPkg = &pagecheck.Page{
+	ModulePath:             "golang.org/x/tools",
+	Suffix:                 "cmd/vet",
+	Title:                  "vet",
+	ModuleURL:              "github.com/golang/tools",
+	Version:                "v1.1.0",
+	FormattedVersion:       "v1.1.0",
+	LicenseType:            "MIT",
+	LicenseFilePath:        "LICENSE",
+	MissingInMinor:         true,
+	IsLatestMajor:          true,
+	UnitURLFormat:          "/golang.org/x/tools/cmd/vet%s",
+	LatestLink:             "/golang.org/x/tools/cmd/vet",
+	LatestMajorVersionLink: "/golang.org/x/tools",
+}
 
 // serverTestCases are the test cases valid for any experiment. For experiments
 // that modify any part of the behaviour covered by the test cases in
@@ -996,6 +1032,14 @@ var linksTestCases = []serverTestCase{
 			checkLink(4, "title2", "about:invalid#zGoSafez"),
 		),
 	},
+	{
+		name: "not at latest",
+		// A package which is at its own latest minor version but not at the
+		// latest minor version of its module.
+		urlPath:        "/golang.org/x/tools/cmd/vet",
+		wantStatusCode: http.StatusOK,
+		want:           in("", pagecheck.UnitHeader(notAtLatestPkg, false, true)),
+	},
 }
 
 // TestServer checks the contents of served pages by looking for
@@ -1025,7 +1069,7 @@ func TestServer(t *testing.T) {
 			testCasesFunc: func() []serverTestCase {
 				return append(serverTestCases(), linksTestCases...)
 			},
-			experiments: []string{internal.ExperimentReadmeOutline, internal.ExperimentGoldmark},
+			experiments: []string{internal.ExperimentReadmeOutline, internal.ExperimentGoldmark, internal.ExperimentNotAtLatest},
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
@@ -1218,8 +1262,8 @@ func newTestServer(t *testing.T, proxyModules []*proxy.Module, experimentNames .
 		t.Fatal(err)
 	}
 	mw := middleware.Chain(
-		middleware.LatestVersions(s.GetLatestInfo),
-		middleware.Experiment(exp))
+		middleware.Experiment(exp),
+		middleware.LatestVersions(s.GetLatestInfo))
 	return s, mw(mux), func() {
 		teardown()
 		postgres.ResetTestDB(testDB, t)

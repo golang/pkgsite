@@ -1,0 +1,272 @@
+/*!
+ * Copyright 2020 The Go Authors. All rights reserved.
+ * Use of this source code is governed by a BSD-style
+ * license that can be found in the LICENSE file.
+ */
+
+/*
+ * Styling the sidenav.
+ */
+
+.DetailsContent :target::before {
+  height: calc(var(--header-height) + 3.75rem);
+  margin-top: calc(
+    -1 * (var(--header-height) + 3.75rem)
+  ); /* Move hidden anchor content for deep linking with a sticky header. */
+}
+.Documentation-nav,
+.Documentation-index,
+.DocNav,
+.DocNav-index {
+  display: none;
+}
+.DocNavMobile {
+  background-color: var(--white);
+  display: block;
+  height: 3rem;
+  margin: 0 -1rem;
+  position: sticky;
+  top: var(--header-height);
+  transition: box-shadow 0.2s linear;
+  z-index: 4;
+}
+@media print {
+  .DocNavMobile {
+    display: none;
+  }
+}
+.DocNavMobile--withShadow {
+  box-shadow: 0 0.1875rem 0.1875rem rgba(0, 0, 0, 0.2);
+}
+.DocNavMobile-label,
+.DocNavMobile-select {
+  left: 1rem;
+  top: 0.5rem;
+  height: 2rem;
+  position: absolute;
+  width: calc(100% - 2rem);
+}
+.DocNavMobile-label {
+  align-items: center;
+  color: var(--gray-2);
+  display: flex;
+  padding: 0 0.5rem;
+}
+.DocNavMobile-label::after {
+  border-bottom: 0;
+  border-left: 0.3em solid transparent;
+  border-right: 0.3rem solid transparent;
+  border-top: 0.3rem solid var(--gray-4);
+  content: '';
+  display: block;
+  height: 0;
+  position: absolute;
+  right: 0.625rem;
+  top: 0.875rem;
+  width: 0;
+}
+.DocNavMobile-selectIcon {
+  fill: var(--gray-3);
+  height: 1.4375rem;
+  margin-right: 0.5rem;
+  transform: rotate(180deg);
+  width: 1.4375rem;
+}
+.DocNavMobile-selectText {
+  flex: 1;
+  margin-right: 1.2rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.DocNavMobile-select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background: transparent;
+  border: 0.0625rem solid var(--gray-8);
+  border-radius: 0.1875rem;
+  color: transparent;
+  display: block;
+}
+/**
+ * Firefox allows for styling of option and optgroup tags.
+ * Ensure they don’t inherit the clear styling of their parent.
+ */
+.DocNavMobile-select option {
+  color: var(--gray-1);
+}
+.DocNavMobile-select optgroup {
+  color: var(--gray-3);
+}
+@media only screen and (min-width: 52rem) {
+  .DetailsContent :target::before {
+    height: calc(var(--header-height) + 0.75rem);
+    margin-top: calc(
+      -1 * (var(--header-height) + 0.75rem)
+    ); /* Move hidden anchor content for deep linking with a sticky header. */
+  }
+  .Documentation {
+    column-gap: 2rem;
+    display: grid;
+    grid-template-columns: 17.5rem minmax(0, auto);
+  }
+  /**
+   * Remove once Doc HTML is fully rolled out, as js-* styles should NEVER be
+   * styled per https://golang.org/wiki/CSSStyleGuide.
+   */
+  .js-docContent,
+  .Documentation-content {
+    max-width: 60rem;
+    min-width: 0;
+    width: 100%;
+  }
+  .Documentation-build {
+    grid-column: span 2;
+    text-align: center;
+  }
+  .DocNav {
+    display: block;
+    max-height: calc(100vh - var(--header-height));
+    overflow-x: hidden;
+    overflow-y: auto;
+    padding-top: 1rem;
+    padding-left: 0.25rem;
+    position: sticky;
+    top: var(--header-height);
+  }
+  .DocNavMobile {
+    display: none;
+  }
+  .DocNav [role='tree'],
+  .DocNav [role='group'] {
+    margin: 0;
+    padding: 0 0 2rem 0;
+  }
+  .DocNav [role='treeitem'][aria-level='1'] {
+    margin-bottom: 0.5rem;
+  }
+  .DocNav [role='group'] {
+    font-size: 0.875rem;
+    padding: 0;
+  }
+  .DocNav [role='treeitem'] {
+    padding: 0.125rem 0 0.125rem 1.25rem;
+    position: relative;
+    user-select: none;
+  }
+  .DocNav [role='treeitem']:focus,
+  .DocNav [role='treeitem']:hover {
+    outline: 0;
+    text-decoration: underline;
+  }
+  .DocNav [role='group'] [role='treeitem'] {
+    padding-left: 2.5rem;
+  }
+  .DocNav ul[role='group'] > :last-child {
+    margin-bottom: 0.375rem;
+  }
+  .DocNav [aria-selected='true'] {
+    color: var(--gray-1);
+    font-weight: 500;
+  }
+  .DocNav [aria-selected='true']:not(.DocNav-groupLabel)::before {
+    border-radius: 50%;
+    background-color: var(--turq-dark);
+    content: '';
+    display: block;
+    height: 0.3125rem;
+    left: 0.4688rem;
+    position: absolute;
+    top: 0.6875rem;
+    width: 0.3125rem;
+  }
+  .DocNav [role='group'] [aria-selected='true']::before {
+    left: 1.5rem;
+    top: 0.75rem;
+  }
+  .DocNav [role='group'] [role='group'] [role='treeitem'] {
+    border-left: 0.125rem solid var(--gray-9);
+    margin-left: 2.5rem;
+    padding-left: 0.5rem;
+  }
+  .DocNav [role='group'] [role='group'] [aria-selected='true']::before {
+    display: none;
+  }
+  .DocNav [role='group'] [role='group'] [aria-selected='true'] {
+    border-left: 0.125rem solid var(--turq-dark);
+  }
+  .DocNav-groupLabel {
+    cursor: pointer;
+    display: block;
+  }
+  .DocNav a,
+  .DocNav a:link,
+  .DocNav a:visited {
+    color: var(--gray-2);
+    display: block;
+    opacity: 1;
+    overflow: hidden;
+    text-decoration: none;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .DocNav a:hover,
+  .DocNav a[aria-selected='true'] {
+    color: var(--gray-1);
+  }
+  .DocNav-groupLabel::before {
+    border-bottom: 0.25rem solid transparent;
+    border-left: 0.25rem solid var(--gray-4);
+    border-right: 0;
+    border-top: 0.25rem solid transparent;
+    content: '';
+    display: block;
+    height: 0;
+    left: 0.5rem;
+    position: absolute;
+    top: 0.625rem;
+    transition: transform 0.1s linear;
+    width: 0;
+  }
+  .DocNav-groupLabel--empty::before {
+    content: unset;
+  }
+  /* Added to increase hit target on triangle above. */
+  .DocNav-groupLabel::after {
+    content: '';
+    display: block;
+    height: 2rem;
+    left: 0;
+    position: absolute;
+    top: 0;
+    width: 2rem;
+  }
+  /**
+   * Expandable nodes at this level have smaller text and more left padding,
+   * so adjust for that.
+   */
+  .DocNav [role='group'] .DocNav-groupLabel::before {
+    left: 1.5625rem;
+    top: 0.6875rem;
+  }
+  .DocNav-groupLabel[aria-expanded='true'] {
+    margin-bottom: 0.375em;
+  }
+  .DocNav-groupLabel[aria-expanded='true']::before {
+    transform: rotate(90deg);
+  }
+  .DocNav [aria-expanded='false'] + [role='group'] {
+    display: none;
+  }
+}
+@media only screen and (min-width: 100rem) {
+  .Documentation {
+    grid-template-columns: 22rem minmax(0, auto);
+  }
+}
+@media only screen and (min-width: 130rem) {
+  .Documentation {
+    grid-template-columns: 35rem minmax(0, auto);
+  }
+}

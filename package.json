@@ -17,8 +17,8 @@
     "lint-css": "stylelint **/*.css",
     "license-check": "jsgl --local .",
     "test-typecheck": "tsc --noEmit",
-    "test-unit": "jest --config devtools/config/jest.config.js content",
-    "test-e2e": "jest --config devtools/config/jest.config.js e2e",
+    "test-unit": "jest --config devtools/config/jest.config.js --env=jsdom content",
+    "test-e2e": "jest --config devtools/config/jest.config.js --env=node e2e",
     "test": "run-s test-*"
   },
   "dependencies": {

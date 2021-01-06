@@ -13,7 +13,6 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/google/safehtml"
 	"golang.org/x/pkgsite/internal"
-	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/testing/sample"
@@ -223,13 +222,7 @@ func TestGetUnitMeta(t *testing.T) {
 				test.want.IsRedistributable,
 			)
 			test.want.CommitTime = sample.CommitTime
-			t.Run("no experiment", func(t *testing.T) {
-				checkUnitMeta(ctx, test)
-			})
-			t.Run("with experiment", func(t *testing.T) {
-				ctx := experiment.NewContext(ctx, internal.ExperimentGetUnitMetaQuery)
-				checkUnitMeta(ctx, test)
-			})
+			checkUnitMeta(ctx, test)
 		})
 	}
 }

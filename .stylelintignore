@@ -1,2 +1,5 @@
 content/static
 third_party
+
+# Ignoring generated readme styles
+content/lib/css/readme.css

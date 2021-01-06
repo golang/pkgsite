@@ -15,7 +15,6 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/derrors"
-	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/middleware"
 	"golang.org/x/pkgsite/internal/stdlib"
 )
@@ -37,11 +36,7 @@ func (db *DB) GetUnitMeta(ctx context.Context, fullPath, requestedModulePath, re
 		q    string
 		args []interface{}
 	)
-	if experiment.IsActive(ctx, internal.ExperimentGetUnitMetaQuery) {
-		q, args, err = getUnitMetaQuery(fullPath, requestedModulePath, requestedVersion).PlaceholderFormat(squirrel.Dollar).ToSql()
-	} else {
-		q, args, err = legacyGetUnitMetaQuery(fullPath, requestedModulePath, requestedVersion).PlaceholderFormat(squirrel.Dollar).ToSql()
-	}
+	q, args, err = getUnitMetaQuery(fullPath, requestedModulePath, requestedVersion).PlaceholderFormat(squirrel.Dollar).ToSql()
 	if err != nil {
 		return nil, fmt.Errorf("squirrel.ToSql: %v", err)
 	}
@@ -93,7 +88,9 @@ func getUnitMetaQuery(fullPath, requestedModulePath, requestedVersion string) sq
 		"u.license_paths",
 	)
 	if requestedVersion != internal.LatestVersion {
-		query = query.From("modules m").Join("units u on u.module_id = m.id").Where(squirrel.Eq{"u.path": fullPath})
+		query = query.From("modules m").
+			Join("units u on u.module_id = m.id").
+			Join("paths p ON p.id = u.path_id").Where(squirrel.Eq{"p.path": fullPath})
 		if requestedModulePath != internal.UnknownModulePath {
 			query = query.Where(squirrel.Eq{"m.module_path": requestedModulePath})
 		}

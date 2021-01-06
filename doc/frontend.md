@@ -58,6 +58,7 @@ See the [API](https://github.com/americanexpress/jest-image-snapshot#%EF%B8%8F-a
 
 To run the tests locally, start the pkgsite server and then run
 `./devtools/npm.sh run test-e2e`
+
 ### Compiling JS sources
 
 The frontend serves compiled and minified JS. If you're modifying any JS code, make

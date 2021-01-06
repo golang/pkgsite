@@ -496,6 +496,27 @@ pre {
 .DetailsHeader-badge--latest a {
   display: none;
 }
+.DetailsHeader-badge--latest span.DetailsHeader-span--notAtLatest {
+  display: none;
+}
+
+.DetailsHeader-badge--notAtLatest {
+  background: var(--blue);
+}
+.DetailsHeader-badge--notAtLatest a {
+  display: none;
+}
+.DetailsHeader-badge--notAtLatest span.DetailsHeader-span--latest {
+  display: none;
+}
+.DetailsHeader-badge--notAtLatest .UnitMetaDetails-icon {
+  z-index: 1;
+}
+.DetailsHeader-badge--notAtLatest .UnitMetaDetails-toggletipBubble {
+  color: black;
+  text-transform: none;
+}
+
 .DetailsHeader-badge--goToLatest {
   background: var(--pink);
 }

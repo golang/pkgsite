@@ -340,13 +340,16 @@ func (db *DB) addPackageDataToSearchResults(ctx context.Context, results []*inte
 		FROM
 			units u
 		INNER JOIN
-		    modules m
+			paths p
+		ON u.path_id = p.id
+		INNER JOIN
+			modules m
 		ON u.module_id = m.id
 		LEFT JOIN
-		    documentation d
+			documentation d
 		ON u.id = d.unit_id
 		WHERE
-			(u.path, m.version, m.module_path) IN (%s)`, strings.Join(keys, ","))
+			(p.path, m.version, m.module_path) IN (%s)`, strings.Join(keys, ","))
 	collect := func(rows *sql.Rows) error {
 		var (
 			path, name, synopsis string
@@ -391,7 +394,7 @@ var upsertSearchStatement = fmt.Sprintf(`
 		hll_leading_zeros
 	)
 	SELECT
-		u.path,
+		p.path,
 		m.version,
 		m.module_path,
 		u.name,
@@ -411,6 +414,10 @@ var upsertSearchStatement = fmt.Sprintf(`
 		hll_zeros(hll_hash(u.path))
 	FROM
 		units u
+	INNER JOIN
+		paths p
+	ON
+		p.id = u.path_id
 	INNER JOIN
 		modules m
 	ON

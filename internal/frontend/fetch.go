@@ -234,6 +234,9 @@ func fetchRequestStatusAndResponseText(results []*fetchResult, fullPath, request
 		case http.StatusInternalServerError:
 			return fr.status, "Oops! Something went wrong."
 		case derrors.ToStatus(derrors.AlternativeModule):
+			if err := module.CheckImportPath(fr.goModPath); err != nil {
+				return http.StatusNotFound, fmt.Sprintf(`%q does not have a valid module path (%q).`, fullPath, fr.goModPath)
+			}
 			t := template.Must(template.New("").Parse(`{{.}}`))
 			h, err := t.ExecuteToHTML(fmt.Sprintf("%s is not a valid path. Were you looking for “<a href='https://pkg.go.dev/%s'>%s</a>”?",
 				displayPath(fullPath, requestedVersion), fr.goModPath, fr.goModPath))

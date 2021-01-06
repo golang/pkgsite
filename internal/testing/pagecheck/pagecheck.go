@@ -43,6 +43,9 @@ type Page struct {
 	// IsLatestMinor is the latest minor version of this module.
 	IsLatestMinor bool
 
+	// MissingInMinor says that the unit is missing in the latest minor version of this module.
+	MissingInMinor bool
+
 	// IsLatestMajor is the latest major version of this series.
 	IsLatestMajor bool
 
@@ -198,9 +201,12 @@ func LicenseDetails(ltype, bodySubstring, source string) htmlcheck.Checker {
 // versionBadge checks the latest-version badge on a header.
 func versionBadge(p *Page) htmlcheck.Checker {
 	class := "DetailsHeader-badge"
-	if p.IsLatestMinor {
+	switch {
+	case p.MissingInMinor:
+		class += "--notAtLatest"
+	case p.IsLatestMinor:
 		class += "--latest"
-	} else {
+	default:
 		class += "--goToLatest"
 	}
 	return in(`[data-test-id="UnitHeader-minorVersionBanner"]`,

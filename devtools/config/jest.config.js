@@ -2,5 +2,9 @@
 module.exports = {
   preset: 'ts-jest',
   rootDir: '../../',
-  testEnvironment: 'node',
+  globals: {
+    'ts-jest': {
+      isolatedModules: true,
+    },
+  },
 };

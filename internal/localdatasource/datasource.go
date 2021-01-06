@@ -15,6 +15,7 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+	"time"
 
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
@@ -35,6 +36,7 @@ type DataSource struct {
 // checks by default.
 func New() *DataSource {
 	return &DataSource{
+		sourceClient:  source.NewClient(1 * time.Minute),
 		loadedModules: make(map[string]*internal.Module),
 	}
 }
