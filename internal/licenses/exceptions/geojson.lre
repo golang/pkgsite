@@ -1,0 +1,13 @@
+//** github.com/losinggeneration/geojson@v0.0.0-20160627001320-09bc167a825e **//
+
+{{Types "CC-BY-SA-4.0"}}
+
+Unit test JSON examples:
+Most unit test examples are taken from the GeoJSON spec Rev 1.0 at
+http://geojson.org/geojson-spec.html
+Authors 	Howard Butler (Hobu Inc.), Martin Daly (Cadcorp), Allan Doyle (MIT), Sean Gillies (UNC-Chapel Hill), Tim Schaub (OpenGeo), Christopher Schmidt (MetaCarta)
+Copyright © 2008 by the Authors
+
+Unit test JSON examples are thus licensed under a
+Creative Commons Attribution 3.0 United States License
+http://creativecommons.org/licenses/by/3.0/us/

@@ -1,0 +1,17 @@
+//**
+gitlab.com/ecp-ci/jacamar-plugins@v0.1.0
+gitlab.com/ecp-ci/jacamar-ci@v0.3.2
+**//
+
+{{Types "Apache-2.0 MIT"}}
+
+Jacamar
+((CI || Plugins))
+is licensed under the Apache License, Version 2.0 (LICENSE-APACHE
+or http://www.apache.org/licenses/LICENSE-2.0) or the MIT license,
+(LICENSE-MIT or http://opensource.org/licenses/MIT), at your option.
+
+Copyrights and patents in the Jacamar
+((CI || Plugins))
+project are retained
+by contributors. No copyright assignment is required to contribute.

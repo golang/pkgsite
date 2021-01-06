@@ -12,9 +12,3 @@ var ignoreFiles = map[string]bool{
 	// so we have to ignore it.
 	"gioui.org COPYING": true,
 }
-
-// exceptionFileTypes returns the license types of the file with contents if it
-// is in the list of exceptions. Otherwise it returns nil.
-func exceptionFileTypes(contents []byte) []string {
-	return exceptionFileTypesMap[exceptionKey(contents)]
-}

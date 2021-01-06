@@ -1,0 +1,25 @@
+//** 
+    github.com/wojnosystems/go_reopen@v1.0.0
+    github.com/coderconvoy/candlestick@v0.0.0-20161129102306-3081b787cd4a
+    github.com/dereklstinson/gocunets@v0.0.0-20200507203743-98db5b7a50a1
+**//
+
+{{Types "CC-BY-4.0"}}
+
+((
+    Attribution 4.0 International https://creativecommons.org/licenses/by/4.0/
+||
+    Unique Candlestick
+    =================
+
+    Use this code as you wish, 
+
+<a rel="license" href="http://creativecommons.org/licenses/by/4.0/"><img alt="Creative Commons Licence" style="border-width:0" src="https://i.creativecommons.org/l/by/4.0/88x31.png" /></a><br /><span xmlns:dct="http://purl.org/dc/terms/" href="http://purl.org/dc/dcmitype/Text" property="dct:title" rel="dct:type">Unique Candlestick</span> by <a xmlns:cc="http://creativecommons.org/ns#" href="github.com/coderconvoy/candlestick" property="cc:attributionName" rel="cc:attributionURL">Matthew Stoodley</a> is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution 4.0 International License</a>.
+
+||
+    This work is licensed under the Creative Commons Attribution 4.0 International
+    License. To view a copy of this license, visit
+    http://creativecommons.org/licenses/by/4.0/ or send a letter to Creative
+    Commons, PO Box 1866, Mountain View, CA 94042, USA.
+))
+

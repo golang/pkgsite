@@ -1,0 +1,13 @@
+//** github.com/cevatbarisyilmaz/gstats@v0.1.5 **//
+
+{{Types "CC-BY-SA-4.0"}}
+
+By default, gstats uses https://github.com/cevatbarisyilmaz/ip2country for geolocation,
+which internally uses [GeoLite2](https://dev.maxmind.com/geoip/geoip2/geolite2/)  database by Maxmind.
+As GeoLite2 is distributed under
+[Creative Commons Attribution-ShareAlike 4.0 International License](https://creativecommons.org/licenses/by-sa/4.0/),
+gstats also uses the same license due to license's terms.
+
+However, you can override the geolocation function to use another geolocation source
+or maybe to not use geolocation at all. In this case, you can use gstats with
+[MIT License](https://opensource.org/licenses/MIT).

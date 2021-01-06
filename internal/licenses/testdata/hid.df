@@ -1,6 +1,3 @@
-source: https://github.com/mindworks-software/hid/blob/master/LICENSE.md
-types: BSD-3-Clause LGPL-2.1 
-
 The components of `hid` are licensed as such:
 
  * `hidapi` is released under the [3-clause BSD](https://github.com/signal11/hidapi/blob/master/LICENSE-bsd.txt) license.

@@ -1,5 +1,7 @@
+//**
 source: https://github.com/golang/freetype/blob/master/LICENSE
-types: Freetype
+**//
+{{Types "Freetype"}}
 
 Use of the Freetype-Go software is subject to your choice of exactly one of
 the following two licenses:

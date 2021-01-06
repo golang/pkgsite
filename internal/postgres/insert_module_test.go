@@ -96,7 +96,7 @@ func checkModule(ctx context.Context, t *testing.T, want *internal.Module) {
 		}
 		wantu.Subdirectories = subdirectories
 		opts := cmp.Options{
-			cmpopts.IgnoreFields(licenses.Metadata{}, "OldCoverage"),
+			cmpopts.IgnoreFields(licenses.Metadata{}, "Coverage", "OldCoverage"),
 			cmp.AllowUnexported(source.Info{}, safehtml.HTML{}),
 		}
 		if diff := cmp.Diff(wantu, got, opts); diff != "" {

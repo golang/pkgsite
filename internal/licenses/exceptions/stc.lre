@@ -1,0 +1,25 @@
+//** github.com/xdrpp/stc@v0.1.2 **//
+
+{{Types "GPL-3.0-or-later Apache-2.0"}}
+
+
+Anyone is premitted to distribute this software under the terms of the
+GNU General Public License (GPL) version 3 or later.  An acceptable
+version of this license is available at the following URL:
+
+        http://www.gnu.org/licenses/gpl-3.0.html
+
+If the Free Software Foundation publishes a higher-numbered GPL
+license, you may at your option distribute this software under the
+terms of that license as well.
+
+
+Anyone is also permitted to distributed this software under the terms
+of the Apache License version 2.0, available at the following URL:
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+
+Stellar Development Foundation may, at the foundation's option,
+relicense any version of this software under any license the
+foundation sees fit.

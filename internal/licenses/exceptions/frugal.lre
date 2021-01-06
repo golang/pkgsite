@@ -1,5 +1,7 @@
+//**
 source: https://github.com/Workiva/frugal/blob/master/LICENSE
-types: Apache-2.0
+**//
+{{Types "Apache-2.0"}}
 
 Copyright 2017-2018 Workiva Inc.
 

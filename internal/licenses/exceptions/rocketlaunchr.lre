@@ -1,0 +1,16 @@
+//**
+source: https://github.com/rocketlaunchr/dataframe-go/blob/master/LICENSE
+**//
+{{Types "MIT"}}
+
+{{template "mit-grant"}}
+{{template "mit-conditions"}}
+{{template "mit-disclaimer"}}
+
+The usage of this software must not be knowingly used for an application 
+that will be directly or indirectly used for military purposes.
+
+All forks of this package must be subject to the above provisions.
+This only applies to the fork itself and NOT the product(s) derived from this package
+or a fork of this package.
+

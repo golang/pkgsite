@@ -1,0 +1,12 @@
+//** github.com/libp2p/hydra-booster@v0.7.3 **//
+
+{{Types "MIT Apache-2.0"}}
+
+This project is transitioning from an MIT-only license to a dual MIT/Apache-2.0 license. 
+Unless otherwise noted, all code contributed prior to __3__ and not contributed by 
+a user listed in [this signoff issue]( __8__ ) is 
+licensed under MIT-only. All new contributions (and past contributions since __3__ ) 
+are licensed under a dual MIT/Apache-2.0 license.
+
+MIT: https://www.opensource.org/licenses/mit
+Apache-2.0: https://www.apache.org/licenses/license-2.0

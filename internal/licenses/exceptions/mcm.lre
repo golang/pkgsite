@@ -1,6 +1,9 @@
-source: https://github.com/apache/mynewt-newtmgr/blob/master/LICENSE
-types: Apache-2.0
+//** github.com/prashanth26/machine-controller-manager@v0.0.0-20181102103410-c6b285941cf9 **//
 
+{{Types "Apache-2.0 BSD-3-Clause"}}
+
+
+```
                                  Apache License
                            Version 2.0, January 2004
                         http://www.apache.org/licenses/
@@ -181,7 +184,7 @@ types: Apache-2.0
    APPENDIX: How to apply the Apache License to your work.
 
       To apply the Apache License to your work, attach the following
-      boilerplate notice, with the fields enclosed by brackets "{}"
+      boilerplate notice, with the fields enclosed by brackets "[]"
       replaced with your own identifying information. (Don't include
       the brackets!)  The text should be enclosed in the appropriate
       comment syntax for the file format. We also recommend that a
@@ -189,7 +192,7 @@ types: Apache-2.0
       same "printed page" as the copyright notice for easier
       identification within third-party archives.
 
-   Copyright {yyyy} {name of copyright owner}
+   Copyright [yyyy] [name of copyright owner]
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -202,138 +205,149 @@ types: Apache-2.0
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
    limitations under the License.
+```
 
-This product bundles pretty, which is available under the MIT license. For
-details, see:
-    * vendor/github.com/kr/pretty/License
+## APIs
 
-This product bundles kr/text, which is available under the MIT license. For
-details, see:
-    * vendor/github.com/kr/text/License
+This project may include APIs to SAP or third party products or services. The use of these APIs, products and services may be subject to additional agreements. In no event shall the application of the Apache Software License, v.2 to this project grant any rights in or to these APIs, products or services that would alter, expand, be inconsistent with, or supersede any terms of these additional agreements. API means application programming interfaces, as well as their respective specifications and implementing code that allows other software products to communicate with or call on SAP or third party products or services (for example, SAP Enterprise Services, BAPIs, Idocs, RFCs and ABAP calls or other user exits) and may be made available through SAP or third party products, SDKs, documentation or other media.
 
-This product bundles mapstructure, which is available under the MIT license.
-For details, see:
-    * vendor/github.com/mitchellh/mapstructure/LICENSE
+## Subcomponents
 
-This product bundles logrus, which is available under the MIT license. For
-details, see:
-    * vendor/github.com/Sirupsen/logrus/LICENSE
+This project includes the following subcomponents that are subject to separate license terms. 
+Your use of these subcomponents is subject to the separate license terms applicable to
+each subcomponent.
 
-This product bundles Cast, which is available under the MIT license. For
-details, see:
-    * vendor/github.com/spf13/cast/LICENSE
+OAI Object Model.   
+https://github.com/go-openapi/spec.  
+Copyright 2015 go-swagger maintainers.  
+Apache 2 license (https://github.com/go-openapi/spec/blob/master/LICENSE ).  
 
-This product bundles jWalterWeatherman, which is available under the MIT
-license. For details, see:
-    * vendor/github.com/spf13/jwalterweatherman/LICENSE
+((
+    Glog.  
+    https://github.com/golang/glog.  
+    Copyright 2013 Google Inc. All Rights Reserved.  
+    Apache 2 license (https://github.com/golang/glog/blob/master/LICENSE ).  
+||
+    klog.  
+    https://github.com/golang/klog.  
+    Copyright 2013 Google Inc. All Rights Reserved.  
+    Apache 2 license (https://github.com/kubernetes/klog/blob/master/LICENSE ).  
+))
 
-This product bundles pflag, which is available under the "3-clause BSD"
-license. For details, see:
-    * vendor/github.com/spf13/pflag/LICENSE
+Prometheus Go Client Library.  
+https://github.com/prometheus/client_golang.  
+Copyright 2015 The Prometheus Authors.  
+Apache 2 license (https://github.com/prometheus/client_golang/blob/master/LICENSE ).  
 
-This product bundles the unix Go package, which is available under the
-"3-clause BSD" license. For details, see:
-    * vendor/golang.org/x/sys/LICENSE
+Pflag.   
+https://github.com/spf13/pflag.  
+Copyright (c) 2012 Alex Ogier. Copyright (c) 2012 The Go Authors.   
+BSD 3-clause "New" or "Revised" License (https://github.com/spf13/pflag/blob/master/LICENSE ).  
 
-This product bundles the Go supplementary cryptography libraries package,
-which is available under the "3-clause BSD" license. For details, see:
-    * vendor/golang.org/x/crypto/LICENSE
+API.  
+https://github.com/kubernetes/api/.  
+Copyright 2017 The Kubernetes Authors.   
+Apache 2 license (https://github.com/kubernetes/api/blob/master/LICENSE ).  
 
-This product bundles the Go supplementary networking libraries package, which
-is available under the "3-clause BSD" license. For details, see:
-    * vendor/golang.org/x/net/LICENSE
+APIMachinery.  
+https://github.com/kubernetes/apimachinery.  
+Copyright 2017 The Kubernetes Authors.      
+Apache 2 license (https://github.com/kubernetes/apimachinery/blob/master/LICENSE ).  
 
-This product bundles fsnotify.v1, which is available under the "3-clause BSD"
-license. For details, see:
-    * vendor/gopkg.in/fsnotify.v1/LICENSE
+APIServer.  
+https://github.com/kubernetes/apiserver.  
+Copyright 2017 The Kubernetes Authors.   
+Apache 2 license (https://github.com/kubernetes/apiserver/blob/master/LICENSE ).  
 
-This product bundles yaml.v2's Go port of libyaml, which is available under the
-MIT license. For details, see:
-    * vendor/mynewt.apache.org/newt/yaml/apic.go
-    * vendor/mynewt.apache.org/newt/yaml/emitterc.go
-    * vendor/mynewt.apache.org/newt/yaml/parserc.go
-    * vendor/mynewt.apache.org/newt/yaml/readerc.go
-    * vendor/mynewt.apache.org/newt/yaml/scannerc.go
-    * vendor/mynewt.apache.org/newt/yaml/writerc.go
-    * vendor/mynewt.apache.org/newt/yaml/yamlh.go
-    * vendor/mynewt.apache.org/newt/yaml/yamlprivateh.go
+Client-go.  
+https://github.com/kubernetes/client-go.  
+Copyright 2017 The Kubernetes Authors.   
+Apache 2 license (https://github.com/kubernetes/client-go/blob/master/LICENSE ).  
 
-This product bundles viper, which is available under the MIT license. For
-details, see:
-    * vendor/mynewt.apache.org/newt/viper/LICENSE
+Code-generator.  
+https://github.com/kubernetes/code-generator.  
+Copyright 2017 The Kubernetes Authors.   
+Apache 2 license (https://github.com/kubernetes/code-generator/blob/master/LICENSE ).  
 
-This product bundles pb, which is available under the "3-clause BSD" license.
-For details, see:
-    * vendor/github.com/cheggaaa/pb/LICENSE
+Gengo.  
+https://github.com/kubernetes/gengo.  
+Copyright 2017 The Kubernetes Authors.   
+Apache 2 license (https://github.com/kubernetes/gengo/blob/master/LICENSE ).   
 
-This product bundles ble, which is available under the "3-clause BSD" license.
-For details, see:
-    * vendor/github.com/currantlabs/ble/LICENSE
+Kube OpenAPI.  
+https://github.com/kubernetes/kube-openapi.  
+Copyright 2017 The Kubernetes Authors.   
+Apache 2 license (https://github.com/kubernetes/kube-openapi/blob/master/LICENSE ).  
 
-This product bundles structs, which is available under the MIT license. For
-details, see:
-    * vendor/github.com/fatih/structs/LICENSE
+Google Cloud Go SDK.  
+https://cloud.google.com/compute/docs/api/libraries#google_apis_go_client_library.  
+Copyright (c) 2011 Google Inc. All rights reserved.  
+BSD-3 license (https://github.com/google/google-api-go-client/blob/master/LICENSE)  
 
-This product bundles structs, which is available under the Apache License 2.0.
-For details, see:
-    * vendor/github.com/inconshreveable/mousetrap/LICENSE
+Gophercloud.  
+https://github.com/gophercloud/gophercloud.  
+Copyright 2012-2013 Rackspace, Inc.  
+Apache 2 license (https://github.com/gophercloud/gophercloud/blob/master/LICENSE)  
 
-This product bundles go-crc16, which is available under the MIT license. For
-details, see:
-    * vendor/github.com/joaojeronimo/go-crc16/README.md
+Concurrent.  
+https://github.com/modern-go/concurrent.  
+Apache 2 license (https://github.com/modern-go/concurrent/blob/master/LICENSE)  
 
-This product bundles ansi, which is available under the MIT license. For
-details, see:
-    * vendor/github.com/mgutz/ansi/LICENSE
+Reflect2.  
+https://github.com/modern-go/reflect2.  
+Apache 2 license (https://github.com/modern-go/reflect2/blob/master/LICENSE)  
 
-This product bundles logxi, which is available under the MIT license. For
-details, see:
-    * vendor/github.com/mgutz/logxi/LICENSE
+Ginkgo.  
+https://github.com/onsi/ginkgo.  
+Copyright (c) 2013-2014 Onsi Fakhouri
+MIT license (https://github.com/onsi/ginkgo/blob/master/LICENSE)  
 
-This product bundles go-homedir, which is available under the MIT license. For
-details, see:
-    * vendor/github.com/mitchellh/go-homedir/LICENSE
+Gomega.  
+https://github.com/onsi/ginkgo.  
+Copyright (c) 2013-2014 Onsi Fakhouri
+MIT license (https://github.com/onsi/gomega/blob/master/LICENSE)  
 
-This product bundles go-codec, which is available under the MIT license. For
-details, see:
-    * vendor/github.com/ugorji/go/LICENSE
+Alibaba Cloud Go Software Development Kit.  
+https://github.com/aliyun/alibaba-cloud-sdk-go.  
+Apache 2 license (https://github.com/aliyun/alibaba-cloud-sdk-go/blob/master/LICENSE)  
 
-This product bundles goble, which is available under the MIT license. For
-details, see:
-    * vendor/github.com/raff/goble/LICENSE
+gRPC-Go.  
+https://github.com/grpc/grpc-go.  
+Copyright 2017 gRPC authors.  
+Apache 2 license (https://github.com/grpc/grpc-go/blob/master/LICENSE)  
 
-This product bundles go-coap, which is available under the MIT license. For
-details, see:
-    * vendor/github.com/runtimeco/go-coap/LICENSE
 
-This product bundles structs, which is available under the Apache License 2.0.
-For details, see:
-    * vendor/github.com/spf13/cobra/LICENSE.txt
+------
+## BSD 3-clause "New" or "Revised" License
 
-This product bundles serial, which is available under the "3-clause BSD"
-license. For details, see:
-    * vendor/github.com/tarm/serial/LICENSE
+((SPDX short identifier: BSD-3-Clause))??
 
-This product bundles go-colorable, which is available under the MIT license.
-For details, see:
-    * vendor/github.com/mattn/go-colorable/LICENSE
+```
+    Copyright (c) <year> <author> All rights reserved.
 
-This product bundles go-runewidth, which is available under the MIT license.
-For details, see:
-    * vendor/github.com/mattn/go-runewidth/LICENSE
+    Redistribution and use in source and binary forms, with or without
+    modification, are permitted provided that the following conditions are
+    met:
 
-This product bundles go-isatty, which is available under the MIT license.
-For details, see:
-    * vendor/github.com/mattn/go-isatty/LICENSE
+    * Redistributions of source code must retain the above copyright
+    notice, this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above
+    copyright notice, this list of conditions and the following disclaimer
+    in the documentation and/or other materials provided with the
+    distribution.
+    * Neither the name of Google Inc. nor the names of its
+    contributors may be used to endorse or promote products derived from
+    this software without specific prior written permission.
 
-This product bundles readline, which is available under the MIT license.
-For details, see:
-    * vendor/github.com/chzyer/readline/LICENSE
-
-This product bundles go-blel, which is available under the "3-clause BSD"
-license. For details, see:
-    * vendor/github.com/go-ble/ble/LICENSE
-
-This product bundles ishell.v1, which is available under the MIT license.
-For details, see:
-    * vendor/gopkg.in/abiosoft/ishell.v1/LICENSE
+    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+    "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+    LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+    A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+    OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+    SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+    LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+    DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+    THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+    (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+    OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+```

@@ -1,0 +1,13 @@
+//**
+git.rwth-aachen.de/acs/public/ontology/owl/owl2go@v1.1.0
+git.rwth-aachen.de/acs/public/ontology/owl/saref@v0.0.0-20200525140909-5b44cbefaa17
+git.rwth-aachen.de/acs/public/cloud/mas/clonemap@v0.0.0-20201023111149-5c55954d016e
+**//
+
+
+{{Types "Apache-2.0 MIT"}}
+
+This project is licensed under either of
+- Apache License, Version 2.0 (LICENSE-Apache or http://www.apache.org/licenses/LICENSE-2.0)
+- MIT license (LICENSE-MIT or https://opensource.org/licenses/MIT)
+at you option.

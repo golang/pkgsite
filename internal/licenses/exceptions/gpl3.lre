@@ -1,0 +1,35 @@
+//**
+    launchpad.net_ubuntu-push@v0.0.0-20170211001545-000000000177
+    github.com/monsti/form@v0.0.0-20140713153911-7d350fe5f89b
+**//
+
+{{Types "GPL-3.0"}}
+
+((This program || monsti/form))
+is free software: you can redistribute it and/or modify it
+under the terms of the
+((
+GNU General Public License version 3, as published by the Free Software Foundation.
+||
+GNU Lesser General Public License as published by the Free
+Software Foundation, either version 3 of the License, or (at your option) any
+later version.
+))
+
+((This program || monsti/form))
+is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied
+((warranties || warranty))
+of
+MERCHANTABILITY,
+((SATISFACTORY QUALITY))??
+or FITNESS FOR A PARTICULAR
+PURPOSE.  See the GNU General Public License for more details.
+
+You should have received a copy of the GNU
+((Lesser))??
+General Public License along with
+((this program || monsti/form))
+If not, see <http://www.gnu.org/licenses/>.
+
+

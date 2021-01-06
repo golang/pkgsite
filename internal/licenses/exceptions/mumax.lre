@@ -1,0 +1,27 @@
+//** github.com/jcvernaleo/3@v3.9.2+incompatible **//
+
+{{Types "GPL-3.0-or-later CC-BY-3.0 Freetype"}}
+
+Mumax3 GPU-accelerated micromagnetic simulator
+Copyright (C) 2012-2014  Arne Vansteenkiste.
+Contributions by Ahmad Syukri, Colin Jermain, Jonathan Leliaert, Mykola Dvornik.
+
+Mumax3 is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+Mumax3 uses svgo (http://github.com/ajstarks/svgo), copyright Anthony Starks,
+licensed under the Creative Commons Attribution 3.0 license 
+as described in http://creativecommons.org/licenses/by/3.0/us/ .
+
+Mumax3 uses freetype-go (http://code.google.com/p/freetype-go/), 
+copyright Google Inc., Jeff R. Allen, Rémy Oudompheng, Roger Peppe,
+licensed under the FreeType License or the GNU General Public License (GPL), version 2 or later. 
+
+Mumax3 uses CUDA libraries, copyright NVIDIA.

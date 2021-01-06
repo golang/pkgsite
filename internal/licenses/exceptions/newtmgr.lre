@@ -1,0 +1,140 @@
+//**
+source: https://github.com/apache/mynewt-artifact/blob/v0.0.15/LICENSE
+**//
+
+{{template "Apache-2.0.lre"}}
+
+This product bundles pretty, which is available under the MIT license. For
+details, see:
+    * vendor/github.com/kr/pretty/License
+
+This product bundles kr/text, which is available under the MIT license. For
+details, see:
+    * vendor/github.com/kr/text/License
+
+This product bundles mapstructure, which is available under the MIT license.
+For details, see:
+    * vendor/github.com/mitchellh/mapstructure/LICENSE
+
+This product bundles logrus, which is available under the MIT license. For
+details, see:
+    * vendor/github.com/Sirupsen/logrus/LICENSE
+
+This product bundles Cast, which is available under the MIT license. For
+details, see:
+    * vendor/github.com/spf13/cast/LICENSE
+
+This product bundles jWalterWeatherman, which is available under the MIT
+license. For details, see:
+    * vendor/github.com/spf13/jwalterweatherman/LICENSE
+
+This product bundles pflag, which is available under the "3-clause BSD"
+license. For details, see:
+    * vendor/github.com/spf13/pflag/LICENSE
+
+This product bundles the unix Go package, which is available under the
+"3-clause BSD" license. For details, see:
+    * vendor/golang.org/x/sys/LICENSE
+
+This product bundles the Go supplementary cryptography libraries package,
+which is available under the "3-clause BSD" license. For details, see:
+    * vendor/golang.org/x/crypto/LICENSE
+
+This product bundles the Go supplementary networking libraries package, which
+is available under the "3-clause BSD" license. For details, see:
+    * vendor/golang.org/x/net/LICENSE
+
+This product bundles fsnotify.v1, which is available under the "3-clause BSD"
+license. For details, see:
+    * vendor/gopkg.in/fsnotify.v1/LICENSE
+
+This product bundles yaml.v2's Go port of libyaml, which is available under the
+MIT license. For details, see:
+    * vendor/mynewt.apache.org/newt/yaml/apic.go
+    * vendor/mynewt.apache.org/newt/yaml/emitterc.go
+    * vendor/mynewt.apache.org/newt/yaml/parserc.go
+    * vendor/mynewt.apache.org/newt/yaml/readerc.go
+    * vendor/mynewt.apache.org/newt/yaml/scannerc.go
+    * vendor/mynewt.apache.org/newt/yaml/writerc.go
+    * vendor/mynewt.apache.org/newt/yaml/yamlh.go
+    * vendor/mynewt.apache.org/newt/yaml/yamlprivateh.go
+
+This product bundles viper, which is available under the MIT license. For
+details, see:
+    * vendor/mynewt.apache.org/newt/viper/LICENSE
+
+This product bundles pb, which is available under the "3-clause BSD" license.
+For details, see:
+    * vendor/github.com/cheggaaa/pb/LICENSE
+
+This product bundles ble, which is available under the "3-clause BSD" license.
+For details, see:
+    * vendor/github.com/currantlabs/ble/LICENSE
+
+This product bundles structs, which is available under the MIT license. For
+details, see:
+    * vendor/github.com/fatih/structs/LICENSE
+
+This product bundles structs, which is available under the Apache License 2.0.
+For details, see:
+    * vendor/github.com/inconshreveable/mousetrap/LICENSE
+
+This product bundles go-crc16, which is available under the MIT license. For
+details, see:
+    * vendor/github.com/joaojeronimo/go-crc16/README.md
+
+This product bundles ansi, which is available under the MIT license. For
+details, see:
+    * vendor/github.com/mgutz/ansi/LICENSE
+
+This product bundles logxi, which is available under the MIT license. For
+details, see:
+    * vendor/github.com/mgutz/logxi/LICENSE
+
+This product bundles go-homedir, which is available under the MIT license. For
+details, see:
+    * vendor/github.com/mitchellh/go-homedir/LICENSE
+
+This product bundles go-codec, which is available under the MIT license. For
+details, see:
+    * vendor/github.com/ugorji/go/LICENSE
+
+This product bundles goble, which is available under the MIT license. For
+details, see:
+    * vendor/github.com/raff/goble/LICENSE
+
+This product bundles go-coap, which is available under the MIT license. For
+details, see:
+    * vendor/github.com/runtimeco/go-coap/LICENSE
+
+This product bundles structs, which is available under the Apache License 2.0.
+For details, see:
+    * vendor/github.com/spf13/cobra/LICENSE.txt
+
+This product bundles serial, which is available under the "3-clause BSD"
+license. For details, see:
+    * vendor/github.com/tarm/serial/LICENSE
+
+This product bundles go-colorable, which is available under the MIT license.
+For details, see:
+    * vendor/github.com/mattn/go-colorable/LICENSE
+
+This product bundles go-runewidth, which is available under the MIT license.
+For details, see:
+    * vendor/github.com/mattn/go-runewidth/LICENSE
+
+This product bundles go-isatty, which is available under the MIT license.
+For details, see:
+    * vendor/github.com/mattn/go-isatty/LICENSE
+
+This product bundles readline, which is available under the MIT license.
+For details, see:
+    * vendor/github.com/chzyer/readline/LICENSE
+
+This product bundles go-blel, which is available under the "3-clause BSD"
+license. For details, see:
+    * vendor/github.com/go-ble/ble/LICENSE
+
+This product bundles ishell.v1, which is available under the MIT license.
+For details, see:
+    * vendor/gopkg.in/abiosoft/ishell.v1/LICENSE

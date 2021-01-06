@@ -1,0 +1,18 @@
+//** lang.yottadb.com/go/yottadb@v1.1.0 **//
+
+{{Types "AGPL-3.0"}}
+
+All software in this package is part of YottaDB (http://yottadb.com) each file of which contains notices from its copyright holders. YottaDB is provided to you under the terms of a license that you must comply with. If there is a COPYING file included in this package, it contains the terms of the license under which the package is provided to you.
+
+If there is not a COPYING file in the package, you must do one of the following:
+ (a) Ensure that there is a signed license under which the software is made available to you.
+ (b) Create a COPYING file by copying the contents of https://www.gnu.org/licenses/agpl.txt and use it as the license.
+
+With free / open source software, the question arises from time to time as to whether an application that uses software licensed under the GNU Affero General Public License must itself use that license or a compatible license. For clarity, our view is:
+ (a) If you distribute software that uses, or is built on, unmodified YottaDB software, that software is not a covered work. Simple recompilation of YottaDB software from unmodified sources also results in an unmodified YottaDB software.
+ (b) If you distribute software that uses, or is built on, a modified version of YottaDB software, your modified version of YottaDB software is a covered work, and the source code to your modified version must be made available per the terms of the license. However that part of the software not required to build the modified version of YottaDB software can be part of an aggregate with the modified version of YottaDB software and made available under a different, unrelated license.
+ (c) Distributing software that is covered and software is not covered in separate directories or folders suffices to create an aggregate with separable licenses.
+
+This clarification is the same as that which also has been made on multiple occasions (e.g., https://groups.google.com/d/msg/hardhats/A4qV-L4ZCjk/xf4fBWm2iisJ) by the upstream GT.M project.
+
+If you submit source code you would like YottaDB to include, please ensure that you understand and agree with the above clarification.

@@ -151,7 +151,7 @@ func TestFetchAndUpdateState(t *testing.T) {
 			Path:              "github.com/my/module/bar",
 			Name:              "bar",
 			Licenses: []*licenses.Metadata{
-				{Types: []string{"BSD-0-Clause"}, FilePath: "LICENSE"},
+				{Types: []string{"0BSD"}, FilePath: "LICENSE"},
 				{Types: []string{"MIT"}, FilePath: "bar/LICENSE"},
 			},
 		},
@@ -204,7 +204,7 @@ func TestFetchAndUpdateState(t *testing.T) {
 					Path:              "nonredistributable.mod/module/bar/baz",
 					Name:              "baz",
 					Licenses: []*licenses.Metadata{
-						{Types: []string{"BSD-0-Clause"}, FilePath: "LICENSE"},
+						{Types: []string{"0BSD"}, FilePath: "LICENSE"},
 						{Types: []string{"MIT"}, FilePath: "bar/LICENSE"},
 						{Types: []string{"MIT"}, FilePath: "bar/baz/COPYING"},
 					},
@@ -231,7 +231,7 @@ func TestFetchAndUpdateState(t *testing.T) {
 					Path:              "nonredistributable.mod/module/foo",
 					Name:              "foo",
 					Licenses: []*licenses.Metadata{
-						{Types: []string{"BSD-0-Clause"}, FilePath: "LICENSE"},
+						{Types: []string{"0BSD"}, FilePath: "LICENSE"},
 						{Types: []string{"UNKNOWN"}, FilePath: "foo/LICENSE.md"},
 					},
 				},
@@ -350,7 +350,7 @@ func TestFetchAndUpdateState(t *testing.T) {
 					Path:              buildConstraintsMod.ModulePath + "/cpu",
 					Name:              "cpu",
 					Licenses: []*licenses.Metadata{
-						{Types: []string{"BSD-0-Clause"}, FilePath: "LICENSE"},
+						{Types: []string{"0BSD"}, FilePath: "LICENSE"},
 					},
 				},
 				Documentation: &internal.Documentation{

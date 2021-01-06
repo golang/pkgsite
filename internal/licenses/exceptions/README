@@ -1,0 +1,15 @@
+The files in this directory (except this one) are processed by gen_exceptions.go
+to produce a map of exceptions to license detection.
+
+The files should be in .lre form, as described in
+github.com/google/licensecheck/licenses/README.md.
+
+The file can contain a call to the Types function with a space-separated list of
+the file types to report for the file:
+
+	{{Types "Apache-2.0 MIT"}}
+
+In the absence of such a call, the type will be the filename without the ".lre"
+extension.
+
+If you add a file to this directory, run `go generate` in the parent directory.
