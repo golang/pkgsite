@@ -158,6 +158,9 @@ func (s *Server) fetchAndPoll(ctx context.Context, ds internal.DataSource, modul
 		log.Errorf(ctx, "fetchAndPoll(ctx, ds, q, %q, %q, %q): %v", modulePath, fullPath, requestedVersion, err)
 		return http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError)
 	}
+	if fr.status == derrors.ToStatus(derrors.AlternativeModule) {
+		fr.status = http.StatusNotFound
+	}
 	return fr.status, fr.responseText
 }
 
@@ -247,7 +250,7 @@ func resultFromFetchRequest(results []*fetchResult, fullPath, requestedVersion s
 			fr.responseText = "Oops! Something went wrong."
 			return fr, nil
 		case derrors.ToStatus(derrors.AlternativeModule):
-			if err := module.CheckImportPath(fr.goModPath); err != nil {
+			if err := module.CheckPath(fr.goModPath); err != nil {
 				fr.status = http.StatusNotFound
 				fr.responseText = fmt.Sprintf(`%q does not have a valid module path (%q).`, fullPath, fr.goModPath)
 				return fr, nil
@@ -259,7 +262,6 @@ func resultFromFetchRequest(results []*fetchResult, fullPath, requestedVersion s
 				fr.status = http.StatusInternalServerError
 				return fr, err
 			}
-			fr.status = http.StatusNotFound
 			fr.responseText = h.String()
 			return fr, nil
 		}

@@ -5,13 +5,18 @@
 package frontend
 
 import (
+	"context"
+	"errors"
 	"fmt"
+	"html"
 	"net/http"
 
 	"github.com/google/safehtml/template"
+	"github.com/google/safehtml/template/uncheckedconversions"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/log"
+	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/stdlib"
 )
 
@@ -46,7 +51,27 @@ func (s *Server) servePathNotFoundPage(w http.ResponseWriter, r *http.Request, d
 	if stdlib.Contains(fullPath) {
 		return &serverError{status: http.StatusNotFound}
 	}
-	return pathNotFoundError(fullPath, requestedVersion)
+
+	db, ok := ds.(*postgres.DB)
+	if !ok {
+		return proxydatasourceNotSupportedErr()
+	}
+	fr, err := previousFetchStatusAndResponse(ctx, db, fullPath, requestedVersion)
+	if err != nil || fr.status == http.StatusInternalServerError {
+		if err != nil && !errors.Is(err, derrors.NotFound) {
+			log.Error(ctx, err)
+		}
+		return pathNotFoundError(fullPath, requestedVersion)
+	}
+	return &serverError{
+		status: fr.status,
+		epage: &errorPage{
+			messageTemplate: uncheckedconversions.TrustedTemplateFromStringKnownToSatisfyTypeContract(`
+					    <h3 class="Error-message">{{.StatusText}}</h3>
+					    <p class="Error-message">` + html.UnescapeString(fr.responseText) + `</p>`),
+			MessageData: struct{ StatusText string }{http.StatusText(fr.status)},
+		},
+	}
 }
 
 // pathNotFoundError returns a page with an option on how to
@@ -69,4 +94,52 @@ func pathNotFoundError(fullPath, requestedVersion string) error {
 			MessageData:  path,
 		},
 	}
+}
+
+// previousFetchStatusAndResponse returns the status and response text from a
+// previous fetch of the fullPath and requestedVersion.
+func previousFetchStatusAndResponse(ctx context.Context, db *postgres.DB, fullPath, requestedVersion string) (_ *fetchResult, err error) {
+	defer derrors.Wrap(&err, "fetchRedirectPath(w, r, %q, %q)", fullPath, requestedVersion)
+
+	vm, err := db.GetVersionMap(ctx, fullPath, requestedVersion)
+	if err != nil {
+		return nil, err
+	}
+	if vm.Status != http.StatusNotFound {
+		return resultFromFetchRequest([]*fetchResult{
+			{
+				modulePath: vm.ModulePath,
+				goModPath:  vm.GoModPath,
+				status:     vm.Status,
+				err:        errors.New(vm.Error),
+			},
+		}, fullPath, requestedVersion)
+	}
+
+	// If the status is 404, it likely means that the fullPath is not a
+	// modulePath. Check all of the candidate module paths for the past result.
+	paths, err := candidateModulePaths(fullPath)
+	if err != nil {
+		return nil, err
+	}
+	vms, err := db.GetVersionMapsNon2xxStatus(ctx, paths, requestedVersion)
+	if err != nil {
+		return nil, err
+	}
+	if len(vms) == 0 {
+		return nil, nil
+	}
+	var fetchResults []*fetchResult
+	for _, vm := range vms {
+		fetchResults = append(fetchResults, &fetchResult{
+			modulePath: vm.ModulePath,
+			goModPath:  vm.GoModPath,
+			status:     vm.Status,
+			err:        errors.New(vm.Error),
+		})
+	}
+	if len(fetchResults) == 0 {
+		return nil, derrors.NotFound
+	}
+	return resultFromFetchRequest(fetchResults, fullPath, requestedVersion)
 }

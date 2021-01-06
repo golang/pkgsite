@@ -19,6 +19,7 @@ import (
 	"github.com/jba/templatecheck"
 	"golang.org/x/net/html"
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/middleware"
 	"golang.org/x/pkgsite/internal/postgres"
@@ -1148,6 +1149,16 @@ func TestServerErrors(t *testing.T) {
 	if err := testDB.InsertModule(ctx, sampleModule); err != nil {
 		t.Fatal(err)
 	}
+	alternativeModule := &internal.VersionMap{
+		ModulePath:       "module.path/alternative",
+		GoModPath:        sample.ModulePath,
+		RequestedVersion: sample.VersionString,
+		ResolvedVersion:  sample.VersionString,
+		Status:           derrors.ToStatus(derrors.AlternativeModule),
+	}
+	if err := testDB.UpsertVersionMap(ctx, alternativeModule); err != nil {
+		t.Fatal(err)
+	}
 	_, handler, _ := newTestServer(t, nil)
 
 	for _, test := range []struct {
@@ -1156,6 +1167,7 @@ func TestServerErrors(t *testing.T) {
 	}{
 		{"not found", "/invalid-page", http.StatusNotFound},
 		{"bad request", "/gocloud.dev/@latest/blob", http.StatusBadRequest},
+		{"alternative module", "/" + alternativeModule.ModulePath, http.StatusNotFound},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			w := httptest.NewRecorder()
