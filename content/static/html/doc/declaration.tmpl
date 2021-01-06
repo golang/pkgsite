@@ -8,6 +8,17 @@
   {{- $out := render_decl .Doc .Decl -}}
   {{if $out.Decl}}
     <div class="Documentation-declaration">
+      <pre>{{- $out.Decl -}}</pre>
+    </div>
+  {{end}}
+  {{- $out.Doc -}}
+  {{"\n"}}
+{{- end -}}
+
+{{- define "declaration-view-source" -}}
+  {{- $out := render_decl .Doc .Decl -}}
+  {{if $out.Decl}}
+    <div class="Documentation-declaration">
       <span class="Documentation-declarationLink">{{source_link "View Source" .Decl}}</span>
       <pre>{{- $out.Decl -}}</pre>
     </div>

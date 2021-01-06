@@ -61,7 +61,7 @@
   <section class="Documentation-constants">
   {{- if .Consts -}}
     {{- range .Consts -}}
-      {{- template "declaration" . -}}
+      {{- template "declaration-view-source" . -}}
     {{- end -}}
   {{- else -}}
       <div class="Documentation-empty">This section is empty.</div>
@@ -72,7 +72,7 @@
   <section class="Documentation-variables">
   {{- if .Vars -}}
     {{- range .Vars -}}
-      {{- template "declaration" . -}}
+      {{- template "declaration-view-source" . -}}
     {{- end -}}
   {{- else -}}
     <div class="Documentation-empty">This section is empty.</div>
