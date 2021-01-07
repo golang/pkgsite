@@ -228,19 +228,6 @@ func fetchMainDetails(ctx context.Context, ds internal.DataSource, um *internal.
 	}, nil
 }
 
-// moduleInfo extracts module info from a unit. This is a shim
-// for functions ReadmeHTML and createDirectory that will be removed
-// when we complete the switch to units.
-func moduleInfo(um *internal.UnitMeta) *internal.ModuleInfo {
-	return &internal.ModuleInfo{
-		ModulePath:        um.ModulePath,
-		Version:           um.Version,
-		CommitTime:        um.CommitTime,
-		IsRedistributable: um.IsRedistributable,
-		SourceInfo:        um.SourceInfo,
-	}
-}
-
 // readmeContent renders the readme to html and collects the headings
 // into an outline.
 func readmeContent(ctx context.Context, u *internal.Unit) (_ *Readme, err error) {
