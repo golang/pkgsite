@@ -22,8 +22,10 @@ func (db *DB) GetStdlibPathsWithSuffix(ctx context.Context, suffix string) (path
 	defer derrors.Wrap(&err, "DB.GetStdlibPaths(ctx, %q)", suffix)
 
 	q := `
-		SELECT path
-		FROM units
+		SELECT p.path
+		FROM units u
+		INNER JOIN paths p
+		ON p.id = u.path_id
 		WHERE module_id = (
 			-- latest release version of stdlib
 			SELECT id
@@ -33,10 +35,10 @@ func (db *DB) GetStdlibPathsWithSuffix(ctx context.Context, suffix string) (path
 				version_type = 'release' DESC,
 				sort_version DESC
 			LIMIT 1)
-			AND name != ''
-			AND path NOT LIKE 'cmd/%'
-			AND path LIKE '%/' || $2
-		ORDER BY path
+			AND u.name != ''
+			AND p.path NOT LIKE 'cmd/%'
+			AND p.path LIKE '%/' || $2
+		ORDER BY p.path
 	`
 	err = db.db.RunQuery(ctx, q, func(rows *sql.Rows) error {
 		var p string

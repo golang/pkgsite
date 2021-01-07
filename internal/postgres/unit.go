@@ -214,9 +214,10 @@ func (db *DB) getUnitID(ctx context.Context, fullPath, modulePath, resolvedVersi
 	query := `
 		SELECT u.id
 		FROM units u
+		INNER JOIN paths p ON (p.id = u.path_id)
 		INNER JOIN modules m ON (u.module_id = m.id)
 		WHERE
-			u.path = $1
+			p.path = $1
 			AND m.module_path = $2
 			AND m.version = $3;`
 	err = db.db.QueryRow(ctx, query, fullPath, modulePath, resolvedVersion).Scan(&unitID)
@@ -260,7 +261,7 @@ func (db *DB) getPackagesInUnit(ctx context.Context, fullPath, modulePath, resol
 
 	query := `
 		SELECT
-			u.path,
+			p.path,
 			u.name,
 			u.redistributable,
 			d.synopsis,
@@ -269,6 +270,8 @@ func (db *DB) getPackagesInUnit(ctx context.Context, fullPath, modulePath, resol
 		FROM modules m
 		INNER JOIN units u
 		ON u.module_id = m.id
+		INNER JOIN paths p
+		ON p.id = u.path_id
 		LEFT JOIN documentation d
 		ON d.unit_id = u.id
 		WHERE
@@ -342,6 +345,8 @@ func (db *DB) getUnitWithAllFields(ctx context.Context, um *internal.UnitMeta) (
 				WHERE package_path = $1
 				), 0) AS num_imported_by
 		FROM units u
+		INNER JOIN paths p
+		ON p.id = u.path_id
 		INNER JOIN modules m
 		ON u.module_id = m.id
 		LEFT JOIN documentation d
@@ -349,7 +354,7 @@ func (db *DB) getUnitWithAllFields(ctx context.Context, um *internal.UnitMeta) (
 		LEFT JOIN readmes r
 		ON r.unit_id = u.id
 		WHERE
-			u.path = $1
+			p.path = $1
 			AND m.module_path = $2
 			AND m.version = $3;`
 
@@ -406,7 +411,7 @@ func (db *DB) getPathsInModule(ctx context.Context, modulePath, resolvedVersion 
 	query := `
 	SELECT
 		u.id,
-		u.path,
+		p.path,
 		u.module_id,
 		u.v1_path,
 		u.name,
@@ -415,6 +420,10 @@ func (db *DB) getPathsInModule(ctx context.Context, modulePath, resolvedVersion 
 		u.redistributable
 	FROM
 		units u
+	INNER JOIN
+		paths p
+	ON
+		p.id = u.path_id
 	INNER JOIN
 		modules m
 	ON
@@ -449,12 +458,14 @@ func (db *DB) GetModuleReadme(ctx context.Context, modulePath, resolvedVersion s
 		FROM modules m
 		INNER JOIN units u
 		ON u.module_id = m.id
+		INNER JOIN paths p
+		ON u.path_id = p.id
 		INNER JOIN readmes r
 		ON u.id = r.unit_id
 		WHERE
 		    m.module_path=$1
 			AND m.version=$2
-			AND m.module_path=u.path`, modulePath, resolvedVersion).Scan(&readme.Filepath, &readme.Contents)
+			AND m.module_path=p.path`, modulePath, resolvedVersion).Scan(&readme.Filepath, &readme.Contents)
 	switch err {
 	case sql.ErrNoRows:
 		return nil, derrors.NotFound

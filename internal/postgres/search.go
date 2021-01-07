@@ -332,7 +332,7 @@ func (db *DB) addPackageDataToSearchResults(ctx context.Context, results []*inte
 	}
 	query := fmt.Sprintf(`
 		SELECT
-			u.path,
+			p.path,
 			u.name,
 			d.synopsis,
 			u.license_types,
@@ -410,8 +410,8 @@ var upsertSearchStatement = fmt.Sprintf(`
 			SETWEIGHT(TO_TSVECTOR($4), 'C') ||
 			SETWEIGHT(TO_TSVECTOR($5), 'D')
 		),
-		hll_hash(u.path) & (%[1]d - 1),
-		hll_zeros(hll_hash(u.path))
+		hll_hash(p.path) & (%[1]d - 1),
+		hll_zeros(hll_hash(p.path))
 	FROM
 		units u
 	INNER JOIN
@@ -427,7 +427,7 @@ var upsertSearchStatement = fmt.Sprintf(`
 	ON
 		u.id = d.unit_id
 	WHERE
-		u.path = $1
+		p.path = $1
 	%s
 	LIMIT 1
 	ON CONFLICT (package_path)
@@ -521,10 +521,12 @@ func (db *DB) GetPackagesForSearchDocumentUpsert(ctx context.Context, before tim
 		FROM modules m
 		INNER JOIN units u
 		ON m.id = u.module_id
+		INNER JOIN paths p
+		ON p.id = u.path_id
 		LEFT JOIN readmes r
 		ON u.id = r.unit_id
 		INNER JOIN search_documents sd
-		ON sd.package_path = u.path
+		ON sd.package_path = p.path
 		    AND sd.module_path = m.module_path
 		    AND sd.version = m.version
 		WHERE sd.updated_at < $1

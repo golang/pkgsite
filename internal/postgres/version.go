@@ -60,7 +60,9 @@ func getPathVersions(ctx context.Context, db *DB, path string, versionTypes ...v
 		u.v1_path = (
 			SELECT u2.v1_path
 			FROM units as u2
-			WHERE u2.path = $1
+			INNER JOIN paths p
+			ON p.id = u2.path_id
+			WHERE p.path = $1
 			LIMIT 1
 		)
 		AND version_type in (%s)
@@ -163,7 +165,11 @@ func (db *DB) getLatestMajorVersion(ctx context.Context, fullPath, modulePath st
 	}
 
 	v1Path := internal.V1Path(fullPath, modulePath)
-	row = db.db.QueryRow(ctx, `SELECT path FROM units WHERE v1_path = $1 AND module_id = $2;`, v1Path, modID)
+	row = db.db.QueryRow(ctx, `
+	    SELECT p.path
+	    FROM units u
+	    INNER JOIN paths p ON p.id = u.path_id
+        WHERE v1_path = $1 AND module_id = $2;`, v1Path, modID)
 	var path string
 	switch err := row.Scan(&path); err {
 	case nil:
@@ -196,7 +202,11 @@ func (db *DB) getLatestMinorModuleVersionInfo(ctx context.Context, unitPath, mod
 
 	// See if the unit path exists at that version.
 	var x int
-	err = db.db.QueryRow(ctx, `SELECT 1 FROM units WHERE path = $1 AND module_id = $2`, unitPath, modID).Scan(&x)
+	err = db.db.QueryRow(ctx, `
+	    SELECT 1
+	    FROM units u
+	    INNER JOIN paths p ON p.id = u.path_id
+	    WHERE p.path = $1 AND u.module_id = $2`, unitPath, modID).Scan(&x)
 	switch err {
 	case nil:
 		return true, nil
