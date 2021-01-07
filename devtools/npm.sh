@@ -6,6 +6,12 @@
 
 source devtools/lib.sh || { echo "Are you at repo root?"; exit 1; }
 
+# Run npm install if node_modules directory does not exist.
+if [ ! -d "node_modules" ]
+then
+  runcmd docker-compose -f devtools/config/docker-compose.yaml run --rm npm install --quiet
+fi
+
 # Run an npm command and capture the exit code.
 runcmd docker-compose -f devtools/config/docker-compose.yaml run --rm npm $@
 code=$EXIT_CODE
