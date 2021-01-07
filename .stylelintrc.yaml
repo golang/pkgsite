@@ -4,3 +4,7 @@ extends:
 rules:
   unit-disallowed-list:
     - "px"
+  declaration-property-value-allowed-list:
+    "/color/":
+    - "/^var\\(--/"
+    - "transparent"
