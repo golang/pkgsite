@@ -67,7 +67,7 @@
     "forceConsistentCasingInFileNames": true  /* Disallow inconsistently-cased references to the same file. */
   },
   "include": [
-    "content/lib/ts"
+    "content/static/js"
   ],
   "exclude": [
     "**/*.test.ts"

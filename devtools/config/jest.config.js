@@ -7,4 +7,5 @@ module.exports = {
       isolatedModules: true,
     },
   },
+  moduleFileExtensions: ['ts', 'js'],
 };
