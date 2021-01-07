@@ -100,8 +100,6 @@
 .DetailsHeader-badge--unknown {
   display: none;
 }
-
-.UnitHeader-flashBanner,
 .UnitHeader-majorVersionBanner {
   background-color: var(--gray-10);
   display: flex;

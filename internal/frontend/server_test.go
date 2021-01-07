@@ -1162,26 +1162,18 @@ func TestServerErrors(t *testing.T) {
 	_, handler, _ := newTestServer(t, nil)
 
 	for _, test := range []struct {
-		name, path, flash string
-		wantCode          int
+		name, path string
+		wantCode   int
 	}{
-		{"not found", "/invalid-page", "", http.StatusNotFound},
-		{"bad request", "/gocloud.dev/@latest/blob", "", http.StatusBadRequest},
-		{"alternative", "/" + alternativeModule.ModulePath, alternativeModule.ModulePath, http.StatusFound},
+		{"not found", "/invalid-page", http.StatusNotFound},
+		{"bad request", "/gocloud.dev/@latest/blob", http.StatusBadRequest},
+		{"alternative module", "/" + alternativeModule.ModulePath, http.StatusFound},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			w := httptest.NewRecorder()
 			handler.ServeHTTP(w, httptest.NewRequest("GET", test.path, nil))
 			if w.Code != test.wantCode {
 				t.Errorf("%q: got status code = %d, want %d", test.path, w.Code, test.wantCode)
-			}
-			r := &http.Request{Header: http.Header{"Cookie": w.Header()["Set-Cookie"]}}
-			got, err := getFlashMessage(w, r, alternativeModuleFlash)
-			if err != nil {
-				t.Fatalf("getFlashMessage(%q): %v", alternativeModuleFlash, err)
-			}
-			if got != test.flash {
-				t.Fatalf("got %q; want %q", got, test.flash)
 			}
 		})
 	}
