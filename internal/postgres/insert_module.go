@@ -281,11 +281,12 @@ func (pdb *DB) insertUnits(ctx context.Context, db *database.DB, m *internal.Mod
 	}
 
 	var (
-		unitValues    []interface{}
 		paths         []string
+		unitValues    []interface{}
 		pathToReadme  = map[string]*internal.Readme{}
 		pathToDoc     = map[string]*internal.Documentation{}
 		pathToImports = map[string][]string{}
+		pathIDToPath  = map[int]string{}
 	)
 	for _, u := range m.Units {
 		var licenseTypes, licensePaths []string
@@ -305,9 +306,10 @@ func (pdb *DB) insertUnits(ctx context.Context, db *database.DB, m *internal.Mod
 			}
 		}
 		v1path := internal.V1Path(u.Path, m.ModulePath)
+		pathID := pathToID[u.Path]
+		pathIDToPath[pathID] = u.Path
 		unitValues = append(unitValues,
-			u.Path,
-			pathToID[u.Path],
+			pathID,
 			moduleID,
 			pathToID[v1path],
 			v1path,
@@ -328,9 +330,13 @@ func (pdb *DB) insertUnits(ctx context.Context, db *database.DB, m *internal.Mod
 		}
 		paths = append(paths, u.Path)
 	}
-	pathToUnitID, err := insertUnits(ctx, db, unitValues)
+	pathIDToUnitID, err := insertUnits(ctx, db, unitValues)
 	if err != nil {
 		return err
+	}
+	pathToUnitID := map[string]int{}
+	for pid, uid := range pathIDToUnitID {
+		pathToUnitID[pathIDToPath[pid]] = uid
 	}
 	if err := insertReadmes(ctx, db, paths, pathToUnitID, pathToReadme); err != nil {
 		return err
@@ -393,12 +399,11 @@ func insertPaths(ctx context.Context, db *database.DB, m *internal.Module) (path
 	return pathToID, nil
 }
 
-func insertUnits(ctx context.Context, db *database.DB, unitValues []interface{}) (pathToUnitID map[string]int, err error) {
+func insertUnits(ctx context.Context, db *database.DB, unitValues []interface{}) (pathIDToUnitID map[int]int, err error) {
 	defer derrors.Wrap(&err, "insertUnits")
 
 	// Insert data into the units table.
 	unitCols := []string{
-		"path",
 		"path_id",
 		"module_id",
 		"v1path_id",
@@ -408,25 +413,22 @@ func insertUnits(ctx context.Context, db *database.DB, unitValues []interface{})
 		"license_paths",
 		"redistributable",
 	}
-	uniqueUnitCols := []string{"path", "module_id"}
-	returningUnitCols := []string{"id", "path"}
+	uniqueUnitCols := []string{"path_id", "module_id"}
+	returningUnitCols := []string{"id", "path_id"}
 
-	pathToUnitID = map[string]int{}
+	pathIDToUnitID = map[int]int{}
 	if err := db.BulkUpsertReturning(ctx, "units", unitCols, unitValues,
 		uniqueUnitCols, returningUnitCols, func(rows *sql.Rows) error {
-			var (
-				unitID int
-				path   string
-			)
-			if err := rows.Scan(&unitID, &path); err != nil {
+			var pathID, unitID int
+			if err := rows.Scan(&unitID, &pathID); err != nil {
 				return err
 			}
-			pathToUnitID[path] = unitID
+			pathIDToUnitID[pathID] = unitID
 			return nil
 		}); err != nil {
 		return nil, err
 	}
-	return pathToUnitID, nil
+	return pathIDToUnitID, nil
 }
 
 func insertDoc(ctx context.Context, db *database.DB,
