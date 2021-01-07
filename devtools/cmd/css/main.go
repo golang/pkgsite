@@ -24,7 +24,7 @@ import (
 )
 
 const (
-	cssFile              = "content/lib/css/readme.css"
+	cssFile              = "content/static/css/readme.css"
 	githubStylesheet     = "https://raw.githubusercontent.com/sindresorhus/github-markdown-css/gh-pages/github-markdown.css"
 	githubREADMEClass    = ".markdown-body"
 	discoveryREADMEClass = ".Overview-readmeContent"

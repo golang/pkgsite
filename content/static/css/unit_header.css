@@ -2,5 +2,145 @@
  * Copyright 2020 The Go Authors. All rights reserved.
  * Use of this source code is governed by a BSD-style
  * license that can be found in the LICENSE file.
- */.UnitHeader{border-bottom:.0625rem solid var(--gray-8);padding:.5rem 1rem}@media only screen and (min-width:57.7rem){.UnitHeader{border-bottom:.0625rem solid var(--gray-8);padding:.5rem 1.5rem}}.UnitHeader-container{margin:auto;max-width:95rem}.UnitHeader-breadcrumb{margin-top:.5rem}.UnitHeader-breadcrumbItem{color:var(--gray-4);display:inline-flex;font-size:.875rem;line-height:1.5rem}.UnitHeader-breadcrumbItem:not(:last-child):after{content:">";padding:0 .5rem}.UnitHeader-heading{display:flex;align-items:center}.UnitHeader-title{font-size:1.75rem;line-height:2.25rem;margin-bottom:1rem;margin-top:.625rem}.UnitHeader-detail{align-items:center;display:flex;flex-wrap:wrap;white-space:nowrap}@media only screen and (min-width:52rem){.UnitHeader-detail{margin-bottom:.5rem}}.UnitHeader-detailItem{color:var(--gray-4);font-size:.875rem;margin-bottom:.5rem}.UnitHeader-detailItem img{margin-right:.5rem;vertical-align:middle}.UnitHeader-detailItem a>span{color:var(--gray-4)}.UnitHeader-detailItem:not(:first-of-type):before{content:"|";padding:1rem}@media only screen and (max-width:52rem){.UnitHeader-detailItem:not(:last-of-type):before{padding:.5rem}}.DetailsHeader-badge,.UnitHeader-versionBadge{border-radius:unset;color:#fff;font-size:.7rem;margin:-1rem 0 -1rem .5rem;padding:.25rem .5rem;text-transform:uppercase;top:-.0625rem}.DetailsHeader-badge--latest,.UnitHeader-versionBadge--latest{background:var(--turq-dark)}.DetailsHeader-badge--goToLatest,.UnitHeader-versionBadge--goToLatest{background:var(--pink)}.DetailsHeader-badge--unknown,.UnitHeader-versionBadge--unknown{display:none}.UnitHeader-majorVersionBanner{background-color:var(--gray-10);display:flex;margin:-.5rem 0 1rem;padding:.75rem 0}.DetailsHeader-banner--latest,.UnitHeader-majorVersionBanner--latest{display:none}.UnitHeader-detailIcon{color:var(--gray-3);flex-shrink:0;margin-left:1rem;margin-right:.7rem;width:1rem}a.UnitHeader-backLink{color:#000;display:block;font-size:1rem}.UnitHeader-backLink img{height:.8125rem;margin-right:.5rem;position:relative;top:-.0625rem;width:auto}.UnitHeader-badge{border:.0625rem solid var(--gray-4);border-radius:.125rem;font-size:.6875rem;font-weight:500;line-height:1rem;margin-left:.5rem;padding:0 .35rem;text-align:center}
-/*# sourceMappingURL=unit_header.css.map */
+ */
+
+.UnitHeader {
+  border-bottom: 0.0625rem solid var(--gray-8);
+  padding: 0.5rem 1rem;
+}
+@media only screen and (min-width: 57.7rem) {
+  .UnitHeader {
+    border-bottom: 0.0625rem solid var(--gray-8);
+    padding: 0.5rem 1.5rem;
+  }
+}
+.UnitHeader-container {
+  margin: auto;
+  max-width: 95rem;
+}
+.UnitHeader-breadcrumb {
+  margin-top: 0.5rem;
+}
+.UnitHeader-breadcrumbItem {
+  color: var(--gray-4);
+  display: inline-flex;
+  font-size: 0.875rem;
+  line-height: 1.5rem;
+}
+.UnitHeader-breadcrumbItem:not(:last-child)::after {
+  content: '>';
+  padding: 0 0.5rem;
+}
+.UnitHeader-heading {
+  display: flex;
+  align-items: center;
+}
+.UnitHeader-title {
+  font-size: 1.75rem;
+  line-height: 2.25rem;
+  margin-bottom: 1rem;
+  margin-top: 0.625rem;
+}
+.UnitHeader-detail {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  white-space: nowrap;
+}
+@media only screen and (min-width: 52rem) {
+  .UnitHeader-detail {
+    margin-bottom: 0.5rem;
+  }
+}
+.UnitHeader-detailItem {
+  color: var(--gray-4);
+  font-size: 0.875rem;
+  margin-bottom: 0.5rem;
+}
+.UnitHeader-detailItem img {
+  margin-right: 0.5rem;
+  vertical-align: middle;
+}
+.UnitHeader-detailItem a > span {
+  color: var(--gray-4);
+}
+.UnitHeader-detailItem:not(:first-of-type)::before {
+  content: '|';
+  padding: 1rem;
+}
+@media only screen and (max-width: 52rem) {
+  .UnitHeader-detailItem:not(:last-of-type)::before {
+    padding: 0.5rem;
+  }
+}
+
+/*
+ * TODO: Replace DetailsHeader-badge with UnitHeader-versionBadge in
+ * middleware/latestversion.go after unit page is launched.
+ */
+.UnitHeader-versionBadge,
+.DetailsHeader-badge {
+  border-radius: unset;
+  color: white;
+  font-size: 0.7rem;
+  margin: -1rem 0 -1rem 0.5rem;
+  padding: 0.25rem 0.5rem;
+  text-transform: uppercase;
+  top: -0.0625rem;
+}
+.UnitHeader-versionBadge--latest,
+.DetailsHeader-badge--latest {
+  background: var(--turq-dark);
+}
+.UnitHeader-versionBadge--goToLatest,
+.DetailsHeader-badge--goToLatest {
+  background: var(--pink);
+}
+.UnitHeader-versionBadge--unknown,
+.DetailsHeader-badge--unknown {
+  display: none;
+}
+.UnitHeader-majorVersionBanner {
+  background-color: var(--gray-10);
+  display: flex;
+  margin: -0.5rem 0 1rem 0;
+  padding: 0.75rem 0;
+}
+
+/*
+ * TODO: Replace DetailsHeader-banner with UnitHeader-majorVersionBanner in
+ * middleware/latestversion.go after unit page is launched.
+ */
+.UnitHeader-majorVersionBanner--latest,
+.DetailsHeader-banner--latest {
+  display: none;
+}
+.UnitHeader-detailIcon {
+  color: var(--gray-3);
+  flex-shrink: 0;
+  margin-left: 1rem;
+  margin-right: 0.7rem;
+  width: 1rem;
+}
+a.UnitHeader-backLink {
+  color: black;
+  display: block;
+  font-size: 1rem;
+}
+.UnitHeader-backLink img {
+  height: 0.8125rem;
+  margin-right: 0.5rem;
+  position: relative;
+  top: -0.0625rem;
+  width: auto;
+}
+.UnitHeader-badge {
+  border: 0.0625rem solid var(--gray-4);
+  border-radius: 0.125rem;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  line-height: 1rem;
+  margin-left: 0.5rem;
+  padding: 0 0.35rem;
+  text-align: center;
+}

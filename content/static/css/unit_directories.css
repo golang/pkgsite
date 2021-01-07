@@ -2,5 +2,44 @@
  * Copyright 2020 The Go Authors. All rights reserved.
  * Use of this source code is governed by a BSD-style
  * license that can be found in the LICENSE file.
- */.UnitDirectories{margin-bottom:2rem}.UnitDirectories-title{border-bottom:.0625rem solid var(--gray-8);font-size:1.375rem;margin:.5rem 0 0;padding-bottom:1rem}.UnitDirectories-title img{height:1rem;margin:auto 1rem auto 0;width:auto}.UnitDirectories-table{margin-top:1.5rem;width:100%}.UnitDirectories-tableHeader{background-color:var(--gray-9)}.UnitDirectories td{max-width:32rem;word-break:break-word}.UnitDirectories td,.UnitDirectories th{border-bottom:.0625rem solid var(--gray-8);padding:.5rem 1rem}.UnitDirectories th{text-align:left}.UnitDirectories-moduleTag{background-color:var(--blue);border-radius:.15rem;color:var(--gray-1);font-size:.74rem;padding:.2rem .4rem}
-/*# sourceMappingURL=unit_directories.css.map */
+ */
+
+.UnitDirectories {
+  margin-bottom: 2rem;
+}
+.UnitDirectories-title {
+  border-bottom: 0.0625rem solid var(--gray-8);
+  font-size: 1.375rem;
+  margin: 0.5rem 0 0 0;
+  padding-bottom: 1rem;
+}
+.UnitDirectories-title img {
+  height: 1rem;
+  margin: auto 1rem auto 0;
+  width: auto;
+}
+.UnitDirectories-table {
+  margin-top: 1.5rem;
+  width: 100%;
+}
+.UnitDirectories-tableHeader {
+  background-color: var(--gray-9);
+}
+.UnitDirectories td {
+  border-bottom: 0.0625rem solid var(--gray-8);
+  max-width: 32rem;
+  padding: 0.5rem 1rem;
+  word-break: break-word;
+}
+.UnitDirectories th {
+  text-align: left;
+  border-bottom: 0.0625rem solid var(--gray-8);
+  padding: 0.5rem 1rem;
+}
+.UnitDirectories-moduleTag {
+  background-color: var(--blue);
+  border-radius: 0.15rem;
+  color: var(--gray-1);
+  font-size: 0.74rem;
+  padding: 0.2rem 0.4rem;
+}

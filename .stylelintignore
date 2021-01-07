@@ -1,5 +1,7 @@
-content/static
 third_party
 
 # Ignoring generated readme styles
-content/lib/css/readme.css
+content/static/css/readme.css
+
+# TODO: Fix lint errors in stylesheet.css
+content/static/css/stylesheet.css
