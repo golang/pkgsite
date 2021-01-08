@@ -27,10 +27,10 @@ func TestFrontendDocRender(t *testing.T) {
 	defer postgres.ResetTestDB(testDB, t)
 
 	m := &proxy.Module{
-		ModulePath: "github.com/golang/fdoc",
+		ModulePath: "github.com/foo/fdoc",
 		Version:    "v1.2.3",
 		Files: map[string]string{
-			"go.mod":  "module github.com/golang/fdoc",
+			"go.mod":  "module github.com/foo/fdoc",
 			"LICENSE": testhelper.MITLicense,
 			"file.go": `
 					// Package fdoc is a test of frontend doc rendering.

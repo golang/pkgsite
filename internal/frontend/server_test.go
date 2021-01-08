@@ -627,6 +627,48 @@ func serverTestCases() []serverTestCase {
 			wantLocation:   "/cmd/cgo",
 		},
 		{
+			name:           "github golang std",
+			urlPath:        "/github.com/golang/go",
+			wantStatusCode: http.StatusMovedPermanently,
+			wantLocation:   "/std",
+		},
+		{
+			name:           "github golang std src",
+			urlPath:        "/github.com/golang/go/src",
+			wantStatusCode: http.StatusMovedPermanently,
+			wantLocation:   "/std",
+		},
+		{
+			name:           "github golang time",
+			urlPath:        "/github.com/golang/go/time",
+			wantStatusCode: http.StatusMovedPermanently,
+			wantLocation:   "/time",
+		},
+		{
+			name:           "github golang time src",
+			urlPath:        "/github.com/golang/go/src/time",
+			wantStatusCode: http.StatusMovedPermanently,
+			wantLocation:   "/time",
+		},
+		{
+			name:           "github golang x tools repo",
+			urlPath:        "/github.com/golang/tools",
+			wantStatusCode: http.StatusMovedPermanently,
+			wantLocation:   "/golang.org/x/tools",
+		},
+		{
+			name:           "github golang x tools go packages",
+			urlPath:        "/github.com/golang/tools/go/packages",
+			wantStatusCode: http.StatusMovedPermanently,
+			wantLocation:   "/golang.org/x/tools/go/packages",
+		},
+		{
+			name:           "github golang x tools gopls",
+			urlPath:        "/github.com/golang/tools/gopls",
+			wantStatusCode: http.StatusMovedPermanently,
+			wantLocation:   "/golang.org/x/tools/gopls",
+		},
+		{
 			name:           "static",
 			urlPath:        "/static/",
 			wantStatusCode: http.StatusOK,
