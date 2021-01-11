@@ -5,7 +5,5 @@
 BEGIN;
 
 ALTER TABLE units DROP CONSTRAINT units_path_id_module_id_key;
-ALTER TABLE units ALTER COLUMN path_id DROP NOT NULL;
-ALTER TABLE units ALTER COLUMN path ADD NOT NULL;
 
 END;
