@@ -25,7 +25,6 @@ func TestStdlibPathForShortcut(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	s, _, _ := newTestServer(t, nil)
 	for _, test := range []struct {
 		path string
 		want string
@@ -34,7 +33,7 @@ func TestStdlibPathForShortcut(t *testing.T) {
 		{"json", "encoding/json"},
 		{"template", ""},
 	} {
-		got, err := stdlibPathForShortcut(ctx, s.getDataSource(ctx), test.path)
+		got, err := stdlibPathForShortcut(ctx, testDB, test.path)
 		if err != nil {
 			t.Fatalf("%q: %v", test.path, err)
 		}

@@ -34,28 +34,33 @@ var errUnitNotFoundWithoutFetch = &serverError{
 	},
 }
 
-func (s *Server) servePathNotFoundPage(w http.ResponseWriter, r *http.Request, ds internal.DataSource, fullPath, requestedVersion string) (err error) {
+// servePathNotFoundPage serves a 404 page for the requested path, or redirects
+// the user to an appropriate location.
+func (s *Server) servePathNotFoundPage(w http.ResponseWriter, r *http.Request,
+	ds internal.DataSource, fullPath, requestedVersion string) (err error) {
 	defer derrors.Wrap(&err, "servePathNotFoundPage(w, r, %q, %q)", fullPath, requestedVersion)
-
-	ctx := r.Context()
-	path, err := stdlibPathForShortcut(ctx, ds, fullPath)
-	if err != nil {
-		// Log the error, but prefer a "path not found" error for a
-		// better user experience.
-		log.Error(ctx, err)
-	}
-	if path != "" {
-		http.Redirect(w, r, fmt.Sprintf("/%s", path), http.StatusFound)
-		return
-	}
-	if stdlib.Contains(fullPath) {
-		return &serverError{status: http.StatusNotFound}
-	}
 
 	db, ok := ds.(*postgres.DB)
 	if !ok {
 		return proxydatasourceNotSupportedErr()
 	}
+	ctx := r.Context()
+
+	if stdlib.Contains(fullPath) {
+		var path string
+		path, err = stdlibPathForShortcut(ctx, db, fullPath)
+		if err != nil {
+			// Log the error, but prefer a "path not found" error for a
+			// better user experience.
+			log.Error(ctx, err)
+		}
+		if path != "" {
+			http.Redirect(w, r, fmt.Sprintf("/%s", path), http.StatusFound)
+			return
+		}
+		return &serverError{status: http.StatusNotFound}
+	}
+
 	fr, err := previousFetchStatusAndResponse(ctx, db, fullPath, requestedVersion)
 	if err != nil || fr.status == http.StatusInternalServerError {
 		if err != nil && !errors.Is(err, derrors.NotFound) {
