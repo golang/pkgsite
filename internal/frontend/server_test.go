@@ -1201,6 +1201,31 @@ func TestServerErrors(t *testing.T) {
 	if err := testDB.UpsertVersionMap(ctx, alternativeModule); err != nil {
 		t.Fatal(err)
 	}
+
+	v1modpath := "notinv1.mod"
+	v1path := "notinv1.mod/foo"
+	if err := testDB.InsertModule(ctx, sample.Module(v1modpath+"/v4", "v4.0.0", "foo")); err != nil {
+		t.Fatal(err)
+	}
+	for _, mod := range []struct {
+		path, version string
+		status        int
+	}{
+		{v1modpath, "v1.0.0", http.StatusNotFound},
+		{v1path, "v4.0.0", http.StatusNotFound},
+		{v1modpath + "/v4", "v4.0.0", http.StatusOK},
+	} {
+		if err := testDB.UpsertVersionMap(ctx, &internal.VersionMap{
+			ModulePath:       mod.path,
+			RequestedVersion: internal.LatestVersion,
+			ResolvedVersion:  mod.version,
+			Status:           mod.status,
+			GoModPath:        mod.path,
+		}); err != nil {
+			t.Fatal(err)
+		}
+	}
+
 	_, handler, _ := newTestServer(t, nil)
 
 	for _, test := range []struct {
@@ -1210,6 +1235,8 @@ func TestServerErrors(t *testing.T) {
 		{"not found", "/invalid-page", http.StatusNotFound},
 		{"bad request", "/gocloud.dev/@latest/blob", http.StatusBadRequest},
 		{"alternative module", "/" + alternativeModule.ModulePath, http.StatusFound},
+		{"module not in v1", "/" + v1modpath, http.StatusFound},
+		{"import path not in v1", "/" + v1path, http.StatusFound},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			w := httptest.NewRecorder()

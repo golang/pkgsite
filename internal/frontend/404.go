@@ -62,24 +62,28 @@ func (s *Server) servePathNotFoundPage(w http.ResponseWriter, r *http.Request,
 	}
 
 	fr, err := previousFetchStatusAndResponse(ctx, db, fullPath, requestedVersion)
-	if err != nil || fr.status == http.StatusInternalServerError {
-		if err != nil && !errors.Is(err, derrors.NotFound) {
+	if err != nil {
+		if err != nil {
 			log.Error(ctx, err)
 		}
 		return pathNotFoundError(fullPath, requestedVersion)
 	}
-	if fr.goModPath != fr.modulePath && fr.status == derrors.ToStatus(derrors.AlternativeModule) {
+	switch fr.status {
+	case http.StatusFound, derrors.ToStatus(derrors.AlternativeModule):
 		http.Redirect(w, r, constructUnitURL(fr.goModPath, fr.goModPath, internal.LatestVersion), http.StatusFound)
 		return
-	}
-	return &serverError{
-		status: fr.status,
-		epage: &errorPage{
-			messageTemplate: uncheckedconversions.TrustedTemplateFromStringKnownToSatisfyTypeContract(`
+	case http.StatusInternalServerError:
+		return pathNotFoundError(fullPath, requestedVersion)
+	default:
+		return &serverError{
+			status: fr.status,
+			epage: &errorPage{
+				messageTemplate: uncheckedconversions.TrustedTemplateFromStringKnownToSatisfyTypeContract(`
 					    <h3 class="Error-message">{{.StatusText}}</h3>
 					    <p class="Error-message">` + html.UnescapeString(fr.responseText) + `</p>`),
-			MessageData: struct{ StatusText string }{http.StatusText(fr.status)},
-		},
+				MessageData: struct{ StatusText string }{http.StatusText(fr.status)},
+			},
+		}
 	}
 }
 
@@ -105,16 +109,24 @@ func pathNotFoundError(fullPath, requestedVersion string) error {
 	}
 }
 
-// previousFetchStatusAndResponse returns the status and response text from a
+// previousFetchStatusAndResponse returns the fetch result from a
 // previous fetch of the fullPath and requestedVersion.
 func previousFetchStatusAndResponse(ctx context.Context, db *postgres.DB, fullPath, requestedVersion string) (_ *fetchResult, err error) {
-	defer derrors.Wrap(&err, "fetchRedirectPath(w, r, %q, %q)", fullPath, requestedVersion)
+	defer derrors.Wrap(&err, "previousFetchStatusAndResponse(w, r, %q, %q)", fullPath, requestedVersion)
 
+	// Check if a row exists in the version_map table for the requested path
+	// and version. If not, this path may have never been fetched.
+	// In that case, a derrors.NotFound will be returned.
 	vm, err := db.GetVersionMap(ctx, fullPath, requestedVersion)
 	if err != nil {
 		return nil, err
 	}
-	if vm.Status != http.StatusNotFound {
+
+	// If the row has been fetched before, and the result was either a 490 or
+	// 491, return that result, since it is a final state.
+	if vm.Status >= 500 ||
+		vm.Status == derrors.ToStatus(derrors.AlternativeModule) ||
+		vm.Status == derrors.ToStatus(derrors.BadModule) {
 		return resultFromFetchRequest([]*fetchResult{
 			{
 				modulePath: vm.ModulePath,
@@ -125,8 +137,30 @@ func previousFetchStatusAndResponse(ctx context.Context, db *postgres.DB, fullPa
 		}, fullPath, requestedVersion)
 	}
 
-	// If the status is 404, it likely means that the fullPath is not a
-	// modulePath. Check all of the candidate module paths for the past result.
+	// Check if the unit path exists at a higher major version.
+	// For example, my.module might not exist, but my.module/v3 might.
+	// Similarly, my.module/foo might not exist, but my.module/v3/foo might.
+	// In either case, the user will be redirected to the highest major version
+	// of the path.
+	//
+	// Do not bother to look for a specific version if this case. If
+	// my.module/foo@v2.1.0 was requested, and my.module/foo/v2 exists, just
+	// return the latest version of my.module/foo/v2.
+	majPath, err := db.GetLatestMajorPathForV1Path(ctx, fullPath)
+	if err != nil && err != derrors.NotFound {
+		return nil, err
+	}
+	if majPath != "" {
+		return &fetchResult{
+			modulePath: majPath,
+			goModPath:  majPath,
+			status:     http.StatusFound,
+		}, nil
+	}
+
+	// The full path does not exist in our database, but its module might.
+	// This could be be because the path is in an alternative module or a bad
+	// module, or it was fetched previously and 404ed.
 	paths, err := candidateModulePaths(fullPath)
 	if err != nil {
 		return nil, err
@@ -140,15 +174,19 @@ func previousFetchStatusAndResponse(ctx context.Context, db *postgres.DB, fullPa
 	}
 	var fetchResults []*fetchResult
 	for _, vm := range vms {
-		fetchResults = append(fetchResults, &fetchResult{
-			modulePath: vm.ModulePath,
-			goModPath:  vm.GoModPath,
-			status:     vm.Status,
-			err:        errors.New(vm.Error),
-		})
+		fetchResults = append(fetchResults, fetchResultFromVersionMap(vm))
 	}
 	if len(fetchResults) == 0 {
 		return nil, derrors.NotFound
 	}
 	return resultFromFetchRequest(fetchResults, fullPath, requestedVersion)
+}
+
+func fetchResultFromVersionMap(vm *internal.VersionMap) *fetchResult {
+	return &fetchResult{
+		modulePath: vm.ModulePath,
+		goModPath:  vm.GoModPath,
+		status:     vm.Status,
+		err:        errors.New(vm.Error),
+	}
 }

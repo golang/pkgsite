@@ -7,8 +7,10 @@ package frontend
 import (
 	"context"
 	"errors"
+	"net/http"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/testing/sample"
@@ -87,6 +89,55 @@ func TestPreviousFetchStatusAndResponse(t *testing.T) {
 			_, err := previousFetchStatusAndResponse(ctx, testDB, test.path, internal.LatestVersion)
 			if !errors.Is(err, derrors.NotFound) {
 				t.Errorf("got %v; want %v", err, derrors.NotFound)
+			}
+		})
+	}
+}
+
+func TestPreviousFetchStatusAndResponse_PathExistsAtNonV1(t *testing.T) {
+	ctx := context.Background()
+
+	if err := testDB.InsertModule(ctx, sample.Module(sample.ModulePath+"/v4", "v4.0.0", "foo")); err != nil {
+		t.Fatal(err)
+	}
+
+	for _, mod := range []struct {
+		path, version string
+		status        int
+	}{
+		{sample.ModulePath, "v1.0.0", http.StatusNotFound},
+		{sample.ModulePath + "/foo", "v4.0.0", http.StatusNotFound},
+		{sample.ModulePath + "/v4", "v4.0.0", http.StatusOK},
+	} {
+		if err := testDB.UpsertVersionMap(ctx, &internal.VersionMap{
+			ModulePath:       mod.path,
+			RequestedVersion: internal.LatestVersion,
+			ResolvedVersion:  mod.version,
+			Status:           mod.status,
+			GoModPath:        mod.path,
+		}); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	for _, test := range []struct {
+		name, path, want string
+	}{
+		{"module path not at v1", sample.ModulePath, sample.ModulePath + "/v4"},
+		{"import path not at v1", sample.ModulePath + "/foo", sample.ModulePath + "/v4/foo"},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			got, err := previousFetchStatusAndResponse(ctx, testDB, test.path, internal.LatestVersion)
+			if err != nil {
+				t.Fatal(err)
+			}
+			want := &fetchResult{
+				modulePath: test.want,
+				goModPath:  test.want,
+				status:     http.StatusFound,
+			}
+			if diff := cmp.Diff(want, got, cmp.AllowUnexported(fetchResult{})); diff != "" {
+				t.Errorf("mismatch (-want, +got):\n%s", diff)
 			}
 		})
 	}
