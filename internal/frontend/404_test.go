@@ -8,11 +8,15 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/experiment"
+	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/testing/sample"
 )
 
@@ -120,6 +124,23 @@ func TestPreviousFetchStatusAndResponse_PathExistsAtNonV1(t *testing.T) {
 		}
 	}
 
+	checkPath := func(ctx context.Context, t *testing.T, testDB *postgres.DB, path, wantPath string, status int) {
+		got, err := previousFetchStatusAndResponse(ctx, testDB, path, internal.LatestVersion)
+		if err != nil {
+			t.Fatal(err)
+		}
+		want := &fetchResult{
+			modulePath: wantPath,
+			goModPath:  wantPath,
+			status:     status,
+		}
+		if diff := cmp.Diff(want, got,
+			cmp.AllowUnexported(fetchResult{}),
+			cmpopts.IgnoreFields(fetchResult{}, "responseText")); diff != "" {
+			t.Errorf("mismatch (-want, +got):\n%s", diff)
+		}
+	}
+
 	for _, test := range []struct {
 		name, path, want string
 	}{
@@ -127,18 +148,12 @@ func TestPreviousFetchStatusAndResponse_PathExistsAtNonV1(t *testing.T) {
 		{"import path not at v1", sample.ModulePath + "/foo", sample.ModulePath + "/v4/foo"},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			got, err := previousFetchStatusAndResponse(ctx, testDB, test.path, internal.LatestVersion)
-			if err != nil {
-				t.Fatal(err)
-			}
-			want := &fetchResult{
-				modulePath: test.want,
-				goModPath:  test.want,
-				status:     http.StatusFound,
-			}
-			if diff := cmp.Diff(want, got, cmp.AllowUnexported(fetchResult{})); diff != "" {
-				t.Errorf("mismatch (-want, +got):\n%s", diff)
-			}
+			want := strings.ReplaceAll(test.want, "/v4", "")
+			checkPath(ctx, t, testDB, test.path, want, http.StatusNotFound)
+		})
+		t.Run(test.name+"not-at-v1", func(t *testing.T) {
+			ctx := experiment.NewContext(ctx, internal.ExperimentNotAtV1)
+			checkPath(ctx, t, testDB, test.path, test.want, http.StatusFound)
 		})
 	}
 }

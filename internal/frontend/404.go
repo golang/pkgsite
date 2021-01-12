@@ -15,6 +15,7 @@ import (
 	"github.com/google/safehtml/template/uncheckedconversions"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/stdlib"
@@ -137,25 +138,27 @@ func previousFetchStatusAndResponse(ctx context.Context, db *postgres.DB, fullPa
 		}, fullPath, requestedVersion)
 	}
 
-	// Check if the unit path exists at a higher major version.
-	// For example, my.module might not exist, but my.module/v3 might.
-	// Similarly, my.module/foo might not exist, but my.module/v3/foo might.
-	// In either case, the user will be redirected to the highest major version
-	// of the path.
-	//
-	// Do not bother to look for a specific version if this case. If
-	// my.module/foo@v2.1.0 was requested, and my.module/foo/v2 exists, just
-	// return the latest version of my.module/foo/v2.
-	majPath, err := db.GetLatestMajorPathForV1Path(ctx, fullPath)
-	if err != nil && err != derrors.NotFound {
-		return nil, err
-	}
-	if majPath != "" {
-		return &fetchResult{
-			modulePath: majPath,
-			goModPath:  majPath,
-			status:     http.StatusFound,
-		}, nil
+	if experiment.IsActive(ctx, internal.ExperimentNotAtV1) {
+		// Check if the unit path exists at a higher major version.
+		// For example, my.module might not exist, but my.module/v3 might.
+		// Similarly, my.module/foo might not exist, but my.module/v3/foo might.
+		// In either case, the user will be redirected to the highest major version
+		// of the path.
+		//
+		// Do not bother to look for a specific version if this case. If
+		// my.module/foo@v2.1.0 was requested, and my.module/foo/v2 exists, just
+		// return the latest version of my.module/foo/v2.
+		majPath, err := db.GetLatestMajorPathForV1Path(ctx, fullPath)
+		if err != nil && err != derrors.NotFound {
+			return nil, err
+		}
+		if majPath != "" {
+			return &fetchResult{
+				modulePath: majPath,
+				goModPath:  majPath,
+				status:     http.StatusFound,
+			}, nil
+		}
 	}
 
 	// The full path does not exist in our database, but its module might.
@@ -183,10 +186,14 @@ func previousFetchStatusAndResponse(ctx context.Context, db *postgres.DB, fullPa
 }
 
 func fetchResultFromVersionMap(vm *internal.VersionMap) *fetchResult {
+	var err error
+	if vm.Error != "" {
+		err = errors.New(vm.Error)
+	}
 	return &fetchResult{
 		modulePath: vm.ModulePath,
 		goModPath:  vm.GoModPath,
 		status:     vm.Status,
-		err:        errors.New(vm.Error),
+		err:        err,
 	}
 }
