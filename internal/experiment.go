@@ -6,15 +6,13 @@
 package internal
 
 const (
-	ExperimentNotAtLatest        = "not-at-latest"
-	ExperimentUnitSidebarDetails = "unit-sidebar-details"
+	ExperimentNotAtLatest = "not-at-latest"
 )
 
 // Experiments represents all of the active experiments in the codebase and
 // a description of each experiment.
 var Experiments = map[string]string{
-	ExperimentNotAtLatest:        "Enable the display of a 'not at latest' badge.",
-	ExperimentUnitSidebarDetails: "Enable the details section in the right sidebar.",
+	ExperimentNotAtLatest: "Enable the display of a 'not at latest' badge.",
 }
 
 // Experiment holds data associated with an experimental feature for frontend

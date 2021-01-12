@@ -5,9 +5,7 @@
 -->
 
 {{define "unit_meta"}}
-  {{if (.Experiments.IsActive "unit-sidebar-details")}}
-    {{template "unit_meta_details" .}}
-  {{end}}
+  {{template "unit_meta_details" .}}
   <div class="UnitMeta">
     <div class="UnitMeta-header">Repository</div>
     {{if .Details.RepositoryURL}}

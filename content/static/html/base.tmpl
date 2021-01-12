@@ -21,7 +21,7 @@
 <link href="/third_party/dialog-polyfill/dialog-polyfill.css?version={{.AppVersionLabel}}" rel="stylesheet">
 <title>{{if .HTMLTitle}}{{.HTMLTitle}} · {{end}}pkg.go.dev</title>
 {{block "pre_content" .}}{{end}}
-<body class="Site{{if .AllowWideContent}} Site--wide{{end}}{{if (.Experiments.IsActive "unit-page")}} Site--redesign{{end}}">
+<body class="Site{{if .AllowWideContent}} Site--wide{{end}} Site--redesign">
 <header class="Site-header Site-header--dark">
   <div class="Banner">
     <div class="Banner-inner">
@@ -87,11 +87,7 @@
 </aside>
 <div class="NavigationDrawer-scrim js-scrim" role="presentation">
 </div>
-{{if (.Experiments.IsActive "unit-page")}}
-  <div class="Site-content">{{block "main_content" .}}{{end}}</div>
-{{else}}
-  <main class="Site-content">{{block "main_content" .}}{{end}}</main>
-{{end}}
+<div class="Site-content">{{block "main_content" .}}{{end}}</div>
 <footer class="Site-footer">
   {{block "pre_footer" .}}{{end}}
   <div class="Footer">
