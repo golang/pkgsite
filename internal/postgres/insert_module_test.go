@@ -18,6 +18,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/google/licensecheck"
 	"github.com/google/safehtml"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/database"
@@ -257,6 +258,45 @@ func TestInsertModuleErrors(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestInsertModuleNewCoverage(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
+	defer ResetTestDB(testDB, t)
+
+	m := sample.DefaultModule()
+	newCoverage := licensecheck.Coverage{
+		Percent: 100,
+		Match:   []licensecheck.Match{{ID: "New", Start: 1, End: 10}},
+	}
+	m.Licenses = []*licenses.License{
+		{
+			Metadata: &licenses.Metadata{
+				Types:       []string{sample.LicenseType},
+				FilePath:    sample.LicenseFilePath,
+				NewCoverage: newCoverage,
+			},
+			Contents: []byte(`Lorem Ipsum`),
+		},
+	}
+	if err := testDB.InsertModule(ctx, m); err != nil {
+		t.Fatal(err)
+	}
+	u, err := testDB.GetUnit(ctx, &internal.UnitMeta{Path: m.ModulePath, ModulePath: m.ModulePath, Version: m.Version}, internal.AllFields)
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := u.LicenseContents[0].Metadata
+	want := &licenses.Metadata{
+		Types:       []string{"MIT"},
+		FilePath:    sample.LicenseFilePath,
+		NewCoverage: newCoverage,
+	}
+	if !cmp.Equal(got, want) {
+		t.Errorf("\ngot  %+v\nwant %+v", got, want)
+	}
+
 }
 
 func TestPostgres_ReadAndWriteModuleOtherColumns(t *testing.T) {

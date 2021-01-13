@@ -7,12 +7,14 @@ package postgres
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"path"
 	"reflect"
 	"sort"
 	"strings"
 
+	"github.com/google/licensecheck"
 	"github.com/lib/pq"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/licenses"
@@ -108,9 +110,24 @@ func collectLicenses(rows *sql.Rows, bypassLicenseCheck bool) ([]*licenses.Licen
 		var (
 			lic          = &licenses.License{Metadata: &licenses.Metadata{}}
 			licenseTypes []string
+			covBytes     []byte
 		)
-		if err := rows.Scan(pq.Array(&licenseTypes), &lic.FilePath, &lic.Contents, jsonbScanner{&lic.Coverage}); err != nil {
+		if err := rows.Scan(pq.Array(&licenseTypes), &lic.FilePath, &lic.Contents, &covBytes); err != nil {
 			return nil, fmt.Errorf("row.Scan(): %v", err)
+		}
+		// The coverage column is JSON for either the new or old
+		// licensecheck.Coverage struct. The new Match type has an ID field
+		// which is always populated, but the old one doesn't. First try
+		// unmarshalling the new one, then if that doesn't populate the ID
+		// field, try the old.
+		if err := json.Unmarshal(covBytes, &lic.NewCoverage); err != nil {
+			return nil, err
+		}
+		if len(lic.NewCoverage.Match) == 0 || lic.NewCoverage.Match[0].ID == "" {
+			lic.NewCoverage = licensecheck.Coverage{}
+			if err := json.Unmarshal(covBytes, &lic.Coverage); err != nil {
+				return nil, err
+			}
 		}
 		lic.Types = licenseTypes
 		if !bypassLicenseCheck {

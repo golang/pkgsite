@@ -28,6 +28,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/google/licensecheck"
 	oldlicensecheck "github.com/google/licensecheck/old"
 	"golang.org/x/mod/module"
 	modzip "golang.org/x/mod/zip"
@@ -63,7 +64,8 @@ type Metadata struct {
 	// relative to the contents directory.
 	FilePath string
 	// The output of oldlicensecheck.Cover.
-	Coverage oldlicensecheck.Coverage
+	Coverage    oldlicensecheck.Coverage
+	NewCoverage licensecheck.Coverage
 }
 
 // A License is a classified license file path and its contents.
