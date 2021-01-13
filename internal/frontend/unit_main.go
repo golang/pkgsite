@@ -35,6 +35,10 @@ type MainDetails struct {
 	// the unit.
 	Subdirectories []*Subdirectory
 
+	// Directories are packages and nested modules relative to the path for the
+	// unit.
+	Directories []*UnitDirectory
+
 	// Licenses contains license metadata used in the header.
 	Licenses []LicenseMetadata
 
@@ -120,6 +124,21 @@ type Subdirectory struct {
 	Suffix   string
 	URL      string
 	Synopsis string
+	IsModule bool
+}
+
+// UnitDirectory is the union of nested modules and subdirectories for a
+// unit organized in a two level tree structure. This content is used in the
+// directories section of the unit page.
+type UnitDirectory struct {
+	// Prefix is the prefix of the unit path for the subdirectories.
+	Prefix string
+
+	// Root is the package located at prefix, nil for a directory.
+	Root *Subdirectory
+
+	// Subdirectories contains subdirectories with prefix trimmed from their suffix.
+	Subdirectories []*Subdirectory
 }
 
 func fetchMainDetails(ctx context.Context, ds internal.DataSource, um *internal.UnitMeta, expandReadme bool) (_ *MainDetails, err error) {
@@ -205,6 +224,7 @@ func fetchMainDetails(ctx context.Context, ds internal.DataSource, um *internal.
 		ExpandReadme:      expandReadme,
 		NestedModules:     nestedModules,
 		Subdirectories:    subdirectories,
+		Directories:       unitDirectories(subdirectories, nestedModules),
 		Licenses:          transformLicenseMetadata(um.Licenses),
 		CommitTime:        absoluteTime(um.CommitTime),
 		Readme:            readme.HTML,
@@ -237,6 +257,43 @@ func readmeContent(ctx context.Context, u *internal.Unit) (_ *Readme, err error)
 		return &Readme{}, nil
 	}
 	return ProcessReadme(ctx, u)
+}
+
+// unitDirectories zips the subdirectories and nested modules together in a two
+// level tree hierarchy.
+func unitDirectories(dirs []*Subdirectory, mods []*NestedModule) []*UnitDirectory {
+	var merged []*Subdirectory
+	for _, d := range dirs {
+		merged = append(merged, &Subdirectory{Suffix: d.Suffix,
+			Synopsis: d.Synopsis, URL: d.URL, IsModule: false})
+	}
+	for _, m := range mods {
+		merged = append(merged, &Subdirectory{Suffix: m.Suffix, URL: m.URL, IsModule: true})
+	}
+
+	// Organize the subdirectories into a two level tree hierarchy. The first part of
+	// the unit path suffix for a subdirectory becomes the prefix under which matching
+	// subdirectories are grouped.
+	mappedDirs := make(map[string]*UnitDirectory)
+	for _, d := range merged {
+		prefix := strings.Split(d.Suffix, "/")[0]
+		if _, ok := mappedDirs[prefix]; !ok {
+			mappedDirs[prefix] = &UnitDirectory{Prefix: prefix}
+		}
+		d.Suffix = strings.TrimPrefix(d.Suffix, prefix+"/")
+		if prefix == d.Suffix {
+			mappedDirs[prefix].Root = d
+		} else {
+			mappedDirs[prefix].Subdirectories = append(mappedDirs[prefix].Subdirectories, d)
+		}
+	}
+
+	var sorted []*UnitDirectory
+	for _, p := range mappedDirs {
+		sorted = append(sorted, p)
+	}
+	sort.Slice(sorted, func(i, j int) bool { return sorted[i].Prefix < sorted[j].Prefix })
+	return sorted
 }
 
 func getNestedModules(ctx context.Context, ds internal.DataSource, um *internal.UnitMeta, sds []*Subdirectory) ([]*NestedModule, error) {

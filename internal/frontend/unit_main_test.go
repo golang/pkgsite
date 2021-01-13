@@ -197,3 +197,58 @@ func TestApproximateLowerBound(t *testing.T) {
 		}
 	}
 }
+
+func TestUnitDirectories(t *testing.T) {
+	subdirectories := []*Subdirectory{
+		{Suffix: "accessapproval"},
+		{Suffix: "accessapproval/cgi"},
+		{Suffix: "accessapproval/cookiejar"},
+		{Suffix: "fgci"},
+		{Suffix: "httptrace"},
+		{Suffix: "internal/bytesconv"},
+		{Suffix: "internal/json"},
+		{Suffix: "zoltan"},
+	}
+	nestedModules := []*NestedModule{
+		{Suffix: "httptest"},
+	}
+
+	got := unitDirectories(subdirectories, nestedModules)
+	want := []*UnitDirectory{
+		{
+			Prefix: "accessapproval",
+			Root:   &Subdirectory{Suffix: "accessapproval"},
+			Subdirectories: []*Subdirectory{
+				{Suffix: "cgi"},
+				{Suffix: "cookiejar"},
+			},
+		},
+		{
+			Prefix: "fgci",
+			Root:   &Subdirectory{Suffix: "fgci"},
+		},
+		{
+			Prefix: "httptest",
+			Root:   &Subdirectory{Suffix: "httptest", IsModule: true},
+		},
+		{
+			Prefix: "httptrace",
+			Root:   &Subdirectory{Suffix: "httptrace"},
+		},
+		{
+			Prefix: "internal",
+			Subdirectories: []*Subdirectory{
+				{Suffix: "bytesconv"},
+				{Suffix: "json"},
+			},
+		},
+		{
+			Prefix: "zoltan",
+			Root:   &Subdirectory{Suffix: "zoltan"},
+		},
+	}
+
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("unitDirectories mismatch (-want +got):\n%s", diff)
+	}
+}
