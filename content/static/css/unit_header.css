@@ -100,7 +100,9 @@
 .DetailsHeader-badge--unknown {
   display: none;
 }
-.UnitHeader-majorVersionBanner {
+
+.UnitHeader-majorVersionBanner,
+.UnitHeader-redirectedFromBanner {
   background-color: var(--gray-10);
   display: flex;
   margin: -0.5rem 0 1rem 0;
@@ -112,9 +114,11 @@
  * middleware/latestversion.go after unit page is launched.
  */
 .UnitHeader-majorVersionBanner--latest,
+.UnitHeader-redirectedFromBanner--none,
 .DetailsHeader-banner--latest {
   display: none;
 }
+
 .UnitHeader-detailIcon {
   color: var(--gray-3);
   flex-shrink: 0;
