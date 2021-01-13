@@ -6,15 +6,17 @@
 package internal
 
 const (
-	ExperimentNotAtLatest = "not-at-latest"
-	ExperimentNotAtV1     = "not-at-v1"
+	ExperimentNotAtLatest   = "not-at-latest"
+	ExperimentNotAtV1       = "not-at-v1"
+	ExperimentDirectoryTree = "directory-tree"
 )
 
 // Experiments represents all of the active experiments in the codebase and
 // a description of each experiment.
 var Experiments = map[string]string{
-	ExperimentNotAtLatest: "Enable the display of a 'not at latest' badge.",
-	ExperimentNotAtV1:     "Redirect requests to a path not at v1 to the highest major version of that path.",
+	ExperimentNotAtLatest:   "Enable the display of a 'not at latest' badge.",
+	ExperimentNotAtV1:       "Redirect requests to a path not at v1 to the highest major version of that path.",
+	ExperimentDirectoryTree: "Enable the directory tree layout on the unit page.",
 }
 
 // Experiment holds data associated with an experimental feature for frontend
