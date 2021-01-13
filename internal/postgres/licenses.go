@@ -120,12 +120,12 @@ func collectLicenses(rows *sql.Rows, bypassLicenseCheck bool) ([]*licenses.Licen
 		// which is always populated, but the old one doesn't. First try
 		// unmarshalling the new one, then if that doesn't populate the ID
 		// field, try the old.
-		if err := json.Unmarshal(covBytes, &lic.NewCoverage); err != nil {
+		if err := json.Unmarshal(covBytes, &lic.Coverage); err != nil {
 			return nil, err
 		}
-		if len(lic.NewCoverage.Match) == 0 || lic.NewCoverage.Match[0].ID == "" {
-			lic.NewCoverage = licensecheck.Coverage{}
-			if err := json.Unmarshal(covBytes, &lic.Coverage); err != nil {
+		if len(lic.Coverage.Match) == 0 || lic.Coverage.Match[0].ID == "" {
+			lic.Coverage = licensecheck.Coverage{}
+			if err := json.Unmarshal(covBytes, &lic.OldCoverage); err != nil {
 				return nil, err
 			}
 		}

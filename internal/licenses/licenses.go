@@ -64,8 +64,8 @@ type Metadata struct {
 	// relative to the contents directory.
 	FilePath string
 	// The output of oldlicensecheck.Cover.
-	Coverage    oldlicensecheck.Coverage
-	NewCoverage licensecheck.Coverage
+	OldCoverage oldlicensecheck.Coverage
+	Coverage    licensecheck.Coverage
 }
 
 // A License is a classified license file path and its contents.
@@ -429,9 +429,9 @@ func (d *Detector) detectFiles(files []*zip.File) []*License {
 		types, cov := DetectFile(bytes, f.Name, d.logf)
 		licenses = append(licenses, &License{
 			Metadata: &Metadata{
-				Types:    types,
-				FilePath: strings.TrimPrefix(f.Name, prefix),
-				Coverage: cov,
+				Types:       types,
+				FilePath:    strings.TrimPrefix(f.Name, prefix),
+				OldCoverage: cov,
 			},
 			Contents: bytes,
 		})

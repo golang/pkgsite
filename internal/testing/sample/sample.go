@@ -38,7 +38,7 @@ var (
 		{
 			Types:    []string{LicenseType},
 			FilePath: LicenseFilePath,
-			Coverage: oldlicensecheck.Coverage{
+			OldCoverage: oldlicensecheck.Coverage{
 				Percent: 100,
 				Match:   []oldlicensecheck.Match{{Name: LicenseType, Type: oldlicensecheck.MIT, Percent: 100}},
 			},

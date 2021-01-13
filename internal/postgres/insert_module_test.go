@@ -96,7 +96,7 @@ func checkModule(ctx context.Context, t *testing.T, want *internal.Module) {
 		}
 		wantu.Subdirectories = subdirectories
 		opts := cmp.Options{
-			cmpopts.IgnoreFields(licenses.Metadata{}, "Coverage"),
+			cmpopts.IgnoreFields(licenses.Metadata{}, "OldCoverage"),
 			cmp.AllowUnexported(source.Info{}, safehtml.HTML{}),
 		}
 		if diff := cmp.Diff(wantu, got, opts); diff != "" {
@@ -273,9 +273,9 @@ func TestInsertModuleNewCoverage(t *testing.T) {
 	m.Licenses = []*licenses.License{
 		{
 			Metadata: &licenses.Metadata{
-				Types:       []string{sample.LicenseType},
-				FilePath:    sample.LicenseFilePath,
-				NewCoverage: newCoverage,
+				Types:    []string{sample.LicenseType},
+				FilePath: sample.LicenseFilePath,
+				Coverage: newCoverage,
 			},
 			Contents: []byte(`Lorem Ipsum`),
 		},
@@ -289,9 +289,9 @@ func TestInsertModuleNewCoverage(t *testing.T) {
 	}
 	got := u.LicenseContents[0].Metadata
 	want := &licenses.Metadata{
-		Types:       []string{"MIT"},
-		FilePath:    sample.LicenseFilePath,
-		NewCoverage: newCoverage,
+		Types:    []string{"MIT"},
+		FilePath: sample.LicenseFilePath,
+		Coverage: newCoverage,
 	}
 	if !cmp.Equal(got, want) {
 		t.Errorf("\ngot  %+v\nwant %+v", got, want)

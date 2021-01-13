@@ -304,7 +304,7 @@ func TestModuleIsRedistributable(t *testing.T) {
 			got := d.ModuleIsRedistributable()
 			if got != test.want {
 				for _, l := range d.ModuleLicenses() {
-					t.Logf("%v %v", l.Types, l.Coverage)
+					t.Logf("%v %v", l.Types, l.OldCoverage)
 				}
 				t.Fatalf("got %t, want %t", got, test.want)
 			}
@@ -313,7 +313,7 @@ func TestModuleIsRedistributable(t *testing.T) {
 				gotMetas = append(gotMetas, lic.Metadata)
 			}
 			opts := []cmp.Option{
-				cmpopts.IgnoreFields(Metadata{}, "Coverage"),
+				cmpopts.IgnoreFields(Metadata{}, "OldCoverage"),
 				cmpopts.SortSlices(func(m1, m2 *Metadata) bool { return m1.FilePath < m2.FilePath }),
 			}
 			if diff := cmp.Diff(test.wantMetas, gotMetas, opts...); diff != "" {
@@ -413,7 +413,7 @@ func TestDetectFiles(t *testing.T) {
 			contents: map[string]string{
 				"foo/LICENSE": mitLicense,
 			},
-			want: []*Metadata{{Types: []string{"MIT"}, FilePath: "foo/LICENSE", Coverage: mitCoverage}},
+			want: []*Metadata{{Types: []string{"MIT"}, FilePath: "foo/LICENSE", OldCoverage: mitCoverage}},
 		},
 
 		{
@@ -424,12 +424,12 @@ func TestDetectFiles(t *testing.T) {
 				"COPYING":        bsd0License,
 			},
 			want: []*Metadata{
-				{Types: []string{"BSD-0-Clause"}, FilePath: "COPYING", Coverage: oldlc.Coverage{
+				{Types: []string{"BSD-0-Clause"}, FilePath: "COPYING", OldCoverage: oldlc.Coverage{
 					Percent: 100,
 					Match:   []oldlc.Match{{Name: "BSD-0-Clause", Type: oldlc.BSD, Percent: 100}},
 				}},
-				{Types: []string{"MIT"}, FilePath: "LICENSE", Coverage: mitCoverage},
-				{Types: []string{"MIT"}, FilePath: "foo/LICENSE.md", Coverage: mitCoverage},
+				{Types: []string{"MIT"}, FilePath: "LICENSE", OldCoverage: mitCoverage},
+				{Types: []string{"MIT"}, FilePath: "foo/LICENSE.md", OldCoverage: mitCoverage},
 			},
 		},
 		{
@@ -438,7 +438,7 @@ func TestDetectFiles(t *testing.T) {
 				"LICENSE": mitLicense + "\n" + bsd0License,
 			},
 			want: []*Metadata{
-				{Types: []string{"BSD-0-Clause", "MIT"}, FilePath: "LICENSE", Coverage: oldlc.Coverage{
+				{Types: []string{"BSD-0-Clause", "MIT"}, FilePath: "LICENSE", OldCoverage: oldlc.Coverage{
 					Percent: 100,
 					Match: []oldlc.Match{
 						{Name: "MIT", Type: oldlc.MIT, Percent: 100},
@@ -472,7 +472,7 @@ func TestDetectFiles(t *testing.T) {
 				{
 					Types:    []string{"UNKNOWN"},
 					FilePath: "foo/LICENSE",
-					Coverage: oldlc.Coverage{
+					OldCoverage: oldlc.Coverage{
 						Percent: 69.361,
 						Match:   []oldlc.Match{{Name: "MIT", Type: oldlc.MIT, Percent: 100}},
 					},
@@ -498,9 +498,9 @@ func TestDetectFiles(t *testing.T) {
 					FilePath: "COPYING",
 				},
 				{
-					Types:    []string{"MIT"},
-					FilePath: "LICENSE",
-					Coverage: mitCoverage,
+					Types:       []string{"MIT"},
+					FilePath:    "LICENSE",
+					OldCoverage: mitCoverage,
 				},
 			},
 		},
@@ -513,7 +513,7 @@ func TestDetectFiles(t *testing.T) {
 				{
 					Types:    []string{"Apache-2.0"},
 					FilePath: "LICENSE",
-					Coverage: oldlc.Coverage{
+					OldCoverage: oldlc.Coverage{
 						Percent: 100,
 						Match: []oldlc.Match{{
 							Name:    "Apache-2.0-Short",
@@ -648,7 +648,7 @@ func TestPackageInfo(t *testing.T) {
 				gotMetas = append(gotMetas, l.Metadata)
 			}
 			opts := []cmp.Option{
-				cmpopts.IgnoreFields(Metadata{}, "Coverage"),
+				cmpopts.IgnoreFields(Metadata{}, "OldCoverage"),
 				cmpopts.SortSlices(func(m1, m2 *Metadata) bool { return m1.FilePath < m2.FilePath }),
 			}
 			if diff := cmp.Diff(test.wantMetas, gotMetas, opts...); diff != "" {
