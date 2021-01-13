@@ -36,8 +36,14 @@
       {{if .Details.SourceFiles}}
         {{block "unit_files" .Details}}{{end}}
       {{end}}
-      {{if (or .Details.Subdirectories .Details.NestedModules)}}
-        {{block "unit_directories" .Details}}{{end}}
+      {{if (.Experiments.IsActive "directory-tree")}}
+        {{if .Details.Directories}}
+          {{block "unit_directories" .Details}}{{end}}
+        {{end}}
+      {{else}}
+        {{if (or .Details.Subdirectories .Details.NestedModules)}}
+          {{block "legacy_unit_directories" .Details}}{{end}}
+        {{end}}
       {{end}}
     </div>
     <div class="UnitDetails-meta" role="complementary" aria-label="links">

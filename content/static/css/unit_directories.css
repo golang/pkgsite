@@ -19,22 +19,30 @@
   width: auto;
 }
 .UnitDirectories-table {
-  margin-top: 1.5rem;
+  border-collapse: collapse;
+  height: 0;
+  table-layout: auto;
   width: 100%;
+}
+.UnitDirectories-table--tree {
+  margin-top: -2rem;
 }
 .UnitDirectories-tableHeader {
   background-color: var(--gray-9);
 }
+.UnitDirectories-tableHeader--tree {
+  visibility: hidden;
+}
 .UnitDirectories td {
   border-bottom: 0.0625rem solid var(--gray-8);
   max-width: 32rem;
+  min-width: 12rem;
   padding: 0.5rem 1rem;
   word-break: break-word;
 }
 .UnitDirectories th {
-  text-align: left;
-  border-bottom: 0.0625rem solid var(--gray-8);
   padding: 0.5rem 1rem;
+  text-align: left;
 }
 .UnitDirectories-moduleTag {
   background-color: var(--blue);
@@ -42,4 +50,84 @@
   color: var(--gray-1);
   font-size: 0.74rem;
   padding: 0.2rem 0.4rem;
+}
+.UnitDirectories tr.hidden {
+  display: none;
+}
+.UnitDirectories tr[aria-controls] {
+  cursor: pointer;
+}
+.UnitDirectories tr[aria-controls]:hover {
+  background-color: var(--gray-10);
+}
+.UnitDirectories th.UnitDirectories-toggleHead {
+  font-size: 0;
+  max-width: 0.625rem;
+  padding: 0;
+  width: 0.625rem;
+}
+.UnitDirectories td.UnitDirectories-toggleCell,
+th.UnitDirectories-toggleCell {
+  background-color: var(--white);
+  border: var(--white);
+  max-width: 0.625rem;
+  padding: 0;
+  width: 0.625rem;
+}
+.UnitDirectories-toggleButton {
+  background-color: transparent;
+  border: none;
+  margin: 0 -0.5rem -1rem -1rem;
+  vertical-align: top;
+}
+.UnitDirectories-subSpacer {
+  border-right: 0.0625rem solid var(--gray-8);
+  display: inline;
+  margin-right: 0.875rem;
+  width: 0.0625rem;
+}
+.UnitDirectories-toggleButton[aria-expanded='true'] img {
+  transform: rotate(90deg);
+}
+.UnitDirectories-pathCell {
+  align-items: flex-start;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.75rem;
+  word-break: break-all;
+}
+.UnitDirectories-subdirectory {
+  border-left: 0.0625rem solid var(--gray-8);
+  display: flex;
+  flex-direction: column;
+  padding: 0.5rem 1rem;
+}
+.UnitDirectories-mobileSynopsis {
+  display: none;
+  line-height: 1.25rem;
+  margin-top: 0.25rem;
+  word-break: keep-all;
+}
+@media only screen and (max-width: 52rem) {
+  .UnitDirectories-mobileSynopsis {
+    display: initial;
+  }
+  .UnitDirectories-table th.UnitDirectories-desktopSynopsis,
+  .UnitDirectories-table td.UnitDirectories-desktopSynopsis {
+    display: none;
+  }
+}
+.UnitDirectories-expandButton {
+  position: relative;
+}
+.UnitDirectories-expandButton button {
+  background-color: transparent;
+  border: none;
+  bottom: 1rem;
+  color: var(--turq-dark);
+  cursor: pointer;
+  font-size: 0.875rem;
+  position: absolute;
+  right: 0;
+  text-decoration: none;
 }

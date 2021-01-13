@@ -7,6 +7,13 @@
 
 import { CopyToClipboardController } from './clipboard.js';
 import './toggle-tip.js';
+import { ExpandableRowsTableController } from '/static/js/table.js';
+
+document
+  .querySelectorAll('.js-expandableTable')
+  .forEach(
+    el => new ExpandableRowsTableController(el, document.querySelector('.js-expandAllDirectories'))
+  );
 
 /**
  * Instantiates CopyToClipboardController controller copy buttons
