@@ -14,6 +14,7 @@ import (
 	"github.com/google/safehtml/template"
 	"github.com/google/safehtml/template/uncheckedconversions"
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/cookie"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/log"
@@ -71,6 +72,8 @@ func (s *Server) servePathNotFoundPage(w http.ResponseWriter, r *http.Request,
 	}
 	switch fr.status {
 	case http.StatusFound, derrors.ToStatus(derrors.AlternativeModule):
+		u := constructUnitURL(fr.goModPath, fr.goModPath, internal.LatestVersion)
+		cookie.Set(w, cookie.AlternativeModuleFlash, fullPath, u)
 		http.Redirect(w, r, constructUnitURL(fr.goModPath, fr.goModPath, internal.LatestVersion), http.StatusFound)
 		return
 	case http.StatusInternalServerError:

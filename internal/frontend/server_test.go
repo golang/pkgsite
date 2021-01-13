@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"os"
 	"regexp"
 	"strings"
@@ -19,6 +20,7 @@ import (
 	"github.com/jba/templatecheck"
 	"golang.org/x/net/html"
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/cookie"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/middleware"
@@ -1230,14 +1232,14 @@ func TestServerErrors(t *testing.T) {
 	_, handlerNoExp, _ := newTestServer(t, nil)
 
 	for _, test := range []struct {
-		name, path string
-		wantCode   int
+		name, path, flash string
+		wantCode          int
 	}{
-		{"not found", "/invalid-page", http.StatusNotFound},
-		{"bad request", "/gocloud.dev/@latest/blob", http.StatusBadRequest},
-		{"alternative module", "/" + alternativeModule.ModulePath, http.StatusFound},
-		{"module not in v1", "/" + v1modpath, http.StatusFound},
-		{"import path not in v1", "/" + v1path, http.StatusFound},
+		{"not found", "/invalid-page", "", http.StatusNotFound},
+		{"bad request", "/gocloud.dev/@latest/blob", "", http.StatusBadRequest},
+		{"alternative module", "/" + alternativeModule.ModulePath, "module.path/alternative", http.StatusFound},
+		{"module not in v1", "/" + v1modpath, "notinv1.mod", http.StatusFound},
+		{"import path not in v1", "/" + v1path, "notinv1.mod/foo", http.StatusFound},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			w := httptest.NewRecorder()
@@ -1246,9 +1248,22 @@ func TestServerErrors(t *testing.T) {
 				t.Errorf("%q: got status code = %d, want %d", test.path, w.Code, test.wantCode)
 			}
 
-			handlerNoExp.ServeHTTP(w, httptest.NewRequest("GET", test.path, nil))
+			w2 := httptest.NewRecorder()
+			handlerNoExp.ServeHTTP(w2, httptest.NewRequest("GET", test.path, nil))
 			if test.path == v1modpath || test.path == v1path {
 				test.wantCode = http.StatusNotFound
+			}
+
+			r := &http.Request{
+				Header: http.Header{"Cookie": w.Header()["Set-Cookie"]},
+				URL:    &url.URL{Path: test.path},
+			}
+			got, err := cookie.Extract(w, r, cookie.AlternativeModuleFlash)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if got != test.flash {
+				t.Fatalf("got %q; want %q", got, test.flash)
 			}
 			if w.Code != test.wantCode {
 				t.Errorf("%q: got status code = %d, want %d", test.path, w.Code, test.wantCode)
