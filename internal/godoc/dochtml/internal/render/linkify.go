@@ -462,6 +462,7 @@ scan:
 	// Emit anchor IDs and data-kind attributes for each relevant line.
 	var htmls []safehtml.HTML
 	for line, iks := range anchorLines {
+		inAnchor := false
 		for _, ik := range iks {
 			// Attributes for types and functions are handled in the template
 			// that generates the full documentation HTML.
@@ -474,13 +475,17 @@ scan:
 				continue
 			}
 			htmls = append(htmls, ExecuteToHTML(anchorTemplate, ik))
+			inAnchor = true
 		}
 		htmls = append(htmls, htmlLines[line]...)
+		if inAnchor {
+			htmls = append(htmls, template.MustParseAndExecuteToHTML("</span>"))
+		}
 	}
 	return safehtml.HTMLConcat(htmls...)
 }
 
-var anchorTemplate = template.Must(template.New("anchor").Parse(`<span id="{{.ID}}" data-kind="{{.Kind}}"></span>`))
+var anchorTemplate = template.Must(template.New("anchor").Parse(`<span id="{{.ID}}" data-kind="{{.Kind}}">`))
 
 // declVisitor is an ast.Visitor that trims
 // large string literals and composite literals.

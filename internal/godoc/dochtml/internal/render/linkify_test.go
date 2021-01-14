@@ -185,27 +185,27 @@ func TestDeclHTML(t *testing.T) {
 			name:   "const",
 			symbol: "Nanosecond",
 			want: `const (
-<span id="Nanosecond" data-kind="constant"></span>	Nanosecond  <a href="#Duration">Duration</a> = 1
-<span id="Microsecond" data-kind="constant"></span>	Microsecond          = 1000 * <a href="#Nanosecond">Nanosecond</a>
-<span id="Millisecond" data-kind="constant"></span>	Millisecond          = 1000 * <a href="#Microsecond">Microsecond</a> <span class="comment">// comment</span>
-<span id="Second" data-kind="constant"></span>	Second               = 1000 * <a href="#Millisecond">Millisecond</a> <span class="comment">/* multi
+<span id="Nanosecond" data-kind="constant">	Nanosecond  <a href="#Duration">Duration</a> = 1
+</span><span id="Microsecond" data-kind="constant">	Microsecond          = 1000 * <a href="#Nanosecond">Nanosecond</a>
+</span><span id="Millisecond" data-kind="constant">	Millisecond          = 1000 * <a href="#Microsecond">Microsecond</a> <span class="comment">// comment</span>
+</span><span id="Second" data-kind="constant">	Second               = 1000 * <a href="#Millisecond">Millisecond</a> <span class="comment">/* multi
 	line
-	comment */</span>
-<span id="Minute" data-kind="constant"></span>	Minute = 60 * <a href="#Second">Second</a>
-<span id="Hour" data-kind="constant"></span>	Hour   = 60 * <a href="#Minute">Minute</a>
-)`,
+	comment */</span></span>
+<span id="Minute" data-kind="constant">	Minute = 60 * <a href="#Second">Second</a>
+</span><span id="Hour" data-kind="constant">	Hour   = 60 * <a href="#Minute">Minute</a>
+</span>)`,
 		},
 		{
 			name:   "var",
 			symbol: "UTC",
-			want:   `<span id="UTC" data-kind="variable"></span>var UTC *<a href="#Location">Location</a> = &amp;utcLoc`,
+			want:   `<span id="UTC" data-kind="variable">var UTC *<a href="#Location">Location</a> = &amp;utcLoc</span>`,
 		},
 		{
 			name:   "type",
 			symbol: "Ticker",
 			want: `type Ticker struct {
-<span id="Ticker.C" data-kind="field"></span>	C &lt;-chan <a href="#Time">Time</a> <span class="comment">// The channel on which the ticks are delivered.</span>
-	<span class="comment">// contains filtered or unexported fields</span>
+<span id="Ticker.C" data-kind="field">	C &lt;-chan <a href="#Time">Time</a> <span class="comment">// The channel on which the ticks are delivered.</span>
+</span>	<span class="comment">// contains filtered or unexported fields</span>
 
 }`,
 		},
@@ -223,8 +223,8 @@ func TestDeclHTML(t *testing.T) {
 			name:   "interface",
 			symbol: "Iface",
 			want: `type Iface interface {
-<span id="Iface.M" data-kind="method"></span>	<span class="comment">// Method comment.</span>
-	M()
+<span id="Iface.M" data-kind="method">	<span class="comment">// Method comment.</span>
+</span>	M()
 
 	<span class="comment">// contains filtered or unexported methods</span>
 
@@ -234,11 +234,11 @@ func TestDeclHTML(t *testing.T) {
 			name:   "long literal",
 			symbol: "TooLongLiteral",
 			want: `type TooLongLiteral struct {
-<span id="TooLongLiteral.Name" data-kind="field"></span>	<span class="comment">// The name.</span>
-	Name <a href="/builtin#string">string</a>
+<span id="TooLongLiteral.Name" data-kind="field">	<span class="comment">// The name.</span>
+</span>	Name <a href="/builtin#string">string</a>
 
-<span id="TooLongLiteral.Labels" data-kind="field"></span>	<span class="comment">// The labels.</span>
-	Labels <a href="/builtin#int">int</a> &#34;&#34; <span class="comment">/* 137 byte string literal not displayed */</span>
+<span id="TooLongLiteral.Labels" data-kind="field">	<span class="comment">// The labels.</span>
+</span>	Labels <a href="/builtin#int">int</a> &#34;&#34; <span class="comment">/* 137 byte string literal not displayed */</span>
 
 	<span class="comment">// contains filtered or unexported fields</span>
 

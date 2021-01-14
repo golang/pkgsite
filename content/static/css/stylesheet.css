@@ -1307,6 +1307,14 @@ pre {
   padding-top: 1.5rem;
   text-align: right;
 }
+.Documentation-declaration pre {
+  scroll-padding-top: calc(var(--header-height) + 3.75rem);
+}
+@media only screen and (min-width: 52rem) {
+  .Documentation-declaration pre {
+    scroll-padding-top: calc(var(--header-height) + 0.75rem);
+  }
+}
 .Documentation-declaration + .Documentation-declaration {
   margin-top: 0.625rem;
 }
