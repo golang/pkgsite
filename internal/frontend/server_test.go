@@ -653,22 +653,14 @@ func serverTestCases() []serverTestCase {
 			wantLocation:   "/time",
 		},
 		{
-			name:           "github golang x tools repo",
+			name:           "github golang x tools repo 404 instead of redirect",
 			urlPath:        "/github.com/golang/tools",
-			wantStatusCode: http.StatusMovedPermanently,
-			wantLocation:   "/golang.org/x/tools",
+			wantStatusCode: http.StatusNotFound,
 		},
 		{
-			name:           "github golang x tools go packages",
+			name:           "github golang x tools go packages 404 instead of redirect",
 			urlPath:        "/github.com/golang/tools/go/packages",
-			wantStatusCode: http.StatusMovedPermanently,
-			wantLocation:   "/golang.org/x/tools/go/packages",
-		},
-		{
-			name:           "github golang x tools gopls",
-			urlPath:        "/github.com/golang/tools/gopls",
-			wantStatusCode: http.StatusMovedPermanently,
-			wantLocation:   "/golang.org/x/tools/gopls",
+			wantStatusCode: http.StatusNotFound,
 		},
 		{
 			name:           "static",

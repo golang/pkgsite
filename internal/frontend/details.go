@@ -7,6 +7,7 @@ package frontend
 import (
 	"context"
 	"net/http"
+	"strings"
 
 	"github.com/google/safehtml/template"
 	"go.opencensus.io/stats"
@@ -30,6 +31,15 @@ func (s *Server) serveDetails(w http.ResponseWriter, r *http.Request, ds interna
 	if r.URL.Path == "/" {
 		s.staticPageHandler("index.tmpl", "Home")(w, r)
 		return nil
+	}
+	if strings.HasPrefix(r.URL.Path, "/github.com/golang/go") {
+		urlPath := strings.TrimPrefix(strings.TrimPrefix(r.URL.Path, "/github.com/golang/go"), "/src")
+		if urlPath == "" {
+			http.Redirect(w, r, "/std", http.StatusMovedPermanently)
+			return
+		}
+		http.Redirect(w, r, urlPath, http.StatusMovedPermanently)
+		return
 	}
 
 	ctx := r.Context()

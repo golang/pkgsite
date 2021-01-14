@@ -137,19 +137,6 @@ func (s *Server) Install(handle func(string, http.Handler), redisClient *redis.C
 	handle("/license-policy", s.licensePolicyHandler())
 	handle("/about", http.RedirectHandler("https://go.dev/about", http.StatusFound))
 	handle("/badge/", http.HandlerFunc(s.badgeHandler))
-	handle("/github.com/golang/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		suffix := strings.TrimPrefix(r.URL.Path, "/github.com/golang")
-		if !strings.HasPrefix(r.URL.Path, "/github.com/golang/go") {
-			http.Redirect(w, r, "/golang.org/x"+suffix, http.StatusMovedPermanently)
-			return
-		}
-		urlPath := strings.TrimPrefix(strings.TrimPrefix(suffix, "/go"), "/src")
-		if urlPath == "" {
-			http.Redirect(w, r, "/std", http.StatusMovedPermanently)
-			return
-		}
-		http.Redirect(w, r, urlPath, http.StatusMovedPermanently)
-	}))
 	handle("/C", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Package "C" is a special case: redirect to /cmd/cgo.
 		// (This is what golang.org/C does.)
