@@ -143,6 +143,12 @@ class DocNavTreeController {
       return;
     }
 
+    // Close inactive top level item if selected id is not in its tree.
+    let topLevelExpanded = this._el.querySelector('[aria-level="1"][aria-expanded="true"]');
+    if (topLevelExpanded && !topLevelExpanded.contains(this._selectedEl)) {
+      this.collapseItem(topLevelExpanded);
+    }
+
     if (this._selectedEl.getAttribute('aria-level') === '1') {
       this._selectedEl.setAttribute('aria-expanded', 'true');
     }
