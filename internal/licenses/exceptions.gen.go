@@ -878,12 +878,15 @@ exceptions:
 		((http))??
 		((www))??
 		.apache.org/licenses/LICENSE-2.0
+		((html))??
 	||
 		((http))??
 		aws.amazon.com/apache2.0/
 	))??
 
-	((or in the license file accompanying this file.))??
+	((or in the license file accompanying this
+		((file. || software.))
+	))??
 
 	((
 		((As well as the file __10__))??
@@ -1066,7 +1069,7 @@ OR THE USE OR OTHER DEALINGS IN
       (( 2. || (b) ))??
       You must cause any modified files to carry prominent notices stating that
       You changed the files;
-      ((and || andxi))
+      and
 
       (( 3. || c ))??
       You must retain, in the Source form of any Derivative Works that You
@@ -10162,12 +10165,15 @@ exceptions:
 		((http))??
 		((www))??
 		.apache.org/licenses/LICENSE-2.0
+		((html))??
 	||
 		((http))??
 		aws.amazon.com/apache2.0/
 	))??
 
-	((or in the license file accompanying this file.))??
+	((or in the license file accompanying this
+		((file. || software.))
+	))??
 
 	((
 		((As well as the file __10__))??
@@ -10350,7 +10356,7 @@ OR THE USE OR OTHER DEALINGS IN
       (( 2. || (b) ))??
       You must cause any modified files to carry prominent notices stating that
       You changed the files;
-      ((and || andxi))
+      and
 
       (( 3. || c ))??
       You must retain, in the Source form of any Derivative Works that You
@@ -10706,12 +10712,15 @@ exceptions:
 		((http))??
 		((www))??
 		.apache.org/licenses/LICENSE-2.0
+		((html))??
 	||
 		((http))??
 		aws.amazon.com/apache2.0/
 	))??
 
-	((or in the license file accompanying this file.))??
+	((or in the license file accompanying this
+		((file. || software.))
+	))??
 
 	((
 		((As well as the file __10__))??
@@ -10894,7 +10903,7 @@ OR THE USE OR OTHER DEALINGS IN
       (( 2. || (b) ))??
       You must cause any modified files to carry prominent notices stating that
       You changed the files;
-      ((and || andxi))
+      and
 
       (( 3. || c ))??
       You must retain, in the Source form of any Derivative Works that You
