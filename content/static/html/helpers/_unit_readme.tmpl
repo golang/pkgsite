@@ -5,8 +5,8 @@
 -->
 
 {{define "unit_readme"}}
-  <div class="UnitReadme {{if .ExpandReadme}}UnitReadme--expanded{{end}} js-readme" id="section-readme">
-    <h2 class="UnitReadme-title">
+  <div class="UnitReadme {{if .ExpandReadme}}UnitReadme--expanded{{end}} js-readme">
+    <h2 class="UnitReadme-title" id="section-readme">
       <img height="25px" width="20px" src="/static/img/pkg-icon-readme_20x16.svg" alt="">README
     </h2>
     {{if .Readme.String }}

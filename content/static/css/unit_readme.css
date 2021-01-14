@@ -15,6 +15,7 @@
 }
 .UnitReadme-title img {
   margin-right: 1rem;
+  vertical-align: bottom;
 }
 .UnitReadme-content {
   position: relative;
@@ -47,6 +48,7 @@
 }
 .UnitReadme--expanded .UnitReadme-content {
   max-height: initial;
+  overflow: initial;
 }
 .UnitReadme--expanded .UnitReadme-fadeOut {
   display: none;

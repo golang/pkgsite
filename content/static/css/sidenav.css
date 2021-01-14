@@ -8,12 +8,6 @@
  * Styling the sidenav.
  */
 
-.DetailsContent :target::before {
-  height: calc(var(--header-height) + 3.75rem);
-  margin-top: calc(
-    -1 * (var(--header-height) + 3.75rem)
-  ); /* Move hidden anchor content for deep linking with a sticky header. */
-}
 .Documentation-nav,
 .Documentation-index,
 .DocNav,
@@ -100,12 +94,6 @@
   color: var(--gray-3);
 }
 @media only screen and (min-width: 52rem) {
-  .DetailsContent :target::before {
-    height: calc(var(--header-height) + 0.75rem);
-    margin-top: calc(
-      -1 * (var(--header-height) + 0.75rem)
-    ); /* Move hidden anchor content for deep linking with a sticky header. */
-  }
   .Documentation {
     column-gap: 2rem;
     display: grid;

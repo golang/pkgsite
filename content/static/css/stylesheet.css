@@ -784,16 +784,6 @@ pre {
 .Site--wide .DetailsContent {
   max-width: none;
 }
-.DetailsContent :target::before {
-  content: ' ';
-  display: block;
-  height: calc(var(--header-height) + 0.75rem);
-  margin-top: calc(
-    -1 * (var(--header-height) + 0.75rem)
-  ); /* Move hidden anchor content for deep linking with a sticky header. */
-  pointer-events: none;
-  visibility: hidden;
-}
 
 .CopyToClipboardButton {
   background-color: transparent;
