@@ -64,12 +64,12 @@
 .UnitHeader-detailItem a > span {
   color: var(--gray-4);
 }
-.UnitHeader-detailItem:not(:first-of-type)::before {
+.UnitHeader-detailItem:not(:last-of-type)::after {
   content: '|';
   padding: 1rem;
 }
 @media only screen and (max-width: 52rem) {
-  .UnitHeader-detailItem:not(:last-of-type)::before {
+  .UnitHeader-detailItem:not(:last-of-type)::after {
     padding: 0.5rem;
   }
 }

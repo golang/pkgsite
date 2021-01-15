@@ -53,7 +53,7 @@
 .UnitDetails-outline {
   display: none;
   height: calc(100vh - 7.8475rem);
-  margin-top: 2.5rem;
+  margin-top: 1.5rem;
   position: sticky;
   top: 4.5rem;
 }
@@ -68,16 +68,17 @@
 }
 @media only screen and (min-width: 64rem) {
   .UnitDetails-content {
-    margin-top: 2rem;
+    margin-top: 1rem;
   }
 }
 .UnitDetails-meta {
-  display: none;
-  margin-top: 2rem;
+  order: -1;
 }
 @media only screen and (min-width: 64rem) {
   .UnitDetails-meta {
     display: block;
+    margin-top: 2rem;
+    order: initial;
   }
 }
 .UnitDetails-contentEmpty {

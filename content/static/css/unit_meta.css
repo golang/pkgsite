@@ -32,8 +32,15 @@
   justify-content: space-between;
   line-height: 1rem;
   margin-bottom: 0.5rem;
-  margin-top: 1.85rem;
   padding-bottom: 0.5rem;
+}
+@media only screen and (min-width: 64rem) {
+  .UnitMetaDetails-header {
+    margin-top: 0.625rem;
+  }
+}
+.UnitMetaDetails .UnitMetaDetails-header > a {
+  font-size: 0.875rem;
 }
 .UnitMetaDetails ul {
   list-style: none;
@@ -74,7 +81,7 @@
   border-radius: 0.25rem;
   display: block;
   font-size: 0.75rem;
-  left: -12rem;
+  left: -6rem;
   letter-spacing: 0.01875rem;
   line-height: 1rem;
   padding: 0.5rem;
@@ -83,18 +90,18 @@
   white-space: initial;
   width: 12rem;
 }
-@media only screen and (min-width: 65rem) {
+@media only screen and (min-width: 64rem) {
   .UnitMetaDetails-toggletipBubble {
-    left: -10rem;
+    left: -12rem;
   }
 }
 @media only screen and (min-width: 70rem) {
   .UnitMetaDetails-toggletipBubble {
-    left: -8rem;
+    left: -12rem;
   }
 }
 @media only screen and (min-width: 82rem) {
   .UnitMetaDetails-toggletipBubble {
-    left: -6rem;
+    left: -8rem;
   }
 }
