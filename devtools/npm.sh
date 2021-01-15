@@ -6,6 +6,11 @@
 
 source devtools/lib.sh || { echo "Are you at repo root?"; exit 1; }
 
+if [[ ! -x "$(command -v docker-compose)" ]]; then
+  err "docker-compose must be installed: see https://docs.docker.com/compose/install/"
+  exit 1
+fi
+
 # Run npm install if node_modules directory does not exist.
 if [ ! -d "node_modules" ]
 then

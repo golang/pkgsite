@@ -142,6 +142,10 @@ run_prettier() {
   fi
 }
 
+run_npm_lint() {
+  ./devtools/npm.sh run lint
+}
+
 standard_linters() {
   check_headers
   check_bad_migrations
@@ -168,6 +172,7 @@ Available subcommands:
   prettier    - (lint, nonstandard) run prettier on .js and .css files.
   templates   - (lint, nonstandard) run go-template-lint on templates
   script_hashses - (lint) check script hashes
+  npm_lint   - (lint, nonstandard) run linters on .ts and .css files
 EOUSAGE
 }
 
@@ -189,6 +194,7 @@ main() {
     "")
       standard_linters
       run_prettier
+      run_npm_lint
       runcmd go mod tidy
       runcmd env GO_DISCOVERY_TESTDB=true go test ./...
       runcmd go test ./internal/secrets
@@ -215,6 +221,7 @@ main() {
     templates) check_templates ;;
     unparam) check_unparam ;;
     script_hashes) check_script_hashes ;;
+    npm_lint) run_npm_lint ;;
     *)
       usage
       exit 1
