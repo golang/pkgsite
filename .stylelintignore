@@ -1,7 +1,10 @@
 third_party
 
-# Ignoring generated readme styles
+# Generated readme styles
 content/static/css/readme.css
 
-# TODO: Fix lint errors in stylesheet.css
+# Worker stylesheet
+content/static/css/worker.css
+
+# TODO(https://golang.org/issue/43734): Fix lint errors in stylesheet.css
 content/static/css/stylesheet.css

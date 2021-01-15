@@ -17,15 +17,15 @@ input {
   width: 12.5rem;
 }
 button {
-  width: 16rem;
   background-color: #eee;
-  border-radius: 0.125rem;
   border: 0.0625rem solid #ccc;
+  border-radius: 0.125rem;
+  width: 16rem;
 }
 table {
   border-spacing: 0.625rem 0.125rem;
-  padding: 0.1875rem 0 0.125rem 0;
   font-size: 0.75rem;
+  padding: 0.1875rem 0 0.125rem 0;
 }
 td {
   border-top: 0.0625rem solid #ddd;

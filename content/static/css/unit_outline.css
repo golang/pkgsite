@@ -22,7 +22,7 @@
   margin-bottom: -0.1625rem;
 }
 .UnitOutline-jumpTo button {
-  background-color: white;
+  background-color: var(--white);
   border: 0.0625rem solid var(--gray-8);
   border-radius: 0.25rem;
   color: var(--gray-4);
@@ -118,8 +118,8 @@
   margin-bottom: 0.375em;
 }
 .UnitOutline [role='treeitem'][aria-level='2'] {
-  position: relative;
   margin-bottom: 0.25rem;
+  position: relative;
 }
 .UnitOutline [role='treeitem'][aria-level='3'] {
   font-size: 0.875rem;
@@ -133,8 +133,8 @@
 }
 .UnitOutline [role='treeitem'][aria-selected='true'][aria-level='2']:not([aria-expanded])::before,
 .UnitOutline [role='treeitem'][aria-selected='true'][aria-level='3']:not([aria-expanded])::before {
-  border-radius: 50%;
   background-color: var(--turq-dark);
+  border-radius: 50%;
   content: '';
   display: block;
   height: 0.3125rem;

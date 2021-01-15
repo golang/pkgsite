@@ -34,10 +34,10 @@
 }
 .DocNavMobile-label,
 .DocNavMobile-select {
-  left: 1rem;
-  top: 0.5rem;
   height: 2rem;
+  left: 1rem;
   position: absolute;
+  top: 0.5rem;
   width: calc(100% - 2rem);
 }
 .DocNavMobile-label {
@@ -83,6 +83,7 @@
   color: transparent;
   display: block;
 }
+
 /**
  * Firefox allows for styling of option and optgroup tags.
  * Ensure they don’t inherit the clear styling of their parent.
@@ -99,6 +100,7 @@
     display: grid;
     grid-template-columns: 17.5rem minmax(0, auto);
   }
+
   /**
    * Remove once Doc HTML is fully rolled out, as js-* styles should NEVER be
    * styled per https://golang.org/wiki/CSSStyleGuide.
@@ -118,8 +120,8 @@
     max-height: calc(100vh - var(--header-height));
     overflow-x: hidden;
     overflow-y: auto;
-    padding-top: 1rem;
     padding-left: 0.25rem;
+    padding-top: 1rem;
     position: sticky;
     top: var(--header-height);
   }
@@ -159,8 +161,8 @@
     font-weight: 500;
   }
   .DocNav [aria-selected='true']:not(.DocNav-groupLabel)::before {
-    border-radius: 50%;
     background-color: var(--turq-dark);
+    border-radius: 50%;
     content: '';
     display: block;
     height: 0.3125rem;
@@ -220,6 +222,7 @@
   .DocNav-groupLabel--empty::before {
     content: unset;
   }
+
   /* Added to increase hit target on triangle above. */
   .DocNav-groupLabel::after {
     content: '';
@@ -230,6 +233,7 @@
     top: 0;
     width: 2rem;
   }
+
   /**
    * Expandable nodes at this level have smaller text and more left padding,
    * so adjust for that.

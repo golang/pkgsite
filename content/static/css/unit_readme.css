@@ -18,33 +18,33 @@
   vertical-align: bottom;
 }
 .UnitReadme-content {
-  position: relative;
   max-height: 20rem;
   overflow: hidden;
+  position: relative;
 }
 .UnitReadme-content ul {
   line-height: 1.5rem;
 }
 .UnitReadme-fadeOut {
-  position: absolute;
+  background-image: linear-gradient(to bottom, transparent, var(--white));
   bottom: 0;
   left: 0;
-  width: 100%;
-  text-align: center;
   margin: 0;
   padding: 1.875rem 0;
-  background-image: linear-gradient(to bottom, transparent, var(--white));
+  position: absolute;
+  text-align: center;
+  width: 100%;
 }
 .UnitReadme-expandLink {
+  color: var(--turq-dark);
   cursor: pointer;
   padding: 0.625rem 0;
-  color: var(--turq-dark);
 }
 .UnitReadme-collapseLink {
+  color: var(--turq-dark);
   cursor: pointer;
   display: none;
   padding: 0.625rem 0;
-  color: var(--turq-dark);
 }
 .UnitReadme--expanded .UnitReadme-content {
   max-height: initial;

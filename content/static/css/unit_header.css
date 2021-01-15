@@ -32,8 +32,8 @@
   padding: 0 0.5rem;
 }
 .UnitHeader-heading {
-  display: flex;
   align-items: center;
+  display: flex;
 }
 .UnitHeader-title {
   font-size: 1.75rem;
@@ -81,7 +81,7 @@
 .UnitHeader-versionBadge,
 .DetailsHeader-badge {
   border-radius: unset;
-  color: white;
+  color: var(--white);
   font-size: 0.7rem;
   margin: -1rem 0 -1rem 0.5rem;
   padding: 0.25rem 0.5rem;
@@ -123,7 +123,7 @@
   width: 1rem;
 }
 a.UnitHeader-backLink {
-  color: black;
+  color: var(--black);
   display: block;
   font-size: 1rem;
 }

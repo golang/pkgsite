@@ -41,9 +41,9 @@
   margin: 2.5rem auto auto 0;
 }
 .Homepage-searchButton {
+  background-color: var(--turq-dark);
   border: none;
   border-radius: 0 0.5rem 0.5rem 0;
-  background-color: var(--turq-dark);
   color: var(--white);
   cursor: pointer;
   font-size: 1em;
@@ -52,13 +52,13 @@
   width: 7.375rem;
 }
 .Homepage-searchHelp {
-  width: 100%;
-  max-width: 45.0625rem;
-  display: block;
   align-items: center;
+  display: block;
   justify-content: space-between;
   margin: auto;
+  max-width: 45.0625rem;
   text-align: center;
+  width: 100%;
 }
 @media only screen and (min-width: 30rem) {
   .Homepage-searchHelp {
@@ -126,14 +126,14 @@ a.Homepage-helpLink {
 .Questions-content {
   flex-grow: 1;
   margin: 0 auto;
-  padding: 0 1.5rem;
   max-width: 75.75rem;
+  padding: 0 1.5rem;
 }
 .Questions-content ul {
   list-style: none;
   padding-inline-start: 0;
 }
 .Questions-content ul > li {
-  line-height: 1.75rem;
   font-size: 0.875rem;
+  line-height: 1.75rem;
 }

@@ -39,6 +39,11 @@
     margin-top: 0.625rem;
   }
 }
+.UnitMetaDetails a {
+  font-size: 1rem;
+  font-weight: normal;
+  text-transform: none;
+}
 .UnitMetaDetails .UnitMetaDetails-header > a {
   font-size: 0.875rem;
 }
@@ -51,17 +56,12 @@
   margin-bottom: 0.75rem;
   white-space: nowrap;
 }
-.UnitMetaDetails a {
-  font-size: 1rem;
-  font-weight: normal;
-  text-transform: none;
-}
 .UnitMetaDetails-icon {
   height: auto;
   margin-right: 0.25rem;
   position: relative;
-  width: 0.875rem;
   top: 0.125rem;
+  width: 0.875rem;
   z-index: -1;
 }
 .UnitMetaDetails-toggletip button {
