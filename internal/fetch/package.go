@@ -246,9 +246,13 @@ func extractPackagesFromZip(ctx context.Context, modulePath, resolvedVersion str
 // 	Directory and file names that begin with "." or "_" are ignored
 // 	by the go tool, as are directories named "testdata".
 //
+// However, even though `go list` and other commands that take package
+// wildcards will ignore these, they can still be imported and used in
+// working Go programs. We continue to ignore the "." and "testdata"
+// cases, but we've seen valid Go packages with "_", so we accept those.
 func ignoredByGoTool(importPath string) bool {
 	for _, el := range strings.Split(importPath, "/") {
-		if strings.HasPrefix(el, ".") || strings.HasPrefix(el, "_") || el == "testdata" {
+		if strings.HasPrefix(el, ".") || el == "testdata" {
 			return true
 		}
 	}
