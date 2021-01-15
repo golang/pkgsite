@@ -1310,7 +1310,7 @@ pre {
 .Documentation-declaration pre {
   scroll-padding-top: calc(var(--header-height) + 3.75rem);
 }
-@media only screen and (min-width: 52rem) {
+@media only screen and (min-width: 64rem) {
   .Documentation-declaration pre {
     scroll-padding-top: calc(var(--header-height) + 0.75rem);
   }

@@ -28,12 +28,6 @@
     padding: 0 1.5rem;
   }
 }
-@media only screen and (min-width: 52rem) {
-  .UnitDetails {
-    grid-template-columns: 15.5rem minmax(32.5rem, 43.125rem);
-    margin-top: 0;
-  }
-}
 @media only screen and (min-width: 64rem) {
   .UnitDetails {
     grid-template-columns: 15.5rem minmax(30.5rem, 43.125rem) minmax(10rem, 15.5rem);
@@ -48,7 +42,7 @@
 .UnitDetails :target {
   scroll-margin-top: calc(var(--header-height) + 3.75rem);
 }
-@media only screen and (min-width: 52rem) {
+@media only screen and (min-width: 64rem) {
   .UnitDetails :target {
     scroll-margin-top: calc(var(--header-height) + 0.75rem);
   }
@@ -63,7 +57,7 @@
   position: sticky;
   top: 4.5rem;
 }
-@media only screen and (min-width: 52rem) {
+@media only screen and (min-width: 64rem) {
   .UnitDetails-outline {
     display: block;
   }
@@ -72,7 +66,7 @@
   margin-top: 0.5rem;
   max-width: 60rem;
 }
-@media only screen and (min-width: 52rem) {
+@media only screen and (min-width: 64rem) {
   .UnitDetails-content {
     margin-top: 2rem;
   }
