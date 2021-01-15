@@ -547,7 +547,7 @@ var moduleDocTooLarge = &testModule{
 		Files: map[string]string{
 			"LICENSE": testhelper.BSD0License,
 			"doc.go": "// This documentation is big.\n" +
-				strings.Repeat("// Too big.\n", 200_000) +
+				strings.Repeat("// Too big.\n", 100_000) +
 				"package bigdoc",
 		},
 	},

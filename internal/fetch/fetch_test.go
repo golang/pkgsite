@@ -46,7 +46,7 @@ func TestFetchModule(t *testing.T) {
 	defer func() { httpPost = origPost }()
 
 	defer func(oldmax int) { godoc.MaxDocumentationHTML = oldmax }(godoc.MaxDocumentationHTML)
-	godoc.MaxDocumentationHTML = 1 * megabyte
+	godoc.MaxDocumentationHTML = megabyte / 2
 
 	for _, test := range []struct {
 		name         string
