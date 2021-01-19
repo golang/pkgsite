@@ -232,7 +232,7 @@ func extractPackagesFromZip(ctx context.Context, modulePath, resolvedVersion str
 		})
 	}
 	if len(pkgs) == 0 {
-		return nil, packageVersionStates, errModuleContainsNoPackages
+		return nil, packageVersionStates, ErrModuleContainsNoPackages
 	}
 	return pkgs, packageVersionStates, nil
 }

@@ -34,7 +34,7 @@ import (
 )
 
 var (
-	errModuleContainsNoPackages = errors.New("module contains 0 packages")
+	ErrModuleContainsNoPackages = errors.New("module contains 0 packages")
 	errMalformedZip             = errors.New("module zip is malformed")
 )
 
@@ -270,7 +270,7 @@ func processZipFile(ctx context.Context, modulePath string, resolvedVersion stri
 	d := licenses.NewDetector(modulePath, resolvedVersion, zipReader, logf)
 	allLicenses := d.AllLicenses()
 	packages, packageVersionStates, err := extractPackagesFromZip(ctx, modulePath, resolvedVersion, zipReader, d, sourceInfo)
-	if errors.Is(err, errModuleContainsNoPackages) || errors.Is(err, errMalformedZip) {
+	if errors.Is(err, ErrModuleContainsNoPackages) || errors.Is(err, errMalformedZip) {
 		return nil, nil, fmt.Errorf("%v: %w", err.Error(), derrors.BadModule)
 	}
 	if err != nil {

@@ -264,6 +264,24 @@ func resultFromFetchRequest(results []*fetchResult, fullPath, requestedVersion s
 			}
 			fr.responseText = h.String()
 			return fr, nil
+		case derrors.ToStatus(derrors.BadModule):
+			// There are 3 categories of 490 errors that we see:
+			// - module contains 0 packages
+			// - empty commit time
+			// - zip.NewReader: zip: not a valid zip file: bad module
+			//   (only seen for foo.maxj.us/oops.fossil)
+			//
+			// Provide a specific message for the first error.
+			fr.status = http.StatusNotFound
+			p := fullPath
+			if requestedVersion != internal.LatestVersion {
+				p = fullPath + "@" + requestedVersion
+			}
+			fr.responseText = fmt.Sprintf("%s could not be processed.", p)
+			if fr.err != nil && strings.Contains(fr.err.Error(), fetch.ErrModuleContainsNoPackages.Error()) {
+				fr.responseText = fmt.Sprintf("There are no packages in module %s.", p)
+			}
+			return fr, nil
 		}
 
 		// A module was found for a prefix of the path, but the path did not exist
