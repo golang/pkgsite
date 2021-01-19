@@ -8,14 +8,12 @@ import (
 	"context"
 	"errors"
 	"net/http"
-	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
-	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/testing/sample"
 )
@@ -124,15 +122,15 @@ func TestPreviousFetchStatusAndResponse_PathExistsAtNonV1(t *testing.T) {
 		}
 	}
 
-	checkPath := func(ctx context.Context, t *testing.T, testDB *postgres.DB, path, wantPath string, status int) {
-		got, err := previousFetchStatusAndResponse(ctx, testDB, path, internal.LatestVersion)
+	checkPath := func(ctx context.Context, t *testing.T, testDB *postgres.DB, path, version, wantPath string, wantStatus int) {
+		got, err := previousFetchStatusAndResponse(ctx, testDB, path, version)
 		if err != nil {
 			t.Fatal(err)
 		}
 		want := &fetchResult{
 			modulePath: wantPath,
 			goModPath:  wantPath,
-			status:     status,
+			status:     wantStatus,
 		}
 		if diff := cmp.Diff(want, got,
 			cmp.AllowUnexported(fetchResult{}),
@@ -142,18 +140,26 @@ func TestPreviousFetchStatusAndResponse_PathExistsAtNonV1(t *testing.T) {
 	}
 
 	for _, test := range []struct {
-		name, path, want string
+		name, path, version, wantPath string
+		wantStatus                    int
 	}{
-		{"module path not at v1", sample.ModulePath, sample.ModulePath + "/v4"},
-		{"import path not at v1", sample.ModulePath + "/foo", sample.ModulePath + "/v4/foo"},
+		{"module path not at v1", sample.ModulePath, internal.LatestVersion, sample.ModulePath + "/v4", http.StatusFound},
+		{"import path not at v1", sample.ModulePath + "/foo", internal.LatestVersion, sample.ModulePath + "/v4/foo", http.StatusFound},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			want := strings.ReplaceAll(test.want, "/v4", "")
-			checkPath(ctx, t, testDB, test.path, want, http.StatusNotFound)
+			checkPath(ctx, t, testDB, test.path, test.version, test.wantPath, test.wantStatus)
 		})
-		t.Run(test.name+"not-at-v1", func(t *testing.T) {
-			ctx := experiment.NewContext(ctx, internal.ExperimentNotAtV1)
-			checkPath(ctx, t, testDB, test.path, test.want, http.StatusFound)
+	}
+	for _, test := range []struct {
+		name, path, version string
+	}{
+		{"import path v1 missing version", sample.ModulePath + "/foo", "v1.5.2"},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			_, err := previousFetchStatusAndResponse(ctx, testDB, test.path, test.version)
+			if !errors.Is(err, derrors.NotFound) {
+				t.Fatal(err)
+			}
 		})
 	}
 }

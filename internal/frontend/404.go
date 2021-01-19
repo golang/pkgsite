@@ -16,7 +16,6 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/cookie"
 	"golang.org/x/pkgsite/internal/derrors"
-	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/stdlib"
@@ -141,27 +140,29 @@ func previousFetchStatusAndResponse(ctx context.Context, db *postgres.DB, fullPa
 		}, fullPath, requestedVersion)
 	}
 
-	if experiment.IsActive(ctx, internal.ExperimentNotAtV1) {
-		// Check if the unit path exists at a higher major version.
-		// For example, my.module might not exist, but my.module/v3 might.
-		// Similarly, my.module/foo might not exist, but my.module/v3/foo might.
-		// In either case, the user will be redirected to the highest major version
-		// of the path.
-		//
-		// Do not bother to look for a specific version if this case. If
-		// my.module/foo@v2.1.0 was requested, and my.module/foo/v2 exists, just
-		// return the latest version of my.module/foo/v2.
-		majPath, err := db.GetLatestMajorPathForV1Path(ctx, fullPath)
-		if err != nil && err != derrors.NotFound {
-			return nil, err
-		}
-		if majPath != "" {
-			return &fetchResult{
-				modulePath: majPath,
-				goModPath:  majPath,
-				status:     http.StatusFound,
-			}, nil
-		}
+	// Check if the unit path exists at a higher major version.
+	// For example, my.module might not exist, but my.module/v3 might.
+	// Similarly, my.module/foo might not exist, but my.module/v3/foo might.
+	// In either case, the user will be redirected to the highest major version
+	// of the path.
+	//
+	// Do not bother to look for a specific version if this case. If
+	// my.module/foo@v2.1.0 was requested, and my.module/foo/v2 exists, just
+	// return the latest version of my.module/foo/v2.
+	//
+	// Only redirect if the majPath returned is different from the fullPath, and
+	// the majPath is not at v1. We don't want to redirect my.module/foo/v3 to
+	// my.module/foo, or my.module/foo@v1.5.2 to my.module/foo@v1.0.0.
+	majPath, maj, err := db.GetLatestMajorPathForV1Path(ctx, fullPath)
+	if err != nil && err != derrors.NotFound {
+		return nil, err
+	}
+	if majPath != fullPath && maj != 1 && majPath != "" {
+		return &fetchResult{
+			modulePath: majPath,
+			goModPath:  majPath,
+			status:     http.StatusFound,
+		}, nil
 	}
 
 	// The full path does not exist in our database, but its module might.

@@ -8,7 +8,6 @@ package internal
 const (
 	ExperimentDirectoryTree        = "directory-tree"
 	ExperimentNotAtLatest          = "not-at-latest"
-	ExperimentNotAtV1              = "not-at-v1"
 	ExperimentRedirectedFromBanner = "redirected-from-banner"
 )
 
@@ -17,7 +16,6 @@ const (
 var Experiments = map[string]string{
 	ExperimentDirectoryTree:        "Enable the directory tree layout on the unit page.",
 	ExperimentNotAtLatest:          "Enable the display of a 'not at latest' badge.",
-	ExperimentNotAtV1:              "Redirect requests to a path not at v1 to the highest major version of that path.",
 	ExperimentRedirectedFromBanner: "Display banner with path that request was redirected from.",
 }
 

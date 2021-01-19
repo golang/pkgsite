@@ -6,6 +6,8 @@ package postgres
 
 import (
 	"context"
+	"strconv"
+	"strings"
 	"testing"
 
 	"golang.org/x/pkgsite/internal/testing/sample"
@@ -15,18 +17,27 @@ func TestGetLatestMajorPathForV1Path(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
-	checkLatest := func(t *testing.T, versions []string, v1path string, wantVersion string) {
+	checkLatest := func(t *testing.T, versions []string, v1path string, version, suffix string) {
 		t.Helper()
-		got, err := testDB.GetLatestMajorPathForV1Path(ctx, v1path)
+		gotPath, gotVer, err := testDB.GetLatestMajorPathForV1Path(ctx, v1path)
 		if err != nil {
 			t.Fatal(err)
 		}
 		want := sample.ModulePath
-		if wantVersion != "" {
-			want = want + "/" + wantVersion
+		if suffix != "" {
+			want = want + "/" + suffix
 		}
-		if got != want {
-			t.Errorf("GetLatestMajorPathForV1Path(%q) = %q, want %q", v1path, got, want)
+		var wantVer int
+		if version == "" {
+			wantVer = 1
+		} else {
+			wantVer, err = strconv.Atoi(strings.TrimPrefix(version, "v"))
+			if err != nil {
+				t.Fatal(err)
+			}
+		}
+		if gotPath != want || gotVer != wantVer {
+			t.Errorf("GetLatestMajorPathForV1Path(%q) = %q, %d, want %q, %d", v1path, gotPath, gotVer, want, wantVer)
 		}
 	}
 
@@ -71,14 +82,15 @@ func TestGetLatestMajorPathForV1Path(t *testing.T) {
 			}
 			t.Run("module", func(t *testing.T) {
 				v1path := sample.ModulePath
-				checkLatest(t, test.versions, v1path, test.want)
+				checkLatest(t, test.versions, v1path, test.want, test.want)
 			})
 			t.Run("package", func(t *testing.T) {
+				want := test.want
 				if test.want != "" {
-					test.want += "/"
+					want += "/"
 				}
 				v1path := sample.ModulePath + "/" + suffix
-				checkLatest(t, test.versions, v1path, test.want+suffix)
+				checkLatest(t, test.versions, v1path, test.want, want+suffix)
 			})
 		})
 	}

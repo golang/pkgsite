@@ -17,7 +17,7 @@ import (
 
 // GetLatestMajorPathForV1Path reports the latest unit path in the series for
 // the given v1path.
-func (db *DB) GetLatestMajorPathForV1Path(ctx context.Context, v1path string) (_ string, err error) {
+func (db *DB) GetLatestMajorPathForV1Path(ctx context.Context, v1path string) (_ string, _ int, err error) {
 	defer derrors.Wrap(&err, "DB.GetLatestPathForV1Path(ctx, %q)", v1path)
 	q := `
 		SELECT p.path, m.series_path
@@ -42,7 +42,7 @@ func (db *DB) GetLatestMajorPathForV1Path(ctx context.Context, v1path string) (_
 		return nil
 	}, v1path)
 	if err != nil {
-		return "", err
+		return "", 0, err
 	}
 
 	var (
@@ -59,7 +59,7 @@ func (db *DB) GetLatestMajorPathForV1Path(ctx context.Context, v1path string) (_
 		if v != "" {
 			i, err = strconv.Atoi(v)
 			if err != nil {
-				return "", fmt.Errorf("strconv.Atoi(%q): %v", v, err)
+				return "", 0, fmt.Errorf("strconv.Atoi(%q): %v", v, err)
 			}
 		}
 		if maj <= i {
@@ -67,5 +67,9 @@ func (db *DB) GetLatestMajorPathForV1Path(ctx context.Context, v1path string) (_
 			majPath = p
 		}
 	}
-	return majPath, nil
+	if maj == 0 {
+		// Return 1 as the major version for all v0 or v1 majPaths.
+		maj = 1
+	}
+	return majPath, maj, nil
 }

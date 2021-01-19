@@ -1220,8 +1220,7 @@ func TestServerErrors(t *testing.T) {
 		}
 	}
 
-	_, handler, _ := newTestServer(t, nil, internal.ExperimentNotAtV1)
-	_, handlerNoExp, _ := newTestServer(t, nil)
+	_, handler, _ := newTestServer(t, nil)
 
 	for _, test := range []struct {
 		name, path, flash string
@@ -1236,12 +1235,6 @@ func TestServerErrors(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			w := httptest.NewRecorder()
 			handler.ServeHTTP(w, httptest.NewRequest("GET", test.path, nil))
-			if w.Code != test.wantCode {
-				t.Errorf("%q: got status code = %d, want %d", test.path, w.Code, test.wantCode)
-			}
-
-			w2 := httptest.NewRecorder()
-			handlerNoExp.ServeHTTP(w2, httptest.NewRequest("GET", test.path, nil))
 			if test.path == v1modpath || test.path == v1path {
 				test.wantCode = http.StatusNotFound
 			}
