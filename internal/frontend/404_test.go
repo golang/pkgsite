@@ -20,6 +20,7 @@ import (
 
 func TestPreviousFetchStatusAndResponse(t *testing.T) {
 	ctx := context.Background()
+	defer postgres.ResetTestDB(testDB, t)
 
 	for _, mod := range []struct {
 		path      string
@@ -34,6 +35,7 @@ func TestPreviousFetchStatusAndResponse(t *testing.T) {
 		{"github.com/alternative/ok", "github.com/vanity", 491},
 		{"github.com/alternative/ok/path", "", 404},
 		{"github.com/alternative/bad", "vanity", 491},
+		{"github.com/kubernetes/client-go", "k8s.io/client-go", 491},
 		{"bad.mod/foo/bar", "", 490},
 		{"bad.mod/foo", "", 404},
 		{"bad.mod", "", 490},
@@ -71,7 +73,7 @@ func TestPreviousFetchStatusAndResponse(t *testing.T) {
 		{"mod to reprocess", "reprocess.mod/foo", 404},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			fr, err := previousFetchStatusAndResponse(ctx, testDB, test.path, internal.LatestVersion)
+			fr, err := previousFetchStatusAndResponse(ctx, testDB, test.path, internal.UnknownModulePath, internal.LatestVersion)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -84,11 +86,11 @@ func TestPreviousFetchStatusAndResponse(t *testing.T) {
 	for _, test := range []struct {
 		name, path string
 	}{
-		{"path never fetched", "github.com/nonexistent"},
+		{"path never fetched", "github.com/non/existent"},
 		{"path never fetched, but top level mod fetched", "mvdan.cc/sh/v3"},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			_, err := previousFetchStatusAndResponse(ctx, testDB, test.path, internal.LatestVersion)
+			_, err := previousFetchStatusAndResponse(ctx, testDB, test.path, internal.UnknownModulePath, internal.LatestVersion)
 			if !errors.Is(err, derrors.NotFound) {
 				t.Errorf("got %v; want %v", err, derrors.NotFound)
 			}
@@ -96,8 +98,67 @@ func TestPreviousFetchStatusAndResponse(t *testing.T) {
 	}
 }
 
+func TestPreviousFetchStatusAndResponse_AlternativeModuleWithDeepLinking(t *testing.T) {
+	ctx := context.Background()
+	defer postgres.ResetTestDB(testDB, t)
+
+	for _, mod := range []struct {
+		path      string
+		goModPath string
+		status    int
+	}{
+		{"k8s.io/client-go", "k8s.io/client-go", 200},
+		{"github.com/kubernetes/client-go", "k8s.io/client-go", 491},
+	} {
+		goModPath := mod.goModPath
+		if goModPath == "" {
+			goModPath = mod.path
+		}
+		if err := testDB.UpsertVersionMap(ctx, &internal.VersionMap{
+			ModulePath:       mod.path,
+			RequestedVersion: internal.LatestVersion,
+			ResolvedVersion:  sample.VersionString,
+			Status:           mod.status,
+			GoModPath:        goModPath,
+		}); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	for _, test := range []struct {
+		name, path, mod string
+		status          int
+	}{
+		{"path with specified module", "github.com/kubernetes/client-go/informers/admissionregistration/v1", "github.com/kubernetes/client-go", 491},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			fr, err := previousFetchStatusAndResponse(ctx, testDB, test.path, test.mod, internal.LatestVersion)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if fr.status != test.status {
+				t.Errorf("got %v; want %v", fr.status, test.status)
+			}
+		})
+	}
+	for _, test := range []struct {
+		name, path, mod string
+	}{
+		{"path with unknown module", "github.com/kubernetes/client-go/informers/admissionregistration/v1", internal.UnknownModulePath},
+		{"module nonexistent module", "github.com/kubernetes/client-go/typo", "github.com/kubernetes/client-go/typo"},
+		{"path with specified nonexistent module", "github.com/kubernetes/client-go/typo/informers/admissionregistration/v1", "github.com/kubernetes/client-go/typo"},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			if _, err := previousFetchStatusAndResponse(ctx, testDB, test.path, test.mod, internal.LatestVersion); !errors.Is(err, derrors.NotFound) {
+				t.Fatal(err)
+			}
+		})
+	}
+}
+
 func TestPreviousFetchStatusAndResponse_PathExistsAtNonV1(t *testing.T) {
 	ctx := context.Background()
+	defer postgres.ResetTestDB(testDB, t)
 
 	if err := testDB.InsertModule(ctx, sample.Module(sample.ModulePath+"/v4", "v4.0.0", "foo")); err != nil {
 		t.Fatal(err)
@@ -123,7 +184,7 @@ func TestPreviousFetchStatusAndResponse_PathExistsAtNonV1(t *testing.T) {
 	}
 
 	checkPath := func(ctx context.Context, t *testing.T, testDB *postgres.DB, path, version, wantPath string, wantStatus int) {
-		got, err := previousFetchStatusAndResponse(ctx, testDB, path, version)
+		got, err := previousFetchStatusAndResponse(ctx, testDB, path, internal.UnknownModulePath, version)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -156,7 +217,7 @@ func TestPreviousFetchStatusAndResponse_PathExistsAtNonV1(t *testing.T) {
 		{"import path v1 missing version", sample.ModulePath + "/foo", "v1.5.2"},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			_, err := previousFetchStatusAndResponse(ctx, testDB, test.path, test.version)
+			_, err := previousFetchStatusAndResponse(ctx, testDB, test.path, internal.UnknownModulePath, test.version)
 			if !errors.Is(err, derrors.NotFound) {
 				t.Fatal(err)
 			}

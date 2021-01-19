@@ -93,7 +93,7 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 		if !errors.Is(err, derrors.NotFound) {
 			return err
 		}
-		return s.servePathNotFoundPage(w, r, ds, info.fullPath, info.requestedVersion)
+		return s.servePathNotFoundPage(w, r, ds, info.fullPath, info.modulePath, info.requestedVersion)
 	}
 
 	recordVersionTypeMetric(ctx, info.requestedVersion)

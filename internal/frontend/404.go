@@ -38,7 +38,7 @@ var errUnitNotFoundWithoutFetch = &serverError{
 // servePathNotFoundPage serves a 404 page for the requested path, or redirects
 // the user to an appropriate location.
 func (s *Server) servePathNotFoundPage(w http.ResponseWriter, r *http.Request,
-	ds internal.DataSource, fullPath, requestedVersion string) (err error) {
+	ds internal.DataSource, fullPath, modulePath, requestedVersion string) (err error) {
 	defer derrors.Wrap(&err, "servePathNotFoundPage(w, r, %q, %q)", fullPath, requestedVersion)
 
 	db, ok := ds.(*postgres.DB)
@@ -62,7 +62,7 @@ func (s *Server) servePathNotFoundPage(w http.ResponseWriter, r *http.Request,
 		return &serverError{status: http.StatusNotFound}
 	}
 
-	fr, err := previousFetchStatusAndResponse(ctx, db, fullPath, requestedVersion)
+	fr, err := previousFetchStatusAndResponse(ctx, db, fullPath, modulePath, requestedVersion)
 	if err != nil {
 		if err != nil {
 			log.Error(ctx, err)
@@ -73,7 +73,7 @@ func (s *Server) servePathNotFoundPage(w http.ResponseWriter, r *http.Request,
 	case http.StatusFound, derrors.ToStatus(derrors.AlternativeModule):
 		u := constructUnitURL(fr.goModPath, fr.goModPath, internal.LatestVersion)
 		cookie.Set(w, cookie.AlternativeModuleFlash, fullPath, u)
-		http.Redirect(w, r, constructUnitURL(fr.goModPath, fr.goModPath, internal.LatestVersion), http.StatusFound)
+		http.Redirect(w, r, u, http.StatusFound)
 		return
 	case http.StatusInternalServerError:
 		return pathNotFoundError(fullPath, requestedVersion)
@@ -114,22 +114,29 @@ func pathNotFoundError(fullPath, requestedVersion string) error {
 
 // previousFetchStatusAndResponse returns the fetch result from a
 // previous fetch of the fullPath and requestedVersion.
-func previousFetchStatusAndResponse(ctx context.Context, db *postgres.DB, fullPath, requestedVersion string) (_ *fetchResult, err error) {
+func previousFetchStatusAndResponse(ctx context.Context, db *postgres.DB, fullPath, modulePath, requestedVersion string) (_ *fetchResult, err error) {
 	defer derrors.Wrap(&err, "previousFetchStatusAndResponse(w, r, %q, %q)", fullPath, requestedVersion)
 
-	// Check if a row exists in the version_map table for the requested path
-	// and version. If not, this path may have never been fetched.
-	// In that case, a derrors.NotFound will be returned.
-	vm, err := db.GetVersionMap(ctx, fullPath, requestedVersion)
+	// Get all candidate module paths for this path.
+	paths, err := modulePathsToFetch(ctx, db, fullPath, modulePath)
 	if err != nil {
 		return nil, err
 	}
-
-	// If the row has been fetched before, and the result was either a 490 or
-	// 491, return that result, since it is a final state.
-	if vm.Status >= 500 ||
-		vm.Status == derrors.ToStatus(derrors.AlternativeModule) ||
-		vm.Status == derrors.ToStatus(derrors.BadModule) {
+	// Check if a row exists in the version_map table for the longest candidate
+	// path and version.
+	//
+	// If we have not fetched the path before, a derrors.NotFound will be
+	// returned.
+	vm, err := db.GetVersionMap(ctx, paths[0], requestedVersion)
+	if err != nil {
+		return nil, err
+	}
+	// If the row has been fetched before, and the result was either a 490,
+	// 491, or 5xx, return that result, since it is a final state.
+	if vm != nil &&
+		(vm.Status >= 500 ||
+			vm.Status == derrors.ToStatus(derrors.AlternativeModule) ||
+			vm.Status == derrors.ToStatus(derrors.BadModule)) {
 		return resultFromFetchRequest([]*fetchResult{
 			{
 				modulePath: vm.ModulePath,
@@ -164,20 +171,9 @@ func previousFetchStatusAndResponse(ctx context.Context, db *postgres.DB, fullPa
 			status:     http.StatusFound,
 		}, nil
 	}
-
-	// The full path does not exist in our database, but its module might.
-	// This could be be because the path is in an alternative module or a bad
-	// module, or it was fetched previously and 404ed.
-	paths, err := candidateModulePaths(fullPath)
-	if err != nil {
-		return nil, err
-	}
 	vms, err := db.GetVersionMapsNon2xxStatus(ctx, paths, requestedVersion)
 	if err != nil {
 		return nil, err
-	}
-	if len(vms) == 0 {
-		return nil, nil
 	}
 	var fetchResults []*fetchResult
 	for _, vm := range vms {
