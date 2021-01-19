@@ -47,9 +47,12 @@
     scroll-margin-top: calc(var(--header-height) + 0.75rem);
   }
 }
+/*
+TODO(https://golang.org/issue/43773): fix highlight bug.
 .UnitDetails :target:not(h2) {
   background-color: var(--yellow);
 }
+*/
 .UnitDetails-outline {
   display: none;
   height: calc(100vh - 7.8475rem);
