@@ -28,6 +28,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"sync"
 
 	"github.com/google/licensecheck"
 	oldlicensecheck "github.com/google/licensecheck/old"
@@ -264,14 +265,20 @@ func AcceptedLicenses() []AcceptedLicenseInfo {
 	return lics
 }
 
-var scanner *licensecheck.Scanner
+var (
+	_scanner    *licensecheck.Scanner
+	scannerOnce sync.Once
+)
 
-func init() {
-	var err error
-	scanner, err = licensecheck.NewScanner(append(exceptionLicenses, licensecheck.BuiltinLicenses()...))
-	if err != nil {
-		log.Fatalf(context.Background(), "licensecheck.NewScanner: %v", err)
-	}
+func scanner() *licensecheck.Scanner {
+	scannerOnce.Do(func() {
+		var err error
+		_scanner, err = licensecheck.NewScanner(append(exceptionLicenses, licensecheck.BuiltinLicenses()...))
+		if err != nil {
+			log.Fatalf(context.Background(), "licensecheck.NewScanner: %v", err)
+		}
+	})
+	return _scanner
 }
 
 // A Detector detects licenses in a module and its packages.
@@ -483,7 +490,7 @@ func DetectFile(contents []byte, filename string, logf func(string, ...interface
 	if logf == nil {
 		logf = func(string, ...interface{}) {}
 	}
-	cov := scanner.Scan(contents)
+	cov := scanner().Scan(contents)
 	if cov.Percent < float64(coverageThreshold) {
 		logf("%s license coverage too low (%+v), skipping", filename, cov)
 		return []string{unknownLicenseType}, cov
