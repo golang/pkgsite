@@ -869,3 +869,9 @@ type Iface interface {
 
 	u()
 }
+
+type FieldTagFiltered struct {
+	u int
+
+	Name string `tag`
+}

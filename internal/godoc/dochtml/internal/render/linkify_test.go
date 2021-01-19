@@ -16,6 +16,8 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/safehtml"
 	"github.com/google/safehtml/testconversions"
+	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/godoc/internal/doc"
 )
 
@@ -176,10 +178,12 @@ TLSUnique contains the tls-unique channel binding value (see RFC
 }
 
 func TestDeclHTML(t *testing.T) {
+	pkgTime2, fsetTime2 := mustLoadPackage("time") // Needed because DeclHTML changes the AST.
 	for _, test := range []struct {
-		name   string
-		symbol string
-		want   string
+		name        string
+		symbol      string
+		want        string
+		wantRewrite string
 	}{
 		{
 			name:   "const",
@@ -208,6 +212,10 @@ func TestDeclHTML(t *testing.T) {
 </span>	<span class="comment">// contains filtered or unexported fields</span>
 
 }`,
+			wantRewrite: `type Ticker struct {
+<span id="Ticker.C" data-kind="field">	C &lt;-chan <a href="#Time">Time</a> <span class="comment">// The channel on which the ticks are delivered.</span>
+</span>	<span class="comment">// contains filtered or unexported fields</span>
+}`,
 		},
 		{
 			name:   "func",
@@ -229,6 +237,11 @@ func TestDeclHTML(t *testing.T) {
 	<span class="comment">// contains filtered or unexported methods</span>
 
 }`,
+			wantRewrite: `type Iface interface {
+<span id="Iface.M" data-kind="method">	<span class="comment">// Method comment.</span>
+</span>	M()
+	<span class="comment">// contains filtered or unexported methods</span>
+}`,
 		},
 		{
 			name:   "long literal",
@@ -243,6 +256,26 @@ func TestDeclHTML(t *testing.T) {
 	<span class="comment">// contains filtered or unexported fields</span>
 
 }`,
+			wantRewrite: `type TooLongLiteral struct {
+<span id="TooLongLiteral.Name" data-kind="field">	<span class="comment">// The name.</span>
+</span>	Name <a href="/builtin#string">string</a>
+
+<span id="TooLongLiteral.Labels" data-kind="field">	<span class="comment">// The labels.</span>
+</span>	Labels <a href="/builtin#int">int</a> ` + "``" + ` <span class="comment">/* 137-byte string literal not displayed */</span>
+	<span class="comment">// contains filtered or unexported fields</span>
+}`,
+		},
+		{
+			name:   "filtered comment",
+			symbol: "FieldTagFiltered",
+			want: `type FieldTagFiltered struct {
+<span id="FieldTagFiltered.Name" data-kind="field">	Name <a href="/builtin#string">string</a> ` + "`tag`" + ` <span class="comment">// contains filtered or unexported fields</span>
+</span>
+}`,
+			wantRewrite: `type FieldTagFiltered struct {
+<span id="FieldTagFiltered.Name" data-kind="field">	Name <a href="/builtin#string">string</a> ` + "`tag`" + `
+</span>	<span class="comment">// contains filtered or unexported fields</span>
+}`,
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
@@ -250,8 +283,16 @@ func TestDeclHTML(t *testing.T) {
 			r := New(context.Background(), fsetTime, pkgTime, nil)
 			got := r.DeclHTML("", decl).Decl.String()
 			if diff := cmp.Diff(test.want, got); diff != "" {
-				fmt.Println(got)
 				t.Errorf("mismatch (-want +got)\n%s", diff)
+			}
+
+			if test.wantRewrite != "" {
+				r = New(experiment.NewContext(context.Background(), internal.ExperimentRewriteAST), fsetTime2, pkgTime2, nil)
+				decl = declForName(t, pkgTime2, test.symbol)
+				got := r.DeclHTML("", decl).Decl.String()
+				if diff := cmp.Diff(test.wantRewrite, got); diff != "" {
+					t.Errorf("mismatch (-want +got)\n%s", diff)
+				}
 			}
 		})
 	}

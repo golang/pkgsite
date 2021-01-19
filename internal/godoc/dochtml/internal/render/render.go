@@ -15,6 +15,8 @@ import (
 
 	"github.com/google/safehtml"
 	"github.com/google/safehtml/template"
+	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/godoc/internal/doc"
 )
 
@@ -40,6 +42,7 @@ type Renderer struct {
 	docTmpl           *template.Template
 	exampleTmpl       *template.Template
 	links             []Link // Links removed from package overview to be displayed elsewhere.
+	rewriteAST        bool
 }
 
 type Options struct {
@@ -119,6 +122,7 @@ func New(ctx context.Context, fset *token.FileSet, pkg *doc.Package, opts *Optio
 		disablePermalinks: disablePermalinks,
 		docTmpl:           docDataTmpl,
 		exampleTmpl:       exampleTmpl,
+		rewriteAST:        experiment.IsActive(ctx, internal.ExperimentRewriteAST),
 	}
 }
 
