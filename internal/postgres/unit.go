@@ -399,7 +399,6 @@ type dbPath struct {
 	id              int64
 	path            string
 	moduleID        int64
-	v1Path          string
 	name            string
 	licenseTypes    []string
 	licensePaths    []string
@@ -413,7 +412,6 @@ func (db *DB) getPathsInModule(ctx context.Context, modulePath, resolvedVersion 
 		u.id,
 		p.path,
 		u.module_id,
-		u.v1_path,
 		u.name,
 		u.license_types,
 		u.license_paths,
@@ -436,7 +434,7 @@ func (db *DB) getPathsInModule(ctx context.Context, modulePath, resolvedVersion 
 	var paths []*dbPath
 	collect := func(rows *sql.Rows) error {
 		var p dbPath
-		if err := rows.Scan(&p.id, &p.path, &p.moduleID, &p.v1Path, &p.name, pq.Array(&p.licenseTypes),
+		if err := rows.Scan(&p.id, &p.path, &p.moduleID, &p.name, pq.Array(&p.licenseTypes),
 			pq.Array(&p.licensePaths), &p.redistributable); err != nil {
 			return fmt.Errorf("row.Scan(): %v", err)
 		}
