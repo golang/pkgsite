@@ -280,9 +280,10 @@ func resultFromFetchRequest(results []*fetchResult, fullPath, requestedVersion s
 	fr := results[0]
 	if moduleMatchingPathPrefix != "" {
 		t := template.Must(template.New("").Parse(`{{.}}`))
-		h, err := t.ExecuteToHTML(fmt.Sprintf("Package %s could not be found, but you can view module “%s” at <a href='https://pkg.go.dev/%s'>pkg.go.dev/%s</a>.",
+		h, err := t.ExecuteToHTML(fmt.Sprintf(`
+		    <div class="Error-message">%s could not be found.</div>
+		    <div class="Error-message">However, you can view <a href="https://pkg.go.dev/%s">module %s</a>.</div>`,
 			displayPath(fullPath, requestedVersion),
-			displayPath(moduleMatchingPathPrefix, requestedVersion),
 			displayPath(moduleMatchingPathPrefix, requestedVersion),
 			displayPath(moduleMatchingPathPrefix, requestedVersion),
 		))

@@ -171,13 +171,17 @@ func previousFetchStatusAndResponse(ctx context.Context, db *postgres.DB, fullPa
 			status:     http.StatusFound,
 		}, nil
 	}
-	vms, err := db.GetVersionMapsNon2xxStatus(ctx, paths, requestedVersion)
+	vms, err := db.GetVersionMaps(ctx, paths, requestedVersion)
 	if err != nil {
 		return nil, err
 	}
 	var fetchResults []*fetchResult
 	for _, vm := range vms {
-		fetchResults = append(fetchResults, fetchResultFromVersionMap(vm))
+		fr := fetchResultFromVersionMap(vm)
+		fetchResults = append(fetchResults, fr)
+		if vm.Status == http.StatusOK || vm.Status == 290 {
+			fr.err = errPathDoesNotExistInModule
+		}
 	}
 	if len(fetchResults) == 0 {
 		return nil, derrors.NotFound

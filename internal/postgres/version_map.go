@@ -94,9 +94,9 @@ func (db *DB) GetVersionMap(ctx context.Context, modulePath, requestedVersion st
 	}
 }
 
-// GetVersionMapsNon2xxStatus returns all of the version maps for the provided
+// GetVersionMaps returns all of the version maps for the provided
 // path and requested version if they are present.
-func (db *DB) GetVersionMapsNon2xxStatus(ctx context.Context, paths []string, requestedVersion string) (_ []*internal.VersionMap, err error) {
+func (db *DB) GetVersionMaps(ctx context.Context, paths []string, requestedVersion string) (_ []*internal.VersionMap, err error) {
 	defer derrors.Wrap(&err, "DB.GetVersionMapsWith4xxStatus(ctx, %v, %q)", paths, requestedVersion)
 
 	var result []*internal.VersionMap
@@ -117,7 +117,6 @@ func (db *DB) GetVersionMapsNon2xxStatus(ctx context.Context, paths []string, re
 	q, args, err := versionMapSelect().
 		Where("module_path = ANY(?)", pq.Array(paths)).
 		Where(squirrel.Or{squirrel.Eq{"requested_version": requestedVersion}, squirrel.Eq{"resolved_version": requestedVersion}}).
-		Where(squirrel.GtOrEq{"status": 400}).
 		OrderBy("module_path DESC").
 		PlaceholderFormat(squirrel.Dollar).ToSql()
 	if err != nil {

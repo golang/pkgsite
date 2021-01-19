@@ -116,12 +116,14 @@ func TestFetchErrors(t *testing.T) {
 			wantErrorMessage: "Bad Request",
 		},
 		{
-			name:             "module found but package does not exist",
-			modulePath:       testModulePath,
-			fullPath:         "github.com/module/pkg-nonexistent",
-			version:          internal.LatestVersion,
-			want:             http.StatusNotFound,
-			wantErrorMessage: "Package github.com/module/pkg-nonexistent could not be found, but you can view module “github.com/module” at &lt;a href=&#39;https://pkg.go.dev/github.com/module&#39;&gt;pkg.go.dev/github.com/module&lt;/a&gt;.",
+			name:       "module found but package does not exist",
+			modulePath: testModulePath,
+			fullPath:   "github.com/module/pkg-nonexistent",
+			version:    internal.LatestVersion,
+			want:       http.StatusNotFound,
+			wantErrorMessage: `
+		    &lt;div class=&#34;Error-message&#34;&gt;github.com/module/pkg-nonexistent could not be found.&lt;/div&gt;
+		    &lt;div class=&#34;Error-message&#34;&gt;However, you can view &lt;a href=&#34;https://pkg.go.dev/github.com/module&#34;&gt;module github.com/module&lt;/a&gt;.&lt;/div&gt;`,
 		},
 		{
 			name:             "module exists but fetch timed out",
@@ -148,10 +150,9 @@ func TestFetchErrors(t *testing.T) {
 				t.Fatalf("fetchAndPoll(ctx, testDB, q, %q, %q, %q): %d; want = %d",
 					test.modulePath, test.fullPath, test.version, got, test.want)
 			}
-
 			if err != test.wantErrorMessage {
-				t.Fatalf("fetchAndPoll(ctx, testDB, q, %q, %q, %q): %d; wantErrorMessage = %s",
-					test.modulePath, test.fullPath, test.version, got, test.wantErrorMessage)
+				t.Fatalf("fetchAndPoll(ctx, testDB, q, %q, %q, %q): %d;\ngot = \n%q,\nwantErrorMessage = \n%q",
+					test.modulePath, test.fullPath, test.version, got, err, test.wantErrorMessage)
 			}
 		})
 	}
