@@ -71,7 +71,9 @@ func structScannerForType(t reflect.Type) func(p interface{}) []interface{} {
 			p := v.Field(info.num).Addr().Interface()
 			switch info.kind {
 			case reflect.Slice:
-				p = pq.Array(p)
+				if _, ok := p.(*[]byte); !ok {
+					p = pq.Array(p)
+				}
 			case reflect.Ptr:
 				p = NullPtr(p)
 			default:

@@ -19,6 +19,7 @@ type testStruct struct {
 	Score int
 	Slice []int64
 	Ptr   *int64
+	Bytes []byte
 }
 
 func TestNullPtr(t *testing.T) {
@@ -56,7 +57,8 @@ func TestStructScanner(t *testing.T) {
 	if err := args[3].(nullPtr).Scan(int64(9)); err != nil {
 		t.Fatal(err)
 	}
-	want := testStruct{"foo", 3, []int64{1, 2, 3}, intptr(9)}
+	*args[4].(*[]byte) = []byte("abc")
+	want := testStruct{"foo", 3, []int64{1, 2, 3}, intptr(9), []byte("abc")}
 	if !cmp.Equal(s, want) {
 		t.Errorf("got %+v, want %+v", s, want)
 	}
@@ -72,32 +74,33 @@ func TestCollectStructs(t *testing.T) {
 	}
 	_, err := testDB.Exec(ctx, `
 		CREATE TABLE structs (
-			name text NOT NULL,
-			score integer NOT NULL,
-			slice integer[],
-			nullable integer
+			name     text NOT NULL,
+			score    integer NOT NULL,
+			slice    integer[],
+			nullable integer,
+			bytes    bytea
 		)`)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := testDB.BulkInsert(ctx, "structs", []string{"name", "score", "slice", "nullable"}, []interface{}{
-		"A", 1, pq.Array([]int64(nil)), 7,
-		"B", 2, pq.Array([]int64{1, 2}), -8,
-		"C", 3, pq.Array([]int64{}), nil,
+	if err := testDB.BulkInsert(ctx, "structs", []string{"name", "score", "slice", "nullable", "bytes"}, []interface{}{
+		"A", 1, pq.Array([]int64(nil)), 7, nil,
+		"B", 2, pq.Array([]int64{1, 2}), -8, []byte("abc"),
+		"C", 3, pq.Array([]int64{}), nil, []byte("def"),
 	}, ""); err != nil {
 		t.Fatal(err)
 	}
 
-	query := `SELECT name, score, slice, nullable FROM structs`
+	query := `SELECT name, score, slice, nullable, bytes FROM structs`
 	var got []testStruct
 	if err := testDB.CollectStructs(ctx, &got, query); err != nil {
 		t.Fatal(err)
 	}
 	sort.Slice(got, func(i, j int) bool { return got[i].Name < got[j].Name })
 	want := []testStruct{
-		{"A", 1, nil, intptr(7)},
-		{"B", 2, []int64{1, 2}, intptr(-8)},
-		{"C", 3, []int64{}, nil},
+		{"A", 1, nil, intptr(7), nil},
+		{"B", 2, []int64{1, 2}, intptr(-8), []byte("abc")},
+		{"C", 3, []int64{}, nil, []byte("def")},
 	}
 	if !cmp.Equal(got, want) {
 		t.Errorf("got %+v, want %+v", got, want)
