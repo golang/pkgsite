@@ -5,12 +5,16 @@
 package doc_test
 
 import (
+	"bufio"
 	"bytes"
 	"fmt"
 	"go/ast"
 	"go/format"
 	"go/parser"
 	"go/token"
+	"io"
+	"os"
+	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
@@ -18,475 +22,60 @@ import (
 	"golang.org/x/pkgsite/internal/godoc/internal/doc"
 )
 
-const exampleTestFile = `
-package foo_test
-
-import (
-	"flag"
-	"fmt"
-	"log"
-	"sort"
-	"os/exec"
-)
-
-func ExampleHello() {
-	fmt.Println("Hello, world!")
-	// Output: Hello, world!
-}
-
-func ExampleImport() {
-	out, err := exec.Command("date").Output()
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Printf("The date is %s\n", out)
-}
-
-func ExampleKeyValue() {
-	v := struct {
-		a string
-		b int
-	}{
-		a: "A",
-		b: 1,
-	}
-	fmt.Print(v)
-	// Output: a: "A", b: 1
-}
-
-func ExampleKeyValueImport() {
-	f := flag.Flag{
-		Name: "play",
-	}
-	fmt.Print(f)
-	// Output: Name: "play"
-}
-
-var keyValueTopDecl = struct {
-	a string
-	b int
-}{
-	a: "B",
-	b: 2,
-}
-
-func ExampleKeyValueTopDecl() {
-	fmt.Print(keyValueTopDecl)
-	// Output: a: "B", b: 2
-}
-
-// Person represents a person by name and age.
-type Person struct {
-    Name string
-    Age  int
-}
-
-// String returns a string representation of the Person.
-func (p Person) String() string {
-    return fmt.Sprintf("%s: %d", p.Name, p.Age)
-}
-
-// ByAge implements sort.Interface for []Person based on
-// the Age field.
-type ByAge []Person
-
-// Len returns the number of elements in ByAge.
-func (a (ByAge)) Len() int { return len(a) }
-
-// Swap swaps the elements in ByAge.
-func (a ByAge) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
-func (a ByAge) Less(i, j int) bool { return a[i].Age < a[j].Age }
-
-// people is the array of Person
-var people = []Person{
-	{"Bob", 31},
-	{"John", 42},
-	{"Michael", 17},
-	{"Jenny", 26},
-}
-
-func ExampleSort() {
-    fmt.Println(people)
-    sort.Sort(ByAge(people))
-    fmt.Println(people)
-    // Output:
-    // [Bob: 31 John: 42 Michael: 17 Jenny: 26]
-    // [Michael: 17 Jenny: 26 Bob: 31 John: 42]
-}
-`
-
-var exampleTestCases = []struct {
-	Name, Play, Output string
-}{
-	{
-		Name:   "Hello",
-		Play:   exampleHelloPlay,
-		Output: "Hello, world!\n",
-	},
-	{
-		Name: "Import",
-		Play: exampleImportPlay,
-	},
-	{
-		Name:   "KeyValue",
-		Play:   exampleKeyValuePlay,
-		Output: "a: \"A\", b: 1\n",
-	},
-	{
-		Name:   "KeyValueImport",
-		Play:   exampleKeyValueImportPlay,
-		Output: "Name: \"play\"\n",
-	},
-	{
-		Name:   "KeyValueTopDecl",
-		Play:   exampleKeyValueTopDeclPlay,
-		Output: "a: \"B\", b: 2\n",
-	},
-	{
-		Name:   "Sort",
-		Play:   exampleSortPlay,
-		Output: "[Bob: 31 John: 42 Michael: 17 Jenny: 26]\n[Michael: 17 Jenny: 26 Bob: 31 John: 42]\n",
-	},
-}
-
-const exampleHelloPlay = `package main
-
-import (
-	"fmt"
-)
-
-func main() {
-	fmt.Println("Hello, world!")
-}
-`
-const exampleImportPlay = `package main
-
-import (
-	"fmt"
-	"log"
-	"os/exec"
-)
-
-func main() {
-	out, err := exec.Command("date").Output()
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Printf("The date is %s\n", out)
-}
-`
-
-const exampleKeyValuePlay = `package main
-
-import (
-	"fmt"
-)
-
-func main() {
-	v := struct {
-		a string
-		b int
-	}{
-		a: "A",
-		b: 1,
-	}
-	fmt.Print(v)
-}
-`
-
-const exampleKeyValueImportPlay = `package main
-
-import (
-	"flag"
-	"fmt"
-)
-
-func main() {
-	f := flag.Flag{
-		Name: "play",
-	}
-	fmt.Print(f)
-}
-`
-
-const exampleKeyValueTopDeclPlay = `package main
-
-import (
-	"fmt"
-)
-
-var keyValueTopDecl = struct {
-	a string
-	b int
-}{
-	a: "B",
-	b: 2,
-}
-
-func main() {
-	fmt.Print(keyValueTopDecl)
-}
-`
-
-const exampleSortPlay = `package main
-
-import (
-	"fmt"
-	"sort"
-)
-
-// Person represents a person by name and age.
-type Person struct {
-	Name string
-	Age  int
-}
-
-// String returns a string representation of the Person.
-func (p Person) String() string {
-	return fmt.Sprintf("%s: %d", p.Name, p.Age)
-}
-
-// ByAge implements sort.Interface for []Person based on
-// the Age field.
-type ByAge []Person
-
-// Len returns the number of elements in ByAge.
-func (a ByAge) Len() int { return len(a) }
-
-// Swap swaps the elements in ByAge.
-func (a ByAge) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
-func (a ByAge) Less(i, j int) bool { return a[i].Age < a[j].Age }
-
-// people is the array of Person
-var people = []Person{
-	{"Bob", 31},
-	{"John", 42},
-	{"Michael", 17},
-	{"Jenny", 26},
-}
-
-func main() {
-	fmt.Println(people)
-	sort.Sort(ByAge(people))
-	fmt.Println(people)
-}
-`
-
 func TestExamples(t *testing.T) {
-	fset := token.NewFileSet()
-	file, err := parser.ParseFile(fset, "test.go", strings.NewReader(exampleTestFile), parser.ParseComments)
+	dir := filepath.Join("testdata", "examples")
+	filenames, err := filepath.Glob(filepath.Join(dir, "*.go"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	for i, e := range doc.Examples(file) {
-		c := exampleTestCases[i]
-		if e.Name != c.Name {
-			t.Errorf("got Name == %q, want %q", e.Name, c.Name)
-		}
-		if w := c.Play; w != "" {
-			g := formatFile(t, fset, e.Play)
-			if g != w {
-				t.Errorf("%s: got Play == %q, want %q", c.Name, g, w)
+	for _, filename := range filenames {
+		t.Run(filepath.Base(filename), func(t *testing.T) {
+			fset := token.NewFileSet()
+			astFile, err := parser.ParseFile(fset, filename, nil, parser.ParseComments)
+			if err != nil {
+				t.Fatal(err)
 			}
-		}
-		if g, w := e.Output, c.Output; g != w {
-			t.Errorf("%s: got Output == %q, want %q", c.Name, g, w)
-		}
-	}
-}
-
-const exampleWholeFile = `package foo_test
-
-type X int
-
-func (X) Foo() {
-}
-
-func (X) TestBlah() {
-}
-
-func (X) BenchmarkFoo() {
-}
-
-func Example() {
-	fmt.Println("Hello, world!")
-	// Output: Hello, world!
-}
-`
-
-const exampleWholeFileOutput = `package main
-
-type X int
-
-func (X) Foo() {
-}
-
-func (X) TestBlah() {
-}
-
-func (X) BenchmarkFoo() {
-}
-
-func main() {
-	fmt.Println("Hello, world!")
-}
-`
-const exampleWholeFileFunction = `package foo_test
-
-func Foo(x int) {
-}
-
-func Example() {
-	fmt.Println("Hello, world!")
-	// Output: Hello, world!
-}
-`
-
-const exampleWholeFileFunctionOutput = `package main
-
-func Foo(x int) {
-}
-
-func main() {
-	fmt.Println("Hello, world!")
-}
-`
-
-var exampleWholeFileTestCases = []struct {
-	Title, Source, Play, Output string
-}{
-	{
-		"Methods",
-		exampleWholeFile,
-		exampleWholeFileOutput,
-		"Hello, world!\n",
-	},
-	{
-		"Function",
-		exampleWholeFileFunction,
-		exampleWholeFileFunctionOutput,
-		"Hello, world!\n",
-	},
-}
-
-func TestExamplesWholeFile(t *testing.T) {
-	for _, c := range exampleWholeFileTestCases {
-		fset := token.NewFileSet()
-		file, err := parser.ParseFile(fset, "test.go", strings.NewReader(c.Source), parser.ParseComments)
-		if err != nil {
-			t.Fatal(err)
-		}
-		es := doc.Examples(file)
-		if len(es) != 1 {
-			t.Fatalf("%s: wrong number of examples; got %d want 1", c.Title, len(es))
-		}
-		e := es[0]
-		if e.Name != "" {
-			t.Errorf("%s: got Name == %q, want %q", c.Title, e.Name, "")
-		}
-		if g, w := formatFile(t, fset, e.Play), c.Play; g != w {
-			t.Errorf("%s: got Play == %q, want %q", c.Title, g, w)
-		}
-		if g, w := e.Output, c.Output; g != w {
-			t.Errorf("%s: got Output == %q, want %q", c.Title, g, w)
-		}
-	}
-}
-
-const exampleInspectSignature = `package foo_test
-
-import (
-	"bytes"
-	"io"
-)
-
-func getReader() io.Reader { return nil }
-
-func do(b bytes.Reader) {}
-
-func Example() {
-	getReader()
-	do()
-	// Output:
-}
-
-func ExampleIgnored() {
-}
-`
-
-const exampleInspectSignatureOutput = `package main
-
-import (
-	"bytes"
-	"io"
-)
-
-func getReader() io.Reader { return nil }
-
-func do(b bytes.Reader) {}
-
-func main() {
-	getReader()
-	do()
-}
-`
-
-func TestExampleInspectSignature(t *testing.T) {
-	// Verify that "bytes" and "io" are imported. See issue #28492.
-	fset := token.NewFileSet()
-	file, err := parser.ParseFile(fset, "test.go", strings.NewReader(exampleInspectSignature), parser.ParseComments)
-	if err != nil {
-		t.Fatal(err)
-	}
-	es := doc.Examples(file)
-	if len(es) != 2 {
-		t.Fatalf("wrong number of examples; got %d want 2", len(es))
-	}
-	// We are interested in the first example only.
-	e := es[0]
-	if e.Name != "" {
-		t.Errorf("got Name == %q, want %q", e.Name, "")
-	}
-	if g, w := formatFile(t, fset, e.Play), exampleInspectSignatureOutput; g != w {
-		t.Errorf("got Play == %q, want %q", g, w)
-	}
-	if g, w := e.Output, ""; g != w {
-		t.Errorf("got Output == %q, want %q", g, w)
-	}
-}
-
-const exampleEmpty = `
-package p
-func Example() {}
-func Example_a()
-`
-
-const exampleEmptyOutput = `package main
-
-func main() {}
-func main()
-`
-
-func TestExampleEmpty(t *testing.T) {
-	fset := token.NewFileSet()
-	file, err := parser.ParseFile(fset, "test.go", strings.NewReader(exampleEmpty), parser.ParseComments)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	es := doc.Examples(file)
-	if len(es) != 1 {
-		t.Fatalf("wrong number of examples; got %d want 1", len(es))
-	}
-	e := es[0]
-	if e.Name != "" {
-		t.Errorf("got Name == %q, want %q", e.Name, "")
-	}
-	if g, w := formatFile(t, fset, e.Play), exampleEmptyOutput; g != w {
-		t.Errorf("got Play == %q, want %q", g, w)
-	}
-	if g, w := e.Output, ""; g != w {
-		t.Errorf("got Output == %q, want %q", g, w)
+			goldenFilename := strings.TrimSuffix(filename, ".go") + ".golden"
+			golden, err := readSectionFile(goldenFilename)
+			if err != nil {
+				t.Fatal(err)
+			}
+			examples := map[string]*doc.Example{}
+			unseen := map[string]bool{} // examples we haven't seen yet
+			for _, e := range doc.Examples(astFile) {
+				examples[e.Name] = e
+				unseen[e.Name] = true
+			}
+			for section, want := range golden {
+				words := strings.Split(section, ".")
+				if len(words) != 2 {
+					t.Fatalf("bad section name %q", section)
+				}
+				name, kind := words[0], words[1]
+				ex := examples[name]
+				if ex == nil {
+					t.Fatalf("no example named %q", name)
+				}
+				switch kind {
+				case "Play":
+					got := strings.TrimSpace(formatFile(t, fset, ex.Play))
+					if got != want {
+						t.Errorf("%s Play: got\n%s\n---- want ----\n%s", ex.Name, got, want)
+					}
+					delete(unseen, name)
+				case "Output":
+					got := strings.TrimSpace(ex.Output)
+					if got != want {
+						t.Errorf("%s Output: got\n%q\n---- want ----\n%q", ex.Name, got, want)
+					}
+				default:
+					t.Fatalf("bad section kind %q", kind)
+				}
+			}
+			for name := range unseen {
+				t.Errorf("no Play golden for example %q", name)
+			}
+		})
 	}
 }
 
@@ -715,4 +304,86 @@ func mustParse(fset *token.FileSet, filename, src string) *ast.File {
 		panic(err)
 	}
 	return f
+}
+
+// readSectionFile reads a file that is divided into sections, and returns
+// a map from section name to contents.
+//
+// A section begins with a line starting with at least four hyphens. Any number
+// of additional hyphens may follow. After the last hyphen is the section name,
+// which may be followed by more hyphens. The contents of the section are the
+// lines that follow, until the next section start or EOF. For example, here is
+// a section with name Foo and contents "hello":
+//
+//    ---- Foo
+//    hello
+//
+// Lines before the first section are ignored.
+//
+// There is no way to represent a section that contains a line beginning with
+// four or more hyphens.
+func readSectionFile(filename string) (map[string]string, error) {
+	f, err := os.Open(filename)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+	return readSections(filename, f)
+}
+
+func readSections(filename string, r io.Reader) (map[string]string, error) {
+	scan := bufio.NewScanner(r)
+	sections := map[string]string{}
+	var name string
+	var lines []string
+	for scan.Scan() {
+		line := scan.Text()
+		if strings.HasPrefix(line, "----") {
+			if name != "" {
+				sections[name] = strings.Join(lines, "\n")
+				lines = nil
+			}
+			name = strings.Trim(line, "- \t")
+			if name == "" {
+				return nil, fmt.Errorf("%s: empty name on line: %q", filename, line)
+			}
+			if _, ok := sections[name]; ok {
+				return nil, fmt.Errorf("%s: duplicate section name %q", filename, name)
+			}
+		} else if name != "" {
+			lines = append(lines, line)
+		}
+	}
+	if err := scan.Err(); err != nil {
+		return nil, fmt.Errorf("%s: %w", filename, err)
+	}
+	if name != "" {
+		sections[name] = strings.Join(lines, "\n")
+	}
+	return sections, nil
+}
+
+const sectionFileContents = `
+---- S1 ----
+hello, world
+---------------- empty ----------------
+---- S2
+two
+lines
+`
+
+func TestReadSections(t *testing.T) {
+	r := strings.NewReader(sectionFileContents)
+	got, err := readSections("test", r)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := map[string]string{
+		"S1":    "hello, world",
+		"S2":    "two\nlines",
+		"empty": "",
+	}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("got %v, want %v", got, want)
+	}
 }

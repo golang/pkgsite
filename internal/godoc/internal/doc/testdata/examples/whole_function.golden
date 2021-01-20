@@ -1,0 +1,13 @@
+---------------- .Play
+package main
+
+import "fmt"
+
+func Foo(x int) {
+}
+
+func main() {
+	fmt.Println("Hello, world!")
+}
+---------------- .Output
+Hello, world!
