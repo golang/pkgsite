@@ -9,7 +9,6 @@ const (
 	ExperimentDirectoryTree        = "directory-tree"
 	ExperimentNotAtLatest          = "not-at-latest"
 	ExperimentRedirectedFromBanner = "redirected-from-banner"
-	ExperimentRewriteAST           = "rewrite-ast"
 )
 
 // Experiments represents all of the active experiments in the codebase and
@@ -18,7 +17,6 @@ var Experiments = map[string]string{
 	ExperimentDirectoryTree:        "Enable the directory tree layout on the unit page.",
 	ExperimentNotAtLatest:          "Enable the display of a 'not at latest' badge.",
 	ExperimentRedirectedFromBanner: "Display banner with path that request was redirected from.",
-	ExperimentRewriteAST:           "Rewrite AST for long literals when rendering doc instead of adding comments.",
 }
 
 // Experiment holds data associated with an experimental feature for frontend

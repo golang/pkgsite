@@ -377,20 +377,15 @@ func (r *Renderer) formatDeclHTML(decl ast.Decl, idr *identifierResolver) safeht
 	})
 
 	// Trim large string literals and composite literals.
-	var (
-		b bytes.Buffer
-		n interface{}
+	const (
+		maxStringSize = 125
+		maxElements   = 100
 	)
-	if r.rewriteAST {
-		n = rewriteDecl(decl, 125, 100)
-	} else {
-		v := &declVisitor{}
-		ast.Walk(v, decl)
-		n = &printer.CommentedNode{Node: decl, Comments: v.Comments}
-	}
+	decl = rewriteDecl(decl, maxStringSize, maxElements)
 	// Format decl as Go source code file.
 	p := printer.Config{Mode: printer.UseSpaces | printer.TabIndent, Tabwidth: 4}
-	p.Fprint(&b, r.fset, n)
+	var b bytes.Buffer
+	p.Fprint(&b, r.fset, decl)
 	src := b.Bytes()
 	fset := token.NewFileSet()
 	file := fset.AddFile("", fset.Base(), b.Len())
@@ -493,84 +488,65 @@ scan:
 
 var anchorTemplate = template.Must(template.New("anchor").Parse(`<span id="{{.ID}}" data-kind="{{.Kind}}">`))
 
-// declVisitor is an ast.Visitor that trims
-// large string literals and composite literals.
-type declVisitor struct {
-	// Comments is a collection of existing documentation in the ast.Decl,
-	// with additional comments to indicate when a part of the original
-	// code is not displayed.
-	Comments []*ast.CommentGroup
+// rewriteDecl rewrites n by removing strings longer than maxStringSize and
+// composite literals longer than maxElements.
+func rewriteDecl(n ast.Decl, maxStringSize, maxElements int) ast.Decl {
+	v := &rewriteVisitor{maxStringSize, maxElements}
+	ast.Walk(v, n)
+	return n
 }
 
-type afterVisitor struct {
-	v ast.Visitor
-	f func()
+type rewriteVisitor struct {
+	maxStringSize, maxElements int
 }
 
-func (v *afterVisitor) Visit(n ast.Node) ast.Visitor {
-	if n == nil {
-		v.f()
-	}
-	return v.v
-}
-
-// Visit implements ast.Visitor.
-func (v *declVisitor) Visit(n ast.Node) ast.Visitor {
-
-	addComment := func(pos token.Pos, text string) {
-		v.Comments = append(v.Comments,
-			&ast.CommentGroup{List: []*ast.Comment{{
-				Slash: pos,
-				Text:  text,
-			}}})
-	}
-
+func (v *rewriteVisitor) Visit(n ast.Node) ast.Visitor {
 	switch n := n.(type) {
-	case *ast.BasicLit:
-		if n.Kind == token.STRING && len(n.Value) > 128 {
-			addComment(n.Pos(), stringBasicLitSize(n.Value))
-			n.Value = `""`
+	case *ast.ValueSpec:
+		for _, val := range n.Values {
+			v.rewriteLongValue(val, &n.Comment)
 		}
-	case *ast.CompositeLit:
-		if len(n.Elts) > 100 {
-			addComment(n.Lbrace, fmt.Sprintf("/* %d elements not displayed */", len(n.Elts)))
-			n.Elts = n.Elts[:0]
+	case *ast.Field:
+		if n.Tag != nil {
+			v.rewriteLongValue(n.Tag, &n.Comment)
 		}
-
-	case *ast.StructType:
-		if n.Incomplete && n.Fields != nil {
-			return &afterVisitor{v, func() {
-				addComment(n.Fields.Closing-1, "// contains filtered or unexported fields")
-			}}
-		}
-
-	case *ast.InterfaceType:
-		if n.Incomplete && n.Methods != nil {
-			return &afterVisitor{v, func() {
-				addComment(n.Methods.Closing-1, "// contains filtered or unexported methods")
-			}}
-		}
-
-	case *ast.CommentGroup:
-		v.Comments = append(v.Comments, n) // Preserve existing documentation in the ast.Decl.
-		return nil                         // No need to visit individual comments of the comment group.
 	}
 	return v
 }
 
-// stringBasicLitSize computes the number of bytes in the given string basic literal.
-//
-// See noder.basicLit and syntax.StringLit cases in cmd/compile/internal/gc/noder.go.
-func stringBasicLitSize(s string) string {
-	if len(s) > 0 && s[0] == '`' {
-		// strip carriage returns from raw string
-		s = strings.ReplaceAll(s, "\r", "")
+func (v *rewriteVisitor) rewriteLongValue(n ast.Node, pcg **ast.CommentGroup) {
+	switch n := n.(type) {
+	case *ast.BasicLit:
+		if n.Kind != token.STRING {
+			return
+		}
+		size := len(n.Value) - 2 // subtract quotation marks
+		if size <= v.maxStringSize {
+			return
+		}
+		addComment(pcg, n.ValuePos, fmt.Sprintf("/* %d-byte string literal not displayed */", size))
+		if len(n.Value) == 0 {
+			// Impossible, but avoid the panic just in case.
+			return
+		}
+		if quote := n.Value[0]; quote == '`' {
+			n.Value = "``"
+		} else {
+			n.Value = `""`
+		}
+	case *ast.CompositeLit:
+		if len(n.Elts) > v.maxElements {
+			addComment(pcg, n.Lbrace, fmt.Sprintf("/* %d elements not displayed */", len(n.Elts)))
+			n.Elts = n.Elts[:0]
+		}
 	}
-	u, err := strconv.Unquote(s)
-	if err != nil {
-		return fmt.Sprintf("/* invalid %d byte string literal not displayed */", len(s))
+}
+
+func addComment(cg **ast.CommentGroup, pos token.Pos, text string) {
+	if *cg == nil {
+		*cg = &ast.CommentGroup{}
 	}
-	return fmt.Sprintf("/* %d byte string literal not displayed */", len(u))
+	(*cg).List = append((*cg).List, &ast.Comment{Slash: pos, Text: text})
 }
 
 // An idKind holds an anchor ID and the kind of the identifier being anchored.
@@ -711,65 +687,4 @@ func generateAnchorLinks(idr *identifierResolver, decl ast.Decl) map[*ast.Ident]
 		return true
 	})
 	return m
-}
-
-// rewriteDecl rewrites n by removing strings longer than maxStringSize and
-// composite literals longer than maxElements.
-func rewriteDecl(n ast.Decl, maxStringSize, maxElements int) ast.Decl {
-	v := &rewriteVisitor{maxStringSize, maxElements}
-	ast.Walk(v, n)
-	return n
-}
-
-type rewriteVisitor struct {
-	maxStringSize, maxElements int
-}
-
-func (v *rewriteVisitor) Visit(n ast.Node) ast.Visitor {
-	switch n := n.(type) {
-	case *ast.ValueSpec:
-		for _, val := range n.Values {
-			v.rewriteLongValue(val, &n.Comment)
-		}
-	case *ast.Field:
-		if n.Tag != nil {
-			v.rewriteLongValue(n.Tag, &n.Comment)
-		}
-	}
-	return v
-}
-
-func (v *rewriteVisitor) rewriteLongValue(n ast.Node, pcg **ast.CommentGroup) {
-	switch n := n.(type) {
-	case *ast.BasicLit:
-		if n.Kind != token.STRING {
-			return
-		}
-		size := len(n.Value) - 2 // subtract quotation marks
-		if size <= v.maxStringSize {
-			return
-		}
-		addComment(pcg, n.ValuePos, fmt.Sprintf("/* %d-byte string literal not displayed */", size))
-		if len(n.Value) == 0 {
-			// Impossible, but avoid the panic just in case.
-			return
-		}
-		if quote := n.Value[0]; quote == '`' {
-			n.Value = "``"
-		} else {
-			n.Value = `""`
-		}
-	case *ast.CompositeLit:
-		if len(n.Elts) > v.maxElements {
-			addComment(pcg, n.Lbrace, fmt.Sprintf("/* %d elements not displayed */", len(n.Elts)))
-			n.Elts = n.Elts[:0]
-		}
-	}
-}
-
-func addComment(cg **ast.CommentGroup, pos token.Pos, text string) {
-	if *cg == nil {
-		*cg = &ast.CommentGroup{}
-	}
-	(*cg).List = append((*cg).List, &ast.Comment{Slash: pos, Text: text})
 }
