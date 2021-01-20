@@ -30,7 +30,7 @@ import (
 	"golang.org/x/pkgsite/internal/testing/sample"
 )
 
-const testTimeout = 60 * time.Second
+const testTimeout = 120 * time.Second
 
 var (
 	testDB     *postgres.DB
