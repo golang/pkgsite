@@ -189,7 +189,7 @@ func main() {
 	}
 	mw := middleware.Chain(
 		middleware.RequestLog(cmdconfig.Logger(ctx, cfg, "frontend-log")),
-		middleware.AcceptRequests(http.MethodGet, http.MethodPost), // accept only GETs and POSTs
+		middleware.AcceptRequests(http.MethodGet, http.MethodPost, http.MethodHead), // accept only GETs, POSTs and HEADs
 		middleware.Quota(cfg.Quota, cacheClient),
 		middleware.GodocURL(), // potentially redirects so should be early in chain
 		middleware.RedirectedFrom(),

@@ -122,7 +122,7 @@ const (
 // /search?q=<query>. If <query> is an exact match for a package path, the user
 // will be redirected to the details page.
 func (s *Server) serveSearch(w http.ResponseWriter, r *http.Request, ds internal.DataSource) error {
-	if r.Method != http.MethodGet {
+	if r.Method != http.MethodGet && r.Method != http.MethodHead {
 		return &serverError{status: http.StatusMethodNotAllowed}
 	}
 	db, ok := ds.(*postgres.DB)

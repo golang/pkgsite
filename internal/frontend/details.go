@@ -25,7 +25,7 @@ import (
 func (s *Server) serveDetails(w http.ResponseWriter, r *http.Request, ds internal.DataSource) (err error) {
 	defer middleware.ElapsedStat(r.Context(), "serveDetails")()
 
-	if r.Method != http.MethodGet {
+	if r.Method != http.MethodGet && r.Method != http.MethodHead {
 		return &serverError{status: http.StatusMethodNotAllowed}
 	}
 	if r.URL.Path == "/" {
