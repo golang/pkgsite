@@ -19,6 +19,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"golang.org/x/pkgsite/internal/godoc/internal/doc"
 )
 
@@ -42,7 +43,7 @@ func TestExamples(t *testing.T) {
 			}
 			examples := map[string]*doc.Example{}
 			unseen := map[string]bool{} // examples we haven't seen yet
-			for _, e := range doc.Examples(astFile) {
+			for _, e := range doc.Examples(fset, astFile) {
 				examples[e.Name] = e
 				unseen[e.Name] = true
 			}
@@ -59,8 +60,8 @@ func TestExamples(t *testing.T) {
 				switch kind {
 				case "Play":
 					got := strings.TrimSpace(formatFile(t, fset, ex.Play))
-					if got != want {
-						t.Errorf("%s Play: got\n%s\n---- want ----\n%s", ex.Name, got, want)
+					if diff := cmp.Diff(want, got); diff != "" {
+						t.Errorf("mismatch (-want, +got):\n%s", diff)
 					}
 					delete(unseen, name)
 				case "Output":

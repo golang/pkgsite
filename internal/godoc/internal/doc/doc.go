@@ -209,7 +209,7 @@ func NewFromFiles(fset *token.FileSet, files []*ast.File, importPath string, opt
 	// Compute package documentation.
 	pkg, _ := ast.NewPackage(fset, goFiles, simpleImporter, nil) // Ignore errors that can happen due to unresolved identifiers.
 	p := New(pkg, importPath, mode)
-	classifyExamples(p, Examples(testGoFiles...))
+	classifyExamples(p, Examples(fset, testGoFiles...))
 	return p, nil
 }
 

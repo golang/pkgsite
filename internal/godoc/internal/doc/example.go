@@ -47,7 +47,7 @@ type Example struct {
 //     example function, zero test or benchmark functions, and at least one
 //     top-level function, type, variable, or constant declaration other
 //     than the example function.
-func Examples(testFiles ...*ast.File) []*Example {
+func Examples(fset *token.FileSet, testFiles ...*ast.File) []*Example {
 	var list []*Example
 	for _, file := range testFiles {
 		hasTests := false // file contains tests or benchmarks
@@ -86,7 +86,7 @@ func Examples(testFiles ...*ast.File) []*Example {
 				Name:        name[len("Example"):],
 				Doc:         doc,
 				Code:        f.Body,
-				Play:        playExample(file, f),
+				Play:        playExample(fset, file, f),
 				Comments:    file.Comments,
 				Output:      output,
 				Unordered:   unordered,
@@ -149,9 +149,9 @@ func isTest(name, prefix string) bool {
 
 // playExample synthesizes a new *ast.File based on the provided
 // file with the provided function body as the body of main.
-func playExample(file *ast.File, f *ast.FuncDecl) *ast.File {
+func playExample(fset *token.FileSet, file *ast.File, f *ast.FuncDecl) *ast.File {
 	body := f.Body
-
+	tokenFile := fset.File(file.Package)
 	if !strings.HasSuffix(file.Name.Name, "_test") {
 		// We don't support examples that are part of the
 		// greater package (yet).
@@ -243,7 +243,6 @@ func playExample(file *ast.File, f *ast.FuncDecl) *ast.File {
 				switch s := spec.(type) {
 				case *ast.TypeSpec:
 					ast.Inspect(s.Type, inspectFunc)
-
 					depDecls = append(depDecls, typMethods[s.Name.Name]...)
 				case *ast.ValueSpec:
 					if s.Type != nil {
@@ -336,20 +335,7 @@ func playExample(file *ast.File, f *ast.FuncDecl) *ast.File {
 		}
 	}
 
-	// Synthesize import declaration.
-	importDecl := &ast.GenDecl{
-		Tok:    token.IMPORT,
-		Lparen: 1, // Need non-zero Lparen and Rparen so that printer
-		Rparen: 1, // treats this as a factored import.
-	}
-	for n, p := range namedImports {
-		s := &ast.ImportSpec{Path: &ast.BasicLit{Value: strconv.Quote(p)}}
-		if path.Base(p) != n {
-			s.Name = ast.NewIdent(n)
-		}
-		importDecl.Specs = append(importDecl.Specs, s)
-	}
-	importDecl.Specs = append(importDecl.Specs, blankImports...)
+	importDecl := synthesizeImportDecl(namedImports, blankImports, tokenFile)
 
 	// Synthesize main function.
 	funcDecl := &ast.FuncDecl{
@@ -377,6 +363,53 @@ func playExample(file *ast.File, f *ast.FuncDecl) *ast.File {
 		Decls:    decls,
 		Comments: comments,
 	}
+}
+
+// synthesizeImportDecl creates the imports for the example. We want the imports
+// divided into two groups, one for the standard library and one for all others.
+// To get ast.SortImports (called by the formatter) to do that, we must assign
+// file positions to the import specs so that there is a blank line between the
+// two groups. The exact positions don't matter, and they don't have to be
+// distinct within a group; ast.SortImports just looks for a gap of more than
+// one line between specs.
+func synthesizeImportDecl(namedImports map[string]string, blankImports []ast.Spec, tfile *token.File) *ast.GenDecl {
+	importDecl := &ast.GenDecl{
+		Tok:    token.IMPORT,
+		Lparen: 1, // Need non-zero Lparen and Rparen so that printer
+		Rparen: 1, // treats this as a factored import.
+	}
+	var stds, others []ast.Spec
+	var stdPos, otherPos token.Pos
+	if tfile.LineCount() >= 3 {
+		stdPos = tfile.LineStart(1)
+		otherPos = tfile.LineStart(3)
+	}
+	for n, p := range namedImports {
+		var (
+			pos   token.Pos
+			specs *[]ast.Spec
+		)
+		if !strings.ContainsRune(p, '.') {
+			pos = stdPos
+			specs = &stds
+		} else {
+			pos = otherPos
+			specs = &others
+		}
+		s := &ast.ImportSpec{
+			Path:   &ast.BasicLit{Value: strconv.Quote(p), ValuePos: pos},
+			EndPos: pos,
+		}
+		if path.Base(p) != n {
+			s.Name = ast.NewIdent(n)
+			s.Name.NamePos = pos
+		}
+		*specs = append(*specs, s)
+	}
+	importDecl.Specs = append(stds, others...)
+	importDecl.Specs = append(importDecl.Specs, blankImports...)
+
+	return importDecl
 }
 
 // playExampleFile takes a whole file example and synthesizes a new *ast.File
