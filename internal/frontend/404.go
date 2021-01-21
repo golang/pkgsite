@@ -64,7 +64,7 @@ func (s *Server) servePathNotFoundPage(w http.ResponseWriter, r *http.Request,
 
 	fr, err := previousFetchStatusAndResponse(ctx, db, fullPath, modulePath, requestedVersion)
 	if err != nil {
-		if err != nil {
+		if !errors.Is(err, derrors.NotFound) {
 			log.Error(ctx, err)
 		}
 		return pathNotFoundError(fullPath, requestedVersion)
