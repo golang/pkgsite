@@ -329,7 +329,7 @@ func newStdlibInfo(version string) (_ *Info, err error) {
 //   example.com/a/b.git/c
 // then repo="example.com/a/b" and relativeModulePath="c"; the ".git" is omitted, since it is neither
 // part of the repo nor part of the relative path to the module within the repo.
-func matchStatic(moduleOrRepoPath string) (repo, relativeModulePath string, _ urlTemplates, transformCommit func(string, bool) string, _ error) {
+func matchStatic(moduleOrRepoPath string) (repo, relativeModulePath string, _ urlTemplates, transformCommit transformCommitFunc, _ error) {
 	for _, pat := range patterns {
 		matches := pat.re.FindStringSubmatch(moduleOrRepoPath)
 		if matches == nil {
@@ -395,7 +395,12 @@ func moduleInfoDynamic(ctx context.Context, client *Client, modulePath, version 
 		var repo string
 		repo, _, templates, transformCommit, _ = matchStatic(removeHTTPScheme(sourceMeta.dirTemplate))
 		if templates == (urlTemplates{}) {
-			log.Infof(ctx, "no templates for repo URL %q from meta tag: err=%v", sourceMeta.repoURL, err)
+			if err == nil {
+				templates, transformCommit = matchLegacyTemplates(ctx, sourceMeta)
+				repoURL = strings.TrimSuffix(repoURL, ".git")
+			} else {
+				log.Infof(ctx, "no templates for repo URL %q from meta tag: err=%v", sourceMeta.repoURL, err)
+			}
 		} else {
 			// Use the repo from the template, not the original one.
 			repoURL = "https://" + repo
@@ -411,6 +416,63 @@ func moduleInfoDynamic(ctx context.Context, client *Client, modulePath, version 
 		moduleDir: dir,
 		commit:    commit,
 		templates: templates,
+	}, nil
+}
+
+// List of template regexps and their corresponding likely templates,
+// used by matchLegacyTemplates below.
+var legacyTemplateMatches = []struct {
+	fileRegexp      *regexp.Regexp
+	templates       urlTemplates
+	transformCommit transformCommitFunc
+}{
+	{
+		regexp.MustCompile(`/src/branch/\w+\{/dir\}/\{file\}#L\{line\}$`),
+		giteaURLTemplates, giteaTransformCommit,
+	},
+	{
+		regexp.MustCompile(`/src/\w+\{/dir\}/\{file\}#L\{line\}$`),
+		giteaURLTemplates, nil,
+	},
+	{
+		regexp.MustCompile(`/-/blob/\w+\{/dir\}/\{file\}#L\{line\}$`),
+		gitlab2URLTemplates, nil,
+	},
+	{
+		regexp.MustCompile(`/tree\{/dir\}/\{file\}#n\{line\}$`),
+		fdioURLTemplates, fdioTransformCommit,
+	},
+}
+
+// matchLegacyTemplates matches the templates from the go-source meta tag
+// against some known patterns to guess the version-aware URL templates. If it
+// can't find a match, it falls back using the go-source templates with some
+// small replacements. These will not be version-aware but will still serve
+// source at a fixed commit, which is better than nothing.
+func matchLegacyTemplates(ctx context.Context, sm *sourceMeta) (_ urlTemplates, transformCommit transformCommitFunc) {
+	if sm.fileTemplate == "" {
+		return urlTemplates{}, nil
+	}
+	for _, ltm := range legacyTemplateMatches {
+		if ltm.fileRegexp.MatchString(sm.fileTemplate) {
+			return ltm.templates, ltm.transformCommit
+		}
+	}
+	log.Infof(ctx, "matchLegacyTemplates: no matches for repo URL %q; replacing", sm.repoURL)
+	rep := strings.NewReplacer(
+		"{/dir}/{file}", "/{file}",
+		"{dir}/{file}", "{file}",
+		"{/dir}", "/{dir}")
+	line := rep.Replace(sm.fileTemplate)
+	file := line
+	if i := strings.LastIndexByte(line, '#'); i > 0 {
+		file = line[:i]
+	}
+	return urlTemplates{
+		Repo:      sm.repoURL,
+		Directory: rep.Replace(sm.dirTemplate),
+		File:      file,
+		Line:      line,
 	}, nil
 }
 
@@ -463,6 +525,8 @@ func removeVersionSuffix(s string) string {
 	return strings.TrimSuffix(dir, "/")
 }
 
+type transformCommitFunc func(commit string, isHash bool) string
+
 // Patterns for determining repo and URL templates from module paths or repo
 // URLs. Each regexp must match a prefix of the target string, and must have a
 // group named "repo".
@@ -471,7 +535,7 @@ var patterns = []struct {
 	templates urlTemplates
 	re        *regexp.Regexp
 	// transformCommit may alter the commit before substitution
-	transformCommit func(commit string, isHash bool) string
+	transformCommit transformCommitFunc
 }{
 	{
 		pattern:   `^(?P<repo>github\.com/[a-z0-9A-Z_.\-]+/[a-z0-9A-Z_.\-]+)`,
@@ -504,30 +568,13 @@ var patterns = []struct {
 		},
 	},
 	{
-		pattern: `^(?P<repo>git\.fd\.io/[a-z0-9A-Z_.\-]+)`,
-		templates: urlTemplates{
-			Directory: "{repo}/tree/{dir}?{commit}",
-			File:      "{repo}/tree/{file}?{commit}",
-			Line:      "{repo}/tree/{file}?{commit}#n{line}",
-			Raw:       "{repo}/plain/{file}?{commit}",
-		},
-		transformCommit: func(commit string, isHash bool) string {
-			// hashes use "?id=", tags use "?h="
-			p := "h"
-			if isHash {
-				p = "id"
-			}
-			return fmt.Sprintf("%s=%s", p, commit)
-		},
+		pattern:         `^(?P<repo>git\.fd\.io/[a-z0-9A-Z_.\-]+)`,
+		templates:       fdioURLTemplates,
+		transformCommit: fdioTransformCommit,
 	},
 	{
-		pattern: `^(?P<repo>git\.pirl\.io/[a-z0-9A-Z_.\-]+/[a-z0-9A-Z_.\-]+)`,
-		templates: urlTemplates{
-			Directory: "{repo}/-/tree/{commit}/{dir}",
-			File:      "{repo}/-/blob/{commit}/{file}",
-			Line:      "{repo}/-/blob/{commit}/{file}#L{line}",
-			Raw:       "{repo}/-/raw/{commit}/{file}",
-		},
+		pattern:   `^(?P<repo>git\.pirl\.io/[a-z0-9A-Z_.\-]+/[a-z0-9A-Z_.\-]+)`,
+		templates: gitlab2URLTemplates,
 	},
 	{
 		pattern:         `^(?P<repo>gitea\.com/[a-z0-9A-Z_.\-]+/[a-z0-9A-Z_.\-]+)(\.git|$)`,
@@ -617,6 +664,15 @@ func giteaTransformCommit(commit string, isHash bool) string {
 	return "tag/" + commit
 }
 
+func fdioTransformCommit(commit string, isHash bool) string {
+	// hashes use "?id=", tags use "?h="
+	p := "h"
+	if isHash {
+		p = "id"
+	}
+	return fmt.Sprintf("%s=%s", p, commit)
+}
+
 // urlTemplates describes how to build URLs from bits of source information.
 // The fields are exported for JSON encoding.
 //
@@ -663,6 +719,18 @@ var (
 		File:      "{repo}/+/{commit}/{file}",
 		Line:      "{repo}/+/{commit}/{file}#{line}",
 		// Gitiles has no support for serving raw content at this time.
+	}
+	gitlab2URLTemplates = urlTemplates{
+		Directory: "{repo}/-/tree/{commit}/{dir}",
+		File:      "{repo}/-/blob/{commit}/{file}",
+		Line:      "{repo}/-/blob/{commit}/{file}#L{line}",
+		Raw:       "{repo}/-/raw/{commit}/{file}",
+	}
+	fdioURLTemplates = urlTemplates{
+		Directory: "{repo}/tree/{dir}?{commit}",
+		File:      "{repo}/tree/{file}?{commit}",
+		Line:      "{repo}/tree/{file}?{commit}#n{line}",
+		Raw:       "{repo}/plain/{file}?{commit}",
 	}
 )
 

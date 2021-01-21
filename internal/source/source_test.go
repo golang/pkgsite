@@ -353,6 +353,42 @@ func TestModuleInfo(t *testing.T) {
 			"https://gotools.org/dmitri.shuralyov.com/gpu/mtl/example/movingtriangle/internal/coreanim?rev=d42048ed14fd#coreanim.go-L1",
 			"",
 		},
+		{
+			"go-source templates match gitea with transform",
+			"opendev.org/airship/airshipctl", "v2.0.0-beta.1", "pkg/cluster/command.go",
+			"https://opendev.org/airship/airshipctl",
+			"https://opendev.org/airship/airshipctl/src/tag/v2.0.0-beta.1",
+			"https://opendev.org/airship/airshipctl/src/tag/v2.0.0-beta.1/pkg/cluster/command.go",
+			"https://opendev.org/airship/airshipctl/src/tag/v2.0.0-beta.1/pkg/cluster/command.go#L1",
+			"",
+		},
+		{
+			"go-source templates match gitea without transform",
+			"git.borago.de/Marco/gqltest", "v0.0.18", "go.mod",
+			"https://git.borago.de/Marco/gqltest",
+			"https://git.borago.de/Marco/gqltest/src/v0.0.18",
+			"https://git.borago.de/Marco/gqltest/src/v0.0.18/go.mod",
+			"https://git.borago.de/Marco/gqltest/src/v0.0.18/go.mod#L1",
+			"https://git.borago.de/Marco/gqltest/raw/v0.0.18/go.mod",
+		},
+		{
+			"go-source templates match gitlab2",
+			"git.pluggableideas.com/destrealm/3rdparty/go-yaml", "v2.2.6", "go.mod",
+			"https://git.pluggableideas.com/destrealm/3rdparty/go-yaml",
+			"https://git.pluggableideas.com/destrealm/3rdparty/go-yaml/-/tree/v2.2.6",
+			"https://git.pluggableideas.com/destrealm/3rdparty/go-yaml/-/blob/v2.2.6/go.mod",
+			"https://git.pluggableideas.com/destrealm/3rdparty/go-yaml/-/blob/v2.2.6/go.mod#L1",
+			"https://git.pluggableideas.com/destrealm/3rdparty/go-yaml/-/raw/v2.2.6/go.mod",
+		},
+		{
+			"go-source templates match fdio",
+			"golang.zx2c4.com/wireguard/windows", "v0.3.4", "go.mod",
+			"https://git.zx2c4.com/wireguard-windows",
+			"https://git.zx2c4.com/wireguard-windows/tree/?h=v0.3.4",
+			"https://git.zx2c4.com/wireguard-windows/tree/go.mod?h=v0.3.4",
+			"https://git.zx2c4.com/wireguard-windows/tree/go.mod?h=v0.3.4#n1",
+			"https://git.zx2c4.com/wireguard-windows/plain/go.mod?h=v0.3.4",
+		},
 	} {
 		t.Run(test.desc, func(t *testing.T) {
 			info, err := ModuleInfo(context.Background(), &Client{client}, test.modulePath, test.version)
@@ -484,12 +520,17 @@ func TestModuleInfoDynamic(t *testing.T) {
 		},
 		{
 			"alice.org/pkg/source",
-			// Has a go-source tag, but we can't use the templates.
+			// Has a go-source tag; we try to use the templates.
 			&Info{
 				repoURL:   "http://alice.org/pkg",
 				moduleDir: "source",
 				commit:    "source/v1.2.3",
-				// empty templates
+				templates: urlTemplates{
+					Repo:      "http://alice.org/pkg",
+					Directory: "http://alice.org/pkg/{dir}",
+					File:      "http://alice.org/pkg/{dir}?f={file}",
+					Line:      "http://alice.org/pkg/{dir}?f={file}#Line{line}",
+				},
 			},
 		},
 
@@ -500,7 +541,12 @@ func TestModuleInfoDynamic(t *testing.T) {
 				repoURL:   "http://alice.org/pkg",
 				moduleDir: "ignore",
 				commit:    "ignore/v1.2.3",
-				// empty templates
+				templates: urlTemplates{
+					Repo:      "http://alice.org/pkg",
+					Directory: "http://alice.org/pkg/{dir}",
+					File:      "http://alice.org/pkg/{dir}?f={file}",
+					Line:      "http://alice.org/pkg/{dir}?f={file}#Line{line}",
+				},
 			},
 		},
 		{"alice.org/pkg/multiple", nil},
@@ -510,7 +556,7 @@ func TestModuleInfoDynamic(t *testing.T) {
 			&Info{
 				// The go-import tag's repo root ends in ".git", but according to the spec
 				// there should not be a .vcs suffix, so we include the ".git" in the repo URL.
-				repoURL:   "https://vcs.net/bob/pkg.git",
+				repoURL:   "https://vcs.net/bob/pkg",
 				moduleDir: "",
 				commit:    "v1.2.3",
 				// empty templates
@@ -519,7 +565,7 @@ func TestModuleInfoDynamic(t *testing.T) {
 		{
 			"bob.com/pkg/sub",
 			&Info{
-				repoURL:   "https://vcs.net/bob/pkg.git",
+				repoURL:   "https://vcs.net/bob/pkg",
 				moduleDir: "sub",
 				commit:    "sub/v1.2.3",
 				// empty templates
@@ -905,5 +951,51 @@ func TestURLTemplates(t *testing.T) {
 		check(p.templates.File, "commit")
 		check(p.templates.Line, "commit", "line")
 		check(p.templates.Raw, "commit", "file")
+	}
+}
+
+func TestMatchLegacyTemplates(t *testing.T) {
+	for _, test := range []struct {
+		sm                     sourceMeta
+		wantTemplates          urlTemplates
+		wantTransformCommitNil bool
+	}{
+		{
+			sm:                     sourceMeta{"", "", "", "https://git.blindage.org/21h/hcloud-dns/src/branch/master{/dir}/{file}#L{line}"},
+			wantTemplates:          giteaURLTemplates,
+			wantTransformCommitNil: false,
+		},
+		{
+			sm:                     sourceMeta{"", "", "", "https://git.lastassault.de/sup/networkoverlap/-/blob/master{/dir}/{file}#L{line}"},
+			wantTemplates:          gitlab2URLTemplates,
+			wantTransformCommitNil: true,
+		},
+		{
+			sm:                     sourceMeta{"", "", "", "https://git.borago.de/Marco/gqltest/src/master{/dir}/{file}#L{line}"},
+			wantTemplates:          giteaURLTemplates,
+			wantTransformCommitNil: true,
+		},
+		{
+			sm:                     sourceMeta{"", "", "", "https://git.zx2c4.com/wireguard-windows/tree{/dir}/{file}#n{line}"},
+			wantTemplates:          fdioURLTemplates,
+			wantTransformCommitNil: false,
+		},
+		{
+			sm: sourceMeta{"", "", "unknown{/dir}", "unknown{/dir}/{file}#L{line}"},
+			wantTemplates: urlTemplates{
+				Repo:      "",
+				Directory: "unknown/{dir}",
+				File:      "unknown/{file}",
+				Line:      "unknown/{file}#L{line}",
+			},
+			wantTransformCommitNil: true,
+		},
+	} {
+		gotTemplates, gotTransformCommit := matchLegacyTemplates(context.Background(), &test.sm)
+		gotNil := gotTransformCommit == nil
+		if gotTemplates != test.wantTemplates || gotNil != test.wantTransformCommitNil {
+			t.Errorf("%+v:\ngot  (%+v, %t)\nwant (%+v, %t)",
+				test.sm, gotTemplates, gotNil, test.wantTemplates, test.wantTransformCommitNil)
+		}
 	}
 }
