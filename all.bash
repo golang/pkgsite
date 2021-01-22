@@ -171,6 +171,15 @@ Available subcommands:
 EOUSAGE
 }
 
+# Packages to run without the race detector on CI.
+# (They time out with -race.)
+declare -A no_race
+no_race=(
+  [golang.org/x/pkgsite/internal/frontend]=1
+  [golang.org/x/pkgsite/internal/worker]=1
+  [golang.org/x/pkgsite/internal/testing/integration]=1
+)
+
 main() {
   case "$1" in
     "-h" | "--help" | "help")
@@ -187,8 +196,15 @@ main() {
     ci)
       # Similar to the no-arg mode, but omit actions that require GCP
       # permissions or that don't test the code.
+      # Also, run the race detector on most tests.
       standard_linters
-      runcmd env GO_DISCOVERY_TESTDB=true go test -race -count=1 ./...
+      for pkg in $(go list ./...); do
+        if [[ ${no_race[$pkg]} = '' ]]; then
+          race="$race $pkg"
+        fi
+      done
+      runcmd env GO_DISCOVERY_TESTDB=true go test -race -count=1 $race
+      runcmd env GO_DISCOVERY_TESTDB=true go test -count=1 ${!no_race[*]}
       ;;
     lint) standard_linters ;;
     headers) check_headers ;;
