@@ -304,6 +304,7 @@ func findDeclsAndUnresolved(body ast.Node, topDecls map[*ast.Object]ast.Decl, ty
 	var depDecls []ast.Decl
 	unresolved := make(map[string]bool)
 	hasDepDecls := make(map[ast.Decl]bool)
+	objs := map[*ast.Object]bool{}
 
 	var inspectFunc func(ast.Node) bool
 	inspectFunc = func(n ast.Node) bool {
@@ -312,6 +313,7 @@ func findDeclsAndUnresolved(body ast.Node, topDecls map[*ast.Object]ast.Decl, ty
 			if e.Obj == nil && e.Name != "_" {
 				unresolved[e.Name] = true
 			} else if d := topDecls[e.Obj]; d != nil {
+				objs[e.Obj] = true
 				if !hasDepDecls[d] {
 					hasDepDecls[d] = true
 					depDecls = append(depDecls, d)
@@ -367,7 +369,54 @@ func findDeclsAndUnresolved(body ast.Node, topDecls map[*ast.Object]ast.Decl, ty
 			}
 		}
 	}
-	return depDecls, unresolved
+	// Some decls include multiple specs, such as a variable declaration with
+	// multiple variables on the same line, or a parenthesized declaration. Trim
+	// the declarations to include only the specs that are actually mentioned.
+	ds := depDecls[:0]
+	for _, d := range depDecls {
+		switch d := d.(type) {
+		case *ast.FuncDecl:
+			ds = append(ds, d)
+		case *ast.GenDecl:
+			// Collect all Specs that were mentioned in the example.
+			var specs []ast.Spec
+			for _, s := range d.Specs {
+				switch s := s.(type) {
+				case *ast.TypeSpec:
+					if objs[s.Name.Obj] {
+						specs = append(specs, s)
+					}
+				case *ast.ValueSpec:
+					// A ValueSpec may have multiple names (e.g. "var a, b int").
+					// Keep only the names that were mentioned in the example.
+					ns := *s
+					ns.Names = nil
+					ns.Values = nil
+					for i, n := range s.Names {
+						if objs[n.Obj] {
+							ns.Names = append(ns.Names, n)
+							if s.Values != nil {
+								ns.Values = append(ns.Values, s.Values[i])
+							}
+						}
+					}
+					if len(ns.Names) > 0 {
+						specs = append(specs, &ns)
+					}
+				}
+			}
+			if len(specs) > 0 {
+				nd := *d // copy the GenDecl
+				nd.Specs = specs
+				if len(specs) == 1 {
+					// Remove grouping parens if there is only one spec.
+					nd.Lparen = 0
+				}
+				ds = append(ds, &nd)
+			}
+		}
+	}
+	return ds, unresolved
 }
 
 // synthesizeImportDecl creates the imports for the example. We want the imports

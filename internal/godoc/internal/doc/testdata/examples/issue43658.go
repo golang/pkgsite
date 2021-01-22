@@ -82,68 +82,70 @@ func linksTo(i ...int) intset {
 	return s
 }
 
-var smallDumbell = []intset{
-	0: linksTo(1, 2),
-	1: linksTo(2),
-	2: linksTo(3),
-	3: linksTo(4, 5),
-	4: linksTo(5),
-	5: nil,
-}
+var (
+	smallDumbell = []intset{
+		0: linksTo(1, 2),
+		1: linksTo(2),
+		2: linksTo(3),
+		3: linksTo(4, 5),
+		4: linksTo(5),
+		5: nil,
+	}
 
-// http://www.slate.com/blogs/the_world_/2014/07/17/the_middle_east_friendship_chart.html
-var middleEast = struct{ friends, complicated, enemies []intset }{
-	// green cells
-	friends: []intset{
-		0:  nil,
-		1:  linksTo(5, 7, 9, 12),
-		2:  linksTo(11),
-		3:  linksTo(4, 5, 10),
-		4:  linksTo(3, 5, 10),
-		5:  linksTo(1, 3, 4, 8, 10, 12),
-		6:  nil,
-		7:  linksTo(1, 12),
-		8:  linksTo(5, 9, 11),
-		9:  linksTo(1, 8, 12),
-		10: linksTo(3, 4, 5),
-		11: linksTo(2, 8),
-		12: linksTo(1, 5, 7, 9),
-	},
+	// http://www.slate.com/blogs/the_world_/2014/07/17/the_middle_east_friendship_chart.html
+	middleEast = struct{ friends, complicated, enemies []intset }{
+		// green cells
+		friends: []intset{
+			0:  nil,
+			1:  linksTo(5, 7, 9, 12),
+			2:  linksTo(11),
+			3:  linksTo(4, 5, 10),
+			4:  linksTo(3, 5, 10),
+			5:  linksTo(1, 3, 4, 8, 10, 12),
+			6:  nil,
+			7:  linksTo(1, 12),
+			8:  linksTo(5, 9, 11),
+			9:  linksTo(1, 8, 12),
+			10: linksTo(3, 4, 5),
+			11: linksTo(2, 8),
+			12: linksTo(1, 5, 7, 9),
+		},
 
-	// yellow cells
-	complicated: []intset{
-		0:  linksTo(2, 4),
-		1:  linksTo(4, 8),
-		2:  linksTo(0, 3, 4, 5, 8, 9),
-		3:  linksTo(2, 8, 11),
-		4:  linksTo(0, 1, 2, 8),
-		5:  linksTo(2),
-		6:  nil,
-		7:  linksTo(9, 11),
-		8:  linksTo(1, 2, 3, 4, 10, 12),
-		9:  linksTo(2, 7, 11),
-		10: linksTo(8),
-		11: linksTo(3, 7, 9, 12),
-		12: linksTo(8, 11),
-	},
+		// yellow cells
+		complicated: []intset{
+			0:  linksTo(2, 4),
+			1:  linksTo(4, 8),
+			2:  linksTo(0, 3, 4, 5, 8, 9),
+			3:  linksTo(2, 8, 11),
+			4:  linksTo(0, 1, 2, 8),
+			5:  linksTo(2),
+			6:  nil,
+			7:  linksTo(9, 11),
+			8:  linksTo(1, 2, 3, 4, 10, 12),
+			9:  linksTo(2, 7, 11),
+			10: linksTo(8),
+			11: linksTo(3, 7, 9, 12),
+			12: linksTo(8, 11),
+		},
 
-	// red cells
-	enemies: []intset{
-		0:  linksTo(1, 3, 5, 6, 7, 8, 9, 10, 11, 12),
-		1:  linksTo(0, 2, 3, 6, 10, 11),
-		2:  linksTo(1, 6, 7, 10, 12),
-		3:  linksTo(0, 1, 6, 7, 9, 12),
-		4:  linksTo(6, 7, 9, 11, 12),
-		5:  linksTo(0, 6, 7, 9, 11),
-		6:  linksTo(0, 1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12),
-		7:  linksTo(0, 2, 3, 4, 5, 6, 8, 10),
-		8:  linksTo(0, 6, 7),
-		9:  linksTo(0, 3, 4, 5, 6, 10),
-		10: linksTo(0, 1, 2, 6, 7, 9, 11, 12),
-		11: linksTo(0, 1, 4, 5, 6, 10),
-		12: linksTo(0, 2, 3, 4, 6, 10),
-	},
-}
+		// red cells
+		enemies: []intset{
+			0:  linksTo(1, 3, 5, 6, 7, 8, 9, 10, 11, 12),
+			1:  linksTo(0, 2, 3, 6, 10, 11),
+			2:  linksTo(1, 6, 7, 10, 12),
+			3:  linksTo(0, 1, 6, 7, 9, 12),
+			4:  linksTo(6, 7, 9, 11, 12),
+			5:  linksTo(0, 6, 7, 9, 11),
+			6:  linksTo(0, 1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12),
+			7:  linksTo(0, 2, 3, 4, 5, 6, 8, 10),
+			8:  linksTo(0, 6, 7),
+			9:  linksTo(0, 3, 4, 5, 6, 10),
+			10: linksTo(0, 1, 2, 6, 7, 9, 11, 12),
+			11: linksTo(0, 1, 4, 5, 6, 10),
+			12: linksTo(0, 2, 3, 4, 6, 10),
+		},
+	}
+)
 
 var friends, enemies *simple.WeightedUndirectedGraph
 
