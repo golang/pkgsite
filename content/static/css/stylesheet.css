@@ -1587,6 +1587,7 @@ table.Directories {
 }
 
 .JumpDialog {
+  position: fixed;
   width: 25rem;
 }
 .JumpDialog-body {
