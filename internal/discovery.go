@@ -20,6 +20,12 @@ const (
 	// proxy client.
 	LatestVersion = "latest"
 
+	// MainVersion represents the main branch.
+	MainVersion = "main"
+
+	// MasterVersion represents the master branch.
+	MasterVersion = "master"
+
 	// UnknownModulePath signifies that the module path for a given package
 	// path is ambiguous or not known. This is because requests to the
 	// frontend can come in the form of <import-path>[@<version>], and it is
@@ -29,8 +35,8 @@ const (
 
 // DefaultBranches are default branches that are supported by pkgsite.
 var DefaultBranches = map[string]bool{
-	"main":   true,
-	"master": true,
+	MainVersion:   true,
+	MasterVersion: true,
 }
 
 // ModuleInfo holds metadata associated with a module.

@@ -263,17 +263,19 @@ func Directory(version string) string {
 	return "src/pkg"
 }
 
-// Approximate size of Zip("v1.15.2").
-const estimatedZipSize = 16 * 1024 * 1024
+// EstimatedZipSize is the approximate size of
+// Zip("v1.15.2").
+const EstimatedZipSize = 16 * 1024 * 1024
 
-func ZipInfo(requestedVersion string) (resolvedVersion string, zipSize int64, err error) {
+// ZipInfo returns the proxy .info information for the module std.
+func ZipInfo(requestedVersion string) (resolvedVersion string, err error) {
 	defer derrors.Wrap(&err, "stdlib.ZipInfo(%q)", requestedVersion)
 
 	resolvedVersion, err = semanticVersion(requestedVersion)
 	if err != nil {
-		return "", 0, err
+		return "", err
 	}
-	return resolvedVersion, estimatedZipSize, nil
+	return resolvedVersion, nil
 }
 
 // Zip creates a module zip representing the entire Go standard library at the

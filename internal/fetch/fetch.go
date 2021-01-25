@@ -92,6 +92,8 @@ type FetchResult struct {
 	ModulePath           string
 	RequestedVersion     string
 	ResolvedVersion      string
+	MainVersion          string
+	MasterVersion        string
 	GoModPath            string
 	Status               int
 	Error                error
@@ -135,42 +137,22 @@ func FetchModule(ctx context.Context, modulePath, requestedVersion string, proxy
 		}
 	}()
 
-	var (
-		commitTime time.Time
-		zipReader  *zip.Reader
-		zipSize    int64
-		err        error
-	)
-	// Get the just information we need to make a load-shedding decision.
-	if modulePath == stdlib.ModulePath {
-		var resolvedVersion string
-		resolvedVersion, zipSize, err = stdlib.ZipInfo(requestedVersion)
-		if err != nil {
-			fr.Error = err
-			return fr
-		}
-		fr.ResolvedVersion = resolvedVersion
-	} else {
-		getInfo := proxyClient.GetInfo
-		if disableProxyFetch {
-			getInfo = proxyClient.GetInfoNoFetch
-		}
-		info, err := getInfo(ctx, modulePath, requestedVersion)
-		if err != nil {
-			fr.Error = err
-			return fr
-		}
-		fr.ResolvedVersion = info.Version
-		commitTime = info.Time
-		if zipLoadShedder != nil {
-			zipSize, err = proxyClient.GetZipSize(ctx, modulePath, fr.ResolvedVersion)
-			if err != nil {
-				fr.Error = err
-				return fr
-			}
-		}
+	var commitTime time.Time
+	info, err := GetInfo(ctx, modulePath, requestedVersion, proxyClient, disableProxyFetch)
+	if err != nil {
+		fr.Error = err
+		return fr
 	}
+	fr.ResolvedVersion = info.Version
+	commitTime = info.Time
+
+	var zipSize int64
 	if zipLoadShedder != nil {
+		zipSize, err := getZipSize(ctx, modulePath, fr.ResolvedVersion, proxyClient)
+		if err != nil {
+			fr.Error = err
+			return fr
+		}
 		// Load shed or mark module as too large.
 		// We treat zip size as a proxy for the total memory consumed by
 		// processing a module, and use it to decide whether we can currently
@@ -199,6 +181,7 @@ func FetchModule(ctx context.Context, modulePath, requestedVersion string, proxy
 	}
 	startFetchInfo(fi)
 
+	var zipReader *zip.Reader
 	if modulePath == stdlib.ModulePath {
 		zipReader, commitTime, err = stdlib.Zip(requestedVersion)
 		if err != nil {
@@ -247,6 +230,32 @@ func FetchModule(ctx context.Context, modulePath, requestedVersion string, proxy
 		}
 	}
 	return fr
+}
+
+// GetInfo returns the result of a request to the proxy .info endpoint. If
+// the modulePath is "std", a request to @master will return an empty
+// commit time.
+func GetInfo(ctx context.Context, modulePath, requestedVersion string, proxyClient *proxy.Client, disableProxyFetch bool) (_ *proxy.VersionInfo, err error) {
+	if modulePath == stdlib.ModulePath {
+		var resolvedVersion string
+		resolvedVersion, err = stdlib.ZipInfo(requestedVersion)
+		if err != nil {
+			return nil, err
+		}
+		return &proxy.VersionInfo{Version: resolvedVersion}, nil
+	}
+	getInfo := proxyClient.GetInfo
+	if disableProxyFetch {
+		getInfo = proxyClient.GetInfoNoFetch
+	}
+	return getInfo(ctx, modulePath, requestedVersion)
+}
+
+func getZipSize(ctx context.Context, modulePath, resolvedVersion string, proxyClient *proxy.Client) (_ int64, err error) {
+	if modulePath == stdlib.ModulePath {
+		return stdlib.EstimatedZipSize, nil
+	}
+	return proxyClient.GetZipSize(ctx, modulePath, resolvedVersion)
 }
 
 // processZipFile extracts information from the module version zip.

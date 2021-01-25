@@ -370,7 +370,7 @@ func TestFetchAndUpdateState(t *testing.T) {
 	sourceClient := source.NewClient(sourceTimeout)
 	f := &Fetcher{proxyClient, sourceClient, testDB}
 	for _, test := range testCases {
-		t.Run(test.pkg, func(t *testing.T) {
+		t.Run(strings.ReplaceAll(test.pkg+test.version, "/", " "), func(t *testing.T) {
 			defer postgres.ResetTestDB(testDB, t)
 			if _, _, err := f.FetchAndUpdateState(ctx, test.modulePath, test.version, testAppVersion, false); err != nil {
 				t.Fatalf("FetchAndUpdateState(%q, %q, %v, %v, %v): %v", test.modulePath, test.version, proxyClient, sourceClient, testDB, err)
@@ -418,6 +418,15 @@ func TestFetchAndUpdateState(t *testing.T) {
 				for _, dontWant := range test.dontWantDoc {
 					if strings.Contains(gotDoc, dontWant) {
 						t.Errorf("got documentation contains unwanted documentation substring:\ngot: %q\ndontWant (substring): %q", gotDoc, dontWant)
+					}
+				}
+			}
+			// TODO(https://golang.org/issue/43890): fix 500 error for
+			// fetching std@master and update test.
+			if test.modulePath != stdlib.ModulePath {
+				for _, v := range []string{internal.MainVersion, internal.MasterVersion, test.version} {
+					if _, err := testDB.GetVersionMap(ctx, test.modulePath, v); err != nil {
+						t.Error(err)
 					}
 				}
 			}

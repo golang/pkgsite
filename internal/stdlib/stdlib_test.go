@@ -195,15 +195,12 @@ func TestZipInfo(t *testing.T) {
 			want:             "master",
 		},
 	} {
-		gotVersion, gotSize, err := ZipInfo(tc.requestedVersion)
+		gotVersion, err := ZipInfo(tc.requestedVersion)
 		if err != nil {
 			t.Fatal(err)
 		}
 		if want := tc.want; gotVersion != want {
 			t.Errorf("version: got %q, want %q", gotVersion, want)
-		}
-		if want := int64(estimatedZipSize); gotSize != want {
-			t.Errorf("size: got %d, want %d", gotSize, want)
 		}
 	}
 }
