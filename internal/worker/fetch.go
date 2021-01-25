@@ -234,11 +234,9 @@ func resolvedVersion(ctx context.Context, modulePath, requestedVersion string, p
 	info, err := fetch.GetInfo(ctx, modulePath, requestedVersion, proxyClient, false)
 	if err != nil {
 		if !errors.Is(err, derrors.NotFound) {
-			// If an error occurs, log it and insert the module as
-			// normal.
+			// If an error occurs, log it and insert the module as normal.
 			log.Errorf(ctx, "fetch.GetInfo(ctx, %q, %q, f.ProxyClient, false): %v", modulePath, requestedVersion, err)
 		}
-		log.Infof(ctx, "fetch.GetInfo(ctx, %q, %q, f.ProxyClient, false): %v", modulePath, requestedVersion, err)
 		return ""
 	}
 	return info.Version
