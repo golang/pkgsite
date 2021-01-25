@@ -181,6 +181,12 @@ func FetchModule(ctx context.Context, modulePath, requestedVersion string, proxy
 	}
 	startFetchInfo(fi)
 
+	// getGoModPath may return a non-empty goModPath even if the error is
+	// non-nil, if the module version is an alternative module.
+	fr.GoModPath, fr.Error = getGoModPath(ctx, modulePath, fr.ResolvedVersion, proxyClient)
+	if fr.Error != nil {
+		return fr
+	}
 	var zipReader *zip.Reader
 	if modulePath == stdlib.ModulePath {
 		zipReader, commitTime, err = stdlib.Zip(requestedVersion)
@@ -188,26 +194,7 @@ func FetchModule(ctx context.Context, modulePath, requestedVersion string, proxy
 			fr.Error = err
 			return fr
 		}
-		fr.GoModPath = stdlib.ModulePath
 	} else {
-		goModBytes, err := proxyClient.GetMod(ctx, modulePath, fr.ResolvedVersion)
-		if err != nil {
-			fr.Error = err
-			return fr
-		}
-		goModPath := modfile.ModulePath(goModBytes)
-		if goModPath == "" {
-			fr.Error = fmt.Errorf("go.mod has no module path: %w", derrors.BadModule)
-			return fr
-		}
-		fr.GoModPath = goModPath
-		if goModPath != modulePath {
-			// The module path in the go.mod file doesn't match the path of the
-			// zip file. Don't insert the module. Store an AlternativeModule
-			// status in module_version_states.
-			fr.Error = fmt.Errorf("module path=%s, go.mod path=%s: %w", modulePath, goModPath, derrors.AlternativeModule)
-			return fr
-		}
 		zipReader, err = proxyClient.GetZip(ctx, modulePath, fr.ResolvedVersion)
 		if err != nil {
 			fr.Error = err
@@ -256,6 +243,28 @@ func getZipSize(ctx context.Context, modulePath, resolvedVersion string, proxyCl
 		return stdlib.EstimatedZipSize, nil
 	}
 	return proxyClient.GetZipSize(ctx, modulePath, resolvedVersion)
+}
+
+func getGoModPath(ctx context.Context, modulePath, resolvedVersion string, proxyClient *proxy.Client) (_ string, err error) {
+	if modulePath == stdlib.ModulePath {
+		return stdlib.ModulePath, nil
+	}
+
+	goModBytes, err := proxyClient.GetMod(ctx, modulePath, resolvedVersion)
+	if err != nil {
+		return "", err
+	}
+	goModPath := modfile.ModulePath(goModBytes)
+	if goModPath == "" {
+		return "", fmt.Errorf("go.mod has no module path: %w", derrors.BadModule)
+	}
+	if goModPath != modulePath {
+		// The module path in the go.mod file doesn't match the path of the
+		// zip file. Don't insert the module. Store an AlternativeModule
+		// status in module_version_states.
+		return goModPath, fmt.Errorf("module path=%s, go.mod path=%s: %w", modulePath, goModPath, derrors.AlternativeModule)
+	}
+	return goModPath, nil
 }
 
 // processZipFile extracts information from the module version zip.
