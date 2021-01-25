@@ -191,7 +191,6 @@ func main() {
 		middleware.RequestLog(cmdconfig.Logger(ctx, cfg, "frontend-log")),
 		middleware.AcceptRequests(http.MethodGet, http.MethodPost, http.MethodHead), // accept only GETs, POSTs and HEADs
 		middleware.Quota(cfg.Quota, cacheClient),
-		middleware.GodocURL(), // potentially redirects so should be early in chain
 		middleware.RedirectedFrom(),
 		middleware.SecureHeaders(!*disableCSP), // must come before any caching for nonces to work
 		middleware.Experiment(experimenter),

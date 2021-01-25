@@ -85,3 +85,18 @@ func LatestVersions(getLatest latestFunc) Middleware {
 		})
 	}
 }
+
+// capturingResponseWriter is an http.ResponseWriter that captures
+// the body for later processing.
+type capturingResponseWriter struct {
+	http.ResponseWriter
+	buf bytes.Buffer
+}
+
+func (c *capturingResponseWriter) Write(b []byte) (int, error) {
+	return c.buf.Write(b)
+}
+
+func (c *capturingResponseWriter) bytes() []byte {
+	return c.buf.Bytes()
+}

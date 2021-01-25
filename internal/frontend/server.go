@@ -243,9 +243,6 @@ type basePage struct {
 	// Experiments contains the experiments currently active.
 	Experiments *experiment.Set
 
-	// GodocURL is the URL of the corresponding page on godoc.org (if applicable).
-	GodocURL string
-
 	// DevMode indicates whether the server is running in development mode.
 	DevMode bool
 
@@ -285,7 +282,6 @@ func (s *Server) newBasePage(r *http.Request, title string) basePage {
 		HTMLTitle:          title,
 		Query:              searchQuery(r),
 		Experiments:        experiment.FromContext(r.Context()),
-		GodocURL:           middleware.GodocURLPlaceholder,
 		DevMode:            s.devMode,
 		AppVersionLabel:    s.appVersionLabel,
 		GoogleTagManagerID: s.googleTagManagerID,
