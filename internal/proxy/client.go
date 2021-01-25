@@ -70,7 +70,13 @@ func (c *Client) GetInfoNoFetch(ctx context.Context, modulePath, requestedVersio
 }
 
 func (c *Client) getInfo(ctx context.Context, modulePath, requestedVersion string, disableFetch bool) (_ *VersionInfo, err error) {
-	defer derrors.WrapAndReport(&err, "proxy.Client.GetInfo(%q, %q)", modulePath, requestedVersion)
+	defer func() {
+		wrap := derrors.Wrap
+		if !errors.Is(err, derrors.NotFound) {
+			wrap = derrors.WrapAndReport
+		}
+		wrap(&err, "proxy.Client.getInfo(%q, %q)", modulePath, requestedVersion)
+	}()
 	data, err := c.readBody(ctx, modulePath, requestedVersion, "info", disableFetch)
 	if err != nil {
 		return nil, err
