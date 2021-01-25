@@ -143,7 +143,7 @@ func orderByLatest(q squirrel.SelectBuilder) squirrel.SelectBuilder {
 			WHEN m.version_type = 'prerelease' THEN 4
 			ELSE 5
 		END`,
-		"m.module_path DESC",
+		"m.series_path DESC",
 		"m.sort_version DESC",
 	).PlaceholderFormat(squirrel.Dollar)
 }
@@ -157,8 +157,8 @@ const orderByLatestStmt = `
 					WHEN m.version_type = 'prerelease' THEN 4
 					ELSE 5
 				END,
-				m.sort_version DESC,
-				m.module_path DESC`
+				m.series_path DESC,
+				m.sort_version DESC`
 
 // GetUnit returns a unit from the database, along with all of the data
 // associated with that unit.

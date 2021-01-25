@@ -240,6 +240,8 @@ func TestGetLatestInfo(t *testing.T) {
 		sample.Module("a.com/M/v2", "v2.0.5", "all", "most"),
 		sample.Module("a.com/M/v3", "v3.0.1", "all", "some"),
 		sample.Module("a.com/M/D", "v1.3.0", "other"),
+		sample.Module("b.com/M/v9", "v9.0.0", ""),
+		sample.Module("b.com/M/v10", "v10.0.0", ""),
 	} {
 		if err := testDB.InsertModule(ctx, m); err != nil {
 			t.Fatal(err)
@@ -247,12 +249,13 @@ func TestGetLatestInfo(t *testing.T) {
 	}
 
 	for _, test := range []struct {
-		unit string
-		want internal.LatestInfo
+		unit, module string
+		want         internal.LatestInfo
 	}{
 		{
 			// A unit that is the module.
-			"a.com/M",
+			"a.com/M", "a.com/M",
+
 			internal.LatestInfo{
 				MinorVersion:      "v1.2.0",
 				MinorModulePath:   "a.com/M",
@@ -263,7 +266,8 @@ func TestGetLatestInfo(t *testing.T) {
 		},
 		{
 			// A unit that exists in all versions of the module.
-			"a.com/M/all",
+			"a.com/M/all", "a.com/M",
+
 			internal.LatestInfo{
 				MinorVersion:      "v1.2.0",
 				MinorModulePath:   "a.com/M",
@@ -274,7 +278,8 @@ func TestGetLatestInfo(t *testing.T) {
 		},
 		{
 			// A unit that exists in most versions, but not the latest major.
-			"a.com/M/most",
+			"a.com/M/most", "a.com/M",
+
 			internal.LatestInfo{
 				MinorVersion:      "v1.2.0",
 				MinorModulePath:   "a.com/M",
@@ -285,7 +290,8 @@ func TestGetLatestInfo(t *testing.T) {
 		},
 		{
 			// A unit that does not exist at the latest minor version, but does at the latest major.
-			"a.com/M/some",
+			"a.com/M/some", "a.com/M",
+
 			internal.LatestInfo{
 				MinorVersion:      "v1.1.1",
 				MinorModulePath:   "a.com/M",
@@ -296,7 +302,8 @@ func TestGetLatestInfo(t *testing.T) {
 		},
 		{
 			// A unit that does not exist at the latest minor or major versions.
-			"a.com/M/one",
+			"a.com/M/one", "a.com/M",
+
 			internal.LatestInfo{
 				MinorVersion:      "v1.1.1",
 				MinorModulePath:   "a.com/M",
@@ -307,7 +314,8 @@ func TestGetLatestInfo(t *testing.T) {
 		},
 		{
 			// A unit whose latest minor version is in a different module.
-			"a.com/M/D/other",
+			"a.com/M/D/other", "a.com/M",
+
 			internal.LatestInfo{
 				MinorVersion:      "v1.3.0",
 				MinorModulePath:   "a.com/M/D",
@@ -316,9 +324,20 @@ func TestGetLatestInfo(t *testing.T) {
 				MajorUnitPath:     "a.com/M/v3",
 			},
 		},
+		{
+			// A module with v9 and v10 versions.
+			"b.com/M/v9", "b.com/M/v9",
+			internal.LatestInfo{
+				MinorVersion:      "v9.0.0",
+				MinorModulePath:   "b.com/M/v9",
+				UnitExistsAtMinor: true,
+				MajorModulePath:   "b.com/M/v10",
+				MajorUnitPath:     "b.com/M/v10",
+			},
+		},
 	} {
 		t.Run(test.unit, func(t *testing.T) {
-			got, err := testDB.GetLatestInfo(ctx, test.unit, "a.com/M")
+			got, err := testDB.GetLatestInfo(ctx, test.unit, test.module)
 			if err != nil {
 				t.Fatal(err)
 			}
