@@ -180,13 +180,19 @@ var TestCommitTime = time.Date(2019, 9, 4, 1, 2, 3, 0, time.UTC)
 func getGoRepo(version string) (_ *git.Repository, err error) {
 	defer derrors.Wrap(&err, "getGoRepo(%q)", version)
 
-	tag, err := TagForVersion(version)
-	if err != nil {
-		return nil, err
+	var ref plumbing.ReferenceName
+	if version == "master" {
+		ref = plumbing.HEAD
+	} else {
+		tag, err := TagForVersion(version)
+		if err != nil {
+			return nil, err
+		}
+		ref = plumbing.NewTagReferenceName(tag)
 	}
 	return git.Clone(memory.NewStorage(), nil, &git.CloneOptions{
 		URL:           GoRepoURL,
-		ReferenceName: plumbing.NewTagReferenceName(tag),
+		ReferenceName: ref,
 		SingleBranch:  true,
 		Depth:         1,
 		Tags:          git.NoTags,
@@ -375,6 +381,8 @@ func semanticVersion(requestedVersion string) (_ string, err error) {
 		}
 		return latestVersion, nil
 	case "master":
+		// TODO(https://github.com/golang/go/issues/43890): a semantic version
+		// needs to be returned here.
 		return requestedVersion, nil
 	default:
 		for _, v := range knownVersions {
