@@ -31,7 +31,6 @@ go-discovery*.json
 #### App Engine
 *credentials.json
 *credentials.yaml
-*.gcloudignore
 
 #### Loadtest Related Files ####
 results.bin
