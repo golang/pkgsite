@@ -151,12 +151,21 @@ func TestGetNextModulesToFetchAndUpdateModuleVersionStatesForReprocessing(t *tes
 		w.numPackages = 0
 	}
 	checkNextToRequeue(want, len(mods))
-	// Mark all modules for reprocessing.
+
 	for _, m := range mods {
 		if err := upsertModuleVersionState(ctx, testDB.db, m.modulePath, m.version, "2020-04-29t14", &m.numPackages, now, m.status, m.modulePath, derrors.FromStatus(m.status, "test string")); err != nil {
 			t.Fatal(err)
 		}
 	}
+
+	// Mark the latest version of all modules for reprocessing.
+	if err := testDB.UpdateModuleVersionStatesForReprocessingLatestOnly(ctx, "2020-04-30t14"); err != nil {
+		t.Fatal(err)
+	}
+	want = generateMods([]string{latest}, sizes, []int{200, 290})
+	checkNextToRequeue(want, len(mods))
+
+	// Mark all modules for reprocessing.
 	if err := testDB.UpdateModuleVersionStatesForReprocessing(ctx, "2020-04-30t14"); err != nil {
 		t.Fatal(err)
 	}
@@ -164,9 +173,9 @@ func TestGetNextModulesToFetchAndUpdateModuleVersionStatesForReprocessing(t *tes
 	// that for some modules, but we need to do it for all of them so that they all are candidates
 	// for GetNextModulesToFetch.
 	if _, err := testDB.db.Exec(ctx, `
-		UPDATE module_version_states
-		SET next_processed_after = CURRENT_TIMESTAMP
-	`); err != nil {
+			UPDATE module_version_states
+			SET next_processed_after = CURRENT_TIMESTAMP
+		`); err != nil {
 		t.Fatal(err)
 	}
 

@@ -34,6 +34,41 @@ func (db *DB) UpdateModuleVersionStatesForReprocessing(ctx context.Context, appV
 	return nil
 }
 
+// UpdateModuleVersionStatesForReprocessingLatestOnly marks modules to be
+// reprocessed that were processed prior to the provided appVersion.
+func (db *DB) UpdateModuleVersionStatesForReprocessingLatestOnly(ctx context.Context, appVersion string) (err error) {
+	query := `
+		UPDATE module_version_states mvs
+		SET
+			status = (
+				CASE WHEN status=200 THEN 520
+					 WHEN status=290 THEN 521
+					 END
+				),
+			next_processed_after = CURRENT_TIMESTAMP,
+			last_processed_at = NULL
+		FROM (
+			SELECT DISTINCT ON (module_path) module_path, version
+			FROM module_version_states
+			ORDER BY
+				module_path,
+				incompatible,
+				right(sort_version, 1) = '~' DESC, -- prefer release versions
+				sort_version DESC
+		) latest
+		WHERE
+			app_version < $1
+			AND (status = 200 OR status = 290)
+			AND latest.module_path = mvs.module_path
+			AND latest.version = mvs.version;`
+	affected, err := db.db.Exec(ctx, query, appVersion)
+	if err != nil {
+		return err
+	}
+	log.Infof(ctx, "Updated latest version of module_version_states with status=200 and status=290 and app_version < %q; %d affected", appVersion, affected)
+	return nil
+}
+
 func (db *DB) UpdateModuleVersionStatesWithStatus(ctx context.Context, status int, appVersion string) (err error) {
 	query := `UPDATE module_version_states
 			SET
@@ -137,7 +172,7 @@ func (db *DB) GetNextModulesToFetch(ctx context.Context, limit int) (_ []*intern
 // rather than actually choosing a random number. md5 is built in to postgres and
 // is an adequate hash for this purpose.
 const nextModulesToProcessQuery = `
-    -- Make a table of the latest versions of each module.
+	-- Make a table of the latest versions of each module.
 	WITH latest_versions AS (
 		SELECT DISTINCT ON (module_path) module_path, version
 		FROM module_version_states

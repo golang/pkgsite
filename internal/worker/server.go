@@ -457,6 +457,19 @@ func (s *Server) handleReprocess(w http.ResponseWriter, r *http.Request) error {
 	if err := config.ValidateAppVersion(appVersion); err != nil {
 		return &serverError{http.StatusBadRequest, fmt.Errorf("config.ValidateAppVersion(%q): %v", appVersion, err)}
 	}
+
+	// Reprocess only the latest version of a module version with a previous
+	// status of 200 or 290.
+	latestOnly := r.FormValue("latest_only") == "true"
+	if latestOnly {
+		if err := s.db.UpdateModuleVersionStatesForReprocessingLatestOnly(r.Context(), appVersion); err != nil {
+			return err
+		}
+		fmt.Fprintf(w, "Scheduled latest version of modules to be reprocessed for appVersion > %q.", appVersion)
+		return nil
+	}
+
+	// Reprocess only module versions with the given status code.
 	status := r.FormValue("status")
 	if status != "" {
 		code, err := strconv.Atoi(status)
@@ -470,6 +483,7 @@ func (s *Server) handleReprocess(w http.ResponseWriter, r *http.Request) error {
 		return nil
 	}
 
+	// Reprocess all module versions in module_version_states.
 	if err := s.db.UpdateModuleVersionStatesForReprocessing(r.Context(), appVersion); err != nil {
 		return err
 	}
