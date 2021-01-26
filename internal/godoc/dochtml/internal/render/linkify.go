@@ -175,7 +175,9 @@ func (r *Renderer) codeString(ex *doc.Example) (string, error) {
 			Node:     ex.Code,
 			Comments: ex.Comments,
 		}
-		format.Node(&buf, r.fset, n)
+		if err := format.Node(&buf, r.fset, n); err != nil {
+			return "", err
+		}
 	}
 
 	return buf.String(), nil
@@ -185,6 +187,7 @@ func (r *Renderer) codeHTML(ex *doc.Example) safehtml.HTML {
 	codeStr, err := r.codeString(ex)
 	if err != nil {
 		log.Errorf(r.ctx, "Error converting *doc.Example into string: %v", err)
+		return template.MustParseAndExecuteToHTML(`<pre class="Documentation-exampleCode">Error rendering example code.</pre>`)
 	}
 	return codeHTML(codeStr, r.exampleTmpl)
 }

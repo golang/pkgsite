@@ -119,6 +119,7 @@ func New(ctx context.Context, fset *token.FileSet, pkg *doc.Package, opts *Optio
 		disablePermalinks: disablePermalinks,
 		docTmpl:           docDataTmpl,
 		exampleTmpl:       exampleTmpl,
+		ctx:               ctx,
 	}
 }
 

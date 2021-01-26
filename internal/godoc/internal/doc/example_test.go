@@ -30,7 +30,7 @@ func TestExamples(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, filename := range filenames {
-		t.Run(filepath.Base(filename), func(t *testing.T) {
+		t.Run(strings.TrimSuffix(filepath.Base(filename), ".go"), func(t *testing.T) {
 			fset := token.NewFileSet()
 			astFile, err := parser.ParseFile(fset, filename, nil, parser.ParseComments)
 			if err != nil {
@@ -81,6 +81,7 @@ func TestExamples(t *testing.T) {
 }
 
 func formatFile(t *testing.T, fset *token.FileSet, n *ast.File) string {
+	t.Helper()
 	if n == nil {
 		return "<nil>"
 	}

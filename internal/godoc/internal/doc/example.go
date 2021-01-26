@@ -372,6 +372,11 @@ func findDeclsAndUnresolved(body ast.Node, topDecls map[*ast.Object]ast.Decl, ty
 	// Some decls include multiple specs, such as a variable declaration with
 	// multiple variables on the same line, or a parenthesized declaration. Trim
 	// the declarations to include only the specs that are actually mentioned.
+	// However, if there is a constant group with iota, leave it all: later
+	// constant declarations in the group may have no value and so cannot stand
+	// on their own, and furthermore, removing any constant from the group could
+	// change the values of subsequent ones.
+	// See testdata/examples/iota.go for a minimal example.
 	ds := depDecls[:0]
 	for _, d := range depDecls {
 		switch d := d.(type) {
@@ -406,17 +411,35 @@ func findDeclsAndUnresolved(body ast.Node, topDecls map[*ast.Object]ast.Decl, ty
 				}
 			}
 			if len(specs) > 0 {
-				nd := *d // copy the GenDecl
-				nd.Specs = specs
-				if len(specs) == 1 {
-					// Remove grouping parens if there is only one spec.
-					nd.Lparen = 0
+				// Constant with iota? Keep it all.
+				if d.Tok == token.CONST && hasIota(d.Specs[0]) {
+					ds = append(ds, d)
+				} else {
+					// Synthesize a GenDecl with just the Specs we need.
+					nd := *d // copy the GenDecl
+					nd.Specs = specs
+					if len(specs) == 1 {
+						// Remove grouping parens if there is only one spec.
+						nd.Lparen = 0
+					}
+					ds = append(ds, &nd)
 				}
-				ds = append(ds, &nd)
 			}
 		}
 	}
 	return ds, unresolved
+}
+
+func hasIota(s ast.Spec) bool {
+	has := false
+	ast.Inspect(s, func(n ast.Node) bool {
+		if id, ok := n.(*ast.Ident); ok && id.Name == "iota" {
+			has = true
+			return false
+		}
+		return true
+	})
+	return has
 }
 
 // synthesizeImportDecl creates the imports for the example. We want the imports
@@ -451,7 +474,7 @@ func synthesizeImportDecl(namedImports map[string]string, blankImports []ast.Spe
 			specs = &others
 		}
 		s := &ast.ImportSpec{
-			Path:   &ast.BasicLit{Value: strconv.Quote(p), ValuePos: pos},
+			Path:   &ast.BasicLit{Value: strconv.Quote(p), Kind: token.STRING, ValuePos: pos},
 			EndPos: pos,
 		}
 		if path.Base(p) != n {
