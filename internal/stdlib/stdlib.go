@@ -290,12 +290,15 @@ func ZipInfo(requestedVersion string) (resolvedVersion string, err error) {
 // zip file is in module form, with each path prefixed by ModuleName + "@" +
 // version.
 //
+// Normally, Zip returns the resolved version it was passed. If the resolved
+// version is "master", Zip returns a semantic version for the branch.
+//
 // Zip reads the standard library at the Go repository tag corresponding to to
 // the given semantic version.
 //
 // Zip ignores go.mod files in the standard library, treating it as if it were a
 // single module named "std" at the given version.
-func Zip(resolvedVersion string) (_ *zip.Reader, commitTime time.Time, err error) {
+func Zip(resolvedVersion string) (_ *zip.Reader, resolvedVersion2 string, commitTime time.Time, err error) {
 	// This code taken, with modifications, from
 	// https://github.com/shurcooL/play/blob/master/256/moduleproxy/std/std.go.
 	defer derrors.Wrap(&err, "stdlib.Zip(%q)", resolvedVersion)
@@ -307,53 +310,66 @@ func Zip(resolvedVersion string) (_ *zip.Reader, commitTime time.Time, err error
 		repo, err = getGoRepo(resolvedVersion)
 	}
 	if err != nil {
-		return nil, time.Time{}, err
+		return nil, "", time.Time{}, err
 	}
 	var buf bytes.Buffer
 	z := zip.NewWriter(&buf)
 	head, err := repo.Head()
 	if err != nil {
-		return nil, time.Time{}, err
+		return nil, "", time.Time{}, err
 	}
 	commit, err := repo.CommitObject(head.Hash())
 	if err != nil {
-		return nil, time.Time{}, err
+		return nil, "", time.Time{}, err
 	}
 	root, err := repo.TreeObject(commit.TreeHash)
 	if err != nil {
-		return nil, time.Time{}, err
+		return nil, "", time.Time{}, err
 	}
 	prefixPath := ModulePath + "@" + resolvedVersion
 	// Add top-level files.
 	if err := addFiles(z, repo, root, prefixPath, false); err != nil {
-		return nil, time.Time{}, err
+		return nil, "", time.Time{}, err
 	}
 	// Add files from the stdlib directory.
 	libdir := root
 	for _, d := range strings.Split(Directory(resolvedVersion), "/") {
 		libdir, err = subTree(repo, libdir, d)
 		if err != nil {
-			return nil, time.Time{}, err
+			return nil, "", time.Time{}, err
 		}
 	}
 	if err := addFiles(z, repo, libdir, prefixPath, true); err != nil {
-		return nil, time.Time{}, err
+		return nil, "", time.Time{}, err
 	}
 	if err := z.Close(); err != nil {
-		return nil, time.Time{}, err
+		return nil, "", time.Time{}, err
 	}
 	br := bytes.NewReader(buf.Bytes())
 	zr, err := zip.NewReader(br, int64(br.Len()))
 	if err != nil {
-		return nil, time.Time{}, err
+		return nil, "", time.Time{}, err
 	}
-	return zr, commit.Committer.When, nil
+	if resolvedVersion == "master" {
+		resolvedVersion = newPseudoVersion("v0.0.0", commit.Committer.When, commit.Hash)
+	}
+	return zr, resolvedVersion, commit.Committer.When, nil
+}
+
+func newPseudoVersion(version string, commitTime time.Time, hash plumbing.Hash) string {
+	return fmt.Sprintf("%s-%s-%s", version, commitTime.Format("20060102150405"), hash.String()[:12])
 }
 
 // semanticVersion returns the semantic version corresponding to the
-// requestedVersion.
+// requestedVersion. If the requested version is "master", then semanticVersion
+// returns it as is. The branch name is resolved to a proper pseudo-version in
+// Zip.
 func semanticVersion(requestedVersion string) (_ string, err error) {
 	defer derrors.Wrap(&err, "semanticVersion(%q)", requestedVersion)
+
+	if requestedVersion == "master" {
+		return requestedVersion, nil
+	}
 
 	knownVersions, err := Versions()
 	if err != nil {
@@ -380,10 +396,6 @@ func semanticVersion(requestedVersion string) (_ string, err error) {
 			}
 		}
 		return latestVersion, nil
-	case "master":
-		// TODO(https://github.com/golang/go/issues/43890): a semantic version
-		// needs to be returned here.
-		return requestedVersion, nil
 	default:
 		for _, v := range knownVersions {
 			if v == requestedVersion {

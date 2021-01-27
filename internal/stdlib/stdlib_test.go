@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	"golang.org/x/mod/semver"
+	"golang.org/x/pkgsite/internal/version"
 )
 
 func TestTagForVersion(t *testing.T) {
@@ -121,9 +122,16 @@ func TestZip(t *testing.T) {
 	defer func() { UseTestData = false }()
 	for _, resolvedVersion := range []string{"v1.14.6", "v1.12.5", "v1.3.2", "master"} {
 		t.Run(resolvedVersion, func(t *testing.T) {
-			zr, gotTime, err := Zip(resolvedVersion)
+			zr, gotResolvedVersion, gotTime, err := Zip(resolvedVersion)
 			if err != nil {
 				t.Fatal(err)
+			}
+			if resolvedVersion == "master" {
+				if !version.IsPseudo(gotResolvedVersion) {
+					t.Errorf("resolved version: %s is not a pseudo-version", gotResolvedVersion)
+				}
+			} else if gotResolvedVersion != resolvedVersion {
+				t.Errorf("resolved version: got %s, want %s", gotResolvedVersion, resolvedVersion)
 			}
 			if !gotTime.Equal(TestCommitTime) {
 				t.Errorf("commit time: got %s, want %s", gotTime, TestCommitTime)

@@ -189,13 +189,18 @@ func FetchModule(ctx context.Context, modulePath, requestedVersion string, proxy
 		return fr
 	}
 	var zipReader *zip.Reader
+
 	if modulePath == stdlib.ModulePath {
-		zipReader, commitTime, err = stdlib.Zip(requestedVersion)
+		var resolvedVersion string
+		zipReader, resolvedVersion, commitTime, err = stdlib.Zip(requestedVersion)
 		if err != nil {
 			fr.Error = err
 			return fr
 		}
-
+		// If the requested version is a branch name like "master" or "main", we cannot
+		// determine the right resolved version until we start working with the repo.
+		fr.ResolvedVersion = resolvedVersion
+		fi.Version = resolvedVersion
 	} else {
 		zipReader, err = proxyClient.GetZip(ctx, modulePath, fr.ResolvedVersion)
 		if err != nil {
