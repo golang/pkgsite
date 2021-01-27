@@ -61,7 +61,7 @@ func TestExamples(t *testing.T) {
 				case "Play":
 					got := strings.TrimSpace(formatFile(t, fset, ex.Play))
 					if diff := cmp.Diff(want, got); diff != "" {
-						t.Errorf("mismatch (-want, +got):\n%s", diff)
+						t.Errorf("%s Play: mismatch (-want, +got):\n%s", name, diff)
 					}
 					delete(unseen, name)
 				case "Output":

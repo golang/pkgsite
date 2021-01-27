@@ -394,6 +394,13 @@ func findDeclsAndUnresolved(body ast.Node, topDecls map[*ast.Object]ast.Decl, ty
 				case *ast.ValueSpec:
 					// A ValueSpec may have multiple names (e.g. "var a, b int").
 					// Keep only the names that were mentioned in the example.
+					// Exception: the multiple names have a single initializer (which
+					// would be a function call with multiple return values). In that
+					// case, keep everything.
+					if len(s.Names) > 1 && len(s.Values) == 1 {
+						specs = append(specs, s)
+						continue
+					}
 					ns := *s
 					ns.Names = nil
 					ns.Values = nil
