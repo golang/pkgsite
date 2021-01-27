@@ -148,7 +148,8 @@ func FetchModule(ctx context.Context, modulePath, requestedVersion string, proxy
 
 	var zipSize int64
 	if zipLoadShedder != nil {
-		zipSize, err := getZipSize(ctx, modulePath, fr.ResolvedVersion, proxyClient)
+		var err error
+		zipSize, err = getZipSize(ctx, modulePath, fr.ResolvedVersion, proxyClient)
 		if err != nil {
 			fr.Error = err
 			return fr
@@ -194,6 +195,7 @@ func FetchModule(ctx context.Context, modulePath, requestedVersion string, proxy
 			fr.Error = err
 			return fr
 		}
+
 	} else {
 		zipReader, err = proxyClient.GetZip(ctx, modulePath, fr.ResolvedVersion)
 		if err != nil {
