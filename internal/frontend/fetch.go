@@ -239,7 +239,9 @@ func resultFromFetchRequest(results []*fetchResult, fullPath, requestedVersion s
 		// appropriate result is found, return. Otherwise, look at the next
 		// path.
 		case http.StatusOK:
-			return fr, nil
+			if fr.err == nil {
+				return fr, nil
+			}
 		case http.StatusRequestTimeout:
 			// If the context timed out or was canceled before all of the requests
 			// finished, return an error letting the user to check back later. The
