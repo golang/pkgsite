@@ -224,3 +224,27 @@ func TestPreviousFetchStatusAndResponse_PathExistsAtNonV1(t *testing.T) {
 		})
 	}
 }
+
+func TestGithubPathRedirect(t *testing.T) {
+	for _, test := range []struct {
+		path, want string
+	}{
+		{sample.ModulePath, ""},
+		{sample.ModulePath + "/tree/master/tree/master", ""},
+		{sample.ModulePath + "/blob", "/" + sample.ModulePath},
+		{sample.ModulePath + "/tree", "/" + sample.ModulePath},
+		{sample.ModulePath + "/blob/master", "/" + sample.ModulePath},
+		{sample.ModulePath + "/tree/master", "/" + sample.ModulePath},
+		{sample.ModulePath + "/blob/master/pkg", "/" + sample.ModulePath + "/pkg"},
+		{sample.ModulePath + "/tree/master/pkg", "/" + sample.ModulePath + "/pkg"},
+		{sample.ModulePath + "/blob/v1.0.0/pkg", "/" + sample.ModulePath + "/pkg"},
+		{sample.ModulePath + "/tree/v2.0.0/pkg", "/" + sample.ModulePath + "/pkg"},
+		{"bitbucket.org/valid/module_name" + "/tree", ""},
+	} {
+		t.Run(test.path, func(t *testing.T) {
+			if got := githubPathRedirect(test.path); got != test.want {
+				t.Fatalf("githubPathRedirect(%q): %q; want = %q", test.path, got, "/"+test.want)
+			}
+		})
+	}
+}

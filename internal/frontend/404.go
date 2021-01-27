@@ -10,6 +10,8 @@ import (
 	"fmt"
 	"html"
 	"net/http"
+	"regexp"
+	"strings"
 
 	"github.com/google/safehtml/template"
 	"github.com/google/safehtml/template/uncheckedconversions"
@@ -78,6 +80,10 @@ func (s *Server) servePathNotFoundPage(w http.ResponseWriter, r *http.Request,
 	case http.StatusInternalServerError:
 		return pathNotFoundError(fullPath, requestedVersion)
 	default:
+		if u := githubPathRedirect(fullPath); u != "" {
+			http.Redirect(w, r, u, http.StatusFound)
+			return
+		}
 		return &serverError{
 			status: fr.status,
 			epage: &errorPage{
@@ -88,6 +94,26 @@ func (s *Server) servePathNotFoundPage(w http.ResponseWriter, r *http.Request,
 			},
 		}
 	}
+}
+
+// githubRegexp is regex to match a GitHub URL scheme containing a "/blob" or
+// "/tree" element.
+var githubRegexp = regexp.MustCompile(`(blob|tree)(/[^/]+)?`)
+
+func githubPathRedirect(fullPath string) string {
+	parts := strings.Split(fullPath, "/")
+	if len(parts) <= 3 || parts[0] != "github.com" {
+		return ""
+	}
+	m := strings.Split(fullPath, "/"+githubRegexp.FindString(fullPath))
+	if len(m) != 2 {
+		return ""
+	}
+	p := m[0]
+	if m[1] != "" {
+		p = m[0] + m[1]
+	}
+	return constructUnitURL(p, p, internal.LatestVersion)
 }
 
 // pathNotFoundError returns a page with an option on how to

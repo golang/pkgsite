@@ -1219,6 +1219,14 @@ func TestServerErrors(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
+	if err := testDB.UpsertVersionMap(ctx, &internal.VersionMap{
+		ModulePath:       sample.ModulePath + "/blob/master",
+		RequestedVersion: internal.LatestVersion,
+		ResolvedVersion:  sample.VersionString,
+		Status:           http.StatusNotFound,
+	}); err != nil {
+		t.Fatal(err)
+	}
 
 	_, handler, _ := newTestServer(t, nil)
 
@@ -1228,6 +1236,7 @@ func TestServerErrors(t *testing.T) {
 	}{
 		{"not found", "/invalid-page", "", http.StatusNotFound},
 		{"bad request", "/gocloud.dev/@latest/blob", "", http.StatusBadRequest},
+		{"github url", "/" + sample.ModulePath + "/blob/master", "", http.StatusFound},
 		{"alternative module", "/" + alternativeModule.ModulePath, "module.path/alternative", http.StatusFound},
 		{"module not in v1", "/" + v1modpath, "notinv1.mod", http.StatusFound},
 		{"import path not in v1", "/" + v1path, "notinv1.mod/foo", http.StatusFound},
