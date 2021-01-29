@@ -62,7 +62,7 @@ func moduleUnits(modulePath, version string,
 			dir.Name = pkg.name
 			dir.Imports = pkg.imports
 			// TODO(golang/go#37232): keep all docs
-			dir.Documentation = pkg.docs[0]
+			dir.Documentation = pkg.docs[:1]
 		}
 		units = append(units, dir)
 	}

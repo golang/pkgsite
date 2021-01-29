@@ -53,9 +53,9 @@ var moduleOnePackage = &testModule{
 						Name: "foo",
 						Path: "github.com/basic/foo",
 					},
-					Documentation: &internal.Documentation{
+					Documentation: []*internal.Documentation{{
 						Synopsis: "package foo exports a helpful constant.",
-					},
+					}},
 					Imports: []string{"net/http"},
 				},
 			},
@@ -123,18 +123,18 @@ var moduleMultiPackage = &testModule{
 						Filepath: "bar/README.md",
 						Contents: "Another README FILE FOR TESTING.",
 					},
-					Documentation: &internal.Documentation{
+					Documentation: []*internal.Documentation{{
 						Synopsis: "package bar",
-					},
+					}},
 				},
 				{
 					UnitMeta: internal.UnitMeta{
 						Name: "foo",
 						Path: "github.com/my/module/foo",
 					},
-					Documentation: &internal.Documentation{
+					Documentation: []*internal.Documentation{{
 						Synopsis: "package foo",
-					},
+					}},
 					Imports: []string{"fmt", "github.com/my/module/bar"},
 				},
 			},
@@ -177,9 +177,9 @@ var moduleNoGoMod = &testModule{
 						Name: "p",
 						Path: "no.mod/module/p",
 					},
-					Documentation: &internal.Documentation{
+					Documentation: []*internal.Documentation{{
 						Synopsis: "Package p is inside a module where a go.mod file hasn't been explicitly added yet.",
-					},
+					}},
 				},
 			},
 		},
@@ -240,9 +240,9 @@ var moduleBadPackages = &testModule{
 						Name: "good",
 						Path: "bad.mod/module/good",
 					},
-					Documentation: &internal.Documentation{
+					Documentation: []*internal.Documentation{{
 						Synopsis: "Package good is inside a module that has bad packages.",
-					},
+					}},
 				},
 			},
 		},
@@ -305,9 +305,9 @@ var moduleBuildConstraints = &testModule{
 						Name: "cpu",
 						Path: "build.constraints/module/cpu",
 					},
-					Documentation: &internal.Documentation{
+					Documentation: []*internal.Documentation{{
 						Synopsis: "Package cpu implements processor feature detection used by the Go standard library.",
-					},
+					}},
 				},
 			},
 		},
@@ -396,18 +396,18 @@ var moduleNonRedist = &testModule{
 						Name: "bar",
 						Path: "nonredistributable.mod/module/bar",
 					},
-					Documentation: &internal.Documentation{
+					Documentation: []*internal.Documentation{{
 						Synopsis: "package bar",
-					},
+					}},
 				},
 				{
 					UnitMeta: internal.UnitMeta{
 						Name: "baz",
 						Path: "nonredistributable.mod/module/bar/baz",
 					},
-					Documentation: &internal.Documentation{
+					Documentation: []*internal.Documentation{{
 						Synopsis: "package baz",
-					},
+					}},
 				},
 				{
 					UnitMeta: internal.UnitMeta{
@@ -418,9 +418,9 @@ var moduleNonRedist = &testModule{
 						Filepath: "foo/README.md",
 						Contents: "README FILE SHOW UP HERE BUT WILL BE REMOVED BEFORE DB INSERT",
 					},
-					Documentation: &internal.Documentation{
+					Documentation: []*internal.Documentation{{
 						Synopsis: "package foo",
-					},
+					}},
 					Imports: []string{"fmt", "github.com/my/module/bar"},
 				},
 			},
@@ -468,7 +468,7 @@ var moduleBadImportPath = &testModule{
 						Name: "foo",
 						Path: "bad.import.path.com/good/import/path",
 					},
-					Documentation: &internal.Documentation{},
+					Documentation: []*internal.Documentation{{}},
 				},
 			},
 		},
@@ -526,9 +526,9 @@ var moduleDocTest = &testModule{
 						Name: "permalink",
 						Path: "doc.test/permalink",
 					},
-					Documentation: &internal.Documentation{
+					Documentation: []*internal.Documentation{{
 						Synopsis: "Package permalink is for testing the heading permalink documentation rendering feature.",
-					},
+					}},
 				},
 			},
 		},
@@ -565,9 +565,9 @@ var moduleDocTooLarge = &testModule{
 						Name: "bigdoc",
 						Path: "bigdoc.test",
 					},
-					Documentation: &internal.Documentation{
+					Documentation: []*internal.Documentation{{
 						Synopsis: "This documentation is big.",
-					},
+					}},
 				},
 			},
 		},
@@ -621,11 +621,11 @@ var moduleWasm = &testModule{
 						Name: "js",
 						Path: "github.com/my/module/js/js",
 					},
-					Documentation: &internal.Documentation{
+					Documentation: []*internal.Documentation{{
 						Synopsis: "Package js only works with wasm.",
 						GOOS:     "js",
 						GOARCH:   "wasm",
-					},
+					}},
 				},
 			},
 		},
@@ -673,9 +673,9 @@ var moduleStd = &testModule{
 						Name: "builtin",
 						Path: "builtin",
 					},
-					Documentation: &internal.Documentation{
+					Documentation: []*internal.Documentation{{
 						Synopsis: "Package builtin provides documentation for Go's predeclared identifiers.",
-					},
+					}},
 				},
 				{
 					UnitMeta: internal.UnitMeta{
@@ -691,9 +691,9 @@ var moduleStd = &testModule{
 						Filepath: "cmd/pprof/README",
 						Contents: "This directory is the copy of Google's pprof shipped as part of the Go distribution.\n",
 					},
-					Documentation: &internal.Documentation{
+					Documentation: []*internal.Documentation{{
 						Synopsis: "Pprof interprets and displays profiles of Go programs.",
-					},
+					}},
 					Imports: []string{
 						"cmd/internal/objfile",
 						"crypto/tls",
@@ -719,9 +719,9 @@ var moduleStd = &testModule{
 						Name: "context",
 						Path: "context",
 					},
-					Documentation: &internal.Documentation{
+					Documentation: []*internal.Documentation{{
 						Synopsis: "Package context defines the Context type, which carries deadlines, cancelation signals, and other request-scoped values across API boundaries and between processes.",
-					},
+					}},
 					Imports: []string{"errors", "fmt", "reflect", "sync", "time"},
 				},
 				{
@@ -734,9 +734,9 @@ var moduleStd = &testModule{
 						Name: "json",
 						Path: "encoding/json",
 					},
-					Documentation: &internal.Documentation{
+					Documentation: []*internal.Documentation{{
 						Synopsis: "Package json implements encoding and decoding of JSON as defined in RFC 7159.",
-					},
+					}},
 					Imports: []string{
 						"bytes",
 						"encoding",
@@ -760,9 +760,9 @@ var moduleStd = &testModule{
 						Name: "errors",
 						Path: "errors",
 					},
-					Documentation: &internal.Documentation{
+					Documentation: []*internal.Documentation{{
 						Synopsis: "Package errors implements functions to manipulate errors.",
-					},
+					}},
 				},
 				{
 					UnitMeta: internal.UnitMeta{
@@ -770,9 +770,9 @@ var moduleStd = &testModule{
 						Path: "flag",
 					},
 					Imports: []string{"errors", "fmt", "io", "os", "reflect", "sort", "strconv", "strings", "time"},
-					Documentation: &internal.Documentation{
+					Documentation: []*internal.Documentation{{
 						Synopsis: "Package flag implements command-line flag parsing.",
-					},
+					}},
 				},
 			},
 		},
@@ -806,9 +806,9 @@ var moduleMaster = &testModule{
 						Name: "foo",
 						Path: "github.com/my/module/foo",
 					},
-					Documentation: &internal.Documentation{
+					Documentation: []*internal.Documentation{{
 						Synopsis: "package foo exports a helpful constant.",
-					},
+					}},
 				},
 			},
 		},
@@ -842,9 +842,9 @@ var moduleLatest = &testModule{
 						Name: "foo",
 						Path: "github.com/my/module/foo",
 					},
-					Documentation: &internal.Documentation{
+					Documentation: []*internal.Documentation{{
 						Synopsis: "package foo exports a helpful constant.",
-					},
+					}},
 				},
 			},
 		},
@@ -891,9 +891,9 @@ package example_test
 							Name: "example",
 							Path: path + "/example",
 						},
-						Documentation: &internal.Documentation{
+						Documentation: []*internal.Documentation{{
 							Synopsis: "Package example contains examples.",
-						},
+						}},
 					},
 				},
 			},

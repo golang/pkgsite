@@ -464,8 +464,9 @@ func (db *DB) upsertSearchDocuments(ctx context.Context, ddb *database.DB, mod *
 			PackagePath: pkg.Path,
 			ModulePath:  mod.ModulePath,
 		}
-		if pkg.Documentation != nil {
-			args.Synopsis = pkg.Documentation.Synopsis
+		if len(pkg.Documentation) > 0 {
+			// Use the synopsis of the first GOOS/GOARCH pair.
+			args.Synopsis = pkg.Documentation[0].Synopsis
 		}
 		if pkg.Readme != nil {
 			args.ReadmeFilePath = pkg.Readme.Filepath

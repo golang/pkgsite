@@ -626,7 +626,7 @@ func TestGetUnitFieldSet(t *testing.T) {
 	cleanFields := func(u *internal.Unit, fields internal.FieldSet) {
 		// Add/remove fields based on the FieldSet specified.
 		if fields&internal.WithMain != 0 {
-			u.Documentation = sample.Documentation
+			u.Documentation = []*internal.Documentation{sample.Documentation}
 			u.Readme = readme
 			u.NumImports = len(sample.Imports)
 			u.Subdirectories = []*internal.PackageMeta{
@@ -714,7 +714,7 @@ func unit(fullPath, modulePath, version, name string, readme *internal.Readme, s
 	if u.IsPackage() {
 		u.Imports = sample.Imports
 		u.NumImports = len(sample.Imports)
-		u.Documentation = sample.Documentation
+		u.Documentation = []*internal.Documentation{sample.Documentation}
 	}
 	return u
 }

@@ -51,7 +51,7 @@ func (um *UnitMeta) IsModule() bool {
 type Unit struct {
 	UnitMeta
 	Readme          *Readme
-	Documentation   *Documentation
+	Documentation   []*Documentation
 	Subdirectories  []*PackageMeta
 	Imports         []string
 	LicenseContents []*licenses.License

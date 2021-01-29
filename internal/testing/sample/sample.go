@@ -140,12 +140,12 @@ func UnitForModuleRoot(m *internal.ModuleInfo) *internal.Unit {
 func UnitForPackage(path, modulePath, version, name string, isRedistributable bool) *internal.Unit {
 	return &internal.Unit{
 		UnitMeta: *UnitMeta(path, modulePath, version, name, isRedistributable),
-		Documentation: &internal.Documentation{
+		Documentation: []*internal.Documentation{{
 			Synopsis: Synopsis,
 			Source:   DocumentationSource,
 			GOOS:     GOOS,
 			GOARCH:   GOARCH,
-		},
+		}},
 		LicenseContents: Licenses,
 		Imports:         Imports,
 		NumImports:      len(Imports),

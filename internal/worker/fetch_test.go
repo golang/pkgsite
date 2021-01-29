@@ -155,11 +155,11 @@ func TestFetchAndUpdateState(t *testing.T) {
 				{Types: []string{"MIT"}, FilePath: "bar/LICENSE"},
 			},
 		},
-		Documentation: &internal.Documentation{
+		Documentation: []*internal.Documentation{{
 			Synopsis: "package bar",
 			GOOS:     "linux",
 			GOARCH:   "amd64",
-		},
+		}},
 		Readme: &internal.Readme{
 			Filepath: "bar/README.md",
 			Contents: "README FILE FOR TESTING.",
@@ -209,11 +209,11 @@ func TestFetchAndUpdateState(t *testing.T) {
 						{Types: []string{"MIT"}, FilePath: "bar/baz/COPYING"},
 					},
 				},
-				Documentation: &internal.Documentation{
+				Documentation: []*internal.Documentation{{
 					Synopsis: "package baz",
 					GOOS:     "linux",
 					GOARCH:   "amd64",
-				},
+				}},
 			},
 			wantDoc: []string{"Baz returns the string &#34;baz&#34;."},
 		}, {
@@ -259,11 +259,11 @@ func TestFetchAndUpdateState(t *testing.T) {
 					},
 				},
 				NumImports: 5,
-				Documentation: &internal.Documentation{
+				Documentation: []*internal.Documentation{{
 					Synopsis: "Package context defines the Context type, which carries deadlines, cancelation signals, and other request-scoped values across API boundaries and between processes.",
 					GOOS:     "linux",
 					GOARCH:   "amd64",
-				},
+				}},
 			},
 			wantDoc: []string{"This example demonstrates the use of a cancelable context to prevent a\ngoroutine leak."},
 		}, {
@@ -287,11 +287,11 @@ func TestFetchAndUpdateState(t *testing.T) {
 						},
 					},
 				},
-				Documentation: &internal.Documentation{
+				Documentation: []*internal.Documentation{{
 					Synopsis: "Package builtin provides documentation for Go's predeclared identifiers.",
 					GOOS:     "linux",
 					GOARCH:   "amd64",
-				},
+				}},
 			},
 			wantDoc: []string{"int64 is the set of all signed 64-bit integers."},
 		}, {
@@ -316,11 +316,11 @@ func TestFetchAndUpdateState(t *testing.T) {
 					},
 				},
 				NumImports: 15,
-				Documentation: &internal.Documentation{
+				Documentation: []*internal.Documentation{{
 					Synopsis: "Package json implements encoding and decoding of JSON as defined in RFC 7159.",
 					GOOS:     "linux",
 					GOARCH:   "amd64",
-				},
+				}},
 			},
 			wantDoc: []string{
 				"The mapping between JSON and Go values is described\nin the documentation for the Marshal and Unmarshal functions.",
@@ -353,11 +353,11 @@ func TestFetchAndUpdateState(t *testing.T) {
 						{Types: []string{"0BSD"}, FilePath: "LICENSE"},
 					},
 				},
-				Documentation: &internal.Documentation{
+				Documentation: []*internal.Documentation{{
 					Synopsis: "Package cpu implements processor feature detection used by the Go standard library.",
 					GOOS:     "linux",
 					GOARCH:   "amd64",
-				},
+				}},
 			},
 			wantDoc: []string{"const CacheLinePadSize = 3"},
 			dontWantDoc: []string{
@@ -399,7 +399,7 @@ func TestFetchAndUpdateState(t *testing.T) {
 				t.Errorf("mismatch on readme (-want +got):\n%s", diff)
 			}
 			if got, want := gotPkg.Documentation, test.want.Documentation; got == nil || want == nil {
-				if got != want {
+				if !cmp.Equal(got, want) {
 					t.Fatalf("mismatch on documentation: got: %v\nwant: %v", got, want)
 				}
 				return

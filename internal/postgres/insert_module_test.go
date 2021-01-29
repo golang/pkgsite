@@ -129,7 +129,7 @@ func TestInsertModuleLicenseCheck(t *testing.T) {
 			}
 
 			mod := sample.Module(sample.ModulePath, sample.VersionString, "")
-			checkHasRedistData(mod.Units[0].Readme.Contents, mod.Units[0].Documentation.Source, true)
+			checkHasRedistData(mod.Units[0].Readme.Contents, mod.Units[0].Documentation[0].Source, true)
 			mod.IsRedistributable = false
 			mod.Units[0].IsRedistributable = false
 
@@ -155,7 +155,7 @@ func TestInsertModuleLicenseCheck(t *testing.T) {
 				readme = u.Readme.Contents
 			}
 			if u.Documentation != nil {
-				source = u.Documentation.Source
+				source = u.Documentation[0].Source
 			}
 			checkHasRedistData(readme, source, bypass)
 		})

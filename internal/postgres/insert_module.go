@@ -328,10 +328,14 @@ func (pdb *DB) insertUnits(ctx context.Context, db *database.DB, m *internal.Mod
 		if u.Readme != nil {
 			pathToReadme[u.Path] = u.Readme
 		}
-		if u.Documentation != nil && u.Documentation.Source == nil {
+		if u.Documentation != nil && u.Documentation[0] != nil && u.Documentation[0].Source == nil {
 			return fmt.Errorf("insertUnits: unit %q missing source files", u.Path)
 		}
-		pathToDoc[u.Path] = u.Documentation
+		if u.Documentation == nil {
+			pathToDoc[u.Path] = nil
+		} else {
+			pathToDoc[u.Path] = u.Documentation[0]
+		}
 		if len(u.Imports) > 0 {
 			pathToImports[u.Path] = u.Imports
 		}

@@ -78,11 +78,11 @@ var (
 			IsRedistributable: true,
 		},
 		Imports: []string{"net/http"},
-		Documentation: &internal.Documentation{
+		Documentation: []*internal.Documentation{{
 			Synopsis: "Package baz provides a helpful constant.",
 			GOOS:     "linux",
 			GOARCH:   "amd64",
-		},
+		}},
 	}
 	wantModuleInfo = internal.ModuleInfo{
 		ModulePath:        "foo.com/bar",

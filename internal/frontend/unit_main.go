@@ -166,9 +166,9 @@ func fetchMainDetails(ctx context.Context, ds internal.DataSource, um *internal.
 		synopsis           string
 	)
 	if unit.Documentation != nil {
-		synopsis = unit.Documentation.Synopsis
+		synopsis = unit.Documentation[0].Synopsis
 		end := middleware.ElapsedStat(ctx, "DecodePackage")
-		docPkg, err := godoc.DecodePackage(unit.Documentation.Source)
+		docPkg, err := godoc.DecodePackage(unit.Documentation[0].Source)
 		end()
 		if err != nil {
 			if errors.Is(err, godoc.ErrInvalidEncodingType) {
@@ -343,7 +343,7 @@ const missingDocReplacement = `<p>Documentation is missing.</p>`
 func getHTML(ctx context.Context, u *internal.Unit, docPkg *godoc.Package) (_ *dochtml.Parts, err error) {
 	defer derrors.Wrap(&err, "getHTML(%s)", u.Path)
 
-	if len(u.Documentation.Source) > 0 {
+	if len(u.Documentation[0].Source) > 0 {
 		return renderDocParts(ctx, u, docPkg)
 	}
 	log.Errorf(ctx, "unit %s (%s@%s) missing documentation source", u.Path, u.ModulePath, u.Version)

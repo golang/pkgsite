@@ -100,11 +100,11 @@ func TestReFetch(t *testing.T) {
 			Filepath: "bar/README.md",
 			Contents: "This is a readme",
 		},
-		Documentation: &internal.Documentation{
+		Documentation: []*internal.Documentation{{
 			Synopsis: "Package bar",
 			GOOS:     "linux",
 			GOARCH:   "amd64",
-		},
+		}},
 		Subdirectories: []*internal.PackageMeta{
 			{
 				Path:              "github.com/valid/module_name/bar",
@@ -138,7 +138,7 @@ func TestReFetch(t *testing.T) {
 		t.Errorf("mismatch on readme (-want +got):\n%s", diff)
 	}
 	if got, want := gotPkg.Documentation, want.Documentation; got == nil || want == nil {
-		if got != want {
+		if !cmp.Equal(got, want) {
 			t.Fatalf("mismatch on documentation: got: %v\nwant: %v", got, want)
 		}
 		return

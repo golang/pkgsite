@@ -42,12 +42,12 @@ func TestFetchSearchPage(t *testing.T) {
 						Version:           "v1.0.0",
 						IsRedistributable: true,
 					},
-					Documentation: &internal.Documentation{
+					Documentation: []*internal.Documentation{{
 						GOOS:     sample.GOOS,
 						GOARCH:   sample.GOARCH,
 						Synopsis: "foo is a package.",
 						Source:   []byte{},
-					},
+					}},
 					Readme: &internal.Readme{
 						Filepath: "readme",
 						Contents: "readme",
@@ -73,12 +73,12 @@ func TestFetchSearchPage(t *testing.T) {
 						Version:           "v1.0.0",
 						IsRedistributable: true,
 					},
-					Documentation: &internal.Documentation{
+					Documentation: []*internal.Documentation{{
 						GOOS:     sample.GOOS,
 						GOARCH:   sample.GOARCH,
 						Synopsis: "bar is used by foo.",
 						Source:   []byte{},
-					},
+					}},
 					Readme: &internal.Readme{
 						Filepath: "readme",
 						Contents: "readme",
@@ -116,7 +116,7 @@ func TestFetchSearchPage(t *testing.T) {
 						Name:           moduleBar.Packages()[0].Name,
 						PackagePath:    moduleBar.Packages()[0].Path,
 						ModulePath:     moduleBar.ModulePath,
-						Synopsis:       moduleBar.Packages()[0].Documentation.Synopsis,
+						Synopsis:       moduleBar.Packages()[0].Documentation[0].Synopsis,
 						DisplayVersion: moduleBar.Version,
 						Licenses:       []string{"MIT"},
 						CommitTime:     elapsedTime(moduleBar.CommitTime),
@@ -142,7 +142,7 @@ func TestFetchSearchPage(t *testing.T) {
 						Name:           moduleFoo.Packages()[0].Name,
 						PackagePath:    moduleFoo.Packages()[0].Path,
 						ModulePath:     moduleFoo.ModulePath,
-						Synopsis:       moduleFoo.Packages()[0].Documentation.Synopsis,
+						Synopsis:       moduleFoo.Packages()[0].Documentation[0].Synopsis,
 						DisplayVersion: moduleFoo.Version,
 						Licenses:       []string{"MIT"},
 						CommitTime:     elapsedTime(moduleFoo.CommitTime),

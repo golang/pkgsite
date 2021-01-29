@@ -180,7 +180,7 @@ func (p *Package) RenderParts(ctx context.Context, innerPath string, sourceInfo 
 // RenderPartsFromUnit is a convenience function that first decodes the source
 // in the unit, which must exist, and then calls RenderParts.
 func RenderPartsFromUnit(ctx context.Context, u *internal.Unit) (_ *dochtml.Parts, err error) {
-	docPkg, err := DecodePackage(u.Documentation.Source)
+	docPkg, err := DecodePackage(u.Documentation[0].Source)
 	if err != nil {
 		return nil, err
 	}

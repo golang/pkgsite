@@ -156,7 +156,7 @@ func importGraph(popularPath, importerModule string, importerCount int) []*inter
 	m := sample.Module(popularPath, "v1.2.3", "")
 	m.Packages()[0].Imports = nil
 	// Try to improve the ts_rank of the 'foo' search term.
-	m.Packages()[0].Documentation.Synopsis = "foo"
+	m.Packages()[0].Documentation[0].Synopsis = "foo"
 	m.Units[0].Readme.Contents = "foo"
 	mods := []*internal.Module{m}
 
@@ -167,12 +167,12 @@ func importGraph(popularPath, importerModule string, importerCount int) []*inter
 			fullPath := importerModule + "/" + name
 			u := &internal.Unit{
 				UnitMeta: *sample.UnitMeta(fullPath, importerModule, m.Version, name, true),
-				Documentation: &internal.Documentation{
+				Documentation: []*internal.Documentation{{
 					Synopsis: sample.Synopsis,
 					GOOS:     sample.GOOS,
 					GOARCH:   sample.GOARCH,
 					Source:   []byte{},
-				},
+				}},
 				Imports: []string{popularPath},
 			}
 			sample.AddUnit(m, u)
@@ -418,12 +418,12 @@ func TestInsertSearchDocumentAndSearch(t *testing.T) {
 				Path:              "gocloud.dev/cloud",
 				IsRedistributable: true, // required because some test cases depend on the README contents
 			},
-			Documentation: &internal.Documentation{
+			Documentation: []*internal.Documentation{{
 				GOOS:     sample.GOOS,
 				GOARCH:   sample.GOARCH,
 				Synopsis: "Package cloud contains a library and tools for open cloud development in Go. The Go Cloud Development Kit (Go CDK)",
 				Source:   []byte{},
-			},
+			}},
 		}
 
 		modKube = "k8s.io"
@@ -433,19 +433,19 @@ func TestInsertSearchDocumentAndSearch(t *testing.T) {
 				Path:              "k8s.io/client-go",
 				IsRedistributable: true, // required because some test cases depend on the README contents
 			},
-			Documentation: &internal.Documentation{
+			Documentation: []*internal.Documentation{{
 				GOOS:     sample.GOOS,
 				GOARCH:   sample.GOARCH,
 				Synopsis: "Package client-go implements a Go client for Kubernetes.",
 				Source:   []byte{},
-			},
+			}},
 		}
 
 		kubeResult = func(score float64, numResults uint64) *internal.SearchResult {
 			return &internal.SearchResult{
 				Name:        pkgKube.Name,
 				PackagePath: pkgKube.Path,
-				Synopsis:    pkgKube.Documentation.Synopsis,
+				Synopsis:    pkgKube.Documentation[0].Synopsis,
 				Licenses:    []string{"MIT"},
 				CommitTime:  sample.CommitTime,
 				Version:     sample.VersionString,
@@ -459,7 +459,7 @@ func TestInsertSearchDocumentAndSearch(t *testing.T) {
 			return &internal.SearchResult{
 				Name:        pkgGoCDK.Name,
 				PackagePath: pkgGoCDK.Path,
-				Synopsis:    pkgGoCDK.Documentation.Synopsis,
+				Synopsis:    pkgGoCDK.Documentation[0].Synopsis,
 				Licenses:    []string{"MIT"},
 				CommitTime:  sample.CommitTime,
 				Version:     sample.VersionString,
@@ -767,7 +767,7 @@ func TestUpsertSearchDocument(t *testing.T) {
 	insertModule := func(version string, gomod bool) {
 		m := sample.Module(sample.ModulePath, version, "A")
 		m.HasGoMod = gomod
-		m.Packages()[0].Documentation.Synopsis = "syn-" + version
+		m.Packages()[0].Documentation[0].Synopsis = "syn-" + version
 		if err := testDB.InsertModule(ctx, m); err != nil {
 			t.Fatal(err)
 		}

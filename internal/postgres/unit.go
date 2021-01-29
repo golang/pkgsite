@@ -400,7 +400,7 @@ func (db *DB) getUnitWithAllFields(ctx context.Context, um *internal.UnitMeta) (
 		return nil, derrors.NotFound
 	case nil:
 		if d.GOOS != "" {
-			u.Documentation = &d
+			u.Documentation = []*internal.Documentation{&d}
 		}
 		if r.Filepath != "" {
 			u.Readme = &r
