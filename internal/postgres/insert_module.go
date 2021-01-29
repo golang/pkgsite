@@ -407,7 +407,7 @@ func insertPaths(ctx context.Context, db *database.DB, m *internal.Module) (path
 }
 
 func insertUnits(ctx context.Context, db *database.DB, unitValues []interface{}) (pathIDToUnitID map[int]int, err error) {
-	defer derrors.Wrap(&err, "insertUnits")
+	defer derrors.WrapAndReport(&err, "insertUnits")
 
 	// Insert data into the units table.
 	unitCols := []string{
@@ -422,6 +422,18 @@ func insertUnits(ctx context.Context, db *database.DB, unitValues []interface{})
 	uniqueUnitCols := []string{"path_id", "module_id"}
 	returningUnitCols := []string{"id", "path_id"}
 
+	// Check to see if any rows have the same path_id and module_id.
+	// For golang/go#43899.
+	conflictingValues := map[[2]interface{}]bool{}
+	for i := 0; i < len(unitValues); i += len(unitCols) {
+		key := [2]interface{}{unitValues[i], unitValues[i+1]}
+		if conflictingValues[key] {
+			log.Errorf(ctx, "insertUnits: %v occurs twice", key)
+		} else {
+			conflictingValues[key] = true
+		}
+	}
+
 	pathIDToUnitID = map[int]int{}
 	if err := db.BulkUpsertReturning(ctx, "units", unitCols, unitValues,
 		uniqueUnitCols, returningUnitCols, func(rows *sql.Rows) error {
@@ -432,6 +444,10 @@ func insertUnits(ctx context.Context, db *database.DB, unitValues []interface{})
 			pathIDToUnitID[pathID] = unitID
 			return nil
 		}); err != nil {
+		log.Errorf(ctx, "got error doing bulk upsert to units (see below); logging path_id, module_id for golang.org/issue/43899")
+		for i := 0; i < len(unitValues); i += len(unitCols) {
+			log.Errorf(ctx, "%v, %v", unitValues[i], unitValues[i+1])
+		}
 		return nil, err
 	}
 	return pathIDToUnitID, nil
