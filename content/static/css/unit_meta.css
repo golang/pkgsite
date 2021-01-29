@@ -25,7 +25,6 @@
 }
 
 .UnitMetaDetails-header {
-  border-bottom: 0.0625rem solid var(--gray-8);
   display: flex;
   font-size: 1rem;
   font-weight: bold;
@@ -36,6 +35,7 @@
 }
 @media only screen and (min-width: 64rem) {
   .UnitMetaDetails-header {
+    border-bottom: 0.0625rem solid var(--gray-8);
     margin-top: 0.625rem;
   }
 }
