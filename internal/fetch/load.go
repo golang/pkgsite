@@ -44,14 +44,6 @@ type BadPackageError struct {
 
 func (bpe *BadPackageError) Error() string { return bpe.Err.Error() }
 
-// Go environments used to construct build contexts in loadPackage.
-var goEnvs = []struct{ GOOS, GOARCH string }{
-	{"linux", "amd64"},
-	{"windows", "amd64"},
-	{"darwin", "amd64"},
-	{"js", "wasm"},
-}
-
 // loadPackage loads a Go package by calling loadPackageWithBuildContext, trying
 // several build contexts in turn. It returns a goPackage with documentation
 // information for each build context that results in a valid package, in the
@@ -76,8 +68,8 @@ func loadPackage(ctx context.Context, zipGoFiles []*zip.File, innerPath string, 
 		files[name] = b
 	}
 
-	for _, env := range goEnvs {
-		pkg, err := loadPackageWithBuildContext(ctx, env.GOOS, env.GOARCH, files, innerPath, sourceInfo, modInfo)
+	for _, bc := range internal.BuildContexts {
+		pkg, err := loadPackageWithBuildContext(ctx, bc.GOOS, bc.GOARCH, files, innerPath, sourceInfo, modInfo)
 		if err != nil && !errors.Is(err, godoc.ErrTooLarge) && !errors.Is(err, derrors.NotFound) {
 			return nil, err
 		}
