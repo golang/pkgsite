@@ -8,6 +8,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/Masterminds/squirrel"
@@ -265,6 +266,8 @@ func (db *DB) getPackagesInUnit(ctx context.Context, fullPath, modulePath, resol
 			u.name,
 			u.redistributable,
 			d.synopsis,
+			d.GOOS,
+			d.GOARCH,
 			u.license_types,
 			u.license_paths
 		FROM modules m
@@ -277,20 +280,32 @@ func (db *DB) getPackagesInUnit(ctx context.Context, fullPath, modulePath, resol
 		WHERE
 			m.module_path = $1
 			AND m.version = $2
-			AND u.name != ''
-		ORDER BY path;`
-	var packages []*internal.PackageMeta
+			AND u.name != '';`
+
+	// If a package has more than build context (GOOS/GOARCH pair), it will have
+	// more than one row in documentation, and this query will produce multiple
+	// rows for that package. If we could sort the build contexts in SQL we
+	// could deal with that in the query, but we must sort in code, so we read
+	// all the rows and pick the right one afterwards.
+	type pmbc struct {
+		pm *internal.PackageMeta
+		bc internal.BuildContext
+	}
+	packagesByPath := map[string][]pmbc{}
 	collect := func(rows *sql.Rows) error {
 		var (
 			pkg          internal.PackageMeta
 			licenseTypes []string
 			licensePaths []string
+			bc           internal.BuildContext
 		)
 		if err := rows.Scan(
 			&pkg.Path,
 			&pkg.Name,
 			&pkg.IsRedistributable,
 			database.NullIsEmpty(&pkg.Synopsis),
+			database.NullIsEmpty(&bc.GOOS),
+			database.NullIsEmpty(&bc.GOARCH),
 			pq.Array(&licenseTypes),
 			pq.Array(&licensePaths),
 		); err != nil {
@@ -302,13 +317,20 @@ func (db *DB) getPackagesInUnit(ctx context.Context, fullPath, modulePath, resol
 				return err
 			}
 			pkg.Licenses = lics
-			packages = append(packages, &pkg)
+			packagesByPath[pkg.Path] = append(packagesByPath[pkg.Path], pmbc{&pkg, bc})
 		}
 		return nil
 	}
 	if err := db.db.RunQuery(ctx, query, collect, modulePath, resolvedVersion); err != nil {
 		return nil, err
 	}
+
+	var packages []*internal.PackageMeta
+	for _, ps := range packagesByPath {
+		sort.Slice(ps, func(i, j int) bool { return internal.CompareBuildContexts(ps[i].bc, ps[j].bc) < 0 })
+		packages = append(packages, ps[0].pm)
+	}
+	sort.Slice(packages, func(i, j int) bool { return packages[i].Path < packages[j].Path })
 	for _, p := range packages {
 		if db.bypassLicenseCheck {
 			p.IsRedistributable = true
