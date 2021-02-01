@@ -43,6 +43,8 @@ func TestFetchSearchPage(t *testing.T) {
 						IsRedistributable: true,
 					},
 					Documentation: &internal.Documentation{
+						GOOS:     sample.GOOS,
+						GOARCH:   sample.GOARCH,
 						Synopsis: "foo is a package.",
 						Source:   []byte{},
 					},
@@ -72,6 +74,8 @@ func TestFetchSearchPage(t *testing.T) {
 						IsRedistributable: true,
 					},
 					Documentation: &internal.Documentation{
+						GOOS:     sample.GOOS,
+						GOARCH:   sample.GOARCH,
 						Synopsis: "bar is used by foo.",
 						Source:   []byte{},
 					},

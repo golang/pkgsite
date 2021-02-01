@@ -419,6 +419,8 @@ func TestInsertSearchDocumentAndSearch(t *testing.T) {
 				IsRedistributable: true, // required because some test cases depend on the README contents
 			},
 			Documentation: &internal.Documentation{
+				GOOS:     sample.GOOS,
+				GOARCH:   sample.GOARCH,
 				Synopsis: "Package cloud contains a library and tools for open cloud development in Go. The Go Cloud Development Kit (Go CDK)",
 				Source:   []byte{},
 			},
@@ -432,6 +434,8 @@ func TestInsertSearchDocumentAndSearch(t *testing.T) {
 				IsRedistributable: true, // required because some test cases depend on the README contents
 			},
 			Documentation: &internal.Documentation{
+				GOOS:     sample.GOOS,
+				GOARCH:   sample.GOARCH,
 				Synopsis: "Package client-go implements a Go client for Kubernetes.",
 				Source:   []byte{},
 			},

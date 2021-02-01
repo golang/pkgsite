@@ -466,6 +466,9 @@ func insertDoc(ctx context.Context, db *database.DB,
 			continue
 		}
 		unitID := pathToUnitID[path]
+		if doc.GOOS == "" || doc.GOARCH == "" {
+			return errors.New("empty GOOS or GOARCH")
+		}
 		docValues = append(docValues, unitID, doc.GOOS, doc.GOARCH, doc.Synopsis, doc.Source)
 	}
 	uniqueCols := []string{"unit_id", "goos", "goarch"}
