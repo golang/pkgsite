@@ -63,6 +63,7 @@ var (
 type docData struct {
 	Elements          []docElement
 	DisablePermalinks bool
+	EnableCommandTOC  bool
 }
 
 type docElement struct {
@@ -112,7 +113,8 @@ func (r *Renderer) declHTML(doc string, decl ast.Decl, extractLinks bool) (out s
 				}
 			}
 		}
-		out.Doc = ExecuteToHTML(r.docTmpl, docData{Elements: els, DisablePermalinks: r.disablePermalinks})
+		out.Doc = ExecuteToHTML(r.docTmpl, docData{Elements: els,
+			DisablePermalinks: r.disablePermalinks, EnableCommandTOC: r.enableCommandTOC})
 	}
 	if decl != nil {
 		out.Decl = r.formatDeclHTML(decl, idr)

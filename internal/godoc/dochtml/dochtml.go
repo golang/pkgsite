@@ -25,7 +25,9 @@ import (
 	"github.com/google/safehtml/legacyconversions"
 	"github.com/google/safehtml/template"
 	"github.com/google/safehtml/uncheckedconversions"
+	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/godoc/dochtml/internal/render"
 	"golang.org/x/pkgsite/internal/godoc/internal/doc"
 )
@@ -193,6 +195,7 @@ func renderInfo(ctx context.Context, fset *token.FileSet, p *doc.Package, opt Re
 			return "/" + versionedPath
 		},
 		DisableHotlinking: true,
+		EnableCommandTOC:  experiment.IsActive(ctx, internal.ExperimentCommandTOC),
 	})
 
 	fileLink := func(name string) safehtml.HTML {

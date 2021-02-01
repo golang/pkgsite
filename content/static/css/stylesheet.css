@@ -1274,6 +1274,19 @@ pre {
   color: var(--gray-3);
   margin-top: -0.5rem;
 }
+@media only screen and (min-width: 64rem) {
+  .Documentation-toc {
+    columns: 2;
+    white-space: nowrap;
+  }
+}
+.Documentation-toc:empty {
+  display: none;
+}
+.Documentation-tocItem {
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
 
 .Documentation-tocItem--constants,
 .Documentation-tocItem--funcsAndTypes,

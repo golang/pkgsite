@@ -36,6 +36,7 @@ type Renderer struct {
 	packageURL        func(string) string
 	disableHotlinking bool
 	disablePermalinks bool
+	enableCommandTOC  bool
 	ctx               context.Context
 	docTmpl           *template.Template
 	exampleTmpl       *template.Template
@@ -65,10 +66,29 @@ type Options struct {
 	//
 	// Only relevant for HTML formatting.
 	DisablePermalinks bool
+
+	// EnableCommandTOC turns on the table of contents for the overview section
+	// of command pages.
+	//
+	// Only relevant for HTML formatting.
+	EnableCommandTOC bool
 }
 
 // docDataTmpl renders documentation. It expects a docData.
 var docDataTmpl = template.Must(template.New("").Parse(`
+{{- if and .EnableCommandTOC .Elements -}}
+	<div role="navigation" aria-label="Table of Contents">
+		<ul class="Documentation-toc">
+			{{- range .Elements -}}
+				{{- if .IsHeading -}}
+					<li class="Documentation-tocItem">
+						<a href="#{{.ID}}">{{.Title}}</a>
+					</li>
+				{{- end -}}
+			{{- end -}}
+		</ul>
+	</div>
+{{- end -}}
 {{- range .Elements -}}
   {{- if .IsHeading -}}
     <h4 id="{{.ID}}">{{.Title}}
@@ -99,6 +119,7 @@ func New(ctx context.Context, fset *token.FileSet, pkg *doc.Package, opts *Optio
 	var packageURL func(string) string
 	var disableHotlinking bool
 	var disablePermalinks bool
+	var enableCommandTOC bool
 	if opts != nil {
 		if len(opts.RelatedPackages) > 0 {
 			others = opts.RelatedPackages
@@ -108,6 +129,7 @@ func New(ctx context.Context, fset *token.FileSet, pkg *doc.Package, opts *Optio
 		}
 		disableHotlinking = opts.DisableHotlinking
 		disablePermalinks = opts.DisablePermalinks
+		enableCommandTOC = opts.EnableCommandTOC
 	}
 	pids := newPackageIDs(pkg, others...)
 
@@ -117,6 +139,7 @@ func New(ctx context.Context, fset *token.FileSet, pkg *doc.Package, opts *Optio
 		packageURL:        packageURL,
 		disableHotlinking: disableHotlinking,
 		disablePermalinks: disablePermalinks,
+		enableCommandTOC:  enableCommandTOC,
 		docTmpl:           docDataTmpl,
 		exampleTmpl:       exampleTmpl,
 		ctx:               ctx,
