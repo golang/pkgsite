@@ -4,42 +4,40 @@
   license that can be found in the LICENSE file.
 -->
 
-{{define "module_list"}}
-  {{range $major := .}}
-    <h2>
-      {{.Major}}
-      {{if not (eq $major.ModulePath "std")}}
-        <span class="Versions-modulePath"> &ndash; {{$major.ModulePath}}</span>
-      {{end}}
-    </h2>
-    <ul class="Versions-list">
-      {{range $v := $major.Versions}}
-        <li class="Versions-item">
-          <a href="{{$v.Link}}">{{$v.Version}}</a>
-          <span class="Versions-commitTime"> &ndash; {{$v.CommitTime}}</span>
-        </li>
-      {{end}}
-    </ul>
-  {{end}}
-{{end}}
-
 {{define "versions"}}
   <div class="Versions">
-    {{if or .OtherModules .ThisModule}}
-      {{if .OtherModules}}
-        <h2>Versions in this module</h2>
+    <table>
+      <tr><th colspan="3"><h2>Versions in this module</h2></th></tr>
+      {{template "module_list" .ThisModule}}
+      {{if .IncompatibleModules}}
+        <tr><th colspan="3"><h2>Incompatible versions in this module</h2></th></tr>
+        {{template "module_list" .IncompatibleModules}}
       {{end}}
-      {{if .ThisModule}}
-        {{template "module_list" .ThisModule}}
-      {{else}}
-        <p class="Versions-message">There are no tagged versions of this module.</p>
+    </table>
+
+    {{if .OtherModules}}
+      <h2>Other modules containing this package</h2>
+      {{range .OtherModules}}
+        <div><a href="/{{.}}">{{.}}</a></div>
       {{end}}
-      {{if .OtherModules}}
-        <h2>Other modules containing this package</h2>
-        {{template "module_list" .OtherModules}}
-      {{end}}
-    {{else}}
-      {{template "empty_content" "No other known versions of this package!"}}
     {{end}}
   </div>
+{{end}}
+
+{{define "module_list"}}
+  {{range $major := .}}
+     {{range $i, $v := $major.Versions}}
+       <tr>
+         <td>
+           {{if eq $i 0 }}<div class="Versions-major">{{$major.Major}}</div>{{end}}
+         </td>
+         <td>
+           <a href="{{$v.Link}}">{{$v.Version}}</a>
+         </td>
+         <td>
+           <div class="Versions-commitTime">{{$v.CommitTime}}</div>
+         </td>
+       </tr>
+     {{end}}
+  {{end}}
 {{end}}

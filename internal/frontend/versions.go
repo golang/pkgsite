@@ -27,9 +27,13 @@ type VersionsDetails struct {
 	// current package.
 	ThisModule []*VersionList
 
+	// IncompatibleModules is the slice of the VersionsLists with the same
+	// module path as the current package, but with incompatible versions.
+	IncompatibleModules []*VersionList
+
 	// OtherModules is the slice of VersionLists with a different module path
 	// from the current package.
-	OtherModules []*VersionList
+	OtherModules []string
 }
 
 // VersionListKey identifies a version list on the versions tab. We have a
@@ -39,8 +43,13 @@ type VersionsDetails struct {
 type VersionListKey struct {
 	// ModulePath is the module path of this major version.
 	ModulePath string
+
 	// Major is the major version string (e.g. v1, v2)
 	Major string
+
+	// Incompatible indicates whether the VersionListKey represents an
+	// incompatible module version.
+	Incompatible bool
 }
 
 // VersionList holds all versions corresponding to a unique (module path,
@@ -110,7 +119,6 @@ func pathInVersion(v1Path string, mi *internal.ModuleInfo) string {
 // path as the package version under consideration, and those that don't.  The
 // given versions MUST be sorted first by module path and then by semver.
 func buildVersionDetails(currentModulePath string, modInfos []*internal.ModuleInfo, linkify func(v *internal.ModuleInfo) string) *VersionsDetails {
-
 	// lists organizes versions by VersionListKey. Note that major version isn't
 	// sufficient as a key: there are packages contained in the same major
 	// version of different modules, for example github.com/hashicorp/vault/api,
@@ -140,11 +148,17 @@ func buildVersionDetails(currentModulePath string, modInfos []*internal.ModuleIn
 				// Trim both '/' and '.' from the path major version to account for
 				// standard and gopkg.in module paths.
 				major = strings.TrimLeft(pathMajor, "/.")
+			} else if version.IsIncompatible(mi.Version) {
+				major = semver.Major(mi.Version)
 			} else if major != "v0" && !strings.HasPrefix(major, "go") {
 				major = "v1"
 			}
 		}
-		key := VersionListKey{ModulePath: mi.ModulePath, Major: major}
+		key := VersionListKey{
+			ModulePath:   mi.ModulePath,
+			Major:        major,
+			Incompatible: version.IsIncompatible(mi.Version),
+		}
 		vs := &VersionSummary{
 			Link:       linkify(mi),
 			CommitTime: absoluteTime(mi.CommitTime),
@@ -157,16 +171,24 @@ func buildVersionDetails(currentModulePath string, modInfos []*internal.ModuleIn
 	}
 
 	var details VersionsDetails
+	other := map[string]bool{}
 	for _, key := range seenLists {
 		vl := &VersionList{
 			VersionListKey: key,
 			Versions:       lists[key],
 		}
 		if key.ModulePath == currentModulePath {
-			details.ThisModule = append(details.ThisModule, vl)
+			if key.Incompatible {
+				details.IncompatibleModules = append(details.IncompatibleModules, vl)
+			} else {
+				details.ThisModule = append(details.ThisModule, vl)
+			}
 		} else {
-			details.OtherModules = append(details.OtherModules, vl)
+			other[key.ModulePath] = true
 		}
+	}
+	for m := range other {
+		details.OtherModules = append(details.OtherModules, m)
 	}
 	return &details
 }

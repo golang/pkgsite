@@ -79,9 +79,9 @@ func TestFetchPackageVersionsDetails(t *testing.T) {
 			true),
 		Documentation: []*internal.Documentation{sample.Doc},
 	}
-	makeList := func(pkgPath, modulePath, major string, versions []string) *VersionList {
+	makeList := func(pkgPath, modulePath, major string, versions []string, incompatible bool) *VersionList {
 		return &VersionList{
-			VersionListKey: VersionListKey{ModulePath: modulePath, Major: major},
+			VersionListKey: VersionListKey{ModulePath: modulePath, Major: major, Incompatible: incompatible},
 			Versions: versionSummaries(pkgPath, versions, func(path, version string) string {
 				return constructUnitURL(pkgPath, modulePath, version)
 			}),
@@ -103,7 +103,7 @@ func TestFetchPackageVersionsDetails(t *testing.T) {
 			},
 			wantDetails: &VersionsDetails{
 				ThisModule: []*VersionList{
-					makeList("net/http", "std", "go1", []string{"go1.12.5", "go1.11.6"}),
+					makeList("net/http", "std", "go1", []string{"go1.12.5", "go1.11.6"}, false),
 				},
 			},
 		},
@@ -113,6 +113,7 @@ func TestFetchPackageVersionsDetails(t *testing.T) {
 			modules: []*internal.Module{
 				sampleModule(modulePath1, "v0.0.0-20140414041502-3c2ca4d52544", version.TypePseudo, pkg2),
 				sampleModule(modulePath1, "v1.2.3", version.TypeRelease, pkg1),
+				sampleModule(modulePath1, "v2.1.0+incompatible", version.TypeRelease, pkg1),
 				sampleModule(modulePath2, "v2.0.0", version.TypeRelease, pkg2),
 				sampleModule(modulePath1, "v1.3.0", version.TypeRelease, pkg1),
 				sampleModule(modulePath1, "v1.2.1", version.TypeRelease, pkg1),
@@ -121,12 +122,12 @@ func TestFetchPackageVersionsDetails(t *testing.T) {
 			},
 			wantDetails: &VersionsDetails{
 				ThisModule: []*VersionList{
-					makeList(v1Path, modulePath1, "v1", []string{"v1.3.0", "v1.2.3", "v1.2.1"}),
+					makeList(v1Path, modulePath1, "v1", []string{"v1.3.0", "v1.2.3", "v1.2.1"}, false),
 				},
-				OtherModules: []*VersionList{
-					makeList(v2Path, modulePath2, "v2", []string{"v2.2.1-alpha.1", "v2.0.0"}),
-					makeList(v1Path, "test.com", "v1", []string{"v1.2.1"}),
+				IncompatibleModules: []*VersionList{
+					makeList(v1Path, modulePath1, "v2", []string{"v2.1.0+incompatible"}, true),
 				},
+				OtherModules: []string{modulePath2, "test.com"},
 			},
 		},
 		{
@@ -142,11 +143,9 @@ func TestFetchPackageVersionsDetails(t *testing.T) {
 			},
 			wantDetails: &VersionsDetails{
 				ThisModule: []*VersionList{
-					makeList(v2Path, modulePath2, "v2", []string{"v2.2.1-alpha.1", "v2.0.0"}),
+					makeList(v2Path, modulePath2, "v2", []string{"v2.2.1-alpha.1", "v2.0.0"}, false),
 				},
-				OtherModules: []*VersionList{
-					makeList(v1Path, modulePath1, "v1", []string{"v1.2.3", "v1.2.1", "v2.1.0+incompatible"}),
-				},
+				OtherModules: []string{modulePath1},
 			},
 		},
 		{
@@ -157,12 +156,7 @@ func TestFetchPackageVersionsDetails(t *testing.T) {
 				sampleModule(modulePath1, "v0.0.0-20140414041502-4c2ca4d52544", version.TypePseudo, pkg2),
 			},
 			wantDetails: &VersionsDetails{
-				OtherModules: []*VersionList{
-					makeList(v1Path, modulePath1, "v0", []string{
-						"v0.0.0-20140414041502-4c2ca4d52544",
-						"v0.0.0-20140414041501-3c2ca4d52544",
-					}),
-				},
+				OtherModules: []string{modulePath1},
 			},
 		},
 	} {
@@ -178,11 +172,6 @@ func TestFetchPackageVersionsDetails(t *testing.T) {
 				t.Fatalf("fetchVersionsDetails(ctx, db, %q, %q): %v", tc.pkg.Path, tc.pkg.ModulePath, err)
 			}
 			for _, vl := range tc.wantDetails.ThisModule {
-				for _, v := range vl.Versions {
-					v.CommitTime = absoluteTime(tc.modules[0].CommitTime)
-				}
-			}
-			for _, vl := range tc.wantDetails.OtherModules {
 				for _, v := range vl.Versions {
 					v.CommitTime = absoluteTime(tc.modules[0].CommitTime)
 				}

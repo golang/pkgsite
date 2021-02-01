@@ -205,7 +205,7 @@ func insertModule(ctx context.Context, db *database.DB, m *internal.Module) (_ i
 		m.IsRedistributable,
 		m.HasGoMod,
 		m.DeprecatedComment,
-		isIncompatible(m.Version),
+		version.IsIncompatible(m.Version),
 	).Scan(&moduleID)
 	if err != nil {
 		return 0, err
@@ -579,12 +579,6 @@ func lock(ctx context.Context, tx *database.DB, modulePath string) (err error) {
 		log.Debugf(ctx, "locking %s (%d) succeeded", modulePath, h)
 	}
 	return nil
-}
-
-// isIncompatible reports whether the build metadata of the version is
-// "+incompatible", https://semver.org clause 10.
-func isIncompatible(version string) bool {
-	return strings.HasSuffix(version, "+incompatible")
 }
 
 // isLatestVersion reports whether version is the latest version of the module.

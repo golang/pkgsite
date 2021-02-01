@@ -41,6 +41,11 @@ func IsPseudo(v string) bool {
 	return strings.Count(v, "-") >= 2 && pseudoVersionRE.MatchString(v)
 }
 
+// IsIncompatible reports whether a valid version v is an incompatible version.
+func IsIncompatible(v string) bool {
+	return strings.HasSuffix(v, "+incompatible")
+}
+
 // ParseType returns the Type of a given a version.
 func ParseType(version string) (Type, error) {
 	if !semver.IsValid(version) {
