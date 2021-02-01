@@ -94,6 +94,16 @@ func TestModuleInfo(t *testing.T) {
 			"https://github.com/hashicorp/consul/raw/sdk/v0.2.0/sdk/freeport/freeport.go",
 		},
 		{
+			"github module with VCS suffix",
+			"github.com/pkg/errors.git", "v0.8.1", "errors.go",
+
+			"https://github.com/pkg/errors",
+			"https://github.com/pkg/errors/tree/v0.8.1",
+			"https://github.com/pkg/errors/blob/v0.8.1/errors.go",
+			"https://github.com/pkg/errors/blob/v0.8.1/errors.go#L1",
+			"https://github.com/pkg/errors/raw/v0.8.1/errors.go",
+		},
+		{
 			"bitbucket",
 			"bitbucket.org/plazzaro/kami", "v1.2.1", "defaults.go",
 

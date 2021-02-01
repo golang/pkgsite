@@ -200,6 +200,18 @@ func TestReadme(t *testing.T) {
 			wantOutline: nil,
 		},
 		{
+			name: "relative image markdown is made absolute for GitHub, .git removed from repo URL",
+			unit: &internal.Unit{
+				UnitMeta: internal.UnitMeta{SourceInfo: source.NewGitHubInfo("https://github.com/robpike/ivy.git", "", "v0.1.0")},
+			},
+			readme: &internal.Readme{
+				Filepath: "README.md",
+				Contents: "![ivy](ivy.jpg)",
+			},
+			wantHTML:    `<p><img src="https://github.com/robpike/ivy/raw/v0.1.0/ivy.jpg" alt="ivy"/></p>`,
+			wantOutline: nil,
+		},
+		{
 			name: "relative image markdown is left alone for unknown origins",
 			unit: &internal.Unit{},
 			readme: &internal.Readme{

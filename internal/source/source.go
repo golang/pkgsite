@@ -192,7 +192,7 @@ func (i *Info) UnmarshalJSON(data []byte) (err error) {
 	if err := json.Unmarshal(data, &ji); err != nil {
 		return err
 	}
-	i.repoURL = ji.RepoURL
+	i.repoURL = trimVCSSuffix(ji.RepoURL)
 	i.moduleDir = ji.ModuleDir
 	i.commit = ji.Commit
 	if ji.Kind != "" {
@@ -275,7 +275,7 @@ func ModuleInfo(ctx context.Context, client *Client, modulePath, version string)
 			commit = transformCommit(commit, isHash)
 		}
 		info = &Info{
-			repoURL:   "https://" + repo,
+			repoURL:   trimVCSSuffix("https://" + repo),
 			moduleDir: relativeModulePath,
 			commit:    commit,
 			templates: templates,
@@ -755,6 +755,26 @@ func commitFromVersion(vers, relativeModulePath string) (commit string, isHash b
 	}
 }
 
+// trimVCSSuffix removes a VCS suffix from a repo URL in selected cases.
+//
+// The Go command allows a VCS suffix on a repo, like github.com/foo/bar.git. But
+// some code hosting sites don't support all paths constructed from such URLs.
+// For example, GitHub will redirect github.com/foo/bar.git to github.com/foo/bar,
+// but will 404 on github.com/goo/bar.git/tree/master and any other URL with a
+// non-empty path.
+//
+// To be conservative, we remove the suffix only in cases where we know it's
+// wrong.
+func trimVCSSuffix(repoURL string) string {
+	if !strings.HasSuffix(repoURL, ".git") {
+		return repoURL
+	}
+	if strings.HasPrefix(repoURL, "https://github.com/") || strings.HasPrefix(repoURL, "https://gitlab.com/") {
+		return strings.TrimSuffix(repoURL, ".git")
+	}
+	return repoURL
+}
+
 // The following code copied from cmd/go/internal/get:
 
 // expand rewrites s to replace {k} with match[k] for each key k in match.
@@ -773,7 +793,7 @@ func expand(s string, match map[string]string) string {
 // It is for testing only.
 func NewGitHubInfo(repoURL, moduleDir, commit string) *Info {
 	return &Info{
-		repoURL:   repoURL,
+		repoURL:   trimVCSSuffix(repoURL),
 		moduleDir: moduleDir,
 		commit:    commit,
 		templates: githubURLTemplates,
