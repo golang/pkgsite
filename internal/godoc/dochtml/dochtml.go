@@ -85,12 +85,7 @@ func Render(ctx context.Context, fset *token.FileSet, p *doc.Package, opt Render
 
 	funcs, data, _ := renderInfo(ctx, fset, p, opt)
 	p = data.Package
-	if p.Doc == "" &&
-		len(p.Examples) == 0 &&
-		len(p.Consts) == 0 &&
-		len(p.Vars) == 0 &&
-		len(p.Types) == 0 &&
-		len(p.Funcs) == 0 {
+	if docIsEmpty(p) {
 		return safehtml.HTML{}, nil
 	}
 	tmpl := template.Must(unitTemplate.Clone()).Funcs(funcs)
@@ -120,12 +115,7 @@ func RenderParts(ctx context.Context, fset *token.FileSet, p *doc.Package, opt R
 
 	funcs, data, links := renderInfo(ctx, fset, p, opt)
 	p = data.Package
-	if p.Doc == "" &&
-		len(p.Examples) == 0 &&
-		len(p.Consts) == 0 &&
-		len(p.Vars) == 0 &&
-		len(p.Types) == 0 &&
-		len(p.Funcs) == 0 {
+	if docIsEmpty(p) {
 		return &Parts{}, nil
 	}
 	tmpl := template.Must(unitTemplate.Clone()).Funcs(funcs)
@@ -156,6 +146,15 @@ func RenderParts(ctx context.Context, fset *token.FileSet, p *doc.Package, opt R
 		return nil, err
 	}
 	return parts, nil
+}
+
+func docIsEmpty(p *doc.Package) bool {
+	return p.Doc == "" &&
+		len(p.Examples) == 0 &&
+		len(p.Consts) == 0 &&
+		len(p.Vars) == 0 &&
+		len(p.Types) == 0 &&
+		len(p.Funcs) == 0
 }
 
 // renderInfo returns the functions and data needed to render the doc.
