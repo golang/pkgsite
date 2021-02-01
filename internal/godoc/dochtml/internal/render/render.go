@@ -157,7 +157,7 @@ func (r *Renderer) ShortSynopsis(n ast.Node) (string, error) {
 
 // Synopsis returns a one-line summary of the given input node.
 func (r *Renderer) Synopsis(n ast.Node) string {
-	return oneLineNodeDepth(r.fset, n, 0)
+	return OneLineNodeDepth(r.fset, n, 0)
 }
 
 // DocHTML formats documentation text as HTML.

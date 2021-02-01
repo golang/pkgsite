@@ -13,10 +13,10 @@ import (
 	"strings"
 )
 
-// oneLineNodeDepth returns a one-line summary of the given input node.
+// OneLineNodeDepth returns a one-line summary of the given input node.
 // The depth specifies the current depth when traversing the AST and the
 // function will stop traversing once depth reaches maxSynopsisNodeDepth.
-func oneLineNodeDepth(fset *token.FileSet, node ast.Node, depth int) string {
+func OneLineNodeDepth(fset *token.FileSet, node ast.Node, depth int) string {
 	const dotDotDot = "..."
 	if depth == maxSynopsisNodeDepth {
 		return dotDotDot
@@ -45,20 +45,20 @@ func oneLineNodeDepth(fset *token.FileSet, node ast.Node, depth int) string {
 				// The type name may carry over from a previous specification in the
 				// case of constants and iota.
 				if valueSpec.Type != nil {
-					typ = fmt.Sprintf(" %s", oneLineNodeDepth(fset, valueSpec.Type, depth))
+					typ = fmt.Sprintf(" %s", OneLineNodeDepth(fset, valueSpec.Type, depth))
 				} else if len(valueSpec.Values) > 0 {
 					typ = ""
 				}
 
 				val := ""
 				if i < len(valueSpec.Values) && valueSpec.Values[i] != nil {
-					val = fmt.Sprintf(" = %s", oneLineNodeDepth(fset, valueSpec.Values[i], depth))
+					val = fmt.Sprintf(" = %s", OneLineNodeDepth(fset, valueSpec.Values[i], depth))
 				}
 				return fmt.Sprintf("%s %s%s%s%s", n.Tok, valueSpec.Names[0], typ, val, trailer)
 			}
 		case token.TYPE:
 			if len(n.Specs) > 0 {
-				return oneLineNodeDepth(fset, n.Specs[0], depth) + trailer
+				return OneLineNodeDepth(fset, n.Specs[0], depth) + trailer
 			}
 		case token.IMPORT:
 			if len(n.Specs) > 0 {
@@ -71,11 +71,11 @@ func oneLineNodeDepth(fset *token.FileSet, node ast.Node, depth int) string {
 	case *ast.FuncDecl:
 		// Formats func declarations.
 		name := n.Name.Name
-		recv := oneLineNodeDepth(fset, n.Recv, depth)
+		recv := OneLineNodeDepth(fset, n.Recv, depth)
 		if len(recv) > 0 {
 			recv = "(" + recv + ") "
 		}
-		fnc := oneLineNodeDepth(fset, n.Type, depth)
+		fnc := OneLineNodeDepth(fset, n.Type, depth)
 		if strings.Index(fnc, "func") == 0 {
 			fnc = fnc[4:]
 		}
@@ -86,7 +86,7 @@ func oneLineNodeDepth(fset *token.FileSet, node ast.Node, depth int) string {
 		if n.Assign.IsValid() {
 			sep = " = "
 		}
-		return fmt.Sprintf("type %s%s%s", n.Name.Name, sep, oneLineNodeDepth(fset, n.Type, depth))
+		return fmt.Sprintf("type %s%s%s", n.Name.Name, sep, OneLineNodeDepth(fset, n.Type, depth))
 
 	case *ast.FuncType:
 		var params []string
@@ -137,35 +137,35 @@ func oneLineNodeDepth(fset *token.FileSet, node ast.Node, depth int) string {
 		return dotDotDot
 
 	case *ast.FuncLit:
-		return oneLineNodeDepth(fset, n.Type, depth) + " { ... }"
+		return OneLineNodeDepth(fset, n.Type, depth) + " { ... }"
 
 	case *ast.CompositeLit:
-		typ := oneLineNodeDepth(fset, n.Type, depth)
+		typ := OneLineNodeDepth(fset, n.Type, depth)
 		if len(n.Elts) == 0 {
 			return fmt.Sprintf("%s{}", typ)
 		}
 		return fmt.Sprintf("%s{ %s }", typ, dotDotDot)
 
 	case *ast.ArrayType:
-		length := oneLineNodeDepth(fset, n.Len, depth)
-		element := oneLineNodeDepth(fset, n.Elt, depth)
+		length := OneLineNodeDepth(fset, n.Len, depth)
+		element := OneLineNodeDepth(fset, n.Elt, depth)
 		return fmt.Sprintf("[%s]%s", length, element)
 
 	case *ast.MapType:
-		key := oneLineNodeDepth(fset, n.Key, depth)
-		value := oneLineNodeDepth(fset, n.Value, depth)
+		key := OneLineNodeDepth(fset, n.Key, depth)
+		value := OneLineNodeDepth(fset, n.Value, depth)
 		return fmt.Sprintf("map[%s]%s", key, value)
 
 	case *ast.CallExpr:
-		fnc := oneLineNodeDepth(fset, n.Fun, depth)
+		fnc := OneLineNodeDepth(fset, n.Fun, depth)
 		var args []string
 		for _, arg := range n.Args {
-			args = append(args, oneLineNodeDepth(fset, arg, depth))
+			args = append(args, OneLineNodeDepth(fset, arg, depth))
 		}
 		return fmt.Sprintf("%s(%s)", fnc, joinStrings(args))
 
 	case *ast.UnaryExpr:
-		return fmt.Sprintf("%s%s", n.Op, oneLineNodeDepth(fset, n.X, depth))
+		return fmt.Sprintf("%s%s", n.Op, OneLineNodeDepth(fset, n.X, depth))
 
 	case *ast.Ident:
 		return n.Name
@@ -189,9 +189,9 @@ func oneLineField(fset *token.FileSet, field *ast.Field, depth int) string {
 		names = append(names, name.Name)
 	}
 	if len(names) == 0 {
-		return oneLineNodeDepth(fset, field.Type, depth)
+		return OneLineNodeDepth(fset, field.Type, depth)
 	}
-	return joinStrings(names) + " " + oneLineNodeDepth(fset, field.Type, depth)
+	return joinStrings(names) + " " + OneLineNodeDepth(fset, field.Type, depth)
 }
 
 // joinStrings formats the input as a comma-separated list,
