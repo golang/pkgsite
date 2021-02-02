@@ -7,10 +7,7 @@ package frontend
 import (
 	"context"
 	"errors"
-	"fmt"
-	"math"
 	"sort"
-	"strconv"
 	"strings"
 
 	"github.com/google/safehtml"
@@ -71,7 +68,7 @@ type MainDetails struct {
 	// ImportedByCount is the number of packages that import this path.
 	// When the count is > limit it will read as 'limit+'. This field
 	// is not supported when using a datasource proxy.
-	ImportedByCount string
+	ImportedByCount int
 
 	DocBody       safehtml.HTML
 	DocOutline    safehtml.HTML
@@ -235,7 +232,7 @@ func fetchMainDetails(ctx context.Context, ds internal.DataSource, um *internal.
 		SourceURL:         um.SourceInfo.DirectoryURL(internal.Suffix(um.Path, um.ModulePath)),
 		MobileOutline:     docParts.MobileOutline,
 		NumImports:        unit.NumImports,
-		ImportedByCount:   formatImportedByCount(unit.NumImportedBy),
+		ImportedByCount:   unit.NumImportedBy,
 		IsPackage:         unit.IsPackage(),
 		ModFileURL:        um.SourceInfo.ModuleURL() + "/go.mod",
 		IsTaggedVersion:   isTaggedVersion,
@@ -348,32 +345,4 @@ func getHTML(ctx context.Context, u *internal.Unit, docPkg *godoc.Package) (_ *d
 	}
 	log.Errorf(ctx, "unit %s (%s@%s) missing documentation source", u.Path, u.ModulePath, u.Version)
 	return &dochtml.Parts{Body: template.MustParseAndExecuteToHTML(missingDocReplacement)}, nil
-}
-
-// formatImportedByCount fetches the imported by count for the unit and returns a
-// string to be displayed. If the datasource does not support imported by, it
-// will return N/A.
-func formatImportedByCount(numImportedBy int) string {
-	if numImportedBy < mainPageImportedByLimit {
-		// Exact number is less than the limit, so just return that.
-		return strconv.Itoa(numImportedBy)
-	}
-
-	// Exact number is greater than the limit, so fetch an approximate value
-	// from search_documents.num_imported_by. This number might be different
-	// than the result of GetImportedBy because alternative modules and internal
-	// packages are excluded.
-	// Treat the result as approximate.
-	return fmt.Sprintf("%d+", approximateLowerBound(numImportedBy))
-}
-
-// approximateLowerBound rounds n down to a multiple of a power of 10.
-// See the test for examples.
-func approximateLowerBound(n int) int {
-	if n == 0 {
-		return 0
-	}
-	f := float64(n)
-	powerOf10 := math.Pow(10, math.Floor(math.Log10(f)))
-	return int(powerOf10 * math.Floor(f/powerOf10))
 }

@@ -7,6 +7,7 @@ package frontend
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"golang.org/x/pkgsite/internal"
@@ -82,9 +83,6 @@ type ImportedByDetails struct {
 }
 
 var (
-	// mainPageImportedByLimit determines whether the main (unit) page displays
-	// an exact or an approximate number of importers.
-	mainPageImportedByLimit = 21
 	// tabImportedByLimit is the maximum number of importers displayed on the imported
 	// by page.
 	tabImportedByLimit = 20001
@@ -109,7 +107,7 @@ func fetchImportedByDetails(ctx context.Context, ds internal.DataSource, pkgPath
 	}
 	sections := Sections(importedBy, nextPrefixAccount)
 
-	display := formatImportedByCount(numImportedBy)
+	display := strconv.Itoa(numImportedBy)
 	if numImportedBy >= tabImportedByLimit {
 		display += fmt.Sprintf(" (displaying %d packages)", tabImportedByLimit-1)
 	}

@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -146,7 +147,7 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 	page.Details = d
 	main, ok := d.(*MainDetails)
 	if ok {
-		page.MetaDescription = metaDescription(main.ImportedByCount)
+		page.MetaDescription = metaDescription(strconv.Itoa(main.ImportedByCount))
 	}
 	s.servePage(ctx, w, tabSettings.TemplateName, page)
 	return nil

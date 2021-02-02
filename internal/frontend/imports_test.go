@@ -167,7 +167,7 @@ func TestFetchImportedByDetails_ExceedsTabLimit(t *testing.T) {
 			pkg := sample.UnitForPackage(sample.PackagePath, sample.ModulePath, sample.VersionString, sample.PackageName, true)
 			wantDetails := &ImportedByDetails{
 				ModulePath:           sample.ModulePath,
-				NumImportedByDisplay: fmt.Sprintf("%s (displaying 20000 packages)", formatImportedByCount(count)),
+				NumImportedByDisplay: fmt.Sprintf("%d (displaying 20000 packages)", count),
 				Total:                count,
 			}
 			checkFetchImportedByDetails(ctx, t, pkg, wantDetails)

@@ -144,53 +144,30 @@ func TestGetImportedByCount(t *testing.T) {
 		}
 	}
 
-	mainPageImportedByLimit = 2
-	tabImportedByLimit = 3
 	for _, test := range []struct {
 		mod  *internal.Module
-		want string
+		want int
 	}{
 		{
 			mod:  mod3,
-			want: "0",
+			want: 0,
 		},
 		{
 			mod:  mod2,
-			want: "1",
+			want: 1,
 		},
 		{
 			mod:  mod1,
-			want: "2+",
+			want: 2,
 		},
 	} {
 		pkg := test.mod.Packages()[0]
 		t.Run(test.mod.ModulePath, func(t *testing.T) {
-			got := formatImportedByCount(pkg.NumImportedBy)
+			got := pkg.NumImportedBy
 			if diff := cmp.Diff(test.want, got); diff != "" {
 				t.Errorf("getImportedByCount(ctx, db, %q) mismatch (-want +got):\n%s", pkg.Path, diff)
 			}
 		})
-	}
-}
-
-func TestApproximateLowerBound(t *testing.T) {
-	for _, test := range []struct {
-		in, want int
-	}{
-		{0, 0},
-		{1, 1},
-		{5, 5},
-		{10, 10},
-		{11, 10},
-		{23, 20},
-		{57, 50},
-		{124, 100},
-		{2593, 2000},
-	} {
-		got := approximateLowerBound(test.in)
-		if got != test.want {
-			t.Errorf("approximateLowerBound(%d) = %d, want %d", test.in, got, test.want)
-		}
 	}
 }
 
