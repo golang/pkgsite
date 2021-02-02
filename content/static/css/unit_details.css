@@ -48,7 +48,7 @@
   }
 }
 
-.UnitDetails :target:not(h2) {
+.UnitDetails :target:not(details, h2) {
   background-color: var(--yellow);
 }
 .UnitDetails-outline {
