@@ -165,11 +165,7 @@ func TestGetImportedByCount(t *testing.T) {
 	} {
 		pkg := test.mod.Packages()[0]
 		t.Run(test.mod.ModulePath, func(t *testing.T) {
-			got, err := getImportedByCount(ctx, testDB, pkg)
-			if err != nil {
-				t.Fatalf("getImportedByCount(ctx, db, %q) = %v err = %v, want %v",
-					pkg.Path, got, err, test.want)
-			}
+			got := formatImportedByCount(pkg.NumImportedBy)
 			if diff := cmp.Diff(test.want, got); diff != "" {
 				t.Errorf("getImportedByCount(ctx, db, %q) mismatch (-want +got):\n%s", pkg.Path, diff)
 			}

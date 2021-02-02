@@ -40,7 +40,7 @@ type SearchResult struct {
 	DisplayVersion string
 	Licenses       []string
 	CommitTime     string
-	NumImportedBy  uint64
+	NumImportedBy  string
 	Approximate    bool
 }
 
@@ -63,7 +63,7 @@ func fetchSearchPage(ctx context.Context, db *postgres.DB, query string, pagePar
 			DisplayVersion: displayVersion(r.Version, r.ModulePath),
 			Licenses:       r.Licenses,
 			CommitTime:     elapsedTime(r.CommitTime),
-			NumImportedBy:  r.NumImportedBy,
+			NumImportedBy:  formatImportedByCount(int(r.NumImportedBy)),
 		})
 	}
 

@@ -120,7 +120,6 @@ func TestFetchSearchPage(t *testing.T) {
 						DisplayVersion: moduleBar.Version,
 						Licenses:       []string{"MIT"},
 						CommitTime:     elapsedTime(moduleBar.CommitTime),
-						NumImportedBy:  0,
 					},
 				},
 			},
@@ -147,7 +146,6 @@ func TestFetchSearchPage(t *testing.T) {
 						DisplayVersion: moduleFoo.Version,
 						Licenses:       []string{"MIT"},
 						CommitTime:     elapsedTime(moduleFoo.CommitTime),
-						NumImportedBy:  0,
 					},
 				},
 			},
@@ -161,6 +159,7 @@ func TestFetchSearchPage(t *testing.T) {
 
 			opts := cmp.Options{
 				cmp.AllowUnexported(SearchPage{}, pagination{}),
+				cmpopts.IgnoreFields(SearchResult{}, "NumImportedBy"),
 				cmpopts.IgnoreFields(licenses.Metadata{}, "FilePath"),
 				cmpopts.IgnoreFields(pagination{}, "Approximate"),
 				cmpopts.IgnoreFields(basePage{}, "MetaDescription"),

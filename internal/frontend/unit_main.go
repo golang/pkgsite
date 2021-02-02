@@ -22,7 +22,6 @@ import (
 	"golang.org/x/pkgsite/internal/godoc/dochtml"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/middleware"
-	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/version"
 )
 
@@ -160,10 +159,6 @@ func fetchMainDetails(ctx context.Context, ds internal.DataSource, um *internal.
 	if err != nil {
 		return nil, err
 	}
-	importedByCount, err := getImportedByCount(ctx, ds, unit)
-	if err != nil {
-		return nil, err
-	}
 	var (
 		docParts           = &dochtml.Parts{}
 		docLinks, modLinks []link
@@ -240,7 +235,7 @@ func fetchMainDetails(ctx context.Context, ds internal.DataSource, um *internal.
 		SourceURL:         um.SourceInfo.DirectoryURL(internal.Suffix(um.Path, um.ModulePath)),
 		MobileOutline:     docParts.MobileOutline,
 		NumImports:        unit.NumImports,
-		ImportedByCount:   importedByCount,
+		ImportedByCount:   formatImportedByCount(unit.NumImportedBy),
 		IsPackage:         unit.IsPackage(),
 		ModFileURL:        um.SourceInfo.ModuleURL() + "/go.mod",
 		IsTaggedVersion:   isTaggedVersion,
@@ -355,28 +350,13 @@ func getHTML(ctx context.Context, u *internal.Unit, docPkg *godoc.Package) (_ *d
 	return &dochtml.Parts{Body: template.MustParseAndExecuteToHTML(missingDocReplacement)}, nil
 }
 
-// getImportedByCount fetches the imported by count for the unit and returns a
+// formatImportedByCount fetches the imported by count for the unit and returns a
 // string to be displayed. If the datasource does not support imported by, it
 // will return N/A.
-func getImportedByCount(ctx context.Context, ds internal.DataSource, unit *internal.Unit) (_ string, err error) {
-	defer derrors.Wrap(&err, "getImportedByCount(%q, %q, %q)", unit.Path, unit.ModulePath, unit.Version)
-	defer middleware.ElapsedStat(ctx, "getImportedByCount")()
-
-	db, ok := ds.(*postgres.DB)
-	if !ok {
-		return "N/A", nil
-	}
-
-	// Get an exact number for a small limit, to determine whether we should
-	// fetch data from search_documents and display an approximate count, or
-	// just use the exact count.
-	importedBy, err := db.GetImportedBy(ctx, unit.Path, unit.ModulePath, mainPageImportedByLimit)
-	if err != nil {
-		return "", err
-	}
-	if len(importedBy) < mainPageImportedByLimit {
+func formatImportedByCount(numImportedBy int) string {
+	if numImportedBy < mainPageImportedByLimit {
 		// Exact number is less than the limit, so just return that.
-		return strconv.Itoa(len(importedBy)), nil
+		return strconv.Itoa(numImportedBy)
 	}
 
 	// Exact number is greater than the limit, so fetch an approximate value
@@ -384,7 +364,7 @@ func getImportedByCount(ctx context.Context, ds internal.DataSource, unit *inter
 	// than the result of GetImportedBy because alternative modules and internal
 	// packages are excluded.
 	// Treat the result as approximate.
-	return fmt.Sprintf("%d+", approximateLowerBound(unit.NumImportedBy)), nil
+	return fmt.Sprintf("%d+", approximateLowerBound(numImportedBy))
 }
 
 // approximateLowerBound rounds n down to a multiple of a power of 10.
