@@ -314,7 +314,10 @@ func (pdb *DB) insertUnits(ctx context.Context, db *database.DB, m *internal.Mod
 			}
 		}
 		v1path := internal.V1Path(u.Path, m.ModulePath)
-		pathID := pathToID[u.Path]
+		pathID, ok := pathToID[u.Path]
+		if !ok {
+			return fmt.Errorf("no entry in paths table for %q; should be impossible", u.Path)
+		}
 		pathIDToPath[pathID] = u.Path
 		unitValues = append(unitValues,
 			pathID,
