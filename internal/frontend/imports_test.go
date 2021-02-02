@@ -6,7 +6,9 @@ package frontend
 
 import (
 	"context"
+	"fmt"
 	"path"
+	"strconv"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -110,15 +112,16 @@ func TestFetchImportedByDetails(t *testing.T) {
 		wantDetails *ImportedByDetails
 	}{
 		{
-			pkg:         pkg3,
-			wantDetails: &ImportedByDetails{TotalIsExact: true},
+			pkg: pkg3,
+			wantDetails: &ImportedByDetails{
+				NumImportedByDisplay: "0",
+			},
 		},
 		{
 			pkg: pkg2,
 			wantDetails: &ImportedByDetails{
-				ImportedBy:   []*Section{{Prefix: pkg3.Path, NumLines: 0}},
-				Total:        1,
-				TotalIsExact: true,
+				ImportedBy:           []*Section{{Prefix: pkg3.Path, NumLines: 0}},
+				NumImportedByDisplay: "0",
 			},
 		},
 		{
@@ -128,29 +131,58 @@ func TestFetchImportedByDetails(t *testing.T) {
 					{Prefix: pkg2.Path, NumLines: 0},
 					{Prefix: pkg3.Path, NumLines: 0},
 				},
-				Total:        2,
-				TotalIsExact: true,
+				NumImportedByDisplay: "0",
 			},
 		},
 	}
 
-	checkFetchImportedByDetails := func(ctx context.Context, pkg *internal.Unit, wantDetails *ImportedByDetails) {
-		got, err := fetchImportedByDetails(ctx, testDB, pkg.Path, pkg.ModulePath)
-		if err != nil {
-			t.Fatalf("fetchImportedByDetails(ctx, db, %q) = %v err = %v, want %v",
-				pkg.Path, got, err, wantDetails)
-		}
-		wantDetails.ModulePath = pkg.ModulePath
-		if diff := cmp.Diff(wantDetails, got); diff != "" {
-			t.Errorf("fetchImportedByDetails(ctx, db, %q) mismatch (-want +got):\n%s", pkg.Path, diff)
-		}
-	}
 	for _, test := range tests {
 		t.Run(test.pkg.Path, func(t *testing.T) {
 			otherVersion := newModule(path.Dir(test.pkg.Path), test.pkg)
 			otherVersion.Version = "v1.0.5"
 			pkg := otherVersion.Units[1]
-			checkFetchImportedByDetails(ctx, pkg, test.wantDetails)
+			checkFetchImportedByDetails(ctx, t, pkg, test.wantDetails)
 		})
+	}
+}
+
+func TestFetchImportedByDetails_ExceedsTabLimit(t *testing.T) {
+	defer postgres.ResetTestDB(testDB, t)
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
+
+	for _, count := range []int{tabImportedByLimit, 30000} {
+		t.Run(strconv.Itoa(count), func(t *testing.T) {
+			args := postgres.UpsertSearchDocumentArgs{
+				PackagePath: sample.PackagePath,
+				ModulePath:  sample.ModulePath,
+			}
+			if err := testDB.InsertModule(ctx, sample.Module(sample.ModulePath, sample.VersionString, sample.PackageName)); err != nil {
+				t.Fatal(err)
+			}
+			if err := testDB.UpsertSearchDocumentWithImportedByCount(ctx, args, count); err != nil {
+				t.Fatal(err)
+			}
+
+			pkg := sample.UnitForPackage(sample.PackagePath, sample.ModulePath, sample.VersionString, sample.PackageName, true)
+			wantDetails := &ImportedByDetails{
+				ModulePath:           sample.ModulePath,
+				NumImportedByDisplay: fmt.Sprintf("%s (displaying 20000 packages)", formatImportedByCount(count)),
+				Total:                count,
+			}
+			checkFetchImportedByDetails(ctx, t, pkg, wantDetails)
+		})
+	}
+}
+
+func checkFetchImportedByDetails(ctx context.Context, t *testing.T, pkg *internal.Unit, wantDetails *ImportedByDetails) {
+	got, err := fetchImportedByDetails(ctx, testDB, pkg.Path, pkg.ModulePath)
+	if err != nil {
+		t.Fatalf("fetchImportedByDetails(ctx, db, %q) = %v err = %v, want %v",
+			pkg.Path, got, err, wantDetails)
+	}
+	wantDetails.ModulePath = pkg.ModulePath
+	if diff := cmp.Diff(wantDetails, got); diff != "" {
+		t.Errorf("fetchImportedByDetails(ctx, db, %q) mismatch (-want +got):\n%s", pkg.Path, diff)
 	}
 }

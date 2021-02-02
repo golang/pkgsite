@@ -989,7 +989,7 @@ func TestGetPackagesForSearchDocumentUpsert(t *testing.T) {
 		t.Fatal(err)
 	}
 	sort.Slice(got, func(i, j int) bool { return got[i].PackagePath < got[j].PackagePath })
-	want := []upsertSearchDocumentArgs{
+	want := []UpsertSearchDocumentArgs{
 		{
 			PackagePath:    moduleN.ModulePath,
 			ModulePath:     moduleN.ModulePath,

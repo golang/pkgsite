@@ -6,6 +6,7 @@ package frontend
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"golang.org/x/pkgsite/internal"
@@ -64,6 +65,7 @@ func fetchImportsDetails(ctx context.Context, ds internal.DataSource, pkgPath, m
 // ImportedByDetails contains information for the collection of packages that
 // import a given package.
 type ImportedByDetails struct {
+	// ModulePath is the module path for the package referenced on this page.
 	ModulePath string
 
 	// ImportedBy is the collection of packages that import the
@@ -71,8 +73,12 @@ type ImportedByDetails struct {
 	// They are organized into a tree of sections by prefix.
 	ImportedBy []*Section
 
-	Total        int  // number of packages in ImportedBy
-	TotalIsExact bool // if false, then there may be more than Total
+	// NumImportedByDisplay is the display text at the top of the imported by
+	// tab section, which shows the imported by count and package limit.
+	NumImportedByDisplay string
+
+	// Total is the total number of importers.
+	Total int
 }
 
 var (
@@ -97,22 +103,20 @@ func fetchImportedByDetails(ctx context.Context, ds internal.DataSource, pkgPath
 	if err != nil {
 		return nil, err
 	}
-	importedByCount := len(importedBy)
-
-	// If we reached the query limit, then we don't know the total.
-	// Say so, and show one less than the limit.
-	// For example, if the limit is 101 and we get 101 results, then we'll
-	// say there are more than 100, and show the first 100.
-	totalIsExact := true
-	if importedByCount == tabImportedByLimit {
-		importedBy = importedBy[:len(importedBy)-1]
-		totalIsExact = false
+	numImportedBy, err := db.GetImportedByCount(ctx, pkgPath, modulePath)
+	if err != nil {
+		return nil, err
 	}
 	sections := Sections(importedBy, nextPrefixAccount)
+
+	display := formatImportedByCount(numImportedBy)
+	if numImportedBy >= tabImportedByLimit {
+		display += fmt.Sprintf(" (displaying %d packages)", tabImportedByLimit-1)
+	}
 	return &ImportedByDetails{
-		ModulePath:   modulePath,
-		ImportedBy:   sections,
-		Total:        importedByCount,
-		TotalIsExact: totalIsExact,
+		ModulePath:           modulePath,
+		ImportedBy:           sections,
+		NumImportedByDisplay: display,
+		Total:                numImportedBy,
 	}, nil
 }

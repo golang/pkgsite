@@ -452,7 +452,7 @@ var upsertSearchStatement = fmt.Sprintf(`
 
 // upsertSearchDocuments adds search information for mod ot the search_documents table.
 // It assumes that all non-redistributable data has been removed from mod.
-func (db *DB) upsertSearchDocuments(ctx context.Context, ddb *database.DB, mod *internal.Module) (err error) {
+func upsertSearchDocuments(ctx context.Context, ddb *database.DB, mod *internal.Module) (err error) {
 	defer derrors.Wrap(&err, "upsertSearchDocuments(ctx, %q)", mod.ModulePath)
 	ctx, span := trace.StartSpan(ctx, "UpsertSearchDocuments")
 	defer span.End()
@@ -460,7 +460,7 @@ func (db *DB) upsertSearchDocuments(ctx context.Context, ddb *database.DB, mod *
 		if isInternalPackage(pkg.Path) {
 			continue
 		}
-		args := upsertSearchDocumentArgs{
+		args := UpsertSearchDocumentArgs{
 			PackagePath: pkg.Path,
 			ModulePath:  mod.ModulePath,
 		}
@@ -472,14 +472,14 @@ func (db *DB) upsertSearchDocuments(ctx context.Context, ddb *database.DB, mod *
 			args.ReadmeFilePath = pkg.Readme.Filepath
 			args.ReadmeContents = pkg.Readme.Contents
 		}
-		if err := db.UpsertSearchDocument(ctx, ddb, args); err != nil {
+		if err := UpsertSearchDocument(ctx, ddb, args); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-type upsertSearchDocumentArgs struct {
+type UpsertSearchDocumentArgs struct {
 	PackagePath    string
 	ModulePath     string
 	Synopsis       string
@@ -492,7 +492,7 @@ type upsertSearchDocumentArgs struct {
 //
 // The given module should have already been validated via a call to
 // validateModule.
-func (db *DB) UpsertSearchDocument(ctx context.Context, ddb *database.DB, args upsertSearchDocumentArgs) (err error) {
+func UpsertSearchDocument(ctx context.Context, ddb *database.DB, args UpsertSearchDocumentArgs) (err error) {
 	defer derrors.Wrap(&err, "DB.UpsertSearchDocument(ctx, ddb, %q, %q)", args.PackagePath, args.ModulePath)
 
 	// Only summarize the README if the package and module have the same path.
@@ -508,7 +508,7 @@ func (db *DB) UpsertSearchDocument(ctx context.Context, ddb *database.DB, args u
 
 // GetPackagesForSearchDocumentUpsert fetches search information for packages in search_documents
 // whose update time is before the given time.
-func (db *DB) GetPackagesForSearchDocumentUpsert(ctx context.Context, before time.Time, limit int) (argsList []upsertSearchDocumentArgs, err error) {
+func (db *DB) GetPackagesForSearchDocumentUpsert(ctx context.Context, before time.Time, limit int) (argsList []UpsertSearchDocumentArgs, err error) {
 	defer derrors.Wrap(&err, "GetPackagesForSearchDocumentUpsert(ctx, %s, %d)", before, limit)
 
 	query := `
@@ -535,7 +535,7 @@ func (db *DB) GetPackagesForSearchDocumentUpsert(ctx context.Context, before tim
 
 	collect := func(rows *sql.Rows) error {
 		var (
-			a      upsertSearchDocumentArgs
+			a      UpsertSearchDocumentArgs
 			redist bool
 		)
 		if err := rows.Scan(&a.PackagePath, &a.ModulePath, &a.Synopsis, &redist,
@@ -874,4 +874,18 @@ func (db *DB) DeleteOlderVersionFromSearchDocuments(ctx context.Context, moduleP
 		log.Infof(ctx, "deleted %d rows from search_documents", n)
 		return nil
 	})
+}
+
+// UpsertSearchDocumentWithImportedByCount is the same as UpsertSearchDocument,
+// except it also updates the imported by count. This is only used for testing.
+func (db *DB) UpsertSearchDocumentWithImportedByCount(ctx context.Context, args UpsertSearchDocumentArgs, importedByCount int) (err error) {
+	defer derrors.Wrap(&err, "DB.UpsertSearchDocumentWithImportedByCount(ctx, ddb, %q, %q)", args.PackagePath, args.ModulePath)
+
+	if err := UpsertSearchDocument(ctx, db.db, args); err != nil {
+		return err
+	}
+	_, err = db.db.Exec(ctx,
+		`UPDATE search_documents SET imported_by_count=$1 WHERE package_path=$2;`,
+		importedByCount, args.PackagePath)
+	return err
 }
