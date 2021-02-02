@@ -66,8 +66,6 @@ func getPathVersions(ctx context.Context, db *DB, path string, versionTypes ...v
 			LIMIT 1
 		)
 		AND version_type in (%s)
-		-- Packages must have documentation source
-		AND (u.name = '' OR d.source IS NOT NULL)
 	ORDER BY
 		m.incompatible,
 		m.module_path DESC,
