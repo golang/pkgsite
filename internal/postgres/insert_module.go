@@ -292,7 +292,7 @@ func (pdb *DB) insertUnits(ctx context.Context, db *database.DB, m *internal.Mod
 		paths         []string
 		unitValues    []interface{}
 		pathToReadme  = map[string]*internal.Readme{}
-		pathToDoc     = map[string]*internal.Documentation{}
+		pathToDoc     = map[string][]*internal.Documentation{}
 		pathToImports = map[string][]string{}
 		pathIDToPath  = map[int]string{}
 	)
@@ -331,14 +331,12 @@ func (pdb *DB) insertUnits(ctx context.Context, db *database.DB, m *internal.Mod
 		if u.Readme != nil {
 			pathToReadme[u.Path] = u.Readme
 		}
-		if u.Documentation != nil && u.Documentation[0] != nil && u.Documentation[0].Source == nil {
-			return fmt.Errorf("insertUnits: unit %q missing source files", u.Path)
+		for _, d := range u.Documentation {
+			if d.Source == nil {
+				return fmt.Errorf("insertUnits: unit %q missing source files for %q, %q", u.Path, d.GOOS, d.GOARCH)
+			}
 		}
-		if u.Documentation == nil {
-			pathToDoc[u.Path] = nil
-		} else {
-			pathToDoc[u.Path] = u.Documentation[0]
-		}
+		pathToDoc[u.Path] = u.Documentation
 		if len(u.Imports) > 0 {
 			pathToImports[u.Path] = u.Imports
 		}
@@ -463,20 +461,18 @@ func insertUnits(ctx context.Context, db *database.DB, unitValues []interface{})
 func insertDoc(ctx context.Context, db *database.DB,
 	paths []string,
 	pathToUnitID map[string]int,
-	pathToDoc map[string]*internal.Documentation) (err error) {
+	pathToDoc map[string][]*internal.Documentation) (err error) {
 	defer derrors.Wrap(&err, "insertDoc")
 
 	var docValues []interface{}
 	for _, path := range paths {
-		doc := pathToDoc[path]
-		if doc == nil {
-			continue
-		}
 		unitID := pathToUnitID[path]
-		if doc.GOOS == "" || doc.GOARCH == "" {
-			return errors.New("empty GOOS or GOARCH")
+		for _, doc := range pathToDoc[path] {
+			if doc.GOOS == "" || doc.GOARCH == "" {
+				return errors.New("empty GOOS or GOARCH")
+			}
+			docValues = append(docValues, unitID, doc.GOOS, doc.GOARCH, doc.Synopsis, doc.Source)
 		}
-		docValues = append(docValues, unitID, doc.GOOS, doc.GOARCH, doc.Synopsis, doc.Source)
 	}
 	uniqueCols := []string{"unit_id", "goos", "goarch"}
 	docCols := append(uniqueCols, "synopsis", "source")

@@ -345,12 +345,10 @@ func (db *DB) getUnitWithAllFields(ctx context.Context, um *internal.UnitMeta) (
 	defer derrors.Wrap(&err, "getUnitWithAllFields(ctx, %q, %q, %q)", um.Path, um.ModulePath, um.Version)
 	defer middleware.ElapsedStat(ctx, "getUnitWithAllFields")()
 
+	// Get README and import counts.
 	query := `
         SELECT
-			d.goos,
-			d.goarch,
-			d.synopsis,
-			d.source,
+			u.id,
 			r.file_path,
 			r.contents,
 			COALESCE((
@@ -371,8 +369,6 @@ func (db *DB) getUnitWithAllFields(ctx context.Context, um *internal.UnitMeta) (
 		ON p.id = u.path_id
 		INNER JOIN modules m
 		ON u.module_id = m.id
-		LEFT JOIN documentation d
-		ON d.unit_id = u.id
 		LEFT JOIN readmes r
 		ON r.unit_id = u.id
 		WHERE
@@ -381,15 +377,12 @@ func (db *DB) getUnitWithAllFields(ctx context.Context, um *internal.UnitMeta) (
 			AND m.version = $3;`
 
 	var (
-		d internal.Documentation
-		r internal.Readme
-		u internal.Unit
+		unitID int
+		r      internal.Readme
+		u      internal.Unit
 	)
 	err = db.db.QueryRow(ctx, query, um.Path, um.ModulePath, um.Version).Scan(
-		database.NullIsEmpty(&d.GOOS),
-		database.NullIsEmpty(&d.GOARCH),
-		database.NullIsEmpty(&d.Synopsis),
-		&d.Source,
+		&unitID,
 		database.NullIsEmpty(&r.Filepath),
 		database.NullIsEmpty(&r.Contents),
 		&u.NumImports,
@@ -399,15 +392,38 @@ func (db *DB) getUnitWithAllFields(ctx context.Context, um *internal.UnitMeta) (
 	case sql.ErrNoRows:
 		return nil, derrors.NotFound
 	case nil:
-		if d.GOOS != "" {
-			u.Documentation = []*internal.Documentation{&d}
-		}
 		if r.Filepath != "" {
 			u.Readme = &r
 		}
 	default:
 		return nil, err
 	}
+
+	// Get documentation. There can be multiple rows.
+	query = `
+		SELECT goos, goarch, synopsis, source
+		FROM documentation
+		WHERE unit_id = $1
+	`
+	err = db.db.RunQuery(ctx, query, func(rows *sql.Rows) error {
+		var d internal.Documentation
+		if err := rows.Scan(&d.GOOS, &d.GOARCH, &d.Synopsis, &d.Source); err != nil {
+			return err
+		}
+		u.Documentation = append(u.Documentation, &d)
+		return nil
+	}, unitID)
+	if err != nil {
+		return nil, err
+	}
+	// Sort documentation by GOOS/GOARCH.
+	sort.Slice(u.Documentation, func(i, j int) bool {
+		ci := u.Documentation[i].BuildContext()
+		cj := u.Documentation[j].BuildContext()
+		return internal.CompareBuildContexts(ci, cj) < 0
+	})
+
+	// Get other info.
 	pkgs, err := db.getPackagesInUnit(ctx, um.Path, um.ModulePath, um.Version)
 	if err != nil {
 		return nil, err
