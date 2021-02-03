@@ -79,6 +79,9 @@ type MainDetails struct {
 	// tag on the main unit page.
 	DocSynopsis string
 
+	// GOOS and GOARCH are the build context for the doc.
+	GOOS, GOARCH string
+
 	// SourceFiles contains .go files for the package.
 	SourceFiles []*File
 
@@ -161,11 +164,14 @@ func fetchMainDetails(ctx context.Context, ds internal.DataSource, um *internal.
 		docLinks, modLinks []link
 		files              []*File
 		synopsis           string
+		goos, goarch       string
 	)
 
 	doc := internal.DocumentationForBuildContext(unit.Documentation, bc)
 	if doc != nil {
 		synopsis = doc.Synopsis
+		goos = doc.GOOS
+		goarch = doc.GOARCH
 		end := middleware.ElapsedStat(ctx, "DecodePackage")
 		docPkg, err := godoc.DecodePackage(doc.Source)
 		end()
@@ -229,6 +235,8 @@ func fetchMainDetails(ctx context.Context, ds internal.DataSource, um *internal.
 		DocOutline:        docParts.Outline,
 		DocBody:           docParts.Body,
 		DocSynopsis:       synopsis,
+		GOOS:              goos,
+		GOARCH:            goarch,
 		SourceFiles:       files,
 		RepositoryURL:     um.SourceInfo.RepoURL(),
 		SourceURL:         um.SourceInfo.DirectoryURL(internal.Suffix(um.Path, um.ModulePath)),

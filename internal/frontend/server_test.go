@@ -351,6 +351,7 @@ func insertTestModules(ctx context.Context, t *testing.T, mods []testModule) {
 
 var (
 	in      = htmlcheck.In
+	notIn   = htmlcheck.NotIn
 	hasText = htmlcheck.HasText
 	attr    = htmlcheck.HasAttr
 
@@ -778,7 +779,9 @@ func serverTestCases() []serverTestCase {
 			name:           "package default",
 			urlPath:        fmt.Sprintf("/%s", sample.PackagePath),
 			wantStatusCode: http.StatusOK,
-			want:           pagecheck.UnitHeader(pkgV100, unversioned, isPackage),
+			want: in("",
+				pagecheck.UnitHeader(pkgV100, unversioned, isPackage),
+				notIn(".UnitDoc-buildContext")),
 		},
 		{
 			name:           "package default redirect",
@@ -1037,25 +1040,33 @@ func serverTestCases() []serverTestCase {
 			name:           "two docs default",
 			urlPath:        "/a.com/two/pkg",
 			wantStatusCode: http.StatusOK,
-			want:           in(".Documentation-variables", hasText("var L")),
+			want: in("",
+				in(".Documentation-variables", hasText("var L")),
+				in(".UnitDoc-buildContext", hasText("GOOS=linux"))),
 		},
 		{
 			name:           "two docs linux",
 			urlPath:        "/a.com/two/pkg?GOOS=linux",
 			wantStatusCode: http.StatusOK,
-			want:           in(".Documentation-variables", hasText("var L")),
+			want: in("",
+				in(".Documentation-variables", hasText("var L")),
+				in(".UnitDoc-buildContext", hasText("GOOS=linux"))),
 		},
 		{
 			name:           "two docs windows",
 			urlPath:        "/a.com/two/pkg?GOOS=windows",
 			wantStatusCode: http.StatusOK,
-			want:           in(".Documentation-variables", hasText("var W")),
+			want: in("",
+				in(".Documentation-variables", hasText("var W")),
+				in(".UnitDoc-buildContext", hasText("GOOS=windows"))),
 		},
 		{
 			name:           "two docs no match",
 			urlPath:        "/a.com/two/pkg?GOOS=dragonfly",
 			wantStatusCode: http.StatusOK,
-			want:           htmlcheck.NotIn(".Documentation-variables"),
+			want: in("",
+				notIn(".Documentation-variables"),
+				notIn(".UnitDoc-buildContext")),
 		},
 	}
 }

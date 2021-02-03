@@ -12,6 +12,11 @@
     <div class="Documentation js-documentation">
       {{if .DocBody.String}}
         {{.DocBody}}
+        {{if or (ne .GOOS "all") (ne .GOARCH "all")}}
+          <div class=UnitDoc-buildContext>
+            GOOS={{.GOOS}}, GOARCH={{.GOARCH}}
+          </div>
+        {{end}}
       {{else}}
         <div class="UnitDoc-emptySection">
           <img src="/static/img/gopher-airplane.svg" alt="The Go Gopher"/>
