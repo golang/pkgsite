@@ -62,7 +62,6 @@ type testModule struct {
 type testPackage struct {
 	name           string
 	suffix         string
-	doc            string
 	readmeContents string
 	readmeFilePath string
 }
@@ -108,13 +107,11 @@ var testModules = []testModule{
 		packages: []testPackage{
 			{
 				suffix:         "foo",
-				doc:            sample.DocumentationHTML.String(),
 				readmeContents: sample.ReadmeContents,
 				readmeFilePath: sample.ReadmeFilePath,
 			},
 			{
 				suffix: "foo/directory/hello",
-				doc:    `<a href="/pkg/io#Writer">io.Writer</a>`,
 			},
 		},
 	},
@@ -126,23 +123,19 @@ var testModules = []testModule{
 		packages: []testPackage{
 			{
 				suffix:         "bar",
-				doc:            sample.DocumentationHTML.String(),
 				readmeContents: sample.ReadmeContents,
 				readmeFilePath: sample.ReadmeFilePath,
 			},
 			{
 				suffix: "bar/directory/hello",
-				doc:    `<a href="/pkg/io#Writer">io.Writer</a>`,
 			},
 			{
 				suffix:         "buz",
-				doc:            sample.DocumentationHTML.String(),
 				readmeContents: sample.ReadmeContents,
 				readmeFilePath: sample.ReadmeFilePath,
 			},
 			{
 				suffix: "buz/directory/hello",
-				doc:    `<a href="/pkg/io#Writer">io.Writer</a>`,
 			},
 		},
 	},
@@ -154,13 +147,11 @@ var testModules = []testModule{
 		packages: []testPackage{
 			{
 				suffix:         "bar",
-				doc:            sample.DocumentationHTML.String(),
 				readmeContents: sample.ReadmeContents,
 				readmeFilePath: sample.ReadmeFilePath,
 			},
 			{
 				suffix: "bar/directory/hello",
-				doc:    `<a href="/pkg/io#Writer">io.Writer</a>`,
 			},
 		},
 	},
@@ -229,7 +220,6 @@ var testModules = []testModule{
 				// UnitMeta (right sidebar) links will be from the godoc and
 				// module readme.
 				suffix: "no_readme",
-				doc:    sample.DocumentationHTML.String(),
 			},
 			{
 				// This package has a readme as well as godoc links, so the
@@ -237,7 +227,6 @@ var testModules = []testModule{
 				suffix:         "has_readme",
 				readmeFilePath: "has_readme/README.md", // required
 				readmeContents: packageLinksReadme,
-				doc:            sample.DocumentationHTML.String(),
 			},
 		},
 	},

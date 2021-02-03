@@ -24,7 +24,6 @@ func TestLatestMinorVersion(t *testing.T) {
 			packages: []testPackage{
 				{
 					suffix:         "bar",
-					doc:            sample.DocumentationHTML.String(),
 					readmeContents: sample.ReadmeContents,
 					readmeFilePath: sample.ReadmeFilePath,
 				},
