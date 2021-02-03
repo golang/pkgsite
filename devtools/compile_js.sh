@@ -46,7 +46,6 @@ main() {
   fi
   $cmd $JSDIR/base.min.js               $JSDIR/{site,analytics}.js
   $cmd $JSDIR/fetch.min.js              $JSDIR/fetch.js
-  $cmd $JSDIR/playground.min.js         $JSDIR/playground.js
   $cmd $JSDIR/badge.min.js              $JSDIR/badge.js
   $cmd $JSDIR/jump.min.js               third_party/dialog-polyfill/dialog-polyfill.js $JSDIR/jump.js
 
