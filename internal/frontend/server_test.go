@@ -23,6 +23,7 @@ import (
 	"golang.org/x/pkgsite/internal/cookie"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/experiment"
+	"golang.org/x/pkgsite/internal/godoc"
 	"golang.org/x/pkgsite/internal/middleware"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/proxy"
@@ -64,6 +65,7 @@ type testPackage struct {
 	suffix         string
 	readmeContents string
 	readmeFilePath string
+	docs           []*internal.Documentation
 }
 
 type serverTestCase struct {
@@ -283,6 +285,22 @@ var testModules = []testModule{
 			{name: "blog", suffix: "blog"},
 		},
 	},
+	// A module with a package that has documentation for two build contexts.
+	{
+		path:            "a.com/two",
+		redistributable: true,
+		versions:        []string{"v1.2.3"},
+		packages: []testPackage{
+			{
+				name:   "pkg",
+				suffix: "pkg",
+				docs: []*internal.Documentation{
+					godoc.DocumentationForTesting("linux", "amd64", `package p; var L int`),
+					godoc.DocumentationForTesting("windows", "amd64", `package p; var W int`),
+				},
+			},
+		},
+	},
 }
 
 func insertTestModules(ctx context.Context, t *testing.T, mods []testModule) {
@@ -312,6 +330,9 @@ func insertTestModules(ctx context.Context, t *testing.T, mods []testModule) {
 							Contents: pkg.readmeContents,
 							Filepath: pkg.readmeFilePath,
 						}
+					}
+					if pkg.docs != nil {
+						u.Documentation = pkg.docs
 					}
 				}
 				if !mod.redistributable {
@@ -1011,6 +1032,30 @@ func serverTestCases() []serverTestCase {
 			wantStatusCode: http.StatusOK,
 			want: in("",
 				pagecheck.UnitHeader(cloudMod, unversioned, isDirectory)),
+		},
+		{
+			name:           "two docs default",
+			urlPath:        "/a.com/two/pkg",
+			wantStatusCode: http.StatusOK,
+			want:           in(".Documentation-variables", hasText("var L")),
+		},
+		{
+			name:           "two docs linux",
+			urlPath:        "/a.com/two/pkg?GOOS=linux",
+			wantStatusCode: http.StatusOK,
+			want:           in(".Documentation-variables", hasText("var L")),
+		},
+		{
+			name:           "two docs windows",
+			urlPath:        "/a.com/two/pkg?GOOS=windows",
+			wantStatusCode: http.StatusOK,
+			want:           in(".Documentation-variables", hasText("var W")),
+		},
+		{
+			name:           "two docs no match",
+			urlPath:        "/a.com/two/pkg?GOOS=dragonfly",
+			wantStatusCode: http.StatusOK,
+			want:           htmlcheck.NotIn(".Documentation-variables"),
 		},
 	}
 }

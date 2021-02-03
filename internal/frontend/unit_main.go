@@ -137,7 +137,7 @@ type UnitDirectory struct {
 	Subdirectories []*Subdirectory
 }
 
-func fetchMainDetails(ctx context.Context, ds internal.DataSource, um *internal.UnitMeta, expandReadme bool) (_ *MainDetails, err error) {
+func fetchMainDetails(ctx context.Context, ds internal.DataSource, um *internal.UnitMeta, expandReadme bool, bc internal.BuildContext) (_ *MainDetails, err error) {
 	defer middleware.ElapsedStat(ctx, "fetchMainDetails")()
 
 	unit, err := ds.GetUnit(ctx, um, internal.WithMain)
@@ -162,10 +162,12 @@ func fetchMainDetails(ctx context.Context, ds internal.DataSource, um *internal.
 		files              []*File
 		synopsis           string
 	)
-	if unit.Documentation != nil {
-		synopsis = unit.Documentation[0].Synopsis
+
+	doc := internal.DocumentationForBuildContext(unit.Documentation, bc)
+	if doc != nil {
+		synopsis = doc.Synopsis
 		end := middleware.ElapsedStat(ctx, "DecodePackage")
-		docPkg, err := godoc.DecodePackage(unit.Documentation[0].Source)
+		docPkg, err := godoc.DecodePackage(doc.Source)
 		end()
 		if err != nil {
 			if errors.Is(err, godoc.ErrInvalidEncodingType) {

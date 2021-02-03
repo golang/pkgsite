@@ -140,7 +140,14 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 		PageLabels:       pageLabels(um),
 		PageType:         pageType(um),
 	}
-	d, err := fetchDetailsForUnit(ctx, r, tab, ds, um)
+
+	// Use GOOS and GOARCH query parameters to create a build context, which
+	// affects the documentation and synopsis. Omitting both results in an empty
+	// build context, which will match the first (and preferred) build context.
+	// It's also okay to provide just one (e.g. GOOS=windows), which will select
+	// the first doc with that value, ignoring the other one.
+	bc := internal.BuildContext{GOOS: r.FormValue("GOOS"), GOARCH: r.FormValue("GOARCH")}
+	d, err := fetchDetailsForUnit(ctx, r, tab, ds, um, bc)
 	if err != nil {
 		return err
 	}

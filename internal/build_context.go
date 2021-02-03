@@ -36,7 +36,22 @@ func CompareBuildContexts(c1, c2 BuildContext) int {
 	return pos(c1) - pos(c2)
 }
 
-// GoBuildContext returns the BuildContext for d.
+// BuildContext returns the BuildContext for d.
 func (d *Documentation) BuildContext() BuildContext {
 	return BuildContext{GOOS: d.GOOS, GOARCH: d.GOARCH}
+}
+
+// DocumentationForBuildContext returns the first Documentation the list that
+// matches the BuildContext, or nil if none does. A Documentation matches if its
+// GOOS and GOARCH fields are the same as those of the BuildContext, or if the
+// BuildContext field is empty. That is, empty BuildContext fields act as
+// wildcards. So the zero BuildContext will match the first element of docs, if
+// there is one.
+func DocumentationForBuildContext(docs []*Documentation, bc BuildContext) *Documentation {
+	for _, d := range docs {
+		if (bc.GOOS == "" || bc.GOOS == d.GOOS) && (bc.GOARCH == "" || bc.GOARCH == d.GOARCH) {
+			return d
+		}
+	}
+	return nil
 }
