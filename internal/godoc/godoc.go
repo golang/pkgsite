@@ -37,7 +37,6 @@ type Package struct {
 // data will be lost. Renaming a field is like deleting the old field
 // and adding a new one.
 type encPackage struct { // fields that can be directly encoded
-	GOOS, GOARCH       string
 	Files              []*File
 	ModulePackagePaths map[string]bool
 }
@@ -58,12 +57,10 @@ type scopeItem struct {
 }
 
 // NewPackage returns a new Package with the given fset and set of module package paths.
-func NewPackage(fset *token.FileSet, goos, goarch string, modPaths map[string]bool) *Package {
+func NewPackage(fset *token.FileSet, modPaths map[string]bool) *Package {
 	return &Package{
 		Fset: fset,
 		encPackage: encPackage{
-			GOOS:               goos,
-			GOARCH:             goarch,
 			ModulePackagePaths: modPaths,
 		},
 	}

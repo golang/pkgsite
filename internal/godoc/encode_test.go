@@ -76,7 +76,7 @@ func main() { a = 1 }
 	}
 	compareObjs(f)
 
-	p := NewPackage(fset, "linux", "amd64", nil)
+	p := NewPackage(fset, nil)
 	p.AddFile(f, false)
 	data, err := p.Encode(ctx)
 	if err != nil {
@@ -95,7 +95,7 @@ func packageForDir(dir string, removeNodes bool) (*Package, error) {
 	if err != nil {
 		return nil, err
 	}
-	p := NewPackage(fset, "linux", "amd64", nil)
+	p := NewPackage(fset, nil)
 	for _, pkg := range pkgs {
 		for _, f := range pkg.Files {
 			p.AddFile(f, removeNodes)
@@ -137,9 +137,6 @@ func BenchmarkRemovingAST(b *testing.B) {
 // random-order map iteration.) The output is designed to be diffed.
 func printPackage(w io.Writer, p *Package) error {
 	if err := printFileSet(w, p.Fset); err != nil {
-		return err
-	}
-	if _, err := fmt.Fprintf(w, "GOOS %q, GOARCH %q\n", p.GOOS, p.GOARCH); err != nil {
 		return err
 	}
 	var mpps []string

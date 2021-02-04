@@ -3420,14 +3420,7 @@ func encode_encPackage(e *codec.Encoder, x *encPackage) {
 	if !e.StartStruct(x == nil, x) {
 		return
 	}
-	if x.GOOS != "" {
-		e.EncodeUint(0)
-		e.EncodeString(x.GOOS)
-	}
-	if x.GOARCH != "" {
-		e.EncodeUint(1)
-		e.EncodeString(x.GOARCH)
-	}
+
 	if x.Files != nil {
 		e.EncodeUint(2)
 		encode_slice_File(e, x.Files)
@@ -3456,10 +3449,6 @@ func decode_encPackage(d *codec.Decoder, p **encPackage) {
 			break
 		}
 		switch n {
-		case 0:
-			x.GOOS = d.DecodeString()
-		case 1:
-			x.GOARCH = d.DecodeString()
 		case 2:
 			decode_slice_File(d, &x.Files)
 		case 3:

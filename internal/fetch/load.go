@@ -192,7 +192,7 @@ func loadPackageForBuildContext(ctx context.Context, files map[string][]byte, in
 	if err != nil {
 		return "", nil, "", nil, err
 	}
-	docPkg := godoc.NewPackage(fset, "", "", modInfo.ModulePackages)
+	docPkg := godoc.NewPackage(fset, modInfo.ModulePackages)
 	for _, pf := range goFiles {
 		removeNodes := true
 		// Don't strip the seemingly unexported functions from the builtin package;
@@ -209,7 +209,7 @@ func loadPackageForBuildContext(ctx context.Context, files map[string][]byte, in
 		return "", nil, "", nil, err
 	}
 
-	synopsis, imports, _, err = docPkg.Render(ctx, innerPath, sourceInfo, modInfo, "", "")
+	synopsis, imports, _, err = docPkg.Render(ctx, innerPath, sourceInfo, modInfo)
 	if err != nil && !errors.Is(err, godoc.ErrTooLarge) {
 		return "", nil, "", nil, err
 	}
