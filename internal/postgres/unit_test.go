@@ -449,13 +449,21 @@ func TestGetUnit(t *testing.T) {
 	// Add a module that has documentation for two Go build contexts.
 	m = sample.Module("a.com/twodoc", "v1.2.3", "p")
 	pkg := m.Packages()[0]
-	doc2 := &internal.Documentation{
-		GOOS:     "windows",
-		GOARCH:   "amd64",
-		Synopsis: pkg.Documentation[0].Synopsis + " 2",
-		Source:   pkg.Documentation[0].Source,
+	docs2 := []*internal.Documentation{
+		{
+			GOOS:     "linux",
+			GOARCH:   "amd64",
+			Synopsis: sample.Synopsis + " for linux",
+			Source:   sample.Documentation.Source,
+		},
+		{
+			GOOS:     "windows",
+			GOARCH:   "amd64",
+			Synopsis: sample.Synopsis + " for windows",
+			Source:   sample.Documentation.Source,
+		},
 	}
-	pkg.Documentation = append(pkg.Documentation, doc2)
+	pkg.Documentation = docs2
 	if err := testDB.InsertModule(ctx, m); err != nil {
 		t.Fatal(err)
 	}
@@ -578,7 +586,8 @@ func TestGetUnit(t *testing.T) {
 				u := unit("a.com/twodoc/p", "a.com/twodoc", "v1.2.3", "p",
 					nil,
 					[]string{"p"})
-				u.Documentation = append(u.Documentation, doc2)
+				u.Documentation = docs2
+				u.Subdirectories[0].Synopsis = docs2[0].Synopsis
 				return u
 			}(),
 		},

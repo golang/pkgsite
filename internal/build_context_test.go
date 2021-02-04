@@ -7,21 +7,33 @@ package internal
 import "testing"
 
 func TestCompareBuildContexts(t *testing.T) {
+	check := func(c1, c2 BuildContext, want int) {
+		t.Helper()
+		got := CompareBuildContexts(c1, c2)
+		switch want {
+		case 0:
+			if got != 0 {
+				t.Errorf("%v vs. %v: got %d, want 0", c1, c2, got)
+			}
+		case 1:
+			if got <= 0 {
+				t.Errorf("%v vs. %v: got %d, want > 0", c1, c2, got)
+			}
+		case -1:
+			if got >= 0 {
+				t.Errorf("%v vs. %v: got %d, want < 0", c1, c2, got)
+			}
+		}
+	}
+
 	for i, c1 := range BuildContexts {
-		if got := CompareBuildContexts(c1, c1); got != 0 {
-			t.Errorf("%v: got %d, want 0", c1, got)
-		}
+		check(c1, c1, 0)
 		for _, c2 := range BuildContexts[i+1:] {
-			if got := CompareBuildContexts(c1, c2); got >= 0 {
-				t.Errorf("%v, %v: got %d, want < 0", c1, c2, got)
-			}
-			if got := CompareBuildContexts(c2, c1); got <= 0 {
-				t.Errorf("%v, %v: got %d, want > 0", c2, c1, got)
-			}
+			check(c1, c2, -1)
+			check(c2, c1, 1)
 		}
 	}
-	got := CompareBuildContexts(BuildContext{"?", "?"}, BuildContexts[len(BuildContexts)-1])
-	if got <= 0 {
-		t.Errorf("unknown vs. last: got %d, want > 0", got)
-	}
+
+	// Special cases.
+	check(BuildContext{"?", "?"}, BuildContexts[len(BuildContexts)-1], 1) // unknown is last
 }
