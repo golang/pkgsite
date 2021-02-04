@@ -53,7 +53,8 @@ func (bpe *BadPackageError) Error() string { return bpe.Err.Error() }
 //
 // If a package is fine except that its documentation is too large, loadPackage
 // returns a goPackage whose err field is a non-nil error with godoc.ErrTooLarge in its chain.
-func loadPackage(ctx context.Context, zipGoFiles []*zip.File, innerPath string, sourceInfo *source.Info, modInfo *godoc.ModuleInfo) (_ *goPackage, err error) {
+func loadPackage(ctx context.Context, zipGoFiles []*zip.File, innerPath string,
+	sourceInfo *source.Info, modInfo *godoc.ModuleInfo) (_ *goPackage, err error) {
 	defer derrors.Wrap(&err, "loadPackage(ctx, zipGoFiles, %q, sourceInfo, modInfo)", innerPath)
 	ctx, span := trace.StartSpan(ctx, "fetch.loadPackage")
 	defer span.End()
@@ -97,7 +98,7 @@ func loadPackage(ctx context.Context, zipGoFiles []*zip.File, innerPath string, 
 			pkg.docs = append(pkg.docs, &doc2)
 			continue
 		}
-		name, imports, synopsis, source, err := loadPackageForBuildContext(ctx, mfiles, innerPath, sourceInfo, modInfo)
+		name, imports, synopsis, source, api, err := loadPackageForBuildContext(ctx, mfiles, innerPath, sourceInfo, modInfo)
 		switch {
 		case errors.Is(err, derrors.NotFound):
 			// No package for this build context.
@@ -117,6 +118,7 @@ func loadPackage(ctx context.Context, zipGoFiles []*zip.File, innerPath string, 
 					GOARCH:   internal.All,
 					Synopsis: synopsis,
 					Source:   source,
+					API:      api,
 				}},
 			}, nil
 		case err != nil:
@@ -145,6 +147,7 @@ func loadPackage(ctx context.Context, zipGoFiles []*zip.File, innerPath string, 
 				GOARCH:   bc.GOARCH,
 				Synopsis: synopsis,
 				Source:   source,
+				API:      api,
 			}
 			docsByFiles[filesKey] = doc
 			pkg.docs = append(pkg.docs, doc)
@@ -194,13 +197,14 @@ var httpPost = http.Post
 //
 // If it returns an error with ErrTooLarge in its chain, the other return values
 // are still valid.
-func loadPackageForBuildContext(ctx context.Context, files map[string][]byte, innerPath string, sourceInfo *source.Info, modInfo *godoc.ModuleInfo) (name string, imports []string, synopsis string, source []byte, err error) {
+func loadPackageForBuildContext(ctx context.Context, files map[string][]byte, innerPath string, sourceInfo *source.Info, modInfo *godoc.ModuleInfo) (
+	name string, imports []string, synopsis string, source []byte, api []*internal.Symbol, err error) {
 	modulePath := modInfo.ModulePath
 	defer derrors.Wrap(&err, "loadPackageWithBuildContext(files, %q, %q, %+v)", innerPath, modulePath, sourceInfo)
 
 	packageName, goFiles, fset, err := loadFilesWithBuildContext(innerPath, files)
 	if err != nil {
-		return "", nil, "", nil, err
+		return "", nil, "", nil, nil, err
 	}
 	docPkg := godoc.NewPackage(fset, modInfo.ModulePackages)
 	for _, pf := range goFiles {
@@ -216,14 +220,14 @@ func loadPackageForBuildContext(ctx context.Context, files map[string][]byte, in
 	// Encode first, because Render messes with the AST.
 	src, err := docPkg.Encode(ctx)
 	if err != nil {
-		return "", nil, "", nil, err
+		return "", nil, "", nil, nil, err
 	}
 
-	synopsis, imports, _, err = docPkg.Render(ctx, innerPath, sourceInfo, modInfo)
+	synopsis, imports, _, api, err = docPkg.Render(ctx, innerPath, sourceInfo, modInfo)
 	if err != nil && !errors.Is(err, godoc.ErrTooLarge) {
-		return "", nil, "", nil, err
+		return "", nil, "", nil, nil, err
 	}
-	return packageName, imports, synopsis, src, err
+	return packageName, imports, synopsis, src, api, err
 }
 
 // loadFilesWithBuildContext loads all the given Go files at innerPath. It

@@ -56,3 +56,8 @@ type I2 interface {
 	I1 // embedded interface; should not have an id
 	M2()
 }
+
+type (
+	A int
+	B bool
+)

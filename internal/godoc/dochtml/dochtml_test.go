@@ -30,7 +30,7 @@ var (
 	in           = htmlcheck.In
 	hasAttr      = htmlcheck.HasAttr
 	hasHref      = htmlcheck.HasHref
-	hasText 		 = htmlcheck.HasText
+	hasText      = htmlcheck.HasText
 	hasExactText = htmlcheck.HasExactText
 )
 
@@ -472,6 +472,8 @@ func testIDsAndKinds(t *testing.T, htmlDoc *html.Node) {
 		{"I1.M1", "method"},
 		{"I2", "type"},
 		{"I2.M2", "method"},
+		{"A", "type"},
+		{"B", "type"},
 	}
 
 	var got []attrs

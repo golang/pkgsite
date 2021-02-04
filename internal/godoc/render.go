@@ -44,14 +44,20 @@ type Renderer struct {
 
 // Render renders the documentation for the package.
 // Rendering destroys p's AST; do not call any methods of p after it returns.
-func (p *Package) Render(ctx context.Context, innerPath string, sourceInfo *source.Info, modInfo *ModuleInfo) (synopsis string, imports []string, html safehtml.HTML, err error) {
+func (p *Package) Render(ctx context.Context, innerPath string, sourceInfo *source.Info, modInfo *ModuleInfo) (
+	synopsis string, imports []string, html safehtml.HTML, api []*internal.Symbol, err error) {
 	// This is mostly copied from internal/fetch/fetch.go.
 	defer derrors.Wrap(&err, "godoc.Package.Render(%q, %q, %q)", modInfo.ModulePath, modInfo.ResolvedVersion, innerPath)
 
 	p.renderCalled = true
 	d, err := p.docPackage(innerPath, modInfo)
 	if err != nil {
-		return "", nil, safehtml.HTML{}, err
+		return "", nil, safehtml.HTML{}, nil, err
+	}
+
+	api, err = dochtml.GetSymbols(d, p.Fset)
+	if err != nil {
+		return "", nil, safehtml.HTML{}, nil, err
 	}
 
 	// Render documentation HTML.
@@ -60,9 +66,9 @@ func (p *Package) Render(ctx context.Context, innerPath string, sourceInfo *sour
 	if errors.Is(err, ErrTooLarge) {
 		docHTML = template.MustParseAndExecuteToHTML(DocTooLargeReplacement)
 	} else if err != nil {
-		return "", nil, safehtml.HTML{}, fmt.Errorf("dochtml.Render: %v", err)
+		return "", nil, safehtml.HTML{}, nil, fmt.Errorf("dochtml.Render: %v", err)
 	}
-	return doc.Synopsis(d.Doc), d.Imports, docHTML, err
+	return doc.Synopsis(d.Doc), d.Imports, docHTML, api, err
 }
 
 // docPackage computes and returns a doc.Package.
