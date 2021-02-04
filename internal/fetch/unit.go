@@ -61,8 +61,7 @@ func moduleUnits(modulePath, version string,
 		if pkg, ok := pkgLookup[dirPath]; ok {
 			dir.Name = pkg.name
 			dir.Imports = pkg.imports
-			// TODO(golang/go#37232): keep all docs
-			dir.Documentation = pkg.docs[:1]
+			dir.Documentation = pkg.docs
 		}
 		units = append(units, dir)
 	}

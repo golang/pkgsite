@@ -103,8 +103,9 @@ func loadPackage(ctx context.Context, zipGoFiles []*zip.File, innerPath string, 
 			// No package for this build context.
 			continue
 		case errors.Is(err, godoc.ErrTooLarge):
-			// The doc for this build context is too large. Remember that and
-			// return the package for this build context; ignore the others.
+			// The doc for this build context is too large. To keep things
+			// simple, return a single package with this error that will be used
+			// for all build contexts, and ignore the others.
 			return &goPackage{
 				err:     err,
 				path:    importPath,
@@ -162,6 +163,7 @@ func loadPackage(ctx context.Context, zipGoFiles []*zip.File, innerPath string, 
 
 // mapKeyForFiles generates a value that corresponds to the given set of file
 // names and can be used as a map key.
+// It assumes the filenames do not contain spaces.
 func mapKeyForFiles(files map[string][]byte) string {
 	var names []string
 	for n := range files {

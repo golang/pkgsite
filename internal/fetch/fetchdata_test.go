@@ -315,9 +315,28 @@ var moduleBuildConstraints = &testModule{
 						Name: "cpu",
 						Path: "build.constraints/module/cpu",
 					},
-					Documentation: []*internal.Documentation{{
-						Synopsis: "Package cpu implements processor feature detection used by the Go standard library.",
-					}},
+					Documentation: []*internal.Documentation{
+						{
+							GOOS:     "linux",
+							GOARCH:   "amd64",
+							Synopsis: "Package cpu implements processor feature detection used by the Go standard library.",
+						},
+						{
+							GOOS:     "windows",
+							GOARCH:   "amd64",
+							Synopsis: "Package cpu implements processor feature detection used by the Go standard library.",
+						},
+						{
+							GOOS:     "darwin",
+							GOARCH:   "amd64",
+							Synopsis: "Package cpu implements processor feature detection used by the Go standard library.",
+						},
+						{
+							GOOS:     "js",
+							GOARCH:   "wasm",
+							Synopsis: "Package cpu implements processor feature detection used by the Go standard library.",
+						},
+					},
 				},
 			},
 		},
@@ -609,7 +628,6 @@ var moduleWasm = &testModule{
 	mod: &proxy.Module{
 		ModulePath: "github.com/my/module/js",
 		Files: map[string]string{
-
 			"README.md": "THIS IS A README",
 			"LICENSE":   testhelper.BSD0License,
 			"js/js.go": `
@@ -666,6 +684,8 @@ var moduleStd = &testModule{
 	mod: &proxy.Module{
 		ModulePath: stdlib.ModulePath,
 		Version:    "v1.12.5",
+		// No files necessary because the internal/stdlib package will read from
+		// internal/stdlib/testdata.
 	},
 	fr: &FetchResult{
 		Module: &internal.Module{
@@ -679,8 +699,7 @@ var moduleStd = &testModule{
 			Units: []*internal.Unit{
 				{
 					UnitMeta: internal.UnitMeta{
-						Path: "std",
-
+						Path:              "std",
 						IsRedistributable: true,
 					},
 					Readme: &internal.Readme{
@@ -713,9 +732,31 @@ var moduleStd = &testModule{
 						Filepath: "cmd/pprof/README",
 						Contents: "This directory is the copy of Google's pprof shipped as part of the Go distribution.\n",
 					},
-					Documentation: []*internal.Documentation{{
-						Synopsis: "Pprof interprets and displays profiles of Go programs.",
-					}},
+					// cmd/pprof has a file with a build constraint that does not include js/wasm.
+					// Since the set files isn't the same across all build contexts, we represent
+					// every build context.
+					Documentation: []*internal.Documentation{
+						{
+							GOOS:     "linux",
+							GOARCH:   "amd64",
+							Synopsis: "Pprof interprets and displays profiles of Go programs.",
+						},
+						{
+							GOOS:     "windows",
+							GOARCH:   "amd64",
+							Synopsis: "Pprof interprets and displays profiles of Go programs.",
+						},
+						{
+							GOOS:     "darwin",
+							GOARCH:   "amd64",
+							Synopsis: "Pprof interprets and displays profiles of Go programs.",
+						},
+						{
+							GOOS:     "js",
+							GOARCH:   "wasm",
+							Synopsis: "Pprof interprets and displays profiles of Go programs.",
+						},
+					},
 					Imports: []string{
 						"cmd/internal/objfile",
 						"crypto/tls",

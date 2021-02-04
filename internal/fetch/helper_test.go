@@ -73,12 +73,6 @@ func cleanFetchResult(t *testing.T, fr *FetchResult, detector *licenses.Detector
 			IsRedistributable: u.IsRedistributable,
 			Licenses:          u.Licenses,
 		}
-		if len(u.Documentation) > 0 {
-			if u.Documentation[0].GOOS == "" {
-				u.Documentation[0].GOOS = "linux"
-				u.Documentation[0].GOARCH = "amd64"
-			}
-		}
 		if u.IsPackage() && shouldSetPVS {
 			fr.PackageVersionStates = append(
 				fr.PackageVersionStates, &internal.PackageVersionState{
