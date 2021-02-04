@@ -97,7 +97,7 @@ func loadPackage(ctx context.Context, zipGoFiles []*zip.File, innerPath string, 
 			pkg.docs = append(pkg.docs, &doc2)
 			continue
 		}
-		name, imports, synopsis, source, err := loadPackageWithBuildContext(ctx, bc.GOOS, bc.GOARCH, mfiles, innerPath, sourceInfo, modInfo)
+		name, imports, synopsis, source, err := loadPackageForBuildContext(ctx, mfiles, innerPath, sourceInfo, modInfo)
 		switch {
 		case errors.Is(err, derrors.NotFound):
 			// No package for this build context.
@@ -166,9 +166,9 @@ func mapKeyForFiles(files map[string][]byte) string {
 // httpPost allows package fetch tests to stub out playground URL fetches.
 var httpPost = http.Post
 
-// loadPackageWithBuildContext loads a Go package made of .go files in
-// files using a build context constructed from the given GOOS and GOARCH
-// values. modulePath is stdlib.ModulePath for the Go standard library and the
+// loadPackageForBuildContext loads a Go package made of .go files in
+// files, which should match some build context.
+// modulePath is stdlib.ModulePath for the Go standard library and the
 // module path for all other modules. innerPath is the path of the Go package
 // directory relative to the module root. The files argument must contain only
 // .go files that have been verified to be of reasonable size and that match
@@ -184,16 +184,15 @@ var httpPost = http.Post
 //
 // If it returns an error with ErrTooLarge in its chain, the other return values
 // are still valid.
-func loadPackageWithBuildContext(ctx context.Context, goos, goarch string, files map[string][]byte, innerPath string, sourceInfo *source.Info, modInfo *godoc.ModuleInfo) (name string, imports []string, synopsis string, source []byte, err error) {
+func loadPackageForBuildContext(ctx context.Context, files map[string][]byte, innerPath string, sourceInfo *source.Info, modInfo *godoc.ModuleInfo) (name string, imports []string, synopsis string, source []byte, err error) {
 	modulePath := modInfo.ModulePath
-	defer derrors.Wrap(&err, "loadPackageWithBuildContext(%q, %q, files, %q, %q, %+v)",
-		goos, goarch, innerPath, modulePath, sourceInfo)
+	defer derrors.Wrap(&err, "loadPackageWithBuildContext(files, %q, %q, %+v)", innerPath, modulePath, sourceInfo)
 
 	packageName, goFiles, fset, err := loadFilesWithBuildContext(innerPath, files)
 	if err != nil {
 		return "", nil, "", nil, err
 	}
-	docPkg := godoc.NewPackage(fset, goos, goarch, modInfo.ModulePackages)
+	docPkg := godoc.NewPackage(fset, "", "", modInfo.ModulePackages)
 	for _, pf := range goFiles {
 		removeNodes := true
 		// Don't strip the seemingly unexported functions from the builtin package;
@@ -210,7 +209,7 @@ func loadPackageWithBuildContext(ctx context.Context, goos, goarch string, files
 		return "", nil, "", nil, err
 	}
 
-	synopsis, imports, _, err = docPkg.Render(ctx, innerPath, sourceInfo, modInfo, goos, goarch)
+	synopsis, imports, _, err = docPkg.Render(ctx, innerPath, sourceInfo, modInfo, "", "")
 	if err != nil && !errors.Is(err, godoc.ErrTooLarge) {
 		return "", nil, "", nil, err
 	}
