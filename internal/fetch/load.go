@@ -77,7 +77,11 @@ func loadPackage(ctx context.Context, zipGoFiles []*zip.File, innerPath string, 
 
 	var pkg *goPackage
 	for _, bc := range internal.BuildContexts {
-		name, imports, synopsis, source, err := loadPackageWithBuildContext(ctx, bc.GOOS, bc.GOARCH, files, innerPath, sourceInfo, modInfo)
+		mfiles, err := matchingFiles(bc.GOOS, bc.GOARCH, files)
+		if err != nil {
+			return nil, err
+		}
+		name, imports, synopsis, source, err := loadPackageWithBuildContext(ctx, bc.GOOS, bc.GOARCH, mfiles, innerPath, sourceInfo, modInfo)
 		switch {
 		case errors.Is(err, derrors.NotFound):
 			// No package for this build context.
@@ -138,24 +142,25 @@ var httpPost = http.Post
 // values. modulePath is stdlib.ModulePath for the Go standard library and the
 // module path for all other modules. innerPath is the path of the Go package
 // directory relative to the module root. The files argument must contain only
-// .go files that have been verified to be of reasonable size.
+// .go files that have been verified to be of reasonable size and that match
+// the build context.
 //
-// It returns the list of imports, the package synopsis, and the serialized
-// source (AST) for the package.
+// It returns the package name, list of imports, the package synopsis, and the
+// serialized source (AST) for the package.
 //
 // It returns an error with NotFound in its chain if the directory doesn't
 // contain a Go package or all .go files have been excluded by constraints. A
 // *BadPackageError error is returned if the directory contains .go files but do
 // not make up a valid package.
 //
-// If it returns an error with ErrTooLarge in its chain, the returned name is
-// still valid.
+// If it returns an error with ErrTooLarge in its chain, the other return values
+// are still valid.
 func loadPackageWithBuildContext(ctx context.Context, goos, goarch string, files map[string][]byte, innerPath string, sourceInfo *source.Info, modInfo *godoc.ModuleInfo) (name string, imports []string, synopsis string, source []byte, err error) {
 	modulePath := modInfo.ModulePath
 	defer derrors.Wrap(&err, "loadPackageWithBuildContext(%q, %q, files, %q, %q, %+v)",
 		goos, goarch, innerPath, modulePath, sourceInfo)
 
-	packageName, goFiles, fset, err := loadFilesWithBuildContext(innerPath, goos, goarch, files)
+	packageName, goFiles, fset, err := loadFilesWithBuildContext(innerPath, files)
 	if err != nil {
 		return "", nil, "", nil, err
 	}
@@ -183,17 +188,11 @@ func loadPackageWithBuildContext(ctx context.Context, goos, goarch string, files
 	return packageName, imports, synopsis, src, err
 }
 
-// loadFilesWithBuildContext loads all the Go files at innerPath that match goos
-// and goarch in the zip. It returns the package name as it occurs in the
-// source, a map of the ASTs of all the Go files, and the token.FileSet used for
-// parsing.
+// loadFilesWithBuildContext loads all the given Go files at innerPath. It
+// returns the package name as it occurs in the source, a map of the ASTs of all
+// the Go files, and the token.FileSet used for parsing.
 // If there are no non-test Go files, it returns a NotFound error.
-func loadFilesWithBuildContext(innerPath, goos, goarch string, allFiles map[string][]byte) (pkgName string, fileMap map[string]*ast.File, _ *token.FileSet, _ error) {
-	// Apply build constraints to get a map from matching file names to their contents.
-	files, err := matchingFiles(goos, goarch, allFiles)
-	if err != nil {
-		return "", nil, nil, err
-	}
+func loadFilesWithBuildContext(innerPath string, files map[string][]byte) (pkgName string, fileMap map[string]*ast.File, _ *token.FileSet, _ error) {
 	// Parse .go files and add them to the goFiles slice.
 	var (
 		fset            = token.NewFileSet()
