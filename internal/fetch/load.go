@@ -70,11 +70,23 @@ func loadPackage(ctx context.Context, zipGoFiles []*zip.File, innerPath string, 
 
 	for _, bc := range internal.BuildContexts {
 		pkg, err := loadPackageWithBuildContext(ctx, bc.GOOS, bc.GOARCH, files, innerPath, sourceInfo, modInfo)
-		if err != nil && !errors.Is(err, godoc.ErrTooLarge) && !errors.Is(err, derrors.NotFound) {
-			return nil, err
-		}
-		if pkg != nil {
+		switch {
+		case errors.Is(err, derrors.NotFound):
+			// No package for this build context.
+			continue
+		case errors.Is(err, godoc.ErrTooLarge):
+			// pkg should be non-nil. Remember the error and return the package
+			// for this build context; ignore the others.
+			if pkg == nil {
+				return nil, errors.New("unexpected nil package")
+			}
 			pkg.err = err
+			return pkg, nil
+		case err != nil:
+			// Serious error. Fail.
+			return nil, err
+		default:
+			// No error. Remember the package.
 			pkgs = append(pkgs, pkg)
 		}
 	}
