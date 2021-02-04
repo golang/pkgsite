@@ -21,6 +21,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"sort"
 	"strings"
 
 	"go.opencensus.io/trace"
@@ -76,10 +77,25 @@ func loadPackage(ctx context.Context, zipGoFiles []*zip.File, innerPath string, 
 	v1path := internal.V1Path(importPath, modulePath)
 
 	var pkg *goPackage
+	// Parse the package for each build context.
+	// The documentation is determined by the set of matching files, so keep
+	// track of those to avoid duplication.
+	docsByFiles := map[string]*internal.Documentation{}
 	for _, bc := range internal.BuildContexts {
 		mfiles, err := matchingFiles(bc.GOOS, bc.GOARCH, files)
 		if err != nil {
 			return nil, err
+		}
+		filesKey := mapKeyForFiles(mfiles)
+		if doc := docsByFiles[filesKey]; doc != nil {
+			// We have seen this set of files before.
+			// loadPackageWithBuildContext will produce the same outputs,
+			// so don't bother calling it. Just copy the doc.
+			doc2 := *doc
+			doc2.GOOS = bc.GOOS
+			doc2.GOARCH = bc.GOARCH
+			pkg.docs = append(pkg.docs, &doc2)
+			continue
 		}
 		name, imports, synopsis, source, err := loadPackageWithBuildContext(ctx, bc.GOOS, bc.GOARCH, mfiles, innerPath, sourceInfo, modInfo)
 		switch {
@@ -123,15 +139,28 @@ func loadPackage(ctx context.Context, zipGoFiles []*zip.File, innerPath string, 
 					Err: fmt.Errorf("more than one package name (%q and %q)", pkg.name, name),
 				}
 			}
-			pkg.docs = append(pkg.docs, &internal.Documentation{
+			doc := &internal.Documentation{
 				GOOS:     bc.GOOS,
 				GOARCH:   bc.GOARCH,
 				Synopsis: synopsis,
 				Source:   source,
-			})
+			}
+			docsByFiles[filesKey] = doc
+			pkg.docs = append(pkg.docs, doc)
 		}
 	}
 	return pkg, nil
+}
+
+// mapKeyForFiles generates a value that corresponds to the given set of file
+// names and can be used as a map key.
+func mapKeyForFiles(files map[string][]byte) string {
+	var names []string
+	for n := range files {
+		names = append(names, n)
+	}
+	sort.Strings(names)
+	return strings.Join(names, " ")
 }
 
 // httpPost allows package fetch tests to stub out playground URL fetches.
