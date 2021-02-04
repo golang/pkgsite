@@ -207,6 +207,9 @@ func extractPackagesFromZip(ctx context.Context, modulePath, resolvedVersion str
 			if errors.Is(pkg.err, godoc.ErrTooLarge) {
 				status = derrors.PackageDocumentationHTMLTooLarge
 				errMsg = pkg.err.Error()
+			} else if pkg.err != nil {
+				// ErrTooLarge is the only valid value of pkg.err.
+				return nil, nil, fmt.Errorf("bad package error for %s: %v", pkg.path, pkg.err)
 			}
 			if d != nil { //  should only be nil for tests
 				isRedist, lics := d.PackageInfo(innerPath)
