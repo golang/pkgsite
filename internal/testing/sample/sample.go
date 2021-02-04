@@ -62,8 +62,8 @@ var (
 	Synopsis       = "This is a package synopsis"
 	ReadmeFilePath = "README.md"
 	ReadmeContents = "readme"
-	GOOS           = "linux"
-	GOARCH         = "amd64"
+	GOOS           = internal.All
+	GOARCH         = internal.All
 )
 
 // LicenseCmpOpts are options to use when comparing licenses with the cmp package.

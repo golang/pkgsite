@@ -54,6 +54,8 @@ var moduleOnePackage = &testModule{
 						Path: "github.com/basic/foo",
 					},
 					Documentation: []*internal.Documentation{{
+						GOOS:     internal.All,
+						GOARCH:   internal.All,
 						Synopsis: "package foo exports a helpful constant.",
 					}},
 					Imports: []string{"net/http"},
@@ -124,6 +126,8 @@ var moduleMultiPackage = &testModule{
 						Contents: "Another README FILE FOR TESTING.",
 					},
 					Documentation: []*internal.Documentation{{
+						GOOS:     internal.All,
+						GOARCH:   internal.All,
 						Synopsis: "package bar",
 					}},
 				},
@@ -133,6 +137,8 @@ var moduleMultiPackage = &testModule{
 						Path: "github.com/my/module/foo",
 					},
 					Documentation: []*internal.Documentation{{
+						GOOS:     internal.All,
+						GOARCH:   internal.All,
 						Synopsis: "package foo",
 					}},
 					Imports: []string{"fmt", "github.com/my/module/bar"},
@@ -178,6 +184,8 @@ var moduleNoGoMod = &testModule{
 						Path: "no.mod/module/p",
 					},
 					Documentation: []*internal.Documentation{{
+						GOOS:     internal.All,
+						GOARCH:   internal.All,
 						Synopsis: "Package p is inside a module where a go.mod file hasn't been explicitly added yet.",
 					}},
 				},
@@ -241,6 +249,8 @@ var moduleBadPackages = &testModule{
 						Path: "bad.mod/module/good",
 					},
 					Documentation: []*internal.Documentation{{
+						GOOS:     internal.All,
+						GOARCH:   internal.All,
 						Synopsis: "Package good is inside a module that has bad packages.",
 					}},
 				},
@@ -397,6 +407,8 @@ var moduleNonRedist = &testModule{
 						Path: "nonredistributable.mod/module/bar",
 					},
 					Documentation: []*internal.Documentation{{
+						GOOS:     internal.All,
+						GOARCH:   internal.All,
 						Synopsis: "package bar",
 					}},
 				},
@@ -406,6 +418,8 @@ var moduleNonRedist = &testModule{
 						Path: "nonredistributable.mod/module/bar/baz",
 					},
 					Documentation: []*internal.Documentation{{
+						GOOS:     internal.All,
+						GOARCH:   internal.All,
 						Synopsis: "package baz",
 					}},
 				},
@@ -419,6 +433,8 @@ var moduleNonRedist = &testModule{
 						Contents: "README FILE SHOW UP HERE BUT WILL BE REMOVED BEFORE DB INSERT",
 					},
 					Documentation: []*internal.Documentation{{
+						GOOS:     internal.All,
+						GOARCH:   internal.All,
 						Synopsis: "package foo",
 					}},
 					Imports: []string{"fmt", "github.com/my/module/bar"},
@@ -468,7 +484,7 @@ var moduleBadImportPath = &testModule{
 						Name: "foo",
 						Path: "bad.import.path.com/good/import/path",
 					},
-					Documentation: []*internal.Documentation{{}},
+					Documentation: []*internal.Documentation{{GOOS: internal.All, GOARCH: internal.All}},
 				},
 			},
 		},
@@ -527,6 +543,8 @@ var moduleDocTest = &testModule{
 						Path: "doc.test/permalink",
 					},
 					Documentation: []*internal.Documentation{{
+						GOOS:     internal.All,
+						GOARCH:   internal.All,
 						Synopsis: "Package permalink is for testing the heading permalink documentation rendering feature.",
 					}},
 				},
@@ -566,6 +584,8 @@ var moduleDocTooLarge = &testModule{
 						Path: "bigdoc.test",
 					},
 					Documentation: []*internal.Documentation{{
+						GOOS:     internal.All,
+						GOARCH:   internal.All,
 						Synopsis: "This documentation is big.",
 					}},
 				},
@@ -674,6 +694,8 @@ var moduleStd = &testModule{
 						Path: "builtin",
 					},
 					Documentation: []*internal.Documentation{{
+						GOOS:     internal.All,
+						GOARCH:   internal.All,
 						Synopsis: "Package builtin provides documentation for Go's predeclared identifiers.",
 					}},
 				},
@@ -720,6 +742,8 @@ var moduleStd = &testModule{
 						Path: "context",
 					},
 					Documentation: []*internal.Documentation{{
+						GOOS:     internal.All,
+						GOARCH:   internal.All,
 						Synopsis: "Package context defines the Context type, which carries deadlines, cancelation signals, and other request-scoped values across API boundaries and between processes.",
 					}},
 					Imports: []string{"errors", "fmt", "reflect", "sync", "time"},
@@ -735,6 +759,8 @@ var moduleStd = &testModule{
 						Path: "encoding/json",
 					},
 					Documentation: []*internal.Documentation{{
+						GOOS:     internal.All,
+						GOARCH:   internal.All,
 						Synopsis: "Package json implements encoding and decoding of JSON as defined in RFC 7159.",
 					}},
 					Imports: []string{
@@ -761,6 +787,8 @@ var moduleStd = &testModule{
 						Path: "errors",
 					},
 					Documentation: []*internal.Documentation{{
+						GOOS:     internal.All,
+						GOARCH:   internal.All,
 						Synopsis: "Package errors implements functions to manipulate errors.",
 					}},
 				},
@@ -771,6 +799,8 @@ var moduleStd = &testModule{
 					},
 					Imports: []string{"errors", "fmt", "io", "os", "reflect", "sort", "strconv", "strings", "time"},
 					Documentation: []*internal.Documentation{{
+						GOOS:     internal.All,
+						GOARCH:   internal.All,
 						Synopsis: "Package flag implements command-line flag parsing.",
 					}},
 				},
@@ -807,6 +837,8 @@ var moduleMaster = &testModule{
 						Path: "github.com/my/module/foo",
 					},
 					Documentation: []*internal.Documentation{{
+						GOOS:     internal.All,
+						GOARCH:   internal.All,
 						Synopsis: "package foo exports a helpful constant.",
 					}},
 				},
@@ -843,6 +875,8 @@ var moduleLatest = &testModule{
 						Path: "github.com/my/module/foo",
 					},
 					Documentation: []*internal.Documentation{{
+						GOOS:     internal.All,
+						GOARCH:   internal.All,
 						Synopsis: "package foo exports a helpful constant.",
 					}},
 				},
@@ -892,6 +926,8 @@ package example_test
 							Path: path + "/example",
 						},
 						Documentation: []*internal.Documentation{{
+							GOOS:     internal.All,
+							GOARCH:   internal.All,
 							Synopsis: "Package example contains examples.",
 						}},
 					},
