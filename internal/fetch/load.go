@@ -56,7 +56,7 @@ func loadPackage(ctx context.Context, zipGoFiles []*zip.File, innerPath string, 
 	defer derrors.Wrap(&err, "loadPackage(ctx, zipGoFiles, %q, sourceInfo, modInfo)", innerPath)
 	ctx, span := trace.StartSpan(ctx, "fetch.loadPackage")
 	defer span.End()
-	var pkgs []*goPackage
+
 	// Make a map with all the zip file contents.
 	files := make(map[string][]byte)
 	for _, f := range zipGoFiles {
@@ -68,91 +68,100 @@ func loadPackage(ctx context.Context, zipGoFiles []*zip.File, innerPath string, 
 		files[name] = b
 	}
 
+	modulePath := modInfo.ModulePath
+	importPath := path.Join(modulePath, innerPath)
+	if modulePath == stdlib.ModulePath {
+		importPath = innerPath
+	}
+	v1path := internal.V1Path(importPath, modulePath)
+
+	var pkg *goPackage
 	for _, bc := range internal.BuildContexts {
-		pkg, err := loadPackageWithBuildContext(ctx, bc.GOOS, bc.GOARCH, files, innerPath, sourceInfo, modInfo)
+		name, imports, synopsis, source, err := loadPackageWithBuildContext(ctx, bc.GOOS, bc.GOARCH, files, innerPath, sourceInfo, modInfo)
 		switch {
 		case errors.Is(err, derrors.NotFound):
 			// No package for this build context.
 			continue
 		case errors.Is(err, godoc.ErrTooLarge):
-			// pkg should be non-nil. Remember the error and return the package
-			// for this build context; ignore the others.
-			if pkg == nil {
-				return nil, errors.New("unexpected nil package")
-			}
-			pkg.err = err
-			return pkg, nil
+			// The doc for this build context is too large. Remember that and
+			// return the package for this build context; ignore the others.
+			return &goPackage{
+				err:     err,
+				path:    importPath,
+				v1path:  v1path,
+				name:    name,
+				imports: imports,
+				docs: []*internal.Documentation{{
+					GOOS:     bc.GOOS,
+					GOARCH:   bc.GOARCH,
+					Synopsis: synopsis,
+					Source:   source,
+				}},
+			}, nil
 		case err != nil:
 			// Serious error. Fail.
 			return nil, err
 		default:
-			// No error. Remember the package.
-			pkgs = append(pkgs, pkg)
-		}
-	}
-	return mergePackages(pkgs)
-}
-
-// mergePackages combines multiple packages from different build contexts into
-// one.
-func mergePackages(pkgs []*goPackage) (*goPackage, error) {
-	if len(pkgs) == 0 {
-		return nil, nil
-	}
-	// If any build context has an error, return that one.
-	for _, pkg := range pkgs {
-		if pkg.err != nil {
-			return pkg, nil
-		}
-	}
-
-	// Use everything from the first package, just merge the docs.
-	result := pkgs[0]
-	for _, pkg := range pkgs[1:] {
-		if pkg.name != result.name {
-			// All the build environments should use the same package name. Although
+			// No error.
+			if pkg == nil {
+				pkg = &goPackage{
+					path:    importPath,
+					v1path:  v1path,
+					name:    name,
+					imports: imports, // Use the imports from the first successful build context.
+				}
+			}
+			// All the build contexts should use the same package name. Although
 			// it's technically legal for different build tags to result in different
 			// package names, it's not something we support.
-			return nil, &BadPackageError{
-				Err: fmt.Errorf("more than one package name (%q and %q)", result.name, pkg.name),
+			if name != pkg.name {
+				return nil, &BadPackageError{
+					Err: fmt.Errorf("more than one package name (%q and %q)", pkg.name, name),
+				}
 			}
+			pkg.docs = append(pkg.docs, &internal.Documentation{
+				GOOS:     bc.GOOS,
+				GOARCH:   bc.GOARCH,
+				Synopsis: synopsis,
+				Source:   source,
+			})
 		}
-		result.docs = append(result.docs, pkg.docs[0])
 	}
-	return result, nil
+	return pkg, nil
 }
 
 // httpPost allows package fetch tests to stub out playground URL fetches.
 var httpPost = http.Post
 
-// loadPackageWithBuildContext loads a Go package made of .go files in zipGoFiles
-// using a build context constructed from the given GOOS and GOARCH values.
-// modulePath is stdlib.ModulePath for the Go standard library and the module
-// path for all other modules. innerPath is the path of the Go package directory
-// relative to the module root.
+// loadPackageWithBuildContext loads a Go package made of .go files in
+// files using a build context constructed from the given GOOS and GOARCH
+// values. modulePath is stdlib.ModulePath for the Go standard library and the
+// module path for all other modules. innerPath is the path of the Go package
+// directory relative to the module root. The files argument must contain only
+// .go files that have been verified to be of reasonable size.
 //
-// zipGoFiles must contain only .go files that have been verified
-// to be of reasonable size.
+// It returns the list of imports, the package synopsis, and the serialized
+// source (AST) for the package.
 //
-// The returned goPackage.licenses field is not populated.
+// It returns an error with NotFound in its chain if the directory doesn't
+// contain a Go package or all .go files have been excluded by constraints. A
+// *BadPackageError error is returned if the directory contains .go files but do
+// not make up a valid package.
 //
-// It returns a nil goPackage if the directory doesn't contain a Go package
-// or all .go files have been excluded by constraints.
-// A *BadPackageError error is returned if the directory
-// contains .go files but do not make up a valid package.
-func loadPackageWithBuildContext(ctx context.Context, goos, goarch string, files map[string][]byte, innerPath string, sourceInfo *source.Info, modInfo *godoc.ModuleInfo) (_ *goPackage, err error) {
+// If it returns an error with ErrTooLarge in its chain, the returned name is
+// still valid.
+func loadPackageWithBuildContext(ctx context.Context, goos, goarch string, files map[string][]byte, innerPath string, sourceInfo *source.Info, modInfo *godoc.ModuleInfo) (name string, imports []string, synopsis string, source []byte, err error) {
 	modulePath := modInfo.ModulePath
 	defer derrors.Wrap(&err, "loadPackageWithBuildContext(%q, %q, files, %q, %q, %+v)",
 		goos, goarch, innerPath, modulePath, sourceInfo)
 
 	packageName, goFiles, fset, err := loadFilesWithBuildContext(innerPath, goos, goarch, files)
 	if err != nil {
-		return nil, err
+		return "", nil, "", nil, err
 	}
 	docPkg := godoc.NewPackage(fset, goos, goarch, modInfo.ModulePackages)
 	for _, pf := range goFiles {
-		var removeNodes bool
-		removeNodes = true
+		removeNodes := true
 		// Don't strip the seemingly unexported functions from the builtin package;
 		// they are actually Go builtins like make, new, etc.
 		if modulePath == stdlib.ModulePath && innerPath == "builtin" {
@@ -164,36 +173,21 @@ func loadPackageWithBuildContext(ctx context.Context, goos, goarch string, files
 	// Encode first, because Render messes with the AST.
 	src, err := docPkg.Encode(ctx)
 	if err != nil {
-		return nil, err
+		return "", nil, "", nil, err
 	}
 
-	synopsis, imports, _, err := docPkg.Render(ctx, innerPath, sourceInfo, modInfo, goos, goarch)
+	synopsis, imports, _, err = docPkg.Render(ctx, innerPath, sourceInfo, modInfo, goos, goarch)
 	if err != nil && !errors.Is(err, godoc.ErrTooLarge) {
-		return nil, err
+		return "", nil, "", nil, err
 	}
-	importPath := path.Join(modulePath, innerPath)
-	if modulePath == stdlib.ModulePath {
-		importPath = innerPath
-	}
-	v1path := internal.V1Path(importPath, modulePath)
-	return &goPackage{
-		path:    importPath,
-		name:    packageName,
-		v1path:  v1path,
-		imports: imports,
-		docs: []*internal.Documentation{{
-			GOOS:     goos,
-			GOARCH:   goarch,
-			Synopsis: synopsis,
-			Source:   src,
-		}},
-	}, err
+	return packageName, imports, synopsis, src, err
 }
 
 // loadFilesWithBuildContext loads all the Go files at innerPath that match goos
 // and goarch in the zip. It returns the package name as it occurs in the
 // source, a map of the ASTs of all the Go files, and the token.FileSet used for
 // parsing.
+// If there are no non-test Go files, it returns a NotFound error.
 func loadFilesWithBuildContext(innerPath, goos, goarch string, allFiles map[string][]byte) (pkgName string, fileMap map[string]*ast.File, _ *token.FileSet, _ error) {
 	// Apply build constraints to get a map from matching file names to their contents.
 	files, err := matchingFiles(goos, goarch, allFiles)
