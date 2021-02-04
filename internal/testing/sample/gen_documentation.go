@@ -31,7 +31,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	p := godoc.NewPackage(fset, sample.GOOS, sample.GOARCH, nil)
+	p := godoc.NewPackage(fset, nil)
 	for _, pkg := range pkgs {
 		for _, f := range pkg.Files {
 			p.AddFile(f, true)
@@ -47,7 +47,7 @@ func main() {
 		ResolvedVersion: sample.VersionString,
 		ModulePackages:  nil,
 	}
-	_, _, html, err := p.Render(ctx, "p", si, mi, "", "")
+	_, _, html, err := p.Render(ctx, "p", si, mi)
 	if err != nil {
 		log.Fatal(err)
 	}
