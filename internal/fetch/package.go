@@ -10,7 +10,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net/http"
 	"path"
 	"runtime/debug"
 	"strings"
@@ -219,15 +218,11 @@ func extractPackagesFromZip(ctx context.Context, modulePath, resolvedVersion str
 			pkgs = append(pkgs, pkg)
 			pkgPath = pkg.path
 		}
-		code := http.StatusOK
-		if status != nil {
-			code = derrors.ToStatus(status)
-		}
 		packageVersionStates = append(packageVersionStates, &internal.PackageVersionState{
 			ModulePath:  modulePath,
 			PackagePath: pkgPath,
 			Version:     resolvedVersion,
-			Status:      code,
+			Status:      derrors.ToStatus(status),
 			Error:       errMsg,
 		})
 	}
