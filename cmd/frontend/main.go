@@ -10,7 +10,6 @@ import (
 	"flag"
 	"net/http"
 	"os"
-	"path/filepath"
 	"time"
 
 	"cloud.google.com/go/profiler"
@@ -21,7 +20,6 @@ import (
 	"golang.org/x/pkgsite/internal/config"
 	"golang.org/x/pkgsite/internal/dcensus"
 	"golang.org/x/pkgsite/internal/frontend"
-	"golang.org/x/pkgsite/internal/localdatasource"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/middleware"
 	"golang.org/x/pkgsite/internal/postgres"
@@ -42,8 +40,6 @@ var (
 		"for direct proxy mode and frontend fetches")
 	directProxy = flag.Bool("direct_proxy", false, "if set to true, uses the module proxy referred to by this URL "+
 		"as a direct backend, bypassing the database")
-	localPaths         = flag.String("local", "", "run locally, accepts a GOPATH-like collection of local paths for modules to load to memory")
-	gopathMode         = flag.Bool("gopath_mode", false, "assume that local modules' paths are relative to GOPATH/src, used only with -local")
 	bypassLicenseCheck = flag.Bool("bypass_license_check", false, "display all information, even for non-redistributable paths")
 )
 
@@ -75,41 +71,36 @@ func main() {
 	expg := cmdconfig.ExperimentGetter(ctx, cfg)
 	log.Infof(ctx, "cmd/frontend: initialized cmdconfig.ExperimentGetter")
 
-	if *localPaths != "" {
-		lds := localdatasource.New()
-		dsg = func(context.Context) internal.DataSource { return lds }
-	} else {
-		proxyClient, err := proxy.New(*proxyURL)
-		if err != nil {
-			log.Fatal(ctx, err)
-		}
+	proxyClient, err := proxy.New(*proxyURL)
+	if err != nil {
+		log.Fatal(ctx, err)
+	}
 
-		if *directProxy {
-			var pds *proxydatasource.DataSource
-			if *bypassLicenseCheck {
-				pds = proxydatasource.NewBypassingLicenseCheck(proxyClient)
-			} else {
-				pds = proxydatasource.New(proxyClient)
-			}
-			dsg = func(context.Context) internal.DataSource { return pds }
+	if *directProxy {
+		var pds *proxydatasource.DataSource
+		if *bypassLicenseCheck {
+			pds = proxydatasource.NewBypassingLicenseCheck(proxyClient)
 		} else {
-			db, err := cmdconfig.OpenDB(ctx, cfg, *bypassLicenseCheck)
-			if err != nil {
-				log.Fatalf(ctx, "%v", err)
-			}
-			defer db.Close()
-			dsg = func(context.Context) internal.DataSource { return db }
-			sourceClient := source.NewClient(config.SourceTimeout)
-			// The closure passed to queue.New is only used for testing and local
-			// execution, not in production. So it's okay that it doesn't use a
-			// per-request connection.
-			fetchQueue, err = queue.New(ctx, cfg, queueName, *workers, expg,
-				func(ctx context.Context, modulePath, version string) (int, error) {
-					return frontend.FetchAndUpdateState(ctx, modulePath, version, proxyClient, sourceClient, db)
-				})
-			if err != nil {
-				log.Fatalf(ctx, "queue.New: %v", err)
-			}
+			pds = proxydatasource.New(proxyClient)
+		}
+		dsg = func(context.Context) internal.DataSource { return pds }
+	} else {
+		db, err := cmdconfig.OpenDB(ctx, cfg, *bypassLicenseCheck)
+		if err != nil {
+			log.Fatalf(ctx, "%v", err)
+		}
+		defer db.Close()
+		dsg = func(context.Context) internal.DataSource { return db }
+		sourceClient := source.NewClient(config.SourceTimeout)
+		// The closure passed to queue.New is only used for testing and local
+		// execution, not in production. So it's okay that it doesn't use a
+		// per-request connection.
+		fetchQueue, err = queue.New(ctx, cfg, queueName, *workers, expg,
+			func(ctx context.Context, modulePath, version string) (int, error) {
+				return frontend.FetchAndUpdateState(ctx, modulePath, version, proxyClient, sourceClient, db)
+			})
+		if err != nil {
+			log.Fatalf(ctx, "queue.New: %v", err)
 		}
 	}
 
@@ -133,13 +124,6 @@ func main() {
 	})
 	if err != nil {
 		log.Fatalf(ctx, "frontend.NewServer: %v", err)
-	}
-
-	if *localPaths != "" {
-		lds, ok := dsg(ctx).(*localdatasource.DataSource)
-		if ok {
-			load(ctx, lds, *localPaths)
-		}
 	}
 
 	router := dcensus.NewRouter(frontend.TagRoute)
@@ -203,26 +187,4 @@ func main() {
 	addr := cfg.HostAddr("localhost:8080")
 	log.Infof(ctx, "Listening on addr %s", addr)
 	log.Fatal(ctx, http.ListenAndServe(addr, mw(router)))
-}
-
-// load loads local modules from pathList.
-func load(ctx context.Context, ds *localdatasource.DataSource, pathList string) {
-	paths := filepath.SplitList(pathList)
-	loaded := len(paths)
-	for _, path := range paths {
-		var err error
-		if *gopathMode {
-			err = ds.LoadFromGOPATH(ctx, path)
-		} else {
-			err = ds.Load(ctx, path)
-		}
-		if err != nil {
-			log.Error(ctx, err)
-			loaded--
-		}
-	}
-
-	if loaded == 0 {
-		log.Fatalf(ctx, "failed to load module(s) at %s", pathList)
-	}
 }
