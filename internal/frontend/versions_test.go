@@ -7,7 +7,6 @@ package frontend
 import (
 	"context"
 	"testing"
-	"time"
 
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/pkgsite/internal"
@@ -19,7 +18,6 @@ import (
 var (
 	modulePath1 = "test.com/module"
 	modulePath2 = "test.com/module/v2"
-	commitTime  = sample.CommitTime.In(time.UTC).Format("Jan _2, 2006")
 )
 
 func sampleModule(modulePath, version string, versionType version.Type, packages ...*internal.Unit) *internal.Module {
@@ -39,7 +37,7 @@ func versionSummaries(path string, versions []string, linkify func(path, version
 		vs[i] = &VersionSummary{
 			Version:    version,
 			Link:       linkify(path, version),
-			CommitTime: commitTime,
+			CommitTime: absoluteTime(sample.CommitTime),
 		}
 	}
 	return vs
