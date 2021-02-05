@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"html"
 	"net/http"
+	"net/url"
 	"regexp"
 	"strings"
 
@@ -69,6 +70,13 @@ func (s *Server) servePathNotFoundPage(w http.ResponseWriter, r *http.Request,
 		if !errors.Is(err, derrors.NotFound) {
 			log.Error(ctx, err)
 		}
+		// Redirect to the search result page for an empty directory that is above nested modules.
+		// For golang/go#43725
+		nm, err := ds.GetNestedModules(ctx, fullPath)
+		if err == nil && len(nm) > 0 {
+			http.Redirect(w, r, "/search?q="+url.QueryEscape(fullPath), http.StatusFound)
+			return nil
+		}
 		return pathNotFoundError(fullPath, requestedVersion)
 	}
 	switch fr.status {
@@ -83,6 +91,13 @@ func (s *Server) servePathNotFoundPage(w http.ResponseWriter, r *http.Request,
 		if u := githubPathRedirect(fullPath); u != "" {
 			http.Redirect(w, r, u, http.StatusFound)
 			return
+		}
+		// Redirect to the search result page for an empty directory that is above nested modules.
+		// For golang/go#43725
+		nm, err := ds.GetNestedModules(ctx, fullPath)
+		if err == nil && len(nm) > 0 {
+			http.Redirect(w, r, "/search?q="+url.QueryEscape(fullPath), http.StatusFound)
+			return nil
 		}
 		return &serverError{
 			status: fr.status,
