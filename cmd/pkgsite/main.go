@@ -13,10 +13,12 @@
 //
 // The flags are:
 //
-//  -local=path1,path2
-//      Accepts a GOPATH-like collection of local paths for modules to load to memory
 //  -gopath_mode=false
 //      Assume that local modules' paths are relative to GOPATH/src
+//  -http=:8080
+//      HTTP service address to listen for incoming requests on
+//  -local=path1,path2
+//      Accepts a GOPATH-like collection of local paths for modules to load to memory
 package main
 
 import (
@@ -35,10 +37,13 @@ import (
 	"golang.org/x/pkgsite/internal/middleware"
 )
 
+const defaultAddr = "localhost:8080" // default webserver address
+
 var (
 	_          = flag.String("static", "content/static", "path to folder containing static files served")
-	localPaths = flag.String("local", "", "run locally, accepts a GOPATH-like collection of local paths for modules to load to memory")
 	gopathMode = flag.Bool("gopath_mode", false, "assume that local modules' paths are relative to GOPATH/src, used only with -local")
+	httpAddr   = flag.String("http", defaultAddr, "HTTP service address to listen for incoming requests on")
+	localPaths = flag.String("local", "", "run locally, accepts a GOPATH-like collection of local paths for modules to load to memory")
 )
 
 func main() {
@@ -71,9 +76,8 @@ func main() {
 		middleware.LatestVersions(server.GetLatestInfo), // must come before caching for version badge to work
 		middleware.Timeout(54*time.Second),
 	)
-	addr := "localhost:6060"
-	log.Infof(ctx, "Listening on addr %s", addr)
-	log.Fatal(ctx, http.ListenAndServe(addr, mw(router)))
+	log.Infof(ctx, "Listening on addr %s", *httpAddr)
+	log.Fatal(ctx, http.ListenAndServe(*httpAddr, mw(router)))
 }
 
 // load loads local modules from pathList.
