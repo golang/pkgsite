@@ -37,7 +37,7 @@
   border-bottom: 0.0625rem solid var(--gray-8);
   max-width: 32rem;
   min-width: 12rem;
-  padding: 0.5rem 1rem;
+  padding: 0.25rem 1rem;
   word-break: break-word;
 }
 .UnitDirectories th {

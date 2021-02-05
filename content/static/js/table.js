@@ -25,12 +25,15 @@ export class ExpandableRowsTableController {
     this.toggles.forEach(t => {
       t.addEventListener('click', e => {
         this.handleToggleClick(e);
-        this.updateVisibleItems();
       });
     });
     this.expandAll?.addEventListener('click', () => {
-      this.handleExpandAllClick();
-      this.updateVisibleItems();
+      this.expandAllItems();
+    });
+    document.addEventListener('keydown', e => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+        this.expandAllItems();
+      }
     });
   }
   handleToggleClick(e) {
@@ -43,11 +46,13 @@ export class ExpandableRowsTableController {
     const isExpanded = target?.getAttribute('aria-expanded') === 'true';
     target?.setAttribute('aria-expanded', isExpanded ? 'false' : 'true');
     e.stopPropagation();
+    this.updateVisibleItems();
   }
-  handleExpandAllClick() {
+  expandAllItems() {
     this.table
       .querySelectorAll('[aria-expanded=false]')
       .forEach(t => t.setAttribute('aria-expanded', 'true'));
+    this.updateVisibleItems();
   }
   updateVisibleItems() {
     this.toggles.forEach(t => {

@@ -87,4 +87,10 @@ describe('ExpandableRowsTableController', () => {
     expect(document.querySelector('#hidden-row-id-1').classList).toContain('visible');
     expect(document.querySelector('#hidden-row-id-2').classList).toContain('visible');
   });
+
+  it('expands rows when entering text search', () => {
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'f', ctrlKey: true }));
+    expect(document.querySelector('#hidden-row-id-1').classList).toContain('visible');
+    expect(document.querySelector('#hidden-row-id-2').classList).toContain('visible');
+  });
 });
