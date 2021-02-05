@@ -39,10 +39,11 @@ require (
 	github.com/yuin/gopher-lua v0.0.0-20200816102855-ee81675732da // indirect
 	go.opencensus.io v0.22.4
 	golang.org/x/mod v0.3.1-0.20200828183125-ce943fd02449
-	golang.org/x/net v0.0.0-20201021035429-f5854403a974
-	golang.org/x/sync v0.0.0-20201020160332-67f06af15bc9
+	golang.org/x/net v0.0.0-20200904194848-62affa334b73
+	golang.org/x/sync v0.0.0-20200625203802-6e8e738ad208
+	golang.org/x/sys v0.0.0-20200922070232-aee5d888a860 // indirect
 	golang.org/x/text v0.3.4 // indirect
-	golang.org/x/tools v0.1.0 // indirect
+	golang.org/x/tools v0.0.0-20200915173823-2db8f0ff891c
 	google.golang.org/api v0.32.0
 	google.golang.org/genproto v0.0.0-20200923140941-5646d36feee1
 	google.golang.org/grpc v1.32.0

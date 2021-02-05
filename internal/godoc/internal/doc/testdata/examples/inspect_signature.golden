@@ -1,4 +1,4 @@
----------------- .Play
+-- .Play --
 package main
 
 import (
@@ -14,8 +14,8 @@ func main() {
 	getReader()
 	do()
 }
----------------- .Output
----------------- Ignored.Play
+-- .Output --
+-- Ignored.Play --
 package main
 
 import ()

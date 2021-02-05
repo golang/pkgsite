@@ -1,4 +1,4 @@
----------------- Hello.Play
+-- Hello.Play --
 package main
 
 import (
@@ -8,9 +8,9 @@ import (
 func main() {
 	fmt.Println("Hello, world!")
 }
----------------- Hello.Output
+-- Hello.Output --
 Hello, world!
----------------- Import.Play
+-- Import.Play --
 package main
 
 import (
@@ -26,7 +26,7 @@ func main() {
 	}
 	fmt.Printf("The date is %s\n", out)
 }
----------------- KeyValue.Play
+-- KeyValue.Play --
 package main
 
 import (
@@ -43,7 +43,7 @@ func main() {
 	}
 	fmt.Print(v)
 }
----------------- KeyValueImport.Play
+-- KeyValueImport.Play --
 package main
 
 import (
@@ -57,11 +57,11 @@ func main() {
 	}
 	fmt.Print(f)
 }
----------------- KeyValue.Output
+-- KeyValue.Output --
 a: "A", b: 1
----------------- KeyValueImport.Output
+-- KeyValueImport.Output --
 Name: "play"
----------------- KeyValueTopDecl.Play
+-- KeyValueTopDecl.Play --
 package main
 
 import (
@@ -79,9 +79,9 @@ var keyValueTopDecl = struct {
 func main() {
 	fmt.Print(keyValueTopDecl)
 }
----------------- KeyValueTopDecl.Output
+-- KeyValueTopDecl.Output --
 a: "B", b: 2
----------------- Sort.Play
+-- Sort.Play --
 package main
 
 import (
@@ -124,6 +124,6 @@ func main() {
 	sort.Sort(ByAge(people))
 	fmt.Println(people)
 }
----------------- Sort.Output
+-- Sort.Output --
 [Bob: 31 John: 42 Michael: 17 Jenny: 26]
 [Michael: 17 Jenny: 26 Bob: 31 John: 42]

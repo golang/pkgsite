@@ -1,4 +1,4 @@
----------------- .Play
+-- .Play --
 package main
 
 import ()
@@ -14,7 +14,7 @@ func main() {
 	_ = b
 	_ = d
 }
----------------- 2.Play
+-- 2.Play --
 package main
 
 import ()

@@ -1,4 +1,4 @@
----------------- .Play
+-- .Play --
 package main
 
 import "fmt"
@@ -17,5 +17,5 @@ func (X) BenchmarkFoo() {
 func main() {
 	fmt.Println("Hello, world!")
 }
----------------- .Output
+-- .Output --
 Hello, world!

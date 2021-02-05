@@ -1,4 +1,4 @@
----------------- Profile_simple.Play
+-- Profile_simple.Play --
 package main
 
 import (
@@ -79,7 +79,9 @@ var smallDumbell = []intset{
 	4: linksTo(5),
 	5: nil,
 }
----------------- Profile_multiplex.Play
+
+-- Profile_multiplex.Play --
+
 package main
 
 import (

@@ -5,15 +5,12 @@
 package doc_test
 
 import (
-	"bufio"
 	"bytes"
 	"fmt"
 	"go/ast"
 	"go/format"
 	"go/parser"
 	"go/token"
-	"io"
-	"os"
 	"path/filepath"
 	"reflect"
 	"strings"
@@ -21,6 +18,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/pkgsite/internal/godoc/internal/doc"
+	"golang.org/x/tools/txtar"
 )
 
 func TestExamples(t *testing.T) {
@@ -311,81 +309,16 @@ func mustParse(fset *token.FileSet, filename, src string) *ast.File {
 // readSectionFile reads a file that is divided into sections, and returns
 // a map from section name to contents.
 //
-// A section begins with a line starting with at least four hyphens. Any number
-// of additional hyphens may follow. After the last hyphen is the section name,
-// which may be followed by more hyphens. The contents of the section are the
-// lines that follow, until the next section start or EOF. For example, here is
-// a section with name Foo and contents "hello":
-//
-//    ---- Foo
-//    hello
-//
-// Lines before the first section are ignored.
-//
-// There is no way to represent a section that contains a line beginning with
-// four or more hyphens.
+// We use the txtar format for the file. See https://pkg.go.dev/golang.org/x/tools/txtar.
+// Although the format talks about filenames as the keys, they can be arbitrary strings.
 func readSectionFile(filename string) (map[string]string, error) {
-	f, err := os.Open(filename)
+	archive, err := txtar.ParseFile(filename)
 	if err != nil {
 		return nil, err
 	}
-	defer f.Close()
-	return readSections(filename, f)
-}
-
-func readSections(filename string, r io.Reader) (map[string]string, error) {
-	scan := bufio.NewScanner(r)
-	sections := map[string]string{}
-	var name string
-	var lines []string
-	for scan.Scan() {
-		line := scan.Text()
-		if strings.HasPrefix(line, "----") {
-			if name != "" {
-				sections[name] = strings.Join(lines, "\n")
-				lines = nil
-			}
-			name = strings.Trim(line, "- \t")
-			if name == "" {
-				return nil, fmt.Errorf("%s: empty name on line: %q", filename, line)
-			}
-			if _, ok := sections[name]; ok {
-				return nil, fmt.Errorf("%s: duplicate section name %q", filename, name)
-			}
-		} else if name != "" {
-			lines = append(lines, line)
-		}
+	m := map[string]string{}
+	for _, f := range archive.Files {
+		m[f.Name] = strings.TrimSpace(string(f.Data))
 	}
-	if err := scan.Err(); err != nil {
-		return nil, fmt.Errorf("%s: %w", filename, err)
-	}
-	if name != "" {
-		sections[name] = strings.Join(lines, "\n")
-	}
-	return sections, nil
-}
-
-const sectionFileContents = `
----- S1 ----
-hello, world
----------------- empty ----------------
----- S2
-two
-lines
-`
-
-func TestReadSections(t *testing.T) {
-	r := strings.NewReader(sectionFileContents)
-	got, err := readSections("test", r)
-	if err != nil {
-		t.Fatal(err)
-	}
-	want := map[string]string{
-		"S1":    "hello, world",
-		"S2":    "two\nlines",
-		"empty": "",
-	}
-	if !reflect.DeepEqual(got, want) {
-		t.Errorf("got %v, want %v", got, want)
-	}
+	return m, nil
 }

@@ -1,4 +1,4 @@
----------------- A.Play
+-- A.Play --
 package main
 
 import ()
@@ -12,7 +12,7 @@ var a, b = f()
 func main() {
 	_ = a
 }
----------------- B.Play
+-- B.Play --
 package main
 
 import ()
