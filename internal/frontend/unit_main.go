@@ -172,6 +172,22 @@ func fetchMainDetails(ctx context.Context, ds internal.DataSource, um *internal.
 		synopsis = doc.Synopsis
 		goos = doc.GOOS
 		goarch = doc.GOARCH
+		// If there is only one Documentation and it is linux/amd64, then
+		// make it all/all.
+		//
+		// This is temporary, until the next reprocessing. It assumes a unit
+		// with a single linux/amd64 actually has only one build context,
+		// and hasn't been reprocessed to have all/all.
+		//
+		// The only effect of this is to prevent "GOOS=linux, GOARCH=amd64" from
+		// appearing at the bottom of the doc. That is wrong in the (rather
+		// unlikely) case that the package truly only has doc for linux/amd64,
+		// but the bug is only cosmetic.
+		if len(unit.Documentation) == 1 && goos == "linux" && goarch == "amd64" {
+			goos = internal.All
+			goarch = internal.All
+		}
+
 		end := middleware.ElapsedStat(ctx, "DecodePackage")
 		docPkg, err := godoc.DecodePackage(doc.Source)
 		end()
