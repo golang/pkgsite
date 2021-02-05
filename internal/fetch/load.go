@@ -112,8 +112,8 @@ func loadPackage(ctx context.Context, zipGoFiles []*zip.File, innerPath string, 
 				name:    name,
 				imports: imports,
 				docs: []*internal.Documentation{{
-					GOOS:     internal.All,
-					GOARCH:   internal.All,
+					GOOS:     bc.GOOS,
+					GOARCH:   bc.GOARCH,
 					Synopsis: synopsis,
 					Source:   source,
 				}},
@@ -148,14 +148,6 @@ func loadPackage(ctx context.Context, zipGoFiles []*zip.File, innerPath string, 
 			docsByFiles[filesKey] = doc
 			pkg.docs = append(pkg.docs, doc)
 		}
-	}
-	// If all the build contexts succeeded and had the same set of files, then
-	// assume that the package doc is valid for all build contexts. Represent
-	// this with a single Documentation whose GOOS and GOARCH are both "all".
-	if len(docsByFiles) == 1 && len(pkg.docs) == len(internal.BuildContexts) {
-		pkg.docs = pkg.docs[:1]
-		pkg.docs[0].GOOS = internal.All
-		pkg.docs[0].GOARCH = internal.All
 	}
 	return pkg, nil
 }
