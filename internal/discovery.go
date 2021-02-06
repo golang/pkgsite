@@ -45,7 +45,10 @@ type ModuleInfo struct {
 	Version           string
 	CommitTime        time.Time
 	IsRedistributable bool
-	HasGoMod          bool // whether the module zip has a go.mod file
+	// Whether the module zip has a go.mod file.
+	HasGoMod bool
+	// The text after the Deprecated comment (could be empty), or nil if no comment.
+	DeprecatedComment *string
 	SourceInfo        *source.Info
 }
 

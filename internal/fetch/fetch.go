@@ -14,6 +14,7 @@ import (
 	"path"
 	"sort"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -184,7 +185,8 @@ func FetchModule(ctx context.Context, modulePath, requestedVersion string, proxy
 
 	// getGoModPath may return a non-empty goModPath even if the error is
 	// non-nil, if the module version is an alternative module.
-	fr.GoModPath, fr.Error = getGoModPath(ctx, modulePath, fr.ResolvedVersion, proxyClient)
+	var goModBytes []byte
+	fr.GoModPath, goModBytes, fr.Error = getGoModPath(ctx, modulePath, fr.ResolvedVersion, proxyClient)
 	if fr.Error != nil {
 		return fr
 	}
@@ -212,6 +214,12 @@ func FetchModule(ctx context.Context, modulePath, requestedVersion string, proxy
 	if err != nil {
 		fr.Error = err
 		return fr
+	}
+	if goModBytes != nil {
+		if err := processGoModFile(goModBytes, mod); err != nil {
+			fr.Error = fmt.Errorf("%v: %w", err.Error(), derrors.BadModule)
+			return fr
+		}
 	}
 	fr.Module = mod
 	fr.PackageVersionStates = pvs
@@ -252,26 +260,27 @@ func getZipSize(ctx context.Context, modulePath, resolvedVersion string, proxyCl
 	return proxyClient.GetZipSize(ctx, modulePath, resolvedVersion)
 }
 
-func getGoModPath(ctx context.Context, modulePath, resolvedVersion string, proxyClient *proxy.Client) (_ string, err error) {
+// getGoModPath returns the module path from the go.mod file, as well as the contents of the file obtained from the proxy.
+// If modulePath is the standardl library, then the contents will be nil.
+func getGoModPath(ctx context.Context, modulePath, resolvedVersion string, proxyClient *proxy.Client) (string, []byte, error) {
 	if modulePath == stdlib.ModulePath {
-		return stdlib.ModulePath, nil
+		return stdlib.ModulePath, nil, nil
 	}
-
 	goModBytes, err := proxyClient.GetMod(ctx, modulePath, resolvedVersion)
 	if err != nil {
-		return "", err
+		return "", nil, err
 	}
 	goModPath := modfile.ModulePath(goModBytes)
 	if goModPath == "" {
-		return "", fmt.Errorf("go.mod has no module path: %w", derrors.BadModule)
+		return "", nil, fmt.Errorf("go.mod has no module path: %w", derrors.BadModule)
 	}
 	if goModPath != modulePath {
 		// The module path in the go.mod file doesn't match the path of the
 		// zip file. Don't insert the module. Store an AlternativeModule
 		// status in module_version_states.
-		return goModPath, fmt.Errorf("module path=%s, go.mod path=%s: %w", modulePath, goModPath, derrors.AlternativeModule)
+		return goModPath, goModBytes, fmt.Errorf("module path=%s, go.mod path=%s: %w", modulePath, goModPath, derrors.AlternativeModule)
 	}
-	return goModPath, nil
+	return goModPath, goModBytes, nil
 }
 
 // processZipFile extracts information from the module version zip.
@@ -301,8 +310,7 @@ func processZipFile(ctx context.Context, modulePath string, resolvedVersion stri
 	if err != nil {
 		return nil, nil, fmt.Errorf("extractPackagesFromZip(%q, %q, zipReader, %v): %v", modulePath, resolvedVersion, allLicenses, err)
 	}
-	hasGoMod := zipContainsFilename(zipReader, path.Join(moduleVersionDir(modulePath, resolvedVersion), "go.mod"))
-
+	hasGoMod := zipFile(zipReader, path.Join(moduleVersionDir(modulePath, resolvedVersion), "go.mod")) != nil
 	return &internal.Module{
 		ModuleInfo: internal.ModuleInfo{
 			ModulePath:        modulePath,
@@ -317,20 +325,54 @@ func processZipFile(ctx context.Context, modulePath string, resolvedVersion stri
 	}, packageVersionStates, nil
 }
 
+// processGoModFile populates mod with information extracted from the contents of the go.mod file.
+func processGoModFile(goModBytes []byte, mod *internal.Module) (err error) {
+	defer derrors.Wrap(&err, "processGoModFile")
+
+	mf, err := modfile.Parse("go.mod", goModBytes, nil)
+	if err != nil {
+		return err
+	}
+	hasDepComment, depComment := extractDeprecatedComment(mf)
+	if hasDepComment {
+		mod.DeprecatedComment = &depComment
+	}
+	return nil
+}
+
+// extractDeprecatedComment looks for "Deprecated" comments in the line comments
+// before the module declaration. If it finds one, it returns true along with
+// the text after "Deprecated:". Otherwise it returns false, "".
+func extractDeprecatedComment(mf *modfile.File) (bool, string) {
+	const prefix = "Deprecated:"
+
+	if mf.Module == nil {
+		return false, ""
+	}
+	for _, comment := range append(mf.Module.Syntax.Before, mf.Module.Syntax.Suffix...) {
+		text := strings.TrimSpace(strings.TrimPrefix(comment.Token, "//"))
+		if strings.HasPrefix(text, prefix) {
+			return true, strings.TrimSpace(text[len(prefix):])
+		}
+	}
+	return false, ""
+}
+
 // moduleVersionDir formats the content subdirectory for the given
 // modulePath and version.
 func moduleVersionDir(modulePath, version string) string {
 	return fmt.Sprintf("%s@%s", modulePath, version)
 }
 
-// zipContainsFilename reports whether there is a file with the given name in the zip.
-func zipContainsFilename(r *zip.Reader, name string) bool {
+// zipFile returns the file in r whose name matches the given name, or nil
+// if there isn't one.
+func zipFile(r *zip.Reader, name string) *zip.File {
 	for _, f := range r.File {
 		if f.Name == name {
-			return true
+			return f
 		}
 	}
-	return false
+	return nil
 }
 
 type FetchInfo struct {

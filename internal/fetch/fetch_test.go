@@ -18,6 +18,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/google/safehtml/template"
+	"golang.org/x/mod/modfile"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/godoc"
@@ -183,6 +184,57 @@ func TestFetchModule_Errors(t *testing.T) {
 					}
 				}
 			})
+		}
+	}
+}
+
+func TestExtractDeprecatedComment(t *testing.T) {
+	for _, test := range []struct {
+		name        string
+		in          string
+		wantHas     bool
+		wantComment string
+	}{
+		{"no comment", `module m`, false, ""},
+		{"valid comment",
+			`
+			// Deprecated: use v2
+			module m
+		`, true, "use v2"},
+		{"take first",
+			`
+			// Deprecated: use v2
+			// Deprecated: use v3
+			module m
+		`, true, "use v2"},
+		{"ignore others",
+			`
+			// c1
+			// Deprecated: use v2
+			// c2
+			module m
+		`, true, "use v2"},
+		{"must be capitalized",
+			`
+			// c1
+			// deprecated: use v2
+			// c2
+			module m
+		`, false, ""},
+		{"suffix",
+			`
+			// c1
+			module m // Deprecated: use v2
+		`, true, "use v2",
+		},
+	} {
+		mf, err := modfile.Parse("test", []byte(test.in), nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		gotHas, gotComment := extractDeprecatedComment(mf)
+		if gotHas != test.wantHas || gotComment != test.wantComment {
+			t.Errorf("%s: got (%t, %q), want(%t, %q)", test.name, gotHas, gotComment, test.wantHas, test.wantComment)
 		}
 	}
 }
