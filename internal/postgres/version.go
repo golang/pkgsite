@@ -50,6 +50,7 @@ func getPathVersions(ctx context.Context, db *DB, path string, versionTypes ...v
 		m.commit_time,
 		m.redistributable,
 		m.has_go_mod,
+		m.deprecated_comment,
 		m.source_info
 	FROM modules m
 	INNER JOIN units u

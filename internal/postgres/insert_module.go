@@ -176,8 +176,9 @@ func insertModule(ctx context.Context, db *database.DB, m *internal.Module) (_ i
 			source_info,
 			redistributable,
 			has_go_mod,
+			deprecated_comment,
 			incompatible)
-		VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+		VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
 		ON CONFLICT
 			(module_path, version)
 		DO UPDATE SET
@@ -193,6 +194,7 @@ func insertModule(ctx context.Context, db *database.DB, m *internal.Module) (_ i
 		sourceInfoJSON,
 		m.IsRedistributable,
 		m.HasGoMod,
+		m.DeprecatedComment,
 		isIncompatible(m.Version),
 	).Scan(&moduleID)
 	if err != nil {

@@ -57,6 +57,15 @@ func TestInsertModule(t *testing.T) {
 			name:   "stdlib",
 			module: sample.Module("std", "v1.12.5", "context"),
 		},
+		{
+			name: "deprecated",
+			module: func() *internal.Module {
+				m := sample.DefaultModule()
+				c := "use v2"
+				m.DeprecatedComment = &c
+				return m
+			}(),
+		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			defer ResetTestDB(testDB, t)

@@ -31,6 +31,7 @@ func (db *DB) GetNestedModules(ctx context.Context, modulePath string) (_ []*int
 			m.commit_time,
 			m.redistributable,
 			m.has_go_mod,
+			m.deprecated_comment,
 			m.source_info
 		FROM
 			modules m
@@ -146,6 +147,7 @@ func (db *DB) GetModuleInfo(ctx context.Context, modulePath, resolvedVersion str
 			commit_time,
 			redistributable,
 			has_go_mod,
+			deprecated_comment,
 			source_info
 		FROM
 			modules
@@ -197,7 +199,7 @@ func (s jsonbScanner) Scan(value interface{}) (err error) {
 func scanModuleInfo(scan func(dest ...interface{}) error) (*internal.ModuleInfo, error) {
 	var mi internal.ModuleInfo
 	if err := scan(&mi.ModulePath, &mi.Version, &mi.CommitTime,
-		&mi.IsRedistributable, &mi.HasGoMod, jsonbScanner{&mi.SourceInfo}); err != nil {
+		&mi.IsRedistributable, &mi.HasGoMod, &mi.DeprecatedComment, jsonbScanner{&mi.SourceInfo}); err != nil {
 		return nil, err
 	}
 	return &mi, nil

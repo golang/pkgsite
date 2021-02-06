@@ -14,7 +14,7 @@ import (
 )
 
 func TestGetLatestMajorPathForV1Path(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout*2)
 	defer cancel()
 
 	checkLatest := func(t *testing.T, versions []string, v1path string, version, suffix string) {
