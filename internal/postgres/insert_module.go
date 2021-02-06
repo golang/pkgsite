@@ -75,7 +75,9 @@ func (db *DB) saveModule(ctx context.Context, m *internal.Module) (err error) {
 	ctx, span := trace.StartSpan(ctx, "saveModule")
 	defer span.End()
 
-	return db.db.Transact(ctx, sql.LevelDefault, func(tx *database.DB) error {
+	// Without RepeatableRead, insertPaths can fail to return some paths.
+	// For details, see the commit message for https://golang.org/cl/290269.
+	return db.db.Transact(ctx, sql.LevelRepeatableRead, func(tx *database.DB) error {
 		moduleID, err := insertModule(ctx, tx, m)
 		if err != nil {
 			return err
