@@ -45,15 +45,6 @@ type encPackage struct { // fields that can be directly encoded
 type File struct {
 	Name string // full file pathname relative to zip content directory
 	AST  *ast.File
-	// The following fields are only for encoding and decoding. They are public
-	// only because gob requires them to be. Clients should ignore them.
-	UnresolvedNums []int       `codec:"-"` // used to handle sharing of unresolved identifiers
-	ScopeItems     []scopeItem `codec:"-"` // sorted by name for deterministic encoding
-}
-
-type scopeItem struct {
-	Name string
-	Num  int
 }
 
 // NewPackage returns a new Package with the given fset and set of module package paths.

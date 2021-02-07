@@ -7,8 +7,6 @@ package godoc
 import (
 	"bytes"
 	"context"
-	"encoding/gob"
-	"errors"
 	"fmt"
 	"go/ast"
 	"go/parser"
@@ -252,64 +250,6 @@ func printNode(w io.Writer, root ast.Node) error {
 	return err
 }
 
-// Compare the time it takes to encode with gob vs. internal/codec.
-func BenchmarkEncoding(b *testing.B) {
-	p, err := packageForDir(packageToTest, true)
-	if err != nil {
-		b.Fatal(err)
-	}
-	b.Run("gob", func(b *testing.B) {
-		for i := 0; i < b.N; i++ {
-			_, err := p.gobEncode()
-			if err != nil {
-				b.Fatal(err)
-			}
-		}
-	})
-	b.Run("fast", func(b *testing.B) {
-		for i := 0; i < b.N; i++ {
-			_, err := p.fastEncode()
-			if err != nil {
-				b.Fatal(err)
-			}
-		}
-	})
-}
-
-// Compare the time it takes to decode with gob vs. internal/codec.
-func BenchmarkDecoding(b *testing.B) {
-	p, err := packageForDir(packageToTest, true)
-	if err != nil {
-		b.Fatal(err)
-	}
-	b.Run("gob", func(b *testing.B) {
-		data, err := p.gobEncode()
-		if err != nil {
-			b.Fatal(err)
-		}
-		b.ResetTimer()
-		for i := 0; i < b.N; i++ {
-			_, err := gobDecodePackage(data[encodingTypeLen:])
-			if err != nil {
-				b.Fatal(err)
-			}
-		}
-	})
-	b.Run("fast", func(b *testing.B) {
-		data, err := p.fastEncode()
-		if err != nil {
-			b.Fatal(err)
-		}
-		b.ResetTimer()
-		for i := 0; i < b.N; i++ {
-			_, err := fastDecodePackage(data[encodingTypeLen:])
-			if err != nil {
-				b.Fatal(err)
-			}
-		}
-	})
-}
-
 func printFileSet(w io.Writer, fset *token.FileSet) error {
 	var err error
 	fset.Iterate(func(f *token.File) bool {
@@ -317,29 +257,4 @@ func printFileSet(w io.Writer, fset *token.FileSet) error {
 		return err == nil
 	})
 	return err
-}
-
-func (p *Package) gobEncode() (_ []byte, err error) {
-	if p.renderCalled {
-		return nil, errors.New("can't Encode after Render")
-	}
-
-	for _, f := range p.Files {
-		removeCycles(f)
-	}
-
-	var buf bytes.Buffer
-	io.WriteString(&buf, gobEncodingType)
-	enc := gob.NewEncoder(&buf)
-	// Encode the fset using the Write method it provides.
-	if err := p.Fset.Write(enc.Encode); err != nil {
-		return nil, fmt.Errorf("p.Fset.Write: %v", err)
-	}
-	if err := enc.Encode(p.encPackage); err != nil {
-		return nil, fmt.Errorf("enc.Encode: %v", err)
-	}
-	for _, f := range p.Files {
-		fixupObjects(f)
-	}
-	return buf.Bytes(), nil
 }
