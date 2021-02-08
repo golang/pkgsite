@@ -690,8 +690,13 @@ pre {
   font-size: 1.5rem;
 }
 .SearchSnippet-synopsis {
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
   color: var(--gray-3);
+  display: -webkit-box;
   margin: 0 0 1rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .SearchSnippet-infoLabel {
   font-size: 0.875rem;
