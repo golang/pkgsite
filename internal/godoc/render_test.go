@@ -14,7 +14,6 @@ import (
 	"github.com/google/safehtml/template"
 	"golang.org/x/pkgsite/internal/godoc/dochtml"
 	"golang.org/x/pkgsite/internal/source"
-	"golang.org/x/pkgsite/internal/testing/sample"
 )
 
 var templateSource = template.TrustedSourceFromConstant("../../content/static/html/doc")
@@ -22,10 +21,10 @@ var templateSource = template.TrustedSourceFromConstant("../../content/static/ht
 func TestRender(t *testing.T) {
 	dochtml.LoadTemplates(templateSource)
 	ctx := context.Background()
-	si := source.NewGitHubInfo(sample.ModulePath, "", "abcde")
+	si := source.NewGitHubInfo("a.com/M", "", "abcde")
 	mi := &ModuleInfo{
-		ModulePath:      sample.ModulePath,
-		ResolvedVersion: sample.VersionString,
+		ModulePath:      "a.com/M",
+		ResolvedVersion: "v1.2.3",
 		ModulePackages:  nil,
 	}
 
