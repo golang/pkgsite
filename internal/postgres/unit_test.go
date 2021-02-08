@@ -450,18 +450,8 @@ func TestGetUnit(t *testing.T) {
 	m = sample.Module("a.com/twodoc", "v1.2.3", "p")
 	pkg := m.Packages()[0]
 	docs2 := []*internal.Documentation{
-		{
-			GOOS:     "linux",
-			GOARCH:   "amd64",
-			Synopsis: sample.Synopsis + " for linux",
-			Source:   sample.Documentation.Source,
-		},
-		{
-			GOOS:     "windows",
-			GOARCH:   "amd64",
-			Synopsis: sample.Synopsis + " for windows",
-			Source:   sample.Documentation.Source,
-		},
+		sample.Documentation("linux", "amd64", `package p; var L int`),
+		sample.Documentation("windows", "amd64", `package p; var W int`),
 	}
 	pkg.Documentation = docs2
 	if err := testDB.InsertModule(ctx, m); err != nil {
@@ -662,14 +652,14 @@ func TestGetUnitFieldSet(t *testing.T) {
 	cleanFields := func(u *internal.Unit, fields internal.FieldSet) {
 		// Add/remove fields based on the FieldSet specified.
 		if fields&internal.WithMain != 0 {
-			u.Documentation = []*internal.Documentation{sample.Documentation}
+			u.Documentation = []*internal.Documentation{sample.Doc}
 			u.Readme = readme
 			u.NumImports = len(sample.Imports)
 			u.Subdirectories = []*internal.PackageMeta{
 				{
 					Path:              "a.com/m/dir/p",
 					Name:              "p",
-					Synopsis:          sample.Synopsis,
+					Synopsis:          sample.Doc.Synopsis,
 					IsRedistributable: true,
 					Licenses:          sample.LicenseMetadata,
 				},
@@ -750,7 +740,7 @@ func unit(fullPath, modulePath, version, name string, readme *internal.Readme, s
 	if u.IsPackage() {
 		u.Imports = sample.Imports
 		u.NumImports = len(sample.Imports)
-		u.Documentation = []*internal.Documentation{sample.Documentation}
+		u.Documentation = []*internal.Documentation{sample.Doc}
 	}
 	return u
 }

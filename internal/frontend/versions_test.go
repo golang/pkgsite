@@ -59,7 +59,7 @@ func TestFetchPackageVersionsDetails(t *testing.T) {
 			"v1.2.1",
 			sample.Suffix,
 			true),
-		Documentation: []*internal.Documentation{sample.Documentation},
+		Documentation: []*internal.Documentation{sample.Doc},
 	}
 	pkg2 := &internal.Unit{
 		UnitMeta: *sample.UnitMeta(
@@ -68,7 +68,7 @@ func TestFetchPackageVersionsDetails(t *testing.T) {
 			"v1.2.1-alpha.1",
 			sample.Suffix,
 			true),
-		Documentation: []*internal.Documentation{sample.Documentation},
+		Documentation: []*internal.Documentation{sample.Doc},
 	}
 	nethttpPkg := &internal.Unit{
 		UnitMeta: *sample.UnitMeta(
@@ -77,7 +77,7 @@ func TestFetchPackageVersionsDetails(t *testing.T) {
 			"v1.12.5",
 			"http",
 			true),
-		Documentation: []*internal.Documentation{sample.Documentation},
+		Documentation: []*internal.Documentation{sample.Doc},
 	}
 	makeList := func(pkgPath, modulePath, major string, versions []string) *VersionList {
 		return &VersionList{

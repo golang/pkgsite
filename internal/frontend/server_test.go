@@ -23,7 +23,6 @@ import (
 	"golang.org/x/pkgsite/internal/cookie"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/experiment"
-	"golang.org/x/pkgsite/internal/godoc"
 	"golang.org/x/pkgsite/internal/middleware"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/proxy"
@@ -295,8 +294,8 @@ var testModules = []testModule{
 				name:   "pkg",
 				suffix: "pkg",
 				docs: []*internal.Documentation{
-					godoc.DocumentationForTesting("linux", "amd64", `package p; var L int`),
-					godoc.DocumentationForTesting("windows", "amd64", `package p; var W int`),
+					sample.Documentation("linux", "amd64", `package p; var L int`),
+					sample.Documentation("windows", "amd64", `package p; var W int`),
 				},
 			},
 		},

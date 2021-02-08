@@ -7,7 +7,10 @@
 package sample
 
 import (
+	"context"
 	"fmt"
+	"go/parser"
+	"go/token"
 	"math"
 	"net/http"
 	"path"
@@ -19,12 +22,11 @@ import (
 	"github.com/google/licensecheck"
 	oldlicensecheck "github.com/google/licensecheck/old"
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/godoc"
 	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/stdlib"
 )
-
-//go:generate go run gen_documentation.go
 
 // These sample values can be used to construct test cases.
 var (
@@ -59,11 +61,20 @@ var (
 	PackagePath    = path.Join(ModulePath, Suffix)
 	V1Path         = PackagePath
 	Imports        = []string{"path/to/bar", "fmt"}
-	Synopsis       = "This is a package synopsis"
 	ReadmeFilePath = "README.md"
 	ReadmeContents = "readme"
 	GOOS           = internal.All
 	GOARCH         = internal.All
+	Doc            = Documentation(GOOS, GOARCH, `
+		// Package p is a package.
+		//
+		//
+		// Links
+		//
+		// - pkg.go.dev, https://pkg.go.dev
+ 		package p
+		var V int
+	`)
 )
 
 // LicenseCmpOpts are options to use when comparing licenses with the cmp package.
@@ -138,14 +149,11 @@ func UnitForModuleRoot(m *internal.ModuleInfo) *internal.Unit {
 //
 // The package name is last component of the package path.
 func UnitForPackage(path, modulePath, version, name string, isRedistributable bool) *internal.Unit {
+	// Copy Doc because some tests modify it.
+	doc := *Doc
 	return &internal.Unit{
-		UnitMeta: *UnitMeta(path, modulePath, version, name, isRedistributable),
-		Documentation: []*internal.Documentation{{
-			Synopsis: Synopsis,
-			Source:   DocumentationSource,
-			GOOS:     GOOS,
-			GOARCH:   GOARCH,
-		}},
+		UnitMeta:        *UnitMeta(path, modulePath, version, name, isRedistributable),
+		Documentation:   []*internal.Documentation{&doc},
 		LicenseContents: Licenses,
 		Imports:         Imports,
 		NumImports:      len(Imports),
@@ -182,7 +190,7 @@ func PackageMeta(fullPath string) *internal.PackageMeta {
 		Path:              fullPath,
 		IsRedistributable: true,
 		Name:              path.Base(fullPath),
-		Synopsis:          Synopsis,
+		Synopsis:          Doc.Synopsis,
 		Licenses:          LicenseMetadata,
 	}
 }
@@ -256,4 +264,26 @@ func constructFullPath(modulePath, suffix string) string {
 		return path.Join(modulePath, suffix)
 	}
 	return suffix
+}
+
+// Documentation returns a Documentation value for the given Go source.
+// It panics if there are errors parsing or encoding the source.
+func Documentation(goos, goarch, fileContents string) *internal.Documentation {
+	fset := token.NewFileSet()
+	pf, err := parser.ParseFile(fset, "sample.go", fileContents, parser.ParseComments)
+	if err != nil {
+		panic(err)
+	}
+	docPkg := godoc.NewPackage(fset, nil)
+	docPkg.AddFile(pf, true)
+	src, err := docPkg.Encode(context.Background())
+	if err != nil {
+		panic(err)
+	}
+	return &internal.Documentation{
+		GOOS:     goos,
+		GOARCH:   goarch,
+		Synopsis: fmt.Sprintf("This is a package synopsis for GOOS=%s, GOARCH=%s", goos, goarch),
+		Source:   src,
+	}
 }

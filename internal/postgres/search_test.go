@@ -166,14 +166,9 @@ func importGraph(popularPath, importerModule string, importerCount int) []*inter
 			name := fmt.Sprintf("importer%d", i)
 			fullPath := importerModule + "/" + name
 			u := &internal.Unit{
-				UnitMeta: *sample.UnitMeta(fullPath, importerModule, m.Version, name, true),
-				Documentation: []*internal.Documentation{{
-					Synopsis: sample.Synopsis,
-					GOOS:     sample.GOOS,
-					GOARCH:   sample.GOARCH,
-					Source:   []byte{},
-				}},
-				Imports: []string{popularPath},
+				UnitMeta:      *sample.UnitMeta(fullPath, importerModule, m.Version, name, true),
+				Documentation: []*internal.Documentation{sample.Doc},
+				Imports:       []string{popularPath},
 			}
 			sample.AddUnit(m, u)
 			mods = append(mods, m)
@@ -1002,14 +997,14 @@ func TestGetPackagesForSearchDocumentUpsert(t *testing.T) {
 			ModulePath:     "mod.com",
 			ReadmeFilePath: "README.md",
 			ReadmeContents: "readme",
-			Synopsis:       "This is a package synopsis",
+			Synopsis:       sample.Doc.Synopsis,
 		},
 		{
 			PackagePath:    "mod.com/A/notinternal",
 			ModulePath:     "mod.com",
 			ReadmeFilePath: "README.md",
 			ReadmeContents: "readme",
-			Synopsis:       "This is a package synopsis",
+			Synopsis:       sample.Doc.Synopsis,
 		},
 	}
 	if diff := cmp.Diff(want, got); diff != "" {

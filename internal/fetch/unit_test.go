@@ -91,7 +91,7 @@ func samplePackage(modulePath, suffix string) *goPackage {
 		docs: []*internal.Documentation{{
 			GOOS:     sample.GOOS,
 			GOARCH:   sample.GOARCH,
-			Synopsis: sample.Synopsis,
+			Synopsis: sample.Doc.Synopsis,
 		}},
 	}
 }
