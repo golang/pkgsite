@@ -1580,6 +1580,8 @@ table.Directories {
   border: 0.0625rem solid rgba(0, 0, 0, 0.2);
   border-radius: 6px;
   box-shadow: 0 0.3125rem 0.9375rem rgba(0, 0, 0, 0.5);
+  top: 50%;
+  transform: translate(0, -50%);
 }
 .Dialog-title {
   font-size: 1.125rem;
