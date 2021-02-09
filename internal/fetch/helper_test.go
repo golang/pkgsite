@@ -112,11 +112,11 @@ func updateFetchResultVersions(t *testing.T, fr *FetchResult, local bool) *Fetch
 
 // proxyFetcher is a test helper function that sets up a test proxy, fetches
 // a module using FetchModule, and returns fetch result and a license detector.
-func proxyFetcher(t *testing.T, withLicenseDetector bool, ctx context.Context, mod *testModule, fetchVersion string) (*FetchResult, *licenses.Detector) {
+func proxyFetcher(t *testing.T, withLicenseDetector bool, ctx context.Context, mod *proxy.Module, fetchVersion string) (*FetchResult, *licenses.Detector) {
 	t.Helper()
 
-	modulePath := mod.mod.ModulePath
-	version := mod.mod.Version
+	modulePath := mod.ModulePath
+	version := mod.Version
 	if version == "" {
 		version = sample.VersionString
 	}
@@ -127,7 +127,7 @@ func proxyFetcher(t *testing.T, withLicenseDetector bool, ctx context.Context, m
 	proxyClient, teardownProxy := proxy.SetupTestClient(t, []*proxy.Module{{
 		ModulePath: modulePath,
 		Version:    version,
-		Files:      mod.mod.Files,
+		Files:      mod.Files,
 	}})
 	defer teardownProxy()
 	got := FetchModule(ctx, modulePath, fetchVersion, proxyClient, source.NewClientForTesting(), false)
@@ -142,16 +142,16 @@ func proxyFetcher(t *testing.T, withLicenseDetector bool, ctx context.Context, m
 // localFetcher is a helper function that creates a test directory to hold a module,
 // fetches the module from the directory using FetchLocalModule, and returns a fetch
 // result, and a license detector.
-func localFetcher(t *testing.T, withLicenseDetector bool, ctx context.Context, mod *testModule, fetchVersion string) (*FetchResult, *licenses.Detector) {
+func localFetcher(t *testing.T, withLicenseDetector bool, ctx context.Context, mod *proxy.Module, fetchVersion string) (*FetchResult, *licenses.Detector) {
 	t.Helper()
 
-	directory, err := testhelper.CreateTestDirectory(mod.mod.Files)
+	directory, err := testhelper.CreateTestDirectory(mod.Files)
 	if err != nil {
 		t.Fatalf("couldn't create test files")
 	}
 	defer os.RemoveAll(directory)
 
-	modulePath := mod.mod.ModulePath
+	modulePath := mod.ModulePath
 	got := FetchLocalModule(ctx, modulePath, directory, source.NewClientForTesting())
 	if !withLicenseDetector {
 		return got, nil

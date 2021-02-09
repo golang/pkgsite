@@ -24,6 +24,7 @@ import (
 	"golang.org/x/pkgsite/internal/godoc"
 	"golang.org/x/pkgsite/internal/godoc/dochtml"
 	"golang.org/x/pkgsite/internal/licenses"
+	"golang.org/x/pkgsite/internal/proxy"
 	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/testing/sample"
@@ -32,6 +33,8 @@ import (
 var testTimeout = 30 * time.Second
 
 var templateSource = template.TrustedSourceFromConstant("../../content/static/html/doc")
+
+type fetchFunc func(t *testing.T, withLicenseDetector bool, ctx context.Context, mod *proxy.Module, fetchVersion string) (*FetchResult, *licenses.Detector)
 
 func TestFetchModule(t *testing.T) {
 	dochtml.LoadTemplates(templateSource)
@@ -79,7 +82,7 @@ func TestFetchModule(t *testing.T) {
 	} {
 		for _, fetcher := range []struct {
 			name  string
-			fetch func(t *testing.T, withLicenseDetector bool, ctx context.Context, mod *testModule, fetchVersion string) (*FetchResult, *licenses.Detector)
+			fetch fetchFunc
 		}{
 			{name: "proxy", fetch: proxyFetcher},
 			{name: "local", fetch: localFetcher},
@@ -92,7 +95,7 @@ func TestFetchModule(t *testing.T) {
 				ctx, cancel := context.WithTimeout(ctx, 300*time.Second)
 				defer cancel()
 
-				got, d := fetcher.fetch(t, true, ctx, test.mod, test.fetchVersion)
+				got, d := fetcher.fetch(t, true, ctx, test.mod.mod, test.fetchVersion)
 				defer got.Defer()
 				if got.Error != nil {
 					t.Fatalf("fetching failed: %v", got.Error)
@@ -167,13 +170,13 @@ func TestFetchModule_Errors(t *testing.T) {
 	} {
 		for _, fetcher := range []struct {
 			name  string
-			fetch func(t *testing.T, withLicenseDetector bool, ctx context.Context, mod *testModule, fetchVersion string) (*FetchResult, *licenses.Detector)
+			fetch fetchFunc
 		}{
 			{name: "proxy", fetch: proxyFetcher},
 			{name: "local", fetch: localFetcher},
 		} {
 			t.Run(fmt.Sprintf("%s:%s", fetcher.name, test.name), func(t *testing.T) {
-				got, _ := fetcher.fetch(t, false, ctx, test.mod, "")
+				got, _ := fetcher.fetch(t, false, ctx, test.mod.mod, "")
 				defer got.Defer()
 				if !errors.Is(got.Error, test.wantErr) {
 					t.Fatalf("got error = %v; wantErr = %v)", got.Error, test.wantErr)
