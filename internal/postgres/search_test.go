@@ -171,8 +171,8 @@ func importGraph(popularPath, importerModule string, importerCount int) []*inter
 				Imports:       []string{popularPath},
 			}
 			sample.AddUnit(m, u)
-			mods = append(mods, m)
 		}
+		mods = append(mods, m)
 	}
 	return mods
 }
