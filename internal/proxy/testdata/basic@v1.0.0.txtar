@@ -1,0 +1,56 @@
+A simple module with a single package, which is at the module root.
+
+-- go.mod --
+module example.com/basic
+
+-- README.md --
+This is the README for a test module.
+
+-- LICENSE --
+$MITLicense
+
+-- file1.go --
+// Package basic is a sample package.
+package basic
+
+import 	"time"
+
+// Version is the same as the module version.
+const Version = "v1.0.0"
+
+// F is a function.
+func F(t time.Time, s string) (T, u) {
+	x := 3
+	x = C
+}
+
+// G is new in v1.1.0.
+func G() int {
+	return 3
+}
+
+-- file2.go --
+package basic
+
+var V = Version
+
+type T int
+
+type u int
+
+-- example_test.go --
+package basic_test
+
+// Example for the package.
+func Example() {
+	fmt.Println("hello")
+	// Output: hello
+}
+
+// A function example.
+func ExampleF() {
+	basic.F()
+}
+
+
+

@@ -1,0 +1,57 @@
+A module with multiple packages, one of which is not redistributable.
+
+-- go.mod --
+module example.com/nonredist
+
+go 1.13
+
+-- LICENSE --
+$BSD0License
+
+-- README.md --
+README file for testing.
+
+-- bar/LICENSE --
+$MITLicense
+
+-- bar/bar.go --
+// package bar
+package bar
+
+// Bar returns the string "bar".
+func Bar() string {
+	return "bar"
+}
+
+
+-- bar/baz/COPYING --
+$MITLicense
+-- bar/baz/baz.go --
+// package baz
+package baz
+
+// Baz returns the string "baz".
+func Baz() string {
+	return "baz"
+}
+
+-- unk/README.md --
+README file will be removed before DB insert.
+
+-- unk/LICENSE.md --
+An unknown license.
+
+-- unk/unk.go --
+// package unk
+package unk
+
+import (
+	"fmt"
+
+	"example.com/nonredist/bar"
+)
+
+// FooBar returns the string "foo bar".
+func FooBar() string {
+	return fmt.Sprintf("foo %s", bar.Bar())
+}

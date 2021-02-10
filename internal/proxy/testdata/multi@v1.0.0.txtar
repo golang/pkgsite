@@ -1,0 +1,45 @@
+A module with two packages, foo and bar.
+
+-- go.mod --
+module example.com/multi
+
+go 1.13
+
+-- LICENSE --
+$BSD0License
+
+-- README.md --
+README file for testing.
+
+-- foo/LICENSE.md --
+$MITLicense
+
+-- foo/foo.go --
+// package foo
+package foo
+
+import (
+	"fmt"
+
+	"example.com/multi/bar"
+)
+
+// FooBar returns the string "foo bar".
+func FooBar() string {
+	return fmt.Sprintf("foo %s", bar.Bar())
+}
+
+-- bar/LICENSE --
+$MITLicense
+
+-- bar/README --
+Another README file for testing.
+
+-- bar/bar.go --
+// package bar
+package bar
+
+// Bar returns the string "bar".
+func Bar() string {
+	return "bar"
+}
