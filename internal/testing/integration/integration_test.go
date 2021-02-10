@@ -25,14 +25,17 @@ import (
 	"golang.org/x/pkgsite/internal/proxy"
 	"golang.org/x/pkgsite/internal/queue"
 	"golang.org/x/pkgsite/internal/source"
-	"golang.org/x/pkgsite/internal/testing/testhelper"
 	"golang.org/x/pkgsite/internal/worker"
 )
 
-var testDB *postgres.DB
+var (
+	testDB      *postgres.DB
+	testModules []*proxy.Module
+)
 
 func TestMain(m *testing.M) {
 	dochtml.LoadTemplates(template.TrustedSourceFromConstant("../../../content/static/html/doc"))
+	testModules = proxy.LoadTestModules("../../proxy/testdata")
 	postgres.RunDBTests("discovery_integration_test", m, &testDB)
 }
 
@@ -42,24 +45,7 @@ func TestEndToEndProcessing(t *testing.T) {
 
 	defer postgres.ResetTestDB(testDB, t)
 
-	var (
-		modulePath = "github.com/my/module"
-		version    = "v1.0.0"
-		moduleData = map[string]string{
-			"go.mod":     "module " + modulePath,
-			"foo/foo.go": "package foo\n\nconst Foo = 525600",
-			"README.md":  "This is a readme",
-			"LICENSE":    testhelper.MITLicense,
-		}
-	)
-	testModules := []*proxy.Module{
-		{
-			ModulePath: modulePath,
-			Version:    version,
-			Files:      moduleData,
-		},
-	}
-	proxyClient, indexClient, teardownClients := setupProxyAndIndex(t, testModules...)
+	proxyClient, indexClient, teardownClients := setupProxyAndIndex(t)
 	defer teardownClients()
 
 	redisCache, err := miniredis.Run()
@@ -117,12 +103,12 @@ func TestEndToEndProcessing(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 	queue.WaitForTesting(ctx)
 
-	body, err := doGet(frontendHTTP.URL + "/github.com/my/module/foo")
+	body, err := doGet(frontendHTTP.URL + "/example.com/basic")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if idx := strings.Index(string(body), "525600"); idx < 0 {
-		t.Error("Documentation constant 525600 not found in body")
+	if idx := strings.Index(string(body), "v1.1.0"); idx < 0 {
+		t.Error("Documentation constant v1.1.0 not found in body")
 	}
 }
 
@@ -144,11 +130,11 @@ func doGet(url string) ([]byte, error) {
 	return body, nil
 }
 
-func setupProxyAndIndex(t *testing.T, modules ...*proxy.Module) (*proxy.Client, *index.Client, func()) {
+func setupProxyAndIndex(t *testing.T) (*proxy.Client, *index.Client, func()) {
 	t.Helper()
-	proxyClient, teardownProxy := proxy.SetupTestClient(t, modules)
+	proxyClient, teardownProxy := proxy.SetupTestClient(t, testModules)
 	var indexVersions []*internal.IndexVersion
-	for _, m := range modules {
+	for _, m := range testModules {
 		indexVersions = append(indexVersions, &internal.IndexVersion{
 			Path:      m.ModulePath,
 			Version:   m.Version,

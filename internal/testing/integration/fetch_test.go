@@ -11,27 +11,16 @@ import (
 	"testing"
 
 	"golang.org/x/pkgsite/internal/postgres"
-	"golang.org/x/pkgsite/internal/proxy"
-	"golang.org/x/pkgsite/internal/testing/sample"
-	"golang.org/x/pkgsite/internal/testing/testhelper"
 )
 
 func TestFrontendFetchForMasterVersion(t *testing.T) {
 	defer postgres.ResetTestDB(testDB, t)
 
-	// Add sample.ModulePath@sample.VersionString to the database.
-	// Check that GET /sample.ModulePath returns a 200.
-	testModule := &proxy.Module{
-		ModulePath: sample.ModulePath,
-		Version:    "v1.0.0",
-		Files: map[string]string{
-			"found.go":       "package found\nconst Value = 123",
-			"dir/pkg/pkg.go": "package pkg\nconst Value = 321",
-			"LICENSE":        testhelper.MITLicense,
-		},
-	}
+	// Add a module to the database.
+	// Check that GET of the module's path returns a 200.
 	ctx := context.Background()
-	q, teardown := setupQueue(ctx, t, []*proxy.Module{testModule})
+	q, teardown := setupQueue(ctx, t, testModules[:1])
+	const modulePath = "example.com/basic"
 	defer teardown()
 	ts := setupFrontend(ctx, t, q)
 
@@ -39,21 +28,21 @@ func TestFrontendFetchForMasterVersion(t *testing.T) {
 		method, urlPath string
 		status          int
 	}{
-		// Validate that the sample.ModulePath does not exist in the database.
-		{http.MethodGet, sample.ModulePath, http.StatusNotFound},
+		// Validate that the modulePath does not exist in the database.
+		{http.MethodGet, modulePath, http.StatusNotFound},
 		// Insert the latest version of the module using the frontend fetch
 		// endpoint.
-		{http.MethodPost, fmt.Sprintf("fetch/%s", sample.ModulePath), http.StatusOK},
-		// Validate that sample.ModulePath@master does not exist in the
-		// database. GET /sample.ModulePath@master should return a 404.
-		{http.MethodGet, fmt.Sprintf("%s@master", sample.ModulePath), http.StatusNotFound},
+		{http.MethodPost, fmt.Sprintf("fetch/%s", modulePath), http.StatusOK},
+		// Validate that modulePath@master does not exist in the
+		// database. GET /modulePath@master should return a 404.
+		{http.MethodGet, fmt.Sprintf("%s@master", modulePath), http.StatusNotFound},
 		// Insert the master version of the module using the frontend fetch
 		// endpoint.
-		{http.MethodPost, fmt.Sprintf("fetch/%s@master", sample.ModulePath), http.StatusOK},
-		// Check that GET /sample.ModulePath@master now returns a 200.
-		{http.MethodGet, fmt.Sprintf("%s@master", sample.ModulePath), http.StatusOK},
-		// Check that GET /mod/sample.ModulePath@master also returns a 200.
-		{http.MethodGet, fmt.Sprintf("mod/%s@master", sample.ModulePath), http.StatusOK},
+		{http.MethodPost, fmt.Sprintf("fetch/%s@master", modulePath), http.StatusOK},
+		// Check that GET /modulePath@master now returns a 200.
+		{http.MethodGet, fmt.Sprintf("%s@master", modulePath), http.StatusOK},
+		// Check that GET /mod/modulePath@master also returns a 200.
+		{http.MethodGet, fmt.Sprintf("mod/%s@master", modulePath), http.StatusOK},
 	} {
 		testURL := ts.URL + "/" + req.urlPath
 		validateResponse(t, req.method, testURL, req.status, nil)

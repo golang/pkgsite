@@ -17,8 +17,6 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/postgres"
-	"golang.org/x/pkgsite/internal/proxy"
-	"golang.org/x/pkgsite/internal/testing/testhelper"
 )
 
 // Test that the worker saves the information needed to render
@@ -26,44 +24,15 @@ import (
 func TestFrontendDocRender(t *testing.T) {
 	defer postgres.ResetTestDB(testDB, t)
 
-	m := &proxy.Module{
-		ModulePath: "github.com/foo/fdoc",
-		Version:    "v1.2.3",
-		Files: map[string]string{
-			"go.mod":  "module github.com/foo/fdoc",
-			"LICENSE": testhelper.MITLicense,
-			"file.go": `
-					// Package fdoc is a test of frontend doc rendering.
-					package fdoc
-
-					import 	"time"
-
-					// C is a constant.
-					const C = 123
-
-					// F is a function.
-					func F(t time.Time, s string) (T, u) {
-						x := 3
-						x = C
-					}
-			`,
-			"file2.go": `
-					package fdoc
-
-					var V = C
-					type T int
-					type u int
-			`,
-		},
-	}
-
 	// Process with saving the source.
 	processVersions(
 		experiment.NewContext(context.Background()),
-		t, []*proxy.Module{m})
+		t, testModules)
 
-	workerDoc := getDoc(t, m.ModulePath)
-	frontendDoc := getDoc(t, m.ModulePath)
+	const modulePath = "example.com/basic"
+
+	workerDoc := getDoc(t, modulePath)
+	frontendDoc := getDoc(t, modulePath)
 	if diff := cmp.Diff(workerDoc, frontendDoc); diff != "" {
 		t.Errorf("mismatch (-worker, +frontend):\n%s", diff)
 	}
