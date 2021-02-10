@@ -75,6 +75,46 @@ var (
  		package p
 		var V int
 	`)
+	Constant = &internal.Symbol{
+		Name:     "Constant",
+		Synopsis: "const Constant",
+		Section:  internal.SymbolSectionConstants,
+		Kind:     internal.SymbolKindConstant,
+	}
+	Variable = &internal.Symbol{
+		Name:     "Variable",
+		Synopsis: "var Variable",
+		Section:  internal.SymbolSectionVariables,
+		Kind:     internal.SymbolKindVariable,
+	}
+	Function = &internal.Symbol{
+		Name:     "Function",
+		Synopsis: "func Function() error",
+		Section:  internal.SymbolSectionFunctions,
+		Kind:     internal.SymbolKindFunction,
+	}
+	Type = &internal.Symbol{
+		Name:     "Type",
+		Synopsis: "type Type struct",
+		Section:  internal.SymbolSectionTypes,
+		Kind:     internal.SymbolKindType,
+		Children: []*internal.Symbol{
+			{
+				Name:       "Field",
+				Synopsis:   "field",
+				Section:    internal.SymbolSectionTypes,
+				Kind:       internal.SymbolKindField,
+				ParentName: "Type.Field",
+			},
+			{
+				Name:       "Method",
+				Synopsis:   "method",
+				Section:    internal.SymbolSectionTypes,
+				Kind:       internal.SymbolKindMethod,
+				ParentName: "Type.Method",
+			},
+		},
+	}
 )
 
 // LicenseCmpOpts are options to use when comparing licenses with the cmp package.

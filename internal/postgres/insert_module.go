@@ -368,7 +368,19 @@ func (pdb *DB) insertUnits(ctx context.Context, db *database.DB, m *internal.Mod
 	if err := insertDoc(ctx, db, paths, pathToUnitID, pathToDoc); err != nil {
 		return err
 	}
-	return insertImports(ctx, db, paths, pathToUnitID, pathToImports)
+	if err := insertImports(ctx, db, paths, pathToUnitID, pathToImports); err != nil {
+		return err
+	}
+
+	// Only update symbols if the version type is release.
+	versionType, err := version.ParseType(m.Version)
+	if err != nil {
+		return err
+	}
+	if versionType == version.TypeRelease {
+		return insertSymbols(ctx, db, pathToDoc)
+	}
+	return nil
 }
 
 func insertPaths(ctx context.Context, db *database.DB, m *internal.Module) (pathToID map[string]int, err error) {
