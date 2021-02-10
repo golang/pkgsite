@@ -24,15 +24,6 @@ type Server struct {
 	mux     *http.ServeMux
 }
 
-// Module represents a module version used by the proxy server.
-type Module struct {
-	ModulePath string
-	Version    string
-	Files      map[string]string
-	NotCached  bool // if true, behaves like it's uncached
-	zip        []byte
-}
-
 // NewServer returns a proxy Server that serves the provided modules.
 func NewServer(modules []*Module) *Server {
 	s := &Server{
