@@ -159,12 +159,12 @@ Disallow: /fetch/*
 const (
 	// defaultTTL is used when details tab contents are subject to change, or when
 	// there is a problem confirming that the details can be permanently cached.
-	defaultTTL = 1 * time.Hour
+	defaultTTL = 10 * time.Minute
 	// shortTTL is used for volatile content, such as the latest version of a
 	// package or module.
 	shortTTL = 10 * time.Minute
 	// longTTL is used when details content is essentially static.
-	longTTL = 24 * time.Hour
+	longTTL = 10 * time.Minute
 	// tinyTTL is used to cache crawled pages.
 	tinyTTL = 1 * time.Minute
 )
