@@ -33,13 +33,15 @@ import (
 const testTimeout = 120 * time.Second
 
 var (
-	testDB     *postgres.DB
-	httpClient *http.Client
+	testDB      *postgres.DB
+	httpClient  *http.Client
+	testModules []*proxy.Module
 )
 
 func TestMain(m *testing.M) {
 	httpClient = &http.Client{Transport: fakeTransport{}}
 	dochtml.LoadTemplates(template.TrustedSourceFromConstant("../../content/static/html/doc"))
+	testModules = proxy.LoadTestModules("../proxy/testdata")
 	postgres.RunDBTests("discovery_worker_test", m, &testDB)
 }
 

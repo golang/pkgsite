@@ -112,10 +112,10 @@ func TestFetchAndUpdateState_BadRequestedVersion(t *testing.T) {
 
 	defer postgres.ResetTestDB(testDB, t)
 	var (
-		modulePath = buildConstraintsMod.ModulePath
+		modulePath = buildConstraintsModulePath
 		version    = "badversion"
 	)
-	proxyClient, teardownProxy := proxy.SetupTestClient(t, []*proxy.Module{buildConstraintsMod})
+	proxyClient, teardownProxy := proxy.SetupTestClient(t, testModules)
 	defer teardownProxy()
 	fetchAndCheckStatus(ctx, t, proxyClient, modulePath, version, http.StatusNotFound)
 }
@@ -127,21 +127,21 @@ func TestFetchAndUpdateState_Incomplete(t *testing.T) {
 
 	defer postgres.ResetTestDB(testDB, t)
 
-	proxyClient, teardownProxy := proxy.SetupTestClient(t, []*proxy.Module{buildConstraintsMod})
+	proxyClient, teardownProxy := proxy.SetupTestClient(t, testModules)
 	defer teardownProxy()
 
-	fetchAndCheckStatus(ctx, t, proxyClient, buildConstraintsMod.ModulePath, buildConstraintsMod.Version, hasIncompletePackagesCode)
-	checkPackageVersionStates(ctx, t, buildConstraintsMod.ModulePath, buildConstraintsMod.Version, []*internal.PackageVersionState{
+	fetchAndCheckStatus(ctx, t, proxyClient, buildConstraintsModulePath, buildConstraintsVersion, hasIncompletePackagesCode)
+	checkPackageVersionStates(ctx, t, buildConstraintsModulePath, buildConstraintsVersion, []*internal.PackageVersionState{
 		{
-			PackagePath: buildConstraintsMod.ModulePath + "/cpu",
-			ModulePath:  buildConstraintsMod.ModulePath,
-			Version:     buildConstraintsMod.Version,
+			PackagePath: buildConstraintsModulePath + "/cpu",
+			ModulePath:  buildConstraintsModulePath,
+			Version:     buildConstraintsVersion,
 			Status:      200,
 		},
 		{
-			PackagePath: buildConstraintsMod.ModulePath + "/ignore",
-			ModulePath:  buildConstraintsMod.ModulePath,
-			Version:     buildConstraintsMod.Version,
+			PackagePath: buildConstraintsModulePath + "/ignore",
+			ModulePath:  buildConstraintsModulePath,
+			Version:     buildConstraintsVersion,
 			Status:      600,
 		},
 	})

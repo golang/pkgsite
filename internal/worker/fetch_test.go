@@ -21,7 +21,6 @@ import (
 	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/testing/sample"
-	"golang.org/x/pkgsite/internal/testing/testhelper"
 )
 
 const (
@@ -29,29 +28,15 @@ const (
 	hasIncompletePackagesCode = 290
 	hasIncompletePackagesDesc = "incomplete packages"
 
-	testAppVersion = "appVersionLabel"
+	testAppVersion             = "appVersionLabel"
+	buildConstraintsModulePath = "example.com/build-constraints"
+	buildConstraintsVersion    = "v1.0.0"
 )
 
 var (
 	sourceTimeout       = 1 * time.Second
 	testProxyCommitTime = time.Date(2019, 1, 30, 0, 0, 0, 0, time.UTC)
 )
-
-var buildConstraintsMod = &proxy.Module{
-	ModulePath: "build.constraints/module",
-	Version:    sample.VersionString,
-	Files: map[string]string{
-		"LICENSE": testhelper.BSD0License,
-		"cpu/cpu.go": `
-				// Package cpu implements processor feature detection
-				// used by the Go standard library.
-				package cpu`,
-		"cpu/cpu_arm.go":   "package cpu\n\nconst CacheLinePadSize = 1",
-		"cpu/cpu_arm64.go": "package cpu\n\nconst CacheLinePadSize = 2",
-		"cpu/cpu_x86.go":   "// +build 386 amd64 amd64p32\n\npackage cpu\n\nconst CacheLinePadSize = 3",
-		"ignore/ignore.go": "// +build ignore\n\npackage ignore",
-	},
-}
 
 func TestFetchAndUpdateState(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
@@ -60,95 +45,18 @@ func TestFetchAndUpdateState(t *testing.T) {
 	stdlib.UseTestData = true
 	defer func() { stdlib.UseTestData = false }()
 
-	proxyClient, teardownProxy := proxy.SetupTestClient(t, []*proxy.Module{
-		buildConstraintsMod,
-		{
-			ModulePath: "github.com/my/module",
-			Files: map[string]string{
-				"go.mod":        "module github.com/my/module\n\ngo 1.12",
-				"LICENSE":       testhelper.BSD0License,
-				"bar/README.md": "README FILE FOR TESTING.",
-				"bar/LICENSE":   testhelper.MITLicense,
-				"bar/bar.go": `
-					// package bar
-					package bar
-
-					// Bar returns the string "bar".
-					func Bar() string {
-						return "bar"
-					}`,
-				"foo/LICENSE.md": testhelper.MITLicense,
-				"foo/foo.go": `
-					// package foo
-					package foo
-
-					import (
-						"fmt"
-
-						"github.com/my/module/bar"
-					)
-
-					// FooBar returns the string "foo bar".
-					func FooBar() string {
-						return fmt.Sprintf("foo %s", bar.Bar())
-					}`,
-			},
-		},
-
-		{
-			ModulePath: "nonredistributable.mod/module",
-			Files: map[string]string{
-				"go.mod":          "module nonredistributable.mod/module\n\ngo 1.13",
-				"LICENSE":         testhelper.BSD0License,
-				"README.md":       "README FILE FOR TESTING.",
-				"bar/baz/COPYING": testhelper.MITLicense,
-				"bar/baz/baz.go": `
-				// package baz
-				package baz
-
-				// Baz returns the string "baz".
-				func Baz() string {
-					return "baz"
-				}
-				`,
-				"bar/LICENSE": testhelper.MITLicense,
-				"bar/bar.go": `
-				// package bar
-				package bar
-
-				// Bar returns the string "bar".
-				func Bar() string {
-					return "bar"
-				}`,
-				"foo/LICENSE.md": testhelper.UnknownLicense,
-				"foo/foo.go": `
-				// package foo
-				package foo
-
-				import (
-					"fmt"
-
-					"github.com/my/module/bar"
-				)
-
-				// FooBar returns the string "foo bar".
-				func FooBar() string {
-					return fmt.Sprintf("foo %s", bar.Bar())
-				}`,
-			},
-		},
-	})
+	proxyClient, teardownProxy := proxy.SetupTestClient(t, testModules)
 	defer teardownProxy()
 
 	myModuleV100 := &internal.Unit{
 		UnitMeta: internal.UnitMeta{
-			ModulePath:        "github.com/my/module",
+			ModulePath:        "example.com/multi",
 			HasGoMod:          true,
 			Version:           sample.VersionString,
 			CommitTime:        testProxyCommitTime,
-			SourceInfo:        source.NewGitHubInfo("https://github.com/my/module", "", sample.VersionString),
+			SourceInfo:        source.NewGitHubInfo("https://example.com/multi", "", sample.VersionString),
 			IsRedistributable: true,
-			Path:              "github.com/my/module/bar",
+			Path:              "example.com/multi/bar",
 			Name:              "bar",
 			Licenses: []*licenses.Metadata{
 				{Types: []string{"0BSD"}, FilePath: "LICENSE"},
@@ -161,8 +69,8 @@ func TestFetchAndUpdateState(t *testing.T) {
 			GOARCH:   "amd64",
 		}},
 		Readme: &internal.Readme{
-			Filepath: "bar/README.md",
-			Contents: "README FILE FOR TESTING.",
+			Filepath: "bar/README",
+			Contents: "Another README file for testing.",
 		},
 	}
 
@@ -175,33 +83,33 @@ func TestFetchAndUpdateState(t *testing.T) {
 		dontWantDoc []string // Substrings we expect not to see in DocumentationHTML.
 	}{
 		{
-			modulePath: "github.com/my/module",
+			modulePath: "example.com/multi",
 			version:    sample.VersionString,
-			pkg:        "github.com/my/module/bar",
+			pkg:        "example.com/multi/bar",
 			want:       myModuleV100,
 			wantDoc:    []string{"Bar returns the string &#34;bar&#34;."},
 		},
 		{
-			modulePath: "github.com/my/module",
+			modulePath: "example.com/multi",
 			version:    internal.LatestVersion,
-			pkg:        "github.com/my/module/bar",
+			pkg:        "example.com/multi/bar",
 			want:       myModuleV100,
 		},
 		{
-			// nonredistributable.mod/module is redistributable, as are its
-			// packages bar and bar/baz. But package foo is not.
-			modulePath: "nonredistributable.mod/module",
+			// example.com/nonredist is redistributable, as are its
+			// packages bar and bar/baz. But package unk is not.
+			modulePath: "example.com/nonredist",
 			version:    sample.VersionString,
-			pkg:        "nonredistributable.mod/module/bar/baz",
+			pkg:        "example.com/nonredist/bar/baz",
 			want: &internal.Unit{
 				UnitMeta: internal.UnitMeta{
-					ModulePath:        "nonredistributable.mod/module",
-					Version:           "v1.0.0",
+					ModulePath:        "example.com/nonredist",
+					Version:           sample.VersionString,
 					HasGoMod:          true,
 					CommitTime:        testProxyCommitTime,
-					SourceInfo:        nil,
+					SourceInfo:        source.NewGitHubInfo("https://example.com/nonredist", "", sample.VersionString),
 					IsRedistributable: true,
-					Path:              "nonredistributable.mod/module/bar/baz",
+					Path:              "example.com/nonredist/bar/baz",
 					Name:              "baz",
 					Licenses: []*licenses.Metadata{
 						{Types: []string{"0BSD"}, FilePath: "LICENSE"},
@@ -217,22 +125,22 @@ func TestFetchAndUpdateState(t *testing.T) {
 			},
 			wantDoc: []string{"Baz returns the string &#34;baz&#34;."},
 		}, {
-			modulePath: "nonredistributable.mod/module",
+			modulePath: "example.com/nonredist",
 			version:    sample.VersionString,
-			pkg:        "nonredistributable.mod/module/foo",
+			pkg:        "example.com/nonredist/unk",
 			want: &internal.Unit{
 				UnitMeta: internal.UnitMeta{
-					ModulePath:        "nonredistributable.mod/module",
+					ModulePath:        "example.com/nonredist",
 					Version:           sample.VersionString,
 					HasGoMod:          true,
 					CommitTime:        testProxyCommitTime,
-					SourceInfo:        nil,
+					SourceInfo:        source.NewGitHubInfo("https://example.com/nonredist", "", sample.VersionString),
 					IsRedistributable: false,
-					Path:              "nonredistributable.mod/module/foo",
-					Name:              "foo",
+					Path:              "example.com/nonredist/unk",
+					Name:              "unk",
 					Licenses: []*licenses.Metadata{
 						{Types: []string{"0BSD"}, FilePath: "LICENSE"},
-						{Types: []string{"UNKNOWN"}, FilePath: "foo/LICENSE.md"},
+						{Types: []string{"UNKNOWN"}, FilePath: "unk/LICENSE.md"},
 					},
 				},
 				NumImports: 2,
@@ -337,18 +245,19 @@ func TestFetchAndUpdateState(t *testing.T) {
 				"Decoder.Decode (stream)",
 			},
 		}, {
-			modulePath: buildConstraintsMod.ModulePath,
-			version:    buildConstraintsMod.Version,
-			pkg:        buildConstraintsMod.ModulePath + "/cpu",
+			modulePath: buildConstraintsModulePath,
+			version:    sample.VersionString,
+			pkg:        buildConstraintsModulePath + "/cpu",
 			want: &internal.Unit{
 				UnitMeta: internal.UnitMeta{
-					ModulePath:        buildConstraintsMod.ModulePath,
-					Version:           buildConstraintsMod.Version,
-					HasGoMod:          false,
+					ModulePath:        buildConstraintsModulePath,
+					Version:           "v1.0.0",
+					HasGoMod:          true,
 					CommitTime:        testProxyCommitTime,
 					IsRedistributable: true,
-					Path:              buildConstraintsMod.ModulePath + "/cpu",
+					Path:              buildConstraintsModulePath + "/cpu",
 					Name:              "cpu",
+					SourceInfo:        source.NewGitHubInfo("https://"+buildConstraintsModulePath, "", sample.VersionString),
 					Licenses: []*licenses.Metadata{
 						{Types: []string{"0BSD"}, FilePath: "LICENSE"},
 					},
@@ -370,7 +279,7 @@ func TestFetchAndUpdateState(t *testing.T) {
 	sourceClient := source.NewClient(sourceTimeout)
 	f := &Fetcher{proxyClient, sourceClient, testDB}
 	for _, test := range testCases {
-		t.Run(strings.ReplaceAll(test.pkg+test.version, "/", " "), func(t *testing.T) {
+		t.Run(strings.ReplaceAll(test.pkg+"@"+test.version, "/", " "), func(t *testing.T) {
 			defer postgres.ResetTestDB(testDB, t)
 			if _, _, err := f.FetchAndUpdateState(ctx, test.modulePath, test.version, testAppVersion, false); err != nil {
 				t.Fatalf("FetchAndUpdateState(%q, %q, %v, %v, %v): %v", test.modulePath, test.version, proxyClient, sourceClient, testDB, err)
