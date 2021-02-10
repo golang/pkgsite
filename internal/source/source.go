@@ -260,6 +260,13 @@ func ModuleInfo(ctx context.Context, client *Client, modulePath, version string)
 	ctx, span := trace.StartSpan(ctx, "source.ModuleInfo")
 	defer span.End()
 
+	// The example.com domain can never be real; it is reserved for testing
+	// (https://en.wikipedia.org/wiki/Example.com). Treat it as if it used
+	// GitHub templates.
+	if strings.HasPrefix(modulePath, "example.com/") {
+		return NewGitHubInfo("https://"+modulePath, "", version), nil
+	}
+
 	if modulePath == stdlib.ModulePath {
 		return newStdlibInfo(version)
 	}
