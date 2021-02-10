@@ -19,112 +19,135 @@ import (
 
 type testModule struct {
 	mod        *proxy.Module
+	modfunc    func() *proxy.Module // call to get module if mod field is nil
 	fr         *FetchResult
 	docStrings map[string][]string
 }
 
-var moduleOnePackage = &testModule{
-	mod: &proxy.Module{
-		ModulePath: "github.com/basic",
-		Files: map[string]string{
-			"README.md":  "THIS IS A README",
-			"foo/foo.go": "// package foo exports a helpful constant.\npackage foo\nimport \"net/http\"\nconst OK = http.StatusOK",
-			"LICENSE":    testhelper.BSD0License,
+var singleUnits = []*internal.Unit{
+	{
+		UnitMeta: internal.UnitMeta{
+			Path: "example.com/single",
 		},
+		Readme: &internal.Readme{
+			Filepath: "README.md",
+			Contents: "This is the README for a test module.",
+		},
+	},
+	{
+		UnitMeta: internal.UnitMeta{
+			Name: "pkg",
+			Path: "example.com/single/pkg",
+		},
+		Documentation: []*internal.Documentation{{
+			GOOS:     internal.All,
+			GOARCH:   internal.All,
+			Synopsis: "Package pkg is a sample package.",
+			API: []*internal.Symbol{
+				{Name: "Version", Synopsis: "const Version", Section: "Constants", Kind: "Constant"},
+				{Name: "V", Synopsis: "var V", Section: "Variables", Kind: "Variable"},
+				{Name: "G", Synopsis: "func G() int", Section: "Functions", Kind: "Function"},
+				{
+					Name:     "T",
+					Synopsis: "type T int",
+					Section:  "Types",
+					Kind:     "Type",
+					Children: []*internal.Symbol{{
+						Name:       "F",
+						Synopsis:   "func F(t time.Time, s string) (T, u)",
+						Section:    "Types",
+						Kind:       "Function",
+						ParentName: "T",
+					}},
+				},
+			},
+		}},
+		Imports: []string{"time"},
+	},
+}
+
+var moduleOnePackage = &testModule{
+	modfunc: func() *proxy.Module {
+		return proxy.FindModule(testModules, "example.com/single", "v1.0.0")
 	},
 	fr: &FetchResult{
 		Module: &internal.Module{
 			ModuleInfo: internal.ModuleInfo{
-				ModulePath: "github.com/basic",
-				HasGoMod:   false,
+				ModulePath: "example.com/single",
+				HasGoMod:   true,
+				SourceInfo: source.NewGitHubInfo("https://example.com/single", "", "v1.0.0"),
 			},
-			Units: []*internal.Unit{
-				{
-					UnitMeta: internal.UnitMeta{
-						Path: "github.com/basic",
-					},
-					Readme: &internal.Readme{
-						Filepath: "README.md",
-						Contents: "THIS IS A README",
-					},
-				},
-				{
-					UnitMeta: internal.UnitMeta{
-						Name: "foo",
-						Path: "github.com/basic/foo",
-					},
-					Documentation: []*internal.Documentation{{
-						GOOS:     internal.All,
-						GOARCH:   internal.All,
-						Synopsis: "package foo exports a helpful constant.",
-						API:      []*internal.Symbol{{Name: "OK", Synopsis: "const OK", Section: "Constants", Kind: "Constant"}},
-					}},
-					Imports: []string{"net/http"},
-				},
-			},
+			Units: singleUnits,
 		},
 	},
 }
 
-var moduleMultiPackage = &testModule{
-	mod: &proxy.Module{
-		ModulePath: "github.com/my/module",
-		Files: map[string]string{
-			"go.mod":        "module github.com/my/module\n\ngo 1.12",
-			"LICENSE":       testhelper.BSD0License,
-			"README.md":     "README FILE FOR TESTING.",
-			"bar/COPYING":   testhelper.MITLicense,
-			"bar/README.md": "Another README FILE FOR TESTING.",
-			"bar/bar.go": `
-			// package bar
-			package bar
-
-			// Bar returns the string "bar".
-			func Bar() string {
-				return "bar"
-			}`,
-			"foo/LICENSE.md": testhelper.MITLicense,
-			"foo/foo.go": `
-			// package foo
-			package foo
-
-			import (
-				"fmt"
-
-				"github.com/my/module/bar"
-			)
-
-			// FooBar returns the string "foo bar".
-			func FooBar() string {
-				return fmt.Sprintf("foo %s", bar.Bar())
-			}`,
-		},
+var moduleNoGoMod = &testModule{
+	modfunc: func() *proxy.Module {
+		return proxy.FindModule(testModules, "example.com/basic", "v1.0.0").
+			ChangePath("example.com/nogo").
+			DeleteFile("go.mod")
 	},
 	fr: &FetchResult{
 		Module: &internal.Module{
 			ModuleInfo: internal.ModuleInfo{
-				ModulePath: "github.com/my/module",
-				HasGoMod:   true,
-				SourceInfo: source.NewGitHubInfo("https://github.com/my/module", "", "v1.0.0"),
+				ModulePath: "example.com/nogo",
+				HasGoMod:   false,
+				SourceInfo: source.NewGitHubInfo("https://example.com/nogo", "", "v1.0.0"),
 			},
 			Units: []*internal.Unit{
 				{
 					UnitMeta: internal.UnitMeta{
-						Path: "github.com/my/module",
+						Name: "basic",
+						Path: "example.com/nogo",
 					},
 					Readme: &internal.Readme{
 						Filepath: "README.md",
-						Contents: "README FILE FOR TESTING.",
+						Contents: "This is the README for a test module.",
+					},
+					Documentation: []*internal.Documentation{{
+						GOOS:     internal.All,
+						GOARCH:   internal.All,
+						Synopsis: "Package basic is a sample package.",
+						API:      singleUnits[1].Documentation[0].API,
+					}},
+					Imports: []string{"time"},
+				},
+			},
+		},
+	},
+	docStrings: map[string][]string{
+		"no.mod/module/p": {"const Year = 2009"},
+	},
+}
+
+var moduleMultiPackage = &testModule{
+	modfunc: func() *proxy.Module { return proxy.FindModule(testModules, "example.com/multi", "v1.0.0") },
+	fr: &FetchResult{
+		Module: &internal.Module{
+			ModuleInfo: internal.ModuleInfo{
+				ModulePath: "example.com/multi",
+				HasGoMod:   true,
+				SourceInfo: source.NewGitHubInfo("https://example.com/multi", "", "v1.0.0"),
+			},
+			Units: []*internal.Unit{
+				{
+					UnitMeta: internal.UnitMeta{
+						Path: "example.com/multi",
+					},
+					Readme: &internal.Readme{
+						Filepath: "README.md",
+						Contents: "README file for testing.",
 					},
 				},
 				{
 					UnitMeta: internal.UnitMeta{
 						Name: "bar",
-						Path: "github.com/my/module/bar",
+						Path: "example.com/multi/bar",
 					},
 					Readme: &internal.Readme{
-						Filepath: "bar/README.md",
-						Contents: "Another README FILE FOR TESTING.",
+						Filepath: "bar/README",
+						Contents: "Another README file for testing.",
 					},
 					Documentation: []*internal.Documentation{{
 						GOOS:     internal.All,
@@ -136,7 +159,7 @@ var moduleMultiPackage = &testModule{
 				{
 					UnitMeta: internal.UnitMeta{
 						Name: "foo",
-						Path: "github.com/my/module/foo",
+						Path: "example.com/multi/foo",
 					},
 					Documentation: []*internal.Documentation{{
 						GOOS:     internal.All,
@@ -144,7 +167,7 @@ var moduleMultiPackage = &testModule{
 						Synopsis: "package foo",
 						API:      []*internal.Symbol{{Name: "FooBar", Synopsis: "func FooBar() string", Section: "Functions", Kind: "Function"}},
 					}},
-					Imports: []string{"fmt", "github.com/my/module/bar"},
+					Imports: []string{"example.com/multi/bar", "fmt"},
 				},
 			},
 		},
@@ -152,59 +175,6 @@ var moduleMultiPackage = &testModule{
 	docStrings: map[string][]string{
 		"github.com/my/module/bar": {"Bar returns the string &#34;bar&#34;."},
 		"github.com/my/module/foo": {"FooBar returns the string &#34;foo bar&#34;."},
-	},
-}
-
-var moduleNoGoMod = &testModule{
-	mod: &proxy.Module{
-		ModulePath: "no.mod/module",
-		Files: map[string]string{
-			"LICENSE": testhelper.BSD0License,
-			"p/p.go": `
-				// Package p is inside a module where a go.mod
-				// file hasn't been explicitly added yet.
-				package p
-
-				// Year is a year before go.mod files existed.
-				const Year = 2009`,
-		},
-	},
-	fr: &FetchResult{
-		Module: &internal.Module{
-			ModuleInfo: internal.ModuleInfo{
-				ModulePath: "no.mod/module",
-				HasGoMod:   false,
-			},
-			Units: []*internal.Unit{
-				{
-					UnitMeta: internal.UnitMeta{
-						Path: "no.mod/module",
-					},
-				},
-				{
-					UnitMeta: internal.UnitMeta{
-						Name: "p",
-						Path: "no.mod/module/p",
-					},
-					Documentation: []*internal.Documentation{{
-						GOOS:     internal.All,
-						GOARCH:   internal.All,
-						Synopsis: "Package p is inside a module where a go.mod file hasn't been explicitly added yet.",
-						API: []*internal.Symbol{
-							{
-								Name:     "Year",
-								Synopsis: "const Year",
-								Section:  "Constants",
-								Kind:     "Constant",
-							},
-						},
-					}},
-				},
-			},
-		},
-	},
-	docStrings: map[string][]string{
-		"no.mod/module/p": {"const Year = 2009"},
 	},
 }
 
@@ -295,37 +265,25 @@ var moduleBadPackages = &testModule{
 }
 
 var moduleBuildConstraints = &testModule{
-	mod: &proxy.Module{
-		ModulePath: "build.constraints/module",
-		Files: map[string]string{
-			"LICENSE": testhelper.BSD0License,
-			"cpu/cpu.go": `
-					// Package cpu implements processor feature detection
-					// used by the Go standard library.
-					package cpu`,
-			"cpu/cpu_arm.go":   "package cpu\n\nconst CacheLinePadSize = 1",
-			"cpu/cpu_arm64.go": "package cpu\n\nconst CacheLinePadSize = 2",
-			"cpu/cpu_x86.go":   "// +build 386 amd64 amd64p32\n\npackage cpu\n\nconst CacheLinePadSize = 3",
-			"ignore/ignore.go": "// +build ignore\n\npackage ignore",
-		},
-	},
+	modfunc: func() *proxy.Module { return proxy.FindModule(testModules, "example.com/build-constraints", "") },
 	fr: &FetchResult{
 		Status: derrors.ToStatus(derrors.HasIncompletePackages),
 		Module: &internal.Module{
 			ModuleInfo: internal.ModuleInfo{
-				ModulePath: "build.constraints/module",
-				HasGoMod:   false,
+				ModulePath: "example.com/build-constraints",
+				HasGoMod:   true,
+				SourceInfo: source.NewGitHubInfo("https://example.com/build-constraints", "", "v1.0.0"),
 			},
 			Units: []*internal.Unit{
 				{
 					UnitMeta: internal.UnitMeta{
-						Path: "build.constraints/module",
+						Path: "example.com/build-constraints",
 					},
 				},
 				{
 					UnitMeta: internal.UnitMeta{
 						Name: "cpu",
-						Path: "build.constraints/module/cpu",
+						Path: "example.com/build-constraints/cpu",
 					},
 					Documentation: []*internal.Documentation{
 						{
@@ -378,15 +336,15 @@ var moduleBuildConstraints = &testModule{
 		},
 		PackageVersionStates: []*internal.PackageVersionState{
 			{
-				ModulePath:  "build.constraints/module",
+				ModulePath:  "example.com/build-constraints",
 				Version:     "v1.0.0",
-				PackagePath: "build.constraints/module/cpu",
+				PackagePath: "example.com/build-constraints/cpu",
 				Status:      http.StatusOK,
 			},
 			{
-				ModulePath:  "build.constraints/module",
+				ModulePath:  "example.com/build-constraints",
 				Version:     "v1.0.0",
-				PackagePath: "build.constraints/module/ignore",
+				PackagePath: "example.com/build-constraints/ignore",
 				Status:      derrors.ToStatus(derrors.PackageBuildContextNotSupported),
 			},
 		},
@@ -397,69 +355,28 @@ var moduleBuildConstraints = &testModule{
 }
 
 var moduleNonRedist = &testModule{
-	mod: &proxy.Module{
-		ModulePath: "nonredistributable.mod/module",
-		Files: map[string]string{
-			"go.mod":          "module nonredistributable.mod/module\n\ngo 1.13",
-			"LICENSE":         testhelper.BSD0License,
-			"README.md":       "README FILE FOR TESTING.",
-			"bar/baz/COPYING": testhelper.MITLicense,
-			"bar/baz/baz.go": `
-			// package baz
-			package baz
-
-			// Baz returns the string "baz".
-			func Baz() string {
-				return "baz"
-			}
-			`,
-			"bar/LICENSE": testhelper.MITLicense,
-			"bar/bar.go": `
-			// package bar
-			package bar
-
-			// Bar returns the string "bar".
-			func Bar() string {
-				return "bar"
-			}`,
-			"foo/README.md":  "README FILE SHOW UP HERE BUT WILL BE REMOVED BEFORE DB INSERT",
-			"foo/LICENSE.md": testhelper.UnknownLicense,
-			"foo/foo.go": `
-			// package foo
-			package foo
-
-			import (
-				"fmt"
-
-				"github.com/my/module/bar"
-			)
-
-			// FooBar returns the string "foo bar".
-			func FooBar() string {
-				return fmt.Sprintf("foo %s", bar.Bar())
-			}`,
-		},
-	},
+	modfunc: func() *proxy.Module { return proxy.FindModule(testModules, "example.com/nonredist", "") },
 	fr: &FetchResult{
 		Module: &internal.Module{
 			ModuleInfo: internal.ModuleInfo{
-				ModulePath: "nonredistributable.mod/module",
+				ModulePath: "example.com/nonredist",
 				HasGoMod:   true,
+				SourceInfo: source.NewGitHubInfo("https://example.com/nonredist", "", "v1.0.0"),
 			},
 			Units: []*internal.Unit{
 				{
 					UnitMeta: internal.UnitMeta{
-						Path: "nonredistributable.mod/module",
+						Path: "example.com/nonredist",
 					},
 					Readme: &internal.Readme{
 						Filepath: "README.md",
-						Contents: "README FILE FOR TESTING.",
+						Contents: "README file for testing.",
 					},
 				},
 				{
 					UnitMeta: internal.UnitMeta{
 						Name: "bar",
-						Path: "nonredistributable.mod/module/bar",
+						Path: "example.com/nonredist/bar",
 					},
 					Documentation: []*internal.Documentation{{
 						GOOS:     internal.All,
@@ -471,7 +388,7 @@ var moduleNonRedist = &testModule{
 				{
 					UnitMeta: internal.UnitMeta{
 						Name: "baz",
-						Path: "nonredistributable.mod/module/bar/baz",
+						Path: "example.com/nonredist/bar/baz",
 					},
 					Documentation: []*internal.Documentation{{
 						GOOS:     internal.All,
@@ -482,28 +399,28 @@ var moduleNonRedist = &testModule{
 				},
 				{
 					UnitMeta: internal.UnitMeta{
-						Name: "foo",
-						Path: "nonredistributable.mod/module/foo",
+						Name: "unk",
+						Path: "example.com/nonredist/unk",
 					},
 					Readme: &internal.Readme{
-						Filepath: "foo/README.md",
-						Contents: "README FILE SHOW UP HERE BUT WILL BE REMOVED BEFORE DB INSERT",
+						Filepath: "unk/README.md",
+						Contents: "README file will be removed before DB insert.",
 					},
 					Documentation: []*internal.Documentation{{
 						GOOS:     internal.All,
 						GOARCH:   internal.All,
-						Synopsis: "package foo",
+						Synopsis: "package unk",
 						API:      []*internal.Symbol{{Name: "FooBar", Synopsis: "func FooBar() string", Section: "Functions", Kind: "Function"}},
 					}},
-					Imports: []string{"fmt", "github.com/my/module/bar"},
+					Imports: []string{"example.com/nonredist/bar", "fmt"},
 				},
 			},
 		},
 	},
 	docStrings: map[string][]string{
-		"nonredistributable.mod/module/bar":     {"Bar returns the string"},
-		"nonredistributable.mod/module/bar/baz": {"Baz returns the string"},
-		"nonredistributable.mod/module/foo":     {"FooBar returns the string"},
+		"example.com/nonredist/bar":     {"Bar returns the string"},
+		"example.com/nonredist/bar/baz": {"Baz returns the string"},
+		"example.com/nonredist/foo":     {"FooBar returns the string"},
 	},
 }
 

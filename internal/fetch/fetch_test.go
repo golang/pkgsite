@@ -11,6 +11,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -32,12 +33,20 @@ import (
 
 var testTimeout = 30 * time.Second
 
-var templateSource = template.TrustedSourceFromConstant("../../content/static/html/doc")
+var (
+	templateSource = template.TrustedSourceFromConstant("../../content/static/html/doc")
+	testModules    []*proxy.Module
+)
 
 type fetchFunc func(t *testing.T, withLicenseDetector bool, ctx context.Context, mod *proxy.Module, fetchVersion string) (*FetchResult, *licenses.Detector)
 
-func TestFetchModule(t *testing.T) {
+func TestMain(m *testing.M) {
 	dochtml.LoadTemplates(templateSource)
+	testModules = proxy.LoadTestModules("../proxy/testdata")
+	os.Exit(m.Run())
+}
+
+func TestFetchModule(t *testing.T) {
 	stdlib.UseTestData = true
 
 	// Stub out the function used to share playground snippets
@@ -59,20 +68,20 @@ func TestFetchModule(t *testing.T) {
 		proxyOnly    bool
 		cleaned      bool
 	}{
-		{name: "basic", mod: moduleNoGoMod},
+		{name: "single", mod: moduleOnePackage},
 		{name: "wasm", mod: moduleWasm},
-		{name: "no go.mod file", mod: moduleOnePackage},
-		{name: "has go.mod", mod: moduleMultiPackage},
-		{name: "module with bad packages", mod: moduleBadPackages},
-		{name: "module with build constraints", mod: moduleBuildConstraints},
-		{name: "module with packages with bad import paths", mod: moduleBadImportPath},
-		{name: "module with documentation", mod: moduleDocTest},
+		{name: "no go.mod file", mod: moduleNoGoMod},
+		{name: "multi", mod: moduleMultiPackage},
+		{name: "bad packages", mod: moduleBadPackages},
+		{name: "build constraints", mod: moduleBuildConstraints},
+		{name: "packages with bad import paths", mod: moduleBadImportPath},
+		{name: "documentation", mod: moduleDocTest},
 		{name: "documentation too large", mod: moduleDocTooLarge},
-		{name: "module with package-level example", mod: modulePackageExample},
-		{name: "module with function example", mod: moduleFuncExample},
-		{name: "module with type example", mod: moduleTypeExample},
-		{name: "module with method example", mod: moduleMethodExample},
-		{name: "module with nonredistributable packages", mod: moduleNonRedist},
+		{name: "package-level example", mod: modulePackageExample},
+		{name: "function example", mod: moduleFuncExample},
+		{name: "type example", mod: moduleTypeExample},
+		{name: "method example", mod: moduleMethodExample},
+		{name: "nonredistributable packages", mod: moduleNonRedist},
 		// Proxy only as stdlib is not accounted for in local mode
 		{name: "stdlib module", mod: moduleStd, proxyOnly: true},
 		// Proxy only as version is pre specified in local mode
@@ -95,7 +104,15 @@ func TestFetchModule(t *testing.T) {
 				ctx, cancel := context.WithTimeout(ctx, 300*time.Second)
 				defer cancel()
 
-				got, d := fetcher.fetch(t, true, ctx, test.mod.mod, test.fetchVersion)
+				mod := test.mod.mod
+				if mod == nil {
+					mod = test.mod.modfunc()
+				}
+				if mod == nil {
+					t.Fatal("nil module")
+				}
+
+				got, d := fetcher.fetch(t, true, ctx, mod, test.fetchVersion)
 				defer got.Defer()
 				if got.Error != nil {
 					t.Fatalf("fetching failed: %v", got.Error)
