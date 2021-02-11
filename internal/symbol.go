@@ -54,4 +54,7 @@ type Symbol struct {
 	// RedirectHandler, StripPrefix, and TimeoutHandler. Each child
 	// symbol will have ParentName set to the Name of this type.
 	Children []*Symbol
+
+	// SinceVersion is the first version when the symbol was introduced.
+	SinceVersion string
 }

@@ -16,6 +16,44 @@ import (
 	"golang.org/x/pkgsite/internal/testing/sample"
 )
 
+func TestShouldUpdateSymbolHistory(t *testing.T) {
+	testSym := "Foo"
+	for _, test := range []struct {
+		name       string
+		newVersion string
+		oldHist    map[string]*internal.Symbol
+		want       bool
+	}{
+		{
+			name:    "should update when new version is older",
+			oldHist: map[string]*internal.Symbol{testSym: {SinceVersion: "v1.2.3"}},
+			want:    true,
+		},
+		{
+			name:    "should update when symbol does not exist",
+			oldHist: map[string]*internal.Symbol{},
+			want:    true,
+		},
+		{
+			name:    "should update when new version is the same",
+			oldHist: map[string]*internal.Symbol{testSym: {SinceVersion: sample.VersionString}},
+			want:    true,
+		},
+		{
+			name:    "should not update when new version is newer",
+			oldHist: map[string]*internal.Symbol{testSym: {SinceVersion: "v0.1.0"}},
+			want:    false,
+		},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			if got := shouldUpdateSymbolHistory(testSym, sample.VersionString, test.oldHist); got != test.want {
+				t.Errorf("shouldUpdateSymbolHistory(%q, %q, %+v) = %t; want = %t",
+					testSym, sample.VersionString, test.oldHist, got, test.want)
+			}
+		})
+	}
+}
+
 func TestInsertSymbolNames(t *testing.T) {
 	t.Parallel()
 	testDB, release := acquire(t)

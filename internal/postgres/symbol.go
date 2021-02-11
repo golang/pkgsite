@@ -10,6 +10,7 @@ import (
 	"fmt"
 
 	"github.com/lib/pq"
+	"golang.org/x/mod/semver"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/derrors"
@@ -32,7 +33,23 @@ func insertSymbols(ctx context.Context, db *database.DB, pathToDocs map[string][
 		}
 	}
 	_, err = upsertSymbolsReturningIDs(ctx, db, symNames)
+
+	//TODO(https://golang.org/issue/37102): insert symbol history
 	return err
+}
+
+// shouldUpdateSymbolHistory reports whether the row for the given symbolName
+// should be updated. oldHist contains all of the current symbols in the
+// database for the same package and GOOS/GOARCH.
+//
+// shouldUpdateSymbolHistory reports true if the symbolName does not currently
+// exist, or if the newVersion is older than or equal to the current database version.
+func shouldUpdateSymbolHistory(symbolName, newVersion string, oldHist map[string]*internal.Symbol) bool {
+	dh, ok := oldHist[symbolName]
+	if !ok {
+		return true
+	}
+	return semver.Compare(newVersion, dh.SinceVersion) < 1
 }
 
 func upsertSymbolsReturningIDs(ctx context.Context, db *database.DB, values []interface{}) (map[string]int, error) {
