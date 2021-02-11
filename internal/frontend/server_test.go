@@ -341,9 +341,7 @@ func insertTestModules(ctx context.Context, t *testing.T, mods []testModule) {
 					u.Readme = nil
 				}
 			}
-			if err := testDB.InsertModule(ctx, m); err != nil {
-				t.Fatal(err)
-			}
+			postgres.MustInsertModule(ctx, t, testDB, m)
 		}
 	}
 }
@@ -1226,9 +1224,7 @@ func TestServerErrors(t *testing.T) {
 
 	defer postgres.ResetTestDB(testDB, t)
 	sampleModule := sample.DefaultModule()
-	if err := testDB.InsertModule(ctx, sampleModule); err != nil {
-		t.Fatal(err)
-	}
+	postgres.MustInsertModule(ctx, t, testDB, sampleModule)
 	alternativeModule := &internal.VersionMap{
 		ModulePath:       "module.path/alternative",
 		GoModPath:        sample.ModulePath,
@@ -1242,9 +1238,7 @@ func TestServerErrors(t *testing.T) {
 
 	v1modpath := "notinv1.mod"
 	v1path := "notinv1.mod/foo"
-	if err := testDB.InsertModule(ctx, sample.Module(v1modpath+"/v4", "v4.0.0", "foo")); err != nil {
-		t.Fatal(err)
-	}
+	postgres.MustInsertModule(ctx, t, testDB, sample.Module(v1modpath+"/v4", "v4.0.0", "foo"))
 	for _, mod := range []struct {
 		path, version string
 		status        int

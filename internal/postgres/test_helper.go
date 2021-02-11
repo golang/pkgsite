@@ -151,7 +151,7 @@ func RunDBTests(dbName string, m *testing.M, testDB **DB) {
 // MustInsertModule inserts m into db, calling t.Fatal on error.
 func MustInsertModule(ctx context.Context, t *testing.T, db *DB, m *internal.Module) {
 	t.Helper()
-	if err := db.InsertModule(ctx, m); err != nil {
+	if _, err := db.InsertModule(ctx, m); err != nil {
 		t.Fatal(err)
 	}
 }

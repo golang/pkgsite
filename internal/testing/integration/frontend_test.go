@@ -17,6 +17,7 @@ import (
 	"golang.org/x/pkgsite/internal/fetch"
 	"golang.org/x/pkgsite/internal/frontend"
 	"golang.org/x/pkgsite/internal/middleware"
+	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/proxy"
 	"golang.org/x/pkgsite/internal/queue"
 	"golang.org/x/pkgsite/internal/source"
@@ -101,9 +102,7 @@ func fetchAndInsertModule(ctx context.Context, t *testing.T, tm *proxy.Module, p
 	if res.Error != nil {
 		t.Fatal(res.Error)
 	}
-	if err := testDB.InsertModule(ctx, res.Module); err != nil {
-		t.Fatal(err)
-	}
+	postgres.MustInsertModule(ctx, t, testDB, res.Module)
 }
 
 func validateResponse(t *testing.T, method, testURL string, wantCode int, wantHTML htmlcheck.Checker) {

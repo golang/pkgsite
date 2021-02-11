@@ -252,7 +252,7 @@ func TestInsertModuleErrors(t *testing.T) {
 	for _, test := range testCases {
 		t.Run(test.name, func(t *testing.T) {
 			defer ResetTestDB(testDB, t)
-			if err := testDB.InsertModule(ctx, test.module); !errors.Is(err, test.wantWriteErr) {
+			if _, err := testDB.InsertModule(ctx, test.module); !errors.Is(err, test.wantWriteErr) {
 				t.Errorf("error: %v, want write error: %v", err, test.wantWriteErr)
 			}
 		})

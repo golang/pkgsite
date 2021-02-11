@@ -14,6 +14,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/proxy"
 	"golang.org/x/pkgsite/internal/testing/sample"
 	"golang.org/x/pkgsite/internal/testing/testhelper"
@@ -169,9 +170,7 @@ func TestFetchPathAlreadyExists(t *testing.T) {
 		t.Run(strconv.Itoa(test.status), func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), testFetchTimeout)
 			defer cancel()
-			if err := testDB.InsertModule(ctx, sample.DefaultModule()); err != nil {
-				t.Fatal(err)
-			}
+			postgres.MustInsertModule(ctx, t, testDB, sample.DefaultModule())
 			if err := testDB.UpsertVersionMap(ctx, &internal.VersionMap{
 				ModulePath:       sample.ModulePath,
 				RequestedVersion: sample.VersionString,

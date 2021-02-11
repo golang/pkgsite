@@ -56,9 +56,7 @@ func TestFetchImportsDetails(t *testing.T) {
 			pkg := module.Units[1]
 			pkg.Imports = test.imports
 
-			if err := testDB.InsertModule(ctx, module); err != nil {
-				t.Fatal(err)
-			}
+			postgres.MustInsertModule(ctx, t, testDB, module)
 
 			got, err := fetchImportsDetails(ctx, testDB, pkg.Path, pkg.ModulePath, pkg.Version)
 			if err != nil {
@@ -102,9 +100,7 @@ func TestFetchImportedByDetails(t *testing.T) {
 	}
 
 	for _, m := range testModules {
-		if err := testDB.InsertModule(ctx, m); err != nil {
-			t.Fatal(err)
-		}
+		postgres.MustInsertModule(ctx, t, testDB, m)
 	}
 
 	tests := []struct {
@@ -157,9 +153,7 @@ func TestFetchImportedByDetails_ExceedsTabLimit(t *testing.T) {
 				PackagePath: sample.PackagePath,
 				ModulePath:  sample.ModulePath,
 			}
-			if err := testDB.InsertModule(ctx, sample.Module(sample.ModulePath, sample.VersionString, sample.PackageName)); err != nil {
-				t.Fatal(err)
-			}
+			postgres.MustInsertModule(ctx, t, testDB, sample.Module(sample.ModulePath, sample.VersionString, sample.PackageName))
 			if err := testDB.UpsertSearchDocumentWithImportedByCount(ctx, args, count); err != nil {
 				t.Fatal(err)
 			}

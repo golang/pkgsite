@@ -80,15 +80,9 @@ func TestFetchLicensesDetails(t *testing.T) {
 
 	defer postgres.ResetTestDB(testDB, t)
 	ctx := context.Background()
-	if err := testDB.InsertModule(ctx, testModule); err != nil {
-		t.Fatal(err)
-	}
-	if err := testDB.InsertModule(ctx, stdlibModule); err != nil {
-		t.Fatal(err)
-	}
-	if err := testDB.InsertModule(ctx, crlfModule); err != nil {
-		t.Fatal(err)
-	}
+	postgres.MustInsertModule(ctx, t, testDB, testModule)
+	postgres.MustInsertModule(ctx, t, testDB, stdlibModule)
+	postgres.MustInsertModule(ctx, t, testDB, crlfModule)
 	for _, test := range []struct {
 		err                                 error
 		name, fullPath, modulePath, version string

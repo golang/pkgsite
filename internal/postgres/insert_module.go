@@ -33,7 +33,8 @@ import (
 // InsertModule inserts a version into the database using
 // db.saveVersion, along with a search document corresponding to each of its
 // packages.
-func (db *DB) InsertModule(ctx context.Context, m *internal.Module) (err error) {
+// It returns whether the version inserted was the latest for the given module path.
+func (db *DB) InsertModule(ctx context.Context, m *internal.Module) (isLatest bool, err error) {
 	defer func() {
 		if m == nil {
 			derrors.Wrap(&err, "DB.InsertModule(ctx, nil)")
@@ -43,18 +44,18 @@ func (db *DB) InsertModule(ctx context.Context, m *internal.Module) (err error) 
 	}()
 
 	if err := validateModule(m); err != nil {
-		return err
+		return false, err
 	}
 	// The proxy accepts modules with zero commit times, but they are bad.
 	if m.CommitTime.IsZero() {
-		return fmt.Errorf("empty commit time: %w", derrors.BadModule)
+		return false, fmt.Errorf("empty commit time: %w", derrors.BadModule)
 	}
 	// Compare existing data from the database, and the module to be
 	// inserted. Rows that currently exist should not be missing from the
 	// new module. We want to be sure that we will overwrite every row that
 	// pertains to the module.
 	if err := db.comparePaths(ctx, m); err != nil {
-		return err
+		return false, err
 	}
 	if !db.bypassLicenseCheck {
 		// If we are not bypassing license checking, remove data for non-redistributable modules.
@@ -68,16 +69,19 @@ func (db *DB) InsertModule(ctx context.Context, m *internal.Module) (err error) 
 // corresponding will be deleted and reinserted.
 // If the module is malformed then insertion will fail.
 //
+// saveModule reports whether the version inserted is the latest known version
+// for the module path (that is, the latest minor version of the module)
+//
 // A derrors.InvalidArgument error will be returned if the given module and
 // licenses are invalid.
-func (db *DB) saveModule(ctx context.Context, m *internal.Module) (err error) {
+func (db *DB) saveModule(ctx context.Context, m *internal.Module) (isLatest bool, err error) {
 	defer derrors.Wrap(&err, "saveModule(ctx, tx, Module(%q, %q))", m.ModulePath, m.Version)
 	ctx, span := trace.StartSpan(ctx, "saveModule")
 	defer span.End()
 
 	// Without RepeatableRead, insertPaths can fail to return some paths.
 	// For details, see the commit message for https://golang.org/cl/290269.
-	return db.db.Transact(ctx, sql.LevelRepeatableRead, func(tx *database.DB) error {
+	err = db.db.Transact(ctx, sql.LevelRepeatableRead, func(tx *database.DB) error {
 		moduleID, err := insertModule(ctx, tx, m)
 		if err != nil {
 			return err
@@ -108,7 +112,7 @@ func (db *DB) saveModule(ctx context.Context, m *internal.Module) (err error) {
 
 		// We only insert into imports_unique and search_documents if this is
 		// the latest version of the module.
-		isLatest, err := isLatestVersion(ctx, tx, m.ModulePath, m.Version)
+		isLatest, err = isLatestVersion(ctx, tx, m.ModulePath, m.Version)
 		if err != nil {
 			return err
 		}
@@ -152,6 +156,10 @@ func (db *DB) saveModule(ctx context.Context, m *internal.Module) (err error) {
 		// Insert the module's packages into search_documents.
 		return upsertSearchDocuments(ctx, tx, m)
 	})
+	if err != nil {
+		return false, err
+	}
+	return isLatest, nil
 }
 
 func insertModule(ctx context.Context, db *database.DB, m *internal.Module) (_ int, err error) {

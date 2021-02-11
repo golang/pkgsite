@@ -170,9 +170,7 @@ func TestFetchPackageVersionsDetails(t *testing.T) {
 			defer postgres.ResetTestDB(testDB, t)
 
 			for _, v := range tc.modules {
-				if err := testDB.InsertModule(ctx, v); err != nil {
-					t.Fatal(err)
-				}
+				postgres.MustInsertModule(ctx, t, testDB, v)
 			}
 
 			got, err := fetchVersionsDetails(ctx, testDB, tc.pkg.Path, tc.pkg.ModulePath)

@@ -88,9 +88,7 @@ func TestFetchSearchPage(t *testing.T) {
 		}
 	)
 	for _, m := range []*internal.Module{moduleFoo, moduleBar} {
-		if err := testDB.InsertModule(ctx, m); err != nil {
-			t.Fatal(err)
-		}
+		postgres.MustInsertModule(ctx, t, testDB, m)
 	}
 
 	for _, test := range []struct {
@@ -208,9 +206,7 @@ func TestSearchRequestRedirectPath(t *testing.T) {
 	modules := []*internal.Module{golangTools, std}
 
 	for _, v := range modules {
-		if err := testDB.InsertModule(ctx, v); err != nil {
-			t.Fatal(err)
-		}
+		postgres.MustInsertModule(ctx, t, testDB, v)
 	}
 	for _, test := range []struct {
 		name  string
