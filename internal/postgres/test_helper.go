@@ -15,6 +15,7 @@ import (
 	"testing"
 
 	"github.com/golang-migrate/migrate/v4"
+	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/testing/dbtest"
@@ -147,6 +148,14 @@ func RunDBTests(dbName string, m *testing.M, testDB **DB) {
 	os.Exit(code)
 }
 
+// MustInsertModule inserts m into db, calling t.Fatal on error.
+func MustInsertModule(ctx context.Context, t *testing.T, db *DB, m *internal.Module) {
+	t.Helper()
+	if err := db.InsertModule(ctx, m); err != nil {
+		t.Fatal(err)
+	}
+}
+
 // InsertSampleDirectory tree inserts a set of packages for testing
 // GetUnit and frontend.FetchDirectoryDetails.
 func InsertSampleDirectoryTree(ctx context.Context, t *testing.T, testDB *DB) {
@@ -218,9 +227,7 @@ func InsertSampleDirectoryTree(ctx context.Context, t *testing.T, testDB *DB) {
 		},
 	} {
 		m := sample.Module(data.modulePath, data.version, data.suffixes...)
-		if err := testDB.InsertModule(ctx, m); err != nil {
-			t.Fatal(err)
-		}
+		MustInsertModule(ctx, t, testDB, m)
 	}
 
 }

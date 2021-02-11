@@ -76,9 +76,7 @@ func TestGetLatestMajorPathForV1Path(t *testing.T) {
 					v = v + ".0.0"
 				}
 				m := sample.Module(modpath, v, suffix)
-				if err := testDB.InsertModule(ctx, m); err != nil {
-					t.Fatal(err)
-				}
+				MustInsertModule(ctx, t, testDB, m)
 			}
 			t.Run("module", func(t *testing.T) {
 				v1path := sample.ModulePath

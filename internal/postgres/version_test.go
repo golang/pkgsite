@@ -59,9 +59,7 @@ func TestGetVersions(t *testing.T) {
 
 	defer ResetTestDB(testDB, t)
 	for _, m := range testModules {
-		if err := testDB.InsertModule(ctx, m); err != nil {
-			t.Fatal(err)
-		}
+		MustInsertModule(ctx, t, testDB, m)
 	}
 
 	stdModuleVersions := []*internal.ModuleInfo{
@@ -243,9 +241,7 @@ func TestGetLatestInfo(t *testing.T) {
 		sample.Module("b.com/M/v9", "v9.0.0", ""),
 		sample.Module("b.com/M/v10", "v10.0.0", ""),
 	} {
-		if err := testDB.InsertModule(ctx, m); err != nil {
-			t.Fatal(err)
-		}
+		MustInsertModule(ctx, t, testDB, m)
 	}
 
 	for _, test := range []struct {

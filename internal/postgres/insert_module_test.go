@@ -70,13 +70,9 @@ func TestInsertModule(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			defer ResetTestDB(testDB, t)
 
-			if err := testDB.InsertModule(ctx, test.module); err != nil {
-				t.Fatal(err)
-			}
+			MustInsertModule(ctx, t, testDB, test.module)
 			// Test that insertion of duplicate primary key won't fail.
-			if err := testDB.InsertModule(ctx, test.module); err != nil {
-				t.Fatal(err)
-			}
+			MustInsertModule(ctx, t, testDB, test.module)
 			checkModule(ctx, t, test.module)
 		})
 	}
@@ -142,9 +138,7 @@ func TestInsertModuleLicenseCheck(t *testing.T) {
 			mod.IsRedistributable = false
 			mod.Units[0].IsRedistributable = false
 
-			if err := db.InsertModule(ctx, mod); err != nil {
-				t.Fatal(err)
-			}
+			MustInsertModule(ctx, t, db, mod)
 
 			// New model
 			pathInfo := &internal.UnitMeta{
@@ -178,17 +172,13 @@ func TestUpsertModule(t *testing.T) {
 	m := sample.Module("upsert.org", "v1.2.3", "dir/p")
 
 	// Insert the module.
-	if err := testDB.InsertModule(ctx, m); err != nil {
-		t.Fatal(err)
-	}
+	MustInsertModule(ctx, t, testDB, m)
 	// Change the module, and re-insert.
 	m.IsRedistributable = !m.IsRedistributable
 	m.Licenses[0].Contents = append(m.Licenses[0].Contents, " and more"...)
 	m.Units[0].Readme.Contents += " and more"
 
-	if err := testDB.InsertModule(ctx, m); err != nil {
-		t.Fatal(err)
-	}
+	MustInsertModule(ctx, t, testDB, m)
 	// The changes should have been saved.
 	checkModule(ctx, t, m)
 }
@@ -289,9 +279,7 @@ func TestInsertModuleNewCoverage(t *testing.T) {
 			Contents: []byte(`Lorem Ipsum`),
 		},
 	}
-	if err := testDB.InsertModule(ctx, m); err != nil {
-		t.Fatal(err)
-	}
+	MustInsertModule(ctx, t, testDB, m)
 	u, err := testDB.GetUnit(ctx, &internal.UnitMeta{Path: m.ModulePath, ModulePath: m.ModulePath, Version: m.Version}, internal.AllFields)
 	if err != nil {
 		t.Fatal(err)
@@ -324,9 +312,7 @@ func TestPostgres_ReadAndWriteModuleOtherColumns(t *testing.T) {
 		seriesPath:  "github.com/user/repo/path",
 	}
 
-	if err := testDB.InsertModule(ctx, v); err != nil {
-		t.Fatal(err)
-	}
+	MustInsertModule(ctx, t, testDB, v)
 	query := `
 	SELECT
 		sort_version, series_path
@@ -377,9 +363,7 @@ func TestLatestVersion(t *testing.T) {
 		m.Version = mod.version
 		m.ModulePath = mod.modulePath
 
-		if err := testDB.InsertModule(ctx, m); err != nil {
-			t.Fatal(err)
-		}
+		MustInsertModule(ctx, t, testDB, m)
 	}
 
 	for _, test := range []struct {
@@ -436,9 +420,7 @@ func TestLatestVersion_PreferIncompatibleOverPrerelease(t *testing.T) {
 		m.Version = mod.version
 		m.ModulePath = mod.modulePath
 
-		if err := testDB.InsertModule(ctx, m); err != nil {
-			t.Fatal(err)
-		}
+		MustInsertModule(ctx, t, testDB, m)
 	}
 
 	for _, test := range []struct {
@@ -467,9 +449,7 @@ func TestDeleteModule(t *testing.T) {
 
 	v := sample.DefaultModule()
 
-	if err := testDB.InsertModule(ctx, v); err != nil {
-		t.Fatal(err)
-	}
+	MustInsertModule(ctx, t, testDB, v)
 	if _, err := testDB.GetModuleInfo(ctx, v.ModulePath, v.Version); err != nil {
 		t.Fatal(err)
 	}
@@ -523,9 +503,7 @@ func TestPostgres_NewerAlternative(t *testing.T) {
 		t.Fatal(err)
 	}
 	m := sample.Module(modulePath, okVersion, "p")
-	if err := testDB.InsertModule(ctx, m); err != nil {
-		t.Fatal(err)
-	}
+	MustInsertModule(ctx, t, testDB, m)
 	if _, _, found := GetFromSearchDocuments(ctx, t, testDB, m.Packages()[0].Path); found {
 		t.Fatal("found package after inserting")
 	}

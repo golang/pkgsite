@@ -44,9 +44,7 @@ func TestGetStdlibPaths(t *testing.T) {
 		for _, p := range m.Packages() {
 			p.Imports = nil
 		}
-		if err := testDB.InsertModule(ctx, m); err != nil {
-			t.Fatal(err)
-		}
+		MustInsertModule(ctx, t, testDB, m)
 	}
 
 	got, err := testDB.GetStdlibPathsWithSuffix(ctx, "json")

@@ -209,9 +209,7 @@ func TestUpsertModuleVersionStates(t *testing.T) {
 			defer ResetTestDB(testDB, t)
 
 			if test.insertModuleBeforeMVS && test.shouldInsertModule {
-				if err := testDB.InsertModule(ctx, m); err != nil {
-					t.Fatalf("testDB.InsertModule(): %v", err)
-				}
+				MustInsertModule(ctx, t, testDB, m)
 			}
 
 			err := testDB.UpsertModuleVersionState(ctx, m.ModulePath, m.Version, appVersion, time.Now(), test.status, "", nil, nil)
@@ -227,9 +225,7 @@ func TestUpsertModuleVersionStates(t *testing.T) {
 			}
 
 			if !test.insertModuleBeforeMVS && test.shouldInsertModule {
-				if err := testDB.InsertModule(ctx, m); err != nil {
-					t.Fatalf("testDB.InsertModule(): %v", err)
-				}
+				MustInsertModule(ctx, t, testDB, m)
 			}
 
 			if !test.shouldInsertModule {

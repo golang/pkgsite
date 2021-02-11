@@ -41,12 +41,8 @@ func TestGetLicenses(t *testing.T) {
 	defer ResetTestDB(testDB, t)
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout*5)
 	defer cancel()
-	if err := testDB.InsertModule(ctx, testModule); err != nil {
-		t.Fatal(err)
-	}
-	if err := testDB.InsertModule(ctx, stdlibModule); err != nil {
-		t.Fatal(err)
-	}
+	MustInsertModule(ctx, t, testDB, testModule)
+	MustInsertModule(ctx, t, testDB, stdlibModule)
 	for _, test := range []struct {
 		err                                 error
 		name, fullPath, modulePath, version string
@@ -140,9 +136,7 @@ func TestGetModuleLicenses(t *testing.T) {
 		})
 	}
 
-	if err := testDB.InsertModule(ctx, testModule); err != nil {
-		t.Fatal(err)
-	}
+	MustInsertModule(ctx, t, testDB, testModule)
 
 	var moduleID int
 	query := `
@@ -174,9 +168,7 @@ func TestGetLicensesBypass(t *testing.T) {
 
 	// Insert with non-redistributable license contents.
 	m := nonRedistributableModule()
-	if err := bypassDB.InsertModule(ctx, m); err != nil {
-		t.Fatal(err)
-	}
+	MustInsertModule(ctx, t, bypassDB, m)
 
 	// check reads and the second license in the module and compares it with want.
 	check := func(bypass bool, want *licenses.License) {
