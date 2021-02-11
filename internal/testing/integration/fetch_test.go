@@ -22,7 +22,7 @@ func TestFrontendFetchForMasterVersion(t *testing.T) {
 	q, teardown := setupQueue(ctx, t, testModules[:1])
 	const modulePath = "example.com/basic"
 	defer teardown()
-	ts := setupFrontend(ctx, t, q)
+	ts := setupFrontend(ctx, t, q, nil)
 
 	for _, req := range []struct {
 		method, urlPath string

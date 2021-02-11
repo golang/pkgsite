@@ -294,6 +294,7 @@ func (s *Server) doFetch(w http.ResponseWriter, r *http.Request) (string, int) {
 		ProxyClient:  s.proxyClient,
 		SourceClient: s.sourceClient,
 		DB:           s.db,
+		Cache:        s.cache,
 	}
 	code, resolvedVersion, err := f.FetchAndUpdateState(r.Context(), modulePath, requestedVersion, s.cfg.AppVersionLabel(), disableProxyFetch)
 	if err != nil {

@@ -10,14 +10,17 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"sort"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/alicebob/miniredis/v2"
 	"github.com/go-redis/redis/v8"
+	"github.com/google/go-cmp/cmp"
 	"github.com/google/safehtml/template"
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/cache"
 	"golang.org/x/pkgsite/internal/config"
 	"golang.org/x/pkgsite/internal/godoc/dochtml"
 	"golang.org/x/pkgsite/internal/index"
@@ -45,7 +48,7 @@ func TestEndToEndProcessing(t *testing.T) {
 
 	defer postgres.ResetTestDB(testDB, t)
 
-	proxyClient, indexClient, teardownClients := setupProxyAndIndex(t)
+	proxyClient, proxyServer, indexClient, teardownClients := setupProxyAndIndex(t)
 	defer teardownClients()
 
 	redisCache, err := miniredis.Run()
@@ -62,15 +65,16 @@ func TestEndToEndProcessing(t *testing.T) {
 	defer redisHA.Close()
 	redisHAClient := redis.NewClient(&redis.Options{Addr: redisHA.Addr()})
 
+	fetcher := &worker.Fetcher{
+		ProxyClient:  proxyClient,
+		SourceClient: source.NewClient(1 * time.Second),
+		DB:           testDB,
+		Cache:        cache.New(redisCacheClient),
+	}
 	// TODO: it would be better if InMemory made http requests
 	// back to worker, rather than calling fetch itself.
 	queue := queue.NewInMemory(ctx, 10, nil, func(ctx context.Context, mpath, version string) (int, error) {
-		f := &worker.Fetcher{
-			ProxyClient:  proxyClient,
-			SourceClient: source.NewClient(1 * time.Second),
-			DB:           testDB,
-		}
-		code, _, err := f.FetchAndUpdateState(ctx, mpath, version, "test", false)
+		code, _, err := fetcher.FetchAndUpdateState(ctx, mpath, version, "test", false)
 		return code, err
 	})
 	workerServer, err := worker.NewServer(&config.Config{}, worker.ServerConfig{
@@ -90,7 +94,7 @@ func TestEndToEndProcessing(t *testing.T) {
 	workerServer.Install(workerMux.Handle)
 	workerHTTP := httptest.NewServer(workerMux)
 
-	frontendHTTP := setupFrontend(ctx, t, queue)
+	frontendHTTP := setupFrontend(ctx, t, queue, redisCacheClient)
 	if _, err := doGet(workerHTTP.URL + "/poll"); err != nil {
 		t.Fatal(err)
 	}
@@ -103,13 +107,58 @@ func TestEndToEndProcessing(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 	queue.WaitForTesting(ctx)
 
-	body, err := doGet(frontendHTTP.URL + "/example.com/basic")
+	var wantKeys []string
+	for _, test := range []struct {
+		url, want string
+	}{
+		{"example.com/basic", "v1.1.0"},
+		{"example.com/basic@v1.0.0", "v1.0.0"},
+		{"example.com/single", "This is the README"},
+		{"example.com/single/pkg", "hello"},
+		{"example.com/single@v1.0.0/pkg", "hello"},
+	} {
+		wantKeys = append(wantKeys, "/"+test.url)
+		body, err := doGet(frontendHTTP.URL + "/" + test.url)
+		if err != nil {
+			t.Fatalf("%s: %v", test.url, err)
+		}
+		if !strings.Contains(string(body), test.want) {
+			t.Errorf("%q not found in body", test.want)
+			t.Logf("%s", body)
+		}
+	}
+
+	// Test cache invalidation.
+	keys := cacheKeys(t, redisCacheClient)
+	sort.Strings(wantKeys)
+	if !cmp.Equal(keys, wantKeys) {
+		t.Errorf("cache keys: got %v, want %v", keys, wantKeys)
+	}
+
+	// Process a newer version of a module, and verify that the cache has been invalidated.
+	modulePath := "example.com/single"
+	version := "v1.2.3"
+	proxyServer.AddModule(proxy.FindModule(testModules, modulePath, "v1.0.0").ChangeVersion(version))
+	_, _, err = fetcher.FetchAndUpdateState(ctx, modulePath, version, "test", false)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if idx := strings.Index(string(body), "v1.1.0"); idx < 0 {
-		t.Error("Documentation constant v1.1.0 not found in body")
+
+	// All the keys with modulePath should be gone, but the others should remain.
+	keys = cacheKeys(t, redisCacheClient)
+	wantKeys = []string{"/example.com/basic", "/example.com/basic@v1.0.0"}
+	if !cmp.Equal(keys, wantKeys) {
+		t.Errorf("cache keys: got %v, want %v", keys, wantKeys)
 	}
+}
+
+func cacheKeys(t *testing.T, client *redis.Client) []string {
+	keys, err := client.Keys(context.Background(), "*").Result()
+	if err != nil {
+		t.Fatal(err)
+	}
+	sort.Strings(keys)
+	return keys
 }
 
 // doGet executes an HTTP GET request for url and returns the response body, or
@@ -130,9 +179,14 @@ func doGet(url string) ([]byte, error) {
 	return body, nil
 }
 
-func setupProxyAndIndex(t *testing.T) (*proxy.Client, *index.Client, func()) {
+func setupProxyAndIndex(t *testing.T) (*proxy.Client, *proxy.Server, *index.Client, func()) {
 	t.Helper()
-	proxyClient, teardownProxy := proxy.SetupTestClient(t, testModules)
+	proxyServer := proxy.NewServer(testModules)
+	proxyClient, teardownProxy, err := proxy.NewClientForServer(proxyServer)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	var indexVersions []*internal.IndexVersion
 	for _, m := range testModules {
 		indexVersions = append(indexVersions, &internal.IndexVersion{
@@ -146,5 +200,5 @@ func setupProxyAndIndex(t *testing.T) (*proxy.Client, *index.Client, func()) {
 		teardownProxy()
 		teardownIndex()
 	}
-	return proxyClient, indexClient, teardown
+	return proxyClient, proxyServer, indexClient, teardown
 }

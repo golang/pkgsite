@@ -40,7 +40,7 @@ func TestFrontendDocRender(t *testing.T) {
 
 func getDoc(t *testing.T, modulePath string, exps ...string) string {
 	ctx := experiment.NewContext(context.Background(), exps...)
-	ts := setupFrontend(ctx, t, nil)
+	ts := setupFrontend(ctx, t, nil, nil)
 	url := ts.URL + "/" + modulePath
 	resp, err := http.Get(url)
 	if err != nil {

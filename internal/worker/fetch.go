@@ -18,6 +18,7 @@ import (
 	"go.opencensus.io/trace"
 	"golang.org/x/mod/semver"
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/cache"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/fetch"
@@ -43,6 +44,7 @@ type Fetcher struct {
 	ProxyClient  *proxy.Client
 	SourceClient *source.Client
 	DB           *postgres.DB
+	Cache        *cache.Cache
 }
 
 // FetchAndUpdateState fetches and processes a module version, and then updates
@@ -214,7 +216,7 @@ func (f *Fetcher) fetchAndInsertModule(ctx context.Context, modulePath, requeste
 	// The module was successfully fetched.
 	log.Infof(ctx, "fetch.FetchModule succeeded for %s@%s", ft.ModulePath, ft.RequestedVersion)
 	start := time.Now()
-	_, err = f.DB.InsertModule(ctx, ft.Module)
+	isLatest, err := f.DB.InsertModule(ctx, ft.Module)
 	ft.timings["db.InsertModule"] = time.Since(start)
 	if err != nil {
 		log.Error(ctx, err)
@@ -224,7 +226,51 @@ func (f *Fetcher) fetchAndInsertModule(ctx context.Context, modulePath, requeste
 		return ft
 	}
 	log.Infof(ctx, "db.InsertModule succeeded for %s@%s", ft.ModulePath, ft.RequestedVersion)
+	// Invalidate the cache if we just processed the latest version of a module.
+	if isLatest {
+		if err := f.invalidateCache(ctx, ft.ModulePath); err != nil {
+			// Failure to invalidate the cache is not that serious; at worst it means some pages will be stale.
+			// (Cache TTLs for details pages configured in internal/frontend/server.go must not be too long,
+			// to account for this possibility.)
+			log.Errorf(ctx, "failed to invalidate cache for %s: %v", ft.ModulePath, err)
+		} else {
+			log.Infof(ctx, "invalidated cache for %s", ft.ModulePath)
+		}
+	}
 	return ft
+}
+
+// invalidateCache deletes the series path for modulePath, as well as any
+// possible URL path of which it is a componentwise prefix. That is, it deletes
+// example.com/mod, example.com/mod@v1.2.3 and example.com/mod/pkg, but not the
+// unrelated example.com/module.
+//
+// We delete the series path, not the module path, because adding a v2 module
+// can affect v1 pages. For example, the first v2 module will add a "higher
+// major version" banner to all v1 pages. While adding a v1 version won't
+// currently affect v2 pages, that could change some day (for instance, if we
+// decide to provide history). So it's better to be safe and delete all paths in
+// the series.
+func (f *Fetcher) invalidateCache(ctx context.Context, modulePath string) error {
+	if f.Cache == nil {
+		return nil
+	}
+	var errs []error
+	seriesPath := internal.SeriesPathForModule(modulePath)
+	// All cache keys are request URLs, so they begin with "/".
+	if err := f.Cache.Delete(ctx, "/"+seriesPath); err != nil {
+		errs = append(errs, err)
+	}
+	// Delete all suffixes of the series path followed by a character that marks its end.
+	for _, end := range "/@?#" {
+		if err := f.Cache.DeletePrefix(ctx, fmt.Sprintf("/%s%c", seriesPath, end)); err != nil {
+			errs = append(errs, err)
+		}
+	}
+	if len(errs) > 0 {
+		return fmt.Errorf("%d errors, first is %w", len(errs), errs[0])
+	}
+	return nil
 }
 
 func resolvedVersion(ctx context.Context, modulePath, requestedVersion string, proxyClient *proxy.Client) string {

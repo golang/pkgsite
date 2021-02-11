@@ -11,6 +11,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/go-redis/redis/v8"
 	"github.com/google/safehtml/template"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/experiment"
@@ -26,7 +27,7 @@ import (
 
 // TODO(https://github.com/golang/go/issues/40096): factor out this code reduce
 // duplication
-func setupFrontend(ctx context.Context, t *testing.T, q queue.Queue) *httptest.Server {
+func setupFrontend(ctx context.Context, t *testing.T, q queue.Queue, rc *redis.Client) *httptest.Server {
 	t.Helper()
 	s, err := frontend.NewServer(frontend.ServerConfig{
 		DataSourceGetter:     func(context.Context) internal.DataSource { return testDB },
@@ -40,7 +41,7 @@ func setupFrontend(ctx context.Context, t *testing.T, q queue.Queue) *httptest.S
 		t.Fatal(err)
 	}
 	mux := http.NewServeMux()
-	s.Install(mux.Handle, nil, nil)
+	s.Install(mux.Handle, rc, nil)
 
 	// Get experiments from the context. Fully roll them out.
 	expNames := experiment.FromContext(ctx).Active()

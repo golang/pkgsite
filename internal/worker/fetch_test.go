@@ -277,7 +277,7 @@ func TestFetchAndUpdateState(t *testing.T) {
 	}
 
 	sourceClient := source.NewClient(sourceTimeout)
-	f := &Fetcher{proxyClient, sourceClient, testDB}
+	f := &Fetcher{proxyClient, sourceClient, testDB, nil}
 	for _, test := range testCases {
 		t.Run(strings.ReplaceAll(test.pkg+"@"+test.version, "/", " "), func(t *testing.T) {
 			defer postgres.ResetTestDB(testDB, t)
