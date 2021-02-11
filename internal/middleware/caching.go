@@ -19,6 +19,7 @@ import (
 	"go.opencensus.io/stats"
 	"go.opencensus.io/stats/view"
 	"go.opencensus.io/tag"
+	icache "golang.org/x/pkgsite/internal/cache"
 	"golang.org/x/pkgsite/internal/config"
 	"golang.org/x/pkgsite/internal/log"
 )
@@ -88,7 +89,7 @@ func recordCacheError(ctx context.Context, name, operation string) {
 type cache struct {
 	name       string
 	authValues []string
-	client     *redis.Client
+	cache      *icache.Cache
 	delegate   http.Handler
 	expirer    Expirer
 }
@@ -115,7 +116,7 @@ func Cache(name string, client *redis.Client, expirer Expirer, authValues []stri
 		return &cache{
 			name:       name,
 			authValues: authValues,
-			client:     client,
+			cache:      icache.New(client),
 			delegate:   h,
 			expirer:    expirer,
 		}
@@ -159,10 +160,7 @@ func (c *cache) get(ctx context.Context, key string) (io.Reader, bool) {
 	// fall back to un-cached serving if redis is unavailable.
 	getCtx, cancelGet := context.WithTimeout(ctx, 100*time.Millisecond)
 	defer cancelGet()
-	val, err := c.client.Get(getCtx, key).Bytes()
-	if err == redis.Nil {
-		return nil, false
-	}
+	val, err := c.cache.Get(getCtx, key)
 	if err != nil {
 		select {
 		case <-getCtx.Done():
@@ -171,6 +169,9 @@ func (c *cache) get(ctx context.Context, key string) (io.Reader, bool) {
 			log.Infof(ctx, "cache get(%q): %v", key, err)
 		}
 		recordCacheError(ctx, c.name, "GET")
+		return nil, false
+	}
+	if val == nil {
 		return nil, false
 	}
 	zr, err := gzip.NewReader(bytes.NewReader(val))
@@ -190,8 +191,7 @@ func (c *cache) put(ctx context.Context, key string, rec *cacheRecorder, ttl tim
 	log.Infof(ctx, "caching response of length %d for %s", rec.buf.Len(), key)
 	setCtx, cancelSet := context.WithTimeout(context.Background(), 1*time.Second)
 	defer cancelSet()
-	_, err := c.client.Set(setCtx, key, rec.buf.Bytes(), ttl).Result()
-	if err != nil {
+	if err := c.cache.Put(setCtx, key, rec.buf.Bytes(), ttl); err != nil {
 		recordCacheError(ctx, c.name, "SET")
 		log.Warningf(ctx, "cache set %q: %v", key, err)
 	}

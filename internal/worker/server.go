@@ -24,6 +24,7 @@ import (
 	"github.com/google/safehtml/template"
 	"go.opencensus.io/trace"
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/cache"
 	"golang.org/x/pkgsite/internal/config"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/godoc/dochtml"
@@ -39,18 +40,18 @@ import (
 
 // Server can be installed to serve the go discovery worker.
 type Server struct {
-	cfg              *config.Config
-	indexClient      *index.Client
-	proxyClient      *proxy.Client
-	sourceClient     *source.Client
-	redisHAClient    *redis.Client
-	redisCacheClient *redis.Client
-	db               *postgres.DB
-	queue            queue.Queue
-	reportingClient  *errorreporting.Client
-	templates        map[string]*template.Template
-	staticPath       template.TrustedSource
-	getExperiments   func() []*internal.Experiment
+	cfg             *config.Config
+	indexClient     *index.Client
+	proxyClient     *proxy.Client
+	sourceClient    *source.Client
+	redisHAClient   *redis.Client
+	cache           *cache.Cache
+	db              *postgres.DB
+	queue           queue.Queue
+	reportingClient *errorreporting.Client
+	templates       map[string]*template.Template
+	staticPath      template.TrustedSource
+	getExperiments  func() []*internal.Experiment
 }
 
 // ServerConfig contains everything needed by a Server.
@@ -88,19 +89,23 @@ func NewServer(cfg *config.Config, scfg ServerConfig) (_ *Server, err error) {
 		indexTemplate:    t1,
 		versionsTemplate: t2,
 	}
+	var c *cache.Cache
+	if scfg.RedisCacheClient != nil {
+		c = cache.New(scfg.RedisCacheClient)
+	}
 	return &Server{
-		cfg:              cfg,
-		db:               scfg.DB,
-		indexClient:      scfg.IndexClient,
-		proxyClient:      scfg.ProxyClient,
-		sourceClient:     scfg.SourceClient,
-		redisHAClient:    scfg.RedisHAClient,
-		redisCacheClient: scfg.RedisCacheClient,
-		queue:            scfg.Queue,
-		reportingClient:  scfg.ReportingClient,
-		templates:        templates,
-		staticPath:       scfg.StaticPath,
-		getExperiments:   scfg.GetExperiments,
+		cfg:             cfg,
+		db:              scfg.DB,
+		indexClient:     scfg.IndexClient,
+		proxyClient:     scfg.ProxyClient,
+		sourceClient:    scfg.SourceClient,
+		redisHAClient:   scfg.RedisHAClient,
+		cache:           c,
+		queue:           scfg.Queue,
+		reportingClient: scfg.ReportingClient,
+		templates:       templates,
+		staticPath:      scfg.StaticPath,
+		getExperiments:  scfg.GetExperiments,
 	}, nil
 }
 
@@ -492,12 +497,11 @@ func (s *Server) handleReprocess(w http.ResponseWriter, r *http.Request) error {
 }
 
 func (s *Server) clearCache(w http.ResponseWriter, r *http.Request) error {
-	if s.redisCacheClient == nil {
+	if s.cache == nil {
 		return errors.New("redis cache client is not configured")
 	}
-	status := s.redisCacheClient.FlushAll(r.Context())
-	if status.Err() != nil {
-		return status.Err()
+	if err := s.cache.Clear(r.Context()); err != nil {
+		return err
 	}
 	fmt.Fprint(w, "Cache cleared.")
 	return nil
