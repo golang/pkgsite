@@ -20,6 +20,9 @@ func TestErrorReporting(t *testing.T) {
 	}{
 		{500, 1},
 		{200, 0},
+		{404, 0},
+		{503, 0},
+		{550, 0},
 	}
 
 	for _, test := range tests {

@@ -120,7 +120,7 @@ var codes = []struct {
 	{AlternativeModule, 491},
 	{ModuleTooLarge, 492},
 
-	{ProxyTimedOut, http.StatusGatewayTimeout},
+	{ProxyTimedOut, 550}, // not a real code
 	// 52x and 54x errors represents modules that need to be reprocessed, and the
 	// previous status code the module had. Note that the status code
 	// matters for determining reprocessing order.
