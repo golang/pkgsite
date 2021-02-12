@@ -1530,3 +1530,25 @@ func TestCheckTemplates(t *testing.T) {
 		})
 	}
 }
+
+func TestEmptyDirectoryBetweenNestedModulesRedirect(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
+	defer postgres.ResetTestDB(testDB, t)
+
+	postgres.MustInsertModule(ctx, t, testDB, sample.Module(sample.ModulePath, sample.VersionString, ""))
+	postgres.MustInsertModule(ctx, t, testDB, sample.Module(sample.ModulePath+"/missing/c", sample.VersionString, ""))
+
+	_, handler, _ := newTestServer(t, nil)
+	w := httptest.NewRecorder()
+	dirPath := sample.ModulePath + "/missing"
+	handler.ServeHTTP(w, httptest.NewRequest("GET", "/"+dirPath, nil))
+	if w.Code != http.StatusFound {
+		t.Errorf("%q: got status code = %d, want %d", "/"+dirPath, w.Code, http.StatusFound)
+	}
+	got := w.Header().Get("Location")
+	wantURL := "/search?q=" + url.PathEscape(dirPath)
+	if got != wantURL {
+		t.Errorf("got location = %q, want %q", got, wantURL)
+	}
+}
