@@ -266,7 +266,7 @@ func (s *Server) handleFetch(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, `<p><a href="/fetch/rsc.io/quote/@v/v1.0.0">Fetch an example module</a></p>`)
 		return
 	}
-	msg, code := s.doFetch(r)
+	msg, code := s.doFetch(w, r)
 	if code == http.StatusInternalServerError || code == http.StatusServiceUnavailable {
 		log.Infof(r.Context(), "doFetch of %s returned %d; returning that code to retry task", r.URL.Path, code)
 		http.Error(w, http.StatusText(code), code)
@@ -284,7 +284,7 @@ func (s *Server) handleFetch(w http.ResponseWriter, r *http.Request) {
 }
 
 // doFetch executes a fetch request and returns the msg and status.
-func (s *Server) doFetch(r *http.Request) (string, int) {
+func (s *Server) doFetch(w http.ResponseWriter, r *http.Request) (string, int) {
 	modulePath, requestedVersion, err := parseModulePathAndVersion(r.URL.Path)
 	if err != nil {
 		return err.Error(), http.StatusBadRequest
@@ -297,9 +297,31 @@ func (s *Server) doFetch(r *http.Request) (string, int) {
 	}
 	code, resolvedVersion, err := f.FetchAndUpdateState(r.Context(), modulePath, requestedVersion, s.cfg.AppVersionLabel(), disableProxyFetch)
 	if err != nil {
+		s.reportError(r.Context(), err, w, r)
 		return err.Error(), code
 	}
 	return fmt.Sprintf("fetched and updated %s@%s", modulePath, resolvedVersion), code
+}
+
+// reportError sends the error to the GCP Error Reporting service.
+// TODO(jba): factor out from here and frontend/server.go.
+func (s *Server) reportError(ctx context.Context, err error, w http.ResponseWriter, r *http.Request) {
+	if s.reportingClient == nil {
+		return
+	}
+	// Extract the stack trace from the error if there is one.
+	var stack []byte
+	if serr := (*derrors.StackError)(nil); errors.As(err, &serr) {
+		stack = serr.Stack
+	}
+	s.reportingClient.Report(errorreporting.Entry{
+		Error: err,
+		Req:   r,
+		Stack: stack,
+	})
+	log.Debugf(ctx, "reported error %v with stack size %d", err, len(stack))
+	// Bypass the error-reporting middleware.
+	w.Header().Set(config.BypassErrorReportingHeader, "true")
 }
 
 // parseModulePathAndVersion returns the module and version specified by p. p
