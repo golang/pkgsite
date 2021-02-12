@@ -14,12 +14,12 @@ import (
 )
 
 func TestGetLatestMajorPathForV1Path(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout*2)
-	defer cancel()
+	t.Parallel()
+	ctx := context.Background()
 
-	checkLatest := func(t *testing.T, versions []string, v1path string, version, suffix string) {
+	checkLatest := func(t *testing.T, db *DB, versions []string, v1path string, version, suffix string) {
 		t.Helper()
-		gotPath, gotVer, err := testDB.GetLatestMajorPathForV1Path(ctx, v1path)
+		gotPath, gotVer, err := db.GetLatestMajorPathForV1Path(ctx, v1path)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -62,7 +62,9 @@ func TestGetLatestMajorPathForV1Path(t *testing.T) {
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			ResetTestDB(testDB, t)
+			testDB, release := acquire(t)
+			defer release()
+
 			suffix := "a/b/c"
 
 			for _, v := range test.versions {
@@ -80,7 +82,7 @@ func TestGetLatestMajorPathForV1Path(t *testing.T) {
 			}
 			t.Run("module", func(t *testing.T) {
 				v1path := sample.ModulePath
-				checkLatest(t, test.versions, v1path, test.want, test.want)
+				checkLatest(t, testDB, test.versions, v1path, test.want, test.want)
 			})
 			t.Run("package", func(t *testing.T) {
 				want := test.want
@@ -88,7 +90,7 @@ func TestGetLatestMajorPathForV1Path(t *testing.T) {
 					want += "/"
 				}
 				v1path := sample.ModulePath + "/" + suffix
-				checkLatest(t, test.versions, v1path, test.want, want+suffix)
+				checkLatest(t, testDB, test.versions, v1path, test.want, want+suffix)
 			})
 		})
 	}

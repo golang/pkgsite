@@ -17,9 +17,7 @@ import (
 )
 
 func TestGetVersions(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	defer cancel()
-
+	t.Parallel()
 	var (
 		taggedAndPseudoModule = "path.to/foo"
 		taggedModuleV2        = "path.to/foo/v2"
@@ -57,7 +55,11 @@ func TestGetVersions(t *testing.T) {
 		testModules = append(testModules, sample.Module(pseudoModule, fmt.Sprintf("v0.0.0-202001011200%02d-000000000000", i), "blog"))
 	}
 
-	defer ResetTestDB(testDB, t)
+	testDB, release := acquire(t)
+	defer release()
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
+
 	for _, m := range testModules {
 		MustInsertModule(ctx, t, testDB, m)
 	}
@@ -228,9 +230,11 @@ func TestGetVersions(t *testing.T) {
 }
 
 func TestGetLatestInfo(t *testing.T) {
+	t.Parallel()
+	testDB, release := acquire(t)
+	defer release()
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
-	defer ResetTestDB(testDB, t)
 
 	for _, m := range []*internal.Module{
 		sample.Module("a.com/M", "v1.1.1", "all", "most", "some", "one", "D/other"),

@@ -19,8 +19,8 @@ import (
 )
 
 func TestGetNestedModules(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	defer cancel()
+	t.Parallel()
+	ctx := context.Background()
 
 	for _, test := range []struct {
 		name            string
@@ -69,7 +69,9 @@ func TestGetNestedModules(t *testing.T) {
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			defer ResetTestDB(testDB, t)
+			testDB, release := acquire(t)
+			defer release()
+
 			for _, v := range test.modules {
 				MustInsertModule(ctx, t, testDB, v)
 			}
@@ -91,9 +93,11 @@ func TestGetNestedModules(t *testing.T) {
 }
 
 func TestGetNestedModules_Excluded(t *testing.T) {
+	t.Parallel()
+	testDB, release := acquire(t)
+	defer release()
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
-	defer ResetTestDB(testDB, t)
 
 	test := struct {
 		name            string
@@ -136,10 +140,11 @@ func TestGetNestedModules_Excluded(t *testing.T) {
 }
 
 func TestPostgres_GetModuleInfo(t *testing.T) {
+	t.Parallel()
+	testDB, release := acquire(t)
+	defer release()
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
-
-	defer ResetTestDB(testDB, t)
 
 	testCases := []struct {
 		name, path, version string
@@ -205,6 +210,9 @@ func TestPostgres_GetModuleInfo(t *testing.T) {
 }
 
 func TestGetImportedBy(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+
 	var (
 		m1          = sample.Module("path.to/foo", "v1.1.0", "bar")
 		m2          = sample.Module("path2.to/foo", "v1.2.0", "bar2")
@@ -258,10 +266,8 @@ func TestGetImportedBy(t *testing.T) {
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			defer ResetTestDB(testDB, t)
-
-			ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-			defer cancel()
+			testDB, release := acquire(t)
+			defer release()
 
 			for _, v := range testModules {
 				MustInsertModule(ctx, t, testDB, v)
@@ -279,6 +285,7 @@ func TestGetImportedBy(t *testing.T) {
 }
 
 func TestJSONBScanner(t *testing.T) {
+	t.Parallel()
 	type S struct{ A int }
 
 	want := &S{1}
@@ -307,6 +314,7 @@ func TestJSONBScanner(t *testing.T) {
 }
 
 func TestRemovePkgPrefix(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		body string
 		want string

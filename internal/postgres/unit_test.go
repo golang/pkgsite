@@ -22,10 +22,11 @@ import (
 )
 
 func TestGetUnitMeta(t *testing.T) {
+	t.Parallel()
+	testDB, release := acquire(t)
+	defer release()
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
-
-	defer ResetTestDB(testDB, t)
 
 	for _, testModule := range []struct {
 		module, version, packageSuffix string
@@ -229,10 +230,12 @@ func TestGetUnitMeta(t *testing.T) {
 }
 
 func TestGetUnitMetaBypass(t *testing.T) {
+	t.Parallel()
+	testDB, release := acquire(t)
+	defer release()
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
-	defer ResetTestDB(testDB, t)
 	bypassDB := NewBypassingLicenseCheck(testDB.db)
 
 	for _, testModule := range []struct {
@@ -421,9 +424,11 @@ func TestGetUnitMetaBypass(t *testing.T) {
 }
 
 func TestGetUnit(t *testing.T) {
+	t.Parallel()
+	testDB, release := acquire(t)
+	defer release()
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
-	defer ResetTestDB(testDB, t)
 	InsertSampleDirectoryTree(ctx, t, testDB)
 
 	// Add a module that has READMEs in a directory and a package.
@@ -583,15 +588,15 @@ func TestGetUnit(t *testing.T) {
 				test.want.IsRedistributable,
 			)
 			test.want.CommitTime = um.CommitTime
-			checkUnit(ctx, t, um, test.want)
+			checkUnit(ctx, t, testDB, um, test.want)
 		})
 	}
 }
 
-func checkUnit(ctx context.Context, t *testing.T, um *internal.UnitMeta, want *internal.Unit, experiments ...string) {
+func checkUnit(ctx context.Context, t *testing.T, db *DB, um *internal.UnitMeta, want *internal.Unit, experiments ...string) {
 	t.Helper()
 	ctx = experiment.NewContext(ctx, experiments...)
-	got, err := testDB.GetUnit(ctx, um, internal.AllFields)
+	got, err := db.GetUnit(ctx, um, internal.AllFields)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -611,10 +616,11 @@ func checkUnit(ctx context.Context, t *testing.T, um *internal.UnitMeta, want *i
 }
 
 func TestGetUnit_SubdirectoriesShowNonRedistPackages(t *testing.T) {
+	t.Parallel()
+	testDB, release := acquire(t)
+	defer release()
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
-
-	defer ResetTestDB(testDB, t)
 
 	m := sample.DefaultModule()
 	m.IsRedistributable = false
@@ -623,10 +629,11 @@ func TestGetUnit_SubdirectoriesShowNonRedistPackages(t *testing.T) {
 }
 
 func TestGetUnitFieldSet(t *testing.T) {
+	t.Parallel()
+	testDB, release := acquire(t)
+	defer release()
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
-
-	defer ResetTestDB(testDB, t)
 
 	readme := &internal.Readme{
 		Filepath: "a.com/m/dir/p/README.md",
@@ -746,9 +753,11 @@ func subdirectories(modulePath string, suffixes []string) []*internal.PackageMet
 }
 
 func TestGetUnitBypass(t *testing.T) {
+	t.Parallel()
+	testDB, release := acquire(t)
+	defer release()
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
-	defer ResetTestDB(testDB, t)
 	bypassDB := NewBypassingLicenseCheck(testDB.db)
 
 	m := nonRedistributableModule()

@@ -19,7 +19,9 @@ import (
 )
 
 func TestModuleVersionState(t *testing.T) {
-	defer ResetTestDB(testDB, t)
+	t.Parallel()
+	testDB, release := acquire(t)
+	defer release()
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
@@ -144,8 +146,8 @@ func TestModuleVersionState(t *testing.T) {
 }
 
 func TestUpsertModuleVersionStates(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout*2)
-	defer cancel()
+	t.Parallel()
+	ctx := context.Background()
 
 	m := sample.DefaultModule()
 	appVersion := time.Now().String()
@@ -206,7 +208,8 @@ func TestUpsertModuleVersionStates(t *testing.T) {
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			defer ResetTestDB(testDB, t)
+			testDB, release := acquire(t)
+			defer release()
 
 			if test.insertModuleBeforeMVS && test.shouldInsertModule {
 				MustInsertModule(ctx, t, testDB, m)

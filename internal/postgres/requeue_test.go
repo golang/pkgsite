@@ -23,9 +23,11 @@ import (
 )
 
 func TestGetNextModulesToFetchAndUpdateModuleVersionStatesForReprocessing(t *testing.T) {
+	t.Parallel()
+	testDB, release := acquire(t)
+	defer release()
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
-	defer ResetTestDB(testDB, t)
 
 	type testData struct {
 		modulePath, version string
@@ -188,9 +190,11 @@ func md5hash(mv *internal.ModuleVersionState) []byte {
 	return s[:]
 }
 func TestGetNextModulesToFetchOnlyPicksUpStatus0AndStatusGreaterThan500(t *testing.T) {
+	t.Parallel()
+	testDB, release := acquire(t)
+	defer release()
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
-	defer ResetTestDB(testDB, t)
 
 	statuses := []int{
 		http.StatusOK,

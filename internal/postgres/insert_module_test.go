@@ -30,8 +30,8 @@ import (
 )
 
 func TestInsertModule(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout*2)
-	defer cancel()
+	t.Parallel()
+	ctx := context.Background()
 
 	for _, test := range []struct {
 		name   string
@@ -76,18 +76,19 @@ func TestInsertModule(t *testing.T) {
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			defer ResetTestDB(testDB, t)
+			testDB, release := acquire(t)
+			defer release()
 
 			MustInsertModule(ctx, t, testDB, test.module)
 			// Test that insertion of duplicate primary key won't fail.
 			MustInsertModule(ctx, t, testDB, test.module)
-			checkModule(ctx, t, test.module)
+			checkModule(ctx, t, testDB, test.module)
 		})
 	}
 }
 
-func checkModule(ctx context.Context, t *testing.T, want *internal.Module) {
-	got, err := testDB.GetModuleInfo(ctx, want.ModulePath, want.Version)
+func checkModule(ctx context.Context, t *testing.T, db *DB, want *internal.Module) {
+	got, err := db.GetModuleInfo(ctx, want.ModulePath, want.Version)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -96,7 +97,7 @@ func checkModule(ctx context.Context, t *testing.T, want *internal.Module) {
 	}
 
 	for _, wantu := range want.Units {
-		got, err := testDB.GetUnit(ctx, &wantu.UnitMeta, internal.AllFields)
+		got, err := db.GetUnit(ctx, &wantu.UnitMeta, internal.AllFields)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -119,12 +120,13 @@ func checkModule(ctx context.Context, t *testing.T, want *internal.Module) {
 }
 
 func TestInsertModuleLicenseCheck(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	defer cancel()
-
+	t.Parallel()
+	ctx := context.Background()
 	for _, bypass := range []bool{false, true} {
 		t.Run(fmt.Sprintf("bypass=%t", bypass), func(t *testing.T) {
-			defer ResetTestDB(testDB, t)
+			testDB, release := acquire(t)
+			defer release()
+
 			var db *DB
 			if bypass {
 				db = NewBypassingLicenseCheck(testDB.db)
@@ -174,6 +176,9 @@ func TestInsertModuleLicenseCheck(t *testing.T) {
 }
 
 func TestUpsertModule(t *testing.T) {
+	t.Parallel()
+	testDB, release := acquire(t)
+	defer release()
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
@@ -188,12 +193,12 @@ func TestUpsertModule(t *testing.T) {
 
 	MustInsertModule(ctx, t, testDB, m)
 	// The changes should have been saved.
-	checkModule(ctx, t, m)
+	checkModule(ctx, t, testDB, m)
 }
 
 func TestInsertModuleErrors(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout*2)
-	defer cancel()
+	t.Parallel()
+	ctx := context.Background()
 
 	testCases := []struct {
 		name string
@@ -259,7 +264,9 @@ func TestInsertModuleErrors(t *testing.T) {
 
 	for _, test := range testCases {
 		t.Run(test.name, func(t *testing.T) {
-			defer ResetTestDB(testDB, t)
+			testDB, release := acquire(t)
+			defer release()
+
 			if _, err := testDB.InsertModule(ctx, test.module); !errors.Is(err, test.wantWriteErr) {
 				t.Errorf("error: %v, want write error: %v", err, test.wantWriteErr)
 			}
@@ -268,9 +275,11 @@ func TestInsertModuleErrors(t *testing.T) {
 }
 
 func TestInsertModuleNewCoverage(t *testing.T) {
+	t.Parallel()
+	testDB, release := acquire(t)
+	defer release()
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
-	defer ResetTestDB(testDB, t)
 
 	m := sample.DefaultModule()
 	newCoverage := licensecheck.Coverage{
@@ -305,9 +314,11 @@ func TestInsertModuleNewCoverage(t *testing.T) {
 }
 
 func TestPostgres_ReadAndWriteModuleOtherColumns(t *testing.T) {
+	t.Parallel()
 	// Verify that InsertModule correctly populates the columns in the versions
 	// table that are not in the ModuleInfo struct.
-	defer ResetTestDB(testDB, t)
+	testDB, release := acquire(t)
+	defer release()
 	ctx := context.Background()
 
 	type other struct {
@@ -339,7 +350,9 @@ func TestPostgres_ReadAndWriteModuleOtherColumns(t *testing.T) {
 }
 
 func TestLatestVersion(t *testing.T) {
-	defer ResetTestDB(testDB, t)
+	t.Parallel()
+	testDB, release := acquire(t)
+	defer release()
 	ctx := context.Background()
 
 	for _, mod := range []struct {
@@ -408,7 +421,9 @@ func TestLatestVersion(t *testing.T) {
 }
 
 func TestLatestVersion_PreferIncompatibleOverPrerelease(t *testing.T) {
-	defer ResetTestDB(testDB, t)
+	t.Parallel()
+	testDB, release := acquire(t)
+	defer release()
 	ctx := context.Background()
 
 	for _, mod := range []struct {
@@ -451,9 +466,11 @@ func TestLatestVersion_PreferIncompatibleOverPrerelease(t *testing.T) {
 }
 
 func TestDeleteModule(t *testing.T) {
+	t.Parallel()
+	testDB, release := acquire(t)
+	defer release()
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
-	defer ResetTestDB(testDB, t)
 
 	v := sample.DefaultModule()
 
@@ -493,11 +510,13 @@ func TestDeleteModule(t *testing.T) {
 }
 
 func TestPostgres_NewerAlternative(t *testing.T) {
+	t.Parallel()
 	// Verify that packages are not added to search_documents if the module has a newer
 	// alternative version.
+	testDB, release := acquire(t)
+	defer release()
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
-	defer ResetTestDB(testDB, t)
 
 	const (
 		modulePath = "example.com/Mod"
@@ -518,10 +537,11 @@ func TestPostgres_NewerAlternative(t *testing.T) {
 }
 
 func TestMakeValidUnicode(t *testing.T) {
+	t.Parallel()
+	testDB, release := acquire(t)
+	defer release()
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
-
-	defer ResetTestDB(testDB, t)
 
 	db := testDB.Underlying()
 
@@ -556,11 +576,13 @@ func TestMakeValidUnicode(t *testing.T) {
 }
 
 func TestLock(t *testing.T) {
+	t.Parallel()
 	// Verify that two transactions cannot both hold the same lock, but that every one
 	// that wants the lock eventually gets it.
+	testDB, release := acquire(t)
+	defer release()
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
-	defer ResetTestDB(testDB, t)
 
 	db := testDB.Underlying()
 

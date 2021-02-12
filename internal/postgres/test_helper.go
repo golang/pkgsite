@@ -13,6 +13,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/golang-migrate/migrate/v4"
 	"golang.org/x/pkgsite/internal"
@@ -144,6 +145,53 @@ func RunDBTests(dbName string, m *testing.M, testDB **DB) {
 	code := m.Run()
 	if err := db.Close(); err != nil {
 		log.Fatal(err)
+	}
+	os.Exit(code)
+}
+
+// RunDBTestsInParallel sets up numDBs databases, then runs the tests. Before it runs them,
+// it sets acquirep to a function that tests should use to acquire a database. The second
+// return value of the function should be called in a defer statement to release the database.
+// For example:
+//
+//    func Test(t *testing.T) {
+//        db, release := acquire(t)
+//        defer release()
+func RunDBTestsInParallel(dbBaseName string, numDBs int, m *testing.M, acquirep *func(*testing.T) (*DB, func())) {
+	start := time.Now()
+	database.QueryLoggingDisabled = true
+	dbs := make(chan *DB, numDBs)
+	for i := 0; i < numDBs; i++ {
+		db, err := SetupTestDB(fmt.Sprintf("%s-%d", dbBaseName, i))
+		if err != nil {
+			if errors.Is(err, derrors.NotFound) && os.Getenv("GO_DISCOVERY_TESTDB") != "true" {
+				log.Printf("SKIPPING: could not connect to DB (see doc/postgres.md to set up): %v", err)
+				return
+			}
+			log.Fatal(err)
+		}
+		dbs <- db
+	}
+
+	*acquirep = func(t *testing.T) (*DB, func()) {
+		db := <-dbs
+		release := func() {
+			ResetTestDB(db, t)
+			dbs <- db
+		}
+		return db, release
+	}
+
+	log.Printf("parallel test setup for %d DBs took %s", numDBs, time.Since(start))
+	code := m.Run()
+	if len(dbs) != cap(dbs) {
+		log.Fatal("not all DBs were released")
+	}
+	for i := 0; i < numDBs; i++ {
+		db := <-dbs
+		if err := db.Close(); err != nil {
+			log.Fatal(err)
+		}
 	}
 	os.Exit(code)
 }

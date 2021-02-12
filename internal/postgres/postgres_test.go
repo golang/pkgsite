@@ -16,13 +16,14 @@ import (
 
 const testTimeout = 5 * time.Second
 
-var testDB *DB
+var acquire func(*testing.T) (*DB, func())
 
 func TestMain(m *testing.M) {
-	RunDBTests("discovery_postgres_test", m, &testDB)
+	RunDBTestsInParallel("discovery_postgres_test", 4, m, &acquire)
 }
 
 func TestGetOldestUnprocessedIndexTime(t *testing.T) {
+	t.Parallel()
 	ctx := context.Background()
 
 	type modTimes struct {
@@ -67,7 +68,8 @@ func TestGetOldestUnprocessedIndexTime(t *testing.T) {
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			defer ResetTestDB(testDB, t)
+			testDB, release := acquire(t)
+			defer release()
 			for i, m := range test.mods {
 				path := fmt.Sprintf("m%d", i)
 				it, err := time.Parse(time.Kitchen, m.indexTimestamp)

@@ -19,6 +19,7 @@ import (
 )
 
 func TestGetLicenses(t *testing.T) {
+	t.Parallel()
 	testModule := sample.Module(sample.ModulePath, "v1.2.3", "A/B")
 	stdlibModule := sample.Module(stdlib.ModulePath, "v1.13.0", "cmd/go")
 	mit := &licenses.Metadata{Types: []string{"MIT"}, FilePath: "LICENSE"}
@@ -38,7 +39,9 @@ func TestGetLicenses(t *testing.T) {
 	// github.com/valid/module_name/A/B
 	testModule.Units[2].Licenses = []*licenses.Metadata{mit, bsd}
 
-	defer ResetTestDB(testDB, t)
+	testDB, release := acquire(t)
+	defer release()
+
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout*5)
 	defer cancel()
 	MustInsertModule(ctx, t, testDB, testModule)
@@ -118,13 +121,16 @@ func TestGetLicenses(t *testing.T) {
 }
 
 func TestGetModuleLicenses(t *testing.T) {
+	t.Parallel()
 	modulePath := "test.module"
 	testModule := sample.Module(modulePath, "v1.2.3", "", "foo", "bar")
 	testModule.Packages()[0].Licenses = []*licenses.Metadata{{Types: []string{"ISC"}, FilePath: "LICENSE"}}
 	testModule.Packages()[1].Licenses = []*licenses.Metadata{{Types: []string{"MIT"}, FilePath: "foo/LICENSE"}}
 	testModule.Packages()[2].Licenses = []*licenses.Metadata{{Types: []string{"GPL2"}, FilePath: "bar/LICENSE.txt"}}
 
-	defer ResetTestDB(testDB, t)
+	testDB, release := acquire(t)
+	defer release()
+
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
@@ -160,9 +166,11 @@ func TestGetModuleLicenses(t *testing.T) {
 }
 
 func TestGetLicensesBypass(t *testing.T) {
+	t.Parallel()
+	testDB, release := acquire(t)
+	defer release()
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
-	defer ResetTestDB(testDB, t)
 
 	bypassDB := NewBypassingLicenseCheck(testDB.db)
 

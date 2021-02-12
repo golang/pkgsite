@@ -16,9 +16,11 @@ import (
 )
 
 func TestReadAndWriteVersionMap(t *testing.T) {
+	t.Parallel()
+	testDB, release := acquire(t)
+	defer release()
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
-	defer ResetTestDB(testDB, t)
 
 	m := sample.Module("golang.org/x/tools", sample.VersionString, "go/packages")
 	MustInsertModule(ctx, t, testDB, m)
@@ -42,9 +44,11 @@ func TestReadAndWriteVersionMap(t *testing.T) {
 	}
 }
 func TestUpsertVersionMap(t *testing.T) {
+	t.Parallel()
+	testDB, release := acquire(t)
+	defer release()
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
-	defer ResetTestDB(testDB, t)
 
 	upsertAndVerifyVersionMap := func(vm *internal.VersionMap) {
 		err := testDB.UpsertVersionMap(ctx, vm)
@@ -76,9 +80,11 @@ func TestUpsertVersionMap(t *testing.T) {
 }
 
 func TestGetVersionMapsWithNon2xxStatus(t *testing.T) {
+	t.Parallel()
+	testDB, release := acquire(t)
+	defer release()
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
-	defer ResetTestDB(testDB, t)
 
 	tests := []struct {
 		path   string

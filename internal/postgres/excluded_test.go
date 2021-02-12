@@ -10,7 +10,9 @@ import (
 )
 
 func TestIsExcluded(t *testing.T) {
-	defer ResetTestDB(testDB, t)
+	t.Parallel()
+	testDB, release := acquire(t)
+	defer release()
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 

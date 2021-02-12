@@ -11,6 +11,7 @@ import (
 )
 
 func TestSearchDocumentSections(t *testing.T) {
+	t.Parallel()
 	for _, test := range []struct {
 		name                string
 		synopsis            string
@@ -72,6 +73,7 @@ Many Go projects are built using Viper including:`,
 }
 
 func TestProcessWords(t *testing.T) {
+	t.Parallel()
 	for _, test := range []struct {
 		in   string
 		want []string
@@ -94,6 +96,7 @@ func TestProcessWords(t *testing.T) {
 }
 
 func TestProcessMarkdown(t *testing.T) {
+	t.Parallel()
 	const (
 		in = `
 Blackfriday [![Build Status](https://travis-ci.org/russross/blackfriday.svg?branch=master)](https://travis-ci.org/russross/blackfriday)
@@ -114,6 +117,7 @@ _Blackfriday_ is a [Markdown][1] *processor* implemented in [Go](https://golang.
 }
 
 func TestSentenceEndIndex(t *testing.T) {
+	t.Parallel()
 	for _, test := range []struct {
 		in   string
 		want int
