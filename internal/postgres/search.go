@@ -113,7 +113,7 @@ var searchers = map[string]searcher{
 // rarely relevant: "int" or "package", for example. In these cases we'll pay
 // the penalty of a deep search that scans nearly every package.
 func (db *DB) Search(ctx context.Context, q string, limit, offset, maxResultCount int) (_ []*internal.SearchResult, err error) {
-	defer derrors.Wrap(&err, "DB.Search(ctx, %q, %d, %d)", q, limit, offset)
+	defer derrors.WrapStack(&err, "DB.Search(ctx, %q, %d, %d)", q, limit, offset)
 	resp, err := db.hedgedSearch(ctx, q, limit, offset, maxResultCount, searchers, nil)
 	if err != nil {
 		return nil, err
@@ -314,7 +314,7 @@ func (db *DB) popularSearch(ctx context.Context, searchQuery string, limit, offs
 // addPackageDataToSearchResults adds package information to SearchResults that is not stored
 // in the search_documents table.
 func (db *DB) addPackageDataToSearchResults(ctx context.Context, results []*internal.SearchResult) (err error) {
-	defer derrors.Wrap(&err, "DB.addPackageDataToSearchResults(results)")
+	defer derrors.WrapStack(&err, "DB.addPackageDataToSearchResults(results)")
 	if len(results) == 0 {
 		return nil
 	}
@@ -453,7 +453,7 @@ var upsertSearchStatement = fmt.Sprintf(`
 // upsertSearchDocuments adds search information for mod ot the search_documents table.
 // It assumes that all non-redistributable data has been removed from mod.
 func upsertSearchDocuments(ctx context.Context, ddb *database.DB, mod *internal.Module) (err error) {
-	defer derrors.Wrap(&err, "upsertSearchDocuments(ctx, %q)", mod.ModulePath)
+	defer derrors.WrapStack(&err, "upsertSearchDocuments(ctx, %q)", mod.ModulePath)
 	ctx, span := trace.StartSpan(ctx, "UpsertSearchDocuments")
 	defer span.End()
 	for _, pkg := range mod.Packages() {
@@ -493,7 +493,7 @@ type UpsertSearchDocumentArgs struct {
 // The given module should have already been validated via a call to
 // validateModule.
 func UpsertSearchDocument(ctx context.Context, ddb *database.DB, args UpsertSearchDocumentArgs) (err error) {
-	defer derrors.Wrap(&err, "DB.UpsertSearchDocument(ctx, ddb, %q, %q)", args.PackagePath, args.ModulePath)
+	defer derrors.WrapStack(&err, "DB.UpsertSearchDocument(ctx, ddb, %q, %q)", args.PackagePath, args.ModulePath)
 
 	// Only summarize the README if the package and module have the same path.
 	if args.PackagePath != args.ModulePath {
@@ -509,7 +509,7 @@ func UpsertSearchDocument(ctx context.Context, ddb *database.DB, args UpsertSear
 // GetPackagesForSearchDocumentUpsert fetches search information for packages in search_documents
 // whose update time is before the given time.
 func (db *DB) GetPackagesForSearchDocumentUpsert(ctx context.Context, before time.Time, limit int) (argsList []UpsertSearchDocumentArgs, err error) {
-	defer derrors.Wrap(&err, "GetPackagesForSearchDocumentUpsert(ctx, %s, %d)", before, limit)
+	defer derrors.WrapStack(&err, "GetPackagesForSearchDocumentUpsert(ctx, %s, %d)", before, limit)
 
 	query := `
 		SELECT
@@ -564,7 +564,7 @@ func (db *DB) GetPackagesForSearchDocumentUpsert(ctx context.Context, before tim
 //
 // UpdateSearchDocumentsImportedByCount returns the number of rows updated.
 func (db *DB) UpdateSearchDocumentsImportedByCount(ctx context.Context) (nUpdated int64, err error) {
-	defer derrors.Wrap(&err, "UpdateSearchDocumentsImportedByCount(ctx)")
+	defer derrors.WrapStack(&err, "UpdateSearchDocumentsImportedByCount(ctx)")
 
 	searchPackages, err := db.getSearchPackages(ctx)
 	if err != nil {
@@ -589,7 +589,7 @@ func (db *DB) UpdateSearchDocumentsImportedByCount(ctx context.Context) (nUpdate
 
 // getSearchPackages returns the set of package paths that are in the search_documents table.
 func (db *DB) getSearchPackages(ctx context.Context) (set map[string]bool, err error) {
-	defer derrors.Wrap(&err, "DB.getSearchPackages(ctx)")
+	defer derrors.WrapStack(&err, "DB.getSearchPackages(ctx)")
 
 	set = map[string]bool{}
 	err = db.db.RunQuery(ctx, `SELECT package_path FROM search_documents`, func(rows *sql.Rows) error {
@@ -607,7 +607,7 @@ func (db *DB) getSearchPackages(ctx context.Context) (set map[string]bool, err e
 }
 
 func (db *DB) computeImportedByCounts(ctx context.Context, searchDocsPackages map[string]bool) (counts map[string]int, err error) {
-	defer derrors.Wrap(&err, "db.computeImportedByCounts(ctx)")
+	defer derrors.WrapStack(&err, "db.computeImportedByCounts(ctx)")
 
 	counts = map[string]int{}
 	// Get all (from_path, to_path) pairs, deduped.
@@ -648,7 +648,7 @@ func (db *DB) computeImportedByCounts(ctx context.Context, searchDocsPackages ma
 }
 
 func insertImportedByCounts(ctx context.Context, db *database.DB, counts map[string]int) (err error) {
-	defer derrors.Wrap(&err, "insertImportedByCounts(ctx, db, counts)")
+	defer derrors.WrapStack(&err, "insertImportedByCounts(ctx, db, counts)")
 
 	const createTableQuery = `
 		CREATE TEMPORARY TABLE computed_imported_by_counts (
@@ -668,7 +668,7 @@ func insertImportedByCounts(ctx context.Context, db *database.DB, counts map[str
 }
 
 func compareImportedByCounts(ctx context.Context, db *database.DB) (err error) {
-	defer derrors.Wrap(&err, "compareImportedByCounts(ctx, tx)")
+	defer derrors.WrapStack(&err, "compareImportedByCounts(ctx, tx)")
 
 	query := `
 		SELECT
@@ -837,7 +837,7 @@ func isInternalPackage(path string) bool {
 // the given module path whose version is older than the given version.
 // It is used when fetching a module with an alternative path. See internal/worker/fetch.go:fetchAndUpdateState.
 func (db *DB) DeleteOlderVersionFromSearchDocuments(ctx context.Context, modulePath, resolvedVersion string) (err error) {
-	defer derrors.Wrap(&err, "DeleteOlderVersionFromSearchDocuments(ctx, %q, %q)", modulePath, resolvedVersion)
+	defer derrors.WrapStack(&err, "DeleteOlderVersionFromSearchDocuments(ctx, %q, %q)", modulePath, resolvedVersion)
 
 	return db.db.Transact(ctx, sql.LevelDefault, func(tx *database.DB) error {
 		// Collect all package paths in search_documents with the given module path
@@ -879,7 +879,7 @@ func (db *DB) DeleteOlderVersionFromSearchDocuments(ctx context.Context, moduleP
 // UpsertSearchDocumentWithImportedByCount is the same as UpsertSearchDocument,
 // except it also updates the imported by count. This is only used for testing.
 func (db *DB) UpsertSearchDocumentWithImportedByCount(ctx context.Context, args UpsertSearchDocumentArgs, importedByCount int) (err error) {
-	defer derrors.Wrap(&err, "DB.UpsertSearchDocumentWithImportedByCount(ctx, ddb, %q, %q)", args.PackagePath, args.ModulePath)
+	defer derrors.WrapStack(&err, "DB.UpsertSearchDocumentWithImportedByCount(ctx, ddb, %q, %q)", args.PackagePath, args.ModulePath)
 
 	if err := UpsertSearchDocument(ctx, db.db, args); err != nil {
 		return err

@@ -37,10 +37,10 @@ import (
 func (db *DB) InsertModule(ctx context.Context, m *internal.Module) (isLatest bool, err error) {
 	defer func() {
 		if m == nil {
-			derrors.Wrap(&err, "DB.InsertModule(ctx, nil)")
+			derrors.WrapStack(&err, "DB.InsertModule(ctx, nil)")
 			return
 		}
-		derrors.Wrap(&err, "DB.InsertModule(ctx, Module(%q, %q))", m.ModulePath, m.Version)
+		derrors.WrapStack(&err, "DB.InsertModule(ctx, Module(%q, %q))", m.ModulePath, m.Version)
 	}()
 
 	if err := validateModule(m); err != nil {
@@ -75,7 +75,7 @@ func (db *DB) InsertModule(ctx context.Context, m *internal.Module) (isLatest bo
 // A derrors.InvalidArgument error will be returned if the given module and
 // licenses are invalid.
 func (db *DB) saveModule(ctx context.Context, m *internal.Module) (isLatest bool, err error) {
-	defer derrors.Wrap(&err, "saveModule(ctx, tx, Module(%q, %q))", m.ModulePath, m.Version)
+	defer derrors.WrapStack(&err, "saveModule(ctx, tx, Module(%q, %q))", m.ModulePath, m.Version)
 	ctx, span := trace.StartSpan(ctx, "saveModule")
 	defer span.End()
 
@@ -165,7 +165,7 @@ func (db *DB) saveModule(ctx context.Context, m *internal.Module) (isLatest bool
 func insertModule(ctx context.Context, db *database.DB, m *internal.Module) (_ int, err error) {
 	ctx, span := trace.StartSpan(ctx, "insertModule")
 	defer span.End()
-	defer derrors.Wrap(&err, "insertModule(ctx, %q, %q)", m.ModulePath, m.Version)
+	defer derrors.WrapStack(&err, "insertModule(ctx, %q, %q)", m.ModulePath, m.Version)
 	sourceInfoJSON, err := json.Marshal(m.SourceInfo)
 	if err != nil {
 		return 0, err
@@ -216,7 +216,7 @@ func insertModule(ctx context.Context, db *database.DB, m *internal.Module) (_ i
 func insertLicenses(ctx context.Context, db *database.DB, m *internal.Module, moduleID int) (err error) {
 	ctx, span := trace.StartSpan(ctx, "insertLicenses")
 	defer span.End()
-	defer derrors.Wrap(&err, "insertLicenses(ctx, %q, %q)", m.ModulePath, m.Version)
+	defer derrors.WrapStack(&err, "insertLicenses(ctx, %q, %q)", m.ModulePath, m.Version)
 	var licenseValues []interface{}
 	for _, l := range m.Licenses {
 		var covJSON []byte
@@ -254,7 +254,7 @@ func insertLicenses(ctx context.Context, db *database.DB, m *internal.Module, mo
 func insertImportsUnique(ctx context.Context, tx *database.DB, m *internal.Module) (err error) {
 	ctx, span := trace.StartSpan(ctx, "insertImportsUnique")
 	defer span.End()
-	defer derrors.Wrap(&err, "insertImportsUnique(%q, %q)", m.ModulePath, m.Version)
+	defer derrors.WrapStack(&err, "insertImportsUnique(%q, %q)", m.ModulePath, m.Version)
 
 	// Remove the previous rows for this module. We'll replace them with
 	// new ones below.
@@ -282,7 +282,7 @@ func insertImportsUnique(ctx context.Context, tx *database.DB, m *internal.Modul
 // It can be assume that at least one unit is a package, and there are one or
 // more units in the module.
 func (pdb *DB) insertUnits(ctx context.Context, db *database.DB, m *internal.Module, moduleID int) (err error) {
-	defer derrors.Wrap(&err, "insertUnits(ctx, tx, %q, %q)", m.ModulePath, m.Version)
+	defer derrors.WrapStack(&err, "insertUnits(ctx, tx, %q, %q)", m.ModulePath, m.Version)
 	ctx, span := trace.StartSpan(ctx, "insertUnits")
 	defer span.End()
 
@@ -474,7 +474,7 @@ func insertDoc(ctx context.Context, db *database.DB,
 	paths []string,
 	pathToUnitID map[string]int,
 	pathToDoc map[string][]*internal.Documentation) (err error) {
-	defer derrors.Wrap(&err, "insertDoc")
+	defer derrors.WrapStack(&err, "insertDoc")
 
 	// Remove old rows before inserting new ones, to get rid of obsolete rows.
 	// This is necessary because of the change to use all/all to represent documentation
@@ -507,7 +507,7 @@ func insertImports(ctx context.Context, db *database.DB,
 	paths []string,
 	pathToUnitID map[string]int,
 	pathToImports map[string][]string) (err error) {
-	defer derrors.Wrap(&err, "insertImports")
+	defer derrors.WrapStack(&err, "insertImports")
 
 	var importValues []interface{}
 	for _, pkgPath := range paths {
@@ -528,7 +528,7 @@ func insertReadmes(ctx context.Context, db *database.DB,
 	paths []string,
 	pathToUnitID map[string]int,
 	pathToReadme map[string]*internal.Readme) (err error) {
-	defer derrors.Wrap(&err, "insertReadmes")
+	defer derrors.WrapStack(&err, "insertReadmes")
 
 	var readmeValues []interface{}
 	for _, path := range paths {
@@ -552,7 +552,7 @@ func insertReadmes(ctx context.Context, db *database.DB,
 
 // lock obtains an exclusive, transaction-scoped advisory lock on modulePath.
 func lock(ctx context.Context, tx *database.DB, modulePath string) (err error) {
-	defer derrors.Wrap(&err, "lock(%s)", modulePath)
+	defer derrors.WrapStack(&err, "lock(%s)", modulePath)
 	if !tx.InTransaction() {
 		return errors.New("not in a transaction")
 	}
@@ -589,7 +589,7 @@ func isIncompatible(version string) bool {
 
 // isLatestVersion reports whether version is the latest version of the module.
 func isLatestVersion(ctx context.Context, ddb *database.DB, modulePath, resolvedVersion string) (_ bool, err error) {
-	defer derrors.Wrap(&err, "isLatestVersion(ctx, tx, %q)", modulePath)
+	defer derrors.WrapStack(&err, "isLatestVersion(ctx, tx, %q)", modulePath)
 
 	q, args, err := orderByLatest(squirrel.Select("m.version").
 		From("modules m").
@@ -620,7 +620,7 @@ func validateModule(m *internal.Module) (err error) {
 		if err != nil {
 			err = fmt.Errorf("%v: %w", err, derrors.DBModuleInsertInvalid)
 			if m != nil {
-				derrors.Wrap(&err, "validateModule(%q, %q)", m.ModulePath, m.Version)
+				derrors.WrapStack(&err, "validateModule(%q, %q)", m.ModulePath, m.Version)
 			}
 		}
 	}()
@@ -656,7 +656,7 @@ func validateModule(m *internal.Module) (err error) {
 // m.ModulePath and m.Version in the database. It returns an error if there
 // are licenses in the licenses table that are not present in m.Licenses.
 func (db *DB) compareLicenses(ctx context.Context, moduleID int, lics []*licenses.License) (err error) {
-	defer derrors.Wrap(&err, "compareLicenses(ctx, %d)", moduleID)
+	defer derrors.WrapStack(&err, "compareLicenses(ctx, %d)", moduleID)
 	dbLicenses, err := db.getModuleLicenses(ctx, moduleID)
 	if err != nil {
 		return err
@@ -678,7 +678,7 @@ func (db *DB) compareLicenses(ctx context.Context, moduleID int, lics []*license
 // m.ModulePath and m.Version in the database. It returns an error if there
 // are paths in the paths table that are not present in m.Directories.
 func (db *DB) comparePaths(ctx context.Context, m *internal.Module) (err error) {
-	defer derrors.Wrap(&err, "comparePaths(ctx, %q, %q)", m.ModulePath, m.Version)
+	defer derrors.WrapStack(&err, "comparePaths(ctx, %q, %q)", m.ModulePath, m.Version)
 	dbPaths, err := db.getPathsInModule(ctx, m.ModulePath, m.Version)
 	if err != nil {
 		return err
@@ -697,7 +697,7 @@ func (db *DB) comparePaths(ctx context.Context, m *internal.Module) (err error) 
 
 // DeleteModule deletes a Version from the database.
 func (db *DB) DeleteModule(ctx context.Context, modulePath, resolvedVersion string) (err error) {
-	defer derrors.Wrap(&err, "DeleteModule(ctx, db, %q, %q)", modulePath, resolvedVersion)
+	defer derrors.WrapStack(&err, "DeleteModule(ctx, db, %q, %q)", modulePath, resolvedVersion)
 	return db.db.Transact(ctx, sql.LevelDefault, func(tx *database.DB) error {
 		// We only need to delete from the modules table. Thanks to ON DELETE
 		// CASCADE constraints, that will trigger deletions from all other tables.

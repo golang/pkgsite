@@ -21,7 +21,7 @@ import (
 // GetNestedModules returns the latest major version of all nested modules
 // given a modulePath path prefix with or without major version.
 func (db *DB) GetNestedModules(ctx context.Context, modulePath string) (_ []*internal.ModuleInfo, err error) {
-	defer derrors.Wrap(&err, "GetNestedModules(ctx, %v)", modulePath)
+	defer derrors.WrapStack(&err, "GetNestedModules(ctx, %v)", modulePath)
 	defer middleware.ElapsedStat(ctx, "GetNestedModules")()
 
 	query := `
@@ -74,7 +74,7 @@ func (db *DB) GetNestedModules(ctx context.Context, modulePath string) (_ []*int
 //
 // Instead of supporting pagination, this query runs with a limit.
 func (db *DB) GetImportedBy(ctx context.Context, pkgPath, modulePath string, limit int) (paths []string, err error) {
-	defer derrors.Wrap(&err, "GetImportedBy(ctx, %q, %q)", pkgPath, modulePath)
+	defer derrors.WrapStack(&err, "GetImportedBy(ctx, %q, %q)", pkgPath, modulePath)
 	defer middleware.ElapsedStat(ctx, "GetImportedBy")()
 
 	if pkgPath == "" {
@@ -110,7 +110,7 @@ func (db *DB) GetImportedBy(ctx context.Context, pkgPath, modulePath string, lim
 
 // GetImportedByCount returns the number of packages that import pkgPath.
 func (db *DB) GetImportedByCount(ctx context.Context, pkgPath, modulePath string) (_ int, err error) {
-	defer derrors.Wrap(&err, "GetImportedByCount(ctx, %q, %q)", pkgPath, modulePath)
+	defer derrors.WrapStack(&err, "GetImportedByCount(ctx, %q, %q)", pkgPath, modulePath)
 	defer middleware.ElapsedStat(ctx, "GetImportedByCount")()
 
 	if pkgPath == "" {
@@ -138,7 +138,7 @@ func (db *DB) GetImportedByCount(ctx context.Context, pkgPath, modulePath string
 // GetModuleInfo fetches a module version from the database with the primary key
 // (module_path, version).
 func (db *DB) GetModuleInfo(ctx context.Context, modulePath, resolvedVersion string) (_ *internal.ModuleInfo, err error) {
-	defer derrors.Wrap(&err, "GetModuleInfo(ctx, %q, %q)", modulePath, resolvedVersion)
+	defer derrors.WrapStack(&err, "GetModuleInfo(ctx, %q, %q)", modulePath, resolvedVersion)
 
 	query := `
 		SELECT

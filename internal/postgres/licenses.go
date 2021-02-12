@@ -23,7 +23,7 @@ import (
 )
 
 func (db *DB) getLicenses(ctx context.Context, fullPath, modulePath string, unitID int) (_ []*licenses.License, err error) {
-	defer derrors.Wrap(&err, "getLicenses(ctx, %d)", unitID)
+	defer derrors.WrapStack(&err, "getLicenses(ctx, %d)", unitID)
 	defer middleware.ElapsedStat(ctx, "getLicenses")()
 
 	query := `
@@ -83,7 +83,7 @@ func (db *DB) getLicenses(ctx context.Context, fullPath, modulePath string, unit
 // version. These are the top-level licenses in the module zip file.
 // It returns an InvalidArgument error if the module path or version is invalid.
 func (db *DB) getModuleLicenses(ctx context.Context, moduleID int) (_ []*licenses.License, err error) {
-	defer derrors.Wrap(&err, "getModuleLicenses(ctx, %d)", moduleID)
+	defer derrors.WrapStack(&err, "getModuleLicenses(ctx, %d)", moduleID)
 
 	query := `
 	SELECT
@@ -158,7 +158,7 @@ func mustHaveColumns(rows *sql.Rows, wantColumns ...string) {
 // zipLicenseMetadata constructs licenses.Metadata from the given license types
 // and paths, by zipping and then sorting.
 func zipLicenseMetadata(licenseTypes []string, licensePaths []string) (_ []*licenses.Metadata, err error) {
-	defer derrors.Wrap(&err, "zipLicenseMetadata(%v, %v)", licenseTypes, licensePaths)
+	defer derrors.WrapStack(&err, "zipLicenseMetadata(%v, %v)", licenseTypes, licensePaths)
 
 	if len(licenseTypes) != len(licensePaths) {
 		return nil, fmt.Errorf("BUG: got %d license types and %d license paths", len(licenseTypes), len(licensePaths))

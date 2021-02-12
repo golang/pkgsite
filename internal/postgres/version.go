@@ -21,7 +21,7 @@ import (
 // descending semver order if any exist. If none, it returns the 10 most
 // recent from a list of pseudo-versions sorted in descending semver order.
 func (db *DB) GetVersionsForPath(ctx context.Context, path string) (_ []*internal.ModuleInfo, err error) {
-	defer derrors.Wrap(&err, "GetVersionsForPath(ctx, %q)", path)
+	defer derrors.WrapStack(&err, "GetVersionsForPath(ctx, %q)", path)
 
 	versions, err := getPathVersions(ctx, db, path, version.TypeRelease, version.TypePrerelease)
 	if err != nil {
@@ -41,7 +41,7 @@ func (db *DB) GetVersionsForPath(ctx context.Context, path string) (_ []*interna
 // order. The version types included in the list are specified by a list of
 // VersionTypes.
 func getPathVersions(ctx context.Context, db *DB, path string, versionTypes ...version.Type) (_ []*internal.ModuleInfo, err error) {
-	defer derrors.Wrap(&err, "getPathVersions(ctx, db, %q, %v)", path, versionTypes)
+	defer derrors.WrapStack(&err, "getPathVersions(ctx, db, %q, %v)", path, versionTypes)
 
 	baseQuery := `
 	SELECT
@@ -107,7 +107,7 @@ func versionTypeExpr(vts []version.Type) string {
 // GetLatestInfo returns the latest information about the unit in the module.
 // See internal.LatestInfo for documentation about the returned values.
 func (db *DB) GetLatestInfo(ctx context.Context, unitPath, modulePath string) (latest internal.LatestInfo, err error) {
-	defer derrors.Wrap(&err, "DB.GetLatestInfo(ctx, %q, %q)", unitPath, modulePath)
+	defer derrors.WrapStack(&err, "DB.GetLatestInfo(ctx, %q, %q)", unitPath, modulePath)
 
 	group, gctx := errgroup.WithContext(ctx)
 
@@ -143,7 +143,7 @@ func (db *DB) GetLatestInfo(ctx context.Context, unitPath, modulePath string) (l
 // if no later module path was found. It also returns the full package path at the
 // latest module version if it exists. If not, it returns the module path.
 func (db *DB) getLatestMajorVersion(ctx context.Context, fullPath, modulePath string) (_ string, _ string, err error) {
-	defer derrors.Wrap(&err, "DB.getLatestMajorVersion(ctx, %q, %q)", fullPath, modulePath)
+	defer derrors.WrapStack(&err, "DB.getLatestMajorVersion(ctx, %q, %q)", fullPath, modulePath)
 
 	var (
 		modID   int
@@ -183,7 +183,7 @@ func (db *DB) getLatestMajorVersion(ctx context.Context, fullPath, modulePath st
 
 // getLatestMinorModuleVersion reports whether unitPath exists at the latest version of modulePath.
 func (db *DB) getLatestMinorModuleVersionInfo(ctx context.Context, unitPath, modulePath string) (unitExists bool, err error) {
-	defer derrors.Wrap(&err, "DB.getLatestMinorVersion(ctx, %q, %q)", unitPath, modulePath)
+	defer derrors.WrapStack(&err, "DB.getLatestMinorVersion(ctx, %q, %q)", unitPath, modulePath)
 
 	// Find the latest version of the module path.
 	var modID int

@@ -18,7 +18,7 @@ import (
 
 // UpsertVersionMap inserts a version_map entry into the database.
 func (db *DB) UpsertVersionMap(ctx context.Context, vm *internal.VersionMap) (err error) {
-	defer derrors.Wrap(&err, "DB.UpsertVersionMap(ctx, tx, %q, %q, %q)",
+	defer derrors.WrapStack(&err, "DB.UpsertVersionMap(ctx, tx, %q, %q, %q)",
 		vm.ModulePath, vm.RequestedVersion, vm.ResolvedVersion)
 
 	var moduleID int
@@ -68,7 +68,7 @@ func (db *DB) UpsertVersionMap(ctx context.Context, vm *internal.VersionMap) (er
 // GetVersionMap fetches a version_map entry corresponding to the given
 // modulePath and requestedVersion.
 func (db *DB) GetVersionMap(ctx context.Context, modulePath, requestedVersion string) (_ *internal.VersionMap, err error) {
-	defer derrors.Wrap(&err, "DB.GetVersionMap(ctx, tx, %q, %q)", modulePath, requestedVersion)
+	defer derrors.WrapStack(&err, "DB.GetVersionMap(ctx, tx, %q, %q)", modulePath, requestedVersion)
 	if modulePath == internal.UnknownModulePath {
 		return nil, fmt.Errorf("modulePath must be specified: %w", derrors.InvalidArgument)
 	}
@@ -97,7 +97,7 @@ func (db *DB) GetVersionMap(ctx context.Context, modulePath, requestedVersion st
 // GetVersionMaps returns all of the version maps for the provided
 // path and requested version if they are present.
 func (db *DB) GetVersionMaps(ctx context.Context, paths []string, requestedVersion string) (_ []*internal.VersionMap, err error) {
-	defer derrors.Wrap(&err, "DB.GetVersionMapsWith4xxStatus(ctx, %v, %q)", paths, requestedVersion)
+	defer derrors.WrapStack(&err, "DB.GetVersionMapsWith4xxStatus(ctx, %v, %q)", paths, requestedVersion)
 
 	var result []*internal.VersionMap
 	versionMaps := map[string]*internal.VersionMap{}

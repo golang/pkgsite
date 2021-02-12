@@ -20,7 +20,7 @@ import (
 // UpdateModuleVersionStatesForReprocessing marks modules to be reprocessed
 // that were processed prior to the provided appVersion.
 func (db *DB) UpdateModuleVersionStatesForReprocessing(ctx context.Context, appVersion string) (err error) {
-	defer derrors.Wrap(&err, "UpdateModuleVersionStatesForReprocessing(ctx, %q)", appVersion)
+	defer derrors.WrapStack(&err, "UpdateModuleVersionStatesForReprocessing(ctx, %q)", appVersion)
 
 	for _, status := range []int{
 		http.StatusOK,
@@ -107,7 +107,7 @@ var largeModulesLimit = config.GetEnvInt("GO_DISCOVERY_LARGE_MODULES_LIMIT", 100
 // reduce database load and timeouts. We also want to leave alternative modules
 // towards the end, since these will incur unnecessary deletes otherwise.
 func (db *DB) GetNextModulesToFetch(ctx context.Context, limit int) (_ []*internal.ModuleVersionState, err error) {
-	defer derrors.Wrap(&err, "GetNextModulesToFetch(ctx, %d)", limit)
+	defer derrors.WrapStack(&err, "GetNextModulesToFetch(ctx, %d)", limit)
 	queryFmt := nextModulesToProcessQuery
 
 	var mvs []*internal.ModuleVersionState

@@ -30,7 +30,7 @@ import (
 // 2. Prefer newer module versions to older, and release to pre-release;
 // 3. In the unlikely event of two paths at the same version, pick the longer module path.
 func (db *DB) GetUnitMeta(ctx context.Context, fullPath, requestedModulePath, requestedVersion string) (_ *internal.UnitMeta, err error) {
-	defer derrors.Wrap(&err, "DB.GetUnitMeta(ctx, %q, %q, %q)", fullPath, requestedModulePath, requestedVersion)
+	defer derrors.WrapStack(&err, "DB.GetUnitMeta(ctx, %q, %q, %q)", fullPath, requestedModulePath, requestedVersion)
 	defer middleware.ElapsedStat(ctx, "GetUnitMeta")()
 
 	var (
@@ -164,7 +164,7 @@ const orderByLatestStmt = `
 // GetUnit returns a unit from the database, along with all of the data
 // associated with that unit.
 func (db *DB) GetUnit(ctx context.Context, um *internal.UnitMeta, fields internal.FieldSet) (_ *internal.Unit, err error) {
-	defer derrors.Wrap(&err, "GetUnit(ctx, %q, %q, %q)", um.Path, um.ModulePath, um.Version)
+	defer derrors.WrapStack(&err, "GetUnit(ctx, %q, %q, %q)", um.Path, um.ModulePath, um.Version)
 
 	u := &internal.Unit{UnitMeta: *um}
 	if fields&internal.WithMain != 0 {
@@ -209,7 +209,7 @@ func (db *DB) GetUnit(ctx context.Context, um *internal.UnitMeta, fields interna
 }
 
 func (db *DB) getUnitID(ctx context.Context, fullPath, modulePath, resolvedVersion string) (_ int, err error) {
-	defer derrors.Wrap(&err, "getPathID(ctx, %q, %q, %q)", fullPath, modulePath, resolvedVersion)
+	defer derrors.WrapStack(&err, "getPathID(ctx, %q, %q, %q)", fullPath, modulePath, resolvedVersion)
 	defer middleware.ElapsedStat(ctx, "getPathID")()
 	var unitID int
 	query := `
@@ -234,7 +234,7 @@ func (db *DB) getUnitID(ctx context.Context, fullPath, modulePath, resolvedVersi
 
 // getImports returns the imports corresponding to unitID.
 func (db *DB) getImports(ctx context.Context, unitID int) (_ []string, err error) {
-	defer derrors.Wrap(&err, "getImports(ctx, %d)", unitID)
+	defer derrors.WrapStack(&err, "getImports(ctx, %d)", unitID)
 	defer middleware.ElapsedStat(ctx, "getImports")()
 	var imports []string
 	collect := func(rows *sql.Rows) error {
@@ -257,7 +257,7 @@ func (db *DB) getImports(ctx context.Context, unitID int) (_ []string, err error
 // getPackagesInUnit returns all of the packages in a unit from a
 // module version, including the package that lives at fullPath, if present.
 func (db *DB) getPackagesInUnit(ctx context.Context, fullPath, modulePath, resolvedVersion string) (_ []*internal.PackageMeta, err error) {
-	defer derrors.Wrap(&err, "DB.getPackagesInUnit(ctx, %q, %q, %q)", fullPath, modulePath, resolvedVersion)
+	defer derrors.WrapStack(&err, "DB.getPackagesInUnit(ctx, %q, %q, %q)", fullPath, modulePath, resolvedVersion)
 	defer middleware.ElapsedStat(ctx, "getPackagesInUnit")()
 
 	query := `
@@ -342,7 +342,7 @@ func (db *DB) getPackagesInUnit(ctx context.Context, fullPath, modulePath, resol
 }
 
 func (db *DB) getUnitWithAllFields(ctx context.Context, um *internal.UnitMeta) (_ *internal.Unit, err error) {
-	defer derrors.Wrap(&err, "getUnitWithAllFields(ctx, %q, %q, %q)", um.Path, um.ModulePath, um.Version)
+	defer derrors.WrapStack(&err, "getUnitWithAllFields(ctx, %q, %q, %q)", um.Path, um.ModulePath, um.Version)
 	defer middleware.ElapsedStat(ctx, "getUnitWithAllFields")()
 
 	// Get README and import counts.
@@ -444,7 +444,7 @@ type dbPath struct {
 }
 
 func (db *DB) getPathsInModule(ctx context.Context, modulePath, resolvedVersion string) (_ []*dbPath, err error) {
-	defer derrors.Wrap(&err, "DB.getPathsInModule(ctx, %q, %q)", modulePath, resolvedVersion)
+	defer derrors.WrapStack(&err, "DB.getPathsInModule(ctx, %q, %q)", modulePath, resolvedVersion)
 	query := `
 	SELECT
 		u.id,
@@ -487,7 +487,7 @@ func (db *DB) getPathsInModule(ctx context.Context, modulePath, resolvedVersion 
 
 // GetModuleReadme returns the README corresponding to the modulePath and version.
 func (db *DB) GetModuleReadme(ctx context.Context, modulePath, resolvedVersion string) (_ *internal.Readme, err error) {
-	defer derrors.Wrap(&err, "GetModuleReadme(ctx, %q, %q)", modulePath, resolvedVersion)
+	defer derrors.WrapStack(&err, "GetModuleReadme(ctx, %q, %q)", modulePath, resolvedVersion)
 	var readme internal.Readme
 	err = db.db.QueryRow(ctx, `
 		SELECT file_path, contents

@@ -19,7 +19,7 @@ import (
 // We are only interested in actual standard library packages: not commands, which we happen to include
 // in the stdlib module, and not directories (paths that do not contain a package).
 func (db *DB) GetStdlibPathsWithSuffix(ctx context.Context, suffix string) (paths []string, err error) {
-	defer derrors.Wrap(&err, "DB.GetStdlibPaths(ctx, %q)", suffix)
+	defer derrors.WrapStack(&err, "DB.GetStdlibPaths(ctx, %q)", suffix)
 
 	q := `
 		SELECT p.path
