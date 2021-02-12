@@ -195,6 +195,10 @@ func (db *DB) transactWithRetry(ctx context.Context, opts *sql.TxOptions, txFunc
 			db.mu.Unlock()
 			continue
 		}
+		if err != nil && strings.Contains(err.Error(), serializationFailureCode) {
+			return fmt.Errorf("error text has %q but not recognized as serialization failure: type %T, err %v",
+				serializationFailureCode, err, err)
+		}
 		if i > 0 {
 			log.Debugf(ctx, "retried serializable transaction %d time(s)", i)
 		}
