@@ -110,6 +110,7 @@ func main() {
 			Addr: cfg.RedisHAHost + ":" + cfg.RedisHAPort,
 		})
 	}
+	rc := cmdconfig.ReportingClient(ctx, cfg)
 	server, err := frontend.NewServer(frontend.ServerConfig{
 		DataSourceGetter:     dsg,
 		Queue:                fetchQueue,
@@ -121,6 +122,7 @@ func main() {
 		AppVersionLabel:      cfg.AppVersionLabel(),
 		GoogleTagManagerID:   cfg.GoogleTagManagerID,
 		ServeStats:           cfg.ServeStats,
+		ReportingClient:      rc,
 	})
 	if err != nil {
 		log.Fatalf(ctx, "frontend.NewServer: %v", err)
@@ -162,7 +164,6 @@ func main() {
 	if err != nil {
 		log.Fatal(ctx, err)
 	}
-	rc := cmdconfig.ReportingClient(ctx, cfg)
 	log.Infof(ctx, "cmd/frontend: initializing cmdconfig.Experimenter")
 	experimenter := cmdconfig.Experimenter(ctx, cfg, expg, rc)
 	log.Infof(ctx, "cmd/frontend: initialized cmdconfig.Experimenter")

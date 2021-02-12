@@ -16,10 +16,12 @@ import (
 	"sync"
 	"time"
 
+	"cloud.google.com/go/errorreporting"
 	"github.com/go-redis/redis/v8"
 	"github.com/google/safehtml"
 	"github.com/google/safehtml/template"
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/config"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/godoc/dochtml"
@@ -46,6 +48,7 @@ type Server struct {
 	appVersionLabel      string
 	googleTagManagerID   string
 	serveStats           bool
+	reportingClient      *errorreporting.Client
 
 	mu        sync.Mutex // Protects all fields below
 	templates map[string]*template.Template
@@ -65,6 +68,7 @@ type ServerConfig struct {
 	AppVersionLabel      string
 	GoogleTagManagerID   string
 	ServeStats           bool
+	ReportingClient      *errorreporting.Client
 }
 
 // NewServer creates a new Server for the given database and template directory.
@@ -90,6 +94,7 @@ func NewServer(scfg ServerConfig) (_ *Server, err error) {
 		appVersionLabel:      scfg.AppVersionLabel,
 		googleTagManagerID:   scfg.GoogleTagManagerID,
 		serveStats:           scfg.ServeStats,
+		reportingClient:      scfg.ReportingClient,
 	}
 	errorPageBytes, err := s.renderErrorPage(context.Background(), http.StatusInternalServerError, "error.tmpl", nil)
 	if err != nil {
@@ -353,11 +358,32 @@ func (s *Server) serveError(w http.ResponseWriter, r *http.Request, err error) {
 	if serr.responseText == "" {
 		serr.responseText = http.StatusText(serr.status)
 	}
+	s.reportError(ctx, err, w, r)
 	if r.Method == http.MethodPost {
 		http.Error(w, serr.responseText, serr.status)
 		return
 	}
 	s.serveErrorPage(w, r, serr.status, serr.epage)
+}
+
+// reportError sends the error to the GCP Error Reporting service.
+func (s *Server) reportError(ctx context.Context, err error, w http.ResponseWriter, r *http.Request) {
+	if s.reportingClient == nil {
+		return
+	}
+	// Extract the stack trace from the error if there is one.
+	var stack []byte
+	if serr := (*derrors.StackError)(nil); errors.As(err, &serr) {
+		stack = serr.Stack
+	}
+	s.reportingClient.Report(errorreporting.Entry{
+		Error: err,
+		Req:   r,
+		Stack: stack,
+	})
+	log.Debugf(ctx, "reported error %v with stack size %d", err, len(stack))
+	// Bypass the error-reporting middleware.
+	w.Header().Set(config.BypassErrorReportingHeader, "true")
 }
 
 func (s *Server) serveErrorPage(w http.ResponseWriter, r *http.Request, status int, page *errorPage) {
