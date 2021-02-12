@@ -9,6 +9,7 @@ import (
 	"net/http"
 
 	"cloud.google.com/go/errorreporting"
+	"golang.org/x/pkgsite/internal/config"
 	"golang.org/x/pkgsite/internal/derrors"
 )
 
@@ -17,8 +18,12 @@ import (
 func ErrorReporting(report func(errorreporting.Entry)) Middleware {
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			w2 := &responseWriter{ResponseWriter: w}
+			w2 := &erResponseWriter{ResponseWriter: w}
 			h.ServeHTTP(w2, r)
+			// Don't report if the bypass header was set.
+			if w2.bypass {
+				return
+			}
 			// Don't report success or client errors.
 			if w2.status < 500 {
 				return
@@ -37,4 +42,21 @@ func ErrorReporting(report func(errorreporting.Entry)) Middleware {
 			})
 		})
 	}
+}
+
+type erResponseWriter struct {
+	http.ResponseWriter
+
+	bypass bool
+	status int
+}
+
+func (rw *erResponseWriter) WriteHeader(code int) {
+	rw.status = code
+	if rw.ResponseWriter.Header().Get(config.BypassErrorReportingHeader) == "true" {
+		rw.bypass = true
+		// Don't send this header to clients.
+		rw.ResponseWriter.Header().Del(config.BypassErrorReportingHeader)
+	}
+	rw.ResponseWriter.WriteHeader(code)
 }

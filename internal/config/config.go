@@ -102,6 +102,10 @@ const (
 	// BypassCacheAuthHeader is the header key used by the frontend server to
 	// know that a request can bypass cache.
 	BypassCacheAuthHeader = "X-Go-Discovery-Auth-Bypass-Cache"
+
+	// BypassErrorReportingHeader is the header key used by the ErrorReporting middleware
+	// to avoid calling the errorreporting service.
+	BypassErrorReportingHeader = "X-Go-Discovery-Bypass-Error-Reporting"
 )
 
 // Config holds shared configuration values used in instantiating our server
