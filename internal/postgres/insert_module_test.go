@@ -46,6 +46,14 @@ func TestInsertModule(t *testing.T) {
 			module: sample.Module(sample.ModulePath, sample.VersionString, "internal/foo"),
 		},
 		{
+			name:   "valid test for prerelease version",
+			module: sample.Module(sample.ModulePath, "v1.0.0-beta", "internal/foo"),
+		},
+		{
+			name:   "valid test for pseudoversion version",
+			module: sample.Module(sample.ModulePath, "v0.0.0-20210212193344-7015347762c1", "internal/foo"),
+		},
+		{
 			name: "valid test with go.mod missing",
 			module: func() *internal.Module {
 				m := sample.DefaultModule()
