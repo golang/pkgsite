@@ -49,7 +49,7 @@ const disableFetchHeader = "Disable-Module-Fetch"
 // New constructs a *Client using the provided url, which is expected to
 // be an absolute URI that can be directly passed to http.Get.
 func New(u string) (_ *Client, err error) {
-	defer derrors.Wrap(&err, "proxy.New(%q)", u)
+	defer derrors.WrapStack(&err, "proxy.New(%q)", u)
 	return &Client{
 		url:        strings.TrimRight(u, "/"),
 		httpClient: &http.Client{Transport: &ochttp.Transport{}},
@@ -90,7 +90,7 @@ func (c *Client) getInfo(ctx context.Context, modulePath, requestedVersion strin
 
 // GetMod makes a request to $GOPROXY/<module>/@v/<resolvedVersion>.mod and returns the raw data.
 func (c *Client) GetMod(ctx context.Context, modulePath, resolvedVersion string) (_ []byte, err error) {
-	defer derrors.WrapAndReport(&err, "proxy.Client.GetMod(%q, %q)", modulePath, resolvedVersion)
+	defer derrors.WrapStack(&err, "proxy.Client.GetMod(%q, %q)", modulePath, resolvedVersion)
 	return c.readBody(ctx, modulePath, resolvedVersion, "mod", false)
 }
 
@@ -100,7 +100,7 @@ func (c *Client) GetMod(ctx context.Context, modulePath, resolvedVersion string)
 // $GOPROXY/<modulePath>/@v/<requestedVersion>.info to obtained the valid
 // semantic version.
 func (c *Client) GetZip(ctx context.Context, modulePath, resolvedVersion string) (_ *zip.Reader, err error) {
-	defer derrors.WrapAndReport(&err, "proxy.Client.GetZip(ctx, %q, %q)", modulePath, resolvedVersion)
+	defer derrors.WrapStack(&err, "proxy.Client.GetZip(ctx, %q, %q)", modulePath, resolvedVersion)
 
 	bodyBytes, err := c.readBody(ctx, modulePath, resolvedVersion, "zip", false)
 	if err != nil {
@@ -116,7 +116,7 @@ func (c *Client) GetZip(ctx context.Context, modulePath, resolvedVersion string)
 // GetZipSize gets the size in bytes of the zip from the proxy, without downloading it.
 // The version must be resolved, as by a call to Client.GetInfo.
 func (c *Client) GetZipSize(ctx context.Context, modulePath, resolvedVersion string) (_ int64, err error) {
-	defer derrors.WrapAndReport(&err, "proxy.Client.GetZipSize(ctx, %q, %q)", modulePath, resolvedVersion)
+	defer derrors.WrapStack(&err, "proxy.Client.GetZipSize(ctx, %q, %q)", modulePath, resolvedVersion)
 
 	url, err := c.escapedURL(modulePath, resolvedVersion, "zip")
 	if err != nil {
@@ -137,9 +137,7 @@ func (c *Client) GetZipSize(ctx context.Context, modulePath, resolvedVersion str
 }
 
 func (c *Client) escapedURL(modulePath, requestedVersion, suffix string) (_ string, err error) {
-	defer func() {
-		derrors.Wrap(&err, "Client.escapedURL(%q, %q, %q)", modulePath, requestedVersion, suffix)
-	}()
+	defer derrors.WrapStack(&err, "Client.escapedURL(%q, %q, %q)", modulePath, requestedVersion, suffix)
 
 	if suffix != "info" && suffix != "mod" && suffix != "zip" {
 		return "", errors.New(`suffix must be "info", "mod" or "zip"`)
@@ -162,7 +160,7 @@ func (c *Client) escapedURL(modulePath, requestedVersion, suffix string) (_ stri
 }
 
 func (c *Client) readBody(ctx context.Context, modulePath, requestedVersion, suffix string, disableFetch bool) (_ []byte, err error) {
-	defer derrors.Wrap(&err, "Client.readBody(%q, %q, %q)", modulePath, requestedVersion, suffix)
+	defer derrors.WrapStack(&err, "Client.readBody(%q, %q, %q)", modulePath, requestedVersion, suffix)
 
 	u, err := c.escapedURL(modulePath, requestedVersion, suffix)
 	if err != nil {
@@ -209,7 +207,7 @@ func (c *Client) executeRequest(ctx context.Context, u string, disableFetch bool
 		if ctx.Err() != nil {
 			err = fmt.Errorf("%v: %w", err, derrors.ProxyTimedOut)
 		}
-		derrors.Wrap(&err, "executeRequest(ctx, %q)", u)
+		derrors.WrapStack(&err, "executeRequest(ctx, %q)", u)
 	}()
 
 	req, err := http.NewRequest("GET", u, nil)
