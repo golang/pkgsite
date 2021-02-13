@@ -30,16 +30,16 @@ func GetSymbols(p *doc.Package, fset *token.FileSet) (_ []*internal.Symbol, err 
 		return nil, err
 	}
 	return append(append(append(
-		constants(p), variables(p)...), functions(p, fset)...), typs...), nil
+		constants(p, fset), variables(p, fset)...), functions(p, fset)...), typs...), nil
 }
 
-func constants(p *doc.Package) []*internal.Symbol {
+func constants(p *doc.Package, fset *token.FileSet) []*internal.Symbol {
 	var syms []*internal.Symbol
 	for _, c := range p.Consts {
 		for _, n := range c.Names {
 			syms = append(syms, &internal.Symbol{
 				Name:     n,
-				Synopsis: "const " + n,
+				Synopsis: render.OneLineNodeDepth(fset, c.Decl, 0),
 				Section:  internal.SymbolSectionConstants,
 				Kind:     internal.SymbolKindConstant,
 			})
@@ -48,13 +48,13 @@ func constants(p *doc.Package) []*internal.Symbol {
 	return syms
 }
 
-func variables(p *doc.Package) []*internal.Symbol {
+func variables(p *doc.Package, fset *token.FileSet) []*internal.Symbol {
 	var syms []*internal.Symbol
 	for _, v := range p.Vars {
 		for _, n := range v.Names {
 			syms = append(syms, &internal.Symbol{
 				Name:     n,
-				Synopsis: "var " + n,
+				Synopsis: render.OneLineNodeDepth(fset, v.Decl, 0),
 				Section:  internal.SymbolSectionVariables,
 				Kind:     internal.SymbolKindVariable,
 			})
@@ -100,8 +100,8 @@ func types(p *doc.Package, fset *token.FileSet) ([]*internal.Symbol, error) {
 		syms = append(syms, t)
 		t.Children = append(append(append(append(append(
 			t.Children,
-			constantsForType(typ)...),
-			variablesForType(typ)...),
+			constantsForType(typ, fset)...),
+			variablesForType(typ, fset)...),
 			functionsForType(typ, fset)...),
 			fieldsForType(typ.Name, spec, fset)...),
 			mthds...)
@@ -109,7 +109,7 @@ func types(p *doc.Package, fset *token.FileSet) ([]*internal.Symbol, error) {
 	return syms, nil
 }
 
-func constantsForType(t *doc.Type) []*internal.Symbol {
+func constantsForType(t *doc.Type, fset *token.FileSet) []*internal.Symbol {
 	var syms []*internal.Symbol
 	for _, c := range t.Consts {
 		for _, n := range c.Names {
@@ -117,7 +117,7 @@ func constantsForType(t *doc.Type) []*internal.Symbol {
 				Name:       n,
 				ParentName: t.Name,
 				Kind:       internal.SymbolKindConstant,
-				Synopsis:   "const " + n,
+				Synopsis:   render.OneLineNodeDepth(fset, c.Decl, 0),
 				Section:    internal.SymbolSectionTypes,
 			})
 		}
@@ -125,7 +125,7 @@ func constantsForType(t *doc.Type) []*internal.Symbol {
 	return syms
 }
 
-func variablesForType(t *doc.Type) []*internal.Symbol {
+func variablesForType(t *doc.Type, fset *token.FileSet) []*internal.Symbol {
 	var syms []*internal.Symbol
 	for _, v := range t.Vars {
 		for _, n := range v.Names {
@@ -133,7 +133,7 @@ func variablesForType(t *doc.Type) []*internal.Symbol {
 				Name:       n,
 				ParentName: t.Name,
 				Kind:       internal.SymbolKindVariable,
-				Synopsis:   "var " + n,
+				Synopsis:   render.OneLineNodeDepth(fset, v.Decl, 0),
 				Section:    internal.SymbolSectionTypes,
 			})
 		}

@@ -44,8 +44,8 @@ var singleUnits = []*internal.Unit{
 			GOARCH:   internal.All,
 			Synopsis: "Package pkg is a sample package.",
 			API: []*internal.Symbol{
-				{Name: "Version", Synopsis: "const Version", Section: "Constants", Kind: "Constant"},
-				{Name: "V", Synopsis: "var V", Section: "Variables", Kind: "Variable"},
+				{Name: "Version", Synopsis: `const Version = "v1.0.0"`, Section: "Constants", Kind: "Constant"},
+				{Name: "V", Synopsis: "var V = Version", Section: "Variables", Kind: "Variable"},
 				{Name: "G", Synopsis: "func G() int", Section: "Functions", Kind: "Function"},
 				{
 					Name:     "T",
@@ -233,7 +233,12 @@ var moduleBadPackages = &testModule{
 						GOOS:     internal.All,
 						GOARCH:   internal.All,
 						Synopsis: "Package good is inside a module that has bad packages.",
-						API:      []*internal.Symbol{{Name: "Good", Synopsis: "const Good", Section: "Constants", Kind: "Constant"}},
+						API: []*internal.Symbol{{
+							Name:     "Good",
+							Synopsis: "const Good = true",
+							Section:  "Constants",
+							Kind:     "Constant",
+						}},
 					}},
 				},
 			},
@@ -293,7 +298,7 @@ var moduleBuildConstraints = &testModule{
 							API: []*internal.Symbol{
 								{
 									Name:     "CacheLinePadSize",
-									Synopsis: "const CacheLinePadSize",
+									Synopsis: "const CacheLinePadSize = 3",
 									Section:  "Constants",
 									Kind:     "Constant",
 								},
@@ -306,7 +311,7 @@ var moduleBuildConstraints = &testModule{
 							API: []*internal.Symbol{
 								{
 									Name:     "CacheLinePadSize",
-									Synopsis: "const CacheLinePadSize",
+									Synopsis: "const CacheLinePadSize = 3",
 									Section:  "Constants",
 									Kind:     "Constant",
 								},
@@ -319,7 +324,7 @@ var moduleBuildConstraints = &testModule{
 							API: []*internal.Symbol{
 								{
 									Name:     "CacheLinePadSize",
-									Synopsis: "const CacheLinePadSize",
+									Synopsis: "const CacheLinePadSize = 3",
 									Section:  "Constants",
 									Kind:     "Constant",
 								},
@@ -676,25 +681,25 @@ var moduleStd = &testModule{
 						API: []*internal.Symbol{
 							{
 								Name:     "true",
-								Synopsis: "const true",
+								Synopsis: "const true = 0 == 0 ...",
 								Section:  "Constants",
 								Kind:     "Constant",
 							},
 							{
 								Name:     "false",
-								Synopsis: "const false",
+								Synopsis: "const true = 0 == 0 ...",
 								Section:  "Constants",
 								Kind:     "Constant",
 							},
 							{
 								Name:     "iota",
-								Synopsis: "const iota",
+								Synopsis: "const iota = 0",
 								Section:  "Constants",
 								Kind:     "Constant",
 							},
 							{
 								Name:     "nil",
-								Synopsis: "var nil",
+								Synopsis: "var nil Type",
 								Section:  "Variables",
 								Kind:     "Variable",
 							},
@@ -1021,13 +1026,13 @@ var moduleStd = &testModule{
 						API: []*internal.Symbol{
 							{
 								Name:     "Canceled",
-								Synopsis: "var Canceled",
+								Synopsis: `var Canceled = errors.New("context canceled")`,
 								Section:  "Variables",
 								Kind:     "Variable",
 							},
 							{
 								Name:     "DeadlineExceeded",
-								Synopsis: "var DeadlineExceeded",
+								Synopsis: "var DeadlineExceeded error = deadlineExceededError{}",
 								Section:  "Variables",
 								Kind:     "Variable",
 							},
@@ -1648,19 +1653,19 @@ var moduleStd = &testModule{
 							API: []*internal.Symbol{
 								{
 									Name:     "CommandLine",
-									Synopsis: "var CommandLine",
+									Synopsis: "var CommandLine = NewFlagSet(os.Args[0], ExitOnError)",
 									Section:  "Variables",
 									Kind:     "Variable",
 								},
 								{
 									Name:     "ErrHelp",
-									Synopsis: "var ErrHelp",
+									Synopsis: `var ErrHelp = errors.New("flag: help requested")`,
 									Section:  "Variables",
 									Kind:     "Variable",
 								},
 								{
 									Name:     "Usage",
-									Synopsis: "var Usage",
+									Synopsis: "var Usage = func() { ... }",
 									Section:  "Variables",
 									Kind:     "Variable",
 								},
@@ -1840,21 +1845,21 @@ var moduleStd = &testModule{
 									Children: []*internal.Symbol{
 										{
 											Name:       "ContinueOnError",
-											Synopsis:   "const ContinueOnError",
+											Synopsis:   "const ContinueOnError ErrorHandling = iota ...",
 											Section:    "Types",
 											Kind:       "Constant",
 											ParentName: "ErrorHandling",
 										},
 										{
 											Name:       "ExitOnError",
-											Synopsis:   "const ExitOnError",
+											Synopsis:   "const ContinueOnError ErrorHandling = iota ...",
 											Section:    "Types",
 											Kind:       "Constant",
 											ParentName: "ErrorHandling",
 										},
 										{
 											Name:       "PanicOnError",
-											Synopsis:   "const PanicOnError",
+											Synopsis:   "const ContinueOnError ErrorHandling = iota ...",
 											Section:    "Types",
 											Kind:       "Constant",
 											ParentName: "ErrorHandling",
@@ -2220,7 +2225,7 @@ var moduleMaster = &testModule{
 						GOOS:     internal.All,
 						GOARCH:   internal.All,
 						Synopsis: "package foo exports a helpful constant.",
-						API:      []*internal.Symbol{{Name: "Bar", Synopsis: "const Bar", Section: "Constants", Kind: "Constant"}},
+						API:      []*internal.Symbol{{Name: "Bar", Synopsis: "const Bar = 1", Section: "Constants", Kind: "Constant"}},
 					}},
 				},
 			},
@@ -2259,7 +2264,7 @@ var moduleLatest = &testModule{
 						GOOS:     internal.All,
 						GOARCH:   internal.All,
 						Synopsis: "package foo exports a helpful constant.",
-						API:      []*internal.Symbol{{Name: "Bar", Synopsis: "const Bar", Section: "Constants", Kind: "Constant"}},
+						API:      []*internal.Symbol{{Name: "Bar", Synopsis: "const Bar = 1", Section: "Constants", Kind: "Constant"}},
 					}},
 				},
 			},

@@ -24,13 +24,13 @@ func TestGetSymbols(t *testing.T) {
 	want := []*internal.Symbol{
 		{
 			Name:     "C",
-			Synopsis: "const C",
+			Synopsis: "const C = 1",
 			Section:  "Constants",
 			Kind:     "Constant",
 		},
 		{
 			Name:     "V",
-			Synopsis: "var V",
+			Synopsis: "var V = 2",
 			Section:  "Variables",
 			Kind:     "Variable",
 		},
@@ -120,14 +120,14 @@ func TestGetSymbols(t *testing.T) {
 			Children: []*internal.Symbol{
 				{
 					Name:       "CT",
-					Synopsis:   "const CT",
+					Synopsis:   "const CT T = 3",
 					Section:    "Types",
 					ParentName: "T",
 					Kind:       "Constant",
 				},
 				{
 					Name:       "VT",
-					Synopsis:   "var VT",
+					Synopsis:   "var VT T",
 					Section:    "Types",
 					ParentName: "T",
 					Kind:       "Variable",
