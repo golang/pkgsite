@@ -17,9 +17,11 @@ import (
 )
 
 func TestInsertSymbolNames(t *testing.T) {
+	t.Parallel()
+	testDB, release := acquire(t)
+	defer release()
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
-	defer ResetTestDB(testDB, t)
 
 	mod := sample.DefaultModule()
 	if len(mod.Packages()) != 1 {
