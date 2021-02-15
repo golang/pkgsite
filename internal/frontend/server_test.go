@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"net/url"
 	"os"
 	"regexp"
 	"strings"
@@ -1219,6 +1218,28 @@ func isSubset(subset, set *experiment.Set) bool {
 }
 
 func TestServerErrors(t *testing.T) {
+	_, handler, _ := newTestServer(t, nil)
+	for _, test := range []struct {
+		name, path string
+		wantCode   int
+	}{
+		{"not found", "/invalid-page", http.StatusNotFound},
+		{"bad request", "/gocloud.dev/@latest/blob", http.StatusBadRequest},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			w := httptest.NewRecorder()
+			handler.ServeHTTP(w, httptest.NewRequest("GET", test.path, nil))
+			if w.Code != test.wantCode {
+				t.Errorf("%q: got status code = %d, want %d", test.path, w.Code, test.wantCode)
+			}
+		})
+	}
+}
+
+// Verify that some paths that aren't found will redirect to valid pages.
+// Sometimes redirection sets the AlternativeModuleFlash cookie and puts
+// up a banner.
+func TestServer404Redirect(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
@@ -1270,38 +1291,42 @@ func TestServerErrors(t *testing.T) {
 
 	for _, test := range []struct {
 		name, path, flash string
-		wantCode          int
 	}{
-		{"not found", "/invalid-page", "", http.StatusNotFound},
-		{"bad request", "/gocloud.dev/@latest/blob", "", http.StatusBadRequest},
-		{"github url", "/" + sample.ModulePath + "/blob/master", "", http.StatusFound},
-		{"alternative module", "/" + alternativeModule.ModulePath, "module.path/alternative", http.StatusFound},
-		{"module not in v1", "/" + v1modpath, "notinv1.mod", http.StatusFound},
-		{"import path not in v1", "/" + v1path, "notinv1.mod/foo", http.StatusFound},
+		{"github url", "/" + sample.ModulePath + "/blob/master", ""},
+		{"alternative module", "/" + alternativeModule.ModulePath, "module.path/alternative"},
+		{"module not in v1", "/" + v1modpath, "notinv1.mod"},
+		{"import path not in v1", "/" + v1path, "notinv1.mod/foo"},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			w := httptest.NewRecorder()
 			handler.ServeHTTP(w, httptest.NewRequest("GET", test.path, nil))
-			if test.path == v1modpath || test.path == v1path {
-				test.wantCode = http.StatusNotFound
+			// Check for http.StatusFound, which indicates a redirect.
+			if w.Code != http.StatusFound {
+				t.Errorf("%q: got status code = %d, want %d", test.path, w.Code, http.StatusFound)
 			}
-
-			r := &http.Request{
-				Header: http.Header{"Cookie": w.Header()["Set-Cookie"]},
-				URL:    &url.URL{Path: test.path},
-			}
-			got, err := cookie.Extract(w, r, cookie.AlternativeModuleFlash)
-			if err != nil {
-				t.Fatal(err)
-			}
-			if got != test.flash {
-				t.Fatalf("got %q; want %q", got, test.flash)
-			}
-			if w.Code != test.wantCode {
-				t.Errorf("%q: got status code = %d, want %d", test.path, w.Code, test.wantCode)
+			c := findCookie(cookie.AlternativeModuleFlash, w.Result().Cookies())
+			if c == nil && test.flash != "" {
+				t.Error("got no flash cookie, expected one")
+			} else if c != nil {
+				val, err := cookie.Base64Value(c)
+				if err != nil {
+					t.Fatal(err)
+				}
+				if val != test.flash {
+					t.Errorf("got cookie value %q, want %q", val, test.flash)
+				}
 			}
 		})
 	}
+}
+
+func findCookie(name string, cookies []*http.Cookie) *http.Cookie {
+	for _, c := range cookies {
+		if c.Name == name {
+			return c
+		}
+	}
+	return nil
 }
 
 func mustRequest(urlPath string, t *testing.T) *http.Request {

@@ -28,7 +28,7 @@ func Extract(w http.ResponseWriter, r *http.Request, name string) (_ string, err
 	if c == nil {
 		return "", nil
 	}
-	val, err := base64.URLEncoding.DecodeString(c.Value)
+	val, err := Base64Value(c)
 	if err != nil {
 		return "", nil
 	}
@@ -37,6 +37,15 @@ func Extract(w http.ResponseWriter, r *http.Request, name string) (_ string, err
 		Path:    r.URL.Path,
 		Expires: time.Unix(0, 0),
 	})
+	return val, nil
+}
+
+// Base64Value decodes  the value of c using the Base64 URL encoding and returns it as a string.
+func Base64Value(c *http.Cookie) (string, error) {
+	val, err := base64.URLEncoding.DecodeString(c.Value)
+	if err != nil {
+		return "", err
+	}
 	return string(val), nil
 }
 
