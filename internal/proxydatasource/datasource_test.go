@@ -66,7 +66,7 @@ func setup(t *testing.T) (context.Context, *DataSource, func()) {
 }
 
 var (
-	wantLicenseMD = sample.LicenseMetadata[0]
+	wantLicenseMD = sample.LicenseMetadata()[0]
 	wantPackage   = internal.Unit{
 		UnitMeta: internal.UnitMeta{
 			Path:              "foo.com/bar/baz",

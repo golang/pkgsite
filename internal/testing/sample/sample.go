@@ -30,25 +30,12 @@ import (
 
 // These sample values can be used to construct test cases.
 var (
-	ModulePath      = "github.com/valid/module_name"
-	RepositoryURL   = "https://github.com/valid/module_name"
-	VersionString   = "v1.0.0"
-	CommitTime      = NowTruncated()
-	LicenseType     = "MIT"
-	LicenseFilePath = "LICENSE"
-	LicenseMetadata = []*licenses.Metadata{
-		{
-			Types:    []string{LicenseType},
-			FilePath: LicenseFilePath,
-			OldCoverage: oldlicensecheck.Coverage{
-				Percent: 100,
-				Match:   []oldlicensecheck.Match{{Name: LicenseType, Type: oldlicensecheck.MIT, Percent: 100}},
-			},
-		},
-	}
-	Licenses = []*licenses.License{
-		{Metadata: LicenseMetadata[0], Contents: []byte(`Lorem Ipsum`)},
-	}
+	ModulePath                = "github.com/valid/module_name"
+	RepositoryURL             = "https://github.com/valid/module_name"
+	VersionString             = "v1.0.0"
+	CommitTime                = NowTruncated()
+	LicenseType               = "MIT"
+	LicenseFilePath           = "LICENSE"
 	NonRedistributableLicense = &licenses.License{
 		Metadata: &licenses.Metadata{
 			FilePath: "NONREDIST_LICENSE",
@@ -152,7 +139,7 @@ func Module(modulePath, version string, suffixes ...string) *internal.Module {
 	mi := ModuleInfo(modulePath, version)
 	m := &internal.Module{
 		ModuleInfo: *mi,
-		Licenses:   Licenses,
+		Licenses:   Licenses(),
 	}
 	m.Units = []*internal.Unit{UnitForModuleRoot(mi)}
 	for _, s := range suffixes {
@@ -166,13 +153,17 @@ func Module(modulePath, version string, suffixes ...string) *internal.Module {
 			m.Units[0].Name = u.Name
 		}
 	}
+	// Fill in license contents.
+	for _, u := range m.Units {
+		u.LicenseContents = m.Licenses
+	}
 	return m
 }
 
 func UnitForModuleRoot(m *internal.ModuleInfo) *internal.Unit {
 	u := &internal.Unit{
 		UnitMeta:        *UnitMeta(m.ModulePath, m.ModulePath, m.Version, "", m.IsRedistributable),
-		LicenseContents: Licenses,
+		LicenseContents: Licenses(),
 	}
 	u.Readme = &internal.Readme{
 		Filepath: ReadmeFilePath,
@@ -194,7 +185,7 @@ func UnitForPackage(path, modulePath, version, name string, isRedistributable bo
 	return &internal.Unit{
 		UnitMeta:        *UnitMeta(path, modulePath, version, name, isRedistributable),
 		Documentation:   []*internal.Documentation{&doc},
-		LicenseContents: Licenses,
+		LicenseContents: Licenses(),
 		Imports:         Imports,
 		NumImports:      len(Imports),
 	}
@@ -231,7 +222,7 @@ func PackageMeta(fullPath string) *internal.PackageMeta {
 		IsRedistributable: true,
 		Name:              path.Base(fullPath),
 		Synopsis:          Doc.Synopsis,
-		Licenses:          LicenseMetadata,
+		Licenses:          LicenseMetadata(),
 	}
 }
 
@@ -276,6 +267,28 @@ func AddLicense(m *internal.Module, lic *licenses.License) {
 	for _, u := range m.Units {
 		if strings.TrimPrefix(u.Path, m.ModulePath+"/") == dir {
 			u.Licenses = append(u.Licenses, lic.Metadata)
+			u.LicenseContents = append(u.LicenseContents, lic)
+		}
+	}
+}
+
+// ReplaceLicense replaces all licenses having the same file path as lic with lic.
+func ReplaceLicense(m *internal.Module, lic *licenses.License) {
+	replaceLicense(lic, m.Licenses)
+	for _, u := range m.Units {
+		for i, lm := range u.Licenses {
+			if lm.FilePath == lic.FilePath {
+				u.Licenses[i] = lic.Metadata
+			}
+		}
+		replaceLicense(lic, u.LicenseContents)
+	}
+}
+
+func replaceLicense(lic *licenses.License, lics []*licenses.License) {
+	for i, l := range lics {
+		if l.FilePath == lic.FilePath {
+			lics[i] = lic
 		}
 	}
 }
@@ -294,7 +307,7 @@ func UnitMeta(path, modulePath, version, name string, isRedistributable bool) *i
 		Name:              name,
 		CommitTime:        NowTruncated(),
 		IsRedistributable: isRedistributable,
-		Licenses:          LicenseMetadata,
+		Licenses:          LicenseMetadata(),
 		SourceInfo:        source.NewGitHubInfo("https://"+modulePath, "", version),
 	}
 }
@@ -325,5 +338,24 @@ func Documentation(goos, goarch, fileContents string) *internal.Documentation {
 		GOARCH:   goarch,
 		Synopsis: fmt.Sprintf("This is a package synopsis for GOOS=%s, GOARCH=%s", goos, goarch),
 		Source:   src,
+	}
+}
+
+func LicenseMetadata() []*licenses.Metadata {
+	return []*licenses.Metadata{
+		{
+			Types:    []string{LicenseType},
+			FilePath: LicenseFilePath,
+			OldCoverage: oldlicensecheck.Coverage{
+				Percent: 100,
+				Match:   []oldlicensecheck.Match{{Name: LicenseType, Type: oldlicensecheck.MIT, Percent: 100}},
+			},
+		},
+	}
+}
+
+func Licenses() []*licenses.License {
+	return []*licenses.License{
+		{Metadata: LicenseMetadata()[0], Contents: []byte(`Lorem Ipsum`)},
 	}
 }

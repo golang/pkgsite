@@ -101,11 +101,10 @@ func checkModule(ctx context.Context, t *testing.T, db *DB, want *internal.Modul
 		if err != nil {
 			t.Fatal(err)
 		}
-		wantu.LicenseContents = sample.Licenses
 		var subdirectories []*internal.PackageMeta
 		for _, u := range want.Units {
 			if u.IsPackage() && (strings.HasPrefix(u.Path, wantu.Path) || wantu.Path == stdlib.ModulePath) {
-				subdirectories = append(subdirectories, sample.PackageMeta(u.Path))
+				subdirectories = append(subdirectories, packageMetaFromUnit(u))
 			}
 		}
 		wantu.Subdirectories = subdirectories
@@ -116,6 +115,16 @@ func checkModule(ctx context.Context, t *testing.T, db *DB, want *internal.Modul
 		if diff := cmp.Diff(wantu, got, opts); diff != "" {
 			t.Errorf("mismatch (-want +got):\n%s", diff)
 		}
+	}
+}
+
+func packageMetaFromUnit(u *internal.Unit) *internal.PackageMeta {
+	return &internal.PackageMeta{
+		Path:              u.Path,
+		IsRedistributable: u.IsRedistributable,
+		Name:              u.Name,
+		Synopsis:          u.Documentation[0].Synopsis,
+		Licenses:          u.Licenses,
 	}
 }
 
@@ -188,7 +197,9 @@ func TestUpsertModule(t *testing.T) {
 	MustInsertModule(ctx, t, testDB, m)
 	// Change the module, and re-insert.
 	m.IsRedistributable = !m.IsRedistributable
-	m.Licenses[0].Contents = append(m.Licenses[0].Contents, " and more"...)
+	lic := *m.Licenses[0]
+	lic.Contents = append(lic.Contents, " and more"...)
+	sample.ReplaceLicense(m, &lic)
 	m.Units[0].Readme.Contents += " and more"
 
 	MustInsertModule(ctx, t, testDB, m)

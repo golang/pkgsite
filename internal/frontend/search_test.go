@@ -36,7 +36,7 @@ func TestFetchSearchPage(t *testing.T) {
 					UnitMeta: internal.UnitMeta{
 						Name:              "foo",
 						Path:              "github.com/mod/foo",
-						Licenses:          sample.LicenseMetadata,
+						Licenses:          sample.LicenseMetadata(),
 						CommitTime:        now,
 						ModulePath:        "github.com/mod/foo",
 						Version:           "v1.0.0",
@@ -67,7 +67,7 @@ func TestFetchSearchPage(t *testing.T) {
 					UnitMeta: internal.UnitMeta{
 						Name:              "bar",
 						Path:              "github.com/mod/bar",
-						Licenses:          sample.LicenseMetadata,
+						Licenses:          sample.LicenseMetadata(),
 						CommitTime:        now,
 						ModulePath:        "github.com/mod/bar",
 						Version:           "v1.0.0",

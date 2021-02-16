@@ -546,7 +546,7 @@ func TestInsertSearchDocumentAndSearch(t *testing.T) {
 				defer release()
 
 				for modulePath, pkg := range test.packages {
-					pkg.Licenses = sample.LicenseMetadata
+					pkg.Licenses = sample.LicenseMetadata()
 					m := sample.Module(modulePath, sample.VersionString)
 					sample.AddUnit(m, pkg)
 					MustInsertModule(ctx, t, testDB, m)

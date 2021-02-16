@@ -656,7 +656,7 @@ func TestGetUnitFieldSet(t *testing.T) {
 					Name:              "p",
 					Synopsis:          sample.Doc.Synopsis,
 					IsRedistributable: true,
-					Licenses:          sample.LicenseMetadata,
+					Licenses:          sample.LicenseMetadata(),
 				},
 			}
 		}
@@ -724,10 +724,10 @@ func unit(fullPath, modulePath, version, name string, readme *internal.Readme, s
 			Version:           version,
 			Path:              fullPath,
 			IsRedistributable: true,
-			Licenses:          sample.LicenseMetadata,
+			Licenses:          sample.LicenseMetadata(),
 			Name:              name,
 		},
-		LicenseContents: sample.Licenses,
+		LicenseContents: sample.Licenses(),
 		Readme:          readme,
 	}
 

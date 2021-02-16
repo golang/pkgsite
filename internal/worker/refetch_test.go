@@ -111,7 +111,7 @@ func TestReFetch(t *testing.T) {
 				Name:              "bar",
 				Synopsis:          "Package bar",
 				IsRedistributable: true,
-				Licenses:          sample.LicenseMetadata,
+				Licenses:          sample.LicenseMetadata(),
 			},
 		},
 	}

@@ -19,7 +19,7 @@ const testTimeout = 5 * time.Second
 var acquire func(*testing.T) (*DB, func())
 
 func TestMain(m *testing.M) {
-	RunDBTestsInParallel("discovery_postgres_test", 1, m, &acquire)
+	RunDBTestsInParallel("discovery_postgres_test", 4, m, &acquire)
 }
 
 func TestGetOldestUnprocessedIndexTime(t *testing.T) {
