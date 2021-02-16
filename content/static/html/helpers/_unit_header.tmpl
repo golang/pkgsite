@@ -57,7 +57,7 @@
             <img class="UnitHeader-detailItemLarge" height="16px" width="16px" src="/static/img/pkg-icon-arrowBranch_16x16.svg" alt="">
             <a href="?tab=versions">Version {{.DisplayVersion}}</a>
             <!-- Do not reformat the data attributes of the following div: the server uses a regexp to extract them. -->
-            <div class="DetailsHeader-badge $$GODISCOVERY_LATESTMINORCLASS$$"
+            <div class="DetailsHeader-badge {{.LatestMinorClass}}"
                 data-test-id="UnitHeader-minorVersionBanner"
                 data-version="{{.LinkVersion}}"
                 data-mpath="{{.Unit.ModulePath}}"
@@ -119,7 +119,7 @@
         <div class="UnitHeader-detail">
           <span class="UnitHeader-detailItem">
           <!-- Do not reformat the data attributes of the following div: the server uses a regexp to extract them. -->
-          <div style="display: none;" class="DetailsHeader-badge $$GODISCOVERY_LATESTMINORCLASS$$"
+          <div style="display: none;" class="DetailsHeader-badge {{.LatestMinorClass}}"
               data-version="{{.LinkVersion}}" data-mpath="{{.Unit.ModulePath}}" data-ppath="{{.Unit.Path}}" data-pagetype="{{.PageType}}">
           </div>
           <a class="UnitHeader-backLink" href="{{.URLPath}}">

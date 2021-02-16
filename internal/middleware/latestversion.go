@@ -9,16 +9,13 @@ import (
 	"context"
 	"net/http"
 	"regexp"
-	"strings"
 
 	"golang.org/x/mod/module"
 	"golang.org/x/pkgsite/internal"
-	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/log"
 )
 
 const (
-	latestMinorClassPlaceholder   = "$$GODISCOVERY_LATESTMINORCLASS$$"
 	latestMajorClassPlaceholder   = "$$GODISCOVERY_LATESTMAJORCLASS$$"
 	LatestMajorVersionPlaceholder = "$$GODISCOVERY_LATESTMAJORVERSION$$"
 	LatestMajorVersionURL         = "$$GODISCOVERY_LATESTMAJORVERSIONURL$$"
@@ -40,25 +37,10 @@ func LatestVersions(getLatest latestFunc) Middleware {
 			body := crw.bytes()
 			matches := latestInfoRegexp.FindSubmatch(body)
 			if matches != nil {
-				version := string(matches[1])
-				// The template package converts '+' to its HTML entity.
-				version = strings.Replace(version, "&#43;", "+", -1)
 				modulePath := string(matches[2])
 				_, majorVersion, _ := module.SplitPathVersion(modulePath)
 				unitPath := string(matches[3])
 				latest := getLatest(r.Context(), unitPath, modulePath)
-				latestMinorClass := "DetailsHeader-badge"
-				switch {
-				case latest.MinorVersion == "":
-					latestMinorClass += "--unknown"
-				case latest.MinorVersion == version && !latest.UnitExistsAtMinor && experiment.IsActive(r.Context(), internal.ExperimentNotAtLatest):
-					latestMinorClass += "--notAtLatest"
-				case latest.MinorVersion == version:
-					latestMinorClass += "--latest"
-				default:
-					latestMinorClass += "--goToLatest"
-				}
-
 				_, latestMajorVersion, ok := module.SplitPathVersion(latest.MajorModulePath)
 				var latestMajorVersionText string
 				if ok && len(latestMajorVersion) > 0 {
@@ -72,7 +54,6 @@ func LatestVersions(getLatest latestFunc) Middleware {
 				if majorVersion == latestMajorVersion || latestMajorVersion == "" {
 					latestMajorClass += " DetailsHeader-banner--latest"
 				}
-				body = bytes.ReplaceAll(body, []byte(latestMinorClassPlaceholder), []byte(latestMinorClass))
 				body = bytes.ReplaceAll(body, []byte(latestMajorClassPlaceholder), []byte(latestMajorClass))
 				body = bytes.ReplaceAll(body, []byte(LatestMajorVersionPlaceholder), []byte(latestMajorVersionText))
 				body = bytes.ReplaceAll(body, []byte(LatestMajorVersionURL), []byte(latest.MajorUnitPath))

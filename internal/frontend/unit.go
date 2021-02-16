@@ -17,6 +17,7 @@ import (
 	"github.com/google/safehtml/uncheckedconversions"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/stdlib"
 )
@@ -53,6 +54,10 @@ type UnitPage struct {
 
 	// LatestURL is a url pointing to the latest version of a unit.
 	LatestURL string
+
+	// LatestMinorClass is the CSS class that describes the current unit's minor
+	// version in relationship to the latest version of the unit.
+	LatestMinorClass string
 
 	// PageType is the type of page (pkg, cmd, dir, std, or mod).
 	PageType string
@@ -122,10 +127,13 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 		http.Redirect(w, r, r.URL.Path, http.StatusFound)
 		return nil
 	}
+
+	latestInfo := s.GetLatestInfo(r.Context(), um.Path, um.ModulePath)
 	tabSettings := unitTabLookup[tab]
 	title := pageTitle(um)
 	basePage := s.newBasePage(r, title)
 	basePage.AllowWideContent = true
+	lv := linkVersion(um.Version, um.ModulePath)
 	page := UnitPage{
 		basePage:         basePage,
 		Unit:             um,
@@ -135,8 +143,9 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 		URLPath:          constructUnitURL(um.Path, um.ModulePath, info.requestedVersion),
 		CanonicalURLPath: canonicalURLPath(um),
 		DisplayVersion:   displayVersion(um.Version, um.ModulePath),
-		LinkVersion:      linkVersion(um.Version, um.ModulePath),
+		LinkVersion:      lv,
 		LatestURL:        constructUnitURL(um.Path, um.ModulePath, internal.LatestVersion),
+		LatestMinorClass: latestMinorClass(r.Context(), lv, latestInfo),
 		PageLabels:       pageLabels(um),
 		PageType:         pageType(um),
 	}
@@ -158,6 +167,21 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 	}
 	s.servePage(ctx, w, tabSettings.TemplateName, page)
 	return nil
+}
+
+func latestMinorClass(ctx context.Context, version string, latest internal.LatestInfo) string {
+	c := "DetailsHeader-badge"
+	switch {
+	case latest.MinorVersion == "":
+		c += "--unknown"
+	case latest.MinorVersion == version && !latest.UnitExistsAtMinor && experiment.IsActive(ctx, internal.ExperimentNotAtLatest):
+		c += "--notAtLatest"
+	case latest.MinorVersion == version:
+		c += "--latest"
+	default:
+		c += "--goToLatest"
+	}
+	return c
 }
 
 // metaDescription uses a safehtml escape hatch to build HTML used
