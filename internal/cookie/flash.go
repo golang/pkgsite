@@ -30,7 +30,7 @@ func Extract(w http.ResponseWriter, r *http.Request, name string) (_ string, err
 	}
 	val, err := Base64Value(c)
 	if err != nil {
-		return "", nil
+		return "", err
 	}
 	http.SetCookie(w, &http.Cookie{
 		Name:    name,
