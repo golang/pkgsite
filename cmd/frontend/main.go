@@ -41,6 +41,7 @@ var (
 	directProxy = flag.Bool("direct_proxy", false, "if set to true, uses the module proxy referred to by this URL "+
 		"as a direct backend, bypassing the database")
 	bypassLicenseCheck = flag.Bool("bypass_license_check", false, "display all information, even for non-redistributable paths")
+	hostAddr           = flag.String("host", "localhost:8080", "Host address for the server")
 )
 
 func main() {
@@ -185,7 +186,7 @@ func main() {
 		ermw,
 		middleware.Timeout(54*time.Second),
 	)
-	addr := cfg.HostAddr("localhost:8080")
+	addr := cfg.HostAddr(*hostAddr)
 	log.Infof(ctx, "Listening on addr %s", addr)
 	log.Fatal(ctx, http.ListenAndServe(addr, mw(router)))
 }
