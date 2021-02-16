@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"path"
+	"sort"
 	"strings"
 
 	"golang.org/x/mod/module"
@@ -190,6 +191,8 @@ func buildVersionDetails(currentModulePath string, modInfos []*internal.ModuleIn
 	for m := range other {
 		details.OtherModules = append(details.OtherModules, m)
 	}
+	// Sort for testing.
+	sort.Strings(details.OtherModules)
 	return &details
 }
 

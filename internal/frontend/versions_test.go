@@ -127,7 +127,7 @@ func TestFetchPackageVersionsDetails(t *testing.T) {
 				IncompatibleModules: []*VersionList{
 					makeList(v1Path, modulePath1, "v2", []string{"v2.1.0+incompatible"}, true),
 				},
-				OtherModules: []string{modulePath2, "test.com"},
+				OtherModules: []string{"test.com", modulePath2},
 			},
 		},
 		{
