@@ -67,38 +67,59 @@ var (
 		Synopsis: "const Constant",
 		Section:  internal.SymbolSectionConstants,
 		Kind:     internal.SymbolKindConstant,
+		GOOS:     internal.All,
+		GOARCH:   internal.All,
 	}
 	Variable = &internal.Symbol{
 		Name:     "Variable",
 		Synopsis: "var Variable",
 		Section:  internal.SymbolSectionVariables,
 		Kind:     internal.SymbolKindVariable,
+		GOOS:     internal.All,
+		GOARCH:   internal.All,
 	}
 	Function = &internal.Symbol{
 		Name:     "Function",
 		Synopsis: "func Function() error",
 		Section:  internal.SymbolSectionFunctions,
 		Kind:     internal.SymbolKindFunction,
+		GOOS:     internal.All,
+		GOARCH:   internal.All,
+	}
+	FunctionNew = &internal.Symbol{
+		Name:       "New",
+		Synopsis:   "func New() *Type",
+		Section:    internal.SymbolSectionTypes,
+		Kind:       internal.SymbolKindFunction,
+		ParentName: "Type",
+		GOOS:       internal.All,
+		GOARCH:     internal.All,
 	}
 	Type = &internal.Symbol{
 		Name:     "Type",
 		Synopsis: "type Type struct",
 		Section:  internal.SymbolSectionTypes,
 		Kind:     internal.SymbolKindType,
+		GOOS:     internal.All,
+		GOARCH:   internal.All,
 		Children: []*internal.Symbol{
 			{
-				Name:       "Field",
+				Name:       "Type.Field",
 				Synopsis:   "field",
 				Section:    internal.SymbolSectionTypes,
 				Kind:       internal.SymbolKindField,
-				ParentName: "Type.Field",
+				ParentName: "Type",
+				GOOS:       internal.All,
+				GOARCH:     internal.All,
 			},
 			{
-				Name:       "Method",
+				Name:       "Type.Method",
 				Synopsis:   "method",
 				Section:    internal.SymbolSectionTypes,
 				Kind:       internal.SymbolKindMethod,
-				ParentName: "Type.Method",
+				ParentName: "Type",
+				GOOS:       internal.All,
+				GOARCH:     internal.All,
 			},
 		},
 	}

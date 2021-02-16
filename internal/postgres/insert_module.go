@@ -378,7 +378,7 @@ func (pdb *DB) insertUnits(ctx context.Context, db *database.DB, m *internal.Mod
 		return err
 	}
 	if versionType == version.TypeRelease {
-		return insertSymbols(ctx, db, pathToDoc)
+		return insertSymbols(ctx, db, m.ModulePath, m.Version, pathToID, pathToDoc)
 	}
 	return nil
 }

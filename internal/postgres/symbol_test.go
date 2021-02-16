@@ -13,6 +13,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/testing/sample"
 )
 
@@ -54,11 +55,12 @@ func TestShouldUpdateSymbolHistory(t *testing.T) {
 	}
 }
 
-func TestInsertSymbolNames(t *testing.T) {
+func TestInsertSymbolNamesAndHistory(t *testing.T) {
 	t.Parallel()
 	testDB, release := acquire(t)
 	defer release()
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	ctx = experiment.NewContext(ctx, internal.ExperimentInsertSymbolHistory)
 	defer cancel()
 
 	mod := sample.DefaultModule()
@@ -72,6 +74,7 @@ func TestInsertSymbolNames(t *testing.T) {
 		sample.Constant,
 		sample.Variable,
 		sample.Function,
+		sample.FunctionNew,
 		sample.Type,
 	}
 	MustInsertModule(ctx, t, testDB, mod)
@@ -92,6 +95,7 @@ func TestInsertSymbolNames(t *testing.T) {
 		sample.Variable.Name,
 		sample.Function.Name,
 		sample.Type.Name,
+		sample.FunctionNew.Name,
 	}
 	for _, c := range sample.Type.Children {
 		want = append(want, c.Name)
@@ -99,6 +103,74 @@ func TestInsertSymbolNames(t *testing.T) {
 	sort.Strings(got)
 	sort.Strings(want)
 	if diff := cmp.Diff(want, got); diff != "" {
+		t.Fatalf("mismatch (-want +got):\n%s", diff)
+	}
+
+	gotHist, err := getSymbolHistory(ctx, testDB.db, mod.Packages()[0].Path, mod.ModulePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	wantHist := map[string]map[string]*internal.Symbol{
+		goosgoarch(internal.All, internal.All): {
+			"Constant": {
+				Name:         "Constant",
+				Synopsis:     "const Constant",
+				Section:      "Constants",
+				Kind:         "Constant",
+				ParentName:   "Constant",
+				SinceVersion: "v1.0.0",
+			},
+			"Function": {
+				Name:         "Function",
+				Synopsis:     "func Function() error",
+				Section:      "Functions",
+				Kind:         "Function",
+				ParentName:   "Function",
+				SinceVersion: "v1.0.0",
+			},
+			"Type": {
+				Name:         "Type",
+				Synopsis:     "type Type struct",
+				Section:      "Types",
+				Kind:         "Type",
+				ParentName:   "Type",
+				SinceVersion: "v1.0.0",
+			},
+			"Variable": {
+				Name:         "Variable",
+				Synopsis:     "var Variable",
+				Section:      "Variables",
+				Kind:         "Variable",
+				ParentName:   "Variable",
+				SinceVersion: "v1.0.0",
+			},
+			"Type.Field": {
+				Name:         "Type.Field",
+				Synopsis:     "field",
+				Section:      "Types",
+				Kind:         "Field",
+				ParentName:   "Type",
+				SinceVersion: "v1.0.0",
+			},
+			"Type.Method": {
+				Name:         "Type.Method",
+				Synopsis:     "method",
+				Section:      "Types",
+				Kind:         "Method",
+				ParentName:   "Type",
+				SinceVersion: "v1.0.0",
+			},
+			"New": {
+				Name:         "New",
+				Synopsis:     "func New() *Type",
+				Section:      "Types",
+				Kind:         "Function",
+				ParentName:   "Type",
+				SinceVersion: "v1.0.0",
+			},
+		},
+	}
+	if diff := cmp.Diff(wantHist, gotHist); diff != "" {
 		t.Fatalf("mismatch (-want +got):\n%s", diff)
 	}
 }

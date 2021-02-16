@@ -8,6 +8,7 @@ package internal
 const (
 	ExperimentCommandTOC           = "command-toc"
 	ExperimentDirectoryTree        = "directory-tree"
+	ExperimentInsertSymbolHistory  = "insert-symbol-history"
 	ExperimentNotAtLatest          = "not-at-latest"
 	ExperimentRedirectedFromBanner = "redirected-from-banner"
 )
@@ -17,6 +18,7 @@ const (
 var Experiments = map[string]string{
 	ExperimentCommandTOC:           "Enable the table of contents for command documention pages.",
 	ExperimentDirectoryTree:        "Enable the directory tree layout on the unit page.",
+	ExperimentInsertSymbolHistory:  "Insert symbol history data into the symbol_history table.",
 	ExperimentNotAtLatest:          "Enable the display of a 'not at latest' badge.",
 	ExperimentRedirectedFromBanner: "Display banner with path that request was redirected from.",
 }
