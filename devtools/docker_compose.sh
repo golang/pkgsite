@@ -23,7 +23,7 @@ EOUSAGE
 
 function cleanup() {
   info "Cleaning up..."
-  runcmd docker-compose -f devtools/config/docker-compose.next.yaml down --remove-orphans --rmi local
+  runcmd docker-compose -f devtools/config/docker-compose.yaml down --remove-orphans --rmi local
 }
 
 run_build=false
@@ -41,11 +41,11 @@ while [[ $# -gt 0 ]]; do
       trap cleanup EXIT SIGINT
 
       if $run_build; then
-        docker-compose -f devtools/config/docker-compose.next.yaml build
+        docker-compose -f devtools/config/docker-compose.yaml build
       fi
 
       # Run an npm command and capture the exit code.
-      runcmd docker-compose -f devtools/config/docker-compose.next.yaml run --rm $@
+      runcmd docker-compose -f devtools/config/docker-compose.yaml run --rm $@
 
       # Exit with the code from the docker-compose command.
       exit $EXIT_CODE
