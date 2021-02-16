@@ -1,0 +1,1069 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`golang.org/x/pkgsite accessibility tree matches snapshot 1`] = `
+Object {
+  "children": Array [
+    Object {
+      "name": "Black Lives Matter",
+      "role": "text",
+    },
+    Object {
+      "name": "Support the Equal Justice Initiative",
+      "role": "link",
+    },
+    Object {
+      "name": "Link to Go homepage",
+      "role": "link",
+    },
+    Object {
+      "name": "Search for a package",
+      "role": "button",
+    },
+    Object {
+      "description": "Search for a package",
+      "name": "Search for a package",
+      "role": "textbox",
+    },
+    Object {
+      "description": "Why Go",
+      "name": "Why Go",
+      "role": "link",
+    },
+    Object {
+      "description": "Getting Started",
+      "name": "Getting Started",
+      "role": "link",
+    },
+    Object {
+      "description": "Discover Packages",
+      "name": "Discover Packages",
+      "role": "link",
+    },
+    Object {
+      "name": "About",
+      "role": "link",
+    },
+    Object {
+      "name": "Discover Packages",
+      "role": "link",
+    },
+    Object {
+      "name": ">",
+      "role": "text",
+    },
+    Object {
+      "name": "golang.org/x/pkgsite",
+      "role": "text",
+    },
+    Object {
+      "name": "Copy path to clipboard. golang.org/x/pkgsite",
+      "role": "button",
+    },
+    Object {
+      "level": 1,
+      "name": "pkgsite",
+      "role": "heading",
+    },
+    Object {
+      "name": "module",
+      "role": "text",
+    },
+    Object {
+      "name": "Version v0.0.0-...-5867665",
+      "role": "link",
+    },
+    Object {
+      "name": "LATEST",
+      "role": "text",
+    },
+    Object {
+      "name": "|",
+      "role": "text",
+    },
+    Object {
+      "name": "Feb 16, 2021",
+      "role": "text",
+    },
+    Object {
+      "name": "|",
+      "role": "text",
+    },
+    Object {
+      "name": "BSD-3-Clause",
+      "role": "link",
+    },
+    Object {
+      "name": "Jump to ...",
+      "role": "button",
+    },
+    Object {
+      "name": "find",
+      "role": "text",
+    },
+    Object {
+      "children": Array [
+        Object {
+          "children": Array [
+            Object {
+              "level": 2,
+              "name": "Pkg.go.dev",
+              "role": "treeitem",
+            },
+            Object {
+              "level": 2,
+              "name": "A site for discovering Go packages",
+              "role": "treeitem",
+            },
+            Object {
+              "level": 2,
+              "name": "Roadmap",
+              "role": "treeitem",
+            },
+            Object {
+              "level": 2,
+              "name": "Issues",
+              "role": "treeitem",
+            },
+            Object {
+              "level": 2,
+              "name": "Contributing",
+              "role": "treeitem",
+            },
+            Object {
+              "level": 2,
+              "name": "License",
+              "role": "treeitem",
+            },
+            Object {
+              "level": 2,
+              "name": "Links",
+              "role": "treeitem",
+            },
+          ],
+          "expanded": true,
+          "level": 1,
+          "name": "README",
+          "role": "treeitem",
+          "selected": true,
+        },
+        Object {
+          "level": 2,
+          "name": "Pkg.go.dev",
+          "role": "treeitem",
+        },
+        Object {
+          "level": 2,
+          "name": "A site for discovering Go packages",
+          "role": "treeitem",
+        },
+        Object {
+          "level": 2,
+          "name": "Roadmap",
+          "role": "treeitem",
+        },
+        Object {
+          "level": 2,
+          "name": "Issues",
+          "role": "treeitem",
+        },
+        Object {
+          "level": 2,
+          "name": "Contributing",
+          "role": "treeitem",
+        },
+        Object {
+          "level": 2,
+          "name": "License",
+          "role": "treeitem",
+        },
+        Object {
+          "level": 2,
+          "name": "Links",
+          "role": "treeitem",
+        },
+        Object {
+          "level": 1,
+          "name": "Directories",
+          "role": "treeitem",
+        },
+      ],
+      "name": "Outline",
+      "role": "tree",
+    },
+    Object {
+      "level": 2,
+      "name": "README",
+      "role": "heading",
+    },
+    Object {
+      "level": 3,
+      "name": "Pkg.go.dev",
+      "role": "heading",
+    },
+    Object {
+      "name": "Go Reference",
+      "role": "link",
+    },
+    Object {
+      "level": 4,
+      "name": "A site for discovering Go packages",
+      "role": "heading",
+    },
+    Object {
+      "name": "Pkg.go.dev is a website for discovering and evaluating Go packages and modules.",
+      "role": "text",
+    },
+    Object {
+      "name": "You can check it out at",
+      "role": "text",
+    },
+    Object {
+      "name": "https://pkg.go.dev",
+      "role": "link",
+    },
+    Object {
+      "name": ".",
+      "role": "text",
+    },
+    Object {
+      "level": 4,
+      "name": "Roadmap",
+      "role": "heading",
+    },
+    Object {
+      "name": "Pkg.go.dev",
+      "role": "text",
+    },
+    Object {
+      "name": "launched",
+      "role": "link",
+    },
+    Object {
+      "name": "in November 2019, and is currently under active development by the Go team.",
+      "role": "text",
+    },
+    Object {
+      "name": "Here's what we are currently working on:",
+      "role": "text",
+    },
+    Object {
+      "name": "•",
+      "role": "text",
+    },
+    Object {
+      "name": "Design updates: We have some design changes planned for pkg.go.dev, to address",
+      "role": "text",
+    },
+    Object {
+      "name": "UX feedback",
+      "role": "link",
+    },
+    Object {
+      "name": "that we have received. You can expect a more cohesive search and navigation experience coming soon. We plan to share these designs for feedback once they are ready.",
+      "role": "text",
+    },
+    Object {
+      "name": "•",
+      "role": "text",
+    },
+    Object {
+      "name": "Godoc.org redirect: Longer term, we are working towards",
+      "role": "text",
+    },
+    Object {
+      "name": "redirecting godoc.org traffic",
+      "role": "link",
+    },
+    Object {
+      "name": "to pkg.go.dev. We know that there are features available on godoc.org that users want to see on pkg.go.dev, and we want to ensure that we address these. We’ve been keeping track of issues related to redirecting godoc.org traffic on",
+      "role": "text",
+    },
+    Object {
+      "name": "Go issue #39144",
+      "role": "link",
+    },
+    Object {
+      "name": ". These issues will be prioritized in the next few months. We also plan to continue improving our license detection algorithm.",
+      "role": "text",
+    },
+    Object {
+      "name": "•",
+      "role": "text",
+    },
+    Object {
+      "name": "Search improvements: We’ll be improving our search experience based on feedback in",
+      "role": "text",
+    },
+    Object {
+      "name": "Go issue #37810",
+      "role": "link",
+    },
+    Object {
+      "name": ", to make it easier for users to find the dependencies they are looking for and make better decisions around which ones to import.",
+      "role": "text",
+    },
+    Object {
+      "name": "We encourage everyone to begin using",
+      "role": "text",
+    },
+    Object {
+      "name": "pkg.go.dev",
+      "role": "link",
+    },
+    Object {
+      "name": "today for all of their needs and to",
+      "role": "text",
+    },
+    Object {
+      "name": "file feedback",
+      "role": "link",
+    },
+    Object {
+      "name": "! You can redirect all of your requests from godoc.org to pkg.go.dev, by clicking",
+      "role": "text",
+    },
+    Object {
+      "name": "Always use pkg.go.dev",
+      "role": "text",
+    },
+    Object {
+      "name": "at the top of any page on",
+      "role": "text",
+    },
+    Object {
+      "name": "godoc.org",
+      "role": "link",
+    },
+    Object {
+      "name": ".",
+      "role": "text",
+    },
+    Object {
+      "level": 4,
+      "name": "Issues",
+      "role": "heading",
+    },
+    Object {
+      "name": "If you want to report a bug or have a feature suggestion, please first check the",
+      "role": "text",
+    },
+    Object {
+      "name": "known issues",
+      "role": "link",
+    },
+    Object {
+      "name": "to see if your issue is already being discussed. If an issue does not already exist, feel free to",
+      "role": "text",
+    },
+    Object {
+      "name": "file an issue",
+      "role": "link",
+    },
+    Object {
+      "name": ".",
+      "role": "text",
+    },
+    Object {
+      "name": "For answers to frequently asked questions, see",
+      "role": "text",
+    },
+    Object {
+      "name": "go.dev/about",
+      "role": "link",
+    },
+    Object {
+      "name": ".",
+      "role": "text",
+    },
+    Object {
+      "name": "You can also chat with us on the #tools slack channel on the",
+      "role": "text",
+    },
+    Object {
+      "name": "Gophers slack",
+      "role": "link",
+    },
+    Object {
+      "name": ".",
+      "role": "text",
+    },
+    Object {
+      "level": 4,
+      "name": "Contributing",
+      "role": "heading",
+    },
+    Object {
+      "name": "We would love your help!",
+      "role": "text",
+    },
+    Object {
+      "name": "Our canonical Git repository is located at",
+      "role": "text",
+    },
+    Object {
+      "name": "go.googlesource.com/pkgsite",
+      "role": "link",
+    },
+    Object {
+      "name": ". There is a mirror of the repository at",
+      "role": "text",
+    },
+    Object {
+      "name": "github.com/golang/pkgsite",
+      "role": "link",
+    },
+    Object {
+      "name": ".",
+      "role": "text",
+    },
+    Object {
+      "name": "To contribute, please read our",
+      "role": "text",
+    },
+    Object {
+      "name": "contributing guide",
+      "role": "link",
+    },
+    Object {
+      "name": ".",
+      "role": "text",
+    },
+    Object {
+      "level": 4,
+      "name": "License",
+      "role": "heading",
+    },
+    Object {
+      "name": "Unless otherwise noted, the Go source files are distributed under the BSD-style license found in the",
+      "role": "text",
+    },
+    Object {
+      "name": "LICENSE",
+      "role": "link",
+    },
+    Object {
+      "name": "file.",
+      "role": "text",
+    },
+    Object {
+      "level": 4,
+      "name": "Links",
+      "role": "heading",
+    },
+    Object {
+      "name": "•",
+      "role": "text",
+    },
+    Object {
+      "name": "Homepage",
+      "role": "link",
+    },
+    Object {
+      "name": "•",
+      "role": "text",
+    },
+    Object {
+      "name": "Feedback",
+      "role": "link",
+    },
+    Object {
+      "name": "•",
+      "role": "text",
+    },
+    Object {
+      "name": "Issue Tracker",
+      "role": "link",
+    },
+    Object {
+      "name": "Expand ▾",
+      "role": "link",
+    },
+    Object {
+      "level": 2,
+      "name": "Directories",
+      "role": "heading",
+    },
+    Object {
+      "name": "Path",
+      "role": "text",
+    },
+    Object {
+      "name": "Synopsis",
+      "role": "text",
+    },
+    Object {
+      "name": "cmd/frontend",
+      "role": "link",
+    },
+    Object {
+      "name": "The frontend runs a service to serve user-facing traffic.",
+      "role": "text",
+    },
+    Object {
+      "name": "cmd/internal/cmdconfig",
+      "role": "link",
+    },
+    Object {
+      "name": "Package cmdconfig contains functions for configuring commands.",
+      "role": "text",
+    },
+    Object {
+      "name": "cmd/pkgsite",
+      "role": "link",
+    },
+    Object {
+      "name": "This is a work in progress.",
+      "role": "text",
+    },
+    Object {
+      "name": "cmd/prober",
+      "role": "link",
+    },
+    Object {
+      "name": "The prober hits the frontend with a fixed set of URLs.",
+      "role": "text",
+    },
+    Object {
+      "name": "cmd/worker",
+      "role": "link",
+    },
+    Object {
+      "name": "The worker command runs a service with the primary job of fetching modules from a proxy and writing them to the database.",
+      "role": "text",
+    },
+    Object {
+      "name": "devtools/cmd/create_experiment_config",
+      "role": "link",
+    },
+    Object {
+      "name": "Command create_experiment_config creates an experiment.yaml file, which will set a rollout of 100 for all experiments.",
+      "role": "text",
+    },
+    Object {
+      "name": "devtools/cmd/csphash",
+      "role": "link",
+    },
+    Object {
+      "name": "csphash computes the hashes of script tags in files, and checks that they are added to our content security policy.",
+      "role": "text",
+    },
+    Object {
+      "name": "devtools/cmd/css",
+      "role": "link",
+    },
+    Object {
+      "name": "Command css appends CSS styles to content/static/stylesheet.css.",
+      "role": "text",
+    },
+    Object {
+      "name": "internal",
+      "role": "link",
+    },
+    Object {
+      "name": "Package internal contains data used through x/pkgsite.",
+      "role": "text",
+    },
+    Object {
+      "name": "internal/auth",
+      "role": "link",
+    },
+    Object {
+      "name": "Package auth authorizes programs to make HTTP requests to the discovery site.",
+      "role": "text",
+    },
+    Object {
+      "name": "internal/cache",
+      "role": "link",
+    },
+    Object {
+      "name": "Package cache implements a redis-based page cache for pkgsite.",
+      "role": "text",
+    },
+    Object {
+      "name": "internal/config",
+      "role": "link",
+    },
+    Object {
+      "name": "Package config resolves shared configuration for Go Discovery services, and provides functions to access this configuration.",
+      "role": "text",
+    },
+    Object {
+      "name": "internal/config/dynconfig",
+      "role": "link",
+    },
+    Object {
+      "name": "Package dynconfig supports dynamic configuration for pkgsite services.",
+      "role": "text",
+    },
+    Object {
+      "name": "internal/cookie",
+      "role": "link",
+    },
+    Object {
+      "name": "Package cookie is used to get and set HTTP cookies.",
+      "role": "text",
+    },
+    Object {
+      "name": "internal/database",
+      "role": "link",
+    },
+    Object {
+      "name": "Package database adds some useful functionality to a sql.DB.",
+      "role": "text",
+    },
+    Object {
+      "name": "internal/dcensus",
+      "role": "link",
+    },
+    Object {
+      "name": "Package dcensus provides functionality for debug instrumentation.",
+      "role": "text",
+    },
+    Object {
+      "name": "internal/derrors",
+      "role": "link",
+    },
+    Object {
+      "name": "Package derrors defines internal error values to categorize the different types error semantics we support.",
+      "role": "text",
+    },
+    Object {
+      "name": "internal/experiment",
+      "role": "link",
+    },
+    Object {
+      "name": "Package experiment provides functionality for experiments.",
+      "role": "text",
+    },
+    Object {
+      "name": "internal/fetch",
+      "role": "link",
+    },
+    Object {
+      "name": "Package fetch provides a way to fetch modules from a proxy.",
+      "role": "text",
+    },
+    Object {
+      "name": "internal/frontend",
+      "role": "link",
+    },
+    Object {
+      "name": "Package frontend provides functionality for running the pkg.go.dev site.",
+      "role": "text",
+    },
+    Object {
+      "name": "internal/godoc",
+      "role": "link",
+    },
+    Object {
+      "name": "Package godoc is for rendering Go documentation.",
+      "role": "text",
+    },
+    Object {
+      "name": "internal/godoc/codec",
+      "role": "link",
+    },
+    Object {
+      "name": "Package codec implements the general-purpose part of an encoder for Go values.",
+      "role": "text",
+    },
+    Object {
+      "name": "internal/godoc/dochtml",
+      "role": "link",
+    },
+    Object {
+      "name": "Package dochtml renders Go package documentation into HTML.",
+      "role": "text",
+    },
+    Object {
+      "name": "internal/godoc/dochtml/internal/render",
+      "role": "link",
+    },
+    Object {
+      "name": "Package render formats Go documentation as HTML.",
+      "role": "text",
+    },
+    Object {
+      "name": "internal/godoc/internal/doc",
+      "role": "link",
+    },
+    Object {
+      "name": "Package doc extracts source code documentation from a Go AST.",
+      "role": "text",
+    },
+    Object {
+      "name": "internal/index",
+      "role": "link",
+    },
+    Object {
+      "name": "Package index provides a client for communicating with the module index.",
+      "role": "text",
+    },
+    Object {
+      "name": "internal/licenses",
+      "role": "link",
+    },
+    Object {
+      "name": "Package licenses detects licenses and determines whether they are redistributable.",
+      "role": "text",
+    },
+    Object {
+      "name": "internal/localdatasource",
+      "role": "link",
+    },
+    Object {
+      "name": "Package localdatasource implements an in-memory internal.DataSource used to load and display documentation for local modules that are not available via a proxy.",
+      "role": "text",
+    },
+    Object {
+      "name": "internal/log",
+      "role": "link",
+    },
+    Object {
+      "name": "Package log supports structured and unstructured logging with levels.",
+      "role": "text",
+    },
+    Object {
+      "name": "internal/middleware",
+      "role": "link",
+    },
+    Object {
+      "name": "Package middleware implements a simple middleware pattern for http handlers, along with implementations for some common middlewares.",
+      "role": "text",
+    },
+    Object {
+      "name": "internal/poller",
+      "role": "link",
+    },
+    Object {
+      "name": "Package poller supports periodic polling to load a value.",
+      "role": "text",
+    },
+    Object {
+      "name": "internal/postgres",
+      "role": "link",
+    },
+    Object {
+      "name": "Package postgres provides functionality for reading and writing to the postgres database.",
+      "role": "text",
+    },
+    Object {
+      "name": "internal/proxy",
+      "role": "link",
+    },
+    Object {
+      "name": "Package proxy provides a client for interacting with a proxy.",
+      "role": "text",
+    },
+    Object {
+      "name": "internal/proxydatasource",
+      "role": "link",
+    },
+    Object {
+      "name": "Package proxydatasource implements an internal.DataSource backed solely by a proxy instance.",
+      "role": "text",
+    },
+    Object {
+      "name": "internal/queue",
+      "role": "link",
+    },
+    Object {
+      "name": "Package queue provides queue implementations that can be used for asynchronous scheduling of fetch actions.",
+      "role": "text",
+    },
+    Object {
+      "name": "internal/secrets",
+      "role": "link",
+    },
+    Object {
+      "name": "Package secrets is used to interact with secretmanager.",
+      "role": "text",
+    },
+    Object {
+      "name": "internal/source",
+      "role": "link",
+    },
+    Object {
+      "name": "Package source constructs public URLs that link to the source files in a module.",
+      "role": "text",
+    },
+    Object {
+      "name": "internal/stdlib",
+      "role": "link",
+    },
+    Object {
+      "name": "Package stdlib supports special handling of the Go standard library.",
+      "role": "text",
+    },
+    Object {
+      "name": "internal/testing/dbtest",
+      "role": "link",
+    },
+    Object {
+      "name": "Package dbtest supports testing with a database.",
+      "role": "text",
+    },
+    Object {
+      "name": "internal/testing/htmlcheck",
+      "role": "link",
+    },
+    Object {
+      "name": "Package htmlcheck provides a set of functions that check for properties of a parsed HTML document.",
+      "role": "text",
+    },
+    Object {
+      "name": "internal/testing/pagecheck",
+      "role": "link",
+    },
+    Object {
+      "name": "Package pagecheck implements HTML checkers for discovery site pages.",
+      "role": "text",
+    },
+    Object {
+      "name": "internal/testing/sample",
+      "role": "link",
+    },
+    Object {
+      "name": "Package sample provides functionality for generating sample values of the types contained in the internal package.",
+      "role": "text",
+    },
+    Object {
+      "name": "internal/testing/testhelper",
+      "role": "link",
+    },
+    Object {
+      "name": "Package testhelper provides shared functionality and constants to be used in Discovery tests.",
+      "role": "text",
+    },
+    Object {
+      "name": "internal/version",
+      "role": "link",
+    },
+    Object {
+      "name": "Package version handles version types.",
+      "role": "text",
+    },
+    Object {
+      "name": "internal/worker",
+      "role": "link",
+    },
+    Object {
+      "name": "Package worker provides functionality for running a worker service.",
+      "role": "text",
+    },
+    Object {
+      "name": "internal/xcontext",
+      "role": "link",
+    },
+    Object {
+      "name": "Package xcontext is a package to offer the extra functionality we need from contexts that is not available from the standard context package.",
+      "role": "text",
+    },
+    Object {
+      "name": "Details",
+      "role": "text",
+    },
+    Object {
+      "name": "Learn more",
+      "role": "link",
+    },
+    Object {
+      "name": "checked",
+      "role": "img",
+    },
+    Object {
+      "name": "Valid",
+      "role": "text",
+    },
+    Object {
+      "name": "go.mod",
+      "role": "link",
+    },
+    Object {
+      "name": "file",
+      "role": "text",
+    },
+    Object {
+      "name": "more info",
+      "role": "button",
+    },
+    Object {
+      "name": "checked",
+      "role": "img",
+    },
+    Object {
+      "name": "Redistributable license",
+      "role": "text",
+    },
+    Object {
+      "name": "more info",
+      "role": "button",
+    },
+    Object {
+      "name": "unchecked",
+      "role": "img",
+    },
+    Object {
+      "name": "Tagged version",
+      "role": "text",
+    },
+    Object {
+      "name": "more info",
+      "role": "button",
+    },
+    Object {
+      "name": "unchecked",
+      "role": "img",
+    },
+    Object {
+      "name": "Stable version",
+      "role": "text",
+    },
+    Object {
+      "name": "more info",
+      "role": "button",
+    },
+    Object {
+      "name": "Repository",
+      "role": "text",
+    },
+    Object {
+      "description": "https://github.com/golang/pkgsite",
+      "name": "https://github.com/golang/pkgsite",
+      "role": "link",
+    },
+    Object {
+      "name": "Links",
+      "role": "text",
+    },
+    Object {
+      "description": "https://pkg.go.dev",
+      "name": "Homepage",
+      "role": "link",
+    },
+    Object {
+      "description": "https://golang.org/s/pkgsite-feedback",
+      "name": "Feedback",
+      "role": "link",
+    },
+    Object {
+      "description": "https://golang.org/s/pkgsite-issues",
+      "name": "Issue Tracker",
+      "role": "link",
+    },
+    Object {
+      "description": "Why Go",
+      "name": "Why Go",
+      "role": "link",
+    },
+    Object {
+      "description": "Use Cases",
+      "name": "Use Cases",
+      "role": "link",
+    },
+    Object {
+      "description": "Case Studies",
+      "name": "Case Studies",
+      "role": "link",
+    },
+    Object {
+      "description": "Getting Started",
+      "name": "Getting Started",
+      "role": "link",
+    },
+    Object {
+      "name": "Playground",
+      "role": "link",
+    },
+    Object {
+      "name": "Tour",
+      "role": "link",
+    },
+    Object {
+      "name": "Stack Overflow",
+      "role": "link",
+    },
+    Object {
+      "description": "Discover Packages",
+      "name": "Discover Packages",
+      "role": "link",
+    },
+    Object {
+      "description": "About",
+      "name": "About",
+      "role": "link",
+    },
+    Object {
+      "name": "Download",
+      "role": "link",
+    },
+    Object {
+      "name": "Blog",
+      "role": "link",
+    },
+    Object {
+      "name": "Release Notes",
+      "role": "link",
+    },
+    Object {
+      "name": "Brand Guidelines",
+      "role": "link",
+    },
+    Object {
+      "name": "Code of Conduct",
+      "role": "link",
+    },
+    Object {
+      "description": "Connect",
+      "name": "Connect",
+      "role": "link",
+    },
+    Object {
+      "name": "Twitter",
+      "role": "link",
+    },
+    Object {
+      "name": "GitHub",
+      "role": "link",
+    },
+    Object {
+      "name": "Slack",
+      "role": "link",
+    },
+    Object {
+      "name": "Meetup",
+      "role": "link",
+    },
+    Object {
+      "name": "Gopher in flight goggles",
+      "role": "img",
+    },
+    Object {
+      "name": "Copyright",
+      "role": "link",
+    },
+    Object {
+      "name": "Terms of Service",
+      "role": "link",
+    },
+    Object {
+      "name": "Privacy Policy",
+      "role": "link",
+    },
+    Object {
+      "name": "Report an Issue",
+      "role": "link",
+    },
+    Object {
+      "name": "golang.org",
+      "role": "link",
+    },
+    Object {
+      "name": "Google logo",
+      "role": "link",
+    },
+  ],
+  "name": "pkgsite · pkg.go.dev",
+  "role": "WebArea",
+}
+`;
