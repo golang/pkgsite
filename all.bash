@@ -127,6 +127,22 @@ check_script_hashes() {
   runcmd go run ./devtools/cmd/csphash content/static/html/**/*.tmpl
 }
 
+npm() {
+  # Run npm install if node_modules directory does not exist.
+  if [ ! -d "node_modules" ]; then
+    ./devtools/docker_compose.sh nodejs npm install --quiet
+  fi
+  ./devtools/docker_compose.sh nodejs npm $@
+}
+
+run_e2e() {
+  # Run npm install if node_modules directory does not exist.
+  if [ ! -d "node_modules" ]; then
+    ./devtools/docker_compose.sh ci npm install --quiet
+  fi
+  ./devtools/docker_compose.sh ci npm run test:jest:e2e -- $@
+}
+
 # run_prettier runs prettier on CSS, JS, and MD files. Uses globally
 # installed prettier if available or a dockerized installation as a
 # fallback.
@@ -140,10 +156,6 @@ run_prettier() {
   else
     err "prettier must be installed: see https://prettier.io/docs/en/install.html"
   fi
-}
-
-run_npm_lint() {
-  ./devtools/npm.sh run lint
 }
 
 standard_linters() {
@@ -160,19 +172,20 @@ usage() {
   cat <<EOUSAGE
 Usage: $0 [subcommand]
 Available subcommands:
-  help        - display this help message
-  (empty)     - run all standard checks and tests
-  ci          - run checks and tests suitable for continuous integration
-  lint        - run all standard linters below:
-  headers     - (lint) check source files for the license disclaimer
-  migrations  - (lint) check migration sequence numbers
-  misspell    - (lint) run misspell on source files
-  staticcheck - (lint) run staticcheck on source files
-  unparam     - (lint) run unparam on source files
-  prettier    - (lint, nonstandard) run prettier on .js and .css files.
-  templates   - (lint, nonstandard) run go-template-lint on templates
+  help           - display this help message
+  (empty)        - run all standard checks and tests
+  ci             - run checks and tests suitable for continuous integration
+  e2e            - run e2e tests locally.
+  lint           - run all standard linters below:
+  headers        - (lint) check source files for the license disclaimer
+  migrations     - (lint) check migration sequence numbers
+  misspell       - (lint) run misspell on source files
+  npm            - run npm scripts from package.json
   script_hashses - (lint) check script hashes
-  npm_lint   - (lint, nonstandard) run linters on .ts and .css files
+  staticcheck    - (lint) run staticcheck on source files
+  unparam        - (lint) run unparam on source files
+  prettier       - (lint, nonstandard) run prettier on .js and .css files.
+  templates      - (lint, nonstandard) run go-template-lint on templates
 EOUSAGE
 }
 
@@ -194,7 +207,8 @@ main() {
     "")
       standard_linters
       run_prettier
-      run_npm_lint
+      npm run lint
+      npm run test
       runcmd go mod tidy
       runcmd env GO_DISCOVERY_TESTDB=true go test ./...
       runcmd go test ./internal/secrets
@@ -221,7 +235,8 @@ main() {
     templates) check_templates ;;
     unparam) check_unparam ;;
     script_hashes) check_script_hashes ;;
-    npm_lint) run_npm_lint ;;
+    npm) npm ${@:2} ;;
+    e2e) run_e2e ${@:2} ;;
     *)
       usage
       exit 1
