@@ -41,3 +41,6 @@ __debug_bin
 
 #### NPM ####
 node_modules
+
+#### E2E Test Output ####
+e2e/__image_snapshots__/__diff_output__
