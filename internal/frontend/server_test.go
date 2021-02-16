@@ -6,7 +6,9 @@ package frontend
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -15,6 +17,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/alicebob/miniredis/v2"
+	"github.com/go-redis/redis/v8"
 	"github.com/google/safehtml/template"
 	"github.com/jba/templatecheck"
 	"golang.org/x/net/html"
@@ -41,7 +45,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestHTMLInjection(t *testing.T) {
-	_, handler, _ := newTestServer(t, nil)
+	_, handler, _ := newTestServer(t, nil, nil)
 	w := httptest.NewRecorder()
 	handler.ServeHTTP(w, httptest.NewRequest("GET", "/<em>UHOH</em>", nil))
 	if strings.Contains(w.Body.String(), "<em>") {
@@ -1168,7 +1172,7 @@ func testServer(t *testing.T, testCases []serverTestCase, experimentNames ...str
 	if err := testDB.InsertExcludedPrefix(ctx, excludedModulePath, "testuser", "testreason"); err != nil {
 		t.Fatal(err)
 	}
-	_, handler, _ := newTestServer(t, nil, experimentNames...)
+	_, handler, _ := newTestServer(t, nil, nil, experimentNames...)
 
 	experimentsSet := experiment.NewSet(experimentNames...)
 
@@ -1218,7 +1222,7 @@ func isSubset(subset, set *experiment.Set) bool {
 }
 
 func TestServerErrors(t *testing.T) {
-	_, handler, _ := newTestServer(t, nil)
+	_, handler, _ := newTestServer(t, nil, nil)
 	for _, test := range []struct {
 		name, path string
 		wantCode   int
@@ -1287,7 +1291,13 @@ func TestServer404Redirect(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_, handler, _ := newTestServer(t, nil)
+	rs, err := miniredis.Run()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer rs.Close()
+
+	_, handler, _ := newTestServer(t, nil, redis.NewClient(&redis.Options{Addr: rs.Addr()}))
 
 	for _, test := range []struct {
 		name, path, flash string
@@ -1304,7 +1314,8 @@ func TestServer404Redirect(t *testing.T) {
 			if w.Code != http.StatusFound {
 				t.Errorf("%q: got status code = %d, want %d", test.path, w.Code, http.StatusFound)
 			}
-			c := findCookie(cookie.AlternativeModuleFlash, w.Result().Cookies())
+			res := w.Result()
+			c := findCookie(cookie.AlternativeModuleFlash, res.Cookies())
 			if c == nil && test.flash != "" {
 				t.Error("got no flash cookie, expected one")
 			} else if c != nil {
@@ -1313,9 +1324,28 @@ func TestServer404Redirect(t *testing.T) {
 					t.Fatal(err)
 				}
 				if val != test.flash {
-					t.Errorf("got cookie value %q, want %q", val, test.flash)
+					t.Fatalf("got cookie value %q, want %q", val, test.flash)
+				}
+				// If we have a cookie, then following the redirect URL with the cookie
+				// should serve a "redirected from" banner.
+				loc := res.Header.Get("Location")
+				r := httptest.NewRequest("GET", loc, nil)
+				r.AddCookie(c)
+				w = httptest.NewRecorder()
+				handler.ServeHTTP(w, r)
+				if err := checkBanner(w.Result().Body, val); err != nil {
+					t.Fatalf("banner: %v", err)
+				}
+				// Visiting the same page again without the cookie should not
+				// display the banner.
+				r = httptest.NewRequest("GET", loc, nil)
+				w = httptest.NewRecorder()
+				handler.ServeHTTP(w, r)
+				if err := checkBanner(w.Result().Body, val); err != errNoBanner {
+					t.Fatalf("banner #2: got %v, want %v", err, errNoBanner)
 				}
 			}
+
 		})
 	}
 }
@@ -1325,6 +1355,24 @@ func findCookie(name string, cookies []*http.Cookie) *http.Cookie {
 		if c.Name == name {
 			return c
 		}
+	}
+	return nil
+}
+
+var errNoBanner = errors.New("no redirect banner")
+
+func checkBanner(body io.ReadCloser, path string) error {
+	doc, err := html.Parse(body)
+	if err != nil {
+		return err
+	}
+	_ = body.Close()
+
+	if in(".UnitHeader-redirectedFromBanner--none")(doc) == nil {
+		return errNoBanner
+	}
+	if err := in(".UnitHeader-redirectedFromBanner", hasText(path))(doc); err != nil {
+		return err
 	}
 	return nil
 }
@@ -1390,7 +1438,7 @@ func TestTagRoute(t *testing.T) {
 	}
 }
 
-func newTestServer(t *testing.T, proxyModules []*proxy.Module, experimentNames ...string) (*Server, http.Handler, func()) {
+func newTestServer(t *testing.T, proxyModules []*proxy.Module, redisClient *redis.Client, experimentNames ...string) (*Server, http.Handler, func()) {
 	t.Helper()
 	proxyClient, teardown := proxy.SetupTestClient(t, proxyModules)
 	sourceClient := source.NewClient(sourceTimeout)
@@ -1413,7 +1461,7 @@ func newTestServer(t *testing.T, proxyModules []*proxy.Module, experimentNames .
 		t.Fatal(err)
 	}
 	mux := http.NewServeMux()
-	s.Install(mux.Handle, nil, nil)
+	s.Install(mux.Handle, redisClient, nil)
 
 	var exps []*internal.Experiment
 	for _, n := range experimentNames {
@@ -1424,6 +1472,7 @@ func newTestServer(t *testing.T, proxyModules []*proxy.Module, experimentNames .
 		t.Fatal(err)
 	}
 	mw := middleware.Chain(
+		middleware.RedirectedFrom(),
 		middleware.Experiment(exp),
 		middleware.LatestVersions(s.GetLatestInfo))
 	return s, mw(mux), func() {

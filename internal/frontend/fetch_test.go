@@ -79,7 +79,7 @@ func TestFetch(t *testing.T) {
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			s, _, teardown := newTestServer(t, testModulesForProxy)
+			s, _, teardown := newTestServer(t, testModulesForProxy, nil)
 			defer teardown()
 
 			ctx, cancel := context.WithTimeout(context.Background(), testFetchTimeout)
@@ -143,7 +143,7 @@ func TestFetchErrors(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), test.fetchTimeout)
 			defer cancel()
 
-			s, _, teardown := newTestServer(t, testModulesForProxy)
+			s, _, teardown := newTestServer(t, testModulesForProxy, nil)
 			defer teardown()
 			got, err := s.fetchAndPoll(ctx, s.getDataSource(ctx), test.modulePath, test.fullPath, test.version)
 
@@ -180,7 +180,7 @@ func TestFetchPathAlreadyExists(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			s, _, teardown := newTestServer(t, testModulesForProxy)
+			s, _, teardown := newTestServer(t, testModulesForProxy, nil)
 			defer teardown()
 			got, _ := s.fetchAndPoll(ctx, s.getDataSource(ctx), sample.ModulePath, sample.PackagePath, sample.VersionString)
 			if got != test.want {
