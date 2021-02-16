@@ -19,7 +19,6 @@ import (
 
 const (
 	latestMinorClassPlaceholder   = "$$GODISCOVERY_LATESTMINORCLASS$$"
-	LatestMinorVersionPlaceholder = "$$GODISCOVERY_LATESTMINORVERSION$$"
 	latestMajorClassPlaceholder   = "$$GODISCOVERY_LATESTMAJORCLASS$$"
 	LatestMajorVersionPlaceholder = "$$GODISCOVERY_LATESTMAJORVERSION$$"
 	LatestMajorVersionURL         = "$$GODISCOVERY_LATESTMAJORVERSIONURL$$"
@@ -74,7 +73,6 @@ func LatestVersions(getLatest latestFunc) Middleware {
 					latestMajorClass += " DetailsHeader-banner--latest"
 				}
 				body = bytes.ReplaceAll(body, []byte(latestMinorClassPlaceholder), []byte(latestMinorClass))
-				body = bytes.ReplaceAll(body, []byte(LatestMinorVersionPlaceholder), []byte(latest.MinorVersion))
 				body = bytes.ReplaceAll(body, []byte(latestMajorClassPlaceholder), []byte(latestMajorClass))
 				body = bytes.ReplaceAll(body, []byte(LatestMajorVersionPlaceholder), []byte(latestMajorVersionText))
 				body = bytes.ReplaceAll(body, []byte(LatestMajorVersionURL), []byte(latest.MajorUnitPath))
