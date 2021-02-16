@@ -6,7 +6,6 @@ package frontend
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -1333,19 +1332,20 @@ func TestServer404Redirect(t *testing.T) {
 				r.AddCookie(c)
 				w = httptest.NewRecorder()
 				handler.ServeHTTP(w, r)
-				if err := checkBanner(w.Result().Body, val); err != nil {
-					t.Fatalf("banner: %v", err)
+				err = checkBody(w.Result().Body, in(".UnitHeader-redirectedFromBanner", hasText(val)))
+				if err != nil {
+					t.Fatal(err)
 				}
 				// Visiting the same page again without the cookie should not
 				// display the banner.
 				r = httptest.NewRequest("GET", loc, nil)
 				w = httptest.NewRecorder()
 				handler.ServeHTTP(w, r)
-				if err := checkBanner(w.Result().Body, val); err != errNoBanner {
-					t.Fatalf("banner #2: got %v, want %v", err, errNoBanner)
+				err = checkBody(w.Result().Body, notIn(".UnitHeader-redirectedFromBanner"))
+				if err != nil {
+					t.Fatal(err)
 				}
 			}
-
 		})
 	}
 }
@@ -1359,22 +1359,13 @@ func findCookie(name string, cookies []*http.Cookie) *http.Cookie {
 	return nil
 }
 
-var errNoBanner = errors.New("no redirect banner")
-
-func checkBanner(body io.ReadCloser, path string) error {
+func checkBody(body io.ReadCloser, c htmlcheck.Checker) error {
 	doc, err := html.Parse(body)
 	if err != nil {
 		return err
 	}
 	_ = body.Close()
-
-	if in(".UnitHeader-redirectedFromBanner--none")(doc) == nil {
-		return errNoBanner
-	}
-	if err := in(".UnitHeader-redirectedFromBanner", hasText(path))(doc); err != nil {
-		return err
-	}
-	return nil
+	return c(doc)
 }
 
 func mustRequest(urlPath string, t *testing.T) *http.Request {
@@ -1472,7 +1463,6 @@ func newTestServer(t *testing.T, proxyModules []*proxy.Module, redisClient *redi
 		t.Fatal(err)
 	}
 	mw := middleware.Chain(
-		middleware.RedirectedFrom(),
 		middleware.Experiment(exp),
 		middleware.LatestVersions(s.GetLatestInfo))
 	return s, mw(mux), func() {

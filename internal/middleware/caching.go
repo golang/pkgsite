@@ -21,6 +21,7 @@ import (
 	"go.opencensus.io/tag"
 	icache "golang.org/x/pkgsite/internal/cache"
 	"golang.org/x/pkgsite/internal/config"
+	"golang.org/x/pkgsite/internal/cookie"
 	"golang.org/x/pkgsite/internal/log"
 )
 
@@ -131,6 +132,11 @@ func (c *cache) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			c.delegate.ServeHTTP(w, r)
 			return
 		}
+	}
+	// If the flash cookie is set, bypass the cache.
+	if _, err := r.Cookie(cookie.AlternativeModuleFlash); err == nil {
+		c.delegate.ServeHTTP(w, r)
+		return
 	}
 	ctx := r.Context()
 	key := r.URL.String()

@@ -121,7 +121,6 @@
  * middleware/latestversion.go after unit page is launched.
  */
 .UnitHeader-majorVersionBanner--latest,
-.UnitHeader-redirectedFromBanner--none,
 .DetailsHeader-banner--latest {
   display: none;
 }

@@ -72,7 +72,6 @@ func main() {
 	server.Install(router.Handle, nil, nil)
 
 	mw := middleware.Chain(
-		middleware.RedirectedFrom(),
 		middleware.LatestVersions(server.GetLatestInfo), // must come before caching for version badge to work
 		middleware.Timeout(54*time.Second),
 	)

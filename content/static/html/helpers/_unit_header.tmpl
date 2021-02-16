@@ -4,6 +4,8 @@
   license that can be found in the LICENSE file.
 -->
 
+{{/* . = internal/frontend.UnitPage */}}
+
 {{define "unit_header"}}
   <header class="UnitHeader" role="complementary"
       aria-label="{{if eq .PageType "std"}}module{{else}}{{.PageType}}{{end}} {{.Title}} information">
@@ -36,12 +38,14 @@
           <span class="UnitHeader-badge">{{.}}</span>
         {{end}}
       </div>
-      <div class="UnitHeader-redirectedFromBanner $$GODISCOVERY_REDIRECTEDFROMCLASS$$">
-        <img height="19px" width="16px" class="UnitHeader-detailIcon" src="/static/img/pkg-icon-info_19x16.svg" alt="">
-        <span>
-          Redirected from <span>$$GODISCOVERY_REDIRECTEDFROMPATH$$</span>.
-        </span>
-      </div>
+      {{with .RedirectedFromPath}}
+        <div class="UnitHeader-redirectedFromBanner">
+          <img height="19px" width="16px" class="UnitHeader-detailIcon" src="/static/img/pkg-icon-info_19x16.svg" alt="">
+          <span>
+          Redirected from <span>{{.}}</span>.
+          </span>
+        </div>
+      {{end}}
       <div class="UnitHeader-majorVersionBanner $$GODISCOVERY_LATESTMAJORCLASS$$" data-test-id="UnitHeader-majorVersionBanner">
         <img height="19px" width="16px" class="UnitHeader-detailIcon" src="/static/img/pkg-icon-info_19x16.svg" alt="">
         <span>

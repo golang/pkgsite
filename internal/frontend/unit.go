@@ -16,6 +16,7 @@ import (
 	"github.com/google/safehtml"
 	"github.com/google/safehtml/uncheckedconversions"
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/cookie"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/log"
@@ -73,6 +74,11 @@ type UnitPage struct {
 	// Settings contains settings for the selected tab.
 	SelectedTab TabSettings
 
+	// RedirectedFromPath is the path that redirected to the current page.
+	// If non-empty, a "redirected from" banner will be displayed
+	// (see content/static/html/helpers/_unit_header.tmpl).
+	RedirectedFromPath string
+
 	// Details contains data specific to the type of page being rendered.
 	Details interface{}
 }
@@ -129,25 +135,32 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 	}
 
 	latestInfo := s.GetLatestInfo(r.Context(), um.Path, um.ModulePath)
+	var redirectPath string
+	redirectPath, err = cookie.Extract(w, r, cookie.AlternativeModuleFlash)
+	if err != nil {
+		// Don't fail, but don't display a banner either.
+		log.Errorf(ctx, "extracting AlternativeModuleFlash cookie: %v", err)
+	}
 	tabSettings := unitTabLookup[tab]
 	title := pageTitle(um)
 	basePage := s.newBasePage(r, title)
 	basePage.AllowWideContent = true
 	lv := linkVersion(um.Version, um.ModulePath)
 	page := UnitPage{
-		basePage:         basePage,
-		Unit:             um,
-		Breadcrumb:       displayBreadcrumb(um, info.requestedVersion),
-		Title:            title,
-		SelectedTab:      tabSettings,
-		URLPath:          constructUnitURL(um.Path, um.ModulePath, info.requestedVersion),
-		CanonicalURLPath: canonicalURLPath(um),
-		DisplayVersion:   displayVersion(um.Version, um.ModulePath),
-		LinkVersion:      lv,
-		LatestURL:        constructUnitURL(um.Path, um.ModulePath, internal.LatestVersion),
-		LatestMinorClass: latestMinorClass(r.Context(), lv, latestInfo),
-		PageLabels:       pageLabels(um),
-		PageType:         pageType(um),
+		basePage:           basePage,
+		Unit:               um,
+		Breadcrumb:         displayBreadcrumb(um, info.requestedVersion),
+		Title:              title,
+		SelectedTab:        tabSettings,
+		URLPath:            constructUnitURL(um.Path, um.ModulePath, info.requestedVersion),
+		CanonicalURLPath:   canonicalURLPath(um),
+		DisplayVersion:     displayVersion(um.Version, um.ModulePath),
+		LinkVersion:        lv,
+		LatestURL:          constructUnitURL(um.Path, um.ModulePath, internal.LatestVersion),
+		LatestMinorClass:   latestMinorClass(r.Context(), lv, latestInfo),
+		PageLabels:         pageLabels(um),
+		PageType:           pageType(um),
+		RedirectedFromPath: redirectPath,
 	}
 
 	// Use GOOS and GOARCH query parameters to create a build context, which

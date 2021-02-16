@@ -178,7 +178,6 @@ func main() {
 		middleware.AcceptRequests(http.MethodGet, http.MethodPost, http.MethodHead), // accept only GETs, POSTs and HEADs
 		middleware.BetaPkgGoDevRedirect(),
 		middleware.Quota(cfg.Quota, cacheClient),
-		middleware.RedirectedFrom(),
 		middleware.SecureHeaders(!*disableCSP), // must come before any caching for nonces to work
 		middleware.Experiment(experimenter),
 		middleware.LatestVersions(server.GetLatestInfo), // must come before caching for version badge to work
