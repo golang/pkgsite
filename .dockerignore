@@ -6,3 +6,7 @@ node_modules
 private
 # ...except for the config directory.
 !private/config
+# Exclude e2e tests.
+e2e
+# Exclude devtools config.
+devtools/config
