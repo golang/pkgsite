@@ -1,0 +1,85 @@
+# Copyright 2020 The Go Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style
+# license that can be found in the LICENSE file.
+
+version: '3'
+services:
+  # nodejs is used to run npm scripts from ../../package.json. It mounts the
+  # pkgsite root directory into a container and obscures the git directories
+  # as a precaution so they can't be written to during npm package installs.
+  nodejs:
+    build:
+      context: ../../
+      dockerfile: devtools/config/Dockerfile.nodejs
+    environment:
+      FRONTEND_URL: ${GO_DISCOVERY_FRONTEND_URL:-http://host.docker.internal:8080}
+    image: pkgsite_nodejs
+    init: true
+    volumes:
+      - ../..:/pkgsite
+      - /pkgsite/.git
+      - /pkgsite/private/.git
+
+  # ci extends the nodejs config above and is used to run the e2e tests in CI.
+  # It starts the frontend server and then runs a given npm command.
+  ci:
+    depends_on:
+      - frontend
+    environment:
+      FRONTEND_URL: ${GO_DISCOVERY_FRONTEND_URL:-http://frontend:8080}
+    extends: nodejs
+    image: pkgsite_ci
+
+  frontend:
+    build:
+      context: ../../
+      dockerfile: devtools/config/Dockerfile.frontend
+    command: ./frontend -host=0.0.0.0:8080
+    depends_on:
+      - migrate
+    environment:
+      - GO_DISCOVERY_DATABASE_USER=postgres
+      - GO_DISCOVERY_DATABASE_PASSWORD=postgres
+      - GO_DISCOVERY_DATABASE_HOST=db
+      - GO_DISCOVERY_DATABASE_NAME=discovery-db
+      - PORT=8080
+    image: pkgsite_frontend
+    ports:
+      - 8080:8080
+
+  migrate:
+    depends_on:
+      - wait_for_db
+    image: migrate/migrate:v4.14.1
+    volumes:
+      - ../../migrations:/pkgsite/migrations
+    command:
+      [
+        '-path',
+        '/pkgsite/migrations',
+        '-database',
+        'postgres://postgres:postgres@db:5432/discovery-db?sslmode=disable',
+        'up',
+      ]
+
+  # wait_for_db is used to delay migrations until the database is ready for connections.
+  wait_for_db:
+    image: ubuntu:14.04
+    depends_on:
+      - db
+    command: >
+      /bin/bash -c "
+        while ! nc -z db 5432;
+        do
+          echo sleeping;
+          sleep 1;
+        done;
+        echo connected!;
+      "
+
+  db:
+    image: postgres:13.2
+    environment:
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=discovery-db
