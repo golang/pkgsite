@@ -63,8 +63,7 @@ flakiness. See the
 [API](https://github.com/americanexpress/jest-image-snapshot#%EF%B8%8F-api) for
 jest image snapshots for more information.
 
-To run the tests locally, start the pkgsite server and then run
-`./devtools/npm.sh run test-e2e`
+To run the tests on your machine run `./all.bash e2e`.
 
 ## Static Assets
 
@@ -78,22 +77,21 @@ scripts should be written with TypeScript.
 ### Building
 
 If you're modifying any TypeScript code, you must run
-`devtools/npm.sh run build` for the changes to take effect. This script will
+`./all.bash npm run build` for the changes to take effect. This script will
 require Docker to be installed.
 
 ### Development
 
 To watch the source files for changes and have them rebuilt automatically
-you can run `devtools/npm.sh run develop`.
+you can run `./all.bash npm run develop`.
 
 ### Testing
 
-You can test html and static asset changes by running `devtools/npm.sh test`.
-This will run the TypeScript type checker, unit tests, and end-to-end tests.
-For end-to-end tests to run you must be running the frontend server locally.
+You can test html and static asset changes by running `./all.bash npm test`.
+This will run the TypeScript type checker and unit tests.
 
 ### Linting
 
-Lint your changes by running `devtools/npm.sh run lint`. This will run stylelint
+Lint your changes by running `./all.bash npm run lint`. This will run stylelint
 and eslint on CSS and TS files in content/static. You can autofix some errors by
-running `devtools/npm.sh run lint -- --fix`.
+running `./all.bash npm run lint -- --fix`.
