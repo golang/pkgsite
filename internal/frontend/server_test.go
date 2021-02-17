@@ -10,6 +10,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"os"
 	"regexp"
 	"strings"
@@ -1539,7 +1540,7 @@ func TestEmptyDirectoryBetweenNestedModulesRedirect(t *testing.T) {
 	postgres.MustInsertModule(ctx, t, testDB, sample.Module(sample.ModulePath, sample.VersionString, ""))
 	postgres.MustInsertModule(ctx, t, testDB, sample.Module(sample.ModulePath+"/missing/c", sample.VersionString, ""))
 
-	_, handler, _ := newTestServer(t, nil)
+	_, handler, _ := newTestServer(t, nil, nil)
 	w := httptest.NewRecorder()
 	dirPath := sample.ModulePath + "/missing"
 	handler.ServeHTTP(w, httptest.NewRequest("GET", "/"+dirPath, nil))
