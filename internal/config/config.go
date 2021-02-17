@@ -171,9 +171,6 @@ type Config struct {
 
 	Quota QuotaSettings
 
-	// Teeproxy sepcifies the configuration values for the teeproxy.
-	Teeproxy TeeproxySettings
-
 	// Minimum log level below which no logs will be printed.
 	// Possible values are [debug, info, error, fatal].
 	// In case of invalid/empty value, all logs will be printed.
@@ -335,22 +332,6 @@ type QuotaSettings struct {
 	HMACKey    []byte `json:"-"` // key for obfuscating IPs
 }
 
-// TeeproxySettings contains the configuration values for the teeproxy. See
-// internal/teeproxy.Config to see what these values mean.
-type TeeproxySettings struct {
-	AuthKey          string
-	AuthValue        string
-	Hosts            []string
-	Rate             float64
-	Burst            int
-	FailsToRed       int
-	FailureThreshold float64
-	GreenInterval    time.Duration
-	MinTimeout       time.Duration
-	MaxTimeout       time.Duration
-	SuccsToGreen     int
-}
-
 // Init resolves all configuration values provided by the config package. It
 // must be called before any configuration values are used.
 func Init(ctx context.Context) (_ *Config, err error) {
@@ -401,20 +382,7 @@ func Init(ctx context.Context) (_ *Config, err error) {
 			}(),
 			AuthValues: parseCommaList(os.Getenv("GO_DISCOVERY_AUTH_VALUES")),
 		},
-		UseProfiler: os.Getenv("GO_DISCOVERY_USE_PROFILER") == "true",
-		Teeproxy: TeeproxySettings{
-			AuthKey:          BypassQuotaAuthHeader,
-			AuthValue:        os.Getenv("GO_DISCOVERY_TEEPROXY_AUTH_VALUE"),
-			Hosts:            parseCommaList(os.Getenv("GO_DISCOVERY_TEEPROXY_FORWARDED_HOSTS")),
-			Rate:             GetEnvFloat64("GO_DISCOVERY_TEEPROXY_RATE", 50),
-			Burst:            GetEnvInt("GO_DISCOVERY_TEEPROXY_BURST", 50),
-			FailsToRed:       GetEnvInt("GO_DISCOVERY_TEEPROXY_FAILS_TO_RED", 10),
-			FailureThreshold: GetEnvFloat64("GO_DISCOVERY_TEEPROXY_FAILURE_THRESHOLD", 0.5),
-			GreenInterval:    time.Duration(GetEnvInt("GO_DISCOVERY_TEEPROXY_GREEN_INTERVAL_SECONDS", 10)) * time.Second,
-			MinTimeout:       time.Duration(GetEnvInt("GO_DISCOVERY_TEEPROXY_MIN_TIMEOUT_SECONDS", 30)) * time.Second,
-			MaxTimeout:       time.Duration(GetEnvInt("GO_DISCOVERY_TEEPROXY_MAX_TIMEOUT_SECONDS", 240)) * time.Second,
-			SuccsToGreen:     GetEnvInt("GO_DISCOVERY_TEEPROXY_SUCCS_TO_GREEN", 20),
-		},
+		UseProfiler:           os.Getenv("GO_DISCOVERY_USE_PROFILER") == "true",
 		LogLevel:              os.Getenv("GO_DISCOVERY_LOG_LEVEL"),
 		ServeStats:            os.Getenv("GO_DISCOVERY_SERVE_STATS") == "true",
 		DisableErrorReporting: os.Getenv("GO_DISCOVERY_DISABLE_ERROR_REPORTING") == "true",
