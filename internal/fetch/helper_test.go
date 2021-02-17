@@ -29,7 +29,7 @@ var testProxyCommitTime = time.Date(2019, 1, 30, 0, 0, 0, 0, time.UTC)
 // it. It's meant to be used with test cases in fetchdata_test and should be called
 // only once for each test case. The missing information is added here to avoid
 // having to hardcode it into each test case.
-func cleanFetchResult(t *testing.T, fr *FetchResult, detector *licenses.Detector) *FetchResult {
+func cleanFetchResult(t *testing.T, fr *FetchResult) *FetchResult {
 	t.Helper()
 
 	fr.ModulePath = fr.Module.ModulePath
@@ -48,19 +48,6 @@ func cleanFetchResult(t *testing.T, fr *FetchResult, detector *licenses.Detector
 	fr.ResolvedVersion = fr.Module.Version
 	if fr.Module.CommitTime.IsZero() {
 		fr.Module.CommitTime = testProxyCommitTime
-	}
-
-	allLicenses := detector.AllLicenses()
-	if len(allLicenses) > 0 {
-		fr.Module.Licenses = allLicenses
-		fr.Module.IsRedistributable = true
-		for _, d := range fr.Module.Units {
-			isRedist, lics := detector.PackageInfo(internal.Suffix(d.Path, fr.ModulePath))
-			for _, l := range lics {
-				d.Licenses = append(d.Licenses, l.Metadata)
-			}
-			d.IsRedistributable = isRedist
-		}
 	}
 
 	shouldSetPVS := (fr.PackageVersionStates == nil)
@@ -82,6 +69,27 @@ func cleanFetchResult(t *testing.T, fr *FetchResult, detector *licenses.Detector
 					Status:      http.StatusOK,
 				},
 			)
+		}
+	}
+	return fr
+}
+
+func cleanLicenses(t *testing.T, fr *FetchResult, detector *licenses.Detector) *FetchResult {
+	fr.Module.Licenses = nil
+	for _, u := range fr.Module.Units {
+		u.Licenses = nil
+	}
+
+	allLicenses := detector.AllLicenses()
+	if len(allLicenses) > 0 {
+		fr.Module.Licenses = allLicenses
+		fr.Module.IsRedistributable = true
+		for _, d := range fr.Module.Units {
+			isRedist, lics := detector.PackageInfo(internal.Suffix(d.Path, fr.ModulePath))
+			for _, l := range lics {
+				d.Licenses = append(d.Licenses, l.Metadata)
+			}
+			d.IsRedistributable = isRedist
 		}
 	}
 	return fr

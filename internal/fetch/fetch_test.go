@@ -66,7 +66,6 @@ func TestFetchModule(t *testing.T) {
 		mod          *testModule
 		fetchVersion string
 		proxyOnly    bool
-		cleaned      bool
 	}{
 		{name: "single", mod: moduleOnePackage},
 		{name: "wasm", mod: moduleWasm},
@@ -89,67 +88,67 @@ func TestFetchModule(t *testing.T) {
 		// Proxy only as version is pre specified in local mode
 		{name: "latest version of module", mod: moduleLatest, fetchVersion: "latest", proxyOnly: true},
 	} {
-		for _, fetcher := range []struct {
-			name  string
-			fetch fetchFunc
-		}{
-			{name: "proxy", fetch: proxyFetcher},
-			{name: "local", fetch: localFetcher},
-		} {
-			if test.proxyOnly && fetcher.name == "local" {
-				continue
+		t.Run(test.name, func(t *testing.T) {
+			mod := test.mod.mod
+			if mod == nil {
+				mod = test.mod.modfunc()
 			}
-			t.Run(fmt.Sprintf("%s:%s", fetcher.name, test.name), func(t *testing.T) {
-				ctx := context.Background()
-				ctx, cancel := context.WithTimeout(ctx, 300*time.Second)
-				defer cancel()
+			if mod == nil {
+				t.Fatal("nil module")
+			}
+			test.mod.fr = cleanFetchResult(t, test.mod.fr)
 
-				mod := test.mod.mod
-				if mod == nil {
-					mod = test.mod.modfunc()
+			for _, fetcher := range []struct {
+				name  string
+				fetch fetchFunc
+			}{
+				{name: "proxy", fetch: proxyFetcher},
+				{name: "local", fetch: localFetcher},
+			} {
+				if test.proxyOnly && fetcher.name == "local" {
+					continue
 				}
-				if mod == nil {
-					t.Fatal("nil module")
-				}
+				t.Run(fetcher.name, func(t *testing.T) {
+					ctx := context.Background()
+					ctx, cancel := context.WithTimeout(ctx, 300*time.Second)
+					defer cancel()
 
-				got, d := fetcher.fetch(t, true, ctx, mod, test.fetchVersion)
-				defer got.Defer()
-				if got.Error != nil {
-					t.Fatalf("fetching failed: %v", got.Error)
-				}
-				if !test.cleaned {
-					test.mod.fr = cleanFetchResult(t, test.mod.fr, d)
-					test.cleaned = true
-				}
-				fr := updateFetchResultVersions(t, test.mod.fr, fetcher.name == "local")
-				sortFetchResult(fr)
-				sortFetchResult(got)
-				opts := []cmp.Option{
-					cmpopts.IgnoreFields(internal.Documentation{}, "Source"),
-					cmpopts.IgnoreFields(internal.PackageVersionState{}, "Error"),
-					cmpopts.IgnoreFields(FetchResult{}, "Defer"),
-					cmp.AllowUnexported(source.Info{}),
-					cmpopts.EquateEmpty(),
-				}
-				if fetcher.name == "local" {
-					opts = append(opts,
-						[]cmp.Option{
-							// Pre specified for all modules
-							cmpopts.IgnoreFields(internal.Module{}, "SourceInfo"),
-							cmpopts.IgnoreFields(internal.Module{}, "Version"),
-							cmpopts.IgnoreFields(FetchResult{}, "RequestedVersion"),
-							cmpopts.IgnoreFields(FetchResult{}, "ResolvedVersion"),
-							cmpopts.IgnoreFields(internal.Module{}, "CommitTime"),
-						}...)
-				}
+					got, d := fetcher.fetch(t, true, ctx, mod, test.fetchVersion)
+					defer got.Defer()
+					if got.Error != nil {
+						t.Fatalf("fetching failed: %v", got.Error)
+					}
+					test.mod.fr = cleanLicenses(t, test.mod.fr, d)
+					fr := updateFetchResultVersions(t, test.mod.fr, fetcher.name == "local")
+					sortFetchResult(fr)
+					sortFetchResult(got)
+					opts := []cmp.Option{
+						cmpopts.IgnoreFields(internal.Documentation{}, "Source"),
+						cmpopts.IgnoreFields(internal.PackageVersionState{}, "Error"),
+						cmpopts.IgnoreFields(FetchResult{}, "Defer"),
+						cmp.AllowUnexported(source.Info{}),
+						cmpopts.EquateEmpty(),
+					}
+					if fetcher.name == "local" {
+						opts = append(opts,
+							[]cmp.Option{
+								// Pre specified for all modules
+								cmpopts.IgnoreFields(internal.Module{}, "SourceInfo"),
+								cmpopts.IgnoreFields(internal.Module{}, "Version"),
+								cmpopts.IgnoreFields(FetchResult{}, "RequestedVersion"),
+								cmpopts.IgnoreFields(FetchResult{}, "ResolvedVersion"),
+								cmpopts.IgnoreFields(internal.Module{}, "CommitTime"),
+							}...)
+					}
 
-				opts = append(opts, sample.LicenseCmpOpts...)
-				if diff := cmp.Diff(fr, got, opts...); diff != "" {
-					t.Fatalf("mismatch (-want +got):\n%s", diff)
-				}
-				validateDocumentationHTML(t, got.Module, test.mod.docStrings)
-			})
-		}
+					opts = append(opts, sample.LicenseCmpOpts...)
+					if diff := cmp.Diff(fr, got, opts...); diff != "" {
+						t.Fatalf("mismatch (-want +got):\n%s", diff)
+					}
+					validateDocumentationHTML(t, got.Module, test.mod.docStrings)
+				})
+			}
+		})
 	}
 }
 
