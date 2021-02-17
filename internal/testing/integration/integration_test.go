@@ -9,26 +9,19 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"net/http/httptest"
 	"sort"
 	"strings"
 	"testing"
 	"time"
 
-	"github.com/alicebob/miniredis/v2"
 	"github.com/go-redis/redis/v8"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/safehtml/template"
 	"golang.org/x/pkgsite/internal"
-	"golang.org/x/pkgsite/internal/cache"
-	"golang.org/x/pkgsite/internal/config"
 	"golang.org/x/pkgsite/internal/godoc/dochtml"
 	"golang.org/x/pkgsite/internal/index"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/proxy"
-	"golang.org/x/pkgsite/internal/queue"
-	"golang.org/x/pkgsite/internal/source"
-	"golang.org/x/pkgsite/internal/worker"
 )
 
 var (
@@ -51,49 +44,13 @@ func TestEndToEndProcessing(t *testing.T) {
 	proxyClient, proxyServer, indexClient, teardownClients := setupProxyAndIndex(t)
 	defer teardownClients()
 
-	redisCache, err := miniredis.Run()
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer redisCache.Close()
-	redisCacheClient := redis.NewClient(&redis.Options{Addr: redisCache.Addr()})
+	redisCacheClient, td := newRedisClient(t)
+	defer td()
 
-	redisHA, err := miniredis.Run()
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer redisHA.Close()
-	redisHAClient := redis.NewClient(&redis.Options{Addr: redisHA.Addr()})
+	redisHAClient, td := newRedisClient(t)
+	defer td()
 
-	fetcher := &worker.Fetcher{
-		ProxyClient:  proxyClient,
-		SourceClient: source.NewClient(1 * time.Second),
-		DB:           testDB,
-		Cache:        cache.New(redisCacheClient),
-	}
-	// TODO: it would be better if InMemory made http requests
-	// back to worker, rather than calling fetch itself.
-	queue := queue.NewInMemory(ctx, 10, nil, func(ctx context.Context, mpath, version string) (int, error) {
-		code, _, err := fetcher.FetchAndUpdateState(ctx, mpath, version, "test", false)
-		return code, err
-	})
-	workerServer, err := worker.NewServer(&config.Config{}, worker.ServerConfig{
-		DB:               testDB,
-		IndexClient:      indexClient,
-		ProxyClient:      proxyClient,
-		SourceClient:     source.NewClient(1 * time.Second),
-		RedisHAClient:    redisHAClient,
-		RedisCacheClient: redisCacheClient,
-		Queue:            queue,
-		StaticPath:       template.TrustedSourceFromConstant("../../../content/static"),
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-	workerMux := http.NewServeMux()
-	workerServer.Install(workerMux.Handle)
-	workerHTTP := httptest.NewServer(workerMux)
-
+	workerHTTP, fetcher, queue := setupWorker(ctx, t, proxyClient, indexClient, redisCacheClient, redisHAClient)
 	frontendHTTP := setupFrontend(ctx, t, queue, redisCacheClient)
 	if _, err := doGet(workerHTTP.URL + "/poll"); err != nil {
 		t.Fatal(err)
@@ -139,7 +96,7 @@ func TestEndToEndProcessing(t *testing.T) {
 	modulePath := "example.com/single"
 	version := "v1.2.3"
 	proxyServer.AddModule(proxy.FindModule(testModules, modulePath, "v1.0.0").ChangeVersion(version))
-	_, _, err = fetcher.FetchAndUpdateState(ctx, modulePath, version, "test", false)
+	_, _, err := fetcher.FetchAndUpdateState(ctx, modulePath, version, "test", false)
 	if err != nil {
 		t.Fatal(err)
 	}
