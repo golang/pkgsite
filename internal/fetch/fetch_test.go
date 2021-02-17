@@ -140,7 +140,6 @@ func TestFetchModule(t *testing.T) {
 								cmpopts.IgnoreFields(internal.Module{}, "CommitTime"),
 							}...)
 					}
-
 					opts = append(opts, sample.LicenseCmpOpts...)
 					if diff := cmp.Diff(fr, got, opts...); diff != "" {
 						t.Fatalf("mismatch (-want +got):\n%s", diff)

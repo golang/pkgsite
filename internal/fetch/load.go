@@ -95,10 +95,34 @@ func loadPackage(ctx context.Context, zipGoFiles []*zip.File, innerPath string,
 			doc2 := *doc
 			doc2.GOOS = bc.GOOS
 			doc2.GOARCH = bc.GOARCH
+			doc2.API = nil
+			for _, s := range doc.API {
+				s2 := *s
+				s2.Children = nil
+				s2.GOOS = bc.GOOS
+				s2.GOARCH = bc.GOARCH
+				for _, c := range s.Children {
+					c2 := *c
+					c2.GOOS = bc.GOOS
+					c2.GOARCH = bc.GOARCH
+					s2.Children = append(s2.Children, &c2)
+				}
+				doc2.API = append(doc2.API, &s2)
+			}
 			pkg.docs = append(pkg.docs, &doc2)
 			continue
 		}
-		name, imports, synopsis, source, api, err := loadPackageForBuildContext(ctx, mfiles, innerPath, sourceInfo, modInfo)
+		name, imports, synopsis, source, api, err := loadPackageForBuildContext(ctx,
+			mfiles, innerPath, sourceInfo, modInfo)
+		for _, s := range api {
+			s.GOOS = bc.GOOS
+			s.GOARCH = bc.GOARCH
+			for _, c := range s.Children {
+				c.GOOS = bc.GOOS
+				c.GOARCH = bc.GOARCH
+			}
+		}
+
 		switch {
 		case errors.Is(err, derrors.NotFound):
 			// No package for this build context.
@@ -160,6 +184,14 @@ func loadPackage(ctx context.Context, zipGoFiles []*zip.File, innerPath string,
 		pkg.docs = pkg.docs[:1]
 		pkg.docs[0].GOOS = internal.All
 		pkg.docs[0].GOARCH = internal.All
+		for _, s := range pkg.docs[0].API {
+			s.GOOS = internal.All
+			s.GOARCH = internal.All
+			for _, c := range s.Children {
+				c.GOOS = internal.All
+				c.GOARCH = internal.All
+			}
+		}
 	}
 	return pkg, nil
 }

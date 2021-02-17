@@ -57,4 +57,10 @@ type Symbol struct {
 
 	// SinceVersion is the first version when the symbol was introduced.
 	SinceVersion string
+
+	// GOOS specifies the execution operating system where the symbol appears.
+	GOOS string
+
+	// GOARCH specifies the execution architecture where the symbol appears.
+	GOARCH string
 }
