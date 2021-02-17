@@ -297,7 +297,7 @@ func (s *Server) doFetch(w http.ResponseWriter, r *http.Request) (string, int) {
 		Cache:        s.cache,
 	}
 	code, resolvedVersion, err := f.FetchAndUpdateState(r.Context(), modulePath, requestedVersion, s.cfg.AppVersionLabel(), disableProxyFetch)
-	if err != nil {
+	if code == http.StatusInternalServerError {
 		s.reportError(r.Context(), err, w, r)
 		return err.Error(), code
 	}
