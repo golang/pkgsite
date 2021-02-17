@@ -6,21 +6,23 @@
 package internal
 
 const (
-	ExperimentCommandTOC           = "command-toc"
-	ExperimentDirectoryTree        = "directory-tree"
-	ExperimentInsertSymbolHistory  = "insert-symbol-history"
-	ExperimentNotAtLatest          = "not-at-latest"
-	ExperimentRedirectedFromBanner = "redirected-from-banner"
+	ExperimentCommandTOC            = "command-toc"
+	ExperimentDirectoryTree         = "directory-tree"
+	ExperimentInsertSymbolHistory   = "insert-symbol-history"
+	ExperimentInteractivePlayground = "interactive-playground"
+	ExperimentNotAtLatest           = "not-at-latest"
+	ExperimentRedirectedFromBanner  = "redirected-from-banner"
 )
 
 // Experiments represents all of the active experiments in the codebase and
 // a description of each experiment.
 var Experiments = map[string]string{
-	ExperimentCommandTOC:           "Enable the table of contents for command documention pages.",
-	ExperimentDirectoryTree:        "Enable the directory tree layout on the unit page.",
-	ExperimentInsertSymbolHistory:  "Insert symbol history data into the symbol_history table.",
-	ExperimentNotAtLatest:          "Enable the display of a 'not at latest' badge.",
-	ExperimentRedirectedFromBanner: "Display banner with path that request was redirected from.",
+	ExperimentCommandTOC:            "Enable the table of contents for command documention pages.",
+	ExperimentDirectoryTree:         "Enable the directory tree layout on the unit page.",
+	ExperimentInsertSymbolHistory:   "Insert symbol history data into the symbol_history table.",
+	ExperimentInteractivePlayground: "Enable interactive example playground on the unit page.",
+	ExperimentNotAtLatest:           "Enable the display of a 'not at latest' badge.",
+	ExperimentRedirectedFromBanner:  "Display banner with path that request was redirected from.",
 }
 
 // Experiment holds data associated with an experimental feature for frontend
