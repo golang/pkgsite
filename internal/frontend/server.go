@@ -352,13 +352,13 @@ func (s *Server) serveError(w http.ResponseWriter, r *http.Request, err error) {
 	}
 	if serr.status == http.StatusInternalServerError {
 		log.Error(ctx, err)
+		s.reportError(ctx, err, w, r)
 	} else {
 		log.Infof(ctx, "returning %d (%s) for error %v", serr.status, http.StatusText(serr.status), err)
 	}
 	if serr.responseText == "" {
 		serr.responseText = http.StatusText(serr.status)
 	}
-	s.reportError(ctx, err, w, r)
 	if r.Method == http.MethodPost {
 		http.Error(w, serr.responseText, serr.status)
 		return
