@@ -38,7 +38,7 @@ func DBConnURI(dbName string) string {
 		host     = getEnv("GO_DISCOVERY_DATABASE_TEST_HOST", "localhost")
 		port     = getEnv("GO_DISCOVERY_DATABASE_TEST_PORT", "5432")
 	)
-	cs := fmt.Sprintf("postgres://%s/%s?sslmode=disable&user=%s&password=%s&port=%s",
+	cs := fmt.Sprintf("postgres://%s/%s?sslmode=disable&user=%s&password=%s&port=%s&timezone=UTC",
 		host, dbName, url.QueryEscape(user), url.QueryEscape(password), url.QueryEscape(port))
 	return cs
 }
