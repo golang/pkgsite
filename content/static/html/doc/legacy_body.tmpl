@@ -1,0 +1,162 @@
+<!--
+  Copyright 2020 The Go Authors. All rights reserved.
+  Use of this source code is governed by a BSD-style
+  license that can be found in the LICENSE file.
+-->
+<div class="Documentation-content js-docContent"> {{/* Documentation content container */}}
+{{- if or .Doc (index .Examples.Map "") -}}
+  <section class="Documentation-overview">
+    <h3 tabindex="-1" id="pkg-overview" class="Documentation-overviewHeader">Overview <a href="#pkg-overview">¶</a></h3>{{"\n\n" -}}
+    {{render_doc_extract_links .Doc}}{{"\n" -}}
+    {{- template "legacy_example" (index .Examples.Map "") -}}
+  </section>
+{{- end -}}
+
+{{- if or .Consts .Vars .Funcs .Types -}}
+  <section class="Documentation-index">
+    <h3 id="pkg-index" class="Documentation-indexHeader">Index <a href="#pkg-index">¶</a></h3>{{"\n\n" -}}
+    <ul class="Documentation-indexList">{{"\n" -}}
+      {{- if .Consts -}}<li class="Documentation-indexConstants"><a href="#pkg-constants">Constants</a></li>{{"\n"}}{{- end -}}
+      {{- if .Vars -}}<li class="Documentation-indexVariables"><a href="#pkg-variables">Variables</a></li>{{"\n"}}{{- end -}}
+
+      {{- range .Funcs -}}
+      <li class="Documentation-indexFunction">
+        <a href="#{{.Name}}">{{render_synopsis .Decl}}</a>
+      </li>{{"\n"}}
+      {{- end -}}
+
+      {{- range .Types -}}
+        {{- $tname := .Name -}}
+        <li class="Documentation-indexType"><a href="#{{$tname}}">type {{$tname}}</a></li>{{"\n"}}
+        {{- with .Funcs -}}
+          <li><ul class="Documentation-indexTypeFunctions">{{"\n" -}}
+          {{range .}}<li><a href="#{{.Name}}">{{render_synopsis .Decl}}</a></li>{{"\n"}}{{end}}
+          </ul></li>{{"\n" -}}
+        {{- end -}}
+        {{- with .Methods -}}
+          <li><ul class="Documentation-indexTypeMethods">{{"\n" -}}
+          {{range .}}<li><a href="#{{$tname}}.{{.Name}}">{{render_synopsis .Decl}}</a></li>{{"\n"}}{{end}}
+          </ul></li>{{"\n" -}}
+        {{- end -}}
+      {{- end -}}
+
+      {{- range $marker, $item := .Notes -}}
+      <li class="Documentation-indexNote"><a href="#pkg-note-{{$marker}}">{{(index $.NoteHeaders $marker).Label}}s</a></li>
+      {{- end -}}
+    </ul>{{"\n" -}}
+  </section>
+
+  {{- if .Examples.List -}}
+  <section class="Documentation-examples">
+    <h4 tabindex="-1" id="pkg-examples" class="Documentation-examplesHeader">Examples <a class="Documentation-idLink" href="#pkg-examples">¶</a></h4>{{"\n" -}}
+    <ul class="Documentation-examplesList">{{"\n" -}}
+      {{- range .Examples.List -}}
+        <li><a href="#{{.ID}}" class="js-exampleHref">{{or .ParentID "Package"}}{{with .Suffix}} ({{.}}){{end}}</a></li>{{"\n" -}}
+      {{- end -}}
+    </ul>{{"\n" -}}
+  </section>
+  {{- end -}}
+
+  <h3 tabindex="-1" id="pkg-constants" class="Documentation-constantsHeader">Constants <a href="#pkg-constants">¶</a></h3>{{"\n"}}
+  <section class="Documentation-constants">
+  {{- if .Consts -}}
+    {{- range .Consts -}}
+      {{- template "declaration-view-source" . -}}
+    {{- end -}}
+  {{- else -}}
+      <div class="Documentation-empty">This section is empty.</div>
+  {{- end -}}
+  </section>
+
+  <h3 tabindex="-1" id="pkg-variables" class="Documentation-variablesHeader">Variables <a href="#pkg-variables">¶</a></h3>{{"\n"}}
+  <section class="Documentation-variables">
+  {{- if .Vars -}}
+    {{- range .Vars -}}
+      {{- template "declaration-view-source" . -}}
+    {{- end -}}
+  {{- else -}}
+    <div class="Documentation-empty">This section is empty.</div>
+  {{- end -}}
+  </section>
+
+  <h3 tabindex="-1" id="pkg-functions" class="Documentation-functionsHeader">Functions <a href="#pkg-functions">¶</a></h3>{{"\n"}}
+  <section class="Documentation-functions">
+  {{- if .Funcs -}}
+        {{- range .Funcs -}}
+        <div class="Documentation-function">
+            {{- $id := safe_id .Name -}}
+            <h4 tabindex="-1" id="{{$id}}" data-kind="function" class="Documentation-functionHeader">func {{source_link .Name .Decl}} <a class="Documentation-idLink" href="#{{$id}}">¶</a></h4>{{"\n"}}
+            {{- template "declaration" . -}}
+            {{- template "legacy_example" (index $.Examples.Map .Name) -}}
+        </div>
+        {{- end -}}
+  {{- else -}}
+    <div class="Documentation-empty">This section is empty.</div>
+  {{- end -}}
+  </section>
+
+  <h3 tabindex="-1" id="pkg-types" class="Documentation-typesHeader">Types <a href="#pkg-types">¶</a></h3>{{"\n"}}
+  <section class="Documentation-types">
+  {{- if .Types -}}
+    {{- range .Types -}}
+    <div class="Documentation-type">
+      {{- $tname := .Name -}}
+      {{- $id := safe_id .Name -}}
+      <h4 tabindex="-1" id="{{$id}}" data-kind="type" class="Documentation-typeHeader">type {{source_link .Name .Decl}} <a class="Documentation-idLink" href="#{{$id}}">¶</a></h4>{{"\n"}}
+      {{- template "declaration" . -}}
+      {{- template "legacy_example" (index $.Examples.Map .Name) -}}
+
+      {{- range .Consts -}}
+      <div class="Documentation-typeConstant">
+        {{- template "declaration" . -}}
+      </div>
+      {{- end -}}
+
+      {{- range .Vars -}}
+      <div class="Documentation-typeVariable">
+        {{- template "declaration" . -}}
+      </div>
+      {{- end -}}
+
+      {{- range .Funcs -}}
+      <div class="Documentation-typeFunc">
+        {{- $id := safe_id .Name -}}
+        <h4 tabindex="-1" id="{{$id}}" data-kind="function" class="Documentation-typeFuncHeader">func {{source_link .Name .Decl}} <a class="Documentation-idLink" href="#{{$id}}">¶</a></h4>{{"\n"}}
+        {{- template "declaration" . -}}
+        {{- template "legacy_example" (index $.Examples.Map .Name) -}}
+      </div>
+      {{- end -}}
+
+      {{- range .Methods -}}
+      <div class="Documentation-typeMethod">
+        {{- $name := (printf "%s.%s" $tname .Name) -}}
+        {{- $id := (safe_id $name) -}}
+        <h4 tabindex="-1" id="{{$id}}" data-kind="method" class="Documentation-typeMethodHeader">func ({{.Recv}}) {{source_link .Name .Decl}} <a class="Documentation-idLink" href="#{{$id}}">¶</a></h4>{{"\n"}}
+        {{- template "declaration" . -}}
+        {{- template "legacy_example" (index $.Examples.Map $name) -}}
+      </div>
+      {{- end -}}
+    </div>
+    {{- end -}}
+  {{- else -}}
+    <div class="Documentation-empty">This section is empty.</div>
+  {{- end -}}
+  </section>
+{{- end -}}
+
+{{- if .Notes -}}
+  <h3 tabindex="-1" id="pkg-notes" class="Documentation-notesHeader">Notes <a href="#pkg-notes">¶</a></h3>{{"\n"}}
+  <section class="Documentation-notes">
+    {{- range $marker, $content := .Notes -}}
+    <div class="Documentation-note">
+      <h3 tabindex="-1" id="{{(index $.NoteHeaders $marker).SafeIdentifier}}" class="Documentation-noteHeader">{{(index $.NoteHeaders $marker).Label}}s <a href="#pkg-note-{{$marker}}">¶</a></h3>
+      <ul class="Documentation-noteList" style="padding-left: 20px; list-style: initial;">{{"\n" -}}
+      {{- range $v := $content -}}
+        <li style="margin: 6px 0 6px 0;">{{render_doc $v.Body}}</li>
+      {{- end -}}
+      </ul>{{"\n" -}}
+    </div>
+    {{- end -}}
+  </section>
+{{- end -}}
+</div> {{/* End documentation content container */}}
