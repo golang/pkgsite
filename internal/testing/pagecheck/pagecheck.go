@@ -106,17 +106,11 @@ func UnitHeader(p *Page, versionedURL bool, isPackage bool) htmlcheck.Checker {
 		importsDetails = nil
 	}
 
-	majorVersionBannerClass := "UnitHeader-majorVersionBanner"
+	var majorVersionBanner htmlcheck.Checker
 	if p.IsLatestMajor {
-		majorVersionBannerClass += "  DetailsHeader-banner--latest"
-	}
-
-	return in("header.UnitHeader",
-		versionBadge(p),
-		in(`[data-test-id="UnitHeader-breadcrumbCurrent"]`, text(curBreadcrumb)),
-		in(`[data-test-id="UnitHeader-title"]`, text(p.Title)),
-		in(`[data-test-id="UnitHeader-majorVersionBanner"]`,
-			attr("class", majorVersionBannerClass),
+		majorVersionBanner = htmlcheck.NotIn(`[data-test-id="UnitHeader-majorVersionBanner"]`)
+	} else {
+		majorVersionBanner = in(`[data-test-id="UnitHeader-majorVersionBanner"]`,
 			in("span",
 				text("The highest tagged major version is "),
 				in("a",
@@ -124,7 +118,13 @@ func UnitHeader(p *Page, versionedURL bool, isPackage bool) htmlcheck.Checker {
 					exactText(p.LatestMajorVersion),
 				),
 			),
-		),
+		)
+	}
+	return in("header.UnitHeader",
+		versionBadge(p),
+		in(`[data-test-id="UnitHeader-breadcrumbCurrent"]`, text(curBreadcrumb)),
+		in(`[data-test-id="UnitHeader-title"]`, text(p.Title)),
+		majorVersionBanner,
 		in(`[data-test-id="UnitHeader-version"]`,
 			in("a",
 				href("?tab=versions"),

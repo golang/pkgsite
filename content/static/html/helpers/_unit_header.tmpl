@@ -4,7 +4,7 @@
   license that can be found in the LICENSE file.
 -->
 
-{{/* . = internal/frontend.UnitPage */}}
+{{/* . is internal/frontend.UnitPage */}}
 
 {{define "unit_header"}}
   <header class="UnitHeader" role="complementary"
@@ -46,13 +46,14 @@
           </span>
         </div>
       {{end}}
-      <div class="UnitHeader-majorVersionBanner $$GODISCOVERY_LATESTMAJORCLASS$$" data-test-id="UnitHeader-majorVersionBanner">
-        <img height="19px" width="16px" class="UnitHeader-detailIcon" src="/static/img/pkg-icon-info_19x16.svg" alt="">
-        <span>
-          The highest tagged major version is <a href="/$$GODISCOVERY_LATESTMAJORVERSIONURL$$">$$GODISCOVERY_LATESTMAJORVERSION$$</a>.
-        </span>
-      </div>
-
+      {{if .LatestMajorVersion}}
+        <div class="UnitHeader-majorVersionBanner" data-test-id="UnitHeader-majorVersionBanner">
+          <img height="19px" width="16px" class="UnitHeader-detailIcon" src="/static/img/pkg-icon-info_19x16.svg" alt="">
+          <span>
+            The highest tagged major version is <a href="/{{.LatestMajorVersionURL}}">{{.LatestMajorVersion}}</a>.
+          </span>
+        </div>
+      {{end}}
       <div class="js-fixedHeaderSentinel"></div>
       {{if (eq .SelectedTab.Name "")}}
         <div class="UnitHeader-detail">

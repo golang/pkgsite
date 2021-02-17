@@ -462,7 +462,6 @@ func serverTestCases() []serverTestCase {
 	pp.Version = pseudoVersion
 	pp.FormattedVersion = "v0.0.0-...-1234567"
 	pp.IsLatestMinor = false
-	p9.IsLatestMajor = false
 	pkgPseudo := &pp
 
 	pkgInc := &pagecheck.Page{
@@ -1186,7 +1185,7 @@ func testServer(t *testing.T, testCases []serverTestCase, experimentNames ...str
 			handler.ServeHTTP(w, httptest.NewRequest("GET", test.urlPath, nil))
 			res := w.Result()
 			if res.StatusCode != test.wantStatusCode {
-				t.Errorf("GET %q = %d, want %d", test.urlPath, res.StatusCode, test.wantStatusCode)
+				t.Fatalf("GET %q = %d, want %d", test.urlPath, res.StatusCode, test.wantStatusCode)
 			}
 			if test.wantLocation != "" {
 				if got := res.Header.Get("Location"); got != test.wantLocation {
@@ -1463,9 +1462,7 @@ func newTestServer(t *testing.T, proxyModules []*proxy.Module, redisClient *redi
 	if err != nil {
 		t.Fatal(err)
 	}
-	mw := middleware.Chain(
-		middleware.Experiment(exp),
-		middleware.LatestVersions(s.GetLatestInfo))
+	mw := middleware.Experiment(exp)
 	return s, mw(mux), func() {
 		teardown()
 		postgres.ResetTestDB(testDB, t)

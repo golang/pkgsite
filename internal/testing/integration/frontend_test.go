@@ -64,7 +64,6 @@ func setupFrontend(ctx context.Context, t *testing.T, q queue.Queue, rc *redis.C
 	mw := middleware.Chain(
 		middleware.AcceptRequests(http.MethodGet, http.MethodPost),
 		middleware.SecureHeaders(enableCSP),
-		middleware.LatestVersions(s.GetLatestInfo),
 		middleware.Experiment(experimenter),
 	)
 	return httptest.NewServer(mw(mux))

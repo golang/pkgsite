@@ -71,10 +71,7 @@ func main() {
 	router := dcensus.NewRouter(frontend.TagRoute)
 	server.Install(router.Handle, nil, nil)
 
-	mw := middleware.Chain(
-		middleware.LatestVersions(server.GetLatestInfo), // must come before caching for version badge to work
-		middleware.Timeout(54*time.Second),
-	)
+	mw := middleware.Timeout(54 * time.Second)
 	log.Infof(ctx, "Listening on addr %s", *httpAddr)
 	log.Fatal(ctx, http.ListenAndServe(*httpAddr, mw(router)))
 }

@@ -67,9 +67,9 @@ var (
 		TagKeys:     []tag.Key{keyCacheName, keyCacheOperation},
 	}
 
-	// To avoid test flakiness, when testMode is true, cache writes are
+	// To avoid test flakiness, when TestMode is true, cache writes are
 	// synchronous.
-	testMode = false
+	TestMode = false
 )
 
 func recordCacheResult(ctx context.Context, name string, hit bool, latency time.Duration) {
@@ -153,7 +153,7 @@ func (c *cache) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	c.delegate.ServeHTTP(rec, r)
 	if rec.bufErr == nil && (rec.statusCode == 0 || rec.statusCode == http.StatusOK) {
 		ttl := c.expirer(r)
-		if testMode {
+		if TestMode {
 			c.put(ctx, key, rec, ttl)
 		} else {
 			go c.put(ctx, key, rec, ttl)

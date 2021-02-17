@@ -180,7 +180,6 @@ func main() {
 		middleware.Quota(cfg.Quota, cacheClient),
 		middleware.SecureHeaders(!*disableCSP), // must come before any caching for nonces to work
 		middleware.Experiment(experimenter),
-		middleware.LatestVersions(server.GetLatestInfo), // must come before caching for version badge to work
 		middleware.Panic(panicHandler),
 		ermw,
 		middleware.Timeout(54*time.Second),

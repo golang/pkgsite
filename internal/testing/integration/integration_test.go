@@ -20,6 +20,7 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/godoc/dochtml"
 	"golang.org/x/pkgsite/internal/index"
+	"golang.org/x/pkgsite/internal/middleware"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/proxy"
 )
@@ -40,6 +41,8 @@ func TestEndToEndProcessing(t *testing.T) {
 	defer cancel()
 
 	defer postgres.ResetTestDB(testDB, t)
+
+	middleware.TestMode = true
 
 	proxyClient, proxyServer, indexClient, teardownClients := setupProxyAndIndex(t)
 	defer teardownClients()
