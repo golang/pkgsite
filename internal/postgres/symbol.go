@@ -20,14 +20,14 @@ import (
 func insertSymbols(ctx context.Context, db *database.DB, modulePath, version string,
 	pathToID map[string]int, pathToDocs map[string][]*internal.Documentation) (err error) {
 	defer derrors.WrapStack(&err, "insertSymbols(ctx, db, %q, %q, pathToID, pathToDocs)", modulePath, version)
-	symToID, err := upsertSymbolsReturningIDs(ctx, db, pathToDocs)
-	if err != nil {
-		return err
-	}
 	if !experiment.IsActive(ctx, internal.ExperimentInsertSymbolHistory) {
 		return nil
 	}
 
+	symToID, err := upsertSymbolsReturningIDs(ctx, db, pathToDocs)
+	if err != nil {
+		return err
+	}
 	var symHistoryValues []interface{}
 	for path, docs := range pathToDocs {
 		buildToNameToSym, err := getSymbolHistory(ctx, db, path, modulePath)
