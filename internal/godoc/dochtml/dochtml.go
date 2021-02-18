@@ -134,8 +134,13 @@ func RenderParts(ctx context.Context, fset *token.FileSet, p *doc.Package, opt R
 		return html
 	}
 
+	bodyTmplName := "legacy_body.tmpl"
+	if experiment.IsActive(ctx, internal.ExperimentInteractivePlayground) {
+		bodyTmplName = "body.tmpl"
+	}
+
 	parts := &Parts{
-		Body:          exec("body.tmpl"),
+		Body:          exec(bodyTmplName),
 		Outline:       exec("outline.tmpl"),
 		MobileOutline: exec("sidenav-mobile.tmpl"),
 		// links must be called after body, because the call to
@@ -193,8 +198,9 @@ func renderInfo(ctx context.Context, fset *token.FileSet, p *doc.Package, opt Re
 			}
 			return "/" + versionedPath
 		},
-		DisableHotlinking: true,
-		EnableCommandTOC:  experiment.IsActive(ctx, internal.ExperimentCommandTOC),
+		DisableHotlinking:           true,
+		EnableCommandTOC:            experiment.IsActive(ctx, internal.ExperimentCommandTOC),
+		EnableInteractivePlayground: experiment.IsActive(ctx, internal.ExperimentInteractivePlayground),
 	})
 
 	fileLink := func(name string) safehtml.HTML {

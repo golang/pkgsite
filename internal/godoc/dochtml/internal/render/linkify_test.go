@@ -366,7 +366,7 @@ b := 1
 `,
 		},
 	} {
-		out := codeHTML(test.in, exampleTmpl)
+		out := codeHTML(test.in, legacyExampleTmpl)
 		got := strings.TrimSpace(string(out.String()))
 		want := strings.TrimSpace(test.want)
 		if got != want {

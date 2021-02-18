@@ -28,6 +28,7 @@ func LoadTemplates(dir template.TrustedSource) {
 		tc := template.TrustedSourceFromConstant
 
 		example := join(dir, tc("example.tmpl"))
+		legacyExample := join(dir, tc("legacy_example.tmpl"))
 		declaration := join(dir, tc("declaration.tmpl"))
 		unitTemplate = template.Must(template.New("unit.tmpl").
 			Funcs(tmpl).
@@ -36,7 +37,9 @@ func LoadTemplates(dir template.TrustedSource) {
 				join(dir, tc("outline.tmpl")),
 				join(dir, tc("sidenav-mobile.tmpl")),
 				join(dir, tc("body.tmpl")),
+				join(dir, tc("legacy_body.tmpl")),
 				example,
+				legacyExample,
 				declaration))
 	})
 }
