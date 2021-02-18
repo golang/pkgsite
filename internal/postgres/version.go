@@ -55,8 +55,6 @@ func getPathVersions(ctx context.Context, db *DB, path string, versionTypes ...v
 	FROM modules m
 	INNER JOIN units u
 		ON u.module_id = m.id
-	LEFT JOIN documentation d
-		ON d.unit_id = u.id
 	WHERE
 		u.v1path_id = (
 			SELECT u2.v1path_id
