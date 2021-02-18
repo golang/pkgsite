@@ -115,10 +115,7 @@ func newGCP(cfg *config.Config, client *cloudtasks.Client, queueID string) (_ *G
 // version. It returns an error if there was an error hashing the task name, or
 // an error pushing the task to GCP. If the task was a duplicate, it returns (false, nil).
 func (q *GCP) ScheduleFetch(ctx context.Context, modulePath, version, suffix string, disableProxyFetch bool) (enqueued bool, err error) {
-	// the new taskqueue API requires a deadline of <= 30s
-	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
-	defer cancel()
-	defer derrors.Wrap(&err, "queue.ScheduleFetch(%q, %q, %q)", modulePath, version, suffix)
+	defer derrors.WrapStack(&err, "queue.ScheduleFetch(%q, %q, %q)", modulePath, version, suffix)
 
 	req := q.newTaskRequest(modulePath, version, suffix, disableProxyFetch)
 	enqueued = true
