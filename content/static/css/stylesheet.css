@@ -115,7 +115,8 @@ p {
   word-break: break-word;
 }
 code,
-pre {
+pre,
+.Documentation textarea {
   font-size: 1rem;
   font-family: SFMono-Regular, Consolas, Liberation Mono, Menlo, monospace;
 }
@@ -1234,7 +1235,8 @@ pre {
   padding-left: 2em;
 }
 .Documentation code,
-.Documentation pre {
+.Documentation pre,
+.Documentation textarea {
   background-color: var(--gray-10);
   border-radius: 0.3em;
   border: 0.0625rem solid var(--gray-7);
@@ -1344,7 +1346,7 @@ pre {
   justify-content: flex-end;
   margin-top: 0.5rem;
 }
-.Documentation-exampleButtonsContainer button {
+.Documentation-examplePlayButton {
   background-color: var(--white);
   border: 0.15rem solid var(--turq-med);
   color: var(--turq-med);
@@ -1353,11 +1355,40 @@ pre {
   height: 2.5rem;
   width: 4.125rem;
 }
+.Documentation-exampleRunButton,
+.Documentation-exampleShareButton,
+.Documentation-exampleFormatButton {
+  border: 0.0625rem solid var(--turq-dark);
+  border-radius: 0.25rem;
+  cursor: pointer;
+  height: 2rem;
+  margin-left: 0.5rem;
+  padding: 0 1rem;
+}
+.Documentation-exampleRunButton {
+  background-color: var(--turq-dark);
+  color: var(--white);
+}
+.Documentation-exampleShareButton,
+.Documentation-exampleFormatButton {
+  background-color: var(--white);
+  color: var(--turq-dark);
+}
 .Documentation-exampleDetails {
   margin-top: 1rem;
 }
 .Documentation-exampleDetailsBody pre {
-  margin: 1rem 0;
+  border-radius: 0 0 0.3rem 0.3rem;
+  margin-bottom: 1rem;
+  margin-top: -0.25rem;
+}
+.Documentation-exampleDetailsBody textarea {
+  border: 0.0625rem solid var(--gray-7);
+  height: 100%;
+  outline: none;
+  overflow: hidden;
+  resize: none;
+  width: 100%;
 }
 /**
  * We add another selector here to these two classes to increase CSS specificity,
@@ -1380,6 +1411,9 @@ pre {
   margin-bottom: 2rem;
   outline: none;
   text-decoration: none;
+}
+.Documentation-exampleOutputLabel {
+  color: var(--gray-4);
 }
 .Documentation-exampleError {
   color: var(--pink);

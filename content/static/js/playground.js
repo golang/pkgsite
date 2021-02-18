@@ -11,43 +11,30 @@ const PlayExampleClassName = {
   EXAMPLE_OUTPUT: '.Documentation-exampleOutput',
   EXAMPLE_ERROR: '.Documentation-exampleError',
   PLAY_BUTTON: '.Documentation-examplePlayButton',
+  SHARE_BUTTON: '.Documentation-exampleShareButton',
+  FORMAT_BUTTON: '.Documentation-exampleFormatButton',
+  RUN_BUTTON: '.Documentation-exampleRunButton',
 };
 export class PlaygroundExampleController {
   constructor(exampleEl) {
     this.exampleEl = exampleEl;
-    let hasError = false;
-    if (!exampleEl) {
-      console.warn('Must provide playground example element');
-      hasError = true;
-    }
     this.exampleEl = exampleEl;
-    const anchorEl = exampleEl.querySelector('a');
-    if (!anchorEl) {
-      console.warn('anchor tag is not detected');
-      hasError = true;
-    }
-    this.anchorEl = anchorEl;
-    const errorEl = exampleEl.querySelector(PlayExampleClassName.EXAMPLE_ERROR);
-    if (!errorEl) {
-      hasError = true;
-    }
-    this.errorEl = errorEl;
-    const playButtonEl = exampleEl.querySelector(PlayExampleClassName.PLAY_BUTTON);
-    if (!playButtonEl) {
-      hasError = true;
-    }
-    this.playButtonEl = playButtonEl;
-    const inputEl = exampleEl.querySelector(PlayExampleClassName.EXAMPLE_INPUT);
-    if (!inputEl) {
-      console.warn('Input element is not detected');
-      hasError = true;
-    }
-    this.inputEl = inputEl;
+    this.anchorEl = exampleEl.querySelector('a');
+    this.errorEl = exampleEl.querySelector(PlayExampleClassName.EXAMPLE_ERROR);
+    this.playButtonEl = exampleEl.querySelector(PlayExampleClassName.PLAY_BUTTON);
+    this.shareButtonEl = exampleEl.querySelector(PlayExampleClassName.SHARE_BUTTON);
+    this.formatButtonEl = exampleEl.querySelector(PlayExampleClassName.FORMAT_BUTTON);
+    this.runButtonEl = exampleEl.querySelector(PlayExampleClassName.RUN_BUTTON);
+    this.inputEl = exampleEl.querySelector(PlayExampleClassName.EXAMPLE_INPUT);
     this.outputEl = exampleEl.querySelector(PlayExampleClassName.EXAMPLE_OUTPUT);
-    if (hasError) {
-      return;
-    }
-    this.playButtonEl?.addEventListener('click', () => this.handlePlayButtonClick());
+    this.playButtonEl?.addEventListener('click', () => this.handleShareButtonClick());
+    this.shareButtonEl?.addEventListener('click', () => this.handleShareButtonClick());
+    this.formatButtonEl?.addEventListener('click', () => this.handleFormatButtonClick());
+    this.runButtonEl?.addEventListener('click', () => this.handleRunButtonClick());
+    if (!this.inputEl) return;
+    this.resize();
+    this.inputEl.addEventListener('keyup', () => this.resize());
+    this.inputEl.addEventListener('keydown', e => this.onKeydown(e));
   }
   getAnchorHash() {
     return this.anchorEl?.hash;
@@ -55,9 +42,26 @@ export class PlaygroundExampleController {
   expand() {
     this.exampleEl.open = true;
   }
+  resize() {
+    if (this.inputEl?.value) {
+      const numLineBreaks = (this.inputEl.value.match(/\n/g) || []).length;
+      this.inputEl.style.height = `${(20 + numLineBreaks * 20 + 12 + 2) / 16}rem`;
+    }
+  }
+  onKeydown(e) {
+    if (e.key === 'Tab') {
+      document.execCommand('insertText', false, '\t');
+      e.preventDefault();
+    }
+  }
+  setInputText(output) {
+    if (this.inputEl) {
+      this.inputEl.value = output;
+    }
+  }
   setOutputText(output) {
     if (this.outputEl) {
-      this.outputEl.textContent = output;
+      this.outputEl.innerHTML = output;
     }
   }
   setErrorText(err) {
@@ -66,16 +70,58 @@ export class PlaygroundExampleController {
     }
     this.setOutputText('An error has occurred…');
   }
-  handlePlayButtonClick() {
-    const PLAYGROUND_BASE_URL = '//play.golang.org/p/';
+  handleShareButtonClick() {
+    const PLAYGROUND_BASE_URL = 'https://play.golang.org/p/';
     this.setOutputText('Waiting for remote server…');
-    fetch('/play/', {
+    fetch('/play/share', {
       method: 'POST',
       body: this.inputEl?.textContent,
     })
       .then(res => res.text())
       .then(shareId => {
-        window.open(PLAYGROUND_BASE_URL + shareId);
+        const href = PLAYGROUND_BASE_URL + shareId;
+        this.setOutputText(`<a href="${href}">${href}</a>`);
+        window.open(href);
+      })
+      .catch(err => {
+        this.setErrorText(err);
+      });
+  }
+  handleFormatButtonClick() {
+    this.setOutputText('Waiting for remote server…');
+    const body = new FormData();
+    body.append('body', this.inputEl?.value ?? '');
+    fetch('/play/fmt', {
+      method: 'POST',
+      body: body,
+    })
+      .then(res => res.json())
+      .then(({ Body, Error }) => {
+        this.setOutputText(Error || 'Done.');
+        if (Body) {
+          this.setInputText(Body);
+          this.resize();
+        }
+      })
+      .catch(err => {
+        this.setErrorText(err);
+      });
+  }
+  handleRunButtonClick() {
+    this.setOutputText('Waiting for remote server…');
+    fetch('/play/compile', {
+      method: 'POST',
+      body: JSON.stringify({ body: this.inputEl?.value, version: 2 }),
+    })
+      .then(res => res.json())
+      .then(async ({ Events, Errors }) => {
+        if (Errors) {
+          this.setOutputText(Errors);
+        }
+        for (const e of Events || []) {
+          this.setOutputText(e.Message);
+          await new Promise(resolve => setTimeout(resolve, e.Delay / 1000000));
+        }
       })
       .catch(err => {
         this.setErrorText(err);

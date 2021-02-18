@@ -21,6 +21,9 @@ const PlayExampleClassName = {
   EXAMPLE_OUTPUT: '.Documentation-exampleOutput',
   EXAMPLE_ERROR: '.Documentation-exampleError',
   PLAY_BUTTON: '.Documentation-examplePlayButton',
+  SHARE_BUTTON: '.Documentation-exampleShareButton',
+  FORMAT_BUTTON: '.Documentation-exampleFormatButton',
+  RUN_BUTTON: '.Documentation-exampleRunButton',
 };
 
 /**
@@ -28,79 +31,71 @@ const PlayExampleClassName = {
  * generate shareable Go Playground URLs.
  */
 export class PlaygroundExampleController {
+  /**
+   * The anchor tag used to identify the container with an example href.
+   * There is only one in an example container div.
+   */
   private readonly anchorEl: HTMLAnchorElement | null;
+
+  /**
+   * The error element
+   */
   private readonly errorEl: Element | null;
+
+  /**
+   * Buttons that redirect to an example's playground, this element
+   * only exists in executable examples.
+   */
   private readonly playButtonEl: Element | null;
-  private readonly inputEl: Element | null;
+  private readonly shareButtonEl: Element | null;
+
+  /**
+   * Button that formats the code in an example's playground.
+   */
+  private readonly formatButtonEl: Element | null;
+
+  /**
+   * Button that runs the code in an example's playground, this element
+   * only exists in executable examples.
+   */
+  private readonly runButtonEl: Element | null;
+
+  /**
+   * The executable code of an example.
+   */
+  private readonly inputEl: HTMLTextAreaElement | null;
+
+  /**
+   * The output of the given example code. This only exists if the
+   * author of the package provides an output for this example.
+   */
   private readonly outputEl: Element | null;
 
   /**
-   * @param exampleEl - The div that contains playground content for the given example.
+   * @param exampleEl The div that contains playground content for the given example.
    */
-  constructor(private exampleEl: HTMLDetailsElement) {
-    // Used to indicate when to terminate before the eventlistener is added.
-    let hasError = false;
-
-    if (!exampleEl) {
-      console.warn('Must provide playground example element');
-      hasError = true;
-    }
-    /**
-     * The example container
-     */
+  constructor(private readonly exampleEl: HTMLDetailsElement) {
     this.exampleEl = exampleEl;
-
-    /**
-     * The anchor tag used to identify the container with an example href.
-     * There is only one in an example container div.
-     */
-    const anchorEl = exampleEl.querySelector('a');
-    if (!anchorEl) {
-      console.warn('anchor tag is not detected');
-      hasError = true;
-    }
-    this.anchorEl = anchorEl;
-
-    /**
-     * The error element
-     */
-    const errorEl = exampleEl.querySelector(PlayExampleClassName.EXAMPLE_ERROR);
-    if (!errorEl) {
-      hasError = true;
-    }
-    this.errorEl = errorEl;
-
-    /**
-     * Button that redirects to an example's playground, this element
-     * only exists in executable examples.
-     */
-    const playButtonEl = exampleEl.querySelector(PlayExampleClassName.PLAY_BUTTON);
-    if (!playButtonEl) {
-      hasError = true;
-    }
-    this.playButtonEl = playButtonEl;
-
-    /**
-     * The executable code of an example.
-     */
-    const inputEl = exampleEl.querySelector(PlayExampleClassName.EXAMPLE_INPUT);
-    if (!inputEl) {
-      console.warn('Input element is not detected');
-      hasError = true;
-    }
-    this.inputEl = inputEl;
-
-    /**
-     * The output of the given example code. This only exists if the
-     * author of the package provides an output for this example.
-     */
+    this.anchorEl = exampleEl.querySelector('a');
+    this.errorEl = exampleEl.querySelector(PlayExampleClassName.EXAMPLE_ERROR);
+    this.playButtonEl = exampleEl.querySelector(PlayExampleClassName.PLAY_BUTTON);
+    this.shareButtonEl = exampleEl.querySelector(PlayExampleClassName.SHARE_BUTTON);
+    this.formatButtonEl = exampleEl.querySelector(PlayExampleClassName.FORMAT_BUTTON);
+    this.runButtonEl = exampleEl.querySelector(PlayExampleClassName.RUN_BUTTON);
+    this.inputEl = exampleEl.querySelector(PlayExampleClassName.EXAMPLE_INPUT);
     this.outputEl = exampleEl.querySelector(PlayExampleClassName.EXAMPLE_OUTPUT);
 
-    if (hasError) {
-      return;
-    }
+    // This is legacy listener to be replaced the listener for shareButtonEl.
+    this.playButtonEl?.addEventListener('click', () => this.handleShareButtonClick());
+    this.shareButtonEl?.addEventListener('click', () => this.handleShareButtonClick());
+    this.formatButtonEl?.addEventListener('click', () => this.handleFormatButtonClick());
+    this.runButtonEl?.addEventListener('click', () => this.handleRunButtonClick());
 
-    this.playButtonEl?.addEventListener('click', () => this.handlePlayButtonClick());
+    if (!this.inputEl) return;
+
+    this.resize();
+    this.inputEl.addEventListener('keyup', () => this.resize());
+    this.inputEl.addEventListener('keydown', e => this.onKeydown(e));
   }
 
   /**
@@ -118,11 +113,46 @@ export class PlaygroundExampleController {
   }
 
   /**
+   * Resizes the input element to accomodate the amount of text present.
+   */
+  private resize(): void {
+    if (this.inputEl?.value) {
+      const numLineBreaks = (this.inputEl.value.match(/\n/g) || []).length;
+      // min-height + lines x line-height + padding + border
+      this.inputEl.style.height = `${(20 + numLineBreaks * 20 + 12 + 2) / 16}rem`;
+    }
+  }
+
+  /**
+   * Handler to override keyboard behavior in the playground's
+   * textarea element.
+   *
+   * Tab key inserts tabs into the example playground instead of
+   * switching to the next interactive element.
+   * @param e input element keyboard event.
+   */
+  private onKeydown(e: KeyboardEvent) {
+    if (e.key === 'Tab') {
+      document.execCommand('insertText', false, '\t');
+      e.preventDefault();
+    }
+  }
+
+  /**
+   * Changes the text of the example's input box.
+   */
+  private setInputText(output: string) {
+    if (this.inputEl) {
+      this.inputEl.value = output;
+    }
+  }
+
+  /**
    * Changes the text of the example's output box.
    */
   private setOutputText(output: string) {
     if (this.outputEl) {
-      this.outputEl.textContent = output;
+      this.outputEl.innerHTML = output;
     }
   }
 
@@ -141,18 +171,70 @@ export class PlaygroundExampleController {
    * Opens a new window to play.golang.org using the
    * example snippet's code in the playground.
    */
-  private handlePlayButtonClick() {
-    const PLAYGROUND_BASE_URL = '//play.golang.org/p/';
+  private handleShareButtonClick() {
+    const PLAYGROUND_BASE_URL = 'https://play.golang.org/p/';
 
     this.setOutputText('Waiting for remote server…');
 
-    fetch('/play/', {
+    fetch('/play/share', {
       method: 'POST',
       body: this.inputEl?.textContent,
     })
       .then(res => res.text())
       .then(shareId => {
-        window.open(PLAYGROUND_BASE_URL + shareId);
+        const href = PLAYGROUND_BASE_URL + shareId;
+        this.setOutputText(`<a href="${href}">${href}</a>`);
+        window.open(href);
+      })
+      .catch(err => {
+        this.setErrorText(err);
+      });
+  }
+
+  /**
+   * Runs gofmt on the example snippet in the playground.
+   */
+  private handleFormatButtonClick() {
+    this.setOutputText('Waiting for remote server…');
+    const body = new FormData();
+    body.append('body', this.inputEl?.value ?? '');
+
+    fetch('/play/fmt', {
+      method: 'POST',
+      body: body,
+    })
+      .then(res => res.json())
+      .then(({ Body, Error }) => {
+        this.setOutputText(Error || 'Done.');
+        if (Body) {
+          this.setInputText(Body);
+          this.resize();
+        }
+      })
+      .catch(err => {
+        this.setErrorText(err);
+      });
+  }
+
+  /**
+   * Runs the code snippet in the example playground.
+   */
+  private handleRunButtonClick() {
+    this.setOutputText('Waiting for remote server…');
+
+    fetch('/play/compile', {
+      method: 'POST',
+      body: JSON.stringify({ body: this.inputEl?.value, version: 2 }),
+    })
+      .then(res => res.json())
+      .then(async ({ Events, Errors }) => {
+        if (Errors) {
+          this.setOutputText(Errors);
+        }
+        for (const e of Events || []) {
+          this.setOutputText(e.Message);
+          await new Promise(resolve => setTimeout(resolve, e.Delay / 1000000));
+        }
       })
       .catch(err => {
         this.setErrorText(err);
