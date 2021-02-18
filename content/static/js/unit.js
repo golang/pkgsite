@@ -45,7 +45,9 @@ if (readme && readmeContent && readmeOutline && readmeExpand.length && readmeCol
   readmeCollapse.addEventListener('click', e => {
     e.preventDefault();
     readme.classList.remove('UnitReadme--expanded');
-    readmeExpand[1].scrollIntoView({ block: 'center' });
+    if (readmeExpand[1]) {
+      readmeExpand[1].scrollIntoView({ block: 'center' });
+    }
   });
   readmeContent.addEventListener('keyup', e => {
     readme.classList.add('UnitReadme--expanded');
@@ -72,6 +74,6 @@ if (readmeOption && !readme) {
 }
 const unitDirectories = document.querySelector('.js-unitDirectories');
 const directoriesOption = document.querySelector('.js-directoriesOption');
-if (!unitDirectories) {
+if (!unitDirectories && directoriesOption) {
   directoriesOption.setAttribute('disabled', true);
 }
