@@ -22,75 +22,57 @@ import (
 func insertSymbols(ctx context.Context, db *database.DB, modulePath, version string,
 	pathToID map[string]int, pathToDocs map[string][]*internal.Documentation) (err error) {
 	defer derrors.WrapStack(&err, "insertSymbols(ctx, db, %q, %q, pathToID, pathToDocs)", modulePath, version)
-	symToID, err := upsertSymbolsReturningIDs(ctx, db, pathToDocs)
+	if !experiment.IsActive(ctx, internal.ExperimentInsertSymbolHistory) {
+		return nil
+	}
+	pkgsymToID, err := upsertPackageSymbolsReturningIDs(ctx, db, modulePath, pathToID, pathToDocs)
 	if err != nil {
 		return err
 	}
 
-	if !experiment.IsActive(ctx, internal.ExperimentInsertSymbolHistory) {
-		return nil
-	}
-	var symHistoryValues []interface{}
+	var (
+		uniqueKeys       = map[string]string{}
+		symHistoryValues []interface{}
+	)
 	for path, docs := range pathToDocs {
 		buildToNameToSym, err := getSymbolHistory(ctx, db, path, modulePath)
 		if err != nil {
 			return err
 		}
 		for _, doc := range docs {
-			nameToSymbol := buildToNameToSym[goosgoarch(doc.GOOS, doc.GOARCH)]
-			for _, s := range doc.API {
-				symHistoryValues, err = appendSymbolHistoryRow(s, symHistoryValues, path, modulePath, version,
-					pathToID, symToID, nameToSymbol)
-				if err != nil {
-					return err
-				}
-
-				for _, s := range s.Children {
-					symHistoryValues, err = appendSymbolHistoryRow(s, symHistoryValues, path, modulePath, version,
-						pathToID, symToID, nameToSymbol)
-					if err != nil {
-						return err
+			builds := []internal.BuildContext{{GOOS: doc.GOOS, GOARCH: doc.GOARCH}}
+			if doc.GOOS == internal.All {
+				builds = internal.BuildContexts
+			}
+			for _, build := range builds {
+				nameToSymbol := buildToNameToSym[goosgoarch(build.GOOS, build.GOARCH)]
+				updateSymbols(doc.API, func(s *internal.Symbol) (err error) {
+					defer derrors.WrapStack(&err, "updateSymbols(%q)", s.Name)
+					if !shouldUpdateSymbolHistory(s.Name, version, nameToSymbol) {
+						return nil
 					}
-				}
+					pkgsymID := pkgsymToID[packageSymbolKey(s.Section, s.Synopsis)]
+					if pkgsymID == 0 {
+						return fmt.Errorf("symbolID cannot be 0: %q", s.Name)
+					}
+
+					// Validate that the unique constraint won't be violated.
+					// It is easier to debug when returning an error here as
+					// opposed to from the BulkUpsert statement.
+					key := fmt.Sprintf("%d-%s-%s", pkgsymID, build.GOOS, build.GOARCH)
+					if val, ok := uniqueKeys[key]; ok {
+						return fmt.Errorf("symbol %q exists at %q -- failed to insert symbol %q (%q) q with the same (package_symbol_id, goos, goarch)", key, val, s.Name, s.Synopsis)
+					}
+					uniqueKeys[key] = fmt.Sprintf("%q (%q)", s.Name, s.Synopsis)
+					symHistoryValues = append(symHistoryValues, pkgsymID, build.GOOS, build.GOARCH, version)
+					return nil
+				})
 			}
 		}
 	}
-	uniqueSymCols := []string{"package_path_id", "module_path_id", "symbol_id", "goos", "goarch"}
-	symCols := append(uniqueSymCols, "type", "parent_symbol_id", "since_version", "section", "synopsis")
+	uniqueSymCols := []string{"package_symbol_id", "goos", "goarch"}
+	symCols := append(uniqueSymCols, "since_version")
 	return db.BulkUpsert(ctx, "symbol_history", symCols, symHistoryValues, uniqueSymCols)
-}
-
-func appendSymbolHistoryRow(s *internal.Symbol, values []interface{},
-	packagePath, modulePath, version string,
-	pathToID, symToID map[string]int,
-	dbHist map[string]*internal.Symbol) (_ []interface{}, err error) {
-	defer derrors.WrapStack(&err, "symbolHistoryRow(%q, %q, %q, %q)", s.Name, packagePath, modulePath, version)
-	if !shouldUpdateSymbolHistory(s.Name, version, dbHist) {
-		return values, nil
-	}
-
-	symbolID := symToID[s.Name]
-	if symbolID == 0 {
-		return nil, fmt.Errorf("symbolID cannot be 0: %q", s.Name)
-	}
-	if s.ParentName == "" {
-		s.ParentName = s.Name
-	}
-	parentID := symToID[s.ParentName]
-	if parentID == 0 {
-		return nil, fmt.Errorf("parentSymbolID cannot be 0: %q", s.ParentName)
-	}
-	packagePathID := pathToID[packagePath]
-	if packagePathID == 0 {
-		return nil, fmt.Errorf("packagePathID cannot be 0: %q", packagePathID)
-	}
-	modulePathID := pathToID[modulePath]
-	if modulePathID == 0 {
-		return nil, fmt.Errorf("modulePathID cannot be 0: %q", modulePathID)
-	}
-	return append(values,
-		packagePathID, modulePathID, symbolID, s.GOOS, s.GOARCH, s.Kind, parentID,
-		version, s.Section, s.Synopsis), nil
 }
 
 // shouldUpdateSymbolHistory reports whether the row for the given symbolName
@@ -107,19 +89,95 @@ func shouldUpdateSymbolHistory(symbolName, newVersion string, oldHist map[string
 	return semver.Compare(newVersion, dh.SinceVersion) < 1
 }
 
-func upsertSymbolsReturningIDs(ctx context.Context, db *database.DB, pathToDocs map[string][]*internal.Documentation) (_ map[string]int, err error) {
-	defer derrors.WrapStack(&err, "upsertSymbolsReturningIDs")
+func upsertPackageSymbolsReturningIDs(ctx context.Context, db *database.DB,
+	modulePath string, pathToID map[string]int, pathToDocs map[string][]*internal.Documentation) (_ map[string]int, err error) {
+	defer derrors.WrapStack(&err, "upsertPackageSymbolsReturningIDs(ctx, db, %q, pathToID, pathToDocs)", modulePath)
+	nameToID, err := upsertSymbolNamesReturningIDs(ctx, db, pathToDocs)
+	if err != nil {
+		return nil, err
+	}
+
+	var values []interface{}
+	modulePathID := pathToID[modulePath]
+	if modulePathID == 0 {
+		return nil, fmt.Errorf("modulePathID cannot be 0: %q", modulePath)
+	}
+	for path, docs := range pathToDocs {
+		pathID := pathToID[path]
+		for _, doc := range docs {
+			updateSymbols(doc.API, func(s *internal.Symbol) error {
+				if s.ParentName == "" {
+					s.ParentName = s.Name
+				}
+				values = append(values, pathID, modulePathID, nameToID[s.Name], nameToID[s.ParentName], s.Section, s.Kind, s.Synopsis)
+				return nil
+			})
+		}
+	}
+	if err := db.BulkInsert(ctx, "package_symbols",
+		[]string{
+			"package_path_id",
+			"module_path_id",
+			"symbol_name_id",
+			"parent_symbol_name_id",
+			"section",
+			"type",
+			"synopsis",
+		}, values, database.OnConflictDoNothing); err != nil {
+		return nil, err
+	}
+
+	query := `
+        SELECT
+            ps.id,
+            ps.section,
+            ps.synopsis
+        FROM package_symbols ps
+        INNER JOIN symbol_names sn
+        ON ps.symbol_name_id = sn.id
+        WHERE module_path_id = $1;`
+	pkgsymToID := map[string]int{}
+	collect := func(rows *sql.Rows) error {
+		var (
+			id       int
+			section  internal.SymbolSection
+			synopsis string
+		)
+		if err := rows.Scan(&id, &section, &synopsis); err != nil {
+			return fmt.Errorf("row.Scan(): %v", err)
+		}
+		pkgsymToID[packageSymbolKey(section, synopsis)] = id
+		return nil
+	}
+	if err := db.RunQuery(ctx, query, collect, modulePathID); err != nil {
+		return nil, err
+	}
+	for _, docs := range pathToDocs {
+		for _, doc := range docs {
+			updateSymbols(doc.API, func(s *internal.Symbol) error {
+				if _, ok := pkgsymToID[packageSymbolKey(s.Section, s.Synopsis)]; !ok {
+					return fmt.Errorf("missing package symbol for %q %q (section=%q, type=%q)", s.Name, s.Synopsis, s.Section, s.Kind)
+				}
+				return nil
+			})
+		}
+	}
+	return pkgsymToID, nil
+}
+
+func packageSymbolKey(section internal.SymbolSection, synopsis string) string {
+	return fmt.Sprintf("section=%s_synopsis=%s", section, synopsis)
+}
+
+func upsertSymbolNamesReturningIDs(ctx context.Context, db *database.DB, pathToDocs map[string][]*internal.Documentation) (_ map[string]int, err error) {
+	defer derrors.WrapStack(&err, "upsertSymbolNamesReturningIDs")
 	var values []interface{}
 	for _, docs := range pathToDocs {
 		for _, doc := range docs {
-			for _, s := range doc.API {
+			updateSymbols(doc.API, func(s *internal.Symbol) error {
 				values = append(values, s.Name)
-				if len(s.Children) > 0 {
-					for _, s := range s.Children {
-						values = append(values, s.Name)
-					}
-				}
-			}
+				return nil
+			})
 		}
 	}
 
@@ -155,43 +213,42 @@ func getSymbolHistory(ctx context.Context, db *database.DB, packagePath, moduleP
         SELECT
             s1.name AS symbol_name,
             s2.name AS parent_symbol_name,
+            ps.section,
+            ps.type,
+            ps.synopsis,
             sh.since_version,
-            sh.section,
-            sh.type,
-            sh.synopsis,
             sh.goos,
             sh.goarch
         FROM symbol_history sh
-        INNER JOIN paths p1 ON sh.package_path_id = p1.id
-        INNER JOIN paths p2 ON sh.module_path_id = p2.id
-        INNER JOIN symbols s1 ON sh.symbol_id = s1.id
-        INNER JOIN symbols s2 ON sh.parent_symbol_id = s2.id
+        INNER JOIN package_symbols ps ON sh.package_symbol_id = ps.id
+        INNER JOIN symbol_names s1 ON ps.symbol_name_id = s1.id
+        INNER JOIN symbol_names s2 ON ps.parent_symbol_name_id = s2.id
+        INNER JOIN paths p1 ON ps.package_path_id = p1.id
+        INNER JOIN paths p2 ON ps.module_path_id = p2.id
         WHERE p1.path = $1 AND p2.path = $2;`
 
 	// Map from GOOS/GOARCH to (map from symbol name to symbol).
 	buildToNameToSym := map[string]map[string]*internal.Symbol{}
 	collect := func(rows *sql.Rows) error {
 		var (
-			sh     internal.Symbol
-			goos   string
-			goarch string
+			sh internal.Symbol
 		)
 		if err := rows.Scan(
 			&sh.Name,
 			&sh.ParentName,
-			&sh.SinceVersion,
 			&sh.Section,
 			&sh.Kind,
 			&sh.Synopsis,
-			&goos,
-			&goarch,
+			&sh.SinceVersion,
+			&sh.GOOS,
+			&sh.GOARCH,
 		); err != nil {
 			return fmt.Errorf("row.Scan(): %v", err)
 		}
-		nameToSym, ok := buildToNameToSym[goosgoarch(goos, goarch)]
+		nameToSym, ok := buildToNameToSym[goosgoarch(sh.GOOS, sh.GOARCH)]
 		if !ok {
 			nameToSym = map[string]*internal.Symbol{}
-			buildToNameToSym[goosgoarch(goos, goarch)] = nameToSym
+			buildToNameToSym[goosgoarch(sh.GOOS, sh.GOARCH)] = nameToSym
 		}
 		nameToSym[sh.Name] = &sh
 		return nil
@@ -204,6 +261,20 @@ func getSymbolHistory(ctx context.Context, db *database.DB, packagePath, moduleP
 
 func goosgoarch(goos, goarch string) string {
 	return fmt.Sprintf("goos=%s_goarch=%s", goos, goarch)
+}
+
+func updateSymbols(symbols []*internal.Symbol, updateFunc func(s *internal.Symbol) error) error {
+	for _, s := range symbols {
+		if err := updateFunc(s); err != nil {
+			return err
+		}
+		for _, s := range s.Children {
+			if err := updateFunc(s); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }
 
 // CompareStdLib is a helper function for comparing the output of

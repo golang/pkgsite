@@ -51,7 +51,8 @@ var (
 	ReadmeContents = "readme"
 	GOOS           = internal.All
 	GOARCH         = internal.All
-	Doc            = Documentation(GOOS, GOARCH, `
+	Doc            = Documentation(GOOS, GOARCH, DocContents)
+	DocContents    = `
 		// Package p is a package.
 		//
 		//
@@ -60,7 +61,7 @@ var (
 		// - pkg.go.dev, https://pkg.go.dev
  		package p
 		var V int
-	`)
+	`
 	Constant = &internal.Symbol{
 		Name:     "Constant",
 		Synopsis: "const Constant",
