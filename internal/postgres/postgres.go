@@ -36,6 +36,9 @@ func NewBypassingLicenseCheck(db *database.DB) *DB {
 	return newdb(db, true)
 }
 
+// For testing.
+var startPoller = true
+
 func newdb(db *database.DB, bypass bool) *DB {
 	p := poller.New(
 		[]string(nil),
@@ -46,8 +49,10 @@ func newdb(db *database.DB, bypass bool) *DB {
 			log.Errorf(context.Background(), "getting excluded prefixes: %v", err)
 		})
 	ctx, cancel := context.WithCancel(context.Background())
-	p.Poll(ctx) // Initialize the state.
-	p.Start(ctx, time.Minute)
+	if startPoller {
+		p.Poll(ctx) // Initialize the state.
+		p.Start(ctx, time.Minute)
+	}
 	return &DB{
 		db:                 db,
 		bypassLicenseCheck: bypass,
