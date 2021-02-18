@@ -15,6 +15,8 @@ import (
 	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/experiment"
+	"golang.org/x/pkgsite/internal/stdlib"
+	"golang.org/x/pkgsite/internal/symbol"
 )
 
 func insertSymbols(ctx context.Context, db *database.DB, modulePath, version string,
@@ -201,4 +203,28 @@ func getSymbolHistory(ctx context.Context, db *database.DB, packagePath, moduleP
 
 func goosgoarch(goos, goarch string) string {
 	return fmt.Sprintf("goos=%s_goarch=%s", goos, goarch)
+}
+
+// CompareStdLib is a helper function for comparing the output of
+// getSymbolHistory and symbol.ParsePackageAPIInfo. This is only meant for use
+// locally for testing purposes.
+func (db *DB) CompareStdLib(ctx context.Context) (map[string][]string, error) {
+	apiVersions, err := symbol.ParsePackageAPIInfo()
+	if err != nil {
+		return nil, err
+	}
+	pkgToErrors := map[string][]string{}
+	for path := range apiVersions {
+		hist, err := getSymbolHistory(ctx, db.db, path, stdlib.ModulePath)
+		if err != nil {
+			return nil, err
+		}
+		// symbol.ParsePackageAPIInfo does not support OS/ARCH-dependent symbols.
+		data := hist[goosgoarch("linux", "amd64")]
+		errs := symbol.CompareStdLib(path, apiVersions[path], data)
+		if len(errs) > 0 {
+			pkgToErrors[path] = errs
+		}
+	}
+	return pkgToErrors, nil
 }
