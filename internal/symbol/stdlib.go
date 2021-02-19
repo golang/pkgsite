@@ -12,6 +12,37 @@ import (
 	"golang.org/x/pkgsite/internal"
 )
 
+var pathToExceptions = map[string]map[string]bool{
+	// RawMessage.MarshalJSON was introduced in go1, but in go1.8 the receiver
+	// was changed from a point (*RawMessage) to a value (RawMessage).
+	// See https://golang.org/doc/go1.8#encoding_json. This resulted in
+	// golang.org/pkg/encoding/json to show that this symbol was introduced in
+	// go1.8. We want to show go1.1 on pkg.go.dev.
+	"encoding/json": {
+		"RawMessage": true,
+	},
+	// Package syscall doesn't follow the Go 1 compatibility promise like all
+	// other normal packages in the standard library. See
+	// https://golang.org/s/go1.4-syscall and its API varies significantly
+	// between different GOOS/GOARCH pairs.
+	"syscall": {
+		// RawSockaddrInet6 is listed in api/go1.txt as:
+		//     pkg syscall (darwin-386), type RawSockaddrInet6 struct
+		// It is listed in api/go1.1.txt as:
+		//     pkg syscall type RawSockaddrInet6 struct
+		// As a result, golang.org/pkg/syscall only recognizes its existence as
+		// of go1.1.
+		// The same is true for RawSockaddrUnix and TimespecToNsec.
+		"RawSockaddrInet6":          true,
+		"RawSockaddrInet6.Addr":     true,
+		"RawSockaddrInet6.Flowinfo": true,
+		"RawSockaddrInet6.Port":     true,
+		"RawSockaddrInet6.Scope_id": true,
+		"RawSockaddrUnix":           true,
+		"TimespecToNsec":            true,
+	},
+}
+
 // pathToEmbeddedMethods contains methods that appear on a struct, because it
 // was added to an embedded struct. pkgsite does not currently support embedding,
 // so these methods are skipped by when comparing the stdlib API for now.
@@ -209,6 +240,11 @@ func CompareStdLib(path string, apiVersions pkgAPIVersions, symbols map[string]*
 		}
 		if methods, ok := pathToEmbeddedMethods[path]; ok {
 			if _, ok := methods[name]; ok {
+				return
+			}
+		}
+		if exceptions, ok := pathToExceptions[path]; ok {
+			if _, ok := exceptions[name]; ok {
 				return
 			}
 		}
