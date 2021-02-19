@@ -112,7 +112,7 @@ func ResetTestDB(db *DB, t *testing.T) {
 			TRUNCATE search_documents;
 			TRUNCATE version_map;
 			TRUNCATE paths CASCADE;
-			-- TRUNCATE symbols CASCADE;
+			TRUNCATE symbol_names CASCADE;
 			TRUNCATE imports_unique;`); err != nil {
 			return err
 		}

@@ -22,13 +22,13 @@ import (
 func insertSymbols(ctx context.Context, db *database.DB, modulePath, version string,
 	pathToID map[string]int, pathToDocs map[string][]*internal.Documentation) (err error) {
 	defer derrors.WrapStack(&err, "insertSymbols(ctx, db, %q, %q, pathToID, pathToDocs)", modulePath, version)
-	if !experiment.IsActive(ctx, internal.ExperimentInsertSymbolHistory) {
-		return nil
-	}
-
 	symToID, err := upsertSymbolsReturningIDs(ctx, db, pathToDocs)
 	if err != nil {
 		return err
+	}
+
+	if !experiment.IsActive(ctx, internal.ExperimentInsertSymbolHistory) {
+		return nil
 	}
 	var symHistoryValues []interface{}
 	for path, docs := range pathToDocs {
@@ -107,7 +107,8 @@ func shouldUpdateSymbolHistory(symbolName, newVersion string, oldHist map[string
 	return semver.Compare(newVersion, dh.SinceVersion) < 1
 }
 
-func upsertSymbolsReturningIDs(ctx context.Context, db *database.DB, pathToDocs map[string][]*internal.Documentation) (map[string]int, error) {
+func upsertSymbolsReturningIDs(ctx context.Context, db *database.DB, pathToDocs map[string][]*internal.Documentation) (_ map[string]int, err error) {
+	defer derrors.WrapStack(&err, "upsertSymbolsReturningIDs")
 	var values []interface{}
 	for _, docs := range pathToDocs {
 		for _, doc := range docs {
@@ -122,12 +123,12 @@ func upsertSymbolsReturningIDs(ctx context.Context, db *database.DB, pathToDocs 
 		}
 	}
 
-	if err := db.BulkInsert(ctx, "symbols", []string{"name"}, values, database.OnConflictDoNothing); err != nil {
+	if err := db.BulkInsert(ctx, "symbol_names", []string{"name"}, values, database.OnConflictDoNothing); err != nil {
 		return nil, err
 	}
 	query := `
         SELECT id, name
-        FROM symbols
+        FROM symbol_names
         WHERE name = ANY($1);`
 	symbols := map[string]int{}
 	collect := func(rows *sql.Rows) error {

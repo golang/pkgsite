@@ -56,14 +56,10 @@ func TestShouldUpdateSymbolHistory(t *testing.T) {
 }
 
 func TestInsertSymbolNamesAndHistory(t *testing.T) {
-	// TODO: remove this once migrations have been altered.
-	t.Skip()
-
 	t.Parallel()
 	testDB, release := acquire(t)
 	defer release()
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	ctx = experiment.NewContext(ctx, internal.ExperimentInsertSymbolHistory)
 	defer cancel()
 
 	mod := sample.DefaultModule()
@@ -83,7 +79,7 @@ func TestInsertSymbolNamesAndHistory(t *testing.T) {
 	MustInsertModule(ctx, t, testDB, mod)
 
 	var got []string
-	if err := testDB.db.RunQuery(ctx, `SELECT name FROM symbols;`, func(rows *sql.Rows) error {
+	if err := testDB.db.RunQuery(ctx, `SELECT name FROM symbol_names;`, func(rows *sql.Rows) error {
 		var n string
 		if err := rows.Scan(&n); err != nil {
 			return fmt.Errorf("row.Scan(): %v", err)
@@ -93,6 +89,10 @@ func TestInsertSymbolNamesAndHistory(t *testing.T) {
 	}); err != nil {
 		t.Fatal(err)
 	}
+
+	// TODO: remove this once code has been updated to match new schema
+	t.Skip()
+	ctx = experiment.NewContext(ctx, internal.ExperimentInsertSymbolHistory)
 	want := []string{
 		sample.Constant.Name,
 		sample.Variable.Name,
