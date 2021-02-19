@@ -15,3 +15,7 @@ run_pg "DROP DATABASE discovery_frontend_test;"
 run_pg "DROP DATABASE discovery_integration_test;"
 run_pg "DROP DATABASE discovery_postgres_test;"
 run_pg "DROP DATABASE discovery_worker_test;"
+run_pg 'DROP DATABASE "discovery_postgres_test-0";'
+run_pg 'DROP DATABASE "discovery_postgres_test-1";'
+run_pg 'DROP DATABASE "discovery_postgres_test-2";'
+run_pg 'DROP DATABASE "discovery_postgres_test-3";'
