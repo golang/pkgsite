@@ -117,6 +117,13 @@ func newGCP(cfg *config.Config, client *cloudtasks.Client, queueID string) (_ *G
 func (q *GCP) ScheduleFetch(ctx context.Context, modulePath, version, suffix string, disableProxyFetch bool) (enqueued bool, err error) {
 	defer derrors.WrapStack(&err, "queue.ScheduleFetch(%q, %q, %q)", modulePath, version, suffix)
 
+	// Cloud Tasks enforces an RPC timeout of at most 30s. I couldn't find this
+	// in the documentation, but using a larger value, or no timeout, results in
+	// an InvalidArgument error with the text "The deadline cannot be more than
+	// 30s in the future."
+	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
+
 	req := q.newTaskRequest(modulePath, version, suffix, disableProxyFetch)
 	enqueued = true
 	if _, err := q.client.CreateTask(ctx, req); err != nil {
