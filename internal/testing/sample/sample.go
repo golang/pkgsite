@@ -47,7 +47,6 @@ var (
 	Suffix         = "foo"
 	PackagePath    = path.Join(ModulePath, Suffix)
 	V1Path         = PackagePath
-	Imports        = []string{"path/to/bar", "fmt"}
 	ReadmeFilePath = "README.md"
 	ReadmeContents = "readme"
 	GOOS           = internal.All
@@ -203,12 +202,13 @@ func UnitForModuleRoot(m *internal.ModuleInfo) *internal.Unit {
 func UnitForPackage(path, modulePath, version, name string, isRedistributable bool) *internal.Unit {
 	// Copy Doc because some tests modify it.
 	doc := *Doc
+	imps := Imports()
 	return &internal.Unit{
 		UnitMeta:        *UnitMeta(path, modulePath, version, name, isRedistributable),
 		Documentation:   []*internal.Documentation{&doc},
 		LicenseContents: Licenses(),
-		Imports:         Imports,
-		NumImports:      len(Imports),
+		Imports:         imps,
+		NumImports:      len(imps),
 	}
 }
 
@@ -379,4 +379,8 @@ func Licenses() []*licenses.License {
 	return []*licenses.License{
 		{Metadata: LicenseMetadata()[0], Contents: []byte(`Lorem Ipsum`)},
 	}
+}
+
+func Imports() []string {
+	return []string{"fmt", "path/to/bar"}
 }

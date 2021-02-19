@@ -649,7 +649,7 @@ func TestGetUnitFieldSet(t *testing.T) {
 		if fields&internal.WithMain != 0 {
 			u.Documentation = []*internal.Documentation{sample.Doc}
 			u.Readme = readme
-			u.NumImports = len(sample.Imports)
+			u.NumImports = len(sample.Imports())
 			u.Subdirectories = []*internal.PackageMeta{
 				{
 					Path:              "a.com/m/dir/p",
@@ -661,8 +661,9 @@ func TestGetUnitFieldSet(t *testing.T) {
 			}
 		}
 		if fields&internal.WithImports != 0 {
-			u.Imports = sample.Imports
-			u.NumImports = len(sample.Imports)
+			imps := sample.Imports()
+			u.Imports = imps
+			u.NumImports = len(imps)
 		}
 		if fields&internal.WithLicenses == 0 {
 			u.LicenseContents = nil
@@ -733,8 +734,9 @@ func unit(fullPath, modulePath, version, name string, readme *internal.Readme, s
 
 	u.Subdirectories = subdirectories(modulePath, suffixes)
 	if u.IsPackage() {
-		u.Imports = sample.Imports
-		u.NumImports = len(sample.Imports)
+		imps := sample.Imports()
+		u.Imports = imps
+		u.NumImports = len(imps)
 		u.Documentation = []*internal.Documentation{sample.Doc}
 	}
 	return u

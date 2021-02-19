@@ -87,7 +87,7 @@ func samplePackage(modulePath, suffix string) *goPackage {
 		v1path:            internal.V1Path(p, modulePath),
 		isRedistributable: true,
 		licenseMeta:       sample.LicenseMetadata(),
-		imports:           sample.Imports,
+		imports:           sample.Imports(),
 		docs: []*internal.Documentation{{
 			GOOS:     sample.GOOS,
 			GOARCH:   sample.GOARCH,
