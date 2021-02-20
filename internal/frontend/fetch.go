@@ -576,7 +576,7 @@ func FetchAndUpdateState(ctx context.Context, modulePath, requestedVersion strin
 		derrors.Wrap(&err, "FetchAndUpdateState(%q, %q)", modulePath, requestedVersion)
 	}()
 
-	fr := fetch.FetchModule(ctx, modulePath, requestedVersion, proxyClient, sourceClient, false)
+	fr := fetch.FetchModule(ctx, modulePath, requestedVersion, proxyClient, sourceClient)
 	defer fr.Defer()
 	if fr.Error == nil {
 		// Only attempt to insert the module into module_version_states if the

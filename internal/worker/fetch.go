@@ -172,7 +172,11 @@ func (f *Fetcher) fetchAndInsertModule(ctx context.Context, modulePath, requeste
 	go func() {
 		defer wg.Done()
 		start := time.Now()
-		fr := fetch.FetchModule(ctx, modulePath, requestedVersion, f.ProxyClient, f.SourceClient, disableProxyFetch)
+		pc := f.ProxyClient
+		if disableProxyFetch {
+			pc = pc.WithFetchDisabled()
+		}
+		fr := fetch.FetchModule(ctx, modulePath, requestedVersion, pc, f.SourceClient)
 		if fr == nil {
 			panic("fetch.FetchModule should never return a nil FetchResult")
 		}
@@ -277,7 +281,7 @@ func resolvedVersion(ctx context.Context, modulePath, requestedVersion string, p
 	if modulePath == stdlib.ModulePath && requestedVersion == internal.MainVersion {
 		return ""
 	}
-	info, err := fetch.GetInfo(ctx, modulePath, requestedVersion, proxyClient, false)
+	info, err := fetch.GetInfo(ctx, modulePath, requestedVersion, proxyClient)
 	if err != nil {
 		if !errors.Is(err, derrors.NotFound) {
 			// If an error occurs, log it and insert the module as normal.

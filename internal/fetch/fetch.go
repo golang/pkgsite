@@ -112,7 +112,7 @@ type FetchResult struct {
 // Callers of FetchModule must
 //   defer fr.Defer()
 // immediately after the call.
-func FetchModule(ctx context.Context, modulePath, requestedVersion string, proxyClient *proxy.Client, sourceClient *source.Client, disableProxyFetch bool) (fr *FetchResult) {
+func FetchModule(ctx context.Context, modulePath, requestedVersion string, proxyClient *proxy.Client, sourceClient *source.Client) (fr *FetchResult) {
 	start := time.Now()
 	fr = &FetchResult{
 		ModulePath:       modulePath,
@@ -139,7 +139,7 @@ func FetchModule(ctx context.Context, modulePath, requestedVersion string, proxy
 	}()
 
 	var commitTime time.Time
-	info, err := GetInfo(ctx, modulePath, requestedVersion, proxyClient, disableProxyFetch)
+	info, err := GetInfo(ctx, modulePath, requestedVersion, proxyClient)
 	if err != nil {
 		fr.Error = err
 		return fr
@@ -237,7 +237,7 @@ func FetchModule(ctx context.Context, modulePath, requestedVersion string, proxy
 // GetInfo returns the result of a request to the proxy .info endpoint. If
 // the modulePath is "std", a request to @master will return an empty
 // commit time.
-func GetInfo(ctx context.Context, modulePath, requestedVersion string, proxyClient *proxy.Client, disableProxyFetch bool) (_ *proxy.VersionInfo, err error) {
+func GetInfo(ctx context.Context, modulePath, requestedVersion string, proxyClient *proxy.Client) (_ *proxy.VersionInfo, err error) {
 	if modulePath == stdlib.ModulePath {
 		var resolvedVersion string
 		resolvedVersion, err = stdlib.ZipInfo(requestedVersion)
@@ -245,9 +245,6 @@ func GetInfo(ctx context.Context, modulePath, requestedVersion string, proxyClie
 			return nil, err
 		}
 		return &proxy.VersionInfo{Version: resolvedVersion}, nil
-	}
-	if disableProxyFetch {
-		proxyClient = proxyClient.WithFetchDisabled()
 	}
 	return proxyClient.Info(ctx, modulePath, requestedVersion)
 }
