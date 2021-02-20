@@ -71,13 +71,15 @@ func (c *Client) WithFetchDisabled() *Client {
 
 // Info makes a request to $GOPROXY/<module>/@v/<requestedVersion>.info and
 // transforms that data into a *VersionInfo.
+// If requestedVersion is internal.LatestVersion, it uses the proxy's @latest
+// endpoint instead.
 func (c *Client) Info(ctx context.Context, modulePath, requestedVersion string) (_ *VersionInfo, err error) {
 	defer func() {
 		wrap := derrors.Wrap
 		if !errors.Is(err, derrors.NotFound) && !errors.Is(err, derrors.ProxyTimedOut) {
 			wrap = derrors.WrapAndReport
 		}
-		wrap(&err, "proxy.Client.getInfo(%q, %q)", modulePath, requestedVersion)
+		wrap(&err, "proxy.Client.Info(%q, %q)", modulePath, requestedVersion)
 	}()
 	data, err := c.readBody(ctx, modulePath, requestedVersion, "info")
 	if err != nil {
