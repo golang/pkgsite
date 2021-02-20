@@ -204,7 +204,7 @@ func FetchModule(ctx context.Context, modulePath, requestedVersion string, proxy
 		fr.ResolvedVersion = resolvedVersion
 		fi.Version = resolvedVersion
 	} else {
-		zipReader, err = proxyClient.GetZip(ctx, modulePath, fr.ResolvedVersion)
+		zipReader, err = proxyClient.Zip(ctx, modulePath, fr.ResolvedVersion)
 		if err != nil {
 			fr.Error = err
 			return fr
@@ -249,14 +249,14 @@ func GetInfo(ctx context.Context, modulePath, requestedVersion string, proxyClie
 	if disableProxyFetch {
 		proxyClient = proxyClient.WithFetchDisabled()
 	}
-	return proxyClient.GetInfo(ctx, modulePath, requestedVersion)
+	return proxyClient.Info(ctx, modulePath, requestedVersion)
 }
 
 func getZipSize(ctx context.Context, modulePath, resolvedVersion string, proxyClient *proxy.Client) (_ int64, err error) {
 	if modulePath == stdlib.ModulePath {
 		return stdlib.EstimatedZipSize, nil
 	}
-	return proxyClient.GetZipSize(ctx, modulePath, resolvedVersion)
+	return proxyClient.ZipSize(ctx, modulePath, resolvedVersion)
 }
 
 // getGoModPath returns the module path from the go.mod file, as well as the contents of the file obtained from the proxy.
@@ -265,7 +265,7 @@ func getGoModPath(ctx context.Context, modulePath, resolvedVersion string, proxy
 	if modulePath == stdlib.ModulePath {
 		return stdlib.ModulePath, nil, nil
 	}
-	goModBytes, err := proxyClient.GetMod(ctx, modulePath, resolvedVersion)
+	goModBytes, err := proxyClient.Mod(ctx, modulePath, resolvedVersion)
 	if err != nil {
 		return "", nil, err
 	}

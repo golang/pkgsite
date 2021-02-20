@@ -197,7 +197,7 @@ func licenseDetector(ctx context.Context, t *testing.T, modulePath, version stri
 			t.Fatal(err)
 		}
 	} else {
-		zipReader, err = proxyClient.GetZip(ctx, modulePath, version)
+		zipReader, err = proxyClient.Zip(ctx, modulePath, version)
 		if err != nil {
 			t.Fatal(err)
 		}

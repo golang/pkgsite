@@ -99,7 +99,7 @@ func TestExtractReadmesFromZip(t *testing.T) {
 				proxyClient, teardownProxy := proxy.SetupTestClient(t, []*proxy.Module{
 					{ModulePath: test.modulePath, Files: test.files}})
 				defer teardownProxy()
-				reader, err = proxyClient.GetZip(ctx, test.modulePath, "v1.0.0")
+				reader, err = proxyClient.Zip(ctx, test.modulePath, "v1.0.0")
 				if err != nil {
 					t.Fatal(err)
 				}

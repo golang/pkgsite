@@ -82,13 +82,13 @@ func TestGetLatestInfo(t *testing.T) {
 	client, teardownProxy := SetupTestClient(t, testModules)
 	defer teardownProxy()
 
-	info, err := client.GetInfo(ctx, sample.ModulePath, internal.LatestVersion)
+	info, err := client.Info(ctx, sample.ModulePath, internal.LatestVersion)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	if got, want := info.Version, "v1.2.0"; got != want {
-		t.Errorf("GetInfo(ctx, %q, %q): Version = %q, want %q", sample.ModulePath, internal.LatestVersion, got, want)
+		t.Errorf("Info(ctx, %q, %q): Version = %q, want %q", sample.ModulePath, internal.LatestVersion, got, want)
 	}
 }
 
@@ -117,50 +117,50 @@ func TestListVersions(t *testing.T) {
 	defer teardownProxy()
 
 	want := []string{"v1.1.0", "v1.2.0"}
-	got, err := client.ListVersions(ctx, sample.ModulePath)
+	got, err := client.Versions(ctx, sample.ModulePath)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if diff := cmp.Diff(want, got); diff != "" {
-		t.Errorf("ListVersions(%q) diff:\n%s", sample.ModulePath, diff)
+		t.Errorf("Versions(%q) diff:\n%s", sample.ModulePath, diff)
 	}
 }
 
-func TestGetInfo(t *testing.T) {
+func TestInfo(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
 	client, teardownProxy := SetupTestClient(t, []*Module{testModule, uncachedModule})
 	defer teardownProxy()
 
-	info, err := client.GetInfo(ctx, sample.ModulePath, sample.VersionString)
+	info, err := client.Info(ctx, sample.ModulePath, sample.VersionString)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	if info.Version != sample.VersionString {
-		t.Errorf("VersionInfo.Version for GetInfo(ctx, %q, %q) = %q, want %q",
+		t.Errorf("VersionInfo.Version for Info(ctx, %q, %q) = %q, want %q",
 			sample.ModulePath, sample.VersionString, info.Version, sample.VersionString)
 	}
 	expectedTime := time.Date(2019, 1, 30, 0, 0, 0, 0, time.UTC)
 	if info.Time != expectedTime {
-		t.Errorf("VersionInfo.Time for GetInfo(ctx, %q, %q) = %v, want %v", sample.ModulePath, sample.VersionString, info.Time, expectedTime)
+		t.Errorf("VersionInfo.Time for Info(ctx, %q, %q) = %v, want %v", sample.ModulePath, sample.VersionString, info.Time, expectedTime)
 	}
 
-	// With fetch disabled, GetInfo returns "NotFetched" error on uncached module.
+	// With fetch disabled, Info returns "NotFetched" error on uncached module.
 	noFetchClient := client.WithFetchDisabled()
-	_, err = noFetchClient.GetInfo(ctx, uncachedModulePath, sample.VersionString)
+	_, err = noFetchClient.Info(ctx, uncachedModulePath, sample.VersionString)
 	if !errors.Is(err, derrors.NotFetched) {
 		t.Fatalf("got %v, want NotFetched", err)
 	}
-	// GetInfo with fetch disabled succeeds on a cached module.
-	_, err = noFetchClient.GetInfo(ctx, sample.ModulePath, sample.VersionString)
+	// Info with fetch disabled succeeds on a cached module.
+	_, err = noFetchClient.Info(ctx, sample.ModulePath, sample.VersionString)
 	if err != nil {
 		t.Fatal(err)
 	}
 }
 
-func TestGetInfo_Errors(t *testing.T) {
+func TestInfo_Errors(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
@@ -187,20 +187,20 @@ func TestGetInfo_Errors(t *testing.T) {
 			want:       derrors.ProxyTimedOut,
 		},
 	} {
-		if _, err := client.GetInfo(ctx, test.modulePath, sample.VersionString); !errors.Is(err, test.want) {
-			t.Errorf("GetInfo(ctx, %q, %q): %v, want %v", test.modulePath, sample.VersionString, err, test.want)
+		if _, err := client.Info(ctx, test.modulePath, sample.VersionString); !errors.Is(err, test.want) {
+			t.Errorf("Info(ctx, %q, %q): %v, want %v", test.modulePath, sample.VersionString, err, test.want)
 		}
 	}
 }
 
-func TestGetMod(t *testing.T) {
+func TestMod(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
 	client, teardownProxy := SetupTestClient(t, []*Module{testModule})
 	defer teardownProxy()
 
-	bytes, err := client.GetMod(ctx, sample.ModulePath, sample.VersionString)
+	bytes, err := client.Mod(ctx, sample.ModulePath, sample.VersionString)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -218,7 +218,7 @@ func TestGetZip(t *testing.T) {
 	client, teardownProxy := SetupTestClient(t, []*Module{testModule})
 	defer teardownProxy()
 
-	zipReader, err := client.GetZip(ctx, sample.ModulePath, sample.VersionString)
+	zipReader, err := client.Zip(ctx, sample.ModulePath, sample.VersionString)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -233,7 +233,7 @@ func TestGetZip(t *testing.T) {
 		sample.ModulePath + "@" + sample.VersionString + "/bar/LICENSE",
 	}
 	if len(zipReader.File) != len(wantFiles) {
-		t.Errorf("GetZip(ctx, %q, %q) returned number of files: got %d, want %d",
+		t.Errorf("Zip(ctx, %q, %q) returned number of files: got %d, want %d",
 			sample.ModulePath, sample.VersionString, len(zipReader.File), len(wantFiles))
 	}
 
@@ -243,30 +243,30 @@ func TestGetZip(t *testing.T) {
 	}
 	for _, zipFile := range zipReader.File {
 		if !expectedFileSet[zipFile.Name] {
-			t.Errorf("GetZip(ctx, %q, %q) returned unexpected file: %q", sample.ModulePath,
+			t.Errorf("Zip(ctx, %q, %q) returned unexpected file: %q", sample.ModulePath,
 				sample.VersionString, zipFile.Name)
 		}
 		expectedFileSet[zipFile.Name] = false
 	}
 }
 
-func TestGetZipNonExist(t *testing.T) {
+func TestZipNonExist(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
 	client, teardownProxy := SetupTestClient(t, nil)
 	defer teardownProxy()
 
-	if _, err := client.GetZip(ctx, sample.ModulePath, sample.VersionString); !errors.Is(err, derrors.NotFound) {
+	if _, err := client.Zip(ctx, sample.ModulePath, sample.VersionString); !errors.Is(err, derrors.NotFound) {
 		t.Errorf("got %v, want %v", err, derrors.NotFound)
 	}
 }
 
-func TestGetZipSize(t *testing.T) {
+func TestZipSize(t *testing.T) {
 	t.Run("found", func(t *testing.T) {
 		client, teardownProxy := SetupTestClient(t, []*Module{testModule})
 		defer teardownProxy()
-		got, err := client.GetZipSize(context.Background(), sample.ModulePath, sample.VersionString)
+		got, err := client.ZipSize(context.Background(), sample.ModulePath, sample.VersionString)
 		if err != nil {
 			t.Error(err)
 		}
@@ -278,7 +278,7 @@ func TestGetZipSize(t *testing.T) {
 	t.Run("not found", func(t *testing.T) {
 		client, teardownProxy := SetupTestClient(t, nil)
 		defer teardownProxy()
-		if _, err := client.GetZipSize(context.Background(), sample.ModulePath, sample.VersionString); !errors.Is(err, derrors.NotFound) {
+		if _, err := client.ZipSize(context.Background(), sample.ModulePath, sample.VersionString); !errors.Is(err, derrors.NotFound) {
 			t.Errorf("got %v, want %v", err, derrors.NotFound)
 		}
 	})

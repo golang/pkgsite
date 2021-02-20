@@ -69,9 +69,9 @@ func (c *Client) WithFetchDisabled() *Client {
 	return &c2
 }
 
-// GetInfo makes a request to $GOPROXY/<module>/@v/<requestedVersion>.info and
+// Info makes a request to $GOPROXY/<module>/@v/<requestedVersion>.info and
 // transforms that data into a *VersionInfo.
-func (c *Client) GetInfo(ctx context.Context, modulePath, requestedVersion string) (_ *VersionInfo, err error) {
+func (c *Client) Info(ctx context.Context, modulePath, requestedVersion string) (_ *VersionInfo, err error) {
 	defer func() {
 		wrap := derrors.Wrap
 		if !errors.Is(err, derrors.NotFound) && !errors.Is(err, derrors.ProxyTimedOut) {
@@ -90,19 +90,19 @@ func (c *Client) GetInfo(ctx context.Context, modulePath, requestedVersion strin
 	return &v, nil
 }
 
-// GetMod makes a request to $GOPROXY/<module>/@v/<resolvedVersion>.mod and returns the raw data.
-func (c *Client) GetMod(ctx context.Context, modulePath, resolvedVersion string) (_ []byte, err error) {
-	defer derrors.WrapStack(&err, "proxy.Client.GetMod(%q, %q)", modulePath, resolvedVersion)
+// Mod makes a request to $GOPROXY/<module>/@v/<resolvedVersion>.mod and returns the raw data.
+func (c *Client) Mod(ctx context.Context, modulePath, resolvedVersion string) (_ []byte, err error) {
+	defer derrors.WrapStack(&err, "proxy.Client.Mod(%q, %q)", modulePath, resolvedVersion)
 	return c.readBody(ctx, modulePath, resolvedVersion, "mod")
 }
 
-// GetZip makes a request to $GOPROXY/<modulePath>/@v/<resolvedVersion>.zip and
+// Zip makes a request to $GOPROXY/<modulePath>/@v/<resolvedVersion>.zip and
 // transforms that data into a *zip.Reader. <resolvedVersion> must have already
 // been resolved by first making a request to
 // $GOPROXY/<modulePath>/@v/<requestedVersion>.info to obtained the valid
 // semantic version.
-func (c *Client) GetZip(ctx context.Context, modulePath, resolvedVersion string) (_ *zip.Reader, err error) {
-	defer derrors.WrapStack(&err, "proxy.Client.GetZip(ctx, %q, %q)", modulePath, resolvedVersion)
+func (c *Client) Zip(ctx context.Context, modulePath, resolvedVersion string) (_ *zip.Reader, err error) {
+	defer derrors.WrapStack(&err, "proxy.Client.Zip(ctx, %q, %q)", modulePath, resolvedVersion)
 
 	bodyBytes, err := c.readBody(ctx, modulePath, resolvedVersion, "zip")
 	if err != nil {
@@ -115,10 +115,10 @@ func (c *Client) GetZip(ctx context.Context, modulePath, resolvedVersion string)
 	return zipReader, nil
 }
 
-// GetZipSize gets the size in bytes of the zip from the proxy, without downloading it.
-// The version must be resolved, as by a call to Client.GetInfo.
-func (c *Client) GetZipSize(ctx context.Context, modulePath, resolvedVersion string) (_ int64, err error) {
-	defer derrors.WrapStack(&err, "proxy.Client.GetZipSize(ctx, %q, %q)", modulePath, resolvedVersion)
+// ZipSize gets the size in bytes of the zip from the proxy, without downloading it.
+// The version must be resolved, as by a call to Client.Info.
+func (c *Client) ZipSize(ctx context.Context, modulePath, resolvedVersion string) (_ int64, err error) {
+	defer derrors.WrapStack(&err, "proxy.Client.ZipSize(ctx, %q, %q)", modulePath, resolvedVersion)
 
 	url, err := c.escapedURL(modulePath, resolvedVersion, "zip")
 	if err != nil {
@@ -180,9 +180,9 @@ func (c *Client) readBody(ctx context.Context, modulePath, requestedVersion, suf
 	return data, nil
 }
 
-// ListVersions makes a request to $GOPROXY/<path>/@v/list and returns the
+// Versions makes a request to $GOPROXY/<path>/@v/list and returns the
 // resulting version strings.
-func (c *Client) ListVersions(ctx context.Context, modulePath string) ([]string, error) {
+func (c *Client) Versions(ctx context.Context, modulePath string) ([]string, error) {
 	escapedPath, err := module.EscapePath(modulePath)
 	if err != nil {
 		return nil, fmt.Errorf("module.EscapePath(%q): %w", modulePath, derrors.InvalidArgument)
