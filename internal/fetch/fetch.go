@@ -246,11 +246,10 @@ func GetInfo(ctx context.Context, modulePath, requestedVersion string, proxyClie
 		}
 		return &proxy.VersionInfo{Version: resolvedVersion}, nil
 	}
-	getInfo := proxyClient.GetInfo
 	if disableProxyFetch {
-		getInfo = proxyClient.GetInfoNoFetch
+		proxyClient = proxyClient.WithFetchDisabled()
 	}
-	return getInfo(ctx, modulePath, requestedVersion)
+	return proxyClient.GetInfo(ctx, modulePath, requestedVersion)
 }
 
 func getZipSize(ctx context.Context, modulePath, resolvedVersion string, proxyClient *proxy.Client) (_ int64, err error) {

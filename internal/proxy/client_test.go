@@ -147,13 +147,14 @@ func TestGetInfo(t *testing.T) {
 		t.Errorf("VersionInfo.Time for GetInfo(ctx, %q, %q) = %v, want %v", sample.ModulePath, sample.VersionString, info.Time, expectedTime)
 	}
 
-	// GetInfoNoFetch returns "NotFetched" error on uncached module.
-	_, err = client.GetInfoNoFetch(ctx, uncachedModulePath, sample.VersionString)
+	// With fetch disabled, GetInfo returns "NotFetched" error on uncached module.
+	noFetchClient := client.WithFetchDisabled()
+	_, err = noFetchClient.GetInfo(ctx, uncachedModulePath, sample.VersionString)
 	if !errors.Is(err, derrors.NotFetched) {
 		t.Fatalf("got %v, want NotFetched", err)
 	}
-	// GetInfoNoFetch succeeds on cached module.
-	_, err = client.GetInfoNoFetch(ctx, sample.ModulePath, sample.VersionString)
+	// GetInfo with fetch disabled succeeds on a cached module.
+	_, err = noFetchClient.GetInfo(ctx, sample.ModulePath, sample.VersionString)
 	if err != nil {
 		t.Fatal(err)
 	}
