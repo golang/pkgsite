@@ -14,15 +14,23 @@ type BuildContext struct {
 // All represents all values for a build context element (GOOS or GOARCH).
 const All = "all"
 
+var (
+	BuildContextAll     = BuildContext{All, All}
+	BuildContextLinux   = BuildContext{"linux", "amd64"}
+	BuildContextWindows = BuildContext{"windows", "amd64"}
+	BuildContextDarwin  = BuildContext{"darwin", "amd64"}
+	BuildContextJS      = BuildContext{"js", "wasm"}
+)
+
 // BuildContexts are the build contexts we check when loading a package (see
 // internal/fetch/load.go).
 // We store documentation for all of the listed contexts.
 // The order determines which environment's docs we will show as the default.
 var BuildContexts = []BuildContext{
-	{"linux", "amd64"},
-	{"windows", "amd64"},
-	{"darwin", "amd64"},
-	{"js", "wasm"},
+	BuildContextLinux,
+	BuildContextWindows,
+	BuildContextDarwin,
+	BuildContextJS,
 }
 
 // CompareBuildContexts returns a negative number, 0, or a positive number depending on

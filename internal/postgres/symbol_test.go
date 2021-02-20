@@ -196,11 +196,11 @@ func TestInsertSymbolHistory(t *testing.T) {
 			SinceVersion: "v1.0.0",
 		},
 	}
-	wantHist := map[string]map[string]*internal.Symbol{
-		goosgoarch("darwin", "amd64"):  symbols,
-		goosgoarch("js", "wasm"):       symbols,
-		goosgoarch("linux", "amd64"):   symbols,
-		goosgoarch("windows", "amd64"): symbols,
+	wantHist := map[internal.BuildContext]map[string]*internal.Symbol{
+		internal.BuildContextDarwin:  symbols,
+		internal.BuildContextJS:      symbols,
+		internal.BuildContextLinux:   symbols,
+		internal.BuildContextWindows: symbols,
 	}
 	if diff := cmp.Diff(wantHist, gotHist,
 		cmpopts.IgnoreFields(internal.Symbol{}, "GOOS", "GOARCH")); diff != "" {
@@ -259,11 +259,11 @@ func TestInsertSymbolHistory_MultiVersions(t *testing.T) {
 		"Foo.A": methodA,
 		"Foo.B": methodB,
 	}
-	wantHist := map[string]map[string]*internal.Symbol{
-		goosgoarch("darwin", "amd64"):  symbols,
-		goosgoarch("js", "wasm"):       symbols,
-		goosgoarch("linux", "amd64"):   symbols,
-		goosgoarch("windows", "amd64"): symbols,
+	wantHist := map[internal.BuildContext]map[string]*internal.Symbol{
+		internal.BuildContextDarwin:  symbols,
+		internal.BuildContextJS:      symbols,
+		internal.BuildContextLinux:   symbols,
+		internal.BuildContextWindows: symbols,
 	}
 	if diff := cmp.Diff(wantHist, gotHist,
 		cmpopts.IgnoreFields(internal.Symbol{}, "GOOS", "GOARCH")); diff != "" {
@@ -342,23 +342,23 @@ func TestInsertSymbolHistory_MultiGOOS(t *testing.T) {
 	b1 := func() *internal.Symbol { b := methodB; b.SinceVersion = "v1.2.0"; return &b }()
 	a2 := func() *internal.Symbol { a := methodA; a.SinceVersion = "v1.2.0"; return &a }()
 	b2 := func() *internal.Symbol { b := methodB; b.SinceVersion = "v1.1.0"; return &b }()
-	wantHist := map[string]map[string]*internal.Symbol{
-		goosgoarch("linux", "amd64"): {
+	wantHist := map[internal.BuildContext]map[string]*internal.Symbol{
+		internal.BuildContextLinux: {
 			"Foo":   parent,
 			"Foo.A": a1,
 			"Foo.B": b1,
 		},
-		goosgoarch("windows", "amd64"): {
+		internal.BuildContextWindows: {
 			"Foo":   parent,
 			"Foo.A": a1,
 			"Foo.B": b1,
 		},
-		goosgoarch("darwin", "amd64"): {
+		internal.BuildContextDarwin: {
 			"Foo":   parent,
 			"Foo.A": a2,
 			"Foo.B": b2,
 		},
-		goosgoarch("js", "wasm"): {
+		internal.BuildContextJS: {
 			"Foo":   parent,
 			"Foo.A": a2,
 			"Foo.B": b2,

@@ -45,7 +45,7 @@ func insertSymbols(ctx context.Context, db *database.DB, modulePath, version str
 				builds = internal.BuildContexts
 			}
 			for _, build := range builds {
-				nameToSymbol := buildToNameToSym[goosgoarch(build.GOOS, build.GOARCH)]
+				nameToSymbol := buildToNameToSym[internal.BuildContext{GOOS: build.GOOS, GOARCH: build.GOARCH}]
 				updateSymbols(doc.API, func(s *internal.Symbol) (err error) {
 					defer derrors.WrapStack(&err, "updateSymbols(%q)", s.Name)
 					if !shouldUpdateSymbolHistory(s.Name, version, nameToSymbol) {
@@ -207,7 +207,7 @@ func upsertSymbolNamesReturningIDs(ctx context.Context, db *database.DB, pathToD
 	return symbols, nil
 }
 
-func getSymbolHistory(ctx context.Context, db *database.DB, packagePath, modulePath string) (_ map[string]map[string]*internal.Symbol, err error) {
+func getSymbolHistory(ctx context.Context, db *database.DB, packagePath, modulePath string) (_ map[internal.BuildContext]map[string]*internal.Symbol, err error) {
 	defer derrors.Wrap(&err, "getSymbolHistoryForPath(ctx, db, %q, %q)", packagePath, modulePath)
 	query := `
         SELECT
@@ -228,7 +228,7 @@ func getSymbolHistory(ctx context.Context, db *database.DB, packagePath, moduleP
         WHERE p1.path = $1 AND p2.path = $2;`
 
 	// Map from GOOS/GOARCH to (map from symbol name to symbol).
-	buildToNameToSym := map[string]map[string]*internal.Symbol{}
+	buildToNameToSym := map[internal.BuildContext]map[string]*internal.Symbol{}
 	collect := func(rows *sql.Rows) error {
 		var (
 			sh internal.Symbol
@@ -245,10 +245,10 @@ func getSymbolHistory(ctx context.Context, db *database.DB, packagePath, moduleP
 		); err != nil {
 			return fmt.Errorf("row.Scan(): %v", err)
 		}
-		nameToSym, ok := buildToNameToSym[goosgoarch(sh.GOOS, sh.GOARCH)]
+		nameToSym, ok := buildToNameToSym[internal.BuildContext{GOOS: sh.GOOS, GOARCH: sh.GOARCH}]
 		if !ok {
 			nameToSym = map[string]*internal.Symbol{}
-			buildToNameToSym[goosgoarch(sh.GOOS, sh.GOARCH)] = nameToSym
+			buildToNameToSym[internal.BuildContext{GOOS: sh.GOOS, GOARCH: sh.GOARCH}] = nameToSym
 		}
 		nameToSym[sh.Name] = &sh
 		return nil
@@ -257,10 +257,6 @@ func getSymbolHistory(ctx context.Context, db *database.DB, packagePath, moduleP
 		return nil, err
 	}
 	return buildToNameToSym, nil
-}
-
-func goosgoarch(goos, goarch string) string {
-	return fmt.Sprintf("goos=%s_goarch=%s", goos, goarch)
 }
 
 func updateSymbols(symbols []*internal.Symbol, updateFunc func(s *internal.Symbol) error) error {
@@ -292,7 +288,7 @@ func (db *DB) CompareStdLib(ctx context.Context) (map[string][]string, error) {
 			return nil, err
 		}
 		// symbol.ParsePackageAPIInfo does not support OS/ARCH-dependent symbols.
-		data := hist[goosgoarch("linux", "amd64")]
+		data := hist[internal.BuildContext{GOOS: "linux", GOARCH: "amd64"}]
 		errs := symbol.CompareStdLib(path, apiVersions[path], data)
 		if len(errs) > 0 {
 			pkgToErrors[path] = errs
