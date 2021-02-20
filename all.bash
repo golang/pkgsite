@@ -14,6 +14,46 @@ warnout() {
   done
 }
 
+# filter FILES GLOB1 GLOB2 ...
+# returns the files in FILES that match any of the glob patterns.
+filter() {
+  local infiles=$1
+  shift
+  local patterns=$*
+  local outfiles=
+
+  for pat in $patterns; do
+    for f in $infiles; do
+      if [[ $f == $pat ]]; then
+        outfiles="$outfiles $f"
+      fi
+    done
+  done
+  echo $outfiles
+}
+
+# Return the files that are modified or added.
+# If there are such files in the working directory, whether or not
+# they are staged for commit, use those.
+# Otherwise, use the files changed since the previous commit.
+modified_files() {
+  local working="$(diff_files '') $(diff_files --cached)"
+  if [[ $working != ' ' ]]; then
+    echo $working
+  elif [[ $(git rev-parse HEAD) = $(git rev-parse master) ]]; then
+    echo ""
+  else
+    diff_files HEAD^
+  fi
+}
+
+# Helper for modified_files. It asks git for all modified, added or deleted
+# files, and keeps only the latter two.
+diff_files() {
+  git diff --name-status $* | awk '$1 != "D" { print $2 }'
+}
+
+
 # codedirs lists directories that contain discovery code. If they include
 # directories containing external code, those directories must be excluded in
 # findcode below.
@@ -64,11 +104,16 @@ ensure_go_binary() {
 # commit, and all other non-third-party files in the repo, have a license
 # header.
 check_headers() {
-  info "Checking staged files for license header"
-  # Check code files that have been modified or added.
-  verify_header $(git diff --cached --name-status | grep -vE "^D" | cut -f 2- | grep -E ".go$|.sql$|.sh$")
-  info "Checking internal files for license header"
-  verify_header $(findcode)
+  if [[ $# -gt 0 ]]; then
+    info "Checking listed files for license header"
+    verify_header $*
+  else
+    info "Checking staged files for license header"
+    # Check code files that have been modified or added.
+    verify_header $(git diff --cached --name-status | grep -vE "^D" | cut -f 2- | grep -E ".go$|.sql$|.sh$")
+    info "Checking internal files for license header"
+    verify_header $(findcode)
+  fi
 }
 
 # bad_migrations outputs migrations with bad sequence numbers.
@@ -121,10 +166,12 @@ check_templates() {
 }
 
 
+script_hash_glob='content/static/html/**/*.tmpl'
+
 # check_script_hashes checks that our CSP hashes match the ones
 # for our HTML scripts.
 check_script_hashes() {
-  runcmd go run ./devtools/cmd/csphash content/static/html/**/*.tmpl
+  runcmd go run ./devtools/cmd/csphash $script_hash_glob
 }
 
 npm() {
@@ -143,30 +190,40 @@ run_e2e() {
   ./devtools/docker_compose.sh ci npm run test:jest:e2e -- $@
 }
 
+prettier_file_globs='content/static/**/*.{js,css} **/*.md'
+
 # run_prettier runs prettier on CSS, JS, and MD files. Uses globally
 # installed prettier if available or a dockerized installation as a
 # fallback.
 run_prettier() {
-  FILES='content/static/**/*.{js,css} **/*.md'
+  local files=$*
+  if [[ $files = '' ]]; then
+    files=$prettier_file_globs
+  fi
   if [[ -x "$(command -v prettier)" ]]; then
-    runcmd prettier --write $FILES
+    runcmd prettier --write $files
   elif [[ -x "$(command -v docker-compose)" && "$(docker images -q pkgsite_npm)" ]]; then
     runcmd docker-compose -f devtools/config/docker-compose.yaml run --entrypoint=npx \
-    npm prettier --write $FILES
+    npm prettier --write $files
   else
     err "prettier must be installed: see https://prettier.io/docs/en/install.html"
   fi
 }
 
-standard_linters() {
-  check_headers
-  check_bad_migrations
+go_linters() {
   check_vet
   check_staticcheck
   check_misspell
   check_unparam
+}
+
+standard_linters() {
+  check_headers
+  check_bad_migrations
+  go_linters
   check_script_hashes
 }
+
 
 usage() {
   cat <<EOUSAGE
@@ -175,6 +232,7 @@ Available subcommands:
   help           - display this help message
   (empty)        - run all standard checks and tests
   ci             - run checks and tests suitable for continuous integration
+  cl             - run checks and tests on the current CL, suitable for a commit or pre-push hook
   e2e            - run e2e tests locally.
   lint           - run all standard linters below:
   headers        - (lint) check source files for the license disclaimer
@@ -213,6 +271,39 @@ main() {
       runcmd env GO_DISCOVERY_TESTDB=true go test ./...
       runcmd go test ./internal/secrets
       ;;
+    cl)
+      # Similar to the above, but only run checks that apply to files in this commit.
+      files=$(modified_files)
+      if [[ $files = '' ]]; then
+        info "No modified files; nothing to do."
+        exit 0
+      fi
+      info "Running checks on:"
+      info "    " $files
+
+      check_headers $files
+      if [[ $(filter "$files" 'migrations/*') != '' ]]; then
+        check_bad_migrations
+      fi
+      if [[ $(filter "$files" $script_hash_glob) != '' ]]; then
+        check_script_hashes
+      fi
+      if [[ $(filter "$files" '*.go') != '' ]]; then
+        go_linters
+      fi
+      pfiles=$(filter "$files" $prettier_file_globs)
+      if [[ $pfiles != '' ]]; then
+        run_prettier $pfiles
+      fi
+      if [[ $(filter "$files" 'content/static/**') != '' ]]; then
+        npm run lint
+        npm run test
+      fi
+      runcmd go mod tidy
+      runcmd env GO_DISCOVERY_TESTDB=true go test ./...
+      runcmd go test ./internal/secrets
+      ;;
+
     ci)
       # Similar to the no-arg mode, but omit actions that require GCP
       # permissions or that don't test the code.
