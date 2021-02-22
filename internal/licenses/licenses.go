@@ -266,12 +266,20 @@ func AcceptedLicenses() []AcceptedLicenseInfo {
 }
 
 var (
+	// OmitExceptions causes the list of exceptions to be omitted from license detection.
+	// It is intended only to speed up testing, and must be set before the first use
+	// of this package.
+	OmitExceptions bool
+
 	_scanner    *licensecheck.Scanner
 	scannerOnce sync.Once
 )
 
 func scanner() *licensecheck.Scanner {
 	scannerOnce.Do(func() {
+		if OmitExceptions {
+			exceptionLicenses = nil
+		}
 		var err error
 		_scanner, err = licensecheck.NewScanner(append(exceptionLicenses, licensecheck.BuiltinLicenses()...))
 		if err != nil {
