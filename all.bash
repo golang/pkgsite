@@ -202,9 +202,9 @@ run_prettier() {
   fi
   if [[ -x "$(command -v prettier)" ]]; then
     runcmd prettier --write $files
-  elif [[ -x "$(command -v docker-compose)" && "$(docker images -q pkgsite_npm)" ]]; then
+  elif [[ -x "$(command -v docker-compose)" && "$(docker images -q pkgsite_nodejs)" ]]; then
     runcmd docker-compose -f devtools/config/docker-compose.yaml run --entrypoint=npx \
-    npm prettier --write $files
+    nodejs prettier --write $files
   else
     err "prettier must be installed: see https://prettier.io/docs/en/install.html"
   fi
