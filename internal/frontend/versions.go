@@ -276,6 +276,9 @@ func pseudoVersionRev(v string) string {
 // displayVersion returns the version string, formatted for display.
 func displayVersion(v string, modulePath string) string {
 	if modulePath == stdlib.ModulePath {
+		if strings.HasPrefix(v, "v0.0.0") {
+			return strings.Split(v, "-")[2]
+		}
 		return goTagForVersion(v)
 	}
 	return formatVersion(v)

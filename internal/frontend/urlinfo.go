@@ -182,7 +182,7 @@ func checkExcluded(ctx context.Context, ds internal.DataSource, fullPath string)
 // isSupportedVersion reports whether the version is supported by the frontend.
 func isSupportedVersion(fullPath, requestedVersion string) bool {
 	if _, ok := internal.DefaultBranches[requestedVersion]; ok {
-		return !stdlib.Contains(fullPath)
+		return !stdlib.Contains(fullPath) || requestedVersion == "master"
 	}
 	return requestedVersion == internal.LatestVersion || semver.IsValid(requestedVersion)
 }

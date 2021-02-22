@@ -218,7 +218,7 @@ func TestIsSupportedVersion(t *testing.T) {
 		{"net/http", "v1.2.3", true}, // isSupportedVersion expects the goTag is already converted to semver
 		{"net/http", "v1.2.3.bad", false},
 		{"net/http", "latest", true},
-		{"net/http", "master", false},
+		{"net/http", "master", true},
 		{"net/http", "main", false},
 	}
 	for _, test := range tests {
