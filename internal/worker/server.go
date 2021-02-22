@@ -152,6 +152,11 @@ func (s *Server) Install(handle func(string, http.Handler)) {
 	// Google Cloud Task Queues.
 	handle("/fetch/", http.StripPrefix("/fetch", rmw(http.HandlerFunc(s.handleFetch))))
 
+	// scheduled: fetch-std-master checks if the std@master version in the
+	// database is up to date with the version at HEAD. If not, a fetch request
+	// is queued to refresh the std@master version.
+	handle("/fetch-std-master/", rmw(s.errorHandler(s.handleFetchStdMaster)))
+
 	// scheduled: enqueue queries the module_version_states table for the next
 	// batch of module versions to process, and enqueues them for processing.
 	// Normally this will not cause duplicate processing, because Cloud Tasks
@@ -451,6 +456,23 @@ func (s *Server) handleHTMLPage(f func(w http.ResponseWriter, r *http.Request) e
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		}
 	}
+}
+
+func (s *Server) handleFetchStdMaster(w http.ResponseWriter, r *http.Request) error {
+	_, resolvedVersion, _, err := stdlib.Zip("master")
+	if err != nil {
+		return err
+	}
+	vm, err := s.db.GetVersionMap(r.Context(), stdlib.ModulePath, "master")
+	if err != nil {
+		return err
+	}
+	if vm.ResolvedVersion != resolvedVersion {
+		if _, err := s.queue.ScheduleFetch(r.Context(), stdlib.ModulePath, "master", "", false); err != nil {
+			return fmt.Errorf("error scheduling fetch for %s: %w", "master", err)
+		}
+	}
+	return s.db.DeletePseudoversionsExcept(r.Context(), stdlib.ModulePath, vm.ResolvedVersion)
 }
 
 func (s *Server) handlePopulateStdLib(w http.ResponseWriter, r *http.Request) error {
