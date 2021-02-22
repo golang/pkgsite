@@ -151,3 +151,41 @@ func TestParseVersionType(t *testing.T) {
 		})
 	}
 }
+
+func TestLatest(t *testing.T) {
+	for _, test := range []struct {
+		name     string
+		versions []string
+		allow    func(string) bool
+		want     string
+	}{
+		{
+			name:     "highest release",
+			versions: []string{"v1.2.3", "v1.0.0", "v1.9.0-pre"},
+			want:     "v1.2.3",
+		},
+		{
+			name:     "highest pre-release if no release",
+			versions: []string{"v1.2.3-alpha", "v1.0.0-beta", "v1.9.0-pre"},
+			want:     "v1.9.0-pre",
+		},
+		{
+			name:     "use incompatible.mod",
+			versions: []string{"v1.2.3", "v1.0.0", "v2.0.0+incompatible"},
+			want:     "v2.0.0+incompatible",
+		},
+		{
+			name:     "ignore incompatible",
+			versions: []string{"v1.2.3", "v1.0.0", "v2.0.0+incompatible"},
+			allow:    func(v string) bool { return !IsIncompatible(v) },
+			want:     "v1.2.3",
+		},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			got := Latest(test.versions, test.allow)
+			if got != test.want {
+				t.Errorf("got %s, want %s", got, test.want)
+			}
+		})
+	}
+}

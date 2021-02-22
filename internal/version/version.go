@@ -160,3 +160,32 @@ func appendNumericPrefix(dst []byte, n int) []byte {
 	}
 	return dst
 }
+
+// Later reports whether v1 is later than v2, using semver but preferring
+// release versions to pre-release versions.
+func Later(v1, v2 string) bool {
+	pre1 := semver.Prerelease(v1) != ""
+	pre2 := semver.Prerelease(v2) != ""
+	if pre1 == pre2 {
+		return semver.Compare(v1, v2) > 0
+	}
+	return !pre1
+}
+
+// Latest returns the latest version of a module from a list of versions, using
+// the go command's definition of latest: semver is observed, except that
+// release versions are preferred to prerelease.
+// If allow is non-nil, then only versions for which allow returns true will be
+// considered. If no versions are allowed, the empty string is returned.
+func Latest(versions []string, allow func(string) bool) string {
+	var latest string
+	for _, v := range versions {
+		if allow != nil && !allow(v) {
+			continue
+		}
+		if latest == "" || Later(v, latest) {
+			latest = v
+		}
+	}
+	return latest
+}
