@@ -231,6 +231,7 @@ export class PlaygroundExampleController {
         if (Errors) {
           this.setOutputText(Errors);
         }
+        this.setOutputText('');
         for (const e of Events || []) {
           this.setOutputText(e.Message);
           await new Promise(resolve => setTimeout(resolve, e.Delay / 1000000));

@@ -14,9 +14,7 @@
       <p><a class="Documentation-examplesPlay" href="{{.}}">Open in Go playground »</a></p>{{"\n" -}}
       {{- end -}}
       {{render_code .Example}}{{"\n" -}}
-      {{- if (or .Output .EmptyOutput) -}}
-        <pre><span class="Documentation-exampleOutputLabel">Output:</span>{{"\n\n"}}<span class="Documentation-exampleOutput">{{- .Output -}}</span></pre>{{"\n" -}}
-      {{- end -}}
+      <pre><span class="Documentation-exampleOutputLabel">Output:</span>{{"\n\n"}}<span class="Documentation-exampleOutput">{{- .Output -}}</span></pre>{{"\n" -}}
     </div>{{"\n" -}}
     {{- if .Play -}}
       <div class="Documentation-exampleButtonsContainer">
