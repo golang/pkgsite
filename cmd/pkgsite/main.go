@@ -9,6 +9,7 @@
 // web page.
 // Usage:
 //
+//  pkgsite [flag] # Load module from current directory.
 //  pkgsite [flag] [path1,path2] # Load modules from paths to memory.
 //
 // The flags are:
@@ -49,7 +50,7 @@ func main() {
 
 	paths := flag.Arg(0)
 	if paths == "" {
-		log.Fatalf(ctx, "no paths given")
+		paths = "."
 	}
 
 	lds := localdatasource.New()
