@@ -115,8 +115,12 @@ func (s *Server) AddModule(m *Module) {
 		s.handleLatest(m.ModulePath, fmt.Sprintf("/%s/@latest", m.ModulePath))
 		// TODO(https://golang.org/issue/39985): Add endpoint for handling
 		// master and main versions.
-		s.handleLatest(m.ModulePath, fmt.Sprintf("/%s/@v/master.info", m.ModulePath))
-		s.handleLatest(m.ModulePath, fmt.Sprintf("/%s/@v/main.info", m.ModulePath))
+		if m.Version != "master" {
+			s.handleLatest(m.ModulePath, fmt.Sprintf("/%s/@v/master.info", m.ModulePath))
+		}
+		if m.Version != "main" {
+			s.handleLatest(m.ModulePath, fmt.Sprintf("/%s/@v/main.info", m.ModulePath))
+		}
 	}
 	s.handleInfo(m.ModulePath, m.Version, m.NotCached)
 	s.handleMod(m)

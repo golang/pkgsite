@@ -62,6 +62,11 @@ func TestTagForVersion(t *testing.T) {
 			want:    "master",
 		},
 		{
+			name:    "master version",
+			version: TestVersion,
+			want:    "master",
+		},
+		{
 			name:    "bad std semver",
 			version: "v1.x",
 			wantErr: true,
@@ -120,7 +125,7 @@ func TestMajorVersionForVersion(t *testing.T) {
 func TestZip(t *testing.T) {
 	UseTestData = true
 	defer func() { UseTestData = false }()
-	for _, resolvedVersion := range []string{"v1.14.6", "v1.12.5", "v1.3.2", "master"} {
+	for _, resolvedVersion := range []string{"v1.14.6", "v1.12.5", "v1.3.2", TestVersion} {
 		t.Run(resolvedVersion, func(t *testing.T) {
 			zr, gotResolvedVersion, gotTime, err := Zip(resolvedVersion)
 			if err != nil {
@@ -141,12 +146,12 @@ func TestZip(t *testing.T) {
 				"errors/errors.go":      true,
 				"errors/errors_test.go": true,
 			}
-			if semver.Compare(resolvedVersion, "v1.4.0") > 0 || resolvedVersion == "master" {
+			if semver.Compare(resolvedVersion, "v1.4.0") > 0 || resolvedVersion == TestVersion {
 				wantFiles["README.md"] = true
 			} else {
 				wantFiles["README"] = true
 			}
-			if semver.Compare(resolvedVersion, "v1.13.0") > 0 || resolvedVersion == "master" {
+			if semver.Compare(resolvedVersion, "v1.13.0") > 0 || resolvedVersion == TestVersion {
 				wantFiles["cmd/README.vendor"] = true
 			}
 

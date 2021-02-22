@@ -92,10 +92,9 @@ func TagForVersion(version string) (_ string, err error) {
 	defer derrors.Wrap(&err, "TagForVersion(%q)", version)
 
 	// Special case: master => master
-	if version == "master" {
-		return version, nil
+	if version == "master" || strings.HasPrefix(version, "v0.0.0") {
+		return "master", nil
 	}
-
 	// Special case: v1.0.0 => go1.
 	if version == "v1.0.0" {
 		return "go1", nil
@@ -110,7 +109,6 @@ func TagForVersion(version string) (_ string, err error) {
 	if patch == "0" {
 		versionWithoutPrerelease = strings.TrimSuffix(versionWithoutPrerelease, ".0")
 	}
-
 	goVersion = fmt.Sprintf("go%s", strings.TrimPrefix(versionWithoutPrerelease, "v"))
 	if prerelease != "" {
 		// Go prereleases look like  "beta1" instead of "beta.1".
@@ -174,7 +172,10 @@ const (
 var UseTestData = false
 
 // TestCommitTime is the time used for all commits when UseTestData is true.
-var TestCommitTime = time.Date(2019, 9, 4, 1, 2, 3, 0, time.UTC)
+var (
+	TestCommitTime = time.Date(2019, 9, 4, 1, 2, 3, 0, time.UTC)
+	TestVersion    = "v0.0.0-20190904010203-89fb59e2e920"
+)
 
 // getGoRepo returns a repo object for the Go repo at version.
 func getGoRepo(version string) (_ *git.Repository, err error) {
@@ -202,6 +203,9 @@ func getGoRepo(version string) (_ *git.Repository, err error) {
 // getTestGoRepo gets a Go repo for testing.
 func getTestGoRepo(version string) (_ *git.Repository, err error) {
 	defer derrors.Wrap(&err, "getTestGoRepo(%q)", version)
+	if strings.HasPrefix(version, "v0.0.0") {
+		version = "master"
+	}
 
 	fs := osfs.New(filepath.Join(testhelper.TestDataPath("testdata"), version))
 	repo, err := git.Init(memory.NewStorage(), fs)
@@ -262,7 +266,8 @@ func Versions() (_ []string, err error) {
 
 // Directory returns the directory of the standard library relative to the repo root.
 func Directory(version string) string {
-	if semver.Compare(version, "v1.4.0-beta.1") >= 0 || version == "master" {
+	if semver.Compare(version, "v1.4.0-beta.1") >= 0 ||
+		version == "master" || strings.HasPrefix(version, "v0.0.0") {
 		return "src"
 	}
 	// For versions older than v1.4.0-beta.1, the stdlib is in src/pkg.
@@ -322,6 +327,9 @@ func Zip(resolvedVersion string) (_ *zip.Reader, resolvedVersion2 string, commit
 	if err != nil {
 		return nil, "", time.Time{}, err
 	}
+	if resolvedVersion == "master" {
+		resolvedVersion = newPseudoVersion("v0.0.0", commit.Committer.When, commit.Hash)
+	}
 	root, err := repo.TreeObject(commit.TreeHash)
 	if err != nil {
 		return nil, "", time.Time{}, err
@@ -350,9 +358,6 @@ func Zip(resolvedVersion string) (_ *zip.Reader, resolvedVersion2 string, commit
 	if err != nil {
 		return nil, "", time.Time{}, err
 	}
-	if resolvedVersion == "master" {
-		resolvedVersion = newPseudoVersion("v0.0.0", commit.Committer.When, commit.Hash)
-	}
 	return zr, resolvedVersion, commit.Committer.When, nil
 }
 
@@ -368,7 +373,7 @@ func semanticVersion(requestedVersion string) (_ string, err error) {
 	defer derrors.Wrap(&err, "semanticVersion(%q)", requestedVersion)
 
 	if requestedVersion == "master" {
-		return requestedVersion, nil
+		return "master", nil
 	}
 
 	knownVersions, err := Versions()

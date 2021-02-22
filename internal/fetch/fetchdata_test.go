@@ -642,6 +642,73 @@ var moduleAlternative = &testModule{
 	},
 }
 
+var moduleStdMaster = &testModule{
+	mod: &proxy.Module{
+		ModulePath: stdlib.ModulePath,
+		Version:    "master",
+		// No files necessary because the internal/stdlib package will read from
+		// internal/stdlib/testdata.
+	},
+	fr: &FetchResult{
+		RequestedVersion: "master",
+		ResolvedVersion:  stdlib.TestVersion,
+		Module: &internal.Module{
+			ModuleInfo: internal.ModuleInfo{
+				ModulePath: stdlib.ModulePath,
+				Version:    stdlib.TestVersion,
+				CommitTime: stdlib.TestCommitTime,
+				HasGoMod:   true,
+				SourceInfo: source.NewStdlibInfo("master"),
+			},
+			Units: []*internal.Unit{
+				{
+					UnitMeta: internal.UnitMeta{
+						Path:              "errors",
+						Name:              "errors",
+						IsRedistributable: true,
+						Version:           stdlib.TestVersion,
+						ModulePath:        stdlib.ModulePath,
+					},
+					Documentation: []*internal.Documentation{
+						{
+							GOOS:     internal.All,
+							GOARCH:   internal.All,
+							Synopsis: "Package errors implements functions to manipulate errors.",
+							API: []*internal.Symbol{
+								{
+									Name:     "New",
+									Synopsis: "func New(text string) error",
+									Section:  "Functions",
+									Kind:     "Function",
+									GOOS:     internal.All,
+									GOARCH:   internal.All,
+								},
+							},
+						},
+					},
+				},
+				{
+					UnitMeta: internal.UnitMeta{
+						Path:              "std",
+						IsRedistributable: true,
+						Version:           stdlib.TestVersion,
+						ModulePath:        "std",
+					},
+					Readme: &internal.Readme{Filepath: "README.md", Contents: "# The Go Programming Language\n"},
+				},
+			},
+		},
+		PackageVersionStates: []*internal.PackageVersionState{
+			{
+				PackagePath: "errors",
+				ModulePath:  "std",
+				Version:     stdlib.TestVersion,
+				Status:      200,
+			},
+		},
+	},
+}
+
 var moduleStd = &testModule{
 	mod: &proxy.Module{
 		ModulePath: stdlib.ModulePath,

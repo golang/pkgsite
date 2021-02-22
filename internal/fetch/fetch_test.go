@@ -84,6 +84,8 @@ func TestFetchModule(t *testing.T) {
 		// Proxy only as stdlib is not accounted for in local mode
 		{name: "stdlib module", mod: moduleStd, proxyOnly: true},
 		// Proxy only as version is pre specified in local mode
+		{name: "master version of stdlib module", mod: moduleStdMaster, fetchVersion: "master", proxyOnly: true},
+		// Proxy only as version is pre specified in local mode
 		{name: "master version of module", mod: moduleMaster, fetchVersion: "master", proxyOnly: true},
 		// Proxy only as version is pre specified in local mode
 		{name: "latest version of module", mod: moduleLatest, fetchVersion: "latest", proxyOnly: true},
