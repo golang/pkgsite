@@ -63,10 +63,8 @@ func main() {
 	if err != nil {
 		log.Fatalf(ctx, "frontend.NewServer: %v", err)
 	}
-	lds, ok := dsg(ctx).(*localdatasource.DataSource)
-	if ok {
-		load(ctx, lds, *localPaths)
-	}
+
+	load(ctx, lds, *localPaths)
 
 	router := dcensus.NewRouter(frontend.TagRoute)
 	server.Install(router.Handle, nil, nil)
