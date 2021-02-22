@@ -9,7 +9,7 @@
 // web page.
 // Usage:
 //
-//  pkgsite [flag]
+//  pkgsite [flag] [path1,path2] # Load modules from paths to memory.
 //
 // The flags are:
 //
@@ -17,15 +17,13 @@
 //      Assume that local modules' paths are relative to GOPATH/src
 //  -http=:8080
 //      HTTP service address to listen for incoming requests on
-//  -local=path1,path2
-//      Accepts a GOPATH-like collection of local paths for modules to load to memory
 package main
 
 import (
 	"context"
 	"flag"
 	"net/http"
-	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/google/safehtml/template"
@@ -41,21 +39,21 @@ const defaultAddr = "localhost:8080" // default webserver address
 
 var (
 	_          = flag.String("static", "content/static", "path to folder containing static files served")
-	gopathMode = flag.Bool("gopath_mode", false, "assume that local modules' paths are relative to GOPATH/src, used only with -local")
+	gopathMode = flag.Bool("gopath_mode", false, "assume that local modules' paths are relative to GOPATH/src")
 	httpAddr   = flag.String("http", defaultAddr, "HTTP service address to listen for incoming requests on")
-	localPaths = flag.String("local", "", "run locally, accepts a GOPATH-like collection of local paths for modules to load to memory")
 )
 
 func main() {
 	flag.Parse()
 	ctx := context.Background()
-	var dsg func(context.Context) internal.DataSource
-	if *localPaths == "" {
-		log.Fatalf(ctx, "-local is not set")
+
+	paths := flag.Arg(0)
+	if paths == "" {
+		log.Fatalf(ctx, "no paths given")
 	}
 
 	lds := localdatasource.New()
-	dsg = func(context.Context) internal.DataSource { return lds }
+	dsg := func(context.Context) internal.DataSource { return lds }
 	server, err := frontend.NewServer(frontend.ServerConfig{
 		DataSourceGetter: dsg,
 		StaticPath:       template.TrustedSourceFromFlag(flag.Lookup("static").Value),
@@ -64,7 +62,7 @@ func main() {
 		log.Fatalf(ctx, "frontend.NewServer: %v", err)
 	}
 
-	load(ctx, lds, *localPaths)
+	load(ctx, lds, paths)
 
 	router := dcensus.NewRouter(frontend.TagRoute)
 	server.Install(router.Handle, nil, nil)
@@ -76,7 +74,7 @@ func main() {
 
 // load loads local modules from pathList.
 func load(ctx context.Context, ds *localdatasource.DataSource, pathList string) {
-	paths := filepath.SplitList(pathList)
+	paths := strings.Split(pathList, ",")
 	loaded := len(paths)
 	for _, path := range paths {
 		var err error

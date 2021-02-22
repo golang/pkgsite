@@ -47,11 +47,12 @@ will do that as well.
 You can also use run the frontend locally with an in-memory datasource
 populated with modules loaded from your local filesystem.
 
-    go run ./cmd/pkgsite [-local .]
+    go run ./cmd/pkgsite [path1,path2]
 
 This allows you to run the frontend without setting up a database and to view
-documentation of local modules without requiring a proxy. `-local` accepts a
-GOPATH-like string containing paths of modules to load into memory.
+documentation of local modules without requiring a proxy. The command accepts a
+list of comma-separated strings each representing a path of a module to load
+into memory.
 
 ### Testing
 
