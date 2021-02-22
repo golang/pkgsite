@@ -174,7 +174,13 @@ func insertModule(ctx context.Context, db *database.DB, m *internal.Module) (_ i
 	if err != nil {
 		return 0, err
 	}
-	var moduleID int
+	var (
+		moduleID   int
+		depComment *string
+	)
+	if m.Deprecated {
+		depComment = &m.DeprecationComment
+	}
 	err = db.QueryRow(ctx,
 		`INSERT INTO modules(
 			module_path,
@@ -204,7 +210,7 @@ func insertModule(ctx context.Context, db *database.DB, m *internal.Module) (_ i
 		sourceInfoJSON,
 		m.IsRedistributable,
 		m.HasGoMod,
-		m.DeprecatedComment,
+		depComment,
 		version.IsIncompatible(m.Version),
 	).Scan(&moduleID)
 	if err != nil {

@@ -197,10 +197,17 @@ func (s jsonbScanner) Scan(value interface{}) (err error) {
 
 // scanModuleInfo constructs an *internal.ModuleInfo from the given scanner.
 func scanModuleInfo(scan func(dest ...interface{}) error) (*internal.ModuleInfo, error) {
-	var mi internal.ModuleInfo
+	var (
+		mi         internal.ModuleInfo
+		depComment *string
+	)
 	if err := scan(&mi.ModulePath, &mi.Version, &mi.CommitTime,
-		&mi.IsRedistributable, &mi.HasGoMod, &mi.DeprecatedComment, jsonbScanner{&mi.SourceInfo}); err != nil {
+		&mi.IsRedistributable, &mi.HasGoMod, &depComment, jsonbScanner{&mi.SourceInfo}); err != nil {
 		return nil, err
+	}
+	if depComment != nil {
+		mi.Deprecated = true
+		mi.DeprecationComment = *depComment
 	}
 	return &mi, nil
 }

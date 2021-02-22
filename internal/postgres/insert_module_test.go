@@ -69,8 +69,8 @@ func TestInsertModule(t *testing.T) {
 			name: "deprecated",
 			module: func() *internal.Module {
 				m := sample.DefaultModule()
-				c := "use v2"
-				m.DeprecatedComment = &c
+				m.Deprecated = true
+				m.DeprecationComment = "use v2"
 				return m
 			}(),
 		},

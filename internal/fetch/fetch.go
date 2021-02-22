@@ -326,10 +326,7 @@ func processGoModFile(goModBytes []byte, mod *internal.Module) (err error) {
 	if err != nil {
 		return err
 	}
-	hasDepComment, depComment := extractDeprecatedComment(mf)
-	if hasDepComment {
-		mod.DeprecatedComment = &depComment
-	}
+	mod.Deprecated, mod.DeprecationComment = extractDeprecatedComment(mf)
 	return nil
 }
 

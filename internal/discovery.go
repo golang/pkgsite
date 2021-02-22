@@ -45,11 +45,18 @@ type ModuleInfo struct {
 	Version           string
 	CommitTime        time.Time
 	IsRedistributable bool
-	// Whether the module zip has a go.mod file.
-	HasGoMod bool
-	// The text after the Deprecated comment (could be empty), or nil if no comment.
-	DeprecatedComment *string
-	SourceInfo        *source.Info
+	// HasGoMod describes whether the module zip has a go.mod file.
+	HasGoMod   bool
+	SourceInfo *source.Info
+
+	// Deprecated describes whether the module is deprecated.
+	Deprecated bool
+	// DeprecationComment is the comment describing the deprecation, if any.
+	DeprecationComment string
+	// Retracted describes whether the module version is retracted.
+	Retracted bool
+	// RetractionRationale is the reason for the retraction, if any.
+	RetractionRationale string
 }
 
 // VersionMap holds metadata associated with module queries for a version.
