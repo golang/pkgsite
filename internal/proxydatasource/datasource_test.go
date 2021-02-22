@@ -8,7 +8,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strings"
+	"os"
 	"testing"
 	"time"
 
@@ -21,42 +21,19 @@ import (
 	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/proxy"
 	"golang.org/x/pkgsite/internal/testing/sample"
-	"golang.org/x/pkgsite/internal/testing/testhelper"
 )
+
+var testModules []*proxy.Module
+
+func TestMain(m *testing.M) {
+	dochtml.LoadTemplates(template.TrustedSourceFromConstant("../../content/static/html/doc"))
+	testModules = proxy.LoadTestModules("../proxy/testdata")
+	licenses.OmitExceptions = true
+	os.Exit(m.Run())
+}
 
 func setup(t *testing.T) (context.Context, *DataSource, func()) {
 	t.Helper()
-	dochtml.LoadTemplates(template.TrustedSourceFromConstant("../../content/static/html/doc"))
-
-	contents := map[string]string{
-		"go.mod":     "module foo.com/bar",
-		"LICENSE":    testhelper.MITLicense,
-		"baz/baz.go": "//Package baz provides a helpful constant.\npackage baz\nimport \"net/http\"\nconst OK = http.StatusOK",
-	}
-	// nrContents is the same as contents, except the license is non-redistributable.
-	nrContents := map[string]string{
-		"go.mod":     "module foo.com/nr",
-		"LICENSE":    "unknown",
-		"baz/baz.go": "//Package baz provides a helpful constant.\npackage baz\nimport \"net/http\"\nconst OK = http.StatusOK",
-	}
-
-	testModules := []*proxy.Module{
-		{
-			ModulePath: "foo.com/bar",
-			Version:    "v1.1.0",
-			Files:      contents,
-		},
-		{
-			ModulePath: "foo.com/bar",
-			Version:    "v1.2.0",
-			Files:      contents,
-		},
-		{
-			ModulePath: "foo.com/nr",
-			Version:    "v1.1.0",
-			Files:      nrContents,
-		},
-	}
 	client, teardownProxy := proxy.SetupTestClient(t, testModules)
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	return ctx, NewForTesting(client), func() {
@@ -84,31 +61,32 @@ var (
 			GOARCH:   "amd64",
 		}},
 	}
-	wantModuleInfo = internal.ModuleInfo{
-		ModulePath:        "foo.com/bar",
-		Version:           "v1.2.0",
-		CommitTime:        time.Date(2019, 1, 30, 0, 0, 0, 0, time.UTC),
-		IsRedistributable: true,
-		HasGoMod:          true,
-	}
 	cmpOpts = append([]cmp.Option{
 		cmpopts.IgnoreFields(licenses.License{}, "Contents"),
+		cmpopts.IgnoreFields(internal.ModuleInfo{}, "SourceInfo"),
 	}, sample.LicenseCmpOpts...)
 )
 
-func TestDataSource_GetModuleInfo(t *testing.T) {
+func TestGetModuleInfo(t *testing.T) {
 	ctx, ds, teardown := setup(t)
 	defer teardown()
-	got, err := ds.GetModuleInfo(ctx, "foo.com/bar", "v1.2.0")
+	got, err := ds.GetModuleInfo(ctx, "example.com/basic", "v1.1.0")
 	if err != nil {
 		t.Fatal(err)
+	}
+	wantModuleInfo := internal.ModuleInfo{
+		ModulePath:        "example.com/basic",
+		Version:           "v1.1.0",
+		CommitTime:        time.Date(2019, 1, 30, 0, 0, 0, 0, time.UTC),
+		IsRedistributable: true,
+		HasGoMod:          true,
 	}
 	if diff := cmp.Diff(&wantModuleInfo, got, cmpOpts...); diff != "" {
 		t.Errorf("GetModuleInfo diff (-want +got):\n%s", diff)
 	}
 }
 
-func TestDataSource_GetUnitMeta(t *testing.T) {
+func TestGetUnitMeta(t *testing.T) {
 	ctx, ds, teardown := setup(t)
 	defer teardown()
 
@@ -117,45 +95,45 @@ func TestDataSource_GetUnitMeta(t *testing.T) {
 		want                      *internal.UnitMeta
 	}{
 		{
-			path:       "foo.com/bar",
-			modulePath: "foo.com/bar",
-			version:    "v1.1.0",
+			path:       "example.com/single",
+			modulePath: "example.com/single",
+			version:    "v1.0.0",
 			want: &internal.UnitMeta{
-				ModulePath:        "foo.com/bar",
-				Version:           "v1.1.0",
+				ModulePath:        "example.com/single",
+				Version:           "v1.0.0",
 				IsRedistributable: true,
 			},
 		},
 		{
-			path:       "foo.com/bar/baz",
-			modulePath: "foo.com/bar",
-			version:    "v1.1.0",
+			path:       "example.com/single/pkg",
+			modulePath: "example.com/single",
+			version:    "v1.0.0",
 			want: &internal.UnitMeta{
-				ModulePath:        "foo.com/bar",
-				Name:              "baz",
-				Version:           "v1.1.0",
+				ModulePath:        "example.com/single",
+				Name:              "pkg",
+				Version:           "v1.0.0",
 				IsRedistributable: true,
 			},
 		},
 		{
-			path:       "foo.com/bar/baz",
+			path:       "example.com/single/pkg",
 			modulePath: internal.UnknownModulePath,
-			version:    "v1.1.0",
+			version:    "v1.0.0",
 			want: &internal.UnitMeta{
-				ModulePath:        "foo.com/bar",
-				Name:              "baz",
-				Version:           "v1.1.0",
+				ModulePath:        "example.com/single",
+				Name:              "pkg",
+				Version:           "v1.0.0",
 				IsRedistributable: true,
 			},
 		},
 		{
-			path:       "foo.com/bar/baz",
+			path:       "example.com/basic",
 			modulePath: internal.UnknownModulePath,
 			version:    internal.LatestVersion,
 			want: &internal.UnitMeta{
-				ModulePath:        "foo.com/bar",
-				Name:              "baz",
-				Version:           "v1.2.0",
+				ModulePath:        "example.com/basic",
+				Name:              "basic",
+				Version:           "v1.1.0",
 				IsRedistributable: true,
 			},
 		},
@@ -173,31 +151,42 @@ func TestDataSource_GetUnitMeta(t *testing.T) {
 	}
 }
 
-func TestDataSource_Bypass(t *testing.T) {
+func TestBypass(t *testing.T) {
 	for _, bypass := range []bool{false, true} {
 		t.Run(fmt.Sprintf("bypass=%t", bypass), func(t *testing.T) {
 			// re-create the data source to get around caching
 			ctx, ds, teardown := setup(t)
 			defer teardown()
 			ds.bypassLicenseCheck = bypass
-			for _, mpath := range []string{"foo.com/bar", "foo.com/nr"} {
-				wantEmpty := !bypass && strings.HasSuffix(mpath, "/nr")
+			for _, test := range []struct {
+				path      string
+				wantEmpty bool
+			}{
+				{"example.com/basic", false},
+				{"example.com/nonredist/unk", !bypass},
+			} {
+				t.Run(test.path, func(t *testing.T) {
+					um, err := ds.GetUnitMeta(ctx, test.path, internal.UnknownModulePath, "v1.0.0")
+					if err != nil {
+						t.Fatal(err)
+					}
+					got, err := ds.GetUnit(ctx, um, 0)
+					if err != nil {
+						t.Fatal(err)
+					}
 
-				got, err := ds.getModule(ctx, mpath, "v1.1.0")
-				if err != nil {
-					t.Fatal(err)
-				}
-				// Assume internal.Module.RemoveNonRedistributableData is correct; we just
-				// need to check one value to confirm that it was called.
-				if gotEmpty := (got.Licenses[0].Contents == nil); gotEmpty != wantEmpty {
-					t.Errorf("bypass %t for %q: got empty %t, want %t", bypass, mpath, gotEmpty, wantEmpty)
-				}
+					// Assume internal.Module.RemoveNonRedistributableData is correct; we just
+					// need to check one value to confirm that it was called.
+					if gotEmpty := (got.Documentation == nil); gotEmpty != test.wantEmpty {
+						t.Errorf("got empty %t, want %t", gotEmpty, test.wantEmpty)
+					}
+				})
 			}
 		})
 	}
 }
 
-func TestDataSource_GetLatestInfo(t *testing.T) {
+func TestGetLatestInfo(t *testing.T) {
 	t.Helper()
 	testModules := []*proxy.Module{
 		{
