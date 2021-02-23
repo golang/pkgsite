@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"golang.org/x/mod/modfile"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/stdlib"
@@ -345,5 +346,60 @@ func TestGetLatestInfo(t *testing.T) {
 				t.Errorf("mismatch (-want, +got):\n%s", diff)
 			}
 		})
+	}
+}
+
+func TestRawLatestInfo(t *testing.T) {
+	t.Parallel()
+	testDB, release := acquire(t)
+	defer release()
+	ctx := context.Background()
+
+	goMod, err := modfile.ParseLax("m from DB", []byte(`module m`), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	info := &internal.RawLatestInfo{ModulePath: "m", Version: "v1.0.0", GoModFile: goMod}
+	if err := testDB.UpdateRawLatestInfo(ctx, info); err != nil {
+		t.Fatal(err)
+	}
+	got, err := testDB.GetRawLatestInfo(ctx, "m")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if diff := cmp.Diff(info, got); diff != "" {
+		t.Fatalf("mismatch (-want, +got): %s", diff)
+	}
+
+	info.Version = "v1.2.3"
+	if err := testDB.UpdateRawLatestInfo(ctx, info); err != nil {
+		t.Fatal(err)
+	}
+	got, err = testDB.GetRawLatestInfo(ctx, "m")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if diff := cmp.Diff(info, got); diff != "" {
+		t.Fatalf("mismatch (-want, +got): %s", diff)
+	}
+
+}
+
+func TestShouldUpdateRawLatest(t *testing.T) {
+	for _, test := range []struct {
+		new, cur string
+		want     bool
+	}{
+		{"v1.2.0", "v1.0.0", true},
+		{"v1.2.0", "v1.2.0", false},
+		{"v1.2.0", "v1.3.0", false},
+		{"v1.0.0", "v1.9.9-pre", true},          // release beats prerelease
+		{"v1.0.0", "v2.3.4+incompatible", true}, // compatible beats incompatible
+	} {
+		got := shouldUpdateRawLatest(test.new, test.cur)
+		if got != test.want {
+			t.Errorf("shouldUpdateRawLatest(%q, %q) = %t, want %t", test.new, test.cur, got, test.want)
+		}
 	}
 }

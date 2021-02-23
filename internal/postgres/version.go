@@ -11,7 +11,9 @@ import (
 	"strings"
 
 	"github.com/Masterminds/squirrel"
+	"golang.org/x/mod/modfile"
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/version"
 	"golang.org/x/sync/errgroup"
@@ -213,4 +215,111 @@ func (db *DB) getLatestMinorModuleVersionInfo(ctx context.Context, unitPath, mod
 	default:
 		return false, err
 	}
+}
+
+// GetRawLatestInfo returns the row of the raw_latest_versions table for modulePath.
+// If the module path is not found, it returns nil, nil.
+func (db *DB) GetRawLatestInfo(ctx context.Context, modulePath string) (_ *internal.RawLatestInfo, err error) {
+	defer derrors.WrapStack(&err, "GetRawLatestInfo(%q)", modulePath)
+
+	var (
+		info       internal.RawLatestInfo
+		goModBytes []byte
+	)
+	err = db.db.QueryRow(ctx, `
+		SELECT p.path, r.version, r.go_mod_bytes
+		FROM raw_latest_versions r
+		INNER JOIN paths p ON p.id = r.module_path_id
+		WHERE p.path = $1`,
+		modulePath).Scan(&info.ModulePath, &info.Version, &goModBytes)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, err
+	}
+	info.GoModFile, err = modfile.ParseLax(modulePath+" from DB", goModBytes, nil)
+	if err != nil {
+		return nil, err
+	}
+	return &info, nil
+}
+
+// UpdateRawLatestInfo upserts its argument into the raw_latest_versions table
+// if the row doesn't exist, or the new version is later.
+func (db *DB) UpdateRawLatestInfo(ctx context.Context, info *internal.RawLatestInfo) (err error) {
+	defer derrors.WrapStack(&err, "UpdateRawLatestInfo(%q)", info.ModulePath)
+
+	// We need RepeatableRead here because the INSERT...ON CONFLICT does a read.
+	return db.db.Transact(ctx, sql.LevelRepeatableRead, func(tx *database.DB) error {
+		var (
+			id         int
+			curVersion string
+		)
+		err = tx.QueryRow(ctx, `
+			SELECT p.id, r.version
+			FROM raw_latest_versions r
+			INNER JOIN paths p ON p.id = r.module_path_id
+			WHERE p.path = $1`,
+			info.ModulePath).Scan(&id, &curVersion)
+		switch {
+		case err == sql.ErrNoRows:
+			// Fall through to upsert.
+		case err != nil:
+			return err
+		default:
+			if !shouldUpdateRawLatest(info.Version, curVersion) {
+				return nil
+			}
+		}
+
+		return upsertRawLatestInfo(ctx, tx, id, info)
+	})
+}
+
+func shouldUpdateRawLatest(newVersion, curVersion string) bool {
+	// Only update if the new one is later according to version.Later
+	// (semver except that release > prerelease). that avoids a race
+	// condition where worker 1 sees a version, but worker 2 sees a
+	// newer version and updates before worker 1 proceeds.
+	//
+	// However, the raw latest version can go backwards if it was an
+	// incompatible version, but then a compatible version with a go.mod
+	// file is published. For example, the module starts with a
+	// v2.0.0+incompatible, but then the author adds a v1.0.0 with a
+	// go.mod file, making v1.0.0 the new latest. Take that case into
+	// account.
+	return version.Later(newVersion, curVersion) ||
+		(version.IsIncompatible(curVersion) && !version.IsIncompatible(newVersion))
+}
+
+func upsertRawLatestInfo(ctx context.Context, tx *database.DB, id int, info *internal.RawLatestInfo) (err error) {
+	defer derrors.WrapStack(&err, "upsertRawLatestInfo(%d, %q, %q)", id, info.ModulePath, info.Version)
+
+	// If the row doesn't exist, insert it and get the path ID.
+	if id == 0 {
+		id, err = insertPath(ctx, tx, info.ModulePath)
+		if err != nil {
+			return err
+		}
+	}
+
+	// Convert the go.mod file into bytes.
+	goModBytes, err := info.GoModFile.Format()
+	if err != nil {
+		return err
+	}
+	_, err = tx.Exec(ctx, `
+		INSERT INTO raw_latest_versions (
+			module_path_id,
+			version,
+			go_mod_bytes
+		) VALUES ($1, $2, $3)
+		ON CONFLICT (module_path_id)
+		DO UPDATE SET
+			version=excluded.version,
+			go_mod_bytes=excluded.go_mod_bytes
+		`,
+		id, info.Version, goModBytes)
+	return err
 }

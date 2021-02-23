@@ -7,11 +7,13 @@ package postgres
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
 
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/derrors"
 )
 
@@ -72,4 +74,21 @@ func (db *DB) GetLatestMajorPathForV1Path(ctx context.Context, v1path string) (_
 		maj = 1
 	}
 	return majPath, maj, nil
+}
+
+// insertPath inserts path into the paths table and returns its ID.
+// The path must not already exist.
+func insertPath(ctx context.Context, db *database.DB, path string) (id int, err error) {
+	derrors.WrapStack(&err, "insertPath(%q)", path)
+
+	err = db.QueryRow(ctx,
+		`INSERT INTO paths (path) VALUES ($1) RETURNING id`,
+		path).Scan(&id)
+	if err != nil {
+		return 0, err
+	}
+	if id == 0 {
+		return 0, errors.New("zero ID")
+	}
+	return id, nil
 }
