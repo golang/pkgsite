@@ -1,0 +1,15 @@
+A module that is deprecated, according to its latest go.mod file.
+
+-- go.mod --
+// Deprecated: use something else
+module example.com/deprecated
+
+-- LICENSE --
+$MITLicense
+
+-- file.go --
+// Package pkg is a sample package.
+package pkg
+
+// Version is the same as the module version.
+const Version = "v1.1.0"

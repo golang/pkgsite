@@ -281,7 +281,7 @@ main() {
       info "Running checks on:"
       info "    " $files
 
-      check_headers $files
+      check_headers $(filter "$files" '*.go' '*.sql' '*.sh')
       if [[ $(filter "$files" 'migrations/*') != '' ]]; then
         check_bad_migrations
       fi

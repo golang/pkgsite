@@ -55,16 +55,16 @@ func TestEndToEndProcessing(t *testing.T) {
 
 	workerHTTP, fetcher, queue := setupWorker(ctx, t, proxyClient, indexClient, redisCacheClient, redisHAClient)
 	frontendHTTP := setupFrontend(ctx, t, queue, redisCacheClient)
-	if _, err := doGet(workerHTTP.URL + "/poll"); err != nil {
+	if _, err := doGet(workerHTTP.URL + "/poll?limit=1000"); err != nil {
 		t.Fatal(err)
 	}
 	// TODO: This should really be made deterministic.
 	time.Sleep(100 * time.Millisecond)
-	if _, err := doGet(workerHTTP.URL + "/enqueue"); err != nil {
+	if _, err := doGet(workerHTTP.URL + "/enqueue?limit=1000"); err != nil {
 		t.Fatal(err)
 	}
 	// TODO: This should really be made deterministic.
-	time.Sleep(100 * time.Millisecond)
+	time.Sleep(200 * time.Millisecond)
 	queue.WaitForTesting(ctx)
 
 	var wantKeys []string

@@ -1,0 +1,20 @@
+A module with some versions retracted.
+This is the latest version. It retracts itself.
+
+-- go.mod --
+module example.com/retractions
+
+retract (
+    v1.2.0 // bad
+    v1.1.0 // worse
+)
+
+-- LICENSE --
+$MITLicense
+
+-- file.go --
+// Package pkg is a sample package.
+package pkg
+
+// Version is the same as the module version.
+const Version = "v1.2.0"
