@@ -1239,6 +1239,62 @@ func TestServerErrors(t *testing.T) {
 	}
 }
 
+func TestServer404Redirect_NoLoop(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
+
+	altPath := "module.path/alternative"
+	goModPath := "module.path/alternative/pkg"
+	defer postgres.ResetTestDB(testDB, t)
+	sampleModule := sample.DefaultModule()
+	postgres.MustInsertModule(ctx, t, testDB, sampleModule)
+	alternativeModule := &internal.VersionMap{
+		ModulePath:       altPath,
+		GoModPath:        goModPath,
+		RequestedVersion: internal.LatestVersion,
+		ResolvedVersion:  sample.VersionString,
+		Status:           derrors.ToStatus(derrors.AlternativeModule),
+	}
+	alternativeModulePkg := &internal.VersionMap{
+		ModulePath:       goModPath,
+		GoModPath:        goModPath,
+		RequestedVersion: internal.LatestVersion,
+		ResolvedVersion:  sample.VersionString,
+		Status:           http.StatusNotFound,
+	}
+	if err := testDB.UpsertVersionMap(ctx, alternativeModule); err != nil {
+		t.Fatal(err)
+	}
+	if err := testDB.UpsertVersionMap(ctx, alternativeModulePkg); err != nil {
+		t.Fatal(err)
+	}
+
+	rs, err := miniredis.Run()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer rs.Close()
+
+	_, handler, _ := newTestServer(t, nil, redis.NewClient(&redis.Options{Addr: rs.Addr()}))
+
+	for _, test := range []struct {
+		name, path string
+		status     int
+	}{
+		{"do not redirect if alternative module does not successfully return", "/" + altPath, http.StatusNotFound},
+		{"do not redirect go mod path endlessly", "/" + goModPath, http.StatusNotFound},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			w := httptest.NewRecorder()
+			handler.ServeHTTP(w, httptest.NewRequest("GET", test.path, nil))
+			// Check for http.StatusFound, which indicates a redirect.
+			if w.Code != test.status {
+				t.Errorf("%q: got status code = %d, want %d", test.path, w.Code, test.status)
+			}
+		})
+	}
+}
+
 // Verify that some paths that aren't found will redirect to valid pages.
 // Sometimes redirection sets the AlternativeModuleFlash cookie and puts
 // up a banner.

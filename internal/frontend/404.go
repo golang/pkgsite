@@ -81,10 +81,22 @@ func (s *Server) servePathNotFoundPage(w http.ResponseWriter, r *http.Request,
 	}
 	switch fr.status {
 	case http.StatusFound, derrors.ToStatus(derrors.AlternativeModule):
+		if fr.goModPath == fullPath {
+			// The redirectPath and the fullpath are the same. Do not redirect
+			// to avoid ending up in a loop.
+			return errUnitNotFoundWithoutFetch
+		}
+		vm, err := db.GetVersionMap(ctx, fr.goModPath, internal.LatestVersion)
+		if (err != nil && !errors.Is(err, derrors.NotFound)) ||
+			(vm != nil && vm.Status != http.StatusOK) {
+			// We attempted to fetch the canonical module path before and were
+			// not successful. Do not redirect this request.
+			return errUnitNotFoundWithoutFetch
+		}
 		u := constructUnitURL(fr.goModPath, fr.goModPath, internal.LatestVersion)
 		cookie.Set(w, cookie.AlternativeModuleFlash, fullPath, u)
 		http.Redirect(w, r, u, http.StatusFound)
-		return
+		return nil
 	case http.StatusInternalServerError:
 		return pathNotFoundError(fullPath, requestedVersion)
 	default:
