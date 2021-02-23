@@ -303,7 +303,7 @@ func processZipFile(ctx context.Context, modulePath string, resolvedVersion stri
 	if err != nil {
 		return nil, nil, fmt.Errorf("extractPackagesFromZip(%q, %q, zipReader, %v): %v", modulePath, resolvedVersion, allLicenses, err)
 	}
-	hasGoMod := zipFile(zipReader, path.Join(moduleVersionDir(modulePath, resolvedVersion), "go.mod")) != nil
+	hasGoMod := hasGoModFile(zipReader, modulePath, resolvedVersion)
 	return &internal.Module{
 		ModuleInfo: internal.ModuleInfo{
 			ModulePath:        modulePath,
@@ -316,6 +316,10 @@ func processZipFile(ctx context.Context, modulePath string, resolvedVersion stri
 		Licenses: allLicenses,
 		Units:    moduleUnits(modulePath, resolvedVersion, packages, readmes, d),
 	}, packageVersionStates, nil
+}
+
+func hasGoModFile(zr *zip.Reader, m, v string) bool {
+	return zipFile(zr, path.Join(moduleVersionDir(m, v), "go.mod")) != nil
 }
 
 // processGoModFile populates mod with information extracted from the contents of the go.mod file.
