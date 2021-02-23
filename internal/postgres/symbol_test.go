@@ -249,11 +249,6 @@ func TestInsertSymbolHistory_MultiVersions(t *testing.T) {
 	MustInsertModule(ctx, t, testDB, mod10)
 	MustInsertModule(ctx, t, testDB, mod11)
 
-	gotHist, err := getSymbolHistory(ctx, testDB.db, mod10.Packages()[0].Path, mod10.ModulePath)
-	if err != nil {
-		t.Fatal(err)
-	}
-
 	symbols := map[string]*internal.Symbol{
 		"Foo":   typ,
 		"Foo.A": methodA,
@@ -264,6 +259,10 @@ func TestInsertSymbolHistory_MultiVersions(t *testing.T) {
 		internal.BuildContextJS:      symbols,
 		internal.BuildContextLinux:   symbols,
 		internal.BuildContextWindows: symbols,
+	}
+	gotHist, err := getSymbolHistory(ctx, testDB.db, mod12.Packages()[0].Path, mod12.ModulePath)
+	if err != nil {
+		t.Fatal(err)
 	}
 	if diff := cmp.Diff(wantHist, gotHist,
 		cmpopts.IgnoreFields(internal.Symbol{}, "GOOS", "GOARCH")); diff != "" {
@@ -304,10 +303,22 @@ func TestInsertSymbolHistory_MultiGOOS(t *testing.T) {
 	mod11 := moduleWithSymbols(t, "v1.1.0", nil)
 	makeDocs := func() []*internal.Documentation {
 		return []*internal.Documentation{
-			sample.Documentation("linux", "amd64", sample.DocContents),
-			sample.Documentation("windows", "amd64", sample.DocContents),
-			sample.Documentation("darwin", "amd64", sample.DocContents),
-			sample.Documentation("js", "wasm", sample.DocContents),
+			sample.Documentation(
+				internal.BuildContextLinux.GOOS,
+				internal.BuildContextLinux.GOARCH,
+				sample.DocContents),
+			sample.Documentation(
+				internal.BuildContextWindows.GOOS,
+				internal.BuildContextWindows.GOARCH,
+				sample.DocContents),
+			sample.Documentation(
+				internal.BuildContextDarwin.GOOS,
+				internal.BuildContextDarwin.GOARCH,
+				sample.DocContents),
+			sample.Documentation(
+				internal.BuildContextJS.GOOS,
+				internal.BuildContextJS.GOARCH,
+				sample.DocContents),
 		}
 	}
 	mod11.Packages()[0].Documentation = makeDocs()
