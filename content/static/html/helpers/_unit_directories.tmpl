@@ -52,8 +52,10 @@
             <tr data-id="{{$prefix}}-{{.Suffix}}">
               <td>
                 <div class="UnitDirectories-subdirectory">
-                  <a href="{{.URL}}">{{.Suffix}}</a>
-                  {{if .IsModule}}<span class="UnitHeader-badge">Module</span>{{end}}
+                  <span>
+                    <a href="{{.URL}}">{{.Suffix}}</a>
+                    {{if .IsModule}}<span class="UnitHeader-badge">Module</span>{{end}}
+                  </span>
                   <div class="UnitDirectories-mobileSynopsis">{{.Synopsis}}</div>
                 </div>
               </td>
