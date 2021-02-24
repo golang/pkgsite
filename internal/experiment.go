@@ -12,6 +12,7 @@ const (
 	ExperimentInteractivePlayground = "interactive-playground"
 	ExperimentNotAtLatest           = "not-at-latest"
 	ExperimentRedirectedFromBanner  = "redirected-from-banner"
+	ExperimentRetractions           = "retractions"
 )
 
 // Experiments represents all of the active experiments in the codebase and
@@ -23,6 +24,7 @@ var Experiments = map[string]string{
 	ExperimentInteractivePlayground: "Enable interactive example playground on the unit page.",
 	ExperimentNotAtLatest:           "Enable the display of a 'not at latest' badge.",
 	ExperimentRedirectedFromBanner:  "Display banner with path that request was redirected from.",
+	ExperimentRetractions:           "Retrieve and display retraction and deprecation information.",
 }
 
 // Experiment holds data associated with an experimental feature for frontend
