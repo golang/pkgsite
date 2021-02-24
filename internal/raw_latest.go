@@ -17,9 +17,11 @@ import (
 // The go.mod file of the raw latest version establishes whether
 // the module is deprecated, and what versions are retracted.
 type RawLatestInfo struct {
-	ModulePath string
-	Version    string
-	GoModFile  *modfile.File
+	ModulePath         string
+	Version            string
+	GoModFile          *modfile.File
+	deprecated         bool
+	deprecationComment string
 }
 
 func NewRawLatestInfo(modulePath, version string, modBytes []byte) (*RawLatestInfo, error) {
@@ -27,16 +29,20 @@ func NewRawLatestInfo(modulePath, version string, modBytes []byte) (*RawLatestIn
 	if err != nil {
 		return nil, err
 	}
+	dep, comment := isDeprecated(f)
 	return &RawLatestInfo{
-		ModulePath: modulePath,
-		Version:    version,
-		GoModFile:  f,
+		ModulePath:         modulePath,
+		Version:            version,
+		GoModFile:          f,
+		deprecated:         dep,
+		deprecationComment: comment,
 	}, nil
 }
 
 // PopulateModuleInfo uses the RawLatestInfo to populate fields of the given module.
 func (r *RawLatestInfo) PopulateModuleInfo(mi *ModuleInfo) {
-	mi.Deprecated, mi.DeprecationComment = isDeprecated(r.GoModFile)
+	mi.Deprecated = r.deprecated
+	mi.DeprecationComment = r.deprecationComment
 	mi.Retracted, mi.RetractionRationale = isRetracted(r.GoModFile, mi.Version)
 }
 

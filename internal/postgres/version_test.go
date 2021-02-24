@@ -385,36 +385,25 @@ func TestRawLatestInfo(t *testing.T) {
 	defer release()
 	ctx := context.Background()
 
-	info, err := internal.NewRawLatestInfo("m", "v1.0.0", []byte(`module m`))
-	if err != nil {
-		t.Fatal(err)
-	}
-	if err := testDB.UpdateRawLatestInfo(ctx, info); err != nil {
-		t.Fatal(err)
-	}
-	got, err := testDB.GetRawLatestInfo(ctx, "m")
-	if err != nil {
-		t.Fatal(err)
-	}
-	if diff := cmp.Diff(info, got); diff != "" {
-		t.Fatalf("mismatch (-want, +got): %s", diff)
-	}
-
-	info, err = internal.NewRawLatestInfo("m", "v1.2.3", []byte(`module m`))
-	if err != nil {
-		t.Fatal(err)
-	}
-	if err := testDB.UpdateRawLatestInfo(ctx, info); err != nil {
-		t.Fatal(err)
-	}
-	got, err = testDB.GetRawLatestInfo(ctx, "m")
-	if err != nil {
-		t.Fatal(err)
-	}
-	if diff := cmp.Diff(info, got); diff != "" {
-		t.Fatalf("mismatch (-want, +got): %s", diff)
+	check := func(v string) {
+		info, err := internal.NewRawLatestInfo("m", v, []byte(`module m`))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := testDB.UpdateRawLatestInfo(ctx, info); err != nil {
+			t.Fatal(err)
+		}
+		got, err := testDB.GetRawLatestInfo(ctx, "m")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if diff := cmp.Diff(info, got, cmp.AllowUnexported(internal.RawLatestInfo{})); diff != "" {
+			t.Fatalf("mismatch (-want, +got): %s", diff)
+		}
 	}
 
+	check("v1.0.0")
+	check("v1.2.3")
 }
 
 func TestShouldUpdateRawLatest(t *testing.T) {
