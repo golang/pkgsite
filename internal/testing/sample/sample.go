@@ -103,6 +103,7 @@ var (
 		GOOS:     internal.All,
 		GOARCH:   internal.All,
 		Children: []*internal.Symbol{
+			FunctionNew,
 			{
 				Name:       "Type.Field",
 				Synopsis:   "field",

@@ -61,7 +61,7 @@ func TestInsertSymbolNamesAndHistory(t *testing.T) {
 	testDB, release := acquire(t)
 	defer release()
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	ctx = experiment.NewContext(ctx, internal.ExperimentInsertSymbolHistory)
+	ctx = experiment.NewContext(ctx, internal.ExperimentInsertSymbols, internal.ExperimentInsertSymbolHistory)
 	defer cancel()
 
 	mod := sample.DefaultModule()
@@ -71,13 +71,13 @@ func TestInsertSymbolNamesAndHistory(t *testing.T) {
 	if len(mod.Packages()[0].Documentation) != 1 {
 		t.Fatalf("len(mod.Packages()[0].Documentation) = %d; want 1", len(mod.Packages()[0].Documentation))
 	}
-	mod.Packages()[0].Documentation[0].API = []*internal.Symbol{
+	api := []*internal.Symbol{
 		sample.Constant,
 		sample.Variable,
 		sample.Function,
-		sample.FunctionNew,
 		sample.Type,
 	}
+	mod.Packages()[0].Documentation[0].API = api
 	MustInsertModule(ctx, t, testDB, mod)
 
 	var got []string
@@ -97,7 +97,6 @@ func TestInsertSymbolNamesAndHistory(t *testing.T) {
 		sample.Variable.Name,
 		sample.Function.Name,
 		sample.Type.Name,
-		sample.FunctionNew.Name,
 	}
 	for _, c := range sample.Type.Children {
 		want = append(want, c.Name)
@@ -105,16 +104,19 @@ func TestInsertSymbolNamesAndHistory(t *testing.T) {
 	sort.Strings(got)
 	sort.Strings(want)
 	if diff := cmp.Diff(want, got); diff != "" {
-		t.Fatalf("mismatch (-want +got):\n%s", diff)
+		t.Errorf("mismatch (-want +got):\n%s", diff)
 	}
+	compareUnitSymbols(ctx, t, testDB, mod.Packages()[0].Path, mod.ModulePath, mod.Version,
+		map[internal.BuildContext][]*internal.Symbol{
+			internal.BuildContextAll: api,
+		})
 }
 
-func TestInsertSymbolHistory(t *testing.T) {
-	t.Parallel()
+func TestInsertSymbolHistory_Basic(t *testing.T) {
 	testDB, release := acquire(t)
 	defer release()
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	ctx = experiment.NewContext(ctx, internal.ExperimentInsertSymbolHistory)
+	ctx = experiment.NewContext(ctx, internal.ExperimentInsertSymbols, internal.ExperimentInsertSymbolHistory)
 	defer cancel()
 
 	mod := sample.DefaultModule()
@@ -124,13 +126,13 @@ func TestInsertSymbolHistory(t *testing.T) {
 	if len(mod.Packages()[0].Documentation) != 1 {
 		t.Fatalf("len(mod.Packages()[0].Documentation) = %d; want 1", len(mod.Packages()[0].Documentation))
 	}
-	mod.Packages()[0].Documentation[0].API = []*internal.Symbol{
+	api := []*internal.Symbol{
 		sample.Constant,
 		sample.Variable,
 		sample.Function,
-		sample.FunctionNew,
 		sample.Type,
 	}
+	mod.Packages()[0].Documentation[0].API = api
 	MustInsertModule(ctx, t, testDB, mod)
 
 	gotHist, err := getSymbolHistory(ctx, testDB.db, mod.Packages()[0].Path, mod.ModulePath)
@@ -206,17 +208,20 @@ func TestInsertSymbolHistory(t *testing.T) {
 		cmpopts.IgnoreFields(internal.Symbol{}, "GOOS", "GOARCH")); diff != "" {
 		t.Fatalf("mismatch (-want +got):\n%s", diff)
 	}
+	compareUnitSymbols(ctx, t, testDB, mod.Packages()[0].Path, mod.ModulePath, mod.Version,
+		map[internal.BuildContext][]*internal.Symbol{
+			internal.BuildContextAll: api,
+		})
 }
 
 func TestInsertSymbolHistory_MultiVersions(t *testing.T) {
-	t.Parallel()
 	testDB, release := acquire(t)
 	defer release()
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	ctx = experiment.NewContext(ctx, internal.ExperimentInsertSymbolHistory)
+	ctx = experiment.NewContext(ctx, internal.ExperimentInsertSymbols, internal.ExperimentInsertSymbolHistory)
 	defer cancel()
 
-	typ := &internal.Symbol{
+	typ := internal.Symbol{
 		Name:         "Foo",
 		Synopsis:     "type Foo struct",
 		Section:      internal.SymbolSectionTypes,
@@ -224,7 +229,7 @@ func TestInsertSymbolHistory_MultiVersions(t *testing.T) {
 		ParentName:   "Foo",
 		SinceVersion: "v1.0.0",
 	}
-	methodA := &internal.Symbol{
+	methodA := internal.Symbol{
 		Name:         "Foo.A",
 		Synopsis:     "func (*Foo) A()",
 		Section:      internal.SymbolSectionTypes,
@@ -232,7 +237,7 @@ func TestInsertSymbolHistory_MultiVersions(t *testing.T) {
 		ParentName:   typ.Name,
 		SinceVersion: "v1.1.0",
 	}
-	methodB := &internal.Symbol{
+	methodB := internal.Symbol{
 		Name:         "Foo.B",
 		Synopsis:     "func (*Foo) B()",
 		Section:      internal.SymbolSectionTypes,
@@ -240,9 +245,13 @@ func TestInsertSymbolHistory_MultiVersions(t *testing.T) {
 		ParentName:   typ.Name,
 		SinceVersion: "v1.2.0",
 	}
-	mod10 := moduleWithSymbols(t, "v1.0.0", []*internal.Symbol{typ})
-	mod11 := moduleWithSymbols(t, "v1.1.0", []*internal.Symbol{typ, methodA})
-	mod12 := moduleWithSymbols(t, "v1.2.0", []*internal.Symbol{typ, methodA, methodB})
+	mod10 := moduleWithSymbols(t, "v1.0.0", []*internal.Symbol{&typ})
+	typA := typ
+	typA.Children = append(typA.Children, &methodA)
+	mod11 := moduleWithSymbols(t, "v1.1.0", []*internal.Symbol{&typA})
+	typB := typA
+	typB.Children = append(typB.Children, &methodB)
+	mod12 := moduleWithSymbols(t, "v1.2.0", []*internal.Symbol{&typB})
 
 	// Insert most recent, then oldest, then middle version.
 	MustInsertModule(ctx, t, testDB, mod12)
@@ -250,9 +259,9 @@ func TestInsertSymbolHistory_MultiVersions(t *testing.T) {
 	MustInsertModule(ctx, t, testDB, mod11)
 
 	symbols := map[string]*internal.Symbol{
-		"Foo":   typ,
-		"Foo.A": methodA,
-		"Foo.B": methodB,
+		"Foo":   &typ,
+		"Foo.A": &methodA,
+		"Foo.B": &methodB,
 	}
 	wantHist := map[internal.BuildContext]map[string]*internal.Symbol{
 		internal.BuildContextDarwin:  symbols,
@@ -268,14 +277,27 @@ func TestInsertSymbolHistory_MultiVersions(t *testing.T) {
 		cmpopts.IgnoreFields(internal.Symbol{}, "GOOS", "GOARCH")); diff != "" {
 		t.Fatalf("mismatch (-want +got):\n%s", diff)
 	}
+
+	createwant := func(docs []*internal.Documentation) map[internal.BuildContext][]*internal.Symbol {
+		want := map[internal.BuildContext][]*internal.Symbol{}
+		for _, doc := range mod10.Packages()[0].Documentation {
+			want[internal.BuildContext{GOOS: doc.GOOS, GOARCH: doc.GOARCH}] = doc.API
+		}
+		return want
+	}
+	want10 := createwant(mod10.Packages()[0].Documentation)
+	want11 := createwant(mod11.Packages()[0].Documentation)
+	want12 := createwant(mod12.Packages()[0].Documentation)
+	compareUnitSymbols(ctx, t, testDB, mod10.Packages()[0].Path, mod10.ModulePath, mod10.Version, want10)
+	compareUnitSymbols(ctx, t, testDB, mod11.Packages()[0].Path, mod11.ModulePath, mod11.Version, want11)
+	compareUnitSymbols(ctx, t, testDB, mod12.Packages()[0].Path, mod12.ModulePath, mod12.Version, want12)
 }
 
 func TestInsertSymbolHistory_MultiGOOS(t *testing.T) {
-	t.Parallel()
 	testDB, release := acquire(t)
 	defer release()
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	ctx = experiment.NewContext(ctx, internal.ExperimentInsertSymbolHistory)
+	ctx = experiment.NewContext(ctx, internal.ExperimentInsertSymbols, internal.ExperimentInsertSymbolHistory)
 	defer cancel()
 
 	typ := internal.Symbol{
@@ -323,12 +345,17 @@ func TestInsertSymbolHistory_MultiGOOS(t *testing.T) {
 	}
 	mod11.Packages()[0].Documentation = makeDocs()
 	docs1 := mod11.Packages()[0].Documentation
-	symsA := []*internal.Symbol{&typ, &methodA}
-	symsB := []*internal.Symbol{&typ, &methodB}
+	typA := typ
+	typA.Children = []*internal.Symbol{&methodA}
+	typB := typ
+	typB.Children = []*internal.Symbol{&methodB}
+	symsA := []*internal.Symbol{&typA}
+	symsB := []*internal.Symbol{&typB}
 	docs1[0].API = symsA
 	docs1[1].API = symsA
 	docs1[2].API = symsB
 	docs1[3].API = symsB
+	mod11.Packages()[0].Documentation = docs1
 
 	mod12 := moduleWithSymbols(t, "v1.2.0", nil)
 	mod12.Packages()[0].Documentation = makeDocs()
@@ -337,6 +364,7 @@ func TestInsertSymbolHistory_MultiGOOS(t *testing.T) {
 	docs2[1].API = symsB
 	docs2[2].API = symsA
 	docs2[3].API = symsA
+	mod12.Packages()[0].Documentation = docs2
 
 	// Insert most recent, then oldest, then middle version.
 	MustInsertModule(ctx, t, testDB, mod12)
@@ -379,6 +407,20 @@ func TestInsertSymbolHistory_MultiGOOS(t *testing.T) {
 		cmpopts.IgnoreFields(internal.Symbol{}, "GOOS", "GOARCH")); diff != "" {
 		t.Fatalf("mismatch (-want +got):\n%s", diff)
 	}
+
+	createwant := func(docs []*internal.Documentation) map[internal.BuildContext][]*internal.Symbol {
+		want := map[internal.BuildContext][]*internal.Symbol{}
+		for _, doc := range mod10.Packages()[0].Documentation {
+			want[internal.BuildContext{GOOS: doc.GOOS, GOARCH: doc.GOARCH}] = doc.API
+		}
+		return want
+	}
+	want10 := createwant(mod10.Packages()[0].Documentation)
+	want11 := createwant(mod11.Packages()[0].Documentation)
+	want12 := createwant(mod12.Packages()[0].Documentation)
+	compareUnitSymbols(ctx, t, testDB, mod10.Packages()[0].Path, mod10.ModulePath, mod10.Version, want10)
+	compareUnitSymbols(ctx, t, testDB, mod11.Packages()[0].Path, mod11.ModulePath, mod11.Version, want11)
+	compareUnitSymbols(ctx, t, testDB, mod12.Packages()[0].Path, mod12.ModulePath, mod12.Version, want12)
 }
 
 func moduleWithSymbols(t *testing.T, version string, symbols []*internal.Symbol) *internal.Module {
@@ -392,4 +434,39 @@ func moduleWithSymbols(t *testing.T, version string, symbols []*internal.Symbol)
 	// symbols for goos/goarch = all/all
 	mod.Packages()[0].Documentation[0].API = symbols
 	return mod
+}
+
+func compareUnitSymbols(ctx context.Context, t *testing.T, testDB *DB,
+	path, modulePath, version string, wantBuildToSymbols map[internal.BuildContext][]*internal.Symbol) {
+	t.Helper()
+	unitID, err := testDB.getUnitID(ctx, path, modulePath, version)
+	if err != nil {
+		t.Fatal(err)
+	}
+	buildToSymbols, err := getUnitSymbols(ctx, testDB.db, unitID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for build, got := range buildToSymbols {
+		want := wantBuildToSymbols[build]
+		sort.Slice(got, func(i, j int) bool {
+			return got[i].Synopsis < got[j].Synopsis
+		})
+		for _, s := range got {
+			sort.Slice(s.Children, func(i, j int) bool {
+				return s.Children[i].Synopsis < s.Children[j].Synopsis
+			})
+		}
+		sort.Slice(want, func(i, j int) bool {
+			return want[i].Synopsis < want[j].Synopsis
+		})
+		for _, s := range want {
+			sort.Slice(s.Children, func(i, j int) bool {
+				return s.Children[i].Synopsis < s.Children[j].Synopsis
+			})
+		}
+		if diff := cmp.Diff(want, got, cmpopts.IgnoreFields(internal.Symbol{}, "SinceVersion", "GOOS", "GOARCH")); diff != "" {
+			t.Fatalf("mismatch (-want +got):\n%s", diff)
+		}
+	}
 }

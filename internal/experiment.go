@@ -8,6 +8,7 @@ package internal
 const (
 	ExperimentCommandTOC            = "command-toc"
 	ExperimentDirectoryTree         = "directory-tree"
+	ExperimentInsertSymbols         = "insert-symbols"
 	ExperimentInsertSymbolHistory   = "insert-symbol-history"
 	ExperimentInteractivePlayground = "interactive-playground"
 	ExperimentNotAtLatest           = "not-at-latest"
@@ -20,6 +21,7 @@ const (
 var Experiments = map[string]string{
 	ExperimentCommandTOC:            "Enable the table of contents for command documention pages.",
 	ExperimentDirectoryTree:         "Enable the directory tree layout on the unit page.",
+	ExperimentInsertSymbols:         "Insert data into symbols, package_symbols, and documentation_symbols.",
 	ExperimentInsertSymbolHistory:   "Insert symbol history data into the symbol_history table.",
 	ExperimentInteractivePlayground: "Enable interactive example playground on the unit page.",
 	ExperimentNotAtLatest:           "Enable the display of a 'not at latest' badge.",

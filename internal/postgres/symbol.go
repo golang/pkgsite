@@ -23,24 +23,30 @@ func insertSymbols(ctx context.Context, db *database.DB, modulePath, version str
 	pathToID map[string]int,
 	pathToDocIDToDoc map[string]map[int]*internal.Documentation) (err error) {
 	defer derrors.WrapStack(&err, "insertSymbols(ctx, db, %q, %q, pathToID, pathToDocs)", modulePath, version)
-	if !experiment.IsActive(ctx, internal.ExperimentInsertSymbolHistory) {
+	if !experiment.IsActive(ctx, internal.ExperimentInsertSymbols) {
 		return nil
 	}
-	pkgsymToID, err := upsertPackageSymbolsReturningIDs(ctx, db, modulePath, pathToID, pathToDocIDToDoc)
+	pathToPkgsymToID, err := upsertPackageSymbolsReturningIDs(ctx, db, modulePath, pathToID, pathToDocIDToDoc)
 	if err != nil {
 		return err
 	}
+	if err := upsertDocumentationSymbols(ctx, db, pathToPkgsymToID, pathToDocIDToDoc); err != nil {
+		return err
+	}
 
+	if !experiment.IsActive(ctx, internal.ExperimentInsertSymbolHistory) {
+		return nil
+	}
 	var (
-		uniqueKeys       = map[string]string{}
+		uniqueKeys       = map[string]internal.Symbol{}
 		symHistoryValues []interface{}
 	)
-	for path, docs := range pathToDocIDToDoc {
+	for path, docIDToDoc := range pathToDocIDToDoc {
 		buildToNameToSym, err := getSymbolHistory(ctx, db, path, modulePath)
 		if err != nil {
 			return err
 		}
-		for _, doc := range docs {
+		for _, doc := range docIDToDoc {
 			builds := []internal.BuildContext{{GOOS: doc.GOOS, GOARCH: doc.GOARCH}}
 			if doc.GOOS == internal.All {
 				builds = internal.BuildContexts
@@ -52,9 +58,8 @@ func insertSymbols(ctx context.Context, db *database.DB, modulePath, version str
 					if !shouldUpdateSymbolHistory(s.Name, version, nameToSymbol) {
 						return nil
 					}
-
 					pkgsym := packageSymbol{synopsis: s.Synopsis, section: s.Section}
-					pkgsymID := pkgsymToID[pkgsym]
+					pkgsymID := pathToPkgsymToID[path][pkgsym]
 					if pkgsymID == 0 {
 						return fmt.Errorf("pkgsymID cannot be 0: %q", pkgsym)
 					}
@@ -64,9 +69,9 @@ func insertSymbols(ctx context.Context, db *database.DB, modulePath, version str
 					// opposed to from the BulkUpsert statement.
 					key := fmt.Sprintf("%d-%s-%s", pkgsymID, build.GOOS, build.GOARCH)
 					if val, ok := uniqueKeys[key]; ok {
-						return fmt.Errorf("symbol %q exists at %q -- failed to insert symbol %q (%q) q with the same (package_symbol_id, goos, goarch)", key, val, s.Name, s.Synopsis)
+						return fmt.Errorf("DB package symbol %q already exists: %v; failed to insert symbol %q (%v) q with the same (package_symbol_id, goos, goarch)", key, val, s.Name, s)
 					}
-					uniqueKeys[key] = fmt.Sprintf("%q (%q)", s.Name, s.Synopsis)
+					uniqueKeys[key] = *s
 					symHistoryValues = append(symHistoryValues, pkgsymID, build.GOOS, build.GOARCH, version)
 					return nil
 				}); err != nil {
@@ -99,35 +104,127 @@ type packageSymbol struct {
 	section  internal.SymbolSection
 }
 
+func upsertDocumentationSymbols(ctx context.Context, db *database.DB,
+	pathToPkgsymID map[string]map[packageSymbol]int,
+	pathToDocIDToDoc map[string]map[int]*internal.Documentation) (err error) {
+
+	// Create a map of documenation_id TO package_symbol_id set.
+	// This will be used to verify that all package_symbols for the unit have
+	// been inserted.
+	docIDToPkgsymIDs := map[int]map[int]bool{}
+	for path, docIDToDoc := range pathToDocIDToDoc {
+		for docID, doc := range docIDToDoc {
+			err := updateSymbols(doc.API, func(s *internal.Symbol) error {
+				pkgsymToID := pathToPkgsymID[path]
+				pkgsymID := pkgsymToID[packageSymbol{synopsis: s.Synopsis, section: s.Section}]
+				_, ok := docIDToPkgsymIDs[docID]
+				if !ok {
+					docIDToPkgsymIDs[docID] = map[int]bool{}
+				}
+				docIDToPkgsymIDs[docID][pkgsymID] = true
+				return nil
+			})
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	// Fetch all existing rows in documentation_symbols for this unit using the
+	// documentation IDs.
+	// Keep track of which rows already exist in documentation_symbols using
+	// gotDocIDToPkgsymIDs.
+	var documentationIDs []interface{}
+	for docID := range docIDToPkgsymIDs {
+		documentationIDs = append(documentationIDs, docID)
+	}
+	gotDocIDToPkgsymIDs := map[int]map[int]bool{}
+	collect := func(rows *sql.Rows) error {
+		var id, docID, pkgsymID int
+		if err := rows.Scan(&id, &docID, &pkgsymID); err != nil {
+			return fmt.Errorf("row.Scan(): %v", err)
+		}
+		if !docIDToPkgsymIDs[docID][pkgsymID] {
+			return fmt.Errorf("unexpected pkgsymID %d for docID %d", pkgsymID, docID)
+		}
+		if _, ok := gotDocIDToPkgsymIDs[docID]; !ok {
+			gotDocIDToPkgsymIDs[docID] = map[int]bool{}
+		}
+		gotDocIDToPkgsymIDs[docID][pkgsymID] = true
+		return nil
+	}
+	if err := db.RunQuery(ctx, `
+        SELECT
+            ds.id,
+            ds.documentation_id,
+            ds.package_symbol_id
+        FROM documentation_symbols ds
+        WHERE documentation_id = ANY($1);`, collect, pq.Array(documentationIDs)); err != nil {
+		return err
+	}
+
+	// Get the difference between the documentation_symbols for this package,
+	// and the ones that already exist in the documentation_symbols table. Only
+	// insert rows that do not already exist.
+	var values []interface{}
+	for docID, pkgsymIDSet := range docIDToPkgsymIDs {
+		gotSet := gotDocIDToPkgsymIDs[docID]
+		for pkgsymID := range pkgsymIDSet {
+			if !gotSet[pkgsymID] {
+				values = append(values, docID, pkgsymID)
+			}
+		}
+	}
+	// Insert the rows.
+	// Note that the order of pkgsymcols must match that of the SELECT query in
+	// the collect function.
+	docsymcols := []string{"documentation_id", "package_symbol_id"}
+	if err := db.BulkInsert(ctx, "documentation_symbols", docsymcols,
+		values, database.OnConflictDoNothing); err != nil {
+		return err
+	}
+	return nil
+}
+
 func upsertPackageSymbolsReturningIDs(ctx context.Context, db *database.DB,
 	modulePath string, pathToID map[string]int,
-	pathToDocIDToDoc map[string]map[int]*internal.Documentation) (_ map[packageSymbol]int, err error) {
-	defer derrors.WrapStack(&err, "upsertPackageSymbolsReturningIDs(ctx, db, %q, pathToID, pathToDocs)", modulePath)
+	pathToDocIDToDoc map[string]map[int]*internal.Documentation) (_ map[string]map[packageSymbol]int, err error) {
+	defer derrors.WrapStack(&err, "upsertPackageSymbolsReturningIDs(ctx, db, %q, pathToID, pathToDocIDToDoc)", modulePath)
 	nameToID, err := upsertSymbolNamesReturningIDs(ctx, db, pathToDocIDToDoc)
 	if err != nil {
 		return nil, err
+	}
+
+	idToPath := map[int]string{}
+	for path, id := range pathToID {
+		idToPath[id] = path
 	}
 
 	modulePathID := pathToID[modulePath]
 	if modulePathID == 0 {
 		return nil, fmt.Errorf("modulePathID cannot be 0: %q", modulePath)
 	}
-	pkgsymToID := map[packageSymbol]int{}
+	pathTopkgsymToID := map[string]map[packageSymbol]int{}
 	collect := func(rows *sql.Rows) error {
 		var (
-			id       int
-			section  internal.SymbolSection
-			synopsis string
+			id, pathID int
+			section    internal.SymbolSection
+			synopsis   string
 		)
-		if err := rows.Scan(&id, &section, &synopsis); err != nil {
+		if err := rows.Scan(&id, &pathID, &section, &synopsis); err != nil {
 			return fmt.Errorf("row.Scan(): %v", err)
 		}
-		pkgsymToID[packageSymbol{synopsis: synopsis, section: section}] = id
+		path := idToPath[pathID]
+		if _, ok := pathTopkgsymToID[path]; !ok {
+			pathTopkgsymToID[path] = map[packageSymbol]int{}
+		}
+		pathTopkgsymToID[path][packageSymbol{synopsis: synopsis, section: section}] = id
 		return nil
 	}
 	if err := db.RunQuery(ctx, `
         SELECT
             ps.id,
+            ps.package_path_id,
             ps.section,
             ps.synopsis
         FROM package_symbols ps
@@ -156,7 +253,7 @@ func upsertPackageSymbolsReturningIDs(ctx context.Context, db *database.DB,
 				if parentID == 0 {
 					return fmt.Errorf("pathID cannot be 0: %q", s.ParentName)
 				}
-				if _, ok := pkgsymToID[ps]; !ok {
+				if _, ok := pathTopkgsymToID[path][ps]; !ok {
 					packageSymbols = append(packageSymbols, pathID,
 						modulePathID, symID, parentID, s.Section, s.Kind,
 						s.Synopsis)
@@ -169,7 +266,7 @@ func upsertPackageSymbolsReturningIDs(ctx context.Context, db *database.DB,
 	}
 	// The order of pkgsymcols must match that of the SELECT query in the
 	//collect function.
-	pkgsymcols := []string{"id", "section", "synopsis"}
+	pkgsymcols := []string{"id", "package_path_id", "section", "synopsis"}
 	if err := db.BulkInsertReturning(ctx, "package_symbols",
 		[]string{
 			"package_path_id",
@@ -182,15 +279,15 @@ func upsertPackageSymbolsReturningIDs(ctx context.Context, db *database.DB,
 		}, packageSymbols, database.OnConflictDoNothing, pkgsymcols, collect); err != nil {
 		return nil, err
 	}
-	return pkgsymToID, nil
+	return pathTopkgsymToID, nil
 }
 
 func upsertSymbolNamesReturningIDs(ctx context.Context, db *database.DB,
-	pathToDocIDToDoc map[string]map[int]*internal.Documentation) (_ map[string]int, err error) {
+	pathToDocIDToDocs map[string]map[int]*internal.Documentation) (_ map[string]int, err error) {
 	defer derrors.WrapStack(&err, "upsertSymbolNamesReturningIDs")
 	var names []string
-	for _, docs := range pathToDocIDToDoc {
-		for _, doc := range docs {
+	for _, docIDToDocs := range pathToDocIDToDocs {
+		for _, doc := range docIDToDocs {
 			if err := updateSymbols(doc.API, func(s *internal.Symbol) error {
 				names = append(names, s.Name)
 				return nil
@@ -233,6 +330,72 @@ func upsertSymbolNamesReturningIDs(ctx context.Context, db *database.DB,
 		return nil, err
 	}
 	return nameToID, nil
+}
+
+// getUnitSymbols returns all of the symbols for the given unitID.
+func getUnitSymbols(ctx context.Context, db *database.DB, unitID int) (_ map[internal.BuildContext][]*internal.Symbol, err error) {
+	defer derrors.Wrap(&err, "getUnitSymbols(ctx, db, %d)", unitID)
+
+	// Fetch all symbols for the unit. Order by symbol_type "Type" first, so
+	// that when we collect the children the structs for these symbols will
+	// already be created.
+	query := `
+        SELECT
+            s1.name AS symbol_name,
+            s2.name AS parent_symbol_name,
+            ps.section,
+            ps.type,
+            ps.synopsis,
+            d.goos,
+            d.goarch
+        FROM documentation_symbols ds
+        INNER JOIN documentation d ON d.id = ds.documentation_id
+        INNER JOIN package_symbols ps ON ds.package_symbol_id = ps.id
+        INNER JOIN symbol_names s1 ON ps.symbol_name_id = s1.id
+        INNER JOIN symbol_names s2 ON ps.parent_symbol_name_id = s2.id
+        WHERE d.unit_id = $1
+        ORDER BY CASE WHEN ps.type='Type' THEN 0 ELSE 1 END;`
+	var buildToSymbols map[internal.BuildContext][]*internal.Symbol
+	buildToNameToType := map[internal.BuildContext]map[string]*internal.Symbol{}
+	collect := func(rows *sql.Rows) error {
+		var s internal.Symbol
+		if err := rows.Scan(
+			&s.Name, &s.ParentName,
+			&s.Section, &s.Kind, &s.Synopsis,
+			&s.GOOS, &s.GOARCH); err != nil {
+			return fmt.Errorf("row.Scan(): %v", err)
+		}
+		build := internal.BuildContext{GOOS: s.GOOS, GOARCH: s.GOARCH}
+		switch s.Section {
+		// For symbols that belong to a type, map that symbol as a children of
+		// the parent type.
+		case internal.SymbolSectionTypes:
+			if s.Kind == internal.SymbolKindType {
+				_, ok := buildToNameToType[build]
+				if !ok {
+					buildToNameToType[build] = map[string]*internal.Symbol{}
+				}
+				buildToNameToType[build][s.Name] = &s
+			} else {
+				nameToType, ok := buildToNameToType[build]
+				if !ok {
+					return fmt.Errorf("build context %v for parent type %q could not be found for symbol %q", build, s.ParentName, s.Name)
+				}
+				parent, ok := nameToType[s.ParentName]
+				if !ok {
+					return fmt.Errorf("parent type %q could not be found for symbol %q", s.ParentName, s.Name)
+				}
+				parent.Children = append(parent.Children, &s)
+			}
+		default:
+			buildToNameToType[build][s.Name] = &s
+		}
+		return nil
+	}
+	if err := db.RunQuery(ctx, query, collect, unitID); err != nil {
+		return nil, err
+	}
+	return buildToSymbols, nil
 }
 
 func getSymbolHistory(ctx context.Context, db *database.DB, packagePath, modulePath string) (_ map[internal.BuildContext]map[string]*internal.Symbol, err error) {

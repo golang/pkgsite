@@ -215,8 +215,8 @@ func (db *DB) GetUnit(ctx context.Context, um *internal.UnitMeta, fields interna
 }
 
 func (db *DB) getUnitID(ctx context.Context, fullPath, modulePath, resolvedVersion string) (_ int, err error) {
-	defer derrors.WrapStack(&err, "getPathID(ctx, %q, %q, %q)", fullPath, modulePath, resolvedVersion)
-	defer middleware.ElapsedStat(ctx, "getPathID")()
+	defer derrors.WrapStack(&err, "getUnitID(ctx, %q, %q, %q)", fullPath, modulePath, resolvedVersion)
+	defer middleware.ElapsedStat(ctx, "getUnitID")()
 	var unitID int
 	query := `
 		SELECT u.id
