@@ -296,9 +296,9 @@ func shouldUpdateRawLatest(newVersion, curVersion string) bool {
 func upsertRawLatestInfo(ctx context.Context, tx *database.DB, id int, info *internal.RawLatestInfo) (err error) {
 	defer derrors.WrapStack(&err, "upsertRawLatestInfo(%d, %q, %q)", id, info.ModulePath, info.Version)
 
-	// If the row doesn't exist, insert it and get the path ID.
+	// If the row doesn't exist, get a path ID for the module path.
 	if id == 0 {
-		id, err = insertPath(ctx, tx, info.ModulePath)
+		id, err = upsertPath(ctx, tx, info.ModulePath)
 		if err != nil {
 			return err
 		}

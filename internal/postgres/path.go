@@ -76,14 +76,20 @@ func (db *DB) GetLatestMajorPathForV1Path(ctx context.Context, v1path string) (_
 	return majPath, maj, nil
 }
 
-// insertPath inserts path into the paths table and returns its ID.
-// The path must not already exist.
-func insertPath(ctx context.Context, db *database.DB, path string) (id int, err error) {
+// upsertPath adds path into the paths table if it does not exist, and returns
+// its ID either way.
+// Assumes it is running inside a transaction.
+func upsertPath(ctx context.Context, db *database.DB, path string) (id int, err error) {
 	derrors.WrapStack(&err, "insertPath(%q)", path)
 
 	err = db.QueryRow(ctx,
-		`INSERT INTO paths (path) VALUES ($1) RETURNING id`,
+		`SELECT id FROM paths WHERE path = $1`,
 		path).Scan(&id)
+	if err == sql.ErrNoRows {
+		err = db.QueryRow(ctx,
+			`INSERT INTO paths (path) VALUES ($1) RETURNING id`,
+			path).Scan(&id)
+	}
 	if err != nil {
 		return 0, err
 	}
