@@ -35,7 +35,7 @@ func TestMain(m *testing.M) {
 func setup(t *testing.T) (context.Context, *DataSource, func()) {
 	t.Helper()
 	client, teardownProxy := proxy.SetupTestClient(t, testModules)
-	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 40*time.Second)
 	return ctx, NewForTesting(client), func() {
 		teardownProxy()
 		cancel()

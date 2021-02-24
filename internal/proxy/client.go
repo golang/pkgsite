@@ -24,6 +24,7 @@ import (
 	"golang.org/x/net/context/ctxhttp"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/log"
 )
 
 // A Client is used by the fetch service to communicate with a module
@@ -189,7 +190,12 @@ func (c *Client) readBody(ctx context.Context, modulePath, requestedVersion, suf
 
 // Versions makes a request to $GOPROXY/<path>/@v/list and returns the
 // resulting version strings.
-func (c *Client) Versions(ctx context.Context, modulePath string) ([]string, error) {
+func (c *Client) Versions(ctx context.Context, modulePath string) (_ []string, err error) {
+	log.Infof(ctx, "proxy.Versions(%q) starting", modulePath)
+	start := time.Now()
+	defer func() {
+		log.Infof(ctx, "proxy.Versions(%q) took %s, err=%v\n", modulePath, time.Since(start), err)
+	}()
 	escapedPath, err := module.EscapePath(modulePath)
 	if err != nil {
 		return nil, fmt.Errorf("module.EscapePath(%q): %w", modulePath, derrors.InvalidArgument)
