@@ -93,25 +93,8 @@ func getPathVersions(ctx context.Context, db *DB, path string, versionTypes ...v
 	if err := db.db.RunQuery(ctx, query, collect, path); err != nil {
 		return nil, err
 	}
-	if experiment.IsActive(ctx, internal.ExperimentRetractions) {
-		start := time.Now()
-		infos := map[string]*internal.RawLatestInfo{}
-		for _, mi := range versions {
-			if _, ok := infos[mi.ModulePath]; !ok {
-				info, err := db.GetRawLatestInfo(ctx, mi.ModulePath)
-				if err != nil {
-					return nil, err
-				}
-				infos[mi.ModulePath] = info
-			}
-		}
-		for _, mi := range versions {
-			info := infos[mi.ModulePath]
-			if info != nil {
-				info.PopulateModuleInfo(mi)
-			}
-		}
-		log.Debugf(ctx, "getPathVersions: raw latest info fetched and applied in %dms", time.Since(start).Milliseconds())
+	if err := populateRawLatestInfo(ctx, db, versions); err != nil {
+		return nil, err
 	}
 	return versions, nil
 }
@@ -124,6 +107,34 @@ func versionTypeExpr(vts []version.Type) string {
 		vs = append(vs, fmt.Sprintf("'%s'", vt.String()))
 	}
 	return strings.Join(vs, ", ")
+}
+
+func populateRawLatestInfo(ctx context.Context, db *DB, mis []*internal.ModuleInfo) (err error) {
+	defer derrors.WrapStack(&err, "populateRawLatestInfo(%d ModuleInfos)", len(mis))
+
+	if experiment.IsActive(ctx, internal.ExperimentRetractions) {
+		start := time.Now()
+		// Collect the RawLatestInfos for all modules in the list.
+		infos := map[string]*internal.RawLatestInfo{}
+		for _, mi := range mis {
+			if _, ok := infos[mi.ModulePath]; !ok {
+				info, err := db.GetRawLatestInfo(ctx, mi.ModulePath)
+				if err != nil {
+					return err
+				}
+				infos[mi.ModulePath] = info
+			}
+		}
+		// Use the collected RawLatestInfos to populate the ModuleInfos.
+		for _, mi := range mis {
+			info := infos[mi.ModulePath]
+			if info != nil {
+				info.PopulateModuleInfo(mi)
+			}
+		}
+		log.Debugf(ctx, "raw latest info fetched and applied in %dms", time.Since(start).Milliseconds())
+	}
+	return nil
 }
 
 // GetLatestInfo returns the latest information about the unit in the module.

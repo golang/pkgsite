@@ -250,16 +250,6 @@ func TestGetVersions(t *testing.T) {
 	}
 }
 
-func addRawLatest(ctx context.Context, t *testing.T, db *DB, modulePath, version, modFile string) {
-	info, err := internal.NewRawLatestInfo(modulePath, version, []byte(modFile))
-	if err != nil {
-		t.Fatal(err)
-	}
-	if err := db.UpdateRawLatestInfo(ctx, info); err != nil {
-		t.Fatal(err)
-	}
-}
-
 func TestGetLatestInfo(t *testing.T) {
 	t.Parallel()
 	testDB, release := acquire(t)
@@ -421,5 +411,15 @@ func TestShouldUpdateRawLatest(t *testing.T) {
 		if got != test.want {
 			t.Errorf("shouldUpdateRawLatest(%q, %q) = %t, want %t", test.new, test.cur, got, test.want)
 		}
+	}
+}
+
+func addRawLatest(ctx context.Context, t *testing.T, db *DB, modulePath, version, modFile string) {
+	info, err := internal.NewRawLatestInfo(modulePath, version, []byte(modFile))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := db.UpdateRawLatestInfo(ctx, info); err != nil {
+		t.Fatal(err)
 	}
 }

@@ -67,6 +67,10 @@ func (db *DB) GetNestedModules(ctx context.Context, modulePath string) (_ []*int
 		return nil, err
 	}
 
+	if err := populateRawLatestInfo(ctx, db, modules); err != nil {
+		return nil, err
+	}
+
 	return modules, nil
 }
 
