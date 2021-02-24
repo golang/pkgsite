@@ -10,7 +10,6 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"golang.org/x/mod/modfile"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/source"
@@ -252,14 +251,9 @@ func TestGetVersions(t *testing.T) {
 }
 
 func addRawLatest(ctx context.Context, t *testing.T, db *DB, modulePath, version, modFile string) {
-	f, err := modfile.ParseLax(modulePath+"@"+version, []byte(modFile), nil)
+	info, err := internal.NewRawLatestInfo(modulePath, version, []byte(modFile))
 	if err != nil {
 		t.Fatal(err)
-	}
-	info := &internal.RawLatestInfo{
-		ModulePath: modulePath,
-		Version:    version,
-		GoModFile:  f,
 	}
 	if err := db.UpdateRawLatestInfo(ctx, info); err != nil {
 		t.Fatal(err)
@@ -391,12 +385,10 @@ func TestRawLatestInfo(t *testing.T) {
 	defer release()
 	ctx := context.Background()
 
-	goMod, err := modfile.ParseLax("m from DB", []byte(`module m`), nil)
+	info, err := internal.NewRawLatestInfo("m", "v1.0.0", []byte(`module m`))
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	info := &internal.RawLatestInfo{ModulePath: "m", Version: "v1.0.0", GoModFile: goMod}
 	if err := testDB.UpdateRawLatestInfo(ctx, info); err != nil {
 		t.Fatal(err)
 	}
@@ -408,7 +400,10 @@ func TestRawLatestInfo(t *testing.T) {
 		t.Fatalf("mismatch (-want, +got): %s", diff)
 	}
 
-	info.Version = "v1.2.3"
+	info, err = internal.NewRawLatestInfo("m", "v1.2.3", []byte(`module m`))
+	if err != nil {
+		t.Fatal(err)
+	}
 	if err := testDB.UpdateRawLatestInfo(ctx, info); err != nil {
 		t.Fatal(err)
 	}

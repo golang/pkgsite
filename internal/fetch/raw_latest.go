@@ -7,9 +7,7 @@ package fetch
 import (
 	"context"
 	"errors"
-	"fmt"
 
-	"golang.org/x/mod/modfile"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/log"
@@ -35,15 +33,7 @@ func RawLatestInfo(ctx context.Context, modulePath string, prox *proxy.Client, h
 	if err != nil {
 		return nil, err
 	}
-	f, err := modfile.ParseLax(fmt.Sprintf("%s@%s/go.mod", modulePath, v), modBytes, nil)
-	if err != nil {
-		return nil, err
-	}
-	return &internal.RawLatestInfo{
-		ModulePath: modulePath,
-		Version:    v,
-		GoModFile:  f,
-	}, nil
+	return internal.NewRawLatestInfo(modulePath, v, modBytes)
 }
 
 // fetchRawLatestVersion uses the proxy to determine the latest

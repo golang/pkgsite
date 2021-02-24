@@ -5,6 +5,7 @@
 package internal
 
 import (
+	"fmt"
 	"strings"
 
 	"golang.org/x/mod/modfile"
@@ -19,6 +20,18 @@ type RawLatestInfo struct {
 	ModulePath string
 	Version    string
 	GoModFile  *modfile.File
+}
+
+func NewRawLatestInfo(modulePath, version string, modBytes []byte) (*RawLatestInfo, error) {
+	f, err := modfile.ParseLax(fmt.Sprintf("%s@%s/go.mod", modulePath, version), modBytes, nil)
+	if err != nil {
+		return nil, err
+	}
+	return &RawLatestInfo{
+		ModulePath: modulePath,
+		Version:    version,
+		GoModFile:  f,
+	}, nil
 }
 
 // PopulateModuleInfo uses the RawLatestInfo to populate fields of the given module.

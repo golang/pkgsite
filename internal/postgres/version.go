@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/Masterminds/squirrel"
-	"golang.org/x/mod/modfile"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/derrors"
@@ -246,26 +245,22 @@ func (db *DB) GetRawLatestInfo(ctx context.Context, modulePath string) (_ *inter
 	defer derrors.WrapStack(&err, "GetRawLatestInfo(%q)", modulePath)
 
 	var (
-		info       internal.RawLatestInfo
+		version    string
 		goModBytes []byte
 	)
 	err = db.db.QueryRow(ctx, `
-		SELECT p.path, r.version, r.go_mod_bytes
+		SELECT r.version, r.go_mod_bytes
 		FROM raw_latest_versions r
 		INNER JOIN paths p ON p.id = r.module_path_id
 		WHERE p.path = $1`,
-		modulePath).Scan(&info.ModulePath, &info.Version, &goModBytes)
+		modulePath).Scan(&version, &goModBytes)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
 		}
 		return nil, err
 	}
-	info.GoModFile, err = modfile.ParseLax(modulePath+" from DB", goModBytes, nil)
-	if err != nil {
-		return nil, err
-	}
-	return &info, nil
+	return internal.NewRawLatestInfo(modulePath, version, goModBytes)
 }
 
 // UpdateRawLatestInfo upserts its argument into the raw_latest_versions table
