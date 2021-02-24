@@ -21,10 +21,10 @@ type RawLatestInfo struct {
 	GoModFile  *modfile.File
 }
 
-// PopulateModule uses the RawLatestInfo to populate fields of the given module.
-func (r *RawLatestInfo) PopulateModule(m *Module) {
-	m.Deprecated, m.DeprecationComment = isDeprecated(r.GoModFile)
-	m.Retracted, m.RetractionRationale = isRetracted(r.GoModFile, m.Version)
+// PopulateModuleInfo uses the RawLatestInfo to populate fields of the given module.
+func (r *RawLatestInfo) PopulateModuleInfo(mi *ModuleInfo) {
+	mi.Deprecated, mi.DeprecationComment = isDeprecated(r.GoModFile)
+	mi.Retracted, mi.RetractionRationale = isRetracted(r.GoModFile, mi.Version)
 }
 
 // isDeprecated reports whether the go.mod deprecates this module.

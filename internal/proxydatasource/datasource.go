@@ -113,7 +113,7 @@ func (ds *DataSource) getModule(ctx context.Context, modulePath, version string)
 		if err != nil {
 			res.Error = err
 		} else {
-			rawLatest.PopulateModule(m)
+			rawLatest.PopulateModuleInfo(&m.ModuleInfo)
 		}
 	}
 
