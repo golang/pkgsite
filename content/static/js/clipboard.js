@@ -6,8 +6,9 @@
  */
 export class CopyToClipboardController {
     constructor(el) {
+        var _a;
         this._el = el;
-        this._data = el.dataset['toCopy'] ?? '';
+        this._data = (_a = el.dataset['toCopy']) !== null && _a !== void 0 ? _a : '';
         el.addEventListener('click', e => this.handleCopyClick(e));
     }
     handleCopyClick(e) {

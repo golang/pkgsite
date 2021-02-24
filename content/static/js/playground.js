@@ -17,6 +17,7 @@ const PlayExampleClassName = {
 };
 export class PlaygroundExampleController {
   constructor(exampleEl) {
+    var _a, _b, _c, _d;
     this.exampleEl = exampleEl;
     this.exampleEl = exampleEl;
     this.anchorEl = exampleEl.querySelector('a');
@@ -27,23 +28,33 @@ export class PlaygroundExampleController {
     this.runButtonEl = exampleEl.querySelector(PlayExampleClassName.RUN_BUTTON);
     this.inputEl = exampleEl.querySelector(PlayExampleClassName.EXAMPLE_INPUT);
     this.outputEl = exampleEl.querySelector(PlayExampleClassName.EXAMPLE_OUTPUT);
-    this.playButtonEl?.addEventListener('click', () => this.handleShareButtonClick());
-    this.shareButtonEl?.addEventListener('click', () => this.handleShareButtonClick());
-    this.formatButtonEl?.addEventListener('click', () => this.handleFormatButtonClick());
-    this.runButtonEl?.addEventListener('click', () => this.handleRunButtonClick());
+    (_a = this.playButtonEl) === null || _a === void 0
+      ? void 0
+      : _a.addEventListener('click', () => this.handleShareButtonClick());
+    (_b = this.shareButtonEl) === null || _b === void 0
+      ? void 0
+      : _b.addEventListener('click', () => this.handleShareButtonClick());
+    (_c = this.formatButtonEl) === null || _c === void 0
+      ? void 0
+      : _c.addEventListener('click', () => this.handleFormatButtonClick());
+    (_d = this.runButtonEl) === null || _d === void 0
+      ? void 0
+      : _d.addEventListener('click', () => this.handleRunButtonClick());
     if (!this.inputEl) return;
     this.resize();
     this.inputEl.addEventListener('keyup', () => this.resize());
     this.inputEl.addEventListener('keydown', e => this.onKeydown(e));
   }
   getAnchorHash() {
-    return this.anchorEl?.hash;
+    var _a;
+    return (_a = this.anchorEl) === null || _a === void 0 ? void 0 : _a.hash;
   }
   expand() {
     this.exampleEl.open = true;
   }
   resize() {
-    if (this.inputEl?.value) {
+    var _a;
+    if ((_a = this.inputEl) === null || _a === void 0 ? void 0 : _a.value) {
       const numLineBreaks = (this.inputEl.value.match(/\n/g) || []).length;
       this.inputEl.style.height = `${(20 + numLineBreaks * 20 + 12 + 2) / 16}rem`;
     }
@@ -71,11 +82,12 @@ export class PlaygroundExampleController {
     this.setOutputText('An error has occurred…');
   }
   handleShareButtonClick() {
+    var _a;
     const PLAYGROUND_BASE_URL = 'https://play.golang.org/p/';
     this.setOutputText('Waiting for remote server…');
     fetch('/play/share', {
       method: 'POST',
-      body: this.inputEl?.textContent,
+      body: (_a = this.inputEl) === null || _a === void 0 ? void 0 : _a.textContent,
     })
       .then(res => res.text())
       .then(shareId => {
@@ -88,9 +100,16 @@ export class PlaygroundExampleController {
       });
   }
   handleFormatButtonClick() {
+    var _a, _b;
     this.setOutputText('Waiting for remote server…');
     const body = new FormData();
-    body.append('body', this.inputEl?.value ?? '');
+    body.append(
+      'body',
+      (_b = (_a = this.inputEl) === null || _a === void 0 ? void 0 : _a.value) !== null &&
+        _b !== void 0
+        ? _b
+        : ''
+    );
     fetch('/play/fmt', {
       method: 'POST',
       body: body,
@@ -108,10 +127,14 @@ export class PlaygroundExampleController {
       });
   }
   handleRunButtonClick() {
+    var _a;
     this.setOutputText('Waiting for remote server…');
     fetch('/play/compile', {
       method: 'POST',
-      body: JSON.stringify({ body: this.inputEl?.value, version: 2 }),
+      body: JSON.stringify({
+        body: (_a = this.inputEl) === null || _a === void 0 ? void 0 : _a.value,
+        version: 2,
+      }),
     })
       .then(res => res.json())
       .then(async ({ Events, Errors }) => {
