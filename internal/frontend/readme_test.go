@@ -190,7 +190,11 @@ func TestReadme(t *testing.T) {
 		{
 			name: "relative image markdown is made absolute for GitHub",
 			unit: &internal.Unit{
-				UnitMeta: internal.UnitMeta{SourceInfo: source.NewGitHubInfo("http://github.com/golang/go", "", "master")},
+				UnitMeta: internal.UnitMeta{
+					ModuleInfo: internal.ModuleInfo{
+						SourceInfo: source.NewGitHubInfo("http://github.com/golang/go", "", "master"),
+					},
+				},
 			},
 			readme: &internal.Readme{
 				Filepath: "README.md",
@@ -202,7 +206,11 @@ func TestReadme(t *testing.T) {
 		{
 			name: "relative image markdown is made absolute for GitHub, .git removed from repo URL",
 			unit: &internal.Unit{
-				UnitMeta: internal.UnitMeta{SourceInfo: source.NewGitHubInfo("https://github.com/robpike/ivy.git", "", "v0.1.0")},
+				UnitMeta: internal.UnitMeta{
+					ModuleInfo: internal.ModuleInfo{
+						SourceInfo: source.NewGitHubInfo("https://github.com/robpike/ivy.git", "", "v0.1.0"),
+					},
+				},
 			},
 			readme: &internal.Readme{
 				Filepath: "README.md",
@@ -294,8 +302,10 @@ func TestReadme(t *testing.T) {
 			name: "image link with bad URL",
 			unit: &internal.Unit{
 				UnitMeta: internal.UnitMeta{
-					Version:    "v1.2.3",
-					SourceInfo: source.NewGitHubInfo("https://github.com/some/<script>", "", "v1.2.3"),
+					ModuleInfo: internal.ModuleInfo{
+						Version:    "v1.2.3",
+						SourceInfo: source.NewGitHubInfo("https://github.com/some/<script>", "", "v1.2.3"),
+					},
 				},
 			},
 			readme: &internal.Readme{

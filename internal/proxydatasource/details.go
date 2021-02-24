@@ -48,9 +48,12 @@ func (ds *DataSource) GetUnitMeta(ctx context.Context, path, inModulePath, inVer
 		return nil, err
 	}
 	um := &internal.UnitMeta{
-		Path:       path,
-		ModulePath: inModulePath,
-		Version:    inVersion,
+		Path: path,
+		ModuleInfo: internal.ModuleInfo{
+			ModulePath:        inModulePath,
+			Version:           inVersion,
+			IsRedistributable: m.IsRedistributable,
+		},
 	}
 	for _, d := range m.Units {
 		if d.Path == path {

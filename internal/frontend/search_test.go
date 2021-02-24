@@ -34,12 +34,15 @@ func TestFetchSearchPage(t *testing.T) {
 			Units: []*internal.Unit{
 				{
 					UnitMeta: internal.UnitMeta{
+						ModuleInfo: internal.ModuleInfo{
+							ModulePath:        "github.com/mod/foo",
+							Version:           "v1.0.0",
+							CommitTime:        now,
+							IsRedistributable: true,
+						},
 						Name:              "foo",
 						Path:              "github.com/mod/foo",
 						Licenses:          sample.LicenseMetadata(),
-						CommitTime:        now,
-						ModulePath:        "github.com/mod/foo",
-						Version:           "v1.0.0",
 						IsRedistributable: true,
 					},
 					Documentation: []*internal.Documentation{{
@@ -65,12 +68,15 @@ func TestFetchSearchPage(t *testing.T) {
 			Units: []*internal.Unit{
 				{
 					UnitMeta: internal.UnitMeta{
+						ModuleInfo: internal.ModuleInfo{
+							CommitTime:        now,
+							ModulePath:        "github.com/mod/bar",
+							Version:           "v1.0.0",
+							IsRedistributable: true,
+						},
 						Name:              "bar",
 						Path:              "github.com/mod/bar",
 						Licenses:          sample.LicenseMetadata(),
-						CommitTime:        now,
-						ModulePath:        "github.com/mod/bar",
-						Version:           "v1.0.0",
 						IsRedistributable: true,
 					},
 					Documentation: []*internal.Documentation{{

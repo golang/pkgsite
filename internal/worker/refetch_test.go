@@ -85,11 +85,14 @@ func TestReFetch(t *testing.T) {
 	}
 	want := &internal.Unit{
 		UnitMeta: internal.UnitMeta{
-			ModulePath:        sample.ModulePath,
-			Version:           version,
-			CommitTime:        time.Date(2019, 1, 30, 0, 0, 0, 0, time.UTC),
+			ModuleInfo: internal.ModuleInfo{
+				ModulePath:        sample.ModulePath,
+				Version:           version,
+				CommitTime:        time.Date(2019, 1, 30, 0, 0, 0, 0, time.UTC),
+				IsRedistributable: true,
+				SourceInfo:        source.NewGitHubInfo("https://"+sample.ModulePath, "", sample.VersionString),
+			},
 			IsRedistributable: true,
-			SourceInfo:        source.NewGitHubInfo("https://"+sample.ModulePath, "", sample.VersionString),
 			Path:              sample.ModulePath + "/bar",
 			Name:              "bar",
 			Licenses: []*licenses.Metadata{

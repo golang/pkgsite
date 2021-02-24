@@ -323,14 +323,17 @@ func UnitEmpty(path, modulePath, version string) *internal.Unit {
 
 func UnitMeta(path, modulePath, version, name string, isRedistributable bool) *internal.UnitMeta {
 	return &internal.UnitMeta{
-		ModulePath:        modulePath,
-		Version:           version,
 		Path:              path,
 		Name:              name,
-		CommitTime:        NowTruncated(),
 		IsRedistributable: isRedistributable,
 		Licenses:          LicenseMetadata(),
-		SourceInfo:        source.NewGitHubInfo("https://"+modulePath, "", version),
+		ModuleInfo: internal.ModuleInfo{
+			ModulePath:        modulePath,
+			Version:           version,
+			CommitTime:        NowTruncated(),
+			IsRedistributable: isRedistributable,
+			SourceInfo:        source.NewGitHubInfo("https://"+modulePath, "", version),
+		},
 	}
 }
 

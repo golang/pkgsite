@@ -142,9 +142,11 @@ func TestFetchLicensesDetails(t *testing.T) {
 			wantDetails := &LicensesDetails{Licenses: transformLicenses(
 				test.modulePath, test.version, test.want)}
 			got, err := fetchLicensesDetails(ctx, testDB, &internal.UnitMeta{
-				Path:       test.fullPath,
-				ModulePath: test.modulePath,
-				Version:    test.version,
+				Path: test.fullPath,
+				ModuleInfo: internal.ModuleInfo{
+					ModulePath: test.modulePath,
+					Version:    test.version,
+				},
 			})
 			if err != nil {
 				t.Fatal(err)

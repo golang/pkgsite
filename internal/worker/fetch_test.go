@@ -50,11 +50,14 @@ func TestFetchAndUpdateState(t *testing.T) {
 
 	myModuleV100 := &internal.Unit{
 		UnitMeta: internal.UnitMeta{
-			ModulePath:        "example.com/multi",
-			HasGoMod:          true,
-			Version:           sample.VersionString,
-			CommitTime:        testProxyCommitTime,
-			SourceInfo:        source.NewGitHubInfo("https://example.com/multi", "", sample.VersionString),
+			ModuleInfo: internal.ModuleInfo{
+				ModulePath:        "example.com/multi",
+				HasGoMod:          true,
+				Version:           sample.VersionString,
+				CommitTime:        testProxyCommitTime,
+				SourceInfo:        source.NewGitHubInfo("https://example.com/multi", "", sample.VersionString),
+				IsRedistributable: true,
+			},
 			IsRedistributable: true,
 			Path:              "example.com/multi/bar",
 			Name:              "bar",
@@ -103,11 +106,14 @@ func TestFetchAndUpdateState(t *testing.T) {
 			pkg:        "example.com/nonredist/bar/baz",
 			want: &internal.Unit{
 				UnitMeta: internal.UnitMeta{
-					ModulePath:        "example.com/nonredist",
-					Version:           sample.VersionString,
-					HasGoMod:          true,
-					CommitTime:        testProxyCommitTime,
-					SourceInfo:        source.NewGitHubInfo("https://example.com/nonredist", "", sample.VersionString),
+					ModuleInfo: internal.ModuleInfo{
+						ModulePath:        "example.com/nonredist",
+						Version:           sample.VersionString,
+						HasGoMod:          true,
+						CommitTime:        testProxyCommitTime,
+						SourceInfo:        source.NewGitHubInfo("https://example.com/nonredist", "", sample.VersionString),
+						IsRedistributable: true,
+					},
 					IsRedistributable: true,
 					Path:              "example.com/nonredist/bar/baz",
 					Name:              "baz",
@@ -130,11 +136,14 @@ func TestFetchAndUpdateState(t *testing.T) {
 			pkg:        "example.com/nonredist/unk",
 			want: &internal.Unit{
 				UnitMeta: internal.UnitMeta{
-					ModulePath:        "example.com/nonredist",
-					Version:           sample.VersionString,
-					HasGoMod:          true,
-					CommitTime:        testProxyCommitTime,
-					SourceInfo:        source.NewGitHubInfo("https://example.com/nonredist", "", sample.VersionString),
+					ModuleInfo: internal.ModuleInfo{
+						ModulePath:        "example.com/nonredist",
+						Version:           sample.VersionString,
+						HasGoMod:          true,
+						CommitTime:        testProxyCommitTime,
+						SourceInfo:        source.NewGitHubInfo("https://example.com/nonredist", "", sample.VersionString),
+						IsRedistributable: true,
+					},
 					IsRedistributable: false,
 					Path:              "example.com/nonredist/unk",
 					Name:              "unk",
@@ -151,11 +160,14 @@ func TestFetchAndUpdateState(t *testing.T) {
 			pkg:        "context",
 			want: &internal.Unit{
 				UnitMeta: internal.UnitMeta{
-					ModulePath:        "std",
-					Version:           "v1.12.5",
-					HasGoMod:          true,
-					CommitTime:        stdlib.TestCommitTime,
-					SourceInfo:        source.NewStdlibInfo("v1.12.5"),
+					ModuleInfo: internal.ModuleInfo{
+						ModulePath:        "std",
+						Version:           "v1.12.5",
+						HasGoMod:          true,
+						CommitTime:        stdlib.TestCommitTime,
+						SourceInfo:        source.NewStdlibInfo("v1.12.5"),
+						IsRedistributable: true,
+					},
 					IsRedistributable: true,
 					Path:              "context",
 					Name:              "context",
@@ -180,11 +192,14 @@ func TestFetchAndUpdateState(t *testing.T) {
 			pkg:        "builtin",
 			want: &internal.Unit{
 				UnitMeta: internal.UnitMeta{
-					ModulePath:        "std",
-					Version:           "v1.12.5",
-					HasGoMod:          true,
-					CommitTime:        stdlib.TestCommitTime,
-					SourceInfo:        source.NewStdlibInfo("v1.12.5"),
+					ModuleInfo: internal.ModuleInfo{
+						ModulePath:        "std",
+						Version:           "v1.12.5",
+						HasGoMod:          true,
+						CommitTime:        stdlib.TestCommitTime,
+						SourceInfo:        source.NewStdlibInfo("v1.12.5"),
+						IsRedistributable: true,
+					},
 					IsRedistributable: true,
 					Path:              "builtin",
 					Name:              "builtin",
@@ -208,11 +223,14 @@ func TestFetchAndUpdateState(t *testing.T) {
 			pkg:        "encoding/json",
 			want: &internal.Unit{
 				UnitMeta: internal.UnitMeta{
-					ModulePath:        "std",
-					Version:           "v1.12.5",
-					HasGoMod:          true,
-					CommitTime:        stdlib.TestCommitTime,
-					SourceInfo:        source.NewStdlibInfo("v1.12.5"),
+					ModuleInfo: internal.ModuleInfo{
+						ModulePath:        "std",
+						Version:           "v1.12.5",
+						HasGoMod:          true,
+						CommitTime:        stdlib.TestCommitTime,
+						SourceInfo:        source.NewStdlibInfo("v1.12.5"),
+						IsRedistributable: true,
+					},
 					IsRedistributable: true,
 					Path:              "encoding/json",
 					Name:              "json",
@@ -250,14 +268,17 @@ func TestFetchAndUpdateState(t *testing.T) {
 			pkg:        buildConstraintsModulePath + "/cpu",
 			want: &internal.Unit{
 				UnitMeta: internal.UnitMeta{
-					ModulePath:        buildConstraintsModulePath,
-					Version:           "v1.0.0",
-					HasGoMod:          true,
-					CommitTime:        testProxyCommitTime,
+					ModuleInfo: internal.ModuleInfo{
+						ModulePath:        buildConstraintsModulePath,
+						Version:           "v1.0.0",
+						HasGoMod:          true,
+						CommitTime:        testProxyCommitTime,
+						SourceInfo:        source.NewGitHubInfo("https://"+buildConstraintsModulePath, "", sample.VersionString),
+						IsRedistributable: true,
+					},
 					IsRedistributable: true,
 					Path:              buildConstraintsModulePath + "/cpu",
 					Name:              "cpu",
-					SourceInfo:        source.NewGitHubInfo("https://"+buildConstraintsModulePath, "", sample.VersionString),
 					Licenses: []*licenses.Metadata{
 						{Types: []string{"0BSD"}, FilePath: "LICENSE"},
 					},

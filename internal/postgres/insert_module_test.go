@@ -160,12 +160,7 @@ func TestInsertModuleLicenseCheck(t *testing.T) {
 			MustInsertModule(ctx, t, db, mod)
 
 			// New model
-			pathInfo := &internal.UnitMeta{
-				Path:       mod.ModulePath,
-				ModulePath: mod.ModulePath,
-				Version:    mod.Version,
-			}
-			u, err := db.GetUnit(ctx, pathInfo, internal.AllFields)
+			u, err := db.GetUnit(ctx, newUnitMeta(mod.ModulePath, mod.ModulePath, mod.Version), internal.AllFields)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -308,7 +303,7 @@ func TestInsertModuleNewCoverage(t *testing.T) {
 		},
 	}
 	MustInsertModule(ctx, t, testDB, m)
-	u, err := testDB.GetUnit(ctx, &internal.UnitMeta{Path: m.ModulePath, ModulePath: m.ModulePath, Version: m.Version}, internal.AllFields)
+	u, err := testDB.GetUnit(ctx, newUnitMeta(m.ModulePath, m.ModulePath, m.Version), internal.AllFields)
 	if err != nil {
 		t.Fatal(err)
 	}

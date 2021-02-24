@@ -43,6 +43,7 @@ type fetchFunc func(t *testing.T, withLicenseDetector bool, ctx context.Context,
 func TestMain(m *testing.M) {
 	dochtml.LoadTemplates(templateSource)
 	testModules = proxy.LoadTestModules("../proxy/testdata")
+	licenses.OmitExceptions = true
 	os.Exit(m.Run())
 }
 

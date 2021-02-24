@@ -105,7 +105,7 @@ func TestGetNestedModules(t *testing.T) {
 		t.Run(test.modulePath, func(t *testing.T) {
 			got, err := getNestedModules(ctx, testDB, &internal.UnitMeta{
 				Path:       test.modulePath,
-				ModulePath: test.modulePath,
+				ModuleInfo: internal.ModuleInfo{ModulePath: test.modulePath},
 			}, test.subdirectories)
 			if err != nil {
 				t.Fatal(err)

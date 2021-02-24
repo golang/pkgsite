@@ -73,9 +73,10 @@ var moduleOnePackage = &testModule{
 	fr: &FetchResult{
 		Module: &internal.Module{
 			ModuleInfo: internal.ModuleInfo{
-				ModulePath: "example.com/single",
-				HasGoMod:   true,
-				SourceInfo: source.NewGitHubInfo("https://example.com/single", "", "v1.0.0"),
+				ModulePath:        "example.com/single",
+				HasGoMod:          true,
+				SourceInfo:        source.NewGitHubInfo("https://example.com/single", "", "v1.0.0"),
+				IsRedistributable: true,
 			},
 			Units: singleUnits,
 		},
@@ -91,9 +92,10 @@ var moduleNoGoMod = &testModule{
 	fr: &FetchResult{
 		Module: &internal.Module{
 			ModuleInfo: internal.ModuleInfo{
-				ModulePath: "example.com/nogo",
-				HasGoMod:   false,
-				SourceInfo: source.NewGitHubInfo("https://example.com/nogo", "", "v1.0.0"),
+				ModulePath:        "example.com/nogo",
+				HasGoMod:          false,
+				SourceInfo:        source.NewGitHubInfo("https://example.com/nogo", "", "v1.0.0"),
+				IsRedistributable: true,
 			},
 			Units: []*internal.Unit{
 				{
@@ -126,9 +128,10 @@ var moduleMultiPackage = &testModule{
 	fr: &FetchResult{
 		Module: &internal.Module{
 			ModuleInfo: internal.ModuleInfo{
-				ModulePath: "example.com/multi",
-				HasGoMod:   true,
-				SourceInfo: source.NewGitHubInfo("https://example.com/multi", "", "v1.0.0"),
+				ModulePath:        "example.com/multi",
+				HasGoMod:          true,
+				SourceInfo:        source.NewGitHubInfo("https://example.com/multi", "", "v1.0.0"),
+				IsRedistributable: true,
 			},
 			Units: []*internal.Unit{
 				{
@@ -216,7 +219,8 @@ var moduleBadPackages = &testModule{
 		Status: derrors.ToStatus(derrors.HasIncompletePackages),
 		Module: &internal.Module{
 			ModuleInfo: internal.ModuleInfo{
-				ModulePath: "bad.mod/module",
+				ModulePath:        "bad.mod/module",
+				IsRedistributable: true,
 			},
 			Units: []*internal.Unit{
 				{
@@ -275,9 +279,10 @@ var moduleBuildConstraints = &testModule{
 		Status: derrors.ToStatus(derrors.HasIncompletePackages),
 		Module: &internal.Module{
 			ModuleInfo: internal.ModuleInfo{
-				ModulePath: "example.com/build-constraints",
-				HasGoMod:   true,
-				SourceInfo: source.NewGitHubInfo("https://example.com/build-constraints", "", "v1.0.0"),
+				ModulePath:        "example.com/build-constraints",
+				HasGoMod:          true,
+				SourceInfo:        source.NewGitHubInfo("https://example.com/build-constraints", "", "v1.0.0"),
+				IsRedistributable: true,
 			},
 			Units: []*internal.Unit{
 				{
@@ -364,9 +369,10 @@ var moduleNonRedist = &testModule{
 	fr: &FetchResult{
 		Module: &internal.Module{
 			ModuleInfo: internal.ModuleInfo{
-				ModulePath: "example.com/nonredist",
-				HasGoMod:   true,
-				SourceInfo: source.NewGitHubInfo("https://example.com/nonredist", "", "v1.0.0"),
+				ModulePath:        "example.com/nonredist",
+				HasGoMod:          true,
+				SourceInfo:        source.NewGitHubInfo("https://example.com/nonredist", "", "v1.0.0"),
+				IsRedistributable: true,
 			},
 			Units: []*internal.Unit{
 				{
@@ -508,8 +514,9 @@ var moduleDocTest = &testModule{
 		GoModPath: "doc.test",
 		Module: &internal.Module{
 			ModuleInfo: internal.ModuleInfo{
-				ModulePath: "doc.test",
-				HasGoMod:   false,
+				ModulePath:        "doc.test",
+				HasGoMod:          false,
+				IsRedistributable: true,
 			},
 			Units: []*internal.Unit{
 				{
@@ -554,8 +561,9 @@ var moduleDocTooLarge = &testModule{
 		GoModPath: "bigdoc.test",
 		Module: &internal.Module{
 			ModuleInfo: internal.ModuleInfo{
-				ModulePath: "bigdoc.test",
-				HasGoMod:   false,
+				ModulePath:        "bigdoc.test",
+				HasGoMod:          false,
+				IsRedistributable: true,
 			},
 			Units: []*internal.Unit{
 				{
@@ -602,8 +610,9 @@ var moduleWasm = &testModule{
 	fr: &FetchResult{
 		Module: &internal.Module{
 			ModuleInfo: internal.ModuleInfo{
-				ModulePath: "github.com/my/module/js",
-				SourceInfo: source.NewGitHubInfo("https://github.com/my/module", "js", "js/v1.0.0"),
+				ModulePath:        "github.com/my/module/js",
+				SourceInfo:        source.NewGitHubInfo("https://github.com/my/module", "js", "js/v1.0.0"),
+				IsRedistributable: true,
 			},
 			Units: []*internal.Unit{
 				{
@@ -654,11 +663,12 @@ var moduleStdMaster = &testModule{
 		ResolvedVersion:  stdlib.TestVersion,
 		Module: &internal.Module{
 			ModuleInfo: internal.ModuleInfo{
-				ModulePath: stdlib.ModulePath,
-				Version:    stdlib.TestVersion,
-				CommitTime: stdlib.TestCommitTime,
-				HasGoMod:   true,
-				SourceInfo: source.NewStdlibInfo("master"),
+				ModulePath:        stdlib.ModulePath,
+				Version:           stdlib.TestVersion,
+				CommitTime:        stdlib.TestCommitTime,
+				HasGoMod:          true,
+				SourceInfo:        source.NewStdlibInfo("master"),
+				IsRedistributable: true,
 			},
 			Units: []*internal.Unit{
 				{
@@ -666,8 +676,11 @@ var moduleStdMaster = &testModule{
 						Path:              "errors",
 						Name:              "errors",
 						IsRedistributable: true,
-						Version:           stdlib.TestVersion,
-						ModulePath:        stdlib.ModulePath,
+						ModuleInfo: internal.ModuleInfo{
+							Version:           stdlib.TestVersion,
+							ModulePath:        stdlib.ModulePath,
+							IsRedistributable: true,
+						},
 					},
 					Documentation: []*internal.Documentation{
 						{
@@ -691,8 +704,11 @@ var moduleStdMaster = &testModule{
 					UnitMeta: internal.UnitMeta{
 						Path:              "std",
 						IsRedistributable: true,
-						Version:           stdlib.TestVersion,
-						ModulePath:        "std",
+						ModuleInfo: internal.ModuleInfo{
+							Version:           stdlib.TestVersion,
+							ModulePath:        "std",
+							IsRedistributable: true,
+						},
 					},
 					Readme: &internal.Readme{Filepath: "README.md", Contents: "# The Go Programming Language\n"},
 				},
@@ -719,11 +735,12 @@ var moduleStd = &testModule{
 	fr: &FetchResult{
 		Module: &internal.Module{
 			ModuleInfo: internal.ModuleInfo{
-				ModulePath: "std",
-				Version:    "v1.12.5",
-				CommitTime: stdlib.TestCommitTime,
-				HasGoMod:   true,
-				SourceInfo: source.NewStdlibInfo("v1.12.5"),
+				ModulePath:        "std",
+				Version:           "v1.12.5",
+				CommitTime:        stdlib.TestCommitTime,
+				HasGoMod:          true,
+				SourceInfo:        source.NewStdlibInfo("v1.12.5"),
+				IsRedistributable: true,
 			},
 			Units: []*internal.Unit{
 				{
@@ -2365,8 +2382,9 @@ package example_test
 			GoModPath: path,
 			Module: &internal.Module{
 				ModuleInfo: internal.ModuleInfo{
-					ModulePath: path,
-					HasGoMod:   false,
+					ModulePath:        path,
+					HasGoMod:          false,
+					IsRedistributable: true,
 				},
 				Units: []*internal.Unit{
 					{

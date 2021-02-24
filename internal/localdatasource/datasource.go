@@ -137,10 +137,13 @@ func (ds *DataSource) GetUnitMeta(ctx context.Context, path, requestedModulePath
 	ds.mu.Unlock()
 
 	um := &internal.UnitMeta{
-		Path:       path,
-		ModulePath: requestedModulePath,
-		Version:    fetch.LocalVersion,
-		CommitTime: fetch.LocalCommitTime,
+		Path: path,
+		ModuleInfo: internal.ModuleInfo{
+			ModulePath:        requestedModulePath,
+			Version:           fetch.LocalVersion,
+			CommitTime:        fetch.LocalCommitTime,
+			IsRedistributable: module.IsRedistributable,
+		},
 	}
 
 	for _, u := range module.Units {

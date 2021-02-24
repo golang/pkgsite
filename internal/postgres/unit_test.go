@@ -80,133 +80,91 @@ func TestGetUnitMeta(t *testing.T) {
 		}
 	}
 
+	wantUnitMeta := func(modPath, version, name string) *internal.UnitMeta {
+		return &internal.UnitMeta{
+			ModuleInfo: internal.ModuleInfo{
+				ModulePath:        modPath,
+				Version:           version,
+				IsRedistributable: true,
+			},
+			Name:              name,
+			IsRedistributable: true,
+		}
+	}
+
 	for _, test := range []teststruct{
 		{
 			name:    "known module and version",
 			path:    "m.com/a",
 			module:  "m.com",
 			version: "v1.2.0-pre",
-			want: &internal.UnitMeta{
-				ModulePath:        "m.com",
-				Version:           "v1.2.0-pre",
-				Name:              "a",
-				IsRedistributable: true,
-			},
+			want:    wantUnitMeta("m.com", "v1.2.0-pre", "a"),
 		},
 		{
 			name:    "unknown module, known version",
 			path:    "m.com/a/b",
 			version: "v1.1.0",
 			// The path is in two modules at v1.1.0. Prefer the longer one.
-			want: &internal.UnitMeta{
-				ModulePath:        "m.com/a",
-				Version:           "v1.1.0",
-				Name:              "b",
-				IsRedistributable: true,
-			},
+			want: wantUnitMeta("m.com/a", "v1.1.0", "b"),
 		},
 		{
 			name:   "known module, unknown version",
 			path:   "m.com/a",
 			module: "m.com",
 			// Choose the latest release version.
-			want: &internal.UnitMeta{
-				ModulePath:        "m.com",
-				Version:           "v1.1.0",
-				IsRedistributable: true,
-			},
+			want: wantUnitMeta("m.com", "v1.1.0", ""),
 		},
 		{
 			name: "unknown module and version",
 			path: "m.com/a/b",
 			// Select the latest release version, longest module.
-			want: &internal.UnitMeta{
-				ModulePath:        "m.com/a",
-				Version:           "v1.1.0",
-				Name:              "b",
-				IsRedistributable: true,
-			},
+			want: wantUnitMeta("m.com/a", "v1.1.0", "b"),
 		},
 		{
 			name: "module",
 			path: "m.com",
 			// Select the latest version of the module.
-			want: &internal.UnitMeta{
-				ModulePath:        "m.com",
-				Version:           "v1.1.0",
-				IsRedistributable: true,
-			},
+			want: wantUnitMeta("m.com", "v1.1.0", ""),
 		},
 		{
 			name:    "longest module",
 			path:    "m.com/a",
 			version: "v1.1.0",
 			// Prefer module m/a over module m, directory a.
-			want: &internal.UnitMeta{
-				ModulePath:        "m.com/a",
-				Version:           "v1.1.0",
-				IsRedistributable: true,
-			},
+			want: wantUnitMeta("m.com/a", "v1.1.0", ""),
 		},
 		{
 			name: "directory",
 			path: "m.com/dir",
-			want: &internal.UnitMeta{
-				ModulePath:        "m.com",
-				Version:           "v1.0.1",
-				IsRedistributable: true,
-			},
+			want: wantUnitMeta("m.com", "v1.0.1", ""),
 		},
 		{
 			name:    "module at master version",
 			path:    "m.com",
 			version: "master",
-			want: &internal.UnitMeta{
-				ModulePath:        "m.com",
-				Version:           "v1.2.0-pre",
-				IsRedistributable: true,
-			},
+			want:    wantUnitMeta("m.com", "v1.2.0-pre", ""),
 		},
 		{
 			name:    "package at master version",
 			path:    "m.com/a",
 			version: "master",
-			want: &internal.UnitMeta{
-				ModulePath:        "m.com",
-				Version:           "v1.2.0-pre",
-				Name:              "a",
-				IsRedistributable: true,
-			},
+			want:    wantUnitMeta("m.com", "v1.2.0-pre", "a"),
 		},
 		{
 			name:    "incompatible module",
 			path:    "m.com/b",
 			version: "master",
-			want: &internal.UnitMeta{
-				ModulePath:        "m.com/b",
-				Version:           "v2.0.0+incompatible",
-				IsRedistributable: true,
-			},
+			want:    wantUnitMeta("m.com/b", "v2.0.0+incompatible", ""),
 		},
 		{
 			name: "prefer pubsublite nested module",
 			path: "cloud.google.com/go/pubsublite",
-			want: &internal.UnitMeta{
-				ModulePath:        "cloud.google.com/go/pubsublite",
-				Name:              "pubsublite",
-				Version:           "v0.4.0",
-				IsRedistributable: true,
-			},
+			want: wantUnitMeta("cloud.google.com/go/pubsublite", "v0.4.0", "pubsublite"),
 		},
 		{
 			name: "prefer compute metadata in main module",
 			path: "cloud.google.com/go/compute/metadata",
-			want: &internal.UnitMeta{
-				ModulePath:        "cloud.google.com/go",
-				Name:              "metadata",
-				Version:           "v0.74.0",
-				IsRedistributable: true,
-			},
+			want: wantUnitMeta("cloud.google.com/go", "v0.74.0", "metadata"),
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
@@ -267,6 +225,18 @@ func TestGetUnitMetaBypass(t *testing.T) {
 		}
 	}
 
+	wantUnitMeta := func(modPath, version, name string, isRedist bool) *internal.UnitMeta {
+		return &internal.UnitMeta{
+			ModuleInfo: internal.ModuleInfo{
+				ModulePath:        modPath,
+				Version:           version,
+				IsRedistributable: false,
+			},
+			Name:              name,
+			IsRedistributable: isRedist,
+		}
+	}
+
 	for _, bypassLicenseCheck := range []bool{false, true} {
 		for _, test := range []struct {
 			name                  string
@@ -278,107 +248,63 @@ func TestGetUnitMetaBypass(t *testing.T) {
 				path:    "m.com/a",
 				module:  "m.com",
 				version: "v1.2.0-pre",
-				want: &internal.UnitMeta{
-					ModulePath:        "m.com",
-					Version:           "v1.2.0-pre",
-					Name:              "a",
-					IsRedistributable: bypassLicenseCheck,
-				},
+				want:    wantUnitMeta("m.com", "v1.2.0-pre", "a", bypassLicenseCheck),
 			},
 			{
 				name:    "unknown module, known version",
 				path:    "m.com/a/b",
 				version: "v1.1.0",
 				// The path is in two modules at v1.1.0. Prefer the longer one.
-				want: &internal.UnitMeta{
-					ModulePath:        "m.com/a",
-					Version:           "v1.1.0",
-					Name:              "b",
-					IsRedistributable: bypassLicenseCheck,
-				},
+				want: wantUnitMeta("m.com/a", "v1.1.0", "b", bypassLicenseCheck),
 			},
 			{
 				name:   "known module, unknown version",
 				path:   "m.com/a",
 				module: "m.com",
 				// Choose the latest release version.
-				want: &internal.UnitMeta{
-					ModulePath:        "m.com",
-					Version:           "v1.1.0",
-					IsRedistributable: bypassLicenseCheck,
-				},
+				want: wantUnitMeta("m.com", "v1.1.0", "", bypassLicenseCheck),
 			},
 			{
 				name: "unknown module and version",
 				path: "m.com/a/b",
 				// Select the latest release version, longest module.
-				want: &internal.UnitMeta{
-					ModulePath:        "m.com/a",
-					Version:           "v1.1.0",
-					Name:              "b",
-					IsRedistributable: bypassLicenseCheck,
-				},
+				want: wantUnitMeta("m.com/a", "v1.1.0", "b", bypassLicenseCheck),
 			},
 			{
 				name: "module",
 				path: "m.com",
 				// Select the latest version of the module.
-				want: &internal.UnitMeta{
-					ModulePath:        "m.com",
-					Version:           "v1.1.0",
-					IsRedistributable: bypassLicenseCheck,
-				},
+				want: wantUnitMeta("m.com", "v1.1.0", "", bypassLicenseCheck),
 			},
 			{
 				name:    "longest module",
 				path:    "m.com/a",
 				version: "v1.1.0",
 				// Prefer module m/a over module m, directory a.
-				want: &internal.UnitMeta{
-					ModulePath:        "m.com/a",
-					Version:           "v1.1.0",
-					IsRedistributable: bypassLicenseCheck,
-				},
+				want: wantUnitMeta("m.com/a", "v1.1.0", "", bypassLicenseCheck),
 			},
 			{
 				name: "directory",
 				path: "m.com/dir",
-				want: &internal.UnitMeta{
-					ModulePath:        "m.com",
-					Version:           "v1.0.1",
-					IsRedistributable: bypassLicenseCheck,
-				},
+				want: wantUnitMeta("m.com", "v1.0.1", "", bypassLicenseCheck),
 			},
 			{
 				name:    "module at master version",
 				path:    "m.com",
 				version: "master",
-				want: &internal.UnitMeta{
-					ModulePath:        "m.com",
-					Version:           "v1.2.0-pre",
-					IsRedistributable: bypassLicenseCheck,
-				},
+				want:    wantUnitMeta("m.com", "v1.2.0-pre", "", bypassLicenseCheck),
 			},
 			{
 				name:    "package at master version",
 				path:    "m.com/a",
 				version: "master",
-				want: &internal.UnitMeta{
-					ModulePath:        "m.com",
-					Version:           "v1.2.0-pre",
-					Name:              "a",
-					IsRedistributable: bypassLicenseCheck,
-				},
+				want:    wantUnitMeta("m.com", "v1.2.0-pre", "a", bypassLicenseCheck),
 			},
 			{
 				name:    "incompatible module",
 				path:    "m.com/b",
 				version: "master",
-				want: &internal.UnitMeta{
-					ModulePath:        "m.com/b",
-					Version:           "v2.0.0+incompatible",
-					IsRedistributable: bypassLicenseCheck,
-				},
+				want:    wantUnitMeta("m.com/b", "v2.0.0+incompatible", "", bypassLicenseCheck),
 			},
 		} {
 			name := fmt.Sprintf("bypass %v %s", bypassLicenseCheck, test.name)
@@ -396,6 +322,7 @@ func TestGetUnitMetaBypass(t *testing.T) {
 					test.want.Name,
 					test.want.IsRedistributable,
 				)
+				test.want.ModuleInfo.IsRedistributable = false
 				test.want.CommitTime = sample.CommitTime
 
 				var db *DB
@@ -721,8 +648,11 @@ func TestGetUnitFieldSet(t *testing.T) {
 func unit(fullPath, modulePath, version, name string, readme *internal.Readme, suffixes []string) *internal.Unit {
 	u := &internal.Unit{
 		UnitMeta: internal.UnitMeta{
-			ModulePath:        modulePath,
-			Version:           version,
+			ModuleInfo: internal.ModuleInfo{
+				ModulePath:        modulePath,
+				Version:           version,
+				IsRedistributable: true,
+			},
 			Path:              fullPath,
 			IsRedistributable: true,
 			Licenses:          sample.LicenseMetadata(),
@@ -772,11 +702,7 @@ func TestGetUnitBypass(t *testing.T) {
 		{testDB, true},
 		{bypassDB, false},
 	} {
-		pathInfo := &internal.UnitMeta{
-			Path:       m.ModulePath,
-			ModulePath: m.ModulePath,
-			Version:    m.Version,
-		}
+		pathInfo := newUnitMeta(m.ModulePath, m.ModulePath, m.Version)
 		d, err := test.db.GetUnit(ctx, pathInfo, internal.AllFields)
 		if err != nil {
 			t.Fatal(err)
@@ -807,4 +733,14 @@ func findDirectory(m *internal.Module, path string) *internal.Unit {
 		}
 	}
 	return nil
+}
+
+func newUnitMeta(path, modulePath, version string) *internal.UnitMeta {
+	return &internal.UnitMeta{
+		Path: path,
+		ModuleInfo: internal.ModuleInfo{
+			ModulePath: modulePath,
+			Version:    version,
+		},
+	}
 }

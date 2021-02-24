@@ -36,9 +36,11 @@ type ImportsDetails struct {
 // pkgPath, modulePath and version from the database and returns a ImportsDetails.
 func fetchImportsDetails(ctx context.Context, ds internal.DataSource, pkgPath, modulePath, resolvedVersion string) (_ *ImportsDetails, err error) {
 	u, err := ds.GetUnit(ctx, &internal.UnitMeta{
-		Path:       pkgPath,
-		ModulePath: modulePath,
-		Version:    resolvedVersion,
+		Path: pkgPath,
+		ModuleInfo: internal.ModuleInfo{
+			ModulePath: modulePath,
+			Version:    resolvedVersion,
+		},
 	}, internal.WithImports)
 	if err != nil {
 		return nil, err

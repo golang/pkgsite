@@ -48,8 +48,11 @@ func moduleUnits(modulePath, version string,
 		}
 		dir := &internal.Unit{
 			UnitMeta: internal.UnitMeta{
-				ModulePath:        modulePath,
-				Version:           version,
+				ModuleInfo: internal.ModuleInfo{
+					ModulePath:        modulePath,
+					Version:           version,
+					IsRedistributable: d.ModuleIsRedistributable(),
+				},
 				Path:              dirPath,
 				IsRedistributable: isRedist,
 				Licenses:          meta,

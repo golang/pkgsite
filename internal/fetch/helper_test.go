@@ -53,8 +53,11 @@ func cleanFetchResult(t *testing.T, fr *FetchResult) *FetchResult {
 	shouldSetPVS := (fr.PackageVersionStates == nil)
 	for _, u := range fr.Module.Units {
 		u.UnitMeta = internal.UnitMeta{
-			ModulePath:        fr.Module.ModulePath,
-			Version:           fr.Module.Version,
+			ModuleInfo: internal.ModuleInfo{
+				ModulePath:        fr.Module.ModulePath,
+				Version:           fr.Module.Version,
+				IsRedistributable: fr.Module.IsRedistributable,
+			},
 			Path:              u.Path,
 			Name:              u.Name,
 			IsRedistributable: u.IsRedistributable,

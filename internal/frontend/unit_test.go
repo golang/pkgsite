@@ -64,8 +64,7 @@ func TestCanonicalURLPath(t *testing.T) {
 	} {
 		um := &internal.UnitMeta{
 			Path:       test.path,
-			ModulePath: test.modpath,
-			Version:    test.version,
+			ModuleInfo: internal.ModuleInfo{ModulePath: test.modpath, Version: test.version},
 		}
 		got := canonicalURLPath(um)
 		if got != test.want {

@@ -17,6 +17,7 @@ import (
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/fetch"
 	"golang.org/x/pkgsite/internal/godoc/dochtml"
+	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/testing/testhelper"
 )
 
@@ -33,7 +34,7 @@ func setup(t *testing.T) (context.Context, func(), *DataSource, error) {
 	if datasource != nil {
 		return ctx, cancel, datasource, nil
 	}
-
+	licenses.OmitExceptions = true
 	modules := []map[string]string{
 		{
 			"go.mod":        "module github.com/my/module\n\ngo 1.12",
@@ -114,35 +115,44 @@ func TestGetUnitMeta(t *testing.T) {
 			path:       "github.com/my/module",
 			modulePath: "github.com/my/module",
 			want: &internal.UnitMeta{
-				Path:              "github.com/my/module",
-				ModulePath:        "github.com/my/module",
+				Path: "github.com/my/module",
+				ModuleInfo: internal.ModuleInfo{
+					ModulePath:        "github.com/my/module",
+					Version:           fetch.LocalVersion,
+					CommitTime:        fetch.LocalCommitTime,
+					IsRedistributable: true,
+				},
 				IsRedistributable: true,
-				Version:           fetch.LocalVersion,
-				CommitTime:        fetch.LocalCommitTime,
 			},
 		},
 		{
 			path:       "github.com/my/module/bar",
 			modulePath: "github.com/my/module",
 			want: &internal.UnitMeta{
-				Path:              "github.com/my/module/bar",
-				Name:              "bar",
-				ModulePath:        "github.com/my/module",
+				Path: "github.com/my/module/bar",
+				Name: "bar",
+				ModuleInfo: internal.ModuleInfo{
+					ModulePath:        "github.com/my/module",
+					Version:           fetch.LocalVersion,
+					CommitTime:        fetch.LocalCommitTime,
+					IsRedistributable: true,
+				},
 				IsRedistributable: true,
-				Version:           fetch.LocalVersion,
-				CommitTime:        fetch.LocalCommitTime,
 			},
 		},
 		{
 			path:       "github.com/my/module/foo",
 			modulePath: "github.com/my/module",
 			want: &internal.UnitMeta{
-				Path:              "github.com/my/module/foo",
-				Name:              "foo",
-				ModulePath:        "github.com/my/module",
+				Path: "github.com/my/module/foo",
+				Name: "foo",
+				ModuleInfo: internal.ModuleInfo{
+					ModulePath:        "github.com/my/module",
+					IsRedistributable: true,
+					Version:           fetch.LocalVersion,
+					CommitTime:        fetch.LocalCommitTime,
+				},
 				IsRedistributable: true,
-				Version:           fetch.LocalVersion,
-				CommitTime:        fetch.LocalCommitTime,
 			},
 		},
 		{
@@ -151,10 +161,13 @@ func TestGetUnitMeta(t *testing.T) {
 			want: &internal.UnitMeta{
 				Path:              "github.com/my/module/bar",
 				Name:              "bar",
-				ModulePath:        "github.com/my/module",
 				IsRedistributable: true,
-				Version:           fetch.LocalVersion,
-				CommitTime:        fetch.LocalCommitTime,
+				ModuleInfo: internal.ModuleInfo{
+					ModulePath:        "github.com/my/module",
+					Version:           fetch.LocalVersion,
+					CommitTime:        fetch.LocalCommitTime,
+					IsRedistributable: true,
+				},
 			},
 		},
 		{
@@ -219,7 +232,7 @@ func TestGetUnit(t *testing.T) {
 		t.Run(test.path, func(t *testing.T) {
 			um := &internal.UnitMeta{
 				Path:       test.path,
-				ModulePath: test.modulePath,
+				ModuleInfo: internal.ModuleInfo{ModulePath: test.modulePath},
 			}
 			got, err := ds.GetUnit(ctx, um, 0)
 			if !test.wantLoaded {

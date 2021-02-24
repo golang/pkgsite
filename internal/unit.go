@@ -5,10 +5,7 @@
 package internal
 
 import (
-	"time"
-
 	"golang.org/x/pkgsite/internal/licenses"
-	"golang.org/x/pkgsite/internal/source"
 )
 
 // UnitMeta represents metadata about a unit.
@@ -21,12 +18,9 @@ type UnitMeta struct {
 	Licenses          []*licenses.Metadata
 
 	// Module level information
-	//
-	Version    string
-	ModulePath string
-	CommitTime time.Time
-	SourceInfo *source.Info
-	HasGoMod   bool
+	// Note: IsRedistributable (above) applies to the unit;
+	// ModuleInfo.IsRedistributable applies to the module.
+	ModuleInfo
 }
 
 // IsPackage reports whether the path represents a package path.

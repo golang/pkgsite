@@ -52,6 +52,7 @@ func (db *DB) GetUnitMeta(ctx context.Context, fullPath, requestedModulePath, re
 		&um.CommitTime,
 		jsonbScanner{&um.SourceInfo},
 		&um.HasGoMod,
+		&um.ModuleInfo.IsRedistributable,
 		&um.Name,
 		&um.IsRedistributable,
 		pq.Array(&licenseTypes),
@@ -83,6 +84,7 @@ func getUnitMetaQuery(fullPath, requestedModulePath, requestedVersion string) sq
 		"m.commit_time",
 		"m.source_info",
 		"m.has_go_mod",
+		"m.redistributable",
 		"u.name",
 		"u.redistributable",
 		"u.license_types",
@@ -114,6 +116,7 @@ func getUnitMetaQuery(fullPath, requestedModulePath, requestedVersion string) sq
 		"m.commit_time",
 		"m.source_info",
 		"m.has_go_mod",
+		"m.redistributable",
 		"u.id AS unit_id",
 	).From("modules m").
 		Join("units u ON u.module_id = m.id").

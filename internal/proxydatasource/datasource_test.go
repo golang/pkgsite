@@ -46,11 +46,14 @@ var (
 	wantLicenseMD = sample.LicenseMetadata()[0]
 	wantPackage   = internal.Unit{
 		UnitMeta: internal.UnitMeta{
-			Path:              "foo.com/bar/baz",
-			Name:              "baz",
-			ModulePath:        "foo.com/bar",
-			Version:           "v1.2.0",
-			CommitTime:        time.Date(2019, 1, 30, 0, 0, 0, 0, time.UTC),
+			Path: "foo.com/bar/baz",
+			Name: "baz",
+			ModuleInfo: internal.ModuleInfo{
+				ModulePath:        "foo.com/bar",
+				Version:           "v1.2.0",
+				CommitTime:        time.Date(2019, 1, 30, 0, 0, 0, 0, time.UTC),
+				IsRedistributable: true,
+			},
 			Licenses:          []*licenses.Metadata{wantLicenseMD},
 			IsRedistributable: true,
 		},
@@ -132,8 +135,11 @@ func TestGetUnitMeta(t *testing.T) {
 			modulePath: "example.com/single",
 			version:    "v1.0.0",
 			want: &internal.UnitMeta{
-				ModulePath:        "example.com/single",
-				Version:           "v1.0.0",
+				ModuleInfo: internal.ModuleInfo{
+					ModulePath:        "example.com/single",
+					Version:           "v1.0.0",
+					IsRedistributable: true,
+				},
 				IsRedistributable: true,
 			},
 		},
@@ -142,9 +148,12 @@ func TestGetUnitMeta(t *testing.T) {
 			modulePath: "example.com/single",
 			version:    "v1.0.0",
 			want: &internal.UnitMeta{
-				ModulePath:        "example.com/single",
+				ModuleInfo: internal.ModuleInfo{
+					ModulePath:        "example.com/single",
+					Version:           "v1.0.0",
+					IsRedistributable: true,
+				},
 				Name:              "pkg",
-				Version:           "v1.0.0",
 				IsRedistributable: true,
 			},
 		},
@@ -153,9 +162,12 @@ func TestGetUnitMeta(t *testing.T) {
 			modulePath: internal.UnknownModulePath,
 			version:    "v1.0.0",
 			want: &internal.UnitMeta{
-				ModulePath:        "example.com/single",
+				ModuleInfo: internal.ModuleInfo{
+					ModulePath:        "example.com/single",
+					Version:           "v1.0.0",
+					IsRedistributable: true,
+				},
 				Name:              "pkg",
-				Version:           "v1.0.0",
 				IsRedistributable: true,
 			},
 		},
@@ -164,9 +176,12 @@ func TestGetUnitMeta(t *testing.T) {
 			modulePath: internal.UnknownModulePath,
 			version:    internal.LatestVersion,
 			want: &internal.UnitMeta{
-				ModulePath:        "example.com/basic",
+				ModuleInfo: internal.ModuleInfo{
+					ModulePath:        "example.com/basic",
+					Version:           "v1.1.0",
+					IsRedistributable: true,
+				},
 				Name:              "basic",
-				Version:           "v1.1.0",
 				IsRedistributable: true,
 			},
 		},

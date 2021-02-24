@@ -95,7 +95,7 @@ func TestGetLicenses(t *testing.T) {
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			u, err := testDB.GetUnit(ctx, &internal.UnitMeta{Path: test.fullPath, ModulePath: test.modulePath, Version: test.version}, internal.WithLicenses)
+			u, err := testDB.GetUnit(ctx, newUnitMeta(test.fullPath, test.modulePath, test.version), internal.WithLicenses)
 			if !errors.Is(err, test.err) {
 				t.Fatal(err)
 			}
@@ -185,7 +185,7 @@ func TestGetLicensesBypass(t *testing.T) {
 		if bypass {
 			db = bypassDB
 		}
-		u, err := db.GetUnit(ctx, &internal.UnitMeta{Path: sample.ModulePath, ModulePath: sample.ModulePath, Version: m.Version}, internal.WithLicenses)
+		u, err := db.GetUnit(ctx, newUnitMeta(sample.ModulePath, sample.ModulePath, m.Version), internal.WithLicenses)
 		if err != nil {
 			t.Fatal(err)
 		}
