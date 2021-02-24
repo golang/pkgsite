@@ -370,3 +370,20 @@ func logTaskResult(ctx context.Context, ft *fetchTask, prefix string) {
 	logf(ctx, "%s for %s@%s: code=%d, num_packages=%d, err=%v; timings: %s",
 		prefix, ft.ModulePath, ft.ResolvedVersion, ft.Status, len(ft.PackageVersionStates), ft.Error, msg)
 }
+
+// fetchAndUpdateRawLatest fetches information about the raw latest version from the proxy,
+// and updates the database if the version has changed.
+func (f *Fetcher) fetchAndUpdateRawLatest(ctx context.Context, modulePath string) (err error) {
+	defer derrors.Wrap(&err, "fetchAndUpdateRawLatest(%q)", modulePath)
+	info, err := fetch.RawLatestInfo(ctx, modulePath, f.ProxyClient, func(v string) (bool, error) {
+		modinfo, err := f.DB.GetModuleInfo(ctx, modulePath, v)
+		if err != nil {
+			return false, err
+		}
+		return modinfo.HasGoMod, nil
+	})
+	if err != nil {
+		return err
+	}
+	return f.DB.UpdateRawLatestInfo(ctx, info)
+}

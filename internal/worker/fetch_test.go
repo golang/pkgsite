@@ -342,3 +342,27 @@ func TestFetchAndUpdateState(t *testing.T) {
 		})
 	}
 }
+
+func TestFetchAndUpdateRawLatest(t *testing.T) {
+	ctx := context.Background()
+	prox, teardown := proxy.SetupTestClient(t, testModules)
+	defer teardown()
+
+	const modulePath = "example.com/basic"
+	f := &Fetcher{
+		ProxyClient:  prox,
+		SourceClient: source.NewClient(sourceTimeout),
+		DB:           testDB,
+	}
+	if err := f.fetchAndUpdateRawLatest(ctx, modulePath); err != nil {
+		t.Fatal(err)
+	}
+	got, err := testDB.GetRawLatestInfo(ctx, modulePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	const wantVersion = "v1.1.0"
+	if got.ModulePath != modulePath || got.Version != wantVersion {
+		t.Errorf("got (%q, %q), want (%q, %q)", got.ModulePath, got.Version, modulePath, wantVersion)
+	}
+}

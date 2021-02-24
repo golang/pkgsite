@@ -305,6 +305,14 @@ func (s *Server) doFetch(w http.ResponseWriter, r *http.Request) (string, int) {
 	if r.FormValue(queue.DisableProxyFetchParam) == queue.DisableProxyFetchValue {
 		f.ProxyClient = f.ProxyClient.WithFetchDisabled()
 	}
+	// Whenever we fetch a module, make sure its raw latest information is up to
+	// date in the DB.
+	if err := f.fetchAndUpdateRawLatest(ctx, modulePath); err != nil {
+		// Do not fail the fetch just because we couldn't update the raw latest info.
+		log.Errorf(ctx, "updating raw latest: %v", err)
+		derrors.Report(err)
+	}
+
 	code, resolvedVersion, err := f.FetchAndUpdateState(ctx, modulePath, requestedVersion, s.cfg.AppVersionLabel())
 	if code == http.StatusInternalServerError {
 		s.reportError(ctx, err, w, r)
