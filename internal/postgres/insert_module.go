@@ -310,7 +310,7 @@ func (pdb *DB) insertUnits(ctx context.Context, db *database.DB, m *internal.Mod
 		paths         []string
 		unitValues    []interface{}
 		pathToReadme  = map[string]*internal.Readme{}
-		pathToDoc     = map[string][]*internal.Documentation{}
+		pathToDocs    = map[string][]*internal.Documentation{}
 		pathToImports = map[string][]string{}
 		pathIDToPath  = map[int]string{}
 	)
@@ -354,7 +354,7 @@ func (pdb *DB) insertUnits(ctx context.Context, db *database.DB, m *internal.Mod
 				return fmt.Errorf("insertUnits: unit %q missing source files for %q, %q", u.Path, d.GOOS, d.GOARCH)
 			}
 		}
-		pathToDoc[u.Path] = u.Documentation
+		pathToDocs[u.Path] = u.Documentation
 		if len(u.Imports) > 0 {
 			pathToImports[u.Path] = u.Imports
 		}
@@ -371,7 +371,8 @@ func (pdb *DB) insertUnits(ctx context.Context, db *database.DB, m *internal.Mod
 	if err := insertReadmes(ctx, db, paths, pathToUnitID, pathToReadme); err != nil {
 		return err
 	}
-	if err := insertDoc(ctx, db, paths, pathToUnitID, pathToDoc); err != nil {
+	pathToDocIDToDoc, err := insertDocs(ctx, db, paths, pathToUnitID, pathToDocs)
+	if err != nil {
 		return err
 	}
 	if err := insertImports(ctx, db, paths, pathToUnitID, pathToImports); err != nil {
@@ -384,7 +385,7 @@ func (pdb *DB) insertUnits(ctx context.Context, db *database.DB, m *internal.Mod
 		return err
 	}
 	if versionType == version.TypeRelease {
-		return insertSymbols(ctx, db, m.ModulePath, m.Version, pathToID, pathToDoc)
+		return insertSymbols(ctx, db, m.ModulePath, m.Version, pathToID, pathToDocIDToDoc)
 	}
 	return nil
 }
@@ -488,37 +489,73 @@ func insertUnits(ctx context.Context, db *database.DB, unitValues []interface{})
 	return pathIDToUnitID, nil
 }
 
-func insertDoc(ctx context.Context, db *database.DB,
+func insertDocs(ctx context.Context, db *database.DB,
 	paths []string,
 	pathToUnitID map[string]int,
-	pathToDoc map[string][]*internal.Documentation) (err error) {
-	defer derrors.WrapStack(&err, "insertDoc")
+	pathToDocs map[string][]*internal.Documentation) (_ map[string]map[int]*internal.Documentation, err error) {
+	defer derrors.WrapStack(&err, "insertDocs")
 
+	pathToDocIDToDoc := map[string]map[int]*internal.Documentation{}
 	// Remove old rows before inserting new ones, to get rid of obsolete rows.
 	// This is necessary because of the change to use all/all to represent documentation
 	// that is the same for all build contexts. It can be removed once all the DBs have
 	// been updated.
-	var unitIDs []int
+	var (
+		unitIDs      []int
+		unitIDToPath = map[int]string{}
+	)
 	for _, path := range paths {
 		unitIDs = append(unitIDs, pathToUnitID[path])
+		unitIDToPath[pathToUnitID[path]] = path
 	}
 	if _, err := db.Exec(ctx, `DELETE FROM documentation WHERE unit_id = ANY($1)`, pq.Array(unitIDs)); err != nil {
-		return err
+		return nil, err
 	}
 
 	var docValues []interface{}
 	for _, path := range paths {
 		unitID := pathToUnitID[path]
-		for _, doc := range pathToDoc[path] {
+		for _, doc := range pathToDocs[path] {
 			if doc.GOOS == "" || doc.GOARCH == "" {
-				return errors.New("empty GOOS or GOARCH")
+				return nil, errors.New("empty GOOS or GOARCH")
 			}
-			docValues = append(docValues, unitID, doc.GOOS, doc.GOARCH, doc.Synopsis, doc.Source)
+			docValues = append(docValues, unitID, doc.GOOS, doc.GOARCH, doc.GOOS, doc.GOARCH, doc.Synopsis, doc.Source)
 		}
+		unitIDs = append(unitIDs, unitID)
 	}
 	uniqueCols := []string{"unit_id", "goos", "goarch"}
-	docCols := append(uniqueCols, "synopsis", "source")
-	return db.BulkUpsert(ctx, "documentation", docCols, docValues, uniqueCols)
+	docCols := append(uniqueCols, "new_goos", "new_goarch", "synopsis", "source")
+	if err := db.BulkUpsert(ctx, "documentation", docCols, docValues, uniqueCols); err != nil {
+		return nil, err
+	}
+
+	collect := func(rows *sql.Rows) error {
+		var (
+			id, unitID   int
+			goos, goarch string
+		)
+		if err := rows.Scan(&id, &unitID, &goos, &goarch); err != nil {
+			return err
+		}
+		path := unitIDToPath[unitID]
+		_, ok := pathToDocIDToDoc[path]
+		if !ok {
+			pathToDocIDToDoc[path] = map[int]*internal.Documentation{}
+		}
+		for _, doc := range pathToDocs[path] {
+			if doc.GOOS == goos && doc.GOARCH == goarch {
+				pathToDocIDToDoc[path][id] = doc
+			}
+		}
+		return nil
+	}
+	for _, unitID := range unitIDs {
+		if err := db.RunQuery(ctx,
+			`SELECT id, unit_id, goos, goarch FROM documentation WHERE unit_id = $1`, collect, unitID); err != nil {
+			return nil, err
+		}
+	}
+	return pathToDocIDToDoc, nil
 }
 
 func insertImports(ctx context.Context, db *database.DB,

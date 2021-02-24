@@ -20,12 +20,13 @@ import (
 )
 
 func insertSymbols(ctx context.Context, db *database.DB, modulePath, version string,
-	pathToID map[string]int, pathToDocs map[string][]*internal.Documentation) (err error) {
+	pathToID map[string]int,
+	pathToDocIDToDoc map[string]map[int]*internal.Documentation) (err error) {
 	defer derrors.WrapStack(&err, "insertSymbols(ctx, db, %q, %q, pathToID, pathToDocs)", modulePath, version)
 	if !experiment.IsActive(ctx, internal.ExperimentInsertSymbolHistory) {
 		return nil
 	}
-	pkgsymToID, err := upsertPackageSymbolsReturningIDs(ctx, db, modulePath, pathToID, pathToDocs)
+	pkgsymToID, err := upsertPackageSymbolsReturningIDs(ctx, db, modulePath, pathToID, pathToDocIDToDoc)
 	if err != nil {
 		return err
 	}
@@ -34,7 +35,7 @@ func insertSymbols(ctx context.Context, db *database.DB, modulePath, version str
 		uniqueKeys       = map[string]string{}
 		symHistoryValues []interface{}
 	)
-	for path, docs := range pathToDocs {
+	for path, docs := range pathToDocIDToDoc {
 		buildToNameToSym, err := getSymbolHistory(ctx, db, path, modulePath)
 		if err != nil {
 			return err
@@ -99,9 +100,10 @@ type packageSymbol struct {
 }
 
 func upsertPackageSymbolsReturningIDs(ctx context.Context, db *database.DB,
-	modulePath string, pathToID map[string]int, pathToDocs map[string][]*internal.Documentation) (_ map[packageSymbol]int, err error) {
+	modulePath string, pathToID map[string]int,
+	pathToDocIDToDoc map[string]map[int]*internal.Documentation) (_ map[packageSymbol]int, err error) {
 	defer derrors.WrapStack(&err, "upsertPackageSymbolsReturningIDs(ctx, db, %q, pathToID, pathToDocs)", modulePath)
-	nameToID, err := upsertSymbolNamesReturningIDs(ctx, db, pathToDocs)
+	nameToID, err := upsertSymbolNamesReturningIDs(ctx, db, pathToDocIDToDoc)
 	if err != nil {
 		return nil, err
 	}
@@ -135,7 +137,7 @@ func upsertPackageSymbolsReturningIDs(ctx context.Context, db *database.DB,
 	}
 
 	var packageSymbols []interface{}
-	for path, docs := range pathToDocs {
+	for path, docs := range pathToDocIDToDoc {
 		pathID := pathToID[path]
 		if pathID == 0 {
 			return nil, fmt.Errorf("pathID cannot be 0: %q", path)
@@ -183,10 +185,11 @@ func upsertPackageSymbolsReturningIDs(ctx context.Context, db *database.DB,
 	return pkgsymToID, nil
 }
 
-func upsertSymbolNamesReturningIDs(ctx context.Context, db *database.DB, pathToDocs map[string][]*internal.Documentation) (_ map[string]int, err error) {
+func upsertSymbolNamesReturningIDs(ctx context.Context, db *database.DB,
+	pathToDocIDToDoc map[string]map[int]*internal.Documentation) (_ map[string]int, err error) {
 	defer derrors.WrapStack(&err, "upsertSymbolNamesReturningIDs")
 	var names []string
-	for _, docs := range pathToDocs {
+	for _, docs := range pathToDocIDToDoc {
 		for _, doc := range docs {
 			if err := updateSymbols(doc.API, func(s *internal.Symbol) error {
 				names = append(names, s.Name)
