@@ -36,7 +36,7 @@ func setupWorker(ctx context.Context, t *testing.T, proxyClient *proxy.Client, i
 	// TODO: it would be better if InMemory made http requests
 	// back to worker, rather than calling fetch itself.
 	queue := queue.NewInMemory(ctx, 10, nil, func(ctx context.Context, mpath, version string) (int, error) {
-		code, _, err := fetcher.FetchAndUpdateState(ctx, mpath, version, "test", false)
+		code, _, err := fetcher.FetchAndUpdateState(ctx, mpath, version, "test")
 		return code, err
 	})
 

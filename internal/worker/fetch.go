@@ -51,8 +51,8 @@ type Fetcher struct {
 // the module_version_states table according to the result. It returns an HTTP
 // status code representing the result of the fetch operation, and a non-nil
 // error if this status code is not 200.
-func (f *Fetcher) FetchAndUpdateState(ctx context.Context, modulePath, requestedVersion, appVersionLabel string, disableProxyFetch bool) (_ int, resolvedVersion string, err error) {
-	defer derrors.Wrap(&err, "FetchAndUpdateState(%q, %q, %q, %t)", modulePath, requestedVersion, appVersionLabel, disableProxyFetch)
+func (f *Fetcher) FetchAndUpdateState(ctx context.Context, modulePath, requestedVersion, appVersionLabel string) (_ int, resolvedVersion string, err error) {
+	defer derrors.Wrap(&err, "FetchAndUpdateState(%q, %q, %q)", modulePath, requestedVersion, appVersionLabel)
 	tctx, span := trace.StartSpan(ctx, "FetchAndUpdateState")
 	ctx = experiment.NewContext(tctx, experiment.FromContext(ctx).Active()...)
 	ctx = log.NewContextWithLabel(ctx, "fetch", modulePath+"@"+requestedVersion)
@@ -67,7 +67,7 @@ func (f *Fetcher) FetchAndUpdateState(ctx context.Context, modulePath, requested
 		trace.StringAttribute("version", requestedVersion))
 	defer span.End()
 
-	ft := f.fetchAndInsertModule(ctx, modulePath, requestedVersion, disableProxyFetch)
+	ft := f.fetchAndInsertModule(ctx, modulePath, requestedVersion)
 	span.AddAttributes(trace.Int64Attribute("numPackages", int64(len(ft.PackageVersionStates))))
 
 	// If there were any errors processing the module then we didn't insert it.
@@ -128,11 +128,7 @@ func (f *Fetcher) FetchAndUpdateState(ctx context.Context, modulePath, requested
 // fetchAndInsertModule fetches the given module version from the module proxy
 // or (in the case of the standard library) from the Go repo and writes the
 // resulting data to the database.
-//
-// The given parentCtx is used for tracing, but fetches actually execute in a
-// detached context with fixed timeout, so that fetches are allowed to complete
-// even for short-lived requests.
-func (f *Fetcher) fetchAndInsertModule(ctx context.Context, modulePath, requestedVersion string, disableProxyFetch bool) *fetchTask {
+func (f *Fetcher) fetchAndInsertModule(ctx context.Context, modulePath, requestedVersion string) *fetchTask {
 	ft := &fetchTask{
 		FetchResult: fetch.FetchResult{
 			ModulePath:       modulePath,
@@ -172,11 +168,7 @@ func (f *Fetcher) fetchAndInsertModule(ctx context.Context, modulePath, requeste
 	go func() {
 		defer wg.Done()
 		start := time.Now()
-		pc := f.ProxyClient
-		if disableProxyFetch {
-			pc = pc.WithFetchDisabled()
-		}
-		fr := fetch.FetchModule(ctx, modulePath, requestedVersion, pc, f.SourceClient)
+		fr := fetch.FetchModule(ctx, modulePath, requestedVersion, f.ProxyClient, f.SourceClient)
 		if fr == nil {
 			panic("fetch.FetchModule should never return a nil FetchResult")
 		}
@@ -184,12 +176,12 @@ func (f *Fetcher) fetchAndInsertModule(ctx context.Context, modulePath, requeste
 		ft.FetchResult = *fr
 		ft.timings["fetch.FetchModule"] = time.Since(start)
 	}()
-	// Do not resolve the @main and @master version if disableProxyFetch is on.
+	// Do not resolve the @main and @master version if proxy fetch is disabled.
 	var main string
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		if !disableProxyFetch {
+		if !f.ProxyClient.FetchDisabled() {
 			main = resolvedVersion(ctx, modulePath, internal.MainVersion, f.ProxyClient)
 		}
 	}()
@@ -197,7 +189,7 @@ func (f *Fetcher) fetchAndInsertModule(ctx context.Context, modulePath, requeste
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		if !disableProxyFetch {
+		if !f.ProxyClient.FetchDisabled() {
 			master = resolvedVersion(ctx, modulePath, internal.MasterVersion, f.ProxyClient)
 		}
 	}()

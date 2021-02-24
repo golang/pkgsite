@@ -69,6 +69,11 @@ func (c *Client) WithFetchDisabled() *Client {
 	return &c2
 }
 
+// FetchDisabled reports whether proxy fetch is disabled.
+func (c *Client) FetchDisabled() bool {
+	return c.disableFetch
+}
+
 // Info makes a request to $GOPROXY/<module>/@v/<requestedVersion>.info and
 // transforms that data into a *VersionInfo.
 // If requestedVersion is internal.LatestVersion, it uses the proxy's @latest

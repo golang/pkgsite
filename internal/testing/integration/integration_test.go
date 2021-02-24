@@ -99,7 +99,7 @@ func TestEndToEndProcessing(t *testing.T) {
 	modulePath := "example.com/single"
 	version := "v1.2.3"
 	proxyServer.AddModule(proxy.FindModule(testModules, modulePath, "v1.0.0").ChangeVersion(version))
-	_, _, err := fetcher.FetchAndUpdateState(ctx, modulePath, version, "test", false)
+	_, _, err := fetcher.FetchAndUpdateState(ctx, modulePath, version, "test")
 	if err != nil {
 		t.Fatal(err)
 	}

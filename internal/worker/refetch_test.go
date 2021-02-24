@@ -61,7 +61,7 @@ func TestReFetch(t *testing.T) {
 	defer teardownProxy()
 	sourceClient := source.NewClient(sourceTimeout)
 	f := &Fetcher{proxyClient, sourceClient, testDB, nil}
-	if _, _, err := f.FetchAndUpdateState(ctx, sample.ModulePath, version, testAppVersion, false); err != nil {
+	if _, _, err := f.FetchAndUpdateState(ctx, sample.ModulePath, version, testAppVersion); err != nil {
 		t.Fatalf("FetchAndUpdateState(%q, %q): %v", sample.ModulePath, version, err)
 	}
 
@@ -80,7 +80,7 @@ func TestReFetch(t *testing.T) {
 	defer teardownProxy()
 
 	f = &Fetcher{proxyClient, sourceClient, testDB, nil}
-	if _, _, err := f.FetchAndUpdateState(ctx, sample.ModulePath, version, testAppVersion, false); err != nil {
+	if _, _, err := f.FetchAndUpdateState(ctx, sample.ModulePath, version, testAppVersion); err != nil {
 		t.Fatalf("FetchAndUpdateState(%q, %q): %v", modulePath, version, err)
 	}
 	want := &internal.Unit{
@@ -154,7 +154,7 @@ func TestReFetch(t *testing.T) {
 	})
 	defer teardownProxy()
 	f = &Fetcher{proxyClient, sourceClient, testDB, nil}
-	if _, _, err := f.FetchAndUpdateState(ctx, modulePath, version, testAppVersion, false); !errors.Is(err, derrors.DBModuleInsertInvalid) {
+	if _, _, err := f.FetchAndUpdateState(ctx, modulePath, version, testAppVersion); !errors.Is(err, derrors.DBModuleInsertInvalid) {
 		t.Fatalf("FetchAndUpdateState(%q, %q): %v", modulePath, version, err)
 	}
 }

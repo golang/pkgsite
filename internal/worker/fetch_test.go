@@ -281,7 +281,7 @@ func TestFetchAndUpdateState(t *testing.T) {
 	for _, test := range testCases {
 		t.Run(strings.ReplaceAll(test.pkg+"@"+test.version, "/", " "), func(t *testing.T) {
 			defer postgres.ResetTestDB(testDB, t)
-			if _, _, err := f.FetchAndUpdateState(ctx, test.modulePath, test.version, testAppVersion, false); err != nil {
+			if _, _, err := f.FetchAndUpdateState(ctx, test.modulePath, test.version, testAppVersion); err != nil {
 				t.Fatalf("FetchAndUpdateState(%q, %q, %v, %v, %v): %v", test.modulePath, test.version, proxyClient, sourceClient, testDB, err)
 			}
 

@@ -290,20 +290,24 @@ func (s *Server) handleFetch(w http.ResponseWriter, r *http.Request) {
 
 // doFetch executes a fetch request and returns the msg and status.
 func (s *Server) doFetch(w http.ResponseWriter, r *http.Request) (string, int) {
+	ctx := r.Context()
 	modulePath, requestedVersion, err := parseModulePathAndVersion(r.URL.Path)
 	if err != nil {
 		return err.Error(), http.StatusBadRequest
 	}
-	disableProxyFetch := r.FormValue(queue.DisableProxyFetchParam) == queue.DisableProxyFetchValue
+
 	f := &Fetcher{
 		ProxyClient:  s.proxyClient,
 		SourceClient: s.sourceClient,
 		DB:           s.db,
 		Cache:        s.cache,
 	}
-	code, resolvedVersion, err := f.FetchAndUpdateState(r.Context(), modulePath, requestedVersion, s.cfg.AppVersionLabel(), disableProxyFetch)
+	if r.FormValue(queue.DisableProxyFetchParam) == queue.DisableProxyFetchValue {
+		f.ProxyClient = f.ProxyClient.WithFetchDisabled()
+	}
+	code, resolvedVersion, err := f.FetchAndUpdateState(ctx, modulePath, requestedVersion, s.cfg.AppVersionLabel())
 	if code == http.StatusInternalServerError {
-		s.reportError(r.Context(), err, w, r)
+		s.reportError(ctx, err, w, r)
 		return err.Error(), code
 	}
 	return fmt.Sprintf("fetched and updated %s@%s", modulePath, resolvedVersion), code
