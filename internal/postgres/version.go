@@ -9,12 +9,15 @@ import (
 	"database/sql"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/Masterminds/squirrel"
 	"golang.org/x/mod/modfile"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/experiment"
+	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/version"
 	"golang.org/x/sync/errgroup"
 )
@@ -90,6 +93,26 @@ func getPathVersions(ctx context.Context, db *DB, path string, versionTypes ...v
 	}
 	if err := db.db.RunQuery(ctx, query, collect, path); err != nil {
 		return nil, err
+	}
+	if experiment.IsActive(ctx, internal.ExperimentRetractions) {
+		start := time.Now()
+		infos := map[string]*internal.RawLatestInfo{}
+		for _, mi := range versions {
+			if _, ok := infos[mi.ModulePath]; !ok {
+				info, err := db.GetRawLatestInfo(ctx, mi.ModulePath)
+				if err != nil {
+					return nil, err
+				}
+				infos[mi.ModulePath] = info
+			}
+		}
+		for _, mi := range versions {
+			info := infos[mi.ModulePath]
+			if info != nil {
+				info.PopulateModuleInfo(mi)
+			}
+		}
+		log.Debugf(ctx, "getPathVersions: raw latest info fetched and applied in %dms", time.Since(start).Milliseconds())
 	}
 	return versions, nil
 }

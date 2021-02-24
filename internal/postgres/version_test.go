@@ -12,6 +12,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/mod/modfile"
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/testing/sample"
@@ -64,6 +65,11 @@ func TestGetVersions(t *testing.T) {
 	for _, m := range testModules {
 		MustInsertModule(ctx, t, testDB, m)
 	}
+	// Add raw latest version info for rootModule.
+	addRawLatest(ctx, t, testDB, rootModule, "v1.1.0", `
+		module golang.org/foo/bar // Deprecated: use other
+		retract v1.0.3 // security flaw
+    `)
 
 	stdModuleVersions := []*internal.ModuleInfo{
 		{
@@ -182,26 +188,38 @@ func TestGetVersions(t *testing.T) {
 					Version:    "v1.0.3",
 				},
 				{
-					ModulePath: rootModule,
-					Version:    "v1.0.3",
+					ModulePath:          rootModule,
+					Version:             "v1.0.3",
+					Deprecated:          true,
+					DeprecationComment:  "use other",
+					Retracted:           true,
+					RetractionRationale: "security flaw",
 				},
 				{
-					ModulePath: rootModule,
-					Version:    "v0.11.6",
+					ModulePath:         rootModule,
+					Version:            "v0.11.6",
+					Deprecated:         true,
+					DeprecationComment: "use other",
 				},
 			},
 		},
 		{
-			name: "root_module_path",
+			name: "root module path",
 			path: "golang.org/foo/bar",
 			want: []*internal.ModuleInfo{
 				{
-					ModulePath: rootModule,
-					Version:    "v1.0.3",
+					ModulePath:          rootModule,
+					Version:             "v1.0.3",
+					Deprecated:          true,
+					DeprecationComment:  "use other",
+					Retracted:           true,
+					RetractionRationale: "security flaw",
 				},
 				{
-					ModulePath: rootModule,
-					Version:    "v0.11.6",
+					ModulePath:         rootModule,
+					Version:            "v0.11.6",
+					Deprecated:         true,
+					DeprecationComment: "use other",
 				},
 			},
 		},
@@ -211,22 +229,40 @@ func TestGetVersions(t *testing.T) {
 		},
 	}
 
+	ctx = experiment.NewContext(ctx, internal.ExperimentRetractions)
 	for _, test := range testCases {
 		t.Run(test.name, func(t *testing.T) {
-			var want []*internal.ModuleInfo
 			for _, w := range test.want {
 				mod := sample.ModuleInfo(w.ModulePath, w.Version)
-				want = append(want, mod)
+				w.CommitTime = mod.CommitTime
+				w.IsRedistributable = mod.IsRedistributable
+				w.HasGoMod = mod.HasGoMod
+				w.SourceInfo = mod.SourceInfo
 			}
 
 			got, err := testDB.GetVersionsForPath(ctx, test.path)
 			if err != nil {
 				t.Fatal(err)
 			}
-			if diff := cmp.Diff(want, got, cmp.AllowUnexported(source.Info{})); diff != "" {
+			if diff := cmp.Diff(test.want, got, cmp.AllowUnexported(source.Info{})); diff != "" {
 				t.Errorf("testDB.GetVersionsForPath(%q) mismatch (-want +got):\n%s", test.path, diff)
 			}
 		})
+	}
+}
+
+func addRawLatest(ctx context.Context, t *testing.T, db *DB, modulePath, version, modFile string) {
+	f, err := modfile.ParseLax(modulePath+"@"+version, []byte(modFile), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	info := &internal.RawLatestInfo{
+		ModulePath: modulePath,
+		Version:    version,
+		GoModFile:  f,
+	}
+	if err := db.UpdateRawLatestInfo(ctx, info); err != nil {
+		t.Fatal(err)
 	}
 }
 
