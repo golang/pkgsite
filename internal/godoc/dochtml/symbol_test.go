@@ -23,10 +23,40 @@ func TestGetSymbols(t *testing.T) {
 	}
 	want := []*internal.Symbol{
 		{
-			Name:     "C",
-			Synopsis: "const C = 1",
+			Name:     "AA",
+			Synopsis: "const AA",
 			Section:  "Constants",
 			Kind:     "Constant",
+		},
+		{
+			Name:     "BB",
+			Synopsis: "const BB",
+			Section:  "Constants",
+			Kind:     "Constant",
+		},
+		{
+			Name:     "CC",
+			Synopsis: "const CC",
+			Section:  "Constants",
+			Kind:     "Constant",
+		},
+		{
+			Name:     "C",
+			Synopsis: "const C",
+			Section:  "Constants",
+			Kind:     "Constant",
+		},
+		{
+			Name:     "ErrA",
+			Synopsis: `var ErrA = errors.New("error A")`,
+			Section:  "Variables",
+			Kind:     "Variable",
+		},
+		{
+			Name:     "ErrB",
+			Synopsis: `var ErrB = errors.New("error B")`,
+			Section:  "Variables",
+			Kind:     "Variable",
 		},
 		{
 			Name:     "V",
@@ -60,7 +90,7 @@ func TestGetSymbols(t *testing.T) {
 			Children: []*internal.Symbol{
 				{
 					Name:       "I1.M1",
-					Synopsis:   "M1",
+					Synopsis:   "type I1 interface, M1 func()",
 					Section:    "Types",
 					ParentName: "I1",
 					Kind:       "Method",
@@ -75,10 +105,39 @@ func TestGetSymbols(t *testing.T) {
 			Children: []*internal.Symbol{
 				{
 					Name:       "I2.M2",
-					Synopsis:   "M2",
+					Synopsis:   "type I2 interface, M2 func()",
 					Section:    "Types",
 					ParentName: "I2",
 					Kind:       "Method",
+				},
+			},
+		},
+		{
+			Name:     "Num",
+			Synopsis: "type Num int",
+			Section:  "Types",
+			Kind:     "Type",
+			Children: []*internal.Symbol{
+				{
+					Name:       "DD",
+					Synopsis:   "const DD",
+					Section:    "Types",
+					Kind:       "Constant",
+					ParentName: "Num",
+				},
+				{
+					Name:       "EE",
+					Synopsis:   "const EE",
+					Section:    "Types",
+					Kind:       "Constant",
+					ParentName: "Num",
+				},
+				{
+					Name:       "FF",
+					Synopsis:   "const FF",
+					Section:    "Types",
+					Kind:       "Constant",
+					ParentName: "Num",
 				},
 			},
 		},
@@ -90,7 +149,7 @@ func TestGetSymbols(t *testing.T) {
 			Children: []*internal.Symbol{
 				{
 					Name:       "S1.F",
-					Synopsis:   "F",
+					Synopsis:   "type S1 struct, F int",
 					Section:    "Types",
 					ParentName: "S1",
 					Kind:       "Field",
@@ -105,7 +164,7 @@ func TestGetSymbols(t *testing.T) {
 			Children: []*internal.Symbol{
 				{
 					Name:       "S2.G",
-					Synopsis:   "G",
+					Synopsis:   "type S2 struct, G int",
 					Section:    "Types",
 					ParentName: "S2",
 					Kind:       "Field",
@@ -120,7 +179,7 @@ func TestGetSymbols(t *testing.T) {
 			Children: []*internal.Symbol{
 				{
 					Name:       "CT",
-					Synopsis:   "const CT T = 3",
+					Synopsis:   "const CT",
 					Section:    "Types",
 					ParentName: "T",
 					Kind:       "Constant",
@@ -149,7 +208,7 @@ func TestGetSymbols(t *testing.T) {
 			},
 		},
 	}
-	if diff := cmp.Diff(got, want); diff != "" {
+	if diff := cmp.Diff(want, got); diff != "" {
 		t.Fatal(diff)
 	}
 }

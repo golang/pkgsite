@@ -13,11 +13,12 @@ import (
 	"strings"
 )
 
+const dotDotDot = "..."
+
 // OneLineNodeDepth returns a one-line summary of the given input node.
 // The depth specifies the current depth when traversing the AST and the
 // function will stop traversing once depth reaches maxSynopsisNodeDepth.
 func OneLineNodeDepth(fset *token.FileSet, node ast.Node, depth int) string {
-	const dotDotDot = "..."
 	if depth == maxSynopsisNodeDepth {
 		return dotDotDot
 	}
@@ -35,26 +36,9 @@ func OneLineNodeDepth(fset *token.FileSet, node ast.Node, depth int) string {
 
 		switch n.Tok {
 		case token.CONST, token.VAR:
-			typ := ""
 			for i, spec := range n.Specs {
 				valueSpec := spec.(*ast.ValueSpec) // must succeed; we can't mix types in one GenDecl.
-				if len(valueSpec.Names) > 1 || len(valueSpec.Values) > 1 {
-					trailer = " " + dotDotDot
-				}
-
-				// The type name may carry over from a previous specification in the
-				// case of constants and iota.
-				if valueSpec.Type != nil {
-					typ = fmt.Sprintf(" %s", OneLineNodeDepth(fset, valueSpec.Type, depth))
-				} else if len(valueSpec.Values) > 0 {
-					typ = ""
-				}
-
-				val := ""
-				if i < len(valueSpec.Values) && valueSpec.Values[i] != nil {
-					val = fmt.Sprintf(" = %s", OneLineNodeDepth(fset, valueSpec.Values[i], depth))
-				}
-				return fmt.Sprintf("%s %s%s%s%s", n.Tok, valueSpec.Names[0], typ, val, trailer)
+				return ConstOrVarSynopsis(valueSpec, fset, n.Tok, trailer, i, depth)
 			}
 		case token.TYPE:
 			if len(n.Specs) > 0 {
@@ -92,7 +76,7 @@ func OneLineNodeDepth(fset *token.FileSet, node ast.Node, depth int) string {
 		var params []string
 		if n.Params != nil {
 			for _, field := range n.Params.List {
-				params = append(params, oneLineField(fset, field, depth))
+				params = append(params, OneLineField(fset, field, depth))
 			}
 		}
 		needParens := false
@@ -101,7 +85,7 @@ func OneLineNodeDepth(fset *token.FileSet, node ast.Node, depth int) string {
 			needParens = needParens || len(n.Results.List) > 1
 			for _, field := range n.Results.List {
 				needParens = needParens || len(field.Names) > 0
-				results = append(results, oneLineField(fset, field, depth))
+				results = append(results, OneLineField(fset, field, depth))
 			}
 		}
 
@@ -132,7 +116,7 @@ func OneLineNodeDepth(fset *token.FileSet, node ast.Node, depth int) string {
 			return ""
 		}
 		if len(n.List) == 1 {
-			return oneLineField(fset, n.List[0], depth)
+			return OneLineField(fset, n.List[0], depth)
 		}
 		return dotDotDot
 
@@ -182,8 +166,30 @@ func OneLineNodeDepth(fset *token.FileSet, node ast.Node, depth int) string {
 	}
 }
 
-// oneLineField returns a one-line summary of the field.
-func oneLineField(fset *token.FileSet, field *ast.Field, depth int) string {
+func ConstOrVarSynopsis(valueSpec *ast.ValueSpec, fset *token.FileSet, tok token.Token,
+	trailer string, i, depth int) string {
+	if len(valueSpec.Names) > 1 || len(valueSpec.Values) > 1 {
+		trailer = " " + dotDotDot
+	}
+
+	// The type name may carry over from a previous specification in the
+	// case of constants and iota.
+	typ := ""
+	if valueSpec.Type != nil {
+		typ = fmt.Sprintf(" %s", OneLineNodeDepth(fset, valueSpec.Type, depth))
+	} else if len(valueSpec.Values) > 0 {
+		typ = ""
+	}
+
+	val := ""
+	if i < len(valueSpec.Values) && valueSpec.Values[i] != nil {
+		val = fmt.Sprintf(" = %s", OneLineNodeDepth(fset, valueSpec.Values[i], depth))
+	}
+	return fmt.Sprintf("%s %s%s%s%s", tok, valueSpec.Names[0], typ, val, trailer)
+}
+
+// OneLineField returns a one-line summary of the field.
+func OneLineField(fset *token.FileSet, field *ast.Field, depth int) string {
 	var names []string
 	for _, name := range field.Names {
 		names = append(names, name.Name)

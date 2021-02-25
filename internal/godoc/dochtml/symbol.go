@@ -29,17 +29,24 @@ func GetSymbols(p *doc.Package, fset *token.FileSet) (_ []*internal.Symbol, err 
 	if err != nil {
 		return nil, err
 	}
+	vars, err := variables(p.Vars, fset)
+	if err != nil {
+		return nil, err
+	}
 	return append(append(append(
-		constants(p, fset), variables(p, fset)...), functions(p, fset)...), typs...), nil
+		constants(p.Consts), vars...), functions(p, fset)...), typs...), nil
 }
 
-func constants(p *doc.Package, fset *token.FileSet) []*internal.Symbol {
+func constants(consts []*doc.Value) []*internal.Symbol {
 	var syms []*internal.Symbol
-	for _, c := range p.Consts {
+	for _, c := range consts {
 		for _, n := range c.Names {
+			if n == "_" {
+				continue
+			}
 			syms = append(syms, &internal.Symbol{
 				Name:     n,
-				Synopsis: render.OneLineNodeDepth(fset, c.Decl, 0),
+				Synopsis: "const " + n,
 				Section:  internal.SymbolSectionConstants,
 				Kind:     internal.SymbolKindConstant,
 			})
@@ -48,19 +55,35 @@ func constants(p *doc.Package, fset *token.FileSet) []*internal.Symbol {
 	return syms
 }
 
-func variables(p *doc.Package, fset *token.FileSet) []*internal.Symbol {
+func variables(vars []*doc.Value, fset *token.FileSet) (_ []*internal.Symbol, err error) {
+	defer derrors.Wrap(&err, "variables")
 	var syms []*internal.Symbol
-	for _, v := range p.Vars {
-		for _, n := range v.Names {
-			syms = append(syms, &internal.Symbol{
-				Name:     n,
-				Synopsis: render.OneLineNodeDepth(fset, v.Decl, 0),
-				Section:  internal.SymbolSectionVariables,
-				Kind:     internal.SymbolKindVariable,
-			})
+	for _, v := range vars {
+		specs := v.Decl.Specs
+		for _, spec := range specs {
+			valueSpec := spec.(*ast.ValueSpec) // must succeed; we can't mix types in one GenDecl.
+			if len(valueSpec.Names) != 1 {
+				return nil, fmt.Errorf("unexpected number of spec.Names: %d; want 1 (%v)", len(valueSpec.Names), v.Names)
+			}
+			ident := valueSpec.Names[0]
+			if ident.Name == "_" {
+				continue
+			}
+			syn := render.OneLineNodeDepth(fset, v.Decl, 0)
+			if len(valueSpec.Values) != 0 {
+				syn = render.ConstOrVarSynopsis(valueSpec, fset, token.VAR, "", 0, 0)
+			}
+			syms = append(syms,
+				&internal.Symbol{
+					Name:     ident.Name,
+					Synopsis: syn,
+					Section:  internal.SymbolSectionVariables,
+					Kind:     internal.SymbolKindVariable,
+				})
+
 		}
 	}
-	return syms
+	return syms, nil
 }
 
 func functions(p *doc.Package, fset *token.FileSet) []*internal.Symbol {
@@ -97,48 +120,45 @@ func types(p *doc.Package, fset *token.FileSet) ([]*internal.Symbol, error) {
 			Section:  internal.SymbolSectionTypes,
 			Kind:     internal.SymbolKindType,
 		}
+		fields := fieldsForType(typ.Name, spec, fset)
+		if err != nil {
+			return nil, err
+		}
 		syms = append(syms, t)
+		vars, err := variablesForType(typ, fset)
+		if err != nil {
+			return nil, err
+		}
 		t.Children = append(append(append(append(append(
 			t.Children,
-			constantsForType(typ, fset)...),
-			variablesForType(typ, fset)...),
+			constantsForType(typ)...),
+			vars...),
 			functionsForType(typ, fset)...),
-			fieldsForType(typ.Name, spec, fset)...),
+			fields...),
 			mthds...)
 	}
 	return syms, nil
 }
 
-func constantsForType(t *doc.Type, fset *token.FileSet) []*internal.Symbol {
-	var syms []*internal.Symbol
-	for _, c := range t.Consts {
-		for _, n := range c.Names {
-			syms = append(syms, &internal.Symbol{
-				Name:       n,
-				ParentName: t.Name,
-				Kind:       internal.SymbolKindConstant,
-				Synopsis:   render.OneLineNodeDepth(fset, c.Decl, 0),
-				Section:    internal.SymbolSectionTypes,
-			})
-		}
+func constantsForType(t *doc.Type) []*internal.Symbol {
+	consts := constants(t.Consts)
+	for _, c := range consts {
+		c.ParentName = t.Name
+		c.Section = internal.SymbolSectionTypes
 	}
-	return syms
+	return consts
 }
 
-func variablesForType(t *doc.Type, fset *token.FileSet) []*internal.Symbol {
-	var syms []*internal.Symbol
-	for _, v := range t.Vars {
-		for _, n := range v.Names {
-			syms = append(syms, &internal.Symbol{
-				Name:       n,
-				ParentName: t.Name,
-				Kind:       internal.SymbolKindVariable,
-				Synopsis:   render.OneLineNodeDepth(fset, v.Decl, 0),
-				Section:    internal.SymbolSectionTypes,
-			})
-		}
+func variablesForType(t *doc.Type, fset *token.FileSet) (_ []*internal.Symbol, err error) {
+	vars, err := variables(t.Vars, fset)
+	if err != nil {
+		return nil, err
 	}
-	return syms
+	for _, v := range vars {
+		v.ParentName = t.Name
+		v.Section = internal.SymbolSectionTypes
+	}
+	return vars, nil
 }
 
 func functionsForType(t *doc.Type, fset *token.FileSet) []*internal.Symbol {
@@ -162,12 +182,18 @@ func fieldsForType(typName string, spec *ast.TypeSpec, fset *token.FileSet) []*i
 	}
 	var syms []*internal.Symbol
 	for _, f := range st.Fields.List {
+		// It's not possible for there to be more than one name.
+		// FieldList is also used by go/ast for st.Methods, which is the
+		// only reason this type is a list.
 		for _, n := range f.Names {
+			synopsis := fmt.Sprintf("type %s struct, %s %s", typName, n,
+				render.OneLineNodeDepth(fset, f.Type, 0))
+			name := typName + "." + n.Name
 			syms = append(syms, &internal.Symbol{
-				Name:       typName + "." + n.Name,
+				Name:       name,
 				ParentName: typName,
 				Kind:       internal.SymbolKindField,
-				Synopsis:   render.OneLineNodeDepth(fset, n, 0),
+				Synopsis:   synopsis,
 				Section:    internal.SymbolSectionTypes,
 			})
 		}
@@ -195,11 +221,13 @@ func methodsForType(t *doc.Type, spec *ast.TypeSpec, fset *token.FileSet) ([]*in
 				return nil, fmt.Errorf("len(m.Names) = %d; expected 0 or 1", len(m.Names))
 			}
 			for _, n := range m.Names {
+				name := t.Name + "." + n.Name
+				synopsis := fmt.Sprintf("type %s interface, %s", t.Name, render.OneLineField(fset, m, 0))
 				syms = append(syms, &internal.Symbol{
-					Name:       t.Name + "." + n.Name,
+					Name:       name,
 					ParentName: t.Name,
 					Kind:       internal.SymbolKindMethod,
-					Synopsis:   render.OneLineNodeDepth(fset, n, 0),
+					Synopsis:   synopsis,
 					Section:    internal.SymbolSectionTypes,
 				})
 			}

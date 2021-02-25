@@ -1,21 +1,29 @@
-// Copyright 2019 The Go Authors. All rights reserved.
+// Copyright 2021 The Go Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// Package everydecl has every form of declaration known to dochtml.
-// It is designed to test that the generated HTML has the right id and data-kind
-// attributes.
-//
-//
-// Links
-//
-// - pkgsite repo, https://go.googlesource.com/pkgsite
-// - Play with Go, https://play-with-go.dev
-//
-package everydecl
+// Package symbols is designed to test symbols from a docPackage.
+package symbols
 
 // const
 const C = 1
+
+// const iota
+const (
+	AA = iota + 1
+	_
+	BB
+	CC
+)
+
+type Num int
+
+const (
+	DD Num = iota
+	_
+	EE
+	FF
+)
 
 // var
 var V = 2
@@ -31,6 +39,12 @@ const CT T = 3
 
 // typeVariable
 var VT T
+
+// multi-line var
+var (
+	ErrA = errors.New("error A")
+	ErrB = errors.New("error B")
+)
 
 // typeFunc
 func TF() T { return T(0) }

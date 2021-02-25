@@ -44,7 +44,7 @@ var singleUnits = []*internal.Unit{
 			GOARCH:   internal.All,
 			Synopsis: "Package pkg is a sample package.",
 			API: []*internal.Symbol{
-				{Name: "Version", Synopsis: `const Version = "v1.0.0"`, Section: "Constants", Kind: "Constant"},
+				{Name: "Version", Synopsis: "const Version", Section: "Constants", Kind: "Constant"},
 				{Name: "V", Synopsis: "var V = Version", Section: "Variables", Kind: "Variable"},
 				{Name: "G", Synopsis: "func G() int", Section: "Functions", Kind: "Function"},
 				{
@@ -239,7 +239,7 @@ var moduleBadPackages = &testModule{
 						Synopsis: "Package good is inside a module that has bad packages.",
 						API: []*internal.Symbol{{
 							Name:     "Good",
-							Synopsis: "const Good = true",
+							Synopsis: "const Good",
 							Section:  "Constants",
 							Kind:     "Constant",
 						}},
@@ -303,7 +303,7 @@ var moduleBuildConstraints = &testModule{
 							API: []*internal.Symbol{
 								{
 									Name:     "CacheLinePadSize",
-									Synopsis: "const CacheLinePadSize = 3",
+									Synopsis: "const CacheLinePadSize",
 									Section:  "Constants",
 									Kind:     "Constant",
 								},
@@ -316,7 +316,7 @@ var moduleBuildConstraints = &testModule{
 							API: []*internal.Symbol{
 								{
 									Name:     "CacheLinePadSize",
-									Synopsis: "const CacheLinePadSize = 3",
+									Synopsis: "const CacheLinePadSize",
 									Section:  "Constants",
 									Kind:     "Constant",
 								},
@@ -329,7 +329,7 @@ var moduleBuildConstraints = &testModule{
 							API: []*internal.Symbol{
 								{
 									Name:     "CacheLinePadSize",
-									Synopsis: "const CacheLinePadSize = 3",
+									Synopsis: "const CacheLinePadSize",
 									Section:  "Constants",
 									Kind:     "Constant",
 								},
@@ -760,19 +760,19 @@ var moduleStd = &testModule{
 						API: []*internal.Symbol{
 							{
 								Name:     "true",
-								Synopsis: "const true = 0 == 0 ...",
+								Synopsis: "const true",
 								Section:  "Constants",
 								Kind:     "Constant",
 							},
 							{
 								Name:     "false",
-								Synopsis: "const true = 0 == 0 ...",
+								Synopsis: "const false",
 								Section:  "Constants",
 								Kind:     "Constant",
 							},
 							{
 								Name:     "iota",
-								Synopsis: "const iota = 0",
+								Synopsis: "const iota",
 								Section:  "Constants",
 								Kind:     "Constant",
 							},
@@ -934,7 +934,7 @@ var moduleStd = &testModule{
 								Children: []*internal.Symbol{
 									{
 										Name:       "error.Error",
-										Synopsis:   "Error",
+										Synopsis:   "type error interface, Error func() string",
 										Section:    "Types",
 										Kind:       "Method",
 										ParentName: "error",
@@ -1168,28 +1168,28 @@ var moduleStd = &testModule{
 									},
 									{
 										Name:       "Context.Deadline",
-										Synopsis:   "Deadline",
+										Synopsis:   "type Context interface, Deadline func() (deadline time.Time, ok bool)",
 										Section:    "Types",
 										Kind:       "Method",
 										ParentName: "Context",
 									},
 									{
 										Name:       "Context.Done",
-										Synopsis:   "Done",
+										Synopsis:   "type Context interface, Done func() <-chan struct{}",
 										Section:    "Types",
 										Kind:       "Method",
 										ParentName: "Context",
 									},
 									{
 										Name:       "Context.Err",
-										Synopsis:   "Err",
+										Synopsis:   "type Context interface, Err func() error",
 										Section:    "Types",
 										Kind:       "Method",
 										ParentName: "Context",
 									},
 									{
 										Name:       "Context.Value",
-										Synopsis:   "Value",
+										Synopsis:   "type Context interface, Value func(key interface{}) interface{}",
 										Section:    "Types",
 										Kind:       "Method",
 										ParentName: "Context",
@@ -1374,7 +1374,7 @@ var moduleStd = &testModule{
 									Children: []*internal.Symbol{
 										{
 											Name:       "InvalidUTF8Error.S",
-											Synopsis:   "S",
+											Synopsis:   "type InvalidUTF8Error struct, S string",
 											Section:    "Types",
 											Kind:       "Field",
 											ParentName: "InvalidUTF8Error",
@@ -1396,7 +1396,7 @@ var moduleStd = &testModule{
 									Children: []*internal.Symbol{
 										{
 											Name:       "InvalidUnmarshalError.Type",
-											Synopsis:   "Type",
+											Synopsis:   "type InvalidUnmarshalError struct, Type reflect.Type",
 											Section:    "Types",
 											Kind:       "Field",
 											ParentName: "InvalidUnmarshalError",
@@ -1418,7 +1418,7 @@ var moduleStd = &testModule{
 									Children: []*internal.Symbol{
 										{
 											Name:       "Marshaler.MarshalJSON",
-											Synopsis:   "MarshalJSON",
+											Synopsis:   "type Marshaler interface, MarshalJSON func() ([]byte, error)",
 											Section:    "Types",
 											Kind:       "Method",
 											ParentName: "Marshaler",
@@ -1433,14 +1433,14 @@ var moduleStd = &testModule{
 									Children: []*internal.Symbol{
 										{
 											Name:       "MarshalerError.Type",
-											Synopsis:   "Type",
+											Synopsis:   "type MarshalerError struct, Type reflect.Type",
 											Section:    "Types",
 											Kind:       "Field",
 											ParentName: "MarshalerError",
 										},
 										{
 											Name:       "MarshalerError.Err",
-											Synopsis:   "Err",
+											Synopsis:   "type MarshalerError struct, Err error",
 											Section:    "Types",
 											Kind:       "Field",
 											ParentName: "MarshalerError",
@@ -1513,7 +1513,7 @@ var moduleStd = &testModule{
 									Children: []*internal.Symbol{
 										{
 											Name:       "SyntaxError.Offset",
-											Synopsis:   "Offset",
+											Synopsis:   "type SyntaxError struct, Offset int64",
 											Section:    "Types",
 											Kind:       "Field",
 											ParentName: "SyntaxError",
@@ -1541,21 +1541,21 @@ var moduleStd = &testModule{
 									Children: []*internal.Symbol{
 										{
 											Name:       "UnmarshalFieldError.Key",
-											Synopsis:   "Key",
+											Synopsis:   "type UnmarshalFieldError struct, Key string",
 											Section:    "Types",
 											Kind:       "Field",
 											ParentName: "UnmarshalFieldError",
 										},
 										{
 											Name:       "UnmarshalFieldError.Type",
-											Synopsis:   "Type",
+											Synopsis:   "type UnmarshalFieldError struct, Type reflect.Type",
 											Section:    "Types",
 											Kind:       "Field",
 											ParentName: "UnmarshalFieldError",
 										},
 										{
 											Name:       "UnmarshalFieldError.Field",
-											Synopsis:   "Field",
+											Synopsis:   "type UnmarshalFieldError struct, Field reflect.StructField",
 											Section:    "Types",
 											Kind:       "Field",
 											ParentName: "UnmarshalFieldError",
@@ -1577,35 +1577,35 @@ var moduleStd = &testModule{
 									Children: []*internal.Symbol{
 										{
 											Name:       "UnmarshalTypeError.Value",
-											Synopsis:   "Value",
+											Synopsis:   "type UnmarshalTypeError struct, Value string",
 											Section:    "Types",
 											Kind:       "Field",
 											ParentName: "UnmarshalTypeError",
 										},
 										{
 											Name:       "UnmarshalTypeError.Type",
-											Synopsis:   "Type",
+											Synopsis:   "type UnmarshalTypeError struct, Type reflect.Type",
 											Section:    "Types",
 											Kind:       "Field",
 											ParentName: "UnmarshalTypeError",
 										},
 										{
 											Name:       "UnmarshalTypeError.Offset",
-											Synopsis:   "Offset",
+											Synopsis:   "type UnmarshalTypeError struct, Offset int64",
 											Section:    "Types",
 											Kind:       "Field",
 											ParentName: "UnmarshalTypeError",
 										},
 										{
 											Name:       "UnmarshalTypeError.Struct",
-											Synopsis:   "Struct",
+											Synopsis:   "type UnmarshalTypeError struct, Struct string",
 											Section:    "Types",
 											Kind:       "Field",
 											ParentName: "UnmarshalTypeError",
 										},
 										{
 											Name:       "UnmarshalTypeError.Field",
-											Synopsis:   "Field",
+											Synopsis:   "type UnmarshalTypeError struct, Field string",
 											Section:    "Types",
 											Kind:       "Field",
 											ParentName: "UnmarshalTypeError",
@@ -1627,7 +1627,7 @@ var moduleStd = &testModule{
 									Children: []*internal.Symbol{
 										{
 											Name:       "Unmarshaler.UnmarshalJSON",
-											Synopsis:   "UnmarshalJSON",
+											Synopsis:   "type Unmarshaler interface, UnmarshalJSON func([]byte) error",
 											Section:    "Types",
 											Kind:       "Method",
 											ParentName: "Unmarshaler",
@@ -1642,7 +1642,7 @@ var moduleStd = &testModule{
 									Children: []*internal.Symbol{
 										{
 											Name:       "UnsupportedTypeError.Type",
-											Synopsis:   "Type",
+											Synopsis:   "type UnsupportedTypeError struct, Type reflect.Type",
 											Section:    "Types",
 											Kind:       "Field",
 											ParentName: "UnsupportedTypeError",
@@ -1664,14 +1664,14 @@ var moduleStd = &testModule{
 									Children: []*internal.Symbol{
 										{
 											Name:       "UnsupportedValueError.Value",
-											Synopsis:   "Value",
+											Synopsis:   "type UnsupportedValueError struct, Value reflect.Value",
 											Section:    "Types",
 											Kind:       "Field",
 											ParentName: "UnsupportedValueError",
 										},
 										{
 											Name:       "UnsupportedValueError.Str",
-											Synopsis:   "Str",
+											Synopsis:   "type UnsupportedValueError struct, Str string",
 											Section:    "Types",
 											Kind:       "Field",
 											ParentName: "UnsupportedValueError",
@@ -1924,21 +1924,21 @@ var moduleStd = &testModule{
 									Children: []*internal.Symbol{
 										{
 											Name:       "ContinueOnError",
-											Synopsis:   "const ContinueOnError ErrorHandling = iota ...",
+											Synopsis:   "const ContinueOnError",
 											Section:    "Types",
 											Kind:       "Constant",
 											ParentName: "ErrorHandling",
 										},
 										{
 											Name:       "ExitOnError",
-											Synopsis:   "const ContinueOnError ErrorHandling = iota ...",
+											Synopsis:   "const ExitOnError",
 											Section:    "Types",
 											Kind:       "Constant",
 											ParentName: "ErrorHandling",
 										},
 										{
 											Name:       "PanicOnError",
-											Synopsis:   "const ContinueOnError ErrorHandling = iota ...",
+											Synopsis:   "const PanicOnError",
 											Section:    "Types",
 											Kind:       "Constant",
 											ParentName: "ErrorHandling",
@@ -1960,28 +1960,28 @@ var moduleStd = &testModule{
 										},
 										{
 											Name:       "Flag.Name",
-											Synopsis:   "Name",
+											Synopsis:   "type Flag struct, Name string",
 											Section:    "Types",
 											Kind:       "Field",
 											ParentName: "Flag",
 										},
 										{
 											Name:       "Flag.Usage",
-											Synopsis:   "Usage",
+											Synopsis:   "type Flag struct, Usage string",
 											Section:    "Types",
 											Kind:       "Field",
 											ParentName: "Flag",
 										},
 										{
 											Name:       "Flag.Value",
-											Synopsis:   "Value",
+											Synopsis:   "type Flag struct, Value Value",
 											Section:    "Types",
 											Kind:       "Field",
 											ParentName: "Flag",
 										},
 										{
 											Name:       "Flag.DefValue",
-											Synopsis:   "DefValue",
+											Synopsis:   "type Flag struct, DefValue string",
 											Section:    "Types",
 											Kind:       "Field",
 											ParentName: "Flag",
@@ -2003,7 +2003,7 @@ var moduleStd = &testModule{
 										},
 										{
 											Name:       "FlagSet.Usage",
-											Synopsis:   "Usage",
+											Synopsis:   "type FlagSet struct, Usage func()",
 											Section:    "Types",
 											Kind:       "Field",
 											ParentName: "FlagSet",
@@ -2248,7 +2248,7 @@ var moduleStd = &testModule{
 									Kind:     "Type",
 									Children: []*internal.Symbol{{
 										Name:       "Getter.Get",
-										Synopsis:   "Get",
+										Synopsis:   "type Getter interface, Get func() interface{}",
 										Section:    "Types",
 										Kind:       "Method",
 										ParentName: "Getter",
@@ -2260,8 +2260,20 @@ var moduleStd = &testModule{
 									Section:  "Types",
 									Kind:     "Type",
 									Children: []*internal.Symbol{
-										{Name: "Value.String", Synopsis: "String", Section: "Types", Kind: "Method", ParentName: "Value"},
-										{Name: "Value.Set", Synopsis: "Set", Section: "Types", Kind: "Method", ParentName: "Value"},
+										{
+											Name:       "Value.String",
+											Synopsis:   "type Value interface, String func() string",
+											Section:    "Types",
+											Kind:       "Method",
+											ParentName: "Value",
+										},
+										{
+											Name:       "Value.Set",
+											Synopsis:   "type Value interface, Set func(string) error",
+											Section:    "Types",
+											Kind:       "Method",
+											ParentName: "Value",
+										},
 									},
 								},
 							},
@@ -2304,7 +2316,7 @@ var moduleMaster = &testModule{
 						GOOS:     internal.All,
 						GOARCH:   internal.All,
 						Synopsis: "package foo exports a helpful constant.",
-						API:      []*internal.Symbol{{Name: "Bar", Synopsis: "const Bar = 1", Section: "Constants", Kind: "Constant"}},
+						API:      []*internal.Symbol{{Name: "Bar", Synopsis: "const Bar", Section: "Constants", Kind: "Constant"}},
 					}},
 				},
 			},
@@ -2343,7 +2355,7 @@ var moduleLatest = &testModule{
 						GOOS:     internal.All,
 						GOARCH:   internal.All,
 						Synopsis: "package foo exports a helpful constant.",
-						API:      []*internal.Symbol{{Name: "Bar", Synopsis: "const Bar = 1", Section: "Constants", Kind: "Constant"}},
+						API:      []*internal.Symbol{{Name: "Bar", Synopsis: "const Bar", Section: "Constants", Kind: "Constant"}},
 					}},
 				},
 			},
