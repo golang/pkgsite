@@ -15,6 +15,7 @@ BEGIN
     RETURN NEW;
 END
 $BODY$ LANGUAGE PLPGSQL;
+ALTER SEQUENCE sequence_documentation_id OWNED BY documentation.id;
 
 CREATE TRIGGER documentation_id_update
 BEFORE INSERT OR UPDATE ON documentation

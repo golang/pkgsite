@@ -9,6 +9,5 @@ ALTER TABLE documentation DROP COLUMN new_goos;
 ALTER TABLE documentation DROP COLUMN new_goarch;
 DROP TRIGGER documentation_id_update ON documentation;
 DROP FUNCTION update_documentation_id;
-DROP SEQUENCE sequence_documentation_id;
 
 END;
