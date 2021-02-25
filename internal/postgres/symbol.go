@@ -108,7 +108,7 @@ func upsertDocumentationSymbols(ctx context.Context, db *database.DB,
 	pathToPkgsymID map[string]map[packageSymbol]int,
 	pathToDocIDToDoc map[string]map[int]*internal.Documentation) (err error) {
 
-	// Create a map of documenation_id TO package_symbol_id set.
+	// Create a map of documentation_id TO package_symbol_id set.
 	// This will be used to verify that all package_symbols for the unit have
 	// been inserted.
 	docIDToPkgsymIDs := map[int]map[int]bool{}
@@ -355,7 +355,12 @@ func getUnitSymbols(ctx context.Context, db *database.DB, unitID int) (_ map[int
         INNER JOIN symbol_names s2 ON ps.parent_symbol_name_id = s2.id
         WHERE d.unit_id = $1
         ORDER BY CASE WHEN ps.type='Type' THEN 0 ELSE 1 END;`
-	var buildToSymbols map[internal.BuildContext][]*internal.Symbol
+	// buildToSymbols contains all of the symbols for this unit, grouped by
+	// build context.
+	buildToSymbols := map[internal.BuildContext][]*internal.Symbol{}
+	// buildToNameToType contains all of the types for this unit, grouped by
+	// name and build context. This is used to keep track of the parent types,
+	// so that we can map the children to those symbols.
 	buildToNameToType := map[internal.BuildContext]map[string]*internal.Symbol{}
 	collect := func(rows *sql.Rows) error {
 		var s internal.Symbol
@@ -376,6 +381,7 @@ func getUnitSymbols(ctx context.Context, db *database.DB, unitID int) (_ map[int
 					buildToNameToType[build] = map[string]*internal.Symbol{}
 				}
 				buildToNameToType[build][s.Name] = &s
+				buildToSymbols[build] = append(buildToSymbols[build], &s)
 			} else {
 				nameToType, ok := buildToNameToType[build]
 				if !ok {
@@ -388,7 +394,7 @@ func getUnitSymbols(ctx context.Context, db *database.DB, unitID int) (_ map[int
 				parent.Children = append(parent.Children, &s)
 			}
 		default:
-			buildToNameToType[build][s.Name] = &s
+			buildToSymbols[build] = append(buildToSymbols[build], &s)
 		}
 		return nil
 	}

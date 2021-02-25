@@ -1,4 +1,4 @@
-// Copyright 2019 The Go Authors. All rights reserved.
+// Copyright 2021 The Go Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
@@ -245,12 +245,13 @@ func TestInsertSymbolHistory_MultiVersions(t *testing.T) {
 		ParentName:   typ.Name,
 		SinceVersion: "v1.2.0",
 	}
-	mod10 := moduleWithSymbols(t, "v1.0.0", []*internal.Symbol{&typ})
 	typA := typ
-	typA.Children = append(typA.Children, &methodA)
+	typA.Children = []*internal.Symbol{&methodA}
+	typB := typ
+	typB.Children = []*internal.Symbol{&methodA, &methodB}
+
+	mod10 := moduleWithSymbols(t, "v1.0.0", []*internal.Symbol{&typ})
 	mod11 := moduleWithSymbols(t, "v1.1.0", []*internal.Symbol{&typA})
-	typB := typA
-	typB.Children = append(typB.Children, &methodB)
 	mod12 := moduleWithSymbols(t, "v1.2.0", []*internal.Symbol{&typB})
 
 	// Insert most recent, then oldest, then middle version.
@@ -277,14 +278,14 @@ func TestInsertSymbolHistory_MultiVersions(t *testing.T) {
 		cmpopts.IgnoreFields(internal.Symbol{}, "GOOS", "GOARCH")); diff != "" {
 		t.Fatalf("mismatch (-want +got):\n%s", diff)
 	}
-
 	createwant := func(docs []*internal.Documentation) map[internal.BuildContext][]*internal.Symbol {
 		want := map[internal.BuildContext][]*internal.Symbol{}
-		for _, doc := range mod10.Packages()[0].Documentation {
+		for _, doc := range docs {
 			want[internal.BuildContext{GOOS: doc.GOOS, GOARCH: doc.GOARCH}] = doc.API
 		}
 		return want
 	}
+
 	want10 := createwant(mod10.Packages()[0].Documentation)
 	want11 := createwant(mod11.Packages()[0].Documentation)
 	want12 := createwant(mod12.Packages()[0].Documentation)
@@ -345,32 +346,40 @@ func TestInsertSymbolHistory_MultiGOOS(t *testing.T) {
 	}
 	mod11.Packages()[0].Documentation = makeDocs()
 	docs1 := mod11.Packages()[0].Documentation
-	typA := typ
-	typA.Children = []*internal.Symbol{&methodA}
-	typB := typ
-	typB.Children = []*internal.Symbol{&methodB}
-	symsA := []*internal.Symbol{&typA}
-	symsB := []*internal.Symbol{&typB}
-	docs1[0].API = symsA
-	docs1[1].API = symsA
-	docs1[2].API = symsB
-	docs1[3].API = symsB
+
+	symsA := []internal.Symbol{methodA}
+	symsB := []internal.Symbol{methodB}
+	createType := func(methods []internal.Symbol, goos, goarch string) []*internal.Symbol {
+		newTyp := typ
+		newTyp.GOOS = goos
+		newTyp.GOARCH = goarch
+
+		for _, m := range methods {
+			m.GOOS = goos
+			m.GOARCH = goarch
+			newTyp.Children = append(newTyp.Children, &m)
+		}
+		return []*internal.Symbol{&newTyp}
+	}
+	docs1[0].API = createType(symsA, docs1[0].GOOS, docs1[0].GOARCH)
+	docs1[1].API = createType(symsA, docs1[1].GOOS, docs1[1].GOARCH)
+	docs1[2].API = createType(symsB, docs1[2].GOOS, docs1[2].GOARCH)
+	docs1[3].API = createType(symsB, docs1[3].GOOS, docs1[3].GOARCH)
 	mod11.Packages()[0].Documentation = docs1
 
 	mod12 := moduleWithSymbols(t, "v1.2.0", nil)
 	mod12.Packages()[0].Documentation = makeDocs()
 	docs2 := mod12.Packages()[0].Documentation
-	docs2[0].API = symsB
-	docs2[1].API = symsB
-	docs2[2].API = symsA
-	docs2[3].API = symsA
+	docs2[0].API = createType(symsB, docs2[0].GOOS, docs2[0].GOARCH)
+	docs2[1].API = createType(symsB, docs2[1].GOOS, docs2[1].GOARCH)
+	docs2[2].API = createType(symsA, docs2[2].GOOS, docs2[2].GOARCH)
+	docs2[3].API = createType(symsA, docs2[3].GOOS, docs2[3].GOARCH)
 	mod12.Packages()[0].Documentation = docs2
 
 	// Insert most recent, then oldest, then middle version.
 	MustInsertModule(ctx, t, testDB, mod12)
 	MustInsertModule(ctx, t, testDB, mod10)
 	MustInsertModule(ctx, t, testDB, mod11)
-
 	gotHist, err := getSymbolHistory(ctx, testDB.db, mod10.Packages()[0].Path, mod10.ModulePath)
 	if err != nil {
 		t.Fatal(err)
@@ -410,7 +419,7 @@ func TestInsertSymbolHistory_MultiGOOS(t *testing.T) {
 
 	createwant := func(docs []*internal.Documentation) map[internal.BuildContext][]*internal.Symbol {
 		want := map[internal.BuildContext][]*internal.Symbol{}
-		for _, doc := range mod10.Packages()[0].Documentation {
+		for _, doc := range docs {
 			want[internal.BuildContext{GOOS: doc.GOOS, GOARCH: doc.GOARCH}] = doc.API
 		}
 		return want
