@@ -8,6 +8,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 	"testing"
@@ -161,6 +162,45 @@ func checkPathMap(t *testing.T, got map[string]int, paths []string) {
 			t.Errorf("missing path %q", p)
 		} else if g == 0 {
 			t.Errorf("path %q has a 0 ID", p)
+		}
+	}
+}
+
+func TestUpsertPathsConcurrently(t *testing.T) {
+	// Verify that we get no constraint violations or other errors when
+	// the same set of paths is upserted multiple times concurrently.
+	t.Parallel()
+	testDB, release := acquire(t)
+	defer release()
+	ctx := context.Background()
+
+	const n = 10
+	paths := make([]string, 100)
+	for i := 0; i < len(paths); i++ {
+		paths[i] = fmt.Sprintf("p%d", i)
+	}
+	errc := make(chan error, n)
+	for i := 0; i < n; i++ {
+		i := i
+		go func() {
+			start := (10 * i) % len(paths)
+			end := start + 50
+			if end > len(paths) {
+				end = len(paths)
+			}
+			sub := paths[start:end]
+			got, err := upsertPathsInTx(ctx, testDB.db, sub)
+			if err == nil {
+				checkPathMap(t, got, sub)
+
+			}
+			errc <- err
+		}()
+
+	}
+	for i := 0; i < n; i++ {
+		if err := <-errc; err != nil {
+			t.Fatal(err)
 		}
 	}
 }
