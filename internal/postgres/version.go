@@ -93,7 +93,7 @@ func getPathVersions(ctx context.Context, db *DB, path string, versionTypes ...v
 	if err := db.db.RunQuery(ctx, query, collect, path); err != nil {
 		return nil, err
 	}
-	if err := populateRawLatestInfo(ctx, db, versions); err != nil {
+	if err := populateRawLatestInfos(ctx, db, versions); err != nil {
 		return nil, err
 	}
 	return versions, nil
@@ -109,8 +109,26 @@ func versionTypeExpr(vts []version.Type) string {
 	return strings.Join(vs, ", ")
 }
 
-func populateRawLatestInfo(ctx context.Context, db *DB, mis []*internal.ModuleInfo) (err error) {
-	defer derrors.WrapStack(&err, "populateRawLatestInfo(%d ModuleInfos)", len(mis))
+func populateRawLatestInfo(ctx context.Context, db *DB, mi *internal.ModuleInfo) (err error) {
+	defer derrors.WrapStack(&err, "populateRawLatestInfo(%q)", mi.ModulePath)
+
+	if experiment.IsActive(ctx, internal.ExperimentRetractions) {
+		// Get information about retractions an deprecations, and apply it.
+		start := time.Now()
+		info, err := db.GetRawLatestInfo(ctx, mi.ModulePath)
+		if err != nil {
+			return err
+		}
+		if info != nil {
+			info.PopulateModuleInfo(mi)
+		}
+		log.Debugf(ctx, "raw latest info fetched and applied in %dms", time.Since(start).Milliseconds())
+	}
+	return nil
+}
+
+func populateRawLatestInfos(ctx context.Context, db *DB, mis []*internal.ModuleInfo) (err error) {
+	defer derrors.WrapStack(&err, "populateRawLatestInfos(%d ModuleInfos)", len(mis))
 
 	if experiment.IsActive(ctx, internal.ExperimentRetractions) {
 		start := time.Now()

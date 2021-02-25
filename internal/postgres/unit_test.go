@@ -27,6 +27,7 @@ func TestGetUnitMeta(t *testing.T) {
 	defer release()
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
+	ctx = experiment.NewContext(ctx, internal.ExperimentRetractions)
 
 	for _, testModule := range []struct {
 		module, version, packageSuffix string
@@ -58,6 +59,8 @@ func TestGetUnitMeta(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
+
+	addRawLatest(ctx, t, testDB, "m.com", "v.1.1.0", "module m.com\nretract v1.0.1 // bad")
 
 	type teststruct struct {
 		name                  string
@@ -136,7 +139,12 @@ func TestGetUnitMeta(t *testing.T) {
 		{
 			name: "directory",
 			path: "m.com/dir",
-			want: wantUnitMeta("m.com", "v1.0.1", ""),
+			want: func() *internal.UnitMeta {
+				um := wantUnitMeta("m.com", "v1.0.1", "")
+				um.Retracted = true
+				um.RetractionRationale = "bad"
+				return um
+			}(),
 		},
 		{
 			name:    "module at master version",
@@ -174,14 +182,17 @@ func TestGetUnitMeta(t *testing.T) {
 			if test.version == "" {
 				test.version = internal.LatestVersion
 			}
-			test.want = sample.UnitMeta(
+			want := sample.UnitMeta(
 				test.path,
 				test.want.ModulePath,
 				test.want.Version,
 				test.want.Name,
 				test.want.IsRedistributable,
 			)
-			test.want.CommitTime = sample.CommitTime
+			want.CommitTime = sample.CommitTime
+			want.Retracted = test.want.Retracted
+			want.RetractionRationale = test.want.RetractionRationale
+			test.want = want
 			checkUnitMeta(ctx, test)
 		})
 	}

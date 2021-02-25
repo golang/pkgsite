@@ -12,12 +12,9 @@ import (
 	"fmt"
 	"reflect"
 	"regexp"
-	"time"
 
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
-	"golang.org/x/pkgsite/internal/experiment"
-	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/middleware"
 )
 
@@ -67,7 +64,7 @@ func (db *DB) GetNestedModules(ctx context.Context, modulePath string) (_ []*int
 		return nil, err
 	}
 
-	if err := populateRawLatestInfo(ctx, db, modules); err != nil {
+	if err := populateRawLatestInfos(ctx, db, modules); err != nil {
 		return nil, err
 	}
 
@@ -171,17 +168,8 @@ func (db *DB) GetModuleInfo(ctx context.Context, modulePath, resolvedVersion str
 		return nil, fmt.Errorf("row.Scan(): %v", err)
 	}
 
-	if experiment.IsActive(ctx, internal.ExperimentRetractions) {
-		// Get information about retractions an deprecations, and apply it.
-		start := time.Now()
-		info, err := db.GetRawLatestInfo(ctx, modulePath)
-		if err != nil {
-			return nil, err
-		}
-		if info != nil {
-			info.PopulateModuleInfo(mi)
-		}
-		log.Debugf(ctx, "raw latest info fetched and applied in %dms", time.Since(start).Milliseconds())
+	if err := populateRawLatestInfo(ctx, db, mi); err != nil {
+		return nil, err
 	}
 	return mi, nil
 }
