@@ -78,17 +78,25 @@ func (db *DB) GetLatestMajorPathForV1Path(ctx context.Context, v1path string) (_
 
 // upsertPath adds path into the paths table if it does not exist, and returns
 // its ID either way.
-// Assumes it is running inside a transaction.
-func upsertPath(ctx context.Context, db *database.DB, path string) (id int, err error) {
-	derrors.WrapStack(&err, "insertPath(%q)", path)
+// It assumes it is running inside a transaction.
+func upsertPath(ctx context.Context, tx *database.DB, path string) (id int, err error) {
+	// Doing the select first and then the insert led to uniqueness constraint
+	// violations even with fully serializable transactions; see
+	// https://www.postgresql.org/message-id/CAOqyxwL4E_JmUScYrnwd0_sOtm3bt4c7G%2B%2BUiD2PnmdGJFiqyQ%40mail.gmail.com.
+	// If the upsert is done first and then the select, then everything works
+	// fine.
+	defer derrors.WrapStack(&err, "upsertPath(%q)", path)
 
-	err = db.QueryRow(ctx,
-		`SELECT id FROM paths WHERE path = $1`,
+	err = tx.QueryRow(ctx,
+		`INSERT INTO paths (path) VALUES ($1) ON CONFLICT DO NOTHING RETURNING id`,
 		path).Scan(&id)
 	if err == sql.ErrNoRows {
-		err = db.QueryRow(ctx,
-			`INSERT INTO paths (path) VALUES ($1) RETURNING id`,
+		err = tx.QueryRow(ctx,
+			`SELECT id FROM paths WHERE path = $1`,
 			path).Scan(&id)
+		if err == sql.ErrNoRows {
+			return 0, errors.New("got no rows; shouldn't happen")
+		}
 	}
 	if err != nil {
 		return 0, err

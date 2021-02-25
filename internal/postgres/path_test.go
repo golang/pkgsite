@@ -6,10 +6,13 @@ package postgres
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	"strconv"
 	"strings"
 	"testing"
 
+	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/testing/sample"
 )
 
@@ -93,5 +96,36 @@ func TestGetLatestMajorPathForV1Path(t *testing.T) {
 				checkLatest(t, testDB, test.versions, v1path, test.want, want+suffix)
 			})
 		})
+	}
+}
+
+func TestUpsertPathConcurrently(t *testing.T) {
+	// Verify that we get no constraint violations or other errors when
+	// the same path is upserted multiple times concurrently.
+	testDB, release := acquire(t)
+	defer release()
+	ctx := context.Background()
+
+	const n = 10
+	errc := make(chan error, n)
+	for i := 0; i < n; i++ {
+		go func() {
+			errc <- testDB.db.Transact(ctx, sql.LevelRepeatableRead, func(tx *database.DB) error {
+				id, err := upsertPath(ctx, tx, "a/path")
+				if err != nil {
+					return err
+				}
+				if id == 0 {
+					return errors.New("zero id")
+				}
+				return nil
+			})
+		}()
+
+	}
+	for i := 0; i < n; i++ {
+		if err := <-errc; err != nil {
+			t.Fatal(err)
+		}
 	}
 }
