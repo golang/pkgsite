@@ -391,20 +391,6 @@ func (pdb *DB) insertUnits(ctx context.Context, db *database.DB, m *internal.Mod
 }
 
 func insertPaths(ctx context.Context, db *database.DB, m *internal.Module) (pathToID map[string]int, err error) {
-	// Add new unit paths to the paths table.
-	pathToID = map[string]int{}
-	collect := func(rows *sql.Rows) error {
-		var (
-			pathID int
-			path   string
-		)
-		if err := rows.Scan(&pathID, &path); err != nil {
-			return err
-		}
-		pathToID[path] = pathID
-		return nil
-	}
-
 	// Read all existing paths for this module, to avoid a large bulk upsert.
 	// (We've seen these bulk upserts hang for so long that they time out (10
 	// minutes)).
@@ -418,28 +404,7 @@ func insertPaths(ctx context.Context, db *database.DB, m *internal.Module) (path
 	for p := range curPathsSet {
 		curPaths = append(curPaths, p)
 	}
-	if err := db.RunQuery(ctx, `SELECT id, path FROM paths WHERE path = ANY($1)`,
-		collect, pq.Array(curPaths)); err != nil {
-		return nil, err
-	}
-
-	// Insert any unit paths that we don't already have.
-	var values []interface{}
-	for _, v := range curPaths {
-		if _, ok := pathToID[v]; !ok {
-			values = append(values, v)
-		}
-	}
-	if len(values) > 0 {
-		// Insert data into the paths table.
-		pathCols := []string{"path"}
-		returningPathCols := []string{"id", "path"}
-		if err := db.BulkInsertReturning(ctx, "paths", pathCols, values,
-			database.OnConflictDoNothing, returningPathCols, collect); err != nil {
-			return nil, err
-		}
-	}
-	return pathToID, nil
+	return upsertPaths(ctx, db, curPaths)
 }
 
 func insertUnits(ctx context.Context, db *database.DB, unitValues []interface{}) (pathIDToUnitID map[int]int, err error) {

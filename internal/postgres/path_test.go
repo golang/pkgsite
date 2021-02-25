@@ -102,6 +102,7 @@ func TestGetLatestMajorPathForV1Path(t *testing.T) {
 func TestUpsertPathConcurrently(t *testing.T) {
 	// Verify that we get no constraint violations or other errors when
 	// the same path is upserted multiple times concurrently.
+	t.Parallel()
 	testDB, release := acquire(t)
 	defer release()
 	ctx := context.Background()
@@ -128,4 +129,51 @@ func TestUpsertPathConcurrently(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
+}
+
+func TestUpsertPaths(t *testing.T) {
+	t.Parallel()
+	testDB, release := acquire(t)
+	defer release()
+	ctx := context.Background()
+
+	check := func(paths []string) {
+		got, err := upsertPathsInTx(ctx, testDB.db, paths)
+		if err != nil {
+			t.Fatal(err)
+		}
+		checkPathMap(t, got, paths)
+	}
+
+	check([]string{"a", "b", "c"})
+	check([]string{"b", "c", "d", "e"})
+}
+
+func checkPathMap(t *testing.T, got map[string]int, paths []string) {
+	t.Helper()
+	if g, w := len(got), len(paths); g != w {
+		t.Errorf("got %d paths, want %d", g, w)
+		return
+	}
+	for _, p := range paths {
+		g, ok := got[p]
+		if !ok {
+			t.Errorf("missing path %q", p)
+		} else if g == 0 {
+			t.Errorf("path %q has a 0 ID", p)
+		}
+	}
+}
+
+func upsertPathsInTx(ctx context.Context, db *database.DB, paths []string) (map[string]int, error) {
+	var m map[string]int
+	err := db.Transact(ctx, sql.LevelRepeatableRead, func(tx *database.DB) error {
+		var err error
+		m, err = upsertPaths(ctx, tx, paths)
+		return err
+	})
+	if err != nil {
+		return nil, err
+	}
+	return m, nil
 }

@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/lib/pq"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/derrors"
@@ -105,4 +106,47 @@ func upsertPath(ctx context.Context, tx *database.DB, path string) (id int, err 
 		return 0, errors.New("zero ID")
 	}
 	return id, nil
+}
+
+// upsertPaths adds all the paths to the paths table if they aren't already
+// there, and returns their ID either way.
+// It assumes it is running inside a transaction.
+func upsertPaths(ctx context.Context, db *database.DB, paths []string) (pathToID map[string]int, err error) {
+	defer derrors.WrapStack(&err, "upsertPaths(%d paths)", len(paths))
+
+	pathToID = map[string]int{}
+	collect := func(rows *sql.Rows) error {
+		var (
+			pathID int
+			path   string
+		)
+		if err := rows.Scan(&pathID, &path); err != nil {
+			return err
+		}
+		pathToID[path] = pathID
+		return nil
+	}
+
+	if err := db.RunQuery(ctx, `SELECT id, path FROM paths WHERE path = ANY($1)`,
+		collect, pq.Array(paths)); err != nil {
+		return nil, err
+	}
+
+	// Insert any unit paths that we don't already have.
+	var values []interface{}
+	for _, v := range paths {
+		if _, ok := pathToID[v]; !ok {
+			values = append(values, v)
+		}
+	}
+	if len(values) > 0 {
+		// Insert data into the paths table.
+		pathCols := []string{"path"}
+		returningPathCols := []string{"id", "path"}
+		if err := db.BulkInsertReturning(ctx, "paths", pathCols, values,
+			database.OnConflictDoNothing, returningPathCols, collect); err != nil {
+			return nil, err
+		}
+	}
+	return pathToID, nil
 }
