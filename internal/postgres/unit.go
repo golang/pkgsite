@@ -196,7 +196,10 @@ func (db *DB) GetUnit(ctx context.Context, um *internal.UnitMeta, fields interna
 		if err != nil {
 			return nil, err
 		}
-		u.Symbols = symbols
+		// Return nil if there are no symbols, instead of an empty map.
+		if len(u.Symbols) > 0 {
+			u.Symbols = symbols
+		}
 	}
 	if fields&internal.WithImports != 0 {
 		imports, err := db.getImports(ctx, unitID)
