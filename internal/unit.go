@@ -49,6 +49,7 @@ type Unit struct {
 	Subdirectories  []*PackageMeta
 	Imports         []string
 	LicenseContents []*licenses.License
+	Symbols         map[BuildContext][]*Symbol
 	NumImports      int
 	NumImportedBy   int
 }
@@ -107,4 +108,5 @@ const (
 	WithMain FieldSet = 1 << iota
 	WithImports
 	WithLicenses
+	WithSymbols
 )
