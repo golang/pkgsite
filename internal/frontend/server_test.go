@@ -805,7 +805,7 @@ func serverTestCases() []serverTestCase {
 				pagecheck.UnitHeader(v2pkgV100, versioned, isPackage),
 				pagecheck.UnitReadme(),
 				pagecheck.UnitDoc(),
-				pagecheck.UnitDirectories(fmt.Sprintf("/%s@%s/%s/directory/hello", v2pkgV100.ModulePath, v2pkgV100.Version, v2pkgV100.Suffix), "directory/hello"),
+				pagecheck.UnitDirectories(fmt.Sprintf("/%s@%s/%s/directory/hello", v2pkgV100.ModulePath, v2pkgV100.Version, v2pkgV100.Suffix), "hello"),
 				pagecheck.CanonicalURLPath("/github.com/v2major/module_name@v1.0.0/bar")),
 		},
 		{
@@ -816,7 +816,7 @@ func serverTestCases() []serverTestCase {
 				pagecheck.UnitHeader(&v2pkgV1Buz, versioned, isPackage),
 				pagecheck.UnitReadme(),
 				pagecheck.UnitDoc(),
-				pagecheck.UnitDirectories(fmt.Sprintf("/%s@%s/%s/directory/hello", v2pkgV1Buz.ModulePath, v2pkgV1Buz.Version, v2pkgV1Buz.Suffix), "directory/hello"),
+				pagecheck.UnitDirectories(fmt.Sprintf("/%s@%s/%s/directory/hello", v2pkgV1Buz.ModulePath, v2pkgV1Buz.Version, v2pkgV1Buz.Suffix), "hello"),
 				pagecheck.CanonicalURLPath("/github.com/v2major/module_name@v1.0.0/buz")),
 		},
 		{
@@ -827,7 +827,7 @@ func serverTestCases() []serverTestCase {
 				pagecheck.UnitHeader(v2pkgV200, versioned, isPackage),
 				pagecheck.UnitReadme(),
 				pagecheck.UnitDoc(),
-				pagecheck.UnitDirectories(fmt.Sprintf("/%s@%s/%s/directory/hello", v2pkgV200.ModulePath, v2pkgV200.Version, v2pkgV200.Suffix), "directory/hello"),
+				pagecheck.UnitDirectories(fmt.Sprintf("/%s@%s/%s/directory/hello", v2pkgV200.ModulePath, v2pkgV200.Version, v2pkgV200.Suffix), "hello"),
 				pagecheck.CanonicalURLPath("/github.com/v2major/module_name/v2@v2.0.0/bar")),
 		},
 		{
@@ -838,7 +838,7 @@ func serverTestCases() []serverTestCase {
 				pagecheck.UnitHeader(pkgV100, versioned, isPackage),
 				pagecheck.UnitReadme(),
 				pagecheck.UnitDoc(),
-				pagecheck.UnitDirectories(fmt.Sprintf("/%s@%s/%s/directory/hello", sample.ModulePath, sample.VersionString, sample.Suffix), "directory/hello"),
+				pagecheck.UnitDirectories(fmt.Sprintf("/%s@%s/%s/directory/hello", sample.ModulePath, sample.VersionString, sample.Suffix), "hello"),
 				pagecheck.CanonicalURLPath("/github.com/valid/module_name@v1.0.0/foo")),
 		},
 		{
