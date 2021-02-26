@@ -109,11 +109,22 @@
 }
 
 .UnitHeader-majorVersionBanner,
-.UnitHeader-redirectedFromBanner {
-  background-color: var(--gray-10);
+.UnitHeader-redirectedFromBanner,
+.UnitHeader-deprecatedBanner,
+.UnitHeader-retractedBanner {
   display: flex;
   margin: -0.5rem 0 1rem 0;
   padding: 0.75rem 0;
+}
+
+.UnitHeader-majorVersionBanner,
+.UnitHeader-redirectedFromBanner {
+  background-color: var(--gray-10);
+}
+
+.UnitHeader-deprecatedBanner,
+.UnitHeader-retractedBanner {
+  background-color: var(--yellow);
 }
 
 .UnitHeader-detailIcon {

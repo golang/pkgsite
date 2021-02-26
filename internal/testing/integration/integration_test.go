@@ -18,6 +18,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/safehtml/template"
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/godoc/dochtml"
 	"golang.org/x/pkgsite/internal/index"
 	"golang.org/x/pkgsite/internal/middleware"
@@ -39,6 +40,7 @@ func TestMain(m *testing.M) {
 func TestEndToEndProcessing(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
+	ctx = experiment.NewContext(ctx, internal.ExperimentRetractions)
 
 	defer postgres.ResetTestDB(testDB, t)
 
@@ -76,16 +78,20 @@ func TestEndToEndProcessing(t *testing.T) {
 		{"example.com/single", "This is the README"},
 		{"example.com/single/pkg", "hello"},
 		{"example.com/single@v1.0.0/pkg", "hello"},
+		{"example.com/deprecated", "UnitHeader-deprecatedBanner"},
+		{"example.com/retractions@v1.1.0", "UnitHeader-retractedBanner"},
 	} {
-		wantKeys = append(wantKeys, "/"+test.url)
-		body, err := doGet(frontendHTTP.URL + "/" + test.url)
-		if err != nil {
-			t.Fatalf("%s: %v", test.url, err)
-		}
-		if !strings.Contains(string(body), test.want) {
-			t.Errorf("%q not found in body", test.want)
-			t.Logf("%s", body)
-		}
+		t.Run(strings.ReplaceAll(test.url, "/", "_"), func(t *testing.T) {
+			wantKeys = append(wantKeys, "/"+test.url)
+			body, err := doGet(frontendHTTP.URL + "/" + test.url)
+			if err != nil {
+				t.Fatalf("%s: %v", test.url, err)
+			}
+			if !strings.Contains(string(body), test.want) {
+				t.Errorf("%q not found in body", test.want)
+				t.Logf("%s", body)
+			}
+		})
 	}
 
 	// Test cache invalidation.
@@ -105,8 +111,14 @@ func TestEndToEndProcessing(t *testing.T) {
 	}
 
 	// All the keys with modulePath should be gone, but the others should remain.
+	wantKeys = nil
+	// Remove modulePath from the previous keys.
+	for _, k := range keys {
+		if !strings.Contains(k, modulePath) {
+			wantKeys = append(wantKeys, k)
+		}
+	}
 	keys = cacheKeys(t, redisCacheClient)
-	wantKeys = []string{"/example.com/basic", "/example.com/basic@v1.0.0"}
 	if !cmp.Equal(keys, wantKeys) {
 		t.Errorf("cache keys: got %v, want %v", keys, wantKeys)
 	}
