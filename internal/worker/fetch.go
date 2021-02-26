@@ -121,6 +121,7 @@ func (f *Fetcher) FetchAndUpdateState(ctx context.Context, modulePath, requested
 		Version:              ft.ResolvedVersion,
 		AppVersion:           appVersionLabel,
 		Status:               ft.Status,
+		HasGoMod:             ft.HasGoMod,
 		GoModPath:            ft.GoModPath,
 		FetchErr:             ft.Error,
 		PackageVersionStates: ft.PackageVersionStates,

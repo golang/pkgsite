@@ -47,6 +47,7 @@ type ModuleVersionStateForUpsert struct {
 	AppVersion           string
 	Timestamp            time.Time
 	Status               int
+	HasGoMod             bool
 	GoModPath            string
 	FetchErr             error
 	PackageVersionStates []*internal.PackageVersionState
@@ -100,16 +101,18 @@ func upsertModuleVersionState(ctx context.Context, db *database.DB, numPackages 
 				app_version,
 				index_timestamp,
 				status,
+				has_go_mod,
 				go_mod_path,
 				error,
 				num_packages,
 				incompatible)
-			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
 			ON CONFLICT (module_path, version)
 			DO UPDATE
 			SET
 				app_version=excluded.app_version,
 				status=excluded.status,
+				has_go_mod=excluded.has_go_mod,
 				go_mod_path=excluded.go_mod_path,
 				error=excluded.error,
 				num_packages=excluded.num_packages,
@@ -125,7 +128,7 @@ func upsertModuleVersionState(ctx context.Context, db *database.DB, numPackages 
 						CURRENT_TIMESTAMP + INTERVAL '1 hour'
 					END;`,
 		mvs.ModulePath, mvs.Version, version.ForSorting(mvs.Version),
-		mvs.AppVersion, mvs.Timestamp, mvs.Status, mvs.GoModPath, sqlErrorMsg, numPackages,
+		mvs.AppVersion, mvs.Timestamp, mvs.Status, mvs.HasGoMod, mvs.GoModPath, sqlErrorMsg, numPackages,
 		version.IsIncompatible(mvs.Version))
 	if err != nil {
 		return err
@@ -221,6 +224,7 @@ const moduleVersionStateColumns = `
 			last_processed_at,
 			next_processed_after,
 			app_version,
+			has_go_mod,
 			go_mod_path,
 			num_packages`
 
@@ -231,14 +235,19 @@ func scanModuleVersionState(scan func(dest ...interface{}) error) (*internal.Mod
 		v               internal.ModuleVersionState
 		lastProcessedAt pq.NullTime
 		numPackages     sql.NullInt64
+		hasGoMod        sql.NullBool
 	)
 	if err := scan(&v.ModulePath, &v.Version, &v.IndexTimestamp, &v.CreatedAt, &v.Status, &v.Error,
-		&v.TryCount, &v.LastProcessedAt, &v.NextProcessedAfter, &v.AppVersion, &v.GoModPath, &numPackages); err != nil {
+		&v.TryCount, &v.LastProcessedAt, &v.NextProcessedAfter, &v.AppVersion, &hasGoMod, &v.GoModPath,
+		&numPackages); err != nil {
 		return nil, err
 	}
 	if lastProcessedAt.Valid {
 		lp := lastProcessedAt.Time
 		v.LastProcessedAt = &lp
+	}
+	if hasGoMod.Valid {
+		v.HasGoMod = hasGoMod.Bool
 	}
 	if numPackages.Valid {
 		n := int(numPackages.Int64)

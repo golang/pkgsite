@@ -174,7 +174,10 @@ type ModuleVersionState struct {
 	// deployment time for the above timestamp might be Jul 9, 2019, 11:29:59 AM.
 	AppVersion string
 
-	// GoModPath is the path declared in the go.mod file.
+	// HasGoMod says whether the zip file has a go.mod file.
+	HasGoMod bool
+
+	// GoModPath is the path declared in the go.mod file fetched from the proxy.
 	GoModPath string
 
 	// NumPackages it the number of packages that were processed as part of the

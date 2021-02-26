@@ -230,6 +230,7 @@ func TestUpsertModuleVersionStates(t *testing.T) {
 				AppVersion: appVersion,
 				Timestamp:  time.Now(),
 				Status:     test.status,
+				HasGoMod:   true,
 			}
 			err := testDB.UpsertModuleVersionState(ctx, mvsu)
 			if test.wantUpsertMVSError != (err != nil) {
@@ -241,6 +242,9 @@ func TestUpsertModuleVersionStates(t *testing.T) {
 			}
 			if mvs.Status != test.wantMVSStatus {
 				t.Errorf("module_version_states.status = %d, want %d", mvs.Status, test.wantMVSStatus)
+			}
+			if !mvs.HasGoMod {
+				t.Errorf("HasGoMod: got %t, want true", mvs.HasGoMod)
 			}
 
 			if !test.insertModuleBeforeMVS && test.shouldInsertModule {

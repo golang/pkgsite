@@ -94,8 +94,10 @@ func TestWorker(t *testing.T) {
 		}
 		state = func(version *internal.IndexVersion, code, tryCount, numPackages int) *internal.ModuleVersionState {
 			goModPath := version.Path
+			hasGoMod := true
 			if code == 0 || code >= 300 {
 				goModPath = ""
+				hasGoMod = false
 			}
 			var n *int
 			if code != 0 && code != http.StatusNotFound {
@@ -107,6 +109,7 @@ func TestWorker(t *testing.T) {
 				Status:         code,
 				TryCount:       tryCount,
 				Version:        version.Version,
+				HasGoMod:       hasGoMod,
 				GoModPath:      goModPath,
 				NumPackages:    n,
 			}
