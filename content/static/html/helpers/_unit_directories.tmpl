@@ -12,60 +12,64 @@
     <div class="UnitDirectories-expandButton js-expandAllDirectories">
       <button>Expand all</button>
     </div>
-    {{- if .Directories -}}
+    {{if .Directories}}
       <table class="UnitDirectories-table UnitDirectories-table--tree js-expandableTable" data-test-id="UnitDirectories-table">
         <tr class="UnitDirectories-tableHeader UnitDirectories-tableHeader--tree">
           <th>Path</th>
           <th class="UnitDirectories-desktopSynopsis">Synopsis</th>
         </tr>
-        {{- range .Directories -}}
-          {{- $prefix := .Prefix -}}
-          <tr{{if .Subdirectories}} data-aria-controls="{{range .Subdirectories}}{{$prefix}}-{{.Suffix}} {{end}}"{{end}}>
-            <td data-id="{{$prefix}}" data-aria-owns="{{range .Subdirectories}}{{$prefix}}-{{.Suffix}} {{end}}">
-              <div class="UnitDirectories-pathCell">
-                <div>
-                  {{- if .Subdirectories -}}
-                    <button type="button" class="UnitDirectories-toggleButton"
-                        aria-expanded="false"
-                        aria-label="{{len .Subdirectories}} more from"
-                        data-aria-controls="{{range .Subdirectories}}{{$prefix}}-{{.Suffix}} {{end}}"
-                        data-aria-labelledby="{{$prefix}}-button {{$prefix}}"
-                        data-id="{{$prefix}}-button">
-                      <img alt="" src="/static/img/pkg-icon-arrowRight_24x24.svg" height="24" width="24">
-                    </button>
-                  {{- end -}}
-                  {{- if .Root -}}
-                    <a href="{{.Root.URL}}">{{.Root.Suffix}}</a>
-                    {{if .Root.IsModule}}<span class="UnitHeader-badge">module</span>{{end}}
-                  </div>
-                  <div class="UnitDirectories-mobileSynopsis">{{.Root.Synopsis}}</div>
-                </div>
-              </td>
-              <td class="UnitDirectories-desktopSynopsis">{{.Root.Synopsis}}</td>
-            {{- else -}}
-                <span>{{.Prefix}}</span>
-              </td>
-              <td class="UnitDirectories-desktopSynopsis"></td>
-            {{- end -}}
-          </tr>
-          {{- range .Subdirectories -}}
-            <tr data-id="{{$prefix}}-{{.Suffix}}">
-              <td>
-                <div class="UnitDirectories-subdirectory">
-                  <span>
-                    <a href="{{.URL}}">{{.Suffix}}</a>
-                    {{if .IsModule}}<span class="UnitHeader-badge">Module</span>{{end}}
-                  </span>
-                  <div class="UnitDirectories-mobileSynopsis">{{.Synopsis}}</div>
-                </div>
-              </td>
-              <td class="UnitDirectories-desktopSynopsis">{{.Synopsis}}</td>
-            {{- end -}}
-          </tr>
-        {{- end -}}
+        {{range .Directories}}
+          {{template "directory" .}}
+        {{end}}
       </table>
-    {{- end -}}
+    {{end}}
   </div>
+{{end}}
+
+{{define "directory"}}
+  {{$prefix := .Prefix}}
+  <tr{{if .Subdirectories}} data-aria-controls="{{range .Subdirectories}}{{$prefix}}-{{.Suffix}} {{end}}"{{end}}>
+    <td data-id="{{$prefix}}" data-aria-owns="{{range .Subdirectories}}{{$prefix}}-{{.Suffix}} {{end}}">
+      <div class="UnitDirectories-pathCell">
+        <div>
+          {{- if .Subdirectories -}}
+            <button type="button" class="UnitDirectories-toggleButton"
+                aria-expanded="false"
+                aria-label="{{len .Subdirectories}} more from"
+                data-aria-controls="{{range .Subdirectories}}{{$prefix}}-{{.Suffix}} {{end}}"
+                data-aria-labelledby="{{$prefix}}-button {{$prefix}}"
+                data-id="{{$prefix}}-button">
+              <img alt="" src="/static/img/pkg-icon-arrowRight_24x24.svg" height="24" width="24">
+            </button>
+          {{- end -}}
+          {{- if .Root -}}
+            <a href="{{.Root.URL}}">{{.Root.Suffix}}</a>
+            {{if .Root.IsModule}}<span class="UnitHeader-badge">module</span>{{end}}
+          </div>
+          <div class="UnitDirectories-mobileSynopsis">{{.Root.Synopsis}}</div>
+        </div>
+      </td>
+      <td class="UnitDirectories-desktopSynopsis">{{.Root.Synopsis}}</td>
+    {{- else -}}
+        <span>{{.Prefix}}</span>
+      </td>
+      <td class="UnitDirectories-desktopSynopsis"></td>
+    {{- end -}}
+  </tr>
+  {{- range .Subdirectories -}}
+    <tr data-id="{{$prefix}}-{{.Suffix}}">
+      <td>
+        <div class="UnitDirectories-subdirectory">
+          <span>
+            <a href="{{.URL}}">{{.Suffix}}</a>
+            {{if .IsModule}}<span class="UnitHeader-badge">Module</span>{{end}}
+          </span>
+          <div class="UnitDirectories-mobileSynopsis">{{.Synopsis}}</div>
+        </div>
+      </td>
+      <td class="UnitDirectories-desktopSynopsis">{{.Synopsis}}</td>
+    {{- end -}}
+  </tr>
 {{end}}
 
 {{define "legacy_unit_directories"}}
