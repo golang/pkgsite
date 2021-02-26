@@ -113,7 +113,8 @@ func ResetTestDB(db *DB, t *testing.T) {
 			TRUNCATE version_map;
 			TRUNCATE paths CASCADE;
 			TRUNCATE symbol_names CASCADE;
-			TRUNCATE imports_unique;`); err != nil {
+			TRUNCATE imports_unique;
+			TRUNCATE raw_latest_versions;`); err != nil {
 			return err
 		}
 		if _, err := tx.Exec(ctx, `TRUNCATE module_version_states CASCADE;`); err != nil {

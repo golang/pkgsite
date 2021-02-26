@@ -320,6 +320,7 @@ func (db *DB) UpdateRawLatestInfo(ctx context.Context, info *internal.RawLatestI
 			}
 		}
 
+		log.Debugf(ctx, "updating raw latest from %q to %q", curVersion, info.Version)
 		return upsertRawLatestInfo(ctx, tx, id, info)
 	})
 }
