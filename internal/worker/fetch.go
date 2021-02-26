@@ -116,8 +116,16 @@ func (f *Fetcher) FetchAndUpdateState(ctx context.Context, modulePath, requested
 	// TODO(golang/go#39628): Split UpsertModuleVersionState into
 	// InsertModuleVersionState and UpdateModuleVersionState.
 	start := time.Now()
-	err = f.DB.UpsertModuleVersionState(ctx, ft.ModulePath, ft.ResolvedVersion, appVersionLabel,
-		time.Time{}, ft.Status, ft.GoModPath, ft.Error, ft.PackageVersionStates)
+	mvs := &postgres.ModuleVersionStateForUpsert{
+		ModulePath:           ft.ModulePath,
+		Version:              ft.ResolvedVersion,
+		AppVersion:           appVersionLabel,
+		Status:               ft.Status,
+		GoModPath:            ft.GoModPath,
+		FetchErr:             ft.Error,
+		PackageVersionStates: ft.PackageVersionStates,
+	}
+	err = f.DB.UpsertModuleVersionState(ctx, mvs)
 	ft.timings["db.UpsertModuleVersionState"] = time.Since(start)
 	if err != nil {
 		log.Error(ctx, err)

@@ -41,46 +41,55 @@ func (db *DB) InsertIndexVersions(ctx context.Context, versions []*internal.Inde
 	})
 }
 
+type ModuleVersionStateForUpsert struct {
+	ModulePath           string
+	Version              string
+	AppVersion           string
+	Timestamp            time.Time
+	Status               int
+	GoModPath            string
+	FetchErr             error
+	PackageVersionStates []*internal.PackageVersionState
+}
+
 // UpsertModuleVersionState inserts or updates the module_version_state table with
 // the results of a fetch operation for a given module version.
-func (db *DB) UpsertModuleVersionState(ctx context.Context, modulePath, vers, appVersion string, timestamp time.Time, status int, goModPath string, fetchErr error, packageVersionStates []*internal.PackageVersionState) (err error) {
-	defer derrors.WrapStack(&err, "UpsertModuleVersionState(ctx, %q, %q, %q, %s, %d, %q, %v",
-		modulePath, vers, appVersion, timestamp, status, goModPath, fetchErr)
+func (db *DB) UpsertModuleVersionState(ctx context.Context, mvs *ModuleVersionStateForUpsert) (err error) {
+	defer derrors.WrapStack(&err, "UpsertModuleVersionState(ctx, %+v", mvs)
 	ctx, span := trace.StartSpan(ctx, "UpsertModuleVersionState")
 	defer span.End()
 
 	var numPackages *int
-	if !(status >= http.StatusBadRequest && status <= http.StatusNotFound) {
+	if !(mvs.Status >= http.StatusBadRequest && mvs.Status <= http.StatusNotFound) {
 		// If a module was fetched a 40x error in this range, we won't know how
 		// many packages it has.
-		n := len(packageVersionStates)
+		n := len(mvs.PackageVersionStates)
 		numPackages = &n
 	}
 
 	return db.db.Transact(ctx, sql.LevelDefault, func(tx *database.DB) error {
-		if err := upsertModuleVersionState(ctx, tx, modulePath, vers, appVersion, numPackages, timestamp, status, goModPath, fetchErr); err != nil {
+		if err := upsertModuleVersionState(ctx, tx, numPackages, mvs); err != nil {
 			return err
 		}
 		// Sync modules.status if the module exists in the modules table.
-		if err := updateModulesStatus(ctx, tx, modulePath, vers, status); err != nil {
+		if err := updateModulesStatus(ctx, tx, mvs.ModulePath, mvs.Version, mvs.Status); err != nil {
 			return err
 		}
-		if len(packageVersionStates) == 0 {
+		if len(mvs.PackageVersionStates) == 0 {
 			return nil
 		}
-		return upsertPackageVersionStates(ctx, tx, packageVersionStates)
+		return upsertPackageVersionStates(ctx, tx, mvs.PackageVersionStates)
 	})
 }
 
-func upsertModuleVersionState(ctx context.Context, db *database.DB, modulePath, vers, appVersion string, numPackages *int, timestamp time.Time, status int, goModPath string, fetchErr error) (err error) {
-	defer derrors.WrapStack(&err, "upsertModuleVersionState(ctx, %q, %q, %q, %s, %d, %q, %v",
-		modulePath, vers, appVersion, timestamp, status, goModPath, fetchErr)
+func upsertModuleVersionState(ctx context.Context, db *database.DB, numPackages *int, mvs *ModuleVersionStateForUpsert) (err error) {
+	defer derrors.WrapStack(&err, "upsertModuleVersionState(%q, %q, ...)", mvs.ModulePath, mvs.Version)
 	ctx, span := trace.StartSpan(ctx, "upsertModuleVersionState")
 	defer span.End()
 
 	var sqlErrorMsg string
-	if fetchErr != nil {
-		sqlErrorMsg = fetchErr.Error()
+	if mvs.FetchErr != nil {
+		sqlErrorMsg = mvs.FetchErr.Error()
 	}
 
 	affected, err := db.Exec(ctx, `
@@ -115,8 +124,9 @@ func upsertModuleVersionState(ctx context.Context, db *database.DB, modulePath, 
 					ELSE
 						CURRENT_TIMESTAMP + INTERVAL '1 hour'
 					END;`,
-		modulePath, vers, version.ForSorting(vers),
-		appVersion, timestamp, status, goModPath, sqlErrorMsg, numPackages, version.IsIncompatible(vers))
+		mvs.ModulePath, mvs.Version, version.ForSorting(mvs.Version),
+		mvs.AppVersion, mvs.Timestamp, mvs.Status, mvs.GoModPath, sqlErrorMsg, numPackages,
+		version.IsIncompatible(mvs.Version))
 	if err != nil {
 		return err
 	}

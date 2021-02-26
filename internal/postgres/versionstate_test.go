@@ -85,7 +85,16 @@ func TestModuleVersionState(t *testing.T) {
 			Status:      500,
 		}
 	)
-	if err := testDB.UpsertModuleVersionState(ctx, fooVersion.Path, fooVersion.Version, "", fooVersion.Timestamp, statusCode, goModPath, fetchErr, []*internal.PackageVersionState{pkgVersionState}); err != nil {
+	mvs := &ModuleVersionStateForUpsert{
+		ModulePath:           fooVersion.Path,
+		Version:              fooVersion.Version,
+		Timestamp:            fooVersion.Timestamp,
+		Status:               statusCode,
+		GoModPath:            goModPath,
+		FetchErr:             fetchErr,
+		PackageVersionStates: []*internal.PackageVersionState{pkgVersionState},
+	}
+	if err := testDB.UpsertModuleVersionState(ctx, mvs); err != nil {
 		t.Fatal(err)
 	}
 	errString := fetchErr.Error()
@@ -215,7 +224,14 @@ func TestUpsertModuleVersionStates(t *testing.T) {
 				MustInsertModule(ctx, t, testDB, m)
 			}
 
-			err := testDB.UpsertModuleVersionState(ctx, m.ModulePath, m.Version, appVersion, time.Now(), test.status, "", nil, nil)
+			mvsu := &ModuleVersionStateForUpsert{
+				ModulePath: m.ModulePath,
+				Version:    m.Version,
+				AppVersion: appVersion,
+				Timestamp:  time.Now(),
+				Status:     test.status,
+			}
+			err := testDB.UpsertModuleVersionState(ctx, mvsu)
 			if test.wantUpsertMVSError != (err != nil) {
 				t.Fatalf("db.UpsertModuleVersionState(): %v, want error: %t", err, test.wantUpsertMVSError)
 			}

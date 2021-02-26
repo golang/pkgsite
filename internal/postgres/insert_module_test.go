@@ -525,17 +525,23 @@ func TestPostgres_NewerAlternative(t *testing.T) {
 	defer cancel()
 
 	const (
-		modulePath = "example.com/Mod"
 		altVersion = "v1.2.0"
 		okVersion  = "v1.0.0"
 	)
 
-	err := testDB.UpsertModuleVersionState(ctx, modulePath, altVersion, "appVersion", time.Now(),
-		derrors.ToStatus(derrors.AlternativeModule), "example.com/mod", derrors.AlternativeModule, nil)
-	if err != nil {
+	mvs := &ModuleVersionStateForUpsert{
+		ModulePath: "example.com/Mod",
+		Version:    altVersion,
+		AppVersion: "appVersion",
+		Timestamp:  time.Now(),
+		Status:     derrors.ToStatus(derrors.AlternativeModule),
+		GoModPath:  "example.com/mod",
+		FetchErr:   derrors.AlternativeModule,
+	}
+	if err := testDB.UpsertModuleVersionState(ctx, mvs); err != nil {
 		t.Fatal(err)
 	}
-	m := sample.Module(modulePath, okVersion, "p")
+	m := sample.Module(mvs.ModulePath, okVersion, "p")
 	MustInsertModule(ctx, t, testDB, m)
 	if _, _, found := GetFromSearchDocuments(ctx, t, testDB, m.Packages()[0].Path); found {
 		t.Fatal("found package after inserting")
