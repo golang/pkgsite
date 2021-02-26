@@ -90,11 +90,15 @@ var (
 )
 
 type FetchResult struct {
-	ModulePath           string
-	RequestedVersion     string
-	ResolvedVersion      string
-	MainVersion          string
-	MasterVersion        string
+	ModulePath       string
+	RequestedVersion string
+	ResolvedVersion  string
+	MainVersion      string
+	MasterVersion    string
+	// HasGoMod says whether the zip contain a go.mod file. If Module (below) is non-nil, then
+	// Module.HasGoMod will be the same value. But HasGoMod will be populated even if Module is nil
+	// because there were problems with it, as long as we can download and read the zip.
+	HasGoMod             bool
 	GoModPath            string
 	Status               int
 	Error                error
@@ -184,14 +188,6 @@ func fetchModule(ctx context.Context, fr *FetchResult, proxyClient *proxy.Client
 	}
 	startFetchInfo(fi)
 
-	// getGoModPath may return a non-empty goModPath even if the error is
-	// non-nil, if the module version is an alternative module.
-	var goModBytes []byte
-	fr.GoModPath, goModBytes, err = getGoModPath(ctx, fr.ModulePath, fr.ResolvedVersion, proxyClient)
-	if err != nil {
-		return fi, err
-	}
-
 	var zipReader *zip.Reader
 	if fr.ModulePath == stdlib.ModulePath {
 		var resolvedVersion string
@@ -209,10 +205,29 @@ func fetchModule(ctx context.Context, fr *FetchResult, proxyClient *proxy.Client
 			return fi, err
 		}
 	}
+
+	// Set fr.HasGoMod as early as possible, because the go command uses it to
+	// decide the latest version in some cases (see fetchRawLatestVersion in
+	// this package) and all it requires is a valid zip.
+	if fr.ModulePath == stdlib.ModulePath {
+		fr.HasGoMod = true
+	} else {
+		fr.HasGoMod = hasGoModFile(zipReader, fr.ModulePath, fr.ResolvedVersion)
+	}
+
+	// getGoModPath may return a non-empty goModPath even if the error is
+	// non-nil, if the module version is an alternative module.
+	var goModBytes []byte
+	fr.GoModPath, goModBytes, err = getGoModPath(ctx, fr.ModulePath, fr.ResolvedVersion, proxyClient)
+	if err != nil {
+		return fi, err
+	}
+
 	mod, pvs, err := processZipFile(ctx, fr.ModulePath, fr.ResolvedVersion, commitTime, zipReader, sourceClient)
 	if err != nil {
 		return fi, err
 	}
+	mod.HasGoMod = fr.HasGoMod
 	if goModBytes != nil {
 		if err := processGoModFile(goModBytes, mod); err != nil {
 			return fi, fmt.Errorf("%v: %w", err.Error(), derrors.BadModule)
@@ -220,9 +235,6 @@ func fetchModule(ctx context.Context, fr *FetchResult, proxyClient *proxy.Client
 	}
 	fr.Module = mod
 	fr.PackageVersionStates = pvs
-	if fr.ModulePath == stdlib.ModulePath {
-		fr.Module.HasGoMod = true
-	}
 	for _, state := range fr.PackageVersionStates {
 		if state.Status != http.StatusOK {
 			fr.Status = derrors.ToStatus(derrors.HasIncompletePackages)
@@ -303,15 +315,14 @@ func processZipFile(ctx context.Context, modulePath string, resolvedVersion stri
 	if err != nil {
 		return nil, nil, fmt.Errorf("extractPackagesFromZip(%q, %q, zipReader, %v): %v", modulePath, resolvedVersion, allLicenses, err)
 	}
-	hasGoMod := hasGoModFile(zipReader, modulePath, resolvedVersion)
 	return &internal.Module{
 		ModuleInfo: internal.ModuleInfo{
 			ModulePath:        modulePath,
 			Version:           resolvedVersion,
 			CommitTime:        commitTime,
 			IsRedistributable: d.ModuleIsRedistributable(),
-			HasGoMod:          hasGoMod,
 			SourceInfo:        sourceInfo,
+			// HasGoMod is populated by the caller.
 		},
 		Licenses: allLicenses,
 		Units:    moduleUnits(modulePath, resolvedVersion, packages, readmes, d),

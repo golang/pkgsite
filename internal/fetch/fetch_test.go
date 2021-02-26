@@ -182,9 +182,29 @@ func TestFetchModule_Errors(t *testing.T) {
 		mod           *testModule
 		wantErr       error
 		wantGoModPath string
+		wantHasGoMod  bool
 	}{
-		{name: "alternative", mod: moduleAlternative, wantErr: derrors.AlternativeModule, wantGoModPath: "canonical"},
-		{name: "empty module", mod: moduleEmpty, wantErr: derrors.BadModule},
+		{
+			name:          "alternative",
+			mod:           moduleAlternative,
+			wantErr:       derrors.AlternativeModule,
+			wantGoModPath: "canonical",
+			wantHasGoMod:  true,
+		},
+		{
+			name:          "empty module",
+			mod:           moduleEmpty,
+			wantErr:       derrors.BadModule,
+			wantGoModPath: "emp.ty/module",
+			wantHasGoMod:  false,
+		},
+		{
+			name:          "go.mod but no go files",
+			mod:           moduleNoGo,
+			wantErr:       derrors.BadModule,
+			wantGoModPath: "no.go/files",
+			wantHasGoMod:  true,
+		},
 	} {
 		for _, fetcher := range []struct {
 			name  string
@@ -199,10 +219,14 @@ func TestFetchModule_Errors(t *testing.T) {
 				if !errors.Is(got.Error, test.wantErr) {
 					t.Fatalf("got error = %v; wantErr = %v)", got.Error, test.wantErr)
 				}
-				if test.wantGoModPath != "" {
-					if got == nil || got.GoModPath != test.wantGoModPath {
-						t.Errorf("got %+v, wanted GoModPath %q", got, test.wantGoModPath)
-					}
+				if got == nil {
+					t.Fatal("got nil")
+				}
+				if g, w := got.GoModPath, test.wantGoModPath; g != w {
+					t.Errorf("GoModPath: got %q, want %q", g, w)
+				}
+				if g, w := got.HasGoMod, test.wantHasGoMod; g != w {
+					t.Errorf("HasGoMod: got %t, want %t", g, w)
 				}
 			})
 		}

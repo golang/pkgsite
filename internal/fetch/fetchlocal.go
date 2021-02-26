@@ -84,7 +84,9 @@ func FetchLocalModule(ctx context.Context, modulePath, localPath string, sourceC
 	//   - Neither is given.
 	if goModBytes, err := ioutil.ReadFile(filepath.Join(localPath, "go.mod")); err != nil {
 		fr.GoModPath = modulePath
+		fr.HasGoMod = false
 	} else {
+		fr.HasGoMod = true
 		fr.GoModPath = modfile.ModulePath(goModBytes)
 		if fr.GoModPath != modulePath && modulePath != "" {
 			fr.Error = fmt.Errorf("module path=%s, go.mod path=%s: %w", modulePath, fr.GoModPath, derrors.AlternativeModule)
@@ -109,7 +111,7 @@ func FetchLocalModule(ctx context.Context, modulePath, localPath string, sourceC
 		fr.Error = err
 		return fr
 	}
-
+	mod.HasGoMod = fr.HasGoMod
 	fr.Module = mod
 	fr.PackageVersionStates = pvs
 	fr.Module.SourceInfo = nil // version is not known, so even if info is found it most likely is wrong.

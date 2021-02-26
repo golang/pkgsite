@@ -71,6 +71,7 @@ var moduleOnePackage = &testModule{
 		return proxy.FindModule(testModules, "example.com/single", "v1.0.0")
 	},
 	fr: &FetchResult{
+		HasGoMod: true,
 		Module: &internal.Module{
 			ModuleInfo: internal.ModuleInfo{
 				ModulePath:        "example.com/single",
@@ -90,6 +91,7 @@ var moduleNoGoMod = &testModule{
 			DeleteFile("go.mod")
 	},
 	fr: &FetchResult{
+		HasGoMod: false,
 		Module: &internal.Module{
 			ModuleInfo: internal.ModuleInfo{
 				ModulePath:        "example.com/nogo",
@@ -126,6 +128,7 @@ var moduleNoGoMod = &testModule{
 var moduleMultiPackage = &testModule{
 	modfunc: func() *proxy.Module { return proxy.FindModule(testModules, "example.com/multi", "v1.0.0") },
 	fr: &FetchResult{
+		HasGoMod: true,
 		Module: &internal.Module{
 			ModuleInfo: internal.ModuleInfo{
 				ModulePath:        "example.com/multi",
@@ -184,6 +187,14 @@ var moduleMultiPackage = &testModule{
 var moduleEmpty = &testModule{
 	mod: &proxy.Module{
 		ModulePath: "emp.ty/module",
+	},
+	fr: &FetchResult{Module: &internal.Module{}},
+}
+
+var moduleNoGo = &testModule{
+	mod: &proxy.Module{
+		ModulePath: "no.go/files",
+		Files:      map[string]string{"go.mod": "module no.go/files"},
 	},
 	fr: &FetchResult{Module: &internal.Module{}},
 }
@@ -276,7 +287,8 @@ var moduleBadPackages = &testModule{
 var moduleBuildConstraints = &testModule{
 	modfunc: func() *proxy.Module { return proxy.FindModule(testModules, "example.com/build-constraints", "") },
 	fr: &FetchResult{
-		Status: derrors.ToStatus(derrors.HasIncompletePackages),
+		Status:   derrors.ToStatus(derrors.HasIncompletePackages),
+		HasGoMod: true,
 		Module: &internal.Module{
 			ModuleInfo: internal.ModuleInfo{
 				ModulePath:        "example.com/build-constraints",
@@ -367,6 +379,7 @@ var moduleBuildConstraints = &testModule{
 var moduleNonRedist = &testModule{
 	modfunc: func() *proxy.Module { return proxy.FindModule(testModules, "example.com/nonredist", "") },
 	fr: &FetchResult{
+		HasGoMod: true,
 		Module: &internal.Module{
 			ModuleInfo: internal.ModuleInfo{
 				ModulePath:        "example.com/nonredist",
@@ -511,6 +524,7 @@ var moduleDocTest = &testModule{
 		},
 	},
 	fr: &FetchResult{
+		HasGoMod:  false,
 		GoModPath: "doc.test",
 		Module: &internal.Module{
 			ModuleInfo: internal.ModuleInfo{
@@ -558,6 +572,7 @@ var moduleDocTooLarge = &testModule{
 	},
 	fr: &FetchResult{
 		Status:    derrors.ToStatus(derrors.HasIncompletePackages),
+		HasGoMod:  false,
 		GoModPath: "bigdoc.test",
 		Module: &internal.Module{
 			ModuleInfo: internal.ModuleInfo{
@@ -661,6 +676,7 @@ var moduleStdMaster = &testModule{
 	fr: &FetchResult{
 		RequestedVersion: "master",
 		ResolvedVersion:  stdlib.TestVersion,
+		HasGoMod:         true,
 		Module: &internal.Module{
 			ModuleInfo: internal.ModuleInfo{
 				ModulePath:        stdlib.ModulePath,
@@ -732,6 +748,7 @@ var moduleStd = &testModule{
 		// internal/stdlib/testdata.
 	},
 	fr: &FetchResult{
+		HasGoMod: true,
 		Module: &internal.Module{
 			ModuleInfo: internal.ModuleInfo{
 				ModulePath:        "std",
@@ -2387,6 +2404,7 @@ package example_test
 		},
 		fr: &FetchResult{
 			GoModPath: path,
+			HasGoMod:  false,
 			Module: &internal.Module{
 				ModuleInfo: internal.ModuleInfo{
 					ModulePath:        path,
