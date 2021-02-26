@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/stdlib"
 )
 
 // UnitDirectory is the union of nested modules and subdirectories for a
@@ -114,6 +115,12 @@ func getSubdirectories(um *internal.UnitMeta, pkgs []*internal.PackageMeta) []*S
 	var sdirs []*Subdirectory
 	for _, pm := range pkgs {
 		if um.Path == pm.Path {
+			continue
+		}
+		if um.Path == stdlib.ModulePath && strings.HasPrefix(pm.Path, "cmd/") {
+			// Omit "cmd" from the directory listing on
+			// pkg.go.dev/std, since go list std does not
+			// list them.
 			continue
 		}
 		sdirs = append(sdirs, &Subdirectory{
