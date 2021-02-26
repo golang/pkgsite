@@ -79,9 +79,21 @@ func (db *DB) saveModule(ctx context.Context, m *internal.Module) (isLatest bool
 	ctx, span := trace.StartSpan(ctx, "saveModule")
 	defer span.End()
 
-	// Without RepeatableRead, insertPaths can fail to return some paths.
+	// Insert paths first in a separate transaction, because we've seen various
+	// problems like deadlock when we do it as part of the main transaction
+	// below. Without RepeatableRead, insertPaths can fail to return some paths.
 	// For details, see the commit message for https://golang.org/cl/290269.
+	var pathToID map[string]int
 	err = db.db.Transact(ctx, sql.LevelRepeatableRead, func(tx *database.DB) error {
+		var err error
+		pathToID, err = insertPaths(ctx, tx, m)
+		return err
+	})
+	if err != nil {
+		return false, err
+	}
+
+	err = db.db.Transact(ctx, sql.LevelDefault, func(tx *database.DB) error {
 		moduleID, err := insertModule(ctx, tx, m)
 		if err != nil {
 			return err
@@ -96,7 +108,7 @@ func (db *DB) saveModule(ctx context.Context, m *internal.Module) (isLatest bool
 		if err := insertLicenses(ctx, tx, m, moduleID); err != nil {
 			return err
 		}
-		if err := db.insertUnits(ctx, tx, m, moduleID); err != nil {
+		if err := db.insertUnits(ctx, tx, m, moduleID, pathToID); err != nil {
 			return err
 		}
 
@@ -287,7 +299,7 @@ func insertImportsUnique(ctx context.Context, tx *database.DB, m *internal.Modul
 //
 // It can be assume that at least one unit is a package, and there are one or
 // more units in the module.
-func (pdb *DB) insertUnits(ctx context.Context, db *database.DB, m *internal.Module, moduleID int) (err error) {
+func (pdb *DB) insertUnits(ctx context.Context, db *database.DB, m *internal.Module, moduleID int, pathToID map[string]int) (err error) {
 	defer derrors.WrapStack(&err, "insertUnits(ctx, tx, %q, %q)", m.ModulePath, m.Version)
 	ctx, span := trace.StartSpan(ctx, "insertUnits")
 	defer span.End()
@@ -301,11 +313,6 @@ func (pdb *DB) insertUnits(ctx context.Context, db *database.DB, m *internal.Mod
 	for _, u := range m.Units {
 		sort.Strings(u.Imports)
 	}
-	pathToID, err := insertPaths(ctx, db, m)
-	if err != nil {
-		return err
-	}
-
 	var (
 		paths         []string
 		unitValues    []interface{}
@@ -390,7 +397,10 @@ func (pdb *DB) insertUnits(ctx context.Context, db *database.DB, m *internal.Mod
 	return nil
 }
 
-func insertPaths(ctx context.Context, db *database.DB, m *internal.Module) (pathToID map[string]int, err error) {
+// insertPaths inserts all paths in m that aren't already there, and returns a map from each path to its
+// ID in the paths table.
+// Should be run inside a transaction.
+func insertPaths(ctx context.Context, tx *database.DB, m *internal.Module) (pathToID map[string]int, err error) {
 	// Read all existing paths for this module, to avoid a large bulk upsert.
 	// (We've seen these bulk upserts hang for so long that they time out (10
 	// minutes)).
@@ -404,7 +414,7 @@ func insertPaths(ctx context.Context, db *database.DB, m *internal.Module) (path
 	for p := range curPathsSet {
 		curPaths = append(curPaths, p)
 	}
-	return upsertPaths(ctx, db, curPaths)
+	return upsertPaths(ctx, tx, curPaths)
 }
 
 func insertUnits(ctx context.Context, db *database.DB, unitValues []interface{}) (pathIDToUnitID map[int]int, err error) {
