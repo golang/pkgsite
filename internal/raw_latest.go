@@ -41,6 +41,9 @@ func NewRawLatestInfo(modulePath, version string, modBytes []byte) (*RawLatestIn
 
 // PopulateModuleInfo uses the RawLatestInfo to populate fields of the given module.
 func (r *RawLatestInfo) PopulateModuleInfo(mi *ModuleInfo) {
+	if r == nil {
+		return
+	}
 	mi.Deprecated = r.deprecated
 	mi.DeprecationComment = r.deprecationComment
 	mi.Retracted, mi.RetractionRationale = isRetracted(r.GoModFile, mi.Version)

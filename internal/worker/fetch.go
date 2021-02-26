@@ -404,5 +404,9 @@ func (f *Fetcher) fetchAndUpdateRawLatest(ctx context.Context, modulePath string
 	if err != nil {
 		return err
 	}
+	if info == nil {
+		// No info (e.g. for stdlib); that's fine.
+		return nil
+	}
 	return f.DB.UpdateRawLatestInfo(ctx, info)
 }

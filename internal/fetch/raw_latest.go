@@ -12,11 +12,12 @@ import (
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/proxy"
+	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/version"
 )
 
 // RawLatestInfo uses the proxy to get information about the raw latest version
-// of modulePath.
+// of modulePath. If it cannot obtain it, it returns (nil, nil).
 //
 // The hasGoMod function that is passed in should check if version v of the
 // module has a go.mod file, using a source other than the proxy (e.g. a
@@ -24,6 +25,11 @@ import (
 // an error that wraps derrors.NotFound.
 func RawLatestInfo(ctx context.Context, modulePath string, prox *proxy.Client, hasGoMod func(v string) (bool, error)) (_ *internal.RawLatestInfo, err error) {
 	defer derrors.WrapStack(&err, "RawLatestInfo(%q)", modulePath)
+
+	// No raw latest info for std; no deprecations or retractions.
+	if modulePath == stdlib.ModulePath {
+		return nil, nil
+	}
 
 	v, err := fetchRawLatestVersion(ctx, modulePath, prox, hasGoMod)
 	if err != nil {
