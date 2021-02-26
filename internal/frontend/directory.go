@@ -13,30 +13,34 @@ import (
 	"golang.org/x/pkgsite/internal/stdlib"
 )
 
-// UnitDirectory is the union of nested modules and subdirectories for a
-// unit organized in a two level tree structure. This content is used in the
+// Directories is the directory listing for all directories in the unit,
+// which is listed in the directories section of the main page.
+type Directories struct {
+	// External contains all of the non-internal directories for the unit.
+	External []*Directory
+
+	// Internal contains the top level internal directory for the unit, if any.
+	Internal *Directory
+}
+
+// Directory is either a nested module or subdirectory of a unit, organized in
+// a two level tree structure. This content is used in the
 // directories section of the unit page.
-type UnitDirectory struct {
+type Directory struct {
 	// Prefix is the prefix of the unit path for the subdirectories.
 	Prefix string
 
 	// Root is the package located at prefix, nil for a directory.
-	Root *Subdirectory
+	Root *DirectoryInfo
 
 	// Subdirectories contains subdirectories with prefix trimmed from their suffix.
-	Subdirectories []*Subdirectory
+	Subdirectories []*DirectoryInfo
 }
 
-// NestedModule is a nested module relative to the path of a given unit.
-// This content is used in the Directories section of the unit page.
-type NestedModule struct {
-	Suffix string // suffix after the unit path
-	URL    string
-}
-
-// Subdirectory is a package in a subdirectory relative to the path of a given
-// unit. This content is used in the Directories section of the unit page.
-type Subdirectory struct {
+// DirectoryInfo contains information about a package or nested module,
+// relative to the path of a given unit. This content is used in the
+// Directories section of the unit page.
+type DirectoryInfo struct {
 	Suffix   string
 	URL      string
 	Synopsis string
@@ -45,24 +49,18 @@ type Subdirectory struct {
 
 // unitDirectories zips the subdirectories and nested modules together in a two
 // level tree hierarchy.
-func unitDirectories(dirs []*Subdirectory, mods []*NestedModule) []*UnitDirectory {
-	var merged []*Subdirectory
-	for _, d := range dirs {
-		merged = append(merged, &Subdirectory{Suffix: d.Suffix,
-			Synopsis: d.Synopsis, URL: d.URL, IsModule: false})
+func unitDirectories(directories []*DirectoryInfo) *Directories {
+	if len(directories) == 0 {
+		return nil
 	}
-	for _, m := range mods {
-		merged = append(merged, &Subdirectory{Suffix: m.Suffix, URL: m.URL, IsModule: true})
-	}
-
 	// Organize the subdirectories into a two level tree hierarchy. The first part of
 	// the unit path suffix for a subdirectory becomes the prefix under which matching
 	// subdirectories are grouped.
-	mappedDirs := make(map[string]*UnitDirectory)
-	for _, d := range merged {
+	mappedDirs := make(map[string]*Directory)
+	for _, d := range directories {
 		prefix := strings.Split(d.Suffix, "/")[0]
 		if _, ok := mappedDirs[prefix]; !ok {
-			mappedDirs[prefix] = &UnitDirectory{Prefix: prefix}
+			mappedDirs[prefix] = &Directory{Prefix: prefix}
 		}
 		d.Suffix = strings.TrimPrefix(d.Suffix, prefix+"/")
 		if prefix == d.Suffix {
@@ -72,15 +70,21 @@ func unitDirectories(dirs []*Subdirectory, mods []*NestedModule) []*UnitDirector
 		}
 	}
 
-	var sorted []*UnitDirectory
-	for _, p := range mappedDirs {
-		sorted = append(sorted, p)
+	section := &Directories{}
+	for prefix, dir := range mappedDirs {
+		if prefix == "internal" {
+			section.Internal = dir
+		} else {
+			section.External = append(section.External, dir)
+		}
 	}
-	sort.Slice(sorted, func(i, j int) bool { return sorted[i].Prefix < sorted[j].Prefix })
-	return sorted
+	sort.Slice(section.External, func(i, j int) bool {
+		return section.External[i].Prefix < section.External[j].Prefix
+	})
+	return section
 }
 
-func getNestedModules(ctx context.Context, ds internal.DataSource, um *internal.UnitMeta, sds []*Subdirectory) ([]*NestedModule, error) {
+func getNestedModules(ctx context.Context, ds internal.DataSource, um *internal.UnitMeta, sds []*DirectoryInfo) ([]*DirectoryInfo, error) {
 	nestedModules, err := ds.GetNestedModules(ctx, um.ModulePath)
 	if err != nil {
 		return nil, err
@@ -91,7 +95,7 @@ func getNestedModules(ctx context.Context, ds internal.DataSource, um *internal.
 	for _, dir := range sds {
 		excludedSuffixes[dir.Suffix] = true
 	}
-	var mods []*NestedModule
+	var mods []*DirectoryInfo
 	for _, m := range nestedModules {
 		if m.SeriesPath() == internal.SeriesPathForModule(um.ModulePath) {
 			continue
@@ -103,16 +107,17 @@ func getNestedModules(ctx context.Context, ds internal.DataSource, um *internal.
 		if excludedSuffixes[suffix] {
 			continue
 		}
-		mods = append(mods, &NestedModule{
-			URL:    constructUnitURL(m.ModulePath, m.ModulePath, internal.LatestVersion),
-			Suffix: suffix,
+		mods = append(mods, &DirectoryInfo{
+			URL:      constructUnitURL(m.ModulePath, m.ModulePath, internal.LatestVersion),
+			Suffix:   suffix,
+			IsModule: true,
 		})
 	}
 	return mods, nil
 }
 
-func getSubdirectories(um *internal.UnitMeta, pkgs []*internal.PackageMeta) []*Subdirectory {
-	var sdirs []*Subdirectory
+func getSubdirectories(um *internal.UnitMeta, pkgs []*internal.PackageMeta) []*DirectoryInfo {
+	var sdirs []*DirectoryInfo
 	for _, pm := range pkgs {
 		if um.Path == pm.Path {
 			continue
@@ -123,7 +128,7 @@ func getSubdirectories(um *internal.UnitMeta, pkgs []*internal.PackageMeta) []*S
 			// list them.
 			continue
 		}
-		sdirs = append(sdirs, &Subdirectory{
+		sdirs = append(sdirs, &DirectoryInfo{
 			URL:      constructUnitURL(pm.Path, um.ModulePath, linkVersion(um.Version, um.ModulePath)),
 			Suffix:   internal.Suffix(pm.Path, um.Path),
 			Synopsis: pm.Synopsis,

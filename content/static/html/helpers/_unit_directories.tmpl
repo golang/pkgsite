@@ -12,17 +12,19 @@
     <div class="UnitDirectories-expandButton js-expandAllDirectories">
       <button>Expand all</button>
     </div>
-    {{if .Directories}}
-      <table class="UnitDirectories-table UnitDirectories-table--tree js-expandableTable" data-test-id="UnitDirectories-table">
+      <table class="UnitDirectories-table UnitDirectories-table--tree js-expandableTable"
+             data-test-id="UnitDirectories-table">
         <tr class="UnitDirectories-tableHeader UnitDirectories-tableHeader--tree">
           <th>Path</th>
           <th class="UnitDirectories-desktopSynopsis">Synopsis</th>
         </tr>
-        {{range .Directories}}
-          {{template "directory" .}}
+        {{range $dir := .Directories.External}}
+           {{template "directory" .}}
+        {{end}}
+        {{if .Directories.Internal}}
+           {{template "directory" .Directories.Internal}}
         {{end}}
       </table>
-    {{end}}
   </div>
 {{end}}
 

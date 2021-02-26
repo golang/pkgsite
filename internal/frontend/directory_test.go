@@ -35,12 +35,12 @@ func TestGetNestedModules(t *testing.T) {
 
 	for _, test := range []struct {
 		modulePath     string
-		subdirectories []*Subdirectory
-		want           []*NestedModule
+		subdirectories []*DirectoryInfo
+		want           []*DirectoryInfo
 	}{
 		{
 			modulePath: "cloud.google.com/go",
-			want: []*NestedModule{
+			want: []*DirectoryInfo{
 				{
 					Suffix: "pubsub",
 					URL:    "/cloud.google.com/go/pubsub",
@@ -68,7 +68,7 @@ func TestGetNestedModules(t *testing.T) {
 		},
 		{
 			modulePath: "cloud.google.com/go/storage",
-			want: []*NestedModule{
+			want: []*DirectoryInfo{
 				{
 					Suffix: "module",
 					URL:    "/cloud.google.com/go/storage/module",
@@ -81,7 +81,7 @@ func TestGetNestedModules(t *testing.T) {
 		},
 		{
 			modulePath: "cloud.google.com/go/storage",
-			subdirectories: []*Subdirectory{
+			subdirectories: []*DirectoryInfo{
 				{
 					Suffix: "module",
 					URL:    "/cloud.google.com/go/storage/module",
@@ -94,7 +94,7 @@ func TestGetNestedModules(t *testing.T) {
 		},
 		{
 			modulePath: "cloud.google.com/go/storage/v9",
-			subdirectories: []*Subdirectory{
+			subdirectories: []*DirectoryInfo{
 				{
 					Suffix: "module",
 					URL:    "/cloud.google.com/go/storage/v9/module",
@@ -110,6 +110,9 @@ func TestGetNestedModules(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
+			for _, w := range test.want {
+				w.IsModule = true
+			}
 			if diff := cmp.Diff(test.want, got); diff != "" {
 				t.Errorf("mismatch (-want +got):\n%s", diff)
 			}
@@ -118,52 +121,62 @@ func TestGetNestedModules(t *testing.T) {
 }
 
 func TestUnitDirectories(t *testing.T) {
-	subdirectories := []*Subdirectory{
+	subdirectories := []*DirectoryInfo{
 		{Suffix: "accessapproval"},
+		{Suffix: "accessapproval/internal"},
 		{Suffix: "accessapproval/cgi"},
 		{Suffix: "accessapproval/cookiejar"},
+		{Suffix: "accessapproval/cookiejar/internal"},
 		{Suffix: "fgci"},
 		{Suffix: "httptrace"},
 		{Suffix: "internal/bytesconv"},
 		{Suffix: "internal/json"},
 		{Suffix: "zoltan"},
 	}
-	nestedModules := []*NestedModule{
-		{Suffix: "httptest"},
+	nestedModules := []*DirectoryInfo{
+		{Suffix: "httptest", IsModule: true},
+		{Suffix: "pubsub/internal", IsModule: true},
 	}
-
-	got := unitDirectories(subdirectories, nestedModules)
-	want := []*UnitDirectory{
-		{
-			Prefix: "accessapproval",
-			Root:   &Subdirectory{Suffix: "accessapproval"},
-			Subdirectories: []*Subdirectory{
-				{Suffix: "cgi"},
-				{Suffix: "cookiejar"},
+	got := unitDirectories(append(subdirectories, nestedModules...))
+	want := &Directories{
+		External: []*Directory{
+			{
+				Prefix: "accessapproval",
+				Root:   &DirectoryInfo{Suffix: "accessapproval"},
+				Subdirectories: []*DirectoryInfo{
+					{Suffix: "internal"},
+					{Suffix: "cgi"},
+					{Suffix: "cookiejar"},
+					{Suffix: "cookiejar/internal"},
+				},
+			},
+			{
+				Prefix: "fgci",
+				Root:   &DirectoryInfo{Suffix: "fgci"},
+			},
+			{
+				Prefix: "httptest",
+				Root:   &DirectoryInfo{Suffix: "httptest", IsModule: true},
+			},
+			{
+				Prefix: "httptrace",
+				Root:   &DirectoryInfo{Suffix: "httptrace"},
+			},
+			{
+				Prefix:         "pubsub",
+				Subdirectories: []*DirectoryInfo{{Suffix: "internal", IsModule: true}},
+			},
+			{
+				Prefix: "zoltan",
+				Root:   &DirectoryInfo{Suffix: "zoltan"},
 			},
 		},
-		{
-			Prefix: "fgci",
-			Root:   &Subdirectory{Suffix: "fgci"},
-		},
-		{
-			Prefix: "httptest",
-			Root:   &Subdirectory{Suffix: "httptest", IsModule: true},
-		},
-		{
-			Prefix: "httptrace",
-			Root:   &Subdirectory{Suffix: "httptrace"},
-		},
-		{
+		Internal: &Directory{
 			Prefix: "internal",
-			Subdirectories: []*Subdirectory{
+			Subdirectories: []*DirectoryInfo{
 				{Suffix: "bytesconv"},
 				{Suffix: "json"},
 			},
-		},
-		{
-			Prefix: "zoltan",
-			Root:   &Subdirectory{Suffix: "zoltan"},
 		},
 	}
 

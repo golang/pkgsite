@@ -22,16 +22,9 @@ import (
 
 // MainDetails contains data needed to render the unit template.
 type MainDetails struct {
-	// NestedModules are nested modules relative to the path for the unit.
-	NestedModules []*NestedModule
-
-	// Subdirectories are packages in subdirectories relative to the path for
-	// the unit.
-	Subdirectories []*Subdirectory
-
 	// Directories are packages and nested modules relative to the path for the
 	// unit.
-	Directories []*UnitDirectory
+	Directories *Directories
 
 	// Licenses contains license metadata used in the header.
 	Licenses []LicenseMetadata
@@ -203,12 +196,9 @@ func fetchMainDetails(ctx context.Context, ds internal.DataSource, um *internal.
 		return nil, err
 	}
 	isTaggedVersion := versionType != version.TypePseudo
-
 	return &MainDetails{
 		ExpandReadme:      expandReadme,
-		NestedModules:     nestedModules,
-		Subdirectories:    subdirectories,
-		Directories:       unitDirectories(subdirectories, nestedModules),
+		Directories:       unitDirectories(append(subdirectories, nestedModules...)),
 		Licenses:          transformLicenseMetadata(um.Licenses),
 		CommitTime:        absoluteTime(um.CommitTime),
 		Readme:            readme.HTML,
