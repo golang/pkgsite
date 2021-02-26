@@ -58,7 +58,15 @@ func unitDirectories(directories []*DirectoryInfo) *Directories {
 	// subdirectories are grouped.
 	mappedDirs := make(map[string]*Directory)
 	for _, d := range directories {
-		prefix := strings.Split(d.Suffix, "/")[0]
+		prefix := strings.SplitN(d.Suffix, "/", 2)[0]
+
+		// Skip internal directories that are not in the top level internal
+		// directory. For example, foo/internal and foo/internal/bar should
+		// be skipped, but internal/foo should be included.
+		if prefix != "internal" && (strings.HasSuffix(d.Suffix, "/internal") ||
+			strings.Contains(d.Suffix, "/internal/")) {
+			continue
+		}
 		if _, ok := mappedDirs[prefix]; !ok {
 			mappedDirs[prefix] = &Directory{Prefix: prefix}
 		}

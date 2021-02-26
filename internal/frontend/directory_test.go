@@ -144,10 +144,8 @@ func TestUnitDirectories(t *testing.T) {
 				Prefix: "accessapproval",
 				Root:   &DirectoryInfo{Suffix: "accessapproval"},
 				Subdirectories: []*DirectoryInfo{
-					{Suffix: "internal"},
 					{Suffix: "cgi"},
 					{Suffix: "cookiejar"},
-					{Suffix: "cookiejar/internal"},
 				},
 			},
 			{
@@ -161,10 +159,6 @@ func TestUnitDirectories(t *testing.T) {
 			{
 				Prefix: "httptrace",
 				Root:   &DirectoryInfo{Suffix: "httptrace"},
-			},
-			{
-				Prefix:         "pubsub",
-				Subdirectories: []*DirectoryInfo{{Suffix: "internal", IsModule: true}},
 			},
 			{
 				Prefix: "zoltan",
