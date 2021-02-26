@@ -399,6 +399,9 @@ func logTaskResult(ctx context.Context, ft *fetchTask, prefix string) {
 // and updates the database if the version has changed.
 func (f *Fetcher) fetchAndUpdateRawLatest(ctx context.Context, modulePath string) (err error) {
 	defer derrors.Wrap(&err, "fetchAndUpdateRawLatest(%q)", modulePath)
+	if modulePath == stdlib.ModulePath {
+		return nil
+	}
 	info, err := fetch.RawLatestInfo(ctx, modulePath, f.ProxyClient, func(v string) (bool, error) {
 		modinfo, err := f.DB.GetModuleInfo(ctx, modulePath, v)
 		if err != nil {
