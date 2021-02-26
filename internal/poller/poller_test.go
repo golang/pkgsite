@@ -7,6 +7,7 @@ package poller
 import (
 	"context"
 	"strconv"
+	"sync"
 	"testing"
 	"time"
 )
@@ -18,7 +19,10 @@ type numError struct {
 func (e numError) Error() string { return strconv.Itoa(e.num) }
 
 func Test(t *testing.T) {
-	var goods, bads []int
+	var (
+		mu          sync.Mutex
+		goods, bads []int
+	)
 
 	cur := -1
 	getter := func(context.Context) (interface{}, error) {
@@ -31,7 +35,9 @@ func Test(t *testing.T) {
 	}
 
 	onError := func(err error) {
+		mu.Lock()
 		bads = append(bads, err.(numError).num)
+		mu.Unlock()
 	}
 
 	p := New(cur, getter, onError)
@@ -53,7 +59,10 @@ func Test(t *testing.T) {
 		}
 	}
 	// Expect bads to be consecutive odd numbers.
-	for i, b := range bads {
+	mu.Lock()
+	bs := bads
+	mu.Unlock()
+	for i, b := range bs {
 		if b%2 == 0 || (i > 0 && bads[i-1]+2 != b) {
 			t.Errorf("incorrect 'bad' value %d", b)
 		}
