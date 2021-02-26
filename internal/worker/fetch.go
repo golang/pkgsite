@@ -67,6 +67,14 @@ func (f *Fetcher) FetchAndUpdateState(ctx context.Context, modulePath, requested
 		trace.StringAttribute("version", requestedVersion))
 	defer span.End()
 
+	// Whenever we fetch a module, make sure its raw latest information is up to
+	// date in the DB.
+	if err := f.fetchAndUpdateRawLatest(ctx, modulePath); err != nil {
+		// Do not fail the fetch just because we couldn't update the raw latest info.
+		log.Errorf(ctx, "updating raw latest: %v", err)
+		derrors.Report(err)
+	}
+
 	ft := f.fetchAndInsertModule(ctx, modulePath, requestedVersion)
 	span.AddAttributes(trace.Int64Attribute("numPackages", int64(len(ft.PackageVersionStates))))
 
