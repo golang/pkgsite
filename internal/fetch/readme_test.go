@@ -39,10 +39,6 @@ func TestExtractReadmesFromZip(t *testing.T) {
 			version:    "v1.12.5",
 			want: []*internal.Readme{
 				{
-					Filepath: "README.md",
-					Contents: "# The Go Programming Language\n",
-				},
-				{
 					Filepath: "cmd/pprof/README",
 					Contents: "This directory is the copy of Google's pprof shipped as part of the Go distribution.\n",
 				},

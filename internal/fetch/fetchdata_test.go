@@ -710,7 +710,6 @@ var moduleStdMaster = &testModule{
 							IsRedistributable: true,
 						},
 					},
-					Readme: &internal.Readme{Filepath: "README.md", Contents: "# The Go Programming Language\n"},
 				},
 			},
 		},
@@ -747,10 +746,6 @@ var moduleStd = &testModule{
 					UnitMeta: internal.UnitMeta{
 						Path:              "std",
 						IsRedistributable: true,
-					},
-					Readme: &internal.Readme{
-						Filepath: "README.md",
-						Contents: "# The Go Programming Language\n",
 					},
 				},
 				{

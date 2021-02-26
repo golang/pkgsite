@@ -410,7 +410,7 @@ func (db *DB) getUnitWithAllFields(ctx context.Context, um *internal.UnitMeta) (
 	case sql.ErrNoRows:
 		return nil, derrors.NotFound
 	case nil:
-		if r.Filepath != "" {
+		if r.Filepath != "" && um.ModulePath != stdlib.ModulePath {
 			u.Readme = &r
 		}
 	default:

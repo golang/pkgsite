@@ -425,15 +425,17 @@ func addFiles(z *zip.Writer, r *git.Repository, t *object.Tree, dirpath string, 
 			// ignore; we'll synthesize our own
 			continue
 		}
-		if e.Name == "README.vendor" && !strings.Contains(dirpath, "/") {
+		if strings.HasPrefix(e.Name, "README") && !strings.Contains(dirpath, "/") {
 			// For versions newer than v1.4.0-beta.1, the stdlib is in src/pkg.
 			// This means that our construction of the zip files will return
 			// two READMEs at the root:
 			// https://golang.org/README.md and
 			// https://golang.org/src/README.vendor
-			// We only want to display the README.md, so ignore README.vendor.
-			// However, we do want to store the README.vendor in
-			// std@<version>/cmd.
+			//
+			// We do not want to display the README.md
+			// or any README.vendor.
+			// However, we do want to store the README in
+			// other directories.
 			continue
 		}
 		switch e.Mode {

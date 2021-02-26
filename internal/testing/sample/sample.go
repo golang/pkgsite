@@ -175,6 +175,9 @@ func Module(modulePath, version string, suffixes ...string) *internal.Module {
 			m.Units[0].Name = u.Name
 		}
 	}
+	if modulePath == stdlib.ModulePath {
+		m.Units[0].Readme = nil
+	}
 	// Fill in license contents.
 	for _, u := range m.Units {
 		u.LicenseContents = m.Licenses

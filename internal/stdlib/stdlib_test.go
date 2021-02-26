@@ -146,11 +146,6 @@ func TestZip(t *testing.T) {
 				"errors/errors.go":      true,
 				"errors/errors_test.go": true,
 			}
-			if semver.Compare(resolvedVersion, "v1.4.0") > 0 || resolvedVersion == TestVersion {
-				wantFiles["README.md"] = true
-			} else {
-				wantFiles["README"] = true
-			}
 			if semver.Compare(resolvedVersion, "v1.13.0") > 0 || resolvedVersion == TestVersion {
 				wantFiles["cmd/README.vendor"] = true
 			}

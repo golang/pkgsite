@@ -63,7 +63,7 @@ func TestInsertModule(t *testing.T) {
 		},
 		{
 			name:   "stdlib",
-			module: sample.Module("std", "v1.12.5", "context"),
+			module: sample.Module(stdlib.ModulePath, "v1.12.5", "context"),
 		},
 		{
 			name: "deprecated",
