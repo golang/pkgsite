@@ -14,7 +14,7 @@ import (
 func TestGetSymbols(t *testing.T) {
 	LoadTemplates(templateSource)
 	fset,
-		d := mustLoadPackage("everydecl")
+		d := mustLoadPackage("symbols")
 	got,
 		err := GetSymbols(d,
 		fset)
