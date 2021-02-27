@@ -14,6 +14,7 @@ import (
 	"golang.org/x/mod/module"
 	"golang.org/x/mod/semver"
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/stdlib"
@@ -51,6 +52,11 @@ type VersionListKey struct {
 	// Incompatible indicates whether the VersionListKey represents an
 	// incompatible module version.
 	Incompatible bool
+
+	// Deprecated indicates whether the major version is deprecated.
+	Deprecated bool
+	// DeprecationComment holds the reason for deprecation, if any.
+	DeprecationComment string
 }
 
 // VersionList holds all versions corresponding to a unique (module path,
@@ -67,8 +73,10 @@ type VersionList struct {
 type VersionSummary struct {
 	CommitTime string
 	// Link to this version, for use in the anchor href.
-	Link    string
-	Version string
+	Link                string
+	Version             string
+	Retracted           bool
+	RetractionRationale string
 }
 
 func fetchVersionsDetails(ctx context.Context, ds internal.DataSource, fullPath, modulePath string) (*VersionsDetails, error) {
@@ -92,7 +100,7 @@ func fetchVersionsDetails(ctx context.Context, ds internal.DataSource, fullPath,
 		}
 		return constructUnitURL(versionPath, mi.ModulePath, linkVersion(mi.Version, mi.ModulePath))
 	}
-	return buildVersionDetails(modulePath, versions, linkify), nil
+	return buildVersionDetails(ctx, modulePath, versions, linkify), nil
 }
 
 // pathInVersion constructs the full import path of the package corresponding
@@ -119,7 +127,7 @@ func pathInVersion(v1Path string, mi *internal.ModuleInfo) string {
 // versions tab, organizing major versions into those that have the same module
 // path as the package version under consideration, and those that don't.  The
 // given versions MUST be sorted first by module path and then by semver.
-func buildVersionDetails(currentModulePath string, modInfos []*internal.ModuleInfo, linkify func(v *internal.ModuleInfo) string) *VersionsDetails {
+func buildVersionDetails(ctx context.Context, currentModulePath string, modInfos []*internal.ModuleInfo, linkify func(v *internal.ModuleInfo) string) *VersionsDetails {
 	// lists organizes versions by VersionListKey. Note that major version isn't
 	// sufficient as a key: there are packages contained in the same major
 	// version of different modules, for example github.com/hashicorp/vault/api,
@@ -164,6 +172,12 @@ func buildVersionDetails(currentModulePath string, modInfos []*internal.ModuleIn
 			Link:       linkify(mi),
 			CommitTime: absoluteTime(mi.CommitTime),
 			Version:    linkVersion(mi.Version, mi.ModulePath),
+		}
+		if experiment.IsActive(ctx, internal.ExperimentRetractions) {
+			key.Deprecated = mi.Deprecated
+			key.DeprecationComment = mi.DeprecationComment
+			vs.Retracted = mi.Retracted
+			vs.RetractionRationale = mi.RetractionRationale
 		}
 		if _, ok := lists[key]; !ok {
 			seenLists = append(seenLists, key)

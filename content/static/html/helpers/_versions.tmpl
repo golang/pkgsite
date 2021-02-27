@@ -4,6 +4,8 @@
   license that can be found in the LICENSE file.
 -->
 
+{{/* . is internal/frontend.VersionsDetails */}}
+
 {{define "versions"}}
   <div class="Versions">
     <table>
@@ -24,15 +26,24 @@
   </div>
 {{end}}
 
+
+{{/* . is []*internal/frontend.VersionList */}}
+
 {{define "module_list"}}
   {{range $major := .}}
      {{range $i, $v := $major.Versions}}
        <tr>
          <td>
-           {{if eq $i 0 }}<div class="Versions-major">{{$major.Major}}</div>{{end}}
+           {{if eq $i 0 }}
+             <div class="Versions-major">
+               {{$major.Major}}
+               {{if $major.Deprecated}}(Deprecated{{with $major.DeprecationComment}}: {{.}}{{end}}){{end}}
+             </div>
+           {{end}}
          </td>
          <td>
            <a href="{{$v.Link}}">{{$v.Version}}</a>
+           {{if $v.Retracted}}(Retracted{{with .RetractionRationale}}: {{.}}){{end}}{{end}}
          </td>
          <td>
            <div class="Versions-commitTime">{{$v.CommitTime}}</div>
