@@ -47,18 +47,19 @@
         </div>
       {{end}}
 
-      {{if .Unit.Deprecated}}
-        <div class="UnitHeader-deprecatedBanner">
-          Deprecated{{with .Unit.DeprecationComment}}: {{.}}{{end}}
-	</div>
-      {{end}}
+     {{if (.Experiments.IsActive "retractions")}}
+       {{if .Unit.Deprecated}}
+          <div class="UnitHeader-deprecatedBanner">
+            Deprecated{{with .Unit.DeprecationComment}}: {{.}}{{end}}
+          </div>
+        {{end}}
 
-      {{if .Unit.Retracted}}
-        <div class="UnitHeader-retractedBanner">
-          Retracted{{with .Unit.RetractionRationale}}: {{.}}{{end}}
-	</div>
+        {{if .Unit.Retracted}}
+          <div class="UnitHeader-retractedBanner">
+            Retracted{{with .Unit.RetractionRationale}}: {{.}}{{end}}
+          </div>
+        {{end}}
       {{end}}
-
       {{if .LatestMajorVersion}}
         <div class="UnitHeader-majorVersionBanner" data-test-id="UnitHeader-majorVersionBanner">
           <img height="19px" width="16px" class="UnitHeader-detailIcon" src="/static/img/pkg-icon-info_19x16.svg" alt="">
