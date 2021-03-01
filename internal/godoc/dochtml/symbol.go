@@ -62,24 +62,23 @@ func variables(vars []*doc.Value, fset *token.FileSet) (_ []*internal.Symbol, er
 		specs := v.Decl.Specs
 		for _, spec := range specs {
 			valueSpec := spec.(*ast.ValueSpec) // must succeed; we can't mix types in one GenDecl.
-			if len(valueSpec.Names) != 1 {
-				return nil, fmt.Errorf("unexpected number of spec.Names: %d; want 1 (%v)", len(valueSpec.Names), v.Names)
+			for _, ident := range valueSpec.Names {
+				if ident.Name == "_" {
+					continue
+				}
+				vs := *valueSpec
+				if len(valueSpec.Names) != 0 {
+					vs.Names = []*ast.Ident{ident}
+				}
+				syn := render.ConstOrVarSynopsis(&vs, fset, token.VAR, "", 0, 0)
+				syms = append(syms,
+					&internal.Symbol{
+						Name:     ident.Name,
+						Synopsis: syn,
+						Section:  internal.SymbolSectionVariables,
+						Kind:     internal.SymbolKindVariable,
+					})
 			}
-			ident := valueSpec.Names[0]
-			if ident.Name == "_" {
-				continue
-			}
-			syn := render.OneLineNodeDepth(fset, v.Decl, 0)
-			if len(valueSpec.Values) != 0 {
-				syn = render.ConstOrVarSynopsis(valueSpec, fset, token.VAR, "", 0, 0)
-			}
-			syms = append(syms,
-				&internal.Symbol{
-					Name:     ident.Name,
-					Synopsis: syn,
-					Section:  internal.SymbolSectionVariables,
-					Kind:     internal.SymbolKindVariable,
-				})
 
 		}
 	}

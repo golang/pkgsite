@@ -59,6 +59,20 @@ func TestGetSymbols(t *testing.T) {
 			Kind:     "Variable",
 		},
 		{
+			Name:     "A",
+			Synopsis: "var A string",
+			Section:  "Variables",
+			Kind:     "Variable",
+		},
+
+		{
+			Name:     "B",
+			Synopsis: "var B string",
+			Section:  "Variables",
+			Kind:     "Variable",
+		},
+
+		{
 			Name:     "V",
 			Synopsis: "var V = 2",
 			Section:  "Variables",

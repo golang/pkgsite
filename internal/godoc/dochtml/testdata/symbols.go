@@ -28,6 +28,9 @@ const (
 // var
 var V = 2
 
+// Multiple variables on the same line.
+var A, B string
+
 // func
 func F() {}
 
