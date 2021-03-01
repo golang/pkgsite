@@ -12,7 +12,7 @@
     "lint": "run-s --continue-on-error \"lint:* -- {1}\" -- ",
     "lint:css": "stylelint **/*.css",
     "lint:ts": "eslint . --ext .ts",
-    "test": "run-s --continue-on-error lint:* test:*",
+    "test": "run-s --continue-on-error test:*",
     "test:typecheck": "tsc --noEmit",
     "test:jest": "jest --config devtools/config/jest.config.js content",
     "test:jest:e2e": "jest --config devtools/config/jest.config.js e2e",
