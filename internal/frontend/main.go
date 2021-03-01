@@ -73,6 +73,9 @@ type MainDetails struct {
 	// GOOS and GOARCH are the build context for the doc.
 	GOOS, GOARCH string
 
+	// BuildContexts holds the values for build contexts available for the doc.
+	BuildContexts []internal.BuildContext
+
 	// SourceFiles contains .go files for the package.
 	SourceFiles []*File
 
@@ -126,6 +129,7 @@ func fetchMainDetails(ctx context.Context, ds internal.DataSource, um *internal.
 		files              []*File
 		synopsis           string
 		goos, goarch       string
+		buildContexts      []internal.BuildContext
 	)
 
 	doc := internal.DocumentationForBuildContext(unit.Documentation, bc)
@@ -147,6 +151,10 @@ func fetchMainDetails(ctx context.Context, ds internal.DataSource, um *internal.
 		if len(unit.Documentation) == 1 && goos == "linux" && goarch == "amd64" {
 			goos = internal.All
 			goarch = internal.All
+		} else {
+			for _, v := range unit.Documentation {
+				buildContexts = append(buildContexts, v.BuildContext())
+			}
 		}
 
 		end := middleware.ElapsedStat(ctx, "DecodePackage")
@@ -211,6 +219,7 @@ func fetchMainDetails(ctx context.Context, ds internal.DataSource, um *internal.
 		DocSynopsis:       synopsis,
 		GOOS:              goos,
 		GOARCH:            goarch,
+		BuildContexts:     buildContexts,
 		SourceFiles:       files,
 		RepositoryURL:     um.SourceInfo.RepoURL(),
 		SourceURL:         um.SourceInfo.DirectoryURL(internal.Suffix(um.Path, um.ModulePath)),
