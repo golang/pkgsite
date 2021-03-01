@@ -780,7 +780,7 @@ func serverTestCases() []serverTestCase {
 			wantStatusCode: http.StatusOK,
 			want: in("",
 				pagecheck.UnitHeader(pkgV100, unversioned, isPackage),
-				notIn(".UnitDoc-buildContext")),
+				notIn(".UnitBuildContext-titleContext")),
 		},
 		{
 			name:           "package default redirect",
@@ -1041,7 +1041,7 @@ func serverTestCases() []serverTestCase {
 			wantStatusCode: http.StatusOK,
 			want: in("",
 				in(".Documentation-variables", hasText("var L")),
-				in(".UnitDoc-buildContext", hasText("GOOS=linux"))),
+				in(".UnitBuildContext-titleContext", hasText("linux/amd64"))),
 		},
 		{
 			name:           "two docs linux",
@@ -1049,7 +1049,7 @@ func serverTestCases() []serverTestCase {
 			wantStatusCode: http.StatusOK,
 			want: in("",
 				in(".Documentation-variables", hasText("var L")),
-				in(".UnitDoc-buildContext", hasText("GOOS=linux"))),
+				in(".UnitBuildContext-titleContext", hasText("linux/amd64"))),
 		},
 		{
 			name:           "two docs windows",
@@ -1057,7 +1057,7 @@ func serverTestCases() []serverTestCase {
 			wantStatusCode: http.StatusOK,
 			want: in("",
 				in(".Documentation-variables", hasText("var W")),
-				in(".UnitDoc-buildContext", hasText("GOOS=windows"))),
+				in(".UnitBuildContext-titleContext", hasText("windows/amd64"))),
 		},
 		{
 			name:           "two docs no match",
@@ -1065,7 +1065,7 @@ func serverTestCases() []serverTestCase {
 			wantStatusCode: http.StatusOK,
 			want: in("",
 				notIn(".Documentation-variables"),
-				notIn(".UnitDoc-buildContext")),
+				notIn(".UnitBuildContext-titleContext")),
 		},
 	}
 }

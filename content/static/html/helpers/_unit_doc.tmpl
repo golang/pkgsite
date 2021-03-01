@@ -9,14 +9,10 @@
     <h2 class="UnitDoc-title" id="section-documentation">
       <img height="25px" width="20px" src="/static/img/pkg-icon-doc_20x12.svg" alt="">Documentation
     </h2>
+    {{template "unit_build_context" .}}
     <div class="Documentation js-documentation">
       {{if .DocBody.String}}
         {{.DocBody}}
-        {{if or (ne .GOOS "all") (ne .GOARCH "all")}}
-          <div class=UnitDoc-buildContext>
-            GOOS={{.GOOS}}, GOARCH={{.GOARCH}}
-          </div>
-        {{end}}
       {{else}}
         <div class="UnitDoc-emptySection">
           <img src="/static/img/gopher-airplane.svg" alt="The Go Gopher"/>

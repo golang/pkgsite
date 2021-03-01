@@ -150,7 +150,7 @@
   top: 1.125rem;
   width: 1.5rem;
 }
-@media only screen and (min-width: 80rem) {
+@media only screen and (min-width: 90rem) {
   .UnitFixedHeader-overflowContainer {
     display: none;
   }
@@ -216,12 +216,12 @@
     padding: 0.5rem;
   }
 }
-@media only screen and (min-width: 64rem) {
+@media only screen and (min-width: 70rem) {
   .UnitHeaderFixed-detailItem--md {
     display: block;
   }
 }
-@media only screen and (min-width: 80rem) {
+@media only screen and (min-width: 90rem) {
   .UnitHeaderFixed-detailItem--lg {
     display: block;
   }

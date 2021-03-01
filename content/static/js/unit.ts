@@ -81,3 +81,8 @@ const directoriesOption = document.querySelector('.js-directoriesOption');
 if (!unitDirectories && directoriesOption) {
   directoriesOption.setAttribute('disabled', 'true');
 }
+document.querySelectorAll('.js-buildContextSelect').forEach(el => {
+  el.addEventListener('change', e => {
+    window.location.search = `?GOOS=${(e.target as HTMLSelectElement).value}`;
+  });
+});

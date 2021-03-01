@@ -78,6 +78,9 @@
                   {{.Details.ImportedByCount}} <span>Imported by</span>
                 </a>
               </span>
+              <span class="UnitHeaderFixed-detailItem UnitHeaderFixed-detailItem--lg">
+                {{template "unit_build_context" .Details}}
+              </span>
             {{end}}
           </div>
           <div class="UnitFixedHeader-overflowContainer">
