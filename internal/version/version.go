@@ -162,14 +162,23 @@ func appendNumericPrefix(dst []byte, n int) []byte {
 }
 
 // Later reports whether v1 is later than v2, using semver but preferring
-// release versions to pre-release versions.
+// release versions to pre-release versions, and both to pseudo-versions.
 func Later(v1, v2 string) bool {
-	pre1 := semver.Prerelease(v1) != ""
-	pre2 := semver.Prerelease(v2) != ""
-	if pre1 == pre2 {
+	rel1 := semver.Prerelease(v1) == ""
+	rel2 := semver.Prerelease(v2) == ""
+	if rel1 && rel2 {
 		return semver.Compare(v1, v2) > 0
 	}
-	return !pre1
+	if rel1 != rel2 {
+		return rel1
+	}
+	// Both are pre-release.
+	pseudo1 := IsPseudo(v1)
+	pseudo2 := IsPseudo(v2)
+	if pseudo1 == pseudo2 {
+		return semver.Compare(v1, v2) > 0
+	}
+	return !pseudo1
 }
 
 // Latest returns the latest version of a module from a list of versions, using

@@ -170,6 +170,17 @@ func TestLatest(t *testing.T) {
 			want:     "v1.9.0-pre",
 		},
 		{
+			name:     "prefer pre-release to pseudo",
+			versions: []string{"v1.0.0-20180713131340-b395d2d6f5ee", "v0.0.0-alpha"},
+			want:     "v0.0.0-alpha",
+		},
+
+		{
+			name:     "highest pseudo if no pre-release or release",
+			versions: []string{"v0.0.0-20180713131340-b395d2d6f5ee", "v0.0.0-20190124233150-8f7fa2680c82"},
+			want:     "v0.0.0-20190124233150-8f7fa2680c82",
+		},
+		{
 			name:     "use incompatible.mod",
 			versions: []string{"v1.2.3", "v1.0.0", "v2.0.0+incompatible"},
 			want:     "v2.0.0+incompatible",
