@@ -13,7 +13,6 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	"golang.org/x/mod/modfile"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/godoc"
 	"golang.org/x/pkgsite/internal/licenses"
@@ -386,12 +385,5 @@ func TestFetchAndUpdateRawLatest(t *testing.T) {
 	const wantVersion = "v1.1.0"
 	if got.ModulePath != modulePath || got.Version != wantVersion {
 		t.Errorf("got (%q, %q), want (%q, %q)", got.ModulePath, got.Version, modulePath, wantVersion)
-	}
-}
-
-func TestIsInternalError(t *testing.T) {
-	_, err := modfile.ParseLax("test", []byte("module m\nrequire github.com/googleapis/gax-go v2.0.4"), nil)
-	if isInternalError(err) {
-		t.Errorf("%v (%[1]T): should be user error, got isInternalError=true", err)
 	}
 }

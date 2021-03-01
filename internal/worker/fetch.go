@@ -16,7 +16,6 @@ import (
 	"unicode/utf8"
 
 	"go.opencensus.io/trace"
-	"golang.org/x/mod/modfile"
 	"golang.org/x/mod/semver"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/cache"
@@ -73,9 +72,6 @@ func (f *Fetcher) FetchAndUpdateState(ctx context.Context, modulePath, requested
 	if err := f.fetchAndUpdateRawLatest(ctx, modulePath); err != nil {
 		// Do not fail the fetch just because we couldn't update the raw latest info.
 		log.Errorf(ctx, "updating raw latest: %v", err)
-		if isInternalError(err) {
-			derrors.Report(err)
-		}
 	}
 
 	ft := f.fetchAndInsertModule(ctx, modulePath, requestedVersion)
@@ -134,19 +130,6 @@ func (f *Fetcher) FetchAndUpdateState(ctx context.Context, modulePath, requested
 	}
 	logTaskResult(ctx, ft, "Updated module version state")
 	return ft.Status, ft.ResolvedVersion, ft.Error
-}
-
-// isInternalError reports whether the error is a problem with the server, rather than
-// the incoming data.
-func isInternalError(err error) bool {
-	// Errors from modfile.ParseLax are user errors.
-	if e := (modfile.ErrorList{}); errors.As(err, &e) {
-		return false
-	}
-	if e := (&modfile.Error{}); errors.As(err, &e) {
-		return false
-	}
-	return true
 }
 
 // fetchAndInsertModule fetches the given module version from the module proxy
