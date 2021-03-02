@@ -37,6 +37,10 @@ while [[ $# -gt 0 ]]; do
       run_build=true
       shift
       ;;
+    "logs")
+      runcmd docker-compose -f devtools/config/docker-compose.yaml logs -f
+      exit $EXIT_CODE
+      ;;
     "nodejs" | "ci")
       trap cleanup EXIT SIGINT
 
