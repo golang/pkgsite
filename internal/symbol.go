@@ -4,6 +4,8 @@
 
 package internal
 
+import "sort"
+
 // SymbolSection is the documentation section where a symbol appears.
 type SymbolSection string
 
@@ -63,4 +65,56 @@ type Symbol struct {
 
 	// GOARCH specifies the execution architecture where the symbol appears.
 	GOARCH string
+}
+
+// UnitSymbol represents a symbol that is part of a unit.
+type UnitSymbol struct {
+	// TODO: factor out duplicate fields between Symbol and UnitSymbol
+	Name       string
+	ParentName string
+	Synopsis   string
+	Section    SymbolSection
+	Kind       SymbolKind
+
+	// Version is the unit version.
+	Version string
+
+	// builds are the build contexts that apply to this symbol.
+	builds map[BuildContext]bool
+}
+
+// BuildContexts returns the build contexts for this UnitSymbol.
+func (us *UnitSymbol) BuildContexts() []BuildContext {
+	var builds []BuildContext
+	for b := range us.builds {
+		builds = append(builds, b)
+	}
+	sort.Slice(builds, func(i, j int) bool {
+		return builds[i].GOOS < builds[j].GOOS
+	})
+	return builds
+}
+
+// AddBuildContext adds a build context supported by this UnitSymbol.
+func (us *UnitSymbol) AddBuildContext(build BuildContext) {
+	if us.builds == nil {
+		us.builds = map[BuildContext]bool{}
+	}
+	if build != BuildContextAll {
+		us.builds[build] = true
+		return
+	}
+	for _, b := range BuildContexts {
+		us.builds[b] = true
+	}
+}
+
+// SupportsBuild reports whether the provided build is supported by this
+// UnitSymbol. If the build is BuildContextAll, this is interpreted as this
+// unit symbol supports at least one build context.
+func (us *UnitSymbol) SupportsBuild(build BuildContext) bool {
+	if build == BuildContextAll {
+		return len(us.builds) > 0
+	}
+	return us.builds[build]
 }

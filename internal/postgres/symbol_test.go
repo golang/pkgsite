@@ -100,6 +100,10 @@ func TestInsertSymbolNamesAndHistory(t *testing.T) {
 		map[internal.BuildContext][]*internal.Symbol{
 			internal.BuildContextAll: api,
 		})
+
+	want2 := map[string]map[string]*internal.UnitSymbol{}
+	want2[mod.Version] = unitSymbolsFromAPI(api, mod.Version)
+	comparePackageSymbols(ctx, t, testDB, mod.Packages()[0].Path, mod.ModulePath, mod.Version, want2)
 }
 
 func TestInsertSymbolHistory_Basic(t *testing.T) {
@@ -202,6 +206,10 @@ func TestInsertSymbolHistory_Basic(t *testing.T) {
 		map[internal.BuildContext][]*internal.Symbol{
 			internal.BuildContextAll: api,
 		})
+
+	want2 := map[string]map[string]*internal.UnitSymbol{}
+	want2[mod.Version] = unitSymbolsFromAPI(api, mod.Version)
+	comparePackageSymbols(ctx, t, testDB, mod.Packages()[0].Path, mod.ModulePath, mod.Version, want2)
 }
 
 func TestInsertSymbolHistory_MultiVersions(t *testing.T) {
@@ -282,6 +290,21 @@ func TestInsertSymbolHistory_MultiVersions(t *testing.T) {
 	compareUnitSymbols(ctx, t, testDB, mod10.Packages()[0].Path, mod10.ModulePath, mod10.Version, want10)
 	compareUnitSymbols(ctx, t, testDB, mod11.Packages()[0].Path, mod11.ModulePath, mod11.Version, want11)
 	compareUnitSymbols(ctx, t, testDB, mod12.Packages()[0].Path, mod12.ModulePath, mod12.Version, want12)
+
+	want2 := map[string]map[string]*internal.UnitSymbol{}
+	for _, want := range []struct {
+		version        string
+		buildToSymbols map[internal.BuildContext][]*internal.Symbol
+	}{
+		{mod10.Version, want10},
+		{mod11.Version, want11},
+		{mod12.Version, want12},
+	} {
+		for _, api := range want.buildToSymbols {
+			want2[want.version] = unitSymbolsFromAPI(api, want.version)
+		}
+	}
+	comparePackageSymbols(ctx, t, testDB, mod10.Packages()[0].Path, mod10.ModulePath, mod10.Version, want2)
 }
 
 func TestInsertSymbolHistory_MultiGOOS(t *testing.T) {
@@ -420,6 +443,22 @@ func TestInsertSymbolHistory_MultiGOOS(t *testing.T) {
 	compareUnitSymbols(ctx, t, testDB, mod10.Packages()[0].Path, mod10.ModulePath, mod10.Version, want10)
 	compareUnitSymbols(ctx, t, testDB, mod11.Packages()[0].Path, mod11.ModulePath, mod11.Version, want11)
 	compareUnitSymbols(ctx, t, testDB, mod12.Packages()[0].Path, mod12.ModulePath, mod12.Version, want12)
+
+	want2 := map[string]map[string]*internal.UnitSymbol{}
+	for _, mod := range []*internal.Module{mod10, mod11, mod12} {
+		want2[mod.Version] = map[string]*internal.UnitSymbol{}
+		for _, pkg := range mod.Packages() {
+			for _, doc := range pkg.Documentation {
+				nameToUnitSym := unitSymbolsFromAPI(doc.API, mod.Version)
+				for name, unitSym := range nameToUnitSym {
+					if _, ok := want2[mod.Version][name]; !ok {
+						want2[mod.Version][name] = unitSym
+					}
+				}
+			}
+		}
+	}
+	comparePackageSymbols(ctx, t, testDB, mod10.Packages()[0].Path, mod10.ModulePath, mod10.Version, want2)
 }
 
 func moduleWithSymbols(t *testing.T, version string, symbols []*internal.Symbol) *internal.Module {
@@ -464,8 +503,46 @@ func compareUnitSymbols(ctx context.Context, t *testing.T, testDB *DB,
 				return s.Children[i].Synopsis < s.Children[j].Synopsis
 			})
 		}
-		if diff := cmp.Diff(want, got, cmpopts.IgnoreFields(internal.Symbol{}, "SinceVersion", "GOOS", "GOARCH")); diff != "" {
+		if diff := cmp.Diff(want, got,
+			cmpopts.IgnoreFields(internal.Symbol{}, "SinceVersion", "GOOS", "GOARCH")); diff != "" {
 			t.Fatalf("mismatch (-want +got):\n%s", diff)
 		}
 	}
+}
+
+func comparePackageSymbols(ctx context.Context, t *testing.T, testDB *DB,
+	path, modulePath, version string, want map[string]map[string]*internal.UnitSymbol) {
+	t.Helper()
+	got, err := testDB.GetPackageSymbols(ctx, path, modulePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if diff := cmp.Diff(want, got,
+		cmpopts.IgnoreFields(internal.UnitSymbol{}, "builds")); diff != "" {
+		t.Errorf("mismatch (-want +got):\n%s", diff)
+	}
+}
+
+func unitSymbolsFromAPI(api []*internal.Symbol, version string) map[string]*internal.UnitSymbol {
+	nameToUnitSymbols := map[string]*internal.UnitSymbol{}
+	updateSymbols(api, func(s *internal.Symbol) error {
+		if _, ok := nameToUnitSymbols[s.Name]; !ok {
+			us := unitSymbolFromSymbol(s, version)
+			nameToUnitSymbols[s.Name] = us
+		}
+		return nil
+	})
+	return nameToUnitSymbols
+}
+func unitSymbolFromSymbol(s *internal.Symbol, version string) *internal.UnitSymbol {
+	us := &internal.UnitSymbol{
+		Name:       s.Name,
+		ParentName: s.ParentName,
+		Section:    s.Section,
+		Kind:       s.Kind,
+		Synopsis:   s.Synopsis,
+		Version:    version,
+	}
+	us.AddBuildContext(internal.BuildContext{GOOS: s.GOOS, GOARCH: s.GOARCH})
+	return us
 }
