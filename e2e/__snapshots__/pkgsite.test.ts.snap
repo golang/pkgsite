@@ -484,6 +484,10 @@ Object {
       "role": "heading",
     },
     Object {
+      "name": "Expand all",
+      "role": "button",
+    },
+    Object {
       "name": "Path",
       "role": "text",
     },
@@ -492,68 +496,24 @@ Object {
       "role": "text",
     },
     Object {
-      "name": "cmd/frontend",
-      "role": "link",
+      "name": "4 more from cmd",
+      "role": "button",
     },
     Object {
-      "name": "The frontend runs a service to serve user-facing traffic.",
+      "name": "cmd",
       "role": "text",
     },
     Object {
-      "name": "cmd/internal/cmdconfig",
-      "role": "link",
+      "name": "3 more from devtools",
+      "role": "button",
     },
     Object {
-      "name": "Package cmdconfig contains functions for configuring commands.",
+      "name": "devtools",
       "role": "text",
     },
     Object {
-      "name": "cmd/pkgsite",
-      "role": "link",
-    },
-    Object {
-      "name": "This is a work in progress.",
-      "role": "text",
-    },
-    Object {
-      "name": "cmd/prober",
-      "role": "link",
-    },
-    Object {
-      "name": "The prober hits the frontend with a fixed set of URLs.",
-      "role": "text",
-    },
-    Object {
-      "name": "cmd/worker",
-      "role": "link",
-    },
-    Object {
-      "name": "The worker command runs a service with the primary job of fetching modules from a proxy and writing them to the database.",
-      "role": "text",
-    },
-    Object {
-      "name": "devtools/cmd/create_experiment_config",
-      "role": "link",
-    },
-    Object {
-      "name": "Command create_experiment_config creates an experiment.yaml file, which will set a rollout of 100 for all experiments.",
-      "role": "text",
-    },
-    Object {
-      "name": "devtools/cmd/csphash",
-      "role": "link",
-    },
-    Object {
-      "name": "csphash computes the hashes of script tags in files, and checks that they are added to our content security policy.",
-      "role": "text",
-    },
-    Object {
-      "name": "devtools/cmd/css",
-      "role": "link",
-    },
-    Object {
-      "name": "Command css appends CSS styles to content/static/stylesheet.css.",
-      "role": "text",
+      "name": "37 more from internal",
+      "role": "button",
     },
     Object {
       "name": "internal",
@@ -561,302 +521,6 @@ Object {
     },
     Object {
       "name": "Package internal contains data used through x/pkgsite.",
-      "role": "text",
-    },
-    Object {
-      "name": "internal/auth",
-      "role": "link",
-    },
-    Object {
-      "name": "Package auth authorizes programs to make HTTP requests to the discovery site.",
-      "role": "text",
-    },
-    Object {
-      "name": "internal/cache",
-      "role": "link",
-    },
-    Object {
-      "name": "Package cache implements a redis-based page cache for pkgsite.",
-      "role": "text",
-    },
-    Object {
-      "name": "internal/config",
-      "role": "link",
-    },
-    Object {
-      "name": "Package config resolves shared configuration for Go Discovery services, and provides functions to access this configuration.",
-      "role": "text",
-    },
-    Object {
-      "name": "internal/config/dynconfig",
-      "role": "link",
-    },
-    Object {
-      "name": "Package dynconfig supports dynamic configuration for pkgsite services.",
-      "role": "text",
-    },
-    Object {
-      "name": "internal/cookie",
-      "role": "link",
-    },
-    Object {
-      "name": "Package cookie is used to get and set HTTP cookies.",
-      "role": "text",
-    },
-    Object {
-      "name": "internal/database",
-      "role": "link",
-    },
-    Object {
-      "name": "Package database adds some useful functionality to a sql.DB.",
-      "role": "text",
-    },
-    Object {
-      "name": "internal/dcensus",
-      "role": "link",
-    },
-    Object {
-      "name": "Package dcensus provides functionality for debug instrumentation.",
-      "role": "text",
-    },
-    Object {
-      "name": "internal/derrors",
-      "role": "link",
-    },
-    Object {
-      "name": "Package derrors defines internal error values to categorize the different types error semantics we support.",
-      "role": "text",
-    },
-    Object {
-      "name": "internal/experiment",
-      "role": "link",
-    },
-    Object {
-      "name": "Package experiment provides functionality for experiments.",
-      "role": "text",
-    },
-    Object {
-      "name": "internal/fetch",
-      "role": "link",
-    },
-    Object {
-      "name": "Package fetch provides a way to fetch modules from a proxy.",
-      "role": "text",
-    },
-    Object {
-      "name": "internal/frontend",
-      "role": "link",
-    },
-    Object {
-      "name": "Package frontend provides functionality for running the pkg.go.dev site.",
-      "role": "text",
-    },
-    Object {
-      "name": "internal/godoc",
-      "role": "link",
-    },
-    Object {
-      "name": "Package godoc is for rendering Go documentation.",
-      "role": "text",
-    },
-    Object {
-      "name": "internal/godoc/codec",
-      "role": "link",
-    },
-    Object {
-      "name": "Package codec implements the general-purpose part of an encoder for Go values.",
-      "role": "text",
-    },
-    Object {
-      "name": "internal/godoc/dochtml",
-      "role": "link",
-    },
-    Object {
-      "name": "Package dochtml renders Go package documentation into HTML.",
-      "role": "text",
-    },
-    Object {
-      "name": "internal/godoc/dochtml/internal/render",
-      "role": "link",
-    },
-    Object {
-      "name": "Package render formats Go documentation as HTML.",
-      "role": "text",
-    },
-    Object {
-      "name": "internal/godoc/internal/doc",
-      "role": "link",
-    },
-    Object {
-      "name": "Package doc extracts source code documentation from a Go AST.",
-      "role": "text",
-    },
-    Object {
-      "name": "internal/index",
-      "role": "link",
-    },
-    Object {
-      "name": "Package index provides a client for communicating with the module index.",
-      "role": "text",
-    },
-    Object {
-      "name": "internal/licenses",
-      "role": "link",
-    },
-    Object {
-      "name": "Package licenses detects licenses and determines whether they are redistributable.",
-      "role": "text",
-    },
-    Object {
-      "name": "internal/localdatasource",
-      "role": "link",
-    },
-    Object {
-      "name": "Package localdatasource implements an in-memory internal.DataSource used to load and display documentation for local modules that are not available via a proxy.",
-      "role": "text",
-    },
-    Object {
-      "name": "internal/log",
-      "role": "link",
-    },
-    Object {
-      "name": "Package log supports structured and unstructured logging with levels.",
-      "role": "text",
-    },
-    Object {
-      "name": "internal/middleware",
-      "role": "link",
-    },
-    Object {
-      "name": "Package middleware implements a simple middleware pattern for http handlers, along with implementations for some common middlewares.",
-      "role": "text",
-    },
-    Object {
-      "name": "internal/poller",
-      "role": "link",
-    },
-    Object {
-      "name": "Package poller supports periodic polling to load a value.",
-      "role": "text",
-    },
-    Object {
-      "name": "internal/postgres",
-      "role": "link",
-    },
-    Object {
-      "name": "Package postgres provides functionality for reading and writing to the postgres database.",
-      "role": "text",
-    },
-    Object {
-      "name": "internal/proxy",
-      "role": "link",
-    },
-    Object {
-      "name": "Package proxy provides a client for interacting with a proxy.",
-      "role": "text",
-    },
-    Object {
-      "name": "internal/proxydatasource",
-      "role": "link",
-    },
-    Object {
-      "name": "Package proxydatasource implements an internal.DataSource backed solely by a proxy instance.",
-      "role": "text",
-    },
-    Object {
-      "name": "internal/queue",
-      "role": "link",
-    },
-    Object {
-      "name": "Package queue provides queue implementations that can be used for asynchronous scheduling of fetch actions.",
-      "role": "text",
-    },
-    Object {
-      "name": "internal/secrets",
-      "role": "link",
-    },
-    Object {
-      "name": "Package secrets is used to interact with secretmanager.",
-      "role": "text",
-    },
-    Object {
-      "name": "internal/source",
-      "role": "link",
-    },
-    Object {
-      "name": "Package source constructs public URLs that link to the source files in a module.",
-      "role": "text",
-    },
-    Object {
-      "name": "internal/stdlib",
-      "role": "link",
-    },
-    Object {
-      "name": "Package stdlib supports special handling of the Go standard library.",
-      "role": "text",
-    },
-    Object {
-      "name": "internal/testing/dbtest",
-      "role": "link",
-    },
-    Object {
-      "name": "Package dbtest supports testing with a database.",
-      "role": "text",
-    },
-    Object {
-      "name": "internal/testing/htmlcheck",
-      "role": "link",
-    },
-    Object {
-      "name": "Package htmlcheck provides a set of functions that check for properties of a parsed HTML document.",
-      "role": "text",
-    },
-    Object {
-      "name": "internal/testing/pagecheck",
-      "role": "link",
-    },
-    Object {
-      "name": "Package pagecheck implements HTML checkers for discovery site pages.",
-      "role": "text",
-    },
-    Object {
-      "name": "internal/testing/sample",
-      "role": "link",
-    },
-    Object {
-      "name": "Package sample provides functionality for generating sample values of the types contained in the internal package.",
-      "role": "text",
-    },
-    Object {
-      "name": "internal/testing/testhelper",
-      "role": "link",
-    },
-    Object {
-      "name": "Package testhelper provides shared functionality and constants to be used in Discovery tests.",
-      "role": "text",
-    },
-    Object {
-      "name": "internal/version",
-      "role": "link",
-    },
-    Object {
-      "name": "Package version handles version types.",
-      "role": "text",
-    },
-    Object {
-      "name": "internal/worker",
-      "role": "link",
-    },
-    Object {
-      "name": "Package worker provides functionality for running a worker service.",
-      "role": "text",
-    },
-    Object {
-      "name": "internal/xcontext",
-      "role": "link",
-    },
-    Object {
-      "name": "Package xcontext is a package to offer the extra functionality we need from contexts that is not available from the standard context package.",
       "role": "text",
     },
     Object {
