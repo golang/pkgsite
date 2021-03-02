@@ -46,6 +46,8 @@ services:
     image: pkgsite_frontend
     ports:
       - 8080:8080
+    volumes:
+      - './e2e-config.yaml:/app/experiment.yaml'
 
   migrate:
     depends_on:
