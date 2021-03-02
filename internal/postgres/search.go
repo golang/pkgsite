@@ -372,9 +372,23 @@ func (db *DB) addPackageDataToSearchResults(ctx context.Context, results []*inte
 				r.Licenses = append(r.Licenses, l)
 			}
 		}
+		r.Licenses = sortAndDedup(r.Licenses)
 		return nil
 	}
 	return db.db.RunQuery(ctx, query, collect)
+}
+
+func sortAndDedup(s []string) []string {
+	var r []string
+	m := map[string]bool{}
+	for _, x := range s {
+		m[x] = true
+	}
+	for x := range m {
+		r = append(r, x)
+	}
+	sort.Strings(r)
+	return r
 }
 
 var upsertSearchStatement = fmt.Sprintf(`

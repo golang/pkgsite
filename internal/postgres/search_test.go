@@ -23,6 +23,7 @@ import (
 	"go.opencensus.io/stats/view"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/testing/sample"
 )
 
@@ -684,6 +685,34 @@ func TestSearchBypass(t *testing.T) {
 		if got := (rs[0].Synopsis == ""); got != test.wantEmpty {
 			t.Errorf("bypass %t: got empty %t, want %t", test.db == bypassDB, got, test.wantEmpty)
 		}
+	}
+}
+
+func TestSearchLicenseDedup(t *testing.T) {
+	// Verify that a license type appears only once even if there are multiple
+	// licenses of that type.
+	t.Parallel()
+	testDB, release := acquire(t)
+	defer release()
+	ctx := context.Background()
+	m := sample.Module("example.com/mod", "v1.2.3", "pkg")
+	// Add a second MIT license in the pkg directory.
+	sample.AddLicense(m, &licenses.License{
+		Metadata: &licenses.Metadata{
+			Types:    []string{"MIT"},
+			FilePath: "pkg/LICENSE.md",
+		},
+	})
+	MustInsertModule(ctx, t, testDB, m)
+	got, err := testDB.Search(ctx, m.ModulePath, 10, 0, 100)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(got) != 1 {
+		t.Fatalf("got %d results, want 1", len(got))
+	}
+	if got, want := got[0].Licenses, []string{"MIT"}; !cmp.Equal(got, want) {
+		t.Errorf("got %v, want %v", got, want)
 	}
 }
 
