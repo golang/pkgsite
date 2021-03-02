@@ -178,7 +178,7 @@ export class PlaygroundExampleController {
 
     fetch('/play/share', {
       method: 'POST',
-      body: this.inputEl?.textContent,
+      body: this.inputEl?.value,
     })
       .then(res => res.text())
       .then(shareId => {

@@ -87,7 +87,7 @@ export class PlaygroundExampleController {
     this.setOutputText('Waiting for remote server…');
     fetch('/play/share', {
       method: 'POST',
-      body: (_a = this.inputEl) === null || _a === void 0 ? void 0 : _a.textContent,
+      body: (_a = this.inputEl) === null || _a === void 0 ? void 0 : _a.value,
     })
       .then(res => res.text())
       .then(shareId => {
