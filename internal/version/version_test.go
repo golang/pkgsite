@@ -152,11 +152,10 @@ func TestParseVersionType(t *testing.T) {
 	}
 }
 
-func TestLatest(t *testing.T) {
+func TestLatestOf(t *testing.T) {
 	for _, test := range []struct {
 		name     string
 		versions []string
-		allow    func(string) bool
 		want     string
 	}{
 		{
@@ -181,21 +180,78 @@ func TestLatest(t *testing.T) {
 			want:     "v0.0.0-20190124233150-8f7fa2680c82",
 		},
 		{
-			name:     "use incompatible.mod",
+			name:     "use incompatible",
 			versions: []string{"v1.2.3", "v1.0.0", "v2.0.0+incompatible"},
 			want:     "v2.0.0+incompatible",
 		},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			got := LatestOf(test.versions)
+			if got != test.want {
+				t.Errorf("got %s, want %s", got, test.want)
+			}
+		})
+	}
+}
+
+func TestLatest(t *testing.T) {
+	pseudo := "v0.0.0-20190124233150-8f7fa2680c82"
+	for _, test := range []struct {
+		name     string
+		versions []string
+		hasGoMod func(string) (bool, error)
+		want     string
+	}{
 		{
-			name:     "ignore incompatible",
-			versions: []string{"v1.2.3", "v1.0.0", "v2.0.0+incompatible"},
-			allow:    func(v string) bool { return !IsIncompatible(v) },
+			name:     "empty",
+			versions: nil,
+			want:     "",
+		},
+		{
+			name:     "tagged release",
+			versions: []string{pseudo, "v0.1.0", "v1.2.3-pre"},
+			want:     "v0.1.0",
+		},
+		{
+			name:     "tagged pre-release",
+			versions: []string{pseudo, "v1.2.3-pre"},
+			want:     "v1.2.3-pre",
+		},
+		{
+			name:     "pseudo",
+			versions: []string{pseudo},
+			want:     pseudo,
+		},
+		{
+			name:     "incompatible with go.mod",
+			versions: []string{"v2.0.0+incompatible", "v1.2.3"},
 			want:     "v1.2.3",
+		},
+		{
+			name:     "incompatible without go.mod",
+			versions: []string{"v2.0.0+incompatible", "v1.2.3"},
+			hasGoMod: func(v string) (bool, error) { return false, nil },
+			want:     "v2.0.0+incompatible",
+		},
+		{
+			name: "incompatible without tagged go.mod",
+			// Although the latest compatible version has a go.mod file,
+			// it is not a tagged version.
+			versions: []string{pseudo, "v2.0.0+incompatible"},
+			want:     "v2.0.0+incompatible",
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			got := Latest(test.versions, test.allow)
+
+			if test.hasGoMod == nil {
+				test.hasGoMod = func(v string) (bool, error) { return true, nil }
+			}
+			got, err := Latest(test.versions, test.hasGoMod)
+			if err != nil {
+				t.Fatal(err)
+			}
 			if got != test.want {
-				t.Errorf("got %s, want %s", got, test.want)
+				t.Errorf("got %q, want %q", got, test.want)
 			}
 		})
 	}

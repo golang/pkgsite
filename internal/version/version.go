@@ -181,20 +181,67 @@ func Later(v1, v2 string) bool {
 	return !pseudo1
 }
 
-// Latest returns the latest version of a module from a list of versions, using
+// Latest finds the latest version of a module using the same algorithm as the
+// Go command. It prefers tagged release versions to tagged pre-release
+// versions, and both of those to pseudo-versions. If versions is empty, Latest
+// returns the empty string.
+//
+// hasGoMod should report whether the version it is given has a go.mod file.
+// Latest returns the latest incompatible version only if the latest compatible
+// version does not have a go.mod file.
+func Latest(versions []string, hasGoMod func(v string) (bool, error)) (v string, err error) {
+	latest := LatestOf(versions)
+	if latest == "" {
+		return "", nil
+	}
+
+	// If the latest is a compatible version, use it.
+	if !IsIncompatible(latest) {
+		return latest, nil
+	}
+	// The latest version is incompatible. If there is a go.mod file at the
+	// latest compatible tagged version, assume the module author has adopted
+	// proper versioning, and use that latest compatible version. Otherwise, use
+	// this incompatible version.
+	latestCompat := LatestOf(RemoveIf(versions, func(v string) bool { return IsIncompatible(v) || IsPseudo(v) }))
+	if latestCompat == "" {
+		// No compatible versions; use the latest (incompatible) version.
+		return latest, nil
+	}
+	latestCompatHasGoMod, err := hasGoMod(latestCompat)
+	if err != nil {
+		return "", err
+	}
+	if latestCompatHasGoMod {
+		return latestCompat, nil
+	}
+	return latest, nil
+}
+
+// LatestOf returns the latest version of a module from a list of versions, using
 // the go command's definition of latest: semver is observed, except that
-// release versions are preferred to prerelease.
-// If allow is non-nil, then only versions for which allow returns true will be
-// considered. If no versions are allowed, the empty string is returned.
-func Latest(versions []string, allow func(string) bool) string {
-	var latest string
-	for _, v := range versions {
-		if allow != nil && !allow(v) {
-			continue
-		}
-		if latest == "" || Later(v, latest) {
+// release versions are preferred to prerelease, and both are preferred to pseudo-versions.
+// If versions is empty, the empty string is returned.
+func LatestOf(versions []string) string {
+	if len(versions) == 0 {
+		return ""
+	}
+	latest := versions[0]
+	for _, v := range versions[1:] {
+		if Later(v, latest) {
 			latest = v
 		}
 	}
 	return latest
+}
+
+// RemoveIf returns a copy of s that omits all values for which f returns true.
+func RemoveIf(s []string, f func(string) bool) []string {
+	var r []string
+	for _, x := range s {
+		if !f(x) {
+			r = append(r, x)
+		}
+	}
+	return r
 }

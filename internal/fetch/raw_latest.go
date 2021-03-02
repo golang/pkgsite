@@ -58,11 +58,7 @@ func fetchRawLatestVersion(ctx context.Context, modulePath string, prox *proxy.C
 		log.Debugf(ctx, "fetchRawLatestVersion(%q) => (%q, %v)", modulePath, v, err)
 	}()
 
-	if hasGoMod == nil {
-		hasGoMod = func(string) (bool, error) { return false, derrors.NotFound }
-	}
-
-	// Prefer tagged versions to pseudoversions. Get them from the proxy's list endpoint.
+	// Get tagged versions from the proxy's list endpoint.
 	taggedVersions, err := prox.Versions(ctx, modulePath)
 	if err != nil {
 		return "", err
@@ -77,35 +73,29 @@ func fetchRawLatestVersion(ctx context.Context, modulePath string, prox *proxy.C
 	}
 
 	// Find the latest of all tagged versions.
-	latest := version.Latest(taggedVersions, nil)
-	// If the latest is a compatible version, use it.
-	if !version.IsIncompatible(latest) {
-		return latest, nil
-	}
-	// The latest version is incompatible. If there is a go.mod file at the
-	// latest compatible version, assume the module author has adopted proper
-	// versioning, and use that latest compatible version. Otherwise, use this
-	// incompatible version.
-	latestCompat := version.Latest(taggedVersions, func(v string) bool { return !version.IsIncompatible(v) })
-	if latestCompat == "" {
-		// No compatible versions; use the latest (incompatible) version.
-		return latest, nil
-	}
-	latestCompatHasGoMod, err := hasGoMod(latestCompat)
-	if err != nil {
-		if !errors.Is(err, derrors.NotFound) {
-			return "", err
+	hasGoModFunc := func(v string) (bool, error) {
+		var (
+			has bool
+			err error
+		)
+		if hasGoMod == nil {
+			err = derrors.NotFound
+		} else {
+			has, err = hasGoMod(v)
 		}
-		// hasGoMod doesn't know; download the zip.
-		zr, err := prox.Zip(ctx, modulePath, latestCompat)
-		if err != nil {
-			return "", err
+		if err == nil {
+			return has, nil
+		} else if !errors.Is(err, derrors.NotFound) {
+			return false, err
+		} else {
+			// hasGoMod doesn't know; download the zip.
+			zr, err := prox.Zip(ctx, modulePath, v)
+			if err != nil {
+				return false, err
+			}
+			return hasGoModFile(zr, modulePath, v), nil
 		}
-		latestCompatHasGoMod = hasGoModFile(zr, modulePath, latestCompat)
 	}
-	if latestCompatHasGoMod {
-		return latestCompat, nil
-	} else {
-		return latest, nil
-	}
+	return version.Latest(taggedVersions, hasGoModFunc)
+
 }
