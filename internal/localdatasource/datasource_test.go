@@ -18,6 +18,7 @@ import (
 	"golang.org/x/pkgsite/internal/fetch"
 	"golang.org/x/pkgsite/internal/godoc/dochtml"
 	"golang.org/x/pkgsite/internal/licenses"
+	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/testing/testhelper"
 )
 
@@ -173,6 +174,11 @@ func TestGetUnitMeta(t *testing.T) {
 		{
 			path:       "github.com/not/loaded",
 			modulePath: internal.UnknownModulePath,
+			wantErr:    derrors.NotFound,
+		},
+		{
+			path:       "net/http",
+			modulePath: stdlib.ModulePath,
 			wantErr:    derrors.NotFound,
 		},
 	} {

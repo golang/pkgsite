@@ -98,7 +98,7 @@ func getFullPath(modulePath string) string {
 }
 
 // GetUnit returns information about a unit. Both the module path and package
-// path must both be known.
+// path must be known.
 func (ds *DataSource) GetUnit(ctx context.Context, pathInfo *internal.UnitMeta, fields internal.FieldSet) (_ *internal.Unit, err error) {
 	defer derrors.Wrap(&err, "GetUnit(%q, %q)", pathInfo.Path, pathInfo.ModulePath)
 
@@ -135,6 +135,9 @@ func (ds *DataSource) GetUnitMeta(ctx context.Context, path, requestedModulePath
 	ds.mu.Lock()
 	module := ds.loadedModules[requestedModulePath]
 	ds.mu.Unlock()
+	if module == nil {
+		return nil, fmt.Errorf("%s not loaded: %w", requestedModulePath, derrors.NotFound)
+	}
 
 	um := &internal.UnitMeta{
 		Path: path,
