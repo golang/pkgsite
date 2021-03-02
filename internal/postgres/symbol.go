@@ -405,7 +405,7 @@ func getUnitSymbols(ctx context.Context, db *database.DB, unitID int) (_ map[int
 }
 
 func getSymbolHistory(ctx context.Context, db *database.DB, packagePath, modulePath string) (_ map[internal.BuildContext]map[string]*internal.Symbol, err error) {
-	defer derrors.Wrap(&err, "getSymbolHistoryForPath(ctx, db, %q, %q)", packagePath, modulePath)
+	defer derrors.Wrap(&err, "getSymbolHistory(ctx, db, %q, %q)", packagePath, modulePath)
 	query := `
         SELECT
             s1.name AS symbol_name,
@@ -480,13 +480,11 @@ func (db *DB) CompareStdLib(ctx context.Context) (map[string][]string, error) {
 	}
 	pkgToErrors := map[string][]string{}
 	for path := range apiVersions {
-		hist, err := getSymbolHistory(ctx, db.db, path, stdlib.ModulePath)
+		versionToNameToSymbol, err := db.GetPackageSymbols(ctx, path, stdlib.ModulePath)
 		if err != nil {
 			return nil, err
 		}
-		// symbol.ParsePackageAPIInfo does not support OS/ARCH-dependent symbols.
-		data := hist[internal.BuildContext{GOOS: "linux", GOARCH: "amd64"}]
-		errs := symbol.CompareStdLib(path, apiVersions[path], data)
+		errs := symbol.CompareStdLib(path, apiVersions[path], versionToNameToSymbol)
 		if len(errs) > 0 {
 			pkgToErrors[path] = errs
 		}

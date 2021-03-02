@@ -118,3 +118,8 @@ func (us *UnitSymbol) SupportsBuild(build BuildContext) bool {
 	}
 	return us.builds[build]
 }
+
+// InAll reports whether the unit symbol supports all build contexts.
+func (us *UnitSymbol) InAll() bool {
+	return len(us.builds) == len(BuildContexts)
+}

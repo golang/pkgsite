@@ -9,6 +9,7 @@ import (
 	"sort"
 	"strings"
 
+	"golang.org/x/mod/semver"
 	"golang.org/x/pkgsite/internal"
 )
 
@@ -237,7 +238,29 @@ var pathToEmbeddedMethods = map[string]map[string]string{
 
 // CompareStdLib compares the since version data for symbols with the data for
 // apiVersions, which is obtained from the api folder of runtime.GOROOT.
-func CompareStdLib(path string, apiVersions pkgAPIVersions, symbols map[string]*internal.Symbol) []string {
+func CompareStdLib(path string, apiVersions pkgAPIVersions,
+	inVersionToNameToUnitSymbol map[string]map[string]*internal.UnitSymbol) []string {
+	versionToNameToUnitSymbol := IntroducedHistory(inVersionToNameToUnitSymbol)
+
+	// Create a map of name to the first version when the symbol name was found
+	// in the package.
+	nameToVersion := map[string]string{}
+	for version, nts := range versionToNameToUnitSymbol {
+		for name := range nts {
+			if _, ok := nameToVersion[name]; !ok {
+				nameToVersion[name] = version
+				continue
+			}
+			// Track the first version when the symbol name is addded. It is
+			// possible for the symbol name to appear in multiple versions if
+			// it is introduced at different build contexts, but the godoc
+			// logic that generates apiVersions does not.
+			if semver.Compare(version, nameToVersion[name]) == -1 {
+				nameToVersion[name] = version
+			}
+		}
+	}
+
 	var errors []string
 	check := func(name, version string) {
 		if strings.HasSuffix(name, "embedded") {
@@ -263,10 +286,10 @@ func CompareStdLib(path string, apiVersions pkgAPIVersions, symbols map[string]*
 				return
 			}
 		}
-		got, ok := symbols[name]
+		got, ok := nameToVersion[name]
 		if !ok {
 			errors = append(errors, fmt.Sprintf("not found: (added in %q) %q \n", version, name))
-		} else if g := strings.TrimSuffix(strings.TrimPrefix(got.SinceVersion, "v"), ".0"); g != version {
+		} else if g := strings.TrimSuffix(strings.TrimPrefix(got, "v"), ".0"); g != version {
 			errors = append(errors, fmt.Sprintf("mismatch: (added in %q | got %q) %q\n", version, g, name))
 		}
 	}
