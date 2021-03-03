@@ -2,7 +2,7 @@
 # Use of this source code is governed by a BSD-style
 # license that can be found in the LICENSE file.
 
-version: '3'
+version: '2.4'
 services:
   # nodejs is used to run npm scripts from ../../package.json. It mounts the
   # pkgsite root directory into a container and obscures the git directories
