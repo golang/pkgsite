@@ -139,6 +139,7 @@ var (
 		"Artistic-2.0",
 		"BlueOak-1.0.0",
 		"0BSD",
+		"BSD-1-Clause",
 		"BSD-2-Clause",
 		"BSD-2-Clause-Views",
 		"BSD-3-Clause",
