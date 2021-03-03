@@ -189,6 +189,14 @@ func Later(v1, v2 string) bool {
 // hasGoMod should report whether the version it is given has a go.mod file.
 // Latest returns the latest incompatible version only if the latest compatible
 // version does not have a go.mod file.
+//
+// The meaning of latest is defined at
+// https://golang.org/ref/mod#version-queries. That definition does not deal
+// with retractions, or with a subtlety involving incompatible versions. The
+// actual definition is embodied in the go command's queryMatcher.filterVersions
+// method. This function is a re-implementation and specialization of that
+// method at Go version 1.16
+// (https://go.googlesource.com/go/+/refs/tags/go1.16/src/cmd/go/internal/modload/query.go#441).
 func Latest(versions []string, hasGoMod func(v string) (bool, error)) (v string, err error) {
 	latest := LatestOf(versions)
 	if latest == "" {
