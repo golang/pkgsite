@@ -60,7 +60,7 @@ func TestGetUnitMeta(t *testing.T) {
 		}
 	}
 
-	addRawLatest(ctx, t, testDB, "m.com", "v.1.1.0", "module m.com\nretract v1.0.1 // bad")
+	addLatest(ctx, t, testDB, "m.com", "v.1.1.0", "module m.com\nretract v1.0.1 // bad")
 
 	type teststruct struct {
 		name                  string

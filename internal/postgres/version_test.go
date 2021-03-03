@@ -65,7 +65,7 @@ func TestGetVersions(t *testing.T) {
 		MustInsertModule(ctx, t, testDB, m)
 	}
 	// Add raw latest version info for rootModule.
-	addRawLatest(ctx, t, testDB, rootModule, "v1.1.0", `
+	addLatest(ctx, t, testDB, rootModule, "v1.1.0", `
 		module golang.org/foo/bar // Deprecated: use other
 		retract v1.0.3 // security flaw
     `)
@@ -414,12 +414,12 @@ func TestShouldUpdateRawLatest(t *testing.T) {
 	}
 }
 
-func addRawLatest(ctx context.Context, t *testing.T, db *DB, modulePath, version, modFile string) {
-	info, err := internal.NewRawLatestInfo(modulePath, version, []byte(modFile))
+func addLatest(ctx context.Context, t *testing.T, db *DB, modulePath, version, modFile string) {
+	info, err := internal.NewLatestModuleVersions(modulePath, version, version, "", []byte(modFile))
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := db.UpdateRawLatestInfo(ctx, info); err != nil {
+	if err := db.UpdateLatestModuleVersions(ctx, info); err != nil {
 		t.Fatal(err)
 	}
 }

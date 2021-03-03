@@ -93,7 +93,7 @@ func getPathVersions(ctx context.Context, db *DB, path string, versionTypes ...v
 	if err := db.db.RunQuery(ctx, query, collect, path); err != nil {
 		return nil, err
 	}
-	if err := populateRawLatestInfos(ctx, db, versions); err != nil {
+	if err := populateLatestInfos(ctx, db, versions); err != nil {
 		return nil, err
 	}
 	return versions, nil
@@ -109,48 +109,48 @@ func versionTypeExpr(vts []version.Type) string {
 	return strings.Join(vs, ", ")
 }
 
-func populateRawLatestInfo(ctx context.Context, db *DB, mi *internal.ModuleInfo) (err error) {
-	defer derrors.WrapStack(&err, "populateRawLatestInfo(%q)", mi.ModulePath)
+func populateLatestInfo(ctx context.Context, db *DB, mi *internal.ModuleInfo) (err error) {
+	defer derrors.WrapStack(&err, "populateLatestInfo(%q)", mi.ModulePath)
 
 	if experiment.IsActive(ctx, internal.ExperimentRetractions) {
 		// Get information about retractions an deprecations, and apply it.
 		start := time.Now()
-		info, err := db.GetRawLatestInfo(ctx, mi.ModulePath)
+		lmv, err := db.GetLatestModuleVersions(ctx, mi.ModulePath)
 		if err != nil {
 			return err
 		}
-		if info != nil {
-			info.PopulateModuleInfo(mi)
+		if lmv != nil {
+			lmv.PopulateModuleInfo(mi)
 		}
-		log.Debugf(ctx, "raw latest info fetched and applied in %dms", time.Since(start).Milliseconds())
+		log.Debugf(ctx, "latest info fetched and applied in %dms", time.Since(start).Milliseconds())
 	}
 	return nil
 }
 
-func populateRawLatestInfos(ctx context.Context, db *DB, mis []*internal.ModuleInfo) (err error) {
-	defer derrors.WrapStack(&err, "populateRawLatestInfos(%d ModuleInfos)", len(mis))
+func populateLatestInfos(ctx context.Context, db *DB, mis []*internal.ModuleInfo) (err error) {
+	defer derrors.WrapStack(&err, "populateLatestInfos(%d ModuleInfos)", len(mis))
 
 	if experiment.IsActive(ctx, internal.ExperimentRetractions) {
 		start := time.Now()
-		// Collect the RawLatestInfos for all modules in the list.
-		infos := map[string]*internal.RawLatestInfo{}
+		// Collect the LatestModuleVersions for all modules in the list.
+		lmvs := map[string]*internal.LatestModuleVersions{}
 		for _, mi := range mis {
-			if _, ok := infos[mi.ModulePath]; !ok {
-				info, err := db.GetRawLatestInfo(ctx, mi.ModulePath)
+			if _, ok := lmvs[mi.ModulePath]; !ok {
+				lmv, err := db.GetLatestModuleVersions(ctx, mi.ModulePath)
 				if err != nil {
 					return err
 				}
-				infos[mi.ModulePath] = info
+				lmvs[mi.ModulePath] = lmv
 			}
 		}
-		// Use the collected RawLatestInfos to populate the ModuleInfos.
+		// Use the collected LatestModuleVersions to populate the ModuleInfos.
 		for _, mi := range mis {
-			info := infos[mi.ModulePath]
-			if info != nil {
-				info.PopulateModuleInfo(mi)
+			lmv := lmvs[mi.ModulePath]
+			if lmv != nil {
+				lmv.PopulateModuleInfo(mi)
 			}
 		}
-		log.Debugf(ctx, "raw latest info fetched and applied in %dms", time.Since(start).Milliseconds())
+		log.Debugf(ctx, "latest info fetched and applied in %dms", time.Since(start).Milliseconds())
 	}
 	return nil
 }

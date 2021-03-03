@@ -71,7 +71,7 @@ func (db *DB) GetUnitMeta(ctx context.Context, fullPath, requestedModulePath, re
 		}
 
 		um.Licenses = lics
-		if err := populateRawLatestInfo(ctx, db, &um.ModuleInfo); err != nil {
+		if err := populateLatestInfo(ctx, db, &um.ModuleInfo); err != nil {
 			return nil, err
 		}
 		return &um, nil

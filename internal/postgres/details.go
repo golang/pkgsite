@@ -64,7 +64,7 @@ func (db *DB) GetNestedModules(ctx context.Context, modulePath string) (_ []*int
 		return nil, err
 	}
 
-	if err := populateRawLatestInfos(ctx, db, modules); err != nil {
+	if err := populateLatestInfos(ctx, db, modules); err != nil {
 		return nil, err
 	}
 
@@ -168,7 +168,7 @@ func (db *DB) GetModuleInfo(ctx context.Context, modulePath, resolvedVersion str
 		return nil, fmt.Errorf("row.Scan(): %v", err)
 	}
 
-	if err := populateRawLatestInfo(ctx, db, mi); err != nil {
+	if err := populateLatestInfo(ctx, db, mi); err != nil {
 		return nil, err
 	}
 	return mi, nil
