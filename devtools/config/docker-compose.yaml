@@ -53,6 +53,7 @@ services:
     depends_on:
       - wait_for_db
     image: migrate/migrate:v4.14.1
+    restart: on-failure:5
     volumes:
       - ../../migrations:/pkgsite/migrations
     command:
