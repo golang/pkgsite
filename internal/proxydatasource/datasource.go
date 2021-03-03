@@ -109,11 +109,11 @@ func (ds *DataSource) getModule(ctx context.Context, modulePath, version string)
 		}
 		// Use the go.mod file at the raw latest version to fill in deprecation
 		// and retraction information.
-		rawLatest, err := fetch.RawLatestInfo(ctx, modulePath, ds.proxyClient, nil)
+		lmv, err := fetch.LatestModuleVersions(ctx, modulePath, ds.proxyClient, nil)
 		if err != nil {
 			res.Error = err
 		} else {
-			rawLatest.PopulateModuleInfo(&m.ModuleInfo)
+			lmv.PopulateModuleInfo(&m.ModuleInfo)
 		}
 	}
 
