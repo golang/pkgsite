@@ -185,9 +185,9 @@ npm() {
 run_e2e() {
   # Run npm install if node_modules directory does not exist.
   if [ ! -d "node_modules" ]; then
-    ./devtools/docker_compose.sh ci npm install --quiet
+    ./devtools/docker_compose.sh nodejs npm install --quiet
   fi
-  ./devtools/docker_compose.sh ci npm run test:jest:e2e -- $@
+  ./devtools/docker_compose.sh --build ci npm run test:jest:e2e -- $@
 }
 
 prettier_file_globs='content/static/**/*.{js,css} **/*.md'
