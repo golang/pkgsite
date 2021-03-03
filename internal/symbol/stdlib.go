@@ -19,7 +19,7 @@ var pathToExceptions = map[string]map[string]bool{
 	// golang.org/pkg/encoding/json to show that this symbol was introduced in
 	// go1.8. We want to show go1.1 on pkg.go.dev.
 	"encoding/json": {
-		"RawMessage": true,
+		"RawMessage.MarshalJSON": true,
 	},
 	// Package syscall doesn't follow the Go 1 compatibility promise like all
 	// other normal packages in the standard library. See
@@ -32,7 +32,8 @@ var pathToExceptions = map[string]map[string]bool{
 		//     pkg syscall type RawSockaddrInet6 struct
 		// As a result, golang.org/pkg/syscall only recognizes its existence as
 		// of go1.1.
-		// The same is true for RawSockaddrUnix and TimespecToNsec.
+		// The same is true for RawSockaddrUnix, TimespecToNsec, and
+		// NsecToTimespec.
 		"RawSockaddrInet6":          true,
 		"RawSockaddrInet6.Addr":     true,
 		"RawSockaddrInet6.Flowinfo": true,
@@ -40,6 +41,7 @@ var pathToExceptions = map[string]map[string]bool{
 		"RawSockaddrInet6.Scope_id": true,
 		"RawSockaddrUnix":           true,
 		"TimespecToNsec":            true,
+		"NsecToTimespec":            true,
 	},
 }
 
@@ -51,6 +53,11 @@ var pathToEmbeddedMethods = map[string]map[string]string{
 		// https://pkg.go.dev/archive/zip@go1.6#ReadCloser
 		// Embedded https://pkg.go.dev/archive/zip#Reader.RegisterDecompressor
 		"ReadCloser.RegisterDecompressor": "v1.6.0",
+		// https://pkg.go.dev/archive/zip@go1.16#ReadCloser
+		// method Open was added to embedded struct in go1.16
+		// https://pkg.go.dev/archive/zip@go1.16#Reader.Open
+		// Release notes: https://golang.org/doc/go1.16#archive/zip
+		"ReadCloser.Open": "v1.16.0",
 	},
 	"bufio": {
 		// https://pkg.go.dev/bufio@go1.1#ReadWriter
@@ -175,6 +182,14 @@ var pathToEmbeddedMethods = map[string]map[string]string{
 		// https://pkg.go.dev/text/template/parse@go1.1#CommandNode
 		// Embedded https://pkg.go.dev/text/template/parse#Pos.Position
 		"CommandNode.Position": "v1.1.0",
+		// https://pkg.go.dev/text/template/parse@go1.16#CommentNode
+		// Embedded https://pkg.go.dev/text/template/parse@go1.16#Pos.Position
+		// Release notes: https://golang.org/doc/go1.16#text/template/parse
+		"CommentNode.Position": "v1.16.0",
+		// https://pkg.go.dev/text/template/parse@go1.16#CommentNode
+		// Embedded https://pkg.go.dev/text/template/parse@go1.16#NodeType.Type
+		// Release notes: https://golang.org/doc/go1.16#text/template/parse
+		"CommentNode.Type": "v1.16.0",
 		// https://pkg.go.dev/text/template/parse@go1.1#DotNode
 		// Embedded https://pkg.go.dev/text/template/parse#Pos.Position
 		"DotNode.Position": "v1.1.0",
