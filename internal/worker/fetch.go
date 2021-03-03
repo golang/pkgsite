@@ -67,15 +67,22 @@ func (f *Fetcher) FetchAndUpdateState(ctx context.Context, modulePath, requested
 		trace.StringAttribute("version", requestedVersion))
 	defer span.End()
 
-	// Whenever we fetch a module, make sure its raw latest information is up to
-	// date in the DB.
-	if err := f.fetchAndUpdateRawLatest(ctx, modulePath); err != nil {
-		// Do not fail the fetch just because we couldn't update the raw latest info.
-		log.Errorf(ctx, "updating raw latest: %v", err)
-	}
-
 	ft := f.fetchAndInsertModule(ctx, modulePath, requestedVersion)
 	span.AddAttributes(trace.Int64Attribute("numPackages", int64(len(ft.PackageVersionStates))))
+
+	// Whenever we fetch a module successfully -- even if the module itself is
+	// bad in some way -- make sure its latest information is up to date in the
+	// DB.
+	if ft.Status < 500 {
+		if err := f.fetchAndUpdateLatest(ctx, modulePath); err != nil {
+			log.Errorf(ctx, "%v", err)
+			// Do not overwrite an error from insertion.
+			if ft.Error == nil {
+				ft.Error = err
+				ft.Status = http.StatusInternalServerError
+			}
+		}
+	}
 
 	// If there were any errors processing the module then we didn't insert it.
 	// Delete it in case we are reprocessing an existing module.
@@ -387,14 +394,14 @@ func logTaskResult(ctx context.Context, ft *fetchTask, prefix string) {
 		prefix, ft.ModulePath, ft.ResolvedVersion, ft.Status, len(ft.PackageVersionStates), ft.Error, msg)
 }
 
-// fetchAndUpdateRawLatest fetches information about the raw latest version from the proxy,
+// fetchAndUpdateLatest fetches information about the raw latest version from the proxy,
 // and updates the database if the version has changed.
-func (f *Fetcher) fetchAndUpdateRawLatest(ctx context.Context, modulePath string) (err error) {
-	defer derrors.Wrap(&err, "fetchAndUpdateRawLatest(%q)", modulePath)
+func (f *Fetcher) fetchAndUpdateLatest(ctx context.Context, modulePath string) (err error) {
+	defer derrors.Wrap(&err, "fetchAndUpdateLatest(%q)", modulePath)
 	if modulePath == stdlib.ModulePath {
 		return nil
 	}
-	info, err := fetch.RawLatestInfo(ctx, modulePath, f.ProxyClient, func(v string) (bool, error) {
+	lmv, err := fetch.LatestModuleVersions(ctx, modulePath, f.ProxyClient, func(v string) (bool, error) {
 		modinfo, err := f.DB.GetModuleInfo(ctx, modulePath, v)
 		if err != nil {
 			return false, err
@@ -404,9 +411,5 @@ func (f *Fetcher) fetchAndUpdateRawLatest(ctx context.Context, modulePath string
 	if err != nil {
 		return err
 	}
-	if info == nil {
-		// No info (e.g. for stdlib); that's fine.
-		return nil
-	}
-	return f.DB.UpdateRawLatestInfo(ctx, info)
+	return f.DB.UpdateLatestModuleVersions(ctx, lmv)
 }

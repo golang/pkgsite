@@ -33,7 +33,9 @@ func LatestModuleVersions(ctx context.Context, modulePath string, prox *proxy.Cl
 	defer derrors.WrapStack(&err, "LatestModuleVersions(%q)", modulePath)
 
 	defer func() {
-		log.Debugf(ctx, "LatestModuleVersions(%q) => (raw=%q cooked=%q, %v)", modulePath, info.RawVersion, info.CookedVersion, err)
+		if info != nil {
+			log.Debugf(ctx, "LatestModuleVersions(%q) => (raw=%q cooked=%q, %v)", modulePath, info.RawVersion, info.CookedVersion, err)
+		}
 	}()
 
 	// Remember calls to hasGoMod because they can be expensive.

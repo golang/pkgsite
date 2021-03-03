@@ -364,26 +364,31 @@ func TestFetchAndUpdateState(t *testing.T) {
 	}
 }
 
-func TestFetchAndUpdateRawLatest(t *testing.T) {
+func TestFetchAndUpdateLatest(t *testing.T) {
 	ctx := context.Background()
 	prox, teardown := proxy.SetupTestClient(t, testModules)
 	defer teardown()
 
-	const modulePath = "example.com/basic"
+	const modulePath = "example.com/retractions"
 	f := &Fetcher{
 		ProxyClient:  prox,
 		SourceClient: source.NewClient(sourceTimeout),
 		DB:           testDB,
 	}
-	if err := f.fetchAndUpdateRawLatest(ctx, modulePath); err != nil {
+	if err := f.fetchAndUpdateLatest(ctx, modulePath); err != nil {
 		t.Fatal(err)
 	}
-	got, err := testDB.GetRawLatestInfo(ctx, modulePath)
+	got, err := testDB.GetLatestModuleVersions(ctx, modulePath)
 	if err != nil {
 		t.Fatal(err)
 	}
-	const wantVersion = "v1.1.0"
-	if got.ModulePath != modulePath || got.Version != wantVersion {
-		t.Errorf("got (%q, %q), want (%q, %q)", got.ModulePath, got.Version, modulePath, wantVersion)
+	const (
+		wantRaw    = "v1.2.0"
+		wantCooked = "v1.0.0"
+	)
+	if got.ModulePath != modulePath || got.RawVersion != wantRaw || got.CookedVersion != wantCooked {
+		t.Errorf("got (%q, %q, %q), want (%q, %q, %q)",
+			got.ModulePath, got.RawVersion, got.CookedVersion,
+			modulePath, wantRaw, wantCooked)
 	}
 }
