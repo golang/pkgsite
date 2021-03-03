@@ -14,7 +14,7 @@ const e2e = process.argv.includes('e2e');
 if (e2e) {
   config = {
     ...config,
-    setupFilesAfterEnv: ['<rootDir>/devtools/config/e2e-test-setup.ts'],
+    setupFilesAfterEnv: ['<rootDir>/e2e/setup.ts'],
     testEnvironment: 'node',
   };
 }
