@@ -7,6 +7,7 @@ let config = {
     },
   },
   moduleFileExtensions: ['ts', 'js'],
+  testRunner: 'jest-circus/runner',
 };
 
 // eslint-disable-next-line no-undef
