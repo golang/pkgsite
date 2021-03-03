@@ -47,12 +47,12 @@ modified_files() {
   fi
 }
 
+
 # Helper for modified_files. It asks git for all modified, added or deleted
 # files, and keeps only the latter two.
 diff_files() {
-  git diff --name-status $* | awk '$1 != "D" { print $2 }'
+  git diff --name-status $* | awk '$1 ~ /^R/ { print $3; next } $1 != "D" { print $2 }'
 }
-
 
 # codedirs lists directories that contain discovery code. If they include
 # directories containing external code, those directories must be excluded in

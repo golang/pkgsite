@@ -64,7 +64,7 @@ func TestGetVersions(t *testing.T) {
 	for _, m := range testModules {
 		MustInsertModule(ctx, t, testDB, m)
 	}
-	// Add raw latest version info for rootModule.
+	// Add latest version info for rootModule.
 	addLatest(ctx, t, testDB, rootModule, "v1.1.0", `
 		module golang.org/foo/bar // Deprecated: use other
 		retract v1.0.3 // security flaw
@@ -367,33 +367,6 @@ func TestGetLatestInfo(t *testing.T) {
 			}
 		})
 	}
-}
-
-func TestRawLatestInfo(t *testing.T) {
-	t.Parallel()
-	testDB, release := acquire(t)
-	defer release()
-	ctx := context.Background()
-
-	check := func(v string) {
-		info, err := internal.NewRawLatestInfo("m", v, []byte(`module m`))
-		if err != nil {
-			t.Fatal(err)
-		}
-		if err := testDB.UpdateRawLatestInfo(ctx, info); err != nil {
-			t.Fatal(err)
-		}
-		got, err := testDB.GetRawLatestInfo(ctx, "m")
-		if err != nil {
-			t.Fatal(err)
-		}
-		if diff := cmp.Diff(info, got, cmp.AllowUnexported(internal.RawLatestInfo{})); diff != "" {
-			t.Fatalf("mismatch (-want, +got): %s", diff)
-		}
-	}
-
-	check("v1.0.0")
-	check("v1.2.3")
 }
 
 func TestShouldUpdateRawLatest(t *testing.T) {

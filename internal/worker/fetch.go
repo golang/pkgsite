@@ -394,7 +394,7 @@ func logTaskResult(ctx context.Context, ft *fetchTask, prefix string) {
 		prefix, ft.ModulePath, ft.ResolvedVersion, ft.Status, len(ft.PackageVersionStates), ft.Error, msg)
 }
 
-// fetchAndUpdateLatest fetches information about the raw latest version from the proxy,
+// fetchAndUpdateLatest fetches information about the latest versions from the proxy,
 // and updates the database if the version has changed.
 func (f *Fetcher) fetchAndUpdateLatest(ctx context.Context, modulePath string) (err error) {
 	defer derrors.Wrap(&err, "fetchAndUpdateLatest(%q)", modulePath)

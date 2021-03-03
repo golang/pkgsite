@@ -6,6 +6,7 @@ package internal
 
 import (
 	"fmt"
+	"strings"
 
 	"golang.org/x/mod/modfile"
 	"golang.org/x/mod/semver"
@@ -40,6 +41,25 @@ func NewLatestModuleVersions(modulePath, raw, cooked, good string, modBytes []by
 		deprecated:         dep,
 		deprecationComment: comment,
 	}, nil
+}
+
+// isDeprecated reports whether the go.mod deprecates this module.
+// It looks for "Deprecated" comments in the line comments before and next to
+// the module declaration. If it finds one, it returns true along with the text
+// after "Deprecated:". Otherwise it returns false, "".
+func isDeprecated(mf *modfile.File) (bool, string) {
+	const prefix = "Deprecated:"
+
+	if mf.Module == nil {
+		return false, ""
+	}
+	for _, comment := range append(mf.Module.Syntax.Before, mf.Module.Syntax.Suffix...) {
+		text := strings.TrimSpace(strings.TrimPrefix(comment.Token, "//"))
+		if strings.HasPrefix(text, prefix) {
+			return true, strings.TrimSpace(text[len(prefix):])
+		}
+	}
+	return false, ""
 }
 
 // PopulateModuleInfo uses the LatestModuleVersions to populate fields of the given module.
