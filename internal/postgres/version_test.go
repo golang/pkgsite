@@ -423,3 +423,136 @@ func addRawLatest(ctx context.Context, t *testing.T, db *DB, modulePath, version
 		t.Fatal(err)
 	}
 }
+
+func TestGetLatestGoodVersion(t *testing.T) {
+	t.Parallel()
+	testDB, release := acquire(t)
+	defer release()
+	ctx := context.Background()
+
+	const (
+		modulePath = "example.com/m"
+		modFile    = `
+			module example.com/m
+			retract v1.3.0
+		`
+	)
+
+	lmv, err := internal.NewLatestModuleVersions(modulePath, "", "", "", []byte(modFile))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, v := range []string{"v2.0.0+incompatible", "v1.4.0-pre", "v1.3.0", "v1.2.0", "v1.1.0"} {
+		MustInsertModule(ctx, t, testDB, sample.Module(modulePath, v, "pkg"))
+	}
+
+	for _, test := range []struct {
+		name   string
+		cooked string // cooked latest version
+		want   string
+	}{
+		{
+			name:   "compatible",
+			cooked: "v1.3.0",
+			want:   "v1.2.0", // v1.3.0 is retracted
+		},
+		{
+			name:   "incompatible",
+			cooked: "v2.0.0+incompatible",
+			want:   "v2.0.0+incompatible",
+		},
+		{
+			name:   "bad", // cooked version not in modules table
+			cooked: "v1.4.0",
+			want:   "v1.2.0",
+		},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			lmv.CookedVersion = test.cooked
+			got, err := getLatestGoodVersion(ctx, testDB.db, lmv)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if got != test.want {
+				t.Errorf("got %q, want %q", got, test.want)
+			}
+		})
+	}
+}
+
+func TestLatestModuleVersions(t *testing.T) {
+	t.Parallel()
+	testDB, release := acquire(t)
+	defer release()
+	ctx := context.Background()
+
+	const (
+		modulePath = "example.com/m"
+		modFile    = `
+			module example.com/m
+			retract v1.3.0
+		`
+		incompatible = "v2.0.0+incompatible"
+	)
+	modBytes := []byte(modFile)
+
+	for _, v := range []string{incompatible, "v1.4.0-pre", "v1.3.0", "v1.2.0", "v1.1.0"} {
+		MustInsertModule(ctx, t, testDB, sample.Module(modulePath, v, "pkg"))
+	}
+
+	type versions struct {
+		raw, cooked, good string
+	}
+	// These tests form a sequence. Each test's want versions are in the DB for the next test.
+	for _, test := range []struct {
+		name     string
+		in, want versions
+	}{
+		{
+			name: "initial",
+			in:   versions{"v1.3.0", "v1.2.0", ""}, // in good isn't used
+			want: versions{"v1.3.0", "v1.2.0", "v1.2.0"},
+		},
+		{
+			name: "older", // older incoming info doesn't cause an update
+			in:   versions{"v1.2.0", "v1.2.0", ""},
+			want: versions{"v1.3.0", "v1.2.0", "v1.2.0"},
+		},
+		{
+			name: "newer bad", // a newer version, not in modules table
+			in:   versions{"v1.4.0", "v1.4.0", ""},
+			want: versions{"v1.4.0", "v1.4.0", "v1.2.0"},
+		},
+		{
+			name: "incompatible",
+			in:   versions{incompatible, incompatible, ""},
+			want: versions{incompatible, incompatible, incompatible},
+		},
+		{
+			name: "compatible", // "downgrade" from incompatible to compatible will update
+			in:   versions{"v1.3.0", "v1.2.0", ""},
+			want: versions{"v1.3.0", "v1.2.0", "v1.2.0"},
+		},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			vNew, err := internal.NewLatestModuleVersions(modulePath, test.in.raw, test.in.cooked, "", modBytes)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if err := testDB.UpdateLatestModuleVersions(ctx, vNew); err != nil {
+				t.Fatal(err)
+			}
+			vGot, err := testDB.GetLatestModuleVersions(ctx, modulePath)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if vGot == nil {
+				t.Fatal("got nothing")
+			}
+			got := versions{vGot.RawVersion, vGot.CookedVersion, vGot.GoodVersion}
+			if got != test.want {
+				t.Fatalf("got %q, want %q", got, test.want)
+			}
+		})
+	}
+}
