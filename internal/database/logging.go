@@ -108,8 +108,6 @@ func logQuery(ctx context.Context, query string, args []interface{}, instanceID 
 				if errors.Is(ctx.Err(), context.Canceled) ||
 					strings.Contains(entry.Error, "pq: canceling statement due to user request") {
 					logf = log.Debug
-				} else {
-					derrors.Report(*errp)
 				}
 				logf(ctx, entry)
 			}
