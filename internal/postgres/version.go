@@ -400,14 +400,8 @@ func getLatestGoodVersion(ctx context.Context, tx *database.DB, lmv *internal.La
 	if err != nil {
 		return "", err
 	}
-
-	// Remove retracted versions from the good versions.
-	unretractedGoodVersions := version.RemoveIf(vs, func(v string) bool {
-		retracted, _ := internal.IsRetracted(lmv.GoModFile, v)
-		return retracted
-	})
 	// Choose the latest good version from the unretracted versions.
-	return version.LatestOf(unretractedGoodVersions), nil
+	return version.LatestOf(version.RemoveIf(vs, lmv.IsRetracted)), nil
 }
 
 func upsertLatestModuleVersions(ctx context.Context, tx *database.DB, id int, lmv *internal.LatestModuleVersions) (err error) {

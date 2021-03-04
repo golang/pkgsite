@@ -85,7 +85,7 @@ func TestIsRetracted(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		gotIs, gotRationale := IsRetracted(mf, "v1.2.3")
+		gotIs, gotRationale := isRetracted(mf, "v1.2.3")
 		if gotIs != test.wantIs || gotRationale != test.wantRationale {
 			t.Errorf("%s: got (%t, %q), want(%t, %q)", test.name, gotIs, gotRationale, test.wantIs, test.wantRationale)
 		}

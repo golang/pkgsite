@@ -66,12 +66,19 @@ func isDeprecated(mf *modfile.File) (bool, string) {
 func (li *LatestModuleVersions) PopulateModuleInfo(mi *ModuleInfo) {
 	mi.Deprecated = li.deprecated
 	mi.DeprecationComment = li.deprecationComment
-	mi.Retracted, mi.RetractionRationale = IsRetracted(li.GoModFile, mi.Version)
+	mi.Retracted, mi.RetractionRationale = isRetracted(li.GoModFile, mi.Version)
 }
 
-// IsRetracted reports whether the go.mod file retracts the version.
+// IsRetracted reports whether the version is retracted according to the go.mod
+// file in the receiver.
+func (li *LatestModuleVersions) IsRetracted(version string) bool {
+	r, _ := isRetracted(li.GoModFile, version)
+	return r
+}
+
+// isRetracted reports whether the go.mod file retracts the version.
 // If so, it returns true along with the rationale for the retraction.
-func IsRetracted(mf *modfile.File, resolvedVersion string) (bool, string) {
+func isRetracted(mf *modfile.File, resolvedVersion string) (bool, string) {
 	for _, r := range mf.Retract {
 		if semver.Compare(resolvedVersion, r.Low) >= 0 && semver.Compare(resolvedVersion, r.High) <= 0 {
 			return true, r.Rationale
