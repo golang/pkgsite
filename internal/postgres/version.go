@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/Masterminds/squirrel"
+	"github.com/lib/pq"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/derrors"
@@ -282,6 +283,38 @@ func shouldUpdateRawLatest(newVersion, curVersion string) bool {
 	// account.
 	return version.Later(newVersion, curVersion) ||
 		(version.IsIncompatible(curVersion) && !version.IsIncompatible(newVersion))
+}
+
+func (db *DB) getMultiLatestModuleVersions(ctx context.Context, modulePaths []string) (lmvs []*internal.LatestModuleVersions, err error) {
+	derrors.WrapStack(&err, "getMultiLatestModuleVersions(%v)", modulePaths)
+
+	collect := func(rows *sql.Rows) error {
+		var (
+			modulePath, raw, cooked, good string
+			goModBytes                    []byte
+		)
+		if err := rows.Scan(&modulePath, &raw, &cooked, &good, &goModBytes); err != nil {
+			return err
+		}
+		lmv, err := internal.NewLatestModuleVersions(modulePath, raw, cooked, good, goModBytes)
+		if err != nil {
+			return err
+		}
+		lmvs = append(lmvs, lmv)
+		return nil
+	}
+
+	err = db.db.RunQuery(ctx, `
+		SELECT p.path, r.raw_version, r.cooked_version, r.good_version, r.raw_go_mod_bytes
+		FROM latest_module_versions r
+		INNER JOIN paths p ON p.id = r.module_path_id
+		WHERE p.path = ANY($1)
+		ORDER BY p.path DESC
+	`, collect, pq.Array(modulePaths))
+	if err != nil {
+		return nil, err
+	}
+	return lmvs, nil
 }
 
 // GetLatestModuleVersions returns the row of the latest_module_versions table for modulePath.

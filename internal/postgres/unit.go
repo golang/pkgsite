@@ -7,7 +7,6 @@ package postgres
 import (
 	"context"
 	"database/sql"
-	"errors"
 	"fmt"
 	"sort"
 	"strings"
@@ -20,6 +19,7 @@ import (
 	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/middleware"
 	"golang.org/x/pkgsite/internal/stdlib"
+	"golang.org/x/pkgsite/internal/version"
 )
 
 // GetUnitMeta returns information about the "best" entity (module, path or directory) with
@@ -28,17 +28,209 @@ import (
 // internal.LatestVersion.
 //
 // The rules for picking the best are:
-// 1. Match the module path and or version, if they are provided;
-// 2. Prefer newer module versions to older, and release to pre-release;
-// 3. In the unlikely event of two paths at the same version, pick the longer module path.
+// 1. If the version is known but the module path is not, choose the longest module path
+//    at that version that contains fullPath.
+// 2. Otherwise, find the latest "good" version (in the modules table) that contains fullPath.
+//    a. First, follow the algorithm of the go command: prefer longer module paths, and
+//       find the latest unretracted version, using semver but preferring release to pre-release.
+//    b. If no modules have latest-version information, find the latest by sorting the versions
+//       we do have: again first by module path length, then by version.
 func (db *DB) GetUnitMeta(ctx context.Context, fullPath, requestedModulePath, requestedVersion string) (_ *internal.UnitMeta, err error) {
 	defer derrors.WrapStack(&err, "DB.GetUnitMeta(ctx, %q, %q, %q)", fullPath, requestedModulePath, requestedVersion)
 	defer middleware.ElapsedStat(ctx, "GetUnitMeta")()
 
 	if experiment.IsActive(ctx, internal.ExperimentUnitMetaWithLatest) {
-		return nil, errors.New("unimplemented")
+		modulePath := requestedModulePath
+		version := requestedVersion
+		var lmv *internal.LatestModuleVersions
+		if requestedVersion == internal.LatestVersion {
+			modulePath, version, lmv, err = db.getLatestUnitVersion(ctx, fullPath, requestedModulePath)
+			if err != nil {
+				return nil, err
+			}
+		}
+		return db.getUnitMetaWithKnownLatestVersion(ctx, fullPath, modulePath, version, lmv)
 	}
 	return db.legacyGetUnitMeta(ctx, fullPath, requestedModulePath, requestedVersion)
+}
+
+func (db *DB) getUnitMetaWithKnownLatestVersion(ctx context.Context, fullPath, modulePath, version string, lmv *internal.LatestModuleVersions) (_ *internal.UnitMeta, err error) {
+	defer derrors.WrapStack(&err, "getUnitMetaKnownVersion")
+
+	query := squirrel.Select(
+		"m.module_path",
+		"m.version",
+		"m.commit_time",
+		"m.source_info",
+		"m.has_go_mod",
+		"m.redistributable",
+		"u.name",
+		"u.redistributable",
+		"u.license_types",
+		"u.license_paths").
+		From("modules m").
+		Join("units u on u.module_id = m.id").
+		Join("paths p ON p.id = u.path_id").Where(squirrel.Eq{"p.path": fullPath}).
+		PlaceholderFormat(squirrel.Dollar)
+
+	if internal.DefaultBranches[version] {
+		query = query.
+			Join("version_map vm ON m.id = vm.module_id").
+			Where("vm.requested_version = ?", version)
+	} else {
+		query = query.Where(squirrel.Eq{"version": version})
+	}
+	if modulePath == internal.UnknownModulePath {
+		// If we don't know the module, look for the one  with the longest series path.
+		query = query.OrderBy("m.series_path DESC").Limit(1)
+	} else {
+		query = query.Where(squirrel.Eq{"m.module_path": modulePath})
+	}
+
+	q, args, err := query.ToSql()
+	if err != nil {
+		return nil, err
+	}
+	var (
+		licenseTypes []string
+		licensePaths []string
+		um           = internal.UnitMeta{Path: fullPath}
+	)
+	err = db.db.QueryRow(ctx, q, args...).Scan(
+		&um.ModulePath,
+		&um.Version,
+		&um.CommitTime,
+		jsonbScanner{&um.SourceInfo},
+		&um.HasGoMod,
+		&um.ModuleInfo.IsRedistributable,
+		&um.Name,
+		&um.IsRedistributable,
+		pq.Array(&licenseTypes),
+		pq.Array(&licensePaths))
+	if err == sql.ErrNoRows {
+		return nil, derrors.NotFound
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	lics, err := zipLicenseMetadata(licenseTypes, licensePaths)
+	if err != nil {
+		return nil, err
+	}
+
+	if db.bypassLicenseCheck {
+		um.IsRedistributable = true
+	}
+	um.Licenses = lics
+
+	if experiment.IsActive(ctx, internal.ExperimentRetractions) {
+		// If we don't have the latest version information, try to get it.
+		// We can be here if there is really no info (in which case we are repeating
+		// some work, but it's fast), or if we are ignoring the info (for instance,
+		// if all versions were retracted).
+		if lmv == nil {
+			lmv, err = db.GetLatestModuleVersions(ctx, um.ModulePath)
+			if err != nil {
+				return nil, err
+			}
+		}
+		if lmv != nil {
+			lmv.PopulateModuleInfo(&um.ModuleInfo)
+		}
+	}
+	return &um, nil
+}
+
+// getLatestUnitVersion gets the latest version of requestedModulePath that contains fullPath.
+// See GetUnitMeta for more details.
+func (db *DB) getLatestUnitVersion(ctx context.Context, fullPath, requestedModulePath string) (
+	modulePath, latestVersion string, lmv *internal.LatestModuleVersions, err error) {
+
+	defer derrors.WrapStack(&err, "getLatestUnitVersion(%q, %q)", fullPath, requestedModulePath)
+
+	modPaths := []string{requestedModulePath}
+	// If we don't know the module path, try each possible module path from longest to shortest.
+	if requestedModulePath == internal.UnknownModulePath {
+		modPaths = internal.CandidateModulePaths(fullPath)
+	}
+	// Get latest-version information for all possible modules, from longest
+	// to shortest path.
+	lmvs, err := db.getMultiLatestModuleVersions(ctx, modPaths)
+	if err != nil {
+		return "", "", nil, err
+	}
+	for _, lmv = range lmvs {
+		// Collect all the versions of this module that contain fullPath.
+		query := squirrel.Select("m.version").
+			From("modules m").
+			Join("units u on u.module_id = m.id").
+			Join("paths p ON p.id = u.path_id").
+			Where(squirrel.Eq{"m.module_path": lmv.ModulePath}).
+			Where(squirrel.Eq{"p.path": fullPath})
+		q, args, err := query.PlaceholderFormat(squirrel.Dollar).ToSql()
+		if err != nil {
+			return "", "", nil, err
+		}
+		allVersions, err := collectStrings(ctx, db.db, q, args...)
+		if err != nil {
+			return "", "", nil, err
+		}
+		// Remove retracted versions.
+		unretractedVersions := version.RemoveIf(allVersions, lmv.IsRetracted)
+		// If there are no unretracted versions, move on. If we fall out of the
+		// loop we will pick the latest retracted version.
+		if len(unretractedVersions) == 0 {
+			continue
+		}
+		// Choose the latest version.
+		// If the cooked latest version is compatible, then by the logic of
+		// internal/version.Latest (which matches the go command), either
+		// incompatible versions should be ignored or there were no incompatible
+		// versions. In either case, remove them.
+		eligibleVersions := unretractedVersions
+		if !version.IsIncompatible(lmv.CookedVersion) {
+			eligibleVersions = version.RemoveIf(unretractedVersions, version.IsIncompatible)
+			if len(eligibleVersions) == 0 {
+				// Oops, incompatible versions are all we've got. (Possible if
+				// the latest cooked version is bad.) Guess we'll keep them.
+				eligibleVersions = unretractedVersions
+			}
+		}
+		latestVersion = version.LatestOf(eligibleVersions)
+		break
+	}
+	if latestVersion != "" {
+		return lmv.ModulePath, latestVersion, lmv, nil
+	}
+	// If we don't have latest-version info for any path (or there are no
+	// unretracted versions for paths where we do), fall back to finding the
+	// latest good version from the longest path. We can't determine
+	// deprecations or retractions, and the "go get" command won't download the
+	// module unless a specific version is supplied. But we can still show the
+	// latest version we have.
+	query := squirrel.Select("m.module_path", "m.version").
+		From("modules m").
+		Join("units u on u.module_id = m.id").
+		Join("paths p ON p.id = u.path_id").
+		Where(squirrel.Eq{"p.path": fullPath}).
+		// Like the go command, order first by path length, then by release
+		// version, then prerelease. Without latest-version information, we
+		// ignore all adjustments for incompatible and retracted versions.
+		OrderBy("m.series_path DESC", "m.version_type = 'release' DESC", "m.sort_version DESC").
+		Limit(1)
+	q, args, err := query.PlaceholderFormat(squirrel.Dollar).ToSql()
+	if err != nil {
+		return "", "", nil, err
+	}
+	err = db.db.QueryRow(ctx, q, args...).Scan(&modulePath, &latestVersion)
+	if err == sql.ErrNoRows {
+		return "", "", nil, derrors.NotFound
+	}
+	if err != nil {
+		return "", "", nil, err
+	}
+	return modulePath, latestVersion, nil, nil
 }
 
 func (db *DB) legacyGetUnitMeta(ctx context.Context, fullPath, requestedModulePath, requestedVersion string) (_ *internal.UnitMeta, err error) {
