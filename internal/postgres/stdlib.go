@@ -6,7 +6,6 @@ package postgres
 
 import (
 	"context"
-	"database/sql"
 
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/stdlib"
@@ -40,16 +39,5 @@ func (db *DB) GetStdlibPathsWithSuffix(ctx context.Context, suffix string) (path
 			AND p.path LIKE '%/' || $2
 		ORDER BY p.path
 	`
-	err = db.db.RunQuery(ctx, q, func(rows *sql.Rows) error {
-		var p string
-		if err := rows.Scan(&p); err != nil {
-			return err
-		}
-		paths = append(paths, p)
-		return nil
-	}, stdlib.ModulePath, suffix)
-	if err != nil {
-		return nil, err
-	}
-	return paths, nil
+	return collectStrings(ctx, db.db, q, stdlib.ModulePath, suffix)
 }

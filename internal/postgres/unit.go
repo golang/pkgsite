@@ -265,22 +265,10 @@ func (db *DB) getUnitID(ctx context.Context, fullPath, modulePath, resolvedVersi
 func (db *DB) getImports(ctx context.Context, unitID int) (_ []string, err error) {
 	defer derrors.WrapStack(&err, "getImports(ctx, %d)", unitID)
 	defer middleware.ElapsedStat(ctx, "getImports")()
-	var imports []string
-	collect := func(rows *sql.Rows) error {
-		var path string
-		if err := rows.Scan(&path); err != nil {
-			return fmt.Errorf("row.Scan(): %v", err)
-		}
-		imports = append(imports, path)
-		return nil
-	}
-	if err := db.db.RunQuery(ctx, `
+	return collectStrings(ctx, db.db, `
 		SELECT to_path
 		FROM package_imports
-		WHERE unit_id = $1`, collect, unitID); err != nil {
-		return nil, err
-	}
-	return imports, nil
+		WHERE unit_id = $1`, unitID)
 }
 
 // getPackagesInUnit returns all of the packages in a unit from a

@@ -97,19 +97,7 @@ func (db *DB) GetImportedBy(ctx context.Context, pkgPath, modulePath string, lim
 			from_path
 		LIMIT $3`
 
-	var importedby []string
-	collect := func(rows *sql.Rows) error {
-		var fromPath string
-		if err := rows.Scan(&fromPath); err != nil {
-			return fmt.Errorf("row.Scan(): %v", err)
-		}
-		importedby = append(importedby, fromPath)
-		return nil
-	}
-	if err := db.db.RunQuery(ctx, query, collect, pkgPath, modulePath, limit); err != nil {
-		return nil, err
-	}
-	return importedby, nil
+	return collectStrings(ctx, db.db, query, pkgPath, modulePath, limit)
 }
 
 // GetImportedByCount returns the number of packages that import pkgPath.

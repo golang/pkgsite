@@ -377,7 +377,6 @@ func getLatestGoodVersion(ctx context.Context, tx *database.DB, lmv *internal.La
 	// incompatible versions. If it isn't, then either there are no
 	// incompatible versions, or there are but the latest compatible version
 	// has a go.mod file. Either way, ignore incompatible versions.
-	var vs []string
 	q := squirrel.Select("version").
 		From("modules").
 		Where(squirrel.Eq{"module_path": lmv.ModulePath}).
@@ -389,14 +388,7 @@ func getLatestGoodVersion(ctx context.Context, tx *database.DB, lmv *internal.La
 	if err != nil {
 		return "", err
 	}
-	err = tx.RunQuery(ctx, query, func(rows *sql.Rows) error {
-		var v string
-		if err := rows.Scan(&v); err != nil {
-			return err
-		}
-		vs = append(vs, v)
-		return nil
-	}, args...)
+	vs, err := collectStrings(ctx, tx, query, args...)
 	if err != nil {
 		return "", err
 	}

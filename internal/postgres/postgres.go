@@ -111,3 +111,22 @@ func (db *DB) StalenessTimestamp(ctx context.Context) (time.Time, error) {
 		return time.Time{}, err
 	}
 }
+
+// collectStrings runs the query, which must select for a single string column, and returns
+// a slice of the resulting strings.
+func collectStrings(ctx context.Context, db *database.DB, query string, args ...interface{}) (ss []string, err error) {
+	defer derrors.WrapStack(&err, "DB.collectStrings(%q)", query)
+
+	err = db.RunQuery(ctx, query, func(rows *sql.Rows) error {
+		var s string
+		if err := rows.Scan(&s); err != nil {
+			return err
+		}
+		ss = append(ss, s)
+		return nil
+	}, args...)
+	if err != nil {
+		return nil, err
+	}
+	return ss, nil
+}

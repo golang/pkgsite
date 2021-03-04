@@ -6,8 +6,6 @@ package postgres
 
 import (
 	"context"
-	"database/sql"
-	"fmt"
 	"sort"
 	"testing"
 
@@ -80,18 +78,10 @@ func TestInsertSymbolNamesAndHistory(t *testing.T) {
 	mod.Packages()[0].Documentation[0].API = api
 	MustInsertModule(ctx, t, testDB, mod)
 
-	var got []string
-	if err := testDB.db.RunQuery(ctx, `SELECT name FROM symbol_names;`, func(rows *sql.Rows) error {
-		var n string
-		if err := rows.Scan(&n); err != nil {
-			return fmt.Errorf("row.Scan(): %v", err)
-		}
-		got = append(got, n)
-		return nil
-	}); err != nil {
+	got, err := collectStrings(ctx, testDB.db, `SELECT name FROM symbol_names;`)
+	if err != nil {
 		t.Fatal(err)
 	}
-
 	want := []string{
 		sample.Constant.Name,
 		sample.Variable.Name,

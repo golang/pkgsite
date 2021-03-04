@@ -6,7 +6,6 @@ package postgres
 
 import (
 	"context"
-	"database/sql"
 	"strings"
 
 	"golang.org/x/pkgsite/internal/database"
@@ -58,17 +57,5 @@ func (db *DB) GetExcludedPrefixes(ctx context.Context) ([]string, error) {
 }
 
 func getExcludedPrefixes(ctx context.Context, db *database.DB) ([]string, error) {
-	var eps []string
-	err := db.RunQuery(ctx, `SELECT prefix FROM excluded_prefixes`, func(rows *sql.Rows) error {
-		var ep string
-		if err := rows.Scan(&ep); err != nil {
-			return err
-		}
-		eps = append(eps, ep)
-		return nil
-	})
-	if err != nil {
-		return nil, err
-	}
-	return eps, nil
+	return collectStrings(ctx, db, `SELECT prefix FROM excluded_prefixes`)
 }
