@@ -7,6 +7,7 @@ package postgres
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"sort"
 	"strings"
@@ -16,6 +17,7 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/middleware"
 	"golang.org/x/pkgsite/internal/stdlib"
 )
@@ -32,6 +34,15 @@ import (
 func (db *DB) GetUnitMeta(ctx context.Context, fullPath, requestedModulePath, requestedVersion string) (_ *internal.UnitMeta, err error) {
 	defer derrors.WrapStack(&err, "DB.GetUnitMeta(ctx, %q, %q, %q)", fullPath, requestedModulePath, requestedVersion)
 	defer middleware.ElapsedStat(ctx, "GetUnitMeta")()
+
+	if experiment.IsActive(ctx, internal.ExperimentUnitMetaWithLatest) {
+		return nil, errors.New("unimplemented")
+	}
+	return db.legacyGetUnitMeta(ctx, fullPath, requestedModulePath, requestedVersion)
+}
+
+func (db *DB) legacyGetUnitMeta(ctx context.Context, fullPath, requestedModulePath, requestedVersion string) (_ *internal.UnitMeta, err error) {
+	defer derrors.WrapStack(&err, "DB.legacyGetUnitMeta(ctx, %q, %q, %q)", fullPath, requestedModulePath, requestedVersion)
 
 	var (
 		q    string
