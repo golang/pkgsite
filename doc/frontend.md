@@ -66,6 +66,22 @@ jest image snapshots for more information.
 
 To run the tests on your machine run `./all.bash e2e`.
 
+To update the image and accessibility snapshots run `./all/bash e2e -u`
+
+#### Writing E2E Tests
+
+Tests are written in the Jest framework using Puppeteer to drive a headless
+instance of Chrome.
+
+Familiarize yourself with the
+[Page](https://pptr.dev/#?product=Puppeteer&version=v5.5.0&show=api-class-page)
+class from the Puppeteer documenation. You'll find methods on this class that
+let you to interact with the page.
+
+Most tests will follow a similar structure but for details on the Jest
+framework and the various hooks and assertions see the
+[API](https://jestjs.io/docs/en/api).
+
 ## Static Assets
 
 A migration to TypeScript for pkg.go.dev is underway. See
