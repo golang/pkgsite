@@ -204,6 +204,7 @@ func fetchMainDetails(ctx context.Context, ds internal.DataSource, um *internal.
 		return nil, err
 	}
 	isTaggedVersion := versionType != version.TypePseudo
+	isStableVersion := semver.Major(um.Version) != "v0" && versionType == version.TypeRelease
 	return &MainDetails{
 		ExpandReadme:      expandReadme,
 		Directories:       unitDirectories(append(subdirectories, nestedModules...)),
@@ -229,7 +230,7 @@ func fetchMainDetails(ctx context.Context, ds internal.DataSource, um *internal.
 		IsPackage:         unit.IsPackage(),
 		ModFileURL:        um.SourceInfo.ModuleURL() + "/go.mod",
 		IsTaggedVersion:   isTaggedVersion,
-		IsStableVersion:   semver.Major(um.Version) != "v0",
+		IsStableVersion:   isStableVersion,
 	}, nil
 }
 
