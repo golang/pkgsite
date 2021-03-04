@@ -411,5 +411,11 @@ func (f *Fetcher) fetchAndUpdateLatest(ctx context.Context, modulePath string) (
 	if err != nil {
 		return err
 	}
+	// There may be no version information for the module, even if it exists.
+	// In that case, lmv will be nil and there is nothing to insert into the DB.
+	if lmv == nil {
+		log.Infof(ctx, "no latest-version information for %s", modulePath)
+		return nil
+	}
 	return f.DB.UpdateLatestModuleVersions(ctx, lmv)
 }

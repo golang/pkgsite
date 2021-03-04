@@ -15,6 +15,7 @@ import (
 
 	"golang.org/x/mod/semver"
 	"golang.org/x/pkgsite/internal/testing/testhelper"
+	"golang.org/x/pkgsite/internal/version"
 )
 
 // Server represents a proxy server containing the specified modules.
@@ -91,7 +92,9 @@ func (s *Server) handleList(modulePath string) {
 		var vList []string
 		if modules, ok := s.modules[modulePath]; ok {
 			for _, v := range modules {
-				vList = append(vList, v.Version)
+				if !version.IsPseudo(v.Version) {
+					vList = append(vList, v.Version)
+				}
 			}
 		}
 		http.ServeContent(w, r, modulePath, time.Now(), strings.NewReader(strings.Join(vList, "\n")))
@@ -105,21 +108,41 @@ func (s *Server) AddRoute(route string, fn func(w http.ResponseWriter, r *http.R
 
 // AddModule adds an additional module to the server.
 func (s *Server) AddModule(m *Module) {
+	s.addModule(m, true)
+}
+
+// AddModuleNoLatest adds a module to the server, but the @v/list endpoint will
+// return nothing and @latest endpoint will serve a 410.
+// For testing the unusual case where a module exists but there is no version information.
+func (s *Server) AddModuleNoVersions(m *Module) {
+	s.addModule(m, false)
+}
+
+func (s *Server) addModule(m *Module, hasVersions bool) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	m = cleanModule(m)
 
 	if _, ok := s.modules[m.ModulePath]; !ok {
-		s.handleList(m.ModulePath)
-		s.handleLatest(m.ModulePath, fmt.Sprintf("/%s/@latest", m.ModulePath))
-		// TODO(https://golang.org/issue/39985): Add endpoint for handling
-		// master and main versions.
-		if m.Version != "master" {
-			s.handleLatest(m.ModulePath, fmt.Sprintf("/%s/@v/master.info", m.ModulePath))
-		}
-		if m.Version != "main" {
-			s.handleLatest(m.ModulePath, fmt.Sprintf("/%s/@v/main.info", m.ModulePath))
+		if hasVersions {
+			s.handleList(m.ModulePath)
+			s.handleLatest(m.ModulePath, fmt.Sprintf("/%s/@latest", m.ModulePath))
+			// TODO(https://golang.org/issue/39985): Add endpoint for handling
+			// master and main versions.
+			if m.Version != "master" {
+				s.handleLatest(m.ModulePath, fmt.Sprintf("/%s/@v/master.info", m.ModulePath))
+			}
+			if m.Version != "main" {
+				s.handleLatest(m.ModulePath, fmt.Sprintf("/%s/@v/main.info", m.ModulePath))
+			}
+		} else {
+			s.mux.HandleFunc(fmt.Sprintf("/%s/@v/list", m.ModulePath), func(w http.ResponseWriter, r *http.Request) {
+				http.ServeContent(w, r, m.ModulePath, time.Now(), strings.NewReader(""))
+			})
+			s.mux.HandleFunc(fmt.Sprintf("/%s/@latest", m.ModulePath), func(w http.ResponseWriter, r *http.Request) {
+				http.Error(w, "not found", http.StatusGone)
+			})
 		}
 	}
 	s.handleInfo(m.ModulePath, m.Version, m.NotCached)

@@ -29,6 +29,15 @@ import (
 // module has a go.mod file, using a source other than the proxy (e.g. a
 // database). If it doesn't have enough information to decide, it should return
 // an error that wraps derrors.NotFound.
+//
+// If a module has no tagged versions and hasn't been accessed at a
+// pseudo-version in a while, then the proxy's list endpoint will serve nothing
+// and its @latest endpoint will return a 404/410. (Example:
+// cloud.google.com/go/compute/metadata, which has a
+// v0.0.0-20181107005212-dafb9c8d8707 that @latest does not return.) That is not
+// a failure, but a valid state in which there is no version information for a
+// module, even though particular pseudo-versions of the module might exist. In
+// this case, LatestModuleVersions returns (nil, nil).
 func LatestModuleVersions(ctx context.Context, modulePath string, prox *proxy.Client, hasGoMod func(v string) (bool, error)) (info *internal.LatestModuleVersions, err error) {
 	defer derrors.WrapStack(&err, "LatestModuleVersions(%q)", modulePath)
 
@@ -71,15 +80,19 @@ func LatestModuleVersions(ctx context.Context, modulePath string, prox *proxy.Cl
 	}
 	latestInfo, err := prox.Info(ctx, modulePath, internal.LatestVersion)
 	if err != nil {
-		return nil, err
+		if !errors.Is(err, derrors.NotFound) {
+			return nil, err
+		}
+	} else {
+		versions = append(versions, latestInfo.Version)
 	}
-	versions = append(versions, latestInfo.Version)
+	if len(versions) == 0 {
+		// No tagged versions, and @latest returns NotFound: no version information.
+		return nil, nil
+	}
 	rawLatest, err := version.Latest(versions, hasGoModFunc)
 	if err != nil {
 		return nil, err
-	}
-	if rawLatest == "" {
-		return nil, errors.New("no raw version found")
 	}
 
 	// Get the go.mod file at the raw latest version.

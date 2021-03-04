@@ -42,3 +42,26 @@ func TestLatestModuleVersions(t *testing.T) {
 		}
 	}
 }
+
+func TestLatestModuleVersionsNotFound(t *testing.T) {
+	// Verify that we get (nil, nil) if there is no version information.
+	const modulePath = "example.com/no-versions"
+	server := proxy.NewServer(testModules)
+	server.AddModuleNoVersions(&proxy.Module{
+		ModulePath: modulePath,
+		Version:    "v0.0.0-20181107005212-dafb9c8d8707",
+	})
+	client, teardown, err := proxy.NewClientForServer(server)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer teardown()
+
+	got, err := LatestModuleVersions(context.Background(), modulePath, client, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got != nil {
+		t.Errorf("got %v, want nil", got)
+	}
+}
