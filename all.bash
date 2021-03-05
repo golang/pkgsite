@@ -70,9 +70,9 @@ verify_header() {
   if [[ "$@" != "" ]]; then
     for FILE in $@
     do
-        # Allow for the copyright header to start on either of the first two
+        # Allow for the copyright header to start on either of the first three
         # lines, to accommodate conventions for CSS and HTML.
-        line="$(head -3 $FILE)"
+        line="$(head -4 $FILE)"
         if [[ ! $line == *"The Go Authors. All rights reserved."* ]] &&
          [[ ! $line == "// DO NOT EDIT. This file was copied from" ]]; then
               err "missing license header: $FILE"
