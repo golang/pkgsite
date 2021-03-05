@@ -48,7 +48,12 @@
 
 {{define "unit_post_content"}}
   <script>
-    loadScript("/static/js/jump.min.js", {async: true, defer: true});
+    if (!window.HTMLDialogElement) {
+      loadScript("/third_party/dialog-polyfill/dialog-polyfill.js");
+    }
+  </script>
+  <script>
+    loadScript("/static/js/jump.js");
   </script>
   <script>
     loadScript("/static/js/playground.js", {type: 'module', async: true, defer: true});

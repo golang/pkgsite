@@ -24,7 +24,8 @@ var scriptHashes = []string{
 	// From content/static/html/pages/unit.tmpl
 	"'sha256-hsHIJwO1h0Vzwa75j0l07kUfQ7MEZGI/HlSPB/8leZ0='",
 	// From content/static/html/pages/unit_details.tmpl
-	"'sha256-CFun5NgnYeEpye8qcbQPq5Ycwavi4IXuZiIzSMNqRUw='",
+	"'sha256-mKoRSTy/ibLlGchw5uTQdCsNmqX/Lt9zNnBMtD8u5Us='",
+	"'sha256-/Mz1Pw/2FXZF9LLUgqsWFCN718K+/UPib6w8IBIf6Xk='",
 	"'sha256-L+G1K2BEWa+o2vPy1pwdabLjINBByPWi1NkRwvASUq8='",
 	"'sha256-hb8VdkRSeBmkNlbshYmBnkYWC/BYHCPiz5s7liRcZNM='",
 }
