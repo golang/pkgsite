@@ -16,7 +16,7 @@ var scriptHashes = []string{
 	"'sha256-dwce5DnVX7uk6fdvvNxQyLTH/cJrTMDK6zzrdKwdwcg='",
 	"'sha256-M35cNZ8vPcaBGw5WTgh0Gn7DLsxkvPbdTFN1pELeevM='",
 	// From content/static/html/pages/badge.tmpl
-	"'sha256-T7xOt6cgLji3rhOWyKK7t5XKv8+LASQwOnHiHHy8Kwk='",
+	"'sha256-v9+UvX+P27rKraeTl7uAfOWdLmmQU39RskIoqUrU4wo='",
 	// From content/static/html/pages/fetch.tmpl
 	"'sha256-1J6DWwTWs/QDZ2+ORDuUQCibmFnXXaNXYOtc0Jk6VU4='",
 	// From content/static/html/worker/index.tmpl
