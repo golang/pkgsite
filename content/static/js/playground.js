@@ -138,10 +138,7 @@ export class PlaygroundExampleController {
     })
       .then(res => res.json())
       .then(async ({ Events, Errors }) => {
-        if (Errors) {
-          this.setOutputText(Errors);
-        }
-        this.setOutputText('');
+        this.setOutputText(Errors || '');
         for (const e of Events || []) {
           this.setOutputText(e.Message);
           await new Promise(resolve => setTimeout(resolve, e.Delay / 1000000));

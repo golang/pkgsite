@@ -105,12 +105,33 @@ describe('PlaygroundExampleController', () => {
     expect(el<HTMLTextAreaElement>('.Documentation-exampleCode').value).toBe('// mocked response');
   });
 
+  it('displays error message after pressing format with invalid code', async () => {
+    mocked(window.fetch).mockResolvedValue({
+      json: () =>
+        Promise.resolve({
+          Body: '',
+          Error: '// mocked error',
+        }),
+    } as Response);
+    el('[aria-label="Format Code"]').click();
+    const body = new FormData();
+    body.append('body', codeSnippet);
+    await flushPromises();
+
+    expect(window.fetch).toHaveBeenCalledWith('/play/fmt', {
+      body: body,
+      method: 'POST',
+    });
+    expect(el<HTMLTextAreaElement>('.Documentation-exampleCode').value).toBe(codeSnippet);
+    expect(el('.Documentation-exampleOutput').textContent).toContain('// mocked error');
+  });
+
   it('displays code output after pressing run', async () => {
     mocked(window.fetch).mockResolvedValue({
       json: () =>
         Promise.resolve({
           Events: [{ Message: '// mocked response', Kind: 'stdout', Delay: 0 }],
-          Error: '',
+          Errors: null,
         }),
     } as Response);
     el('[aria-label="Run Code"]').click();
@@ -121,5 +142,23 @@ describe('PlaygroundExampleController', () => {
       method: 'POST',
     });
     expect(el('.Documentation-exampleOutput').textContent).toContain('// mocked response');
+  });
+
+  it('displays error message after pressing run with invalid code', async () => {
+    mocked(window.fetch).mockResolvedValue({
+      json: () =>
+        Promise.resolve({
+          Events: null,
+          Errors: '// mocked error',
+        }),
+    } as Response);
+    el('[aria-label="Run Code"]').click();
+    await flushPromises();
+
+    expect(window.fetch).toHaveBeenCalledWith('/play/compile', {
+      body: JSON.stringify({ body: codeSnippet, version: 2 }),
+      method: 'POST',
+    });
+    expect(el('.Documentation-exampleOutput').textContent).toContain('// mocked error');
   });
 });
