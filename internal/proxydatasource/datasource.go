@@ -10,7 +10,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"path"
 	"sort"
 	"strconv"
 	"strings"
@@ -165,7 +164,7 @@ func (ds *DataSource) getModule(ctx context.Context, modulePath, version string)
 func (ds *DataSource) findModule(ctx context.Context, pkgPath string, version string) (_ string, _ *proxy.VersionInfo, err error) {
 	defer derrors.Wrap(&err, "findModule(%q, ...)", pkgPath)
 	pkgPath = strings.TrimLeft(pkgPath, "/")
-	for modulePath := pkgPath; modulePath != "" && modulePath != "."; modulePath = path.Dir(modulePath) {
+	for _, modulePath := range internal.CandidateModulePaths(pkgPath) {
 		info, err := ds.proxyClient.Info(ctx, modulePath, version)
 		if errors.Is(err, derrors.NotFound) {
 			continue

@@ -526,39 +526,17 @@ func candidateModulePaths(fullPath string) (_ []string, err error) {
 			err:    fmt.Errorf("isValidPath(%q): false", fullPath),
 		}
 	}
-	var (
-		path        string
-		modulePaths []string
-	)
-	parts := strings.Split(fullPath, "/")
-	if _, ok := vcsHostsWithThreeElementRepoName[parts[0]]; ok {
-		if len(parts) < 3 {
-			return nil, &serverError{
-				status: http.StatusBadRequest,
-				err:    fmt.Errorf("invalid path: %q", fullPath),
-			}
-		}
-		path = strings.Join(parts[0:2], "/") + "/"
-		parts = parts[2:]
-	}
-	for _, part := range parts {
-		if len(modulePaths) == maxPathsToFetch {
-			return modulePaths, nil
-		}
-		path += part
-		if err := module.CheckImportPath(path); err != nil {
-			continue
-		}
-		modulePaths = append([]string{path}, modulePaths...)
-		path += "/"
-	}
-	if len(modulePaths) == 0 {
+	paths := internal.CandidateModulePaths(fullPath)
+	if paths == nil {
 		return nil, &serverError{
 			status: http.StatusBadRequest,
 			err:    fmt.Errorf("invalid path: %q", fullPath),
 		}
 	}
-	return modulePaths, nil
+	if len(paths) > maxPathsToFetch {
+		return paths[len(paths)-maxPathsToFetch:], nil
+	}
+	return paths, nil
 }
 
 // FetchAndUpdateState is used by the InMemory queue for testing in
