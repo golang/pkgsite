@@ -13,6 +13,7 @@ import (
 	"path"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/google/safehtml/template"
 	"golang.org/x/pkgsite/internal"
@@ -133,6 +134,9 @@ func (s *Server) serveSearch(w http.ResponseWriter, r *http.Request, ds internal
 
 	ctx := r.Context()
 	query := searchQuery(r)
+	if !utf8.ValidString(query) {
+		return &serverError{status: http.StatusBadRequest}
+	}
 	if len(query) > maxSearchQueryLength {
 		return &serverError{
 			status: http.StatusBadRequest,
