@@ -1,10 +1,10 @@
-'use strict';
 /*!
  * @license
  * Copyright 2020 The Go Authors. All rights reserved.
  * Use of this source code is governed by a BSD-style
  * license that can be found in the LICENSE file.
  */
+
 const fetchButton = document.querySelector('.js-fetchButton');
 if (fetchButton) {
   fetchButton.addEventListener('click', e => {
@@ -12,12 +12,14 @@ if (fetchButton) {
     fetchPath();
   });
 }
+
 async function fetchPath() {
-  var _a;
-  const fetchMessageEl = document.querySelector('.js-fetchMessage');
-  const fetchMessageSecondary = document.querySelector('.js-fetchMessageSecondary');
-  const fetchButton = document.querySelector('.js-fetchButton');
-  const fetchLoading = document.querySelector('.js-fetchLoading');
+  const fetchMessageEl = document.querySelector<HTMLHeadingElement>('.js-fetchMessage');
+  const fetchMessageSecondary = document.querySelector<HTMLParagraphElement>(
+    '.js-fetchMessageSecondary'
+  );
+  const fetchButton = document.querySelector<HTMLButtonElement>('.js-fetchButton');
+  const fetchLoading = document.querySelector<HTMLDivElement>('.js-fetchLoading');
   if (!(fetchMessageEl && fetchMessageSecondary && fetchButton && fetchLoading)) {
     return;
   }
@@ -26,6 +28,7 @@ async function fetchPath() {
     'Feel free to navigate away and check back later, we’ll keep working on it!';
   fetchButton.style.display = 'none';
   fetchLoading.style.display = 'block';
+
   const response = await fetch(`/fetch${window.location.pathname}`, { method: 'POST' });
   if (response.ok) {
     window.location.reload();
@@ -35,7 +38,5 @@ async function fetchPath() {
   fetchLoading.style.display = 'none';
   fetchMessageSecondary.textContent = '';
   const responseTextParsedDOM = new DOMParser().parseFromString(responseText, 'text/html');
-  fetchMessageEl.innerHTML =
-    (_a = responseTextParsedDOM.documentElement.textContent) !== null && _a !== void 0 ? _a : '';
+  fetchMessageEl.innerHTML = responseTextParsedDOM.documentElement.textContent ?? '';
 }
-//# sourceMappingURL=fetch.js.map

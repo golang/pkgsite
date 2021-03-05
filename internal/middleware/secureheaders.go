@@ -18,7 +18,7 @@ var scriptHashes = []string{
 	// From content/static/html/pages/badge.tmpl
 	"'sha256-v9+UvX+P27rKraeTl7uAfOWdLmmQU39RskIoqUrU4wo='",
 	// From content/static/html/pages/fetch.tmpl
-	"'sha256-1J6DWwTWs/QDZ2+ORDuUQCibmFnXXaNXYOtc0Jk6VU4='",
+	"'sha256-4FhQmh9Hu76JzYm35KNNysU2Z7buJwg3cMSHsGwKSCE='",
 	// From content/static/html/worker/index.tmpl
 	"'sha256-y5EX2GR3tCwSK0/kmqZnsWVeBROA8tA75L+I+woljOE='",
 	// From content/static/html/pages/unit.tmpl
