@@ -194,16 +194,7 @@
     }
     document.head.appendChild(s);
   }
-  loadScript('/static/js/web-vitals.js', {type: 'module', defer: true});
-  loadScript("/static/js/base.min.js");
-
-  if (document.querySelector('.js-gtmID').dataset.gtmid && window.dataLayer) {
-    window.dataLayer.push(function() {
-      loadScript('/static/js/utm_source.js', {type: 'module', async: true, defer: true})
-    })
-  } else {
-    loadScript('/static/js/utm_source.js', {type: 'module', async: true, defer: true})
-  }
+  loadScript("/static/js/site.js");
 </script>
 
 {{block "post_content" .}}{{end}}
