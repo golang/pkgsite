@@ -19,17 +19,13 @@
  * ```
  */
 export class ExpandableRowsTableController {
-  private table: HTMLTableElement;
-  private expandAll?: HTMLButtonElement;
   private toggles: NodeListOf<HTMLTableRowElement>;
 
   /**
    * Create a table controller.
    * @param table - The table element to which the controller binds.
    */
-  constructor(table: HTMLTableElement, expandAll?: HTMLButtonElement) {
-    this.table = table;
-    this.expandAll = expandAll;
+  constructor(private table: HTMLTableElement, private expandAll?: HTMLButtonElement | null) {
     this.toggles = table.querySelectorAll<HTMLTableRowElement>('[data-aria-controls]');
     this.setAttributes();
     this.attachEventListeners();
