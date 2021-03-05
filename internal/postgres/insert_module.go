@@ -93,7 +93,7 @@ func (db *DB) saveModule(ctx context.Context, m *internal.Module) (isLatest bool
 		return false, err
 	}
 
-	err = db.db.Transact(ctx, sql.LevelDefault, func(tx *database.DB) error {
+	err = db.db.Transact(ctx, sql.LevelRepeatableRead, func(tx *database.DB) error {
 		moduleID, err := insertModule(ctx, tx, m)
 		if err != nil {
 			return err
