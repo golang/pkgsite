@@ -1,20 +1,35 @@
 /*!
  * @license
- * Copyright 2020 The Go Authors. All rights reserved.
+ * Copyright 2021 The Go Authors. All rights reserved.
  * Use of this source code is governed by a BSD-style
  * license that can be found in the LICENSE file.
  */
+
 import { CopyToClipboardController } from './clipboard.js';
 import './toggle-tip.js';
 import { ExpandableRowsTableController } from './table.js';
+
 document
-  .querySelectorAll('.js-expandableTable')
+  .querySelectorAll<HTMLTableElement>('.js-expandableTable')
   .forEach(
-    el => new ExpandableRowsTableController(el, document.querySelector('.js-expandAllDirectories'))
+    el =>
+      new ExpandableRowsTableController(
+        el,
+        document.querySelector<HTMLButtonElement>('.js-expandAllDirectories')
+      )
   );
-document.querySelectorAll('.js-copyToClipboard').forEach(el => {
+
+/**
+ * Instantiates CopyToClipboardController controller copy buttons
+ * on the unit page.
+ */
+document.querySelectorAll<HTMLButtonElement>('.js-copyToClipboard').forEach(el => {
   new CopyToClipboardController(el);
 });
+
+/**
+ * Event handlers for expanding and collapsing the readme section.
+ */
 const readme = document.querySelector('.js-readme');
 const readmeContent = document.querySelector('.js-readmeContent');
 const readmeOutline = document.querySelector('.js-readmeOutline');
@@ -53,6 +68,10 @@ if (readme && readmeContent && readmeOutline && readmeExpand.length && readmeCol
     }
   });
 }
+
+/**
+ * Disable unavailable sections in navigation dropdown on mobile.
+ */
 const readmeOption = document.querySelector('.js-readmeOption');
 if (readmeOption && !readme) {
   readmeOption.setAttribute('disabled', 'true');
@@ -62,4 +81,3 @@ const directoriesOption = document.querySelector('.js-directoriesOption');
 if (!unitDirectories && directoriesOption) {
   directoriesOption.setAttribute('disabled', 'true');
 }
-//# sourceMappingURL=unit.js.map
