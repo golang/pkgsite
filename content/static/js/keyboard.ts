@@ -1,23 +1,25 @@
-'use strict';
 /*!
  * @license
  * Copyright 2019-2020 The Go Authors. All rights reserved.
  * Use of this source code is governed by a BSD-style
  * license that can be found in the LICENSE file.
  */
-var _a;
-const canonicalURLPath =
-  (_a = document.querySelector('.js-canonicalURLPath')) === null || _a === void 0
-    ? void 0
-    : _a.dataset['canonicalUrlPath'];
+
+// This file implements the behavior of the keyboard shortcut which allows
+// for users to press 'y' to to change browser URL to the canonical URL
+// without triggering a reload.
+
+const canonicalURLPath = document.querySelector<HTMLDivElement>('.js-canonicalURLPath')?.dataset[
+  'canonicalUrlPath'
+];
 if (canonicalURLPath && canonicalURLPath !== '') {
   document.addEventListener('keydown', e => {
-    var _a, _b;
-    const t = (_a = e.target) === null || _a === void 0 ? void 0 : _a.tagName;
+    // TODO(golang.org/issue/40246): consolidate keyboard shortcut behavior across the site.
+    const t = (e.target as HTMLElement)?.tagName;
     if (t === 'INPUT' || t === 'SELECT' || t === 'TEXTAREA') {
       return;
     }
-    if ((_b = e.target) === null || _b === void 0 ? void 0 : _b.isContentEditable) {
+    if ((e.target as HTMLElement)?.isContentEditable) {
       return;
     }
     if (e.metaKey || e.ctrlKey) {
@@ -30,4 +32,3 @@ if (canonicalURLPath && canonicalURLPath !== '') {
     }
   });
 }
-//# sourceMappingURL=keyboard.js.map
