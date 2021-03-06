@@ -12,6 +12,8 @@ import (
 	"go/token"
 	"regexp"
 	"strings"
+	"unicode"
+	"unicode/utf8"
 
 	"github.com/google/safehtml"
 	"github.com/google/safehtml/template"
@@ -19,13 +21,6 @@ import (
 )
 
 var (
-	// Regexp for headings.
-	headingHead = `^[\p{Lu}]`                                  // any uppercase letter
-	headingBody = `([^,.;:!?+*/=()\[\]{}_^°&§~%#@<">\\]|'s )*` // any non-illegal character
-	headingTail = `([\p{L}\p{Nd}]|'s)?$`                       // any letter or digit
-
-	headingRx = regexp.MustCompile(headingHead + headingBody + headingTail)
-
 	// Regexp for example outputs.
 	exampleOutputRx = regexp.MustCompile(`(?i)//[[:space:]]*(unordered )?output:`)
 )
@@ -309,7 +304,7 @@ func docToBlocks(doc string) []block {
 		switch {
 		case indentLength(group[0]) > 0:
 			blks = append(blks, &preformat{unindent(group)})
-		case i != 0 && !wasHeading && len(group) == 1 && headingRx.MatchString(group[0]) && willParagraph:
+		case i != 0 && !wasHeading && len(group) == 1 && isHeading(group[0]) && willParagraph:
 			blks = append(blks, &heading{group[0]})
 		default:
 			blks = append(blks, &paragraph{group})
@@ -349,4 +344,57 @@ func unindent(lines []string) []string {
 		}
 	}
 	return lines
+}
+
+// isHeading returns bool of if it passes as a section heading or not.
+// This is the copy of the heading function from the standard library.
+// https://go.googlesource.com/go/+/refs/tags/go1.16/src/go/doc/comment.go#212
+func isHeading(line string) bool {
+	line = strings.TrimSpace(line)
+	if len(line) == 0 {
+		return false
+	}
+
+	// a heading must start with an uppercase letter
+	r, _ := utf8.DecodeRuneInString(line)
+	if !unicode.IsLetter(r) || !unicode.IsUpper(r) {
+		return false
+	}
+
+	// it must end in a letter or digit:
+	r, _ = utf8.DecodeLastRuneInString(line)
+	if !unicode.IsLetter(r) && !unicode.IsDigit(r) {
+		return false
+	}
+
+	// exclude lines with illegal characters. we allow "(),"
+	if strings.ContainsAny(line, ";:!?+*/=[]{}_^°&§~%#@<\">\\") {
+		return false
+	}
+
+	// allow "'" for possessive "'s" only
+	for b := line; ; {
+		i := strings.IndexRune(b, '\'')
+		if i < 0 {
+			break
+		}
+		if i+1 >= len(b) || b[i+1] != 's' || (i+2 < len(b) && b[i+2] != ' ') {
+			return false // not followed by "s "
+		}
+		b = b[i+2:]
+	}
+
+	// allow "." when followed by non-space
+	for b := line; ; {
+		i := strings.IndexRune(b, '.')
+		if i < 0 {
+			break
+		}
+		if i+1 >= len(b) || b[i+1] == ' ' {
+			return false // not followed by non-space
+		}
+		b = b[i+1:]
+	}
+
+	return true
 }

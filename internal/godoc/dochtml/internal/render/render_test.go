@@ -205,6 +205,21 @@ func TestDocToBlocks(t *testing.T) {
 			&preformat{lines{"BenchmarkHello    10000000    282 ns/op"}},
 			&paragraph{lines{"means that the loop ran 10000000 times at a speed of 282 ns per loop."}},
 		},
+	}, {
+		in: `
+			See https://golang.org/s/go14customimport for details.
+
+			Modules, module versions, and more
+
+			Modules are how Go manages dependencies.
+
+			A module is a collection of packages that are released, versioned, and distributed together. Modules may be downloaded directly from version control repositories or from module proxy servers.`,
+		want: []block{
+			&paragraph{lines{"See https://golang.org/s/go14customimport for details."}},
+			&heading{"Modules, module versions, and more"},
+			&paragraph{lines{"Modules are how Go manages dependencies."}},
+			&paragraph{lines{"A module is a collection of packages that are released, versioned, and distributed together. Modules may be downloaded directly from version control repositories or from module proxy servers."}},
+		},
 	}}
 
 	for i, tt := range tests {
