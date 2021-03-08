@@ -27,16 +27,15 @@ func (db *DB) GetPackageSymbols(ctx context.Context, packagePath, modulePath str
             m.version,
             d.goos,
             d.goarch
-        FROM package_symbols ps
+        FROM modules m
+        INNER JOIN units u ON u.module_id = m.id
+        INNER JOIN documentation d ON d.unit_id = u.id
+        INNER JOIN documentation_symbols ds ON ds.documentation_id = d.id
+        INNER JOIN package_symbols ps ON ps.id = ds.package_symbol_id
+        INNER JOIN paths p1 ON u.path_id = p1.id
         INNER JOIN symbol_names s1 ON ps.symbol_name_id = s1.id
         INNER JOIN symbol_names s2 ON ps.parent_symbol_name_id = s2.id
-        INNER JOIN documentation_symbols ds ON ps.id = ds.package_symbol_id
-        INNER JOIN documentation d ON d.id = ds.documentation_id
-        INNER JOIN units u ON u.id = d.unit_id
-        INNER JOIN modules m ON m.id = u.module_id
-        INNER JOIN paths p1 ON ps.package_path_id = p1.id
-        INNER JOIN paths p2 ON ps.module_path_id = p2.id
-        WHERE p1.path = $1 AND p2.path = $2
+        WHERE p1.path = $1 AND m.module_path = $2
         ORDER BY
             CASE WHEN ps.type='Type' THEN 0 ELSE 1 END,
             symbol_name;`
