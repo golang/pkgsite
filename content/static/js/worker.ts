@@ -1,12 +1,12 @@
-'use strict';
 /*!
  * @license
  * Copyright 2021 The Go Authors. All rights reserved.
  * Use of this source code is governed by a BSD-style
  * license that can be found in the LICENSE file.
  */
-function submitForm(formName, reload) {
-  const form = document.querySelector(`form[name="${formName}" ]`);
+
+function submitForm(formName: string, reload: boolean) {
+  const form = document.querySelector<HTMLFormElement>(`form[name="${formName}" ]`);
   if (!form) {
     throw Error(`Form "${formName}" not found.`);
   }
@@ -28,5 +28,5 @@ function submitForm(formName, reload) {
   xhr.open(form.method, form.action);
   xhr.send(new FormData(form));
 }
+
 window.submitForm = submitForm;
-//# sourceMappingURL=worker.js.map
