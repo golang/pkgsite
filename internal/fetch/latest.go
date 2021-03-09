@@ -7,6 +7,7 @@ package fetch
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
@@ -98,7 +99,10 @@ func LatestModuleVersions(ctx context.Context, modulePath string, prox *proxy.Cl
 	// Get the go.mod file at the raw latest version.
 	modBytes, err := prox.Mod(ctx, modulePath, rawLatest)
 	if err != nil {
-		return nil, err
+		// Something's wrong with the go.mod file, so assume a minimal one instead of failing.
+		log.Warningf(ctx, "proxy.Mod(%q, %q): %v; using minimal go.mod for latest version info",
+			modulePath, rawLatest)
+		modBytes = []byte(fmt.Sprintf("module %s", modulePath))
 	}
 	lmv, err := internal.NewLatestModuleVersions(modulePath, rawLatest, "", "", modBytes)
 	if err != nil {
