@@ -174,6 +174,12 @@ check_script_hashes() {
   runcmd go run ./devtools/cmd/csphash $script_hash_glob
 }
 
+# check_script_output checks that the minifed JavaScript output
+# matches the TypeScript source files.
+check_script_output() {
+  runcmd go run ./devtools/cmd/static -check
+}
+
 npm() {
   # Run npm install if node_modules directory does not exist.
   if [ ! -d "node_modules" ]; then
@@ -222,6 +228,7 @@ standard_linters() {
   check_bad_migrations
   go_linters
   check_script_hashes
+  check_script_output
 }
 
 
@@ -239,7 +246,8 @@ Available subcommands:
   migrations     - (lint) check migration sequence numbers
   misspell       - (lint) run misspell on source files
   npm            - run npm scripts from package.json
-  script_hashses - (lint) check script hashes
+  script_hashes  - (lint) check script hashes
+  script_output  - (lint) check script output
   staticcheck    - (lint) run staticcheck on source files
   unparam        - (lint) run unparam on source files
   prettier       - (lint, nonstandard) run prettier on .js and .css files.
@@ -287,6 +295,7 @@ main() {
       fi
       if [[ $(filter "$files" $script_hash_glob) != '' ]]; then
         check_script_hashes
+        check_script_output
       fi
       if [[ $(filter "$files" '*.go') != '' ]]; then
         go_linters
@@ -326,6 +335,7 @@ main() {
     templates) check_templates ;;
     unparam) check_unparam ;;
     script_hashes) check_script_hashes ;;
+    script_output) check_script_output ;;
     npm) npm ${@:2} ;;
     e2e) run_e2e ${@:2} ;;
     *)
