@@ -29,6 +29,7 @@ import (
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/middleware"
 	"golang.org/x/pkgsite/internal/queue"
+	"golang.org/x/pkgsite/internal/static"
 )
 
 // Server can be installed to serve the go discovery frontend.
@@ -128,7 +129,7 @@ func (s *Server) Install(handle func(string, http.Handler), redisClient *redis.C
 	handle("/_ah/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		log.Infof(r.Context(), "Request made to %q", r.URL.Path)
 	}))
-	handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir(s.staticPath.String()))))
+	handle("/static/", s.staticHandler())
 	handle("/third_party/", http.StripPrefix("/third_party", http.FileServer(http.Dir(s.thirdPartyPath))))
 	handle("/favicon.ico", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, fmt.Sprintf("%s/img/favicon.ico", http.Dir(s.staticPath.String())))
@@ -565,4 +566,19 @@ func parsePageTemplates(base template.TrustedSource) (map[string]*template.Templ
 		templates[set[0].String()] = t
 	}
 	return templates, nil
+}
+
+func (s *Server) staticHandler() http.Handler {
+	staticPath := s.staticPath.String()
+
+	// In dev mode compile TypeScript files into minified JavaScript files
+	// and rebuild them on file changes.
+	if s.devMode {
+		ctx := context.Background()
+		err := static.Build(staticPath, true)
+		if err != nil {
+			log.Error(ctx, err)
+		}
+	}
+	return http.StripPrefix("/static/", http.FileServer(http.Dir(staticPath)))
 }
