@@ -88,6 +88,9 @@ func upsertPath(ctx context.Context, tx *database.DB, path string) (id int, err 
 	// fine.
 	defer derrors.WrapStack(&err, "upsertPath(%q)", path)
 
+	if _, err := tx.Exec(ctx, `LOCK TABLE paths IN EXCLUSIVE MODE`); err != nil {
+		return 0, err
+	}
 	err = tx.QueryRow(ctx,
 		`INSERT INTO paths (path) VALUES ($1) ON CONFLICT DO NOTHING RETURNING id`,
 		path).Scan(&id)
