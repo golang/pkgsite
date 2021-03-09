@@ -6,6 +6,7 @@ package frontend
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -113,6 +114,27 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 		return s.servePathNotFoundPage(w, r, ds, info.fullPath, info.modulePath, info.requestedVersion)
 	}
 
+	// Use GOOS and GOARCH query parameters to create a build context, which
+	// affects the documentation and synopsis. Omitting both results in an empty
+	// build context, which will match the first (and preferred) build context.
+	// It's also okay to provide just one (e.g. GOOS=windows), which will select
+	// the first doc with that value, ignoring the other one.
+	bc := internal.BuildContext{GOOS: r.FormValue("GOOS"), GOARCH: r.FormValue("GOARCH")}
+	d, err := fetchDetailsForUnit(ctx, r, tab, ds, um, bc)
+	if err != nil {
+		return err
+	}
+	if s.serveStats && r.FormValue("m") == "json" {
+		data, err := json.Marshal(d)
+		if err != nil {
+			return fmt.Errorf("json.Marshal: %v", err)
+		}
+		if _, err := w.Write(data); err != nil {
+			return fmt.Errorf("w.Write: %v", err)
+		}
+		return nil
+	}
+
 	recordVersionTypeMetric(ctx, info.requestedVersion)
 	if _, ok := internal.DefaultBranches[info.requestedVersion]; ok {
 		// Since path@master is a moving target, we don't want it to be stale.
@@ -178,16 +200,6 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 		RedirectedFromPath:    redirectPath,
 	}
 
-	// Use GOOS and GOARCH query parameters to create a build context, which
-	// affects the documentation and synopsis. Omitting both results in an empty
-	// build context, which will match the first (and preferred) build context.
-	// It's also okay to provide just one (e.g. GOOS=windows), which will select
-	// the first doc with that value, ignoring the other one.
-	bc := internal.BuildContext{GOOS: r.FormValue("GOOS"), GOARCH: r.FormValue("GOARCH")}
-	d, err := fetchDetailsForUnit(ctx, r, tab, ds, um, bc)
-	if err != nil {
-		return err
-	}
 	page.Details = d
 	main, ok := d.(*MainDetails)
 	if ok {
