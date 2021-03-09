@@ -10,6 +10,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/testing/sample"
 	"golang.org/x/pkgsite/internal/version"
@@ -44,9 +45,6 @@ func versionSummaries(path string, versions []string, linkify func(path, version
 }
 
 func TestFetchPackageVersionsDetails(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout*2)
-	defer cancel()
-
 	var (
 		v2Path = "test.com/module/v2/foo"
 		v1Path = "test.com/module/foo"
@@ -161,6 +159,9 @@ func TestFetchPackageVersionsDetails(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
+			ctx, cancel := context.WithTimeout(context.Background(), testTimeout*2)
+			ctx = experiment.NewContext(ctx, internal.ExperimentInsertSymbols, internal.ExperimentSymbolHistoryVersionsPage)
+			defer cancel()
 			defer postgres.ResetTestDB(testDB, t)
 
 			for _, v := range tc.modules {

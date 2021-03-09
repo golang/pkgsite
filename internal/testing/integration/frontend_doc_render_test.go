@@ -39,9 +39,13 @@ func TestFrontendDocRender(t *testing.T) {
 }
 
 func getDoc(t *testing.T, modulePath string, exps ...string) string {
+	return getFrontendPage(t, "/"+modulePath, exps...)
+}
+
+func getFrontendPage(t *testing.T, urlPath string, exps ...string) string {
 	ctx := experiment.NewContext(context.Background(), exps...)
 	ts := setupFrontend(ctx, t, nil, nil)
-	url := ts.URL + "/" + modulePath
+	url := ts.URL + urlPath
 	resp, err := http.Get(url)
 	if err != nil {
 		t.Fatalf("%s: %v", url, err)

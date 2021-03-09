@@ -18,6 +18,7 @@ import (
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/stdlib"
+	"golang.org/x/pkgsite/internal/symbol"
 	"golang.org/x/pkgsite/internal/version"
 )
 
@@ -77,6 +78,7 @@ type VersionSummary struct {
 	Version             string
 	Retracted           bool
 	RetractionRationale string
+	Symbols             []*Symbol
 }
 
 func fetchVersionsDetails(ctx context.Context, ds internal.DataSource, fullPath, modulePath string) (*VersionsDetails, error) {
@@ -89,6 +91,15 @@ func fetchVersionsDetails(ctx context.Context, ds internal.DataSource, fullPath,
 	if err != nil {
 		return nil, err
 	}
+
+	outVersionToNameToUnitSymbol := map[string]map[string]*internal.UnitSymbol{}
+	if experiment.IsActive(ctx, internal.ExperimentSymbolHistoryVersionsPage) {
+		versionToNameToUnitSymbols, err := db.GetPackageSymbols(ctx, fullPath, modulePath)
+		if err != nil {
+			return nil, err
+		}
+		outVersionToNameToUnitSymbol = symbol.IntroducedHistory(versionToNameToUnitSymbols)
+	}
 	linkify := func(mi *internal.ModuleInfo) string {
 		// Here we have only version information, but need to construct the full
 		// import path of the package corresponding to this version.
@@ -100,7 +111,7 @@ func fetchVersionsDetails(ctx context.Context, ds internal.DataSource, fullPath,
 		}
 		return constructUnitURL(versionPath, mi.ModulePath, linkVersion(mi.Version, mi.ModulePath))
 	}
-	return buildVersionDetails(ctx, modulePath, versions, linkify), nil
+	return buildVersionDetails(ctx, modulePath, versions, outVersionToNameToUnitSymbol, linkify), nil
 }
 
 // pathInVersion constructs the full import path of the package corresponding
@@ -127,7 +138,11 @@ func pathInVersion(v1Path string, mi *internal.ModuleInfo) string {
 // versions tab, organizing major versions into those that have the same module
 // path as the package version under consideration, and those that don't.  The
 // given versions MUST be sorted first by module path and then by semver.
-func buildVersionDetails(ctx context.Context, currentModulePath string, modInfos []*internal.ModuleInfo, linkify func(v *internal.ModuleInfo) string) *VersionsDetails {
+func buildVersionDetails(ctx context.Context,
+	currentModulePath string,
+	modInfos []*internal.ModuleInfo,
+	versionToNameToSymbol map[string]map[string]*internal.UnitSymbol,
+	linkify func(v *internal.ModuleInfo) string) *VersionsDetails {
 	// lists organizes versions by VersionListKey. Note that major version isn't
 	// sufficient as a key: there are packages contained in the same major
 	// version of different modules, for example github.com/hashicorp/vault/api,
@@ -178,6 +193,9 @@ func buildVersionDetails(ctx context.Context, currentModulePath string, modInfos
 			key.DeprecationComment = mi.DeprecationComment
 			vs.Retracted = mi.Retracted
 			vs.RetractionRationale = mi.RetractionRationale
+		}
+		if nts, ok := versionToNameToSymbol[mi.Version]; ok {
+			vs.Symbols = symbolsForVersion(linkify(mi), nts)
 		}
 		if _, ok := lists[key]; !ok {
 			seenLists = append(seenLists, key)

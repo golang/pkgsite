@@ -4,11 +4,18 @@
 
 package internal
 
+import "fmt"
+
 // A BuildContext describes a build context for the Go tool: information needed
 // to build a Go package. For our purposes, we only care about the information
 // that affects documentation generated from the package.
 type BuildContext struct {
 	GOOS, GOARCH string
+}
+
+// String returns a string formatted representation of the build context.
+func (b BuildContext) String() string {
+	return fmt.Sprintf("%s/%s", b.GOOS, b.GOARCH)
 }
 
 // All represents all values for a build context element (GOOS or GOARCH).

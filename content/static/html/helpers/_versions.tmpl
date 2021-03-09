@@ -47,8 +47,28 @@
          </td>
          <td>
            <div class="Versions-commitTime">{{$v.CommitTime}}</div>
+           <div>
+             {{range $v.Symbols}}
+               {{template "symbol" .}}
+               {{range .Children}}
+                 <div class="Versions-symbolChild">{{template "symbol" .}}</div>
+               {{end}}
+             {{end}}
+           </div>
          </td>
        </tr>
      {{end}}
   {{end}}
+{{end}}
+
+{{define "symbol"}}
+  <div>
+     {{if .New}}
+       {{if eq .Kind "Method"}}method{{else if eq .Kind "Field"}}field{{end}}
+       <a href="{{.Link}}">{{end}}{{.Synopsis}} {{if .New}}</a>
+     {{end}}
+     {{if .Builds}}
+       <span class="Versions-symbolBuilds">{{range $i, $b := .Builds}}{{if $i}}, {{end}}{{$b}}{{end}}</span>
+     {{end}}
+ </div>
 {{end}}

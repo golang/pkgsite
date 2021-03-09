@@ -36,6 +36,7 @@ func setupFrontend(ctx context.Context, t *testing.T, q queue.Queue, rc *redis.C
 		ThirdPartyPath:       "../../../third_party",
 		AppVersionLabel:      "",
 		Queue:                q,
+		ServeStats:           true,
 	})
 	if err != nil {
 		t.Fatal(err)

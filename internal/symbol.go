@@ -29,7 +29,7 @@ const (
 )
 
 // Symbol is an element in the package API. A symbol can be a constant,
-// variable, function of type.
+// variable, function, or type.
 type Symbol struct {
 	// Name is the name of the symbol.
 	Name string

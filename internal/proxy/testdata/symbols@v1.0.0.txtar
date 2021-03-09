@@ -1,0 +1,84 @@
+A module used for testing the symbols logic.
+
+-- go.mod --
+module example.com/symbols
+
+-- README.md --
+This is the README for a test module.
+
+-- LICENSE --
+$MITLicense
+
+-- symbols.go --
+package symbols
+
+// const
+const C = 1
+
+// const iota
+const (
+	AA = iota + 1
+	_
+	BB
+	CC
+)
+
+type Num int
+
+const (
+	DD Num = iota
+	_
+	EE
+	FF
+)
+
+// var
+var V = 2
+
+// Multiple variables on the same line.
+var A, B string
+
+// func
+func F() {}
+
+// type
+type T int
+
+// typeConstant
+const CT T = 3
+
+// typeVariable
+var VT T
+
+// multi-line var
+var (
+	ErrA = errors.New("error A")
+	ErrB = errors.New("error B")
+)
+
+// typeFunc
+func TF() T { return T(0) }
+
+// method
+// BUG(uid): this verifies that notes are rendered
+func (T) M() {}
+
+type S1 struct {
+	F int // field
+}
+
+type S2 struct {
+	S1 // embedded struct; should have an id
+}
+
+type I1 interface {
+	M1()
+}
+
+type I2 interface {
+	I1 // embedded interface; should not have an id
+}
+
+type (
+	Int int
+)
