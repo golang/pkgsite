@@ -575,7 +575,7 @@ func (s *Server) staticHandler() http.Handler {
 	// and rebuild them on file changes.
 	if s.devMode {
 		ctx := context.Background()
-		err := static.Build(staticPath, true)
+		_, err := static.Build(static.Config{StaticPath: staticPath, Watch: true, Write: true})
 		if err != nil {
 			log.Error(ctx, err)
 		}
