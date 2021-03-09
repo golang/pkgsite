@@ -10,7 +10,6 @@ import (
 	"fmt"
 
 	"github.com/lib/pq"
-	"golang.org/x/mod/semver"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/derrors"
@@ -30,73 +29,7 @@ func insertSymbols(ctx context.Context, db *database.DB, modulePath, version str
 	if err != nil {
 		return err
 	}
-	if err := upsertDocumentationSymbols(ctx, db, pathToPkgsymToID, pathToDocIDToDoc); err != nil {
-		return err
-	}
-
-	if !experiment.IsActive(ctx, internal.ExperimentInsertSymbolHistory) {
-		return nil
-	}
-	var (
-		uniqueKeys       = map[string]internal.Symbol{}
-		symHistoryValues []interface{}
-	)
-	for path, docIDToDoc := range pathToDocIDToDoc {
-		buildToNameToSym, err := getSymbolHistory(ctx, db, path, modulePath)
-		if err != nil {
-			return err
-		}
-		for _, doc := range docIDToDoc {
-			builds := []internal.BuildContext{{GOOS: doc.GOOS, GOARCH: doc.GOARCH}}
-			if doc.GOOS == internal.All {
-				builds = internal.BuildContexts
-			}
-			for _, build := range builds {
-				nameToSymbol := buildToNameToSym[internal.BuildContext{GOOS: build.GOOS, GOARCH: build.GOARCH}]
-				if err := updateSymbols(doc.API, func(s *internal.Symbol) (err error) {
-					defer derrors.WrapStack(&err, "updateSymbols(%q)", s.Name)
-					if !shouldUpdateSymbolHistory(s.Name, version, nameToSymbol) {
-						return nil
-					}
-					pkgsym := packageSymbol{synopsis: s.Synopsis, section: s.Section}
-					pkgsymID := pathToPkgsymToID[path][pkgsym]
-					if pkgsymID == 0 {
-						return fmt.Errorf("pkgsymID cannot be 0: %q", pkgsym)
-					}
-
-					// Validate that the unique constraint won't be violated.
-					// It is easier to debug when returning an error here as
-					// opposed to from the BulkUpsert statement.
-					key := fmt.Sprintf("%d-%s-%s", pkgsymID, build.GOOS, build.GOARCH)
-					if val, ok := uniqueKeys[key]; ok {
-						return fmt.Errorf("DB package symbol %q already exists: %v; failed to insert symbol %q (%v) q with the same (package_symbol_id, goos, goarch)", key, val, s.Name, s)
-					}
-					uniqueKeys[key] = *s
-					symHistoryValues = append(symHistoryValues, pkgsymID, build.GOOS, build.GOARCH, version)
-					return nil
-				}); err != nil {
-					return err
-				}
-			}
-		}
-	}
-	uniqueSymCols := []string{"package_symbol_id", "goos", "goarch"}
-	symCols := append(uniqueSymCols, "since_version")
-	return db.BulkUpsert(ctx, "symbol_history", symCols, symHistoryValues, uniqueSymCols)
-}
-
-// shouldUpdateSymbolHistory reports whether the row for the given symbolName
-// should be updated. oldHist contains all of the current symbols in the
-// database for the same package and GOOS/GOARCH.
-//
-// shouldUpdateSymbolHistory reports true if the symbolName does not currently
-// exist, or if the newVersion is older than or equal to the current database version.
-func shouldUpdateSymbolHistory(symbolName, newVersion string, oldHist map[string]*internal.Symbol) bool {
-	dh, ok := oldHist[symbolName]
-	if !ok {
-		return true
-	}
-	return semver.Compare(newVersion, dh.SinceVersion) < 1
+	return upsertDocumentationSymbols(ctx, db, pathToPkgsymToID, pathToDocIDToDoc)
 }
 
 type packageSymbol struct {
@@ -402,58 +335,6 @@ func getUnitSymbols(ctx context.Context, db *database.DB, unitID int) (_ map[int
 		return nil, err
 	}
 	return buildToSymbols, nil
-}
-
-func getSymbolHistory(ctx context.Context, db *database.DB, packagePath, modulePath string) (_ map[internal.BuildContext]map[string]*internal.Symbol, err error) {
-	defer derrors.Wrap(&err, "getSymbolHistory(ctx, db, %q, %q)", packagePath, modulePath)
-	query := `
-        SELECT
-            s1.name AS symbol_name,
-            s2.name AS parent_symbol_name,
-            ps.section,
-            ps.type,
-            ps.synopsis,
-            sh.since_version,
-            sh.goos,
-            sh.goarch
-        FROM symbol_history sh
-        INNER JOIN package_symbols ps ON sh.package_symbol_id = ps.id
-        INNER JOIN symbol_names s1 ON ps.symbol_name_id = s1.id
-        INNER JOIN symbol_names s2 ON ps.parent_symbol_name_id = s2.id
-        INNER JOIN paths p1 ON ps.package_path_id = p1.id
-        INNER JOIN paths p2 ON ps.module_path_id = p2.id
-        WHERE p1.path = $1 AND p2.path = $2;`
-
-	// Map from GOOS/GOARCH to (map from symbol name to symbol).
-	buildToNameToSym := map[internal.BuildContext]map[string]*internal.Symbol{}
-	collect := func(rows *sql.Rows) error {
-		var (
-			sh internal.Symbol
-		)
-		if err := rows.Scan(
-			&sh.Name,
-			&sh.ParentName,
-			&sh.Section,
-			&sh.Kind,
-			&sh.Synopsis,
-			&sh.SinceVersion,
-			&sh.GOOS,
-			&sh.GOARCH,
-		); err != nil {
-			return fmt.Errorf("row.Scan(): %v", err)
-		}
-		nameToSym, ok := buildToNameToSym[internal.BuildContext{GOOS: sh.GOOS, GOARCH: sh.GOARCH}]
-		if !ok {
-			nameToSym = map[string]*internal.Symbol{}
-			buildToNameToSym[internal.BuildContext{GOOS: sh.GOOS, GOARCH: sh.GOARCH}] = nameToSym
-		}
-		nameToSym[sh.Name] = &sh
-		return nil
-	}
-	if err := db.RunQuery(ctx, query, collect, packagePath, modulePath); err != nil {
-		return nil, err
-	}
-	return buildToNameToSym, nil
 }
 
 func updateSymbols(symbols []*internal.Symbol, updateFunc func(s *internal.Symbol) error) error {

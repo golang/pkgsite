@@ -16,44 +16,6 @@ import (
 	"golang.org/x/pkgsite/internal/testing/sample"
 )
 
-func TestShouldUpdateSymbolHistory(t *testing.T) {
-	testSym := "Foo"
-	for _, test := range []struct {
-		name       string
-		newVersion string
-		oldHist    map[string]*internal.Symbol
-		want       bool
-	}{
-		{
-			name:    "should update when new version is older",
-			oldHist: map[string]*internal.Symbol{testSym: {SinceVersion: "v1.2.3"}},
-			want:    true,
-		},
-		{
-			name:    "should update when symbol does not exist",
-			oldHist: map[string]*internal.Symbol{},
-			want:    true,
-		},
-		{
-			name:    "should update when new version is the same",
-			oldHist: map[string]*internal.Symbol{testSym: {SinceVersion: sample.VersionString}},
-			want:    true,
-		},
-		{
-			name:    "should not update when new version is newer",
-			oldHist: map[string]*internal.Symbol{testSym: {SinceVersion: "v0.1.0"}},
-			want:    false,
-		},
-	} {
-		t.Run(test.name, func(t *testing.T) {
-			if got := shouldUpdateSymbolHistory(testSym, sample.VersionString, test.oldHist); got != test.want {
-				t.Errorf("shouldUpdateSymbolHistory(%q, %q, %+v) = %t; want = %t",
-					testSym, sample.VersionString, test.oldHist, got, test.want)
-			}
-		})
-	}
-}
-
 func TestInsertSymbolNamesAndHistory(t *testing.T) {
 	t.Parallel()
 	testDB, release := acquire(t)
@@ -97,10 +59,7 @@ func TestInsertSymbolNamesAndHistory(t *testing.T) {
 		t.Errorf("mismatch (-want +got):\n%s", diff)
 	}
 	compareUnitSymbols(ctx, t, testDB, mod.Packages()[0].Path, mod.ModulePath, mod.Version,
-		map[internal.BuildContext][]*internal.Symbol{
-			internal.BuildContextAll: api,
-		})
-
+		map[internal.BuildContext][]*internal.Symbol{internal.BuildContextAll: api})
 	want2 := map[string]map[string]*internal.UnitSymbol{}
 	want2[mod.Version] = unitSymbolsFromAPI(api, mod.Version)
 	comparePackageSymbols(ctx, t, testDB, mod.Packages()[0].Path, mod.ModulePath, mod.Version, want2)
@@ -129,84 +88,8 @@ func TestInsertSymbolHistory_Basic(t *testing.T) {
 	mod.Packages()[0].Documentation[0].API = api
 	MustInsertModule(ctx, t, testDB, mod)
 
-	gotHist, err := getSymbolHistory(ctx, testDB.db, mod.Packages()[0].Path, mod.ModulePath)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	symbols := map[string]*internal.Symbol{
-		"Constant": {
-			Name:         "Constant",
-			Synopsis:     "const Constant",
-			Section:      "Constants",
-			Kind:         "Constant",
-			ParentName:   "Constant",
-			SinceVersion: "v1.0.0",
-		},
-		"Function": {
-			Name:         "Function",
-			Synopsis:     "func Function() error",
-			Section:      "Functions",
-			Kind:         "Function",
-			ParentName:   "Function",
-			SinceVersion: "v1.0.0",
-		},
-		"Type": {
-			Name:         "Type",
-			Synopsis:     "type Type struct",
-			Section:      "Types",
-			Kind:         "Type",
-			ParentName:   "Type",
-			SinceVersion: "v1.0.0",
-		},
-		"Variable": {
-			Name:         "Variable",
-			Synopsis:     "var Variable",
-			Section:      "Variables",
-			Kind:         "Variable",
-			ParentName:   "Variable",
-			SinceVersion: "v1.0.0",
-		},
-		"Type.Field": {
-			Name:         "Type.Field",
-			Synopsis:     "field",
-			Section:      "Types",
-			Kind:         "Field",
-			ParentName:   "Type",
-			SinceVersion: "v1.0.0",
-		},
-		"Type.Method": {
-			Name:         "Type.Method",
-			Synopsis:     "method",
-			Section:      "Types",
-			Kind:         "Method",
-			ParentName:   "Type",
-			SinceVersion: "v1.0.0",
-		},
-		"New": {
-			Name:         "New",
-			Synopsis:     "func New() *Type",
-			Section:      "Types",
-			Kind:         "Function",
-			ParentName:   "Type",
-			SinceVersion: "v1.0.0",
-		},
-	}
-	wantHist := map[internal.BuildContext]map[string]*internal.Symbol{
-		internal.BuildContextDarwin:  symbols,
-		internal.BuildContextJS:      symbols,
-		internal.BuildContextLinux:   symbols,
-		internal.BuildContextWindows: symbols,
-	}
-	if diff := cmp.Diff(wantHist, gotHist,
-		cmpopts.IgnoreFields(internal.Symbol{}, "GOOS", "GOARCH")); diff != "" {
-		t.Fatalf("mismatch (-want +got):\n%s", diff)
-	}
 	compareUnitSymbols(ctx, t, testDB, mod.Packages()[0].Path, mod.ModulePath, mod.Version,
-		map[internal.BuildContext][]*internal.Symbol{
-			internal.BuildContextAll: api,
-		})
-
+		map[internal.BuildContext][]*internal.Symbol{internal.BuildContextAll: api})
 	want2 := map[string]map[string]*internal.UnitSymbol{}
 	want2[mod.Version] = unitSymbolsFromAPI(api, mod.Version)
 	comparePackageSymbols(ctx, t, testDB, mod.Packages()[0].Path, mod.ModulePath, mod.Version, want2)
@@ -257,25 +140,6 @@ func TestInsertSymbolHistory_MultiVersions(t *testing.T) {
 	MustInsertModule(ctx, t, testDB, mod10)
 	MustInsertModule(ctx, t, testDB, mod11)
 
-	symbols := map[string]*internal.Symbol{
-		"Foo":   &typ,
-		"Foo.A": &methodA,
-		"Foo.B": &methodB,
-	}
-	wantHist := map[internal.BuildContext]map[string]*internal.Symbol{
-		internal.BuildContextDarwin:  symbols,
-		internal.BuildContextJS:      symbols,
-		internal.BuildContextLinux:   symbols,
-		internal.BuildContextWindows: symbols,
-	}
-	gotHist, err := getSymbolHistory(ctx, testDB.db, mod12.Packages()[0].Path, mod12.ModulePath)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if diff := cmp.Diff(wantHist, gotHist,
-		cmpopts.IgnoreFields(internal.Symbol{}, "GOOS", "GOARCH")); diff != "" {
-		t.Fatalf("mismatch (-want +got):\n%s", diff)
-	}
 	createwant := func(docs []*internal.Documentation) map[internal.BuildContext][]*internal.Symbol {
 		want := map[internal.BuildContext][]*internal.Symbol{}
 		for _, doc := range docs {
@@ -393,42 +257,6 @@ func TestInsertSymbolHistory_MultiGOOS(t *testing.T) {
 	MustInsertModule(ctx, t, testDB, mod12)
 	MustInsertModule(ctx, t, testDB, mod10)
 	MustInsertModule(ctx, t, testDB, mod11)
-	gotHist, err := getSymbolHistory(ctx, testDB.db, mod10.Packages()[0].Path, mod10.ModulePath)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	parent := func() *internal.Symbol { typ.SinceVersion = "v1.0.0"; return &typ }()
-	a1 := func() *internal.Symbol { a := methodA; a.SinceVersion = "v1.1.0"; return &a }()
-	b1 := func() *internal.Symbol { b := methodB; b.SinceVersion = "v1.2.0"; return &b }()
-	a2 := func() *internal.Symbol { a := methodA; a.SinceVersion = "v1.2.0"; return &a }()
-	b2 := func() *internal.Symbol { b := methodB; b.SinceVersion = "v1.1.0"; return &b }()
-	wantHist := map[internal.BuildContext]map[string]*internal.Symbol{
-		internal.BuildContextLinux: {
-			"Foo":   parent,
-			"Foo.A": a1,
-			"Foo.B": b1,
-		},
-		internal.BuildContextWindows: {
-			"Foo":   parent,
-			"Foo.A": a1,
-			"Foo.B": b1,
-		},
-		internal.BuildContextDarwin: {
-			"Foo":   parent,
-			"Foo.A": a2,
-			"Foo.B": b2,
-		},
-		internal.BuildContextJS: {
-			"Foo":   parent,
-			"Foo.A": a2,
-			"Foo.B": b2,
-		},
-	}
-	if diff := cmp.Diff(wantHist, gotHist,
-		cmpopts.IgnoreFields(internal.Symbol{}, "GOOS", "GOARCH")); diff != "" {
-		t.Fatalf("mismatch (-want +got):\n%s", diff)
-	}
 
 	createwant := func(docs []*internal.Documentation) map[internal.BuildContext][]*internal.Symbol {
 		want := map[internal.BuildContext][]*internal.Symbol{}
