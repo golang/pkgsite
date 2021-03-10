@@ -14,8 +14,10 @@ import (
 
 	"github.com/google/safehtml"
 	"github.com/google/safehtml/template"
+	"golang.org/x/mod/semver"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/godoc/dochtml"
 	"golang.org/x/pkgsite/internal/godoc/internal/doc"
 	"golang.org/x/pkgsite/internal/source"
@@ -61,7 +63,7 @@ func (p *Package) Render(ctx context.Context, innerPath string, sourceInfo *sour
 	}
 
 	// Render documentation HTML.
-	opts := p.renderOptions(innerPath, sourceInfo, modInfo)
+	opts := p.renderOptions(innerPath, sourceInfo, modInfo, nil)
 	docHTML, err := dochtml.Render(ctx, p.Fset, d, opts)
 	if errors.Is(err, ErrTooLarge) {
 		docHTML = template.MustParseAndExecuteToHTML(DocTooLargeReplacement)
@@ -126,7 +128,8 @@ func (p *Package) docPackage(innerPath string, modInfo *ModuleInfo) (_ *doc.Pack
 }
 
 // renderOptions returns a RenderOptions for p.
-func (p *Package) renderOptions(innerPath string, sourceInfo *source.Info, modInfo *ModuleInfo) dochtml.RenderOptions {
+func (p *Package) renderOptions(innerPath string, sourceInfo *source.Info, modInfo *ModuleInfo,
+	nameToVersion map[string]string) dochtml.RenderOptions {
 	sourceLinkFunc := func(n ast.Node) string {
 		if sourceInfo == nil {
 			return ""
@@ -145,23 +148,65 @@ func (p *Package) renderOptions(innerPath string, sourceInfo *source.Info, modIn
 	}
 
 	return dochtml.RenderOptions{
-		FileLinkFunc:   fileLinkFunc,
-		SourceLinkFunc: sourceLinkFunc,
-		ModInfo:        modInfo,
-		Limit:          int64(MaxDocumentationHTML),
+		FileLinkFunc:     fileLinkFunc,
+		SourceLinkFunc:   sourceLinkFunc,
+		ModInfo:          modInfo,
+		SinceVersionFunc: sinceVersionFunc(modInfo.ModulePath, nameToVersion),
+		Limit:            int64(MaxDocumentationHTML),
+	}
+}
+
+// sinceVersionFunc returns a func that reports the version when the symbol
+// with name was first introduced.  nameToVersion is a map of symbol name to
+// the first version that symbol name was seen in the package.
+//
+// If the version when the symbol name was first introduced is the earliest
+// version in nameToVersion, an empty string is returned. This is because we
+// don't want to display that information on the main page to reduce clutter.
+func sinceVersionFunc(modulePath string, nameToVersion map[string]string) func(name string) string {
+	var earliest string
+	for _, v := range nameToVersion {
+		if earliest == "" {
+			earliest = v
+			continue
+		}
+		if semver.Compare(v, earliest) < 0 {
+			earliest = v
+		}
+	}
+
+	return func(name string) string {
+		if nameToVersion == nil {
+			return ""
+		}
+		v := nameToVersion[name]
+		if v == earliest {
+			return ""
+		}
+		if modulePath == stdlib.ModulePath {
+			// This should never return an error.
+			tag, _ := stdlib.TagForVersion(v)
+			return tag
+		}
+		return v
 	}
 }
 
 // RenderParts renders the documentation for the package in parts.
 // Rendering destroys p's AST; do not call any methods of p after it returns.
-func (p *Package) RenderParts(ctx context.Context, innerPath string, sourceInfo *source.Info, modInfo *ModuleInfo) (_ *dochtml.Parts, err error) {
+func (p *Package) RenderParts(ctx context.Context, innerPath string,
+	sourceInfo *source.Info, modInfo *ModuleInfo, nameToVersion map[string]string) (_ *dochtml.Parts, err error) {
 	p.renderCalled = true
 
 	d, err := p.docPackage(innerPath, modInfo)
 	if err != nil {
 		return nil, err
 	}
-	opts := p.renderOptions(innerPath, sourceInfo, modInfo)
+
+	if !experiment.IsActive(ctx, internal.ExperimentSymbolHistoryMainPage) {
+		nameToVersion = map[string]string{}
+	}
+	opts := p.renderOptions(innerPath, sourceInfo, modInfo, nameToVersion)
 	parts, err := dochtml.RenderParts(ctx, p.Fset, d, opts)
 	if errors.Is(err, ErrTooLarge) {
 		return &dochtml.Parts{Body: template.MustParseAndExecuteToHTML(DocTooLargeReplacement)}, nil
@@ -190,5 +235,5 @@ func RenderPartsFromUnit(ctx context.Context, u *internal.Unit) (_ *dochtml.Part
 	} else if u.Path != u.ModulePath {
 		innerPath = u.Path[len(u.ModulePath)+1:]
 	}
-	return docPkg.RenderParts(ctx, innerPath, u.SourceInfo, modInfo)
+	return docPkg.RenderParts(ctx, innerPath, u.SourceInfo, modInfo, nil)
 }

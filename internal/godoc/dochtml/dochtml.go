@@ -53,8 +53,9 @@ type RenderOptions struct {
 	// including the .go qualifier.
 	// As a special case, FileLinkFunc may return the empty
 	// string to indicate that a given file should not be linked.
-	FileLinkFunc   func(file string) (url string)
-	SourceLinkFunc func(ast.Node) string
+	FileLinkFunc     func(file string) (url string)
+	SourceLinkFunc   func(ast.Node) string
+	SinceVersionFunc func(name string) string
 	// ModInfo optionally specifies information about the module the package
 	// belongs to in order to render module-related documentation.
 	ModInfo *ModuleInfo
@@ -202,6 +203,9 @@ func renderInfo(ctx context.Context, fset *token.FileSet, p *doc.Package, opt Re
 	sourceLink := func(name string, node ast.Node) safehtml.HTML {
 		return linkHTML(name, opt.SourceLinkFunc(node), "Documentation-source")
 	}
+	sinceVersion := func(name string) safehtml.HTML {
+		return safehtml.HTMLEscaped(opt.SinceVersionFunc(name))
+	}
 	funcs := map[string]interface{}{
 		"render_short_synopsis":    r.ShortSynopsis,
 		"render_synopsis":          r.Synopsis,
@@ -211,6 +215,7 @@ func renderInfo(ctx context.Context, fset *token.FileSet, p *doc.Package, opt Re
 		"render_code":              r.CodeHTML,
 		"file_link":                fileLink,
 		"source_link":              sourceLink,
+		"since_version":            sinceVersion,
 	}
 	data := templateData{
 		RootURL:     "/pkg",

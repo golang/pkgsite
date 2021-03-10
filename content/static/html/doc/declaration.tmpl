@@ -26,3 +26,13 @@
   {{- $out.Doc -}}
   {{"\n"}}
 {{- end -}}
+
+{{- define "since_version" -}}
+  {{$v := (since_version .)}}
+  <span class="Documentation-sinceVersion">
+    {{if $v.String}}
+      <span class="Documentation-sinceVersionLabel">added in</span>
+      <span class="Documentation-sinceVersionVersion">{{$v}}</span>
+    {{end}}
+  </span>
+{{end}}

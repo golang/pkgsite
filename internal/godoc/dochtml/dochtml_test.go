@@ -91,8 +91,9 @@ func TestRenderParts(t *testing.T) {
 
 	ctx := context.Background()
 	parts, err := RenderParts(ctx, fset, d, RenderOptions{
-		FileLinkFunc:   func(string) string { return "file" },
-		SourceLinkFunc: func(ast.Node) string { return "src" },
+		FileLinkFunc:     func(string) string { return "file" },
+		SourceLinkFunc:   func(ast.Node) string { return "src" },
+		SinceVersionFunc: func(string) string { return "" },
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -101,6 +102,7 @@ func TestRenderParts(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	sidenavDoc, err := html.Parse(strings.NewReader(parts.Outline.String()))
 	if err != nil {
 		t.Fatal(err)
