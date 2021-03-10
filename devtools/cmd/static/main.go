@@ -32,7 +32,7 @@ func main() {
 			if err != nil {
 				log.Fatal(err)
 			}
-			if bytes.Equal(file, v.Contents) {
+			if !bytes.Equal(file, v.Contents) {
 				log.Fatalf("static files out of sync, try running 'go run ./devtools/cmd/static'")
 			}
 		}
