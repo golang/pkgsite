@@ -188,47 +188,18 @@ func TestExampleRender(t *testing.T) {
 		want   string
 	}{
 		{
-			name:   "Non executable example (no play buttons)",
-			htmlID: "example-package-AppRunNoAction",
-			want: `<details tabindex="-1" id="example-package-AppRunNoAction" class="Documentation-exampleDetails js-exampleContainer">
-<summary class="Documentation-exampleDetailsHeader">Example (AppRunNoAction) <a href="#example-package-AppRunNoAction">¶</a></summary>
-<div class="Documentation-exampleDetailsBody">
-<p>non-executable example taken from <a href="https://github.com/urfave/cli/blob/master/app_test.go#L184">https://github.com/urfave/cli/blob/master/app_test.go#L184</a>
-</p>
-<p>Code:</p>
-
-<pre class="Documentation-exampleCode"><span class="comment">// example comment</span>
-app := App{}
-app.Name = &#34;greet&#34;
-_ = app.Run([]string{&#34;greet&#34;})
-</pre>
-
-<pre class="Documentation-exampleOutput">NAME:
-   greet - A new cli application
-
-USAGE:
-   greet [global options] command [command options] [arguments...]
-
-COMMANDS:
-   help, h  Shows a list of commands or help for one command
-
-GLOBAL OPTIONS:
-   --help, -h  show help (default: false)
-</pre>
-</div>
-</details>`,
-		},
-		{
 			name:   "Executable examples (with play buttons)",
 			htmlID: "example-package-StringsCompare",
 			want: `<details tabindex="-1" id="example-package-StringsCompare" class="Documentation-exampleDetails js-exampleContainer">
 <summary class="Documentation-exampleDetailsHeader">Example (StringsCompare) <a href="#example-package-StringsCompare">¶</a></summary>
 <div class="Documentation-exampleDetailsBody">
-<p>executable example
+<div role="navigation" aria-label="Table of Contents">
+		<ul class="Documentation-toc"></ul>
+	</div><p>executable example
 </p>
 <p>Code:</p>
 
-<pre class="Documentation-exampleCode">package main
+<textarea class="Documentation-exampleCode" spellcheck="false">package main
 
 import (
 	&#34;fmt&#34;
@@ -236,13 +207,13 @@ import (
 )
 
 func main() {
-	<span class="comment">// example comment</span>
+	// example comment
 	fmt.Println(strings.Compare(&#34;a&#34;, &#34;b&#34;))
 	fmt.Println(strings.Compare(&#34;a&#34;, &#34;a&#34;))
 	fmt.Println(strings.Compare(&#34;b&#34;, &#34;a&#34;))
 
 }
-</pre>
+</textarea>
 
 <pre class="Documentation-exampleOutput">-1
 0

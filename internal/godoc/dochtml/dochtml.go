@@ -25,9 +25,7 @@ import (
 	"github.com/google/safehtml/legacyconversions"
 	"github.com/google/safehtml/template"
 	"github.com/google/safehtml/uncheckedconversions"
-	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
-	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/godoc/dochtml/internal/render"
 	"golang.org/x/pkgsite/internal/godoc/internal/doc"
 )
@@ -134,13 +132,8 @@ func RenderParts(ctx context.Context, fset *token.FileSet, p *doc.Package, opt R
 		return html
 	}
 
-	bodyTmplName := "legacy_body.tmpl"
-	if experiment.IsActive(ctx, internal.ExperimentInteractivePlayground) {
-		bodyTmplName = "body.tmpl"
-	}
-
 	parts := &Parts{
-		Body:          exec(bodyTmplName),
+		Body:          exec("body.tmpl"),
 		Outline:       exec("outline.tmpl"),
 		MobileOutline: exec("sidenav-mobile.tmpl"),
 		// links must be called after body, because the call to
@@ -199,8 +192,8 @@ func renderInfo(ctx context.Context, fset *token.FileSet, p *doc.Package, opt Re
 			return "/" + versionedPath
 		},
 		DisableHotlinking:           true,
-		EnableCommandTOC:            experiment.IsActive(ctx, internal.ExperimentCommandTOC),
-		EnableInteractivePlayground: experiment.IsActive(ctx, internal.ExperimentInteractivePlayground),
+		EnableCommandTOC:            true,
+		EnableInteractivePlayground: true,
 	})
 
 	fileLink := func(name string) safehtml.HTML {
