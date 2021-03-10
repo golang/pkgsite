@@ -6,8 +6,6 @@
   },
   "private": true,
   "scripts": {
-    "build": "tsc --project .",
-    "develop": "tsc --project . --watch",
     "license-check": "jsgl --local .",
     "lint": "run-s --continue-on-error \"lint:* -- {1}\" -- ",
     "lint:css": "stylelint **/*.css",
