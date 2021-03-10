@@ -21,7 +21,7 @@ func TestInsertSymbolNamesAndHistory(t *testing.T) {
 	testDB, release := acquire(t)
 	defer release()
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	ctx = experiment.NewContext(ctx, internal.ExperimentInsertSymbols, internal.ExperimentInsertSymbolHistory)
+	ctx = experiment.NewContext(ctx, internal.ExperimentInsertSymbols)
 	defer cancel()
 
 	mod := sample.DefaultModule()
@@ -69,7 +69,7 @@ func TestInsertSymbolHistory_Basic(t *testing.T) {
 	testDB, release := acquire(t)
 	defer release()
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	ctx = experiment.NewContext(ctx, internal.ExperimentInsertSymbols, internal.ExperimentInsertSymbolHistory)
+	ctx = experiment.NewContext(ctx, internal.ExperimentInsertSymbols)
 	defer cancel()
 
 	mod := sample.DefaultModule()
@@ -99,7 +99,7 @@ func TestInsertSymbolHistory_MultiVersions(t *testing.T) {
 	testDB, release := acquire(t)
 	defer release()
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	ctx = experiment.NewContext(ctx, internal.ExperimentInsertSymbols, internal.ExperimentInsertSymbolHistory)
+	ctx = experiment.NewContext(ctx, internal.ExperimentInsertSymbols)
 	defer cancel()
 
 	typ := internal.Symbol{
@@ -175,7 +175,7 @@ func TestInsertSymbolHistory_MultiGOOS(t *testing.T) {
 	testDB, release := acquire(t)
 	defer release()
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	ctx = experiment.NewContext(ctx, internal.ExperimentInsertSymbols, internal.ExperimentInsertSymbolHistory)
+	ctx = experiment.NewContext(ctx, internal.ExperimentInsertSymbols)
 	defer cancel()
 
 	typ := internal.Symbol{
