@@ -1,32 +1,7 @@
-'use strict';
 /*!
  * @license
  * Copyright 2021 The Go Authors. All rights reserved.
  * Use of this source code is governed by a BSD-style
  * license that can be found in the LICENSE file.
- */
-function submitForm(formName, reload) {
-  const form = document.querySelector(`form[name="${formName}" ]`);
-  if (!form) {
-    throw Error(`Form "${formName}" not found.`);
-  }
-  form.result.value = 'request pending...';
-  const xhr = new XMLHttpRequest();
-  xhr.onreadystatechange = function () {
-    if (this.readyState == 4) {
-      if (this.status >= 200 && this.status < 300) {
-        if (reload) {
-          location.reload();
-        } else {
-          form.result.value = 'Success.';
-        }
-      } else {
-        form.result.value = 'ERROR: ' + this.responseText;
-      }
-    }
-  };
-  xhr.open(form.method, form.action);
-  xhr.send(new FormData(form));
-}
-window.submitForm = submitForm;
+ */function submitForm(o,s){const e=document.querySelector(`form[name="${o}" ]`);if(!e)throw Error(`Form "${o}" not found.`);e.result.value="request pending...";const t=new XMLHttpRequest;t.onreadystatechange=function(){this.readyState==4&&(this.status>=200&&this.status<300?s?location.reload():e.result.value="Success.":e.result.value="ERROR: "+this.responseText)},t.open(e.method,e.action),t.send(new FormData(e))}window.submitForm=submitForm;
 //# sourceMappingURL=worker.js.map

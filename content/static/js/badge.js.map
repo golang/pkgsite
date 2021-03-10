@@ -1,1 +1,7 @@
-{"version":3,"file":"badge.js","sourceRoot":"","sources":["badge.ts"],"names":[],"mappings":";AAAA;;;;;GAKG;AAEH,MAAM,UAAU,GAAG,QAAQ,CAAC,gBAAgB,CAAC,sBAAsB,CAAC,CAAC;AACrE,UAAU,CAAC,OAAO,CAAC,OAAO,CAAC,EAAE;IAC3B,OAAO,CAAC,gBAAgB,CAAC,OAAO,EAAE,CAAC,CAAC,EAAE;;QACpC,CAAC,CAAC,cAAc,EAAE,CAAC;QACnB,MAAC,CAAC,CAAC,aAAkC,0CAAE,MAAM,GAAG;QAChD,QAAQ,CAAC,WAAW,CAAC,MAAM,CAAC,CAAC;IAC/B,CAAC,CAAC,CAAC;AACL,CAAC,CAAC,CAAC"}
+{
+  "version": 3,
+  "sources": ["badge.ts"],
+  "sourcesContent": ["/*!\n * @license\n * Copyright 2019-2020 The Go Authors. All rights reserved.\n * Use of this source code is governed by a BSD-style\n * license that can be found in the LICENSE file.\n */\n\nconst snippetEls = document.querySelectorAll('.js-toolsCopySnippet');\nsnippetEls.forEach(inputEl => {\n  inputEl.addEventListener('click', e => {\n    e.preventDefault();\n    (e.currentTarget as HTMLInputElement)?.select();\n    document.execCommand('copy');\n  });\n});\n"],
+  "mappings": "AAAA;AAAA;AAAA;AAAA;AAAA;AAAA,GAOA,KAAM,YAAa,SAAS,iBAAiB,wBAC7C,WAAW,QAAQ,GAAW,CAC5B,EAAQ,iBAAiB,QAAS,GAAK,CACrC,EAAE,iBACD,EAAE,eAAoC,SACvC,SAAS,YAAY",
+  "names": []
+}
