@@ -18,7 +18,8 @@ You can run the frontend locally like so:
 
     go run ./cmd/frontend [-dev] [-direct_proxy]
 
-- The `-dev` flag reloads templates on each page load.
+- The `-dev` flag reloads templates on each page load and rebuilds JavaScript
+  assets when TypeScript source files change.
 
 The frontend can use one of three datasources:
 
@@ -84,23 +85,15 @@ framework and the various hooks and assertions see the
 
 ## Static Assets
 
-A migration to TypeScript for pkg.go.dev is underway. See
-[#43359](https://github.com/golang/go/issues/43359) for tracking info.
-
-JavaScript assets for pkg.go.dev are built from TypeScript files in the
-content/static/js directory. All new scripts and updates to existing
-scripts should be written with TypeScript.
+JavaScript assets for pkg.go.dev are compiled from TypeScript files in the
+content/static/js directory. The compiled assets are commited to the repo so the
+frontend or worker service can be run without any additional steps from a new
+clone of the project.
 
 ### Building
 
-If you're modifying any TypeScript code, you must run
-`./all.bash npm run build` for the changes to take effect. This script will
-require Docker to be installed.
-
-### Development
-
-To watch the source files for changes and have them rebuilt automatically
-you can run `./all.bash npm run develop`.
+When modifying any TypeScript code, you must run
+`go run ./devtools/cmd/static` before commiting your changes.
 
 ### Testing
 
