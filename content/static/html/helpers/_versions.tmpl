@@ -64,11 +64,10 @@
 {{define "symbol"}}
   <div>
      {{if .New}}
-       {{if eq .Kind "Method"}}method{{else if eq .Kind "Field"}}field{{end}}
        <a href="{{.Link}}">{{end}}{{.Synopsis}} {{if .New}}</a>
      {{end}}
      {{if .Builds}}
        <span class="Versions-symbolBuilds">{{range $i, $b := .Builds}}{{if $i}}, {{end}}{{$b}}{{end}}</span>
      {{end}}
- </div>
+  </div>
 {{end}}
