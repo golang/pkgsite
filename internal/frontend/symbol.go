@@ -60,7 +60,7 @@ func symbolsForVersion(pkgURLPath string, symbolsAtVersion map[string]*internal.
 		if !ok {
 			s = &Symbol{
 				Name:     us.Name,
-				Synopsis: formatSynopsis(us.Synopsis, us.ParentName, us.Kind),
+				Synopsis: us.Synopsis,
 				Link:     symbolLink(pkgURLPath, us.Name),
 				Section:  us.Section,
 				Kind:     us.Kind,
@@ -117,44 +117,15 @@ func symbolBuilds(us *internal.UnitSymbol) []string {
 // function is only used when a parent symbol is not found for the unit symbol,
 // which means it was not introduced at the same version.
 func createParent(us *internal.UnitSymbol, pkgURLPath string) *Symbol {
-	var synopsis string
-	if strings.Contains(us.Synopsis, fmt.Sprintf("type %s struct", us.ParentName)) {
-		synopsis = fmt.Sprintf("type %s struct", us.ParentName)
-	} else if strings.Contains(us.Synopsis, fmt.Sprintf("type %s interface", us.ParentName)) {
-		synopsis = fmt.Sprintf("type %s interface", us.ParentName)
-	} else {
-		synopsis = fmt.Sprintf("type %s", us.ParentName)
-	}
 	s := &Symbol{
 		Name:     us.ParentName,
-		Synopsis: synopsis,
+		Synopsis: fmt.Sprintf("type %s", us.ParentName),
 		Link:     symbolLink(pkgURLPath, us.ParentName),
 		Section:  internal.SymbolSectionTypes,
 		Kind:     internal.SymbolKindType,
 		Builds:   symbolBuilds(us),
 	}
 	return s
-}
-
-// formatSynopsis removes the leading "type <ParentName> <struct/interface>,"
-// string for the synopsis. These strings are added to prevent conflicts
-// between the same synopsis for different symbols (for example, if two
-// different interfaces both had a Foo() string method) in the database, since
-// the synopsis is used as a piece of a unique constraint in the database.
-//
-// Trailing brackets are removed from types.
-// TODO(https://golang.org/issue/37102): Change the unique constraint on
-// package_symbols and store the desired synopsis. Then remove this function.
-func formatSynopsis(syn, parentName string, kind internal.SymbolKind) string {
-	switch kind {
-	case internal.SymbolKindType:
-		return strings.TrimSuffix(syn, "{}")
-	case internal.SymbolKindField:
-		return strings.TrimPrefix(syn, fmt.Sprintf("type %s struct, ", parentName))
-	case internal.SymbolKindMethod:
-		return strings.TrimPrefix(syn, fmt.Sprintf("type %s interface, ", parentName))
-	}
-	return syn
 }
 
 // sortSymbols returns an array of symbols in order of

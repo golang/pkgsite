@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"go/ast"
 	"go/token"
+	"strings"
 
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
@@ -115,7 +116,7 @@ func types(p *doc.Package, fset *token.FileSet) ([]*internal.Symbol, error) {
 		}
 		t := &internal.Symbol{
 			Name:     typ.Name,
-			Synopsis: render.OneLineNodeDepth(fset, spec, 0),
+			Synopsis: strings.TrimSuffix(strings.TrimSuffix(render.OneLineNodeDepth(fset, spec, 0), "{ ... }"), "{}"),
 			Section:  internal.SymbolSectionTypes,
 			Kind:     internal.SymbolKindType,
 		}
@@ -185,8 +186,7 @@ func fieldsForType(typName string, spec *ast.TypeSpec, fset *token.FileSet) []*i
 		// FieldList is also used by go/ast for st.Methods, which is the
 		// only reason this type is a list.
 		for _, n := range f.Names {
-			synopsis := fmt.Sprintf("type %s struct, %s %s", typName, n,
-				render.OneLineNodeDepth(fset, f.Type, 0))
+			synopsis := fmt.Sprintf("%s %s", n, render.OneLineNodeDepth(fset, f.Type, 0))
 			name := typName + "." + n.Name
 			syms = append(syms, &internal.Symbol{
 				Name:       name,
@@ -221,7 +221,7 @@ func methodsForType(t *doc.Type, spec *ast.TypeSpec, fset *token.FileSet) ([]*in
 			}
 			for _, n := range m.Names {
 				name := t.Name + "." + n.Name
-				synopsis := fmt.Sprintf("type %s interface, %s", t.Name, render.OneLineField(fset, m, 0))
+				synopsis := render.OneLineField(fset, m, 0)
 				syms = append(syms, &internal.Symbol{
 					Name:       name,
 					ParentName: t.Name,

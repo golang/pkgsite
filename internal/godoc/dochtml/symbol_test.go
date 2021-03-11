@@ -98,13 +98,13 @@ func TestGetSymbols(t *testing.T) {
 		},
 		{
 			Name:     "I1",
-			Synopsis: "type I1 interface{ ... }",
+			Synopsis: "type I1 interface",
 			Section:  "Types",
 			Kind:     "Type",
 			Children: []*internal.Symbol{
 				{
 					Name:       "I1.M1",
-					Synopsis:   "type I1 interface, M1 func()",
+					Synopsis:   "M1 func()",
 					Section:    "Types",
 					ParentName: "I1",
 					Kind:       "Method",
@@ -113,13 +113,13 @@ func TestGetSymbols(t *testing.T) {
 		},
 		{
 			Name:     "I2",
-			Synopsis: "type I2 interface{ ... }",
+			Synopsis: "type I2 interface",
 			Section:  "Types",
 			Kind:     "Type",
 			Children: []*internal.Symbol{
 				{
 					Name:       "I2.M2",
-					Synopsis:   "type I2 interface, M2 func()",
+					Synopsis:   "M2 func()",
 					Section:    "Types",
 					ParentName: "I2",
 					Kind:       "Method",
@@ -157,13 +157,13 @@ func TestGetSymbols(t *testing.T) {
 		},
 		{
 			Name:     "S1",
-			Synopsis: "type S1 struct{ ... }",
+			Synopsis: "type S1 struct",
 			Section:  "Types",
 			Kind:     "Type",
 			Children: []*internal.Symbol{
 				{
 					Name:       "S1.F",
-					Synopsis:   "type S1 struct, F int",
+					Synopsis:   "F int",
 					Section:    "Types",
 					ParentName: "S1",
 					Kind:       "Field",
@@ -172,13 +172,13 @@ func TestGetSymbols(t *testing.T) {
 		},
 		{
 			Name:     "S2",
-			Synopsis: "type S2 struct{ ... }",
+			Synopsis: "type S2 struct",
 			Section:  "Types",
 			Kind:     "Type",
 			Children: []*internal.Symbol{
 				{
 					Name:       "S2.G",
-					Synopsis:   "type S2 struct, G int",
+					Synopsis:   "G int",
 					Section:    "Types",
 					ParentName: "S2",
 					Kind:       "Field",

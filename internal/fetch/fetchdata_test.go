@@ -945,13 +945,13 @@ var moduleStd = &testModule{
 							},
 							{
 								Name:     "error",
-								Synopsis: "type error interface{ ... }",
+								Synopsis: "type error interface",
 								Section:  "Types",
 								Kind:     "Type",
 								Children: []*internal.Symbol{
 									{
 										Name:       "error.Error",
-										Synopsis:   "type error interface, Error func() string",
+										Synopsis:   "Error func() string",
 										Section:    "Types",
 										Kind:       "Method",
 										ParentName: "error",
@@ -1158,7 +1158,7 @@ var moduleStd = &testModule{
 							},
 							{
 								Name:     "Context",
-								Synopsis: "type Context interface{ ... }",
+								Synopsis: "type Context interface",
 								Section:  "Types",
 								Kind:     "Type",
 								Children: []*internal.Symbol{
@@ -1185,28 +1185,28 @@ var moduleStd = &testModule{
 									},
 									{
 										Name:       "Context.Deadline",
-										Synopsis:   "type Context interface, Deadline func() (deadline time.Time, ok bool)",
+										Synopsis:   "Deadline func() (deadline time.Time, ok bool)",
 										Section:    "Types",
 										Kind:       "Method",
 										ParentName: "Context",
 									},
 									{
 										Name:       "Context.Done",
-										Synopsis:   "type Context interface, Done func() <-chan struct{}",
+										Synopsis:   "Done func() <-chan struct{}",
 										Section:    "Types",
 										Kind:       "Method",
 										ParentName: "Context",
 									},
 									{
 										Name:       "Context.Err",
-										Synopsis:   "type Context interface, Err func() error",
+										Synopsis:   "Err func() error",
 										Section:    "Types",
 										Kind:       "Method",
 										ParentName: "Context",
 									},
 									{
 										Name:       "Context.Value",
-										Synopsis:   "type Context interface, Value func(key interface{}) interface{}",
+										Synopsis:   "Value func(key interface{}) interface{}",
 										Section:    "Types",
 										Kind:       "Method",
 										ParentName: "Context",
@@ -1277,7 +1277,7 @@ var moduleStd = &testModule{
 								},
 								{
 									Name:     "Decoder",
-									Synopsis: "type Decoder struct{}",
+									Synopsis: "type Decoder struct",
 									Section:  "Types",
 									Kind:     "Type",
 									Children: []*internal.Symbol{
@@ -1349,7 +1349,7 @@ var moduleStd = &testModule{
 								},
 								{
 									Name:     "Encoder",
-									Synopsis: "type Encoder struct{}",
+									Synopsis: "type Encoder struct",
 									Section:  "Types",
 									Kind:     "Type",
 									Children: []*internal.Symbol{
@@ -1385,13 +1385,13 @@ var moduleStd = &testModule{
 								},
 								{
 									Name:     "InvalidUTF8Error",
-									Synopsis: "type InvalidUTF8Error struct{ ... }",
+									Synopsis: "type InvalidUTF8Error struct",
 									Section:  "Types",
 									Kind:     "Type",
 									Children: []*internal.Symbol{
 										{
 											Name:       "InvalidUTF8Error.S",
-											Synopsis:   "type InvalidUTF8Error struct, S string",
+											Synopsis:   "S string",
 											Section:    "Types",
 											Kind:       "Field",
 											ParentName: "InvalidUTF8Error",
@@ -1407,13 +1407,13 @@ var moduleStd = &testModule{
 								},
 								{
 									Name:     "InvalidUnmarshalError",
-									Synopsis: "type InvalidUnmarshalError struct{ ... }",
+									Synopsis: "type InvalidUnmarshalError struct",
 									Section:  "Types",
 									Kind:     "Type",
 									Children: []*internal.Symbol{
 										{
 											Name:       "InvalidUnmarshalError.Type",
-											Synopsis:   "type InvalidUnmarshalError struct, Type reflect.Type",
+											Synopsis:   "Type reflect.Type",
 											Section:    "Types",
 											Kind:       "Field",
 											ParentName: "InvalidUnmarshalError",
@@ -1429,13 +1429,13 @@ var moduleStd = &testModule{
 								},
 								{
 									Name:     "Marshaler",
-									Synopsis: "type Marshaler interface{ ... }",
+									Synopsis: "type Marshaler interface",
 									Section:  "Types",
 									Kind:     "Type",
 									Children: []*internal.Symbol{
 										{
 											Name:       "Marshaler.MarshalJSON",
-											Synopsis:   "type Marshaler interface, MarshalJSON func() ([]byte, error)",
+											Synopsis:   "MarshalJSON func() ([]byte, error)",
 											Section:    "Types",
 											Kind:       "Method",
 											ParentName: "Marshaler",
@@ -1444,20 +1444,20 @@ var moduleStd = &testModule{
 								},
 								{
 									Name:     "MarshalerError",
-									Synopsis: "type MarshalerError struct{ ... }",
+									Synopsis: "type MarshalerError struct",
 									Section:  "Types",
 									Kind:     "Type",
 									Children: []*internal.Symbol{
 										{
 											Name:       "MarshalerError.Type",
-											Synopsis:   "type MarshalerError struct, Type reflect.Type",
+											Synopsis:   "Type reflect.Type",
 											Section:    "Types",
 											Kind:       "Field",
 											ParentName: "MarshalerError",
 										},
 										{
 											Name:       "MarshalerError.Err",
-											Synopsis:   "type MarshalerError struct, Err error",
+											Synopsis:   "Err error",
 											Section:    "Types",
 											Kind:       "Field",
 											ParentName: "MarshalerError",
@@ -1524,13 +1524,13 @@ var moduleStd = &testModule{
 								},
 								{
 									Name:     "SyntaxError",
-									Synopsis: "type SyntaxError struct{ ... }",
+									Synopsis: "type SyntaxError struct",
 									Section:  "Types",
 									Kind:     "Type",
 									Children: []*internal.Symbol{
 										{
 											Name:       "SyntaxError.Offset",
-											Synopsis:   "type SyntaxError struct, Offset int64",
+											Synopsis:   "Offset int64",
 											Section:    "Types",
 											Kind:       "Field",
 											ParentName: "SyntaxError",
@@ -1546,33 +1546,33 @@ var moduleStd = &testModule{
 								},
 								{
 									Name:     "Token",
-									Synopsis: "type Token interface{}",
+									Synopsis: "type Token interface",
 									Section:  "Types",
 									Kind:     "Type",
 								},
 								{
 									Name:     "UnmarshalFieldError",
-									Synopsis: "type UnmarshalFieldError struct{ ... }",
+									Synopsis: "type UnmarshalFieldError struct",
 									Section:  "Types",
 									Kind:     "Type",
 									Children: []*internal.Symbol{
 										{
 											Name:       "UnmarshalFieldError.Key",
-											Synopsis:   "type UnmarshalFieldError struct, Key string",
+											Synopsis:   "Key string",
 											Section:    "Types",
 											Kind:       "Field",
 											ParentName: "UnmarshalFieldError",
 										},
 										{
 											Name:       "UnmarshalFieldError.Type",
-											Synopsis:   "type UnmarshalFieldError struct, Type reflect.Type",
+											Synopsis:   "Type reflect.Type",
 											Section:    "Types",
 											Kind:       "Field",
 											ParentName: "UnmarshalFieldError",
 										},
 										{
 											Name:       "UnmarshalFieldError.Field",
-											Synopsis:   "type UnmarshalFieldError struct, Field reflect.StructField",
+											Synopsis:   "Field reflect.StructField",
 											Section:    "Types",
 											Kind:       "Field",
 											ParentName: "UnmarshalFieldError",
@@ -1588,41 +1588,41 @@ var moduleStd = &testModule{
 								},
 								{
 									Name:     "UnmarshalTypeError",
-									Synopsis: "type UnmarshalTypeError struct{ ... }",
+									Synopsis: "type UnmarshalTypeError struct",
 									Section:  "Types",
 									Kind:     "Type",
 									Children: []*internal.Symbol{
 										{
 											Name:       "UnmarshalTypeError.Value",
-											Synopsis:   "type UnmarshalTypeError struct, Value string",
+											Synopsis:   "Value string",
 											Section:    "Types",
 											Kind:       "Field",
 											ParentName: "UnmarshalTypeError",
 										},
 										{
 											Name:       "UnmarshalTypeError.Type",
-											Synopsis:   "type UnmarshalTypeError struct, Type reflect.Type",
+											Synopsis:   "Type reflect.Type",
 											Section:    "Types",
 											Kind:       "Field",
 											ParentName: "UnmarshalTypeError",
 										},
 										{
 											Name:       "UnmarshalTypeError.Offset",
-											Synopsis:   "type UnmarshalTypeError struct, Offset int64",
+											Synopsis:   "Offset int64",
 											Section:    "Types",
 											Kind:       "Field",
 											ParentName: "UnmarshalTypeError",
 										},
 										{
 											Name:       "UnmarshalTypeError.Struct",
-											Synopsis:   "type UnmarshalTypeError struct, Struct string",
+											Synopsis:   "Struct string",
 											Section:    "Types",
 											Kind:       "Field",
 											ParentName: "UnmarshalTypeError",
 										},
 										{
 											Name:       "UnmarshalTypeError.Field",
-											Synopsis:   "type UnmarshalTypeError struct, Field string",
+											Synopsis:   "Field string",
 											Section:    "Types",
 											Kind:       "Field",
 											ParentName: "UnmarshalTypeError",
@@ -1638,13 +1638,13 @@ var moduleStd = &testModule{
 								},
 								{
 									Name:     "Unmarshaler",
-									Synopsis: "type Unmarshaler interface{ ... }",
+									Synopsis: "type Unmarshaler interface",
 									Section:  "Types",
 									Kind:     "Type",
 									Children: []*internal.Symbol{
 										{
 											Name:       "Unmarshaler.UnmarshalJSON",
-											Synopsis:   "type Unmarshaler interface, UnmarshalJSON func([]byte) error",
+											Synopsis:   "UnmarshalJSON func([]byte) error",
 											Section:    "Types",
 											Kind:       "Method",
 											ParentName: "Unmarshaler",
@@ -1653,13 +1653,13 @@ var moduleStd = &testModule{
 								},
 								{
 									Name:     "UnsupportedTypeError",
-									Synopsis: "type UnsupportedTypeError struct{ ... }",
+									Synopsis: "type UnsupportedTypeError struct",
 									Section:  "Types",
 									Kind:     "Type",
 									Children: []*internal.Symbol{
 										{
 											Name:       "UnsupportedTypeError.Type",
-											Synopsis:   "type UnsupportedTypeError struct, Type reflect.Type",
+											Synopsis:   "Type reflect.Type",
 											Section:    "Types",
 											Kind:       "Field",
 											ParentName: "UnsupportedTypeError",
@@ -1675,20 +1675,20 @@ var moduleStd = &testModule{
 								},
 								{
 									Name:     "UnsupportedValueError",
-									Synopsis: "type UnsupportedValueError struct{ ... }",
+									Synopsis: "type UnsupportedValueError struct",
 									Section:  "Types",
 									Kind:     "Type",
 									Children: []*internal.Symbol{
 										{
 											Name:       "UnsupportedValueError.Value",
-											Synopsis:   "type UnsupportedValueError struct, Value reflect.Value",
+											Synopsis:   "Value reflect.Value",
 											Section:    "Types",
 											Kind:       "Field",
 											ParentName: "UnsupportedValueError",
 										},
 										{
 											Name:       "UnsupportedValueError.Str",
-											Synopsis:   "type UnsupportedValueError struct, Str string",
+											Synopsis:   "Str string",
 											Section:    "Types",
 											Kind:       "Field",
 											ParentName: "UnsupportedValueError",
@@ -1964,7 +1964,7 @@ var moduleStd = &testModule{
 								},
 								{
 									Name:     "Flag",
-									Synopsis: "type Flag struct{ ... }",
+									Synopsis: "type Flag struct",
 									Section:  "Types",
 									Kind:     "Type",
 									Children: []*internal.Symbol{
@@ -1977,28 +1977,28 @@ var moduleStd = &testModule{
 										},
 										{
 											Name:       "Flag.Name",
-											Synopsis:   "type Flag struct, Name string",
+											Synopsis:   "Name string",
 											Section:    "Types",
 											Kind:       "Field",
 											ParentName: "Flag",
 										},
 										{
 											Name:       "Flag.Usage",
-											Synopsis:   "type Flag struct, Usage string",
+											Synopsis:   "Usage string",
 											Section:    "Types",
 											Kind:       "Field",
 											ParentName: "Flag",
 										},
 										{
 											Name:       "Flag.Value",
-											Synopsis:   "type Flag struct, Value Value",
+											Synopsis:   "Value Value",
 											Section:    "Types",
 											Kind:       "Field",
 											ParentName: "Flag",
 										},
 										{
 											Name:       "Flag.DefValue",
-											Synopsis:   "type Flag struct, DefValue string",
+											Synopsis:   "DefValue string",
 											Section:    "Types",
 											Kind:       "Field",
 											ParentName: "Flag",
@@ -2007,7 +2007,7 @@ var moduleStd = &testModule{
 								},
 								{
 									Name:     "FlagSet",
-									Synopsis: "type FlagSet struct{ ... }",
+									Synopsis: "type FlagSet struct",
 									Section:  "Types",
 									Kind:     "Type",
 									Children: []*internal.Symbol{
@@ -2020,7 +2020,7 @@ var moduleStd = &testModule{
 										},
 										{
 											Name:       "FlagSet.Usage",
-											Synopsis:   "type FlagSet struct, Usage func()",
+											Synopsis:   "Usage func()",
 											Section:    "Types",
 											Kind:       "Field",
 											ParentName: "FlagSet",
@@ -2260,12 +2260,12 @@ var moduleStd = &testModule{
 								},
 								{
 									Name:     "Getter",
-									Synopsis: "type Getter interface{ ... }",
+									Synopsis: "type Getter interface",
 									Section:  "Types",
 									Kind:     "Type",
 									Children: []*internal.Symbol{{
 										Name:       "Getter.Get",
-										Synopsis:   "type Getter interface, Get func() interface{}",
+										Synopsis:   "Get func() interface{}",
 										Section:    "Types",
 										Kind:       "Method",
 										ParentName: "Getter",
@@ -2273,20 +2273,20 @@ var moduleStd = &testModule{
 								},
 								{
 									Name:     "Value",
-									Synopsis: "type Value interface{ ... }",
+									Synopsis: "type Value interface",
 									Section:  "Types",
 									Kind:     "Type",
 									Children: []*internal.Symbol{
 										{
 											Name:       "Value.String",
-											Synopsis:   "type Value interface, String func() string",
+											Synopsis:   "String func() string",
 											Section:    "Types",
 											Kind:       "Method",
 											ParentName: "Value",
 										},
 										{
 											Name:       "Value.Set",
-											Synopsis:   "type Value interface, Set func(string) error",
+											Synopsis:   "Set func(string) error",
 											Section:    "Types",
 											Kind:       "Method",
 											ParentName: "Value",
@@ -2469,7 +2469,7 @@ func ExampleF() {
 `, "Documentation-exampleButtonsContainer")
 
 var moduleTypeExample = moduleWithExamples("type.example",
-	[]*internal.Symbol{{Name: "T", Synopsis: "type T struct{}", Section: "Types", Kind: "Type"}},
+	[]*internal.Symbol{{Name: "T", Synopsis: "type T struct", Section: "Types", Kind: "Type"}},
 	`type T struct{}
 `, `import "type.example/example"
 
@@ -2483,7 +2483,7 @@ var moduleMethodExample = moduleWithExamples("method.example",
 	[]*internal.Symbol{
 		{
 			Name:     "T",
-			Synopsis: "type T struct{}",
+			Synopsis: "type T struct",
 			Section:  "Types",
 			Kind:     "Type",
 			Children: []*internal.Symbol{

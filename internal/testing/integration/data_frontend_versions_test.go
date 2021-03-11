@@ -80,7 +80,7 @@ var versionsPageSymbols = []*frontend.VersionList{
 				Symbols: []*frontend.Symbol{
 					{
 						Name:     "I2",
-						Synopsis: "type I2 interface",
+						Synopsis: "type I2",
 						Link:     "/example.com/symbols@v1.1.0#I2",
 						Section:  "Types",
 						Kind:     "Type",
@@ -97,7 +97,7 @@ var versionsPageSymbols = []*frontend.VersionList{
 					},
 					{
 						Name:     "S2",
-						Synopsis: "type S2 struct",
+						Synopsis: "type S2",
 						Link:     "/example.com/symbols@v1.1.0#S2",
 						Section:  "Types",
 						Kind:     "Type",
