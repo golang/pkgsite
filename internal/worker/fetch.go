@@ -75,11 +75,16 @@ func (f *Fetcher) FetchAndUpdateState(ctx context.Context, modulePath, requested
 	// DB.
 	if ft.Status < 500 {
 		if err := f.fetchAndUpdateLatest(ctx, modulePath); err != nil {
-			log.Errorf(ctx, "%v", err)
-			// Do not overwrite an error from insertion.
-			if ft.Error == nil {
-				ft.Error = err
-				ft.Status = http.StatusInternalServerError
+			// Internal errors are serious, but others aren't.
+			if derrors.ToStatus(err) >= 500 {
+				// Do not overwrite an error from insertion.
+				if ft.Error == nil {
+					ft.Error = err
+					ft.Status = http.StatusInternalServerError
+				}
+				log.Errorf(ctx, "%v", err)
+			} else {
+				log.Infof(ctx, "%v", err)
 			}
 		}
 	}

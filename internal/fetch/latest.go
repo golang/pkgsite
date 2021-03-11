@@ -80,15 +80,16 @@ func LatestModuleVersions(ctx context.Context, modulePath string, prox *proxy.Cl
 		return nil, err
 	}
 	latestInfo, err := prox.Info(ctx, modulePath, internal.LatestVersion)
-	if err != nil {
-		if !errors.Is(err, derrors.NotFound) {
-			return nil, err
-		}
+	if errors.Is(err, derrors.NotFound) || errors.Is(err, derrors.NotFetched) {
+		// No information from the proxy, but not a showstopper either; we can
+		// proceed with the result of the list endpoint.
+	} else if err != nil {
+		return nil, err
 	} else {
 		versions = append(versions, latestInfo.Version)
 	}
 	if len(versions) == 0 {
-		// No tagged versions, and @latest returns NotFound: no version information.
+		// No tagged versions, and nothing from @latest: no version information.
 		return nil, nil
 	}
 	rawLatest, err := version.Latest(versions, hasGoModFunc)
@@ -106,7 +107,8 @@ func LatestModuleVersions(ctx context.Context, modulePath string, prox *proxy.Cl
 	}
 	lmv, err := internal.NewLatestModuleVersions(modulePath, rawLatest, "", "", modBytes)
 	if err != nil {
-		return nil, err
+		// An error here means a bad go.mod file.
+		return nil, fmt.Errorf("%v: %w", err, derrors.BadModule)
 	}
 
 	// Get the cooked latest version by disallowing retracted versions.

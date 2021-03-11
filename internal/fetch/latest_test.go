@@ -8,6 +8,7 @@ import (
 	"context"
 	"testing"
 
+	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/proxy"
 )
 
@@ -63,5 +64,29 @@ func TestLatestModuleVersionsNotFound(t *testing.T) {
 	}
 	if got != nil {
 		t.Errorf("got %v, want nil", got)
+	}
+}
+
+func TestLatestModuleVersionsBadGoMod(t *testing.T) {
+	// Verify that we get a BadModule error if the go.mod file is bad.
+	const modulePath = "example.com/bad-go-mod"
+	server := proxy.NewServer([]*proxy.Module{
+		{
+			ModulePath: modulePath,
+			Version:    "v1.0.0",
+			Files: map[string]string{
+				"go.mod": "module example.com/bad-go-mod\ngo 1.13.8",
+			},
+		},
+	})
+	client, teardown, err := proxy.NewClientForServer(server)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer teardown()
+
+	_, err = LatestModuleVersions(context.Background(), modulePath, client, nil)
+	if got, want := derrors.ToStatus(err), 490; got != want {
+		t.Errorf("got status %d, want %d", got, want)
 	}
 }
