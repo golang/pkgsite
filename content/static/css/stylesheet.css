@@ -1307,6 +1307,22 @@ pre,
   margin-bottom: 0.5rem;
 }
 
+.Documentation-function h4,
+.Documentation-type h4,
+.Documentation-typeFunc h4,
+.Documentation-typeMethod h4 {
+  display: flex;
+  justify-content: space-between;
+  position: relative;
+}
+.Documentation-sinceVersion {
+  bottom: 0;
+  font-size: 1rem;
+  font-weight: 400;
+  position: absolute;
+  right: 0;
+}
+
 .Documentation-constants br:last-of-type,
 .Documentation-variables br:last-of-type {
   display: none;

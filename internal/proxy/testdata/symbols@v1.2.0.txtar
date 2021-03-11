@@ -93,3 +93,13 @@ package hello
 func Hello() string {
 	return "Hello"
 }
+
+-- hello/hello_js.go --
+// +build js,wasm
+
+package hello
+
+// HelloJS returns a greeting when the build context is js/wasm.
+func HelloJS() string {
+	return "Hello"
+}

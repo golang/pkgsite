@@ -13,10 +13,13 @@ import (
 	"golang.org/x/mod/semver"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/godoc"
 	"golang.org/x/pkgsite/internal/godoc/dochtml"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/middleware"
+	"golang.org/x/pkgsite/internal/postgres"
+	"golang.org/x/pkgsite/internal/symbol"
 	"golang.org/x/pkgsite/internal/version"
 )
 
@@ -133,6 +136,24 @@ func fetchMainDetails(ctx context.Context, ds internal.DataSource, um *internal.
 	)
 
 	doc := internal.DocumentationForBuildContext(unit.Documentation, bc)
+	versionToNameToUnitSymbol := map[string]map[string]*internal.UnitSymbol{}
+	if experiment.IsActive(ctx, internal.ExperimentSymbolHistoryMainPage) {
+		db, ok := ds.(*postgres.DB)
+		if !ok {
+			return nil, proxydatasourceNotSupportedErr()
+		}
+		versionToNameToUnitSymbols, err := db.GetPackageSymbols(ctx, um.Path, um.ModulePath)
+		if err != nil {
+			return nil, err
+		}
+		versionToNameToUnitSymbol = symbol.IntroducedHistory(versionToNameToUnitSymbols)
+	}
+	nameToVersion := map[string]string{}
+	for v, nts := range versionToNameToUnitSymbol {
+		for n := range nts {
+			nameToVersion[n] = v
+		}
+	}
 	if doc != nil {
 		synopsis = doc.Synopsis
 		goos = doc.GOOS
@@ -169,7 +190,7 @@ func fetchMainDetails(ctx context.Context, ds internal.DataSource, um *internal.
 			}
 			return nil, err
 		}
-		docParts, err = getHTML(ctx, unit, docPkg)
+		docParts, err = getHTML(ctx, unit, docPkg, nameToVersion)
 		// If err  is ErrTooLarge, then docBody will have an appropriate message.
 		if err != nil && !errors.Is(err, dochtml.ErrTooLarge) {
 			return nil, err
@@ -247,11 +268,12 @@ func readmeContent(ctx context.Context, u *internal.Unit) (_ *Readme, err error)
 
 const missingDocReplacement = `<p>Documentation is missing.</p>`
 
-func getHTML(ctx context.Context, u *internal.Unit, docPkg *godoc.Package) (_ *dochtml.Parts, err error) {
+func getHTML(ctx context.Context, u *internal.Unit, docPkg *godoc.Package,
+	nameToVersion map[string]string) (_ *dochtml.Parts, err error) {
 	defer derrors.Wrap(&err, "getHTML(%s)", u.Path)
 
 	if len(u.Documentation[0].Source) > 0 {
-		return renderDocParts(ctx, u, docPkg)
+		return renderDocParts(ctx, u, docPkg, nameToVersion)
 	}
 	log.Errorf(ctx, "unit %s (%s@%s) missing documentation source", u.Path, u.ModulePath, u.Version)
 	return &dochtml.Parts{Body: template.MustParseAndExecuteToHTML(missingDocReplacement)}, nil

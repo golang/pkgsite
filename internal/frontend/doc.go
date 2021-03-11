@@ -20,7 +20,8 @@ import (
 	"golang.org/x/pkgsite/internal/stdlib"
 )
 
-func renderDocParts(ctx context.Context, u *internal.Unit, docPkg *godoc.Package) (_ *dochtml.Parts, err error) {
+func renderDocParts(ctx context.Context, u *internal.Unit, docPkg *godoc.Package,
+	nameToVersion map[string]string) (_ *dochtml.Parts, err error) {
 	defer derrors.Wrap(&err, "renderDocParts")
 	defer middleware.ElapsedStat(ctx, "renderDocParts")()
 
@@ -35,7 +36,7 @@ func renderDocParts(ctx context.Context, u *internal.Unit, docPkg *godoc.Package
 	} else if u.Path != u.ModulePath {
 		innerPath = u.Path[len(u.ModulePath)+1:]
 	}
-	return docPkg.RenderParts(ctx, innerPath, u.SourceInfo, modInfo, nil)
+	return docPkg.RenderParts(ctx, innerPath, u.SourceInfo, modInfo, nameToVersion)
 }
 
 // sourceFiles returns the .go files for a package.
