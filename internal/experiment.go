@@ -7,7 +7,6 @@ package internal
 
 const (
 	ExperimentInsertSymbols             = "insert-symbols"
-	ExperimentNotAtLatest               = "not-at-latest"
 	ExperimentRetractions               = "retractions"
 	ExperimentSymbolHistoryVersionsPage = "symbol-history-versions-page"
 	ExperimentUnitMetaWithLatest        = "unit-meta-with-latest"
@@ -17,7 +16,6 @@ const (
 // a description of each experiment.
 var Experiments = map[string]string{
 	ExperimentInsertSymbols:             "Insert data into symbols, package_symbols, and documentation_symbols.",
-	ExperimentNotAtLatest:               "Enable the display of a 'not at latest' badge.",
 	ExperimentRetractions:               "Retrieve and display retraction and deprecation information.",
 	ExperimentSymbolHistoryVersionsPage: "Show package API history on the versions page.",
 	ExperimentUnitMetaWithLatest:        "Use latest-version information for GetUnitMeta.",

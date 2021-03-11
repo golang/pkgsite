@@ -1142,15 +1142,10 @@ func TestServer(t *testing.T) {
 		experiments   []string
 	}{
 		{
-			name:          "no experiments",
-			testCasesFunc: serverTestCases,
-		},
-		{
-			name: "with experiment not-at-latest",
+			name: "no experiments",
 			testCasesFunc: func() []serverTestCase {
 				return append(serverTestCases(), linksTestCases...)
 			},
-			experiments: []string{internal.ExperimentNotAtLatest},
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {

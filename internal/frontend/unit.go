@@ -20,7 +20,6 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/cookie"
 	"golang.org/x/pkgsite/internal/derrors"
-	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/stdlib"
 )
@@ -192,7 +191,7 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 		DisplayVersion:        displayVersion(um.Version, um.ModulePath),
 		LinkVersion:           lv,
 		LatestURL:             constructUnitURL(um.Path, um.ModulePath, internal.LatestVersion),
-		LatestMinorClass:      latestMinorClass(r.Context(), lv, latestInfo),
+		LatestMinorClass:      latestMinorClass(lv, latestInfo),
 		LatestMajorVersion:    latestMajorVersionNum,
 		LatestMajorVersionURL: latestInfo.MajorUnitPath,
 		PageLabels:            pageLabels(um),
@@ -209,12 +208,12 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 	return nil
 }
 
-func latestMinorClass(ctx context.Context, version string, latest internal.LatestInfo) string {
+func latestMinorClass(version string, latest internal.LatestInfo) string {
 	c := "DetailsHeader-badge"
 	switch {
 	case latest.MinorVersion == "":
 		c += "--unknown"
-	case latest.MinorVersion == version && !latest.UnitExistsAtMinor && experiment.IsActive(ctx, internal.ExperimentNotAtLatest):
+	case latest.MinorVersion == version && !latest.UnitExistsAtMinor:
 		c += "--notAtLatest"
 	case latest.MinorVersion == version:
 		c += "--latest"
