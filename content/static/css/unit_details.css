@@ -49,7 +49,8 @@
 }
 
 .UnitDetails :target:not(details, h2) {
-  background-color: var(--yellow);
+  background-color: var(--blue);
+  padding: 0.25rem;
 }
 .UnitDetails-outline {
   display: none;
