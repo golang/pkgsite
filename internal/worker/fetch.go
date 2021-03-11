@@ -409,13 +409,15 @@ func (f *Fetcher) fetchAndUpdateLatest(ctx context.Context, modulePath string) (
 		return modinfo.HasGoMod, nil
 	})
 	if err != nil {
+		if err2 := f.DB.UpdateLatestModuleVersionsStatus(ctx, modulePath, derrors.ToStatus(err)); err2 != nil {
+			log.Errorf(ctx, "failed to update latest_module_versions status for %s: %v", modulePath, err2)
+		}
 		return err
 	}
 	// There may be no version information for the module, even if it exists.
-	// In that case, lmv will be nil and there is nothing to insert into the DB.
+	// In that case, lmv will be nil and we insert a 404 into the DB.
 	if lmv == nil {
-		log.Infof(ctx, "no latest-version information for %s", modulePath)
-		return nil
+		return f.DB.UpdateLatestModuleVersionsStatus(ctx, modulePath, 404)
 	}
 	return f.DB.UpdateLatestModuleVersions(ctx, lmv)
 }
