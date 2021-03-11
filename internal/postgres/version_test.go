@@ -6,6 +6,7 @@ package postgres
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"testing"
 
@@ -527,5 +528,79 @@ func TestLatestModuleVersions(t *testing.T) {
 				t.Fatalf("got %q, want %q", got, test.want)
 			}
 		})
+	}
+}
+
+func TestLatestModuleVersionsBadStatus(t *testing.T) {
+	t.Parallel()
+	testDB, release := acquire(t)
+	defer release()
+	ctx := context.Background()
+
+	const modulePath = "example.com/m"
+
+	getStatus := func() int {
+		var s int
+		err := testDB.db.QueryRow(ctx, `
+				SELECT status
+				FROM latest_module_versions l
+				INNER JOIN paths p ON (p.id=l.module_path_id)
+				WHERE p.path = $1`,
+			modulePath).Scan(&s)
+		if err != nil && err != sql.ErrNoRows {
+			t.Fatal(err)
+		}
+		return s
+	}
+
+	// Insert a failure status.
+	newStatus := 410
+	if err := testDB.UpdateLatestModuleVersionsStatus(ctx, modulePath, newStatus); err != nil {
+		t.Fatal(err)
+	}
+	if got := getStatus(); got != newStatus {
+		t.Errorf("got %d, want %d", got, newStatus)
+	}
+
+	// GetLatestModuleVersions should return nil.
+	got, err := testDB.GetLatestModuleVersions(ctx, modulePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got != nil {
+		t.Errorf("got %v, want nil", got)
+	}
+
+	// A new failure status should overwrite.
+	newStatus = 404
+	if err := testDB.UpdateLatestModuleVersionsStatus(ctx, modulePath, newStatus); err != nil {
+		t.Fatal(err)
+	}
+	if got := getStatus(); got != newStatus {
+		t.Errorf("got %d, want %d", got, newStatus)
+	}
+
+	// Good information overwrites.
+	lmv, err := internal.NewLatestModuleVersions(modulePath, "v1.2.3", "v1.2.3", "", []byte(`module example.com/m`))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := testDB.UpdateLatestModuleVersions(ctx, lmv); err != nil {
+		t.Fatal(err)
+	}
+	if got := getStatus(); got != 200 {
+		t.Errorf("got %d, want %d", got, 200)
+	}
+
+	// Once we have good information, a bad status won't remove it.
+	if err := testDB.UpdateLatestModuleVersionsStatus(ctx, modulePath, 500); err != nil {
+		t.Fatal(err)
+	}
+	got, err = testDB.GetLatestModuleVersions(ctx, modulePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got == nil {
+		t.Error("got nil, want non-nil")
 	}
 }

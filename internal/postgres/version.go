@@ -309,6 +309,7 @@ func (db *DB) getMultiLatestModuleVersions(ctx context.Context, modulePaths []st
 		FROM latest_module_versions r
 		INNER JOIN paths p ON p.id = r.module_path_id
 		WHERE p.path = ANY($1)
+		AND r.status = 200
 		ORDER BY p.path DESC
 	`, collect, pq.Array(modulePaths))
 	if err != nil {
@@ -330,20 +331,25 @@ func getLatestModuleVersions(ctx context.Context, db *database.DB, modulePath st
 	var (
 		raw, cooked, good string
 		goModBytes        []byte
+		status            int
 	)
 	err = db.QueryRow(ctx, `
-		SELECT r.module_path_id, r.raw_version, r.cooked_version, r.good_version, r.raw_go_mod_bytes
+		SELECT
+			r.module_path_id, r.raw_version, r.cooked_version, r.good_version, r.raw_go_mod_bytes, r.status
 		FROM latest_module_versions r
 		INNER JOIN paths p ON p.id = r.module_path_id
 		WHERE p.path = $1`,
-		modulePath).Scan(&id, &raw, &cooked, &good, &goModBytes)
+		modulePath).Scan(&id, &raw, &cooked, &good, &goModBytes, &status)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, 0, nil
 		}
 		return nil, 0, err
 	}
-
+	if status != 200 {
+		// No information for this module path, but the ID is still useful.
+		return nil, id, nil
+	}
 	lmv, err := internal.NewLatestModuleVersions(modulePath, raw, cooked, good, goModBytes)
 	if err != nil {
 		return nil, 0, err
@@ -389,14 +395,40 @@ func (db *DB) UpdateLatestModuleVersions(ctx context.Context, vNew *internal.Lat
 		}
 		lmv.GoodVersion = latestGoodVersion
 		if vCur == nil {
-			log.Debugf(ctx, "%s: inserting raw=%q, cooked=%q, good=%q",
+			log.Debugf(ctx, "%s: inserting latest_module_versions raw=%q, cooked=%q, good=%q",
 				lmv.ModulePath, lmv.RawVersion, lmv.CookedVersion, lmv.GoodVersion)
 		} else {
-			log.Debugf(ctx, "%s: updating raw=%q, cooked=%q, good=%q to raw=%q, cooked=%q, good=%q",
+			log.Debugf(ctx, "%s: updating latest_module_versions raw=%q, cooked=%q, good=%q to raw=%q, cooked=%q, good=%q",
 				lmv.ModulePath, vCur.RawVersion, vCur.CookedVersion, vCur.GoodVersion,
 				lmv.RawVersion, lmv.CookedVersion, lmv.GoodVersion)
 		}
-		return upsertLatestModuleVersions(ctx, tx, id, lmv)
+		return upsertLatestModuleVersions(ctx, tx, lmv.ModulePath, id, lmv, 200)
+	})
+}
+
+// UpdateLatestModuleVersionsStatus updates or inserts a failure status into the
+// latest_module_versions table.
+// It only updates the table if it doesn't have valid information for the module path.
+func (db *DB) UpdateLatestModuleVersionsStatus(ctx context.Context, modulePath string, newStatus int) (err error) {
+	defer derrors.WrapStack(&err, "UpdateLatestModuleVersionsStatus(%q, %d)", modulePath, newStatus)
+
+	// We need RepeatableRead here because the INSERT...ON CONFLICT does a read.
+	return db.db.Transact(ctx, sql.LevelRepeatableRead, func(tx *database.DB) error {
+		var id, curStatus int
+		err := tx.QueryRow(ctx, `
+				SELECT r.module_path_id, r.status
+				FROM latest_module_versions r
+				INNER JOIN paths p ON p.id = r.module_path_id
+				WHERE p.path = $1`,
+			modulePath).Scan(&id, &curStatus)
+		if err != nil && err != sql.ErrNoRows {
+			return err
+		}
+		if curStatus == 200 {
+			return nil
+		}
+		log.Debugf(ctx, "%s: updating latest_module_versions status to %d", modulePath, newStatus)
+		return upsertLatestModuleVersions(ctx, tx, modulePath, id, nil, newStatus)
 	})
 }
 
@@ -429,20 +461,29 @@ func getLatestGoodVersion(ctx context.Context, tx *database.DB, lmv *internal.La
 	return version.LatestOf(version.RemoveIf(vs, lmv.IsRetracted)), nil
 }
 
-func upsertLatestModuleVersions(ctx context.Context, tx *database.DB, id int, lmv *internal.LatestModuleVersions) (err error) {
-	defer derrors.WrapStack(&err, "upsertLatestModuleVersions(%q)", lmv.ModulePath)
+func upsertLatestModuleVersions(ctx context.Context, tx *database.DB, modulePath string, id int, lmv *internal.LatestModuleVersions, status int) (err error) {
+	defer derrors.WrapStack(&err, "upsertLatestModuleVersions(%s, %d)", modulePath, status)
 
 	// If the row doesn't exist, get a path ID for the module path.
 	if id == 0 {
-		id, err = upsertPath(ctx, tx, lmv.ModulePath)
+		id, err = upsertPath(ctx, tx, modulePath)
 		if err != nil {
 			return err
 		}
 	}
-	// Convert the go.mod file into bytes.
-	goModBytes, err := lmv.GoModFile.Format()
-	if err != nil {
-		return err
+	var (
+		raw, cooked, good string
+		goModBytes        = []byte{} // not nil, a zero-length slice
+	)
+	if lmv != nil {
+		raw = lmv.RawVersion
+		cooked = lmv.CookedVersion
+		good = lmv.GoodVersion
+		// Convert the go.mod file into bytes.
+		goModBytes, err = lmv.GoModFile.Format()
+		if err != nil {
+			return err
+		}
 	}
 	_, err = tx.Exec(ctx, `
 		INSERT INTO latest_module_versions (
@@ -450,15 +491,17 @@ func upsertLatestModuleVersions(ctx context.Context, tx *database.DB, id int, lm
 			raw_version,
 			cooked_version,
 			good_version,
-			raw_go_mod_bytes
-		) VALUES ($1, $2, $3, $4, $5)
+			raw_go_mod_bytes,
+			status
+		) VALUES ($1, $2, $3, $4, $5, $6)
 		ON CONFLICT (module_path_id)
 		DO UPDATE SET
 			raw_version=excluded.raw_version,
 			cooked_version=excluded.cooked_version,
 			good_version=excluded.good_version,
-			raw_go_mod_bytes=excluded.raw_go_mod_bytes
+			raw_go_mod_bytes=excluded.raw_go_mod_bytes,
+			status=excluded.status
 		`,
-		id, lmv.RawVersion, lmv.CookedVersion, lmv.GoodVersion, goModBytes)
+		id, raw, cooked, good, goModBytes, status)
 	return err
 }
