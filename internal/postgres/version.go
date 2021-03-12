@@ -202,10 +202,15 @@ func (db *DB) getLatestMajorVersion(ctx context.Context, fullPath, modulePath st
 		modPath string
 	)
 	seriesPath := internal.SeriesPathForModule(modulePath)
-	q, args, err := orderByLatest(squirrel.Select("m.module_path", "m.id").
+	q, args, err := squirrel.Select("m.module_path", "m.id").
 		From("modules m").
-		Where(squirrel.Eq{"m.series_path": seriesPath})).
+		Where(squirrel.Eq{"m.series_path": seriesPath}).
+		OrderBy(
+			"m.incompatible", // ignore incompatible versions unless they're all we have
+			"m.sort_version DESC",
+		).
 		Limit(1).
+		PlaceholderFormat(squirrel.Dollar).
 		ToSql()
 	if err != nil {
 		return "", "", err
