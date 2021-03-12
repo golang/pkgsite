@@ -1,0 +1,15 @@
+//**
+source: https://github.com/apache/trafficcontrol/blob/master/LICENSE
+**//
+{{Types "Apache-2.0 BSD-2-Clause BSD-3-Clause MIT"}}
+
+This product bundles __15__, which
+(( is || are ))
+available under
+(( a || an ))
+(("))??
+(( Apache-2.0 || BSD-2-Clause || BSD-3-Clause || MIT ))
+(("))??
+license.
+__40__
+Refer to the above license for the full text.
