@@ -177,7 +177,7 @@ func (db *DB) GetLatestInfo(ctx context.Context, unitPath, modulePath string) (l
 		return err
 	})
 	group.Go(func() (err error) {
-		latest.UnitExistsAtMinor, err = db.getLatestMinorModuleVersionInfo(gctx, unitPath, modulePath)
+		latest.UnitExistsAtMinor, err = db.unitExistsAtLatest(gctx, unitPath, modulePath)
 		return err
 	})
 
@@ -238,32 +238,46 @@ func (db *DB) getLatestMajorVersion(ctx context.Context, fullPath, modulePath st
 	}
 }
 
-// getLatestMinorModuleVersion reports whether unitPath exists at the latest version of modulePath.
-func (db *DB) getLatestMinorModuleVersionInfo(ctx context.Context, unitPath, modulePath string) (unitExists bool, err error) {
-	defer derrors.WrapStack(&err, "DB.getLatestMinorVersion(ctx, %q, %q)", unitPath, modulePath)
+// unitExistsAtLatest reports whether unitPath exists at the latest version of modulePath.
+func (db *DB) unitExistsAtLatest(ctx context.Context, unitPath, modulePath string) (unitExists bool, err error) {
+	defer derrors.WrapStack(&err, "DB.unitExistsAtLatest(ctx, %q, %q)", unitPath, modulePath)
 
-	// Find the latest version of the module path.
-	var modID int
-	q, args, err := orderByLatest(squirrel.Select("m.id").
-		From("modules m").
-		Where(squirrel.Eq{"m.module_path": modulePath})).
-		Limit(1).
-		ToSql()
+	// Find the latest version of the module path in the modules table.
+	var latestGoodVersion string
+	lmv, err := db.GetLatestModuleVersions(ctx, modulePath)
 	if err != nil {
 		return false, err
 	}
-	row := db.db.QueryRow(ctx, q, args...)
-	if err := row.Scan(&modID); err != nil {
-		return false, err
+	if lmv != nil {
+		// If we have latest-version info, use it.
+		latestGoodVersion = lmv.GoodVersion
+	} else {
+		// Otherwise, query the modules table, ignoring all adjustments for incompatible and retracted versions.
+		err := db.db.QueryRow(ctx, `
+			SELECT version
+			FROM modules
+			WHERE module_path = $1
+			ORDER BY
+				version_type = 'release' DESC,
+				sort_version DESC
+			LIMIT 1
+		`, modulePath).Scan(&latestGoodVersion)
+		if err != nil {
+			return false, err
+		}
 	}
-
+	if latestGoodVersion == "" {
+		return true, nil
+	}
 	// See if the unit path exists at that version.
 	var x int
 	err = db.db.QueryRow(ctx, `
 		SELECT 1
 		FROM units u
 		INNER JOIN paths p ON p.id = u.path_id
-		WHERE p.path = $1 AND u.module_id = $2`, unitPath, modID).Scan(&x)
+		INNER JOIN modules m ON m.id = u.module_id
+		WHERE p.path = $1 AND m.module_path = $2 AND m.version = $3
+	`, unitPath, modulePath, latestGoodVersion).Scan(&x)
 	switch err {
 	case nil:
 		return true, nil
