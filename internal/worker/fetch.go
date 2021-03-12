@@ -74,7 +74,7 @@ func (f *Fetcher) FetchAndUpdateState(ctx context.Context, modulePath, requested
 	// bad in some way -- make sure its latest information is up to date in the
 	// DB.
 	if ft.Status < 500 {
-		if err := f.fetchAndUpdateLatest(ctx, modulePath); err != nil {
+		if err := f.FetchAndUpdateLatest(ctx, modulePath); err != nil {
 			// Internal errors are serious, but others aren't.
 			if derrors.ToStatus(err) >= 500 {
 				// Do not overwrite an error from insertion.
@@ -399,10 +399,10 @@ func logTaskResult(ctx context.Context, ft *fetchTask, prefix string) {
 		prefix, ft.ModulePath, ft.ResolvedVersion, ft.Status, len(ft.PackageVersionStates), ft.Error, msg)
 }
 
-// fetchAndUpdateLatest fetches information about the latest versions from the proxy,
+// FetchAndUpdateLatest fetches information about the latest versions from the proxy,
 // and updates the database if the version has changed.
-func (f *Fetcher) fetchAndUpdateLatest(ctx context.Context, modulePath string) (err error) {
-	defer derrors.Wrap(&err, "fetchAndUpdateLatest(%q)", modulePath)
+func (f *Fetcher) FetchAndUpdateLatest(ctx context.Context, modulePath string) (err error) {
+	defer derrors.Wrap(&err, "FetchAndUpdateLatest(%q)", modulePath)
 	if modulePath == stdlib.ModulePath {
 		return nil
 	}
