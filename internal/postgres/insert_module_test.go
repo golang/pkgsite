@@ -273,7 +273,7 @@ func TestInsertModuleErrors(t *testing.T) {
 			testDB, release := acquire(t)
 			defer release()
 
-			if _, err := testDB.InsertModule(ctx, test.module); !errors.Is(err, test.wantWriteErr) {
+			if _, err := testDB.InsertModule(ctx, test.module, nil); !errors.Is(err, test.wantWriteErr) {
 				t.Errorf("error: %v, want write error: %v", err, test.wantWriteErr)
 			}
 		})
@@ -355,119 +355,88 @@ func TestPostgres_ReadAndWriteModuleOtherColumns(t *testing.T) {
 	}
 }
 
-func TestLatestVersion(t *testing.T) {
+func TestInsertModuleLatest(t *testing.T) {
+	// Check the first return value of InsertModule, which is whether the
+	// inserted module is the latest good version. Also check that
+	// latest_module_versions.good_version is populated correctly.
 	t.Parallel()
 	testDB, release := acquire(t)
 	defer release()
 	ctx := context.Background()
 
-	for _, mod := range []struct {
-		version    string
-		modulePath string
-	}{
-		{
-			version:    "v1.5.2",
-			modulePath: sample.ModulePath,
-		},
-		{
-			version:    "v2.0.0+incompatible",
-			modulePath: sample.ModulePath,
-		},
-		{
-			version:    "v2.0.1",
-			modulePath: sample.ModulePath + "/v2",
-		},
-		{
-			version:    "v3.0.1-rc9.0.20200212222136-a4a89636720b",
-			modulePath: sample.ModulePath + "/v3",
-		},
-		{
-			version:    "v3.0.1-rc9",
-			modulePath: sample.ModulePath + "/v3",
-		},
-	} {
-		m := sample.DefaultModule()
-		m.Version = mod.version
-		m.ModulePath = mod.modulePath
-
-		MustInsertModule(ctx, t, testDB, m)
-	}
-
+	// These tests are cumulative: actions of earlier tests may affect later ones.
 	for _, test := range []struct {
-		name        string
-		modulePath  string
-		wantVersion string
+		version        string
+		cooked         string // The latest cooked version, affects incompatible versions; empty => nil lmv
+		retract        string // body of go.mod retract statement
+		wantIsLatest   bool
+		wantLatestGood string
 	}{
 		{
-			name:        "test v1 version",
-			modulePath:  sample.ModulePath,
-			wantVersion: "v1.5.2",
+			version:      "v2.0.0+incompatible",
+			cooked:       "v2.0.0+incompatible",
+			wantIsLatest: true, // The only version, so the latest.
 		},
 		{
-			name:        "test v2 version",
-			modulePath:  sample.ModulePath + "/v2",
-			wantVersion: "v2.0.1",
+			version: "v1.5.2",
+			cooked:  "v1.9.0",
+			// Compatible version is later than incompatible.
+			wantIsLatest: true,
 		},
 		{
-			name:        "test v3 version - prefer prerelease over pseudo",
-			modulePath:  sample.ModulePath + "/v3",
-			wantVersion: "v3.0.1-rc9",
+			version: "v1.5.1",
+			cooked:  "v1.9.0",
+			// An earlier version; not the latest.
+			wantIsLatest:   false,
+			wantLatestGood: "v1.5.2",
+		},
+		{
+			version:      "v1.4.0",
+			cooked:       "v1.9.1",           // ignore incompatible
+			retract:      "[v1.5.0, v1.6.0]", // all versions except this retracted
+			wantIsLatest: true,
+		},
+		{
+			version:        "v1.4.1",
+			cooked:         "v1.9.2",           // ignore incompatible
+			retract:        "[v1.4.0, v1.6.0]", // all versions retracted, even this one
+			wantIsLatest:   false,
+			wantLatestGood: "",
 		},
 	} {
-		t.Run(test.name, func(t *testing.T) {
-			isLatest, err := isLatestVersion(ctx, testDB.db, test.modulePath, test.wantVersion)
+		t.Run(test.version, func(t *testing.T) {
+			m := sample.DefaultModule()
+			m.Version = test.version
+			var lmv *internal.LatestModuleVersions
+			if test.cooked != "" {
+				gomod := "module " + m.ModulePath
+				if test.retract != "" {
+					gomod += "\nretract " + test.retract
+				}
+				lmv = addLatest(ctx, t, testDB, m.ModulePath, test.cooked, gomod)
+			}
+			gotIsLatest, err := testDB.InsertModule(ctx, m, lmv)
 			if err != nil {
 				t.Fatal(err)
 			}
-			if !isLatest {
-				t.Errorf("%s is not the latest version", test.wantVersion)
+			if gotIsLatest != test.wantIsLatest {
+				t.Errorf("got latest %t, want %t", gotIsLatest, test.wantIsLatest)
+			}
+			gotLMV, err := testDB.GetLatestModuleVersions(ctx, m.ModulePath)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if gotLMV == nil {
+				t.Fatal("gotLMV is nil")
+			}
+			wantLatestGood := test.wantLatestGood
+			if wantLatestGood == "" && test.wantIsLatest {
+				wantLatestGood = test.version
+			}
+			if gotLMV.GoodVersion != wantLatestGood {
+				t.Errorf("got good version %q, want %q", gotLMV.GoodVersion, wantLatestGood)
 			}
 		})
-	}
-}
-
-func TestLatestVersion_PreferIncompatibleOverPrerelease(t *testing.T) {
-	t.Parallel()
-	testDB, release := acquire(t)
-	defer release()
-	ctx := context.Background()
-
-	for _, mod := range []struct {
-		version    string
-		modulePath string
-	}{
-		{
-			version:    "v0.0.0-20201007032633-0806396f153e",
-			modulePath: sample.ModulePath,
-		},
-		{
-			version:    "v2.0.0+incompatible",
-			modulePath: sample.ModulePath,
-		},
-	} {
-		m := sample.DefaultModule()
-		m.Version = mod.version
-		m.ModulePath = mod.modulePath
-
-		MustInsertModule(ctx, t, testDB, m)
-	}
-
-	for _, test := range []struct {
-		modulePath string
-		want       string
-	}{
-		{
-			modulePath: sample.ModulePath,
-			want:       "v2.0.0+incompatible",
-		},
-	} {
-		isLatest, err := isLatestVersion(ctx, testDB.db, test.modulePath, test.want)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if !isLatest {
-			t.Errorf("%s is not the latest version", test.want)
-		}
 	}
 }
 

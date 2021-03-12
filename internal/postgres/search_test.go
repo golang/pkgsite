@@ -791,30 +791,42 @@ func TestUpsertSearchDocument(t *testing.T) {
 		m := sample.Module(sample.ModulePath, version, "A")
 		m.HasGoMod = gomod
 		m.Packages()[0].Documentation[0].Synopsis = "syn-" + version
+		lmv := addLatest(ctx, t, testDB, m.ModulePath, m.Version, "")
 		MustInsertModule(ctx, t, testDB, m)
+		MustInsertModuleLMV(ctx, t, testDB, m, lmv)
 	}
 
-	insertModule("v1.0.0", false)
+	const v1 = "v1.0.0"
+	insertModule(v1, false)
+	sd1 := getSearchDocument()
+	if sd1.version != v1 {
+		t.Fatalf("got %s, want %s", sd1.version, v1)
+	}
 
-	// Ensures the row updated in the search_document table for a given module
-	// is updated with a version that prefers non-incompatible modules. (The
-	// latest version after this insertion should remain v1.0.0)
-	insertModule("v2.0.0+incompatible", false)
-	sdOriginal := getSearchDocument()
+	// Since the latest compatible version has no go.mod file, this incompatible version
+	// is the latest.
+	const vInc = "v2.0.0+incompatible"
+	insertModule(vInc, false)
+	sdInc := getSearchDocument()
+	if sdInc.version != vInc {
+		t.Fatalf("got %s, want %s", sdInc.version, vInc)
+	}
 
+	// Inserting an older module doesn't change anything.
 	insertModule("v0.5.0", true)
 	sdOlder := getSearchDocument()
-	if diff := cmp.Diff(sdOriginal, sdOlder, cmp.AllowUnexported(searchDocument{})); diff != "" {
-		t.Errorf("mismatch (-want, +got):\n%s", diff)
+	if diff := cmp.Diff(sdInc, sdOlder, cmp.AllowUnexported(searchDocument{})); diff != "" {
+		t.Fatalf("mismatch (-want, +got):\n%s", diff)
 	}
 
-	insertModule("v1.5.2", true)
+	// A later compatible version with a go.mod file. This becomes the new latest version.
+	const v15 = "v1.5.2"
+	insertModule(v15, true)
 	sdNewer := getSearchDocument()
-	if orig, newer := sdOriginal.versionUpdatedAt, sdNewer.versionUpdatedAt; orig == newer {
-		t.Fatalf("expected version_updated_at to change since a newer version was inserted; got original = %v, newer = %v",
-			orig, newer)
+	if sdNewer.version != v15 {
+		t.Fatalf("got %s, want %s", sdNewer.version, v15)
 	}
-	sdWant := sdOriginal
+	sdWant := sd1
 	sdWant.version = "v1.5.2"
 	sdWant.synopsis = "syn-v1.5.2"
 	sdWant.hasGoMod = true

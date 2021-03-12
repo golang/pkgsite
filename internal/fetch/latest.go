@@ -113,9 +113,13 @@ func LatestModuleVersions(ctx context.Context, modulePath string, prox *proxy.Cl
 
 	// Get the cooked latest version by disallowing retracted versions.
 	unretractedVersions := version.RemoveIf(versions, lmv.IsRetracted)
-	lmv.CookedVersion, err = version.Latest(unretractedVersions, hasGoModFunc)
-	if err != nil {
-		return nil, err
+	if len(versions) == len(unretractedVersions) {
+		lmv.CookedVersion = lmv.RawVersion
+	} else {
+		lmv.CookedVersion, err = version.Latest(unretractedVersions, hasGoModFunc)
+		if err != nil {
+			return nil, err
+		}
 	}
 	return lmv, nil
 }

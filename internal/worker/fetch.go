@@ -67,27 +67,16 @@ func (f *Fetcher) FetchAndUpdateState(ctx context.Context, modulePath, requested
 		trace.StringAttribute("version", requestedVersion))
 	defer span.End()
 
-	ft := f.fetchAndInsertModule(ctx, modulePath, requestedVersion)
-	span.AddAttributes(trace.Int64Attribute("numPackages", int64(len(ft.PackageVersionStates))))
-
-	// Whenever we fetch a module successfully -- even if the module itself is
-	// bad in some way -- make sure its latest information is up to date in the
-	// DB.
-	if ft.Status < 500 {
-		if err := f.FetchAndUpdateLatest(ctx, modulePath); err != nil {
-			// Internal errors are serious, but others aren't.
-			if derrors.ToStatus(err) >= 500 {
-				// Do not overwrite an error from insertion.
-				if ft.Error == nil {
-					ft.Error = err
-					ft.Status = http.StatusInternalServerError
-				}
-				log.Errorf(ctx, "%v", err)
-			} else {
-				log.Infof(ctx, "%v", err)
-			}
-		}
+	// Get the latest-version information first, and update the DB. We'll need
+	// it to determine if the current module version is the latest good one for
+	// its path.
+	lmv, err := f.FetchAndUpdateLatest(ctx, modulePath)
+	// The only errors possible here should be DB failures.
+	if err != nil {
+		return derrors.ToStatus(err), "", err
 	}
+	ft := f.fetchAndInsertModule(ctx, modulePath, requestedVersion, lmv)
+	span.AddAttributes(trace.Int64Attribute("numPackages", int64(len(ft.PackageVersionStates))))
 
 	// If there were any errors processing the module then we didn't insert it.
 	// Delete it in case we are reprocessing an existing module.
@@ -156,7 +145,7 @@ func (f *Fetcher) FetchAndUpdateState(ctx context.Context, modulePath, requested
 // fetchAndInsertModule fetches the given module version from the module proxy
 // or (in the case of the standard library) from the Go repo and writes the
 // resulting data to the database.
-func (f *Fetcher) fetchAndInsertModule(ctx context.Context, modulePath, requestedVersion string) *fetchTask {
+func (f *Fetcher) fetchAndInsertModule(ctx context.Context, modulePath, requestedVersion string, lmv *internal.LatestModuleVersions) *fetchTask {
 	ft := &fetchTask{
 		FetchResult: fetch.FetchResult{
 			ModulePath:       modulePath,
@@ -239,8 +228,11 @@ func (f *Fetcher) fetchAndInsertModule(ctx context.Context, modulePath, requeste
 
 	// The module was successfully fetched.
 	log.Infof(ctx, "fetch.FetchModule succeeded for %s@%s", ft.ModulePath, ft.RequestedVersion)
+
+	// Determine the current latest-version information for this module.
+
 	start := time.Now()
-	isLatest, err := f.DB.InsertModule(ctx, ft.Module)
+	isLatest, err := f.DB.InsertModule(ctx, ft.Module, lmv)
 	ft.timings["db.InsertModule"] = time.Since(start)
 	if err != nil {
 		log.Error(ctx, err)
@@ -401,10 +393,14 @@ func logTaskResult(ctx context.Context, ft *fetchTask, prefix string) {
 
 // FetchAndUpdateLatest fetches information about the latest versions from the proxy,
 // and updates the database if the version has changed.
-func (f *Fetcher) FetchAndUpdateLatest(ctx context.Context, modulePath string) (err error) {
+// It returns the most recent good information, which may be what it just fetched or
+// may be what is already in the DB.
+// It does not update the latest good version; that happens inside InsertModule, because
+// it must be protected by the module-path advisory lock.
+func (f *Fetcher) FetchAndUpdateLatest(ctx context.Context, modulePath string) (_ *internal.LatestModuleVersions, err error) {
 	defer derrors.Wrap(&err, "FetchAndUpdateLatest(%q)", modulePath)
 	if modulePath == stdlib.ModulePath {
-		return nil
+		return nil, nil
 	}
 	lmv, err := fetch.LatestModuleVersions(ctx, modulePath, f.ProxyClient, func(v string) (bool, error) {
 		modinfo, err := f.DB.GetModuleInfo(ctx, modulePath, v)
@@ -413,16 +409,19 @@ func (f *Fetcher) FetchAndUpdateLatest(ctx context.Context, modulePath string) (
 		}
 		return modinfo.HasGoMod, nil
 	})
-	if err != nil {
-		if err2 := f.DB.UpdateLatestModuleVersionsStatus(ctx, modulePath, derrors.ToStatus(err)); err2 != nil {
-			log.Errorf(ctx, "failed to update latest_module_versions status for %s: %v", modulePath, err2)
-		}
-		return err
+	var status int
+	switch {
+	case lmv != nil:
+		status = 200
+	case err == nil:
+		// There may be no version information for the module, even if it exists.
+		// In that case, we insert a 404 into the DB.
+		status = 404
+	default:
+		status = derrors.ToStatus(err)
 	}
-	// There may be no version information for the module, even if it exists.
-	// In that case, lmv will be nil and we insert a 404 into the DB.
-	if lmv == nil {
-		return f.DB.UpdateLatestModuleVersionsStatus(ctx, modulePath, 404)
+	if status != 200 {
+		return nil, f.DB.UpdateLatestModuleVersionsStatus(ctx, modulePath, status)
 	}
 	return f.DB.UpdateLatestModuleVersions(ctx, lmv)
 }

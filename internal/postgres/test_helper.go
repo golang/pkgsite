@@ -114,7 +114,7 @@ func ResetTestDB(db *DB, t *testing.T) {
 			TRUNCATE paths CASCADE;
 			TRUNCATE symbol_names CASCADE;
 			TRUNCATE imports_unique;
-			TRUNCATE raw_latest_versions;`); err != nil {
+			TRUNCATE latest_module_versions;`); err != nil {
 			return err
 		}
 		if _, err := tx.Exec(ctx, `TRUNCATE module_version_states CASCADE;`); err != nil {
@@ -200,8 +200,12 @@ func RunDBTestsInParallel(dbBaseName string, numDBs int, m *testing.M, acquirep 
 
 // MustInsertModule inserts m into db, calling t.Fatal on error.
 func MustInsertModule(ctx context.Context, t *testing.T, db *DB, m *internal.Module) {
+	MustInsertModuleLMV(ctx, t, db, m, nil)
+}
+
+func MustInsertModuleLMV(ctx context.Context, t *testing.T, db *DB, m *internal.Module, lmv *internal.LatestModuleVersions) {
 	t.Helper()
-	if _, err := db.InsertModule(ctx, m); err != nil {
+	if _, err := db.InsertModule(ctx, m, lmv); err != nil {
 		t.Fatal(err)
 	}
 }

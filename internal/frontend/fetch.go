@@ -559,7 +559,7 @@ func FetchAndUpdateState(ctx context.Context, modulePath, requestedVersion strin
 	if fr.Error == nil {
 		// Only attempt to insert the module into module_version_states if the
 		// fetch process was successful.
-		if _, err := db.InsertModule(ctx, fr.Module); err != nil {
+		if _, err := db.InsertModule(ctx, fr.Module, nil); err != nil {
 			fr.Status = http.StatusInternalServerError
 			log.Errorf(ctx, "FetchAndUpdateState(%q, %q): db.InsertModule failed: %v", modulePath, requestedVersion, err)
 		}

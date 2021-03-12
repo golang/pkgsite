@@ -16,7 +16,6 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/Masterminds/squirrel"
 	"github.com/lib/pq"
 	"go.opencensus.io/trace"
 	"golang.org/x/mod/module"
@@ -30,11 +29,10 @@ import (
 	"golang.org/x/pkgsite/internal/version"
 )
 
-// InsertModule inserts a version into the database using
-// db.saveVersion, along with a search document corresponding to each of its
-// packages.
+// InsertModule inserts a version into the database using db.saveVersion, along
+// with a search document corresponding to each of its packages.
 // It returns whether the version inserted was the latest for the given module path.
-func (db *DB) InsertModule(ctx context.Context, m *internal.Module) (isLatest bool, err error) {
+func (db *DB) InsertModule(ctx context.Context, m *internal.Module, lmv *internal.LatestModuleVersions) (isLatest bool, err error) {
 	defer func() {
 		if m == nil {
 			derrors.WrapStack(&err, "DB.InsertModule(ctx, nil)")
@@ -61,7 +59,7 @@ func (db *DB) InsertModule(ctx context.Context, m *internal.Module) (isLatest bo
 		// If we are not bypassing license checking, remove data for non-redistributable modules.
 		m.RemoveNonRedistributableData()
 	}
-	return db.saveModule(ctx, m)
+	return db.saveModule(ctx, m, lmv)
 }
 
 // saveModule inserts a Module into the database along with its packages,
@@ -74,7 +72,7 @@ func (db *DB) InsertModule(ctx context.Context, m *internal.Module) (isLatest bo
 //
 // A derrors.InvalidArgument error will be returned if the given module and
 // licenses are invalid.
-func (db *DB) saveModule(ctx context.Context, m *internal.Module) (isLatest bool, err error) {
+func (db *DB) saveModule(ctx context.Context, m *internal.Module, lmv *internal.LatestModuleVersions) (isLatest bool, err error) {
 	defer derrors.WrapStack(&err, "saveModule(ctx, tx, Module(%q, %q))", m.ModulePath, m.Version)
 	ctx, span := trace.StartSpan(ctx, "saveModule")
 	defer span.End()
@@ -124,13 +122,23 @@ func (db *DB) saveModule(ctx context.Context, m *internal.Module) (isLatest bool
 
 		// We only insert into imports_unique and search_documents if this is
 		// the latest version of the module.
-		isLatest, err = isLatestVersion(ctx, tx, m.ModulePath, m.Version)
+		// By the time this function is called, we've already inserted into the modules table.
+		// So the query in getLatestGoodVersion will include this version.
+		latest, err := getLatestGoodVersion(ctx, tx, m.ModulePath, lmv)
 		if err != nil {
 			return err
 		}
+		// Update the DB with the latest version, even if we are not the latest.
+		// (Perhaps we just learned of a retraction that affects the good latest
+		// version.)
+		if err := updateLatestGoodVersion(ctx, tx, m.ModulePath, latest); err != nil {
+			return err
+		}
+		isLatest = m.Version == latest
 		if !isLatest {
 			return nil
 		}
+		// Here, this module is the latest good version.
 
 		if err := insertImportsUnique(ctx, tx, m); err != nil {
 			return err
@@ -609,29 +617,6 @@ func lock(ctx context.Context, tx *database.DB, modulePath string) (err error) {
 		log.Debugf(ctx, "locking %s (%d) succeeded", modulePath, h)
 	}
 	return nil
-}
-
-// isLatestVersion reports whether version is the latest version of the module.
-func isLatestVersion(ctx context.Context, ddb *database.DB, modulePath, resolvedVersion string) (_ bool, err error) {
-	defer derrors.WrapStack(&err, "isLatestVersion(ctx, tx, %q)", modulePath)
-
-	q, args, err := orderByLatest(squirrel.Select("m.version").
-		From("modules m").
-		Where(squirrel.Eq{"m.module_path": modulePath})).
-		Limit(1).
-		ToSql()
-	if err != nil {
-		return false, err
-	}
-	row := ddb.QueryRow(ctx, q, args...)
-	var v string
-	if err := row.Scan(&v); err != nil {
-		if err == sql.ErrNoRows {
-			return true, nil // It's the only version, so it's also the latest.
-		}
-		return false, err
-	}
-	return resolvedVersion == v, nil
 }
 
 // validateModule checks that fields needed to insert a module into the database

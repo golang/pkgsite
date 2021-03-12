@@ -7,6 +7,7 @@ package postgres
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -288,22 +289,6 @@ func (db *DB) unitExistsAtLatest(ctx context.Context, unitPath, modulePath strin
 	}
 }
 
-func shouldUpdateRawLatest(newVersion, curVersion string) bool {
-	// Only update if the new one is later according to version.Later
-	// (semver except that release > prerelease). that avoids a race
-	// condition where worker 1 sees a version, but worker 2 sees a
-	// newer version and updates before worker 1 proceeds.
-	//
-	// However, the raw latest version can go backwards if it was an
-	// incompatible version, but then a compatible version with a go.mod
-	// file is published. For example, the module starts with a
-	// v2.0.0+incompatible, but then the author adds a v1.0.0 with a
-	// go.mod file, making v1.0.0 the new latest. Take that case into
-	// account.
-	return version.Later(newVersion, curVersion) ||
-		(version.IsIncompatible(curVersion) && !version.IsIncompatible(newVersion))
-}
-
 func (db *DB) getMultiLatestModuleVersions(ctx context.Context, modulePaths []string) (lmvs []*internal.LatestModuleVersions, err error) {
 	derrors.WrapStack(&err, "getMultiLatestModuleVersions(%v)", modulePaths)
 
@@ -335,6 +320,41 @@ func (db *DB) getMultiLatestModuleVersions(ctx context.Context, modulePaths []st
 		return nil, err
 	}
 	return lmvs, nil
+}
+
+// getLatestGoodVersion returns the latest version of a module in the modules
+// table, respecting the retractions and other information in the given
+// LatestModuleVersions. If lmv is nil, it finds the latest version, favoring
+// release over pre-release, including incompatible versions, and ignoring
+// retractions.
+func getLatestGoodVersion(ctx context.Context, tx *database.DB, modulePath string, lmv *internal.LatestModuleVersions) (_ string, err error) {
+	defer derrors.WrapStack(&err, "getLatestGoodVersion(%q)", modulePath)
+
+	// Read the versions from the modules table.
+	// If the cooked latest version is incompatible, then include
+	// incompatible versions. If it isn't, then either there are no
+	// incompatible versions, or there are but the latest compatible version
+	// has a go.mod file. Either way, ignore incompatible versions.
+	q := squirrel.Select("version").
+		From("modules").
+		Where(squirrel.Eq{"module_path": modulePath}).
+		PlaceholderFormat(squirrel.Dollar)
+	if lmv != nil && !version.IsIncompatible(lmv.CookedVersion) {
+		q = q.Where("NOT incompatible")
+	}
+	query, args, err := q.ToSql()
+	if err != nil {
+		return "", err
+	}
+	vs, err := collectStrings(ctx, tx, query, args...)
+	if err != nil {
+		return "", err
+	}
+	// Choose the latest good version from the unretracted versions.
+	if lmv != nil {
+		vs = version.RemoveIf(vs, lmv.IsRetracted)
+	}
+	return version.LatestOf(vs), nil
 }
 
 // GetLatestModuleVersions returns the row of the latest_module_versions table for modulePath.
@@ -376,53 +396,54 @@ func getLatestModuleVersions(ctx context.Context, db *database.DB, modulePath st
 	return lmv, id, nil
 }
 
+// rawIsMoreRecent reports whether raw version v1 is more recent than v2.
+// v1 is more recent if it is later according to the go command (higher semver,
+// preferring release to prerelease). However, the raw latest version can go
+// backwards if it was an incompatible version, but then a compatible version
+// with a go.mod file is published. For example, the module starts with a
+// v2.0.0+incompatible, but then the author adds a v1.0.0 with a go.mod file,
+// making v1.0.0 the new latest.
+func rawIsMoreRecent(v1, v2 string) bool {
+	return version.Later(v1, v2) || (version.IsIncompatible(v2) && !version.IsIncompatible(v1))
+}
+
 // UpdateLatestModuleVersions upserts its argument into the latest_module_versions table
 // if the row doesn't exist, or the new version is later.
-// It also updates lmv.GoodVersion to the latest good version, always.
-func (db *DB) UpdateLatestModuleVersions(ctx context.Context, vNew *internal.LatestModuleVersions) (err error) {
+// It doesn't update the good version.
+// It returns the version that is in the DB when it completes.
+func (db *DB) UpdateLatestModuleVersions(ctx context.Context, vNew *internal.LatestModuleVersions) (_ *internal.LatestModuleVersions, err error) {
 	defer derrors.WrapStack(&err, "UpdateLatestModuleVersions(%q)", vNew.ModulePath)
 
+	var vResult *internal.LatestModuleVersions
 	// We need RepeatableRead here because the INSERT...ON CONFLICT does a read.
-	return db.db.Transact(ctx, sql.LevelRepeatableRead, func(tx *database.DB) error {
+	err = db.db.Transact(ctx, sql.LevelRepeatableRead, func(tx *database.DB) error {
 		vCur, id, err := getLatestModuleVersions(ctx, tx, vNew.ModulePath)
 		if err != nil {
 			return err
 		}
 		// Is vNew the most recent information, or does the DB already have
 		//something more up to date?
-		update := vCur == nil || shouldUpdateRawLatest(vNew.RawVersion, vCur.RawVersion)
-		// Set lmv to the information that is now in force.
-		lmv := vCur
-		if update {
-			lmv = vNew
-		}
-
-		// Even if we don't update the raw and cooked versions, we might need to
-		// update the good version. For instance, we could have just added a
-		// version that is later than all the other good ones but still not the
-		// same as the raw or cooked version. So find the latest good version,
-		// using the most up-to-date information.
-		latestGoodVersion, err := getLatestGoodVersion(ctx, tx, lmv)
-		if err != nil {
-			return err
-		}
-		// Update the good version if it differs from the current value.
-		update = update || latestGoodVersion != vCur.GoodVersion
+		update := vCur == nil || rawIsMoreRecent(vNew.RawVersion, vCur.RawVersion)
 		if !update {
 			log.Debugf(ctx, "%s: not updating latest module versions", vNew.ModulePath)
+			vResult = vCur
 			return nil
 		}
-		lmv.GoodVersion = latestGoodVersion
 		if vCur == nil {
-			log.Debugf(ctx, "%s: inserting latest_module_versions raw=%q, cooked=%q, good=%q",
-				lmv.ModulePath, lmv.RawVersion, lmv.CookedVersion, lmv.GoodVersion)
+			log.Debugf(ctx, "%s: inserting latest_module_versions raw=%q, cooked=%q",
+				vNew.ModulePath, vNew.RawVersion, vNew.CookedVersion)
 		} else {
-			log.Debugf(ctx, "%s: updating latest_module_versions raw=%q, cooked=%q, good=%q to raw=%q, cooked=%q, good=%q",
-				lmv.ModulePath, vCur.RawVersion, vCur.CookedVersion, vCur.GoodVersion,
-				lmv.RawVersion, lmv.CookedVersion, lmv.GoodVersion)
+			log.Debugf(ctx, "%s: updating latest_module_versions raw=%q, cooked=%q to raw=%q, cooked=%q",
+				vNew.ModulePath, vCur.RawVersion, vCur.CookedVersion,
+				vNew.RawVersion, vNew.CookedVersion)
 		}
-		return upsertLatestModuleVersions(ctx, tx, lmv.ModulePath, id, lmv, 200)
+		vResult = vNew
+		return upsertLatestModuleVersions(ctx, tx, vNew.ModulePath, id, vNew, 200)
 	})
+	if err != nil {
+		return nil, err
+	}
+	return vResult, nil
 }
 
 // UpdateLatestModuleVersionsStatus updates or inserts a failure status into the
@@ -451,35 +472,6 @@ func (db *DB) UpdateLatestModuleVersionsStatus(ctx context.Context, modulePath s
 	})
 }
 
-// getLatestGoodVersion returns the latest version of a module in the modules table,
-// respecting the retractions and other information in the given LatestModuleVersions.
-func getLatestGoodVersion(ctx context.Context, tx *database.DB, lmv *internal.LatestModuleVersions) (_ string, err error) {
-	defer derrors.WrapStack(&err, "getLatestGoodVersion(%q)", lmv.ModulePath)
-
-	// Read the versions from the modules table.
-	// If the cooked latest version is incompatible, then include
-	// incompatible versions. If it isn't, then either there are no
-	// incompatible versions, or there are but the latest compatible version
-	// has a go.mod file. Either way, ignore incompatible versions.
-	q := squirrel.Select("version").
-		From("modules").
-		Where(squirrel.Eq{"module_path": lmv.ModulePath}).
-		PlaceholderFormat(squirrel.Dollar)
-	if !version.IsIncompatible(lmv.CookedVersion) {
-		q = q.Where("NOT incompatible")
-	}
-	query, args, err := q.ToSql()
-	if err != nil {
-		return "", err
-	}
-	vs, err := collectStrings(ctx, tx, query, args...)
-	if err != nil {
-		return "", err
-	}
-	// Choose the latest good version from the unretracted versions.
-	return version.LatestOf(version.RemoveIf(vs, lmv.IsRetracted)), nil
-}
-
 func upsertLatestModuleVersions(ctx context.Context, tx *database.DB, modulePath string, id int, lmv *internal.LatestModuleVersions, status int) (err error) {
 	defer derrors.WrapStack(&err, "upsertLatestModuleVersions(%s, %d)", modulePath, status)
 
@@ -491,13 +483,12 @@ func upsertLatestModuleVersions(ctx context.Context, tx *database.DB, modulePath
 		}
 	}
 	var (
-		raw, cooked, good string
-		goModBytes        = []byte{} // not nil, a zero-length slice
+		raw, cooked string
+		goModBytes  = []byte{} // not nil, a zero-length slice
 	)
 	if lmv != nil {
 		raw = lmv.RawVersion
 		cooked = lmv.CookedVersion
-		good = lmv.GoodVersion
 		// Convert the go.mod file into bytes.
 		goModBytes, err = lmv.GoModFile.Format()
 		if err != nil {
@@ -512,15 +503,40 @@ func upsertLatestModuleVersions(ctx context.Context, tx *database.DB, modulePath
 			good_version,
 			raw_go_mod_bytes,
 			status
-		) VALUES ($1, $2, $3, $4, $5, $6)
+		) VALUES ($1, $2, $3, '', $4, $5)
 		ON CONFLICT (module_path_id)
 		DO UPDATE SET
 			raw_version=excluded.raw_version,
 			cooked_version=excluded.cooked_version,
-			good_version=excluded.good_version,
+			-- do not update good_version
 			raw_go_mod_bytes=excluded.raw_go_mod_bytes,
 			status=excluded.status
 		`,
-		id, raw, cooked, good, goModBytes, status)
+		id, raw, cooked, goModBytes, status)
 	return err
+}
+
+// updateLatestGoodVersion updates latest_module_versions.good_version for modulePath to version.
+func updateLatestGoodVersion(ctx context.Context, tx *database.DB, modulePath, version string) (err error) {
+	defer derrors.WrapStack(&err, "updateLatestGoodVersion(%q, %q)", modulePath, version)
+
+	n, err := tx.Exec(ctx, `
+		UPDATE latest_module_versions
+		SET good_version = $2
+		WHERE module_path_id = (
+			SELECT id FROM paths
+			WHERE path = $1
+		)`, modulePath, version)
+	if err != nil {
+		return err
+	}
+	switch n {
+	case 0:
+		log.Debugf(ctx, "updateLatestGoodVersion(%q, %q): no change", modulePath, version)
+	case 1:
+		log.Debugf(ctx, "updateLatestGoodVersion(%q, %q): updated", modulePath, version)
+	default:
+		return errors.New("more than one row affected")
+	}
+	return nil
 }

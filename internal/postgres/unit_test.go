@@ -649,14 +649,15 @@ func TestGetLatestUnitVersion(t *testing.T) {
 			testDB, release := acquire(t)
 			defer release()
 
+			lmvs := map[string]*internal.LatestModuleVersions{}
+			for _, l := range test.latests {
+				modFile := fmt.Sprintf("module %s\n%s", l.module, l.goMod)
+				lmvs[l.module] = addLatest(ctx, t, testDB, l.module, l.version, modFile)
+			}
 			for _, p := range test.packages {
 				mod, ver, pkg := parseModuleVersionPackage(p)
 				m := sample.Module(mod, ver, pkg)
-				MustInsertModule(ctx, t, testDB, m)
-			}
-			for _, l := range test.latests {
-				modFile := fmt.Sprintf("module %s\n%s", l.module, l.goMod)
-				addLatest(ctx, t, testDB, l.module, l.version, modFile)
+				MustInsertModuleLMV(ctx, t, testDB, m, lmvs[mod])
 			}
 			if test.modulePath == "" {
 				test.modulePath = internal.UnknownModulePath

@@ -375,10 +375,7 @@ func TestFetchAndUpdateLatest(t *testing.T) {
 		SourceClient: source.NewClient(sourceTimeout),
 		DB:           testDB,
 	}
-	if err := f.FetchAndUpdateLatest(ctx, modulePath); err != nil {
-		t.Fatal(err)
-	}
-	got, err := testDB.GetLatestModuleVersions(ctx, modulePath)
+	got, err := f.FetchAndUpdateLatest(ctx, modulePath)
 	if err != nil {
 		t.Fatal(err)
 	}

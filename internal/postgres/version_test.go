@@ -371,7 +371,7 @@ func TestGetLatestInfo(t *testing.T) {
 	}
 }
 
-func TestShouldUpdateRawLatest(t *testing.T) {
+func TestRawIsMoreRecent(t *testing.T) {
 	for _, test := range []struct {
 		new, cur string
 		want     bool
@@ -382,21 +382,26 @@ func TestShouldUpdateRawLatest(t *testing.T) {
 		{"v1.0.0", "v1.9.9-pre", true},          // release beats prerelease
 		{"v1.0.0", "v2.3.4+incompatible", true}, // compatible beats incompatible
 	} {
-		got := shouldUpdateRawLatest(test.new, test.cur)
+		got := rawIsMoreRecent(test.new, test.cur)
 		if got != test.want {
-			t.Errorf("shouldUpdateRawLatest(%q, %q) = %t, want %t", test.new, test.cur, got, test.want)
+			t.Errorf("rawIsMoreRecent(%q, %q) = %t, want %t", test.new, test.cur, got, test.want)
 		}
 	}
 }
 
-func addLatest(ctx context.Context, t *testing.T, db *DB, modulePath, version, modFile string) {
+func addLatest(ctx context.Context, t *testing.T, db *DB, modulePath, version, modFile string) *internal.LatestModuleVersions {
+	if modFile == "" {
+		modFile = "module " + modulePath
+	}
 	info, err := internal.NewLatestModuleVersions(modulePath, version, version, "", []byte(modFile))
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := db.UpdateLatestModuleVersions(ctx, info); err != nil {
+	lmv, err := db.UpdateLatestModuleVersions(ctx, info)
+	if err != nil {
 		t.Fatal(err)
 	}
+	return lmv
 }
 
 func TestGetLatestGoodVersion(t *testing.T) {
@@ -423,7 +428,7 @@ func TestGetLatestGoodVersion(t *testing.T) {
 
 	for _, test := range []struct {
 		name   string
-		cooked string // cooked latest version
+		cooked string // cooked latest version; empty means nil lmv
 		want   string
 	}{
 		{
@@ -441,10 +446,19 @@ func TestGetLatestGoodVersion(t *testing.T) {
 			cooked: "v1.4.0",
 			want:   "v1.2.0",
 		},
+		{
+			name:   "nil",
+			cooked: "", // no latest-version info
+			want:   "v2.0.0+incompatible",
+		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			lmv.CookedVersion = test.cooked
-			got, err := getLatestGoodVersion(ctx, testDB.db, lmv)
+			var lm *internal.LatestModuleVersions
+			if test.cooked != "" {
+				lmv.CookedVersion = test.cooked
+				lm = lmv
+			}
+			got, err := getLatestGoodVersion(ctx, testDB.db, modulePath, lm)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -476,7 +490,7 @@ func TestLatestModuleVersions(t *testing.T) {
 	}
 
 	type versions struct {
-		raw, cooked, good string
+		raw, cooked string
 	}
 	// These tests form a sequence. Each test's want versions are in the DB for the next test.
 	for _, test := range []struct {
@@ -485,28 +499,28 @@ func TestLatestModuleVersions(t *testing.T) {
 	}{
 		{
 			name: "initial",
-			in:   versions{"v1.3.0", "v1.2.0", ""}, // in good isn't used
-			want: versions{"v1.3.0", "v1.2.0", "v1.2.0"},
+			in:   versions{"v1.3.0", "v1.2.0"},
+			want: versions{"v1.3.0", "v1.2.0"},
 		},
 		{
 			name: "older", // older incoming info doesn't cause an update
-			in:   versions{"v1.2.0", "v1.2.0", ""},
-			want: versions{"v1.3.0", "v1.2.0", "v1.2.0"},
+			in:   versions{"v1.2.0", "v1.2.0"},
+			want: versions{"v1.3.0", "v1.2.0"},
 		},
 		{
 			name: "newer bad", // a newer version, not in modules table
-			in:   versions{"v1.4.0", "v1.4.0", ""},
-			want: versions{"v1.4.0", "v1.4.0", "v1.2.0"},
+			in:   versions{"v1.4.0", "v1.4.0"},
+			want: versions{"v1.4.0", "v1.4.0"},
 		},
 		{
 			name: "incompatible",
-			in:   versions{incompatible, incompatible, ""},
-			want: versions{incompatible, incompatible, incompatible},
+			in:   versions{incompatible, incompatible},
+			want: versions{incompatible, incompatible},
 		},
 		{
 			name: "compatible", // "downgrade" from incompatible to compatible will update
-			in:   versions{"v1.3.0", "v1.2.0", ""},
-			want: versions{"v1.3.0", "v1.2.0", "v1.2.0"},
+			in:   versions{"v1.3.0", "v1.2.0"},
+			want: versions{"v1.3.0", "v1.2.0"},
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
@@ -514,17 +528,14 @@ func TestLatestModuleVersions(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			if err := testDB.UpdateLatestModuleVersions(ctx, vNew); err != nil {
-				t.Fatal(err)
-			}
-			vGot, err := testDB.GetLatestModuleVersions(ctx, modulePath)
+			vGot, err := testDB.UpdateLatestModuleVersions(ctx, vNew)
 			if err != nil {
 				t.Fatal(err)
 			}
 			if vGot == nil {
 				t.Fatal("got nothing")
 			}
-			got := versions{vGot.RawVersion, vGot.CookedVersion, vGot.GoodVersion}
+			got := versions{vGot.RawVersion, vGot.CookedVersion}
 			if got != test.want {
 				t.Fatalf("got %q, want %q", got, test.want)
 			}
@@ -586,7 +597,7 @@ func TestLatestModuleVersionsBadStatus(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := testDB.UpdateLatestModuleVersions(ctx, lmv); err != nil {
+	if _, err := testDB.UpdateLatestModuleVersions(ctx, lmv); err != nil {
 		t.Fatal(err)
 	}
 	if got := getStatus(); got != 200 {
