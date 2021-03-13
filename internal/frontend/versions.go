@@ -78,7 +78,7 @@ type VersionSummary struct {
 	Version             string
 	Retracted           bool
 	RetractionRationale string
-	Symbols             []*Symbol
+	Symbols             [][]*Symbol
 }
 
 func fetchVersionsDetails(ctx context.Context, ds internal.DataSource, fullPath, modulePath string) (*VersionsDetails, error) {

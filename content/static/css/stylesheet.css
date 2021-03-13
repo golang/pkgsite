@@ -1489,18 +1489,33 @@ pre,
   padding-left: 1rem;
 }
 .Versions-commitTime {
-  color: var(--gray-3);
   font-weight: 400;
   font-size: 1rem;
 }
 .Versions-major {
   font-weight: 600;
 }
+.Versions-symbols {
+  margin-left: 2rem;
+}
+.Versions-symbolBulletNew {
+  color: var(--gray-3);
+  padding-right: 0.5rem;
+}
+.Versions-symbolBuilds,
+.Versions-symbolBuildsDash,
+.Versions-symbolOld {
+  color: var(--gray-3);
+}
 .Versions-symbolChild {
   padding-left: 2rem;
 }
-.Versions-symbolBuilds {
-  font-size: 0.75rem;
+.Versions-symbolSection,
+.Versions-symbolType {
+  margin-bottom: 0.625rem;
+}
+.Versions-symbolsHeader {
+  margin: 0.625rem 0;
 }
 
 .Imports-list {

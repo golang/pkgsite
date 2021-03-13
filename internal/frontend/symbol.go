@@ -53,7 +53,7 @@ type Symbol struct {
 
 // symbolsForVersions returns an array of symbols for use in the VersionSummary
 // of the specified version.
-func symbolsForVersion(pkgURLPath string, symbolsAtVersion map[string]*internal.UnitSymbol) []*Symbol {
+func symbolsForVersion(pkgURLPath string, symbolsAtVersion map[string]*internal.UnitSymbol) [][]*Symbol {
 	nameToSymbol := map[string]*Symbol{}
 	for _, us := range symbolsAtVersion {
 		s, ok := nameToSymbol[us.Name]
@@ -91,6 +91,9 @@ func symbolsForVersion(pkgURLPath string, symbolsAtVersion map[string]*internal.
 			parent = createParent(us, pkgURLPath)
 			nameToSymbol[us.ParentName] = parent
 		}
+		if len(parent.Builds) == len(s.Builds) {
+			s.Builds = nil
+		}
 		parent.Children = append(parent.Children, s)
 	}
 	return sortSymbols(nameToSymbol)
@@ -108,6 +111,7 @@ func symbolBuilds(us *internal.UnitSymbol) []string {
 	for _, b := range us.BuildContexts() {
 		builds = append(builds, b.String())
 	}
+	sort.Strings(builds)
 	return builds
 }
 
@@ -135,7 +139,7 @@ func createParent(us *internal.UnitSymbol, pkgURLPath string) *Symbol {
 // order of (1) Fields (2) Constants (3) Variables (4) Functions and (5)
 // Methods. For interfaces, child symbols are sorted in order of
 // (1) Methods (2) Constants (3) Variables and (4) Functions.
-func sortSymbols(nameToSymbol map[string]*Symbol) []*Symbol {
+func sortSymbols(nameToSymbol map[string]*Symbol) [][]*Symbol {
 	sm := map[internal.SymbolSection][]*Symbol{}
 	for _, parent := range nameToSymbol {
 		sm[parent.Section] = append(sm[parent.Section], parent)
@@ -162,11 +166,18 @@ func sortSymbols(nameToSymbol map[string]*Symbol) []*Symbol {
 	for _, syms := range sm {
 		sortSymbolsGroup(syms)
 	}
-	return append(append(append(
-		sm[internal.SymbolSectionConstants],
-		sm[internal.SymbolSectionVariables]...),
-		sm[internal.SymbolSectionFunctions]...),
-		sm[internal.SymbolSectionTypes]...)
+
+	var out [][]*Symbol
+	for _, section := range []internal.SymbolSection{
+		internal.SymbolSectionConstants,
+		internal.SymbolSectionVariables,
+		internal.SymbolSectionFunctions,
+		internal.SymbolSectionTypes} {
+		if sm[section] != nil {
+			out = append(out, sm[section])
+		}
+	}
+	return out
 }
 
 func sortSymbolsGroup(syms []*Symbol) {
