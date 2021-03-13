@@ -575,14 +575,15 @@ func TestGetLatestUnitVersion(t *testing.T) {
 		},
 		{
 			name: "only incompatible",
-			// Use incompatible versions if they are all we've got.
+			// If incompatible versions are all we've got, return one.
 			packages: []string{
 				"m.com@v3.0.0+incompatible/a",
 				"m.com@v2.0.0+incompatible/a",
 			},
-			latests:  []latest{{"m.com", "v1.2.3", ""}}, // latest version is compatible but bad
-			fullPath: "m.com/a",
-			want:     "m.com@v3.0.0+incompatible",
+			latests:    []latest{{"m.com", "v1.2.3", ""}}, // latest version is compatible but bad
+			fullPath:   "m.com/a",
+			want:       "m.com@v3.0.0+incompatible",
+			wantNilLMV: true,
 		},
 		{
 			name: "no latest",

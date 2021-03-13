@@ -188,16 +188,10 @@ func (db *DB) getLatestUnitVersion(ctx context.Context, fullPath, requestedModul
 		// internal/version.Latest (which matches the go command), either
 		// incompatible versions should be ignored or there were no incompatible
 		// versions. In either case, remove them.
-		eligibleVersions := unretractedVersions
 		if !version.IsIncompatible(lmv.CookedVersion) {
-			eligibleVersions = version.RemoveIf(unretractedVersions, version.IsIncompatible)
-			if len(eligibleVersions) == 0 {
-				// Oops, incompatible versions are all we've got. (Possible if
-				// the latest cooked version is bad.) Guess we'll keep them.
-				eligibleVersions = unretractedVersions
-			}
+			unretractedVersions = version.RemoveIf(unretractedVersions, version.IsIncompatible)
 		}
-		latestVersion = version.LatestOf(eligibleVersions)
+		latestVersion = version.LatestOf(unretractedVersions)
 		break
 	}
 	if latestVersion != "" {
