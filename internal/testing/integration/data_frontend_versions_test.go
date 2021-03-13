@@ -19,6 +19,7 @@ var versionsPageHello = []*frontend.VersionList{
 				Retracted:           false,
 				RetractionRationale: "",
 				Version:             "v1.2.0",
+				IsMinor:             true,
 				Symbols: [][]*frontend.Symbol{
 					{
 						{
@@ -38,6 +39,7 @@ var versionsPageHello = []*frontend.VersionList{
 				Retracted:           false,
 				RetractionRationale: "",
 				Version:             "v1.1.0",
+				IsMinor:             true,
 				Symbols: [][]*frontend.Symbol{
 					{
 						{
@@ -76,11 +78,13 @@ var versionsPageSymbols = []*frontend.VersionList{
 				CommitTime: "Jan 30, 2019",
 				Link:       "/example.com/symbols@v1.2.0",
 				Version:    "v1.2.0",
+				IsMinor:    true,
 			},
 			{
 				CommitTime: "Jan 30, 2019",
 				Link:       "/example.com/symbols@v1.1.0",
 				Version:    "v1.1.0",
+				IsMinor:    true,
 				Symbols: [][]*frontend.Symbol{
 					{
 						{
@@ -134,6 +138,7 @@ var versionsPageSymbols = []*frontend.VersionList{
 				Retracted:           false,
 				RetractionRationale: "",
 				Version:             "v1.0.0",
+				IsMinor:             true,
 				Symbols: [][]*frontend.Symbol{
 					{
 						{

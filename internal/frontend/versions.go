@@ -78,6 +78,7 @@ type VersionSummary struct {
 	Version             string
 	Retracted           bool
 	RetractionRationale string
+	IsMinor             bool
 	Symbols             [][]*Symbol
 }
 
@@ -187,6 +188,7 @@ func buildVersionDetails(ctx context.Context,
 			Link:       linkify(mi),
 			CommitTime: absoluteTime(mi.CommitTime),
 			Version:    linkVersion(mi.Version, mi.ModulePath),
+			IsMinor:    isMinor(mi.Version),
 		}
 		if experiment.IsActive(ctx, internal.ExperimentRetractions) {
 			key.Deprecated = mi.Deprecated
@@ -226,6 +228,24 @@ func buildVersionDetails(ctx context.Context,
 	// Sort for testing.
 	sort.Strings(details.OtherModules)
 	return &details
+}
+
+// isMinor reports whether v is a release version where the patch version is 0.
+// It is assumed that v is a valid semantic version.
+func isMinor(v string) bool {
+	if version.IsIncompatible(v) {
+		return false
+	}
+	typ, err := version.ParseType(v)
+	if err != nil {
+		// This should never happen because v will always be a valid semantic
+		// version.
+		return false
+	}
+	if typ == version.TypePrerelease || typ == version.TypePseudo {
+		return false
+	}
+	return strings.HasSuffix(strings.TrimPrefix(v, semver.MajorMinor(v)), ".0")
 }
 
 // formatVersion formats a more readable representation of the given version

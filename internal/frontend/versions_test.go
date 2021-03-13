@@ -39,6 +39,7 @@ func versionSummaries(path string, versions []string, linkify func(path, version
 			Version:    version,
 			Link:       linkify(path, version),
 			CommitTime: absoluteTime(sample.CommitTime),
+			IsMinor:    isMinor(version),
 		}
 	}
 	return vs
@@ -241,6 +242,28 @@ func TestPseudoVersionBase(t *testing.T) {
 		t.Run(test.version, func(t *testing.T) {
 			if got := pseudoVersionBase(test.version); got != test.want {
 				t.Errorf("pseudoVersionBase(%q) = %q, want %q", test.version, got, test.want)
+			}
+		})
+	}
+}
+
+func TestIsMinor(t *testing.T) {
+	for _, test := range []struct {
+		version string
+		want    bool
+	}{
+		{"v0.5.0", true},
+		{"v1.0.0-pre", false},
+		{"v1.0.0", true},
+		{"v1.0.1", false},
+		{"v2.0.0+incompatible", false},
+		{"v1.0.0-20190311183353-d8887717615a", false},
+		{"v1.2.3-pre.0.20190311183353-d8887717615a", false},
+		{"v1.2.4-0.20190311183353-d8887717615a", false},
+	} {
+		t.Run(test.version, func(t *testing.T) {
+			if got := isMinor(test.version); got != test.want {
+				t.Errorf("isMinor(%q) = %t, want %t", test.version, got, test.want)
 			}
 		})
 	}

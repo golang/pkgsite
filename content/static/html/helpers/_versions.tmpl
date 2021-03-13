@@ -65,7 +65,7 @@
            {{end}}
          </td>
          <td>
-           <a href="{{$v.Link}}">{{$v.Version}}</a>
+           <a class="{{if $v.IsMinor}}Versions-minor{{end}}" href="{{$v.Link}}">{{$v.Version}}</a>
            {{if $v.Retracted}}(Retracted{{with .RetractionRationale}}: {{.}}){{end}}{{end}}
          </td>
          <td>
