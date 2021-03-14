@@ -1017,6 +1017,7 @@ func TestGetPackagesForSearchDocumentUpsert(t *testing.T) {
 		{
 			PackagePath:    moduleN.ModulePath,
 			ModulePath:     moduleN.ModulePath,
+			Version:        "v1.2.3",
 			ReadmeFilePath: "",
 			ReadmeContents: "",
 			Synopsis:       "",
@@ -1024,6 +1025,7 @@ func TestGetPackagesForSearchDocumentUpsert(t *testing.T) {
 		{
 			PackagePath:    "mod.com/A",
 			ModulePath:     "mod.com",
+			Version:        "v1.2.3",
 			ReadmeFilePath: "README.md",
 			ReadmeContents: "readme",
 			Synopsis:       sample.Doc.Synopsis,
@@ -1031,6 +1033,7 @@ func TestGetPackagesForSearchDocumentUpsert(t *testing.T) {
 		{
 			PackagePath:    "mod.com/A/notinternal",
 			ModulePath:     "mod.com",
+			Version:        "v1.2.3",
 			ReadmeFilePath: "README.md",
 			ReadmeContents: "readme",
 			Synopsis:       sample.Doc.Synopsis,

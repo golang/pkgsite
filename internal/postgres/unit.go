@@ -352,18 +352,6 @@ func orderByLatest(q squirrel.SelectBuilder) squirrel.SelectBuilder {
 	).PlaceholderFormat(squirrel.Dollar)
 }
 
-const orderByLatestStmt = `
-			ORDER BY
-				CASE
-					WHEN m.version_type = 'release' AND NOT m.incompatible THEN 1
-					WHEN m.version_type = 'prerelease' AND NOT m.incompatible THEN 2
-					WHEN m.version_type = 'release' THEN 3
-					WHEN m.version_type = 'prerelease' THEN 4
-					ELSE 5
-				END,
-				m.series_path DESC,
-				m.sort_version DESC`
-
 // GetUnit returns a unit from the database, along with all of the data
 // associated with that unit.
 func (db *DB) GetUnit(ctx context.Context, um *internal.UnitMeta, fields internal.FieldSet) (_ *internal.Unit, err error) {

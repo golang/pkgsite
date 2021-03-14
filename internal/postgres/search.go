@@ -419,12 +419,12 @@ var upsertSearchStatement = fmt.Sprintf(`
 		m.commit_time,
 		m.has_go_mod,
 		(
-			SETWEIGHT(TO_TSVECTOR('path_tokens', $2), 'A') ||
-			SETWEIGHT(TO_TSVECTOR($3), 'B') ||
-			SETWEIGHT(TO_TSVECTOR($4), 'C') ||
-			SETWEIGHT(TO_TSVECTOR($5), 'D')
+			SETWEIGHT(TO_TSVECTOR('path_tokens', $4), 'A') ||
+			SETWEIGHT(TO_TSVECTOR($5), 'B') ||
+			SETWEIGHT(TO_TSVECTOR($6), 'C') ||
+			SETWEIGHT(TO_TSVECTOR($7), 'D')
 		),
-		hll_hash(p.path) & (%[1]d - 1),
+		hll_hash(p.path) & (%d - 1),
 		hll_zeros(hll_hash(p.path))
 	FROM
 		units u
@@ -442,8 +442,11 @@ var upsertSearchStatement = fmt.Sprintf(`
 		u.id = d.unit_id
 	WHERE
 		p.path = $1
-	%s
-	LIMIT 1
+	AND
+		m.module_path = $2
+	AND
+		m.version = $3
+	LIMIT 1 -- could be multiple build contexts
 	ON CONFLICT (package_path)
 	DO UPDATE SET
 		package_path=excluded.package_path,
@@ -462,12 +465,12 @@ var upsertSearchStatement = fmt.Sprintf(`
 			THEN search_documents.version_updated_at
 			ELSE CURRENT_TIMESTAMP
 			END)
-	;`, hllRegisterCount, orderByLatestStmt)
+	;`, hllRegisterCount)
 
 // upsertSearchDocuments adds search information for mod ot the search_documents table.
 // It assumes that all non-redistributable data has been removed from mod.
 func upsertSearchDocuments(ctx context.Context, ddb *database.DB, mod *internal.Module) (err error) {
-	defer derrors.WrapStack(&err, "upsertSearchDocuments(ctx, %q)", mod.ModulePath)
+	defer derrors.WrapStack(&err, "upsertSearchDocuments(ctx, %q, %q)", mod.ModulePath, mod.Version)
 	ctx, span := trace.StartSpan(ctx, "UpsertSearchDocuments")
 	defer span.End()
 	for _, pkg := range mod.Packages() {
@@ -477,6 +480,7 @@ func upsertSearchDocuments(ctx context.Context, ddb *database.DB, mod *internal.
 		args := UpsertSearchDocumentArgs{
 			PackagePath: pkg.Path,
 			ModulePath:  mod.ModulePath,
+			Version:     mod.Version,
 		}
 		if len(pkg.Documentation) > 0 {
 			// Use the synopsis of the first GOOS/GOARCH pair.
@@ -496,14 +500,13 @@ func upsertSearchDocuments(ctx context.Context, ddb *database.DB, mod *internal.
 type UpsertSearchDocumentArgs struct {
 	PackagePath    string
 	ModulePath     string
+	Version        string
 	Synopsis       string
 	ReadmeFilePath string
 	ReadmeContents string
 }
 
-// UpsertSearchDocument inserts a row for each package in the module, if that
-// package is the latest version and is not internal.
-//
+// UpsertSearchDocument inserts a row in search_documents for the given package.
 // The given module should have already been validated via a call to
 // validateModule.
 func UpsertSearchDocument(ctx context.Context, ddb *database.DB, args UpsertSearchDocumentArgs) (err error) {
@@ -516,7 +519,7 @@ func UpsertSearchDocument(ctx context.Context, ddb *database.DB, args UpsertSear
 	}
 	pathTokens := strings.Join(GeneratePathTokens(args.PackagePath), " ")
 	sectionB, sectionC, sectionD := SearchDocumentSections(args.Synopsis, args.ReadmeFilePath, args.ReadmeContents)
-	_, err = ddb.Exec(ctx, upsertSearchStatement, args.PackagePath, pathTokens, sectionB, sectionC, sectionD)
+	_, err = ddb.Exec(ctx, upsertSearchStatement, args.PackagePath, args.ModulePath, args.Version, pathTokens, sectionB, sectionC, sectionD)
 	return err
 }
 
@@ -529,6 +532,7 @@ func (db *DB) GetPackagesForSearchDocumentUpsert(ctx context.Context, before tim
 		SELECT
 			sd.package_path,
 			sd.module_path,
+			sd.version,
 			sd.synopsis,
 			sd.redistributable,
 			r.file_path,
@@ -552,7 +556,7 @@ func (db *DB) GetPackagesForSearchDocumentUpsert(ctx context.Context, before tim
 			a      UpsertSearchDocumentArgs
 			redist bool
 		)
-		if err := rows.Scan(&a.PackagePath, &a.ModulePath, &a.Synopsis, &redist,
+		if err := rows.Scan(&a.PackagePath, &a.ModulePath, &a.Version, &a.Synopsis, &redist,
 			database.NullIsEmpty(&a.ReadmeFilePath), database.NullIsEmpty(&a.ReadmeContents)); err != nil {
 			return err
 		}
