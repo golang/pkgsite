@@ -120,7 +120,7 @@ func UnitHeader(p *Page, versionedURL bool, isPackage bool) htmlcheck.Checker {
 			),
 		)
 	}
-	return in("header.UnitHeader",
+	return in("header.LegacyUnitHeader",
 		versionBadge(p),
 		in(`[data-test-id="UnitHeader-breadcrumbCurrent"]`, text(curBreadcrumb)),
 		in(`[data-test-id="UnitHeader-title"]`, text(p.Title)),

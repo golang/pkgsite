@@ -4,7 +4,7 @@
  * license that can be found in the LICENSE file.
  */
 
-@import './unit_header.css';
+@import './legacy_unit_header.css';
 @import './unit_fixed_header.css';
 @import './unit_build_context.css';
 

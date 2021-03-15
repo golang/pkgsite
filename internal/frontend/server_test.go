@@ -1389,7 +1389,7 @@ func TestServer404Redirect(t *testing.T) {
 				r.AddCookie(c)
 				w = httptest.NewRecorder()
 				handler.ServeHTTP(w, r)
-				err = checkBody(w.Result().Body, in(".UnitHeader-redirectedFromBanner", hasText(val)))
+				err = checkBody(w.Result().Body, in(".LegacyUnitHeader-redirectedFromBanner", hasText(val)))
 				if err != nil {
 					t.Fatal(err)
 				}
@@ -1398,7 +1398,7 @@ func TestServer404Redirect(t *testing.T) {
 				r = httptest.NewRequest("GET", loc, nil)
 				w = httptest.NewRecorder()
 				handler.ServeHTTP(w, r)
-				err = checkBody(w.Result().Body, notIn(".UnitHeader-redirectedFromBanner"))
+				err = checkBody(w.Result().Body, notIn(".LegacyUnitHeader-redirectedFromBanner"))
 				if err != nil {
 					t.Fatal(err)
 				}
