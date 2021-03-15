@@ -144,6 +144,11 @@ pre,
     padding: 0;
   }
 }
+.Site-margin {
+  margin: auto;
+  max-width: 95rem;
+  width: 100%;
+}
 
 .FeedbackButton {
   cursor: pointer;
@@ -789,7 +794,6 @@ pre,
   height: 1.5rem;
   margin: 0 0.5rem;
   position: relative;
-  width: 1.5rem;
 }
 .CopyToClipboardButton:not([data-tooltip])::before,
 .CopyToClipboardButton:not([data-tooltip])::after,
@@ -833,7 +837,6 @@ pre,
 .CopyToClipboardButton-image {
   display: block;
   height: 0.9375rem;
-  width: 0.8125rem;
 }
 
 .DetailsNav {

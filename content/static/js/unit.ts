@@ -86,3 +86,21 @@ document.querySelectorAll('.js-buildContextSelect').forEach(el => {
     window.location.search = `?GOOS=${(e.target as HTMLSelectElement).value}`;
   });
 });
+
+const observer = new IntersectionObserver(
+  ([e]) => {
+    if (e.intersectionRatio < 1) {
+      document.querySelector('.js-unitHeader')?.classList.add('UnitHeader--sticky');
+      document.querySelector('.js-unitHeader')?.classList.remove('UnitHeader--full');
+    } else {
+      document.querySelector('.js-unitHeader')?.classList.remove('UnitHeader--sticky');
+      document.querySelector('.js-unitHeader')?.classList.add('UnitHeader--full');
+    }
+  },
+  { threshold: 1.0, rootMargin: '-20px' }
+);
+
+const headerSentinel = document.querySelector('.js-headerSentinel');
+if (headerSentinel) {
+  observer.observe(headerSentinel);
+}

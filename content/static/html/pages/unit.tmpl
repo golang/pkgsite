@@ -12,8 +12,12 @@
 
 {{define "main_content"}}
   <div class="Container">
-    {{block "legacy_unit_header" .}}{{end}}
-    {{block "unit_fixed_header" .}}{{end}}
+    {{if (.Experiments.IsActive "sticky-header")}} 
+      {{block "unit_header" .}}{{end}}
+    {{else}}
+      {{block "legacy_unit_header" .}}{{end}}
+      {{block "unit_fixed_header" .}}{{end}}
+    {{end}}
     {{block "unit_content" .}}{{end}}
   </div>
 

@@ -6,68 +6,151 @@
 
 .UnitHeader {
   border-bottom: 0.0625rem solid var(--gray-8);
-  padding: 0.5rem 1rem;
+  padding-bottom: 1rem;
+  position: sticky;
+  top: 0;
+  white-space: nowrap;
+  z-index: 100;
 }
-@media only screen and (min-width: 57.7rem) {
-  .UnitHeader {
-    border-bottom: 0.0625rem solid var(--gray-8);
-    padding: 0.5rem 1.5rem;
+.UnitHeader--sticky {
+  background-color: var(--white);
+  padding-bottom: 0;
+}
+.UnitHeader-outer {
+  min-height: 13.0625rem;
+  position: sticky;
+  top: -9.5rem;
+  z-index: 100;
+}
+@media only screen and (min-width: 64rem) {
+  .UnitHeader-outer {
+    min-height: 6.0625rem;
+    top: -2.5rem;
   }
 }
-.UnitHeader-container {
-  margin: auto;
-  max-width: 95rem;
+.UnitHeader-inner {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: var(--header-height);
 }
-.UnitHeader-breadcrumb {
-  margin-top: 0.5rem;
+.UnitHeader--sticky .UnitHeader-inner {
+  align-items: center;
+  flex-direction: row;
+}
+
+.UnitHeader-breadcrumbs {
+  line-height: 1.5rem;
+  margin-top: 1rem;
+  white-space: initial;
 }
 .UnitHeader-breadcrumbItem {
   color: var(--gray-4);
   display: inline-flex;
   font-size: 0.875rem;
-  line-height: 1.5rem;
 }
 .UnitHeader-breadcrumbItem:not(:last-child)::after {
   content: '>';
   padding: 0 0.5rem;
 }
-.UnitHeader-heading {
+
+.UnitHeader,
+.UnitHeader-breadcrumbs {
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+@media only screen and (min-width: 57.5rem) {
+  .UnitHeader,
+  .UnitHeader-breadcrumbs {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
+.UnitHeader-title {
   align-items: center;
   display: flex;
+  overflow: hidden;
 }
-.UnitHeader-title {
-  font-size: 1.75rem;
-  line-height: 2.25rem;
-  margin-bottom: 1rem;
-  margin-top: 0.625rem;
-}
-.UnitHeader-detail {
+.UnitHeader-logo {
+  align-items: center;
   display: flex;
+  margin-right: 0;
+  opacity: 0;
+  transition: opacity 0.25s ease-in-out, margin 0.25s ease-in, width 0.25s ease-out;
+  visibility: hidden;
+  width: 0;
+}
+.UnitHeader-logo img {
+  height: 1.695625rem;
+  width: 4.5rem;
+}
+.UnitHeader--sticky .UnitHeader-logo {
+  margin-right: 0.5rem;
+  opacity: 1;
+  visibility: visible;
+  width: 4.5rem;
+}
+@media only screen and (min-width: 37.5rem) {
+  .UnitHeader--sticky .UnitHeader-logo {
+    height: 1.9541rem;
+    margin-right: 1rem;
+    width: 5.1875rem;
+  }
+}
+.UnitHeader-title h1 {
+  font-size: 1.75rem;
+  font-weight: 600;
+  line-height: 2.25rem;
+  margin: 0.5rem 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.UnitHeader--sticky .UnitHeader-title h1 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1.5;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+@media only screen and (min-width: 37.5rem) {
+  .UnitHeader--sticky .UnitHeader-title h1 {
+    font-size: 1.5rem;
+  }
+}
+.UnitHeader-inner .CopyToClipboardButton {
+  display: none;
+}
+.UnitHeader--sticky .UnitHeader-inner .CopyToClipboardButton {
+  display: initial;
+}
+
+.UnitHeader-details {
+  display: none;
   flex-direction: column;
   white-space: nowrap;
 }
+.UnitHeader--full .UnitHeader-details {
+  display: flex;
+}
 @media only screen and (min-width: 64rem) {
-  .UnitHeader-detail {
+  .UnitHeader-details {
     align-items: center;
     flex-direction: row;
-    flex-wrap: wrap;
-    margin-bottom: 0.5rem;
+  }
+}
+@media only screen and (min-width: 64rem) {
+  .UnitHeader-details {
+    display: flex;
   }
 }
 .UnitHeader-detailItem {
   color: var(--gray-4);
+  display: inline;
   font-size: 0.875rem;
-  margin-bottom: 0.5rem;
-}
-.UnitHeader-detailItem img {
-  margin-right: 0.5rem;
-  vertical-align: middle;
-}
-.UnitHeader-scaleIcon img {
-  margin-right: 0.75rem;
-}
-.UnitHeader-detailItem a > span {
-  color: var(--gray-4);
+  line-height: 1.75rem;
 }
 @media only screen and (min-width: 64rem) {
   .UnitHeader-detailItem:not(:last-of-type)::after {
@@ -75,21 +158,106 @@
     padding: 1rem;
   }
 }
-@media only screen and (max-width: 52rem) {
-  .UnitHeader-detailItem:not(:last-of-type)::after {
-    padding: 0.5rem;
+.UnitHeader-detailItem > a > span {
+  color: var(--gray-4);
+}
+
+.UnitHeader-overflowContainer {
+  display: none;
+  height: 1.5rem;
+  position: absolute;
+  right: 1rem;
+  top: 1.125rem;
+  width: 1.5rem;
+}
+.UnitHeader--sticky .UnitHeader-overflowContainer {
+  display: block;
+}
+@media only screen and (min-width: 70rem) {
+  .UnitHeader--sticky .UnitHeader-overflowContainer {
+    display: none;
+  }
+}
+.UnitHeader-overflowImage {
+  fill: var(--gray-3);
+  height: 100%;
+  left: 0;
+  position: absolute;
+  top: 0;
+  width: 100%;
+}
+.UnitHeader-overflowSelect {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background: transparent;
+  border: 0;
+  color: transparent;
+  cursor: pointer;
+  font-size: 1rem;
+  height: 100%;
+  left: 0;
+  position: absolute;
+  top: 0;
+  width: 100%;
+}
+.UnitHeader-overflowSelect option {
+  color: var(--gray-1);
+}
+
+.UnitHeader-badge {
+  border: 0.0625rem solid var(--gray-4);
+  border-radius: 0.125rem;
+  display: none;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  line-height: 1rem;
+  margin-left: 0.5rem;
+  margin-top: 0.125rem;
+  padding: 0 0.35rem;
+  text-align: center;
+}
+.UnitHeader--full .UnitHeader-badge {
+  display: block;
+}
+@media only screen and (min-width: 80rem) {
+  .UnitHeader--sticky .UnitHeader-badge {
+    display: block;
   }
 }
 
-/*
- * TODO: Replace DetailsHeader-badge with UnitHeader-versionBadge in
- * middleware/latestversion.go after unit page is launched.
- */
+.UnitHeader-banner {
+  display: flex;
+  padding: 0.75rem 1rem;
+}
+@media only screen and (min-width: 57.7rem) {
+  .UnitHeader-banner {
+    padding: 0.75rem 1.5rem;
+  }
+}
+.UnitHeader-bannerContent {
+  align-items: center;
+  display: flex;
+}
+.UnitHeader-banner--majorVersion,
+.UnitHeader-banner--redirected {
+  background-color: var(--gray-10);
+}
+.UnitHeader-banner--deprecated,
+.UnitHeader-banner--retracted {
+  background-color: var(--yellow);
+}
+.UnitHeader-banner-icon {
+  color: var(--gray-3);
+  margin-right: 0.5rem;
+  width: 1rem;
+}
 .UnitHeader-versionBadge,
 .DetailsHeader-badge {
   border-radius: unset;
   color: var(--white);
   font-size: 0.7rem;
+  line-height: 0.85rem;
   margin: -1rem 0 -1rem 0.5rem;
   padding: 0.25rem 0.5rem;
   text-transform: uppercase;
@@ -108,32 +276,6 @@
   display: none;
 }
 
-.UnitHeader-majorVersionBanner,
-.UnitHeader-redirectedFromBanner,
-.UnitHeader-deprecatedBanner,
-.UnitHeader-retractedBanner {
-  display: flex;
-  margin: -0.5rem 0 1rem 0;
-  padding: 0.75rem 0;
-}
-
-.UnitHeader-majorVersionBanner,
-.UnitHeader-redirectedFromBanner {
-  background-color: var(--gray-10);
-}
-
-.UnitHeader-deprecatedBanner,
-.UnitHeader-retractedBanner {
-  background-color: var(--yellow);
-}
-
-.UnitHeader-detailIcon {
-  color: var(--gray-3);
-  flex-shrink: 0;
-  margin-left: 1rem;
-  margin-right: 0.7rem;
-  width: 1rem;
-}
 a.UnitHeader-backLink {
   color: var(--black);
   display: block;
@@ -142,17 +284,5 @@ a.UnitHeader-backLink {
 .UnitHeader-backLink img {
   height: 0.8125rem;
   margin-right: 0.5rem;
-  position: relative;
-  top: -0.0625rem;
   width: auto;
-}
-.UnitHeader-badge {
-  border: 0.0625rem solid var(--gray-4);
-  border-radius: 0.125rem;
-  font-size: 0.6875rem;
-  font-weight: 500;
-  line-height: 1rem;
-  margin-left: 0.5rem;
-  padding: 0 0.35rem;
-  text-align: center;
 }
