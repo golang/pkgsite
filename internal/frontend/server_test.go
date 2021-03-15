@@ -765,14 +765,20 @@ func serverTestCases() []serverTestCase {
 		{
 			name:           "stdlib shortcut with trailing slash",
 			urlPath:        "/http/",
-			wantStatusCode: http.StatusFound,
-			wantLocation:   "/net/http",
+			wantStatusCode: http.StatusMovedPermanently,
+			wantLocation:   "/http",
 		},
 		{
 			name:           "stdlib shortcut with args and trailing slash",
 			urlPath:        "/http@go1.13/",
-			wantStatusCode: http.StatusFound,
-			wantLocation:   "/net/http",
+			wantStatusCode: http.StatusMovedPermanently,
+			wantLocation:   "/http@go1.13",
+		},
+		{
+			name:           "package page with trailiing slash",
+			urlPath:        "/github.com/my/module/",
+			wantStatusCode: http.StatusMovedPermanently,
+			wantLocation:   "/github.com/my/module",
 		},
 		{
 			name:           "package default",

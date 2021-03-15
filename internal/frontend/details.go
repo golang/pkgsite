@@ -41,6 +41,10 @@ func (s *Server) serveDetails(w http.ResponseWriter, r *http.Request, ds interna
 		http.Redirect(w, r, urlPath, http.StatusMovedPermanently)
 		return
 	}
+	if strings.HasSuffix(r.URL.Path, "/") {
+		http.Redirect(w, r, strings.TrimSuffix(r.URL.Path, "/"), http.StatusMovedPermanently)
+		return
+	}
 
 	ctx := r.Context()
 	// If page statistics are enabled, use the "exp" query param to adjust
