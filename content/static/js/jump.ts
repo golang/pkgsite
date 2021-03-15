@@ -29,10 +29,14 @@ const jumpFilter = jumpDialog?.querySelector<HTMLInputElement>('.JumpDialog-inpu
 const searchInput = document.querySelector<HTMLInputElement>('.js-searchFocus');
 const doc = document.querySelector<HTMLDivElement>('.js-documentation');
 
-declare let dialogPolyfill: { registerDialog: (el: Element) => void };
+function loadPolyfill() {
+  return import(`${window.location.origin}/third_party/dialog-polyfill/dialog-polyfill.esm.js`);
+}
 
 if (jumpDialog && !jumpDialog.showModal) {
-  dialogPolyfill.registerDialog(jumpDialog);
+  loadPolyfill().then(({ default: dialogPolyfill }) => {
+    dialogPolyfill.registerDialog(jumpDialog);
+  });
 }
 
 interface JumpListItem {
@@ -250,7 +254,9 @@ jumpFilter?.addEventListener('keydown', function (event) {
 
 const shortcutsDialog = document.querySelector<HTMLDialogElement>('.ShortcutsDialog');
 if (shortcutsDialog && !shortcutsDialog.showModal) {
-  dialogPolyfill.registerDialog(shortcutsDialog);
+  loadPolyfill().then(({ default: dialogPolyfill }) => {
+    dialogPolyfill.registerDialog(shortcutsDialog);
+  });
 }
 
 // Keyboard shortcuts:
