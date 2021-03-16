@@ -6,7 +6,6 @@ package database
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	"fmt"
 	"strings"
@@ -32,7 +31,7 @@ type queryEndLogEntry struct {
 	Error           string `json:",omitempty"`
 }
 
-func logQuery(ctx context.Context, query string, args []interface{}, instanceID string) func(*error) {
+func logQuery(ctx context.Context, query string, args []interface{}, instanceID string, retryable bool) func(*error) {
 	if QueryLoggingDisabled {
 		return func(*error) {}
 	}
@@ -109,26 +108,28 @@ func logQuery(ctx context.Context, query string, args []interface{}, instanceID 
 					strings.Contains(entry.Error, "pq: canceling statement due to user request") {
 					logf = log.Debug
 				}
+				// If the transaction is retryable and this is a serialization error,
+				// then it's not really an error at all. Log it as a warning, so if
+				// we get a "failed due to max retries" error, we can find these easily.
+				if retryable && isSerializationFailure(*errp) {
+					logf = log.Warning
+				}
 				logf(ctx, entry)
 			}
 		}
 	}
 }
 
-func (db *DB) logTransaction(ctx context.Context, opts *sql.TxOptions) func(*error) {
+func (db *DB) logTransaction(ctx context.Context) func(*error) {
 	if QueryLoggingDisabled {
 		return func(*error) {}
 	}
 	uid := generateLoggingID(db.instanceID)
-	isoLevel := "default"
-	if opts != nil {
-		isoLevel = opts.Isolation.String()
-	}
-	log.Debugf(ctx, "%s transaction (isolation %s) started", uid, isoLevel)
+	log.Debugf(ctx, "%s transaction (isolation %s) started", uid, db.opts.Isolation)
 	start := time.Now()
 	return func(errp *error) {
 		log.Debugf(ctx, "%s transaction (isolation %s) finished in %s with error %v",
-			uid, isoLevel, time.Since(start), *errp)
+			uid, db.opts.Isolation, time.Since(start), *errp)
 	}
 }
 
