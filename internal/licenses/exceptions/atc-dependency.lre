@@ -3,13 +3,15 @@ source: https://github.com/apache/trafficcontrol/blob/master/LICENSE
 **//
 {{Types "Apache-2.0 BSD-2-Clause BSD-3-Clause MIT"}}
 
-This product bundles __15__, which
+This product bundles __3__, which
 (( is || are ))
 available under
 (( a || an ))
-(("))??
 (( Apache-2.0 || BSD-2-Clause || BSD-3-Clause || MIT ))
-(("))??
 license.
-__40__
+__15__
+(( /* || .css || .js || .scss ))
+(( ./licenses/__4__ || ./vendor/__15__/LICENSE
+(( .libyaml || .md || .txt ))??
+))
 Refer to the above license for the full text.

@@ -41,6 +41,7 @@ var exceptionLicenses = []licensecheck.License{
 	{ID: "MPL-2.0-no-copyleft-exception", LRE: license_MPL_2_0_no_copyleft_exception_lre},
 	{ID: "NCSA", LRE: license_NCSA_lre},
 	{ID: "Unlicense", LRE: license_Unlicense_lre},
+	{ID: "atc-dependency", LRE: license_atc_dependency_lre},
 	{ID: "atlantis", LRE: license_atlantis_lre},
 	{ID: "atvg", LRE: license_atvg_lre},
 	{ID: "autogold", LRE: license_autogold_lre},
@@ -97,58 +98,59 @@ var exceptionLicenses = []licensecheck.License{
 }
 
 var exceptionTypes = map[string][]string{
-	"atlantis":      {"Apache-2.0"},
-	"atvg":          {"MPL-2.0"},
-	"autogold":      {"Apache-2.0", "MIT"},
-	"autoscaler":    {"Apache-2.0", "BSD-2-Clause", "BSD-3-Clause", "ISC", "MIT", "MPL-2.0"},
-	"battelle":      {"BSD-3-Clause"},
-	"blink":         {"CC-BY-SA-4.0"},
-	"bsd-eay":       {"BSD-3-Clause"},
-	"cc0-1":         {"CC0-1.0"},
-	"cc0-2":         {"CC0-1.0"},
-	"cc0-3":         {"CC0-1.0"},
-	"cc0-4":         {"CC0-1.0"},
-	"ccby3":         {"CC-BY-3.0"},
-	"ccby4":         {"CC-BY-4.0"},
-	"ccbysa4":       {"CC-BY-SA-4.0"},
-	"cockroach":     {"Apache-2.0"},
-	"dgraph":        {"Apache-2.0", "AGPL-3.0"},
-	"drone":         {"Apache-2.0"},
-	"dropbox":       {"GPL-2.0"},
-	"fontawesome":   {"MIT"},
-	"freetype":      {"Freetype"},
-	"frugal":        {"Apache-2.0"},
-	"geojson":       {"CC-BY-SA-4.0"},
-	"glycerine":     {"Apache-2.0"},
-	"golangdoc":     {"CC-BY-3.0"},
-	"gpl2":          {"GPL-2.0"},
-	"gpl3":          {"GPL-3.0"},
-	"gstats":        {"CC-BY-SA-4.0"},
-	"hardikdr":      {"BSD-3-Clause", "Apache-2.0", "MIT"},
-	"heim":          {"CC-BY-4.0", "MIT"},
-	"hid":           {"BSD-3-Clause", "LGPL-2.1"},
-	"ichain":        {"Apache-2.0"},
-	"ipld":          {"Apache-2.0", "MIT"},
-	"jacamar":       {"Apache-2.0", "MIT"},
-	"learn":         {"CC-BY-4.0"},
-	"maskimko":      {"Apache-2.0"},
-	"mcm":           {"Apache-2.0", "BSD-3-Clause"},
-	"micro":         {"Apache-2.0"},
-	"mumax":         {"GPL-3.0-or-later", "CC-BY-3.0", "Freetype"},
-	"mynewt":        {"Apache-2.0"},
-	"passwordcheck": {"CC0-1.0"},
-	"permissive":    {"MIT", "Apache-2.0"},
-	"protocol":      {"Apache-2.0", "MIT"},
-	"rocketlaunchr": {"MIT"},
-	"rwth":          {"Apache-2.0", "MIT"},
-	"skipper":       {"Apache-2.0", "MIT"},
-	"splunk":        {"Apache-2.0"},
-	"stc":           {"GPL-3.0-or-later", "Apache-2.0"},
-	"tencent-1":     {"MIT"},
-	"tencent-2":     {"MIT"},
-	"tendermint":    {"Apache-2.0"},
-	"transition":    {"MIT", "Apache-2.0"},
-	"yottadb":       {"AGPL-3.0"},
+	"atc-dependency": {"Apache-2.0", "BSD-2-Clause", "BSD-3-Clause", "MIT"},
+	"atlantis":       {"Apache-2.0"},
+	"atvg":           {"MPL-2.0"},
+	"autogold":       {"Apache-2.0", "MIT"},
+	"autoscaler":     {"Apache-2.0", "BSD-2-Clause", "BSD-3-Clause", "ISC", "MIT", "MPL-2.0"},
+	"battelle":       {"BSD-3-Clause"},
+	"blink":          {"CC-BY-SA-4.0"},
+	"bsd-eay":        {"BSD-3-Clause"},
+	"cc0-1":          {"CC0-1.0"},
+	"cc0-2":          {"CC0-1.0"},
+	"cc0-3":          {"CC0-1.0"},
+	"cc0-4":          {"CC0-1.0"},
+	"ccby3":          {"CC-BY-3.0"},
+	"ccby4":          {"CC-BY-4.0"},
+	"ccbysa4":        {"CC-BY-SA-4.0"},
+	"cockroach":      {"Apache-2.0"},
+	"dgraph":         {"Apache-2.0", "AGPL-3.0"},
+	"drone":          {"Apache-2.0"},
+	"dropbox":        {"GPL-2.0"},
+	"fontawesome":    {"MIT"},
+	"freetype":       {"Freetype"},
+	"frugal":         {"Apache-2.0"},
+	"geojson":        {"CC-BY-SA-4.0"},
+	"glycerine":      {"Apache-2.0"},
+	"golangdoc":      {"CC-BY-3.0"},
+	"gpl2":           {"GPL-2.0"},
+	"gpl3":           {"GPL-3.0"},
+	"gstats":         {"CC-BY-SA-4.0"},
+	"hardikdr":       {"BSD-3-Clause", "Apache-2.0", "MIT"},
+	"heim":           {"CC-BY-4.0", "MIT"},
+	"hid":            {"BSD-3-Clause", "LGPL-2.1"},
+	"ichain":         {"Apache-2.0"},
+	"ipld":           {"Apache-2.0", "MIT"},
+	"jacamar":        {"Apache-2.0", "MIT"},
+	"learn":          {"CC-BY-4.0"},
+	"maskimko":       {"Apache-2.0"},
+	"mcm":            {"Apache-2.0", "BSD-3-Clause"},
+	"micro":          {"Apache-2.0"},
+	"mumax":          {"GPL-3.0-or-later", "CC-BY-3.0", "Freetype"},
+	"mynewt":         {"Apache-2.0"},
+	"passwordcheck":  {"CC0-1.0"},
+	"permissive":     {"MIT", "Apache-2.0"},
+	"protocol":       {"Apache-2.0", "MIT"},
+	"rocketlaunchr":  {"MIT"},
+	"rwth":           {"Apache-2.0", "MIT"},
+	"skipper":        {"Apache-2.0", "MIT"},
+	"splunk":         {"Apache-2.0"},
+	"stc":            {"GPL-3.0-or-later", "Apache-2.0"},
+	"tencent-1":      {"MIT"},
+	"tencent-2":      {"MIT"},
+	"tendermint":     {"Apache-2.0"},
+	"transition":     {"MIT", "Apache-2.0"},
+	"yottadb":        {"AGPL-3.0"},
 }
 
 const license_AGPL_3_0_lre = `
@@ -1068,8 +1070,7 @@ OR THE USE OR OTHER DEALINGS IN
 
       (( 2. || (b) ))??
       You must cause any modified files to carry prominent notices stating that
-      You changed the files;
-      and
+      You changed the files; and
 
       (( 3. || c ))??
       You must retain, in the Source form of any Derivative Works that You
@@ -6117,6 +6118,24 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 (( For more information, please refer to <https:/unlicense.org/> ))??
 `
+const license_atc_dependency_lre = `//**
+source: https://github.com/apache/trafficcontrol/blob/master/LICENSE
+**//
+
+
+This product bundles __3__, which
+(( is || are ))
+available under
+(( a || an ))
+(( Apache-2.0 || BSD-2-Clause || BSD-3-Clause || MIT ))
+license.
+__15__
+(( /* || .css || .js || .scss ))
+(( ./licenses/__4__ || ./vendor/__15__/LICENSE
+(( .libyaml || .md || .txt ))??
+))
+Refer to the above license for the full text.
+`
 const license_atlantis_lre = `//**
 source: https://github.com/runatlantis/atlantis/blob/master/LICENSE
 **//
@@ -10355,8 +10374,7 @@ OR THE USE OR OTHER DEALINGS IN
 
       (( 2. || (b) ))??
       You must cause any modified files to carry prominent notices stating that
-      You changed the files;
-      and
+      You changed the files; and
 
       (( 3. || c ))??
       You must retain, in the Source form of any Derivative Works that You
@@ -10902,8 +10920,7 @@ OR THE USE OR OTHER DEALINGS IN
 
       (( 2. || (b) ))??
       You must cause any modified files to carry prominent notices stating that
-      You changed the files;
-      and
+      You changed the files; and
 
       (( 3. || c ))??
       You must retain, in the Source form of any Derivative Works that You
