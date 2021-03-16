@@ -423,7 +423,9 @@ func (db *DB) UpdateLatestModuleVersions(ctx context.Context, vNew *internal.Lat
 		}
 		// Is vNew the most recent information, or does the DB already have
 		//something more up to date?
-		update := vCur == nil || rawIsMoreRecent(vNew.RawVersion, vCur.RawVersion)
+		update := vCur == nil || rawIsMoreRecent(vNew.RawVersion, vCur.RawVersion) ||
+			// If new versions are added, cooked can change even if raw is the same.
+			(vNew.RawVersion == vCur.RawVersion && vNew.CookedVersion != vCur.CookedVersion)
 		if !update {
 			log.Debugf(ctx, "%s: not updating latest module versions", vNew.ModulePath)
 			vResult = vCur
