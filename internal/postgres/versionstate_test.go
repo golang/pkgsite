@@ -8,6 +8,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"net/http"
 	"testing"
 	"time"
@@ -15,6 +16,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/testing/sample"
 )
 
@@ -273,4 +275,93 @@ func TestUpsertModuleVersionStates(t *testing.T) {
 		})
 	}
 
+}
+
+func TestHasGoMod(t *testing.T) {
+	ptr := func(b bool) *bool { return &b }
+
+	for _, test := range []struct {
+		mvsHasRow          bool
+		mvsValue           *bool
+		modulesHasRow      bool
+		modulesValue       bool
+		want, wantNotFound bool
+	}{
+		{
+			mvsHasRow: true,
+			mvsValue:  ptr(false),
+			want:      false,
+		},
+		{
+			mvsHasRow: true,
+			mvsValue:  ptr(true),
+			want:      true,
+		},
+		{
+			mvsHasRow:     true,
+			mvsValue:      nil,
+			modulesHasRow: false,
+			wantNotFound:  true,
+		},
+		{
+			mvsHasRow:     true,
+			mvsValue:      nil,
+			modulesHasRow: true,
+			modulesValue:  true,
+			want:          true,
+		},
+		{
+			mvsHasRow:     true,
+			mvsValue:      nil,
+			modulesHasRow: true,
+			modulesValue:  true,
+			want:          true,
+		},
+		{
+			mvsHasRow:    false,
+			wantNotFound: true,
+		},
+	} {
+		mvsValue := "NULL"
+		if test.mvsValue != nil {
+			mvsValue = fmt.Sprint(*test.mvsValue)
+		}
+		name := fmt.Sprintf("%t,%s,%t,%t", test.mvsHasRow, mvsValue, test.modulesHasRow, test.modulesValue)
+		t.Run(name, func(t *testing.T) {
+			ctx := context.Background()
+			testDB, release := acquire(t)
+			defer release()
+
+			const (
+				modulePath = "m.com"
+				version    = "v1.2.3"
+			)
+			if test.mvsHasRow {
+				_, err := testDB.db.Exec(ctx, `
+						INSERT INTO module_version_states
+						 (module_path, version, has_go_mod, index_timestamp, sort_version, incompatible, status)
+						VALUES ($1, $2, $3, CURRENT_TIMESTAMP, '', false, 200)`,
+					modulePath, version, test.mvsValue)
+				if err != nil {
+					t.Fatal(err)
+				}
+			}
+			if test.modulesHasRow {
+				m := sample.Module(modulePath, version, "")
+				m.HasGoMod = test.modulesValue
+				MustInsertModule(ctx, t, testDB, m)
+			}
+
+			got, err := testDB.HasGoMod(ctx, modulePath, version)
+			if err != nil && !errors.Is(err, derrors.NotFound) {
+				t.Fatal(err)
+			}
+			if got != test.want {
+				t.Errorf("got %t, want %t", got, test.want)
+			}
+			if got := errors.Is(err, derrors.NotFound); got != test.wantNotFound {
+				t.Errorf("not found: got %t, want %t", got, test.wantNotFound)
+			}
+		})
+	}
 }

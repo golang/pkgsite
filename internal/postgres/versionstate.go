@@ -443,3 +443,46 @@ func (db *DB) GetVersionStats(ctx context.Context) (_ *VersionStats, err error) 
 	}
 	return stats, nil
 }
+
+// HasGoMod reports whether a given module version has a go.mod file.
+// It returns a NotFound error if it can't find any information.
+func (db *DB) HasGoMod(ctx context.Context, modulePath, version string) (has bool, err error) {
+	defer derrors.WrapStack(&err, "HasGoMod(%q, %q)", modulePath, version)
+
+	// Check the module_version_states table. It has information about
+	// every module we've seen. Ignore rows with status == 0 because
+	// they haven't been processed yet.
+	var hasP *bool
+	err = db.db.QueryRow(ctx, `
+		SELECT has_go_mod
+		FROM module_version_states
+		WHERE module_path = $1
+		AND version = $2
+		AND status != 0
+	`, modulePath, version).Scan(&hasP)
+	if err == sql.ErrNoRows {
+		return false, derrors.NotFound
+	}
+	if err != nil {
+		return false, err
+	}
+	if hasP != nil {
+		return *hasP, nil
+	}
+	// the has_go_mod column hasn't been populated yet.
+	// Fall back to the modules table.
+	// This can be removed when all rows have been populated and
+	// module_version_states.has_go_mod is migrated to NOT NULL.
+	err = db.db.QueryRow(ctx, `
+		SELECT has_go_mod
+		FROM modules
+		WHERE module_path = $1 AND version = $2
+	`, modulePath, version).Scan(&has)
+	if err == sql.ErrNoRows {
+		return false, derrors.NotFound
+	}
+	if err != nil {
+		return false, err
+	}
+	return has, nil
+}

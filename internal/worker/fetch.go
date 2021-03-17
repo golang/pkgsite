@@ -403,11 +403,7 @@ func (f *Fetcher) FetchAndUpdateLatest(ctx context.Context, modulePath string) (
 		return nil, nil
 	}
 	lmv, err := fetch.LatestModuleVersions(ctx, modulePath, f.ProxyClient, func(v string) (bool, error) {
-		modinfo, err := f.DB.GetModuleInfo(ctx, modulePath, v)
-		if err != nil {
-			return false, err
-		}
-		return modinfo.HasGoMod, nil
+		return f.DB.HasGoMod(ctx, modulePath, v)
 	})
 	var status int
 	switch {
