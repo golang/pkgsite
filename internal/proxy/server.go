@@ -20,9 +20,10 @@ import (
 
 // Server represents a proxy server containing the specified modules.
 type Server struct {
-	mu      sync.Mutex
-	modules map[string][]*Module
-	mux     *http.ServeMux
+	mu          sync.Mutex
+	modules     map[string][]*Module
+	mux         *http.ServeMux
+	zipRequests int // number of .zip endpoint requests, for testing
 }
 
 // NewServer returns a proxy Server that serves the provided modules.
@@ -79,6 +80,9 @@ func (s *Server) handleMod(m *Module) {
 func (s *Server) handleZip(m *Module) {
 	s.mux.HandleFunc(fmt.Sprintf("/%s/@v/%s.zip", m.ModulePath, m.Version),
 		func(w http.ResponseWriter, r *http.Request) {
+			s.mu.Lock()
+			s.zipRequests++
+			s.mu.Unlock()
 			http.ServeContent(w, r, m.ModulePath, time.Now(), bytes.NewReader(m.zip))
 		})
 }
@@ -154,6 +158,12 @@ func (s *Server) addModule(m *Module, hasVersions bool) {
 		// Return the modules in order of decreasing semver.
 		return semver.Compare(s.modules[m.ModulePath][i].Version, s.modules[m.ModulePath][j].Version) < 0
 	})
+}
+
+func (s *Server) ZipRequests() int {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.zipRequests
 }
 
 const versionTime = "2019-01-30T00:00:00Z"

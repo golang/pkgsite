@@ -37,6 +37,13 @@ type Client struct {
 
 	// Whether fetch should be disabled.
 	disableFetch bool
+
+	// One-element zip cache, to avoid a double download.
+	// See TestFetchAndUpdateStateCacheZip in internal/worker/fetch_test.go.
+	// Not thread-safe; should be used by only a single request goroutine.
+	rememberLastZip                   bool
+	lastZipModulePath, lastZipVersion string
+	lastZipReader                     *zip.Reader
 }
 
 // A VersionInfo contains metadata about a given version of a module.
@@ -72,6 +79,17 @@ func (c *Client) WithFetchDisabled() *Client {
 // FetchDisabled reports whether proxy fetch is disabled.
 func (c *Client) FetchDisabled() bool {
 	return c.disableFetch
+}
+
+// WithZipCache returns a new client that caches the last zip
+// it downloads (not thread-safely).
+func (c *Client) WithZipCache() *Client {
+	c2 := *c
+	c2.rememberLastZip = true
+	c2.lastZipModulePath = ""
+	c2.lastZipVersion = ""
+	c2.lastZipReader = nil
+	return &c2
 }
 
 // Info makes a request to $GOPROXY/<module>/@v/<requestedVersion>.info and
@@ -111,6 +129,9 @@ func (c *Client) Mod(ctx context.Context, modulePath, resolvedVersion string) (_
 func (c *Client) Zip(ctx context.Context, modulePath, resolvedVersion string) (_ *zip.Reader, err error) {
 	defer derrors.WrapStack(&err, "proxy.Client.Zip(ctx, %q, %q)", modulePath, resolvedVersion)
 
+	if c.lastZipModulePath == modulePath && c.lastZipVersion == resolvedVersion {
+		return c.lastZipReader, nil
+	}
 	bodyBytes, err := c.readBody(ctx, modulePath, resolvedVersion, "zip")
 	if err != nil {
 		return nil, err
@@ -118,6 +139,11 @@ func (c *Client) Zip(ctx context.Context, modulePath, resolvedVersion string) (_
 	zipReader, err := zip.NewReader(bytes.NewReader(bodyBytes), int64(len(bodyBytes)))
 	if err != nil {
 		return nil, fmt.Errorf("zip.NewReader: %v: %w", err, derrors.BadModule)
+	}
+	if c.rememberLastZip {
+		c.lastZipModulePath = modulePath
+		c.lastZipVersion = resolvedVersion
+		c.lastZipReader = zipReader
 	}
 	return zipReader, nil
 }

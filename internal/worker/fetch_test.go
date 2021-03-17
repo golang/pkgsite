@@ -298,7 +298,7 @@ func TestFetchAndUpdateState(t *testing.T) {
 	}
 
 	sourceClient := source.NewClient(sourceTimeout)
-	f := &Fetcher{proxyClient, sourceClient, testDB, nil}
+	f := &Fetcher{proxyClient.WithZipCache(), sourceClient, testDB, nil}
 	for _, test := range testCases {
 		t.Run(strings.ReplaceAll(test.pkg+"@"+test.version, "/", " "), func(t *testing.T) {
 			defer postgres.ResetTestDB(testDB, t)
@@ -362,6 +362,56 @@ func TestFetchAndUpdateState(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestFetchAndUpdateStateCacheZip(t *testing.T) {
+	// We can try to download a zip from the proxy twice when we are processing
+	// a new module at the latest compatible version, and there is an
+	// incompatible version. In that case, fetch.LatestModuleVersions needs to
+	// download the zip to see if there is a go.mod file, and then the zip is
+	// downloaded again in fetch.FetchModule. To avoid the double download, the
+	// proxy can be set up with a small cache for the last downloaded zip. This
+	// test confirms that that feature works.
+	ctx := context.Background()
+	defer postgres.ResetTestDB(testDB, t)
+	proxyServer := proxy.NewServer([]*proxy.Module{
+		{
+			ModulePath: "m.com",
+			Version:    "v2.0.0+incompatible",
+			Files:      map[string]string{"a.go": "package a"},
+		},
+		{
+			ModulePath: "m.com",
+			Version:    "v1.0.0",
+			Files:      map[string]string{"a.go": "package a"},
+		},
+	})
+	proxyClient, teardownProxy, err := proxy.NewClientForServer(proxyServer)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer teardownProxy()
+
+	// With a plain proxy, we download the zip twice.
+	f := &Fetcher{proxyClient, source.NewClient(sourceTimeout), testDB, nil}
+	if _, _, err := f.FetchAndUpdateState(ctx, "m.com", "v1.0.0", testAppVersion); err != nil {
+		t.Fatal(err)
+	}
+	if got, want := proxyServer.ZipRequests(), 2; got != want {
+		t.Errorf("got %d downloads, want %d", got, want)
+	}
+
+	// With the cache, we download it only once.
+	postgres.ResetTestDB(testDB, t) // to avoid finding has_go_mod in the DB
+	f.ProxyClient = proxyClient.WithZipCache()
+	if _, _, err := f.FetchAndUpdateState(ctx, "m.com", "v1.0.0", testAppVersion); err != nil {
+		t.Fatal(err)
+	}
+	// We want three total zip requests: 2 before, 1 now.
+	if got, want := proxyServer.ZipRequests(), 3; got != want {
+		t.Errorf("got %d downloads, want %d", got, want)
+	}
+
 }
 
 func TestFetchAndUpdateLatest(t *testing.T) {
