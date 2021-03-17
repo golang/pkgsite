@@ -44,13 +44,6 @@
   padding: 0.5rem 1rem;
   text-align: left;
 }
-.UnitDirectories-moduleTag {
-  background-color: var(--blue);
-  border-radius: 0.15rem;
-  color: var(--gray-1);
-  font-size: 0.74rem;
-  padding: 0.2rem 0.4rem;
-}
 .UnitDirectories tr.hidden {
   display: none;
 }
