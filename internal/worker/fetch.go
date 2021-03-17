@@ -399,9 +399,6 @@ func logTaskResult(ctx context.Context, ft *fetchTask, prefix string) {
 // it must be protected by the module-path advisory lock.
 func (f *Fetcher) FetchAndUpdateLatest(ctx context.Context, modulePath string) (_ *internal.LatestModuleVersions, err error) {
 	defer derrors.Wrap(&err, "FetchAndUpdateLatest(%q)", modulePath)
-	if modulePath == stdlib.ModulePath {
-		return nil, nil
-	}
 	lmv, err := fetch.LatestModuleVersions(ctx, modulePath, f.ProxyClient, func(v string) (bool, error) {
 		return f.DB.HasGoMod(ctx, modulePath, v)
 	})

@@ -10,6 +10,7 @@ import (
 
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/proxy"
+	"golang.org/x/pkgsite/internal/stdlib"
 )
 
 func TestLatestModuleVersions(t *testing.T) {
@@ -19,7 +20,10 @@ func TestLatestModuleVersions(t *testing.T) {
 	prox, teardown := proxy.SetupTestClient(t, testModules)
 	defer teardown()
 
-	// These tests depend on the test modules, which are taken from the contents
+	stdlib.UseTestData = true
+	defer func() { stdlib.UseTestData = false }()
+
+	// These tests (except for std) depend on the test modules, which are taken from the contents
 	// of internal/proxy/testdata/*.txtar.
 	for _, test := range []struct {
 		modulePath          string
@@ -27,6 +31,7 @@ func TestLatestModuleVersions(t *testing.T) {
 	}{
 		{"example.com/basic", "v1.1.0", "v1.1.0"},
 		{"example.com/retractions", "v1.2.0", "v1.0.0"},
+		{"std", "v1.14.6", "v1.14.6"},
 	} {
 		got, err := LatestModuleVersions(context.Background(), test.modulePath, prox, nil)
 		if err != nil {

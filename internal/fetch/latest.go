@@ -13,6 +13,7 @@ import (
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/proxy"
+	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/version"
 )
 
@@ -39,6 +40,10 @@ import (
 // a failure, but a valid state in which there is no version information for a
 // module, even though particular pseudo-versions of the module might exist. In
 // this case, LatestModuleVersions returns (nil, nil).
+//
+// As a special case, the "std" module's versions are fetched from the repo (by
+// calling stdlib.Versions). We assume stdlib versions are never retracted, and
+// that there are no incompatible versions.
 func LatestModuleVersions(ctx context.Context, modulePath string, prox *proxy.Client, hasGoMod func(v string) (bool, error)) (info *internal.LatestModuleVersions, err error) {
 	defer derrors.WrapStack(&err, "LatestModuleVersions(%q)", modulePath)
 
@@ -47,6 +52,18 @@ func LatestModuleVersions(ctx context.Context, modulePath string, prox *proxy.Cl
 			log.Debugf(ctx, "LatestModuleVersions(%q) => (raw=%q cooked=%q, %v)", modulePath, info.RawVersion, info.CookedVersion, err)
 		}
 	}()
+
+	if modulePath == stdlib.ModulePath {
+		vs, err := stdlib.Versions()
+		if err != nil {
+			return nil, err
+		}
+		latest := version.LatestOf(vs)
+		if latest == "" {
+			return nil, errors.New("no versions for stdlib")
+		}
+		return internal.NewLatestModuleVersions(modulePath, latest, latest, "", []byte("module std"))
+	}
 
 	// Remember calls to hasGoMod because they can be expensive.
 	hasGoModResults := map[string]bool{}
