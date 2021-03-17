@@ -376,6 +376,49 @@ var moduleBuildConstraints = &testModule{
 	},
 }
 
+// The package in this module is broken for one build context, but not all.
+var moduleBadBuildContext = &testModule{
+	mod: &proxy.Module{
+		ModulePath: "github.com/bad-context",
+		Files: map[string]string{
+			"pkg/linux.go": `
+					// +build linux js
+
+					package pkg`,
+			"pkg/js.go": `
+					// +build js
+
+					package js`,
+		},
+	},
+	fr: &FetchResult{
+		Module: &internal.Module{
+			ModuleInfo: internal.ModuleInfo{
+				ModulePath:        "github.com/bad-context",
+				HasGoMod:          false,
+				IsRedistributable: false,
+			},
+			Units: []*internal.Unit{
+				{
+					UnitMeta: internal.UnitMeta{
+						Path: "github.com/bad-context",
+					},
+				},
+				{
+					UnitMeta: internal.UnitMeta{
+						Name: "pkg",
+						Path: "github.com/bad-context/pkg",
+					},
+					Documentation: []*internal.Documentation{{
+						GOOS:   "linux",
+						GOARCH: "amd64",
+					}},
+				},
+			},
+		},
+	},
+}
+
 var moduleNonRedist = &testModule{
 	modfunc: func() *proxy.Module { return proxy.FindModule(testModules, "example.com/nonredist", "") },
 	fr: &FetchResult{

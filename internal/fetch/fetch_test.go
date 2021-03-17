@@ -74,6 +74,7 @@ func TestFetchModule(t *testing.T) {
 		{name: "multi", mod: moduleMultiPackage},
 		{name: "bad packages", mod: moduleBadPackages},
 		{name: "build constraints", mod: moduleBuildConstraints},
+		{name: "bad build context", mod: moduleBadBuildContext},
 		{name: "packages with bad import paths", mod: moduleBadImportPath},
 		{name: "documentation", mod: moduleDocTest},
 		{name: "documentation too large", mod: moduleDocTooLarge},

@@ -127,6 +127,9 @@ func loadPackage(ctx context.Context, zipGoFiles []*zip.File, innerPath string,
 		case errors.Is(err, derrors.NotFound):
 			// No package for this build context.
 			continue
+		case errors.As(err, new(*BadPackageError)):
+			// This build context was bad, but maybe others aren't.
+			continue
 		case errors.Is(err, godoc.ErrTooLarge):
 			// The doc for this build context is too large. To keep things
 			// simple, return a single package with this error that will be used
