@@ -16,7 +16,6 @@ import (
 
 	"github.com/google/safehtml"
 	"github.com/google/safehtml/uncheckedconversions"
-	"golang.org/x/mod/module"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/cookie"
 	"golang.org/x/pkgsite/internal/derrors"
@@ -172,14 +171,6 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 	basePage := s.newBasePage(r, title)
 	basePage.AllowWideContent = true
 	lv := linkVersion(um.Version, um.ModulePath)
-	_, majorVersion, _ := module.SplitPathVersion(um.ModulePath)
-	_, latestMajorVersion, ok := module.SplitPathVersion(latestInfo.MajorModulePath)
-	// Show the banner if there was no error getting the latest major version,
-	// and it is different from the major version of the current module path.
-	var latestMajorVersionNum string
-	if ok && majorVersion != latestMajorVersion && latestMajorVersion != "" {
-		latestMajorVersionNum = strings.TrimPrefix(latestMajorVersion, "/")
-	}
 	page := UnitPage{
 		basePage:              basePage,
 		Unit:                  um,
@@ -192,11 +183,17 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 		LinkVersion:           lv,
 		LatestURL:             constructUnitURL(um.Path, um.ModulePath, internal.LatestVersion),
 		LatestMinorClass:      latestMinorClass(lv, latestInfo),
-		LatestMajorVersion:    latestMajorVersionNum,
 		LatestMajorVersionURL: latestInfo.MajorUnitPath,
 		PageLabels:            pageLabels(um),
 		PageType:              pageType(um),
 		RedirectedFromPath:    redirectPath,
+	}
+
+	// Show the banner if there was no error getting the latest major version,
+	// and it is different from the major version of the current module path.
+	latestMajor := internal.MajorVersionForModule(latestInfo.MajorModulePath)
+	if latestMajor != "" && latestMajor != internal.MajorVersionForModule(um.ModulePath) {
+		page.LatestMajorVersion = latestMajor
 	}
 
 	page.Details = d

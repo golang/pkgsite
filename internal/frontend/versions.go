@@ -11,7 +11,6 @@ import (
 	"sort"
 	"strings"
 
-	"golang.org/x/mod/module"
 	"golang.org/x/mod/semver"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/experiment"
@@ -165,19 +164,16 @@ func buildVersionDetails(ctx context.Context,
 				panic(err)
 			}
 		}
-		if _, pathMajor, ok := module.SplitPathVersion(mi.ModulePath); ok {
-			// We prefer the path major version except for v1 import paths where the
-			// semver major version is v0. In this case, we prefer the more specific
-			// semver version.
-			if pathMajor != "" {
-				// Trim both '/' and '.' from the path major version to account for
-				// standard and gopkg.in module paths.
-				major = strings.TrimLeft(pathMajor, "/.")
-			} else if version.IsIncompatible(mi.Version) {
-				major = semver.Major(mi.Version)
-			} else if major != "v0" && !strings.HasPrefix(major, "go") {
-				major = "v1"
-			}
+		// We prefer the path major version except for v1 import paths where the
+		// semver major version is v0. In this case, we prefer the more specific
+		// semver version.
+		pathMajor := internal.MajorVersionForModule(mi.ModulePath)
+		if pathMajor != "" {
+			major = pathMajor
+		} else if version.IsIncompatible(mi.Version) {
+			major = semver.Major(mi.Version)
+		} else if major != "v0" && !strings.HasPrefix(major, "go") {
+			major = "v1"
 		}
 		key := VersionListKey{
 			ModulePath:   mi.ModulePath,
