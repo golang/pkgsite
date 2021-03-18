@@ -179,6 +179,7 @@ var (
 		"OpenSSL",
 		"OSL-3.0",
 		"PostgreSQL", // TODO: ask legal
+		"Python-2.0",
 		"Unlicense",
 		"UPL-1.0",
 		"Zlib",
