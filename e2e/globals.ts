@@ -1,6 +1,5 @@
-import { Browser, Page } from 'puppeteer';
+import { Browser } from 'puppeteer';
 
 declare global {
   const browser: Browser;
-  const page: Page;
 }

@@ -6,13 +6,20 @@
  */
 
 import './globals';
-import puppeteer from 'puppeteer';
+import puppeteer, { Page } from 'puppeteer';
 
 const baseUrl = process.env.FRONTEND_URL ?? '';
 
 describe('Homepage', () => {
+  let page: Page;
+
   beforeEach(async () => {
+    page = await browser.newPage();
     await page.goto(baseUrl);
+  });
+
+  afterEach(async () => {
+    await page.close();
   });
 
   test('accessibility tree matches snapshot', async () => {
