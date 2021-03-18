@@ -267,6 +267,10 @@ func TestGetLatestInfo(t *testing.T) {
 		sample.Module("a.com/M/D", "v1.3.0", "other"),
 		sample.Module("b.com/M/v9", "v9.0.0", ""),
 		sample.Module("b.com/M/v10", "v10.0.0", ""),
+		sample.Module("gopkg.in/M.v1", "v1.0.0", ""),
+		sample.Module("gopkg.in/M.v2", "v2.0.0-pre", ""),
+		sample.Module("gopkg.in/M.v3", "v3.0.0-20200602140019-6ec2bf8d378b", ""),
+		sample.Module("c.com/M", "v0.0.0-20200602140019-6ec2bf8d378b", ""),
 	} {
 		MustInsertModule(ctx, t, testDB, m)
 	}
@@ -356,6 +360,28 @@ func TestGetLatestInfo(t *testing.T) {
 				UnitExistsAtMinor: true,
 				MajorModulePath:   "b.com/M/v10",
 				MajorUnitPath:     "b.com/M/v10",
+			},
+		},
+		{
+			// gopkg.in module, highest version is not tagged
+			"gopkg.in/M.v1", "gopkg.in/M.v1",
+			internal.LatestInfo{
+				MinorVersion:      "v1.0.0",
+				MinorModulePath:   "gopkg.in/M.v1",
+				UnitExistsAtMinor: true,
+				MajorModulePath:   "gopkg.in/M.v2",
+				MajorUnitPath:     "gopkg.in/M.v2",
+			},
+		},
+		{
+			// no tagged versions
+			"c.com/M", "c.com/M",
+			internal.LatestInfo{
+				MinorVersion:      "v0.0.0-20200602140019-6ec2bf8d378b",
+				MinorModulePath:   "c.com/M",
+				UnitExistsAtMinor: true,
+				MajorModulePath:   "",
+				MajorUnitPath:     "",
 			},
 		},
 	} {

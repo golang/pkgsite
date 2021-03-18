@@ -195,6 +195,9 @@ func (db *DB) GetLatestInfo(ctx context.Context, unitPath, modulePath string) (l
 // This function will return "github.com/casbin/casbin/v3" or the input module path
 // if no later module path was found. It also returns the full package path at the
 // latest module version if it exists. If not, it returns the module path.
+//
+// getLatestMajorVersion only considers tagged (non-pseudo) versions. If there are none,
+// it returns empty strings.
 func (db *DB) getLatestMajorVersion(ctx context.Context, fullPath, modulePath string) (_ string, _ string, err error) {
 	defer derrors.WrapStack(&err, "DB.getLatestMajorVersion(ctx, %q, %q)", fullPath, modulePath)
 
@@ -203,12 +206,13 @@ func (db *DB) getLatestMajorVersion(ctx context.Context, fullPath, modulePath st
 		modPath string
 	)
 	seriesPath := internal.SeriesPathForModule(modulePath)
-	q, args, err := squirrel.Select("m.module_path", "m.id").
-		From("modules m").
-		Where(squirrel.Eq{"m.series_path": seriesPath}).
+	q, args, err := squirrel.Select("module_path", "id").
+		From("modules").
+		Where(squirrel.Eq{"series_path": seriesPath}).
+		Where(squirrel.NotEq{"version_type": "pseudo"}).
 		OrderBy(
-			"m.incompatible", // ignore incompatible versions unless they're all we have
-			"m.sort_version DESC",
+			"incompatible", // ignore incompatible versions unless they're all we have
+			"sort_version DESC",
 		).
 		Limit(1).
 		PlaceholderFormat(squirrel.Dollar).
@@ -216,13 +220,18 @@ func (db *DB) getLatestMajorVersion(ctx context.Context, fullPath, modulePath st
 	if err != nil {
 		return "", "", err
 	}
-	row := db.db.QueryRow(ctx, q, args...)
-	if err := row.Scan(&modPath, &modID); err != nil {
+
+	switch err := db.db.QueryRow(ctx, q, args...).Scan(&modPath, &modID); err {
+	case nil:
+		// fall through to next query
+	case sql.ErrNoRows:
+		return "", "", nil
+	default:
 		return "", "", err
 	}
 
 	v1Path := internal.V1Path(fullPath, modulePath)
-	row = db.db.QueryRow(ctx, `
+	row := db.db.QueryRow(ctx, `
 		SELECT p.path
 		FROM units u
 		INNER JOIN paths p ON p.id = u.path_id
