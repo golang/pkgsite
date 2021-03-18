@@ -8,7 +8,6 @@ import (
 	"context"
 	"fmt"
 	"path"
-	"strconv"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -117,7 +116,8 @@ func TestFetchImportedByDetails(t *testing.T) {
 			pkg: pkg2,
 			wantDetails: &ImportedByDetails{
 				ImportedBy:           []*Section{{Prefix: pkg3.Path, NumLines: 0}},
-				NumImportedByDisplay: "0",
+				NumImportedByDisplay: "1",
+				Total:                1,
 			},
 		},
 		{
@@ -127,7 +127,8 @@ func TestFetchImportedByDetails(t *testing.T) {
 					{Prefix: pkg2.Path, NumLines: 0},
 					{Prefix: pkg3.Path, NumLines: 0},
 				},
-				NumImportedByDisplay: "0",
+				NumImportedByDisplay: "2",
+				Total:                2,
 			},
 		},
 	}
@@ -147,26 +148,28 @@ func TestFetchImportedByDetails_ExceedsTabLimit(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
-	for _, count := range []int{tabImportedByLimit, 30000} {
-		t.Run(strconv.Itoa(count), func(t *testing.T) {
-			args := postgres.UpsertSearchDocumentArgs{
-				PackagePath: sample.PackagePath,
-				ModulePath:  sample.ModulePath,
-			}
-			postgres.MustInsertModule(ctx, t, testDB, sample.Module(sample.ModulePath, sample.VersionString, sample.PackageName))
-			if err := testDB.UpsertSearchDocumentWithImportedByCount(ctx, args, count); err != nil {
-				t.Fatal(err)
-			}
+	old := tabImportedByLimit
+	tabImportedByLimit = 3
+	defer func() { tabImportedByLimit = old }()
 
-			pkg := sample.UnitForPackage(sample.PackagePath, sample.ModulePath, sample.VersionString, sample.PackageName, true)
-			wantDetails := &ImportedByDetails{
-				ModulePath:           sample.ModulePath,
-				NumImportedByDisplay: fmt.Sprintf("%d (displaying 20000 packages)", count),
-				Total:                count,
-			}
-			checkFetchImportedByDetails(ctx, t, pkg, wantDetails)
-		})
+	m := sample.Module("m.com/a", sample.VersionString, "foo")
+	postgres.MustInsertModule(ctx, t, testDB, m)
+	for _, mod := range []string{"m1.com/a", "m2.com/a", "m3.com/a"} {
+		m2 := sample.Module(mod, sample.VersionString, "p")
+		m2.Packages()[0].Imports = []string{"m.com/a/foo"}
+		postgres.MustInsertModule(ctx, t, testDB, m2)
 	}
+	wantDetails := &ImportedByDetails{
+		ModulePath: "m.com/a",
+		ImportedBy: []*Section{
+			{Prefix: "m1.com/a/p"},
+			{Prefix: "m2.com/a/p"},
+		},
+
+		NumImportedByDisplay: fmt.Sprintf("%d (displaying %d packages)", 3, tabImportedByLimit-1),
+		Total:                3,
+	}
+	checkFetchImportedByDetails(ctx, t, m.Packages()[0], wantDetails)
 }
 
 func checkFetchImportedByDetails(ctx context.Context, t *testing.T, pkg *internal.Unit, wantDetails *ImportedByDetails) {

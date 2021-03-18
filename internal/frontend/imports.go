@@ -87,6 +87,7 @@ type ImportedByDetails struct {
 var (
 	// tabImportedByLimit is the maximum number of importers displayed on the imported
 	// by page.
+	// Variable for testing.
 	tabImportedByLimit = 20001
 )
 
@@ -103,9 +104,9 @@ func fetchImportedByDetails(ctx context.Context, ds internal.DataSource, pkgPath
 	if err != nil {
 		return nil, err
 	}
-	numImportedBy, err := db.GetImportedByCount(ctx, pkgPath, modulePath)
-	if err != nil {
-		return nil, err
+	numImportedBy := len(importedBy)
+	if numImportedBy >= tabImportedByLimit {
+		importedBy = importedBy[:tabImportedByLimit-1]
 	}
 	sections := Sections(importedBy, nextPrefixAccount)
 
