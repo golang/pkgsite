@@ -418,7 +418,6 @@ func rawIsMoreRecent(v1, v2 string) bool {
 
 // UpdateLatestModuleVersions upserts its argument into the latest_module_versions table
 // if the row doesn't exist, or the new version is later.
-// It doesn't update the good version.
 // It returns the version that is in the DB when it completes.
 func (db *DB) UpdateLatestModuleVersions(ctx context.Context, vNew *internal.LatestModuleVersions) (_ *internal.LatestModuleVersions, err error) {
 	defer derrors.WrapStack(&err, "UpdateLatestModuleVersions(%q)", vNew.ModulePath)
@@ -447,6 +446,17 @@ func (db *DB) UpdateLatestModuleVersions(ctx context.Context, vNew *internal.Lat
 			log.Debugf(ctx, "%s: updating latest_module_versions raw=%q, cooked=%q to raw=%q, cooked=%q",
 				vNew.ModulePath, vCur.RawVersion, vCur.CookedVersion,
 				vNew.RawVersion, vNew.CookedVersion)
+			// If the latest good version is now retracted, recompute it.
+			if vCur.GoodVersion != "" && vNew.IsRetracted(vCur.GoodVersion) {
+				good, err := getLatestGoodVersion(ctx, tx, vNew.ModulePath, vNew)
+				if err != nil {
+					return err
+				}
+				vNew.GoodVersion = good
+				log.Debugf(ctx, "%s: updating latest_module_versions good=%q", vNew.ModulePath, vNew.GoodVersion)
+			} else {
+				vNew.GoodVersion = vCur.GoodVersion
+			}
 		}
 		vResult = vNew
 		return upsertLatestModuleVersions(ctx, tx, vNew.ModulePath, id, vNew, 200)
@@ -494,12 +504,13 @@ func upsertLatestModuleVersions(ctx context.Context, tx *database.DB, modulePath
 		}
 	}
 	var (
-		raw, cooked string
-		goModBytes  = []byte{} // not nil, a zero-length slice
+		raw, cooked, good string
+		goModBytes        = []byte{} // not nil, a zero-length slice
 	)
 	if lmv != nil {
 		raw = lmv.RawVersion
 		cooked = lmv.CookedVersion
+		good = lmv.GoodVersion
 		// Convert the go.mod file into bytes.
 		goModBytes, err = lmv.GoModFile.Format()
 		if err != nil {
@@ -514,16 +525,16 @@ func upsertLatestModuleVersions(ctx context.Context, tx *database.DB, modulePath
 			good_version,
 			raw_go_mod_bytes,
 			status
-		) VALUES ($1, $2, $3, '', $4, $5)
+		) VALUES ($1, $2, $3, $4, $5, $6)
 		ON CONFLICT (module_path_id)
 		DO UPDATE SET
 			raw_version=excluded.raw_version,
 			cooked_version=excluded.cooked_version,
-			-- do not update good_version
+			good_version=excluded.good_version,
 			raw_go_mod_bytes=excluded.raw_go_mod_bytes,
 			status=excluded.status
 		`,
-		id, raw, cooked, goModBytes, status)
+		id, raw, cooked, good, goModBytes, status)
 	return err
 }
 

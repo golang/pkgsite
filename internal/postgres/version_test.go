@@ -511,10 +511,6 @@ func TestLatestModuleVersions(t *testing.T) {
 	)
 	modBytes := []byte(modFile)
 
-	for _, v := range []string{incompatible, "v1.4.0-pre", "v1.3.0", "v1.2.0", "v1.1.0"} {
-		MustInsertModule(ctx, t, testDB, sample.Module(modulePath, v, "pkg"))
-	}
-
 	type versions struct {
 		raw, cooked string
 	}
@@ -641,4 +637,41 @@ func TestLatestModuleVersionsBadStatus(t *testing.T) {
 	if got == nil {
 		t.Error("got nil, want non-nil")
 	}
+}
+
+func TestLatestModuleVersionsGood(t *testing.T) {
+	// Verify that the good latest version is updated properly.
+	t.Parallel()
+	testDB, release := acquire(t)
+	defer release()
+	ctx := context.Background()
+
+	const modulePath = "example.com/m"
+
+	check := func(want string) {
+		t.Helper()
+		got, err := testDB.GetLatestModuleVersions(ctx, modulePath)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got.GoodVersion != want {
+			t.Fatalf("got %q, want %q", got.GoodVersion, want)
+		}
+	}
+
+	// Add two good versions.
+	v1 := "v1.1.0"
+	lmv := addLatest(ctx, t, testDB, modulePath, v1, "")
+	MustInsertModuleLMV(ctx, t, testDB, sample.Module(modulePath, v1, "pkg"), lmv)
+	check(v1)
+
+	// Good version should be updated.
+	v2 := "v1.2.0"
+	lmv = addLatest(ctx, t, testDB, modulePath, v2, "")
+	MustInsertModuleLMV(ctx, t, testDB, sample.Module(modulePath, v2, "pkg"), lmv)
+	check(v2)
+
+	// New latest-version info retracts v2; good version should switch to v1.
+	addLatest(ctx, t, testDB, modulePath, "v1.3.0", fmt.Sprintf("module %s\nretract %s", modulePath, v2))
+	check(v1)
 }
