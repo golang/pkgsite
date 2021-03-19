@@ -8,6 +8,7 @@ package internal
 const (
 	ExperimentInsertSymbols             = "insert-symbols"
 	ExperimentRetractions               = "retractions"
+	ExperimentStickyHeader					    = "sticky-header"
 	ExperimentSymbolHistoryVersionsPage = "symbol-history-versions-page"
 	ExperimentSymbolHistoryMainPage     = "symbol-history-main-page"
 	ExperimentUnitMetaWithLatest        = "unit-meta-with-latest"
@@ -18,6 +19,7 @@ const (
 var Experiments = map[string]string{
 	ExperimentInsertSymbols:             "Insert data into symbols, package_symbols, and documentation_symbols.",
 	ExperimentRetractions:               "Retrieve and display retraction and deprecation information.",
+	ExperimentStickyHeader:              "Enable the sticky header on the unit page.",
 	ExperimentSymbolHistoryVersionsPage: "Show package API history on the versions page.",
 	ExperimentSymbolHistoryMainPage:     "Show package API history on the main unit page.",
 	ExperimentUnitMetaWithLatest:        "Use latest-version information for GetUnitMeta.",
