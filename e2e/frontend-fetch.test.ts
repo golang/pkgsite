@@ -9,10 +9,10 @@ import './globals';
 import puppeteer, { Page } from 'puppeteer';
 
 const baseUrl = process.env.FRONTEND_URL ?? '';
-
+const el = (id: string) => `[data-test-id="${id}"]`;
 const selectors = {
-  fetchButton: '.js-fetchButton',
-  fetchMessage: '.js-fetchMessage',
+  fetchButton: el('fetch-button'),
+  fetchMessage: el('fetch-message'),
 };
 
 describe('Frontend Fetch', () => {
@@ -20,7 +20,7 @@ describe('Frontend Fetch', () => {
 
   beforeAll(async () => {
     page = await browser.newPage();
-    await page.goto(baseUrl + '/golang.org/x/tools/gopls@v0.6.6');
+    await page.goto(baseUrl + '/rsc.io/quote');
   });
 
   afterAll(async () => {
@@ -48,9 +48,9 @@ describe('Frontend Fetch', () => {
 
     await page.click(selectors.fetchButton);
     const message = await page.$eval(selectors.fetchMessage, el => el.textContent);
-    expect(message).toBe('Fetching golang.org/x/tools/gopls@v0.6.6');
+    expect(message).toBe('Fetching rsc.io/quote');
 
     await page.waitForNavigation();
-    expect(await page.title()).toBe('gopls · pkg.go.dev');
+    expect(await page.title()).toBe('quote · pkg.go.dev');
   }, 30000);
 });
