@@ -697,6 +697,7 @@ func (db *DB) ReInsertLatestVersion(ctx context.Context, modulePath string) (err
 		if err != nil {
 			return err
 		}
+
 		// Insert into search_documents.
 		for _, pkg := range pkgMetas {
 			if isInternalPackage(pkg.Path) {
@@ -716,6 +717,25 @@ func (db *DB) ReInsertLatestVersion(ctx context.Context, modulePath string) (err
 				return err
 			}
 		}
+
+		// Remove old rows from imports_unique.
+		if _, err := tx.Exec(ctx, `DELETE FROM imports_unique WHERE from_module_path = $1`, modulePath); err != nil {
+			return err
+		}
+
+		// Insert this version's imports into imports_unique.
+		if _, err := tx.Exec(ctx, `
+			INSERT INTO imports_unique (from_path, from_module_path, to_path)
+			SELECT p.path, m.module_path, i.to_path
+			FROM units u
+			INNER JOIN package_imports i ON (u.id = i.unit_id)
+			INNER JOIN paths p ON (p.id = u.path_id)
+			INNER JOIN modules m ON (m.id=u.module_id)
+			WHERE m.module_path = $1 and m.version = $2
+		`, modulePath, lmv.GoodVersion); err != nil {
+			return err
+		}
+
 		log.Debugf(ctx, "ReInsertLatestVersion(%q): re-inserted at latest good version %s", modulePath, lmv.GoodVersion)
 		return nil
 	})

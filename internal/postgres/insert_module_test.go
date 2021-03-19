@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
+	"sort"
 	"strings"
 	"sync"
 	"testing"
@@ -660,10 +661,12 @@ func TestReInsertLatestVersion(t *testing.T) {
 
 	const modulePath = "m.com/a"
 
-	insert := func(version string, status int, modfile string) {
+	insert := func(version string, status int, imports []string, modfile string) {
 		m := sample.Module(modulePath, version, "pkg")
 		lmv := addLatest(ctx, t, testDB, modulePath, version, "module "+modulePath+"\n"+modfile)
-		m.Packages()[0].Documentation[0].Synopsis = version
+		pkg := m.Packages()[0]
+		pkg.Documentation[0].Synopsis = version
+		pkg.Imports = imports
 		if status == 200 {
 			MustInsertModuleLMV(ctx, t, testDB, m, lmv)
 		}
@@ -681,7 +684,8 @@ func TestReInsertLatestVersion(t *testing.T) {
 		}
 	}
 
-	check := func(wantVersion string) {
+	check := func(wantVersion string, wantImports []string) {
+		t.Helper()
 		var gotVersion, gotSynopsis string
 		if err := testDB.db.QueryRow(ctx, `
 			SELECT version, synopsis
@@ -692,20 +696,37 @@ func TestReInsertLatestVersion(t *testing.T) {
 			t.Fatal(err)
 		}
 		if gotVersion != wantVersion && gotSynopsis != wantVersion {
-			t.Fatalf("got (%s, %s), want %s for both", gotVersion, gotSynopsis, wantVersion)
+			t.Fatalf("got version %s, synopsis %q, want %s for both", gotVersion, gotSynopsis, wantVersion)
+		}
+
+		gotImports, err := collectStrings(ctx, testDB.db, `
+			SELECT to_path
+			FROM imports_unique
+			WHERE from_path = 'm.com/a/pkg'
+			AND from_module_path = 'm.com/a'
+		`)
+		if err != nil {
+			t.Fatal(err)
+		}
+		sort.Strings(gotImports)
+		sort.Strings(wantImports)
+		if !cmp.Equal(gotImports, wantImports) {
+			t.Fatalf("got imports %v, want %v", gotImports, wantImports)
 		}
 	}
 
-	// Insert a good module. It should be in search_documents.
-	insert("v1.1.0", 200, "")
-	check("v1.1.0")
+	imports1 := []string{"fmt", "log"}
+	// Insert a good module. It should be in search_documents and imports_unique.
+	insert("v1.1.0", 200, imports1, "")
+	check("v1.1.0", imports1)
 
 	// Insert a higher, good version. It should replace the first.
-	insert("v1.2.0", 200, "")
-	check("v1.2.0")
+	imports2 := []string{"log", "strings"}
+	insert("v1.2.0", 200, imports2, "")
+	check("v1.2.0", imports2)
 
 	// Now an even higher, bad version comes along that retracts v1.2.0.
-	// The search_documents table should go back to v1.1.0.
-	insert("v1.3.0", 400, "retract v1.2.0")
-	check("v1.1.0")
+	// The search_documents and imports_unique tables should go back to v1.1.0.
+	insert("v1.3.0", 400, nil, "retract v1.2.0")
+	check("v1.1.0", imports1)
 }
