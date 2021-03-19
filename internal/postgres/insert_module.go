@@ -144,7 +144,7 @@ func (db *DB) saveModule(ctx context.Context, m *internal.Module, lmv *internal.
 			return err
 		}
 
-		// If there is a more recent version of this module that has an alternative
+		// If the most recent version of this module has an alternative
 		// module path, then do not insert its packages into search_documents. This
 		// happens when a module that initially does not have a go.mod file is
 		// forked or fetched via some non-canonical path (such as an alternative
@@ -164,14 +164,13 @@ func (db *DB) saveModule(ctx context.Context, m *internal.Module, lmv *internal.
 		// (github.com/Sirupsen/logrus@v1.1.0 in the example) and then see the valid
 		// one. The "if code == 491" section of internal/worker.fetchAndUpdateState
 		// handles the case where we fetch the versions in the other order.
-		row := tx.QueryRow(ctx, `
-			SELECT 1 FROM module_version_states
-			WHERE module_path = $1 AND sort_version > $2 and status = 491`,
-			m.ModulePath, version.ForSorting(m.Version))
-		var x int
-		if err := row.Scan(&x); err != sql.ErrNoRows {
-			log.Infof(ctx, "%s@%s: not inserting into search documents", m.ModulePath, m.Version)
+		alt, err := isAlternativeModulePath(ctx, tx, m.ModulePath)
+		if err != nil {
 			return err
+		}
+		if alt {
+			log.Infof(ctx, "%s@%s: not inserting into search documents", m.ModulePath, m.Version)
+			return nil
 		}
 		// Insert the module's packages into search_documents.
 		return upsertSearchDocuments(ctx, tx, m)
@@ -180,6 +179,34 @@ func (db *DB) saveModule(ctx context.Context, m *internal.Module, lmv *internal.
 		return false, err
 	}
 	return isLatest, nil
+}
+
+// isAlternativeModulePath reports whether the module path is "alternative,"
+// that is, it disagrees with the module path in the go.mod file. This can
+// happen when someone forks a repo and does not change the go.mod file, or when
+// the path used to get a module is a case variant of the correct one (e.g.
+// github.com/Sirupsen/logrus vs. github.com/sirupsen/logrus).
+func isAlternativeModulePath(ctx context.Context, db *database.DB, modulePath string) (_ bool, err error) {
+	defer derrors.WrapStack(&err, "isAlternativeModulePath(%q)", modulePath)
+
+	// See if the cooked latest version has a status of 491 (AlternativeModule).
+	var status int
+	switch err := db.QueryRow(ctx, `
+		SELECT s.status
+		FROM paths p, latest_module_versions l, module_version_states s
+		WHERE p.id = l.module_path_id
+		AND p.path = s.module_path
+		AND l.cooked_version = s.version
+	`).Scan(&status); err {
+	case sql.ErrNoRows:
+		// Not enough information; assume false so we don't omit a valid module
+		// from search.
+		return false, nil
+	case nil:
+		return status == derrors.ToStatus(derrors.AlternativeModule), nil
+	default:
+		return false, err
+	}
 }
 
 func insertModule(ctx context.Context, db *database.DB, m *internal.Module) (_ int, err error) {
