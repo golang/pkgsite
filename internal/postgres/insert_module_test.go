@@ -651,3 +651,61 @@ func TestIsAlternativeModulePath(t *testing.T) {
 		}
 	}
 }
+
+func TestReInsertLatestVersion(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testDB, release := acquire(t)
+	defer release()
+
+	const modulePath = "m.com/a"
+
+	insert := func(version string, status int, modfile string) {
+		m := sample.Module(modulePath, version, "pkg")
+		lmv := addLatest(ctx, t, testDB, modulePath, version, "module "+modulePath+"\n"+modfile)
+		m.Packages()[0].Documentation[0].Synopsis = version
+		if status == 200 {
+			MustInsertModuleLMV(ctx, t, testDB, m, lmv)
+		}
+		if err := testDB.UpsertModuleVersionState(ctx, &ModuleVersionStateForUpsert{
+			ModulePath: modulePath,
+			Version:    version,
+			AppVersion: "app",
+			Timestamp:  time.Now(),
+			Status:     status,
+		}); err != nil {
+			t.Fatal(err)
+		}
+		if err := testDB.ReInsertLatestVersion(ctx, modulePath); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	check := func(wantVersion string) {
+		var gotVersion, gotSynopsis string
+		if err := testDB.db.QueryRow(ctx, `
+			SELECT version, synopsis
+			FROM search_documents
+			WHERE module_path = 'm.com/a'
+			AND package_path = 'm.com/a/pkg'
+		`).Scan(&gotVersion, &gotSynopsis); err != nil {
+			t.Fatal(err)
+		}
+		if gotVersion != wantVersion && gotSynopsis != wantVersion {
+			t.Fatalf("got (%s, %s), want %s for both", gotVersion, gotSynopsis, wantVersion)
+		}
+	}
+
+	// Insert a good module. It should be in search_documents.
+	insert("v1.1.0", 200, "")
+	check("v1.1.0")
+
+	// Insert a higher, good version. It should replace the first.
+	insert("v1.2.0", 200, "")
+	check("v1.2.0")
+
+	// Now an even higher, bad version comes along that retracts v1.2.0.
+	// The search_documents table should go back to v1.1.0.
+	insert("v1.3.0", 400, "retract v1.2.0")
+	check("v1.1.0")
+}

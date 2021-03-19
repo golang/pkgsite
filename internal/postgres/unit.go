@@ -448,7 +448,11 @@ func (db *DB) getImports(ctx context.Context, unitID int) (_ []string, err error
 // getPackagesInUnit returns all of the packages in a unit from a
 // module version, including the package that lives at fullPath, if present.
 func (db *DB) getPackagesInUnit(ctx context.Context, fullPath, modulePath, resolvedVersion string) (_ []*internal.PackageMeta, err error) {
-	defer derrors.WrapStack(&err, "DB.getPackagesInUnit(ctx, %q, %q, %q)", fullPath, modulePath, resolvedVersion)
+	return getPackagesInUnit(ctx, db.db, fullPath, modulePath, resolvedVersion, db.bypassLicenseCheck)
+}
+
+func getPackagesInUnit(ctx context.Context, db *database.DB, fullPath, modulePath, resolvedVersion string, bypassLicenseCheck bool) (_ []*internal.PackageMeta, err error) {
+	defer derrors.WrapStack(&err, "getPackagesInUnit(ctx, %q, %q, %q)", fullPath, modulePath, resolvedVersion)
 	defer middleware.ElapsedStat(ctx, "getPackagesInUnit")()
 
 	query := `
@@ -512,7 +516,7 @@ func (db *DB) getPackagesInUnit(ctx context.Context, fullPath, modulePath, resol
 		}
 		return nil
 	}
-	if err := db.db.RunQuery(ctx, query, collect, modulePath, resolvedVersion); err != nil {
+	if err := db.RunQuery(ctx, query, collect, modulePath, resolvedVersion); err != nil {
 		return nil, err
 	}
 
@@ -523,7 +527,7 @@ func (db *DB) getPackagesInUnit(ctx context.Context, fullPath, modulePath, resol
 	}
 	sort.Slice(packages, func(i, j int) bool { return packages[i].Path < packages[j].Path })
 	for _, p := range packages {
-		if db.bypassLicenseCheck {
+		if bypassLicenseCheck {
 			p.IsRedistributable = true
 		} else {
 			p.RemoveNonRedistributableData()
@@ -678,9 +682,13 @@ func (db *DB) getPathsInModule(ctx context.Context, modulePath, resolvedVersion 
 
 // GetModuleReadme returns the README corresponding to the modulePath and version.
 func (db *DB) GetModuleReadme(ctx context.Context, modulePath, resolvedVersion string) (_ *internal.Readme, err error) {
-	defer derrors.WrapStack(&err, "GetModuleReadme(ctx, %q, %q)", modulePath, resolvedVersion)
+	return getModuleReadme(ctx, db.db, modulePath, resolvedVersion)
+}
+
+func getModuleReadme(ctx context.Context, db *database.DB, modulePath, resolvedVersion string) (_ *internal.Readme, err error) {
+	defer derrors.WrapStack(&err, "getModuleReadme(ctx, %q, %q)", modulePath, resolvedVersion)
 	var readme internal.Readme
-	err = db.db.QueryRow(ctx, `
+	err = db.QueryRow(ctx, `
 		SELECT file_path, contents
 		FROM modules m
 		INNER JOIN units u

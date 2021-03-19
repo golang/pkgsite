@@ -467,7 +467,7 @@ var upsertSearchStatement = fmt.Sprintf(`
 			END)
 	;`, hllRegisterCount)
 
-// upsertSearchDocuments adds search information for mod ot the search_documents table.
+// upsertSearchDocuments adds search information for mod to the search_documents table.
 // It assumes that all non-redistributable data has been removed from mod.
 func upsertSearchDocuments(ctx context.Context, ddb *database.DB, mod *internal.Module) (err error) {
 	defer derrors.WrapStack(&err, "upsertSearchDocuments(ctx, %q, %q)", mod.ModulePath, mod.Version)
@@ -513,6 +513,7 @@ func UpsertSearchDocument(ctx context.Context, ddb *database.DB, args UpsertSear
 	defer derrors.WrapStack(&err, "DB.UpsertSearchDocument(ctx, ddb, %q, %q)", args.PackagePath, args.ModulePath)
 
 	// Only summarize the README if the package and module have the same path.
+	// If this changes, fix DB.ReInsertLatestVersion.
 	if args.PackagePath != args.ModulePath {
 		args.ReadmeFilePath = ""
 		args.ReadmeContents = ""

@@ -632,6 +632,95 @@ func insertReadmes(ctx context.Context, db *database.DB,
 	return db.BulkUpsert(ctx, "readmes", readmeCols, readmeValues, []string{"unit_id"})
 }
 
+// ReInsertLatestVersion checks that the latest good version matches the version
+// in search_documents. If it doesn't, it inserts the latest good version into
+// search_documents and imports_unique.
+func (db *DB) ReInsertLatestVersion(ctx context.Context, modulePath string) (err error) {
+	defer derrors.WrapStack(&err, "ReInsertLatestVersion(%q)", modulePath)
+
+	return db.db.Transact(ctx, sql.LevelRepeatableRead, func(tx *database.DB) error {
+		// Hold the lock on the module path throughout.
+		if err := lock(ctx, tx, modulePath); err != nil {
+			return err
+		}
+
+		lmv, _, err := getLatestModuleVersions(ctx, tx, modulePath)
+		if err != nil {
+			return err
+		}
+		if lmv.GoodVersion == "" {
+			// TODO(golang/go#44710): once we are confident that
+			// latest_module_versions is accurate and up to date, we can assume
+			// that a missing GoodVersion should mean that there are no good
+			// versions remaining, and we should remove the current module from
+			// search_documents.
+			log.Debugf(ctx, "ReInsertLatestVersion(%q): no good version", modulePath)
+			return nil
+		}
+		// Is the latest good version in search_documents?
+		var x int
+		switch err := tx.QueryRow(ctx, `
+			SELECT 1
+			FROM search_documents
+			WHERE module_path = $1
+			AND version = $2
+		`, modulePath, lmv.GoodVersion).Scan(&x); err {
+		case sql.ErrNoRows:
+			break
+		case nil:
+			log.Debugf(ctx, "ReInsertLatestVersion(%q): good version %s found in search_documents; doing nothing",
+				modulePath, lmv.GoodVersion)
+			return nil
+		default:
+			return err
+		}
+
+		// The latest good version is not in search_documents. Is this an
+		// alternative module path?
+		alt, err := isAlternativeModulePath(ctx, tx, modulePath)
+		if err != nil {
+			return err
+		}
+		if alt {
+			log.Debugf(ctx, "ReInsertLatestVersion(%q): alternative module path; doing nothing", modulePath)
+			return nil
+		}
+
+		// Not an alternative module path. Read the module information at the
+		// latest good version.
+		pkgMetas, err := getPackagesInUnit(ctx, tx, modulePath, modulePath, lmv.GoodVersion, db.bypassLicenseCheck)
+		if err != nil {
+			return err
+		}
+		// We only need the readme for the module.
+		readme, err := getModuleReadme(ctx, tx, modulePath, lmv.GoodVersion)
+		if err != nil {
+			return err
+		}
+		// Insert into search_documents.
+		for _, pkg := range pkgMetas {
+			if isInternalPackage(pkg.Path) {
+				continue
+			}
+			args := UpsertSearchDocumentArgs{
+				PackagePath: pkg.Path,
+				ModulePath:  modulePath,
+				Version:     lmv.GoodVersion,
+				Synopsis:    pkg.Synopsis,
+			}
+			if pkg.Path == modulePath && readme != nil {
+				args.ReadmeFilePath = readme.Filepath
+				args.ReadmeContents = readme.Contents
+			}
+			if err := UpsertSearchDocument(ctx, tx, args); err != nil {
+				return err
+			}
+		}
+		log.Debugf(ctx, "ReInsertLatestVersion(%q): re-inserted at latest good version %s", modulePath, lmv.GoodVersion)
+		return nil
+	})
+}
+
 // lock obtains an exclusive, transaction-scoped advisory lock on modulePath.
 func lock(ctx context.Context, tx *database.DB, modulePath string) (err error) {
 	defer derrors.WrapStack(&err, "lock(%s)", modulePath)
