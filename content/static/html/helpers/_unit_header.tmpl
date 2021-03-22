@@ -94,12 +94,10 @@
         data-ppath="{{.Unit.Path}}"
         data-pagetype="{{.PageType}}">
       <span class="DetailsHeader-span--latest">Latest</span>
-      {{if (.Experiments.IsActive "not-at-latest")}}
-        <span class="DetailsHeader-span--notAtLatest">
-          Latest
-          {{template "severity_toggletip" "This package is not in the latest version of its module."}}
-        </span>
-      {{end}}
+      <span class="DetailsHeader-span--notAtLatest">
+        Latest
+        {{template "severity_toggletip" "This package is not in the latest version of its module."}}
+      </span>
       <a href="{{.LatestURL}}">Go to latest</a>
     </div>
   </span>
