@@ -91,6 +91,7 @@ func (i *Info) FileURL(pathname string) string {
 		"repo":       i.repoURL,
 		"importPath": path.Join(strings.TrimPrefix(i.repoURL, "https://"), dir),
 		"commit":     i.commit,
+		"dir":        dir,
 		"file":       path.Join(i.moduleDir, pathname),
 		"base":       base,
 	})
@@ -107,6 +108,7 @@ func (i *Info) LineURL(pathname string, line int) string {
 		"importPath": path.Join(strings.TrimPrefix(i.repoURL, "https://"), dir),
 		"commit":     i.commit,
 		"file":       path.Join(i.moduleDir, pathname),
+		"dir":        dir,
 		"base":       base,
 		"line":       strconv.Itoa(line),
 	})
@@ -355,6 +357,10 @@ func matchStatic(moduleOrRepoPath string) (repo, relativeModulePath string, _ ur
 		const apacheDomain = "git.apache.org/"
 		if strings.HasPrefix(repo, apacheDomain) {
 			repo = strings.Replace(repo, apacheDomain, "github.com/apache/", 1)
+		}
+		// Special case: module paths are blitiri.com.ar/go/..., but repos are blitiri.com.ar/git/r/...
+		if strings.HasPrefix(repo, "blitiri.com.ar/") {
+			repo = strings.Replace(repo, "/go/", "/git/r/", 1)
 		}
 		relativeModulePath = strings.TrimPrefix(moduleOrRepoPath, matches[0])
 		relativeModulePath = strings.TrimPrefix(relativeModulePath, "/")
@@ -612,7 +618,6 @@ var patterns = []struct {
 		// URLs anyway. See gogs/gogs#6242.
 		templates: giteaURLTemplates,
 	},
-
 	{
 		pattern: `^(?P<repo>dmitri\.shuralyov\.com\/.+)$`,
 		templates: urlTemplates{
@@ -620,6 +625,15 @@ var patterns = []struct {
 			Directory: "https://gotools.org/{importPath}?rev={commit}",
 			File:      "https://gotools.org/{importPath}?rev={commit}#{base}",
 			Line:      "https://gotools.org/{importPath}?rev={commit}#{base}-L{line}",
+		},
+	},
+	{
+		pattern: `^(?P<repo>blitiri\.com\.ar/go/.+)$`,
+		templates: urlTemplates{
+			Repo:      "{repo}",
+			Directory: "{repo}/b/master/t/{dir}",
+			File:      "{repo}/b/master/t/{dir}f={file}.html",
+			Line:      "{repo}/b/master/t/{dir}f={file}.html#line-{line}",
 		},
 	},
 

@@ -399,6 +399,15 @@ func TestModuleInfo(t *testing.T) {
 			"https://git.zx2c4.com/wireguard-windows/tree/go.mod?h=v0.3.4#n1",
 			"https://git.zx2c4.com/wireguard-windows/plain/go.mod?h=v0.3.4",
 		},
+		{
+			"go-source templates match blitiri.com.ar",
+			"blitiri.com.ar/go/log", "v1.1.0", "go.mod",
+			"https://blitiri.com.ar/git/r/log",
+			"https://blitiri.com.ar/git/r/log/b/master/t",
+			"https://blitiri.com.ar/git/r/log/b/master/t/f=go.mod.html",
+			"https://blitiri.com.ar/git/r/log/b/master/t/f=go.mod.html#line-1",
+			"",
+		},
 	} {
 		t.Run(test.desc, func(t *testing.T) {
 			info, err := ModuleInfo(context.Background(), &Client{client}, test.modulePath, test.version)
@@ -945,6 +954,9 @@ func TestURLTemplates(t *testing.T) {
 	// Check that templates contain the right variables.
 
 	for _, p := range patterns {
+		if strings.Contains(p.pattern, "blitiri") {
+			continue
+		}
 		check := func(tmpl string, vars ...string) {
 			if tmpl == "" {
 				return
