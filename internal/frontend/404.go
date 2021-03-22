@@ -67,18 +67,21 @@ func (s *Server) servePathNotFoundPage(w http.ResponseWriter, r *http.Request,
 
 	fr, err := previousFetchStatusAndResponse(ctx, db, fullPath, modulePath, requestedVersion)
 	if err != nil {
+		// If an error occurred, it means that we have never tried to fetch
+		// this path before or an error occurred when we tried to
+		// gather data about this 404.
+		//
+		// If the latter, log the error.
+		// In either case, give the user the option to fetch that path.
 		if !errors.Is(err, derrors.NotFound) {
 			log.Error(ctx, err)
 		}
-		// Redirect to the search result page for an empty directory that is above nested modules.
-		// For golang/go#43725
-		nm, err := ds.GetNestedModules(ctx, fullPath)
-		if err == nil && len(nm) > 0 {
-			http.Redirect(w, r, "/search?q="+url.QueryEscape(fullPath), http.StatusFound)
-			return nil
-		}
 		return pathNotFoundError(fullPath, requestedVersion)
 	}
+
+	// If we've reached this point, we know that we've seen this path before.
+	// Show a relevant page or redirect the use based on the previous fetch
+	// response.
 	switch fr.status {
 	case http.StatusFound, derrors.ToStatus(derrors.AlternativeModule):
 		if fr.goModPath == fullPath {
@@ -105,7 +108,7 @@ func (s *Server) servePathNotFoundPage(w http.ResponseWriter, r *http.Request,
 			return
 		}
 		// Redirect to the search result page for an empty directory that is above nested modules.
-		// For golang/go#43725
+		// See https://golang.org/issue/43725 for context.
 		nm, err := ds.GetNestedModules(ctx, fullPath)
 		if err == nil && len(nm) > 0 {
 			http.Redirect(w, r, "/search?q="+url.QueryEscape(fullPath), http.StatusFound)

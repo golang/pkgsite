@@ -1592,18 +1592,37 @@ func TestEmptyDirectoryBetweenNestedModulesRedirect(t *testing.T) {
 	defer postgres.ResetTestDB(testDB, t)
 
 	postgres.MustInsertModule(ctx, t, testDB, sample.Module(sample.ModulePath, sample.VersionString, ""))
-	postgres.MustInsertModule(ctx, t, testDB, sample.Module(sample.ModulePath+"/missing/c", sample.VersionString, ""))
+	postgres.MustInsertModule(ctx, t, testDB, sample.Module(sample.ModulePath+"/missing/dir/c", sample.VersionString, ""))
+
+	missingPath := sample.ModulePath + "/missing"
+	notInsertedPath := sample.ModulePath + "/missing/dir"
+	if err := testDB.UpsertVersionMap(ctx, &internal.VersionMap{
+		ModulePath:       missingPath,
+		RequestedVersion: internal.LatestVersion,
+		ResolvedVersion:  sample.VersionString,
+	}); err != nil {
+		t.Fatal(err)
+	}
 
 	_, handler, _ := newTestServer(t, nil, nil)
-	w := httptest.NewRecorder()
-	dirPath := sample.ModulePath + "/missing"
-	handler.ServeHTTP(w, httptest.NewRequest("GET", "/"+dirPath, nil))
-	if w.Code != http.StatusFound {
-		t.Errorf("%q: got status code = %d, want %d", "/"+dirPath, w.Code, http.StatusFound)
-	}
-	got := w.Header().Get("Location")
-	wantURL := "/search?q=" + url.PathEscape(dirPath)
-	if got != wantURL {
-		t.Errorf("got location = %q, want %q", got, wantURL)
+	for _, test := range []struct {
+		name, path   string
+		wantStatus   int
+		wantLocation string
+	}{
+		{"want 404 for unknown version of module", sample.ModulePath + "@v0.5.0", http.StatusNotFound, ""},
+		{"want 404 for never fetched directory", notInsertedPath, http.StatusNotFound, ""},
+		{"want 302 for previously fetched directory", missingPath, http.StatusFound, "/search?q=" + url.PathEscape(missingPath)},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			w := httptest.NewRecorder()
+			handler.ServeHTTP(w, httptest.NewRequest("GET", "/"+test.path, nil))
+			if w.Code != test.wantStatus {
+				t.Errorf("%q: got status code = %d, want %d", "/"+test.path, w.Code, test.wantStatus)
+			}
+			if got := w.Header().Get("Location"); got != test.wantLocation {
+				t.Errorf("got location = %q, want %q", got, test.wantLocation)
+			}
+		})
 	}
 }
