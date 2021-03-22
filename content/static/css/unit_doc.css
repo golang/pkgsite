@@ -9,6 +9,7 @@
 }
 .UnitDoc {
   margin-bottom: 2rem;
+  word-break: break-word;
 }
 .UnitDoc-title {
   border-bottom: 0.0625rem solid var(--gray-8);

@@ -368,6 +368,19 @@ func TestReadme(t *testing.T) {
 			},
 		},
 		{
+			name: "text is extracted from headings that contain only non-text nodes",
+			unit: unit,
+			readme: &internal.Readme{
+				Filepath: "README.md",
+				Contents: `# [![Image Text](file.svg)](link.html)
+				`,
+			},
+			wantHTML: `<h3 class="h1" id="readme-heading"><a href="https://github.com/valid/module_name/blob/v1.0.0/link.html" rel="nofollow"><img src="https://github.com/valid/module_name/raw/v1.0.0/file.svg" alt="Image Text"/></a></h3>`,
+			wantOutline: []*Heading{
+				{Level: 1, Text: "Image Text", ID: "readme-heading"},
+			},
+		},
+		{
 			name: "duplicated headings ids have incremental suffix",
 			unit: unit,
 			readme: &internal.Readme{
