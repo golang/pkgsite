@@ -29,7 +29,7 @@ func (db *DB) GetPackageSymbols(ctx context.Context, packagePath, modulePath str
             d.goarch
         FROM modules m
         INNER JOIN units u ON u.module_id = m.id
-        INNER JOIN documentation d ON d.unit_id = u.id
+        INNER JOIN new_documentation d ON d.unit_id = u.id
         INNER JOIN documentation_symbols ds ON ds.documentation_id = d.id
         INNER JOIN package_symbols ps ON ps.id = ds.package_symbol_id
         INNER JOIN paths p1 ON u.path_id = p1.id

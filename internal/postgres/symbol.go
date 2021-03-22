@@ -298,7 +298,7 @@ func getUnitSymbols(ctx context.Context, db *database.DB, unitID int) (_ map[int
             d.goos,
             d.goarch
         FROM documentation_symbols ds
-        INNER JOIN documentation d ON d.id = ds.documentation_id
+        INNER JOIN new_documentation d ON d.id = ds.documentation_id
         INNER JOIN package_symbols ps ON ds.package_symbol_id = ps.id
         INNER JOIN symbol_names s1 ON ps.symbol_name_id = s1.id
         INNER JOIN symbol_names s2 ON ps.parent_symbol_name_id = s2.id
