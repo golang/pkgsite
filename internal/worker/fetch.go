@@ -110,6 +110,21 @@ func (f *Fetcher) FetchAndUpdateState(ctx context.Context, modulePath, requested
 		return ft.Status, ft.ResolvedVersion, ft.Error
 	}
 
+	// Check if the latest good version of the module is not the one in search_documents,
+	// and insert it there and in imports_unique if so.
+	// Do not bother if this is an alternative module path.
+	if ft.Status != derrors.ToStatus(derrors.AlternativeModule) || lmv == nil || lmv.CookedVersion != ft.ResolvedVersion {
+		if err := f.DB.ReInsertLatestVersion(ctx, modulePath); err != nil {
+			log.Error(ctx, err)
+			if ft.Status != http.StatusInternalServerError {
+				ft.Error = err
+				ft.Status = http.StatusInternalServerError
+			}
+			// Do not return an error here, because we want to insert into
+			// module_version_states below.
+		}
+	}
+
 	// Update the module_version_states table with the new status of
 	// module@version. This must happen last, because if it succeeds with a
 	// code < 500 but a later action fails, we will never retry the later

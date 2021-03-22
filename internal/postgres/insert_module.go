@@ -648,6 +648,10 @@ func (db *DB) ReInsertLatestVersion(ctx context.Context, modulePath string) (err
 		if err != nil {
 			return err
 		}
+		if lmv == nil {
+			log.Debugf(ctx, "ReInsertLatestVersion(%q): no latest-version info", modulePath)
+			return nil
+		}
 		if lmv.GoodVersion == "" {
 			// TODO(golang/go#44710): once we are confident that
 			// latest_module_versions is accurate and up to date, we can assume
@@ -694,7 +698,7 @@ func (db *DB) ReInsertLatestVersion(ctx context.Context, modulePath string) (err
 		}
 		// We only need the readme for the module.
 		readme, err := getModuleReadme(ctx, tx, modulePath, lmv.GoodVersion)
-		if err != nil {
+		if err != nil && !errors.Is(err, derrors.NotFound) {
 			return err
 		}
 
