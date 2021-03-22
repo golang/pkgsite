@@ -174,10 +174,9 @@ check_script_hashes() {
   runcmd go run ./devtools/cmd/csphash $script_hash_glob
 }
 
-# check_script_output checks that the minifed JavaScript output
-# matches the TypeScript source files.
-check_script_output() {
-  runcmd go run ./devtools/cmd/static -check
+# run_build_static builds JavaScript output from TypeScript source files.
+run_build_static() {
+  runcmd go run ./devtools/cmd/static
 }
 
 npm() {
@@ -228,7 +227,7 @@ standard_linters() {
   check_bad_migrations
   go_linters
   check_script_hashes
-  check_script_output
+  run_build_static
 }
 
 
@@ -295,7 +294,7 @@ main() {
       fi
       if [[ $(filter "$files" $script_hash_glob) != '' ]]; then
         check_script_hashes
-        check_script_output
+        run_build_static
       fi
       if [[ $(filter "$files" '*.go') != '' ]]; then
         go_linters
@@ -335,7 +334,7 @@ main() {
     templates) check_templates ;;
     unparam) check_unparam ;;
     script_hashes) check_script_hashes ;;
-    script_output) check_script_output ;;
+    build_static) run_build_static ;;
     npm) npm ${@:2} ;;
     e2e) run_e2e ${@:2} ;;
     *)
