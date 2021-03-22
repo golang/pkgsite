@@ -6,7 +6,6 @@ package frontend
 
 import (
 	"context"
-	"fmt"
 	"path"
 	"testing"
 
@@ -116,7 +115,7 @@ func TestFetchImportedByDetails(t *testing.T) {
 			pkg: pkg2,
 			wantDetails: &ImportedByDetails{
 				ImportedBy:           []*Section{{Prefix: pkg3.Path, NumLines: 0}},
-				NumImportedByDisplay: "1",
+				NumImportedByDisplay: "0 (1 including internal and invalid packages)",
 				Total:                1,
 			},
 		},
@@ -127,7 +126,7 @@ func TestFetchImportedByDetails(t *testing.T) {
 					{Prefix: pkg2.Path, NumLines: 0},
 					{Prefix: pkg3.Path, NumLines: 0},
 				},
-				NumImportedByDisplay: "2",
+				NumImportedByDisplay: "0 (2 including internal and invalid packages)",
 				Total:                2,
 			},
 		},
@@ -143,14 +142,14 @@ func TestFetchImportedByDetails(t *testing.T) {
 	}
 }
 
-func TestFetchImportedByDetails_ExceedsTabLimit(t *testing.T) {
+func TestFetchImportedByDetails_ExceedsLimit(t *testing.T) {
 	defer postgres.ResetTestDB(testDB, t)
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
-	old := tabImportedByLimit
-	tabImportedByLimit = 3
-	defer func() { tabImportedByLimit = old }()
+	old := importedByLimit
+	importedByLimit = 3
+	defer func() { importedByLimit = old }()
 
 	m := sample.Module("m.com/a", sample.VersionString, "foo")
 	postgres.MustInsertModule(ctx, t, testDB, m)
@@ -166,7 +165,7 @@ func TestFetchImportedByDetails_ExceedsTabLimit(t *testing.T) {
 			{Prefix: "m2.com/a/p"},
 		},
 
-		NumImportedByDisplay: fmt.Sprintf("%d (displaying %d packages)", 3, tabImportedByLimit-1),
+		NumImportedByDisplay: "0 (more than 2 including internal and invalid packages)",
 		Total:                3,
 	}
 	checkFetchImportedByDetails(ctx, t, m.Packages()[0], wantDetails)

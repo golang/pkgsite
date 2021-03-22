@@ -85,10 +85,10 @@ type ImportedByDetails struct {
 }
 
 var (
-	// tabImportedByLimit is the maximum number of importers displayed on the imported
+	// importedByLimit is the maximum number of importers displayed on the imported
 	// by page.
 	// Variable for testing.
-	tabImportedByLimit = 20001
+	importedByLimit = 20001
 )
 
 // fetchImportedByDetails fetches importers for the package version specified by
@@ -100,19 +100,43 @@ func fetchImportedByDetails(ctx context.Context, ds internal.DataSource, pkgPath
 		return nil, proxydatasourceNotSupportedErr()
 	}
 
-	importedBy, err := db.GetImportedBy(ctx, pkgPath, modulePath, tabImportedByLimit)
+	importedBy, err := db.GetImportedBy(ctx, pkgPath, modulePath, importedByLimit)
 	if err != nil {
 		return nil, err
 	}
 	numImportedBy := len(importedBy)
-	if numImportedBy >= tabImportedByLimit {
-		importedBy = importedBy[:tabImportedByLimit-1]
+	numImportedBySearch, err := db.GetImportedByCount(ctx, pkgPath, modulePath)
+	if err != nil {
+		return nil, err
+	}
+	if numImportedBy >= importedByLimit {
+		importedBy = importedBy[:importedByLimit-1]
 	}
 	sections := Sections(importedBy, nextPrefixAccount)
 
-	display := strconv.Itoa(numImportedBy)
-	if numImportedBy >= tabImportedByLimit {
-		display += fmt.Sprintf(" (displaying %d packages)", tabImportedByLimit-1)
+	// Display the number of importers, taking into account the number we
+	// actually retrieved, the limit on that number, and the imported-by count
+	// in the search_documents table.
+	var display string
+	switch {
+	// If there are more importers than the limit, and the search number is
+	// greater, use the search number and indicate that we're displaying fewer.
+	case numImportedBy >= importedByLimit && numImportedBySearch > numImportedBy:
+		display = fmt.Sprintf("%d (displaying %d packages)", numImportedBySearch, importedByLimit-1)
+	// If we've exceeded the limit but the search number is smaller, we don't
+	// know the true number, so say so.
+	case numImportedBy >= importedByLimit:
+		display = fmt.Sprintf("%d (more than %d including internal and invalid packages)", numImportedBySearch, importedByLimit-1)
+	// If we haven't exceeded the limit and we have more than the search number,
+	// then display both numbers so users coming from the search page won't see
+	// a mismatch.
+	case numImportedBy > numImportedBySearch:
+		display = fmt.Sprintf("%d (%d including internal and invalid packages)", numImportedBySearch, numImportedBy)
+	// Otherwise, we have all the packages, and the search number is either
+	// wrong (perhaps it hasn't been recomputed yet) or it is the same as the
+	// retrieved number. In that case, just display the retrieved number.
+	default:
+		display = strconv.Itoa(numImportedBy)
 	}
 	return &ImportedByDetails{
 		ModulePath:           modulePath,
