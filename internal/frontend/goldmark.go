@@ -40,11 +40,11 @@ func (g *astTransformer) Transform(node *ast.Document, reader text.Reader, pc pa
 		}
 		switch v := n.(type) {
 		case *ast.Image:
-			if d := translateRelativeLink(string(v.Destination), g.info, true, g.readme); d != "" {
+			if d := translateLink(string(v.Destination), g.info, true, g.readme); d != "" {
 				v.Destination = []byte(d)
 			}
 		case *ast.Link:
-			if d := translateRelativeLink(string(v.Destination), g.info, false, g.readme); d != "" {
+			if d := translateLink(string(v.Destination), g.info, false, g.readme); d != "" {
 				v.Destination = []byte(d)
 			}
 		}

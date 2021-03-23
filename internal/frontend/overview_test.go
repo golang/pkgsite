@@ -213,6 +213,24 @@ func TestBlackfridayReadmeHTML(t *testing.T) {
 			},
 			want: `<p><a href="#readme-heading-id" rel="nofollow">Local Heading</a></p>`,
 		},
+		{
+			name: "absolute link to blob",
+			mi:   aModule,
+			readme: &internal.Readme{
+				Filepath: "README.md",
+				Contents: `<img src="https://github.com/foo/bar/blob/master/logo.svg">`,
+			},
+			want: `<p><img src="https://github.com/foo/bar/raw/master/logo.svg"/></p>`,
+		},
+		{
+			name: "absolute link not to blob",
+			mi:   aModule,
+			readme: &internal.Readme{
+				Filepath: "README.md",
+				Contents: `<img src="https://github.com/foo/bar/bloob/master/logo.svg">`,
+			},
+			want: `<p><img src="https://github.com/foo/bar/bloob/master/logo.svg"></p>`,
+		},
 	}
 	checkReadme := func(ctx context.Context, t *testing.T, mi *internal.ModuleInfo, readme *internal.Readme, want string) {
 		hgot, err := LegacyReadmeHTML(ctx, mi, readme)

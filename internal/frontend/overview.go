@@ -47,7 +47,7 @@ func blackfridayReadmeHTML(readme *internal.Readme, mi *internal.ModuleInfo) (sa
 			}
 		case blackfriday.Image, blackfriday.Link:
 			useRaw := node.Type == blackfriday.Image
-			if d := translateRelativeLink(string(node.LinkData.Destination), mi.SourceInfo, useRaw, readme); d != "" {
+			if d := translateLink(string(node.LinkData.Destination), mi.SourceInfo, useRaw, readme); d != "" {
 				node.LinkData.Destination = []byte(d)
 			}
 		case blackfriday.HTMLBlock, blackfriday.HTMLSpan:
@@ -115,16 +115,36 @@ func isMarkdown(filename string) bool {
 	return ext == ".md" || ext == ".markdown"
 }
 
-// translateRelativeLink converts relative image paths to absolute paths.
+// translateLink converts image links so that they will work on pkgsite.
 //
 // README files sometimes use relative image paths to image files inside the
 // repository. As the discovery site doesn't host the full repository content,
 // in order for the image to render, we need to convert the relative path to an
 // absolute URL to a hosted image.
-func translateRelativeLink(dest string, info *source.Info, useRaw bool, readme *internal.Readme) string {
+//
+// In addition, GitHub will translate absolute non-raw links to image files to raw links.
+// For example, when GitHub renders a README with
+//    <img src="https://github.com/gobuffalo/buffalo/blob/master/logo.svg">
+// it rewrites it to
+//    <img src="https://github.com/gobuffalo/buffalo/raw/master/logo.svg">
+// (replacing "blob" with "raw").
+// We do that too.
+func translateLink(dest string, info *source.Info, useRaw bool, readme *internal.Readme) string {
 	destURL, err := url.Parse(dest)
-	if err != nil || destURL.IsAbs() {
+	if err != nil {
 		return ""
+	}
+	if destURL.IsAbs() {
+		if destURL.Host != "github.com" {
+			return ""
+		}
+		parts := strings.Split(destURL.Path, "/")
+		if len(parts) < 4 || parts[3] != "blob" {
+			return ""
+		}
+		parts[3] = "raw"
+		destURL.Path = strings.Join(parts, "/")
+		return destURL.String()
 	}
 	if destURL.Path == "" {
 		// This is a fragment; leave it.
@@ -195,7 +215,7 @@ func walkHTML(n *html.Node, info *source.Info, readme *internal.Readme) bool {
 		var attrs []html.Attribute
 		for _, a := range n.Attr {
 			if a.Key == "src" {
-				if v := translateRelativeLink(a.Val, info, true, readme); v != "" {
+				if v := translateLink(a.Val, info, true, readme); v != "" {
 					a.Val = v
 					changed = true
 				}
