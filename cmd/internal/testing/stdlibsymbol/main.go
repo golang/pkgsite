@@ -93,12 +93,14 @@ func compareVersionsPage(path string) error {
 		for _, vs := range vl.Versions {
 			v := stdlib.VersionForTag(vs.Version)
 			versionToNameToSymbol[v] = map[string]*internal.UnitSymbol{}
-			for _, s := range vs.Symbols {
-				if s.New {
-					versionToNameToSymbol[v][s.Name] = unitSymbol(s)
-				}
-				for _, c := range s.Children {
-					versionToNameToSymbol[v][c.Name] = unitSymbol(c)
+			for _, syms := range vs.Symbols {
+				for _, s := range syms {
+					if s.New {
+						versionToNameToSymbol[v][s.Name] = unitSymbol(s)
+					}
+					for _, c := range s.Children {
+						versionToNameToSymbol[v][c.Name] = unitSymbol(c)
+					}
 				}
 			}
 		}
