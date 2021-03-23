@@ -10,13 +10,12 @@
   position: sticky;
   top: 0;
   white-space: nowrap;
-  z-index: 100;
 }
 .UnitHeader--sticky {
-  background-color: var(--white);
   padding-bottom: 0;
 }
 .UnitHeader-outer {
+  background-color: var(--white);
   min-height: 13.0625rem;
   position: sticky;
   top: -9.5rem;
@@ -40,6 +39,7 @@
 }
 
 .UnitHeader-breadcrumbs {
+  background-color: var(--white);
   line-height: 1.5rem;
   margin-top: 1rem;
   white-space: initial;
@@ -141,7 +141,7 @@
     flex-direction: row;
   }
 }
-@media only screen and (min-width: 64rem) {
+@media only screen and (min-width: 70rem) {
   .UnitHeader-details {
     display: flex;
   }
@@ -152,6 +152,7 @@
   font-size: 0.875rem;
   line-height: 1.75rem;
 }
+
 @media only screen and (min-width: 64rem) {
   .UnitHeader-detailItem:not(:last-of-type)::after {
     content: '|';
