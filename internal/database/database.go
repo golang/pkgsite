@@ -33,6 +33,7 @@ type DB struct {
 	db         *sql.DB
 	instanceID string
 	tx         *sql.Tx
+	conn       *sql.Conn     // the Conn of the Tx, when tx != nil
 	opts       sql.TxOptions // valid when tx != nil
 	mu         sync.Mutex
 	maxRetries int // max times a single transaction was retried
@@ -237,9 +238,15 @@ func (db *DB) transact(ctx context.Context, opts *sql.TxOptions, txFunc func(*DB
 	if db.InTransaction() {
 		return errors.New("a DB Transact function was called on a DB already in a transaction")
 	}
-	tx, err := db.db.BeginTx(ctx, opts)
+	conn, err := db.db.Conn(ctx)
 	if err != nil {
-		return fmt.Errorf("db.BeginTx(): %w", err)
+		return err
+	}
+	defer conn.Close()
+
+	tx, err := conn.BeginTx(ctx, opts)
+	if err != nil {
+		return fmt.Errorf("conn.BeginTx(): %w", err)
 	}
 	defer func() {
 		if p := recover(); p != nil {
@@ -256,6 +263,7 @@ func (db *DB) transact(ctx context.Context, opts *sql.TxOptions, txFunc func(*DB
 
 	dbtx := New(db.db, db.instanceID)
 	dbtx.tx = tx
+	dbtx.conn = conn
 	dbtx.opts = *opts
 	defer dbtx.logTransaction(ctx)(&err)
 	if err := txFunc(dbtx); err != nil {
