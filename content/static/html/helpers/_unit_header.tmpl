@@ -76,7 +76,7 @@
         <img height="72px" width="72px" class="UnitHeader-logo" src="/static/img/go-logo-blue.svg" alt="Go">
       </a>
     </div>
-    <h1>{{.Title}}</h1>
+    <h1 data-test-id="UnitHeader-title">{{.Title}}</h1>
     {{range .PageLabels}}
       <span class="UnitHeader-badge">{{.}}</span>
     {{end}}
