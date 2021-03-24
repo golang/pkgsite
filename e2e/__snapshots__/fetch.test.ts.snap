@@ -49,7 +49,7 @@ Object {
     },
     Object {
       "level": 3,
-      "name": "Oops! We couldn't find “rsc.io/quote”.",
+      "name": "Oops! We couldn't find “fetch.test”.",
       "role": "heading",
     },
     Object {
@@ -61,11 +61,11 @@ Object {
       "role": "link",
     },
     Object {
-      "name": ", or request to add “rsc.io/quote” to pkg.go.dev.",
+      "name": ", or request to add “fetch.test” to pkg.go.dev.",
       "role": "text",
     },
     Object {
-      "name": "Request “rsc.io/quote”",
+      "name": "Request “fetch.test”",
       "role": "button",
     },
     Object {

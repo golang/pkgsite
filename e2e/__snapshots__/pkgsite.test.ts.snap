@@ -60,6 +60,10 @@ Object {
       "role": "button",
     },
     Object {
+      "name": "Go",
+      "role": "img",
+    },
+    Object {
       "level": 1,
       "name": "pkgsite",
       "role": "heading",
@@ -69,7 +73,7 @@ Object {
       "role": "text",
     },
     Object {
-      "name": "Version v0.0.0-...-5867665",
+      "name": "Version: v0.0.0-...-4500fee",
       "role": "link",
     },
     Object {
@@ -81,11 +85,15 @@ Object {
       "role": "text",
     },
     Object {
-      "name": "Feb 16, 2021",
+      "name": "Published: Mar 23, 2021",
       "role": "text",
     },
     Object {
       "name": "|",
+      "role": "text",
+    },
+    Object {
+      "name": "License:",
       "role": "text",
     },
     Object {
@@ -504,7 +512,7 @@ Object {
       "role": "text",
     },
     Object {
-      "name": "3 more from devtools",
+      "name": "4 more from devtools",
       "role": "button",
     },
     Object {
@@ -512,7 +520,7 @@ Object {
       "role": "text",
     },
     Object {
-      "name": "37 more from internal",
+      "name": "39 more from internal",
       "role": "button",
     },
     Object {

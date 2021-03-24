@@ -5,25 +5,20 @@
  * license that can be found in the LICENSE file.
  */
 
-import './globals';
+import './global-types';
 import puppeteer, { Page } from 'puppeteer';
 
 const baseUrl = process.env.FRONTEND_URL ?? '';
-const el = (id: string) => `[data-test-id="${id}"]`;
-const selectors = {
-  fetchButton: el('fetch-button'),
-  fetchMessage: el('fetch-message'),
-};
 
-describe('Frontend Fetch', () => {
+describe('Badge', () => {
   let page: Page;
 
-  beforeAll(async () => {
+  beforeEach(async () => {
     page = await browser.newPage();
-    await page.goto(baseUrl + '/rsc.io/quote');
+    await page.goto(baseUrl + '/badge');
   });
 
-  afterAll(async () => {
+  afterEach(async () => {
     await page.close();
   });
 
@@ -42,15 +37,4 @@ describe('Frontend Fetch', () => {
     const image = await page.screenshot({ fullPage: true });
     expect(image).toMatchImageSnapshot();
   });
-
-  test('clicking fetch button fetches module and navigates to page', async () => {
-    expect(await page.title()).toBe('404 Not Found · pkg.go.dev');
-
-    await page.click(selectors.fetchButton);
-    const message = await page.$eval(selectors.fetchMessage, el => el.textContent);
-    expect(message).toBe('Fetching rsc.io/quote');
-
-    await page.waitForNavigation();
-    expect(await page.title()).toBe('quote · pkg.go.dev');
-  }, 30000);
 });
