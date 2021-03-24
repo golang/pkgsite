@@ -8,6 +8,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"sort"
 
 	"github.com/lib/pq"
 	"golang.org/x/pkgsite/internal"
@@ -105,10 +106,17 @@ func upsertDocumentationSymbols(ctx context.Context, db *database.DB,
 	// Get the difference between the documentation_symbols for this package,
 	// and the ones that already exist in the documentation_symbols table. Only
 	// insert rows that do not already exist.
+	//
+	// Sort first to prevent deadlocks.
+	var docIDs []int
+	for docID := range docIDToPkgsymIDs {
+		docIDs = append(docIDs, docID)
+	}
+	sort.Ints(docIDs)
 	var values []interface{}
-	for docID, pkgsymIDSet := range docIDToPkgsymIDs {
+	for _, docID := range docIDs {
 		gotSet := gotDocIDToPkgsymIDs[docID]
-		for pkgsymID := range pkgsymIDSet {
+		for pkgsymID := range docIDToPkgsymIDs[docID] {
 			if !gotSet[pkgsymID] {
 				values = append(values, docID, pkgsymID)
 			}
@@ -182,8 +190,16 @@ func upsertPackageSymbolsReturningIDs(ctx context.Context, db *database.DB,
 		return nil, err
 	}
 
+	// Sort to prevent deadlocks.
+	var paths []string
+	for path := range pathToDocIDToDoc {
+		paths = append(paths, path)
+	}
+	sort.Strings(paths)
+
 	var packageSymbols []interface{}
-	for path, docs := range pathToDocIDToDoc {
+	for _, path := range paths {
+		docs := pathToDocIDToDoc[path]
 		pathID := pathToID[path]
 		if pathID == 0 {
 			return nil, fmt.Errorf("pathID cannot be 0: %q", path)
@@ -268,6 +284,7 @@ func upsertSymbolNamesReturningIDs(ctx context.Context, db *database.DB,
 		return nil, err
 	}
 
+	sort.Strings(names)
 	var values []interface{}
 	for _, name := range names {
 		if _, ok := nameToID[name]; !ok {
