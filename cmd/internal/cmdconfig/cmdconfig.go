@@ -98,8 +98,8 @@ func ExperimentGetter(ctx context.Context, cfg *config.Config) middleware.Experi
 func OpenDB(ctx context.Context, cfg *config.Config, bypassLicenseCheck bool) (_ *postgres.DB, err error) {
 	defer derrors.Wrap(&err, "cmdconfig.OpenDB(ctx, cfg)")
 
-	// Wrap the postgres driver with OpenCensus instrumentation.
-	ocDriver, err := ocsql.Register(cfg.DBDriver, ocsql.WithAllTraceOptions())
+	// Wrap the postgres driver with our own wrapper, which adds OpenCensus instrumentation.
+	ocDriver, err := database.RegisterOCWrapper(cfg.DBDriver, ocsql.WithAllTraceOptions())
 	if err != nil {
 		return nil, fmt.Errorf("unable to register the ocsql driver: %v", err)
 	}
