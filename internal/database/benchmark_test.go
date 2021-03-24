@@ -24,7 +24,7 @@ func BenchmarkBulkInsert(b *testing.B) {
 	}
 	defer pgxDB.Close()
 
-	if _, err := testDB.Exec(ctx, `DROP TABLE test_large_bulk; CREATE TABLE test_large_bulk (i BIGINT);`); err != nil {
+	if _, err := testDB.Exec(ctx, `DROP TABLE IF EXISTS test_large_bulk; CREATE TABLE test_large_bulk (i BIGINT);`); err != nil {
 		b.Fatal(err)
 	}
 	const size = 15000
