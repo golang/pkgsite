@@ -97,11 +97,11 @@ func UnitHeader(p *Page, versionedURL bool, isPackage bool) htmlcheck.Checker {
 		in(`[data-test-id="UnitHeader-imports"]`,
 			in("a",
 				href(urlPath+"?tab=imports"),
-				text(`[0-9]+\+? Imports`))),
+				text(`Imports: [0-9]+\+?`))),
 		in(`[data-test-id="UnitHeader-importedby"]`,
 			in("a",
 				href(urlPath+"?tab=importedby"),
-				text(`[0-9]+\+? Imported by`))))
+				text(`Imported by: [0-9]+\+?`))))
 	if !isPackage {
 		importsDetails = nil
 	}
@@ -120,7 +120,7 @@ func UnitHeader(p *Page, versionedURL bool, isPackage bool) htmlcheck.Checker {
 			),
 		)
 	}
-	return in("header.LegacyUnitHeader",
+	return in("",
 		versionBadge(p),
 		in(`[data-test-id="UnitHeader-breadcrumbCurrent"]`, text(curBreadcrumb)),
 		in(`[data-test-id="UnitHeader-title"]`, text(p.Title)),
@@ -128,7 +128,7 @@ func UnitHeader(p *Page, versionedURL bool, isPackage bool) htmlcheck.Checker {
 		in(`[data-test-id="UnitHeader-version"]`,
 			in("a",
 				href("?tab=versions"),
-				exactText("Version "+p.FormattedVersion))),
+				exactText("Version: "+p.FormattedVersion))),
 		in(`[data-test-id="UnitHeader-commitTime"]`,
 			text(p.CommitTime)),
 		in(`[data-test-id="UnitHeader-licenses"]`,
