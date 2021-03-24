@@ -5,7 +5,7 @@
  * license that can be found in the LICENSE file.
  */
 
-import './globals';
+import './global-types';
 import puppeteer, { Page } from 'puppeteer';
 
 const baseUrl = process.env.FRONTEND_URL ?? '';

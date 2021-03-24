@@ -5,7 +5,7 @@
  * license that can be found in the LICENSE file.
  */
 
-import './globals';
+import './global-types';
 import puppeteer, { Page } from 'puppeteer';
 
 const baseUrl = process.env.FRONTEND_URL ?? '';
@@ -16,9 +16,7 @@ describe('golang.org/x/pkgsite', () => {
   beforeAll(async () => {
     page = await browser.newPage();
     await page.goto(baseUrl);
-    await page.evaluate(() =>
-      fetch(`/fetch/golang.org/x/pkgsite@v0.0.0-20210216165259-5867665b19ca`, { method: 'POST' })
-    );
+    await page.evaluate(() => fetch(`/fetch/golang.org/x/pkgsite`, { method: 'POST' }));
   }, 30000);
 
   beforeEach(async () => {
