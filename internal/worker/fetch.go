@@ -59,6 +59,9 @@ func (f *Fetcher) FetchAndUpdateState(ctx context.Context, modulePath, requested
 	if !utf8.ValidString(modulePath) {
 		log.Errorf(ctx, "module path %q is not valid UTF-8", modulePath)
 	}
+	if modulePath == internal.UnknownModulePath {
+		return http.StatusInternalServerError, "", errors.New("called with internal.UnknownModulePath")
+	}
 	if !utf8.ValidString(requestedVersion) {
 		log.Errorf(ctx, "requested version %q is not valid UTF-8", requestedVersion)
 	}
