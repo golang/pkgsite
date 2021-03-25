@@ -18,6 +18,7 @@ import (
 
 	cloudtasks "cloud.google.com/go/cloudtasks/apiv2"
 	"github.com/golang/protobuf/ptypes"
+	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/config"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/experiment"
@@ -124,6 +125,9 @@ func (q *GCP) ScheduleFetch(ctx context.Context, modulePath, version, suffix str
 	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
 
+	if modulePath == internal.UnknownModulePath {
+		return false, errors.New("given unknown module path")
+	}
 	req := q.newTaskRequest(modulePath, version, suffix, disableProxyFetch)
 	enqueued = true
 	if _, err := q.client.CreateTask(ctx, req); err != nil {
