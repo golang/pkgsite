@@ -236,5 +236,5 @@ func elapsedTime(date time.Time) string {
 		return fmt.Sprintf("%d days ago", elapsedDays)
 	}
 
-	return date.Format("Jan _2, 2006")
+	return absoluteTime(date)
 }

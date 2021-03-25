@@ -92,7 +92,7 @@ func SetupTestDB(dbName string) (_ *DB, err error) {
 	}
 	driver := os.Getenv("GO_DISCOVERY_DATABASE_DRIVER")
 	if driver == "" {
-		driver = "postgres"
+		driver = "pgx"
 	}
 	db, err := database.Open(driver, dbtest.DBConnURI(dbName), "test")
 	if err != nil {

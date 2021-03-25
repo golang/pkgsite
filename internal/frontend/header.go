@@ -99,5 +99,9 @@ func effectiveName(pkgPath, pkgName string) string {
 // absoluteTime takes a date and returns returns a human-readable,
 // date with the format mmm d, yyyy:
 func absoluteTime(date time.Time) string {
-	return date.Format("Jan _2, 2006")
+	// Convert to UTC because that is how the date is represented in the DB.
+	// (The pgx driver returns local times.) Example: if a date is stored
+	// as Jan 30 at midnight, then the local NYC time is on Jan 29, and this
+	// function would return "Jan 29" instead of the correct "Jan 30".
+	return date.In(time.UTC).Format("Jan _2, 2006")
 }
