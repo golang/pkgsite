@@ -46,7 +46,7 @@ func (db *DB) CopyUpsert(ctx context.Context, table string, columns []string, sr
 		tempTable := fmt.Sprintf("__%s_copy", table)
 		stmt := fmt.Sprintf(`
 			DROP TABLE IF EXISTS %s;
-			CREATE TEMP TABLE %[1]s AS SELECT * FROM %s LIMIT 0
+			CREATE TEMP TABLE %[1]s (LIKE %s) ON COMMIT DROP
 		`, tempTable, table)
 		_, err = conn.Exec(ctx, stmt)
 		if err != nil {
