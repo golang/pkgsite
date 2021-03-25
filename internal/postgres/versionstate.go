@@ -56,7 +56,7 @@ type ModuleVersionStateForUpsert struct {
 // UpsertModuleVersionState inserts or updates the module_version_state table with
 // the results of a fetch operation for a given module version.
 func (db *DB) UpsertModuleVersionState(ctx context.Context, mvs *ModuleVersionStateForUpsert) (err error) {
-	defer derrors.WrapStack(&err, "UpsertModuleVersionState(ctx, %+v", mvs)
+	defer derrors.WrapStack(&err, "UpsertModuleVersionState(ctx, %s@%s)", mvs.ModulePath, mvs.Version)
 	ctx, span := trace.StartSpan(ctx, "UpsertModuleVersionState")
 	defer span.End()
 
