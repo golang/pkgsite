@@ -7,6 +7,14 @@
 .UnitDirectories {
   margin-bottom: 2rem;
 }
+.UnitDirectories h2 a.UnitDirectories-idLink,
+.UnitDirectories summary a {
+  opacity: 0;
+}
+.UnitDirectories h2:hover a,
+.UnitDirectories summary:focus a {
+  opacity: 1;
+}
 .UnitDirectories-title {
   border-bottom: 0.0625rem solid var(--gray-8);
   font-size: 1.375rem;

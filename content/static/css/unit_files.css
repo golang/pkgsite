@@ -7,6 +7,14 @@
 .UnitFiles {
   margin-bottom: 2rem;
 }
+.UnitFiles h2 a.UnitFiles-idLink,
+.UnitFiles summary a {
+  opacity: 0;
+}
+.UnitFiles h2:hover a,
+.UnitFiles summary:focus a {
+  opacity: 1;
+}
 .UnitFiles-title {
   border-bottom: 0.0625rem solid var(--gray-8);
   font-size: 1.375rem;
