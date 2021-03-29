@@ -28,21 +28,19 @@ require (
 	github.com/google/go-replayers/httpreplay v0.1.0
 	github.com/google/licensecheck v0.3.1
 	github.com/google/safehtml v0.0.2
-	github.com/jackc/pgconn v1.7.2
-	github.com/jackc/pgx/v4 v4.9.2
+	github.com/jackc/pgconn v1.8.1
+	github.com/jackc/pgx/v4 v4.11.1-0.20210326152507-88ede6efb5b0
 	github.com/jba/templatecheck v0.2.0
 	github.com/lib/pq v1.3.0
 	github.com/microcosm-cc/bluemonday v1.0.2
 	github.com/russross/blackfriday/v2 v2.0.1
-	github.com/shurcooL/sanitized_anchor_name v1.0.0 // indirect
 	github.com/yuin/goldmark v1.2.1
 	github.com/yuin/goldmark-emoji v1.0.1
 	github.com/yuin/gopher-lua v0.0.0-20200816102855-ee81675732da // indirect
 	go.opencensus.io v0.22.4
 	golang.org/x/mod v0.3.1-0.20200828183125-ce943fd02449
-	golang.org/x/net v0.0.0-20200904194848-62affa334b73
+	golang.org/x/net v0.0.0-20210226172049-e18ecbb05110
 	golang.org/x/sync v0.0.0-20200625203802-6e8e738ad208
-	golang.org/x/sys v0.0.0-20200922070232-aee5d888a860 // indirect
 	golang.org/x/text v0.3.4 // indirect
 	golang.org/x/tools v0.0.0-20200915173823-2db8f0ff891c
 	google.golang.org/api v0.32.0
