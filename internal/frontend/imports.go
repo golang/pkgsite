@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/stdlib"
 )
@@ -109,6 +110,14 @@ func fetchImportedByDetails(ctx context.Context, ds internal.DataSource, pkgPath
 	if err != nil {
 		return nil, err
 	}
+	if numImportedBySearch > numImportedBy {
+		// numImportedBySearch should never be greater than numImportedBy.
+		//
+		// If that happens, log an error so that we can debug, but continue
+		// with generating the page fo the user.
+		log.Errorf(ctx, "search_documents.num_imported_by > numImportedBy from imports unique, which shouldn't happen: %d", numImportedBySearch)
+	}
+
 	if numImportedBy >= importedByLimit {
 		importedBy = importedBy[:importedByLimit-1]
 	}
@@ -117,21 +126,27 @@ func fetchImportedByDetails(ctx context.Context, ds internal.DataSource, pkgPath
 	// Display the number of importers, taking into account the number we
 	// actually retrieved, the limit on that number, and the imported-by count
 	// in the search_documents table.
-	var display string
+	var (
+		display string
+		pkgword = "package"
+	)
+	if numImportedBy > 1 {
+		pkgword = "packages"
+	}
 	switch {
 	// If there are more importers than the limit, and the search number is
 	// greater, use the search number and indicate that we're displaying fewer.
 	case numImportedBy >= importedByLimit && numImportedBySearch > numImportedBy:
-		display = fmt.Sprintf("%d (displaying %d packages)", numImportedBySearch, importedByLimit-1)
+		display = fmt.Sprintf("%d (displaying %d %s)", numImportedBySearch, importedByLimit-1, pkgword)
 	// If we've exceeded the limit but the search number is smaller, we don't
 	// know the true number, so say so.
 	case numImportedBy >= importedByLimit:
-		display = fmt.Sprintf("%d (more than %d including internal and invalid packages)", numImportedBySearch, importedByLimit-1)
+		display = fmt.Sprintf("%d (displaying more than %d %s, including internal and invalid packages)", numImportedBySearch, importedByLimit-1, pkgword)
 	// If we haven't exceeded the limit and we have more than the search number,
 	// then display both numbers so users coming from the search page won't see
 	// a mismatch.
 	case numImportedBy > numImportedBySearch:
-		display = fmt.Sprintf("%d (%d including internal and invalid packages)", numImportedBySearch, numImportedBy)
+		display = fmt.Sprintf("%d (displaying %d %s, including internal and invalid packages)", numImportedBySearch, numImportedBy, pkgword)
 	// Otherwise, we have all the packages, and the search number is either
 	// wrong (perhaps it hasn't been recomputed yet) or it is the same as the
 	// retrieved number. In that case, just display the retrieved number.
