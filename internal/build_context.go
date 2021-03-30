@@ -46,11 +46,17 @@ func CompareBuildContexts(c1, c2 BuildContext) int {
 	if c1 == c2 {
 		return 0
 	}
-	// We should never see a BuildContext with "all" here.
-	if c1.GOOS == All || c1.GOARCH == All || c2.GOOS == All || c2.GOARCH == All {
-		panic("BuildContext with 'all'")
+	// Although we really shouldn't see a BuildContext with "all" here, we may if the
+	// DB erroneously has both an all/all row and some other row. So just prefer the all/all.
+	if c1 == BuildContextAll {
+		if c2 == BuildContextAll {
+			return 0
+		}
+		return -1
 	}
-
+	if c2 == BuildContextAll {
+		return 1
+	}
 	pos := func(c BuildContext) int {
 		for i, d := range BuildContexts {
 			if c == d {
