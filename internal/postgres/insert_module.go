@@ -510,7 +510,20 @@ func insertDocs(ctx context.Context, db *database.DB,
 	paths []string,
 	pathToUnitID map[string]int,
 	pathToDocs map[string][]*internal.Documentation) (err error) {
-	defer derrors.WrapStack(&err, "insertDocsCopy(%d paths)", len(paths))
+	defer derrors.WrapStack(&err, "insertDocs(%d paths)", len(paths))
+
+	// Remove old rows before inserting new ones, to get rid of obsolete rows.
+	// This is necessary because of the change to use all/all to represent documentation
+	// that is the same for all build contexts. It can be removed once all the DBs have
+	// been updated.
+	var unitIDs []int
+	for _, path := range paths {
+		unitIDs = append(unitIDs, pathToUnitID[path])
+	}
+	if _, err := db.Exec(ctx, `DELETE FROM documentation WHERE unit_id = ANY($1)`,
+		pq.Array(unitIDs)); err != nil {
+		return err
+	}
 
 	generateRows := func() chan database.RowItem {
 		ch := make(chan database.RowItem)
