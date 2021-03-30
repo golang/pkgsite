@@ -8,15 +8,18 @@
 
 {{define "versions"}}
   <div class="Versions">
-    <table>
-      <tr><th colspan="3"><h2>Versions in this module</h2></th></tr>
-      {{template "module_list" .ThisModule}}
-      {{if .IncompatibleModules}}
-        <tr><th colspan="3"><h2>Incompatible versions in this module</h2></th></tr>
-        {{template "module_list_incompatible" .IncompatibleModules}}
-      {{end}}
-    </table>
-
+    <div class="Versions-title">
+      <h2>Versions in this module</h2>
+      <div class="Versions-titleButtonGroup js-buttonGroup">
+        <button class="js-versionsExpand">Expand all</button>
+        <button class="js-versionsCollapse">Collapse all</button>
+      </div>
+    </div>
+    {{template "version_list" .ThisModule}}
+    {{if .IncompatibleModules}}
+      <h2>Incompatible versions in this module</h2>
+      {{template "version_list" .IncompatibleModules}}
+    {{end}}
     {{if .OtherModules}}
       <h2>Other modules containing this package</h2>
       {{range .OtherModules}}
@@ -26,87 +29,74 @@
   </div>
 {{end}}
 
-
 {{/* . is []*internal/frontend.VersionList */}}
 
-{{define "module_list_incompatible"}}
-  {{range $major := .}}
-     {{range $i, $v := $major.Versions}}
-       <tr>
-         <td>
-           {{if eq $i 0 }}
-             <div class="Versions-major">
-               {{if $major.Deprecated}}(Deprecated{{with $major.DeprecationComment}}: {{.}}{{end}}){{end}}
-             </div>
-           {{end}}
-         </td>
-         <td>
-           <a href="{{$v.Link}}">{{$v.Version}}</a>
-           {{if $v.Retracted}}(Retracted{{with .RetractionRationale}}: {{.}}){{end}}{{end}}
-         </td>
-         <td>
-           <div class="Versions-commitTime">{{$v.CommitTime}}</div>
-         </td>
-       </tr>
-     {{end}}
-  {{end}}
+{{define "version_list"}}
+  <div class="Versions-list">
+    {{range $major := .}}
+      {{range $i, $v := $major.Versions}}
+        <div class="Version-major">
+          {{if and (eq $i 0) (not $major.Incompatible)}}
+            <strong>{{$major.Major}}</strong>
+            <div>{{if $major.Deprecated}}(Deprecated{{with $major.DeprecationComment}}: {{.}}{{end}}){{end}}</div>
+          {{end}}
+        </div>
+        <div class="Version-tag">
+          <a class="js-versionLink" href="{{$v.Link}}">{{$v.Version}}</a>
+          <div>{{if $v.Retracted}}(Retracted{{with $v.RetractionRationale}}: {{.}}{{end}}){{end}}</div>
+        </div>
+        <div class="Version-dot{{if and $v.IsMinor (not $major.Incompatible)}} Version-dot--minor{{end}}"></div>
+        {{if and $v.Symbols (not $major.Incompatible)}}
+          {{template "symbol_history" $v}}
+        {{else}}
+          <div class="Version-commitTime">{{$v.CommitTime}}</div>
+        {{end}}
+      {{end}}
+    {{end}}
+  </div>
 {{end}}
 
-{{define "module_list"}}
-  {{range $major := .}}
-     {{range $i, $v := $major.Versions}}
-       <tr>
-         <td>
-           {{if eq $i 0 }}
-             <div class="Versions-major">
-               {{$major.Major}}
-               {{if $major.Deprecated}}(Deprecated{{with $major.DeprecationComment}}: {{.}}{{end}}){{end}}
-             </div>
-           {{end}}
-         </td>
-         <td>
-           <a href="{{$v.Link}}">{{$v.Version}}</a>
-           {{if $v.Retracted}}(Retracted{{with .RetractionRationale}}: {{.}}){{end}}{{end}}
-         </td>
-         <td>
-           <div class="Versions-commitTime">{{$v.CommitTime}}</div>
-           {{if $v.Symbols }}
-             <div class="Versions-symbols">
-             <div class="Versions-symbolsHeader">Changes in this version</div>
-             {{range $v.Symbols}}
-               <div class="Versions-symbolSection">
-               {{range .}}
-                 {{if eq .Kind "Type"}}
-                   <div class="Versions-symbolType">
-                   {{template "symbol" .}}
-                   {{range .Children}}
-                     <div class="Versions-symbolChild">{{template "symbol" .}}</div>
-                   {{end}}
-                   </div>
-                 {{else}}
-                   <div>{{template "symbol" .}}</div>
-                 {{end}}
-               {{end}}
-               </div>
-             {{end}}
-           </div>
-           {{end}}
-         </td>
-       </tr>
-     {{end}}
-  {{end}}
+{{define "symbol_history"}}
+  <details class="Version-details js-versionDetails">
+    <summary class="Version-summary">
+      <img alt="" height="24" width="24" src="/static/img/pkg-icon-arrowRight_24x24.svg">
+      {{.CommitTime}}
+    </summary>
+    <div class="Versions-symbols">
+      <div class="Versions-symbolsHeader">Changes in this version</div>
+      {{range .Symbols}}
+        <div class="Versions-symbolSection">
+          {{range .}}
+            {{if eq .Kind "Type"}}
+              <div class="Versions-symbolType">
+                {{template "symbol" .}}
+                {{range .Children}}
+                  <div class="Versions-symbolChild">{{template "symbol" .}}</div>
+                {{end}}
+              </div>
+            {{else}}
+              <div>{{template "symbol" .}}</div>
+            {{end}}
+          {{end}}
+        </div>
+      {{end}}
+    </div>
+  </details>
 {{end}}
 
 {{define "symbol"}}
   <div>
-     {{if .New}}
-       <span class="Versions-symbolBulletNew">+</span><a class="Versions-symbolSynopsis" href="{{.Link}}">{{.Synopsis}}</a>
-     {{else}}
-       <span class="Versions-symbolOld Versions-symbolSynopsis">{{.Synopsis}}</span>
-     {{end}}
-     {{if .Builds}}
-       <span class="Versions-symbolBuildsDash">—</span>
-       <span class="Versions-symbolBuilds">{{range $i, $b := .Builds}}{{if $i}}, {{end}}{{$b}}{{end}}</span>
-     {{end}}
+    {{if .New}}
+      <span class="Versions-symbolBulletNew">+</span>
+      <a class="Versions-symbolSynopsis" href="{{.Link}}">{{.Synopsis}}</a>
+    {{else}}
+      <span class="Versions-symbolOld Versions-symbolSynopsis">{{.Synopsis}}</span>
+    {{end}}
+    {{if .Builds}}
+      <span class="Versions-symbolBuildsDash">—</span>
+      <span class="Versions-symbolBuilds">
+        {{range $i, $b := .Builds}}{{if $i}}, {{end}}{{$b}}{{end}}
+      </span>
+    {{end}}
   </div>
 {{end}}

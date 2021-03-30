@@ -1,0 +1,108 @@
+/*
+ * Copyright 2021 The Go Authors. All rights reserved.
+ * Use of this source code is governed by a BSD-style
+ * license that can be found in the LICENSE file.
+ */
+
+.Unit-content .Versions {
+  margin-top: 1rem;
+  max-width: unset;
+}
+.Versions-title {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem 2.5rem;
+  margin-bottom: 1rem;
+}
+.Versions-title h2 {
+  margin: 0;
+}
+.Versions-titleButtonGroup {
+  display: none;
+}
+.Versions-titleButtonGroup button {
+  background-color: transparent;
+  border: none;
+  bottom: 1rem;
+  color: var(--turq-dark);
+  cursor: pointer;
+  font-size: 0.875rem;
+  text-decoration: none;
+}
+.Versions-titleButtonGroup button:disabled {
+  color: var(--gray-8);
+  cursor: initial;
+}
+.Versions-list {
+  gap: 0 1rem;
+  line-height: 2.25rem;
+}
+@media only screen and (min-width: 37.5rem) {
+  .Versions-list {
+    display: grid;
+    grid-template-columns: fit-content(8rem) fit-content(20rem) min-content auto;
+  }
+}
+.Version-major {
+  margin-bottom: 1rem;
+  min-width: 4rem;
+}
+@media only screen and (min-width: 37.5rem) {
+  .Version-major {
+    margin-bottom: 0;
+  }
+}
+.Version-tag {
+  text-align: left;
+}
+@media only screen and (min-width: 37.5rem) {
+  .Version-tag {
+    text-align: right;
+  }
+}
+.Version-dot {
+  border: 0.0625rem solid var(--gray-9);
+  color: var(--gray-8);
+  display: none;
+  font-size: 2.75rem;
+  justify-content: center;
+  line-height: 1.75rem;
+  -webkit-text-stroke: 0.125rem var(--white);
+  width: 0;
+}
+.Version-dot::before {
+  content: '•';
+}
+@media only screen and (min-width: 37.5rem) {
+  .Version-dot {
+    display: flex;
+  }
+}
+.Version-dot--minor {
+  color: var(--turq-dark);
+}
+.Version-commitTime {
+  margin-left: 1rem;
+  white-space: nowrap;
+}
+.Version-details {
+  line-height: 1.25rem;
+  margin-left: -0.5rem;
+}
+.Version-summary {
+  align-items: center;
+  cursor: pointer;
+  display: flex;
+  line-height: 2.25rem;
+  padding-right: 0.5rem;
+  white-space: nowrap;
+  width: min-content;
+}
+details.Version-details img {
+  position: relative;
+  top: 0.0625rem;
+}
+details.Version-details[open] img {
+  transform: rotate(90deg);
+}

@@ -4,8 +4,22 @@
   license that can be found in the LICENSE file.
 -->
 
+{{define "unit_pre_content"}}
+  <link href="/static/css/versions.css?version={{.AppVersionLabel}}" rel="stylesheet">
+{{end}}
+
 {{define "unit_content"}}
   <div class="Unit-content" role="main" data-test-id="UnitVersions">
-    {{block "versions" .Details}}{{end}}
+    {{if (.Experiments.IsActive "symbol-history-versions-page")}}
+      {{block "versions" .Details}}{{end}}
+    {{else}}
+      {{block "legacy_versions" .Details}}{{end}}
+    {{end}}
   </div>
+{{end}}
+
+{{define "unit_post_content"}}
+  <script>
+    loadScript("/static/js/versions.js", {type: 'module', async: true, defer: true})
+  </script>
 {{end}}
