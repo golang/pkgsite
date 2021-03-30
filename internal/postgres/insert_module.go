@@ -510,24 +510,31 @@ func insertDocs(ctx context.Context, db *database.DB,
 	paths []string,
 	pathToUnitID map[string]int,
 	pathToDocs map[string][]*internal.Documentation) (err error) {
-	defer derrors.WrapStack(&err, "insertDocs")
+	defer derrors.WrapStack(&err, "insertDocsCopy(%d paths)", len(paths))
 
-	var docValues []interface{}
-	for _, path := range paths {
-		unitID := pathToUnitID[path]
-		for _, doc := range pathToDocs[path] {
-			if doc.GOOS == "" || doc.GOARCH == "" {
-				return errors.New("empty GOOS or GOARCH")
+	generateRows := func() chan database.RowItem {
+		ch := make(chan database.RowItem)
+		go func() {
+			for _, path := range paths {
+				unitID := pathToUnitID[path]
+				for _, doc := range pathToDocs[path] {
+					if doc.GOOS == "" || doc.GOARCH == "" {
+						ch <- database.RowItem{Err: errors.New("empty GOOS or GOARCH")}
+					}
+					ch <- database.RowItem{Values: []interface{}{unitID, doc.GOOS, doc.GOARCH, doc.Synopsis, doc.Source}}
+				}
 			}
-			docValues = append(docValues, unitID, doc.GOOS, doc.GOARCH, doc.Synopsis, doc.Source)
-		}
+			close(ch)
+		}()
+		return ch
 	}
+
 	uniqueCols := []string{"unit_id", "goos", "goarch"}
 	docCols := append(uniqueCols, "synopsis", "source")
-	if err := db.BulkUpsert(ctx, "documentation", docCols, docValues, uniqueCols); err != nil {
+	if err := db.CopyUpsert(ctx, "documentation", docCols, database.CopyFromChan(generateRows()), uniqueCols, ""); err != nil {
 		return err
 	}
-	return db.BulkUpsert(ctx, "new_documentation", docCols, docValues, uniqueCols)
+	return db.CopyUpsert(ctx, "new_documentation", docCols, database.CopyFromChan(generateRows()), uniqueCols, "id")
 }
 
 // getDocIDsForPath returns a map of the unit path to documentation.id to
