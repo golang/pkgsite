@@ -23,11 +23,13 @@ import (
 // src is the source of the rows to upsert.
 // conflictColumns are the columns that might conflict (i.e. that have a UNIQUE
 // constraint).
+// If dropColumn is non-empty, that column will be dropped from the temporary
+// table before copying. Use dropColumn for generated ID columns.
 //
 // CopyUpsert works by first creating a temporary table, populating it with
 // CopyFrom, and then running an INSERT...SELECT...ON CONFLICT to upsert its
 // rows into the original table.
-func (db *DB) CopyUpsert(ctx context.Context, table string, columns []string, src pgx.CopyFromSource, conflictColumns []string) (err error) {
+func (db *DB) CopyUpsert(ctx context.Context, table string, columns []string, src pgx.CopyFromSource, conflictColumns []string, dropColumn string) (err error) {
 	defer derrors.Wrap(&err, "CopyUpsert(%q)", table)
 
 	if !db.InTransaction() {
@@ -46,8 +48,11 @@ func (db *DB) CopyUpsert(ctx context.Context, table string, columns []string, sr
 		tempTable := fmt.Sprintf("__%s_copy", table)
 		stmt := fmt.Sprintf(`
 			DROP TABLE IF EXISTS %s;
-			CREATE TEMP TABLE %[1]s (LIKE %s) ON COMMIT DROP
+			CREATE TEMP TABLE %[1]s (LIKE %s) ON COMMIT DROP;
 		`, tempTable, table)
+		if dropColumn != "" {
+			stmt += fmt.Sprintf("ALTER TABLE %s DROP COLUMN %s", tempTable, dropColumn)
+		}
 		_, err = conn.Exec(ctx, stmt)
 		if err != nil {
 			return err
@@ -55,12 +60,12 @@ func (db *DB) CopyUpsert(ctx context.Context, table string, columns []string, sr
 		start := time.Now()
 		n, err := conn.CopyFrom(ctx, []string{tempTable}, columns, src)
 		if err != nil {
-			return err
+			return fmt.Errorf("CopyFrom: %w", err)
 		}
 		log.Debugf(ctx, "CopyUpsert(%q): copied %d rows in %s", table, n, time.Since(start))
 		conflictAction := buildUpsertConflictAction(columns, conflictColumns)
-		query := buildCopyUpsertQuery(table, tempTable, columns, conflictAction)
-
+		cols := strings.Join(columns, ", ")
+		query := fmt.Sprintf("INSERT INTO %s (%s) SELECT %s FROM %s %s", table, cols, cols, tempTable, conflictAction)
 		defer logQuery(ctx, query, nil, db.instanceID, db.IsRetryable())(&err)
 		start = time.Now()
 		ctag, err := conn.Exec(ctx, query)
@@ -70,11 +75,6 @@ func (db *DB) CopyUpsert(ctx context.Context, table string, columns []string, sr
 		log.Debugf(ctx, "CopyUpsert(%q): upserted %d rows in %s", table, ctag.RowsAffected(), time.Since(start))
 		return nil
 	})
-}
-
-func buildCopyUpsertQuery(table, tempTable string, columns []string, conflictAction string) string {
-	cols := strings.Join(columns, ", ")
-	return fmt.Sprintf("INSERT INTO %s (%s) SELECT %s FROM %s %s", table, cols, cols, tempTable, conflictAction)
 }
 
 // A RowItem is a row of values or an error.
