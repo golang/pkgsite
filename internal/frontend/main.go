@@ -135,6 +135,8 @@ func fetchMainDetails(ctx context.Context, ds internal.DataSource, um *internal.
 		buildContexts      []internal.BuildContext
 	)
 
+	unit.Documentation = cleanDocumentation(unit.Documentation)
+
 	doc := internal.DocumentationForBuildContext(unit.Documentation, bc)
 	versionToNameToUnitSymbol := map[string]map[string]*internal.UnitSymbol{}
 	if experiment.IsActive(ctx, internal.ExperimentSymbolHistoryMainPage) {
@@ -158,26 +160,9 @@ func fetchMainDetails(ctx context.Context, ds internal.DataSource, um *internal.
 		synopsis = doc.Synopsis
 		goos = doc.GOOS
 		goarch = doc.GOARCH
-		// If there is only one Documentation and it is linux/amd64, then
-		// make it all/all.
-		//
-		// This is temporary, until the next reprocessing. It assumes a unit
-		// with a single linux/amd64 actually has only one build context,
-		// and hasn't been reprocessed to have all/all.
-		//
-		// The only effect of this is to prevent "GOOS=linux, GOARCH=amd64" from
-		// appearing at the bottom of the doc. That is wrong in the (rather
-		// unlikely) case that the package truly only has doc for linux/amd64,
-		// but the bug is only cosmetic.
-		if len(unit.Documentation) == 1 && goos == "linux" && goarch == "amd64" {
-			goos = internal.All
-			goarch = internal.All
-		} else {
-			for _, v := range unit.Documentation {
-				buildContexts = append(buildContexts, v.BuildContext())
-			}
+		for _, v := range unit.Documentation {
+			buildContexts = append(buildContexts, v.BuildContext())
 		}
-
 		end := middleware.ElapsedStat(ctx, "DecodePackage")
 		docPkg, err := godoc.DecodePackage(doc.Source)
 		end()
@@ -253,6 +238,30 @@ func fetchMainDetails(ctx context.Context, ds internal.DataSource, um *internal.
 		IsTaggedVersion:   isTaggedVersion,
 		IsStableVersion:   isStableVersion,
 	}, nil
+}
+
+func cleanDocumentation(docs []*internal.Documentation) []*internal.Documentation {
+	// If there is more than one row but the first is all/all, ignore the others.
+	// Should never happen;  temporary fix until the DB is cleaned up.
+	if len(docs) > 1 && docs[0].BuildContext() == internal.BuildContextAll {
+		return docs[:1]
+	}
+	// If there is only one Documentation and it is linux/amd64, then
+	// make it all/all.
+	//
+	// This is temporary, until the next reprocessing. It assumes a unit
+	// with a single linux/amd64 actually has only one build context,
+	// and hasn't been reprocessed to have all/all.
+	//
+	// The only effect of this is to prevent "GOOS=linux, GOARCH=amd64" from
+	// appearing at the bottom of the doc. That is wrong in the (rather
+	// unlikely) case that the package truly only has doc for linux/amd64,
+	// but the bug is only cosmetic.
+	if len(docs) == 1 && docs[0].GOOS == "linux" && docs[0].GOARCH == "amd64" {
+		docs[0].GOOS = internal.All
+		docs[0].GOARCH = internal.All
+	}
+	return docs
 }
 
 // readmeContent renders the readme to html and collects the headings
