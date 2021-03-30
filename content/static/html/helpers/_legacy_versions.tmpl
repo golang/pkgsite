@@ -1,0 +1,112 @@
+<!--
+  Copyright 2020 The Go Authors. All rights reserved.
+  Use of this source code is governed by a BSD-style
+  license that can be found in the LICENSE file.
+-->
+
+{{/* . is internal/frontend.VersionsDetails */}}
+
+{{define "legacy_versions"}}
+  <div class="Versions">
+    <table>
+      <tr><th colspan="3"><h2>Versions in this module</h2></th></tr>
+      {{template "module_list" .ThisModule}}
+      {{if .IncompatibleModules}}
+        <tr><th colspan="3"><h2>Incompatible versions in this module</h2></th></tr>
+        {{template "module_list_incompatible" .IncompatibleModules}}
+      {{end}}
+    </table>
+
+    {{if .OtherModules}}
+      <h2>Other modules containing this package</h2>
+      {{range .OtherModules}}
+        <div><a href="/{{.}}">{{.}}</a></div>
+      {{end}}
+    {{end}}
+  </div>
+{{end}}
+
+
+{{/* . is []*internal/frontend.VersionList */}}
+
+{{define "module_list_incompatible"}}
+  {{range $major := .}}
+     {{range $i, $v := $major.Versions}}
+       <tr>
+         <td>
+           {{if eq $i 0 }}
+             <div class="Versions-major">
+               {{if $major.Deprecated}}(Deprecated{{with $major.DeprecationComment}}: {{.}}{{end}}){{end}}
+             </div>
+           {{end}}
+         </td>
+         <td>
+           <a href="{{$v.Link}}">{{$v.Version}}</a>
+           {{if $v.Retracted}}(Retracted{{with .RetractionRationale}}: {{.}}){{end}}{{end}}
+         </td>
+         <td>
+           <div class="Versions-commitTime">{{$v.CommitTime}}</div>
+         </td>
+       </tr>
+     {{end}}
+  {{end}}
+{{end}}
+
+{{define "module_list"}}
+  {{range $major := .}}
+     {{range $i, $v := $major.Versions}}
+       <tr>
+         <td>
+           {{if eq $i 0 }}
+             <div class="Versions-major">
+               {{$major.Major}}
+               {{if $major.Deprecated}}(Deprecated{{with $major.DeprecationComment}}: {{.}}{{end}}){{end}}
+             </div>
+           {{end}}
+         </td>
+         <td>
+           <a href="{{$v.Link}}">{{$v.Version}}</a>
+           {{if $v.Retracted}}(Retracted{{with .RetractionRationale}}: {{.}}){{end}}{{end}}
+         </td>
+         <td>
+           <div class="Versions-commitTime">{{$v.CommitTime}}</div>
+           {{if $v.Symbols }}
+             <div class="Versions-symbols">
+             <div class="Versions-symbolsHeader">Changes in this version</div>
+             {{range $v.Symbols}}
+               <div class="Versions-symbolSection">
+               {{range .}}
+                 {{if eq .Kind "Type"}}
+                   <div class="Versions-symbolType">
+                   {{template "legacy_symbol" .}}
+                   {{range .Children}}
+                     <div class="Versions-symbolChild">{{template "legacy_symbol" .}}</div>
+                   {{end}}
+                   </div>
+                 {{else}}
+                   <div>{{template "legacy_symbol" .}}</div>
+                 {{end}}
+               {{end}}
+               </div>
+             {{end}}
+           </div>
+           {{end}}
+         </td>
+       </tr>
+     {{end}}
+  {{end}}
+{{end}}
+
+{{define "legacy_symbol"}}
+  <div>
+     {{if .New}}
+       <span class="Versions-symbolBulletNew">+</span><a class="Versions-symbolSynopsis" href="{{.Link}}">{{.Synopsis}}</a>
+     {{else}}
+       <span class="Versions-symbolOld Versions-symbolSynopsis">{{.Synopsis}}</span>
+     {{end}}
+     {{if .Builds}}
+       <span class="Versions-symbolBuildsDash">—</span>
+       <span class="Versions-symbolBuilds">{{range $i, $b := .Builds}}{{if $i}}, {{end}}{{$b}}{{end}}</span>
+     {{end}}
+  </div>
+{{end}}
