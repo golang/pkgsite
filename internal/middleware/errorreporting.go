@@ -36,6 +36,10 @@ func ErrorReporting(report func(errorreporting.Entry)) Middleware {
 			if w2.status == derrors.ToStatus(derrors.ProxyTimedOut) {
 				return
 			}
+			// Don't report on proxy internal errors; they're not actionable.
+			if w2.status == derrors.ToStatus(derrors.ProxyError) {
+				return
+			}
 			report(errorreporting.Entry{
 				Error: fmt.Errorf("handler for %q returned status code %d", r.URL.Path, w2.status),
 				Req:   r,

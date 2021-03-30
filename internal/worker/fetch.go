@@ -235,10 +235,8 @@ func (f *Fetcher) fetchAndInsertModule(ctx context.Context, modulePath, requeste
 	// There was an error fetching this module.
 	if ft.Error != nil {
 		logf := log.Infof
-		if ft.Status == http.StatusServiceUnavailable {
+		if ft.Status >= 500 && ft.Status != derrors.ToStatus(derrors.ProxyTimedOut) {
 			logf = log.Warningf
-		} else if ft.Status >= 500 && ft.Status != derrors.ToStatus(derrors.ProxyTimedOut) {
-			logf = log.Errorf
 		}
 		logf(ctx, "Error executing fetch: %v (code %d)", ft.Error, ft.Status)
 		return ft
@@ -314,8 +312,8 @@ func resolvedVersion(ctx context.Context, modulePath, requestedVersion string, p
 	info, err := fetch.GetInfo(ctx, modulePath, requestedVersion, proxyClient)
 	if err != nil {
 		if !errors.Is(err, derrors.NotFound) {
-			// If an error occurs, log it and insert the module as normal.
-			log.Errorf(ctx, "fetch.GetInfo(ctx, %q, %q, f.ProxyClient, false): %v", modulePath, requestedVersion, err)
+			// If an error occurs, log it as a warning and insert the module as normal.
+			log.Warningf(ctx, "fetch.GetInfo(ctx, %q, %q, f.ProxyClient, false): %v", modulePath, requestedVersion, err)
 		}
 		return ""
 	}

@@ -268,6 +268,8 @@ func responseError(r *http.Response, fetchDisabled bool) error {
 	switch {
 	case 200 <= r.StatusCode && r.StatusCode < 300:
 		return nil
+	case 500 <= r.StatusCode:
+		return derrors.ProxyError
 	case r.StatusCode == http.StatusNotFound,
 		r.StatusCode == http.StatusGone:
 		// Treat both 404 Not Found and 410 Gone responses

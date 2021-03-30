@@ -57,6 +57,9 @@ var (
 	// ProxyTimedOut indicates that a request timed out when fetching from the Module Mirror.
 	ProxyTimedOut = errors.New("proxy timed out")
 
+	// ProxyError is used to capture non-actionable server errors returned from the proxy.
+	ProxyError = errors.New("proxy error")
+
 	// PackageBuildContextNotSupported indicates that the build context for the
 	// package is not supported.
 	PackageBuildContextNotSupported = errors.New("package build context not supported")
@@ -122,6 +125,7 @@ var codes = []struct {
 	{ModuleTooLarge, 492},
 
 	{ProxyTimedOut, 550}, // not a real code
+	{ProxyError, 551},    // not a real code
 	// 52x and 54x errors represents modules that need to be reprocessed, and the
 	// previous status code the module had. Note that the status code
 	// matters for determining reprocessing order.
