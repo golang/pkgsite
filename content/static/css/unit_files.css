@@ -7,25 +7,6 @@
 .UnitFiles {
   margin-bottom: 2rem;
 }
-.UnitFiles h2 a.UnitFiles-idLink,
-.UnitFiles summary a {
-  opacity: 0;
-}
-.UnitFiles h2:hover a,
-.UnitFiles summary:focus a {
-  opacity: 1;
-}
-.UnitFiles-title {
-  border-bottom: 0.0625rem solid var(--gray-8);
-  font-size: 1.375rem;
-  margin: 0.5rem 0 0 0;
-  padding-bottom: 1rem;
-}
-.UnitFiles-title img {
-  height: 1.25rem;
-  margin: auto 1rem auto 0;
-  width: auto;
-}
 .UnitFiles-titleLink {
   position: relative;
 }
@@ -46,6 +27,25 @@
   position: relative;
   top: 0.125rem;
   width: 1rem;
+}
+.UnitFiles h2 a.UnitFiles-idLink,
+.UnitFiles summary a {
+  opacity: 0;
+}
+.UnitFiles h2:hover a,
+.UnitFiles summary:focus a {
+  opacity: 1;
+}
+.UnitFiles-title {
+  border-bottom: 0.0625rem solid var(--gray-8);
+  font-size: 1.375rem;
+  margin: 0.5rem 0 0 0;
+  padding-bottom: 1rem;
+}
+.UnitFiles-title img {
+  height: 1.25rem;
+  margin: auto 1rem auto 0;
+  width: auto;
 }
 .UnitFiles-fileList {
   column-count: 5;
