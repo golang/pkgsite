@@ -9,7 +9,9 @@
 {{define "unit_header"}}
   {{template "unit_header_breadcrumbs" .}}
   <div class="js-headerSentinel"></div>
-  <div class="UnitHeader-outer">
+  <div class="UnitHeader-outer
+      {{if .Unit.IsPackage}} UnitHeader-outer--package{{end}}
+      {{if eq .SelectedTab.Name ""}} UnitHeader-outer--main{{end}}">
     <header class="UnitHeader UnitHeader--full js-unitHeader" role="complementary"
       aria-label="{{if eq .PageType "std"}}module{{else}}{{.PageType}}{{end}} {{.Title}} information">
       <div class="Site-margin UnitHeader-inner">

@@ -16,13 +16,25 @@
 }
 .UnitHeader-outer {
   background-color: var(--white);
-  min-height: 13.0625rem;
+  min-height: 6.0625rem;
   position: sticky;
-  top: -9.5rem;
+  top: -2.5rem;
   z-index: 100;
 }
+.UnitHeader-outer--main {
+  min-height: 9.5625rem;
+  top: -6rem;
+}
+.UnitHeader-outer--main.UnitHeader-outer--package {
+  min-height: 13.0625rem;
+  top: -9.5rem;
+}
 @media only screen and (min-width: 64rem) {
-  .UnitHeader-outer {
+  .UnitHeader-outer--main {
+    min-height: 6.0625rem;
+    top: -2.5rem;
+  }
+  .UnitHeader-outer--main.UnitHeader-outer--package {
     min-height: 6.0625rem;
     top: -2.5rem;
   }
