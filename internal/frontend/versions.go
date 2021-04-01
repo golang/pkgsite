@@ -10,6 +10,7 @@ import (
 	"path"
 	"sort"
 	"strings"
+	"unicode"
 
 	"golang.org/x/mod/semver"
 	"golang.org/x/pkgsite/internal"
@@ -188,9 +189,9 @@ func buildVersionDetails(ctx context.Context,
 		}
 		if experiment.IsActive(ctx, internal.ExperimentRetractions) {
 			key.Deprecated = mi.Deprecated
-			key.DeprecationComment = mi.DeprecationComment
+			key.DeprecationComment = shortRationale(mi.DeprecationComment)
 			vs.Retracted = mi.Retracted
-			vs.RetractionRationale = mi.RetractionRationale
+			vs.RetractionRationale = shortRationale(mi.RetractionRationale)
 		}
 		if nts, ok := versionToNameToSymbol[mi.Version]; ok {
 			vs.Symbols = symbolsForVersion(linkify(mi), nts)
@@ -286,6 +287,32 @@ func shorten(s string, maxLen int) string {
 		return s[:maxLen]
 	}
 	return s
+}
+
+// shortRationale returns a rationale string that is safe
+// to print in a terminal. It returns hard-coded strings if the rationale
+// is empty, too long, or contains non-printable characters.
+func shortRationale(rationale string) string {
+	// Copied with slight modifications from
+	// https://go.googlesource.com/go/+/87c6fa4f473f178f7d931ddadd10c76444f8dc7b/src/cmd/go/internal/modload/modfile.go#208.
+	const maxRationaleBytes = 500
+	if i := strings.Index(rationale, "\n"); i >= 0 {
+		rationale = rationale[:i]
+	}
+	rationale = strings.TrimSpace(rationale)
+	if rationale == "" {
+		return ""
+	}
+	if len(rationale) > maxRationaleBytes {
+		return "(rationale omitted: too long)"
+	}
+	for _, r := range rationale {
+		if !unicode.IsGraphic(r) && !unicode.IsSpace(r) {
+			return "(rationale omitted: contains non-printable characters)"
+		}
+	}
+	// NOTE: the go.mod parser rejects invalid UTF-8, so we don't check that here.
+	return rationale
 }
 
 // pseudoVersionRev extracts the pseudo version base, excluding the timestamp.
