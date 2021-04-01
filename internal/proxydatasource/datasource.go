@@ -193,15 +193,17 @@ func (ds *DataSource) getUnit(ctx context.Context, fullPath, modulePath, version
 }
 
 // GetLatestInfo returns latest information for unitPath and modulePath.
-func (ds *DataSource) GetLatestInfo(ctx context.Context, unitPath, modulePath string) (latest internal.LatestInfo, err error) {
+func (ds *DataSource) GetLatestInfo(ctx context.Context, unitPath, modulePath string, latestUnitMeta *internal.UnitMeta) (latest internal.LatestInfo, err error) {
 	defer derrors.Wrap(&err, "GetLatestInfo(ctx, %q, %q)", unitPath, modulePath)
 
-	um, err := ds.GetUnitMeta(ctx, unitPath, internal.UnknownModulePath, internal.LatestVersion)
-	if err != nil {
-		return latest, err
+	if latestUnitMeta == nil {
+		latestUnitMeta, err = ds.GetUnitMeta(ctx, unitPath, internal.UnknownModulePath, internal.LatestVersion)
+		if err != nil {
+			return latest, err
+		}
 	}
-	latest.MinorVersion = um.Version
-	latest.MinorModulePath = um.ModulePath
+	latest.MinorVersion = latestUnitMeta.Version
+	latest.MinorModulePath = latestUnitMeta.ModulePath
 
 	latest.MajorModulePath, latest.MajorUnitPath, err = ds.getLatestMajorVersion(ctx, unitPath, modulePath)
 	if err != nil {

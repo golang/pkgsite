@@ -179,7 +179,7 @@ func (ds *DataSource) findModule(pkgPath string) (_ string, err error) {
 }
 
 // GetLatestInfo is not implemented.
-func (ds *DataSource) GetLatestInfo(ctx context.Context, unitPath, modulePath string) (internal.LatestInfo, error) {
+func (ds *DataSource) GetLatestInfo(ctx context.Context, unitPath, modulePath string, latestUnitMeta *internal.UnitMeta) (internal.LatestInfo, error) {
 	return internal.LatestInfo{}, nil
 }
 

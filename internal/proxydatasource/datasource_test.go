@@ -312,7 +312,7 @@ func TestGetLatestInfo(t *testing.T) {
 			wantPackagePath: "incompatible.com/bar/v3",
 		},
 	} {
-		gotLatest, err := ds.GetLatestInfo(ctx, test.fullPath, test.modulePath)
+		gotLatest, err := ds.GetLatestInfo(ctx, test.fullPath, test.modulePath, nil)
 		if err != nil {
 			if test.wantErr == nil {
 				t.Fatalf("got unexpected error %v", err)

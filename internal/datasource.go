@@ -24,7 +24,7 @@ type DataSource interface {
 
 	// GetLatestInfo gets information about the latest versions of a unit and module.
 	// See LatestInfo for documentation.
-	GetLatestInfo(ctx context.Context, unitPath, modulePath string) (LatestInfo, error)
+	GetLatestInfo(ctx context.Context, unitPath, modulePath string, latestUnitMeta *UnitMeta) (LatestInfo, error)
 }
 
 // LatestInfo holds information about the latest versions and paths.

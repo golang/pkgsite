@@ -159,7 +159,13 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 		return nil
 	}
 
-	latestInfo := s.GetLatestInfo(ctx, um.Path, um.ModulePath)
+	// If we've already called GetUnitMeta for an unknown module path and the latest version, pass
+	// it to GetLatestInfo to avoid a redundant call.
+	var latestUnitMeta *internal.UnitMeta
+	if info.modulePath == internal.UnknownModulePath && info.requestedVersion == internal.LatestVersion {
+		latestUnitMeta = um
+	}
+	latestInfo := s.GetLatestInfo(ctx, um.Path, um.ModulePath, latestUnitMeta)
 	var redirectPath string
 	redirectPath, err = cookie.Extract(w, r, cookie.AlternativeModuleFlash)
 	if err != nil {

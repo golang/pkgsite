@@ -159,20 +159,27 @@ func populateLatestInfos(ctx context.Context, db *DB, mis []*internal.ModuleInfo
 
 // GetLatestInfo returns the latest information about the unit in the module.
 // See internal.LatestInfo for documentation about the returned values.
-func (db *DB) GetLatestInfo(ctx context.Context, unitPath, modulePath string) (latest internal.LatestInfo, err error) {
+// If latestUnitMeta is non-nil, it is the result of GetUnitMeta(unitPath, internal.UnknownModulePath, internal.LatestVersion).
+// That can save a redundant call to GetUnitMeta here.
+func (db *DB) GetLatestInfo(ctx context.Context, unitPath, modulePath string, latestUnitMeta *internal.UnitMeta) (latest internal.LatestInfo, err error) {
 	defer derrors.WrapStack(&err, "DB.GetLatestInfo(ctx, %q, %q)", unitPath, modulePath)
 
 	group, gctx := errgroup.WithContext(ctx)
 
-	group.Go(func() error {
-		um, err := db.GetUnitMeta(gctx, unitPath, internal.UnknownModulePath, internal.LatestVersion)
-		if err != nil {
-			return err
-		}
-		latest.MinorVersion = um.Version
-		latest.MinorModulePath = um.ModulePath
-		return nil
-	})
+	if latestUnitMeta != nil {
+		latest.MinorVersion = latestUnitMeta.Version
+		latest.MinorModulePath = latestUnitMeta.ModulePath
+	} else {
+		group.Go(func() error {
+			um, err := db.GetUnitMeta(gctx, unitPath, internal.UnknownModulePath, internal.LatestVersion)
+			if err != nil {
+				return err
+			}
+			latest.MinorVersion = um.Version
+			latest.MinorModulePath = um.ModulePath
+			return nil
+		})
+	}
 	group.Go(func() (err error) {
 		latest.MajorModulePath, latest.MajorUnitPath, err = db.getLatestMajorVersion(gctx, unitPath, modulePath)
 		return err

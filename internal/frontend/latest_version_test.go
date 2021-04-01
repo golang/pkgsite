@@ -61,7 +61,7 @@ func TestLatestMinorVersion(t *testing.T) {
 	svr := &Server{getDataSource: func(context.Context) internal.DataSource { return testDB }}
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
-			got := svr.GetLatestInfo(ctx, tc.fullPath, tc.modulePath)
+			got := svr.GetLatestInfo(ctx, tc.fullPath, tc.modulePath, nil)
 			if got.MinorVersion != tc.wantMinorVersion {
 				t.Fatalf("got %q, want %q", tc.wantMinorVersion, got.MinorVersion)
 			}

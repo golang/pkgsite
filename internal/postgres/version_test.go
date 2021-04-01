@@ -386,7 +386,7 @@ func TestGetLatestInfo(t *testing.T) {
 		},
 	} {
 		t.Run(test.unit, func(t *testing.T) {
-			got, err := testDB.GetLatestInfo(ctx, test.unit, test.module)
+			got, err := testDB.GetLatestInfo(ctx, test.unit, test.module, nil)
 			if err != nil {
 				t.Fatal(err)
 			}
