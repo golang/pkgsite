@@ -159,7 +159,7 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 		return nil
 	}
 
-	latestInfo := s.GetLatestInfo(r.Context(), um.Path, um.ModulePath)
+	latestInfo := s.GetLatestInfo(ctx, um.Path, um.ModulePath)
 	var redirectPath string
 	redirectPath, err = cookie.Extract(w, r, cookie.AlternativeModuleFlash)
 	if err != nil {
