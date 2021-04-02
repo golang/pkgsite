@@ -7,44 +7,12 @@
 {{/* . is internal/frontend.UnitPage */}}
 
 {{define "unit_header"}}
-  {{template "unit_header_breadcrumbs" .}}
-  <div class="js-headerSentinel"></div>
-  <div class="UnitHeader-outer
-      {{if .Unit.IsPackage}} UnitHeader-outer--package{{end}}
-      {{if eq .SelectedTab.Name ""}} UnitHeader-outer--main{{end}}">
-    <header class="UnitHeader UnitHeader--full js-unitHeader" role="complementary"
-      aria-label="{{if eq .PageType "std"}}module{{else}}{{.PageType}}{{end}} {{.Title}} information">
-      <div class="Site-margin UnitHeader-inner">
-        {{template "unit_header_title" .}}
-        {{with .Breadcrumb}}
-          {{if .CopyData}}
-            <button class="CopyToClipboardButton js-copyToClipboard"
-                title="Copy path to clipboard.&#10;&#10;{{.CopyData}}"
-                data-to-copy="{{.CopyData}}"
-                tabindex="-1">
-              <img class="CopyToClipboardButton-image" src="/static/img/copy-click.svg" alt="">
-            </button>
-          {{end}}
-        {{end}}
-        <div style="flex-grow: 1;"></div>
-        <div class="UnitHeader-details">
-          {{if (eq .SelectedTab.Name "")}}
-            {{template "detail_item_version" .}}
-            {{template "detail_item_commit_time" .}}
-            {{template "detail_item_licenses" .}}
-            {{if .Unit.IsPackage}}
-              {{template "detail_item_imports" .}}
-              {{template "detail_item_importedby" .}}
-            {{end}}
-          {{else}}
-            {{template "detail_page_nav" .}}
-          {{end}}
-        </div>
-        {{template "detail_items_overflow" .}}
-      </div>
-    </header>
-  </div>
-  {{template "unit_header_banners" .}}
+  <header class="js-unitHeader UnitHeader{{if eq .SelectedTab.Name ""}} UnitHeader--full UnitHeader--main{{if .Unit.IsPackage}}--package{{end}}{{end}}" aria-label="{{if eq .PageType "std"}}module{{else}}{{.PageType}}{{end}} {{.Title}} information" role="complementary">
+    <div class="js-headerSentinel"></div>
+    {{template "unit_header_banners" .}}
+    {{template "unit_header_breadcrumbs" .}}
+    {{template "unit_header_content" .}}
+  </header>
 {{end}}
 
 {{define "unit_header_breadcrumbs"}}
@@ -67,6 +35,39 @@
           {{end}}
         </span>
       {{end}}
+    </div>
+  </div>
+{{end}}
+
+{{define "unit_header_content"}}
+  <div class="UnitHeader-content">
+    <div class="Site-margin">
+      {{template "unit_header_title" .}}
+      {{with .Breadcrumb}}
+        {{if .CopyData}}
+          <button class="CopyToClipboardButton js-copyToClipboard"
+              title="Copy path to clipboard.&#10;&#10;{{.CopyData}}"
+              data-to-copy="{{.CopyData}}"
+              tabindex="-1">
+            <img class="CopyToClipboardButton-image" src="/static/img/copy-click.svg" alt="">
+          </button>
+        {{end}}
+      {{end}}
+      <div style="flex-grow: 1;"></div>
+      <div class="UnitHeader-details">
+        {{if (eq .SelectedTab.Name "")}}
+          {{template "detail_item_version" .}}
+          {{template "detail_item_commit_time" .}}
+          {{template "detail_item_licenses" .}}
+          {{if .Unit.IsPackage}}
+            {{template "detail_item_imports" .}}
+            {{template "detail_item_importedby" .}}
+          {{end}}
+        {{else}}
+          {{template "detail_page_nav" .}}
+        {{end}}
+      </div>
+      {{template "detail_items_overflow" .}}
     </div>
   </div>
 {{end}}
@@ -191,48 +192,50 @@
 {{end}}
 
 {{define "unit_header_banners"}}
-  {{with .RedirectedFromPath}}
-    <div class="UnitHeader-banner UnitHeader-banner--redirected">
-      <span class="Site-margin UnitHeader-bannerContent">
-        <img height="19px" width="16px" class="UnitHeader-banner-icon" src="/static/img/pkg-icon-info_19x16.svg" alt="">
-        <span>
-        Redirected from <span data-test-id="redirected-banner-text">{{.}}</span>.
-        </span>
-      </span>
-    </div>
-  {{end}}
-  {{if (.Experiments.IsActive "retractions")}}
-    {{if .Unit.Deprecated}}
-      <div class="UnitHeader-banner UnitHeader-banner--deprecated">
+  <div class="UnitHeader-banners">
+    {{with .RedirectedFromPath}}
+      <div class="UnitHeader-banner UnitHeader-banner--redirected">
         <span class="Site-margin UnitHeader-bannerContent">
-          <strong>Deprecated</strong>
-          {{with .Unit.DeprecationComment}}
-            <strong>:</strong>&nbsp;{{.}}
-          {{end}}
+          <img height="19px" width="16px" class="UnitHeader-banner-icon" src="/static/img/pkg-icon-info_19x16.svg" alt="">
+          <span>
+          Redirected from <span data-test-id="redirected-banner-text">{{.}}</span>.
+          </span>
         </span>
       </div>
     {{end}}
-    {{if .Unit.Retracted}}
-      <div class="UnitHeader-banner UnitHeader-banner--retracted">
+    {{if (.Experiments.IsActive "retractions")}}
+      {{if .Unit.Deprecated}}
+        <div class="UnitHeader-banner UnitHeader-banner--deprecated">
+          <span class="Site-margin UnitHeader-bannerContent">
+            <strong>Deprecated</strong>
+            {{with .Unit.DeprecationComment}}
+              <strong>:</strong>&nbsp;{{.}}
+            {{end}}
+          </span>
+        </div>
+      {{end}}
+      {{if .Unit.Retracted}}
+        <div class="UnitHeader-banner UnitHeader-banner--retracted">
+          <span class="Site-margin UnitHeader-bannerContent">
+            <strong>Retracted</strong>
+              {{with .Unit.RetractionRationale}}
+              <strong>:</strong>&nbsp;{{.}}
+            {{end}}
+          </span>
+        </div>
+      {{end}}
+    {{end}}
+    {{if .LatestMajorVersion}}
+      <div class="UnitHeader-banner UnitHeader-banner--majorVersion" data-test-id="UnitHeader-majorVersionBanner">
         <span class="Site-margin UnitHeader-bannerContent">
-          <strong>Retracted</strong>
-            {{with .Unit.RetractionRationale}}
-            <strong>:</strong> {{.}}
-          {{end}}
+          <img height="19px" width="16px" class="UnitHeader-banner-icon" src="/static/img/pkg-icon-info_19x16.svg" alt="">
+          <span>
+            The highest tagged major version is <a href="/{{.LatestMajorVersionURL}}">{{.LatestMajorVersion}}</a>.
+          </span>
         </span>
       </div>
     {{end}}
-  {{end}}
-  {{if .LatestMajorVersion}}
-    <div class="UnitHeader-banner UnitHeader-banner--majorVersion" data-test-id="UnitHeader-majorVersionBanner">
-      <span class="Site-margin UnitHeader-bannerContent">
-        <img height="19px" width="16px" class="UnitHeader-banner-icon" src="/static/img/pkg-icon-info_19x16.svg" alt="">
-        <span>
-          The highest tagged major version is <a href="/{{.LatestMajorVersionURL}}">{{.LatestMajorVersion}}</a>.
-        </span>
-      </span>
-    </div>
-  {{end}}
+  </div>
 {{end}}
 
 {{define "severity_toggletip"}}

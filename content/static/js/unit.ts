@@ -87,6 +87,10 @@ document.querySelectorAll('.js-buildContextSelect').forEach(el => {
   });
 });
 
+/**
+ * Adds double click event listener to the header that will
+ * scroll the page back to the top.
+ */
 const unitHeader = document.querySelector('.js-unitHeader');
 unitHeader?.addEventListener('dblclick', e => {
   const target = e.target as HTMLElement;
@@ -98,6 +102,41 @@ unitHeader?.addEventListener('dblclick', e => {
     window.scrollTo({ top: 0 });
   }
 });
+
+/**
+ * Calculates dynamic heights values for header elements to support
+ * variable size sticky positioned elements in the header so that banners
+ * and breadcumbs may overflow to multiple lines.
+ */
+const header = document.querySelector<HTMLElement>('.UnitHeader');
+const breadcrumbs = header?.querySelector<HTMLElement>('.UnitHeader-breadcrumbs');
+const content = header?.querySelector<HTMLElement>('.UnitHeader-content');
+const calcSize = () => {
+  document.documentElement.style.removeProperty('--full-header-height');
+  document.documentElement.style.setProperty(
+    '--full-header-height',
+    `${(header?.getBoundingClientRect().height ?? 0) / 16}rem`
+  );
+  document.documentElement.style.setProperty('--banner-height', `0rem`);
+  document.documentElement.style.setProperty(
+    '--breadcrumbs-height',
+    `${(breadcrumbs?.getBoundingClientRect().height ?? 0) / 16}rem`
+  );
+  document.documentElement.style.setProperty(
+    '--content-height',
+    `${(content?.getBoundingClientRect().height ?? 0) / 16}rem`
+  );
+};
+calcSize();
+window.addEventListener('resize', function () {
+  calcSize();
+});
+
+/**
+ * Observer for header that applies classnames to transition
+ * header elements into their sticky position and back into the
+ * full size position.
+ */
 const observer = new IntersectionObserver(
   ([e]) => {
     if (e.intersectionRatio < 1) {

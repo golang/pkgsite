@@ -15,7 +15,7 @@
   flex-direction: column;
   max-height: 100%;
   position: sticky;
-  top: 4.5rem;
+  top: calc(var(--header-height) + var(--banner-height) + 1rem);
 }
 .UnitOutline-jumpTo {
   display: flex;

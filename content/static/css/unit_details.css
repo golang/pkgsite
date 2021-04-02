@@ -56,7 +56,7 @@
   height: calc(100vh - 7.8475rem);
   margin-top: 1.5rem;
   position: sticky;
-  top: 4.5rem;
+  top: calc(var(--header-height) + var(--banner-height) + 1rem);
 }
 @media only screen and (min-width: 64rem) {
   .UnitDetails-outline {

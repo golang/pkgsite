@@ -20,7 +20,7 @@
   height: 3rem;
   margin: 0 -1rem;
   position: sticky;
-  top: var(--header-height);
+  top: calc(var(--header-height, 0) + var(--banner-height, 0));
   transition: box-shadow 0.2s linear;
   z-index: 100;
 }
