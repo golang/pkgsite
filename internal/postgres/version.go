@@ -265,7 +265,7 @@ func (db *DB) unitExistsAtLatest(ctx context.Context, unitPath, modulePath strin
 	if err != nil {
 		return false, err
 	}
-	if lmv != nil {
+	if lmv != nil && lmv.GoodVersion != "" {
 		// If we have latest-version info, use it.
 		latestGoodVersion = lmv.GoodVersion
 	} else {
