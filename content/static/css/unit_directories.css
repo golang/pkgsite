@@ -134,6 +134,7 @@ th.UnitDirectories-toggleCell {
   bottom: 1rem;
   color: var(--turq-dark);
   cursor: pointer;
+  display: none;
   font-size: 0.875rem;
   position: absolute;
   right: 0;

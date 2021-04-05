@@ -19,17 +19,19 @@
  * ```
  */
 export class ExpandableRowsTableController {
-  private toggles: NodeListOf<HTMLTableRowElement>;
+  private rows: HTMLTableRowElement[];
+  private toggles: HTMLButtonElement[];
 
   /**
    * Create a table controller.
    * @param table - The table element to which the controller binds.
    */
-  constructor(private table: HTMLTableElement, private expandAll?: HTMLButtonElement | null) {
-    this.toggles = table.querySelectorAll<HTMLTableRowElement>('[data-aria-controls]');
+  constructor(private table: HTMLTableElement, private toggleAll?: HTMLButtonElement | null) {
+    this.rows = Array.from(table.querySelectorAll<HTMLTableRowElement>('[data-aria-controls]'));
+    this.toggles = Array.from(this.table.querySelectorAll('[aria-expanded]'));
     this.setAttributes();
     this.attachEventListeners();
-    this.updateVisibleItems();
+    this.update();
   }
 
   /**
@@ -46,12 +48,12 @@ export class ExpandableRowsTableController {
   }
 
   private attachEventListeners() {
-    this.toggles.forEach(t => {
+    this.rows.forEach(t => {
       t.addEventListener('click', e => {
         this.handleToggleClick(e);
       });
     });
-    this.expandAll?.addEventListener('click', () => {
+    this.toggleAll?.addEventListener('click', () => {
       this.expandAllItems();
     });
 
@@ -72,21 +74,29 @@ export class ExpandableRowsTableController {
     const isExpanded = target?.getAttribute('aria-expanded') === 'true';
     target?.setAttribute('aria-expanded', isExpanded ? 'false' : 'true');
     e.stopPropagation();
-    this.updateVisibleItems();
+    this.update();
   }
 
-  private expandAllItems() {
-    this.table
-      .querySelectorAll('[aria-expanded=false]')
-      .forEach(t => t.setAttribute('aria-expanded', 'true'));
+  private expandAllItems = () => {
+    this.toggles.map(t => t.setAttribute('aria-expanded', 'true'));
+    this.update();
+  };
+
+  private collapseAllItems = () => {
+    this.toggles.map(t => t.setAttribute('aria-expanded', 'false'));
+    this.update();
+  };
+
+  private update = () => {
     this.updateVisibleItems();
-  }
+    setTimeout(() => this.updateGlobalToggle());
+  };
 
   private updateVisibleItems() {
-    this.toggles.forEach(t => {
+    this.rows.map(t => {
       const isExpanded = t?.getAttribute('aria-expanded') === 'true';
       const rowIds = t?.getAttribute('aria-controls')?.trimEnd().split(' ');
-      rowIds?.forEach(id => {
+      rowIds?.map(id => {
         const target = document.getElementById(`${id}`);
         if (isExpanded) {
           target?.classList.add('visible');
@@ -97,5 +107,20 @@ export class ExpandableRowsTableController {
         }
       });
     });
+  }
+
+  private updateGlobalToggle() {
+    if (!this.toggleAll) return;
+    if (this.rows.some(t => t.hasAttribute('aria-expanded'))) {
+      this.toggleAll.style.display = 'block';
+    }
+    const someCollapsed = this.toggles.some(el => el.getAttribute('aria-expanded') === 'false');
+    if (someCollapsed) {
+      this.toggleAll.innerText = 'Expand all';
+      this.toggleAll.onclick = this.expandAllItems;
+    } else {
+      this.toggleAll.innerText = 'Collapse all';
+      this.toggleAll.onclick = this.collapseAllItems;
+    }
   }
 }

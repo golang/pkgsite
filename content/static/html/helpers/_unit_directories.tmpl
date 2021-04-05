@@ -10,22 +10,22 @@
       <img height="25px" width="20px" src="/static/img/pkg-icon-folder_20x16.svg" alt="">Directories
       <a class="UnitDirectories-idLink" href="#section-directories">¶</a>
     </h2>
-    <div class="UnitDirectories-expandButton js-expandAllDirectories">
-      <button>Expand all</button>
+    <div class="UnitDirectories-expandButton">
+      <button class="js-expandAllDirectories">Expand all</button>
     </div>
-      <table class="UnitDirectories-table UnitDirectories-table--tree js-expandableTable"
-             data-test-id="UnitDirectories-table">
-        <tr class="UnitDirectories-tableHeader UnitDirectories-tableHeader--tree">
-          <th>Path</th>
-          <th class="UnitDirectories-desktopSynopsis">Synopsis</th>
-        </tr>
-        {{range $dir := .Directories.External}}
-           {{template "directory" .}}
-        {{end}}
-        {{if .Directories.Internal}}
-           {{template "directory" .Directories.Internal}}
-        {{end}}
-      </table>
+    <table class="UnitDirectories-table UnitDirectories-table--tree js-expandableTable"
+          data-test-id="UnitDirectories-table">
+      <tr class="UnitDirectories-tableHeader UnitDirectories-tableHeader--tree">
+        <th>Path</th>
+        <th class="UnitDirectories-desktopSynopsis">Synopsis</th>
+      </tr>
+      {{range $dir := .Directories.External}}
+          {{template "directory" .}}
+      {{end}}
+      {{if .Directories.Internal}}
+          {{template "directory" .Directories.Internal}}
+      {{end}}
+    </table>
   </div>
 {{end}}
 
