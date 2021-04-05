@@ -219,7 +219,7 @@
 }
 .UnitHeader-banner--majorVersion,
 .UnitHeader-banner--redirected {
-  background-color: var(--gray-10);
+  background-color: var(--gray-9);
 }
 .UnitHeader-banner--deprecated,
 .UnitHeader-banner--retracted {
