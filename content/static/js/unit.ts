@@ -147,7 +147,7 @@ const observer = new IntersectionObserver(
       unitHeader?.classList.add('UnitHeader--full');
     }
   },
-  { threshold: 1.0, rootMargin: '-20px' }
+  { threshold: 1.0, rootMargin: '40px' }
 );
 
 const headerSentinel = document.querySelector('.js-headerSentinel');

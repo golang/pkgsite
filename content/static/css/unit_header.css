@@ -7,7 +7,7 @@
 .UnitHeader {
   min-height: calc(var(--full-header-height));
   position: sticky;
-  top: calc(var(--breadcrumbs-height) * -1);
+  top: calc(var(--full-header-height) * -1 + var(--banner-height) + var(--header-height));
   white-space: nowrap;
   z-index: 100;
 }
@@ -31,6 +31,8 @@
 .UnitHeader-content {
   background-color: var(--white);
   border-bottom: 0.0625rem solid var(--gray-8);
+  position: sticky;
+  top: var(--banner-height);
 }
 .UnitHeader-content > div {
   display: flex;
