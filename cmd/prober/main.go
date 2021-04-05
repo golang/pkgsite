@@ -163,6 +163,7 @@ func init() {
 
 var (
 	baseURL        string
+	authValue      string
 	client         *http.Client
 	metricExporter *stackdriver.Exporter
 	metricReader   *metricexport.Reader
@@ -205,6 +206,11 @@ func main() {
 		log.Fatal(ctx, "must set PROBER_BASE_URL")
 	}
 	log.Infof(ctx, "base URL %s", baseURL)
+
+	authValue = config.GetEnv("GO_DISCOVERY_PROBER_AUTH_VALUE", "")
+	if authValue == "" {
+		log.Warningf(ctx, "missing GO_DISCOVERY_PROBER_AUTH_VALUE; won't bypass cache or quota")
+	}
 
 	cfg, err := config.Init(ctx)
 	if err != nil {
@@ -333,8 +339,11 @@ func runProbe(ctx context.Context, p *Probe) *ProbeStatus {
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
 	req, err := http.NewRequest(http.MethodGet, url, nil)
-	if p.BypassCache {
-		req.Header.Set("x-go-discovery-bypass-cache", "yes")
+	if authValue != "" {
+		if p.BypassCache {
+			req.Header.Set(config.BypassCacheAuthHeader, authValue)
+		}
+		req.Header.Set(config.BypassQuotaAuthHeader, authValue)
 	}
 	if err != nil {
 		status.Text = fmt.Sprintf("FAILED making request: %v", err)
