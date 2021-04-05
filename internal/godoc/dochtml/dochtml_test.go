@@ -39,8 +39,9 @@ func TestRender(t *testing.T) {
 	fset, d := mustLoadPackage("everydecl")
 
 	rawDoc, err := Render(context.Background(), fset, d, RenderOptions{
-		FileLinkFunc:   func(string) string { return "file" },
-		SourceLinkFunc: func(ast.Node) string { return "src" },
+		FileLinkFunc:     func(string) string { return "file" },
+		SourceLinkFunc:   func(ast.Node) string { return "src" },
+		SinceVersionFunc: func(string) string { return "" },
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -199,7 +200,6 @@ func TestExampleRender(t *testing.T) {
 		<ul class="Documentation-toc"></ul>
 	</div><p>executable example
 </p>
-<p>Code:</p>
 
 <textarea class="Documentation-exampleCode" spellcheck="false">package main
 
@@ -217,14 +217,18 @@ func main() {
 }
 </textarea>
 
-<pre class="Documentation-exampleOutput">-1
+<pre><span class="Documentation-exampleOutputLabel">Output:</span>
+
+<span class="Documentation-exampleOutput">-1
 0
 1
-</pre>
+</span></pre>
 </div>
 <div class="Documentation-exampleButtonsContainer">
         <p class="Documentation-exampleError" role="alert" aria-atomic="true"></p>
-        <button class="Documentation-examplePlayButton" aria-label="Play Code">Play</button>
+        <button class="Documentation-exampleShareButton" aria-label="Share Code">Share</button>
+        <button class="Documentation-exampleFormatButton" aria-label="Format Code">Format</button>
+        <button class="Documentation-exampleRunButton" aria-label="Run Code">Run</button>
       </div></details>`,
 		},
 	} {
