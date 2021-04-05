@@ -78,8 +78,8 @@ func TestEndToEndProcessing(t *testing.T) {
 		{"example.com/single", "This is the README"},
 		{"example.com/single/pkg", "hello"},
 		{"example.com/single@v1.0.0/pkg", "hello"},
-		{"example.com/deprecated", "LegacyUnitHeader-deprecatedBanner"},
-		{"example.com/retractions@v1.1.0", "LegacyUnitHeader-retractedBanner"},
+		{"example.com/deprecated", "UnitHeader-banner--deprecated"},
+		{"example.com/retractions@v1.1.0", "UnitHeader-banner--retracted"},
 		{"example.com/deprecated?tab=versions", "Deprecated: use something else"},
 		{"example.com/retractions?tab=versions", "Retracted: bad"},
 	} {

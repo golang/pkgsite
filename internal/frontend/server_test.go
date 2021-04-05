@@ -1152,7 +1152,6 @@ func TestServer(t *testing.T) {
 			testCasesFunc: func() []serverTestCase {
 				return append(serverTestCases(), linksTestCases...)
 			},
-			experiments: []string{internal.ExperimentStickyHeader},
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
@@ -1390,7 +1389,7 @@ func TestServer404Redirect(t *testing.T) {
 				r.AddCookie(c)
 				w = httptest.NewRecorder()
 				handler.ServeHTTP(w, r)
-				err = checkBody(w.Result().Body, in(".LegacyUnitHeader-redirectedFromBanner", hasText(val)))
+				err = checkBody(w.Result().Body, in(`[data-test-id="redirected-banner-text"]`, hasText(val)))
 				if err != nil {
 					t.Fatal(err)
 				}
@@ -1399,7 +1398,7 @@ func TestServer404Redirect(t *testing.T) {
 				r = httptest.NewRequest("GET", loc, nil)
 				w = httptest.NewRecorder()
 				handler.ServeHTTP(w, r)
-				err = checkBody(w.Result().Body, notIn(".LegacyUnitHeader-redirectedFromBanner"))
+				err = checkBody(w.Result().Body, notIn(`[data-test-id="redirected-banner-text"]`))
 				if err != nil {
 					t.Fatal(err)
 				}
