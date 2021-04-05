@@ -1148,7 +1148,7 @@ func TestServer(t *testing.T) {
 		experiments   []string
 	}{
 		{
-			name: "sticky header",
+			name: "no experiments",
 			testCasesFunc: func() []serverTestCase {
 				return append(serverTestCases(), linksTestCases...)
 			},
