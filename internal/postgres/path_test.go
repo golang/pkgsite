@@ -44,6 +44,12 @@ func TestGetLatestMajorPathForV1Path(t *testing.T) {
 			[]string{"m.com/v4@v4.0.0"},
 			"m.com/v4", 4,
 		},
+		{
+			"gopkg.in",
+			"gopkg.in/yaml",
+			[]string{"gopkg.in/yaml.v1@v1.0.0", "gopkg.in/yaml.v2@v2.0.0"},
+			"gopkg.in/yaml.v2", 2,
+		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			testDB, release := acquire(t)
@@ -75,6 +81,26 @@ func TestGetLatestMajorPathForV1Path(t *testing.T) {
 				check(test.v1ModulePath+"/"+suffix, test.wantModulePath+"/"+suffix)
 			})
 		})
+	}
+}
+
+func TestModulePathMajorVersion(t *testing.T) {
+	for _, test := range []struct {
+		in   string
+		want int
+	}{
+		{"m.com", 1},
+		{"m.com/v123", 123},
+		{"gopkg.in/m.v1", 1},
+		{"gopkg.in/m.v35", 35},
+	} {
+		got, err := modulePathMajorVersion(test.in)
+		if err != nil {
+			t.Fatalf("%s: %v", test.in, err)
+		}
+		if got != test.want {
+			t.Errorf("%s: got %d, want %d", test.in, got, test.want)
+		}
 	}
 }
 
