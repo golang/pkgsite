@@ -36,15 +36,7 @@ func (db *DB) CopyUpsert(ctx context.Context, table string, columns []string, sr
 		return errors.New("not in a transaction")
 	}
 
-	return db.conn.Raw(func(c interface{}) error {
-		if w, ok := c.(*wrapConn); ok {
-			c = w.underlying
-		}
-		stdConn, ok := c.(*stdlib.Conn)
-		if !ok {
-			return fmt.Errorf("DB driver is not pgx or wrapper; conn type is %T", c)
-		}
-		conn := stdConn.Conn()
+	return db.WithPGXConn(func(conn *pgx.Conn) error {
 		tempTable := fmt.Sprintf("__%s_copy", table)
 		stmt := fmt.Sprintf(`
 			DROP TABLE IF EXISTS %s;
@@ -78,6 +70,22 @@ func (db *DB) CopyUpsert(ctx context.Context, table string, columns []string, sr
 			log.Debugf(ctx, "CopyUpsert(%q): upserted %d rows in %s", table, ctag.RowsAffected(), time.Since(start))
 		}
 		return nil
+	})
+}
+
+func (db *DB) WithPGXConn(f func(conn *pgx.Conn) error) error {
+	if !db.InTransaction() {
+		return errors.New("not in a transaction")
+	}
+	return db.conn.Raw(func(c interface{}) error {
+		if w, ok := c.(*wrapConn); ok {
+			c = w.underlying
+		}
+		stdConn, ok := c.(*stdlib.Conn)
+		if !ok {
+			return fmt.Errorf("DB driver is not pgx or wrapper; conn type is %T", c)
+		}
+		return f(stdConn.Conn())
 	})
 }
 
