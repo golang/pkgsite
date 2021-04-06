@@ -513,11 +513,13 @@ func upsertLatestModuleVersions(ctx context.Context, tx *database.DB, modulePath
 	var (
 		raw, cooked, good string
 		goModBytes        = []byte{} // not nil, a zero-length slice
+		deprecated        bool
 	)
 	if lmv != nil {
 		raw = lmv.RawVersion
 		cooked = lmv.CookedVersion
 		good = lmv.GoodVersion
+		deprecated = lmv.Deprecated
 		// Convert the go.mod file into bytes.
 		goModBytes, err = lmv.GoModFile.Format()
 		if err != nil {
@@ -527,21 +529,25 @@ func upsertLatestModuleVersions(ctx context.Context, tx *database.DB, modulePath
 	_, err = tx.Exec(ctx, `
 		INSERT INTO latest_module_versions (
 			module_path_id,
+			series_path,
 			raw_version,
 			cooked_version,
 			good_version,
+			deprecated,
 			raw_go_mod_bytes,
 			status
-		) VALUES ($1, $2, $3, $4, $5, $6)
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 		ON CONFLICT (module_path_id)
 		DO UPDATE SET
+			series_path=excluded.series_path,
 			raw_version=excluded.raw_version,
 			cooked_version=excluded.cooked_version,
 			good_version=excluded.good_version,
+			deprecated=excluded.deprecated,
 			raw_go_mod_bytes=excluded.raw_go_mod_bytes,
 			status=excluded.status
 		`,
-		id, raw, cooked, good, goModBytes, status)
+		id, internal.SeriesPathForModule(modulePath), raw, cooked, good, deprecated, goModBytes, status)
 	return err
 }
 

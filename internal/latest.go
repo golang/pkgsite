@@ -21,7 +21,7 @@ type LatestModuleVersions struct {
 	CookedVersion      string        // considering retractions
 	GoodVersion        string        // successfully processed
 	GoModFile          *modfile.File // of raw
-	deprecated         bool
+	Deprecated         bool
 	deprecationComment string
 }
 
@@ -38,7 +38,7 @@ func NewLatestModuleVersions(modulePath, raw, cooked, good string, modBytes []by
 		CookedVersion:      cooked,
 		GoodVersion:        good,
 		GoModFile:          modFile,
-		deprecated:         dep,
+		Deprecated:         dep,
 		deprecationComment: comment,
 	}, nil
 }
@@ -64,7 +64,7 @@ func isDeprecated(mf *modfile.File) (bool, string) {
 
 // PopulateModuleInfo uses the LatestModuleVersions to populate fields of the given module.
 func (li *LatestModuleVersions) PopulateModuleInfo(mi *ModuleInfo) {
-	mi.Deprecated = li.deprecated
+	mi.Deprecated = li.Deprecated
 	mi.DeprecationComment = li.deprecationComment
 	mi.Retracted, mi.RetractionRationale = isRetracted(li.GoModFile, mi.Version)
 }
