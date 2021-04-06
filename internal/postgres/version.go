@@ -255,6 +255,79 @@ func (db *DB) getLatestMajorVersion(ctx context.Context, fullPath, modulePath st
 	}
 }
 
+//lint:ignore U1000 We're going to replace getLatestMajorVersion with this once the new DB columns are populated.
+func (db *DB) getLatestMajorVersion2(ctx context.Context, fullPath, modulePath string) (modPath, pkgPath string, err error) {
+	defer derrors.WrapStack(&err, "DB.getLatestMajorVersion2(%q)", modulePath)
+
+	// Collect all the non-deprecated module paths for the series that have at
+	// least one good version.
+	seriesPath := internal.SeriesPathForModule(modulePath)
+	q, args, err := squirrel.Select("p.path", "l.good_version").
+		From("latest_module_versions l").
+		Join("paths p ON p.id = l.module_path_id").
+		Where(squirrel.Eq{"l.series_path": seriesPath}).
+		Where("NOT l.deprecated").
+		Where(squirrel.NotEq{"l.good_version": ""}).
+		PlaceholderFormat(squirrel.Dollar).
+		ToSql()
+	if err != nil {
+		return "", "", err
+	}
+
+	type pathver struct {
+		path, version string
+	}
+
+	var pathvers []pathver
+	err = db.db.RunQuery(ctx, q, func(rows *sql.Rows) error {
+		var pv pathver
+		if err := rows.Scan(&pv.path, &pv.version); err != nil {
+			return err
+		}
+		pathvers = append(pathvers, pv)
+		return nil
+	}, args...)
+	if err != nil {
+		return "", "", err
+	}
+
+	// Find the highest tagged version.
+	var max pathver
+	for _, pv := range pathvers {
+		if version.IsPseudo(pv.version) {
+			continue
+		}
+		if max.path == "" || version.Later(pv.version, max.version) {
+			max = pv
+		}
+	}
+
+	// No highest tagged version: return empty strings.
+	if max.path == "" {
+		return "", "", nil
+	}
+
+	// Find the unit path at the max-version module path.
+	v1Path := internal.V1Path(fullPath, modulePath)
+	row := db.db.QueryRow(ctx, `
+		SELECT p.path
+		FROM units u
+		INNER JOIN modules m ON m.id = u.module_id
+		INNER JOIN paths p ON p.id = u.path_id
+		INNER JOIN paths p2 ON p2.id = u.v1path_id
+		WHERE p2.path = $1 AND m.module_path = $2 AND m.version = $3`,
+		v1Path, max.path, max.version)
+	var path string
+	switch err := row.Scan(&path); err {
+	case nil:
+		return max.path, path, nil
+	case sql.ErrNoRows:
+		return max.path, max.path, nil
+	default:
+		return "", "", err
+	}
+}
+
 // unitExistsAtLatest reports whether unitPath exists at the latest version of modulePath.
 func (db *DB) unitExistsAtLatest(ctx context.Context, unitPath, modulePath string) (unitExists bool, err error) {
 	defer derrors.WrapStack(&err, "DB.unitExistsAtLatest(ctx, %q, %q)", unitPath, modulePath)
