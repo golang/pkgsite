@@ -45,6 +45,8 @@
   }
 }
 .Version-major {
+  align-items: baseline;
+  display: flex;
   margin-bottom: 1rem;
   min-width: 4rem;
 }
@@ -83,26 +85,31 @@
   color: var(--turq-dark);
 }
 .Version-commitTime {
+  align-items: center;
+  display: flex;
   margin-left: 1rem;
   white-space: nowrap;
 }
 .Version-details {
   line-height: 1.25rem;
-  margin-left: -0.5rem;
 }
 .Version-summary {
   align-items: center;
   cursor: pointer;
-  display: flex;
   line-height: 2.25rem;
   padding-right: 0.5rem;
   white-space: nowrap;
   width: min-content;
 }
-details.Version-details img {
-  position: relative;
-  top: 0.0625rem;
-}
-details.Version-details[open] img {
-  transform: rotate(90deg);
+
+.Version-badge {
+  border: 0.0625rem solid var(--gray-4);
+  border-radius: 0.125rem;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  line-height: 1rem;
+  margin-left: 0.5rem;
+  margin-top: 0.125rem;
+  padding: 0 0.35rem;
+  text-align: center;
 }

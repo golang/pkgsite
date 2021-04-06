@@ -37,19 +37,20 @@
       {{range $i, $v := $major.Versions}}
         <div class="Version-major">
           {{if and (eq $i 0) (not $major.Incompatible)}}
-            <strong>{{$major.Major}}</strong>
-            <div>{{if $major.Deprecated}}(Deprecated{{with $major.DeprecationComment}}: {{.}}{{end}}){{end}}</div>
+            <strong>{{$major.Major}}</strong>       
+            {{if true}}<span class="Version-badge">deprecated</span>{{end}}
           {{end}}
         </div>
         <div class="Version-tag">
           <a class="js-versionLink" href="{{$v.Link}}">{{$v.Version}}</a>
-          <div>{{if $v.Retracted}}(Retracted{{with $v.RetractionRationale}}: {{.}}{{end}}){{end}}</div>
         </div>
         <div class="Version-dot{{if and $v.IsMinor (not $major.Incompatible)}} Version-dot--minor{{end}}"></div>
         {{if and $v.Symbols (not $major.Incompatible)}}
           {{template "symbol_history" $v}}
         {{else}}
-          <div class="Version-commitTime">{{$v.CommitTime}}</div>
+          <div class="Version-commitTime">
+            {{$v.CommitTime}}{{if $v.Retracted}}<span class="Version-badge">retracted</span>{{end}}
+          </div>
         {{end}}
       {{end}}
     {{end}}
@@ -59,8 +60,7 @@
 {{define "symbol_history"}}
   <details class="Version-details js-versionDetails">
     <summary class="Version-summary">
-      <img alt="" height="24" width="24" src="/static/img/pkg-icon-arrowRight_24x24.svg">
-      {{.CommitTime}}
+      {{.CommitTime}}{{if .Retracted}}<span class="Version-badge">retracted</span>{{end}}
     </summary>
     <div class="Versions-symbols">
       <div class="Versions-symbolsHeader">Changes in this version</div>
