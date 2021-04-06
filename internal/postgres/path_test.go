@@ -9,8 +9,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"strconv"
-	"strings"
 	"testing"
 
 	"golang.org/x/pkgsite/internal/database"
@@ -21,80 +19,60 @@ func TestGetLatestMajorPathForV1Path(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
 
-	checkLatest := func(t *testing.T, db *DB, versions []string, v1path string, version, suffix string) {
-		t.Helper()
-		gotPath, gotVer, err := db.GetLatestMajorPathForV1Path(ctx, v1path)
-		if err != nil {
-			t.Fatal(err)
-		}
-		want := sample.ModulePath
-		if suffix != "" {
-			want = want + "/" + suffix
-		}
-		var wantVer int
-		if version == "" {
-			wantVer = 1
-		} else {
-			wantVer, err = strconv.Atoi(strings.TrimPrefix(version, "v"))
-			if err != nil {
-				t.Fatal(err)
-			}
-		}
-		if gotPath != want || gotVer != wantVer {
-			t.Errorf("GetLatestMajorPathForV1Path(%q) = %q, %d, want %q, %d", v1path, gotPath, gotVer, want, wantVer)
-		}
-	}
-
 	for _, test := range []struct {
-		name, want string
-		versions   []string
+		name           string
+		v1ModulePath   string
+		modvers        []string
+		wantModulePath string
+		wantVersion    int
 	}{
 		{
 			"want highest major version",
-			"v11",
-			[]string{"", "v2", "v11"},
+			"m.com",
+			[]string{"m.com@v1.0.0", "m.com/v2@v2.0.0", "m.com/v11@v11.0.0"},
+			"m.com/v11", 11,
 		},
 		{
 			"only v1 version",
-			"",
-			[]string{""},
+			"m.com",
+			[]string{"m.com@v1.0.0"},
+			"m.com", 1,
 		},
 		{
 			"no v1 version",
-			"v4",
-			[]string{"v4"},
+			"m.com",
+			[]string{"m.com/v4@v4.0.0"},
+			"m.com/v4", 4,
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			testDB, release := acquire(t)
 			defer release()
 
-			suffix := "a/b/c"
+			const suffix = "a/b/c"
 
-			for _, v := range test.versions {
-				modpath := sample.ModulePath
-				if v != "" {
-					modpath = modpath + "/" + v
+			check := func(v1path, wantPath string) {
+				t.Helper()
+				gotPath, gotVer, err := testDB.GetLatestMajorPathForV1Path(ctx, v1path)
+				if err != nil {
+					t.Fatal(err)
 				}
-				if v == "" {
-					v = sample.VersionString
-				} else {
-					v = v + ".0.0"
+				if gotPath != wantPath || gotVer != test.wantVersion {
+					t.Errorf("GetLatestMajorPathForV1Path(%q) = %q, %d, want %q, %d",
+						v1path, gotPath, gotVer, wantPath, test.wantVersion)
 				}
-				m := sample.Module(modpath, v, suffix)
+			}
+
+			for _, mv := range test.modvers {
+				mod, ver, _ := parseModuleVersionPackage(mv)
+				m := sample.Module(mod, ver, suffix)
 				MustInsertModule(ctx, t, testDB, m)
 			}
 			t.Run("module", func(t *testing.T) {
-				v1path := sample.ModulePath
-				checkLatest(t, testDB, test.versions, v1path, test.want, test.want)
+				check(test.v1ModulePath, test.wantModulePath)
 			})
 			t.Run("package", func(t *testing.T) {
-				want := test.want
-				if test.want != "" {
-					want += "/"
-				}
-				v1path := sample.ModulePath + "/" + suffix
-				checkLatest(t, testDB, test.versions, v1path, test.want, want+suffix)
+				check(test.v1ModulePath+"/"+suffix, test.wantModulePath+"/"+suffix)
 			})
 		})
 	}

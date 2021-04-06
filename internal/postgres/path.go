@@ -19,7 +19,7 @@ import (
 )
 
 // GetLatestMajorPathForV1Path reports the latest unit path in the series for
-// the given v1path.
+// the given v1path. It also returns the major version for that path.
 func (db *DB) GetLatestMajorPathForV1Path(ctx context.Context, v1path string) (_ string, _ int, err error) {
 	defer derrors.WrapStack(&err, "DB.GetLatestPathForV1Path(ctx, %q)", v1path)
 	q := `
