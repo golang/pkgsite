@@ -62,7 +62,9 @@ func (db *DB) CopyUpsert(ctx context.Context, table string, columns []string, sr
 		if err != nil {
 			return fmt.Errorf("CopyFrom: %w", err)
 		}
-		log.Debugf(ctx, "CopyUpsert(%q): copied %d rows in %s", table, n, time.Since(start))
+		if !QueryLoggingDisabled {
+			log.Debugf(ctx, "CopyUpsert(%q): copied %d rows in %s", table, n, time.Since(start))
+		}
 		conflictAction := buildUpsertConflictAction(columns, conflictColumns)
 		cols := strings.Join(columns, ", ")
 		query := fmt.Sprintf("INSERT INTO %s (%s) SELECT %s FROM %s %s", table, cols, cols, tempTable, conflictAction)
@@ -72,7 +74,9 @@ func (db *DB) CopyUpsert(ctx context.Context, table string, columns []string, sr
 		if err != nil {
 			return err
 		}
-		log.Debugf(ctx, "CopyUpsert(%q): upserted %d rows in %s", table, ctag.RowsAffected(), time.Since(start))
+		if !QueryLoggingDisabled {
+			log.Debugf(ctx, "CopyUpsert(%q): upserted %d rows in %s", table, ctag.RowsAffected(), time.Since(start))
+		}
 		return nil
 	})
 }
