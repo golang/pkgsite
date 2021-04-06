@@ -115,10 +115,13 @@
 .UnitHeader--full .UnitHeader-details {
   display: flex;
 }
-@media only screen and (min-width: 64rem) {
+@media only screen and (min-width: 52rem) {
   .UnitHeader-details {
     align-items: center;
     flex-direction: row;
+  }
+  .UnitHeader--full .UnitHeader-details {
+    flex-wrap: wrap;
   }
 }
 @media only screen and (min-width: 70rem) {
@@ -133,7 +136,7 @@
   line-height: 1.75rem;
 }
 
-@media only screen and (min-width: 64rem) {
+@media only screen and (min-width: 52rem) {
   .UnitHeader-detailItem:not(:last-of-type)::after {
     content: '|';
     padding: 1rem;

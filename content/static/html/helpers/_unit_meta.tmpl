@@ -5,30 +5,42 @@
 -->
 
 {{define "unit_meta"}}
-  {{template "unit_meta_details" .}}
   <div class="UnitMeta">
-    <div class="UnitMeta-header">Repository</div>
-    {{if .Details.RepositoryURL}}
-      <a href="{{.Details.RepositoryURL}}" title="{{.Details.RepositoryURL}}" target="_blank" rel="noopener">
-        {{.Details.RepositoryURL}}
-      </a>
-    {{else}}
-      Repository URL not available.
-    {{end}}
+    <h2 class="UnitMeta-detailsTitle">Details</h2>
+    <div class="UnitMeta-details">
+      {{template "unit_meta_details" .}}
+    </div>
+    <div class="UnitMeta-learn">
+      <a href="/about#best-practices-h2">Learn more</a>
+    </div>
+    <h2 class="UnitMeta-repoTitle">Repository</h2>
+    <div class="UnitMeta-repo">
+      {{if .Details.RepositoryURL}}
+        <a href="{{.Details.RepositoryURL}}" title="{{.Details.RepositoryURL}}" target="_blank" rel="noopener">
+          {{.Details.RepositoryURL}}
+        </a>
+      {{else}}
+        Repository URL not available.
+      {{end}}
+    </div>
     {{if or .Details.ReadmeLinks .Details.DocLinks .Details.ModuleReadmeLinks}}
-      <div class="UnitMeta-header">Links</div>
+      <h2 class="UnitMeta-linksTitle">Links</h2>
     {{end}}
-    {{template "unit_meta_links" .Details.ReadmeLinks}}
-    {{template "unit_meta_links" .Details.DocLinks}}
-    {{template "unit_meta_links" .Details.ModuleReadmeLinks}}
+    <div class="UnitMeta-links">
+      <ul>
+        {{template "unit_meta_links" .Details.ReadmeLinks}}
+        {{template "unit_meta_links" .Details.DocLinks}}
+        {{template "unit_meta_links" .Details.ModuleReadmeLinks}}
+      </ul>
+    </div>
   </div>
 {{end}}
 
 {{define "unit_meta_links"}}
   {{range .}}
-    <div class="UnitMeta-repo">
+    <li>
       <a href="{{.Href}}" title="{{.Href}}" target="_blank" rel="noopener">{{.Body}}</a>
-    </div>
+    </li>
   {{end}}
 {{end}}
 
@@ -52,29 +64,26 @@
 {{end}}
 
 {{define "unit_meta_details"}}
-  <div class="UnitMetaDetails">
-    <div class="UnitMetaDetails-header">Details<a href="/about#best-practices-h2">Learn more</a></div>
-    <ul>
-      <li>
-        {{template "unit_meta_details_check" .Unit.HasGoMod}}
-        Valid <a href="{{.Details.ModFileURL}}" target="_blank">go.mod</a> file
-        {{template "unit_meta_details_toggletip" "The Go module system was introduced in Go 1.11 and is the official dependency management solution for Go."}}
-      </li>
-      <li>
-        {{template "unit_meta_details_check" .Unit.IsRedistributable}}
-        Redistributable license
-        {{template "unit_meta_details_toggletip" "Redistributable licenses place minimal restrictions on how software can be used, modified, and redistributed."}}
-      </li>
-      <li>
-        {{template "unit_meta_details_check" .Details.IsTaggedVersion}}
-        Tagged version
-        {{template "unit_meta_details_toggletip" "Modules with tagged versions give importers more predictable builds."}}
-      </li>
-      <li>
-        {{template "unit_meta_details_check"  .Details.IsStableVersion}}
-        Stable version
-        {{template "unit_meta_details_toggletip" "When a project reaches major version v1 it is considered stable."}}
-      </li>
-    </ul>
-  </div>
+  <ul>
+    <li>
+      {{template "unit_meta_details_check" .Unit.HasGoMod}}
+      Valid <a href="{{.Details.ModFileURL}}" target="_blank">go.mod</a> file
+      {{template "unit_meta_details_toggletip" "The Go module system was introduced in Go 1.11 and is the official dependency management solution for Go."}}
+    </li>
+    <li>
+      {{template "unit_meta_details_check" .Unit.IsRedistributable}}
+      Redistributable license
+      {{template "unit_meta_details_toggletip" "Redistributable licenses place minimal restrictions on how software can be used, modified, and redistributed."}}
+    </li>
+    <li>
+      {{template "unit_meta_details_check" .Details.IsTaggedVersion}}
+      Tagged version
+      {{template "unit_meta_details_toggletip" "Modules with tagged versions give importers more predictable builds."}}
+    </li>
+    <li>
+      {{template "unit_meta_details_check"  .Details.IsStableVersion}}
+      Stable version
+      {{template "unit_meta_details_toggletip" "When a project reaches major version v1 it is considered stable."}}
+    </li>
+  </ul>
 {{end}}
