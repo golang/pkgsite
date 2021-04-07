@@ -1076,10 +1076,10 @@ func serverTestCases() []serverTestCase {
 	}
 }
 
-func checkLink(n int, title, url string) htmlcheck.Checker {
+func checkLink(title, url string) htmlcheck.Checker {
 	// The first div under .UnitMeta is "Repository", the second is "Links",
 	// and each subsequent div contains a <a> tag with a custom link.
-	return in(fmt.Sprintf("div:nth-of-type(%d) > a", n+2), href(url), hasText(title))
+	return in(fmt.Sprintf(`[data-test-id="meta-link-%s"]`, title), href(url), hasText(title))
 }
 
 var linksTestCases = []serverTestCase{
@@ -1087,36 +1087,36 @@ var linksTestCases = []serverTestCase{
 		name:           "module links",
 		urlPath:        "/github.com/links/mod",
 		wantStatusCode: http.StatusOK,
-		want: in(".UnitMeta",
+		want: in("",
 			// Module readme links.
-			checkLink(1, "title1", "http://url1"),
-			checkLink(2, "title2", "about:invalid#zGoSafez"),
+			checkLink("title1", "http://url1"),
+			checkLink("title2", "about:invalid#zGoSafez"),
 		),
 	},
 	{
 		name:           "no_readme package links",
 		urlPath:        "/github.com/links/mod/no_readme",
 		wantStatusCode: http.StatusOK,
-		want: in(".UnitMeta",
+		want: in("",
 			// Package doc links are first.
-			checkLink(1, "pkg.go.dev", "https://pkg.go.dev"),
+			checkLink("pkg.go.dev", "https://pkg.go.dev"),
 			// Then module readmes.
-			checkLink(2, "title1", "http://url1"),
-			checkLink(3, "title2", "about:invalid#zGoSafez"),
+			checkLink("title1", "http://url1"),
+			checkLink("title2", "about:invalid#zGoSafez"),
 		),
 	},
 	{
 		name:           "has_readme package links",
 		urlPath:        "/github.com/links/mod/has_readme",
 		wantStatusCode: http.StatusOK,
-		want: in(".UnitMeta",
+		want: in("",
 			// Package readme links are first.
-			checkLink(1, "pkg title", "http://url2"),
+			checkLink("pkg title", "http://url2"),
 			// Package doc links are second.
-			checkLink(2, "pkg.go.dev", "https://pkg.go.dev"),
+			checkLink("pkg.go.dev", "https://pkg.go.dev"),
 			// Module readme links are third.
-			checkLink(3, "title1", "http://url1"),
-			checkLink(4, "title2", "about:invalid#zGoSafez"),
+			checkLink("title1", "http://url1"),
+			checkLink("title2", "about:invalid#zGoSafez"),
 		),
 	},
 	{

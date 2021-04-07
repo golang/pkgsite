@@ -39,7 +39,8 @@
 {{define "unit_meta_links"}}
   {{range .}}
     <li>
-      <a href="{{.Href}}" title="{{.Href}}" target="_blank" rel="noopener">{{.Body}}</a>
+      <a href="{{.Href}}" title="{{.Href}}" target="_blank" rel="noopener"
+          data-test-id="meta-link-{{.Body}}">{{.Body}}</a>
     </li>
   {{end}}
 {{end}}
