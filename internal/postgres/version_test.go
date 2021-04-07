@@ -415,21 +415,6 @@ func TestRawIsMoreRecent(t *testing.T) {
 	}
 }
 
-func addLatest(ctx context.Context, t *testing.T, db *DB, modulePath, version, modFile string) *internal.LatestModuleVersions {
-	if modFile == "" {
-		modFile = "module " + modulePath
-	}
-	info, err := internal.NewLatestModuleVersions(modulePath, version, version, "", []byte(modFile))
-	if err != nil {
-		t.Fatal(err)
-	}
-	lmv, err := db.UpdateLatestModuleVersions(ctx, info)
-	if err != nil {
-		t.Fatal(err)
-	}
-	return lmv
-}
-
 func TestGetLatestGoodVersion(t *testing.T) {
 	t.Parallel()
 	testDB, release := acquire(t)

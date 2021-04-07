@@ -203,11 +203,33 @@ func MustInsertModule(ctx context.Context, t *testing.T, db *DB, m *internal.Mod
 	MustInsertModuleLMV(ctx, t, db, m, nil)
 }
 
+// MustInsertModule inserts m into db, calling t.Fatal on error.
+// It also updates the latest-version information for m.
+func MustInsertModuleLatest(ctx context.Context, t *testing.T, db *DB, m *internal.Module) {
+	lmv := addLatest(ctx, t, db, m.ModulePath, m.Version, "")
+	MustInsertModuleLMV(ctx, t, db, m, lmv)
+}
+
 func MustInsertModuleLMV(ctx context.Context, t *testing.T, db *DB, m *internal.Module, lmv *internal.LatestModuleVersions) {
 	t.Helper()
 	if _, err := db.InsertModule(ctx, m, lmv); err != nil {
 		t.Fatal(err)
 	}
+}
+
+func addLatest(ctx context.Context, t *testing.T, db *DB, modulePath, version, modFile string) *internal.LatestModuleVersions {
+	if modFile == "" {
+		modFile = "module " + modulePath
+	}
+	info, err := internal.NewLatestModuleVersions(modulePath, version, version, "", []byte(modFile))
+	if err != nil {
+		t.Fatal(err)
+	}
+	lmv, err := db.UpdateLatestModuleVersions(ctx, info)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return lmv
 }
 
 // InsertSampleDirectory tree inserts a set of packages for testing
