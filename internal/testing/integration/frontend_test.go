@@ -103,7 +103,7 @@ func fetchAndInsertModule(ctx context.Context, t *testing.T, tm *proxy.Module, p
 	if res.Error != nil {
 		t.Fatal(res.Error)
 	}
-	postgres.MustInsertModule(ctx, t, testDB, res.Module)
+	postgres.MustInsertModuleLatest(ctx, t, testDB, res.Module)
 }
 
 func validateResponse(t *testing.T, method, testURL string, wantCode int, wantHTML htmlcheck.Checker) {

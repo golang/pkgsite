@@ -160,7 +160,7 @@ func TestPreviousFetchStatusAndResponse_PathExistsAtNonV1(t *testing.T) {
 	ctx := context.Background()
 	defer postgres.ResetTestDB(testDB, t)
 
-	postgres.MustInsertModule(ctx, t, testDB, sample.Module(sample.ModulePath+"/v4", "v4.0.0", "foo"))
+	postgres.MustInsertModuleLatest(ctx, t, testDB, sample.Module(sample.ModulePath+"/v4", "v4.0.0", "foo"))
 
 	for _, mod := range []struct {
 		path, version string

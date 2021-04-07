@@ -1248,7 +1248,7 @@ func TestServer404Redirect_NoLoop(t *testing.T) {
 	goModPath := "module.path/alternative/pkg"
 	defer postgres.ResetTestDB(testDB, t)
 	sampleModule := sample.DefaultModule()
-	postgres.MustInsertModule(ctx, t, testDB, sampleModule)
+	postgres.MustInsertModuleLatest(ctx, t, testDB, sampleModule)
 	alternativeModule := &internal.VersionMap{
 		ModulePath:       altPath,
 		GoModPath:        goModPath,
@@ -1305,7 +1305,7 @@ func TestServer404Redirect(t *testing.T) {
 
 	defer postgres.ResetTestDB(testDB, t)
 	sampleModule := sample.DefaultModule()
-	postgres.MustInsertModule(ctx, t, testDB, sampleModule)
+	postgres.MustInsertModuleLatest(ctx, t, testDB, sampleModule)
 	alternativeModule := &internal.VersionMap{
 		ModulePath:       "module.path/alternative",
 		GoModPath:        sample.ModulePath,
@@ -1319,7 +1319,7 @@ func TestServer404Redirect(t *testing.T) {
 
 	v1modpath := "notinv1.mod"
 	v1path := "notinv1.mod/foo"
-	postgres.MustInsertModule(ctx, t, testDB, sample.Module(v1modpath+"/v4", "v4.0.0", "foo"))
+	postgres.MustInsertModuleLatest(ctx, t, testDB, sample.Module(v1modpath+"/v4", "v4.0.0", "foo"))
 	for _, mod := range []struct {
 		path, version string
 		status        int
@@ -1591,8 +1591,8 @@ func TestEmptyDirectoryBetweenNestedModulesRedirect(t *testing.T) {
 	defer cancel()
 	defer postgres.ResetTestDB(testDB, t)
 
-	postgres.MustInsertModule(ctx, t, testDB, sample.Module(sample.ModulePath, sample.VersionString, ""))
-	postgres.MustInsertModule(ctx, t, testDB, sample.Module(sample.ModulePath+"/missing/dir/c", sample.VersionString, ""))
+	postgres.MustInsertModuleLatest(ctx, t, testDB, sample.Module(sample.ModulePath, sample.VersionString, ""))
+	postgres.MustInsertModuleLatest(ctx, t, testDB, sample.Module(sample.ModulePath+"/missing/dir/c", sample.VersionString, ""))
 
 	missingPath := sample.ModulePath + "/missing"
 	notInsertedPath := sample.ModulePath + "/missing/dir"
