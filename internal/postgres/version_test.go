@@ -647,18 +647,20 @@ func TestLatestModuleVersionsGood(t *testing.T) {
 	}
 
 	// Add two good versions.
-	v1 := "v1.1.0"
-	lmv := addLatest(ctx, t, testDB, modulePath, v1, "")
-	MustInsertModuleLMV(ctx, t, testDB, sample.Module(modulePath, v1, "pkg"), lmv)
+	const v1 = "v1.1.0"
+	MustInsertModuleLatest(ctx, t, testDB, sample.Module(modulePath, v1, "pkg"))
 	check(v1)
 
 	// Good version should be updated.
-	v2 := "v1.2.0"
-	lmv = addLatest(ctx, t, testDB, modulePath, v2, "")
-	MustInsertModuleLMV(ctx, t, testDB, sample.Module(modulePath, v2, "pkg"), lmv)
+	const v2 = "v1.2.0"
+	MustInsertModuleLatest(ctx, t, testDB, sample.Module(modulePath, v2, "pkg"))
 	check(v2)
 
-	// New latest-version info retracts v2; good version should switch to v1.
-	addLatest(ctx, t, testDB, modulePath, "v1.3.0", fmt.Sprintf("module %s\nretract %s", modulePath, v2))
+	// New latest-version info retracts v2 (and itself); good version should switch to v1.
+	MustInsertModuleGoMod(ctx, t, testDB, sample.Module(modulePath, "v1.3.0", "pkg"), fmt.Sprintf(`
+		module %s
+		retract v1.3.0
+		retract %s
+	`, modulePath, v2))
 	check(v1)
 }

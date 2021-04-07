@@ -663,13 +663,15 @@ func TestReInsertLatestVersion(t *testing.T) {
 
 	insert := func(version string, status int, imports []string, modfile string) {
 		m := sample.Module(modulePath, version, "pkg")
-		lmv := addLatest(ctx, t, testDB, modulePath, version, "module "+modulePath+"\n"+modfile)
 		pkg := m.Packages()[0]
 		pkg.Documentation[0].Synopsis = version
 		pkg.Imports = imports
 		if status == 200 {
-			MustInsertModuleLMV(ctx, t, testDB, m, lmv)
+			MustInsertModuleGoMod(ctx, t, testDB, m, modfile)
+		} else {
+			addLatest(ctx, t, testDB, modulePath, version, modfile)
 		}
+
 		if err := testDB.UpsertModuleVersionState(ctx, &ModuleVersionStateForUpsert{
 			ModulePath: modulePath,
 			Version:    version,

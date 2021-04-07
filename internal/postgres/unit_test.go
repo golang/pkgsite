@@ -55,7 +55,7 @@ func testGetUnitMeta(t *testing.T, ctx context.Context) {
 		{"cloud.google.com/go", "v0.69.0", "pubsublite", false, ""},
 		{"cloud.google.com/go/pubsublite", "v0.4.0", "", false, ""},
 		{"cloud.google.com/go", "v0.74.0", "compute/metadata", false, ""},
-		{"cloud.google.com/go/compute/metadata", "v0.0.0-20181115181204-d50f0e9b2506", "", false, ""},
+		{"cloud.google.com/go/compute/metadata", "v0.0.0-20181115181204-d50f0e9b2506", "", false, "-"},
 	} {
 		m := sample.Module(testModule.module, testModule.version, testModule.packageSuffix)
 		MustInsertModuleGoMod(ctx, t, testDB, m, testModule.goMod)
@@ -473,16 +473,15 @@ func TestGetUnitMetaBypass(t *testing.T) {
 func TestGetLatestUnitVersion(t *testing.T) {
 	ctx := context.Background()
 
-	type latest struct { // latest-version info
-		module  string
-		version string // latest raw and cooked version
-		goMod   string // go.mod file contents after "module" line
+	type pgm struct { // package as mod@ver/pkg, and go.mod
+		pkg   string
+		goMod string // go.mod file contents after "module" line, or "0" to omit
 	}
 
 	for _, test := range []struct {
 		name                 string
-		packages             []string // mod@ver/pkg
-		latests              []latest
+		packages             []pgm
+		badModules           []pgm  // have latest-version info, but not in the DB
 		fullPath, modulePath string // inputs to getLatestUnitVersion
 		want                 string
 		wantNilLMV           bool // lmv return value is null
@@ -492,13 +491,12 @@ func TestGetLatestUnitVersion(t *testing.T) {
 			// If the module is known and there is latest-version information
 			// for it, then the result is the latest version that contains the
 			// full path.
-			packages: []string{
-				"m.com@v1.4.0/b",     // latest version, but no package "a"
-				"m.com@v1.3.0-pre/a", // pre-release
-				"m.com@v1.2.0/a",     // latest version with package a
-				"m.com@v1.1.0/a",
+			packages: []pgm{
+				{"m.com@v1.4.0/b", ""},     // latest version, but no package "a"
+				{"m.com@v1.3.0-pre/a", ""}, // pre-release
+				{"m.com@v1.2.0/a", ""},     // latest version with package a
+				{"m.com@v1.1.0/a", ""},
 			},
-			latests:    []latest{{"m.com", "v1.4", ""}},
 			fullPath:   "m.com/a",
 			modulePath: "m.com",
 			want:       "m.com@v1.2.0",
@@ -507,13 +505,9 @@ func TestGetLatestUnitVersion(t *testing.T) {
 			name: "longest",
 			// If the module is unknown, then the longest module with the full
 			// path is used, even if a shorter module has a later version.
-			packages: []string{
-				"m.com@v1.3.0/a/b", // shorter path, later version
-				"m.com/a@v1.0.0/b", // longer path, earlier version
-			},
-			latests: []latest{
-				{"m.com", "v1.3.0", ""},
-				{"m.com/a", "v1.0.0", ""},
+			packages: []pgm{
+				{"m.com@v1.3.0/a/b", ""}, // shorter path, later version
+				{"m.com/a@v1.0.0/b", ""}, // longer path, earlier version
 			},
 			fullPath: "m.com/a/b",
 			want:     "m.com/a@v1.0.0",
@@ -521,24 +515,22 @@ func TestGetLatestUnitVersion(t *testing.T) {
 		{
 			name: "prerelease",
 			// Use the latest pre-release version if there are no release versions.
-			packages: []string{
-				"m.com@v1.2.0-pre/a",
-				"m.com@v1.3.0-pre/a",
-				"m.com@v1.1.0-pre/a",
+			packages: []pgm{
+				{"m.com@v1.2.0-pre/a", ""},
+				{"m.com@v1.3.0-pre/a", ""},
+				{"m.com@v1.1.0-pre/a", ""},
 			},
-			latests:  []latest{{"m.com", "v1.3.0-pre", ""}},
 			fullPath: "m.com/a",
 			want:     "m.com@v1.3.0-pre",
 		},
 		{
 			name: "retracted",
 			// Skip retracted versions.
-			packages: []string{
-				"m.com@v2.0.0+incompatible/a", // ignored: cooked latest version is compatible
-				"m.com@v1.3.0/a",
-				"m.com@v1.2.0/a",
+			packages: []pgm{
+				{"m.com@v2.0.0+incompatible/a", ""},  // ignored: cooked latest version is compatible
+				{"m.com@v1.3.0/a", "retract v1.3.0"}, // retracts itself
+				{"m.com@v1.2.0/a", ""},
 			},
-			latests:  []latest{{"m.com", "v1.3.0", "retract v1.3.0"}}, // retracts itself
 			fullPath: "m.com/a",
 			want:     "m.com@v1.2.0", // latest unretracted compatible version
 		},
@@ -547,39 +539,38 @@ func TestGetLatestUnitVersion(t *testing.T) {
 			// The latest version is not in the DB, but is still used for
 			// retractions and to decide whether to ignore incompatible
 			// versions.
-			packages: []string{
-				"m.com@v2.0.0+incompatible/a", // ignored: cooked latest version is compatible
-				"m.com@v1.3.0/a",
-				"m.com@v1.2.0/a",
+			packages: []pgm{
+				{"m.com@v2.0.0+incompatible/a", ""}, // ignored: cooked latest version is compatible
+				{"m.com@v1.3.0/a", ""},
+				{"m.com@v1.2.0/a", ""},
 			},
 			// Latest raw version retracts v1.3.0.
 			// Latest cooked version is compatible, so ignore incompatible.
-			latests:  []latest{{"m.com", "v1.4.0", "retract v1.3.0"}},
-			fullPath: "m.com/a",
-			want:     "m.com@v1.2.0", // latest unretracted compatible version
+			badModules: []pgm{{"m.com@v1.4.0", "retract v1.3.0"}},
+			fullPath:   "m.com/a",
+			want:       "m.com@v1.2.0", // latest unretracted compatible version
 		},
 		{
 			name: "incompatible",
 			// Incompatible versions aren't skipped if the latest compatible
 			// version does not have a go.mod file, indicated by the
 			// latest-version info having an incompatible cooked version.
-			packages: []string{
-				"m.com@v2.0.0+incompatible/a",
-				"m.com@v1.3.0/a",
-				"m.com@v1.2.0/a",
+			packages: []pgm{
+				{"m.com@v1.3.0/a", "-"},
+				{"m.com@v1.2.0/a", ""},
+				{"m.com@v2.0.0+incompatible/a", ""},
 			},
-			latests:  []latest{{"m.com", "v2.0.0+incompatible", ""}},
 			fullPath: "m.com/a",
 			want:     "m.com@v2.0.0+incompatible",
 		},
 		{
 			name: "only incompatible",
 			// If incompatible versions are all we've got, return one.
-			packages: []string{
-				"m.com@v3.0.0+incompatible/a",
-				"m.com@v2.0.0+incompatible/a",
+			packages: []pgm{
+				{"m.com@v3.0.0+incompatible/a", ""},
+				{"m.com@v2.0.0+incompatible/a", ""},
 			},
-			latests:    []latest{{"m.com", "v1.2.3", ""}}, // latest version is compatible but bad
+			badModules: []pgm{{"m.com@v1.2.3", ""}}, // latest version is compatible but bad
 			fullPath:   "m.com/a",
 			want:       "m.com@v3.0.0+incompatible",
 			wantNilLMV: true,
@@ -588,11 +579,11 @@ func TestGetLatestUnitVersion(t *testing.T) {
 			name: "no latest",
 			// Without latest-version information, use whatever the DB has.
 			// Prefer longer paths, and release versions to pre-release.
-			packages: []string{
-				"m.com@v1.4.0/a/b",     // shorter module path
-				"m.com/a@v1.3.0/c",     // does not contain full path
-				"m.com/a@v1.2.0-pre/b", // pre-release
-				"m.com/a@v1.1.0/b",
+			packages: []pgm{
+				{"m.com@v1.4.0/a/b", "-"},     // shorter module path
+				{"m.com/a@v1.3.0/c", "-"},     // does not contain full path
+				{"m.com/a@v1.2.0-pre/b", "-"}, // pre-release
+				{"m.com/a@v1.1.0/b", "-"},
 			},
 			fullPath:   "m.com/a/b",
 			want:       "m.com/a@v1.1.0",
@@ -603,11 +594,11 @@ func TestGetLatestUnitVersion(t *testing.T) {
 			// Without latest-version information, use whatever the DB has.
 			// Prefer longer paths, and later versions even if they are
 			// incompatible.
-			packages: []string{
-				"m.com@v2.3.0+incompatible/a/b", // shorter module path
-				"m.com/a@v2.2.0+incompatible/c", // does not contain path
-				"m.com/a@v2.1.0+incompatible/b",
-				"m.com/a@v2.0.0+incompatible/b",
+			packages: []pgm{
+				{"m.com@v2.3.0+incompatible/a/b", "-"}, // shorter module path
+				{"m.com/a@v2.1.0+incompatible/b", "-"},
+				{"m.com/a@v2.0.0+incompatible/b", "-"},
+				{"m.com/a@v2.2.0+incompatible/c", "-"}, // does not contain path
 			},
 			fullPath:   "m.com/a/b",
 			want:       "m.com/a@v2.1.0+incompatible",
@@ -621,11 +612,10 @@ func TestGetLatestUnitVersion(t *testing.T) {
 			// cloud.google.com/go@vX/compute/metadata to
 			// cloud.google.com/go/compute/metadata@vX because the latter, while
 			// a module, has no latest-version info.
-			packages: []string{
-				"m.com@v1.0.0/a/b",
-				"m.com/a@v1.0.0/b",
+			packages: []pgm{
+				{"m.com@v1.0.0/a/b", ""},
+				{"m.com/a@v1.0.0/b", "-"},
 			},
-			latests:  []latest{{"m.com", "v1.0.0", ""}},
 			fullPath: "m.com/a/b",
 			want:     "m.com@v1.0.0",
 		},
@@ -633,12 +623,11 @@ func TestGetLatestUnitVersion(t *testing.T) {
 			name: "all retracted",
 			// If all the versions containing the path are retracted, then return
 			// the latest anyway.
-			packages: []string{
-				"m.com@v1.1.0/a/b",
-				"m.com@v1.2.0/a/b",
-				"m.com@v1.3.0/a/c",
+			packages: []pgm{
+				{"m.com@v1.1.0/a/b", ""},
+				{"m.com@v1.2.0/a/b", ""},
+				{"m.com@v1.3.0/a/c", "retract [v1.0.0, v1.2.0]"},
 			},
-			latests:    []latest{{"m.com", "v1.3.0", "retract [v1.0.0, v1.2.0]"}},
 			fullPath:   "m.com/a/b",
 			want:       "m.com@v1.2.0",
 			wantNilLMV: true,
@@ -648,16 +637,16 @@ func TestGetLatestUnitVersion(t *testing.T) {
 			testDB, release := acquire(t)
 			defer release()
 
-			lmvs := map[string]*internal.LatestModuleVersions{}
-			for _, l := range test.latests {
-				modFile := fmt.Sprintf("module %s\n%s", l.module, l.goMod)
-				lmvs[l.module] = addLatest(ctx, t, testDB, l.module, l.version, modFile)
-			}
 			for _, p := range test.packages {
-				mod, ver, pkg := parseModuleVersionPackage(p)
+				mod, ver, pkg := parseModuleVersionPackage(p.pkg)
 				m := sample.Module(mod, ver, pkg)
-				MustInsertModuleLMV(ctx, t, testDB, m, lmvs[mod])
+				MustInsertModuleGoMod(ctx, t, testDB, m, p.goMod)
 			}
+			for _, b := range test.badModules {
+				mod, ver, _ := parseModuleVersionPackage(b.pkg)
+				addLatest(ctx, t, testDB, mod, ver, b.goMod)
+			}
+
 			if test.modulePath == "" {
 				test.modulePath = internal.UnknownModulePath
 			}

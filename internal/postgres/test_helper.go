@@ -12,6 +12,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -210,8 +211,15 @@ func MustInsertModuleLatest(ctx context.Context, t *testing.T, db *DB, m *intern
 }
 
 func MustInsertModuleGoMod(ctx context.Context, t *testing.T, db *DB, m *internal.Module, goMod string) {
-	lmv := addLatest(ctx, t, db, m.ModulePath, m.Version, goMod)
-	MustInsertModuleLMV(ctx, t, db, m, lmv)
+	if goMod == "-" {
+		if err := db.UpdateLatestModuleVersionsStatus(ctx, m.ModulePath, 404); err != nil {
+			t.Fatal(err)
+		}
+		MustInsertModuleLMV(ctx, t, db, m, nil)
+	} else {
+		lmv := addLatest(ctx, t, db, m.ModulePath, m.Version, goMod)
+		MustInsertModuleLMV(ctx, t, db, m, lmv)
+	}
 }
 
 func MustInsertModuleLMV(ctx context.Context, t *testing.T, db *DB, m *internal.Module, lmv *internal.LatestModuleVersions) {
@@ -222,8 +230,8 @@ func MustInsertModuleLMV(ctx context.Context, t *testing.T, db *DB, m *internal.
 }
 
 func addLatest(ctx context.Context, t *testing.T, db *DB, modulePath, version, modFile string) *internal.LatestModuleVersions {
-	if modFile == "" {
-		modFile = "module " + modulePath
+	if !strings.HasPrefix(strings.TrimSpace(modFile), "module") {
+		modFile = "module " + modulePath + "\n" + modFile
 	}
 	info, err := internal.NewLatestModuleVersions(modulePath, version, version, "", []byte(modFile))
 	if err != nil {

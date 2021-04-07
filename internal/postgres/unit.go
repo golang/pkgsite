@@ -154,7 +154,6 @@ func (db *DB) getLatestUnitVersion(ctx context.Context, fullPath, requestedModul
 	if requestedModulePath == internal.UnknownModulePath {
 		modPaths = internal.CandidateModulePaths(fullPath)
 	}
-	fmt.Printf("#### candidate paths: %v\n", modPaths)
 	// Get latest-version information for all possible modules, from longest
 	// to shortest path.
 	lmvs, err := db.getMultiLatestModuleVersions(ctx, modPaths)
@@ -162,7 +161,6 @@ func (db *DB) getLatestUnitVersion(ctx context.Context, fullPath, requestedModul
 		return "", "", nil, err
 	}
 	for _, lmv = range lmvs {
-		fmt.Printf("#### lmv: %+v\n", lmv)
 		// Collect all the versions of this module that contain fullPath.
 		query := squirrel.Select("m.version").
 			From("modules m").
@@ -178,7 +176,6 @@ func (db *DB) getLatestUnitVersion(ctx context.Context, fullPath, requestedModul
 		if err != nil {
 			return "", "", nil, err
 		}
-		fmt.Printf("####  allVersions = %v\n", allVersions)
 		// Remove retracted versions.
 		unretractedVersions := version.RemoveIf(allVersions, lmv.IsRetracted)
 		// If there are no unretracted versions, move on. If we fall out of the
@@ -195,7 +192,6 @@ func (db *DB) getLatestUnitVersion(ctx context.Context, fullPath, requestedModul
 			unretractedVersions = version.RemoveIf(unretractedVersions, version.IsIncompatible)
 		}
 		latestVersion = version.LatestOf(unretractedVersions)
-		fmt.Printf("################ got latestVersion %q\n", latestVersion)
 		break
 	}
 	if latestVersion != "" {
