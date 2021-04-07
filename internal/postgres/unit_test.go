@@ -43,21 +43,22 @@ func testGetUnitMeta(t *testing.T, ctx context.Context) {
 	for _, testModule := range []struct {
 		module, version, packageSuffix string
 		isMaster                       bool
+		goMod                          string
 	}{
-		{"m.com", "v1.0.0", "a", false},
-		{"m.com", "v1.0.1", "dir/a", false},
-		{"m.com", "v1.1.0", "a/b", false},
-		{"m.com", "v1.2.0-pre", "a", true},
-		{"m.com", "v2.0.0+incompatible", "a", false},
-		{"m.com/a", "v1.1.0", "b", false},
-		{"m.com/b", "v2.0.0+incompatible", "a", true},
-		{"cloud.google.com/go", "v0.69.0", "pubsublite", false},
-		{"cloud.google.com/go/pubsublite", "v0.4.0", "", false},
-		{"cloud.google.com/go", "v0.74.0", "compute/metadata", false},
-		{"cloud.google.com/go/compute/metadata", "v0.0.0-20181115181204-d50f0e9b2506", "", false},
+		{"m.com", "v1.0.0", "a", false, ""},
+		{"m.com", "v1.0.1", "dir/a", false, ""},
+		{"m.com", "v2.0.0+incompatible", "a", false, ""},
+		{"m.com", "v1.1.0", "a/b", false, "module m.com\nretract v1.0.1 // bad"},
+		{"m.com", "v1.2.0-pre", "a", true, ""},
+		{"m.com/a", "v1.1.0", "b", false, ""},
+		{"m.com/b", "v2.0.0+incompatible", "a", true, ""},
+		{"cloud.google.com/go", "v0.69.0", "pubsublite", false, ""},
+		{"cloud.google.com/go/pubsublite", "v0.4.0", "", false, ""},
+		{"cloud.google.com/go", "v0.74.0", "compute/metadata", false, ""},
+		{"cloud.google.com/go/compute/metadata", "v0.0.0-20181115181204-d50f0e9b2506", "", false, ""},
 	} {
 		m := sample.Module(testModule.module, testModule.version, testModule.packageSuffix)
-		MustInsertModule(ctx, t, testDB, m)
+		MustInsertModuleGoMod(ctx, t, testDB, m, testModule.goMod)
 		requested := m.Version
 		if testModule.isMaster {
 			requested = "master"
@@ -70,11 +71,6 @@ func testGetUnitMeta(t *testing.T, ctx context.Context) {
 			t.Fatal(err)
 		}
 	}
-
-	addLatest(ctx, t, testDB, "m.com", "v1.1.0", "module m.com\nretract v1.0.1 // bad")
-	addLatest(ctx, t, testDB, "m.com/a", "v1.1.0", "module m.com/a")
-	addLatest(ctx, t, testDB, "cloud.google.com/go/pubsublite", "v0.0.0", "module cloud.google.com/go/pubsublite")
-	addLatest(ctx, t, testDB, "cloud.google.com/go", "v0.74.0", "module cloud.google.com/go")
 
 	type teststruct struct {
 		name                  string
@@ -283,11 +279,14 @@ func TestGetUnitMetaDiffs(t *testing.T) {
 			for _, p := range test.packages {
 				mod, ver, pkg := parseModuleVersionPackage(p)
 				m := sample.Module(mod, ver, pkg)
-				MustInsertModule(ctx, t, testDB, m)
-			}
-			for _, l := range test.latests {
-				modFile := fmt.Sprintf("module %s\n%s", l.module, l.goMod)
-				addLatest(ctx, t, testDB, l.module, l.version, modFile)
+				goMod := "module " + mod
+				for _, l := range test.latests {
+					if l.module == mod && l.version == ver {
+						goMod += "\n" + l.goMod
+						break
+					}
+				}
+				MustInsertModuleGoMod(ctx, t, testDB, m, goMod)
 			}
 			gotLegacy, err := testDB.GetUnitMeta(ctx, test.path, internal.UnknownModulePath, internal.LatestVersion)
 			if err != nil {

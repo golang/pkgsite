@@ -206,7 +206,11 @@ func MustInsertModule(ctx context.Context, t *testing.T, db *DB, m *internal.Mod
 // MustInsertModule inserts m into db, calling t.Fatal on error.
 // It also updates the latest-version information for m.
 func MustInsertModuleLatest(ctx context.Context, t *testing.T, db *DB, m *internal.Module) {
-	lmv := addLatest(ctx, t, db, m.ModulePath, m.Version, "")
+	MustInsertModuleGoMod(ctx, t, db, m, "module "+m.ModulePath)
+}
+
+func MustInsertModuleGoMod(ctx context.Context, t *testing.T, db *DB, m *internal.Module, goMod string) {
+	lmv := addLatest(ctx, t, db, m.ModulePath, m.Version, goMod)
 	MustInsertModuleLMV(ctx, t, db, m, lmv)
 }
 

@@ -63,13 +63,15 @@ func TestGetVersions(t *testing.T) {
 	defer cancel()
 
 	for _, m := range testModules {
-		MustInsertModule(ctx, t, testDB, m)
+		goMod := "module " + m.ModulePath
+		if m.ModulePath == rootModule {
+			goMod = `
+				module golang.org/foo/bar // Deprecated: use other
+				retract v1.0.3 // security flaw
+			`
+		}
+		MustInsertModuleGoMod(ctx, t, testDB, m, goMod)
 	}
-	// Add latest version info for rootModule.
-	addLatest(ctx, t, testDB, rootModule, "v1.1.0", `
-		module golang.org/foo/bar // Deprecated: use other
-		retract v1.0.3 // security flaw
-    `)
 
 	stdModuleVersions := []*internal.ModuleInfo{
 		{
