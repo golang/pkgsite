@@ -23,7 +23,7 @@ func TestReadAndWriteVersionMap(t *testing.T) {
 	defer cancel()
 
 	m := sample.Module("golang.org/x/tools", sample.VersionString, "go/packages")
-	MustInsertModule(ctx, t, testDB, m)
+	MustInsertModuleLatest(ctx, t, testDB, m)
 
 	vm := &internal.VersionMap{
 		ModulePath:       m.ModulePath,

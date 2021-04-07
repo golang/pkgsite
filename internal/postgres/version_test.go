@@ -434,7 +434,7 @@ func TestGetLatestGoodVersion(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, v := range []string{"v2.0.0+incompatible", "v1.4.0-pre", "v1.3.0", "v1.2.0", "v1.1.0"} {
-		MustInsertModule(ctx, t, testDB, sample.Module(modulePath, v, "pkg"))
+		MustInsertModuleLatest(ctx, t, testDB, sample.Module(modulePath, v, "pkg"))
 	}
 
 	for _, test := range []struct {

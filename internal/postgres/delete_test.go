@@ -26,7 +26,7 @@ func TestDeletePseudoversionsExcept(t *testing.T) {
 		"v0.0.0-20190904010203-89fb59e2e920",
 	}
 	for _, v := range versions {
-		MustInsertModule(ctx, t, testDB, sample.Module(sample.ModulePath, v, ""))
+		MustInsertModuleLatest(ctx, t, testDB, sample.Module(sample.ModulePath, v, ""))
 	}
 	if err := testDB.DeletePseudoversionsExcept(ctx, sample.ModulePath, pseudo1); err != nil {
 		t.Fatal(err)

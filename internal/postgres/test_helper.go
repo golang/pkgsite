@@ -303,7 +303,7 @@ func InsertSampleDirectoryTree(ctx context.Context, t *testing.T, testDB *DB) {
 		},
 	} {
 		m := sample.Module(data.modulePath, data.version, data.suffixes...)
-		MustInsertModule(ctx, t, testDB, m)
+		MustInsertModuleLatest(ctx, t, testDB, m)
 	}
 
 }
