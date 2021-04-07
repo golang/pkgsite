@@ -14,6 +14,7 @@ import (
 
 	"github.com/Masterminds/squirrel"
 	"github.com/lib/pq"
+	"golang.org/x/mod/semver"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/derrors"
@@ -205,62 +206,12 @@ func (db *DB) GetLatestInfo(ctx context.Context, unitPath, modulePath string, la
 //
 // getLatestMajorVersion only considers tagged (non-pseudo) versions. If there are none,
 // it returns empty strings.
-func (db *DB) getLatestMajorVersion(ctx context.Context, fullPath, modulePath string) (_ string, _ string, err error) {
-	defer derrors.WrapStack(&err, "DB.getLatestMajorVersion(ctx, %q, %q)", fullPath, modulePath)
-
-	var (
-		modID   int
-		modPath string
-	)
-	seriesPath := internal.SeriesPathForModule(modulePath)
-	q, args, err := squirrel.Select("module_path", "id").
-		From("modules").
-		Where(squirrel.Eq{"series_path": seriesPath}).
-		Where(squirrel.NotEq{"version_type": "pseudo"}).
-		OrderBy(
-			"incompatible", // ignore incompatible versions unless they're all we have
-			"sort_version DESC",
-		).
-		Limit(1).
-		PlaceholderFormat(squirrel.Dollar).
-		ToSql()
-	if err != nil {
-		return "", "", err
-	}
-
-	switch err := db.db.QueryRow(ctx, q, args...).Scan(&modPath, &modID); err {
-	case nil:
-		// fall through to next query
-	case sql.ErrNoRows:
-		return "", "", nil
-	default:
-		return "", "", err
-	}
-
-	v1Path := internal.V1Path(fullPath, modulePath)
-	row := db.db.QueryRow(ctx, `
-		SELECT p.path
-		FROM units u
-		INNER JOIN paths p ON p.id = u.path_id
-		INNER JOIN paths p2 ON p2.id = u.v1path_id
-		WHERE p2.path = $1 AND module_id = $2;`, v1Path, modID)
-	var path string
-	switch err := row.Scan(&path); err {
-	case nil:
-		return modPath, path, nil
-	case sql.ErrNoRows:
-		return modPath, modPath, nil
-	default:
-		return "", "", err
-	}
-}
-
-//lint:ignore U1000 We're going to replace getLatestMajorVersion with this once the new DB columns are populated.
-func (db *DB) getLatestMajorVersion2(ctx context.Context, fullPath, modulePath string) (modPath, pkgPath string, err error) {
+func (db *DB) getLatestMajorVersion(ctx context.Context, fullPath, modulePath string) (modPath, pkgPath string, err error) {
 	defer derrors.WrapStack(&err, "DB.getLatestMajorVersion2(%q)", modulePath)
 
 	// Collect all the non-deprecated module paths for the series that have at
-	// least one good version.
+	// least one good version, along with that good version. A good version
+	// is both servable (in the modules table) and not retracted.
 	seriesPath := internal.SeriesPathForModule(modulePath)
 	q, args, err := squirrel.Select("p.path", "l.good_version").
 		From("latest_module_versions l").
@@ -291,13 +242,16 @@ func (db *DB) getLatestMajorVersion2(ctx context.Context, fullPath, modulePath s
 		return "", "", err
 	}
 
-	// Find the highest tagged version.
+	// Find the highest tagged version from among the (module path, good
+	// version) pairs.
 	var max pathver
 	for _, pv := range pathvers {
 		if version.IsPseudo(pv.version) {
 			continue
 		}
-		if max.path == "" || version.Later(pv.version, max.version) {
+		// Use semver.Compare, not version.Later, because we don't want to prefer
+		// release to prerelease: we want v2.0.0-pre over v1.0.0.
+		if max.path == "" || semver.Compare(pv.version, max.version) > 0 {
 			max = pv
 		}
 	}

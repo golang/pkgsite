@@ -259,9 +259,9 @@ func TestGetLatestInfo(t *testing.T) {
 	defer cancel()
 
 	for _, m := range []*internal.Module{
+		sample.Module("a.com/M", "v99.0.0+incompatible", "all", "most"),
 		sample.Module("a.com/M", "v1.1.1", "all", "most", "some", "one", "D/other"),
 		sample.Module("a.com/M", "v1.2.0", "all", "most"),
-		sample.Module("a.com/M", "v99.0.0+incompatible", "all", "most"),
 		sample.Module("a.com/M/v2", "v2.0.5", "all", "most"),
 		sample.Module("a.com/M/v3", "v3.0.1", "all", "some"),
 		sample.Module("a.com/M/D", "v1.3.0", "other"),
@@ -272,7 +272,7 @@ func TestGetLatestInfo(t *testing.T) {
 		sample.Module("gopkg.in/M.v3", "v3.0.0-20200602140019-6ec2bf8d378b", ""),
 		sample.Module("c.com/M", "v0.0.0-20200602140019-6ec2bf8d378b", ""),
 	} {
-		MustInsertModule(ctx, t, testDB, m)
+		MustInsertModuleLatest(ctx, t, testDB, m)
 	}
 
 	for _, test := range []struct {
