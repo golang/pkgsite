@@ -80,9 +80,9 @@ func TestInsertModule(t *testing.T) {
 			testDB, release := acquire(t)
 			defer release()
 
-			MustInsertModuleLatest(ctx, t, testDB, test.module)
+			MustInsertModule(ctx, t, testDB, test.module)
 			// Test that insertion of duplicate primary key won't fail.
-			MustInsertModuleLatest(ctx, t, testDB, test.module)
+			MustInsertModule(ctx, t, testDB, test.module)
 			checkModule(ctx, t, testDB, test.module)
 		})
 	}
@@ -158,7 +158,7 @@ func TestInsertModuleLicenseCheck(t *testing.T) {
 			mod.IsRedistributable = false
 			mod.Units[0].IsRedistributable = false
 
-			MustInsertModuleLatest(ctx, t, db, mod)
+			MustInsertModule(ctx, t, db, mod)
 
 			// New model
 			u, err := db.GetUnit(ctx, newUnitMeta(mod.ModulePath, mod.ModulePath, mod.Version), internal.AllFields)
@@ -190,7 +190,7 @@ func TestUpsertModule(t *testing.T) {
 	m := sample.Module("upsert.org", "v1.2.3", "dir/p")
 
 	// Insert the module.
-	MustInsertModuleLatest(ctx, t, testDB, m)
+	MustInsertModule(ctx, t, testDB, m)
 	// Change the module, and re-insert.
 	m.IsRedistributable = !m.IsRedistributable
 	lic := *m.Licenses[0]
@@ -198,7 +198,7 @@ func TestUpsertModule(t *testing.T) {
 	sample.ReplaceLicense(m, &lic)
 	m.Units[0].Readme.Contents += " and more"
 
-	MustInsertModuleLatest(ctx, t, testDB, m)
+	MustInsertModule(ctx, t, testDB, m)
 	// The changes should have been saved.
 	checkModule(ctx, t, testDB, m)
 }
@@ -303,7 +303,7 @@ func TestInsertModuleNewCoverage(t *testing.T) {
 			Contents: []byte(`Lorem Ipsum`),
 		},
 	}
-	MustInsertModuleLatest(ctx, t, testDB, m)
+	MustInsertModule(ctx, t, testDB, m)
 	u, err := testDB.GetUnit(ctx, newUnitMeta(m.ModulePath, m.ModulePath, m.Version), internal.AllFields)
 	if err != nil {
 		t.Fatal(err)
@@ -338,7 +338,7 @@ func TestPostgres_ReadAndWriteModuleOtherColumns(t *testing.T) {
 		seriesPath:  "github.com/user/repo/path",
 	}
 
-	MustInsertModuleLatest(ctx, t, testDB, v)
+	MustInsertModule(ctx, t, testDB, v)
 	query := `
 	SELECT
 		sort_version, series_path
@@ -450,7 +450,7 @@ func TestDeleteModule(t *testing.T) {
 
 	v := sample.DefaultModule()
 
-	MustInsertModuleLatest(ctx, t, testDB, v)
+	MustInsertModule(ctx, t, testDB, v)
 	if _, err := testDB.GetModuleInfo(ctx, v.ModulePath, v.Version); err != nil {
 		t.Fatal(err)
 	}
@@ -513,7 +513,7 @@ func TestPostgres_NewerAlternative(t *testing.T) {
 		t.Fatal(err)
 	}
 	m := sample.Module(mvs.ModulePath, okVersion, "p")
-	MustInsertModuleLatest(ctx, t, testDB, m)
+	MustInsertModule(ctx, t, testDB, m)
 	if _, _, found := GetFromSearchDocuments(ctx, t, testDB, m.Packages()[0].Path); found {
 		t.Fatal("found package after inserting")
 	}

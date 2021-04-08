@@ -54,7 +54,7 @@ func TestFetchImportsDetails(t *testing.T) {
 			pkg := module.Units[1]
 			pkg.Imports = test.imports
 
-			postgres.MustInsertModuleLatest(ctx, t, testDB, module)
+			postgres.MustInsertModule(ctx, t, testDB, module)
 
 			got, err := fetchImportsDetails(ctx, testDB, pkg.Path, pkg.ModulePath, pkg.Version)
 			if err != nil {
@@ -98,7 +98,7 @@ func TestFetchImportedByDetails(t *testing.T) {
 	}
 
 	for _, m := range testModules {
-		postgres.MustInsertModuleLatest(ctx, t, testDB, m)
+		postgres.MustInsertModule(ctx, t, testDB, m)
 	}
 
 	tests := []struct {
@@ -152,11 +152,11 @@ func TestFetchImportedByDetails_ExceedsLimit(t *testing.T) {
 	defer func() { importedByLimit = old }()
 
 	m := sample.Module("m.com/a", sample.VersionString, "foo")
-	postgres.MustInsertModuleLatest(ctx, t, testDB, m)
+	postgres.MustInsertModule(ctx, t, testDB, m)
 	for _, mod := range []string{"m1.com/a", "m2.com/a", "m3.com/a"} {
 		m2 := sample.Module(mod, sample.VersionString, "p")
 		m2.Packages()[0].Imports = []string{"m.com/a/foo"}
-		postgres.MustInsertModuleLatest(ctx, t, testDB, m2)
+		postgres.MustInsertModule(ctx, t, testDB, m2)
 	}
 	wantDetails := &ImportedByDetails{
 		ModulePath: "m.com/a",

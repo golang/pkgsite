@@ -274,7 +274,7 @@ func TestGetLatestInfo(t *testing.T) {
 		sample.Module("gopkg.in/M.v3", "v3.0.0-20200602140019-6ec2bf8d378b", ""),
 		sample.Module("c.com/M", "v0.0.0-20200602140019-6ec2bf8d378b", ""),
 	} {
-		MustInsertModuleLatest(ctx, t, testDB, m)
+		MustInsertModule(ctx, t, testDB, m)
 	}
 
 	for _, test := range []struct {
@@ -436,7 +436,7 @@ func TestGetLatestGoodVersion(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, v := range []string{"v2.0.0+incompatible", "v1.4.0-pre", "v1.3.0", "v1.2.0", "v1.1.0"} {
-		MustInsertModuleLatest(ctx, t, testDB, sample.Module(modulePath, v, "pkg"))
+		MustInsertModule(ctx, t, testDB, sample.Module(modulePath, v, "pkg"))
 	}
 
 	for _, test := range []struct {
@@ -648,12 +648,12 @@ func TestLatestModuleVersionsGood(t *testing.T) {
 
 	// Add two good versions.
 	const v1 = "v1.1.0"
-	MustInsertModuleLatest(ctx, t, testDB, sample.Module(modulePath, v1, "pkg"))
+	MustInsertModule(ctx, t, testDB, sample.Module(modulePath, v1, "pkg"))
 	check(v1)
 
 	// Good version should be updated.
 	const v2 = "v1.2.0"
-	MustInsertModuleLatest(ctx, t, testDB, sample.Module(modulePath, v2, "pkg"))
+	MustInsertModule(ctx, t, testDB, sample.Module(modulePath, v2, "pkg"))
 	check(v2)
 
 	// New latest-version info retracts v2 (and itself); good version should switch to v1.

@@ -72,7 +72,7 @@ func TestGetLatestMajorPathForV1Path(t *testing.T) {
 			for _, mv := range test.modvers {
 				mod, ver, _ := parseModuleVersionPackage(mv)
 				m := sample.Module(mod, ver, suffix)
-				MustInsertModuleLatest(ctx, t, testDB, m)
+				MustInsertModule(ctx, t, testDB, m)
 			}
 			t.Run("module", func(t *testing.T) {
 				check(test.v1ModulePath, test.wantModulePath)

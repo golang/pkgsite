@@ -223,7 +223,7 @@ func TestUpsertModuleVersionStates(t *testing.T) {
 			defer release()
 
 			if test.insertModuleBeforeMVS && test.shouldInsertModule {
-				MustInsertModuleLatest(ctx, t, testDB, m)
+				MustInsertModule(ctx, t, testDB, m)
 			}
 
 			mvsu := &ModuleVersionStateForUpsert{
@@ -250,7 +250,7 @@ func TestUpsertModuleVersionStates(t *testing.T) {
 			}
 
 			if !test.insertModuleBeforeMVS && test.shouldInsertModule {
-				MustInsertModuleLatest(ctx, t, testDB, m)
+				MustInsertModule(ctx, t, testDB, m)
 			}
 
 			if !test.shouldInsertModule {
@@ -349,7 +349,7 @@ func TestHasGoMod(t *testing.T) {
 			if test.modulesHasRow {
 				m := sample.Module(modulePath, version, "")
 				m.HasGoMod = test.modulesValue
-				MustInsertModuleLatest(ctx, t, testDB, m)
+				MustInsertModule(ctx, t, testDB, m)
 			}
 
 			got, err := testDB.HasGoMod(ctx, modulePath, version)

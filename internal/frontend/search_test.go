@@ -94,7 +94,7 @@ func TestFetchSearchPage(t *testing.T) {
 		}
 	)
 	for _, m := range []*internal.Module{moduleFoo, moduleBar} {
-		postgres.MustInsertModuleLatest(ctx, t, testDB, m)
+		postgres.MustInsertModule(ctx, t, testDB, m)
 	}
 
 	for _, test := range []struct {
@@ -212,7 +212,7 @@ func TestSearchRequestRedirectPath(t *testing.T) {
 	modules := []*internal.Module{golangTools, std}
 
 	for _, v := range modules {
-		postgres.MustInsertModuleLatest(ctx, t, testDB, v)
+		postgres.MustInsertModule(ctx, t, testDB, v)
 	}
 	for _, test := range []struct {
 		name  string

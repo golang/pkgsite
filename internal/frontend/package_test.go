@@ -21,7 +21,7 @@ func TestStdlibPathForShortcut(t *testing.T) {
 		"text/template", "html/template", // two matches for "template"
 	)
 	ctx := context.Background()
-	postgres.MustInsertModuleLatest(ctx, t, testDB, m)
+	postgres.MustInsertModule(ctx, t, testDB, m)
 
 	for _, test := range []struct {
 		path string

@@ -170,7 +170,7 @@ func TestFetchPathAlreadyExists(t *testing.T) {
 		t.Run(strconv.Itoa(test.status), func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), testFetchTimeout)
 			defer cancel()
-			postgres.MustInsertModuleLatest(ctx, t, testDB, sample.DefaultModule())
+			postgres.MustInsertModule(ctx, t, testDB, sample.DefaultModule())
 			if err := testDB.UpsertVersionMap(ctx, &internal.VersionMap{
 				ModulePath:       sample.ModulePath,
 				RequestedVersion: sample.VersionString,

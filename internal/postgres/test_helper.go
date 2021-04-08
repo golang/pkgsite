@@ -200,30 +200,21 @@ func RunDBTestsInParallel(dbBaseName string, numDBs int, m *testing.M, acquirep 
 }
 
 // MustInsertModule inserts m into db, calling t.Fatal on error.
-func MustInsertModule(ctx context.Context, t *testing.T, db *DB, m *internal.Module) {
-	MustInsertModuleLMV(ctx, t, db, m, nil)
-}
-
-// MustInsertModule inserts m into db, calling t.Fatal on error.
 // It also updates the latest-version information for m.
-func MustInsertModuleLatest(ctx context.Context, t *testing.T, db *DB, m *internal.Module) {
-	MustInsertModuleGoMod(ctx, t, db, m, "module "+m.ModulePath)
+func MustInsertModule(ctx context.Context, t *testing.T, db *DB, m *internal.Module) {
+	MustInsertModuleGoMod(ctx, t, db, m, "")
 }
 
 func MustInsertModuleGoMod(ctx context.Context, t *testing.T, db *DB, m *internal.Module, goMod string) {
+	t.Helper()
+	var lmv *internal.LatestModuleVersions
 	if goMod == "-" {
 		if err := db.UpdateLatestModuleVersionsStatus(ctx, m.ModulePath, 404); err != nil {
 			t.Fatal(err)
 		}
-		MustInsertModuleLMV(ctx, t, db, m, nil)
 	} else {
-		lmv := addLatest(ctx, t, db, m.ModulePath, m.Version, goMod)
-		MustInsertModuleLMV(ctx, t, db, m, lmv)
+		lmv = addLatest(ctx, t, db, m.ModulePath, m.Version, goMod)
 	}
-}
-
-func MustInsertModuleLMV(ctx context.Context, t *testing.T, db *DB, m *internal.Module, lmv *internal.LatestModuleVersions) {
-	t.Helper()
 	if _, err := db.InsertModule(ctx, m, lmv); err != nil {
 		t.Fatal(err)
 	}
@@ -315,7 +306,7 @@ func InsertSampleDirectoryTree(ctx context.Context, t *testing.T, testDB *DB) {
 		},
 	} {
 		m := sample.Module(data.modulePath, data.version, data.suffixes...)
-		MustInsertModuleLatest(ctx, t, testDB, m)
+		MustInsertModule(ctx, t, testDB, m)
 	}
 
 }

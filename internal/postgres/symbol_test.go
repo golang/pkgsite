@@ -38,7 +38,7 @@ func TestInsertSymbolNamesAndHistory(t *testing.T) {
 		sample.Type,
 	}
 	mod.Packages()[0].Documentation[0].API = api
-	MustInsertModuleLatest(ctx, t, testDB, mod)
+	MustInsertModule(ctx, t, testDB, mod)
 
 	got, err := collectStrings(ctx, testDB.db, `SELECT name FROM symbol_names;`)
 	if err != nil {
@@ -86,7 +86,7 @@ func TestInsertSymbolHistory_Basic(t *testing.T) {
 		sample.Type,
 	}
 	mod.Packages()[0].Documentation[0].API = api
-	MustInsertModuleLatest(ctx, t, testDB, mod)
+	MustInsertModule(ctx, t, testDB, mod)
 
 	compareUnitSymbols(ctx, t, testDB, mod.Packages()[0].Path, mod.ModulePath, mod.Version,
 		map[internal.BuildContext][]*internal.Symbol{internal.BuildContextAll: api})
@@ -136,9 +136,9 @@ func TestInsertSymbolHistory_MultiVersions(t *testing.T) {
 	mod12 := moduleWithSymbols(t, "v1.2.0", []*internal.Symbol{&typB})
 
 	// Insert most recent, then oldest, then middle version.
-	MustInsertModuleLatest(ctx, t, testDB, mod12)
-	MustInsertModuleLatest(ctx, t, testDB, mod10)
-	MustInsertModuleLatest(ctx, t, testDB, mod11)
+	MustInsertModule(ctx, t, testDB, mod12)
+	MustInsertModule(ctx, t, testDB, mod10)
+	MustInsertModule(ctx, t, testDB, mod11)
 
 	createwant := func(docs []*internal.Documentation) map[internal.BuildContext][]*internal.Symbol {
 		want := map[internal.BuildContext][]*internal.Symbol{}
@@ -254,9 +254,9 @@ func TestInsertSymbolHistory_MultiGOOS(t *testing.T) {
 	mod12.Packages()[0].Documentation = docs2
 
 	// Insert most recent, then oldest, then middle version.
-	MustInsertModuleLatest(ctx, t, testDB, mod12)
-	MustInsertModuleLatest(ctx, t, testDB, mod10)
-	MustInsertModuleLatest(ctx, t, testDB, mod11)
+	MustInsertModule(ctx, t, testDB, mod12)
+	MustInsertModule(ctx, t, testDB, mod10)
+	MustInsertModule(ctx, t, testDB, mod11)
 
 	createwant := func(docs []*internal.Documentation) map[internal.BuildContext][]*internal.Symbol {
 		want := map[internal.BuildContext][]*internal.Symbol{}

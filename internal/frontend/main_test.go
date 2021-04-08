@@ -34,7 +34,7 @@ func TestGetImportedByCount(t *testing.T) {
 	mod2 := newModule(p2, []string{p1}, 1)
 	mod3 := newModule(p3, []string{p1, p2}, 0)
 	for _, m := range []*internal.Module{mod1, mod2, mod3} {
-		postgres.MustInsertModuleLatest(ctx, t, testDB, m)
+		postgres.MustInsertModule(ctx, t, testDB, m)
 	}
 
 	for _, test := range []struct {

@@ -331,7 +331,7 @@ func TestGetUnitMetaBypass(t *testing.T) {
 		m := sample.Module(testModule.module, testModule.version, testModule.packageSuffix)
 		makeModuleNonRedistributable(m)
 
-		MustInsertModuleLatest(ctx, t, bypassDB, m)
+		MustInsertModule(ctx, t, bypassDB, m)
 		requested := m.Version
 		if testModule.isMaster {
 			requested = "master"
@@ -699,7 +699,7 @@ func TestGetUnit(t *testing.T) {
 		Filepath: "PKG_README.md",
 		Contents: "pkg readme",
 	}
-	MustInsertModuleLatest(ctx, t, testDB, m)
+	MustInsertModule(ctx, t, testDB, m)
 
 	// Add a module that has documentation for two Go build contexts.
 	m = sample.Module("a.com/twodoc", "v1.2.3", "p")
@@ -709,7 +709,7 @@ func TestGetUnit(t *testing.T) {
 		sample.Documentation("windows", "amd64", `package p; var W int`),
 	}
 	pkg.Documentation = docs2
-	MustInsertModuleLatest(ctx, t, testDB, m)
+	MustInsertModule(ctx, t, testDB, m)
 
 	for _, test := range []struct {
 		name, path, modulePath, version string
@@ -881,7 +881,7 @@ func TestGetUnit_SubdirectoriesShowNonRedistPackages(t *testing.T) {
 	m := sample.DefaultModule()
 	m.IsRedistributable = false
 	m.Packages()[0].IsRedistributable = false
-	MustInsertModuleLatest(ctx, t, testDB, m)
+	MustInsertModule(ctx, t, testDB, m)
 }
 
 func TestGetUnitFieldSet(t *testing.T) {
@@ -898,7 +898,7 @@ func TestGetUnitFieldSet(t *testing.T) {
 	// Add a module that has READMEs in a directory and a package.
 	m := sample.Module("a.com/m", "v1.2.3", "dir/p")
 	m.Packages()[0].Readme = readme
-	MustInsertModuleLatest(ctx, t, testDB, m)
+	MustInsertModule(ctx, t, testDB, m)
 
 	cleanFields := func(u *internal.Unit, fields internal.FieldSet) {
 		// Add/remove fields based on the FieldSet specified.
@@ -1022,7 +1022,7 @@ func TestGetUnitBypass(t *testing.T) {
 	bypassDB := NewBypassingLicenseCheck(testDB.db)
 
 	m := nonRedistributableModule()
-	MustInsertModuleLatest(ctx, t, bypassDB, m)
+	MustInsertModule(ctx, t, bypassDB, m)
 
 	for _, test := range []struct {
 		db        *DB
