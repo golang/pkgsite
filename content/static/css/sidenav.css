@@ -22,7 +22,7 @@
   position: sticky;
   top: calc(var(--header-height, 0) + var(--banner-height, 0));
   transition: box-shadow 0.2s linear;
-  z-index: 100;
+  z-index: 1;
 }
 @media print {
   .DocNavMobile {
