@@ -161,6 +161,11 @@ function updateJumpList(filter: string) {
       jumpList?.appendChild(item.link);
     }
   } else {
+    if (!jumpListItems || jumpListItems.length === 0) {
+      const msg = document.createElement('i');
+      msg.innerHTML = 'No jump items found.';
+      jumpList?.appendChild(msg);
+    }
     // No filter set; display all items in their existing order.
     for (const item of jumpListItems ?? []) {
       item.link.innerHTML = item.name + ' <i>' + item.kind + '</i>';
@@ -171,7 +176,7 @@ function updateJumpList(filter: string) {
   if (jumpBody) {
     jumpBody.scrollTop = 0;
   }
-  if (jumpList && jumpList.children.length > 0) {
+  if (jumpListItems?.length && jumpList && jumpList.children.length > 0) {
     setActiveJumpItem(0);
   }
 }
@@ -266,7 +271,7 @@ if (shortcutsDialog && !shortcutsDialog.showModal) {
 // Ignore a keypress if a dialog is already open, or if it is pressed on a
 // component that wants to consume it.
 document.addEventListener('keypress', function (e) {
-  if (jumpDialog?.open || shortcutsDialog?.open || !doc) {
+  if (jumpDialog?.open || shortcutsDialog?.open) {
     return;
   }
   const target = e.target as HTMLElement | null;
