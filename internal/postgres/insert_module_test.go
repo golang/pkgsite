@@ -37,6 +37,7 @@ func TestInsertModule(t *testing.T) {
 	for _, test := range []struct {
 		name   string
 		module *internal.Module
+		goMod  string
 	}{
 		{
 			name:   "valid test",
@@ -74,15 +75,16 @@ func TestInsertModule(t *testing.T) {
 				m.DeprecationComment = "use v2"
 				return m
 			}(),
+			goMod: "module " + sample.ModulePath + " // Deprecated: use v2",
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			testDB, release := acquire(t)
 			defer release()
 
-			MustInsertModule(ctx, t, testDB, test.module)
+			MustInsertModuleGoMod(ctx, t, testDB, test.module, test.goMod)
 			// Test that insertion of duplicate primary key won't fail.
-			MustInsertModule(ctx, t, testDB, test.module)
+			MustInsertModuleGoMod(ctx, t, testDB, test.module, test.goMod)
 			checkModule(ctx, t, testDB, test.module)
 		})
 	}

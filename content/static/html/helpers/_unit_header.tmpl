@@ -203,27 +203,25 @@
         </span>
       </div>
     {{end}}
-    {{if (.Experiments.IsActive "retractions")}}
-      {{if .Unit.Deprecated}}
-        <div class="UnitHeader-banner UnitHeader-banner--deprecated">
-          <span class="Site-margin UnitHeader-bannerContent">
-            <strong>Deprecated</strong>
-            {{with .Unit.DeprecationComment}}
-              <strong>:</strong>&nbsp;{{.}}
-            {{end}}
-          </span>
-        </div>
-      {{end}}
-      {{if .Unit.Retracted}}
-        <div class="UnitHeader-banner UnitHeader-banner--retracted">
-          <span class="Site-margin UnitHeader-bannerContent">
-            <strong>Retracted</strong>
-              {{with .Unit.RetractionRationale}}
-              <strong>:</strong>&nbsp;{{.}}
-            {{end}}
-          </span>
-        </div>
-      {{end}}
+    {{if .Unit.Deprecated}}
+      <div class="UnitHeader-banner UnitHeader-banner--deprecated">
+        <span class="Site-margin UnitHeader-bannerContent">
+          <strong>Deprecated</strong>
+          {{with .Unit.DeprecationComment}}
+            <strong>:</strong>&nbsp;{{.}}
+          {{end}}
+        </span>
+      </div>
+    {{end}}
+    {{if .Unit.Retracted}}
+      <div class="UnitHeader-banner UnitHeader-banner--retracted">
+        <span class="Site-margin UnitHeader-bannerContent">
+          <strong>Retracted</strong>
+            {{with .Unit.RetractionRationale}}
+            <strong>:</strong>&nbsp;{{.}}
+          {{end}}
+        </span>
+      </div>
     {{end}}
     {{if .LatestMajorVersion}}
       <div class="UnitHeader-banner UnitHeader-banner--majorVersion" data-test-id="UnitHeader-majorVersionBanner">

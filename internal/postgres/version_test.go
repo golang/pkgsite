@@ -12,7 +12,6 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/pkgsite/internal"
-	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/testing/sample"
@@ -231,7 +230,6 @@ func TestGetVersions(t *testing.T) {
 		},
 	}
 
-	ctx = experiment.NewContext(ctx, internal.ExperimentRetractions)
 	for _, test := range testCases {
 		t.Run(test.name, func(t *testing.T) {
 			for _, w := range test.want {

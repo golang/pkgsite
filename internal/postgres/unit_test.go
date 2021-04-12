@@ -26,13 +26,11 @@ func TestGetUnitMeta(t *testing.T) {
 	t.Parallel()
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout*2)
 	defer cancel()
-	ctx = experiment.NewContext(ctx, internal.ExperimentRetractions)
 	t.Run("legacy", func(t *testing.T) {
 		testGetUnitMeta(t, ctx)
 	})
 	t.Run("latest", func(t *testing.T) {
-		testGetUnitMeta(t, experiment.NewContext(ctx,
-			internal.ExperimentRetractions, internal.ExperimentUnitMetaWithLatest))
+		testGetUnitMeta(t, experiment.NewContext(ctx, internal.ExperimentUnitMetaWithLatest))
 	})
 }
 
@@ -295,7 +293,7 @@ func TestGetUnitMetaDiffs(t *testing.T) {
 			if got := modver(gotLegacy); got != test.wantLegacy {
 				t.Errorf("legacy: got %s, want %s", got, test.wantLegacy)
 			}
-			gotLatest, err := testDB.GetUnitMeta(experiment.NewContext(ctx, internal.ExperimentRetractions, internal.ExperimentUnitMetaWithLatest),
+			gotLatest, err := testDB.GetUnitMeta(experiment.NewContext(ctx, internal.ExperimentUnitMetaWithLatest),
 				test.path, internal.UnknownModulePath, internal.LatestVersion)
 			if err != nil {
 				t.Fatal(err)

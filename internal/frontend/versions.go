@@ -112,7 +112,7 @@ func fetchVersionsDetails(ctx context.Context, ds internal.DataSource, fullPath,
 		}
 		return constructUnitURL(versionPath, mi.ModulePath, linkVersion(mi.Version, mi.ModulePath))
 	}
-	return buildVersionDetails(ctx, modulePath, versions, outVersionToNameToUnitSymbol, linkify), nil
+	return buildVersionDetails(modulePath, versions, outVersionToNameToUnitSymbol, linkify), nil
 }
 
 // pathInVersion constructs the full import path of the package corresponding
@@ -139,8 +139,7 @@ func pathInVersion(v1Path string, mi *internal.ModuleInfo) string {
 // versions tab, organizing major versions into those that have the same module
 // path as the package version under consideration, and those that don't.  The
 // given versions MUST be sorted first by module path and then by semver.
-func buildVersionDetails(ctx context.Context,
-	currentModulePath string,
+func buildVersionDetails(currentModulePath string,
 	modInfos []*internal.ModuleInfo,
 	versionToNameToSymbol map[string]map[string]*internal.UnitSymbol,
 	linkify func(v *internal.ModuleInfo) string) *VersionsDetails {
@@ -187,12 +186,10 @@ func buildVersionDetails(ctx context.Context,
 			Version:    linkVersion(mi.Version, mi.ModulePath),
 			IsMinor:    isMinor(mi.Version),
 		}
-		if experiment.IsActive(ctx, internal.ExperimentRetractions) {
-			key.Deprecated = mi.Deprecated
-			key.DeprecationComment = shortRationale(mi.DeprecationComment)
-			vs.Retracted = mi.Retracted
-			vs.RetractionRationale = shortRationale(mi.RetractionRationale)
-		}
+		key.Deprecated = mi.Deprecated
+		key.DeprecationComment = shortRationale(mi.DeprecationComment)
+		vs.Retracted = mi.Retracted
+		vs.RetractionRationale = shortRationale(mi.RetractionRationale)
 		if nts, ok := versionToNameToSymbol[mi.Version]; ok {
 			vs.Symbols = symbolsForVersion(linkify(mi), nts)
 		}

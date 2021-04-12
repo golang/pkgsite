@@ -124,20 +124,18 @@ func (db *DB) getUnitMetaWithKnownLatestVersion(ctx context.Context, fullPath, m
 	}
 	um.Licenses = lics
 
-	if experiment.IsActive(ctx, internal.ExperimentRetractions) {
-		// If we don't have the latest version information, try to get it.
-		// We can be here if there is really no info (in which case we are repeating
-		// some work, but it's fast), or if we are ignoring the info (for instance,
-		// if all versions were retracted).
-		if lmv == nil {
-			lmv, err = db.GetLatestModuleVersions(ctx, um.ModulePath)
-			if err != nil {
-				return nil, err
-			}
+	// If we don't have the latest version information, try to get it.
+	// We can be here if there is really no info (in which case we are repeating
+	// some work, but it's fast), or if we are ignoring the info (for instance,
+	// if all versions were retracted).
+	if lmv == nil {
+		lmv, err = db.GetLatestModuleVersions(ctx, um.ModulePath)
+		if err != nil {
+			return nil, err
 		}
-		if lmv != nil {
-			lmv.PopulateModuleInfo(&um.ModuleInfo)
-		}
+	}
+	if lmv != nil {
+		lmv.PopulateModuleInfo(&um.ModuleInfo)
 	}
 	return &um, nil
 }
