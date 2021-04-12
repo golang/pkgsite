@@ -68,7 +68,7 @@
   <ul>
     <li>
       {{template "unit_meta_details_check" .Unit.HasGoMod}}
-      Valid <a href="{{.Details.ModFileURL}}" target="_blank">go.mod</a> file
+      Valid {{if .Unit.HasGoMod}}<a href="{{.Details.ModFileURL}}" target="_blank">{{end}}go.mod{{if .Unit.HasGoMod}}</a>{{end}} file
       {{template "unit_meta_details_toggletip" "The Go module system was introduced in Go 1.11 and is the official dependency management solution for Go."}}
     </li>
     <li>
