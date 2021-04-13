@@ -9,7 +9,6 @@ const (
 	ExperimentInsertSymbols             = "insert-symbols"
 	ExperimentSymbolHistoryVersionsPage = "symbol-history-versions-page"
 	ExperimentSymbolHistoryMainPage     = "symbol-history-main-page"
-	ExperimentUnitMetaWithLatest        = "unit-meta-with-latest"
 )
 
 // Experiments represents all of the active experiments in the codebase and
@@ -18,7 +17,6 @@ var Experiments = map[string]string{
 	ExperimentInsertSymbols:             "Insert data into symbols, package_symbols, and documentation_symbols.",
 	ExperimentSymbolHistoryVersionsPage: "Show package API history on the versions page.",
 	ExperimentSymbolHistoryMainPage:     "Show package API history on the main unit page.",
-	ExperimentUnitMetaWithLatest:        "Use latest-version information for GetUnitMeta.",
 }
 
 // Experiment holds data associated with an experimental feature for frontend

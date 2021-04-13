@@ -26,12 +26,7 @@ func TestGetUnitMeta(t *testing.T) {
 	t.Parallel()
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout*2)
 	defer cancel()
-	t.Run("legacy", func(t *testing.T) {
-		testGetUnitMeta(t, ctx)
-	})
-	t.Run("latest", func(t *testing.T) {
-		testGetUnitMeta(t, experiment.NewContext(ctx, internal.ExperimentUnitMetaWithLatest))
-	})
+	testGetUnitMeta(t, ctx)
 }
 
 func testGetUnitMeta(t *testing.T, ctx context.Context) {
@@ -207,104 +202,6 @@ func testGetUnitMeta(t *testing.T, ctx context.Context) {
 	}
 }
 
-func TestGetUnitMetaDiffs(t *testing.T) {
-	// Demonstrate differences between legacy and latest-version GetUnitMeta
-	// implementations.
-
-	t.Parallel()
-
-	type latest struct { // latest-version info
-		module  string
-		version string // latest raw and cooked version
-		goMod   string // go.mod file contents after "module" line
-	}
-
-	modver := func(u *internal.UnitMeta) string { return u.ModulePath + "@" + u.Version }
-
-	for _, test := range []struct {
-		name                   string
-		packages               []string // mod@ver/pkg
-		latests                []latest
-		path                   string
-		wantLatest, wantLegacy string
-	}{
-		{
-			name: "incompatible",
-			// When there are incompatible versions and no go.mod at the latest
-			// compatible version, the go command selects the highest
-			// incompatible version, but legacy GetUnitMeta selects the highest
-			// compatible version.
-			packages: []string{
-				"m.com@v1.0.0/a",
-				"m.com@v2.0.0+incompatible/a",
-			},
-			latests:    []latest{{"m.com", "v2.0.0+incompatible", ""}},
-			path:       "m.com/a",
-			wantLatest: "m.com@v2.0.0+incompatible",
-			wantLegacy: "m.com@v1.0.0",
-		},
-		{
-			name: "shorter",
-			// The go command prefers the longer path if both have latest-version information,
-			// but legacy GetUnitMeta prefers the shorter path if it has a release version.
-			packages: []string{
-				"m.com@v1.0.0/a/b",     // shorter path, release version
-				"m.com/a@v1.0.0-pre/b", // longer path, pre-release version
-			},
-			latests:    []latest{{"m.com", "v1.0.0", ""}, {"m.com/a", "v1.0.0-pre", ""}},
-			path:       "m.com/a/b",
-			wantLatest: "m.com/a@v1.0.0-pre",
-			wantLegacy: "m.com@v1.0.0",
-		},
-		{
-			name: "retraction",
-			// Legacy GetUnitMeta ignores retractions when picking the latest version.
-			packages: []string{
-				"m.com@v1.0.0/a",
-				"m.com@v1.1.0/a", // latest, also retracted
-			},
-			latests:    []latest{{"m.com", "v1.1.0", "retract v1.1.0"}},
-			path:       "m.com/a",
-			wantLatest: "m.com@v1.0.0",
-			wantLegacy: "m.com@v1.1.0",
-		},
-	} {
-		t.Run(test.name, func(t *testing.T) {
-			ctx := context.Background()
-			testDB, release := acquire(t)
-			defer release()
-
-			for _, p := range test.packages {
-				mod, ver, pkg := parseModuleVersionPackage(p)
-				m := sample.Module(mod, ver, pkg)
-				goMod := "module " + mod
-				for _, l := range test.latests {
-					if l.module == mod && l.version == ver {
-						goMod += "\n" + l.goMod
-						break
-					}
-				}
-				MustInsertModuleGoMod(ctx, t, testDB, m, goMod)
-			}
-			gotLegacy, err := testDB.GetUnitMeta(ctx, test.path, internal.UnknownModulePath, internal.LatestVersion)
-			if err != nil {
-				t.Fatal(err)
-			}
-			if got := modver(gotLegacy); got != test.wantLegacy {
-				t.Errorf("legacy: got %s, want %s", got, test.wantLegacy)
-			}
-			gotLatest, err := testDB.GetUnitMeta(experiment.NewContext(ctx, internal.ExperimentUnitMetaWithLatest),
-				test.path, internal.UnknownModulePath, internal.LatestVersion)
-			if err != nil {
-				t.Fatal(err)
-			}
-			if got := modver(gotLatest); got != test.wantLatest {
-				t.Errorf("latest: got %s, want %s", got, test.wantLatest)
-			}
-		})
-	}
-}
-
 func TestGetUnitMetaBypass(t *testing.T) {
 	t.Parallel()
 	testDB, release := acquire(t)
@@ -318,13 +215,13 @@ func TestGetUnitMetaBypass(t *testing.T) {
 		module, version, packageSuffix string
 		isMaster                       bool
 	}{
+		{"m.com", "v2.0.0+incompatible", "a", false},
+		{"m.com/b", "v2.0.0+incompatible", "a", true},
 		{"m.com", "v1.0.0", "a", false},
 		{"m.com", "v1.0.1", "dir/a", false},
 		{"m.com", "v1.1.0", "a/b", false},
 		{"m.com", "v1.2.0-pre", "a", true},
-		{"m.com", "v2.0.0+incompatible", "a", false},
 		{"m.com/a", "v1.1.0", "b", false},
-		{"m.com/b", "v2.0.0+incompatible", "a", true},
 	} {
 		m := sample.Module(testModule.module, testModule.version, testModule.packageSuffix)
 		makeModuleNonRedistributable(m)
