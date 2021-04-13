@@ -222,13 +222,7 @@ func insertModule(ctx context.Context, db *database.DB, m *internal.Module) (_ i
 	if err != nil {
 		return 0, err
 	}
-	var (
-		moduleID   int
-		depComment *string
-	)
-	if m.Deprecated {
-		depComment = &m.DeprecationComment
-	}
+	var moduleID int
 	err = db.QueryRow(ctx,
 		`INSERT INTO modules(
 			module_path,
@@ -240,9 +234,8 @@ func insertModule(ctx context.Context, db *database.DB, m *internal.Module) (_ i
 			source_info,
 			redistributable,
 			has_go_mod,
-			deprecated_comment,
 			incompatible)
-		VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+		VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
 		ON CONFLICT
 			(module_path, version)
 		DO UPDATE SET
@@ -258,7 +251,6 @@ func insertModule(ctx context.Context, db *database.DB, m *internal.Module) (_ i
 		sourceInfoJSON,
 		m.IsRedistributable,
 		m.HasGoMod,
-		depComment,
 		version.IsIncompatible(m.Version),
 	).Scan(&moduleID)
 	if err != nil {
