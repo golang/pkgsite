@@ -37,8 +37,8 @@
       {{range $i, $v := $major.Versions}}
         <div class="Version-major">
           {{if and (eq $i 0) (not $major.Incompatible)}}
-            <strong>{{$major.Major}}</strong>       
-            {{if true}}<span class="Version-badge">deprecated</span>{{end}}
+            <strong>{{$major.Major}}</strong>
+            {{if $major.Deprecated}}<span class="Version-badge">deprecated</span>{{end}}
           {{end}}
         </div>
         <div class="Version-tag">
