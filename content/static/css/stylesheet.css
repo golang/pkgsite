@@ -1322,16 +1322,13 @@ pre,
 .Documentation-type h4,
 .Documentation-typeFunc h4,
 .Documentation-typeMethod h4 {
+  align-items: baseline;
   display: flex;
   justify-content: space-between;
-  position: relative;
 }
 .Documentation-sinceVersion {
-  bottom: 0;
   font-size: 1rem;
   font-weight: 400;
-  position: absolute;
-  right: 0;
 }
 
 .Documentation-constants br:last-of-type,
