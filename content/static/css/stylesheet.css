@@ -22,7 +22,7 @@
 
   --blue: #bfeaf4;
   --black: #000;
-  --green: #00a29c;
+  --green: #3a6e11;
   --pink: #ce3262;
   --purple: #542c7d;
   --slate: #253443; /* Footer background. */
@@ -187,7 +187,7 @@ pre,
    * text never wraps or gets cut off.
    */
   display: none;
-  background-color: #000;
+  background-color: var(--gray-1);
 }
 .Banner-inner {
   align-items: center;
@@ -1269,7 +1269,7 @@ pre,
   margin-top: 0;
 }
 .Documentation pre .comment {
-  color: #060;
+  color: var(--green);
 }
 
 .Documentation-toc,
