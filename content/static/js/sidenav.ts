@@ -130,7 +130,7 @@ class DocNavTreeController {
     const topLevelExpanded = this.el.querySelector<HTMLElement>(
       '[aria-level="1"][aria-expanded="true"]'
     );
-    if (topLevelExpanded && !topLevelExpanded.contains(this.selectedEl)) {
+    if (topLevelExpanded && !topLevelExpanded.parentElement?.contains(this.selectedEl)) {
       this.collapseItem(topLevelExpanded);
     }
 

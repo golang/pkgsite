@@ -18,16 +18,7 @@
               aria-level="1" aria-owns="readme-outline" tabindex="0">
             README
           </a>
-          <ul role="group" id="readme-outline">
-            {{range .ReadmeOutline}}
-              <li role="none">
-                <a href="#{{.ID}}" role="treeitem" aria-selected="false" aria-level="2"
-                    tabindex="-1">
-                  {{.Text}}
-                </a>
-              </li>
-            {{end}}
-          </ul>
+          {{template "readme_outline" .ReadmeOutline}}
         </li>
       {{end}}
       {{if .IsPackage}}
@@ -57,4 +48,44 @@
       {{end}}
     </ul>
   </div>
+{{end}}
+
+{{define "readme_outline"}}
+  <ul role="group" id="readme-outline">
+    {{range .}}
+      <li role="none">
+        <a href="#{{.ID}}" role="treeitem" aria-level="2" aria-owns="nav-group-readme"
+            tabindex="-1" {{if gt (len .Children) 0}}aria-expanded="false"{{end}}>
+          {{.Text}}
+        </a>
+        <ul role="group" id="nav-group-readme">
+          {{range .Children}}
+            {{$tname := .Text}}
+            <li role="none">
+              {{if .Children}}
+                {{$navgroupid := (printf "nav.group.%s" $tname)}}
+                <a href="#{{.ID}}" role="treeitem" aria-expanded="false" aria-level="3"
+                    tabindex="-1" data-aria-owns="{{$navgroupid}}">
+                  {{$tname}}
+                </a>
+                <ul role="group" >
+                  {{range .Children}}
+                    <li role="none">
+                      <a href="#{{.ID}}" role="treeitem" aria-level="4" tabindex="-1">
+                        {{.Text}}
+                      </a>
+                    </li>
+                  {{end}} {{/* range .Children */}}
+                </ul>
+              {{else}}
+                <a href="#{{.ID}}" role="treeitem" aria-level="3" tabindex="-1">
+                  {{$tname}}
+                </a>
+              {{end}} {{/* if .Children */}}
+            </li>
+          {{end}} {{/* range .Children */}}
+        </ul>
+      </li>
+    {{end}}
+  </ul>
 {{end}}
