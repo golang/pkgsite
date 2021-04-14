@@ -17,7 +17,7 @@
     <div class="UnitMeta-repo">
       {{if .Details.RepositoryURL}}
         <a href="{{.Details.RepositoryURL}}" title="{{.Details.RepositoryURL}}" target="_blank" rel="noopener">
-          {{.Details.RepositoryURL}}
+          {{stripscheme .Details.RepositoryURL}}
         </a>
       {{else}}
         Repository URL not available.
