@@ -163,7 +163,7 @@ function updateJumpList(filter: string) {
   } else {
     if (!jumpListItems || jumpListItems.length === 0) {
       const msg = document.createElement('i');
-      msg.innerHTML = 'No jump items found.';
+      msg.innerHTML = 'There are no identifiers on this page.';
       jumpList?.appendChild(msg);
     }
     // No filter set; display all items in their existing order.
