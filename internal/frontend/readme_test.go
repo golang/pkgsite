@@ -11,6 +11,7 @@ import (
 	"unicode"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/source"
@@ -32,28 +33,45 @@ func TestReadme(t *testing.T) {
 			unit: unit,
 			readme: &internal.Readme{
 				Filepath: sample.ReadmeFilePath,
-				Contents: "#### Four\n\n##### Five",
-			},
-			wantHTML: "<h3 class=\"h4\" id=\"readme-four\">Four</h3>\n" +
-				"<h4 class=\"h5\" id=\"readme-five\">Five</h4>",
-			wantOutline: []*Heading{
-				{Level: 4, Text: "Four", ID: "readme-four"},
-				{Level: 5, Text: "Five", ID: "readme-five"},
-			},
-		},
-		{
-			name: "The top 2 level headings are kept within outline",
-			unit: unit,
-			readme: &internal.Readme{
-				Filepath: sample.ReadmeFilePath,
-				Contents: "#### Four\n\n##### Five\n\n###### Six",
+				Contents: "#### Four\n\n##### Five\n\n##### Five\n\n#### Four",
 			},
 			wantHTML: "<h3 class=\"h4\" id=\"readme-four\">Four</h3>\n" +
 				"<h4 class=\"h5\" id=\"readme-five\">Five</h4>\n" +
-				"<h5 class=\"h6\" id=\"readme-six\">Six</h5>",
+				"<h4 class=\"h5\" id=\"readme-five-1\">Five</h4>\n" +
+				"<h3 class=\"h4\" id=\"readme-four-1\">Four</h3>",
 			wantOutline: []*Heading{
-				{Level: 4, Text: "Four", ID: "readme-four"},
-				{Level: 5, Text: "Five", ID: "readme-five"},
+				{
+					Level: 4,
+					Text:  "Four",
+					ID:    "readme-four",
+					Children: []*Heading{
+						{Level: 5, Text: "Five", ID: "readme-five"},
+						{Level: 5, Text: "Five", ID: "readme-five-1"},
+					},
+				},
+				{
+					Level: 4,
+					Text:  "Four",
+					ID:    "readme-four-1",
+				},
+			},
+		},
+		{
+			name: "The highest level heading is dropped when no other headings exist at same level",
+			unit: unit,
+			readme: &internal.Readme{
+				Filepath: sample.ReadmeFilePath,
+				Contents: "#### Four\n\n##### Five\n\n###### Six\n\n##### Five",
+			},
+			wantHTML: "<h3 class=\"h4\" id=\"readme-four\">Four</h3>\n" +
+				"<h4 class=\"h5\" id=\"readme-five\">Five</h4>\n" +
+				"<h5 class=\"h6\" id=\"readme-six\">Six</h5>\n" +
+				"<h4 class=\"h5\" id=\"readme-five-1\">Five</h4>",
+			wantOutline: []*Heading{
+				{Level: 5, Text: "Five", ID: "readme-five", Children: []*Heading{
+					{Level: 6, Text: "Six", ID: "readme-six"},
+				}},
+				{Level: 5, Text: "Five", ID: "readme-five-1"},
 			},
 		},
 		{
@@ -68,7 +86,9 @@ func TestReadme(t *testing.T) {
 				"<h4 class=\"h3\" id=\"readme-three\">Three</h4>",
 			wantOutline: []*Heading{
 				{Level: 2, Text: "Two", ID: "readme-two"},
-				{Level: 1, Text: "One", ID: "readme-one"},
+				{Level: 1, Text: "One", ID: "readme-one", Children: []*Heading{
+					{Level: 3, Text: "Three", ID: "readme-three"},
+				}},
 			},
 		},
 		{
@@ -76,15 +96,18 @@ func TestReadme(t *testing.T) {
 			unit: unit,
 			readme: &internal.Readme{
 				Filepath: sample.ReadmeFilePath,
-				Contents: "# One\n\n#### Four\n\n#### Four",
+				Contents: "# One\n\n#### Four\n\n#### Four\n\n# One",
 			},
 			wantHTML: "<h3 class=\"h1\" id=\"readme-one\">One</h3>\n" +
 				"<h6 class=\"h4\" id=\"readme-four\">Four</h6>\n" +
-				"<h6 class=\"h4\" id=\"readme-four-1\">Four</h6>",
+				"<h6 class=\"h4\" id=\"readme-four-1\">Four</h6>\n" +
+				"<h3 class=\"h1\" id=\"readme-one-1\">One</h3>",
 			wantOutline: []*Heading{
-				{Level: 1, Text: "One", ID: "readme-one"},
-				{Level: 4, Text: "Four", ID: "readme-four"},
-				{Level: 4, Text: "Four", ID: "readme-four-1"},
+				{Level: 1, Text: "One", ID: "readme-one", Children: []*Heading{
+					{Level: 4, Text: "Four", ID: "readme-four"},
+					{Level: 4, Text: "Four", ID: "readme-four-1"},
+				}},
+				{Level: 1, Text: "One", ID: "readme-one-1"},
 			},
 		},
 		{
@@ -98,6 +121,7 @@ func TestReadme(t *testing.T) {
 				"<h2 class=\"h2\" id=\"readme-two\">Two</h2>\n" +
 				"<h1 class=\"h1\" id=\"readme-one\">One</h1>",
 			wantOutline: []*Heading{
+				{Level: 3, Text: "Three", ID: "readme-three"},
 				{Level: 2, Text: "Two", ID: "readme-two"},
 				{Level: 1, Text: "One", ID: "readme-one"},
 			},
@@ -385,15 +409,18 @@ func TestReadme(t *testing.T) {
 			unit: unit,
 			readme: &internal.Readme{
 				Filepath: "README.md",
-				Contents: "# Heading\n## Heading\n## Heading",
+				Contents: "# Heading\n## Heading\n## Heading\n# Heading",
 			},
 			wantHTML: `<h3 class="h1" id="readme-heading">Heading</h3>` + "\n" +
 				`<h4 class="h2" id="readme-heading-1">Heading</h4>` + "\n" +
-				`<h4 class="h2" id="readme-heading-2">Heading</h4>`,
+				`<h4 class="h2" id="readme-heading-2">Heading</h4>` + "\n" +
+				`<h3 class="h1" id="readme-heading-3">Heading</h3>`,
 			wantOutline: []*Heading{
-				{Level: 1, Text: "Heading", ID: "readme-heading"},
-				{Level: 2, Text: "Heading", ID: "readme-heading-1"},
-				{Level: 2, Text: "Heading", ID: "readme-heading-2"},
+				{Level: 1, Text: "Heading", ID: "readme-heading", Children: []*Heading{
+					{Level: 2, Text: "Heading", ID: "readme-heading-1"},
+					{Level: 2, Text: "Heading", ID: "readme-heading-2"},
+				}},
+				{Level: 1, Text: "Heading", ID: "readme-heading-3"},
 			},
 		},
 		{
@@ -401,15 +428,18 @@ func TestReadme(t *testing.T) {
 			unit: unit,
 			readme: &internal.Readme{
 				Filepath: "README.md",
-				Contents: "# Heading 😎\n## 👾\n## Heading 🚀",
+				Contents: "# Heading 😎\n## 👾\n## Heading 🚀\n# Heading",
 			},
 			wantHTML: `<h3 class="h1" id="readme-heading">Heading 😎</h3>` + "\n" +
 				`<h4 class="h2" id="readme-heading-1">👾</h4>` + "\n" +
-				`<h4 class="h2" id="readme-heading-2">Heading 🚀</h4>`,
+				`<h4 class="h2" id="readme-heading-2">Heading 🚀</h4>` + "\n" +
+				`<h3 class="h1" id="readme-heading-3">Heading</h3>`,
 			wantOutline: []*Heading{
-				{Level: 1, Text: "Heading 😎", ID: "readme-heading"},
-				{Level: 2, Text: "👾", ID: "readme-heading-1"},
-				{Level: 2, Text: "Heading 🚀", ID: "readme-heading-2"},
+				{Level: 1, Text: "Heading 😎", ID: "readme-heading", Children: []*Heading{
+					{Level: 2, Text: "👾", ID: "readme-heading-1"},
+					{Level: 2, Text: "Heading 🚀", ID: "readme-heading-2"},
+				}},
+				{Level: 1, Text: "Heading", ID: "readme-heading-3"},
 			},
 		},
 	} {
@@ -423,7 +453,9 @@ func TestReadme(t *testing.T) {
 			if diff := cmp.Diff(test.wantHTML, gotHTML); diff != "" {
 				t.Errorf("Readme(%v) html mismatch (-want +got):\n%s", test.unit.UnitMeta, diff)
 			}
-			if diff := cmp.Diff(test.wantOutline, readme.Outline); diff != "" {
+			if diff := cmp.Diff(test.wantOutline, readme.Outline, cmp.Options{
+				cmpopts.IgnoreUnexported(Heading{}),
+			}); diff != "" {
 				t.Errorf("Readme(%v) outline mismatch (-want +got):\n%s", test.unit.UnitMeta, diff)
 			}
 		})

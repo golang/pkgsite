@@ -215,6 +215,7 @@ func (s *ids) Put(value []byte) {
 }
 
 type extractLinks struct {
+	ctx            context.Context
 	inLinksHeading bool
 	links          []link
 }
@@ -264,6 +265,75 @@ func (e *extractLinks) Transform(node *ast.Document, reader text.Reader, pc pars
 		return ast.WalkContinue, nil
 	})
 	if err != nil {
-		log.Errorf(context.Background(), "extractLinks.Transform: %v", err)
+		log.Errorf(e.ctx, "extractLinks.Transform: %v", err)
 	}
+}
+
+type extractTOC struct {
+	ctx      context.Context
+	headings []*Heading
+}
+
+// Transform collects the headings from a readme into an outline
+// of the document. It nests the headings based on the h-level hierarchy.
+// See tests for heading levels in TestReadme for behavior.
+func (e *extractTOC) Transform(node *ast.Document, reader text.Reader, pc parser.Context) {
+	var headings []*Heading
+	err := ast.Walk(node, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
+		if n.Kind() == ast.KindHeading && entering {
+			var buffer bytes.Buffer
+			for c := n.FirstChild(); c != nil; c = c.NextSibling() {
+				// We keep only text content from the headings in the first pass.
+				if c.Kind() == ast.KindText {
+					buffer.Write(c.Text(reader.Source()))
+				}
+			}
+			// If the buffer is empty we take the text content from non-text nodes.
+			if buffer.Len() == 0 {
+				for c := n.FirstChild(); c != nil; c = c.NextSibling() {
+					buffer.Write(c.Text(reader.Source()))
+				}
+			}
+			heading := n.(*ast.Heading)
+			section := &Heading{
+				Level: heading.Level,
+				Text:  buffer.String(),
+			}
+			if id, ok := heading.AttributeString("id"); ok {
+				section.ID = string(id.([]byte))
+			}
+			headings = append(headings, section)
+			return ast.WalkSkipChildren, nil
+		}
+		return ast.WalkContinue, nil
+	})
+	if err != nil {
+		log.Errorf(e.ctx, "extractTOC.Transform: %v", err)
+	}
+
+	// We nest the headings by walking through the list we extracted and
+	// establishing parent child relationships based on heading levels.
+	var nested []*Heading
+	for i, h := range headings {
+		if i == 0 {
+			nested = append(nested, h)
+			continue
+		}
+		parent := headings[i-1]
+		for parent != nil && parent.Level >= h.Level {
+			parent = parent.parent
+		}
+		if parent == nil {
+			nested = append(nested, h)
+		} else {
+			h.parent = parent
+			parent.Children = append(parent.Children, h)
+		}
+	}
+	// If there is only one top tevel heading with 1 or more children we
+	// assume it is the title of the document and remove it from the TOC.
+	if len(nested) == 1 && len(nested[0].Children) > 0 {
+		nested = nested[0].Children
+	}
+	e.headings = nested
 }

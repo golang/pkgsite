@@ -7,7 +7,6 @@ package frontend
 import (
 	"bytes"
 	"context"
-	"math"
 
 	"github.com/google/safehtml"
 	"github.com/google/safehtml/template"
@@ -15,7 +14,6 @@ import (
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/yuin/goldmark"
 	emoji "github.com/yuin/goldmark-emoji"
-	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/extension"
 	"github.com/yuin/goldmark/parser"
 	"github.com/yuin/goldmark/renderer"
@@ -27,8 +25,8 @@ import (
 	"golang.org/x/pkgsite/internal/source"
 )
 
-// Heading holds data about a heading within a readme used in the
-// sidebar template to render the readme outline.
+// Heading holds data about a heading and nested headings within a readme.
+// This data is used in the sidebar template to render the readme outline.
 type Heading struct {
 	// Level is the original level of the heading.
 	Level int
@@ -39,6 +37,11 @@ type Heading struct {
 	// within the readme outline. All ids are prefixed with readme-
 	// to avoid name collisions.
 	ID string
+	// Children are nested headings.
+	Children []*Heading
+	// parent is the heading this heading is nested within. Nil for top
+	// level headings.
+	parent *Heading
 }
 
 // Readme holds the result of processing a REAME file.
@@ -62,10 +65,10 @@ type Readme struct {
 // This function is exported for use by external tools.
 func ProcessReadme(ctx context.Context, u *internal.Unit) (_ *Readme, err error) {
 	defer derrors.WrapAndReport(&err, "ProcessReadme(%q, %q, %q)", u.Path, u.ModulePath, u.Version)
-	return processReadme(u.Readme, u.SourceInfo)
+	return processReadme(ctx, u.Readme, u.SourceInfo)
 }
 
-func processReadme(readme *internal.Readme, sourceInfo *source.Info) (_ *Readme, err error) {
+func processReadme(ctx context.Context, readme *internal.Readme, sourceInfo *source.Info) (_ *Readme, err error) {
 	if readme == nil || readme.Contents == "" {
 		return &Readme{}, nil
 	}
@@ -82,7 +85,8 @@ func processReadme(readme *internal.Readme, sourceInfo *source.Info) (_ *Readme,
 	// instead of the default ones. The default values are in:
 	// https://github.com/yuin/goldmark/blob/7b90f04af43131db79ec320be0bd4744079b346f/parser/parser.go#L567
 	const astTransformerPriority = 10000
-	el := &extractLinks{}
+	el := &extractLinks{ctx: ctx}
+	et := &extractTOC{ctx: ctx}
 	gdMarkdown := goldmark.New(
 		goldmark.WithParserOptions(
 			// WithHeadingAttribute allows us to include other attributes in
@@ -103,6 +107,7 @@ func processReadme(readme *internal.Readme, sourceInfo *source.Info) (_ *Readme,
 				}, astTransformerPriority),
 				// Extract links after we have transformed the URLs.
 				util.Prioritized(el, astTransformerPriority+1),
+				util.Prioritized(et, astTransformerPriority+1),
 			),
 		),
 		// These extensions lets users write HTML code in the README. This is
@@ -131,7 +136,7 @@ func processReadme(readme *internal.Readme, sourceInfo *source.Info) (_ *Readme,
 	}
 	return &Readme{
 		HTML:    sanitizeHTML(&b),
-		Outline: readmeOutline(doc, contents),
+		Outline: et.headings,
 		Links:   el.links,
 	}, nil
 }
@@ -152,56 +157,4 @@ func sanitizeHTML(b *bytes.Buffer) safehtml.HTML {
 
 	s := string(p.SanitizeBytes(b.Bytes()))
 	return uncheckedconversions.HTMLFromStringKnownToSatisfyTypeContract(s)
-}
-
-// readmeOutline collects the headings from a readme into an outline
-// of the document. It keeps only the top two levels of nesting from
-// any set of headings. See tests for heading levels in TestReadme
-// for behavior.
-func readmeOutline(doc ast.Node, contents []byte) []*Heading {
-	var headings []*Heading
-	// l1 and l2 are used to keep track of the top two heading levels.
-	l1, l2 := math.MaxInt8, math.MaxInt8
-
-	ast.Walk(doc, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
-		if n.Kind() == ast.KindHeading && entering {
-			var buffer bytes.Buffer
-			for c := n.FirstChild(); c != nil; c = c.NextSibling() {
-				// We keep only text content from the headings in the first pass.
-				if c.Kind() == ast.KindText {
-					buffer.Write(c.Text(contents))
-				}
-			}
-			// If the buffer is empty we take the text content from non-text nodes.
-			if buffer.Len() == 0 {
-				for c := n.FirstChild(); c != nil; c = c.NextSibling() {
-					buffer.Write(c.Text(contents))
-				}
-			}
-			heading := n.(*ast.Heading)
-			section := Heading{
-				Level: heading.Level,
-				Text:  buffer.String(),
-			}
-			if id, ok := heading.AttributeString("id"); ok {
-				section.ID = string(id.([]byte))
-			}
-			headings = append(headings, &section)
-			if heading.Level < l1 {
-				l2, l1 = l1, heading.Level
-			} else if heading.Level < l2 && heading.Level != l1 {
-				l2 = heading.Level
-			}
-			return ast.WalkSkipChildren, nil
-		}
-		return ast.WalkContinue, nil
-	})
-
-	var filtered []*Heading
-	for _, h := range headings {
-		if h.Level <= l2 {
-			filtered = append(filtered, h)
-		}
-	}
-	return filtered
 }

@@ -197,7 +197,7 @@ func fetchMainDetails(ctx context.Context, ds internal.DataSource, um *internal.
 			return nil, err
 		}
 		if err == nil {
-			rm, err := processReadme(modReadme, um.SourceInfo)
+			rm, err := processReadme(ctx, modReadme, um.SourceInfo)
 			if err != nil {
 				return nil, err
 			}
