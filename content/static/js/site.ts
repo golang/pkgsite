@@ -68,7 +68,7 @@ interface Window {
 function removeUTMSource() {
   const urlParams = new URLSearchParams(window.location.search);
   const utmSource = urlParams.get('utm_source');
-  if (utmSource !== 'gopls' && utmSource !== 'godoc') {
+  if (utmSource !== 'gopls' && utmSource !== 'godoc' && utmSource !== 'pkggodev') {
     return;
   }
 
