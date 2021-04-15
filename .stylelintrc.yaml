@@ -4,10 +4,11 @@ extends:
 plugins:
   - stylelint-order
 rules:
-  unit-disallowed-list:
-    - 'px'
+  color-hex-case: lower
   declaration-property-value-allowed-list:
     '/color/':
       - "/^var\\(--/"
       - 'transparent'
   order/properties-alphabetical-order: true
+  unit-disallowed-list:
+    - 'px'
