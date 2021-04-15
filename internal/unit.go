@@ -108,5 +108,4 @@ const (
 	WithMain FieldSet = 1 << iota
 	WithImports
 	WithLicenses
-	WithSymbols
 )
