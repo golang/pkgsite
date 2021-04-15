@@ -11,13 +11,19 @@ import (
 
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/experiment"
 )
 
 // GetPackageSymbols returns all of the symbols for a given package path and module path.
 func (db *DB) GetPackageSymbols(ctx context.Context, packagePath, modulePath string,
 ) (_ map[string]map[string]*internal.UnitSymbol, err error) {
 	defer derrors.Wrap(&err, "GetPackageSymbols(ctx, db, %q, %q)", packagePath, modulePath)
-	query := `
+
+	doctable := "new_documentation"
+	if experiment.IsActive(ctx, internal.ExperimentDoNotInsertNewDocumentation) {
+		doctable = "documentation"
+	}
+	query := fmt.Sprintf(`
 		SELECT
 			s1.name AS symbol_name,
 			s2.name AS parent_symbol_name,
@@ -29,7 +35,7 @@ func (db *DB) GetPackageSymbols(ctx context.Context, packagePath, modulePath str
 			d.goarch
 		FROM modules m
 		INNER JOIN units u ON u.module_id = m.id
-		INNER JOIN new_documentation d ON d.unit_id = u.id
+		INNER JOIN %s d ON d.unit_id = u.id
 		INNER JOIN documentation_symbols ds ON ds.documentation_id = d.id
 		INNER JOIN package_symbols ps ON ps.id = ds.package_symbol_id
 		INNER JOIN paths p1 ON u.path_id = p1.id
@@ -42,7 +48,7 @@ func (db *DB) GetPackageSymbols(ctx context.Context, packagePath, modulePath str
 			AND m.version_type = 'release'
 		ORDER BY
 			CASE WHEN ps.type='Type' THEN 0 ELSE 1 END,
-			symbol_name;`
+			symbol_name;`, doctable)
 
 	// versionToNameToUnitSymbol contains all of the types for this unit,
 	// grouped by name and build context. This is used to keep track of the

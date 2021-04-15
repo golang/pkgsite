@@ -536,10 +536,18 @@ func insertDocs(ctx context.Context, db *database.DB,
 
 	uniqueCols := []string{"unit_id", "goos", "goarch"}
 	docCols := append(uniqueCols, "synopsis", "source")
-	if err := db.CopyUpsert(ctx, "documentation", docCols, database.CopyFromChan(generateRows()), uniqueCols, ""); err != nil {
+	if experiment.IsActive(ctx, internal.ExperimentDoNotInsertNewDocumentation) {
+		return db.CopyUpsert(ctx, "documentation",
+			docCols, database.CopyFromChan(generateRows()), uniqueCols, "id")
+	}
+
+	// These lines can be deleted once new_documentation is renamed to documentation.
+	if err := db.CopyUpsert(ctx, "documentation",
+		docCols, database.CopyFromChan(generateRows()), uniqueCols, ""); err != nil {
 		return err
 	}
-	return db.CopyUpsert(ctx, "new_documentation", docCols, database.CopyFromChan(generateRows()), uniqueCols, "id")
+	return db.CopyUpsert(ctx, "new_documentation",
+		docCols, database.CopyFromChan(generateRows()), uniqueCols, "id")
 }
 
 // getDocIDsForPath returns a map of the unit path to documentation.id to

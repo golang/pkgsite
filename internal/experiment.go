@@ -6,17 +6,19 @@
 package internal
 
 const (
-	ExperimentInsertSymbols             = "insert-symbols"
-	ExperimentSymbolHistoryVersionsPage = "symbol-history-versions-page"
-	ExperimentSymbolHistoryMainPage     = "symbol-history-main-page"
+	ExperimentDoNotInsertNewDocumentation = "do-not-insert-new-documentation"
+	ExperimentInsertSymbols               = "insert-symbols"
+	ExperimentSymbolHistoryVersionsPage   = "symbol-history-versions-page"
+	ExperimentSymbolHistoryMainPage       = "symbol-history-main-page"
 )
 
 // Experiments represents all of the active experiments in the codebase and
 // a description of each experiment.
 var Experiments = map[string]string{
-	ExperimentInsertSymbols:             "Insert data into symbols, package_symbols, and documentation_symbols.",
-	ExperimentSymbolHistoryVersionsPage: "Show package API history on the versions page.",
-	ExperimentSymbolHistoryMainPage:     "Show package API history on the main unit page.",
+	ExperimentDoNotInsertNewDocumentation: "Do not insert into the new_documentation table.",
+	ExperimentInsertSymbols:               "Insert data into symbols, package_symbols, and documentation_symbols.",
+	ExperimentSymbolHistoryVersionsPage:   "Show package API history on the versions page.",
+	ExperimentSymbolHistoryMainPage:       "Show package API history on the main unit page.",
 }
 
 // Experiment holds data associated with an experimental feature for frontend

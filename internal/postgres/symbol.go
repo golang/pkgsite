@@ -305,7 +305,11 @@ func getUnitSymbols(ctx context.Context, db *database.DB, unitID int) (_ map[int
 	// Fetch all symbols for the unit. Order by symbol_type "Type" first, so
 	// that when we collect the children the structs for these symbols will
 	// already be created.
-	query := `
+	doctable := "new_documentation"
+	if experiment.IsActive(ctx, internal.ExperimentDoNotInsertNewDocumentation) {
+		doctable = "documentation"
+	}
+	query := fmt.Sprintf(`
         SELECT
             s1.name AS symbol_name,
             s2.name AS parent_symbol_name,
@@ -315,12 +319,12 @@ func getUnitSymbols(ctx context.Context, db *database.DB, unitID int) (_ map[int
             d.goos,
             d.goarch
         FROM documentation_symbols ds
-        INNER JOIN new_documentation d ON d.id = ds.documentation_id
+        INNER JOIN %s d ON d.id = ds.documentation_id
         INNER JOIN package_symbols ps ON ds.package_symbol_id = ps.id
         INNER JOIN symbol_names s1 ON ps.symbol_name_id = s1.id
         INNER JOIN symbol_names s2 ON ps.parent_symbol_name_id = s2.id
         WHERE d.unit_id = $1
-        ORDER BY CASE WHEN ps.type='Type' THEN 0 ELSE 1 END;`
+        ORDER BY CASE WHEN ps.type='Type' THEN 0 ELSE 1 END;`, doctable)
 	// buildToSymbols contains all of the symbols for this unit, grouped by
 	// build context.
 	buildToSymbols := map[internal.BuildContext][]*internal.Symbol{}
