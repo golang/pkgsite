@@ -18,27 +18,31 @@ func (db *DB) GetPackageSymbols(ctx context.Context, packagePath, modulePath str
 ) (_ map[string]map[string]*internal.UnitSymbol, err error) {
 	defer derrors.Wrap(&err, "GetPackageSymbols(ctx, db, %q, %q)", packagePath, modulePath)
 	query := `
-        SELECT
-            s1.name AS symbol_name,
-            s2.name AS parent_symbol_name,
-            ps.section,
-            ps.type,
-            ps.synopsis,
-            m.version,
-            d.goos,
-            d.goarch
-        FROM modules m
-        INNER JOIN units u ON u.module_id = m.id
-        INNER JOIN new_documentation d ON d.unit_id = u.id
-        INNER JOIN documentation_symbols ds ON ds.documentation_id = d.id
-        INNER JOIN package_symbols ps ON ps.id = ds.package_symbol_id
-        INNER JOIN paths p1 ON u.path_id = p1.id
-        INNER JOIN symbol_names s1 ON ps.symbol_name_id = s1.id
-        INNER JOIN symbol_names s2 ON ps.parent_symbol_name_id = s2.id
-        WHERE p1.path = $1 AND m.module_path = $2
-        ORDER BY
-            CASE WHEN ps.type='Type' THEN 0 ELSE 1 END,
-            symbol_name;`
+		SELECT
+			s1.name AS symbol_name,
+			s2.name AS parent_symbol_name,
+			ps.section,
+			ps.type,
+			ps.synopsis,
+			m.version,
+			d.goos,
+			d.goarch
+		FROM modules m
+		INNER JOIN units u ON u.module_id = m.id
+		INNER JOIN new_documentation d ON d.unit_id = u.id
+		INNER JOIN documentation_symbols ds ON ds.documentation_id = d.id
+		INNER JOIN package_symbols ps ON ps.id = ds.package_symbol_id
+		INNER JOIN paths p1 ON u.path_id = p1.id
+		INNER JOIN symbol_names s1 ON ps.symbol_name_id = s1.id
+		INNER JOIN symbol_names s2 ON ps.parent_symbol_name_id = s2.id
+		WHERE
+			p1.path = $1
+			AND m.module_path = $2
+			AND NOT m.incompatible
+			AND m.version_type = 'release'
+		ORDER BY
+			CASE WHEN ps.type='Type' THEN 0 ELSE 1 END,
+			symbol_name;`
 
 	// versionToNameToUnitSymbol contains all of the types for this unit,
 	// grouped by name and build context. This is used to keep track of the
