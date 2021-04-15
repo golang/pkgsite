@@ -1626,3 +1626,19 @@ func TestEmptyDirectoryBetweenNestedModulesRedirect(t *testing.T) {
 		})
 	}
 }
+
+func TestStripScheme(t *testing.T) {
+	cases := map[string]string{
+		"http://github.com":                    "github.com",
+		"https://github.com/path/to/something": "github.com/path/to/something",
+		"example.com":                          "example.com",
+		"chrome-extension://abcd":              "abcd",
+		"nonwellformed.com/path?://query=1":    "query=1",
+	}
+
+	for url, expected := range cases {
+		if actual := stripscheme(url); actual != expected {
+			t.Errorf("Failed for %q: got %q, want %q", url, actual, expected)
+		}
+	}
+}

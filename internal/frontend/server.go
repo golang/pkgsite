@@ -519,6 +519,15 @@ var templateFuncs = template.FuncMap{
 	"commaseparate": func(s []string) string {
 		return strings.Join(s, ", ")
 	},
+	"stripscheme": stripscheme,
+}
+
+func stripscheme(url string) string {
+	if i := strings.Index(url, "://"); i > 0 {
+		return url[i+len("://"):]
+	}
+
+	return url
 }
 
 // parsePageTemplates parses html templates contained in the given base
