@@ -79,7 +79,7 @@ func TestRender(t *testing.T) {
 		t.Errorf("note check: %v", err)
 	}
 
-	checker = in("#DocNavMobile-select",
+	checker = in("",
 		in("optgroup[label=Notes]", in("option", hasAttr("value", "pkg-note-BUG"), hasExactText("Bugs"))))
 	if err := checker(htmlDoc); err != nil {
 		t.Errorf("note check: %v", err)
@@ -140,7 +140,7 @@ func TestRenderParts(t *testing.T) {
 		t.Errorf("note check: %v", err)
 	}
 
-	checker = in("#DocNavMobile-select",
+	checker = in("",
 		in("optgroup[label=Notes]", in("option", hasAttr("value", "pkg-note-BUG"), hasExactText("Bugs"))))
 	if err := checker(mobileDoc); err != nil {
 		t.Errorf("note check: %v", err)

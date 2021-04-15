@@ -10,7 +10,7 @@
 
 {{define "unit_content"}}
   <div class="UnitDetails" data-test-id="UnitDetails">
-    {{.Details.MobileOutline}}
+    {{block "unit_outline_mobile" .Details}}{{end}}
     <div class="UnitDetails-outline" role="navigation"
         aria-label="{{if eq .PageType "std"}}module
         {{else}}{{.PageType}}{{end}}details navigation">

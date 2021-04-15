@@ -3,62 +3,49 @@
   Use of this source code is governed by a BSD-style
   license that can be found in the LICENSE file.
 -->
-<nav class="DocNavMobile js-mobileNav">
-  <label for="DocNavMobile-select" class="DocNavMobile-label">
-    <svg class="DocNavMobile-selectIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="black" width="18px" height="18px">
-      <path d="M0 0h24v24H0z" fill="none"/><path d="M3 9h14V7H3v2zm0 4h14v-2H3v2zm0 4h14v-2H3v2zm16 0h2v-2h-2v2zm0-10v2h2V7h-2zm0 6h2v-2h-2v2z"/>
-    </svg>
-    <span class="DocNavMobile-selectText js-mobileNavSelectText">Outline</span>
-  </label>
-  <select id="DocNavMobile-select" class="DocNavMobile-select">
-    <option value="">Outline</option>
-    <option class="js-readmeOption" value="section-readme">README</option>
-    <optgroup label="Documentation">
-      {{if or .Doc (index .Examples.Map "")}}
-        <option value="pkg-overview">Overview</option>
-      {{end}}
-      {{if or .Consts .Vars .Funcs .Types}}
-        <option value="pkg-index">Index</option>
-      {{end}}
-      {{if .Examples.List}}
-        <option value="pkg-examples">Examples</option>
-      {{end}}
-      {{if .Consts}}
-        <option value="pkg-constants">Constants</option>
-      {{end}}
-      {{if .Vars}}
-        <option value="pkg-variables">Variables</option>
-      {{end}}
-    </optgroup>
-    {{if .Funcs}}
-      <optgroup label="Functions">
-        {{range .Funcs}}
-          <option value="{{.Name}}">{{render_short_synopsis .Decl}}</option>
-        {{end}}
-      </optgroup>
+
+<optgroup label="Documentation">
+  {{if or .Doc (index .Examples.Map "")}}
+    <option value="pkg-overview">Overview</option>
+  {{end}}
+  {{if or .Consts .Vars .Funcs .Types}}
+    <option value="pkg-index">Index</option>
+  {{end}}
+  {{if .Examples.List}}
+    <option value="pkg-examples">Examples</option>
+  {{end}}
+  {{if .Consts}}
+    <option value="pkg-constants">Constants</option>
+  {{end}}
+  {{if .Vars}}
+    <option value="pkg-variables">Variables</option>
+  {{end}}
+</optgroup>
+{{if .Funcs}}
+  <optgroup label="Functions">
+    {{range .Funcs}}
+      <option value="{{.Name}}">{{render_short_synopsis .Decl}}</option>
     {{end}}
-    {{if .Types}}
-      <optgroup label="Types">
-        {{range .Types}}
-          {{$tname := .Name}}
-          <option value="{{$tname}}">type {{$tname}}</option>
-          {{range .Funcs}}
-            <option value="{{.Name}}">{{render_short_synopsis .Decl}}</option>
-          {{end}}
-          {{range .Methods}}
-            <option value="{{$tname}}.{{.Name}}">{{render_short_synopsis .Decl}}</option>
-          {{end}}
-        {{end}} {{/* range .Types */}}
-      </optgroup>
+  </optgroup>
+{{end}}
+{{if .Types}}
+  <optgroup label="Types">
+    {{range .Types}}
+      {{$tname := .Name}}
+      <option value="{{$tname}}">type {{$tname}}</option>
+      {{range .Funcs}}
+        <option value="{{.Name}}">{{render_short_synopsis .Decl}}</option>
+      {{end}}
+      {{range .Methods}}
+        <option value="{{$tname}}.{{.Name}}">{{render_short_synopsis .Decl}}</option>
+      {{end}}
+    {{end}} {{/* range .Types */}}
+  </optgroup>
+{{end}}
+{{if .Notes}}
+  <optgroup label="Notes">
+    {{range $marker, $item := .Notes}}
+      <option value="pkg-note-{{$marker}}">{{(index $.NoteHeaders $marker).Label}}s</option>
     {{end}}
-    {{if .Notes}}
-      <optgroup label="Notes">
-        {{range $marker, $item := .Notes}}
-          <option value="pkg-note-{{$marker}}">{{(index $.NoteHeaders $marker).Label}}s</option>
-        {{end}}
-      </optgroup>
-    {{end}}
-    <option class="js-sourcefilesOption" value="section-sourcefiles">Source Files</option>
-    <option class="js-directoriesOption" value="section-directories">Directories</option>
-  </select>
-</nav>
+  </optgroup>
+{{end}}
