@@ -14,7 +14,9 @@
     </label>
     <select id="DocNavMobile-select" class="DocNavMobile-select">
       <option value="">Outline</option>
-      <option class="js-readmeOption" value="section-readme">README</option>
+      <optgroup label="README">
+        {{range .ReadmeOutline}}<option value="{{.ID}}">{{.Text}}</option>{{end}}
+      </optgroup>
       {{.MobileOutline}}
       <option class="js-sourcefilesOption" value="section-sourcefiles">Source Files</option>
       <option class="js-directoriesOption" value="section-directories">Directories</option>

@@ -35,10 +35,16 @@ const readmeContent = document.querySelector('.js-readmeContent');
 const readmeOutline = document.querySelector('.js-readmeOutline');
 const readmeExpand = document.querySelectorAll('.js-readmeExpand');
 const readmeCollapse = document.querySelector('.js-readmeCollapse');
+const mobileNavSelect = document.querySelector<HTMLSelectElement>('.DocNavMobile-select');
 if (readme && readmeContent && readmeOutline && readmeExpand.length && readmeCollapse) {
   if (window.location.hash.includes('readme')) {
     readme.classList.add('UnitReadme--expanded');
   }
+  mobileNavSelect?.addEventListener('change', e => {
+    if ((e.target as HTMLSelectElement).value.startsWith('readme-')) {
+      readme.classList.add('UnitReadme--expanded');
+    }
+  });
   readmeExpand.forEach(el =>
     el.addEventListener('click', e => {
       e.preventDefault();
