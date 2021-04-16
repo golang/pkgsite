@@ -182,10 +182,11 @@ func TestWorker(t *testing.T) {
 			f := &Fetcher{proxyClient, source.NewClient(sourceTimeout), testDB, nil}
 
 			// Use 10 workers to have parallelism consistent with the worker binary.
-			q := queue.NewInMemory(ctx, 10, nil, func(ctx context.Context, mpath, version string) (int, error) {
-				code, _, err := f.FetchAndUpdateState(ctx, mpath, version, "")
-				return code, err
-			})
+			q := queue.NewInMemory(ctx, 10, []string{internal.ExperimentDoNotInsertNewDocumentation},
+				func(ctx context.Context, mpath, version string) (int, error) {
+					code, _, err := f.FetchAndUpdateState(ctx, mpath, version, "")
+					return code, err
+				})
 
 			s, err := NewServer(&config.Config{}, ServerConfig{
 				DB:           testDB,

@@ -10,6 +10,8 @@ import (
 	"net/http"
 	"testing"
 
+	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/postgres"
 )
 
@@ -19,7 +21,8 @@ func TestFrontendFetchForMasterVersion(t *testing.T) {
 	// Add a module to the database.
 	// Check that GET of the module's path returns a 200.
 	ctx := context.Background()
-	q, teardown := setupQueue(ctx, t, testModules[:1])
+	ctx = experiment.NewContext(ctx, internal.ExperimentDoNotInsertNewDocumentation)
+	q, teardown := setupQueue(ctx, t, testModules[:1], internal.ExperimentDoNotInsertNewDocumentation)
 	const modulePath = "example.com/basic"
 	defer teardown()
 	ts := setupFrontend(ctx, t, q, nil)

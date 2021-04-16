@@ -14,6 +14,7 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/proxy"
@@ -28,6 +29,7 @@ func TestReFetch(t *testing.T) {
 	// of the (fake) proxy, though in reality the most likely cause of changes to
 	// a version is updates to our data model or fetch logic.
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	ctx = experiment.NewContext(ctx, internal.ExperimentDoNotInsertNewDocumentation)
 	defer cancel()
 	defer postgres.ResetTestDB(testDB, t)
 

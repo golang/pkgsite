@@ -20,6 +20,7 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/testing/dbtest"
 	"golang.org/x/pkgsite/internal/testing/sample"
 	"golang.org/x/pkgsite/internal/testing/testhelper"
@@ -207,6 +208,7 @@ func MustInsertModule(ctx context.Context, t *testing.T, db *DB, m *internal.Mod
 
 func MustInsertModuleGoMod(ctx context.Context, t *testing.T, db *DB, m *internal.Module, goMod string) {
 	t.Helper()
+	ctx = experiment.NewContext(ctx, internal.ExperimentDoNotInsertNewDocumentation)
 	var lmv *internal.LatestModuleVersions
 	if goMod == "-" {
 		if err := db.UpdateLatestModuleVersionsStatus(ctx, m.ModulePath, 404); err != nil {

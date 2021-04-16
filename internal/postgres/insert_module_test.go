@@ -24,6 +24,7 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/stdlib"
@@ -208,6 +209,7 @@ func TestUpsertModule(t *testing.T) {
 func TestInsertModuleErrors(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
+	ctx = experiment.NewContext(ctx, internal.ExperimentDoNotInsertNewDocumentation)
 
 	testCases := []struct {
 		name string
@@ -366,6 +368,7 @@ func TestInsertModuleLatest(t *testing.T) {
 	testDB, release := acquire(t)
 	defer release()
 	ctx := context.Background()
+	ctx = experiment.NewContext(ctx, internal.ExperimentDoNotInsertNewDocumentation)
 
 	// These tests are cumulative: actions of earlier tests may affect later ones.
 	for _, test := range []struct {

@@ -20,7 +20,10 @@ import (
 func TestFrontendVersionsPage(t *testing.T) {
 	defer postgres.ResetTestDB(testDB, t)
 
-	exps := []string{internal.ExperimentSymbolHistoryVersionsPage}
+	exps := []string{
+		internal.ExperimentSymbolHistoryVersionsPage,
+		internal.ExperimentDoNotInsertNewDocumentation,
+	}
 	processVersions(
 		experiment.NewContext(context.Background(), exps...),
 		t, testModules)

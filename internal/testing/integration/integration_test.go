@@ -18,6 +18,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/safehtml/template"
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/godoc/dochtml"
 	"golang.org/x/pkgsite/internal/index"
 	"golang.org/x/pkgsite/internal/middleware"
@@ -38,6 +39,7 @@ func TestMain(m *testing.M) {
 
 func TestEndToEndProcessing(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx = experiment.NewContext(ctx, internal.ExperimentDoNotInsertNewDocumentation)
 	defer cancel()
 
 	defer postgres.ResetTestDB(testDB, t)

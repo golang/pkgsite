@@ -54,6 +54,7 @@ type Fetcher struct {
 func (f *Fetcher) FetchAndUpdateState(ctx context.Context, modulePath, requestedVersion, appVersionLabel string) (_ int, resolvedVersion string, err error) {
 	defer derrors.Wrap(&err, "FetchAndUpdateState(%q, %q, %q)", modulePath, requestedVersion, appVersionLabel)
 	tctx, span := trace.StartSpan(ctx, "FetchAndUpdateState")
+	fmt.Println(experiment.FromContext(ctx).Active())
 	ctx = experiment.NewContext(tctx, experiment.FromContext(ctx).Active()...)
 	ctx = log.NewContextWithLabel(ctx, "fetch", modulePath+"@"+requestedVersion)
 	if !utf8.ValidString(modulePath) {

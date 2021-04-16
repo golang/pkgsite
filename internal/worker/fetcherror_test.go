@@ -18,6 +18,7 @@ import (
 	"golang.org/x/mod/semver"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/fetch"
 	"golang.org/x/pkgsite/internal/godoc"
 	"golang.org/x/pkgsite/internal/postgres"
@@ -31,6 +32,7 @@ import (
 // we delete it from the database.
 func TestFetchAndUpdateState_NotFound(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	ctx = experiment.NewContext(ctx, internal.ExperimentDoNotInsertNewDocumentation)
 	defer cancel()
 	defer postgres.ResetTestDB(testDB, t)
 
@@ -92,6 +94,7 @@ func TestFetchAndUpdateState_NotFound(t *testing.T) {
 func TestFetchAndUpdateState_Excluded(t *testing.T) {
 	// Check that an excluded module is not processed, and is marked excluded in module_version_states.
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	ctx = experiment.NewContext(ctx, internal.ExperimentDoNotInsertNewDocumentation)
 	defer cancel()
 
 	defer postgres.ResetTestDB(testDB, t)
@@ -108,6 +111,7 @@ func TestFetchAndUpdateState_Excluded(t *testing.T) {
 
 func TestFetchAndUpdateState_BadRequestedVersion(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	ctx = experiment.NewContext(ctx, internal.ExperimentDoNotInsertNewDocumentation)
 	defer cancel()
 
 	defer postgres.ResetTestDB(testDB, t)
@@ -123,6 +127,7 @@ func TestFetchAndUpdateState_BadRequestedVersion(t *testing.T) {
 func TestFetchAndUpdateState_Incomplete(t *testing.T) {
 	// Check that we store the special "incomplete" status in module_version_states.
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	ctx = experiment.NewContext(ctx, internal.ExperimentDoNotInsertNewDocumentation)
 	defer cancel()
 
 	defer postgres.ResetTestDB(testDB, t)
@@ -150,6 +155,7 @@ func TestFetchAndUpdateState_Incomplete(t *testing.T) {
 func TestFetchAndUpdateState_Mismatch(t *testing.T) {
 	// Check that an excluded module is not processed, and is marked excluded in module_version_states.
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	ctx = experiment.NewContext(ctx, internal.ExperimentDoNotInsertNewDocumentation)
 	defer cancel()
 
 	defer postgres.ResetTestDB(testDB, t)
@@ -175,6 +181,7 @@ func TestFetchAndUpdateState_DeleteOlder(t *testing.T) {
 	// Check that fetching an alternative module deletes all older versions of that
 	// module from search_documents (but not versions).
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	ctx = experiment.NewContext(ctx, internal.ExperimentDoNotInsertNewDocumentation)
 	defer cancel()
 
 	defer postgres.ResetTestDB(testDB, t)
@@ -219,6 +226,7 @@ func TestFetchAndUpdateState_DeleteOlder(t *testing.T) {
 
 func TestFetchAndUpdateState_SkipIncompletePackage(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	ctx = experiment.NewContext(ctx, internal.ExperimentDoNotInsertNewDocumentation)
 	defer cancel()
 	defer postgres.ResetTestDB(testDB, t)
 	badModule := map[string]string{
@@ -255,6 +263,7 @@ func TestFetchAndUpdateState_Timeout(t *testing.T) {
 	defer teardownProxy()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 0)
+	ctx = experiment.NewContext(ctx, internal.ExperimentDoNotInsertNewDocumentation)
 	defer cancel()
 	fetchAndCheckStatus(ctx, t, proxyClient, sample.ModulePath, sample.VersionString, http.StatusInternalServerError)
 }
@@ -263,6 +272,7 @@ func TestFetchAndUpdateState_Timeout(t *testing.T) {
 // that we automatically try to fetch it again later.
 func TestFetchAndUpdateState_ProxyTimedOut(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	ctx = experiment.NewContext(ctx, internal.ExperimentDoNotInsertNewDocumentation)
 	defer cancel()
 	defer postgres.ResetTestDB(testDB, t)
 
@@ -288,6 +298,7 @@ func TestFetchAndUpdateState_ProxyTimedOut(t *testing.T) {
 // would otherwise exceed HTML size limit and not get shown at all.
 func TestTrimLargeCode(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout*3)
+	ctx = experiment.NewContext(ctx, internal.ExperimentDoNotInsertNewDocumentation)
 	defer cancel()
 	defer postgres.ResetTestDB(testDB, t)
 	trimmedModule := map[string]string{

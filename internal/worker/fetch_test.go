@@ -14,6 +14,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/godoc"
 	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/postgres"
@@ -40,6 +41,7 @@ var (
 
 func TestFetchAndUpdateState(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	ctx = experiment.NewContext(ctx, internal.ExperimentDoNotInsertNewDocumentation)
 	defer cancel()
 
 	stdlib.UseTestData = true
@@ -373,6 +375,7 @@ func TestFetchAndUpdateStateCacheZip(t *testing.T) {
 	// proxy can be set up with a small cache for the last downloaded zip. This
 	// test confirms that that feature works.
 	ctx := context.Background()
+	ctx = experiment.NewContext(ctx, internal.ExperimentDoNotInsertNewDocumentation)
 	defer postgres.ResetTestDB(testDB, t)
 	proxyServer := proxy.NewServer([]*proxy.Module{
 		{
@@ -416,6 +419,7 @@ func TestFetchAndUpdateStateCacheZip(t *testing.T) {
 
 func TestFetchAndUpdateLatest(t *testing.T) {
 	ctx := context.Background()
+	ctx = experiment.NewContext(ctx, internal.ExperimentDoNotInsertNewDocumentation)
 	prox, teardown := proxy.SetupTestClient(t, testModules)
 	defer teardown()
 
