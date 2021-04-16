@@ -14,7 +14,6 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
-	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/proxy"
 	"golang.org/x/pkgsite/internal/testing/sample"
@@ -80,11 +79,10 @@ func TestFetch(t *testing.T) {
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			s, _, teardown := newTestServer(t, testModulesForProxy, nil, internal.ExperimentDoNotInsertNewDocumentation)
+			s, _, teardown := newTestServer(t, testModulesForProxy, nil)
 			defer teardown()
 
 			ctx, cancel := context.WithTimeout(context.Background(), testFetchTimeout)
-			ctx = experiment.NewContext(ctx, internal.ExperimentDoNotInsertNewDocumentation)
 			defer cancel()
 
 			status, responseText := s.fetchAndPoll(ctx, s.getDataSource(ctx), testModulePath, test.fullPath, test.version)
@@ -143,10 +141,9 @@ func TestFetchErrors(t *testing.T) {
 				test.fetchTimeout = testFetchTimeout
 			}
 			ctx, cancel := context.WithTimeout(context.Background(), test.fetchTimeout)
-			ctx = experiment.NewContext(ctx, internal.ExperimentDoNotInsertNewDocumentation)
 			defer cancel()
 
-			s, _, teardown := newTestServer(t, testModulesForProxy, nil, internal.ExperimentDoNotInsertNewDocumentation)
+			s, _, teardown := newTestServer(t, testModulesForProxy, nil)
 			defer teardown()
 			got, err := s.fetchAndPoll(ctx, s.getDataSource(ctx), test.modulePath, test.fullPath, test.version)
 

@@ -12,7 +12,6 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"golang.org/x/pkgsite/internal"
-	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/testing/sample"
 )
 
@@ -305,7 +304,6 @@ func compareUnitSymbols(ctx context.Context, t *testing.T, testDB *DB,
 	if err != nil {
 		t.Fatal(err)
 	}
-	ctx = experiment.NewContext(ctx, internal.ExperimentDoNotInsertNewDocumentation)
 	buildToSymbols, err := getUnitSymbols(ctx, testDB.db, unitID)
 	if err != nil {
 		t.Fatal(err)
@@ -338,7 +336,6 @@ func compareUnitSymbols(ctx context.Context, t *testing.T, testDB *DB,
 func comparePackageSymbols(ctx context.Context, t *testing.T, testDB *DB,
 	path, modulePath, version string, want map[string]map[string]*internal.UnitSymbol) {
 	t.Helper()
-	ctx = experiment.NewContext(ctx, internal.ExperimentDoNotInsertNewDocumentation)
 	got, err := testDB.GetPackageSymbols(ctx, path, modulePath)
 	if err != nil {
 		t.Fatal(err)

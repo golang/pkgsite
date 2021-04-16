@@ -161,10 +161,7 @@ func TestFetchPackageVersionsDetails(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), testTimeout*2)
-			ctx = experiment.NewContext(ctx,
-				internal.ExperimentDoNotInsertNewDocumentation,
-				internal.ExperimentSymbolHistoryVersionsPage,
-			)
+			ctx = experiment.NewContext(ctx, internal.ExperimentSymbolHistoryVersionsPage)
 			defer cancel()
 			defer postgres.ResetTestDB(testDB, t)
 

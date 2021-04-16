@@ -14,7 +14,6 @@ import (
 	"github.com/alicebob/miniredis/v2"
 	"github.com/go-redis/redis/v8"
 	"github.com/google/safehtml/template"
-	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/cache"
 	"golang.org/x/pkgsite/internal/config"
 	"golang.org/x/pkgsite/internal/index"
@@ -36,11 +35,10 @@ func setupWorker(ctx context.Context, t *testing.T, proxyClient *proxy.Client, i
 	}
 	// TODO: it would be better if InMemory made http requests
 	// back to worker, rather than calling fetch itself.
-	queue := queue.NewInMemory(ctx, 10, []string{internal.ExperimentDoNotInsertNewDocumentation},
-		func(ctx context.Context, mpath, version string) (int, error) {
-			code, _, err := fetcher.FetchAndUpdateState(ctx, mpath, version, "test")
-			return code, err
-		})
+	queue := queue.NewInMemory(ctx, 10, nil, func(ctx context.Context, mpath, version string) (int, error) {
+		code, _, err := fetcher.FetchAndUpdateState(ctx, mpath, version, "test")
+		return code, err
+	})
 
 	workerServer, err := worker.NewServer(&config.Config{}, worker.ServerConfig{
 		DB:               testDB,

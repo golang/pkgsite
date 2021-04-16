@@ -23,7 +23,6 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/derrors"
-	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/stdlib"
@@ -533,17 +532,7 @@ func insertDocs(ctx context.Context, db *database.DB,
 
 	uniqueCols := []string{"unit_id", "goos", "goarch"}
 	docCols := append(uniqueCols, "synopsis", "source")
-	if experiment.IsActive(ctx, internal.ExperimentDoNotInsertNewDocumentation) {
-		return db.CopyUpsert(ctx, "documentation",
-			docCols, database.CopyFromChan(generateRows()), uniqueCols, "id")
-	}
-
-	// These lines can be deleted once new_documentation is renamed to documentation.
-	if err := db.CopyUpsert(ctx, "documentation",
-		docCols, database.CopyFromChan(generateRows()), uniqueCols, ""); err != nil {
-		return err
-	}
-	return db.CopyUpsert(ctx, "new_documentation",
+	return db.CopyUpsert(ctx, "documentation",
 		docCols, database.CopyFromChan(generateRows()), uniqueCols, "id")
 }
 
@@ -583,11 +572,7 @@ func getDocIDsForPath(ctx context.Context, db *database.DB,
 		unitIDs = append(unitIDs, pathToUnitID[path])
 	}
 
-	doctable := "new_documentation"
-	if experiment.IsActive(ctx, internal.ExperimentDoNotInsertNewDocumentation) {
-		doctable = "documentation"
-	}
-	q := fmt.Sprintf(`SELECT id, unit_id, goos, goarch FROM %s WHERE unit_id = ANY($1)`, doctable)
+	q := `SELECT id, unit_id, goos, goarch FROM documentation WHERE unit_id = ANY($1)`
 	if err := db.RunQuery(ctx, q, collect, pq.Array(unitIDs)); err != nil {
 		return nil, err
 	}
