@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2020 The Go Authors. All rights reserved.
+ * Copyright 2021 The Go Authors. All rights reserved.
  * Use of this source code is governed by a BSD-style
  * license that can be found in the LICENSE file.
  */
@@ -8,14 +8,12 @@
 import './global-types';
 import puppeteer, { Page } from 'puppeteer';
 
-const baseUrl = process.env.FRONTEND_URL ?? '';
-
 describe('Error', () => {
   let page: Page;
 
   beforeEach(async () => {
-    page = await browser.newPage();
-    await page.goto(baseUrl + '/@bad-request');
+    page = await newPage();
+    await page.goto(baseURL + '/@bad-request');
   });
 
   afterEach(async () => {

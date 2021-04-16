@@ -8,14 +8,12 @@
 import './global-types';
 import puppeteer, { Page } from 'puppeteer';
 
-const baseUrl = process.env.FRONTEND_URL ?? '';
-
 describe('Homepage', () => {
   let page: Page;
 
   beforeEach(async () => {
-    page = await browser.newPage();
-    await page.goto(baseUrl);
+    page = await newPage();
+    await page.goto(baseURL);
   });
 
   afterEach(async () => {
@@ -28,12 +26,14 @@ describe('Homepage', () => {
   });
 
   test('desktop viewport matches image snapshot', async () => {
+    await page.$eval('[data-test-id="homepage-search"]', e => (e as HTMLInputElement).blur());
     const image = await page.screenshot({ fullPage: true });
     expect(image).toMatchImageSnapshot();
   });
 
   test('mobile viewport matches image snapshot', async () => {
     await page.emulate(puppeteer.devices['Pixel 2']);
+    await page.$eval('[data-test-id="homepage-search"]', e => (e as HTMLInputElement).blur());
     const image = await page.screenshot({ fullPage: true });
     expect(image).toMatchImageSnapshot();
   });

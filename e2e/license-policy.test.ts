@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2020 The Go Authors. All rights reserved.
+ * Copyright 2021 The Go Authors. All rights reserved.
  * Use of this source code is governed by a BSD-style
  * license that can be found in the LICENSE file.
  */
@@ -8,15 +8,15 @@
 import './global-types';
 import puppeteer, { Page } from 'puppeteer';
 
-describe('Frontend Fetch', () => {
+describe('License Policy', () => {
   let page: Page;
 
-  beforeAll(async () => {
+  beforeEach(async () => {
     page = await newPage();
-    await page.goto(baseURL + '/fetch.test');
+    await page.goto(baseURL + '/license-policy');
   });
 
-  afterAll(async () => {
+  afterEach(async () => {
     await page.close();
   });
 
