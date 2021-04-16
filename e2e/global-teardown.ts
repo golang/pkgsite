@@ -1,13 +1,18 @@
-import os from 'os';
-import path from 'path';
-import rimraf from 'rimraf';
-import { Browser } from 'puppeteer';
+/**
+ * @license
+ * Copyright 2021 The Go Authors. All rights reserved.
+ * Use of this source code is governed by a BSD-style
+ * license that can be found in the LICENSE file.
+ */
 
-declare const global: NodeJS.Global & typeof globalThis & { browser: Browser };
+import { ChildProcessWithoutNullStreams } from 'child_process';
 
-const DIR = path.join(os.tmpdir(), 'jest_puppeteer_global_setup');
+declare const global: NodeJS.Global &
+  typeof globalThis & { chromium: ChildProcessWithoutNullStreams };
+
+/**
+ * teardown kills the chromium instance when the test run is complete.
+ */
 export default async function teardown(): Promise<void> {
-  await global.browser.close();
-  // Clean-up the websocket endpoint file.
-  rimraf.sync(DIR);
+  global.chromium.kill();
 }

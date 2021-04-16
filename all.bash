@@ -179,20 +179,16 @@ run_build_static() {
   runcmd go run ./devtools/cmd/static
 }
 
-npm() {
+run_npm() {
+  npmcmd="./devtools/docker_nodejs.sh npm"
+  if [[ -x "$(command -v npm)" ]]; then
+    npmcmd="npm"
+  fi
   # Run npm install if node_modules directory does not exist.
   if [ ! -d "node_modules" ]; then
-    ./devtools/docker_compose.sh nodejs npm install --quiet
+    runcmd $npmcmd install --quiet
   fi
-  ./devtools/docker_compose.sh nodejs npm $@
-}
-
-run_e2e() {
-  # Run npm install if node_modules directory does not exist.
-  if [ ! -d "node_modules" ]; then
-    ./devtools/docker_compose.sh nodejs npm install --quiet
-  fi
-  ./devtools/docker_compose.sh --build ci npm run test:jest:e2e -- $@
+  runcmd $npmcmd $@
 }
 
 prettier_file_globs='content/static/**/*.{js,css} **/*.md'
@@ -207,9 +203,6 @@ run_prettier() {
   fi
   if [[ -x "$(command -v prettier)" ]]; then
     runcmd prettier --write $files
-  elif [[ -x "$(command -v docker-compose)" && "$(docker images -q pkgsite_nodejs)" ]]; then
-    runcmd docker-compose -f devtools/config/docker-compose.yaml run --entrypoint=npx \
-    nodejs prettier --write $files
   else
     err "prettier must be installed: see https://prettier.io/docs/en/install.html"
   fi
@@ -239,7 +232,8 @@ Available subcommands:
   (empty)        - run all standard checks and tests
   ci             - run checks and tests suitable for continuous integration
   cl             - run checks and tests on the current CL, suitable for a commit or pre-push hook
-  e2e            - run e2e tests locally.
+  e2e            - run e2e tests locally
+  e2e_update     - update e2e snapshots
   lint           - run all standard linters below:
   headers        - (lint) check source files for the license disclaimer
   migrations     - (lint) check migration sequence numbers
@@ -335,8 +329,10 @@ main() {
     unparam) check_unparam ;;
     script_hashes) check_script_hashes ;;
     build_static) run_build_static ;;
-    npm) npm ${@:2} ;;
-    e2e) run_e2e ${@:2} ;;
+    npm) run_npm ${@:2} ;;
+    e2e) run_npm run e2e;;
+    e2e_update) run_npm run e2e -- -u;;
+
     *)
       usage
       exit 1
