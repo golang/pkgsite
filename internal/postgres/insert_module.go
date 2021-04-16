@@ -582,9 +582,13 @@ func getDocIDsForPath(ctx context.Context, db *database.DB,
 		unitIDToPath[pathToUnitID[path]] = path
 		unitIDs = append(unitIDs, pathToUnitID[path])
 	}
-	if err := db.RunQuery(ctx,
-		`SELECT id, unit_id, goos, goarch FROM new_documentation WHERE unit_id = ANY($1)`,
-		collect, pq.Array(unitIDs)); err != nil {
+
+	doctable := "new_documentation"
+	if experiment.IsActive(ctx, internal.ExperimentDoNotInsertNewDocumentation) {
+		doctable = "documentation"
+	}
+	q := fmt.Sprintf(`SELECT id, unit_id, goos, goarch FROM %s WHERE unit_id = ANY($1)`, doctable)
+	if err := db.RunQuery(ctx, q, collect, pq.Array(unitIDs)); err != nil {
 		return nil, err
 	}
 	return pathToDocIDToDoc, nil
