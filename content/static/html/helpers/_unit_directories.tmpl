@@ -47,7 +47,7 @@
           {{- end -}}
           {{- if .Root -}}
             <a href="{{.Root.URL}}">{{.Root.Suffix}}</a>
-            {{if .Root.IsModule}}<span class="UnitHeader-badge">module</span>{{end}}
+            {{if .Root.IsModule}}<span class="UnitDirectories-badge">module</span>{{end}}
           </div>
           <div class="UnitDirectories-mobileSynopsis">{{.Root.Synopsis}}</div>
         </div>
@@ -65,7 +65,7 @@
         <div class="UnitDirectories-subdirectory">
           <span>
             <a href="{{.URL}}">{{.Suffix}}</a>
-            {{if .IsModule}}<span class="UnitHeader-badge">Module</span>{{end}}
+            {{if .IsModule}}<span class="UnitDirectories-badge">Module</span>{{end}}
           </span>
           <div class="UnitDirectories-mobileSynopsis">{{.Synopsis}}</div>
         </div>
