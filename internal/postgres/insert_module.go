@@ -413,20 +413,17 @@ func (pdb *DB) insertUnits(ctx context.Context, db *database.DB, m *internal.Mod
 		return err
 	}
 
-	if experiment.IsActive(ctx, internal.ExperimentInsertSymbols) {
-		pathToDocIDToDoc, err := getDocIDsForPath(ctx, db, pathToUnitID, pathToDocs)
-		if err != nil {
-			return err
-		}
-
-		// Only update symbols if the version type is release.
-		versionType, err := version.ParseType(m.Version)
-		if err != nil {
-			return err
-		}
-		if versionType == version.TypeRelease {
-			return insertSymbols(ctx, db, m.ModulePath, m.Version, pathToID, pathToDocIDToDoc)
-		}
+	pathToDocIDToDoc, err := getDocIDsForPath(ctx, db, pathToUnitID, pathToDocs)
+	if err != nil {
+		return err
+	}
+	// Only update symbols if the version type is release.
+	versionType, err := version.ParseType(m.Version)
+	if err != nil {
+		return err
+	}
+	if versionType == version.TypeRelease {
+		return insertSymbols(ctx, db, m.ModulePath, m.Version, pathToID, pathToDocIDToDoc)
 	}
 	return nil
 }

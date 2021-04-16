@@ -7,7 +7,6 @@ package internal
 
 const (
 	ExperimentDoNotInsertNewDocumentation = "do-not-insert-new-documentation"
-	ExperimentInsertSymbols               = "insert-symbols"
 	ExperimentSymbolHistoryVersionsPage   = "symbol-history-versions-page"
 	ExperimentSymbolHistoryMainPage       = "symbol-history-main-page"
 )
@@ -16,7 +15,6 @@ const (
 // a description of each experiment.
 var Experiments = map[string]string{
 	ExperimentDoNotInsertNewDocumentation: "Do not insert into the new_documentation table.",
-	ExperimentInsertSymbols:               "Insert data into symbols, package_symbols, and documentation_symbols.",
 	ExperimentSymbolHistoryVersionsPage:   "Show package API history on the versions page.",
 	ExperimentSymbolHistoryMainPage:       "Show package API history on the main unit page.",
 }

@@ -23,9 +23,6 @@ func insertSymbols(ctx context.Context, db *database.DB, modulePath, version str
 	pathToID map[string]int,
 	pathToDocIDToDoc map[string]map[int]*internal.Documentation) (err error) {
 	defer derrors.WrapStack(&err, "insertSymbols(ctx, db, %q, %q, pathToID, pathToDocs)", modulePath, version)
-	if !experiment.IsActive(ctx, internal.ExperimentInsertSymbols) {
-		return nil
-	}
 	pathToPkgsymToID, err := upsertPackageSymbolsReturningIDs(ctx, db, modulePath, pathToID, pathToDocIDToDoc)
 	if err != nil {
 		return err
