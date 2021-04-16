@@ -1,3 +1,0 @@
-experiments:
-  - Name: sticky-header
-    Rollout: 100
