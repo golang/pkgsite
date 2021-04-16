@@ -27,22 +27,27 @@
           {{range .Results}}
             <div class="SearchSnippet">
               <h2 class="SearchSnippet-header">
-                <a href="/{{.PackagePath}}">{{.PackagePath}}</a>
+                <a href="/{{.PackagePath}}" data-test-id="snippet-title">{{.PackagePath}}</a>
               </h2>
-              <p class="SearchSnippet-synopsis">{{.Synopsis}}</p>
+              <p class="SearchSnippet-synopsis" data-test-id="snippet-synopsis">{{.Synopsis}}</p>
               <div class="SearchSnippet-infoLabel">
-                <b class="InfoLabel-title">Version:</b> {{.DisplayVersion}}
+                <b class="InfoLabel-title">Version:</b>
+                <span data-test-id="snippet-version"> {{.DisplayVersion}}</span>
                 <span class="InfoLabel-divider">|</span>
-                <b class="InfoLabel-title">Published:</b> {{.CommitTime}}
+                <b class="InfoLabel-title">Published:</b>
+                <span data-test-id="snippet-published"> {{.CommitTime}}</span>
                 <span class="InfoLabel-divider">|</span>
-                <b class="InfoLabel-title">Imported by:</b> {{.NumImportedBy}}
+                <b class="InfoLabel-title">Imported by:</b>
+                <span data-test-id="snippet-importedby"> {{.NumImportedBy}}</span>
                 <span class="InfoLabel-divider">|</span>
                 <b class="InfoLabel-title">{{pluralize (len .Licenses) "License"}}:</b>
-                {{if .Licenses}}
-                  {{commaseparate .Licenses}}
-                {{else}}
-                  <span>N/A</span>
-                {{end}}
+                <span data-test-id="snippet-license">
+                  {{if .Licenses}}
+                    {{commaseparate .Licenses}}
+                  {{else}}
+                    <span>N/A</span>
+                  {{end}}
+                </span>
               </div>
             </div>
           {{end}}
