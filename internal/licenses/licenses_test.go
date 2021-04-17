@@ -749,3 +749,13 @@ func coveragePercentEqual(a, b float64) bool {
 	}
 	return math.Abs(a-b) <= 4
 }
+
+func BenchmarkBuildDFA(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		s, err := lc.NewScanner(append(exceptionLicenses, lc.BuiltinLicenses()...))
+		if err != nil {
+			b.Fatal(err)
+		}
+		_ = s
+	}
+}
