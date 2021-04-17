@@ -32,7 +32,7 @@ class PuppeteerEnvironment extends NodeEnvironment {
         page.on('request', r => {
           const url = new URL(r.url());
           let headers = r.headers();
-          if (url.origin.endsWith('pkg.go.dev')) {
+          if (url.origin === BASE_URL) {
             headers = { ...r.headers(), Authorization: `Bearer ${AUTHORIZATION}` };
           }
           r.continue({ headers });
