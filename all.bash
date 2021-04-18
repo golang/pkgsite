@@ -232,8 +232,6 @@ Available subcommands:
   (empty)        - run all standard checks and tests
   ci             - run checks and tests suitable for continuous integration
   cl             - run checks and tests on the current CL, suitable for a commit or pre-push hook
-  e2e            - run e2e tests locally
-  e2e_update     - update e2e snapshots
   lint           - run all standard linters below:
   headers        - (lint) check source files for the license disclaimer
   migrations     - (lint) check migration sequence numbers
@@ -330,8 +328,6 @@ main() {
     script_hashes) check_script_hashes ;;
     build_static) run_build_static ;;
     npm) run_npm ${@:2} ;;
-    e2e) run_npm run e2e;;
-    e2e_update) run_npm run e2e -- -u;;
 
     *)
       usage
