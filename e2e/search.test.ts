@@ -38,6 +38,10 @@ describe('Search', () => {
     const image = await page.screenshot({ fullPage: true });
     expect(image).toMatchImageSnapshot();
   });
+
+  test('no page errors', () => {
+    expect(pageErrors).toHaveLength(0);
+  });
 });
 
 /**

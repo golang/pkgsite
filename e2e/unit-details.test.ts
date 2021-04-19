@@ -61,6 +61,10 @@ describe('Unit Details - golang.org/x/pkgsite - mobile', () => {
   });
 });
 
+test('no page errors', () => {
+  expect(pageErrors).toHaveLength(0);
+});
+
 /**
  * prepare gets the page ready for snapshot testing by rewriting highly
  * variable page content to constant values.

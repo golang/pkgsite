@@ -25,6 +25,7 @@ class PuppeteerEnvironment extends NodeEnvironment {
   constructor(config) {
     super(config);
     this.global.baseURL = BASE_URL;
+    this.global.pageErrors = [];
     this.global.newPage = async () => {
       const page = await this.global.browser.newPage();
       if (AUTHORIZATION) {
@@ -38,6 +39,9 @@ class PuppeteerEnvironment extends NodeEnvironment {
           r.continue({ headers });
         });
       }
+      page.on('pageerror', err => {
+        this.global.pageErrors.push(err);
+      });
       return page;
     };
   }

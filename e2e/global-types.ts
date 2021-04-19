@@ -26,4 +26,9 @@ declare global {
    * interact with a single Chrome tab.
    */
   const newPage: () => Promise<Page>;
+
+  /**
+   * pageErrors is a record of uncaught exceptions that have occured on a page.
+   */
+  const pageErrors: Error[];
 }
