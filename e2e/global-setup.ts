@@ -25,9 +25,13 @@ const port = Number(process.env.PORT) || 3000;
  * and sleeps momentarily to make sure everything is ready to go.
  */
 export default async function setup(): Promise<void> {
-  global.chromium = spawn('docker', ['run', '-p', `${port}:${port}`, 'browserless/chrome'], {
-    stdio: 'ignore',
-  });
+  global.chromium = spawn(
+    'docker',
+    ['run', '--rm', '-p', `${port}:${port}`, 'browserless/chrome'],
+    {
+      stdio: 'ignore',
+    }
+  );
 
   global.chromium.on('error', e => {
     console.error(e);
@@ -35,7 +39,7 @@ export default async function setup(): Promise<void> {
   });
 
   await wait({ port, output: 'dots' });
-  await sleep(1000);
+  await sleep(3000);
 }
 
 function sleep(ms: number) {
