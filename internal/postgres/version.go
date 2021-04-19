@@ -18,6 +18,7 @@ import (
 	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/log"
+	"golang.org/x/pkgsite/internal/middleware"
 	"golang.org/x/pkgsite/internal/version"
 	"golang.org/x/sync/errgroup"
 )
@@ -322,7 +323,8 @@ func (db *DB) unitExistsAtLatest(ctx context.Context, unitPath, modulePath strin
 }
 
 func (db *DB) getMultiLatestModuleVersions(ctx context.Context, modulePaths []string) (lmvs []*internal.LatestModuleVersions, err error) {
-	derrors.WrapStack(&err, "getMultiLatestModuleVersions(%v)", modulePaths)
+	defer derrors.WrapStack(&err, "getMultiLatestModuleVersions(%v)", modulePaths)
+	defer middleware.ElapsedStat(ctx, "getMultiLatestModuleVersions")()
 
 	collect := func(rows *sql.Rows) error {
 		var (

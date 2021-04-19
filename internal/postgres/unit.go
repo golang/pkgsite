@@ -52,6 +52,7 @@ func (db *DB) GetUnitMeta(ctx context.Context, fullPath, requestedModulePath, re
 
 func (db *DB) getUnitMetaWithKnownLatestVersion(ctx context.Context, fullPath, modulePath, version string, lmv *internal.LatestModuleVersions) (_ *internal.UnitMeta, err error) {
 	defer derrors.WrapStack(&err, "getUnitMetaKnownVersion")
+	defer middleware.ElapsedStat(ctx, "getUnitMetaKnownVersion")()
 
 	query := squirrel.Select(
 		"m.module_path",
@@ -142,6 +143,7 @@ func (db *DB) getLatestUnitVersion(ctx context.Context, fullPath, requestedModul
 	modulePath, latestVersion string, lmv *internal.LatestModuleVersions, err error) {
 
 	defer derrors.WrapStack(&err, "getLatestUnitVersion(%q, %q)", fullPath, requestedModulePath)
+	defer middleware.ElapsedStat(ctx, "getLatestUnitVersion")()
 
 	modPaths := []string{requestedModulePath}
 	// If we don't know the module path, try each possible module path from longest to shortest.
@@ -434,6 +436,7 @@ func (db *DB) getUnitWithAllFields(ctx context.Context, um *internal.UnitMeta) (
 		r      internal.Readme
 		u      internal.Unit
 	)
+	end := middleware.ElapsedStat(ctx, "getUnitWithAllFields-readme-and-imports")
 	err = db.db.QueryRow(ctx, query, um.Path, um.ModulePath, um.Version).Scan(
 		&unitID,
 		database.NullIsEmpty(&r.Filepath),
@@ -451,30 +454,14 @@ func (db *DB) getUnitWithAllFields(ctx context.Context, um *internal.UnitMeta) (
 	default:
 		return nil, err
 	}
+	end()
 
-	// Get documentation. There can be multiple rows.
-	query = `
-		SELECT goos, goarch, synopsis, source
-		FROM documentation
-		WHERE unit_id = $1
-	`
-	err = db.db.RunQuery(ctx, query, func(rows *sql.Rows) error {
-		var d internal.Documentation
-		if err := rows.Scan(&d.GOOS, &d.GOARCH, &d.Synopsis, &d.Source); err != nil {
-			return err
-		}
-		u.Documentation = append(u.Documentation, &d)
-		return nil
-	}, unitID)
+	// Get documentation.
+	docs, err := db.getDocumentation(ctx, unitID)
 	if err != nil {
 		return nil, err
 	}
-	// Sort documentation by GOOS/GOARCH.
-	sort.Slice(u.Documentation, func(i, j int) bool {
-		ci := u.Documentation[i].BuildContext()
-		cj := u.Documentation[j].BuildContext()
-		return internal.CompareBuildContexts(ci, cj) < 0
-	})
+	u.Documentation = docs
 
 	// Get other info.
 	pkgs, err := db.getPackagesInUnit(ctx, um.Path, um.ModulePath, um.Version)
@@ -484,6 +471,35 @@ func (db *DB) getUnitWithAllFields(ctx context.Context, um *internal.UnitMeta) (
 	u.Subdirectories = pkgs
 	u.UnitMeta = *um
 	return &u, nil
+}
+
+func (db *DB) getDocumentation(ctx context.Context, unitID int) (_ []*internal.Documentation, err error) {
+	defer derrors.WrapStack(&err, "getDocumentation(ctx, %d)", unitID)
+	defer middleware.ElapsedStat(ctx, "getDocumentation")()
+
+	var docs []*internal.Documentation
+	// Get documentation. There can be multiple rows.
+	query := `
+		SELECT goos, goarch, synopsis, source
+		FROM documentation
+		WHERE unit_id = $1`
+	if err := db.db.RunQuery(ctx, query, func(rows *sql.Rows) error {
+		var d internal.Documentation
+		if err := rows.Scan(&d.GOOS, &d.GOARCH, &d.Synopsis, &d.Source); err != nil {
+			return err
+		}
+		docs = append(docs, &d)
+		return nil
+	}, unitID); err != nil {
+		return nil, err
+	}
+	// Sort documentation by GOOS/GOARCH.
+	sort.Slice(docs, func(i, j int) bool {
+		ci := docs[i].BuildContext()
+		cj := docs[j].BuildContext()
+		return internal.CompareBuildContexts(ci, cj) < 0
+	})
+	return docs, nil
 }
 
 type dbPath struct {
