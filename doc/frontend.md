@@ -65,9 +65,9 @@ flakiness. See the
 [API](https://github.com/americanexpress/jest-image-snapshot#%EF%B8%8F-api) for
 jest image snapshots for more information.
 
-To run the tests on your machine run `./all.bash e2e`.
+The e2e tests require that npm and docker are installed on your machine.
 
-To update the image and accessibility snapshots run `./all/bash e2e -u`
+Run the tests with `BASE_URL=https://pkg.go.dev npm run e2e`.
 
 #### Writing E2E Tests
 
@@ -97,11 +97,19 @@ When modifying any TypeScript code, you must run
 
 ### Testing
 
-You can test html and static asset changes by running `./all.bash npm test`.
+You can test html and static asset changes by running `npm test`.
 This will run the TypeScript type checker and unit tests.
 
 ### Linting
 
-Lint your changes by running `./all.bash npm run lint`. This will run stylelint
+Lint your changes by running `npm run lint`. This will run stylelint
 and eslint on CSS and TS files in content/static. You can autofix some errors by
-running `./all.bash npm run lint -- --fix`.
+running `npm run lint -- --fix`.
+
+### Running npm commands with docker
+
+To run the the unit tests or linters without installing npm prefix the
+command with `./all.bash`. This will run the npm through a docker
+container that has the pkgsite code mounted in an internal directory.
+
+`./all.bash npm run <command>`
