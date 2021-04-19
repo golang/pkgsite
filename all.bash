@@ -264,8 +264,8 @@ main() {
     "")
       standard_linters
       run_prettier
-      npm run lint
-      npm run test
+      run_npm run lint
+      run_npm run test
       runcmd go mod tidy
       runcmd env GO_DISCOVERY_TESTDB=true go test ./...
       runcmd go test ./internal/secrets
@@ -296,8 +296,8 @@ main() {
         run_prettier $pfiles
       fi
       if [[ $(filter "$files" 'content/static/**') != '' ]]; then
-        npm run lint
-        npm run test
+        run_npm run lint
+        run_npm run test
       fi
       runcmd go mod tidy
       runcmd env GO_DISCOVERY_TESTDB=true go test ./...
