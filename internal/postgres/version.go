@@ -155,6 +155,7 @@ func populateLatestInfos(ctx context.Context, db *DB, mis []*internal.ModuleInfo
 // That can save a redundant call to GetUnitMeta here.
 func (db *DB) GetLatestInfo(ctx context.Context, unitPath, modulePath string, latestUnitMeta *internal.UnitMeta) (latest internal.LatestInfo, err error) {
 	defer derrors.WrapStack(&err, "DB.GetLatestInfo(ctx, %q, %q)", unitPath, modulePath)
+	defer middleware.ElapsedStat(ctx, "DB.GetLatestInfo")()
 
 	group, gctx := errgroup.WithContext(ctx)
 
@@ -199,6 +200,7 @@ func (db *DB) GetLatestInfo(ctx context.Context, unitPath, modulePath string, la
 // it returns empty strings.
 func (db *DB) getLatestMajorVersion(ctx context.Context, fullPath, modulePath string) (modPath, pkgPath string, err error) {
 	defer derrors.WrapStack(&err, "DB.getLatestMajorVersion2(%q)", modulePath)
+	defer middleware.ElapsedStat(ctx, "DB.getLatestMajorVersion")()
 
 	// Collect all the non-deprecated module paths for the series that have at
 	// least one good version, along with that good version. A good version
@@ -276,6 +278,7 @@ func (db *DB) getLatestMajorVersion(ctx context.Context, fullPath, modulePath st
 // unitExistsAtLatest reports whether unitPath exists at the latest version of modulePath.
 func (db *DB) unitExistsAtLatest(ctx context.Context, unitPath, modulePath string) (unitExists bool, err error) {
 	defer derrors.WrapStack(&err, "DB.unitExistsAtLatest(ctx, %q, %q)", unitPath, modulePath)
+	defer middleware.ElapsedStat(ctx, "DB.unitExistsAtLatest")()
 
 	// Find the latest version of the module path in the modules table.
 	var latestGoodVersion string

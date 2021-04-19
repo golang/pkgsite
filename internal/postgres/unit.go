@@ -36,7 +36,7 @@ import (
 //       we do have: again first by module path length, then by version.
 func (db *DB) GetUnitMeta(ctx context.Context, fullPath, requestedModulePath, requestedVersion string) (_ *internal.UnitMeta, err error) {
 	defer derrors.WrapStack(&err, "DB.GetUnitMeta(ctx, %q, %q, %q)", fullPath, requestedModulePath, requestedVersion)
-	defer middleware.ElapsedStat(ctx, "GetUnitMeta")()
+	defer middleware.ElapsedStat(ctx, "DB.GetUnitMeta")()
 
 	modulePath := requestedModulePath
 	version := requestedVersion

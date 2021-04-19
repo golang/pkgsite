@@ -9,6 +9,7 @@ import (
 
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/log"
+	"golang.org/x/pkgsite/internal/middleware"
 )
 
 // GetLatestInfo returns various pieces of information about the latest
@@ -19,6 +20,8 @@ import (
 // It returns empty strings on error.
 // It is intended to be used as an argument to middleware.LatestVersions.
 func (s *Server) GetLatestInfo(ctx context.Context, unitPath, modulePath string, latestUnitMeta *internal.UnitMeta) internal.LatestInfo {
+	defer middleware.ElapsedStat(ctx, "GetLatestInfo")()
+
 	// It is okay to use a different DataSource (DB connection) than the rest of the
 	// request, because this makes self-contained calls on the DB.
 	ds := s.getDataSource(ctx)
