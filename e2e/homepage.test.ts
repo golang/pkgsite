@@ -11,12 +11,12 @@ import puppeteer, { Page } from 'puppeteer';
 describe('Homepage', () => {
   let page: Page;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     page = await newPage();
     await page.goto(baseURL);
   });
 
-  afterEach(async () => {
+  afterAll(async () => {
     await page.close();
   });
 

@@ -46,29 +46,31 @@ describe('Search', () => {
  * @param page The page to prepare
  */
 async function prepare(page: Page): Promise<void> {
-  await page.$$eval('[data-test-id="snippet-title"]', els =>
-    els.map(el => {
-      el.innerHTML = 'net/http/pprof';
-      (el as HTMLAnchorElement).href = 'net/http/pprof';
-    })
-  );
-  await page.$$eval('[data-test-id="snippet-synopsis"]', els =>
-    els.map(
-      el =>
-        (el.innerHTML =
-          'Package pprof serves via its HTTP server runtime profiling data in the format expected by the pprof visualization tool.')
-    )
-  );
-  await page.$$eval('[data-test-id="snippet-version"]', els =>
-    els.map(el => (el.innerHTML = 'go1.16.3'))
-  );
-  await page.$$eval('[data-test-id="snippet-published"]', els =>
-    els.map(el => (el.innerHTML = 'Apr 1, 2021'))
-  );
-  await page.$$eval('[data-test-id="snippet-importedby"]', els =>
-    els.map(el => (el.innerHTML = '11632'))
-  );
-  await page.$$eval('[data-test-id="snippet-license"]', els =>
-    els.map(el => (el.innerHTML = 'BSD-3-Clause'))
-  );
+  await Promise.all([
+    page.$$eval('[data-test-id="snippet-title"]', els =>
+      els.map(el => {
+        el.innerHTML = 'net/http/pprof';
+        (el as HTMLAnchorElement).href = 'net/http/pprof';
+      })
+    ),
+    page.$$eval('[data-test-id="snippet-synopsis"]', els =>
+      els.map(el => {
+        el.innerHTML =
+          'Package pprof serves via its HTTP server runtime profiling ' +
+          'data in the format expected by the pprof visualization tool.';
+      })
+    ),
+    page.$$eval('[data-test-id="snippet-version"]', els =>
+      els.map(el => (el.innerHTML = 'go1.16.3'))
+    ),
+    page.$$eval('[data-test-id="snippet-published"]', els =>
+      els.map(el => (el.innerHTML = 'Apr 1, 2021'))
+    ),
+    page.$$eval('[data-test-id="snippet-importedby"]', els =>
+      els.map(el => (el.innerHTML = '11632'))
+    ),
+    page.$$eval('[data-test-id="snippet-license"]', els =>
+      els.map(el => (el.innerHTML = 'BSD-3-Clause'))
+    ),
+  ]);
 }

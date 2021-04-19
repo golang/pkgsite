@@ -11,12 +11,12 @@ import puppeteer, { Page } from 'puppeteer';
 describe('Badge', () => {
   let page: Page;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     page = await newPage();
     await page.goto(baseURL + '/badge');
   });
 
-  afterEach(async () => {
+  afterAll(async () => {
     await page.close();
   });
 
