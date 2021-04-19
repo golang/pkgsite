@@ -12,12 +12,14 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/experiment"
+	"golang.org/x/pkgsite/internal/middleware"
 )
 
 // GetPackageSymbols returns all of the symbols for a given package path and module path.
 func (db *DB) GetPackageSymbols(ctx context.Context, packagePath, modulePath string,
 ) (_ map[string]map[string]*internal.UnitSymbol, err error) {
 	defer derrors.Wrap(&err, "GetPackageSymbols(ctx, db, %q, %q)", packagePath, modulePath)
+	defer middleware.ElapsedStat(ctx, "GetPackageSymbols")
 
 	doctable := "new_documentation"
 	if experiment.IsActive(ctx, internal.ExperimentDoNotInsertNewDocumentation) {
