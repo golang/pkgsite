@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strings"
 	"testing"
 )
@@ -31,11 +32,15 @@ func TestPlaygroundShare(t *testing.T) {
 			}
 		}))
 		defer ts.Close()
-		pgURL = ts.URL
+		testURL, err := url.Parse(ts.URL)
+		if err != nil {
+			t.Fatal(err)
+		}
+		pgURL = testURL
 	}
 
 	testCases := []struct {
-		pgURL  string
+		pgURL  *url.URL
 		method string
 		desc   string
 		body   string
@@ -70,7 +75,7 @@ func main() {
 			shareID: "UCPdVNrl0-P",
 		},
 		{
-			pgURL:  "/*?",
+			pgURL:  &url.URL{Path: "/*?"},
 			method: http.MethodPost,
 			desc:   "Share endpoint: Malformed URL returns internal server error",
 			code:   http.StatusInternalServerError,
@@ -80,13 +85,14 @@ func main() {
 		t.Run(test.desc, func(t *testing.T) {
 			body := strings.NewReader(test.body)
 
-			req, err := http.NewRequest(test.method, "/play", body)
+			req, err := http.NewRequest(test.method, "/play/share", body)
 			if err != nil {
 				t.Fatal(err)
 			}
 			req.Header.Set("Content-Type", "text/plain; charset=utf-8")
 			w := httptest.NewRecorder()
-			makeFetchPlayRequest(w, req, test.pgURL)
+			proxy := makePlaygroundProxy(test.pgURL)
+			proxy.ServeHTTP(w, req)
 
 			res := w.Result()
 			if got, want := res.StatusCode, test.code; got != want {

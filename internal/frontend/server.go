@@ -137,8 +137,6 @@ func (s *Server) Install(handle func(string, http.Handler), redisClient *redis.C
 	handle("/mod/", http.HandlerFunc(s.handleModuleDetailsRedirect))
 	handle("/pkg/", http.HandlerFunc(s.handlePackageDetailsRedirect))
 	handle("/fetch/", fetchHandler)
-	// This is legacy handler to be replaced by /play/share.
-	handle("/play", http.HandlerFunc(s.handlePlay))
 	handle("/play/compile", http.HandlerFunc(s.proxyPlayground))
 	handle("/play/fmt", http.HandlerFunc(s.handleFmt))
 	handle("/play/share", http.HandlerFunc(s.proxyPlayground))
