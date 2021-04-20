@@ -19,7 +19,7 @@ import (
 func (db *DB) GetPackageSymbols(ctx context.Context, packagePath, modulePath string,
 ) (_ map[string]map[string]*internal.UnitSymbol, err error) {
 	defer derrors.Wrap(&err, "GetPackageSymbols(ctx, db, %q, %q)", packagePath, modulePath)
-	defer middleware.ElapsedStat(ctx, "GetPackageSymbols")
+	defer middleware.ElapsedStat(ctx, "GetPackageSymbols")()
 
 	doctable := "new_documentation"
 	if experiment.IsActive(ctx, internal.ExperimentDoNotInsertNewDocumentation) {

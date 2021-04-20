@@ -28,7 +28,7 @@ import (
 // recent from a list of pseudo-versions sorted in descending semver order.
 func (db *DB) GetVersionsForPath(ctx context.Context, path string) (_ []*internal.ModuleInfo, err error) {
 	defer derrors.WrapStack(&err, "GetVersionsForPath(ctx, %q)", path)
-	defer middleware.ElapsedStat(ctx, "GetVersionsForPath")
+	defer middleware.ElapsedStat(ctx, "GetVersionsForPath")()
 
 	versions, err := getPathVersions(ctx, db, path, version.TypeRelease, version.TypePrerelease)
 	if err != nil {
