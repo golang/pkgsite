@@ -18,7 +18,6 @@ import (
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/stdlib"
-	"golang.org/x/pkgsite/internal/symbol"
 	"golang.org/x/pkgsite/internal/version"
 )
 
@@ -95,11 +94,10 @@ func fetchVersionsDetails(ctx context.Context, ds internal.DataSource, fullPath,
 
 	outVersionToNameToUnitSymbol := map[string]map[string]*internal.UnitSymbol{}
 	if experiment.IsActive(ctx, internal.ExperimentSymbolHistoryVersionsPage) {
-		versionToNameToUnitSymbols, err := db.GetPackageSymbols(ctx, fullPath, modulePath)
+		outVersionToNameToUnitSymbol, err = db.GetSymbolHistory(ctx, fullPath, modulePath)
 		if err != nil {
 			return nil, err
 		}
-		outVersionToNameToUnitSymbol = symbol.IntroducedHistory(versionToNameToUnitSymbols)
 	}
 	linkify := func(mi *internal.ModuleInfo) string {
 		// Here we have only version information, but need to construct the full

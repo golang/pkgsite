@@ -10,16 +10,32 @@ import (
 	"fmt"
 
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/middleware"
+	"golang.org/x/pkgsite/internal/symbol"
 )
 
-// GetPackageSymbols returns all of the symbols for a given package path and module path.
-func (db *DB) GetPackageSymbols(ctx context.Context, packagePath, modulePath string,
-) (_ map[string]map[string]*internal.UnitSymbol, err error) {
-	defer derrors.Wrap(&err, "GetPackageSymbols(ctx, db, %q, %q)", packagePath, modulePath)
-	defer middleware.ElapsedStat(ctx, "GetPackageSymbols")()
+// GetSymbolHistory returns a map of the first version when a symbol name is
+// added to the API, to the symbol name, to the UnitSymbol struct. The
+// UnitSymbol.Children field will always be empty, as children names are also
+// tracked.
+func (db *DB) GetSymbolHistory(ctx context.Context, packagePath, modulePath string,
+) (outVersionToNameToUnitSymbol map[string]map[string]*internal.UnitSymbol, err error) {
+	defer derrors.Wrap(&err, "GetSymbolHistory(ctx, %q, %q)", packagePath, modulePath)
+	defer middleware.ElapsedStat(ctx, "GetSymbolHistory")()
+	versionToNameToUnitSymbols, err := getPackageSymbols(ctx, db.db, packagePath, modulePath)
+	if err != nil {
+		return nil, err
+	}
+	return symbol.IntroducedHistory(versionToNameToUnitSymbols), nil
+}
 
+// getPackageSymbols returns all of the symbols for a given package path and module path.
+func getPackageSymbols(ctx context.Context, ddb *database.DB, packagePath, modulePath string,
+) (_ map[string]map[string]*internal.UnitSymbol, err error) {
+	defer derrors.Wrap(&err, "getPackageSymbols(ctx, ddb, %q, %q)", packagePath, modulePath)
+	defer middleware.ElapsedStat(ctx, "getPackageSymbols")()
 	query := `
 		SELECT
 			s1.name AS symbol_name,
@@ -86,7 +102,7 @@ func (db *DB) GetPackageSymbols(ctx context.Context, packagePath, modulePath str
 		us.AddBuildContext(build)
 		return nil
 	}
-	if err := db.db.RunQuery(ctx, query, collect, packagePath, modulePath); err != nil {
+	if err := ddb.RunQuery(ctx, query, collect, packagePath, modulePath); err != nil {
 		return nil, err
 	}
 	return versionToNameToUnitSymbol, nil

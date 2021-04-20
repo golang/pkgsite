@@ -390,7 +390,7 @@ func (db *DB) CompareStdLib(ctx context.Context) (map[string][]string, error) {
 	}
 	pkgToErrors := map[string][]string{}
 	for path := range apiVersions {
-		versionToNameToSymbol, err := db.GetPackageSymbols(ctx, path, stdlib.ModulePath)
+		versionToNameToSymbol, err := getPackageSymbols(ctx, db.db, path, stdlib.ModulePath)
 		if err != nil {
 			return nil, err
 		}

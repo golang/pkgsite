@@ -19,7 +19,6 @@ import (
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/middleware"
 	"golang.org/x/pkgsite/internal/postgres"
-	"golang.org/x/pkgsite/internal/symbol"
 	"golang.org/x/pkgsite/internal/version"
 )
 
@@ -144,11 +143,10 @@ func fetchMainDetails(ctx context.Context, ds internal.DataSource, um *internal.
 		if !ok {
 			return nil, proxydatasourceNotSupportedErr()
 		}
-		versionToNameToUnitSymbols, err := db.GetPackageSymbols(ctx, um.Path, um.ModulePath)
+		versionToNameToUnitSymbol, err = db.GetSymbolHistory(ctx, um.Path, um.ModulePath)
 		if err != nil {
 			return nil, err
 		}
-		versionToNameToUnitSymbol = symbol.IntroducedHistory(versionToNameToUnitSymbols)
 	}
 	nameToVersion := map[string]string{}
 	for v, nts := range versionToNameToUnitSymbol {

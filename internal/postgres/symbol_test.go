@@ -336,7 +336,7 @@ func compareUnitSymbols(ctx context.Context, t *testing.T, testDB *DB,
 func comparePackageSymbols(ctx context.Context, t *testing.T, testDB *DB,
 	path, modulePath, version string, want map[string]map[string]*internal.UnitSymbol) {
 	t.Helper()
-	got, err := testDB.GetPackageSymbols(ctx, path, modulePath)
+	got, err := getPackageSymbols(ctx, testDB.db, path, modulePath)
 	if err != nil {
 		t.Fatal(err)
 	}
