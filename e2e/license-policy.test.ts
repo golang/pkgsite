@@ -8,35 +8,38 @@
 import './global-types';
 import puppeteer, { Page } from 'puppeteer';
 
-describe('License Policy', () => {
-  let page: Page;
+let page: Page;
 
-  beforeAll(async () => {
-    page = await newPage();
-    await page.goto(baseURL + '/license-policy');
-  });
+beforeAll(async () => {
+  page = await newPage();
+  await page.goto(baseURL + '/license-policy');
+});
 
-  afterAll(async () => {
-    await page.close();
-  });
+afterAll(async () => {
+  await page.close();
+});
 
-  test('accessibility tree matches snapshot', async () => {
-    const a11yTree = await page.accessibility.snapshot();
-    expect(a11yTree).toMatchSnapshot();
-  });
+test('accessibility tree (desktop)', async () => {
+  const a11yTree = await page.accessibility.snapshot();
+  expect(a11yTree).toMatchSnapshot();
+});
 
-  test('desktop viewport matches image snapshot', async () => {
-    const image = await page.screenshot({ fullPage: true });
-    expect(image).toMatchImageSnapshot();
-  });
+test('full page (desktop)', async () => {
+  const image = await page.screenshot({ fullPage: true });
+  expect(image).toMatchImageSnapshot();
+});
 
-  test('mobile viewport matches image snapshot', async () => {
-    await page.emulate(puppeteer.devices['Pixel 2']);
-    const image = await page.screenshot({ fullPage: true });
-    expect(image).toMatchImageSnapshot();
-  });
+test('accessibility tree (mobile)', async () => {
+  const a11yTree = await page.accessibility.snapshot();
+  expect(a11yTree).toMatchSnapshot();
+});
 
-  test('no page errors', () => {
-    expect(pageErrors).toHaveLength(0);
-  });
+test('full page (mobile)', async () => {
+  await page.emulate(puppeteer.devices['Pixel 2']);
+  const image = await page.screenshot({ fullPage: true });
+  expect(image).toMatchImageSnapshot();
+});
+
+test('no page errors', () => {
+  expect(pageErrors).toHaveLength(0);
 });

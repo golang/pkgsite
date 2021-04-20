@@ -8,7 +8,7 @@
 import './global-types';
 import puppeteer, { Page } from 'puppeteer';
 
-describe('Unit Details - golang.org/x/pkgsite - desktop', () => {
+describe('pkgsite (desktop)', () => {
   let page: Page;
   beforeAll(async () => {
     page = await newPage();
@@ -20,12 +20,12 @@ describe('Unit Details - golang.org/x/pkgsite - desktop', () => {
     await page.close();
   });
 
-  test('accessibility tree matches snapshot', async () => {
+  test('accessibility tree', async () => {
     const a11yTree = await page.accessibility.snapshot();
     expect(a11yTree).toMatchSnapshot();
   });
 
-  test('viewport matches image snapshot', async () => {
+  test('full page', async () => {
     const image = await page.screenshot({ fullPage: true });
     expect(image).toMatchImageSnapshot({});
   });
@@ -70,7 +70,7 @@ describe('Unit Details - golang.org/x/pkgsite - desktop', () => {
   });
 });
 
-describe('Unit Details - golang.org/x/pkgsite - mobile', () => {
+describe('pkgsite (mobile)', () => {
   let page: Page;
   beforeAll(async () => {
     page = await newPage();
@@ -83,12 +83,12 @@ describe('Unit Details - golang.org/x/pkgsite - mobile', () => {
     await page.close();
   });
 
-  test('accessibility tree matches snapshot', async () => {
+  test('accessibility tree', async () => {
     const a11yTree = await page.accessibility.snapshot();
     expect(a11yTree).toMatchSnapshot();
   });
 
-  test('viewport matches image snapshot', async () => {
+  test('full page', async () => {
     const image = await page.screenshot({ fullPage: true });
     expect(image).toMatchImageSnapshot();
   });
@@ -100,7 +100,7 @@ describe('Unit Details - golang.org/x/pkgsite - mobile', () => {
   });
 });
 
-describe('Unit Details - golang.org/x/pkgsite/internal/derrors', () => {
+describe('derrors', () => {
   let page: Page;
   beforeAll(async () => {
     page = await newPage();
@@ -112,12 +112,12 @@ describe('Unit Details - golang.org/x/pkgsite/internal/derrors', () => {
     await page.close();
   });
 
-  test('accessibility tree matches snapshot', async () => {
+  test('accessibility tree', async () => {
     const a11yTree = await page.accessibility.snapshot();
     expect(a11yTree).toMatchSnapshot();
   });
 
-  test('viewport matches image snapshot', async () => {
+  test('full page', async () => {
     const image = await page.screenshot({ fullPage: true });
     expect(image).toMatchImageSnapshot();
   });
@@ -135,7 +135,7 @@ describe('Unit Details - golang.org/x/pkgsite/internal/derrors', () => {
     ${'#StackError'}
     ${'#NewStackError'}
     ${'#section-sourcefiles'}
-  `('documentation outline $href', async ({ href }) => {
+  `('doc outline $href', async ({ href }) => {
     await page.click(`[href="${href}"][role="treeitem"]`);
     const image = await page.screenshot();
     expect(image).toMatchImageSnapshot();

@@ -8,40 +8,44 @@
 import './global-types';
 import puppeteer, { Page } from 'puppeteer';
 
-describe('Search', () => {
-  let page: Page;
+let page: Page;
 
-  beforeAll(async () => {
-    page = await newPage();
-    await page.goto(baseURL + '/search?q=http');
-  });
+beforeAll(async () => {
+  page = await newPage();
+  await page.goto(baseURL + '/search?q=http');
+});
 
-  afterAll(async () => {
-    await page.close();
-  });
+afterAll(async () => {
+  await page.close();
+});
 
-  test('accessibility tree matches snapshot', async () => {
-    await prepare(page);
-    const a11yTree = await page.accessibility.snapshot();
-    expect(a11yTree).toMatchSnapshot();
-  });
+test('accessibility tree (desktop)', async () => {
+  await prepare(page);
+  const a11yTree = await page.accessibility.snapshot();
+  expect(a11yTree).toMatchSnapshot();
+});
 
-  test('desktop viewport matches image snapshot', async () => {
-    await prepare(page);
-    const image = await page.screenshot({ fullPage: true });
-    expect(image).toMatchImageSnapshot();
-  });
+test('full page (desktop)', async () => {
+  await prepare(page);
+  const image = await page.screenshot({ fullPage: true });
+  expect(image).toMatchImageSnapshot();
+});
 
-  test('mobile viewport matches image snapshot', async () => {
-    await page.emulate(puppeteer.devices['Pixel 2']);
-    await prepare(page);
-    const image = await page.screenshot({ fullPage: true });
-    expect(image).toMatchImageSnapshot();
-  });
+test('accessibility tree (mobile)', async () => {
+  await prepare(page);
+  const a11yTree = await page.accessibility.snapshot();
+  expect(a11yTree).toMatchSnapshot();
+});
 
-  test('no page errors', () => {
-    expect(pageErrors).toHaveLength(0);
-  });
+test('full page (mobile)', async () => {
+  await page.emulate(puppeteer.devices['Pixel 2']);
+  await prepare(page);
+  const image = await page.screenshot({ fullPage: true });
+  expect(image).toMatchImageSnapshot();
+});
+
+test('no page errors', () => {
+  expect(pageErrors).toHaveLength(0);
 });
 
 /**

@@ -5,6 +5,4 @@
  * license that can be found in the LICENSE file.
  */
 
-describe('Unit Licenses', () => {
-  test.todo('todo');
-});
+test.todo('todo');

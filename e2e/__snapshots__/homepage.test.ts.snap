@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Homepage accessibility tree matches snapshot 1`] = `
+exports[`accessibility tree (desktop) 1`] = `
 Object {
   "children": Array [
     Object {
@@ -33,6 +33,184 @@ Object {
     Object {
       "name": "About",
       "role": "link",
+    },
+    Object {
+      "name": "Cartoon gopher typing",
+      "role": "img",
+    },
+    Object {
+      "description": "Search for Go packages",
+      "focused": true,
+      "name": "Search for Go packages",
+      "role": "textbox",
+    },
+    Object {
+      "name": "Search",
+      "role": "button",
+    },
+    Object {
+      "name": "EXAMPLE SEARCHES:",
+      "role": "text",
+    },
+    Object {
+      "name": "“http”",
+      "role": "link",
+    },
+    Object {
+      "name": "“command”",
+      "role": "link",
+    },
+    Object {
+      "name": "“yaml OR json OR xml”",
+      "role": "link",
+    },
+    Object {
+      "name": "Search help",
+      "role": "link",
+    },
+    Object {
+      "name": "Frequently asked questions:",
+      "role": "text",
+    },
+    Object {
+      "name": "How can I add a package?",
+      "role": "link",
+    },
+    Object {
+      "name": "How can I remove a package?",
+      "role": "link",
+    },
+    Object {
+      "name": "How can I add a go badge in my README file?",
+      "role": "link",
+    },
+    Object {
+      "description": "Why Go",
+      "name": "Why Go",
+      "role": "link",
+    },
+    Object {
+      "description": "Use Cases",
+      "name": "Use Cases",
+      "role": "link",
+    },
+    Object {
+      "description": "Case Studies",
+      "name": "Case Studies",
+      "role": "link",
+    },
+    Object {
+      "description": "Getting Started",
+      "name": "Getting Started",
+      "role": "link",
+    },
+    Object {
+      "name": "Playground",
+      "role": "link",
+    },
+    Object {
+      "name": "Tour",
+      "role": "link",
+    },
+    Object {
+      "name": "Stack Overflow",
+      "role": "link",
+    },
+    Object {
+      "description": "Discover Packages",
+      "name": "Discover Packages",
+      "role": "link",
+    },
+    Object {
+      "description": "About",
+      "name": "About",
+      "role": "link",
+    },
+    Object {
+      "name": "Download",
+      "role": "link",
+    },
+    Object {
+      "name": "Blog",
+      "role": "link",
+    },
+    Object {
+      "name": "Release Notes",
+      "role": "link",
+    },
+    Object {
+      "name": "Brand Guidelines",
+      "role": "link",
+    },
+    Object {
+      "name": "Code of Conduct",
+      "role": "link",
+    },
+    Object {
+      "description": "Connect",
+      "name": "Connect",
+      "role": "link",
+    },
+    Object {
+      "name": "Twitter",
+      "role": "link",
+    },
+    Object {
+      "name": "GitHub",
+      "role": "link",
+    },
+    Object {
+      "name": "Slack",
+      "role": "link",
+    },
+    Object {
+      "name": "Meetup",
+      "role": "link",
+    },
+    Object {
+      "name": "Gopher in flight goggles",
+      "role": "img",
+    },
+    Object {
+      "name": "Copyright",
+      "role": "link",
+    },
+    Object {
+      "name": "Terms of Service",
+      "role": "link",
+    },
+    Object {
+      "name": "Privacy Policy",
+      "role": "link",
+    },
+    Object {
+      "name": "Report an Issue",
+      "role": "link",
+    },
+    Object {
+      "name": "golang.org",
+      "role": "link",
+    },
+    Object {
+      "name": "Google logo",
+      "role": "link",
+    },
+  ],
+  "name": "Home · pkg.go.dev",
+  "role": "WebArea",
+}
+`;
+
+exports[`accessibility tree (mobile) 1`] = `
+Object {
+  "children": Array [
+    Object {
+      "name": "Link to Go homepage",
+      "role": "link",
+    },
+    Object {
+      "name": "Open navigation.",
+      "role": "button",
     },
     Object {
       "name": "Cartoon gopher typing",
