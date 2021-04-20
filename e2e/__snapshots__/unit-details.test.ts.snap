@@ -1,0 +1,2972 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Unit Details - golang.org/x/pkgsite - desktop accessibility tree matches snapshot 1`] = `
+Object {
+  "children": Array [
+    Object {
+      "name": "Black Lives Matter",
+      "role": "text",
+    },
+    Object {
+      "name": "Support the Equal Justice Initiative",
+      "role": "link",
+    },
+    Object {
+      "name": "Link to Go homepage",
+      "role": "link",
+    },
+    Object {
+      "name": "Search for a package",
+      "role": "button",
+    },
+    Object {
+      "description": "Search for a package",
+      "name": "Search for a package",
+      "role": "textbox",
+    },
+    Object {
+      "description": "Why Go",
+      "name": "Why Go",
+      "role": "link",
+    },
+    Object {
+      "description": "Getting Started",
+      "name": "Getting Started",
+      "role": "link",
+    },
+    Object {
+      "description": "Discover Packages",
+      "name": "Discover Packages",
+      "role": "link",
+    },
+    Object {
+      "name": "About",
+      "role": "link",
+    },
+    Object {
+      "name": "Discover Packages",
+      "role": "link",
+    },
+    Object {
+      "name": ">",
+      "role": "text",
+    },
+    Object {
+      "name": "golang.org/x/pkgsite",
+      "role": "text",
+    },
+    Object {
+      "name": "Copy path to clipboard. golang.org/x/pkgsite",
+      "role": "button",
+    },
+    Object {
+      "level": 1,
+      "name": "pkgsite",
+      "role": "heading",
+    },
+    Object {
+      "name": "module",
+      "role": "text",
+    },
+    Object {
+      "name": "Version: v0.0.0",
+      "role": "link",
+    },
+    Object {
+      "name": "LATEST",
+      "role": "text",
+    },
+    Object {
+      "name": "|",
+      "role": "text",
+    },
+    Object {
+      "name": "Published: Apr 16, 2021",
+      "role": "text",
+    },
+    Object {
+      "name": "|",
+      "role": "text",
+    },
+    Object {
+      "name": "License:",
+      "role": "text",
+    },
+    Object {
+      "name": "BSD-3-Clause",
+      "role": "link",
+    },
+    Object {
+      "name": "Jump to ...",
+      "role": "button",
+    },
+    Object {
+      "name": "find",
+      "role": "text",
+    },
+    Object {
+      "children": Array [
+        Object {
+          "expanded": true,
+          "level": 1,
+          "name": "README",
+          "role": "treeitem",
+          "selected": true,
+        },
+        Object {
+          "level": 2,
+          "name": "A site for discovering Go packages",
+          "role": "treeitem",
+        },
+        Object {
+          "level": 2,
+          "name": "Issues",
+          "role": "treeitem",
+        },
+        Object {
+          "level": 2,
+          "name": "Contributing",
+          "role": "treeitem",
+        },
+        Object {
+          "level": 2,
+          "name": "License",
+          "role": "treeitem",
+        },
+        Object {
+          "level": 2,
+          "name": "Links",
+          "role": "treeitem",
+        },
+        Object {
+          "level": 1,
+          "name": "Directories",
+          "role": "treeitem",
+        },
+      ],
+      "name": "Outline",
+      "role": "tree",
+    },
+    Object {
+      "name": "README",
+      "role": "text",
+    },
+    Object {
+      "name": "¶",
+      "role": "link",
+    },
+    Object {
+      "level": 3,
+      "name": "Pkg.go.dev",
+      "role": "heading",
+    },
+    Object {
+      "name": "Go Reference",
+      "role": "link",
+    },
+    Object {
+      "level": 4,
+      "name": "A site for discovering Go packages",
+      "role": "heading",
+    },
+    Object {
+      "name": "Pkg.go.dev is a website for discovering and evaluating Go packages and modules.",
+      "role": "text",
+    },
+    Object {
+      "name": "You can check it out at",
+      "role": "text",
+    },
+    Object {
+      "name": "https://pkg.go.dev",
+      "role": "link",
+    },
+    Object {
+      "name": ".",
+      "role": "text",
+    },
+    Object {
+      "level": 4,
+      "name": "Issues",
+      "role": "heading",
+    },
+    Object {
+      "name": "If you want to report a bug or have a feature suggestion, please first check the",
+      "role": "text",
+    },
+    Object {
+      "name": "known issues",
+      "role": "link",
+    },
+    Object {
+      "name": "to see if your issue is already being discussed. If an issue does not already exist, feel free to",
+      "role": "text",
+    },
+    Object {
+      "name": "file an issue",
+      "role": "link",
+    },
+    Object {
+      "name": ".",
+      "role": "text",
+    },
+    Object {
+      "name": "For answers to frequently asked questions, see",
+      "role": "text",
+    },
+    Object {
+      "name": "go.dev/about",
+      "role": "link",
+    },
+    Object {
+      "name": ".",
+      "role": "text",
+    },
+    Object {
+      "name": "You can also chat with us on the",
+      "role": "text",
+    },
+    Object {
+      "name": "#pkgsite Slack channel",
+      "role": "link",
+    },
+    Object {
+      "name": "on the",
+      "role": "text",
+    },
+    Object {
+      "name": "Gophers Slack",
+      "role": "link",
+    },
+    Object {
+      "name": ".",
+      "role": "text",
+    },
+    Object {
+      "level": 4,
+      "name": "Contributing",
+      "role": "heading",
+    },
+    Object {
+      "name": "We would love your help!",
+      "role": "text",
+    },
+    Object {
+      "name": "Our canonical Git repository is located at",
+      "role": "text",
+    },
+    Object {
+      "name": "go.googlesource.com/pkgsite",
+      "role": "link",
+    },
+    Object {
+      "name": ". There is a mirror of the repository at",
+      "role": "text",
+    },
+    Object {
+      "name": "github.com/golang/pkgsite",
+      "role": "link",
+    },
+    Object {
+      "name": ".",
+      "role": "text",
+    },
+    Object {
+      "name": "To contribute, please read our",
+      "role": "text",
+    },
+    Object {
+      "name": "contributing guide",
+      "role": "link",
+    },
+    Object {
+      "name": ".",
+      "role": "text",
+    },
+    Object {
+      "level": 4,
+      "name": "License",
+      "role": "heading",
+    },
+    Object {
+      "name": "Unless otherwise noted, the Go source files are distributed under the BSD-style license found in the",
+      "role": "text",
+    },
+    Object {
+      "name": "LICENSE",
+      "role": "link",
+    },
+    Object {
+      "name": "file.",
+      "role": "text",
+    },
+    Object {
+      "level": 4,
+      "name": "Links",
+      "role": "heading",
+    },
+    Object {
+      "name": "•",
+      "role": "text",
+    },
+    Object {
+      "name": "Homepage",
+      "role": "link",
+    },
+    Object {
+      "name": "•",
+      "role": "text",
+    },
+    Object {
+      "name": "Feedback",
+      "role": "link",
+    },
+    Object {
+      "name": "•",
+      "role": "text",
+    },
+    Object {
+      "name": "Issue Tracker",
+      "role": "link",
+    },
+    Object {
+      "name": "Expand ▾",
+      "role": "link",
+    },
+    Object {
+      "name": "Directories",
+      "role": "text",
+    },
+    Object {
+      "name": "¶",
+      "role": "link",
+    },
+    Object {
+      "name": "Expand all",
+      "role": "button",
+    },
+    Object {
+      "name": "4 more from cmd",
+      "role": "button",
+    },
+    Object {
+      "name": "cmd",
+      "role": "text",
+    },
+    Object {
+      "name": "4 more from devtools",
+      "role": "button",
+    },
+    Object {
+      "name": "devtools",
+      "role": "text",
+    },
+    Object {
+      "name": "39 more from internal",
+      "role": "button",
+    },
+    Object {
+      "name": "internal",
+      "role": "link",
+    },
+    Object {
+      "name": "Package internal contains data used through x/pkgsite.",
+      "role": "text",
+    },
+    Object {
+      "level": 2,
+      "name": "Details",
+      "role": "heading",
+    },
+    Object {
+      "name": "checked",
+      "role": "img",
+    },
+    Object {
+      "name": "Valid",
+      "role": "text",
+    },
+    Object {
+      "name": "go.mod",
+      "role": "link",
+    },
+    Object {
+      "name": "file",
+      "role": "text",
+    },
+    Object {
+      "name": "more info",
+      "role": "button",
+    },
+    Object {
+      "name": "checked",
+      "role": "img",
+    },
+    Object {
+      "name": "Redistributable license",
+      "role": "text",
+    },
+    Object {
+      "name": "more info",
+      "role": "button",
+    },
+    Object {
+      "name": "unchecked",
+      "role": "img",
+    },
+    Object {
+      "name": "Tagged version",
+      "role": "text",
+    },
+    Object {
+      "name": "more info",
+      "role": "button",
+    },
+    Object {
+      "name": "unchecked",
+      "role": "img",
+    },
+    Object {
+      "name": "Stable version",
+      "role": "text",
+    },
+    Object {
+      "name": "more info",
+      "role": "button",
+    },
+    Object {
+      "name": "Learn more",
+      "role": "link",
+    },
+    Object {
+      "level": 2,
+      "name": "Repository",
+      "role": "heading",
+    },
+    Object {
+      "description": "https://github.com/golang/pkgsite",
+      "name": "github.com/golang/pkgsite",
+      "role": "link",
+    },
+    Object {
+      "level": 2,
+      "name": "Links",
+      "role": "heading",
+    },
+    Object {
+      "description": "https://pkg.go.dev",
+      "name": "Homepage",
+      "role": "link",
+    },
+    Object {
+      "description": "https://golang.org/s/pkgsite-feedback",
+      "name": "Feedback",
+      "role": "link",
+    },
+    Object {
+      "description": "https://golang.org/s/pkgsite-issues",
+      "name": "Issue Tracker",
+      "role": "link",
+    },
+    Object {
+      "description": "Why Go",
+      "name": "Why Go",
+      "role": "link",
+    },
+    Object {
+      "description": "Use Cases",
+      "name": "Use Cases",
+      "role": "link",
+    },
+    Object {
+      "description": "Case Studies",
+      "name": "Case Studies",
+      "role": "link",
+    },
+    Object {
+      "description": "Getting Started",
+      "name": "Getting Started",
+      "role": "link",
+    },
+    Object {
+      "name": "Playground",
+      "role": "link",
+    },
+    Object {
+      "name": "Tour",
+      "role": "link",
+    },
+    Object {
+      "name": "Stack Overflow",
+      "role": "link",
+    },
+    Object {
+      "description": "Discover Packages",
+      "name": "Discover Packages",
+      "role": "link",
+    },
+    Object {
+      "description": "About",
+      "name": "About",
+      "role": "link",
+    },
+    Object {
+      "name": "Download",
+      "role": "link",
+    },
+    Object {
+      "name": "Blog",
+      "role": "link",
+    },
+    Object {
+      "name": "Release Notes",
+      "role": "link",
+    },
+    Object {
+      "name": "Brand Guidelines",
+      "role": "link",
+    },
+    Object {
+      "name": "Code of Conduct",
+      "role": "link",
+    },
+    Object {
+      "description": "Connect",
+      "name": "Connect",
+      "role": "link",
+    },
+    Object {
+      "name": "Twitter",
+      "role": "link",
+    },
+    Object {
+      "name": "GitHub",
+      "role": "link",
+    },
+    Object {
+      "name": "Slack",
+      "role": "link",
+    },
+    Object {
+      "name": "Meetup",
+      "role": "link",
+    },
+    Object {
+      "name": "Gopher in flight goggles",
+      "role": "img",
+    },
+    Object {
+      "name": "Copyright",
+      "role": "link",
+    },
+    Object {
+      "name": "Terms of Service",
+      "role": "link",
+    },
+    Object {
+      "name": "Privacy Policy",
+      "role": "link",
+    },
+    Object {
+      "name": "Report an Issue",
+      "role": "link",
+    },
+    Object {
+      "name": "golang.org",
+      "role": "link",
+    },
+    Object {
+      "name": "Google logo",
+      "role": "link",
+    },
+  ],
+  "name": "pkgsite · pkg.go.dev",
+  "role": "WebArea",
+}
+`;
+
+exports[`Unit Details - golang.org/x/pkgsite - mobile accessibility tree matches snapshot 1`] = `
+Object {
+  "children": Array [
+    Object {
+      "name": "Link to Go homepage",
+      "role": "link",
+    },
+    Object {
+      "name": "Search for a package",
+      "role": "button",
+    },
+    Object {
+      "description": "Search for a package",
+      "name": "Search for a package",
+      "role": "textbox",
+    },
+    Object {
+      "name": "Open navigation.",
+      "role": "button",
+    },
+    Object {
+      "name": "Discover Packages",
+      "role": "link",
+    },
+    Object {
+      "name": ">",
+      "role": "text",
+    },
+    Object {
+      "name": "golang.org/x/pkgsite",
+      "role": "text",
+    },
+    Object {
+      "name": "Copy path to clipboard. golang.org/x/pkgsite",
+      "role": "button",
+    },
+    Object {
+      "level": 1,
+      "name": "pkgsite",
+      "role": "heading",
+    },
+    Object {
+      "name": "module",
+      "role": "text",
+    },
+    Object {
+      "name": "Version: v0.0.0",
+      "role": "link",
+    },
+    Object {
+      "name": "LATEST",
+      "role": "text",
+    },
+    Object {
+      "name": "Published: Apr 16, 2021",
+      "role": "text",
+    },
+    Object {
+      "name": "License:",
+      "role": "text",
+    },
+    Object {
+      "name": "BSD-3-Clause",
+      "role": "link",
+    },
+    Object {
+      "name": "Outline",
+      "role": "text",
+    },
+    Object {
+      "children": Array [
+        Object {
+          "name": "Outline",
+          "role": "menuitem",
+          "selected": true,
+        },
+        Object {
+          "name": "A site for discovering Go packages",
+          "role": "menuitem",
+        },
+        Object {
+          "name": "Issues",
+          "role": "menuitem",
+        },
+        Object {
+          "name": "Contributing",
+          "role": "menuitem",
+        },
+        Object {
+          "name": "License",
+          "role": "menuitem",
+        },
+        Object {
+          "name": "Links",
+          "role": "menuitem",
+        },
+        Object {
+          "name": "Source Files",
+          "role": "menuitem",
+        },
+        Object {
+          "name": "Directories",
+          "role": "menuitem",
+        },
+      ],
+      "name": "Outline",
+      "role": "combobox",
+      "value": "Outline",
+    },
+    Object {
+      "name": "README",
+      "role": "text",
+    },
+    Object {
+      "name": "¶",
+      "role": "link",
+    },
+    Object {
+      "level": 3,
+      "name": "Pkg.go.dev",
+      "role": "heading",
+    },
+    Object {
+      "name": "Go Reference",
+      "role": "link",
+    },
+    Object {
+      "level": 4,
+      "name": "A site for discovering Go packages",
+      "role": "heading",
+    },
+    Object {
+      "name": "Pkg.go.dev is a website for discovering and evaluating Go packages and modules.",
+      "role": "text",
+    },
+    Object {
+      "name": "You can check it out at",
+      "role": "text",
+    },
+    Object {
+      "name": "https://pkg.go.dev",
+      "role": "link",
+    },
+    Object {
+      "name": ".",
+      "role": "text",
+    },
+    Object {
+      "level": 4,
+      "name": "Issues",
+      "role": "heading",
+    },
+    Object {
+      "name": "If you want to report a bug or have a feature suggestion, please first check the",
+      "role": "text",
+    },
+    Object {
+      "name": "known issues",
+      "role": "link",
+    },
+    Object {
+      "name": "to see if your issue is already being discussed. If an issue does not already exist, feel free to",
+      "role": "text",
+    },
+    Object {
+      "name": "file an issue",
+      "role": "link",
+    },
+    Object {
+      "name": ".",
+      "role": "text",
+    },
+    Object {
+      "name": "For answers to frequently asked questions, see",
+      "role": "text",
+    },
+    Object {
+      "name": "go.dev/about",
+      "role": "link",
+    },
+    Object {
+      "name": ".",
+      "role": "text",
+    },
+    Object {
+      "name": "You can also chat with us on the",
+      "role": "text",
+    },
+    Object {
+      "name": "#pkgsite Slack channel",
+      "role": "link",
+    },
+    Object {
+      "name": "on the",
+      "role": "text",
+    },
+    Object {
+      "name": "Gophers Slack",
+      "role": "link",
+    },
+    Object {
+      "name": ".",
+      "role": "text",
+    },
+    Object {
+      "level": 4,
+      "name": "Contributing",
+      "role": "heading",
+    },
+    Object {
+      "name": "We would love your help!",
+      "role": "text",
+    },
+    Object {
+      "name": "Our canonical Git repository is located at",
+      "role": "text",
+    },
+    Object {
+      "name": "go.googlesource.com/pkgsite",
+      "role": "link",
+    },
+    Object {
+      "name": ". There is a mirror of the repository at",
+      "role": "text",
+    },
+    Object {
+      "name": "github.com/golang/pkgsite",
+      "role": "link",
+    },
+    Object {
+      "name": ".",
+      "role": "text",
+    },
+    Object {
+      "name": "To contribute, please read our",
+      "role": "text",
+    },
+    Object {
+      "name": "contributing guide",
+      "role": "link",
+    },
+    Object {
+      "name": ".",
+      "role": "text",
+    },
+    Object {
+      "level": 4,
+      "name": "License",
+      "role": "heading",
+    },
+    Object {
+      "name": "Unless otherwise noted, the Go source files are distributed under the BSD-style license found in the",
+      "role": "text",
+    },
+    Object {
+      "name": "LICENSE",
+      "role": "link",
+    },
+    Object {
+      "name": "file.",
+      "role": "text",
+    },
+    Object {
+      "level": 4,
+      "name": "Links",
+      "role": "heading",
+    },
+    Object {
+      "name": "•",
+      "role": "text",
+    },
+    Object {
+      "name": "Homepage",
+      "role": "link",
+    },
+    Object {
+      "name": "•",
+      "role": "text",
+    },
+    Object {
+      "name": "Feedback",
+      "role": "link",
+    },
+    Object {
+      "name": "•",
+      "role": "text",
+    },
+    Object {
+      "name": "Issue Tracker",
+      "role": "link",
+    },
+    Object {
+      "name": "Expand ▾",
+      "role": "link",
+    },
+    Object {
+      "name": "Directories",
+      "role": "text",
+    },
+    Object {
+      "name": "¶",
+      "role": "link",
+    },
+    Object {
+      "name": "Expand all",
+      "role": "button",
+    },
+    Object {
+      "name": "4 more from cmd",
+      "role": "button",
+    },
+    Object {
+      "name": "cmd",
+      "role": "text",
+    },
+    Object {
+      "name": "4 more from devtools",
+      "role": "button",
+    },
+    Object {
+      "name": "devtools",
+      "role": "text",
+    },
+    Object {
+      "name": "39 more from internal Package internal contains data used through x/pkgsite.",
+      "role": "button",
+    },
+    Object {
+      "name": "internal",
+      "role": "link",
+    },
+    Object {
+      "name": "Package internal contains data used through x/pkgsite.",
+      "role": "text",
+    },
+    Object {
+      "level": 2,
+      "name": "Details",
+      "role": "heading",
+    },
+    Object {
+      "name": "checked",
+      "role": "img",
+    },
+    Object {
+      "name": "Valid",
+      "role": "text",
+    },
+    Object {
+      "name": "go.mod",
+      "role": "link",
+    },
+    Object {
+      "name": "file",
+      "role": "text",
+    },
+    Object {
+      "name": "more info",
+      "role": "button",
+    },
+    Object {
+      "name": "checked",
+      "role": "img",
+    },
+    Object {
+      "name": "Redistributable license",
+      "role": "text",
+    },
+    Object {
+      "name": "more info",
+      "role": "button",
+    },
+    Object {
+      "name": "unchecked",
+      "role": "img",
+    },
+    Object {
+      "name": "Tagged version",
+      "role": "text",
+    },
+    Object {
+      "name": "more info",
+      "role": "button",
+    },
+    Object {
+      "name": "unchecked",
+      "role": "img",
+    },
+    Object {
+      "name": "Stable version",
+      "role": "text",
+    },
+    Object {
+      "name": "more info",
+      "role": "button",
+    },
+    Object {
+      "name": "Learn more",
+      "role": "link",
+    },
+    Object {
+      "level": 2,
+      "name": "Repository",
+      "role": "heading",
+    },
+    Object {
+      "description": "https://github.com/golang/pkgsite",
+      "name": "github.com/golang/pkgsite",
+      "role": "link",
+    },
+    Object {
+      "level": 2,
+      "name": "Links",
+      "role": "heading",
+    },
+    Object {
+      "description": "https://pkg.go.dev",
+      "name": "Homepage",
+      "role": "link",
+    },
+    Object {
+      "description": "https://golang.org/s/pkgsite-feedback",
+      "name": "Feedback",
+      "role": "link",
+    },
+    Object {
+      "description": "https://golang.org/s/pkgsite-issues",
+      "name": "Issue Tracker",
+      "role": "link",
+    },
+    Object {
+      "description": "Why Go",
+      "name": "Why Go",
+      "role": "link",
+    },
+    Object {
+      "description": "Use Cases",
+      "name": "Use Cases",
+      "role": "link",
+    },
+    Object {
+      "description": "Case Studies",
+      "name": "Case Studies",
+      "role": "link",
+    },
+    Object {
+      "description": "Getting Started",
+      "name": "Getting Started",
+      "role": "link",
+    },
+    Object {
+      "name": "Playground",
+      "role": "link",
+    },
+    Object {
+      "name": "Tour",
+      "role": "link",
+    },
+    Object {
+      "name": "Stack Overflow",
+      "role": "link",
+    },
+    Object {
+      "description": "Discover Packages",
+      "name": "Discover Packages",
+      "role": "link",
+    },
+    Object {
+      "description": "About",
+      "name": "About",
+      "role": "link",
+    },
+    Object {
+      "name": "Download",
+      "role": "link",
+    },
+    Object {
+      "name": "Blog",
+      "role": "link",
+    },
+    Object {
+      "name": "Release Notes",
+      "role": "link",
+    },
+    Object {
+      "name": "Brand Guidelines",
+      "role": "link",
+    },
+    Object {
+      "name": "Code of Conduct",
+      "role": "link",
+    },
+    Object {
+      "description": "Connect",
+      "name": "Connect",
+      "role": "link",
+    },
+    Object {
+      "name": "Twitter",
+      "role": "link",
+    },
+    Object {
+      "name": "GitHub",
+      "role": "link",
+    },
+    Object {
+      "name": "Slack",
+      "role": "link",
+    },
+    Object {
+      "name": "Meetup",
+      "role": "link",
+    },
+    Object {
+      "name": "Gopher in flight goggles",
+      "role": "img",
+    },
+    Object {
+      "name": "Copyright",
+      "role": "link",
+    },
+    Object {
+      "name": "Terms of Service",
+      "role": "link",
+    },
+    Object {
+      "name": "Privacy Policy",
+      "role": "link",
+    },
+    Object {
+      "name": "Report an Issue",
+      "role": "link",
+    },
+    Object {
+      "name": "golang.org",
+      "role": "link",
+    },
+    Object {
+      "name": "Google logo",
+      "role": "link",
+    },
+  ],
+  "name": "pkgsite · pkg.go.dev",
+  "role": "WebArea",
+}
+`;
+
+exports[`Unit Details - golang.org/x/pkgsite/internal/derrors accessibility tree matches snapshot 1`] = `
+Object {
+  "children": Array [
+    Object {
+      "name": "Black Lives Matter",
+      "role": "text",
+    },
+    Object {
+      "name": "Support the Equal Justice Initiative",
+      "role": "link",
+    },
+    Object {
+      "name": "Link to Go homepage",
+      "role": "link",
+    },
+    Object {
+      "name": "Search for a package",
+      "role": "button",
+    },
+    Object {
+      "description": "Search for a package",
+      "name": "Search for a package",
+      "role": "textbox",
+    },
+    Object {
+      "description": "Why Go",
+      "name": "Why Go",
+      "role": "link",
+    },
+    Object {
+      "description": "Getting Started",
+      "name": "Getting Started",
+      "role": "link",
+    },
+    Object {
+      "description": "Discover Packages",
+      "name": "Discover Packages",
+      "role": "link",
+    },
+    Object {
+      "name": "About",
+      "role": "link",
+    },
+    Object {
+      "name": "Discover Packages",
+      "role": "link",
+    },
+    Object {
+      "name": ">",
+      "role": "text",
+    },
+    Object {
+      "name": "golang.org/x/pkgsite",
+      "role": "link",
+    },
+    Object {
+      "name": ">",
+      "role": "text",
+    },
+    Object {
+      "name": "internal",
+      "role": "link",
+    },
+    Object {
+      "name": ">",
+      "role": "text",
+    },
+    Object {
+      "name": "derrors",
+      "role": "text",
+    },
+    Object {
+      "name": "Copy path to clipboard. golang.org/x/pkgsite/internal/derrors",
+      "role": "button",
+    },
+    Object {
+      "level": 1,
+      "name": "derrors",
+      "role": "heading",
+    },
+    Object {
+      "name": "package",
+      "role": "text",
+    },
+    Object {
+      "name": "Version: v0.0.0",
+      "role": "link",
+    },
+    Object {
+      "name": "LATEST",
+      "role": "text",
+    },
+    Object {
+      "name": "|",
+      "role": "text",
+    },
+    Object {
+      "name": "Published: Apr 16, 2021",
+      "role": "text",
+    },
+    Object {
+      "name": "|",
+      "role": "text",
+    },
+    Object {
+      "name": "License:",
+      "role": "text",
+    },
+    Object {
+      "name": "BSD-3-Clause",
+      "role": "link",
+    },
+    Object {
+      "name": "|",
+      "role": "text",
+    },
+    Object {
+      "name": "Imports: 0",
+      "role": "link",
+    },
+    Object {
+      "name": "|",
+      "role": "text",
+    },
+    Object {
+      "name": "Imported by: 0",
+      "role": "link",
+    },
+    Object {
+      "name": "Jump to ...",
+      "role": "button",
+    },
+    Object {
+      "name": "find",
+      "role": "text",
+    },
+    Object {
+      "children": Array [
+        Object {
+          "expanded": true,
+          "level": 1,
+          "name": "Documentation",
+          "role": "treeitem",
+          "selected": true,
+        },
+        Object {
+          "level": 2,
+          "name": "Overview",
+          "role": "treeitem",
+        },
+        Object {
+          "level": 2,
+          "name": "Index",
+          "role": "treeitem",
+        },
+        Object {
+          "level": 2,
+          "name": "Constants",
+          "role": "treeitem",
+        },
+        Object {
+          "level": 2,
+          "name": "Variables",
+          "role": "treeitem",
+        },
+        Object {
+          "level": 2,
+          "name": "Functions",
+          "role": "treeitem",
+        },
+        Object {
+          "level": 2,
+          "name": "Types",
+          "role": "treeitem",
+        },
+        Object {
+          "level": 1,
+          "name": "Source Files",
+          "role": "treeitem",
+        },
+      ],
+      "name": "Outline",
+      "role": "tree",
+    },
+    Object {
+      "name": "Documentation",
+      "role": "text",
+    },
+    Object {
+      "name": "¶",
+      "role": "link",
+    },
+    Object {
+      "children": Array [
+        Object {
+          "name": "Overview",
+          "role": "text",
+        },
+        Object {
+          "name": "¶",
+          "role": "link",
+        },
+      ],
+      "level": 3,
+      "name": "Overview ¶",
+      "role": "heading",
+    },
+    Object {
+      "name": "Table of Contents",
+      "role": "navigation",
+    },
+    Object {
+      "name": "Package derrors defines internal error values to categorize the different types error semantics we support.",
+      "role": "text",
+    },
+    Object {
+      "name": "Index",
+      "role": "text",
+    },
+    Object {
+      "name": "¶",
+      "role": "link",
+    },
+    Object {
+      "name": "Variables",
+      "role": "link",
+    },
+    Object {
+      "name": "func Add(errp *error, format string, args ...interface{})",
+      "role": "link",
+    },
+    Object {
+      "name": "func FromStatus(code int, format string, args ...interface{}) error",
+      "role": "link",
+    },
+    Object {
+      "name": "func Report(err error)",
+      "role": "link",
+    },
+    Object {
+      "name": "func SetReportingClient(c *errorreporting.Client)",
+      "role": "link",
+    },
+    Object {
+      "name": "func ToReprocessStatus(status int) int",
+      "role": "link",
+    },
+    Object {
+      "name": "func ToStatus(err error) int",
+      "role": "link",
+    },
+    Object {
+      "name": "func Wrap(errp *error, format string, args ...interface{})",
+      "role": "link",
+    },
+    Object {
+      "name": "func WrapAndReport(errp *error, format string, args ...interface{})",
+      "role": "link",
+    },
+    Object {
+      "name": "func WrapStack(errp *error, format string, args ...interface{})",
+      "role": "link",
+    },
+    Object {
+      "name": "type StackError",
+      "role": "link",
+    },
+    Object {
+      "name": "func NewStackError(err error) *StackError",
+      "role": "link",
+    },
+    Object {
+      "name": "func (e *StackError) Error() string",
+      "role": "link",
+    },
+    Object {
+      "name": "func (e *StackError) Unwrap() error",
+      "role": "link",
+    },
+    Object {
+      "children": Array [
+        Object {
+          "name": "Constants",
+          "role": "text",
+        },
+        Object {
+          "name": "¶",
+          "role": "link",
+        },
+      ],
+      "level": 3,
+      "name": "Constants ¶",
+      "role": "heading",
+    },
+    Object {
+      "name": "This section is empty.",
+      "role": "text",
+    },
+    Object {
+      "children": Array [
+        Object {
+          "name": "Variables",
+          "role": "text",
+        },
+        Object {
+          "name": "¶",
+          "role": "link",
+        },
+      ],
+      "level": 3,
+      "name": "Variables ¶",
+      "role": "heading",
+    },
+    Object {
+      "name": "View Source",
+      "role": "link",
+    },
+    Object {
+      "name": "var (",
+      "role": "text",
+    },
+    Object {
+      "name": "// HasIncompletePackages indicates a module containing packages that",
+      "role": "text",
+    },
+    Object {
+      "name": "// were processed with a 60x error code.",
+      "role": "text",
+    },
+    Object {
+      "name": "HasIncompletePackages =",
+      "role": "text",
+    },
+    Object {
+      "name": "errors",
+      "role": "link",
+    },
+    Object {
+      "name": ".",
+      "role": "text",
+    },
+    Object {
+      "name": "New",
+      "role": "link",
+    },
+    Object {
+      "name": "(\\"has incomplete packages\\")",
+      "role": "text",
+    },
+    Object {
+      "name": "// NotFound indicates that a requested entity was not found (HTTP 404).",
+      "role": "text",
+    },
+    Object {
+      "name": "NotFound =",
+      "role": "text",
+    },
+    Object {
+      "name": "errors",
+      "role": "link",
+    },
+    Object {
+      "name": ".",
+      "role": "text",
+    },
+    Object {
+      "name": "New",
+      "role": "link",
+    },
+    Object {
+      "name": "(\\"not found\\")",
+      "role": "text",
+    },
+    Object {
+      "name": "// NotFetched means that the proxy returned \\"not found\\" with the",
+      "role": "text",
+    },
+    Object {
+      "name": "// Disable-Module-Fetch header set. We don't know if the module really",
+      "role": "text",
+    },
+    Object {
+      "name": "// doesn't exist, or the proxy just didn't fetch it.",
+      "role": "text",
+    },
+    Object {
+      "name": "NotFetched =",
+      "role": "text",
+    },
+    Object {
+      "name": "errors",
+      "role": "link",
+    },
+    Object {
+      "name": ".",
+      "role": "text",
+    },
+    Object {
+      "name": "New",
+      "role": "link",
+    },
+    Object {
+      "name": "(\\"not fetched by proxy\\")",
+      "role": "text",
+    },
+    Object {
+      "name": "// InvalidArgument indicates that the input into the request is invalid in",
+      "role": "text",
+    },
+    Object {
+      "name": "// some way (HTTP 400).",
+      "role": "text",
+    },
+    Object {
+      "name": "InvalidArgument =",
+      "role": "text",
+    },
+    Object {
+      "name": "errors",
+      "role": "link",
+    },
+    Object {
+      "name": ".",
+      "role": "text",
+    },
+    Object {
+      "name": "New",
+      "role": "link",
+    },
+    Object {
+      "name": "(\\"invalid argument\\")",
+      "role": "text",
+    },
+    Object {
+      "name": "// BadModule indicates a problem with a module.",
+      "role": "text",
+    },
+    Object {
+      "name": "BadModule =",
+      "role": "text",
+    },
+    Object {
+      "name": "errors",
+      "role": "link",
+    },
+    Object {
+      "name": ".",
+      "role": "text",
+    },
+    Object {
+      "name": "New",
+      "role": "link",
+    },
+    Object {
+      "name": "(\\"bad module\\")",
+      "role": "text",
+    },
+    Object {
+      "name": "// Excluded indicates that the module is excluded. (See internal/postgres/excluded.go.)",
+      "role": "text",
+    },
+    Object {
+      "name": "Excluded =",
+      "role": "text",
+    },
+    Object {
+      "name": "errors",
+      "role": "link",
+    },
+    Object {
+      "name": ".",
+      "role": "text",
+    },
+    Object {
+      "name": "New",
+      "role": "link",
+    },
+    Object {
+      "name": "(\\"excluded\\")",
+      "role": "text",
+    },
+    Object {
+      "name": "// AlternativeModule indicates that the path of the module zip file differs",
+      "role": "text",
+    },
+    Object {
+      "name": "// from the path specified in the go.mod file.",
+      "role": "text",
+    },
+    Object {
+      "name": "AlternativeModule =",
+      "role": "text",
+    },
+    Object {
+      "name": "errors",
+      "role": "link",
+    },
+    Object {
+      "name": ".",
+      "role": "text",
+    },
+    Object {
+      "name": "New",
+      "role": "link",
+    },
+    Object {
+      "name": "(\\"alternative module\\")",
+      "role": "text",
+    },
+    Object {
+      "name": "// ModuleTooLarge indicates that the module is too large for us to process.",
+      "role": "text",
+    },
+    Object {
+      "name": "// This should be temporary: we should obtain sufficient resources to process",
+      "role": "text",
+    },
+    Object {
+      "name": "// any module, up to the max size allowed by the proxy.",
+      "role": "text",
+    },
+    Object {
+      "name": "ModuleTooLarge =",
+      "role": "text",
+    },
+    Object {
+      "name": "errors",
+      "role": "link",
+    },
+    Object {
+      "name": ".",
+      "role": "text",
+    },
+    Object {
+      "name": "New",
+      "role": "link",
+    },
+    Object {
+      "name": "(\\"module too large\\")",
+      "role": "text",
+    },
+    Object {
+      "name": "// SheddingLoad indicates that the server is overloaded and cannot process the",
+      "role": "text",
+    },
+    Object {
+      "name": "// module at this time.",
+      "role": "text",
+    },
+    Object {
+      "name": "SheddingLoad =",
+      "role": "text",
+    },
+    Object {
+      "name": "errors",
+      "role": "link",
+    },
+    Object {
+      "name": ".",
+      "role": "text",
+    },
+    Object {
+      "name": "New",
+      "role": "link",
+    },
+    Object {
+      "name": "(\\"shedding load\\")",
+      "role": "text",
+    },
+    Object {
+      "name": "// Unknown indicates that the error has unknown semantics.",
+      "role": "text",
+    },
+    Object {
+      "name": "Unknown =",
+      "role": "text",
+    },
+    Object {
+      "name": "errors",
+      "role": "link",
+    },
+    Object {
+      "name": ".",
+      "role": "text",
+    },
+    Object {
+      "name": "New",
+      "role": "link",
+    },
+    Object {
+      "name": "(\\"unknown\\")",
+      "role": "text",
+    },
+    Object {
+      "name": "// ProxyTimedOut indicates that a request timed out when fetching from the Module Mirror.",
+      "role": "text",
+    },
+    Object {
+      "name": "ProxyTimedOut =",
+      "role": "text",
+    },
+    Object {
+      "name": "errors",
+      "role": "link",
+    },
+    Object {
+      "name": ".",
+      "role": "text",
+    },
+    Object {
+      "name": "New",
+      "role": "link",
+    },
+    Object {
+      "name": "(\\"proxy timed out\\")",
+      "role": "text",
+    },
+    Object {
+      "name": "// PackageBuildContextNotSupported indicates that the build context for the",
+      "role": "text",
+    },
+    Object {
+      "name": "// package is not supported.",
+      "role": "text",
+    },
+    Object {
+      "name": "PackageBuildContextNotSupported =",
+      "role": "text",
+    },
+    Object {
+      "name": "errors",
+      "role": "link",
+    },
+    Object {
+      "name": ".",
+      "role": "text",
+    },
+    Object {
+      "name": "New",
+      "role": "link",
+    },
+    Object {
+      "name": "(\\"package build context not supported\\")",
+      "role": "text",
+    },
+    Object {
+      "name": "// PackageMaxImportsLimitExceeded indicates that the package has too many",
+      "role": "text",
+    },
+    Object {
+      "name": "// imports.",
+      "role": "text",
+    },
+    Object {
+      "name": "PackageMaxImportsLimitExceeded =",
+      "role": "text",
+    },
+    Object {
+      "name": "errors",
+      "role": "link",
+    },
+    Object {
+      "name": ".",
+      "role": "text",
+    },
+    Object {
+      "name": "New",
+      "role": "link",
+    },
+    Object {
+      "name": "(\\"package max imports limit exceeded\\")",
+      "role": "text",
+    },
+    Object {
+      "name": "// PackageMaxFileSizeLimitExceeded indicates that the package contains a file",
+      "role": "text",
+    },
+    Object {
+      "name": "// that exceeds fetch.MaxFileSize.",
+      "role": "text",
+    },
+    Object {
+      "name": "PackageMaxFileSizeLimitExceeded =",
+      "role": "text",
+    },
+    Object {
+      "name": "errors",
+      "role": "link",
+    },
+    Object {
+      "name": ".",
+      "role": "text",
+    },
+    Object {
+      "name": "New",
+      "role": "link",
+    },
+    Object {
+      "name": "(\\"package max file size limit exceeded\\")",
+      "role": "text",
+    },
+    Object {
+      "name": "// PackageDocumentationHTMLTooLarge indicates that the rendered documentation",
+      "role": "text",
+    },
+    Object {
+      "name": "// HTML size exceeded the specified limit for dochtml.RenderOptions.",
+      "role": "text",
+    },
+    Object {
+      "name": "PackageDocumentationHTMLTooLarge =",
+      "role": "text",
+    },
+    Object {
+      "name": "errors",
+      "role": "link",
+    },
+    Object {
+      "name": ".",
+      "role": "text",
+    },
+    Object {
+      "name": "New",
+      "role": "link",
+    },
+    Object {
+      "name": "(\\"package documentation HTML is too large\\")",
+      "role": "text",
+    },
+    Object {
+      "name": "// PackageBadImportPath represents an error loading a package because its",
+      "role": "text",
+    },
+    Object {
+      "name": "// contents do not make up a valid package. This can happen, for",
+      "role": "text",
+    },
+    Object {
+      "name": "// example, if the .go files fail to parse or declare different package",
+      "role": "text",
+    },
+    Object {
+      "name": "// names.",
+      "role": "text",
+    },
+    Object {
+      "name": "// Go files were found in a directory, but the resulting import path is invalid.",
+      "role": "text",
+    },
+    Object {
+      "name": "PackageBadImportPath =",
+      "role": "text",
+    },
+    Object {
+      "name": "errors",
+      "role": "link",
+    },
+    Object {
+      "name": ".",
+      "role": "text",
+    },
+    Object {
+      "name": "New",
+      "role": "link",
+    },
+    Object {
+      "name": "(\\"package bad import path\\")",
+      "role": "text",
+    },
+    Object {
+      "name": "// PackageInvalidContents represents an error loading a package because",
+      "role": "text",
+    },
+    Object {
+      "name": "// its contents do not make up a valid package. This can happen, for",
+      "role": "text",
+    },
+    Object {
+      "name": "// example, if the .go files fail to parse or declare different package",
+      "role": "text",
+    },
+    Object {
+      "name": "// names.",
+      "role": "text",
+    },
+    Object {
+      "name": "PackageInvalidContents =",
+      "role": "text",
+    },
+    Object {
+      "name": "errors",
+      "role": "link",
+    },
+    Object {
+      "name": ".",
+      "role": "text",
+    },
+    Object {
+      "name": "New",
+      "role": "link",
+    },
+    Object {
+      "name": "(\\"package invalid contents\\")",
+      "role": "text",
+    },
+    Object {
+      "name": "// DBModuleInsertInvalid represents a module that was successfully",
+      "role": "text",
+    },
+    Object {
+      "name": "// fetched but could not be inserted due to invalid arguments to",
+      "role": "text",
+    },
+    Object {
+      "name": "// postgres.InsertModule.",
+      "role": "text",
+    },
+    Object {
+      "name": "DBModuleInsertInvalid =",
+      "role": "text",
+    },
+    Object {
+      "name": "errors",
+      "role": "link",
+    },
+    Object {
+      "name": ".",
+      "role": "text",
+    },
+    Object {
+      "name": "New",
+      "role": "link",
+    },
+    Object {
+      "name": "(\\"db module insert invalid\\")",
+      "role": "text",
+    },
+    Object {
+      "name": "// ReprocessStatusOK indicates that the module to be reprocessed",
+      "role": "text",
+    },
+    Object {
+      "name": "// previously had a status of http.StatusOK.",
+      "role": "text",
+    },
+    Object {
+      "name": "ReprocessStatusOK =",
+      "role": "text",
+    },
+    Object {
+      "name": "errors",
+      "role": "link",
+    },
+    Object {
+      "name": ".",
+      "role": "text",
+    },
+    Object {
+      "name": "New",
+      "role": "link",
+    },
+    Object {
+      "name": "(\\"reprocess status ok\\")",
+      "role": "text",
+    },
+    Object {
+      "name": "// ReprocessHasIncompletePackages indicates that the module to be reprocessed",
+      "role": "text",
+    },
+    Object {
+      "name": "// previously had a status of 290.",
+      "role": "text",
+    },
+    Object {
+      "name": "ReprocessHasIncompletePackages =",
+      "role": "text",
+    },
+    Object {
+      "name": "errors",
+      "role": "link",
+    },
+    Object {
+      "name": ".",
+      "role": "text",
+    },
+    Object {
+      "name": "New",
+      "role": "link",
+    },
+    Object {
+      "name": "(\\"reprocess has incomplete packages\\")",
+      "role": "text",
+    },
+    Object {
+      "name": "// ReprocessBadModule indicates that the module to be reprocessed",
+      "role": "text",
+    },
+    Object {
+      "name": "// previously had a status of derrors.BadModule.",
+      "role": "text",
+    },
+    Object {
+      "name": "ReprocessBadModule =",
+      "role": "text",
+    },
+    Object {
+      "name": "errors",
+      "role": "link",
+    },
+    Object {
+      "name": ".",
+      "role": "text",
+    },
+    Object {
+      "name": "New",
+      "role": "link",
+    },
+    Object {
+      "name": "(\\"reprocess bad module\\")",
+      "role": "text",
+    },
+    Object {
+      "name": "// ReprocessAlternativeModule indicates that the module to be reprocessed",
+      "role": "text",
+    },
+    Object {
+      "name": "// previously had a status of derrors.AlternativeModule.",
+      "role": "text",
+    },
+    Object {
+      "name": "ReprocessAlternative =",
+      "role": "text",
+    },
+    Object {
+      "name": "errors",
+      "role": "link",
+    },
+    Object {
+      "name": ".",
+      "role": "text",
+    },
+    Object {
+      "name": "New",
+      "role": "link",
+    },
+    Object {
+      "name": "(\\"reprocess alternative module\\")",
+      "role": "text",
+    },
+    Object {
+      "name": "// ReprocessDBModuleInsertInvalid represents a module to be reprocessed",
+      "role": "text",
+    },
+    Object {
+      "name": "// that was successfully fetched but could not be inserted due to invalid",
+      "role": "text",
+    },
+    Object {
+      "name": "// arguments to postgres.InsertModule.",
+      "role": "text",
+    },
+    Object {
+      "name": "ReprocessDBModuleInsertInvalid =",
+      "role": "text",
+    },
+    Object {
+      "name": "errors",
+      "role": "link",
+    },
+    Object {
+      "name": ".",
+      "role": "text",
+    },
+    Object {
+      "name": "New",
+      "role": "link",
+    },
+    Object {
+      "name": "(\\"reprocess db module insert invalid\\") )",
+      "role": "text",
+    },
+    Object {
+      "children": Array [
+        Object {
+          "name": "Functions",
+          "role": "text",
+        },
+        Object {
+          "name": "¶",
+          "role": "link",
+        },
+      ],
+      "level": 3,
+      "name": "Functions ¶",
+      "role": "heading",
+    },
+    Object {
+      "children": Array [
+        Object {
+          "name": "func",
+          "role": "text",
+        },
+        Object {
+          "name": "Add",
+          "role": "link",
+        },
+        Object {
+          "name": "¶",
+          "role": "link",
+        },
+      ],
+      "level": 4,
+      "name": "func Add¶",
+      "role": "heading",
+    },
+    Object {
+      "name": "func Add(errp *",
+      "role": "text",
+    },
+    Object {
+      "name": "error",
+      "role": "link",
+    },
+    Object {
+      "name": ", format",
+      "role": "text",
+    },
+    Object {
+      "name": "string",
+      "role": "link",
+    },
+    Object {
+      "name": ", args ...interface{})",
+      "role": "text",
+    },
+    Object {
+      "name": "Table of Contents",
+      "role": "navigation",
+    },
+    Object {
+      "name": "Add adds context to the error. The result cannot be unwrapped to recover the original error. It does nothing when *errp == nil.",
+      "role": "text",
+    },
+    Object {
+      "name": "Example:",
+      "role": "text",
+    },
+    Object {
+      "name": "defer derrors.Add(&err, \\"copy(%s, %s)\\", src, dst)",
+      "role": "text",
+    },
+    Object {
+      "name": "See Wrap for an equivalent function that allows the result to be unwrapped.",
+      "role": "text",
+    },
+    Object {
+      "children": Array [
+        Object {
+          "name": "func",
+          "role": "text",
+        },
+        Object {
+          "name": "FromStatus",
+          "role": "link",
+        },
+        Object {
+          "name": "¶",
+          "role": "link",
+        },
+      ],
+      "level": 4,
+      "name": "func FromStatus¶",
+      "role": "heading",
+    },
+    Object {
+      "name": "func FromStatus(code",
+      "role": "text",
+    },
+    Object {
+      "name": "int",
+      "role": "link",
+    },
+    Object {
+      "name": ", format",
+      "role": "text",
+    },
+    Object {
+      "name": "string",
+      "role": "link",
+    },
+    Object {
+      "name": ", args ...interface{})",
+      "role": "text",
+    },
+    Object {
+      "name": "error",
+      "role": "link",
+    },
+    Object {
+      "name": "Table of Contents",
+      "role": "navigation",
+    },
+    Object {
+      "name": "FromStatus generates an error according for the given status code. It uses the given format string and arguments to create the error string according to the fmt package. If format is the empty string, then the error corresponding to the code is returned unwrapped.",
+      "role": "text",
+    },
+    Object {
+      "name": "If code is http.StatusOK, it returns nil.",
+      "role": "text",
+    },
+    Object {
+      "children": Array [
+        Object {
+          "name": "func",
+          "role": "text",
+        },
+        Object {
+          "name": "Report",
+          "role": "link",
+        },
+        Object {
+          "name": "¶",
+          "role": "link",
+        },
+      ],
+      "level": 4,
+      "name": "func Report¶",
+      "role": "heading",
+    },
+    Object {
+      "name": "func Report(err",
+      "role": "text",
+    },
+    Object {
+      "name": "error",
+      "role": "link",
+    },
+    Object {
+      "name": ")",
+      "role": "text",
+    },
+    Object {
+      "name": "Table of Contents",
+      "role": "navigation",
+    },
+    Object {
+      "name": "Report uses the errorreporting API to report an error.",
+      "role": "text",
+    },
+    Object {
+      "children": Array [
+        Object {
+          "name": "func",
+          "role": "text",
+        },
+        Object {
+          "name": "SetReportingClient",
+          "role": "link",
+        },
+        Object {
+          "name": "¶",
+          "role": "link",
+        },
+      ],
+      "level": 4,
+      "name": "func SetReportingClient¶",
+      "role": "heading",
+    },
+    Object {
+      "name": "func SetReportingClient(c *",
+      "role": "text",
+    },
+    Object {
+      "name": "errorreporting",
+      "role": "link",
+    },
+    Object {
+      "name": ".",
+      "role": "text",
+    },
+    Object {
+      "name": "Client",
+      "role": "link",
+    },
+    Object {
+      "name": ")",
+      "role": "text",
+    },
+    Object {
+      "name": "Table of Contents",
+      "role": "navigation",
+    },
+    Object {
+      "name": "SetReportingClient sets an errorreporting client, for use by Report.",
+      "role": "text",
+    },
+    Object {
+      "children": Array [
+        Object {
+          "name": "func",
+          "role": "text",
+        },
+        Object {
+          "name": "ToReprocessStatus",
+          "role": "link",
+        },
+        Object {
+          "name": "¶",
+          "role": "link",
+        },
+      ],
+      "level": 4,
+      "name": "func ToReprocessStatus¶",
+      "role": "heading",
+    },
+    Object {
+      "name": "func ToReprocessStatus(status",
+      "role": "text",
+    },
+    Object {
+      "name": "int",
+      "role": "link",
+    },
+    Object {
+      "name": ")",
+      "role": "text",
+    },
+    Object {
+      "name": "int",
+      "role": "link",
+    },
+    Object {
+      "name": "Table of Contents",
+      "role": "navigation",
+    },
+    Object {
+      "name": "ToReprocessStatus returns the reprocess status code corresponding to the provided status.",
+      "role": "text",
+    },
+    Object {
+      "children": Array [
+        Object {
+          "name": "func",
+          "role": "text",
+        },
+        Object {
+          "name": "ToStatus",
+          "role": "link",
+        },
+        Object {
+          "name": "¶",
+          "role": "link",
+        },
+      ],
+      "level": 4,
+      "name": "func ToStatus¶",
+      "role": "heading",
+    },
+    Object {
+      "name": "func ToStatus(err",
+      "role": "text",
+    },
+    Object {
+      "name": "error",
+      "role": "link",
+    },
+    Object {
+      "name": ")",
+      "role": "text",
+    },
+    Object {
+      "name": "int",
+      "role": "link",
+    },
+    Object {
+      "name": "Table of Contents",
+      "role": "navigation",
+    },
+    Object {
+      "name": "ToStatus returns a status code corresponding to err.",
+      "role": "text",
+    },
+    Object {
+      "children": Array [
+        Object {
+          "name": "func",
+          "role": "text",
+        },
+        Object {
+          "name": "Wrap",
+          "role": "link",
+        },
+        Object {
+          "name": "¶",
+          "role": "link",
+        },
+      ],
+      "level": 4,
+      "name": "func Wrap¶",
+      "role": "heading",
+    },
+    Object {
+      "name": "func Wrap(errp *",
+      "role": "text",
+    },
+    Object {
+      "name": "error",
+      "role": "link",
+    },
+    Object {
+      "name": ", format",
+      "role": "text",
+    },
+    Object {
+      "name": "string",
+      "role": "link",
+    },
+    Object {
+      "name": ", args ...interface{})",
+      "role": "text",
+    },
+    Object {
+      "name": "Table of Contents",
+      "role": "navigation",
+    },
+    Object {
+      "name": "Wrap adds context to the error and allows unwrapping the result to recover the original error.",
+      "role": "text",
+    },
+    Object {
+      "name": "Example:",
+      "role": "text",
+    },
+    Object {
+      "name": "defer derrors.Wrap(&err, \\"copy(%s, %s)\\", src, dst)",
+      "role": "text",
+    },
+    Object {
+      "name": "See Add for an equivalent function that does not allow the result to be unwrapped.",
+      "role": "text",
+    },
+    Object {
+      "children": Array [
+        Object {
+          "name": "func",
+          "role": "text",
+        },
+        Object {
+          "name": "WrapAndReport",
+          "role": "link",
+        },
+        Object {
+          "name": "¶",
+          "role": "link",
+        },
+      ],
+      "level": 4,
+      "name": "func WrapAndReport¶",
+      "role": "heading",
+    },
+    Object {
+      "name": "func WrapAndReport(errp *",
+      "role": "text",
+    },
+    Object {
+      "name": "error",
+      "role": "link",
+    },
+    Object {
+      "name": ", format",
+      "role": "text",
+    },
+    Object {
+      "name": "string",
+      "role": "link",
+    },
+    Object {
+      "name": ", args ...interface{})",
+      "role": "text",
+    },
+    Object {
+      "name": "Table of Contents",
+      "role": "navigation",
+    },
+    Object {
+      "name": "WrapAndReport calls Wrap followed by Report.",
+      "role": "text",
+    },
+    Object {
+      "children": Array [
+        Object {
+          "name": "func",
+          "role": "text",
+        },
+        Object {
+          "name": "WrapStack",
+          "role": "link",
+        },
+        Object {
+          "name": "¶",
+          "role": "link",
+        },
+      ],
+      "level": 4,
+      "name": "func WrapStack¶",
+      "role": "heading",
+    },
+    Object {
+      "name": "func WrapStack(errp *",
+      "role": "text",
+    },
+    Object {
+      "name": "error",
+      "role": "link",
+    },
+    Object {
+      "name": ", format",
+      "role": "text",
+    },
+    Object {
+      "name": "string",
+      "role": "link",
+    },
+    Object {
+      "name": ", args ...interface{})",
+      "role": "text",
+    },
+    Object {
+      "name": "Table of Contents",
+      "role": "navigation",
+    },
+    Object {
+      "name": "WrapStack is like Wrap, but adds a stack trace if there isn't one already.",
+      "role": "text",
+    },
+    Object {
+      "children": Array [
+        Object {
+          "name": "Types",
+          "role": "text",
+        },
+        Object {
+          "name": "¶",
+          "role": "link",
+        },
+      ],
+      "level": 3,
+      "name": "Types ¶",
+      "role": "heading",
+    },
+    Object {
+      "children": Array [
+        Object {
+          "name": "type",
+          "role": "text",
+        },
+        Object {
+          "name": "StackError",
+          "role": "link",
+        },
+        Object {
+          "name": "¶",
+          "role": "link",
+        },
+      ],
+      "level": 4,
+      "name": "type StackError¶",
+      "role": "heading",
+    },
+    Object {
+      "name": "type StackError struct {",
+      "role": "text",
+    },
+    Object {
+      "name": "Stack []",
+      "role": "text",
+    },
+    Object {
+      "name": "byte",
+      "role": "link",
+    },
+    Object {
+      "name": "// contains filtered or unexported fields",
+      "role": "text",
+    },
+    Object {
+      "name": "}",
+      "role": "text",
+    },
+    Object {
+      "name": "Table of Contents",
+      "role": "navigation",
+    },
+    Object {
+      "name": "StackError wraps an error and adds a stack trace.",
+      "role": "text",
+    },
+    Object {
+      "children": Array [
+        Object {
+          "name": "func",
+          "role": "text",
+        },
+        Object {
+          "name": "NewStackError",
+          "role": "link",
+        },
+        Object {
+          "name": "¶",
+          "role": "link",
+        },
+      ],
+      "level": 4,
+      "name": "func NewStackError¶",
+      "role": "heading",
+    },
+    Object {
+      "name": "func NewStackError(err",
+      "role": "text",
+    },
+    Object {
+      "name": "error",
+      "role": "link",
+    },
+    Object {
+      "name": ") *",
+      "role": "text",
+    },
+    Object {
+      "name": "StackError",
+      "role": "link",
+    },
+    Object {
+      "name": "Table of Contents",
+      "role": "navigation",
+    },
+    Object {
+      "name": "NewStackError returns a StackError, capturing a stack trace.",
+      "role": "text",
+    },
+    Object {
+      "children": Array [
+        Object {
+          "name": "func (*StackError)",
+          "role": "text",
+        },
+        Object {
+          "name": "Error",
+          "role": "link",
+        },
+        Object {
+          "name": "¶",
+          "role": "link",
+        },
+      ],
+      "level": 4,
+      "name": "func (*StackError) Error¶",
+      "role": "heading",
+    },
+    Object {
+      "name": "func (e *",
+      "role": "text",
+    },
+    Object {
+      "name": "StackError",
+      "role": "link",
+    },
+    Object {
+      "name": ") Error()",
+      "role": "text",
+    },
+    Object {
+      "name": "string",
+      "role": "link",
+    },
+    Object {
+      "children": Array [
+        Object {
+          "name": "func (*StackError)",
+          "role": "text",
+        },
+        Object {
+          "name": "Unwrap",
+          "role": "link",
+        },
+        Object {
+          "name": "¶",
+          "role": "link",
+        },
+      ],
+      "level": 4,
+      "name": "func (*StackError) Unwrap¶",
+      "role": "heading",
+    },
+    Object {
+      "name": "func (e *",
+      "role": "text",
+    },
+    Object {
+      "name": "StackError",
+      "role": "link",
+    },
+    Object {
+      "name": ") Unwrap()",
+      "role": "text",
+    },
+    Object {
+      "name": "error",
+      "role": "link",
+    },
+    Object {
+      "name": "Source Files",
+      "role": "text",
+    },
+    Object {
+      "name": "¶",
+      "role": "link",
+    },
+    Object {
+      "name": "View all",
+      "role": "link",
+    },
+    Object {
+      "description": "derrors.go",
+      "name": "derrors.go",
+      "role": "link",
+    },
+    Object {
+      "level": 2,
+      "name": "Details",
+      "role": "heading",
+    },
+    Object {
+      "name": "checked",
+      "role": "img",
+    },
+    Object {
+      "name": "Valid",
+      "role": "text",
+    },
+    Object {
+      "name": "go.mod",
+      "role": "link",
+    },
+    Object {
+      "name": "file",
+      "role": "text",
+    },
+    Object {
+      "name": "more info",
+      "role": "button",
+    },
+    Object {
+      "name": "checked",
+      "role": "img",
+    },
+    Object {
+      "name": "Redistributable license",
+      "role": "text",
+    },
+    Object {
+      "name": "more info",
+      "role": "button",
+    },
+    Object {
+      "name": "unchecked",
+      "role": "img",
+    },
+    Object {
+      "name": "Tagged version",
+      "role": "text",
+    },
+    Object {
+      "name": "more info",
+      "role": "button",
+    },
+    Object {
+      "name": "unchecked",
+      "role": "img",
+    },
+    Object {
+      "name": "Stable version",
+      "role": "text",
+    },
+    Object {
+      "name": "more info",
+      "role": "button",
+    },
+    Object {
+      "name": "Learn more",
+      "role": "link",
+    },
+    Object {
+      "level": 2,
+      "name": "Repository",
+      "role": "heading",
+    },
+    Object {
+      "description": "https://github.com/golang/pkgsite",
+      "name": "github.com/golang/pkgsite",
+      "role": "link",
+    },
+    Object {
+      "level": 2,
+      "name": "Links",
+      "role": "heading",
+    },
+    Object {
+      "description": "https://pkg.go.dev",
+      "name": "Homepage",
+      "role": "link",
+    },
+    Object {
+      "description": "https://golang.org/s/pkgsite-feedback",
+      "name": "Feedback",
+      "role": "link",
+    },
+    Object {
+      "description": "https://golang.org/s/pkgsite-issues",
+      "name": "Issue Tracker",
+      "role": "link",
+    },
+    Object {
+      "description": "Why Go",
+      "name": "Why Go",
+      "role": "link",
+    },
+    Object {
+      "description": "Use Cases",
+      "name": "Use Cases",
+      "role": "link",
+    },
+    Object {
+      "description": "Case Studies",
+      "name": "Case Studies",
+      "role": "link",
+    },
+    Object {
+      "description": "Getting Started",
+      "name": "Getting Started",
+      "role": "link",
+    },
+    Object {
+      "name": "Playground",
+      "role": "link",
+    },
+    Object {
+      "name": "Tour",
+      "role": "link",
+    },
+    Object {
+      "name": "Stack Overflow",
+      "role": "link",
+    },
+    Object {
+      "description": "Discover Packages",
+      "name": "Discover Packages",
+      "role": "link",
+    },
+    Object {
+      "description": "About",
+      "name": "About",
+      "role": "link",
+    },
+    Object {
+      "name": "Download",
+      "role": "link",
+    },
+    Object {
+      "name": "Blog",
+      "role": "link",
+    },
+    Object {
+      "name": "Release Notes",
+      "role": "link",
+    },
+    Object {
+      "name": "Brand Guidelines",
+      "role": "link",
+    },
+    Object {
+      "name": "Code of Conduct",
+      "role": "link",
+    },
+    Object {
+      "description": "Connect",
+      "name": "Connect",
+      "role": "link",
+    },
+    Object {
+      "name": "Twitter",
+      "role": "link",
+    },
+    Object {
+      "name": "GitHub",
+      "role": "link",
+    },
+    Object {
+      "name": "Slack",
+      "role": "link",
+    },
+    Object {
+      "name": "Meetup",
+      "role": "link",
+    },
+    Object {
+      "name": "Gopher in flight goggles",
+      "role": "img",
+    },
+    Object {
+      "name": "Copyright",
+      "role": "link",
+    },
+    Object {
+      "name": "Terms of Service",
+      "role": "link",
+    },
+    Object {
+      "name": "Privacy Policy",
+      "role": "link",
+    },
+    Object {
+      "name": "Report an Issue",
+      "role": "link",
+    },
+    Object {
+      "name": "golang.org",
+      "role": "link",
+    },
+    Object {
+      "name": "Google logo",
+      "role": "link",
+    },
+  ],
+  "name": "derrors · pkg.go.dev",
+  "role": "WebArea",
+}
+`;
