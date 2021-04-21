@@ -182,9 +182,9 @@ func sinceVersionFunc(modulePath string, nameToVersion map[string]string) func(n
 	}
 }
 
-// RenderParts renders the documentation for the package in parts.
+// Render renders the documentation for the package.
 // Rendering destroys p's AST; do not call any methods of p after it returns.
-func (p *Package) RenderParts(ctx context.Context, innerPath string,
+func (p *Package) Render(ctx context.Context, innerPath string,
 	sourceInfo *source.Info, modInfo *ModuleInfo, nameToVersion map[string]string) (_ *dochtml.Parts, err error) {
 	p.renderCalled = true
 
@@ -225,5 +225,5 @@ func RenderPartsFromUnit(ctx context.Context, u *internal.Unit) (_ *dochtml.Part
 	} else if u.Path != u.ModulePath {
 		innerPath = u.Path[len(u.ModulePath)+1:]
 	}
-	return docPkg.RenderParts(ctx, innerPath, u.SourceInfo, modInfo, nil)
+	return docPkg.Render(ctx, innerPath, u.SourceInfo, modInfo, nil)
 }

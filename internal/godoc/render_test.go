@@ -116,7 +116,7 @@ func TestRenderParts_SinceVersion(t *testing.T) {
 		// TF is a method.
 		"T.M": "v1.4.0",
 	}
-	parts, err := p.RenderParts(ctx, "p", si, mi, nameToVersion)
+	parts, err := p.Render(ctx, "p", si, mi, nameToVersion)
 	if err != nil {
 		t.Fatal(err)
 	}

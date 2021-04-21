@@ -36,7 +36,7 @@ func renderDocParts(ctx context.Context, u *internal.Unit, docPkg *godoc.Package
 	} else if u.Path != u.ModulePath {
 		innerPath = u.Path[len(u.ModulePath)+1:]
 	}
-	return docPkg.RenderParts(ctx, innerPath, u.SourceInfo, modInfo, nameToVersion)
+	return docPkg.Render(ctx, innerPath, u.SourceInfo, modInfo, nameToVersion)
 }
 
 // sourceFiles returns the .go files for a package.
