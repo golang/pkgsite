@@ -12,6 +12,7 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/middleware"
 	"golang.org/x/pkgsite/internal/symbol"
 )
@@ -21,9 +22,16 @@ import (
 // UnitSymbol.Children field will always be empty, as children names are also
 // tracked.
 func (db *DB) GetSymbolHistory(ctx context.Context, packagePath, modulePath string,
-) (outVersionToNameToUnitSymbol map[string]map[string]*internal.UnitSymbol, err error) {
+) (_ map[string]map[string]*internal.UnitSymbol, err error) {
 	defer derrors.Wrap(&err, "GetSymbolHistory(ctx, %q, %q)", packagePath, modulePath)
 	defer middleware.ElapsedStat(ctx, "GetSymbolHistory")()
+
+	if experiment.IsActive(ctx, internal.ExperimentReadSymbolHistory) {
+		// TODO(https://golang.org/issue/37102): read data from the
+		// symbol_history table.
+		return nil, nil
+	}
+
 	versionToNameToUnitSymbols, err := getPackageSymbols(ctx, db.db, packagePath, modulePath)
 	if err != nil {
 		return nil, err

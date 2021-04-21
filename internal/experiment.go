@@ -7,6 +7,8 @@ package internal
 
 const (
 	ExperimentDeprecatedDoc             = "deprecated-doc"
+	ExperimentInsertSymbolHistory       = "insert-symbol-history"
+	ExperimentReadSymbolHistory         = "read-symbol-history"
 	ExperimentSymbolHistoryVersionsPage = "symbol-history-versions-page"
 	ExperimentSymbolHistoryMainPage     = "symbol-history-main-page"
 )
@@ -15,6 +17,8 @@ const (
 // a description of each experiment.
 var Experiments = map[string]string{
 	ExperimentDeprecatedDoc:             "Treat deprecated symbols specially in documentation.",
+	ExperimentInsertSymbolHistory:       "Insert data into the symbol_history table.",
+	ExperimentReadSymbolHistory:         "Read data from the symbol_history table.",
 	ExperimentSymbolHistoryVersionsPage: "Show package API history on the versions page.",
 	ExperimentSymbolHistoryMainPage:     "Show package API history on the main unit page.",
 }
