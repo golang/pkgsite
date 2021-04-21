@@ -15,16 +15,16 @@ import (
 )
 
 // GetUnit returns information about a directory at a path.
-func (ds *DataSource) GetUnit(ctx context.Context, um *internal.UnitMeta, field internal.FieldSet) (_ *internal.Unit, err error) {
+func (ds *DataSource) GetUnit(ctx context.Context, um *internal.UnitMeta, field internal.FieldSet, bc internal.BuildContext) (_ *internal.Unit, err error) {
 	defer derrors.Wrap(&err, "GetUnit(%q, %q, %q)", um.Path, um.ModulePath, um.Version)
-	return ds.getUnit(ctx, um.Path, um.ModulePath, um.Version)
+	return ds.getUnit(ctx, um.Path, um.ModulePath, um.Version, bc)
 }
 
 // GetModuleInfo returns the ModuleInfo as fetched from the proxy for module
 // version specified by modulePath and version.
 func (ds *DataSource) GetModuleInfo(ctx context.Context, modulePath, version string) (_ *internal.ModuleInfo, err error) {
 	defer derrors.Wrap(&err, "GetModuleInfo(%q, %q)", modulePath, version)
-	m, err := ds.getModule(ctx, modulePath, version)
+	m, err := ds.getModule(ctx, modulePath, version, internal.BuildContext{})
 	if err != nil {
 		return nil, err
 	}
@@ -43,7 +43,7 @@ func (ds *DataSource) GetUnitMeta(ctx context.Context, path, inModulePath, inVer
 		}
 		inVersion = info.Version
 	}
-	m, err := ds.getModule(ctx, inModulePath, inVersion)
+	m, err := ds.getModule(ctx, inModulePath, inVersion, internal.BuildContext{})
 	if err != nil {
 		return nil, err
 	}

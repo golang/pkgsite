@@ -85,7 +85,7 @@ type versionEntry struct {
 
 // getModule retrieves a version from the cache, or failing that queries and
 // processes the version from the proxy.
-func (ds *DataSource) getModule(ctx context.Context, modulePath, version string) (_ *internal.Module, err error) {
+func (ds *DataSource) getModule(ctx context.Context, modulePath, version string, _ internal.BuildContext) (_ *internal.Module, err error) {
 	defer derrors.Wrap(&err, "getModule(%q, %q)", modulePath, version)
 
 	key := versionKey{modulePath, version}
@@ -106,6 +106,7 @@ func (ds *DataSource) getModule(ctx context.Context, modulePath, version string)
 		} else {
 			m.RemoveNonRedistributableData()
 		}
+		//
 		// Use the go.mod file at the raw latest version to fill in deprecation
 		// and retraction information.
 		lmv, err := fetch.LatestModuleVersions(ctx, modulePath, ds.proxyClient, nil)
@@ -178,9 +179,9 @@ func (ds *DataSource) findModule(ctx context.Context, pkgPath string, version st
 }
 
 // getUnit returns information about a unit.
-func (ds *DataSource) getUnit(ctx context.Context, fullPath, modulePath, version string) (_ *internal.Unit, err error) {
+func (ds *DataSource) getUnit(ctx context.Context, fullPath, modulePath, version string, bc internal.BuildContext) (_ *internal.Unit, err error) {
 	var m *internal.Module
-	m, err = ds.getModule(ctx, modulePath, version)
+	m, err = ds.getModule(ctx, modulePath, version, bc)
 	if err != nil {
 		return nil, err
 	}

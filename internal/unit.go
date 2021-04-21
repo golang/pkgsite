@@ -45,7 +45,8 @@ func (um *UnitMeta) IsModule() bool {
 type Unit struct {
 	UnitMeta
 	Readme          *Readme
-	Documentation   []*Documentation
+	BuildContexts   []BuildContext   // set only on read
+	Documentation   []*Documentation // at most one on read
 	Subdirectories  []*PackageMeta
 	Imports         []string
 	LicenseContents []*licenses.License

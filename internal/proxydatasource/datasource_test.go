@@ -218,7 +218,7 @@ func TestBypass(t *testing.T) {
 					if err != nil {
 						t.Fatal(err)
 					}
-					got, err := ds.GetUnit(ctx, um, 0)
+					got, err := ds.GetUnit(ctx, um, 0, internal.BuildContext{})
 					if err != nil {
 						t.Fatal(err)
 					}

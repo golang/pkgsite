@@ -225,12 +225,13 @@ func (db *DB) getLatestUnitVersion(ctx context.Context, fullPath, requestedModul
 
 // GetUnit returns a unit from the database, along with all of the data
 // associated with that unit.
-func (db *DB) GetUnit(ctx context.Context, um *internal.UnitMeta, fields internal.FieldSet) (_ *internal.Unit, err error) {
-	defer derrors.WrapStack(&err, "GetUnit(ctx, %q, %q, %q)", um.Path, um.ModulePath, um.Version)
+// If bc is not nil, get only the Documentation that matches it (or nil if none do).
+func (db *DB) GetUnit(ctx context.Context, um *internal.UnitMeta, fields internal.FieldSet, bc internal.BuildContext) (_ *internal.Unit, err error) {
+	defer derrors.WrapStack(&err, "GetUnit(ctx, %q, %q, %q, %v)", um.Path, um.ModulePath, um.Version, bc)
 
 	u := &internal.Unit{UnitMeta: *um}
 	if fields&internal.WithMain != 0 {
-		u, err = db.getUnitWithAllFields(ctx, um)
+		u, err = db.getUnitWithAllFields(ctx, um, bc)
 		if err != nil {
 			return nil, err
 		}
@@ -396,16 +397,53 @@ func getPackagesInUnit(ctx context.Context, db *database.DB, fullPath, modulePat
 	return packages, nil
 }
 
-func (db *DB) getUnitWithAllFields(ctx context.Context, um *internal.UnitMeta) (_ *internal.Unit, err error) {
+func (db *DB) getUnitWithAllFields(ctx context.Context, um *internal.UnitMeta, bc internal.BuildContext) (_ *internal.Unit, err error) {
 	defer derrors.WrapStack(&err, "getUnitWithAllFields(ctx, %q, %q, %q)", um.Path, um.ModulePath, um.Version)
 	defer middleware.ElapsedStat(ctx, "getUnitWithAllFields")()
 
-	// Get README and import counts.
+	// Get build contexts and unit ID.
+	var unitID int
+	var bcs []internal.BuildContext
+	err = db.db.RunQuery(ctx, `
+		SELECT d.goos, d.goarch, u.id
+		FROM units u
+		INNER JOIN paths p ON p.id = u.path_id
+		INNER JOIN modules m ON m.id = u.module_id
+		LEFT JOIN documentation d ON d.unit_id = u.id
+		WHERE
+			p.path = $1
+			AND m.module_path = $2
+			AND m.version = $3
+	`, func(rows *sql.Rows) error {
+		var bc internal.BuildContext
+		// GOOS and GOARCH will be NULL if there are no documentation rows for
+		// the unit, but we still want the unit ID.
+		if err := rows.Scan(database.NullIsEmpty(&bc.GOOS), database.NullIsEmpty(&bc.GOARCH), &unitID); err != nil {
+			return err
+		}
+		if bc.GOOS != "" && bc.GOARCH != "" {
+			bcs = append(bcs, bc)
+		}
+		return nil
+	}, um.Path, um.ModulePath, um.Version)
+	if err != nil {
+		return nil, err
+	}
+	sort.Slice(bcs, func(i, j int) bool { return internal.CompareBuildContexts(bcs[i], bcs[j]) < 0 })
+	var bcMatched internal.BuildContext
+	for _, c := range bcs {
+		if bc.Match(c) {
+			bcMatched = c
+			break
+		}
+	}
+	// Get README, documentation and import counts.
 	query := `
         SELECT
-			u.id,
 			r.file_path,
 			r.contents,
+			d.synopsis,
+			d.source,
 			COALESCE((
 				SELECT COUNT(unit_id)
 				FROM package_imports
@@ -420,49 +458,51 @@ func (db *DB) getUnitWithAllFields(ctx context.Context, um *internal.UnitMeta) (
 				WHERE package_path = $1
 				), 0) AS num_imported_by
 		FROM units u
-		INNER JOIN paths p
-		ON p.id = u.path_id
-		INNER JOIN modules m
-		ON u.module_id = m.id
 		LEFT JOIN readmes r
 		ON r.unit_id = u.id
-		WHERE
-			p.path = $1
-			AND m.module_path = $2
-			AND m.version = $3;`
 
+		LEFT JOIN (
+			SELECT synopsis, source, goos, goarch, unit_id
+			FROM documentation d
+			WHERE d.GOOS = $3 AND d.GOARCH = $4
+        ) d
+		ON d.unit_id = u.id
+		WHERE u.id = $2
+	`
 	var (
-		unitID int
-		r      internal.Readme
-		u      internal.Unit
+		r internal.Readme
+		u internal.Unit
 	)
+	u.BuildContexts = bcs
+	var goos, goarch interface{}
+	if bcMatched.GOOS != "" {
+		goos = bcMatched.GOOS
+		goarch = bcMatched.GOARCH
+	}
+	doc := &internal.Documentation{GOOS: bcMatched.GOOS, GOARCH: bcMatched.GOARCH}
 	end := middleware.ElapsedStat(ctx, "getUnitWithAllFields-readme-and-imports")
-	err = db.db.QueryRow(ctx, query, um.Path, um.ModulePath, um.Version).Scan(
-		&unitID,
+	err = db.db.QueryRow(ctx, query, um.Path, unitID, goos, goarch).Scan(
 		database.NullIsEmpty(&r.Filepath),
 		database.NullIsEmpty(&r.Contents),
+		database.NullIsEmpty(&doc.Synopsis),
+		&doc.Source,
 		&u.NumImports,
 		&u.NumImportedBy,
 	)
 	switch err {
 	case sql.ErrNoRows:
-		return nil, derrors.NotFound
+		// Neither a README nor documentation; that's OK, continue.
 	case nil:
 		if r.Filepath != "" && um.ModulePath != stdlib.ModulePath {
 			u.Readme = &r
+		}
+		if doc.GOOS != "" {
+			u.Documentation = []*internal.Documentation{doc}
 		}
 	default:
 		return nil, err
 	}
 	end()
-
-	// Get documentation.
-	docs, err := db.getDocumentation(ctx, unitID)
-	if err != nil {
-		return nil, err
-	}
-	u.Documentation = docs
-
 	// Get other info.
 	pkgs, err := db.getPackagesInUnit(ctx, um.Path, um.ModulePath, um.Version)
 	if err != nil {
@@ -471,35 +511,6 @@ func (db *DB) getUnitWithAllFields(ctx context.Context, um *internal.UnitMeta) (
 	u.Subdirectories = pkgs
 	u.UnitMeta = *um
 	return &u, nil
-}
-
-func (db *DB) getDocumentation(ctx context.Context, unitID int) (_ []*internal.Documentation, err error) {
-	defer derrors.WrapStack(&err, "getDocumentation(ctx, %d)", unitID)
-	defer middleware.ElapsedStat(ctx, "getDocumentation")()
-
-	var docs []*internal.Documentation
-	// Get documentation. There can be multiple rows.
-	query := `
-		SELECT goos, goarch, synopsis, source
-		FROM documentation
-		WHERE unit_id = $1`
-	if err := db.db.RunQuery(ctx, query, func(rows *sql.Rows) error {
-		var d internal.Documentation
-		if err := rows.Scan(&d.GOOS, &d.GOARCH, &d.Synopsis, &d.Source); err != nil {
-			return err
-		}
-		docs = append(docs, &d)
-		return nil
-	}, unitID); err != nil {
-		return nil, err
-	}
-	// Sort documentation by GOOS/GOARCH.
-	sort.Slice(docs, func(i, j int) bool {
-		ci := docs[i].BuildContext()
-		cj := docs[j].BuildContext()
-		return internal.CompareBuildContexts(ci, cj) < 0
-	})
-	return docs, nil
 }
 
 type dbPath struct {

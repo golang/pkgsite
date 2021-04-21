@@ -109,7 +109,7 @@ type File struct {
 func fetchMainDetails(ctx context.Context, ds internal.DataSource, um *internal.UnitMeta, expandReadme bool, bc internal.BuildContext) (_ *MainDetails, err error) {
 	defer middleware.ElapsedStat(ctx, "fetchMainDetails")()
 
-	unit, err := ds.GetUnit(ctx, um, internal.WithMain)
+	unit, err := ds.GetUnit(ctx, um, internal.WithMain, bc)
 	if err != nil {
 		return nil, err
 	}
@@ -135,15 +135,18 @@ func fetchMainDetails(ctx context.Context, ds internal.DataSource, um *internal.
 	)
 
 	unit.Documentation = cleanDocumentation(unit.Documentation)
-	doc := internal.DocumentationForBuildContext(unit.Documentation, bc)
+	// There should be at most one Documentation.
+	var doc *internal.Documentation
+	if len(unit.Documentation) > 0 {
+		doc = unit.Documentation[0]
+	}
+
 	versionToNameToUnitSymbol := map[string]map[string]*internal.UnitSymbol{}
 	if doc != nil {
 		synopsis = doc.Synopsis
 		goos = doc.GOOS
 		goarch = doc.GOARCH
-		for _, v := range unit.Documentation {
-			buildContexts = append(buildContexts, v.BuildContext())
-		}
+		buildContexts = unit.BuildContexts
 		end := middleware.ElapsedStat(ctx, "DecodePackage")
 		docPkg, err := godoc.DecodePackage(doc.Source)
 		end()

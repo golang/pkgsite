@@ -42,7 +42,7 @@ func fetchImportsDetails(ctx context.Context, ds internal.DataSource, pkgPath, m
 			ModulePath: modulePath,
 			Version:    resolvedVersion,
 		},
-	}, internal.WithImports)
+	}, internal.WithImports, internal.BuildContext{})
 	if err != nil {
 		return nil, err
 	}

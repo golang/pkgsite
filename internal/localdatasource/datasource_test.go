@@ -240,7 +240,7 @@ func TestGetUnit(t *testing.T) {
 				Path:       test.path,
 				ModuleInfo: internal.ModuleInfo{ModulePath: test.modulePath},
 			}
-			got, err := ds.GetUnit(ctx, um, 0)
+			got, err := ds.GetUnit(ctx, um, 0, internal.BuildContext{})
 			if !test.wantLoaded {
 				if err == nil {
 					t.Fatalf("returned not loaded module %q", test.path)

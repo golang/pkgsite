@@ -100,7 +100,7 @@ func checkModule(ctx context.Context, t *testing.T, db *DB, want *internal.Modul
 	}
 
 	for _, wantu := range want.Units {
-		got, err := db.GetUnit(ctx, &wantu.UnitMeta, internal.AllFields)
+		got, err := db.GetUnit(ctx, &wantu.UnitMeta, internal.AllFields, internal.BuildContext{})
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -111,6 +111,7 @@ func checkModule(ctx context.Context, t *testing.T, db *DB, want *internal.Modul
 			}
 		}
 		wantu.Subdirectories = subdirectories
+		wantu.BuildContexts = got.BuildContexts
 		opts := cmp.Options{
 			cmpopts.IgnoreFields(licenses.Metadata{}, "Coverage", "OldCoverage"),
 			cmp.AllowUnexported(source.Info{}, safehtml.HTML{}),
@@ -163,7 +164,7 @@ func TestInsertModuleLicenseCheck(t *testing.T) {
 			MustInsertModule(ctx, t, db, mod)
 
 			// New model
-			u, err := db.GetUnit(ctx, newUnitMeta(mod.ModulePath, mod.ModulePath, mod.Version), internal.AllFields)
+			u, err := db.GetUnit(ctx, newUnitMeta(mod.ModulePath, mod.ModulePath, mod.Version), internal.AllFields, internal.BuildContext{})
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -306,7 +307,7 @@ func TestInsertModuleNewCoverage(t *testing.T) {
 		},
 	}
 	MustInsertModule(ctx, t, testDB, m)
-	u, err := testDB.GetUnit(ctx, newUnitMeta(m.ModulePath, m.ModulePath, m.Version), internal.AllFields)
+	u, err := testDB.GetUnit(ctx, newUnitMeta(m.ModulePath, m.ModulePath, m.Version), internal.AllFields, internal.BuildContext{})
 	if err != nil {
 		t.Fatal(err)
 	}

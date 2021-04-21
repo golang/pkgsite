@@ -129,13 +129,13 @@ func TestReFetch(t *testing.T) {
 		t.Fatalf("testDB.GetUnitMeta(ctx, %q, %q) mismatch (-want +got):\n%s", want.ModulePath, want.Version, diff)
 	}
 
-	gotPkg, err := testDB.GetUnit(ctx, got, internal.WithMain)
+	gotPkg, err := testDB.GetUnit(ctx, got, internal.WithMain, internal.BuildContext{})
 	if err != nil {
 		t.Fatal(err)
 	}
 	if diff := cmp.Diff(want, gotPkg,
 		cmp.AllowUnexported(source.Info{}),
-		cmpopts.IgnoreFields(internal.Unit{}, "Documentation"),
+		cmpopts.IgnoreFields(internal.Unit{}, "Documentation", "BuildContexts"),
 		cmpopts.IgnoreFields(licenses.Metadata{}, "Coverage", "OldCoverage"),
 		cmpopts.IgnoreFields(internal.UnitMeta{}, "HasGoMod")); diff != "" {
 		t.Errorf("mismatch on readme (-want +got):\n%s", diff)

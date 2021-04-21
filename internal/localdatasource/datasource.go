@@ -76,6 +76,15 @@ func (ds *DataSource) fetch(ctx context.Context, modulePath, localPath string) e
 		unit.IsRedistributable = true
 	}
 
+	for _, unit := range fr.Module.Units {
+		for _, d := range unit.Documentation {
+			unit.BuildContexts = append(unit.BuildContexts, internal.BuildContext{
+				GOOS:   d.GOOS,
+				GOARCH: d.GOARCH,
+			})
+		}
+	}
+
 	ds.mu.Lock()
 	defer ds.mu.Unlock()
 	ds.loadedModules[fr.ModulePath] = fr.Module
@@ -99,7 +108,7 @@ func getFullPath(modulePath string) string {
 
 // GetUnit returns information about a unit. Both the module path and package
 // path must be known.
-func (ds *DataSource) GetUnit(ctx context.Context, pathInfo *internal.UnitMeta, fields internal.FieldSet) (_ *internal.Unit, err error) {
+func (ds *DataSource) GetUnit(ctx context.Context, pathInfo *internal.UnitMeta, fields internal.FieldSet, bc internal.BuildContext) (_ *internal.Unit, err error) {
 	defer derrors.Wrap(&err, "GetUnit(%q, %q)", pathInfo.Path, pathInfo.ModulePath)
 
 	modulepath := pathInfo.ModulePath

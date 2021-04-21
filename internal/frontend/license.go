@@ -37,7 +37,7 @@ type LicenseMetadata struct {
 // fetchLicensesDetails fetches license data for the package version specified by
 // path and version from the database and returns a LicensesDetails.
 func fetchLicensesDetails(ctx context.Context, ds internal.DataSource, um *internal.UnitMeta) (*LicensesDetails, error) {
-	u, err := ds.GetUnit(ctx, um, internal.WithLicenses)
+	u, err := ds.GetUnit(ctx, um, internal.WithLicenses, internal.BuildContext{})
 	if err != nil {
 		return nil, err
 	}

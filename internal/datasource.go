@@ -16,7 +16,8 @@ type DataSource interface {
 	GetNestedModules(ctx context.Context, modulePath string) ([]*ModuleInfo, error)
 	// GetUnit returns information about a directory, which may also be a
 	// module and/or package. The module and version must both be known.
-	GetUnit(ctx context.Context, pathInfo *UnitMeta, fields FieldSet) (_ *Unit, err error)
+	// The BuildContext selects the documentation to read.
+	GetUnit(ctx context.Context, pathInfo *UnitMeta, fields FieldSet, bc BuildContext) (_ *Unit, err error)
 	// GetUnitMeta returns information about a path.
 	GetUnitMeta(ctx context.Context, path, requestedModulePath, requestedVersion string) (_ *UnitMeta, err error)
 	// GetModuleReadme gets the readme for the module.

@@ -317,14 +317,14 @@ func TestFetchAndUpdateState(t *testing.T) {
 				t.Fatalf("testDB.GetUnitMeta(ctx, %q, %q) mismatch (-want +got):\n%s", test.modulePath, test.version, diff)
 			}
 
-			gotPkg, err := testDB.GetUnit(ctx, got, internal.WithMain)
+			gotPkg, err := testDB.GetUnit(ctx, got, internal.WithMain, internal.BuildContext{})
 			if err != nil {
 				t.Fatal(err)
 			}
 
 			if diff := cmp.Diff(test.want, gotPkg,
 				cmp.AllowUnexported(source.Info{}),
-				cmpopts.IgnoreFields(internal.Unit{}, "Documentation"),
+				cmpopts.IgnoreFields(internal.Unit{}, "Documentation", "BuildContexts"),
 				cmpopts.IgnoreFields(internal.Unit{}, "Subdirectories")); diff != "" {
 				t.Errorf("mismatch on readme (-want +got):\n%s", diff)
 			}

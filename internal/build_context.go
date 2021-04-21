@@ -18,6 +18,15 @@ func (b BuildContext) String() string {
 	return fmt.Sprintf("%s/%s", b.GOOS, b.GOARCH)
 }
 
+// Match reports whether its receiver, which acts like a pattern, matches its
+// target, an ordinary BuildContext. In addition to the usual values, a pattern
+// can have an empty GOOS or GOARCH, which means "match anything."
+func (pattern BuildContext) Match(target BuildContext) bool {
+	match := func(pat, targ string) bool { return pat == "" || targ == All || pat == targ }
+
+	return match(pattern.GOOS, target.GOOS) && match(pattern.GOARCH, target.GOARCH)
+}
+
 // All represents all values for a build context element (GOOS or GOARCH).
 const All = "all"
 
@@ -81,7 +90,7 @@ func (d *Documentation) BuildContext() BuildContext {
 // match the first element of docs, if there is one.
 func DocumentationForBuildContext(docs []*Documentation, bc BuildContext) *Documentation {
 	for _, d := range docs {
-		if (bc.GOOS == "" || d.GOOS == All || bc.GOOS == d.GOOS) && (bc.GOARCH == "" || d.GOARCH == All || bc.GOARCH == d.GOARCH) {
+		if bc.Match(BuildContext{d.GOOS, d.GOARCH}) {
 			return d
 		}
 	}

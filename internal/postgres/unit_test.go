@@ -724,7 +724,8 @@ func TestGetUnit(t *testing.T) {
 				u := unit("a.com/twodoc/p", "a.com/twodoc", "v1.2.3", "p",
 					nil,
 					[]string{"p"})
-				u.Documentation = docs2
+				u.Documentation = docs2[:1]
+				u.BuildContexts = []internal.BuildContext{internal.BuildContextLinux, internal.BuildContextWindows}
 				u.Subdirectories[0].Synopsis = docs2[0].Synopsis
 				return u
 			}(),
@@ -747,7 +748,7 @@ func TestGetUnit(t *testing.T) {
 func checkUnit(ctx context.Context, t *testing.T, db *DB, um *internal.UnitMeta, want *internal.Unit, experiments ...string) {
 	t.Helper()
 	ctx = experiment.NewContext(ctx, experiments...)
-	got, err := db.GetUnit(ctx, um, internal.AllFields)
+	got, err := db.GetUnit(ctx, um, internal.AllFields, internal.BuildContext{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -799,6 +800,7 @@ func TestGetUnitFieldSet(t *testing.T) {
 		// Add/remove fields based on the FieldSet specified.
 		if fields&internal.WithMain != 0 {
 			u.Documentation = []*internal.Documentation{sample.Doc}
+			u.BuildContexts = []internal.BuildContext{internal.BuildContextAll}
 			u.Readme = readme
 			u.NumImports = len(sample.Imports())
 			u.Subdirectories = []*internal.PackageMeta{
@@ -850,7 +852,7 @@ func TestGetUnitFieldSet(t *testing.T) {
 				test.want.Name,
 				test.want.IsRedistributable,
 			)
-			got, err := testDB.GetUnit(ctx, um, test.fields)
+			got, err := testDB.GetUnit(ctx, um, test.fields, internal.BuildContext{})
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -864,6 +866,59 @@ func TestGetUnitFieldSet(t *testing.T) {
 			cleanFields(test.want, test.fields)
 			if diff := cmp.Diff(test.want, got, opts...); diff != "" {
 				t.Errorf("mismatch (-want, +got):\n%s", diff)
+			}
+		})
+	}
+}
+
+func TestGetUnitBuildContext(t *testing.T) {
+	t.Parallel()
+	testDB, release := acquire(t)
+	defer release()
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
+
+	// Add a module that has documentation for two Go build contexts.
+	m := sample.Module("a.com/twodoc", "v1.2.3", "p")
+	pkg := m.Packages()[0]
+	linuxDoc := sample.Documentation("linux", "amd64", `package p; var L int`)
+	windowsDoc := sample.Documentation("windows", "amd64", `package p; var W int`)
+	pkg.Documentation = []*internal.Documentation{linuxDoc, windowsDoc}
+	MustInsertModule(ctx, t, testDB, m)
+
+	um := sample.UnitMeta(
+		"a.com/twodoc/p",
+		"a.com/twodoc",
+		"v1.2.3",
+		"p",
+		true)
+	for _, test := range []struct {
+		goos, goarch string
+		want         *internal.Documentation
+	}{
+		{"", "", linuxDoc},
+		{"linux", "amd64", linuxDoc},
+		{"windows", "amd64", windowsDoc},
+		{"linux", "", linuxDoc},
+		{"wasm", "js", nil},
+	} {
+		t.Run(fmt.Sprintf("%s-%s", test.goos, test.goarch), func(t *testing.T) {
+			bc := internal.BuildContext{GOOS: test.goos, GOARCH: test.goarch}
+			u, err := testDB.GetUnit(ctx, um, internal.WithMain, bc)
+			if err != nil {
+				t.Fatal(err)
+			}
+			got := u.Documentation
+			var want []*internal.Documentation
+			if test.want != nil {
+				want = []*internal.Documentation{test.want}
+			}
+			if diff := cmp.Diff(want, got); diff != "" {
+				t.Errorf("mismatch (-want, +got):\n%s", diff)
+			}
+			wantb := []internal.BuildContext{internal.BuildContextLinux, internal.BuildContextWindows}
+			if got := u.BuildContexts; !cmp.Equal(got, wantb) {
+				t.Errorf("got %v, want %v", got, wantb)
 			}
 		})
 	}
@@ -892,6 +947,7 @@ func unit(fullPath, modulePath, version, name string, readme *internal.Readme, s
 		u.Imports = imps
 		u.NumImports = len(imps)
 		u.Documentation = []*internal.Documentation{sample.Doc}
+		u.BuildContexts = []internal.BuildContext{internal.BuildContextAll}
 	}
 	return u
 }
@@ -927,7 +983,7 @@ func TestGetUnitBypass(t *testing.T) {
 		{bypassDB, false},
 	} {
 		pathInfo := newUnitMeta(m.ModulePath, m.ModulePath, m.Version)
-		d, err := test.db.GetUnit(ctx, pathInfo, internal.AllFields)
+		d, err := test.db.GetUnit(ctx, pathInfo, internal.AllFields, internal.BuildContext{})
 		if err != nil {
 			t.Fatal(err)
 		}
