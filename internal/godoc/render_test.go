@@ -27,7 +27,7 @@ var (
 	hasText = htmlcheck.HasText
 )
 
-func TestRender(t *testing.T) {
+func TestDocInfo(t *testing.T) {
 	dochtml.LoadTemplates(templateSource)
 	ctx := context.Background()
 	si := source.NewGitHubInfo("a.com/M", "", "abcde")
@@ -43,17 +43,14 @@ func TestRender(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	wantSyn, wantImports, wantDoc, _, err := p.Render(ctx, "p", si, mi)
+	wantSyn, wantImports, _, err := p.DocInfo(ctx, "p", si, mi)
 	if err != nil {
 		t.Fatal(err)
-	}
-	if strings.Contains(wantDoc.String(), "return") {
-		t.Fatal("doc rendered with function bodies")
 	}
 
 	check := func(p *Package) {
 		t.Helper()
-		gotSyn, gotImports, gotDoc, _, err := p.Render(ctx, "p", si, mi)
+		gotSyn, gotImports, _, err := p.DocInfo(ctx, "p", si, mi)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -62,11 +59,6 @@ func TestRender(t *testing.T) {
 		}
 		if !cmp.Equal(gotImports, wantImports) {
 			t.Errorf("imports: got %v, want %v", gotImports, wantImports)
-		}
-		if diff := cmp.Diff(wantDoc.String(), gotDoc.String()); diff != "" {
-			t.Errorf("doc mismatch (-want, +got):\n%s", diff)
-			t.Logf("---- want ----\n%s", wantDoc)
-			t.Logf("---- got ----\n%s", gotDoc)
 		}
 	}
 

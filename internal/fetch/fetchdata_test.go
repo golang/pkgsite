@@ -614,7 +614,6 @@ var moduleDocTooLarge = &testModule{
 		},
 	},
 	fr: &FetchResult{
-		Status:    derrors.ToStatus(derrors.HasIncompletePackages),
 		HasGoMod:  false,
 		GoModPath: "bigdoc.test",
 		Module: &internal.Module{
@@ -642,7 +641,7 @@ var moduleDocTooLarge = &testModule{
 				PackagePath: "bigdoc.test",
 				ModulePath:  "bigdoc.test",
 				Version:     "v1.0.0",
-				Status:      derrors.ToStatus(derrors.PackageDocumentationHTMLTooLarge),
+				Status:      200,
 			},
 		},
 	},

@@ -258,8 +258,8 @@ func loadPackageForBuildContext(ctx context.Context, files map[string][]byte, in
 		return "", nil, "", nil, nil, err
 	}
 
-	synopsis, imports, _, api, err = docPkg.Render(ctx, innerPath, sourceInfo, modInfo)
-	if err != nil && !errors.Is(err, godoc.ErrTooLarge) {
+	synopsis, imports, api, err = docPkg.DocInfo(ctx, innerPath, sourceInfo, modInfo)
+	if err != nil {
 		return "", nil, "", nil, nil, err
 	}
 	return packageName, imports, synopsis, src, api, err

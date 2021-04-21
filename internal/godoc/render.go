@@ -12,7 +12,6 @@ import (
 	"path"
 	"sort"
 
-	"github.com/google/safehtml"
 	"github.com/google/safehtml/template"
 	"golang.org/x/mod/semver"
 	"golang.org/x/pkgsite/internal"
@@ -44,33 +43,24 @@ var MaxDocumentationHTML = 20 * megabyte
 type Renderer struct {
 }
 
-// Render renders the documentation for the package.
-// Rendering destroys p's AST; do not call any methods of p after it returns.
-func (p *Package) Render(ctx context.Context, innerPath string, sourceInfo *source.Info, modInfo *ModuleInfo) (
-	synopsis string, imports []string, html safehtml.HTML, api []*internal.Symbol, err error) {
+// DocInfo returns information extracted from the package's documentation.
+// This destroys p's AST; do not call any methods of p after it returns.
+func (p *Package) DocInfo(ctx context.Context, innerPath string, sourceInfo *source.Info, modInfo *ModuleInfo) (
+	synopsis string, imports []string, api []*internal.Symbol, err error) {
 	// This is mostly copied from internal/fetch/fetch.go.
-	defer derrors.Wrap(&err, "godoc.Package.Render(%q, %q, %q)", modInfo.ModulePath, modInfo.ResolvedVersion, innerPath)
+	defer derrors.Wrap(&err, "godoc.Package.DocInfo(%q, %q, %q)", modInfo.ModulePath, modInfo.ResolvedVersion, innerPath)
 
 	p.renderCalled = true
 	d, err := p.docPackage(innerPath, modInfo)
 	if err != nil {
-		return "", nil, safehtml.HTML{}, nil, err
+		return "", nil, nil, err
 	}
 
 	api, err = dochtml.GetSymbols(d, p.Fset)
 	if err != nil {
-		return "", nil, safehtml.HTML{}, nil, err
+		return "", nil, nil, err
 	}
-
-	// Render documentation HTML.
-	opts := p.renderOptions(innerPath, sourceInfo, modInfo, nil)
-	docHTML, err := dochtml.Render(ctx, p.Fset, d, opts)
-	if errors.Is(err, ErrTooLarge) {
-		docHTML = template.MustParseAndExecuteToHTML(DocTooLargeReplacement)
-	} else if err != nil {
-		return "", nil, safehtml.HTML{}, nil, fmt.Errorf("dochtml.Render: %v", err)
-	}
-	return doc.Synopsis(d.Doc), d.Imports, docHTML, api, err
+	return doc.Synopsis(d.Doc), d.Imports, api, nil
 }
 
 // docPackage computes and returns a doc.Package.
