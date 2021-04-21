@@ -335,7 +335,7 @@ func TestFetchAndUpdateState(t *testing.T) {
 				return
 			}
 			if gotPkg.Documentation != nil {
-				parts, err := godoc.RenderPartsFromUnit(ctx, gotPkg)
+				parts, err := godoc.RenderFromUnit(ctx, gotPkg)
 				if err != nil {
 					t.Fatal(err)
 				}

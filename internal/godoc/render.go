@@ -39,10 +39,6 @@ const (
 // It is a variable for testing.
 var MaxDocumentationHTML = 20 * megabyte
 
-// A Renderer renders documentation for a Package.
-type Renderer struct {
-}
-
 // DocInfo returns information extracted from the package's documentation.
 // This destroys p's AST; do not call any methods of p after it returns.
 func (p *Package) DocInfo(ctx context.Context, innerPath string, sourceInfo *source.Info, modInfo *ModuleInfo) (
@@ -207,9 +203,9 @@ func (p *Package) Render(ctx context.Context, innerPath string,
 	return parts, nil
 }
 
-// RenderPartsFromUnit is a convenience function that first decodes the source
-// in the unit, which must exist, and then calls RenderParts.
-func RenderPartsFromUnit(ctx context.Context, u *internal.Unit) (_ *dochtml.Parts, err error) {
+// RenderFromUnit is a convenience function that first decodes the source
+// in the unit, which must exist, and then calls Render.
+func RenderFromUnit(ctx context.Context, u *internal.Unit) (_ *dochtml.Parts, err error) {
 	docPkg, err := DecodePackage(u.Documentation[0].Source)
 	if err != nil {
 		return nil, err

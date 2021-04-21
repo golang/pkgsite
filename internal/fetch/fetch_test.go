@@ -161,7 +161,7 @@ func validateDocumentationHTML(t *testing.T, got *internal.Module, want map[stri
 	ctx := context.Background()
 	for _, u := range got.Units {
 		if wantStrings := want[u.Path]; wantStrings != nil {
-			parts, err := godoc.RenderPartsFromUnit(ctx, u)
+			parts, err := godoc.RenderFromUnit(ctx, u)
 			if err != nil && !errors.Is(err, godoc.ErrTooLarge) {
 				t.Fatal(err)
 			}
