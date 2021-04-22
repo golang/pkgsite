@@ -70,27 +70,6 @@ type templateData struct {
 	NoteHeaders map[string]noteHeader
 }
 
-// Render renders package documentation HTML for the
-// provided file set and package.
-//
-// If the rendered documentation HTML size exceeds the specified limit,
-// an error with ErrTooLarge in its chain will be returned.
-func Render(ctx context.Context, fset *token.FileSet, p *doc.Package, opt RenderOptions) (_ safehtml.HTML, err error) {
-	defer derrors.Wrap(&err, "dochtml.Render")
-	if opt.Limit == 0 {
-		const megabyte = 1000 * 1000
-		opt.Limit = 10 * megabyte
-	}
-
-	funcs, data, _ := renderInfo(ctx, fset, p, opt)
-	p = data.Package
-	if docIsEmpty(p) {
-		return safehtml.HTML{}, nil
-	}
-	tmpl := template.Must(unitTemplate.Clone()).Funcs(funcs)
-	return executeToHTMLWithLimit(tmpl, data, opt.Limit)
-}
-
 // Parts contains HTML for each part of the documentation.
 type Parts struct {
 	Body          safehtml.HTML // main body of doc
@@ -104,7 +83,7 @@ type Parts struct {
 //
 // If any of the rendered documentation part HTML sizes exceeds the specified limit,
 // an error with ErrTooLarge in its chain will be returned.
-func RenderParts(ctx context.Context, fset *token.FileSet, p *doc.Package, opt RenderOptions) (_ *Parts, err error) {
+func Render(ctx context.Context, fset *token.FileSet, p *doc.Package, opt RenderOptions) (_ *Parts, err error) {
 	defer derrors.Wrap(&err, "dochtml.RenderParts")
 
 	if opt.Limit == 0 {
@@ -117,26 +96,21 @@ func RenderParts(ctx context.Context, fset *token.FileSet, p *doc.Package, opt R
 	if docIsEmpty(p) {
 		return &Parts{}, nil
 	}
-	tmpl := template.Must(unitTemplate.Clone()).Funcs(funcs)
 
-	exec := func(name string) safehtml.HTML {
+	exec := func(tmpl *template.Template) safehtml.HTML {
 		if err != nil {
 			return safehtml.HTML{}
 		}
-		t := tmpl.Lookup(name)
-		if t == nil {
-			err = fmt.Errorf("missing %s", name)
-			return safehtml.HTML{}
-		}
+		t := template.Must(tmpl.Clone()).Funcs(funcs)
 		var html safehtml.HTML
 		html, err = executeToHTMLWithLimit(t, data, opt.Limit)
 		return html
 	}
 
 	parts := &Parts{
-		Body:          exec("body.tmpl"),
-		Outline:       exec("outline.tmpl"),
-		MobileOutline: exec("sidenav-mobile.tmpl"),
+		Body:          exec(bodyTemplate),
+		Outline:       exec(outlineTemplate),
+		MobileOutline: exec(sidenavTemplate),
 		// links must be called after body, because the call to
 		// render_doc_extract_links in body.tmpl creates the links.
 		Links: links(),

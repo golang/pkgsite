@@ -34,64 +34,12 @@ var (
 	hasExactText = htmlcheck.HasExactText
 )
 
-func TestRender(t *testing.T) {
-	LoadTemplates(templateSource)
-	fset, d := mustLoadPackage("everydecl")
-
-	rawDoc, err := Render(context.Background(), fset, d, RenderOptions{
-		FileLinkFunc:     func(string) string { return "file" },
-		SourceLinkFunc:   func(ast.Node) string { return "src" },
-		SinceVersionFunc: func(string) string { return "" },
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	htmlDoc, err := html.Parse(strings.NewReader(rawDoc.String()))
-	if err != nil {
-		t.Fatal(err)
-	}
-	// Check that there are no duplicate id attributes.
-	t.Run("duplicate ids", func(t *testing.T) {
-		testDuplicateIDs(t, htmlDoc)
-	})
-	t.Run("ids-and-kinds", func(t *testing.T) {
-		// Check that the id and data-kind labels are right.
-		testIDsAndKinds(t, htmlDoc)
-	})
-
-	checker := in(".Documentation-note",
-		in("h3", hasAttr("id", "pkg-note-BUG"), hasExactText("Bugs ¶")),
-		in("a", hasHref("#pkg-note-BUG")))
-	if err := checker(htmlDoc); err != nil {
-		t.Errorf("note check: %v", err)
-	}
-
-	checker = in(".Documentation-index",
-		in(".Documentation-indexNote", in("a", hasHref("#pkg-note-BUG"), hasExactText("Bugs"))))
-	if err := checker(htmlDoc); err != nil {
-		t.Errorf("note check: %v", err)
-	}
-
-	checker = in(".DocNav-notes",
-		in("#nav-group-notes", in("li", in("a", hasHref("#pkg-note-BUG"), hasText("Bugs")))))
-	if err := checker(htmlDoc); err != nil {
-		t.Errorf("note check: %v", err)
-	}
-
-	checker = in("",
-		in("optgroup[label=Notes]", in("option", hasAttr("value", "pkg-note-BUG"), hasExactText("Bugs"))))
-	if err := checker(htmlDoc); err != nil {
-		t.Errorf("note check: %v", err)
-	}
-}
-
 func TestRenderParts(t *testing.T) {
 	LoadTemplates(templateSource)
 	fset, d := mustLoadPackage("everydecl")
 
 	ctx := context.Background()
-	parts, err := RenderParts(ctx, fset, d, RenderOptions{
+	parts, err := Render(ctx, fset, d, RenderOptions{
 		FileLinkFunc:     func(string) string { return "file" },
 		SourceLinkFunc:   func(ast.Node) string { return "src" },
 		SinceVersionFunc: func(string) string { return "" },
@@ -160,7 +108,7 @@ func TestExampleRender(t *testing.T) {
 	ctx := context.Background()
 	fset, d := mustLoadPackage("example_test")
 
-	rawDoc, err := Render(ctx, fset, d, RenderOptions{
+	parts, err := Render(ctx, fset, d, RenderOptions{
 		FileLinkFunc:   func(string) string { return "file" },
 		SourceLinkFunc: func(ast.Node) string { return "src" },
 	})
@@ -168,7 +116,7 @@ func TestExampleRender(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	htmlDoc, err := html.Parse(strings.NewReader(rawDoc.String()))
+	htmlDoc, err := html.Parse(strings.NewReader(parts.Body.String()))
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -18,7 +18,7 @@ var (
 
 	// TODO(golang.org/issue/5060): finalize URL scheme and design for notes,
 	// then it becomes more viable to factor out inline CSS style.
-	unitTemplate *template.Template
+	bodyTemplate, outlineTemplate, sidenavTemplate *template.Template
 )
 
 // LoadTemplates reads and parses the templates used to generate documentation.
@@ -26,18 +26,18 @@ func LoadTemplates(dir template.TrustedSource) {
 	loadOnce.Do(func() {
 		join := template.TrustedSourceJoin
 		tc := template.TrustedSourceFromConstant
-
-		example := join(dir, tc("example.tmpl"))
-		declaration := join(dir, tc("declaration.tmpl"))
-		unitTemplate = template.Must(template.New("unit.tmpl").
+		bodyTemplate = template.Must(template.New("body.tmpl").
 			Funcs(tmpl).
 			ParseFilesFromTrustedSources(
-				join(dir, tc("unit.tmpl")),
-				join(dir, tc("outline.tmpl")),
-				join(dir, tc("sidenav-mobile.tmpl")),
 				join(dir, tc("body.tmpl")),
-				example,
-				declaration))
+				join(dir, tc("declaration.tmpl")),
+				join(dir, tc("example.tmpl"))))
+		outlineTemplate = template.Must(template.New("outline.tmpl").
+			Funcs(tmpl).
+			ParseFilesFromTrustedSources(join(dir, tc("outline.tmpl"))))
+		sidenavTemplate = template.Must(template.New("sidenav-mobile.tmpl").
+			Funcs(tmpl).
+			ParseFilesFromTrustedSources(join(dir, tc("sidenav-mobile.tmpl"))))
 	})
 }
 

@@ -193,7 +193,7 @@ func (p *Package) Render(ctx context.Context, innerPath string,
 		nameToVersion = map[string]string{}
 	}
 	opts := p.renderOptions(innerPath, sourceInfo, modInfo, nameToVersion)
-	parts, err := dochtml.RenderParts(ctx, p.Fset, d, opts)
+	parts, err := dochtml.Render(ctx, p.Fset, d, opts)
 	if errors.Is(err, ErrTooLarge) {
 		return &dochtml.Parts{Body: template.MustParseAndExecuteToHTML(DocTooLargeReplacement)}, nil
 	}
