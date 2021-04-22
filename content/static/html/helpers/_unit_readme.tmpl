@@ -15,8 +15,12 @@
         <div class="Overview-readmeContent js-readmeContent">{{.Readme}}</div>
         <div class="UnitReadme-fadeOut"></div>
       </div>
-      <a class="UnitReadme-expandLink js-readmeExpand" data-test-id="readme-expand" href="?readme=expanded#section-readme">Expand ▾</a>
-      <a class="UnitReadme-collapseLink js-readmeCollapse" data-test-id="readme-collapse" href="#">Collapse ▴</a>
+      <button class="UnitReadme-expandLink js-readmeExpand"
+          data-test-id="readme-expand"
+          data-gtm-label="Expand Readme">Expand ▾</button>
+      <button class="UnitReadme-collapseLink js-readmeCollapse"
+          data-test-id="readme-collapse"
+          data-gtm-label="Collapse Readme">Collapse ▴</button>
     {{end}}
   </div>
 {{end}}

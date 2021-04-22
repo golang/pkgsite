@@ -7,7 +7,9 @@
 {{define "unit_outline"}}
   <div class="UnitOutline">
     <div class="UnitOutline-jumpTo">
-      <button class="UnitOutline-jumpToInput js-jumpToInput" data-test-id="jump-to-button">
+      <button class="UnitOutline-jumpToInput js-jumpToInput"
+          data-gtm-label="Jump To Identifier"
+          data-test-id="jump-to-button">
         Jump to ...
       </button>
     </div>
@@ -15,7 +17,7 @@
       {{if .Readme.String}}
         <li role="none" class="js-readmeOutline">
           <a href="#section-readme" role="treeitem" aria-expanded="false" aria-selected="false"
-              aria-level="1" aria-owns="readme-outline" tabindex="0">
+              aria-level="1" aria-owns="readme-outline" tabindex="0" data-gtm-action="outline link clicked">
             README
           </a>
           {{template "readme_outline" .ReadmeOutline}}
@@ -24,7 +26,7 @@
       {{if .IsPackage}}
         <li role="none">
           <a href="#section-documentation" role="treeitem" aria-expanded="false" aria-level="1"
-              aria-selected="false"aria-owns="doc-outline" tabindex="-1">
+              aria-selected="false"aria-owns="doc-outline" tabindex="-1" data-gtm-action="outline link clicked">
             Documentation
           </a>
           {{.DocOutline}}
@@ -33,7 +35,7 @@
       {{if .SourceFiles}}
         <li role="none">
           <a href="#section-sourcefiles" role="treeitem" aria-expanded="false"
-              aria-selected="false" aria-level="1" tabindex="-1">
+              aria-selected="false" aria-level="1" tabindex="-1" data-gtm-action="outline link clicked">
             Source Files
           </a>
         </li>
@@ -41,7 +43,8 @@
       {{if .Directories}}
         <li role="none">
           <a href="#section-directories" role="treeitem" aria-expanded="false"
-              aria-selected="false" aria-level="1" tabindex="-1">
+              aria-selected="false" aria-level="1" tabindex="-1"
+              data-gtm-action="outline link clicked">
             Directories
           </a>
         </li>
@@ -55,7 +58,8 @@
     {{range .}}
       <li role="none">
         <a href="#{{.ID}}" role="treeitem" aria-level="2" aria-owns="nav-group-readme"
-            tabindex="-1" {{if gt (len .Children) 0}}aria-expanded="false"{{end}}>
+            tabindex="-1" {{if gt (len .Children) 0}}aria-expanded="false"{{end}}
+            data-gtm-action="readme outline link clicked">
           {{.Text}}
         </a>
         <ul role="group" id="nav-group-readme">
@@ -65,20 +69,23 @@
               {{if .Children}}
                 {{$navgroupid := (printf "nav.group.%s" $tname)}}
                 <a href="#{{.ID}}" role="treeitem" aria-expanded="false" aria-level="3"
-                    tabindex="-1" data-aria-owns="{{$navgroupid}}">
+                    tabindex="-1" data-aria-owns="{{$navgroupid}}"
+                    data-gtm-action="readme outline link clicked">
                   {{$tname}}
                 </a>
                 <ul role="group" >
                   {{range .Children}}
                     <li role="none">
-                      <a href="#{{.ID}}" role="treeitem" aria-level="4" tabindex="-1">
+                      <a href="#{{.ID}}" role="treeitem" aria-level="4" tabindex="-1"
+                          data-gtm-action="readme outline link clicked">
                         {{.Text}}
                       </a>
                     </li>
                   {{end}} {{/* range .Children */}}
                 </ul>
               {{else}}
-                <a href="#{{.ID}}" role="treeitem" aria-level="3" tabindex="-1">
+                <a href="#{{.ID}}" role="treeitem" aria-level="3" tabindex="-1"
+                    data-gtm-action="readme outline link clicked">
                   {{$tname}}
                 </a>
               {{end}} {{/* if .Children */}}

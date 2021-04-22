@@ -44,15 +44,19 @@
   width: 100%;
 }
 .UnitReadme-expandLink {
+  background: none;
+  border: none;
   color: var(--turq-dark);
   cursor: pointer;
-  padding: 0.625rem 0;
+  padding: 0;
 }
 .UnitReadme-collapseLink {
+  background: none;
+  border: none;
   color: var(--turq-dark);
   cursor: pointer;
   display: none;
-  padding: 0.625rem 0;
+  padding: 0;
 }
 .UnitReadme--expanded .UnitReadme-content {
   max-height: initial;
