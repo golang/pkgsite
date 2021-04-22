@@ -60,12 +60,14 @@ func (mset methodSet) set(f *ast.FuncDecl, preserveAST bool) {
 		}
 		recv = recvString(typ)
 	}
+	text := f.Doc.Text()
 	mset[name] = &Func{
-		Doc:  f.Doc.Text(),
-		Name: name,
-		Decl: f,
-		Recv: recv,
-		Orig: recv,
+		Doc:          text,
+		IsDeprecated: isDeprecated(text),
+		Name:         name,
+		Decl:         f,
+		Recv:         recv,
+		Orig:         recv,
 	}
 	if !preserveAST {
 		f.Doc = nil // doc consumed - remove from AST
@@ -297,11 +299,13 @@ func (r *reader) readValue(decl *ast.GenDecl) {
 		}
 	}
 
+	text := decl.Doc.Text()
 	*values = append(*values, &Value{
-		Doc:   decl.Doc.Text(),
-		Names: specNames(decl.Specs),
-		Decl:  decl,
-		order: r.order,
+		Doc:          text,
+		IsDeprecated: isDeprecated(text),
+		Names:        specNames(decl.Specs),
+		Decl:         decl,
+		order:        r.order,
 	})
 	if r.mode&PreserveAST == 0 {
 		decl.Doc = nil // doc consumed - remove from AST
@@ -798,13 +802,14 @@ func sortedTypes(m map[string]*namedType, allMethods bool) []*Type {
 	i := 0
 	for _, t := range m {
 		list[i] = &Type{
-			Doc:     t.doc,
-			Name:    t.name,
-			Decl:    t.decl,
-			Consts:  sortedValues(t.values, token.CONST),
-			Vars:    sortedValues(t.values, token.VAR),
-			Funcs:   sortedFuncs(t.funcs, true),
-			Methods: sortedFuncs(t.methods, allMethods),
+			Doc:          t.doc,
+			IsDeprecated: isDeprecated(t.doc),
+			Name:         t.name,
+			Decl:         t.decl,
+			Consts:       sortedValues(t.values, token.CONST),
+			Vars:         sortedValues(t.values, token.VAR),
+			Funcs:        sortedFuncs(t.funcs, true),
+			Methods:      sortedFuncs(t.methods, allMethods),
 		}
 		i++
 	}
@@ -858,6 +863,13 @@ func noteBodies(notes []*Note) []string {
 		list = append(list, n.Body)
 	}
 	return list
+}
+
+var deprecatedRx = regexp.MustCompile(`(^|\n)\s*Deprecated:`) // "Deprecated:" at the start of a line.
+
+// isDeprecated reports whether the string has a "Deprecated" line.
+func isDeprecated(s string) bool {
+	return deprecatedRx.MatchString(s)
 }
 
 // ----------------------------------------------------------------------------

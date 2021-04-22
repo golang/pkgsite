@@ -36,12 +36,14 @@
       </a>
       <ul role="group" id="nav-group-functions">
         {{range .Funcs}}
-          <li role="none">
-            <a href="#{{.Name}}" role="treeitem" aria-level="3" tabindex="-1"
-                 title="{{render_short_synopsis .Decl}}">
-              {{render_short_synopsis .Decl}}
-            </a>
-          </li>
+          {{if not .IsDeprecated}}
+              <li role="none">
+                <a href="#{{.Name}}" role="treeitem" aria-level="3" tabindex="-1"
+                     title="{{render_short_synopsis .Decl}}">
+                  {{render_short_synopsis .Decl}}
+                </a>
+              </li>
+          {{end}}
         {{end}}
       </ul>
     </li>
@@ -52,39 +54,45 @@
       </a>
       <ul role="group" id="nav-group-types">
         {{range .Types}}
-          {{$tname := .Name}}
-          <li role="none">
-            {{if or .Funcs .Methods}}
-              {{$navgroupname := (printf "nav.group.%s" $tname)}}
-              {{$navgroupid := (safe_id $navgroupname)}}
-              <a href="#{{$tname}}" role="treeitem" aria-expanded="false" aria-level="3" tabindex="-1"
-                   data-aria-owns="{{$navgroupid}}">
-                type {{$tname}}
-              </a>
-              <ul role="group" id="{{$navgroupid}}">
-                {{range .Funcs}}
-                  <li role="none">
-                    <a href="#{{.Name}}" role="treeitem" aria-level="4" tabindex="-1"
-                        title="{{render_short_synopsis .Decl}}">
-                      {{render_short_synopsis .Decl}}
-                    </a>
-                  </li>
-                {{end}}
-                {{range .Methods}}
-                  <li role="none">
-                    <a href="#{{$tname}}.{{.Name}}" role="treeitem" aria-level="4" tabindex="-1"
-                        title="{{render_short_synopsis .Decl}}">
-                      {{render_short_synopsis .Decl}}
-                    </a>
-                  </li>
-                {{end}}
-              </ul>
-            {{else}}
-              <a href="#{{$tname}}" role="treeitem" aria-level="3" tabindex="-1">
-                type {{$tname}}
-              </a>
-            {{end}} {{/* if or .Funcs .Methods */}}
-          </li>
+          {{if not .IsDeprecated}}
+            {{$tname := .Name}}
+            <li role="none">
+              {{if or .Funcs .Methods}}
+                {{$navgroupname := (printf "nav.group.%s" $tname)}}
+                {{$navgroupid := (safe_id $navgroupname)}}
+                <a href="#{{$tname}}" role="treeitem" aria-expanded="false" aria-level="3" tabindex="-1"
+                     data-aria-owns="{{$navgroupid}}">
+                  type {{$tname}}
+                </a>
+                <ul role="group" id="{{$navgroupid}}">
+                  {{range .Funcs}}
+                    {{if not .IsDeprecated}}
+                      <li role="none">
+                        <a href="#{{.Name}}" role="treeitem" aria-level="4" tabindex="-1"
+                            title="{{render_short_synopsis .Decl}}">
+                          {{render_short_synopsis .Decl}}
+                        </a>
+                      </li>
+                    {{end}}
+                  {{end}}
+                  {{range .Methods}}
+                    {{if not .IsDeprecated}}
+                      <li role="none">
+                        <a href="#{{$tname}}.{{.Name}}" role="treeitem" aria-level="4" tabindex="-1"
+                            title="{{render_short_synopsis .Decl}}">
+                          {{render_short_synopsis .Decl}}
+                        </a>
+                      </li>
+                    {{end}}
+                  {{end}}
+                </ul>
+              {{else}}
+                <a href="#{{$tname}}" role="treeitem" aria-level="3" tabindex="-1">
+                  type {{$tname}}
+                </a>
+              {{end}} {{/* if or .Funcs .Methods */}}
+            </li>
+          {{end}}
         {{end}} {{/* range .Types */}}
       </ul>
     </li>

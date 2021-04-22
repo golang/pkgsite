@@ -34,16 +34,18 @@ var (
 	hasExactText = htmlcheck.HasExactText
 )
 
+var testRenderOptions = RenderOptions{
+	FileLinkFunc:     func(string) string { return "file" },
+	SourceLinkFunc:   func(ast.Node) string { return "src" },
+	SinceVersionFunc: func(string) string { return "" },
+}
+
 func TestRenderParts(t *testing.T) {
 	LoadTemplates(templateSource)
 	fset, d := mustLoadPackage("everydecl")
 
 	ctx := context.Background()
-	parts, err := Render(ctx, fset, d, RenderOptions{
-		FileLinkFunc:     func(string) string { return "file" },
-		SourceLinkFunc:   func(ast.Node) string { return "src" },
-		SinceVersionFunc: func(string) string { return "" },
-	})
+	parts, err := Render(ctx, fset, d, testRenderOptions)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -108,10 +110,7 @@ func TestExampleRender(t *testing.T) {
 	ctx := context.Background()
 	fset, d := mustLoadPackage("example_test")
 
-	parts, err := Render(ctx, fset, d, RenderOptions{
-		FileLinkFunc:   func(string) string { return "file" },
-		SourceLinkFunc: func(ast.Node) string { return "src" },
-	})
+	parts, err := Render(ctx, fset, d, testRenderOptions)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -352,6 +351,33 @@ func TestVersionedPkgPath(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestDeprecated(t *testing.T) {
+	LoadTemplates(templateSource)
+	ctx := context.Background()
+	fset, d := mustLoadPackage("deprecated")
+	parts, err := Render(ctx, fset, d, testRenderOptions)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// In package deprecated, all non-deprecated symbols begin with "Good" and
+	// all deprecated ones begin with "Bad".
+	// There is one const, var, func and type of each.
+
+	// The outline only has functions and types, so we should see two "Good"s and no "Bad"s.
+	outlineString := parts.Outline.String()
+	for _, want := range []string{"GoodF()", "type GoodT", "GoodM", "NewGoodTGood()"} {
+		if !strings.Contains(outlineString, want) {
+			t.Errorf("outline does not have %q but should", want)
+		}
+	}
+	for _, notWant := range []string{"BadF()", "type BadT", "BadM()", "NewGoodTBad()"} {
+		if strings.Contains(outlineString, notWant) {
+			t.Errorf("outline has %q but shouldn't", notWant)
+		}
+	}
+
 }
 
 func testDuplicateIDs(t *testing.T, htmlDoc *html.Node) {

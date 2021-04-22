@@ -49,9 +49,10 @@ type Package struct {
 
 // Value is the documentation for a (possibly grouped) var or const declaration.
 type Value struct {
-	Doc   string
-	Names []string // var or const names in declaration order
-	Decl  *ast.GenDecl
+	Doc          string
+	Names        []string // var or const names in declaration order
+	Decl         *ast.GenDecl
+	IsDeprecated bool
 
 	order int
 }
@@ -72,6 +73,8 @@ type Type struct {
 	// this type. Examples are extracted from _test.go files
 	// provided to NewFromFiles.
 	Examples []*Example
+
+	IsDeprecated bool
 }
 
 // Func is the documentation for a func declaration.
@@ -90,6 +93,8 @@ type Func struct {
 	// function or method. Examples are extracted from _test.go files
 	// provided to NewFromFiles.
 	Examples []*Example
+
+	IsDeprecated bool
 }
 
 // A Note represents a marked comment starting with "MARKER(uid): note body".
