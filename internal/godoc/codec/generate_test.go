@@ -10,12 +10,11 @@ import (
 	"go/ast"
 	"go/token"
 	"io"
-	"io/ioutil"
-	"path/filepath"
 	"reflect"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"golang.org/x/pkgsite/internal/testing/testhelper"
 )
 
 var update = flag.Bool("update", false, "update goldens instead of checking against them")
@@ -57,30 +56,7 @@ func testGenerate(t *testing.T, name string, x interface{}) {
 		t.Fatal(err)
 	}
 	got := buf.String()
-	if *update {
-		writeGolden(t, name, got)
-	} else {
-		want := readGolden(t, name)
-		if diff := cmp.Diff(want, got); diff != "" {
-			t.Errorf("%s: mismatch (-want, +got):\n%s", name, diff)
-		}
-	}
-}
-
-func writeGolden(t *testing.T, name string, data string) {
-	filename := filepath.Join("testdata", name+".go")
-	if err := ioutil.WriteFile(filename, []byte(data), 0644); err != nil {
-		t.Fatal(err)
-	}
-	t.Logf("wrote %s", filename)
-}
-
-func readGolden(t *testing.T, name string) string {
-	data, err := ioutil.ReadFile(filepath.Join("testdata", name+".go"))
-	if err != nil {
-		t.Fatal(err)
-	}
-	return string(data)
+	testhelper.CompareWithGolden(t, got, name+".go", *update)
 }
 
 func TestExportedFields(t *testing.T) {

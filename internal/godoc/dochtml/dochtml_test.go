@@ -7,6 +7,9 @@ package dochtml
 import (
 	"bytes"
 	"context"
+	"flag"
+	"fmt"
+
 	"go/ast"
 	"go/parser"
 	"go/token"
@@ -22,9 +25,12 @@ import (
 	"golang.org/x/pkgsite/internal/godoc/dochtml/internal/render"
 	"golang.org/x/pkgsite/internal/godoc/internal/doc"
 	"golang.org/x/pkgsite/internal/testing/htmlcheck"
+	"golang.org/x/pkgsite/internal/testing/testhelper"
 )
 
 var templateSource = template.TrustedSourceFromConstant("../../../content/static/html/doc")
+
+var update = flag.Bool("update", false, "update goldens instead of checking against them")
 
 var (
 	in           = htmlcheck.In
@@ -41,27 +47,28 @@ var testRenderOptions = RenderOptions{
 }
 
 func TestRenderParts(t *testing.T) {
-	LoadTemplates(templateSource)
-	fset, d := mustLoadPackage("everydecl")
-
 	ctx := context.Background()
+	LoadTemplates(templateSource)
+
+	fset, d := mustLoadPackage("everydecl")
 	parts, err := Render(ctx, fset, d, testRenderOptions)
 	if err != nil {
 		t.Fatal(err)
 	}
+	compareWithGolden(t, parts, "everydecl", *update)
+
+	fset2, d2 := mustLoadPackage("deprecated")
+	parts2, err := Render(ctx, fset2, d2, testRenderOptions)
+	if err != nil {
+		t.Fatal(err)
+	}
+	compareWithGolden(t, parts2, "deprecated", *update)
+
 	bodyDoc, err := html.Parse(strings.NewReader(parts.Body.String()))
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	sidenavDoc, err := html.Parse(strings.NewReader(parts.Outline.String()))
-	if err != nil {
-		t.Fatal(err)
-	}
-	mobileDoc, err := html.Parse(strings.NewReader(parts.MobileOutline.String()))
-	if err != nil {
-		t.Fatal(err)
-	}
 	// Check that there are no duplicate id attributes.
 	t.Run("duplicate ids", func(t *testing.T) {
 		testDuplicateIDs(t, bodyDoc)
@@ -71,31 +78,6 @@ func TestRenderParts(t *testing.T) {
 		testIDsAndKinds(t, bodyDoc)
 	})
 
-	checker := in(".Documentation-note",
-		in("h3", hasAttr("id", "pkg-note-BUG"), hasExactText("Bugs ¶")),
-		in("a", hasHref("#pkg-note-BUG")))
-	if err := checker(bodyDoc); err != nil {
-		t.Errorf("note check: %v", err)
-	}
-
-	checker = in(".Documentation-index",
-		in(".Documentation-indexNote", in("a", hasHref("#pkg-note-BUG"), hasExactText("Bugs"))))
-	if err := checker(bodyDoc); err != nil {
-		t.Errorf("note check: %v", err)
-	}
-
-	checker = in(".DocNav-notes",
-		in("#nav-group-notes", in("li", in("a", hasHref("#pkg-note-BUG"), hasText("Bugs")))))
-	if err := checker(sidenavDoc); err != nil {
-		t.Errorf("note check: %v", err)
-	}
-
-	checker = in("",
-		in("optgroup[label=Notes]", in("option", hasAttr("value", "pkg-note-BUG"), hasExactText("Bugs"))))
-	if err := checker(mobileDoc); err != nil {
-		t.Errorf("note check: %v", err)
-	}
-
 	wantLinks := []render.Link{
 		{Href: "https://go.googlesource.com/pkgsite", Text: "pkgsite repo"},
 		{Href: "https://play-with-go.dev", Text: "Play with Go"},
@@ -103,6 +85,11 @@ func TestRenderParts(t *testing.T) {
 	if diff := cmp.Diff(wantLinks, parts.Links); diff != "" {
 		t.Errorf("links mismatch (-want, +got):\n%s", diff)
 	}
+}
+
+func compareWithGolden(t *testing.T, parts *Parts, name string, update bool) {
+	got := fmt.Sprintf("%s\n----\n%s\n----\n%s\n", parts.Body, parts.Outline, parts.MobileOutline)
+	testhelper.CompareWithGolden(t, got, name+".golden", update)
 }
 
 func TestExampleRender(t *testing.T) {
@@ -351,33 +338,6 @@ func TestVersionedPkgPath(t *testing.T) {
 			}
 		})
 	}
-}
-
-func TestDeprecated(t *testing.T) {
-	LoadTemplates(templateSource)
-	ctx := context.Background()
-	fset, d := mustLoadPackage("deprecated")
-	parts, err := Render(ctx, fset, d, testRenderOptions)
-	if err != nil {
-		t.Fatal(err)
-	}
-	// In package deprecated, all non-deprecated symbols begin with "Good" and
-	// all deprecated ones begin with "Bad".
-	// There is one const, var, func and type of each.
-
-	// The outline only has functions and types, so we should see two "Good"s and no "Bad"s.
-	outlineString := parts.Outline.String()
-	for _, want := range []string{"GoodF()", "type GoodT", "GoodM", "NewGoodTGood()"} {
-		if !strings.Contains(outlineString, want) {
-			t.Errorf("outline does not have %q but should", want)
-		}
-	}
-	for _, notWant := range []string{"BadF()", "type BadT", "BadM()", "NewGoodTBad()"} {
-		if strings.Contains(outlineString, notWant) {
-			t.Errorf("outline has %q but shouldn't", notWant)
-		}
-	}
-
 }
 
 func testDuplicateIDs(t *testing.T, htmlDoc *html.Node) {

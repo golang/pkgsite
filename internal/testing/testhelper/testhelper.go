@@ -20,7 +20,9 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"golang.org/x/pkgsite/internal/derrors"
 )
 
@@ -141,4 +143,32 @@ func CreateTestDirectory(files map[string]string) (_ string, err error) {
 	}
 
 	return tempDir, nil
+}
+
+func CompareWithGolden(t *testing.T, got, filename string, update bool) {
+	t.Helper()
+	if update {
+		writeGolden(t, filename, got)
+	} else {
+		want := readGolden(t, filename)
+		if diff := cmp.Diff(want, got); diff != "" {
+			t.Errorf("%s: mismatch (-want, +got):\n%s", filename, diff)
+		}
+	}
+}
+
+func writeGolden(t *testing.T, name string, data string) {
+	filename := filepath.Join("testdata", name)
+	if err := ioutil.WriteFile(filename, []byte(data), 0644); err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("wrote %s", filename)
+}
+
+func readGolden(t *testing.T, name string) string {
+	data, err := ioutil.ReadFile(filepath.Join("testdata", name))
+	if err != nil {
+		t.Fatal(err)
+	}
+	return string(data)
 }
