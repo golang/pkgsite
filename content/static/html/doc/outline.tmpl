@@ -47,14 +47,12 @@
       </a>
       <ul role="group" id="nav-group-functions">
         {{range .Funcs}}
-          {{if not .IsDeprecated}}
-              <li role="none">
-                <a href="#{{.Name}}" role="treeitem" aria-level="3" tabindex="-1"
-                     title="{{render_short_synopsis .Decl}}" data-gtm-action="doc outline link clicked">
-                  {{render_short_synopsis .Decl}}
-                </a>
-              </li>
-          {{end}}
+            <li role="none">
+              <a href="#{{.Name}}" role="treeitem" aria-level="3" tabindex="-1"
+                   title="{{render_short_synopsis .Decl}}" data-gtm-action="doc outline link clicked">
+                {{render_short_synopsis .Decl}}
+              </a>
+            </li>
         {{end}}
       </ul>
     </li>
@@ -65,46 +63,40 @@
       </a>
       <ul role="group" id="nav-group-types">
         {{range .Types}}
-          {{if not .IsDeprecated}}
-            {{$tname := .Name}}
-            <li role="none">
-              {{if or .Funcs .Methods}}
-                {{$navgroupname := (printf "nav.group.%s" $tname)}}
-                {{$navgroupid := (safe_id $navgroupname)}}
-                <a href="#{{$tname}}" role="treeitem" aria-expanded="false" aria-level="3" tabindex="-1"
-                     data-aria-owns="{{$navgroupid}}" data-gtm-action="doc outline link clicked">
-                  type {{$tname}}
-                </a>
-                <ul role="group" id="{{$navgroupid}}">
-                  {{range .Funcs}}
-                    {{if not .IsDeprecated}}
-                      <li role="none">
-                        <a href="#{{.Name}}" role="treeitem" aria-level="4" tabindex="-1"
-                            title="{{render_short_synopsis .Decl}}" data-gtm-action="doc outline link clicked">
-                          {{render_short_synopsis .Decl}}
-                        </a>
-                      </li>
-                    {{end}}
-                  {{end}}
-                  {{range .Methods}}
-                    {{if not .IsDeprecated}}
-                      <li role="none">
-                        <a href="#{{$tname}}.{{.Name}}" role="treeitem" aria-level="4" tabindex="-1"
-                            title="{{render_short_synopsis .Decl}}" data-gtm-action="doc outline link clicked">
-                          {{render_short_synopsis .Decl}}
-                        </a>
-                      </li>
-                    {{end}}
-                  {{end}}
-                </ul>
-              {{else}}
-                <a href="#{{$tname}}" role="treeitem" aria-level="3" tabindex="-1"
-                    data-gtm-action="doc outline link clicked">
-                  type {{$tname}}
-                </a>
-              {{end}} {{/* if or .Funcs .Methods */}}
-            </li>
-          {{end}}
+          {{$tname := .Name}}
+          <li role="none">
+            {{if or .Funcs .Methods}}
+              {{$navgroupname := (printf "nav.group.%s" $tname)}}
+              {{$navgroupid := (safe_id $navgroupname)}}
+              <a href="#{{$tname}}" role="treeitem" aria-expanded="false" aria-level="3" tabindex="-1"
+                   data-aria-owns="{{$navgroupid}}" data-gtm-action="doc outline link clicked">
+                type {{$tname}}
+              </a>
+              <ul role="group" id="{{$navgroupid}}">
+                {{range .Funcs}}
+                  <li role="none">
+                    <a href="#{{.Name}}" role="treeitem" aria-level="4" tabindex="-1"
+                        title="{{render_short_synopsis .Decl}}" data-gtm-action="doc outline link clicked">
+                      {{render_short_synopsis .Decl}}
+                    </a>
+                  </li>
+                {{end}}
+                {{range .Methods}}
+                  <li role="none">
+                    <a href="#{{$tname}}.{{.Name}}" role="treeitem" aria-level="4" tabindex="-1"
+                        title="{{render_short_synopsis .Decl}}" data-gtm-action="doc outline link clicked">
+                      {{render_short_synopsis .Decl}}
+                    </a>
+                  </li>
+                {{end}}
+              </ul>
+            {{else}}
+              <a href="#{{$tname}}" role="treeitem" aria-level="3" tabindex="-1"
+                  data-gtm-action="doc outline link clicked">
+                type {{$tname}}
+              </a>
+            {{end}} {{/* if or .Funcs .Methods */}}
+          </li>
         {{end}} {{/* range .Types */}}
       </ul>
     </li>

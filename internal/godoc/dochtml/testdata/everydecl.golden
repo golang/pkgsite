@@ -252,14 +252,12 @@ BUG(uid): this verifies that notes are rendered
       </a>
       <ul role="group" id="nav-group-functions">
         
-          
-              <li role="none">
-                <a href="#F" role="treeitem" aria-level="3" tabindex="-1"
-                     title="F()">
-                  F()
-                </a>
-              </li>
-          
+          <li role="none">
+            <a href="#F" role="treeitem" aria-level="3" tabindex="-1"
+                 title="F()">
+              F()
+            </a>
+          </li>
         
       </ul>
     </li>
@@ -271,106 +269,88 @@ BUG(uid): this verifies that notes are rendered
       <ul role="group" id="nav-group-types">
         
           
+          <li role="none">
             
-            <li role="none">
-              
-                <a href="#A" role="treeitem" aria-level="3" tabindex="-1">
-                  type A
-                </a>
-               
-            </li>
-          
+              <a href="#A" role="treeitem" aria-level="3" tabindex="-1">
+                type A
+              </a>
+             
+          </li>
         
           
+          <li role="none">
             
-            <li role="none">
-              
-                <a href="#B" role="treeitem" aria-level="3" tabindex="-1">
-                  type B
-                </a>
-               
-            </li>
-          
+              <a href="#B" role="treeitem" aria-level="3" tabindex="-1">
+                type B
+              </a>
+             
+          </li>
         
           
+          <li role="none">
             
-            <li role="none">
-              
-                <a href="#I1" role="treeitem" aria-level="3" tabindex="-1">
-                  type I1
-                </a>
-               
-            </li>
-          
+              <a href="#I1" role="treeitem" aria-level="3" tabindex="-1">
+                type I1
+              </a>
+             
+          </li>
         
           
+          <li role="none">
             
-            <li role="none">
-              
-                <a href="#I2" role="treeitem" aria-level="3" tabindex="-1">
-                  type I2
-                </a>
-               
-            </li>
-          
+              <a href="#I2" role="treeitem" aria-level="3" tabindex="-1">
+                type I2
+              </a>
+             
+          </li>
         
           
+          <li role="none">
             
-            <li role="none">
-              
-                <a href="#S1" role="treeitem" aria-level="3" tabindex="-1">
-                  type S1
-                </a>
-               
-            </li>
-          
+              <a href="#S1" role="treeitem" aria-level="3" tabindex="-1">
+                type S1
+              </a>
+             
+          </li>
         
           
+          <li role="none">
             
-            <li role="none">
-              
-                <a href="#S2" role="treeitem" aria-level="3" tabindex="-1">
-                  type S2
-                </a>
-               
-            </li>
-          
+              <a href="#S2" role="treeitem" aria-level="3" tabindex="-1">
+                type S2
+              </a>
+             
+          </li>
         
           
+          <li role="none">
             
-            <li role="none">
               
+              
+              <a href="#T" role="treeitem" aria-expanded="false" aria-level="3" tabindex="-1"
+                   data-aria-owns="nav.group.T">
+                type T
+              </a>
+              <ul role="group" id="nav.group.T">
+                
+                  <li role="none">
+                    <a href="#TF" role="treeitem" aria-level="4" tabindex="-1"
+                        title="TF()">
+                      TF()
+                    </a>
+                  </li>
                 
                 
-                <a href="#T" role="treeitem" aria-expanded="false" aria-level="3" tabindex="-1"
-                     data-aria-owns="nav.group.T">
-                  type T
-                </a>
-                <ul role="group" id="nav.group.T">
-                  
-                    
-                      <li role="none">
-                        <a href="#TF" role="treeitem" aria-level="4" tabindex="-1"
-                            title="TF()">
-                          TF()
-                        </a>
-                      </li>
-                    
-                  
-                  
-                    
-                      <li role="none">
-                        <a href="#T.M" role="treeitem" aria-level="4" tabindex="-1"
-                            title="M()">
-                          M()
-                        </a>
-                      </li>
-                    
-                  
-                </ul>
-               
-            </li>
-          
+                  <li role="none">
+                    <a href="#T.M" role="treeitem" aria-level="4" tabindex="-1"
+                        title="M()">
+                      M()
+                    </a>
+                  </li>
+                
+              </ul>
+             
+          </li>
          
       </ul>
     </li>

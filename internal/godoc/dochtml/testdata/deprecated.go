@@ -13,7 +13,8 @@ const BadC = 2
 
 var GoodV = 1
 
-var BadV = 2 // Deprecated: use GoodV.
+// Deprecated: use GoodV.
+var BadV = 2
 
 func GoodF() {}
 
