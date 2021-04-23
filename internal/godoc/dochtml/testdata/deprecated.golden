@@ -153,7 +153,8 @@
               
               
               <a href="#GoodT" role="treeitem" aria-expanded="false" aria-level="3" tabindex="-1"
-                   data-aria-owns="nav.group.GoodT" data-gtm-action="doc outline link clicked">
+                   data-aria-owns="nav.group.GoodT" title="type GoodT"
+                   data-gtm-action="doc outline link clicked">
                 type GoodT
               </a>
               <ul role="group" id="nav.group.GoodT">

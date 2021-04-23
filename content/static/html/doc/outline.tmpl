@@ -69,7 +69,8 @@
               {{$navgroupname := (printf "nav.group.%s" $tname)}}
               {{$navgroupid := (safe_id $navgroupname)}}
               <a href="#{{$tname}}" role="treeitem" aria-expanded="false" aria-level="3" tabindex="-1"
-                   data-aria-owns="{{$navgroupid}}" data-gtm-action="doc outline link clicked">
+                   data-aria-owns="{{$navgroupid}}" title="type {{$tname}}"
+                   data-gtm-action="doc outline link clicked">
                 type {{$tname}}
               </a>
               <ul role="group" id="{{$navgroupid}}">
@@ -91,7 +92,7 @@
                 {{end}}
               </ul>
             {{else}}
-              <a href="#{{$tname}}" role="treeitem" aria-level="3" tabindex="-1"
+              <a href="#{{$tname}}" role="treeitem" aria-level="3" tabindex="-1" title="type {{$tname}}"
                   data-gtm-action="doc outline link clicked">
                 type {{$tname}}
               </a>

@@ -278,7 +278,7 @@ BUG(uid): this verifies that notes are rendered
           
           <li role="none">
             
-              <a href="#A" role="treeitem" aria-level="3" tabindex="-1"
+              <a href="#A" role="treeitem" aria-level="3" tabindex="-1" title="type A"
                   data-gtm-action="doc outline link clicked">
                 type A
               </a>
@@ -288,7 +288,7 @@ BUG(uid): this verifies that notes are rendered
           
           <li role="none">
             
-              <a href="#B" role="treeitem" aria-level="3" tabindex="-1"
+              <a href="#B" role="treeitem" aria-level="3" tabindex="-1" title="type B"
                   data-gtm-action="doc outline link clicked">
                 type B
               </a>
@@ -298,7 +298,7 @@ BUG(uid): this verifies that notes are rendered
           
           <li role="none">
             
-              <a href="#I1" role="treeitem" aria-level="3" tabindex="-1"
+              <a href="#I1" role="treeitem" aria-level="3" tabindex="-1" title="type I1"
                   data-gtm-action="doc outline link clicked">
                 type I1
               </a>
@@ -308,7 +308,7 @@ BUG(uid): this verifies that notes are rendered
           
           <li role="none">
             
-              <a href="#I2" role="treeitem" aria-level="3" tabindex="-1"
+              <a href="#I2" role="treeitem" aria-level="3" tabindex="-1" title="type I2"
                   data-gtm-action="doc outline link clicked">
                 type I2
               </a>
@@ -318,7 +318,7 @@ BUG(uid): this verifies that notes are rendered
           
           <li role="none">
             
-              <a href="#S1" role="treeitem" aria-level="3" tabindex="-1"
+              <a href="#S1" role="treeitem" aria-level="3" tabindex="-1" title="type S1"
                   data-gtm-action="doc outline link clicked">
                 type S1
               </a>
@@ -328,7 +328,7 @@ BUG(uid): this verifies that notes are rendered
           
           <li role="none">
             
-              <a href="#S2" role="treeitem" aria-level="3" tabindex="-1"
+              <a href="#S2" role="treeitem" aria-level="3" tabindex="-1" title="type S2"
                   data-gtm-action="doc outline link clicked">
                 type S2
               </a>
@@ -341,7 +341,8 @@ BUG(uid): this verifies that notes are rendered
               
               
               <a href="#T" role="treeitem" aria-expanded="false" aria-level="3" tabindex="-1"
-                   data-aria-owns="nav.group.T" data-gtm-action="doc outline link clicked">
+                   data-aria-owns="nav.group.T" title="type T"
+                   data-gtm-action="doc outline link clicked">
                 type T
               </a>
               <ul role="group" id="nav.group.T">
