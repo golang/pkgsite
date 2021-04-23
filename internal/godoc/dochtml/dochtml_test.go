@@ -24,21 +24,12 @@ import (
 	"golang.org/x/net/html"
 	"golang.org/x/pkgsite/internal/godoc/dochtml/internal/render"
 	"golang.org/x/pkgsite/internal/godoc/internal/doc"
-	"golang.org/x/pkgsite/internal/testing/htmlcheck"
 	"golang.org/x/pkgsite/internal/testing/testhelper"
 )
 
 var templateSource = template.TrustedSourceFromConstant("../../../content/static/html/doc")
 
 var update = flag.Bool("update", false, "update goldens instead of checking against them")
-
-var (
-	in           = htmlcheck.In
-	hasAttr      = htmlcheck.HasAttr
-	hasHref      = htmlcheck.HasHref
-	hasText      = htmlcheck.HasText
-	hasExactText = htmlcheck.HasExactText
-)
 
 var testRenderOptions = RenderOptions{
 	FileLinkFunc:     func(string) string { return "file" },

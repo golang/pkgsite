@@ -102,40 +102,48 @@
 <ul role="group" id="doc-outline">
   
     <li role="none">
-      <a href="#pkg-overview" role="treeitem" aria-level="2" tabindex="-1">Overview</a>
+      <a href="#pkg-overview" role="treeitem" aria-level="2" tabindex="-1"
+          data-gtm-action="doc outline link clicked">Overview</a>
     </li>
   <li class="DocNav-overview" role="none">
       <a href="#pkg-index" role="treeitem" aria-level="2" tabindex="-1" aria-owns="nav-group-index"
-          >
+          
+          data-gtm-action="doc outline link clicked">
         Index
       </a>
       
     </li>
     <li class="DocNav-constants" role="none">
-      <a href="#pkg-constants" role="treeitem" aria-level="2" tabindex="-1">Constants</a>
+      <a href="#pkg-constants" role="treeitem" aria-level="2" tabindex="-1"
+          data-gtm-action="doc outline link clicked">
+        Constants
+      </a>
     </li>
     <li class="DocNav-variables" role="none">
-      <a href="#pkg-variables" role="treeitem" aria-level="2" tabindex="-1">Variables</a>
+      <a href="#pkg-variables" role="treeitem" aria-level="2" tabindex="-1"
+          data-gtm-action="doc outline link clicked">
+        Variables
+      </a>
     </li>
     <li class="DocNav-functions" role="none">
       <a href="#pkg-functions" role="treeitem" aria-level="2" tabindex="-1" aria-owns="nav-group-functions"
-           aria-expanded="false">
+           aria-expanded="false" data-gtm-action="doc outline link clicked">
         Functions
       </a>
       <ul role="group" id="nav-group-functions">
         
-          <li role="none">
-            <a href="#GoodF" role="treeitem" aria-level="3" tabindex="-1"
-                 title="GoodF()">
-              GoodF()
-            </a>
-          </li>
+            <li role="none">
+              <a href="#GoodF" role="treeitem" aria-level="3" tabindex="-1"
+                   title="GoodF()" data-gtm-action="doc outline link clicked">
+                GoodF()
+              </a>
+            </li>
         
       </ul>
     </li>
     <li class="DocNav-types" role="none">
       <a href="#pkg-types" role="treeitem" aria-level="2" tabindex="-1" aria-owns="nav-group-types"
-           aria-expanded="false">
+           aria-expanded="false" data-gtm-action="doc outline link clicked">
         Types
       </a>
       <ul role="group" id="nav-group-types">
@@ -146,14 +154,14 @@
               
               
               <a href="#GoodT" role="treeitem" aria-expanded="false" aria-level="3" tabindex="-1"
-                   data-aria-owns="nav.group.GoodT">
+                   data-aria-owns="nav.group.GoodT" data-gtm-action="doc outline link clicked">
                 type GoodT
               </a>
               <ul role="group" id="nav.group.GoodT">
                 
                   <li role="none">
                     <a href="#NewGoodTGood" role="treeitem" aria-level="4" tabindex="-1"
-                        title="NewGoodTGood()">
+                        title="NewGoodTGood()" data-gtm-action="doc outline link clicked">
                       NewGoodTGood()
                     </a>
                   </li>
@@ -161,7 +169,7 @@
                 
                   <li role="none">
                     <a href="#GoodT.GoodM" role="treeitem" aria-level="4" tabindex="-1"
-                        title="GoodM()">
+                        title="GoodM()" data-gtm-action="doc outline link clicked">
                       GoodM()
                     </a>
                   </li>

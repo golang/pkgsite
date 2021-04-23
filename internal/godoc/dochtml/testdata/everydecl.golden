@@ -230,40 +230,48 @@ BUG(uid): this verifies that notes are rendered
 <ul role="group" id="doc-outline">
   
     <li role="none">
-      <a href="#pkg-overview" role="treeitem" aria-level="2" tabindex="-1">Overview</a>
+      <a href="#pkg-overview" role="treeitem" aria-level="2" tabindex="-1"
+          data-gtm-action="doc outline link clicked">Overview</a>
     </li>
   <li class="DocNav-overview" role="none">
       <a href="#pkg-index" role="treeitem" aria-level="2" tabindex="-1" aria-owns="nav-group-index"
-          >
+          
+          data-gtm-action="doc outline link clicked">
         Index
       </a>
       
     </li>
     <li class="DocNav-constants" role="none">
-      <a href="#pkg-constants" role="treeitem" aria-level="2" tabindex="-1">Constants</a>
+      <a href="#pkg-constants" role="treeitem" aria-level="2" tabindex="-1"
+          data-gtm-action="doc outline link clicked">
+        Constants
+      </a>
     </li>
     <li class="DocNav-variables" role="none">
-      <a href="#pkg-variables" role="treeitem" aria-level="2" tabindex="-1">Variables</a>
+      <a href="#pkg-variables" role="treeitem" aria-level="2" tabindex="-1"
+          data-gtm-action="doc outline link clicked">
+        Variables
+      </a>
     </li>
     <li class="DocNav-functions" role="none">
       <a href="#pkg-functions" role="treeitem" aria-level="2" tabindex="-1" aria-owns="nav-group-functions"
-           aria-expanded="false">
+           aria-expanded="false" data-gtm-action="doc outline link clicked">
         Functions
       </a>
       <ul role="group" id="nav-group-functions">
         
-          <li role="none">
-            <a href="#F" role="treeitem" aria-level="3" tabindex="-1"
-                 title="F()">
-              F()
-            </a>
-          </li>
+            <li role="none">
+              <a href="#F" role="treeitem" aria-level="3" tabindex="-1"
+                   title="F()" data-gtm-action="doc outline link clicked">
+                F()
+              </a>
+            </li>
         
       </ul>
     </li>
     <li class="DocNav-types" role="none">
       <a href="#pkg-types" role="treeitem" aria-level="2" tabindex="-1" aria-owns="nav-group-types"
-           aria-expanded="false">
+           aria-expanded="false" data-gtm-action="doc outline link clicked">
         Types
       </a>
       <ul role="group" id="nav-group-types">
@@ -271,7 +279,8 @@ BUG(uid): this verifies that notes are rendered
           
           <li role="none">
             
-              <a href="#A" role="treeitem" aria-level="3" tabindex="-1">
+              <a href="#A" role="treeitem" aria-level="3" tabindex="-1"
+                  data-gtm-action="doc outline link clicked">
                 type A
               </a>
              
@@ -280,7 +289,8 @@ BUG(uid): this verifies that notes are rendered
           
           <li role="none">
             
-              <a href="#B" role="treeitem" aria-level="3" tabindex="-1">
+              <a href="#B" role="treeitem" aria-level="3" tabindex="-1"
+                  data-gtm-action="doc outline link clicked">
                 type B
               </a>
              
@@ -289,7 +299,8 @@ BUG(uid): this verifies that notes are rendered
           
           <li role="none">
             
-              <a href="#I1" role="treeitem" aria-level="3" tabindex="-1">
+              <a href="#I1" role="treeitem" aria-level="3" tabindex="-1"
+                  data-gtm-action="doc outline link clicked">
                 type I1
               </a>
              
@@ -298,7 +309,8 @@ BUG(uid): this verifies that notes are rendered
           
           <li role="none">
             
-              <a href="#I2" role="treeitem" aria-level="3" tabindex="-1">
+              <a href="#I2" role="treeitem" aria-level="3" tabindex="-1"
+                  data-gtm-action="doc outline link clicked">
                 type I2
               </a>
              
@@ -307,7 +319,8 @@ BUG(uid): this verifies that notes are rendered
           
           <li role="none">
             
-              <a href="#S1" role="treeitem" aria-level="3" tabindex="-1">
+              <a href="#S1" role="treeitem" aria-level="3" tabindex="-1"
+                  data-gtm-action="doc outline link clicked">
                 type S1
               </a>
              
@@ -316,7 +329,8 @@ BUG(uid): this verifies that notes are rendered
           
           <li role="none">
             
-              <a href="#S2" role="treeitem" aria-level="3" tabindex="-1">
+              <a href="#S2" role="treeitem" aria-level="3" tabindex="-1"
+                  data-gtm-action="doc outline link clicked">
                 type S2
               </a>
              
@@ -328,14 +342,14 @@ BUG(uid): this verifies that notes are rendered
               
               
               <a href="#T" role="treeitem" aria-expanded="false" aria-level="3" tabindex="-1"
-                   data-aria-owns="nav.group.T">
+                   data-aria-owns="nav.group.T" data-gtm-action="doc outline link clicked">
                 type T
               </a>
               <ul role="group" id="nav.group.T">
                 
                   <li role="none">
                     <a href="#TF" role="treeitem" aria-level="4" tabindex="-1"
-                        title="TF()">
+                        title="TF()" data-gtm-action="doc outline link clicked">
                       TF()
                     </a>
                   </li>
@@ -343,7 +357,7 @@ BUG(uid): this verifies that notes are rendered
                 
                   <li role="none">
                     <a href="#T.M" role="treeitem" aria-level="4" tabindex="-1"
-                        title="M()">
+                        title="M()" data-gtm-action="doc outline link clicked">
                       M()
                     </a>
                   </li>
@@ -358,13 +372,14 @@ BUG(uid): this verifies that notes are rendered
   
     <li class="DocNav-notes" role="none">
       <a href="#pkg-notes" role="treeitem" aria-expanded="false" aria-level="2" tabindex="-1"
-           aria-owns="nav-group-notes">
+           aria-owns="nav-group-notes" data-gtm-action="doc outline link clicked">
         Notes
       </a>
       <ul role="group" id="nav-group-notes">
         
           <li role="none">
-            <a href="#pkg-note-BUG" role="treeitem" aria-level="3" tabindex="-1">
+            <a href="#pkg-note-BUG" role="treeitem" aria-level="3" tabindex="-1"
+                data-gtm-action="doc outline link clicked">
               Bugs
             </a>
           </li>
