@@ -22,6 +22,8 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/google/safehtml/template"
 	"golang.org/x/net/html"
+	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/godoc/dochtml/internal/render"
 	"golang.org/x/pkgsite/internal/godoc/internal/doc"
 	"golang.org/x/pkgsite/internal/testing/testhelper"
@@ -48,12 +50,14 @@ func TestRenderParts(t *testing.T) {
 	}
 	compareWithGolden(t, parts, "everydecl", *update)
 
-	fset2, d2 := mustLoadPackage("deprecated")
-	parts2, err := Render(ctx, fset2, d2, testRenderOptions)
-	if err != nil {
-		t.Fatal(err)
+	if experiment.IsActive(ctx, internal.ExperimentDeprecatedDoc) {
+		fset2, d2 := mustLoadPackage("deprecated")
+		parts2, err := Render(ctx, fset2, d2, testRenderOptions)
+		if err != nil {
+			t.Fatal(err)
+		}
+		compareWithGolden(t, parts2, "deprecated", *update)
 	}
-	compareWithGolden(t, parts2, "deprecated", *update)
 
 	bodyDoc, err := html.Parse(strings.NewReader(parts.Body.String()))
 	if err != nil {
