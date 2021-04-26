@@ -251,6 +251,7 @@ jumpFilter?.addEventListener('keydown', function (event) {
       if (activeJumpItem >= 0) {
         if (jumpList) {
           (jumpList.children[activeJumpItem] as HTMLElement).click();
+          event.preventDefault();
         }
       }
       break;
