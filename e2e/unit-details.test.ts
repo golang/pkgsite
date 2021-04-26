@@ -10,13 +10,13 @@ import puppeteer, { Page } from 'puppeteer';
 
 describe('pkgsite (desktop)', () => {
   let page: Page;
-  beforeAll(async () => {
+  beforeEach(async () => {
     page = await newPage();
     await page.goto(baseURL + '/golang.org/x/pkgsite');
     await prepare(page);
   });
 
-  afterAll(async () => {
+  afterEach(async () => {
     await page.close();
   });
 

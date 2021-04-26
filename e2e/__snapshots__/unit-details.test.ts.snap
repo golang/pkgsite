@@ -618,6 +618,30 @@ Object {
       "role": "text",
     },
     Object {
+      "name": "// ProxyError is used to capture non-actionable server errors returned from the proxy.",
+      "role": "text",
+    },
+    Object {
+      "name": "ProxyError =",
+      "role": "text",
+    },
+    Object {
+      "name": "errors",
+      "role": "link",
+    },
+    Object {
+      "name": ".",
+      "role": "text",
+    },
+    Object {
+      "name": "New",
+      "role": "link",
+    },
+    Object {
+      "name": "(\\"proxy error\\")",
+      "role": "text",
+    },
+    Object {
       "name": "// PackageBuildContextNotSupported indicates that the build context for the",
       "role": "text",
     },
@@ -2170,7 +2194,7 @@ Object {
     },
     Object {
       "name": "Expand ▾",
-      "role": "link",
+      "role": "button",
     },
     Object {
       "name": "Directories",
@@ -2717,7 +2741,7 @@ Object {
     },
     Object {
       "name": "Expand ▾",
-      "role": "link",
+      "role": "button",
     },
     Object {
       "name": "Directories",
