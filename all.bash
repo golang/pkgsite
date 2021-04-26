@@ -201,10 +201,10 @@ run_prettier() {
   if [[ $files = '' ]]; then
     files=$prettier_file_globs
   fi
-  if [[ -x "$(command -v prettier)" ]]; then
-    runcmd prettier --write $files
+  if [[ -x "$(command -v npx)" ]]; then
+    runcmd npx prettier --write $files
   else
-    err "prettier must be installed: see https://prettier.io/docs/en/install.html"
+    runcmd ./devtools/docker_nodejs.sh npx prettier --write $files
   fi
 }
 
