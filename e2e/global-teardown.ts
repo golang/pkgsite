@@ -15,4 +15,5 @@ declare const global: NodeJS.Global &
  */
 export default async function teardown(): Promise<void> {
   global.chromium.kill();
+  await new Promise(r => global.chromium.on('exit', r));
 }
