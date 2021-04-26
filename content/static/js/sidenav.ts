@@ -192,7 +192,8 @@ class DocNavTreeController {
    * Handles when a tree item is clicked.
    */
   private handleItemClick(e: MouseEvent) {
-    const el = e.target as HTMLSelectElement;
+    const el = e.target as HTMLSelectElement | null;
+    if (!el) return;
     this.setFocusedIndex(this.visibleItems.indexOf(el));
     if (el.hasAttribute('aria-expanded')) {
       this.toggleItemExpandedState(el);
