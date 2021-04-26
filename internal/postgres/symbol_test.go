@@ -12,6 +12,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/testing/sample"
 )
 
@@ -20,6 +21,10 @@ func TestInsertSymbolNamesAndHistory(t *testing.T) {
 	testDB, release := acquire(t)
 	defer release()
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	ctx = experiment.NewContext(ctx,
+		internal.ExperimentReadSymbolHistory,
+		internal.ExperimentInsertSymbolHistory,
+	)
 	defer cancel()
 
 	mod := sample.DefaultModule()
@@ -61,12 +66,36 @@ func TestInsertSymbolNamesAndHistory(t *testing.T) {
 	want2 := map[string]map[string]*internal.UnitSymbol{}
 	want2[mod.Version] = unitSymbolsFromAPI(api, mod.Version)
 	comparePackageSymbols(ctx, t, testDB, mod.Packages()[0].Path, mod.ModulePath, mod.Version, want2)
+
+	gotHist, err := getSymbolHistory(ctx, testDB.db, mod.Packages()[0].Path, mod.ModulePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	wantHist := map[string]map[string]*internal.UnitSymbol{
+		"v1.0.0": map[string]*internal.UnitSymbol{
+			"Constant":    unitSymbolFromSymbol(sample.Constant, "v1.0.0"),
+			"Variable":    unitSymbolFromSymbol(sample.Variable, "v1.0.0"),
+			"Function":    unitSymbolFromSymbol(sample.Function, "v1.0.0"),
+			"Type":        unitSymbolFromSymbol(sample.Type, "v1.0.0"),
+			"Type.Field":  unitSymbolFromSymbol(sample.Type.Children[0], "v1.0.0"),
+			"New":         unitSymbolFromSymbol(sample.Type.Children[1], "v1.0.0"),
+			"Type.Method": unitSymbolFromSymbol(sample.Type.Children[2], "v1.0.0"),
+		},
+	}
+	if diff := cmp.Diff(wantHist, gotHist,
+		cmp.AllowUnexported(internal.UnitSymbol{})); diff != "" {
+		t.Fatalf("mismatch on symbol history(-want +got):\n%s", diff)
+	}
 }
 
 func TestInsertSymbolHistory_Basic(t *testing.T) {
 	testDB, release := acquire(t)
 	defer release()
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	ctx = experiment.NewContext(ctx,
+		internal.ExperimentReadSymbolHistory,
+		internal.ExperimentInsertSymbolHistory,
+	)
 	defer cancel()
 
 	mod := sample.DefaultModule()
@@ -96,6 +125,10 @@ func TestInsertSymbolHistory_MultiVersions(t *testing.T) {
 	testDB, release := acquire(t)
 	defer release()
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	ctx = experiment.NewContext(ctx,
+		internal.ExperimentReadSymbolHistory,
+		internal.ExperimentInsertSymbolHistory,
+	)
 	defer cancel()
 
 	typ := internal.Symbol{
@@ -165,12 +198,42 @@ func TestInsertSymbolHistory_MultiVersions(t *testing.T) {
 		}
 	}
 	comparePackageSymbols(ctx, t, testDB, mod10.Packages()[0].Path, mod10.ModulePath, mod10.Version, want2)
+
+	gotHist, err := getSymbolHistory(ctx, testDB.db, mod10.Packages()[0].Path, mod10.ModulePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	typA.GOOS = internal.All
+	methodA.GOOS = internal.All
+	methodB.GOOS = internal.All
+	typA.GOARCH = internal.All
+	methodA.GOARCH = internal.All
+	methodB.GOARCH = internal.All
+	wantHist := map[string]map[string]*internal.UnitSymbol{
+		"v1.0.0": map[string]*internal.UnitSymbol{
+			"Foo": unitSymbolFromSymbol(&typA, "v1.0.0"),
+		},
+		"v1.1.0": {
+			"Foo.A": unitSymbolFromSymbol(&methodA, "v1.1.0"),
+		},
+		"v1.2.0": {
+			"Foo.B": unitSymbolFromSymbol(&methodB, "v1.2.0"),
+		},
+	}
+	if diff := cmp.Diff(wantHist, gotHist,
+		cmp.AllowUnexported(internal.UnitSymbol{})); diff != "" {
+		t.Fatalf("mismatch on symbol history(-want +got):\n%s", diff)
+	}
 }
 
 func TestInsertSymbolHistory_MultiGOOS(t *testing.T) {
 	testDB, release := acquire(t)
 	defer release()
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	ctx = experiment.NewContext(ctx,
+		internal.ExperimentReadSymbolHistory,
+		internal.ExperimentInsertSymbolHistory,
+	)
 	defer cancel()
 
 	typ := internal.Symbol{
@@ -282,6 +345,55 @@ func TestInsertSymbolHistory_MultiGOOS(t *testing.T) {
 		}
 	}
 	comparePackageSymbols(ctx, t, testDB, mod10.Packages()[0].Path, mod10.ModulePath, mod10.Version, want2)
+
+	gotHist, err := getSymbolHistory(ctx, testDB.db, mod10.Packages()[0].Path, mod10.ModulePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	typ.GOOS = internal.All
+	typ.GOARCH = internal.All
+	wantHist := map[string]map[string]*internal.UnitSymbol{
+		"v1.0.0": map[string]*internal.UnitSymbol{
+			"Foo": unitSymbolFromSymbol(&typ, "v1.0.0"),
+		},
+		"v1.1.0": map[string]*internal.UnitSymbol{
+			"Foo.A": func() *internal.UnitSymbol {
+				us := unitSymbolFromSymbol(&methodA, "v1.1.0")
+				us.RemoveBuildContexts()
+				us.AddBuildContext(internal.BuildContextLinux)
+				us.AddBuildContext(internal.BuildContextWindows)
+				return us
+			}(),
+			"Foo.B": func() *internal.UnitSymbol {
+				us := unitSymbolFromSymbol(&methodB, "v1.1.0")
+				us.RemoveBuildContexts()
+				us.AddBuildContext(internal.BuildContextJS)
+				us.AddBuildContext(internal.BuildContextDarwin)
+				return us
+			}(),
+		},
+		"v1.2.0": map[string]*internal.UnitSymbol{
+			"Foo.A": func() *internal.UnitSymbol {
+				us := unitSymbolFromSymbol(&methodA, "v1.2.0")
+				us.RemoveBuildContexts()
+				us.AddBuildContext(internal.BuildContextJS)
+				us.AddBuildContext(internal.BuildContextDarwin)
+				return us
+			}(),
+			"Foo.B": func() *internal.UnitSymbol {
+				us := unitSymbolFromSymbol(&methodB, "v1.2.0")
+				us.RemoveBuildContexts()
+				us.AddBuildContext(internal.BuildContextLinux)
+				us.AddBuildContext(internal.BuildContextWindows)
+				return us
+			}(),
+		},
+	}
+	if diff := cmp.Diff(wantHist, gotHist,
+		cmp.AllowUnexported(internal.UnitSymbol{})); diff != "" {
+		t.Fatalf("mismatch on symbol history(-want +got):\n%s", diff)
+	}
 }
 
 func moduleWithSymbols(t *testing.T, version string, symbols []*internal.Symbol) *internal.Module {

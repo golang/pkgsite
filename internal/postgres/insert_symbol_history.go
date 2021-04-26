@@ -4,7 +4,143 @@
 
 package postgres
 
-import "golang.org/x/mod/semver"
+import (
+	"context"
+	"fmt"
+
+	"golang.org/x/mod/semver"
+	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/database"
+	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/version"
+)
+
+// upsertSymbolHistory upserts data into the symbol_history table.
+func upsertSymbolHistory(ctx context.Context, ddb *database.DB,
+	modulePath, ver string,
+	nameToID map[string]int,
+	pathToID map[string]int,
+	pathToPkgsymID map[string]map[packageSymbol]int,
+	pathToDocIDToDoc map[string]map[int]*internal.Documentation,
+) (err error) {
+	defer derrors.WrapStack(&err, "upsertSymbolHistory")
+
+	versionType, err := version.ParseType(ver)
+	if err != nil {
+		return err
+	}
+	if versionType != version.TypeRelease || version.IsIncompatible(ver) {
+		return nil
+	}
+
+	if _, err := ddb.Exec(ctx, `LOCK TABLE symbol_history IN EXCLUSIVE MODE`); err != nil {
+		return err
+	}
+	for packagePath, docIDToDoc := range pathToDocIDToDoc {
+		dbVersionToNameToUnitSymbol, err := getSymbolHistory(ctx, ddb, packagePath, modulePath)
+		if err != nil {
+			return err
+		}
+		for _, doc := range docIDToDoc {
+			var values []interface{}
+			builds := []internal.BuildContext{{GOOS: doc.GOOS, GOARCH: doc.GOARCH}}
+			if doc.GOOS == internal.All {
+				builds = internal.BuildContexts
+			}
+			for _, b := range builds {
+				dbNameToVersion := map[string]string{}
+				for v, nameToUS := range dbVersionToNameToUnitSymbol {
+					for name, us := range nameToUS {
+						if us.SupportsBuild(b) {
+							dbNameToVersion[name] = v
+						}
+					}
+				}
+
+				if err := updateSymbols(doc.API, func(s *internal.Symbol) error {
+					if shouldUpdateSymbolHistory(s.Name, ver, dbNameToVersion) {
+						values, err = appendSymbolHistoryRow(s, values,
+							packagePath, modulePath, ver, b, pathToID, nameToID,
+							pathToPkgsymID)
+						if err != nil {
+							return err
+						}
+					}
+					return nil
+				}); err != nil {
+					return err
+				}
+			}
+
+			cols := []string{
+				"symbol_name_id",
+				"parent_symbol_name_id",
+				"package_path_id",
+				"module_path_id",
+				"package_symbol_id",
+				"since_version",
+				"sort_version",
+				"goos",
+				"goarch",
+			}
+			if err := ddb.BulkInsert(ctx, "symbol_history", cols, values,
+				`ON CONFLICT (package_path_id, module_path_id, symbol_name_id, goos, goarch)
+				DO UPDATE
+				SET
+					symbol_name_id=excluded.symbol_name_id,
+					parent_symbol_name_id=excluded.parent_symbol_name_id,
+					package_path_id=excluded.package_path_id,
+					module_path_id=excluded.module_path_id,
+					package_symbol_id=excluded.package_symbol_id,
+					since_version=excluded.since_version,
+					sort_version=excluded.sort_version,
+					goos=excluded.goos,
+					goarch=excluded.goarch
+				WHERE
+					symbol_history.sort_version > excluded.sort_version`); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func appendSymbolHistoryRow(s *internal.Symbol, values []interface{},
+	packagePath, modulePath, ver string, build internal.BuildContext,
+	pathToID, symToID map[string]int,
+	pathToPkgsymID map[string]map[packageSymbol]int) (_ []interface{}, err error) {
+	defer derrors.WrapStack(&err, "appendSymbolHistoryRow(%q, %q, %q, %q)", s.Name, packagePath, modulePath, ver)
+	symbolID := symToID[s.Name]
+	if symbolID == 0 {
+		return nil, fmt.Errorf("symbolID cannot be 0: %q", s.Name)
+	}
+	if s.ParentName == "" {
+		s.ParentName = s.Name
+	}
+	parentID := symToID[s.ParentName]
+	if parentID == 0 {
+		return nil, fmt.Errorf("parentSymbolID cannot be 0: %q", s.ParentName)
+	}
+	packagePathID := pathToID[packagePath]
+	if packagePathID == 0 {
+		return nil, fmt.Errorf("packagePathID cannot be 0: %q", packagePathID)
+	}
+	modulePathID := pathToID[modulePath]
+	if modulePathID == 0 {
+		return nil, fmt.Errorf("modulePathID cannot be 0: %q", modulePathID)
+	}
+	pkgsymID := pathToPkgsymID[packagePath][packageSymbol{synopsis: s.Synopsis, name: s.Name, section: s.Section}]
+	return append(values,
+		symbolID,
+		parentID,
+		packagePathID,
+		modulePathID,
+		pkgsymID,
+		ver,
+		version.ForSorting(ver),
+		build.GOOS,
+		build.GOARCH), nil
+}
 
 // shouldUpdateSymbolHistory reports whether the row for the given symbolName
 // should be updated. oldHist contains all of the current symbols in the

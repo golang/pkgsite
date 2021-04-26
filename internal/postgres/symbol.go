@@ -23,7 +23,11 @@ func insertSymbols(ctx context.Context, db *database.DB, modulePath, version str
 	pathToID map[string]int,
 	pathToDocIDToDoc map[string]map[int]*internal.Documentation) (err error) {
 	defer derrors.WrapStack(&err, "insertSymbols(ctx, db, %q, %q, pathToID, pathToDocs)", modulePath, version)
-	pathToPkgsymToID, err := upsertPackageSymbolsReturningIDs(ctx, db, modulePath, pathToID, pathToDocIDToDoc)
+	nameToID, err := upsertSymbolNamesReturningIDs(ctx, db, pathToDocIDToDoc)
+	if err != nil {
+		return err
+	}
+	pathToPkgsymToID, err := upsertPackageSymbolsReturningIDs(ctx, db, modulePath, pathToID, nameToID, pathToDocIDToDoc)
 	if err != nil {
 		return err
 	}
@@ -32,9 +36,8 @@ func insertSymbols(ctx context.Context, db *database.DB, modulePath, version str
 	}
 
 	if experiment.IsActive(ctx, internal.ExperimentInsertSymbolHistory) {
-		// TODO(https://golang.org/issue/37102): insert data into the
-		// symbol_history table.
-		return nil
+		return upsertSymbolHistory(ctx, db, modulePath, version, nameToID,
+			pathToID, pathToPkgsymToID, pathToDocIDToDoc)
 	}
 	return nil
 }
@@ -142,12 +145,9 @@ func upsertDocumentationSymbols(ctx context.Context, db *database.DB,
 func upsertPackageSymbolsReturningIDs(ctx context.Context, db *database.DB,
 	modulePath string,
 	pathToID map[string]int,
+	nameToID map[string]int,
 	pathToDocIDToDoc map[string]map[int]*internal.Documentation) (_ map[string]map[packageSymbol]int, err error) {
 	defer derrors.WrapStack(&err, "upsertPackageSymbolsReturningIDs(ctx, db, %q, pathToID, pathToDocIDToDoc)", modulePath)
-	nameToID, err := upsertSymbolNamesReturningIDs(ctx, db, pathToDocIDToDoc)
-	if err != nil {
-		return nil, err
-	}
 
 	idToPath := map[int]string{}
 	for path, id := range pathToID {
