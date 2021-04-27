@@ -4,6 +4,11 @@
   license that can be found in the LICENSE file.
 -->
 
+
+{{define "unit_pre_content"}}
+  <link href="/static/css/imports.css?version={{.AppVersionLabel}}" rel="stylesheet">
+{{end}}
+
 {{define "unit_content"}}
   <div class="Unit-content" role="main">
     {{block "imports" .Details}}{{end}}

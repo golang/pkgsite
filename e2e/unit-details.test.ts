@@ -190,7 +190,9 @@ async function prepare(page: Page): Promise<void> {
     }),
     page.$eval(
       select('UnitHeader-version', 'a'),
-      el => ((el as HTMLElement).innerHTML = '<span>Version: </span>v0.0.0')
+      el =>
+        ((el as HTMLElement).innerHTML =
+          '<span class="UnitHeader-detailItemSubtle">Version: </span>v0.0.0')
     ),
     page.$eval(
       select('UnitHeader-commitTime'),

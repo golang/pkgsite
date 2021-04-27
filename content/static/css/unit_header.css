@@ -142,7 +142,7 @@
     padding: 1rem;
   }
 }
-.UnitHeader-detailItem > a > span {
+.UnitHeader-detailItemSubtle {
   color: var(--gray-4);
 }
 
@@ -266,4 +266,47 @@ a.UnitHeader-backLink {
   height: 0.8125rem;
   margin-right: 0.5rem;
   width: auto;
+}
+
+.DetailsHeader-badge--notAtLatest {
+  background: var(--turq-dark);
+}
+.DetailsHeader-badge--notAtLatest a {
+  display: none;
+}
+.DetailsHeader-badge--notAtLatest span.DetailsHeader-span--latest {
+  display: none;
+}
+.DetailsHeader-badge--notAtLatest .UnitMetaDetails-icon {
+  z-index: 1;
+}
+.DetailsHeader-badge--notAtLatest .UnitMetaDetails-toggletipBubble {
+  color: var(--black);
+  text-transform: none;
+}
+.DetailsHeader-span--notAtLatest .UnitMetaDetails-toggletip {
+  height: 0;
+}
+.DetailsHeader-span--notAtLatest .UnitMetaDetails-toggletip button {
+  height: 0.8125rem;
+  line-height: 0;
+}
+.DetailsHeader-span--notAtLatest .UnitMetaDetails-toggletip img {
+  vertical-align: middle;
+}
+
+.DetailsHeader-badge--goToLatest {
+  background: var(--pink);
+}
+.DetailsHeader-badge--goToLatest a {
+  color: var(--white);
+}
+.DetailsHeader-badge--goToLatest span {
+  display: none;
+}
+.DetailsHeader-badge--unknown a {
+  display: none;
+}
+.DetailsHeader-badge--unknown span {
+  display: none;
 }

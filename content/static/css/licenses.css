@@ -1,0 +1,25 @@
+/*!
+ * Copyright 2021 The Go Authors. All rights reserved.
+ * Use of this source code is governed by a BSD-style
+ * license that can be found in the LICENSE file.
+ */
+
+.License-contents {
+  background-color: var(--gray-10);
+  border: 0.0625rem solid var(--gray-8);
+  border-radius: 0.1875rem;
+  font-size: 0.875rem;
+  line-height: 1.375rem;
+  margin: 0;
+  overflow-x: auto;
+  padding: 1.5rem;
+  tab-size: 4;
+}
+.License-source {
+  color: var(--gray-3);
+  font-size: 0.875rem;
+  padding-top: 0.5rem;
+}
+.Disclaimer-link {
+  font-style: italic;
+}

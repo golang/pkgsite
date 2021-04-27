@@ -1,0 +1,97 @@
+/*
+ * Copyright 2021 The Go Authors. All rights reserved.
+ * Use of this source code is governed by a BSD-style
+ * license that can be found in the LICENSE file.
+ */
+
+.SearchResults {
+  margin: 0 auto;
+  max-width: 60em;
+  padding: 2rem 0;
+}
+.SearchResults-header {
+  font-size: 1.875rem;
+  margin: 0;
+}
+.SearchResults-help {
+  margin-top: 0.3125rem;
+}
+.SearchResults-resultCount {
+  color: var(--gray-3);
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.625rem;
+  margin-top: 1.125rem;
+}
+.SearchResults-footer {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.SearchSnippet {
+  border-top: 0.0625rem solid var(--gray-8);
+  padding: 1rem 0;
+}
+.SearchSnippet:only-of-type,
+.SearchSnippet:last-of-type {
+  border-bottom: 0.0625rem solid var(--gray-8);
+  margin-bottom: 1rem;
+}
+.SearchSnippet-header {
+  font-size: 1.5rem;
+  margin: 0 0 0.3125rem;
+}
+.SearchSnippet-synopsis {
+  -webkit-box-orient: vertical;
+  color: var(--gray-3);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  margin: 0 0 1rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.SearchSnippet-infoLabel {
+  font-size: 0.875rem;
+  line-height: 1.375rem;
+}
+
+.Pagination-nav {
+  display: flex;
+}
+.Pagination-navInner {
+  display: flex;
+  flex: 1;
+  justify-content: space-between;
+}
+.Pagination-previous[aria-disabled='true'],
+.Pagination-next[aria-disabled='true'] {
+  color: var(--gray-6);
+}
+.Pagination-number {
+  color: var(--gray-1);
+  padding: 0 0.375rem;
+}
+
+.SearchResults .Pagination-nav,
+.SearchResults-help,
+.SearchResults-resultCount {
+  flex-wrap: wrap;
+  font-size: 0.875rem;
+}
+@media only screen and (min-width: 50rem) {
+  .SearchResults .Pagination-nav,
+  .SearchResults-help,
+  .SearchResults-resultCount {
+    flex-wrap: wrap;
+    font-size: 1.125rem;
+  }
+  .Pagination-navInner {
+    max-width: 25rem;
+  }
+  .Pagination-previous {
+    margin-right: 0.75rem;
+  }
+  .Pagination-next {
+    margin-left: 0.75rem;
+  }
+}

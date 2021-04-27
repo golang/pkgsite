@@ -4,9 +4,7 @@
  * license that can be found in the LICENSE file.
  */
 
-.Documentation {
-  display: block;
-}
+/* stylelint-disable no-descending-specificity */
 .UnitDoc {
   margin-bottom: 2rem;
   word-break: break-word;
@@ -43,4 +41,277 @@
 }
 .UnitDoc .Documentation h4 {
   font-size: 1.375rem;
+}
+
+.Documentation {
+  color: var(--gray-1);
+  display: block;
+}
+.Documentation h2,
+.Documentation h3 {
+  font-size: 1.5rem;
+}
+.Documentation a {
+  color: var(--turq-dark);
+  text-decoration: none;
+}
+.Documentation a:hover {
+  text-decoration: underline;
+}
+.Documentation h2 a,
+.Documentation h3 a,
+.Documentation h4 a.Documentation-idLink,
+.Documentation summary a {
+  opacity: 0;
+}
+.Documentation a:focus {
+  opacity: 1;
+}
+.Documentation h3 a.Documentation-source {
+  opacity: 1;
+}
+.Documentation h2:hover a,
+.Documentation h3:hover a,
+.Documentation h4:hover a,
+.Documentation summary:hover a,
+.Documentation summary:focus a {
+  opacity: 1;
+}
+.Documentation ul {
+  line-height: 1.5rem;
+  list-style: none;
+  padding-left: 0;
+}
+.Documentation ul ul {
+  padding-left: 2em;
+}
+.Documentation code,
+.Documentation pre,
+.Documentation textarea {
+  background-color: var(--gray-10);
+  border: 0.0625rem solid var(--gray-7);
+  border-radius: 0.3em;
+  font-size: 0.875rem;
+  line-height: 1.375rem;
+  line-height: 1.25rem;
+  margin: 0;
+  overflow-x: auto;
+  padding: 0.625rem;
+  tab-size: 4;
+}
+.Documentation pre + pre {
+  margin-top: 0.625rem;
+}
+
+.Documentation .Documentation-declarationLink + pre {
+  border-radius: 0 0 0.3em 0.3em;
+  border-top: 0.03125rem solid var(--gray-8);
+  margin-top: 0;
+}
+.Documentation pre .comment {
+  color: var(--green);
+}
+
+.Documentation-toc,
+.Documentation-overview,
+.Documentation-index,
+.Documentation-examples {
+  padding-bottom: 0;
+}
+.Documentation-empty {
+  color: var(--gray-3);
+  margin-top: -0.5rem;
+}
+@media only screen and (min-width: 64rem) {
+  .Documentation-toc {
+    columns: 2;
+    white-space: nowrap;
+  }
+}
+.Documentation-toc:empty {
+  display: none;
+}
+.Documentation-tocItem {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.Documentation-tocItem--constants,
+.Documentation-tocItem--funcsAndTypes,
+.Documentation-tocItem--functions,
+.Documentation-tocItem--types,
+.Documentation-tocItem--variables,
+.Documentation-tocItem--notes {
+  display: none;
+}
+
+.Documentation-overviewHeader,
+.Documentation-indexHeader,
+.Documentation-constantsHeader,
+.Documentation-variablesHeader,
+.Documentation-examplesHeader,
+.Documentation-filesHeader,
+.Documentation-functionHeader,
+.Documentation-typeHeader,
+.Documentation-typeMethodHeader,
+.Documentation-typeFuncHeader {
+  margin-bottom: 0.5rem;
+}
+
+.Documentation-function h4,
+.Documentation-type h4,
+.Documentation-typeFunc h4,
+.Documentation-typeMethod h4 {
+  align-items: baseline;
+  display: flex;
+  justify-content: space-between;
+}
+.Documentation-sinceVersion {
+  font-size: 1rem;
+  font-weight: 400;
+}
+
+.Documentation-constants br:last-of-type,
+.Documentation-variables br:last-of-type {
+  display: none;
+}
+
+.Documentation-build {
+  color: var(--gray-3);
+  font-size: 0.875rem;
+  padding-top: 1.5rem;
+  text-align: right;
+}
+.Documentation-declaration pre {
+  scroll-padding-top: calc(var(--header-height) + 3.75rem);
+}
+@media only screen and (min-width: 64rem) {
+  .Documentation-declaration pre {
+    scroll-padding-top: calc(var(--header-height) + 0.75rem);
+  }
+}
+.Documentation-declaration + .Documentation-declaration {
+  margin-top: 0.625rem;
+}
+.Documentation-declarationLink {
+  background-color: var(--gray-10);
+  border: 0.0625rem solid var(--gray-7);
+  border-bottom: none;
+  border-radius: 0.3em 0.3em 0 0;
+  display: block;
+  font-size: 0.75rem;
+  line-height: 0.5rem;
+  padding: 0.375rem;
+  text-align: right;
+}
+.Documentation-exampleButtonsContainer {
+  align-items: center;
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.5rem;
+}
+.Documentation-examplePlayButton {
+  background-color: var(--white);
+  border: 0.15rem solid var(--turq-med);
+  color: var(--turq-med);
+  cursor: pointer;
+  flex-shrink: 0;
+  height: 2.5rem;
+  width: 4.125rem;
+}
+.Documentation-exampleRunButton,
+.Documentation-exampleShareButton,
+.Documentation-exampleFormatButton {
+  border: 0.0625rem solid var(--turq-dark);
+  border-radius: 0.25rem;
+  cursor: pointer;
+  height: 2rem;
+  margin-left: 0.5rem;
+  padding: 0 1rem;
+}
+.Documentation-exampleRunButton {
+  background-color: var(--turq-dark);
+  color: var(--white);
+}
+.Documentation-exampleShareButton,
+.Documentation-exampleFormatButton {
+  background-color: var(--white);
+  color: var(--turq-dark);
+}
+.Documentation-exampleDetails {
+  margin-top: 1rem;
+}
+.Documentation-exampleDetailsBody pre {
+  border-radius: 0 0 0.3rem 0.3rem;
+  margin-bottom: 1rem;
+  margin-top: -0.25rem;
+}
+.Documentation-exampleDetailsBody textarea {
+  border: 0.0625rem solid var(--gray-7);
+  height: 100%;
+  outline: none;
+  overflow: hidden;
+  resize: none;
+  width: 100%;
+}
+
+/**
+ * We add another selector here to these two classes to increase CSS specificity,
+ * the selector .Documentation pre + pre overrides .Documentation-exampleCode
+ * and .Documentation-exampleOutput by itself and would replace the styles.
+ */
+.Documentation-exampleDetailsBody .Documentation-exampleCode {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  margin: 0;
+}
+.Documentation-exampleDetailsBody .Documentation-exampleOutput {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+  margin: 0 0 0.5rem;
+}
+.Documentation-exampleDetailsHeader {
+  color: var(--turq-dark);
+  cursor: pointer;
+  margin-bottom: 2rem;
+  outline: none;
+  text-decoration: none;
+}
+.Documentation-exampleOutputLabel {
+  color: var(--gray-4);
+}
+.Documentation-exampleError {
+  color: var(--pink);
+  margin-right: 0.4rem;
+  padding-right: 0.5rem;
+}
+
+/* See https://golang.org/issue/43368 for context. */
+.Documentation-function pre,
+.Documentation-typeFunc pre,
+.Documentation-typeMethod pre {
+  white-space: pre-wrap;
+  word-break: break-all;
+  word-wrap: break-word;
+}
+
+.Documentation-indexDeprecated {
+  color: var(--gray-3);
+  font-size: 0.875rem;
+  font-style: italic;
+  margin-left: 0.5rem;
+}
+
+.Documentation-bodyDeprecated {
+  color: var(--gray-3);
+  font-size: 1rem;
+  font-style: italic;
+  font-weight: 400;
+  margin-left: 0.5rem;
+  margin-right: 0.5rem;
+}
+
+.Documentation-deprecatedShowLink {
+  font-size: 1rem;
+  font-weight: 400;
 }

@@ -11,6 +11,7 @@
 @import './unit_files.css';
 @import './unit_directories.css';
 @import './unit_meta.css';
+@import './unit_build_context.css';
 
 .UnitDetails {
   column-gap: 2rem;
@@ -92,4 +93,39 @@
 .UnitDetails-contentEmpty img {
   height: 7.8125rem;
   width: auto;
+}
+
+.JumpDialog {
+  width: 25rem;
+}
+.JumpDialog-body {
+  height: 12rem;
+  overflow-y: scroll;
+  padding: 0 0 0 0.8rem;
+}
+.JumpDialog-list {
+  display: flex;
+  flex-direction: column;
+}
+.JumpDialog-filter {
+  margin: 0.5rem 0.8rem;
+}
+.JumpDialog-input {
+  font-size: 1.125rem;
+  width: 100%;
+}
+.JumpDialog a {
+  padding: 0.25rem;
+  text-decoration: none;
+}
+.JumpDialog .JumpDialog-active {
+  background-color: var(--turq-dark);
+  color: var(--white);
+}
+
+.ShortcutsDialog-key {
+  text-align: right;
+}
+.ShortcutsDialog table {
+  padding: 0 1rem;
 }

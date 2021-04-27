@@ -8,6 +8,59 @@
   margin-top: 1rem;
   max-width: unset;
 }
+.Versions table {
+  border-spacing: 0;
+}
+.Versions th {
+  text-align: left;
+}
+.Versions td {
+  padding-bottom: 1rem;
+}
+.Versions td:nth-child(1) {
+  padding-right: 3rem;
+  vertical-align: top;
+}
+.Versions td:nth-child(2) {
+  border-right: 0.0625rem solid var(--gray-8);
+  padding-right: 1rem;
+  text-align: right;
+  vertical-align: top;
+  white-space: nowrap;
+}
+.Versions td:nth-child(3) {
+  padding-left: 1rem;
+}
+.Versions-commitTime {
+  font-size: 1rem;
+  font-weight: 400;
+}
+.Versions-major {
+  font-weight: 600;
+}
+.Versions-symbols {
+  margin-left: 2rem;
+}
+.Versions-symbolBulletNew {
+  color: var(--gray-3);
+  padding-right: 0.5rem;
+}
+.Versions-symbolBuilds,
+.Versions-symbolBuildsDash,
+.Versions-symbolOld {
+  color: var(--gray-3);
+}
+.Versions-symbolChild {
+  padding-left: 2rem;
+}
+.Versions-symbolSection,
+.Versions-symbolType {
+  margin-bottom: 0.625rem;
+}
+.Versions-symbolsHeader {
+  margin: 0.625rem 0;
+}
+
 .Versions-title {
   align-items: center;
   display: flex;

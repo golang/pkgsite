@@ -91,7 +91,7 @@
 
 {{define "detail_item_version"}}
   <span class="UnitHeader-detailItem" data-test-id="UnitHeader-version">
-    <a href="?tab=versions" aria-label="Go to Versions" data-gtmc="header link"><span>Version: </span>{{.DisplayVersion}}</a>
+    <a href="?tab=versions" aria-label="Go to Versions" data-gtmc="header link"><span class="UnitHeader-detailItemSubtle">Version: </span>{{.DisplayVersion}}</a>
     <!-- Do not reformat the data attributes of the following div: the server uses a regexp to extract them. -->
     <div class="DetailsHeader-badge {{.LatestMinorClass}}"
         data-test-id="UnitHeader-minorVersionBanner"
@@ -151,7 +151,7 @@
   <span class="UnitHeader-detailItem" data-test-id="UnitHeader-imports">
     <a href="{{$.URLPath}}?tab=imports" aria-label="Go to Imports"
         data-gtmc="header link">
-      <span>Imports: </span>{{.Details.NumImports}}
+      <span class="UnitHeader-detailItemSubtle">Imports: </span>{{.Details.NumImports}}
     </a>
   </span>
 {{end}}
@@ -160,7 +160,7 @@
   <span class="UnitHeader-detailItem" data-test-id="UnitHeader-importedby">
     <a href="{{$.URLPath}}?tab=importedby" aria-label="Go to Imported By"
         data-gtmc="header link">
-       <span>Imported by: </span>{{.Details.ImportedByCount}}
+       <span class="UnitHeader-detailItemSubtle">Imported by: </span>{{.Details.ImportedByCount}}
     </a>
   </span>
 {{end}}

@@ -71,3 +71,7 @@
 .UnitReadme--expanded .UnitReadme-collapseLink {
   display: block;
 }
+
+.Overview-readmeContent {
+  overflow-wrap: break-word;
+}
