@@ -27,11 +27,11 @@
   {{if .Subs}}
     <details>
       <summary>{{.Prefix}} ({{.NumLines}})</summary>
-      <div class="Details-content">
+      <div class="ImportedBy-detailsContent">
         {{template "sections" .Subs}}
       </div>
     </details>
   {{else}}
-    <li class="Details-indent"><a class="u-breakWord" href="/{{.Prefix}}">{{.Prefix}}</a></li>
+    <li class="ImportedBy-detailsIndent"><a class="u-breakWord" href="/{{.Prefix}}">{{.Prefix}}</a></li>
   {{end}}
 {{end}}
