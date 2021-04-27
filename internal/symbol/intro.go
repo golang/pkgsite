@@ -48,13 +48,18 @@ func IntroducedHistory(versionToNameToUnitSymbol map[string]map[string]*internal
 	// versionToNameToUnitSymbol, where version is the first version when the
 	// symbol name was found in the package.
 	outVersionToNameToUnitSymbol = map[string]map[string]*internal.UnitSymbol{}
-	for _, nameToVersion := range buildToNameToVersion {
+	for build, nameToVersion := range buildToNameToVersion {
 		for name, version := range nameToVersion {
 			if _, ok := outVersionToNameToUnitSymbol[version]; !ok {
 				outVersionToNameToUnitSymbol[version] = map[string]*internal.UnitSymbol{}
 			}
-			us := versionToNameToUnitSymbol[version][name]
-			outVersionToNameToUnitSymbol[version][name] = us
+			us, ok := outVersionToNameToUnitSymbol[version][name]
+			if !ok {
+				us = versionToNameToUnitSymbol[version][name]
+				us.RemoveBuildContexts()
+				outVersionToNameToUnitSymbol[version][name] = us
+			}
+			us.AddBuildContext(build)
 		}
 	}
 	return outVersionToNameToUnitSymbol

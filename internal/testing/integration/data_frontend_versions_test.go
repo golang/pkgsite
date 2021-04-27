@@ -29,6 +29,7 @@ var versionsPageHello = []*frontend.VersionList{
 							New:      true,
 							Section:  "Functions",
 							Kind:     "Function",
+							Builds:   []string{"js/wasm", "windows/amd64"},
 						},
 					},
 				},

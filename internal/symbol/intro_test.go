@@ -96,8 +96,8 @@ func TestIntroducedHistory_MultiGOOS(t *testing.T) {
 			"Foo": withBuilds("Foo", internal.BuildContextLinux, internal.BuildContextWindows),
 		},
 		"v1.1.0": {
-			"Foo":   withBuilds("Foo", internal.BuildContextLinux, internal.BuildContextJS),
-			"Foo.A": withBuilds("Foo.A", internal.BuildContextLinux, internal.BuildContextLinux),
+			"Foo":   withBuilds("Foo", internal.BuildContextJS),
+			"Foo.A": withBuilds("Foo.A", internal.BuildContextLinux),
 		},
 		"v1.2.0": {
 			"Foo.A": withBuilds("Foo.A", internal.BuildContextJS),
