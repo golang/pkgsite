@@ -404,7 +404,9 @@ func (db *DB) CompareStdLib(ctx context.Context) (map[string][]string, error) {
 		if err != nil {
 			return nil, err
 		}
-		errs := symbol.CompareStdLib(path, apiVersions[path], versionToNameToSymbol)
+		versionToNameToUnitSymbol := symbol.IntroducedHistory(versionToNameToSymbol)
+
+		errs := symbol.CompareStdLib(path, apiVersions[path], versionToNameToUnitSymbol)
 		if len(errs) > 0 {
 			pkgToErrors[path] = errs
 		}

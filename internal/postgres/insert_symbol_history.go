@@ -37,7 +37,7 @@ func upsertSymbolHistory(ctx context.Context, ddb *database.DB,
 		return err
 	}
 	for packagePath, docIDToDoc := range pathToDocIDToDoc {
-		dbVersionToNameToUnitSymbol, err := getSymbolHistory(ctx, ddb, packagePath, modulePath)
+		dbVersionToNameToUnitSymbol, err := GetSymbolHistoryFromTable(ctx, ddb, packagePath, modulePath)
 		if err != nil {
 			return err
 		}

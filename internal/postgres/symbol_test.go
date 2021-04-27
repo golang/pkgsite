@@ -67,7 +67,7 @@ func TestInsertSymbolNamesAndHistory(t *testing.T) {
 	want2[mod.Version] = unitSymbolsFromAPI(api, mod.Version)
 	comparePackageSymbols(ctx, t, testDB, mod.Packages()[0].Path, mod.ModulePath, mod.Version, want2)
 
-	gotHist, err := getSymbolHistory(ctx, testDB.db, mod.Packages()[0].Path, mod.ModulePath)
+	gotHist, err := GetSymbolHistoryFromTable(ctx, testDB.db, mod.Packages()[0].Path, mod.ModulePath)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -199,7 +199,7 @@ func TestInsertSymbolHistory_MultiVersions(t *testing.T) {
 	}
 	comparePackageSymbols(ctx, t, testDB, mod10.Packages()[0].Path, mod10.ModulePath, mod10.Version, want2)
 
-	gotHist, err := getSymbolHistory(ctx, testDB.db, mod10.Packages()[0].Path, mod10.ModulePath)
+	gotHist, err := GetSymbolHistoryFromTable(ctx, testDB.db, mod10.Packages()[0].Path, mod10.ModulePath)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -346,7 +346,7 @@ func TestInsertSymbolHistory_MultiGOOS(t *testing.T) {
 	}
 	comparePackageSymbols(ctx, t, testDB, mod10.Packages()[0].Path, mod10.ModulePath, mod10.Version, want2)
 
-	gotHist, err := getSymbolHistory(ctx, testDB.db, mod10.Packages()[0].Path, mod10.ModulePath)
+	gotHist, err := GetSymbolHistoryFromTable(ctx, testDB.db, mod10.Packages()[0].Path, mod10.ModulePath)
 	if err != nil {
 		t.Fatal(err)
 	}

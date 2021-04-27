@@ -27,18 +27,16 @@ func (db *DB) GetSymbolHistory(ctx context.Context, packagePath, modulePath stri
 	defer middleware.ElapsedStat(ctx, "GetSymbolHistory")()
 
 	if experiment.IsActive(ctx, internal.ExperimentReadSymbolHistory) {
-		return getSymbolHistory(ctx, db.db, packagePath, modulePath)
+		return GetSymbolHistoryFromTable(ctx, db.db, packagePath, modulePath)
 	}
-	versionToNameToUnitSymbols, err := getPackageSymbols(ctx, db.db, packagePath, modulePath)
-	if err != nil {
-		return nil, err
-	}
-	return symbol.IntroducedHistory(versionToNameToUnitSymbols), nil
+	return GetSymbolHistoryWithPackageSymbols(ctx, db.db, packagePath, modulePath)
 }
 
-// getSymbolHistory fetches symbol history data from the symbol_history table.
-func getSymbolHistory(ctx context.Context, ddb *database.DB, packagePath, modulePath string,
-) (_ map[string]map[string]*internal.UnitSymbol, err error) {
+// GetSymbolHistoryFromTable fetches symbol history data from the symbol_history table.
+//
+// GetSymbolHistoryFromTable is exported for use in tests.
+func GetSymbolHistoryFromTable(ctx context.Context, ddb *database.DB,
+	packagePath, modulePath string) (_ map[string]map[string]*internal.UnitSymbol, err error) {
 	defer derrors.WrapStack(&err, "getSymbolHistory(ctx, ddb, %q, %q)", packagePath, modulePath)
 	query := `
 		SELECT
@@ -98,4 +96,18 @@ func getSymbolHistory(ctx context.Context, ddb *database.DB, packagePath, module
 		return nil, err
 	}
 	return versionToNameToUnitSymbol, nil
+}
+
+// GetSymbolHistoryWithPackageSymbols fetches symbol history data by using data
+// from package_symbols and documentation_symbols, and computed using
+// symbol.IntroducedHistory.
+//
+// GetSymbolHistoryWithPackageSymbols is exported for use in tests.
+func GetSymbolHistoryWithPackageSymbols(ctx context.Context, ddb *database.DB,
+	packagePath, modulePath string) (_ map[string]map[string]*internal.UnitSymbol, err error) {
+	versionToNameToUnitSymbols, err := getPackageSymbols(ctx, ddb, packagePath, modulePath)
+	if err != nil {
+		return nil, err
+	}
+	return symbol.IntroducedHistory(versionToNameToUnitSymbols), nil
 }

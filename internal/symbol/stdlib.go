@@ -240,12 +240,11 @@ var pathToEmbeddedMethods = map[string]map[string]string{
 // apiVersions, which is obtained from the api folder of runtime.GOROOT.
 func CompareStdLib(path string, apiVersions pkgAPIVersions,
 	inVersionToNameToUnitSymbol map[string]map[string]*internal.UnitSymbol) []string {
-	versionToNameToUnitSymbol := IntroducedHistory(inVersionToNameToUnitSymbol)
 
 	// Create a map of name to the first version when the symbol name was found
 	// in the package.
 	nameToVersion := map[string]string{}
-	for version, nts := range versionToNameToUnitSymbol {
+	for version, nts := range inVersionToNameToUnitSymbol {
 		for name := range nts {
 			if _, ok := nameToVersion[name]; !ok {
 				nameToVersion[name] = version
