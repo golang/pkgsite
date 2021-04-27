@@ -66,10 +66,11 @@ type RenderOptions struct {
 
 // templateData holds the data passed to the HTML templates in this package.
 type templateData struct {
-	RootURL string
-	*doc.Package
-	Examples    *examples
-	NoteHeaders map[string]noteHeader
+	RootURL                    string
+	Package                    *doc.Package
+	Consts, Vars, Funcs, Types []*item
+	Examples                   *examples
+	NoteHeaders                map[string]noteHeader
 }
 
 // Parts contains HTML for each part of the documentation.
@@ -145,6 +146,96 @@ func Render(ctx context.Context, fset *token.FileSet, p *doc.Package, opt Render
 	return parts, nil
 }
 
+// An item is rendered as one piece of documentation. It is essentially a union
+// of the Value, Type and Func types from internal/doc, along with additional
+// information for HTML rendering, like class names.
+type item struct {
+	Doc                          string
+	Decl                         ast.Decl   // GenDecl for consts, vars and types; FuncDecl for functions
+	Name                         string     // for types and functions; empty for consts and vars
+	FullName                     string     // for methods, the type name + "." + Name; else same as Name
+	HeaderStart                  string     // text of header, before source link
+	Examples                     []*example // for types and functions; empty for vars and consts
+	IsDeprecated                 bool
+	Consts, Vars, Funcs, Methods []*item // for types
+	// HTML-specific values, for types and functions
+	Kind        string // for data-kind attribute
+	HeaderClass string // class for header
+}
+
+func packageToItems(p *doc.Package, exmap map[string][]*example) (consts, vars, funcs, types []*item) {
+	consts = valuesToItems(p.Consts)
+	vars = valuesToItems(p.Vars)
+	funcs = funcsToItems(p.Funcs, "Documentation-functionHeader", "", exmap)
+	for _, t := range p.Types {
+		types = append(types, typeToItem(t, exmap))
+	}
+	return consts, vars, funcs, types
+}
+
+func valuesToItems(vs []*doc.Value) []*item {
+	var r []*item
+	for _, v := range vs {
+		r = append(r, valueToItem(v))
+	}
+	return r
+}
+
+func valueToItem(v *doc.Value) *item {
+	return &item{
+		Doc:          v.Doc,
+		Decl:         v.Decl,
+		IsDeprecated: v.IsDeprecated,
+	}
+}
+
+func funcsToItems(fs []*doc.Func, hclass, typeName string, exmap map[string][]*example) []*item {
+	var r []*item
+	for _, f := range fs {
+		fullName := f.Name
+		if typeName != "" {
+			fullName = typeName + "." + f.Name
+		}
+		kind := "function"
+		headerStart := "func"
+		if f.Recv != "" {
+			kind = "method"
+			headerStart += " (" + f.Recv + ")"
+		}
+		i := &item{
+			Doc:          f.Doc,
+			Decl:         f.Decl,
+			Name:         f.Name,
+			FullName:     fullName,
+			HeaderStart:  headerStart,
+			IsDeprecated: f.IsDeprecated,
+			Examples:     exmap[fullName],
+			Kind:         kind,
+			HeaderClass:  hclass,
+		}
+		r = append(r, i)
+	}
+	return r
+}
+
+func typeToItem(t *doc.Type, exmap map[string][]*example) *item {
+	return &item{
+		Name:         t.Name,
+		FullName:     t.Name,
+		Doc:          t.Doc,
+		Decl:         t.Decl,
+		HeaderStart:  "type",
+		IsDeprecated: t.IsDeprecated,
+		Kind:         "type",
+		HeaderClass:  "Documentation-typeHeader",
+		Examples:     exmap[t.Name],
+		Consts:       valuesToItems(t.Consts),
+		Vars:         valuesToItems(t.Vars),
+		Funcs:        funcsToItems(t.Funcs, "Documentation-typeFuncHeader", "", exmap),
+		Methods:      funcsToItems(t.Methods, "Documentation-typeMethodHeader", t.Name, exmap),
+	}
+}
+
 func docIsEmpty(p *doc.Package) bool {
 	return p.Doc == "" &&
 		len(p.Examples) == 0 &&
@@ -215,12 +306,14 @@ func renderInfo(ctx context.Context, fset *token.FileSet, p *doc.Package, opt Re
 		"source_link":              sourceLink,
 		"since_version":            sinceVersion,
 	}
+	examples := collectExamples(p)
 	data := templateData{
-		RootURL:     "/pkg",
 		Package:     p,
-		Examples:    collectExamples(p),
+		RootURL:     "/pkg",
+		Examples:    examples,
 		NoteHeaders: buildNoteHeaders(p.Notes),
 	}
+	data.Consts, data.Vars, data.Funcs, data.Types = packageToItems(p, examples.Map)
 	return funcs, data, r.Links
 }
 

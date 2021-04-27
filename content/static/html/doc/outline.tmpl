@@ -4,7 +4,7 @@
   license that can be found in the LICENSE file.
 -->
 <ul role="group" id="doc-outline">
-  {{if or .Doc (index .Examples.Map "")}}
+  {{if or .Package.Doc (index .Examples.Map "")}}
     <li role="none">
       <a href="#pkg-overview" role="treeitem" aria-level="2" tabindex="-1"
           data-gtmc="doc outline link">Overview</a>
@@ -102,14 +102,14 @@
       </ul>
     </li>
   {{end}}
-  {{if .Notes}}
+  {{if .Package.Notes}}
     <li class="DocNav-notes" role="none">
       <a href="#pkg-notes" role="treeitem" aria-expanded="false" aria-level="2" tabindex="-1"
            aria-owns="nav-group-notes" data-gtmc="doc outline link">
         Notes
       </a>
       <ul role="group" id="nav-group-notes">
-        {{range $marker, $item := .Notes}}
+        {{range $marker, $item := .Package.Notes}}
           <li role="none">
             <a href="#pkg-note-{{$marker}}" role="treeitem" aria-level="3" tabindex="-1"
                 data-gtmc="doc outline link">
