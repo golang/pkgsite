@@ -30,7 +30,7 @@ require (
 	github.com/google/safehtml v0.0.2
 	github.com/jackc/pgconn v1.8.1
 	github.com/jackc/pgx/v4 v4.11.1-0.20210326152507-88ede6efb5b0
-	github.com/jba/templatecheck v0.2.0
+	github.com/jba/templatecheck v0.6.0
 	github.com/lib/pq v1.3.0
 	github.com/microcosm-cc/bluemonday v1.0.2
 	github.com/russross/blackfriday/v2 v2.0.1

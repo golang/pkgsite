@@ -1568,7 +1568,7 @@ func TestCheckTemplates(t *testing.T) {
 				t.Fatalf("no template %q", c.name)
 			}
 			if c.subs == nil {
-				if err := templatecheck.CheckSafe(tm, c.typeval, templateFuncs); err != nil {
+				if err := templatecheck.CheckSafe(tm, c.typeval); err != nil {
 					t.Fatal(err)
 				}
 			} else {
@@ -1577,7 +1577,7 @@ func TestCheckTemplates(t *testing.T) {
 					if s == nil {
 						t.Fatalf("no sub-template %q of %q", n, c.name)
 					}
-					if err := templatecheck.CheckSafe(s, c.typeval, templateFuncs); err != nil {
+					if err := templatecheck.CheckSafe(s, c.typeval); err != nil {
 						t.Fatalf("%s: %v", n, err)
 					}
 				}
