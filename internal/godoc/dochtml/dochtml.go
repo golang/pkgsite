@@ -25,7 +25,9 @@ import (
 	"github.com/google/safehtml/legacyconversions"
 	"github.com/google/safehtml/template"
 	"github.com/google/safehtml/uncheckedconversions"
+	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/godoc/dochtml/internal/render"
 	"golang.org/x/pkgsite/internal/godoc/internal/doc"
 )
@@ -89,6 +91,28 @@ func Render(ctx context.Context, fset *token.FileSet, p *doc.Package, opt Render
 	if opt.Limit == 0 {
 		const megabyte = 1000 * 1000
 		opt.Limit = 10 * megabyte
+	}
+
+	if !experiment.IsActive(ctx, internal.ExperimentDeprecatedDoc) {
+		//Simpler to clear the fields here than to add experiment checks in the templates.
+		for _, c := range p.Consts {
+			c.IsDeprecated = false
+		}
+		for _, v := range p.Vars {
+			v.IsDeprecated = false
+		}
+		for _, f := range p.Funcs {
+			f.IsDeprecated = false
+		}
+		for _, t := range p.Types {
+			t.IsDeprecated = false
+			for _, f := range t.Funcs {
+				f.IsDeprecated = false
+			}
+			for _, m := range t.Methods {
+				m.IsDeprecated = false
+			}
+		}
 	}
 
 	funcs, data, links := renderInfo(ctx, fset, p, opt)

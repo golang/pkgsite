@@ -13,21 +13,43 @@
 <li class="Documentation-indexConstants"><a href="#pkg-constants">Constants</a></li>
 <li class="Documentation-indexVariables"><a href="#pkg-variables">Variables</a></li>
 <li class="Documentation-indexFunction">
-        <a href="#GoodF">func GoodF()</a>
-      </li>
+        <a href="#BadF">func BadF()</a></li>
+<li class="Documentation-indexFunction">
+        <a href="#GoodF">func GoodF()</a></li>
+<li class="Documentation-indexType"><a href="#BadT">type BadT</a></li>
 <li class="Documentation-indexType"><a href="#GoodT">type GoodT</a></li>
 <li><ul class="Documentation-indexTypeFunctions">
-<li><a href="#NewGoodTGood">func NewGoodTGood() GoodT</a></li>
 
+	    <li><a href="#NewGoodTBad">func NewGoodTBad() GoodT</a></li>
+
+	  
+	    <li><a href="#NewGoodTGood">func NewGoodTGood() GoodT</a></li>
+
+	  
           </ul></li>
 <li><ul class="Documentation-indexTypeMethods">
-<li><a href="#GoodT.GoodM">func (GoodT) GoodM()</a></li>
 
+	    <li><a href="#GoodT.BadM">func (GoodT) BadM()</a></li>
+
+	  
+	    <li><a href="#GoodT.GoodM">func (GoodT) GoodM()</a></li>
+
+	  
           </ul></li>
 </ul>
 </section><h3 tabindex="-1" id="pkg-constants" class="Documentation-constantsHeader">Constants <a href="#pkg-constants">¶</a></h3>
 
   <section class="Documentation-constants">
+    <div class="Documentation-declaration">
+      <span class="Documentation-declarationLink"><a class="Documentation-source" href="src">View Source</a></span>
+      <pre><span id="BadC" data-kind="constant">const BadC = 2</span></pre>
+    </div>
+  <div role="navigation" aria-label="Table of Contents">
+		<ul class="Documentation-toc"></ul>
+	</div><p>BadC is bad.
+Deprecated: use GoodC.
+</p>
+
     <div class="Documentation-declaration">
       <span class="Documentation-declarationLink"><a class="Documentation-source" href="src">View Source</a></span>
       <pre><span id="GoodC" data-kind="constant">const GoodC = 1</span></pre>
@@ -40,6 +62,15 @@
   <section class="Documentation-variables">
     <div class="Documentation-declaration">
       <span class="Documentation-declarationLink"><a class="Documentation-source" href="src">View Source</a></span>
+      <pre><span id="BadV" data-kind="variable">var BadV = 2</span></pre>
+    </div>
+  <div role="navigation" aria-label="Table of Contents">
+		<ul class="Documentation-toc"></ul>
+	</div><p>Deprecated: use GoodV.
+</p>
+
+    <div class="Documentation-declaration">
+      <span class="Documentation-declarationLink"><a class="Documentation-source" href="src">View Source</a></span>
       <pre><span id="GoodV" data-kind="variable">var GoodV = 1</span></pre>
     </div>
   
@@ -47,55 +78,137 @@
 
   <h3 tabindex="-1" id="pkg-functions" class="Documentation-functionsHeader">Functions <a href="#pkg-functions">¶</a></h3>
 
-  <section class="Documentation-functions"><div class="Documentation-function"><h4 tabindex="-1" id="GoodF" data-kind="function" class="Documentation-functionHeader">
-              <span>func <a class="Documentation-source" href="src">GoodF</a> <a class="Documentation-idLink" href="#GoodF">¶</a></span>
+  <section class="Documentation-functions"><div class="Documentation-function"><h4 tabindex="-1" id="BadF" data-kind="function" class="Documentation-functionHeader">
+              <span>
+	        func <a class="Documentation-source" href="src">BadF</a> <a class="Documentation-idLink" href="#BadF">¶</a></span>
   <span class="Documentation-sinceVersion">
     
   </span>
 </h4>
 
+	    
+    <div class="Documentation-declaration">
+      <pre>func BadF()</pre>
+    </div>
+  <div role="navigation" aria-label="Table of Contents">
+		<ul class="Documentation-toc"></ul>
+	</div><p>BadF is bad.
+Deprecated: use GoodF.
+</p>
+
+        </div><div class="Documentation-function"><h4 tabindex="-1" id="GoodF" data-kind="function" class="Documentation-functionHeader">
+              <span>
+	        func <a class="Documentation-source" href="src">GoodF</a> <a class="Documentation-idLink" href="#GoodF">¶</a></span>
+  <span class="Documentation-sinceVersion">
+    
+  </span>
+</h4>
+
+	    
     <div class="Documentation-declaration">
       <pre>func GoodF()</pre>
     </div>
   
-</div></section>
+
+        </div></section>
 
   <h3 tabindex="-1" id="pkg-types" class="Documentation-typesHeader">Types <a href="#pkg-types">¶</a></h3>
 
-  <section class="Documentation-types"><div class="Documentation-type"><h4 tabindex="-1" id="GoodT" data-kind="type" class="Documentation-typeHeader">
+  <section class="Documentation-types"><div class="Documentation-type"><h4 tabindex="-1" id="BadT" data-kind="type" class="Documentation-typeHeader">
+        <span>type <a class="Documentation-source" href="src">BadT</a> <a class="Documentation-idLink" href="#BadT">¶</a></span>
+  <span class="Documentation-sinceVersion">
+    
+  </span>
+</h4>
+
+      
+    <div class="Documentation-declaration">
+      <pre>type BadT <a href="/builtin#int">int</a></pre>
+    </div>
+  <div role="navigation" aria-label="Table of Contents">
+		<ul class="Documentation-toc"></ul>
+	</div><p>BadT is bad.
+Deprecated: use GoodT.
+Don&#39;t use this.
+</p>
+</div><div class="Documentation-type"><h4 tabindex="-1" id="GoodT" data-kind="type" class="Documentation-typeHeader">
         <span>type <a class="Documentation-source" href="src">GoodT</a> <a class="Documentation-idLink" href="#GoodT">¶</a></span>
   <span class="Documentation-sinceVersion">
     
   </span>
 </h4>
 
+      
     <div class="Documentation-declaration">
       <pre>type GoodT <a href="/builtin#int">int</a></pre>
     </div>
   
-<div class="Documentation-typeFunc"><h4 tabindex="-1" id="NewGoodTGood" data-kind="function" class="Documentation-typeFuncHeader">
-          <span>func <a class="Documentation-source" href="src">NewGoodTGood</a> <a class="Documentation-idLink" href="#NewGoodTGood">¶</a></span>
+<div class="Documentation-typeFunc"><h4 tabindex="-1" id="NewGoodTBad" data-kind="function" class="Documentation-typeFuncHeader">
+          <span>
+	    func <a class="Documentation-source" href="src">NewGoodTBad</a> <a class="Documentation-idLink" href="#NewGoodTBad">¶</a></span>
   <span class="Documentation-sinceVersion">
     
   </span>
 </h4>
 
+	
+    <div class="Documentation-declaration">
+      <pre>func NewGoodTBad() <a href="#GoodT">GoodT</a></pre>
+    </div>
+  <div role="navigation" aria-label="Table of Contents">
+		<ul class="Documentation-toc"></ul>
+	</div><p>NewGoodTBad is bad.
+Deprecated: use NewGoodTGood.
+</p>
+
+      </div><div class="Documentation-typeFunc"><h4 tabindex="-1" id="NewGoodTGood" data-kind="function" class="Documentation-typeFuncHeader">
+          <span>
+	    func <a class="Documentation-source" href="src">NewGoodTGood</a> <a class="Documentation-idLink" href="#NewGoodTGood">¶</a></span>
+  <span class="Documentation-sinceVersion">
+    
+  </span>
+</h4>
+
+	
     <div class="Documentation-declaration">
       <pre>func NewGoodTGood() <a href="#GoodT">GoodT</a></pre>
     </div>
   
-</div><div class="Documentation-typeMethod"><h4 tabindex="-1" id="GoodT.GoodM" data-kind="method" class="Documentation-typeMethodHeader">
-          <span>func (GoodT) <a class="Documentation-source" href="src">GoodM</a> <a class="Documentation-idLink" href="#GoodT.GoodM">¶</a></span>
+
+      </div><div class="Documentation-typeMethod"><h4 tabindex="-1" id="GoodT.BadM" data-kind="method" class="Documentation-typeMethodHeader">
+          <span>
+	    func (GoodT) <a class="Documentation-source" href="src">BadM</a> <a class="Documentation-idLink" href="#GoodT.BadM">¶</a></span>
   <span class="Documentation-sinceVersion">
     
   </span>
 </h4>
 
+	
+    <div class="Documentation-declaration">
+      <pre>func (<a href="#GoodT">GoodT</a>) BadM()</pre>
+    </div>
+  <div role="navigation" aria-label="Table of Contents">
+		<ul class="Documentation-toc"></ul>
+	</div><p>BadM is bad.
+Deprecated: use GoodM.
+</p>
+
+      </div><div class="Documentation-typeMethod"><h4 tabindex="-1" id="GoodT.GoodM" data-kind="method" class="Documentation-typeMethodHeader">
+          <span>
+	    func (GoodT) <a class="Documentation-source" href="src">GoodM</a> <a class="Documentation-idLink" href="#GoodT.GoodM">¶</a></span>
+  <span class="Documentation-sinceVersion">
+    
+  </span>
+</h4>
+
+	
     <div class="Documentation-declaration">
       <pre>func (<a href="#GoodT">GoodT</a>) GoodM()</pre>
     </div>
   
-</div></div></section></div> 
+
+      </div></div></section></div> 
+
 ----
 
 <ul role="group" id="doc-outline">
@@ -132,6 +245,13 @@
       <ul role="group" id="nav-group-functions">
         
             <li role="none">
+              <a href="#BadF" role="treeitem" aria-level="3" tabindex="-1"
+                   title="BadF()" data-gtm-action="doc outline link clicked">
+                BadF()
+              </a>
+            </li>
+        
+            <li role="none">
               <a href="#GoodF" role="treeitem" aria-level="3" tabindex="-1"
                    title="GoodF()" data-gtm-action="doc outline link clicked">
                 GoodF()
@@ -150,6 +270,16 @@
           
           <li role="none">
             
+              <a href="#BadT" role="treeitem" aria-level="3" tabindex="-1" title="type BadT"
+                  data-gtm-action="doc outline link clicked">
+                type BadT
+              </a>
+             
+          </li>
+        
+          
+          <li role="none">
+            
               
               
               <a href="#GoodT" role="treeitem" aria-expanded="false" aria-level="3" tabindex="-1"
@@ -160,12 +290,26 @@
               <ul role="group" id="nav.group.GoodT">
                 
                   <li role="none">
+                    <a href="#NewGoodTBad" role="treeitem" aria-level="4" tabindex="-1"
+                        title="NewGoodTBad()" data-gtm-action="doc outline link clicked">
+                      NewGoodTBad()
+                    </a>
+                  </li>
+                
+                  <li role="none">
                     <a href="#NewGoodTGood" role="treeitem" aria-level="4" tabindex="-1"
                         title="NewGoodTGood()" data-gtm-action="doc outline link clicked">
                       NewGoodTGood()
                     </a>
                   </li>
                 
+                
+                  <li role="none">
+                    <a href="#GoodT.BadM" role="treeitem" aria-level="4" tabindex="-1"
+                        title="BadM()" data-gtm-action="doc outline link clicked">
+                      BadM()
+                    </a>
+                  </li>
                 
                   <li role="none">
                     <a href="#GoodT.GoodM" role="treeitem" aria-level="4" tabindex="-1"
@@ -205,6 +349,8 @@
 
   <optgroup label="Functions">
     
+      <option value="BadF">BadF()</option>
+    
       <option value="GoodF">GoodF()</option>
     
   </optgroup>
@@ -213,10 +359,19 @@
   <optgroup label="Types">
     
       
+      <option value="BadT">type BadT</option>
+      
+      
+    
+      
       <option value="GoodT">type GoodT</option>
+      
+        <option value="NewGoodTBad">NewGoodTBad()</option>
       
         <option value="NewGoodTGood">NewGoodTGood()</option>
       
+      
+        <option value="GoodT.BadM">BadM()</option>
       
         <option value="GoodT.GoodM">GoodM()</option>
       

@@ -39,7 +39,7 @@ var testRenderOptions = RenderOptions{
 	SinceVersionFunc: func(string) string { return "" },
 }
 
-func TestRenderParts(t *testing.T) {
+func TestRender(t *testing.T) {
 	ctx := context.Background()
 	LoadTemplates(templateSource)
 
@@ -49,15 +49,6 @@ func TestRenderParts(t *testing.T) {
 		t.Fatal(err)
 	}
 	compareWithGolden(t, parts, "everydecl", *update)
-
-	if experiment.IsActive(ctx, internal.ExperimentDeprecatedDoc) {
-		fset2, d2 := mustLoadPackage("deprecated")
-		parts2, err := Render(ctx, fset2, d2, testRenderOptions)
-		if err != nil {
-			t.Fatal(err)
-		}
-		compareWithGolden(t, parts2, "deprecated", *update)
-	}
 
 	bodyDoc, err := html.Parse(strings.NewReader(parts.Body.String()))
 	if err != nil {
@@ -80,6 +71,21 @@ func TestRenderParts(t *testing.T) {
 	if diff := cmp.Diff(wantLinks, parts.Links); diff != "" {
 		t.Errorf("links mismatch (-want, +got):\n%s", diff)
 	}
+}
+
+func TestRenderDeprecated(t *testing.T) {
+	compare := func(ctx context.Context, name string) {
+		t.Helper()
+		fset, d := mustLoadPackage("deprecated")
+		parts, err := Render(ctx, fset, d, testRenderOptions)
+		if err != nil {
+			t.Fatal(err)
+		}
+		compareWithGolden(t, parts, name, *update)
+	}
+
+	compare(context.Background(), "deprecated-off")
+	compare(experiment.NewContext(context.Background(), internal.ExperimentDeprecatedDoc), "deprecated-on")
 }
 
 func compareWithGolden(t *testing.T, parts *Parts, name string, update bool) {

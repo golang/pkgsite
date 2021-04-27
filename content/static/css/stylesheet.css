@@ -1470,6 +1470,28 @@ pre,
   word-wrap: break-word;
 }
 
+.Documentation-indexDeprecated {
+  font-size: 0.875rem;
+  font-style: italic;
+  color: var(--gray-3);
+  margin-left: 0.5rem;
+}
+
+.Documentation-bodyDeprecated {
+  font-size: 1rem;
+  font-style: italic;
+  font-weight: 400;
+  color: var(--gray-3);
+  margin-left: 0.5rem;
+  margin-right: 0.5rem;
+}
+
+.Documentation-deprecatedShowLink {
+  font-size: 1rem;
+  font-weight: 400;
+}
+
+
 .Unit-content .Versions {
   margin-top: 1rem;
 }

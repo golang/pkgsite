@@ -15,8 +15,7 @@ attributes.
 <li class="Documentation-indexConstants"><a href="#pkg-constants">Constants</a></li>
 <li class="Documentation-indexVariables"><a href="#pkg-variables">Variables</a></li>
 <li class="Documentation-indexFunction">
-        <a href="#F">func F()</a>
-      </li>
+        <a href="#F">func F()</a></li>
 <li class="Documentation-indexType"><a href="#A">type A</a></li>
 <li class="Documentation-indexType"><a href="#B">type B</a></li>
 <li class="Documentation-indexType"><a href="#I1">type I1</a></li>
@@ -25,12 +24,16 @@ attributes.
 <li class="Documentation-indexType"><a href="#S2">type S2</a></li>
 <li class="Documentation-indexType"><a href="#T">type T</a></li>
 <li><ul class="Documentation-indexTypeFunctions">
-<li><a href="#TF">func TF() T</a></li>
 
+	    <li><a href="#TF">func TF() T</a></li>
+
+	  
           </ul></li>
 <li><ul class="Documentation-indexTypeMethods">
-<li><a href="#T.M">func (T) M()</a></li>
 
+	    <li><a href="#T.M">func (T) M()</a></li>
+
+	  
           </ul></li>
 <li class="Documentation-indexNote"><a href="#pkg-note-BUG">Bugs</a></li></ul>
 </section><h3 tabindex="-1" id="pkg-constants" class="Documentation-constantsHeader">Constants <a href="#pkg-constants">¶</a></h3>
@@ -62,12 +65,14 @@ attributes.
   <h3 tabindex="-1" id="pkg-functions" class="Documentation-functionsHeader">Functions <a href="#pkg-functions">¶</a></h3>
 
   <section class="Documentation-functions"><div class="Documentation-function"><h4 tabindex="-1" id="F" data-kind="function" class="Documentation-functionHeader">
-              <span>func <a class="Documentation-source" href="src">F</a> <a class="Documentation-idLink" href="#F">¶</a></span>
+              <span>
+	        func <a class="Documentation-source" href="src">F</a> <a class="Documentation-idLink" href="#F">¶</a></span>
   <span class="Documentation-sinceVersion">
     
   </span>
 </h4>
 
+	    
     <div class="Documentation-declaration">
       <pre>func F()</pre>
     </div>
@@ -75,7 +80,8 @@ attributes.
 		<ul class="Documentation-toc"></ul>
 	</div><p>func
 </p>
-</div></section>
+
+        </div></section>
 
   <h3 tabindex="-1" id="pkg-types" class="Documentation-typesHeader">Types <a href="#pkg-types">¶</a></h3>
 
@@ -86,6 +92,7 @@ attributes.
   </span>
 </h4>
 
+      
     <div class="Documentation-declaration">
       <pre>type A <a href="/builtin#int">int</a></pre>
     </div>
@@ -97,6 +104,7 @@ attributes.
   </span>
 </h4>
 
+      
     <div class="Documentation-declaration">
       <pre>type B <a href="/builtin#bool">bool</a></pre>
     </div>
@@ -108,6 +116,7 @@ attributes.
   </span>
 </h4>
 
+      
     <div class="Documentation-declaration">
       <pre>type I1 interface {
 <span id="I1.M1" data-kind="method">	M1()
@@ -121,6 +130,7 @@ attributes.
   </span>
 </h4>
 
+      
     <div class="Documentation-declaration">
       <pre>type I2 interface {
 	<a href="#I1">I1</a> <span class="comment">// embedded interface; should not have an id</span>
@@ -135,6 +145,7 @@ attributes.
   </span>
 </h4>
 
+      
     <div class="Documentation-declaration">
       <pre>type S1 struct {
 <span id="S1.F" data-kind="field">	F <a href="/builtin#int">int</a> <span class="comment">// field</span>
@@ -148,6 +159,7 @@ attributes.
   </span>
 </h4>
 
+      
     <div class="Documentation-declaration">
       <pre>type S2 struct {
 <span id="S2.S1" data-kind="field">	<a href="#S1">S1</a> <span class="comment">// embedded struct; should have an id</span>
@@ -162,6 +174,7 @@ attributes.
   </span>
 </h4>
 
+      
     <div class="Documentation-declaration">
       <pre>type T <a href="/builtin#int">int</a></pre>
     </div>
@@ -186,12 +199,14 @@ attributes.
 	</div><p>typeVariable
 </p>
 </div><div class="Documentation-typeFunc"><h4 tabindex="-1" id="TF" data-kind="function" class="Documentation-typeFuncHeader">
-          <span>func <a class="Documentation-source" href="src">TF</a> <a class="Documentation-idLink" href="#TF">¶</a></span>
+          <span>
+	    func <a class="Documentation-source" href="src">TF</a> <a class="Documentation-idLink" href="#TF">¶</a></span>
   <span class="Documentation-sinceVersion">
     
   </span>
 </h4>
 
+	
     <div class="Documentation-declaration">
       <pre>func TF() <a href="#T">T</a></pre>
     </div>
@@ -199,13 +214,16 @@ attributes.
 		<ul class="Documentation-toc"></ul>
 	</div><p>typeFunc
 </p>
-</div><div class="Documentation-typeMethod"><h4 tabindex="-1" id="T.M" data-kind="method" class="Documentation-typeMethodHeader">
-          <span>func (T) <a class="Documentation-source" href="src">M</a> <a class="Documentation-idLink" href="#T.M">¶</a></span>
+
+      </div><div class="Documentation-typeMethod"><h4 tabindex="-1" id="T.M" data-kind="method" class="Documentation-typeMethodHeader">
+          <span>
+	    func (T) <a class="Documentation-source" href="src">M</a> <a class="Documentation-idLink" href="#T.M">¶</a></span>
   <span class="Documentation-sinceVersion">
     
   </span>
 </h4>
 
+	
     <div class="Documentation-declaration">
       <pre>func (<a href="#T">T</a>) M()</pre>
     </div>
@@ -214,7 +232,8 @@ attributes.
 	</div><p>method
 BUG(uid): this verifies that notes are rendered
 </p>
-</div></div></section><h3 tabindex="-1" id="pkg-notes" class="Documentation-notesHeader">Notes <a href="#pkg-notes">¶</a></h3>
+
+      </div></div></section><h3 tabindex="-1" id="pkg-notes" class="Documentation-notesHeader">Notes <a href="#pkg-notes">¶</a></h3>
 
   <section class="Documentation-notes"><div class="Documentation-note">
       <h3 tabindex="-1" id="pkg-note-BUG" class="Documentation-noteHeader">Bugs <a href="#pkg-note-BUG">¶</a></h3>
