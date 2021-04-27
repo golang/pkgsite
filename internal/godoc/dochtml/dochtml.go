@@ -25,9 +25,7 @@ import (
 	"github.com/google/safehtml/legacyconversions"
 	"github.com/google/safehtml/template"
 	"github.com/google/safehtml/uncheckedconversions"
-	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
-	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/godoc/dochtml/internal/render"
 	"golang.org/x/pkgsite/internal/godoc/internal/doc"
 )
@@ -70,8 +68,6 @@ type templateData struct {
 	*doc.Package
 	Examples    *examples
 	NoteHeaders map[string]noteHeader
-	Deprecated  *deprecated // extracted from doc.Package; do not appear in outline
-	Suffix      string      // suffix for links; always empty (see type deprecated)
 }
 
 // Parts contains HTML for each part of the documentation.
@@ -195,16 +191,11 @@ func renderInfo(ctx context.Context, fset *token.FileSet, p *doc.Package, opt Re
 		"source_link":              sourceLink,
 		"since_version":            sinceVersion,
 	}
-	var dep *deprecated
-	if experiment.IsActive(ctx, internal.ExperimentDeprecatedDoc) {
-		dep = extractDeprecated(p)
-	}
 	data := templateData{
 		RootURL:     "/pkg",
 		Package:     p,
 		Examples:    collectExamples(p),
 		NoteHeaders: buildNoteHeaders(p.Notes),
-		Deprecated:  dep,
 	}
 	return funcs, data, r.Links
 }
@@ -248,15 +239,6 @@ type example struct {
 	ID       safehtml.Identifier // ID of example
 	ParentID string              // ID of top-level declaration this example is attached to
 	Suffix   string              // optional suffix name in title case
-}
-
-// deprecated holds parts of a doc.Package that are deprecated.
-type deprecated struct {
-	Consts   []*doc.Value
-	Types    []*doc.Type
-	Vars     []*doc.Value
-	Funcs    []*doc.Func
-	Examples []*doc.Example
 }
 
 // Code returns an printer.CommentedNode if ex.Comments is non-nil,
@@ -373,67 +355,4 @@ func versionedPkgPath(pkgPath string, modInfo *ModuleInfo) string {
 	// modInfo.ModulePackages contains this prefix for standard library packages.
 	innerPkgPath := pkgPath[len(modInfo.ModulePath):]
 	return fmt.Sprintf("%s@%s%s", modInfo.ModulePath, modInfo.ResolvedVersion, innerPkgPath)
-}
-
-// extractDeprecated removes and returns all deprecated decls in p.
-// It doesn't deal with examples; that is handled elsewhere.
-func extractDeprecated(p *doc.Package) *deprecated {
-	d := &deprecated{}
-	p.Consts, d.Consts = splitDeprecatedValues(p.Consts)
-	p.Vars, d.Vars = splitDeprecatedValues(p.Vars)
-	p.Funcs, d.Funcs = splitDeprecatedFuncs(p.Funcs)
-	var dfs []*doc.Func
-	p.Types, d.Types, dfs = splitDeprecatedTypes(p.Types)
-	// Tack all the deprecated functions and methods from non-deprecated types
-	// onto the end of the top-level deprecated functions.
-	d.Funcs = append(d.Funcs, dfs...)
-	return d
-}
-
-// splitDeprecatedValues splits the given values into two lists: non-deprecated
-// and deprecated.
-func splitDeprecatedValues(xs []*doc.Value) (n, d []*doc.Value) {
-	for _, x := range xs {
-		if x.IsDeprecated {
-			d = append(d, x)
-		} else {
-			n = append(n, x)
-		}
-	}
-	return n, d
-}
-
-// splitDeprecatedFuncs splits the given funcs into two lists: non-deprecated
-// and deprecated.
-func splitDeprecatedFuncs(xs []*doc.Func) (n, d []*doc.Func) {
-	for _, x := range xs {
-		if x.IsDeprecated {
-			d = append(d, x)
-		} else {
-			n = append(n, x)
-		}
-	}
-	return n, d
-}
-
-// splitDeprecatedTypes splits the given types into two lists: non-deprecated
-// and deprecated.
-// It also returns a list of deprecated functions and methods from
-// non-deprecated types.
-func splitDeprecatedTypes(xs []*doc.Type) (n, d []*doc.Type, df []*doc.Func) {
-	for _, x := range xs {
-		if x.IsDeprecated {
-			d = append(d, x)
-		} else {
-			n = append(n, x)
-			// Even if a type isn't deprecated, its child decls might be.
-			// We only care about functions and methods.
-			var f, m []*doc.Func
-			x.Funcs, f = splitDeprecatedFuncs(x.Funcs)
-			df = append(df, f...)
-			x.Methods, m = splitDeprecatedFuncs(x.Methods)
-			df = append(df, m...)
-		}
-	}
-	return n, d, df
 }
