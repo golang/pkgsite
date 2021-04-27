@@ -7,21 +7,21 @@
   {{if or .Doc (index .Examples.Map "")}}
     <li role="none">
       <a href="#pkg-overview" role="treeitem" aria-level="2" tabindex="-1"
-          data-gtm-action="doc outline link clicked">Overview</a>
+          data-gtmc="doc outline link">Overview</a>
     </li>
   {{end}}
   {{- if or .Consts .Vars .Funcs .Types -}}
     <li class="DocNav-overview" role="none">
       <a href="#pkg-index" role="treeitem" aria-level="2" tabindex="-1" aria-owns="nav-group-index"
           {{if .Examples.List}} aria-expanded="false"{{end}}
-          data-gtm-action="doc outline link clicked">
+          data-gtmc="doc outline link">
         Index
       </a>
       {{if .Examples.List}}
         <ul role="group" id="nav-group-index">
           <li role="none">
             <a href="#pkg-examples" role="treeitem" aria-level="3" tabindex="-1"
-                data-gtm-action="doc outline link clicked">
+                data-gtmc="doc outline link">
               Examples
             </a>
           </li>
@@ -30,26 +30,26 @@
     </li>
     <li class="DocNav-constants" role="none">
       <a href="#pkg-constants" role="treeitem" aria-level="2" tabindex="-1"
-          data-gtm-action="doc outline link clicked">
+          data-gtmc="doc outline link">
         Constants
       </a>
     </li>
     <li class="DocNav-variables" role="none">
       <a href="#pkg-variables" role="treeitem" aria-level="2" tabindex="-1"
-          data-gtm-action="doc outline link clicked">
+          data-gtmc="doc outline link">
         Variables
       </a>
     </li>
     <li class="DocNav-functions" role="none">
       <a href="#pkg-functions" role="treeitem" aria-level="2" tabindex="-1" aria-owns="nav-group-functions"
-           {{if gt (len .Funcs) 0}}aria-expanded="false"{{end}} data-gtm-action="doc outline link clicked">
+           {{if gt (len .Funcs) 0}}aria-expanded="false"{{end}} data-gtmc="doc outline link">
         Functions
       </a>
       <ul role="group" id="nav-group-functions">
         {{range .Funcs}}
             <li role="none">
               <a href="#{{.Name}}" role="treeitem" aria-level="3" tabindex="-1"
-                   title="{{render_short_synopsis .Decl}}" data-gtm-action="doc outline link clicked">
+                   title="{{render_short_synopsis .Decl}}" data-gtmc="doc outline link">
                 {{render_short_synopsis .Decl}}
               </a>
             </li>
@@ -58,7 +58,7 @@
     </li>
     <li class="DocNav-types" role="none">
       <a href="#pkg-types" role="treeitem" aria-level="2" tabindex="-1" aria-owns="nav-group-types"
-           {{if gt (len .Types) 0}}aria-expanded="false"{{end}} data-gtm-action="doc outline link clicked">
+           {{if gt (len .Types) 0}}aria-expanded="false"{{end}} data-gtmc="doc outline link">
         Types
       </a>
       <ul role="group" id="nav-group-types">
@@ -70,14 +70,14 @@
               {{$navgroupid := (safe_id $navgroupname)}}
               <a href="#{{$tname}}" role="treeitem" aria-expanded="false" aria-level="3" tabindex="-1"
                    data-aria-owns="{{$navgroupid}}" title="type {{$tname}}"
-                   data-gtm-action="doc outline link clicked">
+                   data-gtmc="doc outline link">
                 type {{$tname}}
               </a>
               <ul role="group" id="{{$navgroupid}}">
                 {{range .Funcs}}
                   <li role="none">
                     <a href="#{{.Name}}" role="treeitem" aria-level="4" tabindex="-1"
-                        title="{{render_short_synopsis .Decl}}" data-gtm-action="doc outline link clicked">
+                        title="{{render_short_synopsis .Decl}}" data-gtmc="doc outline link">
                       {{render_short_synopsis .Decl}}
                     </a>
                   </li>
@@ -85,7 +85,7 @@
                 {{range .Methods}}
                   <li role="none">
                     <a href="#{{$tname}}.{{.Name}}" role="treeitem" aria-level="4" tabindex="-1"
-                        title="{{render_short_synopsis .Decl}}" data-gtm-action="doc outline link clicked">
+                        title="{{render_short_synopsis .Decl}}" data-gtmc="doc outline link">
                       {{render_short_synopsis .Decl}}
                     </a>
                   </li>
@@ -93,7 +93,7 @@
               </ul>
             {{else}}
               <a href="#{{$tname}}" role="treeitem" aria-level="3" tabindex="-1" title="type {{$tname}}"
-                  data-gtm-action="doc outline link clicked">
+                  data-gtmc="doc outline link">
                 type {{$tname}}
               </a>
             {{end}} {{/* if or .Funcs .Methods */}}
@@ -105,14 +105,14 @@
   {{if .Notes}}
     <li class="DocNav-notes" role="none">
       <a href="#pkg-notes" role="treeitem" aria-expanded="false" aria-level="2" tabindex="-1"
-           aria-owns="nav-group-notes" data-gtm-action="doc outline link clicked">
+           aria-owns="nav-group-notes" data-gtmc="doc outline link">
         Notes
       </a>
       <ul role="group" id="nav-group-notes">
         {{range $marker, $item := .Notes}}
           <li role="none">
             <a href="#pkg-note-{{$marker}}" role="treeitem" aria-level="3" tabindex="-1"
-                data-gtm-action="doc outline link clicked">
+                data-gtmc="doc outline link">
               {{(index $.NoteHeaders $marker).Label}}s
             </a>
           </li>

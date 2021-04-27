@@ -112,10 +112,10 @@ func UnitHeader(p *Page, versionedURL bool, isPackage bool) htmlcheck.Checker {
 	} else {
 		majorVersionBanner = in(`[data-test-id="UnitHeader-majorVersionBanner"]`,
 			in("span",
-				text("The highest tagged major version is "),
+				text("The highest tagged major version is"),
 				in("a",
 					href(p.LatestMajorVersionLink),
-					exactText(p.LatestMajorVersion),
+					text(p.LatestMajorVersion),
 				),
 			),
 		)

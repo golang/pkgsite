@@ -30,7 +30,7 @@
             <button class="CopyToClipboardButton js-copyToClipboard"
                 title="Copy path to clipboard.&#10;&#10;{{.CopyData}}"
                 data-to-copy="{{.CopyData}}"
-                data-gtm-label="Copy to Clipboard">
+                data-gtmc="button" aria-label="Copy to Clipboard">
               <img class="CopyToClipboardButton-image" src="/static/img/copy-click.svg" alt="">
             </button>
           {{end}}
@@ -49,7 +49,8 @@
           <button class="CopyToClipboardButton js-copyToClipboard"
               title="Copy path to clipboard.&#10;&#10;{{.CopyData}}"
               data-to-copy="{{.CopyData}}"
-              data-gtm-label="Copy to Clipboard"
+              data-gtmc="button"
+              aria-label="Copy to Clipboard"
               tabindex="-1">
             <img class="CopyToClipboardButton-image" src="/static/img/copy-click.svg" alt="">
           </button>
@@ -77,7 +78,7 @@
 {{define "unit_header_title"}}
   <div class="UnitHeader-title">
     <div class="UnitHeader-logo">
-      <a href="https://go.dev/" tabindex="-1">
+      <a href="https://go.dev/" tabindex="-1" data-gtmc="header link" aria-label="Link to Go Homepage">
         <img height="72px" width="72px" class="UnitHeader-logo" src="/static/img/go-logo-blue.svg" alt="Go">
       </a>
     </div>
@@ -90,7 +91,7 @@
 
 {{define "detail_item_version"}}
   <span class="UnitHeader-detailItem" data-test-id="UnitHeader-version">
-    <a href="?tab=versions"><span>Version: </span>{{.DisplayVersion}}</a>
+    <a href="?tab=versions" aria-label="Go to Versions" data-gtmc="header link"><span>Version: </span>{{.DisplayVersion}}</a>
     <!-- Do not reformat the data attributes of the following div: the server uses a regexp to extract them. -->
     <div class="DetailsHeader-badge {{.LatestMinorClass}}"
         data-test-id="UnitHeader-minorVersionBanner"
@@ -103,7 +104,7 @@
         Latest
         {{template "severity_toggletip" "This package is not in the latest version of its module."}}
       </span>
-      <a href="{{.LatestURL}}">Go to latest</a>
+      <a href="{{.LatestURL}}" aria-label="Go to Latest Version" data-gtmc="header link">Go to latest</a>
     </div>
   </span>
 {{end}}
@@ -119,7 +120,8 @@
     License:{{" "}}
     {{- if .Details.Licenses -}}
       {{- if .Unit.IsRedistributable -}}
-        <a href="{{$.URLPath}}?tab=licenses" data-test-id="UnitHeader-license">
+        <a href="{{$.URLPath}}?tab=licenses" data-test-id="UnitHeader-license"
+            aria-label="Go to Licenses" data-gtmc="header link">
           {{- range $i, $e := .Details.Licenses -}}
             {{if $i}}, {{end}}{{$e.Type}}
           {{- end -}}
@@ -130,18 +132,25 @@
             {{if $i}}, {{end}} {{$e.Type}}
           {{- end -}}
         </span>
-        <a href="/license-policy" class="Disclaimer-link"><em>not legal advice</em></a>
+        <a href="/license-policy" class="Disclaimer-link"
+            aria-label="Go to License Policy" data-gtmc="info link">
+          <em>not legal advice</em>
+        </a>
       {{end}}
     {{else}}
       <span>None detected</span>
-      <a href="/license-policy" class="Disclaimer-link"><em>not legal advice</em></a>
+      <a href="/license-policy" class="Disclaimer-link"
+          aria-label="Go to License Policy" data-gtmc="info link">
+        <em>not legal advice</em>
+      </a>
     {{end}}
   </span>
 {{end}}
 
 {{define "detail_item_imports"}}
   <span class="UnitHeader-detailItem" data-test-id="UnitHeader-imports">
-    <a href="{{$.URLPath}}?tab=imports">
+    <a href="{{$.URLPath}}?tab=imports" aria-label="Go to Imports"
+        data-gtmc="header link">
       <span>Imports: </span>{{.Details.NumImports}}
     </a>
   </span>
@@ -149,7 +158,8 @@
 
 {{define "detail_item_importedby"}}
   <span class="UnitHeader-detailItem" data-test-id="UnitHeader-importedby">
-    <a href="{{$.URLPath}}?tab=importedby">
+    <a href="{{$.URLPath}}?tab=importedby" aria-label="Go to Imported By"
+        data-gtmc="header link">
        <span>Imported by: </span>{{.Details.ImportedByCount}}
     </a>
   </span>
@@ -187,7 +197,7 @@
     <div style="display: none;" class="DetailsHeader-badge {{.LatestMinorClass}}"
         data-version="{{.LinkVersion}}" data-mpath="{{.Unit.ModulePath}}" data-ppath="{{.Unit.Path}}" data-pagetype="{{.PageType}}">
     </div>
-    <a class="UnitHeader-backLink" href="{{.URLPath}}">
+    <a class="UnitHeader-backLink" href="{{.URLPath}}" data-gtmc="header link">
       <img height="16px" width="16px" src="/static/img/pkg-icon-arrowLeft_16x16.svg" alt=""> Go to main page
     </a>
   </span>
@@ -230,7 +240,10 @@
         <span class="Site-margin UnitHeader-bannerContent">
           <img height="19px" width="16px" class="UnitHeader-banner-icon" src="/static/img/pkg-icon-info_19x16.svg" alt="">
           <span>
-            The highest tagged major version is <a href="/{{.LatestMajorVersionURL}}">{{.LatestMajorVersion}}</a>.
+            The highest tagged major version is
+            <a href="/{{.LatestMajorVersionURL}}" data-gtmc="banner link" aria-label="Go to Latest Major Version">
+              {{.LatestMajorVersion}}
+            </a>.
           </span>
         </span>
       </div>
@@ -240,7 +253,8 @@
 
 {{define "severity_toggletip"}}
   <span class="UnitMetaDetails-toggletip">
-    <button type="button" aria-label="more info" data-toggletip-content="{{.}}">
+    <button type="button" data-gtmc="toggle tip button"
+        aria-label="More Info" data-toggletip-content="{{.}}">
       <img src="/static/img/severity.svg" alt="" height="14" width="15">
     </button>
     <span role="status"></span>

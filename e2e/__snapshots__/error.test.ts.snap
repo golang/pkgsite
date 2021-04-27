@@ -12,7 +12,7 @@ Object {
       "role": "link",
     },
     Object {
-      "name": "Link to Go homepage",
+      "name": "Link to Go Homepage",
       "role": "link",
     },
     Object {
@@ -173,7 +173,7 @@ exports[`accessibility tree (mobile) 1`] = `
 Object {
   "children": Array [
     Object {
-      "name": "Link to Go homepage",
+      "name": "Link to Go Homepage",
       "role": "link",
     },
     Object {

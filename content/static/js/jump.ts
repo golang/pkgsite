@@ -87,6 +87,7 @@ function newJumpListItem(el: Element): JumpListItem {
   const name = el.getAttribute('id');
   a.setAttribute('href', '#' + name);
   a.setAttribute('tabindex', '-1');
+  a.setAttribute('data-gtmc', 'jump to link');
   const kind = el.getAttribute('data-kind');
   return {
     link: a,

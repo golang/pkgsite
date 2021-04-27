@@ -12,7 +12,7 @@ Object {
       "role": "link",
     },
     Object {
-      "name": "Link to Go homepage",
+      "name": "Link to Go Homepage",
       "role": "link",
     },
     Object {
@@ -72,7 +72,8 @@ Object {
       "role": "text",
     },
     Object {
-      "name": "Copy path to clipboard. golang.org/x/pkgsite/internal/derrors",
+      "description": "Copy path to clipboard. golang.org/x/pkgsite/internal/derrors",
+      "name": "Copy to Clipboard",
       "role": "button",
     },
     Object {
@@ -85,7 +86,7 @@ Object {
       "role": "text",
     },
     Object {
-      "name": "Version: v0.0.0",
+      "name": "Go to Versions",
       "role": "link",
     },
     Object {
@@ -109,7 +110,7 @@ Object {
       "role": "text",
     },
     Object {
-      "name": "BSD-3-Clause",
+      "name": "Go to Licenses",
       "role": "link",
     },
     Object {
@@ -117,7 +118,7 @@ Object {
       "role": "text",
     },
     Object {
-      "name": "Imports: 0",
+      "name": "Go to Imports",
       "role": "link",
     },
     Object {
@@ -125,11 +126,11 @@ Object {
       "role": "text",
     },
     Object {
-      "name": "Imported by: 0",
+      "name": "Go to Imported By",
       "role": "link",
     },
     Object {
-      "name": "Jump to ...",
+      "name": "Open Jump to Identifier",
       "role": "button",
     },
     Object {
@@ -1875,7 +1876,7 @@ Object {
       "role": "link",
     },
     Object {
-      "name": "Link to Go homepage",
+      "name": "Link to Go Homepage",
       "role": "link",
     },
     Object {
@@ -1919,7 +1920,8 @@ Object {
       "role": "text",
     },
     Object {
-      "name": "Copy path to clipboard. golang.org/x/pkgsite",
+      "description": "Copy path to clipboard. golang.org/x/pkgsite",
+      "name": "Copy to Clipboard",
       "role": "button",
     },
     Object {
@@ -1932,7 +1934,7 @@ Object {
       "role": "text",
     },
     Object {
-      "name": "Version: v0.0.0",
+      "name": "Go to Versions",
       "role": "link",
     },
     Object {
@@ -1956,11 +1958,11 @@ Object {
       "role": "text",
     },
     Object {
-      "name": "BSD-3-Clause",
+      "name": "Go to Licenses",
       "role": "link",
     },
     Object {
-      "name": "Jump to ...",
+      "name": "Open Jump to Identifier",
       "role": "button",
     },
     Object {
@@ -2193,7 +2195,7 @@ Object {
       "role": "link",
     },
     Object {
-      "name": "Expand ▾",
+      "name": "Expand Readme",
       "role": "button",
     },
     Object {
@@ -2205,7 +2207,7 @@ Object {
       "role": "link",
     },
     Object {
-      "name": "Expand all",
+      "name": "Expand All Directories",
       "role": "button",
     },
     Object {
@@ -2452,7 +2454,7 @@ exports[`pkgsite (mobile) accessibility tree 1`] = `
 Object {
   "children": Array [
     Object {
-      "name": "Link to Go homepage",
+      "name": "Link to Go Homepage",
       "role": "link",
     },
     Object {
@@ -2481,7 +2483,8 @@ Object {
       "role": "text",
     },
     Object {
-      "name": "Copy path to clipboard. golang.org/x/pkgsite",
+      "description": "Copy path to clipboard. golang.org/x/pkgsite",
+      "name": "Copy to Clipboard",
       "role": "button",
     },
     Object {
@@ -2494,7 +2497,7 @@ Object {
       "role": "text",
     },
     Object {
-      "name": "Version: v0.0.0",
+      "name": "Go to Versions",
       "role": "link",
     },
     Object {
@@ -2510,7 +2513,7 @@ Object {
       "role": "text",
     },
     Object {
-      "name": "BSD-3-Clause",
+      "name": "Go to Licenses",
       "role": "link",
     },
     Object {
@@ -2740,7 +2743,7 @@ Object {
       "role": "link",
     },
     Object {
-      "name": "Expand ▾",
+      "name": "Expand Readme",
       "role": "button",
     },
     Object {
@@ -2752,7 +2755,7 @@ Object {
       "role": "link",
     },
     Object {
-      "name": "Expand all",
+      "name": "Expand All Directories",
       "role": "button",
     },
     Object {
