@@ -19,29 +19,50 @@ import (
 
 func TestFrontendVersionsPage(t *testing.T) {
 	defer postgres.ResetTestDB(testDB, t)
-
-	exps := []string{internal.ExperimentSymbolHistoryVersionsPage}
-	processVersions(
-		experiment.NewContext(context.Background(), exps...),
-		t, testModules)
-
-	const modulePath = "example.com/symbols"
-	for _, test := range []struct {
-		name, pkgPath string
-		want          []*frontend.VersionList
+	for _, exp := range []struct {
+		name string
+		exps []string
 	}{
-		{"versions page symbols - one version all symbols", modulePath, versionsPageSymbols},
-		{"versions page hello - multi GOOS", modulePath + "/hello", versionsPageHello},
+		{
+			"no experiment",
+			[]string{
+				internal.ExperimentSymbolHistoryVersionsPage,
+			},
+		},
+		{
+			"experiment insert and read symbol_history",
+			[]string{
+				internal.ExperimentInsertSymbolHistory,
+				internal.ExperimentReadSymbolHistory,
+				internal.ExperimentSymbolHistoryVersionsPage,
+			},
+		},
 	} {
-		t.Run(test.name, func(t *testing.T) {
-			urlPath := fmt.Sprintf("/%s?tab=versions&m=json", test.pkgPath)
-			body := getFrontendPage(t, urlPath, exps...)
-			var got frontend.VersionsDetails
-			if err := json.Unmarshal([]byte(body), &got); err != nil {
-				t.Fatalf("json.Unmarshal: %v", err)
-			}
-			if diff := cmp.Diff(test.want, got.ThisModule); diff != "" {
-				t.Errorf("mismatch (-want, got):\n%s", diff)
+		t.Run(exp.name, func(t *testing.T) {
+			exps := exp.exps
+			processVersions(
+				experiment.NewContext(context.Background(), exps...),
+				t, testModules)
+
+			const modulePath = "example.com/symbols"
+			for _, test := range []struct {
+				name, pkgPath string
+				want          []*frontend.VersionList
+			}{
+				{"versions page symbols - one version all symbols", modulePath, versionsPageSymbols},
+				{"versions page hello - multi GOOS", modulePath + "/hello", versionsPageHello},
+			} {
+				t.Run(test.name, func(t *testing.T) {
+					urlPath := fmt.Sprintf("/%s?tab=versions&m=json", test.pkgPath)
+					body := getFrontendPage(t, urlPath, exps...)
+					var got frontend.VersionsDetails
+					if err := json.Unmarshal([]byte(body), &got); err != nil {
+						t.Fatalf("json.Unmarshal: %v", err)
+					}
+					if diff := cmp.Diff(test.want, got.ThisModule); diff != "" {
+						t.Errorf("mismatch (-want, got):\n%s", diff)
+					}
+				})
 			}
 		})
 	}
