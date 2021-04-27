@@ -8,6 +8,7 @@ import (
 	"reflect"
 	"sync"
 
+	"github.com/google/safehtml"
 	"github.com/google/safehtml/template"
 	"golang.org/x/pkgsite/internal/godoc/dochtml/internal/render"
 	"golang.org/x/pkgsite/internal/godoc/internal/doc"
@@ -57,8 +58,8 @@ var tmpl = map[string]interface{}{
 	"render_decl":              (*render.Renderer)(nil).DeclHTML,
 	"render_code":              (*render.Renderer)(nil).CodeHTML,
 	"file_link":                func() string { return "" },
-	"source_link":              func() string { return "" },
-	"since_version":            func() string { return "" },
+	"source_link":              func(string, interface{}) string { return "" },
+	"since_version":            func(string) safehtml.HTML { return safehtml.HTML{} },
 	"play_url":                 func(*doc.Example) string { return "" },
 	"safe_id":                  render.SafeGoID,
 }

@@ -21,6 +21,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/google/safehtml/template"
+	"github.com/jba/templatecheck"
 	"golang.org/x/net/html"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/experiment"
@@ -39,10 +40,18 @@ var testRenderOptions = RenderOptions{
 	SinceVersionFunc: func(string) string { return "" },
 }
 
+func TestCheckTemplates(t *testing.T) {
+	LoadTemplates(templateSource)
+	for _, tm := range []*template.Template{bodyTemplate, outlineTemplate, sidenavTemplate} {
+		if err := templatecheck.CheckSafe(tm, templateData{}); err != nil {
+			t.Fatal(err)
+		}
+	}
+}
+
 func TestRender(t *testing.T) {
 	ctx := context.Background()
 	LoadTemplates(templateSource)
-
 	fset, d := mustLoadPackage("everydecl")
 	parts, err := Render(ctx, fset, d, testRenderOptions)
 	if err != nil {
