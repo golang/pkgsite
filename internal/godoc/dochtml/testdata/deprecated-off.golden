@@ -215,45 +215,45 @@ Deprecated: use GoodM.
   
     <li role="none">
       <a href="#pkg-overview" role="treeitem" aria-level="2" tabindex="-1"
-          data-gtm-action="doc outline link clicked">Overview</a>
+          data-gtmc="doc outline link">Overview</a>
     </li>
   <li class="DocNav-overview" role="none">
       <a href="#pkg-index" role="treeitem" aria-level="2" tabindex="-1" aria-owns="nav-group-index"
           
-          data-gtm-action="doc outline link clicked">
+          data-gtmc="doc outline link">
         Index
       </a>
       
     </li>
     <li class="DocNav-constants" role="none">
       <a href="#pkg-constants" role="treeitem" aria-level="2" tabindex="-1"
-          data-gtm-action="doc outline link clicked">
+          data-gtmc="doc outline link">
         Constants
       </a>
     </li>
     <li class="DocNav-variables" role="none">
       <a href="#pkg-variables" role="treeitem" aria-level="2" tabindex="-1"
-          data-gtm-action="doc outline link clicked">
+          data-gtmc="doc outline link">
         Variables
       </a>
     </li>
     <li class="DocNav-functions" role="none">
       <a href="#pkg-functions" role="treeitem" aria-level="2" tabindex="-1" aria-owns="nav-group-functions"
-           aria-expanded="false" data-gtm-action="doc outline link clicked">
+           aria-expanded="false" data-gtmc="doc outline link">
         Functions
       </a>
       <ul role="group" id="nav-group-functions">
         
             <li role="none">
               <a href="#BadF" role="treeitem" aria-level="3" tabindex="-1"
-                   title="BadF()" data-gtm-action="doc outline link clicked">
+                   title="BadF()" data-gtmc="doc outline link">
                 BadF()
               </a>
             </li>
         
             <li role="none">
               <a href="#GoodF" role="treeitem" aria-level="3" tabindex="-1"
-                   title="GoodF()" data-gtm-action="doc outline link clicked">
+                   title="GoodF()" data-gtmc="doc outline link">
                 GoodF()
               </a>
             </li>
@@ -262,7 +262,7 @@ Deprecated: use GoodM.
     </li>
     <li class="DocNav-types" role="none">
       <a href="#pkg-types" role="treeitem" aria-level="2" tabindex="-1" aria-owns="nav-group-types"
-           aria-expanded="false" data-gtm-action="doc outline link clicked">
+           aria-expanded="false" data-gtmc="doc outline link">
         Types
       </a>
       <ul role="group" id="nav-group-types">
@@ -271,7 +271,7 @@ Deprecated: use GoodM.
           <li role="none">
             
               <a href="#BadT" role="treeitem" aria-level="3" tabindex="-1" title="type BadT"
-                  data-gtm-action="doc outline link clicked">
+                  data-gtmc="doc outline link">
                 type BadT
               </a>
              
@@ -284,21 +284,21 @@ Deprecated: use GoodM.
               
               <a href="#GoodT" role="treeitem" aria-expanded="false" aria-level="3" tabindex="-1"
                    data-aria-owns="nav.group.GoodT" title="type GoodT"
-                   data-gtm-action="doc outline link clicked">
+                   data-gtmc="doc outline link">
                 type GoodT
               </a>
               <ul role="group" id="nav.group.GoodT">
                 
                   <li role="none">
                     <a href="#NewGoodTBad" role="treeitem" aria-level="4" tabindex="-1"
-                        title="NewGoodTBad()" data-gtm-action="doc outline link clicked">
+                        title="NewGoodTBad()" data-gtmc="doc outline link">
                       NewGoodTBad()
                     </a>
                   </li>
                 
                   <li role="none">
                     <a href="#NewGoodTGood" role="treeitem" aria-level="4" tabindex="-1"
-                        title="NewGoodTGood()" data-gtm-action="doc outline link clicked">
+                        title="NewGoodTGood()" data-gtmc="doc outline link">
                       NewGoodTGood()
                     </a>
                   </li>
@@ -306,14 +306,14 @@ Deprecated: use GoodM.
                 
                   <li role="none">
                     <a href="#GoodT.BadM" role="treeitem" aria-level="4" tabindex="-1"
-                        title="BadM()" data-gtm-action="doc outline link clicked">
+                        title="BadM()" data-gtmc="doc outline link">
                       BadM()
                     </a>
                   </li>
                 
                   <li role="none">
                     <a href="#GoodT.GoodM" role="treeitem" aria-level="4" tabindex="-1"
-                        title="GoodM()" data-gtm-action="doc outline link clicked">
+                        title="GoodM()" data-gtmc="doc outline link">
                       GoodM()
                     </a>
                   </li>
