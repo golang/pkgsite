@@ -565,7 +565,6 @@ pre,
   color: var(--gray-3);
 }
 
-/* common dialog styles */
 .Dialog {
   padding: 0;
   position: fixed;

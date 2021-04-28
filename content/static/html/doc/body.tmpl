@@ -167,10 +167,26 @@
 
 {{define "item"}}
   {{$id := safe_id .FullName}}
-  <h4 tabindex="-1" id="{{$id}}" data-kind="{{.Kind}}" class="{{.HeaderClass}}">
-    <span>{{.HeaderStart}} {{source_link .Name .Decl}} <a class="Documentation-idLink" href="#{{$id}}">¶</a></span>
-    {{- template "since_version" .FullName -}}
-  </h4>{{"\n"}}
-  {{- template "declaration" . -}}
-  {{- template "example" .Examples -}}
+  {{if .IsDeprecated}}
+    <details class="Documentation-deprecatedDetails">
+      <summary>
+        <h4 tabindex="-1" id="{{$id}}" data-kind="{{.Kind}}" class="{{.HeaderClass}}">
+          <span>
+            {{.HeaderStart}} {{source_link .Name .Decl}} <a class="Documentation-idLink" href="#{{$id}}">¶</a>
+              <span class="Documentation-deprecatedBody">deprecated</span>
+          </span>
+          {{- template "since_version" .FullName -}}
+        </h4>{{"\n"}}
+      </summary>
+      {{- template "declaration" . -}}
+      {{- template "example" .Examples -}}
+    </details>
+  {{else}}
+    <h4 tabindex="-1" id="{{$id}}" data-kind="{{.Kind}}" class="{{.HeaderClass}}">
+      <span>{{.HeaderStart}} {{source_link .Name .Decl}} <a class="Documentation-idLink" href="#{{$id}}">¶</a></span>
+        {{- template "since_version" .FullName -}}
+    </h4>{{"\n"}}
+    {{- template "declaration" . -}}
+    {{- template "example" .Examples -}}
+  {{end}}
 {{end}}

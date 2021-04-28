@@ -42,7 +42,6 @@
 .UnitDoc .Documentation h4 {
   font-size: 1.375rem;
 }
-
 .Documentation {
   color: var(--gray-1);
   display: block;
@@ -301,8 +300,7 @@
   font-style: italic;
   margin-left: 0.5rem;
 }
-
-.Documentation-bodyDeprecated {
+.Documentation-deprecatedBody {
   color: var(--gray-3);
   font-size: 1rem;
   font-style: italic;
@@ -310,8 +308,20 @@
   margin-left: 0.5rem;
   margin-right: 0.5rem;
 }
-
-.Documentation-deprecatedShowLink {
-  font-size: 1rem;
-  font-weight: 400;
+.Documentation-deprecatedDetails .Documentation-deprecatedBody::after {
+  color: var(--turq-dark);
+  content: 'Show';
+  margin-left: 1rem;
+}
+.Documentation-deprecatedDetails[open] .Documentation-deprecatedBody::after {
+  color: var(--turq-dark);
+  content: 'Hide';
+  margin-left: 1rem;
+}
+.Documentation-deprecatedDetails > summary {
+  list-style: none;
+  opacity: 1;
+}
+.Documentation-deprecatedDetails .Documentation-source {
+  opacity: 1;
 }
