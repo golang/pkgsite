@@ -188,3 +188,53 @@ func sortSymbolsGroup(syms []*Symbol) {
 		sort.Strings(s.Builds)
 	}
 }
+
+// ParseVersionsDetails returns a map of versionToNameToUnitSymbol based on
+// data from the proovided VersionDetails.
+func ParseVersionsDetails(vd VersionsDetails) (map[string]map[string]*internal.UnitSymbol, error) {
+	versionToNameToSymbol := map[string]map[string]*internal.UnitSymbol{}
+	for _, vl := range vd.ThisModule {
+		for _, vs := range vl.Versions {
+			v := vs.Version
+			versionToNameToSymbol[v] = map[string]*internal.UnitSymbol{}
+			for _, syms := range vs.Symbols {
+				for _, s := range syms {
+					if s.New {
+						versionToNameToSymbol[v][s.Name] = unitSymbol(s)
+					}
+					for _, c := range s.Children {
+						versionToNameToSymbol[v][c.Name] = unitSymbol(c)
+					}
+				}
+			}
+		}
+	}
+	return versionToNameToSymbol, nil
+}
+
+// unitSymbol returns an *internal.unitSymbol from the provided *Symbol.
+func unitSymbol(s *Symbol) *internal.UnitSymbol {
+	us := &internal.UnitSymbol{Name: s.Name}
+	if len(s.Builds) == 0 {
+		us.AddBuildContext(internal.BuildContextAll)
+	}
+	for _, b := range s.Builds {
+		parts := strings.SplitN(b, "/", 2)
+		var build internal.BuildContext
+		switch parts[0] {
+		case "linux":
+			build = internal.BuildContextLinux
+		case "darwin":
+			build = internal.BuildContextDarwin
+		case "windows":
+			build = internal.BuildContextWindows
+		case "js":
+			build = internal.BuildContextJS
+		}
+		if us.SupportsBuild(build) {
+			fmt.Printf("duplicate build context for %q: %v\n", s.Name, build)
+		}
+		us.AddBuildContext(build)
+	}
+	return us
+}
