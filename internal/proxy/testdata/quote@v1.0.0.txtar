@@ -1,0 +1,14 @@
+-- go.mod --
+module rsc.io/quote
+
+-- LICENSE --
+$MITLicense
+
+-- quote.go --
+// Package quote collects pithy sayings.
+package quote // import "rsc.io/quote"
+
+// Hello returns a greeting.
+func Hello() string {
+	return "Hello, world."
+}
