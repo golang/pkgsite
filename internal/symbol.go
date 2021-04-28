@@ -123,3 +123,9 @@ func (us *UnitSymbol) SupportsBuild(build BuildContext) bool {
 func (us *UnitSymbol) InAll() bool {
 	return len(us.builds) == len(BuildContexts)
 }
+
+// RemoveBuildContexts removes all of the build contexts associated with this
+// unit symbol.
+func (us *UnitSymbol) RemoveBuildContexts() {
+	us.builds = map[BuildContext]bool{}
+}
