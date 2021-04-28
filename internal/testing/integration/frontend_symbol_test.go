@@ -52,6 +52,11 @@ func TestSymbols(t *testing.T) {
 					"rsc.io/quote",
 					"rsc.io/quote",
 				},
+				{
+					"test v3 module (rsc.io quote v3)",
+					"rsc.io/quote/v3",
+					"rsc.io/quote/v3",
+				},
 			} {
 				t.Run(test.name, func(t *testing.T) {
 					// Get api data.

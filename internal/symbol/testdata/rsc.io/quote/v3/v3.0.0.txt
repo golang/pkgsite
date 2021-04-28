@@ -1,0 +1,4 @@
+pkg rsc.io/quote/v3, func GlassV3() string
+pkg rsc.io/quote/v3, func GoV3() string
+pkg rsc.io/quote/v3, func HelloV3() string
+pkg rsc.io/quote/v3, func OptV3() string
