@@ -5,6 +5,7 @@
 package dochtml
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"flag"
@@ -99,6 +100,16 @@ func TestRenderDeprecated(t *testing.T) {
 
 func compareWithGolden(t *testing.T, parts *Parts, name string, update bool) {
 	got := fmt.Sprintf("%s\n----\n%s\n----\n%s\n", parts.Body, parts.Outline, parts.MobileOutline)
+	// Remove blank lines and whitespace around lines.
+	var b strings.Builder
+	s := bufio.NewScanner(strings.NewReader(got))
+	for s.Scan() {
+		line := strings.TrimSpace(s.Text())
+		if line != "" {
+			fmt.Fprintln(&b, line)
+		}
+	}
+	got = b.String()
 	testhelper.CompareWithGolden(t, got, name+".golden", update)
 }
 
