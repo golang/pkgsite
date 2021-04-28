@@ -410,7 +410,7 @@ func (db *DB) CompareStdLib(ctx context.Context) (map[string][]string, error) {
 		}
 		versionToNameToUnitSymbol := symbol.IntroducedHistory(versionToNameToSymbol)
 
-		errs := symbol.CompareStdLib(path, apiVersions[path], versionToNameToUnitSymbol)
+		errs := symbol.CompareAPIVersions(path, apiVersions[path], versionToNameToUnitSymbol)
 		if len(errs) > 0 {
 			pkgToErrors[path] = errs
 		}

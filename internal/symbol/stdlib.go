@@ -4,15 +4,6 @@
 
 package symbol
 
-import (
-	"fmt"
-	"sort"
-	"strings"
-
-	"golang.org/x/mod/semver"
-	"golang.org/x/pkgsite/internal"
-)
-
 var pathToExceptions = map[string]map[string]bool{
 	// RawMessage.MarshalJSON was introduced in go1, but in go1.8 the receiver
 	// was changed from a point (*RawMessage) to a value (RawMessage).
@@ -234,82 +225,4 @@ var pathToEmbeddedMethods = map[string]map[string]string{
 		// Embedded https://pkg.go.dev/text/template/parse#Pos.Position
 		"WithNode.Position": "v1.1.0",
 	},
-}
-
-// CompareStdLib compares the since version data for symbols with the data for
-// apiVersions, which is obtained from the api folder of runtime.GOROOT.
-func CompareStdLib(path string, apiVersions pkgAPIVersions,
-	inVersionToNameToUnitSymbol map[string]map[string]*internal.UnitSymbol) []string {
-
-	// Create a map of name to the first version when the symbol name was found
-	// in the package.
-	nameToVersion := map[string]string{}
-	for version, nts := range inVersionToNameToUnitSymbol {
-		for name := range nts {
-			if _, ok := nameToVersion[name]; !ok {
-				nameToVersion[name] = version
-				continue
-			}
-			// Track the first version when the symbol name is addded. It is
-			// possible for the symbol name to appear in multiple versions if
-			// it is introduced at different build contexts, but the godoc
-			// logic that generates apiVersions does not.
-			if semver.Compare(version, nameToVersion[name]) == -1 {
-				nameToVersion[name] = version
-			}
-		}
-	}
-
-	var errors []string
-	check := func(name, version string) {
-		if strings.HasSuffix(name, "embedded") {
-			// The Go api/goN.txt files contain a Foo.embedded row when a new
-			// field is added. pkgsite does not currently handle embedding, so
-			// skip this check.
-			//
-			// type UnspecifiedType struct, embedded BasicType in
-			// https://go.googlesource.com/go/+/0e85fd7561de869add933801c531bf25dee9561c/api/go1.4.txt#62
-			// is an example.
-			//
-			// cmd/api code at
-			// https://go.googlesource.com/go/+/go1.16/src/cmd/api/goapi.go#924.
-			return
-		}
-		if methods, ok := pathToEmbeddedMethods[path]; ok {
-			if _, ok := methods[name]; ok {
-				return
-			}
-		}
-		if exceptions, ok := pathToExceptions[path]; ok {
-			if _, ok := exceptions[name]; ok {
-				return
-			}
-		}
-		got, ok := nameToVersion[name]
-		if !ok {
-			errors = append(errors, fmt.Sprintf("not found: (added in %q) %q \n", version, name))
-		} else if g := strings.TrimSuffix(strings.TrimPrefix(got, "v"), ".0"); g != version {
-			errors = append(errors, fmt.Sprintf("mismatch: (added in %q | got %q) %q\n", version, g, name))
-		}
-	}
-
-	for name, version := range apiVersions.funcSince {
-		check(name, version)
-	}
-	for name, version := range apiVersions.typeSince {
-		check(name, version)
-	}
-	for typ, method := range apiVersions.methodSince {
-		for name, version := range method {
-			typ = strings.TrimPrefix(typ, "*")
-			check(typ+"."+name, version)
-		}
-	}
-	for typ, field := range apiVersions.fieldSince {
-		for name, version := range field {
-			check(typ+"."+name, version)
-		}
-	}
-	sort.Strings(errors)
-	return errors
 }
