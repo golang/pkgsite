@@ -10,6 +10,7 @@ import (
 	"strings"
 	"testing"
 
+	"golang.org/x/mod/modfile"
 	"golang.org/x/pkgsite/internal/testing/testhelper"
 	"golang.org/x/tools/txtar"
 )
@@ -92,6 +93,11 @@ func readTxtarModule(filename string) (*Module, error) {
 		return nil, err
 	}
 	for _, f := range ar.Files {
+		if f.Name == "go.mod" {
+			// Overwrite the pregenerated module path if one is specified in
+			// the go.mod file.
+			m.ModulePath = modfile.ModulePath(f.Data)
+		}
 		m.Files[f.Name] = strings.TrimSpace(testModuleReplacer.Replace(string(f.Data)))
 	}
 	return m, nil
