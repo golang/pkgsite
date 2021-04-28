@@ -394,7 +394,11 @@ func updateSymbols(symbols []*internal.Symbol, updateFunc func(s *internal.Symbo
 // getSymbolHistory and symbol.ParsePackageAPIInfo. This is only meant for use
 // locally for testing purposes.
 func (db *DB) CompareStdLib(ctx context.Context) (map[string][]string, error) {
-	apiVersions, err := symbol.ParsePackageAPIInfo()
+	files, err := symbol.LoadAPIFiles(stdlib.ModulePath, "")
+	if err != nil {
+		return nil, err
+	}
+	apiVersions, err := symbol.ParsePackageAPIInfo(files)
 	if err != nil {
 		return nil, err
 	}

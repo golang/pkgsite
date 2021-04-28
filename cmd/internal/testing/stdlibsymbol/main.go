@@ -105,7 +105,11 @@ func compareVersionsPage(path string) error {
 			}
 		}
 	}
-	apiVersions, err := symbol.ParsePackageAPIInfo()
+	files, err := symbol.LoadAPIFiles(stdlib.ModulePath, "")
+	if err != nil {
+		return err
+	}
+	apiVersions, err := symbol.ParsePackageAPIInfo(files)
 	if err != nil {
 		return err
 	}

@@ -13,48 +13,83 @@ package symbol
 
 import (
 	"bufio"
+	"fmt"
 	"os"
 	"path/filepath"
 	"runtime"
 	"sort"
-	"strconv"
 	"strings"
 	"unicode"
+
+	"golang.org/x/mod/semver"
+	"golang.org/x/pkgsite/internal/stdlib"
 )
 
-// ParseAPIInfo parses apiVersions using contents of runtime.GOROOT.
-func ParsePackageAPIInfo() (apiVersions, error) {
-	apiGlob := filepath.Join(filepath.Clean(runtime.GOROOT()), "api", "go*.txt")
-	files, err := filepath.Glob(apiGlob)
-	if err != nil {
-		return nil, err
-	}
-	// Process files in go1.n, go1.n-1, ..., go1.2, go1.1, go1 order.
+// ParseAPIInfo parses apiVersions using contents of the specified directory.
+func ParsePackageAPIInfo(files []string) (apiVersions, error) {
+	// Process files in reverse semver order (vx.y.z, vz.y.z-1, ...).
 	//
-	// It's rare, but the signature of an identifier may change
+	// The signature of an identifier may change
 	// (for example, a function that accepts a type replaced with
 	// an alias), and so an existing symbol may show up again in
-	// a later api/go1.N.txt file. Parsing in reverse version
+	// a later api/vX.Y.Z.txt file. Parsing in reverse version
 	// order means we end up with the earliest version of Go
 	// when the symbol was added. See golang.org/issue/44081.
 	//
-	ver := func(name string) int {
+	ver := func(name string) string {
 		base := filepath.Base(name)
-		ver := strings.TrimPrefix(strings.TrimSuffix(base, ".txt"), "go1.")
-		if ver == "go1" {
-			return 0
-		}
-		v, _ := strconv.Atoi(ver)
-		return v
+		return strings.TrimSuffix(base, ".txt")
 	}
-	sort.Slice(files, func(i, j int) bool { return ver(files[i]) > ver(files[j]) })
+	sort.Slice(files, func(i, j int) bool {
+		return semver.Compare(ver(files[i]), ver(files[j])) > 0
+	})
+
 	vp := new(versionParser)
 	for _, f := range files {
 		if err := vp.parseFile(f); err != nil {
 			return nil, err
 		}
 	}
+	if len(vp.res) == 0 {
+		return nil, fmt.Errorf("apiVersions should not be empty")
+	}
 	return vp.res, nil
+}
+
+// LoadAPIFiles loads data about the API for the given package from dir.
+func LoadAPIFiles(pkgPath, dir string) ([]string, error) {
+	var apiGlob string
+	if stdlib.Contains(pkgPath) {
+		apiGlob = filepath.Join(filepath.Clean(runtime.GOROOT()), "api", "go*.txt")
+	} else {
+		apiGlob = filepath.Join(dir, pkgPath, "v*.txt")
+	}
+
+	files, err := filepath.Glob(apiGlob)
+	if err != nil {
+		return nil, err
+	}
+	if len(files) == 0 {
+		return nil, fmt.Errorf("no files matching %q", apiGlob)
+	}
+
+	if !stdlib.Contains(pkgPath) {
+		return files, nil
+	}
+
+	// stdlib files have the structure goN.txt. Convert the filenames to
+	// semver.
+	var newFiles []string
+	for _, f := range files {
+		base := filepath.Base(f)
+		tag := strings.TrimSuffix(base, ".txt")
+		v, err := stdlib.TagForVersion(tag)
+		if err != nil {
+			return nil, err
+		}
+		newFiles = append(newFiles, filepath.Join(filepath.Dir(f), v+".txt"))
+	}
+	return newFiles, nil
 }
 
 // apiVersions is a map of packages to information about those packages'
@@ -63,12 +98,15 @@ func ParsePackageAPIInfo() (apiVersions, error) {
 // Only things added after Go1 are tracked. Version strings are of the
 // form "1.1", "1.2", etc.
 type apiVersions map[string]pkgAPIVersions // keyed by Go package ("net/http")
+
 // pkgAPIVersions contains information about which version of Go added
 // certain package symbols.
 //
 // Only things added after Go1 are tracked. Version strings are of the
 // form "1.1", "1.2", etc.
 type pkgAPIVersions struct {
+	constSince  map[string]string
+	varSince    map[string]string
 	typeSince   map[string]string            // "Server" -> "1.7"
 	methodSince map[string]map[string]string // "*Server" ->"Shutdown"->1.8
 	funcSince   map[string]string            // "NewServer" -> "1.7"
@@ -90,12 +128,10 @@ type versionParser struct {
 	res apiVersions // initialized lazily
 }
 
-// parseFile parses the named $GOROOT/api/goVERSION.txt file.
+// parseFile parses the named <apidata>/VERSION.txt file.
 //
 // For each row, it updates the corresponding entry in
 // vp.res to VERSION, overwriting any previous value.
-// As a special case, if goVERSION is "go1", it deletes
-// from the map instead.
 func (vp *versionParser) parseFile(name string) error {
 	f, err := os.Open(name)
 	if err != nil {
@@ -103,7 +139,7 @@ func (vp *versionParser) parseFile(name string) error {
 	}
 	defer f.Close()
 	base := filepath.Base(name)
-	ver := strings.TrimPrefix(strings.TrimSuffix(base, ".txt"), "go")
+	ver := strings.TrimSuffix(base, ".txt")
 	sc := bufio.NewScanner(f)
 	for sc.Scan() {
 		row, ok := parseRow(sc.Text())
@@ -116,6 +152,8 @@ func (vp *versionParser) parseFile(name string) error {
 		pkgi, ok := vp.res[row.pkg]
 		if !ok {
 			pkgi = pkgAPIVersions{
+				constSince:  make(map[string]string),
+				varSince:    make(map[string]string),
 				typeSince:   make(map[string]string),
 				methodSince: make(map[string]map[string]string),
 				funcSince:   make(map[string]string),
@@ -124,32 +162,20 @@ func (vp *versionParser) parseFile(name string) error {
 			vp.res[row.pkg] = pkgi
 		}
 		switch row.kind {
+		case "const":
+			pkgi.constSince[row.name] = ver
+		case "var":
+			pkgi.varSince[row.name] = ver
 		case "func":
-			if ver == "1" {
-				delete(pkgi.funcSince, row.name)
-				break
-			}
 			pkgi.funcSince[row.name] = ver
 		case "type":
-			if ver == "1" {
-				delete(pkgi.typeSince, row.name)
-				break
-			}
 			pkgi.typeSince[row.name] = ver
 		case "method":
-			if ver == "1" {
-				delete(pkgi.methodSince[row.recv], row.name)
-				break
-			}
 			if _, ok := pkgi.methodSince[row.recv]; !ok {
 				pkgi.methodSince[row.recv] = make(map[string]string)
 			}
 			pkgi.methodSince[row.recv][row.name] = ver
 		case "field":
-			if ver == "1" {
-				delete(pkgi.fieldSince[row.structName], row.name)
-				break
-			}
 			if _, ok := pkgi.fieldSince[row.structName]; !ok {
 				pkgi.fieldSince[row.structName] = make(map[string]string)
 			}
@@ -164,7 +190,7 @@ func parseRow(s string) (vr versionedRow, ok bool) {
 		return
 	}
 	rest := s[len("pkg "):]
-	endPkg := strings.IndexFunc(rest, func(r rune) bool { return !(unicode.IsLetter(r) || r == '/' || unicode.IsDigit(r)) })
+	endPkg := strings.IndexFunc(rest, func(r rune) bool { return !(unicode.IsLetter(r) || r == '.' || r == '/' || unicode.IsDigit(r)) })
 	if endPkg == -1 {
 		return
 	}
@@ -184,14 +210,38 @@ func parseRow(s string) (vr versionedRow, ok bool) {
 			return
 		}
 		vr.name, rest = rest[:sp], rest[sp+1:]
-		if !strings.HasPrefix(rest, "struct, ") {
+		switch {
+		case strings.HasPrefix(rest, "struct, "):
+			rest = rest[len("struct, "):]
+			if i := strings.IndexByte(rest, ' '); i != -1 {
+				vr.kind = "field"
+				vr.structName = vr.name
+				vr.name = rest[:i]
+				return vr, true
+			}
+		case strings.HasPrefix(rest, "interface, "):
+			rest = rest[len("interface, "):]
+			if i := strings.IndexByte(rest, '('); i != -1 {
+				vr.kind = "method"
+				vr.recv = vr.name
+				vr.name = rest[:i]
+				return vr, true
+			}
+		default:
 			vr.kind = "type"
 			return vr, true
 		}
-		rest = rest[len("struct, "):]
+	case strings.HasPrefix(rest, "const "):
+		vr.kind = "const"
+		rest = rest[len("const "):]
 		if i := strings.IndexByte(rest, ' '); i != -1 {
-			vr.kind = "field"
-			vr.structName = vr.name
+			vr.name = rest[:i]
+			return vr, true
+		}
+	case strings.HasPrefix(rest, "var "):
+		vr.kind = "var"
+		rest = rest[len("var "):]
+		if i := strings.IndexByte(rest, ' '); i != -1 {
 			vr.name = rest[:i]
 			return vr, true
 		}
@@ -209,8 +259,9 @@ func parseRow(s string) (vr versionedRow, ok bool) {
 		if sp == -1 {
 			return
 		}
-		vr.recv = strings.Trim(rest[:sp], "()") // "*File"
-		rest = rest[sp+1:]                      // SetMode(os.FileMode)
+		vr.recv = strings.Trim(rest[:sp], "()")    // "*File"
+		vr.recv = strings.TrimPrefix(vr.recv, "*") // "File"
+		rest = rest[sp+1:]                         // SetMode(os.FileMode)
 		paren := strings.IndexByte(rest, '(')
 		if paren == -1 {
 			return
