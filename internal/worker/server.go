@@ -537,6 +537,16 @@ func (s *Server) handleReprocess(w http.ResponseWriter, r *http.Request) error {
 		return nil
 	}
 
+	// Reprocess only versions with version type release and status of 200 or 290.
+	releaseOnly := r.FormValue("release_only") == "true"
+	if releaseOnly {
+		if err := s.db.UpdateModuleVersionStatesForReprocessingReleaseVersionsOnly(r.Context(), appVersion); err != nil {
+			return err
+		}
+		fmt.Fprintf(w, "Scheduled release and non-incompatible version of modules to be reprocessed for appVersion > %q.", appVersion)
+		return nil
+	}
+
 	// Reprocess all module versions in module_version_states.
 	if err := s.db.UpdateModuleVersionStatesForReprocessing(r.Context(), appVersion); err != nil {
 		return err

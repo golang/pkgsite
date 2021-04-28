@@ -34,13 +34,15 @@ func TestGetNextModulesToFetchAndUpdateModuleVersionStatesForReprocessing(t *tes
 		numPackages, status int
 	}
 	var (
-		latest    = "v1.5.2"
-		notLatest = "v2.0.0+incompatible"
-		big       = 2000
-		small     = 100
-		versions  = []string{notLatest, latest}
-		sizes     = []int{small, big}
-		statuses  = []int{
+		latest       = "v1.5.2"
+		prerelease   = "v1.5.2-prerelease"
+		nonLatest    = "v1.5.1"
+		incompatible = "v2.0.0+incompatible"
+		big          = 2000
+		small        = 100
+		versions     = []string{incompatible, latest, nonLatest, prerelease}
+		sizes        = []int{small, big}
+		statuses     = []int{
 			http.StatusOK,
 			derrors.ToStatus(derrors.HasIncompletePackages),
 			derrors.ToStatus(derrors.DBModuleInsertInvalid),
@@ -50,11 +52,11 @@ func TestGetNextModulesToFetchAndUpdateModuleVersionStatesForReprocessing(t *tes
 		indexVersions []*internal.IndexVersion
 		now           = time.Now()
 	)
-	generateMods := func(versions []string, sizes, statuses []int) []*testData {
+	generateMods := func(vers []string, sizes, statuses []int) []*testData {
 		var mods []*testData
 		for _, status := range statuses {
 			for _, size := range sizes {
-				for _, version := range versions {
+				for _, version := range vers {
 					mods = append(mods, &testData{
 						modulePath:  fmt.Sprintf("%d/%d", size, status),
 						version:     version,
@@ -174,6 +176,13 @@ func TestGetNextModulesToFetchAndUpdateModuleVersionStatesForReprocessing(t *tes
 		t.Fatal(err)
 	}
 	want = generateMods([]string{latest}, sizes, []int{200, 290})
+	checkNextToRequeue(want, len(mods))
+
+	// Mark the release and non-incompatible version of all modules for reprocessing.
+	if err := testDB.UpdateModuleVersionStatesForReprocessingReleaseVersionsOnly(ctx, "2020-04-30t14"); err != nil {
+		t.Fatal(err)
+	}
+	want = generateMods([]string{latest, nonLatest}, sizes, []int{200, 290})
 	checkNextToRequeue(want, len(mods))
 
 	// Mark all modules for reprocessing.

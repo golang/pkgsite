@@ -34,6 +34,32 @@ func (db *DB) UpdateModuleVersionStatesForReprocessing(ctx context.Context, appV
 	return nil
 }
 
+// UpdateModuleVersionStatesForReprocessingReleaseVersionsOnly marks modules to be
+// reprocessed that were processed prior to the provided appVersion.
+func (db *DB) UpdateModuleVersionStatesForReprocessingReleaseVersionsOnly(ctx context.Context, appVersion string) (err error) {
+	query := `
+		UPDATE module_version_states mvs
+		SET
+			status = (
+				CASE WHEN status=200 THEN 520
+					 WHEN status=290 THEN 521
+					 END
+				),
+			next_processed_after = CURRENT_TIMESTAMP,
+			last_processed_at = NULL
+		WHERE
+			app_version < $1
+			AND (status = 200 OR status = 290)
+			AND right(sort_version, 1) = '~' -- release versions only
+			AND NOT incompatible;`
+	affected, err := db.db.Exec(ctx, query, appVersion)
+	if err != nil {
+		return err
+	}
+	log.Infof(ctx, "Updated release and non-incompatible versions of module_version_states with status=200 and status=290 and app_version < %q; %d affected", appVersion, affected)
+	return nil
+}
+
 // UpdateModuleVersionStatesForReprocessingLatestOnly marks modules to be
 // reprocessed that were processed prior to the provided appVersion.
 func (db *DB) UpdateModuleVersionStatesForReprocessingLatestOnly(ctx context.Context, appVersion string) (err error) {
