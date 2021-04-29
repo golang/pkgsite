@@ -135,25 +135,8 @@ func fetchMainDetails(ctx context.Context, ds internal.DataSource, um *internal.
 	)
 
 	unit.Documentation = cleanDocumentation(unit.Documentation)
-
 	doc := internal.DocumentationForBuildContext(unit.Documentation, bc)
 	versionToNameToUnitSymbol := map[string]map[string]*internal.UnitSymbol{}
-	if experiment.IsActive(ctx, internal.ExperimentSymbolHistoryMainPage) {
-		db, ok := ds.(*postgres.DB)
-		if !ok {
-			return nil, proxydatasourceNotSupportedErr()
-		}
-		versionToNameToUnitSymbol, err = db.GetSymbolHistory(ctx, um.Path, um.ModulePath)
-		if err != nil {
-			return nil, err
-		}
-	}
-	nameToVersion := map[string]string{}
-	for v, nts := range versionToNameToUnitSymbol {
-		for n := range nts {
-			nameToVersion[n] = v
-		}
-	}
 	if doc != nil {
 		synopsis = doc.Synopsis
 		goos = doc.GOOS
@@ -173,6 +156,25 @@ func fetchMainDetails(ctx context.Context, ds internal.DataSource, um *internal.
 			}
 			return nil, err
 		}
+
+		if experiment.IsActive(ctx, internal.ExperimentSymbolHistoryMainPage) {
+			db, ok := ds.(*postgres.DB)
+			if !ok {
+				return nil, proxydatasourceNotSupportedErr()
+			}
+			versionToNameToUnitSymbol, err = db.GetSymbolHistoryForBuildContext(ctx, um.Path,
+				um.ModulePath, internal.BuildContext{GOOS: goos, GOARCH: goarch})
+			if err != nil {
+				return nil, err
+			}
+		}
+		nameToVersion := map[string]string{}
+		for v, nts := range versionToNameToUnitSymbol {
+			for n := range nts {
+				nameToVersion[n] = v
+			}
+		}
+
 		docParts, err = getHTML(ctx, unit, docPkg, nameToVersion)
 		// If err  is ErrTooLarge, then docBody will have an appropriate message.
 		if err != nil && !errors.Is(err, dochtml.ErrTooLarge) {

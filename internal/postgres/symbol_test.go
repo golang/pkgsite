@@ -67,7 +67,7 @@ func TestInsertSymbolNamesAndHistory(t *testing.T) {
 	want2[mod.Version] = unitSymbolsFromAPI(api, mod.Version)
 	comparePackageSymbols(ctx, t, testDB, mod.Packages()[0].Path, mod.ModulePath, mod.Version, want2)
 
-	gotHist, err := GetSymbolHistoryFromTable(ctx, testDB.db, mod.Packages()[0].Path, mod.ModulePath)
+	gotHist, err := testDB.GetSymbolHistory(ctx, mod.Packages()[0].Path, mod.ModulePath)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -199,7 +199,7 @@ func TestInsertSymbolHistory_MultiVersions(t *testing.T) {
 	}
 	comparePackageSymbols(ctx, t, testDB, mod10.Packages()[0].Path, mod10.ModulePath, mod10.Version, want2)
 
-	gotHist, err := GetSymbolHistoryFromTable(ctx, testDB.db, mod10.Packages()[0].Path, mod10.ModulePath)
+	gotHist, err := testDB.GetSymbolHistory(ctx, mod10.Packages()[0].Path, mod10.ModulePath)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -346,7 +346,7 @@ func TestInsertSymbolHistory_MultiGOOS(t *testing.T) {
 	}
 	comparePackageSymbols(ctx, t, testDB, mod10.Packages()[0].Path, mod10.ModulePath, mod10.Version, want2)
 
-	gotHist, err := GetSymbolHistoryFromTable(ctx, testDB.db, mod10.Packages()[0].Path, mod10.ModulePath)
+	gotHist, err := testDB.GetSymbolHistory(ctx, mod10.Packages()[0].Path, mod10.ModulePath)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -385,6 +385,42 @@ func TestInsertSymbolHistory_MultiGOOS(t *testing.T) {
 				us := unitSymbolFromSymbol(&methodB, "v1.2.0")
 				us.RemoveBuildContexts()
 				us.AddBuildContext(internal.BuildContextLinux)
+				us.AddBuildContext(internal.BuildContextWindows)
+				return us
+			}(),
+		},
+	}
+	if diff := cmp.Diff(wantHist, gotHist,
+		cmp.AllowUnexported(internal.UnitSymbol{})); diff != "" {
+		t.Fatalf("mismatch on symbol history(-want +got):\n%s", diff)
+	}
+
+	gotHist, err = testDB.GetSymbolHistoryForBuildContext(ctx,
+		mod10.Packages()[0].Path, mod10.ModulePath, internal.BuildContextWindows)
+	if err != nil {
+		t.Fatal(err)
+	}
+	wantHist = map[string]map[string]*internal.UnitSymbol{
+		"v1.0.0": map[string]*internal.UnitSymbol{
+			"Foo": func() *internal.UnitSymbol {
+				us := unitSymbolFromSymbol(&typ, "v1.0.0")
+				us.RemoveBuildContexts()
+				us.AddBuildContext(internal.BuildContextWindows)
+				return us
+			}(),
+		},
+		"v1.1.0": map[string]*internal.UnitSymbol{
+			"Foo.A": func() *internal.UnitSymbol {
+				us := unitSymbolFromSymbol(&methodA, "v1.1.0")
+				us.RemoveBuildContexts()
+				us.AddBuildContext(internal.BuildContextWindows)
+				return us
+			}(),
+		},
+		"v1.2.0": map[string]*internal.UnitSymbol{
+			"Foo.B": func() *internal.UnitSymbol {
+				us := unitSymbolFromSymbol(&methodB, "v1.2.0")
+				us.RemoveBuildContexts()
 				us.AddBuildContext(internal.BuildContextWindows)
 				return us
 			}(),
