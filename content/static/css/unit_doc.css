@@ -166,6 +166,7 @@
   justify-content: space-between;
 }
 .Documentation-sinceVersion {
+  color: var(--gray-5);
   font-size: 1rem;
   font-weight: 400;
 }
