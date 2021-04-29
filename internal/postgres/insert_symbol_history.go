@@ -141,7 +141,7 @@ func appendSymbolHistoryRow(s *internal.Symbol, values []interface{},
 	if modulePathID == 0 {
 		return nil, fmt.Errorf("modulePathID cannot be 0: %q", modulePathID)
 	}
-	pkgsymID := pathToPkgsymID[packagePath][packageSymbol{synopsis: s.Synopsis, name: s.Name, section: s.Section}]
+	pkgsymID := pathToPkgsymID[packagePath][packageSymbol{synopsis: s.Synopsis, name: s.Name, parentName: s.ParentName}]
 	return append(values,
 		symbolID,
 		parentID,
