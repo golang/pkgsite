@@ -204,6 +204,9 @@ func (s *Server) Install(handle func(string, http.Handler)) {
 	// manual: delete the specified module version.
 	handle("/delete/", http.StripPrefix("/delete", rmw(s.errorHandler(s.handleDelete))))
 
+	// scheduled: clean some module versions.
+	handle("/clean", rmw(s.errorHandler(s.handleClean)))
+
 	handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir(s.staticPath.String()))))
 
 	// returns an HTML page displaying information about recent versions that were processed.
@@ -579,6 +582,25 @@ func (s *Server) handleDelete(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
+// Consider a module version for cleaning only if it is older than this.
+const cleanDays = 7
+
+func (s *Server) handleClean(w http.ResponseWriter, r *http.Request) (err error) {
+	defer derrors.Wrap(&err, "handleClean")
+	ctx := r.Context()
+	limit := parseLimitParam(r, 1000)
+	mvs, err := s.db.GetModuleVersionsToClean(ctx, cleanDays, limit)
+	if err != nil {
+		return err
+	}
+	log.Infof(ctx, "cleaning %d modules", len(mvs))
+	if err := s.db.CleanModuleVersions(ctx, mvs); err != nil {
+		return err
+	}
+	fmt.Fprintf(w, "Cleaned %d module versions.\n", len(mvs))
+	return nil
+}
+
 func (s *Server) handleHealthCheck(w http.ResponseWriter, r *http.Request) {
 	if err := s.db.Underlying().Ping(); err != nil {
 		http.Error(w, fmt.Sprintf("DB ping failed: %v", err), http.StatusInternalServerError)
@@ -662,7 +684,7 @@ func toUint64(n interface{}) uint64 {
 	}
 }
 
-// parseLimitParam parses the query parameter with name as in integer. If the
+// parseLimitParam parses the query parameter "limit" as an integer. If the
 // parameter is missing or there is a parse error, it is logged and the default
 // value is returned.
 func parseLimitParam(r *http.Request, defaultValue int) int {
