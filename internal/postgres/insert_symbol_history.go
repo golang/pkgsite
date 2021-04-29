@@ -56,8 +56,20 @@ func upsertSymbolHistory(ctx context.Context, ddb *database.DB,
 						}
 					}
 				}
-
+				seen := map[string]bool{}
 				if err := updateSymbols(doc.API, func(s *internal.Symbol) error {
+					// While a package with duplicate symbol names won't build,
+					// the documentation for these packages are currently
+					// rendered on pkg.go.dev, so doc.API may contain more than
+					// one symbol with the same name.
+					//
+					// For the purpose of symbol_history, just use the first
+					// symbol name we see.
+					if seen[s.Name] {
+						return nil
+					}
+					seen[s.Name] = true
+
 					if shouldUpdateSymbolHistory(s.Name, ver, dbNameToVersion) {
 						values, err = appendSymbolHistoryRow(s, values,
 							packagePath, modulePath, ver, b, pathToID, nameToID,
