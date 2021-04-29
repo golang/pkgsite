@@ -26,11 +26,6 @@ func BadF() {}
 
 type GoodT int
 
-// BadT is bad.
-// Deprecated: use GoodT.
-// Don't use this.
-type BadT int
-
 func NewGoodTGood() GoodT {}
 
 // NewGoodTBad is bad.
@@ -42,3 +37,18 @@ func (GoodT) GoodM() {}
 // BadM is bad.
 // Deprecated: use GoodM.
 func (GoodT) BadM() {}
+
+// BadT is bad.
+// Deprecated: use GoodT.
+// Don't use this.
+type BadT int
+
+func NewBadTGood() BadT {}
+
+// Deprecated: use NewBadTGood.
+func NewBadTBad() BadT {}
+
+func (BadT) GoodM() {}
+
+// Deprecated: use GoodM.
+func (BadT) BadM() {}
