@@ -15,8 +15,6 @@ import (
 	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/experiment"
-	"golang.org/x/pkgsite/internal/stdlib"
-	"golang.org/x/pkgsite/internal/symbol"
 )
 
 func insertSymbols(ctx context.Context, db *database.DB, modulePath, version string,
@@ -388,32 +386,4 @@ func updateSymbols(symbols []*internal.Symbol, updateFunc func(s *internal.Symbo
 		}
 	}
 	return nil
-}
-
-// CompareStdLib is a helper function for comparing the output of
-// getSymbolHistory and symbol.ParsePackageAPIInfo. This is only meant for use
-// locally for testing purposes.
-func (db *DB) CompareStdLib(ctx context.Context) (map[string][]string, error) {
-	files, err := symbol.LoadAPIFiles(stdlib.ModulePath, "")
-	if err != nil {
-		return nil, err
-	}
-	apiVersions, err := symbol.ParsePackageAPIInfo(files)
-	if err != nil {
-		return nil, err
-	}
-	pkgToErrors := map[string][]string{}
-	for path := range apiVersions {
-		versionToNameToSymbol, err := getPackageSymbols(ctx, db.db, path, stdlib.ModulePath)
-		if err != nil {
-			return nil, err
-		}
-		versionToNameToUnitSymbol := symbol.IntroducedHistory(versionToNameToSymbol)
-
-		errs := symbol.CompareAPIVersions(path, apiVersions[path], versionToNameToUnitSymbol)
-		if len(errs) > 0 {
-			pkgToErrors[path] = errs
-		}
-	}
-	return pkgToErrors, nil
 }
