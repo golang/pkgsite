@@ -151,6 +151,7 @@ const observer = new IntersectionObserver(
     } else {
       unitHeader?.classList.remove('UnitHeader--sticky');
       unitHeader?.classList.add('UnitHeader--full');
+      calcSize();
     }
   },
   { threshold: 1.0, rootMargin: '40px' }
