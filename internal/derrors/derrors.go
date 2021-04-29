@@ -51,6 +51,10 @@ var (
 	// module at this time.
 	SheddingLoad = errors.New("shedding load")
 
+	// Cleaned indicates that the module version was cleaned from the DB and
+	// shouldn't be reprocessed.
+	Cleaned = errors.New("cleaned")
+
 	// Unknown indicates that the error has unknown semantics.
 	Unknown = errors.New("unknown")
 
@@ -123,6 +127,7 @@ var codes = []struct {
 	{BadModule, 490},
 	{AlternativeModule, 491},
 	{ModuleTooLarge, 492},
+	{Cleaned, 493},
 
 	{ProxyTimedOut, 550}, // not a real code
 	{ProxyError, 551},    // not a real code

@@ -277,6 +277,36 @@ func TestUpsertModuleVersionStates(t *testing.T) {
 
 }
 
+func TestUpdateModuleVersionStatus(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testDB, release := acquire(t)
+	defer release()
+
+	mvs := &ModuleVersionStateForUpsert{
+		ModulePath: "m.com",
+		Version:    "v1.2.3",
+		Timestamp:  time.Now(),
+		Status:     200,
+	}
+	if err := testDB.UpsertModuleVersionState(ctx, mvs); err != nil {
+		t.Fatal(err)
+	}
+
+	wantStatus := 999
+	wantError := "Error"
+	if err := testDB.UpdateModuleVersionStatus(ctx, mvs.ModulePath, mvs.Version, wantStatus, wantError); err != nil {
+		t.Fatal(err)
+	}
+	got, err := testDB.GetModuleVersionState(ctx, mvs.ModulePath, mvs.Version)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.Status != wantStatus || got.Error != wantError {
+		t.Errorf("got %d, %q; want %d, %q", got.Status, got.Error, wantStatus, wantError)
+	}
+}
+
 func TestHasGoMod(t *testing.T) {
 	ptr := func(b bool) *bool { return &b }
 

@@ -8,15 +8,17 @@ package postgres
 
 import (
 	"context"
+	"errors"
 	"sort"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/testing/sample"
 )
 
-func TestGetModuleVersionsToClean(t *testing.T) {
+func TestClean(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
 	testDB, release := acquire(t)
@@ -36,6 +38,7 @@ func TestGetModuleVersionsToClean(t *testing.T) {
 		m := sample.Module(mod, ver, pkg)
 		MustInsertModule(ctx, t, testDB, m)
 	}
+
 	if err := testDB.UpsertVersionMap(ctx, &internal.VersionMap{
 		ModulePath:       "b.c",
 		RequestedVersion: "main",
@@ -56,5 +59,16 @@ func TestGetModuleVersionsToClean(t *testing.T) {
 	sort.Strings(got)
 	if !cmp.Equal(got, want) {
 		t.Errorf("got  %v\nwant %v", got, want)
+	}
+
+	if err := testDB.CleanModuleVersions(ctx, mvs); err != nil {
+		t.Fatal(err)
+	}
+
+	for _, mv := range mvs {
+		_, err = testDB.GetModuleInfo(ctx, mv.ModulePath, mv.Version)
+		if !errors.Is(err, derrors.NotFound) {
+			t.Errorf("%s: got %v, want NotFound", mv, err)
+		}
 	}
 }

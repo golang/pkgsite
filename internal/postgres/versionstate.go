@@ -160,6 +160,19 @@ func updateModulesStatus(ctx context.Context, db *database.DB, modulePath, resol
 	return nil
 }
 
+// UpdateModuleVersionStatus updates the status and error fields of a module version.
+func (db *DB) UpdateModuleVersionStatus(ctx context.Context, modulePath, version string, status int, error string) (err error) {
+	defer derrors.WrapStack(&err, "UpdateModuleVersionStatus(%q, %q, %d)", modulePath, version, status)
+
+	query := `
+		UPDATE module_version_states
+		SET status = $3, error = $4
+		WHERE module_path = $1 AND version = $2
+	`
+	_, err = db.db.Exec(ctx, query, modulePath, version, status, error)
+	return err
+}
+
 func upsertPackageVersionStates(ctx context.Context, db *database.DB, packageVersionStates []*internal.PackageVersionState) (err error) {
 	defer derrors.WrapStack(&err, "upsertPackageVersionStates")
 	ctx, span := trace.StartSpan(ctx, "upsertPackageVersionStates")
@@ -308,8 +321,8 @@ func (db *DB) GetRecentVersions(ctx context.Context, limit int) (_ []*internal.M
 
 // GetModuleVersionState returns the current module version state for
 // modulePath and version.
-func (db *DB) GetModuleVersionState(ctx context.Context, modulePath, resolvedVrsion string) (_ *internal.ModuleVersionState, err error) {
-	defer derrors.WrapStack(&err, "GetModuleVersionState(ctx, %q, %q)", modulePath, resolvedVrsion)
+func (db *DB) GetModuleVersionState(ctx context.Context, modulePath, resolvedVersion string) (_ *internal.ModuleVersionState, err error) {
+	defer derrors.WrapStack(&err, "GetModuleVersionState(ctx, %q, %q)", modulePath, resolvedVersion)
 
 	query := fmt.Sprintf(`
 		SELECT %s
@@ -319,7 +332,7 @@ func (db *DB) GetModuleVersionState(ctx context.Context, modulePath, resolvedVrs
 			module_path = $1
 			AND version = $2;`, moduleVersionStateColumns)
 
-	row := db.db.QueryRow(ctx, query, modulePath, resolvedVrsion)
+	row := db.db.QueryRow(ctx, query, modulePath, resolvedVersion)
 	v, err := scanModuleVersionState(row.Scan)
 	switch err {
 	case nil:

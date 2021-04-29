@@ -70,3 +70,20 @@ func (db *DB) GetModuleVersionsToClean(ctx context.Context, daysOld, limit int) 
 	}
 	return modvers, nil
 }
+
+// CleanModuleVersions deletes each module version from the DB and marks it as cleaned
+// in module_version_states.
+func (db *DB) CleanModuleVersions(ctx context.Context, mvs []ModuleVersion) (err error) {
+	defer derrors.Wrap(&err, "CleanModuleVersions(%d modules)", len(mvs))
+
+	status := derrors.ToStatus(derrors.Cleaned)
+	for _, mv := range mvs {
+		if err := db.UpdateModuleVersionStatus(ctx, mv.ModulePath, mv.Version, status, ""); err != nil {
+			return err
+		}
+		if err := db.DeleteModule(ctx, mv.ModulePath, mv.Version); err != nil {
+			return err
+		}
+	}
+	return nil
+}
