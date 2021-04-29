@@ -165,5 +165,5 @@ func shouldUpdateSymbolHistory(symbolName, newVersion string, oldHist map[string
 	if !ok {
 		return true
 	}
-	return semver.Compare(newVersion, oldVersion) == -1
+	return semver.Compare(newVersion, oldVersion) <= 0
 }
