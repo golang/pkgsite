@@ -132,28 +132,25 @@ func TestInsertSymbolHistory_MultiVersions(t *testing.T) {
 	defer cancel()
 
 	typ := internal.Symbol{
-		Name:         "Foo",
-		Synopsis:     "type Foo struct",
-		Section:      internal.SymbolSectionTypes,
-		Kind:         internal.SymbolKindType,
-		ParentName:   "Foo",
-		SinceVersion: "v1.0.0",
+		Name:       "Foo",
+		Synopsis:   "type Foo struct",
+		Section:    internal.SymbolSectionTypes,
+		Kind:       internal.SymbolKindType,
+		ParentName: "Foo",
 	}
 	methodA := internal.Symbol{
-		Name:         "Foo.A",
-		Synopsis:     "func (*Foo) A()",
-		Section:      internal.SymbolSectionTypes,
-		Kind:         internal.SymbolKindMethod,
-		ParentName:   typ.Name,
-		SinceVersion: "v1.1.0",
+		Name:       "Foo.A",
+		Synopsis:   "func (*Foo) A()",
+		Section:    internal.SymbolSectionTypes,
+		Kind:       internal.SymbolKindMethod,
+		ParentName: typ.Name,
 	}
 	methodB := internal.Symbol{
-		Name:         "Foo.B",
-		Synopsis:     "func (*Foo) B()",
-		Section:      internal.SymbolSectionTypes,
-		Kind:         internal.SymbolKindMethod,
-		ParentName:   typ.Name,
-		SinceVersion: "v1.2.0",
+		Name:       "Foo.B",
+		Synopsis:   "func (*Foo) B()",
+		Section:    internal.SymbolSectionTypes,
+		Kind:       internal.SymbolKindMethod,
+		ParentName: typ.Name,
 	}
 	typA := typ
 	typA.Children = []*internal.Symbol{&methodA}
@@ -475,7 +472,7 @@ func compareUnitSymbols(ctx context.Context, t *testing.T, testDB *DB,
 			})
 		}
 		if diff := cmp.Diff(want, got,
-			cmpopts.IgnoreFields(internal.Symbol{}, "SinceVersion", "GOOS", "GOARCH")); diff != "" {
+			cmpopts.IgnoreFields(internal.Symbol{}, "GOOS", "GOARCH")); diff != "" {
 			t.Fatalf("mismatch (-want +got):\n%s", diff)
 		}
 	}

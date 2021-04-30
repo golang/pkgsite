@@ -57,9 +57,6 @@ type Symbol struct {
 	// symbol will have ParentName set to the Name of this type.
 	Children []*Symbol
 
-	// SinceVersion is the first version when the symbol was introduced.
-	SinceVersion string
-
 	// GOOS specifies the execution operating system where the symbol appears.
 	GOOS string
 
