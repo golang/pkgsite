@@ -56,16 +56,17 @@ type Symbol struct {
 func symbolsForVersion(pkgURLPath string, symbolsAtVersion map[string]*internal.UnitSymbol) [][]*Symbol {
 	nameToSymbol := map[string]*Symbol{}
 	for _, us := range symbolsAtVersion {
+		builds := symbolBuilds(us)
 		s, ok := nameToSymbol[us.Name]
 		if !ok {
 			s = &Symbol{
 				Name:     us.Name,
 				Synopsis: us.Synopsis,
-				Link:     symbolLink(pkgURLPath, us.Name),
+				Link:     symbolLink(pkgURLPath, us.Name, us.BuildContexts()),
 				Section:  us.Section,
 				Kind:     us.Kind,
 				New:      true,
-				Builds:   symbolBuilds(us),
+				Builds:   builds,
 			}
 		} else if !s.New && us.Kind == internal.SymbolKindType {
 			// It's possible that a symbol was already created if this is a parent
@@ -99,8 +100,15 @@ func symbolsForVersion(pkgURLPath string, symbolsAtVersion map[string]*internal.
 	return sortSymbols(nameToSymbol)
 }
 
-func symbolLink(pkgURLPath, name string) string {
-	return fmt.Sprintf("%s#%s", pkgURLPath, name)
+func symbolLink(pkgURLPath, name string, builds []internal.BuildContext) string {
+	if len(builds) == len(internal.BuildContexts) {
+		return fmt.Sprintf("%s#%s", pkgURLPath, name)
+	}
+
+	// When a symbol is introduced for a specific GOOS/GOARCH at a version,
+	// linking to an unspecified GOOS/GOARCH page might not take the user to
+	// the symbol. Instead, link to one of the supported build contexts.
+	return fmt.Sprintf("%s?GOOS=%s#%s", pkgURLPath, builds[0].GOOS, name)
 }
 
 func symbolBuilds(us *internal.UnitSymbol) []string {
@@ -121,13 +129,14 @@ func symbolBuilds(us *internal.UnitSymbol) []string {
 // function is only used when a parent symbol is not found for the unit symbol,
 // which means it was not introduced at the same version.
 func createParent(us *internal.UnitSymbol, pkgURLPath string) *Symbol {
+	builds := symbolBuilds(us)
 	s := &Symbol{
 		Name:     us.ParentName,
 		Synopsis: fmt.Sprintf("type %s", us.ParentName),
-		Link:     symbolLink(pkgURLPath, us.ParentName),
+		Link:     symbolLink(pkgURLPath, us.ParentName, us.BuildContexts()),
 		Section:  internal.SymbolSectionTypes,
 		Kind:     internal.SymbolKindType,
-		Builds:   symbolBuilds(us),
+		Builds:   builds,
 	}
 	return s
 }

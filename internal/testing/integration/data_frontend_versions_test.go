@@ -25,7 +25,7 @@ var versionsPageHello = []*frontend.VersionList{
 						{
 							Name:     "Hello",
 							Synopsis: "func Hello() string",
-							Link:     "/example.com/symbols@v1.2.0/hello#Hello",
+							Link:     "/example.com/symbols@v1.2.0/hello?GOOS=js#Hello",
 							New:      true,
 							Section:  "Functions",
 							Kind:     "Function",
@@ -46,7 +46,7 @@ var versionsPageHello = []*frontend.VersionList{
 						{
 							Name:     "Hello",
 							Synopsis: "func Hello() string",
-							Link:     "/example.com/symbols@v1.1.0/hello#Hello",
+							Link:     "/example.com/symbols@v1.1.0/hello?GOOS=darwin#Hello",
 							New:      true,
 							Section:  "Functions",
 							Kind:     "Function",
@@ -55,7 +55,7 @@ var versionsPageHello = []*frontend.VersionList{
 						{
 							Name:     "HelloJS",
 							Synopsis: "func HelloJS() string",
-							Link:     "/example.com/symbols@v1.1.0/hello#HelloJS",
+							Link:     "/example.com/symbols@v1.1.0/hello?GOOS=js#HelloJS",
 							New:      true,
 							Section:  "Functions",
 							Kind:     "Function",
