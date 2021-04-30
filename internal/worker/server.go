@@ -204,7 +204,8 @@ func (s *Server) Install(handle func(string, http.Handler)) {
 	// manual: delete the specified module version.
 	handle("/delete/", http.StripPrefix("/delete", rmw(s.errorHandler(s.handleDelete))))
 
-	// scheduled: clean some module versions.
+	// scheduled ("limit" query param): clean some eligible module versions selected from the DB
+	// manual ("module" query param): clean all versions of a given module.
 	handle("/clean", rmw(s.errorHandler(s.handleClean)))
 
 	handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir(s.staticPath.String()))))
@@ -585,20 +586,48 @@ func (s *Server) handleDelete(w http.ResponseWriter, r *http.Request) error {
 // Consider a module version for cleaning only if it is older than this.
 const cleanDays = 7
 
+// handleClean handles a request to clean module versions.
+//
+// If the request has a 'limit' query parameter, then up to that many module versions
+// are selected from the DB among those eligible for cleaning, and they are cleaned.
+//
+// If the request has a 'module' query parameter, all versions of that module path
+// are cleaned.
+//
+// It is an error if neither or both query parameters are provided.
 func (s *Server) handleClean(w http.ResponseWriter, r *http.Request) (err error) {
 	defer derrors.Wrap(&err, "handleClean")
 	ctx := r.Context()
-	limit := parseLimitParam(r, 1000)
-	mvs, err := s.db.GetModuleVersionsToClean(ctx, cleanDays, limit)
-	if err != nil {
-		return err
+
+	limit := r.FormValue("limit")
+	module := r.FormValue("module")
+	switch {
+	case limit == "" && module == "":
+		return errors.New("need 'limit' or 'module' query param")
+
+	case limit != "" && module != "":
+		return errors.New("need exactly one of 'limit' or 'module' query param")
+
+	case limit != "":
+		mvs, err := s.db.GetModuleVersionsToClean(ctx, cleanDays, parseLimitParam(r, 1000))
+		if err != nil {
+			return err
+		}
+		log.Infof(ctx, "cleaning %d modules", len(mvs))
+		if err := s.db.CleanModuleVersions(ctx, mvs, "Bulk deleted via /clean endpoint"); err != nil {
+			return err
+		}
+		fmt.Fprintf(w, "Cleaned %d module versions.\n", len(mvs))
+		return nil
+
+	default: // module != ""
+		log.Infof(ctx, "cleaning module %q", module)
+		if err := s.db.CleanModule(ctx, module, "Manually deleted via /clean endpoint"); err != nil {
+			return err
+		}
+		fmt.Fprintf(w, "Cleaned module %q\n", module)
+		return nil
 	}
-	log.Infof(ctx, "cleaning %d modules", len(mvs))
-	if err := s.db.CleanModuleVersions(ctx, mvs); err != nil {
-		return err
-	}
-	fmt.Fprintf(w, "Cleaned %d module versions.\n", len(mvs))
-	return nil
 }
 
 func (s *Server) handleHealthCheck(w http.ResponseWriter, r *http.Request) {

@@ -18,7 +18,7 @@ import (
 	"golang.org/x/pkgsite/internal/testing/sample"
 )
 
-func TestClean(t *testing.T) {
+func TestCleanBulk(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
 	testDB, release := acquire(t)
@@ -61,7 +61,7 @@ func TestClean(t *testing.T) {
 		t.Errorf("got  %v\nwant %v", got, want)
 	}
 
-	if err := testDB.CleanModuleVersions(ctx, mvs); err != nil {
+	if err := testDB.CleanModuleVersions(ctx, mvs, "test"); err != nil {
 		t.Fatal(err)
 	}
 
@@ -69,6 +69,30 @@ func TestClean(t *testing.T) {
 		_, err = testDB.GetModuleInfo(ctx, mv.ModulePath, mv.Version)
 		if !errors.Is(err, derrors.NotFound) {
 			t.Errorf("%s: got %v, want NotFound", mv, err)
+		}
+	}
+}
+
+func TestCleanModule(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testDB, release := acquire(t)
+	defer release()
+
+	const modulePath = "m.com"
+	versions := []string{"v1.0.0", "v1.2.3"}
+	for _, v := range versions {
+		m := sample.Module(modulePath, v, "")
+		MustInsertModule(ctx, t, testDB, m)
+	}
+	if err := testDB.CleanModule(ctx, modulePath, ""); err != nil {
+		t.Fatal(err)
+	}
+
+	for _, v := range versions {
+		_, err := testDB.GetModuleInfo(ctx, modulePath, v)
+		if !errors.Is(err, derrors.NotFound) {
+			t.Errorf("%s: got %v, want NotFound", v, err)
 		}
 	}
 }
