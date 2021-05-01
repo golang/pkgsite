@@ -38,7 +38,7 @@ type Symbol struct {
 	// children of net/http.Handler are FileServer, NotFoundHandler,
 	// RedirectHandler, StripPrefix, and TimeoutHandler. Each child
 	// symbol will have ParentName set to the Name of this type.
-	Children []*Symbol
+	Children []*SymbolMeta
 
 	// GOOS specifies the execution operating system where the symbol appears.
 	GOOS string

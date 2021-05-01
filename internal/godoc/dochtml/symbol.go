@@ -148,49 +148,53 @@ func types(p *doc.Package, fset *token.FileSet) ([]*internal.Symbol, error) {
 	return syms, nil
 }
 
-func constantsForType(t *doc.Type) []*internal.Symbol {
+func constantsForType(t *doc.Type) []*internal.SymbolMeta {
 	consts := constants(t.Consts)
+	var typConsts []*internal.SymbolMeta
 	for _, c := range consts {
-		c.ParentName = t.Name
-		c.Section = internal.SymbolSectionTypes
+		c2 := c.SymbolMeta
+		c2.ParentName = t.Name
+		c2.Section = internal.SymbolSectionTypes
+		typConsts = append(typConsts, &c2)
 	}
-	return consts
+	return typConsts
 }
 
-func variablesForType(t *doc.Type, fset *token.FileSet) (_ []*internal.Symbol, err error) {
+func variablesForType(t *doc.Type, fset *token.FileSet) (_ []*internal.SymbolMeta, err error) {
 	vars, err := variables(t.Vars, fset)
 	if err != nil {
 		return nil, err
 	}
+	var typVars []*internal.SymbolMeta
 	for _, v := range vars {
-		v.ParentName = t.Name
-		v.Section = internal.SymbolSectionTypes
+		v2 := v.SymbolMeta
+		v2.ParentName = t.Name
+		v2.Section = internal.SymbolSectionTypes
+		typVars = append(typVars, &v2)
 	}
-	return vars, nil
+	return typVars, nil
 }
 
-func functionsForType(t *doc.Type, fset *token.FileSet) []*internal.Symbol {
-	var syms []*internal.Symbol
+func functionsForType(t *doc.Type, fset *token.FileSet) []*internal.SymbolMeta {
+	var syms []*internal.SymbolMeta
 	for _, f := range t.Funcs {
-		syms = append(syms, &internal.Symbol{
-			SymbolMeta: internal.SymbolMeta{
-				Name:       f.Name,
-				ParentName: t.Name,
-				Kind:       internal.SymbolKindFunction,
-				Synopsis:   render.OneLineNodeDepth(fset, f.Decl, 0),
-				Section:    internal.SymbolSectionTypes,
-			},
+		syms = append(syms, &internal.SymbolMeta{
+			Name:       f.Name,
+			ParentName: t.Name,
+			Kind:       internal.SymbolKindFunction,
+			Synopsis:   render.OneLineNodeDepth(fset, f.Decl, 0),
+			Section:    internal.SymbolSectionTypes,
 		})
 	}
 	return syms
 }
 
-func fieldsForType(typName string, spec *ast.TypeSpec, fset *token.FileSet) []*internal.Symbol {
+func fieldsForType(typName string, spec *ast.TypeSpec, fset *token.FileSet) []*internal.SymbolMeta {
 	st, ok := spec.Type.(*ast.StructType)
 	if !ok {
 		return nil
 	}
-	var syms []*internal.Symbol
+	var syms []*internal.SymbolMeta
 	for _, f := range st.Fields.List {
 		// It's not possible for there to be more than one name.
 		// FieldList is also used by go/ast for st.Methods, which is the
@@ -198,31 +202,27 @@ func fieldsForType(typName string, spec *ast.TypeSpec, fset *token.FileSet) []*i
 		for _, n := range f.Names {
 			synopsis := fmt.Sprintf("%s %s", n, render.OneLineNodeDepth(fset, f.Type, 0))
 			name := typName + "." + n.Name
-			syms = append(syms, &internal.Symbol{
-				SymbolMeta: internal.SymbolMeta{
-					Name:       name,
-					ParentName: typName,
-					Kind:       internal.SymbolKindField,
-					Synopsis:   synopsis,
-					Section:    internal.SymbolSectionTypes,
-				},
+			syms = append(syms, &internal.SymbolMeta{
+				Name:       name,
+				ParentName: typName,
+				Kind:       internal.SymbolKindField,
+				Synopsis:   synopsis,
+				Section:    internal.SymbolSectionTypes,
 			})
 		}
 	}
 	return syms
 }
 
-func methodsForType(t *doc.Type, spec *ast.TypeSpec, fset *token.FileSet) ([]*internal.Symbol, error) {
-	var syms []*internal.Symbol
+func methodsForType(t *doc.Type, spec *ast.TypeSpec, fset *token.FileSet) ([]*internal.SymbolMeta, error) {
+	var syms []*internal.SymbolMeta
 	for _, m := range t.Methods {
-		syms = append(syms, &internal.Symbol{
-			SymbolMeta: internal.SymbolMeta{
-				Name:       t.Name + "." + m.Name,
-				ParentName: t.Name,
-				Kind:       internal.SymbolKindMethod,
-				Synopsis:   render.OneLineNodeDepth(fset, m.Decl, 0),
-				Section:    internal.SymbolSectionTypes,
-			},
+		syms = append(syms, &internal.SymbolMeta{
+			Name:       t.Name + "." + m.Name,
+			ParentName: t.Name,
+			Kind:       internal.SymbolKindMethod,
+			Synopsis:   render.OneLineNodeDepth(fset, m.Decl, 0),
+			Section:    internal.SymbolSectionTypes,
 		})
 	}
 	if st, ok := spec.Type.(*ast.InterfaceType); ok {
@@ -236,14 +236,12 @@ func methodsForType(t *doc.Type, spec *ast.TypeSpec, fset *token.FileSet) ([]*in
 			for _, n := range m.Names {
 				name := t.Name + "." + n.Name
 				synopsis := render.OneLineField(fset, m, 0)
-				syms = append(syms, &internal.Symbol{
-					SymbolMeta: internal.SymbolMeta{
-						Name:       name,
-						ParentName: t.Name,
-						Kind:       internal.SymbolKindMethod,
-						Synopsis:   synopsis,
-						Section:    internal.SymbolSectionTypes,
-					},
+				syms = append(syms, &internal.SymbolMeta{
+					Name:       name,
+					ParentName: t.Name,
+					Kind:       internal.SymbolKindMethod,
+					Synopsis:   synopsis,
+					Section:    internal.SymbolSectionTypes,
 				})
 			}
 		}

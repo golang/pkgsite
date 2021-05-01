@@ -125,15 +125,13 @@ func TestGetSymbols(t *testing.T) {
 				Section:  "Types",
 				Kind:     "Type",
 			},
-			Children: []*internal.Symbol{
+			Children: []*internal.SymbolMeta{
 				{
-					SymbolMeta: internal.SymbolMeta{
-						Name:       "I1.M1",
-						Synopsis:   "M1 func()",
-						Section:    "Types",
-						ParentName: "I1",
-						Kind:       "Method",
-					},
+					Name:       "I1.M1",
+					Synopsis:   "M1 func()",
+					Section:    "Types",
+					ParentName: "I1",
+					Kind:       "Method",
 				},
 			},
 		},
@@ -144,15 +142,13 @@ func TestGetSymbols(t *testing.T) {
 				Section:  "Types",
 				Kind:     "Type",
 			},
-			Children: []*internal.Symbol{
+			Children: []*internal.SymbolMeta{
 				{
-					SymbolMeta: internal.SymbolMeta{
-						Name:       "I2.M2",
-						Synopsis:   "M2 func()",
-						Section:    "Types",
-						ParentName: "I2",
-						Kind:       "Method",
-					},
+					Name:       "I2.M2",
+					Synopsis:   "M2 func()",
+					Section:    "Types",
+					ParentName: "I2",
+					Kind:       "Method",
 				},
 			},
 		},
@@ -163,33 +159,27 @@ func TestGetSymbols(t *testing.T) {
 				Section:  "Types",
 				Kind:     "Type",
 			},
-			Children: []*internal.Symbol{
+			Children: []*internal.SymbolMeta{
 				{
-					SymbolMeta: internal.SymbolMeta{
-						Name:       "DD",
-						Synopsis:   "const DD",
-						Section:    "Types",
-						Kind:       "Constant",
-						ParentName: "Num",
-					},
+					Name:       "DD",
+					Synopsis:   "const DD",
+					Section:    "Types",
+					Kind:       "Constant",
+					ParentName: "Num",
 				},
 				{
-					SymbolMeta: internal.SymbolMeta{
-						Name:       "EE",
-						Synopsis:   "const EE",
-						Section:    "Types",
-						Kind:       "Constant",
-						ParentName: "Num",
-					},
+					Name:       "EE",
+					Synopsis:   "const EE",
+					Section:    "Types",
+					Kind:       "Constant",
+					ParentName: "Num",
 				},
 				{
-					SymbolMeta: internal.SymbolMeta{
-						Name:       "FF",
-						Synopsis:   "const FF",
-						Section:    "Types",
-						Kind:       "Constant",
-						ParentName: "Num",
-					},
+					Name:       "FF",
+					Synopsis:   "const FF",
+					Section:    "Types",
+					Kind:       "Constant",
+					ParentName: "Num",
 				},
 			},
 		},
@@ -200,15 +190,13 @@ func TestGetSymbols(t *testing.T) {
 				Section:  "Types",
 				Kind:     "Type",
 			},
-			Children: []*internal.Symbol{
+			Children: []*internal.SymbolMeta{
 				{
-					SymbolMeta: internal.SymbolMeta{
-						Name:       "S1.F",
-						Synopsis:   "F int",
-						Section:    "Types",
-						ParentName: "S1",
-						Kind:       "Field",
-					},
+					Name:       "S1.F",
+					Synopsis:   "F int",
+					Section:    "Types",
+					ParentName: "S1",
+					Kind:       "Field",
 				},
 			},
 		},
@@ -219,15 +207,13 @@ func TestGetSymbols(t *testing.T) {
 				Section:  "Types",
 				Kind:     "Type",
 			},
-			Children: []*internal.Symbol{
+			Children: []*internal.SymbolMeta{
 				{
-					SymbolMeta: internal.SymbolMeta{
-						Name:       "S2.G",
-						Synopsis:   "G int",
-						Section:    "Types",
-						ParentName: "S2",
-						Kind:       "Field",
-					},
+					Name:       "S2.G",
+					Synopsis:   "G int",
+					Section:    "Types",
+					ParentName: "S2",
+					Kind:       "Field",
 				},
 			},
 		},
@@ -238,42 +224,34 @@ func TestGetSymbols(t *testing.T) {
 				Section:  "Types",
 				Kind:     "Type",
 			},
-			Children: []*internal.Symbol{
+			Children: []*internal.SymbolMeta{
 				{
-					SymbolMeta: internal.SymbolMeta{
-						Name:       "CT",
-						Synopsis:   "const CT",
-						Section:    "Types",
-						ParentName: "T",
-						Kind:       "Constant",
-					},
+					Name:       "CT",
+					Synopsis:   "const CT",
+					Section:    "Types",
+					ParentName: "T",
+					Kind:       "Constant",
 				},
 				{
-					SymbolMeta: internal.SymbolMeta{
-						Name:       "VT",
-						Synopsis:   "var VT T",
-						Section:    "Types",
-						ParentName: "T",
-						Kind:       "Variable",
-					},
+					Name:       "VT",
+					Synopsis:   "var VT T",
+					Section:    "Types",
+					ParentName: "T",
+					Kind:       "Variable",
 				},
 				{
-					SymbolMeta: internal.SymbolMeta{
-						Name:       "TF",
-						Synopsis:   "func TF() T",
-						Section:    "Types",
-						ParentName: "T",
-						Kind:       "Function",
-					},
+					Name:       "TF",
+					Synopsis:   "func TF() T",
+					Section:    "Types",
+					ParentName: "T",
+					Kind:       "Function",
 				},
 				{
-					SymbolMeta: internal.SymbolMeta{
-						Name:       "T.M",
-						Synopsis:   "func (T) M()",
-						Section:    "Types",
-						ParentName: "T",
-						Kind:       "Method",
-					},
+					Name:       "T.M",
+					Synopsis:   "func (T) M()",
+					Section:    "Types",
+					ParentName: "T",
+					Kind:       "Method",
 				},
 			},
 		},

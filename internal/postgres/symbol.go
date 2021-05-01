@@ -69,9 +69,9 @@ func upsertDocumentationSymbols(ctx context.Context, db *database.DB,
 	docIDToPkgsymIDs := map[int]map[int]bool{}
 	for path, docIDToDoc := range pathToDocIDToDoc {
 		for docID, doc := range docIDToDoc {
-			err := updateSymbols(doc.API, func(s *internal.Symbol) error {
+			err := updateSymbols(doc.API, func(sm *internal.SymbolMeta) error {
 				pkgsymToID := pathToPkgsymID[path]
-				pkgsymID := pkgsymToID[packageSymbol{synopsis: s.Synopsis, name: s.Name, parentName: s.ParentName}]
+				pkgsymID := pkgsymToID[packageSymbol{synopsis: sm.Synopsis, name: sm.Name, parentName: sm.ParentName}]
 				_, ok := docIDToPkgsymIDs[docID]
 				if !ok {
 					docIDToPkgsymIDs[docID] = map[int]bool{}
@@ -227,23 +227,23 @@ func upsertPackageSymbolsReturningIDs(ctx context.Context, db *database.DB,
 			return nil, fmt.Errorf("pathID cannot be 0: %q", path)
 		}
 		for _, doc := range docs {
-			if err := updateSymbols(doc.API, func(s *internal.Symbol) error {
-				ps := packageSymbol{synopsis: s.Synopsis, name: s.Name, parentName: s.ParentName}
-				symID := nameToID[s.Name]
+			if err := updateSymbols(doc.API, func(sm *internal.SymbolMeta) error {
+				ps := packageSymbol{synopsis: sm.Synopsis, name: sm.Name, parentName: sm.ParentName}
+				symID := nameToID[sm.Name]
 				if symID == 0 {
-					return fmt.Errorf("symID cannot be 0: %q", s.Name)
+					return fmt.Errorf("symID cannot be 0: %q", sm.Name)
 				}
-				if s.ParentName == "" {
-					s.ParentName = s.Name
+				if sm.ParentName == "" {
+					sm.ParentName = sm.Name
 				}
-				parentID := nameToID[s.ParentName]
+				parentID := nameToID[sm.ParentName]
 				if parentID == 0 {
-					return fmt.Errorf("parentSymID cannot be 0: %q", s.ParentName)
+					return fmt.Errorf("parentSymID cannot be 0: %q", sm.ParentName)
 				}
 				if _, ok := pathTopkgsymToID[path][ps]; !ok {
 					packageSymbols = append(packageSymbols, pathID,
-						modulePathID, symID, parentID, s.Section, s.Kind,
-						s.Synopsis)
+						modulePathID, symID, parentID, sm.Section, sm.Kind,
+						sm.Synopsis)
 				}
 				return nil
 			}); err != nil {
@@ -275,8 +275,8 @@ func upsertSymbolNamesReturningIDs(ctx context.Context, db *database.DB,
 	var names []string
 	for _, docIDToDocs := range pathToDocIDToDocs {
 		for _, doc := range docIDToDocs {
-			if err := updateSymbols(doc.API, func(s *internal.Symbol) error {
-				names = append(names, s.Name)
+			if err := updateSymbols(doc.API, func(sm *internal.SymbolMeta) error {
+				names = append(names, sm.Name)
 				return nil
 			}); err != nil {
 				return nil, err
@@ -351,38 +351,46 @@ func getUnitSymbols(ctx context.Context, db *database.DB, unitID int) (_ map[int
 	// so that we can map the children to those symbols.
 	buildToNameToType := map[internal.BuildContext]map[string]*internal.Symbol{}
 	collect := func(rows *sql.Rows) error {
-		var s internal.Symbol
+		var (
+			sm    internal.SymbolMeta
+			build internal.BuildContext
+		)
 		if err := rows.Scan(
-			&s.Name, &s.ParentName,
-			&s.Section, &s.Kind, &s.Synopsis,
-			&s.GOOS, &s.GOARCH); err != nil {
+			&sm.Name, &sm.ParentName,
+			&sm.Section, &sm.Kind, &sm.Synopsis,
+			&build.GOOS, &build.GOARCH); err != nil {
 			return fmt.Errorf("row.Scan(): %v", err)
 		}
-		build := internal.BuildContext{GOOS: s.GOOS, GOARCH: s.GOARCH}
-		switch s.Section {
+
+		s := &internal.Symbol{
+			SymbolMeta: sm,
+			GOOS:       build.GOOS,
+			GOARCH:     build.GOARCH,
+		}
+		switch sm.Section {
 		// For symbols that belong to a type, map that symbol as a children of
 		// the parent type.
 		case internal.SymbolSectionTypes:
-			if s.Kind == internal.SymbolKindType {
+			if sm.Kind == internal.SymbolKindType {
 				_, ok := buildToNameToType[build]
 				if !ok {
 					buildToNameToType[build] = map[string]*internal.Symbol{}
 				}
-				buildToNameToType[build][s.Name] = &s
-				buildToSymbols[build] = append(buildToSymbols[build], &s)
+				buildToNameToType[build][sm.Name] = s
+				buildToSymbols[build] = append(buildToSymbols[build], s)
 			} else {
 				nameToType, ok := buildToNameToType[build]
 				if !ok {
-					return fmt.Errorf("build context %v for parent type %q could not be found for symbol %q", build, s.ParentName, s.Name)
+					return fmt.Errorf("build context %v for parent type %q could not be found for symbol %q", build, sm.ParentName, sm.Name)
 				}
-				parent, ok := nameToType[s.ParentName]
+				parent, ok := nameToType[sm.ParentName]
 				if !ok {
-					return fmt.Errorf("parent type %q could not be found for symbol %q", s.ParentName, s.Name)
+					return fmt.Errorf("parent type %q could not be found for symbol %q", sm.ParentName, sm.Name)
 				}
-				parent.Children = append(parent.Children, &s)
+				parent.Children = append(parent.Children, &sm)
 			}
 		default:
-			buildToSymbols[build] = append(buildToSymbols[build], &s)
+			buildToSymbols[build] = append(buildToSymbols[build], s)
 		}
 		return nil
 	}
@@ -392,13 +400,13 @@ func getUnitSymbols(ctx context.Context, db *database.DB, unitID int) (_ map[int
 	return buildToSymbols, nil
 }
 
-func updateSymbols(symbols []*internal.Symbol, updateFunc func(s *internal.Symbol) error) error {
+func updateSymbols(symbols []*internal.Symbol, updateFunc func(sm *internal.SymbolMeta) error) error {
 	for _, s := range symbols {
-		if err := updateFunc(s); err != nil {
+		if err := updateFunc(&s.SymbolMeta); err != nil {
 			return err
 		}
-		for _, s := range s.Children {
-			if err := updateFunc(s); err != nil {
+		for _, c := range s.Children {
+			if err := updateFunc(c); err != nil {
 				return err
 			}
 		}

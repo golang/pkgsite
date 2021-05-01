@@ -77,10 +77,6 @@ func cleanFetchResult(t *testing.T, fr *FetchResult) *FetchResult {
 			for _, s := range d.API {
 				s.GOOS = d.GOOS
 				s.GOARCH = d.GOARCH
-				for _, c := range s.Children {
-					c.GOOS = d.GOOS
-					c.GOARCH = d.GOARCH
-				}
 			}
 		}
 	}

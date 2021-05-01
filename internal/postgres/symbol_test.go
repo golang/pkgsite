@@ -77,9 +77,9 @@ func TestInsertSymbolNamesAndHistory(t *testing.T) {
 			"Variable":    unitSymbolFromSymbol(sample.Variable, "v1.0.0"),
 			"Function":    unitSymbolFromSymbol(sample.Function, "v1.0.0"),
 			"Type":        unitSymbolFromSymbol(sample.Type, "v1.0.0"),
-			"Type.Field":  unitSymbolFromSymbol(sample.Type.Children[0], "v1.0.0"),
-			"New":         unitSymbolFromSymbol(sample.Type.Children[1], "v1.0.0"),
-			"Type.Method": unitSymbolFromSymbol(sample.Type.Children[2], "v1.0.0"),
+			"Type.Field":  unitSymbolFromSymbolMeta(sample.Type.Children[0], "v1.0.0", internal.BuildContextAll),
+			"New":         unitSymbolFromSymbolMeta(sample.Type.Children[1], "v1.0.0", internal.BuildContextAll),
+			"Type.Method": unitSymbolFromSymbolMeta(sample.Type.Children[2], "v1.0.0", internal.BuildContextAll),
 		},
 	}
 	if diff := cmp.Diff(wantHist, gotHist,
@@ -159,9 +159,9 @@ func TestInsertSymbolHistory_MultiVersions(t *testing.T) {
 		},
 	}
 	typA := typ
-	typA.Children = []*internal.Symbol{&methodA}
+	typA.Children = []*internal.SymbolMeta{&methodA.SymbolMeta}
 	typB := typ
-	typB.Children = []*internal.Symbol{&methodA, &methodB}
+	typB.Children = []*internal.SymbolMeta{&methodA.SymbolMeta, &methodB.SymbolMeta}
 
 	mod10 := moduleWithSymbols(t, "v1.0.0", []*internal.Symbol{&typ})
 	mod11 := moduleWithSymbols(t, "v1.1.0", []*internal.Symbol{&typA})
@@ -301,7 +301,7 @@ func TestInsertSymbolHistory_MultiGOOS(t *testing.T) {
 		for _, m := range methods {
 			m.GOOS = goos
 			m.GOARCH = goarch
-			newTyp.Children = append(newTyp.Children, &m)
+			newTyp.Children = append(newTyp.Children, &m.SymbolMeta)
 		}
 		return []*internal.Symbol{&newTyp}
 	}
@@ -505,26 +505,30 @@ func comparePackageSymbols(ctx context.Context, t *testing.T, testDB *DB,
 
 func unitSymbolsFromAPI(api []*internal.Symbol, version string) map[string]*internal.UnitSymbol {
 	nameToUnitSymbols := map[string]*internal.UnitSymbol{}
-	updateSymbols(api, func(s *internal.Symbol) error {
+	updateSymbols(api, func(s *internal.SymbolMeta) error {
 		if _, ok := nameToUnitSymbols[s.Name]; !ok {
-			us := unitSymbolFromSymbol(s, version)
+			us := unitSymbolFromSymbolMeta(s, version, internal.BuildContextAll)
 			nameToUnitSymbols[s.Name] = us
 		}
 		return nil
 	})
 	return nameToUnitSymbols
 }
+
 func unitSymbolFromSymbol(s *internal.Symbol, version string) *internal.UnitSymbol {
 	us := &internal.UnitSymbol{
-		SymbolMeta: internal.SymbolMeta{
-			Name:       s.Name,
-			ParentName: s.ParentName,
-			Section:    s.Section,
-			Kind:       s.Kind,
-			Synopsis:   s.Synopsis,
-		},
-		Version: version,
+		SymbolMeta: s.SymbolMeta,
+		Version:    version,
 	}
 	us.AddBuildContext(internal.BuildContext{GOOS: s.GOOS, GOARCH: s.GOARCH})
+	return us
+}
+
+func unitSymbolFromSymbolMeta(sm *internal.SymbolMeta, version string, b internal.BuildContext) *internal.UnitSymbol {
+	us := &internal.UnitSymbol{
+		SymbolMeta: *sm,
+		Version:    version,
+	}
+	us.AddBuildContext(b)
 	return us
 }

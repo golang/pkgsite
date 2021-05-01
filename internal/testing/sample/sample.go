@@ -112,29 +112,24 @@ var (
 		},
 		GOOS:   internal.All,
 		GOARCH: internal.All,
-		Children: []*internal.Symbol{
-			FunctionNew,
+		Children: []*internal.SymbolMeta{
+			func() *internal.SymbolMeta {
+				n := FunctionNew.SymbolMeta
+				return &n
+			}(),
 			{
-				SymbolMeta: internal.SymbolMeta{
-					Name:       "Type.Field",
-					Synopsis:   "field",
-					Section:    internal.SymbolSectionTypes,
-					Kind:       internal.SymbolKindField,
-					ParentName: "Type",
-				},
-				GOOS:   internal.All,
-				GOARCH: internal.All,
+				Name:       "Type.Field",
+				Synopsis:   "field",
+				Section:    internal.SymbolSectionTypes,
+				Kind:       internal.SymbolKindField,
+				ParentName: "Type",
 			},
 			{
-				SymbolMeta: internal.SymbolMeta{
-					Name:       "Type.Method",
-					Synopsis:   "method",
-					Section:    internal.SymbolSectionTypes,
-					Kind:       internal.SymbolKindMethod,
-					ParentName: "Type",
-				},
-				GOOS:   internal.All,
-				GOARCH: internal.All,
+				Name:       "Type.Method",
+				Synopsis:   "method",
+				Section:    internal.SymbolSectionTypes,
+				Kind:       internal.SymbolKindMethod,
+				ParentName: "Type",
 			},
 		},
 	}
