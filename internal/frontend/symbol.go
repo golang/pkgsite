@@ -223,7 +223,11 @@ func ParseVersionsDetails(vd VersionsDetails) (map[string]map[string]*internal.U
 
 // unitSymbol returns an *internal.unitSymbol from the provided *Symbol.
 func unitSymbol(s *Symbol) *internal.UnitSymbol {
-	us := &internal.UnitSymbol{Name: s.Name}
+	us := &internal.UnitSymbol{
+		SymbolMeta: internal.SymbolMeta{
+			Name: s.Name,
+		},
+	}
 	if len(s.Builds) == 0 {
 		us.AddBuildContext(internal.BuildContextAll)
 	}

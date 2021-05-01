@@ -132,25 +132,31 @@ func TestInsertSymbolHistory_MultiVersions(t *testing.T) {
 	defer cancel()
 
 	typ := internal.Symbol{
-		Name:       "Foo",
-		Synopsis:   "type Foo struct",
-		Section:    internal.SymbolSectionTypes,
-		Kind:       internal.SymbolKindType,
-		ParentName: "Foo",
+		SymbolMeta: internal.SymbolMeta{
+			Name:       "Foo",
+			Synopsis:   "type Foo struct",
+			Section:    internal.SymbolSectionTypes,
+			Kind:       internal.SymbolKindType,
+			ParentName: "Foo",
+		},
 	}
 	methodA := internal.Symbol{
-		Name:       "Foo.A",
-		Synopsis:   "func (*Foo) A()",
-		Section:    internal.SymbolSectionTypes,
-		Kind:       internal.SymbolKindMethod,
-		ParentName: typ.Name,
+		SymbolMeta: internal.SymbolMeta{
+			Name:       "Foo.A",
+			Synopsis:   "func (*Foo) A()",
+			Section:    internal.SymbolSectionTypes,
+			Kind:       internal.SymbolKindMethod,
+			ParentName: typ.Name,
+		},
 	}
 	methodB := internal.Symbol{
-		Name:       "Foo.B",
-		Synopsis:   "func (*Foo) B()",
-		Section:    internal.SymbolSectionTypes,
-		Kind:       internal.SymbolKindMethod,
-		ParentName: typ.Name,
+		SymbolMeta: internal.SymbolMeta{
+			Name:       "Foo.B",
+			Synopsis:   "func (*Foo) B()",
+			Section:    internal.SymbolSectionTypes,
+			Kind:       internal.SymbolKindMethod,
+			ParentName: typ.Name,
+		},
 	}
 	typA := typ
 	typA.Children = []*internal.Symbol{&methodA}
@@ -234,25 +240,31 @@ func TestInsertSymbolHistory_MultiGOOS(t *testing.T) {
 	defer cancel()
 
 	typ := internal.Symbol{
-		Name:       "Foo",
-		Synopsis:   "type Foo struct",
-		Section:    internal.SymbolSectionTypes,
-		Kind:       internal.SymbolKindType,
-		ParentName: "Foo",
+		SymbolMeta: internal.SymbolMeta{
+			Name:       "Foo",
+			Synopsis:   "type Foo struct",
+			Section:    internal.SymbolSectionTypes,
+			Kind:       internal.SymbolKindType,
+			ParentName: "Foo",
+		},
 	}
 	methodA := internal.Symbol{
-		Name:       "Foo.A",
-		Synopsis:   "func (*Foo) A()",
-		Section:    internal.SymbolSectionTypes,
-		Kind:       internal.SymbolKindMethod,
-		ParentName: typ.Name,
+		SymbolMeta: internal.SymbolMeta{
+			Name:       "Foo.A",
+			Synopsis:   "func (*Foo) A()",
+			Section:    internal.SymbolSectionTypes,
+			Kind:       internal.SymbolKindMethod,
+			ParentName: typ.Name,
+		},
 	}
 	methodB := internal.Symbol{
-		Name:       "Foo.B",
-		Synopsis:   "func (*Foo) B()",
-		Section:    internal.SymbolSectionTypes,
-		Kind:       internal.SymbolKindMethod,
-		ParentName: typ.Name,
+		SymbolMeta: internal.SymbolMeta{
+			Name:       "Foo.B",
+			Synopsis:   "func (*Foo) B()",
+			Section:    internal.SymbolSectionTypes,
+			Kind:       internal.SymbolKindMethod,
+			ParentName: typ.Name,
+		},
 	}
 	mod10 := moduleWithSymbols(t, "v1.0.0", []*internal.Symbol{&typ})
 	mod11 := moduleWithSymbols(t, "v1.1.0", nil)
@@ -504,12 +516,14 @@ func unitSymbolsFromAPI(api []*internal.Symbol, version string) map[string]*inte
 }
 func unitSymbolFromSymbol(s *internal.Symbol, version string) *internal.UnitSymbol {
 	us := &internal.UnitSymbol{
-		Name:       s.Name,
-		ParentName: s.ParentName,
-		Section:    s.Section,
-		Kind:       s.Kind,
-		Synopsis:   s.Synopsis,
-		Version:    version,
+		SymbolMeta: internal.SymbolMeta{
+			Name:       s.Name,
+			ParentName: s.ParentName,
+			Section:    s.Section,
+			Kind:       s.Kind,
+			Synopsis:   s.Synopsis,
+		},
+		Version: version,
 	}
 	us.AddBuildContext(internal.BuildContext{GOOS: s.GOOS, GOARCH: s.GOARCH})
 	return us

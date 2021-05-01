@@ -25,7 +25,11 @@ func TestIntroducedHistory_OneBuildContext(t *testing.T) {
 		if _, ok := input[s.version]; !ok {
 			input[s.version] = map[string]*internal.UnitSymbol{}
 		}
-		us := &internal.UnitSymbol{Name: s.name}
+		us := &internal.UnitSymbol{
+			SymbolMeta: internal.SymbolMeta{
+				Name: s.name,
+			},
+		}
 		for _, b := range internal.BuildContexts {
 			us.AddBuildContext(b)
 		}
@@ -33,13 +37,25 @@ func TestIntroducedHistory_OneBuildContext(t *testing.T) {
 	}
 	want := map[string]map[string]*internal.UnitSymbol{
 		"v1.0.0": {
-			"Foo": &internal.UnitSymbol{Name: "Foo"},
+			"Foo": &internal.UnitSymbol{
+				SymbolMeta: internal.SymbolMeta{
+					Name: "Foo",
+				},
+			},
 		},
 		"v1.1.0": {
-			"Bar": &internal.UnitSymbol{Name: "Bar"},
+			"Bar": &internal.UnitSymbol{
+				SymbolMeta: internal.SymbolMeta{
+					Name: "Bar",
+				},
+			},
 		},
 		"v1.2.0": {
-			"Foo.A": &internal.UnitSymbol{Name: "Foo.A"},
+			"Foo.A": &internal.UnitSymbol{
+				SymbolMeta: internal.SymbolMeta{
+					Name: "Foo.A",
+				},
+			},
 		},
 	}
 	got := IntroducedHistory(input)
@@ -77,14 +93,22 @@ func TestIntroducedHistory_MultiGOOS(t *testing.T) {
 		}
 		us, ok := input[s.version][s.name]
 		if !ok {
-			us = &internal.UnitSymbol{Name: s.name}
+			us = &internal.UnitSymbol{
+				SymbolMeta: internal.SymbolMeta{
+					Name: s.name,
+				},
+			}
 			input[s.version][s.name] = us
 		}
 		us.AddBuildContext(s.build)
 	}
 
 	withBuilds := func(name string, builds ...internal.BuildContext) *internal.UnitSymbol {
-		us := &internal.UnitSymbol{Name: name}
+		us := &internal.UnitSymbol{
+			SymbolMeta: internal.SymbolMeta{
+				Name: name,
+			},
+		}
 		for _, b := range builds {
 			us.AddBuildContext(b)
 		}

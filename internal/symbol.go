@@ -31,6 +31,23 @@ const (
 // Symbol is an element in the package API. A symbol can be a constant,
 // variable, function, or type.
 type Symbol struct {
+	SymbolMeta
+
+	// Children contain the child symbols for this symbol. This will
+	// only be populated when the SymbolType is "Type". For example, the
+	// children of net/http.Handler are FileServer, NotFoundHandler,
+	// RedirectHandler, StripPrefix, and TimeoutHandler. Each child
+	// symbol will have ParentName set to the Name of this type.
+	Children []*Symbol
+
+	// GOOS specifies the execution operating system where the symbol appears.
+	GOOS string
+
+	// GOARCH specifies the execution architecture where the symbol appears.
+	GOARCH string
+}
+
+type SymbolMeta struct {
 	// Name is the name of the symbol.
 	Name string
 
@@ -49,29 +66,11 @@ type Symbol struct {
 	// the empty string. For example, the parent type for
 	// net/http.FileServer is Handler.
 	ParentName string
-
-	// Children contain the child symbols for this symbol. This will
-	// only be populated when the SymbolType is "Type". For example, the
-	// children of net/http.Handler are FileServer, NotFoundHandler,
-	// RedirectHandler, StripPrefix, and TimeoutHandler. Each child
-	// symbol will have ParentName set to the Name of this type.
-	Children []*Symbol
-
-	// GOOS specifies the execution operating system where the symbol appears.
-	GOOS string
-
-	// GOARCH specifies the execution architecture where the symbol appears.
-	GOARCH string
 }
 
 // UnitSymbol represents a symbol that is part of a unit.
 type UnitSymbol struct {
-	// TODO: factor out duplicate fields between Symbol and UnitSymbol
-	Name       string
-	ParentName string
-	Synopsis   string
-	Section    SymbolSection
-	Kind       SymbolKind
+	SymbolMeta
 
 	// Version is the unit version.
 	Version string
