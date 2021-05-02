@@ -92,6 +92,7 @@ func GetSymbolHistoryFromTable(ctx context.Context, ddb *database.DB,
 		var (
 			newUS internal.UnitSymbol
 			build internal.BuildContext
+			v     string
 		)
 		if err := rows.Scan(
 			&newUS.Name,
@@ -99,16 +100,16 @@ func GetSymbolHistoryFromTable(ctx context.Context, ddb *database.DB,
 			&newUS.Section,
 			&newUS.Kind,
 			&newUS.Synopsis,
-			&newUS.Version,
+			&v,
 			&build.GOOS,
 			&build.GOARCH,
 		); err != nil {
 			return fmt.Errorf("row.Scan(): %v", err)
 		}
-		nts, ok := versionToNameToUnitSymbol[newUS.Version]
+		nts, ok := versionToNameToUnitSymbol[v]
 		if !ok {
 			nts = map[string]*internal.UnitSymbol{}
-			versionToNameToUnitSymbol[newUS.Version] = nts
+			versionToNameToUnitSymbol[v] = nts
 		}
 		us, ok := nts[newUS.Name]
 		if !ok {

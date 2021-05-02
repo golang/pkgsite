@@ -55,6 +55,7 @@ func getPackageSymbols(ctx context.Context, ddb *database.DB, packagePath, modul
 		var (
 			newUS internal.UnitSymbol
 			build internal.BuildContext
+			v     string
 		)
 		if err := rows.Scan(
 			&newUS.Name,
@@ -62,21 +63,21 @@ func getPackageSymbols(ctx context.Context, ddb *database.DB, packagePath, modul
 			&newUS.Section,
 			&newUS.Kind,
 			&newUS.Synopsis,
-			&newUS.Version,
+			&v,
 			&build.GOOS,
 			&build.GOARCH,
 		); err != nil {
 			return fmt.Errorf("row.Scan(): %v", err)
 		}
 		if newUS.Section == internal.SymbolSectionTypes && newUS.Kind != internal.SymbolKindType {
-			if err := validateChildSymbol(&newUS, build, versionToNameToUnitSymbol); err != nil {
+			if err := validateChildSymbol(&newUS, v, build, versionToNameToUnitSymbol); err != nil {
 				return err
 			}
 		}
-		nts, ok := versionToNameToUnitSymbol[newUS.Version]
+		nts, ok := versionToNameToUnitSymbol[v]
 		if !ok {
 			nts = map[string]*internal.UnitSymbol{}
-			versionToNameToUnitSymbol[newUS.Version] = nts
+			versionToNameToUnitSymbol[v] = nts
 		}
 		us, ok := nts[newUS.Name]
 		if !ok {
@@ -92,20 +93,20 @@ func getPackageSymbols(ctx context.Context, ddb *database.DB, packagePath, modul
 	return versionToNameToUnitSymbol, nil
 }
 
-func validateChildSymbol(us *internal.UnitSymbol, build internal.BuildContext,
+func validateChildSymbol(us *internal.UnitSymbol, v string, build internal.BuildContext,
 	versionToNameToUnitSymbol map[string]map[string]*internal.UnitSymbol) error {
-	nameToUnitSymbol, ok := versionToNameToUnitSymbol[us.Version]
+	nameToUnitSymbol, ok := versionToNameToUnitSymbol[v]
 	if !ok {
-		return fmt.Errorf("version %q could not be found: %q", us.Version, us.Name)
+		return fmt.Errorf("version %q could not be found: %q", v, us.Name)
 	}
 	parent, ok := nameToUnitSymbol[us.ParentName]
 	if !ok {
 		return fmt.Errorf("parent %q could not be found at version %q: %q",
-			us.ParentName, us.Version, us.Name)
+			us.ParentName, v, us.Name)
 	}
 	if !parent.SupportsBuild(build) {
 		return fmt.Errorf("parent %q does not have build %v at version %q: %q",
-			us.ParentName, build, us.Version, us.Name)
+			us.ParentName, build, v, us.Name)
 	}
 	return nil
 }

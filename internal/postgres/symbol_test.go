@@ -518,7 +518,6 @@ func unitSymbolsFromAPI(api []*internal.Symbol, version string) map[string]*inte
 func unitSymbolFromSymbol(s *internal.Symbol, version string) *internal.UnitSymbol {
 	us := &internal.UnitSymbol{
 		SymbolMeta: s.SymbolMeta,
-		Version:    version,
 	}
 	us.AddBuildContext(internal.BuildContext{GOOS: s.GOOS, GOARCH: s.GOARCH})
 	return us
@@ -527,7 +526,6 @@ func unitSymbolFromSymbol(s *internal.Symbol, version string) *internal.UnitSymb
 func unitSymbolFromSymbolMeta(sm *internal.SymbolMeta, version string, b internal.BuildContext) *internal.UnitSymbol {
 	us := &internal.UnitSymbol{
 		SymbolMeta: *sm,
-		Version:    version,
 	}
 	us.AddBuildContext(b)
 	return us

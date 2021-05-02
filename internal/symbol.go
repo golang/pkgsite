@@ -72,9 +72,6 @@ type SymbolMeta struct {
 type UnitSymbol struct {
 	SymbolMeta
 
-	// Version is the unit version.
-	Version string
-
 	// builds are the build contexts that apply to this symbol.
 	builds map[BuildContext]bool
 }
