@@ -16,6 +16,7 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/middleware"
 	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/version"
@@ -510,6 +511,13 @@ func (db *DB) getUnitWithAllFields(ctx context.Context, um *internal.UnitMeta, b
 	}
 	u.Subdirectories = pkgs
 	u.UnitMeta = *um
+
+	if experiment.IsActive(ctx, internal.ExperimentSymbolHistoryMainPage) {
+		u.SymbolHistory, err = db.GetSymbolHistoryForBuildContext(ctx, um.Path, um.ModulePath, bcMatched)
+		if err != nil {
+			return nil, err
+		}
+	}
 	return &u, nil
 }
 

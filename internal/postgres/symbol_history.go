@@ -38,7 +38,7 @@ func (db *DB) GetSymbolHistory(ctx context.Context, packagePath, modulePath stri
 // GetSymbolHistoryFromTable is exported for use in tests.
 func GetSymbolHistoryFromTable(ctx context.Context, ddb *database.DB,
 	packagePath, modulePath string, bc *internal.BuildContext) (_ map[string]map[string]*internal.UnitSymbol, err error) {
-	defer derrors.WrapStack(&err, "getSymbolHistory(ctx, ddb, %q, %q)", packagePath, modulePath)
+	defer derrors.WrapStack(&err, "GetSymbolHistoryFromTable(ctx, ddb, %q, %q)", packagePath, modulePath)
 
 	q := squirrel.Select(
 		"s1.name AS symbol_name",
@@ -120,21 +120,34 @@ func GetSymbolHistoryWithPackageSymbols(ctx context.Context, ddb *database.DB,
 	return symbol.IntroducedHistory(versionToNameToUnitSymbols), nil
 }
 
-// GetSymbolHistory returns a map of the first version when a symbol name is
+// GetSymbolHistoryForBuildContext returns a map of the first version when a symbol name is
 // added to the API for the specified build context, to the symbol name, to the
 // UnitSymbol struct. The UnitSymbol.Children field will always be empty, as
 // children names are also tracked.
 func (db *DB) GetSymbolHistoryForBuildContext(ctx context.Context, packagePath, modulePath string,
-	build internal.BuildContext) (_ map[string]map[string]*internal.UnitSymbol, err error) {
+	build internal.BuildContext) (nameToVersion map[string]string, err error) {
 	defer derrors.Wrap(&err, "GetSymbolHistoryForBuildContext(ctx, %q, %q)", packagePath, modulePath)
 	defer middleware.ElapsedStat(ctx, "GetSymbolHistoryForBuildContext")()
 
+	var versionToNameToUnitSymbol map[string]map[string]*internal.UnitSymbol
 	if experiment.IsActive(ctx, internal.ExperimentReadSymbolHistory) {
 		if build.GOOS == internal.All {
 			// It doesn't matter which one we use, so just pick a random one.
 			build = internal.BuildContextLinux
 		}
-		return GetSymbolHistoryFromTable(ctx, db.db, packagePath, modulePath, &build)
+		versionToNameToUnitSymbol, err = GetSymbolHistoryFromTable(ctx, db.db, packagePath, modulePath, &build)
+	} else {
+		versionToNameToUnitSymbol, err = GetSymbolHistoryWithPackageSymbols(ctx, db.db, packagePath, modulePath)
 	}
-	return GetSymbolHistoryWithPackageSymbols(ctx, db.db, packagePath, modulePath)
+	if err != nil {
+		return nil, err
+	}
+
+	nameToVersion = map[string]string{}
+	for v, nts := range versionToNameToUnitSymbol {
+		for n := range nts {
+			nameToVersion[n] = v
+		}
+	}
+	return nameToVersion, nil
 }

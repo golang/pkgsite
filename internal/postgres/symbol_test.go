@@ -404,39 +404,17 @@ func TestInsertSymbolHistory_MultiGOOS(t *testing.T) {
 		t.Fatalf("mismatch on symbol history(-want +got):\n%s", diff)
 	}
 
-	gotHist, err = testDB.GetSymbolHistoryForBuildContext(ctx,
+	gotHist2, err := testDB.GetSymbolHistoryForBuildContext(ctx,
 		mod10.Packages()[0].Path, mod10.ModulePath, internal.BuildContextWindows)
 	if err != nil {
 		t.Fatal(err)
 	}
-	wantHist = map[string]map[string]*internal.UnitSymbol{
-		"v1.0.0": map[string]*internal.UnitSymbol{
-			"Foo": func() *internal.UnitSymbol {
-				us := unitSymbolFromSymbol(&typ, "v1.0.0")
-				us.RemoveBuildContexts()
-				us.AddBuildContext(internal.BuildContextWindows)
-				return us
-			}(),
-		},
-		"v1.1.0": map[string]*internal.UnitSymbol{
-			"Foo.A": func() *internal.UnitSymbol {
-				us := unitSymbolFromSymbol(&methodA, "v1.1.0")
-				us.RemoveBuildContexts()
-				us.AddBuildContext(internal.BuildContextWindows)
-				return us
-			}(),
-		},
-		"v1.2.0": map[string]*internal.UnitSymbol{
-			"Foo.B": func() *internal.UnitSymbol {
-				us := unitSymbolFromSymbol(&methodB, "v1.2.0")
-				us.RemoveBuildContexts()
-				us.AddBuildContext(internal.BuildContextWindows)
-				return us
-			}(),
-		},
+	wantHist2 := map[string]string{
+		"Foo":   "v1.0.0",
+		"Foo.A": "v1.1.0",
+		"Foo.B": "v1.2.0",
 	}
-	if diff := cmp.Diff(wantHist, gotHist,
-		cmp.AllowUnexported(internal.UnitSymbol{})); diff != "" {
+	if diff := cmp.Diff(wantHist2, gotHist2); diff != "" {
 		t.Fatalf("mismatch on symbol history(-want +got):\n%s", diff)
 	}
 }
