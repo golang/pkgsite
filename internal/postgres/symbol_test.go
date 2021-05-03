@@ -404,8 +404,12 @@ func TestInsertSymbolHistory_MultiGOOS(t *testing.T) {
 		t.Fatalf("mismatch on symbol history(-want +got):\n%s", diff)
 	}
 
-	gotHist2, err := testDB.GetSymbolHistoryForBuildContext(ctx,
-		mod10.Packages()[0].Path, mod10.ModulePath, internal.BuildContextWindows)
+	pathID, err := getPathID(ctx, testDB.db, mod10.Packages()[0].Path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	gotHist2, err := getSymbolHistoryForBuildContext(ctx, testDB.db,
+		pathID, mod10.ModulePath, internal.BuildContextWindows)
 	if err != nil {
 		t.Fatal(err)
 	}

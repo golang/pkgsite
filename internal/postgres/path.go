@@ -167,3 +167,10 @@ func upsertPaths(ctx context.Context, db *database.DB, paths []string) (pathToID
 	}
 	return pathToID, nil
 }
+
+func getPathID(ctx context.Context, ddb *database.DB, path string) (id int, err error) {
+	err = ddb.QueryRow(ctx,
+		`SELECT id FROM paths WHERE path = $1`,
+		path).Scan(&id)
+	return id, err
+}
