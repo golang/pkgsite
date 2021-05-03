@@ -33,25 +33,6 @@ func (db *DB) GetSymbolHistory(ctx context.Context, packagePath, modulePath stri
 	return GetSymbolHistoryWithPackageSymbols(ctx, db.db, packagePath, modulePath)
 }
 
-// GetSymbolHistory returns a map of the first version when a symbol name is
-// added to the API for the specified build context, to the symbol name, to the
-// UnitSymbol struct. The UnitSymbol.Children field will always be empty, as
-// children names are also tracked.
-func (db *DB) GetSymbolHistoryForBuildContext(ctx context.Context, packagePath, modulePath string,
-	build internal.BuildContext) (_ map[string]map[string]*internal.UnitSymbol, err error) {
-	defer derrors.Wrap(&err, "GetSymbolHistoryForBuildContext(ctx, %q, %q)", packagePath, modulePath)
-	defer middleware.ElapsedStat(ctx, "GetSymbolHistoryForBuildContext")()
-
-	if experiment.IsActive(ctx, internal.ExperimentReadSymbolHistory) {
-		if build.GOOS == internal.All {
-			// It doesn't matter which one we use, so just pick a random one.
-			build = internal.BuildContextLinux
-		}
-		return GetSymbolHistoryFromTable(ctx, db.db, packagePath, modulePath, &build)
-	}
-	return GetSymbolHistoryWithPackageSymbols(ctx, db.db, packagePath, modulePath)
-}
-
 // GetSymbolHistoryFromTable fetches symbol history data from the symbol_history table.
 //
 // GetSymbolHistoryFromTable is exported for use in tests.
@@ -137,4 +118,23 @@ func GetSymbolHistoryWithPackageSymbols(ctx context.Context, ddb *database.DB,
 		return nil, err
 	}
 	return symbol.IntroducedHistory(versionToNameToUnitSymbols), nil
+}
+
+// GetSymbolHistory returns a map of the first version when a symbol name is
+// added to the API for the specified build context, to the symbol name, to the
+// UnitSymbol struct. The UnitSymbol.Children field will always be empty, as
+// children names are also tracked.
+func (db *DB) GetSymbolHistoryForBuildContext(ctx context.Context, packagePath, modulePath string,
+	build internal.BuildContext) (_ map[string]map[string]*internal.UnitSymbol, err error) {
+	defer derrors.Wrap(&err, "GetSymbolHistoryForBuildContext(ctx, %q, %q)", packagePath, modulePath)
+	defer middleware.ElapsedStat(ctx, "GetSymbolHistoryForBuildContext")()
+
+	if experiment.IsActive(ctx, internal.ExperimentReadSymbolHistory) {
+		if build.GOOS == internal.All {
+			// It doesn't matter which one we use, so just pick a random one.
+			build = internal.BuildContextLinux
+		}
+		return GetSymbolHistoryFromTable(ctx, db.db, packagePath, modulePath, &build)
+	}
+	return GetSymbolHistoryWithPackageSymbols(ctx, db.db, packagePath, modulePath)
 }
