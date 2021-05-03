@@ -6,6 +6,68 @@ package integration
 
 import "golang.org/x/pkgsite/internal/frontend"
 
+var versionsPageMultiGoos = []*frontend.VersionList{
+	{
+		VersionListKey: frontend.VersionListKey{
+			ModulePath: "example.com/symbols",
+			Major:      "v1",
+		},
+		Versions: []*frontend.VersionSummary{
+			{
+				CommitTime:          "Jan 30, 2019",
+				Link:                "/example.com/symbols@v1.2.0/multigoos",
+				Retracted:           false,
+				RetractionRationale: "",
+				Version:             "v1.2.0",
+				IsMinor:             true,
+				Symbols: [][]*frontend.Symbol{
+					{
+						{
+							Name:     "CloseOnExec",
+							Synopsis: "func CloseOnExec(n int)",
+							Link:     "/example.com/symbols@v1.2.0/multigoos?GOOS=js#CloseOnExec",
+							New:      true,
+							Section:  "Functions",
+							Kind:     "Function",
+							Builds:   []string{"js/wasm"},
+						},
+					},
+				},
+			},
+			{
+				CommitTime:          "Jan 30, 2019",
+				Link:                "/example.com/symbols@v1.1.0/multigoos",
+				Retracted:           false,
+				RetractionRationale: "",
+				Version:             "v1.1.0",
+				IsMinor:             true,
+				Symbols: [][]*frontend.Symbol{
+					{
+						{
+							Name:     "CloseOnExec",
+							Synopsis: "func CloseOnExec(foo string) error",
+							Link:     "/example.com/symbols@v1.1.0/multigoos?GOOS=windows#CloseOnExec",
+							New:      true,
+							Section:  "Functions",
+							Kind:     "Function",
+							Builds:   []string{"windows/amd64"},
+						},
+						{
+							Name:     "CloseOnExec",
+							Synopsis: "func CloseOnExec(num int) (int, error)",
+							Link:     "/example.com/symbols@v1.1.0/multigoos?GOOS=darwin#CloseOnExec",
+							New:      true,
+							Section:  "Functions",
+							Kind:     "Function",
+							Builds:   []string{"darwin/amd64", "linux/amd64"},
+						},
+					},
+				},
+			},
+		},
+	},
+}
+
 var versionsPageHello = []*frontend.VersionList{
 	{
 		VersionListKey: frontend.VersionListKey{

@@ -92,9 +92,9 @@ func fetchVersionsDetails(ctx context.Context, ds internal.DataSource, fullPath,
 		return nil, err
 	}
 
-	outVersionToNameToUnitSymbol := map[string]map[string]*internal.UnitSymbol{}
+	sh := internal.NewSymbolHistory()
 	if experiment.IsActive(ctx, internal.ExperimentSymbolHistoryVersionsPage) {
-		outVersionToNameToUnitSymbol, err = db.LegacyGetSymbolHistory(ctx, fullPath, modulePath)
+		sh, err = db.GetSymbolHistory(ctx, fullPath, modulePath)
 		if err != nil {
 			return nil, err
 		}
@@ -110,7 +110,7 @@ func fetchVersionsDetails(ctx context.Context, ds internal.DataSource, fullPath,
 		}
 		return constructUnitURL(versionPath, mi.ModulePath, linkVersion(mi.Version, mi.ModulePath))
 	}
-	return buildVersionDetails(modulePath, versions, outVersionToNameToUnitSymbol, linkify), nil
+	return buildVersionDetails(modulePath, versions, sh, linkify), nil
 }
 
 // pathInVersion constructs the full import path of the package corresponding
@@ -139,7 +139,7 @@ func pathInVersion(v1Path string, mi *internal.ModuleInfo) string {
 // given versions MUST be sorted first by module path and then by semver.
 func buildVersionDetails(currentModulePath string,
 	modInfos []*internal.ModuleInfo,
-	versionToNameToSymbol map[string]map[string]*internal.UnitSymbol,
+	sh *internal.SymbolHistory,
 	linkify func(v *internal.ModuleInfo) string) *VersionsDetails {
 	// lists organizes versions by VersionListKey. Note that major version isn't
 	// sufficient as a key: there are packages contained in the same major
@@ -188,8 +188,8 @@ func buildVersionDetails(currentModulePath string,
 		key.DeprecationComment = shortRationale(mi.DeprecationComment)
 		vs.Retracted = mi.Retracted
 		vs.RetractionRationale = shortRationale(mi.RetractionRationale)
-		if nts, ok := versionToNameToSymbol[mi.Version]; ok {
-			vs.Symbols = symbolsForVersion(linkify(mi), nts)
+		if sv := sh.SymbolsAtVersion(mi.Version); sv != nil {
+			vs.Symbols = symbolsForVersion(linkify(mi), sv)
 		}
 		if _, ok := lists[key]; !ok {
 			seenLists = append(seenLists, key)

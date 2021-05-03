@@ -22,15 +22,15 @@ type Symbol struct {
 	// Synopsis is the one line description of the symbol that is displayed.
 	Synopsis string
 
-	// Link is the link to the symbol name on pkg.go.dev.
-	Link string
-
 	// Section is the section that a symbol appears in.
 	Section internal.SymbolSection
 
 	// Kind is the type of a symbol, which is either a constant, variable,
 	// function, type, field or method.
 	Kind internal.SymbolKind
+
+	// Link is the link to the symbol name on pkg.go.dev.
+	Link string
 
 	// Children contain the child symbols for this symbol. This will
 	// only be populated when the SymbolType is "Type". For example, the
@@ -44,6 +44,9 @@ type Symbol struct {
 	// build contexts, Builds will be nil.
 	Builds []string
 
+	// builds keeps track of build contexts used to generate Builds.
+	builds map[internal.BuildContext]bool
+
 	// New indicates that the symbol is new as of the version where it is
 	// present. For example, if type Client was introduced in v1.0.0 and
 	// Client.Timeout was introduced in v1.1.0, New will be false for Client
@@ -51,53 +54,112 @@ type Symbol struct {
 	New bool
 }
 
+func (s *Symbol) addBuilds(builds []internal.BuildContext) {
+	if s.builds == nil {
+		s.builds = map[internal.BuildContext]bool{}
+	}
+	for _, b := range builds {
+		s.builds[b] = true
+	}
+}
+
 // symbolsForVersions returns an array of symbols for use in the VersionSummary
 // of the specified version.
-func symbolsForVersion(pkgURLPath string, symbolsAtVersion map[string]*internal.UnitSymbol) [][]*Symbol {
-	nameToSymbol := map[string]*Symbol{}
-	for _, us := range symbolsAtVersion {
-		builds := symbolBuilds(us)
-		s, ok := nameToSymbol[us.Name]
-		if !ok {
-			s = &Symbol{
-				Name:     us.Name,
-				Synopsis: us.Synopsis,
-				Link:     symbolLink(pkgURLPath, us.Name, us.BuildContexts()),
-				Section:  us.Section,
-				Kind:     us.Kind,
-				New:      true,
-				Builds:   builds,
+func symbolsForVersion(pkgURLPath string, symbolsAtVersion map[string]map[internal.SymbolMeta]*internal.UnitSymbol) [][]*Symbol {
+	nameToMetaToSymbol := map[string]map[internal.SymbolMeta]*Symbol{}
+	children := map[internal.SymbolMeta]*internal.UnitSymbol{}
+	for _, smToUs := range symbolsAtVersion {
+		for sm, us := range smToUs {
+			if sm.ParentName != sm.Name {
+				// For the children, keep track of them for later.
+				children[sm] = us
+				continue
 			}
-		} else if !s.New && us.Kind == internal.SymbolKindType {
-			// It's possible that a symbol was already created if this is a parent
-			// symbol and we called addSymbol on the child symbol first. In that
-			// case, a parent symbol would have been created where s.New is set to
-			// false and s.Synopsis is set to the one created in createParent.
-			// Update those fields instead of overwritting the struct, since the
-			// struct's Children field would have already been populated.
-			s.New = true
-			s.Synopsis = us.Synopsis
+
+			metaToSym, ok := nameToMetaToSymbol[us.Name]
+			if !ok {
+				metaToSym = map[internal.SymbolMeta]*Symbol{}
+				nameToMetaToSymbol[us.Name] = metaToSym
+			}
+			s, ok := metaToSym[sm]
+			if !ok {
+				s = &Symbol{
+					Name:     sm.Name,
+					Synopsis: sm.Synopsis,
+					Section:  sm.Section,
+					Kind:     sm.Kind,
+					Link:     symbolLink(pkgURLPath, sm.Name, us.BuildContexts()),
+					New:      true,
+				}
+				nameToMetaToSymbol[us.Name][sm] = s
+			}
+			s.addBuilds(us.BuildContexts())
 		}
-		if us.ParentName == us.Name {
-			// s is not a child symbol of a type, so add it to the map and
-			// continue.
-			nameToSymbol[us.Name] = s
+	}
+
+	for cm, cus := range children {
+		// Option 1: no parent exists
+		// - make one, add to map
+		// - append to parent
+		// Option 2: parent exists and supports child bc
+		// - append to parent
+		// Option 3 parent exists and does not support child bc
+		// - append to parent
+		cs := &Symbol{
+			Name:     cm.Name,
+			Synopsis: cm.Synopsis,
+			Section:  cm.Section,
+			Kind:     cm.Kind,
+			Link:     symbolLink(pkgURLPath, cm.Name, cus.BuildContexts()),
+			New:      true,
+		}
+
+		parents, ok := nameToMetaToSymbol[cm.ParentName]
+		var found bool
+		if ok {
+			for _, ps := range parents {
+				for build := range ps.builds {
+					if cus.SupportsBuild(build) {
+						ps.Children = append(ps.Children, cs)
+						found = true
+						break
+					}
+				}
+			}
+		}
+		if found {
 			continue
 		}
 
-		// s is a child symbol of a parent type, so append it to the Children field
-		// of the parent type.
-		parent, ok := nameToSymbol[us.ParentName]
-		if !ok {
-			parent = createParent(us, pkgURLPath)
-			nameToSymbol[us.ParentName] = parent
+		// We did not find a parent, so create one.
+		ps := createParent(cus, pkgURLPath)
+		ps.Children = append(ps.Children, cs)
+		pm := internal.SymbolMeta{
+			Name:       ps.Name,
+			ParentName: ps.Name,
+			Synopsis:   ps.Synopsis,
+			Section:    ps.Section,
+			Kind:       ps.Kind,
 		}
-		if len(parent.Builds) == len(s.Builds) {
-			s.Builds = nil
+		ps.addBuilds(cus.BuildContexts())
+		nameToMetaToSymbol[pm.Name] = map[internal.SymbolMeta]*Symbol{
+			pm: ps,
 		}
-		parent.Children = append(parent.Children, s)
 	}
-	return sortSymbols(nameToSymbol)
+
+	var symbols []*Symbol
+	for _, mts := range nameToMetaToSymbol {
+		for _, s := range mts {
+			if len(s.builds) != len(internal.BuildContexts) {
+				for b := range s.builds {
+					s.Builds = append(s.Builds, fmt.Sprintf("%s/%s", b.GOOS, b.GOARCH))
+				}
+				sort.Strings(s.Builds)
+			}
+			symbols = append(symbols, s)
+		}
+	}
+	return sortSymbols(symbols)
 }
 
 func symbolLink(pkgURLPath, name string, builds []internal.BuildContext) string {
@@ -111,33 +173,20 @@ func symbolLink(pkgURLPath, name string, builds []internal.BuildContext) string 
 	return fmt.Sprintf("%s?GOOS=%s#%s", pkgURLPath, builds[0].GOOS, name)
 }
 
-func symbolBuilds(us *internal.UnitSymbol) []string {
-	if us.InAll() {
-		return nil
-	}
-	var builds []string
-	for _, b := range us.BuildContexts() {
-		builds = append(builds, b.String())
-	}
-	sort.Strings(builds)
-	return builds
-}
-
 // createParent creates a parent symbol for the provided unit symbol. This is
 // used when us is a child of a symbol that may have been introduced at a
 // different version. The symbol created will have New set to false, since this
 // function is only used when a parent symbol is not found for the unit symbol,
 // which means it was not introduced at the same version.
 func createParent(us *internal.UnitSymbol, pkgURLPath string) *Symbol {
-	builds := symbolBuilds(us)
 	s := &Symbol{
 		Name:     us.ParentName,
 		Synopsis: fmt.Sprintf("type %s", us.ParentName),
-		Link:     symbolLink(pkgURLPath, us.ParentName, us.BuildContexts()),
 		Section:  internal.SymbolSectionTypes,
 		Kind:     internal.SymbolKindType,
-		Builds:   builds,
+		Link:     symbolLink(pkgURLPath, us.ParentName, us.BuildContexts()),
 	}
+	s.addBuilds(us.BuildContexts())
 	return s
 }
 
@@ -148,11 +197,10 @@ func createParent(us *internal.UnitSymbol, pkgURLPath string) *Symbol {
 // order of (1) Fields (2) Constants (3) Variables (4) Functions and (5)
 // Methods. For interfaces, child symbols are sorted in order of
 // (1) Methods (2) Constants (3) Variables and (4) Functions.
-func sortSymbols(nameToSymbol map[string]*Symbol) [][]*Symbol {
+func sortSymbols(symbols []*Symbol) [][]*Symbol {
 	sm := map[internal.SymbolSection][]*Symbol{}
-	for _, parent := range nameToSymbol {
+	for _, parent := range symbols {
 		sm[parent.Section] = append(sm[parent.Section], parent)
-
 		cm := map[internal.SymbolKind][]*Symbol{}
 		parent.Synopsis = strings.TrimSuffix(parent.Synopsis, "{ ... }")
 		for _, c := range parent.Children {
@@ -193,9 +241,6 @@ func sortSymbolsGroup(syms []*Symbol) {
 	sort.Slice(syms, func(i, j int) bool {
 		return syms[i].Synopsis < syms[j].Synopsis
 	})
-	for _, s := range syms {
-		sort.Strings(s.Builds)
-	}
 }
 
 // ParseVersionsDetails returns a map of versionToNameToUnitSymbol based on

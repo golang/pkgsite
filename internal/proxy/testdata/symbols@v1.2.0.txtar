@@ -103,3 +103,29 @@ package hello
 func HelloJS() string {
 	return "Hello"
 }
+
+-- multigoos/multigoos_windows.go --
+// +build windows
+
+package multigoos
+
+func CloseOnExec(foo string) error {
+    return nil
+}
+
+-- multigoos/multigoos_unix.go --
+// +build aix darwin dragonfly freebsd linux netbsd openbsd solaris
+
+package multigoos
+
+func CloseOnExec(num int) (int, error) {
+    return num, nil
+}
+
+-- multigoos/multigoos_js.go --
+// +build js,wasm
+
+package multigoos
+
+func CloseOnExec(n int) {
+}
