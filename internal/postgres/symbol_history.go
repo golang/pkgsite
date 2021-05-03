@@ -28,7 +28,7 @@ func (db *DB) GetSymbolHistory(ctx context.Context, packagePath, modulePath stri
 	defer middleware.ElapsedStat(ctx, "GetSymbolHistory")()
 
 	if experiment.IsActive(ctx, internal.ExperimentReadSymbolHistory) {
-		return GetSymbolHistoryFromTable(ctx, db.db, packagePath, modulePath, nil)
+		return GetSymbolHistoryFromTable(ctx, db.db, packagePath, modulePath)
 	}
 	return GetSymbolHistoryWithPackageSymbols(ctx, db.db, packagePath, modulePath)
 }
@@ -37,7 +37,7 @@ func (db *DB) GetSymbolHistory(ctx context.Context, packagePath, modulePath stri
 //
 // GetSymbolHistoryFromTable is exported for use in tests.
 func GetSymbolHistoryFromTable(ctx context.Context, ddb *database.DB,
-	packagePath, modulePath string, bc *internal.BuildContext) (_ map[string]map[string]*internal.UnitSymbol, err error) {
+	packagePath, modulePath string) (_ map[string]map[string]*internal.UnitSymbol, err error) {
 	defer derrors.WrapStack(&err, "GetSymbolHistoryFromTable(ctx, ddb, %q, %q)", packagePath, modulePath)
 
 	q := squirrel.Select(
@@ -57,10 +57,6 @@ func GetSymbolHistoryFromTable(ctx context.Context, ddb *database.DB,
 		Join("paths p2 ON sh.module_path_id = p2.id").
 		Where(squirrel.Eq{"p1.path": packagePath}).
 		Where(squirrel.Eq{"p2.path": modulePath})
-	if bc != nil {
-		q = q.Where(squirrel.Eq{"sh.goos": bc.GOOS}).
-			Where(squirrel.Eq{"sh.goarch": bc.GOARCH})
-	}
 	query, args, err := q.PlaceholderFormat(squirrel.Dollar).ToSql()
 	if err != nil {
 		return nil, err
@@ -129,25 +125,62 @@ func (db *DB) GetSymbolHistoryForBuildContext(ctx context.Context, packagePath, 
 	defer derrors.Wrap(&err, "GetSymbolHistoryForBuildContext(ctx, %q, %q)", packagePath, modulePath)
 	defer middleware.ElapsedStat(ctx, "GetSymbolHistoryForBuildContext")()
 
-	var versionToNameToUnitSymbol map[string]map[string]*internal.UnitSymbol
 	if experiment.IsActive(ctx, internal.ExperimentReadSymbolHistory) {
 		if build.GOOS == internal.All {
 			// It doesn't matter which one we use, so just pick a random one.
 			build = internal.BuildContextLinux
 		}
-		versionToNameToUnitSymbol, err = GetSymbolHistoryFromTable(ctx, db.db, packagePath, modulePath, &build)
-	} else {
-		versionToNameToUnitSymbol, err = GetSymbolHistoryWithPackageSymbols(ctx, db.db, packagePath, modulePath)
+		return getSymbolHistoryForBuildContext(ctx, db.db, packagePath, modulePath, build)
 	}
+
+	versionToNameToUnitSymbol, err := GetSymbolHistoryWithPackageSymbols(ctx, db.db, packagePath, modulePath)
 	if err != nil {
 		return nil, err
 	}
-
 	nameToVersion = map[string]string{}
 	for v, nts := range versionToNameToUnitSymbol {
 		for n := range nts {
 			nameToVersion[n] = v
 		}
+	}
+	return nameToVersion, nil
+}
+
+func getSymbolHistoryForBuildContext(ctx context.Context, ddb *database.DB, packagePath, modulePath string,
+	bc internal.BuildContext) (_ map[string]string, err error) {
+	defer derrors.WrapStack(&err, "getSymbolHistoryForBuildContext(ctx, ddb, %q, %q)", packagePath, modulePath)
+
+	q := squirrel.Select(
+		"s1.name AS symbol_name",
+		"sh.since_version",
+	).From("symbol_history sh").
+		Join("package_symbols ps ON ps.id = sh.package_symbol_id").
+		Join("symbol_names s1 ON ps.symbol_name_id = s1.id").
+		Join("symbol_names s2 ON ps.parent_symbol_name_id = s2.id").
+		Join("paths p1 ON sh.package_path_id = p1.id").
+		Join("paths p2 ON sh.module_path_id = p2.id").
+		Where(squirrel.Eq{"p1.path": packagePath}).
+		Where(squirrel.Eq{"p2.path": modulePath}).
+		Where(squirrel.Eq{"sh.goos": bc.GOOS}).
+		Where(squirrel.Eq{"sh.goarch": bc.GOARCH})
+	query, args, err := q.PlaceholderFormat(squirrel.Dollar).ToSql()
+	if err != nil {
+		return nil, err
+	}
+
+	// versionToNameToUnitSymbol is a map of the version a symbol was
+	// introduced, to the name and unit symbol.
+	nameToVersion := map[string]string{}
+	collect := func(rows *sql.Rows) error {
+		var n, v string
+		if err := rows.Scan(&n, &v); err != nil {
+			return fmt.Errorf("row.Scan(): %v", err)
+		}
+		nameToVersion[n] = v
+		return nil
+	}
+	if err := ddb.RunQuery(ctx, query, collect, args...); err != nil {
+		return nil, err
 	}
 	return nameToVersion, nil
 }
