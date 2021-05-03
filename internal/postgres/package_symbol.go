@@ -15,8 +15,8 @@ import (
 	"golang.org/x/pkgsite/internal/middleware"
 )
 
-// getPackageSymbols returns all of the symbols for a given package path and module path.
-func getPackageSymbols(ctx context.Context, ddb *database.DB, packagePath, modulePath string,
+// legacyGetPackageSymbols returns all of the symbols for a given package path and module path.
+func legacyGetPackageSymbols(ctx context.Context, ddb *database.DB, packagePath, modulePath string,
 ) (_ map[string]map[string]*internal.UnitSymbol, err error) {
 	defer derrors.Wrap(&err, "getPackageSymbols(ctx, ddb, %q, %q)", packagePath, modulePath)
 	defer middleware.ElapsedStat(ctx, "getPackageSymbols")()

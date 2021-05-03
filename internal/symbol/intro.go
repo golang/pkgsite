@@ -11,11 +11,11 @@ import (
 	"golang.org/x/pkgsite/internal"
 )
 
-// IntroducedHistory returns a map of the first version when a symbol name is
+// LegacyIntroducedHistory returns a map of the first version when a symbol name is
 // added to the API, to the symbol name, to the UnitSymbol struct. The
 // UnitSymbol.Children field will always be empty, as children names are also
 // tracked.
-func IntroducedHistory(versionToNameToUnitSymbol map[string]map[string]*internal.UnitSymbol) (
+func LegacyIntroducedHistory(versionToNameToUnitSymbol map[string]map[string]*internal.UnitSymbol) (
 	outVersionToNameToUnitSymbol map[string]map[string]*internal.UnitSymbol) {
 	// Create an array of the versions in versionToNameToUnitSymbol, sorted by
 	// increasing semver.

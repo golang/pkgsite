@@ -18,25 +18,25 @@ import (
 	"golang.org/x/pkgsite/internal/symbol"
 )
 
-// GetSymbolHistory returns a map of the first version when a symbol name is
+// LegacyGetSymbolHistory returns a map of the first version when a symbol name is
 // added to the API, to the symbol name, to the UnitSymbol struct. The
 // UnitSymbol.Children field will always be empty, as children names are also
 // tracked.
-func (db *DB) GetSymbolHistory(ctx context.Context, packagePath, modulePath string,
+func (db *DB) LegacyGetSymbolHistory(ctx context.Context, packagePath, modulePath string,
 ) (_ map[string]map[string]*internal.UnitSymbol, err error) {
-	defer derrors.Wrap(&err, "GetSymbolHistory(ctx, %q, %q)", packagePath, modulePath)
-	defer middleware.ElapsedStat(ctx, "GetSymbolHistory")()
+	defer derrors.Wrap(&err, "LegacyGetSymbolHistory(ctx, %q, %q)", packagePath, modulePath)
+	defer middleware.ElapsedStat(ctx, "LegacyGetSymbolHistory")()
 
 	if experiment.IsActive(ctx, internal.ExperimentReadSymbolHistory) {
-		return GetSymbolHistoryFromTable(ctx, db.db, packagePath, modulePath)
+		return LegacyGetSymbolHistoryFromTable(ctx, db.db, packagePath, modulePath)
 	}
-	return GetSymbolHistoryWithPackageSymbols(ctx, db.db, packagePath, modulePath)
+	return LegacyGetSymbolHistoryWithPackageSymbols(ctx, db.db, packagePath, modulePath)
 }
 
-// GetSymbolHistoryFromTable fetches symbol history data from the symbol_history table.
+// LegacyGetSymbolHistoryFromTable fetches symbol history data from the symbol_history table.
 //
-// GetSymbolHistoryFromTable is exported for use in tests.
-func GetSymbolHistoryFromTable(ctx context.Context, ddb *database.DB,
+// LegacyGetSymbolHistoryFromTable is exported for use in tests.
+func LegacyGetSymbolHistoryFromTable(ctx context.Context, ddb *database.DB,
 	packagePath, modulePath string) (_ map[string]map[string]*internal.UnitSymbol, err error) {
 	defer derrors.WrapStack(&err, "GetSymbolHistoryFromTable(ctx, ddb, %q, %q)", packagePath, modulePath)
 
@@ -102,20 +102,20 @@ func GetSymbolHistoryFromTable(ctx context.Context, ddb *database.DB,
 	return versionToNameToUnitSymbol, nil
 }
 
-// GetSymbolHistoryWithPackageSymbols fetches symbol history data by using data
+// LegacyGetSymbolHistoryWithPackageSymbols fetches symbol history data by using data
 // from package_symbols and documentation_symbols, and computed using
 // symbol.IntroducedHistory.
 //
-// GetSymbolHistoryWithPackageSymbols is exported for use in tests.
-func GetSymbolHistoryWithPackageSymbols(ctx context.Context, ddb *database.DB,
+// LegacyGetSymbolHistoryWithPackageSymbols is exported for use in tests.
+func LegacyGetSymbolHistoryWithPackageSymbols(ctx context.Context, ddb *database.DB,
 	packagePath, modulePath string) (_ map[string]map[string]*internal.UnitSymbol, err error) {
 	defer derrors.WrapStack(&err, "GetSymbolHistoryWithPackageSymbols(ctx, ddb, %q, %q)", packagePath, modulePath)
 	defer middleware.ElapsedStat(ctx, "GetSymbolHistoryWithPackageSymbols")()
-	versionToNameToUnitSymbols, err := getPackageSymbols(ctx, ddb, packagePath, modulePath)
+	versionToNameToUnitSymbols, err := legacyGetPackageSymbols(ctx, ddb, packagePath, modulePath)
 	if err != nil {
 		return nil, err
 	}
-	return symbol.IntroducedHistory(versionToNameToUnitSymbols), nil
+	return symbol.LegacyIntroducedHistory(versionToNameToUnitSymbols), nil
 }
 
 // getSymbolHistoryForBuildContext returns a map of the first version when a symbol name is

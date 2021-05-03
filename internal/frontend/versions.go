@@ -94,7 +94,7 @@ func fetchVersionsDetails(ctx context.Context, ds internal.DataSource, fullPath,
 
 	outVersionToNameToUnitSymbol := map[string]map[string]*internal.UnitSymbol{}
 	if experiment.IsActive(ctx, internal.ExperimentSymbolHistoryVersionsPage) {
-		outVersionToNameToUnitSymbol, err = db.GetSymbolHistory(ctx, fullPath, modulePath)
+		outVersionToNameToUnitSymbol, err = db.LegacyGetSymbolHistory(ctx, fullPath, modulePath)
 		if err != nil {
 			return nil, err
 		}

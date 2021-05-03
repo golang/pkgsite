@@ -523,7 +523,7 @@ func (db *DB) getUnitWithAllFields(ctx context.Context, um *internal.UnitMeta, b
 		return &u, nil
 	}
 
-	versionToNameToUnitSymbol, err := GetSymbolHistoryWithPackageSymbols(ctx, db.db, um.Path,
+	versionToNameToUnitSymbol, err := LegacyGetSymbolHistoryWithPackageSymbols(ctx, db.db, um.Path,
 		um.ModulePath)
 	if err != nil {
 		return nil, err

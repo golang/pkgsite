@@ -18,7 +18,7 @@ import (
 // inVersionToNameToUnitSymbol.
 func CompareAPIVersions(path string, apiVersions pkgAPIVersions,
 	inVersionToNameToUnitSymbol map[string]map[string]*internal.UnitSymbol) []string {
-	versionToNameToUnitSymbol := IntroducedHistory(inVersionToNameToUnitSymbol)
+	versionToNameToUnitSymbol := LegacyIntroducedHistory(inVersionToNameToUnitSymbol)
 
 	// Create a map of name to the first version when the symbol name was found
 	// in the package.

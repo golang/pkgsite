@@ -58,7 +58,7 @@ func TestIntroducedHistory_OneBuildContext(t *testing.T) {
 			},
 		},
 	}
-	got := IntroducedHistory(input)
+	got := LegacyIntroducedHistory(input)
 	if diff := cmp.Diff(want, got, cmpopts.IgnoreFields(internal.UnitSymbol{}, "builds")); diff != "" {
 		t.Errorf("mismatch (-want, +got):\n%s", diff)
 	}
@@ -127,7 +127,7 @@ func TestIntroducedHistory_MultiGOOS(t *testing.T) {
 			"Foo.A": withBuilds("Foo.A", internal.BuildContextJS),
 		},
 	}
-	got := IntroducedHistory(input)
+	got := LegacyIntroducedHistory(input)
 	if diff := cmp.Diff(want, got, cmpopts.IgnoreFields(internal.UnitSymbol{}, "builds")); diff != "" {
 		t.Errorf("mismatch (-want, +got):\n%s", diff)
 	}
