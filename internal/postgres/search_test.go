@@ -1191,3 +1191,39 @@ func TestDeleteOlderVersionFromSearch(t *testing.T) {
 	insert(mod)
 	check(mod)
 }
+
+func TestGroupSearchResults(t *testing.T) {
+	rs := []*internal.SearchResult{
+		{PackagePath: "m.com/p", ModulePath: "m.com", Score: 10},
+		{PackagePath: "m.com/p2", ModulePath: "m.com", Score: 8},
+		{PackagePath: "m.com/v2/p", ModulePath: "m.com/v2", Score: 6},
+		{PackagePath: "m.com/v2/p2", ModulePath: "m.com/v2", Score: 4},
+	}
+	got := groupSearchResults(rs)
+	sp2 := &internal.SearchResult{
+		PackagePath: "m.com/p2",
+		ModulePath:  "m.com",
+		Score:       8,
+	}
+	sp := &internal.SearchResult{
+		PackagePath: "m.com/p",
+		ModulePath:  "m.com",
+		Score:       10,
+		SameModule:  []*internal.SearchResult{sp2},
+	}
+	want := []*internal.SearchResult{
+		{
+			PackagePath: "m.com/v2/p",
+			ModulePath:  "m.com/v2",
+			Score:       6,
+			SameModule: []*internal.SearchResult{
+				{PackagePath: "m.com/v2/p2", ModulePath: "m.com/v2", Score: 4},
+			},
+			LowerMajor: []*internal.SearchResult{sp, sp2},
+		},
+		sp,
+	}
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("mismatch (-want, +got)\n%s", diff)
+	}
+}

@@ -54,6 +54,10 @@
   font-size: 0.875rem;
   line-height: 1.375rem;
 }
+.SearchSnippet-sub {
+  font-size: 0.875rem;
+  margin-top: 0.3125rem;
+}
 
 .Pagination-nav {
   display: flex;

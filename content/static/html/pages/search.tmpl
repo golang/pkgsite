@@ -56,9 +56,26 @@
                   {{end}}
                 </span>
               </div>
-            </div>
-          {{end}}
-        {{end}}
+              {{with .SameModule}}
+                <div class="SearchSnippet-sub">
+                  <span>{{.Heading}}</span>
+                  {{range $i, $v := .Links}}
+                    <a href="/{{$v.Href}}" data-gtmc="search result" data-gtmv="{{$i}}">{{$v.Body}}</a>
+                  {{end}}
+                  <span>{{.Suffix}}</span>
+                </div>
+              {{end}}
+              {{with .LowerMajor}}
+                <div class="SearchSnippet-sub">
+                  <span>{{.Heading}}</span>
+                  {{range $i, $v := .Links}}
+                    <a href="/{{$v.Href}}" data-gtmc="search result" data-gtmv="{{$i}}">{{$v.Body}}</a>
+                  {{end}}
+                </div>
+              {{end}}
+            </div> <!-- SearchSnippet -->
+          {{end}}   {{/* range over Results */}}
+        {{end}}     {{/* else */}}
       </div>
       <div class="SearchResults-footer">
         {{template "pagination_nav" .Pagination}}

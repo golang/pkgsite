@@ -56,6 +56,26 @@ func TestMajorVersionForModule(t *testing.T) {
 	}
 }
 
+func TestSeriesPathAndMajorVersion(t *testing.T) {
+	for _, test := range []struct {
+		in             string
+		wantSeriesPath string
+		wantVersion    int
+	}{
+		{"m.com", "m.com", 1},
+		{"m.com/v123", "m.com", 123},
+		{"gopkg.in/m.v1", "gopkg.in/m", 1},
+		{"gopkg.in/m.v35", "gopkg.in/m", 35},
+		{"m.com/v1.2", "", 0},
+	} {
+		gotSeriesPath, gotVersion := SeriesPathAndMajorVersion(test.in)
+		if gotSeriesPath != test.wantSeriesPath || gotVersion != test.wantVersion {
+			t.Errorf("SeriesPathAndMajorVersion(%q) = (%s, %d), want (%s, %d)",
+				test.in, gotSeriesPath, gotVersion, test.wantSeriesPath, test.wantVersion)
+		}
+	}
+}
+
 func TestV1Path(t *testing.T) {
 	for _, test := range []struct {
 		modulePath, suffix string

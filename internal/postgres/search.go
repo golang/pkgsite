@@ -23,6 +23,7 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/stdlib"
 )
@@ -114,7 +115,13 @@ var searchers = map[string]searcher{
 // the penalty of a deep search that scans nearly every package.
 func (db *DB) Search(ctx context.Context, q string, limit, offset, maxResultCount int) (_ []*internal.SearchResult, err error) {
 	defer derrors.WrapStack(&err, "DB.Search(ctx, %q, %d, %d)", q, limit, offset)
-	resp, err := db.hedgedSearch(ctx, q, limit, offset, maxResultCount, searchers, nil)
+
+	queryLimit := limit
+	if experiment.IsActive(ctx, internal.ExperimentSearchGrouping) {
+		// Gather extra results for better grouping by module and series.
+		queryLimit *= 5
+	}
+	resp, err := db.hedgedSearch(ctx, q, queryLimit, offset, maxResultCount, searchers, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -128,6 +135,12 @@ func (db *DB) Search(ctx context.Context, q string, limit, offset, maxResultCoun
 		if !ex {
 			results = append(results, r)
 		}
+	}
+	if experiment.IsActive(ctx, internal.ExperimentSearchGrouping) {
+		results = groupSearchResults(results)
+	}
+	if len(results) > limit {
+		results = results[:limit]
 	}
 	return results, nil
 }
@@ -389,6 +402,56 @@ func sortAndDedup(s []string) []string {
 	}
 	sort.Strings(r)
 	return r
+}
+
+// groupSearchResults groups and re-orders the list of SearchResults by module
+// and series path and returns a new list of SearchResults.
+//
+// The second and later packages from a module are grouped under the first package,
+// and removed from the top-level list.
+//
+// Higher major versions of a module are put before lower ones.
+//
+// Packages from lower major versions of the module are grouped under the first
+// package of the highest major version. But they are not removed from the
+// top-level list.
+func groupSearchResults(rs []*internal.SearchResult) []*internal.SearchResult {
+	// Put higher major versions first, otherwise observing score.
+	sort.Slice(rs, func(i, j int) bool {
+		sp1, v1 := internal.SeriesPathAndMajorVersion(rs[i].ModulePath)
+		sp2, v2 := internal.SeriesPathAndMajorVersion(rs[j].ModulePath)
+		if sp1 != sp2 {
+			return rs[i].Score > rs[j].Score
+		}
+		return v1 > v2
+	})
+
+	modules := map[string]*internal.SearchResult{} // from module path to first result
+	series := map[string]*internal.SearchResult{}  // for series path to first result
+	var results []*internal.SearchResult
+	for _, r := range rs {
+		f := modules[r.ModulePath]
+		if f == nil {
+			// First result with this module path; remember it and keep it.
+			modules[r.ModulePath] = r
+			results = append(results, r)
+		} else {
+			// Record this result under the first result.
+			f.SameModule = append(f.SameModule, r)
+		}
+
+		seriesPath := internal.SeriesPathForModule(r.ModulePath)
+		f = series[seriesPath]
+		if f == nil {
+			// First time we've seen anything from this series: remember it.
+			series[seriesPath] = r
+		} else if r.ModulePath != f.ModulePath {
+			// Result is from a different (lower) major version. Record this result
+			// under the first.
+			f.LowerMajor = append(f.LowerMajor, r)
+		}
+	}
+	return results
 }
 
 var upsertSearchStatement = fmt.Sprintf(`
