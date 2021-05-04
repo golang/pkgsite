@@ -331,7 +331,7 @@ func getPackagesInUnit(ctx context.Context, db *database.DB, fullPath, modulePat
 		queryBuilder = queryBuilder.Join("paths p ON p.id = u.path_id").
 			LeftJoin("documentation d ON d.unit_id = u.id").
 			Where(squirrel.Eq{"u.module_id": moduleID})
-	} else if modulePath != "" && resolvedVersion != "" {
+	} else {
 		queryBuilder = queryBuilder.
 			Join("modules m ON u.module_id = m.id").
 			Join("paths p ON p.id = u.path_id").
