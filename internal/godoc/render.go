@@ -16,7 +16,6 @@ import (
 	"golang.org/x/mod/semver"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
-	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/godoc/dochtml"
 	"golang.org/x/pkgsite/internal/godoc/internal/doc"
 	"golang.org/x/pkgsite/internal/source"
@@ -150,6 +149,12 @@ func (p *Package) renderOptions(innerPath string, sourceInfo *source.Info, modIn
 // version in nameToVersion, an empty string is returned. This is because we
 // don't want to display that information on the main page to reduce clutter.
 func sinceVersionFunc(modulePath string, nameToVersion map[string]string) func(name string) string {
+	if nameToVersion == nil {
+		return func(string) string {
+			return ""
+		}
+	}
+
 	var earliest string
 	for _, v := range nameToVersion {
 		if earliest == "" {
@@ -189,9 +194,6 @@ func (p *Package) Render(ctx context.Context, innerPath string,
 		return nil, err
 	}
 
-	if !experiment.IsActive(ctx, internal.ExperimentSymbolHistoryMainPage) {
-		nameToVersion = map[string]string{}
-	}
 	opts := p.renderOptions(innerPath, sourceInfo, modInfo, nameToVersion)
 	parts, err := dochtml.Render(ctx, p.Fset, d, opts)
 	if errors.Is(err, ErrTooLarge) {

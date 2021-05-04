@@ -512,19 +512,24 @@ func (db *DB) getUnitWithAllFields(ctx context.Context, um *internal.UnitMeta, b
 	u.Subdirectories = pkgs
 	u.UnitMeta = *um
 
-	if !experiment.IsActive(ctx, internal.ExperimentSymbolHistoryMainPage) {
-		return &u, nil
-	}
 	if um.IsPackage() && doc.Source != nil {
+		if um.ModulePath == stdlib.ModulePath {
+			u.SymbolHistory, err = getSymbolHistoryForBuildContext(ctx, db.db, pathID, um.ModulePath, bcMatched)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		if !experiment.IsActive(ctx, internal.ExperimentSymbolHistoryMainPage) {
+			return &u, nil
+		}
 		if experiment.IsActive(ctx, internal.ExperimentReadSymbolHistory) {
 			u.SymbolHistory, err = getSymbolHistoryForBuildContext(ctx, db.db, pathID, um.ModulePath, bcMatched)
 			if err != nil {
 				return nil, err
 			}
-
 			return &u, nil
 		}
-
 		versionToNameToUnitSymbol, err := LegacyGetSymbolHistoryWithPackageSymbols(ctx, db.db, um.Path,
 			um.ModulePath)
 		if err != nil {

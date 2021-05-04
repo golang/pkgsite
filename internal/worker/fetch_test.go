@@ -313,7 +313,7 @@ func TestFetchAndUpdateState(t *testing.T) {
 			sort.Slice(got.Licenses, func(i, j int) bool {
 				return got.Licenses[i].FilePath < got.Licenses[j].FilePath
 			})
-			if diff := cmp.Diff(test.want.UnitMeta, *got, cmp.AllowUnexported(source.Info{})); diff != "" {
+			if diff := cmp.Diff(test.want.UnitMeta, *got, cmpopts.EquateEmpty(), cmp.AllowUnexported(source.Info{})); diff != "" {
 				t.Fatalf("testDB.GetUnitMeta(ctx, %q, %q) mismatch (-want +got):\n%s", test.modulePath, test.version, diff)
 			}
 
@@ -323,6 +323,7 @@ func TestFetchAndUpdateState(t *testing.T) {
 			}
 
 			if diff := cmp.Diff(test.want, gotPkg,
+				cmpopts.EquateEmpty(),
 				cmp.AllowUnexported(source.Info{}),
 				cmpopts.IgnoreFields(internal.Unit{}, "Documentation", "BuildContexts"),
 				cmpopts.IgnoreFields(internal.Unit{}, "Subdirectories")); diff != "" {

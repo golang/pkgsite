@@ -93,7 +93,7 @@ func fetchVersionsDetails(ctx context.Context, ds internal.DataSource, fullPath,
 	}
 
 	sh := internal.NewSymbolHistory()
-	if experiment.IsActive(ctx, internal.ExperimentSymbolHistoryVersionsPage) {
+	if modulePath == stdlib.ModulePath || experiment.IsActive(ctx, internal.ExperimentSymbolHistoryVersionsPage) {
 		sh, err = db.GetSymbolHistory(ctx, fullPath, modulePath)
 		if err != nil {
 			return nil, err

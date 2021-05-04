@@ -15,6 +15,7 @@ import (
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/middleware"
+	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/symbol"
 )
 
@@ -25,6 +26,9 @@ func (db *DB) GetSymbolHistory(ctx context.Context, packagePath, modulePath stri
 	defer derrors.Wrap(&err, "GetSymbolHistory(ctx, %q, %q)", packagePath, modulePath)
 	defer middleware.ElapsedStat(ctx, "GetSymbolHistory")()
 
+	if modulePath == stdlib.ModulePath {
+		return GetSymbolHistoryFromTable(ctx, db.db, packagePath, modulePath)
+	}
 	if experiment.IsActive(ctx, internal.ExperimentReadSymbolHistory) {
 		return GetSymbolHistoryFromTable(ctx, db.db, packagePath, modulePath)
 	}
