@@ -47,11 +47,23 @@ func getPackageSymbols(ctx context.Context, ddb *database.DB, packagePath, modul
 			CASE WHEN ps.type='Type' THEN 0 ELSE 1 END,
 			symbol_name;`
 
-	// versionToNameToUnitSymbol contains all of the types for this unit,
-	// grouped by name and build context. This is used to keep track of the
-	// parent types, so that we can map the children to those symbols.
+	sh, collect := collectSymbolHistory(func(sh *internal.SymbolHistory, sm internal.SymbolMeta, v string, build internal.BuildContext) error {
+		if sm.Section == internal.SymbolSectionTypes && sm.Kind != internal.SymbolKindType {
+			_, err := sh.GetSymbol(sm.ParentName, v, build)
+			return err
+		}
+		return nil
+	})
+	if err := ddb.RunQuery(ctx, query, collect, packagePath, modulePath); err != nil {
+		return nil, err
+	}
+	return sh, nil
+}
+
+func collectSymbolHistory(check func(sh *internal.SymbolHistory, sm internal.SymbolMeta, v string, build internal.BuildContext) error) (*internal.SymbolHistory, func(rows *sql.Rows) error) {
 	sh := internal.NewSymbolHistory()
-	collect := func(rows *sql.Rows) error {
+	return sh, func(rows *sql.Rows) (err error) {
+		defer derrors.Wrap(&err, "collectSymbolHistory")
 		var (
 			sm    internal.SymbolMeta
 			build internal.BuildContext
@@ -69,18 +81,12 @@ func getPackageSymbols(ctx context.Context, ddb *database.DB, packagePath, modul
 		); err != nil {
 			return fmt.Errorf("row.Scan(): %v", err)
 		}
-		if sm.Section == internal.SymbolSectionTypes && sm.Kind != internal.SymbolKindType {
-			if _, err := sh.GetSymbol(sm.ParentName, v, build); err != nil {
-				return err
-			}
+		if err := check(sh, sm, v, build); err != nil {
+			return fmt.Errorf("check(): %v", err)
 		}
 		sh.AddSymbol(sm, v, build)
 		return nil
 	}
-	if err := ddb.RunQuery(ctx, query, collect, packagePath, modulePath); err != nil {
-		return nil, err
-	}
-	return sh, nil
 }
 
 // legacyGetPackageSymbols returns all of the symbols for a given package path and module path.

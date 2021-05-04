@@ -60,30 +60,7 @@ func GetSymbolHistoryFromTable(ctx context.Context, ddb *database.DB,
 		return nil, err
 	}
 
-	// versionToNameToUnitSymbol is a map of the version a symbol was
-	// introduced, to the name and unit symbol.
-	sh := internal.NewSymbolHistory()
-	collect := func(rows *sql.Rows) error {
-		var (
-			sm    internal.SymbolMeta
-			build internal.BuildContext
-			v     string
-		)
-		if err := rows.Scan(
-			&sm.Name,
-			&sm.ParentName,
-			&sm.Section,
-			&sm.Kind,
-			&sm.Synopsis,
-			&v,
-			&build.GOOS,
-			&build.GOARCH,
-		); err != nil {
-			return fmt.Errorf("row.Scan(): %v", err)
-		}
-		sh.AddSymbol(sm, v, build)
-		return nil
-	}
+	sh, collect := collectSymbolHistory(func(*internal.SymbolHistory, internal.SymbolMeta, string, internal.BuildContext) error { return nil })
 	if err := ddb.RunQuery(ctx, query, collect, args...); err != nil {
 		return nil, err
 	}
@@ -126,7 +103,7 @@ func (db *DB) LegacyGetSymbolHistory(ctx context.Context, packagePath, modulePat
 // LegacyGetSymbolHistoryFromTable is exported for use in tests.
 func LegacyGetSymbolHistoryFromTable(ctx context.Context, ddb *database.DB,
 	packagePath, modulePath string) (_ map[string]map[string]*internal.UnitSymbol, err error) {
-	defer derrors.WrapStack(&err, "GetSymbolHistoryFromTable(ctx, ddb, %q, %q)", packagePath, modulePath)
+	defer derrors.WrapStack(&err, "LegacyGetSymbolHistoryFromTable(ctx, ddb, %q, %q)", packagePath, modulePath)
 
 	q := squirrel.Select(
 		"s1.name AS symbol_name",
