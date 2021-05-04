@@ -70,9 +70,16 @@ func upsertDocumentationSymbols(ctx context.Context, db *database.DB,
 	for path, docIDToDoc := range pathToDocIDToDoc {
 		for docID, doc := range docIDToDoc {
 			err := updateSymbols(doc.API, func(sm *internal.SymbolMeta) error {
-				pkgsymToID := pathToPkgsymID[path]
-				pkgsymID := pkgsymToID[packageSymbol{synopsis: sm.Synopsis, name: sm.Name, parentName: sm.ParentName}]
-				_, ok := docIDToPkgsymIDs[docID]
+				pkgsymToID, ok := pathToPkgsymID[path]
+				if !ok {
+					return fmt.Errorf("path could not be found: %q", path)
+				}
+				ps := packageSymbol{synopsis: sm.Synopsis, name: sm.Name, parentName: sm.ParentName}
+				pkgsymID, ok := pkgsymToID[ps]
+				if !ok {
+					return fmt.Errorf("package symbol could not be found: %v", ps)
+				}
+				_, ok = docIDToPkgsymIDs[docID]
 				if !ok {
 					docIDToPkgsymIDs[docID] = map[int]bool{}
 				}
@@ -189,8 +196,16 @@ func upsertPackageSymbolsReturningIDs(ctx context.Context, db *database.DB,
 			return fmt.Errorf("symbol name cannot be empty: %d", symbolID)
 		}
 		parentSym := idToSymbolName[parentSymbolID]
-		if sym == "" {
-			return fmt.Errorf("parent symbol name cannot be empty: %d", parentSymbolID)
+		if parentSym == "" {
+			// A different variable of this symbol was previously inserted.
+			// Don't add this to pathTopkgsymToID, since it's not the package
+			// symbol that we want.
+			// For example:
+			// https://dev-pkg.go.dev/github.com/fastly/kingpin@v1.2.6#TokenShort
+			// and
+			// https://pkg.go.dev/github.com/fastly/kingpin@v1.3.7#TokenShort
+			// have the same synopsis, but different parents and sections.
+			return nil
 		}
 		pathTopkgsymToID[path][packageSymbol{
 			synopsis:   synopsis,
@@ -199,6 +214,8 @@ func upsertPackageSymbolsReturningIDs(ctx context.Context, db *database.DB,
 		}] = id
 		return nil
 	}
+	// This query fetches more that just the package symbols that we want.
+	// The relevant package symbols are filtered above.
 	if err := db.RunQuery(ctx, `
         SELECT
             ps.id,
