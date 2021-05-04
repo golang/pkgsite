@@ -515,26 +515,29 @@ func (db *DB) getUnitWithAllFields(ctx context.Context, um *internal.UnitMeta, b
 	if !experiment.IsActive(ctx, internal.ExperimentSymbolHistoryMainPage) {
 		return &u, nil
 	}
-	if experiment.IsActive(ctx, internal.ExperimentReadSymbolHistory) {
-		u.SymbolHistory, err = getSymbolHistoryForBuildContext(ctx, db.db, pathID, um.ModulePath, bcMatched)
+	if um.IsPackage() && doc.Source != nil {
+		if experiment.IsActive(ctx, internal.ExperimentReadSymbolHistory) {
+			u.SymbolHistory, err = getSymbolHistoryForBuildContext(ctx, db.db, pathID, um.ModulePath, bcMatched)
+			if err != nil {
+				return nil, err
+			}
+
+			return &u, nil
+		}
+
+		versionToNameToUnitSymbol, err := LegacyGetSymbolHistoryWithPackageSymbols(ctx, db.db, um.Path,
+			um.ModulePath)
 		if err != nil {
 			return nil, err
 		}
-		return &u, nil
-	}
-
-	versionToNameToUnitSymbol, err := LegacyGetSymbolHistoryWithPackageSymbols(ctx, db.db, um.Path,
-		um.ModulePath)
-	if err != nil {
-		return nil, err
-	}
-	nameToVersion := map[string]string{}
-	for v, nts := range versionToNameToUnitSymbol {
-		for n := range nts {
-			nameToVersion[n] = v
+		nameToVersion := map[string]string{}
+		for v, nts := range versionToNameToUnitSymbol {
+			for n := range nts {
+				nameToVersion[n] = v
+			}
 		}
+		u.SymbolHistory = nameToVersion
 	}
-	u.SymbolHistory = nameToVersion
 	return &u, nil
 }
 
