@@ -245,36 +245,33 @@ func sortSymbolsGroup(syms []*Symbol) {
 
 // ParseVersionsDetails returns a map of versionToNameToUnitSymbol based on
 // data from the proovided VersionDetails.
-func ParseVersionsDetails(vd VersionsDetails) (map[string]map[string]*internal.UnitSymbol, error) {
-	versionToNameToSymbol := map[string]map[string]*internal.UnitSymbol{}
+func ParseVersionsDetails(vd VersionsDetails) (*internal.SymbolHistory, error) {
+	sh := internal.NewSymbolHistory()
 	for _, vl := range vd.ThisModule {
 		for _, vs := range vl.Versions {
 			v := vs.Version
-			versionToNameToSymbol[v] = map[string]*internal.UnitSymbol{}
 			for _, syms := range vs.Symbols {
 				for _, s := range syms {
 					if s.New {
-						versionToNameToSymbol[v][s.Name] = unitSymbol(s)
+						addSymbol(s, v, sh)
 					}
 					for _, c := range s.Children {
-						versionToNameToSymbol[v][c.Name] = unitSymbol(c)
+						addSymbol(c, v, sh)
 					}
 				}
 			}
 		}
 	}
-	return versionToNameToSymbol, nil
+	return sh, nil
 }
 
-// unitSymbol returns an *internal.unitSymbol from the provided *Symbol.
-func unitSymbol(s *Symbol) *internal.UnitSymbol {
-	us := &internal.UnitSymbol{
-		SymbolMeta: internal.SymbolMeta{
-			Name: s.Name,
-		},
+func addSymbol(s *Symbol, v string, sh *internal.SymbolHistory) {
+	sm := internal.SymbolMeta{
+		Name: s.Name,
 	}
 	if len(s.Builds) == 0 {
-		us.AddBuildContext(internal.BuildContextAll)
+		sh.AddSymbol(sm, v, internal.BuildContextAll)
+		return
 	}
 	for _, b := range s.Builds {
 		parts := strings.SplitN(b, "/", 2)
@@ -289,10 +286,6 @@ func unitSymbol(s *Symbol) *internal.UnitSymbol {
 		case "js":
 			build = internal.BuildContextJS
 		}
-		if us.SupportsBuild(build) {
-			fmt.Printf("duplicate build context for %q: %v\n", s.Name, build)
-		}
-		us.AddBuildContext(build)
+		sh.AddSymbol(sm, v, build)
 	}
-	return us
 }

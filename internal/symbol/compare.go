@@ -9,33 +9,31 @@ import (
 	"sort"
 	"strings"
 
-	"golang.org/x/mod/semver"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/stdlib"
 )
 
 // CompareAPIVersions returns the differences between apiVersions and
 // inVersionToNameToUnitSymbol.
-func CompareAPIVersions(path string, apiVersions pkgAPIVersions,
-	inVersionToNameToUnitSymbol map[string]map[string]*internal.UnitSymbol) []string {
-	versionToNameToUnitSymbol := LegacyIntroducedHistory(inVersionToNameToUnitSymbol)
+func CompareAPIVersions(path string, apiVersions pkgAPIVersions, inSH *internal.SymbolHistory) ([]string, error) {
+	sh, err := IntroducedHistory(inSH)
+	if err != nil {
+		return nil, err
+	}
 
 	// Create a map of name to the first version when the symbol name was found
 	// in the package.
 	nameToVersion := map[string]string{}
-	for version, nts := range versionToNameToUnitSymbol {
+	for _, v := range sh.Versions() {
+		nts := sh.SymbolsAtVersion(v)
 		for name := range nts {
-			if _, ok := nameToVersion[name]; !ok {
-				nameToVersion[name] = version
-				continue
-			}
 			// Track the first version when the symbol name is added. It is
 			// possible for the symbol name to appear in multiple versions if
 			// it is introduced at different build contexts. The godoc
 			// logic that generates apiVersions does not take build
 			// context info into account.
-			if semver.Compare(version, nameToVersion[name]) == -1 {
-				nameToVersion[name] = version
+			if _, ok := nameToVersion[name]; !ok {
+				nameToVersion[name] = v
 			}
 		}
 	}
@@ -76,7 +74,11 @@ func CompareAPIVersions(path string, apiVersions pkgAPIVersions,
 		got, ok := nameToVersion[name]
 		delete(nameToVersion, name)
 		if !ok {
-			errors = append(errors, fmt.Sprintf("not found: (want %q) %q \n", wantVersion, name))
+			if !stdlib.Contains(path) {
+				// The api/goN.txt files contain embedded fields and methods,
+				// which pkg.go.dev does not surface.
+				errors = append(errors, fmt.Sprintf("not found: (want %q) %q \n", wantVersion, name))
+			}
 		} else if got != wantVersion {
 			errors = append(errors, fmt.Sprintf("mismatch: (want %q | got %q) %q\n", wantVersion, got, name))
 		}
@@ -103,9 +105,13 @@ func CompareAPIVersions(path string, apiVersions pkgAPIVersions,
 			check(typ+"."+name, version)
 		}
 	}
-	for name, version := range nameToVersion {
-		errors = append(errors, fmt.Sprintf("extra symbol: %q %q\n", name, version))
+	if !stdlib.Contains(path) {
+		// Some symbols may be missing when parsing the api/goN.txt files due
+		// to build contexts. Ignore these errors to reduce noise.
+		for name, version := range nameToVersion {
+			errors = append(errors, fmt.Sprintf("extra symbol: %q %q\n", name, version))
+		}
 	}
 	sort.Strings(errors)
-	return errors
+	return errors, nil
 }
