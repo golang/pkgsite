@@ -6,6 +6,93 @@ package integration
 
 import "golang.org/x/pkgsite/internal/frontend"
 
+var versionsPageMultiGoosDuplicates = []*frontend.VersionList{
+	{
+		VersionListKey: frontend.VersionListKey{
+			ModulePath: "example.com/symbols",
+			Major:      "v1",
+		},
+		Versions: []*frontend.VersionSummary{
+			{
+				CommitTime:          "Jan 30, 2019",
+				Link:                "/example.com/symbols@v1.2.0/duplicate",
+				Retracted:           false,
+				RetractionRationale: "",
+				Version:             "v1.2.0",
+				IsMinor:             true,
+				Symbols: [][]*frontend.Symbol{
+					{
+						{
+							Name:     "TokenType",
+							Synopsis: "const TokenType",
+							Link:     "/example.com/symbols@v1.2.0/duplicate?GOOS=windows#TokenType",
+							New:      true,
+							Section:  "Constants",
+							Kind:     "Constant",
+							Builds:   []string{"windows/amd64"},
+						},
+					},
+					{
+						{
+							Name:     "TokenType",
+							Synopsis: "type TokenType int",
+							Link:     "/example.com/symbols@v1.2.0/duplicate?GOOS=darwin#TokenType",
+							New:      true,
+							Section:  "Types",
+							Kind:     "Type",
+							Builds:   []string{"darwin/amd64", "linux/amd64"},
+							// Children is nil because TokenShort was first
+							// introduced at an earlier version.
+							// Its parent and section changed at this version,
+							// but we don't surface that information.
+						},
+						{
+							Name:     "TokenType",
+							Synopsis: "type TokenType struct",
+							Link:     "/example.com/symbols@v1.2.0/duplicate?GOOS=js#TokenType",
+							New:      true,
+							Section:  "Types",
+							Kind:     "Type",
+							Children: []*frontend.Symbol{
+								{
+									Name:     "TokenShort",
+									Synopsis: "func TokenShort() TokenType",
+									Link:     "/example.com/symbols@v1.2.0/duplicate?GOOS=js#TokenShort",
+									New:      true,
+									Section:  "Types",
+									Kind:     "Function",
+								},
+							},
+							Builds: []string{"js/wasm"},
+						},
+					},
+				},
+			},
+			{
+				CommitTime:          "Jan 30, 2019",
+				Link:                "/example.com/symbols@v1.1.0/duplicate",
+				Retracted:           false,
+				RetractionRationale: "",
+				Version:             "v1.1.0",
+				IsMinor:             true,
+				Symbols: [][]*frontend.Symbol{
+					{
+						{
+							Name:     "TokenShort",
+							Synopsis: "const TokenShort",
+							Link:     "/example.com/symbols@v1.1.0/duplicate?GOOS=darwin#TokenShort",
+							New:      true,
+							Section:  "Constants",
+							Kind:     "Constant",
+							Builds:   []string{"darwin/amd64", "linux/amd64"},
+						},
+					},
+				},
+			},
+		},
+	},
+}
+
 var versionsPageMultiGoos = []*frontend.VersionList{
 	{
 		VersionListKey: frontend.VersionListKey{

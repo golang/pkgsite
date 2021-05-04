@@ -52,7 +52,9 @@ func TestFrontendVersionsPage(t *testing.T) {
 			}{
 				{"versions page symbols - one version all symbols", modulePath, versionsPageSymbols},
 				{"versions page hello - multi GOOS", modulePath + "/hello", versionsPageHello},
-				{"versions page duplicate symbols multi GOOS", modulePath + "/multigoos", versionsPageMultiGoos},
+				{"versions page - test symbol signature is different for different build context", modulePath + "/multigoos", versionsPageMultiGoos},
+				{"versions page - test symbol is introduced at different versions for different build context and changes across versions",
+					modulePath + "/duplicate", versionsPageMultiGoosDuplicates},
 			} {
 				t.Run(test.name, func(t *testing.T) {
 					urlPath := fmt.Sprintf("/%s?tab=versions&m=json", test.pkgPath)
