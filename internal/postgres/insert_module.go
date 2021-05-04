@@ -686,7 +686,7 @@ func (db *DB) ReInsertLatestVersion(ctx context.Context, modulePath string) (err
 
 		// Not an alternative module path. Read the module information at the
 		// latest good version.
-		pkgMetas, err := getPackagesInUnit(ctx, tx, &modulePath, &modulePath, &lmv.GoodVersion, nil, db.bypassLicenseCheck)
+		pkgMetas, err := getPackagesInUnit(ctx, tx, modulePath, modulePath, lmv.GoodVersion, -1, db.bypassLicenseCheck)
 		if err != nil {
 			return err
 		}

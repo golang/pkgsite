@@ -309,18 +309,11 @@ func (db *DB) getImports(ctx context.Context, unitID int) (_ []string, err error
 // getPackagesInUnit returns all of the packages in a unit from a
 // module_id, including the package that lives at fullPath, if present.
 func (db *DB) getPackagesInUnit(ctx context.Context, fullPath string, moduleID int) (_ []*internal.PackageMeta, err error) {
-	return getPackagesInUnit(ctx, db.db, &fullPath, nil, nil, &moduleID, db.bypassLicenseCheck)
+	return getPackagesInUnit(ctx, db.db, fullPath, "", "", moduleID, db.bypassLicenseCheck)
 }
 
-func getPackagesInUnit(ctx context.Context, db *database.DB, fullPath, modulePath, resolvedVersion *string, moduleID *int, bypassLicenseCheck bool) (_ []*internal.PackageMeta, err error) {
-	if modulePath != nil && resolvedVersion != nil {
-		defer derrors.WrapStack(&err, "getPackagesInUnit(ctx, %q, %q, %q, nil)", *fullPath, *modulePath, *resolvedVersion)
-	}
-
-	if moduleID != nil {
-		defer derrors.WrapStack(&err, "getPackagesInUnit(ctx, %q, nil, nil, %d)", *fullPath, *moduleID)
-	}
-
+func getPackagesInUnit(ctx context.Context, db *database.DB, fullPath, modulePath, resolvedVersion string, moduleID int, bypassLicenseCheck bool) (_ []*internal.PackageMeta, err error) {
+	defer derrors.WrapStack(&err, "getPackagesInUnit(ctx, %q, %q, %q, %d)", fullPath, modulePath, resolvedVersion, moduleID)
 	defer middleware.ElapsedStat(ctx, "getPackagesInUnit")()
 
 	queryBuilder := squirrel.Select(
@@ -334,19 +327,17 @@ func getPackagesInUnit(ctx context.Context, db *database.DB, fullPath, modulePat
 		"u.license_paths",
 	).From("units u")
 
-	if modulePath != nil && resolvedVersion != nil {
+	if moduleID != -1 {
+		queryBuilder = queryBuilder.Join("paths p ON p.id = u.path_id").
+			LeftJoin("documentation d ON d.unit_id = u.id").
+			Where(squirrel.Eq{"u.module_id": moduleID})
+	} else if modulePath != "" && resolvedVersion != "" {
 		queryBuilder = queryBuilder.
 			Join("modules m ON u.module_id = m.id").
 			Join("paths p ON p.id = u.path_id").
 			LeftJoin("documentation d ON d.unit_id = u.id").
-			Where(squirrel.Eq{"m.module_path": *modulePath}).
-			Where(squirrel.Eq{"m.version": *resolvedVersion})
-	}
-
-	if moduleID != nil {
-		queryBuilder = queryBuilder.Join("paths p ON p.id = u.path_id").
-			LeftJoin("documentation d ON d.unit_id = u.id").
-			Where(squirrel.Eq{"u.module_id": *moduleID})
+			Where(squirrel.Eq{"m.module_path": modulePath}).
+			Where(squirrel.Eq{"m.version": resolvedVersion})
 	}
 
 	queryBuilder = queryBuilder.Where(squirrel.NotEq{"u.name": ""})
@@ -385,7 +376,7 @@ func getPackagesInUnit(ctx context.Context, db *database.DB, fullPath, modulePat
 		); err != nil {
 			return fmt.Errorf("row.Scan(): %v", err)
 		}
-		if *fullPath == stdlib.ModulePath || pkg.Path == *fullPath || strings.HasPrefix(pkg.Path, *fullPath+"/") {
+		if fullPath == stdlib.ModulePath || pkg.Path == fullPath || strings.HasPrefix(pkg.Path, fullPath+"/") {
 			lics, err := zipLicenseMetadata(licenseTypes, licensePaths)
 			if err != nil {
 				return err
