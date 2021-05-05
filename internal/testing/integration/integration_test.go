@@ -78,8 +78,8 @@ func TestEndToEndProcessing(t *testing.T) {
 		{"example.com/single@v1.0.0/pkg", "hello"},
 		{"example.com/deprecated", "UnitHeader-banner--deprecated"},
 		{"example.com/retractions@v1.1.0", "UnitHeader-banner--retracted"},
-		{"example.com/deprecated?tab=versions", "Deprecated: use something else"},
-		{"example.com/retractions?tab=versions", "Retracted: bad"},
+		{"example.com/deprecated?tab=versions", "deprecated"},
+		{"example.com/retractions?tab=versions", "retracted"},
 	} {
 		t.Run(strings.ReplaceAll(test.url, "/", "_"), func(t *testing.T) {
 			wantKeys = append(wantKeys, "/"+test.url)
