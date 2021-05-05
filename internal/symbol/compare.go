@@ -26,6 +26,12 @@ func CompareAPIVersions(path string, apiVersions pkgAPIVersions, inSH *internal.
 	nameToVersion := map[string]string{}
 	for _, v := range sh.Versions() {
 		nts := sh.SymbolsAtVersion(v)
+		if stdlib.Contains(path) {
+			v, err = stdlib.TagForVersion(v)
+			if err != nil {
+				return nil, err
+			}
+		}
 		for name := range nts {
 			// Track the first version when the symbol name is added. It is
 			// possible for the symbol name to appear in multiple versions if

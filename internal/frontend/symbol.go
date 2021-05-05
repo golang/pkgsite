@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/stdlib"
 )
 
 // Symbol is an element in the package API. A symbol can be a constant,
@@ -245,18 +246,21 @@ func sortSymbolsGroup(syms []*Symbol) {
 
 // ParseVersionsDetails returns a map of versionToNameToUnitSymbol based on
 // data from the proovided VersionDetails.
-func ParseVersionsDetails(vd VersionsDetails) (*internal.SymbolHistory, error) {
+func ParseVersionsDetails(vd VersionsDetails) (_ *internal.SymbolHistory, err error) {
 	sh := internal.NewSymbolHistory()
 	for _, vl := range vd.ThisModule {
 		for _, vs := range vl.Versions {
 			v := vs.Version
+			if vd.ThisModule[0].ModulePath == stdlib.ModulePath {
+				v = stdlib.VersionForTag(v)
+			}
 			for _, syms := range vs.Symbols {
 				for _, s := range syms {
 					if s.New {
-						addSymbol(s, v, sh)
+						addSymbol(s, v, sh, s.Builds)
 					}
 					for _, c := range s.Children {
-						addSymbol(c, v, sh)
+						addSymbol(c, v, sh, s.Builds)
 					}
 				}
 			}
@@ -265,15 +269,15 @@ func ParseVersionsDetails(vd VersionsDetails) (*internal.SymbolHistory, error) {
 	return sh, nil
 }
 
-func addSymbol(s *Symbol, v string, sh *internal.SymbolHistory) {
+func addSymbol(s *Symbol, v string, sh *internal.SymbolHistory, builds []string) {
 	sm := internal.SymbolMeta{
 		Name: s.Name,
 	}
-	if len(s.Builds) == 0 {
+	if len(builds) == 0 {
 		sh.AddSymbol(sm, v, internal.BuildContextAll)
 		return
 	}
-	for _, b := range s.Builds {
+	for _, b := range builds {
 		parts := strings.SplitN(b, "/", 2)
 		var build internal.BuildContext
 		switch parts[0] {
