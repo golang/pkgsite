@@ -540,13 +540,14 @@ func (db *DB) getUnitWithAllFields(ctx context.Context, um *internal.UnitMeta, b
 			}
 			return &u, nil
 		}
-		versionToNameToUnitSymbol, err := LegacyGetSymbolHistoryWithPackageSymbols(ctx, db.db, um.Path,
+		sh, err := GetSymbolHistoryWithPackageSymbols(ctx, db.db, um.Path,
 			um.ModulePath)
 		if err != nil {
 			return nil, err
 		}
 		nameToVersion := map[string]string{}
-		for v, nts := range versionToNameToUnitSymbol {
+		for _, v := range sh.Versions() {
+			nts := sh.SymbolsAtVersion(v)
 			for n := range nts {
 				nameToVersion[n] = v
 			}

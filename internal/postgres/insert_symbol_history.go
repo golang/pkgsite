@@ -37,7 +37,7 @@ func upsertSymbolHistory(ctx context.Context, ddb *database.DB,
 		return err
 	}
 	for packagePath, docIDToDoc := range pathToDocIDToDoc {
-		dbVersionToNameToUnitSymbol, err := LegacyGetSymbolHistoryFromTable(ctx, ddb, packagePath, modulePath)
+		sh, err := GetSymbolHistoryFromTable(ctx, ddb, packagePath, modulePath)
 		if err != nil {
 			return err
 		}
@@ -49,10 +49,13 @@ func upsertSymbolHistory(ctx context.Context, ddb *database.DB,
 			}
 			for _, b := range builds {
 				dbNameToVersion := map[string]string{}
-				for v, nameToUS := range dbVersionToNameToUnitSymbol {
-					for name, us := range nameToUS {
-						if us.SupportsBuild(b) {
-							dbNameToVersion[name] = v
+				for _, v := range sh.Versions() {
+					nts := sh.SymbolsAtVersion(v)
+					for name, stu := range nts {
+						for _, us := range stu {
+							if us.SupportsBuild(b) {
+								dbNameToVersion[name] = v
+							}
 						}
 					}
 				}
