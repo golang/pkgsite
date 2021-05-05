@@ -514,7 +514,7 @@ func (db *DB) getUnitWithAllFields(ctx context.Context, um *internal.UnitMeta, b
 
 	if um.IsPackage() && doc.Source != nil {
 		if um.ModulePath == stdlib.ModulePath {
-			u.SymbolHistory, err = getSymbolHistoryForBuildContext(ctx, db.db, pathID, um.ModulePath, bcMatched)
+			u.SymbolHistory, err = GetSymbolHistoryForBuildContext(ctx, db.db, pathID, um.ModulePath, bcMatched)
 			if err != nil {
 				return nil, err
 			}
@@ -524,7 +524,7 @@ func (db *DB) getUnitWithAllFields(ctx context.Context, um *internal.UnitMeta, b
 			return &u, nil
 		}
 		if experiment.IsActive(ctx, internal.ExperimentReadSymbolHistory) {
-			u.SymbolHistory, err = getSymbolHistoryForBuildContext(ctx, db.db, pathID, um.ModulePath, bcMatched)
+			u.SymbolHistory, err = GetSymbolHistoryForBuildContext(ctx, db.db, pathID, um.ModulePath, bcMatched)
 			if err != nil {
 				return nil, err
 			}

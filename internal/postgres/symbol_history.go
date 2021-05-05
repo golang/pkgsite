@@ -187,11 +187,11 @@ func LegacyGetSymbolHistoryWithPackageSymbols(ctx context.Context, ddb *database
 	return symbol.LegacyIntroducedHistory(versionToNameToUnitSymbols), nil
 }
 
-// getSymbolHistoryForBuildContext returns a map of the first version when a symbol name is
+// GetSymbolHistoryForBuildContext returns a map of the first version when a symbol name is
 // added to the API for the specified build context, to the symbol name, to the
 // UnitSymbol struct. The UnitSymbol.Children field will always be empty, as
 // children names are also tracked.
-func getSymbolHistoryForBuildContext(ctx context.Context, ddb *database.DB, pathID int, modulePath string,
+func GetSymbolHistoryForBuildContext(ctx context.Context, ddb *database.DB, pathID int, modulePath string,
 	bc internal.BuildContext) (_ map[string]string, err error) {
 	defer derrors.WrapStack(&err, "getSymbolHistoryForBuildContext(ctx, ddb, %d, %q)", pathID, modulePath)
 	defer middleware.ElapsedStat(ctx, "getSymbolHistoryForBuildContext")()
