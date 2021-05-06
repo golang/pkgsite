@@ -45,7 +45,7 @@
 {{define "legacy_search"}}
   {{$query := .Query}}
   {{range $i, $v := .Results}}
-    <div class="SearchSnippet">
+    <div class="LegacySearchSnippet">
       <h2 class="SearchSnippet-header">
         <a href="/{{$v.PackagePath}}" data-gtmc="search result" data-gtmv="{{$i}}"
             data-test-id="snippet-title">
@@ -94,5 +94,51 @@
 {{end}}
 
 {{define "grouped_search"}}
-  Unimplemented
+  {{$query := .Query}}
+  {{range $i, $v := .Results}}
+    <div class="SearchSnippet">
+      <div class="SearchSnippet-breadcrumb">{{$v.PackagePath}}</div>
+      <h2 class="SearchSnippet-header">
+        <a href="/{{$v.PackagePath}}" data-gtmc="search result" data-gtmv="{{$i}}"
+            data-test-id="snippet-title">
+          {{$v.Name}}
+        </a>
+        <span class="SearchSnippet-version">{{$v.DisplayVersion}}</span>
+      </h2>
+      <p class="SearchSnippet-synopsis" data-test-id="snippet-synopsis">{{$v.Synopsis}}</p>
+      <div class="SearchSnippet-infoLabel">
+        <span class="InfoLabel-title">Published:</span>
+        <span data-test-id="snippet-published"> {{$v.CommitTime}}</span>
+        <span class="SearchSnippet-infoLabelDivider"></span>
+        <span class="InfoLabel-title">{{pluralize (len $v.Licenses) "License"}}:</span>
+        <span data-test-id="snippet-license">
+          {{if $v.Licenses}}
+            {{commaseparate $v.Licenses}}
+          {{else}}
+            <span>N/A</span>
+          {{end}}
+        </span>
+        <span class="SearchSnippet-infoLabelDivider"></span>
+        <span class="InfoLabel-title">Imported by:</span>
+        <span data-test-id="snippet-importedby"><b>{{$v.NumImportedBy}}</b></span>
+      </div>
+      {{with .SameModule}}
+        <div class="SearchSnippet-sub">
+          <span>{{.Heading}}</span>
+          {{range $i, $v := .Links}}
+            <a href="/{{$v.Href}}" data-gtmc="search result same module" data-gtmv="{{$i}}">{{$v.Body}}</a>
+          {{end}}
+          <span>{{.Suffix}}</span>
+        </div>
+      {{end}}
+      {{with .LowerMajor}}
+        <div class="SearchSnippet-sub">
+          <span>{{.Heading}}</span>
+          {{range $i, $v := .Links}}
+            <a href="/{{$v.Href}}" data-gtmc="search result lower major" data-gtmv="{{$i}}">{{$v.Body}}</a>
+          {{end}}
+        </div>
+      {{end}}
+    </div> <!-- SearchSnippet -->
+  {{end}}
 {{end}}

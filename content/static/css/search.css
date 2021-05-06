@@ -28,8 +28,11 @@
   justify-content: flex-end;
 }
 
-.SearchSnippet {
+.LegacySearchSnippet {
   border-top: 0.0625rem solid var(--gray-8);
+  padding: 1rem 0;
+}
+.SearchSnippet {
   padding: 1rem 0;
 }
 .SearchSnippet:only-of-type,
@@ -54,9 +57,20 @@
   font-size: 0.875rem;
   line-height: 1.375rem;
 }
+.SearchSnippet-infoLabelDivider {
+  margin-left: 2rem;
+}
 .SearchSnippet-sub {
   font-size: 0.875rem;
   margin-top: 0.3125rem;
+}
+.SearchSnippet-breadcrumb {
+  color: var(--gray-5);
+  font-size: 0.75rem;
+}
+.SearchSnippet-version {
+  color: var(--gray-3);
+  font-size: 0.75rem;
 }
 
 .Pagination-nav {
