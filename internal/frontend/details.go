@@ -6,6 +6,7 @@ package frontend
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"strings"
 
@@ -55,9 +56,14 @@ func (s *Server) serveDetails(w http.ResponseWriter, r *http.Request, ds interna
 
 	urlInfo, err := extractURLPathInfo(r.URL.Path)
 	if err != nil {
+		var epage *errorPage
+		if uerr := new(userError); errors.As(err, &uerr) {
+			epage = &errorPage{MessageData: uerr.userMessage}
+		}
 		return &serverError{
 			status: http.StatusBadRequest,
 			err:    err,
+			epage:  epage,
 		}
 	}
 	if !isSupportedVersion(urlInfo.fullPath, urlInfo.requestedVersion) {

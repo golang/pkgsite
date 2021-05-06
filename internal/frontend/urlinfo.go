@@ -33,6 +33,19 @@ type urlPathInfo struct {
 	requestedVersion string
 }
 
+type userError struct {
+	userMessage string
+	err         error
+}
+
+func (e *userError) Error() string {
+	return e.err.Error()
+}
+
+func (e *userError) Unwrap() error {
+	return e.err
+}
+
 // extractURLPathInfo extracts information from a request to pkg.go.dev.
 // If an error is returned, the user will be served an http.StatusBadRequest.
 func extractURLPathInfo(urlPath string) (_ *urlPathInfo, err error) {
@@ -93,7 +106,10 @@ func parseDetailsURLPath(urlPath string) (_ *urlPathInfo, err error) {
 		// The first path component after the '@' is the version.
 		// You cannot explicitly write "latest" for the version.
 		if endParts[0] == internal.LatestVersion {
-			return nil, fmt.Errorf("invalid version: %q", info.requestedVersion)
+			return nil, &userError{
+				err:         fmt.Errorf("invalid version: %q", info.requestedVersion),
+				userMessage: fmt.Sprintf("%q is not a valid version", endParts[0]),
+			}
 		}
 		info.requestedVersion = endParts[0]
 
@@ -107,7 +123,10 @@ func parseDetailsURLPath(urlPath string) (_ *urlPathInfo, err error) {
 		}
 	}
 	if !isValidPath(info.fullPath) {
-		return nil, fmt.Errorf("isValidPath(%q) is false", info.fullPath)
+		return nil, &userError{
+			err:         fmt.Errorf("isValidPath(%q) is false", info.fullPath),
+			userMessage: fmt.Sprintf("%q is not a valid import path", info.fullPath),
+		}
 	}
 	return info, nil
 }
@@ -120,7 +139,10 @@ func parseStdLibURLPath(urlPath string) (_ *urlPathInfo, err error) {
 	parts := strings.SplitN(urlPath, "@", 2)
 	fullPath := strings.TrimSuffix(strings.TrimPrefix(parts[0], "/"), "/")
 	if !isValidPath(fullPath) {
-		return nil, fmt.Errorf("isValidPath(%q) is false", fullPath)
+		return nil, &userError{
+			err:         fmt.Errorf("isValidPath(%q) is false", fullPath),
+			userMessage: fmt.Sprintf("%q is not a valid import path", fullPath),
+		}
 	}
 
 	info := &urlPathInfo{
@@ -131,9 +153,13 @@ func parseStdLibURLPath(urlPath string) (_ *urlPathInfo, err error) {
 		info.requestedVersion = internal.LatestVersion
 		return info, nil
 	}
-	info.requestedVersion = stdlib.VersionForTag(strings.TrimSuffix(parts[1], "/"))
+	tag := strings.TrimSuffix(parts[1], "/")
+	info.requestedVersion = stdlib.VersionForTag(tag)
 	if info.requestedVersion == "" {
-		return nil, fmt.Errorf("invalid Go tag for url: %q", urlPath)
+		return nil, &userError{
+			err:         fmt.Errorf("invalid Go tag for url: %q", urlPath),
+			userMessage: fmt.Sprintf("%q is not a valid tag for the standard library", tag),
+		}
 	}
 	return info, nil
 }

@@ -744,6 +744,7 @@ func serverTestCases() []serverTestCase {
 			name:           "bad request, invalid github module path",
 			urlPath:        "/github.com/foo",
 			wantStatusCode: http.StatusBadRequest,
+			want:           in("h3.Error-message", hasText("is not a valid import path")),
 		},
 		{
 			name:           "excluded",
