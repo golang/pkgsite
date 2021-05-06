@@ -13,7 +13,7 @@ import (
 )
 
 func TestIntroducedHistory_OneBuildContext(t *testing.T) {
-	input := map[string]map[string]*internal.UnitSymbol{}
+	input := internal.NewSymbolHistory()
 	for _, s := range []struct {
 		name, version string
 	}{
@@ -22,57 +22,50 @@ func TestIntroducedHistory_OneBuildContext(t *testing.T) {
 		{"Foo.A", "v1.2.0"},
 		{"Bar", "v1.1.0"},
 	} {
-		if _, ok := input[s.version]; !ok {
-			input[s.version] = map[string]*internal.UnitSymbol{}
-		}
-		us := &internal.UnitSymbol{
-			SymbolMeta: internal.SymbolMeta{
-				Name: s.name,
-			},
-		}
+		sm := internal.SymbolMeta{Name: s.name}
 		for _, b := range internal.BuildContexts {
-			us.AddBuildContext(b)
+			input.AddSymbol(sm, s.version, b)
 		}
-		input[s.version][s.name] = us
 	}
-	want := map[string]map[string]*internal.UnitSymbol{
-		"v1.0.0": {
-			"Foo": &internal.UnitSymbol{
-				SymbolMeta: internal.SymbolMeta{
-					Name: "Foo",
-				},
-			},
-		},
-		"v1.1.0": {
-			"Bar": &internal.UnitSymbol{
-				SymbolMeta: internal.SymbolMeta{
-					Name: "Bar",
-				},
-			},
-		},
-		"v1.2.0": {
-			"Foo.A": &internal.UnitSymbol{
-				SymbolMeta: internal.SymbolMeta{
-					Name: "Foo.A",
-				},
-			},
-		},
+	want := internal.NewSymbolHistory()
+	want.AddSymbol(
+		internal.SymbolMeta{Name: "Foo"},
+		"v1.0.0",
+		internal.BuildContextAll,
+	)
+	want.AddSymbol(
+		internal.SymbolMeta{Name: "Bar"},
+		"v1.1.0",
+		internal.BuildContextAll,
+	)
+	want.AddSymbol(
+		internal.SymbolMeta{Name: "Foo.A"},
+		"v1.2.0",
+		internal.BuildContextAll,
+	)
+	got, err := IntroducedHistory(input)
+	if err != nil {
+		t.Fatal(err)
 	}
-	got := LegacyIntroducedHistory(input)
-	if diff := cmp.Diff(want, got, cmpopts.IgnoreFields(internal.UnitSymbol{}, "builds")); diff != "" {
+	if diff := cmp.Diff(want, got,
+		cmp.AllowUnexported(internal.UnitSymbol{}, internal.SymbolHistory{}),
+		cmpopts.IgnoreFields(internal.UnitSymbol{}, "builds")); diff != "" {
 		t.Errorf("mismatch (-want, +got):\n%s", diff)
 	}
-	for _, nts := range got {
-		for _, g := range nts {
-			if !g.InAll() {
-				t.Errorf("got build contexts = %v; want all", g.BuildContexts())
+	for _, v := range got.Versions() {
+		nts := got.SymbolsAtVersion(v)
+		for _, stu := range nts {
+			for _, g := range stu {
+				if !g.InAll() {
+					t.Errorf("got build contexts = %v; want all", g.BuildContexts())
+				}
 			}
 		}
 	}
 }
 
 func TestIntroducedHistory_MultiGOOS(t *testing.T) {
-	input := map[string]map[string]*internal.UnitSymbol{}
+	input := internal.NewSymbolHistory()
 	for _, s := range []struct {
 		name, version string
 		build         internal.BuildContext
@@ -88,55 +81,36 @@ func TestIntroducedHistory_MultiGOOS(t *testing.T) {
 		{"Foo", "v1.1.0", internal.BuildContextJS},
 		{"Foo.A", "v1.2.0", internal.BuildContextJS},
 	} {
-		if _, ok := input[s.version]; !ok {
-			input[s.version] = map[string]*internal.UnitSymbol{}
-		}
-		us, ok := input[s.version][s.name]
-		if !ok {
-			us = &internal.UnitSymbol{
-				SymbolMeta: internal.SymbolMeta{
-					Name: s.name,
-				},
-			}
-			input[s.version][s.name] = us
-		}
-		us.AddBuildContext(s.build)
+		sm := internal.SymbolMeta{Name: s.name}
+		input.AddSymbol(sm, s.version, s.build)
 	}
 
-	withBuilds := func(name string, builds ...internal.BuildContext) *internal.UnitSymbol {
-		us := &internal.UnitSymbol{
-			SymbolMeta: internal.SymbolMeta{
-				Name: name,
-			},
-		}
+	want := internal.NewSymbolHistory()
+	withSym := func(name, v string, builds []internal.BuildContext) {
+		s := internal.SymbolMeta{Name: name}
 		for _, b := range builds {
-			us.AddBuildContext(b)
+			want.AddSymbol(s, v, b)
 		}
-		return us
 	}
-	want := map[string]map[string]*internal.UnitSymbol{
-		"v1.0.0": {
-			"Bar": withBuilds("Bar", internal.BuildContextAll),
-			"Foo": withBuilds("Foo", internal.BuildContextLinux, internal.BuildContextWindows),
-		},
-		"v1.1.0": {
-			"Foo":   withBuilds("Foo", internal.BuildContextJS),
-			"Foo.A": withBuilds("Foo.A", internal.BuildContextLinux),
-		},
-		"v1.2.0": {
-			"Foo.A": withBuilds("Foo.A", internal.BuildContextJS),
-		},
+	for _, s := range []struct {
+		n, v   string
+		builds []internal.BuildContext
+	}{
+		{"Bar", "v1.0.0", []internal.BuildContext{internal.BuildContextAll}},
+		{"Foo", "v1.0.0", []internal.BuildContext{internal.BuildContextLinux, internal.BuildContextWindows}},
+		{"Foo", "v1.1.0", []internal.BuildContext{internal.BuildContextJS}},
+		{"Foo.A", "v1.1.0", []internal.BuildContext{internal.BuildContextLinux}},
+		{"Foo.A", "v1.2.0", []internal.BuildContext{internal.BuildContextJS}},
+	} {
+		withSym(s.n, s.v, s.builds)
 	}
-	got := LegacyIntroducedHistory(input)
-	if diff := cmp.Diff(want, got, cmpopts.IgnoreFields(internal.UnitSymbol{}, "builds")); diff != "" {
+
+	got, err := IntroducedHistory(input)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if diff := cmp.Diff(want, got,
+		cmp.AllowUnexported(internal.UnitSymbol{}, internal.SymbolHistory{})); diff != "" {
 		t.Errorf("mismatch (-want, +got):\n%s", diff)
-	}
-	for v, nts := range got {
-		for n, g := range nts {
-			w := want[v][n]
-			if diff := cmp.Diff(w.BuildContexts(), g.BuildContexts()); diff != "" {
-				t.Errorf("(%s %s): got build contexts = %v; want %v", n, v, g.BuildContexts(), w.BuildContexts())
-			}
-		}
 	}
 }
