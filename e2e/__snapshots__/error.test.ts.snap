@@ -49,7 +49,7 @@ Object {
     },
     Object {
       "level": 3,
-      "name": "400 Bad Request",
+      "name": "\\"\\" is not a valid import path",
       "role": "heading",
     },
     Object {
@@ -195,7 +195,7 @@ Object {
     },
     Object {
       "level": 3,
-      "name": "400 Bad Request",
+      "name": "\\"\\" is not a valid import path",
       "role": "heading",
     },
     Object {
