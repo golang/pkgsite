@@ -571,6 +571,34 @@ Object {
       "role": "text",
     },
     Object {
+      "name": "// Cleaned indicates that the module version was cleaned from the DB and",
+      "role": "text",
+    },
+    Object {
+      "name": "// shouldn't be reprocessed.",
+      "role": "text",
+    },
+    Object {
+      "name": "Cleaned =",
+      "role": "text",
+    },
+    Object {
+      "name": "errors",
+      "role": "link",
+    },
+    Object {
+      "name": ".",
+      "role": "text",
+    },
+    Object {
+      "name": "New",
+      "role": "link",
+    },
+    Object {
+      "name": "(\\"cleaned\\")",
+      "role": "text",
+    },
+    Object {
       "name": "// Unknown indicates that the error has unknown semantics.",
       "role": "text",
     },
