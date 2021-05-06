@@ -10,11 +10,7 @@
 
 {{define "unit_content"}}
   <div class="Unit-content" role="main" data-test-id="UnitVersions">
-    {{if (.Experiments.IsActive "symbol-history-versions-page")}}
-      {{block "versions" .Details}}{{end}}
-    {{else}}
-      {{block "legacy_versions" .Details}}{{end}}
-    {{end}}
+    {{block "versions" .Details}}{{end}}
   </div>
 {{end}}
 

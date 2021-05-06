@@ -16,6 +16,7 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/middleware"
 	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/version"
@@ -411,11 +412,10 @@ func (db *DB) getUnitWithAllFields(ctx context.Context, um *internal.UnitMeta, b
 	defer middleware.ElapsedStat(ctx, "getUnitWithAllFields")()
 
 	// Get build contexts and unit ID.
-	var unitID int
-	var moduleID int
+	var pathID, unitID, moduleID int
 	var bcs []internal.BuildContext
 	err = db.db.RunQuery(ctx, `
-		SELECT d.goos, d.goarch, u.id, u.module_id
+		SELECT d.goos, d.goarch, u.id, p.id, u.module_id
 		FROM units u
 		INNER JOIN paths p ON p.id = u.path_id
 		INNER JOIN modules m ON m.id = u.module_id
@@ -428,7 +428,8 @@ func (db *DB) getUnitWithAllFields(ctx context.Context, um *internal.UnitMeta, b
 		var bc internal.BuildContext
 		// GOOS and GOARCH will be NULL if there are no documentation rows for
 		// the unit, but we still want the unit ID.
-		if err := rows.Scan(database.NullIsEmpty(&bc.GOOS), database.NullIsEmpty(&bc.GOARCH), &unitID, &moduleID); err != nil {
+
+		if err := rows.Scan(database.NullIsEmpty(&bc.GOOS), database.NullIsEmpty(&bc.GOARCH), &unitID, &pathID, &moduleID); err != nil {
 			return err
 		}
 		if bc.GOOS != "" && bc.GOARCH != "" {
@@ -520,6 +521,38 @@ func (db *DB) getUnitWithAllFields(ctx context.Context, um *internal.UnitMeta, b
 	}
 	u.Subdirectories = pkgs
 	u.UnitMeta = *um
+
+	if um.IsPackage() && doc.Source != nil {
+		if um.ModulePath == stdlib.ModulePath {
+			u.SymbolHistory, err = GetSymbolHistoryForBuildContext(ctx, db.db, pathID, um.ModulePath, bcMatched)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		if !experiment.IsActive(ctx, internal.ExperimentSymbolHistoryMainPage) {
+			return &u, nil
+		}
+		if experiment.IsActive(ctx, internal.ExperimentReadSymbolHistory) {
+			u.SymbolHistory, err = GetSymbolHistoryForBuildContext(ctx, db.db, pathID, um.ModulePath, bcMatched)
+			if err != nil {
+				return nil, err
+			}
+			return &u, nil
+		}
+		versionToNameToUnitSymbol, err := LegacyGetSymbolHistoryWithPackageSymbols(ctx, db.db, um.Path,
+			um.ModulePath)
+		if err != nil {
+			return nil, err
+		}
+		nameToVersion := map[string]string{}
+		for v, nts := range versionToNameToUnitSymbol {
+			for n := range nts {
+				nameToVersion[n] = v
+			}
+		}
+		u.SymbolHistory = nameToVersion
+	}
 	return &u, nil
 }
 

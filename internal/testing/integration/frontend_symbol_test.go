@@ -76,14 +76,17 @@ func TestSymbols(t *testing.T) {
 					if err := json.Unmarshal([]byte(body), &vd); err != nil {
 						t.Fatalf("json.Unmarshal: %v\n %s", err, body)
 					}
-					versionToNameToSymbol, err := frontend.ParseVersionsDetails(vd)
+					sh, err := frontend.ParseVersionsDetails(vd)
 					if err != nil {
 						t.Fatal(err)
 					}
 
 					// Compare the output of these two data sources.
-					errs := symbol.CompareAPIVersions(test.pkgPath,
-						apiVersions[test.pkgPath], versionToNameToSymbol)
+					errs, err := symbol.CompareAPIVersions(test.pkgPath,
+						apiVersions[test.pkgPath], sh)
+					if err != nil {
+						t.Fatal(err)
+					}
 					for _, e := range errs {
 						t.Error(e)
 					}

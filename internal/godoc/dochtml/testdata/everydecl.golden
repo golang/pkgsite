@@ -185,7 +185,8 @@ attributes.
 </div><p>method
 BUG(uid): this verifies that notes are rendered
 </p>
-</div></div></section><h3 tabindex="-1" id="pkg-notes" class="Documentation-notesHeader">Notes <a href="#pkg-notes">¶</a></h3>
+</div>
+</div></section><h3 tabindex="-1" id="pkg-notes" class="Documentation-notesHeader">Notes <a href="#pkg-notes">¶</a></h3>
 <section class="Documentation-notes"><div class="Documentation-note">
 <h3 tabindex="-1" id="pkg-note-BUG" class="Documentation-noteHeader">Bugs <a href="#pkg-note-BUG">¶</a></h3>
 <ul class="Documentation-noteList" style="padding-left: 20px; list-style: initial;">

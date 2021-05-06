@@ -15,6 +15,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"golang.org/x/mod/semver"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
@@ -399,7 +400,7 @@ func checkPackageVersionStates(ctx context.Context, t *testing.T, modulePath, ve
 	sort.Slice(gotStates, func(i, j int) bool {
 		return gotStates[i].PackagePath < gotStates[j].PackagePath
 	})
-	if diff := cmp.Diff(wantStates, gotStates); diff != "" {
+	if diff := cmp.Diff(wantStates, gotStates, cmpopts.EquateEmpty()); diff != "" {
 		t.Errorf("testDB.GetPackageVersionStatesForModule(ctx, %q, %q) mismatch (-want +got):\n%s",
 			modulePath, version, diff)
 	}

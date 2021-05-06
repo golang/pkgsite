@@ -6,6 +6,155 @@ package integration
 
 import "golang.org/x/pkgsite/internal/frontend"
 
+var versionsPageMultiGoosDuplicates = []*frontend.VersionList{
+	{
+		VersionListKey: frontend.VersionListKey{
+			ModulePath: "example.com/symbols",
+			Major:      "v1",
+		},
+		Versions: []*frontend.VersionSummary{
+			{
+				CommitTime:          "Jan 30, 2019",
+				Link:                "/example.com/symbols@v1.2.0/duplicate",
+				Retracted:           false,
+				RetractionRationale: "",
+				Version:             "v1.2.0",
+				IsMinor:             true,
+				Symbols: [][]*frontend.Symbol{
+					{
+						{
+							Name:     "TokenType",
+							Synopsis: "const TokenType",
+							Link:     "/example.com/symbols@v1.2.0/duplicate?GOOS=windows#TokenType",
+							New:      true,
+							Section:  "Constants",
+							Kind:     "Constant",
+							Builds:   []string{"windows/amd64"},
+						},
+					},
+					{
+						{
+							Name:     "TokenType",
+							Synopsis: "type TokenType int",
+							Link:     "/example.com/symbols@v1.2.0/duplicate?GOOS=darwin#TokenType",
+							New:      true,
+							Section:  "Types",
+							Kind:     "Type",
+							Builds:   []string{"darwin/amd64", "linux/amd64"},
+							// Children is nil because TokenShort was first
+							// introduced at an earlier version.
+							// Its parent and section changed at this version,
+							// but we don't surface that information.
+						},
+						{
+							Name:     "TokenType",
+							Synopsis: "type TokenType struct",
+							Link:     "/example.com/symbols@v1.2.0/duplicate?GOOS=js#TokenType",
+							New:      true,
+							Section:  "Types",
+							Kind:     "Type",
+							Children: []*frontend.Symbol{
+								{
+									Name:     "TokenShort",
+									Synopsis: "func TokenShort() TokenType",
+									Link:     "/example.com/symbols@v1.2.0/duplicate?GOOS=js#TokenShort",
+									New:      true,
+									Section:  "Types",
+									Kind:     "Function",
+								},
+							},
+							Builds: []string{"js/wasm"},
+						},
+					},
+				},
+			},
+			{
+				CommitTime:          "Jan 30, 2019",
+				Link:                "/example.com/symbols@v1.1.0/duplicate",
+				Retracted:           false,
+				RetractionRationale: "",
+				Version:             "v1.1.0",
+				IsMinor:             true,
+				Symbols: [][]*frontend.Symbol{
+					{
+						{
+							Name:     "TokenShort",
+							Synopsis: "const TokenShort",
+							Link:     "/example.com/symbols@v1.1.0/duplicate?GOOS=darwin#TokenShort",
+							New:      true,
+							Section:  "Constants",
+							Kind:     "Constant",
+							Builds:   []string{"darwin/amd64", "linux/amd64"},
+						},
+					},
+				},
+			},
+		},
+	},
+}
+
+var versionsPageMultiGoos = []*frontend.VersionList{
+	{
+		VersionListKey: frontend.VersionListKey{
+			ModulePath: "example.com/symbols",
+			Major:      "v1",
+		},
+		Versions: []*frontend.VersionSummary{
+			{
+				CommitTime:          "Jan 30, 2019",
+				Link:                "/example.com/symbols@v1.2.0/multigoos",
+				Retracted:           false,
+				RetractionRationale: "",
+				Version:             "v1.2.0",
+				IsMinor:             true,
+				Symbols: [][]*frontend.Symbol{
+					{
+						{
+							Name:     "CloseOnExec",
+							Synopsis: "func CloseOnExec(n int)",
+							Link:     "/example.com/symbols@v1.2.0/multigoos?GOOS=js#CloseOnExec",
+							New:      true,
+							Section:  "Functions",
+							Kind:     "Function",
+							Builds:   []string{"js/wasm"},
+						},
+					},
+				},
+			},
+			{
+				CommitTime:          "Jan 30, 2019",
+				Link:                "/example.com/symbols@v1.1.0/multigoos",
+				Retracted:           false,
+				RetractionRationale: "",
+				Version:             "v1.1.0",
+				IsMinor:             true,
+				Symbols: [][]*frontend.Symbol{
+					{
+						{
+							Name:     "CloseOnExec",
+							Synopsis: "func CloseOnExec(foo string) error",
+							Link:     "/example.com/symbols@v1.1.0/multigoos?GOOS=windows#CloseOnExec",
+							New:      true,
+							Section:  "Functions",
+							Kind:     "Function",
+							Builds:   []string{"windows/amd64"},
+						},
+						{
+							Name:     "CloseOnExec",
+							Synopsis: "func CloseOnExec(num int) (int, error)",
+							Link:     "/example.com/symbols@v1.1.0/multigoos?GOOS=darwin#CloseOnExec",
+							New:      true,
+							Section:  "Functions",
+							Kind:     "Function",
+							Builds:   []string{"darwin/amd64", "linux/amd64"},
+						},
+					},
+				},
+			},
+		},
+	},
+}
+
 var versionsPageHello = []*frontend.VersionList{
 	{
 		VersionListKey: frontend.VersionListKey{
@@ -25,7 +174,7 @@ var versionsPageHello = []*frontend.VersionList{
 						{
 							Name:     "Hello",
 							Synopsis: "func Hello() string",
-							Link:     "/example.com/symbols@v1.2.0/hello#Hello",
+							Link:     "/example.com/symbols@v1.2.0/hello?GOOS=js#Hello",
 							New:      true,
 							Section:  "Functions",
 							Kind:     "Function",
@@ -46,7 +195,7 @@ var versionsPageHello = []*frontend.VersionList{
 						{
 							Name:     "Hello",
 							Synopsis: "func Hello() string",
-							Link:     "/example.com/symbols@v1.1.0/hello#Hello",
+							Link:     "/example.com/symbols@v1.1.0/hello?GOOS=darwin#Hello",
 							New:      true,
 							Section:  "Functions",
 							Kind:     "Function",
@@ -55,7 +204,7 @@ var versionsPageHello = []*frontend.VersionList{
 						{
 							Name:     "HelloJS",
 							Synopsis: "func HelloJS() string",
-							Link:     "/example.com/symbols@v1.1.0/hello#HelloJS",
+							Link:     "/example.com/symbols@v1.1.0/hello?GOOS=js#HelloJS",
 							New:      true,
 							Section:  "Functions",
 							Kind:     "Function",

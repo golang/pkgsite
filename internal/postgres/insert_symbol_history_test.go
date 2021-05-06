@@ -29,8 +29,8 @@ func TestShouldUpdateSymbolHistory(t *testing.T) {
 			want:    true,
 		},
 		{
-			name:    "should not update when new version is the same",
-			oldHist: map[string]string{},
+			name:    "should update when new version is the same",
+			oldHist: map[string]string{testSym: sample.VersionString},
 			want:    true,
 		},
 		{

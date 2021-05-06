@@ -38,7 +38,13 @@ func ParsePackageAPIInfo(files []string) (apiVersions, error) {
 	//
 	ver := func(name string) string {
 		base := filepath.Base(name)
-		return strings.TrimSuffix(base, ".txt")
+		v := strings.TrimSuffix(base, ".txt")
+		if strings.HasPrefix(base, "go") {
+			// stdlib files have the structure goN.txt.
+			// Get the semantic version.
+			v = stdlib.VersionForTag(v)
+		}
+		return v
 	}
 	sort.Slice(files, func(i, j int) bool {
 		return semver.Compare(ver(files[i]), ver(files[j])) > 0
@@ -72,24 +78,7 @@ func LoadAPIFiles(pkgPath, dir string) ([]string, error) {
 	if len(files) == 0 {
 		return nil, fmt.Errorf("no files matching %q", apiGlob)
 	}
-
-	if !stdlib.Contains(pkgPath) {
-		return files, nil
-	}
-
-	// stdlib files have the structure goN.txt. Convert the filenames to
-	// semver.
-	var newFiles []string
-	for _, f := range files {
-		base := filepath.Base(f)
-		tag := strings.TrimSuffix(base, ".txt")
-		v, err := stdlib.TagForVersion(tag)
-		if err != nil {
-			return nil, err
-		}
-		newFiles = append(newFiles, filepath.Join(filepath.Dir(f), v+".txt"))
-	}
-	return newFiles, nil
+	return files, nil
 }
 
 // apiVersions is a map of packages to information about those packages'

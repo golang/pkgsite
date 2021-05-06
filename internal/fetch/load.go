@@ -101,12 +101,7 @@ func loadPackage(ctx context.Context, zipGoFiles []*zip.File, innerPath string,
 				s2.Children = nil
 				s2.GOOS = bc.GOOS
 				s2.GOARCH = bc.GOARCH
-				for _, c := range s.Children {
-					c2 := *c
-					c2.GOOS = bc.GOOS
-					c2.GOARCH = bc.GOARCH
-					s2.Children = append(s2.Children, &c2)
-				}
+				s2.Children = append(s2.Children, s.Children...)
 				doc2.API = append(doc2.API, &s2)
 			}
 			pkg.docs = append(pkg.docs, &doc2)
@@ -117,10 +112,6 @@ func loadPackage(ctx context.Context, zipGoFiles []*zip.File, innerPath string,
 		for _, s := range api {
 			s.GOOS = bc.GOOS
 			s.GOARCH = bc.GOARCH
-			for _, c := range s.Children {
-				c.GOOS = bc.GOOS
-				c.GOARCH = bc.GOARCH
-			}
 		}
 
 		switch {
@@ -190,10 +181,6 @@ func loadPackage(ctx context.Context, zipGoFiles []*zip.File, innerPath string,
 		for _, s := range pkg.docs[0].API {
 			s.GOOS = internal.All
 			s.GOARCH = internal.All
-			for _, c := range s.Children {
-				c.GOOS = internal.All
-				c.GOARCH = internal.All
-			}
 		}
 	}
 	return pkg, nil

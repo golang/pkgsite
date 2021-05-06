@@ -67,7 +67,7 @@ func TestInsertSymbolNamesAndHistory(t *testing.T) {
 	want2[mod.Version] = unitSymbolsFromAPI(api, mod.Version)
 	comparePackageSymbols(ctx, t, testDB, mod.Packages()[0].Path, mod.ModulePath, mod.Version, want2)
 
-	gotHist, err := testDB.GetSymbolHistory(ctx, mod.Packages()[0].Path, mod.ModulePath)
+	gotHist, err := testDB.LegacyGetSymbolHistory(ctx, mod.Packages()[0].Path, mod.ModulePath)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -77,9 +77,9 @@ func TestInsertSymbolNamesAndHistory(t *testing.T) {
 			"Variable":    unitSymbolFromSymbol(sample.Variable, "v1.0.0"),
 			"Function":    unitSymbolFromSymbol(sample.Function, "v1.0.0"),
 			"Type":        unitSymbolFromSymbol(sample.Type, "v1.0.0"),
-			"Type.Field":  unitSymbolFromSymbol(sample.Type.Children[0], "v1.0.0"),
-			"New":         unitSymbolFromSymbol(sample.Type.Children[1], "v1.0.0"),
-			"Type.Method": unitSymbolFromSymbol(sample.Type.Children[2], "v1.0.0"),
+			"Type.Field":  unitSymbolFromSymbolMeta(sample.Type.Children[0], "v1.0.0", internal.BuildContextAll),
+			"New":         unitSymbolFromSymbolMeta(sample.Type.Children[1], "v1.0.0", internal.BuildContextAll),
+			"Type.Method": unitSymbolFromSymbolMeta(sample.Type.Children[2], "v1.0.0", internal.BuildContextAll),
 		},
 	}
 	if diff := cmp.Diff(wantHist, gotHist,
@@ -132,33 +132,36 @@ func TestInsertSymbolHistory_MultiVersions(t *testing.T) {
 	defer cancel()
 
 	typ := internal.Symbol{
-		Name:         "Foo",
-		Synopsis:     "type Foo struct",
-		Section:      internal.SymbolSectionTypes,
-		Kind:         internal.SymbolKindType,
-		ParentName:   "Foo",
-		SinceVersion: "v1.0.0",
+		SymbolMeta: internal.SymbolMeta{
+			Name:       "Foo",
+			Synopsis:   "type Foo struct",
+			Section:    internal.SymbolSectionTypes,
+			Kind:       internal.SymbolKindType,
+			ParentName: "Foo",
+		},
 	}
 	methodA := internal.Symbol{
-		Name:         "Foo.A",
-		Synopsis:     "func (*Foo) A()",
-		Section:      internal.SymbolSectionTypes,
-		Kind:         internal.SymbolKindMethod,
-		ParentName:   typ.Name,
-		SinceVersion: "v1.1.0",
+		SymbolMeta: internal.SymbolMeta{
+			Name:       "Foo.A",
+			Synopsis:   "func (*Foo) A()",
+			Section:    internal.SymbolSectionTypes,
+			Kind:       internal.SymbolKindMethod,
+			ParentName: typ.Name,
+		},
 	}
 	methodB := internal.Symbol{
-		Name:         "Foo.B",
-		Synopsis:     "func (*Foo) B()",
-		Section:      internal.SymbolSectionTypes,
-		Kind:         internal.SymbolKindMethod,
-		ParentName:   typ.Name,
-		SinceVersion: "v1.2.0",
+		SymbolMeta: internal.SymbolMeta{
+			Name:       "Foo.B",
+			Synopsis:   "func (*Foo) B()",
+			Section:    internal.SymbolSectionTypes,
+			Kind:       internal.SymbolKindMethod,
+			ParentName: typ.Name,
+		},
 	}
 	typA := typ
-	typA.Children = []*internal.Symbol{&methodA}
+	typA.Children = []*internal.SymbolMeta{&methodA.SymbolMeta}
 	typB := typ
-	typB.Children = []*internal.Symbol{&methodA, &methodB}
+	typB.Children = []*internal.SymbolMeta{&methodA.SymbolMeta, &methodB.SymbolMeta}
 
 	mod10 := moduleWithSymbols(t, "v1.0.0", []*internal.Symbol{&typ})
 	mod11 := moduleWithSymbols(t, "v1.1.0", []*internal.Symbol{&typA})
@@ -199,7 +202,7 @@ func TestInsertSymbolHistory_MultiVersions(t *testing.T) {
 	}
 	comparePackageSymbols(ctx, t, testDB, mod10.Packages()[0].Path, mod10.ModulePath, mod10.Version, want2)
 
-	gotHist, err := testDB.GetSymbolHistory(ctx, mod10.Packages()[0].Path, mod10.ModulePath)
+	gotHist, err := testDB.LegacyGetSymbolHistory(ctx, mod10.Packages()[0].Path, mod10.ModulePath)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -237,25 +240,31 @@ func TestInsertSymbolHistory_MultiGOOS(t *testing.T) {
 	defer cancel()
 
 	typ := internal.Symbol{
-		Name:       "Foo",
-		Synopsis:   "type Foo struct",
-		Section:    internal.SymbolSectionTypes,
-		Kind:       internal.SymbolKindType,
-		ParentName: "Foo",
+		SymbolMeta: internal.SymbolMeta{
+			Name:       "Foo",
+			Synopsis:   "type Foo struct",
+			Section:    internal.SymbolSectionTypes,
+			Kind:       internal.SymbolKindType,
+			ParentName: "Foo",
+		},
 	}
 	methodA := internal.Symbol{
-		Name:       "Foo.A",
-		Synopsis:   "func (*Foo) A()",
-		Section:    internal.SymbolSectionTypes,
-		Kind:       internal.SymbolKindMethod,
-		ParentName: typ.Name,
+		SymbolMeta: internal.SymbolMeta{
+			Name:       "Foo.A",
+			Synopsis:   "func (*Foo) A()",
+			Section:    internal.SymbolSectionTypes,
+			Kind:       internal.SymbolKindMethod,
+			ParentName: typ.Name,
+		},
 	}
 	methodB := internal.Symbol{
-		Name:       "Foo.B",
-		Synopsis:   "func (*Foo) B()",
-		Section:    internal.SymbolSectionTypes,
-		Kind:       internal.SymbolKindMethod,
-		ParentName: typ.Name,
+		SymbolMeta: internal.SymbolMeta{
+			Name:       "Foo.B",
+			Synopsis:   "func (*Foo) B()",
+			Section:    internal.SymbolSectionTypes,
+			Kind:       internal.SymbolKindMethod,
+			ParentName: typ.Name,
+		},
 	}
 	mod10 := moduleWithSymbols(t, "v1.0.0", []*internal.Symbol{&typ})
 	mod11 := moduleWithSymbols(t, "v1.1.0", nil)
@@ -292,7 +301,7 @@ func TestInsertSymbolHistory_MultiGOOS(t *testing.T) {
 		for _, m := range methods {
 			m.GOOS = goos
 			m.GOARCH = goarch
-			newTyp.Children = append(newTyp.Children, &m)
+			newTyp.Children = append(newTyp.Children, &m.SymbolMeta)
 		}
 		return []*internal.Symbol{&newTyp}
 	}
@@ -346,7 +355,7 @@ func TestInsertSymbolHistory_MultiGOOS(t *testing.T) {
 	}
 	comparePackageSymbols(ctx, t, testDB, mod10.Packages()[0].Path, mod10.ModulePath, mod10.Version, want2)
 
-	gotHist, err := testDB.GetSymbolHistory(ctx, mod10.Packages()[0].Path, mod10.ModulePath)
+	gotHist, err := testDB.LegacyGetSymbolHistory(ctx, mod10.Packages()[0].Path, mod10.ModulePath)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -395,39 +404,21 @@ func TestInsertSymbolHistory_MultiGOOS(t *testing.T) {
 		t.Fatalf("mismatch on symbol history(-want +got):\n%s", diff)
 	}
 
-	gotHist, err = testDB.GetSymbolHistoryForBuildContext(ctx,
-		mod10.Packages()[0].Path, mod10.ModulePath, internal.BuildContextWindows)
+	pathID, err := GetPathID(ctx, testDB.db, mod10.Packages()[0].Path)
 	if err != nil {
 		t.Fatal(err)
 	}
-	wantHist = map[string]map[string]*internal.UnitSymbol{
-		"v1.0.0": map[string]*internal.UnitSymbol{
-			"Foo": func() *internal.UnitSymbol {
-				us := unitSymbolFromSymbol(&typ, "v1.0.0")
-				us.RemoveBuildContexts()
-				us.AddBuildContext(internal.BuildContextWindows)
-				return us
-			}(),
-		},
-		"v1.1.0": map[string]*internal.UnitSymbol{
-			"Foo.A": func() *internal.UnitSymbol {
-				us := unitSymbolFromSymbol(&methodA, "v1.1.0")
-				us.RemoveBuildContexts()
-				us.AddBuildContext(internal.BuildContextWindows)
-				return us
-			}(),
-		},
-		"v1.2.0": map[string]*internal.UnitSymbol{
-			"Foo.B": func() *internal.UnitSymbol {
-				us := unitSymbolFromSymbol(&methodB, "v1.2.0")
-				us.RemoveBuildContexts()
-				us.AddBuildContext(internal.BuildContextWindows)
-				return us
-			}(),
-		},
+	gotHist2, err := GetSymbolHistoryForBuildContext(ctx, testDB.db,
+		pathID, mod10.ModulePath, internal.BuildContextWindows)
+	if err != nil {
+		t.Fatal(err)
 	}
-	if diff := cmp.Diff(wantHist, gotHist,
-		cmp.AllowUnexported(internal.UnitSymbol{})); diff != "" {
+	wantHist2 := map[string]string{
+		"Foo":   "v1.0.0",
+		"Foo.A": "v1.1.0",
+		"Foo.B": "v1.2.0",
+	}
+	if diff := cmp.Diff(wantHist2, gotHist2); diff != "" {
 		t.Fatalf("mismatch on symbol history(-want +got):\n%s", diff)
 	}
 }
@@ -475,7 +466,7 @@ func compareUnitSymbols(ctx context.Context, t *testing.T, testDB *DB,
 			})
 		}
 		if diff := cmp.Diff(want, got,
-			cmpopts.IgnoreFields(internal.Symbol{}, "SinceVersion", "GOOS", "GOARCH")); diff != "" {
+			cmpopts.IgnoreFields(internal.Symbol{}, "GOOS", "GOARCH")); diff != "" {
 			t.Fatalf("mismatch (-want +got):\n%s", diff)
 		}
 	}
@@ -484,7 +475,7 @@ func compareUnitSymbols(ctx context.Context, t *testing.T, testDB *DB,
 func comparePackageSymbols(ctx context.Context, t *testing.T, testDB *DB,
 	path, modulePath, version string, want map[string]map[string]*internal.UnitSymbol) {
 	t.Helper()
-	got, err := getPackageSymbols(ctx, testDB.db, path, modulePath)
+	got, err := legacyGetPackageSymbols(ctx, testDB.db, path, modulePath)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -496,24 +487,28 @@ func comparePackageSymbols(ctx context.Context, t *testing.T, testDB *DB,
 
 func unitSymbolsFromAPI(api []*internal.Symbol, version string) map[string]*internal.UnitSymbol {
 	nameToUnitSymbols := map[string]*internal.UnitSymbol{}
-	updateSymbols(api, func(s *internal.Symbol) error {
+	updateSymbols(api, func(s *internal.SymbolMeta) error {
 		if _, ok := nameToUnitSymbols[s.Name]; !ok {
-			us := unitSymbolFromSymbol(s, version)
+			us := unitSymbolFromSymbolMeta(s, version, internal.BuildContextAll)
 			nameToUnitSymbols[s.Name] = us
 		}
 		return nil
 	})
 	return nameToUnitSymbols
 }
+
 func unitSymbolFromSymbol(s *internal.Symbol, version string) *internal.UnitSymbol {
 	us := &internal.UnitSymbol{
-		Name:       s.Name,
-		ParentName: s.ParentName,
-		Section:    s.Section,
-		Kind:       s.Kind,
-		Synopsis:   s.Synopsis,
-		Version:    version,
+		SymbolMeta: s.SymbolMeta,
 	}
 	us.AddBuildContext(internal.BuildContext{GOOS: s.GOOS, GOARCH: s.GOARCH})
+	return us
+}
+
+func unitSymbolFromSymbolMeta(sm *internal.SymbolMeta, version string, b internal.BuildContext) *internal.UnitSymbol {
+	us := &internal.UnitSymbol{
+		SymbolMeta: *sm,
+	}
+	us.AddBuildContext(b)
 	return us
 }

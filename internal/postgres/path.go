@@ -9,11 +9,9 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"strconv"
 	"strings"
 
 	"github.com/lib/pq"
-	"golang.org/x/mod/module"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/derrors"
@@ -58,9 +56,9 @@ func (db *DB) GetLatestMajorPathForV1Path(ctx context.Context, v1path string) (_
 		// Keep only the N following vN.
 		suffix := internal.Suffix(v1path, sp)
 		modPath := strings.TrimSuffix(p, "/"+suffix)
-		i, err := modulePathMajorVersion(modPath)
-		if err != nil {
-			return "", 0, err
+		_, i := internal.SeriesPathAndMajorVersion(modPath)
+		if i == 0 {
+			return "", 0, fmt.Errorf("bad module path %q", modPath)
 		}
 		if maj <= i {
 			maj = i
@@ -72,23 +70,6 @@ func (db *DB) GetLatestMajorPathForV1Path(ctx context.Context, v1path string) (_
 		maj = 1
 	}
 	return majPath, maj, nil
-}
-
-// modulePathMajorVersion returns the numeric major version for the given module path.
-// If the path has no "vN" suffix, it returns 1.
-func modulePathMajorVersion(modulePath string) (int, error) {
-	_, m, ok := module.SplitPathVersion(modulePath)
-	if !ok {
-		return 0, fmt.Errorf("bad module path %q", modulePath)
-	}
-	if m == "" {
-		return 1, nil
-	}
-	// First two characters are either ".v" or "/v".
-	if len(m) < 3 {
-		return 0, fmt.Errorf("bad version %q from module.SplitPathVersion(%q)", m, modulePath)
-	}
-	return strconv.Atoi(m[2:])
 }
 
 // upsertPath adds path into the paths table if it does not exist, and returns
@@ -166,4 +147,11 @@ func upsertPaths(ctx context.Context, db *database.DB, paths []string) (pathToID
 		}
 	}
 	return pathToID, nil
+}
+
+func GetPathID(ctx context.Context, ddb *database.DB, path string) (id int, err error) {
+	err = ddb.QueryRow(ctx,
+		`SELECT id FROM paths WHERE path = $1`,
+		path).Scan(&id)
+	return id, err
 }

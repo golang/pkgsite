@@ -117,29 +117,6 @@
     {{- range .Types -}}
     <div class="Documentation-type">
       {{template "item" .}}
-      {{- range .Consts -}}
-      <div class="Documentation-typeConstant">
-        {{- template "declaration" . -}}
-      </div>
-      {{- end -}}
-
-      {{- range .Vars -}}
-      <div class="Documentation-typeVariable">
-        {{- template "declaration" . -}}
-      </div>
-      {{- end -}}
-
-      {{- range .Funcs -}}
-      <div class="Documentation-typeFunc">
-        {{template "item" .}}
-      </div>
-      {{- end -}}
-
-      {{- range .Methods -}}
-      <div class="Documentation-typeMethod">
-        {{template "item" .}}
-      </div>
-      {{- end -}}
     </div>
     {{- end -}}
   {{- else -}}
@@ -178,15 +155,38 @@
           {{- template "since_version" .FullName -}}
         </h4>{{"\n"}}
       </summary>
-      {{- template "declaration" . -}}
-      {{- template "example" .Examples -}}
+      {{template "item_body" .}}
     </details>
   {{else}}
     <h4 tabindex="-1" id="{{$id}}" data-kind="{{.Kind}}" class="{{.HeaderClass}}">
       <span>{{.HeaderStart}} {{source_link .Name .Decl}} <a class="Documentation-idLink" href="#{{$id}}">¶</a></span>
         {{- template "since_version" .FullName -}}
     </h4>{{"\n"}}
-    {{- template "declaration" . -}}
-    {{- template "example" .Examples -}}
+    {{template "item_body" .}}
   {{end}}
+{{end}}
+
+{{define "item_body"}}
+  {{- template "declaration" . -}}
+  {{- template "example" .Examples -}}
+  {{- range .Consts -}}
+  <div class="Documentation-typeConstant">
+    {{- template "declaration" . -}}
+  </div>
+  {{- end -}}
+  {{- range .Vars -}}
+  <div class="Documentation-typeVariable">
+    {{- template "declaration" . -}}
+  </div>
+  {{- end -}}
+  {{- range .Funcs -}}
+  <div class="Documentation-typeFunc">
+    {{template "item" .}}
+  </div>
+  {{- end -}}
+  {{- range .Methods -}}
+  <div class="Documentation-typeMethod">
+    {{template "item" .}}
+  </div>
+  {{- end -}}
 {{end}}

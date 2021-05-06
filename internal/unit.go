@@ -53,6 +53,10 @@ type Unit struct {
 	Symbols         map[BuildContext][]*Symbol
 	NumImports      int
 	NumImportedBy   int
+
+	// SymbolHistory is a map of symbolName to the version when the symbol was
+	// first added to the package.
+	SymbolHistory map[string]string
 }
 
 // Documentation is the rendered documentation for a given package

@@ -37,7 +37,7 @@ func upsertSymbolHistory(ctx context.Context, ddb *database.DB,
 		return err
 	}
 	for packagePath, docIDToDoc := range pathToDocIDToDoc {
-		dbVersionToNameToUnitSymbol, err := GetSymbolHistoryFromTable(ctx, ddb, packagePath, modulePath, nil)
+		dbVersionToNameToUnitSymbol, err := LegacyGetSymbolHistoryFromTable(ctx, ddb, packagePath, modulePath)
 		if err != nil {
 			return err
 		}
@@ -57,7 +57,7 @@ func upsertSymbolHistory(ctx context.Context, ddb *database.DB,
 					}
 				}
 				seen := map[string]bool{}
-				if err := updateSymbols(doc.API, func(s *internal.Symbol) error {
+				if err := updateSymbols(doc.API, func(sm *internal.SymbolMeta) error {
 					// While a package with duplicate symbol names won't build,
 					// the documentation for these packages are currently
 					// rendered on pkg.go.dev, so doc.API may contain more than
@@ -65,13 +65,13 @@ func upsertSymbolHistory(ctx context.Context, ddb *database.DB,
 					//
 					// For the purpose of symbol_history, just use the first
 					// symbol name we see.
-					if seen[s.Name] {
+					if seen[sm.Name] {
 						return nil
 					}
-					seen[s.Name] = true
+					seen[sm.Name] = true
 
-					if shouldUpdateSymbolHistory(s.Name, ver, dbNameToVersion) {
-						values, err = appendSymbolHistoryRow(s, values,
+					if shouldUpdateSymbolHistory(sm.Name, ver, dbNameToVersion) {
+						values, err = appendSymbolHistoryRow(sm, values,
 							packagePath, modulePath, ver, b, pathToID, nameToID,
 							pathToPkgsymID)
 						if err != nil {
@@ -117,21 +117,21 @@ func upsertSymbolHistory(ctx context.Context, ddb *database.DB,
 	return nil
 }
 
-func appendSymbolHistoryRow(s *internal.Symbol, values []interface{},
+func appendSymbolHistoryRow(sm *internal.SymbolMeta, values []interface{},
 	packagePath, modulePath, ver string, build internal.BuildContext,
 	pathToID, symToID map[string]int,
 	pathToPkgsymID map[string]map[packageSymbol]int) (_ []interface{}, err error) {
-	defer derrors.WrapStack(&err, "appendSymbolHistoryRow(%q, %q, %q, %q)", s.Name, packagePath, modulePath, ver)
-	symbolID := symToID[s.Name]
+	defer derrors.WrapStack(&err, "appendSymbolHistoryRow(%q, %q, %q, %q)", sm.Name, packagePath, modulePath, ver)
+	symbolID := symToID[sm.Name]
 	if symbolID == 0 {
-		return nil, fmt.Errorf("symbolID cannot be 0: %q", s.Name)
+		return nil, fmt.Errorf("symbolID cannot be 0: %q", sm.Name)
 	}
-	if s.ParentName == "" {
-		s.ParentName = s.Name
+	if sm.ParentName == "" {
+		sm.ParentName = sm.Name
 	}
-	parentID := symToID[s.ParentName]
+	parentID := symToID[sm.ParentName]
 	if parentID == 0 {
-		return nil, fmt.Errorf("parentSymbolID cannot be 0: %q", s.ParentName)
+		return nil, fmt.Errorf("parentSymbolID cannot be 0: %q", sm.ParentName)
 	}
 	packagePathID := pathToID[packagePath]
 	if packagePathID == 0 {
@@ -141,7 +141,7 @@ func appendSymbolHistoryRow(s *internal.Symbol, values []interface{},
 	if modulePathID == 0 {
 		return nil, fmt.Errorf("modulePathID cannot be 0: %q", modulePathID)
 	}
-	pkgsymID := pathToPkgsymID[packagePath][packageSymbol{synopsis: s.Synopsis, name: s.Name, section: s.Section}]
+	pkgsymID := pathToPkgsymID[packagePath][packageSymbol{synopsis: sm.Synopsis, name: sm.Name, parentName: sm.ParentName}]
 	return append(values,
 		symbolID,
 		parentID,
@@ -165,5 +165,5 @@ func shouldUpdateSymbolHistory(symbolName, newVersion string, oldHist map[string
 	if !ok {
 		return true
 	}
-	return semver.Compare(newVersion, oldVersion) == -1
+	return semver.Compare(newVersion, oldVersion) <= 0
 }

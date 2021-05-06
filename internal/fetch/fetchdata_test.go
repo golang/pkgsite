@@ -44,21 +44,46 @@ var singleUnits = []*internal.Unit{
 			GOARCH:   internal.All,
 			Synopsis: "Package pkg is a sample package.",
 			API: []*internal.Symbol{
-				{Name: "Version", Synopsis: "const Version", Section: "Constants", Kind: "Constant"},
-				{Name: "V", Synopsis: "var V = Version", Section: "Variables", Kind: "Variable"},
-				{Name: "G", Synopsis: "func G() int", Section: "Functions", Kind: "Function"},
 				{
-					Name:     "T",
-					Synopsis: "type T int",
-					Section:  "Types",
-					Kind:     "Type",
-					Children: []*internal.Symbol{{
-						Name:       "F",
-						Synopsis:   "func F(t time.Time, s string) (T, u)",
-						Section:    "Types",
-						Kind:       "Function",
-						ParentName: "T",
-					}},
+					SymbolMeta: internal.SymbolMeta{
+						Name:     "Version",
+						Synopsis: "const Version",
+						Section:  "Constants",
+						Kind:     "Constant",
+					},
+				},
+				{
+					SymbolMeta: internal.SymbolMeta{
+						Name:     "V",
+						Synopsis: "var V = Version",
+						Section:  "Variables",
+						Kind:     "Variable",
+					},
+				},
+				{
+					SymbolMeta: internal.SymbolMeta{
+						Name:     "G",
+						Synopsis: "func G() int",
+						Section:  "Functions",
+						Kind:     "Function",
+					},
+				},
+				{
+					SymbolMeta: internal.SymbolMeta{
+						Name:     "T",
+						Synopsis: "type T int",
+						Section:  "Types",
+						Kind:     "Type",
+					},
+					Children: []*internal.SymbolMeta{
+						{
+							Name:       "F",
+							Synopsis:   "func F(t time.Time, s string) (T, u)",
+							Section:    "Types",
+							Kind:       "Function",
+							ParentName: "T",
+						},
+					},
 				},
 			},
 		}},
@@ -109,12 +134,14 @@ var moduleNoGoMod = &testModule{
 						Filepath: "README.md",
 						Contents: "This is the README for a test module.",
 					},
-					Documentation: []*internal.Documentation{{
-						GOOS:     internal.All,
-						GOARCH:   internal.All,
-						Synopsis: "Package basic is a sample package.",
-						API:      singleUnits[1].Documentation[0].API,
-					}},
+					Documentation: []*internal.Documentation{
+						{
+							GOOS:     internal.All,
+							GOARCH:   internal.All,
+							Synopsis: "Package basic is a sample package.",
+							API:      singleUnits[1].Documentation[0].API,
+						},
+					},
 					Imports: []string{"time"},
 				},
 			},
@@ -155,12 +182,23 @@ var moduleMultiPackage = &testModule{
 						Filepath: "bar/README",
 						Contents: "Another README file for testing.",
 					},
-					Documentation: []*internal.Documentation{{
-						GOOS:     internal.All,
-						GOARCH:   internal.All,
-						Synopsis: "package bar",
-						API:      []*internal.Symbol{{Name: "Bar", Synopsis: "func Bar() string", Section: "Functions", Kind: "Function"}},
-					}},
+					Documentation: []*internal.Documentation{
+						{
+							GOOS:     internal.All,
+							GOARCH:   internal.All,
+							Synopsis: "package bar",
+							API: []*internal.Symbol{
+								{
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "Bar",
+										Synopsis: "func Bar() string",
+										Section:  "Functions",
+										Kind:     "Function",
+									},
+								},
+							},
+						},
+					},
 				},
 				{
 					UnitMeta: internal.UnitMeta{
@@ -171,7 +209,16 @@ var moduleMultiPackage = &testModule{
 						GOOS:     internal.All,
 						GOARCH:   internal.All,
 						Synopsis: "package foo",
-						API:      []*internal.Symbol{{Name: "FooBar", Synopsis: "func FooBar() string", Section: "Functions", Kind: "Function"}},
+						API: []*internal.Symbol{
+							{
+								SymbolMeta: internal.SymbolMeta{
+									Name:     "FooBar",
+									Synopsis: "func FooBar() string",
+									Section:  "Functions",
+									Kind:     "Function",
+								},
+							},
+						},
 					}},
 					Imports: []string{"example.com/multi/bar", "fmt"},
 				},
@@ -249,10 +296,12 @@ var moduleBadPackages = &testModule{
 						GOARCH:   internal.All,
 						Synopsis: "Package good is inside a module that has bad packages.",
 						API: []*internal.Symbol{{
-							Name:     "Good",
-							Synopsis: "const Good",
-							Section:  "Constants",
-							Kind:     "Constant",
+							SymbolMeta: internal.SymbolMeta{
+								Name:     "Good",
+								Synopsis: "const Good",
+								Section:  "Constants",
+								Kind:     "Constant",
+							},
 						}},
 					}},
 				},
@@ -314,10 +363,12 @@ var moduleBuildConstraints = &testModule{
 							Synopsis: "Package cpu implements processor feature detection used by the Go standard library.",
 							API: []*internal.Symbol{
 								{
-									Name:     "CacheLinePadSize",
-									Synopsis: "const CacheLinePadSize",
-									Section:  "Constants",
-									Kind:     "Constant",
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "CacheLinePadSize",
+										Synopsis: "const CacheLinePadSize",
+										Section:  "Constants",
+										Kind:     "Constant",
+									},
 								},
 							},
 						},
@@ -327,10 +378,12 @@ var moduleBuildConstraints = &testModule{
 							Synopsis: "Package cpu implements processor feature detection used by the Go standard library.",
 							API: []*internal.Symbol{
 								{
-									Name:     "CacheLinePadSize",
-									Synopsis: "const CacheLinePadSize",
-									Section:  "Constants",
-									Kind:     "Constant",
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "CacheLinePadSize",
+										Synopsis: "const CacheLinePadSize",
+										Section:  "Constants",
+										Kind:     "Constant",
+									},
 								},
 							},
 						},
@@ -340,10 +393,12 @@ var moduleBuildConstraints = &testModule{
 							Synopsis: "Package cpu implements processor feature detection used by the Go standard library.",
 							API: []*internal.Symbol{
 								{
-									Name:     "CacheLinePadSize",
-									Synopsis: "const CacheLinePadSize",
-									Section:  "Constants",
-									Kind:     "Constant",
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "CacheLinePadSize",
+										Synopsis: "const CacheLinePadSize",
+										Section:  "Constants",
+										Kind:     "Constant",
+									},
 								},
 							},
 						},
@@ -445,24 +500,46 @@ var moduleNonRedist = &testModule{
 						Name: "bar",
 						Path: "example.com/nonredist/bar",
 					},
-					Documentation: []*internal.Documentation{{
-						GOOS:     internal.All,
-						GOARCH:   internal.All,
-						Synopsis: "package bar",
-						API:      []*internal.Symbol{{Name: "Bar", Synopsis: "func Bar() string", Section: "Functions", Kind: "Function"}},
-					}},
+					Documentation: []*internal.Documentation{
+						{
+							GOOS:     internal.All,
+							GOARCH:   internal.All,
+							Synopsis: "package bar",
+							API: []*internal.Symbol{
+								{
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "Bar",
+										Synopsis: "func Bar() string",
+										Section:  "Functions",
+										Kind:     "Function",
+									},
+								},
+							},
+						},
+					},
 				},
 				{
 					UnitMeta: internal.UnitMeta{
 						Name: "baz",
 						Path: "example.com/nonredist/bar/baz",
 					},
-					Documentation: []*internal.Documentation{{
-						GOOS:     internal.All,
-						GOARCH:   internal.All,
-						Synopsis: "package baz",
-						API:      []*internal.Symbol{{Name: "Baz", Synopsis: "func Baz() string", Section: "Functions", Kind: "Function"}},
-					}},
+					Documentation: []*internal.Documentation{
+						{
+							GOOS:     internal.All,
+							GOARCH:   internal.All,
+							Synopsis: "package baz",
+							API: []*internal.Symbol{
+								{
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "Baz",
+										Synopsis: "func Baz() string",
+										Section:  "Functions",
+										Kind:     "Function",
+									},
+								},
+							},
+						},
+					},
 				},
 				{
 					UnitMeta: internal.UnitMeta{
@@ -473,12 +550,23 @@ var moduleNonRedist = &testModule{
 						Filepath: "unk/README.md",
 						Contents: "README file will be removed before DB insert.",
 					},
-					Documentation: []*internal.Documentation{{
-						GOOS:     internal.All,
-						GOARCH:   internal.All,
-						Synopsis: "package unk",
-						API:      []*internal.Symbol{{Name: "FooBar", Synopsis: "func FooBar() string", Section: "Functions", Kind: "Function"}},
-					}},
+					Documentation: []*internal.Documentation{
+						{
+							GOOS:     internal.All,
+							GOARCH:   internal.All,
+							Synopsis: "package unk",
+							API: []*internal.Symbol{
+								{
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "FooBar",
+										Synopsis: "func FooBar() string",
+										Section:  "Functions",
+										Kind:     "Function",
+									},
+								},
+							},
+						},
+					},
 					Imports: []string{"example.com/nonredist/bar", "fmt"},
 				},
 			},
@@ -686,12 +774,22 @@ var moduleWasm = &testModule{
 						Name: "js",
 						Path: "github.com/my/module/js/js",
 					},
-					Documentation: []*internal.Documentation{{
-						Synopsis: "Package js only works with wasm.",
-						GOOS:     "js",
-						GOARCH:   "wasm",
-						API:      []*internal.Symbol{{Name: "Value", Synopsis: "type Value int", Section: "Types", Kind: "Type"}},
-					}},
+					Documentation: []*internal.Documentation{
+						{
+							Synopsis: "Package js only works with wasm.",
+							GOOS:     "js",
+							GOARCH:   "wasm",
+							API: []*internal.Symbol{
+								{
+									SymbolMeta: internal.SymbolMeta{Name: "Value",
+										Synopsis: "type Value int",
+										Section:  "Types",
+										Kind:     "Type",
+									},
+								},
+							},
+						},
+					},
 				},
 			},
 		},
@@ -747,12 +845,14 @@ var moduleStdMaster = &testModule{
 							Synopsis: "Package errors implements functions to manipulate errors.",
 							API: []*internal.Symbol{
 								{
-									Name:     "New",
-									Synopsis: "func New(text string) error",
-									Section:  "Functions",
-									Kind:     "Function",
-									GOOS:     internal.All,
-									GOARCH:   internal.All,
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "New",
+										Synopsis: "func New(text string) error",
+										Section:  "Functions",
+										Kind:     "Function",
+									},
+									GOOS:   internal.All,
+									GOARCH: internal.All,
 								},
 							},
 						},
@@ -812,286 +912,376 @@ var moduleStd = &testModule{
 						Name: "builtin",
 						Path: "builtin",
 					},
-					Documentation: []*internal.Documentation{{
-						GOOS:     internal.All,
-						GOARCH:   internal.All,
-						Synopsis: "Package builtin provides documentation for Go's predeclared identifiers.",
-						API: []*internal.Symbol{
-							{
-								Name:     "true",
-								Synopsis: "const true",
-								Section:  "Constants",
-								Kind:     "Constant",
-							},
-							{
-								Name:     "false",
-								Synopsis: "const false",
-								Section:  "Constants",
-								Kind:     "Constant",
-							},
-							{
-								Name:     "iota",
-								Synopsis: "const iota",
-								Section:  "Constants",
-								Kind:     "Constant",
-							},
-							{
-								Name:     "nil",
-								Synopsis: "var nil Type",
-								Section:  "Variables",
-								Kind:     "Variable",
-							},
-							{
-								Name:     "append",
-								Synopsis: "func append(slice []Type, elems ...Type) []Type",
-								Section:  "Functions",
-								Kind:     "Function",
-							},
-							{
-								Name:     "cap",
-								Synopsis: "func cap(v Type) int",
-								Section:  "Functions",
-								Kind:     "Function",
-							},
-							{
-								Name:     "close",
-								Synopsis: "func close(c chan<- Type)",
-								Section:  "Functions",
-								Kind:     "Function",
-							},
-							{
-								Name:     "complex",
-								Synopsis: "func complex(r, i FloatType) ComplexType",
-								Section:  "Functions",
-								Kind:     "Function",
-							},
-							{
-								Name:     "copy",
-								Synopsis: "func copy(dst, src []Type) int",
-								Section:  "Functions",
-								Kind:     "Function",
-							},
-							{
-								Name:     "delete",
-								Synopsis: "func delete(m map[Type]Type1, key Type)",
-								Section:  "Functions",
-								Kind:     "Function",
-							},
-							{
-								Name:     "imag",
-								Synopsis: "func imag(c ComplexType) FloatType",
-								Section:  "Functions",
-								Kind:     "Function",
-							},
-							{
-								Name:     "len",
-								Synopsis: "func len(v Type) int",
-								Section:  "Functions",
-								Kind:     "Function",
-							},
-							{
-								Name:     "make",
-								Synopsis: "func make(t Type, size ...IntegerType) Type",
-								Section:  "Functions",
-								Kind:     "Function",
-							},
-							{
-								Name:     "new",
-								Synopsis: "func new(Type) *Type",
-								Section:  "Functions",
-								Kind:     "Function",
-							},
-							{
-								Name:     "panic",
-								Synopsis: "func panic(v interface{})",
-								Section:  "Functions",
-								Kind:     "Function",
-							},
-							{
-								Name:     "print",
-								Synopsis: "func print(args ...Type)",
-								Section:  "Functions",
-								Kind:     "Function",
-							},
-							{
-								Name:     "println",
-								Synopsis: "func println(args ...Type)",
-								Section:  "Functions",
-								Kind:     "Function",
-							},
-							{
-								Name:     "real",
-								Synopsis: "func real(c ComplexType) FloatType",
-								Section:  "Functions",
-								Kind:     "Function",
-							},
-							{
-								Name:     "recover",
-								Synopsis: "func recover() interface{}",
-								Section:  "Functions",
-								Kind:     "Function",
-							},
-							{
-								Name:     "ComplexType",
-								Synopsis: "type ComplexType complex64",
-								Section:  "Types",
-								Kind:     "Type",
-							},
-							{
-								Name:     "FloatType",
-								Synopsis: "type FloatType float32",
-								Section:  "Types",
-								Kind:     "Type",
-							},
-							{
-								Name:     "IntegerType",
-								Synopsis: "type IntegerType int",
-								Section:  "Types",
-								Kind:     "Type",
-							},
-							{
-								Name:     "Type",
-								Synopsis: "type Type int",
-								Section:  "Types",
-								Kind:     "Type",
-							},
-							{
-								Name:     "Type1",
-								Synopsis: "type Type1 int",
-								Section:  "Types",
-								Kind:     "Type",
-							},
-							{
-								Name:     "bool",
-								Synopsis: "type bool bool",
-								Section:  "Types",
-								Kind:     "Type",
-							},
-							{
-								Name:     "byte",
-								Synopsis: "type byte = uint8",
-								Section:  "Types",
-								Kind:     "Type",
-							},
-							{
-								Name:     "complex128",
-								Synopsis: "type complex128 complex128",
-								Section:  "Types",
-								Kind:     "Type",
-							},
-							{
-								Name:     "complex64",
-								Synopsis: "type complex64 complex64",
-								Section:  "Types",
-								Kind:     "Type",
-							},
-							{
-								Name:     "error",
-								Synopsis: "type error interface",
-								Section:  "Types",
-								Kind:     "Type",
-								Children: []*internal.Symbol{
-									{
-										Name:       "error.Error",
-										Synopsis:   "Error func() string",
-										Section:    "Types",
-										Kind:       "Method",
-										ParentName: "error",
+					Documentation: []*internal.Documentation{
+						{
+							GOOS:     internal.All,
+							GOARCH:   internal.All,
+							Synopsis: "Package builtin provides documentation for Go's predeclared identifiers.",
+							API: []*internal.Symbol{
+								{
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "true",
+										Synopsis: "const true",
+										Section:  "Constants",
+										Kind:     "Constant",
+									},
+								},
+								{
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "false",
+										Synopsis: "const false",
+										Section:  "Constants",
+										Kind:     "Constant",
+									},
+								},
+								{
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "iota",
+										Synopsis: "const iota",
+										Section:  "Constants",
+										Kind:     "Constant",
+									},
+								},
+								{
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "nil",
+										Synopsis: "var nil Type",
+										Section:  "Variables",
+										Kind:     "Variable",
+									},
+								},
+								{
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "append",
+										Synopsis: "func append(slice []Type, elems ...Type) []Type",
+										Section:  "Functions",
+										Kind:     "Function",
+									},
+								},
+								{
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "cap",
+										Synopsis: "func cap(v Type) int",
+										Section:  "Functions",
+										Kind:     "Function",
+									},
+								},
+								{
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "close",
+										Synopsis: "func close(c chan<- Type)",
+										Section:  "Functions",
+										Kind:     "Function",
+									},
+								},
+								{
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "complex",
+										Synopsis: "func complex(r, i FloatType) ComplexType",
+										Section:  "Functions",
+										Kind:     "Function",
+									},
+								},
+								{
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "copy",
+										Synopsis: "func copy(dst, src []Type) int",
+										Section:  "Functions",
+										Kind:     "Function",
+									},
+								},
+								{
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "delete",
+										Synopsis: "func delete(m map[Type]Type1, key Type)",
+										Section:  "Functions",
+										Kind:     "Function",
+									},
+								},
+								{
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "imag",
+										Synopsis: "func imag(c ComplexType) FloatType",
+										Section:  "Functions",
+										Kind:     "Function",
+									},
+								},
+								{
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "len",
+										Synopsis: "func len(v Type) int",
+										Section:  "Functions",
+										Kind:     "Function",
+									},
+								},
+								{
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "make",
+										Synopsis: "func make(t Type, size ...IntegerType) Type",
+										Section:  "Functions",
+										Kind:     "Function",
+									},
+								},
+								{
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "new",
+										Synopsis: "func new(Type) *Type",
+										Section:  "Functions",
+										Kind:     "Function",
+									},
+								},
+								{
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "panic",
+										Synopsis: "func panic(v interface{})",
+										Section:  "Functions",
+										Kind:     "Function",
+									},
+								},
+								{
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "print",
+										Synopsis: "func print(args ...Type)",
+										Section:  "Functions",
+										Kind:     "Function",
+									},
+								},
+								{
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "println",
+										Synopsis: "func println(args ...Type)",
+										Section:  "Functions",
+										Kind:     "Function",
+									},
+								},
+								{
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "real",
+										Synopsis: "func real(c ComplexType) FloatType",
+										Section:  "Functions",
+										Kind:     "Function",
+									},
+								},
+								{
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "recover",
+										Synopsis: "func recover() interface{}",
+										Section:  "Functions",
+										Kind:     "Function",
+									},
+								},
+								{
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "ComplexType",
+										Synopsis: "type ComplexType complex64",
+										Section:  "Types",
+										Kind:     "Type",
+									},
+								},
+								{
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "FloatType",
+										Synopsis: "type FloatType float32",
+										Section:  "Types",
+										Kind:     "Type",
+									},
+								},
+								{
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "IntegerType",
+										Synopsis: "type IntegerType int",
+										Section:  "Types",
+										Kind:     "Type",
+									},
+								},
+								{
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "Type",
+										Synopsis: "type Type int",
+										Section:  "Types",
+										Kind:     "Type",
+									},
+								},
+								{
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "Type1",
+										Synopsis: "type Type1 int",
+										Section:  "Types",
+										Kind:     "Type",
+									},
+								},
+								{
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "bool",
+										Synopsis: "type bool bool",
+										Section:  "Types",
+										Kind:     "Type",
+									},
+								},
+								{
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "byte",
+										Synopsis: "type byte = uint8",
+										Section:  "Types",
+										Kind:     "Type",
+									},
+								},
+								{
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "complex128",
+										Synopsis: "type complex128 complex128",
+										Section:  "Types",
+										Kind:     "Type",
+									},
+								},
+								{
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "complex64",
+										Synopsis: "type complex64 complex64",
+										Section:  "Types",
+										Kind:     "Type",
+									},
+								},
+								{
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "error",
+										Synopsis: "type error interface",
+										Section:  "Types",
+										Kind:     "Type",
+									},
+									Children: []*internal.SymbolMeta{
+										{
+											Name:       "error.Error",
+											Synopsis:   "Error func() string",
+											Section:    "Types",
+											Kind:       "Method",
+											ParentName: "error",
+										},
+									},
+								},
+								{
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "float32",
+										Synopsis: "type float32 float32",
+										Section:  "Types",
+										Kind:     "Type",
+									},
+								},
+								{
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "float64",
+										Synopsis: "type float64 float64",
+										Section:  "Types",
+										Kind:     "Type",
+									},
+								},
+								{
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "int",
+										Synopsis: "type int int",
+										Section:  "Types",
+										Kind:     "Type",
+									},
+								},
+								{
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "int16",
+										Synopsis: "type int16 int16",
+										Section:  "Types",
+										Kind:     "Type",
+									},
+								},
+								{
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "int32",
+										Synopsis: "type int32 int32",
+										Section:  "Types",
+										Kind:     "Type",
+									},
+								},
+								{
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "int64",
+										Synopsis: "type int64 int64",
+										Section:  "Types",
+										Kind:     "Type",
+									},
+								},
+								{
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "int8",
+										Synopsis: "type int8 int8",
+										Section:  "Types",
+										Kind:     "Type",
+									},
+								},
+								{
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "rune",
+										Synopsis: "type rune = int32",
+										Section:  "Types",
+										Kind:     "Type"},
+								},
+
+								{
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "string",
+										Synopsis: "type string string",
+										Section:  "Types",
+										Kind:     "Type",
+									},
+								},
+								{
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "uint",
+										Synopsis: "type uint uint",
+										Section:  "Types",
+										Kind:     "Type",
+									},
+								},
+								{
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "uint16",
+										Synopsis: "type uint16 uint16",
+										Section:  "Types",
+										Kind:     "Type",
+									},
+								},
+								{
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "uint32",
+										Synopsis: "type uint32 uint32",
+										Section:  "Types",
+										Kind:     "Type",
+									},
+								},
+								{
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "uint64",
+										Synopsis: "type uint64 uint64",
+										Section:  "Types",
+										Kind:     "Type",
+									},
+								},
+								{
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "uint8",
+										Synopsis: "type uint8 uint8",
+										Section:  "Types",
+										Kind:     "Type",
+									},
+								},
+								{
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "uintptr",
+										Synopsis: "type uintptr uintptr",
+										Section:  "Types",
+										Kind:     "Type",
 									},
 								},
 							},
-							{
-								Name:     "float32",
-								Synopsis: "type float32 float32",
-								Section:  "Types",
-								Kind:     "Type",
-							},
-							{
-								Name:     "float64",
-								Synopsis: "type float64 float64",
-								Section:  "Types",
-								Kind:     "Type",
-							},
-							{
-								Name:     "int",
-								Synopsis: "type int int",
-								Section:  "Types",
-								Kind:     "Type",
-							},
-							{
-								Name:     "int16",
-								Synopsis: "type int16 int16",
-								Section:  "Types",
-								Kind:     "Type",
-							},
-							{
-								Name:     "int32",
-								Synopsis: "type int32 int32",
-								Section:  "Types",
-								Kind:     "Type",
-							},
-							{
-								Name:     "int64",
-								Synopsis: "type int64 int64",
-								Section:  "Types",
-								Kind:     "Type",
-							},
-							{
-								Name:     "int8",
-								Synopsis: "type int8 int8",
-								Section:  "Types",
-								Kind:     "Type",
-							},
-							{
-								Name:     "rune",
-								Synopsis: "type rune = int32",
-								Section:  "Types",
-								Kind:     "Type"},
-
-							{
-								Name:     "string",
-								Synopsis: "type string string",
-								Section:  "Types",
-								Kind:     "Type",
-							},
-							{
-								Name:     "uint",
-								Synopsis: "type uint uint",
-								Section:  "Types",
-								Kind:     "Type",
-							},
-							{
-								Name:     "uint16",
-								Synopsis: "type uint16 uint16",
-								Section:  "Types",
-								Kind:     "Type",
-							},
-							{
-								Name:     "uint32",
-								Synopsis: "type uint32 uint32",
-								Section:  "Types",
-								Kind:     "Type",
-							},
-							{
-								Name:     "uint64",
-								Synopsis: "type uint64 uint64",
-								Section:  "Types",
-								Kind:     "Type",
-							},
-							{
-								Name:     "uint8",
-								Synopsis: "type uint8 uint8",
-								Section:  "Types",
-								Kind:     "Type",
-							},
-							{
-								Name:     "uintptr",
-								Synopsis: "type uintptr uintptr",
-								Section:  "Types",
-								Kind:     "Type",
-							},
 						},
-					}},
+					},
 				},
 				{
 					UnitMeta: internal.UnitMeta{
@@ -1157,106 +1347,122 @@ var moduleStd = &testModule{
 						Name: "context",
 						Path: "context",
 					},
-					Documentation: []*internal.Documentation{{
-						GOOS:     internal.All,
-						GOARCH:   internal.All,
-						Synopsis: "Package context defines the Context type, which carries deadlines, cancelation signals, and other request-scoped values across API boundaries and between processes.",
-						API: []*internal.Symbol{
-							{
-								Name:     "Canceled",
-								Synopsis: `var Canceled = errors.New("context canceled")`,
-								Section:  "Variables",
-								Kind:     "Variable",
-							},
-							{
-								Name:     "DeadlineExceeded",
-								Synopsis: "var DeadlineExceeded error = deadlineExceededError{}",
-								Section:  "Variables",
-								Kind:     "Variable",
-							},
-							{
-								Name:     "WithCancel",
-								Synopsis: "func WithCancel(parent Context) (ctx Context, cancel CancelFunc)",
-								Section:  "Functions",
-								Kind:     "Function",
-							},
-							{
-								Name:     "WithDeadline",
-								Synopsis: "func WithDeadline(parent Context, d time.Time) (Context, CancelFunc)",
-								Section:  "Functions",
-								Kind:     "Function",
-							},
-							{
-								Name:     "WithTimeout",
-								Synopsis: "func WithTimeout(parent Context, timeout time.Duration) (Context, CancelFunc)",
-								Section:  "Functions",
-								Kind:     "Function",
-							},
-							{
-								Name:     "CancelFunc",
-								Synopsis: "type CancelFunc func()",
-								Section:  "Types",
-								Kind:     "Type",
-							},
-							{
-								Name:     "Context",
-								Synopsis: "type Context interface",
-								Section:  "Types",
-								Kind:     "Type",
-								Children: []*internal.Symbol{
-									{
-										Name:       "Background",
-										Synopsis:   "func Background() Context",
-										Section:    "Types",
-										Kind:       "Function",
-										ParentName: "Context",
+					Documentation: []*internal.Documentation{
+						{
+							GOOS:     internal.All,
+							GOARCH:   internal.All,
+							Synopsis: "Package context defines the Context type, which carries deadlines, cancelation signals, and other request-scoped values across API boundaries and between processes.",
+							API: []*internal.Symbol{
+								{
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "Canceled",
+										Synopsis: `var Canceled = errors.New("context canceled")`,
+										Section:  "Variables",
+										Kind:     "Variable",
 									},
-									{
-										Name:       "TODO",
-										Synopsis:   "func TODO() Context",
-										Section:    "Types",
-										Kind:       "Function",
-										ParentName: "Context",
+								},
+								{
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "DeadlineExceeded",
+										Synopsis: "var DeadlineExceeded error = deadlineExceededError{}",
+										Section:  "Variables",
+										Kind:     "Variable",
 									},
-									{
-										Name:       "WithValue",
-										Synopsis:   "func WithValue(parent Context, key, val interface{}) Context",
-										Section:    "Types",
-										Kind:       "Function",
-										ParentName: "Context",
+								},
+								{
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "WithCancel",
+										Synopsis: "func WithCancel(parent Context) (ctx Context, cancel CancelFunc)",
+										Section:  "Functions",
+										Kind:     "Function",
 									},
-									{
-										Name:       "Context.Deadline",
-										Synopsis:   "Deadline func() (deadline time.Time, ok bool)",
-										Section:    "Types",
-										Kind:       "Method",
-										ParentName: "Context",
+								},
+								{
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "WithDeadline",
+										Synopsis: "func WithDeadline(parent Context, d time.Time) (Context, CancelFunc)",
+										Section:  "Functions",
+										Kind:     "Function",
 									},
-									{
-										Name:       "Context.Done",
-										Synopsis:   "Done func() <-chan struct{}",
-										Section:    "Types",
-										Kind:       "Method",
-										ParentName: "Context",
+								},
+								{
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "WithTimeout",
+										Synopsis: "func WithTimeout(parent Context, timeout time.Duration) (Context, CancelFunc)",
+										Section:  "Functions",
+										Kind:     "Function",
 									},
-									{
-										Name:       "Context.Err",
-										Synopsis:   "Err func() error",
-										Section:    "Types",
-										Kind:       "Method",
-										ParentName: "Context",
+								},
+								{
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "CancelFunc",
+										Synopsis: "type CancelFunc func()",
+										Section:  "Types",
+										Kind:     "Type",
 									},
-									{
-										Name:       "Context.Value",
-										Synopsis:   "Value func(key interface{}) interface{}",
-										Section:    "Types",
-										Kind:       "Method",
-										ParentName: "Context",
+								},
+								{
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "Context",
+										Synopsis: "type Context interface",
+										Section:  "Types",
+										Kind:     "Type",
+									},
+									Children: []*internal.SymbolMeta{
+										{
+											Name:       "Background",
+											Synopsis:   "func Background() Context",
+											Section:    "Types",
+											Kind:       "Function",
+											ParentName: "Context",
+										},
+										{
+											Name:       "TODO",
+											Synopsis:   "func TODO() Context",
+											Section:    "Types",
+											Kind:       "Function",
+											ParentName: "Context",
+										},
+										{
+											Name:       "WithValue",
+											Synopsis:   "func WithValue(parent Context, key, val interface{}) Context",
+											Section:    "Types",
+											Kind:       "Function",
+											ParentName: "Context",
+										},
+										{
+											Name:       "Context.Deadline",
+											Synopsis:   "Deadline func() (deadline time.Time, ok bool)",
+											Section:    "Types",
+											Kind:       "Method",
+											ParentName: "Context",
+										},
+										{
+											Name:       "Context.Done",
+											Synopsis:   "Done func() <-chan struct{}",
+											Section:    "Types",
+											Kind:       "Method",
+											ParentName: "Context",
+										},
+										{
+											Name:       "Context.Err",
+											Synopsis:   "Err func() error",
+											Section:    "Types",
+											Kind:       "Method",
+											ParentName: "Context",
+										},
+										{
+											Name:       "Context.Value",
+											Synopsis:   "Value func(key interface{}) interface{}",
+											Section:    "Types",
+											Kind:       "Method",
+											ParentName: "Context",
+										},
 									},
 								},
 							},
 						},
-					}},
+					},
 					Imports: []string{"errors", "fmt", "reflect", "sync", "time"},
 				},
 				{
@@ -1276,53 +1482,69 @@ var moduleStd = &testModule{
 							Synopsis: "Package json implements encoding and decoding of JSON as defined in RFC 7159.",
 							API: []*internal.Symbol{
 								{
-									Name:     "Compact",
-									Synopsis: "func Compact(dst *bytes.Buffer, src []byte) error",
-									Section:  "Functions",
-									Kind:     "Function",
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "Compact",
+										Synopsis: "func Compact(dst *bytes.Buffer, src []byte) error",
+										Section:  "Functions",
+										Kind:     "Function",
+									},
 								},
 								{
-									Name:     "HTMLEscape",
-									Synopsis: "func HTMLEscape(dst *bytes.Buffer, src []byte)",
-									Section:  "Functions",
-									Kind:     "Function",
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "HTMLEscape",
+										Synopsis: "func HTMLEscape(dst *bytes.Buffer, src []byte)",
+										Section:  "Functions",
+										Kind:     "Function",
+									},
 								},
 								{
-									Name:     "Indent",
-									Synopsis: "func Indent(dst *bytes.Buffer, src []byte, prefix, indent string) error",
-									Section:  "Functions",
-									Kind:     "Function",
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "Indent",
+										Synopsis: "func Indent(dst *bytes.Buffer, src []byte, prefix, indent string) error",
+										Section:  "Functions",
+										Kind:     "Function",
+									},
 								},
 								{
-									Name:     "Marshal",
-									Synopsis: "func Marshal(v interface{}) ([]byte, error)",
-									Section:  "Functions",
-									Kind:     "Function",
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "Marshal",
+										Synopsis: "func Marshal(v interface{}) ([]byte, error)",
+										Section:  "Functions",
+										Kind:     "Function",
+									},
 								},
 								{
-									Name:     "MarshalIndent",
-									Synopsis: "func MarshalIndent(v interface{}, prefix, indent string) ([]byte, error)",
-									Section:  "Functions",
-									Kind:     "Function",
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "MarshalIndent",
+										Synopsis: "func MarshalIndent(v interface{}, prefix, indent string) ([]byte, error)",
+										Section:  "Functions",
+										Kind:     "Function",
+									},
 								},
 								{
-									Name:     "Unmarshal",
-									Synopsis: "func Unmarshal(data []byte, v interface{}) error",
-									Section:  "Functions",
-									Kind:     "Function",
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "Unmarshal",
+										Synopsis: "func Unmarshal(data []byte, v interface{}) error",
+										Section:  "Functions",
+										Kind:     "Function",
+									},
 								},
 								{
-									Name:     "Valid",
-									Synopsis: "func Valid(data []byte) bool",
-									Section:  "Functions",
-									Kind:     "Function",
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "Valid",
+										Synopsis: "func Valid(data []byte) bool",
+										Section:  "Functions",
+										Kind:     "Function",
+									},
 								},
 								{
-									Name:     "Decoder",
-									Synopsis: "type Decoder struct",
-									Section:  "Types",
-									Kind:     "Type",
-									Children: []*internal.Symbol{
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "Decoder",
+										Synopsis: "type Decoder struct",
+										Section:  "Types",
+										Kind:     "Type",
+									},
+									Children: []*internal.SymbolMeta{
 										{
 											Name:       "NewDecoder",
 											Synopsis:   "func NewDecoder(r io.Reader) *Decoder",
@@ -1375,11 +1597,13 @@ var moduleStd = &testModule{
 									},
 								},
 								{
-									Name:     "Delim",
-									Synopsis: "type Delim rune",
-									Section:  "Types",
-									Kind:     "Type",
-									Children: []*internal.Symbol{
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "Delim",
+										Synopsis: "type Delim rune",
+										Section:  "Types",
+										Kind:     "Type",
+									},
+									Children: []*internal.SymbolMeta{
 										{
 											Name:       "Delim.String",
 											Synopsis:   "func (d Delim) String() string",
@@ -1390,11 +1614,13 @@ var moduleStd = &testModule{
 									},
 								},
 								{
-									Name:     "Encoder",
-									Synopsis: "type Encoder struct",
-									Section:  "Types",
-									Kind:     "Type",
-									Children: []*internal.Symbol{
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "Encoder",
+										Synopsis: "type Encoder struct",
+										Section:  "Types",
+										Kind:     "Type",
+									},
+									Children: []*internal.SymbolMeta{
 										{
 											Name:       "NewEncoder",
 											Synopsis:   "func NewEncoder(w io.Writer) *Encoder",
@@ -1426,11 +1652,13 @@ var moduleStd = &testModule{
 									},
 								},
 								{
-									Name:     "InvalidUTF8Error",
-									Synopsis: "type InvalidUTF8Error struct",
-									Section:  "Types",
-									Kind:     "Type",
-									Children: []*internal.Symbol{
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "InvalidUTF8Error",
+										Synopsis: "type InvalidUTF8Error struct",
+										Section:  "Types",
+										Kind:     "Type",
+									},
+									Children: []*internal.SymbolMeta{
 										{
 											Name:       "InvalidUTF8Error.S",
 											Synopsis:   "S string",
@@ -1448,11 +1676,13 @@ var moduleStd = &testModule{
 									},
 								},
 								{
-									Name:     "InvalidUnmarshalError",
-									Synopsis: "type InvalidUnmarshalError struct",
-									Section:  "Types",
-									Kind:     "Type",
-									Children: []*internal.Symbol{
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "InvalidUnmarshalError",
+										Synopsis: "type InvalidUnmarshalError struct",
+										Section:  "Types",
+										Kind:     "Type",
+									},
+									Children: []*internal.SymbolMeta{
 										{
 											Name:       "InvalidUnmarshalError.Type",
 											Synopsis:   "Type reflect.Type",
@@ -1470,11 +1700,13 @@ var moduleStd = &testModule{
 									},
 								},
 								{
-									Name:     "Marshaler",
-									Synopsis: "type Marshaler interface",
-									Section:  "Types",
-									Kind:     "Type",
-									Children: []*internal.Symbol{
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "Marshaler",
+										Synopsis: "type Marshaler interface",
+										Section:  "Types",
+										Kind:     "Type",
+									},
+									Children: []*internal.SymbolMeta{
 										{
 											Name:       "Marshaler.MarshalJSON",
 											Synopsis:   "MarshalJSON func() ([]byte, error)",
@@ -1485,11 +1717,13 @@ var moduleStd = &testModule{
 									},
 								},
 								{
-									Name:     "MarshalerError",
-									Synopsis: "type MarshalerError struct",
-									Section:  "Types",
-									Kind:     "Type",
-									Children: []*internal.Symbol{
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "MarshalerError",
+										Synopsis: "type MarshalerError struct",
+										Section:  "Types",
+										Kind:     "Type",
+									},
+									Children: []*internal.SymbolMeta{
 										{
 											Name:       "MarshalerError.Type",
 											Synopsis:   "Type reflect.Type",
@@ -1514,11 +1748,13 @@ var moduleStd = &testModule{
 									},
 								},
 								{
-									Name:     "Number",
-									Synopsis: "type Number string",
-									Section:  "Types",
-									Kind:     "Type",
-									Children: []*internal.Symbol{
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "Number",
+										Synopsis: "type Number string",
+										Section:  "Types",
+										Kind:     "Type",
+									},
+									Children: []*internal.SymbolMeta{
 										{
 											Name:       "Number.Float64",
 											Synopsis:   "func (n Number) Float64() (float64, error)",
@@ -1543,11 +1779,13 @@ var moduleStd = &testModule{
 									},
 								},
 								{
-									Name:     "RawMessage",
-									Synopsis: "type RawMessage []byte",
-									Section:  "Types",
-									Kind:     "Type",
-									Children: []*internal.Symbol{
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "RawMessage",
+										Synopsis: "type RawMessage []byte",
+										Section:  "Types",
+										Kind:     "Type",
+									},
+									Children: []*internal.SymbolMeta{
 										{
 											Name:       "RawMessage.MarshalJSON",
 											Synopsis:   "func (m RawMessage) MarshalJSON() ([]byte, error)",
@@ -1565,11 +1803,13 @@ var moduleStd = &testModule{
 									},
 								},
 								{
-									Name:     "SyntaxError",
-									Synopsis: "type SyntaxError struct",
-									Section:  "Types",
-									Kind:     "Type",
-									Children: []*internal.Symbol{
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "SyntaxError",
+										Synopsis: "type SyntaxError struct",
+										Section:  "Types",
+										Kind:     "Type",
+									},
+									Children: []*internal.SymbolMeta{
 										{
 											Name:       "SyntaxError.Offset",
 											Synopsis:   "Offset int64",
@@ -1587,17 +1827,21 @@ var moduleStd = &testModule{
 									},
 								},
 								{
-									Name:     "Token",
-									Synopsis: "type Token interface",
-									Section:  "Types",
-									Kind:     "Type",
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "Token",
+										Synopsis: "type Token interface",
+										Section:  "Types",
+										Kind:     "Type",
+									},
 								},
 								{
-									Name:     "UnmarshalFieldError",
-									Synopsis: "type UnmarshalFieldError struct",
-									Section:  "Types",
-									Kind:     "Type",
-									Children: []*internal.Symbol{
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "UnmarshalFieldError",
+										Synopsis: "type UnmarshalFieldError struct",
+										Section:  "Types",
+										Kind:     "Type",
+									},
+									Children: []*internal.SymbolMeta{
 										{
 											Name:       "UnmarshalFieldError.Key",
 											Synopsis:   "Key string",
@@ -1629,11 +1873,13 @@ var moduleStd = &testModule{
 									},
 								},
 								{
-									Name:     "UnmarshalTypeError",
-									Synopsis: "type UnmarshalTypeError struct",
-									Section:  "Types",
-									Kind:     "Type",
-									Children: []*internal.Symbol{
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "UnmarshalTypeError",
+										Synopsis: "type UnmarshalTypeError struct",
+										Section:  "Types",
+										Kind:     "Type",
+									},
+									Children: []*internal.SymbolMeta{
 										{
 											Name:       "UnmarshalTypeError.Value",
 											Synopsis:   "Value string",
@@ -1679,11 +1925,13 @@ var moduleStd = &testModule{
 									},
 								},
 								{
-									Name:     "Unmarshaler",
-									Synopsis: "type Unmarshaler interface",
-									Section:  "Types",
-									Kind:     "Type",
-									Children: []*internal.Symbol{
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "Unmarshaler",
+										Synopsis: "type Unmarshaler interface",
+										Section:  "Types",
+										Kind:     "Type",
+									},
+									Children: []*internal.SymbolMeta{
 										{
 											Name:       "Unmarshaler.UnmarshalJSON",
 											Synopsis:   "UnmarshalJSON func([]byte) error",
@@ -1694,11 +1942,13 @@ var moduleStd = &testModule{
 									},
 								},
 								{
-									Name:     "UnsupportedTypeError",
-									Synopsis: "type UnsupportedTypeError struct",
-									Section:  "Types",
-									Kind:     "Type",
-									Children: []*internal.Symbol{
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "UnsupportedTypeError",
+										Synopsis: "type UnsupportedTypeError struct",
+										Section:  "Types",
+										Kind:     "Type",
+									},
+									Children: []*internal.SymbolMeta{
 										{
 											Name:       "UnsupportedTypeError.Type",
 											Synopsis:   "Type reflect.Type",
@@ -1716,11 +1966,13 @@ var moduleStd = &testModule{
 									},
 								},
 								{
-									Name:     "UnsupportedValueError",
-									Synopsis: "type UnsupportedValueError struct",
-									Section:  "Types",
-									Kind:     "Type",
-									Children: []*internal.Symbol{
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "UnsupportedValueError",
+										Synopsis: "type UnsupportedValueError struct",
+										Section:  "Types",
+										Kind:     "Type",
+									},
+									Children: []*internal.SymbolMeta{
 										{
 											Name:       "UnsupportedValueError.Value",
 											Synopsis:   "Value reflect.Value",
@@ -1770,12 +2022,23 @@ var moduleStd = &testModule{
 						Name: "errors",
 						Path: "errors",
 					},
-					Documentation: []*internal.Documentation{{
-						GOOS:     internal.All,
-						GOARCH:   internal.All,
-						Synopsis: "Package errors implements functions to manipulate errors.",
-						API:      []*internal.Symbol{{Name: "New", Synopsis: "func New(text string) error", Section: "Functions", Kind: "Function"}},
-					}},
+					Documentation: []*internal.Documentation{
+						{
+							GOOS:     internal.All,
+							GOARCH:   internal.All,
+							Synopsis: "Package errors implements functions to manipulate errors.",
+							API: []*internal.Symbol{
+								{
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "New",
+										Synopsis: "func New(text string) error",
+										Section:  "Functions",
+										Kind:     "Function",
+									},
+								},
+							},
+						},
+					},
 				},
 				{
 					UnitMeta: internal.UnitMeta{
@@ -1790,197 +2053,261 @@ var moduleStd = &testModule{
 							Synopsis: "Package flag implements command-line flag parsing.",
 							API: []*internal.Symbol{
 								{
-									Name:     "CommandLine",
-									Synopsis: "var CommandLine = NewFlagSet(os.Args[0], ExitOnError)",
-									Section:  "Variables",
-									Kind:     "Variable",
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "CommandLine",
+										Synopsis: "var CommandLine = NewFlagSet(os.Args[0], ExitOnError)",
+										Section:  "Variables",
+										Kind:     "Variable",
+									},
 								},
 								{
-									Name:     "ErrHelp",
-									Synopsis: `var ErrHelp = errors.New("flag: help requested")`,
-									Section:  "Variables",
-									Kind:     "Variable",
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "ErrHelp",
+										Synopsis: `var ErrHelp = errors.New("flag: help requested")`,
+										Section:  "Variables",
+										Kind:     "Variable",
+									},
 								},
 								{
-									Name:     "Usage",
-									Synopsis: "var Usage = func() { ... }",
-									Section:  "Variables",
-									Kind:     "Variable",
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "Usage",
+										Synopsis: "var Usage = func() { ... }",
+										Section:  "Variables",
+										Kind:     "Variable",
+									},
 								},
 								{
-									Name:     "Arg",
-									Synopsis: "func Arg(i int) string",
-									Section:  "Functions",
-									Kind:     "Function",
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "Arg",
+										Synopsis: "func Arg(i int) string",
+										Section:  "Functions",
+										Kind:     "Function",
+									},
 								},
 								{
-									Name:     "Args",
-									Synopsis: "func Args() []string",
-									Section:  "Functions",
-									Kind:     "Function",
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "Args",
+										Synopsis: "func Args() []string",
+										Section:  "Functions",
+										Kind:     "Function",
+									},
 								},
 								{
-									Name:     "Bool",
-									Synopsis: "func Bool(name string, value bool, usage string) *bool",
-									Section:  "Functions",
-									Kind:     "Function",
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "Bool",
+										Synopsis: "func Bool(name string, value bool, usage string) *bool",
+										Section:  "Functions",
+										Kind:     "Function",
+									},
 								},
 								{
-									Name:     "BoolVar",
-									Synopsis: "func BoolVar(p *bool, name string, value bool, usage string)",
-									Section:  "Functions",
-									Kind:     "Function",
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "BoolVar",
+										Synopsis: "func BoolVar(p *bool, name string, value bool, usage string)",
+										Section:  "Functions",
+										Kind:     "Function",
+									},
 								},
 								{
-									Name:     "Duration",
-									Synopsis: "func Duration(name string, value time.Duration, usage string) *time.Duration",
-									Section:  "Functions",
-									Kind:     "Function",
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "Duration",
+										Synopsis: "func Duration(name string, value time.Duration, usage string) *time.Duration",
+										Section:  "Functions",
+										Kind:     "Function",
+									},
 								},
 								{
-									Name:     "DurationVar",
-									Synopsis: "func DurationVar(p *time.Duration, name string, value time.Duration, usage string)",
-									Section:  "Functions",
-									Kind:     "Function",
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "DurationVar",
+										Synopsis: "func DurationVar(p *time.Duration, name string, value time.Duration, usage string)",
+										Section:  "Functions",
+										Kind:     "Function",
+									},
 								},
 								{
-									Name:     "Float64",
-									Synopsis: "func Float64(name string, value float64, usage string) *float64",
-									Section:  "Functions",
-									Kind:     "Function",
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "Float64",
+										Synopsis: "func Float64(name string, value float64, usage string) *float64",
+										Section:  "Functions",
+										Kind:     "Function",
+									},
 								},
 								{
-									Name:     "Float64Var",
-									Synopsis: "func Float64Var(p *float64, name string, value float64, usage string)",
-									Section:  "Functions",
-									Kind:     "Function",
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "Float64Var",
+										Synopsis: "func Float64Var(p *float64, name string, value float64, usage string)",
+										Section:  "Functions",
+										Kind:     "Function",
+									},
 								},
 								{
-									Name:     "Int",
-									Synopsis: "func Int(name string, value int, usage string) *int",
-									Section:  "Functions",
-									Kind:     "Function",
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "Int",
+										Synopsis: "func Int(name string, value int, usage string) *int",
+										Section:  "Functions",
+										Kind:     "Function",
+									},
 								},
 								{
-									Name:     "Int64",
-									Synopsis: "func Int64(name string, value int64, usage string) *int64",
-									Section:  "Functions",
-									Kind:     "Function",
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "Int64",
+										Synopsis: "func Int64(name string, value int64, usage string) *int64",
+										Section:  "Functions",
+										Kind:     "Function",
+									},
 								},
 								{
-									Name:     "Int64Var",
-									Synopsis: "func Int64Var(p *int64, name string, value int64, usage string)",
-									Section:  "Functions",
-									Kind:     "Function",
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "Int64Var",
+										Synopsis: "func Int64Var(p *int64, name string, value int64, usage string)",
+										Section:  "Functions",
+										Kind:     "Function",
+									},
 								},
 								{
-									Name:     "IntVar",
-									Synopsis: "func IntVar(p *int, name string, value int, usage string)",
-									Section:  "Functions",
-									Kind:     "Function",
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "IntVar",
+										Synopsis: "func IntVar(p *int, name string, value int, usage string)",
+										Section:  "Functions",
+										Kind:     "Function",
+									},
 								},
 								{
-									Name:     "NArg",
-									Synopsis: "func NArg() int",
-									Section:  "Functions",
-									Kind:     "Function",
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "NArg",
+										Synopsis: "func NArg() int",
+										Section:  "Functions",
+										Kind:     "Function",
+									},
 								},
 								{
-									Name:     "NFlag",
-									Synopsis: "func NFlag() int",
-									Section:  "Functions",
-									Kind:     "Function",
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "NFlag",
+										Synopsis: "func NFlag() int",
+										Section:  "Functions",
+										Kind:     "Function",
+									},
 								},
 								{
-									Name:     "Parse",
-									Synopsis: "func Parse()",
-									Section:  "Functions",
-									Kind:     "Function",
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "Parse",
+										Synopsis: "func Parse()",
+										Section:  "Functions",
+										Kind:     "Function",
+									},
 								},
 								{
-									Name:     "Parsed",
-									Synopsis: "func Parsed() bool",
-									Section:  "Functions",
-									Kind:     "Function",
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "Parsed",
+										Synopsis: "func Parsed() bool",
+										Section:  "Functions",
+										Kind:     "Function",
+									},
 								},
 								{
-									Name:     "PrintDefaults",
-									Synopsis: "func PrintDefaults()",
-									Section:  "Functions",
-									Kind:     "Function",
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "PrintDefaults",
+										Synopsis: "func PrintDefaults()",
+										Section:  "Functions",
+										Kind:     "Function",
+									},
 								},
 								{
-									Name:     "Set",
-									Synopsis: "func Set(name, value string) error",
-									Section:  "Functions",
-									Kind:     "Function",
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "Set",
+										Synopsis: "func Set(name, value string) error",
+										Section:  "Functions",
+										Kind:     "Function",
+									},
 								},
 								{
-									Name:     "String",
-									Synopsis: "func String(name string, value string, usage string) *string",
-									Section:  "Functions",
-									Kind:     "Function",
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "String",
+										Synopsis: "func String(name string, value string, usage string) *string",
+										Section:  "Functions",
+										Kind:     "Function",
+									},
 								},
 								{
-									Name:     "StringVar",
-									Synopsis: "func StringVar(p *string, name string, value string, usage string)",
-									Section:  "Functions",
-									Kind:     "Function",
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "StringVar",
+										Synopsis: "func StringVar(p *string, name string, value string, usage string)",
+										Section:  "Functions",
+										Kind:     "Function",
+									},
 								},
 								{
-									Name:     "Uint",
-									Synopsis: "func Uint(name string, value uint, usage string) *uint",
-									Section:  "Functions",
-									Kind:     "Function",
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "Uint",
+										Synopsis: "func Uint(name string, value uint, usage string) *uint",
+										Section:  "Functions",
+										Kind:     "Function",
+									},
 								},
 								{
-									Name:     "Uint64",
-									Synopsis: "func Uint64(name string, value uint64, usage string) *uint64",
-									Section:  "Functions",
-									Kind:     "Function",
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "Uint64",
+										Synopsis: "func Uint64(name string, value uint64, usage string) *uint64",
+										Section:  "Functions",
+										Kind:     "Function",
+									},
 								},
 								{
-									Name:     "Uint64Var",
-									Synopsis: "func Uint64Var(p *uint64, name string, value uint64, usage string)",
-									Section:  "Functions",
-									Kind:     "Function",
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "Uint64Var",
+										Synopsis: "func Uint64Var(p *uint64, name string, value uint64, usage string)",
+										Section:  "Functions",
+										Kind:     "Function",
+									},
 								},
 								{
-									Name:     "UintVar",
-									Synopsis: "func UintVar(p *uint, name string, value uint, usage string)",
-									Section:  "Functions",
-									Kind:     "Function",
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "UintVar",
+										Synopsis: "func UintVar(p *uint, name string, value uint, usage string)",
+										Section:  "Functions",
+										Kind:     "Function",
+									},
 								},
 								{
-									Name:     "UnquoteUsage",
-									Synopsis: "func UnquoteUsage(flag *Flag) (name string, usage string)",
-									Section:  "Functions",
-									Kind:     "Function",
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "UnquoteUsage",
+										Synopsis: "func UnquoteUsage(flag *Flag) (name string, usage string)",
+										Section:  "Functions",
+										Kind:     "Function",
+									},
 								},
 								{
-									Name:     "Var",
-									Synopsis: "func Var(value Value, name string, usage string)",
-									Section:  "Functions",
-									Kind:     "Function",
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "Var",
+										Synopsis: "func Var(value Value, name string, usage string)",
+										Section:  "Functions",
+										Kind:     "Function",
+									},
 								},
 								{
-									Name:     "Visit",
-									Synopsis: "func Visit(fn func(*Flag))",
-									Section:  "Functions",
-									Kind:     "Function",
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "Visit",
+										Synopsis: "func Visit(fn func(*Flag))",
+										Section:  "Functions",
+										Kind:     "Function",
+									},
 								},
 								{
-									Name:     "VisitAll",
-									Synopsis: "func VisitAll(fn func(*Flag))",
-									Section:  "Functions",
-									Kind:     "Function",
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "VisitAll",
+										Synopsis: "func VisitAll(fn func(*Flag))",
+										Section:  "Functions",
+										Kind:     "Function",
+									},
 								},
 								{
-									Name:     "ErrorHandling",
-									Synopsis: "type ErrorHandling int",
-									Section:  "Types",
-									Kind:     "Type",
-									Children: []*internal.Symbol{
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "ErrorHandling",
+										Synopsis: "type ErrorHandling int",
+										Section:  "Types",
+										Kind:     "Type",
+									},
+									Children: []*internal.SymbolMeta{
 										{
 											Name:       "ContinueOnError",
 											Synopsis:   "const ContinueOnError",
@@ -2005,11 +2332,13 @@ var moduleStd = &testModule{
 									},
 								},
 								{
-									Name:     "Flag",
-									Synopsis: "type Flag struct",
-									Section:  "Types",
-									Kind:     "Type",
-									Children: []*internal.Symbol{
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "Flag",
+										Synopsis: "type Flag struct",
+										Section:  "Types",
+										Kind:     "Type",
+									},
+									Children: []*internal.SymbolMeta{
 										{
 											Name:       "Lookup",
 											Synopsis:   "func Lookup(name string) *Flag",
@@ -2048,11 +2377,13 @@ var moduleStd = &testModule{
 									},
 								},
 								{
-									Name:     "FlagSet",
-									Synopsis: "type FlagSet struct",
-									Section:  "Types",
-									Kind:     "Type",
-									Children: []*internal.Symbol{
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "FlagSet",
+										Synopsis: "type FlagSet struct",
+										Section:  "Types",
+										Kind:     "Type",
+									},
+									Children: []*internal.SymbolMeta{
 										{
 											Name:       "NewFlagSet",
 											Synopsis:   "func NewFlagSet(name string, errorHandling ErrorHandling) *FlagSet",
@@ -2301,24 +2632,30 @@ var moduleStd = &testModule{
 									},
 								},
 								{
-									Name:     "Getter",
-									Synopsis: "type Getter interface",
-									Section:  "Types",
-									Kind:     "Type",
-									Children: []*internal.Symbol{{
-										Name:       "Getter.Get",
-										Synopsis:   "Get func() interface{}",
-										Section:    "Types",
-										Kind:       "Method",
-										ParentName: "Getter",
-									}},
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "Getter",
+										Synopsis: "type Getter interface",
+										Section:  "Types",
+										Kind:     "Type",
+									},
+									Children: []*internal.SymbolMeta{
+										{
+											Name:       "Getter.Get",
+											Synopsis:   "Get func() interface{}",
+											Section:    "Types",
+											Kind:       "Method",
+											ParentName: "Getter",
+										},
+									},
 								},
 								{
-									Name:     "Value",
-									Synopsis: "type Value interface",
-									Section:  "Types",
-									Kind:     "Type",
-									Children: []*internal.Symbol{
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "Value",
+										Synopsis: "type Value interface",
+										Section:  "Types",
+										Kind:     "Type",
+									},
+									Children: []*internal.SymbolMeta{
 										{
 											Name:       "Value.String",
 											Synopsis:   "String func() string",
@@ -2371,12 +2708,23 @@ var moduleMaster = &testModule{
 						Name: "foo",
 						Path: "github.com/my/module/foo",
 					},
-					Documentation: []*internal.Documentation{{
-						GOOS:     internal.All,
-						GOARCH:   internal.All,
-						Synopsis: "package foo exports a helpful constant.",
-						API:      []*internal.Symbol{{Name: "Bar", Synopsis: "const Bar", Section: "Constants", Kind: "Constant"}},
-					}},
+					Documentation: []*internal.Documentation{
+						{
+							GOOS:     internal.All,
+							GOARCH:   internal.All,
+							Synopsis: "package foo exports a helpful constant.",
+							API: []*internal.Symbol{
+								{
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "Bar",
+										Synopsis: "const Bar",
+										Section:  "Constants",
+										Kind:     "Constant",
+									},
+								},
+							},
+						},
+					},
 				},
 			},
 		},
@@ -2414,8 +2762,18 @@ var moduleLatest = &testModule{
 						GOOS:     internal.All,
 						GOARCH:   internal.All,
 						Synopsis: "package foo exports a helpful constant.",
-						API:      []*internal.Symbol{{Name: "Bar", Synopsis: "const Bar", Section: "Constants", Kind: "Constant"}},
-					}},
+						API: []*internal.Symbol{
+							{
+								SymbolMeta: internal.SymbolMeta{
+									Name:     "Bar",
+									Synopsis: "const Bar",
+									Section:  "Constants",
+									Kind:     "Constant",
+								},
+							},
+						},
+					},
+					},
 				},
 			},
 		},
@@ -2495,10 +2853,12 @@ func Example() {
 var moduleFuncExample = moduleWithExamples("func.example",
 	[]*internal.Symbol{
 		{
-			Name:     "F",
-			Synopsis: "func F()",
-			Section:  "Functions",
-			Kind:     "Function",
+			SymbolMeta: internal.SymbolMeta{
+				Name:     "F",
+				Synopsis: "func F()",
+				Section:  "Functions",
+				Kind:     "Function",
+			},
 		},
 	},
 	`func F() {}
@@ -2511,7 +2871,17 @@ func ExampleF() {
 `, "Documentation-exampleButtonsContainer")
 
 var moduleTypeExample = moduleWithExamples("type.example",
-	[]*internal.Symbol{{Name: "T", Synopsis: "type T struct", Section: "Types", Kind: "Type"}},
+	[]*internal.Symbol{
+		{
+			SymbolMeta: internal.SymbolMeta{
+				Name:     "T",
+				Synopsis: "type T struct",
+				Section:  "Types",
+				Kind:     "Type",
+			},
+		},
+	},
+
 	`type T struct{}
 `, `import "type.example/example"
 
@@ -2524,11 +2894,13 @@ func ExampleT() {
 var moduleMethodExample = moduleWithExamples("method.example",
 	[]*internal.Symbol{
 		{
-			Name:     "T",
-			Synopsis: "type T struct",
-			Section:  "Types",
-			Kind:     "Type",
-			Children: []*internal.Symbol{
+			SymbolMeta: internal.SymbolMeta{
+				Name:     "T",
+				Synopsis: "type T struct",
+				Section:  "Types",
+				Kind:     "Type",
+			},
+			Children: []*internal.SymbolMeta{
 				{
 					Name:       "T.M",
 					Synopsis:   "func (*T) M()",

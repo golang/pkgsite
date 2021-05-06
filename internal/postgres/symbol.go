@@ -44,16 +44,24 @@ type packageSymbol struct {
 	name     string
 	synopsis string
 
-	// section is a unique key in packageSymbol because the section can change
+	// parentName is a unique key in packageSymbol because the section can change
 	// with the name and synopsis remaining the same. For example:
-	// https://pkg.go.dev/go/types@go1.8#Universe is in the Variables section;
-	// https://pkg.go.dev/go/types@go1.16#Universe is in the Types section.
-	section internal.SymbolSection
+	// https://pkg.go.dev/go/types@go1.8#Universe is in the Variables section,
+	// with parentName Universe.
+	// https://pkg.go.dev/go/types@go1.16#Universe is in the Types section,
+	// with parentName Scope.
+	//
+	// https://pkg.go.dev/github.com/89z/page@v1.2.1#Help is in the Types
+	// section under type InputMode.
+	// https://pkg.go.dev/github.com/89z/page@v1.1.3#Help is in the Types
+	// section under ScreenMode.
+	parentName string
 }
 
 func upsertDocumentationSymbols(ctx context.Context, db *database.DB,
 	pathToPkgsymID map[string]map[packageSymbol]int,
 	pathToDocIDToDoc map[string]map[int]*internal.Documentation) (err error) {
+	defer derrors.WrapStack(&err, "upsertDocumentationSymbols(ctx, db, pathToPkgsymID, pathToDocIDToDoc)")
 
 	// Create a map of documentation_id TO package_symbol_id set.
 	// This will be used to verify that all package_symbols for the unit have
@@ -61,10 +69,17 @@ func upsertDocumentationSymbols(ctx context.Context, db *database.DB,
 	docIDToPkgsymIDs := map[int]map[int]bool{}
 	for path, docIDToDoc := range pathToDocIDToDoc {
 		for docID, doc := range docIDToDoc {
-			err := updateSymbols(doc.API, func(s *internal.Symbol) error {
-				pkgsymToID := pathToPkgsymID[path]
-				pkgsymID := pkgsymToID[packageSymbol{synopsis: s.Synopsis, name: s.Name, section: s.Section}]
-				_, ok := docIDToPkgsymIDs[docID]
+			err := updateSymbols(doc.API, func(sm *internal.SymbolMeta) error {
+				pkgsymToID, ok := pathToPkgsymID[path]
+				if !ok {
+					return fmt.Errorf("path could not be found: %q", path)
+				}
+				ps := packageSymbol{synopsis: sm.Synopsis, name: sm.Name, parentName: sm.ParentName}
+				pkgsymID, ok := pkgsymToID[ps]
+				if !ok {
+					return fmt.Errorf("package symbol could not be found: %v", ps)
+				}
+				_, ok = docIDToPkgsymIDs[docID]
 				if !ok {
 					docIDToPkgsymIDs[docID] = map[int]bool{}
 				}
@@ -151,9 +166,11 @@ func upsertPackageSymbolsReturningIDs(ctx context.Context, db *database.DB,
 	for path, id := range pathToID {
 		idToPath[id] = path
 	}
+	var names []string
 	idToSymbolName := map[int]string{}
 	for name, id := range nameToID {
 		idToSymbolName[id] = name
+		names = append(names, name)
 	}
 
 	modulePathID := pathToID[modulePath]
@@ -163,34 +180,52 @@ func upsertPackageSymbolsReturningIDs(ctx context.Context, db *database.DB,
 	pathTopkgsymToID := map[string]map[packageSymbol]int{}
 	collect := func(rows *sql.Rows) error {
 		var (
-			id, pathID, symbolID int
-			synopsis             string
-			section              internal.SymbolSection
+			id, pathID, symbolID, parentSymbolID int
+			synopsis                             string
 		)
-		if err := rows.Scan(&id, &pathID, &symbolID, &synopsis, &section); err != nil {
+		if err := rows.Scan(&id, &pathID, &symbolID, &parentSymbolID, &synopsis); err != nil {
 			return fmt.Errorf("row.Scan(): %v", err)
 		}
 		path := idToPath[pathID]
 		if _, ok := pathTopkgsymToID[path]; !ok {
 			pathTopkgsymToID[path] = map[packageSymbol]int{}
 		}
+
+		sym := idToSymbolName[symbolID]
+		if sym == "" {
+			return fmt.Errorf("symbol name cannot be empty: %d", symbolID)
+		}
+		parentSym := idToSymbolName[parentSymbolID]
+		if parentSym == "" {
+			// A different variable of this symbol was previously inserted.
+			// Don't add this to pathTopkgsymToID, since it's not the package
+			// symbol that we want.
+			// For example:
+			// https://dev-pkg.go.dev/github.com/fastly/kingpin@v1.2.6#TokenShort
+			// and
+			// https://pkg.go.dev/github.com/fastly/kingpin@v1.3.7#TokenShort
+			// have the same synopsis, but different parents and sections.
+			return nil
+		}
 		pathTopkgsymToID[path][packageSymbol{
-			synopsis: synopsis,
-			name:     idToSymbolName[symbolID],
-			section:  section,
+			synopsis:   synopsis,
+			name:       sym,
+			parentName: parentSym,
 		}] = id
 		return nil
 	}
+	// This query fetches more that just the package symbols that we want.
+	// The relevant package symbols are filtered above.
 	if err := db.RunQuery(ctx, `
         SELECT
             ps.id,
             ps.package_path_id,
             ps.symbol_name_id,
-            ps.synopsis,
-            ps.section
+            ps.parent_symbol_name_id,
+            ps.synopsis
         FROM package_symbols ps
-        INNER JOIN symbol_names sn ON ps.symbol_name_id = sn.id
-        WHERE module_path_id = $1;`, collect, modulePathID); err != nil {
+		INNER JOIN symbol_names s ON ps.symbol_name_id = s.id
+        WHERE module_path_id = $1 AND s.name = ANY($2);`, collect, modulePathID, pq.Array(names)); err != nil {
 		return nil, err
 	}
 
@@ -209,23 +244,23 @@ func upsertPackageSymbolsReturningIDs(ctx context.Context, db *database.DB,
 			return nil, fmt.Errorf("pathID cannot be 0: %q", path)
 		}
 		for _, doc := range docs {
-			if err := updateSymbols(doc.API, func(s *internal.Symbol) error {
-				ps := packageSymbol{synopsis: s.Synopsis, name: s.Name, section: s.Section}
-				symID := nameToID[s.Name]
+			if err := updateSymbols(doc.API, func(sm *internal.SymbolMeta) error {
+				ps := packageSymbol{synopsis: sm.Synopsis, name: sm.Name, parentName: sm.ParentName}
+				symID := nameToID[sm.Name]
 				if symID == 0 {
-					return fmt.Errorf("pathID cannot be 0: %q", s.Name)
+					return fmt.Errorf("symID cannot be 0: %q", sm.Name)
 				}
-				if s.ParentName == "" {
-					s.ParentName = s.Name
+				if sm.ParentName == "" {
+					sm.ParentName = sm.Name
 				}
-				parentID := nameToID[s.ParentName]
+				parentID := nameToID[sm.ParentName]
 				if parentID == 0 {
-					return fmt.Errorf("pathID cannot be 0: %q", s.ParentName)
+					return fmt.Errorf("parentSymID cannot be 0: %q", sm.ParentName)
 				}
 				if _, ok := pathTopkgsymToID[path][ps]; !ok {
 					packageSymbols = append(packageSymbols, pathID,
-						modulePathID, symID, parentID, s.Section, s.Kind,
-						s.Synopsis)
+						modulePathID, symID, parentID, sm.Section, sm.Kind,
+						sm.Synopsis)
 				}
 				return nil
 			}); err != nil {
@@ -235,7 +270,7 @@ func upsertPackageSymbolsReturningIDs(ctx context.Context, db *database.DB,
 	}
 	// The order of pkgsymcols must match that of the SELECT query in the
 	//collect function.
-	pkgsymcols := []string{"id", "package_path_id", "symbol_name_id", "synopsis", "section"}
+	pkgsymcols := []string{"id", "package_path_id", "symbol_name_id", "parent_symbol_name_id", "synopsis"}
 	if err := db.BulkInsertReturning(ctx, "package_symbols",
 		[]string{
 			"package_path_id",
@@ -257,8 +292,8 @@ func upsertSymbolNamesReturningIDs(ctx context.Context, db *database.DB,
 	var names []string
 	for _, docIDToDocs := range pathToDocIDToDocs {
 		for _, doc := range docIDToDocs {
-			if err := updateSymbols(doc.API, func(s *internal.Symbol) error {
-				names = append(names, s.Name)
+			if err := updateSymbols(doc.API, func(sm *internal.SymbolMeta) error {
+				names = append(names, sm.Name)
 				return nil
 			}); err != nil {
 				return nil, err
@@ -333,38 +368,46 @@ func getUnitSymbols(ctx context.Context, db *database.DB, unitID int) (_ map[int
 	// so that we can map the children to those symbols.
 	buildToNameToType := map[internal.BuildContext]map[string]*internal.Symbol{}
 	collect := func(rows *sql.Rows) error {
-		var s internal.Symbol
+		var (
+			sm    internal.SymbolMeta
+			build internal.BuildContext
+		)
 		if err := rows.Scan(
-			&s.Name, &s.ParentName,
-			&s.Section, &s.Kind, &s.Synopsis,
-			&s.GOOS, &s.GOARCH); err != nil {
+			&sm.Name, &sm.ParentName,
+			&sm.Section, &sm.Kind, &sm.Synopsis,
+			&build.GOOS, &build.GOARCH); err != nil {
 			return fmt.Errorf("row.Scan(): %v", err)
 		}
-		build := internal.BuildContext{GOOS: s.GOOS, GOARCH: s.GOARCH}
-		switch s.Section {
+
+		s := &internal.Symbol{
+			SymbolMeta: sm,
+			GOOS:       build.GOOS,
+			GOARCH:     build.GOARCH,
+		}
+		switch sm.Section {
 		// For symbols that belong to a type, map that symbol as a children of
 		// the parent type.
 		case internal.SymbolSectionTypes:
-			if s.Kind == internal.SymbolKindType {
+			if sm.Kind == internal.SymbolKindType {
 				_, ok := buildToNameToType[build]
 				if !ok {
 					buildToNameToType[build] = map[string]*internal.Symbol{}
 				}
-				buildToNameToType[build][s.Name] = &s
-				buildToSymbols[build] = append(buildToSymbols[build], &s)
+				buildToNameToType[build][sm.Name] = s
+				buildToSymbols[build] = append(buildToSymbols[build], s)
 			} else {
 				nameToType, ok := buildToNameToType[build]
 				if !ok {
-					return fmt.Errorf("build context %v for parent type %q could not be found for symbol %q", build, s.ParentName, s.Name)
+					return fmt.Errorf("build context %v for parent type %q could not be found for symbol %q", build, sm.ParentName, sm.Name)
 				}
-				parent, ok := nameToType[s.ParentName]
+				parent, ok := nameToType[sm.ParentName]
 				if !ok {
-					return fmt.Errorf("parent type %q could not be found for symbol %q", s.ParentName, s.Name)
+					return fmt.Errorf("parent type %q could not be found for symbol %q", sm.ParentName, sm.Name)
 				}
-				parent.Children = append(parent.Children, &s)
+				parent.Children = append(parent.Children, &sm)
 			}
 		default:
-			buildToSymbols[build] = append(buildToSymbols[build], &s)
+			buildToSymbols[build] = append(buildToSymbols[build], s)
 		}
 		return nil
 	}
@@ -374,13 +417,13 @@ func getUnitSymbols(ctx context.Context, db *database.DB, unitID int) (_ map[int
 	return buildToSymbols, nil
 }
 
-func updateSymbols(symbols []*internal.Symbol, updateFunc func(s *internal.Symbol) error) error {
+func updateSymbols(symbols []*internal.Symbol, updateFunc func(sm *internal.SymbolMeta) error) error {
 	for _, s := range symbols {
-		if err := updateFunc(s); err != nil {
+		if err := updateFunc(&s.SymbolMeta); err != nil {
 			return err
 		}
-		for _, s := range s.Children {
-			if err := updateFunc(s); err != nil {
+		for _, c := range s.Children {
+			if err := updateFunc(c); err != nil {
 				return err
 			}
 		}

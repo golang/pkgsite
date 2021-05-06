@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/frontend"
@@ -51,6 +52,9 @@ func TestFrontendVersionsPage(t *testing.T) {
 			}{
 				{"versions page symbols - one version all symbols", modulePath, versionsPageSymbols},
 				{"versions page hello - multi GOOS", modulePath + "/hello", versionsPageHello},
+				{"versions page - test symbol signature is different for different build context", modulePath + "/multigoos", versionsPageMultiGoos},
+				{"versions page - test symbol is introduced at different versions for different build context and changes across versions",
+					modulePath + "/duplicate", versionsPageMultiGoosDuplicates},
 			} {
 				t.Run(test.name, func(t *testing.T) {
 					urlPath := fmt.Sprintf("/%s?tab=versions&m=json", test.pkgPath)
@@ -59,7 +63,7 @@ func TestFrontendVersionsPage(t *testing.T) {
 					if err := json.Unmarshal([]byte(body), &got); err != nil {
 						t.Fatalf("json.Unmarshal: %v", err)
 					}
-					if diff := cmp.Diff(test.want, got.ThisModule); diff != "" {
+					if diff := cmp.Diff(test.want, got.ThisModule, cmpopts.IgnoreUnexported(frontend.Symbol{})); diff != "" {
 						t.Errorf("mismatch (-want, got):\n%s", diff)
 					}
 				})

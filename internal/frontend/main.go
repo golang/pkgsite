@@ -13,12 +13,10 @@ import (
 	"golang.org/x/mod/semver"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
-	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/godoc"
 	"golang.org/x/pkgsite/internal/godoc/dochtml"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/middleware"
-	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/version"
 )
 
@@ -141,7 +139,6 @@ func fetchMainDetails(ctx context.Context, ds internal.DataSource, um *internal.
 		doc = unit.Documentation[0]
 	}
 
-	versionToNameToUnitSymbol := map[string]map[string]*internal.UnitSymbol{}
 	if doc != nil {
 		synopsis = doc.Synopsis
 		goos = doc.GOOS
@@ -160,25 +157,7 @@ func fetchMainDetails(ctx context.Context, ds internal.DataSource, um *internal.
 			return nil, err
 		}
 
-		if experiment.IsActive(ctx, internal.ExperimentSymbolHistoryMainPage) {
-			db, ok := ds.(*postgres.DB)
-			if !ok {
-				return nil, proxydatasourceNotSupportedErr()
-			}
-			versionToNameToUnitSymbol, err = db.GetSymbolHistoryForBuildContext(ctx, um.Path,
-				um.ModulePath, internal.BuildContext{GOOS: goos, GOARCH: goarch})
-			if err != nil {
-				return nil, err
-			}
-		}
-		nameToVersion := map[string]string{}
-		for v, nts := range versionToNameToUnitSymbol {
-			for n := range nts {
-				nameToVersion[n] = v
-			}
-		}
-
-		docParts, err = getHTML(ctx, unit, docPkg, nameToVersion)
+		docParts, err = getHTML(ctx, unit, docPkg, unit.SymbolHistory)
 		// If err  is ErrTooLarge, then docBody will have an appropriate message.
 		if err != nil && !errors.Is(err, dochtml.ErrTooLarge) {
 			return nil, err

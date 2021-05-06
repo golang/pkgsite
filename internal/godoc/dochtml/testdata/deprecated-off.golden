@@ -14,6 +14,14 @@
 <li class="Documentation-indexFunction">
 <a href="#GoodF">func GoodF()</a></li>
 <li class="Documentation-indexType"><a href="#BadT">type BadT</a></li>
+<li><ul class="Documentation-indexTypeFunctions">
+<li><a href="#NewBadTBad">func NewBadTBad() BadT</a></li>
+<li><a href="#NewBadTGood">func NewBadTGood() BadT</a></li>
+</ul></li>
+<li><ul class="Documentation-indexTypeMethods">
+<li><a href="#BadT.BadM">func (BadT) BadM()</a></li>
+<li><a href="#BadT.GoodM">func (BadT) GoodM()</a></li>
+</ul></li>
 <li class="Documentation-indexType"><a href="#GoodT">type GoodT</a></li>
 <li><ul class="Documentation-indexTypeFunctions">
 <li><a href="#NewGoodTBad">func NewGoodTBad() GoodT</a></li>
@@ -96,6 +104,51 @@ Deprecated: use GoodF.
 Deprecated: use GoodT.
 Don&#39;t use this.
 </p>
+<div class="Documentation-typeFunc">
+<h4 tabindex="-1" id="NewBadTBad" data-kind="function" class="Documentation-typeFuncHeader">
+<span>func <a class="Documentation-source" href="src">NewBadTBad</a> <a class="Documentation-idLink" href="#NewBadTBad">¶</a></span>
+<span class="Documentation-sinceVersion">
+</span>
+</h4>
+<div class="Documentation-declaration">
+<pre>func NewBadTBad() <a href="#BadT">BadT</a></pre>
+</div>
+<div role="navigation" aria-label="Table of Contents">
+<ul class="Documentation-toc"></ul>
+</div><p>Deprecated: use NewBadTGood.
+</p>
+</div><div class="Documentation-typeFunc">
+<h4 tabindex="-1" id="NewBadTGood" data-kind="function" class="Documentation-typeFuncHeader">
+<span>func <a class="Documentation-source" href="src">NewBadTGood</a> <a class="Documentation-idLink" href="#NewBadTGood">¶</a></span>
+<span class="Documentation-sinceVersion">
+</span>
+</h4>
+<div class="Documentation-declaration">
+<pre>func NewBadTGood() <a href="#BadT">BadT</a></pre>
+</div>
+</div><div class="Documentation-typeMethod">
+<h4 tabindex="-1" id="BadT.BadM" data-kind="method" class="Documentation-typeMethodHeader">
+<span>func (BadT) <a class="Documentation-source" href="src">BadM</a> <a class="Documentation-idLink" href="#BadT.BadM">¶</a></span>
+<span class="Documentation-sinceVersion">
+</span>
+</h4>
+<div class="Documentation-declaration">
+<pre>func (<a href="#BadT">BadT</a>) BadM()</pre>
+</div>
+<div role="navigation" aria-label="Table of Contents">
+<ul class="Documentation-toc"></ul>
+</div><p>Deprecated: use GoodM.
+</p>
+</div><div class="Documentation-typeMethod">
+<h4 tabindex="-1" id="BadT.GoodM" data-kind="method" class="Documentation-typeMethodHeader">
+<span>func (BadT) <a class="Documentation-source" href="src">GoodM</a> <a class="Documentation-idLink" href="#BadT.GoodM">¶</a></span>
+<span class="Documentation-sinceVersion">
+</span>
+</h4>
+<div class="Documentation-declaration">
+<pre>func (<a href="#BadT">BadT</a>) GoodM()</pre>
+</div>
+</div>
 </div><div class="Documentation-type">
 <h4 tabindex="-1" id="GoodT" data-kind="type" class="Documentation-typeHeader">
 <span>type <a class="Documentation-source" href="src">GoodT</a> <a class="Documentation-idLink" href="#GoodT">¶</a></span>
@@ -151,7 +204,8 @@ Deprecated: use GoodM.
 <div class="Documentation-declaration">
 <pre>func (<a href="#GoodT">GoodT</a>) GoodM()</pre>
 </div>
-</div></div></section></div>
+</div>
+</div></section></div>
 ----
 <ul role="group" id="doc-outline">
 <li role="none">
@@ -203,10 +257,37 @@ Types
 </a>
 <ul role="group" id="nav-group-types">
 <li role="none">
-<a href="#BadT" role="treeitem" aria-level="3" tabindex="-1" title="type BadT"
+<a href="#BadT" role="treeitem" aria-expanded="false" aria-level="3" tabindex="-1"
+data-aria-owns="nav.group.BadT" title="type BadT"
 data-gtmc="doc outline link">
 type BadT
 </a>
+<ul role="group" id="nav.group.BadT">
+<li role="none">
+<a href="#NewBadTBad" role="treeitem" aria-level="4" tabindex="-1"
+title="NewBadTBad()" data-gtmc="doc outline link">
+NewBadTBad()
+</a>
+</li>
+<li role="none">
+<a href="#NewBadTGood" role="treeitem" aria-level="4" tabindex="-1"
+title="NewBadTGood()" data-gtmc="doc outline link">
+NewBadTGood()
+</a>
+</li>
+<li role="none">
+<a href="#BadT.BadM" role="treeitem" aria-level="4" tabindex="-1"
+title="BadM()" data-gtmc="doc outline link">
+BadM()
+</a>
+</li>
+<li role="none">
+<a href="#BadT.GoodM" role="treeitem" aria-level="4" tabindex="-1"
+title="GoodM()" data-gtmc="doc outline link">
+GoodM()
+</a>
+</li>
+</ul>
 </li>
 <li role="none">
 <a href="#GoodT" role="treeitem" aria-expanded="false" aria-level="3" tabindex="-1"
@@ -257,6 +338,10 @@ GoodM()
 </optgroup>
 <optgroup label="Types">
 <option value="BadT">type BadT</option>
+<option value="NewBadTBad">NewBadTBad()</option>
+<option value="NewBadTGood">NewBadTGood()</option>
+<option value="BadT.BadM">BadM()</option>
+<option value="BadT.GoodM">GoodM()</option>
 <option value="GoodT">type GoodT</option>
 <option value="NewGoodTBad">NewGoodTBad()</option>
 <option value="NewGoodTGood">NewGoodTGood()</option>

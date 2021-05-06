@@ -6,6 +6,7 @@ package internal
 
 import (
 	"path"
+	"strconv"
 	"strings"
 	"time"
 
@@ -103,6 +104,26 @@ func SeriesPathForModule(modulePath string) string {
 func MajorVersionForModule(modulePath string) string {
 	_, v, _ := module.SplitPathVersion(modulePath)
 	return strings.TrimLeft(v, "/.")
+}
+
+// SeriesPathAndMajorVersion splits modulePath into a series path and a
+// numeric major version.
+// If the path doesn't have a "vN" suffix, it returns 1.
+// If the module path is invalid, it returns ("", 0).
+func SeriesPathAndMajorVersion(modulePath string) (string, int) {
+	seriesPath, v, ok := module.SplitPathVersion(modulePath)
+	if !ok {
+		return "", 0
+	}
+	if v == "" {
+		return seriesPath, 1
+	}
+	// First two characters are either ".v" or "/v".
+	n, err := strconv.Atoi(v[2:])
+	if err != nil {
+		return "", 0
+	}
+	return seriesPath, n
 }
 
 // Suffix returns the suffix of the fullPath. It assumes that basePath is a
@@ -221,6 +242,14 @@ type SearchResult struct {
 
 	// NumImportedBy is the number of packages that import PackagePath.
 	NumImportedBy uint64
+
+	// SameModule is a list of SearchResults from the same module as this one,
+	// with lower scores.
+	SameModule []*SearchResult
+
+	// LowerMajor is a list of SearchResults with the same v1 path but at lower
+	// major versions of this module.
+	LowerMajor []*SearchResult
 
 	// NumResults is the total number of packages that were returned for this
 	// search.

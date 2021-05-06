@@ -106,3 +106,36 @@ package hello
 func HelloJS() string {
 	return "Hello"
 }
+
+-- multigoos/multigoos_windows.go --
+// +build windows
+
+package multigoos
+
+// Different signature from CloseOnExec for linux and darwin.
+func CloseOnExec(foo string) error {
+    return nil
+}
+
+-- multigoos/multigoos_unix.go --
+// +build aix darwin dragonfly freebsd linux netbsd openbsd solaris
+
+package multigoos
+
+// Different signature from CloseOnExec for windows.
+func CloseOnExec(num int) (int, error) {
+    return num, nil
+}
+
+-- duplicate/duplicate.go --
+// +build linux darwin
+
+package duplicate
+
+// Unexported here, exported in v1.2.0.
+type tokenType int
+
+// Token types.
+const (
+	TokenShort tokenType = iota
+)

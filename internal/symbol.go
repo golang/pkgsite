@@ -4,7 +4,13 @@
 
 package internal
 
-import "sort"
+import (
+	"fmt"
+	"sort"
+
+	"golang.org/x/mod/semver"
+	"golang.org/x/pkgsite/internal/derrors"
+)
 
 // SymbolSection is the documentation section where a symbol appears.
 type SymbolSection string
@@ -31,6 +37,25 @@ const (
 // Symbol is an element in the package API. A symbol can be a constant,
 // variable, function, or type.
 type Symbol struct {
+	SymbolMeta
+
+	// Children contain the child symbols for this symbol. This will
+	// only be populated when the SymbolType is "Type". For example, the
+	// children of net/http.Handler are FileServer, NotFoundHandler,
+	// RedirectHandler, StripPrefix, and TimeoutHandler. Each child
+	// symbol will have ParentName set to the Name of this type.
+	Children []*SymbolMeta
+
+	// GOOS specifies the execution operating system where the symbol appears.
+	GOOS string
+
+	// GOARCH specifies the execution architecture where the symbol appears.
+	GOARCH string
+}
+
+// SymbolMeta is the metadata for an element in the package API. A symbol can
+// be a constant, variable, function, or type.
+type SymbolMeta struct {
 	// Name is the name of the symbol.
 	Name string
 
@@ -49,35 +74,95 @@ type Symbol struct {
 	// the empty string. For example, the parent type for
 	// net/http.FileServer is Handler.
 	ParentName string
+}
 
-	// Children contain the child symbols for this symbol. This will
-	// only be populated when the SymbolType is "Type". For example, the
-	// children of net/http.Handler are FileServer, NotFoundHandler,
-	// RedirectHandler, StripPrefix, and TimeoutHandler. Each child
-	// symbol will have ParentName set to the Name of this type.
-	Children []*Symbol
+// SymbolHistory represents the history for when a symbol name was first added
+// to a package.
+type SymbolHistory struct {
+	// m is a map of version to name to SymbolMeta to UnitSymbol.
+	// SymbolMeta is stored as a distinct key from name, since it is possible
+	// for a symbol in the same version for different build contexts to have
+	// different SymbolMeta. For example:
+	// https://pkg.go.dev/syscall@go1.16.3#CloseOnExec has function signature:
+	// func CloseOnExec(fd int)
+	//
+	// versus
+	// https://pkg.go.dev/syscall?GOOS=windows#CloseOnExec has function
+	// signature:
+	// func CloseOnExec(fd Handle)
+	m map[string]map[string]map[SymbolMeta]*UnitSymbol
+}
 
-	// SinceVersion is the first version when the symbol was introduced.
-	SinceVersion string
+// NewSymbolHistory returns a new *SymbolHistory.
+func NewSymbolHistory() *SymbolHistory {
+	return &SymbolHistory{
+		m: map[string]map[string]map[SymbolMeta]*UnitSymbol{},
+	}
+}
 
-	// GOOS specifies the execution operating system where the symbol appears.
-	GOOS string
+// SymbolsAtVersion returns a map of name to SymbolMeta to UnitSymbol for a
+// given version.
+func (sh *SymbolHistory) SymbolsAtVersion(v string) map[string]map[SymbolMeta]*UnitSymbol {
+	return sh.m[v]
+}
 
-	// GOARCH specifies the execution architecture where the symbol appears.
-	GOARCH string
+// Versions returns an array of the versions in versionToNameToUnitSymbol, sorted by
+// increasing semver.
+func (sh *SymbolHistory) Versions() []string {
+	var orderdVersions []string
+	for v := range sh.m {
+		orderdVersions = append(orderdVersions, v)
+	}
+	sort.Slice(orderdVersions, func(i, j int) bool {
+		return semver.Compare(orderdVersions[i], orderdVersions[j]) == -1
+	})
+	return orderdVersions
+}
+
+// GetSymbol returns the unit symbol for a given name, version and build context.
+func (sh *SymbolHistory) GetSymbol(name, v string, build BuildContext) (_ *UnitSymbol, err error) {
+	defer derrors.Wrap(&err, "GetSymbol(%q, %q, %v)", name, v, build)
+	sav, ok := sh.m[v]
+	if !ok {
+		return nil, fmt.Errorf("version %q could not be found: %q", v, name)
+	}
+	stu, ok := sav[name]
+	if !ok {
+		return nil, fmt.Errorf("symbol %q could not be found at version %q", name, v)
+	}
+	for _, us := range stu {
+		if us.SupportsBuild(build) {
+			return us, nil
+		}
+	}
+	return nil, fmt.Errorf("symbol %q does not have build %v at version %q", name, build, v)
+}
+
+// AddSymbol adds the given symbol to SymbolHistory.
+func (sh *SymbolHistory) AddSymbol(sm SymbolMeta, v string, build BuildContext) {
+	sav, ok := sh.m[v]
+	if !ok {
+		sav = map[string]map[SymbolMeta]*UnitSymbol{}
+		sh.m[v] = sav
+	}
+	stu, ok := sav[sm.Name]
+	if !ok {
+		stu = map[SymbolMeta]*UnitSymbol{}
+		sh.m[v][sm.Name] = stu
+	}
+	us, ok := stu[sm]
+	if !ok {
+		us = &UnitSymbol{
+			SymbolMeta: sm,
+		}
+		sh.m[v][sm.Name][sm] = us
+	}
+	us.AddBuildContext(build)
 }
 
 // UnitSymbol represents a symbol that is part of a unit.
 type UnitSymbol struct {
-	// TODO: factor out duplicate fields between Symbol and UnitSymbol
-	Name       string
-	ParentName string
-	Synopsis   string
-	Section    SymbolSection
-	Kind       SymbolKind
-
-	// Version is the unit version.
-	Version string
+	SymbolMeta
 
 	// builds are the build contexts that apply to this symbol.
 	builds map[BuildContext]bool

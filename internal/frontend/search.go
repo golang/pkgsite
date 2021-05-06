@@ -11,6 +11,7 @@ import (
 	"math"
 	"net/http"
 	"path"
+	"sort"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -43,6 +44,14 @@ type SearchResult struct {
 	CommitTime     string
 	NumImportedBy  int
 	Approximate    bool
+	SameModule     *subResult // package paths in the same module
+	LowerMajor     *subResult // package paths in lower major versions
+}
+
+type subResult struct {
+	Heading string
+	Links   []link
+	Suffix  string
 }
 
 // fetchSearchPage fetches data matching the search query from the database and
@@ -65,6 +74,8 @@ func fetchSearchPage(ctx context.Context, db *postgres.DB, query string, pagePar
 			Licenses:       r.Licenses,
 			CommitTime:     elapsedTime(r.CommitTime),
 			NumImportedBy:  int(r.NumImportedBy),
+			SameModule:     packagePaths("Other packages in module "+r.ModulePath+":", r.SameModule, 5),
+			LowerMajor:     modulePaths("Lower module versions:", r.LowerMajor),
 		})
 	}
 
@@ -82,7 +93,17 @@ func fetchSearchPage(ctx context.Context, db *postgres.DB, query string, pagePar
 		}
 	}
 
-	pgs := newPagination(pageParams, len(results), numResults)
+	numPageResults := 0
+	for _, r := range dbresults {
+		// Grouping will put some results inside others. Each result counts one
+		// for itself plus one for each sub-result in the SameModule list,
+		// because each of those is removed from the top-level slice. Results in
+		// the LowerMajor list are not removed from the top-level slice,
+		// so we don't add them up.
+		numPageResults += 1 + len(r.SameModule)
+	}
+
+	pgs := newPagination(pageParams, numPageResults, numResults)
 	pgs.Approximate = approximate
 	return &SearchPage{
 		Results:    results,
@@ -101,6 +122,55 @@ func approximateNumber(estimate int, sigma float64) int {
 	unit := math.Pow(10, math.Round(math.Log10(expectedErr)))
 	// Now round the estimate to the nearest unit.
 	return int(unit * math.Round(float64(estimate)/unit))
+}
+
+func packagePaths(heading string, rs []*internal.SearchResult, max int) *subResult {
+	if len(rs) == 0 {
+		return nil
+	}
+	var links []link
+	for i, r := range rs {
+		if i >= max {
+			break
+		}
+		links = append(links, link{Href: r.PackagePath, Body: internal.Suffix(r.PackagePath, r.ModulePath)})
+	}
+	suffix := ""
+	if len(rs) > len(links) {
+		suffix = fmt.Sprintf("(and %d more)", len(rs)-len(links))
+	}
+	return &subResult{
+		Heading: heading,
+		Links:   links,
+		Suffix:  suffix,
+	}
+}
+
+func modulePaths(heading string, rs []*internal.SearchResult) *subResult {
+	if len(rs) == 0 {
+		return nil
+	}
+	mpm := map[string]bool{}
+	for _, r := range rs {
+		mpm[r.ModulePath] = true
+	}
+	var mps []string
+	for m := range mpm {
+		mps = append(mps, m)
+	}
+	sort.Slice(mps, func(i, j int) bool {
+		_, v1 := internal.SeriesPathAndMajorVersion(mps[i])
+		_, v2 := internal.SeriesPathAndMajorVersion(mps[j])
+		return v1 > v2
+	})
+	links := make([]link, len(mps))
+	for i, m := range mps {
+		links[i] = link{Href: m, Body: m}
+	}
+	return &subResult{
+		Heading: heading,
+		Links:   links,
+	}
 }
 
 // Search constraints.

@@ -63,55 +63,66 @@ var (
 		var V int
 	`
 	Constant = &internal.Symbol{
-		Name:     "Constant",
-		Synopsis: "const Constant",
-		Section:  internal.SymbolSectionConstants,
-		Kind:     internal.SymbolKindConstant,
-		GOOS:     internal.All,
-		GOARCH:   internal.All,
+		SymbolMeta: internal.SymbolMeta{
+			Name:     "Constant",
+			Synopsis: "const Constant",
+			Section:  internal.SymbolSectionConstants,
+			Kind:     internal.SymbolKindConstant,
+		},
+		GOOS:   internal.All,
+		GOARCH: internal.All,
 	}
 	Variable = &internal.Symbol{
-		Name:     "Variable",
-		Synopsis: "var Variable",
-		Section:  internal.SymbolSectionVariables,
-		Kind:     internal.SymbolKindVariable,
-		GOOS:     internal.All,
-		GOARCH:   internal.All,
+		SymbolMeta: internal.SymbolMeta{
+			Name:     "Variable",
+			Synopsis: "var Variable",
+			Section:  internal.SymbolSectionVariables,
+			Kind:     internal.SymbolKindVariable,
+		},
+		GOOS:   internal.All,
+		GOARCH: internal.All,
 	}
 	Function = &internal.Symbol{
-		Name:     "Function",
-		Synopsis: "func Function() error",
-		Section:  internal.SymbolSectionFunctions,
-		Kind:     internal.SymbolKindFunction,
-		GOOS:     internal.All,
-		GOARCH:   internal.All,
+		SymbolMeta: internal.SymbolMeta{
+			Name:     "Function",
+			Synopsis: "func Function() error",
+			Section:  internal.SymbolSectionFunctions,
+			Kind:     internal.SymbolKindFunction,
+		},
+		GOOS:   internal.All,
+		GOARCH: internal.All,
 	}
 	FunctionNew = &internal.Symbol{
-		Name:       "New",
-		Synopsis:   "func New() *Type",
-		Section:    internal.SymbolSectionTypes,
-		Kind:       internal.SymbolKindFunction,
-		ParentName: "Type",
-		GOOS:       internal.All,
-		GOARCH:     internal.All,
+		SymbolMeta: internal.SymbolMeta{
+			Name:       "New",
+			Synopsis:   "func New() *Type",
+			Section:    internal.SymbolSectionTypes,
+			Kind:       internal.SymbolKindFunction,
+			ParentName: "Type",
+		},
+		GOOS:   internal.All,
+		GOARCH: internal.All,
 	}
 	Type = &internal.Symbol{
-		Name:     "Type",
-		Synopsis: "type Type struct",
-		Section:  internal.SymbolSectionTypes,
-		Kind:     internal.SymbolKindType,
-		GOOS:     internal.All,
-		GOARCH:   internal.All,
-		Children: []*internal.Symbol{
-			FunctionNew,
+		SymbolMeta: internal.SymbolMeta{
+			Name:     "Type",
+			Synopsis: "type Type struct",
+			Section:  internal.SymbolSectionTypes,
+			Kind:     internal.SymbolKindType,
+		},
+		GOOS:   internal.All,
+		GOARCH: internal.All,
+		Children: []*internal.SymbolMeta{
+			func() *internal.SymbolMeta {
+				n := FunctionNew.SymbolMeta
+				return &n
+			}(),
 			{
 				Name:       "Type.Field",
 				Synopsis:   "field",
 				Section:    internal.SymbolSectionTypes,
 				Kind:       internal.SymbolKindField,
 				ParentName: "Type",
-				GOOS:       internal.All,
-				GOARCH:     internal.All,
 			},
 			{
 				Name:       "Type.Method",
@@ -119,8 +130,6 @@ var (
 				Section:    internal.SymbolSectionTypes,
 				Kind:       internal.SymbolKindMethod,
 				ParentName: "Type",
-				GOOS:       internal.All,
-				GOARCH:     internal.All,
 			},
 		},
 	}
