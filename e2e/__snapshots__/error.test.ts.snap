@@ -49,8 +49,20 @@ Object {
     },
     Object {
       "level": 3,
-      "name": "\\"\\" is not a valid import path",
+      "name": "v1.0-badversion is not a valid semantic version.",
       "role": "heading",
+    },
+    Object {
+      "name": "To search for packages like bad.package,",
+      "role": "text",
+    },
+    Object {
+      "name": "click here",
+      "role": "link",
+    },
+    Object {
+      "name": ".",
+      "role": "text",
     },
     Object {
       "description": "Why Go",
@@ -195,8 +207,20 @@ Object {
     },
     Object {
       "level": 3,
-      "name": "\\"\\" is not a valid import path",
+      "name": "v1.0-badversion is not a valid semantic version.",
       "role": "heading",
+    },
+    Object {
+      "name": "To search for packages like bad.package,",
+      "role": "text",
+    },
+    Object {
+      "name": "click here",
+      "role": "link",
+    },
+    Object {
+      "name": ".",
+      "role": "text",
     },
     Object {
       "description": "Why Go",

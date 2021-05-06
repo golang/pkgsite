@@ -12,7 +12,7 @@ let page: Page;
 
 beforeAll(async () => {
   page = await newPage();
-  await page.goto(baseURL + '/@bad-request');
+  await page.goto(baseURL + '/bad.package@v1.0-badversion');
 });
 
 afterAll(async () => {
