@@ -55,7 +55,7 @@ type Symbol struct {
 	New bool
 }
 
-func (s *Symbol) addBuilds(builds []internal.BuildContext) {
+func (s *Symbol) addBuilds(builds ...internal.BuildContext) {
 	if s.builds == nil {
 		s.builds = map[internal.BuildContext]bool{}
 	}
@@ -94,18 +94,23 @@ func symbolsForVersion(pkgURLPath string, symbolsAtVersion map[string]map[intern
 				}
 				nameToMetaToSymbol[us.Name][sm] = s
 			}
-			s.addBuilds(us.BuildContexts())
+			s.addBuilds(us.BuildContexts()...)
 		}
 	}
 
 	for cm, cus := range children {
-		// Option 1: no parent exists
-		// - make one, add to map
-		// - append to parent
-		// Option 2: parent exists and supports child bc
-		// - append to parent
-		// Option 3 parent exists and does not support child bc
-		// - append to parent
+		// For each child symbol, 1 of 3 things can occur:
+		//
+		// Option 1: If no parent exists for this child symbol, make one
+		// and add the parent to the map.
+		//
+		// Option 2: A parent exists and does not support the build context
+		// of the child. This occurs when the parent type is introduced for
+		// another build context, but was introduced at the previous version
+		// for the current child. Create a new parent for this child.
+		//
+		// Option 3: A parent exists and does support the build context of
+		// the child. Add the child to the parent.
 		cs := &Symbol{
 			Name:     cm.Name,
 			Synopsis: cm.Synopsis,
@@ -115,37 +120,43 @@ func symbolsForVersion(pkgURLPath string, symbolsAtVersion map[string]map[intern
 			New:      true,
 		}
 
-		parents, ok := nameToMetaToSymbol[cm.ParentName]
-		var found bool
-		if ok {
-			for _, ps := range parents {
-				for build := range ps.builds {
-					if cus.SupportsBuild(build) {
-						ps.Children = append(ps.Children, cs)
-						found = true
-						break
-					}
-				}
-			}
-		}
-		if found {
+		ps := findParent(cm.ParentName, cus, nameToMetaToSymbol)
+		if ps != nil {
+			// Option 3: found a relevant parent.
+			ps.Children = append(ps.Children, cs)
 			continue
 		}
 
-		// We did not find a parent, so create one.
-		ps := createParent(cus, pkgURLPath)
-		ps.Children = append(ps.Children, cs)
+		// Option 1 and 2: We did not find a relevant parent, so create
+		// one.
+		//
+		// Since this parent is not introduced at this version, create
+		// a distinct type for each group of symbols.
+		// To do so, we make up a synopsis for the SymbolMeta below, since it
+		// is only used as a key in nameToMetaToSymbol.
+		//
+		// Example case:
+		// http://pkg.go.dev/internal/poll?tab=versions for go1.10 should show:
+		//
+		// type FD -- windows/amd64
+		//		FD.ReadMsg
+		//		FD.WriteMsg
+		// type FD -- darwin/amd64, linux/amd64
+		//		FD.SetBlocking
+		//		FD.WriteOnce
+		ps = createParent(cm.ParentName, pkgURLPath, cus.BuildContexts()...)
 		pm := internal.SymbolMeta{
 			Name:       ps.Name,
 			ParentName: ps.Name,
-			Synopsis:   ps.Synopsis,
+			Synopsis:   fmt.Sprintf("type %s (%v)", ps.Name, cus.BuildContexts()),
 			Section:    ps.Section,
 			Kind:       ps.Kind,
 		}
-		ps.addBuilds(cus.BuildContexts())
-		nameToMetaToSymbol[pm.Name] = map[internal.SymbolMeta]*Symbol{
-			pm: ps,
+		ps.Children = append(ps.Children, cs)
+		if _, ok := nameToMetaToSymbol[pm.Name]; !ok {
+			nameToMetaToSymbol[pm.Name] = map[internal.SymbolMeta]*Symbol{}
 		}
+		nameToMetaToSymbol[pm.Name][pm] = ps
 	}
 
 	var symbols []*Symbol
@@ -161,6 +172,22 @@ func symbolsForVersion(pkgURLPath string, symbolsAtVersion map[string]map[intern
 		}
 	}
 	return sortSymbols(symbols)
+}
+
+func findParent(parentName string, cus *internal.UnitSymbol,
+	nameToMetaToSymbol map[string]map[internal.SymbolMeta]*Symbol) *Symbol {
+	parents, ok := nameToMetaToSymbol[parentName]
+	if !ok {
+		return nil
+	}
+	for _, ps := range parents {
+		for build := range ps.builds {
+			if cus.SupportsBuild(build) {
+				return ps
+			}
+		}
+	}
+	return nil
 }
 
 func symbolLink(pkgURLPath, name string, builds []internal.BuildContext) string {
@@ -179,15 +206,15 @@ func symbolLink(pkgURLPath, name string, builds []internal.BuildContext) string 
 // different version. The symbol created will have New set to false, since this
 // function is only used when a parent symbol is not found for the unit symbol,
 // which means it was not introduced at the same version.
-func createParent(us *internal.UnitSymbol, pkgURLPath string) *Symbol {
+func createParent(parentName, pkgURLPath string, builds ...internal.BuildContext) *Symbol {
 	s := &Symbol{
-		Name:     us.ParentName,
-		Synopsis: fmt.Sprintf("type %s", us.ParentName),
+		Name:     parentName,
+		Synopsis: fmt.Sprintf("type %s", parentName),
 		Section:  internal.SymbolSectionTypes,
 		Kind:     internal.SymbolKindType,
-		Link:     symbolLink(pkgURLPath, us.ParentName, us.BuildContexts()),
+		Link:     symbolLink(pkgURLPath, parentName, builds),
 	}
-	s.addBuilds(us.BuildContexts())
+	s.addBuilds(builds...)
 	return s
 }
 
@@ -240,8 +267,29 @@ func sortSymbols(symbols []*Symbol) [][]*Symbol {
 
 func sortSymbolsGroup(syms []*Symbol) {
 	sort.Slice(syms, func(i, j int) bool {
-		return syms[i].Synopsis < syms[j].Synopsis
+		s1 := syms[i]
+		s2 := syms[j]
+		if s1.Synopsis != s2.Synopsis {
+			return s1.Synopsis < s2.Synopsis
+		}
+		return compareStringSlices(s1.Builds, s2.Builds) < 0
 	})
+}
+
+func compareStringSlices(ss1, ss2 []string) int {
+	for i, s1 := range ss1 {
+		if i >= len(ss2) { // first slice is longer, so greater
+			return 1
+		}
+		if c := strings.Compare(s1, ss2[i]); c != 0 {
+			return c
+		}
+	}
+	if len(ss1) == len(ss2) {
+		return 0
+	}
+	// first slice is shorter
+	return -1
 }
 
 // ParseVersionsDetails returns a map of versionToNameToUnitSymbol based on

@@ -107,6 +107,14 @@ func HelloJS() string {
 	return "Hello"
 }
 
+-- multigoos/multigoos.go --
+// +build darwin linux windows
+
+package multigoos
+
+// type FD is introduced for windows, linux and darwin at this version.
+type FD struct {}
+
 -- multigoos/multigoos_windows.go --
 // +build windows
 

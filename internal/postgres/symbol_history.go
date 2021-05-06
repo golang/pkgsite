@@ -93,8 +93,8 @@ func GetSymbolHistoryWithPackageSymbols(ctx context.Context, ddb *database.DB,
 // children names are also tracked.
 func GetSymbolHistoryForBuildContext(ctx context.Context, ddb *database.DB, pathID int, modulePath string,
 	bc internal.BuildContext) (_ map[string]string, err error) {
-	defer derrors.WrapStack(&err, "getSymbolHistoryForBuildContext(ctx, ddb, %d, %q)", pathID, modulePath)
-	defer middleware.ElapsedStat(ctx, "getSymbolHistoryForBuildContext")()
+	defer derrors.WrapStack(&err, "GetSymbolHistoryForBuildContext(ctx, ddb, %d, %q)", pathID, modulePath)
+	defer middleware.ElapsedStat(ctx, "GetSymbolHistoryForBuildContext")()
 
 	if bc == internal.BuildContextAll {
 		bc = internal.BuildContextLinux

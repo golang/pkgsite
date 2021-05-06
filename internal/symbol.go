@@ -140,6 +140,9 @@ func (sh *SymbolHistory) GetSymbol(name, v string, build BuildContext) (_ *UnitS
 
 // AddSymbol adds the given symbol to SymbolHistory.
 func (sh *SymbolHistory) AddSymbol(sm SymbolMeta, v string, build BuildContext) {
+	if v == "v1.10.0" && (sm.Name == "FD" || sm.ParentName == "FD") {
+		fmt.Println(build, v, sm.Name, sm.Synopsis)
+	}
 	sav, ok := sh.m[v]
 	if !ok {
 		sav = map[string]map[SymbolMeta]*UnitSymbol{}

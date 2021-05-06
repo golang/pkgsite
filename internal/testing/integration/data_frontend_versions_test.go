@@ -119,6 +119,44 @@ var versionsPageMultiGoos = []*frontend.VersionList{
 							Builds:   []string{"js/wasm"},
 						},
 					},
+					{
+						{
+							Name:     "FD",
+							Synopsis: "type FD",
+							Section:  "Types",
+							Kind:     "Type",
+							Link:     "/example.com/symbols@v1.2.0/multigoos?GOOS=darwin#FD",
+							Children: []*frontend.Symbol{
+								{
+									Name:     "FD.MyMethod",
+									Synopsis: "func (*FD) MyMethod()",
+									Section:  "Types",
+									Kind:     "Method",
+									Link:     "/example.com/symbols@v1.2.0/multigoos?GOOS=darwin#FD.MyMethod",
+									New:      true,
+								},
+							},
+							Builds: []string{"darwin/amd64", "linux/amd64"},
+						},
+						{
+							Name:     "FD",
+							Synopsis: "type FD",
+							Section:  "Types",
+							Kind:     "Type",
+							Link:     "/example.com/symbols@v1.2.0/multigoos?GOOS=windows#FD",
+							Children: []*frontend.Symbol{
+								{
+									Name:     "FD.MyWindowsMethod",
+									Synopsis: "func (*FD) MyWindowsMethod()",
+									Section:  "Types",
+									Kind:     "Method",
+									Link:     "/example.com/symbols@v1.2.0/multigoos?GOOS=windows#FD.MyWindowsMethod",
+									New:      true,
+								},
+							},
+							Builds: []string{"windows/amd64"},
+						},
+					},
 				},
 			},
 			{
@@ -147,6 +185,17 @@ var versionsPageMultiGoos = []*frontend.VersionList{
 							Section:  "Functions",
 							Kind:     "Function",
 							Builds:   []string{"darwin/amd64", "linux/amd64"},
+						},
+					},
+					{
+						{
+							Name:     "FD",
+							Synopsis: "type FD struct",
+							Section:  "Types",
+							Kind:     "Type",
+							Link:     "/example.com/symbols@v1.1.0/multigoos?GOOS=darwin#FD",
+							Builds:   []string{"darwin/amd64", "linux/amd64", "windows/amd64"},
+							New:      true,
 						},
 					},
 				},

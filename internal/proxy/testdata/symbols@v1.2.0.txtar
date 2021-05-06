@@ -113,6 +113,13 @@ func CloseOnExec(foo string) error {
     return nil
 }
 
+type FD struct {}
+
+// FD was introduced in v1.1.0 for linux, darwin and windows.
+// MyWindowsMethod is introduced only for windows in this version.
+func (*FD) MyWindowsMethod() {
+}
+
 -- multigoos/multigoos_unix.go --
 // +build aix darwin dragonfly freebsd linux netbsd openbsd solaris
 
@@ -120,6 +127,13 @@ package multigoos
 
 func CloseOnExec(num int) (int, error) {
     return num, nil
+}
+
+type FD struct {}
+
+// FD was introduced in v1.1.0 for linux, darwin and windows.
+// MyMethod is introduced only for darwin and linux in this version.
+func (*FD) MyMethod() {
 }
 
 -- multigoos/multigoos_js.go --
