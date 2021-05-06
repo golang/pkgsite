@@ -308,36 +308,45 @@ func (db *DB) getImports(ctx context.Context, unitID int) (_ []string, err error
 }
 
 // getPackagesInUnit returns all of the packages in a unit from a
-// module version, including the package that lives at fullPath, if present.
-func (db *DB) getPackagesInUnit(ctx context.Context, fullPath, modulePath, resolvedVersion string) (_ []*internal.PackageMeta, err error) {
-	return getPackagesInUnit(ctx, db.db, fullPath, modulePath, resolvedVersion, db.bypassLicenseCheck)
+// module_id, including the package that lives at fullPath, if present.
+func (db *DB) getPackagesInUnit(ctx context.Context, fullPath string, moduleID int) (_ []*internal.PackageMeta, err error) {
+	return getPackagesInUnit(ctx, db.db, fullPath, "", "", moduleID, db.bypassLicenseCheck)
 }
 
-func getPackagesInUnit(ctx context.Context, db *database.DB, fullPath, modulePath, resolvedVersion string, bypassLicenseCheck bool) (_ []*internal.PackageMeta, err error) {
-	defer derrors.WrapStack(&err, "getPackagesInUnit(ctx, %q, %q, %q)", fullPath, modulePath, resolvedVersion)
+func getPackagesInUnit(ctx context.Context, db *database.DB, fullPath, modulePath, resolvedVersion string, moduleID int, bypassLicenseCheck bool) (_ []*internal.PackageMeta, err error) {
+	defer derrors.WrapStack(&err, "getPackagesInUnit(ctx, %q, %q, %q, %d)", fullPath, modulePath, resolvedVersion, moduleID)
 	defer middleware.ElapsedStat(ctx, "getPackagesInUnit")()
 
-	query := `
-		SELECT
-			p.path,
-			u.name,
-			u.redistributable,
-			d.synopsis,
-			d.GOOS,
-			d.GOARCH,
-			u.license_types,
-			u.license_paths
-		FROM modules m
-		INNER JOIN units u
-		ON u.module_id = m.id
-		INNER JOIN paths p
-		ON p.id = u.path_id
-		LEFT JOIN documentation d
-		ON d.unit_id = u.id
-		WHERE
-			m.module_path = $1
-			AND m.version = $2
-			AND u.name != '';`
+	queryBuilder := squirrel.Select(
+		"p.path",
+		"u.name",
+		"u.redistributable",
+		"d.synopsis",
+		"d.GOOS",
+		"d.GOARCH",
+		"u.license_types",
+		"u.license_paths",
+	).From("units u")
+
+	if moduleID != -1 {
+		queryBuilder = queryBuilder.Join("paths p ON p.id = u.path_id").
+			LeftJoin("documentation d ON d.unit_id = u.id").
+			Where(squirrel.Eq{"u.module_id": moduleID})
+	} else {
+		queryBuilder = queryBuilder.
+			Join("modules m ON u.module_id = m.id").
+			Join("paths p ON p.id = u.path_id").
+			LeftJoin("documentation d ON d.unit_id = u.id").
+			Where(squirrel.Eq{"m.module_path": modulePath}).
+			Where(squirrel.Eq{"m.version": resolvedVersion})
+	}
+
+	queryBuilder = queryBuilder.Where(squirrel.NotEq{"u.name": ""})
+
+	query, args, err := queryBuilder.PlaceholderFormat(squirrel.Dollar).ToSql()
+	if err != nil {
+		return nil, err
+	}
 
 	// If a package has more than build context (GOOS/GOARCH pair), it will have
 	// more than one row in documentation, and this query will produce multiple
@@ -378,7 +387,7 @@ func getPackagesInUnit(ctx context.Context, db *database.DB, fullPath, modulePat
 		}
 		return nil
 	}
-	if err := db.RunQuery(ctx, query, collect, modulePath, resolvedVersion); err != nil {
+	if err := db.RunQuery(ctx, query, collect, args...); err != nil {
 		return nil, err
 	}
 
@@ -403,10 +412,10 @@ func (db *DB) getUnitWithAllFields(ctx context.Context, um *internal.UnitMeta, b
 	defer middleware.ElapsedStat(ctx, "getUnitWithAllFields")()
 
 	// Get build contexts and unit ID.
-	var pathID, unitID int
+	var pathID, unitID, moduleID int
 	var bcs []internal.BuildContext
 	err = db.db.RunQuery(ctx, `
-		SELECT d.goos, d.goarch, u.id, p.id
+		SELECT d.goos, d.goarch, u.id, p.id, u.module_id
 		FROM units u
 		INNER JOIN paths p ON p.id = u.path_id
 		INNER JOIN modules m ON m.id = u.module_id
@@ -419,7 +428,8 @@ func (db *DB) getUnitWithAllFields(ctx context.Context, um *internal.UnitMeta, b
 		var bc internal.BuildContext
 		// GOOS and GOARCH will be NULL if there are no documentation rows for
 		// the unit, but we still want the unit ID.
-		if err := rows.Scan(database.NullIsEmpty(&bc.GOOS), database.NullIsEmpty(&bc.GOARCH), &unitID, &pathID); err != nil {
+
+		if err := rows.Scan(database.NullIsEmpty(&bc.GOOS), database.NullIsEmpty(&bc.GOARCH), &unitID, &pathID, &moduleID); err != nil {
 			return err
 		}
 		if bc.GOOS != "" && bc.GOARCH != "" {
@@ -505,7 +515,7 @@ func (db *DB) getUnitWithAllFields(ctx context.Context, um *internal.UnitMeta, b
 	}
 	end()
 	// Get other info.
-	pkgs, err := db.getPackagesInUnit(ctx, um.Path, um.ModulePath, um.Version)
+	pkgs, err := db.getPackagesInUnit(ctx, um.Path, moduleID)
 	if err != nil {
 		return nil, err
 	}
