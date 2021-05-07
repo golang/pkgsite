@@ -188,6 +188,21 @@ func (db *DB) getLatestUnitVersion(ctx context.Context, fullPath, requestedModul
 		if !version.IsIncompatible(lmv.CookedVersion) {
 			unretractedVersions = version.RemoveIf(unretractedVersions, version.IsIncompatible)
 		}
+		// The good version should never be later than the cooked version.
+		// https://golang.org/issue/43265 documents how that could happen:
+		// 1. A pseudo-version is created off of a tagged version. In this case,
+		//    golang.zx2c4.com/wireguard@v0.0.20201119-0.20210128142622-6a128dde71d9.
+		// 2. All tagged versions are retracted.
+		// 3. A new pseudo-version is published. In this case, v0.0.0-20210506092213-60a26371f42f.
+		// Technically, the first pseudo-version is higher than the second, so it
+		// is the latest good version. But the proxy's latest endpoint returns
+		// the second pseudo-version, so that is the cooked version (and what the
+		// go command will download).
+		if lmv.CookedVersion != "" {
+			unretractedVersions = version.RemoveIf(unretractedVersions, func(v string) bool {
+				return version.Later(v, lmv.CookedVersion)
+			})
+		}
 		latestVersion = version.LatestOf(unretractedVersions)
 		break
 	}

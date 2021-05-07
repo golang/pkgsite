@@ -388,10 +388,18 @@ func getLatestGoodVersion(ctx context.Context, tx *database.DB, modulePath strin
 	if err != nil {
 		return "", err
 	}
-	// Choose the latest good version from the unretracted versions.
+	// Choose the latest good version from a filtered list of versions.
 	if lmv != nil {
+		// Remove retracted versions.
 		vs = version.RemoveIf(vs, lmv.IsRetracted)
+		// The good version should never be later than the cooked version.
+		if lmv.CookedVersion != "" {
+			vs = version.RemoveIf(vs, func(v string) bool {
+				return version.Later(v, lmv.CookedVersion)
+			})
+		}
 	}
+
 	return version.LatestOf(vs), nil
 }
 

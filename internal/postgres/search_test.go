@@ -787,15 +787,19 @@ func TestUpsertSearchDocument(t *testing.T) {
 		return sd
 	}
 
-	insertModule := func(version string, gomod bool) {
+	insertModule := func(version string, gomod, latest bool) {
 		m := sample.Module(sample.ModulePath, version, "A")
 		m.HasGoMod = gomod
 		m.Packages()[0].Documentation[0].Synopsis = "syn-" + version
-		MustInsertModule(ctx, t, testDB, m)
+		if latest {
+			MustInsertModule(ctx, t, testDB, m)
+		} else {
+			MustInsertModuleNotLatest(ctx, t, testDB, m)
+		}
 	}
 
 	const v1 = "v1.0.0"
-	insertModule(v1, false)
+	insertModule(v1, false, true)
 	sd1 := getSearchDocument()
 	if sd1.version != v1 {
 		t.Fatalf("got %s, want %s", sd1.version, v1)
@@ -804,14 +808,14 @@ func TestUpsertSearchDocument(t *testing.T) {
 	// Since the latest compatible version has no go.mod file, this incompatible version
 	// is the latest.
 	const vInc = "v2.0.0+incompatible"
-	insertModule(vInc, false)
+	insertModule(vInc, false, true)
 	sdInc := getSearchDocument()
 	if sdInc.version != vInc {
 		t.Fatalf("got %s, want %s", sdInc.version, vInc)
 	}
 
 	// Inserting an older module doesn't change anything.
-	insertModule("v0.5.0", true)
+	insertModule("v0.5.0", true, false)
 	sdOlder := getSearchDocument()
 	if diff := cmp.Diff(sdInc, sdOlder, cmp.AllowUnexported(searchDocument{})); diff != "" {
 		t.Fatalf("mismatch (-want, +got):\n%s", diff)
@@ -819,7 +823,7 @@ func TestUpsertSearchDocument(t *testing.T) {
 
 	// A later compatible version with a go.mod file. This becomes the new latest version.
 	const v15 = "v1.5.2"
-	insertModule(v15, true)
+	insertModule(v15, true, true)
 	sdNewer := getSearchDocument()
 	if sdNewer.version != v15 {
 		t.Fatalf("got %s, want %s", sdNewer.version, v15)

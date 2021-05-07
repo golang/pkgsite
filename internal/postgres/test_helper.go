@@ -202,17 +202,25 @@ func RunDBTestsInParallel(dbBaseName string, numDBs int, m *testing.M, acquirep 
 // MustInsertModule inserts m into db, calling t.Fatal on error.
 // It also updates the latest-version information for m.
 func MustInsertModule(ctx context.Context, t *testing.T, db *DB, m *internal.Module) {
-	MustInsertModuleGoMod(ctx, t, db, m, "")
+	mustInsertModule(ctx, t, db, m, "", true)
 }
 
 func MustInsertModuleGoMod(ctx context.Context, t *testing.T, db *DB, m *internal.Module, goMod string) {
+	mustInsertModule(ctx, t, db, m, goMod, true)
+}
+
+func MustInsertModuleNotLatest(ctx context.Context, t *testing.T, db *DB, m *internal.Module) {
+	mustInsertModule(ctx, t, db, m, "", false)
+}
+
+func mustInsertModule(ctx context.Context, t *testing.T, db *DB, m *internal.Module, goMod string, latest bool) {
 	t.Helper()
 	var lmv *internal.LatestModuleVersions
 	if goMod == "-" {
 		if err := db.UpdateLatestModuleVersionsStatus(ctx, m.ModulePath, 404); err != nil {
 			t.Fatal(err)
 		}
-	} else {
+	} else if latest {
 		lmv = addLatest(ctx, t, db, m.ModulePath, m.Version, goMod)
 	}
 	if _, err := db.InsertModule(ctx, m, lmv); err != nil {
