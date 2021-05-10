@@ -489,26 +489,14 @@ var upsertSearchStatement = fmt.Sprintf(`
 		),
 		hll_hash(p.path) & (%d - 1),
 		hll_zeros(hll_hash(p.path))
-	FROM
-		units u
-	INNER JOIN
-		paths p
-	ON
-		p.id = u.path_id
-	INNER JOIN
-		modules m
-	ON
-		u.module_id = m.id
-	LEFT JOIN
-		documentation d
-	ON
-		u.id = d.unit_id
+	FROM units u
+	INNER JOIN paths p ON p.id = u.path_id
+	INNER JOIN modules m ON u.module_id = m.id
+	LEFT JOIN documentation d ON u.id = d.unit_id
 	WHERE
 		p.path = $1
-	AND
-		m.module_path = $2
-	AND
-		m.version = $3
+		AND m.module_path = $2
+		AND m.version = $3
 	LIMIT 1 -- could be multiple build contexts
 	ON CONFLICT (package_path)
 	DO UPDATE SET
