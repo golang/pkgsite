@@ -21,7 +21,7 @@
       {{with .Breadcrumb}}
         {{range .Links}}
           <span class="UnitHeader-breadcrumbItem" data-test-id="UnitHeader-breadcrumbItem">
-            <a href="{{.Href}}">{{.Body}}</a>
+            <a data-gtmc="breadcrumbs link" href="{{.Href}}">{{.Body}}</a>
           </span>
         {{end}}
         <span class="UnitHeader-breadcrumbItem">
@@ -30,7 +30,7 @@
             <button class="CopyToClipboardButton js-copyToClipboard"
                 title="Copy path to clipboard.&#10;&#10;{{.CopyData}}"
                 data-to-copy="{{.CopyData}}"
-                data-gtmc="button" aria-label="Copy to Clipboard">
+                data-gtmc="breadcrumbs button" aria-label="Copy to Clipboard">
               <img class="CopyToClipboardButton-image" src="/static/img/copy-click.svg" alt="">
             </button>
           {{end}}
@@ -49,7 +49,7 @@
           <button class="CopyToClipboardButton js-copyToClipboard"
               title="Copy path to clipboard.&#10;&#10;{{.CopyData}}"
               data-to-copy="{{.CopyData}}"
-              data-gtmc="button"
+              data-gtmc="title button"
               aria-label="Copy to Clipboard"
               tabindex="-1">
             <img class="CopyToClipboardButton-image" src="/static/img/copy-click.svg" alt="">
