@@ -175,7 +175,8 @@ function select(testId: string, rest = ''): string {
  */
 async function prepare(page: Page): Promise<void> {
   await Promise.all([
-    // Add styles to disable animation transitions.
+    // Add styles to disable animation transitions and
+    // hide blinking curson in input boxes.
     page.addStyleTag({
       content: `
         *,
@@ -186,6 +187,7 @@ async function prepare(page: Page): Promise<void> {
             animation-delay: -0.0001s !important;
             animation-duration: 0s !important;
             animation-play-state: paused !important;
+            caret-color: transparent;
         }`,
     }),
     page.$eval(
