@@ -4,7 +4,7 @@
 
 BEGIN;
 
-DROP INDEX idx_symbol_history_module_sort_version;
+DROP INDEX idx_symbol_history_sort_version;
 DROP INDEX idx_symbol_history_goos;
 DROP INDEX idx_symbol_history_goarch;
 
