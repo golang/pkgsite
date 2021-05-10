@@ -549,6 +549,9 @@ func upsertSearchDocuments(ctx context.Context, ddb *database.DB, mod *internal.
 		if err := UpsertSearchDocument(ctx, ddb, args); err != nil {
 			return err
 		}
+		if err := upsertSearchDocumentSymbols(ctx, ddb, pkg.Path, mod.ModulePath, mod.Version); err != nil {
+			return err
+		}
 	}
 	return nil
 }
