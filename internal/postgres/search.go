@@ -457,8 +457,10 @@ func groupSearchResults(rs []*internal.SearchResult) []*internal.SearchResult {
 var upsertSearchStatement = fmt.Sprintf(`
 	INSERT INTO search_documents (
 		package_path,
+		package_path_id,
 		version,
 		module_path,
+		module_path_id,
 		name,
 		synopsis,
 		license_types,
@@ -471,9 +473,11 @@ var upsertSearchStatement = fmt.Sprintf(`
 		hll_leading_zeros
 	)
 	SELECT
-		p.path,
+		p1.path,
+		p1.id,
 		m.version,
 		m.module_path,
+		p2.id,
 		u.name,
 		d.synopsis,
 		u.license_types,
@@ -487,14 +491,15 @@ var upsertSearchStatement = fmt.Sprintf(`
 			SETWEIGHT(TO_TSVECTOR($6), 'C') ||
 			SETWEIGHT(TO_TSVECTOR($7), 'D')
 		),
-		hll_hash(p.path) & (%d - 1),
-		hll_zeros(hll_hash(p.path))
+		hll_hash(p1.path) & (%d - 1),
+		hll_zeros(hll_hash(p1.path))
 	FROM units u
-	INNER JOIN paths p ON p.id = u.path_id
 	INNER JOIN modules m ON u.module_id = m.id
+	INNER JOIN paths p1 ON p1.id = u.path_id
+	LEFT JOIN paths p2 ON p2.path = m.module_path
 	LEFT JOIN documentation d ON u.id = d.unit_id
 	WHERE
-		p.path = $1
+		p1.path = $1
 		AND m.module_path = $2
 		AND m.version = $3
 	LIMIT 1 -- could be multiple build contexts
