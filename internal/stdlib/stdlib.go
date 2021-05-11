@@ -164,7 +164,7 @@ func finalDigitsIndex(s string) int {
 
 const (
 	GoRepoURL       = "https://go.googlesource.com/go"
-	GoSourceRepoURL = GoRepoURL
+	GoSourceRepoURL = "https://cs.opensource.google/go/go"
 )
 
 // UseTestData determines whether to really clone the Go repo, or use
@@ -247,7 +247,7 @@ func Versions() (_ []string, err error) {
 		})
 		refs, err := re.List(&git.ListOptions{})
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("re.List: %v", err)
 		}
 		for _, r := range refs {
 			refNames = append(refNames, r.Name())

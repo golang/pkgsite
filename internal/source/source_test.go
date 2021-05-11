@@ -31,6 +31,7 @@ func TestModuleInfo(t *testing.T) {
 	defer done()
 
 	check := func(t *testing.T, msg, got, want string) {
+		t.Helper()
 		if got != want {
 			t.Fatalf("%s:\ngot  %s\nwant %s", msg, got, want)
 		}
@@ -52,11 +53,10 @@ func TestModuleInfo(t *testing.T) {
 		{
 			"standard library",
 			"std", "v1.12.0", "bytes/buffer.go",
-
-			"https://go.googlesource.com/go",
-			"https://go.googlesource.com/go/+/go1.12/src",
-			"https://go.googlesource.com/go/+/go1.12/src/bytes/buffer.go",
-			"https://go.googlesource.com/go/+/go1.12/src/bytes/buffer.go#1",
+			"https://cs.opensource.google/go/go",
+			"https://cs.opensource.google/go/go/+/go1.12:src",
+			"https://cs.opensource.google/go/go/+/go1.12:src/bytes/buffer.go",
+			"https://cs.opensource.google/go/go/+/go1.12:src/bytes/buffer.go;l=1",
 			// The raw URLs for the standard library are relative to the repo root, not
 			// the module directory.
 			"",
@@ -64,11 +64,10 @@ func TestModuleInfo(t *testing.T) {
 		{
 			"old standard library",
 			"std", "v1.3.0", "bytes/buffer.go",
-
-			"https://go.googlesource.com/go",
-			"https://go.googlesource.com/go/+/go1.3/src/pkg",
-			"https://go.googlesource.com/go/+/go1.3/src/pkg/bytes/buffer.go",
-			"https://go.googlesource.com/go/+/go1.3/src/pkg/bytes/buffer.go#1",
+			"https://cs.opensource.google/go/go",
+			"https://cs.opensource.google/go/go/+/go1.3:src/pkg",
+			"https://cs.opensource.google/go/go/+/go1.3:src/pkg/bytes/buffer.go",
+			"https://cs.opensource.google/go/go/+/go1.3:src/pkg/bytes/buffer.go;l=1",
 			// The raw URLs for the standard library are relative to the repo root, not
 			// the module directory.
 			"",

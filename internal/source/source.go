@@ -306,7 +306,7 @@ func newStdlibInfo(version string) (_ *Info, err error) {
 		return nil, err
 	}
 
-	templates := googlesourceURLTemplates
+	templates := csopensourceTemplates
 	templates.Raw = "https://github.com/golang/go/raw/{commit}/{file}"
 	return &Info{
 		repoURL:   stdlib.GoSourceRepoURL,
@@ -752,6 +752,12 @@ var (
 		File:      "{repo}/tree/{file}?{commit}",
 		Line:      "{repo}/tree/{file}?{commit}#n{line}",
 		Raw:       "{repo}/plain/{file}?{commit}",
+	}
+	csopensourceTemplates = urlTemplates{
+		Directory: "{repo}/+/{commit}:{dir}",
+		File:      "{repo}/+/{commit}:{file}",
+		Line:      "{repo}/+/{commit}:{file};l={line}",
+		// Gitiles has no support for serving raw content at this time.
 	}
 )
 
