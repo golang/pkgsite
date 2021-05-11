@@ -35,7 +35,8 @@ func (db *DB) InsertIndexVersions(ctx context.Context, versions []*internal.Inde
 			(module_path, version)
 		DO UPDATE SET
 			index_timestamp=excluded.index_timestamp,
-			next_processed_after=CURRENT_TIMESTAMP`
+			next_processed_after=CURRENT_TIMESTAMP,
+			status=0`
 	return db.db.Transact(ctx, sql.LevelDefault, func(tx *database.DB) error {
 		return tx.BulkInsert(ctx, "module_version_states", cols, vals, conflictAction)
 	})
