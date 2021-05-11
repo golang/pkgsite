@@ -13,6 +13,7 @@ import (
 	"net/url"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/google/safehtml/template"
 	"github.com/google/safehtml/template/uncheckedconversions"
@@ -107,6 +108,13 @@ func (s *Server) servePathNotFoundPage(w http.ResponseWriter, r *http.Request,
 			http.Redirect(w, r, u, http.StatusFound)
 			return
 		}
+
+		// If a module has a status of 404, but s.taskIDChangeInterval has
+		// passed, allow the module to be refetched.
+		if fr.status == http.StatusNotFound && time.Since(fr.updatedAt) > s.taskIDChangeInterval {
+			return pathNotFoundError(fullPath, requestedVersion)
+		}
+
 		// Redirect to the search result page for an empty directory that is above nested modules.
 		// See https://golang.org/issue/43725 for context.
 		nm, err := ds.GetNestedModules(ctx, fullPath)
@@ -170,7 +178,8 @@ func pathNotFoundError(fullPath, requestedVersion string) error {
 
 // previousFetchStatusAndResponse returns the fetch result from a
 // previous fetch of the fullPath and requestedVersion.
-func previousFetchStatusAndResponse(ctx context.Context, db *postgres.DB, fullPath, modulePath, requestedVersion string) (_ *fetchResult, err error) {
+func previousFetchStatusAndResponse(ctx context.Context, db *postgres.DB,
+	fullPath, modulePath, requestedVersion string) (_ *fetchResult, err error) {
 	defer derrors.Wrap(&err, "previousFetchStatusAndResponse(w, r, %q, %q)", fullPath, requestedVersion)
 
 	// Get all candidate module paths for this path.
@@ -254,6 +263,7 @@ func fetchResultFromVersionMap(vm *internal.VersionMap) *fetchResult {
 		modulePath: vm.ModulePath,
 		goModPath:  vm.GoModPath,
 		status:     vm.Status,
+		updatedAt:  vm.UpdatedAt,
 		err:        err,
 	}
 }

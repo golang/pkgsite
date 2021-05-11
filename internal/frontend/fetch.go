@@ -124,6 +124,7 @@ type fetchResult struct {
 	status       int
 	err          error
 	responseText string
+	updatedAt    time.Time
 }
 
 func (s *Server) fetchAndPoll(ctx context.Context, ds internal.DataSource, modulePath, fullPath, requestedVersion string) (status int, responseText string) {
@@ -362,6 +363,10 @@ func pollForPath(ctx context.Context, db *postgres.DB, pollEvery time.Duration,
 // process that was initiated is not yet complete.  If the row exists version_map
 // but not paths, it means that a module was found at the requestedVersion, but
 // not the fullPath, so errPathDoesNotExistInModule is returned.
+//
+// Note that if an error occurs while writing to the version_map table,
+// checkForPath will not know. Instead, it will keep running until the request
+// times out.
 func checkForPath(ctx context.Context, db *postgres.DB,
 	fullPath, modulePath, requestedVersion string, taskIDChangeInterval time.Duration) (fr *fetchResult) {
 	defer func() {
@@ -402,11 +407,7 @@ func checkForPath(ctx context.Context, db *postgres.DB,
 	// We successfully retrieved a row in version_map for the modulePath and
 	// requestedVersion. Look at the status of that row to determine whether
 	// an error should be returned.
-	fr = &fetchResult{
-		modulePath: modulePath,
-		status:     vm.Status,
-		goModPath:  vm.GoModPath,
-	}
+	fr = fetchResultFromVersionMap(vm)
 
 	switch fr.status {
 	case http.StatusNotFound,
