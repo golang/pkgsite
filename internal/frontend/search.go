@@ -44,6 +44,7 @@ type SearchResult struct {
 	CommitTime     string
 	NumImportedBy  int
 	Approximate    bool
+	Symbols        *subResult
 	SameModule     *subResult // package paths in the same module
 	LowerMajor     *subResult // package paths in lower major versions
 }
@@ -58,7 +59,13 @@ type subResult struct {
 // returns a SearchPage.
 func fetchSearchPage(ctx context.Context, db *postgres.DB, query string, pageParams paginationParams) (*SearchPage, error) {
 	maxResultCount := maxSearchOffset + pageParams.limit
-	dbresults, err := db.Search(ctx, query, pageParams.limit, pageParams.offset(), maxResultCount, false)
+
+	searchSymbols := false
+	if strings.HasPrefix(query, "identifier:") {
+		query = strings.TrimPrefix(query, "identifier:")
+		searchSymbols = true
+	}
+	dbresults, err := db.Search(ctx, query, pageParams.limit, pageParams.offset(), maxResultCount, searchSymbols)
 	if err != nil {
 		return nil, err
 	}
@@ -76,6 +83,7 @@ func fetchSearchPage(ctx context.Context, db *postgres.DB, query string, pagePar
 			NumImportedBy:  int(r.NumImportedBy),
 			SameModule:     packagePaths("Other packages in module "+r.ModulePath+":", r.SameModule, 5),
 			LowerMajor:     modulePaths("Lower module versions:", r.LowerMajor),
+			Symbols:        symbolResults("Identifiers:", r.PackagePath, r.Symbols, 5),
 		})
 	}
 
@@ -170,6 +178,29 @@ func modulePaths(heading string, rs []*internal.SearchResult) *subResult {
 	return &subResult{
 		Heading: heading,
 		Links:   links,
+	}
+}
+
+func symbolResults(heading, packagePath string, symbols []string, max int) *subResult {
+	if len(symbols) == 0 {
+		return nil
+	}
+	var links []link
+	for i, s := range symbols {
+		if i >= max {
+			break
+		}
+		href := symbolLink(packagePath, s, internal.BuildContexts)
+		links = append(links, link{Href: href, Body: s})
+	}
+	suffix := ""
+	if len(symbols) > len(links) {
+		suffix = fmt.Sprintf("(and %d more)", len(symbols)-len(links))
+	}
+	return &subResult{
+		Heading: heading,
+		Links:   links,
+		Suffix:  suffix,
 	}
 }
 

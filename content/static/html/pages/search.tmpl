@@ -46,7 +46,7 @@
   {{$query := .Query}}
   {{range $i, $v := .Results}}
     <div class="LegacySearchSnippet">
-      <h2 class="SearchSnippet-header">
+      <h2 class="LegacySearchSnippet-header">
         <a href="/{{$v.PackagePath}}" data-gtmc="search result" data-gtmv="{{$i}}"
             data-test-id="snippet-title">
           {{$v.PackagePath}}
@@ -98,13 +98,24 @@
   {{range $i, $v := .Results}}
     <div class="SearchSnippet">
       <div class="SearchSnippet-breadcrumb">{{$v.PackagePath}}</div>
-      <h2 class="SearchSnippet-header">
-        <a href="/{{$v.PackagePath}}" data-gtmc="search result" data-gtmv="{{$i}}"
-            data-test-id="snippet-title">
-          {{$v.Name}}
-        </a>
-        <span class="SearchSnippet-version">{{$v.DisplayVersion}}</span>
-      </h2>
+      <div class="SearchSnippet-headerContainer">
+        <h2 class="SearchSnippet-header">
+          <a href="/{{$v.PackagePath}}" data-gtmc="search result" data-gtmv="{{$i}}"
+              data-test-id="snippet-title">
+            {{$v.Name}}
+          </a>
+          <span class="SearchSnippet-version">{{$v.DisplayVersion}}</span>
+        </h2>
+        {{with .Symbols}}
+          <div class="SearchSnippet-symbolContainer">
+            <span class="SearchSnippet-symbolHeading">{{.Heading}}</span>
+            {{range $i, $v := .Links}}
+              <a class="SearchSnippet-symbol" href="/{{$v.Href}}">{{$v.Body}}</a>
+            {{end}}
+            <span>{{.Suffix}}</span>
+          </div>
+        {{end}}
+      </div>
       <p class="SearchSnippet-synopsis" data-test-id="snippet-synopsis">{{$v.Synopsis}}</p>
       <div class="SearchSnippet-infoLabel">
         <span class="InfoLabel-title">Published:</span>

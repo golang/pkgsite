@@ -10,6 +10,7 @@ const (
 	ExperimentInsertSymbolHistory       = "insert-symbol-history"
 	ExperimentReadSymbolHistory         = "read-symbol-history"
 	ExperimentSearchGrouping            = "search-grouping"
+	ExperimentSymbolSearch              = "symbol-search"
 	ExperimentSymbolHistoryVersionsPage = "symbol-history-versions-page"
 	ExperimentSymbolHistoryMainPage     = "symbol-history-main-page"
 )
@@ -21,6 +22,7 @@ var Experiments = map[string]string{
 	ExperimentSearchGrouping:            "Group search results.",
 	ExperimentInsertSymbolHistory:       "Insert data into the symbol_history table.",
 	ExperimentReadSymbolHistory:         "Read data from the symbol_history table.",
+	ExperimentSymbolSearch:              "Enable searching for symbols.",
 	ExperimentSymbolHistoryVersionsPage: "Show package API history on the versions page.",
 	ExperimentSymbolHistoryMainPage:     "Show package API history on the main unit page.",
 }

@@ -127,7 +127,9 @@ func (db *DB) Search(ctx context.Context, q string, limit, offset, maxResultCoun
 	}
 
 	var searchers map[string]searcher
-	if searchSymbols {
+	if searchSymbols &&
+		experiment.IsActive(ctx, internal.ExperimentSearchGrouping) &&
+		experiment.IsActive(ctx, internal.ExperimentSymbolSearch) {
 		searchers = symbolSearchers
 	} else {
 		searchers = pkgSearchers

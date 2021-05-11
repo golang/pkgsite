@@ -707,7 +707,7 @@ func serverTestCases() []serverTestCase {
 			wantStatusCode: http.StatusOK,
 			want: in("",
 				in(".SearchResults-resultCount", hasText("2 results")),
-				in(".SearchSnippet-header",
+				in(".LegacySearchSnippet-header",
 					in("a",
 						href("/"+sample.ModulePath+"/foo"),
 						hasText(sample.ModulePath+"/foo")))),
