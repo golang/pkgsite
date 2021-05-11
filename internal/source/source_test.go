@@ -264,16 +264,6 @@ func TestModuleInfo(t *testing.T) {
 			"https://git.fd.io/govpp/plain/doc.go?id=f04939006063",
 		},
 		{
-			"git.pirl.io",
-			"git.pirl.io/community/pirl", "1.8.27-damocles", "rpc/doc.go",
-
-			"https://git.pirl.io/community/pirl",
-			"https://git.pirl.io/community/pirl/-/tree/1.8.27-damocles",
-			"https://git.pirl.io/community/pirl/-/blob/1.8.27-damocles/rpc/doc.go",
-			"https://git.pirl.io/community/pirl/-/blob/1.8.27-damocles/rpc/doc.go#L1",
-			"https://git.pirl.io/community/pirl/-/raw/1.8.27-damocles/rpc/doc.go",
-		},
-		{
 			"gitea",
 			"gitea.com/azhai/xorm", "v1.0.3", "log/logger.go",
 
