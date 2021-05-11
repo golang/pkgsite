@@ -14,6 +14,8 @@ declare const global: NodeJS.Global &
  * teardown kills the chromium instance when the test run is complete.
  */
 export default async function teardown(): Promise<void> {
-  global.chromium.kill();
-  await new Promise(r => global.chromium.on('exit', r));
+  if (global.chromium) {
+    global.chromium.kill();
+    await new Promise(r => global.chromium.on('exit', r));
+  }
 }

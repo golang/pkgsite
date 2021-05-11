@@ -11,8 +11,8 @@ const NodeEnvironment = require('jest-environment-node');
 const {
   AUTHORIZATION = null,
   BASE_URL = 'http://host.docker.internal:8080',
-  // PORT default value should match ./global-setup.ts.
-  PORT = 3000,
+  // GO_DISCOVERY_E2E_TEST_PORT default value should match ./global-setup.ts.
+  GO_DISCOVERY_E2E_TEST_PORT = 3000,
 } = process.env;
 
 /**
@@ -49,7 +49,7 @@ class PuppeteerEnvironment extends NodeEnvironment {
   async setup() {
     await super.setup();
     this.global.browser = await puppeteer.connect({
-      browserWSEndpoint: `ws://localhost:${PORT}`,
+      browserWSEndpoint: `ws://localhost:${GO_DISCOVERY_E2E_TEST_PORT}`,
       defaultViewport: { height: 800, width: 1280 },
     });
   }
