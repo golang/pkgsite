@@ -62,6 +62,7 @@ var (
 
 type docData struct {
 	Elements          []docElement
+	Headings          []docElement
 	DisablePermalinks bool
 	EnableCommandTOC  bool
 }
@@ -113,8 +114,19 @@ func (r *Renderer) declHTML(doc string, decl ast.Decl, extractLinks bool) (out s
 				}
 			}
 		}
-		out.Doc = ExecuteToHTML(r.docTmpl, docData{Elements: els,
-			DisablePermalinks: r.disablePermalinks, EnableCommandTOC: r.enableCommandTOC})
+
+		var headings []docElement
+		for _, e := range els {
+			if e.IsHeading {
+				headings = append(headings, e)
+			}
+		}
+		out.Doc = ExecuteToHTML(r.docTmpl, docData{
+			Elements:          els,
+			Headings:          headings,
+			DisablePermalinks: r.disablePermalinks,
+			EnableCommandTOC:  r.enableCommandTOC,
+		})
 	}
 	if decl != nil {
 		out.Decl = r.formatDeclHTML(decl, idr)

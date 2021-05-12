@@ -71,30 +71,28 @@ type Options struct {
 
 // docDataTmpl renders documentation. It expects a docData.
 var docDataTmpl = template.Must(template.New("").Parse(`
-{{- if and .EnableCommandTOC .Elements -}}
-	<div role="navigation" aria-label="Table of Contents">
-		<ul class="Documentation-toc">
-			{{- range .Elements -}}
-				{{- if .IsHeading -}}
-					<li class="Documentation-tocItem">
-						<a href="#{{.ID}}">{{.Title}}</a>
-					</li>
-				{{- end -}}
-			{{- end -}}
-		</ul>
-	</div>
+{{- if and .EnableCommandTOC .Headings -}}
+  <div role="navigation" aria-label="Table of Contents">
+    <ul class="Documentation-toc {{if gt (len .Headings) 5}}Documentation-toc-columns{{end}}">
+      {{- range .Headings -}}
+		<li class="Documentation-tocItem">
+		  <a href="#{{.ID}}">{{.Title}}</a>
+		</li>
+      {{- end -}}
+    </ul>
+  </div>
 {{- end -}}
 {{- range .Elements -}}
   {{- if .IsHeading -}}
     <h4 id="{{.ID}}">{{.Title}}
     {{- if not $.DisablePermalinks}} <a class="Documentation-idLink" href="#{{.ID}}">¶</a>{{end -}}
     </h4>
-  {{else if .IsPreformat -}}
+  {{- else if .IsPreformat -}}
     <pre>{{.Body}}</pre>
   {{- else -}}
     <p>{{.Body}}</p>
   {{- end -}}
-{{end}}`))
+{{- end -}}`))
 
 // exampleTmpl renders code for an example. It expect an Example.
 var exampleTmpl = template.Must(template.New("").Parse(`

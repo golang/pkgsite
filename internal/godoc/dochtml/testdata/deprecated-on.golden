@@ -1,8 +1,6 @@
 <div class="Documentation-content js-docContent"> <section class="Documentation-overview">
 <h3 tabindex="-1" id="pkg-overview" class="Documentation-overviewHeader">Overview <a href="#pkg-overview">¶</a></h3>
-<div role="navigation" aria-label="Table of Contents">
-<ul class="Documentation-toc"></ul>
-</div><p>Package deprecated has some deprecated symbols.
+<p>Package deprecated has some deprecated symbols.
 </p>
 </section><section class="Documentation-index">
 <h3 id="pkg-index" class="Documentation-indexHeader">Index <a href="#pkg-index">¶</a></h3>
@@ -38,9 +36,7 @@
 <span class="Documentation-declarationLink"><a class="Documentation-source" href="src">View Source</a></span>
 <pre><span id="BadC" data-kind="constant">const BadC = 2</span></pre>
 </div>
-<div role="navigation" aria-label="Table of Contents">
-<ul class="Documentation-toc"></ul>
-</div><p>BadC is bad.
+<p>BadC is bad.
 Deprecated: use GoodC.
 </p>
 <div class="Documentation-declaration">
@@ -54,9 +50,7 @@ Deprecated: use GoodC.
 <span class="Documentation-declarationLink"><a class="Documentation-source" href="src">View Source</a></span>
 <pre><span id="BadV" data-kind="variable">var BadV = 2</span></pre>
 </div>
-<div role="navigation" aria-label="Table of Contents">
-<ul class="Documentation-toc"></ul>
-</div><p>Deprecated: use GoodV.
+<p>Deprecated: use GoodV.
 </p>
 <div class="Documentation-declaration">
 <span class="Documentation-declarationLink"><a class="Documentation-source" href="src">View Source</a></span>
@@ -79,9 +73,7 @@ func <a class="Documentation-source" href="src">BadF</a> <a class="Documentation
 <div class="Documentation-declaration">
 <pre>func BadF()</pre>
 </div>
-<div role="navigation" aria-label="Table of Contents">
-<ul class="Documentation-toc"></ul>
-</div><p>BadF is bad.
+<p>BadF is bad.
 Deprecated: use GoodF.
 </p>
 </details>
@@ -111,9 +103,7 @@ type <a class="Documentation-source" href="src">BadT</a> <a class="Documentation
 <div class="Documentation-declaration">
 <pre>type BadT <a href="/builtin#int">int</a></pre>
 </div>
-<div role="navigation" aria-label="Table of Contents">
-<ul class="Documentation-toc"></ul>
-</div><p>BadT is bad.
+<p>BadT is bad.
 Deprecated: use GoodT.
 Don&#39;t use this.
 </p>
@@ -132,9 +122,7 @@ func <a class="Documentation-source" href="src">NewBadTBad</a> <a class="Documen
 <div class="Documentation-declaration">
 <pre>func NewBadTBad() <a href="#BadT">BadT</a></pre>
 </div>
-<div role="navigation" aria-label="Table of Contents">
-<ul class="Documentation-toc"></ul>
-</div><p>Deprecated: use NewBadTGood.
+<p>Deprecated: use NewBadTGood.
 </p>
 </details>
 </div><div class="Documentation-typeFunc">
@@ -161,9 +149,7 @@ func (BadT) <a class="Documentation-source" href="src">BadM</a> <a class="Docume
 <div class="Documentation-declaration">
 <pre>func (<a href="#BadT">BadT</a>) BadM()</pre>
 </div>
-<div role="navigation" aria-label="Table of Contents">
-<ul class="Documentation-toc"></ul>
-</div><p>Deprecated: use GoodM.
+<p>Deprecated: use GoodM.
 </p>
 </details>
 </div><div class="Documentation-typeMethod">
@@ -201,9 +187,7 @@ func <a class="Documentation-source" href="src">NewGoodTBad</a> <a class="Docume
 <div class="Documentation-declaration">
 <pre>func NewGoodTBad() <a href="#GoodT">GoodT</a></pre>
 </div>
-<div role="navigation" aria-label="Table of Contents">
-<ul class="Documentation-toc"></ul>
-</div><p>NewGoodTBad is bad.
+<p>NewGoodTBad is bad.
 Deprecated: use NewGoodTGood.
 </p>
 </details>
@@ -231,9 +215,7 @@ func (GoodT) <a class="Documentation-source" href="src">BadM</a> <a class="Docum
 <div class="Documentation-declaration">
 <pre>func (<a href="#GoodT">GoodT</a>) BadM()</pre>
 </div>
-<div role="navigation" aria-label="Table of Contents">
-<ul class="Documentation-toc"></ul>
-</div><p>BadM is bad.
+<p>BadM is bad.
 Deprecated: use GoodM.
 </p>
 </details>

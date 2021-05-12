@@ -123,8 +123,11 @@
 }
 @media only screen and (min-width: 64rem) {
   .Documentation-toc {
-    columns: 2;
+    margin-left: 2rem;
     white-space: nowrap;
+  }
+  .Documentation-toc-columns {
+    columns: 2;
   }
 }
 .Documentation-toc:empty {

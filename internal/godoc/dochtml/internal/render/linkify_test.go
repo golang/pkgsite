@@ -81,8 +81,7 @@ The Go Project
 
 Go is an open source project.`,
 			want: `<p>Documentation.
-</p><h4 id="hdr-The_Go_Project">The Go Project <a class="Documentation-idLink" href="#hdr-The_Go_Project">¶</a></h4>
-  <p>Go is an open source project.
+</p><h4 id="hdr-The_Go_Project">The Go Project <a class="Documentation-idLink" href="#hdr-The_Go_Project">¶</a></h4><p>Go is an open source project.
 </p>`,
 		},
 		{
@@ -128,13 +127,10 @@ TLSUnique contains the tls-unique channel binding value (see RFC
 			extractLinks: []bool{false},
 			doc:          linksDoc,
 			want: `<p>Documentation.
-</p><h4 id="hdr-The_Go_Project">The Go Project <a class="Documentation-idLink" href="#hdr-The_Go_Project">¶</a></h4>
-  <p>Go is an open source project.
-</p><h4 id="hdr-Links">Links <a class="Documentation-idLink" href="#hdr-Links">¶</a></h4>
-  <p>- title1, url1
+</p><h4 id="hdr-The_Go_Project">The Go Project <a class="Documentation-idLink" href="#hdr-The_Go_Project">¶</a></h4><p>Go is an open source project.
+</p><h4 id="hdr-Links">Links <a class="Documentation-idLink" href="#hdr-Links">¶</a></h4><p>- title1, url1
 </p><pre>-		title2 , url2
-</pre><h4 id="hdr-Header">Header <a class="Documentation-idLink" href="#hdr-Header">¶</a></h4>
-  <p>More doc.
+</pre><h4 id="hdr-Header">Header <a class="Documentation-idLink" href="#hdr-Header">¶</a></h4><p>More doc.
 </p>`,
 		},
 		{
@@ -142,10 +138,8 @@ TLSUnique contains the tls-unique channel binding value (see RFC
 			extractLinks: []bool{true},
 			doc:          linksDoc,
 			want: `<p>Documentation.
-</p><h4 id="hdr-The_Go_Project">The Go Project <a class="Documentation-idLink" href="#hdr-The_Go_Project">¶</a></h4>
-  <p>Go is an open source project.
-</p><h4 id="hdr-Header">Header <a class="Documentation-idLink" href="#hdr-Header">¶</a></h4>
-  <p>More doc.
+</p><h4 id="hdr-The_Go_Project">The Go Project <a class="Documentation-idLink" href="#hdr-The_Go_Project">¶</a></h4><p>Go is an open source project.
+</p><h4 id="hdr-Header">Header <a class="Documentation-idLink" href="#hdr-Header">¶</a></h4><p>More doc.
 </p>`,
 			wantLinks: []Link{
 				{Text: "title1", Href: "url1"},

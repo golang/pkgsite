@@ -151,9 +151,7 @@ func TestExampleRender(t *testing.T) {
 			want: `<details tabindex="-1" id="example-package-StringsCompare" class="Documentation-exampleDetails js-exampleContainer">
 <summary class="Documentation-exampleDetailsHeader">Example (StringsCompare) <a href="#example-package-StringsCompare">¶</a></summary>
 <div class="Documentation-exampleDetailsBody">
-<div role="navigation" aria-label="Table of Contents">
-		<ul class="Documentation-toc"></ul>
-	</div><p>executable example
+<p>executable example
 </p>
 
 <textarea class="Documentation-exampleCode" spellcheck="false">package main

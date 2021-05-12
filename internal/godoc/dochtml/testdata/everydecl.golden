@@ -1,8 +1,6 @@
 <div class="Documentation-content js-docContent"> <section class="Documentation-overview">
 <h3 tabindex="-1" id="pkg-overview" class="Documentation-overviewHeader">Overview <a href="#pkg-overview">¶</a></h3>
-<div role="navigation" aria-label="Table of Contents">
-<ul class="Documentation-toc"></ul>
-</div><p>Package everydecl has every form of declaration known to dochtml.
+<p>Package everydecl has every form of declaration known to dochtml.
 It is designed to test that the generated HTML has the right id and data-kind
 attributes.
 </p>
@@ -33,9 +31,7 @@ attributes.
 <span class="Documentation-declarationLink"><a class="Documentation-source" href="src">View Source</a></span>
 <pre><span id="C" data-kind="constant">const C = 1</span></pre>
 </div>
-<div role="navigation" aria-label="Table of Contents">
-<ul class="Documentation-toc"></ul>
-</div><p>const
+<p>const
 </p>
 </section>
 <h3 tabindex="-1" id="pkg-variables" class="Documentation-variablesHeader">Variables <a href="#pkg-variables">¶</a></h3>
@@ -44,9 +40,7 @@ attributes.
 <span class="Documentation-declarationLink"><a class="Documentation-source" href="src">View Source</a></span>
 <pre><span id="V" data-kind="variable">var V = 2</span></pre>
 </div>
-<div role="navigation" aria-label="Table of Contents">
-<ul class="Documentation-toc"></ul>
-</div><p>var
+<p>var
 </p>
 </section>
 <h3 tabindex="-1" id="pkg-functions" class="Documentation-functionsHeader">Functions <a href="#pkg-functions">¶</a></h3>
@@ -59,9 +53,7 @@ attributes.
 <div class="Documentation-declaration">
 <pre>func F()</pre>
 </div>
-<div role="navigation" aria-label="Table of Contents">
-<ul class="Documentation-toc"></ul>
-</div><p>func
+<p>func
 </p>
 </div></section>
 <h3 tabindex="-1" id="pkg-types" class="Documentation-typesHeader">Types <a href="#pkg-types">¶</a></h3>
@@ -138,25 +130,19 @@ attributes.
 <div class="Documentation-declaration">
 <pre>type T <a href="/builtin#int">int</a></pre>
 </div>
-<div role="navigation" aria-label="Table of Contents">
-<ul class="Documentation-toc"></ul>
-</div><p>type
+<p>type
 </p>
 <div class="Documentation-typeConstant">
 <div class="Documentation-declaration">
 <pre><span id="CT" data-kind="constant">const CT <a href="#T">T</a> = 3</span></pre>
 </div>
-<div role="navigation" aria-label="Table of Contents">
-<ul class="Documentation-toc"></ul>
-</div><p>typeConstant
+<p>typeConstant
 </p>
 </div><div class="Documentation-typeVariable">
 <div class="Documentation-declaration">
 <pre><span id="VT" data-kind="variable">var VT <a href="#T">T</a></span></pre>
 </div>
-<div role="navigation" aria-label="Table of Contents">
-<ul class="Documentation-toc"></ul>
-</div><p>typeVariable
+<p>typeVariable
 </p>
 </div><div class="Documentation-typeFunc">
 <h4 tabindex="-1" id="TF" data-kind="function" class="Documentation-typeFuncHeader">
@@ -167,9 +153,7 @@ attributes.
 <div class="Documentation-declaration">
 <pre>func TF() <a href="#T">T</a></pre>
 </div>
-<div role="navigation" aria-label="Table of Contents">
-<ul class="Documentation-toc"></ul>
-</div><p>typeFunc
+<p>typeFunc
 </p>
 </div><div class="Documentation-typeMethod">
 <h4 tabindex="-1" id="T.M" data-kind="method" class="Documentation-typeMethodHeader">
@@ -180,9 +164,7 @@ attributes.
 <div class="Documentation-declaration">
 <pre>func (<a href="#T">T</a>) M()</pre>
 </div>
-<div role="navigation" aria-label="Table of Contents">
-<ul class="Documentation-toc"></ul>
-</div><p>method
+<p>method
 BUG(uid): this verifies that notes are rendered
 </p>
 </div>
@@ -190,9 +172,7 @@ BUG(uid): this verifies that notes are rendered
 <section class="Documentation-notes"><div class="Documentation-note">
 <h3 tabindex="-1" id="pkg-note-BUG" class="Documentation-noteHeader">Bugs <a href="#pkg-note-BUG">¶</a></h3>
 <ul class="Documentation-noteList" style="padding-left: 20px; list-style: initial;">
-<li style="margin: 6px 0 6px 0;"><div role="navigation" aria-label="Table of Contents">
-<ul class="Documentation-toc"></ul>
-</div><p>this verifies that notes are rendered
+<li style="margin: 6px 0 6px 0;"><p>this verifies that notes are rendered
 </p></li></ul>
 </div></section></div>
 ----
