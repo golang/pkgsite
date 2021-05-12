@@ -67,12 +67,6 @@ type Options struct {
 	//
 	// Only relevant for HTML formatting.
 	EnableCommandTOC bool
-
-	// EnableInteractivePlayground turns on the interactive playgrounds on
-	// unit pages with examples.
-	//
-	// Only relevant for HTML formatting.
-	EnableInteractivePlayground bool
 }
 
 // docDataTmpl renders documentation. It expects a docData.
@@ -102,19 +96,6 @@ var docDataTmpl = template.Must(template.New("").Parse(`
   {{- end -}}
 {{end}}`))
 
-// legacyExampleTmpl renders code for a legacy example. It expect an Example.
-var legacyExampleTmpl = template.Must(template.New("").Parse(`
-<pre class="Documentation-exampleCode">
-{{range .}}
-  {{- if .Comment -}}
-    <span class="comment">{{.Text}}</span>
-  {{- else -}}
-    {{.Text}}
-  {{- end -}}
-{{end}}
-</pre>
-`))
-
 // exampleTmpl renders code for an example. It expect an Example.
 var exampleTmpl = template.Must(template.New("").Parse(`
 <textarea class="Documentation-exampleCode" spellcheck="false">
@@ -130,7 +111,6 @@ func New(ctx context.Context, fset *token.FileSet, pkg *doc.Package, opts *Optio
 	var disableHotlinking bool
 	var disablePermalinks bool
 	var enableCommandTOC bool
-	exampleTemplate := legacyExampleTmpl
 	if opts != nil {
 		if len(opts.RelatedPackages) > 0 {
 			others = opts.RelatedPackages
@@ -141,9 +121,6 @@ func New(ctx context.Context, fset *token.FileSet, pkg *doc.Package, opts *Optio
 		disableHotlinking = opts.DisableHotlinking
 		disablePermalinks = opts.DisablePermalinks
 		enableCommandTOC = opts.EnableCommandTOC
-		if opts.EnableInteractivePlayground {
-			exampleTemplate = exampleTmpl
-		}
 	}
 	pids := newPackageIDs(pkg, others...)
 
@@ -155,7 +132,7 @@ func New(ctx context.Context, fset *token.FileSet, pkg *doc.Package, opts *Optio
 		disablePermalinks: disablePermalinks,
 		enableCommandTOC:  enableCommandTOC,
 		docTmpl:           docDataTmpl,
-		exampleTmpl:       exampleTemplate,
+		exampleTmpl:       exampleTmpl,
 		ctx:               ctx,
 	}
 }

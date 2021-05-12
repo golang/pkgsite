@@ -314,11 +314,12 @@ func TestCodeHTML(t *testing.T) {
 b := 2 /* another comment */
 `,
 			`
-<pre class="Documentation-exampleCode">
+<textarea class="Documentation-exampleCode" spellcheck="false">
 a := 1
-<span class="comment">// a comment</span>
-b := 2 <span class="comment">/* another comment */</span>
-</pre>`,
+// a comment
+b := 2 /* another comment */
+</textarea>
+`,
 		},
 		{
 			"trailing newlines",
@@ -327,9 +328,10 @@ b := 2 <span class="comment">/* another comment */</span>
 
 `,
 			`
-<pre class="Documentation-exampleCode">
+<textarea class="Documentation-exampleCode" spellcheck="false">
 a := 1
-</pre>`,
+</textarea>
+`,
 		},
 		{
 			"stripped output comment",
@@ -340,11 +342,11 @@ b := 1
 // removed
 `,
 			`
-<pre class="Documentation-exampleCode">
+<textarea class="Documentation-exampleCode" spellcheck="false">
 a := 1
-<span class="comment">// Output:</span>
+// Output:
 b := 1
-</pre>
+</textarea>
 `,
 		},
 		{
@@ -358,15 +360,15 @@ b := 1
 cleanup()
 `,
 			`
-<pre class="Documentation-exampleCode">
+<textarea class="Documentation-exampleCode" spellcheck="false">
 a := 1
-<span class="comment">// Output:</span>
+// Output:
 b := 1
-</pre>
+</textarea>
 `,
 		},
 	} {
-		out := codeHTML(test.in, legacyExampleTmpl)
+		out := codeHTML(test.in, exampleTmpl)
 		got := strings.TrimSpace(string(out.String()))
 		want := strings.TrimSpace(test.want)
 		if got != want {
