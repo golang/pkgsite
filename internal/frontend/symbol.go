@@ -66,9 +66,9 @@ func (s *Symbol) addBuilds(builds ...internal.BuildContext) {
 
 // symbolsForVersions returns an array of symbols for use in the VersionSummary
 // of the specified version.
-func symbolsForVersion(pkgURLPath string, symbolsAtVersion map[string]map[internal.SymbolMeta]*internal.UnitSymbol) [][]*Symbol {
+func symbolsForVersion(pkgURLPath string, symbolsAtVersion map[string]map[internal.SymbolMeta]*internal.SymbolBuildContexts) [][]*Symbol {
 	nameToMetaToSymbol := map[string]map[internal.SymbolMeta]*Symbol{}
-	children := map[internal.SymbolMeta]*internal.UnitSymbol{}
+	children := map[internal.SymbolMeta]*internal.SymbolBuildContexts{}
 	for _, smToUs := range symbolsAtVersion {
 		for sm, us := range smToUs {
 			if sm.ParentName != sm.Name {
@@ -92,7 +92,7 @@ func symbolsForVersion(pkgURLPath string, symbolsAtVersion map[string]map[intern
 					Link:     symbolLink(pkgURLPath, sm.Name, us.BuildContexts()),
 					New:      true,
 				}
-				nameToMetaToSymbol[sm.Name][sm] = s
+				nameToMetaToSymbol[s.Name][sm] = s
 			}
 			s.addBuilds(us.BuildContexts()...)
 		}
@@ -174,7 +174,7 @@ func symbolsForVersion(pkgURLPath string, symbolsAtVersion map[string]map[intern
 	return sortSymbols(symbols)
 }
 
-func findParent(parentName string, cus *internal.UnitSymbol,
+func findParent(parentName string, cus *internal.SymbolBuildContexts,
 	nameToMetaToSymbol map[string]map[internal.SymbolMeta]*Symbol) *Symbol {
 	parents, ok := nameToMetaToSymbol[parentName]
 	if !ok {

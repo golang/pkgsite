@@ -48,8 +48,8 @@ func TestIntroducedHistory_OneBuildContext(t *testing.T) {
 		t.Fatal(err)
 	}
 	if diff := cmp.Diff(want, got,
-		cmp.AllowUnexported(internal.UnitSymbol{}, internal.SymbolHistory{}),
-		cmpopts.IgnoreFields(internal.UnitSymbol{}, "builds")); diff != "" {
+		cmp.AllowUnexported(internal.SymbolBuildContexts{}, internal.SymbolHistory{}),
+		cmpopts.IgnoreFields(internal.SymbolBuildContexts{}, "builds")); diff != "" {
 		t.Errorf("mismatch (-want, +got):\n%s", diff)
 	}
 	for _, v := range got.Versions() {
@@ -110,7 +110,7 @@ func TestIntroducedHistory_MultiGOOS(t *testing.T) {
 		t.Fatal(err)
 	}
 	if diff := cmp.Diff(want, got,
-		cmp.AllowUnexported(internal.UnitSymbol{}, internal.SymbolHistory{})); diff != "" {
+		cmp.AllowUnexported(internal.SymbolBuildContexts{}, internal.SymbolHistory{})); diff != "" {
 		t.Errorf("mismatch (-want, +got):\n%s", diff)
 	}
 }

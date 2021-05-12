@@ -90,19 +90,19 @@ type SymbolHistory struct {
 	// https://pkg.go.dev/syscall?GOOS=windows#CloseOnExec has function
 	// signature:
 	// func CloseOnExec(fd Handle)
-	m map[string]map[string]map[SymbolMeta]*UnitSymbol
+	m map[string]map[string]map[SymbolMeta]*SymbolBuildContexts
 }
 
 // NewSymbolHistory returns a new *SymbolHistory.
 func NewSymbolHistory() *SymbolHistory {
 	return &SymbolHistory{
-		m: map[string]map[string]map[SymbolMeta]*UnitSymbol{},
+		m: map[string]map[string]map[SymbolMeta]*SymbolBuildContexts{},
 	}
 }
 
 // SymbolsAtVersion returns a map of name to SymbolMeta to UnitSymbol for a
 // given version.
-func (sh *SymbolHistory) SymbolsAtVersion(v string) map[string]map[SymbolMeta]*UnitSymbol {
+func (sh *SymbolHistory) SymbolsAtVersion(v string) map[string]map[SymbolMeta]*SymbolBuildContexts {
 	return sh.m[v]
 }
 
@@ -145,30 +145,31 @@ func (sh *SymbolHistory) AddSymbol(sm SymbolMeta, v string, build BuildContext) 
 	}
 	sav, ok := sh.m[v]
 	if !ok {
-		sav = map[string]map[SymbolMeta]*UnitSymbol{}
+		sav = map[string]map[SymbolMeta]*SymbolBuildContexts{}
 		sh.m[v] = sav
 	}
 	stu, ok := sav[sm.Name]
 	if !ok {
-		stu = map[SymbolMeta]*UnitSymbol{}
+		stu = map[SymbolMeta]*SymbolBuildContexts{}
 		sh.m[v][sm.Name] = stu
 	}
 	us, ok := stu[sm]
 	if !ok {
-		us = &UnitSymbol{}
+		us = &SymbolBuildContexts{}
 		sh.m[v][sm.Name][sm] = us
 	}
 	us.AddBuildContext(build)
 }
 
-// UnitSymbol represents a symbol that is part of a unit.
-type UnitSymbol struct {
+// SymbolBuildContexts represents the build contexts that are associated with a
+// SymbolMeta.
+type SymbolBuildContexts struct {
 	// builds are the build contexts that apply to this symbol.
 	builds map[BuildContext]bool
 }
 
 // BuildContexts returns the build contexts for this UnitSymbol.
-func (us *UnitSymbol) BuildContexts() []BuildContext {
+func (us *SymbolBuildContexts) BuildContexts() []BuildContext {
 	var builds []BuildContext
 	for b := range us.builds {
 		builds = append(builds, b)
@@ -180,7 +181,7 @@ func (us *UnitSymbol) BuildContexts() []BuildContext {
 }
 
 // AddBuildContext adds a build context supported by this UnitSymbol.
-func (us *UnitSymbol) AddBuildContext(build BuildContext) {
+func (us *SymbolBuildContexts) AddBuildContext(build BuildContext) {
 	if us.builds == nil {
 		us.builds = map[BuildContext]bool{}
 	}
@@ -196,7 +197,7 @@ func (us *UnitSymbol) AddBuildContext(build BuildContext) {
 // SupportsBuild reports whether the provided build is supported by this
 // UnitSymbol. If the build is BuildContextAll, this is interpreted as this
 // unit symbol supports at least one build context.
-func (us *UnitSymbol) SupportsBuild(build BuildContext) bool {
+func (us *SymbolBuildContexts) SupportsBuild(build BuildContext) bool {
 	if build == BuildContextAll {
 		return len(us.builds) > 0
 	}
@@ -204,12 +205,12 @@ func (us *UnitSymbol) SupportsBuild(build BuildContext) bool {
 }
 
 // InAll reports whether the unit symbol supports all build contexts.
-func (us *UnitSymbol) InAll() bool {
+func (us *SymbolBuildContexts) InAll() bool {
 	return len(us.builds) == len(BuildContexts)
 }
 
 // RemoveBuildContexts removes all of the build contexts associated with this
 // unit symbol.
-func (us *UnitSymbol) RemoveBuildContexts() {
+func (us *SymbolBuildContexts) RemoveBuildContexts() {
 	us.builds = map[BuildContext]bool{}
 }

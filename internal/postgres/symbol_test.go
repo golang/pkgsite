@@ -79,7 +79,7 @@ func TestInsertSymbolNamesAndHistory(t *testing.T) {
 	wantHist.AddSymbol(*sample.Type.Children[1], "v1.0.0", internal.BuildContextAll)
 	wantHist.AddSymbol(*sample.Type.Children[2], "v1.0.0", internal.BuildContextAll)
 	if diff := cmp.Diff(wantHist, gotHist,
-		cmp.AllowUnexported(internal.UnitSymbol{}, internal.SymbolHistory{})); diff != "" {
+		cmp.AllowUnexported(internal.SymbolBuildContexts{}, internal.SymbolHistory{})); diff != "" {
 		t.Fatalf("mismatch on symbol history(-want +got):\n%s", diff)
 	}
 }
@@ -215,7 +215,7 @@ func TestInsertSymbolHistory_MultiVersions(t *testing.T) {
 	wantHist.AddSymbol(methodA.SymbolMeta, "v1.1.0", internal.BuildContextAll)
 	wantHist.AddSymbol(methodB.SymbolMeta, "v1.2.0", internal.BuildContextAll)
 	if diff := cmp.Diff(wantHist, gotHist,
-		cmp.AllowUnexported(internal.UnitSymbol{}, internal.SymbolHistory{})); diff != "" {
+		cmp.AllowUnexported(internal.SymbolBuildContexts{}, internal.SymbolHistory{})); diff != "" {
 		t.Fatalf("mismatch on symbol history(-want +got):\n%s", diff)
 	}
 }
@@ -368,7 +368,7 @@ func TestInsertSymbolHistory_MultiGOOS(t *testing.T) {
 	wantHist.AddSymbol(methodB.SymbolMeta, "v1.2.0", internal.BuildContextLinux)
 	wantHist.AddSymbol(methodB.SymbolMeta, "v1.2.0", internal.BuildContextWindows)
 	if diff := cmp.Diff(wantHist, gotHist,
-		cmp.AllowUnexported(internal.UnitSymbol{}, internal.SymbolHistory{})); diff != "" {
+		cmp.AllowUnexported(internal.SymbolBuildContexts{}, internal.SymbolHistory{})); diff != "" {
 		t.Fatalf("mismatch on symbol history(-want +got):\n%s", diff)
 	}
 
@@ -448,8 +448,8 @@ func comparePackageSymbols(ctx context.Context, t *testing.T, testDB *DB,
 		t.Fatal(err)
 	}
 	if diff := cmp.Diff(want, got,
-		cmp.AllowUnexported(internal.UnitSymbol{}, internal.SymbolHistory{}),
-		cmpopts.IgnoreFields(internal.UnitSymbol{}, "builds")); diff != "" {
+		cmp.AllowUnexported(internal.SymbolBuildContexts{}, internal.SymbolHistory{}),
+		cmpopts.IgnoreFields(internal.SymbolBuildContexts{}, "builds")); diff != "" {
 		t.Errorf("mismatch (-want +got):\n%s", diff)
 	}
 }
