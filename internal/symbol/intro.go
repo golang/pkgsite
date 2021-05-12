@@ -40,11 +40,11 @@ func IntroducedHistory(sh *internal.SymbolHistory) (outSH *internal.SymbolHistor
 	outSH = internal.NewSymbolHistory()
 	for build, nameToVersion := range buildToNameToVersion {
 		for name, version := range nameToVersion {
-			us, err := sh.GetSymbol(name, version, build)
+			sm, err := sh.GetSymbol(name, version, build)
 			if err != nil {
 				return nil, err
 			}
-			outSH.AddSymbol(us.SymbolMeta, version, build)
+			outSH.AddSymbol(*sm, version, build)
 		}
 	}
 	return outSH, nil

@@ -120,7 +120,7 @@ func (sh *SymbolHistory) Versions() []string {
 }
 
 // GetSymbol returns the unit symbol for a given name, version and build context.
-func (sh *SymbolHistory) GetSymbol(name, v string, build BuildContext) (_ *UnitSymbol, err error) {
+func (sh *SymbolHistory) GetSymbol(name, v string, build BuildContext) (_ *SymbolMeta, err error) {
 	defer derrors.Wrap(&err, "GetSymbol(%q, %q, %v)", name, v, build)
 	sav, ok := sh.m[v]
 	if !ok {
@@ -130,9 +130,9 @@ func (sh *SymbolHistory) GetSymbol(name, v string, build BuildContext) (_ *UnitS
 	if !ok {
 		return nil, fmt.Errorf("symbol %q could not be found at version %q", name, v)
 	}
-	for _, us := range stu {
+	for sm, us := range stu {
 		if us.SupportsBuild(build) {
-			return us, nil
+			return &sm, nil
 		}
 	}
 	return nil, fmt.Errorf("symbol %q does not have build %v at version %q", name, build, v)
@@ -155,9 +155,7 @@ func (sh *SymbolHistory) AddSymbol(sm SymbolMeta, v string, build BuildContext) 
 	}
 	us, ok := stu[sm]
 	if !ok {
-		us = &UnitSymbol{
-			SymbolMeta: sm,
-		}
+		us = &UnitSymbol{}
 		sh.m[v][sm.Name][sm] = us
 	}
 	us.AddBuildContext(build)
@@ -165,8 +163,6 @@ func (sh *SymbolHistory) AddSymbol(sm SymbolMeta, v string, build BuildContext) 
 
 // UnitSymbol represents a symbol that is part of a unit.
 type UnitSymbol struct {
-	SymbolMeta
-
 	// builds are the build contexts that apply to this symbol.
 	builds map[BuildContext]bool
 }

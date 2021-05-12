@@ -77,10 +77,10 @@ func symbolsForVersion(pkgURLPath string, symbolsAtVersion map[string]map[intern
 				continue
 			}
 
-			metaToSym, ok := nameToMetaToSymbol[us.Name]
+			metaToSym, ok := nameToMetaToSymbol[sm.Name]
 			if !ok {
 				metaToSym = map[internal.SymbolMeta]*Symbol{}
-				nameToMetaToSymbol[us.Name] = metaToSym
+				nameToMetaToSymbol[sm.Name] = metaToSym
 			}
 			s, ok := metaToSym[sm]
 			if !ok {
@@ -92,7 +92,7 @@ func symbolsForVersion(pkgURLPath string, symbolsAtVersion map[string]map[intern
 					Link:     symbolLink(pkgURLPath, sm.Name, us.BuildContexts()),
 					New:      true,
 				}
-				nameToMetaToSymbol[us.Name][sm] = s
+				nameToMetaToSymbol[sm.Name][sm] = s
 			}
 			s.addBuilds(us.BuildContexts()...)
 		}
