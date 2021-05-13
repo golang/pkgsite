@@ -22,8 +22,6 @@ if (e2e) {
   config = {
     ...config,
     setupFilesAfterEnv: ['<rootDir>/e2e/setup.ts'],
-    globalSetup: '<rootDir>/e2e/global-setup.ts',
-    globalTeardown: '<rootDir>/e2e/global-teardown.ts',
     testEnvironment: '<rootDir>/e2e/test-environment.js',
     testTimeout: 60000,
   };
