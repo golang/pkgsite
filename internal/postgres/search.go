@@ -149,7 +149,7 @@ func (db *DB) Search(ctx context.Context, q string, limit, offset, maxResultCoun
 			results = append(results, r)
 		}
 	}
-	if experiment.IsActive(ctx, internal.ExperimentSearchGrouping) {
+	if experiment.IsActive(ctx, internal.ExperimentSearchGrouping) && !searchSymbols {
 		results = groupSearchResults(results)
 	}
 	if len(results) > limit {
