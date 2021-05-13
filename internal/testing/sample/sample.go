@@ -52,7 +52,20 @@ var (
 	GOOS           = internal.All
 	GOARCH         = internal.All
 	Doc            = Documentation(GOOS, GOARCH, DocContents)
-	DocContents    = `
+	API            = []*internal.Symbol{
+		{
+			SymbolMeta: internal.SymbolMeta{
+				Name:       "V",
+				ParentName: "V",
+				Synopsis:   "var V int",
+				Section:    internal.SymbolSectionVariables,
+				Kind:       internal.SymbolKindVariable,
+			},
+			GOOS:   GOOS,
+			GOARCH: GOARCH,
+		},
+	}
+	DocContents = `
 		// Package p is a package.
 		//
 		//
@@ -371,6 +384,7 @@ func Documentation(goos, goarch, fileContents string) *internal.Documentation {
 	if err != nil {
 		panic(err)
 	}
+
 	return &internal.Documentation{
 		GOOS:     goos,
 		GOARCH:   goarch,

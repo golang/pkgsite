@@ -185,7 +185,7 @@ func importGraph(popularPath, importerModule string, importerCount int) []*inter
 // result in the series.
 //
 // This is used to control the order of search results in hedgedSearch.
-func resultGuard(resultOrder []string) func(string) func() {
+func resultGuard(t *testing.T, resultOrder []string) func(string) func() {
 	done := make(map[string](chan struct{}))
 	// waitFor maps [search type] -> [the search type is should wait for]
 	waitFor := make(map[string]string)
@@ -302,8 +302,8 @@ func TestSearch(t *testing.T) {
 			if _, err := testDB.UpdateSearchDocumentsImportedByCount(ctx); err != nil {
 				t.Fatal(err)
 			}
-			guardTestResult := resultGuard(test.resultOrder)
-			resp, err := testDB.hedgedSearch(ctx, "foo", 2, 0, 100, searchers, guardTestResult)
+			guardTestResult := resultGuard(t, test.resultOrder)
+			resp, err := testDB.hedgedSearch(ctx, "foo", 2, 0, 100, pkgSearchers, guardTestResult)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -330,6 +330,56 @@ func TestSearch(t *testing.T) {
 	}
 }
 
+func TestSymbolSearch(t *testing.T) {
+	ctx := context.Background()
+	testDB, release := acquire(t)
+	defer release()
+
+	m := sample.DefaultModule()
+	m.Packages()[0].Documentation[0].API = sample.API
+	MustInsertModule(ctx, t, testDB, m)
+	for _, test := range []struct {
+		name string
+		q    string
+	}{
+		// "V" is the only symbol in sample.DocContents.
+		{
+			"test search by <package>.<identifier>",
+			fmt.Sprintf("%s.%s", sample.PackageName, "V"),
+		},
+		{
+			"test search by <identifier>",
+			"V",
+		},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			resp, err := testDB.hedgedSearch(ctx, test.q, 2, 0, 100, symbolSearchers, nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if len(resp.results) == 0 {
+				t.Fatalf("expected results")
+			}
+			for _, r := range resp.results {
+				want := &internal.SearchResult{
+					Name:        sample.PackageName,
+					PackagePath: sample.PackagePath,
+					ModulePath:  sample.ModulePath,
+					Version:     sample.VersionString,
+					Synopsis:    m.Packages()[0].Documentation[0].Synopsis,
+					Licenses:    []string{"MIT"},
+					CommitTime:  sample.CommitTime,
+					NumResults:  1,
+					Symbols:     []string{"V"},
+				}
+				if diff := cmp.Diff(want, r); diff != "" {
+					t.Errorf("mismatch (-want +got):\n%s", diff)
+				}
+			}
+		})
+	}
+}
+
 func TestSearchErrors(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
@@ -337,7 +387,7 @@ func TestSearchErrors(t *testing.T) {
 	// error.
 	errorIn := func(searcherName string) map[string]searcher {
 		newSearchers := make(map[string]searcher)
-		for name, search := range searchers {
+		for name, search := range pkgSearchers {
 			if name == searcherName {
 				name := name
 				newSearchers[name] = func(*DB, context.Context, string, int, int, int) searchResponse {
@@ -390,7 +440,7 @@ func TestSearchErrors(t *testing.T) {
 			if _, err := testDB.UpdateSearchDocumentsImportedByCount(ctx); err != nil {
 				t.Fatal(err)
 			}
-			guardTestResult := resultGuard(test.resultOrder)
+			guardTestResult := resultGuard(t, test.resultOrder)
 			resp, err := testDB.hedgedSearch(ctx, "foo", 2, 0, 100, test.searchers, guardTestResult)
 			if (err != nil) != test.wantErr {
 				t.Fatalf("hedgedSearch(): got error %v, want error: %t", err, test.wantErr)
@@ -541,7 +591,7 @@ func TestInsertSearchDocumentAndSearch(t *testing.T) {
 			},
 		},
 	} {
-		for method, searcher := range searchers {
+		for method, searcher := range pkgSearchers {
 			t.Run(test.name+":"+method, func(t *testing.T) {
 				testDB, release := acquire(t)
 				defer release()
@@ -609,7 +659,7 @@ func TestSearchPenalties(t *testing.T) {
 		MustInsertModule(ctx, t, testDB, v)
 	}
 
-	for method, searcher := range searchers {
+	for method, searcher := range pkgSearchers {
 		t.Run(method, func(t *testing.T) {
 			res := searcher(testDB, ctx, "foo", 10, 0, 100)
 			if res.err != nil {
@@ -646,7 +696,7 @@ func TestExcludedFromSearch(t *testing.T) {
 		t.Fatal(err)
 	}
 	// Search for both packages.
-	gotResults, err := testDB.Search(ctx, domain, 10, 0, 100)
+	gotResults, err := testDB.Search(ctx, domain, 10, 0, 100, false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -678,7 +728,7 @@ func TestSearchBypass(t *testing.T) {
 		{testDB, true},
 		{bypassDB, false},
 	} {
-		rs, err := test.db.Search(ctx, m.ModulePath, 10, 0, 100)
+		rs, err := test.db.Search(ctx, m.ModulePath, 10, 0, 100, false)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -704,7 +754,7 @@ func TestSearchLicenseDedup(t *testing.T) {
 		},
 	})
 	MustInsertModule(ctx, t, testDB, m)
-	got, err := testDB.Search(ctx, m.ModulePath, 10, 0, 100)
+	got, err := testDB.Search(ctx, m.ModulePath, 10, 0, 100, false)
 	if err != nil {
 		t.Fatal(err)
 	}

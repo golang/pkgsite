@@ -237,6 +237,7 @@ type SearchResult struct {
 	Licenses    []string
 
 	CommitTime time.Time
+
 	// Score is used to sort items in an array of SearchResult.
 	Score float64
 
@@ -254,8 +255,12 @@ type SearchResult struct {
 	// NumResults is the total number of packages that were returned for this
 	// search.
 	NumResults uint64
+
 	// Approximate reports whether NumResults is an approximate count. NumResults
 	// can be approximate if search scanned only a subset of documents, and
 	// result count is estimated using the hyperloglog algorithm.
 	Approximate bool
+
+	// Symbols are the symbols returned by a search request.
+	Symbols []string
 }

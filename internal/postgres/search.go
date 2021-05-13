@@ -84,10 +84,14 @@ type searchEvent struct {
 // A searcher is used to execute a single search request.
 type searcher func(db *DB, ctx context.Context, q string, limit, offset, maxResultCount int) searchResponse
 
-// The searchers used by Search.
-var searchers = map[string]searcher{
+// The pkgSearchers used by Search.
+var pkgSearchers = map[string]searcher{
 	"popular": (*DB).popularSearch,
 	"deep":    (*DB).deepSearch,
+}
+
+var symbolSearchers = map[string]searcher{
+	"symbol": (*DB).symbolSearch,
 }
 
 // Search executes two search requests concurrently:
@@ -113,13 +117,20 @@ var searchers = map[string]searcher{
 // The gap in this optimization is search terms that are very frequent, but
 // rarely relevant: "int" or "package", for example. In these cases we'll pay
 // the penalty of a deep search that scans nearly every package.
-func (db *DB) Search(ctx context.Context, q string, limit, offset, maxResultCount int) (_ []*internal.SearchResult, err error) {
+func (db *DB) Search(ctx context.Context, q string, limit, offset, maxResultCount int, searchSymbols bool) (_ []*internal.SearchResult, err error) {
 	defer derrors.WrapStack(&err, "DB.Search(ctx, %q, %d, %d)", q, limit, offset)
 
 	queryLimit := limit
 	if experiment.IsActive(ctx, internal.ExperimentSearchGrouping) {
 		// Gather extra results for better grouping by module and series.
 		queryLimit *= 5
+	}
+
+	var searchers map[string]searcher
+	if searchSymbols {
+		searchers = symbolSearchers
+	} else {
+		searchers = pkgSearchers
 	}
 	resp, err := db.hedgedSearch(ctx, q, queryLimit, offset, maxResultCount, searchers, nil)
 	if err != nil {
@@ -178,7 +189,9 @@ var scoreExpr = fmt.Sprintf(`
 // available result.
 // The optional guardTestResult func may be used to allow tests to control the
 // order in which search results are returned.
-func (db *DB) hedgedSearch(ctx context.Context, q string, limit, offset, maxResultCount int, searchers map[string]searcher, guardTestResult func(string) func()) (*searchResponse, error) {
+func (db *DB) hedgedSearch(ctx context.Context, q string, limit, offset, maxResultCount int, searchers map[string]searcher, guardTestResult func(string) func()) (_ *searchResponse, err error) {
+	defer derrors.WrapStack(&err, "hedgedSearch(ctx, %q, %d, %d, %d)", q, limit, offset, maxResultCount)
+
 	searchStart := time.Now()
 	responses := make(chan searchResponse, len(searchers))
 	// cancel all unfinished searches when a result (or error) is returned. The
@@ -323,6 +336,92 @@ func (db *DB) popularSearch(ctx context.Context, searchQuery string, limit, offs
 		err:     err,
 	}
 }
+
+// symbolSearch searches all symbols in the symbol_search_documents table for
+// the query.
+//
+// TODO(https://golang.org/issue/44142): factor out common code between
+// symbolSearch and deepSearch.
+func (db *DB) symbolSearch(ctx context.Context, q string, limit, offset, maxResultCount int) searchResponse {
+	query := fmt.Sprintf(`
+		SELECT
+			package_path,
+			version,
+			module_path,
+			commit_time,
+			imported_by_count,
+			ARRAY_AGG(name) AS symbol_names,
+			COUNT(*) OVER() AS total
+		FROM (
+			SELECT
+				sd.package_path,
+				sd.version,
+				sd.module_path,
+				sd.commit_time,
+				sd.imported_by_count,
+				(%s) AS score,
+				s.name
+			FROM search_documents sd
+			INNER JOIN symbol_search_documents ssd
+				ON sd.package_path_id = ssd.package_path_id
+			INNER JOIN symbol_names s
+				ON s.id = ssd.symbol_name_id
+			WHERE
+				ssd.tsv_symbol_tokens @@ to_tsquery('simple', $1)
+			ORDER BY
+				score DESC,
+				commit_time DESC,
+				package_path
+		) r
+		WHERE r.score > 0.1
+		GROUP BY 1, 2, 3, 4, 5
+		LIMIT $2
+		OFFSET $3`, symbolScoreExpr)
+
+	var results []*internal.SearchResult
+	collect := func(rows *sql.Rows) error {
+		var (
+			r    internal.SearchResult
+			syms []sql.NullString
+		)
+		if err := rows.Scan(&r.PackagePath, &r.Version, &r.ModulePath, &r.CommitTime,
+			&r.NumImportedBy, pq.Array(&syms), &r.NumResults); err != nil {
+			return fmt.Errorf("symbolSearch: rows.Scan(): %v", err)
+		}
+		for _, s := range syms {
+			if s.Valid {
+				r.Symbols = append(r.Symbols, s.String)
+			}
+		}
+		results = append(results, &r)
+		return nil
+	}
+
+	// Search for an OR of the terms, so that if the user searches for
+	// "db begin", queries matching "db" and "begin" will be returned.
+	q = strings.Join(strings.Split(q, " "), " | ")
+	err := db.db.RunQuery(ctx, query, collect, q, limit, offset)
+	if err != nil {
+		results = nil
+	}
+	if len(results) > 0 && results[0].NumResults > uint64(maxResultCount) {
+		for _, r := range results {
+			r.NumResults = uint64(maxResultCount)
+		}
+	}
+	return searchResponse{
+		source:  "symbol",
+		results: results,
+		err:     err,
+	}
+}
+
+var symbolScoreExpr = fmt.Sprintf(`
+		ts_rank('{0.1, 0.2, 1.0, 1.0}', ssd.tsv_symbol_tokens, to_tsquery('simple', $1)) *
+		ln(exp(1)+imported_by_count) *
+		CASE WHEN redistributable THEN 1 ELSE %f END *
+		CASE WHEN COALESCE(has_go_mod, true) THEN 1 ELSE %f END
+	`, nonRedistributablePenalty, noGoModPenalty)
 
 // addPackageDataToSearchResults adds package information to SearchResults that is not stored
 // in the search_documents table.
