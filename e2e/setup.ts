@@ -5,7 +5,12 @@
  * license that can be found in the LICENSE file.
  */
 
-import { toMatchImageSnapshot } from 'jest-image-snapshot';
+import { configureToMatchImageSnapshot } from 'jest-image-snapshot';
 
 // Extends jest to compare image snapshots.
+const toMatchImageSnapshot = configureToMatchImageSnapshot({
+  customSnapshotIdentifier: ({ defaultIdentifier, counter }) => {
+    return defaultIdentifier.replace('test-ts', '').replace(`-${counter}`, '');
+  },
+});
 expect.extend({ toMatchImageSnapshot });

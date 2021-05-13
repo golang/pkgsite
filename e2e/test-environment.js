@@ -8,50 +8,30 @@
 const puppeteer = require('puppeteer');
 const NodeEnvironment = require('jest-environment-node');
 
-const {
-  AUTHORIZATION = null,
-  BASE_URL = 'http://host.docker.internal:8080',
-  // GO_DISCOVERY_E2E_TEST_PORT default value should match ./global-setup.ts.
-  GO_DISCOVERY_E2E_TEST_PORT = 3000,
-} = process.env;
+// GO_DISCOVERY_E2E_TEST_PORT default value should match ./global-setup.ts.
+const port = Number(process.env.GO_DISCOVERY_E2E_TEST_PORT ?? 3000);
 
 /**
  * PuppeteerEnvironment is a custom jest test environment. It extends the node
  * test environment to initialize global variables, connect puppeteer on
- * the host machine to the chromium instance running in docker, and add
- * authorization to requests when the AUTHORIZATION env var is set.
+ * the host machine to the chromium instance.
  */
 class PuppeteerEnvironment extends NodeEnvironment {
   constructor(config) {
     super(config);
-    this.global.baseURL = BASE_URL;
     this.global.pageErrors = [];
-    this.global.newPage = async () => {
-      const page = await this.global.browser.newPage();
-      if (AUTHORIZATION) {
-        await page.setRequestInterception(true);
-        page.on('request', r => {
-          const url = new URL(r.url());
-          let headers = r.headers();
-          if (url.origin === BASE_URL) {
-            headers = { ...r.headers(), Authorization: `Bearer ${AUTHORIZATION}` };
-          }
-          r.continue({ headers });
-        });
-      }
-      page.on('pageerror', err => {
-        this.global.pageErrors.push(err);
-      });
-      return page;
-    };
   }
 
   async setup() {
     await super.setup();
-    this.global.browser = await puppeteer.connect({
-      browserWSEndpoint: `ws://localhost:${GO_DISCOVERY_E2E_TEST_PORT}`,
-      defaultViewport: { height: 800, width: 1280 },
-    });
+    try {
+      this.global.browser = await puppeteer.connect({
+        browserWSEndpoint: `ws://localhost:${port}`,
+        defaultViewport: { height: 800, width: 1280 },
+      });
+    } catch (e) {
+      console.error(e);
+    }
   }
 
   async teardown() {

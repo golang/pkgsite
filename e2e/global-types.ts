@@ -5,7 +5,7 @@
  * license that can be found in the LICENSE file.
  */
 
-import { Browser, Page } from 'puppeteer';
+import { Browser } from 'puppeteer';
 
 /**
  * global declares global variables available in e2e test files.
@@ -17,18 +17,7 @@ declare global {
   const browser: Browser;
 
   /**
-   * The baseURL for pkgsite pages (e.g., https://staging-pkg.go.dev).
-   */
-  const baseURL: string;
-
-  /**
-   * newPage resolves to a new Page object. The Page object provides methods to
-   * interact with a single Chrome tab.
-   */
-  const newPage: () => Promise<Page>;
-
-  /**
-   * pageErrors is a record of uncaught exceptions that have occured on a page.
+   * pageErrors is a record of uncaught exceptions that have occured in a test suite.
    */
   const pageErrors: Error[];
 }

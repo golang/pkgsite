@@ -13,3 +13,5 @@ overrides:
   - files:
     - "*.test.ts"
     extends: plugin:jest/recommended
+    rules:
+      jest/no-standalone-expect: off
