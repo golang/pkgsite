@@ -67,7 +67,13 @@ jest image snapshots for more information.
 
 The e2e tests require that npm and docker are installed on your machine.
 
-Run the tests with `BASE_URL=https://pkg.go.dev npm run e2e`.
+First run headless chrome
+
+    docker run --rm -e "CONNECTION_TIMEOUT=-1" -p 3000:3000 browserless/chrome
+
+Then run the tests
+
+    BASE_URL=https://pkg.go.dev npm run e2e
 
 #### Writing E2E Tests
 
