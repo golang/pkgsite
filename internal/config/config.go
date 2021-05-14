@@ -217,8 +217,9 @@ func (c *Config) OnGCP() bool {
 
 // StatementTimeout is the value of the Postgres statement_timeout parameter.
 // Statements that run longer than this are terminated.
-// 10 minutes is the App Engine standard request timeout.
-const StatementTimeout = 10 * time.Minute
+// 10 minutes is the App Engine standard request timeout,
+// but we set this longer for the worker.
+const StatementTimeout = 30 * time.Minute
 
 // SourceTimeout is the value of the timeout for source.Client, which is used
 // to fetch source code from third party URLs.
