@@ -92,7 +92,7 @@ func logQuery(ctx context.Context, query string, args []interface{}, instanceID 
 			} else {
 				entry.Error = (*errp).Error()
 				// There are many places in our logs when a query will be
-				// canceled, because all unfinished search queries for a  given
+				// canceled, because all unfinished search queries for a given
 				// request are canceled:
 				// https://github.com/golang/pkgsite/blob/03662129627796aa387a26b8f4f9251caf5d57fd/internal/postgres/search.go#L178
 				//
