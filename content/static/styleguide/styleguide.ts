@@ -6,18 +6,25 @@
  */
 
 import { ClipboardController } from '../clipboard/clipboard.js';
-import { SelectNavController, makeSelectNav } from '../nav/select.js';
+import { SelectNavController, makeSelectNav } from '../outline/select.js';
 import { ToolTipController } from '../tooltip/tooltip.js';
-import { TreeNavController } from '../nav/tree.js';
+import { TreeNavController } from '../outline/tree.js';
 import { MainLayoutController } from '../main-layout/main-layout.js';
 import { ModalController } from '../modal/modal.js';
 
 window.addEventListener('load', () => {
-  const tree = document.querySelector('.js-tree');
+  const tree = document.querySelector<HTMLElement>('.js-tree');
   if (tree) {
-    const treeCtrl = new TreeNavController(document.querySelector<HTMLElement>('.js-tree'));
+    const treeCtrl = new TreeNavController(tree);
     const select = makeSelectNav(treeCtrl);
     document.querySelector('.js-mainNavMobile').appendChild(select);
+  }
+
+  const guideTree = document.querySelector<HTMLElement>('.Outline .js-tree');
+  if (guideTree) {
+    const treeCtrl = new TreeNavController(guideTree);
+    const select = makeSelectNav(treeCtrl);
+    document.querySelector('.Outline .js-select').appendChild(select);
   }
 
   for (const el of document.querySelectorAll('.js-toggleTheme')) {

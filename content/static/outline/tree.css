@@ -1,0 +1,123 @@
+/*!
+ * Copyright 2021 The Go Authors. All rights reserved.
+ * Use of this source code is governed by a BSD-style
+ * license that can be found in the LICENSE file.
+ */
+
+.go-Tree {
+  --js-tree-height: 0;
+
+  display: flex;
+  flex-direction: column;
+  margin: 0.25rem 0;
+}
+
+.go-Tree ul {
+  list-style: none;
+  padding-left: 0;
+}
+.go-Tree li:last-of-type {
+  padding-bottom: 0.25rem;
+}
+.go-Tree a + ul {
+  display: none;
+}
+.go-Tree a[aria-expanded='true'] + ul[role='group'] {
+  display: block;
+}
+.go-Tree a[aria-level='1'] + ul[role='group'] {
+  -webkit-mask-image: linear-gradient(to bottom, black 93%, transparent 100%);
+  mask-image: linear-gradient(to bottom, black 93%, transparent 100%);
+  max-height: calc(
+    100vh - var(--js-tree-height, 0) - var(--js-sticky-header-height) - var(--gap) * 2
+  );
+  overflow-y: auto;
+  padding: 0.5rem 0.25rem 0 0.25rem;
+}
+.go-Tree a {
+  color: var(--color-text-subtle);
+  display: block;
+  line-height: 1.5rem;
+  overflow: hidden;
+  padding: 0.125rem 0 0.125rem 1.25rem;
+  position: relative;
+  text-overflow: ellipsis;
+  user-select: none;
+  white-space: nowrap;
+}
+.go-Tree > li > a,
+.go-Tree a[aria-level='1'] {
+  display: block;
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 2.5rem;
+  margin: 0 0.25rem;
+  padding: 0 1rem;
+}
+.go-Tree a:focus,
+.go-Tree a:hover {
+  text-decoration: underline;
+  z-index: 1;
+}
+.go-Tree a[aria-selected='true'] {
+  color: var(--color-text);
+  font-weight: 500;
+}
+.go-Tree a[aria-level='1'][aria-selected='true'],
+.go-Tree a[aria-level='1'][aria-expanded='true'] {
+  background-color: var(--color-background-accented);
+}
+.go-Tree a[aria-level='3'][aria-expanded='true'] {
+  margin-bottom: 0.375em;
+}
+.go-Tree a[aria-level='2'] {
+  margin-bottom: 0.25rem;
+  position: relative;
+}
+.go-Tree a[aria-level='3'] {
+  padding-left: 2.5rem;
+}
+.go-Tree a[aria-level='4'] {
+  border-left: 0.125rem solid var(--color-background-accented);
+  margin-left: 2.5rem;
+  padding-left: 0.5rem;
+}
+.go-Tree a[aria-selected='true'][aria-level='2']:not([aria-expanded])::before,
+.go-Tree a[aria-selected='true'][aria-level='3']:not([aria-expanded])::before {
+  background-color: var(--color-brand-primary);
+  border-radius: 50%;
+  content: '';
+  display: block;
+  height: 0.3125rem;
+  left: 0.4688rem;
+  position: absolute;
+  top: 0.75rem;
+  width: 0.3125rem;
+}
+.go-Tree a[aria-expanded][aria-owns][aria-level='2']::before,
+.go-Tree a[aria-expanded][aria-owns][aria-level='3']::before {
+  border-bottom: 0.25rem solid transparent;
+  border-left: 0.25rem solid var(--color-border);
+  border-right: 0;
+  border-top: 0.25rem solid transparent;
+  content: '';
+  display: block;
+  height: 0;
+  left: 0.5rem;
+  position: absolute;
+  top: 0.625rem;
+  transition: transform 0.1s linear;
+  width: 0;
+}
+.go-Tree a[aria-expanded='true'][aria-level='2']::before,
+.go-Tree a[aria-expanded='true'][aria-level='3']::before {
+  transform: rotate(90deg);
+}
+.go-Tree a[aria-expanded][aria-level='3']:not([empty])::before,
+.go-Tree a[aria-selected][aria-level='3']:not([empty])::before {
+  left: 1.5rem;
+  top: 0.75rem;
+}
+.go-Tree a[aria-selected='true'][aria-level='4'] {
+  border-left: 0.125rem solid var(--color-brand-primary);
+}
