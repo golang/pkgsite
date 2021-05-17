@@ -23,6 +23,7 @@ import (
 	"go.opencensus.io/stats/view"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/testing/sample"
 )
@@ -332,6 +333,7 @@ func TestSearch(t *testing.T) {
 
 func TestSymbolSearch(t *testing.T) {
 	ctx := context.Background()
+	ctx = experiment.NewContext(ctx, internal.ExperimentInsertSymbolSearchDocuments)
 	testDB, release := acquire(t)
 	defer release()
 

@@ -14,6 +14,7 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/middleware"
 )
 
@@ -103,6 +104,10 @@ func upsertSearchDocumentSymbols(ctx context.Context, ddb *database.DB,
 	packagePath, modulePath, v string) (err error) {
 	defer derrors.Wrap(&err, "upsertSearchDocumentSymbols(ctx, ddb, %q, %q, %q)", packagePath, modulePath, v)
 	defer middleware.ElapsedStat(ctx, "upsertSearchDocumentSymbols")()
+
+	if !experiment.IsActive(ctx, internal.ExperimentInsertSymbolSearchDocuments) {
+		return nil
+	}
 
 	// If a user is looking for the symbol "DB.Begin", from package
 	// database/sql, we want them to be able to find this by searching for

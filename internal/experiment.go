@@ -6,25 +6,27 @@
 package internal
 
 const (
-	ExperimentDeprecatedDoc             = "deprecated-doc"
-	ExperimentInsertSymbolHistory       = "insert-symbol-history"
-	ExperimentReadSymbolHistory         = "read-symbol-history"
-	ExperimentSearchGrouping            = "search-grouping"
-	ExperimentSymbolSearch              = "symbol-search"
-	ExperimentSymbolHistoryVersionsPage = "symbol-history-versions-page"
-	ExperimentSymbolHistoryMainPage     = "symbol-history-main-page"
+	ExperimentDeprecatedDoc               = "deprecated-doc"
+	ExperimentInsertSymbolHistory         = "insert-symbol-history"
+	ExperimentInsertSymbolSearchDocuments = "insert-symbol-search-documents"
+	ExperimentReadSymbolHistory           = "read-symbol-history"
+	ExperimentSearchGrouping              = "search-grouping"
+	ExperimentSymbolHistoryMainPage       = "symbol-history-main-page"
+	ExperimentSymbolHistoryVersionsPage   = "symbol-history-versions-page"
+	ExperimentSymbolSearch                = "symbol-search"
 )
 
 // Experiments represents all of the active experiments in the codebase and
 // a description of each experiment.
 var Experiments = map[string]string{
-	ExperimentDeprecatedDoc:             "Treat deprecated symbols specially in documentation.",
-	ExperimentSearchGrouping:            "Group search results.",
-	ExperimentInsertSymbolHistory:       "Insert data into the symbol_history table.",
-	ExperimentReadSymbolHistory:         "Read data from the symbol_history table.",
-	ExperimentSymbolSearch:              "Enable searching for symbols.",
-	ExperimentSymbolHistoryVersionsPage: "Show package API history on the versions page.",
-	ExperimentSymbolHistoryMainPage:     "Show package API history on the main unit page.",
+	ExperimentDeprecatedDoc:               "Treat deprecated symbols specially in documentation.",
+	ExperimentInsertSymbolHistory:         "Insert data into the symbol_history table.",
+	ExperimentInsertSymbolSearchDocuments: "Insert data into symbol_search_documents.",
+	ExperimentReadSymbolHistory:           "Read data from the symbol_history table.",
+	ExperimentSearchGrouping:              "Group search results.",
+	ExperimentSymbolHistoryMainPage:       "Show package API history on the main unit page.",
+	ExperimentSymbolHistoryVersionsPage:   "Show package API history on the versions page.",
+	ExperimentSymbolSearch:                "Enable searching for symbols.",
 }
 
 // Experiment holds data associated with an experimental feature for frontend
