@@ -1,0 +1,30 @@
+<!--
+  Copyright 2021 The Go Authors. All rights reserved.
+  Use of this source code is governed by a BSD-style
+  license that can be found in the LICENSE file.
+-->
+
+{{define "main"}}
+  {{block "main-styles".}}{{end}}
+  <main class="go-Main">
+    <div class="go-Main-banner">
+      {{block "main-banner" .}}{{end}}
+    </div>
+    <header class="go-Main-header go-Main-header--sticky js-mainHeader">
+      {{block "main-header" .}}{{end}}
+    </header>
+    <nav class="go-Main-nav go-Main-nav--sticky js-mainNav" aria-label="Outline">
+      {{block "main-nav" .}}{{end}}
+    </nav>
+    <article class="go-Main-article js-mainContent">
+      {{block "main-content" .}}{{end}}
+    </article>
+    <aside class="go-Main-aside">
+      {{block "main-aside" .}}{{end}}
+    </aside>
+    <footer class="go-Main-footer">
+      {{block "main-footer" .}}{{end}}
+    </footer>
+  </main>
+  {{block "main-scripts" .}}{{end}}
+{{end}}

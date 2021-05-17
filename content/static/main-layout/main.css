@@ -1,0 +1,242 @@
+/*!
+ * Copyright 2021 The Go Authors. All rights reserved.
+ * Use of this source code is governed by a BSD-style
+ * license that can be found in the LICENSE file.
+ */
+
+.go-Main {
+  background-color: var(--color-background);
+  color: var(--color-text);
+  display: grid;
+  grid-template-areas:
+    'banner'
+    'header'
+    'aside'
+    'nav'
+    'article'
+    'footer';
+}
+.go-Main > *:not(.go-Main-banner) {
+  padding: 0 var(--gutter);
+}
+.go-Main > *:empty {
+  padding: 0;
+}
+.go-Main-banner {
+  grid-area: banner;
+}
+.go-Main-header {
+  background-color: var(--color-background);
+  border-bottom: var(--border);
+  font-size: 0.875rem;
+  grid-area: header;
+}
+.go-Main-nav {
+  background-color: var(--color-background);
+  border-bottom: var(--border);
+  font-size: 0.875rem;
+  grid-area: nav;
+}
+.go-Main-article {
+  background-color: var(--color-background);
+  grid-area: article;
+}
+.go-Main-aside {
+  background-color: var(--color-background);
+  font-size: 0.875rem;
+  grid-area: aside;
+}
+.go-Main-footer {
+  background-color: var(--color-background);
+  grid-area: footer;
+}
+
+.go-Main-header--sticky {
+  min-height: calc(var(--js-main-header-height));
+  position: sticky;
+  top: calc(var(--js-main-header-height) * -1 + var(--js-sticky-header-height));
+  transition: box-shadow 0.25s linear;
+  white-space: nowrap;
+  z-index: 2;
+}
+.go-Main-header--sticky > :last-child {
+  position: sticky;
+  top: 0;
+}
+.go-Main-header--fixed {
+  box-shadow: none;
+}
+
+.go-Main-header > .go-Breadcrumb {
+  margin-top: 0.75rem;
+}
+.go-Main-headerContent {
+  align-items: center;
+  display: flex;
+  gap: var(--gap);
+  min-height: 3.5rem;
+  vertical-align: middle;
+}
+.go-Main-headerTitle {
+  font-size: 1.5rem;
+  line-height: 1.5rem;
+}
+.go-Main-headerLogo {
+  --logo-height: 1.75rem;
+  --logo-width: calc(var(--logo-height) / 0.3768);
+
+  align-items: center;
+  display: flex;
+  margin-right: calc(var(--gap) * -1);
+  opacity: 0;
+  transition: opacity 0.25s ease-in-out, width 0.25s ease-out;
+  visibility: hidden;
+  width: 0;
+}
+.go-Main-headerLogo > img {
+  height: var(--logo-height);
+  margin: -1rem 0;
+  width: var(--logo-width);
+}
+.go-Main-header--fixed .go-Main-headerLogo {
+  margin-right: 0;
+  opacity: 1;
+  visibility: visible;
+  width: var(--logo-width);
+}
+
+.go-Main-nav--sticky {
+  position: sticky;
+  top: var(--js-sticky-header-height);
+  transition: box-shadow 0.25s linear;
+  z-index: 1;
+}
+.go-Main-nav--fixed {
+  box-shadow: var(--box-shadow);
+}
+
+.go-Main-navDesktop {
+  display: none;
+  margin-top: var(--gap);
+  overflow-y: auto;
+  position: sticky;
+  top: calc(var(--js-sticky-header-height) + var(--gap));
+}
+.go-Main-navMobile {
+  display: flex;
+  margin: 0.5rem 0;
+}
+.go-Main-navMobile .go-Label {
+  flex-grow: 1;
+  position: relative;
+}
+.go-Main-navMobile .go-Select {
+  padding-left: 1.75rem;
+}
+.go-Main-navMobile .go-Label::before {
+  background: url(/static/icon/list_gm_grey_24dp.svg);
+  background-repeat: no-repeat;
+  background-size: contain;
+  content: ' ';
+  height: 1.25rem;
+  left: 0.5rem;
+  padding-left: 1rem;
+  position: absolute;
+  top: 0.375rem;
+  width: 1.25rem;
+}
+
+/* Safari only */
+@media not all and (min-resolution: 0.001dpcm) {
+  @supports (-webkit-appearance: none) {
+    .go-Main-navMobile .go-Select {
+      -webkit-appearance: none;
+      appearance: none;
+    }
+  }
+}
+
+@media screen and (min-width: 50rem) {
+  :root:not([data-layout='stacked']) .go-Main {
+    grid-template-areas:
+      'banner  banner'
+      'header  header'
+      'aside   aside'
+      'nav     article'
+      'footer  footer';
+    grid-template-columns: minmax(25%, 1fr) minmax(0, 3fr);
+  }
+  :root:not([data-layout='stacked']) .go-Main-nav {
+    border-bottom: none;
+  }
+  :root:not([data-layout='stacked']) .go-Main-header--fixed {
+    box-shadow: var(--box-shadow);
+  }
+  :root:not([data-layout='stacked']) .go-Main-nav--sticky {
+    position: initial;
+  }
+  :root:not([data-layout='stacked']) .go-Main-nav--fixed {
+    box-shadow: none;
+  }
+  :root:not([data-layout='stacked']) .go-Main-navDesktop {
+    display: block;
+  }
+  :root:not([data-layout='stacked']) .go-Main-navMobile {
+    display: none;
+  }
+}
+
+@media screen and (min-width: 90rem) {
+  :root:not([data-layout='stacked']) .go-Main {
+    grid-template-areas:
+      'banner banner  banner'
+      'header header  header'
+      'nav    article aside'
+      'footer footer  footer';
+    grid-template-columns: minmax(10%, 1fr) minmax(0, 4fr) minmax(10%, 1fr);
+  }
+}
+
+@media screen and (min-width: 50rem) {
+  :root[data-layout='compact'] .go-Main {
+    grid-template-areas:
+      'banner  banner'
+      'header  nav'
+      'aside   aside'
+      'article article'
+      'footer  footer';
+    grid-template-columns: 1fr auto;
+  }
+  :root[data-layout='compact'] .go-Main-nav {
+    align-items: center;
+    border-bottom: var(--border);
+    display: flex;
+    top: calc((var(--js-main-header-height) - var(--js-sticky-header-height)) * -1);
+  }
+  :root[data-layout='compact'] .go-Main-header--fixed {
+    box-shadow: none;
+  }
+  :root[data-layout='compact'] .go-Main-nav--sticky {
+    position: sticky;
+  }
+  :root[data-layout='compact'] .go-Main-nav--fixed {
+    box-shadow: none;
+  }
+  :root[data-layout='compact'] .go-Main-navDesktop {
+    display: none;
+  }
+  :root[data-layout='compact'] .go-Main-navMobile {
+    display: flex;
+    margin-bottom: var(--gap);
+    margin-top: auto;
+  }
+}
+
+@media print {
+  .go-Main-header--sticky,
+  .go-Main-header--sticky > :last-child,
+  .go-Main-nav--sticky,
+  .go-Main-navDesktop {
+    position: initial;
+  }
+}

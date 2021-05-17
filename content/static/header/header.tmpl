@@ -1,0 +1,51 @@
+<!--
+  Copyright 2021 The Go Authors. All rights reserved.
+  Use of this source code is governed by a BSD-style
+  license that can be found in the LICENSE file.
+-->
+
+{{define "header"}}
+  <header class="go-Header">
+    <a class="go-Header-logo" href="/" aria-label="Go.dev Homepage" data-gtmc="nav link">
+      <img height="78" width="207" src="/static/logo/go-white.svg" alt="Go logo">
+    </a>
+    <form class="go-InputGroup go-Header-search" action="//pkg.go.dev/search"
+        aria-label="Search for a Package" data-gtmc="header search form" role="search">
+      <button class="go-Button go-Button--inverted" aria-label="Submit search">
+        <img class="go-Icon" height="24" width="24" src="/static/icon/search_gm_grey_24dp.svg"
+          alt="">
+      </button>
+      <input class="go-Input" name="q" placeholder="Search for a Package" autocapitalize="off"
+          autocomplete="off" autocorrect="off" spellcheck="false">
+    </form>
+    <div class="go-Header-spacer"></div>
+    <nav class="go-Header-nav" aria-label="Main">
+      <ul>
+        <li>
+          <a href="//go.dev/solutions" data-gtmc="nav link">Why Go</a>
+        </li>
+        <li>
+          <a href="//learn.go.dev" data-gtmc="nav link">Getting Started</a>
+        </li>
+        <li>
+          <a href="//pkg.go.dev" data-gtmc="nav link">Discover Packages</a>
+        </li>
+        <li>
+          <a href="//go.dev/about" data-gtmc="nav link">About</a>
+        </li>
+      </ul>
+      <div class="go-Header-overflow">
+        <img class="go-Header-overflowIcon" height="24" width="24"
+            src="/static/icon/menu_gm_grey_24dp.svg" alt="">
+        <select class="go-Header-selectNav js-selectNav" aria-label="Open navigation"
+            data-gtmc="nav button">
+          <option disabled selected value>Navigate to</option>
+          <option value="//go.dev/solutions">Why Go</option>
+          <option value="//learn.go.dev">Getting Started</option>
+          <option value="//pkg.go.dev">Discover Packages</option>
+          <option value="//go.dev/about">About</option>
+        </select>
+      </div>
+    </nav>
+  </header>
+{{end}}

@@ -1,0 +1,55 @@
+<!--
+  Copyright 2021 The Go Authors. All rights reserved.
+  Use of this source code is governed by a BSD-style
+  license that can be found in the LICENSE file.
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <!-- This will capture unhandled errors during page load for reporting later. -->
+    <script>window.addEventListener('error', window.__err=function f(e){f.p=f.p||[];f.p.push(e)});</script>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {{block "description" .}}
+      <meta name="description" content="Go is an open source programming language that makes it easy to build simple, reliable, and efficient software.">
+    {{end}}
+    <meta class="js-gtmID" data-gtmid="{{.GoogleTagManagerID}}">
+    <link rel="shortcut icon" href="/static/icon/favicon.ico">
+    <link href="/static/base/base.css" rel="stylesheet">
+    {{block "title" .}}
+      <title>pkg.go.dev</title>
+    {{end}}
+  </head>
+  <body>
+    <script>
+      function loadScript(src, props = {}) {
+        let s = document.createElement('script');
+        s.src = src;
+        for (const [k, v] of Object.entries(props)) {
+          s[k] = v
+        }
+        document.head.appendChild(s);
+      }
+    </script>
+    {{template "header" .}}
+    {{template "main" .}}
+    {{template "footer" .}}
+    {{if .GoogleTagManagerID}}
+      <script async>
+        // this will throw if the querySelector can’t find the element
+        const gtmId = document.querySelector('.js-gtmID').dataset.gtmid;
+        if (!gtmId) {
+          throw new Error('Google Tag Manager ID not found');
+        }
+        loadScript(`https://www.googletagmanager.com/gtm.js?id=${gtmId}`);
+      </script>
+      <noscript>
+        <iframe src="https://www.googletagmanager.com/ns.html?id={{.GoogleTagManagerID}}"
+                height="0" width="0" style="display:none;visibility:hidden">
+        </iframe>
+      </noscript>
+    {{end}}
+  </body>
+</html>

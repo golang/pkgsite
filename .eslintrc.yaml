@@ -14,4 +14,5 @@ overrides:
     - "*.test.ts"
     extends: plugin:jest/recommended
     rules:
-      jest/no-standalone-expect: off
+      'jest/no-standalone-expect': off
+      '@typescript-eslint/no-explicit-any': off

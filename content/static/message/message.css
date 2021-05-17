@@ -1,0 +1,35 @@
+/*!
+ * Copyright 2021 The Go Authors. All rights reserved.
+ * Use of this source code is governed by a BSD-style
+ * license that can be found in the LICENSE file.
+ */
+
+.go-Message {
+  color: var(--color-text);
+  font-size: 0.875rem;
+  line-height: 1.5rem;
+  padding: 0 var(--gutter);
+  width: 100%;
+}
+.go-Message--notice {
+  background-color: var(--color-background-accented);
+}
+.go-Message--warning {
+  background-color: var(--color-background-warning);
+  color: var(--gray-1);
+}
+.go-Message--alert {
+  background-color: var(--color-background-alert);
+}
+
+.go-Message > .go-Icon {
+  vertical-align: text-top;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .go-Message--warning > .go-Icon {
+    filter: none;
+  }
+}
+[data-theme='dark'] .go-Message--warning > .go-Icon {
+  filter: none;
+}

@@ -1,0 +1,58 @@
+/*!
+ * Copyright 2021 The Go Authors. All rights reserved.
+ * Use of this source code is governed by a BSD-style
+ * license that can be found in the LICENSE file.
+ */
+
+@import url('./reset.css');
+@import url('../color/color.css');
+@import url('../button/button.css');
+@import url('../typography/typography.css');
+@import url('../icon/icon.css');
+@import url('../form/form.css');
+@import url('../chip/chip.css');
+@import url('../tooltip/tooltip.css');
+@import url('../breadcrumb/breadcrumb.css');
+@import url('../clipboard/clipboard.css');
+@import url('../footer/footer.css');
+@import url('../header/header.css');
+@import url('../modal/modal.css');
+@import url('../message/message.css');
+@import url('../nav/tree.css');
+@import url('../main-layout/main.css');
+
+:root {
+  --gutter: 1rem;
+  --gap: 1rem;
+  --scroll-margin: calc(
+    var(--js-sticky-header-height, 0) + var(--js-sticky-nav-height, 0) + var(--gap) * 2
+  );
+  --border: 0.0625rem solid var(--color-border);
+  --border-radius: 0.25rem;
+  --box-shadow: 0 0 0.375rem 0 rgb(0 0 0 / 25%);
+  --focus-box-shadow: 0 0 0.0625rem 0.0625rem rgba(0, 112, 210, 0.6);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --box-shadow: 0 0.3125rem 0.9375rem rgb(0 0 0 / 45%);
+  }
+}
+[data-theme='dark'] :root {
+  --box-shadow: 0 0.3125rem 0.9375rem rgb(0 0 0 / 45%);
+}
+@media (min-width: 50rem) {
+  :root {
+    --gutter: 1.5rem;
+    --scroll-margin: calc(
+      var(--js-sticky-header-height, 0) + var(--js-sticky-nav-height, 0) + var(--gap)
+    );
+  }
+}
+
+*:target {
+  scroll-margin-top: var(--scroll-margin);
+}
+
+body {
+  min-width: 23.5rem;
+}
