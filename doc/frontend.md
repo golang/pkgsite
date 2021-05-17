@@ -69,7 +69,7 @@ The e2e tests require that npm and docker are installed on your machine.
 
 First run headless chrome
 
-    docker run --rm -e "CONNECTION_TIMEOUT=-1" -p 3000:3000 browserless/chrome
+    docker run --rm -e "CONNECTION_TIMEOUT=-1" -p 3000:3000 browserless/chrome:1.46-chrome-stable
 
 Then run the tests
 
