@@ -326,6 +326,7 @@ func TestFetchAndUpdateState(t *testing.T) {
 				cmpopts.EquateEmpty(),
 				cmp.AllowUnexported(source.Info{}),
 				cmpopts.IgnoreFields(internal.Unit{}, "Documentation", "BuildContexts"),
+				cmpopts.IgnoreFields(internal.Unit{}, "SymbolHistory"),
 				cmpopts.IgnoreFields(internal.Unit{}, "Subdirectories")); diff != "" {
 				t.Errorf("mismatch on readme (-want +got):\n%s", diff)
 			}

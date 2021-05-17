@@ -7,7 +7,6 @@ package internal
 
 const (
 	ExperimentDeprecatedDoc               = "deprecated-doc"
-	ExperimentInsertSymbolHistory         = "insert-symbol-history"
 	ExperimentInsertSymbolSearchDocuments = "insert-symbol-search-documents"
 	ExperimentReadSymbolHistory           = "read-symbol-history"
 	ExperimentSearchGrouping              = "search-grouping"
@@ -20,7 +19,6 @@ const (
 // a description of each experiment.
 var Experiments = map[string]string{
 	ExperimentDeprecatedDoc:               "Treat deprecated symbols specially in documentation.",
-	ExperimentInsertSymbolHistory:         "Insert data into the symbol_history table.",
 	ExperimentInsertSymbolSearchDocuments: "Insert data into symbol_search_documents.",
 	ExperimentReadSymbolHistory:           "Read data from the symbol_history table.",
 	ExperimentSearchGrouping:              "Group search results.",

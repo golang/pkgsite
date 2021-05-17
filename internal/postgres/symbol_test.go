@@ -23,7 +23,6 @@ func TestInsertSymbolNamesAndHistory(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	ctx = experiment.NewContext(ctx,
 		internal.ExperimentReadSymbolHistory,
-		internal.ExperimentInsertSymbolHistory,
 	)
 	defer cancel()
 
@@ -90,7 +89,6 @@ func TestInsertSymbolHistory_Basic(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	ctx = experiment.NewContext(ctx,
 		internal.ExperimentReadSymbolHistory,
-		internal.ExperimentInsertSymbolHistory,
 	)
 	defer cancel()
 
@@ -122,7 +120,6 @@ func TestInsertSymbolHistory_MultiVersions(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	ctx = experiment.NewContext(ctx,
 		internal.ExperimentReadSymbolHistory,
-		internal.ExperimentInsertSymbolHistory,
 	)
 	defer cancel()
 
@@ -226,7 +223,6 @@ func TestInsertSymbolHistory_MultiGOOS(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	ctx = experiment.NewContext(ctx,
 		internal.ExperimentReadSymbolHistory,
-		internal.ExperimentInsertSymbolHistory,
 	)
 	defer cancel()
 

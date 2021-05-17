@@ -32,7 +32,6 @@ func TestSymbols(t *testing.T) {
 		{
 			"experiment insert and read symbol_history",
 			[]string{
-				internal.ExperimentInsertSymbolHistory,
 				internal.ExperimentReadSymbolHistory,
 				internal.ExperimentSymbolHistoryVersionsPage,
 			},

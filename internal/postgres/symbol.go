@@ -14,7 +14,6 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/derrors"
-	"golang.org/x/pkgsite/internal/experiment"
 )
 
 func insertSymbols(ctx context.Context, db *database.DB, modulePath, version string,
@@ -32,12 +31,8 @@ func insertSymbols(ctx context.Context, db *database.DB, modulePath, version str
 	if err := upsertDocumentationSymbols(ctx, db, pathToPkgsymToID, pathToDocIDToDoc); err != nil {
 		return err
 	}
-
-	if experiment.IsActive(ctx, internal.ExperimentInsertSymbolHistory) {
-		return upsertSymbolHistory(ctx, db, modulePath, version, nameToID,
-			pathToID, pathToPkgsymToID, pathToDocIDToDoc)
-	}
-	return nil
+	return upsertSymbolHistory(ctx, db, modulePath, version, nameToID,
+		pathToID, pathToPkgsymToID, pathToDocIDToDoc)
 }
 
 type packageSymbol struct {
