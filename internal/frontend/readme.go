@@ -86,7 +86,7 @@ func processReadme(ctx context.Context, readme *internal.Readme, sourceInfo *sou
 	// https://github.com/yuin/goldmark/blob/7b90f04af43131db79ec320be0bd4744079b346f/parser/parser.go#L567
 	const astTransformerPriority = 10000
 	el := &extractLinks{ctx: ctx}
-	et := &extractTOC{ctx: ctx}
+	et := &extractTOC{ctx: ctx, removeTitle: true}
 	gdMarkdown := goldmark.New(
 		goldmark.WithParserOptions(
 			// WithHeadingAttribute allows us to include other attributes in
@@ -136,7 +136,7 @@ func processReadme(ctx context.Context, readme *internal.Readme, sourceInfo *sou
 	}
 	return &Readme{
 		HTML:    sanitizeHTML(&b),
-		Outline: et.headings,
+		Outline: et.Headings,
 		Links:   el.links,
 	}, nil
 }

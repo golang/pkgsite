@@ -271,7 +271,8 @@ func (e *extractLinks) Transform(node *ast.Document, reader text.Reader, pc pars
 
 type extractTOC struct {
 	ctx      context.Context
-	headings []*Heading
+	Headings []*Heading
+	removeTitle bool // omit title from TOC
 }
 
 // Transform collects the headings from a readme into an outline
@@ -330,10 +331,12 @@ func (e *extractTOC) Transform(node *ast.Document, reader text.Reader, pc parser
 			parent.Children = append(parent.Children, h)
 		}
 	}
-	// If there is only one top tevel heading with 1 or more children we
-	// assume it is the title of the document and remove it from the TOC.
-	if len(nested) == 1 && len(nested[0].Children) > 0 {
-		nested = nested[0].Children
+	if e.removeTitle {
+		// If there is only one top tevel heading with 1 or more children we
+		// assume it is the title of the document and remove it from the TOC.
+		if len(nested) == 1 && len(nested[0].Children) > 0 {
+			nested = nested[0].Children
+		}
 	}
-	e.headings = nested
+	e.Headings = nested
 }
