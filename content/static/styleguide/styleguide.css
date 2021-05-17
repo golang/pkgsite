@@ -1,0 +1,187 @@
+/*!
+ * Copyright 2021 The Go Authors. All rights reserved.
+ * Use of this source code is governed by a BSD-style
+ * license that can be found in the LICENSE file.
+ */
+
+.StyleGuide {
+  background-color: var(--color-background);
+}
+.StyleGuide > section {
+  align-items: center;
+  display: grid;
+  gap: var(--gap) 2rem;
+  grid-template-columns: 100%;
+  padding: var(--gutter) 0;
+}
+.StyleGuide > section > header {
+  border-bottom: var(--border);
+  grid-column: 1/-1;
+  margin-bottom: var(--gap);
+  padding-bottom: var(--gap);
+}
+.StyleGuide > section > h2 {
+  grid-column: 1/-1;
+  width: max-content;
+}
+.StyleGuide > section > hr {
+  border: none;
+  border-bottom: var(--border);
+  grid-column: 1/-1;
+  width: 100%;
+}
+.StyleGuide > section > h3 {
+  grid-column: 1/-1;
+  margin: 1rem 0;
+}
+.StyleGuide > section > p {
+  grid-column: 1/-1;
+}
+.StyleGuide .Color,
+.StyleGuide .ColorIntent {
+  grid-template-columns: repeat(auto-fit, 5rem [col-start] minmax(12rem, auto) [col-end]);
+}
+@media (min-width: 50rem) {
+  .StyleGuide .Icon {
+    grid-template-columns: 10rem 8rem auto;
+  }
+  .StyleGuide .Typography,
+  .StyleGuide .Button,
+  .StyleGuide .Form,
+  .StyleGuide .Modal,
+  .StyleGuide .Message,
+  .StyleGuide .Breadcrumb,
+  .StyleGuide .Chip,
+  .StyleGuide .Tooltip,
+  .StyleGuide .Clipboard {
+    grid-template-columns: 20rem auto;
+  }
+}
+@media (min-width: 80rem) {
+  .StyleGuide .Icon {
+    grid-template-columns: 10rem auto 50%;
+  }
+  .StyleGuide .Typography,
+  .StyleGuide .Button,
+  .StyleGuide .Form,
+  .StyleGuide .Modal,
+  .StyleGuide .Message,
+  .StyleGuide .Breadcrumb,
+  .StyleGuide .Chip,
+  .StyleGuide .Tooltip,
+  .StyleGuide .Clipboard {
+    grid-template-columns: auto 50%;
+  }
+}
+
+.StringifyElement {
+  align-items: baseline;
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+  padding: 0.25rem;
+}
+.ElementMarkup > pre,
+.StringifyElement-markup {
+  color: var(--color-text-subtle);
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+  max-width: 100%;
+  padding-left: 2rem;
+  position: relative;
+}
+.ElementMarkup > pre::before,
+.StringifyElement-markup::before {
+  background: url(/static/icon/content_copy_gm_grey_24dp.svg);
+  background-repeat: no-repeat;
+  background-size: contain;
+  content: ' ';
+  left: 0.5rem;
+  padding-left: 1rem;
+  position: absolute;
+  width: 1rem;
+}
+.StringifyElement-markup:active {
+  filter: contrast(0.9);
+}
+.StringifyElement-details {
+  color: var(--color-text-subtle);
+  font-size: 0.8125rem;
+  overflow-x: auto;
+}
+.GoColor-circle {
+  background-color: var(--color);
+  border: var(--border);
+  border-radius: 2rem;
+  height: 3rem;
+  margin: auto;
+  margin-bottom: 0.5rem;
+  width: 3rem;
+}
+.GoIcon-title,
+.GoColor-title {
+  text-transform: capitalize;
+}
+
+.go-Main-navDesktop a + ul {
+  text-transform: capitalize;
+}
+
+.MainHeader-toggle,
+.MainHeader-toggle legend {
+  display: none;
+}
+@media (min-width: 28rem) {
+  .MainHeader-toggle {
+    display: flex;
+  }
+}
+@media (min-width: 37.5rem) {
+  .MainHeader-toggle legend {
+    display: initial;
+  }
+}
+
+/* Safari only */
+@media not all and (min-resolution: 0.001dpcm) {
+  @supports (-webkit-appearance: none) {
+    .MainHeader-toggle legend {
+      display: none;
+    }
+  }
+}
+
+.UnitMeta {
+  display: grid;
+  gap: var(--gap);
+  grid-template-columns: 100%;
+  margin-bottom: var(--gap);
+  margin-top: var(--gap);
+}
+.UnitMeta-details {
+  display: flex;
+  flex-flow: wrap;
+  flex-direction: column;
+  gap: var(--gap);
+}
+.UnitMeta-repo {
+  align-items: center;
+  display: flex;
+}
+.UnitMeta-repo a {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+@media (min-width: 50rem) {
+  .UnitMeta {
+    grid-template-columns: max-content auto max-content;
+  }
+  .UnitMeta-details {
+    flex-direction: row;
+  }
+}
+@media (min-width: 90rem) {
+  :root:not([data-layout='compact']) .UnitMeta {
+    grid-template-columns: 100%;
+  }
+}
