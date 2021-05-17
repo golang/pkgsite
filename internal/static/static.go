@@ -17,6 +17,7 @@ type Config struct {
 	StaticPath string
 	Watch      bool
 	Write      bool
+	Bundle     bool
 }
 
 // Build compiles TypeScript files into minified JavaScript
@@ -31,7 +32,7 @@ type Config struct {
 // productionized assets.
 func Build(config Config) (*api.BuildResult, error) {
 	var entryPoints []string
-	scriptDir := config.StaticPath + "/js"
+	scriptDir := config.StaticPath
 	files, err := ioutil.ReadDir(scriptDir)
 	if err != nil {
 		return nil, err
@@ -45,6 +46,7 @@ func Build(config Config) (*api.BuildResult, error) {
 		EntryPoints: entryPoints,
 		Outdir:      scriptDir,
 		Write:       config.Write,
+		Bundle:      config.Bundle,
 	}
 	if config.Watch {
 		options.Sourcemap = api.SourceMapInline
