@@ -191,7 +191,7 @@ run_npm() {
   runcmd $npmcmd $@
 }
 
-prettier_file_globs='content/static/**/*.{js,css} **/*.md'
+prettier_file_globs='content/static/**/*.{ts,css} **/*.md'
 
 # run_prettier runs prettier on CSS, JS, and MD files. Uses globally
 # installed prettier if available or a dockerized installation as a
