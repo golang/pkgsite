@@ -34,7 +34,7 @@ require (
 	github.com/lib/pq v1.3.0
 	github.com/microcosm-cc/bluemonday v1.0.2
 	github.com/russross/blackfriday/v2 v2.0.1
-	github.com/yuin/goldmark v1.2.1
+	github.com/yuin/goldmark v1.3.5
 	github.com/yuin/goldmark-emoji v1.0.1
 	github.com/yuin/gopher-lua v0.0.0-20200816102855-ee81675732da // indirect
 	go.opencensus.io v0.22.4
