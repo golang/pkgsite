@@ -251,6 +251,11 @@ func upsertPackageSymbolsReturningIDs(ctx context.Context, db *database.DB,
 			return nil, fmt.Errorf("pathID cannot be 0: %q", path)
 		}
 		for _, doc := range docs {
+			// Sort to prevent deadlocks.
+			sort.Slice(doc.API, func(i, j int) bool {
+				return doc.API[i].Name < doc.API[j].Name
+			})
+
 			if err := updateSymbols(doc.API, func(sm *internal.SymbolMeta) error {
 				ps := packageSymbol{synopsis: sm.Synopsis, name: sm.Name, parentName: sm.ParentName}
 				symID := nameToID[sm.Name]
