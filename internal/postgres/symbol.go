@@ -102,7 +102,15 @@ func upsertDocumentationSymbols(ctx context.Context, db *database.DB,
 			return fmt.Errorf("row.Scan(): %v", err)
 		}
 		if !docIDToPkgsymIDs[docID][pkgsymID] {
-			return fmt.Errorf("unexpected pkgsymID %d for docID %d", pkgsymID, docID)
+			// The package_symbol_id in the documentation_symbols table does
+			// not match the one we want to insert. This can happen if we
+			// change the package_symbol_id. In that case, do not add this to
+			// the map, so that we can upsert below.
+			//
+			// See https://go-review.googlesource.com/c/pkgsite/+/315309
+			// and https://go-review.googlesource.com/c/pkgsite/+/315310
+			// where the package_symbol_id was potentially changed.
+			return nil
 		}
 		if _, ok := gotDocIDToPkgsymIDs[docID]; !ok {
 			gotDocIDToPkgsymIDs[docID] = map[int]bool{}
@@ -139,12 +147,16 @@ func upsertDocumentationSymbols(ctx context.Context, db *database.DB,
 			}
 		}
 	}
-	// Insert the rows.
+	// Upsert the rows.
 	// Note that the order of pkgsymcols must match that of the SELECT query in
 	// the collect function.
 	docsymcols := []string{"documentation_id", "package_symbol_id"}
 	if err := db.BulkInsert(ctx, "documentation_symbols", docsymcols,
-		values, database.OnConflictDoNothing); err != nil {
+		values, `
+			ON CONFLICT (documentation_id, package_symbol_id)
+			DO UPDATE SET
+				documentation_id=excluded.documentation_id,
+				package_symbol_id=excluded.package_symbol_id`); err != nil {
 		return err
 	}
 	return nil
@@ -190,8 +202,8 @@ func upsertPackageSymbolsReturningIDs(ctx context.Context, db *database.DB,
 		if sym == "" {
 			return fmt.Errorf("symbol name cannot be empty: %d", symbolID)
 		}
-		parentSym := idToSymbolName[parentSymbolID]
-		if parentSym == "" {
+		parentSym, ok := idToSymbolName[parentSymbolID]
+		if !ok {
 			// A different variable of this symbol was previously inserted.
 			// Don't add this to pathTopkgsymToID, since it's not the package
 			// symbol that we want.
