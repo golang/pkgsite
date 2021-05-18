@@ -270,8 +270,8 @@ func (e *extractLinks) Transform(node *ast.Document, reader text.Reader, pc pars
 }
 
 type extractTOC struct {
-	ctx      context.Context
-	Headings []*Heading
+	ctx         context.Context
+	Headings    []*Heading
 	removeTitle bool // omit title from TOC
 }
 
