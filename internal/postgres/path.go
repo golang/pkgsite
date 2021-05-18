@@ -9,6 +9,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/lib/pq"
@@ -138,6 +139,8 @@ func upsertPaths(ctx context.Context, db *database.DB, paths []string) (pathToID
 		}
 	}
 	if len(values) > 0 {
+		// Sort to avoid deadlock.
+		sort.Slice(values, func(i, j int) bool { return values[i].(string) < values[j].(string) })
 		// Insert data into the paths table.
 		pathCols := []string{"path"}
 		returningPathCols := []string{"id", "path"}
