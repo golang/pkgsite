@@ -98,8 +98,11 @@ func (c *Client) WithZipCache() *Client {
 // endpoint instead.
 func (c *Client) Info(ctx context.Context, modulePath, requestedVersion string) (_ *VersionInfo, err error) {
 	defer func() {
+		// Don't report NotFetched, because it is the normal result of fetching
+		// an uncached module when fetch is disabled.
+		// Don't report timeouts, because they are relatively frequent and not actionable.
 		wrap := derrors.Wrap
-		if !errors.Is(err, derrors.NotFound) && !errors.Is(err, derrors.ProxyTimedOut) {
+		if !errors.Is(err, derrors.NotFetched) && !errors.Is(err, derrors.ProxyTimedOut) {
 			wrap = derrors.WrapAndReport
 		}
 		wrap(&err, "proxy.Client.Info(%q, %q)", modulePath, requestedVersion)
