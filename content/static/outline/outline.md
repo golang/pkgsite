@@ -2,7 +2,7 @@
 
 ---
 
-### Tree
+### Tree {#outline-tree}
 
 ```html
 <ul class="go-Tree js-tree" role="tree">
@@ -49,6 +49,8 @@
 </ul>
 ```
 
-### Dropdown
+### Select {#outline-select}
 
+```html
 <div class="js-select"></div>
+```

@@ -1541,8 +1541,7 @@ func newTestServer(t *testing.T, proxyModules []*proxy.Module, redisClient *redi
 func TestCheckTemplates(t *testing.T) {
 	// Perform additional checks on parsed templates.
 	staticPath := template.TrustedSourceFromConstant("../../content/static")
-	templateDir := template.TrustedSourceJoin(staticPath, template.TrustedSourceFromConstant("html"))
-	templates, err := parsePageTemplates(templateDir)
+	templates, err := parsePageTemplates(staticPath)
 	if err != nil {
 		t.Fatal(err)
 	}

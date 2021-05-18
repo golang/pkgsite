@@ -166,7 +166,7 @@ check_templates() {
 }
 
 
-script_hash_glob='content/static/html/**/*.tmpl'
+script_hash_glob='content/static/**/*.tmpl'
 
 # check_script_hashes checks that our CSP hashes match the ones
 # for our HTML scripts.

@@ -201,6 +201,7 @@
   :root[data-layout='compact'] .go-Main {
     grid-template-areas:
       'banner  banner'
+      'header  .'
       'header  nav'
       'aside   aside'
       'article article'
@@ -217,7 +218,9 @@
     box-shadow: none;
   }
   :root[data-layout='compact'] .go-Main-nav--sticky {
+    height: var(--js-sticky-header-height);
     position: sticky;
+    top: 0;
   }
   :root[data-layout='compact'] .go-Main-nav--fixed {
     box-shadow: none;
@@ -227,8 +230,6 @@
   }
   :root[data-layout='compact'] .go-Main-navMobile {
     display: flex;
-    margin-bottom: var(--gap);
-    margin-top: auto;
   }
 }
 

@@ -41,6 +41,12 @@
 .StyleGuide .ColorIntent {
   grid-template-columns: repeat(auto-fit, 5rem [col-start] minmax(12rem, auto) [col-end]);
 }
+.StyleGuide .Outline {
+  align-items: flex-start;
+}
+.StyleGuide .Outline > span {
+  margin-top: 0.5rem;
+}
 @media (min-width: 50rem) {
   .StyleGuide .Icon {
     grid-template-columns: 10rem 8rem auto;
@@ -53,6 +59,7 @@
   .StyleGuide .Breadcrumb,
   .StyleGuide .Chip,
   .StyleGuide .Tooltip,
+  .StyleGuide .Outline,
   .StyleGuide .Clipboard {
     grid-template-columns: 20rem auto;
   }
@@ -69,6 +76,7 @@
   .StyleGuide .Breadcrumb,
   .StyleGuide .Chip,
   .StyleGuide .Tooltip,
+  .StyleGuide .Outline,
   .StyleGuide .Clipboard {
     grid-template-columns: auto 50%;
   }

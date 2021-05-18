@@ -75,12 +75,13 @@ type ServerConfig struct {
 // NewServer creates a new Server for the given database and template directory.
 func NewServer(scfg ServerConfig) (_ *Server, err error) {
 	defer derrors.Wrap(&err, "NewServer(...)")
-	templateDir := template.TrustedSourceJoin(scfg.StaticPath, template.TrustedSourceFromConstant("html"))
+	templateDir := template.TrustedSourceJoin(scfg.StaticPath)
 	ts, err := parsePageTemplates(templateDir)
 	if err != nil {
 		return nil, fmt.Errorf("error parsing templates: %v", err)
 	}
-	docTemplateDir := template.TrustedSourceJoin(templateDir, template.TrustedSourceFromConstant("doc"))
+	docTemplateDir := template.TrustedSourceJoin(templateDir, template.TrustedSourceFromConstant("html"),
+		template.TrustedSourceFromConstant("doc"))
 	dochtml.LoadTemplates(docTemplateDir)
 	s := &Server{
 		getDataSource:        scfg.DataSourceGetter,
@@ -145,6 +146,7 @@ func (s *Server) Install(handle func(string, http.Handler), redisClient *redis.C
 	handle("/license-policy", s.licensePolicyHandler())
 	handle("/about", http.RedirectHandler("https://go.dev/about", http.StatusFound))
 	handle("/badge/", http.HandlerFunc(s.badgeHandler))
+	handle("/styleguide", http.HandlerFunc(s.errorHandler(s.serveStyleGuide)))
 	handle("/C", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Package "C" is a special case: redirect to /cmd/cgo.
 		// (This is what golang.org/C does.)
@@ -553,24 +555,46 @@ func parsePageTemplates(base template.TrustedSource) (map[string]*template.Templ
 
 	templates := make(map[string]*template.Template)
 	for _, set := range htmlSets {
-		t, err := template.New("base.tmpl").Funcs(templateFuncs).ParseFilesFromTrustedSources(join(base, tsc("base.tmpl")))
+		t, err := template.New("base.tmpl").Funcs(templateFuncs).ParseFilesFromTrustedSources(join(base, tsc("html"), tsc("base.tmpl")))
 		if err != nil {
 			return nil, fmt.Errorf("ParseFiles: %v", err)
 		}
-		helperGlob := join(base, tsc("helpers"), tsc("*.tmpl"))
+		helperGlob := join(base, tsc("html"), tsc("helpers"), tsc("*.tmpl"))
 		if _, err := t.ParseGlobFromTrustedSource(helperGlob); err != nil {
 			return nil, fmt.Errorf("ParseGlob(%q): %v", helperGlob, err)
 		}
 
 		var files []template.TrustedSource
 		for _, f := range set {
-			files = append(files, join(base, tsc("pages"), f))
+			files = append(files, join(base, tsc("html"), tsc("pages"), f))
 		}
 		if _, err := t.ParseFilesFromTrustedSources(files...); err != nil {
 			return nil, fmt.Errorf("ParseFilesFromTrustedSources(%v): %v", files, err)
 		}
 		templates[set[0].String()] = t
 	}
+
+	styleGuideSets := [][]template.TrustedSource{
+		{tsc("styleguide"), tsc("main-layout")},
+	}
+	for _, set := range styleGuideSets {
+		t, err := template.New("base.tmpl").Funcs(templateFuncs).ParseFilesFromTrustedSources(join(base, tsc("base/base.tmpl")))
+		if err != nil {
+			return nil, fmt.Errorf("ParseFilesFromTrustedSources: %v", err)
+		}
+		helperGlob := join(base, tsc("**/*.partial.tmpl"))
+		if _, err := t.ParseGlobFromTrustedSource(helperGlob); err != nil {
+			return nil, fmt.Errorf("ParseGlobFromTrustedSource(%q): %v", helperGlob, err)
+		}
+		var files []template.TrustedSource
+		for _, f := range set {
+			if _, err := t.ParseGlobFromTrustedSource(join(base, f, tsc("*.tmpl"))); err != nil {
+				return nil, fmt.Errorf("ParseGlobFromTrustedSource(%v): %v", files, err)
+			}
+		}
+		templates[set[0].String()] = t
+	}
+
 	return templates, nil
 }
 
@@ -581,7 +605,7 @@ func (s *Server) staticHandler() http.Handler {
 	// and rebuild them on file changes.
 	if s.devMode {
 		ctx := context.Background()
-		_, err := static.Build(static.Config{StaticPath: staticPath, Watch: true, Write: true})
+		_, err := static.Build(static.Config{StaticPath: staticPath + "/js", Watch: true, Write: true})
 		if err != nil {
 			log.Error(ctx, err)
 		}
