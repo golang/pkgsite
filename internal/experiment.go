@@ -10,6 +10,7 @@ const (
 	ExperimentInsertSymbolSearchDocuments = "insert-symbol-search-documents"
 	ExperimentReadSymbolHistory           = "read-symbol-history"
 	ExperimentSearchGrouping              = "search-grouping"
+	ExperimentStyleGuide                  = "styleguide"
 	ExperimentSymbolHistoryMainPage       = "symbol-history-main-page"
 	ExperimentSymbolHistoryVersionsPage   = "symbol-history-versions-page"
 	ExperimentSymbolSearch                = "symbol-search"
@@ -22,6 +23,7 @@ var Experiments = map[string]string{
 	ExperimentInsertSymbolSearchDocuments: "Insert data into symbol_search_documents.",
 	ExperimentReadSymbolHistory:           "Read data from the symbol_history table.",
 	ExperimentSearchGrouping:              "Group search results.",
+	ExperimentStyleGuide:                  "Enable the styleguide.",
 	ExperimentSymbolHistoryMainPage:       "Show package API history on the main unit page.",
 	ExperimentSymbolHistoryVersionsPage:   "Show package API history on the versions page.",
 	ExperimentSymbolSearch:                "Enable searching for symbols.",

@@ -25,12 +25,16 @@ import (
 	"github.com/yuin/goldmark/util"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/experiment"
 )
 
 // serveStyleGuide serves the styleguide page, the content of which is
 // generated from the markdown files in content/static.
 func (s *Server) serveStyleGuide(w http.ResponseWriter, r *http.Request, ds internal.DataSource) error {
 	ctx := r.Context()
+	if !experiment.IsActive(ctx, internal.ExperimentStyleGuide) {
+		return &serverError{status: http.StatusNotFound}
+	}
 	page, err := styleGuide(ctx, s.staticPath.String())
 	page.basePage = s.newBasePage(r, "")
 	if err != nil {
