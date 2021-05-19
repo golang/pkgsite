@@ -9,7 +9,7 @@ import { DirectNavigationOptions, Page } from 'puppeteer';
 
 import '../global-types';
 
-const { AUTHORIZATION = null, BASE_URL = 'http://host.docker.internal:8080' } = process.env;
+const { AUTHORIZATION = null, BASE_URL = 'http://host.docker.internal:8080', QUOTA_BYPASS = null } = process.env;
 
 /**
  * newPage opens a new chrome tab, sets up a request intercept
@@ -26,7 +26,7 @@ export async function newPage(): Promise<Page> {
       const url = new URL(r.url());
       let headers = r.headers();
       if (url.origin === BASE_URL) {
-        headers = { ...r.headers(), Authorization: `Bearer ${AUTHORIZATION}` };
+          headers = { ...r.headers(), Authorization: `Bearer ${AUTHORIZATION}`, "X-Go-Discovery-Auth-Bypass-Quota": QUOTA_BYPASS };
       }
       r.continue({ headers });
     });
