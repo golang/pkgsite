@@ -141,6 +141,7 @@ var (
 		"0BSD",
 		"BSD-1-Clause",
 		"BSD-2-Clause",
+		"BSD-2-Clause-Patent",
 		"BSD-2-Clause-Views",
 		"BSD-3-Clause",
 		"BSD-3-Clause-Clear",
