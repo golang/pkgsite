@@ -9,6 +9,8 @@ import { configureToMatchImageSnapshot } from 'jest-image-snapshot';
 
 // Extends jest to compare image snapshots.
 const toMatchImageSnapshot = configureToMatchImageSnapshot({
+  failureThreshold: 0.1,
+  failureThresholdType: 'percent',
   customSnapshotIdentifier: ({ defaultIdentifier, counter }) => {
     return defaultIdentifier.replace('test-ts', '').replace(`-${counter}`, '');
   },
