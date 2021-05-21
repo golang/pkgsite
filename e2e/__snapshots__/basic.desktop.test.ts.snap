@@ -921,6 +921,14 @@ Object {
       "role": "text",
     },
     Object {
+      "name": "BSD-2-Clause-Patent",
+      "role": "link",
+    },
+    Object {
+      "name": "•",
+      "role": "text",
+    },
+    Object {
       "name": "BSD-2-Clause-Views",
       "role": "link",
     },

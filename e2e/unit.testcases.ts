@@ -19,7 +19,7 @@ export const testcases = test.each`
   ${'module that is not a package'}                                | ${'/golang.org/x/tools@v0.1.1'}
   ${'module that is also a package'}                               | ${'/gocloud.dev@v0.22.0'}
   ${'really long import path'}                                     | ${'/github.com/envoyproxy/go-control-plane@v0.9.8/envoy/config/filter/network/http_connection_manager/v2'}
-  ${'no documentation'}                                            | ${'/golang.org/x/build@v0.0.0-20210512165013-0536f7398f0e/cmd/gopherstats'}
+  ${'no documentation'}                                            | ${'/github.com/tendermint/tendermint@v0.34.10/cmd/contract_tests'}
   ${'package with multiple licenses'}                              | ${'/github.com/apache/thrift@v0.14.1?tab=licenses'}
   ${'package that exists in multiple modules at the same version'} | ${'/github.com/hashicorp/vault/api@v1.0.3'}
   ${'package with multiple nested modules'}                        | ${'/github.com/Azure/go-autorest/autorest@v0.11.18#section-directories'}
