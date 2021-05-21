@@ -44,4 +44,4 @@ cd "${pkgsite_dir}"
 ${maybe_sudo}docker run --rm -t \
   --network container:${pg_container} \
   -v $(pwd):"/workspace" -w "/workspace" \
-  -e GO_DISCOVERY_TESTDB=true golang:1.14 ./all.bash ci
+  -e GO_DISCOVERY_TESTDB=true golang:1.15 ./all.bash ci
