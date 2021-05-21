@@ -9,12 +9,12 @@ import * as pg from './helpers/page';
 import * as search from './helpers/search.page';
 
 export const testcases = test.each`
-  name                | path                              | prepare
-  ${'badge'}          | ${'/badge'}                       | ${pg.prepare}
-  ${'error'}          | ${'/bad.package@v1.0-badversion'} | ${pg.prepare}
-  ${'fetch'}          | ${'/fetch.test'}                  | ${pg.prepare}
-  ${'home'}           | ${'/'}                            | ${pg.prepare}
-  ${'license policy'} | ${'/license-policy'}              | ${pg.prepare}
-  ${'search'}         | ${'/search?q=http'}               | ${search.prepare}
-  ${'search help'}    | ${'/search-help'}                 | ${pg.prepare}
+  name                       | path                                    | prepare
+  ${'badge'}                 | ${'/badge'}                             | ${pg.prepare}
+  ${'error'}                 | ${'/bad.package@v1.0-badversion'}       | ${pg.prepare}
+  ${'404 with fetch button'} | ${'/github.com/package/does/not/exist'} | ${pg.prepare}
+  ${'home'}                  | ${'/'}                                  | ${pg.prepare}
+  ${'license policy'}        | ${'/license-policy'}                    | ${pg.prepare}
+  ${'search'}                | ${'/search?q=http'}                     | ${search.prepare}
+  ${'search help'}           | ${'/search-help'}                       | ${pg.prepare}
 `;
