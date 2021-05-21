@@ -96,11 +96,11 @@ var docDataTmpl = template.Must(template.New("").Parse(`
 
 // exampleTmpl renders code for an example. It expect an Example.
 var exampleTmpl = template.Must(template.New("").Parse(`
-<textarea class="Documentation-exampleCode" spellcheck="false">
+<pre class="Documentation-exampleCode">
 {{range .}}
 	{{- .Text -}}
 {{end}}
-</textarea>
+</pre>
 `))
 
 func New(ctx context.Context, fset *token.FileSet, pkg *doc.Package, opts *Options) *Renderer {

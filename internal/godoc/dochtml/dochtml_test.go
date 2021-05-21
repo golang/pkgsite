@@ -154,7 +154,7 @@ func TestExampleRender(t *testing.T) {
 <p>executable example
 </p>
 
-<textarea class="Documentation-exampleCode" spellcheck="false">package main
+<pre class="Documentation-exampleCode">package main
 
 import (
 	&#34;fmt&#34;
@@ -168,7 +168,7 @@ func main() {
 	fmt.Println(strings.Compare(&#34;b&#34;, &#34;a&#34;))
 
 }
-</textarea>
+</pre>
 
 <pre><span class="Documentation-exampleOutputLabel">Output:</span>
 

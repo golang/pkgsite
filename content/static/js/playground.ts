@@ -82,7 +82,7 @@ export class PlaygroundExampleController {
     this.shareButtonEl = exampleEl.querySelector(PlayExampleClassName.SHARE_BUTTON);
     this.formatButtonEl = exampleEl.querySelector(PlayExampleClassName.FORMAT_BUTTON);
     this.runButtonEl = exampleEl.querySelector(PlayExampleClassName.RUN_BUTTON);
-    this.inputEl = exampleEl.querySelector(PlayExampleClassName.EXAMPLE_INPUT);
+    this.inputEl = this.makeTextArea(exampleEl.querySelector(PlayExampleClassName.EXAMPLE_INPUT));
     this.outputEl = exampleEl.querySelector(PlayExampleClassName.EXAMPLE_OUTPUT);
 
     // This is legacy listener to be replaced the listener for shareButtonEl.
@@ -96,6 +96,19 @@ export class PlaygroundExampleController {
     this.resize();
     this.inputEl.addEventListener('keyup', () => this.resize());
     this.inputEl.addEventListener('keydown', e => this.onKeydown(e));
+  }
+
+  /**
+   * Replace the pre element with a textarea. The examples are initially rendered
+   * as pre elements so they're fully visible when JS is disabled.
+   */
+  makeTextArea(el: Element | null): HTMLTextAreaElement {
+    const t = document.createElement('textarea');
+    t.classList.add('Documentation-exampleCode');
+    t.spellcheck = false;
+    t.value = el?.innerHTML ?? '';
+    el?.parentElement?.replaceChild(t, el);
+    return t;
   }
 
   /**

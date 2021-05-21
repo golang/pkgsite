@@ -39,7 +39,7 @@ describe('PlaygroundExampleController', () => {
       <div class="Documentation-exampleDetailsBody">
       <p>Code:</p>
 
-      <textarea class="Documentation-exampleCode">${codeSnippet}</textarea>
+      <pre class="Documentation-exampleCode">${codeSnippet}</pre>
 
       <pre>
         <span class="Documentation-exampleOutputLabel">Output:</span>
@@ -69,6 +69,11 @@ describe('PlaygroundExampleController', () => {
     expect(example.open).toBeTruthy();
     summary.click();
     expect(example.open).toBeFalsy();
+  });
+
+  it('replaces the pre element with a text area', () => {
+    const input = document.querySelector('.Documentation-exampleCode');
+    expect(input.tagName).toBe('TEXTAREA');
   });
 
   it('opens playground after pressing share', async () => {

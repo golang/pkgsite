@@ -308,11 +308,11 @@ func TestCodeHTML(t *testing.T) {
 b := 2 /* another comment */
 `,
 			`
-<textarea class="Documentation-exampleCode" spellcheck="false">
+<pre class="Documentation-exampleCode">
 a := 1
 // a comment
 b := 2 /* another comment */
-</textarea>
+</pre>
 `,
 		},
 		{
@@ -322,9 +322,9 @@ b := 2 /* another comment */
 
 `,
 			`
-<textarea class="Documentation-exampleCode" spellcheck="false">
+<pre class="Documentation-exampleCode">
 a := 1
-</textarea>
+</pre>
 `,
 		},
 		{
@@ -336,11 +336,11 @@ b := 1
 // removed
 `,
 			`
-<textarea class="Documentation-exampleCode" spellcheck="false">
+<pre class="Documentation-exampleCode">
 a := 1
 // Output:
 b := 1
-</textarea>
+</pre>
 `,
 		},
 		{
@@ -354,11 +354,11 @@ b := 1
 cleanup()
 `,
 			`
-<textarea class="Documentation-exampleCode" spellcheck="false">
+<pre class="Documentation-exampleCode">
 a := 1
 // Output:
 b := 1
-</textarea>
+</pre>
 `,
 		},
 	} {
