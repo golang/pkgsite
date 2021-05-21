@@ -33,9 +33,6 @@ func upsertSymbolHistory(ctx context.Context, ddb *database.DB,
 		return nil
 	}
 
-	if _, err := ddb.Exec(ctx, `LOCK TABLE symbol_history IN EXCLUSIVE MODE`); err != nil {
-		return err
-	}
 	for packagePath, docIDToDoc := range pathToDocIDToDoc {
 		sh, err := GetSymbolHistoryFromTable(ctx, ddb, packagePath, modulePath)
 		if err != nil {

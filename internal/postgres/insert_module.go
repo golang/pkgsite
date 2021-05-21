@@ -323,10 +323,11 @@ func insertImportsUnique(ctx context.Context, tx *database.DB, m *internal.Modul
 }
 
 // insertUnits inserts the units for a module into the units table.
+// It must be called inside a transaction.
 //
 // It can be assume that at least one unit is a package, and there are one or
 // more units in the module.
-func (pdb *DB) insertUnits(ctx context.Context, db *database.DB, m *internal.Module, moduleID int, pathToID map[string]int) (err error) {
+func (pdb *DB) insertUnits(ctx context.Context, tx *database.DB, m *internal.Module, moduleID int, pathToID map[string]int) (err error) {
 	defer derrors.WrapStack(&err, "insertUnits(ctx, tx, %q, %q)", m.ModulePath, m.Version)
 	ctx, span := trace.StartSpan(ctx, "insertUnits")
 	defer span.End()
@@ -394,7 +395,7 @@ func (pdb *DB) insertUnits(ctx context.Context, db *database.DB, m *internal.Mod
 		}
 		paths = append(paths, u.Path)
 	}
-	pathIDToUnitID, err := insertUnits(ctx, db, unitValues)
+	pathIDToUnitID, err := insertUnits(ctx, tx, unitValues)
 	if err != nil {
 		return err
 	}
@@ -402,17 +403,17 @@ func (pdb *DB) insertUnits(ctx context.Context, db *database.DB, m *internal.Mod
 	for pid, uid := range pathIDToUnitID {
 		pathToUnitID[pathIDToPath[pid]] = uid
 	}
-	if err := insertReadmes(ctx, db, paths, pathToUnitID, pathToReadme); err != nil {
+	if err := insertReadmes(ctx, tx, paths, pathToUnitID, pathToReadme); err != nil {
 		return err
 	}
-	if err := insertDocs(ctx, db, paths, pathToUnitID, pathToDocs); err != nil {
+	if err := insertDocs(ctx, tx, paths, pathToUnitID, pathToDocs); err != nil {
 		return err
 	}
-	if err := insertImports(ctx, db, paths, pathToUnitID, pathToImports); err != nil {
+	if err := insertImports(ctx, tx, paths, pathToUnitID, pathToImports); err != nil {
 		return err
 	}
 
-	pathToDocIDToDoc, err := getDocIDsForPath(ctx, db, pathToUnitID, pathToDocs)
+	pathToDocIDToDoc, err := getDocIDsForPath(ctx, tx, pathToUnitID, pathToDocs)
 	if err != nil {
 		return err
 	}
@@ -422,7 +423,13 @@ func (pdb *DB) insertUnits(ctx context.Context, db *database.DB, m *internal.Mod
 		return err
 	}
 	if versionType == version.TypeRelease {
-		return insertSymbols(ctx, db, m.ModulePath, m.Version, pathToID, pathToDocIDToDoc)
+		// Lock the module path here to prevent conflicts in upsertSymbolHistory.
+		// The lock function will also be called after this, in saveModule, but
+		// that is OK; the same transaction can acquire a lock multiple times.
+		if err := lock(ctx, tx, m.ModulePath); err != nil {
+			return err
+		}
+		return insertSymbols(ctx, tx, m.ModulePath, m.Version, pathToID, pathToDocIDToDoc)
 	}
 	return nil
 }
