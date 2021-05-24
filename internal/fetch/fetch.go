@@ -223,6 +223,20 @@ func fetchModule(ctx context.Context, fr *FetchResult, proxyClient *proxy.Client
 		return fi, err
 	}
 
+	// If there is no go.mod file in the zip, try another way to detect
+	// alternative modules: compare the zip signature to a list of known ones to
+	// see if this is a fork. The intent is to avoid processing certain known
+	// large modules, not to find every fork.
+	if !fr.HasGoMod {
+		forkedModule, err := forkedFrom(zipReader, fr.ModulePath, fr.ResolvedVersion)
+		if err != nil {
+			return fi, err
+		}
+		if forkedModule != "" {
+			return fi, fmt.Errorf("forked from %s: %w", forkedModule, derrors.AlternativeModule)
+		}
+	}
+
 	mod, pvs, err := processZipFile(ctx, fr.ModulePath, fr.ResolvedVersion, commitTime, zipReader, sourceClient)
 	if err != nil {
 		return fi, err
@@ -266,7 +280,7 @@ func getZipSize(ctx context.Context, modulePath, resolvedVersion string, proxyCl
 }
 
 // getGoModPath returns the module path from the go.mod file, as well as the contents of the file obtained from the proxy.
-// If modulePath is the standardl library, then the contents will be nil.
+// If modulePath is the standard library, then the contents will be nil.
 func getGoModPath(ctx context.Context, modulePath, resolvedVersion string, proxyClient *proxy.Client) (string, []byte, error) {
 	if modulePath == stdlib.ModulePath {
 		return stdlib.ModulePath, nil, nil
