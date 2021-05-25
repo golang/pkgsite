@@ -8,1306 +8,2902 @@ package fetch
 
 var ZipSignatures = map[string][]Modver{
 
-	"0070ef7a948597230c7710d62b935cc5fa8bc610d5aae4d5e9c5dba7134b26b8": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.6.15"},
-	},
-	"00fc6544f83d90a60663df8b9067b9ce39ed66fe82c2a1b9759d4f41d00c4321": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.13"},
-	},
-	"01006cd4a7a3be6f1fdacfd2108596431302e40698ca2f87838c123f53f060ec": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.55"},
-	},
-	"012d1955932cc2931798f3a14a15f6ea5c96ec7b710282cd1280384c160da5bb": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.2.5"},
-	},
-	"012f15ae2babab5dc92f00e248b041dd83e33f8d80daab61a056ce870d50c204": []Modver{
-		{"github.com/aws/aws-sdk-go", "v0.9.13"},
-	},
-	"0193c97e31c2053651cfce4ee4e58590b49ce01d1b0b035b64aaef74d9ed336d": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.35"},
-	},
-	"021d3944e21413f0de6e648bda6ecbb2e19f77695079b635098efbd1a2c29f4a": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.1.4"},
-	},
-	"025173bb9b09e9a643221adbe57437d8b92fecffbe13b007a33c6b63391515b1": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.46"},
-	},
-	"02c072786da17cad6844fead29018c3e2496c1dd3204f1721115e815f1201337": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.6.6"},
-	},
-	"02f854e7a9f1c68ad114b8ed48c2aa1a6baae2566134e484a93f2d879f74fbed": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.20"},
-	},
-	"02f8fea651ab4b7f5be6b763dc31db552caad5ec71cc77f9bd499a45bf71e8e5": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.6.25"},
-	},
-	"03417e775446e2d1ad0e1da4f420cb14d0a893445eb311dd8ce2e012f00f71fe": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.5"},
-	},
-	"047014c07bcf3045c902b061654e5c29c2deae1a8b7cf4342c20964106549370": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.6.23"},
-	},
-	"04730a4257855f348c5893d52bf9cf8ef61b7d2599d3cf0077885c5b0dafc73b": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.14.23"},
-	},
-	"0564efa92a7f5ebf8a063f033463f490442e4ecb5c03c5c4b33432e0086580d1": []Modver{
-		{"github.com/aws/aws-sdk-go", "v0.10.3"},
-	},
-	"077a871764f48534cea9cb0c1b711941b1ef1c8798d5fe1ed4231318fcc1d25e": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.14.16"},
-	},
-	"0813a1321df36deceb3727ee60b8e61bdbae3602bad60a4c488a7fb07e1b45a5": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.36"},
-	},
-	"0a510b9459b94608cc366fdb64bcc9069326c71430887440bbdb06709e915fea": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.34"},
-	},
-	"0ac7d7731d2666c93a625d0be7cfd7835bc807ea3eeebbdc906c37103a38cc39": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.40"},
-	},
-	"0b10c7483ad896c345f11a3db33eda4010c25715980b215d0db0aba031c88153": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.1"},
-	},
-	"0b2025f63c87db6396f4cd3127c94b076316b920bdf2b24d5aceafff64ba5cd7": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.5.1"},
-	},
-	"0b469b69e2fe0505040232f1a68d284ff06e3e3167f6ce2a491040a4c721ebc2": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.41"},
-	},
-	"0bdd0a29dbe2be132d2f4b642cd9a7447b1da7c10f682f4028f68f519b58e733": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.60"},
-	},
-	"0d5d957fb29b98a0332c77b43dbdd96e372996145171930b075ec3b70c6a57cf": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.5.13"},
-	},
-	"0d757d537428e4fe3bd2faf887391e3d11d9321c42d60aaafe79ca9ca872f159": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.27"},
-	},
-	"0d89995fa86e776a1b3d5b06ec1bb0bbe3f44154a7f95e27c7ec3424368cae2f": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.11"},
-	},
-	"0df4d9c70273379b9b5f2b16b0e39abb8ec2e4ce83bcd1662194d3b69c807305": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.6"},
-	},
-	"0f4a0214145f3858d6ae99a82b1929cd8c69e2daa133e135fab64bbcb178689f": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.6"},
-	},
-	"0fbebe6ff81e4714160ce14daec7f110db3a392640932fc148e771f22cb788a4": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.4.8"},
-	},
-	"0fbf79157bc496154ab2982947e24c0dd91aa0f34e65f60c5322ed9cf9cd6674": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.46"},
-	},
-	"111ccccfe6b265f392d87cd9a5df2708406e4f779e3674d2a8b270a2eace4022": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.40"},
-	},
-	"1343849bf083e0df8a0d59f74e79ed5d144a5da54cc8b2439f97efb32d42d078": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.14.28"},
-	},
-	"138df3d1f4e0a6bd4fd15e41d81f9ae2200ded75e49bc911a612cb77f55921de": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.39"},
-	},
-	"13a1bcfb4daed19f6f0a1198442a8d08caa0a952ffd6617e6a44fcf2b4a3ed46": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.0.1"},
-	},
-	"13fcff91d5e2487c134dd1e66d6a6ec11b15f42965794bf287d31d3ed05ba039": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.33"},
-	},
-	"141aee89654032bbe8206e0b899390043136612d59de542455794fae8d2592fb": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.1.17"},
-	},
-	"148fb5565f186c8a76fd373567af1743a4e52437bc5e4f43489e136dd1950a94": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.51"},
-	},
-	"14ffed9e9b4e8a87c4c0f2293dee4512793782084d5e841e6f657a4fff3e96be": []Modver{
-		{"github.com/aws/aws-sdk-go", "v0.9.11"},
-	},
-	"1591e025384941bdae088d0bf275e6d4318f1473dcb711baa758264809c9f161": []Modver{
-		{"github.com/aws/aws-sdk-go", "v0.6.1"},
-	},
-	"1602a28be9cd4d8e72e90a4e97a6f2018db42a780894841adcb8f33ea3f448fe": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.6.17"},
-	},
-	"161f220fabecd1439a7ec6b78ebeacc9ca7aa174227f6b4963a73fb55a436cb1": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.79"},
-	},
-	"1695ebca04185f37e47dc945cbc3dddda0fdc6173e12e5fe388720d0614a51fe": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.1"},
-	},
-	"1793ebeb93ada3c48092edc099472f5bba311848bf7b1536b619c52970382d35": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.6.12"},
-	},
-	"179d1a966d113086ef41304821feb882ba9d2d611eff049711ad049aeb0c428d": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.14.12"},
-	},
-	"1815142fa55753742fd728b42f35ba0410336314165d083dc1c13e7d0c07b1a0": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.0.7"},
-	},
-	"1862f20e3fc7331d33f2d0b8814ff799e67b57b2c47277ac812f96f49729f2a5": []Modver{
-		{"github.com/aws/aws-sdk-go", "v0.6.3"},
-	},
-	"19612dcf543ac53ec07e39d22d14c523815082dced201916d5ee7762b1108074": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.7.8"},
-	},
-	"1ad7ea9a140faf7e5abab6dd2a1c3be14d702b048824ed57a6af3add60ef2aa5": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.5.0"},
-	},
-	"1b893f297c24cb18c75043e3604ce3003405d4018cc2cc4f1ffd49c3bd8c3ec9": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.0.11"},
-	},
-	"1c1f7d938afac43062e33e015b5f9c72363492ddf1a790c1bf932cc8e3fccaca": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.1"},
-	},
-	"1c973d1fff85d26a47b9802063c0c571a881430eb2ac858cc2f41921d23d4e0e": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.14.10"},
-	},
-	"1cdf2833181e6ada353085899360b379207ff1d7174a0cf6b145e9dbe4cc35ac": []Modver{
-		{"github.com/aws/aws-sdk-go", "v0.6.7"},
-	},
-	"1cfec04c24662f042a524c859ecb71091496827edd56a77a7d61b5d5f46cac22": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.14"},
-	},
-	"1d1bd99404a30dd0c6dc522de74dae93e9f8751a48760601e5bd79d8ec226a56": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.37"},
-	},
-	"1da2c97642952213538a8e6cdaa6c425f2fb31922d20685806856cf734eec25d": []Modver{
-		{"github.com/aws/aws-sdk-go", "v0.9.14"},
-	},
-	"1e0fad7d8718ca2c4e6a40fb602fb25d3ad614bbee768d79dedff59a477bcb25": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.32"},
-	},
-	"1e0fee6d5ecf83e6b9870d5d1bef0115049bcb60216218defe54576418227e69": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.1.36"},
-	},
-	"1eaa8dab0ed6cf3020eab12c962c6d450599762b4118393693c64c7e56bd8dd3": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.45"},
-	},
-	"1ee2cfc0a11c390786deeae93ea7ce1691b7acbf26dde1b20cc08deeb02ce75a": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.4.18"},
-	},
-	"1f7cabc463bcc2e0e1bd580a57aef1de1a816c9dd29aa009221d54f5f4b7a9df": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.21"},
-	},
-	"1fcd663acf1965e3af7cb000885ff49768afacc9363a6f926b1b24354797a5d0": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.0.3"},
-	},
-	"20f09d91e08f4dfdc23c85a282a8a6f360abd42711672d902b29f4a936bb92b0": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.1.24"},
-	},
-	"21486f3378f32b701f83c7b02081f1123ed2ffdb10c9b13b02fba404f10bee96": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.1.7"},
-	},
-	"21d38c3c8b560ecd68d6b3cc9ba4e5f5067e4294f09c1420493bdf6690981703": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.5"},
-	},
-	"21e57c9b4b781012fd6ec7c58386a022f011a8a3239af44be6b4deec2a0a63c3": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.0.10"},
-	},
-	"21e8cd93fb60ac8271970b6628316979abb20bd5c8822b1310477a0789598927": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.41"},
-	},
-	"21f190fb2b62f496de781ff69c82687fbe8ca473f5c29ed8b16ec204c269fdfe": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.38"},
-	},
-	"240c9cec5f30b638d332eef6e4f9f54554b1f0c4fc13066de05844d35bdb65be": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.60"},
-	},
-	"2769f57b7e09852c1dfe1fefc5b531857cbcfc689a70e64760b524773295a307": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.22"},
-	},
-	"282557411d1cc5191e0888532eefce242f0e8a059388b82d3e735e94ebffad81": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.1.30"},
-	},
-	"28de334f03b2e25cfc9a14865de8a454dbdde4bfb464742ae2100f7161c48fdf": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.10"},
-	},
-	"293cdd551c271da4ba2d12c3d65361e4f1ba794262cb2109c2fb1b7e15a0fa06": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.1.14"},
-	},
-	"297c06fb895dec1030098623338c9abfe432c84fb61810b2ba0a7ab61a578af7": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.7.3"},
-	},
-	"299d627af7aac09f73aa88f5d9860f2dce27cb558412bf9c8fd4dac5c52e61b7": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.26"},
-	},
-	"2a2e3ca5184ae9c76ee11cf263973db2e47d5330ec495c7237c32560d9a58cd0": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.14.24"},
-	},
-	"2ad1323938136b47a98527cd3ae3a1d5c023ec8757f56d0ff85172764a0defd6": []Modver{
-		{"github.com/aws/aws-sdk-go", "v0.7.1"},
-	},
-	"2d578222931bfc313a686e03b6aa7332253b41f92b52c30b60a684c82dad828f": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.4.2"},
-	},
-	"2d812b679bceefde22b9944e888a924922ab3e434fd515bc96a6cddf22259225": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.44"},
-	},
-	"2dde72dd1df899557706b393ab4ab3caed903bc5f75d8593a9e6d970aba14858": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.8"},
-	},
-	"2ed954440e7319af0838fa3f57b90ab85af32de152ca4f7888b6fcc2db2dacc0": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.4"},
-	},
-	"2f0db689e0d466e269ed1b7c23736419765799a3b26bb798e41ff5fd3980a525": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.14.13"},
-	},
-	"3051ec527081bc3aeb64dce8f591eed1b9431c1cba594e8ec8275184fb2d8f7f": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.1.26"},
-	},
-	"328febad29b3a38937231b2838dacb6dfa508a66abb789917a1b566525cf61bb": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.4.19"},
-	},
-	"32ca284475908376c2468290a22cd45cdba289090e19c3fff70f87e1df354634": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.43"},
-	},
-	"33818140d49c09a42929cf8afc654f340ee6c6e62f103d4afd9a512ed338ed94": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.34"},
-	},
-	"33fddb8dbf05fdc6f75f76cec2c4446dc5c56208a5c7661797f29cd01e6c48b8": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.10"},
-	},
-	"349efb73c7cd02881c5166f2547854d36940c9986e7305efa08e0fe850e7bfe6": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.57"},
-	},
-	"359cd9dcf0c1da4bf0f757c76f9442699d560f3a3aac1537b4b49bdc6467433b": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.49"},
-	},
-	"35dd6d0a81f5e9b1550c572ba4fd20950663c17a6f04f4350b4c697aa03bf60b": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.43"},
-	},
-	"36a928e5832de287da1175156d841fc634322218638299d395dd8952f8996c22": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.1.23"},
-	},
-	"36e2cdd881505efc55ffe272e8f5ee0f41fe3137ac5d62f4dd2dd4b3340a04cd": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.5.6"},
-	},
-	"3824ed404dccb537228ff17c2a4ec12265bb2ece53fd68aace0288957600a5f5": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.8"},
-	},
-	"38bcf45c954fad3a15ab68d419e5a3b9187106d1c07b6087f04a79f2ea337709": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.6"},
-	},
-	"38d2e07504b4bce0f9fb84e422495674b4c76c1013e45cedf7b98b60f11a0bce": []Modver{
-		{"github.com/aws/aws-sdk-go", "v0.6.0"},
-	},
-	"38d558e46e9de0b75a55e60a93e028673deca04cf53d45d41203c0a4e415c1c6": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.23"},
-	},
-	"391efbfb5e997f9f2857cda24b866e3c3bb17b33fd4d9d811fdc792a85810f7b": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.14.5"},
-	},
-	"39c46fd0873c5c87d9651b5525299ca6622924a0a355653c76d413f6292c9c03": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.4.0"},
-	},
-	"39faed0060d6e20e7e31d6226adcae4f902d5c5f51ba35c654532dc3b87f5662": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.16"},
-	},
-	"3acc6e304818224d548c3927717336d4dd992ff4af1fb2b95735f397effcc85b": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.24"},
-	},
-	"3b371010d16ed29cb686eab34c12cc28846fbb89cbcca5328b858f717b372e81": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.1.16"},
-	},
-	"3c60dfeaa67f1fb812bfcc0097d9f14b22349556a21968ae016125c307884fdc": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.4.4"},
-	},
-	"3c85c82d7e9f8a90d6e86f1dcab35468913b1b6896fdfdb705251f09d8dd2fac": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.1.9"},
-	},
-	"3cce72f99827c2a753724d84f44a334b52b05dae929359054c1769081063ea4e": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.0.0"},
-	},
-	"3cd9d93645925be3648b76f535b7390a7f4fc5ab031b98f711f2e1c657573f50": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.14.27"},
-	},
-	"3d0b4dc4bb28cc889e57ababba4a8c0311c18194d514bcd8a18e1c6c8a43ecc0": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.14.25"},
-	},
-	"3d6e8ffdc311a9e349ae5e7d151ad74e0247fbda72bcc33b6771e8a8710cec28": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.0.9"},
-	},
-	"3e5501923bebac98d7da4aad12c4ca10c44fd246e53cd1c91ed9e56a8bfc1e9f": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.14.0"},
-	},
-	"3e921f75fd36b0fd9d8d48a5a132450bff0fd7a22b58cd036e75e231bf3be118": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.76"},
-	},
-	"3f17fb46ffea8eed4ad3ac53d098f13eb242f97a4b77e46ee5305530d6844b82": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.0.6"},
-	},
-	"3f185941761b8794dedd71f58b53cc5e43f42cf378a5f502af15d56da93b3688": []Modver{
-		{"github.com/aws/aws-sdk-go", "v0.9.6"},
-	},
-	"3ff68a00d41d69f84764dd0494f9b5f4afb285fd775d1dc45813463e391f3073": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.6.19"},
-	},
-	"40ff69b3cb2d2ffaef8a73747db843d5e5337c389ee52e3d71c192d212f99adf": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.14.4"},
-	},
-	"4101f3452461e5871c610f295f2195517bf4d16e0bf751aa2e97aa86cfd99142": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.50"},
-	},
-	"44514d3926da9e7fa2eb33b82eac42376c68f4e6fe9f45630b20c5d2391a82bb": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.14.11"},
-	},
-	"448e33d2e0806f43a9aa3dbc1361b282ab5f46f90aa9807761ce98df3132e05d": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.4.6"},
-	},
-	"44b25449949fcfbc5e9270c1cf99a7425a66d45d1ccb7d3344b04c9ec6584184": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.15"},
-	},
-	"44f08b8095412f3b1e954a6265a57b79340edb2586f012f30581b5702436bc5f": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.57"},
-	},
-	"45984709ed51d4af5fcaa20772cb97fb81c87775488d83f7c7d6d4bbabdc9d77": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.31"},
-	},
-	"46143f5bd84f61d087c45914555bdf0935ba703d23bec068f133ddbbd5c628e7": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.43"},
-	},
-	"462fa3303e4f5055abc34add02ae8e436b8873167beff60144d3a3712634562d": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.19"},
-	},
-	"46d5a07a19f6981d03806d3230ad6c10b58929bc8d8c940a0383cbf065eabb95": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.0"},
-	},
-	"49108d3bd57f6f3611597cf8e538514f0c0864dda345838b518f4da5bff6ca53": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.1.1"},
-	},
-	"499ae540e8368f072ad7abe1d00e17570547c76839a2a04242efa0875c8557fe": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.0.2"},
-	},
-	"49e238c82492767b23983e1137c8c4f9d1875b44b33a4ca04684581449756fe4": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.51"},
-	},
-	"4b0d0d28927489d358eb83eeeaeaf21861b87a37f3f538bad768eb7dc2adf0db": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.2"},
-	},
-	"4bed5f2a761e4084a7e6fb241da7a6c12164362fa7aacf6dfc6842a2f16a3c87": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.28"},
-	},
-	"4c05588eb813098d097a625727806f5a60d91b2d9b625473ba7126a975567551": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.5"},
+	"85106a1d11a7ce252aeb747bc3066edf0fe670b81c243b7d2c6724a1f14b96a1": []Modver{
+		{"github.com/aws/aws-sdk-go", "v0.10.0"},
 	},
 	"4c852c6129709e73ab115ec0fb4983a6d2039fdefbbfa22c7b5bbe181bb3a950": []Modver{
 		{"github.com/aws/aws-sdk-go", "v0.10.1"},
 	},
-	"4de106a9fb451cf6eb91d8ad08e7f5e69a78eb9bc0d003ab04738c82a312861e": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.56"},
-	},
-	"4e43cc9078f8b52483fc9404293ad6dfcfa2bb8d921bd8edc8df978f96df9e7f": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.27"},
-	},
-	"4e942b85f9860ead36ff2fa78577a351ae4958bf953bcafea8e12a10a647e3f2": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.1.18"},
-	},
-	"4f32d3f18fefac3af6c3e0ffbb8cd372ea467663daf63bb83b457672e511080e": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.2.4"},
-	},
-	"504c699600fc0bb03fe65e7ef2b0e969af65574df246397b22e08d30f00b6e4b": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.12"},
-	},
-	"506b12466c485998bebf400068365c3018b2c47c77ad85d138aadc32f10d59a9": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.14.3"},
-	},
-	"50c24a59af1f79f5211c0ed17d12b0ce53a414f0562dad817a9527fa47d48b33": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.13"},
-	},
-	"50e8385c3900c7bcf9c20838d9214be60a738b369c14e7b3bb13bcd09d074c37": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.2.2"},
-	},
-	"51a6cf99048dc226e1952055442df3d9e995cff52723e3f04b27f00972cd440e": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.6.27"},
-	},
-	"52b9e2f8f8817e65f723bfb03caa056eb8410c008a01b932e5989e68dd1a2bb3": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.67"},
-	},
-	"53459784c777e76f487c94d39350a6d3308ec452d7d7319013fadad7ee927f05": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.44"},
-	},
-	"539a0beb52fa91735ce033b3cc238109e62c793b450bb632b557a9f522f69fda": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.14.20"},
-	},
-	"53c21cde40a2c0ff5b75bd7a1c48225fc7f30522ef3e766e366c8a3009813697": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.38"},
-	},
-	"53fc9e80e8c84b4fa37d5c0a974ec6a62d6af083155ace44eddb81abd4e90b4a": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.22"},
-	},
-	"5413e2c36eb312371f9769969ba2e2260072f3e65d68e5df08c195d383de2de9": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.4.1"},
-	},
-	"541b1501ff913215936e6fec65337b259587d063211731e99ca9a612cc26e497": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.6.9"},
-	},
-	"546625924bddd0653238b2a24917ae24f389c9a6d05377b4ab7f3c94f00a8f1f": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.2.3"},
-	},
-	"557cf5fdf4e651e8383981e159fe77e097a9e419ece86416372f2d781949b4c5": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.45"},
-	},
-	"55ddf50d68d3f453d7c78f891cd4359bf0294419b00bd70e92fad19c215d8fc4": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.7.7"},
-	},
-	"56ce50014cc8739b24601964245fbb21da1a73c91100067dc8380beb83e9a478": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.22"},
-	},
-	"56ee2cc1ab43dd75cb4913b8bf2c3b4020d0fa48ff81c4f96f01a9027603e563": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.78"},
-	},
-	"56f7e9ad880268a73e10595126df7dd485f73fd9a4ef3ab5cc48ca2df8d84cf6": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.2.0"},
-	},
-	"576686c413a425925bd4d300122efa9af5fadb908a2bded181fff975dc44315a": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.5"},
-	},
-	"57d7524ce029015dc8b34d2faf34650eaea4b063de7b3a2c504c69c463c15b80": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.10"},
-	},
-	"585d0d3082110684bc2f1a2287fcbeca2d36ca3d7cfc986bee425da5eb5dab37": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.44"},
-	},
-	"587382b9426c6d38f1ad71407d3e22202190dd3d73e60a0a1ed327911e7bfc30": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.7.0"},
-	},
-	"59bd900cef030cbee1eda510fbf75a78560765cea200ea5667f6dcd0ceadba6b": []Modver{
-		{"github.com/aws/aws-sdk-go", "v0.9.16"},
-	},
-	"59c3ae174388647d37586a845542ff202e9c8d64ac885a8d5446387f35169dcc": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.4.9"},
-	},
-	"5a375386828105f37d370d8970ed04264c9b5b1429f99c791b8f2b8c6af81a4d": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.1.22"},
-	},
-	"5c020239be9374d6109856230dcda18ba91dcee786f4147d7c35706121e4e716": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.52"},
-	},
-	"5c385baaa09fb7e970d88821c3dc51113475330899b0be6b364e8db2efde0afb": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.1"},
-	},
-	"5d7711889af5018a6f13240c1272bb6799e0c94524fd0f048586114ddb8abeaf": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.32"},
-	},
-	"5de491e17e39412c1ae3e6f8e9aadb21ccddafb8695e2b73dc100a67060365e7": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.14"},
-	},
-	"5df9612b3f4b8262b246f042c8454b2e2e2cc0be8579e2429e9b02f8ac153bc5": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.35"},
-	},
-	"5dfc0a5960e96c5380bf40ff09bf43031b33fa25ea52d0b2d49db7d16151750d": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.17"},
-	},
-	"5ecc3f8dbb870a194175e7fd55cb40a40f72811596702e3401e35def698243a9": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.29"},
-	},
-	"5eda578e84a5bf023a60095deb83fdc54524e2405f14deea4a7e78531bef64ed": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.9"},
-	},
-	"5f178588498824e28deeb24eb55b94e9dc29d5a6f32fde89c50189cf77f17b46": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.7.1"},
-	},
-	"605b96752d5e1a3f2f3e25b6669b04bde966155ab99ac01920aa646fcf7e0c9a": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.14.21"},
-	},
-	"62258ed5f9006c441b162271b04a3e0ee1beaf669760d664f13e21eb4eb7d1df": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.10"},
-	},
-	"62df505ace076f2983fb09afe07316776893e6886d7a2c23366ba6dcc1b2bd19": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.53"},
-	},
-	"62f2276a2c5bd9761f35720679e7b5354deb8b3bbfa20eeeffec3055483cae08": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.46"},
-	},
-	"6330413bdffed6b02e030b312846d85f773b6f0c362803e41174f3b2445821cc": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.20"},
-	},
-	"63cbd989a0c361ec2f1a90c39b3b9d14c3a9d6b5c2b0f49c61459d11ea48423e": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.47"},
-	},
-	"649833f6183f125b0edfb6865f9f467a78c84d2813de598c8dd718405b6b9a63": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.14.8"},
-	},
-	"67005e3acade9eb0be4ab95b47fa1d415358c073e1459f47e953b230d3e01b5b": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.8"},
-	},
-	"6753ffe24b836b7b182d91b7593a320a4da7aeb5841ad0b4f2062c2d3d47e189": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.4.17"},
-	},
-	"6977df55401f087976ba4ffbe06db75d50e89d085e7021d440b5d8ebbc121d1b": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.1.12"},
-	},
-	"6a3deac9c66210d882c51e6c0d8bd84e9e8cf4293bc2ccb69e2578b594327190": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.5.2"},
-	},
-	"6ae51447a01200e3c4adf6aed29b33a9459d0f8f12cf58cfe2824a8c71ce3137": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.7.5"},
-	},
-	"6b151eb5c5a98e6f06f8f46bbec53e45c63620566e9980f7e2a638feaf644994": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.72"},
-	},
-	"6c33deaa6911273e87d15d3b8bc56d0b9caa7d2c4cef1f0617720ea598821d2f": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.37"},
-	},
-	"6cc67d190cac79e8d38d6b4fee0e876e5e078bc31f996b3854cda853578724e1": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.4.3"},
-	},
-	"6d67c8aefedee863ec0efc2cb61af89ae74f39f509647207ab844f6a8b5f505b": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.17"},
-	},
-	"6dc02204e16ceb5a23e24be21040ba20e411a9f097509b6c1223c79e193def06": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.77"},
-	},
-	"70d1133a3b946e662ad336b65987ca61226744135edd6a11b2e164d37b27846c": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.59"},
-	},
-	"71db83340849d913fc05e1578740417f8c799acf290ad46e83cf4243f53b8bb8": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.54"},
-	},
-	"721160692fcb6bdea166608298f86b36be57f9f383c78b049158e36194fbc40a": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.48"},
-	},
-	"72334b50c369aeba7c280d2b1c31a9cce335e94b83e212e074f8154930b69f1a": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.1.25"},
-	},
-	"7256b46eebe8585d57163f8c40ace06aa407fcf0e4748112f33d76e8d10c170f": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.30"},
-	},
-	"7264045f9155641b5b64d64e36072885c74e892aebd10889e6157d21605286bf": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.25"},
-	},
-	"726f2c247b1042ce8cd6c5c0fa0ab589fcec407364320e8188a7fc8199e5202b": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.5.12"},
-	},
-	"729d3fb6216f1912450b4b1e46768a7c5b0ab6210bb7f07670c83fc19c2e435d": []Modver{
-		{"github.com/aws/aws-sdk-go", "v0.9.15"},
-	},
-	"72bc7a932d8ff85dcba098860b8838324f9d4ab4c8be2eded52974ce40ef3db5": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.21"},
-	},
-	"740d7ac4fe13ea5e31237c8137d5402c776a8083962b02deb56466739c010a6a": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.1.21"},
-	},
-	"74e40cf266397adebd19d155e15070152e5d68bb0bb358b210eec26372d38e9e": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.14.30"},
-	},
-	"75d6c953b2ea95cbefb730bd59b290568f4f3327cea6a01256b39757a9ed0a24": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.17"},
-	},
-	"7638dd42963ae295425d7b61c6ba6892d29bbcaa228f4b293503c748ffd752f8": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.4.16"},
-	},
-	"766bd823640cc788902a1b0b2c4f475a78eae6143897a6bd456deaf0df9651d6": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.31"},
-	},
-	"77bf0d6522305b6f59d78b385dba789533c2b82ea3ce0cc831f3748c9e1e1899": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.1.5"},
-	},
-	"782af93181006dbde7122dd8de4ac714a62e53832393ee72cbe420c60fde550f": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.4"},
-	},
-	"7a0eb08e48e7f1a8b43a626eeaf4cdd1a787765b78ba7448470991d7964d694f": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.15"},
-	},
-	"7a122c81ae94c3f34a64c5a70a310d3270fbeb46824429f871cdb6c9998b861a": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.5.7"},
-	},
-	"7b1e7ed3e2738315f854b7d911b7c1134164ea5e55d66f36fa60be234bdca9e3": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.2.6"},
-	},
-	"7ca669e4f053223112586b08645572f6824ac3bd438db313c1e46fb99d853f79": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.42"},
-	},
-	"7ca6fa81d95268c244a452facc767853af35af112a2de9cc9c5282592bb372b1": []Modver{
-		{"github.com/aws/aws-sdk-go", "v0.6.5"},
-	},
-	"7cc590aa28a6c3b1f02de525801fed67d5527037a8436146304e3a7c79d3d905": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.6.1"},
-	},
-	"7cd43b1bdeaf4a7343a058b16fd8195fc257f84a10f9cce2bd888a3e86929972": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.37"},
-	},
-	"7ced82d4a74f5c5b36767e0955e0d93e0f0972bc88f2bfe4d40c831a8806c29e": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.0"},
-	},
-	"7d2a6c125b5ec8f37db93b3df811d8021aa06005801bf484e1d434bd983d83a6": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.1.0"},
-	},
-	"7d4a185ff25196cc79e7600190998ec2dc25c3a732f82cff10e7c8f16092ce05": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.29"},
-	},
-	"7d5c06ed703960b238050d87ce06a4bcac684af30293ba0a2656b673c5c84b25": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.19"},
-	},
-	"7df2253669010a441f9a5d454df2e57232574c86fb6e4cadbc58c587bbdf81b8": []Modver{
-		{"github.com/aws/aws-sdk-go", "v0.9.10"},
-	},
-	"7e3b86c3e3a9cd77902755ccc9d2252624b5d52edcedb80a7cfdbe7493eba758": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.63"},
-	},
-	"7e95d6693a7262337d4f3e691acf47979cd447fcdd557d85c61066fc0ef43d19": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.1.11"},
-	},
-	"7f7689e6d7a16179e3496aefa798793615fecfff346ebc2a2355ab0900a1b0e0": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.5.3"},
-	},
-	"7f8e878442e8958887ee9201c087167951249baa626fc2c329ece8ac639a768f": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.1.3"},
-	},
-	"814a5a8ee3e9e501321515250492e20b2c8cb2ecd14280af039439e98c6b9cfe": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.24"},
-	},
-	"81813bf9fa70ccc28bb2745b474c139927b3fdec37ac9132a3cb6af38705a793": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.5.9"},
-	},
-	"81d4ab2b47ac53e5e69d6c09a0f1bbdba4cef2863d2418a6314d744bb1a654d6": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.23"},
-	},
-	"822b8e9315ec22a5dd0ed0b43ca0f15e93c7597a91b8ad764edd53941b0fc778": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.29"},
-	},
-	"82d779236a2e4f24ea279e2007cd888d625fe322155012038c06bb5877bf73ff": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.1.35"},
-	},
-	"82e4734b3bd81663ac93ab8c416dc91611133f5bb1bce052c0406e8c35c6c026": []Modver{
-		{"github.com/aws/aws-sdk-go", "v0.7.4"},
-	},
-	"83bf0629935b7ba1b53eb1eac50e3babb11b6bca57fc8ece320fb5cd21a66ae7": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.7.6"},
-	},
-	"83cef6faefee7353bdada8afae2222fb75aa342964e255df14e55fd812ee2ade": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.55"},
-	},
-	"843efb3d4d053204b1922bde8bc8d0290fa0270116eb708fa09baf5d05cacf99": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.5.10"},
-	},
-	"845349955994e0a8771f9a01a08c91862e155064248ec5aab8c12c94357bc203": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.7.4"},
-	},
-	"85106a1d11a7ce252aeb747bc3066edf0fe670b81c243b7d2c6724a1f14b96a1": []Modver{
-		{"github.com/aws/aws-sdk-go", "v0.10.0"},
-	},
-	"856f70e494d872e13fb0d49171f5ab3b007a4f59d802828403741eba4f1fb299": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.30"},
-	},
-	"85cae8ad2e6c265b60b88cf6d1187cf78c685852651171cee11285cbe788d0ea": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.31"},
-	},
-	"86894d3a9db498c2019b4f3ea7dae8728a305026e507eedc036637ac23523349": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.6.3"},
-	},
-	"8766ca8e769b28d2cb6ddaf9906506595537f0597b63bbe01948066965cde7a5": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.20"},
-	},
-	"8794c8b262c1b6156262632f386a83480a661ec08b40f9a0338049e31fcb2454": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.22"},
-	},
-	"87d6af8f335064b709024582cb751c351a0a7f1093d4e54481f900a61a4c14f5": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.26"},
-	},
-	"8986573cfd66d4255cc0fc39b29aace8b1375684a3ff1548dc9e8e381e93fa8e": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.2.8"},
-	},
-	"8a3a66c5beb4e7f7bd8637aba10af113820e1750a6c47535481d2aaf9cacd6a3": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.9"},
-	},
-	"8bdf7fd57c37473a2254c2d7c01ab9d5b4f38f3bb467955d359fb2e54c38f2d7": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.6.21"},
-	},
-	"8c398f163dcc1c09cb2a06267e2f3d333276e308b99aac240e9d55c68287c29b": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.11"},
-	},
-	"8ca992ea464de926b9ebfa82232ba59a4bd4df4afc21420ae5bc1fa84b47aa15": []Modver{
-		{"github.com/aws/aws-sdk-go", "v0.7.0"},
-	},
-	"8cd7ca25e0af7f2473312fd708e4c7e79266c4a4d6dcfd5c3b971e4f64662506": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.25"},
-	},
-	"8daf0690ce1eaae5abb3c0cfb57a5b448c92a170dd509e934c3b708eeebfce77": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.41"},
-	},
-	"8db47f50c2592c6fee9281c3d8e682278384a9207b4c7c2f70dbf613173e237c": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.6.20"},
-	},
-	"8f0450605d0fe501dfd62f917b9df8735d0bc902ed2356a4428ab3c1e01c4ed5": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.6.2"},
-	},
-	"8fab318eb26ce608f91011f2e7a09b1fcc4010ccb90570497cf19702ecb74eea": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.6.10"},
-	},
-	"8fc37c9c2f8f758b25a456f535f913b1a64dbc1ab6965bf90c0658b45f789e72": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.61"},
-	},
-	"90069c9b8b5679605784d86b4be648ce8f7f83a3463ee69b1ddffdf48cdbb298": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.14.1"},
-	},
-	"91819ad5ad648a2927c20009cee00d31c5d281258d78df65ddd830ddf604e0ec": []Modver{
-		{"github.com/aws/aws-sdk-go", "v0.6.4"},
-	},
-	"91d367ac7b1c45144cc1f6de7bcc5e96df437922f578cdc484bf24644a837015": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.4"},
-	},
-	"92fe882eb361789e6c530bcf1008ae7c2fc5651dee5fda62f9d4f186290c6add": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.21"},
-	},
-	"9312ffca6a1ca514b093f2b2c45582cce9de6ea18d36feb61fcd4f6370ffcf20": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.5.8"},
-	},
-	"932dd2b40fe26d3eef1947a357eecc8e755cd17fca1fd707cb5e882e66118488": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.11.0"},
-	},
-	"94c10ba8665537879830529885f50da7153a7d46109ee6e77515baaaa9746c7b": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.3"},
-	},
-	"9618b7d9e3758e3643f328f5db76dddbc975907372038e10efba50900684163e": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.35"},
-	},
-	"97237376350272865e08eedfbf3198e2ada749f723783ec39bb9899de482930f": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.39"},
-	},
-	"9752b4ecf2998ef26db2fc1b055c085990d2dd5e91ff7d4b346000b18ff7783b": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.6.4"},
-	},
-	"9776578a3021183b043188b02e24204965e19a9d75c02fd4da2eb44222b24649": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.32"},
-	},
-	"97ba8959c59c895b9993ac2a24e11f40ade7c4ffad33adbc31e5db59e1616c74": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.25"},
-	},
-	"97d06c1edcabd03178188388bdc1aedf693eb40f063a4a32c9586c0e5615c649": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.37"},
-	},
-	"98ffc6f4fd04f958ed0f5fba6185db6893a670a50908f15b10478ccd05cac196": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.7"},
-	},
-	"999e6ce423a7f8168fdfbe4e65916b32bff5c64e72ec47afd2a605b75f1e6f8d": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.42"},
-	},
-	"9a37adc9706a60547d079799af88a9552f20b4ecbf399d1ec1a8ad2bfb7c7590": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.4.7"},
-	},
-	"9adc4f287e80d9f635c144f6abd6c2187f94742b03e1cc27b62aa1d119843835": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.1.31"},
-	},
-	"9b118a73452bfe822e07663d433a40fa44e4768703fdb9be2aa2294ff61aa553": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.2.10"},
-	},
-	"9b3ef598b5465eee921e108dca77c4a0b81e4fe28169c9ed40e37c57783150ad": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.14.6"},
-	},
-	"9b8b7f71a56e811f5cbc68dfddd391cec5cfbca5dc7694926224c2195a3ceb92": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.51"},
-	},
-	"9ba3d60ae2851e9672c99f012f6569c0f80c3187651f25954da18c8755792cba": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.1.33"},
-	},
-	"9bb0b1f384b0e7f0d86fb60be6fff32fe22f11c7d81f5f1c0ac01183abd28551": []Modver{
-		{"github.com/aws/aws-sdk-go", "v0.6.6"},
-	},
-	"9bfac6c8a5243ac55fbc1661b0bf699989eeab2e88b8300f3de256ba6746b0bf": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.14.15"},
-	},
-	"9c17f7d52eeea7b9b98d3397a05bd2544a99a43df7063b1ad33a4bc1cdfb9531": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.45"},
-	},
-	"9d01dd6603100a90f34ddb45c3d82364c93327ae89b655c0886777825c07408a": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.1.34"},
-	},
-	"9ddc026590f43f584d5e072418d74169b87ff9d664cbb6d9d07bc41c84ceaf62": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.6.22"},
-	},
-	"9f811d940f696e281efc8304078b7e4828a2a5319808d116424011d8c6f6c0f4": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.36"},
-	},
-	"a01aeb26ac016b3b7e0b4337919a955df992b1dcf68929834b26f0d5de6efd32": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.19"},
-	},
-	"a02390c2d8dd383df82a7795bb7bbc40b5f62dda34726a2b80681f0a7818e25f": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.1.28"},
-	},
-	"a0e398222e6ed7470b948ba826bf8eacf0c92828f90253ae37281d98ff460c6e": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.2"},
-	},
-	"a2061e0fa2dfbb074e56a9dfada2d227ff405a3f80f8c84192a812d64534d549": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.16"},
-	},
-	"a2e9f173a63db6bedc2a626ab975856baada20a7906df38d2ff8fbdb7c71eac5": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.39"},
-	},
-	"a3670093265edb6c98bf18233b1771c7b345c4960d9e78d02f00953a465a8035": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.65"},
-	},
-	"a36d54aca40b41c144e7c72e79365d3f6d3374a0b38f1708fa521cf3f57e31f7": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.14"},
-	},
-	"a482f31dd72f4fa437838c486564adf831e7fff97e77a9f8df57cf0a1aba19ca": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.1.2"},
-	},
-	"a4cd6787d5efa8ade3c8189120643610f37e653c02f50c485a4039d3e0535695": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.23"},
-	},
-	"a685ea3ad626e5676787d61251633ce7ae860d7abebe90d26c39dbcdbd1bcb7f": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.6.11"},
-	},
-	"a7172ebd897ec0bdd5896ef003956496e0b852fdde5d3e8ed44ec07394b8239d": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.36"},
-	},
-	"a859c0d1c0ae79d0359d5e50100716b9e81112a752f0d9b9c28e1b1312ee0383": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.19"},
-	},
-	"a8aba898b18e9cbdacc28e1460948d4d7b2b09176c7c7d7cc33c62ab237b7b7e": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.18"},
-	},
-	"a95f85f501499f93d5bd2eac1cfbf526d1fcd0f5b266dfb1c44e89604dc113b6": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.58"},
-	},
-	"aa4d38c51f50b5793a43083a7698161c402d678a00f91e5c5c8d4f190315156a": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.14.18"},
-	},
-	"aa86127091855ec42181f5e0baa9501ae539ba31e0db7e4defda9d6f2e35bcab": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.6.7"},
-	},
-	"aac95bf8a33cc5e124661ae1ee55c2c1099b71f35240e27cf367cebd4e60da20": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.28"},
-	},
-	"ab436680162a7bb1a3340b41b96b667c52d2ad44b29ddf570ce3c102494cb383": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.14.22"},
-	},
-	"ab77934da39b689f5d4384a67691b99f12bd77c05e441a0c86b37c5b08ae851b": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.11"},
-	},
-	"acd55c1c6a3412d92563d5900007b8e6d29e918abd1d4322b40c68cd2e5d94d0": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.43"},
-	},
-	"ad2bc0b4e758fb5be9dcba21f30c49a78833c2437b1c5f7fc01316f1565d3a4d": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.1.32"},
-	},
-	"adc1efeabebbb73669ead16ba5e1a47a2d7092c43eb39586dd981054354ce00a": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.26"},
-	},
-	"af94c47dd150063aaff2272623b0891d7229d1037c9db22cb9d3b36b61696fdb": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.3"},
-	},
-	"afe432b1d5ecbc9e428a5cd622239b228d72529c3ef8ca64a1c7783e8b30b81d": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.4.20"},
-	},
-	"aff0e936fdf2350fc12907be91903d00ae41c60e7b790ab4c2b09a835e630319": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.33"},
-	},
-	"b05d18e10fde89ae767a34d3e71f0f97740f61fed6858897b38e63d181acca94": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.35"},
-	},
-	"b121ecb90adcb48d197c91630f0ab1dbf29b8dbb0c8fedcdb6671c9093e46ec2": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.0.8"},
-	},
-	"b1cf460a2baf2fbaffab860470be91ad47d51db221e995a1a6247ba02a8c8015": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.14.14"},
-	},
-	"b29eab61918f28211b024788704b2234b4ee9b29a12498437840c8732fcffe85": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.28"},
-	},
-	"b2ae6744ffb6d75b98294b8e9e3fcf08457d32fc02c1e378e59e4af0eab21977": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.6.13"},
-	},
-	"b33bf32f1f8f60e34be5dbe176ac77f8ac094d8d22dd9140e82aa643332c6a02": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.12"},
-	},
-	"b33e2f63f60cbb96223a806069a99413ade2e4fba98c06489cb00ec77667982d": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.33"},
-	},
-	"b48947c676a53f168c17ec5d95f15149ada2a0a60fe745b1f53d1f5e3087d5a0": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.6.24"},
-	},
-	"b4c8a9038e05e76a24c5b1bf24f0031727d6418275d28dc1962bce2c69f28c34": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.71"},
+	"ba2414067ed1a0b6121d2eadd437a69dc48bc18aebd60c445c6f292022147772": []Modver{
+		{"github.com/aws/aws-sdk-go", "v0.10.2"},
+	},
+	"0564efa92a7f5ebf8a063f033463f490442e4ecb5c03c5c4b33432e0086580d1": []Modver{
+		{"github.com/aws/aws-sdk-go", "v0.10.3"},
 	},
 	"b54e3c1f66a38c1f80dc07bcfd1273f2e71743749c8aa47e923f590869bd0c52": []Modver{
 		{"github.com/aws/aws-sdk-go", "v0.10.4"},
 	},
-	"b605031e461eec4f526fc7ae3d2eac5f63b2375b37810ae0a6b5312d9feb8b85": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.18"},
-	},
-	"b820072df7baefaa9e3afd0a6234ec981372b4ef1bace1d5f40852e47dcb0fea": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.12"},
-	},
-	"b836f08db6c6b390372261d812d37f544d2749942e5683d7e6a597e1866fdacb": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.7.2"},
-	},
-	"b8a5da148a172d9124eef42891c124e740bc1bd96370c62d00f3ed8d1759956d": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.2.1"},
-	},
-	"ba0dc01ea6aed7ee65289f25dfdf5b18b573b2bb6b34f107963cd35ba4a2e857": []Modver{
-		{"github.com/aws/aws-sdk-go", "v0.9.17"},
-	},
-	"ba2414067ed1a0b6121d2eadd437a69dc48bc18aebd60c445c6f292022147772": []Modver{
-		{"github.com/aws/aws-sdk-go", "v0.10.2"},
-	},
-	"ba2c3bfa64e78026c49cd2e1a12c14176eed963b18e69612201529c2ca1792d7": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.6.26"},
-	},
-	"ba82ba72a0ed408e811787ffc63e1c77577271534138ced2b717c18cfae6616f": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.7"},
-	},
-	"bae9a07e4e3b32655b4ce2557cb921bd95ad099981dd73c9c399c55862a8a885": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.5.4"},
-	},
-	"bb685200411ab4a7e3790f9626ede3cb512ceec6d1fcfe0f90e3d7a8de0b9e4e": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.4.5"},
-	},
-	"bb95cd16d76ea8b84020a1d34da0507128820b3232f3575bee9f74a77b3c8c5d": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.16"},
-	},
-	"bc2dd541f4f6211fb175e61b837fe3851568ba1bfab228a49a958a0e8ad8288a": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.6.8"},
-	},
-	"bdcd93b6a56cb785d5171daa6fe2b1716d9f76db446ee9c666ef78229fabc497": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.3"},
-	},
-	"bdd5f0e83be169ffce9a32c9eb5290ebd0f1c08f32e66433eb3d2cd1df27e2b9": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.8"},
-	},
-	"bed084ee7e01ef4ded069eef627b9d74a2d67ab247fc21a907ce50dca363570e": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.74"},
-	},
-	"bf468a9b3474abf00d06031d7f14aa226d8fd35c93b45fc88b6ac67821b93ed3": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.4.10"},
-	},
-	"bfba1cf8750b753ff5dcfc4531de324a8c3f06c4ec659c8f51457fb96c14c33e": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.2"},
-	},
-	"c0f39eb2967f8cea15b87fd3472e26ec778720664fde12a54bd4ad12c125d0bd": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.3"},
-	},
-	"c13146db8e9a8badb0228e2542c01c49e31921994da294b7f96b8381d104ec9d": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.47"},
-	},
-	"c404b7f94a47e7bc81885edf845d87e133002c9824b44b6eaa3399ce1b07f13f": []Modver{
-		{"github.com/aws/aws-sdk-go", "v0.7.3"},
-	},
-	"c472b2d2affd375ba2192f78556efe23f00bdcbcb46f698517eebdedf11ac7c1": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.2.7"},
-	},
-	"c56ec9ab483c28135ff229664123dfb5442fff2c35e12cb49f5dcfe8d40b4025": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.58"},
-	},
-	"c5e4f7e2a0fce6ed8532d2dbde97f3803a76f922e8d666278555269721e81807": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.62"},
-	},
-	"c5efee2617f4a0ddaa40babaf92b2a31b7e302e3cb025aa71cc2d7b170f39d3d": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.27"},
-	},
-	"c61d7101ee2a8ec78dfa9dbeb16494eb31c8ec0f209a3d584bbeb89baceb94bc": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.17"},
-	},
-	"c6bce80931304e169b61588cf2f7940a324325f1b4e5fece77e4158d996bffd5": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.40"},
-	},
-	"c8d836190dc536f312f5037aa77b47c7bbdfaf93a7fd521002f9d44b8f2db37e": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.7.9"},
-	},
-	"c9217cf12f626162d9c5a3be4308d1d86bc88998cc86531469a60f6138ac0fdb": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.1.15"},
-	},
-	"c9422700d5aa75f886cfcea44233388601c1e8759365bd64d755aedbcdd2f6bf": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.32"},
-	},
-	"c94ae255ce909dee1db9eaa3d7cc64557ad9299a469a96026e556d81f3f21f6b": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.7"},
-	},
-	"ca17793b617e2860110c2d87ec28661c96b85d04b1a2d5e861b31964c3f1e9f3": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.34"},
-	},
-	"ca574c4591982f836bd397389a94e77ffa5d5e44edbe226303d86550d5fc915d": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.9.0"}, {"github.com/aws/aws-sdk-go", "v1.9.44"},
-	},
-	"ca8e018c638e0e85abce5563d75b92910f88c662c5dac469650c103bc6e340b1": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.49"},
-	},
-	"cb010e8f46f6ab7b800387d0d5f3443bdb526fa9186ae813af37aef95e44bacb": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.59"},
-	},
-	"cb1c4085a562ddf49db0cd25c2cb3080c10d1875315215fa59298b17aa1eb33e": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.66"},
-	},
-	"cb1cad870c2552672c9012abb89de0ae518f30be4a932e5139d8e726eb74a15f": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.20"},
-	},
-	"cb2a904974fbf01db3692e7945a88a3b176a892793f8c66ffa7a5c9a3e2c97ad": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.4.12"},
-	},
-	"cbb2943e5502cdd151eee1d6643f407af8113b3637c45919e98340a5feb31a63": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.39"},
-	},
-	"cd1f3cbd5a155628ac3c3644b368bcde18f59d6a85ebb13a8edf9c1d1578e680": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.38"},
-	},
-	"cd68b3e4ec5d3fca144be7c3539e4bf9c6053bfe6f2e2396a888db248e3cbd3d": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.7"},
-	},
-	"cd732ddad3a59e486f2b19f88d2be2ce1eb75ec112323959d3ea0f8fd1130875": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.14.26"},
-	},
-	"ce30bddfdb91f805313a0e2667bf1a3c1da669d8ad67b1e9a30f901046894c51": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.1.13"},
-	},
-	"ce4c670eed03ad91f82e813208d69a94f1353d4002c00d35949f9223783c2123": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.52"},
-	},
-	"ce5c8dd103671fb3e122d80c5bd52a0f448ddd9c6939530032524138b3ca3ee8": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.53"},
-	},
-	"ce6c3731b313f7efd558297b97a37e6335fca86d78cb72769d00ca5f3e0b2c09": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.1.27"},
-	},
-	"ce711d06869e6292401f47a072a4542e9820fe808aac234a82b830b3c1881483": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.30"},
-	},
-	"ced8d770cc0cdb0e4fbb2781ef521dd065ab1d30272b23deac54f3aeaec59019": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.16"},
-	},
-	"cf828b5564ae3f2ee6b1bbb3adc1bab0012c7a6df12aae29ad513718b70696f8": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.0"},
-	},
-	"d07999a8116a78797cd51dd20e43eb03f286d6e06e2ecbb2431293552085dbea": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.1.10"},
-	},
-	"d0f74a3a6da991ea1b105fa8779d8e4c51a114bad24e4372161eb5820a637b47": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.6.16"},
-	},
-	"d182011c210e5bb52d218631880ab660db7470b386470c482ba32b58f76efd97": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.69"},
-	},
-	"d21fac302382ef6b3eba71fe4c7fba8ce43d372488eecb15dec7f039c0a4f8e2": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.21"},
-	},
-	"d2c0f9ce7cedfc80aafd7b4c2ecd84b80a56d422acacbcd86bd63c489488f33a": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.4.11"},
-	},
-	"d34db4acb9fb08d862e8dcc1f6de37fdf565240b2236c0f1cb824e76ce2ec9be": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.44"},
-	},
-	"d362a7923097bea49e236f33ffb0ec96a2d63daab19ef8804174ef73b9a15182": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.6.14"},
-	},
-	"d3d5d3510f57ac2eeb742096faafc004d0853d4e2fed1900a828df80733e7aeb": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.30"},
-	},
-	"d53259b1aab5464fc6ded0d8f6b60a2249c96a2d6f3b5e8bfb854d70f3317be1": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.73"},
-	},
-	"d55f1e5b5738e08bab3bba904dc085b1cc40a66c13524fafa154206f96bbff1d": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.9"},
-	},
-	"d61bac5bfbdee5372f07be040119096b0dae533b5b940a7a2eb539e48df944e5": []Modver{
-		{"github.com/aws/aws-sdk-go", "v0.6.8"},
-	},
-	"d6463a302a09eb3e44ef93c6b87ef2b2d90a0b8a514b5d8655718c5fa8bf4d12": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.50"},
-	},
-	"d65e4d5afb087b25889fa876a10551f84dac2f8998506d221efd6494206d8c33": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.64"},
-	},
-	"d66262052a1d8d9e3e81d0c2b6d8cb0bfbb749af2d7b3161a432aadb8bc767a1": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.27"},
-	},
-	"d7a3261843094f838a51ff6eacea3f1e4a7b81649a6969e7fd5a175c85a504fd": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.6.18"},
-	},
-	"d7f1bab2eff9d993284f2c8fbd778a4377176ce6827f2bdc98e6786cc38b878a": []Modver{
-		{"github.com/aws/aws-sdk-go", "v0.9.12"},
-	},
-	"d858942c5796c5ee69278b59f60bb7185d3c08e39dcb5e84c96e84fd1aac35bc": []Modver{
-		{"github.com/aws/aws-sdk-go", "v0.9.8"},
-	},
-	"d87b79ab98cf01d0628c4d96277718c27b64223ffeb8334c315cd8b609c5264c": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.2"},
-	},
-	"d907f146c13eff309c1d1ee8468ff2821e93105734353d016044c1570335b724": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.48"},
-	},
-	"d9d826fa574ba6ba8cdd19b0caf9e752601c8d1324f7e6f895570d6ccb8e11ce": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.14.2"},
-	},
-	"da39e3800531c2ffc16792cd1d99b28ec5573701e977cfaa4fd3192e09e67969": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.13"},
-	},
-	"db4dcebc35e050bdf86117a6ea9ec662f1f9f90b7506b8e2e39c53094b8cb70f": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.70"},
-	},
-	"db7832bf78760429656f71cb0351a5f4f1f935a9f997163a4ce2cdf189fb771e": []Modver{
-		{"github.com/aws/aws-sdk-go", "v0.9.9"},
-	},
-	"dbf7d495fed7b8e912352d4731fc48ea5fc76efb5f3680c7b560e752bd532f86": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.24"},
-	},
-	"dd688d526fe1acb41417e3cabb54ef9fcbe72508705478569d7a62f255adfeda": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.38"},
-	},
-	"dd946f6a7c3f719f71c57835b624a90936e485b7cd37f596408dc33c9eb58cac": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.1.29"},
-	},
-	"df65b10f538ab7aff99c7e3f83cfe34b89eb003eddec3c140dac7750d3d73fba": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.9"},
-	},
-	"df90a88e0c32d5f01e95a91ca4236a3e03a4d32801143415bc1a644aed210b80": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.41"},
-	},
-	"dfcef1682cd0caa089c89d9894351f9a796fa977c95fe3bf298437ed9f1b5b52": []Modver{
-		{"github.com/aws/aws-sdk-go", "v0.9.7"},
-	},
-	"e01a71d3de71146dcd91ccd0b849b487c222e0619c2c42e240c06f442dc7c751": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.14.19"},
-	},
-	"e0931892923fa013a833b081990884239062691eeaa07b8dde0c3a96816ffb91": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.0.5"},
-	},
-	"e0bc39c5d159021770ec13ee4893f5e8ed3305f1e645eded670d4bcf3c5641a8": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.0"},
-	},
-	"e119d051768d87de66ff4e2727232f7de44c4162aeea9afd94c3b36711241ca5": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.11"},
-	},
-	"e1b41a770414ed40e9bf119f418a780fc735cdbbcf42a474fc35feccaf00da82": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.15"},
-	},
-	"e1d08b2bf8b1887233f4e89d9df269db5ddacb6ceee5c01481b49947f1bf5cb5": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.36"},
-	},
-	"e2062fab0e53fa5c702b4c942a4a25b83f9bebce5fb3448e91b299dbbbc3424b": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.14.29"},
-	},
-	"e2164a8f836294fb68e2f01b198fec3adf636e1a387e9d5922bdac89bd03f8cd": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.1.8"},
-	},
-	"e2332bf793196d7b05747214fcedd474503df96701e4005156c30eef05f1a2a6": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.4.15"},
-	},
-	"e332eb75ecea0041794df292a08eeabb8f6c596039dd0e796a5021cf56457731": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.1.20"},
-	},
-	"e3a49e7a64d75128384161cbbd65c2a97b5188ca3791c9bd4c935aacdd237855": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.50"},
-	},
-	"e5124f094a85897a0cd0fcced4e163a4b9b40f6d818b4ee487a8592841a301d0": []Modver{
-		{"github.com/aws/aws-sdk-go", "v0.9.5"},
-	},
-	"e6259b965f3109ebb10db93218941dd54bde526943e99d94eb095ed0cac2b0e7": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.4.22"},
-	},
-	"e690b0559769f476dcf9229fbc8292b1cfd24138abb8091e61856a26de9999a4": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.18"},
-	},
-	"e696958a4263caf2b3f15d19450e66c6d7ecbee7849dcdf8c8b82c45273ae0a9": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.29"},
-	},
-	"e732ef222a8b2a0ffe8067ea651bd4d5306d0f227c34ceba1cc5db570e1afb07": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.56"},
-	},
-	"e7ce23fb7fbea352f56ceda1f3d2aed209481e69629d72a7f702882e50e9bb5e": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.14.9"},
-	},
-	"e8b855a2c94dbf3dd30e9a23bb5df5b38bfd6315cc3d03e2844a3092829cebe2": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.75"},
-	},
-	"eae8ee1888d4d8681f131424e2c9b6923dcc9a12b77b8d99f3bdde3ab590b599": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.4"},
-	},
-	"eb1c93b7aafb5767201e0d8f933cf9cae0f93e18afcd8b9280d1486228c7cc32": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.1.6"},
-	},
-	"eb2980a66df4153cf037d1f9fb8c79db9cdbd58a913ea2294b679f6241aa4da0": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.33"},
-	},
-	"eb33e9f10145c827dc58198658dd78edb50568108186d6b1659dcf05371f10f9": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.40"},
-	},
-	"ed4309d0d51b01b596de6ebc4f6275e47d24e6fbd3b19969eae59f7bb492f29c": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.23"},
-	},
-	"eddb064e987b8a441e2f0ab8b635d331fbbfa21342ec7c6975852a1749ea9011": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.5.11"},
-	},
-	"edea33bc34a244dc8e73f82272955be20e017b13316f4657b612c5dca2307bd8": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.3.0"},
-	},
-	"eed74a5552785f1f8c14541ab48ed0cd166e18f4a361f5ad1d35b39e00a61e4e": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.6.5"},
-	},
-	"f0afa0f13fd8f3ed26c91b4994c9737b3463dc9e5f28c961ebd8415b9bbeb849": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.14.17"},
-	},
-	"f1660a7f7e849eeec41a83527c02593705c82a6b9f546727050a27815a88ce59": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.47"},
-	},
-	"f1815af9489d5254297b9671fcd7c8cf087083821268178e62fee7959fd7604c": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.31"},
-	},
-	"f2d55933bb62973a5659b8ce51469edc130127460889ccf26d9373ddcfb80746": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.18"},
-	},
-	"f3fe19b65dab0d023751fa1cb4e4951907bfacf948527577f6c19bbfea505870": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.12"},
-	},
-	"f4046f620abc58e5f69fbaf1fd302cece178a9f2241cd099756fa213cd45453e": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.42"},
-	},
-	"f4319bfc9a8cc81cae83a435a44322db78ec9605c4589006ce50dde99c1c6329": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.28"},
-	},
-	"f46fd31e74c98730b2f6d9e5bd01cab2e6365dc1bd38edadcbc5d0713a9dfc56": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.0.4"},
+	"38d2e07504b4bce0f9fb84e422495674b4c76c1013e45cedf7b98b60f11a0bce": []Modver{
+		{"github.com/aws/aws-sdk-go", "v0.6.0"},
+	},
+	"1591e025384941bdae088d0bf275e6d4318f1473dcb711baa758264809c9f161": []Modver{
+		{"github.com/aws/aws-sdk-go", "v0.6.1"},
 	},
 	"f4f5fcb0cd567068065a61bc6a055521acbd3ddb32dc7a20fb966c838101d976": []Modver{
 		{"github.com/aws/aws-sdk-go", "v0.6.2"},
 	},
-	"f53d56e7aab4c0acf97ea01925f56174bcc66b435bc01ee54313562cf05d0975": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.6.0"},
+	"1862f20e3fc7331d33f2d0b8814ff799e67b57b2c47277ac812f96f49729f2a5": []Modver{
+		{"github.com/aws/aws-sdk-go", "v0.6.3"},
 	},
-	"f5e5e9c9882c365c076b2dbf342b750505a98902a4c1b7070567ecde83ffeceb": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.4.21"},
+	"91819ad5ad648a2927c20009cee00d31c5d281258d78df65ddd830ddf604e0ec": []Modver{
+		{"github.com/aws/aws-sdk-go", "v0.6.4"},
 	},
-	"f68f0f7f0a7c758709daa4ab286696e2ddc5ec5281c7258abf369e12138905d2": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.26"},
+	"7ca6fa81d95268c244a452facc767853af35af112a2de9cc9c5282592bb372b1": []Modver{
+		{"github.com/aws/aws-sdk-go", "v0.6.5"},
 	},
-	"f7370500e2e3f7ba04b89789996d153efa9888f0f5c9aebdaf5a5dd46ff10361": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.6"},
+	"9bb0b1f384b0e7f0d86fb60be6fff32fe22f11c7d81f5f1c0ac01183abd28551": []Modver{
+		{"github.com/aws/aws-sdk-go", "v0.6.6"},
 	},
-	"f83760c92c83ca1c4b8a658e10a208bbd74f98596425ee7e8c5716b9b7b87217": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.48"},
+	"1cdf2833181e6ada353085899360b379207ff1d7174a0cf6b145e9dbe4cc35ac": []Modver{
+		{"github.com/aws/aws-sdk-go", "v0.6.7"},
 	},
-	"f86211b26e0d08dcc478325ed6366c65ba06e2467d482e5233376bcd1b5a0d07": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.14"},
+	"d61bac5bfbdee5372f07be040119096b0dae533b5b940a7a2eb539e48df944e5": []Modver{
+		{"github.com/aws/aws-sdk-go", "v0.6.8"},
 	},
-	"f8b886081d445af9e9b8a28fa38b0d5c4ff9bc792b069d960df1a6984a305869": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.14.7"},
+	"8ca992ea464de926b9ebfa82232ba59a4bd4df4afc21420ae5bc1fa84b47aa15": []Modver{
+		{"github.com/aws/aws-sdk-go", "v0.7.0"},
 	},
-	"f920225c4455dd6c6e003455a0a13c5209f124fa25006d0b5689a2e17395cc8b": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.54"},
-	},
-	"f9b57c361528b04f82c74f474708cb9f0bd066d063644c1ae5fccae107a16870": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.15"},
-	},
-	"fa778c167772a3ef8d409e8039d73cc2f07bb8d040ade4f8b1c72ce0b317664e": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.25"},
-	},
-	"facf252e38bac6853a098dee7fccd6424627451dcaec36d8d6dfcbbe5c68c39a": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.13"},
-	},
-	"fb7e4ba88db2f40423ac9a8a64ae1c0bed170999112109bab0e81be1cf70b9d7": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.5.5"},
+	"2ad1323938136b47a98527cd3ae3a1d5c023ec8757f56d0ff85172764a0defd6": []Modver{
+		{"github.com/aws/aws-sdk-go", "v0.7.1"},
 	},
 	"fb8476c9ec1acea3cd9cbf3cc12279144921f64447e1f06bf55b8ec61be6f7d4": []Modver{
 		{"github.com/aws/aws-sdk-go", "v0.7.2"},
 	},
-	"fbef79a719172c6fca21d448e9d9f8e18c2ccbd15780c0b5f94f6f813f060041": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.24"},
+	"c404b7f94a47e7bc81885edf845d87e133002c9824b44b6eaa3399ce1b07f13f": []Modver{
+		{"github.com/aws/aws-sdk-go", "v0.7.3"},
+	},
+	"82e4734b3bd81663ac93ab8c416dc91611133f5bb1bce052c0406e8c35c6c026": []Modver{
+		{"github.com/aws/aws-sdk-go", "v0.7.4"},
+	},
+	"7df2253669010a441f9a5d454df2e57232574c86fb6e4cadbc58c587bbdf81b8": []Modver{
+		{"github.com/aws/aws-sdk-go", "v0.9.10"},
+	},
+	"14ffed9e9b4e8a87c4c0f2293dee4512793782084d5e841e6f657a4fff3e96be": []Modver{
+		{"github.com/aws/aws-sdk-go", "v0.9.11"},
+	},
+	"d7f1bab2eff9d993284f2c8fbd778a4377176ce6827f2bdc98e6786cc38b878a": []Modver{
+		{"github.com/aws/aws-sdk-go", "v0.9.12"},
+	},
+	"012f15ae2babab5dc92f00e248b041dd83e33f8d80daab61a056ce870d50c204": []Modver{
+		{"github.com/aws/aws-sdk-go", "v0.9.13"},
+	},
+	"1da2c97642952213538a8e6cdaa6c425f2fb31922d20685806856cf734eec25d": []Modver{
+		{"github.com/aws/aws-sdk-go", "v0.9.14"},
+	},
+	"729d3fb6216f1912450b4b1e46768a7c5b0ab6210bb7f07670c83fc19c2e435d": []Modver{
+		{"github.com/aws/aws-sdk-go", "v0.9.15"},
+	},
+	"59bd900cef030cbee1eda510fbf75a78560765cea200ea5667f6dcd0ceadba6b": []Modver{
+		{"github.com/aws/aws-sdk-go", "v0.9.16"},
+	},
+	"ba0dc01ea6aed7ee65289f25dfdf5b18b573b2bb6b34f107963cd35ba4a2e857": []Modver{
+		{"github.com/aws/aws-sdk-go", "v0.9.17"},
+	},
+	"e5124f094a85897a0cd0fcced4e163a4b9b40f6d818b4ee487a8592841a301d0": []Modver{
+		{"github.com/aws/aws-sdk-go", "v0.9.5"},
+	},
+	"3f185941761b8794dedd71f58b53cc5e43f42cf378a5f502af15d56da93b3688": []Modver{
+		{"github.com/aws/aws-sdk-go", "v0.9.6"},
+	},
+	"dfcef1682cd0caa089c89d9894351f9a796fa977c95fe3bf298437ed9f1b5b52": []Modver{
+		{"github.com/aws/aws-sdk-go", "v0.9.7"},
+	},
+	"d858942c5796c5ee69278b59f60bb7185d3c08e39dcb5e84c96e84fd1aac35bc": []Modver{
+		{"github.com/aws/aws-sdk-go", "v0.9.8"},
+	},
+	"db7832bf78760429656f71cb0351a5f4f1f935a9f997163a4ce2cdf189fb771e": []Modver{
+		{"github.com/aws/aws-sdk-go", "v0.9.9"},
+	},
+	"3cce72f99827c2a753724d84f44a334b52b05dae929359054c1769081063ea4e": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.0.0"},
+	},
+	"13a1bcfb4daed19f6f0a1198442a8d08caa0a952ffd6617e6a44fcf2b4a3ed46": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.0.1"},
+	},
+	"21e57c9b4b781012fd6ec7c58386a022f011a8a3239af44be6b4deec2a0a63c3": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.0.10"},
+	},
+	"1b893f297c24cb18c75043e3604ce3003405d4018cc2cc4f1ffd49c3bd8c3ec9": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.0.11"},
+	},
+	"499ae540e8368f072ad7abe1d00e17570547c76839a2a04242efa0875c8557fe": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.0.2"},
+	},
+	"1fcd663acf1965e3af7cb000885ff49768afacc9363a6f926b1b24354797a5d0": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.0.3"},
+	},
+	"f46fd31e74c98730b2f6d9e5bd01cab2e6365dc1bd38edadcbc5d0713a9dfc56": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.0.4"},
+	},
+	"e0931892923fa013a833b081990884239062691eeaa07b8dde0c3a96816ffb91": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.0.5"},
+	},
+	"3f17fb46ffea8eed4ad3ac53d098f13eb242f97a4b77e46ee5305530d6844b82": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.0.6"},
+	},
+	"1815142fa55753742fd728b42f35ba0410336314165d083dc1c13e7d0c07b1a0": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.0.7"},
+	},
+	"b121ecb90adcb48d197c91630f0ab1dbf29b8dbb0c8fedcdb6671c9093e46ec2": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.0.8"},
+	},
+	"3d6e8ffdc311a9e349ae5e7d151ad74e0247fbda72bcc33b6771e8a8710cec28": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.0.9"},
+	},
+	"7d2a6c125b5ec8f37db93b3df811d8021aa06005801bf484e1d434bd983d83a6": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.1.0"},
+	},
+	"49108d3bd57f6f3611597cf8e538514f0c0864dda345838b518f4da5bff6ca53": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.1.1"},
+	},
+	"d07999a8116a78797cd51dd20e43eb03f286d6e06e2ecbb2431293552085dbea": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.1.10"},
+	},
+	"7e95d6693a7262337d4f3e691acf47979cd447fcdd557d85c61066fc0ef43d19": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.1.11"},
+	},
+	"6977df55401f087976ba4ffbe06db75d50e89d085e7021d440b5d8ebbc121d1b": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.1.12"},
+	},
+	"ce30bddfdb91f805313a0e2667bf1a3c1da669d8ad67b1e9a30f901046894c51": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.1.13"},
+	},
+	"293cdd551c271da4ba2d12c3d65361e4f1ba794262cb2109c2fb1b7e15a0fa06": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.1.14"},
+	},
+	"c9217cf12f626162d9c5a3be4308d1d86bc88998cc86531469a60f6138ac0fdb": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.1.15"},
+	},
+	"3b371010d16ed29cb686eab34c12cc28846fbb89cbcca5328b858f717b372e81": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.1.16"},
+	},
+	"141aee89654032bbe8206e0b899390043136612d59de542455794fae8d2592fb": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.1.17"},
+	},
+	"4e942b85f9860ead36ff2fa78577a351ae4958bf953bcafea8e12a10a647e3f2": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.1.18"},
 	},
 	"fc48b8a388e1f0dc9deda9bae8215211fff0e06fc7b1c610a529e01759680cc2": []Modver{
 		{"github.com/aws/aws-sdk-go", "v1.1.19"},
 	},
-	"fca386056bdc08769b70d8bd8d706138238c1c36328bf24596c42b864c02a89e": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.3.1"},
+	"a482f31dd72f4fa437838c486564adf831e7fff97e77a9f8df57cf0a1aba19ca": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.1.2"},
+	},
+	"e332eb75ecea0041794df292a08eeabb8f6c596039dd0e796a5021cf56457731": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.1.20"},
+	},
+	"740d7ac4fe13ea5e31237c8137d5402c776a8083962b02deb56466739c010a6a": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.1.21"},
+	},
+	"5a375386828105f37d370d8970ed04264c9b5b1429f99c791b8f2b8c6af81a4d": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.1.22"},
+	},
+	"36a928e5832de287da1175156d841fc634322218638299d395dd8952f8996c22": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.1.23"},
+	},
+	"20f09d91e08f4dfdc23c85a282a8a6f360abd42711672d902b29f4a936bb92b0": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.1.24"},
+	},
+	"72334b50c369aeba7c280d2b1c31a9cce335e94b83e212e074f8154930b69f1a": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.1.25"},
+	},
+	"3051ec527081bc3aeb64dce8f591eed1b9431c1cba594e8ec8275184fb2d8f7f": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.1.26"},
+	},
+	"ce6c3731b313f7efd558297b97a37e6335fca86d78cb72769d00ca5f3e0b2c09": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.1.27"},
+	},
+	"a02390c2d8dd383df82a7795bb7bbc40b5f62dda34726a2b80681f0a7818e25f": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.1.28"},
+	},
+	"dd946f6a7c3f719f71c57835b624a90936e485b7cd37f596408dc33c9eb58cac": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.1.29"},
+	},
+	"7f8e878442e8958887ee9201c087167951249baa626fc2c329ece8ac639a768f": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.1.3"},
+	},
+	"282557411d1cc5191e0888532eefce242f0e8a059388b82d3e735e94ebffad81": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.1.30"},
+	},
+	"9adc4f287e80d9f635c144f6abd6c2187f94742b03e1cc27b62aa1d119843835": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.1.31"},
+	},
+	"ad2bc0b4e758fb5be9dcba21f30c49a78833c2437b1c5f7fc01316f1565d3a4d": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.1.32"},
+	},
+	"9ba3d60ae2851e9672c99f012f6569c0f80c3187651f25954da18c8755792cba": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.1.33"},
+	},
+	"9d01dd6603100a90f34ddb45c3d82364c93327ae89b655c0886777825c07408a": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.1.34"},
+	},
+	"82d779236a2e4f24ea279e2007cd888d625fe322155012038c06bb5877bf73ff": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.1.35"},
+	},
+	"1e0fee6d5ecf83e6b9870d5d1bef0115049bcb60216218defe54576418227e69": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.1.36"},
+	},
+	"021d3944e21413f0de6e648bda6ecbb2e19f77695079b635098efbd1a2c29f4a": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.1.4"},
+	},
+	"77bf0d6522305b6f59d78b385dba789533c2b82ea3ce0cc831f3748c9e1e1899": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.1.5"},
+	},
+	"eb1c93b7aafb5767201e0d8f933cf9cae0f93e18afcd8b9280d1486228c7cc32": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.1.6"},
+	},
+	"21486f3378f32b701f83c7b02081f1123ed2ffdb10c9b13b02fba404f10bee96": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.1.7"},
+	},
+	"e2164a8f836294fb68e2f01b198fec3adf636e1a387e9d5922bdac89bd03f8cd": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.1.8"},
+	},
+	"3c85c82d7e9f8a90d6e86f1dcab35468913b1b6896fdfdb705251f09d8dd2fac": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.1.9"},
+	},
+	"7ced82d4a74f5c5b36767e0955e0d93e0f0972bc88f2bfe4d40c831a8806c29e": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.10.0"},
+	},
+	"1c1f7d938afac43062e33e015b5f9c72363492ddf1a790c1bf932cc8e3fccaca": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.10.1"},
+	},
+	"62258ed5f9006c441b162271b04a3e0ee1beaf669760d664f13e21eb4eb7d1df": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.10.10"},
+	},
+	"ab77934da39b689f5d4384a67691b99f12bd77c05e441a0c86b37c5b08ae851b": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.10.11"},
+	},
+	"b33bf32f1f8f60e34be5dbe176ac77f8ac094d8d22dd9140e82aa643332c6a02": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.10.12"},
+	},
+	"facf252e38bac6853a098dee7fccd6424627451dcaec36d8d6dfcbbe5c68c39a": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.10.13"},
+	},
+	"5de491e17e39412c1ae3e6f8e9aadb21ccddafb8695e2b73dc100a67060365e7": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.10.14"},
+	},
+	"e1b41a770414ed40e9bf119f418a780fc735cdbbcf42a474fc35feccaf00da82": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.10.15"},
+	},
+	"39faed0060d6e20e7e31d6226adcae4f902d5c5f51ba35c654532dc3b87f5662": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.10.16"},
+	},
+	"c61d7101ee2a8ec78dfa9dbeb16494eb31c8ec0f209a3d584bbeb89baceb94bc": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.10.17"},
+	},
+	"b605031e461eec4f526fc7ae3d2eac5f63b2375b37810ae0a6b5312d9feb8b85": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.10.18"},
+	},
+	"462fa3303e4f5055abc34add02ae8e436b8873167beff60144d3a3712634562d": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.10.19"},
+	},
+	"bfba1cf8750b753ff5dcfc4531de324a8c3f06c4ec659c8f51457fb96c14c33e": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.10.2"},
+	},
+	"6330413bdffed6b02e030b312846d85f773b6f0c362803e41174f3b2445821cc": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.10.20"},
+	},
+	"72bc7a932d8ff85dcba098860b8838324f9d4ab4c8be2eded52974ce40ef3db5": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.10.21"},
+	},
+	"8794c8b262c1b6156262632f386a83480a661ec08b40f9a0338049e31fcb2454": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.10.22"},
+	},
+	"38d558e46e9de0b75a55e60a93e028673deca04cf53d45d41203c0a4e415c1c6": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.10.23"},
+	},
+	"fbef79a719172c6fca21d448e9d9f8e18c2ccbd15780c0b5f94f6f813f060041": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.10.24"},
+	},
+	"7264045f9155641b5b64d64e36072885c74e892aebd10889e6157d21605286bf": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.10.25"},
+	},
+	"299d627af7aac09f73aa88f5d9860f2dce27cb558412bf9c8fd4dac5c52e61b7": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.10.26"},
+	},
+	"d66262052a1d8d9e3e81d0c2b6d8cb0bfbb749af2d7b3161a432aadb8bc767a1": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.10.27"},
+	},
+	"f4319bfc9a8cc81cae83a435a44322db78ec9605c4589006ce50dde99c1c6329": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.10.28"},
+	},
+	"7d4a185ff25196cc79e7600190998ec2dc25c3a732f82cff10e7c8f16092ce05": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.10.29"},
+	},
+	"bdcd93b6a56cb785d5171daa6fe2b1716d9f76db446ee9c666ef78229fabc497": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.10.3"},
+	},
+	"7256b46eebe8585d57163f8c40ace06aa407fcf0e4748112f33d76e8d10c170f": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.10.30"},
+	},
+	"766bd823640cc788902a1b0b2c4f475a78eae6143897a6bd456deaf0df9651d6": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.10.31"},
+	},
+	"1e0fad7d8718ca2c4e6a40fb602fb25d3ad614bbee768d79dedff59a477bcb25": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.10.32"},
+	},
+	"13fcff91d5e2487c134dd1e66d6a6ec11b15f42965794bf287d31d3ed05ba039": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.10.33"},
+	},
+	"33818140d49c09a42929cf8afc654f340ee6c6e62f103d4afd9a512ed338ed94": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.10.34"},
+	},
+	"b05d18e10fde89ae767a34d3e71f0f97740f61fed6858897b38e63d181acca94": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.10.35"},
+	},
+	"e1d08b2bf8b1887233f4e89d9df269db5ddacb6ceee5c01481b49947f1bf5cb5": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.10.36"},
+	},
+	"6c33deaa6911273e87d15d3b8bc56d0b9caa7d2c4cef1f0617720ea598821d2f": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.10.37"},
+	},
+	"21f190fb2b62f496de781ff69c82687fbe8ca473f5c29ed8b16ec204c269fdfe": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.10.38"},
+	},
+	"138df3d1f4e0a6bd4fd15e41d81f9ae2200ded75e49bc911a612cb77f55921de": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.10.39"},
+	},
+	"782af93181006dbde7122dd8de4ac714a62e53832393ee72cbe420c60fde550f": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.10.4"},
+	},
+	"0ac7d7731d2666c93a625d0be7cfd7835bc807ea3eeebbdc906c37103a38cc39": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.10.40"},
+	},
+	"21e8cd93fb60ac8271970b6628316979abb20bd5c8822b1310477a0789598927": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.10.41"},
+	},
+	"7ca669e4f053223112586b08645572f6824ac3bd438db313c1e46fb99d853f79": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.10.42"},
+	},
+	"46143f5bd84f61d087c45914555bdf0935ba703d23bec068f133ddbbd5c628e7": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.10.43"},
+	},
+	"2d812b679bceefde22b9944e888a924922ab3e434fd515bc96a6cddf22259225": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.10.44"},
+	},
+	"9c17f7d52eeea7b9b98d3397a05bd2544a99a43df7063b1ad33a4bc1cdfb9531": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.10.45"},
+	},
+	"0fbf79157bc496154ab2982947e24c0dd91aa0f34e65f60c5322ed9cf9cd6674": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.10.46"},
+	},
+	"63cbd989a0c361ec2f1a90c39b3b9d14c3a9d6b5c2b0f49c61459d11ea48423e": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.10.47"},
+	},
+	"721160692fcb6bdea166608298f86b36be57f9f383c78b049158e36194fbc40a": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.10.48"},
+	},
+	"576686c413a425925bd4d300122efa9af5fadb908a2bded181fff975dc44315a": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.10.5"},
+	},
+	"4101f3452461e5871c610f295f2195517bf4d16e0bf751aa2e97aa86cfd99142": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.10.50"},
+	},
+	"148fb5565f186c8a76fd373567af1743a4e52437bc5e4f43489e136dd1950a94": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.10.51"},
+	},
+	"0f4a0214145f3858d6ae99a82b1929cd8c69e2daa133e135fab64bbcb178689f": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.10.6"},
+	},
+	"ba82ba72a0ed408e811787ffc63e1c77577271534138ced2b717c18cfae6616f": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.10.7"},
+	},
+	"bdd5f0e83be169ffce9a32c9eb5290ebd0f1c08f32e66433eb3d2cd1df27e2b9": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.10.8"},
+	},
+	"8a3a66c5beb4e7f7bd8637aba10af113820e1750a6c47535481d2aaf9cacd6a3": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.10.9"},
+	},
+	"932dd2b40fe26d3eef1947a357eecc8e755cd17fca1fd707cb5e882e66118488": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.11.0"},
+	},
+	"46d5a07a19f6981d03806d3230ad6c10b58929bc8d8c940a0383cbf065eabb95": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.12.0"},
+	},
+	"5c385baaa09fb7e970d88821c3dc51113475330899b0be6b364e8db2efde0afb": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.12.1"},
+	},
+	"28de334f03b2e25cfc9a14865de8a454dbdde4bfb464742ae2100f7161c48fdf": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.12.10"},
+	},
+	"8c398f163dcc1c09cb2a06267e2f3d333276e308b99aac240e9d55c68287c29b": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.12.11"},
+	},
+	"b820072df7baefaa9e3afd0a6234ec981372b4ef1bace1d5f40852e47dcb0fea": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.12.12"},
+	},
+	"50c24a59af1f79f5211c0ed17d12b0ce53a414f0562dad817a9527fa47d48b33": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.12.13"},
+	},
+	"f86211b26e0d08dcc478325ed6366c65ba06e2467d482e5233376bcd1b5a0d07": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.12.14"},
+	},
+	"7a0eb08e48e7f1a8b43a626eeaf4cdd1a787765b78ba7448470991d7964d694f": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.12.15"},
+	},
+	"a2061e0fa2dfbb074e56a9dfada2d227ff405a3f80f8c84192a812d64534d549": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.12.16"},
+	},
+	"75d6c953b2ea95cbefb730bd59b290568f4f3327cea6a01256b39757a9ed0a24": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.12.17"},
+	},
+	"e690b0559769f476dcf9229fbc8292b1cfd24138abb8091e61856a26de9999a4": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.12.18"},
+	},
+	"a01aeb26ac016b3b7e0b4337919a955df992b1dcf68929834b26f0d5de6efd32": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.12.19"},
+	},
+	"a0e398222e6ed7470b948ba826bf8eacf0c92828f90253ae37281d98ff460c6e": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.12.2"},
+	},
+	"02f854e7a9f1c68ad114b8ed48c2aa1a6baae2566134e484a93f2d879f74fbed": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.12.20"},
+	},
+	"d21fac302382ef6b3eba71fe4c7fba8ce43d372488eecb15dec7f039c0a4f8e2": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.12.21"},
+	},
+	"56ce50014cc8739b24601964245fbb21da1a73c91100067dc8380beb83e9a478": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.12.22"},
+	},
+	"a4cd6787d5efa8ade3c8189120643610f37e653c02f50c485a4039d3e0535695": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.12.23"},
+	},
+	"dbf7d495fed7b8e912352d4731fc48ea5fc76efb5f3680c7b560e752bd532f86": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.12.24"},
+	},
+	"8cd7ca25e0af7f2473312fd708e4c7e79266c4a4d6dcfd5c3b971e4f64662506": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.12.25"},
+	},
+	"adc1efeabebbb73669ead16ba5e1a47a2d7092c43eb39586dd981054354ce00a": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.12.26"},
+	},
+	"c5efee2617f4a0ddaa40babaf92b2a31b7e302e3cb025aa71cc2d7b170f39d3d": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.12.27"},
+	},
+	"b29eab61918f28211b024788704b2234b4ee9b29a12498437840c8732fcffe85": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.12.28"},
+	},
+	"822b8e9315ec22a5dd0ed0b43ca0f15e93c7597a91b8ad764edd53941b0fc778": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.12.29"},
+	},
+	"c0f39eb2967f8cea15b87fd3472e26ec778720664fde12a54bd4ad12c125d0bd": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.12.3"},
+	},
+	"856f70e494d872e13fb0d49171f5ab3b007a4f59d802828403741eba4f1fb299": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.12.30"},
+	},
+	"f1815af9489d5254297b9671fcd7c8cf087083821268178e62fee7959fd7604c": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.12.31"},
+	},
+	"5d7711889af5018a6f13240c1272bb6799e0c94524fd0f048586114ddb8abeaf": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.12.32"},
+	},
+	"eb2980a66df4153cf037d1f9fb8c79db9cdbd58a913ea2294b679f6241aa4da0": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.12.33"},
 	},
 	"fcb9d2ebdb73d1797db76332b0c35f2f65aaebc8f0ae55869b139a07f82316f4": []Modver{
 		{"github.com/aws/aws-sdk-go", "v1.12.34"},
+	},
+	"5df9612b3f4b8262b246f042c8454b2e2e2cc0be8579e2429e9b02f8ac153bc5": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.12.35"},
+	},
+	"0813a1321df36deceb3727ee60b8e61bdbae3602bad60a4c488a7fb07e1b45a5": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.12.36"},
+	},
+	"97d06c1edcabd03178188388bdc1aedf693eb40f063a4a32c9586c0e5615c649": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.12.37"},
+	},
+	"cd1f3cbd5a155628ac3c3644b368bcde18f59d6a85ebb13a8edf9c1d1578e680": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.12.38"},
+	},
+	"97237376350272865e08eedfbf3198e2ada749f723783ec39bb9899de482930f": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.12.39"},
+	},
+	"eae8ee1888d4d8681f131424e2c9b6923dcc9a12b77b8d99f3bdde3ab590b599": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.12.4"},
+	},
+	"eb33e9f10145c827dc58198658dd78edb50568108186d6b1659dcf05371f10f9": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.12.40"},
+	},
+	"0b469b69e2fe0505040232f1a68d284ff06e3e3167f6ce2a491040a4c721ebc2": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.12.41"},
+	},
+	"35dd6d0a81f5e9b1550c572ba4fd20950663c17a6f04f4350b4c697aa03bf60b": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.12.43"},
+	},
+	"585d0d3082110684bc2f1a2287fcbeca2d36ca3d7cfc986bee425da5eb5dab37": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.12.44"},
+	},
+	"1eaa8dab0ed6cf3020eab12c962c6d450599762b4118393693c64c7e56bd8dd3": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.12.45"},
+	},
+	"025173bb9b09e9a643221adbe57437d8b92fecffbe13b007a33c6b63391515b1": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.12.46"},
+	},
+	"f1660a7f7e849eeec41a83527c02593705c82a6b9f546727050a27815a88ce59": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.12.47"},
+	},
+	"f83760c92c83ca1c4b8a658e10a208bbd74f98596425ee7e8c5716b9b7b87217": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.12.48"},
+	},
+	"359cd9dcf0c1da4bf0f757c76f9442699d560f3a3aac1537b4b49bdc6467433b": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.12.49"},
+	},
+	"21d38c3c8b560ecd68d6b3cc9ba4e5f5067e4294f09c1420493bdf6690981703": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.12.5"},
+	},
+	"d6463a302a09eb3e44ef93c6b87ef2b2d90a0b8a514b5d8655718c5fa8bf4d12": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.12.50"},
+	},
+	"49e238c82492767b23983e1137c8c4f9d1875b44b33a4ca04684581449756fe4": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.12.51"},
+	},
+	"ce4c670eed03ad91f82e813208d69a94f1353d4002c00d35949f9223783c2123": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.12.52"},
+	},
+	"62df505ace076f2983fb09afe07316776893e6886d7a2c23366ba6dcc1b2bd19": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.12.53"},
+	},
+	"f920225c4455dd6c6e003455a0a13c5209f124fa25006d0b5689a2e17395cc8b": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.12.54"},
+	},
+	"01006cd4a7a3be6f1fdacfd2108596431302e40698ca2f87838c123f53f060ec": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.12.55"},
+	},
+	"e732ef222a8b2a0ffe8067ea651bd4d5306d0f227c34ceba1cc5db570e1afb07": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.12.56"},
+	},
+	"349efb73c7cd02881c5166f2547854d36940c9986e7305efa08e0fe850e7bfe6": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.12.57"},
+	},
+	"a95f85f501499f93d5bd2eac1cfbf526d1fcd0f5b266dfb1c44e89604dc113b6": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.12.58"},
+	},
+	"70d1133a3b946e662ad336b65987ca61226744135edd6a11b2e164d37b27846c": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.12.59"},
+	},
+	"0df4d9c70273379b9b5f2b16b0e39abb8ec2e4ce83bcd1662194d3b69c807305": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.12.6"},
+	},
+	"0bdd0a29dbe2be132d2f4b642cd9a7447b1da7c10f682f4028f68f519b58e733": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.12.60"},
+	},
+	"8fc37c9c2f8f758b25a456f535f913b1a64dbc1ab6965bf90c0658b45f789e72": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.12.61"},
+	},
+	"c5e4f7e2a0fce6ed8532d2dbde97f3803a76f922e8d666278555269721e81807": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.12.62"},
+	},
+	"7e3b86c3e3a9cd77902755ccc9d2252624b5d52edcedb80a7cfdbe7493eba758": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.12.63"},
+	},
+	"d65e4d5afb087b25889fa876a10551f84dac2f8998506d221efd6494206d8c33": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.12.64"},
+	},
+	"a3670093265edb6c98bf18233b1771c7b345c4960d9e78d02f00953a465a8035": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.12.65"},
+	},
+	"cb1c4085a562ddf49db0cd25c2cb3080c10d1875315215fa59298b17aa1eb33e": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.12.66"},
+	},
+	"52b9e2f8f8817e65f723bfb03caa056eb8410c008a01b932e5989e68dd1a2bb3": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.12.67"},
+	},
+	"d182011c210e5bb52d218631880ab660db7470b386470c482ba32b58f76efd97": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.12.69"},
+	},
+	"98ffc6f4fd04f958ed0f5fba6185db6893a670a50908f15b10478ccd05cac196": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.12.7"},
+	},
+	"db4dcebc35e050bdf86117a6ea9ec662f1f9f90b7506b8e2e39c53094b8cb70f": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.12.70"},
+	},
+	"b4c8a9038e05e76a24c5b1bf24f0031727d6418275d28dc1962bce2c69f28c34": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.12.71"},
+	},
+	"6b151eb5c5a98e6f06f8f46bbec53e45c63620566e9980f7e2a638feaf644994": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.12.72"},
+	},
+	"d53259b1aab5464fc6ded0d8f6b60a2249c96a2d6f3b5e8bfb854d70f3317be1": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.12.73"},
+	},
+	"bed084ee7e01ef4ded069eef627b9d74a2d67ab247fc21a907ce50dca363570e": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.12.74"},
+	},
+	"e8b855a2c94dbf3dd30e9a23bb5df5b38bfd6315cc3d03e2844a3092829cebe2": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.12.75"},
+	},
+	"3e921f75fd36b0fd9d8d48a5a132450bff0fd7a22b58cd036e75e231bf3be118": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.12.76"},
+	},
+	"6dc02204e16ceb5a23e24be21040ba20e411a9f097509b6c1223c79e193def06": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.12.77"},
+	},
+	"56ee2cc1ab43dd75cb4913b8bf2c3b4020d0fa48ff81c4f96f01a9027603e563": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.12.78"},
+	},
+	"161f220fabecd1439a7ec6b78ebeacc9ca7aa174227f6b4963a73fb55a436cb1": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.12.79"},
+	},
+	"3824ed404dccb537228ff17c2a4ec12265bb2ece53fd68aace0288957600a5f5": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.12.8"},
+	},
+	"d55f1e5b5738e08bab3bba904dc085b1cc40a66c13524fafa154206f96bbff1d": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.12.9"},
+	},
+	"e0bc39c5d159021770ec13ee4893f5e8ed3305f1e645eded670d4bcf3c5641a8": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.13.0"},
+	},
+	"1695ebca04185f37e47dc945cbc3dddda0fdc6173e12e5fe388720d0614a51fe": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.13.1"},
+	},
+	"57d7524ce029015dc8b34d2faf34650eaea4b063de7b3a2c504c69c463c15b80": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.13.10"},
+	},
+	"e119d051768d87de66ff4e2727232f7de44c4162aeea9afd94c3b36711241ca5": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.13.11"},
+	},
+	"504c699600fc0bb03fe65e7ef2b0e969af65574df246397b22e08d30f00b6e4b": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.13.12"},
+	},
+	"00fc6544f83d90a60663df8b9067b9ce39ed66fe82c2a1b9759d4f41d00c4321": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.13.13"},
+	},
+	"1cfec04c24662f042a524c859ecb71091496827edd56a77a7d61b5d5f46cac22": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.13.14"},
+	},
+	"44b25449949fcfbc5e9270c1cf99a7425a66d45d1ccb7d3344b04c9ec6584184": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.13.15"},
+	},
+	"ced8d770cc0cdb0e4fbb2781ef521dd065ab1d30272b23deac54f3aeaec59019": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.13.16"},
+	},
+	"5dfc0a5960e96c5380bf40ff09bf43031b33fa25ea52d0b2d49db7d16151750d": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.13.17"},
+	},
+	"a8aba898b18e9cbdacc28e1460948d4d7b2b09176c7c7d7cc33c62ab237b7b7e": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.13.18"},
+	},
+	"a859c0d1c0ae79d0359d5e50100716b9e81112a752f0d9b9c28e1b1312ee0383": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.13.19"},
+	},
+	"d87b79ab98cf01d0628c4d96277718c27b64223ffeb8334c315cd8b609c5264c": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.13.2"},
+	},
+	"cb1cad870c2552672c9012abb89de0ae518f30be4a932e5139d8e726eb74a15f": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.13.20"},
+	},
+	"92fe882eb361789e6c530bcf1008ae7c2fc5651dee5fda62f9d4f186290c6add": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.13.21"},
+	},
+	"53fc9e80e8c84b4fa37d5c0a974ec6a62d6af083155ace44eddb81abd4e90b4a": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.13.22"},
+	},
+	"81d4ab2b47ac53e5e69d6c09a0f1bbdba4cef2863d2418a6314d744bb1a654d6": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.13.23"},
+	},
+	"3acc6e304818224d548c3927717336d4dd992ff4af1fb2b95735f397effcc85b": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.13.24"},
+	},
+	"97ba8959c59c895b9993ac2a24e11f40ade7c4ffad33adbc31e5db59e1616c74": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.13.25"},
+	},
+	"87d6af8f335064b709024582cb751c351a0a7f1093d4e54481f900a61a4c14f5": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.13.26"},
+	},
+	"4e43cc9078f8b52483fc9404293ad6dfcfa2bb8d921bd8edc8df978f96df9e7f": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.13.27"},
+	},
+	"4bed5f2a761e4084a7e6fb241da7a6c12164362fa7aacf6dfc6842a2f16a3c87": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.13.28"},
+	},
+	"5ecc3f8dbb870a194175e7fd55cb40a40f72811596702e3401e35def698243a9": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.13.29"},
+	},
+	"94c10ba8665537879830529885f50da7153a7d46109ee6e77515baaaa9746c7b": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.13.3"},
+	},
+	"d3d5d3510f57ac2eeb742096faafc004d0853d4e2fed1900a828df80733e7aeb": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.13.30"},
+	},
+	"85cae8ad2e6c265b60b88cf6d1187cf78c685852651171cee11285cbe788d0ea": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.13.31"},
+	},
+	"c9422700d5aa75f886cfcea44233388601c1e8759365bd64d755aedbcdd2f6bf": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.13.32"},
+	},
+	"aff0e936fdf2350fc12907be91903d00ae41c60e7b790ab4c2b09a835e630319": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.13.33"},
+	},
+	"ca17793b617e2860110c2d87ec28661c96b85d04b1a2d5e861b31964c3f1e9f3": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.13.34"},
+	},
+	"9618b7d9e3758e3643f328f5db76dddbc975907372038e10efba50900684163e": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.13.35"},
+	},
+	"a7172ebd897ec0bdd5896ef003956496e0b852fdde5d3e8ed44ec07394b8239d": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.13.36"},
+	},
+	"7cd43b1bdeaf4a7343a058b16fd8195fc257f84a10f9cce2bd888a3e86929972": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.13.37"},
+	},
+	"53c21cde40a2c0ff5b75bd7a1c48225fc7f30522ef3e766e366c8a3009813697": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.13.38"},
+	},
+	"a2e9f173a63db6bedc2a626ab975856baada20a7906df38d2ff8fbdb7c71eac5": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.13.39"},
+	},
+	"2ed954440e7319af0838fa3f57b90ab85af32de152ca4f7888b6fcc2db2dacc0": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.13.4"},
+	},
+	"c6bce80931304e169b61588cf2f7940a324325f1b4e5fece77e4158d996bffd5": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.13.40"},
+	},
+	"df90a88e0c32d5f01e95a91ca4236a3e03a4d32801143415bc1a644aed210b80": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.13.41"},
+	},
+	"f4046f620abc58e5f69fbaf1fd302cece178a9f2241cd099756fa213cd45453e": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.13.42"},
+	},
+	"32ca284475908376c2468290a22cd45cdba289090e19c3fff70f87e1df354634": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.13.43"},
+	},
+	"d34db4acb9fb08d862e8dcc1f6de37fdf565240b2236c0f1cb824e76ce2ec9be": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.13.44"},
+	},
+	"557cf5fdf4e651e8383981e159fe77e097a9e419ece86416372f2d781949b4c5": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.13.45"},
+	},
+	"62f2276a2c5bd9761f35720679e7b5354deb8b3bbfa20eeeffec3055483cae08": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.13.46"},
+	},
+	"c13146db8e9a8badb0228e2542c01c49e31921994da294b7f96b8381d104ec9d": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.13.47"},
+	},
+	"d907f146c13eff309c1d1ee8468ff2821e93105734353d016044c1570335b724": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.13.48"},
+	},
+	"ca8e018c638e0e85abce5563d75b92910f88c662c5dac469650c103bc6e340b1": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.13.49"},
+	},
+	"03417e775446e2d1ad0e1da4f420cb14d0a893445eb311dd8ce2e012f00f71fe": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.13.5"},
+	},
+	"e3a49e7a64d75128384161cbbd65c2a97b5188ca3791c9bd4c935aacdd237855": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.13.50"},
+	},
+	"9b8b7f71a56e811f5cbc68dfddd391cec5cfbca5dc7694926224c2195a3ceb92": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.13.51"},
+	},
+	"5c020239be9374d6109856230dcda18ba91dcee786f4147d7c35706121e4e716": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.13.52"},
+	},
+	"ce5c8dd103671fb3e122d80c5bd52a0f448ddd9c6939530032524138b3ca3ee8": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.13.53"},
+	},
+	"71db83340849d913fc05e1578740417f8c799acf290ad46e83cf4243f53b8bb8": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.13.54"},
+	},
+	"83cef6faefee7353bdada8afae2222fb75aa342964e255df14e55fd812ee2ade": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.13.55"},
+	},
+	"4de106a9fb451cf6eb91d8ad08e7f5e69a78eb9bc0d003ab04738c82a312861e": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.13.56"},
+	},
+	"44f08b8095412f3b1e954a6265a57b79340edb2586f012f30581b5702436bc5f": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.13.57"},
+	},
+	"c56ec9ab483c28135ff229664123dfb5442fff2c35e12cb49f5dcfe8d40b4025": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.13.58"},
+	},
+	"cb010e8f46f6ab7b800387d0d5f3443bdb526fa9186ae813af37aef95e44bacb": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.13.59"},
+	},
+	"f7370500e2e3f7ba04b89789996d153efa9888f0f5c9aebdaf5a5dd46ff10361": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.13.6"},
+	},
+	"240c9cec5f30b638d332eef6e4f9f54554b1f0c4fc13066de05844d35bdb65be": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.13.60"},
+	},
+	"cd68b3e4ec5d3fca144be7c3539e4bf9c6053bfe6f2e2396a888db248e3cbd3d": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.13.7"},
+	},
+	"67005e3acade9eb0be4ab95b47fa1d415358c073e1459f47e953b230d3e01b5b": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.13.8"},
+	},
+	"5eda578e84a5bf023a60095deb83fdc54524e2405f14deea4a7e78531bef64ed": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.13.9"},
+	},
+	"3e5501923bebac98d7da4aad12c4ca10c44fd246e53cd1c91ed9e56a8bfc1e9f": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.14.0"},
+	},
+	"90069c9b8b5679605784d86b4be648ce8f7f83a3463ee69b1ddffdf48cdbb298": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.14.1"},
+	},
+	"1c973d1fff85d26a47b9802063c0c571a881430eb2ac858cc2f41921d23d4e0e": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.14.10"},
+	},
+	"44514d3926da9e7fa2eb33b82eac42376c68f4e6fe9f45630b20c5d2391a82bb": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.14.11"},
+	},
+	"179d1a966d113086ef41304821feb882ba9d2d611eff049711ad049aeb0c428d": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.14.12"},
+	},
+	"2f0db689e0d466e269ed1b7c23736419765799a3b26bb798e41ff5fd3980a525": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.14.13"},
+	},
+	"b1cf460a2baf2fbaffab860470be91ad47d51db221e995a1a6247ba02a8c8015": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.14.14"},
+	},
+	"9bfac6c8a5243ac55fbc1661b0bf699989eeab2e88b8300f3de256ba6746b0bf": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.14.15"},
+	},
+	"077a871764f48534cea9cb0c1b711941b1ef1c8798d5fe1ed4231318fcc1d25e": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.14.16"},
+	},
+	"f0afa0f13fd8f3ed26c91b4994c9737b3463dc9e5f28c961ebd8415b9bbeb849": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.14.17"},
+	},
+	"aa4d38c51f50b5793a43083a7698161c402d678a00f91e5c5c8d4f190315156a": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.14.18"},
+	},
+	"e01a71d3de71146dcd91ccd0b849b487c222e0619c2c42e240c06f442dc7c751": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.14.19"},
+	},
+	"d9d826fa574ba6ba8cdd19b0caf9e752601c8d1324f7e6f895570d6ccb8e11ce": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.14.2"},
+	},
+	"539a0beb52fa91735ce033b3cc238109e62c793b450bb632b557a9f522f69fda": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.14.20"},
+	},
+	"605b96752d5e1a3f2f3e25b6669b04bde966155ab99ac01920aa646fcf7e0c9a": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.14.21"},
+	},
+	"ab436680162a7bb1a3340b41b96b667c52d2ad44b29ddf570ce3c102494cb383": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.14.22"},
+	},
+	"04730a4257855f348c5893d52bf9cf8ef61b7d2599d3cf0077885c5b0dafc73b": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.14.23"},
+	},
+	"2a2e3ca5184ae9c76ee11cf263973db2e47d5330ec495c7237c32560d9a58cd0": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.14.24"},
+	},
+	"3d0b4dc4bb28cc889e57ababba4a8c0311c18194d514bcd8a18e1c6c8a43ecc0": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.14.25"},
+	},
+	"cd732ddad3a59e486f2b19f88d2be2ce1eb75ec112323959d3ea0f8fd1130875": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.14.26"},
+	},
+	"3cd9d93645925be3648b76f535b7390a7f4fc5ab031b98f711f2e1c657573f50": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.14.27"},
+	},
+	"1343849bf083e0df8a0d59f74e79ed5d144a5da54cc8b2439f97efb32d42d078": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.14.28"},
+	},
+	"e2062fab0e53fa5c702b4c942a4a25b83f9bebce5fb3448e91b299dbbbc3424b": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.14.29"},
+	},
+	"506b12466c485998bebf400068365c3018b2c47c77ad85d138aadc32f10d59a9": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.14.3"},
+	},
+	"74e40cf266397adebd19d155e15070152e5d68bb0bb358b210eec26372d38e9e": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.14.30"},
+	},
+	"40ff69b3cb2d2ffaef8a73747db843d5e5337c389ee52e3d71c192d212f99adf": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.14.4"},
+	},
+	"391efbfb5e997f9f2857cda24b866e3c3bb17b33fd4d9d811fdc792a85810f7b": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.14.5"},
+	},
+	"9b3ef598b5465eee921e108dca77c4a0b81e4fe28169c9ed40e37c57783150ad": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.14.6"},
+	},
+	"f8b886081d445af9e9b8a28fa38b0d5c4ff9bc792b069d960df1a6984a305869": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.14.7"},
+	},
+	"649833f6183f125b0edfb6865f9f467a78c84d2813de598c8dd718405b6b9a63": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.14.8"},
+	},
+	"e7ce23fb7fbea352f56ceda1f3d2aed209481e69629d72a7f702882e50e9bb5e": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.14.9"},
+	},
+	"56f7e9ad880268a73e10595126df7dd485f73fd9a4ef3ab5cc48ca2df8d84cf6": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.2.0"},
+	},
+	"b8a5da148a172d9124eef42891c124e740bc1bd96370c62d00f3ed8d1759956d": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.2.1"},
+	},
+	"9b118a73452bfe822e07663d433a40fa44e4768703fdb9be2aa2294ff61aa553": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.2.10"},
+	},
+	"50e8385c3900c7bcf9c20838d9214be60a738b369c14e7b3bb13bcd09d074c37": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.2.2"},
+	},
+	"546625924bddd0653238b2a24917ae24f389c9a6d05377b4ab7f3c94f00a8f1f": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.2.3"},
+	},
+	"4f32d3f18fefac3af6c3e0ffbb8cd372ea467663daf63bb83b457672e511080e": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.2.4"},
+	},
+	"012d1955932cc2931798f3a14a15f6ea5c96ec7b710282cd1280384c160da5bb": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.2.5"},
+	},
+	"7b1e7ed3e2738315f854b7d911b7c1134164ea5e55d66f36fa60be234bdca9e3": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.2.6"},
+	},
+	"c472b2d2affd375ba2192f78556efe23f00bdcbcb46f698517eebdedf11ac7c1": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.2.7"},
+	},
+	"8986573cfd66d4255cc0fc39b29aace8b1375684a3ff1548dc9e8e381e93fa8e": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.2.8"},
+	},
+	"edea33bc34a244dc8e73f82272955be20e017b13316f4657b612c5dca2307bd8": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.3.0"},
+	},
+	"fca386056bdc08769b70d8bd8d706138238c1c36328bf24596c42b864c02a89e": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.3.1"},
+	},
+	"39c46fd0873c5c87d9651b5525299ca6622924a0a355653c76d413f6292c9c03": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.4.0"},
+	},
+	"5413e2c36eb312371f9769969ba2e2260072f3e65d68e5df08c195d383de2de9": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.4.1"},
+	},
+	"bf468a9b3474abf00d06031d7f14aa226d8fd35c93b45fc88b6ac67821b93ed3": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.4.10"},
+	},
+	"d2c0f9ce7cedfc80aafd7b4c2ecd84b80a56d422acacbcd86bd63c489488f33a": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.4.11"},
+	},
+	"cb2a904974fbf01db3692e7945a88a3b176a892793f8c66ffa7a5c9a3e2c97ad": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.4.12"},
+	},
+	"e2332bf793196d7b05747214fcedd474503df96701e4005156c30eef05f1a2a6": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.4.15"},
+	},
+	"7638dd42963ae295425d7b61c6ba6892d29bbcaa228f4b293503c748ffd752f8": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.4.16"},
+	},
+	"6753ffe24b836b7b182d91b7593a320a4da7aeb5841ad0b4f2062c2d3d47e189": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.4.17"},
+	},
+	"1ee2cfc0a11c390786deeae93ea7ce1691b7acbf26dde1b20cc08deeb02ce75a": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.4.18"},
+	},
+	"328febad29b3a38937231b2838dacb6dfa508a66abb789917a1b566525cf61bb": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.4.19"},
+	},
+	"2d578222931bfc313a686e03b6aa7332253b41f92b52c30b60a684c82dad828f": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.4.2"},
+	},
+	"afe432b1d5ecbc9e428a5cd622239b228d72529c3ef8ca64a1c7783e8b30b81d": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.4.20"},
+	},
+	"f5e5e9c9882c365c076b2dbf342b750505a98902a4c1b7070567ecde83ffeceb": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.4.21"},
+	},
+	"e6259b965f3109ebb10db93218941dd54bde526943e99d94eb095ed0cac2b0e7": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.4.22"},
+	},
+	"6cc67d190cac79e8d38d6b4fee0e876e5e078bc31f996b3854cda853578724e1": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.4.3"},
+	},
+	"3c60dfeaa67f1fb812bfcc0097d9f14b22349556a21968ae016125c307884fdc": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.4.4"},
+	},
+	"bb685200411ab4a7e3790f9626ede3cb512ceec6d1fcfe0f90e3d7a8de0b9e4e": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.4.5"},
+	},
+	"448e33d2e0806f43a9aa3dbc1361b282ab5f46f90aa9807761ce98df3132e05d": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.4.6"},
+	},
+	"9a37adc9706a60547d079799af88a9552f20b4ecbf399d1ec1a8ad2bfb7c7590": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.4.7"},
+	},
+	"0fbebe6ff81e4714160ce14daec7f110db3a392640932fc148e771f22cb788a4": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.4.8"},
+	},
+	"59c3ae174388647d37586a845542ff202e9c8d64ac885a8d5446387f35169dcc": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.4.9"},
+	},
+	"1ad7ea9a140faf7e5abab6dd2a1c3be14d702b048824ed57a6af3add60ef2aa5": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.5.0"},
+	},
+	"0b2025f63c87db6396f4cd3127c94b076316b920bdf2b24d5aceafff64ba5cd7": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.5.1"},
+	},
+	"843efb3d4d053204b1922bde8bc8d0290fa0270116eb708fa09baf5d05cacf99": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.5.10"},
+	},
+	"eddb064e987b8a441e2f0ab8b635d331fbbfa21342ec7c6975852a1749ea9011": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.5.11"},
+	},
+	"726f2c247b1042ce8cd6c5c0fa0ab589fcec407364320e8188a7fc8199e5202b": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.5.12"},
+	},
+	"0d5d957fb29b98a0332c77b43dbdd96e372996145171930b075ec3b70c6a57cf": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.5.13"},
+	},
+	"6a3deac9c66210d882c51e6c0d8bd84e9e8cf4293bc2ccb69e2578b594327190": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.5.2"},
+	},
+	"7f7689e6d7a16179e3496aefa798793615fecfff346ebc2a2355ab0900a1b0e0": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.5.3"},
+	},
+	"bae9a07e4e3b32655b4ce2557cb921bd95ad099981dd73c9c399c55862a8a885": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.5.4"},
+	},
+	"fb7e4ba88db2f40423ac9a8a64ae1c0bed170999112109bab0e81be1cf70b9d7": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.5.5"},
+	},
+	"36e2cdd881505efc55ffe272e8f5ee0f41fe3137ac5d62f4dd2dd4b3340a04cd": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.5.6"},
+	},
+	"7a122c81ae94c3f34a64c5a70a310d3270fbeb46824429f871cdb6c9998b861a": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.5.7"},
+	},
+	"9312ffca6a1ca514b093f2b2c45582cce9de6ea18d36feb61fcd4f6370ffcf20": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.5.8"},
+	},
+	"81813bf9fa70ccc28bb2745b474c139927b3fdec37ac9132a3cb6af38705a793": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.5.9"},
+	},
+	"f53d56e7aab4c0acf97ea01925f56174bcc66b435bc01ee54313562cf05d0975": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.6.0"},
+	},
+	"7cc590aa28a6c3b1f02de525801fed67d5527037a8436146304e3a7c79d3d905": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.6.1"},
+	},
+	"8fab318eb26ce608f91011f2e7a09b1fcc4010ccb90570497cf19702ecb74eea": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.6.10"},
+	},
+	"a685ea3ad626e5676787d61251633ce7ae860d7abebe90d26c39dbcdbd1bcb7f": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.6.11"},
+	},
+	"1793ebeb93ada3c48092edc099472f5bba311848bf7b1536b619c52970382d35": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.6.12"},
+	},
+	"b2ae6744ffb6d75b98294b8e9e3fcf08457d32fc02c1e378e59e4af0eab21977": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.6.13"},
+	},
+	"d362a7923097bea49e236f33ffb0ec96a2d63daab19ef8804174ef73b9a15182": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.6.14"},
+	},
+	"0070ef7a948597230c7710d62b935cc5fa8bc610d5aae4d5e9c5dba7134b26b8": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.6.15"},
+	},
+	"d0f74a3a6da991ea1b105fa8779d8e4c51a114bad24e4372161eb5820a637b47": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.6.16"},
+	},
+	"1602a28be9cd4d8e72e90a4e97a6f2018db42a780894841adcb8f33ea3f448fe": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.6.17"},
+	},
+	"d7a3261843094f838a51ff6eacea3f1e4a7b81649a6969e7fd5a175c85a504fd": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.6.18"},
+	},
+	"3ff68a00d41d69f84764dd0494f9b5f4afb285fd775d1dc45813463e391f3073": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.6.19"},
+	},
+	"8f0450605d0fe501dfd62f917b9df8735d0bc902ed2356a4428ab3c1e01c4ed5": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.6.2"},
+	},
+	"8db47f50c2592c6fee9281c3d8e682278384a9207b4c7c2f70dbf613173e237c": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.6.20"},
+	},
+	"8bdf7fd57c37473a2254c2d7c01ab9d5b4f38f3bb467955d359fb2e54c38f2d7": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.6.21"},
+	},
+	"9ddc026590f43f584d5e072418d74169b87ff9d664cbb6d9d07bc41c84ceaf62": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.6.22"},
+	},
+	"047014c07bcf3045c902b061654e5c29c2deae1a8b7cf4342c20964106549370": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.6.23"},
+	},
+	"b48947c676a53f168c17ec5d95f15149ada2a0a60fe745b1f53d1f5e3087d5a0": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.6.24"},
+	},
+	"02f8fea651ab4b7f5be6b763dc31db552caad5ec71cc77f9bd499a45bf71e8e5": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.6.25"},
+	},
+	"ba2c3bfa64e78026c49cd2e1a12c14176eed963b18e69612201529c2ca1792d7": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.6.26"},
+	},
+	"51a6cf99048dc226e1952055442df3d9e995cff52723e3f04b27f00972cd440e": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.6.27"},
+	},
+	"86894d3a9db498c2019b4f3ea7dae8728a305026e507eedc036637ac23523349": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.6.3"},
+	},
+	"9752b4ecf2998ef26db2fc1b055c085990d2dd5e91ff7d4b346000b18ff7783b": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.6.4"},
+	},
+	"eed74a5552785f1f8c14541ab48ed0cd166e18f4a361f5ad1d35b39e00a61e4e": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.6.5"},
+	},
+	"02c072786da17cad6844fead29018c3e2496c1dd3204f1721115e815f1201337": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.6.6"},
+	},
+	"aa86127091855ec42181f5e0baa9501ae539ba31e0db7e4defda9d6f2e35bcab": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.6.7"},
+	},
+	"bc2dd541f4f6211fb175e61b837fe3851568ba1bfab228a49a958a0e8ad8288a": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.6.8"},
+	},
+	"541b1501ff913215936e6fec65337b259587d063211731e99ca9a612cc26e497": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.6.9"},
+	},
+	"587382b9426c6d38f1ad71407d3e22202190dd3d73e60a0a1ed327911e7bfc30": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.7.0"},
+	},
+	"5f178588498824e28deeb24eb55b94e9dc29d5a6f32fde89c50189cf77f17b46": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.7.1"},
+	},
+	"b836f08db6c6b390372261d812d37f544d2749942e5683d7e6a597e1866fdacb": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.7.2"},
+	},
+	"297c06fb895dec1030098623338c9abfe432c84fb61810b2ba0a7ab61a578af7": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.7.3"},
+	},
+	"845349955994e0a8771f9a01a08c91862e155064248ec5aab8c12c94357bc203": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.7.4"},
+	},
+	"6ae51447a01200e3c4adf6aed29b33a9459d0f8f12cf58cfe2824a8c71ce3137": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.7.5"},
+	},
+	"83bf0629935b7ba1b53eb1eac50e3babb11b6bca57fc8ece320fb5cd21a66ae7": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.7.6"},
+	},
+	"55ddf50d68d3f453d7c78f891cd4359bf0294419b00bd70e92fad19c215d8fc4": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.7.7"},
+	},
+	"19612dcf543ac53ec07e39d22d14c523815082dced201916d5ee7762b1108074": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.7.8"},
+	},
+	"c8d836190dc536f312f5037aa77b47c7bbdfaf93a7fd521002f9d44b8f2db37e": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.7.9"},
+	},
+	"cf828b5564ae3f2ee6b1bbb3adc1bab0012c7a6df12aae29ad513718b70696f8": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.8.0"},
+	},
+	"0b10c7483ad896c345f11a3db33eda4010c25715980b215d0db0aba031c88153": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.8.1"},
+	},
+	"33fddb8dbf05fdc6f75f76cec2c4446dc5c56208a5c7661797f29cd01e6c48b8": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.8.10"},
+	},
+	"0d89995fa86e776a1b3d5b06ec1bb0bbe3f44154a7f95e27c7ec3424368cae2f": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.8.11"},
+	},
+	"f3fe19b65dab0d023751fa1cb4e4951907bfacf948527577f6c19bbfea505870": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.8.12"},
+	},
+	"da39e3800531c2ffc16792cd1d99b28ec5573701e977cfaa4fd3192e09e67969": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.8.13"},
+	},
+	"a36d54aca40b41c144e7c72e79365d3f6d3374a0b38f1708fa521cf3f57e31f7": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.8.14"},
+	},
+	"f9b57c361528b04f82c74f474708cb9f0bd066d063644c1ae5fccae107a16870": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.8.15"},
+	},
+	"bb95cd16d76ea8b84020a1d34da0507128820b3232f3575bee9f74a77b3c8c5d": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.8.16"},
+	},
+	"6d67c8aefedee863ec0efc2cb61af89ae74f39f509647207ab844f6a8b5f505b": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.8.17"},
+	},
+	"f2d55933bb62973a5659b8ce51469edc130127460889ccf26d9373ddcfb80746": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.8.18"},
+	},
+	"7d5c06ed703960b238050d87ce06a4bcac684af30293ba0a2656b673c5c84b25": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.8.19"},
+	},
+	"4b0d0d28927489d358eb83eeeaeaf21861b87a37f3f538bad768eb7dc2adf0db": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.8.2"},
+	},
+	"8766ca8e769b28d2cb6ddaf9906506595537f0597b63bbe01948066965cde7a5": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.8.20"},
+	},
+	"1f7cabc463bcc2e0e1bd580a57aef1de1a816c9dd29aa009221d54f5f4b7a9df": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.8.21"},
+	},
+	"2769f57b7e09852c1dfe1fefc5b531857cbcfc689a70e64760b524773295a307": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.8.22"},
+	},
+	"ed4309d0d51b01b596de6ebc4f6275e47d24e6fbd3b19969eae59f7bb492f29c": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.8.23"},
+	},
+	"814a5a8ee3e9e501321515250492e20b2c8cb2ecd14280af039439e98c6b9cfe": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.8.24"},
+	},
+	"fa778c167772a3ef8d409e8039d73cc2f07bb8d040ade4f8b1c72ce0b317664e": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.8.25"},
+	},
+	"f68f0f7f0a7c758709daa4ab286696e2ddc5ec5281c7258abf369e12138905d2": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.8.26"},
+	},
+	"0d757d537428e4fe3bd2faf887391e3d11d9321c42d60aaafe79ca9ca872f159": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.8.27"},
+	},
+	"aac95bf8a33cc5e124661ae1ee55c2c1099b71f35240e27cf367cebd4e60da20": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.8.28"},
+	},
+	"e696958a4263caf2b3f15d19450e66c6d7ecbee7849dcdf8c8b82c45273ae0a9": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.8.29"},
+	},
+	"af94c47dd150063aaff2272623b0891d7229d1037c9db22cb9d3b36b61696fdb": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.8.3"},
+	},
+	"ce711d06869e6292401f47a072a4542e9820fe808aac234a82b830b3c1881483": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.8.30"},
+	},
+	"45984709ed51d4af5fcaa20772cb97fb81c87775488d83f7c7d6d4bbabdc9d77": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.8.31"},
+	},
+	"9776578a3021183b043188b02e24204965e19a9d75c02fd4da2eb44222b24649": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.8.32"},
+	},
+	"b33e2f63f60cbb96223a806069a99413ade2e4fba98c06489cb00ec77667982d": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.8.33"},
+	},
+	"0a510b9459b94608cc366fdb64bcc9069326c71430887440bbdb06709e915fea": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.8.34"},
+	},
+	"0193c97e31c2053651cfce4ee4e58590b49ce01d1b0b035b64aaef74d9ed336d": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.8.35"},
+	},
+	"9f811d940f696e281efc8304078b7e4828a2a5319808d116424011d8c6f6c0f4": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.8.36"},
+	},
+	"1d1bd99404a30dd0c6dc522de74dae93e9f8751a48760601e5bd79d8ec226a56": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.8.37"},
+	},
+	"dd688d526fe1acb41417e3cabb54ef9fcbe72508705478569d7a62f255adfeda": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.8.38"},
+	},
+	"cbb2943e5502cdd151eee1d6643f407af8113b3637c45919e98340a5feb31a63": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.8.39"},
+	},
+	"91d367ac7b1c45144cc1f6de7bcc5e96df437922f578cdc484bf24644a837015": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.8.4"},
+	},
+	"111ccccfe6b265f392d87cd9a5df2708406e4f779e3674d2a8b270a2eace4022": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.8.40"},
+	},
+	"8daf0690ce1eaae5abb3c0cfb57a5b448c92a170dd509e934c3b708eeebfce77": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.8.41"},
+	},
+	"999e6ce423a7f8168fdfbe4e65916b32bff5c64e72ec47afd2a605b75f1e6f8d": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.8.42"},
+	},
+	"acd55c1c6a3412d92563d5900007b8e6d29e918abd1d4322b40c68cd2e5d94d0": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.8.43"},
+	},
+	"53459784c777e76f487c94d39350a6d3308ec452d7d7319013fadad7ee927f05": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.8.44"},
+	},
+	"4c05588eb813098d097a625727806f5a60d91b2d9b625473ba7126a975567551": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.8.5"},
+	},
+	"38bcf45c954fad3a15ab68d419e5a3b9187106d1c07b6087f04a79f2ea337709": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.8.6"},
+	},
+	"c94ae255ce909dee1db9eaa3d7cc64557ad9299a469a96026e556d81f3f21f6b": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.8.7"},
+	},
+	"2dde72dd1df899557706b393ab4ab3caed903bc5f75d8593a9e6d970aba14858": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.8.8"},
+	},
+	"df65b10f538ab7aff99c7e3f83cfe34b89eb003eddec3c140dac7750d3d73fba": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.8.9"},
+	},
+	"ca574c4591982f836bd397389a94e77ffa5d5e44edbe226303d86550d5fc915d": []Modver{
+		{"github.com/aws/aws-sdk-go", "v1.9.0"}, {"github.com/aws/aws-sdk-go", "v1.9.44"},
+	},
+	"3ce659650444223e69accec5f74f43e6e123691d7fb5dabecf6a6d10ebeb699b": []Modver{
+		{"github.com/kubernetes/kubernetes", "v0.10.0"},
+	},
+	"0f76721651f3169fdca9e64726d3255a06f3982dacf76abbdebc1792334bf1d8": []Modver{
+		{"github.com/kubernetes/kubernetes", "v0.10.1"},
+	},
+	"8f5ab0050753cd211fd2e742312e5f847856337fb131e603b141a91ad98a69a5": []Modver{
+		{"github.com/kubernetes/kubernetes", "v0.11.0"},
+	},
+	"a299efd50cd1b5b1cf86141b9a1b3b2baca4066b55de8a2d07b5a7abb8b57ce0": []Modver{
+		{"github.com/kubernetes/kubernetes", "v0.12.0"},
+	},
+	"0ee994816fad6e85d5c797568bb06d4eabf098155d78cab9508687ef34d228df": []Modver{
+		{"github.com/kubernetes/kubernetes", "v0.12.1"},
+	},
+	"0bb1202477084d4b0e47e4b5458a9548a258a0c802d026149d6f67b1f5d3462c": []Modver{
+		{"github.com/kubernetes/kubernetes", "v0.12.2"},
+	},
+	"84e3c08f55d4f416cc8c630a63262e43ea9b37e512fb7d6ceede82cb70b650be": []Modver{
+		{"github.com/kubernetes/kubernetes", "v0.13.0"},
+	},
+	"63f2c7eb59194e7c304e005159ef67dba9a0bbf27b8044ea12a069b98adcbd3e": []Modver{
+		{"github.com/kubernetes/kubernetes", "v0.13.1"},
+	},
+	"750755cf86aa0829606e568f3151b843227a54b71afa86c22fc3ac597458de1a": []Modver{
+		{"github.com/kubernetes/kubernetes", "v0.13.1-dev"},
+	},
+	"2b3681189b23ee0f4e17ca009b9b75dd41c69e2041f2be09ed60f919fa48d111": []Modver{
+		{"github.com/kubernetes/kubernetes", "v0.13.2"},
+	},
+	"a4a4e19f2336c53569775560849963a8ff73bcffd25cb398b34778fee2f94230": []Modver{
+		{"github.com/kubernetes/kubernetes", "v0.14.0"},
+	},
+	"825bce22e459bb91f5d4a22fa90f0b928c90fc3409f08ed8f96593c1b97f052a": []Modver{
+		{"github.com/kubernetes/kubernetes", "v0.14.1"},
+	},
+	"f9070a54bda3d9253853961a41dc13d1a66449e1af96b7bb8b4125d73439f247": []Modver{
+		{"github.com/kubernetes/kubernetes", "v0.14.2"},
+	},
+	"d427d3a519b29ec17f077cc0bc910cfe6bcac456c68d55b409d5c33c7f0fe86a": []Modver{
+		{"github.com/kubernetes/kubernetes", "v0.15.0"},
+	},
+	"425fa3ec949de04245a0aa8bfb30cb17e590062deef05fdae3f0075080b77699": []Modver{
+		{"github.com/kubernetes/kubernetes", "v0.16.0"},
+	},
+	"e0839c6d0e60258d330a17ba4e16e71756fac71e11d148d233e3b37dd2530478": []Modver{
+		{"github.com/kubernetes/kubernetes", "v0.16.1"},
+	},
+	"c46464b07481a9048014e5ae1150834ce1d94a61772453f4e9a3b85eaf11135c": []Modver{
+		{"github.com/kubernetes/kubernetes", "v0.16.2"},
+	},
+	"9ebb6c898def25599644246383e082ece76112744dc9e2bea10b7f8384d00905": []Modver{
+		{"github.com/kubernetes/kubernetes", "v0.17.0"},
+	},
+	"2e1d9df3995c0a88808bc145f96e673de9d5cb21f7b8cf489c94a262556b1d23": []Modver{
+		{"github.com/kubernetes/kubernetes", "v0.17.1"},
+	},
+	"06199b3c6cb3334a732cd48b7a3e0b4344cdda010b652ff3aa78f05a98d88b59": []Modver{
+		{"github.com/kubernetes/kubernetes", "v0.18.0"},
+	},
+	"e0ddba7f89aebc52eadc7d807c8eb90088fb476533a0888ba318f3594715f9f4": []Modver{
+		{"github.com/kubernetes/kubernetes", "v0.18.1"},
+	},
+	"6c5a59b594163807674d3f018f1f4c7f5fc7e65ab9b6c6b34abe1d0a242d84a8": []Modver{
+		{"github.com/kubernetes/kubernetes", "v0.18.2"},
+	},
+	"3a03cbf8cafeb9ebe5bb75b50cc02e121b07c365f8401287a55981052cb085ab": []Modver{
+		{"github.com/kubernetes/kubernetes", "v0.19.0"},
+	},
+	"ef6d218060c3736a846638e5def788d1b9b419fc7418f808b9b38da71185854e": []Modver{
+		{"github.com/kubernetes/kubernetes", "v0.19.1"},
+	},
+	"ee11c283168d73cdfbbf3fa868bf0ebb10858a4882c0b41bad0d9abb61f2bf82": []Modver{
+		{"github.com/kubernetes/kubernetes", "v0.19.2"},
+	},
+	"1be1e9deeee8b283e1f24997229e53d888f67ece9a1bed6cd81e2c6b5c7757e7": []Modver{
+		{"github.com/kubernetes/kubernetes", "v0.19.3"},
+	},
+	"71bb1d7cad64ed3621e019148f1d412b0cc9c281b91b4ff82e40b69937f7d5fc": []Modver{
+		{"github.com/kubernetes/kubernetes", "v0.20.0"},
+	},
+	"f7d71df6af891dac39a2bb0cb5bf4ea021affc1b423fcf93edffe605b5f400c8": []Modver{
+		{"github.com/kubernetes/kubernetes", "v0.20.1"},
+	},
+	"ed8e604e3f28c379ab1c705d3ce43570bfd83714aefbde58acd45c66e4caefe2": []Modver{
+		{"github.com/kubernetes/kubernetes", "v0.20.2"},
+	},
+	"2f3b2cc27a94c104732e5a04ac45365db19242735e5ced12bb7dd089f9976903": []Modver{
+		{"github.com/kubernetes/kubernetes", "v0.21.0"},
+	},
+	"36b0cdbdcd9a0b68c9598c3a5d139896741d90930431f6915d290d4bf448ce71": []Modver{
+		{"github.com/kubernetes/kubernetes", "v0.21.1"},
+	},
+	"29c6d90505e6aaac581464a01736316d7faef6e2dd1c520af6b68d78e1d9bfb3": []Modver{
+		{"github.com/kubernetes/kubernetes", "v0.21.2"},
+	},
+	"540637ab3b2a78d30db58bcd90b9d37d0d055fc47f5f7d945702ee8fdd93e8b2": []Modver{
+		{"github.com/kubernetes/kubernetes", "v0.21.3"},
+	},
+	"7ad1098df3fd976eca698170790196a0d1949be106c0d49917978c31c1f5c857": []Modver{
+		{"github.com/kubernetes/kubernetes", "v0.21.4"},
+	},
+	"e63250d83a5ff5311f5419fcafe029cbb5ceac0ece61c78489bf2b4845e55a33": []Modver{
+		{"github.com/kubernetes/kubernetes", "v0.4.1"},
+	},
+	"28995363e1a003a2fb84da1942aee35664d3eb6960d6f79503d15754aeeb6616": []Modver{
+		{"github.com/kubernetes/kubernetes", "v0.4.2"},
+	},
+	"85b30d3f4fa6922fb5d5e7ff0e13d1060525e17271365236616f7a577df05fae": []Modver{
+		{"github.com/kubernetes/kubernetes", "v0.4.3"},
+	},
+	"ce20cf653c54cd890b711d88d534d6af93afb9c5c0876bcb3b71a7ffd3e6ad12": []Modver{
+		{"github.com/kubernetes/kubernetes", "v0.4.4"},
+	},
+	"766444f636d2926c9b115ab6c4a1bfa941da3b2a11acd14acc14cc448046e1b0": []Modver{
+		{"github.com/kubernetes/kubernetes", "v0.5.1"},
+	},
+	"5a6c51d311462de6a63f19a32303e7dbec2b4993c3f854379829d9d484ee6dae": []Modver{
+		{"github.com/kubernetes/kubernetes", "v0.5.2"},
+	},
+	"9ba9c850009ad64d87c9141fb8508f9085afdeaa2fa1b1b97ed1ff27f86d3b87": []Modver{
+		{"github.com/kubernetes/kubernetes", "v0.5.3"},
+	},
+	"767c30c34c8e14056fe3ce5dc5ef23ac5d69b3bbad64c38b9697d66ed00203ee": []Modver{
+		{"github.com/kubernetes/kubernetes", "v0.5.4"},
+	},
+	"3dac01f062c1e401cd91bd69106a281cdf9a81af6868e7862936d500412fd1f5": []Modver{
+		{"github.com/kubernetes/kubernetes", "v0.5.5"},
+	},
+	"b369eda84887c8013edaf4cfcf78fde2f9ea2bffb68de1e6de3b52ab1af1ce12": []Modver{
+		{"github.com/kubernetes/kubernetes", "v0.5.6"},
+	},
+	"6c8cae42f83c86048dd98c360411c4b258687b134d4d298ff3b850499f4cd213": []Modver{
+		{"github.com/kubernetes/kubernetes", "v0.6.0"},
+	},
+	"aacde6ecf300a7fe0540407fec22eac7c9e90d6d0335a4538c3cc5134cdccecf": []Modver{
+		{"github.com/kubernetes/kubernetes", "v0.6.1"},
+	},
+	"3de9dc5aad416ee01040f1e68798599fedd7a7ec9e433250f6fe3b58979c6a95": []Modver{
+		{"github.com/kubernetes/kubernetes", "v0.6.2"},
+	},
+	"36fbf54061877a81aa5a58d6e8d626fd820396b6f685a3f205dc466166541ed6": []Modver{
+		{"github.com/kubernetes/kubernetes", "v0.7.0"},
+	},
+	"989109f01d20a7de1729dba26d84bb9a628ea43c758d5e5f21b03c78bb00d488": []Modver{
+		{"github.com/kubernetes/kubernetes", "v0.7.1"},
+	},
+	"6b2d1571bc2e4e2e45591364e963f1d0697a08cda83c7017170d91df77ff3fed": []Modver{
+		{"github.com/kubernetes/kubernetes", "v0.7.2"},
+	},
+	"56cfd145d55ee4d41a092e877f7b69945c7245cd649ae02b7899bd43bd2a5560": []Modver{
+		{"github.com/kubernetes/kubernetes", "v0.7.3"},
+	},
+	"6b863e072aece06169a5aec79d0d620187b57f5b8b98bb3962aefd133dc32d95": []Modver{
+		{"github.com/kubernetes/kubernetes", "v0.7.4"},
+	},
+	"d5fd088a3c158c5670f23a124bb223a69e26ed0e94e4729a070b9d59d12149df": []Modver{
+		{"github.com/kubernetes/kubernetes", "v0.8.0"},
+	},
+	"1415cfd164f247f451a53ac56ebebb94ac2cb1468ec62d223cceb4b3c797d2c7": []Modver{
+		{"github.com/kubernetes/kubernetes", "v0.8.1"},
+	},
+	"0a49d76e7639da4c9e81fff634855ed5de379fb79119f2edb50452d7dd338504": []Modver{
+		{"github.com/kubernetes/kubernetes", "v0.8.2"},
+	},
+	"0044d787f9bfef6a3e528d6b1974cbba021f90540312cfc3b03dfa6740acf6e6": []Modver{
+		{"github.com/kubernetes/kubernetes", "v0.8.4"},
+	},
+	"304d83266e7953e16955aec7a86600e6d8df199c0fb2771788f013b764098a30": []Modver{
+		{"github.com/kubernetes/kubernetes", "v0.9.0"},
+	},
+	"768c4a9e2c54c48ad86f104a457f7026ebb1eded057145a6c51d2f26f5d3597b": []Modver{
+		{"github.com/kubernetes/kubernetes", "v0.9.1"},
+	},
+	"43a4a6ee32795b2a6c7c4b73c16762329059c062ade68da77c3d4f2af4aadfde": []Modver{
+		{"github.com/kubernetes/kubernetes", "v0.9.2"},
+	},
+	"fff52acad8564317aec3db095329dcfcd0a1c008dc6da8b4d0931a2607127fca": []Modver{
+		{"github.com/kubernetes/kubernetes", "v0.9.3"},
+	},
+	"c7f400885b3a034c3951b0337468843496df81b0921b19cd031f3a9ea3ffa713": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.0.0"},
+	},
+	"35135c90f6daf68e07dc0b7112713f957300f77cc0a8e4d6545b033a6a473793": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.0.1"},
+	},
+	"533192082dc6ca63e1c9b85bf495ccbcefef08aa1af34abe566dd7dd322968b3": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.0.2"},
+	},
+	"1b442e97fc323d025db2a2dfc3313009172cc12b777f50b2d50d8314e4fcd107": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.0.3"},
+	},
+	"1175a938709b42504d0c5d2112d0d44a150234dde754d9a98a1a842ff0026487": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.0.4"},
+	},
+	"7e1d4720577867b63e9f722a0ac10b15b7616764475bd59f1d0c003bb4bb53c2": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.0.5"},
+	},
+	"12a80f93ebf09f4707cff61f6389b2d9e1fd88f4d5a1fb87d84210237d704b05": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.0.6"},
+	},
+	"66f0203f19ae5777b36b31843419b7653c5a7ed3e439a9a59fd94a3eeff1561d": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.0.8-beta"}, {"github.com/kubernetes/kubernetes", "v1.0.7"},
+	},
+	"f9f93974eaafd330811a21e5629baf5490ab588b313aea6d45a0c284596d950b": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.1.0-alpha.0"},
+	},
+	"cbff22296b0764b164e0e7ad97e92eb1c84250818ca6d99eff8a3e0369a3e92f": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.1.0-alpha.1"},
+	},
+	"83b05453e9370025149222568f5f176dbebac6bc8aa8dc732efd042f404d3ab2": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.1.0-beta"}, {"github.com/kubernetes/kubernetes", "v1.1.1-beta"}, {"github.com/kubernetes/kubernetes", "v1.1.1-beta.0"}, {"github.com/kubernetes/kubernetes", "v1.1.0"},
+	},
+	"cf0b5e0d7e05923f6d6841bcb4298fb6e60a33a1eb8caa4beb817a0ee101b99c": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.1.1"},
+	},
+	"d154bf405af01d457db2c6738b7d528338dcd5df43af607acac1fb0b8db3c9be": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.1.1-beta.1"},
+	},
+	"4349ecdd529afc75cc29bb7de46bab62c1729b765c0682ba0074b1269be62074": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.1.2"},
+	},
+	"4c9b9225c19b8846dcf106dd6fff802d78b486b69af2726611c0af84b0b52eb2": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.1.2-beta.0"},
+	},
+	"412e0e2d4b1b9c3a47be1f38b35c50dd9bbb33eef00081f9268adf4e5d75374e": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.1.3"},
+	},
+	"ba723d09b5e123642bc7e2e69cadf63f5204b55d2f0e287f6914e8085571fe1e": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.1.3-beta.0"},
+	},
+	"529780fe9143c7f254ff66559c627b74900f3de864399773322cb0168165e19a": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.1.4"},
+	},
+	"a4d6be0f3c131f9843a7f4eeb5f34f7a122db2b54a9ff9c3547d2bb7303e6259": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.1.4-beta.0"},
+	},
+	"a4a4a18aff75368691d5f15d8226a9b30323d62da5715e68dedf4bbcffe7f7dc": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.1.5"},
+	},
+	"b3c862599a10d37c865e1012b19c7b699d1475a112ded26ac9d8fc44924e9817": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.1.5-beta.0"},
+	},
+	"c39fc5cb595c2ef3a4060b3b82b2f5ab1279ed7ba4127ae95e804b6970899e0c": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.1.6"},
+	},
+	"4c3172b76c6c45ef3e7f1f6bf26b8f064f63bc46a6762f511477e886d109bf00": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.1.6-beta.0"},
+	},
+	"daa26b0518dda0a2465eea59cf5b008a8ea24baab0218feda23142b81fcc7ba7": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.1.7"},
+	},
+	"30a4d778ce912adb1b042ed4794caf61a5daaf614428f0926627a18b1cd6270e": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.1.7-beta.0"},
+	},
+	"5b4e66b40f0e4cb873d4c3238eec7867aea467b5052121ce6085413753f356e8": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.1.8"},
+	},
+	"9c76c85d2c1a862517469841f8dba5d6004687f57ac1b9d5122378218e97a7b5": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.1.8-beta.0"},
+	},
+	"e9c1969ebd9ee3fefc294f7718256a3bc81864829fb8eac79b9b91c4f62cf69b": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.1.9-beta.0"},
+	},
+	"2d658ee56d813a7246672e4a43ef644185af083b6cc7e0af5315b687e309697c": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.10.0"},
+	},
+	"8ad08da19df3dbf8477399a50567d16eee70bbab4d869ffa2a8d2a083f1f6452": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.10.0-alpha.0"},
+	},
+	"98fbe7716f6f555378193d040587c8e22433f8ade544a93e6f8726dc0fd1c2e8": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.10.0-alpha.1"},
+	},
+	"db9fe388b0c132958bdb7b48d7216ccfc81fc53bb02f9f320c8ca09881a2dc81": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.10.0-alpha.2"},
+	},
+	"a6742c570e8f39dd8660f40f291b6314a4c598ae0d2ae1e195d954c618390c15": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.10.0-alpha.3"},
+	},
+	"65afd854642e971c1598f081fef81f60af44286ebc6ac2d468390f0e502e8b0c": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.10.0-beta.0"},
+	},
+	"bef36c228b089a788c32c6fec1a6a034bc44229ebfb33f3e9b61c08db26a4b51": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.10.0-beta.1"},
+	},
+	"6367cfa2cc5faaa643cdd568d649ce9228e89a4c5dfa5b3487daeb8869e796a6": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.10.0-beta.2"},
+	},
+	"6d8ff70a9623c3c1cc39b6584591960251e36dcb6ab8fbf8253c22691ed29ff7": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.10.0-beta.3"},
+	},
+	"0894b846a907cdef1f0035795ec819737beb68db8e62a931511b0b5af017d46b": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.10.0-beta.4"},
+	},
+	"5a11d1903a2932e8958e66caf3dc4ead0462d1bb78cc48da8844efd419c7828e": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.10.0-rc.1"},
+	},
+	"6b95569bd2e45042d845836f256c292ccfd6b0169ba693f08f25127f7eeb9604": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.10.1"},
+	},
+	"305580b75e95ecfd22e5f4b71bd76b04fa7ddf29818036294089f2ad81b9c374": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.10.1-beta.0"},
+	},
+	"ee96c2c71211a69c1b1307d212f860ea889bd32775dd1ac6294714a3d9d04c32": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.10.10"},
+	},
+	"8fb0bd84e75e147de4fb44b05d4f958f48ceea3fe192fb8457f86f69ae858bc1": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.10.10-beta.0"},
+	},
+	"9517b96e76b1e00a42b18877c5fd792686da79e72480ebec3ddd8c9e8c2a563a": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.10.11"},
+	},
+	"ecad12fd35be3b20ef20d7b7e0ec339571ba5fb2f9bfa892e72b2ba11c9fdaf4": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.10.11-beta.0"},
+	},
+	"305af8667c32b3f1c5241ed3243f6a4b1876299687eed3766df07f5fb0631cc9": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.10.12"},
+	},
+	"27445a7a8e59c78766c9ee52588da38cf8046452bd68968e153c563c77dd6f3d": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.10.12-beta.0"},
+	},
+	"566f860db336082cab4b2df940b13a926f21a076d9cf26b380dd0c4470f96b62": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.10.13"},
+	},
+	"83a0a51a30d612221d92fa7be7cc9800cd2ef0536e70dc07cb536392fed1fb53": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.10.13-beta.0"},
+	},
+	"d8821dad8432da4c5827fb8d707c7d4674720612e344c24fea2b1b5ef659f0d4": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.10.14-beta.0"},
+	},
+	"4aebfe7f86d6ba2de3367ed284d59a730f4c75c8dcd7aa4b9ce5c141c1020953": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.10.2"},
+	},
+	"b11befe23b33a0e9bfd5a087279e54a04f2a14c5d22ab5e74b2c9c2007afc004": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.10.2-beta.0"},
+	},
+	"8d797782ae99c158aada50d7356c2561a66a835f43f9df9b26a028d0950fa093": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.10.3"},
+	},
+	"0f8d0b5420d8519a5e345c96c81a3a3d510e1095ae441947ca615eed829aa99f": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.10.3-beta.0"},
+	},
+	"bc811b29fe7d8ad0c8bae9fe1eb9ff3f936c3bab617de61e9f6d026c9477e7e2": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.10.4"},
+	},
+	"33ea760dae728131ef19975a9cb69db19b5ed2e25c9149862a7fb086806d4583": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.10.4-beta.0"},
+	},
+	"835f42c0b4330936296af71f8c7eb1e87839f42a8ce5c329262ee4ce8c242ce9": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.10.5"},
+	},
+	"c08ffaad551da82ad39425bd34f4fa8479372cc66a1b15d6c009248d9f263afd": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.10.5-beta.0"},
+	},
+	"f6896cd43fcbd36af577f9d87f0f4bf172039a554a6ea66b8660af73cc8fa2d0": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.10.6"},
+	},
+	"252788c47a8808cdbbb5a5a8dd580b68fef9e0f10aff095d200d52e593e4e9b5": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.10.6-beta.0"},
+	},
+	"2bc7fcc557b68163729e4633f66d6636a266072bac9c615d65d59e334ae58058": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.10.7"},
+	},
+	"663b83ac1409341fa68fbdea85fa7264aeadfe5b26f10f3f804c4f9f3193d1c2": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.10.7-beta.0"},
+	},
+	"97d75c1fb7cdec7b6d877668690c2aa442eb44774248332f95ef62d3eabcca0c": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.10.8"},
+	},
+	"067413fecfed3b48a65b451e06b3c225b3fe992c861b345a5e6634288e623e5c": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.10.8-beta.0"},
+	},
+	"be13f691f16a0b45061ba691e7fb5cbfa6fdf5a6834eca14586581cc4a0a6dc9": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.10.9"},
+	},
+	"45ac50cf2a490f4f5ff35cf9bc271a959209b67976a5925d0a471323ac66458e": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.10.9-beta.0"},
+	},
+	"8b3d21fa885c577c3e60f14693c39fae43fdf7c842d7d6fecb48618fe88f4c9f": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.11.0"},
+	},
+	"8065a6ce0c87b36be849a01e44d620b351bf646ff42598d875cb5b86796d005d": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.11.0-alpha.0"},
+	},
+	"3295992fef9eac1e2331fff995051b5d2162ee527d0247c984ac98f51ca788de": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.11.0-alpha.1"},
+	},
+	"5522111fe04db61bcccd188e94caa120351823682579af8716d4d6e9d180a227": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.11.0-alpha.2"},
+	},
+	"8c53dbc1ed3561d0ef58304aa8c6f6dfc1f87826a534c55aa43d321a7623980b": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.11.0-beta.0"},
+	},
+	"eee53c0abb7b9f7c2c912fe61a7a844ecad3910de5afcdb238c25d8636bbbdd4": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.11.0-beta.1"},
+	},
+	"0334a7d98f04a3a75a14d5e4ec1137923a64a3db18130f5b8297081100da7b5e": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.11.0-beta.2"},
+	},
+	"6ba549dd96afb80bfcda3524d1a87e9c496302597d592cdc679f502eca286841": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.11.0-rc.1"},
+	},
+	"3f7b3b175ced87903ecfd3ffa7a76116f3a6a790c7dba0f11a03614793f37309": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.11.0-rc.2"},
+	},
+	"1b9c7628a72c784cd4b2f8b9d814da85180cf2f371f5de3d784ef01f820755dd": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.11.0-rc.3"},
+	},
+	"4791342267427a9851f2747c509c8ac335807a375187dd98a6b4c82cbd6804cc": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.11.1"},
+	},
+	"9b093cd7aabec2cf54fbc98750a27d69bc8887e028777f688669e86e33944694": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.11.1-beta.0"},
+	},
+	"1ef8a56fa1492ed56066143d655500821e758b8737ae2ebf554a32aba6eda119": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.11.10"},
+	},
+	"3c52eab0415c2aafba92392e7a8e2a25df3f2b9ce5b93a7ab3963a52995989b4": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.11.10-beta.0"},
+	},
+	"6058b3e88e29bd372e22f45c5bd381c0345e2da1496790167708a4885717614a": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.11.11-beta.0"},
+	},
+	"0e650cce1469c5ffed9ea0aeef276d05169e8b48f32479a3e59a6121acf4f98f": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.11.2"},
+	},
+	"a59705f6ad0a8ce175d73857775ec12e5d58cc453d3e36dab0f790180cb4f08e": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.11.2-beta.0"},
+	},
+	"37496284cb3057a664cb672581959f5ec1fc54419b92f762428c92c5b6feb035": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.11.3"},
+	},
+	"afa4fc8f92e2679a87d9851927eef8cf08ad02762738acb33c9a56d27df36321": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.11.3-beta.0"},
+	},
+	"b83bfb6671e6eebba48878f9ef63b15a0853ae6975a3dfe7a2f77a26f1eedc82": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.11.4"},
+	},
+	"367e5ee74b3fac42541f3864d9e992e78986a5e8a6d5eb78852ca85e4ffbccfd": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.11.4-beta.0"},
+	},
+	"8f51f2f8d084843e6a2acd2fd2a919363ea6aaf53aab7a344698207632d6940d": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.11.5"},
+	},
+	"f8a04d3a1f37a83c4847ccf36b0a49a2e9a3f398d1d41ea0174cbb09d34b9923": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.11.5-beta.0"},
+	},
+	"88ca80eb6d9e291956ba66e5a43cf4e93f4ff2fd61736c022a7d130e7ed9d8d4": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.11.6"},
+	},
+	"6e96219839544d40494cf1a4e230479d8e3d0e2c0c29b0075efd88c073f42311": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.11.6-beta.0"},
+	},
+	"0e46d32f4f06020212faeca59be1cc8f18b68b08b2edb01972ae493b159d88d5": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.11.7"},
+	},
+	"fb311cfcb42365a5dd9a20462059637991e16b302ca18605ffea281a1892704b": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.11.7-beta.0"},
+	},
+	"63d4dbd6dcb0836cb5552b9b6278b7a3787153083888ab75f470dd8c42b0933b": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.11.8"},
+	},
+	"b018ceddf33838f291fab8144def4fb167e7f85991908d54bfc2a081a6127328": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.11.8-beta.0"},
+	},
+	"b0b1be5de4c2e5d66e3c1956763b22fc0dbde16674b1500a1f70b0d6540402fc": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.11.9"},
+	},
+	"2ae86a179196110ea8d106dc78a7fbde4d3b44ce4b2bbe54ac7b8164147d9154": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.11.9-beta.0"},
+	},
+	"bb149db7fc7680b460026ae41365f32dee4d4471e05c15d8df1d3d1aadbca114": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.12.0"},
+	},
+	"07a360bde8e554e29bea48f8200f76ff1c9bca198f6d72eb98f0002149bfe89c": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.12.0-alpha.0"},
+	},
+	"1297fd3bdd4b47ddb31bfdcec6ca456c593fe11caf411918f27e239e667caf31": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.12.0-alpha.1"},
+	},
+	"cb9c72abcc9d2edd7d8f8ae232e0cddb84acb6b859c922f2f2f71a40e657a4dc": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.12.0-beta.0"},
+	},
+	"0d8c5fa455c5a835e0687b8bd6557467f1db2ef1e8b66c75cacb29bad291c2fc": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.12.0-beta.1"},
+	},
+	"25cf3198de43352e88a2c20654473f6fd5940dc6d577eb6c3ce0bb0b7da3cf05": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.12.0-beta.2"},
+	},
+	"741550b2724d9ee0c22d58fbb3b029f4b5526ac0df48736c86df87a3af624e8a": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.12.0-rc.1"},
+	},
+	"a14bc9f9e56ef08a2f81688bc893fd52dd0ed00511fc0260dafdb237bb51d9f5": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.12.0-rc.2"},
+	},
+	"631ddeb82917567374c0cffa5145e2e345d0f4f64caa58b2d0eeb5581bc34a48": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.12.1"},
+	},
+	"f9a9aeeece480cc974ee55838cad04eedd62b8cb405b98659e6681d9063e52da": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.12.1-beta.0"},
+	},
+	"cd74dfb2900bd2c272377fd5ab445e72c498c40d0ef67e5eb44e94c40edd4a5c": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.12.10"},
+	},
+	"b85050c2cbb3d7022d8e1f2d24ca89c67b9ed115411911c871427b8ecd2e2a43": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.12.10-beta.0"},
+	},
+	"10e7e77ad26d8fd37d445b24530956733683274731008dee808d015be7b53c3e": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.12.11-beta.0"},
+	},
+	"1c46b0b3f2f614eb70381e3d0805b4d48f238de941b864f63c2769194b824b36": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.12.2"},
+	},
+	"cbd126e9ab3e012c205e30cfb490b3750ea868655b51862771d740a7740ec22e": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.12.2-beta.0"},
+	},
+	"2e0b1f7c2501378a004671c01c02ed4b02560fc3d80d16deb183720de33a43a3": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.12.3"},
+	},
+	"e117881ea0b262437cd0632f3a85598125d49c3a814429f49bd24432a4dea6dd": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.12.3-beta.0"},
+	},
+	"01531850b9a77fbf2834a7c8c18c9aea92b6ee40cc22b325f9dcefe6cdd57f90": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.12.4"},
+	},
+	"4e12f728fb501a4579a7523c82787a0ddbd09ac49733df4ae399aad033242f46": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.12.4-beta.0"},
+	},
+	"28d6823ced82ddd61d9ceebc855b64e976300dc058139ce604863ceb709bb4b9": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.12.5"},
+	},
+	"b6e8c296343954b12a3b1e02744e4509adf25245b8f6aacd752b0be367ea1c42": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.12.5-beta.0"},
+	},
+	"2330ab228da81ed23dffc3a6b42362d2459439884dd1951b49e049d5a793bdcc": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.12.6"},
+	},
+	"2d56798197d34a91d6d0fa71413d22571594c0c8605c091c35bc6a7d59742134": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.12.6-beta.0"},
+	},
+	"921d7ae8c8004c129fc5a3d762a8b7afab8cfe3030735afb5874e6b40fcb61b7": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.12.7"},
+	},
+	"ba95464aed09d5680dae736abfb58c58266342f7ab719837c372a35ba01430cf": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.12.7-beta.0"},
+	},
+	"e0a4006b85b2711a28581ba8a22a24d3064557b98073e92689a947f655f9c642": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.12.8"},
+	},
+	"08b1c6ee50e0290b85aa346ef774bdb1643eab183a790043f06e717d8515ce20": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.12.8-beta.0"},
+	},
+	"a8b01ffd88ce963b2d1818b0a98da164a4aeb0be1ec362c248ca6c9e3255f2b8": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.12.9"},
+	},
+	"1217fedbeee375cf1cf5fbe44aee4fcf831c4cea2abcb939907130900834b766": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.12.9-beta.0"},
+	},
+	"793c66a605b2b6906fa32b11a19ff80d57a666c2f185421d7e4704788d22fc3c": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.13.0"},
+	},
+	"b970d80031a94eb55a6b76ff81ed62a682bddcb40f3f5f9a43f30d2bf865e216": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.13.0-alpha.0"},
+	},
+	"8681417ab68c53b43c9489d9285dcd78efaddf2309d9c0afd42c69b07e86c011": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.13.0-alpha.1"},
+	},
+	"a9219667c5adcb2d58a89e915ffcbcff76c7c2a7b71a2c8ab9b90a95c99f1fb5": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.13.0-alpha.2"},
+	},
+	"eecc089518346beb3b3b4dd528545faabc092294ad2101398e26c5e62b4457f6": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.13.0-alpha.3"},
+	},
+	"dea42459ba1fb9692522f84213dfa0bc85d5d1424fdf1803efda74601b5544e9": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.13.0-beta.0"},
+	},
+	"b674276263debb6338ed951e14442b41f7e8d4c95f11e92c7ac6afa42ef2d9ac": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.13.0-beta.1"},
+	},
+	"015b4c98d2605f27d1fe89a24e8401641e3cbabc33f47e7dfff390c66a8f0df4": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.13.0-beta.2"},
+	},
+	"acbe18913140da5d0b07a9106381d791a28e49a353b87f3a28380a50d8288563": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.13.0-rc.1"},
+	},
+	"79c0d4cfc633e135a233c040127d29a64dfb73ef9a061be9e0508ce2f50cc449": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.13.0-rc.2"},
+	},
+	"2d246e802330ef4bc16bdd6a4ada86d18cc422cb2ce354e20c38a05cf3fd1574": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.13.1"},
+	},
+	"a2c56a65c09f868619e5ad6c0e953b24cc17662420dc824f5c664b5b26a88726": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.13.1-beta.0"},
+	},
+	"1e81deb2da8dd3a617e88765bcbf5df0f85ffc2a67c7500c54c1d2366785660a": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.13.10"},
+	},
+	"86542282220d86fef9571df6e6fa8fede3d2c1b62e1b5ec745039138bd019c64": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.13.10-beta.0"},
+	},
+	"354cc549c3e9c6e640315ce6e36a529411b5d3d1055edcbc474979d2fb6c8a42": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.13.11"},
+	},
+	"1295c14fcc31cdfe5996fd41067f1af020bf841ea50d8113c626f70b9f8adb20": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.13.11-beta.0"},
+	},
+	"915438d14920b1f0ec76bfaf8de7b6778626daac7c7a9b1a5055ccdc63065f1d": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.13.12"},
+	},
+	"e1f791d8acb7301ae7b6e29b78b8d22ce893112c489e4f916ac3bd57288e5690": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.13.12-beta.0"},
+	},
+	"b4b163191edf79f7639ebdeb2d1c71a92dc32ea339290bfd1688e289f7abba89": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.13.13-beta.0"},
+	},
+	"5de47829b403d69a44d91eebd4b6f5d11237fd759ecebc2180fc5f54c0200c50": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.13.2"},
+	},
+	"a475e9b33aa478827fa415dbcfc996fa640f47714ca86758bc3a1d4829c254fe": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.13.2-beta.0"},
+	},
+	"896554cf14863417ed93d18c022a932a4a161625ee9f1197e0547a0a60822e69": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.13.3"},
+	},
+	"dfd8be356f27bff1777be46f0d0b26b12e0a7e3797efa45190f94cb4045cfd43": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.13.3-beta.0"},
+	},
+	"208bf6fa40df0ac50f82889875c16996be0b4dde1e47d931336a1c89558aaa17": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.13.4"},
+	},
+	"011cf507796691ea5ffe74f970169a94b3140cd5e7cb993475a03b394f99bb6f": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.13.4-beta.0"},
+	},
+	"f7e2925b1b607d1d9b78802d882123e0be3800aa8a5c0614279dfe1ee13c2952": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.13.5"},
+	},
+	"6e6d4acab20a7e93f4aac414ac7c54cca21beb6c27ed23146453399e3cb64ca3": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.13.5-beta.0"},
+	},
+	"f200759f037b12097010de0d4b045a69cd03d30e6a5ed62ec826f6cbc7c71567": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.13.6"},
+	},
+	"3bc431c14040ce7638557f26bed512cdcc128e7cce7dbac4a3d425b19b6fc648": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.13.6-beta.0"},
+	},
+	"e23490dd02a2f532b1eac30079749759a2123da7b9c11e3facbbd7b92c2b5786": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.13.7"},
+	},
+	"5945f2e09c174b31051fb52e1acde449de357d96e254acdd5fa99b321e227550": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.13.7-beta.0"},
+	},
+	"3d2156a87dd47992d22cfe37f73974911df5619600590c02e9ac4e2a7a619884": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.13.8"},
+	},
+	"13459bbea0d2be3fcb0d51ce505199f5913f4d056b6f5db675a8b7b665461a9f": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.13.8-beta.0"},
+	},
+	"08521258662322b7e300c39e7c74285bd8e4c34844915b522d1f9d678d57467e": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.13.9"},
+	},
+	"ffc1d2372e3ac083ed6792b27d362d9e1e5178435ea9b6d093ae9e3b2e6aaba5": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.13.9-beta.0"},
+	},
+	"fdc28e8da105dd8201e81d32a58ee851889c17f9af9386d1618ef38725088291": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.14.0"},
+	},
+	"34fd557cfd922d5d0134fa0932e0959a17c9f8d7f9c3a9f2fc097be8caa85e38": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.14.0-alpha.0"},
+	},
+	"9d81047400c4628a24d7b920ba333c97227c2b4c9727dffe6c1a58ea586d8ccd": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.14.0-alpha.1"},
+	},
+	"94062556b791bf97c34da46459a1534f7d686a9dcf569fb252898723de1484bc": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.14.0-alpha.2"},
+	},
+	"6f2c22cf41538232df4d1b16c249439bdd71724780cfb0d09ecf2ccaed9b741d": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.14.0-alpha.3"},
+	},
+	"db86e2b1bdb232717ad0b002fec084d3859112452260a7da89cfb2831c43656d": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.14.0-beta.0"},
+	},
+	"bffe86191b3f68746ed89f8c2045e9a5bbfc5c23540542272e8247f253d5b353": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.14.0-beta.1"},
+	},
+	"da1652bd46d7d469dc07d55f191bf153dfb415e829e0cea45ad1cf241cf352c8": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.14.0-beta.2"},
+	},
+	"ec93cb889ed826c0674e63102ab0820ef3b10f6115c7fff3c35c839da4908d6c": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.14.0-rc.1"},
+	},
+	"d85e75aac6c42cefbc5e76c9f9217636dc086f23c36f47fc45b6dd39bc1517a8": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.14.1"},
+	},
+	"796d29bc102042e5b890ba242edfee21e5c3485df25b564dc618fca638d0e981": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.14.1-beta.0"},
+	},
+	"5c7ab4c4ba1ad011368d42eec42a2c85d840b93e39aef168572345e4007abd52": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.14.10-beta.0"},
+	},
+	"b9c81eef0fc0b83f41e784dabbb682d1170792aff955a2c7ae7c8cb0fc707721": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.14.11-beta.0"}, {"github.com/kubernetes/kubernetes", "v1.14.10"},
+	},
+	"983cfa30b6cbfcf164f5d23faf3469f05aa986c478a1c28a9276ef11416b37cf": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.14.11-beta.1"},
+	},
+	"dfc2060def884ed447f0a4a7445273be0cadf6faf65ba91795f45642cc4e1248": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.14.2"},
+	},
+	"23ce149751095b274520321675b3dee7f0edcb52d3c8812ae85f00e0e3f9f30d": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.14.2-beta.0"},
+	},
+	"4fcca7474a04607a3f23ccf8ddeb758eeefb014df9bff30a6f60534a6d16b419": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.14.3"},
+	},
+	"83ddf2524d547ddbe86ba4c99c0e4a2292bec226c20c8825830501ef9d261976": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.14.3-beta.0"},
+	},
+	"a3fb3659dfbfc7c41e44cd679b364251f26dd32e9bcb51ade680b30b8196567d": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.14.4"},
+	},
+	"f5746d679f6bb9ebad4bf0e0f5a9bc56eccb005b96ffe6905e19fb30f52d6a32": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.14.4-beta.0"},
+	},
+	"5878c468e7cd7603de2193cf0dc2721d69a7525d5c1a9052ce1458f6fbfabaa6": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.14.5"},
+	},
+	"356c175d382ca9a3278c22e993577b4266531c56872cb7a8990b11f45dca24a7": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.14.5-beta.0"},
+	},
+	"6ff2b0eec866b5087b1fa58b4d11def18dbe306b120504c01ff8ea7e2895c712": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.14.6"},
+	},
+	"a84b4dc9d9df8ce70c8574ebcb4e7849875063d1b3e589293bd705619c9b4a34": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.14.6-beta.0"},
+	},
+	"93a10c0fb631990bbb98492b1c27e08698bab041a42d191b40c81d205a0100ae": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.14.7"},
+	},
+	"ff7337749bfa4d2ccdd6e32d6b426fe4edda40bd642ca1de08408507b04517f1": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.14.7-beta.0"},
+	},
+	"f8bd5141d99cb9a6a33dcd0f85b0673905dc9bd9e3c542322a71dac2bdffe1b2": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.14.8"},
+	},
+	"9957ebabab4fda16957579d8358ca74f758bf8507bbe430a7abd1c30f67fd3cf": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.14.8-beta.0"},
+	},
+	"454440e1ac9e50ea00508c34e2065382e408a9f4ddc6dfa4b631e09679037be3": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.14.9"},
+	},
+	"186ff0a3e82003a046cf7a291becc285c6b73b2378e2c874780ce05e551b3025": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.14.9-beta.0"},
+	},
+	"a7338981cbd683e0d1591999bd251e5f84398fb34b6a6de1091d26b18b46dd39": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.15.0-alpha.0"},
+	},
+	"ce30433bfbcb61b053fd657b2a2b645c4f26234bb57f7a23a13285c17c459cc9": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.2.0"},
+	},
+	"c3327ed2c634019be645e4f83259315b58eecaabfb4cd90e415a7c5eaef47625": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.2.0-alpha.0"},
+	},
+	"435e40c71d573b8cc6f06820a4bc06180c2ad1a93a0e61bc3a13f06464a79827": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.2.0-alpha.1"},
+	},
+	"6e6b56bf937c1b206b69da0148f1bf44783c0d7ce4598dc6549c89d083153fd1": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.2.0-alpha.2"},
+	},
+	"f403393e5a048d733f1c94a561311cce6c81c408566a2fafecb64f9552c5ddea": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.2.0-alpha.3"},
+	},
+	"c02c4c7d7bc7ca6851f302779d876b2f5e4df8b4d86724bdbf0a2bab1febb2ab": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.2.0-alpha.4"},
+	},
+	"ea4e62569120a4b65df481e924104fe3073134a03546b2d787c2d9960aba2bc8": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.2.0-alpha.5"},
+	},
+	"da4e24d001845e7b1406271b5c9c1765a551de5adfde9f6936e1219e82781ffa": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.2.0-alpha.6"},
+	},
+	"564652f38c2836f10b8edb9306ac672cf0333e9243a2a30246a8cd757fd7946b": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.2.0-alpha.7"},
+	},
+	"ffd94402bc631cf9cc501195edbb61f5915fbe916c446f5ed4fd1045866e2dcf": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.2.0-alpha.8"},
+	},
+	"44640745cfe352cd3d3d1230970ed957bb009d64582e5241ba8936bc5e128d4f": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.2.0-beta.0"},
+	},
+	"ce536d61b455e49480bdcf2d4a80fe154595ab27e1fc21c91c9dbad6247dc1e7": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.2.0-beta.1"},
+	},
+	"f77d1e90c31564b1d7ae43d90004d4a2d64948962df349a235b065876d6b84a2": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.2.1"},
+	},
+	"53b0fe952851490b5c232a8e3a03be8c9025e7db38953155492381d5e6ebc0ef": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.2.1-beta.0"},
+	},
+	"2eee7a86a24dcf289cb099dcd6325feb8ec451fdcf9d850232420c924aeb662c": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.2.2"},
+	},
+	"8dd66d7badcf937f5c94ac595e61806d79dda307b34c096f9b3d7d82f95e339c": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.2.2-beta.0"},
+	},
+	"26af9cdfa3889af29d9c9ba476009e9ef8c6b73a2a65143031f28cb01a8eae1f": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.2.3"},
+	},
+	"7d53a73aa7b9946cb117eb0ed97f8845d7ad2f8323699e4749bc3a275c369f1e": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.2.3-beta.0"},
+	},
+	"46313b522ad6d4f66f6334a07a76c7765bdc505ba90d76671a35683ed95f64e4": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.2.4"},
+	},
+	"a131a5b9da76ee99972fdec2bd1502a7dec1d2f3375c560c65a49e2d00e740a7": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.2.4-beta.0"},
+	},
+	"cee6d18c68afcf65c94568323561775a6edc38ce742f6240953d3c0eb658ee61": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.2.5"},
+	},
+	"9d48b7687b716da0223391880783c0639f1703a2aa2ef1111f808942b3163992": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.2.5-beta.0"},
+	},
+	"17c4da78cba188e67610531c38538428cb2a190e58ae4cad96f7fb390d0f7eaf": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.2.6"},
+	},
+	"ea3b1e0cba75d5c79eb86b6fccbb6606330077af330c95d224ad98e9497302ff": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.2.6-beta.0"},
+	},
+	"42c62f94b145857d62274b019a9c2574e844d0019cf5a904240c87ad8256bd00": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.2.7"},
+	},
+	"c65c4c432b97d965fec6ed6011e32a09e465b392c7d7ddc5745c1758fdd36cb2": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.2.7-beta.0"},
+	},
+	"cbb5fcace64c924f0c4117b62b7324ac9cd0d003b927fbc633ccc3de602e5eb3": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.2.8-beta.0"},
+	},
+	"4f3faa20561136045225cf70e99f06f70f8a1c14a11fa5020ed7babd162b5809": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.3.0"},
+	},
+	"bfb0c9d02843520697983c0b935d44dd6d20f38e291a3892e87fdd89cbd2aaa1": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.3.0-alpha.0"},
+	},
+	"463a46bfce2fdb14c50a37cd045b799ae4dfa99bf4a757d7165c8bd0c9203199": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.3.0-alpha.1"},
+	},
+	"b8cf4d175e67de909560fb358f92bea7a3e0df630b5fc2377a045bdb576db486": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.3.0-alpha.2"},
+	},
+	"d7532244065a02f28692bb52f38d35150634ae3784f5a4dd4eae5641ad0d5b92": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.3.0-alpha.3"},
+	},
+	"b832937a3e489d30b4296c6d4a8e2b4b115b2ac8dce842890fe0845a3e0eeef8": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.3.0-alpha.4"},
+	},
+	"2d5c2aeb67bc048fc2cd202040bb0d097b2437756df0e1739bc262056313d84c": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.3.0-alpha.5"},
+	},
+	"0b3178763735900332bcb29f3378ebbbaf255a7e630c1391840980909f2b228e": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.3.0-beta.0"},
+	},
+	"dde648223cac6d919e6df014d150a88008125490681efdb045ff338e3794ca1f": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.3.0-beta.1"},
+	},
+	"d64d600ce73f7e3f874b94391bec4c63eb6fa9e8bbb970b594152e5f7799faf8": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.3.0-beta.2"},
+	},
+	"929380bbd2dbc17bb9fa075018e03a2c689895a649cd9a1c53c401583d3638d2": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.3.0-beta.3"},
+	},
+	"551663dddb598620bae2e53b6492358c91a3afd691ac4fc446d8b905083518cd": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.3.1"},
+	},
+	"c83b78f54a7569ae6c15c6b0eee3eeff7e769ed92d9da987fe3102211cc851d4": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.3.1-beta.0"},
+	},
+	"512e8ae17adef161b07f659f8d10ba4709541f7755f492ee9c6dbef89c1394df": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.3.1-beta.1"},
+	},
+	"97e91fa404913cb885975453170d0138ad8b587117a63a35605c4dae22cb2426": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.3.10"},
+	},
+	"cb61a14fa81aa729bd768fa57772f9597d32e28f7cdb3e64a01681ef9aca8d61": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.3.10-beta.0"},
+	},
+	"90264f935c1e2075db3ceb0855bdf7296daeda213cd8eae340b18b9a363b8199": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.3.11-beta.0"},
+	},
+	"b8431718bf784f7610d2384aee402d5236801103524e07e86d17d77d0a352654": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.3.2"},
+	},
+	"ad5356484524ed85455926bff5a3d080efaaf552fbf59ffda2bfb3fe096784de": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.3.2-beta.0"},
+	},
+	"f7d9d8a12dddd51bf7134423aebeb499f83408dadc17f94708be3fdc707668fc": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.3.3"},
+	},
+	"2c866e3254011de9de2ba65f9fec88e1a6abb0b6c1dff7c74468f4e053839e7d": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.3.3-beta.0"},
+	},
+	"ab658b814140bb996f1ec8c328cd5742c915b3622e303cc7366eae668aca9277": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.3.4"},
+	},
+	"555f048ad115a0e26b3486398ca0383af84a9159083737baad02a3b4b36b31a0": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.3.4-beta.0"},
+	},
+	"fef56dd43a56c4b6384a154ce362fc059b83c666a2cc74aab42a819f5813d0d1": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.3.5"},
+	},
+	"277ac74b8905417713f0f800632e3fdef2ff8566538100bd2085833146604600": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.3.5-beta.0"},
+	},
+	"19606adc5fb54b7050daf441b51421fb56a088c67faa2e886938c8ecba75626f": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.3.6"},
+	},
+	"c2b05db853cb507c4a8e0d9394e8fa6045ce468db6822d9b8f4449cb951d8cb1": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.3.6-beta.0"},
+	},
+	"c48c3f8e4eb3623ac32798380c480eafad47d01e3a33ea9b91c1a114dd8e094d": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.3.7"},
+	},
+	"d970a125fbfe73262d825c1fc1adde5c3d4b454c3a3c2b166f3ab13f815cd2d8": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.3.7-beta.0"},
+	},
+	"4ec5f4407de35043b69de53ff3428e7fc87a8e2d7aedb4e7ac22fea9451f2067": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.3.8"},
+	},
+	"435e6e2a28387366d4bacae76cb1de1f8ea57fd66ecd1d69f8a2f5b7a1b6ee31": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.3.8-beta.0"},
+	},
+	"937f0ae3a7a6054b54496f3aa667aef015c56e14cf938480f63ff39bf04c46cc": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.3.9"},
+	},
+	"2f9250d07c36a2798db861a6a56e50f390ac76367ff6ad544da898bc26822c95": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.3.9-beta.0"},
+	},
+	"09198da5c73e70f18553e2b5d82654e0926723094e9fda2288c1b0b58932fd57": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.4.0"},
+	},
+	"d5ba53e94b80f4e34269e15574a80a174668d1bb8fdf3d467f247a10b086c9e4": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.4.0-alpha.0"},
+	},
+	"9eab01f2ba96149d39617ef2024ff80a71130c775363e6a934401b450fade25b": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.4.0-alpha.1"},
+	},
+	"f50ca77022842fdd75f064278ee0f8b1b2f63f75184decfa223da1297aa61d38": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.4.0-alpha.2"},
+	},
+	"8373841fc3526ef849984b6a10e0dfe066d47d07136700ffcdd351bac115592d": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.4.0-alpha.3"},
+	},
+	"02492d39ee23e1f8a3819efe5e8cced51e78d4fdbbfbe3098fdd1be5fd13094a": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.4.0-beta.0"},
+	},
+	"fc519881ebca747433710c61edda230029f875265d2d8dc394353e4d09a445ca": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.4.0-beta.1"},
+	},
+	"84630415eb4dab2add76e86b10ae37ddffd7c3fa395a69303ab8f8009b127f88": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.4.0-beta.10"},
+	},
+	"5bb8475b07c9d51af207954209e649266798a87ae47df9c22668ed51efe8b4e4": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.4.0-beta.11"},
+	},
+	"8fc1bfb90ee943c09c7e08a7a590decae595581dda4f0497c3939a880ea80e1e": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.4.0-beta.2"},
+	},
+	"bfb050bf66cdf5d205ff7322b03bd0cc2e39fea3186cb4ab00bd17f9bd172727": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.4.0-beta.3"},
+	},
+	"7f57f1401d4c302b0864f161c4c711ae04bbebfc9a661039704cdefce5ec1cc8": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.4.0-beta.4"},
+	},
+	"21720e3b0b23de66c56e19a95b0d09f5bdb4a5932aea118b20413a9fc7b82b9b": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.4.0-beta.5"},
+	},
+	"cfca1b9d987c3091341beb158f8ac309054d7bdc855dc576b2701639bc0aa7a6": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.4.0-beta.6"},
+	},
+	"42716fc13b833f496c6685cf5071df669820c5db2e99fc7eae7518a379801d9d": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.4.0-beta.7"},
+	},
+	"61c65ff7699e15ece319f1bdb7ba4e2aae8cc2e0d89d917218d22aae6a91702d": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.4.0-beta.8"},
+	},
+	"66f304f8f6610c65c582e1aff33b9edc1bd35166108b2e5a38758bdeeb950b2e": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.4.0-beta.9"},
+	},
+	"71b42dbc011652c864d1224f730c8ea7b014c52245c9e218781834287865fcd7": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.4.1"},
+	},
+	"e8fa3c1b0bfc9a0d063e44274e6d236fb5385fa8662dc378372a892bd313664e": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.4.1-beta.0"},
+	},
+	"003112556c5b09adcf62df5738d20afbb888986b89364c3325a37f96edd70974": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.4.1-beta.1"},
+	},
+	"6530189f080e02e8969ae89921c173b352feca75163c6710ad29ae8b312a80d2": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.4.1-beta.2"},
+	},
+	"874bb0fb4ffb42f5e747828f1f1418a1e5d6cd64ade1f4f3b92f885ee82cb78b": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.4.11-beta.0"},
+	},
+	"e3c3403a82ec0d54b8411f7ba645853b2fffd7bdbb1c260e41e65783c91fcf88": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.4.12"},
+	},
+	"5c93d12537d53574b7088839c44b6b25918613c5a35cc08d5cb9a4712f03c78b": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.4.12-beta.0"},
+	},
+	"712650e688cda08986436551142b9a8ee1b66bb78e95535c719803e3bd17f4a0": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.4.2"},
+	},
+	"1ded3ca2e1fa592a364a74df2a4ffdeebdb500e3b956c422aed3edeb12a825d7": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.4.2-beta.0"},
+	},
+	"e20e8a706e54ca03baa004efafa1862a99424ca729fa6e79fd984177565a3c01": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.4.2-beta.1"},
+	},
+	"d9d2807a538c15224f5443f09a4ae0b633e0052ff0c1c04825f328da3e07007d": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.4.3"},
+	},
+	"40f1495212f916f3b1da7134e60175104eb36104801874cfc4f8b56d9a77bed2": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.4.3-beta.0"},
+	},
+	"b506cb1f8dbece159bd7cc7af6c3e941abb0a3a19ef94c239da5eef65bcaa46c": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.4.4"},
+	},
+	"e46c3b7a0ae91471d9ee1a3df349d890cbe07dc86c9b84828c57bf3875dac06e": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.4.4-beta.0"},
+	},
+	"d369fd514c43d2d1230c03d9fdb6a468d2b267ae8e4366f5c3aa248486017a7b": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.4.5"},
+	},
+	"dcd32ccbcb5c9300f8dc8fa4d4b81146f818e548a85cd395fb69b43cc013a561": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.4.5-beta.0"},
+	},
+	"5b734390be4b15a8116f99485f71c3fb5bcf21422a08204bfaf95231896156c4": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.4.6"},
+	},
+	"cdb67085f472706a33172d3881bd40990ec5b76395cce70c4823e06cd896502b": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.4.6-beta.0"},
+	},
+	"e36260eef284af2eec246e291c8dfdca8860f2c51cc8040c2a3a0372362fe093": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.4.7"},
+	},
+	"a207c128589cafc88e01e43c077ea3a17ace8e145d0a046b0d0b84d7cd09da7c": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.4.7-beta.0"},
+	},
+	"84d9b89f267509f6663171d7df44bd41522211a97efa3f3774e96cf9ad844852": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.4.8"},
+	},
+	"387c51802fd7e7513489701581258fff9fae4667e1738d8462b75999bd3f17af": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.4.8-beta.0"},
+	},
+	"d9fb4cfafe596496903c08d4791de6ace2151f1cc86ccc6fe47b43dc60a6c465": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.4.9"},
+	},
+	"953facd72821051139b1bfd7f0efb3a4edd001c2710fedaa2949b26e933c864a": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.4.9-beta.0"},
+	},
+	"70ac83ad0331d194ac38fc9be9a91a9a7e8b42d337f3727c1ece0388b9c12346": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.5.0"},
+	},
+	"c4da29a60e9edb54f0c37fa6a484539fb2e5bb72874a45757f1830c07b689f7f": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.5.0-alpha.0"},
+	},
+	"f07980c0a1750da0585574ca2ac9ed891b17202c8a3311e5bb2e8b89c0771663": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.5.0-alpha.1"},
+	},
+	"d8a4afdf3112d53c8f835fd39cdf478eb7308570fa79eb370deda27c8fedd67e": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.5.0-alpha.2"},
+	},
+	"501430e09c8c21a9d7167d9470257d15f470525f3b4334390cbf2d7be62df0db": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.5.0-beta.0"},
+	},
+	"fa7c8644a7f02232fde707b6ffecc7045734bd0c83b1de3a17357c71feb40a35": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.5.0-beta.1"},
+	},
+	"150e79d398b5f1ecd3b7697c162877125aecfc6952bfb9944acb451fbbdede1a": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.5.0-beta.2"},
+	},
+	"8b650be06aad7eb111b9b98b50228e2133fac73dbc8a04e725b3f4ab872d0059": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.5.0-beta.3"},
+	},
+	"cd0fa7e5d104a266273872a63150801f8d33e2cf500e8f43bb5b5044aeab2163": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.5.1"},
+	},
+	"9f81566fc7810b7bb555bba1ba2328699d2d25b52000b59c0cab6e41e86efbe2": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.5.1-beta.0"},
+	},
+	"9d4b08e41e78fdb35ea7b1db5b5ff252e073aad3dee7cb8ad4fd2d51bac57bd0": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.5.2"},
+	},
+	"4985970cc27b3ca5f9c99ef122be640ab17b3b0ae1d0ddb833e166d71d08e506": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.5.2-beta.0"},
+	},
+	"db27c0b1632d467605ffad6925b1f9e0294d33bc4a4ab4d6bdc1b2af2b371dd8": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.5.3"},
+	},
+	"451eb05b6245b21d0436847cb327abb04540ebb142894966e18d3f19117cd7bf": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.5.3-beta.0"},
+	},
+	"37abba9eab8627e5ef06b90c00481c79c1947b06117862ab8dd2b223bd8d6942": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.5.4"},
+	},
+	"b8c3f22a0f0d5842b5c9aad417ae1038d2b1b69ce16657f33267041ac41070e5": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.5.4-beta.0"},
+	},
+	"6313f13b339191ca419531a1027baed33ef8d92cd6ce86b127da02c8cb7e6175": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.5.5"},
+	},
+	"efa1df005c722ded8c457f2c64ab62fa1b02f92c2cd84aa161417347654d4509": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.5.5-beta.0"},
+	},
+	"2742dc370656dd5dd955f3f11ef55e6b866e58f6206bd56a390d1b87afecf6f0": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.5.6"},
+	},
+	"158f2a45a54d17ee66f3cbdcdf1ac90027a346042e5513c4b999acf820c6602a": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.5.6-beta.0"},
+	},
+	"f6fcfbc27362426c4b86000fffc7c84a86bf755c6835935eb61b51a358e5998b": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.5.7"},
+	},
+	"ce150554bed2a80f8917e816635bb2c65f3c74255e936a505e907500b6df2d24": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.5.7-beta.0"},
+	},
+	"0808cc8fc5fdf7fc3f42e893fc306e48dca8deaae881d47125350bc6865c7b5c": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.5.8"},
+	},
+	"e02f1e6bbca62668c33a736b197a14a0a46b7b9652f9a78caf5ce3ab45802344": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.5.8-beta.0"},
+	},
+	"9fde7206230b2f8edd252a271f61868bce7fc9334c35b31f1a77d19dcdf0ee73": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.5.9-beta.0"},
+	},
+	"14e75958d715d966edb556774dd6af60116e92d67f7d0b1df2384543491b5631": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.6.0"},
+	},
+	"b309b7f0b804f1438a65c60a92d6ac9d672d26286e85c9f7a8680ce089058724": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.6.0-alpha.0"},
+	},
+	"dcfcbcfb4113846d779d089d06dc2bf20745e6ed3a01632066dad9088f6e1a95": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.6.0-alpha.1"},
+	},
+	"d5b682e55326dd4d4ec35a4bf6105abedb70baac2a541748a699b0439beaebda": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.6.0-alpha.2"},
+	},
+	"a3e14fb0fd3eaa3d4697010c84651e7d501abc624cbef60a6ac6cfa91eb89bad": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.6.0-alpha.3"},
+	},
+	"190dcceae3f2006933c4ab3308811bdd1c265cd0f5c0303d943c4295d88ed95e": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.6.0-beta.0"},
+	},
+	"5687cbf830cd4c52ba2667f2619de3e91067cca796ce5ea8a2ffaf791d24f3e6": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.6.0-beta.1"},
+	},
+	"5f7a79edc60bf1e430b343630ccf3ddcd2a1a43fcf80737790bb77ffc0b6ea87": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.6.0-beta.2"},
+	},
+	"0a98f4fd2710a90a2525c26ec417c529c5f101c0de9b7a3d2dfa7bb3b21b17ca": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.6.0-beta.3"},
+	},
+	"351dfc485705a9e4d44486b62a9f4a15920d66675f70afd32b2369d2e6f2ce7e": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.6.0-beta.4"},
+	},
+	"51148e14b12aead0c2ca4fa1ee97a8d459aafbd71dc1558a5ae337a6398a9efa": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.6.0-rc.1"},
+	},
+	"eff3d9e2d40c2132f2908cb54546ac88b85bdc9c0bb068486720ab39c6516636": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.6.1"},
+	},
+	"f5eba50ca326058204aa5fcf0d7a8499195f9f3125f89f881ef0ba463fc6ecd1": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.6.1-beta.0"},
+	},
+	"c56b802542c62fc1c174858b61700c35786e2cbd1d84e20120bb5d50a4c9a1aa": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.6.10"},
+	},
+	"e010ad809abfc8c0a50b00f35b98374ca09ad152341a6e08bf01bfc0041d1851": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.6.10-beta.0"},
+	},
+	"ec7f10990e9b6816c792e15ffb1ee63247fedfc1202c72d3704c62b73b461505": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.6.11"},
+	},
+	"1fa1492545a6aaa80b328fcdb98a7de87e2947eef0905e9476c8dd9433c929c2": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.6.11-beta.0"},
+	},
+	"999416edb0784b8e7edd3ffe5404da4f0f4701bdcc8a2be5c8df004a81ed4e03": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.6.12"},
+	},
+	"97c36a4fb3c532e746ad19ae6c5944fdd83cdac5c62e77ef172972aed01240fb": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.6.12-beta.0"},
+	},
+	"f90d03f1fadf1a0419a5c69e6ec31f63fa8b23eac94963975a06285b81be1e35": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.6.13"},
+	},
+	"f26e13faec40781be291c69d0b908ff229840fb249641a8d2c6cf34e2a664b27": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.6.13-beta.0"},
+	},
+	"86d76deedfbc851aa1ef2a49393f5679588f21400ae188a2e9b2e416ba0f5a0f": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.6.14-beta.0"},
+	},
+	"e6464c0a839f0647cdc268c9af480cf6413e7f1ae5ec0426ea92845932d84f03": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.6.2"},
+	},
+	"6487f8449e98c92a46352e555d55f4acbaa18f11d9efe8530b3000a57d832f64": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.6.2-beta.0"},
+	},
+	"afae1ba685b27541b2f8d35a5c5a3638e19c17f95c0fb0712e63b621a628acb0": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.6.3"},
+	},
+	"994de7364545b65c6312b80a7a771ce424caeb30a6e07c53b4f9d65ac8e8f630": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.6.3-beta.0"},
+	},
+	"4e58cc4ed1992349788343edd60df0bcddc2488bda57f79733119e129bd19de3": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.6.3-beta.1"},
+	},
+	"623eea3fe3df690ed99ceee04ee985c0aedaa2cab7a444b339c99ea15698ac6d": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.6.4"},
+	},
+	"52077fe03d12f14b89507bdcf0d64bd9af861e022df6af3632e56424120f0975": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.6.4-beta.0"},
+	},
+	"96a9bdfa0c6a16913162bbf30f9266c62e5f9d5b9bd4e5669f455b6fa49a34e9": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.6.4-beta.1"},
+	},
+	"aa74d2436974286915cda12c3dc4fc2fe6c36ba771c4a82ea1f557fdb75155ff": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.6.5"},
+	},
+	"dd19d94080bb2e5ed11b5373f52c7466124f1c08995f52365163bc0082fa4069": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.6.5-beta.0"},
+	},
+	"2f07acd07c19ed20d3da5c83e7d4ed1d7ba8b948f6173138df37e8e06149fbc8": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.6.6"},
+	},
+	"724aa9de1c3aeb084229bb86425a0d907bf13837e39fac74702b3b96ce260ca2": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.6.6-beta.0"},
+	},
+	"a6e2aa5bb246f7390dde50520e247ebc80a6152b857d6dbd7610b480acc180a8": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.6.7"},
+	},
+	"aade28ccd52979560d5a51d1373af4496219ff54270868855f71a40c1359082f": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.6.7-beta.0"},
+	},
+	"c46c0d272c95b789e6bd608e3ee0a81dd78e28b0b1626586d597d7d2f0d65187": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.6.8"},
+	},
+	"c0de4f7e4ab9d7fc2ec1d642bd3b7342e43e3ef507700284111e4f9b7a49ba2c": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.6.8-beta.0"},
+	},
+	"d00e061b796c5920845ba366401e1c545fce39270b061a37546af9edffe62e08": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.6.9"},
+	},
+	"b5ef6f7113161ee021c2aaab6cce4767207832f39f6271e8ef0a2172c7237a3e": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.6.9-beta.0"},
+	},
+	"811bc795000ae610573373bb1d263f4841218f3660dac92d774d28df379874ad": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.7.0"},
+	},
+	"7a6313fa33af818a78845aa772e4bcf58776e37aeb9d5b43e25bcecf4647aee0": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.7.0-alpha.0"},
+	},
+	"308d67bcb3a36593c9cc5aba81abc36015c2badfae71eaf0f93970d64506273d": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.7.0-alpha.1"},
+	},
+	"38e83614ad3943e3bf704f7d68bd335caa6b5e7b2b8562f82f613dcf3a7f8c43": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.7.0-alpha.2"},
+	},
+	"dd364818fc59b2c6695d0f2cabffc5c2946b2263cc1618b3d3184f969edc7b28": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.7.0-alpha.3"},
+	},
+	"e5aa1fb0acaeb53c517917b7b37147016634cdcef280e51d474936e1315d8bea": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.7.0-alpha.4"},
+	},
+	"b8d494622ff86ead8fcd79a3ffced536f3ca74804c0afc6972d0eb24bda6a97b": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.7.0-beta.0"},
+	},
+	"09ca1e869afde2312fb3936682e5a345b2c16213ffc60afc9fdf0e7903b97fa3": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.7.0-beta.1"},
+	},
+	"364215d531a7c04c35b923a04cb055199783a996d095dfb041a14ad285e83af6": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.7.0-beta.2"},
+	},
+	"28d8133464b0c8d133d497acd8a2858705e85c71cf434177f39046742415e189": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.7.0-beta.3"},
+	},
+	"29ecc1a049063d804d40edd044bcb0515d1c25bd8a2ca1fdcaea0115774afc64": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.7.0-rc.1"},
+	},
+	"35460d07a65e61c8f8ebaa6f35d23353603123211697325bbd57aecf5b945111": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.7.1"},
+	},
+	"061483295ab9b008dee9585195c79b87fabcc3b4861cf841558988bcf5e5b4c5": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.7.1-beta.0"},
+	},
+	"13b58ebc7a4e44e39904c8caf2cedebfe40ef5b7630d81e0ddcdf0f2e2bea0a5": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.7.10"},
+	},
+	"d1bdb293a8eed4a0837673c1b3df7b9489e7e284ecbd46b2955cf33171868957": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.7.10-beta.0"},
+	},
+	"294744e6a1f0a0116e647374c4a45595728b6b4f015a62026131c0105d5e5c28": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.7.11"},
+	},
+	"cd75ad6f1220d9c12194aab7bb4f97bfe6a90069cc139e5c600cdbd72956b559": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.7.11-beta.0"},
+	},
+	"054e40a4ae5972636659b973843c208870e550a413dc1979e552938cf61a0096": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.7.12"},
+	},
+	"b595b3ef2d5dae8f46efe942f4eca556dbe46ad9fb6727b0e455053cfcc13305": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.7.12-beta.0"},
+	},
+	"e0017a5d58fcc50a077c58784580182b0821f2b003a66b107ece522ba5bc3dc5": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.7.13"},
+	},
+	"742118df76395f68c99b0fff8e4c77f7b9280543d6a8a3070dad8a008cd7026e": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.7.13-beta.0"},
+	},
+	"55b71117ef48bd97876f2a507c8ac2f271e6522e63adc6c991c48df6f5af90ad": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.7.14"},
+	},
+	"b440bf1eb7f267ba0c62156e3866eb1587c6982d997aa6df9c2f17c3a0e13a2b": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.7.14-beta.0"},
+	},
+	"553d40df7eef955317a32b5b879b4848cb9045ea30b9e5418dca1bcaeb1983b5": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.7.15"},
+	},
+	"8fc63ce8db7c42f1d02728942c2819f6f375667b5be815c97bebc7c7d0144800": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.7.15-beta.0"},
+	},
+	"8505efe50bd1f77046645b8765ff19ad3d63ad467bdbe4c9ed3e2a41a41dbf80": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.7.16"},
+	},
+	"3fc9b1df477a027c42c8f6fda9f846d4a61afd31e220d8e6ca9c81c604a5e137": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.7.16-beta.0"},
+	},
+	"c33a94697040561371a4ee05aaa7f50c82dda57e0f652e316d461b4b647c960d": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.7.17-beta.0"},
+	},
+	"258d293785070021c63d9812682c3ce4042c857b211aae217d0a4e18a2692f76": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.7.2"},
+	},
+	"294d436c118aa67d5899f2fdbb450995c59e97dc28891a5ab3b11be01e1648b6": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.7.2-beta.0"},
+	},
+	"2c95b0554e17aa39d3ccbce7271d988fdbcf13feaedb65963f1e6ed694b2b112": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.7.3"},
+	},
+	"c6a488fd295d3d31ad4fb0416e8224aec7ec1d0096d3c8327ca42bbcd1a84b75": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.7.3-beta.0"},
+	},
+	"fb28886af946fd70a66ccf4adfc67a3c7f961c7536e5ec6ee1bdf3c09aea77e3": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.7.4"},
+	},
+	"9038cda274ded24daab860e93952f325360b2f631a4d9e56113f49f5c7c30953": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.7.4-beta.0"},
+	},
+	"189a4ac63e9e71d8d6b8d01db87e145dd75a0d64e568e5f85b6ef71f0bd41eb4": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.7.5"},
+	},
+	"ea57d490e70257c01b882eb0f20b4d3b75a9acb6d690a5bd562d811f3b94049a": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.7.5-beta.0"},
+	},
+	"e681018be68a19a40b5c96083d43a0ddabccbf0e6611621b855c5a3a2b07ed72": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.7.6"},
+	},
+	"2051a4297d795a76c5e3dbbed2986997392cce3d6a7555fff8f9a7aea95968ea": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.7.6-beta.0"},
+	},
+	"5c4cd6ac3c620bd548ca5f17dc4a1d3d0cadd4d087be2f2ad44ae294093403a1": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.7.7"},
+	},
+	"73341055a0bd32d9e2778155409f0c4f836b9ab903948521239fca86706be882": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.7.7-beta.0"},
+	},
+	"474657930c18fad95410859d6428fb5e6040c6a3bf6740321b746269a1af862d": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.7.8"},
+	},
+	"730a080317e3f64f549637256218c46407dc99b15f45530cd395704179231e62": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.7.8-beta.0"},
+	},
+	"3fb1c733f7968a85e920800131479f61878847a7db2c423e6f374b06b459acea": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.7.9"},
+	},
+	"edcc56be19d3bc4d45a74131802001f7b52933e840bd705cb900ff5a6d979999": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.7.9-beta.0"},
+	},
+	"b976723bc7c30335f438ff11982fb357bd59403e34d73bd260062a179c16a71a": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.8.0"},
+	},
+	"940dbbc1a94b489575cf90177e96da12eb307cff8a2b2d880bfcc5e62958d6a0": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.8.0-alpha.0"},
+	},
+	"5803d2c7e9bbc70f7e1e936ea22c175353300807c2e7a69b5eadeacbf44feeef": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.8.0-alpha.1"},
+	},
+	"37eed23854bcf9d91f139096a272044aeec0ade810ec29a1f90cb6ad27bdf8d1": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.8.0-alpha.2"},
+	},
+	"66588d7800eb5b3bb2aae0926c0f14b0abe2ef8b6ddd757b39730d78b2eb6002": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.8.0-alpha.3"},
+	},
+	"67fa924bb1acc6707934386250ff018badcaad2dfc451342972cf90493b2d986": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.8.0-beta.0"},
+	},
+	"8a90bfa9d742ceb82979041a49267c815b0c4730ef34070d6002bea55c5c34e3": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.8.0-beta.1"},
+	},
+	"fb8aac6fad9ff8959f20dc301ed1de0899945b7fa65d4c4a9872fc58386bbd11": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.8.0-rc.1"},
+	},
+	"9bf35924b25bed50537dadf944156f8c65bc93aa0d34d9213e0fabc5b82de5bb": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.8.1"},
+	},
+	"8c12690bd98891d158064dadf9ee2b366890acf90767d6bb12b6c3fef410c555": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.8.1-beta.0"},
+	},
+	"e89803b82d0f40216783d485c23eec48e41d0b7d527c5a1cca8a45d953257ba4": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.8.10"},
+	},
+	"24b845b4bf2de6a992cf4199348004389b5ee897e96ceb60b3154a31d9ce76db": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.8.10-beta.0"},
+	},
+	"d2e11f027a1df06132ed86493d919ccafa6c541cad88137cd0a918654b3f7898": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.8.11"},
+	},
+	"b6ae32153de8ed038add593d08eba16331f873a301ef8d8c4ca62482519bd06e": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.8.11-beta.0"},
+	},
+	"dccc69526d8495b1104128478e13ae9020946c45299d4004542b00134e4bd112": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.8.12"},
+	},
+	"dd7969e39fa43248f67f0d2f6e2cce71e52d9ce3ed9a7e27a72ae4bdbbc40a3e": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.8.12-beta.0"},
+	},
+	"7909dd02dc398a850900bafd2a9b18685b97ccf39ddaafd43fd35b608af6b82b": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.8.13"},
+	},
+	"407fdb2f69fb8b033f8d948cb6ac1f2108b0a7e3c87bc7a4e3a315f43cf1cdb9": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.8.13-beta.0"},
+	},
+	"58cab75f209848556328210de8a403c0892648052408212af4b9793aa54c9661": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.8.14"},
+	},
+	"0e7cc784b3cf79c9700b37ec870d8697b27d12c08d90c5153c5eda2f10824ada": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.8.14-beta.0"},
+	},
+	"58502ed3aa474fb1ab83d64bcba433caacd40ef285746795886ba4768cb1a4bb": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.8.15"},
+	},
+	"a506c0b10c0f3780158df43f24bab1a5a179289369e54b31c9f69abe3971a69f": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.8.15-beta.0"},
+	},
+	"6300f609b67f0473756b722764d396acfcec520acb8134b940dd080754662470": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.8.16-beta.0"},
+	},
+	"612b37ca064e0676375a2b133499ff562f2ca0e592904ebc4346fd12ccc3b300": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.8.2"},
+	},
+	"0b12037e4b8d93d9bbfe078b51b1013c7f23736ef9d149484e8f126c6d6f80e1": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.8.2-beta.0"},
+	},
+	"0681a666b0a5eb6608a1ee0aa117f12885edac7aec15337749c531910bcdd884": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.8.3"},
+	},
+	"8713d033504559bca2eb6df539960ed66edd877a6302c5055d466c99b84ed062": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.8.3-beta.0"},
+	},
+	"6b8a74b52bb529e2d20ad22072b7adc835b8cf27d4f7d992fc297f11b1b28e6a": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.8.4"},
+	},
+	"00efd3d335825b14eb261341f6ef9d0971d5e7c00db74420997f8596fd00a55c": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.8.4-beta.0"},
+	},
+	"5a9e7e3bcf84ecf65c0319513bea231c5d4d9e63ba8aaf8afcca826ede5ced43": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.8.5"},
+	},
+	"a234adf53441927ddf50b32d82437b3e93df74d81e4c80090eb2eb44465c3845": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.8.5-beta.0"},
+	},
+	"7e4acd509b594c7dda3adb2df363cec6ad2a259ed4a789b06bf8d5ff57f7262c": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.8.6"},
+	},
+	"29edf531e82c45d58f64d9b7e2a5aadac2ada044c9a2c4326c8de8f8e752d86f": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.8.6-beta.0"},
+	},
+	"f815d782c78ed63fda5cc029fd739171f9c97d54a0712637b2dea5094c44c5d0": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.8.7"},
+	},
+	"80448cff11c102f789a3643fde8961144d078b9ac3961f9a29f9ceaba1fecd72": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.8.7-beta.0"},
+	},
+	"52647b6e24c5e2505417fe27131cecfa1897e4aa4d971ced73c0a0f730796ec8": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.8.8"},
+	},
+	"a966654ef0cd8756a6e1e4db591451b23da5d2989518f1a52e9a347cf610619a": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.8.8-beta.0"},
+	},
+	"9107b4871f21a0dbf75a6beb82410bd7f2fbeb569858f638d21785b12fb35910": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.8.9"},
+	},
+	"b1db78923a12a747b535f7a2a22ca1098ffe0476aadca0170f95b35303e829da": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.8.9-beta.0"},
+	},
+	"7dc16f961604bbf6039538844c6ae26bb9218d9af1be50f741848f1f465ea424": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.9.0"},
+	},
+	"4ccdf1f54873c777cdd7f1bb71e9608344959645afd9b1b3ab5e13f8fa2456f6": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.9.0-alpha.0"},
+	},
+	"52d764971af32a91cd38922f3c53bd2cb1bceebee929c42c81ae50eda90a2951": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.9.0-alpha.1"},
+	},
+	"c1359bb0c7e4386aa154e9b4fddca27a78b1b2e966a7bf66554f62b264a59284": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.9.0-alpha.2"},
+	},
+	"69013a11cbf0de13be3fe1c1858ab4eca7ac2f860f5a8923e65ee220f83ee088": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.9.0-alpha.3"},
+	},
+	"631aa75ec92fc0abff32b8301020a316b97c520a7340929c8b4da120e76c35b3": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.9.0-beta.0"},
+	},
+	"4a101416f6fc3b15ce565b73984eda64de0825a28d3f2a3fa2164302d951992e": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.9.0-beta.1"},
+	},
+	"0c4250692a76d25c8c51973c44182290700e734387fa330741a36503ea7e39c4": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.9.0-beta.2"},
+	},
+	"0e9e5af5a96546c07d75d1d418c45f3dcdb642657603cf8554a8539fc940425a": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.9.1"},
+	},
+	"33695df5a2a0defa168f9be5c1d3ac0c101e1eab393259514de6eeac7e3309e9": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.9.1-beta.0"},
+	},
+	"191d59c2b93e5f7a3920ffb6057a2291c0e70c9a64d6a2c32ebaebe111d19b04": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.9.10"},
+	},
+	"236c851b77aaf170fa550af2c18d248358e3ef5c3f75d80f21df674f9c33f841": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.9.10-beta.0"},
+	},
+	"98f3554066a8a6fbb4b05e0b1d6a4379db48c06bdf5435bb34b35461313eb743": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.9.11"},
+	},
+	"44127714f62a4c07a8fa8aec9a8fc921ab3472472b914e2e6a5868740a0f4057": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.9.11-beta.0"},
+	},
+	"0fe7a0b52d541e95a417c7071aff812c8aad6168f017fd7bd6ca406f9ba03428": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.9.12-beta.0"},
+	},
+	"08e87f5c7b745eec7bbcf658dba943d1ae1dd06ede5adb821f746df2b6fc4a85": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.9.2"},
+	},
+	"2a809e4fe48fb9a9418209adcbbc28e41e3fd3f7ea0a7d0950751bb342ce27c0": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.9.2-beta.0"},
+	},
+	"22c858ce4ba26f0feaf0a901ab6effd37cb8735bfda98ba807f2dc169ce68362": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.9.3"},
+	},
+	"68631e9d755beb5641482c6378650947a6f779722f476469e5f044b4ab8d33df": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.9.3-beta.0"},
+	},
+	"a62ee4d8ddafa7cf8c3cebdb0ab7356b4e46af7744d6a3f5fb59ed7a863e4cf6": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.9.4"},
+	},
+	"8bcbfe7e56286992ac41f3de5246d8e5db9771647a51716e3c8708bc81e27e3e": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.9.4-beta.0"},
+	},
+	"05a62abdb2d363434a23903f7d27bd7be83521e25f7cc46369438daaa8a643ec": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.9.5"},
+	},
+	"4796d34bc5aaa8558aaf3f1f80c0b46e28e06de9bcbeaa954c78053ba20697c6": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.9.5-beta.0"},
+	},
+	"44d5b1c276c4f3de76be07d1486c68bbce227f86c4d8e559043d451e37b9a2b9": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.9.6"},
+	},
+	"eee00f462b868f88f0777d6f46507e4b4bbeb8e227f701c3188585f361a0ef22": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.9.6-beta.0"},
+	},
+	"6771c3c386e20c3589902d1bc819a1c503f4f3c8f702216c42a022fa1b68bf1f": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.9.7"},
+	},
+	"2fb3045f50c3be04522fbfccb09dc7db7bc83d48e1bf88d63d5cb05c72f4b3de": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.9.7-beta.0"},
+	},
+	"b9531f619ce80af8ce5f1337e7d3b6346d4824d9d45ac8b78b72b08b7cd04e60": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.9.8"},
+	},
+	"e41b2f15480ca41536287f884bd8af0be99d0517859445eb4c52846eb24fbf59": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.9.8-beta.0"},
+	},
+	"5e82a7f75cb0a5d52b2081689cb8e9f1e55a51fcde7d5e2e3381026ccc1a3294": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.9.9"},
+	},
+	"daf73b80ce85708d972de64d6a873e71a6b6cef710ca1e2f164a3e93973f2cd8": []Modver{
+		{"github.com/kubernetes/kubernetes", "v1.9.9-beta.0"},
 	},
 }

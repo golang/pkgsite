@@ -39,6 +39,7 @@ var largeNoMods = []struct {
 	highestNoModVersion string
 }{
 	{"github.com/aws/aws-sdk-go", "v1.14.30"},
+	{"github.com/kubernetes/kubernetes", "v1.15.0-alpha.0"},
 }
 
 const goFile = "zip_signatures.gen.go"
@@ -123,16 +124,17 @@ func writeGoFile(filename string) error {
 	type kv struct {
 		Signature string
 		Modvers   []fetch.Modver
+		key       string
 	}
 
 	var kvs []kv
 	for sig, mvs := range fetch.ZipSignatures {
-		kvs = append(kvs, kv{sig, mvs})
+		kvs = append(kvs, kv{sig, mvs, mvs[0].String()})
 	}
 	// Sort the slice so that the diffs will show only the changes. Otherwise
 	// random map iteration order will result in messy diffs even if no
 	// signatures were added.
-	sort.Slice(kvs, func(i, j int) bool { return kvs[i].Signature < kvs[j].Signature })
+	sort.Slice(kvs, func(i, j int) bool { return kvs[i].key < kvs[j].key })
 
 	// Execute the template.
 	var buf bytes.Buffer
