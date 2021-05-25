@@ -191,6 +191,18 @@ run_npm() {
   runcmd $npmcmd $@
 }
 
+run_npx() {
+  npxcmd="./devtools/docker_nodejs.sh npx"
+  if [[ -x "$(command -v npx)" ]]; then
+    npxcmd="npx"
+  fi
+  # Run npm install if node_modules directory does not exist.
+  if [ ! -d "node_modules" ]; then
+    run_npm install --quiet
+  fi
+  runcmd $npxcmd $@
+}
+
 prettier_file_globs='content/static/**/*.{ts,css} **/*.md'
 
 # run_prettier runs prettier on CSS, JS, and MD files. Uses globally
@@ -236,7 +248,8 @@ Available subcommands:
   headers        - (lint) check source files for the license disclaimer
   migrations     - (lint) check migration sequence numbers
   misspell       - (lint) run misspell on source files
-  npm            - run npm scripts from package.json
+  npm            - run npm commands or scripts from package.json
+  npx            - run a command from a local or remote npm package
   script_hashes  - (lint) check script hashes
   script_output  - (lint) check script output
   staticcheck    - (lint) run staticcheck on source files
@@ -328,6 +341,7 @@ main() {
     script_hashes) check_script_hashes ;;
     build_static) run_build_static ;;
     npm) run_npm ${@:2} ;;
+    npx) run_npx ${@:2} ;;
 
     *)
       usage

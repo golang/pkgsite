@@ -8,4 +8,4 @@ set -e
 
 # Script for running a nodejs docker image.
 
-docker run --rm -v `pwd`:/pkgsite -w /pkgsite  node:15.14.0 $@
+docker run --net=host --rm -v `pwd`:/pkgsite -w /pkgsite  node:15.14.0 $@
