@@ -8,6 +8,657 @@ package fetch
 
 var ZipSignatures = map[string][]Modver{
 
+	"1c32062dd9aea3dc5ea2e86fbdb2715e17106d10f20381066c29f640dd416d95": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v0.2.0-beta"},
+	},
+	"d8df832c2e5993b25373960029b8ddfca5f2ddf747010e44c1c2caf8e5d9fbd9": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v10.0.0-beta+incompatible"},
+	},
+	"e717f893b931f4f4e38fb8c492d7234a77eeaa0648768e5b955ecb6d964601d4": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v10.0.1-beta+incompatible"},
+	},
+	"d2c500fcf5a9e71693f9d9d19fa7b23d6c3e827adac988816d3d0b79989e53f1": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v10.0.2-beta+incompatible"},
+	},
+	"5ef4dc0ac88ffa17075f7252233fa8e6a14b6c4f66592ac950135b5b5e2ec293": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v10.0.3-beta+incompatible"},
+	},
+	"7404987ce11eec1dae1b3e07c2bfac1eab66d06f9638b3b4eacff3100a1363dc": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v10.0.4-beta+incompatible"},
+	},
+	"2274fe6aa07141a13075b0aad982bd7065efd4fdd2d7987ba2c18338f06419e2": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v10.1.0-beta+incompatible"},
+	},
+	"5461ea172fbe6b48c93c515c6fc10658ae288a5251d296e668de51821e13cd5a": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v10.1.1-beta+incompatible"},
+	},
+	"41f4eadf4180617f510c1ef5950b185281cfe2537d6f4789c0dbe692b674b0b9": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v10.2.0-beta+incompatible"},
+	},
+	"c58e2689f3893bf1845f81d1e55c0bf5ea47f5a106959ef9c7c6d60424a599fa": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v10.2.1-beta+incompatible"},
+	},
+	"a2e3b78ffafc377dcb416a999fb840b5f7664c73a3010a2a1654848aed419c80": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v10.3.0-beta+incompatible"},
+	},
+	"87b42d2e6d838bb35a2c04f4f37f6eab72ce3614bedf80e71925a6c831d36761": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v10.3.1-beta+incompatible"},
+	},
+	"168079c876f960f8076652bcc34e9c7bbb7ba05e60eb7bd79e9708e43d6d9caa": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v11.0.0-beta+incompatible"},
+	},
+	"1e1183501d02ebd7b21c095ac39a071af77642677a918a074372b8ae1a1b6098": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v11.1.0-beta+incompatible"},
+	},
+	"b891821071dbf946dbd8c4d16781a4fe21d70a622b49462248e213aecf08f3e4": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v11.1.1-beta+incompatible"},
+	},
+	"790238f4b2eebb69b6a2dfd4fdf6ab292ba888b53fc70733ec013652cdc5c3c9": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v11.2.0-beta+incompatible"},
+	},
+	"f90f20f119a74da9a62009559e8f536a268ef16a3559f37051e1f42e4a72c93e": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v11.2.1-beta+incompatible"},
+	},
+	"ab6685c39b9f90114f2d1624067abee3cd3ed40df049cf472c8538aa98007cf8": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v11.2.2-beta+incompatible"},
+	},
+	"1983a101f94ac85bdfc85116858e90332710ae3acdd3cb0ed8a5fc9613a0f621": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v11.3.0-beta+incompatible"},
+	},
+	"b5ed2dda4045708f16e9080e6295b420788efdec41b99ee83f0cdb67fbc69e8f": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v12.0.0-beta+incompatible"},
+	},
+	"bac13f70130b193df6610ff7ec5fba206b23d79cab1c1c8e63624fd1135a077b": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v12.1.0-beta+incompatible"},
+	},
+	"33d1f0a388bbb7def8fa45f0b9f65081c0cef33a9a4222b3e21eca98bc091a0b": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v12.1.1-beta+incompatible"},
+	},
+	"4c9fa27ff1ec6edeb9e30aaf69f5945cacc405c35d4958edb9793d4cd52bae91": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v12.2.0-beta+incompatible"},
+	},
+	"5aed64b8be5d08714772eb8e9a35c572ffc16e6bed3504af6b0097f451db9568": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v12.3.0-beta+incompatible"},
+	},
+	"ccf2245e0901e71bdbea5707becd3bff542c71463f1a5896cfc69451c73bd007": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v12.4.0-beta+incompatible"},
+	},
+	"8e217cd6f727a2b70ab71e93d5a9f64812e345385f7b33e796ccb7ca92d87672": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v12.5.0-beta+incompatible"},
+	},
+	"2e676cf39d39afd68d063ce84131b70905634b00899029c2efac2d3c4f62cdc8": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v14.0.0+incompatible"},
+	},
+	"03d6dcbb51d148f1bd215fb529acd0a9a4455542ef6ce7096cf26bc766422d67": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v14.0.1+incompatible"},
+	},
+	"a7128226ebe59a905996e34c1dc2b56f535b5b8eebb03d2a5ddba5584aa6a9c8": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v14.0.2+incompatible"},
+	},
+	"164e7505ea2ff703754d1e6a8282509ab53b40e8415ae14baab6ab78743d1eab": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v14.1.0+incompatible"},
+	},
+	"664df8ef92454590b081dbbc350e1b5cd1a783a6d0afc65d8dff9dd3e4fc9459": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v14.1.1+incompatible"},
+	},
+	"3a2d21909fdf89cedb773cabe41813f964f78ba69450cdf27a816590f005c7ec": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v14.2.0+incompatible"},
+	},
+	"3168e9fa702f9b39657d9d30cd906dc9b5c680bc014f9cc8c4c0996ff45822ee": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v14.3.0+incompatible"},
+	},
+	"c018ee17848d177813a22d557eed9c910ce236df16d8a32c52fc3271d2c09969": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v14.4.0+incompatible"},
+	},
+	"6725fa9e6740ff0105e3d62ead39ff29017f633c9b3492db19a777e26c81497e": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v14.5.0+incompatible"},
+	},
+	"ad3b4e533bc8a3b20f365056dcef557e39e744d962c2c271753391f83c00d170": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v14.6.0+incompatible"},
+	},
+	"71997123f9cea9307703774219b20dbb75520cc4cb6d2a44d81ca8c4c5e4ebd1": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v14.7.0+incompatible"},
+	},
+	"d7fd8f35e97ad8d65a86ec211cbc54a13381f8fe0124a3a2cd2e1c502d604c24": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v15.0.0+incompatible"},
+	},
+	"27f119bdd0551e7707f6e3a7143518ead864d1a22b41eedf90fa2dcbe51b5460": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v15.0.1+incompatible"},
+	},
+	"63e92b83b8a8f405d23f9e988fab9520236e087bb972d10af9838e8cacbea30e": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v15.1.0+incompatible"},
+	},
+	"46c0b8e705347417c2263c3e6bfe7140e49d481b965cd78632b55d55bf960bb2": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v15.1.1+incompatible"},
+	},
+	"b740ae876669cbc7de043d37c085dd037d21e9ec9ea790a2aeeed8da8eed6444": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v15.2.0+incompatible"},
+	},
+	"d9e874da35c3424f1c59f010c4e6b3ba933f09a624a49ff3808fa49256f437e2": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v15.3.0+incompatible"},
+	},
+	"66b74c969f0dfbe1873e9f5c56f65854efa462b855776d0c1155066b92ee85e4": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v16.0.0+incompatible"},
+	},
+	"0fc5277a7fadff237101252e6a6817ecc977c9126d9793c7c549e8be16e0c01b": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v16.1.0+incompatible"},
+	},
+	"277fe775bbebc19097c2e792ff986e3ef1a1e54a2680a0c9de357f6d319468f5": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v16.2.0+incompatible"},
+	},
+	"847f6c1f71fe9bdb005239a0a1d42ce1590af51107cdb19307c647d34210c7ee": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v16.2.1+incompatible"},
+	},
+	"3058caa198e413ed7a1e5a2de0f897c91694aecf036d7045512fe4d266a73a19": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v17.0.0+incompatible"},
+	},
+	"6f046815b15ccdadf8f921104c1979c6ea951b5efe00c175831ea89aee74bb4e": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v17.1.0+incompatible"},
+	},
+	"4a1624b9aafe8b7f4fd43fa7f630e580508dca03edaeed5c7a2fc7ce97d6c8f9": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v17.2.0+incompatible"},
+	},
+	"63fe07182b095d0b88099c2b5554f8db59df99bd2b7c0f9e6f1e9718308a8716": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v17.3.0+incompatible"},
+	},
+	"de1816bba70cff91834ea23c281e31b61a0b56d7a219110c9da812a1c68dbf48": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v17.3.1+incompatible"},
+	},
+	"75feb95395862fe2461cf78a9485caa49ccfbc015869de11a02e8a0e7ce28258": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v17.4.0+incompatible"},
+	},
+	"316d374348affab7128239d2e44732431cb7c9137ba62be23c6aacb44544734c": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v18.0.0+incompatible"},
+	},
+	"67b7ba2bdc03a3c0041f589e69fd48f80a08056e2c175a58a4528b711e922174": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v18.1.0+incompatible"},
+	},
+	"18d4b107d26799d015948659abe9c99a61625bb1a3f6cccb584715d0bc76446a": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v19.0.0+incompatible"},
+	},
+	"a87f8c27e5ed85d6079780bcfc809f51629b181e6ddac0801b9e23981d38d0d2": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v19.1.0+incompatible"},
+	},
+	"7de7cb08c840994c3c1c3e31c8386329a3d02ed2dc1dbcf141df33024403927c": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v19.1.1+incompatible"},
+	},
+	"1cd1eb47a8200c1490e15483575d77d5ba707a5efa0ccfb7c7d3981939e74841": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v19.2.0+incompatible"},
+	},
+	"e681c80eb00af68f367557e22a16e0698a77b255786c1d6311acdeed01ffaeda": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v2.0.0-beta+incompatible"},
+	},
+	"4a3f0448d807c0402702672a24758989fe8fd986ff39c787fe2cd5c2adb50411": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v2.1.0-beta+incompatible"},
+	},
+	"77eea0ff534cbfbd418e96edd3553b93d36c1abd13d7b391c7078c39403cfe62": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v2.1.1-beta+incompatible"},
+	},
+	"369586e47d9a1bc7b23885d6a18935c05177d899e2459e0c44f101d05dbd1060": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v2.2.0-beta+incompatible"},
+	},
+	"d085c04673ddf4901e2b9dff822aaf761bd7f6b9f52c9a2d3008e193680c13b0": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v20.0.0+incompatible"},
+	},
+	"3a07b20939835be77398a7c924fc8e3165944af75aec84b9467aad580cdd8217": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v20.1.0+incompatible"},
+	},
+	"dd71205b53cbaac55abdb8de0ffe42d98d89026ae9927640960bd741e3d06ebe": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v20.2.0+incompatible"},
+	},
+	"7f13d9e5be46eb42e1a0be7ee25698e4f1fd61af4b6955e6c422db309acb47e9": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v21.0.0+incompatible"},
+	},
+	"076e2880561681b51a223f0da6e2e56e92c7f48464bdaeb8c4d967a3b86c35bc": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v21.1.0+incompatible"},
+	},
+	"d65c88a025ca1d09b09b20f39c8721789e510c6592a8771f5777b90b4d2ae2e0": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v21.2.0+incompatible"},
+	},
+	"81c11823d47dadc594e7499c7273c9ead5c60e5a233a7f4280c850ab10c567b6": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v21.3.0+incompatible"},
+	},
+	"0941c54ea2290b7fce38f330788b877ff6e17240288d51422325b3a57a1c2cad": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v21.4.0+incompatible"},
+	},
+	"f2e11664c1020ada06824cb6ec89ca36eaa5ea9cd20eefd50cf3bbc9d6168cdc": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v22.0.0+incompatible"},
+	},
+	"978fcf2db1bb7d91393762a18f4991b6bfa7235130f4e0af989a7a0c7d7e8a10": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v22.1.0+incompatible"},
+	},
+	"8b0087627235d35720cc3e56e42a3a44dcd813dbf4c36a02f886a7a49157322f": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v22.1.1+incompatible"},
+	},
+	"3472347d8f51343df549fd2a22935b0589b27fd3348fda1f9bc514b1df2b087e": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v22.2.2+incompatible"},
+	},
+	"16a2c7b1f16152424d347d53d68b3317718e1fffe43b43d8ae78f3298115fc2a": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v23.0.0+incompatible"},
+	},
+	"47d97ed58f6fdb1ba7ac9e17b67134a029dfe5bb018946fa066e5e4f86f58ff8": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v23.1.0+incompatible"},
+	},
+	"49aa361bda3e71f5f31d72e34531c9024eb7c8bfa3d8be96314061f606a0fce1": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v23.2.0+incompatible"},
+	},
+	"6f311e6363cbf07206cc289849d10e6cac737c849ed78081bba8c09eef837200": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v24.0.0+incompatible"},
+	},
+	"a98294305fbad92c86248d1a46ef006cfbfcbeb60e2251faad4bb7f4bee4e46d": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v24.1.0+incompatible"},
+	},
+	"5d0c241ced4dd6ca1604accaec241662bcd68be9a60668f929aa1762c72ccd17": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v25.0.0+incompatible"},
+	},
+	"16d17aa7264b679ad444e71dd8aff9a03be2bc43211d1571a98cf00c885dbca6": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v25.1.0+incompatible"},
+	},
+	"fe66b68a2d49239bf42c84ff0f49719e25b528da3ab8e4139e3e53843899f21c": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v26.0.0+incompatible"},
+	},
+	"5693f98d4d0b0bac19f4373654a6cb6c0bcf589ae2b42e389e742bbc58e65d0b": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v26.1.0+incompatible"},
+	},
+	"d403848736e7df3eebde44492bae6cbe865043290c4cbbd031caf6dae1c46ada": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v26.2.0+incompatible"},
+	},
+	"2cb4e5eccdb943ff4e8f376f8598f949a03032f40bae92bdc38466d1b5d2af90": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v26.3.0+incompatible"},
+	},
+	"6e27ddeb1f05f08bb3715575b60aa5571370814775a2bbfbbea590cae16f25e6": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v26.3.1+incompatible"},
+	},
+	"6e4408956fa7f8aac3de9d4a8c25cc2682c0fb6559c7c19a19839a3c18762528": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v26.4.0+incompatible"},
+	},
+	"699f0c45fe7657b2e30270de3982d2c8d4e52a6f593eea720ccd06e2155f02e8": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v26.5.0+incompatible"},
+	},
+	"180c50e8e8749def85b0f8d48634f89ce32fc82028491be14177f8474c356bd8": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v26.6.0+incompatible"},
+	},
+	"3b6c224d4ef44facc76c3cabae4762f39e78e29dbcd1f494a6592610563f2728": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v26.7.0+incompatible"},
+	},
+	"154b9811bdefdfc0fca91af7ab1bb8ec5a240d865aa302dfd816a64bafc57dd7": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v27.0.0+incompatible"},
+	},
+	"d7db3d9aae76014113cdcd9e0c4ac076c7b32ec134c78266d36e04eb79e59029": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v27.1.0+incompatible"},
+	},
+	"f579b7ffa04ada055da2e9bb08a5a2235a335e794d3a310367e77132f204c645": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v27.2.0+incompatible"},
+	},
+	"092c775e7fa0e8f98a58a7391b05c87829ff531a2ad532f8493a3b3dd3fa27ad": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v27.3.0+incompatible"},
+	},
+	"18a59a2fb858a23b39987e9f702018833ce218b4199105d86a6e52c8fad72d70": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v28.0.0+incompatible"},
+	},
+	"4dd4e97205c9eebdd825b7dcab8cd2ced581a65340004a81480dbc53a87a5bf3": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v28.1.0+incompatible"},
+	},
+	"b0efc3028e06982c36c7e9e6c9db7c380724e97440606db1f24b9cf5b3a55841": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v29.0.0+incompatible"},
+	},
+	"ea6d015f74f11596c1ecf469ae7715ec4f4f4ca8a06091c887f94e96bacb9cd4": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v3.0.0-beta+incompatible"},
+	},
+	"206016b91352f9237f22b276739f1023b2894fa1210a1d40076fae95a5eca06b": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v3.1.0-beta+incompatible"},
+	},
+	"0f3756913656f071a2e608e7ab2553b7ff7818401eb5732e5a28f92a370002e7": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v3.2.0-beta+incompatible"},
+	},
+	"79b63b3405d8ebc0c4150edf85ae37339a83b2353d03b4e0745a78971a2e0031": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v30.0.0+incompatible"},
+	},
+	"a861bb9e4b1bd7f9a62a29c4d2e8c2ad000af827941dfc2c922c371b9c691deb": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v30.1.0+incompatible"},
+	},
+	"5efbe7e5cd8933fc4633848f630331867ebfa4ef21ae2c0e7b42cf18597ae05a": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v31.0.0+incompatible"},
+	},
+	"7398102f95a08356e598987ea74954ffc28180296bb6569c06a824260d522a46": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v31.1.0+incompatible"},
+	},
+	"41351d14feb913dd73f3c2a294331cdc4b6f701693862ea0e1ba5de77d87d419": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v31.2.0+incompatible"},
+	},
+	"1e0803b3415c41a855032a5081e14bbc75ea7e402d18c144be5cfaa7e4524f17": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v32.0.0+incompatible"},
+	},
+	"5ed31a38bce8150073b2e8d4727b09ce2c8712fcc336f394ee54bd280a20e375": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v32.1.0+incompatible"},
+	},
+	"b1122ca870baffff58a4027c6855d3a68c5bb1391a502dcdf5225091d9171055": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v32.2.0+incompatible"},
+	},
+	"30dabf4c2d2e9f5a5602623eea5b01fb4bb985869928db580f367b7ac7382b02": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v32.3.0+incompatible"},
+	},
+	"e5cb9ce70e694cf7f39457bc925ef5dbfbd3616e9fe751a4e930c8e34880f9c7": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v32.4.0+incompatible"},
+	},
+	"4f6e546129050eef3fc9fa7938cc487abe8efa739b329797e68a8cf4f1a7a88d": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v32.5.0+incompatible"},
+	},
+	"2da520901cef44906aa682d0fb9f23cfa0ecd25ff35d57aa932f261791c115ee": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v32.6.0+incompatible"},
+	},
+	"b669db8cbec483064fd2829d7805f7f8591659b928377530fe98ce1d1d7bb6f5": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v33.0.0+incompatible"},
+	},
+	"3eafb7bfea4e4f97a6468b5da60517169970a27ab480ccc6a3dff4a0dbf450bf": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v33.1.0+incompatible"},
+	},
+	"9f4952695ba7fe4fea5f4957b6b96152c91fdb9fa1fccdd96c0026c10801402a": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v33.2.0+incompatible"},
+	},
+	"dc3d25c2a944495b2745ea53f5360211377f5af71705caeae9d0e46984c7b1e9": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v33.3.0+incompatible"},
+	},
+	"6d77b040c383892030a6660137777496e533a7cfdd859325a2d9093b00139f1f": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v33.4.0+incompatible"},
+	},
+	"94c82c99b4862e12ab4d1d12c54055d3b89584cab9eb5e717979535eef186a7b": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v34.0.0+incompatible"},
+	},
+	"fdac0c6c52f70716c8eea7e3f324d91dbcc229806804b4ee9a4a424ed19884bf": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v34.1.0+incompatible"},
+	},
+	"cb1bc3a11e03107d292d03111c92d1a6e1f5f69579493e0beda518d41c3335bc": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v34.2.0+incompatible"},
+	},
+	"5a5de2f2b21976d3b85df98124e8f226451f15c0a4abde399cc5e2ee56aef31a": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v34.3.0+incompatible"},
+	},
+	"b4e87f3570df643ae29f9f5fab490a093699409b69e84e9f2858bd6e7c4416ed": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v34.4.0+incompatible"},
+	},
+	"c55777592d801c2afe2b3129271afa31ddd6e36ec3c1f18d24760dd62300c5d2": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v35.0.0+incompatible"},
+	},
+	"1ae1daeb8efa17fcf166597fe981b29595e72790924c15e1bf7e7a76e80b8633": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v35.1.0+incompatible"},
+	},
+	"5bdf5843bf2f692918c1de3a8048e06ee68839b9d731ef0ca4ced921097c3b0a": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v36.0.0+incompatible"},
+	},
+	"1b125cfbda4f7fec6c859f13db9ba68b336ef91b977c0d7822759b4d4f1f968c": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v36.1.0+incompatible"},
+	},
+	"f527c2bedf5d54c6794f315bd44f7adadc0a1402e0d4a9aff81f0a8075e8b2ca": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v36.2.0+incompatible"},
+	},
+	"47fe56523170a2a459e959eb3e6d6a2c8ba43563d63d90021f5047b4399a0f10": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v37.0.0+incompatible"},
+	},
+	"55e59ee51b68437da77f5359bc7e89b6cbd6bd0b089f02cdd4a1d1da05c7b3c0": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v37.1.0+incompatible"},
+	},
+	"ad368a23af47441b0dd6bc3f9523aca5fd19824c3620429daa221cfbd5336d62": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v37.2.0+incompatible"},
+	},
+	"455829483b4d66652cbb978137f86e4d9c700ef2a607fa7cc00643986be626d0": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v38.0.0+incompatible"},
+	},
+	"2421178450a7944134821ee7463a80ab042fc6da95e8718090c38767f34b5e52": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v38.1.0+incompatible"},
+	},
+	"6324297ba86c23fb638426c40ca688d5a7793ceb571913402b72be090784c3a3": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v38.2.0+incompatible"},
+	},
+	"b4c6abc23d4262a39fd5307da69bbb7b18f3f49cf59ad363253d70a3cc53da42": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v39.0.0+incompatible"},
+	},
+	"5994452f6fa5d133040bac4887a621378d45a6155f0ed5070c345d9aa2759f81": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v39.1.0+incompatible"},
+	},
+	"e2a477a84260e9e1897b651e572b67da8415e8cac50d005f16db2769832caf82": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v39.2.0+incompatible"},
+	},
+	"620b1c4bd1b9f2bf4dbd7f40a945f8b7a812c7e1d3a011e5a470d52468f2a33a": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v39.3.0+incompatible"},
+	},
+	"8ab286555a9c2b8e95b53a08c820f9d9732b7c519585d816b357412434df04b2": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v4.0.0-beta+incompatible"},
+	},
+	"c661c038a98d9f4b502676730d770c89b1d8f538f4904c447b9e2c1dd439c91a": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v40.0.0+incompatible"},
+	},
+	"0cc4632135e3184cedd6bfc233b844083f8a2c0b1b00125852a6e46677103f27": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v40.1.0+incompatible"},
+	},
+	"05774be92208e601dca52114363af52d29111a55d101db270e78eecfb862d400": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v40.2.0+incompatible"},
+	},
+	"c3468b433c6840a605a12ef34ca7da5256be8f736651ed2a499b0f586f099ce2": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v40.3.0+incompatible"},
+	},
+	"5cb727ff730766d7b92dda3d9773bcb299ad732f9011f7912b7c346f631c469f": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v40.4.0+incompatible"},
+	},
+	"b0d1ad158b4e0bc4490eea6bb6d443dc8274ac14a8c6d2d1439ccd517ff97b4a": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v40.5.0+incompatible"},
+	},
+	"62da389132318448bb1bdef398369d1ae9f1eaacad7ca2e253bab6df1417f2f2": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v40.6.0+incompatible"},
+	},
+	"afc12e7d92ae8a542cf7b0da371d3571dea3daf63cf117170f08e7ca1b7f806f": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v41.0.0+incompatible"},
+	},
+	"c1401db85c52d8bc7ec7f7192754257956062364a28cbf467991aa466d4c43eb": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v41.1.0+incompatible"},
+	},
+	"8260bf8694a13668a5eb48b1929ef3375732e1be4d311dbe87a271562664a73a": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v41.2.0+incompatible"},
+	},
+	"b6167280283e99718d382d30863bfff576e0175cfd4badd46755bbd8d423457e": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v41.3.0+incompatible"},
+	},
+	"41f8c84eb835a3c7531bf2c86613140f11c86263dad376b44f5b9c0f0226c03b": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v42.0.0+incompatible"},
+	},
+	"b051a9fa67b0d040fde2332f32a9476bdb96cf4dae16c88bf481db2c4bb85d17": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v42.1.0+incompatible"},
+	},
+	"aee1c556d7c5b3cb42ddfe91e2c0327f7d608a0b9a04c9338be6f4c2763c4c80": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v42.2.0+incompatible"},
+	},
+	"6fedc8e1658214befaa90696f26b705cbcebb6fc8dc15c8e5830c2585eb29815": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v42.3.0+incompatible"},
+	},
+	"26fbf4985fa3a9f8e6c46a65799c377671c5cf73b2579f87fc53b5712bc5cf50": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v43.0.0+incompatible"},
+	},
+	"01002cde5d8eeeec94f50c003720c355a6012feeb42c351283229256fbc3ab41": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v43.1.0+incompatible"},
+	},
+	"e9578ceace83d3dc6ab030be09966c7e47bcda985993ba76e332bda5b747509d": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v43.2.0+incompatible"},
+	},
+	"4b446ac5074d88c20c39cc1f24466776b8549270079e5a705b71b0f4684821d9": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v43.3.0+incompatible"},
+	},
+	"7d0eb9d6228f19163908d00e15d2c8e5d8d8d38dc9d5d554eb6dc06a5c4c968b": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v44.0.0+incompatible"},
+	},
+	"d0486b65db28ee29a54ccc65d1d99a0ff40af6724b09cf7d3151375b982eb096": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v44.1.0+incompatible"},
+	},
+	"cc47a620207dc00ea77787140a252a5f4cc7440a304de78d7f86b88a9c9793b6": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v44.2.0+incompatible"},
+	},
+	"e8e2cc8d9ba7c849cc0bafb1d327540d687d88802f41e01c7c92b12e91d061a5": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v45.0.0+incompatible"},
+	},
+	"f92853b0689a11616c930e45ee97e0a2e8ae56c61e3dcdb5b346a626a95da7a8": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v45.1.0+incompatible"},
+	},
+	"84a8c28d53708782449dd3476d218e31af3918bc01f8e91bb655b6f8a992433f": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v45.1.1+incompatible"},
+	},
+	"e067eeee88d5ea91a56deeb3d39ae49634e24d306692d351ebe36d5c4c4b0a21": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v45.1.2+incompatible"},
+	},
+	"15e425ece5fa41587fe0830c4890219b0de0f5256a82a3b0bc2c37d9b4f545fd": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v46.0.0+incompatible"},
+	},
+	"36534540807a0fc07ae0e5740d6aecadd58dae8f120c0b0924f4eca762242449": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v46.1.0+incompatible"},
+	},
+	"23655cf05fc2661d19a0b1d50d57ed53c544bb6c67c2dd35ef4d3ced21d0d3aa": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v46.2.0+incompatible"},
+	},
+	"03b3f472bbab9e3a4c47d7c689aab398088b1a58a94de6425fbfc912f277f2fe": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v46.3.0+incompatible"},
+	},
+	"72c51062301287881cc3f1af01b621dae52a06415cad0b5cddf40af0d86dfb13": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v46.4.0+incompatible"},
+	},
+	"c31dbfe3e4b44bcf3269a93850739a27edb1272e3057267bb85bb32f94f6bace": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v47.0.0+incompatible"},
+	},
+	"8f3224d8e1e4f3ef6083a4ff3b08f34c90f9e4b98f1c477727d77aa57ea6eff3": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v47.1.0+incompatible"},
+	},
+	"4f39c676ade97497b4b406def7968385cc0e0fa6747572433f8b19e29f56585c": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v48.0.0+incompatible"},
+	},
+	"69e46a88037606dd38dc1d56de295c842efab61de3cb017a5369eccb51e756e9": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v48.1.0+incompatible"},
+	},
+	"c964dd7fa7e5682b10ada03fd92853328864c3c65769d7d5dbbd1f023097f2c2": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v48.2.0+incompatible"},
+	},
+	"480b104015c3917252bfa606897e42584fbfcb459693d8a1acc2f13b53fc3faf": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v48.2.1+incompatible"},
+	},
+	"c3bc138e653104bf43025c29fc06464450587da5fae7f3ae8f21175664b78431": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v48.2.2+incompatible"},
+	},
+	"b0f151b2bbf85263782a12a71a5dd559518a91d95f56c9e5e92d34ed0ecbbdb0": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v49.0.0+incompatible"},
+	},
+	"50066669cbaebff92dca236e1e36db6337bad714eea5eeefabb13930d9b97716": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v49.1.0+incompatible"},
+	},
+	"36789bbab6b9da42639d496138bd20dad91caae0c754818caaaa51f42de949c1": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v49.1.1+incompatible"},
+	},
+	"4baff4a3b93b1666e8e57ba12d2a285079a469b75a034fb3b4abd6c8aefd223b": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v49.2.0+incompatible"},
+	},
+	"14496566903d85122d2d09e670741d49643e4c82f692c4864c359752d79956ab": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v49.2.1+incompatible"},
+	},
+	"48186369b2a0c8e44ebaf5f03b152493039c5b63df5a3c2ad8cdff177589857e": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v5.0.0-beta+incompatible"},
+	},
+	"8026c0912f3bf1ca931a90c63ecae05130aa01b53d089eb13e0e40281ea2ce5a": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v50.0.0+incompatible"},
+	},
+	"df20860cdd28b408d58fd4e6ddf6deeaef227d060c21d2243caa0745c3917a74": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v50.1.0+incompatible"},
+	},
+	"9c1a9e489ab352b039bb73d575d0683b8b0cef0b90102ef350ac07215c75066f": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v50.2.0+incompatible"},
+	},
+	"57e2eec77b23d04f176f4d034b05bfb592109fd6206f8cddb08b998bc3d19d16": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v51.0.0+incompatible"},
+	},
+	"4600df09798f318ea88dc1d5f0183c30bfec8697df8c1b503e42021bf4c8dc44": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v51.1.0+incompatible"},
+	},
+	"4cd2cf72ca56efa2b68616a95953ce09f2fbf84247b1c65717d10dafc3a29e15": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v51.2.0+incompatible"},
+	},
+	"9ab556f77bbb9c5b89b7f054f78271f15ef775cf78e9a201db1dd53472c94d46": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v51.3.0+incompatible"},
+	},
+	"97ba2811cf61f4d4ec1b6b6608e326c2b4340f545318d763413fad47d696f584": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v52.0.0+incompatible"},
+	},
+	"b425901471a810bac0078229d64e783893b8e638458628883a9a3ed07b57c54d": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v52.1.0+incompatible"},
+	},
+	"c58d8afb0026c89b72c1ec08a070147c695960e93c1e18546f1bb42884d008b3": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v52.2.0+incompatible"},
+	},
+	"5dd6411fb2bf854acda611981881b7140dc8fab7fccc5848b3c935be52276c76": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v52.3.0+incompatible"},
+	},
+	"5aebb5bc67c630729a084a4150fad7f31357a3c322ae0660cf342a2640fa165f": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v52.3.1+incompatible"},
+	},
+	"53223f53b2eb491ebf0650840f5bf7963b701deb993f49331d0e2d7b7c36af39": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v52.4.0+incompatible"},
+	},
+	"c9296bf8a7ccc9f838846297bebd447eff379a911219c0d53f4f370158c834ae": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v52.5.0+incompatible"},
+	},
+	"137d53691631315608e1ab445c6d979aef5510069afc9f95e9f359c4317c1c05": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v52.6.0+incompatible"},
+	},
+	"31003bdb2e405b6ca43aeeef1728033b1ca84a5da02a5daf9ada45b5ca600b94": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v53.0.0+incompatible"},
+	},
+	"77e8c7b5a46e00a277ca3b44b31227cd6866764b860b4ee87806a61431645f3e": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v53.1.0+incompatible"},
+	},
+	"e8db71ba38c9656b5996e10db3bc7ab1df51e2052e454b8f2e03de24346cecfa": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v53.2.0+incompatible"},
+	},
+	"aed85874e269cc2946d23d7dec16ff5c651bf4a0f1556325f254c3d8748c111c": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v53.3.0+incompatible"},
+	},
+	"c8cfa8240489c31d8b21d589e735063b693cc1334f2af4654acd784d89dfac9d": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v53.4.0+incompatible"},
+	},
+	"e00bea8b4b7549e63a83f54cccccd1d63ea84d71940b144e4a45d815ee75f1c0": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v54.0.0+incompatible"},
+	},
+	"07892d773f4601d0fc476bd2e79bcefe21bf1264c4769c7233eea068366ed9c2": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v54.1.0+incompatible"},
+	},
+	"c44bf96b94f70b1a53a80950b1b75c9fe091cfe86c0ff867ce7ce50bb369b810": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v54.2.0+incompatible"},
+	},
+	"797bfa237bd3b65ac789493d38a6983d7e279f3ea8d97b987166adc74918a1ac": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v54.2.1+incompatible"},
+	},
+	"d7dbffa0c5e2a5d93658bcc047556ddb6e504a9e8a26eddabaffb291d9880fb1": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v54.3.0+incompatible"},
+	},
+	"88d8d8128e0dd0ab9c4c31268e488e63e368b2002e6a3ccf832c7ee036451157": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v6.0.0-beta+incompatible"},
+	},
+	"971578d38a7d08abce8b0ec5fa545b9673acb5bcf4a6c574a7a4747cfe87e484": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v7.0.0-beta+incompatible"},
+	},
+	"c544242503f082be53f55719b00f1f49c6af1b7733a7eadf588d8d1915f46352": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v7.0.1-beta+incompatible"},
+	},
+	"6ddf7cdc426f1b43f3a72340ed0a075ef85ee2369d7aac4b345116b2257bc70f": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v8.0.0-beta+incompatible"},
+	},
+	"937cc7a4e09a4232661dbf9fd7e0d669714212243dfdcf6237bb9429347d246a": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v8.0.1-beta+incompatible"},
+	},
+	"59479ba0bbae9492edad311cbb50175ac4300b5489702d1dc7c79a0b6218a857": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v8.1.0-beta+incompatible"},
+	},
+	"adc5389c6a8728babf145fe4c0be0a2ddc8030d52429bca7e8601ca8350075d9": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v8.1.1-beta+incompatible"},
+	},
+	"12568fd1835d96ee7716a39429c784ea3a9a5f4941ddf47e105beaa040c63b47": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v9.0.0-beta+incompatible"},
+	},
+	"53fa781496d1231b6ce34f32d309741e0335d6c8d91327ae14545b94cdb0706b": []Modver{
+		{"github.com/Azure/azure-sdk-for-go", "v9.0.1-beta+incompatible"},
+	},
 	"85106a1d11a7ce252aeb747bc3066edf0fe670b81c243b7d2c6724a1f14b96a1": []Modver{
 		{"github.com/aws/aws-sdk-go", "v0.10.0"},
 	},
