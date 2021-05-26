@@ -10,9 +10,9 @@ import { DirectNavigationOptions, Page } from 'puppeteer';
 import '../global-types';
 
 const {
-  AUTHORIZATION = null,
-  BASE_URL = 'http://host.docker.internal:8080',
-  QUOTA_BYPASS = null,
+  GO_DISCOVERY_E2E_AUTHORIZATION = null,
+  GO_DISCOVERY_E2E_BASE_URL = 'http://host.docker.internal:8080',
+  GO_DISCOVERY_E2E_QUOTA_BYPASS = null,
 } = process.env;
 
 /**
@@ -24,16 +24,16 @@ const {
  */
 export async function newPage(): Promise<Page> {
   const page = await browser.newPage();
-  if (AUTHORIZATION) {
+  if (GO_DISCOVERY_E2E_AUTHORIZATION) {
     await page.setRequestInterception(true);
     page.on('request', r => {
       const url = new URL(r.url());
       let headers = r.headers();
-      if (url.origin === BASE_URL) {
+      if (url.origin === GO_DISCOVERY_E2E_BASE_URL) {
         headers = {
           ...r.headers(),
-          Authorization: `Bearer ${AUTHORIZATION}`,
-          'X-Go-Discovery-Auth-Bypass-Quota': QUOTA_BYPASS,
+          Authorization: `Bearer ${GO_DISCOVERY_E2E_AUTHORIZATION}`,
+          'X-Go-Discovery-Auth-Bypass-Quota': GO_DISCOVERY_E2E_QUOTA_BYPASS,
         };
       }
       r.continue({ headers });
@@ -44,7 +44,7 @@ export async function newPage(): Promise<Page> {
   });
   const go = page.goto;
   page.goto = (path: string, opts?: DirectNavigationOptions) =>
-    go.call(page, BASE_URL + path, opts);
+    go.call(page, GO_DISCOVERY_E2E_BASE_URL + path, opts);
   return page;
 }
 
