@@ -1961,6 +1961,399 @@ var ZipSignatures = map[string][]Modver{
 	"ca574c4591982f836bd397389a94e77ffa5d5e44edbe226303d86550d5fc915d": []Modver{
 		{"github.com/aws/aws-sdk-go", "v1.9.0"}, {"github.com/aws/aws-sdk-go", "v1.9.44"},
 	},
+	"3750f6f60e8e65a843455c00323fe3be7e79c8ca8bd634de99ca4fcd09ccaa92": []Modver{
+		{"github.com/ethereum/go-ethereum", "v0.4.1"},
+	},
+	"72dad7a762569f25c801592ee3bc0e15c315f6c3c09a6286dc2e2b0e7d107ada": []Modver{
+		{"github.com/ethereum/go-ethereum", "v0.4.2"},
+	},
+	"295ca15590054427dd823995ecb37a4c18dfc20b12da12ca8d120956d9e58339": []Modver{
+		{"github.com/ethereum/go-ethereum", "v0.4.3"},
+	},
+	"1743354d75cf2b8f3858a0f9ebfb6e46650fc4315cc2317fffd76faeedc93377": []Modver{
+		{"github.com/ethereum/go-ethereum", "v0.6.0"},
+	},
+	"e19200a3d68086465e1ed1c8b0bcfcce79805b06e7b3ce1a2be7b8e2c3b8cc61": []Modver{
+		{"github.com/ethereum/go-ethereum", "v0.6.3"},
+	},
+	"1d4582341d8f9360d2561bc9ab48464b611a6a096e4ca575d56483e47caa2dea": []Modver{
+		{"github.com/ethereum/go-ethereum", "v0.6.4"},
+	},
+	"c0f2e0081a9d6fc9115faa58b92f3f2aa464706f40d87e479cabbb098008ace0": []Modver{
+		{"github.com/ethereum/go-ethereum", "v0.6.5"},
+	},
+	"933cfcf975559ae245c929120506d7c8194a67820fef15e2611022f0358e5c0c": []Modver{
+		{"github.com/ethereum/go-ethereum", "v0.6.5-1"},
+	},
+	"bdeb32688d612b15c48cf08201d3d1a34f4c3d772df15dcd731cbc8275516a7e": []Modver{
+		{"github.com/ethereum/go-ethereum", "v0.6.5-2"},
+	},
+	"ec86a8820d4b327e8ba1b6cc2d94a4db6cd59e6ff87db0c9f9804e8e47a22d72": []Modver{
+		{"github.com/ethereum/go-ethereum", "v0.6.6"},
+	},
+	"411bd44c6a52a47b6478136cdd41edf0343e8eb97b20a1cf67ca0a042dc0432c": []Modver{
+		{"github.com/ethereum/go-ethereum", "v0.6.7"},
+	},
+	"d6826807f91b0cd1204ecc90dac3252235ea1502b97cba412527c24c9cac9e9c": []Modver{
+		{"github.com/ethereum/go-ethereum", "v0.6.8"},
+	},
+	"257b399505b8124ad3302035730e833dd855d4070838517d5c0ac7a831419461": []Modver{
+		{"github.com/ethereum/go-ethereum", "v0.7.10"},
+	},
+	"8b81f4313942fae14d448a95911baa9ebb80a12d6665896da7c3a15a12b8fff9": []Modver{
+		{"github.com/ethereum/go-ethereum", "v0.7.10-broken"},
+	},
+	"fe1f22cbb22953385714465bc476bc86a4687d8b5f98f7dd7bf9d081714d1137": []Modver{
+		{"github.com/ethereum/go-ethereum", "v0.7.11"},
+	},
+	"4303f6d046672fbd672b458c225ce40aedd7980bebdd1854a95038f7f5927903": []Modver{
+		{"github.com/ethereum/go-ethereum", "v0.8.4"}, {"github.com/ethereum/go-ethereum", "v0.8.4-1"},
+	},
+	"b4a7a0df3cb06678acde97ecab828ff71076b73273d486770fb362c0f9241cbf": []Modver{
+		{"github.com/ethereum/go-ethereum", "v0.8.5"},
+	},
+	"61825264ed83b4589c2c0d8acdb1c6cd383ebece33109f74a0149ecc7abb2ca7": []Modver{
+		{"github.com/ethereum/go-ethereum", "v0.8.5-2"},
+	},
+	"03ca3f4f91e57c2b2f7720f3e793f46fcc69ee07dd962e07ec18c4f330ba5ae2": []Modver{
+		{"github.com/ethereum/go-ethereum", "v0.9.17"},
+	},
+	"086f052b252f86bd2b04a1c57750e136a984b7f352e9a9f5c906a911abc559a5": []Modver{
+		{"github.com/ethereum/go-ethereum", "v0.9.18"},
+	},
+	"4942ea68d53dc6d5704286a5e62fe3cc706c0299115d21e5ee9153823af8fcde": []Modver{
+		{"github.com/ethereum/go-ethereum", "v0.9.20"},
+	},
+	"7e0304483452ea2ece860b562cd6a98bb1c040ef8a0910082d6ba351ef0dc1bb": []Modver{
+		{"github.com/ethereum/go-ethereum", "v0.9.21"},
+	},
+	"f8026f16754b033f0ec0a5e1c50dbf8cdd161477e81e178fd8e31cdda1e07380": []Modver{
+		{"github.com/ethereum/go-ethereum", "v0.9.22"},
+	},
+	"a2bee6b37698f2665492e87b73b7bed944eaaa64ce1726b5207c96609deb09ee": []Modver{
+		{"github.com/ethereum/go-ethereum", "v0.9.23"},
+	},
+	"d129e8e321d0808e88873ff734ce5438aa6d4a655157a2dd923f4ab15bd902fb": []Modver{
+		{"github.com/ethereum/go-ethereum", "v0.9.24"},
+	},
+	"b373d4bf08aa4f7ac1af9cb920bf93e5b8d6d57e580d3a13e5595a7ac5b6bf1c": []Modver{
+		{"github.com/ethereum/go-ethereum", "v0.9.25"},
+	},
+	"f18a57255d9ae03e378fb6aa463ab4a9a5e86af24e4a7eab80bf52836cb51e7e": []Modver{
+		{"github.com/ethereum/go-ethereum", "v0.9.26"},
+	},
+	"8e596db55e72b24b115362a165bec1c576885ef055c96c5310a53daddbc13baf": []Modver{
+		{"github.com/ethereum/go-ethereum", "v0.9.28"},
+	},
+	"8a6054b579cb2e8fc9da73319bfb1f75e5564efad40b83c26bb414f1b3b7edd9": []Modver{
+		{"github.com/ethereum/go-ethereum", "v0.9.30"},
+	},
+	"aa934a916f77221f69cec0d6477093d6742855eb9c28fc654c69ea20dab1632d": []Modver{
+		{"github.com/ethereum/go-ethereum", "v0.9.32"},
+	},
+	"62242e8ab0510fa025075bd5c3e14451e2d32cb4853c89aca59382b7dd581494": []Modver{
+		{"github.com/ethereum/go-ethereum", "v0.9.34"},
+	},
+	"4741ae8ad243f8bb560d5373564a32a9bbd0d9b683a1b24ff62efd60285a77b8": []Modver{
+		{"github.com/ethereum/go-ethereum", "v0.9.34-1"},
+	},
+	"eddea2e92a2b9f526c776d4151900631e6fc1866a0cbeee9b21c7f012a523341": []Modver{
+		{"github.com/ethereum/go-ethereum", "v0.9.36"},
+	},
+	"d91c5cff7035ead11f430a07804735d71f894c479ee2c885df67390a017ff058": []Modver{
+		{"github.com/ethereum/go-ethereum", "v0.9.38"},
+	},
+	"df95e1a0c98c1ba2b1d57a292a8a784d3afbe9e7fcf237eee873e49952cbf0b0": []Modver{
+		{"github.com/ethereum/go-ethereum", "v0.9.39"},
+	},
+	"fef7bc630b04422b82edf62f84704ef828906ec1cbff84414f9b409644804ea9": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.0.0"},
+	},
+	"991508799cb60ea6dabb1aefcfd5c867c640c1571bc35fe11521c282331570c9": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.0.1"},
+	},
+	"68b921433606ee4148364c6712386f76a1c989e385f2641f8f46c58a4839ba91": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.0.2"},
+	},
+	"ffc696cc120ba15ebd1638dde1331c8c37174be2d2a9f302f582d634c2c0d01b": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.0.3"},
+	},
+	"f125c40184ee7cebbd528cc8104fde2c6f1979229f7bb45f1bc9fb973e2ab428": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.0.4"},
+	},
+	"7c72461e84540879354cab8110fea9673ba748e032ef63fd6a88a76619956754": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.0.5"},
+	},
+	"ab35aad1c41f6e43f9ef189ff8c8436c954d5221edc9ae974cb480688a50c688": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.1.0"},
+	},
+	"0d45d30f1d3b8a9ed7fb4ce95e163403eda729d88f85514cfaa8a57cbc86e739": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.1.1"},
+	},
+	"b561e624a10e48abad1411f434241b243060ad3f8bc5d89981d966753a26ba10": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.1.2"},
+	},
+	"f41585de3d7a79733cfdbb318539debbd338b056cbd0e944afb3f8c657cc005d": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.1.3"},
+	},
+	"b73a2c2b617afe4bbc2381c680f867fc6d1be7bf9215cf7a89aeead5b19cbc84": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.2.2"},
+	},
+	"cfe17b6c9ee5f9189d29fbb2e6faef23c6a02648125b00dc3e718f15cb2afa12": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.2.3"},
+	},
+	"29d45e5f7665c509d134a8f2bc3c19f8423cc302fcff9f908ec779ce0cba1e4a": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.3.1"},
+	},
+	"490bffe0ed7c50f85d93274e9f9430b4a16c0efef2f0b973cc08879e380ef978": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.3.2"},
+	},
+	"29cc888f657e46cf010dd449a451e632416f3a935c333bd55b7f231798fdca0f": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.3.3"},
+	},
+	"e1088985e1332750e044404adcf36094ed58663741ee2cb12c4d3b9a5fcfc36e": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.3.4"},
+	},
+	"6a6235b5bb7bf0fdaf3b609943b2eec1578e9d7e8bfc4ff7fb998b145554ded6": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.3.5"},
+	},
+	"79ddcb3d9c12de090d8205f11860dad313fcf84401a5662836940f123eacd419": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.3.6"},
+	},
+	"86d90213e4fadb8423a7b1c8e86413f2807595e545e952979096b2b2652b101a": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.4.0"},
+	},
+	"f1e3fb39d87b30523700927984cc7265e5cdf6582fbda96c60b372bcdee1534e": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.4.1"},
+	},
+	"8a0ff6a5bd7dcf9c690722a1eb6660f2d468ee36ef0c14298e0fd18c11979f40": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.4.10"},
+	},
+	"957a7fb834bde2f94e7b86845c3fbe56d9c79008e1017d53f8af704489b0bd07": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.4.11"},
+	},
+	"61a90a391991eff2f03cca77933a75f83ae3c6c3d2fc669dd9501b596548646c": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.4.12"},
+	},
+	"18e83a94531b7c2e61fbc74527cfd8adfd0b56fb16e9484748dbe9afa9ccaaef": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.4.13"},
+	},
+	"6380bc7cc0723acb529a2913467ef5810cb3dd936bde539082919df6afec359d": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.4.14"},
+	},
+	"3329bc0e75b8725b385a3dca0a38f37e6b1f6c793937149bd241a4192af2a382": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.4.15"},
+	},
+	"3fb71e0162a06695beea0d21022a0a58c84455572ecc5af9f756c865a230a2ef": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.4.16"},
+	},
+	"77de25aef601cc247c65dae5fac60c5268cf3be960752775c77cdcdc6d1d6aa5": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.4.17"},
+	},
+	"5b8d2a99d1cabb4aec93ebbb0e6504e06a8e86a88582312ba40b18e69fd7591e": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.4.18"},
+	},
+	"86137ca33d39d0a2d01bf648b143a42db227c59ad6a4b6c2f304995a20019377": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.4.19"},
+	},
+	"31ccb49574787743d3e4e77709d7fadf7d3fb85dd6c6e967813c1d3c673ca906": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.4.2"},
+	},
+	"f606bd845d2dbbe96b76c352289f9d24157e5cefea323d9a97a717fd3afff7e8": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.4.3"},
+	},
+	"43b7b56ec9a6d241148659b697b21c363846b17073922cde6dfc9dd37c2e7968": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.4.4"},
+	},
+	"15bdc877132debd6fffb0655af918b2045a69e089db26d291c3cd825a2da2cf9": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.4.5"},
+	},
+	"147ec7d1676beec2a57686c0b9682d439b2841748925bf62916f8556101e9823": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.4.6"},
+	},
+	"4a7c4ab1f8e39254ad9b3137014a247c2e1609cba09053bc7d13c0218e4be252": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.4.7"},
+	},
+	"dbb351d26e4e7b97f7465b8bda4a86593e4edc6e5ea1cc479c1e4163920492a7": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.4.8"},
+	},
+	"d267ef2a1553af9c95c0edccb3768e744db5112520f453a0dd4d87f02fd5472c": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.4.9"},
+	},
+	"0400c9f1453840a47d7b3c3abf5d7c0cddb3641e8850486ad136f0b8ce29b1d6": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.5.0"},
+	},
+	"50bd4ad5e39dd5a7d7c958d29b9448f22bdb152ba447ad91c409b24d584ccfc2": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.5.1"},
+	},
+	"f807b1d018a17b160eefc89ac6be3af806f989daf7d404a711d84bf21f28b681": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.5.2"},
+	},
+	"5a33d75f2f8401f1da11af8c7fbbe7d42f64a336fdcaccfcfc3dfb68bc6134bb": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.5.3"},
+	},
+	"402ab2901c65377d31eefdbd42ea7ba1059e3603b5158bdfd407be4e81b5e26d": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.5.4"},
+	},
+	"8634cc053ec11a17eeea5c58241d880f0c4d41343495789dce625bee21dd464a": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.5.5"},
+	},
+	"93b01d8bb7b4f0056e93cec3539ef91fb04b2b19bc41e7f64bb7e32bcc7655e0": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.5.6"},
+	},
+	"54a06845ac5319765a34fe2eaecd9fddd066dc6355ec5a5c7b02f6c42d0c635d": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.5.7"},
+	},
+	"ad14382b5545d3a8f49c76f87257fb3939ec066dadb98c2fb1bd16ab41d0cade": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.5.8"},
+	},
+	"2f981788cf813f7f088b9abb87452809bf62f4bed5c9173dc9a40091f19b1866": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.5.9"},
+	},
+	"7423b15273d0cabd0a8543e1dce929c335c7c55673f62375d1b6338eeee0afd7": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.6.0"},
+	},
+	"3f837f47f01b08174f4577f2c063a81c8f38473e27f7e6c7a24de443a9164be0": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.6.1"},
+	},
+	"f16ff73833113aa712866bd87e7f05eb6ca5a7babe12718547988aeeda057fa5": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.6.2"},
+	},
+	"c6c24d1b1035d8a37c4107d7fc2cfd7161958db730e2e872ac221fe68d5e8bf6": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.6.3"},
+	},
+	"5eef05061f35ca7e8f547f7ad4a1bae9d33bea90f1115f301f40d55ec2c3e878": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.6.4"},
+	},
+	"8daa460cd43cee74c3760f80f9e119f6c582fcab10f4c0a350f45ce432a5f5b3": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.6.5"},
+	},
+	"a7434906186738fdb726c0f1b9ede131784d61e3d253ee1c531a55c5f3d51a61": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.6.6"},
+	},
+	"4aa6c03eedb8b37f758996a74d3bbc0b611d97154c2eccef550ca60deac78d00": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.6.7"},
+	},
+	"11723cf37c44be8c226c11736050676a15d87134ee2e7900b2532557e8211c90": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.7.0"},
+	},
+	"62b8295c18ddecc87d7634e257a634575e299628da3a6b9ca4eee907fd5802e3": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.7.1"},
+	},
+	"9b121a7f41144f440f7e9fe29973a2ff8a70d27ca7a19cf35de52015a958bd7a": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.7.2"},
+	},
+	"8151dd18c7591266fc4b14ed9d2cd9b8977516c1eaa9578d30859d1b6f121a03": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.7.3"},
+	},
+	"d4a032bb6611368cd359a1de5b5c2f587c95c71f211d2a7d6ce89718a9d1bc6a": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.8.0"},
+	},
+	"c02ec3f1b3956eedc5d835714612dafd4f164cd4cade3f0f7bf3283d04891d1e": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.8.1"},
+	},
+	"4d6179dd141f35b746ba662fa3c125c9924317670628419d1ce1e151c76091fb": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.8.10"},
+	},
+	"21b35a659a10b473e201e7c244cede7c0383920b85c38cb266d97066066429db": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.8.11"},
+	},
+	"89680438dfb09e0dac8034991559f96c9a6d6cb0bab38db787aa00866b4638e5": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.8.12"},
+	},
+	"ea27fc5f54961530dff95273b72e97d424e3b9cc93d24719e8bcf1d0c2341f83": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.8.13"},
+	},
+	"a414b27066b927021fc565fc13a9b399924225fe5120b5b19ada601fd5f30bdf": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.8.14"},
+	},
+	"1e76f6dbc29a169fc93ecb0a562491387854c355b8b3b28adca600dfa3f47034": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.8.15"},
+	},
+	"7a18565f73b676e25e4a53f2ab36d7e753bd4d136f9a1f436c04b23ab0c95398": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.8.16"},
+	},
+	"045b0acd3fe8d00ad089c99c1fca7313e38411b36be7ad70f63d17570f4467c1": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.8.17"},
+	},
+	"2352e64973095bd862df9538df52b67861a8b0c37addc9327793fb93088e2125": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.8.18"},
+	},
+	"35a7612aa91f3786c08abed6c06a0c4be5b325aa1caadb9443bd22fd2cfa2dc1": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.8.19"},
+	},
+	"870dd6185402c9123e106c1bf7a54e6c3d7a4644079aace94ce6a500449f1d75": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.8.2"},
+	},
+	"fb92a3e383ff9be9f1f8ab20feba0a01d58a947397200a7b10d403f95ee0dddc": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.8.20"},
+	},
+	"0b15b98c972176f644b5327dc261fa496c784ff6add4ff0d234c5caace36d9be": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.8.21"},
+	},
+	"9119ed96cfc316d16aa322820d497900aef2d6f1fe81f57d9e9bfa314881c54a": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.8.22"},
+	},
+	"533b078adb691e834ec3a6a2555f02b6d996996713d72741aba6e465c4f934e8": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.8.23"},
+	},
+	"e2b3209c816dca91ef7443600e182a982f325189ce96f6255e8fff817606d1cf": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.8.24"},
+	},
+	"2667b69bd23a2261e80a7ddc36f4f7f9ec54b22b4964c132bc569f661bced985": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.8.25"},
+	},
+	"92744cbe8702dd6de2c172b7f62d24d4831dc2097f9fa0329ed932ae4f78ae96": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.8.26"},
+	},
+	"3c10d2c28b7a18eaf4e0a2c58449171158e61d88a5d1d0e4cc3b8c3399a9d552": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.8.27"},
+	},
+	"e76f2612e4a7f559893e5cfcd1c3bb53801dd118507e9c8d72fc427d9c330390": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.8.3"},
+	},
+	"0f7fdeadacf43465f7d9a20f4e7ddc30f2f450edfab4b5da41667174f804d0a8": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.8.4"},
+	},
+	"e46081c2c0ad7a42a44699dc3da34c000a57bca0ca2d97ba35df279df446d866": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.8.5"},
+	},
+	"f58abafcdb41a29af4c3fe1d9b2c6b8f7c6e587e918edf538d67e92f986dae83": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.8.6"},
+	},
+	"a57a12be41beac81957296987914d40ee0434094f07caac46e2d5268429d83f8": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.8.7"},
+	},
+	"4af458d303dfb5c68ce30465b7e92914332ef14fdabd5e61d9a71d8396c9d3b1": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.8.8"},
+	},
+	"106fa81d7da6c7503eeb5174c3aae9b9843102e6ba136817def10e7729b385cc": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.8.9"},
+	},
+	"7ea6d21f212034d6da6cd45ffa0d31bddce188ae861d0cce95d33c82261e5d17": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.9.0"},
+	},
+	"bf24736e30ede791431d474c0d5c34400c68f56c50c3842d898e5378bb3c2f87": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.9.1"},
+	},
+	"614fa9517ec50fc75afd3e82b70440c874153d1171e6e1c96083a3e5fac494b8": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.9.2"},
+	},
+	"979a7ce5ce2755c431307a211d5b04e5d436199f8db67426544048ebe4190caf": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.9.3"},
+	},
+	"c2936842ae284bdb3219a1f0d6743458af857526072596fa0662ed29cf60c5b0": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.9.4"},
+	},
+	"e1e0c56b82c4fb3ad1b27cb2882074aa41220154cb8e03ffe0877d4574a759a9": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.9.5"},
+	},
+	"41ba853f3cd5b4bb126d9dec1f424dc08a171e67f6810dc2e01d4f6a750aff02": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.9.6"},
+	},
+	"28c519ee605b4d78187e5062ac9984f496c9a5f98af0ba44f7959f1385a84a0c": []Modver{
+		{"github.com/ethereum/go-ethereum", "v1.9.7"},
+	},
 	"3ce659650444223e69accec5f74f43e6e123691d7fb5dabecf6a6d10ebeb699b": []Modver{
 		{"github.com/kubernetes/kubernetes", "v0.10.0"},
 	},
