@@ -21,6 +21,7 @@ import (
 	"io/ioutil"
 	"log"
 	"sort"
+	"strings"
 	"text/template"
 	"time"
 
@@ -29,7 +30,10 @@ import (
 	"golang.org/x/pkgsite/internal/proxy"
 )
 
-var verbose = flag.Bool("v", false, "verbose output")
+var (
+	verbose = flag.Bool("v", false, "verbose output")
+	check   = flag.Bool("check", false, "check signatures of module@version command-line args")
+)
 
 // The list of modules whose exact forks will be excluded from processing. The
 // second field is the highest (in the semver sense) without a go.mod file;
@@ -60,6 +64,17 @@ func main() {
 		log.Fatal(err)
 	}
 
+	if *check {
+		err = checkSignatures(ctx, prox, flag.Args())
+	} else {
+		err = generateSignatures(ctx, prox)
+	}
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func generateSignatures(ctx context.Context, prox *proxy.Client) error {
 	// Remember all the modvers we've already computed, to avoid doing so again.
 	seen := map[fetch.Modver]bool{}
 	for _, mvs := range fetch.ZipSignatures {
@@ -72,7 +87,7 @@ func main() {
 		// Get all tagged versions of the module.
 		versions, err := prox.Versions(ctx, m.modulePath)
 		if err != nil {
-			log.Fatal(err)
+			return err
 		}
 		// Keep versions that are less than or equal to the highest version without a go.mod file.
 		var noGoModVersions []string
@@ -98,9 +113,23 @@ func main() {
 			}
 		}
 	}
-	if err := writeGoFile(goFile); err != nil {
-		log.Fatal(err)
+	return writeGoFile(goFile)
+}
+
+func checkSignatures(ctx context.Context, prox *proxy.Client, args []string) error {
+	for _, arg := range args {
+		words := strings.Split(arg, "@")
+		if len(words) != 2 {
+			return fmt.Errorf("invalid module@version: %q", arg)
+		}
+		sig, err := computeSignature(ctx, prox, fetch.Modver{ModulePath: words[0], Version: words[1]})
+		if err != nil {
+			return err
+		}
+		matches := fetch.ZipSignatures[sig]
+		fmt.Printf("%s: signature %s matches %v\n", arg, sig, matches)
 	}
+	return nil
 }
 
 func computeSignature(ctx context.Context, prox *proxy.Client, mv fetch.Modver) (string, error) {
