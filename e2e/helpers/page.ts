@@ -113,3 +113,62 @@ export async function $$eval(
     await page.$$eval(selector, cb);
   }
 }
+
+/**
+ * TestOptions are options for basic page tests.
+ */
+export interface TestOptions {
+  /**
+   * path is the pathname of the page to visit.
+   */
+  path: string;
+
+  /**
+   * mobile will set the page to a mobile viewport size.
+   */
+  mobile?: boolean;
+
+  /**
+   * prepare will prepare the page for screenshot.
+   */
+  prepare?: typeof prepare;
+}
+
+/**
+ * a11ySnapshotTest asserts that the a11y tree matches the snapshot.
+ * @param page a page object.
+ * @param opts test options.
+ */
+export async function a11ySnapshotTest(
+  page: Page,
+  opts: TestOptions = { path: '' }
+): Promise<void> {
+  if (opts.mobile) {
+    await page.setViewport({ width: 411, height: 731 });
+  }
+  await page.goto(opts.path);
+  await (opts.prepare ?? prepare)(page);
+  const a11yTree = await page.accessibility.snapshot();
+  expect(a11yTree).toMatchSnapshot();
+  await page.close();
+}
+
+/**
+ * fullScreenshotTest asserts that the full page screenshot matches the
+ * image snapshot.
+ * @param path a page object.
+ * @param opts test options.
+ */
+export async function fullScreenshotTest(
+  page: Page,
+  opts: TestOptions = { path: '' }
+): Promise<void> {
+  if (opts.mobile) {
+    await page.setViewport({ width: 411, height: 731 });
+  }
+  await page.goto(opts.path);
+  await (opts.prepare ?? prepare)(page);
+  const image = await page.screenshot({ fullPage: true });
+  expect(image).toMatchImageSnapshot();
+  await page.close();
+}

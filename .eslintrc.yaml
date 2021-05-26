@@ -16,3 +16,11 @@ overrides:
     rules:
       'jest/no-standalone-expect': off
       '@typescript-eslint/no-explicit-any': off
+      'jest/expect-expect':
+      - error
+      - assertFunctionNames:
+        - expect
+        - a11ySnapshotTest
+        - pg.a11ySnapshotTest
+        - fullScreenshotTest
+        - pg.fullScreenshotTest
