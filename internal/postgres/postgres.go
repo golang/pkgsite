@@ -112,6 +112,18 @@ func (db *DB) StalenessTimestamp(ctx context.Context) (time.Time, error) {
 	}
 }
 
+// NumUnprocessedModules returns the number of modules that need to be processed.
+func (db *DB) NumUnprocessedModules(ctx context.Context) (int, error) {
+	var n int
+	err := db.db.QueryRow(ctx, `
+		SELECT COUNT(*) FROM module_version_states WHERE status = 0 OR status >= 500
+	`).Scan(&n)
+	if err != nil {
+		return 0, err
+	}
+	return n, nil
+}
+
 // collectStrings runs the query, which must select for a single string column, and returns
 // a slice of the resulting strings.
 func collectStrings(ctx context.Context, db *database.DB, query string, args ...interface{}) (ss []string, err error) {

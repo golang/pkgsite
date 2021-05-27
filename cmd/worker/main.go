@@ -120,6 +120,7 @@ func main() {
 	views := append(dcensus.ServerViews,
 		worker.EnqueueResponseCount,
 		worker.ProcessingLag,
+		worker.UnprocessedModules,
 		fetch.FetchLatencyDistribution,
 		fetch.FetchResponseCount,
 		fetch.SheddedFetchCount,

@@ -379,6 +379,7 @@ func (s *Server) handlePollIndex(w http.ResponseWriter, r *http.Request) (err er
 	}
 	log.Infof(ctx, "Inserted %d modules from the index", len(modules))
 	s.computeProcessingLag(ctx)
+	s.computeUnprocessedModules(ctx)
 	return nil
 }
 
@@ -396,6 +397,15 @@ func (s *Server) computeProcessingLag(ctx context.Context) {
 		// running on GCP.
 		recordProcessingLag(ctx, time.Since(ot))
 	}
+}
+
+func (s *Server) computeUnprocessedModules(ctx context.Context) {
+	n, err := s.db.NumUnprocessedModules(ctx)
+	if err != nil {
+		log.Warningf(ctx, "NumUnprocessedModules: %v", err)
+		return
+	}
+	recordUnprocessedModules(ctx, n)
 }
 
 // handleEnqueue queries the module_version_states table for the next batch of
