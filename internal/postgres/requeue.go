@@ -235,8 +235,6 @@ const nextModulesToProcessQuery = `
 			WHEN status = 540 OR status = 541 OR status = 542 THEN 4
 			ELSE 5
 		END,
-		-- process new modules in the order they arrived at the index
-		CASE WHEN status = 0 THEN index_timestamp ELSE CURRENT_TIMESTAMP END,
 		md5(module_path||version) -- deterministic but effectively random
 	LIMIT $1
 `
