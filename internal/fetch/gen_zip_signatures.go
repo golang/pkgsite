@@ -46,6 +46,7 @@ var largeNoMods = []struct {
 	{"github.com/kubernetes/kubernetes", "v1.15.0-alpha.0"},
 	{"github.com/Azure/azure-sdk-for-go", "v54.3.0"},
 	{"github.com/ethereum/go-ethereum", "v1.9.7"},
+	{"github.com/moby/moby", "v20.10.6"},
 }
 
 const goFile = "zip_signatures.gen.go"

@@ -3950,4 +3950,571 @@ var ZipSignatures = map[string][]Modver{
 	"daf73b80ce85708d972de64d6a873e71a6b6cef710ca1e2f164a3e93973f2cd8": []Modver{
 		{"github.com/kubernetes/kubernetes", "v1.9.9-beta.0"},
 	},
+	"a8bff6e0f871f47c1ee2e7cafad0950796f6e1ee2a41b2295ed638fb7b603232": []Modver{
+		{"github.com/moby/moby", "v0.1.0"},
+	},
+	"08dfae91a286c708c116959bca84069d4c84e85c1fd511a97ae8f06125105579": []Modver{
+		{"github.com/moby/moby", "v0.1.1"},
+	},
+	"43cd319168e8780d2ca79cb201dd4c18f57df3cbcd179d4e14821842a15bbce0": []Modver{
+		{"github.com/moby/moby", "v0.1.2"},
+	},
+	"c2fffa5b0827577f957ee555e438a08e2544442198b3a48f0fa2e2eb039c3648": []Modver{
+		{"github.com/moby/moby", "v0.1.3"},
+	},
+	"3bb819ffbd6b37e48159fb90206a76dc5315f0398fd49f01ea2509d2e7adacc8": []Modver{
+		{"github.com/moby/moby", "v0.1.4"},
+	},
+	"20082e6863cf6ebaa01d4f743e18b7c724c22d3e7c72529964be106e150a17d9": []Modver{
+		{"github.com/moby/moby", "v0.1.5"},
+	},
+	"33c946c9adeab108bee66236b1c809a699df5c04f88f8bde9c5e627082b67dfa": []Modver{
+		{"github.com/moby/moby", "v0.1.6"},
+	},
+	"bb76a2286b68f92e7870f6f3cd18756dc1a9b5cdfcc32d8db6e5c66e27b7b82b": []Modver{
+		{"github.com/moby/moby", "v0.1.7"},
+	},
+	"7de10fc75098deb1bd597cff083e01a77a15c8fcfc8ea990f18076bc1722259d": []Modver{
+		{"github.com/moby/moby", "v0.1.8"},
+	},
+	"e63680d900e063519fd7116048e08e000712b2e6489d6b4546bface4b93ceab3": []Modver{
+		{"github.com/moby/moby", "v0.10.0"},
+	},
+	"15afb04111bd611d374ddbb9d5fc49abc653bdde6727ba20ec4cc8f92e9cff78": []Modver{
+		{"github.com/moby/moby", "v0.11.0"},
+	},
+	"8b06cbdb887d4052ee331341f92be0d3d7e4ecfbbb889a438cab2fd677326e01": []Modver{
+		{"github.com/moby/moby", "v0.11.1"},
+	},
+	"0a39dfa5f99e66599371eec0088c899b78ddb1c5b1d8f540ed8f268e7fad5420": []Modver{
+		{"github.com/moby/moby", "v0.12.0"},
+	},
+	"c814dcaa611689c521ac4e52bdc554548515631d45aa15a76220b01523e77de4": []Modver{
+		{"github.com/moby/moby", "v0.2.0"},
+	},
+	"e85198bdfab59e6d702e47183b9114b3057ec9bb5c30acf1005ff0f931995e39": []Modver{
+		{"github.com/moby/moby", "v0.2.1"},
+	},
+	"8e6f3a061a77824a5f3372635f4dea320849e80bdfeeba5ce4779bb22238f7a6": []Modver{
+		{"github.com/moby/moby", "v0.2.2"},
+	},
+	"84032f053459c1c8310f9f49b942489f2f0d3d31340e717b21bb86516dcc9891": []Modver{
+		{"github.com/moby/moby", "v0.3.0"},
+	},
+	"6f1d6022c597cc95e35f69f0cd299efed80ee6942fa08a0274db935df545ee72": []Modver{
+		{"github.com/moby/moby", "v0.3.1"},
+	},
+	"55a14a68ab4191de25e87da5756426752fcf63201da459fefa846e766bcff159": []Modver{
+		{"github.com/moby/moby", "v0.3.2"},
+	},
+	"6533aaa890729f273217b53e541ece63a3f8ab85db6b1c92ce1a3fd2dd306d81": []Modver{
+		{"github.com/moby/moby", "v0.3.3"},
+	},
+	"0880046fcc743d1cf4126210ecd7d70ec930f142f3492f16b14e5b15f01f33e3": []Modver{
+		{"github.com/moby/moby", "v0.3.4"},
+	},
+	"19caf5af397c0cbab15d1f91a0036bc68eec3a680d2ca52797c6360884555ac9": []Modver{
+		{"github.com/moby/moby", "v0.4.0"},
+	},
+	"2646acfc811547272364a51f1f7dc7a0d831bd69c25892ac6b861d1e3085d737": []Modver{
+		{"github.com/moby/moby", "v0.4.1"},
+	},
+	"8b838a0924477ee3308de76bbfd45d09954760434fbdf0b60b0d9065bcce84a6": []Modver{
+		{"github.com/moby/moby", "v0.4.2"},
+	},
+	"4ef44b4e70a9e7459be773d27715a5be4d92288f88588ea7c34c8c55cb07787e": []Modver{
+		{"github.com/moby/moby", "v0.4.3"},
+	},
+	"3b215cda7239260162bad7915938c0d7154129fb161122718ecdaab3eacd2222": []Modver{
+		{"github.com/moby/moby", "v0.4.4"},
+	},
+	"5e92aaff0d1f89899322ce28b6ca528db293153da7cb0a6c2edf8c748799e9e7": []Modver{
+		{"github.com/moby/moby", "v0.4.5"},
+	},
+	"6c0776823dfaf8c244e6f7aa38d905ccb90dea42c5c8e615f08b9d716f3b0d20": []Modver{
+		{"github.com/moby/moby", "v0.4.6"},
+	},
+	"d58b110c6a565dc2f04b98eab5456b9892a151d648a0a93b7b7448b928605950": []Modver{
+		{"github.com/moby/moby", "v0.4.7"},
+	},
+	"36b48dba4adef2b7e6b2f7b4e85114590b24fa46d2bab33664fca3e2bc9018da": []Modver{
+		{"github.com/moby/moby", "v0.4.8"},
+	},
+	"508ed44a1b882af8f489b98c4538721a3684d63f4cf7e84458e70dee21068771": []Modver{
+		{"github.com/moby/moby", "v0.5.0"},
+	},
+	"2606d258969cce72bc2a8938e0bb2798e19fa481ac82f091c18f2f0ba4c8cbf8": []Modver{
+		{"github.com/moby/moby", "v0.5.1"},
+	},
+	"d695d35638584cc4c07243abf314c93e06b2c78ec5f64e1820e3dc0649ffc97c": []Modver{
+		{"github.com/moby/moby", "v0.5.2"},
+	},
+	"7e1bdf8af55520dfa00f41ce25d275f21e08c04548014ea1b4268b0f3c5b88e1": []Modver{
+		{"github.com/moby/moby", "v0.5.3"},
+	},
+	"9ac47b30e054458aea9702fccefc7901ec8a317abd14126f1fa404aa5531a178": []Modver{
+		{"github.com/moby/moby", "v0.6.0"},
+	},
+	"5892bbebff8ed46e8f0067e58b1f3d3d5101c594f37971e5a6ac0a67d06cea25": []Modver{
+		{"github.com/moby/moby", "v0.6.1"},
+	},
+	"63ef3c85a8b740ea0a71cd5732930e4a0e5441d58e3e24dc38355902a9f75482": []Modver{
+		{"github.com/moby/moby", "v0.6.2"},
+	},
+	"d65021c1232e549e3569437a8ac9938948bb95a7017484054da55e030c44fc6c": []Modver{
+		{"github.com/moby/moby", "v0.6.3"},
+	},
+	"ff906377a6ecdeefc6ee7f0afb3e0cb661bc8543e0be2d0d344ebc7f845e213e": []Modver{
+		{"github.com/moby/moby", "v0.6.4"},
+	},
+	"5166f34c9b81a8958594da8a567879d4e5aece54620d9094bdf3c3a4f548fabb": []Modver{
+		{"github.com/moby/moby", "v0.6.5"},
+	},
+	"d3ac7bbe5665a763c6cb50d4c50f5dc946575856858734706157582d6e148650": []Modver{
+		{"github.com/moby/moby", "v0.6.6"},
+	},
+	"eb245d0cd3298f6d4f671efba9e68e290ab6793d5205390a138fc925601fe985": []Modver{
+		{"github.com/moby/moby", "v0.6.7"},
+	},
+	"077df6640451161dfb3e92199c414e694a0e2e4b0ac54bec718743c14c63cfc3": []Modver{
+		{"github.com/moby/moby", "v0.7.0"},
+	},
+	"dbfe9511d9cbf9e21a3cb32f4f0f2d3f3b144720c19318650eb0e96634e6ab6f": []Modver{
+		{"github.com/moby/moby", "v0.7.0-rc1"},
+	},
+	"c6d20f9ad1f04a3371427cd82e2a7523064e0468ebb30d5186250e04e300cf89": []Modver{
+		{"github.com/moby/moby", "v0.7.0-rc2"},
+	},
+	"ebd43a070d031ce49106a1230304f48b183e3424dc4c582320e4ae13f2f4db89": []Modver{
+		{"github.com/moby/moby", "v0.7.0-rc3"},
+	},
+	"60db610b2d378a2a595e1145b4d8e4d9d53cd2ee0a92bb2cfc5d8202906317e6": []Modver{
+		{"github.com/moby/moby", "v0.7.0-rc4"},
+	},
+	"7e2094299ee1d4b42bba74b1c9f039a01af42316d5e1775ecb2e3fc83659fcb4": []Modver{
+		{"github.com/moby/moby", "v0.7.0-rc5"},
+	},
+	"e5c8a26a2e61c40b8996d471401c333cc2e0c47d6cebd63ce72dffccd432ccd6": []Modver{
+		{"github.com/moby/moby", "v0.7.0-rc6"},
+	},
+	"de95efb0fbf9b04fb9733576a91b0f7421e9cb726956e9778969070190a6bffb": []Modver{
+		{"github.com/moby/moby", "v0.7.0-rc7"},
+	},
+	"62bedea0b810ba35613a7fda9d215bd5387b603a3e03e158be4ab436c66f10b4": []Modver{
+		{"github.com/moby/moby", "v0.7.1"},
+	},
+	"a8a01407a8c51b6562d54569606b91a874914135127a9ee80f88d0adf5415ab1": []Modver{
+		{"github.com/moby/moby", "v0.7.2"},
+	},
+	"0ecf5623852e286f774a85c62c09d1fe5656bf56501a522e51c60dc368eb06c2": []Modver{
+		{"github.com/moby/moby", "v0.7.3"},
+	},
+	"97e4f77de779b50e5f151669794bc3c0c3aeb7882f3d7dfbbbf477456e726512": []Modver{
+		{"github.com/moby/moby", "v0.7.4"},
+	},
+	"5f924d8ba7cc4c7791279e42313eeb3ed34a95b2b2d650287f8b2c5f7df898f6": []Modver{
+		{"github.com/moby/moby", "v0.7.5"},
+	},
+	"6353a3f4e92b12b69ae208f729e588e6ad8cd3286a0537b9b4415bbe805a0812": []Modver{
+		{"github.com/moby/moby", "v0.7.6"},
+	},
+	"3ffb4d99c3cb4bd83662f057758afccc9d056ebcd16c36c5fa836ccdb0c5c6b8": []Modver{
+		{"github.com/moby/moby", "v0.8.0"},
+	},
+	"ef5833eb6b146ba87ca4e6416087e43cbd2dcdb26751a59f229bb94af0573d58": []Modver{
+		{"github.com/moby/moby", "v0.8.1"},
+	},
+	"8dace34da40a4e54cc90b8b954ff31ff65b62dfa3bc0b70b46c1609d6541d96f": []Modver{
+		{"github.com/moby/moby", "v0.9.0"},
+	},
+	"9270cf27f718da2ff910620895778349d6b48db6bda24c54171072fb8d43fb24": []Modver{
+		{"github.com/moby/moby", "v0.9.1"},
+	},
+	"914528045e610ed613509e9e2176420d16362bced30e4f37cbd042174bfe1aa7": []Modver{
+		{"github.com/moby/moby", "v1.0.0"},
+	},
+	"6b4281344fe0afdeb528369fcc5d7ae33071cd761a1d8ed13e8e99acfe969801": []Modver{
+		{"github.com/moby/moby", "v1.0.1"},
+	},
+	"bf7d1dd5c0721c75a1839ce0514f2f6df165ba446d4a7574f518711f65d87291": []Modver{
+		{"github.com/moby/moby", "v1.1.0"},
+	},
+	"bcef0987e8d490683b7bb1b7617962a1c487afbbd8951f9566b0e01a58fda919": []Modver{
+		{"github.com/moby/moby", "v1.1.1"},
+	},
+	"dd693d4ef0e874a8255a9b251a223691c2fe681f5102eb220acb4e3417f2b262": []Modver{
+		{"github.com/moby/moby", "v1.1.2"},
+	},
+	"334aa718220751ff8bef8b78283368c2d7092b123ae451d889e978ec0c82e399": []Modver{
+		{"github.com/moby/moby", "v1.10.0"},
+	},
+	"96697489fe787dd4d871e9e86b61ab819f11c043b2c4ad22d62a13502b52a2d7": []Modver{
+		{"github.com/moby/moby", "v1.10.0-rc1"},
+	},
+	"47138310d47e212a40f182045eb883f19d75d6b2227fa91dfbaa17d579fdba88": []Modver{
+		{"github.com/moby/moby", "v1.10.0-rc2"},
+	},
+	"f60c658bb1761d702b1ca54ff17a90cdc58dd76aaf6f7fe75bac591d9d20a36d": []Modver{
+		{"github.com/moby/moby", "v1.10.0-rc3"},
+	},
+	"1ffe19afa754601af02a88e36964b49590f14abc1ecb192c6dff0ee99714736d": []Modver{
+		{"github.com/moby/moby", "v1.10.0-rc4"},
+	},
+	"0e50d088616f8d39029580326cd8c0b9dd9a47404dae00e9a9211e407076d3e4": []Modver{
+		{"github.com/moby/moby", "v1.10.1"},
+	},
+	"84316bad1f00f01dbcc648807b49025da3172b174bba90fb1865d98e77d3ca2d": []Modver{
+		{"github.com/moby/moby", "v1.10.1-rc1"},
+	},
+	"6517283ae1875710702345315e1854bc0d51f28d852a7f091568060f65dfd8ab": []Modver{
+		{"github.com/moby/moby", "v1.10.2"},
+	},
+	"9252d31ec3ec4c0e2ad9d6ac5321a762889d0e79229736b0e54be19514f4e9e8": []Modver{
+		{"github.com/moby/moby", "v1.10.2-rc1"},
+	},
+	"95e68ea39023fbdd747417adf1ae7ecb0c8a6ff1c9ffcdab474b478e6fc343ba": []Modver{
+		{"github.com/moby/moby", "v1.10.3"},
+	},
+	"087c1b1bad5949f730bc5a675f0338f83470ad555a05dddee75a6bb9e2770059": []Modver{
+		{"github.com/moby/moby", "v1.10.3-rc1"},
+	},
+	"4ad5cd6a0713fa3484b3a25f1dc5437ad640d813b96fa1ac7943bf67a76f21a7": []Modver{
+		{"github.com/moby/moby", "v1.10.3-rc2"},
+	},
+	"a6e45f22f7044019ac4684c757d2beab3b0d48d2a259d9970d5a9e7548b05466": []Modver{
+		{"github.com/moby/moby", "v1.11.0"},
+	},
+	"9d1332ed5744e248e6f19d36c2413966b058e68b9ce79a86d04c23d32c93eb1b": []Modver{
+		{"github.com/moby/moby", "v1.11.0-rc1"},
+	},
+	"169b172076576c6aa5141c16e84e549ec355fd8da49166e59216aaec1fe2b9c1": []Modver{
+		{"github.com/moby/moby", "v1.11.0-rc2"},
+	},
+	"e8102a3d45ce204cd9e65493906b8537278de80f08630a803e401b134ed97da9": []Modver{
+		{"github.com/moby/moby", "v1.11.0-rc3"},
+	},
+	"3c7db2d039ebe8596e245cbf4e4c3e669b4c31aa9819121714bb50e90cd12076": []Modver{
+		{"github.com/moby/moby", "v1.11.0-rc4"},
+	},
+	"cf89b47241029a55da27dc907fc70bc96ab55223823333ea2e364cbef0067267": []Modver{
+		{"github.com/moby/moby", "v1.11.0-rc5"},
+	},
+	"95611ab8cfc9ac1918d884ee08c5af8d601ece2fd8263f815f61f4617be311a3": []Modver{
+		{"github.com/moby/moby", "v1.11.1"},
+	},
+	"4c9e5e9ae0d2f4718457b54560db52bfcb2cfc822d93a7719528cd5b693b60c1": []Modver{
+		{"github.com/moby/moby", "v1.11.1-rc1"},
+	},
+	"2dbee02704c837272b34485b23655a20688ed29005df0b59cace614abfdda8cb": []Modver{
+		{"github.com/moby/moby", "v1.11.2"},
+	},
+	"917ae93ec91279da873ffdd64bb131504ff95a9a3e8af019def41250ff8a54be": []Modver{
+		{"github.com/moby/moby", "v1.11.2-rc1"},
+	},
+	"5f7b3d059f5b2e9a9d1343c595b36b3b7cea206f016d6cc8a6d62bd84c7651ca": []Modver{
+		{"github.com/moby/moby", "v1.12.0"},
+	},
+	"2b1afaa19191659163a6f1092732cd7866f84f1ce4cb1500a952c60c8e5f190e": []Modver{
+		{"github.com/moby/moby", "v1.12.0-rc1"},
+	},
+	"fe30a864bef95fbfda5027a1343d1b08bcbb45f0c4eb3baf6203d3ae94a03709": []Modver{
+		{"github.com/moby/moby", "v1.12.0-rc2"},
+	},
+	"eeb87cc9c3642f5adb570d8997c24a8e2ba03e9e32c60a69b9583f148561ab86": []Modver{
+		{"github.com/moby/moby", "v1.12.0-rc3"},
+	},
+	"e289e5acc3318fc35f9f553361022ea36389dc177558c3ac2ab38b0d890f7770": []Modver{
+		{"github.com/moby/moby", "v1.12.0-rc4"},
+	},
+	"41d70799a1cbffdf01be2db5fc29c38512c5162ac6adbfe2f6a51e5e5ce8e3ad": []Modver{
+		{"github.com/moby/moby", "v1.12.0-rc5"},
+	},
+	"e5fa812c75778f7b82d6e72ef8bd3272018fcd957a392ee4699cf5affa4e407c": []Modver{
+		{"github.com/moby/moby", "v1.12.1"},
+	},
+	"17f027fcf31ea58d581a5ea4beb89d449990048c482cfa9eff342fb808e041ed": []Modver{
+		{"github.com/moby/moby", "v1.12.1-rc1"},
+	},
+	"4a65a41a8f45acc3fcf72154c31ad5af1d1a1eb6c94ca83310ea0f9ef9f1eef5": []Modver{
+		{"github.com/moby/moby", "v1.12.1-rc2"},
+	},
+	"93f74649169c4fe48021123c78e695d1aca11d183b1708b5b4e22248e0924dad": []Modver{
+		{"github.com/moby/moby", "v1.12.2"},
+	},
+	"95c2c989e2a4d232ca82cbdebd87707f45a0d74efe310360c264c8174b716c6f": []Modver{
+		{"github.com/moby/moby", "v1.12.2-rc1"},
+	},
+	"628e749abdab4ed5f5920df466f335d868806db0aa17ab4b5981573f8b6a383e": []Modver{
+		{"github.com/moby/moby", "v1.12.2-rc2"},
+	},
+	"339f4494eba97fb46117d5e024adf9eb3bd3c15c626679e7d51fe49f2f841c6b": []Modver{
+		{"github.com/moby/moby", "v1.12.2-rc3"},
+	},
+	"0aa0e1f29cff85f1c06b7eeb39c79b5815966604b32146ce1042dcf2a1d402f3": []Modver{
+		{"github.com/moby/moby", "v1.12.3"},
+	},
+	"d78884e8cbabd033ff3f92330156189f82cea854d5d63250c0ea6e39db080800": []Modver{
+		{"github.com/moby/moby", "v1.12.3-rc1"},
+	},
+	"f3eb3921d624ab841e6c832641b56a18ecd3384ec03872e7a9f4caab2783ddf9": []Modver{
+		{"github.com/moby/moby", "v1.12.4"},
+	},
+	"54c8c33221bb5b894077a2dcd9907aeb75984c04393ff4c3105ebe7ef8bd8251": []Modver{
+		{"github.com/moby/moby", "v1.12.4-rc1"},
+	},
+	"ae3bf627f6c593a73b9912cfda163b9b2e240dbf1f7ab38cb52a117d4ec85930": []Modver{
+		{"github.com/moby/moby", "v1.12.5"},
+	},
+	"952030dc34ec1f8526caf864684f8510be8b631b9253d7bdbe42583dfb1872ed": []Modver{
+		{"github.com/moby/moby", "v1.12.5-rc1"},
+	},
+	"34e0f675de4150a894651731037225bcf162c8788f1348f9c816cb9539829c2e": []Modver{
+		{"github.com/moby/moby", "v1.12.6"},
+	},
+	"f7d9bdf5924cbc2cd52f6d3fa78ed703dab9ab618da19f17bf3e68e1dd9d9d1e": []Modver{
+		{"github.com/moby/moby", "v1.13.0"},
+	},
+	"2d3233b074e5b9ba8816fcae6ac607ac373d1be811296ed5fc33323bb63b5874": []Modver{
+		{"github.com/moby/moby", "v1.13.0-rc1"},
+	},
+	"e4c6043c349557d2a7468e7034445bcd6593f2783315186ad86a29466c59a3e3": []Modver{
+		{"github.com/moby/moby", "v1.13.0-rc2"},
+	},
+	"9c5616139d87c7de8ee4d335fc6dbc8e74822092e44fc5cd2d1310e79cd34fca": []Modver{
+		{"github.com/moby/moby", "v1.13.0-rc3"},
+	},
+	"9d7a5b5212133414daa1901d853c91268d45ab2c1343ab4b3056dfca30dc9987": []Modver{
+		{"github.com/moby/moby", "v1.13.0-rc4"},
+	},
+	"e02df45b26b27e9b1d788464cc341356b901aa017b6413fd23aecad2c649960a": []Modver{
+		{"github.com/moby/moby", "v1.13.0-rc5"},
+	},
+	"52bda153c9e87362d1bc22043d51a4ade039faf183032b43c7be6e9a9173e1cd": []Modver{
+		{"github.com/moby/moby", "v1.13.0-rc6"},
+	},
+	"c391584ce7414dbc13439430a3975226f93a2181eb795c87aa2960d6b172ea7c": []Modver{
+		{"github.com/moby/moby", "v1.13.0-rc7"},
+	},
+	"8863c9ca71b83ae2064d050b671b9d004846cf459941f1d82e91693811d09286": []Modver{
+		{"github.com/moby/moby", "v1.13.1"},
+	},
+	"4619d9cd5200e54d264d7f5baf0ccd5d2790f948cc24e5d26622c539197b0bd4": []Modver{
+		{"github.com/moby/moby", "v1.13.1-rc1"},
+	},
+	"37e219ddaf9c315e3ad031cc11daafd15f48b2121a5e914955b7cb2d3cd09b7a": []Modver{
+		{"github.com/moby/moby", "v1.13.1-rc2"},
+	},
+	"f57b490ff89bc680d5102fa3693f927f69f1dfb6c7a090844a2384948ecafa9b": []Modver{
+		{"github.com/moby/moby", "v1.2.0"},
+	},
+	"2d62ed5292e32af3e1d1fd3a5c958d82f9dda2f44a5df9af3fe2b007f2b2522e": []Modver{
+		{"github.com/moby/moby", "v1.3.0"},
+	},
+	"8d74b8b526772bbd25de709ed49f6315315bd1c58d4b429d600553d92bc7d563": []Modver{
+		{"github.com/moby/moby", "v1.3.1"},
+	},
+	"e604b0b07afd967acb81af0b3cf7d4a2aba4d1e7e514bfe6ad06270c1010f4ea": []Modver{
+		{"github.com/moby/moby", "v1.3.2"},
+	},
+	"ba7ecc22a1b9b2f3c5e06efd6064dea7afe64a78796226980d10c06ffaceb64a": []Modver{
+		{"github.com/moby/moby", "v1.3.3"},
+	},
+	"712eb7a9b3c7b7c14f210fc890d4d22660fd229814d5071d4510f3fc21adc848": []Modver{
+		{"github.com/moby/moby", "v1.4.0"},
+	},
+	"8d1164e0db8a77dac537710f808858578c161a81a0cc1ff92568438bf6b6ee12": []Modver{
+		{"github.com/moby/moby", "v1.4.1"},
+	},
+	"6f91ce3208f93cecd0df4d10642d2cab72042ede042db0d2f20bed008075268c": []Modver{
+		{"github.com/moby/moby", "v1.5.0"},
+	},
+	"f5989d01fac5ec800188dd4530a0875c9a813872ccc2d8d6311c1826a65fa14f": []Modver{
+		{"github.com/moby/moby", "v1.5.0-rc1"},
+	},
+	"2f85790dcddbc78765a5de7e71b668354a1c2fbf0259ece620555416516ca2cd": []Modver{
+		{"github.com/moby/moby", "v1.5.0-rc2"},
+	},
+	"8242492dc53b9dfea1a6cd8cb51be3ca3e278902bb3fd4ef2a496759254bfa69": []Modver{
+		{"github.com/moby/moby", "v1.5.0-rc3"},
+	},
+	"4b1bb1a7e3605f595a67df595548a99f7a23026eeebcddb3fb929c8a4574c3f5": []Modver{
+		{"github.com/moby/moby", "v1.5.0-rc4"},
+	},
+	"b89cecf2af6c50f3391c9ea6da84c62642d316afa93c75b062b7415accf8db81": []Modver{
+		{"github.com/moby/moby", "v1.6.0"},
+	},
+	"15fd3e2a2f0c8b4f212f86d072e02d65860ee337a69e6f7b0da7551c19530eed": []Modver{
+		{"github.com/moby/moby", "v1.6.0-rc1"},
+	},
+	"cc4de709218d0a5c8d724f9c8117d9cb8be962be504c6713af73f296b886106f": []Modver{
+		{"github.com/moby/moby", "v1.6.0-rc2"},
+	},
+	"5a138eb242bc514f8b4ee6cc93c55fae96991c241565815205628a3a3dcbbf9c": []Modver{
+		{"github.com/moby/moby", "v1.6.0-rc3"},
+	},
+	"4070e5a5b9caf05dcc099dcb1739c3da33a9aa8241c38d03fed7bc506b34da33": []Modver{
+		{"github.com/moby/moby", "v1.6.0-rc4"},
+	},
+	"0cf2119f91c668838893c9390188a70aa958bf5894949f5c2f4548ba7b027e25": []Modver{
+		{"github.com/moby/moby", "v1.6.0-rc5"},
+	},
+	"5c1bed90a976c4fec21cf77759c3e726b65d5053333f61d61cbac85704f6997f": []Modver{
+		{"github.com/moby/moby", "v1.6.0-rc6"},
+	},
+	"2c79415686b45f9c36c97e8b0c01b878aeef9a0038222ada6b4655f4bdf921a4": []Modver{
+		{"github.com/moby/moby", "v1.6.0-rc7"},
+	},
+	"8340d19568d39001ece31986fd49de9230e99ea3d89ba2c3c6cdc2d2532f1f3e": []Modver{
+		{"github.com/moby/moby", "v1.6.1"},
+	},
+	"7bf2573a871cb40ebe814054261c554edf6a3c922e9b278db180979406009764": []Modver{
+		{"github.com/moby/moby", "v1.6.2"},
+	},
+	"c590bd388ce547623facab8d6e8aca876d41497549667295e1f650141f326e89": []Modver{
+		{"github.com/moby/moby", "v1.7.0"},
+	},
+	"caf768a89581c9658e24f7ccbfff8599a08bdc52d36098c7f94719dc3a90b9ff": []Modver{
+		{"github.com/moby/moby", "v1.7.0-rc1"},
+	},
+	"355b60a84e918912837fbdd446b9729637efc7cc10cf015124ed5e318cecb012": []Modver{
+		{"github.com/moby/moby", "v1.7.0-rc2"},
+	},
+	"3a18fbbcdd06d51b1b96a36293c18da284753e352c2d6cb425127adae99461f1": []Modver{
+		{"github.com/moby/moby", "v1.7.0-rc3"},
+	},
+	"dd9aa38fdb94aae153142278413f28bc040c5443bc9db60d2ad59fc07eb21851": []Modver{
+		{"github.com/moby/moby", "v1.7.0-rc4"},
+	},
+	"ba6948fbb62de4bc801b3b817192e3b1b281f74e39ec1c01c495f3529eb47ca4": []Modver{
+		{"github.com/moby/moby", "v1.7.0-rc5"},
+	},
+	"3683566df289daea7753b6207dce3b320ea2bbe91432ceff50fd34fb7f35d3ba": []Modver{
+		{"github.com/moby/moby", "v1.7.1"},
+	},
+	"f1a71e05142a2819acd669b5c2b6ef7590f3c62ef75008c10cb457104291e8e1": []Modver{
+		{"github.com/moby/moby", "v1.7.1-rc1"},
+	},
+	"555fffa569bf73b5a1e91360536277ce70774eaafc2928fee9bb4bb254a8bfb8": []Modver{
+		{"github.com/moby/moby", "v1.7.1-rc2"},
+	},
+	"b0a9fc60c2518e0c1ab97c6ba6dcc1374185d9517bda90ef180400bd9091a5b6": []Modver{
+		{"github.com/moby/moby", "v1.7.1-rc3"},
+	},
+	"96b154aaf9bdefe2fa3d4f2103b732cbd5e60dc877e54bd00c97e86f6b1ecdb6": []Modver{
+		{"github.com/moby/moby", "v1.8.0"},
+	},
+	"66d6a5d58683cd02190ff803f35aa5cdfb6f90a880dac6b4ba93ddc19d9ce339": []Modver{
+		{"github.com/moby/moby", "v1.8.0-rc1"},
+	},
+	"79eacdccc4d46b7b26867f0d30326c929d345e2853885b7f45b7e82cbc4af7a3": []Modver{
+		{"github.com/moby/moby", "v1.8.0-rc2"},
+	},
+	"5c39db5e74dae913d099f8d301075ea8548287f9c10ba8115f222f65bc0d994d": []Modver{
+		{"github.com/moby/moby", "v1.8.0-rc3"},
+	},
+	"7f23f38587a88cf0343e15f43489d39e9b13e24cb673531237f8b67993c283e0": []Modver{
+		{"github.com/moby/moby", "v1.8.1"},
+	},
+	"cae9ea94b58a652acf77ad58a0848af728a3f12e211deafa982ac41980ed950c": []Modver{
+		{"github.com/moby/moby", "v1.8.2"},
+	},
+	"b7abf0320c92128ae6dd412444befee374810a9d41971bb324a7529ce28a160e": []Modver{
+		{"github.com/moby/moby", "v1.8.2-rc1"},
+	},
+	"9616fb3988e5d6e036c51ea20014712294c42c7d66451f09a11a8cc5955d056d": []Modver{
+		{"github.com/moby/moby", "v1.8.3"},
+	},
+	"6ff4f6085dbefbaf43dbf6dee3cab8d345a065cfcec794fefef5cc00e38290e9": []Modver{
+		{"github.com/moby/moby", "v1.9.0"},
+	},
+	"6e0ed96e7c1bfa0d1eecaae2f7be0d6163eba9bcf20e88208acb5cbb4bcee9e5": []Modver{
+		{"github.com/moby/moby", "v1.9.0-rc1"},
+	},
+	"cb03f708882713ca6a9a78a262493bc3d7311a269c7e950f9b4c9c1914e4ccc6": []Modver{
+		{"github.com/moby/moby", "v1.9.0-rc2"},
+	},
+	"1eb15b875ddb042d65e645594317a2c267fac8aadda88262d405ed826739ed68": []Modver{
+		{"github.com/moby/moby", "v1.9.0-rc3"},
+	},
+	"342efff420f4daa98d9b7f01d2b197c7379c9483c04aabd7db8a3cdce58542c9": []Modver{
+		{"github.com/moby/moby", "v1.9.0-rc4"},
+	},
+	"bffcd208024afdb0b3ff9341bb0a5bba38fe140d33b9f781d84996bf3500bbbd": []Modver{
+		{"github.com/moby/moby", "v1.9.0-rc5"},
+	},
+	"fbc2762978be46424b42c5bbf746186b231192de0ed996f53691eac0812233be": []Modver{
+		{"github.com/moby/moby", "v1.9.1"},
+	},
+	"098af568573a751ae0a2c42e43992f715303a540707cacc7bf6dcc7c77418f06": []Modver{
+		{"github.com/moby/moby", "v1.9.1-rc1"},
+	},
+	"fdb98950bd479cee115fbe10fbe3e0d173dff4083e3f02af69f26bfa43aac36a": []Modver{
+		{"github.com/moby/moby", "v17.10.0-ce+incompatible"},
+	},
+	"3de71c1cc060fa8a06a7f3174e0297f36d3a080114b4446b21e8dbd3be314580": []Modver{
+		{"github.com/moby/moby", "v17.10.0-ce-rc1+incompatible"},
+	},
+	"b51932eb0d518206c955a52da95a937c73a1afec8ff7b0392675cb1604580be9": []Modver{
+		{"github.com/moby/moby", "v17.10.0-ce-rc2+incompatible"},
+	},
+	"cbb58557d16d3bdd3384e8a88398163fc2bf08f6d1e521312cd1adece8748eb1": []Modver{
+		{"github.com/moby/moby", "v17.11.0-ce+incompatible"},
+	},
+	"921a23058526177ecd2236986955f81958abe6452b3e5b0f6592b841bbec5b70": []Modver{
+		{"github.com/moby/moby", "v17.11.0-ce-rc1+incompatible"},
+	},
+	"fb62f1e17889c5fbf54de4bc1f545f829bf41bf0f68b78184199ef6e66508642": []Modver{
+		{"github.com/moby/moby", "v17.11.0-ce-rc2+incompatible"},
+	},
+	"f2b818fa1f3604663552249e7812a3fec5231a454ca2268204103b88aa690051": []Modver{
+		{"github.com/moby/moby", "v17.11.0-ce-rc3+incompatible"},
+	},
+	"dd97ee0f3ab8ae4a01af50236441845c827ea0586c37f053280c896888a49fc2": []Modver{
+		{"github.com/moby/moby", "v17.11.0-ce-rc4+incompatible"},
+	},
+	"bac66487a366c14b645d192a6a95d084d8f3de6de64c8df32de62409c186023e": []Modver{
+		{"github.com/moby/moby", "v17.12.0-ce-rc1+incompatible"},
+	},
+	"efc1b827745e8d7ca6340ec6bce3b10a964bcf4a2f6d10251e91b634432338a4": []Modver{
+		{"github.com/moby/moby", "v17.12.0-ce-rc2+incompatible"},
+	},
+	"d4157fc9239ee2dc75cb78adf934f86e695dde0526f72a69fe40edd7e61a9a36": []Modver{
+		{"github.com/moby/moby", "v17.12.0-ce-rc3+incompatible"},
+	},
+	"409432948045c7fa1333c3d18fc41c600992cc5598c5830e22d80aff975282df": []Modver{
+		{"github.com/moby/moby", "v17.12.0-ce-rc4+incompatible"}, {"github.com/moby/moby", "v17.12.0-ce+incompatible"},
+	},
+	"f04c67376f3331c07dba3aec0d75014de5e1e855a45b8cf9252884e2cd326082": []Modver{
+		{"github.com/moby/moby", "v17.12.1-ce+incompatible"}, {"github.com/moby/moby", "v17.12.1-ce-rc2+incompatible"},
+	},
+	"ed1fb5cac26ef5b2f9a323b2744230174672576a446d9974e829ea820e3cdfde": []Modver{
+		{"github.com/moby/moby", "v17.12.1-ce-rc1+incompatible"},
+	},
+	"4863e4435e31dc818dfd7b674eb8b9c981ef0c1b02bff4bec8087f3ec264a212": []Modver{
+		{"github.com/moby/moby", "v20.10.0+incompatible"},
+	},
+	"ab1b47069b2878846305b2b0483115ed7c5880e772cbce7d0cb4f6b53190ae91": []Modver{
+		{"github.com/moby/moby", "v20.10.0-beta1+incompatible"},
+	},
+	"b8b028527555bcddff87f71a10dcd454ca2b7572606aaef43cd95f7cf8aa24aa": []Modver{
+		{"github.com/moby/moby", "v20.10.0-rc1+incompatible"},
+	},
+	"c49b05079d431aa739ee84fc894046dc6d03927314764dc0138dc752651a9f6f": []Modver{
+		{"github.com/moby/moby", "v20.10.0-rc2+incompatible"},
+	},
+	"ee708f64882d044343fd014e2be85d85990bfd422f8b9adf9a0a9c52c67f55c9": []Modver{
+		{"github.com/moby/moby", "v20.10.1+incompatible"},
+	},
+	"cb7fa0d67b6d13b687ac5c9d401bd7553bfc233ffe561bd329cb490778ecd65a": []Modver{
+		{"github.com/moby/moby", "v20.10.2+incompatible"},
+	},
+	"d679ad3c2221c3605c6017f7d1e0bcbd6d8fa989b27ddcacd23fb677f52ba30d": []Modver{
+		{"github.com/moby/moby", "v20.10.3+incompatible"},
+	},
+	"f47ab3043232bcfb875095f433db0310c54be247ae02a50a74aff73579014a95": []Modver{
+		{"github.com/moby/moby", "v20.10.4+incompatible"}, {"github.com/moby/moby", "v20.10.5+incompatible"},
+	},
+	"1e77a88d21ce401c70da764ace1be21d905b9e3b2316bfc6e0378f3a6e811702": []Modver{
+		{"github.com/moby/moby", "v20.10.6+incompatible"},
+	},
 }
