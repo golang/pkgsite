@@ -53,7 +53,7 @@ var (
 	UnprocessedModules = &view.View{
 		Name:        "go-discovery/unprocessed_modules/count",
 		Measure:     unprocessedModules,
-		Aggregation: view.Count(),
+		Aggregation: view.LastValue(),
 		Description: "number of unprocessed modules",
 	}
 )
