@@ -194,7 +194,7 @@ func (db *DB) transactWithRetry(ctx context.Context, opts *sql.TxOptions, txFunc
 	defer derrors.Wrap(&err, "transactWithRetry(%v)", opts)
 	// Retry on serialization failure, up to some max.
 	// See https://www.postgresql.org/docs/11/transaction-iso.html.
-	const maxRetries = 30
+	const maxRetries = 10
 	for i := 0; i <= maxRetries; i++ {
 		err = db.transact(ctx, opts, txFunc)
 		if isSerializationFailure(err) {
