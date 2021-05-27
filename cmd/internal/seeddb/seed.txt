@@ -1,0 +1,26 @@
+# Copyright 2021 The Go Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style
+# license that can be found in the LICENSE file.
+
+# Modules that are expected to return a 200.
+cuelang.org/go@v0.3.2
+github.com/apache/thrift@v0.14.1
+github.com/creack/pty@v1.1.11
+github.com/envoyproxy/go-control-plane@v0.9.8
+github.com/hashicorp/vault/api@v1.0.3
+github.com/jackc/pgx/v4@v4.11.0
+github.com/jba/bit@v0.2.0
+github.com/tendermint/tendermint@v0.34.10
+gocloud.dev@v0.22.0
+golang.org/x/tools@v0.0.0-20160406004205-fe1488f8abd7
+golang.org/x/tools@v0.1.1
+k8s.io/client-go@v1.5.2
+mvdan.cc/sh/v3@v3.3.0
+mvdan.cc/sh@v2.6.4+incompatible
+golang.org/x/tools/gopls@v0.6.11
+github.com/jackc/pgx@v3.6.2+incompatible
+std@v1.16.3
+
+# This module is expected to return a 404, so that  the path will redirect
+# to github.com/jackc/pgx/v4/pgxpool.
+github.com/jackc/pgx/pgxpool@v3.6.2+incompatible
