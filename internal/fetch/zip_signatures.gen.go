@@ -1961,6 +1961,534 @@ var ZipSignatures = map[string][]Modver{
 	"ca574c4591982f836bd397389a94e77ffa5d5e44edbe226303d86550d5fc915d": []Modver{
 		{"github.com/aws/aws-sdk-go", "v1.9.0"}, {"github.com/aws/aws-sdk-go", "v1.9.44"},
 	},
+	"6e7946a44ef45ca50354dd6a2514b8d1aa1857c4feb71b8e5d8e5b3d72fd672e": []Modver{
+		{"github.com/etcd-io/etcd", "v0.1.0"},
+	},
+	"b09f603a23483c811b776e0ee0487a4fb0feadddc536fad2beb75db6563471e7": []Modver{
+		{"github.com/etcd-io/etcd", "v0.1.1"},
+	},
+	"6da3d120d6daf515576a3b70373d972ff75cdb36c9598b32816f71058196eccf": []Modver{
+		{"github.com/etcd-io/etcd", "v0.1.2"},
+	},
+	"f76d3412e44121a60015ecb0c1ca20197d48528508c055c683090226558b5a8e": []Modver{
+		{"github.com/etcd-io/etcd", "v0.2.0"},
+	},
+	"90bd27dfc564cc97fe7cde5e4439297ceac10b47fd7cf75f6d52371a9376a07b": []Modver{
+		{"github.com/etcd-io/etcd", "v0.2.0-rc0"},
+	},
+	"a93e52ea8f5c61c45b698f8a58486a5ba61d5dc18427f132cfbf17f62c12ba33": []Modver{
+		{"github.com/etcd-io/etcd", "v0.2.0-rc1"},
+	},
+	"e8c736d0d780919b33a8f5869072d334687b25ccb4b30e65d66e6b283432cc4d": []Modver{
+		{"github.com/etcd-io/etcd", "v0.2.0-rc2"},
+	},
+	"4da841fa908bf265e3ed54cc0015503d0d8ec8ccdc20af48a0ec53570c306f5d": []Modver{
+		{"github.com/etcd-io/etcd", "v0.2.0-rc3"},
+	},
+	"f018375128f3848ae4b4968eaf781b60d65a97731b3a97c6a024bc20f8727ac9": []Modver{
+		{"github.com/etcd-io/etcd", "v0.2.0-rc4"},
+	},
+	"882ba19e8847da4649db25057f61cea5208e9d428946a98be96d52af7c7e63c9": []Modver{
+		{"github.com/etcd-io/etcd", "v0.3.0"},
+	},
+	"8bbc53b7e1d97ce7c5664a9e1f246b2586d1d16e748e718c3b1daf52724875ac": []Modver{
+		{"github.com/etcd-io/etcd", "v0.4.0"},
+	},
+	"2b809c54138fc694b8dbdd3c6b5f8e40e5e8368ef4d6bb145c5f59034f899789": []Modver{
+		{"github.com/etcd-io/etcd", "v0.4.1"},
+	},
+	"584e89bc2a8e82017fef1932812d4d1fbe253932bdf0f27745f7ab5bc02bd4b9": []Modver{
+		{"github.com/etcd-io/etcd", "v0.4.2"},
+	},
+	"ca09f765ae99cef707b0a1ef9e9f7a1c95fc77ba4f5ec2a58f2c47bd6b263801": []Modver{
+		{"github.com/etcd-io/etcd", "v0.4.3"},
+	},
+	"951fa2f645de6b4ff4937fff47b9c21961ff4f813d50cd27f65d76dcdfa3c29c": []Modver{
+		{"github.com/etcd-io/etcd", "v0.4.4"},
+	},
+	"b7ffc634404c0052388b5550e61b4c9e3566b3ae01e61d807b8a81f1b86e329c": []Modver{
+		{"github.com/etcd-io/etcd", "v0.4.5"},
+	},
+	"da8c8384765663b9100fbebe5b3ddc2f9e31773972eeba5864f795f57e6e4df7": []Modver{
+		{"github.com/etcd-io/etcd", "v0.4.6"},
+	},
+	"1a36dd67cbfdf2f7ca40c68e591da5784bfb071a1e7a9c7d3b2c5d5c035f4f49": []Modver{
+		{"github.com/etcd-io/etcd", "v0.4.7"},
+	},
+	"d79bff732dc87762849864db2fc24c3041330a5bdc1014a3fabf0d9361328e86": []Modver{
+		{"github.com/etcd-io/etcd", "v0.4.8"},
+	},
+	"1de0c075e870ea7f4266312157d978720ef776d61d437b26e6d1666d7cd702c4": []Modver{
+		{"github.com/etcd-io/etcd", "v0.4.9"},
+	},
+	"3072586e8b36c29b2e159bc32d5c9bffe3d1015ebdee4cc27a7549cbeeae946b": []Modver{
+		{"github.com/etcd-io/etcd", "v0.5.0-alpha.0"},
+	},
+	"4824a676000bfac0a7aa733385440ba603a70ef59ee6f810804be62aea754042": []Modver{
+		{"github.com/etcd-io/etcd", "v0.5.0-alpha.1"},
+	},
+	"3bdc0467e4254b7b4e92a053f202b82a991d0bbf17a3a7160eab97000fdb3051": []Modver{
+		{"github.com/etcd-io/etcd", "v0.5.0-alpha.2"},
+	},
+	"5133892f48e12191c6d7f75fece2c87ea779a224dff6cad475fba500916ba8b8": []Modver{
+		{"github.com/etcd-io/etcd", "v0.5.0-alpha.3"},
+	},
+	"97eaa01c10ef36da805d062d177ea2b1b178ff15db373923f4493c3a9e048c1f": []Modver{
+		{"github.com/etcd-io/etcd", "v0.5.0-alpha.4"},
+	},
+	"b12ad19b14bb360a976d446d8703bc5cdfe3803e32a4c5f1ef11bcf2340e75dc": []Modver{
+		{"github.com/etcd-io/etcd", "v0.5.0-alpha.5"},
+	},
+	"6d854991c6b4b339cfa181be6c97fe6463201cdfa53f467c98ddbc2317a85c37": []Modver{
+		{"github.com/etcd-io/etcd", "v2.0.0+incompatible"},
+	},
+	"31011b0167201a60adce707171bdb68df06065be816707974c1b8a42738c8658": []Modver{
+		{"github.com/etcd-io/etcd", "v2.0.0-rc.1+incompatible"},
+	},
+	"c651e8f30f8b73ea115f76ace6dbed295c9f947265289544020b2a8453d2826b": []Modver{
+		{"github.com/etcd-io/etcd", "v2.0.1+incompatible"},
+	},
+	"87d76a5fec250a77e43ab2fea205730f967cf14a2f87e81d8d802cb38b664895": []Modver{
+		{"github.com/etcd-io/etcd", "v2.0.10+incompatible"},
+	},
+	"e27e22b88abbba6a88f8b9d7b2ba32519a07ad5c971295de48951b993d17fd45": []Modver{
+		{"github.com/etcd-io/etcd", "v2.0.11+incompatible"},
+	},
+	"5b76781d4b6e1fd682e653c742bf81503054b0eea0c2f945b7e4cae733eed60a": []Modver{
+		{"github.com/etcd-io/etcd", "v2.0.12+incompatible"},
+	},
+	"78fb3551f26ac9f198b2c1eaf7e9a127cf6eb3a2f3d8ea037c2256c03cdb6785": []Modver{
+		{"github.com/etcd-io/etcd", "v2.0.13+incompatible"},
+	},
+	"ec5cc3c41099a11928ebdd505135607813f6f621c56b0d04b19854a6ff1a6083": []Modver{
+		{"github.com/etcd-io/etcd", "v2.0.2+incompatible"},
+	},
+	"f458ff2423c1439f484d864a11bc10567a777398475fd2de256aae4c2db76722": []Modver{
+		{"github.com/etcd-io/etcd", "v2.0.3+incompatible"},
+	},
+	"17a16f6ce8fc871e88e0a0555124021e1e79cfd484190697d447e295592752fa": []Modver{
+		{"github.com/etcd-io/etcd", "v2.0.4+incompatible"},
+	},
+	"fbc1ecc802cdecb28d7373cf10d275ed95e0309c77d3636b583b108b5be7e2fd": []Modver{
+		{"github.com/etcd-io/etcd", "v2.0.5+incompatible"},
+	},
+	"44f9d47ed676d99d58759e604a163094b640c34c9596531ec4760d969f14c953": []Modver{
+		{"github.com/etcd-io/etcd", "v2.0.6+incompatible"},
+	},
+	"b63525b0beb459eca27348dc9582fa74b0dc87f7d38323201f25318aef7c6204": []Modver{
+		{"github.com/etcd-io/etcd", "v2.0.7+incompatible"},
+	},
+	"bb78d17fb4a71cb7d65f444dffa9abcebc43a94166e81dd0508c1cb2745c88d0": []Modver{
+		{"github.com/etcd-io/etcd", "v2.0.8+incompatible"},
+	},
+	"0d641e00af6a80c28308d14adf454fa04f1e79ff0da7b030e7a3facb96ed9745": []Modver{
+		{"github.com/etcd-io/etcd", "v2.0.9+incompatible"},
+	},
+	"26db9e63f1b80acd57d020aced1b1b6b04dd30588631a61e56b4c485fccf60cb": []Modver{
+		{"github.com/etcd-io/etcd", "v2.1.0+incompatible"},
+	},
+	"817ec6224d4ba6cf746b9f349f3aa8633163e241f275799c7a65bfb0828c4e3b": []Modver{
+		{"github.com/etcd-io/etcd", "v2.1.0-alpha.0+incompatible"},
+	},
+	"f8e61a49b2bbe290cc139e9ef50016a71dd0673cbb977d43434b3c6032290871": []Modver{
+		{"github.com/etcd-io/etcd", "v2.1.0-alpha.1+incompatible"},
+	},
+	"69a5758dc36943717ddf42328d247d973aac1fc090e41f39dda2c4eaf061f668": []Modver{
+		{"github.com/etcd-io/etcd", "v2.1.0-rc.0+incompatible"},
+	},
+	"0d5e281113e55da41f4ab90763a2f72478ce00062beb1e564dc8b90aed553e8c": []Modver{
+		{"github.com/etcd-io/etcd", "v2.1.1+incompatible"},
+	},
+	"736b3ea9c498daa65ddc4d89faae87b7e7a2deb97b8cf2db3d74a603f8cb5200": []Modver{
+		{"github.com/etcd-io/etcd", "v2.1.2+incompatible"},
+	},
+	"4763fac750368314754b1c48a59b691bdea5e40ba96a225eed9df78ac2b6936e": []Modver{
+		{"github.com/etcd-io/etcd", "v2.1.3+incompatible"},
+	},
+	"636e3f140522ca0634437d87571ccbdd971c99c9249fc93a3d2626ebbfa4dd65": []Modver{
+		{"github.com/etcd-io/etcd", "v2.2.0+incompatible"},
+	},
+	"0ef458374ec4655966f4b1e1db2758331520a443a0d2552bcac42a7eac340652": []Modver{
+		{"github.com/etcd-io/etcd", "v2.2.0-alpha.0+incompatible"},
+	},
+	"a2d472b472fed9993dbf75f1ba600602b591ff31a6e0b0e49e56fcb643125a89": []Modver{
+		{"github.com/etcd-io/etcd", "v2.2.0-alpha.1+incompatible"},
+	},
+	"f7804386bd2882ad1c73c0f2afc082144c2f01939db136f2776fb5d7bc0f5a9d": []Modver{
+		{"github.com/etcd-io/etcd", "v2.2.0-rc.0+incompatible"},
+	},
+	"e34c9485003337cc85e77eecdcf467448e07ab60446057d26ee1317837b6fbc2": []Modver{
+		{"github.com/etcd-io/etcd", "v2.2.1+incompatible"},
+	},
+	"e69b0093220979a9714fdac95f681d81ac0592acb79dd6ecf121399d5588e446": []Modver{
+		{"github.com/etcd-io/etcd", "v2.2.2+incompatible"},
+	},
+	"69c7389880570a8b57e495c7cf8bdba967c212b92b0a61b626aef548ed8558bc": []Modver{
+		{"github.com/etcd-io/etcd", "v2.2.3+incompatible"},
+	},
+	"b03ea2ab2ec5a9c552fcb9f22146f10ba2a3d471be92c3a16fe29f0408be7a59": []Modver{
+		{"github.com/etcd-io/etcd", "v2.2.4+incompatible"},
+	},
+	"4eafda264df6291523476d48610fafd7c7c2386115e953170fede99083d06a43": []Modver{
+		{"github.com/etcd-io/etcd", "v2.2.5+incompatible"},
+	},
+	"9a56221f4e9f0dafa1a78d30931b962535093de8d43ca44213dd9d2de3433feb": []Modver{
+		{"github.com/etcd-io/etcd", "v2.3.0+incompatible"},
+	},
+	"bb1a076ab5ed073f3e73ed5117614a00d62d05fdca08e661eff0244aaad9e74f": []Modver{
+		{"github.com/etcd-io/etcd", "v2.3.0-alpha.0+incompatible"},
+	},
+	"d1527a329930f6fc52e544993dbfc4e40525a48e8c303668dac01304ebca9dad": []Modver{
+		{"github.com/etcd-io/etcd", "v2.3.0-alpha.1+incompatible"},
+	},
+	"486f4e361ed3da7f058351f010818a19aec7f956ea36b9fda8f8b7e0334ad97f": []Modver{
+		{"github.com/etcd-io/etcd", "v2.3.1+incompatible"},
+	},
+	"005be95847e445ef949b15e7deceb17f29c5044d9b492395166d784e55cfc667": []Modver{
+		{"github.com/etcd-io/etcd", "v2.3.2+incompatible"},
+	},
+	"eca5a7074e045577f8e5dce3e2d137fb9ff8e1d31bac999abc08d714c2f02a2d": []Modver{
+		{"github.com/etcd-io/etcd", "v2.3.3+incompatible"},
+	},
+	"d56f26cc082fa416e17208787dadf6a3646fb86338adb82e3c4d4bccb6fa5b96": []Modver{
+		{"github.com/etcd-io/etcd", "v2.3.4+incompatible"},
+	},
+	"75f091f3b6f82d3d6cc5caa606f5079e682ce04e3c5a242560c6e4611b11aaa8": []Modver{
+		{"github.com/etcd-io/etcd", "v2.3.5+incompatible"},
+	},
+	"0478def07d94a12f864274689fc8134e873ad4b14fe7e9e29f115624b2f38757": []Modver{
+		{"github.com/etcd-io/etcd", "v2.3.6+incompatible"},
+	},
+	"a19792445f8b31e4b4d768fa064125edf1692917d29482ac3ca9afdd48c10463": []Modver{
+		{"github.com/etcd-io/etcd", "v2.3.7+incompatible"},
+	},
+	"14bac9460dc7218d0c1efb4d8a59b4c6eed7a000ec339b75852d363207056eae": []Modver{
+		{"github.com/etcd-io/etcd", "v2.3.8+incompatible"},
+	},
+	"db6cc38ecdbb9d1e417e64f4b035ca459259f1ce186beef79b197201d8325f1e": []Modver{
+		{"github.com/etcd-io/etcd", "v3.0.0+incompatible"},
+	},
+	"2f0233860d682679a71668a8083fde5443e142b82940fc4e8919ba39b4638a9b": []Modver{
+		{"github.com/etcd-io/etcd", "v3.0.0-beta.0+incompatible"},
+	},
+	"cefceafbf72dbc08f382ede1ae4b24e67cc7a00a09c84490805f09288c30a573": []Modver{
+		{"github.com/etcd-io/etcd", "v3.0.1+incompatible"},
+	},
+	"4340ef5fcc64b1eb0d8b1851938abd5f544a16e968637c8b01459eab7fcdc719": []Modver{
+		{"github.com/etcd-io/etcd", "v3.0.10+incompatible"},
+	},
+	"51cb98e017c42b886882fccbb0420dd11a1cb933c307417ea98aad097ade49e0": []Modver{
+		{"github.com/etcd-io/etcd", "v3.0.11+incompatible"},
+	},
+	"20f1872a98589dbf0e098753c883850356830e9e019229c8ceeacf7467778567": []Modver{
+		{"github.com/etcd-io/etcd", "v3.0.12+incompatible"},
+	},
+	"8970de96e937780cc4b2f2826a5497d5334d22ab5906522ac4056680903f4ef7": []Modver{
+		{"github.com/etcd-io/etcd", "v3.0.13+incompatible"},
+	},
+	"f27b2232bf0297e57200b30ad92a2ce8b3f9dedee7695a23be1a1a5013f64cfa": []Modver{
+		{"github.com/etcd-io/etcd", "v3.0.14+incompatible"},
+	},
+	"afd52909939f57b1e7682de9b9b8d5e2325add143b7c894e5737f7a2d5915489": []Modver{
+		{"github.com/etcd-io/etcd", "v3.0.15+incompatible"},
+	},
+	"63b2dba5bdce3c828e12b909f8676edb27a1fce1dee773cf4bfe047ff3e7e5cc": []Modver{
+		{"github.com/etcd-io/etcd", "v3.0.16+incompatible"},
+	},
+	"04eecbbfccbe4842d5e69390091c18475195ff1be46c6a5ccc2c48ac761223ba": []Modver{
+		{"github.com/etcd-io/etcd", "v3.0.17+incompatible"},
+	},
+	"235557b1fb2794feff0a2f7a6fa11ba28719431ae9f638362c01010127452786": []Modver{
+		{"github.com/etcd-io/etcd", "v3.0.2+incompatible"},
+	},
+	"001e709281cf58673c20173593b7337dceeaf9ccbe325ffb88bbd0f816905dd6": []Modver{
+		{"github.com/etcd-io/etcd", "v3.0.3+incompatible"},
+	},
+	"a9cfab7b58971e17b39ce36e1c3788598212fb6c0f98b464422e06d29d65fa76": []Modver{
+		{"github.com/etcd-io/etcd", "v3.0.4+incompatible"},
+	},
+	"0668bdbfe2e2076ae413e9ce140f9ad1a743d18f909b6d7bdf89aeea55f40410": []Modver{
+		{"github.com/etcd-io/etcd", "v3.0.5+incompatible"},
+	},
+	"10630a3854105bb0de4733d707f17f93679278896daafe07917a916825a41524": []Modver{
+		{"github.com/etcd-io/etcd", "v3.0.6+incompatible"},
+	},
+	"653fa6694d739898d9e932846e2ffe48cb349ecbdb4ae5a84a026da25a86471e": []Modver{
+		{"github.com/etcd-io/etcd", "v3.0.7+incompatible"},
+	},
+	"d89ea35bf069db6ad925a020fe4775e1a26941fd6838e2585b90e1f67fd0ea46": []Modver{
+		{"github.com/etcd-io/etcd", "v3.0.8+incompatible"},
+	},
+	"e573679c2f26f17d9975b3502e8ee33c74665d235b1075017420a43ff13159ed": []Modver{
+		{"github.com/etcd-io/etcd", "v3.0.9+incompatible"},
+	},
+	"e2765693067c5a9aed5b77928b02413eaee113ca1315afe74af045eb0b71a872": []Modver{
+		{"github.com/etcd-io/etcd", "v3.1.0+incompatible"},
+	},
+	"5ccf3f491c17756297c8f728d37cccbafbb9f8761cda268ddf43072c0ae457cc": []Modver{
+		{"github.com/etcd-io/etcd", "v3.1.0-alpha.0+incompatible"},
+	},
+	"07f70e191a7a104ad003e3cb24c99f1285a75a232a0bc6e0ea82356ea5d8b0f9": []Modver{
+		{"github.com/etcd-io/etcd", "v3.1.0-alpha.1+incompatible"},
+	},
+	"719698335edbcde124e2c5cee82a271388d5ef411551c0ccb6cfc7bffc6d533a": []Modver{
+		{"github.com/etcd-io/etcd", "v3.1.0-rc.0+incompatible"},
+	},
+	"527c041ca603177572247eea44677a31f647483059ee4e76261661e6f02b5c61": []Modver{
+		{"github.com/etcd-io/etcd", "v3.1.0-rc.1+incompatible"},
+	},
+	"54aa0d6747533271ab4ee063d94265e54851ae195e82b38abc0f0f1e23792504": []Modver{
+		{"github.com/etcd-io/etcd", "v3.1.1+incompatible"},
+	},
+	"f9ddaa5b2d557f29d95359ca031f4a94badd29dd0709a6c56a6c1686cd9b39a9": []Modver{
+		{"github.com/etcd-io/etcd", "v3.1.10+incompatible"},
+	},
+	"94044931b96c4c49858adca7a7bccada73d3e84f55fc466b5406507438da0399": []Modver{
+		{"github.com/etcd-io/etcd", "v3.1.11+incompatible"},
+	},
+	"0a51d6e06e3630507757f259dbf42d4e6c483b5c3b909fae839b16b2e6c0c755": []Modver{
+		{"github.com/etcd-io/etcd", "v3.1.12+incompatible"},
+	},
+	"32c7357a99de9e1b9990276b967831d10b054733c18e033e7637d4843b4e5b77": []Modver{
+		{"github.com/etcd-io/etcd", "v3.1.13+incompatible"},
+	},
+	"01bc10caff302dad5dd992e21a74a2ba491da98cfcf5d9b8dabefe114dbf454a": []Modver{
+		{"github.com/etcd-io/etcd", "v3.1.14+incompatible"},
+	},
+	"ba0da82cf0a1c4260600b23ece72a60f20b174878a21a8ee9441a7bed92f62e5": []Modver{
+		{"github.com/etcd-io/etcd", "v3.1.15+incompatible"},
+	},
+	"8232362a8714f135e95fcf890c5a7ebf5266a953ad64603ad4946cefe4b0ecf7": []Modver{
+		{"github.com/etcd-io/etcd", "v3.1.16+incompatible"},
+	},
+	"8dcf86a4f4a610fc3c4738e18986bc0071494b2fb16f68a33652b96ee92e67e1": []Modver{
+		{"github.com/etcd-io/etcd", "v3.1.17+incompatible"},
+	},
+	"ed5c576d6e8d4ba5a9c89845d41363ff125bc39d0dab27ccda69a3d1cbc820fb": []Modver{
+		{"github.com/etcd-io/etcd", "v3.1.18+incompatible"},
+	},
+	"4fe3d63a544d8bbc97b77bb3eecf77260bd324d3dec0dcc063d25652899e7d0a": []Modver{
+		{"github.com/etcd-io/etcd", "v3.1.19+incompatible"},
+	},
+	"40228d01896028742b21f16ec2b090940e8434e40ac63a2e0dbee665a9e408d2": []Modver{
+		{"github.com/etcd-io/etcd", "v3.1.2+incompatible"},
+	},
+	"efaa82ba2b52a4d6c963603a114b1e23328aa70348c00e7209d4598ff102f9d2": []Modver{
+		{"github.com/etcd-io/etcd", "v3.1.20+incompatible"},
+	},
+	"8f0753d3c56a6aabb877d10ba7764f1a98a9059664959f6e73afe2b7e6e3dda7": []Modver{
+		{"github.com/etcd-io/etcd", "v3.1.3+incompatible"},
+	},
+	"bdbeeaa40696cb8cd92fb10b7cba320c68452aad85ab59b20cc97ce5363d8fd2": []Modver{
+		{"github.com/etcd-io/etcd", "v3.1.4+incompatible"},
+	},
+	"27cbb92307b827d6934f58fa31cee0d0263f7b7c9322ac7c2fa5a883f5200f20": []Modver{
+		{"github.com/etcd-io/etcd", "v3.1.5+incompatible"},
+	},
+	"18016c159fe79f6e130e79c09502a98b99e878c1877253ebb2448e19fa4356fb": []Modver{
+		{"github.com/etcd-io/etcd", "v3.1.6+incompatible"},
+	},
+	"74f1825c27c8fbbf79595f9569e354a8ae5b8eadb4f24a2e58e10f070f7236de": []Modver{
+		{"github.com/etcd-io/etcd", "v3.1.7+incompatible"},
+	},
+	"320cf0086320932ec70b1716f76745af4a809b357dd1844d40897220278b2910": []Modver{
+		{"github.com/etcd-io/etcd", "v3.1.8+incompatible"},
+	},
+	"7e6932ce0f8ba4e8b93fe482642372cc562c8df9ea87669dea9c069a7e457998": []Modver{
+		{"github.com/etcd-io/etcd", "v3.1.9+incompatible"},
+	},
+	"98ff1fb2c642ab3cbbba2876f161f61b8b27ae05161d8b1355feaceb20d80015": []Modver{
+		{"github.com/etcd-io/etcd", "v3.2.0+incompatible"},
+	},
+	"c8755775888e7d89cdd42f1d586a98cb760c84e9951275743ac3eed05acb73c9": []Modver{
+		{"github.com/etcd-io/etcd", "v3.2.0-rc.0+incompatible"},
+	},
+	"6099c3e07f1fbee016f081ac810e7f2c3e5240b8e4600ec358a20494d2b34504": []Modver{
+		{"github.com/etcd-io/etcd", "v3.2.0-rc.1+incompatible"},
+	},
+	"40d501d969c2cb1340438fde610570c543d4b5565940106454f30609b91fb718": []Modver{
+		{"github.com/etcd-io/etcd", "v3.2.1+incompatible"},
+	},
+	"851fbed6ad3f60b99b05dd2fa6213ab2d26ce8de00919d72a9819ab05292cf81": []Modver{
+		{"github.com/etcd-io/etcd", "v3.2.10+incompatible"},
+	},
+	"0ac1d29f2290a87af341e945d414eff8bffd7fc519926903e5505311469dedba": []Modver{
+		{"github.com/etcd-io/etcd", "v3.2.11+incompatible"},
+	},
+	"d9c656371acfa27750eff6789d9f3db23900055669e50f853f9a6dccee871b73": []Modver{
+		{"github.com/etcd-io/etcd", "v3.2.12+incompatible"},
+	},
+	"581afed53b6f7518c53ac78ec7d7deebeecab237e6477d20c6c70fa83529e1e5": []Modver{
+		{"github.com/etcd-io/etcd", "v3.2.13+incompatible"},
+	},
+	"3beebcf2aff111462026307f42be8161b3fe243a1d83b7e9a80b4f4a31794aba": []Modver{
+		{"github.com/etcd-io/etcd", "v3.2.14+incompatible"},
+	},
+	"fc924115e075e4c455f44f2c4604c31fbb0852531830c805af5cb35f4f1ff202": []Modver{
+		{"github.com/etcd-io/etcd", "v3.2.15+incompatible"},
+	},
+	"3d1b502458274464be2fc56f6b391f8f20485232d76e35b5cc13192c3785964d": []Modver{
+		{"github.com/etcd-io/etcd", "v3.2.16+incompatible"},
+	},
+	"4763c9c079b217f1befa915a92c4285fc5dfa17080b1289ce5819b35add77d65": []Modver{
+		{"github.com/etcd-io/etcd", "v3.2.17+incompatible"},
+	},
+	"fc82c3e50d75bf61ae51d2e8b8211eec2b4545c9926e62b6c290d0a36efb506a": []Modver{
+		{"github.com/etcd-io/etcd", "v3.2.18+incompatible"},
+	},
+	"bc909a7525b6634844252ef0b402c6616a439154a56d8da6771af9ba7719df77": []Modver{
+		{"github.com/etcd-io/etcd", "v3.2.19+incompatible"},
+	},
+	"21712f96962788ae128a56fc66402dd1f017145e4feb608a3da427b0ac347e7b": []Modver{
+		{"github.com/etcd-io/etcd", "v3.2.2+incompatible"},
+	},
+	"59736055450b82aa768be9ba019f58af44cfb2eeb94d1560217878fab26a4e2a": []Modver{
+		{"github.com/etcd-io/etcd", "v3.2.20+incompatible"},
+	},
+	"ff910409746eb6fd9ab25e5cd56c3326c5f10fe2dee2b931f5c0387ec34d62ae": []Modver{
+		{"github.com/etcd-io/etcd", "v3.2.21+incompatible"},
+	},
+	"f7c78a93e46410e328fbeb19c9986da1cf59d39de03d8290a3dabbe3d74237ee": []Modver{
+		{"github.com/etcd-io/etcd", "v3.2.22+incompatible"},
+	},
+	"23ed22951f8d80cdb7067c313ad58ad911b7fab81f1c7826172d8716b47309db": []Modver{
+		{"github.com/etcd-io/etcd", "v3.2.23+incompatible"},
+	},
+	"9396942c1e59e7cc2ca753c1ce3acddafc652d3416ffd88c437226e563626095": []Modver{
+		{"github.com/etcd-io/etcd", "v3.2.24+incompatible"},
+	},
+	"28a3432f8474da839c16b46d420e520b04bad872974cb8863ad40e96c5ed261d": []Modver{
+		{"github.com/etcd-io/etcd", "v3.2.25+incompatible"},
+	},
+	"a27b2e5bf29a6c49ea1a3b125c5bf6cbef476834f5f38691c2dca21b7f4888c4": []Modver{
+		{"github.com/etcd-io/etcd", "v3.2.26+incompatible"},
+	},
+	"7362ca32af748cfb198000bf9e29d7db56e68e3e1bd18411cd1566030a99e73a": []Modver{
+		{"github.com/etcd-io/etcd", "v3.2.27+incompatible"},
+	},
+	"817255e7a8a8c2b132d8d5031bd851fd4250609d1fa99923f4067fce221078d2": []Modver{
+		{"github.com/etcd-io/etcd", "v3.2.28+incompatible"},
+	},
+	"96acd30c78a92da2c3d4da400f401d4d2a5e1a7dd7af6f529ab2508efda19bdd": []Modver{
+		{"github.com/etcd-io/etcd", "v3.2.29+incompatible"},
+	},
+	"2958afc610ba26f95f8ff6d3338d4a11a90ea74291b0afac913582f39f871751": []Modver{
+		{"github.com/etcd-io/etcd", "v3.2.3+incompatible"},
+	},
+	"6d31096923a13216bff6470db11eb5205b222e35901cd6dc60fe96e465ff9147": []Modver{
+		{"github.com/etcd-io/etcd", "v3.2.30+incompatible"},
+	},
+	"198b80dca12d00545589c4b97e9a714a698bec8c405564da8dcc0d77f6d36d56": []Modver{
+		{"github.com/etcd-io/etcd", "v3.2.31+incompatible"},
+	},
+	"775e7c2053f318c73f8807960833bbc429693b2d49227fadc208256b75dc32bc": []Modver{
+		{"github.com/etcd-io/etcd", "v3.2.32+incompatible"},
+	},
+	"b90238f13ae3918de24b2d2a7535a88459f992f8dc84c3f57c395ec21f73dea9": []Modver{
+		{"github.com/etcd-io/etcd", "v3.2.4+incompatible"},
+	},
+	"06f22974b053a03c472efd92c3950a10b952da273e544918e983b9c6dad63b31": []Modver{
+		{"github.com/etcd-io/etcd", "v3.2.5+incompatible"},
+	},
+	"d539a2e94a0bfe71e33fa39a20d3846ecfc2dcc245a34a284d2eebbfd027e91d": []Modver{
+		{"github.com/etcd-io/etcd", "v3.2.6+incompatible"},
+	},
+	"cff2d99e5d4cdccb358f8cf41a507e043c69690eb3e0b5536b9f2969242a5cc7": []Modver{
+		{"github.com/etcd-io/etcd", "v3.2.7+incompatible"},
+	},
+	"cbd78dcf22d4ccd27e6d1316dfd708692d8b4f365e47c5c259053e9f2972cc56": []Modver{
+		{"github.com/etcd-io/etcd", "v3.2.8+incompatible"},
+	},
+	"02b6a12b3c6c3ede42761c29c820601ce547b7654d19596e5f7a1cf554198e30": []Modver{
+		{"github.com/etcd-io/etcd", "v3.2.9+incompatible"},
+	},
+	"70c273f379164440a69f81a47507563fe68ae7c33912b71d8e3a7aa2ed039158": []Modver{
+		{"github.com/etcd-io/etcd", "v3.3.0+incompatible"},
+	},
+	"6f4220ec6433fe3d239ef73f43e0188ca752c477ae15a6c7a7c70c9407bef98c": []Modver{
+		{"github.com/etcd-io/etcd", "v3.3.0-rc.0+incompatible"},
+	},
+	"2072931f86bac368add03ac06566cab22bd55769de57acc6bd1be1e7913dafdb": []Modver{
+		{"github.com/etcd-io/etcd", "v3.3.0-rc.1+incompatible"},
+	},
+	"aa9ba018b4d913a46a8a584bf8b31166c6023a01377587fb29148df8d9cd5b2c": []Modver{
+		{"github.com/etcd-io/etcd", "v3.3.0-rc.2+incompatible"},
+	},
+	"6b58f73a01df4f90ec836a4454c8c27c29bad01042e64831b1c13261259ba58e": []Modver{
+		{"github.com/etcd-io/etcd", "v3.3.0-rc.3+incompatible"},
+	},
+	"35b3691764b94162d718cdf4b8667500776ecb5afb9994abd63cd6b2410b6d90": []Modver{
+		{"github.com/etcd-io/etcd", "v3.3.0-rc.4+incompatible"},
+	},
+	"10f3d76b9fe4cdb74f40be71b580dafa79112d7da10571457e207250d0ef9e46": []Modver{
+		{"github.com/etcd-io/etcd", "v3.3.1+incompatible"},
+	},
+	"e13b4764889be28e9c3ee1d2dc72554bf878099b94ab1cbad19f9ee2fb1a7736": []Modver{
+		{"github.com/etcd-io/etcd", "v3.3.10+incompatible"},
+	},
+	"a1f176b191467864c351612c00476d28b4a31c8e951e3655f453617096341200": []Modver{
+		{"github.com/etcd-io/etcd", "v3.3.11+incompatible"},
+	},
+	"1c731041bbd5f5dad5e79753672f6fb7a784697e74fbd7387b13487687c7b2b5": []Modver{
+		{"github.com/etcd-io/etcd", "v3.3.12+incompatible"},
+	},
+	"353487143bb880a24a165fbed2873c0aaf4a2c3537a9cc7f49e2d8c24ba3724c": []Modver{
+		{"github.com/etcd-io/etcd", "v3.3.13+incompatible"},
+	},
+	"445dafd80dfb67dbb32294896cd8304d36acf4a2aeb38f8000277b87d3971ec6": []Modver{
+		{"github.com/etcd-io/etcd", "v3.3.15+incompatible"},
+	},
+	"fc8a30a1fd569eb39023c99551762739b80775ee36557c041ac98cee5ee4944d": []Modver{
+		{"github.com/etcd-io/etcd", "v3.3.16+incompatible"},
+	},
+	"31e70f03d7278989076b649e9b40bf0f78e583e634f5d09a5918caa5709bf4b5": []Modver{
+		{"github.com/etcd-io/etcd", "v3.3.17+incompatible"},
+	},
+	"5a1d1135c721ff28807b43a214b9320f2a6379717c9d0de21d6da61273d120fb": []Modver{
+		{"github.com/etcd-io/etcd", "v3.3.18+incompatible"},
+	},
+	"845e9b777433ca25658a06633084732931c695a2b47512ca7e3e43f29f1d5ff7": []Modver{
+		{"github.com/etcd-io/etcd", "v3.3.19+incompatible"},
+	},
+	"ea94dfd5079064484bbf71b44cfca02d978b2f65eefe6a8e3bb6a10acdd6b87d": []Modver{
+		{"github.com/etcd-io/etcd", "v3.3.2+incompatible"},
+	},
+	"c296563ccf88cdd520da5cb7a97f38271483e1238c42050fc070c72d00e1dc1b": []Modver{
+		{"github.com/etcd-io/etcd", "v3.3.20+incompatible"},
+	},
+	"c8a89ab0a8723b1df9e6ceaa794465ec2c3a08e41107e0f5bd9a21e6ff028093": []Modver{
+		{"github.com/etcd-io/etcd", "v3.3.21+incompatible"},
+	},
+	"4525d7234b154fed7e40a93b93ac855a4e490e0e90bbb7f2ef1129f9e4d518e5": []Modver{
+		{"github.com/etcd-io/etcd", "v3.3.22+incompatible"},
+	},
+	"bc9006d791d4a25df6ff15ad82c7eef9ae3ae5d8bd53cd9d5472b96e2cfd5a52": []Modver{
+		{"github.com/etcd-io/etcd", "v3.3.24+incompatible"},
+	},
+	"7e7f2901857ee0ce7b68e954713abc96c5d45301b2a3a6204192fde6b841d877": []Modver{
+		{"github.com/etcd-io/etcd", "v3.3.25+incompatible"},
+	},
+	"7c69782dde62c58fbf3ad571e4f4abf4b14a82aba04c8884bb9554a653af2bfe": []Modver{
+		{"github.com/etcd-io/etcd", "v3.3.3+incompatible"},
+	},
+	"18f83f16d843fab04feed7aaffe381d690d980aed14065618de9cc4ace1470cf": []Modver{
+		{"github.com/etcd-io/etcd", "v3.3.4+incompatible"},
+	},
+	"058d457e380244598f5aa74b4bbe20aab99c465f15896c213aceecec16d3ce0a": []Modver{
+		{"github.com/etcd-io/etcd", "v3.3.5+incompatible"},
+	},
+	"0376eea55c85e289c3f36335f12d698d962cfb8739e527514e729cb1afd918d3": []Modver{
+		{"github.com/etcd-io/etcd", "v3.3.6+incompatible"},
+	},
+	"cd7741b251439ae6373d39d25182e6f9e205e95053ab2770de86e0116ea02bce": []Modver{
+		{"github.com/etcd-io/etcd", "v3.3.7+incompatible"},
+	},
+	"27ce3602a03c53c66c0da76b220e581c1d38481b7971195693c85ad102c4ea48": []Modver{
+		{"github.com/etcd-io/etcd", "v3.3.8+incompatible"},
+	},
+	"e413edd3588170fdaec3c59673c43136375558a5b93d1b6af7a0977d7023a765": []Modver{
+		{"github.com/etcd-io/etcd", "v3.3.9+incompatible"},
+	},
 	"3750f6f60e8e65a843455c00323fe3be7e79c8ca8bd634de99ca4fcd09ccaa92": []Modver{
 		{"github.com/ethereum/go-ethereum", "v0.4.1"},
 	},
