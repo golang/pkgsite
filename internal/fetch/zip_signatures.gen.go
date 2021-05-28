@@ -2354,6 +2354,594 @@ var ZipSignatures = map[string][]Modver{
 	"28c519ee605b4d78187e5062ac9984f496c9a5f98af0ba44f7959f1385a84a0c": []Modver{
 		{"github.com/ethereum/go-ethereum", "v1.9.7"},
 	},
+	"e572dae095d2b120e67e54e6ac651682dd3b0f1f969ad9feb74ba7148e82a9be": []Modver{
+		{"github.com/influxdata/influxdb", "v0.0.1"},
+	},
+	"d65c74a9dae5007d129d6bc06eb94e9fc4a2adae1f40fbebe860f083c3258035": []Modver{
+		{"github.com/influxdata/influxdb", "v0.0.2"},
+	},
+	"1d94c4ab9972c4c245b510ef2515bea6646f02dc124f63a6927e0cef15e09bb9": []Modver{
+		{"github.com/influxdata/influxdb", "v0.0.3"},
+	},
+	"538bceb0015fa94c96535ee60a46e429ac80393b4d0fdacac25aba11a441afa5": []Modver{
+		{"github.com/influxdata/influxdb", "v0.0.4"},
+	},
+	"655d9caa9f366bde11ff95f27da404fdfba455445f328d00a62d4c70af5c4708": []Modver{
+		{"github.com/influxdata/influxdb", "v0.0.5"},
+	},
+	"23afc5706ef6b2e01cd71b501ea603e6e72f3709f0e4c3fd26d437bf848459da": []Modver{
+		{"github.com/influxdata/influxdb", "v0.0.6"},
+	},
+	"9fe1412fb805542a2d0578eb530b10578740b17658a8c933b3ab3516ba921d41": []Modver{
+		{"github.com/influxdata/influxdb", "v0.0.7"},
+	},
+	"40cf66b3d065fba5c10a4dbd839758a006a4994437958ddb7d2674791faac812": []Modver{
+		{"github.com/influxdata/influxdb", "v0.0.8"},
+	},
+	"cd871589d5a1dc90c46468f3e11066c9d7a6519697c8ea3445bcbb0d63e535b6": []Modver{
+		{"github.com/influxdata/influxdb", "v0.0.9"},
+	},
+	"c76fa748b9b643b4b6dd69463eee14c677e110136b34c28b9bc73cccee860a26": []Modver{
+		{"github.com/influxdata/influxdb", "v0.1.0"},
+	},
+	"0ad5d52ee76e6fbec6a7d710fe3481fb8c98ed5919812bc5ca514853ab190526": []Modver{
+		{"github.com/influxdata/influxdb", "v0.10.0"},
+	},
+	"dd8b185394e3f59b0a14e09c0068025a6e63d9d4e5efe562ca76538d98d9dc78": []Modver{
+		{"github.com/influxdata/influxdb", "v0.10.0-beta1"},
+	},
+	"c9b87e5d8521718f2da21f5941db5f04c47d83e79f9acc087e8bd49b696ea73e": []Modver{
+		{"github.com/influxdata/influxdb", "v0.10.0-beta2"},
+	},
+	"1c08c034b0338828cbc07604dc79f7a5ab313ab474b2acc4068d92d8f8ea47c1": []Modver{
+		{"github.com/influxdata/influxdb", "v0.10.0-rc1"},
+	},
+	"c75341603ac7926d97f705a2e6b586f710c77f8b3b7d251e9691af12830090a6": []Modver{
+		{"github.com/influxdata/influxdb", "v0.10.0-rc2"},
+	},
+	"57e99845b54e0df41a39a10a9bade61cf9dae62eb76583394e4327bd605bf896": []Modver{
+		{"github.com/influxdata/influxdb", "v0.10.1"},
+	},
+	"48db7a11144440c24e2539c2e7b26cc9ad89c59582e38180f6be531136911e00": []Modver{
+		{"github.com/influxdata/influxdb", "v0.10.2"},
+	},
+	"2653359d17c9948913aaa982d6893fcbbcfd3adc1387ee86c6a9db19363d0259": []Modver{
+		{"github.com/influxdata/influxdb", "v0.10.3"},
+	},
+	"8ba4b4148f447b157e922caef44206faa4507d0187d20a2394073cc4a09725be": []Modver{
+		{"github.com/influxdata/influxdb", "v0.11.0"},
+	},
+	"8b2c27f834e2f515ac34c46be71c574256643b2bd737ecbe7aee8e9b3d8dc9ff": []Modver{
+		{"github.com/influxdata/influxdb", "v0.11.0-rc1"},
+	},
+	"4f1a1ae21828413983c3d8fd057742267dfab72a34ccaab23243ad4cc641246a": []Modver{
+		{"github.com/influxdata/influxdb", "v0.11.1"},
+	},
+	"dcc53058b0393fb3912c0f575099b73a41d645f9a3c1db48078cec931455720e": []Modver{
+		{"github.com/influxdata/influxdb", "v0.12.0"},
+	},
+	"15395e44baa1bc002504b7444a7b165db999ec49813b84295453f3ad4bf3f8c4": []Modver{
+		{"github.com/influxdata/influxdb", "v0.12.1"},
+	},
+	"be7dd6ec624bdc5023ef011db9f60f3660304be15bde2b8a6dfcd9b74e66af6a": []Modver{
+		{"github.com/influxdata/influxdb", "v0.12.2"},
+	},
+	"1db58ba175f02d85299a3d6e9e68be6e7adab30edd4b216363d6f562943d9811": []Modver{
+		{"github.com/influxdata/influxdb", "v0.13.0"},
+	},
+	"3f018522d7f2d6238f521c84787ea2ca2966c881b1df5c84f42b5033880bf4f1": []Modver{
+		{"github.com/influxdata/influxdb", "v0.13.0-rc1"},
+	},
+	"4d4898b1098f688dc6e2dee714504764a5fa78c6dd9d5d90b0b6bbdc0a9235e2": []Modver{
+		{"github.com/influxdata/influxdb", "v0.13.0-rc2"},
+	},
+	"7eea763eaeccfb73cf0350595194041f07c06c497e96487718f8aa1316e92554": []Modver{
+		{"github.com/influxdata/influxdb", "v0.2.0"},
+	},
+	"420ac2352e3dde9c94ed01e676213c2ed8c3249ba36030764ea28d2bc6ba7b77": []Modver{
+		{"github.com/influxdata/influxdb", "v0.3.0"},
+	},
+	"127ec9225931c6ca7a68479d8eba190003ede96e5de0a9a1b809b277c68bc898": []Modver{
+		{"github.com/influxdata/influxdb", "v0.3.1"},
+	},
+	"d87c35cfe6feebd1cee6d19a8e89e41060041a89b569968ca4f4e7d22dd87543": []Modver{
+		{"github.com/influxdata/influxdb", "v0.3.2"},
+	},
+	"61d6539f6a2d1aa2587f585334e022235eee8c794db252559dc6cd72f876c3a4": []Modver{
+		{"github.com/influxdata/influxdb", "v0.4.0"},
+	},
+	"0ea1e65125bfbf9c21500f43a1e9e04e83f25c0d5bcdd31892c905d5515b9396": []Modver{
+		{"github.com/influxdata/influxdb", "v0.4.1"},
+	},
+	"7cd0505ef5e844db505a71fe3dda6196f13a2d9eeba6144dc968996ee818fa7d": []Modver{
+		{"github.com/influxdata/influxdb", "v0.4.2"},
+	},
+	"d4b2e97958c92f9b470cb70df950e9e1c7edbdffd60b0d8ef3ea6079ea29e8fd": []Modver{
+		{"github.com/influxdata/influxdb", "v0.4.3"},
+	},
+	"330f024837ea9fc4aefc7aacf749993030e60a15d76555276e1089a70001f953": []Modver{
+		{"github.com/influxdata/influxdb", "v0.4.4"},
+	},
+	"53179fdaedd6a3496fe1579065c0352f776928d673caebb269f68fa0039044a0": []Modver{
+		{"github.com/influxdata/influxdb", "v0.5.0"},
+	},
+	"77f2b8788f72e69652ae44a84664191156310074e155fb7380a392b9d31b238c": []Modver{
+		{"github.com/influxdata/influxdb", "v0.5.0-rc.1"},
+	},
+	"6c600248fd3f020185b490d7a70ede8b2c1a111d69e1b08079092db295a00679": []Modver{
+		{"github.com/influxdata/influxdb", "v0.5.0-rc.2"},
+	},
+	"5e538c20df5730b79f253027597e91000f733cf876adfe42a694ee6a097d3794": []Modver{
+		{"github.com/influxdata/influxdb", "v0.5.0-rc.3"},
+	},
+	"381537b6cb33c9b91e09a5a0c3a93258d1740ec6414282d83c3c2374a6a100ad": []Modver{
+		{"github.com/influxdata/influxdb", "v0.5.0-rc.4"},
+	},
+	"5eeda86c28309e48d4af65ef25d78135eb521d943d791325d9e3183a3f9cf6de": []Modver{
+		{"github.com/influxdata/influxdb", "v0.5.0-rc.5"},
+	},
+	"f48a3d7dedfdef966f96fe809f6f74614ac0f6fd1affe412b7b39867acf32906": []Modver{
+		{"github.com/influxdata/influxdb", "v0.5.0-rc.6"},
+	},
+	"fec3e6488429016773c258c387230d9fd8c16d15678f2bc7c1edeac8967fd2ea": []Modver{
+		{"github.com/influxdata/influxdb", "v0.5.1"},
+	},
+	"0fe1eefc892f6bdfcecf002c30456e95114e2ac409f7af94c76cbc10b5a00c15": []Modver{
+		{"github.com/influxdata/influxdb", "v0.5.10"},
+	},
+	"40aa6b766cfe9a9dee714737ff6aead75451a8b3cbec60a06494e37eb629a360": []Modver{
+		{"github.com/influxdata/influxdb", "v0.5.11"},
+	},
+	"b29bc5339b45fc675f7f2fc14cd128b595d01c577a86e9bafc0552a644081d77": []Modver{
+		{"github.com/influxdata/influxdb", "v0.5.12"},
+	},
+	"4c5752c65ae6618ec2af5641fcecdea9080dfb0ef999911bb8ed8c21bf623f86": []Modver{
+		{"github.com/influxdata/influxdb", "v0.5.2"},
+	},
+	"5560499c6267eaaaebac2c0b3ab93274a05cab905a0da5c74394fb359cf84769": []Modver{
+		{"github.com/influxdata/influxdb", "v0.5.3"},
+	},
+	"6f704b422c99e15e1435cfcc6cad688cb0dcafd536a683051d42d747a56a99ff": []Modver{
+		{"github.com/influxdata/influxdb", "v0.5.4"},
+	},
+	"e766db0cf017fc1b02dcd3b69cc50cf1bb0872d2544f3df3b6bd038cce0c45ea": []Modver{
+		{"github.com/influxdata/influxdb", "v0.5.5"},
+	},
+	"d44d072904aa1a1ef6d592c1bef818546f834446d101f97602328fc6cddc981e": []Modver{
+		{"github.com/influxdata/influxdb", "v0.5.6"},
+	},
+	"8e19c783f30e0b8098095b58f2ffe430177004c119a92f3f787e00709022dd25": []Modver{
+		{"github.com/influxdata/influxdb", "v0.5.7"},
+	},
+	"570787cf621221febd33925ba9f7358f82fce2db6d8f1506733969900fb10e9f": []Modver{
+		{"github.com/influxdata/influxdb", "v0.5.8"},
+	},
+	"6a296c9de73a084e192209a08ecf6df20f262c3fc88ac5cf7ec01061460daf2b": []Modver{
+		{"github.com/influxdata/influxdb", "v0.5.9"},
+	},
+	"d71b24b0a33f9fe8f4300fd8d154b7a24bebf5172020eb47e4e398b3bd4ece11": []Modver{
+		{"github.com/influxdata/influxdb", "v0.6.0"},
+	},
+	"27a98ec89d669d2d4558b97964fc7783a6b4eb65b285a29e9dd193dc2a639918": []Modver{
+		{"github.com/influxdata/influxdb", "v0.6.1"},
+	},
+	"699e6e04df256d4ef520884ed5cf17ea9b18aa23401381ae223bcb7e4ff6876f": []Modver{
+		{"github.com/influxdata/influxdb", "v0.6.2"},
+	},
+	"dc529e8d44a568194ba396e74e37ebc9c4f704bc4d6cc3d88673e124a504d11c": []Modver{
+		{"github.com/influxdata/influxdb", "v0.6.3"},
+	},
+	"2979d61ce70eb1e41596d4659410a7e784de6a59474f29e9b0dacc741791c125": []Modver{
+		{"github.com/influxdata/influxdb", "v0.6.4"},
+	},
+	"3b3be056f492463dc8d44686bda08e8dbee85318d2245e3afc399b6dc7fe030a": []Modver{
+		{"github.com/influxdata/influxdb", "v0.6.5"},
+	},
+	"40cc123cb9d32ebbcf54cd0642aeda645842597467fd1f43d54fdf629767d7a2": []Modver{
+		{"github.com/influxdata/influxdb", "v0.7.0"},
+	},
+	"a38ed9f635c483c7699c28acb7b8835bcd55468d4951a9deed75cd56a910b863": []Modver{
+		{"github.com/influxdata/influxdb", "v0.7.1"},
+	},
+	"38a36594a0613370f6e1ad4217b482a65782951c82566d0e14441d1a0f946fed": []Modver{
+		{"github.com/influxdata/influxdb", "v0.7.2"},
+	},
+	"7265efce35e9839f038cba95d27b3e959f5d3dd93f3a820f03e65082e9e9e879": []Modver{
+		{"github.com/influxdata/influxdb", "v0.7.3"},
+	},
+	"4044bfbca16f18d84db81f218d8b293dc030d08cae8fa31a6a593567c57c8bb2": []Modver{
+		{"github.com/influxdata/influxdb", "v0.8.0"},
+	},
+	"b47da04d8b8cd552319441db4744eb8ebc8e2e37f63e3d75053c783e5f7958f0": []Modver{
+		{"github.com/influxdata/influxdb", "v0.8.0-rc.1"},
+	},
+	"e688a774a12256b87c73218ffede05f76b53d6fba66df0131d861b136019bf30": []Modver{
+		{"github.com/influxdata/influxdb", "v0.8.0-rc.2"},
+	},
+	"66b0261a54a102a63ac0f882a2bd0d281e46272a53f92f013b36ea186411a4bc": []Modver{
+		{"github.com/influxdata/influxdb", "v0.8.0-rc.3"},
+	},
+	"c1743dbf28b90dc00a4ea092ca54036c3deafe88656d69e1dc799b2c788d3437": []Modver{
+		{"github.com/influxdata/influxdb", "v0.8.0-rc.4"},
+	},
+	"3c9bbe9791d2f5cb1975200a6e8a8a1f52abe713959d2cb7cb1a4882ace0089f": []Modver{
+		{"github.com/influxdata/influxdb", "v0.8.0-rc.5"},
+	},
+	"601a05df2a611b13b66392c9796b523234076f215fe03844ef3478bcb78f3b1c": []Modver{
+		{"github.com/influxdata/influxdb", "v0.8.1"},
+	},
+	"997471cd2e30bfc17352b6cf47000cda75b7d5d1ecc68f9b8396a681489b4f8d": []Modver{
+		{"github.com/influxdata/influxdb", "v0.8.2"},
+	},
+	"c079fed686056beb16bf3ee963fb8cc2faaaa51e6fb4bfc7450f74742375351d": []Modver{
+		{"github.com/influxdata/influxdb", "v0.8.3"},
+	},
+	"a8d8861c330dad8c3aab7bf262d61d9680d204e3d80b2509c5841aa5c43c8bc1": []Modver{
+		{"github.com/influxdata/influxdb", "v0.8.4"},
+	},
+	"8df4e7915a77321e7604b22bdcc0970db2d16c2db8dd0d14388cefb9302487e8": []Modver{
+		{"github.com/influxdata/influxdb", "v0.8.4-rc.1"},
+	},
+	"59cdec7511324be044994dbf76d87f81bb014c6ca817dc1ce3ecaea10a35005c": []Modver{
+		{"github.com/influxdata/influxdb", "v0.8.5"},
+	},
+	"a883c82d13ffabd7012fe5052bd72a9fbbae5c6ab2507f3d570cb6c8d2eedcc4": []Modver{
+		{"github.com/influxdata/influxdb", "v0.8.7"}, {"github.com/influxdata/influxdb", "v0.8.6"},
+	},
+	"c9f383b654fef959340028966ce1af8a3c0917f94a2fc136688daa9facc11df3": []Modver{
+		{"github.com/influxdata/influxdb", "v0.8.8"},
+	},
+	"f78cc7680c94554193998a96d60e7682540f6f1666f7bb9f6be5bae9fe3102c3": []Modver{
+		{"github.com/influxdata/influxdb", "v0.9.0"},
+	},
+	"430ff7d269193f426a46c241951f7c965204c85951d78cee798c4d9fb0c4cd48": []Modver{
+		{"github.com/influxdata/influxdb", "v0.9.0-rc10"},
+	},
+	"e7a509222406c99c7da09954eb016f1c15e4070feadc5caa8481b9fdf49d3c3d": []Modver{
+		{"github.com/influxdata/influxdb", "v0.9.0-rc11"},
+	},
+	"c60fc9025042a1d2cc5f219a99f6571591bfc15fc105d7416de64c470a975009": []Modver{
+		{"github.com/influxdata/influxdb", "v0.9.0-rc12"},
+	},
+	"bc93d85b963e4f311e6b6585a1dfb68f5a029ab707c41d38b7bb64a50399d77b": []Modver{
+		{"github.com/influxdata/influxdb", "v0.9.0-rc13"},
+	},
+	"8d5a41f2d9b5333906996dda9dd6fdb09be05a09fb82fab9179633d92dc7bb64": []Modver{
+		{"github.com/influxdata/influxdb", "v0.9.0-rc14"},
+	},
+	"a12833d177b7fe4f360e24c6cf49fb65546c254a74c23c9ebb21134372561322": []Modver{
+		{"github.com/influxdata/influxdb", "v0.9.0-rc15"},
+	},
+	"116b7d0455c4f14d632826f63bc4d19125026850d2a47f7cb26b69b1f5e0e99d": []Modver{
+		{"github.com/influxdata/influxdb", "v0.9.0-rc16"},
+	},
+	"455e31dd0041369cfcdca018ff322146e3169af60ec108d82110c42c8b5f98d2": []Modver{
+		{"github.com/influxdata/influxdb", "v0.9.0-rc17"},
+	},
+	"e9bdbfbe8a26646a7bd7e5727cd113a5fa8eef6737df945321a1a4e0a269cff9": []Modver{
+		{"github.com/influxdata/influxdb", "v0.9.0-rc18"},
+	},
+	"c081386d4b0eea8886ed32d383505c9e6a05c5432880e5a4462cfbd5e218aacb": []Modver{
+		{"github.com/influxdata/influxdb", "v0.9.0-rc19"},
+	},
+	"dea1779ab2b7edeea555924dd4aebfe97fbb7527a4e7e5fda2823db1c332522e": []Modver{
+		{"github.com/influxdata/influxdb", "v0.9.0-rc2"},
+	},
+	"f223f56bffd880cea85d61334dfcf60d00522f82cf71c20b7099bec64c9e8b14": []Modver{
+		{"github.com/influxdata/influxdb", "v0.9.0-rc20"},
+	},
+	"fb718b52fb2d2dc6fbf46a31cfb2847ec4f6138cf8b87fab304c15f7b7d7f668": []Modver{
+		{"github.com/influxdata/influxdb", "v0.9.0-rc21"},
+	},
+	"12d5b33b431d46275d1eae211f7eb898d4705d5232cd037ed543c6beea9e4e52": []Modver{
+		{"github.com/influxdata/influxdb", "v0.9.0-rc22"},
+	},
+	"6c40a9f5b000f4d8dc5072f00d3e90d1cc57e28e6a746aceb615060d6251c3c9": []Modver{
+		{"github.com/influxdata/influxdb", "v0.9.0-rc23"},
+	},
+	"da9473b13822c62c3f6fd9d974daa10c9d6b8c9ca6bc3f68190a3083635a2406": []Modver{
+		{"github.com/influxdata/influxdb", "v0.9.0-rc24"},
+	},
+	"06c801ed961c8a8e5f0c60a00d2591d13c3951f23f876b192ceb781a2f8ebb1e": []Modver{
+		{"github.com/influxdata/influxdb", "v0.9.0-rc25"},
+	},
+	"7dd91de38cd4bf528ba75249e8e2b2c920bd29be053722482887d7c2d991630a": []Modver{
+		{"github.com/influxdata/influxdb", "v0.9.0-rc26"},
+	},
+	"bae003e7563cb9cb9882b3ee41e91f72b4b494232fb74bddbe18ccf9f0402b09": []Modver{
+		{"github.com/influxdata/influxdb", "v0.9.0-rc27"},
+	},
+	"53599fbd94bf4600bbe9cb2e8297003c62482ff67ce43edcb9321533500fd18f": []Modver{
+		{"github.com/influxdata/influxdb", "v0.9.0-rc28"},
+	},
+	"ba86dca09585b430ce83a24e5376e82198c23f85f49204314a2e37a1a765ab23": []Modver{
+		{"github.com/influxdata/influxdb", "v0.9.0-rc29"},
+	},
+	"0d133256548112f5c0a4ab74c63f3250fed443ede5c4fa484e0ffd8d57cde94d": []Modver{
+		{"github.com/influxdata/influxdb", "v0.9.0-rc3"},
+	},
+	"b8e5ff33e33412e014d638b8eba2c7239f8516a6419b6c57c6e5dcad6205bc7a": []Modver{
+		{"github.com/influxdata/influxdb", "v0.9.0-rc30"},
+	},
+	"f9482391f56da40ec7eddc382a09f5b5a980e423a8521c53da9dae74b5c0c645": []Modver{
+		{"github.com/influxdata/influxdb", "v0.9.0-rc31"},
+	},
+	"131091d4d359021d056f4a700f775978c14b6cb377ecc53ca9ca5199567ef4bf": []Modver{
+		{"github.com/influxdata/influxdb", "v0.9.0-rc32"},
+	},
+	"f2f7e01b3b9d235f388a1414b3449268691c1966af5ee8c4ce35d61a6ccd94a9": []Modver{
+		{"github.com/influxdata/influxdb", "v0.9.0-rc33"},
+	},
+	"6effc7a3c8ea9320afb8804f93e8415911eb60971e6219678d4946a3d1e500a3": []Modver{
+		{"github.com/influxdata/influxdb", "v0.9.0-rc4"},
+	},
+	"1d62d57d095e78f0b80ead6a67b97e6af9304ad62da51d54cddacf11e2df0c95": []Modver{
+		{"github.com/influxdata/influxdb", "v0.9.0-rc5"},
+	},
+	"a7fe67eb351c8acdbe24dd8f0837219476dd4abe6a6e43f705692cc4946b6b14": []Modver{
+		{"github.com/influxdata/influxdb", "v0.9.0-rc6"},
+	},
+	"2132ab2b15a26b131f59f96c4c5a84352d2473459de3778e1d4abe15cc51f63c": []Modver{
+		{"github.com/influxdata/influxdb", "v0.9.0-rc7"},
+	},
+	"20902abc7ae8f861ac735fceb730f6770fba60164374e56ad647a089335be8ba": []Modver{
+		{"github.com/influxdata/influxdb", "v0.9.0-rc8"},
+	},
+	"7aa9491eec219a8aa663327e7e587bdb855a777235c178a2d1bdfab1caaa8102": []Modver{
+		{"github.com/influxdata/influxdb", "v0.9.0-rc9"},
+	},
+	"4dc3e6abb792a6196f195b0bf7019a4c89332d991e399418b7a1c9fca9f54c80": []Modver{
+		{"github.com/influxdata/influxdb", "v0.9.1"},
+	},
+	"aa8054418d8a537ec125992b90cfb97c50e1fb7eb34730cfc5ab1a4f23ca41e7": []Modver{
+		{"github.com/influxdata/influxdb", "v0.9.1-rc1"},
+	},
+	"a5cb7d181ca74acc3aa611df59dd58fd6f779d33f6a528ebb1074f9a15e4d30b": []Modver{
+		{"github.com/influxdata/influxdb", "v0.9.1-rc2"},
+	},
+	"d2402ac27990b797befc613a3377052400487b88e7c491f2c244ffc67e4e8698": []Modver{
+		{"github.com/influxdata/influxdb", "v0.9.2"},
+	},
+	"c9aa9a0d7ad5239e9abc8b7b3417b440c6406210eeaa14c1693e257b53fae6d4": []Modver{
+		{"github.com/influxdata/influxdb", "v0.9.2-rc1"},
+	},
+	"a1ed75b962b82db9849eb78894ffbfe10167dd2a1926bed52702c956863c6431": []Modver{
+		{"github.com/influxdata/influxdb", "v0.9.3"},
+	},
+	"a00fe0b768cbdd691c40e53566b18ac9d328342a505d4b91207349e84d4e2c81": []Modver{
+		{"github.com/influxdata/influxdb", "v0.9.3-rc1"},
+	},
+	"fc80196db0060802e20ad686b4ef62a9bc5fb1325094dc8618999265995e25d9": []Modver{
+		{"github.com/influxdata/influxdb", "v0.9.3-rc2"},
+	},
+	"01618e8499318bd5854e204987fb2fd62623bc1bb7cc770cfae835a49bd1fc90": []Modver{
+		{"github.com/influxdata/influxdb", "v0.9.3-rc3"},
+	},
+	"a0a78d427374cfc9424f6b049ff905070bf19ee91c481bf7c39428fd1f1e557b": []Modver{
+		{"github.com/influxdata/influxdb", "v0.9.4"},
+	},
+	"d4d091d6caba681350f1bcd1206415fb61c7e48c5fd446ca2d3171e195efb4aa": []Modver{
+		{"github.com/influxdata/influxdb", "v0.9.4-rc1"},
+	},
+	"26c3bd99342219379a9bf381c3791f3d0bcc155447206bdd01418808f24533e8": []Modver{
+		{"github.com/influxdata/influxdb", "v0.9.5"},
+	},
+	"d58d6d1e2d08c96e1031b9fc44438e32472e2f9a1454b604b6bc4dc63e0749b6": []Modver{
+		{"github.com/influxdata/influxdb", "v0.9.5-rc1"},
+	},
+	"523dea4b643942f9f51395e0e5182deae09c2044bb424be6b6cdb068710ca76d": []Modver{
+		{"github.com/influxdata/influxdb", "v0.9.5-rc2"},
+	},
+	"c1cc438b9e384b544b77f49e8ca583a1f5228c6495e0e54d58bda29456412711": []Modver{
+		{"github.com/influxdata/influxdb", "v0.9.5-rc3"},
+	},
+	"7f90a853f2bd5d4a9baa636e399db5d36bf6c7b7886fbda31f58c476265256d4": []Modver{
+		{"github.com/influxdata/influxdb", "v0.9.6-rc1"},
+	},
+	"6995f13baee0bf325e21eefa6076b553afb2c45950441e559bf8a1ccf710619f": []Modver{
+		{"github.com/influxdata/influxdb", "v0.9.6-rc2"}, {"github.com/influxdata/influxdb", "v0.9.6"},
+	},
+	"ac34180e35e6c5d660ff56765c2f36cebd0ac6be9a05e09dd8497864018d2518": []Modver{
+		{"github.com/influxdata/influxdb", "v1.0.0"},
+	},
+	"14574eff800a6ca5f0792fc4ce1f2ef5c4173475fef0dca76d17dbaea3872efb": []Modver{
+		{"github.com/influxdata/influxdb", "v1.0.0-beta1"},
+	},
+	"b231b0a2d55a662812523490b4a7822e0ff805e23278dda877e9ef6c9fa67f7a": []Modver{
+		{"github.com/influxdata/influxdb", "v1.0.0-beta2"},
+	},
+	"7cc16103dd57da486f751cbb0c5810322a23cc9dd2b5bef257d546d48d6c8a47": []Modver{
+		{"github.com/influxdata/influxdb", "v1.0.0-beta3"},
+	},
+	"698821e2ecc817e210e4775baaae3febb735fc516eeb921dea0a30677a595290": []Modver{
+		{"github.com/influxdata/influxdb", "v1.0.0-rc1"},
+	},
+	"f97fae67b4406dec9d6c406f48db7f548e4f2c8e522c33105e56bf1dfa0639e9": []Modver{
+		{"github.com/influxdata/influxdb", "v1.0.0-rc2"},
+	},
+	"fa803a256392483e324ad1be602eae1dfb2584bdaec4230239939dbb21354419": []Modver{
+		{"github.com/influxdata/influxdb", "v1.0.1"},
+	},
+	"7281141a714ecaabae1fa76c4a6769d7042750557ee4a71dba102bee157758fe": []Modver{
+		{"github.com/influxdata/influxdb", "v1.0.2"},
+	},
+	"0a8ff4f7ffd01f12ae6be4919814e9539abe2189f908b0b085adfdf40897e5b7": []Modver{
+		{"github.com/influxdata/influxdb", "v1.1.0"},
+	},
+	"2845ec333ab4d5a40f1cff9b9185669d4dabe7ffbc6698980a1e38172d91051c": []Modver{
+		{"github.com/influxdata/influxdb", "v1.1.0-rc1"},
+	},
+	"7eec0c25f63c21933720ffdf38ea3ae021e286f862fbe363863aa8cf898a0d9a": []Modver{
+		{"github.com/influxdata/influxdb", "v1.1.0-rc2"},
+	},
+	"599856a08105b0bd35aedd73f2f08c1583ba1bc215edd38e5a05fd753171a983": []Modver{
+		{"github.com/influxdata/influxdb", "v1.1.1"},
+	},
+	"e31d89909c3ac4a8168edb489321f2987b861a645e2c03d922ada7f5b47d6965": []Modver{
+		{"github.com/influxdata/influxdb", "v1.1.2"},
+	},
+	"9ca50a73386e0a5fc9e52eca963bbc1eee99d8b2919b400d18194604ffb66cb7": []Modver{
+		{"github.com/influxdata/influxdb", "v1.1.3"},
+	},
+	"bd123a76fd10de74f9376c3e1ce97942cb0dd979a32315d4c23e6a87402bdcfa": []Modver{
+		{"github.com/influxdata/influxdb", "v1.1.4"},
+	},
+	"b086888bdc34f34d4eac65915e62348692c1c8f967ba51b364df955bef4719df": []Modver{
+		{"github.com/influxdata/influxdb", "v1.1.5"},
+	},
+	"833b1ab70b8c6004bcce3198a28d6dafc0a8a7589c9c2e1a4e99f97e728f315d": []Modver{
+		{"github.com/influxdata/influxdb", "v1.2.0"},
+	},
+	"ad0d577f29401cf78cfc41b4f373b5bb8695725e4ef0be14931efd32f8286267": []Modver{
+		{"github.com/influxdata/influxdb", "v1.2.0-rc1"},
+	},
+	"16caf1452688b2fbdfd99426f428ed81462397609b8b7e8921f0e2f4b2ea0b79": []Modver{
+		{"github.com/influxdata/influxdb", "v1.2.0-rc2"},
+	},
+	"d46426dc6b2c940de8d39e7f5cf4fcb7ee29ac26e500891b2035a43366595d1d": []Modver{
+		{"github.com/influxdata/influxdb", "v1.2.1"},
+	},
+	"44286cb44cfa86b2102bd4dd7e5ab1e0cb3ad6d1d11a481d20df74eaac3e172f": []Modver{
+		{"github.com/influxdata/influxdb", "v1.2.1-rc1"},
+	},
+	"b0f66a5f03a76138e1a5795e247c18dc05b69cc5cc08c517b55e1ae7955d7bab": []Modver{
+		{"github.com/influxdata/influxdb", "v1.2.1-rc2"},
+	},
+	"29d3de0e3adf4b2c77df17b4eac38d9b61d495f3efb04dd8b795c20682ea8877": []Modver{
+		{"github.com/influxdata/influxdb", "v1.2.1-rc3"},
+	},
+	"857e384199f84f0b9bb868c9857ebcf67cf8bf6fe7f3dca0a50853836034a851": []Modver{
+		{"github.com/influxdata/influxdb", "v1.2.1-rc4"},
+	},
+	"6d3b6e5dd33476d42df85db15a8e6733d2539d1f9339ad2eedb0cfc4f28d7b4b": []Modver{
+		{"github.com/influxdata/influxdb", "v1.2.1-rc5"},
+	},
+	"ee1105310c463b6172a10bc901827476fc1dc5c7e9a29cf3637545de2217068d": []Modver{
+		{"github.com/influxdata/influxdb", "v1.2.2"},
+	},
+	"add18b877815bcc5daeed6713c97e6ea76c2f308237ef736f31ea609d8ed0e04": []Modver{
+		{"github.com/influxdata/influxdb", "v1.2.3"},
+	},
+	"c57e99099b5fefd8c35ab5fd161e4bb4c93308cf3e984890089fd36d6c967444": []Modver{
+		{"github.com/influxdata/influxdb", "v1.2.4"},
+	},
+	"f7c5db7f35d31a84f4df1b5b00ef923b57ceac8986732da24b2f33437a17190a": []Modver{
+		{"github.com/influxdata/influxdb", "v1.3.0"},
+	},
+	"65d9e43e5b261db5b895094ea8004047448c4c63fb67daa13699159a8a736139": []Modver{
+		{"github.com/influxdata/influxdb", "v1.3.1"},
+	},
+	"f0a6cf8bd75a7faeceae6fa93e45fa51149433669b09db6faa0f67a3925583e7": []Modver{
+		{"github.com/influxdata/influxdb", "v1.3.2"},
+	},
+	"004e653b5b5988ecb9e3ae3b73988e2e61d176ca219ac50097e935b385b192c7": []Modver{
+		{"github.com/influxdata/influxdb", "v1.3.3"},
+	},
+	"31f1dd652c0e61e73f2455088e4e7056d31492aeb3807180c786b0452e21db23": []Modver{
+		{"github.com/influxdata/influxdb", "v1.3.4"},
+	},
+	"1a8baa42d195668597a209ea1a6f06f693e54bb8d83414f1146285f8e0d69740": []Modver{
+		{"github.com/influxdata/influxdb", "v1.3.5"},
+	},
+	"0650886739532719e2b4b049b524974dc5d80abcc3cd1a419289f144f273055b": []Modver{
+		{"github.com/influxdata/influxdb", "v1.3.6"},
+	},
+	"f1fbba21110769792c3756df4325163a71161a7f1c20c90c66dbec61e7a59996": []Modver{
+		{"github.com/influxdata/influxdb", "v1.3.7"},
+	},
+	"dd69c7f9b11fb43ba5a758ad95102cfb91b403836bce62812ffcaf2ecdf71863": []Modver{
+		{"github.com/influxdata/influxdb", "v1.3.8"},
+	},
+	"7ab3d0e0a23a5aafb7ba3a70d06b8ec8acd1721ad316583d5b9bdf818f92d00f": []Modver{
+		{"github.com/influxdata/influxdb", "v1.3.9"},
+	},
+	"47190fca367b7c147bcaac613ae05f70b3b4fc8900af944b9fe608efdc3cfa58": []Modver{
+		{"github.com/influxdata/influxdb", "v1.4.0"},
+	},
+	"926334e61d5dc18c0fae520f602277bb31fde23cefef83f6c19bc31cb7b29161": []Modver{
+		{"github.com/influxdata/influxdb", "v1.4.1"},
+	},
+	"f06d7c0575f174520f8fb60cc4f7f9e2184f777f512dc66bd9c04c77fed77965": []Modver{
+		{"github.com/influxdata/influxdb", "v1.4.2"},
+	},
+	"718d6512470136c9dc7a8eff1ae7e1704863deb8d86f51f09c04024ea4def3bd": []Modver{
+		{"github.com/influxdata/influxdb", "v1.4.3"},
+	},
+	"46b9b4ae700edef8d0547d20756a3ed80e8b1cf8c8418df8db77b54189b53e45": []Modver{
+		{"github.com/influxdata/influxdb", "v1.5.0"},
+	},
+	"f91dff7c605025ad84c03bed46af2a1fba2782aa6ae38148498a261e035722b9": []Modver{
+		{"github.com/influxdata/influxdb", "v1.5.1"},
+	},
+	"6a37edcc1f85532fdb9febb6f75a9075ab10948dd072a7d566120d2c3e4c0381": []Modver{
+		{"github.com/influxdata/influxdb", "v1.5.2"},
+	},
+	"a92d94922dac5efa1edebcb7856d6e200ab7a5777f842f633a8204e8f599f837": []Modver{
+		{"github.com/influxdata/influxdb", "v1.5.3"},
+	},
+	"1d2acbbf74e3a053defcf8f6092df75ac8aa4a1039348026bccdcd297c4d03cf": []Modver{
+		{"github.com/influxdata/influxdb", "v1.5.4"},
+	},
+	"62daaad3a4d06e317aa76b3dfdc52d7e49ce712124f9db50a9f7f8b85d6d14d2": []Modver{
+		{"github.com/influxdata/influxdb", "v1.5.5"},
+	},
+	"524f7a217031800a32b1a95d4086f520ff81e87fda20e3343da3a3d6e7707c6a": []Modver{
+		{"github.com/influxdata/influxdb", "v1.6.0"},
+	},
+	"61bf59b9c5b9aa206ee14411b8ece103e9cb85019a13e7e42727685daa0d8d5d": []Modver{
+		{"github.com/influxdata/influxdb", "v1.6.1"},
+	},
+	"5f80c3636ce7d047fe752594df04397f75a88be1a84b4c531d517b12bb26eb09": []Modver{
+		{"github.com/influxdata/influxdb", "v1.6.1-exp-2-tr"},
+	},
+	"c47d30216d700df43065a7dbcd771bf3401b1ced0debcf2bee74ce2d53c5bdf8": []Modver{
+		{"github.com/influxdata/influxdb", "v1.6.1-exp-tr"},
+	},
+	"738a536977530a5b935ad9cded00295b09fb7013f29c269090eed0f48dad371b": []Modver{
+		{"github.com/influxdata/influxdb", "v1.6.2"},
+	},
+	"bca1d9a6568e342485b427ca07fe57292b769a83cae0eb602b1d2631b1fb2199": []Modver{
+		{"github.com/influxdata/influxdb", "v1.6.3"},
+	},
+	"1c16b300f33674d20d2d5c630ea7f501a0a2f01588708720011e1baacdf4e407": []Modver{
+		{"github.com/influxdata/influxdb", "v1.6.4"},
+	},
+	"bc2a3256b675b0f061eae3613df09293d9fb0afdb78eb8090e5005937c95c3ff": []Modver{
+		{"github.com/influxdata/influxdb", "v1.6.5"},
+	},
+	"79d31dec85c15666e15ef4e73e644f4d9a5621e7faa28ac4cc750c81b7d8ba1f": []Modver{
+		{"github.com/influxdata/influxdb", "v1.6.6"},
+	},
+	"596cf94092efc4a647cf35bad265398097cbdde2869c4144f886d41263fe33bd": []Modver{
+		{"github.com/influxdata/influxdb", "v1.7.0"},
+	},
+	"947dbd17e3e45fa7170f7f04caf7ad4ba3ca158c61caefde3bc369adf07d13f8": []Modver{
+		{"github.com/influxdata/influxdb", "v1.7.1"},
+	},
+	"0370a7e5fb2a3eae2bea2b3eabc64d9d3c62b078143f8d136dd0a8f8a9b72683": []Modver{
+		{"github.com/influxdata/influxdb", "v1.7.2"},
+	},
+	"554e9cdd21a0dcda7aaf7302cfce1d4b429e5424cf08a89661c8eccd6f64bbee": []Modver{
+		{"github.com/influxdata/influxdb", "v1.7.3"},
+	},
+	"b810008d7f77b9851df013bdf7433271afee9fe5966745a881099c64568f3de1": []Modver{
+		{"github.com/influxdata/influxdb", "v1.7.4"},
+	},
+	"8019aab393aba9589ca6b3d63e2560bff802dc494a145e7f5c3f429ff532011b": []Modver{
+		{"github.com/influxdata/influxdb", "v1.7.5"},
+	},
+	"325b534151fd86a00ff17c502c2061b0c4246094a7a3828978e9d6752ea53aa8": []Modver{
+		{"github.com/influxdata/influxdb", "v1.7.6"},
+	},
+	"ab5ed8f4f99c7a9781338e7fb22e85951e8d8253f79a86b663ce0386fcc93eee": []Modver{
+		{"github.com/influxdata/influxdb", "v1.7.7"},
+	},
+	"ebb10a8838b15173fb15c09b47a88a0f618f8d95ef082439c9a11357150c9cfe": []Modver{
+		{"github.com/influxdata/influxdb", "v1.7.8"},
+	},
+	"32e41ef7f06a99730ba87d22a8632cc18ed79ee79ea5f7bf48c0547f6052990d": []Modver{
+		{"github.com/influxdata/influxdb", "v1.7.9-dev1"},
+	},
 	"3ce659650444223e69accec5f74f43e6e123691d7fb5dabecf6a6d10ebeb699b": []Modver{
 		{"github.com/kubernetes/kubernetes", "v0.10.0"},
 	},
