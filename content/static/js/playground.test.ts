@@ -24,8 +24,18 @@ func main() {
 
   io.WriteString( os.Stdout, s)    // Ignoring error for simplicity.
 
+  // HTML special characters: & ' < > "
 }
 `;
+
+const escapeHTML = (s: string) => {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/'/g, '&#39;')
+    .replace(/"/g, '&#34;');
+};
 
 describe('PlaygroundExampleController', () => {
   let example: HTMLDetailsElement;
@@ -39,7 +49,7 @@ describe('PlaygroundExampleController', () => {
       <div class="Documentation-exampleDetailsBody">
       <p>Code:</p>
 
-      <pre class="Documentation-exampleCode">${codeSnippet}</pre>
+      <pre class="Documentation-exampleCode">${escapeHTML(codeSnippet)}</pre>
 
       <pre>
         <span class="Documentation-exampleOutputLabel">Output:</span>

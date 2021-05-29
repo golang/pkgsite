@@ -106,7 +106,7 @@ export class PlaygroundExampleController {
     const t = document.createElement('textarea');
     t.classList.add('Documentation-exampleCode');
     t.spellcheck = false;
-    t.value = el?.innerHTML ?? '';
+    t.value = el?.textContent ?? '';
     el?.parentElement?.replaceChild(t, el);
     return t;
   }
