@@ -11,18 +11,27 @@ attributes.
 <li class="Documentation-indexVariables"><a href="#pkg-variables">Variables</a></li>
 <li class="Documentation-indexFunction">
 <a href="#F">func F()</a></li>
-<li class="Documentation-indexType"><a href="#A">type A</a></li>
-<li class="Documentation-indexType"><a href="#B">type B</a></li>
-<li class="Documentation-indexType"><a href="#I1">type I1</a></li>
-<li class="Documentation-indexType"><a href="#I2">type I2</a></li>
-<li class="Documentation-indexType"><a href="#S1">type S1</a></li>
-<li class="Documentation-indexType"><a href="#S2">type S2</a></li>
-<li class="Documentation-indexType"><a href="#T">type T</a></li>
+<li class="Documentation-indexType">
+<a href="#A">type A</a></li>
+<li class="Documentation-indexType">
+<a href="#B">type B</a></li>
+<li class="Documentation-indexType">
+<a href="#I1">type I1</a></li>
+<li class="Documentation-indexType">
+<a href="#I2">type I2</a></li>
+<li class="Documentation-indexType">
+<a href="#S1">type S1</a></li>
+<li class="Documentation-indexType">
+<a href="#S2">type S2</a></li>
+<li class="Documentation-indexType">
+<a href="#T">type T</a></li>
 <li><ul class="Documentation-indexTypeFunctions">
-<li><a href="#TF">func TF() T</a></li>
+<li>
+<a href="#TF">func TF() T</a></li>
 </ul></li>
 <li><ul class="Documentation-indexTypeMethods">
-<li><a href="#T.M">func (T) M()</a></li>
+<li>
+<a href="#T.M">func (T) M()</a></li>
 </ul></li>
 <li class="Documentation-indexNote"><a href="#pkg-note-BUG">Bugs</a></li></ul>
 </section><h3 tabindex="-1" id="pkg-constants" class="Documentation-constantsHeader">Constants <a href="#pkg-constants">¶</a></h3>

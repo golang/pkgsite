@@ -8,26 +8,36 @@
 <li class="Documentation-indexConstants"><a href="#pkg-constants">Constants</a></li>
 <li class="Documentation-indexVariables"><a href="#pkg-variables">Variables</a></li>
 <li class="Documentation-indexFunction">
-<a href="#BadF">func BadF()</a><span class="Documentation-indexDeprecated">deprecated</span></li>
+<a class="js-deprecatedTagLink" href="#BadF">func BadF()</a><span class="Documentation-indexDeprecated Documentation-deprecatedTag">deprecated</span></li>
 <li class="Documentation-indexFunction">
 <a href="#GoodF">func GoodF()</a></li>
-<li class="Documentation-indexType"><a href="#BadT">type BadT</a><span class="Documentation-indexDeprecated">deprecated</span></li>
+<li class="Documentation-indexType">
+<a class="js-deprecatedTagLink" href="#BadT">type BadT</a><span class="Documentation-indexDeprecated Documentation-deprecatedTag">deprecated</span></li>
 <li><ul class="Documentation-indexTypeFunctions">
-<li><a href="#NewBadTBad">func NewBadTBad() BadT</a><span class="Documentation-indexDeprecated">deprecated</span></li>
-<li><a href="#NewBadTGood">func NewBadTGood() BadT</a></li>
+<li>
+<a class="js-deprecatedTagLink" href="#NewBadTBad">func NewBadTBad() BadT</a><span class="Documentation-indexDeprecated Documentation-deprecatedTag">deprecated</span></li>
+<li>
+<a href="#NewBadTGood">func NewBadTGood() BadT</a></li>
 </ul></li>
 <li><ul class="Documentation-indexTypeMethods">
-<li><a href="#BadT.BadM">func (BadT) BadM()</a><span class="Documentation-indexDeprecated">deprecated</span></li>
-<li><a href="#BadT.GoodM">func (BadT) GoodM()</a></li>
+<li>
+<a class="js-deprecatedTagLink" href="#BadT.BadM">func (BadT) BadM()</a><span class="Documentation-indexDeprecated Documentation-deprecatedTag">deprecated</span></li>
+<li>
+<a href="#BadT.GoodM">func (BadT) GoodM()</a></li>
 </ul></li>
-<li class="Documentation-indexType"><a href="#GoodT">type GoodT</a></li>
+<li class="Documentation-indexType">
+<a href="#GoodT">type GoodT</a></li>
 <li><ul class="Documentation-indexTypeFunctions">
-<li><a href="#NewGoodTBad">func NewGoodTBad() GoodT</a><span class="Documentation-indexDeprecated">deprecated</span></li>
-<li><a href="#NewGoodTGood">func NewGoodTGood() GoodT</a></li>
+<li>
+<a class="js-deprecatedTagLink" href="#NewGoodTBad">func NewGoodTBad() GoodT</a><span class="Documentation-indexDeprecated Documentation-deprecatedTag">deprecated</span></li>
+<li>
+<a href="#NewGoodTGood">func NewGoodTGood() GoodT</a></li>
 </ul></li>
 <li><ul class="Documentation-indexTypeMethods">
-<li><a href="#GoodT.BadM">func (GoodT) BadM()</a><span class="Documentation-indexDeprecated">deprecated</span></li>
-<li><a href="#GoodT.GoodM">func (GoodT) GoodM()</a></li>
+<li>
+<a class="js-deprecatedTagLink" href="#GoodT.BadM">func (GoodT) BadM()</a><span class="Documentation-indexDeprecated Documentation-deprecatedTag">deprecated</span></li>
+<li>
+<a href="#GoodT.GoodM">func (GoodT) GoodM()</a></li>
 </ul></li>
 </ul>
 </section><h3 tabindex="-1" id="pkg-constants" class="Documentation-constantsHeader">Constants <a href="#pkg-constants">¶</a></h3>
@@ -59,23 +69,30 @@ Deprecated: use GoodC.
 </section>
 <h3 tabindex="-1" id="pkg-functions" class="Documentation-functionsHeader">Functions <a href="#pkg-functions">¶</a></h3>
 <section class="Documentation-functions"><div class="Documentation-function">
-<details class="Documentation-deprecatedDetails">
+<details class="Documentation-deprecatedDetails js-deprecatedDetails">
 <summary>
 <h4 tabindex="-1" id="BadF" data-kind="function" class="Documentation-functionHeader">
-<span>
-func <a class="Documentation-source" href="src">BadF</a> <a class="Documentation-idLink" href="#BadF">¶</a>
-<span class="Documentation-deprecatedBody">deprecated</span>
+<span class="Documentation-deprecatedTitle">
+func <a class="Documentation-source" href="src">BadF</a>
+<span class="Documentation-deprecatedTag">deprecated</span>
+<span class="Documentation-deprecatedBody"></span>
 </span>
 <span class="Documentation-sinceVersion">
 </span>
 </h4>
 </summary>
+<div class="Documentation-deprecatedItemBody">
+<div class="Documentation-deprecatedMessage">
+<img class="go-Icon" height="24" width="24" src="/static/icon/alert_gm_grey_24dp.svg" alt="">
+This function has been deprecated.
+</div>
 <div class="Documentation-declaration">
 <pre>func BadF()</pre>
 </div>
 <p>BadF is bad.
 Deprecated: use GoodF.
 </p>
+</div>
 </details>
 </div><div class="Documentation-function">
 <h4 tabindex="-1" id="GoodF" data-kind="function" class="Documentation-functionHeader">
@@ -89,17 +106,23 @@ Deprecated: use GoodF.
 </div></section>
 <h3 tabindex="-1" id="pkg-types" class="Documentation-typesHeader">Types <a href="#pkg-types">¶</a></h3>
 <section class="Documentation-types"><div class="Documentation-type">
-<details class="Documentation-deprecatedDetails">
+<details class="Documentation-deprecatedDetails js-deprecatedDetails">
 <summary>
 <h4 tabindex="-1" id="BadT" data-kind="type" class="Documentation-typeHeader">
-<span>
-type <a class="Documentation-source" href="src">BadT</a> <a class="Documentation-idLink" href="#BadT">¶</a>
-<span class="Documentation-deprecatedBody">deprecated</span>
+<span class="Documentation-deprecatedTitle">
+type <a class="Documentation-source" href="src">BadT</a>
+<span class="Documentation-deprecatedTag">deprecated</span>
+<span class="Documentation-deprecatedBody"></span>
 </span>
 <span class="Documentation-sinceVersion">
 </span>
 </h4>
 </summary>
+<div class="Documentation-deprecatedItemBody">
+<div class="Documentation-deprecatedMessage">
+<img class="go-Icon" height="24" width="24" src="/static/icon/alert_gm_grey_24dp.svg" alt="">
+This type has been deprecated.
+</div>
 <div class="Documentation-declaration">
 <pre>type BadT <a href="/builtin#int">int</a></pre>
 </div>
@@ -108,22 +131,29 @@ Deprecated: use GoodT.
 Don&#39;t use this.
 </p>
 <div class="Documentation-typeFunc">
-<details class="Documentation-deprecatedDetails">
+<details class="Documentation-deprecatedDetails js-deprecatedDetails">
 <summary>
 <h4 tabindex="-1" id="NewBadTBad" data-kind="function" class="Documentation-typeFuncHeader">
-<span>
-func <a class="Documentation-source" href="src">NewBadTBad</a> <a class="Documentation-idLink" href="#NewBadTBad">¶</a>
-<span class="Documentation-deprecatedBody">deprecated</span>
+<span class="Documentation-deprecatedTitle">
+func <a class="Documentation-source" href="src">NewBadTBad</a>
+<span class="Documentation-deprecatedTag">deprecated</span>
+<span class="Documentation-deprecatedBody"></span>
 </span>
 <span class="Documentation-sinceVersion">
 </span>
 </h4>
 </summary>
+<div class="Documentation-deprecatedItemBody">
+<div class="Documentation-deprecatedMessage">
+<img class="go-Icon" height="24" width="24" src="/static/icon/alert_gm_grey_24dp.svg" alt="">
+This function has been deprecated.
+</div>
 <div class="Documentation-declaration">
 <pre>func NewBadTBad() <a href="#BadT">BadT</a></pre>
 </div>
 <p>Deprecated: use NewBadTGood.
 </p>
+</div>
 </details>
 </div><div class="Documentation-typeFunc">
 <h4 tabindex="-1" id="NewBadTGood" data-kind="function" class="Documentation-typeFuncHeader">
@@ -135,22 +165,29 @@ func <a class="Documentation-source" href="src">NewBadTBad</a> <a class="Documen
 <pre>func NewBadTGood() <a href="#BadT">BadT</a></pre>
 </div>
 </div><div class="Documentation-typeMethod">
-<details class="Documentation-deprecatedDetails">
+<details class="Documentation-deprecatedDetails js-deprecatedDetails">
 <summary>
 <h4 tabindex="-1" id="BadT.BadM" data-kind="method" class="Documentation-typeMethodHeader">
-<span>
-func (BadT) <a class="Documentation-source" href="src">BadM</a> <a class="Documentation-idLink" href="#BadT.BadM">¶</a>
-<span class="Documentation-deprecatedBody">deprecated</span>
+<span class="Documentation-deprecatedTitle">
+func (BadT) <a class="Documentation-source" href="src">BadM</a>
+<span class="Documentation-deprecatedTag">deprecated</span>
+<span class="Documentation-deprecatedBody"></span>
 </span>
 <span class="Documentation-sinceVersion">
 </span>
 </h4>
 </summary>
+<div class="Documentation-deprecatedItemBody">
+<div class="Documentation-deprecatedMessage">
+<img class="go-Icon" height="24" width="24" src="/static/icon/alert_gm_grey_24dp.svg" alt="">
+This method has been deprecated.
+</div>
 <div class="Documentation-declaration">
 <pre>func (<a href="#BadT">BadT</a>) BadM()</pre>
 </div>
 <p>Deprecated: use GoodM.
 </p>
+</div>
 </details>
 </div><div class="Documentation-typeMethod">
 <h4 tabindex="-1" id="BadT.GoodM" data-kind="method" class="Documentation-typeMethodHeader">
@@ -160,6 +197,7 @@ func (BadT) <a class="Documentation-source" href="src">BadM</a> <a class="Docume
 </h4>
 <div class="Documentation-declaration">
 <pre>func (<a href="#BadT">BadT</a>) GoodM()</pre>
+</div>
 </div>
 </div>
 </details>
@@ -173,23 +211,30 @@ func (BadT) <a class="Documentation-source" href="src">BadM</a> <a class="Docume
 <pre>type GoodT <a href="/builtin#int">int</a></pre>
 </div>
 <div class="Documentation-typeFunc">
-<details class="Documentation-deprecatedDetails">
+<details class="Documentation-deprecatedDetails js-deprecatedDetails">
 <summary>
 <h4 tabindex="-1" id="NewGoodTBad" data-kind="function" class="Documentation-typeFuncHeader">
-<span>
-func <a class="Documentation-source" href="src">NewGoodTBad</a> <a class="Documentation-idLink" href="#NewGoodTBad">¶</a>
-<span class="Documentation-deprecatedBody">deprecated</span>
+<span class="Documentation-deprecatedTitle">
+func <a class="Documentation-source" href="src">NewGoodTBad</a>
+<span class="Documentation-deprecatedTag">deprecated</span>
+<span class="Documentation-deprecatedBody"></span>
 </span>
 <span class="Documentation-sinceVersion">
 </span>
 </h4>
 </summary>
+<div class="Documentation-deprecatedItemBody">
+<div class="Documentation-deprecatedMessage">
+<img class="go-Icon" height="24" width="24" src="/static/icon/alert_gm_grey_24dp.svg" alt="">
+This function has been deprecated.
+</div>
 <div class="Documentation-declaration">
 <pre>func NewGoodTBad() <a href="#GoodT">GoodT</a></pre>
 </div>
 <p>NewGoodTBad is bad.
 Deprecated: use NewGoodTGood.
 </p>
+</div>
 </details>
 </div><div class="Documentation-typeFunc">
 <h4 tabindex="-1" id="NewGoodTGood" data-kind="function" class="Documentation-typeFuncHeader">
@@ -201,23 +246,30 @@ Deprecated: use NewGoodTGood.
 <pre>func NewGoodTGood() <a href="#GoodT">GoodT</a></pre>
 </div>
 </div><div class="Documentation-typeMethod">
-<details class="Documentation-deprecatedDetails">
+<details class="Documentation-deprecatedDetails js-deprecatedDetails">
 <summary>
 <h4 tabindex="-1" id="GoodT.BadM" data-kind="method" class="Documentation-typeMethodHeader">
-<span>
-func (GoodT) <a class="Documentation-source" href="src">BadM</a> <a class="Documentation-idLink" href="#GoodT.BadM">¶</a>
-<span class="Documentation-deprecatedBody">deprecated</span>
+<span class="Documentation-deprecatedTitle">
+func (GoodT) <a class="Documentation-source" href="src">BadM</a>
+<span class="Documentation-deprecatedTag">deprecated</span>
+<span class="Documentation-deprecatedBody"></span>
 </span>
 <span class="Documentation-sinceVersion">
 </span>
 </h4>
 </summary>
+<div class="Documentation-deprecatedItemBody">
+<div class="Documentation-deprecatedMessage">
+<img class="go-Icon" height="24" width="24" src="/static/icon/alert_gm_grey_24dp.svg" alt="">
+This method has been deprecated.
+</div>
 <div class="Documentation-declaration">
 <pre>func (<a href="#GoodT">GoodT</a>) BadM()</pre>
 </div>
 <p>BadM is bad.
 Deprecated: use GoodM.
 </p>
+</div>
 </details>
 </div><div class="Documentation-typeMethod">
 <h4 tabindex="-1" id="GoodT.GoodM" data-kind="method" class="Documentation-typeMethodHeader">

@@ -299,28 +299,50 @@
 }
 
 .Documentation-indexDeprecated {
-  color: var(--gray-3);
-  font-size: 0.875rem;
-  font-style: italic;
   margin-left: 0.5rem;
 }
 .Documentation-deprecatedBody {
   color: var(--gray-3);
-  font-size: 1rem;
-  font-style: italic;
+  font-size: 0.875rem;
   font-weight: 400;
-  margin-left: 0.5rem;
+  margin-left: 0.25rem;
   margin-right: 0.5rem;
+}
+.Documentation-deprecatedTag {
+  background-color: var(--gray-6);
+  border-radius: 0.125rem;
+  color: var(--white);
+  font-size: 0.75rem;
+  font-weight: normal;
+  line-height: 1.375;
+  padding: 0.125rem 0.25rem;
+  text-transform: uppercase;
+  vertical-align: middle;
+}
+.Documentation-deprecatedTitle {
+  align-items: center;
+  display: flex;
+  gap: 0.5rem;
+}
+.Documentation-deprecatedDetails {
+  color: var(--gray-4);
+}
+.Documentation-deprecatedDetails a {
+  color: var(--gray-4);
+}
+.Documentation-deprecatedDetails[open] {
+  color: var(--gray-1);
+}
+.Documentation-deprecatedDetails[open] a {
+  color: var(--turq-dark);
 }
 .Documentation-deprecatedDetails .Documentation-deprecatedBody::after {
   color: var(--turq-dark);
   content: 'Show';
-  margin-left: 1rem;
 }
 .Documentation-deprecatedDetails[open] .Documentation-deprecatedBody::after {
   color: var(--turq-dark);
   content: 'Hide';
-  margin-left: 1rem;
 }
 .Documentation-deprecatedDetails > summary {
   list-style: none;
@@ -328,4 +350,14 @@
 }
 .Documentation-deprecatedDetails .Documentation-source {
   opacity: 1;
+}
+.Documentation-deprecatedItemBody {
+  background-color: var(--yellow-light);
+  padding: 1rem 1rem 0.5rem 1rem;
+}
+.Documentation-deprecatedMessage {
+  align-items: center;
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
 }

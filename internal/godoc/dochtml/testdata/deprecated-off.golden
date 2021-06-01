@@ -11,23 +11,33 @@
 <a href="#BadF">func BadF()</a></li>
 <li class="Documentation-indexFunction">
 <a href="#GoodF">func GoodF()</a></li>
-<li class="Documentation-indexType"><a href="#BadT">type BadT</a></li>
+<li class="Documentation-indexType">
+<a href="#BadT">type BadT</a></li>
 <li><ul class="Documentation-indexTypeFunctions">
-<li><a href="#NewBadTBad">func NewBadTBad() BadT</a></li>
-<li><a href="#NewBadTGood">func NewBadTGood() BadT</a></li>
+<li>
+<a href="#NewBadTBad">func NewBadTBad() BadT</a></li>
+<li>
+<a href="#NewBadTGood">func NewBadTGood() BadT</a></li>
 </ul></li>
 <li><ul class="Documentation-indexTypeMethods">
-<li><a href="#BadT.BadM">func (BadT) BadM()</a></li>
-<li><a href="#BadT.GoodM">func (BadT) GoodM()</a></li>
+<li>
+<a href="#BadT.BadM">func (BadT) BadM()</a></li>
+<li>
+<a href="#BadT.GoodM">func (BadT) GoodM()</a></li>
 </ul></li>
-<li class="Documentation-indexType"><a href="#GoodT">type GoodT</a></li>
+<li class="Documentation-indexType">
+<a href="#GoodT">type GoodT</a></li>
 <li><ul class="Documentation-indexTypeFunctions">
-<li><a href="#NewGoodTBad">func NewGoodTBad() GoodT</a></li>
-<li><a href="#NewGoodTGood">func NewGoodTGood() GoodT</a></li>
+<li>
+<a href="#NewGoodTBad">func NewGoodTBad() GoodT</a></li>
+<li>
+<a href="#NewGoodTGood">func NewGoodTGood() GoodT</a></li>
 </ul></li>
 <li><ul class="Documentation-indexTypeMethods">
-<li><a href="#GoodT.BadM">func (GoodT) BadM()</a></li>
-<li><a href="#GoodT.GoodM">func (GoodT) GoodM()</a></li>
+<li>
+<a href="#GoodT.BadM">func (GoodT) BadM()</a></li>
+<li>
+<a href="#GoodT.GoodM">func (GoodT) GoodM()</a></li>
 </ul></li>
 </ul>
 </section><h3 tabindex="-1" id="pkg-constants" class="Documentation-constantsHeader">Constants <a href="#pkg-constants">¶</a></h3>

@@ -76,6 +76,25 @@ if (readme && readmeContent && readmeOutline && readmeExpand.length && readmeCol
 }
 
 /**
+ * Expand details items that are focused. This will expand
+ * deprecated symbols when they are navigated to from the index
+ * or a direct link.
+ */
+for (const a of document.querySelectorAll<HTMLAnchorElement>('.js-deprecatedTagLink')) {
+  const hash = new URL(a.href).hash;
+  const heading = document.querySelector(hash);
+  const details = heading?.parentElement?.parentElement as HTMLDetailsElement | null;
+  if (details) {
+    a.addEventListener('click', () => {
+      details.open = true;
+    });
+    if (location.hash === hash) {
+      details.open = true;
+    }
+  }
+}
+
+/**
  * Disable unavailable sections in navigation dropdown on mobile.
  */
 const readmeOption = document.querySelector('.js-readmeOption');
