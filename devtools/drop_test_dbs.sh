@@ -11,11 +11,11 @@ run_pg() {
     psql -U postgres -h localhost -c "$1"
 }
 
-run_pg "DROP DATABASE discovery_frontend_test;"
-run_pg "DROP DATABASE discovery_integration_test;"
-run_pg "DROP DATABASE discovery_postgres_test;"
-run_pg "DROP DATABASE discovery_worker_test;"
-run_pg 'DROP DATABASE "discovery_postgres_test-0";'
-run_pg 'DROP DATABASE "discovery_postgres_test-1";'
-run_pg 'DROP DATABASE "discovery_postgres_test-2";'
-run_pg 'DROP DATABASE "discovery_postgres_test-3";'
+run_pg "DROP DATABASE IF EXISTS discovery_frontend_test;"
+run_pg "DROP DATABASE IF EXISTS discovery_integration_test;"
+run_pg "DROP DATABASE IF EXISTS discovery_postgres_test;"
+run_pg "DROP DATABASE IF EXISTS discovery_worker_test;"
+run_pg 'DROP DATABASE IF EXISTS "discovery_postgres_test-0";'
+run_pg 'DROP DATABASE IF EXISTS "discovery_postgres_test-1";'
+run_pg 'DROP DATABASE IF EXISTS "discovery_postgres_test-2";'
+run_pg 'DROP DATABASE IF EXISTS "discovery_postgres_test-3";'
