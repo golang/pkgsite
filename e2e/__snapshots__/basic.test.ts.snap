@@ -12,7 +12,7 @@ Object {
       "role": "link",
     },
     Object {
-      "name": "Link to Go Homepage",
+      "name": "Go",
       "role": "link",
     },
     Object {
@@ -25,17 +25,34 @@ Object {
       "role": "textbox",
     },
     Object {
-      "description": "Why Go",
       "name": "Why Go",
       "role": "link",
     },
     Object {
-      "description": "Getting Started",
       "name": "Getting Started",
       "role": "link",
     },
     Object {
-      "description": "Discover Packages",
+      "name": "Discover Packages",
+      "role": "link",
+    },
+    Object {
+      "name": "About",
+      "role": "link",
+    },
+    Object {
+      "name": "Go.",
+      "role": "link",
+    },
+    Object {
+      "name": "Why Go",
+      "role": "link",
+    },
+    Object {
+      "name": "Getting Started",
+      "role": "link",
+    },
+    Object {
       "name": "Discover Packages",
       "role": "link",
     },
@@ -69,22 +86,18 @@ Object {
       "role": "button",
     },
     Object {
-      "description": "Why Go",
       "name": "Why Go",
       "role": "link",
     },
     Object {
-      "description": "Use Cases",
       "name": "Use Cases",
       "role": "link",
     },
     Object {
-      "description": "Case Studies",
       "name": "Case Studies",
       "role": "link",
     },
     Object {
-      "description": "Getting Started",
       "name": "Getting Started",
       "role": "link",
     },
@@ -101,12 +114,10 @@ Object {
       "role": "link",
     },
     Object {
-      "description": "Discover Packages",
       "name": "Discover Packages",
       "role": "link",
     },
     Object {
-      "description": "About",
       "name": "About",
       "role": "link",
     },
@@ -116,6 +127,10 @@ Object {
     },
     Object {
       "name": "Blog",
+      "role": "link",
+    },
+    Object {
+      "name": "Issue Tracker",
       "role": "link",
     },
     Object {
@@ -131,7 +146,6 @@ Object {
       "role": "link",
     },
     Object {
-      "description": "Connect",
       "name": "Connect",
       "role": "link",
     },
@@ -148,7 +162,15 @@ Object {
       "role": "link",
     },
     Object {
+      "name": "Reddit",
+      "role": "link",
+    },
+    Object {
       "name": "Meetup",
+      "role": "link",
+    },
+    Object {
+      "name": "Golang Weekly",
       "role": "link",
     },
     Object {
@@ -180,7 +202,7 @@ Object {
       "role": "link",
     },
   ],
-  "name": "404 Not Found · pkg.go.dev",
+  "name": "github.com/package/does/not/exist · pkg.go.dev",
   "role": "WebArea",
 }
 `;
@@ -197,7 +219,7 @@ Object {
       "role": "link",
     },
     Object {
-      "name": "Link to Go Homepage",
+      "name": "Go",
       "role": "link",
     },
     Object {
@@ -210,17 +232,34 @@ Object {
       "role": "textbox",
     },
     Object {
-      "description": "Why Go",
       "name": "Why Go",
       "role": "link",
     },
     Object {
-      "description": "Getting Started",
       "name": "Getting Started",
       "role": "link",
     },
     Object {
-      "description": "Discover Packages",
+      "name": "Discover Packages",
+      "role": "link",
+    },
+    Object {
+      "name": "About",
+      "role": "link",
+    },
+    Object {
+      "name": "Go.",
+      "role": "link",
+    },
+    Object {
+      "name": "Why Go",
+      "role": "link",
+    },
+    Object {
+      "name": "Getting Started",
+      "role": "link",
+    },
+    Object {
       "name": "Discover Packages",
       "role": "link",
     },
@@ -266,22 +305,18 @@ Object {
       "role": "text",
     },
     Object {
-      "description": "Why Go",
       "name": "Why Go",
       "role": "link",
     },
     Object {
-      "description": "Use Cases",
       "name": "Use Cases",
       "role": "link",
     },
     Object {
-      "description": "Case Studies",
       "name": "Case Studies",
       "role": "link",
     },
     Object {
-      "description": "Getting Started",
       "name": "Getting Started",
       "role": "link",
     },
@@ -298,12 +333,10 @@ Object {
       "role": "link",
     },
     Object {
-      "description": "Discover Packages",
       "name": "Discover Packages",
       "role": "link",
     },
     Object {
-      "description": "About",
       "name": "About",
       "role": "link",
     },
@@ -313,6 +346,10 @@ Object {
     },
     Object {
       "name": "Blog",
+      "role": "link",
+    },
+    Object {
+      "name": "Issue Tracker",
       "role": "link",
     },
     Object {
@@ -328,7 +365,6 @@ Object {
       "role": "link",
     },
     Object {
-      "description": "Connect",
       "name": "Connect",
       "role": "link",
     },
@@ -345,7 +381,15 @@ Object {
       "role": "link",
     },
     Object {
+      "name": "Reddit",
+      "role": "link",
+    },
+    Object {
       "name": "Meetup",
+      "role": "link",
+    },
+    Object {
+      "name": "Golang Weekly",
       "role": "link",
     },
     Object {
@@ -377,7 +421,7 @@ Object {
       "role": "link",
     },
   ],
-  "name": "Badge generation tool · pkg.go.dev",
+  "name": "Badge · pkg.go.dev",
   "role": "WebArea",
 }
 `;
@@ -394,7 +438,7 @@ Object {
       "role": "link",
     },
     Object {
-      "name": "Link to Go Homepage",
+      "name": "Go",
       "role": "link",
     },
     Object {
@@ -407,17 +451,34 @@ Object {
       "role": "textbox",
     },
     Object {
-      "description": "Why Go",
       "name": "Why Go",
       "role": "link",
     },
     Object {
-      "description": "Getting Started",
       "name": "Getting Started",
       "role": "link",
     },
     Object {
-      "description": "Discover Packages",
+      "name": "Discover Packages",
+      "role": "link",
+    },
+    Object {
+      "name": "About",
+      "role": "link",
+    },
+    Object {
+      "name": "Go.",
+      "role": "link",
+    },
+    Object {
+      "name": "Why Go",
+      "role": "link",
+    },
+    Object {
+      "name": "Getting Started",
+      "role": "link",
+    },
+    Object {
       "name": "Discover Packages",
       "role": "link",
     },
@@ -447,22 +508,18 @@ Object {
       "role": "text",
     },
     Object {
-      "description": "Why Go",
       "name": "Why Go",
       "role": "link",
     },
     Object {
-      "description": "Use Cases",
       "name": "Use Cases",
       "role": "link",
     },
     Object {
-      "description": "Case Studies",
       "name": "Case Studies",
       "role": "link",
     },
     Object {
-      "description": "Getting Started",
       "name": "Getting Started",
       "role": "link",
     },
@@ -479,12 +536,10 @@ Object {
       "role": "link",
     },
     Object {
-      "description": "Discover Packages",
       "name": "Discover Packages",
       "role": "link",
     },
     Object {
-      "description": "About",
       "name": "About",
       "role": "link",
     },
@@ -494,6 +549,10 @@ Object {
     },
     Object {
       "name": "Blog",
+      "role": "link",
+    },
+    Object {
+      "name": "Issue Tracker",
       "role": "link",
     },
     Object {
@@ -509,7 +568,6 @@ Object {
       "role": "link",
     },
     Object {
-      "description": "Connect",
       "name": "Connect",
       "role": "link",
     },
@@ -526,7 +584,15 @@ Object {
       "role": "link",
     },
     Object {
+      "name": "Reddit",
+      "role": "link",
+    },
+    Object {
       "name": "Meetup",
+      "role": "link",
+    },
+    Object {
+      "name": "Golang Weekly",
       "role": "link",
     },
     Object {
@@ -558,7 +624,7 @@ Object {
       "role": "link",
     },
   ],
-  "name": "400 Bad Request · pkg.go.dev",
+  "name": "{bad.package v1.0-badversion} · pkg.go.dev",
   "role": "WebArea",
 }
 `;
@@ -575,21 +641,38 @@ Object {
       "role": "link",
     },
     Object {
-      "name": "Link to Go Homepage",
+      "name": "Go",
       "role": "link",
     },
     Object {
-      "description": "Why Go",
       "name": "Why Go",
       "role": "link",
     },
     Object {
-      "description": "Getting Started",
       "name": "Getting Started",
       "role": "link",
     },
     Object {
-      "description": "Discover Packages",
+      "name": "Discover Packages",
+      "role": "link",
+    },
+    Object {
+      "name": "About",
+      "role": "link",
+    },
+    Object {
+      "name": "Go.",
+      "role": "link",
+    },
+    Object {
+      "name": "Why Go",
+      "role": "link",
+    },
+    Object {
+      "name": "Getting Started",
+      "role": "link",
+    },
+    Object {
       "name": "Discover Packages",
       "role": "link",
     },
@@ -648,22 +731,18 @@ Object {
       "role": "link",
     },
     Object {
-      "description": "Why Go",
       "name": "Why Go",
       "role": "link",
     },
     Object {
-      "description": "Use Cases",
       "name": "Use Cases",
       "role": "link",
     },
     Object {
-      "description": "Case Studies",
       "name": "Case Studies",
       "role": "link",
     },
     Object {
-      "description": "Getting Started",
       "name": "Getting Started",
       "role": "link",
     },
@@ -680,12 +759,10 @@ Object {
       "role": "link",
     },
     Object {
-      "description": "Discover Packages",
       "name": "Discover Packages",
       "role": "link",
     },
     Object {
-      "description": "About",
       "name": "About",
       "role": "link",
     },
@@ -695,6 +772,10 @@ Object {
     },
     Object {
       "name": "Blog",
+      "role": "link",
+    },
+    Object {
+      "name": "Issue Tracker",
       "role": "link",
     },
     Object {
@@ -710,7 +791,6 @@ Object {
       "role": "link",
     },
     Object {
-      "description": "Connect",
       "name": "Connect",
       "role": "link",
     },
@@ -727,7 +807,15 @@ Object {
       "role": "link",
     },
     Object {
+      "name": "Reddit",
+      "role": "link",
+    },
+    Object {
       "name": "Meetup",
+      "role": "link",
+    },
+    Object {
+      "name": "Golang Weekly",
       "role": "link",
     },
     Object {
@@ -759,7 +847,7 @@ Object {
       "role": "link",
     },
   ],
-  "name": "Home · pkg.go.dev",
+  "name": "pkg.go.dev",
   "role": "WebArea",
 }
 `;
@@ -776,7 +864,7 @@ Object {
       "role": "link",
     },
     Object {
-      "name": "Link to Go Homepage",
+      "name": "Go",
       "role": "link",
     },
     Object {
@@ -789,17 +877,34 @@ Object {
       "role": "textbox",
     },
     Object {
-      "description": "Why Go",
       "name": "Why Go",
       "role": "link",
     },
     Object {
-      "description": "Getting Started",
       "name": "Getting Started",
       "role": "link",
     },
     Object {
-      "description": "Discover Packages",
+      "name": "Discover Packages",
+      "role": "link",
+    },
+    Object {
+      "name": "About",
+      "role": "link",
+    },
+    Object {
+      "name": "Go.",
+      "role": "link",
+    },
+    Object {
+      "name": "Why Go",
+      "role": "link",
+    },
+    Object {
+      "name": "Getting Started",
+      "role": "link",
+    },
+    Object {
       "name": "Discover Packages",
       "role": "link",
     },
@@ -1281,22 +1386,18 @@ Object {
       "role": "text",
     },
     Object {
-      "description": "Why Go",
       "name": "Why Go",
       "role": "link",
     },
     Object {
-      "description": "Use Cases",
       "name": "Use Cases",
       "role": "link",
     },
     Object {
-      "description": "Case Studies",
       "name": "Case Studies",
       "role": "link",
     },
     Object {
-      "description": "Getting Started",
       "name": "Getting Started",
       "role": "link",
     },
@@ -1313,12 +1414,10 @@ Object {
       "role": "link",
     },
     Object {
-      "description": "Discover Packages",
       "name": "Discover Packages",
       "role": "link",
     },
     Object {
-      "description": "About",
       "name": "About",
       "role": "link",
     },
@@ -1328,6 +1427,10 @@ Object {
     },
     Object {
       "name": "Blog",
+      "role": "link",
+    },
+    Object {
+      "name": "Issue Tracker",
       "role": "link",
     },
     Object {
@@ -1343,7 +1446,6 @@ Object {
       "role": "link",
     },
     Object {
-      "description": "Connect",
       "name": "Connect",
       "role": "link",
     },
@@ -1360,7 +1462,15 @@ Object {
       "role": "link",
     },
     Object {
+      "name": "Reddit",
+      "role": "link",
+    },
+    Object {
       "name": "Meetup",
+      "role": "link",
+    },
+    Object {
+      "name": "Golang Weekly",
       "role": "link",
     },
     Object {
@@ -1392,7 +1502,7 @@ Object {
       "role": "link",
     },
   ],
-  "name": "Licenses · pkg.go.dev",
+  "name": "License Policy · pkg.go.dev",
   "role": "WebArea",
 }
 `;
@@ -1409,7 +1519,7 @@ Object {
       "role": "link",
     },
     Object {
-      "name": "Link to Go Homepage",
+      "name": "Go",
       "role": "link",
     },
     Object {
@@ -1422,17 +1532,34 @@ Object {
       "role": "textbox",
     },
     Object {
-      "description": "Why Go",
       "name": "Why Go",
       "role": "link",
     },
     Object {
-      "description": "Getting Started",
       "name": "Getting Started",
       "role": "link",
     },
     Object {
-      "description": "Discover Packages",
+      "name": "Discover Packages",
+      "role": "link",
+    },
+    Object {
+      "name": "About",
+      "role": "link",
+    },
+    Object {
+      "name": "Go.",
+      "role": "link",
+    },
+    Object {
+      "name": "Why Go",
+      "role": "link",
+    },
+    Object {
+      "name": "Getting Started",
+      "role": "link",
+    },
+    Object {
       "name": "Discover Packages",
       "role": "link",
     },
@@ -1513,22 +1640,18 @@ Object {
       "role": "text",
     },
     Object {
-      "description": "Why Go",
       "name": "Why Go",
       "role": "link",
     },
     Object {
-      "description": "Use Cases",
       "name": "Use Cases",
       "role": "link",
     },
     Object {
-      "description": "Case Studies",
       "name": "Case Studies",
       "role": "link",
     },
     Object {
-      "description": "Getting Started",
       "name": "Getting Started",
       "role": "link",
     },
@@ -1545,12 +1668,10 @@ Object {
       "role": "link",
     },
     Object {
-      "description": "Discover Packages",
       "name": "Discover Packages",
       "role": "link",
     },
     Object {
-      "description": "About",
       "name": "About",
       "role": "link",
     },
@@ -1560,6 +1681,10 @@ Object {
     },
     Object {
       "name": "Blog",
+      "role": "link",
+    },
+    Object {
+      "name": "Issue Tracker",
       "role": "link",
     },
     Object {
@@ -1575,7 +1700,6 @@ Object {
       "role": "link",
     },
     Object {
-      "description": "Connect",
       "name": "Connect",
       "role": "link",
     },
@@ -1592,7 +1716,15 @@ Object {
       "role": "link",
     },
     Object {
+      "name": "Reddit",
+      "role": "link",
+    },
+    Object {
       "name": "Meetup",
+      "role": "link",
+    },
+    Object {
+      "name": "Golang Weekly",
       "role": "link",
     },
     Object {
@@ -1633,7 +1765,7 @@ exports[`mobile 404 with fetch button accessibility tree 1`] = `
 Object {
   "children": Array [
     Object {
-      "name": "Link to Go Homepage",
+      "name": "Go",
       "role": "link",
     },
     Object {
@@ -1646,8 +1778,28 @@ Object {
       "role": "textbox",
     },
     Object {
-      "name": "Open navigation.",
+      "name": "Open navigation",
       "role": "button",
+    },
+    Object {
+      "name": "Go.",
+      "role": "link",
+    },
+    Object {
+      "name": "Why Go",
+      "role": "link",
+    },
+    Object {
+      "name": "Getting Started",
+      "role": "link",
+    },
+    Object {
+      "name": "Discover Packages",
+      "role": "link",
+    },
+    Object {
+      "name": "About",
+      "role": "link",
     },
     Object {
       "name": "The Go Gopher",
@@ -1675,22 +1827,18 @@ Object {
       "role": "button",
     },
     Object {
-      "description": "Why Go",
       "name": "Why Go",
       "role": "link",
     },
     Object {
-      "description": "Use Cases",
       "name": "Use Cases",
       "role": "link",
     },
     Object {
-      "description": "Case Studies",
       "name": "Case Studies",
       "role": "link",
     },
     Object {
-      "description": "Getting Started",
       "name": "Getting Started",
       "role": "link",
     },
@@ -1707,12 +1855,10 @@ Object {
       "role": "link",
     },
     Object {
-      "description": "Discover Packages",
       "name": "Discover Packages",
       "role": "link",
     },
     Object {
-      "description": "About",
       "name": "About",
       "role": "link",
     },
@@ -1722,6 +1868,10 @@ Object {
     },
     Object {
       "name": "Blog",
+      "role": "link",
+    },
+    Object {
+      "name": "Issue Tracker",
       "role": "link",
     },
     Object {
@@ -1737,7 +1887,6 @@ Object {
       "role": "link",
     },
     Object {
-      "description": "Connect",
       "name": "Connect",
       "role": "link",
     },
@@ -1754,7 +1903,15 @@ Object {
       "role": "link",
     },
     Object {
+      "name": "Reddit",
+      "role": "link",
+    },
+    Object {
       "name": "Meetup",
+      "role": "link",
+    },
+    Object {
+      "name": "Golang Weekly",
       "role": "link",
     },
     Object {
@@ -1786,7 +1943,7 @@ Object {
       "role": "link",
     },
   ],
-  "name": "404 Not Found · pkg.go.dev",
+  "name": "github.com/package/does/not/exist · pkg.go.dev",
   "role": "WebArea",
 }
 `;
@@ -1795,7 +1952,7 @@ exports[`mobile badge accessibility tree 1`] = `
 Object {
   "children": Array [
     Object {
-      "name": "Link to Go Homepage",
+      "name": "Go",
       "role": "link",
     },
     Object {
@@ -1808,8 +1965,28 @@ Object {
       "role": "textbox",
     },
     Object {
-      "name": "Open navigation.",
+      "name": "Open navigation",
       "role": "button",
+    },
+    Object {
+      "name": "Go.",
+      "role": "link",
+    },
+    Object {
+      "name": "Why Go",
+      "role": "link",
+    },
+    Object {
+      "name": "Getting Started",
+      "role": "link",
+    },
+    Object {
+      "name": "Discover Packages",
+      "role": "link",
+    },
+    Object {
+      "name": "About",
+      "role": "link",
     },
     Object {
       "level": 1,
@@ -1849,22 +2026,18 @@ Object {
       "role": "text",
     },
     Object {
-      "description": "Why Go",
       "name": "Why Go",
       "role": "link",
     },
     Object {
-      "description": "Use Cases",
       "name": "Use Cases",
       "role": "link",
     },
     Object {
-      "description": "Case Studies",
       "name": "Case Studies",
       "role": "link",
     },
     Object {
-      "description": "Getting Started",
       "name": "Getting Started",
       "role": "link",
     },
@@ -1881,12 +2054,10 @@ Object {
       "role": "link",
     },
     Object {
-      "description": "Discover Packages",
       "name": "Discover Packages",
       "role": "link",
     },
     Object {
-      "description": "About",
       "name": "About",
       "role": "link",
     },
@@ -1896,6 +2067,10 @@ Object {
     },
     Object {
       "name": "Blog",
+      "role": "link",
+    },
+    Object {
+      "name": "Issue Tracker",
       "role": "link",
     },
     Object {
@@ -1911,7 +2086,6 @@ Object {
       "role": "link",
     },
     Object {
-      "description": "Connect",
       "name": "Connect",
       "role": "link",
     },
@@ -1928,7 +2102,15 @@ Object {
       "role": "link",
     },
     Object {
+      "name": "Reddit",
+      "role": "link",
+    },
+    Object {
       "name": "Meetup",
+      "role": "link",
+    },
+    Object {
+      "name": "Golang Weekly",
       "role": "link",
     },
     Object {
@@ -1960,7 +2142,7 @@ Object {
       "role": "link",
     },
   ],
-  "name": "Badge generation tool · pkg.go.dev",
+  "name": "Badge · pkg.go.dev",
   "role": "WebArea",
 }
 `;
@@ -1969,7 +2151,7 @@ exports[`mobile error accessibility tree 1`] = `
 Object {
   "children": Array [
     Object {
-      "name": "Link to Go Homepage",
+      "name": "Go",
       "role": "link",
     },
     Object {
@@ -1982,8 +2164,28 @@ Object {
       "role": "textbox",
     },
     Object {
-      "name": "Open navigation.",
+      "name": "Open navigation",
       "role": "button",
+    },
+    Object {
+      "name": "Go.",
+      "role": "link",
+    },
+    Object {
+      "name": "Why Go",
+      "role": "link",
+    },
+    Object {
+      "name": "Getting Started",
+      "role": "link",
+    },
+    Object {
+      "name": "Discover Packages",
+      "role": "link",
+    },
+    Object {
+      "name": "About",
+      "role": "link",
     },
     Object {
       "name": "The Go Gopher",
@@ -2007,22 +2209,18 @@ Object {
       "role": "text",
     },
     Object {
-      "description": "Why Go",
       "name": "Why Go",
       "role": "link",
     },
     Object {
-      "description": "Use Cases",
       "name": "Use Cases",
       "role": "link",
     },
     Object {
-      "description": "Case Studies",
       "name": "Case Studies",
       "role": "link",
     },
     Object {
-      "description": "Getting Started",
       "name": "Getting Started",
       "role": "link",
     },
@@ -2039,12 +2237,10 @@ Object {
       "role": "link",
     },
     Object {
-      "description": "Discover Packages",
       "name": "Discover Packages",
       "role": "link",
     },
     Object {
-      "description": "About",
       "name": "About",
       "role": "link",
     },
@@ -2054,6 +2250,10 @@ Object {
     },
     Object {
       "name": "Blog",
+      "role": "link",
+    },
+    Object {
+      "name": "Issue Tracker",
       "role": "link",
     },
     Object {
@@ -2069,7 +2269,6 @@ Object {
       "role": "link",
     },
     Object {
-      "description": "Connect",
       "name": "Connect",
       "role": "link",
     },
@@ -2086,7 +2285,15 @@ Object {
       "role": "link",
     },
     Object {
+      "name": "Reddit",
+      "role": "link",
+    },
+    Object {
       "name": "Meetup",
+      "role": "link",
+    },
+    Object {
+      "name": "Golang Weekly",
       "role": "link",
     },
     Object {
@@ -2118,7 +2325,7 @@ Object {
       "role": "link",
     },
   ],
-  "name": "400 Bad Request · pkg.go.dev",
+  "name": "{bad.package v1.0-badversion} · pkg.go.dev",
   "role": "WebArea",
 }
 `;
@@ -2127,12 +2334,32 @@ exports[`mobile home accessibility tree 1`] = `
 Object {
   "children": Array [
     Object {
-      "name": "Link to Go Homepage",
+      "name": "Go",
       "role": "link",
     },
     Object {
-      "name": "Open navigation.",
+      "name": "Open navigation",
       "role": "button",
+    },
+    Object {
+      "name": "Go.",
+      "role": "link",
+    },
+    Object {
+      "name": "Why Go",
+      "role": "link",
+    },
+    Object {
+      "name": "Getting Started",
+      "role": "link",
+    },
+    Object {
+      "name": "Discover Packages",
+      "role": "link",
+    },
+    Object {
+      "name": "About",
+      "role": "link",
     },
     Object {
       "name": "Cartoon gopher typing",
@@ -2185,22 +2412,18 @@ Object {
       "role": "link",
     },
     Object {
-      "description": "Why Go",
       "name": "Why Go",
       "role": "link",
     },
     Object {
-      "description": "Use Cases",
       "name": "Use Cases",
       "role": "link",
     },
     Object {
-      "description": "Case Studies",
       "name": "Case Studies",
       "role": "link",
     },
     Object {
-      "description": "Getting Started",
       "name": "Getting Started",
       "role": "link",
     },
@@ -2217,12 +2440,10 @@ Object {
       "role": "link",
     },
     Object {
-      "description": "Discover Packages",
       "name": "Discover Packages",
       "role": "link",
     },
     Object {
-      "description": "About",
       "name": "About",
       "role": "link",
     },
@@ -2232,6 +2453,10 @@ Object {
     },
     Object {
       "name": "Blog",
+      "role": "link",
+    },
+    Object {
+      "name": "Issue Tracker",
       "role": "link",
     },
     Object {
@@ -2247,7 +2472,6 @@ Object {
       "role": "link",
     },
     Object {
-      "description": "Connect",
       "name": "Connect",
       "role": "link",
     },
@@ -2264,7 +2488,15 @@ Object {
       "role": "link",
     },
     Object {
+      "name": "Reddit",
+      "role": "link",
+    },
+    Object {
       "name": "Meetup",
+      "role": "link",
+    },
+    Object {
+      "name": "Golang Weekly",
       "role": "link",
     },
     Object {
@@ -2296,7 +2528,7 @@ Object {
       "role": "link",
     },
   ],
-  "name": "Home · pkg.go.dev",
+  "name": "pkg.go.dev",
   "role": "WebArea",
 }
 `;
@@ -2305,7 +2537,7 @@ exports[`mobile license policy accessibility tree 1`] = `
 Object {
   "children": Array [
     Object {
-      "name": "Link to Go Homepage",
+      "name": "Go",
       "role": "link",
     },
     Object {
@@ -2318,8 +2550,28 @@ Object {
       "role": "textbox",
     },
     Object {
-      "name": "Open navigation.",
+      "name": "Open navigation",
       "role": "button",
+    },
+    Object {
+      "name": "Go.",
+      "role": "link",
+    },
+    Object {
+      "name": "Why Go",
+      "role": "link",
+    },
+    Object {
+      "name": "Getting Started",
+      "role": "link",
+    },
+    Object {
+      "name": "Discover Packages",
+      "role": "link",
+    },
+    Object {
+      "name": "About",
+      "role": "link",
     },
     Object {
       "level": 1,
@@ -2795,22 +3047,18 @@ Object {
       "role": "text",
     },
     Object {
-      "description": "Why Go",
       "name": "Why Go",
       "role": "link",
     },
     Object {
-      "description": "Use Cases",
       "name": "Use Cases",
       "role": "link",
     },
     Object {
-      "description": "Case Studies",
       "name": "Case Studies",
       "role": "link",
     },
     Object {
-      "description": "Getting Started",
       "name": "Getting Started",
       "role": "link",
     },
@@ -2827,12 +3075,10 @@ Object {
       "role": "link",
     },
     Object {
-      "description": "Discover Packages",
       "name": "Discover Packages",
       "role": "link",
     },
     Object {
-      "description": "About",
       "name": "About",
       "role": "link",
     },
@@ -2842,6 +3088,10 @@ Object {
     },
     Object {
       "name": "Blog",
+      "role": "link",
+    },
+    Object {
+      "name": "Issue Tracker",
       "role": "link",
     },
     Object {
@@ -2857,7 +3107,6 @@ Object {
       "role": "link",
     },
     Object {
-      "description": "Connect",
       "name": "Connect",
       "role": "link",
     },
@@ -2874,7 +3123,15 @@ Object {
       "role": "link",
     },
     Object {
+      "name": "Reddit",
+      "role": "link",
+    },
+    Object {
       "name": "Meetup",
+      "role": "link",
+    },
+    Object {
+      "name": "Golang Weekly",
       "role": "link",
     },
     Object {
@@ -2906,7 +3163,7 @@ Object {
       "role": "link",
     },
   ],
-  "name": "Licenses · pkg.go.dev",
+  "name": "License Policy · pkg.go.dev",
   "role": "WebArea",
 }
 `;
@@ -2915,7 +3172,7 @@ exports[`mobile search help accessibility tree 1`] = `
 Object {
   "children": Array [
     Object {
-      "name": "Link to Go Homepage",
+      "name": "Go",
       "role": "link",
     },
     Object {
@@ -2928,8 +3185,28 @@ Object {
       "role": "textbox",
     },
     Object {
-      "name": "Open navigation.",
+      "name": "Open navigation",
       "role": "button",
+    },
+    Object {
+      "name": "Go.",
+      "role": "link",
+    },
+    Object {
+      "name": "Why Go",
+      "role": "link",
+    },
+    Object {
+      "name": "Getting Started",
+      "role": "link",
+    },
+    Object {
+      "name": "Discover Packages",
+      "role": "link",
+    },
+    Object {
+      "name": "About",
+      "role": "link",
     },
     Object {
       "level": 1,
@@ -3004,22 +3281,18 @@ Object {
       "role": "text",
     },
     Object {
-      "description": "Why Go",
       "name": "Why Go",
       "role": "link",
     },
     Object {
-      "description": "Use Cases",
       "name": "Use Cases",
       "role": "link",
     },
     Object {
-      "description": "Case Studies",
       "name": "Case Studies",
       "role": "link",
     },
     Object {
-      "description": "Getting Started",
       "name": "Getting Started",
       "role": "link",
     },
@@ -3036,12 +3309,10 @@ Object {
       "role": "link",
     },
     Object {
-      "description": "Discover Packages",
       "name": "Discover Packages",
       "role": "link",
     },
     Object {
-      "description": "About",
       "name": "About",
       "role": "link",
     },
@@ -3051,6 +3322,10 @@ Object {
     },
     Object {
       "name": "Blog",
+      "role": "link",
+    },
+    Object {
+      "name": "Issue Tracker",
       "role": "link",
     },
     Object {
@@ -3066,7 +3341,6 @@ Object {
       "role": "link",
     },
     Object {
-      "description": "Connect",
       "name": "Connect",
       "role": "link",
     },
@@ -3083,7 +3357,15 @@ Object {
       "role": "link",
     },
     Object {
+      "name": "Reddit",
+      "role": "link",
+    },
+    Object {
       "name": "Meetup",
+      "role": "link",
+    },
+    Object {
+      "name": "Golang Weekly",
       "role": "link",
     },
     Object {
