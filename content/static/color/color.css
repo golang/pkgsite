@@ -60,19 +60,6 @@
   --color-button-accented-text-disabled: var(--gray-3);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme='light']) {
-    --color-brand-primary: var(--turq-med);
-    --color-background: var(--gray-1);
-    --color-background-accented: var(--slate);
-    --color-background-highlighted: var(--gray-2);
-    --color-background-warning: var(--yellow);
-    --color-background-alert: var(--pink);
-    --color-border: var(--gray-4);
-    --color-text: var(--white);
-    --color-text-subtle: var(--gray-7);
-  }
-}
 [data-theme='dark'] {
   --color-brand-primary: var(--turq-med);
   --color-background: var(--gray-1);

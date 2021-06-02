@@ -11,17 +11,11 @@
 }
 .SearchResults-header {
   font-size: 1.875rem;
-  margin: 0;
-}
-.SearchResults-help {
-  margin-top: 0.3125rem;
 }
 .SearchResults-resultCount {
   color: var(--gray-3);
   display: flex;
   justify-content: space-between;
-  margin-bottom: 0.625rem;
-  margin-top: 1.125rem;
 }
 .SearchResults-footer {
   display: flex;

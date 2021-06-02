@@ -13,12 +13,7 @@ import (
 )
 
 func main() {
-	_, err := static.Build(static.Config{StaticPath: "content/static/js", Write: true})
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	_, err = static.Build(static.Config{StaticPath: "content/static/styleguide", Write: true, Bundle: true})
+	_, err := static.Build(static.Config{StaticPath: "content/static", Write: true})
 	if err != nil {
 		log.Fatal(err)
 	}

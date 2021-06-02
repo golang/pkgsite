@@ -4,14 +4,20 @@
   license that can be found in the LICENSE file.
 -->
 
-{{define "pre_content"}}
-  <link href="/static/css/badge.css?version={{.AppVersionLabel}}" rel="stylesheet">
+{{define "title"}}<title>Badge · pkg.go.dev</title>{{end}}
+
+{{define "description"}}
+  <meta name="description" content="Create a badge to link to pkg.go.dev from your project website or README file.">
 {{end}}
 
-{{define "main_content"}}
-  <div class="Container">
-    <div class="Content">
-      <h1 class="Content-header">Create a badge</h1>
+{{define "pre-content"}}
+  <link href="/static/badge/badge.css?version={{.AppVersionLabel}}" rel="stylesheet">
+{{end}}
+
+{{define "main"}}
+  <main class="go-Container">
+    <div class="go-Content">
+      <h1>Create a badge</h1>
       <p>Create a badge to link to pkg.go.dev from your project website or README file.</p>
       <label class="Badge-formElement">
         Badge
@@ -46,16 +52,16 @@
         {{else}}
           <div class="Badge-gopherLanding">
             <img src="/static/img/gopher-airplane.svg" alt="The Go Gopher"/>
-            <p>Type a pkg.go.dev URL above to create a badge link.</p>
+            <p class="go-textSubtle">Type a pkg.go.dev URL above to create a badge link.</p>
           </div>
         {{end}}
       </div>
     </div>
-  </div>
+  </main>
 {{end}}
 
-{{define "post_content"}}
-<script>
-  loadScript("/static/js/badge.js");
-</script>
+{{define "post-content"}}
+  <script>
+    loadScript("/static/badge/badge.js");
+  </script>
 {{end}}

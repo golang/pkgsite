@@ -28,7 +28,7 @@ func TestBadgeHandler_ServeBadgeTool(t *testing.T) {
 	}{
 		{
 			"/badge/",
-			"<p>Type a pkg.go.dev URL above to create a badge link.</p>",
+			`<p class="go-textSubtle">Type a pkg.go.dev URL above to create a badge link.</p>`,
 		},
 		{
 			"/badge/?path=net/http",

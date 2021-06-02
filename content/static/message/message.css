@@ -25,11 +25,7 @@
 .go-Message > .go-Icon {
   vertical-align: text-top;
 }
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme='light']) .go-Message--warning > .go-Icon {
-    filter: none;
-  }
-}
+
 [data-theme='dark'] .go-Message--warning > .go-Icon {
   filter: none;
 }

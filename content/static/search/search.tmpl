@@ -1,16 +1,18 @@
 <!--
-  Copyright 2019 The Go Authors. All rights reserved.
+  Copyright 2021 The Go Authors. All rights reserved.
   Use of this source code is governed by a BSD-style
   license that can be found in the LICENSE file.
 -->
 
-{{define "pre_content"}}
-  <link href="/static/css/search.css?version={{.AppVersionLabel}}" rel="stylesheet">
+{{define "title"}}<title>Search Help · pkg.go.dev</title>{{end}}
+
+{{define "pre-content"}}
+  <link href="/static/search/search.css?version={{.AppVersionLabel}}" rel="stylesheet">
 {{end}}
 
-{{define "main_content"}}
-  <div class="Container">
-    <div class="SearchResults">
+{{define "main"}}
+  <main class="go-Container">
+    <div class="go-Content">
       <h1 class="SearchResults-header">Results for “{{.Query}}”</h1>
       <div class="SearchResults-help"><a href="/search-help">Search help</a></div>
       <div class="SearchResults-resultCount">
@@ -38,7 +40,7 @@
         {{template "pagination_nav" .Pagination}}
       </div>
     </div>
-  </div>
+  </main>
 {{end}}
 
 

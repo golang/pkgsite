@@ -15,14 +15,12 @@ var scriptHashes = []string{
 	"'sha256-CoGrkqEM1Kjjf5b1bpcnDLl8ZZLAsVX+BoAzZ5+AOmc='",
 	"'sha256-karKh1IrXOF1g+uoSxK+k9BuciCwYY/ytGuQVUiRzcM='",
 	"'sha256-2owiLItzX793qLVobnd0z9Z90a2wej4/C73Qb0qNtO4='",
-	// From content/static/html/base.tmpl
-	"'sha256-dwce5DnVX7uk6fdvvNxQyLTH/cJrTMDK6zzrdKwdwcg='",
-	"'sha256-M35cNZ8vPcaBGw5WTgh0Gn7DLsxkvPbdTFN1pELeevM='",
-	"'sha256-CgM7SjnSbDyuIteS+D1CQuSnzyKwL0qtXLU6ZW2hB+g='",
-	// From content/static/html/pages/badge.tmpl
-	"'sha256-v9+UvX+P27rKraeTl7uAfOWdLmmQU39RskIoqUrU4wo='",
-	// From content/static/html/pages/fetch.tmpl
-	"'sha256-4FhQmh9Hu76JzYm35KNNysU2Z7buJwg3cMSHsGwKSCE='",
+	// From content/static/badge/badge.tmpl
+	"'sha256-lYbH/hg0O4Oc1stV4ysso2zlUCXY0yGRUZ5zDOnZ9hI='",
+	// From content/static/fetch/fetch.tmpl
+	"'sha256-NL8cRfvzPNDO6ZYKQYWS1kPknRV9gUCJoTk+fRR04zg='",
+	// From content/static/main-layout/main-layout.tmpl
+	"'sha256-cVUOUH4vbDOJY6vJAjvJj3d2jAmDiwy/SyVsZgZVxVM='",
 	// From content/static/html/pages/unit.tmpl
 	"'sha256-r4g06j/B7WYKOSl8cFfvuZOyiYA1tOyrbnxapiSP64g='",
 	// From content/static/html/pages/unit_details.tmpl

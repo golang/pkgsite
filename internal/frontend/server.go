@@ -98,7 +98,7 @@ func NewServer(scfg ServerConfig) (_ *Server, err error) {
 		serveStats:           scfg.ServeStats,
 		reportingClient:      scfg.ReportingClient,
 	}
-	errorPageBytes, err := s.renderErrorPage(context.Background(), http.StatusInternalServerError, "error.tmpl", nil)
+	errorPageBytes, err := s.renderErrorPage(context.Background(), http.StatusInternalServerError, "error", nil)
 	if err != nil {
 		return nil, fmt.Errorf("s.renderErrorPage(http.StatusInternalServerError, nil): %v", err)
 	}
@@ -142,7 +142,7 @@ func (s *Server) Install(handle func(string, http.Handler), redisClient *redis.C
 	handle("/play/fmt", http.HandlerFunc(s.handleFmt))
 	handle("/play/share", http.HandlerFunc(s.proxyPlayground))
 	handle("/search", searchHandler)
-	handle("/search-help", s.staticPageHandler("search_help.tmpl", "Search Help"))
+	handle("/search-help", s.staticPageHandler("search-help", "Search Help"))
 	handle("/license-policy", s.licensePolicyHandler())
 	handle("/about", http.RedirectHandler("https://go.dev/about", http.StatusFound))
 	handle("/badge/", http.HandlerFunc(s.badgeHandler))
@@ -265,6 +265,14 @@ type basePage struct {
 	// AllowWideContent indicates whether the content should be displayed in a
 	// way that’s amenable to wider viewports.
 	AllowWideContent bool
+
+	// Enables the two and three column layouts on the unit page.
+	UseResponsiveLayout bool
+
+	// UseSiteWrapper indicates whether the page content should be wrapped in the
+	// Site class. This is only used for unit pages until the migration to the new
+	// layout base page is completed.
+	UseSiteWrapper bool
 }
 
 // licensePolicyPage is used to generate the static license policy page.
@@ -282,7 +290,7 @@ func (s *Server) licensePolicyHandler() http.HandlerFunc {
 			LicenseFileNames: licenses.FileNames,
 			LicenseTypes:     lics,
 		}
-		s.servePage(r.Context(), w, "license_policy.tmpl", page)
+		s.servePage(r.Context(), w, "license-policy", page)
 	})
 }
 
@@ -312,7 +320,7 @@ type errorPage struct {
 func (s *Server) PanicHandler() (_ http.HandlerFunc, err error) {
 	defer derrors.Wrap(&err, "PanicHandler")
 	status := http.StatusInternalServerError
-	buf, err := s.renderErrorPage(context.Background(), status, "error.tmpl", nil)
+	buf, err := s.renderErrorPage(context.Background(), status, "error", nil)
 	if err != nil {
 		return nil, err
 	}
@@ -392,7 +400,7 @@ func (s *Server) reportError(ctx context.Context, err error, w http.ResponseWrit
 }
 
 func (s *Server) serveErrorPage(w http.ResponseWriter, r *http.Request, status int, page *errorPage) {
-	template := "error.tmpl"
+	template := "error"
 	if page != nil {
 		if page.AppVersionLabel == "" || page.GoogleTagManagerID == "" {
 			// If the basePage was properly created using newBasePage, both
@@ -436,7 +444,7 @@ func (s *Server) renderErrorPage(ctx context.Context, status int, templateName s
 		page.HTMLTitle = statusInfo
 	}
 	if templateName == "" {
-		templateName = "error.tmpl"
+		templateName = "error"
 	}
 
 	etmpl, err := s.findTemplate(templateName)
@@ -538,14 +546,7 @@ func parsePageTemplates(base template.TrustedSource) (map[string]*template.Templ
 	tsc := template.TrustedSourceFromConstant
 	join := template.TrustedSourceJoin
 
-	htmlSets := [][]template.TrustedSource{
-		{tsc("badge.tmpl")},
-		{tsc("error.tmpl")},
-		{tsc("fetch.tmpl")},
-		{tsc("index.tmpl")},
-		{tsc("license_policy.tmpl")},
-		{tsc("search.tmpl")},
-		{tsc("search_help.tmpl")},
+	legacyHtmlSets := [][]template.TrustedSource{
 		{tsc("unit_details.tmpl"), tsc("unit.tmpl")},
 		{tsc("unit_importedby.tmpl"), tsc("unit.tmpl")},
 		{tsc("unit_imports.tmpl"), tsc("unit.tmpl")},
@@ -554,14 +555,19 @@ func parsePageTemplates(base template.TrustedSource) (map[string]*template.Templ
 	}
 
 	templates := make(map[string]*template.Template)
-	for _, set := range htmlSets {
-		t, err := template.New("base.tmpl").Funcs(templateFuncs).ParseFilesFromTrustedSources(join(base, tsc("html"), tsc("base.tmpl")))
+	for _, set := range legacyHtmlSets {
+		t, err := template.New("base.tmpl").Funcs(templateFuncs).ParseFilesFromTrustedSources(join(base, tsc("base"), tsc("base.tmpl")))
 		if err != nil {
 			return nil, fmt.Errorf("ParseFiles: %v", err)
 		}
 		helperGlob := join(base, tsc("html"), tsc("helpers"), tsc("*.tmpl"))
 		if _, err := t.ParseGlobFromTrustedSource(helperGlob); err != nil {
 			return nil, fmt.Errorf("ParseGlob(%q): %v", helperGlob, err)
+		}
+		header := join(base, tsc("header"), tsc("header.partial.tmpl"))
+		footer := join(base, tsc("footer"), tsc("footer.partial.tmpl"))
+		if _, err := t.ParseFilesFromTrustedSources(header, footer); err != nil {
+			return nil, fmt.Errorf("ParseFilesFromTrustedSources(%v, %v): %v", header, footer, err)
 		}
 
 		var files []template.TrustedSource
@@ -574,10 +580,18 @@ func parsePageTemplates(base template.TrustedSource) (map[string]*template.Templ
 		templates[set[0].String()] = t
 	}
 
-	styleGuideSets := [][]template.TrustedSource{
+	htmlSets := [][]template.TrustedSource{
 		{tsc("styleguide"), tsc("main-layout")},
+		{tsc("homepage")},
+		{tsc("badge")},
+		{tsc("error")},
+		{tsc("fetch")},
+		{tsc("license-policy")},
+		{tsc("search-help")},
+		{tsc("search")},
 	}
-	for _, set := range styleGuideSets {
+
+	for _, set := range htmlSets {
 		t, err := template.New("base.tmpl").Funcs(templateFuncs).ParseFilesFromTrustedSources(join(base, tsc("base/base.tmpl")))
 		if err != nil {
 			return nil, fmt.Errorf("ParseFilesFromTrustedSources: %v", err)
@@ -605,7 +619,7 @@ func (s *Server) staticHandler() http.Handler {
 	// and rebuild them on file changes.
 	if s.devMode {
 		ctx := context.Background()
-		_, err := static.Build(static.Config{StaticPath: staticPath + "/js", Watch: true, Write: true})
+		_, err := static.Build(static.Config{StaticPath: staticPath, Watch: true, Write: true})
 		if err != nil {
 			log.Error(ctx, err)
 		}

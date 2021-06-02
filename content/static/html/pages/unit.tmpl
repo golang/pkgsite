@@ -4,17 +4,18 @@
   license that can be found in the LICENSE file.
 -->
 
-{{define "pre_content"}}
+{{define "pre-content"}}
+  <link href="/static/css/stylesheet.css?version={{.AppVersionLabel}}" rel="stylesheet">
   <link href="/static/css/unit.css?version={{.AppVersionLabel}}" rel="stylesheet">
   {{block "unit_pre_content" .}}{{end}}
   <link href="/static/css/unit_outline.css?version={{.AppVersionLabel}}" rel="stylesheet">
 {{end}}
 
-{{define "main_content"}}
-  <div class="Container">
+{{define "main"}}
+  <main class="Container">
     {{block "unit_header" .}}{{end}}
     {{block "unit_content" .}}{{end}}
-  </div>
+  </main>
 
   <dialog class="JumpDialog Dialog">
     <h2 class="Dialog-title">Jump to</h2>
@@ -48,7 +49,7 @@
   </dialog>
 {{end}}
 
-{{define "post_content"}}
+{{define "post-content"}}
   <div class="js-canonicalURLPath" data-canonical-url-path="{{.CanonicalURLPath}}" hidden />
   <script>
     loadScript('/static/js/keyboard.js', {type: 'module', async: true, defer: true})

@@ -40,5 +40,5 @@ func (s *Server) badgeHandler(w http.ResponseWriter, r *http.Request) {
 		LinkPath:  path,
 		BadgePath: "badge/" + path + ".svg",
 	}
-	s.servePage(r.Context(), w, "badge.tmpl", page)
+	s.servePage(r.Context(), w, "badge", page)
 }

@@ -81,8 +81,8 @@ export class TreeNavController {
 
     for (const href of this.treeitems.map(t => t.el.getAttribute('href'))) {
       if (href) {
-        const id = href.replace(window.location.origin, '').replace('/', '');
-        const target = document.querySelector(id);
+        const id = href.replace(window.location.origin, '').replace('/', '').replace('#', '');
+        const target = document.getElementById(id);
         if (target) {
           observer.observe(target);
         }
@@ -308,7 +308,7 @@ class TreeItem {
     let curr = el.nextElementSibling;
     while (curr) {
       if (curr.tagName.toLowerCase() == 'ul') {
-        const groupId = `${group?.label ?? ''} nav group ${this.label}`;
+        const groupId = `${group?.label ?? ''} nav group ${this.label}`.replace(/[\W_]+/g, '_');
         el.setAttribute('aria-owns', groupId);
         el.setAttribute('aria-expanded', 'false');
         curr.setAttribute('role', 'group');

@@ -683,8 +683,8 @@ func serverTestCases() []serverTestCase {
 			urlPath:        "/license-policy",
 			wantStatusCode: http.StatusOK,
 			want: in("",
-				in(".Content-header", hasText("License Disclaimer")),
-				in(".Content",
+				in("h1", hasText("License Disclaimer")),
+				in(".go-Content",
 					hasText("The Go website displays license information"),
 					hasText("this is not legal advice"))),
 		},
@@ -1554,27 +1554,27 @@ func TestCheckTemplates(t *testing.T) {
 		// error.tmpl omitted because relies on an associated "message" template
 		// that's parsed on demand; see renderErrorPage above.
 		{"fetch", nil, errorPage{}},
-		{"index", nil, basePage{}},
-		{"license_policy", nil, licensePolicyPage{}},
+		{"homepage", nil, basePage{}},
+		{"license-policy", nil, licensePolicyPage{}},
 		{"search", nil, SearchPage{}},
-		{"search_help", nil, basePage{}},
-		{"unit_details", nil, UnitPage{}},
+		{"search-help", nil, basePage{}},
+		{"unit_details.tmpl", nil, UnitPage{}},
 		{
-			"unit_details",
+			"unit_details.tmpl",
 			[]string{"unit_outline", "unit_readme", "unit_doc", "unit_files", "unit_directories"},
 			MainDetails{},
 		},
-		{"unit_importedby", nil, UnitPage{}},
-		{"unit_importedby", []string{"importedby"}, ImportedByDetails{}},
-		{"unit_imports", nil, UnitPage{}},
-		{"unit_imports", []string{"imports"}, ImportsDetails{}},
-		{"unit_licenses", nil, UnitPage{}},
-		{"unit_licenses", []string{"licenses"}, LicensesDetails{}},
-		{"unit_versions", nil, UnitPage{}},
-		{"unit_versions", []string{"versions"}, VersionsDetails{}},
+		{"unit_importedby.tmpl", nil, UnitPage{}},
+		{"unit_importedby.tmpl", []string{"importedby"}, ImportedByDetails{}},
+		{"unit_imports.tmpl", nil, UnitPage{}},
+		{"unit_imports.tmpl", []string{"imports"}, ImportsDetails{}},
+		{"unit_licenses.tmpl", nil, UnitPage{}},
+		{"unit_licenses.tmpl", []string{"licenses"}, LicensesDetails{}},
+		{"unit_versions.tmpl", nil, UnitPage{}},
+		{"unit_versions.tmpl", []string{"versions"}, VersionsDetails{}},
 	} {
 		t.Run(c.name, func(t *testing.T) {
-			tm := templates[c.name+".tmpl"]
+			tm := templates[c.name]
 			if tm == nil {
 				t.Fatalf("no template %q", c.name)
 			}

@@ -4,11 +4,10 @@
  * license that can be found in the LICENSE file.
  */
 
-.Homepage {
-  display: flex;
-  flex-direction: column;
-  margin: 0 auto;
+.go-SearchForm {
+  display: none;
 }
+
 .Homepage-logo {
   display: block;
   height: 14.6rem;
@@ -86,7 +85,6 @@ a.Homepage-helpLink {
   display: block;
   font-size: 0.875rem;
   font-weight: 500;
-  margin: 1.125rem auto 1rem;
   text-align: center;
   width: 100%;
 }
@@ -116,7 +114,8 @@ a.Homepage-helpLink {
   background: var(--gray-10);
   color: var(--gray-2);
   display: flex;
-  padding: 0.5rem 0;
+  padding-bottom: 1rem;
+  padding-top: 0.5rem;
 }
 .Questions-header {
   color: var(--gray-2);

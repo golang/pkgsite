@@ -8,7 +8,7 @@ The size modifer class is optional. The base modal will grow to fit the inner co
 
 ```html
 <dialog id="example-modal-id1" class="go-Modal go-Modal--sm js-modal">
-  <form action="#modals">
+  <form method="dialog">
     <div class="go-Modal-header">
       <h2>Small Modal</h2>
       <button
@@ -42,7 +42,7 @@ The size modifer class is optional. The base modal will grow to fit the inner co
 
 ```html
 <dialog id="example-modal-id2" class="go-Modal go-Modal--md js-modal">
-  <form action="#modals">
+  <form method="dialog">
     <div class="go-Modal-header">
       <h2>Medium Modal</h2>
       <button
@@ -76,7 +76,7 @@ The size modifer class is optional. The base modal will grow to fit the inner co
 
 ```html
 <dialog id="example-modal-id3" class="go-Modal go-Modal--lg js-modal">
-  <form action="#modals">
+  <form method="dialog">
     <div class="go-Modal-header">
       <h2>Large Modal</h2>
       <button

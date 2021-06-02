@@ -5,8 +5,6 @@
  * license that can be found in the LICENSE file.
  */
 
-import polyfill from '../../../third_party/dialog-polyfill/dialog-polyfill.js';
-
 /**
  * ModalController registers a dialog element with the polyfill if
  * necessary for the current browser, add adds event listeners to
@@ -14,8 +12,13 @@ import polyfill from '../../../third_party/dialog-polyfill/dialog-polyfill.js';
  */
 export class ModalController {
   constructor(private el: HTMLDialogElement) {
+    // Only load the dialog polyfill if necessary for the environment.
     if (!window.HTMLDialogElement && !el.showModal) {
-      polyfill.registerDialog(el);
+      import('../../../third_party/dialog-polyfill/dialog-polyfill.esm.js').then(
+        ({ default: polyfill }) => {
+          polyfill.registerDialog(el);
+        }
+      );
     }
     const id = el.id;
     const button = document.querySelector<HTMLButtonElement>(`[aria-controls="${id}"]`);
@@ -26,6 +29,7 @@ export class ModalController {
         } else {
           this.el.open = true;
         }
+        el.querySelector('input')?.focus();
       });
     }
     for (const close of this.el.querySelectorAll<HTMLButtonElement>('[data-modal-close]')) {

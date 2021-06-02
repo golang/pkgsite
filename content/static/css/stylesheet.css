@@ -541,6 +541,7 @@ pre,
 
 .Container {
   color: var(--gray-1);
+  flex-grow: 1;
   margin: 0 auto;
   max-width: 60em;
   position: relative;

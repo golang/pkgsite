@@ -16,7 +16,7 @@
 .Error-message,
 .EmptyContent-message,
 .SearchResults-emptyContentMessage {
-  margin: 0.5rem 0;
+  color: var(--color-textSubtle);
   text-align: center;
 }
 .Error-gopher,
@@ -25,7 +25,7 @@
 .SearchResults-emptyContentGopher {
   display: block;
   height: 15rem;
-  margin: auto;
+  margin: 0 auto;
   padding: 1.25rem 0;
   width: 15rem;
 }

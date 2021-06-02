@@ -1,17 +1,22 @@
 <!--
-    Copyright 2019 The Go Authors. All rights reserved.
-    Use of this source code is governed by a BSD-style
-    license that can be found in the LICENSE file.
+  Copyright 2020 The Go Authors. All rights reserved.
+  Use of this source code is governed by a BSD-style
+  license that can be found in the LICENSE file.
 -->
 
-{{define "pre_content"}}
-  <link href="/static/css/fetch.css?version={{.AppVersionLabel}}" rel="stylesheet">
+{{define "title"}}<title>{{.MessageData}} · pkg.go.dev</title>{{end}}
+
+{{define "description"}}
+  <meta name="description" content="Create a badge to link to pkg.go.dev from your project website or README file.">
 {{end}}
 
-{{define "main_content"}}
-<div class="Container">
-  <div class="Content">
-    <div class="Fetch-container">
+{{define "pre-content"}}
+  <link href="/static/fetch/fetch.css?version={{.AppVersionLabel}}" rel="stylesheet">
+{{end}}
+
+{{define "main"}}
+  <main class="go-Container">
+    <div class="go-Content go-Content--center">
       <img class="Fetch-gopher" src="/static/img/gopher-airplane.svg" alt="The Go Gopher">
       <h3 class="Fetch-message js-fetchMessage"
         data-test-id="fetch-message"
@@ -33,12 +38,12 @@
         Request “{{.MessageData}}”
       </button>
     </div>
-  </div>
-</div>
+  </main>
+
 {{end}}
 
-{{define "post_content"}}
-<script>
-  loadScript("/static/js/fetch.js");
-</script>
+{{define "post-content"}}
+  <script>
+    loadScript("/static/fetch/fetch.js");
+  </script>
 {{end}}

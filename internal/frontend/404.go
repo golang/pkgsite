@@ -170,7 +170,7 @@ func pathNotFoundError(fullPath, requestedVersion string) error {
 	return &serverError{
 		status: http.StatusNotFound,
 		epage: &errorPage{
-			templateName: "fetch.tmpl",
+			templateName: "fetch",
 			MessageData:  path,
 		},
 	}

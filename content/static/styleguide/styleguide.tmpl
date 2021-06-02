@@ -24,7 +24,7 @@
 {{end}}
 
 {{define "main-header"}}
-  <nav class="go-Breadcrumb" aria-label="Breadcrumb">
+  <nav class="go-Main-headerBreadcrumb go-Breadcrumb" aria-label="Breadcrumb">
     <ol>
       <li><a href="/" data-gtmc="breadcrumb link">Discover Packages</a></li>
       <li>
@@ -33,46 +33,50 @@
     </ol>
   </nav>
   <div class="go-Main-headerContent">
-    <a class="go-Main-headerLogo" href="https://go.dev/" aria-hidden="true" tabindex="-1" data-gtmc="header link"
-        aria-label="Link to Go Homepage">
-      <img height="78" width="207" src="/static/logo/go-blue.svg" alt="Go">
-    </a>
-    <h1 class="go-Main-headerTitle">Style Guide</h1>
-    <fieldset class="go-Label go-Label--inline MainHeader-toggle">
-      <legend>Theme</legend>
-      <div class="go-InputGroup">
-        <button class="go-Button go-Button--inverted js-toggleTheme" data-value="light" title="Light"
-            aria-label="Set light theme">
-          <img class="go-Icon" height="24" width="24" src="/static/icon/light_mode_gm_grey_24dp.svg"
-              alt="">
-        </button>
-        <button class="go-Button go-Button--inverted js-toggleTheme" data-value="dark" title="Dark"
-            aria-label="Set dark theme">
-          <img class="go-Icon" height="24" width="24" alt=""
-            src="/static/icon/brightness_2_gm_grey_24dp.svg">
-        </button>
-      </div>
-    </fieldset>
-    <fieldset class="go-Label go-Label--inline MainHeader-toggle">
-      <legend>Layout</legend>
-      <div class="go-InputGroup">
-        <button class="go-Button go-Button--inverted js-toggleLayout" data-value="responsive"
-            title="Responsive" aria-label="Set responsive layout">
-          <img class="go-Icon" height="24" width="24" src="/static/icon/responsive_layout_gm_grey_24dp.svg"
-              alt="">
-        </button>
-        <button class="go-Button go-Button--inverted js-toggleLayout" data-value="stacked"
-            title="Stacked" aria-label="Set stacked layout">
-          <img class="go-Icon" height="24" width="24" src="/static/icon/table_rows_gm_grey_24dp.svg"
-              alt="">
-        </button>
-        <button class="go-Button go-Button--inverted js-toggleLayout" data-value="compact"
-            title="Compact" aria-label="Set compact layout">
-          <img class="go-Icon" height="24" width="24" src="/static/icon/toolbar_gm_grey_24dp.svg"
-              alt="">
-        </button>
-      </div>
-    </fieldset>
+    <div class="go-Main-headerTitle">
+      <a class="go-Main-headerLogo" href="https://go.dev/" aria-hidden="true" tabindex="-1" data-gtmc="header link"
+          aria-label="Link to Go Homepage">
+        <img height="78" width="207" src="/static/logo/go-blue.svg" alt="Go">
+      </a>
+      <h1 class="go-Main-headerTitle">Style Guide</h1>
+    </div>
+    <div class="go-Main-headerDetails">
+      <fieldset class="go-Main-headerDetailItem go-Label go-Label--inline MainHeader-toggle">
+        <legend>Theme</legend>
+        <div class="go-InputGroup">
+          <button class="go-Button go-Button--inverted js-toggleTheme" data-value="light" title="Light"
+              aria-label="Set light theme">
+            <img class="go-Icon" height="24" width="24" src="/static/icon/light_mode_gm_grey_24dp.svg"
+                alt="">
+          </button>
+          <button class="go-Button go-Button--inverted js-toggleTheme" data-value="dark" title="Dark"
+              aria-label="Set dark theme">
+            <img class="go-Icon" height="24" width="24" alt=""
+              src="/static/icon/brightness_2_gm_grey_24dp.svg">
+          </button>
+        </div>
+      </fieldset>
+      <fieldset class="go-Main-headerDetailItem go-Label go-Label--inline MainHeader-toggle">
+        <legend>Layout</legend>
+        <div class="go-InputGroup">
+          <button class="go-Button go-Button--inverted js-toggleLayout" data-value="responsive"
+              title="Responsive" aria-label="Set responsive layout">
+            <img class="go-Icon" height="24" width="24" src="/static/icon/responsive_layout_gm_grey_24dp.svg"
+                alt="">
+          </button>
+          <button class="go-Button go-Button--inverted js-toggleLayout" data-value="stacked"
+              title="Stacked" aria-label="Set stacked layout">
+            <img class="go-Icon" height="24" width="24" src="/static/icon/table_rows_gm_grey_24dp.svg"
+                alt="">
+          </button>
+          <button class="go-Button go-Button--inverted js-toggleLayout" data-value="compact"
+              title="Compact" aria-label="Set compact layout">
+            <img class="go-Icon" height="24" width="24" src="/static/icon/toolbar_gm_grey_24dp.svg"
+                alt="">
+          </button>
+        </div>
+      </fieldset>
+    </div>
   </div>
 {{end}}
 

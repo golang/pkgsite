@@ -10,15 +10,11 @@
   border-radius: 0.5rem;
   color: var(--turq-dark);
   font-size: 1rem;
-  height: 2.5rem;
-  margin: 1rem 0;
+  margin: 1rem auto;
+  min-height: 2.5rem;
   min-width: 5rem;
-  padding: 0 1rem;
-}
-.Fetch-container {
-  align-items: center;
-  display: flex;
-  flex-flow: column;
+  padding: 0.5rem 1rem;
+  width: fit-content;
 }
 @keyframes blink {
   0% {
@@ -44,6 +40,7 @@
 }
 .Fetch-loading {
   display: none;
+  text-align: center;
 }
 .Fetch-loading:nth-child(2) {
   animation-delay: 0.2s;

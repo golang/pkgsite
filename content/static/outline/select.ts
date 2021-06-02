@@ -11,7 +11,11 @@ export class SelectNavController {
   constructor(private el: Element) {
     this.el.addEventListener('change', e => {
       const target = e.target as HTMLSelectElement;
-      window.location.href = target.value;
+      let href = target.value;
+      if (!target.value.startsWith('/')) {
+        href = '/' + href;
+      }
+      window.location.href = href;
     });
   }
 }
@@ -23,31 +27,28 @@ export function makeSelectNav(tree: TreeNavController): HTMLLabelElement {
   const select = document.createElement('select');
   select.classList.add('go-Select', 'js-selectNav');
   label.appendChild(select);
-  const o = document.createElement('option');
-  o.disabled = true;
-  o.selected = true;
-  o.label = 'Outline';
-  select.appendChild(o);
+  const outline = document.createElement('optgroup');
+  outline.label = 'Outline';
+  select.appendChild(outline);
+  const groupMap = {};
   let group: HTMLOptGroupElement;
-  for (const [i, t] of tree.treeitems.entries()) {
-    if (Number(t.depth) > 2) continue;
-    if (t.depth === 1 && tree.treeitems[i + 1]?.depth > 1) {
-      group = document.createElement('optgroup');
-      group.label = t.label;
-      select.appendChild(group);
-    } else {
-      const o = document.createElement('option');
-      o.label = t.label;
-      o.textContent = t.label;
-      o.value = (t.el as HTMLAnchorElement).href
-        .replace(window.location.origin, '')
-        .replace('/', '');
-      if (t.depth === 1) {
-        select.appendChild(o);
-      } else {
-        group.appendChild(o);
+  for (const t of tree.treeitems) {
+    if (Number(t.depth) > 4) continue;
+    if (t.groupTreeitem) {
+      group = groupMap[t.groupTreeitem.label];
+      if (!group) {
+        group = groupMap[t.groupTreeitem.label] = document.createElement('optgroup');
+        group.label = t.groupTreeitem.label;
+        select.appendChild(group);
       }
+    } else {
+      group = outline;
     }
+    const o = document.createElement('option');
+    o.label = t.label;
+    o.textContent = t.label;
+    o.value = (t.el as HTMLAnchorElement).href.replace(window.location.origin, '').replace('/', '');
+    group.appendChild(o);
   }
   tree.addObserver(t => {
     const value = select.querySelector<HTMLOptionElement>(`[label="${t.label}"]`)?.value;

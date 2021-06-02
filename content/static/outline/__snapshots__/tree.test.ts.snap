@@ -16,7 +16,7 @@ exports[`creates tree nav from ul 1`] = `
     <a
       aria-expanded="false"
       aria-level="1"
-      aria-owns=" nav group Level 1"
+      aria-owns="_nav_group_Level_1"
       class="focus"
       href="#one"
       role="treeitem"
@@ -27,7 +27,7 @@ exports[`creates tree nav from ul 1`] = `
     
     
     <ul
-      id=" nav group Level 1"
+      id="_nav_group_Level_1"
       role="group"
     >
       
@@ -58,7 +58,7 @@ exports[`creates tree nav from ul 1`] = `
         <a
           aria-expanded="false"
           aria-level="2"
-          aria-owns="Level 1 nav group Level 2-2"
+          aria-owns="Level_1_nav_group_Level_2_2"
           href="#two-two"
           role="treeitem"
           tabindex="-1"
@@ -68,7 +68,7 @@ exports[`creates tree nav from ul 1`] = `
         
         
         <ul
-          id="Level 1 nav group Level 2-2"
+          id="Level_1_nav_group_Level_2_2"
           role="group"
         >
           
@@ -81,7 +81,7 @@ exports[`creates tree nav from ul 1`] = `
             <a
               aria-expanded="false"
               aria-level="3"
-              aria-owns="Level 2-2 nav group Level 3-1"
+              aria-owns="Level_2_2_nav_group_Level_3_1"
               href="#three-one"
               role="treeitem"
               tabindex="-1"
@@ -91,7 +91,7 @@ exports[`creates tree nav from ul 1`] = `
             
             
             <ul
-              id="Level 2-2 nav group Level 3-1"
+              id="Level_2_2_nav_group_Level_3_1"
               role="group"
             >
               
@@ -152,7 +152,7 @@ exports[`creates tree nav from ul 1`] = `
         <a
           aria-expanded="false"
           aria-level="2"
-          aria-owns="Level 1 nav group Level 2-3"
+          aria-owns="Level_1_nav_group_Level_2_3"
           href="#two-three"
           role="treeitem"
           tabindex="-1"
@@ -162,7 +162,7 @@ exports[`creates tree nav from ul 1`] = `
         
         
         <ul
-          id="Level 1 nav group Level 2-3"
+          id="Level_1_nav_group_Level_2_3"
           role="group"
         >
           
@@ -175,7 +175,7 @@ exports[`creates tree nav from ul 1`] = `
             <a
               aria-expanded="false"
               aria-level="3"
-              aria-owns="Level 2-3 nav group Level 3-2"
+              aria-owns="Level_2_3_nav_group_Level_3_2"
               href="#three-two"
               role="treeitem"
               tabindex="-1"
@@ -185,7 +185,7 @@ exports[`creates tree nav from ul 1`] = `
             
             
             <ul
-              id="Level 2-3 nav group Level 3-2"
+              id="Level_2_3_nav_group_Level_3_2"
               role="group"
             >
               

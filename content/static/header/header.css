@@ -20,7 +20,7 @@
   margin: 0 auto;
   max-width: 75.75rem;
   min-height: 2.5rem;
-  padding: 0.5rem 1.5rem;
+  padding: 0.5rem var(--gutter);
 }
 .Site--wide .go-Banner-inner {
   max-width: 98rem;
@@ -48,17 +48,17 @@
   background: #007d9c;
   border-bottom: none;
   box-shadow: 0 0.0625rem 0.125rem rgba(171, 171, 171, 0.3);
-  padding: 0 var(--gutter);
   top: 0;
   width: 100%;
   z-index: 10;
 }
 .go-Header-inner {
   margin: 0 auto;
-  max-width: 73.75rem;
+  max-width: 75.75rem;
+  padding: 0 var(--gutter);
 }
 .Site--wide .go-Header-inner {
-  max-width: 96rem;
+  max-width: 98rem;
 }
 .go-Header--full .go-Header-inner {
   max-width: initial;

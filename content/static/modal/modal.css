@@ -15,7 +15,7 @@
   color: var(--color-text);
   display: flex;
   flex-direction: column;
-  gap: var(--gap);
+  gap: 1rem;
   max-height: 100%;
   max-width: 100%;
   position: fixed;
@@ -37,7 +37,7 @@
   border-bottom: var(--border);
   display: flex;
   justify-content: space-between;
-  padding-bottom: var(--gap);
+  padding-bottom: 1rem;
 }
 .go-Modal-header h2 {
   font-size: 1.15rem;

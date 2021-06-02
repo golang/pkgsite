@@ -11,29 +11,53 @@ body {
   font-size: 1rem;
 }
 h1 {
-  font-size: 1.75rem;
-  line-height: 2rem;
-}
-h2 {
   font-size: 1.5rem;
   line-height: 1.75rem;
 }
-h3 {
+h2 {
   font-size: 1.375rem;
-  line-height: 1.625rem;
+  line-height: 1.5rem;
+}
+h3 {
+  font-size: 1.25rem;
+  line-height: 1.375rem;
 }
 h4 {
   font-size: 1.125rem;
-  line-height: 1.375rem;
+  line-height: 1.25rem;
 }
 h5 {
   font-size: 1rem;
-  line-height: 1.25rem;
+  line-height: 1.125rem;
 }
 h6 {
   font-size: 0.875rem;
   line-height: 1.125rem;
 }
+
+@media screen and (min-width: 80rem) {
+  h1 {
+    font-size: 1.75rem;
+    line-height: 2rem;
+  }
+  h2 {
+    font-size: 1.5rem;
+    line-height: 1.75rem;
+  }
+  h3 {
+    font-size: 1.375rem;
+    line-height: 1.625rem;
+  }
+  h4 {
+    font-size: 1.125rem;
+    line-height: 1.375rem;
+  }
+  h5 {
+    font-size: 1rem;
+    line-height: 1.25rem;
+  }
+}
+
 h1,
 h2,
 h3,
@@ -64,8 +88,11 @@ strong {
 }
 .go-textSubtle {
   color: var(--color-text-subtle);
-  font-size: 1rem;
-  line-height: 1.5rem;
+}
+.go-textTitle {
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1.25rem;
 }
 .go-textLabel {
   font-size: 0.875rem;
@@ -80,7 +107,7 @@ code,
 pre,
 textarea.code {
   font-family: SFMono-Regular, Consolas, Liberation Mono, Menlo, monospace;
-  font-size: 0.8125rem;
+  font-size: 0.84375rem;
 }
 pre,
 textarea.code {

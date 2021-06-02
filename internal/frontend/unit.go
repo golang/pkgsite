@@ -178,7 +178,7 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 	tabSettings := unitTabLookup[tab]
 	title := pageTitle(um)
 	basePage := s.newBasePage(r, title)
-	basePage.AllowWideContent = true
+	basePage.UseSiteWrapper = true
 	lv := linkVersion(um.Version, um.ModulePath)
 	page := UnitPage{
 		basePage:              basePage,

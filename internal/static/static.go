@@ -7,7 +7,8 @@ package static
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/evanw/esbuild/pkg/api"
@@ -33,13 +34,13 @@ type Config struct {
 func Build(config Config) (*api.BuildResult, error) {
 	var entryPoints []string
 	scriptDir := config.StaticPath
-	files, err := ioutil.ReadDir(scriptDir)
+	files, err := getEntry(config.StaticPath)
 	if err != nil {
 		return nil, err
 	}
 	for _, v := range files {
-		if strings.HasSuffix(v.Name(), ".ts") && !strings.HasSuffix(v.Name(), ".test.ts") {
-			entryPoints = append(entryPoints, scriptDir+"/"+v.Name())
+		if strings.HasSuffix(v, ".ts") && !strings.HasSuffix(v, ".test.ts") {
+			entryPoints = append(entryPoints, v)
 		}
 	}
 	options := api.BuildOptions{
@@ -65,4 +66,26 @@ func Build(config Config) (*api.BuildResult, error) {
 		return nil, fmt.Errorf("error building static files: %v", result.Warnings)
 	}
 	return &result, nil
+}
+
+func getEntry(dir string) ([]string, error) {
+	var matches []string
+	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if info.IsDir() {
+			return nil
+		}
+		if matched, err := filepath.Match("*.ts", filepath.Base(path)); err != nil {
+			return err
+		} else if matched {
+			matches = append(matches, path)
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return matches, nil
 }

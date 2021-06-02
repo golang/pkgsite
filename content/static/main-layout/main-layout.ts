@@ -10,21 +10,24 @@
  * to support variable size sticky positioned elements in the header so that
  * banners and breadcumbs may overflow to multiple lines.
  */
+
+const headerHeight = 3.5;
+
 export class MainLayoutController {
-  private stickyHeader: Element | null;
-  private stickyNav: Element | null;
   private headerObserver: IntersectionObserver;
   private navObserver: IntersectionObserver;
 
   constructor(private mainHeader?: Element | null, private mainNav?: Element | null) {
-    this.stickyHeader = mainHeader.querySelector('.js-stickyHeader') ?? mainHeader.lastElementChild;
-    this.stickyNav = mainNav.lastElementChild;
     this.headerObserver = new IntersectionObserver(
       ([e]) => {
         if (e.intersectionRatio < 1) {
-          this.mainHeader?.classList.add('go-Main-header--fixed');
+          for (const x of document.querySelectorAll('[class^="go-Main-header"')) {
+            x.setAttribute('data-fixed', 'true');
+          }
         } else {
-          this.mainHeader?.classList.remove('go-Main-header--fixed');
+          for (const x of document.querySelectorAll('[class^="go-Main-header"')) {
+            x.removeAttribute('data-fixed');
+          }
           this.handleResize(null);
         }
       },
@@ -34,11 +37,13 @@ export class MainLayoutController {
       ([e]) => {
         if (e.intersectionRatio < 1) {
           this.mainNav?.classList.add('go-Main-nav--fixed');
+          this.mainNav?.setAttribute('data-fixed', 'true');
         } else {
           this.mainNav?.classList.remove('go-Main-nav--fixed');
+          this.mainNav?.removeAttribute('data-fixed');
         }
       },
-      { threshold: 1, rootMargin: `-${this.stickyHeader?.clientHeight ?? 0 + 1}px` }
+      { threshold: 1, rootMargin: `-${(headerHeight ?? 0) * 16 + 10}px` }
     );
     this.init();
   }
@@ -46,20 +51,22 @@ export class MainLayoutController {
   private init() {
     this.handleResize(null);
     window.addEventListener('resize', this.handleResize);
-    this.stickyHeader?.addEventListener('dblclick', this.handleDoubleClick);
-
-    const headerSentinel = document.createElement('div');
-    this.mainHeader?.prepend(headerSentinel);
-    this.headerObserver.observe(headerSentinel);
-
-    const navSentinel = document.createElement('div');
-    this.mainNav?.prepend(navSentinel);
-    this.navObserver.observe(navSentinel);
+    this.mainHeader?.addEventListener('dblclick', this.handleDoubleClick);
+    if (this.mainHeader.hasChildNodes()) {
+      const headerSentinel = document.createElement('div');
+      this.mainHeader?.prepend(headerSentinel);
+      this.headerObserver.observe(headerSentinel);
+    }
+    if (this.mainNav.hasChildNodes()) {
+      const navSentinel = document.createElement('div');
+      this.mainNav?.prepend(navSentinel);
+      this.navObserver.observe(navSentinel);
+    }
   }
 
   private handleDoubleClick: EventListener = e => {
     const target = e.target;
-    if (target === this.stickyHeader) {
+    if (target === this.mainHeader.lastElementChild) {
       window.getSelection()?.removeAllRanges();
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -68,14 +75,15 @@ export class MainLayoutController {
   private handleResize: EventListener = () => {
     const setProp = (name: string, value: string) =>
       document.documentElement.style.setProperty(name, value);
-    setProp('--js-main-header-height', '0');
+    setProp('--js-unit-header-height', '0');
     setTimeout(() => {
       const mainHeaderHeight = (this.mainHeader?.getBoundingClientRect().height ?? 0) / 16;
-      const stickyHeaderHeight = (this.stickyHeader?.getBoundingClientRect().height ?? 0) / 16;
-      const stickyNavHeight = (this.stickyNav?.getBoundingClientRect().height ?? 0) / 16;
-      setProp('--js-main-header-height', `${mainHeaderHeight}rem`);
-      setProp('--js-sticky-header-height', `${stickyHeaderHeight}rem`);
-      setProp('--js-sticky-nav-height', `${stickyNavHeight}rem`);
+      setProp('--js-unit-header-height', `${mainHeaderHeight}rem`);
+      setProp('--js-sticky-header-height', `${headerHeight}rem`);
+      setProp('--js-unit-header-top', `${(mainHeaderHeight - headerHeight) * -1}rem`);
     });
   };
 }
+
+const el = <T extends HTMLElement>(selector: string) => document.querySelector<T>(selector);
+new MainLayoutController(el('.js-mainHeader'), el('.js-mainNav'));

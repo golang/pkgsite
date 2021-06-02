@@ -4,18 +4,13 @@
     license that can be found in the LICENSE file.
 -->
 
-{{define "header_search"}}
-  {{/* This ideally would be empty, but you cannot redefine a template with only whitespace or comments. */}}
-  <wbr>
+{{define "pre-content"}}
+  <link href="/static/homepage/homepage.css?version={{.AppVersionLabel}}" rel="stylesheet">
 {{end}}
 
-{{define "pre_content"}}
-  <link href="/static/css/homepage.css?version={{.AppVersionLabel}}" rel="stylesheet">
-{{end}}
-
-{{define "main_content"}}
-  <div class="Container">
-    <div class="Homepage">
+{{define "main"}}
+  <main class="go-Container">
+    <div class="go-Content go-Content--center">
       <img class="Homepage-logo" src="/static/img/gopher-homepage.jpg" alt="Cartoon gopher typing">
       <form class="Homepage-searchForm" action="/search" role="search" data-gtmc="homepage search form"
           aria-label="Search for a Package">
@@ -49,10 +44,10 @@
         </a>
       <span>
     </div>
-  </div>
+  </main>
 {{end}}
 
-{{define "pre_footer"}}
+{{define "pre-footer"}}
   <div class="Questions">
     <div class="Questions-content">
       <div class="Questions-header">Frequently asked questions:</div>

@@ -30,7 +30,7 @@ func (s *Server) serveDetails(w http.ResponseWriter, r *http.Request, ds interna
 		return &serverError{status: http.StatusMethodNotAllowed}
 	}
 	if r.URL.Path == "/" {
-		s.staticPageHandler("index.tmpl", "Home")(w, r)
+		s.staticPageHandler("homepage", "Home")(w, r)
 		return nil
 	}
 	if strings.HasPrefix(r.URL.Path, "/github.com/golang/go") {

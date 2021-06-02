@@ -21,7 +21,7 @@ export async function prepare(page: Page): Promise<void> {
     pg.$$eval(page, pg.select('UnitHeader-importedby', 'a'), els =>
       els.map(el => (el.innerHTML = 'Imported by: 0'))
     ),
-    pg.$eval(page, '.Site-header', el => ((el as HTMLElement).style.visibility = 'hidden')),
-    pg.$eval(page, '.Site-footer', el => ((el as HTMLElement).style.visibility = 'hidden')),
+    pg.$eval(page, '.go-Header', el => ((el as HTMLElement).style.visibility = 'hidden')),
+    pg.$eval(page, '.go-Footer', el => ((el as HTMLElement).style.visibility = 'hidden')),
   ]);
 }

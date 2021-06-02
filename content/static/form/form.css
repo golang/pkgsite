@@ -20,7 +20,7 @@ input::placeholder {
   align-items: start;
   display: flex;
   flex-direction: column;
-  gap: var(--gap);
+  gap: 1rem;
 }
 
 .go-Label {
