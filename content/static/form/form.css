@@ -16,6 +16,13 @@ input::placeholder {
   color: var(--color-text-subtle);
 }
 
+.go-Form {
+  align-items: start;
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+}
+
 .go-Label {
   display: flex;
   flex-direction: column;

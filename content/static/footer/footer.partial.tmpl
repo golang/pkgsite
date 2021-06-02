@@ -6,6 +6,7 @@
 
 {{define "footer"}}
   <footer class="go-Footer">
+    {{block "pre-footer" .}}{{end}}
     <div class="go-Footer-links">
       <div class="go-Footer-linkColumn">
         <a href="https://go.dev/solutions" class="go-Footer-link go-Footer-link--primary"
@@ -50,6 +51,9 @@
         </a>
         <a href="https://golang.org/dl/" class="go-Footer-link" data-gtmc="footer link">Download</a>
         <a href="https://blog.golang.org" class="go-Footer-link" data-gtmc="footer link">Blog</a>
+        <a href="https://github.com/golang/go/issues" class="go-Footer-link" data-gtmc="footer link">
+          Issue Tracker
+        </a>
         <a href="https://golang.org/doc/devel/release.html" class="go-Footer-link"
             data-gtmc="footer link">
           Release Notes
@@ -74,8 +78,14 @@
             data-gtmc="footer link">
           Slack
         </a>
+        <a href="https://reddit.com/r/golang" class="go-Footer-link" data-gtmc="footer link">
+          Reddit
+        </a>
         <a href="https://www.meetup.com/pro/go" class="go-Footer-link" data-gtmc="footer link">
           Meetup
+        </a>
+        <a href="https://golangweekly.com/" class="go-Footer-link" data-gtmc="footer link">
+          Golang Weekly
         </a>
       </div>
     </div>

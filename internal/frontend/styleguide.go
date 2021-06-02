@@ -37,6 +37,7 @@ func (s *Server) serveStyleGuide(w http.ResponseWriter, r *http.Request, ds inte
 	}
 	page, err := styleGuide(ctx, s.staticPath.String())
 	page.basePage = s.newBasePage(r, "")
+	page.AllowWideContent = true
 	if err != nil {
 		return err
 	}

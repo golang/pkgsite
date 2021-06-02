@@ -12,7 +12,7 @@
   display: grid;
   gap: var(--gap) 2rem;
   grid-template-columns: 100%;
-  padding: var(--gutter) 0;
+  margin-bottom: var(--gap);
 }
 .StyleGuide > section > header {
   border-bottom: var(--border);
@@ -25,10 +25,7 @@
   width: max-content;
 }
 .StyleGuide > section > hr {
-  border: none;
-  border-bottom: var(--border);
   grid-column: 1/-1;
-  width: 100%;
 }
 .StyleGuide > section > h3 {
   grid-column: 1/-1;
@@ -47,7 +44,7 @@
 .StyleGuide .Outline > span {
   margin-top: 0.5rem;
 }
-@media (min-width: 50rem) {
+@media (min-width: 80rem) {
   .StyleGuide .Icon {
     grid-template-columns: 10rem 8rem auto;
   }
@@ -64,7 +61,7 @@
     grid-template-columns: 20rem auto;
   }
 }
-@media (min-width: 80rem) {
+@media (min-width: 95rem) {
   .StyleGuide .Icon {
     grid-template-columns: 10rem auto 50%;
   }
@@ -180,7 +177,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
-@media (min-width: 50rem) {
+@media (min-width: 80rem) {
   .UnitMeta {
     grid-template-columns: max-content auto max-content;
   }
@@ -188,7 +185,7 @@
     flex-direction: row;
   }
 }
-@media (min-width: 90rem) {
+@media (min-width: 95rem) {
   :root:not([data-layout='compact']) .UnitMeta {
     grid-template-columns: 100%;
   }

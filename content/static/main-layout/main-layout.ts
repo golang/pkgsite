@@ -17,7 +17,7 @@ export class MainLayoutController {
   private navObserver: IntersectionObserver;
 
   constructor(private mainHeader?: Element | null, private mainNav?: Element | null) {
-    this.stickyHeader = mainHeader.lastElementChild;
+    this.stickyHeader = mainHeader.querySelector('.js-stickyHeader') ?? mainHeader.lastElementChild;
     this.stickyNav = mainNav.lastElementChild;
     this.headerObserver = new IntersectionObserver(
       ([e]) => {
@@ -36,10 +36,9 @@ export class MainLayoutController {
           this.mainNav?.classList.add('go-Main-nav--fixed');
         } else {
           this.mainNav?.classList.remove('go-Main-nav--fixed');
-          this.handleResize(null);
         }
       },
-      { threshold: 1, rootMargin: `-${this.stickyHeader.clientHeight + 1}px` }
+      { threshold: 1, rootMargin: `-${this.stickyHeader?.clientHeight ?? 0 + 1}px` }
     );
     this.init();
   }
@@ -67,14 +66,16 @@ export class MainLayoutController {
   };
 
   private handleResize: EventListener = () => {
-    const mainHeaderHeight = (this.mainHeader?.getBoundingClientRect().height ?? 0) / 16;
-    const stickyHeaderHeight = (this.stickyHeader?.getBoundingClientRect().height ?? 0) / 16;
-    const stickyNavHeight = (this.stickyNav?.getBoundingClientRect().height ?? 0) / 16;
     const setProp = (name: string, value: string) =>
       document.documentElement.style.setProperty(name, value);
     setProp('--js-main-header-height', '0');
-    setProp('--js-main-header-height', `${mainHeaderHeight}rem`);
-    setProp('--js-sticky-header-height', `${stickyHeaderHeight}rem`);
-    setProp('--js-sticky-nav-height', `${stickyNavHeight}rem`);
+    setTimeout(() => {
+      const mainHeaderHeight = (this.mainHeader?.getBoundingClientRect().height ?? 0) / 16;
+      const stickyHeaderHeight = (this.stickyHeader?.getBoundingClientRect().height ?? 0) / 16;
+      const stickyNavHeight = (this.stickyNav?.getBoundingClientRect().height ?? 0) / 16;
+      setProp('--js-main-header-height', `${mainHeaderHeight}rem`);
+      setProp('--js-sticky-header-height', `${stickyHeaderHeight}rem`);
+      setProp('--js-sticky-nav-height', `${stickyNavHeight}rem`);
+    });
   };
 }

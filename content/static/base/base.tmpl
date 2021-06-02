@@ -5,7 +5,7 @@
 -->
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-layout="responsive">
   <head>
     <!-- This will capture unhandled errors during page load for reporting later. -->
     <script>
@@ -23,6 +23,7 @@
     {{block "title" .}}
       <title>pkg.go.dev</title>
     {{end}}
+    {{block "pre_content" .}}{{end}}
   </head>
   <body>
     <!-- loadScript appends JS sources to the document head. It loads scripts as asynchronous
@@ -36,6 +37,7 @@
         s.defer = true
         document.head.appendChild(s);
       }
+      loadScript("/static/base/base.js");
     </script>
     {{template "header" .}}
     {{template "main" .}}
@@ -55,5 +57,6 @@
         </iframe>
       </noscript>
     {{end}}
+    {{block "post_content" .}}{{end}}
   </body>
 </html>

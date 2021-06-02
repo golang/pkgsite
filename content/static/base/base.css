@@ -5,21 +5,24 @@
  */
 
 @import url('./reset.css');
-@import url('../color/color.css');
-@import url('../button/button.css');
+
 @import url('../typography/typography.css');
-@import url('../icon/icon.css');
-@import url('../form/form.css');
-@import url('../chip/chip.css');
-@import url('../tooltip/tooltip.css');
+
+@import url('../button/button.css');
 @import url('../breadcrumb/breadcrumb.css');
+@import url('../chip/chip.css');
 @import url('../clipboard/clipboard.css');
+@import url('../color/color.css');
 @import url('../footer/footer.css');
-@import url('../header/header.css');
-@import url('../modal/modal.css');
-@import url('../message/message.css');
-@import url('../outline/tree.css');
+@import url('../form/form.css');
+@import url('../gopher/gopher.css');
 @import url('../main-layout/main.css');
+@import url('../header/header.css');
+@import url('../icon/icon.css');
+@import url('../message/message.css');
+@import url('../modal/modal.css');
+@import url('../outline/tree.css');
+@import url('../tooltip/tooltip.css');
 
 :root {
   --gutter: 1rem;
@@ -54,5 +57,28 @@
 }
 
 body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
   min-width: 23.5rem;
+}
+
+.go-Container {
+  display: flex;
+  flex-grow: 1;
+  height: 100%;
+  margin-bottom: 5rem;
+}
+.go-Content {
+  display: flex;
+  flex-flow: column;
+  gap: var(--gap);
+  margin: 0 auto;
+  max-width: 63rem;
+  min-height: 32rem;
+  padding: var(--gutter);
+  width: 100%;
+}
+.go-Content--center {
+  margin: auto;
 }

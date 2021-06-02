@@ -24,12 +24,14 @@
   background: var(--color-background) 80%;
   border: var(--border);
   border-radius: var(--border-radius);
+  color: var(--color-text);
   font-size: 0.75rem;
   letter-spacing: 0.01875rem;
   line-height: 1rem;
   padding: 0.5rem;
   position: absolute;
   top: 1.5rem;
+  white-space: normal;
   width: 12rem;
   z-index: 1;
 }

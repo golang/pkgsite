@@ -8,6 +8,7 @@
   background-color: var(--color-background);
   color: var(--color-text);
   display: grid;
+  flex-grow: 1;
   grid-template-areas:
     'banner'
     'header'
@@ -15,6 +16,7 @@
     'nav'
     'article'
     'footer';
+  grid-template-rows: repeat(6, min-content);
 }
 .go-Main > *:not(.go-Main-banner) {
   padding: 0 var(--gutter);
@@ -40,6 +42,8 @@
 .go-Main-article {
   background-color: var(--color-background);
   grid-area: article;
+  margin-bottom: 5rem;
+  margin-top: 1rem;
 }
 .go-Main-aside {
   background-color: var(--color-background);
@@ -52,9 +56,9 @@
 }
 
 .go-Main-header--sticky {
-  min-height: calc(var(--js-main-header-height));
+  min-height: calc(var(--js-main-header-height, 0));
   position: sticky;
-  top: calc(var(--js-main-header-height) * -1 + var(--js-sticky-header-height));
+  top: calc(var(--js-main-header-height, 0) * -1 + var(--js-sticky-header-height, 0));
   transition: box-shadow 0.25s linear;
   white-space: nowrap;
   z-index: 2;
@@ -107,7 +111,7 @@
 
 .go-Main-nav--sticky {
   position: sticky;
-  top: var(--js-sticky-header-height);
+  top: var(--js-sticky-header-height, 0);
   transition: box-shadow 0.25s linear;
   z-index: 1;
 }
@@ -120,7 +124,7 @@
   margin-top: var(--gap);
   overflow-y: auto;
   position: sticky;
-  top: calc(var(--js-sticky-header-height) + var(--gap));
+  top: calc(var(--js-sticky-header-height, 0) + var(--gap));
 }
 .go-Main-navMobile {
   display: flex;
@@ -156,7 +160,7 @@
   }
 }
 
-@media screen and (min-width: 50rem) {
+@media screen and (min-width: 80rem) {
   :root:not([data-layout='stacked']) .go-Main {
     grid-template-areas:
       'banner  banner'
@@ -164,7 +168,8 @@
       'aside   aside'
       'nav     article'
       'footer  footer';
-    grid-template-columns: minmax(25%, 1fr) minmax(0, 3fr);
+    grid-template-columns: minmax(25%, 1fr) minmax(0, 4fr);
+    grid-template-rows: repeat(5, min-content);
   }
   :root:not([data-layout='stacked']) .go-Main-nav {
     border-bottom: none;
@@ -186,7 +191,7 @@
   }
 }
 
-@media screen and (min-width: 90rem) {
+@media screen and (min-width: 95rem) {
   :root:not([data-layout='stacked']) .go-Main {
     grid-template-areas:
       'banner banner  banner'
@@ -194,10 +199,11 @@
       'nav    article aside'
       'footer footer  footer';
     grid-template-columns: minmax(10%, 1fr) minmax(0, 4fr) minmax(10%, 1fr);
+    grid-template-rows: repeat(4, min-content);
   }
 }
 
-@media screen and (min-width: 50rem) {
+@media screen and (min-width: 80rem) {
   :root[data-layout='compact'] .go-Main {
     grid-template-areas:
       'banner  banner'
@@ -207,18 +213,19 @@
       'article article'
       'footer  footer';
     grid-template-columns: 1fr auto;
+    grid-template-rows: repeat(6, min-content);
   }
   :root[data-layout='compact'] .go-Main-nav {
     align-items: center;
     border-bottom: var(--border);
     display: flex;
-    top: calc((var(--js-main-header-height) - var(--js-sticky-header-height)) * -1);
+    top: calc((var(--js-main-header-height, 0) - var(--js-sticky-header-height, 0)) * -1);
   }
   :root[data-layout='compact'] .go-Main-header--fixed {
     box-shadow: none;
   }
   :root[data-layout='compact'] .go-Main-nav--sticky {
-    height: var(--js-sticky-header-height);
+    height: var(--js-sticky-header-height, 0);
     position: sticky;
     top: 0;
   }
