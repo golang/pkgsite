@@ -23,6 +23,7 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/stdlib"
@@ -422,6 +423,11 @@ func (pdb *DB) insertUnits(ctx context.Context, tx *database.DB, m *internal.Mod
 	if err != nil {
 		return err
 	}
+
+	if experiment.IsActive(ctx, internal.ExperimentSkipInsertSymbols) {
+		return nil
+	}
+
 	if versionType == version.TypeRelease {
 		// Lock the module path here to prevent conflicts in upsertSymbolHistory.
 		// The lock function will also be called after this, in saveModule, but
