@@ -12,6 +12,7 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/version"
 )
 
@@ -95,8 +96,19 @@ func upsertSymbolHistory(ctx context.Context, ddb *database.DB,
 				"goos",
 				"goarch",
 			}
-			if err := ddb.BulkInsert(ctx, "symbol_history", cols, values,
-				`ON CONFLICT (package_path_id, module_path_id, symbol_name_id, goos, goarch)
+			for _, table := range []string{
+				"symbol_history",
+				"new_symbol_history",
+			} {
+				if experiment.IsActive(ctx, internal.ExperimentSkipInsertSymbols) {
+					if table == "symbol_history" {
+						// Skip this table because we can't insert into
+						// package_symbol_id due to integer overflow issues.
+						continue
+					}
+				}
+				if err := ddb.BulkInsert(ctx, table, cols, values,
+					fmt.Sprintf(`ON CONFLICT (package_path_id, module_path_id, symbol_name_id, goos, goarch)
 				DO UPDATE
 				SET
 					symbol_name_id=excluded.symbol_name_id,
@@ -109,8 +121,9 @@ func upsertSymbolHistory(ctx context.Context, ddb *database.DB,
 					goos=excluded.goos,
 					goarch=excluded.goarch
 				WHERE
-					symbol_history.sort_version > excluded.sort_version`); err != nil {
-				return err
+					%s.sort_version > excluded.sort_version`, table)); err != nil {
+					return err
+				}
 			}
 		}
 	}
