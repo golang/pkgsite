@@ -14,12 +14,14 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/experiment"
 )
 
 func insertSymbols(ctx context.Context, db *database.DB, modulePath, version string,
 	pathToID map[string]int,
 	pathToDocIDToDoc map[string]map[int]*internal.Documentation) (err error) {
 	defer derrors.WrapStack(&err, "insertSymbols(ctx, db, %q, %q, pathToID, pathToDocs)", modulePath, version)
+
 	nameToID, err := upsertSymbolNamesReturningIDs(ctx, db, pathToDocIDToDoc)
 	if err != nil {
 		return err
@@ -57,6 +59,10 @@ func upsertDocumentationSymbols(ctx context.Context, db *database.DB,
 	pathToPkgsymID map[string]map[packageSymbol]int,
 	pathToDocIDToDoc map[string]map[int]*internal.Documentation) (err error) {
 	defer derrors.WrapStack(&err, "upsertDocumentationSymbols(ctx, db, pathToPkgsymID, pathToDocIDToDoc)")
+
+	if experiment.IsActive(ctx, internal.ExperimentSkipInsertSymbols) {
+		return nil
+	}
 
 	// Create a map of documentation_id TO package_symbol_id set.
 	// This will be used to verify that all package_symbols for the unit have
