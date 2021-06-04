@@ -156,7 +156,7 @@ func TestFetchSearchPage(t *testing.T) {
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			got, err := fetchSearchPage(ctx, testDB, test.query, paginationParams{limit: 20, page: 1})
+			got, err := fetchSearchPage(ctx, testDB, test.query, paginationParams{limit: 20, page: 1}, false)
 			if err != nil {
 				t.Fatalf("fetchSearchPage(db, %q): %v", test.query, err)
 			}

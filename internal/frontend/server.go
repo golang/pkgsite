@@ -273,6 +273,8 @@ type basePage struct {
 	// Site class. This is only used for unit pages until the migration to the new
 	// layout base page is completed.
 	UseSiteWrapper bool
+
+	SearchMode string
 }
 
 // licensePolicyPage is used to generate the static license policy page.
@@ -303,6 +305,7 @@ func (s *Server) newBasePage(r *http.Request, title string) basePage {
 		DevMode:            s.devMode,
 		AppVersionLabel:    s.appVersionLabel,
 		GoogleTagManagerID: s.googleTagManagerID,
+		SearchMode:         "packages",
 	}
 }
 

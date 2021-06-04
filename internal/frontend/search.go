@@ -64,14 +64,9 @@ type subResult struct {
 
 // fetchSearchPage fetches data matching the search query from the database and
 // returns a SearchPage.
-func fetchSearchPage(ctx context.Context, db *postgres.DB, query string, pageParams paginationParams) (*SearchPage, error) {
+func fetchSearchPage(ctx context.Context, db *postgres.DB, query string, pageParams paginationParams, searchSymbols bool) (*SearchPage, error) {
 	maxResultCount := maxSearchOffset + pageParams.limit
 
-	searchSymbols := false
-	if strings.HasPrefix(query, "identifier:") {
-		query = strings.TrimPrefix(query, "identifier:")
-		searchSymbols = true
-	}
 	dbresults, err := db.Search(ctx, query, pageParams.limit, pageParams.offset(), maxResultCount, searchSymbols)
 	if err != nil {
 		return nil, err
@@ -127,10 +122,11 @@ func fetchSearchPage(ctx context.Context, db *postgres.DB, query string, pagePar
 
 	pgs := newPagination(pageParams, numPageResults, numResults)
 	pgs.Approximate = approximate
-	return &SearchPage{
+	sp := &SearchPage{
 		Results:    results,
 		Pagination: pgs,
-	}, nil
+	}
+	return sp, nil
 }
 
 // approximateNumber returns an approximation of the estimate, calibrated by
@@ -262,11 +258,16 @@ func (s *Server) serveSearch(w http.ResponseWriter, r *http.Request, ds internal
 		http.Redirect(w, r, path, http.StatusFound)
 		return nil
 	}
-	page, err := fetchSearchPage(ctx, db, query, pageParams)
+
+	searchSymbols := shouldSearchSymbols(r)
+	page, err := fetchSearchPage(ctx, db, query, pageParams, searchSymbols)
 	if err != nil {
 		return fmt.Errorf("fetchSearchPage(ctx, db, %q): %v", query, err)
 	}
 	page.basePage = s.newBasePage(r, fmt.Sprintf("%s - Search Results", query))
+	if searchSymbols {
+		page.SearchMode = "identifiers"
+	}
 
 	tmpl := "legacy_search"
 	if experiment.IsActive(ctx, internal.ExperimentSearchGrouping) {
@@ -304,6 +305,11 @@ func searchRequestRedirectPath(ctx context.Context, ds internal.DataSource, quer
 // searchQuery extracts a search query from the request.
 func searchQuery(r *http.Request) string {
 	return strings.TrimSpace(r.FormValue("q"))
+}
+
+// shouldSearchSymbols reports whether the search mode is to search for symbols.
+func shouldSearchSymbols(r *http.Request) bool {
+	return strings.TrimSpace(r.FormValue("m")) == "identifiers"
 }
 
 // elapsedTime takes a date and returns returns human-readable,
