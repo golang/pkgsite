@@ -180,7 +180,7 @@ run_build_static() {
 }
 
 run_npm() {
-  npmcmd="./devtools/docker_nodejs.sh npm"
+  npmcmd="./devtools/ci/docker_nodejs.sh npm"
   if [[ -x "$(command -v npm)" ]]; then
     npmcmd="npm"
   fi
@@ -192,7 +192,7 @@ run_npm() {
 }
 
 run_npx() {
-  npxcmd="./devtools/docker_nodejs.sh npx"
+  npxcmd="./devtools/ci/docker_nodejs.sh npx"
   if [[ -x "$(command -v npx)" ]]; then
     npxcmd="npx"
   fi
@@ -216,7 +216,7 @@ run_prettier() {
   if [[ -x "$(command -v npx)" ]]; then
     runcmd npx prettier --write $files
   else
-    runcmd ./devtools/docker_nodejs.sh npx prettier --write $files
+    runcmd ./devtools/ci/docker_nodejs.sh npx prettier --write $files
   fi
 }
 
