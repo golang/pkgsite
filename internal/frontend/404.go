@@ -20,6 +20,7 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/cookie"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/stdlib"
@@ -63,6 +64,16 @@ func (s *Server) servePathNotFoundPage(w http.ResponseWriter, r *http.Request,
 			http.Redirect(w, r, fmt.Sprintf("/%s", path), http.StatusFound)
 			return
 		}
+
+		if experiment.IsActive(ctx, internal.ExperimentEnableStdFrontendFetch) {
+			return &serverError{
+				status: http.StatusNotFound,
+				epage: &errorPage{
+					templateName: "fetch.tmpl",
+					MessageData:  stdlib.ModulePath,
+				},
+			}
+		}
 		return &serverError{status: http.StatusNotFound}
 	}
 
@@ -77,7 +88,7 @@ func (s *Server) servePathNotFoundPage(w http.ResponseWriter, r *http.Request,
 		if !errors.Is(err, derrors.NotFound) {
 			log.Error(ctx, err)
 		}
-		return pathNotFoundError(fullPath, requestedVersion)
+		return pathNotFoundError(ctx, fullPath, requestedVersion)
 	}
 
 	// If we've reached this point, we know that we've seen this path before.
@@ -102,7 +113,7 @@ func (s *Server) servePathNotFoundPage(w http.ResponseWriter, r *http.Request,
 		http.Redirect(w, r, u, http.StatusFound)
 		return nil
 	case http.StatusInternalServerError:
-		return pathNotFoundError(fullPath, requestedVersion)
+		return pathNotFoundError(ctx, fullPath, requestedVersion)
 	default:
 		if u := githubPathRedirect(fullPath); u != "" {
 			http.Redirect(w, r, u, http.StatusFound)
@@ -112,7 +123,7 @@ func (s *Server) servePathNotFoundPage(w http.ResponseWriter, r *http.Request,
 		// If a module has a status of 404, but s.taskIDChangeInterval has
 		// passed, allow the module to be refetched.
 		if fr.status == http.StatusNotFound && time.Since(fr.updatedAt) > s.taskIDChangeInterval {
-			return pathNotFoundError(fullPath, requestedVersion)
+			return pathNotFoundError(ctx, fullPath, requestedVersion)
 		}
 
 		// Redirect to the search result page for an empty directory that is above nested modules.
@@ -156,11 +167,20 @@ func githubPathRedirect(fullPath string) string {
 
 // pathNotFoundError returns a page with an option on how to
 // add a package or module to the site.
-func pathNotFoundError(fullPath, requestedVersion string) error {
+func pathNotFoundError(ctx context.Context, fullPath, requestedVersion string) error {
 	if !isSupportedVersion(fullPath, requestedVersion) {
 		return invalidVersionError(fullPath, requestedVersion)
 	}
 	if stdlib.Contains(fullPath) {
+		if experiment.IsActive(ctx, internal.ExperimentEnableStdFrontendFetch) {
+			return &serverError{
+				status: http.StatusNotFound,
+				epage: &errorPage{
+					templateName: "fetch.tmpl",
+					MessageData:  stdlib.ModulePath,
+				},
+			}
+		}
 		return &serverError{status: http.StatusNotFound}
 	}
 	path := fullPath

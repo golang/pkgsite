@@ -21,6 +21,7 @@ import (
 	"golang.org/x/mod/module"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/fetch"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/postgres"
@@ -94,21 +95,13 @@ func (s *Server) serveFetch(w http.ResponseWriter, r *http.Request, ds internal.
 		return proxydatasourceNotSupportedErr()
 	}
 	if r.Method != http.MethodPost {
-		// If the experiment flag is not on, or the user makes a GET request,
-		// treat this as a request for the "fetch" package, which does not
-		// exist.
+		// If a user makes a GET request, treat this as a request for the
+		// "fetch" package, which does not exist.
 		return &serverError{status: http.StatusNotFound}
 	}
-	// fetchHander accepts a requests following the same URL format as the
-	// detailsHandler.
+
 	urlInfo, err := extractURLPathInfo(strings.TrimPrefix(r.URL.Path, "/fetch"))
 	if err != nil {
-		return &serverError{status: http.StatusBadRequest}
-	}
-	if !isSupportedVersion(urlInfo.fullPath, urlInfo.requestedVersion) ||
-		// TODO(https://golang.org/issue/39973): add support for fetching the
-		// latest and master versions of the standard library.
-		(stdlib.Contains(urlInfo.fullPath) && urlInfo.requestedVersion == internal.LatestVersion) {
 		return &serverError{status: http.StatusBadRequest}
 	}
 	status, responseText := s.fetchAndPoll(r.Context(), ds, urlInfo.modulePath, urlInfo.fullPath, urlInfo.requestedVersion)
@@ -135,10 +128,10 @@ func (s *Server) fetchAndPoll(ctx context.Context, ds internal.DataSource, modul
 		recordFrontendFetchMetric(ctx, status, time.Since(start))
 	}()
 
-	if !isSupportedVersion(fullPath, requestedVersion) ||
-		// TODO(https://golang.org/issue/39973): add support for fetching the
-		// latest and master versions of the standard library
-		(stdlib.Contains(fullPath) && requestedVersion == internal.LatestVersion) {
+	if !isSupportedVersion(fullPath, requestedVersion) {
+		return http.StatusBadRequest, http.StatusText(http.StatusBadRequest)
+	}
+	if !experiment.IsActive(ctx, internal.ExperimentEnableStdFrontendFetch) && stdlib.Contains(fullPath) {
 		return http.StatusBadRequest, http.StatusText(http.StatusBadRequest)
 	}
 
@@ -521,6 +514,9 @@ var maxPathsToFetch = 10
 // candidateModulePaths returns the potential module paths that could contain
 // the fullPath. The paths are returned in reverse length order.
 func candidateModulePaths(fullPath string) (_ []string, err error) {
+	if fullPath == stdlib.ModulePath {
+		return []string{stdlib.ModulePath}, nil
+	}
 	if !isValidPath(fullPath) {
 		return nil, &serverError{
 			status: http.StatusBadRequest,

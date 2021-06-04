@@ -7,11 +7,12 @@ package internal
 
 const (
 	ExperimentDeprecatedDoc               = "deprecated-doc"
-	ExperimentSkipInsertSymbols           = "skip-insert-symbols"
+	ExperimentEnableStdFrontendFetch      = "enable-std-frontend-fetch"
 	ExperimentInsertSymbolSearchDocuments = "insert-symbol-search-documents"
 	ExperimentNewUnitLayout               = "new-unit-layout"
 	ExperimentReadSymbolHistory           = "read-symbol-history"
 	ExperimentSearchGrouping              = "search-grouping"
+	ExperimentSkipInsertSymbols           = "skip-insert-symbols"
 	ExperimentStyleGuide                  = "styleguide"
 	ExperimentSymbolHistoryMainPage       = "symbol-history-main-page"
 	ExperimentSymbolHistoryVersionsPage   = "symbol-history-versions-page"
@@ -22,11 +23,12 @@ const (
 // a description of each experiment.
 var Experiments = map[string]string{
 	ExperimentDeprecatedDoc:               "Treat deprecated symbols specially in documentation.",
-	ExperimentSkipInsertSymbols:           "Don't insert data into symbols tables.",
+	ExperimentEnableStdFrontendFetch:      "Enable frontend fetching for module std.",
 	ExperimentInsertSymbolSearchDocuments: "Insert data into symbol_search_documents.",
 	ExperimentNewUnitLayout:               "Enable the new layout on the unit page.",
 	ExperimentReadSymbolHistory:           "Read data from the symbol_history table.",
 	ExperimentSearchGrouping:              "Group search results.",
+	ExperimentSkipInsertSymbols:           "Don't insert data into symbols tables.",
 	ExperimentStyleGuide:                  "Enable the styleguide.",
 	ExperimentSymbolHistoryMainPage:       "Show package API history on the main unit page.",
 	ExperimentSymbolHistoryVersionsPage:   "Show package API history on the versions page.",
