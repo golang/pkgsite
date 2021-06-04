@@ -9,6 +9,7 @@ const (
 	ExperimentDeprecatedDoc               = "deprecated-doc"
 	ExperimentSkipInsertSymbols           = "skip-insert-symbols"
 	ExperimentInsertSymbolSearchDocuments = "insert-symbol-search-documents"
+	ExperimentNewUnitLayout               = "new-unit-layout"
 	ExperimentReadSymbolHistory           = "read-symbol-history"
 	ExperimentSearchGrouping              = "search-grouping"
 	ExperimentStyleGuide                  = "styleguide"
@@ -23,6 +24,7 @@ var Experiments = map[string]string{
 	ExperimentDeprecatedDoc:               "Treat deprecated symbols specially in documentation.",
 	ExperimentSkipInsertSymbols:           "Don't insert data into symbols tables.",
 	ExperimentInsertSymbolSearchDocuments: "Insert data into symbol_search_documents.",
+	ExperimentNewUnitLayout:               "Enable the new layout on the unit page.",
 	ExperimentReadSymbolHistory:           "Read data from the symbol_history table.",
 	ExperimentSearchGrouping:              "Group search results.",
 	ExperimentStyleGuide:                  "Enable the styleguide.",
