@@ -33,7 +33,7 @@ done
 
 # Find the repo root.
 script_dir=$(dirname "$(readlink -f "$0")")
-pkgsite_dir=$(readlink -f "${script_dir}/..")
+pkgsite_dir=$(readlink -f "${script_dir}/../..")
 
 # Run postgres.
 pg_container=$(${maybe_sudo}docker run --rm -d -e LANG=C postgres:11.4)
