@@ -303,16 +303,22 @@ func ZipInfo(requestedVersion string) (resolvedVersion string, err error) {
 //
 // Zip ignores go.mod files in the standard library, treating it as if it were a
 // single module named "std" at the given version.
-func Zip(resolvedVersion string) (_ *zip.Reader, resolvedVersion2 string, commitTime time.Time, err error) {
+func Zip(requestedVersion string) (_ *zip.Reader, resolvedVersion2 string, commitTime time.Time, err error) {
 	// This code taken, with modifications, from
 	// https://github.com/shurcooL/play/blob/master/256/moduleproxy/std/std.go.
-	defer derrors.Wrap(&err, "stdlib.Zip(%q)", resolvedVersion)
+	defer derrors.Wrap(&err, "stdlib.Zip(%q)", requestedVersion)
 
 	var repo *git.Repository
 	if UseTestData {
-		repo, err = getTestGoRepo(resolvedVersion)
+		repo, err = getTestGoRepo(requestedVersion)
 	} else {
-		repo, err = getGoRepo(resolvedVersion)
+		if requestedVersion == "latest" {
+			requestedVersion, err = semanticVersion(requestedVersion)
+			if err != nil {
+				return nil, "", time.Time{}, err
+			}
+		}
+		repo, err = getGoRepo(requestedVersion)
 	}
 	if err != nil {
 		return nil, "", time.Time{}, err
@@ -327,21 +333,21 @@ func Zip(resolvedVersion string) (_ *zip.Reader, resolvedVersion2 string, commit
 	if err != nil {
 		return nil, "", time.Time{}, err
 	}
-	if resolvedVersion == "master" {
-		resolvedVersion = newPseudoVersion("v0.0.0", commit.Committer.When, commit.Hash)
+	if requestedVersion == "master" {
+		requestedVersion = newPseudoVersion("v0.0.0", commit.Committer.When, commit.Hash)
 	}
 	root, err := repo.TreeObject(commit.TreeHash)
 	if err != nil {
 		return nil, "", time.Time{}, err
 	}
-	prefixPath := ModulePath + "@" + resolvedVersion
+	prefixPath := ModulePath + "@" + requestedVersion
 	// Add top-level files.
 	if err := addFiles(z, repo, root, prefixPath, false); err != nil {
 		return nil, "", time.Time{}, err
 	}
 	// Add files from the stdlib directory.
 	libdir := root
-	for _, d := range strings.Split(Directory(resolvedVersion), "/") {
+	for _, d := range strings.Split(Directory(requestedVersion), "/") {
 		libdir, err = subTree(repo, libdir, d)
 		if err != nil {
 			return nil, "", time.Time{}, err
@@ -358,7 +364,7 @@ func Zip(resolvedVersion string) (_ *zip.Reader, resolvedVersion2 string, commit
 	if err != nil {
 		return nil, "", time.Time{}, err
 	}
-	return zr, resolvedVersion, commit.Committer.When, nil
+	return zr, requestedVersion, commit.Committer.When, nil
 }
 
 func newPseudoVersion(version string, commitTime time.Time, hash plumbing.Hash) string {
