@@ -186,7 +186,7 @@ func testGetUnitMeta(t *testing.T, ctx context.Context) {
 				test.module = internal.UnknownModulePath
 			}
 			if test.version == "" {
-				test.version = version.LatestVersion
+				test.version = version.Latest
 			}
 			want := sample.UnitMeta(
 				test.path,
@@ -330,7 +330,7 @@ func TestGetUnitMetaBypass(t *testing.T) {
 					test.module = internal.UnknownModulePath
 				}
 				if test.version == "" {
-					test.version = version.LatestVersion
+					test.version = version.Latest
 				}
 				test.want = sample.UnitMeta(
 					test.path,

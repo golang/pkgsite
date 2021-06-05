@@ -18,7 +18,7 @@ func TestParseStdLibURLPath(t *testing.T) {
 			name:        "latest",
 			url:         "/cmd/go",
 			wantPath:    "cmd/go",
-			wantVersion: version.LatestVersion,
+			wantVersion: version.Latest,
 		},
 		{
 			name:        "package at version",

@@ -1265,14 +1265,14 @@ func TestServer404Redirect_NoLoop(t *testing.T) {
 	alternativeModule := &internal.VersionMap{
 		ModulePath:       altPath,
 		GoModPath:        goModPath,
-		RequestedVersion: version.LatestVersion,
+		RequestedVersion: version.Latest,
 		ResolvedVersion:  sample.VersionString,
 		Status:           derrors.ToStatus(derrors.AlternativeModule),
 	}
 	alternativeModulePkg := &internal.VersionMap{
 		ModulePath:       goModPath,
 		GoModPath:        goModPath,
-		RequestedVersion: version.LatestVersion,
+		RequestedVersion: version.Latest,
 		ResolvedVersion:  sample.VersionString,
 		Status:           http.StatusNotFound,
 	}
@@ -1322,7 +1322,7 @@ func TestServer404Redirect(t *testing.T) {
 	alternativeModule := &internal.VersionMap{
 		ModulePath:       "module.path/alternative",
 		GoModPath:        sample.ModulePath,
-		RequestedVersion: version.LatestVersion,
+		RequestedVersion: version.Latest,
 		ResolvedVersion:  sample.VersionString,
 		Status:           derrors.ToStatus(derrors.AlternativeModule),
 	}
@@ -1343,7 +1343,7 @@ func TestServer404Redirect(t *testing.T) {
 	} {
 		if err := testDB.UpsertVersionMap(ctx, &internal.VersionMap{
 			ModulePath:       mod.path,
-			RequestedVersion: version.LatestVersion,
+			RequestedVersion: version.Latest,
 			ResolvedVersion:  mod.version,
 			Status:           mod.status,
 			GoModPath:        mod.path,
@@ -1353,7 +1353,7 @@ func TestServer404Redirect(t *testing.T) {
 	}
 	if err := testDB.UpsertVersionMap(ctx, &internal.VersionMap{
 		ModulePath:       sample.ModulePath + "/blob/master",
-		RequestedVersion: version.LatestVersion,
+		RequestedVersion: version.Latest,
 		ResolvedVersion:  sample.VersionString,
 		Status:           http.StatusNotFound,
 	}); err != nil {
@@ -1610,7 +1610,7 @@ func TestEmptyDirectoryBetweenNestedModulesRedirect(t *testing.T) {
 	notInsertedPath := sample.ModulePath + "/missing/dir"
 	if err := testDB.UpsertVersionMap(ctx, &internal.VersionMap{
 		ModulePath:       missingPath,
-		RequestedVersion: version.LatestVersion,
+		RequestedVersion: version.Latest,
 		ResolvedVersion:  sample.VersionString,
 	}); err != nil {
 		t.Fatal(err)

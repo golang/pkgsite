@@ -30,15 +30,15 @@ const (
 )
 
 const (
-	// LatestVersion signifies the latest available version in requests to the
+	// Latest signifies the latest available version in requests to the
 	// proxy client.
-	LatestVersion = "latest"
+	Latest = "latest"
 
-	// MainVersion represents the main branch.
-	MainVersion = "main"
+	// Main represents the main branch.
+	Main = "main"
 
-	// MasterVersion represents the master branch.
-	MasterVersion = "master"
+	// Master represents the master branch.
+	Master = "master"
 )
 
 func (t Type) String() string {
@@ -193,13 +193,13 @@ func Later(v1, v2 string) bool {
 	return !pseudo1
 }
 
-// Latest finds the latest version of a module using the same algorithm as the
+// LatestVersion finds the latest version of a module using the same algorithm as the
 // Go command. It prefers tagged release versions to tagged pre-release
-// versions, and both of those to pseudo-versions. If versions is empty, Latest
+// versions, and both of those to pseudo-versions. If versions is empty, LatestVersion
 // returns the empty string.
 //
 // hasGoMod should report whether the version it is given has a go.mod file.
-// Latest returns the latest incompatible version only if the latest compatible
+// LatestVersion returns the latest incompatible version only if the latest compatible
 // version does not have a go.mod file.
 //
 // The meaning of latest is defined at
@@ -209,7 +209,7 @@ func Later(v1, v2 string) bool {
 // method. This function is a re-implementation and specialization of that
 // method at Go version 1.16
 // (https://go.googlesource.com/go/+/refs/tags/go1.16/src/cmd/go/internal/modload/query.go#441).
-func Latest(versions []string, hasGoMod func(v string) (bool, error)) (v string, err error) {
+func LatestVersion(versions []string, hasGoMod func(v string) (bool, error)) (v string, err error) {
 	latest := LatestOf(versions)
 	if latest == "" {
 		return "", nil

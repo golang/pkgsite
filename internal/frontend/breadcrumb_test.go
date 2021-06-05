@@ -18,7 +18,7 @@ func TestBreadcrumbPath(t *testing.T) {
 		want                      breadcrumb
 	}{
 		{
-			"example.com/blob/s3blob", "example.com", version.LatestVersion,
+			"example.com/blob/s3blob", "example.com", version.Latest,
 			breadcrumb{
 				Current: "s3blob",
 				Links: []link{
@@ -29,7 +29,7 @@ func TestBreadcrumbPath(t *testing.T) {
 			},
 		},
 		{
-			"example.com", "example.com", version.LatestVersion,
+			"example.com", "example.com", version.Latest,
 			breadcrumb{
 				Current:  "example.com",
 				Links:    []link{},
@@ -37,7 +37,7 @@ func TestBreadcrumbPath(t *testing.T) {
 			},
 		},
 		{
-			"g/x/tools/go/a", "g/x/tools", version.LatestVersion,
+			"g/x/tools/go/a", "g/x/tools", version.Latest,
 			breadcrumb{
 				Current: "a",
 				Links: []link{
@@ -48,7 +48,7 @@ func TestBreadcrumbPath(t *testing.T) {
 			},
 		},
 		{
-			"golang.org/x/tools", "golang.org/x/tools", version.LatestVersion,
+			"golang.org/x/tools", "golang.org/x/tools", version.Latest,
 			breadcrumb{
 				Current:  "golang.org/x/tools",
 				Links:    []link{},
@@ -57,7 +57,7 @@ func TestBreadcrumbPath(t *testing.T) {
 		},
 		{
 			// Special case: stdlib package.
-			"encoding/json", "std", version.LatestVersion,
+			"encoding/json", "std", version.Latest,
 			breadcrumb{
 				Current:  "json",
 				Links:    []link{{"/encoding", "encoding"}},
@@ -75,7 +75,7 @@ func TestBreadcrumbPath(t *testing.T) {
 		},
 		{
 			// Special case: stdlib module.
-			"std", "std", version.LatestVersion,
+			"std", "std", version.Latest,
 			breadcrumb{
 				Current: "Standard library",
 				Links:   nil,

@@ -102,14 +102,14 @@ func (s *Server) servePathNotFoundPage(w http.ResponseWriter, r *http.Request,
 			// to avoid ending up in a loop.
 			return errUnitNotFoundWithoutFetch
 		}
-		vm, err := db.GetVersionMap(ctx, fr.goModPath, version.LatestVersion)
+		vm, err := db.GetVersionMap(ctx, fr.goModPath, version.Latest)
 		if (err != nil && !errors.Is(err, derrors.NotFound)) ||
 			(vm != nil && vm.Status != http.StatusOK) {
 			// We attempted to fetch the canonical module path before and were
 			// not successful. Do not redirect this request.
 			return errUnitNotFoundWithoutFetch
 		}
-		u := constructUnitURL(fr.goModPath, fr.goModPath, version.LatestVersion)
+		u := constructUnitURL(fr.goModPath, fr.goModPath, version.Latest)
 		cookie.Set(w, cookie.AlternativeModuleFlash, fullPath, u)
 		http.Redirect(w, r, u, http.StatusFound)
 		return nil
@@ -163,7 +163,7 @@ func githubPathRedirect(fullPath string) string {
 	if m[1] != "" {
 		p = m[0] + m[1]
 	}
-	return constructUnitURL(p, p, version.LatestVersion)
+	return constructUnitURL(p, p, version.Latest)
 }
 
 // pathNotFoundError returns a page with an option on how to
@@ -185,7 +185,7 @@ func pathNotFoundError(ctx context.Context, fullPath, requestedVersion string) e
 		return &serverError{status: http.StatusNotFound}
 	}
 	path := fullPath
-	if requestedVersion != version.LatestVersion {
+	if requestedVersion != version.Latest {
 		path = fmt.Sprintf("%s@%s", fullPath, requestedVersion)
 	}
 	return &serverError{

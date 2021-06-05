@@ -117,7 +117,7 @@ func getNestedModules(ctx context.Context, ds internal.DataSource, um *internal.
 			continue
 		}
 		mods = append(mods, &DirectoryInfo{
-			URL:      constructUnitURL(m.ModulePath, m.ModulePath, version.LatestVersion),
+			URL:      constructUnitURL(m.ModulePath, m.ModulePath, version.Latest),
 			Suffix:   suffix,
 			IsModule: true,
 		})

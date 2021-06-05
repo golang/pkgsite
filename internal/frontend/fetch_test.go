@@ -56,7 +56,7 @@ func TestFetch(t *testing.T) {
 		{
 			name:     "path at latest package is in module root",
 			fullPath: testModulePath,
-			version:  version.LatestVersion,
+			version:  version.Latest,
 		},
 		{
 			name:     "path at semver package is in module root",
@@ -66,7 +66,7 @@ func TestFetch(t *testing.T) {
 		{
 			name:     "package at latest package is not in module root",
 			fullPath: testModulePath + "/bar/foo",
-			version:  version.LatestVersion,
+			version:  version.Latest,
 		},
 		{
 			name:     "directory at master package is not in module root",
@@ -105,7 +105,7 @@ func TestFetchErrors(t *testing.T) {
 			name:             "non-existent module",
 			modulePath:       "github.com/nonexistent",
 			fullPath:         "github.com/nonexistent",
-			version:          version.LatestVersion,
+			version:          version.Latest,
 			want:             http.StatusNotFound,
 			wantErrorMessage: "\"github.com/nonexistent\" could not be found.",
 		},
@@ -121,7 +121,7 @@ func TestFetchErrors(t *testing.T) {
 			name:       "module found but package does not exist",
 			modulePath: testModulePath,
 			fullPath:   "github.com/module/pkg-nonexistent",
-			version:    version.LatestVersion,
+			version:    version.Latest,
 			want:       http.StatusNotFound,
 			wantErrorMessage: `
 		    &lt;div class=&#34;Error-message&#34;&gt;github.com/module/pkg-nonexistent could not be found.&lt;/div&gt;
@@ -131,7 +131,7 @@ func TestFetchErrors(t *testing.T) {
 			name:             "module exists but fetch timed out",
 			modulePath:       testModulePath,
 			fullPath:         testModulePath,
-			version:          version.LatestVersion,
+			version:          version.Latest,
 			fetchTimeout:     1 * time.Millisecond,
 			want:             http.StatusRequestTimeout,
 			wantErrorMessage: "We're still working on “github.com/module”. Check back in a few minutes!",

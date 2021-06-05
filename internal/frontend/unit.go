@@ -166,7 +166,7 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 	// If we've already called GetUnitMeta for an unknown module path and the latest version, pass
 	// it to GetLatestInfo to avoid a redundant call.
 	var latestUnitMeta *internal.UnitMeta
-	if info.modulePath == internal.UnknownModulePath && info.requestedVersion == version.LatestVersion {
+	if info.modulePath == internal.UnknownModulePath && info.requestedVersion == version.Latest {
 		latestUnitMeta = um
 	}
 	latestInfo := s.GetLatestInfo(ctx, um.Path, um.ModulePath, latestUnitMeta)
@@ -191,7 +191,7 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 		CanonicalURLPath:      canonicalURLPath(um),
 		DisplayVersion:        displayVersion(um.Version, um.ModulePath),
 		LinkVersion:           lv,
-		LatestURL:             constructUnitURL(um.Path, um.ModulePath, version.LatestVersion),
+		LatestURL:             constructUnitURL(um.Path, um.ModulePath, version.Latest),
 		LatestMinorClass:      latestMinorClass(lv, latestInfo),
 		LatestMajorVersionURL: latestInfo.MajorUnitPath,
 		PageLabels:            pageLabels(um),
@@ -260,7 +260,7 @@ func isValidTabForUnit(tab string, um *internal.UnitMeta) bool {
 // version. If requestedVersion is "latest", then the resulting path has no
 // version; otherwise, it has requestedVersion.
 func constructUnitURL(fullPath, modulePath, requestedVersion string) string {
-	if requestedVersion == version.LatestVersion {
+	if requestedVersion == version.Latest {
 		return "/" + fullPath
 	}
 	v := linkVersion(requestedVersion, modulePath)

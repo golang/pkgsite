@@ -184,7 +184,7 @@ func (c *Client) escapedURL(modulePath, requestedVersion, suffix string) (_ stri
 	if err != nil {
 		return "", fmt.Errorf("path: %v: %w", err, derrors.InvalidArgument)
 	}
-	if requestedVersion == version.LatestVersion {
+	if requestedVersion == version.Latest {
 		if suffix != "info" {
 			return "", fmt.Errorf("cannot ask for latest with suffix %q", suffix)
 		}

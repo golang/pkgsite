@@ -42,7 +42,7 @@ func (db *DB) GetUnitMeta(ctx context.Context, fullPath, requestedModulePath, re
 	modulePath := requestedModulePath
 	v := requestedVersion
 	var lmv *internal.LatestModuleVersions
-	if requestedVersion == version.LatestVersion {
+	if requestedVersion == version.Latest {
 		modulePath, v, lmv, err = db.getLatestUnitVersion(ctx, fullPath, requestedModulePath)
 		if err != nil {
 			return nil, err

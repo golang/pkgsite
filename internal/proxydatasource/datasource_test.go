@@ -175,7 +175,7 @@ func TestGetUnitMeta(t *testing.T) {
 		{
 			path:       "example.com/basic",
 			modulePath: internal.UnknownModulePath,
-			version:    version.LatestVersion,
+			version:    version.Latest,
 			want: &internal.UnitMeta{
 				ModuleInfo: internal.ModuleInfo{
 					ModulePath:        "example.com/basic",

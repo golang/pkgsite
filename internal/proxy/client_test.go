@@ -82,13 +82,13 @@ func TestGetLatestInfo(t *testing.T) {
 	client, teardownProxy := SetupTestClient(t, testModules)
 	defer teardownProxy()
 
-	info, err := client.Info(ctx, sample.ModulePath, version.LatestVersion)
+	info, err := client.Info(ctx, sample.ModulePath, version.Latest)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	if got, want := info.Version, "v1.2.0"; got != want {
-		t.Errorf("Info(ctx, %q, %q): Version = %q, want %q", sample.ModulePath, version.LatestVersion, got, want)
+		t.Errorf("Info(ctx, %q, %q): Version = %q, want %q", sample.ModulePath, version.Latest, got, want)
 	}
 }
 
@@ -331,11 +331,11 @@ func TestEncodedURL(t *testing.T) {
 			"", // bad version
 		},
 		{
-			"mod.com", version.LatestVersion, "info",
+			"mod.com", version.Latest, "info",
 			"u/mod.com/@latest",
 		},
 		{
-			"mod.com", version.LatestVersion, "zip",
+			"mod.com", version.Latest, "zip",
 			"", // can't ask for latest zip
 		},
 		{

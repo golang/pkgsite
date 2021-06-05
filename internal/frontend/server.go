@@ -206,7 +206,7 @@ func detailsTTLForPath(ctx context.Context, urlPath, tab string) time.Duration {
 		log.Errorf(ctx, "falling back to default TTL: %v", err)
 		return defaultTTL
 	}
-	if info.requestedVersion == version.LatestVersion {
+	if info.requestedVersion == version.Latest {
 		return shortTTL
 	}
 	if tab == "importedby" || tab == "versions" {

@@ -246,7 +246,7 @@ func TestLatest(t *testing.T) {
 			if test.hasGoMod == nil {
 				test.hasGoMod = func(v string) (bool, error) { return true, nil }
 			}
-			got, err := Latest(test.versions, test.hasGoMod)
+			got, err := LatestVersion(test.versions, test.hasGoMod)
 			if err != nil {
 				t.Fatal(err)
 			}

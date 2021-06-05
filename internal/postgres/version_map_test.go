@@ -106,7 +106,7 @@ func TestGetVersionMapsWithNon2xxStatus(t *testing.T) {
 		want[test.path] = true
 		if err := testDB.UpsertVersionMap(ctx, &internal.VersionMap{
 			ModulePath:       test.path,
-			RequestedVersion: version.LatestVersion,
+			RequestedVersion: version.Latest,
 			ResolvedVersion:  sample.VersionString,
 			GoModPath:        test.path,
 			Status:           test.status,
@@ -114,7 +114,7 @@ func TestGetVersionMapsWithNon2xxStatus(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	vms, err := testDB.GetVersionMaps(ctx, paths, version.LatestVersion)
+	vms, err := testDB.GetVersionMaps(ctx, paths, version.Latest)
 	if err != nil {
 		t.Fatal(err)
 	}

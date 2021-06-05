@@ -351,7 +351,7 @@ func parseModulePathAndVersion(requestPath string) (string, string, error) {
 		if modulePath == "" {
 			return "", "", fmt.Errorf("invalid module path: %q", modulePath)
 		}
-		return modulePath, version.LatestVersion, nil
+		return modulePath, version.Latest, nil
 	}
 	parts := strings.Split(p, "/@v/")
 	if len(parts) != 2 {

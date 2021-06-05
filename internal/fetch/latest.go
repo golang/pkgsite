@@ -96,7 +96,7 @@ func LatestModuleVersions(ctx context.Context, modulePath string, prox *proxy.Cl
 	if err != nil {
 		return nil, err
 	}
-	latestInfo, err := prox.Info(ctx, modulePath, version.LatestVersion)
+	latestInfo, err := prox.Info(ctx, modulePath, version.Latest)
 	if errors.Is(err, derrors.NotFound) || errors.Is(err, derrors.NotFetched) {
 		// No information from the proxy, but not a showstopper either; we can
 		// proceed with the result of the list endpoint.
@@ -109,7 +109,7 @@ func LatestModuleVersions(ctx context.Context, modulePath string, prox *proxy.Cl
 		// No tagged versions, and nothing from @latest: no version information.
 		return nil, nil
 	}
-	rawLatest, err := version.Latest(versions, hasGoModFunc)
+	rawLatest, err := version.LatestVersion(versions, hasGoModFunc)
 	if err != nil {
 		return nil, err
 	}
@@ -133,7 +133,7 @@ func LatestModuleVersions(ctx context.Context, modulePath string, prox *proxy.Cl
 	if len(versions) == len(unretractedVersions) {
 		lmv.CookedVersion = lmv.RawVersion
 	} else {
-		lmv.CookedVersion, err = version.Latest(unretractedVersions, hasGoModFunc)
+		lmv.CookedVersion, err = version.LatestVersion(unretractedVersions, hasGoModFunc)
 		if err != nil {
 			return nil, err
 		}

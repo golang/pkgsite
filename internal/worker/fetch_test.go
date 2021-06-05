@@ -95,7 +95,7 @@ func TestFetchAndUpdateState(t *testing.T) {
 		},
 		{
 			modulePath: "example.com/multi",
-			version:    version.LatestVersion,
+			version:    version.Latest,
 			pkg:        "example.com/multi/bar",
 			want:       myModuleV100,
 		},

@@ -28,7 +28,7 @@ func TestExtractURLPathInfo(t *testing.T) {
 			want: &urlPathInfo{
 				modulePath:       internal.UnknownModulePath,
 				fullPath:         "github.com/hashicorp/vault/api",
-				requestedVersion: version.LatestVersion,
+				requestedVersion: version.Latest,
 			},
 		},
 		{
@@ -64,7 +64,7 @@ func TestExtractURLPathInfo(t *testing.T) {
 			want: &urlPathInfo{
 				modulePath:       stdlib.ModulePath,
 				fullPath:         "std",
-				requestedVersion: version.LatestVersion,
+				requestedVersion: version.Latest,
 			},
 		},
 		{
@@ -82,7 +82,7 @@ func TestExtractURLPathInfo(t *testing.T) {
 			want: &urlPathInfo{
 				modulePath:       stdlib.ModulePath,
 				fullPath:         "net/http",
-				requestedVersion: version.LatestVersion,
+				requestedVersion: version.Latest,
 			},
 		},
 		{

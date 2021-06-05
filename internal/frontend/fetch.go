@@ -271,7 +271,7 @@ func resultFromFetchRequest(results []*fetchResult, fullPath, requestedVersion s
 			// Provide a specific message for the first error.
 			fr.status = http.StatusNotFound
 			p := fullPath
-			if requestedVersion != version.LatestVersion {
+			if requestedVersion != version.Latest {
 				p = fullPath + "@" + requestedVersion
 			}
 			fr.responseText = fmt.Sprintf("%s could not be processed.", p)
@@ -311,7 +311,7 @@ func resultFromFetchRequest(results []*fetchResult, fullPath, requestedVersion s
 		return fr, nil
 	}
 	p := fullPath
-	if requestedVersion != version.LatestVersion {
+	if requestedVersion != version.Latest {
 		p = fullPath + "@" + requestedVersion
 	}
 	fr.status = http.StatusNotFound
@@ -320,7 +320,7 @@ func resultFromFetchRequest(results []*fetchResult, fullPath, requestedVersion s
 }
 
 func displayPath(path, v string) string {
-	if v == version.LatestVersion {
+	if v == version.Latest {
 		return path
 	}
 	return fmt.Sprintf("%s@%s", path, v)
@@ -486,7 +486,7 @@ func modulePathsToFetch(ctx context.Context, ds internal.DataSource, fullPath, m
 	if modulePath != internal.UnknownModulePath {
 		return []string{modulePath}, nil
 	}
-	um, err := ds.GetUnitMeta(ctx, fullPath, modulePath, version.LatestVersion)
+	um, err := ds.GetUnitMeta(ctx, fullPath, modulePath, version.Latest)
 	if err != nil && !errors.Is(err, derrors.NotFound) {
 		return nil, &serverError{
 			status: http.StatusInternalServerError,

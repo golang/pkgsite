@@ -300,7 +300,7 @@ func searchRequestRedirectPath(ctx context.Context, ds internal.DataSource, quer
 	if !strings.Contains(requestedPath, "/") {
 		return ""
 	}
-	_, err := ds.GetUnitMeta(ctx, requestedPath, internal.UnknownModulePath, version.LatestVersion)
+	_, err := ds.GetUnitMeta(ctx, requestedPath, internal.UnknownModulePath, version.Latest)
 	if err != nil {
 		if !errors.Is(err, derrors.NotFound) {
 			log.Errorf(ctx, "searchRequestRedirectPath(%q): %v", requestedPath, err)
