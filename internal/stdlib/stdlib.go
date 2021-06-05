@@ -66,7 +66,7 @@ func VersionForTag(tag string) string {
 		return ""
 	}
 	// Special case for latest and master.
-	if tag == "latest" || tag == "master" {
+	if tag == version.Latest || tag == version.Master {
 		return tag
 	}
 	m := tagRegexp.FindStringSubmatch(tag)
@@ -88,21 +88,21 @@ func VersionForTag(tag string) string {
 // TagForVersion returns the Go standard library repository tag corresponding
 // to semver. The Go tags differ from standard semantic versions in a few ways,
 // such as beginning with "go" instead of "v".
-func TagForVersion(version string) (_ string, err error) {
-	defer derrors.Wrap(&err, "TagForVersion(%q)", version)
+func TagForVersion(v string) (_ string, err error) {
+	defer derrors.Wrap(&err, "TagForVersion(%q)", v)
 
 	// Special case: master => master
-	if version == "master" || strings.HasPrefix(version, "v0.0.0") {
-		return "master", nil
+	if v == version.Master || strings.HasPrefix(v, "v0.0.0") {
+		return version.Master, nil
 	}
 	// Special case: v1.0.0 => go1.
-	if version == "v1.0.0" {
+	if v == "v1.0.0" {
 		return "go1", nil
 	}
-	if !semver.IsValid(version) {
-		return "", fmt.Errorf("%w: requested version is not a valid semantic version: %q ", derrors.InvalidArgument, version)
+	if !semver.IsValid(v) {
+		return "", fmt.Errorf("%w: requested version is not a valid semantic version: %q ", derrors.InvalidArgument, v)
 	}
-	goVersion := semver.Canonical(version)
+	goVersion := semver.Canonical(v)
 	prerelease := semver.Prerelease(goVersion)
 	versionWithoutPrerelease := strings.TrimSuffix(goVersion, prerelease)
 	patch := strings.TrimPrefix(versionWithoutPrerelease, semver.MajorMinor(goVersion)+".")
@@ -178,14 +178,14 @@ var (
 )
 
 // getGoRepo returns a repo object for the Go repo at version.
-func getGoRepo(version string) (_ *git.Repository, err error) {
-	defer derrors.Wrap(&err, "getGoRepo(%q)", version)
+func getGoRepo(v string) (_ *git.Repository, err error) {
+	defer derrors.Wrap(&err, "getGoRepo(%q)", v)
 
 	var ref plumbing.ReferenceName
-	if version == "master" {
+	if v == version.Master {
 		ref = plumbing.HEAD
 	} else {
-		tag, err := TagForVersion(version)
+		tag, err := TagForVersion(v)
 		if err != nil {
 			return nil, err
 		}
@@ -201,13 +201,13 @@ func getGoRepo(version string) (_ *git.Repository, err error) {
 }
 
 // getTestGoRepo gets a Go repo for testing.
-func getTestGoRepo(version string) (_ *git.Repository, err error) {
-	defer derrors.Wrap(&err, "getTestGoRepo(%q)", version)
-	if strings.HasPrefix(version, "v0.0.0") {
-		version = "master"
+func getTestGoRepo(v string) (_ *git.Repository, err error) {
+	defer derrors.Wrap(&err, "getTestGoRepo(%q)", v)
+	if strings.HasPrefix(v, "v0.0.0") {
+		v = version.Master
 	}
 
-	fs := osfs.New(filepath.Join(testhelper.TestDataPath("testdata"), version))
+	fs := osfs.New(filepath.Join(testhelper.TestDataPath("testdata"), v))
 	repo, err := git.Init(memory.NewStorage(), fs)
 	if err != nil {
 		return nil, err
@@ -265,9 +265,9 @@ func Versions() (_ []string, err error) {
 }
 
 // Directory returns the directory of the standard library relative to the repo root.
-func Directory(version string) string {
-	if semver.Compare(version, "v1.4.0-beta.1") >= 0 ||
-		version == "master" || strings.HasPrefix(version, "v0.0.0") {
+func Directory(v string) string {
+	if semver.Compare(v, "v1.4.0-beta.1") >= 0 ||
+		v == version.Master || strings.HasPrefix(v, "v0.0.0") {
 		return "src"
 	}
 	// For versions older than v1.4.0-beta.1, the stdlib is in src/pkg.
@@ -296,7 +296,7 @@ func ZipInfo(requestedVersion string) (resolvedVersion string, err error) {
 // version.
 //
 // Normally, Zip returns the resolved version it was passed. If the resolved
-// version is "master", Zip returns a semantic version for the branch.
+// version is version.Master, Zip returns a semantic version for the branch.
 //
 // Zip reads the standard library at the Go repository tag corresponding to to
 // the given semantic version.
@@ -312,7 +312,7 @@ func Zip(requestedVersion string) (_ *zip.Reader, resolvedVersion2 string, commi
 	if UseTestData {
 		repo, err = getTestGoRepo(requestedVersion)
 	} else {
-		if requestedVersion == "latest" {
+		if requestedVersion == version.Latest {
 			requestedVersion, err = semanticVersion(requestedVersion)
 			if err != nil {
 				return nil, "", time.Time{}, err
@@ -333,7 +333,7 @@ func Zip(requestedVersion string) (_ *zip.Reader, resolvedVersion2 string, commi
 	if err != nil {
 		return nil, "", time.Time{}, err
 	}
-	if requestedVersion == "master" {
+	if requestedVersion == version.Master {
 		requestedVersion = newPseudoVersion("v0.0.0", commit.Committer.When, commit.Hash)
 	}
 	root, err := repo.TreeObject(commit.TreeHash)
@@ -372,14 +372,14 @@ func newPseudoVersion(version string, commitTime time.Time, hash plumbing.Hash) 
 }
 
 // semanticVersion returns the semantic version corresponding to the
-// requestedVersion. If the requested version is "master", then semanticVersion
+// requestedVersion. If the requested version is version.Master, then semanticVersion
 // returns it as is. The branch name is resolved to a proper pseudo-version in
 // Zip.
 func semanticVersion(requestedVersion string) (_ string, err error) {
 	defer derrors.Wrap(&err, "semanticVersion(%q)", requestedVersion)
 
-	if requestedVersion == "master" {
-		return "master", nil
+	if requestedVersion == version.Master {
+		return version.Master, nil
 	}
 
 	knownVersions, err := Versions()
@@ -388,7 +388,7 @@ func semanticVersion(requestedVersion string) (_ string, err error) {
 	}
 
 	switch requestedVersion {
-	case "latest":
+	case version.Latest:
 		var latestVersion string
 		for _, v := range knownVersions {
 			if !strings.HasPrefix(v, "v") {
