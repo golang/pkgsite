@@ -13,10 +13,10 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
-	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/testing/sample"
 	"golang.org/x/pkgsite/internal/testing/testhelper"
+	"golang.org/x/pkgsite/internal/version"
 )
 
 const testTimeout = 5 * time.Second
@@ -82,13 +82,13 @@ func TestGetLatestInfo(t *testing.T) {
 	client, teardownProxy := SetupTestClient(t, testModules)
 	defer teardownProxy()
 
-	info, err := client.Info(ctx, sample.ModulePath, internal.LatestVersion)
+	info, err := client.Info(ctx, sample.ModulePath, version.LatestVersion)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	if got, want := info.Version, "v1.2.0"; got != want {
-		t.Errorf("Info(ctx, %q, %q): Version = %q, want %q", sample.ModulePath, internal.LatestVersion, got, want)
+		t.Errorf("Info(ctx, %q, %q): Version = %q, want %q", sample.ModulePath, version.LatestVersion, got, want)
 	}
 }
 
@@ -331,11 +331,11 @@ func TestEncodedURL(t *testing.T) {
 			"", // bad version
 		},
 		{
-			"mod.com", internal.LatestVersion, "info",
+			"mod.com", version.LatestVersion, "info",
 			"u/mod.com/@latest",
 		},
 		{
-			"mod.com", internal.LatestVersion, "zip",
+			"mod.com", version.LatestVersion, "zip",
 			"", // can't ask for latest zip
 		},
 		{

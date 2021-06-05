@@ -40,15 +40,15 @@ func (db *DB) GetUnitMeta(ctx context.Context, fullPath, requestedModulePath, re
 	defer middleware.ElapsedStat(ctx, "DB.GetUnitMeta")()
 
 	modulePath := requestedModulePath
-	version := requestedVersion
+	v := requestedVersion
 	var lmv *internal.LatestModuleVersions
-	if requestedVersion == internal.LatestVersion {
-		modulePath, version, lmv, err = db.getLatestUnitVersion(ctx, fullPath, requestedModulePath)
+	if requestedVersion == version.LatestVersion {
+		modulePath, v, lmv, err = db.getLatestUnitVersion(ctx, fullPath, requestedModulePath)
 		if err != nil {
 			return nil, err
 		}
 	}
-	return db.getUnitMetaWithKnownLatestVersion(ctx, fullPath, modulePath, version, lmv)
+	return db.getUnitMetaWithKnownLatestVersion(ctx, fullPath, modulePath, v, lmv)
 }
 
 func (db *DB) getUnitMetaWithKnownLatestVersion(ctx context.Context, fullPath, modulePath, version string, lmv *internal.LatestModuleVersions) (_ *internal.UnitMeta, err error) {

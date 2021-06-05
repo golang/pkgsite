@@ -21,6 +21,7 @@ import (
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/postgres"
+	"golang.org/x/pkgsite/internal/version"
 )
 
 const defaultSearchLimit = 10
@@ -299,7 +300,7 @@ func searchRequestRedirectPath(ctx context.Context, ds internal.DataSource, quer
 	if !strings.Contains(requestedPath, "/") {
 		return ""
 	}
-	_, err := ds.GetUnitMeta(ctx, requestedPath, internal.UnknownModulePath, internal.LatestVersion)
+	_, err := ds.GetUnitMeta(ctx, requestedPath, internal.UnknownModulePath, version.LatestVersion)
 	if err != nil {
 		if !errors.Is(err, derrors.NotFound) {
 			log.Errorf(ctx, "searchRequestRedirectPath(%q): %v", requestedPath, err)

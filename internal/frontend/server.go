@@ -30,6 +30,7 @@ import (
 	"golang.org/x/pkgsite/internal/middleware"
 	"golang.org/x/pkgsite/internal/queue"
 	"golang.org/x/pkgsite/internal/static"
+	"golang.org/x/pkgsite/internal/version"
 )
 
 // Server can be installed to serve the go discovery frontend.
@@ -205,7 +206,7 @@ func detailsTTLForPath(ctx context.Context, urlPath, tab string) time.Duration {
 		log.Errorf(ctx, "falling back to default TTL: %v", err)
 		return defaultTTL
 	}
-	if info.requestedVersion == internal.LatestVersion {
+	if info.requestedVersion == version.LatestVersion {
 		return shortTTL
 	}
 	if tab == "importedby" || tab == "versions" {

@@ -9,6 +9,7 @@ import (
 
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/stdlib"
+	"golang.org/x/pkgsite/internal/version"
 )
 
 // displayBreadcrumbs appends additional breadcrumb links for display
@@ -67,7 +68,7 @@ func breadcrumbPath(pkgPath, modPath, requestedVersion string) breadcrumb {
 	b.Links = make([]link, len(dirs)-1)
 	for i := 1; i < len(dirs); i++ {
 		href := "/" + dirs[i]
-		if requestedVersion != internal.LatestVersion {
+		if requestedVersion != version.LatestVersion {
 			href += "@" + linkVersion(requestedVersion, modPath)
 		}
 		el := dirs[i]

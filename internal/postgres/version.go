@@ -164,7 +164,7 @@ func (db *DB) GetLatestInfo(ctx context.Context, unitPath, modulePath string, la
 		latest.MinorModulePath = latestUnitMeta.ModulePath
 	} else {
 		group.Go(func() error {
-			um, err := db.GetUnitMeta(gctx, unitPath, internal.UnknownModulePath, internal.LatestVersion)
+			um, err := db.GetUnitMeta(gctx, unitPath, internal.UnknownModulePath, version.LatestVersion)
 			if err != nil {
 				return err
 			}

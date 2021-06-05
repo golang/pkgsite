@@ -7,7 +7,7 @@ package frontend
 import (
 	"testing"
 
-	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/version"
 )
 
 func TestParseStdLibURLPath(t *testing.T) {
@@ -18,7 +18,7 @@ func TestParseStdLibURLPath(t *testing.T) {
 			name:        "latest",
 			url:         "/cmd/go",
 			wantPath:    "cmd/go",
-			wantVersion: internal.LatestVersion,
+			wantVersion: version.LatestVersion,
 		},
 		{
 			name:        "package at version",

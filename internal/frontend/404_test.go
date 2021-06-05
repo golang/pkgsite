@@ -16,6 +16,7 @@ import (
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/testing/sample"
+	"golang.org/x/pkgsite/internal/version"
 )
 
 func TestPreviousFetchStatusAndResponse(t *testing.T) {
@@ -49,7 +50,7 @@ func TestPreviousFetchStatusAndResponse(t *testing.T) {
 		}
 		if err := testDB.UpsertVersionMap(ctx, &internal.VersionMap{
 			ModulePath:       mod.path,
-			RequestedVersion: internal.LatestVersion,
+			RequestedVersion: version.LatestVersion,
 			ResolvedVersion:  sample.VersionString,
 			Status:           mod.status,
 			GoModPath:        goModPath,
@@ -73,7 +74,7 @@ func TestPreviousFetchStatusAndResponse(t *testing.T) {
 		{"mod to reprocess", "reprocess.mod/foo", 404},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			fr, err := previousFetchStatusAndResponse(ctx, testDB, test.path, internal.UnknownModulePath, internal.LatestVersion)
+			fr, err := previousFetchStatusAndResponse(ctx, testDB, test.path, internal.UnknownModulePath, version.LatestVersion)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -90,7 +91,7 @@ func TestPreviousFetchStatusAndResponse(t *testing.T) {
 		{"path never fetched, but top level mod fetched", "mvdan.cc/sh/v3"},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			_, err := previousFetchStatusAndResponse(ctx, testDB, test.path, internal.UnknownModulePath, internal.LatestVersion)
+			_, err := previousFetchStatusAndResponse(ctx, testDB, test.path, internal.UnknownModulePath, version.LatestVersion)
 			if !errors.Is(err, derrors.NotFound) {
 				t.Errorf("got %v; want %v", err, derrors.NotFound)
 			}
@@ -116,7 +117,7 @@ func TestPreviousFetchStatusAndResponse_AlternativeModuleWithDeepLinking(t *test
 		}
 		if err := testDB.UpsertVersionMap(ctx, &internal.VersionMap{
 			ModulePath:       mod.path,
-			RequestedVersion: internal.LatestVersion,
+			RequestedVersion: version.LatestVersion,
 			ResolvedVersion:  sample.VersionString,
 			Status:           mod.status,
 			GoModPath:        goModPath,
@@ -132,7 +133,7 @@ func TestPreviousFetchStatusAndResponse_AlternativeModuleWithDeepLinking(t *test
 		{"path with specified module", "github.com/kubernetes/client-go/informers/admissionregistration/v1", "github.com/kubernetes/client-go", 491},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			fr, err := previousFetchStatusAndResponse(ctx, testDB, test.path, test.mod, internal.LatestVersion)
+			fr, err := previousFetchStatusAndResponse(ctx, testDB, test.path, test.mod, version.LatestVersion)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -149,7 +150,7 @@ func TestPreviousFetchStatusAndResponse_AlternativeModuleWithDeepLinking(t *test
 		{"path with specified nonexistent module", "github.com/kubernetes/client-go/typo/informers/admissionregistration/v1", "github.com/kubernetes/client-go/typo"},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			if _, err := previousFetchStatusAndResponse(ctx, testDB, test.path, test.mod, internal.LatestVersion); !errors.Is(err, derrors.NotFound) {
+			if _, err := previousFetchStatusAndResponse(ctx, testDB, test.path, test.mod, version.LatestVersion); !errors.Is(err, derrors.NotFound) {
 				t.Fatal(err)
 			}
 		})
@@ -172,7 +173,7 @@ func TestPreviousFetchStatusAndResponse_PathExistsAtNonV1(t *testing.T) {
 	} {
 		if err := testDB.UpsertVersionMap(ctx, &internal.VersionMap{
 			ModulePath:       mod.path,
-			RequestedVersion: internal.LatestVersion,
+			RequestedVersion: version.LatestVersion,
 			ResolvedVersion:  mod.version,
 			Status:           mod.status,
 			GoModPath:        mod.path,
@@ -202,8 +203,8 @@ func TestPreviousFetchStatusAndResponse_PathExistsAtNonV1(t *testing.T) {
 		name, path, version, wantPath string
 		wantStatus                    int
 	}{
-		{"module path not at v1", sample.ModulePath, internal.LatestVersion, sample.ModulePath + "/v4", http.StatusFound},
-		{"import path not at v1", sample.ModulePath + "/foo", internal.LatestVersion, sample.ModulePath + "/v4/foo", http.StatusFound},
+		{"module path not at v1", sample.ModulePath, version.LatestVersion, sample.ModulePath + "/v4", http.StatusFound},
+		{"import path not at v1", sample.ModulePath + "/foo", version.LatestVersion, sample.ModulePath + "/v4/foo", http.StatusFound},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			checkPath(ctx, t, testDB, test.path, test.version, test.wantPath, test.wantStatus)

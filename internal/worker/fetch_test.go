@@ -21,6 +21,7 @@ import (
 	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/testing/sample"
+	"golang.org/x/pkgsite/internal/version"
 )
 
 const (
@@ -94,7 +95,7 @@ func TestFetchAndUpdateState(t *testing.T) {
 		},
 		{
 			modulePath: "example.com/multi",
-			version:    internal.LatestVersion,
+			version:    version.LatestVersion,
 			pkg:        "example.com/multi/bar",
 			want:       myModuleV100,
 		},

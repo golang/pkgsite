@@ -20,6 +20,7 @@ import (
 	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/testing/sample"
+	"golang.org/x/pkgsite/internal/version"
 )
 
 func TestGetUnitMeta(t *testing.T) {
@@ -185,7 +186,7 @@ func testGetUnitMeta(t *testing.T, ctx context.Context) {
 				test.module = internal.UnknownModulePath
 			}
 			if test.version == "" {
-				test.version = internal.LatestVersion
+				test.version = version.LatestVersion
 			}
 			want := sample.UnitMeta(
 				test.path,
@@ -329,7 +330,7 @@ func TestGetUnitMetaBypass(t *testing.T) {
 					test.module = internal.UnknownModulePath
 				}
 				if test.version == "" {
-					test.version = internal.LatestVersion
+					test.version = version.LatestVersion
 				}
 				test.want = sample.UnitMeta(
 					test.path,

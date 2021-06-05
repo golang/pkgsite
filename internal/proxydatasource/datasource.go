@@ -22,6 +22,7 @@ import (
 	"golang.org/x/pkgsite/internal/fetch"
 	"golang.org/x/pkgsite/internal/proxy"
 	"golang.org/x/pkgsite/internal/source"
+	"golang.org/x/pkgsite/internal/version"
 )
 
 var _ internal.DataSource = (*DataSource)(nil)
@@ -198,7 +199,7 @@ func (ds *DataSource) GetLatestInfo(ctx context.Context, unitPath, modulePath st
 	defer derrors.Wrap(&err, "GetLatestInfo(ctx, %q, %q)", unitPath, modulePath)
 
 	if latestUnitMeta == nil {
-		latestUnitMeta, err = ds.GetUnitMeta(ctx, unitPath, internal.UnknownModulePath, internal.LatestVersion)
+		latestUnitMeta, err = ds.GetUnitMeta(ctx, unitPath, internal.UnknownModulePath, version.LatestVersion)
 		if err != nil {
 			return latest, err
 		}
@@ -222,7 +223,7 @@ func (ds *DataSource) GetLatestInfo(ctx context.Context, unitPath, modulePath st
 func (ds *DataSource) getLatestMajorVersion(ctx context.Context, fullPath, modulePath string) (_ string, _ string, err error) {
 	// We are checking if the full path is valid so that we can forward the error if not.
 	seriesPath := internal.SeriesPathForModule(modulePath)
-	info, err := ds.proxyClient.Info(ctx, seriesPath, internal.LatestVersion)
+	info, err := ds.proxyClient.Info(ctx, seriesPath, version.LatestVersion)
 	if err != nil {
 		return "", "", err
 	}
@@ -246,7 +247,7 @@ func (ds *DataSource) getLatestMajorVersion(ctx context.Context, fullPath, modul
 	for v := startVersion; ; v++ {
 		query := fmt.Sprintf("%s/v%d", seriesPath, v)
 
-		_, err := ds.proxyClient.Info(ctx, query, internal.LatestVersion)
+		_, err := ds.proxyClient.Info(ctx, query, version.LatestVersion)
 		if errors.Is(err, derrors.NotFound) {
 			if v == 2 {
 				return modulePath, fullPath, nil

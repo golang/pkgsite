@@ -36,6 +36,7 @@ import (
 	"golang.org/x/pkgsite/internal/queue"
 	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/stdlib"
+	"golang.org/x/pkgsite/internal/version"
 )
 
 // Server can be installed to serve the go discovery worker.
@@ -350,7 +351,7 @@ func parseModulePathAndVersion(requestPath string) (string, string, error) {
 		if modulePath == "" {
 			return "", "", fmt.Errorf("invalid module path: %q", modulePath)
 		}
-		return modulePath, internal.LatestVersion, nil
+		return modulePath, version.LatestVersion, nil
 	}
 	parts := strings.Split(p, "/@v/")
 	if len(parts) != 2 {

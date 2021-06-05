@@ -13,6 +13,7 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/testing/sample"
+	"golang.org/x/pkgsite/internal/version"
 )
 
 func TestReadAndWriteVersionMap(t *testing.T) {
@@ -105,7 +106,7 @@ func TestGetVersionMapsWithNon2xxStatus(t *testing.T) {
 		want[test.path] = true
 		if err := testDB.UpsertVersionMap(ctx, &internal.VersionMap{
 			ModulePath:       test.path,
-			RequestedVersion: internal.LatestVersion,
+			RequestedVersion: version.LatestVersion,
 			ResolvedVersion:  sample.VersionString,
 			GoModPath:        test.path,
 			Status:           test.status,
@@ -113,7 +114,7 @@ func TestGetVersionMapsWithNon2xxStatus(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	vms, err := testDB.GetVersionMaps(ctx, paths, internal.LatestVersion)
+	vms, err := testDB.GetVersionMaps(ctx, paths, version.LatestVersion)
 	if err != nil {
 		t.Fatal(err)
 	}

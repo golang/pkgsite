@@ -34,6 +34,7 @@ import (
 	"golang.org/x/pkgsite/internal/testing/htmlcheck"
 	"golang.org/x/pkgsite/internal/testing/pagecheck"
 	"golang.org/x/pkgsite/internal/testing/sample"
+	"golang.org/x/pkgsite/internal/version"
 )
 
 const testTimeout = 5 * time.Second
@@ -1264,14 +1265,14 @@ func TestServer404Redirect_NoLoop(t *testing.T) {
 	alternativeModule := &internal.VersionMap{
 		ModulePath:       altPath,
 		GoModPath:        goModPath,
-		RequestedVersion: internal.LatestVersion,
+		RequestedVersion: version.LatestVersion,
 		ResolvedVersion:  sample.VersionString,
 		Status:           derrors.ToStatus(derrors.AlternativeModule),
 	}
 	alternativeModulePkg := &internal.VersionMap{
 		ModulePath:       goModPath,
 		GoModPath:        goModPath,
-		RequestedVersion: internal.LatestVersion,
+		RequestedVersion: version.LatestVersion,
 		ResolvedVersion:  sample.VersionString,
 		Status:           http.StatusNotFound,
 	}
@@ -1321,7 +1322,7 @@ func TestServer404Redirect(t *testing.T) {
 	alternativeModule := &internal.VersionMap{
 		ModulePath:       "module.path/alternative",
 		GoModPath:        sample.ModulePath,
-		RequestedVersion: internal.LatestVersion,
+		RequestedVersion: version.LatestVersion,
 		ResolvedVersion:  sample.VersionString,
 		Status:           derrors.ToStatus(derrors.AlternativeModule),
 	}
@@ -1342,7 +1343,7 @@ func TestServer404Redirect(t *testing.T) {
 	} {
 		if err := testDB.UpsertVersionMap(ctx, &internal.VersionMap{
 			ModulePath:       mod.path,
-			RequestedVersion: internal.LatestVersion,
+			RequestedVersion: version.LatestVersion,
 			ResolvedVersion:  mod.version,
 			Status:           mod.status,
 			GoModPath:        mod.path,
@@ -1352,7 +1353,7 @@ func TestServer404Redirect(t *testing.T) {
 	}
 	if err := testDB.UpsertVersionMap(ctx, &internal.VersionMap{
 		ModulePath:       sample.ModulePath + "/blob/master",
-		RequestedVersion: internal.LatestVersion,
+		RequestedVersion: version.LatestVersion,
 		ResolvedVersion:  sample.VersionString,
 		Status:           http.StatusNotFound,
 	}); err != nil {
@@ -1609,7 +1610,7 @@ func TestEmptyDirectoryBetweenNestedModulesRedirect(t *testing.T) {
 	notInsertedPath := sample.ModulePath + "/missing/dir"
 	if err := testDB.UpsertVersionMap(ctx, &internal.VersionMap{
 		ModulePath:       missingPath,
-		RequestedVersion: internal.LatestVersion,
+		RequestedVersion: version.LatestVersion,
 		ResolvedVersion:  sample.VersionString,
 	}); err != nil {
 		t.Fatal(err)

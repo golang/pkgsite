@@ -28,6 +28,7 @@ import (
 	"golang.org/x/pkgsite/internal/proxy"
 	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/stdlib"
+	"golang.org/x/pkgsite/internal/version"
 )
 
 var (
@@ -270,7 +271,7 @@ func resultFromFetchRequest(results []*fetchResult, fullPath, requestedVersion s
 			// Provide a specific message for the first error.
 			fr.status = http.StatusNotFound
 			p := fullPath
-			if requestedVersion != internal.LatestVersion {
+			if requestedVersion != version.LatestVersion {
 				p = fullPath + "@" + requestedVersion
 			}
 			fr.responseText = fmt.Sprintf("%s could not be processed.", p)
@@ -310,7 +311,7 @@ func resultFromFetchRequest(results []*fetchResult, fullPath, requestedVersion s
 		return fr, nil
 	}
 	p := fullPath
-	if requestedVersion != internal.LatestVersion {
+	if requestedVersion != version.LatestVersion {
 		p = fullPath + "@" + requestedVersion
 	}
 	fr.status = http.StatusNotFound
@@ -318,11 +319,11 @@ func resultFromFetchRequest(results []*fetchResult, fullPath, requestedVersion s
 	return fr, nil
 }
 
-func displayPath(path, version string) string {
-	if version == internal.LatestVersion {
+func displayPath(path, v string) string {
+	if v == version.LatestVersion {
 		return path
 	}
-	return fmt.Sprintf("%s@%s", path, version)
+	return fmt.Sprintf("%s@%s", path, v)
 }
 
 // pollForPath polls the database until a row for fullPath is found.
@@ -485,7 +486,7 @@ func modulePathsToFetch(ctx context.Context, ds internal.DataSource, fullPath, m
 	if modulePath != internal.UnknownModulePath {
 		return []string{modulePath}, nil
 	}
-	um, err := ds.GetUnitMeta(ctx, fullPath, modulePath, internal.LatestVersion)
+	um, err := ds.GetUnitMeta(ctx, fullPath, modulePath, version.LatestVersion)
 	if err != nil && !errors.Is(err, derrors.NotFound) {
 		return nil, &serverError{
 			status: http.StatusInternalServerError,

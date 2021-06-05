@@ -11,6 +11,7 @@ import (
 
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/stdlib"
+	"golang.org/x/pkgsite/internal/version"
 )
 
 // Directories is the directory listing for all directories in the unit,
@@ -116,7 +117,7 @@ func getNestedModules(ctx context.Context, ds internal.DataSource, um *internal.
 			continue
 		}
 		mods = append(mods, &DirectoryInfo{
-			URL:      constructUnitURL(m.ModulePath, m.ModulePath, internal.LatestVersion),
+			URL:      constructUnitURL(m.ModulePath, m.ModulePath, version.LatestVersion),
 			Suffix:   suffix,
 			IsModule: true,
 		})

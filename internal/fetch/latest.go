@@ -96,7 +96,7 @@ func LatestModuleVersions(ctx context.Context, modulePath string, prox *proxy.Cl
 	if err != nil {
 		return nil, err
 	}
-	latestInfo, err := prox.Info(ctx, modulePath, internal.LatestVersion)
+	latestInfo, err := prox.Info(ctx, modulePath, version.LatestVersion)
 	if errors.Is(err, derrors.NotFound) || errors.Is(err, derrors.NotFetched) {
 		// No information from the proxy, but not a showstopper either; we can
 		// proceed with the result of the list endpoint.

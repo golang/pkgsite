@@ -18,6 +18,7 @@ import (
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/stdlib"
+	"golang.org/x/pkgsite/internal/version"
 )
 
 type urlPathInfo struct {
@@ -95,7 +96,7 @@ func parseDetailsURLPath(urlPath string) (_ *urlPathInfo, err error) {
 	info := &urlPathInfo{
 		fullPath:         strings.TrimSuffix(strings.TrimPrefix(parts[0], "/"), "/"),
 		modulePath:       internal.UnknownModulePath,
-		requestedVersion: internal.LatestVersion,
+		requestedVersion: version.LatestVersion,
 	}
 	if len(parts) != 1 {
 		// The urlPath contains a "@". Parse the version and suffix from
@@ -105,7 +106,7 @@ func parseDetailsURLPath(urlPath string) (_ *urlPathInfo, err error) {
 		// Parse the requestedVersion from the urlPath.
 		// The first path component after the '@' is the version.
 		// You cannot explicitly write "latest" for the version.
-		if endParts[0] == internal.LatestVersion {
+		if endParts[0] == version.LatestVersion {
 			return nil, &userError{
 				err:         fmt.Errorf("invalid version: %q", info.requestedVersion),
 				userMessage: fmt.Sprintf("%q is not a valid version", endParts[0]),
@@ -150,7 +151,7 @@ func parseStdLibURLPath(urlPath string) (_ *urlPathInfo, err error) {
 		modulePath: stdlib.ModulePath,
 	}
 	if len(parts) == 1 {
-		info.requestedVersion = internal.LatestVersion
+		info.requestedVersion = version.LatestVersion
 		return info, nil
 	}
 	tag := strings.TrimSuffix(parts[1], "/")
@@ -210,7 +211,7 @@ func isSupportedVersion(fullPath, requestedVersion string) bool {
 	if _, ok := internal.DefaultBranches[requestedVersion]; ok {
 		return !stdlib.Contains(fullPath) || requestedVersion == "master"
 	}
-	return requestedVersion == internal.LatestVersion || semver.IsValid(requestedVersion)
+	return requestedVersion == version.LatestVersion || semver.IsValid(requestedVersion)
 }
 
 func setExperimentsFromQueryParam(ctx context.Context, r *http.Request) context.Context {

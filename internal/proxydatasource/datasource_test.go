@@ -21,6 +21,7 @@ import (
 	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/proxy"
 	"golang.org/x/pkgsite/internal/testing/sample"
+	"golang.org/x/pkgsite/internal/version"
 )
 
 var testModules []*proxy.Module
@@ -174,7 +175,7 @@ func TestGetUnitMeta(t *testing.T) {
 		{
 			path:       "example.com/basic",
 			modulePath: internal.UnknownModulePath,
-			version:    internal.LatestVersion,
+			version:    version.LatestVersion,
 			want: &internal.UnitMeta{
 				ModuleInfo: internal.ModuleInfo{
 					ModulePath:        "example.com/basic",

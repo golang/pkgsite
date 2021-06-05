@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/version"
 )
 
 func TestBreadcrumbPath(t *testing.T) {
@@ -18,7 +18,7 @@ func TestBreadcrumbPath(t *testing.T) {
 		want                      breadcrumb
 	}{
 		{
-			"example.com/blob/s3blob", "example.com", internal.LatestVersion,
+			"example.com/blob/s3blob", "example.com", version.LatestVersion,
 			breadcrumb{
 				Current: "s3blob",
 				Links: []link{
@@ -29,7 +29,7 @@ func TestBreadcrumbPath(t *testing.T) {
 			},
 		},
 		{
-			"example.com", "example.com", internal.LatestVersion,
+			"example.com", "example.com", version.LatestVersion,
 			breadcrumb{
 				Current:  "example.com",
 				Links:    []link{},
@@ -37,7 +37,7 @@ func TestBreadcrumbPath(t *testing.T) {
 			},
 		},
 		{
-			"g/x/tools/go/a", "g/x/tools", internal.LatestVersion,
+			"g/x/tools/go/a", "g/x/tools", version.LatestVersion,
 			breadcrumb{
 				Current: "a",
 				Links: []link{
@@ -48,7 +48,7 @@ func TestBreadcrumbPath(t *testing.T) {
 			},
 		},
 		{
-			"golang.org/x/tools", "golang.org/x/tools", internal.LatestVersion,
+			"golang.org/x/tools", "golang.org/x/tools", version.LatestVersion,
 			breadcrumb{
 				Current:  "golang.org/x/tools",
 				Links:    []link{},
@@ -57,7 +57,7 @@ func TestBreadcrumbPath(t *testing.T) {
 		},
 		{
 			// Special case: stdlib package.
-			"encoding/json", "std", internal.LatestVersion,
+			"encoding/json", "std", version.LatestVersion,
 			breadcrumb{
 				Current:  "json",
 				Links:    []link{{"/encoding", "encoding"}},
@@ -75,7 +75,7 @@ func TestBreadcrumbPath(t *testing.T) {
 		},
 		{
 			// Special case: stdlib module.
-			"std", "std", internal.LatestVersion,
+			"std", "std", version.LatestVersion,
 			breadcrumb{
 				Current: "Standard library",
 				Links:   nil,

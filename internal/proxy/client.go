@@ -22,8 +22,8 @@ import (
 	"go.opencensus.io/plugin/ochttp"
 	"golang.org/x/mod/module"
 	"golang.org/x/net/context/ctxhttp"
-	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/version"
 )
 
 // A Client is used by the fetch service to communicate with a module
@@ -184,7 +184,7 @@ func (c *Client) escapedURL(modulePath, requestedVersion, suffix string) (_ stri
 	if err != nil {
 		return "", fmt.Errorf("path: %v: %w", err, derrors.InvalidArgument)
 	}
-	if requestedVersion == internal.LatestVersion {
+	if requestedVersion == version.LatestVersion {
 		if suffix != "info" {
 			return "", fmt.Errorf("cannot ask for latest with suffix %q", suffix)
 		}

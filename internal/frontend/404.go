@@ -24,6 +24,7 @@ import (
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/stdlib"
+	"golang.org/x/pkgsite/internal/version"
 )
 
 // errUnitNotFoundWithoutFetch returns a 404 with instructions to the user on
@@ -101,14 +102,14 @@ func (s *Server) servePathNotFoundPage(w http.ResponseWriter, r *http.Request,
 			// to avoid ending up in a loop.
 			return errUnitNotFoundWithoutFetch
 		}
-		vm, err := db.GetVersionMap(ctx, fr.goModPath, internal.LatestVersion)
+		vm, err := db.GetVersionMap(ctx, fr.goModPath, version.LatestVersion)
 		if (err != nil && !errors.Is(err, derrors.NotFound)) ||
 			(vm != nil && vm.Status != http.StatusOK) {
 			// We attempted to fetch the canonical module path before and were
 			// not successful. Do not redirect this request.
 			return errUnitNotFoundWithoutFetch
 		}
-		u := constructUnitURL(fr.goModPath, fr.goModPath, internal.LatestVersion)
+		u := constructUnitURL(fr.goModPath, fr.goModPath, version.LatestVersion)
 		cookie.Set(w, cookie.AlternativeModuleFlash, fullPath, u)
 		http.Redirect(w, r, u, http.StatusFound)
 		return nil
@@ -162,7 +163,7 @@ func githubPathRedirect(fullPath string) string {
 	if m[1] != "" {
 		p = m[0] + m[1]
 	}
-	return constructUnitURL(p, p, internal.LatestVersion)
+	return constructUnitURL(p, p, version.LatestVersion)
 }
 
 // pathNotFoundError returns a page with an option on how to
@@ -184,7 +185,7 @@ func pathNotFoundError(ctx context.Context, fullPath, requestedVersion string) e
 		return &serverError{status: http.StatusNotFound}
 	}
 	path := fullPath
-	if requestedVersion != internal.LatestVersion {
+	if requestedVersion != version.LatestVersion {
 		path = fmt.Sprintf("%s@%s", fullPath, requestedVersion)
 	}
 	return &serverError{

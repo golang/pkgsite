@@ -14,6 +14,7 @@ import (
 	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/testing/sample"
+	"golang.org/x/pkgsite/internal/version"
 )
 
 func TestExtractURLPathInfo(t *testing.T) {
@@ -27,7 +28,7 @@ func TestExtractURLPathInfo(t *testing.T) {
 			want: &urlPathInfo{
 				modulePath:       internal.UnknownModulePath,
 				fullPath:         "github.com/hashicorp/vault/api",
-				requestedVersion: internal.LatestVersion,
+				requestedVersion: version.LatestVersion,
 			},
 		},
 		{
@@ -63,7 +64,7 @@ func TestExtractURLPathInfo(t *testing.T) {
 			want: &urlPathInfo{
 				modulePath:       stdlib.ModulePath,
 				fullPath:         "std",
-				requestedVersion: internal.LatestVersion,
+				requestedVersion: version.LatestVersion,
 			},
 		},
 		{
@@ -81,7 +82,7 @@ func TestExtractURLPathInfo(t *testing.T) {
 			want: &urlPathInfo{
 				modulePath:       stdlib.ModulePath,
 				fullPath:         "net/http",
-				requestedVersion: internal.LatestVersion,
+				requestedVersion: version.LatestVersion,
 			},
 		},
 		{

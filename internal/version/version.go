@@ -29,6 +29,18 @@ const (
 	TypePseudo = Type("pseudo")
 )
 
+const (
+	// LatestVersion signifies the latest available version in requests to the
+	// proxy client.
+	LatestVersion = "latest"
+
+	// MainVersion represents the main branch.
+	MainVersion = "main"
+
+	// MasterVersion represents the master branch.
+	MasterVersion = "master"
+)
+
 func (t Type) String() string {
 	return string(t)
 }
