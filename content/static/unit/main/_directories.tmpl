@@ -1,0 +1,79 @@
+<!--
+  Copyright 2020 The Go Authors. All rights reserved.
+  Use of this source code is governed by a BSD-style
+  license that can be found in the LICENSE file.
+-->
+
+{{define "unit_directories"}}
+  <div class="UnitDirectories js-unitDirectories">
+    <h2 class="UnitDirectories-title" id="section-directories">
+      <img height="25px" width="20px" src="/static/img/pkg-icon-folder_20x16.svg" alt="">Directories
+      <a class="UnitDirectories-idLink" href="#section-directories">¶</a>
+    </h2>
+    <div class="UnitDirectories-expandButton">
+      <button class="js-expandAllDirectories" data-test-id="directories-toggle"
+          data-gtmc="directories button" aria-label="Expand All Directories">
+        Expand all
+      </button>
+    </div>
+    <table class="UnitDirectories-table UnitDirectories-table--tree js-expandableTable"
+          data-test-id="UnitDirectories-table">
+      <tr class="UnitDirectories-tableHeader UnitDirectories-tableHeader--tree">
+        <th>Path</th>
+        <th class="UnitDirectories-desktopSynopsis">Synopsis</th>
+      </tr>
+      {{range $dir := .Directories.External}}
+          {{template "directory" .}}
+      {{end}}
+      {{if .Directories.Internal}}
+          {{template "directory" .Directories.Internal}}
+      {{end}}
+    </table>
+  </div>
+{{end}}
+
+{{define "directory"}}
+  {{$prefix := .Prefix}}
+  <tr{{if .Subdirectories}} data-aria-controls="{{range .Subdirectories}}{{$prefix}}-{{.Suffix}} {{end}}"{{end}}>
+    <td data-id="{{$prefix}}" data-aria-owns="{{range .Subdirectories}}{{$prefix}}-{{.Suffix}} {{end}}">
+      <div class="UnitDirectories-pathCell">
+        <div>
+          {{- if .Subdirectories -}}
+            <button type="button" class="UnitDirectories-toggleButton"
+                aria-expanded="false"
+                aria-label="{{len .Subdirectories}} more from"
+                data-aria-controls="{{range .Subdirectories}}{{$prefix}}-{{.Suffix}} {{end}}"
+                data-aria-labelledby="{{$prefix}}-button {{$prefix}}"
+                data-id="{{$prefix}}-button">
+              <img alt="" src="/static/img/pkg-icon-arrowRight_24x24.svg" height="24" width="24">
+            </button>
+          {{- end -}}
+          {{- if .Root -}}
+            <a href="{{.Root.URL}}">{{.Root.Suffix}}</a>
+            {{if .Root.IsModule}}<span class="UnitDirectories-badge">module</span>{{end}}
+          </div>
+          <div class="UnitDirectories-mobileSynopsis">{{.Root.Synopsis}}</div>
+        </div>
+      </td>
+      <td class="UnitDirectories-desktopSynopsis">{{.Root.Synopsis}}</td>
+    {{- else -}}
+        <span>{{.Prefix}}</span>
+      </td>
+      <td class="UnitDirectories-desktopSynopsis"></td>
+    {{- end -}}
+  </tr>
+  {{- range .Subdirectories -}}
+    <tr data-id="{{$prefix}}-{{.Suffix}}">
+      <td>
+        <div class="UnitDirectories-subdirectory">
+          <span>
+            <a href="{{.URL}}">{{.Suffix}}</a>
+            {{if .IsModule}}<span class="UnitDirectories-badge">Module</span>{{end}}
+          </span>
+          <div class="UnitDirectories-mobileSynopsis">{{.Synopsis}}</div>
+        </div>
+      </td>
+      <td class="UnitDirectories-desktopSynopsis">{{.Synopsis}}</td>
+    {{- end -}}
+  </tr>
+{{end}}

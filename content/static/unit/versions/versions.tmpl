@@ -1,0 +1,118 @@
+<!--
+  Copyright 2020 The Go Authors. All rights reserved.
+  Use of this source code is governed by a BSD-style
+  license that can be found in the LICENSE file.
+-->
+
+{{define "unit_pre_content"}}
+  <link href="/static/css/versions.css?version={{.AppVersionLabel}}" rel="stylesheet">
+{{end}}
+
+{{define "unit_content"}}
+  <div class="Unit-content" role="main" data-test-id="UnitVersions">
+    {{block "versions" .Details}}{{end}}
+  </div>
+{{end}}
+
+{{/* . is internal/frontend.VersionsDetails */}}
+
+{{define "versions"}}
+  <div class="Versions">
+    <div class="Versions-title">
+      <h2>Versions in this module</h2>
+      <div class="Versions-titleButtonGroup js-buttonGroup">
+        <button class="js-versionsExpand" data-gtmc="versions button"
+            aria-label="Expand All Versions">
+          Expand all
+        </button>
+        <button class="js-versionsCollapse" data-gtmc="versions button"
+            aria-label="Collapse All Versions">
+          Collapse all
+        </button>
+      </div>
+    </div>
+    {{template "version_list" .ThisModule}}
+    {{if .IncompatibleModules}}
+      <h2>Incompatible versions in this module</h2>
+      {{template "version_list" .IncompatibleModules}}
+    {{end}}
+    {{if .OtherModules}}
+      <h2>Other modules containing this package</h2>
+      {{range .OtherModules}}
+        <div><a href="/{{.}}">{{.}}</a></div>
+      {{end}}
+    {{end}}
+  </div>
+{{end}}
+
+{{/* . is []*internal/frontend.VersionList */}}
+
+{{define "version_list"}}
+  <div class="Versions-list">
+    {{range $major := .}}
+      {{range $i, $v := $major.Versions}}
+        <div class="Version-major">
+          {{if and (eq $i 0) (not $major.Incompatible)}}
+            <strong>{{$major.Major}}</strong>
+            {{if $major.Deprecated}}<span class="Version-badge">deprecated</span>{{end}}
+          {{end}}
+        </div>
+        <div class="Version-tag">
+          <a class="js-versionLink" href="{{$v.Link}}">{{$v.Version}}</a>
+        </div>
+        <div class="Version-dot{{if and $v.IsMinor (not $major.Incompatible)}} Version-dot--minor{{end}}"></div>
+        {{if and $v.Symbols (not $major.Incompatible)}}
+          {{template "symbol_history" $v}}
+        {{else}}
+          <div class="Version-commitTime">
+            {{$v.CommitTime}}{{if $v.Retracted}}<span class="Version-badge">retracted</span>{{end}}
+          </div>
+        {{end}}
+      {{end}}
+    {{end}}
+  </div>
+{{end}}
+
+{{define "symbol_history"}}
+  <details class="Version-details js-versionDetails">
+    <summary class="Version-summary">
+      {{.CommitTime}}{{if .Retracted}}<span class="Version-badge">retracted</span>{{end}}
+    </summary>
+    <div class="Versions-symbols">
+      <div class="Versions-symbolsHeader">Changes in this version</div>
+      {{range .Symbols}}
+        <div class="Versions-symbolSection">
+          {{range .}}
+            {{if eq .Kind "Type"}}
+              <div class="Versions-symbolType">
+                {{template "symbol" .}}
+                {{range .Children}}
+                  <div class="Versions-symbolChild">{{template "symbol" .}}</div>
+                {{end}}
+              </div>
+            {{else}}
+              <div>{{template "symbol" .}}</div>
+            {{end}}
+          {{end}}
+        </div>
+      {{end}}
+    </div>
+  </details>
+{{end}}
+
+{{define "symbol"}}
+  <div>
+    {{if .New}}
+      <span class="Versions-symbolBulletNew">+</span>
+      <a class="Versions-symbolSynopsis" href="{{.Link}}">{{.Synopsis}}</a>
+    {{else}}
+      <span class="Versions-symbolOld Versions-symbolSynopsis">{{.Synopsis}}</span>
+    {{end}}
+    {{if .Builds}}
+      <span class="Versions-symbolBuildsDash">—</span>
+      <span class="Versions-symbolBuilds">
+        {{range $i, $b := .Builds}}{{if $i}}, {{end}}{{$b}}{{end}}
+      </span>
+    {{end}}
+  </div>
+{{end}}

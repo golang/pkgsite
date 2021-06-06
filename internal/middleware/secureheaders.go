@@ -11,16 +11,14 @@ import (
 )
 
 var scriptHashes = []string{
-	// From content/static/base/base.tmpl
-	"'sha256-CoGrkqEM1Kjjf5b1bpcnDLl8ZZLAsVX+BoAzZ5+AOmc='",
-	"'sha256-karKh1IrXOF1g+uoSxK+k9BuciCwYY/ytGuQVUiRzcM='",
-	"'sha256-2owiLItzX793qLVobnd0z9Z90a2wej4/C73Qb0qNtO4='",
 	// From content/static/badge/badge.tmpl
 	"'sha256-lYbH/hg0O4Oc1stV4ysso2zlUCXY0yGRUZ5zDOnZ9hI='",
+	// From content/static/base/base.tmpl
+	"'sha256-CoGrkqEM1Kjjf5b1bpcnDLl8ZZLAsVX+BoAzZ5+AOmc='",
+	"'sha256-2owiLItzX793qLVobnd0z9Z90a2wej4/C73Qb0qNtO4='",
+	"'sha256-karKh1IrXOF1g+uoSxK+k9BuciCwYY/ytGuQVUiRzcM='",
 	// From content/static/fetch/fetch.tmpl
 	"'sha256-NL8cRfvzPNDO6ZYKQYWS1kPknRV9gUCJoTk+fRR04zg='",
-	// From content/static/main-layout/main-layout.tmpl
-	"'sha256-cVUOUH4vbDOJY6vJAjvJj3d2jAmDiwy/SyVsZgZVxVM='",
 	// From content/static/html/pages/unit.tmpl
 	"'sha256-r4g06j/B7WYKOSl8cFfvuZOyiYA1tOyrbnxapiSP64g='",
 	// From content/static/html/pages/unit_details.tmpl
@@ -29,10 +27,16 @@ var scriptHashes = []string{
 	"'sha256-hb8VdkRSeBmkNlbshYmBnkYWC/BYHCPiz5s7liRcZNM='",
 	// From content/static/html/pages/unit_versions.tmpl
 	"'sha256-KBdPSv2Ajjw3jsa29qBhRW49nNx3jXxOLZIWX545FCA='",
-	// From content/static/styleguide/styleguide.tmpl
-	"'sha256-Z9STHpM3Fz5XojcH5dbUK50Igi6qInBbVVaqNpjL/HY='",
 	// From content/static/html/worker/index.tmpl
 	"'sha256-y5EX2GR3tCwSK0/kmqZnsWVeBROA8tA75L+I+woljOE='",
+	// From content/static/main-layout/main-layout.tmpl
+	"'sha256-cVUOUH4vbDOJY6vJAjvJj3d2jAmDiwy/SyVsZgZVxVM='",
+	// From content/static/styleguide/styleguide.tmpl
+	"'sha256-Z9STHpM3Fz5XojcH5dbUK50Igi6qInBbVVaqNpjL/HY='",
+	// From content/static/unit/main/main.tmpl
+	"'sha256-r4g06j/B7WYKOSl8cFfvuZOyiYA1tOyrbnxapiSP64g='",
+	// From content/static/unit/versions/versions.tmpl
+	"'sha256-KBdPSv2Ajjw3jsa29qBhRW49nNx3jXxOLZIWX545FCA='",
 }
 
 // SecureHeaders adds a content-security-policy and other security-related
