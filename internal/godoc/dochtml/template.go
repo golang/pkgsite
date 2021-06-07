@@ -5,11 +5,14 @@
 package dochtml
 
 import (
+	"context"
 	"reflect"
 	"sync"
 
 	"github.com/google/safehtml"
 	"github.com/google/safehtml/template"
+	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/godoc/dochtml/internal/render"
 	"golang.org/x/pkgsite/internal/godoc/internal/doc"
 )
@@ -27,15 +30,22 @@ func LoadTemplates(dir template.TrustedSource) {
 	loadOnce.Do(func() {
 		join := template.TrustedSourceJoin
 		tc := template.TrustedSourceFromConstant
+
 		bodyTemplate = template.Must(template.New("body.tmpl").
 			Funcs(tmpl).
 			ParseFilesFromTrustedSources(
 				join(dir, tc("body.tmpl")),
 				join(dir, tc("declaration.tmpl")),
 				join(dir, tc("example.tmpl"))))
-		outlineTemplate = template.Must(template.New("outline.tmpl").
-			Funcs(tmpl).
-			ParseFilesFromTrustedSources(join(dir, tc("outline.tmpl"))))
+		if experiment.IsActive(context.Background(), internal.ExperimentNewUnitLayout) {
+			outlineTemplate = template.Must(template.New("outline.tmpl").
+				Funcs(tmpl).
+				ParseFilesFromTrustedSources(join(dir, tc("outline.tmpl"))))
+		} else {
+			outlineTemplate = template.Must(template.New("legacy-outline.tmpl").
+				Funcs(tmpl).
+				ParseFilesFromTrustedSources(join(dir, tc("legacy-outline.tmpl"))))
+		}
 		sidenavTemplate = template.Must(template.New("sidenav-mobile.tmpl").
 			Funcs(tmpl).
 			ParseFilesFromTrustedSources(join(dir, tc("sidenav-mobile.tmpl"))))

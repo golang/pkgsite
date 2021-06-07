@@ -4,11 +4,14 @@
  * license that can be found in the LICENSE file.
  */
 
-.Imports-list {
-  list-style: none;
-  padding: 0;
-}
+@import url('../header/_header.css');
+
 .Imports-heading {
-  font-size: 1.125rem;
+  margin: 1rem 0;
+}
+.Imports-listItem {
   line-height: 1.125rem;
+}
+.Imports-list {
+  margin: 1rem 0;
 }

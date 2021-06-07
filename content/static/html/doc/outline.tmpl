@@ -3,99 +3,83 @@
   Use of this source code is governed by a BSD-style
   license that can be found in the LICENSE file.
 -->
-<ul role="group" id="doc-outline">
+<ul>
   {{if or .Package.Doc (index .Examples.Map "")}}
-    <li role="none">
-      <a href="#pkg-overview" role="treeitem" aria-level="2" tabindex="-1"
-          data-gtmc="doc outline link">Overview</a>
+    <li>
+      <a href="#pkg-overview" data-gtmc="doc outline link">Overview</a>
     </li>
   {{end}}
   {{- if or .Consts .Vars .Funcs .Types -}}
-    <li class="DocNav-overview" role="none">
-      <a href="#pkg-index" role="treeitem" aria-level="2" tabindex="-1" aria-owns="nav-group-index"
-          {{if .Examples.List}} aria-expanded="false"{{end}}
-          data-gtmc="doc outline link">
+    <li class="DocNav-overview">
+      <a href="#pkg-index" data-gtmc="doc outline link">
         Index
       </a>
       {{if .Examples.List}}
-        <ul role="group" id="nav-group-index">
-          <li role="none">
-            <a href="#pkg-examples" role="treeitem" aria-level="3" tabindex="-1"
-                data-gtmc="doc outline link">
+        <ul>
+          <li>
+            <a href="#pkg-examples" data-gtmc="doc outline link">
               Examples
             </a>
           </li>
         </ul>
       {{end}}
     </li>
-    <li class="DocNav-constants" role="none">
-      <a href="#pkg-constants" role="treeitem" aria-level="2" tabindex="-1"
-          data-gtmc="doc outline link">
+    <li class="DocNav-constants">
+      <a href="#pkg-constants" data-gtmc="doc outline link">
         Constants
       </a>
     </li>
-    <li class="DocNav-variables" role="none">
-      <a href="#pkg-variables" role="treeitem" aria-level="2" tabindex="-1"
-          data-gtmc="doc outline link">
+    <li class="DocNav-variables">
+      <a href="#pkg-variables" data-gtmc="doc outline link">
         Variables
       </a>
     </li>
-    <li class="DocNav-functions" role="none">
-      <a href="#pkg-functions" role="treeitem" aria-level="2" tabindex="-1" aria-owns="nav-group-functions"
-           {{if gt (len .Funcs) 0}}aria-expanded="false"{{end}} data-gtmc="doc outline link">
+    <li class="DocNav-functions">
+      <a href="#pkg-functions" data-gtmc="doc outline link">
         Functions
       </a>
-      <ul role="group" id="nav-group-functions">
-        {{range .Funcs}}
-            <li role="none">
-              <a href="#{{.Name}}" role="treeitem" aria-level="3" tabindex="-1"
-                   title="{{render_short_synopsis .Decl}}" data-gtmc="doc outline link">
+      {{if .Funcs}}
+        <ul>
+          {{range .Funcs}}
+            <li>
+              <a href="#{{.Name}}" title="{{render_short_synopsis .Decl}}" data-gtmc="doc outline link">
                 {{render_short_synopsis .Decl}}
               </a>
             </li>
-        {{end}}
-      </ul>
+          {{end}}
+        </ul>
+      {{end}}
     </li>
-    <li class="DocNav-types" role="none">
-      <a href="#pkg-types" role="treeitem" aria-level="2" tabindex="-1" aria-owns="nav-group-types"
-           {{if gt (len .Types) 0}}aria-expanded="false"{{end}} data-gtmc="doc outline link">
+    <li class="DocNav-types">
+      <a href="#pkg-types" data-gtmc="doc outline link">
         Types
       </a>
-      <ul role="group" id="nav-group-types">
+      <ul>
         {{range .Types}}
           {{$tname := .Name}}
-          <li role="none">
+          <li>
+            <a href="#{{$tname}}" title="type {{$tname}}" data-gtmc="doc outline link">
+              type {{$tname}}
+            </a>
             {{if or .Funcs .Methods}}
-              {{$navgroupname := (printf "nav.group.%s" $tname)}}
-              {{$navgroupid := (safe_id $navgroupname)}}
-              <a href="#{{$tname}}" role="treeitem" aria-expanded="false" aria-level="3" tabindex="-1"
-                   data-aria-owns="{{$navgroupid}}" title="type {{$tname}}"
-                   data-gtmc="doc outline link">
-                type {{$tname}}
-              </a>
-              <ul role="group" id="{{$navgroupid}}">
+              <ul>
                 {{range .Funcs}}
-                  <li role="none">
-                    <a href="#{{.Name}}" role="treeitem" aria-level="4" tabindex="-1"
-                        title="{{render_short_synopsis .Decl}}" data-gtmc="doc outline link">
+                  <li>
+                    <a href="#{{.Name}}" title="{{render_short_synopsis .Decl}}"
+                        data-gtmc="doc outline link">
                       {{render_short_synopsis .Decl}}
                     </a>
                   </li>
                 {{end}}
                 {{range .Methods}}
-                  <li role="none">
-                    <a href="#{{$tname}}.{{.Name}}" role="treeitem" aria-level="4" tabindex="-1"
-                        title="{{render_short_synopsis .Decl}}" data-gtmc="doc outline link">
+                  <li>
+                    <a href="#{{$tname}}.{{.Name}}" title="{{render_short_synopsis .Decl}}"
+                        data-gtmc="doc outline link">
                       {{render_short_synopsis .Decl}}
                     </a>
                   </li>
                 {{end}}
               </ul>
-            {{else}}
-              <a href="#{{$tname}}" role="treeitem" aria-level="3" tabindex="-1" title="type {{$tname}}"
-                  data-gtmc="doc outline link">
-                type {{$tname}}
-              </a>
             {{end}} {{/* if or .Funcs .Methods */}}
           </li>
         {{end}} {{/* range .Types */}}
@@ -103,16 +87,14 @@
     </li>
   {{end}}
   {{if .Package.Notes}}
-    <li class="DocNav-notes" role="none">
-      <a href="#pkg-notes" role="treeitem" aria-expanded="false" aria-level="2" tabindex="-1"
-           aria-owns="nav-group-notes" data-gtmc="doc outline link">
+    <li class="DocNav-notes">
+      <a href="#pkg-notes" data-gtmc="doc outline link">
         Notes
       </a>
-      <ul role="group" id="nav-group-notes">
+      <ul>
         {{range $marker, $item := .Package.Notes}}
-          <li role="none">
-            <a href="#pkg-note-{{$marker}}" role="treeitem" aria-level="3" tabindex="-1"
-                data-gtmc="doc outline link">
+          <li>
+            <a href="#pkg-note-{{$marker}}" data-gtmc="doc outline link">
               {{(index $.NoteHeaders $marker).Label}}s
             </a>
           </li>

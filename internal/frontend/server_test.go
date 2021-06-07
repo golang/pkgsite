@@ -1156,6 +1156,15 @@ func TestServer(t *testing.T) {
 			},
 		},
 		{
+			name: "new layout experiment",
+			testCasesFunc: func() []serverTestCase {
+				return append(serverTestCases(), linksTestCases...)
+			},
+			experiments: []string{
+				internal.ExperimentNewUnitLayout,
+			},
+		},
+		{
 			name: "symbol history experiments",
 			testCasesFunc: func() []serverTestCase {
 				return append(serverTestCases(), linksTestCases...)

@@ -111,12 +111,10 @@ func UnitHeader(p *Page, versionedURL bool, isPackage bool) htmlcheck.Checker {
 		majorVersionBanner = htmlcheck.NotIn(`[data-test-id="UnitHeader-majorVersionBanner"]`)
 	} else {
 		majorVersionBanner = in(`[data-test-id="UnitHeader-majorVersionBanner"]`,
-			in("span",
-				text("The highest tagged major version is"),
-				in("a",
-					href(p.LatestMajorVersionLink),
-					text(p.LatestMajorVersion),
-				),
+			text("The highest tagged major version is"),
+			in("a",
+				href(p.LatestMajorVersionLink),
+				text(p.LatestMajorVersion),
 			),
 		)
 	}
@@ -211,7 +209,7 @@ func versionBadge(p *Page) htmlcheck.Checker {
 	}
 	return in(`[data-test-id="UnitHeader-minorVersionBanner"]`,
 		attr("class", `\b`+regexp.QuoteMeta(class)+`\b`), // the badge has this class too
-		in("a", href(p.LatestLink), exactText("Go to latest")))
+		in("a", href(p.LatestLink), text("Go to latest")))
 }
 
 func unitURLPath(p *Page, versioned bool) string {

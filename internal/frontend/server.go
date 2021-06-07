@@ -582,14 +582,19 @@ func parsePageTemplates(base template.TrustedSource) (map[string]*template.Templ
 	}
 
 	htmlSets := [][]template.TrustedSource{
-		{tsc("styleguide"), tsc("main-layout")},
-		{tsc("homepage")},
 		{tsc("badge")},
 		{tsc("error")},
 		{tsc("fetch")},
+		{tsc("homepage")},
 		{tsc("license-policy")},
-		{tsc("search-help")},
 		{tsc("search")},
+		{tsc("search-help")},
+		{tsc("styleguide"), tsc("main-layout")},
+		{tsc("unit/importedby"), tsc("unit/header"), tsc("main-layout")},
+		{tsc("unit/imports"), tsc("unit/header"), tsc("main-layout")},
+		{tsc("unit/licenses"), tsc("unit/header"), tsc("main-layout")},
+		{tsc("unit/main"), tsc("unit/header"), tsc("main-layout")},
+		{tsc("unit/versions"), tsc("unit/header"), tsc("main-layout")},
 	}
 
 	for _, set := range htmlSets {

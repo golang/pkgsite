@@ -4,24 +4,27 @@
   license that can be found in the LICENSE file.
 -->
 
-{{define "unit_pre_content"}}
-  <link href="/static/css/importedby.css?version={{.AppVersionLabel}}" rel="stylesheet">
+{{define "main-styles"}}
+  <link href="/static/unit/importedby/importedby.css?version={{.AppVersionLabel}}" rel="stylesheet">
 {{end}}
 
-{{define "unit_content"}}
-  <div class="Unit-content" role="main">
-    {{block "importedby" .Details}}{{end}}
-  </div>
+{{define "main-header"}}
+  {{template "unit-header" .}}
 {{end}}
 
+{{define "main-content"}}
+  {{block "importedby" .Details}}{{end}}
+{{end}}
 
 {{define "importedby"}}
   <div class="ImportedBy">
     {{if .ImportedBy}}
-      <b>Known {{pluralize .Total "importer"}}:</b> {{.NumImportedByDisplay}}
+      <div class="ImportedBy-heading">
+        <strong>Known {{pluralize .Total "importer"}}:</strong> {{.NumImportedByDisplay}}
+      </div>
       {{template "sections" .ImportedBy}}
     {{else}}
-      {{template "empty_content" "No known importers for this package!"}}
+      {{template "empty-content" "No known importers for this package!"}}
     {{end}}
   </div>
 {{end}}
@@ -36,7 +39,7 @@
 
 {{define "section"}}
   {{if .Subs}}
-    <details>
+    <details class="ImportedBy-details">
       <summary>{{.Prefix}} ({{.NumLines}})</summary>
       <div class="ImportedBy-detailsContent">
         {{template "sections" .Subs}}

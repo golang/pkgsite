@@ -4,22 +4,9 @@
  * license that can be found in the LICENSE file.
  */
 
-/* TODO(jamal): remove these styles with legacy code. */
-.Documentation-index,
-.DocNav-index {
-  display: block;
-}
-
-.UnitOutline {
-  display: flex;
-  flex-direction: column;
-  max-height: 100%;
-  position: sticky;
-  top: calc(var(--header-height) + var(--banner-height) + 1rem);
-}
 .UnitOutline-jumpTo {
   display: flex;
-  margin-bottom: -0.1625rem;
+  margin-bottom: 1rem;
 }
 .UnitOutline-jumpTo button {
   background-color: var(--white);
@@ -62,111 +49,4 @@
 }
 .UnitOutline-jumpToInput:disabled {
   background-color: var(--gray-9);
-}
-.UnitOutline ul[role='tree'],
-.UnitOutline ul[role='treeitem'],
-.UnitOutline ul[role='group'] {
-  list-style: none;
-  padding-left: 0;
-}
-.UnitOutline li:last-of-type {
-  padding-bottom: 0.25rem;
-}
-.UnitOutline [role='treeitem'][aria-expanded='false'] + ul[role='group'] {
-  display: none;
-}
-.UnitOutline [role='treeitem'][aria-expanded='true'] + ul[role='group'] {
-  display: block;
-}
-.UnitOutline [role='treeitem'][aria-level='1'] + ul[role='group'] {
-  max-height: calc(100vh - 20rem);
-  overflow-y: auto;
-  padding: 0.5rem 0.25rem 0 0.25rem;
-}
-.UnitOutline a {
-  color: var(--gray-2);
-  display: block;
-  line-height: 1.5rem;
-  overflow: hidden;
-  padding: 0.125rem 0 0.125rem 1.25rem;
-  position: relative;
-  text-overflow: ellipsis;
-  user-select: none;
-  white-space: nowrap;
-}
-.UnitOutline a:focus,
-.UnitOutline a:hover {
-  outline: transparent;
-  text-decoration: underline;
-}
-.UnitOutline [role='treeitem'][aria-selected='true'] {
-  color: var(--gray-1);
-  font-weight: 500;
-}
-.UnitOutline [role='treeitem'][aria-level='1'] {
-  display: block;
-  font-size: 1.125rem;
-  font-weight: 500;
-  line-height: 2.5rem;
-  padding: 0 1rem;
-}
-.UnitOutline [role='treeitem'][aria-level='1'][aria-selected='true'],
-.UnitOutline [role='treeitem'][aria-level='1'][aria-expanded='true'] {
-  background-color: var(--gray-9);
-}
-.UnitOutline [role='treeitem'][aria-level='3'][aria-expanded='true'] {
-  margin-bottom: 0.375em;
-}
-.UnitOutline [role='treeitem'][aria-level='2'] {
-  margin-bottom: 0.25rem;
-  position: relative;
-}
-.UnitOutline [role='treeitem'][aria-level='3'] {
-  font-size: 0.875rem;
-  padding-left: 2.5rem;
-}
-.UnitOutline [role='treeitem'][aria-level='4'] {
-  border-left: 0.125rem solid var(--gray-9);
-  font-size: 0.875rem;
-  margin-left: 2.5rem;
-  padding-left: 0.5rem;
-}
-.UnitOutline [role='treeitem'][aria-selected='true'][aria-level='2']:not([aria-expanded])::before,
-.UnitOutline [role='treeitem'][aria-selected='true'][aria-level='3']:not([aria-expanded])::before {
-  background-color: var(--turq-dark);
-  border-radius: 50%;
-  content: '';
-  display: block;
-  height: 0.3125rem;
-  left: 0.4688rem;
-  position: absolute;
-  top: 0.6875rem;
-  width: 0.3125rem;
-}
-.UnitOutline [role='treeitem'][aria-expanded][aria-owns][aria-level='2']::before,
-.UnitOutline [role='treeitem'][aria-expanded][aria-owns][aria-level='3']::before {
-  border-bottom: 0.25rem solid transparent;
-  border-left: 0.25rem solid var(--gray-4);
-  border-right: 0;
-  border-top: 0.25rem solid transparent;
-  content: '';
-  display: block;
-  height: 0;
-  left: 0.5rem;
-  position: absolute;
-  top: 0.625rem;
-  transition: transform 0.1s linear;
-  width: 0;
-}
-.UnitOutline [role='treeitem'][aria-expanded='true'][aria-level='2']::before,
-.UnitOutline [role='treeitem'][aria-expanded='true'][aria-level='3']::before {
-  transform: rotate(90deg);
-}
-.UnitOutline [role='treeitem'][aria-expanded][aria-level='3']:not([empty])::before,
-.UnitOutline [role='treeitem'][aria-selected][aria-level='3']:not([empty])::before {
-  left: 1.5rem;
-  top: 0.75rem;
-}
-.UnitOutline [role='treeitem'][aria-selected='true'][aria-level='4'] {
-  border-left: 0.125rem solid var(--turq-dark);
 }

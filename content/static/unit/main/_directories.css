@@ -46,6 +46,7 @@
   max-width: 32rem;
   min-width: 12rem;
   padding: 0.25rem 1rem;
+  vertical-align: middle;
   word-break: break-word;
 }
 .UnitDirectories th {

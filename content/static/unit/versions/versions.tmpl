@@ -4,22 +4,30 @@
   license that can be found in the LICENSE file.
 -->
 
-{{define "unit_pre_content"}}
-  <link href="/static/css/versions.css?version={{.AppVersionLabel}}" rel="stylesheet">
+{{define "main-styles"}}
+  <link href="/static/unit/versions/versions.css?version={{.AppVersionLabel}}" rel="stylesheet">
 {{end}}
 
-{{define "unit_content"}}
-  <div class="Unit-content" role="main" data-test-id="UnitVersions">
-    {{block "versions" .Details}}{{end}}
-  </div>
+{{define "main-header"}}
+  {{template "unit-header" .}}
+{{end}}
+
+{{define "main-content"}}
+  {{block "versions" .Details}}{{end}}
+{{end}}
+
+{{define "main-scripts"}}
+  <script>
+    loadScript("/static/unit/versions/versions.js")
+  </script>
 {{end}}
 
 {{/* . is internal/frontend.VersionsDetails */}}
 
 {{define "versions"}}
-  <div class="Versions">
+  <div class="Versions" data-test-id="UnitVersions">
     <div class="Versions-title">
-      <h2>Versions in this module</h2>
+      <h2 class="go-textTitle">Versions in this module</h2>
       <div class="Versions-titleButtonGroup js-buttonGroup">
         <button class="js-versionsExpand" data-gtmc="versions button"
             aria-label="Expand All Versions">
@@ -31,10 +39,10 @@
         </button>
       </div>
     </div>
-    {{template "version_list" .ThisModule}}
+    {{template "version-list" .ThisModule}}
     {{if .IncompatibleModules}}
       <h2>Incompatible versions in this module</h2>
-      {{template "version_list" .IncompatibleModules}}
+      {{template "version-list" .IncompatibleModules}}
     {{end}}
     {{if .OtherModules}}
       <h2>Other modules containing this package</h2>
@@ -47,7 +55,7 @@
 
 {{/* . is []*internal/frontend.VersionList */}}
 
-{{define "version_list"}}
+{{define "version-list"}}
   <div class="Versions-list">
     {{range $major := .}}
       {{range $i, $v := $major.Versions}}
@@ -62,7 +70,7 @@
         </div>
         <div class="Version-dot{{if and $v.IsMinor (not $major.Incompatible)}} Version-dot--minor{{end}}"></div>
         {{if and $v.Symbols (not $major.Incompatible)}}
-          {{template "symbol_history" $v}}
+          {{template "symbol-history" $v}}
         {{else}}
           <div class="Version-commitTime">
             {{$v.CommitTime}}{{if $v.Retracted}}<span class="Version-badge">retracted</span>{{end}}
@@ -73,7 +81,7 @@
   </div>
 {{end}}
 
-{{define "symbol_history"}}
+{{define "symbol-history"}}
   <details class="Version-details js-versionDetails">
     <summary class="Version-summary">
       {{.CommitTime}}{{if .Retracted}}<span class="Version-badge">retracted</span>{{end}}

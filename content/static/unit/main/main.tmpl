@@ -4,47 +4,74 @@
   license that can be found in the LICENSE file.
 -->
 
-{{define "pre-content"}}
-  <link href="/static/css/stylesheet.css?version={{.AppVersionLabel}}" rel="stylesheet">
-  <link href="/static/css/unit.css?version={{.AppVersionLabel}}" rel="stylesheet">
-  {{block "unit_pre_content" .}}{{end}}
-  <link href="/static/css/unit_outline.css?version={{.AppVersionLabel}}" rel="stylesheet">
+{{define "main-styles"}}
+  <link href="/static/unit/main/main.css?version={{.AppVersionLabel}}" rel="stylesheet">
 {{end}}
 
-{{define "main"}}
-  <main class="Container">
-    {{block "unit_header" .}}{{end}}
-    {{block "unit_content" .}}{{end}}
-  </main>
+{{define "main-banner"}}
+  {{template "unit-header-banners" .}}
+{{end}}
 
-  <dialog class="JumpDialog Dialog">
-    <h2 class="Dialog-title">Jump to</h2>
-    <form method="dialog" data-gmtc="jump to form" aria-label="Jump to Identifier">
-      <div class="JumpDialog-filter">
-        <input class="JumpDialog-input" autocomplete="off" type="text">
-      </div>
-      <div class="JumpDialog-body">
-        <div class="JumpDialog-list"></div>
-      </div>
-      <div class="Dialog-actions">
-        <button class="Dialog-button" data-test-id="close-dialog">Close</button>
-      </div>
-    </form>
-  </dialog>
+{{define "main-header"}}
+  {{template "unit-header" .}}
+{{end}}
 
-  <dialog class="ShortcutsDialog Dialog">
-    <h2 class="Dialog-title">Keyboard shortcuts</h2>
-    <table>
-      <tbody>
-        <tr><td class="ShortcutsDialog-key"><b>?</b></td><td> : This menu</td></tr>
-        <tr><td class="ShortcutsDialog-key"><b>/</b></td><td> : Search site</td></tr>
-        <tr><td class="ShortcutsDialog-key"><b>f</b> or <b>F</b></td><td> : Jump to</td></tr>
-      </tbody>
-    </table>
-    <form method="dialog">
-      <div class="Dialog-actions">
-        <button class="Dialog-button">Close</button>
-      </div>
-    </form>
-  </dialog>
+{{define "main-aside"}}
+  {{block "unit-meta" .}}{{end}}
+{{end}}
+
+{{define "main-nav"}}
+  <div class="go-Main-navDesktop">
+    {{block "unit-outline" .Details}}{{end}}
+  </div>
+  <div class="go-Main-navMobile js-mainNavMobile">
+    <label class="go-Label">
+      <select class="go-Select">
+        {{if .Details.Readme.String}}
+          <option selected disabled>README</option>
+        {{else if .Details.DocBody.String}}
+          <option selected disabled>Documentation</option>
+        {{else if .Details.SourceFiles}}
+          <option selected disabled>Source Files</option>
+        {{else if .Details.Directories}}
+          <option selected disabled>Directories</option>
+        {{end}}
+      </select>
+    </label>
+  </div>
+{{end}}
+
+{{define "main-content"}}
+  <div class="UnitDetails" data-test-id="UnitDetails" style="display: block;">
+    <div class="UnitDetails-content js-unitDetailsContent" role="main" data-test-id="UnitDetails-content">
+      {{if .Details.Readme.String}}
+        {{block "unit-readme" .Details}}{{end}}
+      {{end}}
+      {{if .Details.IsPackage}}
+        {{if .Unit.IsRedistributable}}
+          {{block "unit-doc" .Details}}{{end}}
+        {{else}}
+          <div class="UnitDetails-contentEmpty">
+            <img src="/static/img/gopher-airplane.svg" alt="The Go Gopher"/>
+            <p>Documentation not displayed due to license restrictions.</p>
+            <p>See our <a href="/license-policy">license policy</a>.</p>
+          </div>
+        {{end}}
+      {{end}}
+      {{if .Details.SourceFiles}}
+        {{block "unit-files" .Details}}{{end}}
+      {{end}}
+      {{if .Details.Directories}}
+        {{block "unit-directories" .Details}}{{end}}
+      {{end}}
+    </div>
+  </div>
+  {{template "unit-modals" .}}
+{{end}}
+
+{{define "main-scripts"}}
+  <div class="js-canonicalURLPath" data-canonical-url-path="{{.CanonicalURLPath}}" hidden></div>
+  <script>
+    loadScript('/static/unit/main/main.js')
+  </script>
 {{end}}

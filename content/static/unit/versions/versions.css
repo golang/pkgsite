@@ -4,10 +4,8 @@
  * license that can be found in the LICENSE file.
  */
 
-.Unit-content .Versions {
-  margin-top: 1rem;
-  max-width: unset;
-}
+@import url('../header/_header.css');
+
 .Versions table {
   border-spacing: 0;
 }
@@ -67,9 +65,6 @@
   flex-wrap: wrap;
   gap: 1rem 2.5rem;
   margin-bottom: 1rem;
-}
-.Versions-title h2 {
-  margin: 0;
 }
 .Versions-titleButtonGroup {
   display: none;

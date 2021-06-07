@@ -45,6 +45,29 @@ var (
 	unitTabs = []TabSettings{
 		{
 			Name:         tabMain,
+			TemplateName: "unit/main",
+		},
+		{
+			Name:         tabVersions,
+			TemplateName: "unit/versions",
+		},
+		{
+			Name:         tabImports,
+			TemplateName: "unit/imports",
+		},
+		{
+			Name:         tabImportedBy,
+			TemplateName: "unit/importedby",
+		},
+		{
+			Name:         tabLicenses,
+			TemplateName: "unit/licenses",
+		},
+	}
+	unitTabLookup  = make(map[string]TabSettings, len(unitTabs))
+	legacyUnitTabs = []TabSettings{
+		{
+			Name:         tabMain,
 			TemplateName: "unit_details.tmpl",
 		},
 		{
@@ -64,12 +87,15 @@ var (
 			TemplateName: "unit_licenses.tmpl",
 		},
 	}
-	unitTabLookup = make(map[string]TabSettings, len(unitTabs))
+	legacyUnitTabLookup = make(map[string]TabSettings, len(legacyUnitTabs))
 )
 
 func init() {
 	for _, t := range unitTabs {
 		unitTabLookup[t.Name] = t
+	}
+	for _, t := range legacyUnitTabs {
+		legacyUnitTabLookup[t.Name] = t
 	}
 }
 

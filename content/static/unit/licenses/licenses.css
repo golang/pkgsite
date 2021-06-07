@@ -4,6 +4,18 @@
  * license that can be found in the LICENSE file.
  */
 
+@import url('../header/_header.css');
+
+.License {
+  margin-bottom: 1rem;
+}
+
+.License > h2 {
+  margin-bottom: 1rem;
+}
+.License > p {
+  margin-bottom: 0.5rem;
+}
 .License-contents {
   background-color: var(--gray-10);
   border: 0.0625rem solid var(--gray-8);

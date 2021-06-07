@@ -4,12 +4,12 @@
   license that can be found in the LICENSE file.
 -->
 
-{{define "unit_build_context"}}
+{{define "unit-build-context"}}
   {{if .BuildContexts}}
     {{if gt (len .BuildContexts) 1}}
       <div class="UnitBuildContext-titleContext">
         <label><a href="https://go.dev/about#build-context">Rendered for</a>
-          <select class="js-buildContextSelect">
+          <select class="go-Select js-buildContextSelect">
             {{range .BuildContexts}}
               <option{{if eq .GOOS $.GOOS}} selected{{end}} value="{{.GOOS}}">{{.GOOS}}/{{.GOARCH}}</option>
             {{end}}

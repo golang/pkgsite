@@ -19,6 +19,7 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/cookie"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/middleware"
 	"golang.org/x/pkgsite/internal/stdlib"
@@ -176,10 +177,19 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 		// Don't fail, but don't display a banner either.
 		log.Errorf(ctx, "extracting AlternativeModuleFlash cookie: %v", err)
 	}
-	tabSettings := unitTabLookup[tab]
+	tabSettings := legacyUnitTabLookup[tab]
 	title := pageTitle(um)
 	basePage := s.newBasePage(r, title)
 	basePage.UseSiteWrapper = true
+
+	if experiment.IsActive(ctx, internal.ExperimentNewUnitLayout) {
+		tabSettings = unitTabLookup[tab]
+		basePage.UseSiteWrapper = false
+		basePage.AllowWideContent = true
+		if tabSettings.Name == "" {
+			basePage.UseResponsiveLayout = true
+		}
+	}
 	lv := linkVersion(um.Version, um.ModulePath)
 	page := UnitPage{
 		basePage:              basePage,
