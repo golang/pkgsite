@@ -5,6 +5,18 @@
  * license that can be found in the LICENSE file.
  */
 
+import { ExpandableRowsTableController } from '../_table/table.js';
+
+document
+  .querySelectorAll<HTMLTableElement>('.js-expandableTable')
+  .forEach(
+    el =>
+      new ExpandableRowsTableController(
+        el,
+        document.querySelector<HTMLButtonElement>('.js-expandAllDirectories')
+      )
+  );
+
 /**
  * MainLayoutController calculates dynamic height values for header elements
  * to support variable size sticky positioned elements in the header so that
