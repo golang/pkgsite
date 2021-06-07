@@ -87,14 +87,12 @@
 }
 
 a.UnitHeader-backLink {
-  color: var(--black);
+  color: var(--color-text);
   display: block;
   font-size: 1rem;
 }
 .UnitHeader-backLink img {
-  height: 0.8125rem;
-  margin-right: 0.5rem;
-  width: auto;
+  vertical-align: middle;
 }
 
 .DetailsHeader-badge--notAtLatest a {

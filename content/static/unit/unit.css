@@ -152,7 +152,7 @@
   }
 }
 .go-Main-headerDetailItem {
-  color: var(--gray-4);
+  color: var(--color-text-subtle);
   display: inline;
   font-size: 0.875rem;
   height: 1.75rem;

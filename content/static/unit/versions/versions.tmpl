@@ -29,11 +29,11 @@
     <div class="Versions-title">
       <h2 class="go-textTitle">Versions in this module</h2>
       <div class="Versions-titleButtonGroup js-buttonGroup">
-        <button class="js-versionsExpand" data-gtmc="versions button"
+        <button class="go-Button go-Button--inline js-versionsExpand" data-gtmc="versions button"
             aria-label="Expand All Versions">
           Expand all
         </button>
-        <button class="js-versionsCollapse" data-gtmc="versions button"
+        <button class="go-Button go-Button--inline js-versionsCollapse" data-gtmc="versions button"
             aria-label="Collapse All Versions">
           Collapse all
         </button>
@@ -62,7 +62,7 @@
         <div class="Version-major">
           {{if and (eq $i 0) (not $major.Incompatible)}}
             <strong>{{$major.Major}}</strong>
-            {{if $major.Deprecated}}<span class="Version-badge">deprecated</span>{{end}}
+            {{if $major.Deprecated}}<span class="go-Chip go-Chip--inverted">deprecated</span>{{end}}
           {{end}}
         </div>
         <div class="Version-tag">
@@ -73,7 +73,7 @@
           {{template "symbol-history" $v}}
         {{else}}
           <div class="Version-commitTime">
-            {{$v.CommitTime}}{{if $v.Retracted}}<span class="Version-badge">retracted</span>{{end}}
+            {{$v.CommitTime}}{{if $v.Retracted}}<span class="go-Chip go-Chip--inverted">retracted</span>{{end}}
           </div>
         {{end}}
       {{end}}
@@ -84,7 +84,7 @@
 {{define "symbol-history"}}
   <details class="Version-details js-versionDetails">
     <summary class="Version-summary">
-      {{.CommitTime}}{{if .Retracted}}<span class="Version-badge">retracted</span>{{end}}
+      {{.CommitTime}}{{if .Retracted}}<span class="go-Chip go-Chip--inverted">retracted</span>{{end}}
     </summary>
     <div class="Versions-symbols">
       <div class="Versions-symbolsHeader">Changes in this version</div>
