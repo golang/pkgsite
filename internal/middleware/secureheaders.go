@@ -29,10 +29,10 @@ var scriptHashes = []string{
 	"'sha256-KBdPSv2Ajjw3jsa29qBhRW49nNx3jXxOLZIWX545FCA='",
 	// From content/static/html/worker/index.tmpl
 	"'sha256-y5EX2GR3tCwSK0/kmqZnsWVeBROA8tA75L+I+woljOE='",
-	// From content/static/main-layout/main-layout.tmpl
-	"'sha256-cVUOUH4vbDOJY6vJAjvJj3d2jAmDiwy/SyVsZgZVxVM='",
 	// From content/static/styleguide/styleguide.tmpl
 	"'sha256-Z9STHpM3Fz5XojcH5dbUK50Igi6qInBbVVaqNpjL/HY='",
+	// From content/static/unit/unit.tmpl
+	"'sha256-+zOYvr6Ug4x7B+bxnsUFqL7ujl8B8hHIi8mxMcYFt7Q='",
 	// From content/static/unit/main/main.tmpl
 	"'sha256-8m/T90VE0swJdEODzIdDuaF+WXGtvVvRIODVMSXMg0c='",
 	// From content/static/unit/versions/versions.tmpl

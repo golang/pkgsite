@@ -9,7 +9,6 @@ import { ClipboardController } from '../clipboard/clipboard.js';
 import { SelectNavController, makeSelectNav } from '../outline/select.js';
 import { ToolTipController } from '../tooltip/tooltip.js';
 import { TreeNavController } from '../outline/tree.js';
-import { MainLayoutController } from '../main-layout/main-layout.js';
 import { ModalController } from '../modal/modal.js';
 
 window.addEventListener('load', () => {
@@ -53,10 +52,6 @@ window.addEventListener('load', () => {
   for (const el of document.querySelectorAll<HTMLDialogElement>('.js-modal')) {
     new ModalController(el);
   }
-
-  const mainHeader = document.querySelector<HTMLElement>('.js-mainHeader');
-  const mainNav = document.querySelector<HTMLElement>('.js-mainNav');
-  new MainLayoutController(mainHeader, mainNav);
 });
 
 customElements.define(

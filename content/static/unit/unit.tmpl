@@ -5,6 +5,7 @@
 -->
 
 {{define "pre-content"}}
+  <link href="/static/unit/unit.css?version={{.AppVersionLabel}}" rel="stylesheet">
   {{block "main-styles".}}{{end}}
 {{end}}
 
@@ -34,6 +35,6 @@
 {{define "post-content"}}
   {{block "main-scripts" .}}{{end}}
   <script>
-    loadScript('/static/main-layout/main-layout.js')
+    loadScript('/static/unit/unit.js')
   </script>
 {{end}}

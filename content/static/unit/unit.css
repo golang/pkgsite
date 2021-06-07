@@ -4,6 +4,8 @@
  * license that can be found in the LICENSE file.
  */
 
+@import url('./_header.css');
+
 .go-Main {
   background-color: var(--color-background);
   color: var(--color-text);

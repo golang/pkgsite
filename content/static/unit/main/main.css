@@ -6,8 +6,6 @@
 
 @import url('../../css/readme.css');
 
-@import url('../header/_header.css');
-
 @import url('./_build-context.css');
 @import url('./_directories.css');
 @import url('./_doc.css');

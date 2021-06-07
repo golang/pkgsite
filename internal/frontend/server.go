@@ -589,12 +589,12 @@ func parsePageTemplates(base template.TrustedSource) (map[string]*template.Templ
 		{tsc("license-policy")},
 		{tsc("search")},
 		{tsc("search-help")},
-		{tsc("styleguide"), tsc("main-layout")},
-		{tsc("unit/importedby"), tsc("unit/header"), tsc("main-layout")},
-		{tsc("unit/imports"), tsc("unit/header"), tsc("main-layout")},
-		{tsc("unit/licenses"), tsc("unit/header"), tsc("main-layout")},
-		{tsc("unit/main"), tsc("unit/header"), tsc("main-layout")},
-		{tsc("unit/versions"), tsc("unit/header"), tsc("main-layout")},
+		{tsc("styleguide"), tsc("unit")},
+		{tsc("unit/importedby"), tsc("unit")},
+		{tsc("unit/imports"), tsc("unit")},
+		{tsc("unit/licenses"), tsc("unit")},
+		{tsc("unit/main"), tsc("unit")},
+		{tsc("unit/versions"), tsc("unit")},
 	}
 
 	for _, set := range htmlSets {
