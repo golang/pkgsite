@@ -77,6 +77,14 @@ body {
   flex-direction: column;
   min-height: 100vh;
   min-width: 23.5rem;
+
+  /**
+   * This is used to programatically detect whether overflow needs to be altered
+   * to prevent jitter when focusing within fixed elements on iOS.
+   * It also must be set to 'touch' for the fix to work.
+   */
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: none;
 }
 
 .go-Container {
