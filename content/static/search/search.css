@@ -13,7 +13,6 @@
   font-size: 1.875rem;
 }
 .SearchResults-resultCount {
-  color: var(--gray-3);
   display: flex;
   justify-content: space-between;
 }
@@ -23,7 +22,7 @@
 }
 
 .LegacySearchSnippet {
-  border-top: 0.0625rem solid var(--gray-8);
+  border-top: var(--border);
   padding: 1rem 0;
 }
 .LegacySearchSnippet-header {
@@ -35,12 +34,11 @@
 }
 .SearchSnippet:only-of-type,
 .SearchSnippet:last-of-type {
-  border-bottom: 0.0625rem solid var(--gray-8);
+  border-bottom: var(--border);
   margin-bottom: 1rem;
 }
 .SearchSnippet-synopsis {
   -webkit-box-orient: vertical;
-  color: var(--gray-3);
   display: -webkit-box;
   -webkit-line-clamp: 2;
   margin: 0 0 1rem;
@@ -59,11 +57,10 @@
   margin-top: 0.3125rem;
 }
 .SearchSnippet-breadcrumb {
-  color: var(--gray-5);
+  color: var(--color-text-subtle);
   font-size: 0.75rem;
 }
 .SearchSnippet-version {
-  color: var(--gray-3);
   font-size: 0.75rem;
 }
 .SearchSnippet-headerContainer {
@@ -91,10 +88,10 @@
 }
 .Pagination-previous[aria-disabled='true'],
 .Pagination-next[aria-disabled='true'] {
-  color: var(--gray-6);
+  color: var(--color-text-subtle);
 }
 .Pagination-number {
-  color: var(--gray-1);
+  color: var(--color-text);
   padding: 0 0.375rem;
 }
 

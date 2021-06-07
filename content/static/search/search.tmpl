@@ -15,7 +15,7 @@
     <div class="go-Content">
       <h1 class="SearchResults-header">Results for “{{.Query}}”</h1>
       <div class="SearchResults-help"><a href="/search-help">Search help</a></div>
-      <div class="SearchResults-resultCount">
+      <div class="SearchResults-resultCount go-textSubtle">
         {{template "pagination_summary" .Pagination}} {{pluralize .Pagination.TotalCount "result"}}
         {{template "pagination_nav" .Pagination}}
       </div>
@@ -54,18 +54,18 @@
           {{$v.PackagePath}}
         </a>
       </h2>
-      <p class="SearchSnippet-synopsis" data-test-id="snippet-synopsis">{{$v.Synopsis}}</p>
+      <p class="SearchSnippet-synopsis go-textSubtle" data-test-id="snippet-synopsis">{{$v.Synopsis}}</p>
       <div class="SearchSnippet-infoLabel">
-        <b class="InfoLabel-title">Version:</b>
+        <strong class="InfoLabel-title">Version:</strong>
         <span data-test-id="snippet-version"> {{$v.DisplayVersion}}</span>
         <span class="InfoLabel-divider">|</span>
-        <b class="InfoLabel-title">Published:</b>
+        <strong class="InfoLabel-title">Published:</strong>
         <span data-test-id="snippet-published"> {{$v.CommitTime}}</span>
         <span class="InfoLabel-divider">|</span>
-        <b class="InfoLabel-title">Imported by:</b>
+        <strong class="InfoLabel-title">Imported by:</strong>
         <span data-test-id="snippet-importedby"> {{$v.NumImportedBy}}</span>
         <span class="InfoLabel-divider">|</span>
-        <b class="InfoLabel-title">{{pluralize (len $v.Licenses) "License"}}:</b>
+        <strong class="InfoLabel-title">{{pluralize (len $v.Licenses) "License"}}:</strong>
         <span data-test-id="snippet-license">
           {{if $v.Licenses}}
             {{commaseparate $v.Licenses}}
@@ -118,7 +118,7 @@
           </div>
         {{end}}
       </div>
-      <p class="SearchSnippet-synopsis" data-test-id="snippet-synopsis">{{$v.Synopsis}}</p>
+      <p class="SearchSnippet-synopsis go-textSubtle" data-test-id="snippet-synopsis">{{$v.Synopsis}}</p>
       <div class="SearchSnippet-infoLabel">
         <span class="InfoLabel-title">Published:</span>
         <span data-test-id="snippet-published"> {{$v.CommitTime}}</span>
@@ -133,7 +133,7 @@
         </span>
         <span class="SearchSnippet-infoLabelDivider"></span>
         <span class="InfoLabel-title">Imported by:</span>
-        <span data-test-id="snippet-importedby"><b>{{$v.NumImportedBy}}</b></span>
+        <span data-test-id="snippet-importedby"><strong>{{$v.NumImportedBy}}</b></spastrong>
       </div>
       {{with .SameModule}}
         <div class="SearchSnippet-sub">
