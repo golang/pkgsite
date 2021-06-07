@@ -16,52 +16,70 @@
 
 {{define "main"}}
   <main class="go-Container">
-    <div class="go-Content">
-      <h1>Create a badge</h1>
-      <p>Create a badge to link to pkg.go.dev from your project website or README file.</p>
-      <label class="Badge-formElement">
-        Badge
-        <div class="Badge-previewLink">
+    <div class="go-Content Badge">
+      <form class="go-Form" action="/badge/" data-gtmc="badge form" aria-label="Create a Badge">
+        <h1>Create a badge</h1>
+        <p>Create a badge to link to pkg.go.dev from your project website or README file.</p>
+        <label class="go-Label">
+          Badge
           <a class="js-badgeExampleButton" href="https://pkg.go.dev/{{.LinkPath}}">
-            <img class="Badge-badgeIcon" src="/static/img/badge.svg" alt="Go Reference">
+            <img class="Badge-badgeIcon" src="/static/badge/badge.svg" alt="Go Reference">
           </a>
-        </div>
-      </label>
-      <form action="/badge/" data-gtmc="badge form" aria-label="Create a Badge">
-        <label class="Badge-formElement">
+        </label>
+        <label class="go-Label">
           URL
-          <input name="path" class="js-toolsPathInput"
+          <input name="path" class="go-Input js-toolsPathInput"
               value="{{if .LinkPath}}https://pkg.go.dev/{{.LinkPath}}{{end}}" placeholder="e.g., https://pkg.go.dev/golang.org/x/pkgsite">
         </label>
-        <label class="Badge-formElement">
-          <button type="submit" class="Badge-submitButton">{{if .LinkPath}}Update{{else}}Create{{end}}</button>
-        </label>
+        <button type="submit" class="go-Button">{{if .LinkPath}}Update{{else}}Create{{end}}</button>
       </form>
       <div class="Badge-snippetContainer">
         {{if .LinkPath}}
-          <label class="Badge-formElement">
-            HTML
-            <input title="Click to copy HTML" name="html" class="Badge-clickToCopy js-toolsCopySnippet" type="text"
-                value='<a href="https://pkg.go.dev/{{.LinkPath}}"><img src="https://pkg.go.dev/{{.BadgePath}}" alt="Go Reference"></a>' readonly>
+          <label class="go-Label">HTML
+            <div class="go-InputGroup">
+              <input class="go-Input" readonly
+                  value='<a href="https://pkg.go.dev/{{.LinkPath}}"><img src="https://pkg.go.dev/{{.BadgePath}}" alt="Go Reference"></a>'>
+              <button
+                class="go-Button go-Button--inverted go-Clipboard js-clipboard"
+                aria-label="Copy to Clipboard"
+                data-gtmc="clipboard button"
+              >
+                <img
+                  class="go-Icon"
+                  height="24"
+                  width="24"
+                  src="/static/_icon/content_copy_gm_grey_24dp.svg"
+                  alt=""
+                />
+              </button>
+            </div>
           </label>
-          <label class="Badge-formElement">
-            Markdown
-            <input title="Click to copy markdown" name="markdown" class="Badge-clickToCopy js-toolsCopySnippet" type="text"
-                value="[![Go Reference](https://pkg.go.dev/{{.BadgePath}})](https://pkg.go.dev/{{.LinkPath}})" readonly>
+          <label class="go-Label">Markdown
+            <div class="go-InputGroup">
+              <input class="go-Input" readonly
+                  value="[![Go Reference](https://pkg.go.dev/{{.BadgePath}})](https://pkg.go.dev/{{.LinkPath}})">
+              <button
+                class="go-Button go-Button--inverted go-Clipboard js-clipboard"
+                aria-label="Copy to Clipboard"
+                data-gtmc="clipboard button"
+              >
+                <img
+                  class="go-Icon"
+                  height="24"
+                  width="24"
+                  src="/static/_icon/content_copy_gm_grey_24dp.svg"
+                  alt=""
+                />
+              </button>
+            </div>
           </label>
         {{else}}
           <div class="Badge-gopherLanding">
-            <img src="/static/img/gopher-airplane.svg" alt="The Go Gopher"/>
+            <img width="1200" height="945" src="/static/_gopher/airplane-1200x945.svg" alt="The Go Gopher"/>
             <p class="go-textSubtle">Type a pkg.go.dev URL above to create a badge link.</p>
           </div>
         {{end}}
       </div>
     </div>
   </main>
-{{end}}
-
-{{define "post-content"}}
-  <script>
-    loadScript("/static/badge/badge.js");
-  </script>
 {{end}}

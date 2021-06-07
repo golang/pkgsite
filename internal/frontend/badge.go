@@ -23,7 +23,7 @@ type badgePage struct {
 func (s *Server) badgeHandler(w http.ResponseWriter, r *http.Request) {
 	path := strings.TrimPrefix(r.URL.Path, "/badge/")
 	if path != "" {
-		http.ServeFile(w, r, fmt.Sprintf("%s/img/badge.svg", s.staticPath))
+		http.ServeFile(w, r, fmt.Sprintf("%s/badge/badge.svg", s.staticPath))
 		return
 	}
 

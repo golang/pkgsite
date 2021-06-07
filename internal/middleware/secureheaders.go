@@ -11,8 +11,6 @@ import (
 )
 
 var scriptHashes = []string{
-	// From content/static/badge/badge.tmpl
-	"'sha256-lYbH/hg0O4Oc1stV4ysso2zlUCXY0yGRUZ5zDOnZ9hI='",
 	// From content/static/_base/base.tmpl
 	"'sha256-CoGrkqEM1Kjjf5b1bpcnDLl8ZZLAsVX+BoAzZ5+AOmc='",
 	"'sha256-bC+aW6Tx/9NPcnVT5hhOM+nIOI9RXxXLinzaeqEjgLc='",

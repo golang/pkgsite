@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["badge.ts"],
-  "sourcesContent": ["/**\n * @license\n * Copyright 2019-2020 The Go Authors. All rights reserved.\n * Use of this source code is governed by a BSD-style\n * license that can be found in the LICENSE file.\n */\n\nconst snippetEls = document.querySelectorAll('.js-toolsCopySnippet');\nsnippetEls.forEach(inputEl => {\n  inputEl.addEventListener('click', e => {\n    e.preventDefault();\n    (e.currentTarget as HTMLInputElement)?.select();\n    document.execCommand('copy');\n  });\n});\n"],
-  "mappings": "AAAA;AAAA;AAAA;AAAA;AAAA;AAAA,GAOA,KAAM,YAAa,SAAS,iBAAiB,wBAC7C,WAAW,QAAQ,GAAW,CAC5B,EAAQ,iBAAiB,QAAS,GAAK,CACrC,EAAE,iBACD,EAAE,eAAoC,SACvC,SAAS,YAAY",
-  "names": []
-}
