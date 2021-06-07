@@ -654,7 +654,7 @@ func parseTemplate(staticPath, filename template.TrustedSource) (*template.Templ
 	if staticPath.String() == "" {
 		return nil, nil
 	}
-	templatePath := template.TrustedSourceJoin(staticPath, template.TrustedSourceFromConstant("html/worker"), filename)
+	templatePath := template.TrustedSourceJoin(staticPath, template.TrustedSourceFromConstant("/worker"), filename)
 	return template.New(filename.String()).Funcs(template.FuncMap{
 		"truncate":  truncate,
 		"timefmt":   formatTime,

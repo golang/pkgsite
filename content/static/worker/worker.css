@@ -4,6 +4,12 @@
  * license that can be found in the LICENSE file.
  */
 
+:root {
+  --white: #eee;
+  --gray: #ccc;
+  --red: red;
+}
+
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu',
     'Helvetica Neue', Arial, sans-serif;
@@ -17,8 +23,8 @@ input {
   width: 12.5rem;
 }
 button {
-  background-color: #eee;
-  border: 0.0625rem solid #ccc;
+  background-color: var(--white);
+  border: 0.0625rem solid var(--gray);
   border-radius: 0.125rem;
   width: 16rem;
 }
@@ -28,23 +34,24 @@ table {
   padding: 0.1875rem 0 0.125rem 0;
 }
 td {
-  border-top: 0.0625rem solid #ddd;
+  border-top: 0.0625rem solid var(--gray);
 }
 
+.Experiments input {
+  width: auto;
+}
 .Experiments input:invalid {
-  border: 0.0625rem dotted red;
+  border: 0.0625rem dotted var(--red);
   border-radius: 0.25rem;
 }
 .Experiments input:valid {
-  border: 0.0625rem solid grey;
+  border: 0.0625rem solid var(--gray);
   border-radius: 0.25rem;
 }
 .Experiments button {
   width: auto;
 }
-.Experiments input {
-  width: auto;
-}
+
 .Experiments-updateResult {
   border: none;
   height: 2rem;
