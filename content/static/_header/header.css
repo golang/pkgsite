@@ -250,7 +250,7 @@
   transform: translateX(100%);
   transition: transform 100ms ease-in-out;
   width: 85%;
-  z-index: 20;
+  z-index: 30;
 }
 .go-NavigationDrawer.is-active {
   transform: translateX(0);
@@ -286,7 +286,7 @@
   position: fixed;
   top: 0;
   width: 100%;
-  z-index: 5;
+  z-index: 20;
 }
 .go-NavigationDrawer.is-active + .go-NavigationDrawer-scrim {
   background-color: var(--gray-1);
