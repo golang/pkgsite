@@ -1,5 +1,5 @@
 import marked from 'marked';
-import fs from 'fs/promises';
+import fs from 'fs';
 
 /**
  * parse extracts code snippets from markdown files in component
@@ -10,5 +10,14 @@ import fs from 'fs/promises';
  */
 export async function parse(file: string): Promise<string> {
   marked.use({ renderer: { code: code => code } });
-  return marked(await fs.readFile(file, { encoding: 'utf-8' }));
+  const f = await new Promise<string>((resolve, reject) =>
+    fs.readFile(file, { encoding: 'utf-8' }, (err, data) => {
+      if (err) {
+        reject(err);
+        return;
+      }
+      resolve(data);
+    })
+  );
+  return marked(f);
 }
