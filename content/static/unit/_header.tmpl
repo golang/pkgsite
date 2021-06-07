@@ -40,7 +40,7 @@
                 class="go-Icon go-Icon--accented"
                 height="24"
                 width="24"
-                src="/static/icon/content_copy_gm_grey_24dp.svg"
+                src="/static/_icon/content_copy_gm_grey_24dp.svg"
                 alt=""
               >
             </button>
@@ -54,7 +54,7 @@
 {{define "unit-header-title"}}
   <div class="go-Main-headerTitle js-stickyHeader">
     <a class="go-Main-headerLogo" href="https://go.dev/" aria-hidden="true" tabindex="-1" data-gtmc="header link" aria-label="Link to Go Homepage">
-      <img height="78" width="207" src="/static/logo/go-blue.svg" alt="Go">
+      <img height="78" width="207" src="/static/_logo/go-blue.svg" alt="Go">
     </a>
     <h1 data-test-id="UnitHeader-title">{{.Title}}</h1>
     {{range .PageLabels}}
@@ -74,7 +74,7 @@
             class="go-Icon go-Icon--accented"
             height="24"
             width="24"
-            src="/static/icon/content_copy_gm_grey_24dp.svg"
+            src="/static/_icon/content_copy_gm_grey_24dp.svg"
             alt=""
           />
         </button>
@@ -215,7 +215,7 @@
           class="go-Icon"
           height="24"
           width="24"
-          src="/static/icon/info_gm_grey_24dp.svg"
+          src="/static/_icon/info_gm_grey_24dp.svg"
           alt="Notice"
         />&nbsp; Redirected from <span data-test-id="redirected-banner-text">{{.}}</span>.
       </div>
@@ -226,7 +226,7 @@
           class="go-Icon"
           height="24"
           width="24"
-          src="/static/icon/alert_gm_grey_24dp.svg"
+          src="/static/_icon/alert_gm_grey_24dp.svg"
           alt="Warning"
         />&nbsp; <strong>Deprecated</strong>
         {{- with .Unit.DeprecationComment -}}
@@ -240,7 +240,7 @@
           class="go-Icon"
           height="24"
           width="24"
-          src="/static/icon/alert_gm_grey_24dp.svg"
+          src="/static/_icon/alert_gm_grey_24dp.svg"
           alt="Warning"
         />&nbsp; <strong>Retracted</strong>
         {{- with .Unit.RetractionRationale -}}
@@ -254,7 +254,7 @@
           class="go-Icon"
           height="24"
           width="24"
-          src="/static/icon/info_gm_grey_24dp.svg"
+          src="/static/_icon/info_gm_grey_24dp.svg"
           alt="Notice"
         />&nbsp; The highest tagged major version is
         <a href="/{{.LatestMajorVersionURL}}" data-gtmc="banner link" aria-label="Go to Latest Major Version">
@@ -268,7 +268,7 @@
 {{define "severity-toggletip"}}
   <details class="go-Tooltip js-tooltip" data-gtmc="tooltip">
     <summary>
-      <img class="go-Icon go-Icon--inverted" height="24" width="24" src="/static/icon/alert_gm_grey_24dp.svg" alt="Warning">
+      <img class="go-Icon go-Icon--inverted" height="24" width="24" src="/static/_icon/alert_gm_grey_24dp.svg" alt="Warning">
     </summary>
     <p>{{.}}</p>
   </details>

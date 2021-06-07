@@ -5,11 +5,8 @@
  * license that can be found in the LICENSE file.
  */
 
-import { ClipboardController } from '../clipboard/clipboard.js';
-import { SelectNavController, makeSelectNav } from '../outline/select.js';
-import { ToolTipController } from '../tooltip/tooltip.js';
-import { TreeNavController } from '../outline/tree.js';
-import { ModalController } from '../modal/modal.js';
+import { SelectNavController, makeSelectNav } from '../_outline/select.js';
+import { TreeNavController } from '../_outline/tree.js';
 
 window.addEventListener('load', () => {
   const tree = document.querySelector<HTMLElement>('.js-tree');
@@ -39,18 +36,8 @@ window.addEventListener('load', () => {
     });
   }
 
-  for (const el of document.querySelectorAll<HTMLButtonElement>('.js-clipboard')) {
-    new ClipboardController(el);
-  }
   for (const el of document.querySelectorAll<HTMLSelectElement>('.js-selectNav')) {
     new SelectNavController(el);
-  }
-  for (const el of document.querySelectorAll<HTMLDetailsElement>('.js-tooltip')) {
-    new ToolTipController(el);
-  }
-
-  for (const el of document.querySelectorAll<HTMLDialogElement>('.js-modal')) {
-    new ModalController(el);
   }
 });
 
@@ -88,7 +75,7 @@ customElements.define(
       this.innerHTML = `
         <p id="icon-${name}" class="go-textLabel GoIcon-title">${name.replaceAll('_', ' ')}</p>
         <stringify-el>
-          <img class="go-Icon" height="24" width="24" src="/static/icon/${name}_gm_grey_24dp.svg" alt="">
+          <img class="go-Icon" height="24" width="24" src="/static/_icon/${name}_gm_grey_24dp.svg" alt="">
         </stringify-el>
       `;
     }

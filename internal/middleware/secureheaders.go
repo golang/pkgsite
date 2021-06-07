@@ -13,9 +13,9 @@ import (
 var scriptHashes = []string{
 	// From content/static/badge/badge.tmpl
 	"'sha256-lYbH/hg0O4Oc1stV4ysso2zlUCXY0yGRUZ5zDOnZ9hI='",
-	// From content/static/base/base.tmpl
+	// From content/static/_base/base.tmpl
 	"'sha256-CoGrkqEM1Kjjf5b1bpcnDLl8ZZLAsVX+BoAzZ5+AOmc='",
-	"'sha256-2owiLItzX793qLVobnd0z9Z90a2wej4/C73Qb0qNtO4='",
+	"'sha256-bC+aW6Tx/9NPcnVT5hhOM+nIOI9RXxXLinzaeqEjgLc='",
 	"'sha256-karKh1IrXOF1g+uoSxK+k9BuciCwYY/ytGuQVUiRzcM='",
 	// From content/static/fetch/fetch.tmpl
 	"'sha256-NL8cRfvzPNDO6ZYKQYWS1kPknRV9gUCJoTk+fRR04zg='",

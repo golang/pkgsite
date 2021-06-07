@@ -1,9 +1,8 @@
-import { SelectNavController, makeSelectNav } from '../../outline/select.js';
-import { TreeNavController } from '../../outline/tree.js';
+import '../../_jump/jump.js';
+import '../../_playground/playground.js';
 
-import '../../jump/jump.js';
-import '../../playground/playground.js';
-import { ExpandableRowsTableController } from '../../table/table.js';
+import { SelectNavController, makeSelectNav } from '../../_outline/select.js';
+import { TreeNavController } from '../../_outline/tree.js';
 
 const el = <T extends HTMLElement>(selector: string) => document.querySelector<T>(selector);
 
@@ -12,11 +11,6 @@ const select = makeSelectNav(treeCtrl);
 const mobileNav = document.querySelector('.js-mainNavMobile');
 mobileNav.replaceChild(select, mobileNav.firstElementChild);
 new SelectNavController(select.firstElementChild);
-
-const expandableTable = el<HTMLTableElement>('.js-expandableTable');
-if (expandableTable) {
-  new ExpandableRowsTableController(expandableTable);
-}
 
 /**
  * Event handlers for expanding and collapsing the readme section.

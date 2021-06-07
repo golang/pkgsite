@@ -4,22 +4,26 @@
  * license that can be found in the LICENSE file.
  */
 
-@import url('../typography/typography.css');
+/**
+ * Typography should be imported first to ensure expected CSS
+ * inheritance on text elements.
+ */
+@import url('../_typography/typography.css');
 
-@import url('../button/button.css');
-@import url('../breadcrumb/breadcrumb.css');
-@import url('../chip/chip.css');
-@import url('../clipboard/clipboard.css');
-@import url('../color/color.css');
-@import url('../footer/footer.css');
-@import url('../form/form.css');
-@import url('../gopher/gopher.css');
-@import url('../header/header.css');
-@import url('../icon/icon.css');
-@import url('../message/message.css');
-@import url('../modal/modal.css');
-@import url('../outline/tree.css');
-@import url('../tooltip/tooltip.css');
+@import url('../_button/button.css');
+@import url('../_breadcrumb/breadcrumb.css');
+@import url('../_chip/chip.css');
+@import url('../_clipboard/clipboard.css');
+@import url('../_color/color.css');
+@import url('../_footer/footer.css');
+@import url('../_form/form.css');
+@import url('../_gopher/gopher.css');
+@import url('../_header/header.css');
+@import url('../_icon/icon.css');
+@import url('../_message/message.css');
+@import url('../_modal/modal.css');
+@import url('../_outline/tree.css');
+@import url('../_tooltip/tooltip.css');
 
 :root {
   /* Padding at the left and right of the viewport. */

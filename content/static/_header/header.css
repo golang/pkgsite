@@ -154,7 +154,7 @@
   width: 2.5rem;
 }
 .go-Header-navOpen--white {
-  background: no-repeat center/2rem url('/static/icon/menu_gm_grey_24dp.svg');
+  background: no-repeat center/2rem url('/static/_icon/menu_gm_grey_24dp.svg');
   filter: brightness(0) saturate(100%) invert(100%) sepia(97%) saturate(13%) hue-rotate(245deg)
     brightness(103%) contrast(107%);
 }

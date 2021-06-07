@@ -83,7 +83,7 @@ func <a class="Documentation-source" href="src">BadF</a>
 </summary>
 <div class="Documentation-deprecatedItemBody">
 <div class="Documentation-deprecatedMessage">
-<img class="go-Icon" height="24" width="24" src="/static/icon/alert_gm_grey_24dp.svg" alt="">
+<img class="go-Icon" height="24" width="24" src="/static/_icon/alert_gm_grey_24dp.svg" alt="">
 This function has been deprecated.
 </div>
 <div class="Documentation-declaration">
@@ -120,7 +120,7 @@ type <a class="Documentation-source" href="src">BadT</a>
 </summary>
 <div class="Documentation-deprecatedItemBody">
 <div class="Documentation-deprecatedMessage">
-<img class="go-Icon" height="24" width="24" src="/static/icon/alert_gm_grey_24dp.svg" alt="">
+<img class="go-Icon" height="24" width="24" src="/static/_icon/alert_gm_grey_24dp.svg" alt="">
 This type has been deprecated.
 </div>
 <div class="Documentation-declaration">
@@ -145,7 +145,7 @@ func <a class="Documentation-source" href="src">NewBadTBad</a>
 </summary>
 <div class="Documentation-deprecatedItemBody">
 <div class="Documentation-deprecatedMessage">
-<img class="go-Icon" height="24" width="24" src="/static/icon/alert_gm_grey_24dp.svg" alt="">
+<img class="go-Icon" height="24" width="24" src="/static/_icon/alert_gm_grey_24dp.svg" alt="">
 This function has been deprecated.
 </div>
 <div class="Documentation-declaration">
@@ -179,7 +179,7 @@ func (BadT) <a class="Documentation-source" href="src">BadM</a>
 </summary>
 <div class="Documentation-deprecatedItemBody">
 <div class="Documentation-deprecatedMessage">
-<img class="go-Icon" height="24" width="24" src="/static/icon/alert_gm_grey_24dp.svg" alt="">
+<img class="go-Icon" height="24" width="24" src="/static/_icon/alert_gm_grey_24dp.svg" alt="">
 This method has been deprecated.
 </div>
 <div class="Documentation-declaration">
@@ -225,7 +225,7 @@ func <a class="Documentation-source" href="src">NewGoodTBad</a>
 </summary>
 <div class="Documentation-deprecatedItemBody">
 <div class="Documentation-deprecatedMessage">
-<img class="go-Icon" height="24" width="24" src="/static/icon/alert_gm_grey_24dp.svg" alt="">
+<img class="go-Icon" height="24" width="24" src="/static/_icon/alert_gm_grey_24dp.svg" alt="">
 This function has been deprecated.
 </div>
 <div class="Documentation-declaration">
@@ -260,7 +260,7 @@ func (GoodT) <a class="Documentation-source" href="src">BadM</a>
 </summary>
 <div class="Documentation-deprecatedItemBody">
 <div class="Documentation-deprecatedMessage">
-<img class="go-Icon" height="24" width="24" src="/static/icon/alert_gm_grey_24dp.svg" alt="">
+<img class="go-Icon" height="24" width="24" src="/static/_icon/alert_gm_grey_24dp.svg" alt="">
 This method has been deprecated.
 </div>
 <div class="Documentation-declaration">

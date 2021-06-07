@@ -43,7 +43,13 @@
 >
   <input name="q" class="go-Input" placeholder="Search for a package" />
   <button class="go-Button go-Button--inverted" aria-label="Submit search">
-    <img class="go-Icon" height="24" width="24" src="/static/icon/search_gm_grey_24dp.svg" alt="" />
+    <img
+      class="go-Icon"
+      height="24"
+      width="24"
+      src="/static/_icon/search_gm_grey_24dp.svg"
+      alt=""
+    />
   </button>
 </form>
 ```
@@ -68,7 +74,7 @@
       class="go-Icon"
       height="24"
       width="24"
-      src="/static/icon/filter_list_gm_grey_24dp.svg"
+      src="/static/_icon/filter_list_gm_grey_24dp.svg"
       alt=""
     />
   </button>
@@ -76,7 +82,13 @@
   <button class="go-Button go-Button--inverted" data-gtmc="menu button">Format</button>
   <button class="go-Button go-Button--inverted" data-gtmc="menu button">Run</button>
   <button class="go-Button go-Button--inverted" data-gtmc="menu button" aria-label="Search">
-    <img class="go-Icon" height="24" width="24" src="/static/icon/search_gm_grey_24dp.svg" alt="" />
+    <img
+      class="go-Icon"
+      height="24"
+      width="24"
+      src="/static/_icon/search_gm_grey_24dp.svg"
+      alt=""
+    />
   </button>
 </div>
 ```
@@ -90,7 +102,7 @@
         class="go-Icon"
         height="24"
         width="24"
-        src="/static/icon/filter_list_gm_grey_24dp.svg"
+        src="/static/_icon/filter_list_gm_grey_24dp.svg"
         alt=""
       />
     </button>
@@ -99,7 +111,7 @@
         class="go-Icon"
         height="24"
         width="24"
-        src="/static/icon/search_gm_grey_24dp.svg"
+        src="/static/_icon/search_gm_grey_24dp.svg"
         alt=""
       />
     </button>

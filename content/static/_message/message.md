@@ -10,7 +10,7 @@
     class="go-Icon"
     height="24"
     width="24"
-    src="/static/icon/info_gm_grey_24dp.svg"
+    src="/static/_icon/info_gm_grey_24dp.svg"
     alt="Notice"
   />&nbsp; The highest tagged major version is v3.
 </div>
@@ -24,7 +24,7 @@
     class="go-Icon"
     height="24"
     width="24"
-    src="/static/icon/alert_gm_grey_24dp.svg"
+    src="/static/_icon/alert_gm_grey_24dp.svg"
     alt="Warning"
   />&nbsp; <strong>Retracted:</strong> This version of Syntax has been retracted.
 </div>
@@ -38,7 +38,7 @@
     class="go-Icon"
     height="24"
     width="24"
-    src="/static/icon/alert_gm_grey_24dp.svg"
+    src="/static/_icon/alert_gm_grey_24dp.svg"
     alt="Alert"
   />&nbsp;
   <strong>Critical error</strong>

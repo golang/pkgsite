@@ -543,6 +543,9 @@ func stripScheme(url string) string {
 //
 // Separate templates are used so that certain contextual functions (e.g.
 // templateName) can be bound independently for each page.
+//
+// Templates in directories prefixed with an underscore are considered helper
+// templates and parsed together with the files in each base directory.
 func parsePageTemplates(base template.TrustedSource) (map[string]*template.Template, error) {
 	tsc := template.TrustedSourceFromConstant
 	join := template.TrustedSourceJoin
@@ -557,7 +560,7 @@ func parsePageTemplates(base template.TrustedSource) (map[string]*template.Templ
 
 	templates := make(map[string]*template.Template)
 	for _, set := range legacyHtmlSets {
-		t, err := template.New("base.tmpl").Funcs(templateFuncs).ParseFilesFromTrustedSources(join(base, tsc("base"), tsc("base.tmpl")))
+		t, err := template.New("base.tmpl").Funcs(templateFuncs).ParseFilesFromTrustedSources(join(base, tsc("_base/base.tmpl")))
 		if err != nil {
 			return nil, fmt.Errorf("ParseFiles: %v", err)
 		}
@@ -565,8 +568,8 @@ func parsePageTemplates(base template.TrustedSource) (map[string]*template.Templ
 		if _, err := t.ParseGlobFromTrustedSource(helperGlob); err != nil {
 			return nil, fmt.Errorf("ParseGlob(%q): %v", helperGlob, err)
 		}
-		header := join(base, tsc("header"), tsc("header.partial.tmpl"))
-		footer := join(base, tsc("footer"), tsc("footer.partial.tmpl"))
+		header := join(base, tsc("_header"), tsc("header.tmpl"))
+		footer := join(base, tsc("_footer"), tsc("footer.tmpl"))
 		if _, err := t.ParseFilesFromTrustedSources(header, footer); err != nil {
 			return nil, fmt.Errorf("ParseFilesFromTrustedSources(%v, %v): %v", header, footer, err)
 		}
@@ -598,11 +601,11 @@ func parsePageTemplates(base template.TrustedSource) (map[string]*template.Templ
 	}
 
 	for _, set := range htmlSets {
-		t, err := template.New("base.tmpl").Funcs(templateFuncs).ParseFilesFromTrustedSources(join(base, tsc("base/base.tmpl")))
+		t, err := template.New("base.tmpl").Funcs(templateFuncs).ParseFilesFromTrustedSources(join(base, tsc("_base/base.tmpl")))
 		if err != nil {
 			return nil, fmt.Errorf("ParseFilesFromTrustedSources: %v", err)
 		}
-		helperGlob := join(base, tsc("**/*.partial.tmpl"))
+		helperGlob := join(base, tsc("_*/*.tmpl"))
 		if _, err := t.ParseGlobFromTrustedSource(helperGlob); err != nil {
 			return nil, fmt.Errorf("ParseGlobFromTrustedSource(%q): %v", helperGlob, err)
 		}

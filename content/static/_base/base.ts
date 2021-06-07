@@ -5,12 +5,13 @@
  * license that can be found in the LICENSE file.
  */
 
-import '../header/header.js';
-import '../keyboard/keyboard.js';
-import { ClipboardController } from '../clipboard/clipboard.js';
-import { ToolTipController } from '../tooltip/tooltip.js';
-import { SelectNavController } from '../outline/select.js';
-import { ModalController } from '../modal/modal.js';
+import '../_header/header.js';
+import '../_keyboard/keyboard.js';
+import { ClipboardController } from '../_clipboard/clipboard.js';
+import { ToolTipController } from '../_tooltip/tooltip.js';
+import { SelectNavController } from '../_outline/select.js';
+import { ModalController } from '../_modal/modal.js';
+import { ExpandableRowsTableController } from '../_table/table.js';
 
 for (const el of document.querySelectorAll<HTMLButtonElement>('.js-clipboard')) {
   new ClipboardController(el);
@@ -26,6 +27,10 @@ for (const t of document.querySelectorAll<HTMLDetailsElement>('.js-tooltip')) {
 
 for (const el of document.querySelectorAll<HTMLSelectElement>('.js-selectNav')) {
   new SelectNavController(el);
+}
+
+for (const el of document.querySelectorAll<HTMLTableElement>('.js-expandableTable')) {
+  new ExpandableRowsTableController(el);
 }
 
 interface TagManagerEvent {

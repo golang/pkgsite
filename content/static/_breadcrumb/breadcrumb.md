@@ -20,7 +20,7 @@
           class="go-Icon go-Icon--accented"
           height="24"
           width="24"
-          src="/static/icon/content_copy_gm_grey_24dp.svg"
+          src="/static/_icon/content_copy_gm_grey_24dp.svg"
           alt=""
         />
       </button>

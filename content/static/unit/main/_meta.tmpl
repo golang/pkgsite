@@ -45,9 +45,9 @@
 {{define "unit-meta-details-check"}}
   <img class="go-Icon{{if .}} go-Icon--accented{{end}}"
     {{- if . -}}
-      src="/static/icon/check_circle_gm_grey_24dp.svg" alt="checked"
+      src="/static/_icon/check_circle_gm_grey_24dp.svg" alt="checked"
     {{- else -}}
-      src="/static/icon/cancel_gm_grey_24dp.svg" alt="unchecked"
+      src="/static/_icon/cancel_gm_grey_24dp.svg" alt="unchecked"
     {{- end -}}
   height="24" width="24">
 {{end}}
@@ -59,7 +59,7 @@
         <summary class="go-textSubtle">
           {{template "unit-meta-details-check" .Unit.HasGoMod}}
           Valid {{if .Unit.HasGoMod}}<a href="{{.Details.ModFileURL}}" target="_blank" rel="noopener">{{end}}go.mod{{if .Unit.HasGoMod}}</a>{{end}} file
-          <img class="go-Icon" src="/static/icon/help_gm_grey_24dp.svg" alt="" height="24" width="24">
+          <img class="go-Icon" src="/static/_icon/help_gm_grey_24dp.svg" alt="" height="24" width="24">
         </summary>
         <p>
           The Go module system was introduced in Go 1.11 and is the official dependency management
@@ -72,7 +72,7 @@
         <summary class="go-textSubtle">
           {{template "unit-meta-details-check" .Unit.IsRedistributable}}
           Redistributable license
-          <img class="go-Icon" src="/static/icon/help_gm_grey_24dp.svg" alt="" height="24" width="24">
+          <img class="go-Icon" src="/static/_icon/help_gm_grey_24dp.svg" alt="" height="24" width="24">
         </summary>
         <p>
           Redistributable licenses place minimal restrictions on how software can be used,
@@ -85,7 +85,7 @@
         <summary class="go-textSubtle">
           {{template "unit-meta-details-check" .Details.IsTaggedVersion}}
           Tagged version
-          <img class="go-Icon" src="/static/icon/help_gm_grey_24dp.svg" alt="" height="24" width="24">
+          <img class="go-Icon" src="/static/_icon/help_gm_grey_24dp.svg" alt="" height="24" width="24">
         </summary>
         <p>Modules with tagged versions give importers more predictable builds.</p>
       </details>
@@ -95,7 +95,7 @@
         <summary class="go-textSubtle">
           {{template "unit-meta-details-check"  .Details.IsStableVersion}}
           Stable version
-          <img class="go-Icon" src="/static/icon/help_gm_grey_24dp.svg" alt="" height="24" width="24">
+          <img class="go-Icon" src="/static/_icon/help_gm_grey_24dp.svg" alt="" height="24" width="24">
         </summary>
         <p>When a project reaches major version v1 it is considered stable.</p>
       </details>
