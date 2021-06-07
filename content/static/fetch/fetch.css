@@ -5,16 +5,7 @@
  */
 
 .Fetch-button {
-  background-color: var(--gray-10);
-  border: 0.0625rem solid var(--gray-8);
-  border-radius: 0.5rem;
-  color: var(--turq-dark);
-  font-size: 1rem;
-  margin: 1rem auto;
-  min-height: 2.5rem;
-  min-width: 5rem;
-  padding: 0.5rem 1rem;
-  width: fit-content;
+  align-self: center;
 }
 @keyframes blink {
   0% {
@@ -32,7 +23,7 @@
   animation-fill-mode: both;
   animation-iteration-count: infinite;
   animation-name: blink;
-  background-color: var(--turq-dark);
+  background-color: var(--color-brand-primary);
   border-radius: 50%;
   display: inline-block;
   height: 0.5rem;
