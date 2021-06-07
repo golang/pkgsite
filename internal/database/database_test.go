@@ -403,7 +403,7 @@ func TestTransactSerializable(t *testing.T) {
 	//   sum rows with class = 2 and insert as a row with class 1
 	// We determined empirically that this number of transactions produces a serialization conflict
 	// 100 times out of 100.
-	const numTransactions = 7
+	const numTransactions = 5
 	errc := make(chan error, numTransactions)
 	for i := 0; i < numTransactions; i++ {
 		i := i
