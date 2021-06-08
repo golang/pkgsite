@@ -1,0 +1,105 @@
+<!--
+  Copyright 2020 The Go Authors. All rights reserved.
+  Use of this source code is governed by a BSD-style
+  license that can be found in the LICENSE file.
+-->
+<ul>
+  {{if or .Package.Doc (index .Examples.Map "")}}
+    <li>
+      <a href="#pkg-overview" data-gtmc="doc outline link">Overview</a>
+    </li>
+  {{end}}
+  {{- if or .Consts .Vars .Funcs .Types -}}
+    <li class="DocNav-overview">
+      <a href="#pkg-index" data-gtmc="doc outline link">
+        Index
+      </a>
+      {{if .Examples.List}}
+        <ul>
+          <li>
+            <a href="#pkg-examples" data-gtmc="doc outline link">
+              Examples
+            </a>
+          </li>
+        </ul>
+      {{end}}
+    </li>
+    <li class="DocNav-constants">
+      <a href="#pkg-constants" data-gtmc="doc outline link">
+        Constants
+      </a>
+    </li>
+    <li class="DocNav-variables">
+      <a href="#pkg-variables" data-gtmc="doc outline link">
+        Variables
+      </a>
+    </li>
+    <li class="DocNav-functions">
+      <a href="#pkg-functions" data-gtmc="doc outline link">
+        Functions
+      </a>
+      {{if .Funcs}}
+        <ul>
+          {{range .Funcs}}
+            <li>
+              <a href="#{{.Name}}" title="{{render_short_synopsis .Decl}}" data-gtmc="doc outline link">
+                {{render_short_synopsis .Decl}}
+              </a>
+            </li>
+          {{end}}
+        </ul>
+      {{end}}
+    </li>
+    <li class="DocNav-types">
+      <a href="#pkg-types" data-gtmc="doc outline link">
+        Types
+      </a>
+      <ul>
+        {{range .Types}}
+          {{$tname := .Name}}
+          <li>
+            <a href="#{{$tname}}" title="type {{$tname}}" data-gtmc="doc outline link">
+              type {{$tname}}
+            </a>
+            {{if or .Funcs .Methods}}
+              <ul>
+                {{range .Funcs}}
+                  <li>
+                    <a href="#{{.Name}}" title="{{render_short_synopsis .Decl}}"
+                        data-gtmc="doc outline link">
+                      {{render_short_synopsis .Decl}}
+                    </a>
+                  </li>
+                {{end}}
+                {{range .Methods}}
+                  <li>
+                    <a href="#{{$tname}}.{{.Name}}" title="{{render_short_synopsis .Decl}}"
+                        data-gtmc="doc outline link">
+                      {{render_short_synopsis .Decl}}
+                    </a>
+                  </li>
+                {{end}}
+              </ul>
+            {{end}} {{/* if or .Funcs .Methods */}}
+          </li>
+        {{end}} {{/* range .Types */}}
+      </ul>
+    </li>
+  {{end}}
+  {{if .Package.Notes}}
+    <li class="DocNav-notes">
+      <a href="#pkg-notes" data-gtmc="doc outline link">
+        Notes
+      </a>
+      <ul>
+        {{range $marker, $item := .Package.Notes}}
+          <li>
+            <a href="#pkg-note-{{$marker}}" data-gtmc="doc outline link">
+              {{(index $.NoteHeaders $marker).Label}}s
+            </a>
+          </li>
+        {{end}}
+      </ul>
+    </li>
+  {{end}}
+</ul>
