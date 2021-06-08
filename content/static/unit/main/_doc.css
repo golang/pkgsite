@@ -18,7 +18,7 @@
   opacity: 1;
 }
 .UnitDoc-title {
-  border-bottom: 0.0625rem solid var(--gray-8);
+  border-bottom: var(--border);
   padding-bottom: 1rem;
 }
 .UnitDoc-title img {
@@ -27,7 +27,7 @@
   width: auto;
 }
 .UnitDoc-emptySection {
-  background-color: var(--gray-10);
+  background-color: var(--color-background-accented);
   color: var(--gray-2);
   height: 12.25rem;
   margin-top: 1.5rem;
@@ -41,7 +41,6 @@
   margin-top: 1.5rem;
 }
 .Documentation {
-  color: var(--gray-1);
   display: block;
 }
 .Documentation p {
@@ -52,7 +51,6 @@
   margin-top: 1.5rem;
 }
 .Documentation a {
-  color: var(--turq-dark);
   text-decoration: none;
 }
 .Documentation a:hover {
@@ -85,30 +83,18 @@
 .Documentation ul ul {
   padding-left: 2em;
 }
-.Documentation code,
-.Documentation pre,
-.Documentation textarea {
-  background-color: var(--gray-10);
-  border: 0.0625rem solid var(--gray-7);
-  border-radius: 0.3em;
-  line-height: 1.375rem;
-  line-height: 1.25rem;
-  margin: 0;
-  overflow-x: auto;
-  padding: 0.625rem;
-  tab-size: 4;
-}
+
 .Documentation pre + pre {
   margin-top: 0.625rem;
 }
 
 .Documentation .Documentation-declarationLink + pre {
   border-radius: 0 0 0.3em 0.3em;
-  border-top: 0.03125rem solid var(--gray-8);
+  border-top: var(--border);
   margin-top: 0;
 }
 .Documentation pre .comment {
-  color: var(--green);
+  color: var(--color-code-comment);
 }
 
 .Documentation-toc,
@@ -118,7 +104,7 @@
   padding-bottom: 0;
 }
 .Documentation-empty {
-  color: var(--gray-3);
+  color: var(--color-text-subtle);
   margin-top: -0.5rem;
 }
 @media only screen and (min-width: 64rem) {
@@ -169,7 +155,8 @@
   justify-content: space-between;
 }
 .Documentation-sinceVersion {
-  color: var(--gray-5);
+  color: var(--color-text-subtle);
+  font-size: 0.9375rem;
   font-weight: 400;
 }
 
@@ -179,7 +166,7 @@
 }
 
 .Documentation-build {
-  color: var(--gray-3);
+  color: var(--color-text-subtle);
   padding-top: 1.5rem;
   text-align: right;
 }
@@ -195,8 +182,8 @@
   margin-top: 0.625rem;
 }
 .Documentation-declarationLink {
-  background-color: var(--gray-10);
-  border: 0.0625rem solid var(--gray-7);
+  background-color: var(--color-background-accented);
+  border: var(--border);
   border-bottom: none;
   border-radius: 0.3em 0.3em 0 0;
   display: block;
@@ -248,7 +235,6 @@
   margin-top: -0.25rem;
 }
 .Documentation-exampleDetailsBody textarea {
-  border: 0.0625rem solid var(--gray-7);
   height: 100%;
   outline: none;
   overflow: hidden;
@@ -272,14 +258,14 @@
   margin: 0 0 0.5rem;
 }
 .Documentation-exampleDetailsHeader {
-  color: var(--turq-dark);
+  color: var(--color-brand-primary);
   cursor: pointer;
   margin-bottom: 2rem;
   outline: none;
   text-decoration: none;
 }
 .Documentation-exampleOutputLabel {
-  color: var(--gray-4);
+  color: var(--color-text-subtle);
 }
 .Documentation-exampleError {
   color: var(--pink);
@@ -300,15 +286,16 @@
   margin-left: 0.5rem;
 }
 .Documentation-deprecatedBody {
-  color: var(--gray-3);
+  color: var(--color-text-subtle);
+  font-size: 0.87rem;
   font-weight: 400;
   margin-left: 0.25rem;
   margin-right: 0.5rem;
 }
 .Documentation-deprecatedTag {
-  background-color: var(--gray-6);
+  background-color: var(--color-border);
   border-radius: 0.125rem;
-  color: var(--white);
+  color: var(--color-text-inverted);
   font-size: 0.75rem;
   font-weight: normal;
   line-height: 1.375;
@@ -322,23 +309,23 @@
   gap: 0.5rem;
 }
 .Documentation-deprecatedDetails {
-  color: var(--gray-4);
+  color: var(--color-text-subtle);
 }
 .Documentation-deprecatedDetails a {
-  color: var(--gray-4);
+  color: var(--color-text-subtle);
 }
 .Documentation-deprecatedDetails[open] {
-  color: var(--gray-1);
+  color: var(--color-text);
 }
 .Documentation-deprecatedDetails[open] a {
-  color: var(--turq-dark);
+  color: var(--color-brand-primary);
 }
 .Documentation-deprecatedDetails .Documentation-deprecatedBody::after {
-  color: var(--turq-dark);
+  color: var(--color-brand-primary);
   content: 'Show';
 }
 .Documentation-deprecatedDetails[open] .Documentation-deprecatedBody::after {
-  color: var(--turq-dark);
+  color: var(--color-brand-primary);
   content: 'Hide';
 }
 .Documentation-deprecatedDetails > summary {
@@ -349,7 +336,6 @@
   opacity: 1;
 }
 .Documentation-deprecatedItemBody {
-  background-color: var(--yellow-light);
   padding: 1rem 1rem 0.5rem 1rem;
 }
 .Documentation-deprecatedMessage {

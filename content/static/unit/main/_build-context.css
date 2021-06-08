@@ -6,21 +6,21 @@
 
 .UnitBuildContext-titleContext label,
 .UnitBuildContext-singleContext {
-  color: var(--gray-4);
+  color: var(--color-text-subtle);
   font-size: 0.875rem;
 }
 .UnitBuildContext-singleContext {
   padding: 0.35rem 0;
 }
 .UnitBuildContext-titleContext select {
-  border-color: var(--gray-7);
-  color: var(--gray-4);
+  border-color: var(--color-border);
+  color: var(--color-text-subtle);
   margin-left: 0.25rem;
   min-width: 6rem;
   padding: 0.25rem 0.125rem;
 }
 .UnitBuildContext-titleContext option {
-  color: var(--gray-4);
+  color: var(--color-text-subtle);
 }
 
 .UnitDoc .UnitBuildContext-titleContext {

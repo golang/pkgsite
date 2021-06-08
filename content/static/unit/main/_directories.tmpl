@@ -39,18 +39,19 @@
       <div class="UnitDirectories-pathCell">
         <div>
           {{- if .Subdirectories -}}
-            <button type="button" class="UnitDirectories-toggleButton"
+            <button type="button" class="go-Button go-Button--inline UnitDirectories-toggleButton"
                 aria-expanded="false"
                 aria-label="{{len .Subdirectories}} more from"
                 data-aria-controls="{{range .Subdirectories}}{{$prefix}}-{{.Suffix}} {{end}}"
                 data-aria-labelledby="{{$prefix}}-button {{$prefix}}"
                 data-id="{{$prefix}}-button">
-              <img alt="" src="/static/img/pkg-icon-arrowRight_24x24.svg" height="24" width="24">
+              <img class="go-Icon" height="24" width="24" src="/static/_icon/arrow_right_gm_grey_24dp.svg"
+                  alt="">
             </button>
           {{- end -}}
           {{- if .Root -}}
             <a href="{{.Root.URL}}">{{.Root.Suffix}}</a>
-            {{if .Root.IsModule}}<span class="UnitDirectories-badge">module</span>{{end}}
+            {{if .Root.IsModule}}<span class="go-Chip go-Chip--inverted">module</span>{{end}}
           </div>
           <div class="UnitDirectories-mobileSynopsis">{{.Root.Synopsis}}</div>
         </div>
@@ -68,7 +69,7 @@
         <div class="UnitDirectories-subdirectory">
           <span>
             <a href="{{.URL}}">{{.Suffix}}</a>
-            {{if .IsModule}}<span class="UnitDirectories-badge">Module</span>{{end}}
+            {{if .IsModule}}<span class="go-Chip go-Chip--inverted">Module</span>{{end}}
           </span>
           <div class="UnitDirectories-mobileSynopsis">{{.Synopsis}}</div>
         </div>

@@ -26,6 +26,6 @@
   vertical-align: text-top;
 }
 
-[data-theme='dark'] .go-Message--warning > .go-Icon {
+[data-theme='dark'] .go-Message--warning .go-Icon {
   filter: none;
 }

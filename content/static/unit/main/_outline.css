@@ -9,22 +9,22 @@
   margin-bottom: 1rem;
 }
 .UnitOutline-jumpTo button {
-  background-color: var(--white);
-  border: 0.0625rem solid var(--gray-8);
+  background-color: var(--color-background);
+  border: var(--border);
   border-radius: 0.25rem;
-  color: var(--gray-4);
+  color: var(--color-text-subtle);
   cursor: pointer;
   height: 2rem;
-  padding-left: 1.5rem;
+  padding-left: 1rem;
   text-align: left;
   width: 100%;
 }
 .UnitOutline-jumpTo button:hover:not([disabled]) {
-  border-color: var(--gray-7);
+  border-color: var(--color-border);
 }
 .UnitOutline-jumpTo::after {
   align-self: center;
-  background-color: var(--gray-9);
+  background-color: var(--color-background-accented);
   border-radius: 0.5rem;
   color: var(--gray-6);
   content: 'f';
@@ -35,17 +35,6 @@
   right: 0.75rem;
   text-align: center;
   width: 1.5rem;
-}
-.UnitOutline-jumpTo::before {
-  align-self: center;
-  border-radius: 0.5rem;
-  color: var(--gray-6);
-  content: url('/static/img/pkg-icon-jumpTo_16x16.svg');
-  font-size: 0.75rem;
-  left: 0.4rem;
-  position: absolute;
-  text-align: center;
-  top: 0.5rem;
 }
 .UnitOutline-jumpToInput:disabled {
   background-color: var(--gray-9);

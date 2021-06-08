@@ -22,6 +22,7 @@
   --blue: #bfeaf4;
   --black: #000;
   --green: #3a6e11;
+  --green-light: #5fda64;
   --pink: #ce3262;
   --pink-light: #fdecf1;
   --purple: #542c7d;
@@ -42,6 +43,7 @@
   --color-text: var(--gray-1);
   --color-text-subtle: var(--gray-4);
   --color-text-inverted: var(--white);
+  --color-code-comment: var(--green);
 
   /* Interactive Colors */
   --color-input: var(--color-background);
@@ -70,4 +72,5 @@
   --color-border: var(--gray-4);
   --color-text: var(--white);
   --color-text-subtle: var(--gray-7);
+  --color-code-comment: var(--green-light);
 }

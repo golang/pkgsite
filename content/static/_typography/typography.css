@@ -107,13 +107,14 @@ code,
 pre,
 textarea.code {
   font-family: SFMono-Regular, Consolas, Liberation Mono, Menlo, monospace;
-  font-size: 0.84375rem;
+  font-size: 0.875rem;
 }
 pre,
 textarea.code {
   background-color: var(--color-background-accented);
   border: var(--border);
   border-radius: var(--border-radius);
+  color: var(--color-text);
   overflow-x: auto;
   padding: 0.625rem;
   tab-size: 4;

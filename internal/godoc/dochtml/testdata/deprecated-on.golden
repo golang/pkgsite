@@ -81,7 +81,7 @@ func <a class="Documentation-source" href="src">BadF</a>
 </span>
 </h4>
 </summary>
-<div class="Documentation-deprecatedItemBody">
+<div class="go-Message go-Message--warning Documentation-deprecatedItemBody">
 <div class="Documentation-deprecatedMessage">
 <img class="go-Icon" height="24" width="24" src="/static/_icon/alert_gm_grey_24dp.svg" alt="">
 This function has been deprecated.
@@ -118,7 +118,7 @@ type <a class="Documentation-source" href="src">BadT</a>
 </span>
 </h4>
 </summary>
-<div class="Documentation-deprecatedItemBody">
+<div class="go-Message go-Message--warning Documentation-deprecatedItemBody">
 <div class="Documentation-deprecatedMessage">
 <img class="go-Icon" height="24" width="24" src="/static/_icon/alert_gm_grey_24dp.svg" alt="">
 This type has been deprecated.
@@ -143,7 +143,7 @@ func <a class="Documentation-source" href="src">NewBadTBad</a>
 </span>
 </h4>
 </summary>
-<div class="Documentation-deprecatedItemBody">
+<div class="go-Message go-Message--warning Documentation-deprecatedItemBody">
 <div class="Documentation-deprecatedMessage">
 <img class="go-Icon" height="24" width="24" src="/static/_icon/alert_gm_grey_24dp.svg" alt="">
 This function has been deprecated.
@@ -177,7 +177,7 @@ func (BadT) <a class="Documentation-source" href="src">BadM</a>
 </span>
 </h4>
 </summary>
-<div class="Documentation-deprecatedItemBody">
+<div class="go-Message go-Message--warning Documentation-deprecatedItemBody">
 <div class="Documentation-deprecatedMessage">
 <img class="go-Icon" height="24" width="24" src="/static/_icon/alert_gm_grey_24dp.svg" alt="">
 This method has been deprecated.
@@ -223,7 +223,7 @@ func <a class="Documentation-source" href="src">NewGoodTBad</a>
 </span>
 </h4>
 </summary>
-<div class="Documentation-deprecatedItemBody">
+<div class="go-Message go-Message--warning Documentation-deprecatedItemBody">
 <div class="Documentation-deprecatedMessage">
 <img class="go-Icon" height="24" width="24" src="/static/_icon/alert_gm_grey_24dp.svg" alt="">
 This function has been deprecated.
@@ -258,7 +258,7 @@ func (GoodT) <a class="Documentation-source" href="src">BadM</a>
 </span>
 </h4>
 </summary>
-<div class="Documentation-deprecatedItemBody">
+<div class="go-Message go-Message--warning Documentation-deprecatedItemBody">
 <div class="Documentation-deprecatedMessage">
 <img class="go-Icon" height="24" width="24" src="/static/_icon/alert_gm_grey_24dp.svg" alt="">
 This method has been deprecated.

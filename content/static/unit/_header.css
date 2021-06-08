@@ -43,37 +43,13 @@
   width: 100%;
 }
 .UnitHeader-overflowSelect option {
-  color: var(--gray-1);
+  color: var(--color-text);
 }
 
-.UnitHeader-banners {
-  z-index: 1;
-}
-.UnitHeader-banner {
-  display: flex;
-  padding: 0.75rem 0;
-}
-.UnitHeader-bannerContent {
-  align-items: center;
-  display: flex;
-}
-.UnitHeader-banner--majorVersion,
-.UnitHeader-banner--redirected {
-  background-color: var(--gray-9);
-}
-.UnitHeader-banner--deprecated,
-.UnitHeader-banner--retracted {
-  background-color: var(--yellow);
-}
-.UnitHeader-banner-icon {
-  color: var(--gray-3);
-  margin-right: 0.5rem;
-  width: 1rem;
-}
 .UnitHeader-versionBadge,
 .DetailsHeader-badge {
   border-radius: unset;
-  color: var(--white);
+  color: var(--color-text-inverted);
   font-size: 0.7rem;
   line-height: 0.85rem;
   margin: -1rem 0 -1rem 0.5rem;

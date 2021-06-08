@@ -43,7 +43,7 @@
 }
 
 .UnitDetails :target:not(details, h2) {
-  background-color: var(--blue);
+  background-color: var(--color-background-highlighted);
   padding: 0.25rem;
 }
 .UnitDetails-meta {
@@ -57,8 +57,8 @@
   }
 }
 .UnitDetails-contentEmpty {
-  background-color: var(--gray-10);
-  color: var(--gray-2);
+  background-color: var(--color-background-accented);
+  color: var(--color-text-subtle);
   height: 15rem;
   padding-top: 1rem;
   text-align: center;

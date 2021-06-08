@@ -20,7 +20,7 @@
   opacity: 1;
 }
 .UnitReadme-title {
-  border-bottom: 0.0625rem solid var(--gray-8);
+  border-bottom: var(--border);
   font-size: 1.375rem;
   padding-bottom: 1rem;
 }
@@ -41,14 +41,14 @@
 .UnitReadme-expandLink {
   background: none;
   border: none;
-  color: var(--turq-dark);
+  color: var(--color-brand-primary);
   cursor: pointer;
   padding: 0;
 }
 .UnitReadme-collapseLink {
   background: none;
   border: none;
-  color: var(--turq-dark);
+  color: var(--color-brand-primary);
   cursor: pointer;
   display: none;
   padding: 0;

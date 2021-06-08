@@ -209,61 +209,59 @@
 {{end}}
 
 {{define "unit-header-banners"}}
-  <div class="UnitHeader-banners">
-    {{with .RedirectedFromPath}}
-      <div class="go-Message go-Message--notice">
-        <img
-          class="go-Icon"
-          height="24"
-          width="24"
-          src="/static/_icon/info_gm_grey_24dp.svg"
-          alt="Notice"
-        />&nbsp; Redirected from <span data-test-id="redirected-banner-text">{{.}}</span>.
-      </div>
-    {{end}}
-    {{if .Unit.Deprecated}}
-      <div class="go-Message go-Message--warning">
-        <img
-          class="go-Icon"
-          height="24"
-          width="24"
-          src="/static/_icon/alert_gm_grey_24dp.svg"
-          alt="Warning"
-        />&nbsp; <strong>Deprecated</strong>
-        {{- with .Unit.DeprecationComment -}}
-          <strong>:</strong>&nbsp;{{.}}
-        {{- end -}}
-      </div>
-    {{end}}
-    {{if .Unit.Retracted}}
-      <div class="go-Message go-Message--warning">
-        <img
-          class="go-Icon"
-          height="24"
-          width="24"
-          src="/static/_icon/alert_gm_grey_24dp.svg"
-          alt="Warning"
-        />&nbsp; <strong>Retracted</strong>
-        {{- with .Unit.RetractionRationale -}}
-          <strong>:</strong>&nbsp;{{.}}
-        {{- end -}}
-      </div>
-    {{end}}
-    {{if .LatestMajorVersion}}
-      <div class="go-Message go-Message--notice" data-test-id="UnitHeader-majorVersionBanner">
-        <img
-          class="go-Icon"
-          height="24"
-          width="24"
-          src="/static/_icon/info_gm_grey_24dp.svg"
-          alt="Notice"
-        />&nbsp; The highest tagged major version is
-        <a href="/{{.LatestMajorVersionURL}}" data-gtmc="banner link" aria-label="Go to Latest Major Version">
-          {{- .LatestMajorVersion -}}
-        </a>.
-      </div>
-    {{end}}
-  </div>
+  {{with .RedirectedFromPath}}
+    <div class="go-Message go-Message--notice">
+      <img
+        class="go-Icon"
+        height="24"
+        width="24"
+        src="/static/_icon/info_gm_grey_24dp.svg"
+        alt="Notice"
+      />&nbsp; Redirected from <span data-test-id="redirected-banner-text">{{.}}</span>.
+    </div>
+  {{end}}
+  {{if .Unit.Deprecated}}
+    <div class="go-Message go-Message--warning">
+      <img
+        class="go-Icon"
+        height="24"
+        width="24"
+        src="/static/_icon/alert_gm_grey_24dp.svg"
+        alt="Warning"
+      />&nbsp; <strong>Deprecated</strong>
+      {{- with .Unit.DeprecationComment -}}
+        <strong>:</strong>&nbsp;{{.}}
+      {{- end -}}
+    </div>
+  {{end}}
+  {{if .Unit.Retracted}}
+    <div class="go-Message go-Message--warning">
+      <img
+        class="go-Icon"
+        height="24"
+        width="24"
+        src="/static/_icon/alert_gm_grey_24dp.svg"
+        alt="Warning"
+      />&nbsp; <strong>Retracted</strong>
+      {{- with .Unit.RetractionRationale -}}
+        <strong>:</strong>&nbsp;{{.}}
+      {{- end -}}
+    </div>
+  {{end}}
+  {{if .LatestMajorVersion}}
+    <div class="go-Message go-Message--notice" data-test-id="UnitHeader-majorVersionBanner">
+      <img
+        class="go-Icon"
+        height="24"
+        width="24"
+        src="/static/_icon/info_gm_grey_24dp.svg"
+        alt="Notice"
+      />&nbsp; The highest tagged major version is
+      <a href="/{{.LatestMajorVersionURL}}" data-gtmc="banner link" aria-label="Go to Latest Major Version">
+        {{- .LatestMajorVersion -}}
+      </a>.
+    </div>
+  {{end}}
 {{end}}
 
 {{define "severity-toggletip"}}
