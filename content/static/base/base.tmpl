@@ -44,13 +44,19 @@
       loadScript("/static/base/base.js");
     </script>
     {{if .UseSiteWrapper}}
-      <div class="Site Site--wide Site--redesign"><div class="Site-content">
+      <div class="Site Site--wide Site--redesign">
     {{end}}
     {{template "header" .}}
-    {{template "main" .}}
+    {{if .UseSiteWrapper}}
+      <div class="Site-content">
+    {{end}}
+      {{template "main" .}}
+    {{if .UseSiteWrapper}}
+      </div>
+    {{end}}
     {{template "footer" .}}
     {{if .UseSiteWrapper}}
-      </div></div>
+      </div>
     {{end}}
     {{if .GoogleTagManagerID}}
       <script>

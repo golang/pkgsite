@@ -129,6 +129,7 @@ pre,
 }
 .Site-content {
   flex: 1;
+  margin-bottom: 5rem;
   padding: 0 1rem;
 }
 .Site--redesign.Site--wide .Site-content {
