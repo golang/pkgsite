@@ -75,10 +75,7 @@ func (s *Server) doIndexPage(w http.ResponseWriter, r *http.Request) (err error)
 	var logsURL string
 	if s.cfg.OnGKE() {
 		env := s.cfg.DeploymentEnvironment()
-		cluster := "pkgsite"
-		if env != "exp" {
-			cluster = env + "-" + cluster
-		}
+		cluster := env + "-" + "pkgsite"
 		logsURL = `https://pantheon.corp.google.com/logs/query;query=resource.type%3D%22k8s_container%22%20resource.labels.cluster_name%3D%22` +
 			cluster +
 			`%22%20resource.labels.container_name%3D%22worker%22?project=` +
