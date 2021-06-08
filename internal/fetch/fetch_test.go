@@ -34,7 +34,7 @@ import (
 var testTimeout = 30 * time.Second
 
 var (
-	templateSource = template.TrustedSourceFromConstant("../../content/static/html/doc")
+	templateSource = template.TrustedSourceFromConstant("../../content/static/dochtml")
 	testModules    []*proxy.Module
 )
 

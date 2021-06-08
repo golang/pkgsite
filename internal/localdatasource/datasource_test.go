@@ -81,7 +81,7 @@ func setup(t *testing.T) (context.Context, func(), *DataSource, error) {
 		},
 	}
 
-	dochtml.LoadTemplates(template.TrustedSourceFromConstant("../../content/static/html/doc"))
+	dochtml.LoadTemplates(template.TrustedSourceFromConstant("../../content/static/dochtml"))
 	datasource = New()
 	ctx, cancel = context.WithTimeout(context.Background(), 20*time.Second)
 	for _, module := range modules {

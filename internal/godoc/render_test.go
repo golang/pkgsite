@@ -20,7 +20,7 @@ import (
 	"golang.org/x/pkgsite/internal/testing/htmlcheck"
 )
 
-var templateSource = template.TrustedSourceFromConstant("../../content/static/html/doc")
+var templateSource = template.TrustedSourceFromConstant("../../content/static/dochtml")
 
 var (
 	in      = htmlcheck.In

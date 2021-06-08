@@ -81,8 +81,7 @@ func NewServer(scfg ServerConfig) (_ *Server, err error) {
 	if err != nil {
 		return nil, fmt.Errorf("error parsing templates: %v", err)
 	}
-	docTemplateDir := template.TrustedSourceJoin(templateDir, template.TrustedSourceFromConstant("html"),
-		template.TrustedSourceFromConstant("doc"))
+	docTemplateDir := template.TrustedSourceJoin(templateDir, template.TrustedSourceFromConstant("dochtml"))
 	dochtml.LoadTemplates(docTemplateDir)
 	s := &Server{
 		getDataSource:        scfg.DataSourceGetter,

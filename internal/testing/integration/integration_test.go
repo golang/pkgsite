@@ -31,7 +31,7 @@ var (
 )
 
 func TestMain(m *testing.M) {
-	dochtml.LoadTemplates(template.TrustedSourceFromConstant("../../../content/static/html/doc"))
+	dochtml.LoadTemplates(template.TrustedSourceFromConstant("../../../content/static/dochtml"))
 	testModules = proxy.LoadTestModules("../../proxy/testdata")
 	postgres.RunDBTests("discovery_integration_test", m, &testDB)
 }
