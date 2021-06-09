@@ -379,19 +379,6 @@ func TestReadme(t *testing.T) {
 			},
 		},
 		{
-			name: "non-text content is removed from outline text",
-			unit: unit,
-			readme: &internal.Readme{
-				Filepath: "README.md",
-				Contents: `# Heading [![Image](file.svg)](link.html)
-				`,
-			},
-			wantHTML: `<h3 class="h1" id="readme-heading">Heading <a href="https://github.com/valid/module_name/blob/v1.0.0/link.html" rel="nofollow"><img src="https://github.com/valid/module_name/raw/v1.0.0/file.svg" alt="Image"/></a></h3>`,
-			wantOutline: []*Heading{
-				{Level: 1, Text: "Heading ", ID: "readme-heading"},
-			},
-		},
-		{
 			name: "text is extracted from headings that contain only non-text nodes",
 			unit: unit,
 			readme: &internal.Readme{

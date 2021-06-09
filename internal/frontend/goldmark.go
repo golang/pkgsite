@@ -282,23 +282,10 @@ func (e *extractTOC) Transform(node *ast.Document, reader text.Reader, pc parser
 	var headings []*Heading
 	err := ast.Walk(node, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
 		if n.Kind() == ast.KindHeading && entering {
-			var buffer bytes.Buffer
-			for c := n.FirstChild(); c != nil; c = c.NextSibling() {
-				// We keep only text content from the headings in the first pass.
-				if c.Kind() == ast.KindText {
-					buffer.Write(c.Text(reader.Source()))
-				}
-			}
-			// If the buffer is empty we take the text content from non-text nodes.
-			if buffer.Len() == 0 {
-				for c := n.FirstChild(); c != nil; c = c.NextSibling() {
-					buffer.Write(c.Text(reader.Source()))
-				}
-			}
 			heading := n.(*ast.Heading)
 			section := &Heading{
 				Level: heading.Level,
-				Text:  buffer.String(),
+				Text:  string(n.Text(reader.Source())),
 			}
 			if id, ok := heading.AttributeString("id"); ok {
 				section.ID = string(id.([]byte))
