@@ -173,16 +173,6 @@ func TestModuleInfo(t *testing.T) {
 			"https://github.com/googleapis/google-cloud-go/raw/spanner/v1.0.0/spanner/doc.go",
 		},
 		{
-			"vanity for bitbucket",
-			"badc0de.net/pkg/glagolitic", "v0.0.0-20180930175637-92f736eb02d6", "doc.go",
-
-			"https://bitbucket.org/ivucica/go-glagolitic",
-			"https://bitbucket.org/ivucica/go-glagolitic/src/92f736eb02d6",
-			"https://bitbucket.org/ivucica/go-glagolitic/src/92f736eb02d6/doc.go",
-			"https://bitbucket.org/ivucica/go-glagolitic/src/92f736eb02d6/doc.go#lines-1",
-			"https://bitbucket.org/ivucica/go-glagolitic/raw/92f736eb02d6/doc.go",
-		},
-		{
 			"vanity for googlesource.com",
 			"cuelang.org/go", "v0.0.9", "cuego/doc.go",
 
@@ -261,16 +251,6 @@ func TestModuleInfo(t *testing.T) {
 			"https://git.fd.io/govpp/tree/doc.go?id=f04939006063",
 			"https://git.fd.io/govpp/tree/doc.go?id=f04939006063#n1",
 			"https://git.fd.io/govpp/plain/doc.go?id=f04939006063",
-		},
-		{
-			"gitea",
-			"gitea.com/azhai/xorm", "v1.0.3", "log/logger.go",
-
-			"https://gitea.com/azhai/xorm",
-			"https://gitea.com/azhai/xorm/src/tag/v1.0.3",
-			"https://gitea.com/azhai/xorm/src/tag/v1.0.3/log/logger.go",
-			"https://gitea.com/azhai/xorm/src/tag/v1.0.3/log/logger.go#L1",
-			"https://gitea.com/azhai/xorm/raw/tag/v1.0.3/log/logger.go",
 		},
 		{
 			"gogs",
