@@ -113,6 +113,9 @@ func upsertPath(ctx context.Context, tx *database.DB, path string) (id int, err 
 func upsertPaths(ctx context.Context, db *database.DB, paths []string) (pathToID map[string]int, err error) {
 	defer derrors.WrapStack(&err, "upsertPaths(%d paths)", len(paths))
 
+	// Read all existing paths for this module, to avoid a large bulk upsert.
+	// (We've seen these bulk upserts hang for so long that they time out (10
+	// minutes)).
 	pathToID = map[string]int{}
 	collect := func(rows *sql.Rows) error {
 		var (

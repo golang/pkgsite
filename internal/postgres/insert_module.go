@@ -439,20 +439,21 @@ func (pdb *DB) insertUnits(ctx context.Context, tx *database.DB, m *internal.Mod
 // ID in the paths table.
 // Should be run inside a transaction.
 func insertPaths(ctx context.Context, tx *database.DB, m *internal.Module) (pathToID map[string]int, err error) {
-	// Read all existing paths for this module, to avoid a large bulk upsert.
-	// (We've seen these bulk upserts hang for so long that they time out (10
-	// minutes)).
 	curPathsSet := map[string]bool{}
 	for _, u := range m.Units {
 		curPathsSet[u.Path] = true
 		curPathsSet[internal.V1Path(u.Path, m.ModulePath)] = true
 		curPathsSet[internal.SeriesPathForModule(m.ModulePath)] = true
 	}
-	var curPaths []string
-	for p := range curPathsSet {
-		curPaths = append(curPaths, p)
+	return upsertPaths(ctx, tx, stringSetToSlice(curPathsSet))
+}
+
+func stringSetToSlice(m map[string]bool) []string {
+	var s []string
+	for e := range m {
+		s = append(s, e)
 	}
-	return upsertPaths(ctx, tx, curPaths)
+	return s
 }
 
 func insertUnits(ctx context.Context, db *database.DB, unitValues []interface{}) (pathIDToUnitID map[int]int, err error) {
@@ -574,11 +575,41 @@ func getDocIDsForPath(ctx context.Context, db *database.DB,
 	return pathToDocIDToDoc, nil
 }
 
-func insertImports(ctx context.Context, db *database.DB,
+func insertImports(ctx context.Context, tx *database.DB,
 	paths []string,
 	pathToUnitID map[string]int,
 	pathToImports map[string][]string) (err error) {
 	defer derrors.WrapStack(&err, "insertImports")
+
+	// Insert into package_imports. This table is going to go away soon,
+	// but for now it is still the table we read from.
+	var pkgImportValues []interface{}
+	for _, pkgPath := range paths {
+		imports, ok := pathToImports[pkgPath]
+		if !ok {
+			continue
+		}
+		unitID := pathToUnitID[pkgPath]
+		for _, toPath := range imports {
+			pkgImportValues = append(pkgImportValues, unitID, toPath)
+		}
+	}
+	pkgImportCols := []string{"unit_id", "to_path"}
+	if err := tx.BulkUpsert(ctx, "package_imports", pkgImportCols, pkgImportValues, pkgImportCols); err != nil {
+		return err
+	}
+
+	// Insert into imports. This will eventually replace package_imports.
+	importPathSet := map[string]bool{}
+	for _, pkgPath := range paths {
+		for _, imp := range pathToImports[pkgPath] {
+			importPathSet[imp] = true
+		}
+	}
+	pathToID, err := upsertPaths(ctx, tx, stringSetToSlice(importPathSet))
+	if err != nil {
+		return err
+	}
 
 	var importValues []interface{}
 	for _, pkgPath := range paths {
@@ -588,11 +619,15 @@ func insertImports(ctx context.Context, db *database.DB,
 		}
 		unitID := pathToUnitID[pkgPath]
 		for _, toPath := range imports {
-			importValues = append(importValues, unitID, toPath)
+			pathID, ok := pathToID[toPath]
+			if !ok {
+				return fmt.Errorf("no ID for path %q; shouldn't happen", toPath)
+			}
+			importValues = append(importValues, unitID, pathID)
 		}
 	}
-	importCols := []string{"unit_id", "to_path"}
-	return db.BulkUpsert(ctx, "package_imports", importCols, importValues, importCols)
+	importCols := []string{"unit_id", "to_path_id"}
+	return tx.BulkUpsert(ctx, "imports", importCols, importValues, importCols)
 }
 
 func insertReadmes(ctx context.Context, db *database.DB,
