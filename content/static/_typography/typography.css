@@ -9,6 +9,7 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif,
     'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 1rem;
+  line-height: normal;
 }
 h1 {
   font-size: 1.5rem;
@@ -108,6 +109,7 @@ pre,
 textarea.code {
   font-family: SFMono-Regular, Consolas, Liberation Mono, Menlo, monospace;
   font-size: 0.875rem;
+  line-height: 1.5em;
 }
 pre,
 textarea.code {
