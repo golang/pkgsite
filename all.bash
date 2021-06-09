@@ -180,10 +180,7 @@ run_build_static() {
 }
 
 run_npm() {
-  npmcmd="./devtools/ci/docker_nodejs.sh npm"
-  if [[ -x "$(command -v npm)" ]]; then
-    npmcmd="npm"
-  fi
+  npmcmd=${GO_DISCOVERY_NPM_CMD:-"./devtools/ci/nodejs.sh npm"}
   # Run npm install if node_modules directory does not exist.
   if [ ! -d "node_modules" ]; then
     runcmd $npmcmd install --quiet
@@ -192,10 +189,7 @@ run_npm() {
 }
 
 run_npx() {
-  npxcmd="./devtools/ci/docker_nodejs.sh npx"
-  if [[ -x "$(command -v npx)" ]]; then
-    npxcmd="npx"
-  fi
+  npxcmd=${GO_DISCOVERY_NPX_CMD:-"./devtools/ci/nodejs.sh npx"}
   # Run npm install if node_modules directory does not exist.
   if [ ! -d "node_modules" ]; then
     run_npm install --quiet
@@ -213,11 +207,7 @@ run_prettier() {
   if [[ $files = '' ]]; then
     files=$prettier_file_globs
   fi
-  if [[ -x "$(command -v npx)" ]]; then
-    runcmd npx prettier --write $files
-  else
-    runcmd ./devtools/ci/docker_nodejs.sh npx prettier --write $files
-  fi
+  run_npx prettier --write $files
 }
 
 go_linters() {
