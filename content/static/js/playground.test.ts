@@ -176,4 +176,22 @@ describe('PlaygroundExampleController', () => {
     });
     expect(el('.Documentation-exampleOutput').textContent).toContain('// mocked error');
   });
+
+  it('escapes example output', async () => {
+    mocked(window.fetch).mockResolvedValue({
+      json: () =>
+        Promise.resolve({
+          Events: [{ Message: '\u003cinput required\u003e', Kind: 'stdout', Delay: 0 }],
+          Errors: null,
+        }),
+    } as Response);
+    el('[aria-label="Run Code"]').click();
+    await flushPromises();
+
+    expect(window.fetch).toHaveBeenCalledWith('/play/compile', {
+      body: JSON.stringify({ body: codeSnippet, version: 2 }),
+      method: 'POST',
+    });
+    expect(el('.Documentation-exampleOutput').innerHTML).toBe('&lt;input required&gt;');
+  });
 });

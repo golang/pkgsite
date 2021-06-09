@@ -165,7 +165,7 @@ export class PlaygroundExampleController {
    */
   private setOutputText(output: string) {
     if (this.outputEl) {
-      this.outputEl.innerHTML = output;
+      this.outputEl.textContent = output;
     }
   }
 
