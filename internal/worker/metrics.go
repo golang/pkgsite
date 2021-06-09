@@ -56,6 +56,19 @@ var (
 		Aggregation: view.LastValue(),
 		Description: "number of unprocessed modules",
 	}
+
+	unprocessedNewModules = stats.Int64(
+		"go-discovery/unprocessed_new_modules_count",
+		"Number of new unprocessed modules (status = 0 or 500).",
+		stats.UnitDimensionless,
+	)
+
+	UnprocessedNewModules = &view.View{
+		Name:        "go-discovery/unprocessed_new_modules/count",
+		Measure:     unprocessedNewModules,
+		Aggregation: view.LastValue(),
+		Description: "number of unprocessed new modules",
+	}
 )
 
 func recordEnqueue(ctx context.Context, status int) {
@@ -68,6 +81,7 @@ func recordProcessingLag(ctx context.Context, d time.Duration) {
 	stats.Record(ctx, processingLag.M(d.Milliseconds()/1000))
 }
 
-func recordUnprocessedModules(ctx context.Context, n int) {
-	stats.Record(ctx, unprocessedModules.M(int64(n)))
+func recordUnprocessedModules(ctx context.Context, total, new int) {
+	stats.Record(ctx, unprocessedModules.M(int64(total)))
+	stats.Record(ctx, unprocessedNewModules.M(int64(new)))
 }

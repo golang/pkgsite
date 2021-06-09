@@ -401,12 +401,12 @@ func (s *Server) computeProcessingLag(ctx context.Context) {
 }
 
 func (s *Server) computeUnprocessedModules(ctx context.Context) {
-	n, err := s.db.NumUnprocessedModules(ctx)
+	total, new, err := s.db.NumUnprocessedModules(ctx)
 	if err != nil {
-		log.Warningf(ctx, "NumUnprocessedModules: %v", err)
+		log.Warningf(ctx, "%v", err)
 		return
 	}
-	recordUnprocessedModules(ctx, n)
+	recordUnprocessedModules(ctx, total, new)
 }
 
 // handleEnqueue queries the module_version_states table for the next batch of
