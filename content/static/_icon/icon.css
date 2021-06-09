@@ -21,3 +21,7 @@
   filter: brightness(0) saturate(100%) invert(100%) sepia(97%) saturate(13%) hue-rotate(245deg)
     brightness(103%) contrast(107%);
 }
+[data-theme='dark'] .go-Icon--accented {
+  filter: brightness(0) invert(57%) sepia(63%) saturate(4864%) hue-rotate(160deg) brightness(100%)
+    contrast(101%);
+}
