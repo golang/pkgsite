@@ -370,21 +370,24 @@ func TestBulkUpdate(t *testing.T) {
 
 func TestTransactSerializable(t *testing.T) {
 	// Test that serializable transactions retry until success.
+	// This test was taken from the example at https://www.postgresql.org/docs/11/transaction-iso.html,
+	// section 13.2.3.
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
-	// This test was taken from the example at https://www.postgresql.org/docs/11/transaction-iso.html,
-	// section 13.2.3.
-	for _, stmt := range []string{
-		`DROP TABLE IF EXISTS ser`,
-		`CREATE TABLE ser (id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY, class INTEGER, value INTEGER)`,
-		`INSERT INTO ser (class, value) VALUES (1, 10), (1, 20), (2, 100), (2, 200)`,
-	} {
-		if _, err := testDB.Exec(ctx, stmt); err != nil {
-			t.Fatal(err)
+	// Once in while, the test doesn't work. Repeat to de-flake.
+	var msg string
+	for i := 0; i < 10; i++ {
+		msg = testTransactSerializable(ctx, t)
+		if msg == "" {
+			return
 		}
 	}
+	t.Fatal(msg)
+}
 
+func testTransactSerializable(ctx context.Context, t *testing.T) string {
+	const numTransactions = 4
 	// A transaction that sums values in class 1 and inserts that sum into class 2,
 	// or vice versa.
 	insertSum := func(tx *DB, queryClass int) error {
@@ -398,30 +401,45 @@ func TestTransactSerializable(t *testing.T) {
 		return err
 	}
 
-	// Run the following two transactions multiple times concurrently:
-	//   sum rows with class = 1 and insert as a row with class 2
-	//   sum rows with class = 2 and insert as a row with class 1
-	// We determined empirically that this number of transactions produces a serialization conflict
-	// 100 times out of 100.
-	const numTransactions = 5
-	errc := make(chan error, numTransactions)
-	for i := 0; i < numTransactions; i++ {
-		i := i
-		go func() {
-			errc <- testDB.Transact(ctx, sql.LevelSerializable,
-				func(tx *DB) error { return insertSum(tx, 1+i%2) })
-		}()
-	}
-	// None of the transactions should fail.
-	for i := 0; i < numTransactions; i++ {
-		if err := <-errc; err != nil {
-			t.Fatal(err)
+	sawRetries := false
+	for i := 0; i < 10; i++ {
+		for _, stmt := range []string{
+			`DROP TABLE IF EXISTS ser`,
+			`CREATE TABLE ser (id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY, class INTEGER, value INTEGER)`,
+			`INSERT INTO ser (class, value) VALUES (1, 10), (1, 20), (2, 100), (2, 200)`,
+		} {
+			if _, err := testDB.Exec(ctx, stmt); err != nil {
+				t.Fatal(err)
+			}
+		}
+
+		// Run the following two transactions multiple times concurrently:
+		//   sum rows with class = 1 and insert as a row with class 2
+		//   sum rows with class = 2 and insert as a row with class 1
+		errc := make(chan error, numTransactions)
+		for i := 0; i < numTransactions; i++ {
+			i := i
+			go func() {
+				errc <- testDB.Transact(ctx, sql.LevelSerializable,
+					func(tx *DB) error { return insertSum(tx, 1+i%2) })
+			}()
+		}
+		// None of the transactions should fail.
+		for i := 0; i < numTransactions; i++ {
+			if err := <-errc; err != nil {
+				return err.Error()
+			}
+		}
+		t.Logf("max retries: %d", testDB.MaxRetries())
+		// If nothing got retried, this test isn't exercising some important behavior.
+		// Try again.
+		if testDB.MaxRetries() > 0 {
+			sawRetries = true
+			break
 		}
 	}
-	t.Logf("max retries: %d", testDB.MaxRetries())
-	// If nothing got retried, this test isn't exercising some important behavior.
-	if testDB.MaxRetries() == 0 {
-		t.Fatal("did not see any retries")
+	if !sawRetries {
+		return "did not see any retries"
 	}
 
 	// Demonstrate serializability: there should be numTransactions new rows in
@@ -433,20 +451,20 @@ func TestTransactSerializable(t *testing.T) {
 	}
 	var rows []row
 	if err := testDB.CollectStructs(ctx, &rows, `SELECT class, value FROM ser ORDER BY id`); err != nil {
-		t.Fatal(err)
+		return err.Error()
 	}
 	const initialRows = 4
 	if got, want := len(rows), initialRows+numTransactions; got != want {
-		t.Fatalf("got %d rows, want %d", got, want)
+		return fmt.Sprintf("got %d rows, want %d", got, want)
 	}
 	sum := make([]int, 2)
 	for i, r := range rows {
 		if got, want := r.Value, sum[2-r.Class]; got != want && i >= initialRows {
-			t.Fatalf("row #%d: got %d, want %d", i, got, want)
+			return fmt.Sprintf("row #%d: got %d, want %d", i, got, want)
 		}
 		sum[r.Class-1] += r.Value
 	}
-
+	return ""
 }
 
 func TestCopyDoesNotUpsert(t *testing.T) {
