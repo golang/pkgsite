@@ -43,9 +43,7 @@
   padding-bottom: 1rem;
 }
 .UnitFiles-title img {
-  height: 1.25rem;
   margin: auto 1rem auto 0;
-  width: auto;
 }
 .UnitFiles-fileList {
   column-count: 5;
