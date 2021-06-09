@@ -11,10 +11,10 @@ set -e
 # mounts the pwd into a volume in the container at /pkgsite,
 # and sets the working directory in the container to /pkgsite.
 
-docker run --net=host --rm \
+docker run --net=host --rm -t \
   -e GO_DISCOVERY_E2E_BASE_URL \
   -e GO_DISCOVERY_E2E_AUTHORIZATION \
   -e GO_DISCOVERY_E2E_QUOTA_BYPASS \
   -v `pwd`:/pkgsite \
   -w /pkgsite  \
-  node:15.14.0 $@
+  node:14.17.0 $@
