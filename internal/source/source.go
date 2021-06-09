@@ -257,8 +257,8 @@ func (c *Client) doURL(ctx context.Context, method, url string, only200 bool) (_
 // to the repo root.
 //
 // ModuleInfo may fetch from arbitrary URLs, so it can be slow.
-func ModuleInfo(ctx context.Context, client *Client, modulePath, version string) (info *Info, err error) {
-	defer derrors.Wrap(&err, "source.ModuleInfo(ctx, %q, %q)", modulePath, version)
+func ModuleInfo(ctx context.Context, client *Client, modulePath, v string) (info *Info, err error) {
+	defer derrors.Wrap(&err, "source.ModuleInfo(ctx, %q, %q)", modulePath, v)
 	ctx, span := trace.StartSpan(ctx, "source.ModuleInfo")
 	defer span.End()
 
@@ -266,20 +266,21 @@ func ModuleInfo(ctx context.Context, client *Client, modulePath, version string)
 	// (https://en.wikipedia.org/wiki/Example.com). Treat it as if it used
 	// GitHub templates.
 	if strings.HasPrefix(modulePath, "example.com/") {
-		return NewGitHubInfo("https://"+modulePath, "", version), nil
+		return NewGitHubInfo("https://"+modulePath, "", v), nil
 	}
 
 	if modulePath == stdlib.ModulePath {
-		return newStdlibInfo(version)
+		return newStdlibInfo(v)
 	}
+
 	repo, relativeModulePath, templates, transformCommit, err := matchStatic(modulePath)
 	if err != nil {
-		info, err = moduleInfoDynamic(ctx, client, modulePath, version)
+		info, err = moduleInfoDynamic(ctx, client, modulePath, v)
 		if err != nil {
 			return nil, err
 		}
 	} else {
-		commit, isHash := commitFromVersion(version, relativeModulePath)
+		commit, isHash := commitFromVersion(v, relativeModulePath)
 		if transformCommit != nil {
 			commit = transformCommit(commit, isHash)
 		}
@@ -292,6 +293,9 @@ func ModuleInfo(ctx context.Context, client *Client, modulePath, version string)
 	}
 	if info != nil {
 		adjustVersionedModuleDirectory(ctx, client, info)
+	}
+	if strings.HasPrefix(modulePath, "golang.org/") {
+		adjustGoRepoInfo(info, modulePath, version.IsPseudo(v))
 	}
 	return info, nil
 	// TODO(golang/go#39627): support launchpad.net, including the special case
@@ -314,6 +318,86 @@ func newStdlibInfo(version string) (_ *Info, err error) {
 		commit:    commit,
 		templates: templates,
 	}, nil
+}
+
+// csNonXRepos is a set of repos hosted at https://cs.opensource.google/go,
+// that are not an x/repo.
+var csNonXRepos = map[string]bool{
+	"dl":        true,
+	"proposal":  true,
+	"vscode-go": true,
+}
+
+// csXRepos is the set of repos hosted at https://cs.opensource.google/go,
+// that have a x/ prefix.
+//
+// x/scratch is not included.
+var csXRepos = map[string]bool{
+	"x/arch":       true,
+	"x/benchmarks": true,
+	"x/blog":       true,
+	"x/build":      true,
+	"x/crypto":     true,
+	"x/debug":      true,
+	"x/example":    true,
+	"x/exp":        true,
+	"x/image":      true,
+	"x/mobile":     true,
+	"x/mod":        true,
+	"x/net":        true,
+	"x/oauth2":     true,
+	"x/perf":       true,
+	"x/pkgsite":    true,
+	"x/playground": true,
+	"x/review":     true,
+	"x/sync":       true,
+	"x/sys":        true,
+	"x/talks":      true,
+	"x/term":       true,
+	"x/text":       true,
+	"x/time":       true,
+	"x/tools":      true,
+	"x/tour":       true,
+	"x/vgo":        true,
+	"x/website":    true,
+	"x/xerrors":    true,
+}
+
+func adjustGoRepoInfo(info *Info, modulePath string, isHash bool) {
+	suffix := strings.TrimPrefix(modulePath, "golang.org/")
+
+	// Validate that this is a repo that exists on
+	// https://cs.opensource.google/go. Otherwise, default to the existing
+	// info.
+	parts := strings.Split(suffix, "/")
+	if len(parts) >= 2 {
+		suffix = parts[0] + "/" + parts[1]
+	}
+	if strings.HasPrefix(suffix, "x/") {
+		if !csXRepos[suffix] {
+			return
+		}
+	} else if !csNonXRepos[suffix] {
+		return
+	}
+
+	// rawURL needs to be set before info.templates is changed.
+	rawURL := fmt.Sprintf(
+		"https://github.com/golang/%s/raw/{commit}/{file}", strings.TrimPrefix(suffix, "x/"))
+
+	info.repoURL = fmt.Sprintf("https://cs.opensource.google/go/%s", suffix)
+	info.templates = csopensourceTemplates
+	info.templates.Raw = rawURL
+
+	if isHash {
+		// When we have a pseudoversion, info.commit will be an actual commit
+		// instead of a tag.
+		//
+		// https://cs.opensource.google/go/* has short commits hardcoded to 8
+		// chars. Commits shorter or longer will not work, unless it is the full
+		// commit hash.
+		info.commit = info.commit[0:8]
+	}
 }
 
 // matchStatic matches the given module or repo path against a list of known
@@ -371,7 +455,7 @@ func matchStatic(moduleOrRepoPath string) (repo, relativeModulePath string, _ ur
 
 // moduleInfoDynamic uses the go-import and go-source meta tags to construct an Info.
 func moduleInfoDynamic(ctx context.Context, client *Client, modulePath, version string) (_ *Info, err error) {
-	defer derrors.Wrap(&err, "source.moduleInfoDynamic(ctx, client, %q, %q)", modulePath, version)
+	defer derrors.Wrap(&err, "moduleInfoDynamic(ctx, client, %q, %q)", modulePath, version)
 
 	if client.httpClient == nil {
 		return nil, nil // for testing

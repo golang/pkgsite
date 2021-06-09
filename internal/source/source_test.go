@@ -23,7 +23,7 @@ import (
 
 var (
 	testTimeout = 2 * time.Second
-	record      = flag.Bool("record", false, "record interactions with other systems, for replay")
+	record      = flag.Bool("record", true, "record interactions with other systems, for replay")
 )
 
 func TestModuleInfo(t *testing.T) {
@@ -123,34 +123,44 @@ func TestModuleInfo(t *testing.T) {
 			"https://github.com/airbrake/gobrake/raw/v3.5.1/gobrake.go",
 		},
 		{
-			"x/tools",
+			"golang x-tools",
 			"golang.org/x/tools", "v0.0.0-20190927191325-030b2cf1153e", "README.md",
 
-			"https://github.com/golang/tools",
-			"https://github.com/golang/tools/tree/030b2cf1153e",
-			"https://github.com/golang/tools/blob/030b2cf1153e/README.md",
-			"https://github.com/golang/tools/blob/030b2cf1153e/README.md#L1",
-			"https://github.com/golang/tools/raw/030b2cf1153e/README.md",
+			"https://cs.opensource.google/go/x/tools",
+			"https://cs.opensource.google/go/x/tools/+/030b2cf1:",
+			"https://cs.opensource.google/go/x/tools/+/030b2cf1:README.md",
+			"https://cs.opensource.google/go/x/tools/+/030b2cf1:README.md;l=1",
+			"https://github.com/golang/tools/raw/030b2cf1/README.md",
 		},
 		{
-			"x/tools/gopls",
+			"golang x-tools-gopls",
 			"golang.org/x/tools/gopls", "v0.4.0", "main.go",
 
-			"https://github.com/golang/tools",
-			"https://github.com/golang/tools/tree/gopls/v0.4.0/gopls",
-			"https://github.com/golang/tools/blob/gopls/v0.4.0/gopls/main.go",
-			"https://github.com/golang/tools/blob/gopls/v0.4.0/gopls/main.go#L1",
+			"https://cs.opensource.google/go/x/tools",
+			"https://cs.opensource.google/go/x/tools/+/gopls/v0.4.0:gopls",
+			"https://cs.opensource.google/go/x/tools/+/gopls/v0.4.0:gopls/main.go",
+			"https://cs.opensource.google/go/x/tools/+/gopls/v0.4.0:gopls/main.go;l=1",
 			"https://github.com/golang/tools/raw/gopls/v0.4.0/gopls/main.go",
 		},
 		{
-			"googlesource.com",
-			"go.googlesource.com/image.git", "v0.0.0-20190910094157-69e4b8554b2a", "math/fixed/fixed.go",
+			"golang dl",
+			"golang.org/dl", "c5c89f6c", "go1.16/main.go",
 
-			"https://go.googlesource.com/image",
-			"https://go.googlesource.com/image/+/69e4b8554b2a",
-			"https://go.googlesource.com/image/+/69e4b8554b2a/math/fixed/fixed.go",
-			"https://go.googlesource.com/image/+/69e4b8554b2a/math/fixed/fixed.go#1",
-			"",
+			"https://cs.opensource.google/go/dl",
+			"https://cs.opensource.google/go/dl/+/c5c89f6c:",
+			"https://cs.opensource.google/go/dl/+/c5c89f6c:go1.16/main.go",
+			"https://cs.opensource.google/go/dl/+/c5c89f6c:go1.16/main.go;l=1",
+			"https://github.com/golang/dl/raw/c5c89f6c/go1.16/main.go",
+		},
+		{
+			"golang x-image",
+			"golang.org/x/image", "v0.0.0-20190910094157-69e4b8554b2a", "math/fixed/fixed.go",
+
+			"https://cs.opensource.google/go/x/image",
+			"https://cs.opensource.google/go/x/image/+/69e4b855:",
+			"https://cs.opensource.google/go/x/image/+/69e4b855:math/fixed/fixed.go",
+			"https://cs.opensource.google/go/x/image/+/69e4b855:math/fixed/fixed.go;l=1",
+			"https://github.com/golang/image/raw/69e4b855/math/fixed/fixed.go",
 		},
 		{
 			"git.apache.org",
