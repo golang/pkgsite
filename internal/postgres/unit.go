@@ -316,10 +316,17 @@ func (db *DB) getUnitID(ctx context.Context, fullPath, modulePath, resolvedVersi
 func (db *DB) getImports(ctx context.Context, unitID int) (_ []string, err error) {
 	defer derrors.WrapStack(&err, "getImports(ctx, %d)", unitID)
 	defer middleware.ElapsedStat(ctx, "getImports")()
-	return collectStrings(ctx, db.db, `
+	query := `
 		SELECT to_path
 		FROM package_imports
-		WHERE unit_id = $1`, unitID)
+		WHERE unit_id = $1`
+	if experiment.IsActive(ctx, internal.ExperimentReadImports) {
+		query = `
+		SELECT p.path
+		FROM paths p INNER JOIN imports i ON p.id = i.to_path_id
+		WHERE i.unit_id = $1`
+	}
+	return collectStrings(ctx, db.db, query, unitID)
 }
 
 // getPackagesInUnit returns all of the packages in a unit from a

@@ -90,8 +90,7 @@ type UnitPage struct {
 	Details interface{}
 }
 
-// serveUnitPage serves a unit page for a path using the paths,
-// modules, documentation, readmes, licenses, and package_imports tables.
+// serveUnitPage serves a unit page for a path.
 func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *http.Request,
 	ds internal.DataSource, info *urlPathInfo) (err error) {
 	defer derrors.Wrap(&err, "serveUnitPage(ctx, w, r, ds, %v)", info)

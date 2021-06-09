@@ -743,7 +743,12 @@ func TestGetUnit(t *testing.T) {
 				test.want.IsRedistributable,
 			)
 			test.want.CommitTime = um.CommitTime
-			checkUnit(ctx, t, testDB, um, test.want)
+			t.Run("none", func(t *testing.T) {
+				checkUnit(ctx, t, testDB, um, test.want)
+			})
+			t.Run(internal.ExperimentReadImports, func(t *testing.T) {
+				checkUnit(ctx, t, testDB, um, test.want, internal.ExperimentReadImports)
+			})
 		})
 	}
 }
