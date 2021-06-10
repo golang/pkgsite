@@ -173,6 +173,16 @@ func TestModuleInfo(t *testing.T) {
 			"https://github.com/googleapis/google-cloud-go/raw/spanner/v1.0.0/spanner/doc.go",
 		},
 		{
+			"vanity for bitbucket",
+			"go.niquid.tech/civic-sip-api", "v0.2.0", "client.go",
+
+			"https://bitbucket.org/niquid/civic-sip-api.git",
+			"https://bitbucket.org/niquid/civic-sip-api.git/src/v0.2.0",
+			"https://bitbucket.org/niquid/civic-sip-api.git/src/v0.2.0/client.go",
+			"https://bitbucket.org/niquid/civic-sip-api.git/src/v0.2.0/client.go#lines-1",
+			"https://bitbucket.org/niquid/civic-sip-api.git/raw/v0.2.0/client.go",
+		},
+		{
 			"vanity for googlesource.com",
 			"cuelang.org/go", "v0.0.9", "cuego/doc.go",
 
@@ -251,6 +261,16 @@ func TestModuleInfo(t *testing.T) {
 			"https://git.fd.io/govpp/tree/doc.go?id=f04939006063",
 			"https://git.fd.io/govpp/tree/doc.go?id=f04939006063#n1",
 			"https://git.fd.io/govpp/plain/doc.go?id=f04939006063",
+		},
+		{
+			"gitea",
+			"gitea.com/chenli/reverse", "v0.1.2", "main.go",
+
+			"https://gitea.com/chenli/reverse",
+			"https://gitea.com/chenli/reverse/src/tag/v0.1.2",
+			"https://gitea.com/chenli/reverse/src/tag/v0.1.2/main.go",
+			"https://gitea.com/chenli/reverse/src/tag/v0.1.2/main.go#L1",
+			"https://gitea.com/chenli/reverse/raw/tag/v0.1.2/main.go",
 		},
 		{
 			"gogs",
