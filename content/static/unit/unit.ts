@@ -40,7 +40,7 @@ export class MainLayoutController {
           for (const x of document.querySelectorAll('[class^="go-Main-header"')) {
             x.removeAttribute('data-fixed');
           }
-          this.handleResize(null);
+          this.handleResize();
         }
       },
       { threshold: 1 }
@@ -61,15 +61,15 @@ export class MainLayoutController {
   }
 
   private init() {
-    this.handleResize(null);
+    this.handleResize();
     window.addEventListener('resize', this.handleResize);
     this.mainHeader?.addEventListener('dblclick', this.handleDoubleClick);
-    if (this.mainHeader.hasChildNodes()) {
+    if (this.mainHeader?.hasChildNodes()) {
       const headerSentinel = document.createElement('div');
       this.mainHeader?.prepend(headerSentinel);
       this.headerObserver.observe(headerSentinel);
     }
-    if (this.mainNav.hasChildNodes()) {
+    if (this.mainNav?.hasChildNodes()) {
       const navSentinel = document.createElement('div');
       this.mainNav?.prepend(navSentinel);
       this.navObserver.observe(navSentinel);
@@ -78,13 +78,13 @@ export class MainLayoutController {
 
   private handleDoubleClick: EventListener = e => {
     const target = e.target;
-    if (target === this.mainHeader.lastElementChild) {
+    if (target === this.mainHeader?.lastElementChild) {
       window.getSelection()?.removeAllRanges();
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
-  private handleResize: EventListener = () => {
+  private handleResize = () => {
     const setProp = (name: string, value: string) =>
       document.documentElement.style.setProperty(name, value);
     setProp('--js-unit-header-height', '0');

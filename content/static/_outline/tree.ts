@@ -48,8 +48,12 @@ export class TreeNavController {
     this.addObserver(treeitem => {
       this.expandTreeitem(treeitem);
       this.setSelected(treeitem);
-      if (treeitem.el.scrollIntoViewIfNeeded) {
-        treeitem.el.scrollIntoViewIfNeeded();
+      // The current version of TypeScript is not aware of HTMLElement.scrollIntoViewIfNeeded.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      if ((treeitem.el as any)?.scrollIntoViewIfNeeded) {
+        // The current version of TypeScript is not aware of HTMLElement.scrollIntoViewIfNeeded.
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (treeitem.el as any)?.scrollIntoViewIfNeeded();
       }
     });
 
@@ -154,7 +158,7 @@ export class TreeNavController {
   }
 
   expandTreeitem(treeitem: TreeItem): void {
-    let currentItem = treeitem;
+    let currentItem: TreeItem | null = treeitem;
     while (currentItem) {
       if (currentItem.isExpandable) {
         currentItem.el.setAttribute('aria-expanded', 'true');
@@ -291,10 +295,11 @@ class TreeItem {
     this.label = el.textContent?.trim() ?? '';
     this.tree = treeObj;
     this.depth = (group?.depth || 0) + 1;
+    this.index = 0;
 
     const parent = el.parentElement;
-    if (parent.tagName.toLowerCase() === 'li') {
-      parent.setAttribute('role', 'none');
+    if (parent?.tagName.toLowerCase() === 'li') {
+      parent?.setAttribute('role', 'none');
     }
     el.setAttribute('aria-level', this.depth + '');
     if (el.getAttribute('aria-label')) {
@@ -469,7 +474,9 @@ function debounce<T extends (...args: any[]) => any>(func: T, wait: number) {
       timeout = null;
       func(...args);
     };
-    clearTimeout(timeout);
+    if (timeout) {
+      clearTimeout(timeout);
+    }
     timeout = setTimeout(later, wait);
   };
 }

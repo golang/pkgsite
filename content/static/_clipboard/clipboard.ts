@@ -21,7 +21,7 @@ export class ClipboardController {
    */
   constructor(private el: HTMLButtonElement) {
     this._data =
-      el.dataset['toCopy'] ?? el.parentElement.querySelector('input')?.value ?? el.innerText;
+      el.dataset['toCopy'] ?? el.parentElement?.querySelector('input')?.value ?? el.innerText;
     el.addEventListener('click', e => this.handleCopyClick(e));
   }
 

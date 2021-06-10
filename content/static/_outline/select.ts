@@ -30,7 +30,7 @@ export function makeSelectNav(tree: TreeNavController): HTMLLabelElement {
   const outline = document.createElement('optgroup');
   outline.label = 'Outline';
   select.appendChild(outline);
-  const groupMap = {};
+  const groupMap: Record<string, HTMLOptGroupElement> = {};
   let group: HTMLOptGroupElement;
   for (const t of tree.treeitems) {
     if (Number(t.depth) > 4) continue;

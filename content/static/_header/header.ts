@@ -4,17 +4,17 @@ function registerHeaderListeners() {
   menuButtons.forEach(button => {
     button.addEventListener('click', e => {
       e.preventDefault();
-      header.classList.toggle('is-active');
-      button.setAttribute('aria-expanded', String(header.classList.contains('is-active')));
+      header?.classList.toggle('is-active');
+      button.setAttribute('aria-expanded', String(header?.classList.contains('is-active')));
     });
   });
 
   const scrim = document.querySelector('.js-scrim');
-  scrim.addEventListener('click', e => {
+  scrim?.addEventListener('click', e => {
     e.preventDefault();
-    header.classList.remove('is-active');
+    header?.classList.remove('is-active');
     menuButtons.forEach(button => {
-      button.setAttribute('aria-expanded', String(header.classList.contains('is-active')));
+      button.setAttribute('aria-expanded', String(header?.classList.contains('is-active')));
     });
   });
 }
@@ -24,7 +24,7 @@ function registerSearchFormListeners() {
   const logo = document.querySelector('.js-headerLogo');
   const form = document.querySelector<HTMLFormElement>('.js-searchForm');
   const button = document.querySelector('.js-searchFormSubmit');
-  const input = form.querySelector('input');
+  const input = form?.querySelector('input');
 
   renderForm();
 
@@ -32,16 +32,16 @@ function registerSearchFormListeners() {
 
   function renderForm() {
     if (window.innerWidth > BREAKPOINT) {
-      logo.classList.remove('go-Header-logo--hidden');
-      form.classList.remove('go-SearchForm--open');
-      input.removeEventListener('focus', showSearchBox);
-      input.removeEventListener('keypress', handleKeypress);
-      input.removeEventListener('focusout', hideSearchBox);
+      logo?.classList.remove('go-Header-logo--hidden');
+      form?.classList.remove('go-SearchForm--open');
+      input?.removeEventListener('focus', showSearchBox);
+      input?.removeEventListener('keypress', handleKeypress);
+      input?.removeEventListener('focusout', hideSearchBox);
     } else {
-      button.addEventListener('click', handleSearchClick);
-      input.addEventListener('focus', showSearchBox);
-      input.addEventListener('keypress', handleKeypress);
-      input.addEventListener('focusout', hideSearchBox);
+      button?.addEventListener('click', handleSearchClick);
+      input?.addEventListener('focus', showSearchBox);
+      input?.addEventListener('keypress', handleKeypress);
+      input?.addEventListener('focusout', hideSearchBox);
     }
   }
 
@@ -49,7 +49,7 @@ function registerSearchFormListeners() {
    * Submits form if Enter key is pressed
    */
   function handleKeypress(e: KeyboardEvent) {
-    if (e.key === 'Enter') form.submit();
+    if (e.key === 'Enter') form?.submit();
   }
 
   /**
@@ -57,16 +57,16 @@ function registerSearchFormListeners() {
    * just the spyglass if we're on mobile).
    */
   function showSearchBox() {
-    logo.classList.add('go-Header-logo--hidden');
-    form.classList.add('go-SearchForm--open');
+    logo?.classList.add('go-Header-logo--hidden');
+    form?.classList.add('go-SearchForm--open');
   }
 
   /**
    * Hides the search box (shrinks to just the spyglass icon).
    */
   function hideSearchBox() {
-    logo.classList.remove('go-Header-logo--hidden');
-    form.classList.remove('go-SearchForm--open');
+    logo?.classList.remove('go-Header-logo--hidden');
+    form?.classList.remove('go-SearchForm--open');
   }
 
   /**
@@ -77,7 +77,7 @@ function registerSearchFormListeners() {
     e.preventDefault();
 
     showSearchBox();
-    input.focus();
+    input?.focus();
   }
 }
 

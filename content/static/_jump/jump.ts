@@ -280,7 +280,7 @@ document.addEventListener('keypress', function (e) {
         jumpFilter.value = '';
       }
       jumpDialog?.showModal();
-      jumpFilter.focus();
+      jumpFilter?.focus();
       updateJumpList('');
       break;
     case '?':

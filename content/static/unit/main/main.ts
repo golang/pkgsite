@@ -4,13 +4,18 @@ import '../../_playground/playground.js';
 import { SelectNavController, makeSelectNav } from '../../_outline/select.js';
 import { TreeNavController } from '../../_outline/tree.js';
 
-const el = <T extends HTMLElement>(selector: string) => document.querySelector<T>(selector);
-
-const treeCtrl = new TreeNavController(el('.js-tree'));
-const select = makeSelectNav(treeCtrl);
-const mobileNav = document.querySelector('.js-mainNavMobile');
-mobileNav.replaceChild(select, mobileNav.firstElementChild);
-new SelectNavController(select.firstElementChild);
+const treeEl = document.querySelector<HTMLElement>('.js-tree');
+if (treeEl) {
+  const treeCtrl = new TreeNavController(treeEl);
+  const select = makeSelectNav(treeCtrl);
+  const mobileNav = document.querySelector('.js-mainNavMobile');
+  if (mobileNav && mobileNav.firstElementChild) {
+    mobileNav?.replaceChild(select, mobileNav.firstElementChild);
+  }
+  if (select.firstElementChild) {
+    new SelectNavController(select.firstElementChild);
+  }
+}
 
 /**
  * Event handlers for expanding and collapsing the readme section.

@@ -13,26 +13,26 @@ window.addEventListener('load', () => {
   if (tree) {
     const treeCtrl = new TreeNavController(tree);
     const select = makeSelectNav(treeCtrl);
-    document.querySelector('.js-mainNavMobile').appendChild(select);
+    document.querySelector('.js-mainNavMobile')?.appendChild(select);
   }
 
   const guideTree = document.querySelector<HTMLElement>('.Outline .js-tree');
   if (guideTree) {
     const treeCtrl = new TreeNavController(guideTree);
     const select = makeSelectNav(treeCtrl);
-    document.querySelector('.Outline .js-select').appendChild(select);
+    document.querySelector('.Outline .js-select')?.appendChild(select);
   }
 
   for (const el of document.querySelectorAll('.js-toggleTheme')) {
     el.addEventListener('click', e => {
       const value = (e.currentTarget as HTMLButtonElement).getAttribute('data-value');
-      document.documentElement.setAttribute('data-theme', value);
+      document.documentElement.setAttribute('data-theme', String(value));
     });
   }
   for (const el of document.querySelectorAll('.js-toggleLayout')) {
     el.addEventListener('click', e => {
       const value = (e.currentTarget as HTMLButtonElement).getAttribute('data-value');
-      document.documentElement.setAttribute('data-layout', value);
+      document.documentElement.setAttribute('data-layout', String(value));
     });
   }
 
@@ -47,7 +47,9 @@ customElements.define(
     constructor() {
       super();
       this.style.setProperty('display', 'contents');
-      const name = this.id;
+      // The current version of TypeScript is not aware of String.replaceAll.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const name = this.id as any;
       this.removeAttribute('id');
       this.innerHTML = `
         <div style="--color: var(${name});" class="GoColor-circle"></div>
@@ -58,9 +60,9 @@ customElements.define(
           <pre class="StringifyElement-markup">var(${name})</pre>
         </span>
       `;
-      this.querySelector('pre').onclick = () => {
+      this.querySelector('pre')?.addEventListener('click', () => {
         navigator.clipboard.writeText(`var(${name})`);
-      };
+      });
     }
   }
 );
@@ -71,9 +73,13 @@ customElements.define(
     constructor() {
       super();
       this.style.setProperty('display', 'contents');
-      const name = this.getAttribute('name');
-      this.innerHTML = `
-        <p id="icon-${name}" class="go-textLabel GoIcon-title">${name.replaceAll('_', ' ')}</p>
+      // The current version of TypeScript is not aware of String.replaceAll.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const name = this.getAttribute('name') as any;
+      this.innerHTML = `<p id="icon-${name}" class="go-textLabel GoIcon-title">${name.replaceAll(
+        '_',
+        ' '
+      )}</p>
         <stringify-el>
           <img class="go-Icon" height="24" width="24" src="/static/_icon/${name}_gm_grey_24dp.svg" alt="">
         </stringify-el>
@@ -89,7 +95,8 @@ customElements.define(
       super();
       this.style.setProperty('display', 'contents');
       const selector = this.getAttribute('selector');
-      const html = '    ' + document.querySelector(selector).outerHTML;
+      if (!selector) return;
+      const html = '    ' + document.querySelector(selector)?.outerHTML;
       this.innerHTML = `
         <stringify-el collapsed>${html}</stringify-el>
       `;
@@ -111,9 +118,9 @@ customElements.define(
         markup = `<details class="StringifyElement-details"><summary>Markup</summary>${markup}</details>`;
       }
       this.innerHTML = `<span${idAttr}>${html}</span>${markup}`;
-      this.querySelector('pre').onclick = () => {
+      this.querySelector('pre')?.addEventListener('click', () => {
         navigator.clipboard.writeText(html);
-      };
+      });
     }
   }
 );
@@ -124,10 +131,10 @@ customElements.define(
  * the given string and removing that number of spaces
  * from the beginning of each line.
  */
-function trim(html) {
+function trim(html: string) {
   return html
     .split('\n')
-    .reduce(
+    .reduce<{ result: string[]; start: number }>(
       (acc, val) => {
         if (acc.result.length === 0) {
           const start = val.indexOf('<');
@@ -144,6 +151,8 @@ function trim(html) {
     .result.join('\n');
 }
 
-function escape(html) {
-  return html.replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+function escape(html: string) {
+  // The current version of TypeScript is not aware of String.replaceAll.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return (html as any)?.replaceAll('<', '&lt;')?.replaceAll('>', '&gt;');
 }
