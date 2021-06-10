@@ -4,6 +4,10 @@
   license that can be found in the LICENSE file.
 -->
 
+{{define "title"}}<title>{{.Title}} · pkg.go.dev</title>{{end}}
+
+{{define "description"}}{{.MetaDescription}}{{end}}
+
 {{define "pre-content"}}
   <link href="/static/unit/unit.css?version={{.AppVersionLabel}}" rel="stylesheet">
   {{block "main-styles".}}{{end}}
