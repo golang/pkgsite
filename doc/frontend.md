@@ -55,39 +55,18 @@ documentation of local modules without requiring a proxy. The command accepts a
 list of comma-separated strings each representing a path of a module to load
 into memory.
 
-### Testing
+### End-to-End (E2E) Tests
 
-In addition to tests inside internal/frontend and internal/testing/integration,
-pages on pkg.go.dev may have accessibility tree and image snapshot tests. These
-tests will create diffs for inspection on failure. Timeouts and diff thresholds
-are configurable for image snapshots if adjustments are needed to prevent test
-flakiness. See the
+In addition to tests written in Go inside internal/frontend and
+internal/testing/integration, pages on pkg.go.dev may have accessibility tree
+and image snapshot tests. These tests will create diffs for inspection on
+failure. Timeouts and diff thresholds are configurable for image snapshots if
+adjustments are needed to prevent test flakiness. See the
 [API](https://github.com/americanexpress/jest-image-snapshot#%EF%B8%8F-api) for
 jest image snapshots for more information.
 
-The e2e tests require that npm and docker are installed on your machine.
-
-First run headless chrome
-
-    docker run --rm -e "CONNECTION_TIMEOUT=-1" -p 3000:3000 browserless/chrome:1.46-chrome-stable
-
-Then run the tests
-
-    BASE_URL=https://pkg.go.dev npm run e2e
-
-#### Writing E2E Tests
-
-Tests are written in the Jest framework using Puppeteer to drive a headless
-instance of Chrome.
-
-Familiarize yourself with the
-[Page](https://pptr.dev/#?product=Puppeteer&version=v5.5.0&show=api-class-page)
-class from the Puppeteer documenation. You'll find methods on this class that
-let you to interact with the page.
-
-Most tests will follow a similar structure but for details on the Jest
-framework and the various hooks and assertions see the
-[API](https://jestjs.io/docs/en/api).
+These tests are in the [e2e/ directory](../e2e). For details, see
+[e2e/README.md](../e2e/README.md).
 
 ## Static Assets
 
