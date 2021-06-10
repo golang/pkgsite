@@ -286,7 +286,7 @@ func (s *Server) licensePolicyHandler() http.HandlerFunc {
 	lics := licenses.AcceptedLicenses()
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		page := licensePolicyPage{
-			basePage:         s.newBasePage(r, "Licenses"),
+			basePage:         s.newBasePage(r, "License Policy"),
 			LicenseFileNames: licenses.FileNames,
 			LicenseTypes:     lics,
 		}
