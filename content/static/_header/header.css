@@ -172,7 +172,7 @@
   transition: max-width 200ms;
 }
 .go-SearchForm--open {
-  background-color: var(--white);
+  background-color: var(--color-background);
   margin-left: 1.5rem;
   max-width: min(100%, 30rem);
 }
@@ -184,7 +184,7 @@
   width: 1.4375rem;
 }
 .go-SearchForm--open svg {
-  fill: var(--gray-3);
+  fill: var(--color-text-subtle);
   margin-right: 0.5rem;
 }
 .go-SearchForm-input {
@@ -207,7 +207,7 @@
   width: 100%;
 }
 .go-SearchForm-input::placeholder {
-  color: var(--gray-4);
+  color: var(--color-text-subtle);
 }
 .go-SearchForm-submit {
   background-color: transparent;
@@ -224,7 +224,7 @@
     width: 100%;
   }
   .go-SearchForm {
-    background-color: var(--white);
+    background-color: var(--color-background);
     margin: 0.6rem 1.4rem 0.6rem 0;
     max-width: none;
   }
@@ -234,7 +234,7 @@
     width: 100%;
   }
   .go-SearchForm svg {
-    fill: #555759;
+    fill: var(--color-text-subtle);
     margin-right: 0.5rem;
   }
 }
