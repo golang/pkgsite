@@ -23,7 +23,7 @@ import (
 
 var (
 	testTimeout = 2 * time.Second
-	record      = flag.Bool("record", true, "record interactions with other systems, for replay")
+	record      = flag.Bool("record", false, "record interactions with other systems, for replay")
 )
 
 func TestModuleInfo(t *testing.T) {
