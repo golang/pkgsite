@@ -1,0 +1,86 @@
+/*!
+ * Copyright 2021 The Go Authors. All rights reserved.
+ * Use of this source code is governed by a BSD-style
+ * license that can be found in the LICENSE file.
+ */
+
+button:focus:not([disabled]) {
+  border-color: var(--color-brand-primary);
+  -webkit-box-shadow: var(--focus-box-shadow);
+  box-shadow: var(--focus-box-shadow);
+  outline: transparent;
+}
+
+.go-Button {
+  align-items: center;
+  background-color: var(--color-button);
+  border: 0.0625rem solid transparent;
+  border-radius: var(--border-radius);
+  color: var(--color-button-text);
+  cursor: pointer;
+  display: inline-flex;
+  font-weight: 500;
+  gap: 0.25rem;
+}
+.go-Button:not(.go-Button--inline) {
+  padding: 0.5rem;
+}
+
+.go-Button--accented {
+  background-color: var(--color-button-accented);
+  color: var(--color-button-accented-text);
+}
+.go-Button--inverted,
+.go-Button--text,
+.go-Button--inline {
+  background-color: var(--color-button-inverted);
+  color: var(--color-button-inverted-text);
+}
+.go-Button--inline {
+  background-color: transparent;
+}
+
+.go-Button--inverted {
+  border: var(--border);
+}
+
+.go-Button:hover {
+  box-shadow: var(--focus-box-shadow);
+  filter: contrast(0.95);
+}
+.go-Button--inline:hover {
+  box-shadow: none;
+  text-decoration: underline var(--color-button-inverted-text);
+}
+.go-Button:focus {
+  filter: contrast(0.95);
+}
+.go-Button--inverted:focus {
+  border-color: var(--color-button-inverted-text);
+}
+.go-Button:active {
+  box-shadow: none;
+  filter: contrast(0.85);
+}
+
+.go-Button:disabled {
+  background-color: var(--color-button-disabled);
+  box-shadow: none;
+  color: var(--color-button-text-disabled);
+  cursor: initial;
+  filter: none;
+  text-decoration: none;
+}
+.go-Button--accented:disabled {
+  background-color: var(--color-button-accented-disabled);
+  color: var(--color-button-accented-text-disabled);
+}
+.go-Button--inverted:disabled,
+.go-Button--text:disabled,
+.go-Button--inline:disabled {
+  background-color: var(--color-button-inverted-disabled);
+  color: var(--color-button-inverted-text-disabled);
+}
+.go-Button--inline:disabled {
+  background-color: transparent;
+}

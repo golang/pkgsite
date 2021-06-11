@@ -1,0 +1,205 @@
+<!--
+  Copyright 2019 The Go Authors. All rights reserved.
+  Use of this source code is governed by a BSD-style
+  license that can be found in the LICENSE file.
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+<meta charset="utf-8">
+<link href="/static/worker/worker.css" rel="stylesheet">
+<title>{{.Env}} Worker</title>
+
+<body>
+  <h1>{{.Env}} Worker</h1>
+  <p>All times in America/New_York.</p>
+
+  <p>
+    <a href="/">
+      Home
+    </a> |
+    <a href="/versions">
+      Recent Versions
+    </a> |
+    <a href="https://cloud.google.com/console/cloudtasks/queue/{{.LocationID}}/{{.ResourcePrefix}}fetch-tasks?project={{.Config.ProjectID}}"
+    target="_blank" rel="noreferrer">
+     Task Queue
+    </a> |
+    <a href="https://cloud.google.com/console/cloudscheduler?project={{.Config.ProjectID}}"
+    target="_blank" rel="noreferrer">
+     Scheduler
+    </a> |
+    <a href="{{.LogsURL}}"
+    target="_blank" rel="noreferrer">
+     Logs
+    </a>
+  </p>
+
+  <div>
+    <form action="/poll" method="post" name="pollForm">
+      <button title="Poll the module index for up to 2000 new versions."
+        onclick="submitForm('pollForm', false); return false">Poll Module Index</button>
+      <input type="number" name="limit" value="10"></input>
+      <output name="result"></output>
+    </form>
+    <form action="/enqueue" method="post" name="enqueueForm">
+      <button title="Query the discovery database for new or failed versions, and enqueue them for processing."
+        onclick="submitForm('enqueueForm', true); return false">Enqueue New and Failed Versions</button>
+      <input type="number" name="limit" value="10">
+      <output name="result"></output>
+    </form>
+    <form action="/reprocess" method="post" name="reprocessForm">
+      <button title="Mark all versions created before the specified app_version to be reprocessed."
+        onclick="submitForm('reprocessForm', true); return false">Reprocess Versions</button>
+      <input type="text" name="app_version">
+      <output name="result"></output>
+    </form>
+    <form action="/populate-stdlib" method="post" name="populateStdlibForm">
+      <button title="Populates the database with all supported versions of the Go standard library."
+        onclick="submitForm('populateStdlibForm', false); return false">Populate Standard Library</button>
+      <output name="result"></output>
+    </form>
+    <form action="/clear-cache" method="get" name="clearCacheForm">
+      <button title="Clears the Redis cache."
+        onclick="submitForm('clearCacheForm', false); return false">Clear Cache</button>
+      <output name="result"></output>
+    </form>
+  </div>
+
+  <div>
+    <h3>Config</h3>
+    <table>
+      <tr><td>App Version</td><td>{{.Config.VersionID}}</td></tr>
+      <tr><td>Zone</td><td>{{.Config.ZoneID}}</td></tr>
+      <tr><td>DB Host</td><td>{{.Config.DBHost}}</td></tr>
+      <tr><td>Redis Cache Host</td><td>{{.Config.RedisCacheHost}}</td></tr>
+      <tr><td>Redis HA Host</td><td>{{.Config.RedisHAHost}}</td></tr>
+      <tr><td>Hostname (Pod)</td><td>{{.Hostname}}</td></tr>
+      <tr><td>Age</td><td>{{timeSince .StartTime}}</td></tr>
+    </table>
+  </div>
+
+  <div class="Experiments">
+    <h3>Experiments</h3>
+    {{if .Experiments}}
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Rollout</th>
+          </tr>
+        </thead>
+        <tbody>
+        {{range .Experiments}}
+            <tr>
+              <td>{{.Name}}</td>
+              <td>{{.Description}}</td>
+              <td>{{.Rollout}}</td>
+            </tr>
+        {{end}}
+        </tbody>
+      </table>
+      <p>To update experiments, modify the {{.Env}}-config.yaml file and deploy with
+        the <code>-config-only</code> flag.</p>
+    {{else}}
+      <p>No experiments.</p>
+    {{end}}
+    <iframe class="Experiments-updateResult" name="experimentUpdateResult" id="experimentUpdateResult"></iframe>
+  </div>
+
+  <div>
+    <h3>Memory (all values in Mi)</h3>
+    <table>
+      <tr>
+        <td>Go Heap</td>
+        <td>
+          {{.GoMemStats.HeapAlloc | bytesToMi}} Alloc /
+          {{.GoMemStats.HeapInuse | bytesToMi}} In Use /
+          {{.GoMemStats.HeapIdle | bytesToMi}} Idle /
+          {{.GoMemStats.HeapReleased | bytesToMi}} Released
+        </td>
+      </tr>
+      <tr>
+        <td>Container</td>
+        <td>
+          {{index .CgroupStats "limit" | bytesToMi}} Limit /
+          {{index .CgroupStats "trueRSS" | bytesToMi}} RSS /
+          {{index .CgroupStats "usage" | bytesToMi}} Used /
+          {{index .CgroupStats "workingSet" | bytesToMi}} Working Set
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <div>
+    <h3>Load Shedding</h3>
+    <table>
+      <tr><td>Fetches In Flight</td><td>{{.LoadShedStats.RequestsInFlight}}</td></tr>
+      <tr>
+        <td>Zip Bytes In Flight</td>
+        <td>{{.LoadShedStats.SizeInFlight | bytesToMi}} /
+          {{.LoadShedStats.MaxSizeInFlight | bytesToMi}} Mi
+          ({{pct .LoadShedStats.SizeInFlight .LoadShedStats.MaxSizeInFlight}}%) </td>
+      </tr>
+      <tr>
+        <td>Shedded Requests</td>
+        <td>{{.LoadShedStats.RequestsShed}} / {{.LoadShedStats.RequestsTotal}}
+          ({{pct .LoadShedStats.RequestsShed .LoadShedStats.RequestsTotal}}%)</td>
+      </tr>
+    </table>
+  </div>
+
+  <div>
+    <h3>Fetches In Flight</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Path</th>
+          <th>Version</th>
+          <th>Zip Size (Mi)</th>
+          <th>Age</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{range .Fetches}}
+          {{if eq .Status 0}}
+            <tr>
+              <td>{{.ModulePath}}</td>
+              <td>{{.Version}}</td>
+              <td>{{.ZipSize | bytesToMi}}</td>
+              <td>{{timeSince .Start}}</td>
+            </tr>
+          {{end}}
+        {{end}}
+      </tbody>
+    </table>
+  </div>
+
+  <div>
+    <h3>Excluded Prefixes</h3>
+    {{if .Excluded}}
+      <table>
+        <thead>
+          <tr><th>Prefix</th></tr>
+        </thead>
+        <tbody>
+        {{range .Excluded}}
+          <tr><td>{{.}}</td></tr>
+        {{end}}
+        </tbody>
+      </table>
+    {{else}}
+      <p>No excluded prefixes.</p>
+    {{end}}
+  </div>
+</body>
+
+<script>
+  function loadScript(src) {
+      let s = document.createElement("script");
+      s.src = src;
+      document.head.appendChild(s);
+  }
+  loadScript("/static/worker/worker.js");
+</script>

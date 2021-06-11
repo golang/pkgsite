@@ -1,0 +1,248 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`creates tree nav from ul 1`] = `
+<ul
+  class="go-Tree js-tree"
+  role="tree"
+  style="--js-tree-height: 0px;"
+>
+  
+  
+  <li
+    role="none"
+  >
+    
+    
+    <a
+      aria-expanded="false"
+      aria-level="1"
+      aria-owns="_nav_group_Level_1"
+      class="focus"
+      href="#one"
+      role="treeitem"
+      tabindex="0"
+    >
+      Level 1
+    </a>
+    
+    
+    <ul
+      id="_nav_group_Level_1"
+      role="group"
+    >
+      
+      
+      <li
+        role="none"
+      >
+        
+        
+        <a
+          aria-level="2"
+          href="#two-one"
+          role="treeitem"
+          tabindex="-1"
+        >
+          Level 2-1
+        </a>
+        
+      
+      </li>
+      
+      
+      <li
+        role="none"
+      >
+        
+        
+        <a
+          aria-expanded="false"
+          aria-level="2"
+          aria-owns="Level_1_nav_group_Level_2_2"
+          href="#two-two"
+          role="treeitem"
+          tabindex="-1"
+        >
+          Level 2-2
+        </a>
+        
+        
+        <ul
+          id="Level_1_nav_group_Level_2_2"
+          role="group"
+        >
+          
+          
+          <li
+            role="none"
+          >
+            
+            
+            <a
+              aria-expanded="false"
+              aria-level="3"
+              aria-owns="Level_2_2_nav_group_Level_3_1"
+              href="#three-one"
+              role="treeitem"
+              tabindex="-1"
+            >
+              Level 3-1
+            </a>
+            
+            
+            <ul
+              id="Level_2_2_nav_group_Level_3_1"
+              role="group"
+            >
+              
+              
+              <li
+                role="none"
+              >
+                
+                
+                <a
+                  aria-level="4"
+                  href="#four-one"
+                  role="treeitem"
+                  tabindex="-1"
+                >
+                  Level 4-1
+                </a>
+                
+              
+              </li>
+              
+              
+              <li
+                role="none"
+              >
+                
+                
+                <a
+                  aria-level="4"
+                  href="#four-two"
+                  role="treeitem"
+                  tabindex="-1"
+                >
+                  Level 4-2
+                </a>
+                
+              
+              </li>
+              
+            
+            </ul>
+            
+          
+          </li>
+          
+        
+        </ul>
+        
+      
+      </li>
+      
+      
+      <li
+        role="none"
+      >
+        
+        
+        <a
+          aria-expanded="false"
+          aria-level="2"
+          aria-owns="Level_1_nav_group_Level_2_3"
+          href="#two-three"
+          role="treeitem"
+          tabindex="-1"
+        >
+          Level 2-3
+        </a>
+        
+        
+        <ul
+          id="Level_1_nav_group_Level_2_3"
+          role="group"
+        >
+          
+          
+          <li
+            role="none"
+          >
+            
+            
+            <a
+              aria-expanded="false"
+              aria-level="3"
+              aria-owns="Level_2_3_nav_group_Level_3_2"
+              href="#three-two"
+              role="treeitem"
+              tabindex="-1"
+            >
+              Level 3-2
+            </a>
+            
+            
+            <ul
+              id="Level_2_3_nav_group_Level_3_2"
+              role="group"
+            >
+              
+              
+              <li
+                role="none"
+              >
+                
+                
+                <a
+                  aria-level="4"
+                  href="#four-three"
+                  role="treeitem"
+                  tabindex="-1"
+                >
+                  Level 4-3
+                </a>
+                
+              
+              </li>
+              
+              
+              <li
+                role="none"
+              >
+                
+                
+                <a
+                  aria-level="4"
+                  href="#four-four"
+                  role="treeitem"
+                  tabindex="-1"
+                >
+                  Level 4-4
+                </a>
+                
+              
+              </li>
+              
+            
+            </ul>
+            
+          
+          </li>
+          
+        
+        </ul>
+        
+      
+      </li>
+      
+    
+    </ul>
+    
+  
+  </li>
+  
+
+</ul>
+`;

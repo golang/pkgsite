@@ -1,0 +1,35 @@
+/*!
+ * Copyright 2020 The Go Authors. All rights reserved.
+ * Use of this source code is governed by a BSD-style
+ * license that can be found in the LICENSE file.
+ */
+
+.UnitBuildContext-titleContext label,
+.UnitBuildContext-singleContext {
+  color: var(--color-text-subtle);
+  font-size: 0.875rem;
+}
+.UnitBuildContext-singleContext {
+  padding: 0.35rem 0;
+}
+.UnitBuildContext-titleContext select {
+  border-color: var(--color-border);
+  color: var(--color-text-subtle);
+  margin-left: 0.25rem;
+  min-width: 6rem;
+  padding: 0.25rem 0.125rem;
+}
+.UnitBuildContext-titleContext option {
+  color: var(--color-text-subtle);
+}
+
+.UnitDoc .UnitBuildContext-titleContext {
+  position: relative;
+}
+
+.UnitDoc .UnitBuildContext-titleContext label,
+.UnitDoc .UnitBuildContext-singleContext {
+  bottom: 0.875rem;
+  position: absolute;
+  right: 0;
+}

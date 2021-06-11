@@ -1,0 +1,51 @@
+<!--
+  Copyright 2020 The Go Authors. All rights reserved.
+  Use of this source code is governed by a BSD-style
+  license that can be found in the LICENSE file.
+-->
+
+<optgroup label="Documentation">
+  {{if or .Package.Doc (index .Examples.Map "")}}
+    <option value="pkg-overview">Overview</option>
+  {{end}}
+  {{if or .Consts .Vars .Funcs .Types}}
+    <option value="pkg-index">Index</option>
+  {{end}}
+  {{if .Examples.List}}
+    <option value="pkg-examples">Examples</option>
+  {{end}}
+  {{if .Consts}}
+    <option value="pkg-constants">Constants</option>
+  {{end}}
+  {{if .Vars}}
+    <option value="pkg-variables">Variables</option>
+  {{end}}
+</optgroup>
+{{if .Funcs}}
+  <optgroup label="Functions">
+    {{range .Funcs}}
+      <option value="{{.Name}}">{{render_short_synopsis .Decl}}</option>
+    {{end}}
+  </optgroup>
+{{end}}
+{{if .Types}}
+  <optgroup label="Types">
+    {{range .Types}}
+      {{$tname := .Name}}
+      <option value="{{$tname}}">type {{$tname}}</option>
+      {{range .Funcs}}
+        <option value="{{.Name}}">{{render_short_synopsis .Decl}}</option>
+      {{end}}
+      {{range .Methods}}
+        <option value="{{$tname}}.{{.Name}}">{{render_short_synopsis .Decl}}</option>
+      {{end}}
+    {{end}} {{/* range .Types */}}
+  </optgroup>
+{{end}}
+{{if .Package.Notes}}
+  <optgroup label="Notes">
+    {{range $marker, $item := .Package.Notes}}
+      <option value="pkg-note-{{$marker}}">{{(index $.NoteHeaders $marker).Label}}s</option>
+    {{end}}
+  </optgroup>
+{{end}}

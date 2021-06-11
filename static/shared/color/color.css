@@ -1,0 +1,76 @@
+/*!
+ * Copyright 2021 The Go Authors. All rights reserved.
+ * Use of this source code is governed by a BSD-style
+ * license that can be found in the LICENSE file.
+ */
+
+:root {
+  /* Colors */
+  --gray-1: #202224;
+  --gray-2: #3e4042;
+  --gray-3: #555759;
+  --gray-4: #6e7072;
+  --gray-5: #848688;
+  --gray-6: #aaacae;
+  --gray-7: #c6c8ca;
+  --gray-8: #dcdee0;
+  --gray-9: #f0f1f2;
+  --gray-10: #fafafa;
+  --turq-light: #5dc9e2;
+  --turq-med: #00add8;
+  --turq-dark: #007d9c;
+  --blue: #bfeaf4;
+  --black: #000;
+  --green: #3a6e11;
+  --green-light: #5fda64;
+  --pink: #ce3262;
+  --pink-light: #fdecf1;
+  --purple: #542c7d;
+  --slate: #253443; /* Footer background. */
+  --white: #fff;
+  --yellow: #fddd00;
+  --yellow-light: #fff8cc;
+
+  /* Color Intents */
+  --color-brand-primary: var(--turq-dark);
+  --color-background: var(--white);
+  --color-background-inverted: var(--slate);
+  --color-background-accented: var(--gray-10);
+  --color-background-highlighted: var(--blue);
+  --color-background-warning: var(--yellow-light);
+  --color-background-alert: var(--pink-light);
+  --color-border: var(--gray-7);
+  --color-text: var(--gray-1);
+  --color-text-subtle: var(--gray-4);
+  --color-text-inverted: var(--white);
+  --color-code-comment: var(--green);
+
+  /* Interactive Colors */
+  --color-input: var(--color-background);
+  --color-input-text: var(--color-text);
+  --color-button: var(--turq-dark);
+  --color-button-disabled: var(--gray-9);
+  --color-button-text: var(--white);
+  --color-button-text-disabled: var(--gray-3);
+  --color-button-inverted: var(--color-background);
+  --color-button-inverted-disabled: var(--color-background);
+  --color-button-inverted-text: var(--color-brand-primary);
+  --color-button-inverted-text-disabled: var(--color-text-subtle);
+  --color-button-accented: var(--yellow);
+  --color-button-accented-disabled: var(--gray-9);
+  --color-button-accented-text: var(--gray-1);
+  --color-button-accented-text-disabled: var(--gray-3);
+}
+
+[data-theme='dark'] {
+  --color-brand-primary: var(--turq-med);
+  --color-background: var(--gray-1);
+  --color-background-accented: var(--slate);
+  --color-background-highlighted: var(--gray-2);
+  --color-background-warning: var(--yellow);
+  --color-background-alert: var(--pink);
+  --color-border: var(--gray-4);
+  --color-text: var(--white);
+  --color-text-subtle: var(--gray-7);
+  --color-code-comment: var(--green-light);
+}

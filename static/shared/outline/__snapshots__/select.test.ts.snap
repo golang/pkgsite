@@ -1,0 +1,97 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`creates select nav from tree 1`] = `
+<label
+  aria-label="Menu"
+  class="go-Label"
+>
+  <select
+    class="go-Select js-selectNav"
+  >
+    <optgroup
+      label="Outline"
+    >
+      <option
+        label="Level 1"
+        value="#one"
+      >
+        Level 1
+      </option>
+    </optgroup>
+    <optgroup
+      label="Level 1"
+    >
+      <option
+        label="Level 2-1"
+        value="#two-one"
+      >
+        Level 2-1
+      </option>
+      <option
+        label="Level 2-2"
+        value="#two-two"
+      >
+        Level 2-2
+      </option>
+      <option
+        label="Level 2-3"
+        value="#two-three"
+      >
+        Level 2-3
+      </option>
+    </optgroup>
+    <optgroup
+      label="Level 2-2"
+    >
+      <option
+        label="Level 3-1"
+        value="#three-one"
+      >
+        Level 3-1
+      </option>
+    </optgroup>
+    <optgroup
+      label="Level 3-1"
+    >
+      <option
+        label="Level 4-1"
+        value="#four-one"
+      >
+        Level 4-1
+      </option>
+      <option
+        label="Level 4-2"
+        value="#four-two"
+      >
+        Level 4-2
+      </option>
+    </optgroup>
+    <optgroup
+      label="Level 2-3"
+    >
+      <option
+        label="Level 3-2"
+        value="#three-two"
+      >
+        Level 3-2
+      </option>
+    </optgroup>
+    <optgroup
+      label="Level 3-2"
+    >
+      <option
+        label="Level 4-3"
+        value="#four-three"
+      >
+        Level 4-3
+      </option>
+      <option
+        label="Level 4-4"
+        value="#four-four"
+      >
+        Level 4-4
+      </option>
+    </optgroup>
+  </select>
+</label>
+`;

@@ -1,0 +1,31 @@
+/*!
+ * Copyright 2020 The Go Authors. All rights reserved.
+ * Use of this source code is governed by a BSD-style
+ * license that can be found in the LICENSE file.
+ */
+
+.Error-gopher,
+.EmptyContent-gopher,
+.Fetch-gopher,
+.SearchResults-emptyContentGopher {
+  display: block;
+  margin: 0 auto;
+  max-width: 15rem;
+  padding: 1.25rem 0;
+}
+.Error-message,
+.EmptyContent-message,
+.SearchResults-emptyContentMessage {
+  color: var(--color-textSubtle);
+  text-align: center;
+}
+.Error-gopher,
+.EmptyContent-gopher,
+.NotFound-gopher,
+.SearchResults-emptyContentGopher {
+  display: block;
+  height: 15rem;
+  margin: 0 auto;
+  padding: 1.25rem 0;
+  width: 15rem;
+}

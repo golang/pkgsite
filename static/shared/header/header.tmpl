@@ -1,0 +1,79 @@
+<!--
+  Copyright 2021 The Go Authors. All rights reserved.
+  Use of this source code is governed by a BSD-style
+  license that can be found in the LICENSE file.
+-->
+
+{{define "header"}}
+  <header class="go-Header{{if .AllowWideContent}} go-Header--full{{end}} js-siteHeader">
+    <div class="go-Banner{{if .AllowWideContent}} go-Banner--full{{end}}">
+      <div class="go-Banner-inner">
+        <div class="go-Banner-message">Black Lives Matter</div>
+        <a class="go-Banner-action"
+          href="https://support.eji.org/give/153413/#!/donation/checkout"
+          target="_blank"
+          rel="noopener">Support the Equal Justice Initiative</a>
+      </div>
+    </div>
+    <div class="go-Header-inner go-Header-inner--dark">
+      <nav class="go-Header-nav">
+        <a href="https://go.dev/" data-gtmc="nav link" data-test-id="go-header-logo-link">
+          <img class="js-headerLogo go-Header-logo" src="/static/_logo/go-white.svg" alt="Go">
+        </a>
+        <div class="go-Header-rightContent">
+          <form class="js-searchForm go-SearchForm" action="/search" role="search" data-gtmc="header search form" >
+            <button class="js-searchFormSubmit go-SearchForm-submit" aria-label="Search for a package">
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M11.76 10.27L17.49 16L16 17.49L10.27 11.76C9.2 12.53 7.91 13 6.5 13C2.91 13 0 10.09 0 6.5C0 2.91 2.91 0 6.5 0C10.09 0 13 2.91 13 6.5C13 7.91 12.53 9.2 11.76 10.27ZM6.5 2C4.01 2 2 4.01 2 6.5C2 8.99 4.01 11 6.5 11C8.99 11 11 8.99 11 6.5C11 4.01 8.99 2 6.5 2Z">
+                </path></svg>
+            </button>
+            <input class="go-SearchForm-input js-searchFocus" aria-label="Search for a package"
+                type="text" name="q" size="1" placeholder="Search for a package"
+                autocapitalize="off" autocomplete="off" autocorrect="off" spellcheck="false"
+                title="Search for a package">
+          </form>
+          <ul class="go-Header-menu">
+            <li class="go-Header-menuItem">
+              <a href="https://go.dev/solutions/" data-gtmc="nav link">Why Go</a>
+            </li>
+            <li class="go-Header-menuItem">
+              <a href="https://go.dev/learn/" data-gtmc="nav link">Getting Started</a>
+            </li>
+            <li class="go-Header-menuItem go-Header-menuItem--active">
+              <a href="/" data-gtmc="nav link">Discover Packages</a>
+            </li>
+            <li class="go-Header-menuItem">
+              <a href="https://go.dev/about" data-gtmc="nav link">About</a>
+            </li>
+          </ul>
+          <button class="go-Header-navOpen js-headerMenuButton go-Header-navOpen--white" data-gtmc="nav button" aria-label="Open navigation">
+          </button>
+        </div>
+      </nav>
+    </div>
+  </header>
+  <aside class="go-NavigationDrawer js-header">
+    <nav>
+      <div class="go-NavigationDrawer-header">
+        <a href="https://go.dev/" tabindex="-1">
+          <img class="go-NavigationDrawer-logo" src="/static/_logo/go-blue.svg" alt="Go.">
+        </a>
+      </div>
+      <ul class="go-NavigationDrawer-list">
+          <li class="go-NavigationDrawer-listItem">
+            <a href="https://go.dev/solutions/" tabindex="-1">Why Go</a>
+          </li>
+          <li class="go-NavigationDrawer-listItem">
+            <a href="https://go.dev/learn/" tabindex="-1">Getting Started</a>
+          </li>
+          <li class="go-NavigationDrawer-listItem go-NavigationDrawer-listItem--active">
+            <a href="/" tabindex="-1">Discover Packages</a>
+          </li>
+          <li class="go-NavigationDrawer-listItem">
+            <a href="https://go.dev/about" tabindex="-1">About</a>
+          </li>
+      </ul>
+    </nav>
+  </aside>
+  <div class="go-NavigationDrawer-scrim js-scrim" role="presentation"></div>
+{{end}}

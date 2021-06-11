@@ -1,0 +1,89 @@
+/*!
+ * Copyright 2021 The Go Authors. All rights reserved.
+ * Use of this source code is governed by a BSD-style
+ * license that can be found in the LICENSE file.
+ */
+
+.go-Footer {
+  background-color: var(--color-background-inverted);
+  color: var(--color-text-inverted);
+  font-size: 0.875rem;
+  width: 100%;
+}
+.go-Footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  margin: auto;
+  max-width: 75.75rem;
+  padding: 2rem 1.5rem 2.625rem 1.5rem;
+}
+.go-Footer-linkColumn {
+  flex: 0 0 9.5rem;
+}
+.go-Footer .go-Footer-link {
+  color: var(--color-text-inverted);
+  display: flex;
+  flex: 1;
+  font-size: 0.875rem;
+  line-height: 2rem;
+}
+.go-Footer .go-Footer-link--primary {
+  font-size: 1.125rem;
+  line-height: 1.75rem;
+  margin-bottom: 0.5rem;
+  margin-top: 0.75rem;
+}
+.go-Footer-bottom {
+  align-items: center;
+  border-top: var(--border);
+  display: flex;
+  margin: 0 1.5rem;
+  min-height: 4.125rem;
+}
+.go-Footer-gopher {
+  align-self: flex-end;
+  height: 3.147rem;
+  width: 5rem;
+}
+.go-Footer-listRow {
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  text-align: center;
+}
+.go-Footer-listItem {
+  align-items: center;
+  display: flex;
+  flex: 1 100%;
+  justify-content: center;
+  margin: 0.4rem 0;
+  padding: 0 1rem;
+}
+.go-Footer-listItem a:link,
+.go-Footer-listItem a:visited {
+  color: var(--color-text-inverted);
+}
+
+.go-Footer-googleLogo {
+  align-self: flex-end;
+  height: 1.5rem;
+  margin-bottom: 1.3rem;
+  text-align: right;
+}
+.go-Footer-googleLogoImg {
+  height: 1.5rem;
+  width: 4.529rem;
+}
+
+@media only screen and (min-width: 52rem) {
+  .go-Footer-listItem {
+    flex: initial;
+  }
+  .go-Footer-listItem + .go-Footer-listItem {
+    border-left: var(--border);
+  }
+}

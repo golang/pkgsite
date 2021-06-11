@@ -1,0 +1,26 @@
+<!--
+  Copyright 2020 The Go Authors. All rights reserved.
+  Use of this source code is governed by a BSD-style
+  license that can be found in the LICENSE file.
+-->
+
+{{define "unit-readme"}}
+  <div class="UnitReadme {{if .ExpandReadme}}UnitReadme--expanded{{end}} js-readme">
+    <h2 class="UnitReadme-title" id="section-readme">
+      <img class="go-Icon" height="24" width="24" src="/static/_icon/chrome_reader_mode_gm_grey_24dp.svg" alt="">
+      README
+      <a class="UnitReadme-idLink" href="#section-readme">¶</a>
+    </h2>
+    {{if .Readme.String }}
+      <div class="UnitReadme-content" data-test-id="Unit-readmeContent">
+        <div class="Overview-readmeContent js-readmeContent">{{.Readme}}</div>
+      </div>
+      <button class="UnitReadme-expandLink js-readmeExpand"
+          data-test-id="readme-expand" data-gtmc="readme button"
+          aria-label="Expand Readme">Expand ▾</button>
+      <button class="UnitReadme-collapseLink js-readmeCollapse"
+          data-test-id="readme-collapse" data-gtmc="readme button"
+          aria-label="Expand Readme">Collapse ▴</button>
+    {{end}}
+  </div>
+{{end}}

@@ -1,0 +1,23 @@
+<!--
+  Copyright 2021 The Go Authors. All rights reserved.
+  Use of this source code is governed by a BSD-style
+  license that can be found in the LICENSE file.
+-->
+
+{{define "title"}}<title>Search Help · pkg.go.dev</title>{{end}}
+
+{{define "main"}}
+  <main class="go-Container">
+    <div class="go-Content">
+      <h1>Search help</h1>
+        <p>You can use symbols or words in your search to make your search results more precise.</p>
+        <h2>Search for an exact match</h2>
+        <p>Put a word or phrase inside quotes. For example, <a href="/search?q=&quot;go+cloud&quot;">"go cloud"</a>.</p>
+        <h2>Combine searches</h2>
+        <p>Put OR between each search query. For example, <a href="/search?q=yaml+OR+json">yaml OR json</a>.</p>
+        <h2>Search by package path</h2>
+        <p>You can search for a package by its full or partial import path. For example, <a href="/search?q=go%2Fpackages">go/packages</a>.</p>
+        <p>If the query matches a package import path, you will be redirected to the package details page for the latest version of that package. For example, <a href="/search?q=golang.org/x/tools/go/packages">golang.org/x/tools/go/packages</a>.</p>
+    </div>
+  </main>
+{{end}}

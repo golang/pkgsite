@@ -1,0 +1,62 @@
+/*!
+ * Copyright 2021 The Go Authors. All rights reserved.
+ * Use of this source code is governed by a BSD-style
+ * license that can be found in the LICENSE file.
+ */
+
+@import url('../../third_party/dialog-polyfill/dialog-polyfill.css');
+
+.go-Modal {
+  background: var(--color-background);
+  border: var(--border);
+  border-radius: var(--border-radius);
+  bottom: 0;
+  box-shadow: var(--box-shadow);
+  color: var(--color-text);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-height: 100%;
+  max-width: 100%;
+  position: fixed;
+  top: 0;
+}
+.go-Modal > form {
+  display: contents;
+}
+.go-Modal--small {
+  width: 20rem;
+}
+.go-Modal--md {
+  width: 30rem;
+}
+.go-Modal--lg {
+  width: 40rem;
+}
+.go-Modal-header {
+  border-bottom: var(--border);
+  display: flex;
+  justify-content: space-between;
+  padding-bottom: 1rem;
+}
+.go-Modal-header h2 {
+  font-size: 1.15rem;
+  line-height: 1.25rem;
+}
+.go-Modal-body {
+  flex-grow: 1;
+  min-height: 2rem;
+  min-width: 18rem;
+}
+.go-Modal-actions {
+  text-align: right;
+}
+
+/* Safari only */
+@media not all and (min-resolution: 0.001dpcm) {
+  @supports (-webkit-appearance: none) {
+    .go-Modal {
+      padding-bottom: 0;
+    }
+  }
+}

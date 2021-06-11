@@ -1,0 +1,160 @@
+<!--
+  Copyright 2021 The Go Authors. All rights reserved.
+  Use of this source code is governed by a BSD-style
+  license that can be found in the LICENSE file.
+-->
+
+{{define "title"}}
+  <title>{{.Query}} - Search Results · pkg.go.dev</title>
+{{end}}
+
+{{define "pre-content"}}
+  <link href="/static/search/search.css?version={{.AppVersionLabel}}" rel="stylesheet">
+{{end}}
+
+{{define "main"}}
+  <main class="go-Container">
+    <div class="go-Content">
+      <h1 class="SearchResults-header">Results for “{{.Query}}”</h1>
+      <div class="SearchResults-help"><a href="/search-help">Search help</a></div>
+      <div class="SearchResults-resultCount go-textSubtle">
+        {{template "pagination_summary" .Pagination}} {{pluralize .Pagination.TotalCount "result"}}
+        {{template "pagination_nav" .Pagination}}
+      </div>
+        {{if eq (len .Results) 0}}
+          <div>
+            <img class="SearchResults-emptyContentGopher" width="945" height="1200"
+                src="/static/_gopher/airplane-1200x945.svg" alt="The Go Gopher">
+            <h3 class="SearchResults-emptyContentMessage">No results found.</h3>
+            <p class="SearchResults-emptyContentMessage">
+              If you think “{{.Query}}” is a valid package or module, you could try downloading it by visiting <a href="https://pkg.go.dev/{{.Query}}">pkg.go.dev/{{.Query}}</a>.
+            </p>
+          </div>
+        {{else}}
+          <div>{{/* Containing element is needed to use *-of-type selectors */}}
+            {{if (.Experiments.IsActive "search-grouping")}}
+              {{template "grouped_search" .}}
+            {{else}}
+              {{template "legacy_search" .}}
+            {{end}}
+          </div>
+        {{end}}
+      <div class="SearchResults-footer">
+        {{template "pagination_nav" .Pagination}}
+      </div>
+    </div>
+  </main>
+{{end}}
+
+
+{{define "legacy_search"}}
+  {{$query := .Query}}
+  {{range $i, $v := .Results}}
+    <div class="LegacySearchSnippet">
+      <h2 class="LegacySearchSnippet-header">
+        <a href="/{{$v.PackagePath}}" data-gtmc="search result" data-gtmv="{{$i}}"
+            data-test-id="snippet-title">
+          {{$v.PackagePath}}
+        </a>
+      </h2>
+      <p class="SearchSnippet-synopsis go-textSubtle" data-test-id="snippet-synopsis">{{$v.Synopsis}}</p>
+      <div class="SearchSnippet-infoLabel">
+        <strong class="InfoLabel-title">Version:</strong>
+        <span data-test-id="snippet-version"> {{$v.DisplayVersion}}</span>
+        <span class="InfoLabel-divider">|</span>
+        <strong class="InfoLabel-title">Published:</strong>
+        <span data-test-id="snippet-published"> {{$v.CommitTime}}</span>
+        <span class="InfoLabel-divider">|</span>
+        <strong class="InfoLabel-title">Imported by:</strong>
+        <span data-test-id="snippet-importedby"> {{$v.NumImportedBy}}</span>
+        <span class="InfoLabel-divider">|</span>
+        <strong class="InfoLabel-title">{{pluralize (len $v.Licenses) "License"}}:</strong>
+        <span data-test-id="snippet-license">
+          {{if $v.Licenses}}
+            {{commaseparate $v.Licenses}}
+          {{else}}
+            <span>N/A</span>
+          {{end}}
+        </span>
+      </div>
+      {{with .SameModule}}
+        <div class="SearchSnippet-sub">
+          <span>{{.Heading}}</span>
+          {{range $i, $v := .Links}}
+            <a href="/{{$v.Href}}" data-gtmc="search result" data-gtmv="{{$i}}">{{$v.Body}}</a>
+          {{end}}
+          <span>{{.Suffix}}</span>
+        </div>
+      {{end}}
+      {{with .LowerMajor}}
+        <div class="SearchSnippet-sub">
+          <span>{{.Heading}}</span>
+          {{range $i, $v := .Links}}
+            <a href="/{{$v.Href}}" data-gtmc="search result" data-gtmv="{{$i}}">{{$v.Body}}</a>
+          {{end}}
+        </div>
+      {{end}}
+    </div> <!-- SearchSnippet -->
+  {{end}}
+{{end}}
+
+{{define "grouped_search"}}
+  {{$query := .Query}}
+  {{range $i, $v := .Results}}
+    <div class="SearchSnippet">
+      <div class="SearchSnippet-breadcrumb">{{$v.PackagePath}}</div>
+      <div class="SearchSnippet-headerContainer">
+        <h2 class="SearchSnippet-header">
+          <a href="/{{$v.PackagePath}}" data-gtmc="search result" data-gtmv="{{$i}}"
+              data-test-id="snippet-title">
+            {{$v.Name}}
+          </a>
+          <span class="SearchSnippet-version">{{$v.DisplayVersion}}</span>
+        </h2>
+        {{with .Symbols}}
+          <div class="SearchSnippet-symbolContainer">
+            <span class="SearchSnippet-symbolHeading">{{.Heading}}</span>
+            {{range $i, $v := .Links}}
+              <a class="SearchSnippet-symbol" href="/{{$v.Href}}">{{$v.Body}}</a>
+            {{end}}
+            <span>{{.Suffix}}</span>
+          </div>
+        {{end}}
+      </div>
+      <p class="SearchSnippet-synopsis go-textSubtle" data-test-id="snippet-synopsis">{{$v.Synopsis}}</p>
+      <div class="SearchSnippet-infoLabel">
+        <span class="InfoLabel-title">Published:</span>
+        <span data-test-id="snippet-published"> {{$v.CommitTime}}</span>
+        <span class="SearchSnippet-infoLabelDivider"></span>
+        <span class="InfoLabel-title">{{pluralize (len $v.Licenses) "License"}}:</span>
+        <span data-test-id="snippet-license">
+          {{if $v.Licenses}}
+            {{commaseparate $v.Licenses}}
+          {{else}}
+            <span>N/A</span>
+          {{end}}
+        </span>
+        <span class="SearchSnippet-infoLabelDivider"></span>
+        <span class="InfoLabel-title">Imported by:</span>
+        <span data-test-id="snippet-importedby"><strong>{{$v.NumImportedBy}}</b></spastrong>
+      </div>
+      {{with .SameModule}}
+        <div class="SearchSnippet-sub">
+          <span>{{.Heading}}</span>
+          {{range $i, $v := .Links}}
+            <a href="/{{$v.Href}}" data-gtmc="search result same module" data-gtmv="{{$i}}">{{$v.Body}}</a>
+          {{end}}
+          <span>{{.Suffix}}</span>
+        </div>
+      {{end}}
+      {{with .LowerMajor}}
+        <div class="SearchSnippet-sub">
+          <span>{{.Heading}}</span>
+          {{range $i, $v := .Links}}
+            <a href="/{{$v.Href}}" data-gtmc="search result lower major" data-gtmv="{{$i}}">{{$v.Body}}</a>
+          {{end}}
+        </div>
+      {{end}}
+    </div> <!-- SearchSnippet -->
+  {{end}}
+{{end}}

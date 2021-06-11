@@ -1,0 +1,102 @@
+<!--
+  Copyright 2020 The Go Authors. All rights reserved.
+  Use of this source code is governed by a BSD-style
+  license that can be found in the LICENSE file.
+-->
+
+{{define "unit-outline"}}
+  <div class="UnitOutline-jumpTo">
+    <button class="UnitOutline-jumpToInput js-jumpToInput"
+        aria-controls="jump-to-modal"
+        aria-label="Open Jump to Identifier"
+        data-test-id="jump-to-button" data-gtmc="outline button">
+      Jump to ...
+    </button>
+  </div>
+  <ul class="go-Tree js-tree" aria-label="Outline">
+    {{if .Readme.String}}
+      <li class="js-readmeOutline">
+        <a href="#section-readme" data-gtmc="outline link">
+          README
+        </a>
+        {{template "readme-outline" .ReadmeOutline}}
+      </li>
+    {{end}}
+    {{if .IsPackage}}
+      <li>
+        <a href="#section-documentation" data-gtmc="outline link">
+          Documentation
+        </a>
+        {{.DocOutline}}
+      </li>
+    {{end}}
+    {{if .SourceFiles}}
+      <li>
+        <a href="#section-sourcefiles" data-gtmc="outline link">
+          Source Files
+        </a>
+      </li>
+    {{end}}
+    {{if .Directories}}
+      <li>
+        <a href="#section-directories" data-gtmc="outline link">
+          Directories
+        </a>
+      </li>
+    {{end}}
+  </ul>
+{{end}}
+
+{{define "readme-outline"}}
+  <ul id="readme-outline">
+    {{range .}}
+      <li>
+        <a href="#{{.ID}}" data-gtmc="readme outline link">
+          {{.Text}}
+        </a>
+        {{if .Children}}
+          <ul>
+            {{range .Children}}
+              <li>
+                <a href="#{{.ID}}" data-gtmc="readme outline link">
+                  {{.Text}}
+                </a>
+                {{if .Children}}
+                  <ul>
+                    {{range .Children}}
+                      <li>
+                        <a href="#{{.ID}}" data-gtmc="readme outline link">
+                          {{.Text}}
+                        </a>
+                      </li>
+                    {{end}} {{/* range .Children */}}
+                  </ul>
+                {{end}} {{/* if .Children */}}
+              </li>
+            {{end}} {{/* range .Children */}}
+          </ul>
+        {{end}} {{/* if .Children */}}
+      </li>
+    {{end}} {{/* range . */}}
+  </ul>
+{{end}}
+
+{{define "unit-outline_mobile"}}
+  <label class="go-Label" aria-label="Menu">
+    <select class="go-Select js-selectNav">
+      <option disabled="" label="Outline"></option>
+      {{if .Readme.String}}
+        <optgroup label="README">
+          {{range .ReadmeOutline}}<option value="{{.ID}}">{{.Text}}</option>{{end}}
+        </optgroup>
+      {{end}}
+      {{.MobileOutline}}
+      {{if .SourceFiles}}
+        <option value="section-sourcefiles">Source Files</option>
+      {{end}}
+      {{if .Directories}}
+        <option value="section-directories">Directories</option>
+      {{end}}
+    </select>
+  </label>
+{{end}}

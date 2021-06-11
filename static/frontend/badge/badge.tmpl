@@ -1,0 +1,85 @@
+<!--
+  Copyright 2020 The Go Authors. All rights reserved.
+  Use of this source code is governed by a BSD-style
+  license that can be found in the LICENSE file.
+-->
+
+{{define "title"}}<title>Badge · pkg.go.dev</title>{{end}}
+
+{{define "description"}}
+  <meta name="description" content="Create a badge to link to pkg.go.dev from your project website or README file.">
+{{end}}
+
+{{define "pre-content"}}
+  <link href="/static/badge/badge.css?version={{.AppVersionLabel}}" rel="stylesheet">
+{{end}}
+
+{{define "main"}}
+  <main class="go-Container">
+    <div class="go-Content Badge">
+      <form class="go-Form" action="/badge/" data-gtmc="badge form" aria-label="Create a Badge">
+        <h1>Create a badge</h1>
+        <p>Create a badge to link to pkg.go.dev from your project website or README file.</p>
+        <label class="go-Label">
+          Badge
+          <a class="js-badgeExampleButton" href="https://pkg.go.dev/{{.LinkPath}}">
+            <img class="Badge-badgeIcon" src="/static/badge/badge.svg" alt="Go Reference">
+          </a>
+        </label>
+        <label class="go-Label">
+          URL
+          <input name="path" class="go-Input js-toolsPathInput"
+              value="{{if .LinkPath}}https://pkg.go.dev/{{.LinkPath}}{{end}}" placeholder="e.g., https://pkg.go.dev/golang.org/x/pkgsite">
+        </label>
+        <button type="submit" class="go-Button">{{if .LinkPath}}Update{{else}}Create{{end}}</button>
+      </form>
+      <div class="Badge-snippetContainer">
+        {{if .LinkPath}}
+          <label class="go-Label">HTML
+            <div class="go-InputGroup">
+              <input class="go-Input" readonly
+                  value='<a href="https://pkg.go.dev/{{.LinkPath}}"><img src="https://pkg.go.dev/{{.BadgePath}}" alt="Go Reference"></a>'>
+              <button
+                class="go-Button go-Button--inverted go-Clipboard js-clipboard"
+                aria-label="Copy to Clipboard"
+                data-gtmc="clipboard button"
+              >
+                <img
+                  class="go-Icon"
+                  height="24"
+                  width="24"
+                  src="/static/_icon/content_copy_gm_grey_24dp.svg"
+                  alt=""
+                />
+              </button>
+            </div>
+          </label>
+          <label class="go-Label">Markdown
+            <div class="go-InputGroup">
+              <input class="go-Input" readonly
+                  value="[![Go Reference](https://pkg.go.dev/{{.BadgePath}})](https://pkg.go.dev/{{.LinkPath}})">
+              <button
+                class="go-Button go-Button--inverted go-Clipboard js-clipboard"
+                aria-label="Copy to Clipboard"
+                data-gtmc="clipboard button"
+              >
+                <img
+                  class="go-Icon"
+                  height="24"
+                  width="24"
+                  src="/static/_icon/content_copy_gm_grey_24dp.svg"
+                  alt=""
+                />
+              </button>
+            </div>
+          </label>
+        {{else}}
+          <div class="Badge-gopherLanding">
+            <img width="1200" height="945" src="/static/_gopher/airplane-1200x945.svg" alt="The Go Gopher"/>
+            <p class="go-textSubtle">Type a pkg.go.dev URL above to create a badge link.</p>
+          </div>
+        {{end}}
+      </div>
+    </div>
+  </main>
+{{end}}

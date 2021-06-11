@@ -1,0 +1,77 @@
+<!--
+  Copyright 2020 The Go Authors. All rights reserved.
+  Use of this source code is governed by a BSD-style
+  license that can be found in the LICENSE file.
+-->
+
+{{define "main-styles"}}
+  <link href="/static/unit/main/main.css?version={{.AppVersionLabel}}" rel="stylesheet">
+{{end}}
+
+{{define "main-banner"}}
+  {{template "unit-header-banners" .}}
+{{end}}
+
+{{define "main-header"}}
+  {{template "unit-header" .}}
+{{end}}
+
+{{define "main-aside"}}
+  {{block "unit-meta" .}}{{end}}
+{{end}}
+
+{{define "main-nav"}}
+  <div class="go-Main-navDesktop">
+    {{block "unit-outline" .Details}}{{end}}
+  </div>
+  <div class="go-Main-navMobile js-mainNavMobile">
+    <label class="go-Label">
+      <select class="go-Select">
+        {{if .Details.Readme.String}}
+          <option selected disabled>README</option>
+        {{else if .Details.DocBody.String}}
+          <option selected disabled>Documentation</option>
+        {{else if .Details.SourceFiles}}
+          <option selected disabled>Source Files</option>
+        {{else if .Details.Directories}}
+          <option selected disabled>Directories</option>
+        {{end}}
+      </select>
+    </label>
+  </div>
+{{end}}
+
+{{define "main-content"}}
+  <div class="UnitDetails" data-test-id="UnitDetails" style="display: block;">
+    <div class="UnitDetails-content js-unitDetailsContent" role="main" data-test-id="UnitDetails-content">
+      {{if .Details.Readme.String}}
+        {{block "unit-readme" .Details}}{{end}}
+      {{end}}
+      {{if .Details.IsPackage}}
+        {{if .Unit.IsRedistributable}}
+          {{block "unit-doc" .Details}}{{end}}
+        {{else}}
+          <div class="UnitDetails-contentEmpty">
+            <img width="945" height="1200" src="/static/_gopher/airplane-1200x945.svg" alt="The Go Gopher"/>
+            <p>Documentation not displayed due to license restrictions.</p>
+            <p>See our <a href="/license-policy">license policy</a>.</p>
+          </div>
+        {{end}}
+      {{end}}
+      {{if .Details.SourceFiles}}
+        {{block "unit-files" .Details}}{{end}}
+      {{end}}
+      {{if .Details.Directories}}
+        {{block "unit-directories" .Details}}{{end}}
+      {{end}}
+    </div>
+  </div>
+  {{template "unit-modals" .}}
+{{end}}
+
+{{define "main-scripts"}}
+  <div class="js-canonicalURLPath" data-canonical-url-path="{{.CanonicalURLPath}}" hidden></div>
+  <script>
+    loadScript('/static/unit/main/main.js')
+  </script>
+{{end}}

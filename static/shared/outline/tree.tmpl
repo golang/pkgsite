@@ -1,0 +1,24 @@
+<!--
+  Copyright 2021 The Go Authors. All rights reserved.
+  Use of this source code is governed by a BSD-style
+  license that can be found in the LICENSE file.
+-->
+
+{{define "treeitems"}}
+  {{range .}}
+    <li>
+      <a href="#{{.ID}}">{{.Text}}</a>
+      {{if and .Children (lt .Level 4)}}
+        <ul>
+          {{template "treeitems" .Children}}
+        </ul>
+      {{end}}
+    </li>
+  {{end}}
+{{end}}
+
+{{define "tree-nav"}}
+  <ul class="go-Tree js-tree" role="tree">
+    {{template "treeitems" .}}
+  </ul>
+{{end}}

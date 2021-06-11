@@ -1,0 +1,30 @@
+<!--
+  Copyright 2020 The Go Authors. All rights reserved.
+  Use of this source code is governed by a BSD-style
+  license that can be found in the LICENSE file.
+-->
+
+{{- define "example" -}}
+  {{- range . -}}
+  <details tabindex="-1" id="{{.ID}}" class="Documentation-exampleDetails js-exampleContainer">{{"\n" -}}
+    <summary class="Documentation-exampleDetailsHeader">Example{{with .Suffix}} ({{.}}){{end}} <a href="#{{.ID}}">¶</a></summary>{{"\n" -}}
+    <div class="Documentation-exampleDetailsBody">{{"\n" -}}
+      {{- if .Doc -}}{{render_doc .Doc}}{{"\n" -}}{{- end -}}
+      {{- with play_url .Example -}}
+      <p><a class="Documentation-examplesPlay" href="{{.}}">Open in Go playground »</a></p>{{"\n" -}}
+      {{- end -}}
+      {{render_code .Example}}{{"\n" -}}
+      <pre><span class="Documentation-exampleOutputLabel">Output:</span>{{"\n\n"}}<span class="Documentation-exampleOutput">{{- .Output -}}</span></pre>{{"\n" -}}
+    </div>{{"\n" -}}
+    {{- if .Play -}}
+      <div class="Documentation-exampleButtonsContainer">
+        <p class="Documentation-exampleError" role="alert" aria-atomic="true"></p>
+        <button class="Documentation-exampleShareButton" aria-label="Share Code">Share</button>
+        <button class="Documentation-exampleFormatButton" aria-label="Format Code">Format</button>
+        <button class="Documentation-exampleRunButton" aria-label="Run Code">Run</button>
+      </div>
+    {{- end -}}
+  </details>{{"\n" -}}
+  {{"\n"}}
+  {{- end -}}
+{{- end -}}
