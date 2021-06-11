@@ -1,8 +1,8 @@
-import '../../_jump/jump.js';
-import '../../_playground/playground.js';
+import '../../../shared/jump/jump';
+import '../../../shared/playground/playground';
 
-import { SelectNavController, makeSelectNav } from '../../_outline/select.js';
-import { TreeNavController } from '../../_outline/tree.js';
+import { SelectNavController, makeSelectNav } from '../../../shared/outline/select';
+import { TreeNavController } from '../../../shared/outline/tree';
 
 const treeEl = document.querySelector<HTMLElement>('.js-tree');
 if (treeEl) {

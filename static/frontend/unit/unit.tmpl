@@ -9,7 +9,7 @@
 {{define "description"}}{{.MetaDescription}}{{end}}
 
 {{define "pre-content"}}
-  <link href="/static/unit/unit.css?version={{.AppVersionLabel}}" rel="stylesheet">
+  <link href="/static/frontend/unit/unit.css?version={{.AppVersionLabel}}" rel="stylesheet">
   {{block "main-styles".}}{{end}}
 {{end}}
 
@@ -39,6 +39,6 @@
 {{define "post-content"}}
   {{block "main-scripts" .}}{{end}}
   <script>
-    loadScript('/static/unit/unit.js')
+    loadScript('/static/frontend/unit/unit.js')
   </script>
 {{end}}

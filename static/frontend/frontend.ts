@@ -5,29 +5,6 @@
  * license that can be found in the LICENSE file.
  */
 
-import '../_header/header.js';
-import '../_keyboard/keyboard.js';
-import { ClipboardController } from '../_clipboard/clipboard.js';
-import { ToolTipController } from '../_tooltip/tooltip.js';
-import { SelectNavController } from '../_outline/select.js';
-import { ModalController } from '../_modal/modal.js';
-
-for (const el of document.querySelectorAll<HTMLButtonElement>('.js-clipboard')) {
-  new ClipboardController(el);
-}
-
-for (const el of document.querySelectorAll<HTMLDialogElement>('.js-modal')) {
-  new ModalController(el);
-}
-
-for (const t of document.querySelectorAll<HTMLDetailsElement>('.js-tooltip')) {
-  new ToolTipController(t);
-}
-
-for (const el of document.querySelectorAll<HTMLSelectElement>('.js-selectNav')) {
-  new SelectNavController(el);
-}
-
 interface TagManagerEvent {
   event: string;
   'gtm.start': number;
@@ -77,3 +54,5 @@ if (document.querySelector<HTMLElement>('.js-gtmID')?.dataset.gtmid && window.da
 } else {
   removeUTMSource();
 }
+
+export {};

@@ -5,7 +5,7 @@
  * license that can be found in the LICENSE file.
  */
 
-import { ExpandableRowsTableController } from '../_table/table.js';
+import { ExpandableRowsTableController } from '../../shared/table/table';
 
 document
   .querySelectorAll<HTMLTableElement>('.js-expandableTable')

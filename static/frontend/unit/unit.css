@@ -197,7 +197,7 @@
   width: 100%;
 }
 .go-Main-navMobile .go-Label::before {
-  background: url(/static/_icon/list_gm_grey_24dp.svg);
+  background: url(/static/shared/icon/list_gm_grey_24dp.svg);
   background-repeat: no-repeat;
   background-size: contain;
   content: ' ';

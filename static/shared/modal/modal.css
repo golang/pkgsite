@@ -4,7 +4,7 @@
  * license that can be found in the LICENSE file.
  */
 
-@import url('../../third_party/dialog-polyfill/dialog-polyfill.css');
+@import url('../../../third_party/dialog-polyfill/dialog-polyfill.css');
 
 .go-Modal {
   background: var(--color-background);

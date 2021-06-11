@@ -4,7 +4,7 @@
  * license that can be found in the LICENSE file.
  */
 
-@import url('../../css/readme.css');
+@import url('../../../legacy/css/readme.css');
 
 @import url('./_build-context.css');
 @import url('./_directories.css');

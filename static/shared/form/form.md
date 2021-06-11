@@ -47,7 +47,7 @@
       class="go-Icon"
       height="24"
       width="24"
-      src="/static/_icon/search_gm_grey_24dp.svg"
+      src="/static/shared/icon/search_gm_grey_24dp.svg"
       alt=""
     />
   </button>
@@ -74,7 +74,7 @@
       class="go-Icon"
       height="24"
       width="24"
-      src="/static/_icon/filter_list_gm_grey_24dp.svg"
+      src="/static/shared/icon/filter_list_gm_grey_24dp.svg"
       alt=""
     />
   </button>
@@ -86,7 +86,7 @@
       class="go-Icon"
       height="24"
       width="24"
-      src="/static/_icon/search_gm_grey_24dp.svg"
+      src="/static/shared/icon/search_gm_grey_24dp.svg"
       alt=""
     />
   </button>
@@ -102,7 +102,7 @@
         class="go-Icon"
         height="24"
         width="24"
-        src="/static/_icon/filter_list_gm_grey_24dp.svg"
+        src="/static/shared/icon/filter_list_gm_grey_24dp.svg"
         alt=""
       />
     </button>
@@ -111,7 +111,7 @@
         class="go-Icon"
         height="24"
         width="24"
-        src="/static/_icon/search_gm_grey_24dp.svg"
+        src="/static/shared/icon/search_gm_grey_24dp.svg"
         alt=""
       />
     </button>

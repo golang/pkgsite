@@ -7,18 +7,18 @@
 {{define "title"}}<title>Style Guide · pkg.go.dev</title>{{end}}
 
 {{define "main-styles"}}
-  <link href="/static/styleguide/styleguide.css" rel="stylesheet">
+  <link href="/static/frontend/styleguide/styleguide.css" rel="stylesheet">
 {{end}}
 
 {{define "main-scripts"}}
   <script type="module">
-    loadScript("/static/styleguide/styleguide.js", {async: true})
+    loadScript("/static/frontend/styleguide/styleguide.js", {async: true})
   </script>
 {{end}}
 
 {{define "main-banner"}}
   <div class="go-Message go-Message--notice">
-    <img class="go-Icon" height="24" width="24" src="/static/_icon/info_gm_grey_24dp.svg" alt="Notice">&nbsp;
+    <img class="go-Icon" height="24" width="24" src="/static/shared/icon/info_gm_grey_24dp.svg" alt="Notice">&nbsp;
     Work in progess.
   </div>
 {{end}}
@@ -36,7 +36,7 @@
     <div class="go-Main-headerTitle">
       <a class="go-Main-headerLogo" href="https://go.dev/" aria-hidden="true" tabindex="-1" data-gtmc="header link"
           aria-label="Link to Go Homepage">
-        <img height="78" width="207" src="/static/_logo/go-blue.svg" alt="Go">
+        <img height="78" width="207" src="/static/shared/logo/go-blue.svg" alt="Go">
       </a>
       <h1 class="go-Main-headerTitle">Style Guide</h1>
     </div>
@@ -46,13 +46,13 @@
         <div class="go-InputGroup">
           <button class="go-Button go-Button--inverted js-toggleTheme" data-value="light" title="Light"
               aria-label="Set light theme">
-            <img class="go-Icon" height="24" width="24" src="/static/_icon/light_mode_gm_grey_24dp.svg"
+            <img class="go-Icon" height="24" width="24" src="/static/shared/icon/light_mode_gm_grey_24dp.svg"
                 alt="">
           </button>
           <button class="go-Button go-Button--inverted js-toggleTheme" data-value="dark" title="Dark"
               aria-label="Set dark theme">
             <img class="go-Icon" height="24" width="24" alt=""
-              src="/static/_icon/brightness_2_gm_grey_24dp.svg">
+              src="/static/shared/icon/brightness_2_gm_grey_24dp.svg">
           </button>
         </div>
       </fieldset>
@@ -61,17 +61,17 @@
         <div class="go-InputGroup">
           <button class="go-Button go-Button--inverted js-toggleLayout" data-value="responsive"
               title="Responsive" aria-label="Set responsive layout">
-            <img class="go-Icon" height="24" width="24" src="/static/_icon/responsive_layout_gm_grey_24dp.svg"
+            <img class="go-Icon" height="24" width="24" src="/static/shared/icon/responsive_layout_gm_grey_24dp.svg"
                 alt="">
           </button>
           <button class="go-Button go-Button--inverted js-toggleLayout" data-value="stacked"
               title="Stacked" aria-label="Set stacked layout">
-            <img class="go-Icon" height="24" width="24" src="/static/_icon/table_rows_gm_grey_24dp.svg"
+            <img class="go-Icon" height="24" width="24" src="/static/shared/icon/table_rows_gm_grey_24dp.svg"
                 alt="">
           </button>
           <button class="go-Button go-Button--inverted js-toggleLayout" data-value="compact"
               title="Compact" aria-label="Set compact layout">
-            <img class="go-Icon" height="24" width="24" src="/static/_icon/toolbar_gm_grey_24dp.svg"
+            <img class="go-Icon" height="24" width="24" src="/static/shared/icon/toolbar_gm_grey_24dp.svg"
                 alt="">
           </button>
         </div>
@@ -106,11 +106,11 @@
       <li>
         <details class="go-Tooltip js-tooltip" data-gtmc="tooltip">
           <summary>
-            <img class="go-Icon" src="/static/_icon/check_circle_gm_grey_24dp.svg" alt="checked"
+            <img class="go-Icon" src="/static/shared/icon/check_circle_gm_grey_24dp.svg" alt="checked"
                 height="24" width="24">
             Valid <a href="https://github.com/example.com/module/tree/v1.0.0/go.mod" target="_blank"
                 rel="noreferrer">go.mod</a> file
-            <img class="go-Icon" src="/static/_icon/help_gm_grey_24dp.svg" alt="" height="24"
+            <img class="go-Icon" src="/static/shared/icon/help_gm_grey_24dp.svg" alt="" height="24"
                 width="24">
           </summary>
           <p>
@@ -122,10 +122,10 @@
       <li>
         <details class="go-Tooltip js-tooltip" data-gtmc="tooltip">
           <summary>
-            <img class="go-Icon" src="/static/_icon/check_circle_gm_grey_24dp.svg" alt="checked"
+            <img class="go-Icon" src="/static/shared/icon/check_circle_gm_grey_24dp.svg" alt="checked"
                 height="24" width="24">
             Redistributable license
-            <img class="go-Icon" src="/static/_icon/help_gm_grey_24dp.svg" alt="" height="24"
+            <img class="go-Icon" src="/static/shared/icon/help_gm_grey_24dp.svg" alt="" height="24"
                 width="24">
           </summary>
           <p>
@@ -137,10 +137,10 @@
       <li>
         <details class="go-Tooltip js-tooltip" data-gtmc="tooltip">
           <summary>
-            <img class="go-Icon" src="/static/_icon/check_circle_gm_grey_24dp.svg" alt="checked"
+            <img class="go-Icon" src="/static/shared/icon/check_circle_gm_grey_24dp.svg" alt="checked"
                 height="24" width="24">
             Tagged version
-            <img class="go-Icon" src="/static/_icon/help_gm_grey_24dp.svg" alt="" height="24"
+            <img class="go-Icon" src="/static/shared/icon/help_gm_grey_24dp.svg" alt="" height="24"
                 width="24">
           </summary>
           <p>Modules with tagged versions give importers more predictable builds.</p>
@@ -149,10 +149,10 @@
       <li>
         <details class="go-Tooltip js-tooltip" data-gtmc="tooltip">
           <summary>
-            <img class="go-Icon" src="/static/_icon/check_circle_gm_grey_24dp.svg" alt="checked"
+            <img class="go-Icon" src="/static/shared/icon/check_circle_gm_grey_24dp.svg" alt="checked"
                 height="24" width="24">
             Stable version
-            <img class="go-Icon" src="/static/_icon/help_gm_grey_24dp.svg" alt="" height="24"
+            <img class="go-Icon" src="/static/shared/icon/help_gm_grey_24dp.svg" alt="" height="24"
                 width="24">
           </summary>
           <p>When a project reaches major version v1 it is considered stable.</p>

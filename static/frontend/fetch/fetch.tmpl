@@ -7,14 +7,14 @@
 {{define "title"}}<title>{{.MessageData}} · pkg.go.dev</title>{{end}}
 
 {{define "pre-content"}}
-  <link href="/static/fetch/fetch.css?version={{.AppVersionLabel}}" rel="stylesheet">
+  <link href="/static/frontend/fetch/fetch.css?version={{.AppVersionLabel}}" rel="stylesheet">
 {{end}}
 
 {{define "main"}}
   <main class="go-Container">
     <div class="go-Content go-Content--center">
       <img class="Fetch-gopher" width="945" height="1200"
-          src="/static/_gopher/airplane-1200x945.svg" alt="The Go Gopher">
+          src="/static/shared/gopher/airplane-1200x945.svg" alt="The Go Gopher">
       <h3 class="Fetch-message js-fetchMessage"
         data-test-id="fetch-message"
         aria-live="polite"
@@ -41,6 +41,6 @@
 
 {{define "post-content"}}
   <script>
-    loadScript("/static/fetch/fetch.js");
+    loadScript("/static/frontend/fetch/fetch.js");
   </script>
 {{end}}

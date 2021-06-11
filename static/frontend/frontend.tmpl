@@ -18,12 +18,12 @@
       <meta name="description" content="Go is an open source programming language that makes it easy to build simple, reliable, and efficient software.">
     {{end}}
     <meta class="js-gtmID" data-gtmid="{{.GoogleTagManagerID}}">
-    <link rel="shortcut icon" href="/static/_icon/favicon.ico">
+    <link rel="shortcut icon" href="/static/shared/icon/favicon.ico">
     <!-- Only load the css reset for non-legacy pages -->
     {{if not .UseSiteWrapper}}
-      <link href="/static/_base/reset.css" rel="stylesheet">
+      <link href="/static/shared/reset.css" rel="stylesheet">
     {{end}}
-    <link href="/static/_base/base.css" rel="stylesheet">
+    <link href="/static/frontend/frontend.css" rel="stylesheet">
     {{block "title" .}}
       <title>pkg.go.dev</title>
     {{end}}
@@ -41,7 +41,7 @@
         s.defer = true
         document.head.appendChild(s);
       }
-      loadScript("/static/_base/base.js");
+      loadScript("/static/frontend/frontend.js");
     </script>
     {{if .UseSiteWrapper}}
       <div class="Site Site--wide Site--redesign">

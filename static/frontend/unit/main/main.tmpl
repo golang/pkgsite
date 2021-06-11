@@ -5,7 +5,7 @@
 -->
 
 {{define "main-styles"}}
-  <link href="/static/unit/main/main.css?version={{.AppVersionLabel}}" rel="stylesheet">
+  <link href="/static/frontend/unit/main/main.css?version={{.AppVersionLabel}}" rel="stylesheet">
 {{end}}
 
 {{define "main-banner"}}
@@ -52,7 +52,7 @@
           {{block "unit-doc" .Details}}{{end}}
         {{else}}
           <div class="UnitDetails-contentEmpty">
-            <img width="945" height="1200" src="/static/_gopher/airplane-1200x945.svg" alt="The Go Gopher"/>
+            <img width="945" height="1200" src="/static/shared/gopher/airplane-1200x945.svg" alt="The Go Gopher"/>
             <p>Documentation not displayed due to license restrictions.</p>
             <p>See our <a href="/license-policy">license policy</a>.</p>
           </div>
@@ -72,6 +72,6 @@
 {{define "main-scripts"}}
   <div class="js-canonicalURLPath" data-canonical-url-path="{{.CanonicalURLPath}}" hidden></div>
   <script>
-    loadScript('/static/unit/main/main.js')
+    loadScript('/static/frontend/unit/main/main.js')
   </script>
 {{end}}

@@ -17,7 +17,7 @@ Use an aria-label on buttons to provide context about the data being copied.
     class="go-Icon"
     height="24"
     width="24"
-    src="/static/_icon/content_copy_gm_grey_24dp.svg"
+    src="/static/shared/icon/content_copy_gm_grey_24dp.svg"
     alt=""
   />
 </button>
@@ -34,7 +34,7 @@ Use an aria-label on buttons to provide context about the data being copied.
     class="go-Icon"
     height="24"
     width="24"
-    src="/static/_icon/content_copy_gm_grey_24dp.svg"
+    src="/static/shared/icon/content_copy_gm_grey_24dp.svg"
     alt=""
   />
 </button>
@@ -54,7 +54,7 @@ Use an aria-label on buttons to provide context about the data being copied.
       class="go-Icon"
       height="24"
       width="24"
-      src="/static/_icon/content_copy_gm_grey_24dp.svg"
+      src="/static/shared/icon/content_copy_gm_grey_24dp.svg"
       alt=""
     />
   </button>

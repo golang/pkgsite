@@ -5,8 +5,8 @@
  * license that can be found in the LICENSE file.
  */
 
-import { SelectNavController, makeSelectNav } from '../_outline/select.js';
-import { TreeNavController } from '../_outline/tree.js';
+import { SelectNavController, makeSelectNav } from '../../shared/outline/select';
+import { TreeNavController } from '../../shared/outline/tree';
 
 window.addEventListener('load', () => {
   const tree = document.querySelector<HTMLElement>('.js-tree');
@@ -81,7 +81,7 @@ customElements.define(
         ' '
       )}</p>
         <stringify-el>
-          <img class="go-Icon" height="24" width="24" src="/static/_icon/${name}_gm_grey_24dp.svg" alt="">
+          <img class="go-Icon" height="24" width="24" src="/static/shared/icon/${name}_gm_grey_24dp.svg" alt="">
         </stringify-el>
       `;
     }

@@ -22,7 +22,7 @@ The size modifer class is optional. The base modal will grow to fit the inner co
           class="go-Icon"
           height="24"
           width="24"
-          src="/static/_icon/close_gm_grey_24dp.svg"
+          src="/static/shared/icon/close_gm_grey_24dp.svg"
           alt=""
         />
       </button>
@@ -56,7 +56,7 @@ The size modifer class is optional. The base modal will grow to fit the inner co
           class="go-Icon"
           height="24"
           width="24"
-          src="/static/_icon/close_gm_grey_24dp.svg"
+          src="/static/shared/icon/close_gm_grey_24dp.svg"
           alt=""
         />
       </button>
@@ -90,7 +90,7 @@ The size modifer class is optional. The base modal will grow to fit the inner co
           class="go-Icon"
           height="24"
           width="24"
-          src="/static/_icon/close_gm_grey_24dp.svg"
+          src="/static/shared/icon/close_gm_grey_24dp.svg"
           alt=""
         />
       </button>

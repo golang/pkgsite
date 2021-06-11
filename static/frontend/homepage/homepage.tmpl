@@ -5,13 +5,13 @@
 -->
 
 {{define "pre-content"}}
-  <link href="/static/homepage/homepage.css?version={{.AppVersionLabel}}" rel="stylesheet">
+  <link href="/static/frontend/homepage/homepage.css?version={{.AppVersionLabel}}" rel="stylesheet">
 {{end}}
 
 {{define "main"}}
   <main class="go-Container">
     <div class="go-Content go-Content--center">
-      <img class="Homepage-logo" src="/static/_gopher/package-search.jpeg" alt="Cartoon gopher typing">
+      <img class="Homepage-logo" src="/static/shared/gopher/package-search.jpeg" alt="Cartoon gopher typing">
       <form class="Homepage-searchForm" action="/search" role="search" data-gtmc="homepage search form"
           aria-label="Search for a Package">
         <div class="Homepage-buttonGroup">
@@ -40,7 +40,7 @@
           <a class="Homepage-exampleSearch" href="/search?q=yaml+OR+json+OR+xml">“yaml OR json OR xml”</a>
         </div>
         <a href="/search-help" target="_blank" rel="noopener" class="Homepage-helpLink">
-          Search help <span><img width="24" height="24" src="/static/_icon/launch_gm_grey_24dp.svg" alt=""></span>
+          Search help <span><img width="24" height="24" src="/static/shared/icon/launch_gm_grey_24dp.svg" alt=""></span>
         </a>
       <span>
     </div>

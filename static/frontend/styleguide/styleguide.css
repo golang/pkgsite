@@ -99,7 +99,7 @@
 }
 .ElementMarkup > pre::before,
 .StringifyElement-markup::before {
-  background: url(/static/_icon/content_copy_gm_grey_24dp.svg);
+  background: url(/static/shared/icon/content_copy_gm_grey_24dp.svg);
   background-repeat: no-repeat;
   background-size: contain;
   content: ' ';

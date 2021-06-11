@@ -9,7 +9,7 @@
 // page. The playground involves a "play" button that allows you to open up
 // a new link to play.golang.org using the example code.
 
-// The CSS is in content/static/css/stylesheet.css.
+// The CSS is in static/frontend/unit/main/_doc.css
 
 /**
  * CSS classes used by PlaygroundExampleController
