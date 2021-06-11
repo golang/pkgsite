@@ -119,8 +119,11 @@ func TestEndToEndProcessing(t *testing.T) {
 		}
 	}
 	keys = cacheKeys(t, redisCacheClient)
+	if len(keys) == 0 {
+		keys = nil
+	}
 	if !cmp.Equal(keys, wantKeys) {
-		t.Errorf("cache keys: got %v, want %v", keys, wantKeys)
+		t.Errorf("cache keys: got %+v, want %+v", keys, wantKeys)
 	}
 }
 
