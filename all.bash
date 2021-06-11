@@ -166,7 +166,7 @@ check_templates() {
 }
 
 
-script_hash_glob='content/static/**/*.tmpl'
+script_hash_glob='static/**/*.tmpl'
 
 # check_script_hashes checks that our CSP hashes match the ones
 # for our HTML scripts.
@@ -197,7 +197,7 @@ run_npx() {
   runcmd $npxcmd $@
 }
 
-prettier_file_globs='content/static/**/*.{ts,css} **/*.md'
+prettier_file_globs='static/**/*.{ts,css} **/*.md'
 
 # run_prettier runs prettier on CSS, JS, and MD files. Uses globally
 # installed prettier if available or a dockerized installation as a
@@ -298,7 +298,7 @@ main() {
       if [[ $pfiles != '' ]]; then
         run_prettier $pfiles
       fi
-      if [[ $(filter "$files" 'content/static/**') != '' ]]; then
+      if [[ $(filter "$files" 'static/**') != '' ]]; then
         run_npm run lint
         run_npm run test
       fi
