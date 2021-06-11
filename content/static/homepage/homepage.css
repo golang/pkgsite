@@ -10,16 +10,16 @@
 
 .Homepage-logo {
   display: block;
-  height: 14.6rem;
-  margin: 0 auto 3.125rem;
-  width: 22.8125rem;
+  height: 10rem;
+  margin: 3.125rem auto;
+  width: auto;
 }
 @media only screen and (min-width: 52rem) {
   .Homepage {
     margin: 2rem auto;
   }
   .Homepage-logo {
-    margin: 3.125rem auto;
+    margin: 3.5rem auto;
   }
 }
 .Homepage-searchForm input {
@@ -54,7 +54,7 @@
   align-items: center;
   display: block;
   justify-content: space-between;
-  margin: auto;
+  margin: 0 auto;
   max-width: 45.0625rem;
   text-align: center;
   width: 100%;
