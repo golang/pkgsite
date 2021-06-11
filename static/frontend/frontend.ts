@@ -5,6 +5,8 @@
  * license that can be found in the LICENSE file.
  */
 
+import '../shared/shared';
+
 interface TagManagerEvent {
   event: string;
   'gtm.start': number;
@@ -54,5 +56,3 @@ if (document.querySelector<HTMLElement>('.js-gtmID')?.dataset.gtmid && window.da
 } else {
   removeUTMSource();
 }
-
-export {};
