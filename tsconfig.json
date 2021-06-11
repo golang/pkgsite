@@ -71,6 +71,7 @@
   ],
   "exclude": [
     "content/static/js",
+    "static/legacy",
     "**/*.test.ts"
   ]
 }
