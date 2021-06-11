@@ -48,7 +48,7 @@ func setupWorker(ctx context.Context, t *testing.T, proxyClient *proxy.Client, i
 		RedisHAClient:    redisHAClient,
 		RedisCacheClient: redisCacheClient,
 		Queue:            queue,
-		StaticPath:       template.TrustedSourceFromConstant("../../../content/static"),
+		StaticPath:       template.TrustedSourceFromConstant("../../../static"),
 	})
 	if err != nil {
 		t.Fatal(err)

@@ -39,7 +39,7 @@ import (
 const defaultAddr = "localhost:8080" // default webserver address
 
 var (
-	_          = flag.String("static", "content/static", "path to folder containing static files served")
+	_          = flag.String("static", "static", "path to folder containing static files served")
 	gopathMode = flag.Bool("gopath_mode", false, "assume that local modules' paths are relative to GOPATH/src")
 	httpAddr   = flag.String("http", defaultAddr, "HTTP service address to listen for incoming requests on")
 )

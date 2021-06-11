@@ -252,7 +252,7 @@ func main() {
 	metricReader = metricexport.NewReader()
 
 	http.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, "content/static/img/favicon.ico")
+		http.ServeFile(w, r, "static/shared/icon/favicon.ico")
 	})
 	http.HandleFunc("/", handleProbe)
 	http.HandleFunc("/check", handleCheck)

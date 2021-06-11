@@ -677,7 +677,7 @@ func serverTestCases() []serverTestCase {
 			name:           "static",
 			urlPath:        "/static/",
 			wantStatusCode: http.StatusOK,
-			want:           in("", hasText("css"), hasText("html"), hasText("img"), hasText("js")),
+			want:           in("", hasText("doc"), hasText("frontend"), hasText("legacy"), hasText("markdown.ts"), hasText("shared"), hasText("worker")),
 		},
 		{
 			name:           "license policy",
@@ -1530,7 +1530,7 @@ func newTestServer(t *testing.T, proxyModules []*proxy.Module, redisClient *redi
 		DataSourceGetter:     func(context.Context) internal.DataSource { return testDB },
 		Queue:                q,
 		TaskIDChangeInterval: 10 * time.Minute,
-		StaticPath:           template.TrustedSourceFromConstant("../../content/static"),
+		StaticPath:           template.TrustedSourceFromConstant("../../static"),
 		ThirdPartyPath:       "../../third_party",
 		AppVersionLabel:      "",
 	})
@@ -1557,7 +1557,7 @@ func newTestServer(t *testing.T, proxyModules []*proxy.Module, redisClient *redi
 
 func TestCheckTemplates(t *testing.T) {
 	// Perform additional checks on parsed templates.
-	staticPath := template.TrustedSourceFromConstant("../../content/static")
+	staticPath := template.TrustedSourceFromConstant("../../static")
 	templates, err := parsePageTemplates(staticPath)
 	if err != nil {
 		t.Fatal(err)

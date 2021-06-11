@@ -81,7 +81,7 @@ func NewServer(scfg ServerConfig) (_ *Server, err error) {
 	if err != nil {
 		return nil, fmt.Errorf("error parsing templates: %v", err)
 	}
-	docTemplateDir := template.TrustedSourceJoin(templateDir, template.TrustedSourceFromConstant("dochtml"))
+	docTemplateDir := template.TrustedSourceJoin(templateDir, template.TrustedSourceFromConstant("doc"))
 	dochtml.LoadTemplates(docTemplateDir)
 	s := &Server{
 		getDataSource:        scfg.DataSourceGetter,
@@ -133,7 +133,7 @@ func (s *Server) Install(handle func(string, http.Handler), redisClient *redis.C
 	handle("/static/", s.staticHandler())
 	handle("/third_party/", http.StripPrefix("/third_party", http.FileServer(http.Dir(s.thirdPartyPath))))
 	handle("/favicon.ico", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, fmt.Sprintf("%s/img/favicon.ico", http.Dir(s.staticPath.String())))
+		http.ServeFile(w, r, fmt.Sprintf("%s/shared/icon/favicon.ico", http.Dir(s.staticPath.String())))
 	}))
 	handle("/mod/", http.HandlerFunc(s.handleModuleDetailsRedirect))
 	handle("/pkg/", http.HandlerFunc(s.handlePackageDetailsRedirect))
@@ -559,23 +559,23 @@ func parsePageTemplates(base template.TrustedSource) (map[string]*template.Templ
 
 	templates := make(map[string]*template.Template)
 	for _, set := range legacyHtmlSets {
-		t, err := template.New("base.tmpl").Funcs(templateFuncs).ParseFilesFromTrustedSources(join(base, tsc("_base/base.tmpl")))
+		t, err := template.New("frontend.tmpl").Funcs(templateFuncs).ParseFilesFromTrustedSources(join(base, tsc("frontend/frontend.tmpl")))
 		if err != nil {
 			return nil, fmt.Errorf("ParseFiles: %v", err)
 		}
-		helperGlob := join(base, tsc("html"), tsc("helpers"), tsc("*.tmpl"))
+		helperGlob := join(base, tsc("legacy/html/helpers/*.tmpl"))
 		if _, err := t.ParseGlobFromTrustedSource(helperGlob); err != nil {
 			return nil, fmt.Errorf("ParseGlob(%q): %v", helperGlob, err)
 		}
-		header := join(base, tsc("_header"), tsc("header.tmpl"))
-		footer := join(base, tsc("_footer"), tsc("footer.tmpl"))
+		header := join(base, tsc("shared/header/header.tmpl"))
+		footer := join(base, tsc("shared/footer/footer.tmpl"))
 		if _, err := t.ParseFilesFromTrustedSources(header, footer); err != nil {
 			return nil, fmt.Errorf("ParseFilesFromTrustedSources(%v, %v): %v", header, footer, err)
 		}
 
 		var files []template.TrustedSource
 		for _, f := range set {
-			files = append(files, join(base, tsc("html"), tsc("pages"), f))
+			files = append(files, join(base, tsc("legacy/html/pages"), f))
 		}
 		if _, err := t.ParseFilesFromTrustedSources(files...); err != nil {
 			return nil, fmt.Errorf("ParseFilesFromTrustedSources(%v): %v", files, err)
@@ -600,17 +600,17 @@ func parsePageTemplates(base template.TrustedSource) (map[string]*template.Templ
 	}
 
 	for _, set := range htmlSets {
-		t, err := template.New("base.tmpl").Funcs(templateFuncs).ParseFilesFromTrustedSources(join(base, tsc("_base/base.tmpl")))
+		t, err := template.New("frontend.tmpl").Funcs(templateFuncs).ParseFilesFromTrustedSources(join(base, tsc("frontend/frontend.tmpl")))
 		if err != nil {
 			return nil, fmt.Errorf("ParseFilesFromTrustedSources: %v", err)
 		}
-		helperGlob := join(base, tsc("_*/*.tmpl"))
+		helperGlob := join(base, tsc("shared/**/*.tmpl"))
 		if _, err := t.ParseGlobFromTrustedSource(helperGlob); err != nil {
 			return nil, fmt.Errorf("ParseGlobFromTrustedSource(%q): %v", helperGlob, err)
 		}
 		var files []template.TrustedSource
 		for _, f := range set {
-			if _, err := t.ParseGlobFromTrustedSource(join(base, f, tsc("*.tmpl"))); err != nil {
+			if _, err := t.ParseGlobFromTrustedSource(join(base, tsc("frontend"), f, tsc("*.tmpl"))); err != nil {
 				return nil, fmt.Errorf("ParseGlobFromTrustedSource(%v): %v", files, err)
 			}
 		}

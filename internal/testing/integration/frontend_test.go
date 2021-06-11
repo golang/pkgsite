@@ -32,7 +32,7 @@ func setupFrontend(ctx context.Context, t *testing.T, q queue.Queue, rc *redis.C
 	s, err := frontend.NewServer(frontend.ServerConfig{
 		DataSourceGetter:     func(context.Context) internal.DataSource { return testDB },
 		TaskIDChangeInterval: 10 * time.Minute,
-		StaticPath:           template.TrustedSourceFromConstant("../../../content/static"),
+		StaticPath:           template.TrustedSourceFromConstant("../../../static"),
 		ThirdPartyPath:       "../../../third_party",
 		AppVersionLabel:      "",
 		Queue:                q,

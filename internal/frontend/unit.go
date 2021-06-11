@@ -82,7 +82,7 @@ type UnitPage struct {
 
 	// RedirectedFromPath is the path that redirected to the current page.
 	// If non-empty, a "redirected from" banner will be displayed
-	// (see content/static/html/helpers/_unit_header.tmpl).
+	// (see static/frontend/unit/_header.tmpl).
 	RedirectedFromPath string
 
 	// Details contains data specific to the type of page being rendered.

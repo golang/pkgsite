@@ -27,7 +27,7 @@ import (
 var testModules []*proxy.Module
 
 func TestMain(m *testing.M) {
-	dochtml.LoadTemplates(template.TrustedSourceFromConstant("../../content/static/dochtml"))
+	dochtml.LoadTemplates(template.TrustedSourceFromConstant("../../static/doc"))
 	testModules = proxy.LoadTestModules("../proxy/testdata")
 	licenses.OmitExceptions = true
 	os.Exit(m.Run())

@@ -11,29 +11,29 @@ import (
 )
 
 var scriptHashes = []string{
-	// From content/static/_base/base.tmpl
+	// From static/frontend/fetch/fetch.tmpl
+	"'sha256-DVdvl49HC0iGx/YKQq/kVNATnEdzGfExbJVTHqT95l8='",
+	// From static/frontend/frontend.tmpl
 	"'sha256-CoGrkqEM1Kjjf5b1bpcnDLl8ZZLAsVX+BoAzZ5+AOmc='",
-	"'sha256-bC+aW6Tx/9NPcnVT5hhOM+nIOI9RXxXLinzaeqEjgLc='",
+	"'sha256-Rex7jo7NdAFHm6IM8u1LgCIn9Gr9p2QZ0bf6ZkK618g='",
 	"'sha256-karKh1IrXOF1g+uoSxK+k9BuciCwYY/ytGuQVUiRzcM='",
-	// From content/static/fetch/fetch.tmpl
-	"'sha256-NL8cRfvzPNDO6ZYKQYWS1kPknRV9gUCJoTk+fRR04zg='",
-	// From content/static/html/pages/unit.tmpl
-	"'sha256-r4g06j/B7WYKOSl8cFfvuZOyiYA1tOyrbnxapiSP64g='",
-	// From content/static/html/pages/unit_details.tmpl
-	"'sha256-nF5UdhqQFxB95DCaw1XdSQCEkIjoMhorTCQ+nQ4+Lq4='",
-	"'sha256-L+G1K2BEWa+o2vPy1pwdabLjINBByPWi1NkRwvASUq8='",
-	"'sha256-hb8VdkRSeBmkNlbshYmBnkYWC/BYHCPiz5s7liRcZNM='",
-	// From content/static/html/pages/unit_versions.tmpl
-	"'sha256-KBdPSv2Ajjw3jsa29qBhRW49nNx3jXxOLZIWX545FCA='",
-	// From content/static/styleguide/styleguide.tmpl
-	"'sha256-Z9STHpM3Fz5XojcH5dbUK50Igi6qInBbVVaqNpjL/HY='",
-	// From content/static/unit/unit.tmpl
-	"'sha256-+zOYvr6Ug4x7B+bxnsUFqL7ujl8B8hHIi8mxMcYFt7Q='",
-	// From content/static/unit/main/main.tmpl
-	"'sha256-8m/T90VE0swJdEODzIdDuaF+WXGtvVvRIODVMSXMg0c='",
-	// From content/static/unit/versions/versions.tmpl
+	// From static/frontend/styleguide/styleguide.tmpl
+	"'sha256-CCxeecrPfflHHGcvr/Zm0OJj1kypbSm3FyE4/9BOfKQ='",
+	// From static/frontend/unit/main/main.tmpl
+	"'sha256-UiVwSVJIK9udADqG5GZe+nRUXWK9wEot2vrxL4D2pQs='",
+	// From static/frontend/unit/unit.tmpl
+	"'sha256-cB+y/oSfWGFf7lHk8KX+ZX2CZQz/dPamIICuPvHcB6w='",
+	// From static/frontend/unit/versions/versions.tmpl
 	"'sha256-sLtGXTcF/X7D/DXYrqY9AwAh298iORMn30Lg1G3UsWI='",
-	// From content/static/worker/index.tmpl
+	// From static/legacy/html/pages/unit.tmpl
+	"'sha256-V0I0c9gVBohHALcsk23X2c1nd3GO+Kpc1BNCpLhEj7Y='",
+	// From static/legacy/html/pages/unit_details.tmpl
+	"'sha256-bHZGfbft0NNI4pr8JS2ajCVFIrvcY1o07hbUL2Lfdls='",
+	"'sha256-NgMe1ssApnbzZAEDkxSBAFfCNRfW6F7ajTmp08jUrPI='",
+	"'sha256-lK9quwyQtvjVXRYCc2nYBfam6X9NN7FitPdCEVd3wpE='",
+	// From static/legacy/html/pages/unit_versions.tmpl
+	"'sha256-86HQcJ6uexGUBJWyPdp/1pozG9N7B3EUGT0ooKXwWzY='",
+	// From static/worker/index.tmpl
 	"'sha256-rEbn/zvLCsDDvDrVWQuUkKGEQsjQjFvIvJK4NVIMqZ4='",
 }
 

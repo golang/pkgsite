@@ -29,7 +29,7 @@ import (
 )
 
 // serveStyleGuide serves the styleguide page, the content of which is
-// generated from the markdown files in content/static.
+// generated from the markdown files in static/shared.
 func (s *Server) serveStyleGuide(w http.ResponseWriter, r *http.Request, ds internal.DataSource) error {
 	ctx := r.Context()
 	if !experiment.IsActive(ctx, internal.ExperimentStyleGuide) {
@@ -39,6 +39,7 @@ func (s *Server) serveStyleGuide(w http.ResponseWriter, r *http.Request, ds inte
 	page.basePage = s.newBasePage(r, "")
 	page.AllowWideContent = true
 	page.UseResponsiveLayout = true
+	page.Title = "Style Guide"
 	if err != nil {
 		return err
 	}
@@ -48,11 +49,12 @@ func (s *Server) serveStyleGuide(w http.ResponseWriter, r *http.Request, ds inte
 
 type styleGuidePage struct {
 	basePage
+	Title    string
 	Sections []*StyleSection
 	Outline  []*Heading
 }
 
-// styleGuide collects the paths to the markdown files in content/static,
+// styleGuide collects the paths to the markdown files in static/shared,
 // renders them into sections for the styleguide, and merges the document
 // outlines into a single page outline.
 func styleGuide(ctx context.Context, staticPath string) (_ *styleGuidePage, err error) {
@@ -187,7 +189,7 @@ func (r *guideRenderer) RegisterFuncs(reg renderer.NodeRendererFuncRegisterer) {
 	reg.Register(ast.KindFencedCodeBlock, r.renderFencedCodeBlock)
 }
 
-// markdownFiles walks the content/static directory and collects
+// markdownFiles walks the static/shared directory and collects
 // the paths to markdown files.
 func markdownFiles(dir string) ([]string, error) {
 	var matches []string

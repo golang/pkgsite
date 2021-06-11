@@ -31,7 +31,7 @@ import (
 	"golang.org/x/pkgsite/internal/testing/testhelper"
 )
 
-var templateSource = template.TrustedSourceFromConstant("../../../content/static/dochtml")
+var templateSource = template.TrustedSourceFromConstant("../../../static/doc")
 
 var update = flag.Bool("update", false, "update goldens instead of checking against them")
 

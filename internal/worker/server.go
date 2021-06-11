@@ -218,7 +218,7 @@ func (s *Server) Install(handle func(string, http.Handler)) {
 	handle("/healthz", http.HandlerFunc(s.handleHealthCheck))
 
 	handle("/favicon.ico", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, "content/static/img/worker-favicon.ico")
+		http.ServeFile(w, r, "static/worker/favicon.ico")
 	}))
 
 	// returns an HTML page displaying the homepage.

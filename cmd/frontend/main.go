@@ -32,7 +32,7 @@ import (
 var (
 	queueName      = config.GetEnv("GO_DISCOVERY_FRONTEND_TASK_QUEUE", "")
 	workers        = flag.Int("workers", 10, "number of concurrent requests to the fetch service, when running locally")
-	_              = flag.String("static", "content/static", "path to folder containing static files served")
+	_              = flag.String("static", "static", "path to folder containing static files served")
 	thirdPartyPath = flag.String("third_party", "third_party", "path to folder containing third-party libraries")
 	devMode        = flag.Bool("dev", false, "enable developer mode (reload templates on each page load, serve non-minified JS/CSS, etc.)")
 	disableCSP     = flag.Bool("nocsp", false, "disable Content Security Policy")

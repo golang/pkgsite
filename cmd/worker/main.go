@@ -38,7 +38,7 @@ var (
 	queueName = config.GetEnv("GO_DISCOVERY_WORKER_TASK_QUEUE", "")
 	workers   = flag.Int("workers", 10, "number of concurrent requests to the fetch service, when running locally")
 	// flag used in call to safehtml/template.TrustedSourceFromFlag
-	_                  = flag.String("static", "content/static", "path to folder containing static files served")
+	_                  = flag.String("static", "static", "path to folder containing static files served")
 	bypassLicenseCheck = flag.Bool("bypass_license_check", false, "insert all data into the DB, even for non-redistributable paths")
 )
 
