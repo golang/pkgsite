@@ -23,7 +23,7 @@
   }
 }
 .Homepage-searchForm input {
-  background: url('/static/img/icon-search.svg') right no-repeat;
+  background: url('/static/_icon/search_gm_grey_24dp.svg') right no-repeat;
   background-position: left 0.75rem center;
   background-size: 1.5rem;
   border: var(--border);

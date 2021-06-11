@@ -21,6 +21,7 @@
 }
 .Error-gopher,
 .EmptyContent-gopher,
+.Fetch-gopher,
 .NotFound-gopher,
 .SearchResults-emptyContentGopher {
   display: block;
