@@ -7,7 +7,7 @@
 {{define "unit_directories"}}
   <div class="UnitDirectories js-unitDirectories">
     <h2 class="UnitDirectories-title" id="section-directories">
-      <img height="25px" width="20px" src="/static/img/pkg-icon-folder_20x16.svg" alt="">Directories
+      <img height="25px" width="20px" src="/static/legacy/img/pkg-icon-folder_20x16.svg" alt="">Directories
       <a class="UnitDirectories-idLink" href="#section-directories">¶</a>
     </h2>
     <div class="UnitDirectories-expandButton">
@@ -45,7 +45,7 @@
                 data-aria-controls="{{range .Subdirectories}}{{$prefix}}-{{.Suffix}} {{end}}"
                 data-aria-labelledby="{{$prefix}}-button {{$prefix}}"
                 data-id="{{$prefix}}-button">
-              <img alt="" src="/static/img/pkg-icon-arrowRight_24x24.svg" height="24" width="24">
+              <img alt="" src="/static/legacy/img/pkg-icon-arrowRight_24x24.svg" height="24" width="24">
             </button>
           {{- end -}}
           {{- if .Root -}}

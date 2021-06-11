@@ -12,7 +12,7 @@
  *
  * @example
  * ```typescript
- * import {ExpandableRowsTableController} from '/static/js/table';
+ * import {ExpandableRowsTableController} from '/static/legacy/js/table';
  *
  * const el = document .querySelector<HTMLTableElement>('.js-myTableElement')
  * new ExpandableRowsTableController(el));

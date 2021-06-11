@@ -17,7 +17,7 @@
   right: 0;
 }
 .UnitFiles-titleLink a::after {
-  background-image: url(/static/img/icon-launch.svg);
+  background-image: url(/static/legacy/img/icon-launch.svg);
   background-repeat: no-repeat;
   background-size: 0.875rem 1.25rem;
   content: '';

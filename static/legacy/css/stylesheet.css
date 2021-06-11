@@ -285,7 +285,7 @@ pre,
   border-bottom-color: var(--white);
 }
 .Header-navOpen {
-  background: no-repeat center/2rem url('/static/img/menu-24px-white.svg');
+  background: no-repeat center/2rem url('/static/legacy/img/menu-24px-white.svg');
   border: none;
   height: 2.5rem;
   margin: auto 1rem;
@@ -400,7 +400,7 @@ pre,
   width: 5.125rem;
 }
 .NavigationDrawer-close {
-  background: no-repeat center/2rem url('/static/img/close-24px.svg');
+  background: no-repeat center/2rem url('/static/legacy/img/close-24px.svg');
   border: none;
   height: 2.5rem;
   margin: auto 1rem;

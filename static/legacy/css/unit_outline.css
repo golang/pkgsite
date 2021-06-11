@@ -53,7 +53,7 @@
   align-self: center;
   border-radius: 0.5rem;
   color: var(--gray-6);
-  content: url('/static/img/pkg-icon-jumpTo_16x16.svg');
+  content: url('/static/legacy/img/pkg-icon-jumpTo_16x16.svg');
   font-size: 0.75rem;
   left: 0.4rem;
   position: absolute;

@@ -48,7 +48,7 @@
 {{define "unit_meta_details_toggletip"}}
   <span class="UnitMetaDetails-toggletip">
     <button type="button" aria-label="more info" data-toggletip-content="{{.}}">
-      <img class="UnitMetaDetails-icon" src="/static/img/pkg-icon-help_24x24.svg" alt="" height="24" width="24">
+      <img class="UnitMetaDetails-icon" src="/static/legacy/img/pkg-icon-help_24x24.svg" alt="" height="24" width="24">
     </button>
     <span role="status"></span>
   </span>
@@ -57,9 +57,9 @@
 {{define "unit_meta_details_check"}}
   <img class="UnitMetaDetails-icon"
     {{- if . -}}
-      src="/static/img/pkg-icon-checkCircleOutline_24x24.svg" alt="checked"
+      src="/static/legacy/img/pkg-icon-checkCircleOutline_24x24.svg" alt="checked"
     {{- else -}}
-      src="/static/img/pkg-icon-cancel_24x24.svg" alt="unchecked"
+      src="/static/legacy/img/pkg-icon-cancel_24x24.svg" alt="unchecked"
     {{- end -}}
   height="24" width="24">
 {{end}}

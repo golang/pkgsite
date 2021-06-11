@@ -31,7 +31,7 @@
                 title="Copy path to clipboard.&#10;&#10;{{.CopyData}}"
                 data-to-copy="{{.CopyData}}"
                 data-gtmc="breadcrumbs button" aria-label="Copy to Clipboard">
-              <img class="CopyToClipboardButton-image" src="/static/img/copy-click.svg" alt="">
+              <img class="CopyToClipboardButton-image" src="/static/legacy/img/copy-click.svg" alt="">
             </button>
           {{end}}
         </span>
@@ -52,7 +52,7 @@
               data-gtmc="title button"
               aria-label="Copy to Clipboard"
               tabindex="-1">
-            <img class="CopyToClipboardButton-image" src="/static/img/copy-click.svg" alt="">
+            <img class="CopyToClipboardButton-image" src="/static/legacy/img/copy-click.svg" alt="">
           </button>
         {{end}}
       {{end}}
@@ -79,7 +79,7 @@
   <div class="UnitHeader-title">
     <div class="UnitHeader-logo">
       <a href="https://go.dev/" tabindex="-1" data-gtmc="header link" aria-label="Link to Go Homepage">
-        <img height="72px" width="72px" class="UnitHeader-logo" src="/static/img/go-logo-blue.svg" alt="Go">
+        <img height="72px" width="72px" class="UnitHeader-logo" src="/static/legacy/img/go-logo-blue.svg" alt="Go">
       </a>
     </div>
     <h1 data-test-id="UnitHeader-title">{{.Title}}</h1>
@@ -198,7 +198,7 @@
         data-version="{{.LinkVersion}}" data-mpath="{{.Unit.ModulePath}}" data-ppath="{{.Unit.Path}}" data-pagetype="{{.PageType}}">
     </div>
     <a class="UnitHeader-backLink" href="{{.URLPath}}" data-gtmc="header link">
-      <img height="16px" width="16px" src="/static/img/pkg-icon-arrowLeft_16x16.svg" alt=""> Go to main page
+      <img height="16px" width="16px" src="/static/legacy/img/pkg-icon-arrowLeft_16x16.svg" alt=""> Go to main page
     </a>
   </span>
 {{end}}
@@ -208,7 +208,7 @@
     {{with .RedirectedFromPath}}
       <div class="UnitHeader-banner UnitHeader-banner--redirected">
         <span class="Site-margin UnitHeader-bannerContent">
-          <img height="19px" width="16px" class="UnitHeader-banner-icon" src="/static/img/pkg-icon-info_19x16.svg" alt="">
+          <img height="19px" width="16px" class="UnitHeader-banner-icon" src="/static/legacy/img/pkg-icon-info_19x16.svg" alt="">
           <span>
           Redirected from <span data-test-id="redirected-banner-text">{{.}}</span>.
           </span>
@@ -238,7 +238,7 @@
     {{if .LatestMajorVersion}}
       <div class="UnitHeader-banner UnitHeader-banner--majorVersion" data-test-id="UnitHeader-majorVersionBanner">
         <span class="Site-margin UnitHeader-bannerContent">
-          <img height="19px" width="16px" class="UnitHeader-banner-icon" src="/static/img/pkg-icon-info_19x16.svg" alt="">
+          <img height="19px" width="16px" class="UnitHeader-banner-icon" src="/static/legacy/img/pkg-icon-info_19x16.svg" alt="">
           <span>
             The highest tagged major version is
             <a href="/{{.LatestMajorVersionURL}}" data-gtmc="banner link" aria-label="Go to Latest Major Version">
@@ -255,7 +255,7 @@
   <span class="UnitMetaDetails-toggletip">
     <button type="button" data-gtmc="toggle tip button"
         aria-label="More Info" data-toggletip-content="{{.}}">
-      <img src="/static/img/severity.svg" alt="" height="14" width="15">
+      <img src="/static/legacy/img/severity.svg" alt="" height="14" width="15">
     </button>
     <span role="status"></span>
   </span>

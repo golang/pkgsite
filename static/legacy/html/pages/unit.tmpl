@@ -9,10 +9,10 @@
 {{define "description"}}{{.MetaDescription}}{{end}}
 
 {{define "pre-content"}}
-  <link href="/static/css/stylesheet.css?version={{.AppVersionLabel}}" rel="stylesheet">
-  <link href="/static/css/unit.css?version={{.AppVersionLabel}}" rel="stylesheet">
+  <link href="/static/legacy/css/stylesheet.css?version={{.AppVersionLabel}}" rel="stylesheet">
+  <link href="/static/legacy/css/unit.css?version={{.AppVersionLabel}}" rel="stylesheet">
   {{block "unit_pre_content" .}}{{end}}
-  <link href="/static/css/unit_outline.css?version={{.AppVersionLabel}}" rel="stylesheet">
+  <link href="/static/legacy/css/unit_outline.css?version={{.AppVersionLabel}}" rel="stylesheet">
 {{end}}
 
 {{define "main"}}
@@ -56,8 +56,8 @@
 {{define "post-content"}}
   <div class="js-canonicalURLPath" data-canonical-url-path="{{.CanonicalURLPath}}" hidden />
   <script>
-    loadScript('/static/js/keyboard.js', {type: 'module', async: true, defer: true})
-    loadScript('/static/js/unit.js', {type: 'module', async: true, defer: true})
+    loadScript('/static/legacy/js/keyboard.js', {type: 'module', async: true, defer: true})
+    loadScript('/static/legacy/js/unit.js', {type: 'module', async: true, defer: true})
   </script>
   {{block "unit_post_content" .}}{{end}}
 {{end}}

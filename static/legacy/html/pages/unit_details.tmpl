@@ -5,7 +5,7 @@
 -->
 
 {{define "unit_pre_content"}}
-  <link href="/static/css/unit_details.css?version={{.AppVersionLabel}}" rel="stylesheet">
+  <link href="/static/legacy/css/unit_details.css?version={{.AppVersionLabel}}" rel="stylesheet">
 {{end}}
 
 {{define "unit_content"}}
@@ -26,7 +26,7 @@
           {{block "unit_doc" .Details}}{{end}}
         {{else}}
           <div class="UnitDetails-contentEmpty">
-            <img src="/static/img/gopher-airplane.svg" alt="The Go Gopher"/>
+            <img src="/static/legacy/img/gopher-airplane.svg" alt="The Go Gopher"/>
             <p>Documentation not displayed due to license restrictions.</p>
             <p>See our <a href="/license-policy">license policy</a>.</p>
           </div>
@@ -48,12 +48,12 @@
 
 {{define "unit_post_content"}}
   <script>
-    loadScript("/static/js/jump.js", {type: 'module', async: true, defer: true});
+    loadScript("/static/legacy/js/jump.js", {type: 'module', async: true, defer: true});
   </script>
   <script>
-    loadScript("/static/js/playground.js", {type: 'module', async: true, defer: true});
+    loadScript("/static/legacy/js/playground.js", {type: 'module', async: true, defer: true});
   </script>
   <script>
-    loadScript('/static/js/sidenav.js', {type: 'module', async: true, defer: true})
+    loadScript('/static/legacy/js/sidenav.js', {type: 'module', async: true, defer: true})
   </script>
 {{end}}

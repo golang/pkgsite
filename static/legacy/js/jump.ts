@@ -9,8 +9,8 @@
 // package documentation, as well as the simple dialog that displays keyboard
 // shortcuts.
 
-// The DOM for the dialogs is at the bottom of content/static/html/pages/pkg_doc.tmpl.
-// The CSS is in content/static/css/stylesheet.css.
+// The DOM for the dialogs is at the bottom of content/static/legacy/html/pages/pkg_doc.tmpl.
+// The CSS is in content/static/legacy/css/stylesheet.css.
 
 // The dialog is activated by pressing the 'f' key. It presents a list
 // (#JumpDialog-list) of all Go identifiers displayed in the documentation.

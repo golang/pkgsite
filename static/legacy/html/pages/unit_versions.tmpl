@@ -5,7 +5,7 @@
 -->
 
 {{define "unit_pre_content"}}
-  <link href="/static/css/versions.css?version={{.AppVersionLabel}}" rel="stylesheet">
+  <link href="/static/legacy/css/versions.css?version={{.AppVersionLabel}}" rel="stylesheet">
 {{end}}
 
 {{define "unit_content"}}
@@ -16,6 +16,6 @@
 
 {{define "unit_post_content"}}
   <script>
-    loadScript("/static/js/versions.js", {type: 'module', async: true, defer: true})
+    loadScript("/static/legacy/js/versions.js", {type: 'module', async: true, defer: true})
   </script>
 {{end}}
