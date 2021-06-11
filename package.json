@@ -8,11 +8,11 @@
   "scripts": {
     "license-check": "jsgl --local .",
     "lint": "run-s --continue-on-error \"lint:* -- {1}\" -- ",
-    "lint:css": "stylelint **/*.css",
-    "lint:ts": "eslint . --ext .ts",
+    "lint:css": "stylelint content/static/**/*.css",
+    "lint:ts": "eslint content/static --ext .ts",
     "test": "run-s --continue-on-error test:*",
     "test:typecheck": "tsc --noEmit",
-    "test:unit": "jest content",
+    "test:unit": "jest content/static",
     "e2e": "jest e2e"
   },
   "dependencies": {
