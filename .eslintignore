@@ -3,3 +3,5 @@ third_party
 #### Static Build Files ####
 content/static/js/*.js
 content/static/js/*.js.map
+static/**/*.js
+static/**/*.js.map
