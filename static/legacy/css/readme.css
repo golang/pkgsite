@@ -1,0 +1,393 @@
+/*!
+* Copyright 2019-2020 The Go Authors. All rights reserved.
+* Use of this source code is governed by a BSD-style
+* license that can be found in the LICENSE file.
+*/
+
+/* ---------- */
+/*
+/* The CSS classes below are generated using devtools/cmd/css/main.go
+/* If the generated CSS already exists, the file is overwritten
+/*
+/* ---------- */
+
+.Overview-readmeContent details {
+  display: block;
+}
+.Overview-readmeContent summary {
+  display: list-item;
+}
+.Overview-readmeContent a {
+  background-color: initial;
+}
+.Overview-readmeContent a:active,
+.Overview-readmeContent a:hover {
+  outline-width: 0;
+}
+.Overview-readmeContent strong {
+  font-weight: inherit;
+  font-weight: bolder;
+}
+.Overview-readmeContent h3 {
+  font-size: 2em;
+  margin: 0.67em 0;
+}
+.Overview-readmeContent img {
+  border-style: none;
+}
+.Overview-readmeContent code,
+.Overview-readmeContent kbd,
+.Overview-readmeContent pre {
+  font-family: monospace, monospace;
+  font-size: 1em;
+}
+.Overview-readmeContent hr {
+  box-sizing: initial;
+  height: 0;
+  overflow: visible;
+}
+.Overview-readmeContent input {
+  font: inherit;
+  margin: 0;
+}
+.Overview-readmeContent input {
+  overflow: visible;
+}
+.Overview-readmeContent [type='checkbox'] {
+  box-sizing: border-box;
+  padding: 0;
+}
+.Overview-readmeContent * {
+  box-sizing: border-box;
+}
+.Overview-readmeContent input {
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+}
+.Overview-readmeContent a {
+  color: var(--color-brand-primary);
+  text-decoration: none;
+}
+.Overview-readmeContent a:hover {
+  text-decoration: underline;
+}
+.Overview-readmeContent strong {
+  font-weight: 600;
+}
+.Overview-readmeContent hr {
+  height: 0;
+  margin: 0.9375rem 0;
+  overflow: hidden;
+  background: transparent;
+  border: 0;
+  border-bottom: var(--border);
+}
+.Overview-readmeContent hr:after,
+.Overview-readmeContent hr:before {
+  display: table;
+  content: '';
+}
+.Overview-readmeContent hr:after {
+  clear: both;
+}
+.Overview-readmeContent table {
+  border-spacing: 0;
+  border-collapse: collapse;
+}
+.Overview-readmeContent td,
+.Overview-readmeContent th {
+  padding: 0;
+}
+.Overview-readmeContent details summary {
+  cursor: pointer;
+}
+.Overview-readmeContent kbd {
+  display: inline-block;
+  padding: 0.1875rem 0.3125rem;
+  font: 0.6875rem SFMono-Regular, Consolas, Liberation Mono, Menlo, monospace;
+  line-height: 0.625rem;
+  color: #444d56;
+  vertical-align: middle;
+  background-color: var(--color-background-accented);
+  border: var(--border);
+  border-radius: 0.1875rem;
+  box-shadow: inset 0 -0.0625rem 0 var(--border);
+}
+.Overview-readmeContent h3,
+.Overview-readmeContent h4,
+.Overview-readmeContent h5,
+.Overview-readmeContent h6,
+.Overview-readmeContent div[aria-level='7'],
+.Overview-readmeContent div[aria-level='8'] {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+.Overview-readmeContent h3 {
+  font-size: 2rem;
+}
+.Overview-readmeContent h3,
+.Overview-readmeContent h4 {
+  font-weight: 600;
+}
+.Overview-readmeContent h4 {
+  font-size: 1.5rem;
+}
+.Overview-readmeContent h5 {
+  font-size: 1.25rem;
+}
+.Overview-readmeContent h5,
+.Overview-readmeContent h6 {
+  font-weight: 600;
+}
+.Overview-readmeContent h6 {
+  font-size: 1rem;
+}
+.Overview-readmeContent div[aria-level='7'] {
+  font-size: 0.875rem;
+}
+.Overview-readmeContent div[aria-level='7'],
+.Overview-readmeContent div[aria-level='8'] {
+  font-weight: 600;
+}
+.Overview-readmeContent div[aria-level='8'] {
+  font-size: 0.75rem;
+}
+.Overview-readmeContent p {
+  margin-top: 0;
+  margin-bottom: 0.625rem;
+}
+.Overview-readmeContent blockquote {
+  margin: 0;
+}
+.Overview-readmeContent ol,
+.Overview-readmeContent ul {
+  padding-left: 0;
+  margin-top: 0;
+  margin-bottom: 0;
+}
+.Overview-readmeContent ol ol,
+.Overview-readmeContent ul ol {
+  list-style-type: lower-roman;
+}
+.Overview-readmeContent ol ol ol,
+.Overview-readmeContent ol ul ol,
+.Overview-readmeContent ul ol ol,
+.Overview-readmeContent ul ul ol {
+  list-style-type: lower-alpha;
+}
+.Overview-readmeContent dd {
+  margin-left: 0;
+}
+.Overview-readmeContent code,
+.Overview-readmeContent pre {
+  font-family: SFMono-Regular, Consolas, Liberation Mono, Menlo, monospace;
+  font-size: 0.75rem;
+}
+.Overview-readmeContent pre {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+.Overview-readmeContent input::-webkit-inner-spin-button,
+.Overview-readmeContent input::-webkit-outer-spin-button {
+  margin: 0;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.Overview-readmeContent :checked + .radio-label {
+  position: relative;
+  z-index: 1;
+  border-color: var(--color-brand-primary);
+}
+.Overview-readmeContent hr {
+  border-bottom-color: var(--color-border);
+}
+.Overview-readmeContent kbd {
+  display: inline-block;
+  padding: 0.1875rem 0.3125rem;
+  font: 0.6875rem SFMono-Regular, Consolas, Liberation Mono, Menlo, monospace;
+  line-height: 0.625rem;
+  color: #444d56;
+  vertical-align: middle;
+  background-color: var(--color-background-accented);
+  border: var(--border);
+  border-radius: 0.1875rem;
+  box-shadow: inset 0 -0.0625rem 0 var(--color-border);
+}
+.Overview-readmeContent a:not([href]) {
+  color: inherit;
+  text-decoration: none;
+}
+.Overview-readmeContent blockquote,
+.Overview-readmeContent details,
+.Overview-readmeContent dl,
+.Overview-readmeContent ol,
+.Overview-readmeContent p,
+.Overview-readmeContent pre,
+.Overview-readmeContent table,
+.Overview-readmeContent ul {
+  margin-top: 0;
+  margin-bottom: 1rem;
+}
+.Overview-readmeContent hr {
+  height: 0.25em;
+  padding: 0;
+  margin: 1.5rem 0;
+  background-color: var(--color-border);
+  border: 0;
+}
+.Overview-readmeContent blockquote {
+  padding: 0 1em;
+  color: var(--color-text-subtle);
+  border-left: 0.25em solid var(--color-border);
+}
+.Overview-readmeContent blockquote > :first-child {
+  margin-top: 0;
+}
+.Overview-readmeContent blockquote > :last-child {
+  margin-bottom: 0;
+}
+.Overview-readmeContent h3,
+.Overview-readmeContent h4,
+.Overview-readmeContent h5,
+.Overview-readmeContent h6,
+.Overview-readmeContent div[aria-level='7'],
+.Overview-readmeContent div[aria-level='8'] {
+  margin-top: 1.5rem;
+  margin-bottom: 1rem;
+  font-weight: 600;
+  line-height: 1.25;
+}
+.Overview-readmeContent h3 {
+  font-size: 2em;
+}
+.Overview-readmeContent h3,
+.Overview-readmeContent h4 {
+  padding-bottom: 0.3em;
+  border-bottom: var(--border);
+}
+.Overview-readmeContent h4 {
+  font-size: 1.5em;
+}
+.Overview-readmeContent h5 {
+  font-size: 1.25em;
+}
+.Overview-readmeContent h6 {
+  font-size: 1em;
+}
+.Overview-readmeContent div[aria-level='7'] {
+  font-size: 0.875em;
+}
+.Overview-readmeContent div[aria-level='8'] {
+  font-size: 0.85em;
+  color: var(--color-text-subtle);
+}
+.Overview-readmeContent ol,
+.Overview-readmeContent ul {
+  padding-left: 2em;
+}
+.Overview-readmeContent ol ol,
+.Overview-readmeContent ol ul,
+.Overview-readmeContent ul ol,
+.Overview-readmeContent ul ul {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+.Overview-readmeContent li {
+  word-wrap: break-all;
+}
+.Overview-readmeContent li > p {
+  margin-top: 1rem;
+}
+.Overview-readmeContent li + li {
+  margin-top: 0.25em;
+}
+.Overview-readmeContent dl {
+  padding: 0;
+}
+.Overview-readmeContent dl dt {
+  padding: 0;
+  margin-top: 1rem;
+  font-size: 1em;
+  font-style: italic;
+  font-weight: 600;
+}
+.Overview-readmeContent dl dd {
+  padding: 0 1rem;
+  margin-bottom: 1rem;
+}
+.Overview-readmeContent table {
+  display: block;
+  width: 100%;
+  overflow: auto;
+}
+.Overview-readmeContent table th {
+  font-weight: 600;
+}
+.Overview-readmeContent table td,
+.Overview-readmeContent table th {
+  padding: 0.375rem 0.8125rem;
+  border: var(--border);
+}
+.Overview-readmeContent table tr {
+  background-color: var(--color-background);
+  border-top: var(--border);
+}
+.Overview-readmeContent table tr:nth-child(2n) {
+  background-color: var(--color-background-accented);
+}
+.Overview-readmeContent img {
+  max-width: 100%;
+  box-sizing: initial;
+  background-color: var(--color-background);
+}
+.Overview-readmeContent img[align='right'] {
+  padding-left: 1.25rem;
+}
+.Overview-readmeContent img[align='left'] {
+  padding-right: 1.25rem;
+}
+.Overview-readmeContent code {
+  padding: 0.2em 0.4em;
+  margin: 0;
+  font-size: 85%;
+  background-color: var(--color-background-accented);
+  border-radius: 0.1875rem;
+}
+.Overview-readmeContent pre {
+  word-wrap: normal;
+}
+.Overview-readmeContent pre > code {
+  padding: 0;
+  margin: 0;
+  font-size: 100%;
+  word-break: normal;
+  white-space: pre;
+  background: transparent;
+  border: 0;
+}
+.Overview-readmeContent pre {
+  padding: 1rem;
+  overflow: auto;
+  font-size: 85%;
+  line-height: 1.45;
+  background-color: var(--color-background-accented);
+  border-radius: 0.1875rem;
+}
+.Overview-readmeContent pre code {
+  display: inline;
+  max-width: auto;
+  padding: 0;
+  margin: 0;
+  overflow: visible;
+  line-height: inherit;
+  word-wrap: normal;
+  background-color: initial;
+  border: 0;
+}
+
+/* ---------- */
+/*
+/* End output from devtools/cmd/css/main.go
+/*
+/* ---------- */

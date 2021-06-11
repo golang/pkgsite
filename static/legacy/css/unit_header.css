@@ -1,0 +1,312 @@
+/*!
+ * Copyright 2020 The Go Authors. All rights reserved.
+ * Use of this source code is governed by a BSD-style
+ * license that can be found in the LICENSE file.
+ */
+
+.UnitHeader {
+  min-height: calc(var(--full-header-height));
+  position: sticky;
+  top: calc(var(--full-header-height) * -1 + var(--banner-height) + var(--header-height));
+  white-space: nowrap;
+  z-index: 1;
+}
+
+.UnitHeader-breadcrumbs {
+  background-color: var(--white);
+  line-height: 1.5rem;
+  padding-top: 1rem;
+  white-space: initial;
+}
+.UnitHeader-breadcrumbItem {
+  color: var(--gray-4);
+  display: inline-flex;
+  font-size: 0.875rem;
+}
+.UnitHeader-breadcrumbItem:not(:last-child)::after {
+  content: '>';
+  padding: 0 0.5rem;
+}
+
+.UnitHeader-content {
+  background-color: var(--white);
+  border-bottom: 0.0625rem solid var(--gray-8);
+  position: sticky;
+  top: var(--banner-height);
+}
+.UnitHeader-content > div {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: var(--header-height);
+  padding-bottom: 1rem;
+}
+.UnitHeader--sticky .UnitHeader-content > div {
+  align-items: center;
+  flex-direction: row;
+  padding-bottom: 0;
+}
+
+.UnitHeader-title {
+  align-items: center;
+  display: flex;
+  overflow: hidden;
+}
+.UnitHeader-logo {
+  align-items: center;
+  display: flex;
+  margin-right: 0;
+  opacity: 0;
+  transition: opacity 0.25s ease-in-out, margin 0.25s ease-in, width 0.25s ease-out;
+  visibility: hidden;
+  width: 0;
+}
+.UnitHeader-logo img {
+  height: 1.695625rem;
+  width: 4.5rem;
+}
+.UnitHeader--sticky .UnitHeader-logo {
+  margin-right: 0.5rem;
+  opacity: 1;
+  visibility: visible;
+  width: 4.5rem;
+}
+@media only screen and (min-width: 37.5rem) {
+  .UnitHeader--sticky .UnitHeader-logo {
+    height: 1.9541rem;
+    margin-right: 1rem;
+    width: 5.1875rem;
+  }
+}
+.UnitHeader-title h1 {
+  font-size: 1.75rem;
+  font-weight: 600;
+  line-height: 2.25rem;
+  margin: 0.5rem 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.UnitHeader--sticky .UnitHeader-title h1 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1.5;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+@media only screen and (min-width: 37.5rem) {
+  .UnitHeader--sticky .UnitHeader-title h1 {
+    font-size: 1.5rem;
+  }
+}
+.UnitHeader-content .CopyToClipboardButton {
+  display: none;
+}
+.UnitHeader--sticky .UnitHeader-content .CopyToClipboardButton {
+  display: initial;
+}
+
+.UnitHeader-details {
+  display: none;
+  flex-direction: column;
+  white-space: nowrap;
+}
+.UnitHeader--full .UnitHeader-details {
+  display: flex;
+}
+@media only screen and (min-width: 52rem) {
+  .UnitHeader-details {
+    align-items: center;
+    flex-direction: row;
+  }
+  .UnitHeader--full .UnitHeader-details {
+    flex-wrap: wrap;
+  }
+}
+@media only screen and (min-width: 70rem) {
+  .UnitHeader-details {
+    display: flex;
+  }
+}
+.UnitHeader-detailItem {
+  color: var(--gray-4);
+  display: inline;
+  font-size: 0.875rem;
+  line-height: 1.75rem;
+}
+
+@media only screen and (min-width: 52rem) {
+  .UnitHeader-detailItem:not(:last-of-type)::after {
+    content: '|';
+    padding: 1rem;
+  }
+}
+.UnitHeader-detailItemSubtle {
+  color: var(--gray-4);
+}
+
+.UnitHeader-overflowContainer {
+  display: none;
+  height: 1.5rem;
+  position: absolute;
+  right: 1rem;
+  width: 1.5rem;
+}
+.UnitHeader--sticky .UnitHeader-overflowContainer {
+  display: block;
+}
+@media only screen and (min-width: 70rem) {
+  .UnitHeader--sticky .UnitHeader-overflowContainer {
+    display: none;
+  }
+}
+.UnitHeader-overflowImage {
+  fill: var(--gray-3);
+  height: 100%;
+  left: 0;
+  position: absolute;
+  top: 0;
+  width: 100%;
+}
+.UnitHeader-overflowSelect {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background: transparent;
+  border: 0;
+  color: transparent;
+  cursor: pointer;
+  font-size: 1rem;
+  height: 100%;
+  left: 0;
+  position: absolute;
+  top: 0;
+  width: 100%;
+}
+.UnitHeader-overflowSelect option {
+  color: var(--gray-1);
+}
+
+.UnitHeader-badge {
+  border: 0.0625rem solid var(--gray-4);
+  border-radius: 0.125rem;
+  display: none;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  line-height: 1rem;
+  margin-left: 0.5rem;
+  margin-top: 0.125rem;
+  padding: 0 0.35rem;
+  text-align: center;
+}
+.UnitHeader--full .UnitHeader-badge {
+  display: block;
+}
+@media only screen and (min-width: 80rem) {
+  .UnitHeader--sticky .UnitHeader-badge {
+    display: block;
+  }
+}
+
+.UnitHeader-banners {
+  z-index: 1;
+}
+.UnitHeader-banner {
+  display: flex;
+  padding: 0.75rem 0;
+}
+.UnitHeader-bannerContent {
+  align-items: center;
+  display: flex;
+}
+.UnitHeader-banner--majorVersion,
+.UnitHeader-banner--redirected {
+  background-color: var(--gray-9);
+}
+.UnitHeader-banner--deprecated,
+.UnitHeader-banner--retracted {
+  background-color: var(--yellow);
+}
+.UnitHeader-banner-icon {
+  color: var(--gray-3);
+  margin-right: 0.5rem;
+  width: 1rem;
+}
+.UnitHeader-versionBadge,
+.DetailsHeader-badge {
+  border-radius: unset;
+  color: var(--white);
+  font-size: 0.7rem;
+  line-height: 0.85rem;
+  margin: -1rem 0 -1rem 0.5rem;
+  padding: 0.25rem 0.5rem;
+  text-transform: uppercase;
+  top: -0.0625rem;
+}
+.UnitHeader-versionBadge--latest,
+.DetailsHeader-badge--latest {
+  background: var(--turq-dark);
+}
+.UnitHeader-versionBadge--goToLatest,
+.DetailsHeader-badge--goToLatest {
+  background: var(--pink);
+}
+.UnitHeader-versionBadge--unknown,
+.DetailsHeader-badge--unknown {
+  display: none;
+}
+
+a.UnitHeader-backLink {
+  color: var(--black);
+  display: block;
+  font-size: 1rem;
+}
+.UnitHeader-backLink img {
+  height: 0.8125rem;
+  margin-right: 0.5rem;
+  width: auto;
+}
+
+.DetailsHeader-badge--notAtLatest {
+  background: var(--turq-dark);
+}
+.DetailsHeader-badge--notAtLatest a {
+  display: none;
+}
+.DetailsHeader-badge--notAtLatest span.DetailsHeader-span--latest {
+  display: none;
+}
+.DetailsHeader-badge--notAtLatest .UnitMetaDetails-icon {
+  z-index: 1;
+}
+.DetailsHeader-badge--notAtLatest .UnitMetaDetails-toggletipBubble {
+  color: var(--black);
+  text-transform: none;
+}
+.DetailsHeader-span--notAtLatest .UnitMetaDetails-toggletip {
+  height: 0;
+}
+.DetailsHeader-span--notAtLatest .UnitMetaDetails-toggletip button {
+  height: 0.8125rem;
+  line-height: 0;
+}
+.DetailsHeader-span--notAtLatest .UnitMetaDetails-toggletip img {
+  vertical-align: middle;
+}
+
+.DetailsHeader-badge--goToLatest {
+  background: var(--pink);
+}
+.DetailsHeader-badge--goToLatest a {
+  color: var(--white);
+}
+.DetailsHeader-badge--goToLatest span {
+  display: none;
+}
+.DetailsHeader-badge--unknown a {
+  display: none;
+}
+.DetailsHeader-badge--unknown span {
+  display: none;
+}

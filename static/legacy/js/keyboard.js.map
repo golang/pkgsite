@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["keyboard.ts"],
+  "sourcesContent": ["/*!\n * @license\n * Copyright 2019-2020 The Go Authors. All rights reserved.\n * Use of this source code is governed by a BSD-style\n * license that can be found in the LICENSE file.\n */\n\n// This file implements the behavior of the keyboard shortcut which allows\n// for users to press 'y' to to change browser URL to the canonical URL\n// without triggering a reload.\n\nconst canonicalURLPath = document.querySelector<HTMLDivElement>('.js-canonicalURLPath')?.dataset[\n  'canonicalUrlPath'\n];\nif (canonicalURLPath && canonicalURLPath !== '') {\n  document.addEventListener('keydown', e => {\n    // TODO(golang.org/issue/40246): consolidate keyboard shortcut behavior across the site.\n    const t = (e.target as HTMLElement)?.tagName;\n    if (t === 'INPUT' || t === 'SELECT' || t === 'TEXTAREA') {\n      return;\n    }\n    if ((e.target as HTMLElement)?.isContentEditable) {\n      return;\n    }\n    if (e.metaKey || e.ctrlKey) {\n      return;\n    }\n    switch (e.key) {\n      case 'y':\n        window.history.replaceState(null, '', canonicalURLPath);\n        break;\n    }\n  });\n}\n"],
+  "mappings": "AAAA;AAAA;AAAA;AAAA;AAAA;AAAA,GAWA,KAAM,kBAAmB,SAAS,cAA8B,yBAAyB,QACvF,iBAEF,AAAI,kBAAoB,mBAAqB,IAC3C,SAAS,iBAAiB,UAAW,GAAK,CAExC,KAAM,GAAK,EAAE,QAAwB,QACrC,GAAI,MAAM,SAAW,IAAM,UAAY,IAAM,aAGxC,GAAE,QAAwB,mBAG3B,IAAE,SAAW,EAAE,SAGnB,OAAQ,EAAE,SACH,IACH,OAAO,QAAQ,aAAa,KAAM,GAAI,kBACtC",
+  "names": []
+}

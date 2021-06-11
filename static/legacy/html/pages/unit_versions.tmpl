@@ -1,0 +1,21 @@
+<!--
+  Copyright 2020 The Go Authors. All rights reserved.
+  Use of this source code is governed by a BSD-style
+  license that can be found in the LICENSE file.
+-->
+
+{{define "unit_pre_content"}}
+  <link href="/static/css/versions.css?version={{.AppVersionLabel}}" rel="stylesheet">
+{{end}}
+
+{{define "unit_content"}}
+  <div class="Unit-content" role="main" data-test-id="UnitVersions">
+    {{block "versions" .Details}}{{end}}
+  </div>
+{{end}}
+
+{{define "unit_post_content"}}
+  <script>
+    loadScript("/static/js/versions.js", {type: 'module', async: true, defer: true})
+  </script>
+{{end}}
