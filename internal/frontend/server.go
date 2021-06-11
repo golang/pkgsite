@@ -627,7 +627,7 @@ func (s *Server) staticHandler() http.Handler {
 	// and rebuild them on file changes.
 	if s.devMode {
 		ctx := context.Background()
-		_, err := static.Build(static.Config{StaticPath: staticPath, Watch: true, Write: true})
+		_, err := static.Build(static.Config{EntryPoint: staticPath + "/frontend", Watch: true, Bundle: true})
 		if err != nil {
 			log.Error(ctx, err)
 		}
