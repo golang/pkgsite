@@ -43,7 +43,7 @@ main() {
 
   cd "${pkgsite_dir}"
   GO_DISCOVERY_E2E_BASE_URL="http://frontend:8080"
-  (./devtools/ci/nodejs.sh npx jest $files $@)
+  (./devtools/nodejs.sh npx jest $files $@)
   echo "Done!"
 
   echo "----- Contents of $outfile -----"

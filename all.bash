@@ -180,7 +180,7 @@ run_build_static() {
 }
 
 run_npm() {
-  npmcmd=${GO_DISCOVERY_NPM_CMD:-"./devtools/ci/nodejs.sh npm"}
+  npmcmd=${GO_DISCOVERY_NPM_CMD:-"./devtools/nodejs.sh npm"}
   # Run npm install if node_modules directory does not exist.
   if [ ! -d "node_modules" ]; then
     runcmd $npmcmd install --quiet
@@ -189,7 +189,7 @@ run_npm() {
 }
 
 run_npx() {
-  npxcmd=${GO_DISCOVERY_NPX_CMD:-"./devtools/ci/nodejs.sh npx"}
+  npxcmd=${GO_DISCOVERY_NPX_CMD:-"./devtools/nodejs.sh npx"}
   # Run npm install if node_modules directory does not exist.
   if [ ! -d "node_modules" ]; then
     run_npm install --quiet
