@@ -11,6 +11,7 @@ import (
 	"go/ast"
 	"path"
 	"sort"
+	"strings"
 
 	"github.com/google/safehtml/template"
 	"golang.org/x/mod/semver"
@@ -55,7 +56,34 @@ func (p *Package) DocInfo(ctx context.Context, innerPath string, sourceInfo *sou
 	if err != nil {
 		return "", nil, nil, err
 	}
-	return doc.Synopsis(d.Doc), d.Imports, api, nil
+	return doc.Synopsis(d.Doc), cleanImports(d.Imports, d.ImportPath), api, nil
+}
+
+// cleanImports cleans import paths, in the sense of path.Clean.
+//
+// An import path consisting of a single dot is dropped. It refers
+// to the package itself.
+//
+// Import paths with leading "." or ".." components are resolved against the
+// package's own import path.
+//
+// Other dot components are resolved with path.Clean.
+//
+// Cleaning may result in duplicates, which are removed.
+func cleanImports(imports []string, importPath string) []string {
+	var r []string
+	seen := map[string]bool{}
+	for _, im := range imports {
+		if im == ".." || strings.HasPrefix(im, "./") || strings.HasPrefix(im, "../") {
+			im = path.Join(importPath, im)
+		}
+		c := path.Clean(im)
+		if c != "." && !seen[c] {
+			r = append(r, c)
+			seen[c] = true
+		}
+	}
+	return r
 }
 
 // docPackage computes and returns a doc.Package.

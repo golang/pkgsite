@@ -154,3 +154,37 @@ func TestRenderParts_SinceVersion(t *testing.T) {
 		})
 	}
 }
+
+func TestCleanImports(t *testing.T) {
+	importPath := "a/b/c"
+	for _, test := range []struct {
+		in, want []string
+	}{
+		{nil, nil},
+		{
+			[]string{"x/y", "z"},
+			[]string{"x/y", "z"},
+		},
+		{
+			[]string{"./d"},
+			[]string{"a/b/c/d"},
+		},
+		{
+			[]string{"x/y", ".", "..", "..."},
+			[]string{"x/y", "a/b", "..."},
+		},
+		{
+			[]string{"../..", "a", "a/b", "..", "../", "../d"},
+			[]string{"a", "a/b", "a/b/d"},
+		},
+		{
+			[]string{"../../.."},
+			nil,
+		},
+	} {
+		got := cleanImports(test.in, importPath)
+		if !cmp.Equal(got, test.want) {
+			t.Errorf("%v: got %v, want %v", test.in, got, test.want)
+		}
+	}
+}
