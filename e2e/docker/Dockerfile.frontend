@@ -19,6 +19,11 @@ COPY go.mod go.sum all.bash /
 # Download the dependencies.
 RUN go mod download
 
+# Copy the pkgsite repo from local machine into Docker client’s current working
+# directory, so that we can use it to build the frontend.
+# See .dockerignore at the repo root for excluded files.
+COPY . /src
+
 # Build the frontend.
 RUN go build -mod=readonly ./cmd/frontend
 
@@ -28,5 +33,5 @@ FROM golang:1.15.5
 WORKDIR app
 
 COPY --from=builder src/frontend      frontend
-COPY content/static                   content/static
+COPY static                           static
 COPY third_party                      third_party
