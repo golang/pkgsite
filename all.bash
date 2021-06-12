@@ -311,7 +311,16 @@ main() {
       # Similar to the no-arg mode, but omit actions that require GCP
       # permissions or that don't test the code.
       # Also, run the race detector on most tests.
+      local start=`date +%s`
       standard_linters
+      # Print how long it takes to download dependencies and run the standard
+      # linters in CI.
+      local end=`date +%s`
+      echo
+      echo "--------------------"
+      echo "DONE: $((end-start)) seconds"
+      echo "--------------------"
+
       for pkg in $(go list ./...); do
         if [[ ${no_race[$pkg]} = '' ]]; then
           race="$race $pkg"
