@@ -89,6 +89,7 @@ body {
 
 .go-Container {
   display: flex;
+  flex-direction: column;
   flex-grow: 1;
   height: 100%;
   margin-bottom: 5rem;
@@ -104,5 +105,6 @@ body {
   width: 100%;
 }
 .go-Content--center {
+  justify-content: center;
   margin: auto;
 }
