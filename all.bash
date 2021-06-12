@@ -59,9 +59,9 @@ diff_files() {
 # findcode below.
 codedirs=(
   "cmd"
-  "content"
   "internal"
   "migrations"
+  "static"
 )
 
 # verify_header checks that all given files contain the standard header for Go
@@ -162,7 +162,7 @@ check_templates() {
   runcmd go-template-lint \
     -f=internal/frontend/server.go \
     -t=internal/frontend/server.go \
-    -td=content/static/html/pages | warnout
+    -td=static | warnout
 }
 
 
