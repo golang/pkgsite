@@ -23,7 +23,7 @@ type Config struct {
 	// should be joined together in a single output file.
 	Bundle bool
 
-	// Watch is true in developement. Sourcemaps are placed inline,
+	// Watch is true in development. Sourcemaps are placed inline,
 	// the output is unminified, and changes to any TypeScript
 	// files will force a rebuild of the JavaScript output.
 	Watch bool
