@@ -7,12 +7,49 @@ package database
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/stdlib"
 )
+
+type copyRow struct {
+	Key   int
+	Value string
+}
+
+func TestCopyInsert(t *testing.T) {
+	pgxOnly(t)
+	ctx := context.Background()
+	for _, stmt := range []string{
+		`DROP TABLE IF EXISTS test_streaming_insert`,
+		`CREATE TABLE test_streaming_insert (key INTEGER PRIMARY KEY, value TEXT)`,
+		`INSERT INTO test_streaming_insert (key, value) VALUES (1, 'foo'), (2, 'bar')`,
+	} {
+		if _, err := testDB.Exec(ctx, stmt); err != nil {
+			t.Fatal(err)
+		}
+	}
+	rows := [][]interface{}{
+		{3, "baz"},
+		{4, "moo"},
+	}
+	err := testDB.Transact(ctx, sql.LevelDefault, func(tx *DB) error {
+		return tx.CopyInsert(ctx, "test_streaming_insert", []string{"key", "value"}, pgx.CopyFromRows(rows), "")
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	compareRows(ctx, t, "test_streaming_insert", []copyRow{
+		{1, "foo"},
+		{2, "bar"},
+		{3, "baz"},
+		{4, "moo"},
+	})
+}
 
 func TestCopyUpsert(t *testing.T) {
 	pgxOnly(t)
@@ -36,25 +73,23 @@ func TestCopyUpsert(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	type row struct {
-		Key   int
-		Value string
-	}
-
-	wantRows := []row{
+	compareRows(ctx, t, "test_streaming_upsert", []copyRow{
 		{1, "moo"},
 		{2, "bar"},
 		{3, "baz"},
-	}
-	var gotRows []row
-	if err := testDB.CollectStructs(ctx, &gotRows, `SELECT * FROM test_streaming_upsert ORDER BY key`); err != nil {
+	})
+}
+
+func compareRows(ctx context.Context, t *testing.T, table string, wantRows []copyRow) {
+	t.Helper()
+	var gotRows []copyRow
+	q := fmt.Sprintf(`SELECT * FROM %s ORDER BY key`, table)
+	if err := testDB.CollectStructs(ctx, &gotRows, q); err != nil {
 		t.Fatal(err)
 	}
 	if !cmp.Equal(gotRows, wantRows) {
 		t.Errorf("got %v, want %v", gotRows, wantRows)
 	}
-
 }
 
 func TestCopyUpsertGeneratedColumn(t *testing.T) {

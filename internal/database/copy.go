@@ -17,6 +17,21 @@ import (
 	"golang.org/x/pkgsite/internal/log"
 )
 
+// CopyInsert insert rows into table using the pgx driver's CopyFrom method.
+// It returns an error if the underlying driver is not pgx.
+// columns is the list of columns to upsert.
+// src is the source of the rows to upsert.
+// If dropColumn is non-empty, that column will be dropped from the temporary
+// table before copying. Use dropColumn for generated ID columns.
+//
+// CopyInsert works by first creating a temporary table, populating it with
+// CopyFrom, and then running an INSERT...SELECT... to insert its rows into the
+// original table.
+func (db *DB) CopyInsert(ctx context.Context, table string, columns []string, src pgx.CopyFromSource, dropColumn string) (err error) {
+	defer derrors.Wrap(&err, "CopyInsert(%q)", table)
+	return db.copy(ctx, table, columns, src, dropColumn, "")
+}
+
 // CopyUpsert upserts rows into table using the pgx driver's CopyFrom method.
 // It returns an error if the underlying driver is not pgx.
 // columns is the list of columns to upsert.
@@ -31,7 +46,10 @@ import (
 // rows into the original table.
 func (db *DB) CopyUpsert(ctx context.Context, table string, columns []string, src pgx.CopyFromSource, conflictColumns []string, dropColumn string) (err error) {
 	defer derrors.Wrap(&err, "CopyUpsert(%q)", table)
+	return db.copy(ctx, table, columns, src, dropColumn, buildUpsertConflictAction(columns, conflictColumns))
+}
 
+func (db *DB) copy(ctx context.Context, table string, columns []string, src pgx.CopyFromSource, dropColumn, conflictAction string) (err error) {
 	if !db.InTransaction() {
 		return errors.New("not in a transaction")
 	}
@@ -55,9 +73,8 @@ func (db *DB) CopyUpsert(ctx context.Context, table string, columns []string, sr
 			return fmt.Errorf("CopyFrom: %w", err)
 		}
 		if !QueryLoggingDisabled {
-			log.Debugf(ctx, "CopyUpsert(%q): copied %d rows in %s", table, n, time.Since(start))
+			log.Debugf(ctx, "DB.copy(%q): copied %d rows in %s", table, n, time.Since(start))
 		}
-		conflictAction := buildUpsertConflictAction(columns, conflictColumns)
 		cols := strings.Join(columns, ", ")
 		query := fmt.Sprintf("INSERT INTO %s (%s) SELECT %s FROM %s %s", table, cols, cols, tempTable, conflictAction)
 		defer logQuery(ctx, query, nil, db.instanceID, db.IsRetryable())(&err)
@@ -67,7 +84,7 @@ func (db *DB) CopyUpsert(ctx context.Context, table string, columns []string, sr
 			return err
 		}
 		if !QueryLoggingDisabled {
-			log.Debugf(ctx, "CopyUpsert(%q): upserted %d rows in %s", table, ctag.RowsAffected(), time.Since(start))
+			log.Debugf(ctx, "DB.copy(%q): affected %d rows in %s", table, ctag.RowsAffected(), time.Since(start))
 		}
 		return nil
 	})
