@@ -62,23 +62,10 @@
           </div>
         {{end}}
       </div>
-      <p class="SearchSnippet-synopsis go-textSubtle" data-test-id="snippet-synopsis">{{$v.Synopsis}}</p>
-      <div class="SearchSnippet-infoLabel">
-        <span class="InfoLabel-title">Published:</span>
-        <span data-test-id="snippet-published"> {{$v.CommitTime}}</span>
-        <span class="SearchSnippet-infoLabelDivider"></span>
-        <span class="InfoLabel-title">{{pluralize (len $v.Licenses) "License"}}:</span>
-        <span data-test-id="snippet-license">
-          {{if $v.Licenses}}
-            {{commaseparate $v.Licenses}}
-          {{else}}
-            <span>N/A</span>
-          {{end}}
-        </span>
-        <span class="SearchSnippet-infoLabelDivider"></span>
-        <span class="InfoLabel-title">Imported by:</span>
-        <span data-test-id="snippet-importedby"><strong>{{$v.NumImportedBy}}</b></spastrong>
-      </div>
+      <p class="SearchSnippet-synopsis go-textSubtle" data-test-id="snippet-synopsis">
+        {{$v.Synopsis}}
+      </p>
+      {{template "search_metadata" $v}}
       {{with .SameModule}}
         <div class="SearchSnippet-sub">
           <span>{{.Heading}}</span>
@@ -98,4 +85,23 @@
       {{end}}
     </div> <!-- SearchSnippet -->
   {{end}}
+{{end}}
+
+{{define "search_metadata"}}
+  <div class="SearchSnippet-infoLabel">
+    <span class="InfoLabel-title">Published:</span>
+    <span data-test-id="snippet-published"> {{.CommitTime}}</span>
+    <span class="SearchSnippet-infoLabelDivider"></span>
+    <span class="InfoLabel-title">{{pluralize (len .Licenses) "License"}}:</span>
+    <span data-test-id="snippet-license">
+      {{if .Licenses}}
+        {{commaseparate .Licenses}}
+      {{else}}
+        <span>N/A</span>
+      {{end}}
+    </span>
+    <span class="SearchSnippet-infoLabelDivider"></span>
+    <span class="InfoLabel-title">Imported by:</span>
+    <span data-test-id="snippet-importedby"><strong>{{.NumImportedBy}}</strong></span>
+  </div>
 {{end}}
