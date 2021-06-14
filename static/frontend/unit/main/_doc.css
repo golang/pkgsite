@@ -235,8 +235,9 @@
 .Documentation-exampleDetailsBody textarea {
   height: 100%;
   outline: none;
-  overflow: hidden;
+  overflow-x: auto;
   resize: none;
+  white-space: nowrap;
   width: 100%;
 }
 

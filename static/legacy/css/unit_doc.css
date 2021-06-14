@@ -253,8 +253,9 @@
   border: 0.0625rem solid var(--gray-7);
   height: 100%;
   outline: none;
-  overflow: hidden;
+  overflow-x: auto;
   resize: none;
+  white-space: nowrap;
   width: 100%;
 }
 
