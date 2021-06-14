@@ -9,10 +9,14 @@
 }
 
 .Homepage-logo {
+  border-radius: var(--border-radius);
   display: block;
   height: 10rem;
   margin: 3.125rem auto;
   width: auto;
+}
+[data-theme='dark'] .Homepage-logo {
+  mix-blend-mode: difference;
 }
 @media only screen and (min-width: 52rem) {
   .Homepage {
