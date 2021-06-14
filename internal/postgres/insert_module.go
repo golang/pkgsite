@@ -23,6 +23,7 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/stdlib"
@@ -581,24 +582,25 @@ func insertImports(ctx context.Context, tx *database.DB,
 	pathToImports map[string][]string) (err error) {
 	defer derrors.WrapStack(&err, "insertImports")
 
-	// Insert into package_imports. This table is going to go away soon,
-	// but for now it is still the table we read from.
-	var pkgImportValues []interface{}
-	for _, pkgPath := range paths {
-		imports, ok := pathToImports[pkgPath]
-		if !ok {
-			continue
+	if !experiment.IsActive(ctx, internal.ExperimentReadImports) {
+		// Insert into package_imports. This table is going to go away soon,
+		// but for now it is still the table we read from.
+		var pkgImportValues []interface{}
+		for _, pkgPath := range paths {
+			imports, ok := pathToImports[pkgPath]
+			if !ok {
+				continue
+			}
+			unitID := pathToUnitID[pkgPath]
+			for _, toPath := range imports {
+				pkgImportValues = append(pkgImportValues, unitID, toPath)
+			}
 		}
-		unitID := pathToUnitID[pkgPath]
-		for _, toPath := range imports {
-			pkgImportValues = append(pkgImportValues, unitID, toPath)
+		pkgImportCols := []string{"unit_id", "to_path"}
+		if err := tx.BulkUpsert(ctx, "package_imports", pkgImportCols, pkgImportValues, pkgImportCols); err != nil {
+			return err
 		}
 	}
-	pkgImportCols := []string{"unit_id", "to_path"}
-	if err := tx.BulkUpsert(ctx, "package_imports", pkgImportCols, pkgImportValues, pkgImportCols); err != nil {
-		return err
-	}
-
 	// Insert into imports. This will eventually replace package_imports.
 	importPathSet := map[string]bool{}
 	for _, pkgPath := range paths {
@@ -752,16 +754,31 @@ func (db *DB) ReInsertLatestVersion(ctx context.Context, modulePath string) (err
 		}
 
 		// Insert this version's imports into imports_unique.
-		if _, err := tx.Exec(ctx, `
-			INSERT INTO imports_unique (from_path, from_module_path, to_path)
-			SELECT p.path, m.module_path, i.to_path
-			FROM units u
-			INNER JOIN package_imports i ON (u.id = i.unit_id)
-			INNER JOIN paths p ON (p.id = u.path_id)
-			INNER JOIN modules m ON (m.id=u.module_id)
-			WHERE m.module_path = $1 and m.version = $2
+		if experiment.IsActive(ctx, internal.ExperimentReadImports) {
+			if _, err := tx.Exec(ctx, `
+				INSERT INTO imports_unique (from_path, from_module_path, to_path)
+				SELECT p1.path, m.module_path, p2.path
+				FROM units u
+				INNER JOIN imports i ON u.id = i.unit_id
+				INNER JOIN paths p1 ON p1.id = u.path_id
+				INNER JOIN modules m ON m.id = u.module_id
+				INNER JOIN paths p2 ON p2.id = i.to_path_id
+				WHERE m.module_path = $1 and m.version = $2
 		`, modulePath, lmv.GoodVersion); err != nil {
-			return err
+				return err
+			}
+		} else {
+			if _, err := tx.Exec(ctx, `
+				INSERT INTO imports_unique (from_path, from_module_path, to_path)
+				SELECT p.path, m.module_path, i.to_path
+				FROM units u
+				INNER JOIN package_imports i ON (u.id = i.unit_id)
+				INNER JOIN paths p ON (p.id = u.path_id)
+				INNER JOIN modules m ON (m.id=u.module_id)
+				WHERE m.module_path = $1 and m.version = $2
+		`, modulePath, lmv.GoodVersion); err != nil {
+				return err
+			}
 		}
 
 		log.Debugf(ctx, "ReInsertLatestVersion(%q): re-inserted at latest good version %s", modulePath, lmv.GoodVersion)

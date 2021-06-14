@@ -471,7 +471,11 @@ func (db *DB) getUnitWithAllFields(ctx context.Context, um *internal.UnitMeta, b
 		}
 	}
 	// Get README, documentation and import counts.
-	query := `
+	importTableName := "package_imports"
+	if experiment.IsActive(ctx, internal.ExperimentReadImports) {
+		importTableName = "imports"
+	}
+	query := fmt.Sprintf(`
         SELECT
 			r.file_path,
 			r.contents,
@@ -479,7 +483,7 @@ func (db *DB) getUnitWithAllFields(ctx context.Context, um *internal.UnitMeta, b
 			d.source,
 			COALESCE((
 				SELECT COUNT(unit_id)
-				FROM package_imports
+				FROM %s
 				WHERE unit_id = u.id
 				GROUP BY unit_id
 				), 0) AS num_imports,
@@ -501,7 +505,7 @@ func (db *DB) getUnitWithAllFields(ctx context.Context, um *internal.UnitMeta, b
         ) d
 		ON d.unit_id = u.id
 		WHERE u.id = $2
-	`
+	`, importTableName)
 	var (
 		r internal.Readme
 		u internal.Unit
