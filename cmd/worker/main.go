@@ -121,6 +121,7 @@ func main() {
 		worker.EnqueueResponseCount,
 		worker.ProcessingLag,
 		worker.UnprocessedModules,
+		worker.UnprocessedNewModules,
 		fetch.FetchLatencyDistribution,
 		fetch.FetchResponseCount,
 		fetch.SheddedFetchCount,
