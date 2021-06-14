@@ -32,11 +32,7 @@
           </div>
         {{else}}
           <div>{{/* Containing element is needed to use *-of-type selectors */}}
-            {{if (.Experiments.IsActive "search-grouping")}}
-              {{template "grouped_search" .}}
-            {{else}}
-              {{template "legacy_search" .}}
-            {{end}}
+            {{template "legacy_search" .}}
           </div>
         {{end}}
       <div class="SearchResults-footer">
@@ -91,67 +87,6 @@
           <span>{{.Heading}}</span>
           {{range $i, $v := .Links}}
             <a href="/{{$v.Href}}" data-gtmc="search result" data-gtmv="{{$i}}">{{$v.Body}}</a>
-          {{end}}
-        </div>
-      {{end}}
-    </div> <!-- SearchSnippet -->
-  {{end}}
-{{end}}
-
-{{define "grouped_search"}}
-  {{$query := .Query}}
-  {{range $i, $v := .Results}}
-    <div class="SearchSnippet">
-      <div class="SearchSnippet-breadcrumb">{{$v.PackagePath}}</div>
-      <div class="SearchSnippet-headerContainer">
-        <h2 class="SearchSnippet-header">
-          <a href="/{{$v.PackagePath}}" data-gtmc="search result" data-gtmv="{{$i}}"
-              data-test-id="snippet-title">
-            {{$v.Name}}
-          </a>
-          <span class="SearchSnippet-version">{{$v.DisplayVersion}}</span>
-        </h2>
-        {{with .Symbols}}
-          <div class="SearchSnippet-symbolContainer">
-            <span class="SearchSnippet-symbolHeading">{{.Heading}}</span>
-            {{range $i, $v := .Links}}
-              <a class="SearchSnippet-symbol" href="/{{$v.Href}}">{{$v.Body}}</a>
-            {{end}}
-            <span>{{.Suffix}}</span>
-          </div>
-        {{end}}
-      </div>
-      <p class="SearchSnippet-synopsis go-textSubtle" data-test-id="snippet-synopsis">{{$v.Synopsis}}</p>
-      <div class="SearchSnippet-infoLabel">
-        <span class="InfoLabel-title">Published:</span>
-        <span data-test-id="snippet-published"> {{$v.CommitTime}}</span>
-        <span class="SearchSnippet-infoLabelDivider"></span>
-        <span class="InfoLabel-title">{{pluralize (len $v.Licenses) "License"}}:</span>
-        <span data-test-id="snippet-license">
-          {{if $v.Licenses}}
-            {{commaseparate $v.Licenses}}
-          {{else}}
-            <span>N/A</span>
-          {{end}}
-        </span>
-        <span class="SearchSnippet-infoLabelDivider"></span>
-        <span class="InfoLabel-title">Imported by:</span>
-        <span data-test-id="snippet-importedby"><strong>{{$v.NumImportedBy}}</b></spastrong>
-      </div>
-      {{with .SameModule}}
-        <div class="SearchSnippet-sub">
-          <span>{{.Heading}}</span>
-          {{range $i, $v := .Links}}
-            <a href="/{{$v.Href}}" data-gtmc="search result same module" data-gtmv="{{$i}}">{{$v.Body}}</a>
-          {{end}}
-          <span>{{.Suffix}}</span>
-        </div>
-      {{end}}
-      {{with .LowerMajor}}
-        <div class="SearchSnippet-sub">
-          <span>{{.Heading}}</span>
-          {{range $i, $v := .Links}}
-            <a href="/{{$v.Href}}" data-gtmc="search result lower major" data-gtmv="{{$i}}">{{$v.Body}}</a>
           {{end}}
         </div>
       {{end}}
