@@ -28,6 +28,16 @@ document.addEventListener('keydown', e => {
     return;
   }
   switch (e.key) {
+    // Temporary shortcut for testing out the dark theme.
+    case 't': {
+      let nextTheme = 'dark';
+      const theme = document.documentElement.getAttribute('data-theme');
+      if (theme === 'dark') {
+        nextTheme = 'light';
+      }
+      document.documentElement.setAttribute('data-theme', nextTheme);
+      break;
+    }
     case 'y':
       if (canonicalURLPath && canonicalURLPath !== '') {
         window.history.replaceState(null, '', canonicalURLPath);
