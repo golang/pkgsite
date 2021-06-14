@@ -588,6 +588,7 @@ func parsePageTemplates(base template.TrustedSource) (map[string]*template.Templ
 		{tsc("error")},
 		{tsc("fetch")},
 		{tsc("homepage")},
+		{tsc("legacy_search")},
 		{tsc("license-policy")},
 		{tsc("search")},
 		{tsc("search-help")},
