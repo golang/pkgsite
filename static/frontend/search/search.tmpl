@@ -50,7 +50,6 @@
               data-test-id="snippet-title">
             {{$v.Name}}
           </a>
-          <span class="SearchSnippet-version">{{$v.DisplayVersion}}</span>
         </h2>
         {{with .Symbols}}
           <div class="SearchSnippet-symbolContainer">
@@ -62,12 +61,12 @@
           </div>
         {{end}}
       </div>
-      <p class="SearchSnippet-synopsis go-textSubtle" data-test-id="snippet-synopsis">
+      <p class="SearchSnippet-synopsis" data-test-id="snippet-synopsis">
         {{$v.Synopsis}}
       </p>
       {{template "search_metadata" $v}}
       {{with .SameModule}}
-        <div class="SearchSnippet-sub">
+        <div class="SearchSnippet-sub go-textSubtle">
           <span>{{.Heading}}</span>
           {{range $i, $v := .Links}}
             <a href="/{{$v.Href}}" data-gtmc="search result same module" data-gtmv="{{$i}}">{{$v.Body}}</a>
@@ -76,7 +75,7 @@
         </div>
       {{end}}
       {{with .LowerMajor}}
-        <div class="SearchSnippet-sub">
+        <div class="SearchSnippet-sub go-textSubtle">
           <span>{{.Heading}}</span>
           {{range $i, $v := .Links}}
             <a href="/{{$v.Href}}" data-gtmc="search result lower major" data-gtmv="{{$i}}">{{$v.Body}}</a>
@@ -89,19 +88,26 @@
 
 {{define "search_metadata"}}
   <div class="SearchSnippet-infoLabel">
-    <span class="InfoLabel-title">Published:</span>
-    <span data-test-id="snippet-published"> {{.CommitTime}}</span>
+    <a href="/{{$.PackagePath}}?tab=importedby" aria-label="Go to Imported By">
+       <span class="go-textSubtle">Imported by: </span><strong>{{.NumImportedBy}}</strong>
+    </a>
+
     <span class="SearchSnippet-infoLabelDivider"></span>
-    <span class="InfoLabel-title">{{pluralize (len .Licenses) "License"}}:</span>
+    <span class="go-textSubtle">Published: </span>
+    <span class="go-textSubtle">{{.DisplayVersion}} • </span>
+    <span class="go-textSubtle" data-test-id="snippet-published">{{.CommitTime}}</span>
+
+    <span class="SearchSnippet-infoLabelDivider"></span>
     <span data-test-id="snippet-license">
-      {{if .Licenses}}
+    {{if .Licenses}}
+      <a href="/{{$.PackagePath}}?tab=licenses" aria-label="Go to Licenses">
+        <span class="go-textSubtle">License: </span>
         {{commaseparate .Licenses}}
-      {{else}}
-        <span>N/A</span>
-      {{end}}
+      </a>
+    {{else}}
+      <span class="go-textSubtle">License: </span>
+      <span class="go-textSubtle">N/A</span>
+    {{end}}
     </span>
-    <span class="SearchSnippet-infoLabelDivider"></span>
-    <span class="InfoLabel-title">Imported by:</span>
-    <span data-test-id="snippet-importedby"><strong>{{.NumImportedBy}}</strong></span>
   </div>
 {{end}}
