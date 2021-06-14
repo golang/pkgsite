@@ -4,13 +4,16 @@
   license that can be found in the LICENSE file.
 -->
 
-{{define "title"}}<title>{{.MessageData}} · pkg.go.dev</title>{{end}}
+{{define "title"}}<title>{{.HTMLTitle}} · pkg.go.dev</title>{{end}}
+
+{{define "pre-content"}}
+  <link href="/static/frontend/error/error.css?version={{.AppVersionLabel}}" rel="stylesheet">
+{{end}}
 
 {{define "main"}}
   <main class="go-Container">
     <div class="go-Content go-Content--center">
-      <img class="Error-gopher" width="1200" height="945"
-          src="/static/shared/gopher/airplane-1200x945.svg" alt="The Go Gopher">
+      {{template "gopher-airplane" ""}}
       {{template "message" .MessageData}}
     </div>
   </main>

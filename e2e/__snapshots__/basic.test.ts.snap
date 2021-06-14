@@ -624,7 +624,7 @@ Object {
       "role": "link",
     },
   ],
-  "name": "{bad.package v1.0-badversion} · pkg.go.dev",
+  "name": "400 Bad Request · pkg.go.dev",
   "role": "WebArea",
 }
 `;
@@ -2325,7 +2325,7 @@ Object {
       "role": "link",
     },
   ],
-  "name": "{bad.package v1.0-badversion} · pkg.go.dev",
+  "name": "400 Bad Request · pkg.go.dev",
   "role": "WebArea",
 }
 `;

@@ -900,15 +900,13 @@ func serverTestCases() []serverTestCase {
 			name:           "package at version imported by tab",
 			urlPath:        fmt.Sprintf("/%s@%s/%s?tab=importedby", sample.ModulePath, sample.VersionString, sample.Suffix),
 			wantStatusCode: http.StatusOK,
-			want: in("",
-				in(".EmptyContent-message", hasText(`No known importers for this package`))),
+			want:           in(`[data-test-id="gopher-message"]`, hasText(`No known importers for this package`)),
 		},
 		{
 			name:           "package at version imported by tab second page",
 			urlPath:        fmt.Sprintf("/%s@%s/%s?tab=importedby&page=2", sample.ModulePath, sample.VersionString, sample.Suffix),
 			wantStatusCode: http.StatusOK,
-			want: in("",
-				in(".EmptyContent-message", hasText(`No known importers for this package`))),
+			want:           in(`[data-test-id="gopher-message"]`, hasText(`No known importers for this package`)),
 		},
 		{
 			name:           "package at version licenses tab",

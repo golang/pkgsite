@@ -1,0 +1,13 @@
+<!--
+  Copyright 2021 The Go Authors. All rights reserved.
+  Use of this source code is governed by a BSD-style
+  license that can be found in the LICENSE file.
+-->
+
+{{define "gopher-airplane"}}
+  <div class="go-GopherMessage">
+    <img width="1200" height="945"src="/static/shared/gopher/airplane-1200x945.svg"
+        alt="The Go Gopher">
+    {{if .}}<p data-test-id="gopher-message">{{.}}</p>{{end}}
+  </div>
+{{end}}

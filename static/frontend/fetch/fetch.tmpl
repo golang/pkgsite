@@ -13,8 +13,7 @@
 {{define "main"}}
   <main class="go-Container">
     <div class="go-Content go-Content--center">
-      <img class="Fetch-gopher" width="945" height="1200"
-          src="/static/shared/gopher/airplane-1200x945.svg" alt="The Go Gopher">
+      {{template "gopher-airplane" ""}}
       <h3 class="Fetch-message js-fetchMessage"
         data-test-id="fetch-message"
         aria-live="polite"

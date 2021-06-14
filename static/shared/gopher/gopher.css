@@ -4,29 +4,15 @@
  * license that can be found in the LICENSE file.
  */
 
-.Error-gopher,
-.EmptyContent-gopher,
-.Fetch-gopher,
-.SearchResults-emptyContentGopher {
-  display: block;
-  margin: 0 auto;
-  max-width: 15rem;
-  padding: 1.25rem 0;
-}
-.Error-message,
-.EmptyContent-message,
-.SearchResults-emptyContentMessage {
-  color: var(--color-textSubtle);
-  text-align: center;
-}
-.Error-gopher,
-.EmptyContent-gopher,
-.NotFound-gopher,
-.Fetch-gopher,
-.SearchResults-emptyContentGopher {
+.go-GopherMessage img {
   display: block;
   height: 15rem;
   margin: 0 auto;
   padding: 1.25rem 0;
   width: 15rem;
+}
+.go-GopherMessage p {
+  font-weight: 600;
+  margin: auto;
+  text-align: center;
 }

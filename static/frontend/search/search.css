@@ -20,7 +20,9 @@
   display: flex;
   justify-content: flex-end;
 }
-
+.SearchResults-emptyContentMessage {
+  text-align: center;
+}
 .LegacySearchSnippet {
   border-top: var(--border);
   padding: 1rem 0;
