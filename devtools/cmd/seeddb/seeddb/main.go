@@ -19,8 +19,8 @@ import (
 	"time"
 
 	_ "github.com/jackc/pgx/v4/stdlib" // for pgx driver
-	"golang.org/x/pkgsite/cmd/internal/cmdconfig"
 	"golang.org/x/pkgsite/internal/config"
+	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/postgres"
@@ -31,7 +31,7 @@ import (
 )
 
 var (
-	seedfile = flag.String("static", "cmd/internal/seeddb/seed.txt", "filename containing modules for seeding the database")
+	seedfile = flag.String("static", "devtools/cmd/seeddb/seeddb/seed.txt", "filename containing modules for seeding the database")
 )
 
 func main() {
@@ -42,14 +42,14 @@ func main() {
 	if err != nil {
 		log.Fatal(ctx, err)
 	}
-	cfg.Dump(os.Stdout)
-
 	log.SetLevel(cfg.LogLevel)
 
-	db, err := cmdconfig.OpenDB(ctx, cfg, false)
+	// Wrap the postgres driver with our own wrapper, which adds OpenCensus instrumentation.
+	ddb, err := database.Open("pgx", cfg.DBConnInfo(), "seeddb")
 	if err != nil {
-		log.Fatal(ctx, err)
+		log.Fatalf(ctx, "database.Open for host %s failed with %v", cfg.DBHost, err)
 	}
+	db := postgres.New(ddb)
 	defer db.Close()
 
 	if err := run(ctx, db, cfg.ProxyURL); err != nil {
