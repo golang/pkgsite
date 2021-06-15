@@ -3,58 +3,68 @@
 # license that can be found in the LICENSE file.
 version: '3'
 services:
+  e2e:
+    image: node:14.17.0
+    depends_on:
+      - chrome
+      - frontend
+    environment:
+      # For cleaner log output from jest and npm install
+      - CI=true
+      - GO_DISCOVERY_E2E_BASE_URL=http://frontend:8080
+      - GO_DISCOVERY_E2E_CHROME_URL=ws://chrome:3000
+      - PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+      - WAITFORIT_TIMEOUT=300
+    command: bash -c "./third_party/wait-for-it/wait-for-it.sh frontend:8080 -- npm install && npx jest e2e/basic.test.ts"
+    volumes:
+      - ../../:/pkgsite
+    working_dir: /pkgsite
   chrome:
     image: browserless/chrome:1.46-chrome-stable
-    depends_on:
-      - frontend
     ports:
       - 3000:3000
     environment:
       - CONNECTION_TIMEOUT=120000
   frontend:
-    build:
-      context: ../../
-      dockerfile: e2e/docker/Dockerfile.frontend
-    command: ./frontend -host=0.0.0.0:8080
+    image: golang:1.15.5
     depends_on:
       - migrate
+    command: [
+      "./third_party/wait-for-it/wait-for-it.sh",
+      "db:5432",
+      "--",
+      "go",
+      "run",
+      "./cmd/frontend",
+      "-host=0.0.0.0:8080",
+    ]
     environment:
       - GO_DISCOVERY_DATABASE_USER=postgres
       - GO_DISCOVERY_DATABASE_PASSWORD=postgres
       - GO_DISCOVERY_DATABASE_HOST=db
       - GO_DISCOVERY_DATABASE_NAME=discovery_e2e_test
+      - WAITFORIT_TIMEOUT=300
       - PORT=8080
-    image: pkgsite_frontend
     ports:
       - 8080:8080
+    volumes:
+      - ../../:/pkgsite
+    working_dir: /pkgsite
   migrate:
     depends_on:
-      - wait_for_db
+      - db
     image: migrate/migrate:v4.14.1
-    volumes:
-      - ../../migrations:/pkgsite/migrations
-    command:
-      [
+    # TODO: add wait-for-it command here also.
+    command: [
         '-path',
         '/pkgsite/migrations',
         '-database',
         'postgres://postgres:postgres@db:5432/discovery_e2e_test?sslmode=disable',
         'up',
       ]
-  # wait_for_db is used to delay migrations until the database is ready for connections.
-  wait_for_db:
-    image: ubuntu:14.04
-    depends_on:
-      - db
-    command: >
-      /bin/bash -c "
-        while ! nc -z db 5432;
-        do
-          echo sleeping;
-          sleep 1;
-        done;
-        echo connected!;
-      "
+    volumes:
+      - ../../:/pkgsite
+    working_dir: /pkgsite
   db:
     image: postgres:11.12
     environment:

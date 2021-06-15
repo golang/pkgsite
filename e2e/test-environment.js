@@ -8,8 +8,7 @@
 const puppeteer = require('puppeteer');
 const NodeEnvironment = require('jest-environment-node');
 
-// GO_DISCOVERY_E2E_TEST_PORT default value should match ./global-setup.ts.
-const port = Number(process.env.GO_DISCOVERY_E2E_TEST_PORT ?? 3000);
+const chromeURL = process.env.GO_DISCOVERY_E2E_CHROME_URL ?? 'ws://chrome:3000';
 
 /**
  * PuppeteerEnvironment is a custom jest test environment. It extends the node
@@ -26,7 +25,7 @@ class PuppeteerEnvironment extends NodeEnvironment {
     await super.setup();
     try {
       this.global.browser = await puppeteer.connect({
-        browserWSEndpoint: `ws://localhost:${port}`,
+        browserWSEndpoint: chromeURL,
         defaultViewport: { height: 800, width: 1280 },
       });
     } catch (e) {
