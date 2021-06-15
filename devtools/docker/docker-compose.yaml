@@ -9,13 +9,16 @@ services:
       - chrome
       - frontend
     environment:
-      # For cleaner log output from jest and npm install
+      # CI is used for cleaner log output from jest and npm install
       - CI=true
       - GO_DISCOVERY_E2E_BASE_URL=http://frontend:8080
       - GO_DISCOVERY_E2E_CHROME_URL=ws://chrome:3000
       - PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
       - WAITFORIT_TIMEOUT=300
-    command: bash -c "./third_party/wait-for-it/wait-for-it.sh frontend:8080 -- npm install && npx jest e2e/basic.test.ts"
+    command: bash -c "
+        ./third_party/wait-for-it/wait-for-it.sh frontend:8080 --
+          npm install && npx jest e2e/basic.test.ts
+        "
     volumes:
       - ../../:/pkgsite
     working_dir: /pkgsite
@@ -29,15 +32,10 @@ services:
     image: golang:1.15.5
     depends_on:
       - migrate
-    command: [
-      "./third_party/wait-for-it/wait-for-it.sh",
-      "db:5432",
-      "--",
-      "go",
-      "run",
-      "./cmd/frontend",
-      "-host=0.0.0.0:8080",
-    ]
+    command: bash -c "
+        ./third_party/wait-for-it/wait-for-it.sh db:5432 --
+          go run ./cmd/frontend -host=0.0.0.0:8080
+        "
     environment:
       - GO_DISCOVERY_DATABASE_USER=postgres
       - GO_DISCOVERY_DATABASE_PASSWORD=postgres
@@ -54,14 +52,14 @@ services:
     depends_on:
       - db
     image: migrate/migrate:v4.14.1
-    # TODO: add wait-for-it command here also.
-    command: [
-        '-path',
-        '/pkgsite/migrations',
-        '-database',
-        'postgres://postgres:postgres@db:5432/discovery_e2e_test?sslmode=disable',
-        'up',
-      ]
+    entrypoint: ""
+    command: sh -c "
+        apk add --no-cache bash &&
+        ./third_party/wait-for-it/wait-for-it.sh db:5432 --
+          migrate -path /pkgsite/migrations
+            -database postgres://postgres:postgres@db:5432/discovery_e2e_test?sslmode=disable up"
+    environment:
+      - WAITFORIT_TIMEOUT=300
     volumes:
       - ../../:/pkgsite
     working_dir: /pkgsite
