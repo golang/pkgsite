@@ -5,12 +5,12 @@
 # license that can be found in the LICENSE file.
 
 cleanup() {
-  docker-compose -f e2e/docker/docker-compose.yaml down --remove-orphans
+  docker-compose -f devtools/docker/docker-compose.yaml down --remove-orphans
 }
 
 error() {
   echo "---------- ERROR: docker-compose logs ----------"
-  docker-compose -f e2e/docker/docker-compose.yaml logs
+  docker-compose -f devtools/docker/docker-compose.yaml logs
   cleanup
 }
 
@@ -25,8 +25,8 @@ main() {
     fi
   done
 
-  docker-compose -f e2e/docker/docker-compose.yaml build &&
-  docker-compose -f e2e/docker/docker-compose.yaml run e2e
+  docker-compose -f devtools/docker/docker-compose.yaml build &&
+  docker-compose -f devtools/docker/docker-compose.yaml run e2e
 
   local status=$?
   if [ $status -eq 0 ]

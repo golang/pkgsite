@@ -104,7 +104,7 @@ print_duration_and_reset
 echo "----------------------------------------"
 echo "Running e2e tests"
 echo "----------------------------------------"
-# TODO: add e2e/docker/run.sh
+# TODO: add ./devtools/run_e2e.sh
 print_duration_and_reset
 
 echo

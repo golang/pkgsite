@@ -7,10 +7,10 @@ This directory contains end-to-end tests for pages on pkg.go.dev.
 In order to run the tests, run this command from the root of the repository:
 
 ```
-$ ./e2e/docker/run.sh
+$ ./devtools/run_e2e.sh
 ```
 
-`./e2e/docker/run.sh` sets up a series of docker containers that run a postgres
+`./devtools/run_e2e.sh` sets up a series of docker containers that run a postgres
 database, frontend, and headless chrome, and runs the e2e tests using headless
 chrome.
 
