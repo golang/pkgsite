@@ -6,11 +6,12 @@
  */
 
 import './header/header';
-import './keyboard/keyboard';
 import { ClipboardController } from './clipboard/clipboard';
 import { ToolTipController } from './tooltip/tooltip';
 import { SelectNavController } from './outline/select';
 import { ModalController } from './modal/modal';
+
+export { keyboard } from './keyboard/keyboard';
 
 for (const el of document.querySelectorAll<HTMLButtonElement>('.js-clipboard')) {
   new ClipboardController(el);
