@@ -13,15 +13,19 @@ export class ClipboardController {
   /**
    * The data to be copied to the clipboard.
    */
-  private _data: string;
+  private data: string;
 
   /**
    * @param el The element that will trigger copying text to the clipboard. The text is
    * expected to be within its data-to-copy attribute.
    */
   constructor(private el: HTMLButtonElement) {
-    this._data =
-      el.dataset['toCopy'] ?? el.parentElement?.querySelector('input')?.value ?? el.innerText;
+    this.data = el.dataset['toCopy'] ?? el.innerText;
+    // if data-to-copy is empty and the button is part of an input group
+    // capture the value of the input.
+    if (!this.data && el.parentElement?.classList.contains('go-InputGroup')) {
+      this.data = (this.data || el.parentElement?.querySelector('input')?.value) ?? '';
+    }
     el.addEventListener('click', e => this.handleCopyClick(e));
   }
 
@@ -38,7 +42,7 @@ export class ClipboardController {
       return;
     }
     navigator.clipboard
-      .writeText(this._data)
+      .writeText(this.data)
       .then(() => {
         this.showTooltipText('Copied!', TOOLTIP_SHOW_DURATION_MS);
       })
