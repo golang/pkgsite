@@ -237,7 +237,7 @@
   outline: none;
   overflow-x: auto;
   resize: none;
-  white-space: nowrap;
+  white-space: pre;
   width: 100%;
 }
 

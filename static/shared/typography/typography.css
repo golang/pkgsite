@@ -120,6 +120,7 @@ textarea.code {
   overflow-x: auto;
   padding: 0.625rem;
   tab-size: 4;
+  white-space: pre;
 }
 
 button,
