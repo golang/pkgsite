@@ -5,51 +5,83 @@
  * license that can be found in the LICENSE file.
  */
 
-// Keyboard shortcuts:
-// - Pressing '/' focuses the search box
-// - Pressing 'y' changes the browser URL to the canonical URL
-// without triggering a reload.
+/**
+ * Options are keyhandler callback options.
+ */
+interface Options {
+  /**
+   * target is the element the key event should filter on. The
+   * default target is the document.
+   */
+  target?: Element;
 
-const searchInput = document.querySelector<HTMLInputElement>('.js-searchFocus');
-const canonicalURLPath = document.querySelector<HTMLDivElement>('.js-canonicalURLPath')?.dataset[
-  'canonicalUrlPath'
-];
+  /**
+   * withMeta specifies if the event callback should fire when
+   * the key is pressed with a meta key (ctrl, alt, etc). By
+   * default meta keypresses are ignored.
+   */
+  withMeta?: boolean;
+}
 
-document.addEventListener('keydown', e => {
-  // TODO(golang.org/issue/40246): consolidate keyboard shortcut behavior across the site.
-  const t = (e.target as HTMLElement)?.tagName;
-  if (t === 'INPUT' || t === 'SELECT' || t === 'TEXTAREA') {
-    return;
+/**
+ * KeyHandler is the config for a keyboard event callback.
+ */
+interface KeyHandler extends Options {
+  description: string;
+  callback: (e: KeyboardEvent) => void;
+}
+
+/**
+ * KeyboardController controls event callbacks for sitewide
+ * keyboard events. Multiple callbacks can be registered for
+ * a single key and by default the controller ignores events
+ * for text input targets.
+ */
+class KeyboardController {
+  handlers: Record<string, Set<KeyHandler>>;
+
+  constructor() {
+    this.handlers = {};
+    document.addEventListener('keydown', e => this.handleKeyPress(e));
   }
-  if ((e.target as HTMLElement)?.isContentEditable) {
-    return;
+
+  /**
+   * on registers keyboard event callbacks.
+   * @param key the key to register.
+   * @param description name of the event.
+   * @param callback event callback.
+   * @param options set target and withMeta options to override the default behaviors.
+   */
+  on(key: string, description: string, callback: (e: KeyboardEvent) => void, options?: Options) {
+    this.handlers[key] ??= new Set();
+    this.handlers[key].add({ description, callback, ...options });
+    return this;
   }
-  if (e.metaKey || e.ctrlKey) {
-    return;
-  }
-  switch (e.key) {
-    // Temporary shortcut for testing out the dark theme.
-    case 't': {
-      let nextTheme = 'dark';
-      const theme = document.documentElement.getAttribute('data-theme');
-      if (theme === 'dark') {
-        nextTheme = 'light';
+
+  private handleKeyPress(e: KeyboardEvent) {
+    for (const handler of this.handlers[e.key] ?? new Set()) {
+      if (handler.target && handler.target !== e.target) {
+        return;
       }
-      document.documentElement.setAttribute('data-theme', nextTheme);
-      break;
+      const t = e.target as HTMLElement | null;
+      if (
+        !handler.target &&
+        (t?.tagName === 'INPUT' || t?.tagName === 'SELECT' || t?.tagName === 'TEXTAREA')
+      ) {
+        return;
+      }
+      if (t?.isContentEditable) {
+        return;
+      }
+      if (
+        (handler.withMeta && !(e.ctrlKey || e.metaKey)) ||
+        (!handler.withMeta && (e.ctrlKey || e.metaKey))
+      ) {
+        return;
+      }
+      handler.callback(e);
     }
-    case 'y':
-      if (canonicalURLPath && canonicalURLPath !== '') {
-        window.history.replaceState(null, '', canonicalURLPath);
-      }
-      break;
-    case '/':
-      // Favoring the Firefox quick find feature over search input
-      // focus. See: https://github.com/golang/go/issues/41093.
-      if (searchInput && !window.navigator.userAgent.includes('Firefox')) {
-        e.preventDefault();
-        searchInput.focus();
-      }
-      break;
   }
-});
+}
+
+export const keyboard = new KeyboardController();
