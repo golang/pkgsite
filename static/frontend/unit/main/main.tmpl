@@ -43,7 +43,7 @@
 
 {{define "main-content"}}
   <div class="UnitDetails" data-test-id="UnitDetails" style="display: block;">
-    <div class="UnitDetails-content js-unitDetailsContent" role="main" data-test-id="UnitDetails-content">
+    <div class="UnitDetails-content js-unitDetailsContent" data-test-id="UnitDetails-content">
       {{if .Details.Readme.String}}
         {{block "unit-readme" .Details}}{{end}}
       {{end}}
