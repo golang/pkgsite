@@ -9,15 +9,15 @@ import puppeteer, { Page } from 'puppeteer';
 
 import './global-types';
 import * as pg from './helpers/page';
-import * as pkgsite from './helpers/pkgsite.page';
+import * as golangxtools from './helpers/golang-x-tools.page';
 
 let page: Page;
 
 beforeAll(async () => {
   page = await pg.newPage();
   await page.emulate(puppeteer.devices['Pixel 2']);
-  await page.goto('/golang.org/x/pkgsite');
-  await pkgsite.prepare(page);
+  await page.goto('/golang.org/x/tools@v0.1.1');
+  await golangxtools.prepare(page);
 });
 
 afterAll(async () => {
