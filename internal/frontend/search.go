@@ -84,8 +84,11 @@ func fetchSearchPage(ctx context.Context, db *postgres.DB, query string, pagePar
 			CommitTime:     elapsedTime(r.CommitTime),
 			NumImportedBy:  int(r.NumImportedBy),
 			SameModule:     packagePaths("Other packages in module "+r.ModulePath+":", r.SameModule, 5),
-			LowerMajor:     modulePaths("Lower module versions:", r.LowerMajor),
-			Symbols:        symbolResults("Identifiers:", r.PackagePath, r.Symbols, 5),
+			// Say "other" instead of "lower" because at some point we may
+			// prefer to show a tagged, lower major version over an untagged
+			// higher major version.
+			LowerMajor: modulePaths("Other module versions:", r.LowerMajor),
+			Symbols:    symbolResults("Identifiers:", r.PackagePath, r.Symbols, 5),
 		})
 	}
 

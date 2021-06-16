@@ -43,13 +43,13 @@
   {{$query := .Query}}
   {{range $i, $v := .Results}}
     <div class="SearchSnippet">
-      <div class="SearchSnippet-breadcrumb">{{$v.PackagePath}}</div>
       <div class="SearchSnippet-headerContainer">
         <h2 class="SearchSnippet-header">
           <a href="/{{$v.PackagePath}}" data-gtmc="search result" data-gtmv="{{$i}}"
               data-test-id="snippet-title">
             {{$v.Name}}
           </a>
+	  <span class="SearchSnippet-header-path">{{$v.PackagePath}}</span>
         </h2>
         {{with .Symbols}}
           <div class="SearchSnippet-symbolContainer">

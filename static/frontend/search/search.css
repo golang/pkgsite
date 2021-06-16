@@ -23,14 +23,6 @@
 .SearchResults-emptyContentMessage {
   text-align: center;
 }
-.LegacySearchSnippet {
-  border-top: var(--border);
-  padding: 1rem 0;
-}
-.LegacySearchSnippet-header {
-  font-size: 1.5rem;
-  margin: 0 0 0.3125rem;
-}
 .SearchSnippet {
   padding: 1rem 0;
 }
@@ -72,6 +64,11 @@
 }
 .SearchSnippet-header {
   font-size: 1.5rem;
+  margin: 0 0 0.3125rem 0;
+}
+.SearchSnippet-header-path {
+  color: var(--color-text-subtle);
+  font-size: 1.0rem;
   margin: 0 0 0.3125rem 0;
 }
 .SearchSnippet-symbol {
