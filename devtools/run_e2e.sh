@@ -9,8 +9,21 @@ cleanup() {
 }
 
 error() {
-  echo "---------- ERROR: docker-compose logs ----------"
-  docker-compose -f devtools/docker/docker-compose.yaml logs
+  echo ""
+  echo "---------- ERROR: docker-compose db logs ----------"
+  docker-compose -f devtools/docker/docker-compose.yaml logs db
+  echo ""
+  echo "---------- ERROR: docker-compose migrate logs ----------"
+  docker-compose -f devtools/docker/docker-compose.yaml logs migrate
+  echo ""
+  echo "---------- ERROR: docker-compose frontend logs ----------"
+  docker-compose -f devtools/docker/docker-compose.yaml logs frontend
+  echo ""
+  echo "---------- ERROR: docker-compose chrome logs ----------"
+  docker-compose -f devtools/docker/docker-compose.yaml logs chrome
+  echo ""
+  echo "---------- ERROR: docker-compose e2e logs ----------"
+  docker-compose -f devtools/docker/docker-compose.yaml logs e2e
   cleanup
 }
 
