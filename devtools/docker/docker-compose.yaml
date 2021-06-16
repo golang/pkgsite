@@ -16,8 +16,7 @@ services:
       - WAITFORIT_TIMEOUT=300
     command: bash -c "
         ./third_party/wait-for-it/wait-for-it.sh frontend:8080 --
-          npx jest e2e/basic.test.ts
-        "
+          npx jest e2e/basic.test.ts"
     volumes:
       - ../../:/pkgsite
     working_dir: /pkgsite
@@ -37,8 +36,7 @@ services:
     command: bash -c "
         ./third_party/wait-for-it/wait-for-it.sh db:5432 --
           go run ./devtools/cmd/seeddb/seeddb/main.go &&
-          go run ./cmd/frontend -host=0.0.0.0:8080
-        "
+          go run ./cmd/frontend -host=0.0.0.0:8080"
     environment:
       - GO_DISCOVERY_DATABASE_USER=postgres
       - GO_DISCOVERY_DATABASE_PASSWORD=postgres
