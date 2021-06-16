@@ -3,6 +3,33 @@
 # license that can be found in the LICENSE file.
 version: '3'
 services:
+  allbash:
+    # Allocate a pseudo-tty, which sets the TERM
+    # environment variable to xterm.
+    # See
+    # https://docs.docker.com/engine/reference/run/#env-environment-variables and
+    # https://www.gnu.org/software/gettext/manual/html_node/The-TERM-variable.html.
+    # This is necessary because devtools/lib.sh uses tput.
+    tty:
+      true
+    # allbash depends only on db, since the Go tests will set up its own
+    # test databases.
+    depends_on:
+      - db
+     # This should match the version we are using on AppEngine.
+    image: golang:1.15.5
+    environment:
+      - GO_DISCOVERY_TESTDB=true
+      - GO_DISCOVERY_DATABASE_TEST_PORT=5432
+      - GO_DISCOVERY_DATABASE_TEST_HOST=db
+      - GO_DISCOVERY_DATABASE_TEST_USER=postgres
+      - GO_DISCOVERY_DATABASE_TEST_PASSWORD=postgres
+      # TERM is set to xterm-256color for use by devtools/lib.sh.
+      - TERM=xterm-256color
+    entrypoint: "./third_party/wait-for-it/wait-for-it.sh db:5432 -- ./all.bash"
+    volumes:
+      - ../../:/pkgsite
+    working_dir: /pkgsite
   e2e:
     image: node:14.17.0
     depends_on:
@@ -27,6 +54,7 @@ services:
     environment:
       - CONNECTION_TIMEOUT=120000
   frontend:
+     # This should match the version we are using on AppEngine.
     image: golang:1.15.5
     depends_on:
       - migrate

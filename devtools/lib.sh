@@ -4,17 +4,19 @@
 
 # Library of useful bash functions and variables.
 
-if [ -t 1 ] && which tput >/dev/null 2>&1; then
-  RED="$(tput setaf 1)"
-  GREEN="$(tput setaf 2)"
-  YELLOW="$(tput setaf 3)"
-  NORMAL="$(tput sgr0)"
-else
-  RED=""
-  GREEN=""
-  YELLOW=""
-  NORMAL=""
-fi
+RED=; GREEN=; YELLOW=; BLUE=; BOLD=; RESET=;
+
+case $TERM in
+  '' | xterm) ;;
+  # If xterm is not xterm-16color, xterm-88color, or xterm-256color, tput will
+  # return the error:
+  #   tput: No value for $TERM and no -T specified
+  *)
+      RED=`tput setaf 1`
+      GREEN=`tput setaf 2`
+      YELLOW=`tput setaf 3`
+      NORMAL=`tput sgr0`
+esac
 
 EXIT_CODE=0
 
@@ -34,10 +36,15 @@ runcmd() {
   msg="$@"
   # Truncate command logging for narrow terminals.
   # Account for the 2 characters of '$ '.
-  maxwidth=$(( $(tput cols) - 2 ))
-  if [[ ${#msg} -gt $maxwidth ]]; then
-    msg="${msg::$(( maxwidth - 3 ))}..."
-  fi
+  case ${TERM} in
+    '' | xterm) ;;
+    *)
+        maxwidth=$(( $(tput cols) - 2 ))
+        if [[ ${#msg} -gt $maxwidth ]]; then
+          msg="${msg::$(( maxwidth - 3 ))}..."
+        fi
+  esac
+
   info "\$ $msg"
   $@ || err "command failed"
 }
