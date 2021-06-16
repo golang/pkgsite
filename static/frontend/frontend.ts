@@ -5,7 +5,7 @@
  * license that can be found in the LICENSE file.
  */
 
-import { keyboard } from '../shared/shared';
+import { analytics, keyboard } from '../shared/shared';
 
 // Temporary shortcut for testing out the dark theme.
 keyboard.on('t', 'toggle theme', () => {
@@ -45,8 +45,7 @@ keyboard.on('y', 'set canonical url', () => {
  * setupGoogleTagManager intializes Google Tag Manager.
  */
 (function setupGoogleTagManager() {
-  window.dataLayer = window.dataLayer || [];
-  window.dataLayer.push({
+  analytics.track({
     'gtm.start': new Date().getTime(),
     event: 'gtm.js',
   });
@@ -72,7 +71,7 @@ function removeUTMSource() {
 }
 
 if (document.querySelector<HTMLElement>('.js-gtmID')?.dataset.gtmid && window.dataLayer) {
-  window.dataLayer.push(function () {
+  analytics.func(function () {
     removeUTMSource();
   });
 } else {

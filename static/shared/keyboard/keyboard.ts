@@ -5,6 +5,8 @@
  * license that can be found in the LICENSE file.
  */
 
+import { track } from '../analytics/analytics';
+
 /**
  * Options are keyhandler callback options.
  */
@@ -79,6 +81,7 @@ class KeyboardController {
       ) {
         return;
       }
+      track('keypress', 'hotkeys', `${e.key} pressed`, handler.description);
       handler.callback(e);
     }
   }
