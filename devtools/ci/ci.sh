@@ -14,6 +14,12 @@ docker with sudo.
 EOUSAGE
 }
 
+# Run tools in continuous integration mode.
+export CI=true
+# Skip installing chrome with puppeteer. We are using the browserless/chrome
+# docker image instead.
+export PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+
 # starttime is the start time for this entire script.
 starttime=`date +%s`
 # sectionstart is the start time for a section. This is reset in

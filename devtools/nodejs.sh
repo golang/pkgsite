@@ -12,9 +12,11 @@ set -e
 # and sets the working directory in the container to /pkgsite.
 
 docker run --net=host --rm -t \
+  -e CI \
   -e GO_DISCOVERY_E2E_BASE_URL \
   -e GO_DISCOVERY_E2E_AUTHORIZATION \
   -e GO_DISCOVERY_E2E_QUOTA_BYPASS \
+  -e PUPPETEER_SKIP_CHROMIUM_DOWNLOAD \
   -v `pwd`:/pkgsite \
   -w /pkgsite  \
   node:14.17.0 $@
