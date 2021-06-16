@@ -13,11 +13,10 @@ services:
       - CI=true
       - GO_DISCOVERY_E2E_BASE_URL=http://frontend:8080
       - GO_DISCOVERY_E2E_CHROME_URL=ws://chrome:3000
-      - PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
       - WAITFORIT_TIMEOUT=300
     command: bash -c "
         ./third_party/wait-for-it/wait-for-it.sh frontend:8080 --
-          npm install && npx jest e2e/basic.test.ts
+          npx jest e2e/basic.test.ts
         "
     volumes:
       - ../../:/pkgsite

@@ -76,7 +76,7 @@ print_duration_and_reset
 echo "----------------------------------------"
 echo "Installing NPM"
 echo "----------------------------------------"
-./devtools/nodejs.sh npm install --quiet
+./devtools/nodejs.sh npm ci
 print_duration_and_reset
 
 echo "----------------------------------------"
