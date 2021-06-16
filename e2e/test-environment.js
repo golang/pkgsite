@@ -8,7 +8,7 @@
 const puppeteer = require('puppeteer');
 const NodeEnvironment = require('jest-environment-node');
 
-const chromeURL = process.env.GO_DISCOVERY_E2E_CHROME_URL ?? 'ws://chrome:3000';
+const chromeURL = process.env.GO_DISCOVERY_E2E_CHROME_URL ?? 'ws://localhost:3000';
 
 /**
  * PuppeteerEnvironment is a custom jest test environment. It extends the node
