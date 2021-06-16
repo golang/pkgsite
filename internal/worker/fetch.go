@@ -243,7 +243,7 @@ func (f *Fetcher) fetchAndInsertModule(ctx context.Context, modulePath, requeste
 	}
 
 	// The module was successfully fetched.
-	log.Infof(ctx, "fetch.FetchModule succeeded for %s@%s", ft.ModulePath, ft.RequestedVersion)
+	log.Debugf(ctx, "fetch.FetchModule succeeded for %s@%s", ft.ModulePath, ft.RequestedVersion)
 
 	// Determine the current latest-version information for this module.
 
@@ -257,7 +257,7 @@ func (f *Fetcher) fetchAndInsertModule(ctx context.Context, modulePath, requeste
 		ft.Error = err
 		return ft
 	}
-	log.Infof(ctx, "db.InsertModule succeeded for %s@%s", ft.ModulePath, ft.RequestedVersion)
+	log.Debugf(ctx, "db.InsertModule succeeded for %s@%s", ft.ModulePath, ft.RequestedVersion)
 	// Invalidate the cache if we just processed the latest version of a module.
 	if isLatest {
 		if err := f.invalidateCache(ctx, ft.ModulePath); err != nil {
@@ -266,7 +266,7 @@ func (f *Fetcher) fetchAndInsertModule(ctx context.Context, modulePath, requeste
 			// to account for this possibility.)
 			log.Errorf(ctx, "failed to invalidate cache for %s: %v", ft.ModulePath, err)
 		} else {
-			log.Infof(ctx, "invalidated cache for %s", ft.ModulePath)
+			log.Debugf(ctx, "invalidated cache for %s", ft.ModulePath)
 		}
 	}
 	return ft
