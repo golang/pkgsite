@@ -252,6 +252,11 @@
   width: 85%;
   z-index: 30;
 }
+@media only screen and (min-width: 50rem) {
+  .go-NavigationDrawer {
+    display: none;
+  }
+}
 .go-NavigationDrawer.is-active {
   transform: translateX(0);
 }
