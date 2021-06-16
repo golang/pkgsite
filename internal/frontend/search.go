@@ -48,7 +48,7 @@ type SearchResult struct {
 	Approximate    bool
 	Symbols        *subResult
 	SameModule     *subResult // package paths in the same module
-	LowerMajor     *subResult // package paths in lower major versions
+	OtherMajor     *subResult // package paths in lower major versions
 }
 
 type subResult struct {
@@ -87,7 +87,7 @@ func fetchSearchPage(ctx context.Context, db *postgres.DB, query string, pagePar
 			// Say "other" instead of "lower" because at some point we may
 			// prefer to show a tagged, lower major version over an untagged
 			// higher major version.
-			LowerMajor: modulePaths("Other module versions:", r.LowerMajor),
+			OtherMajor: modulePaths("Other module versions:", r.OtherMajor),
 			Symbols:    symbolResults("Identifiers:", r.PackagePath, r.Symbols, 5),
 		})
 	}
@@ -159,16 +159,12 @@ func packagePaths(heading string, rs []*internal.SearchResult, max int) *subResu
 	}
 }
 
-func modulePaths(heading string, rs []*internal.SearchResult) *subResult {
-	if len(rs) == 0 {
+func modulePaths(heading string, mpaths map[string]bool) *subResult {
+	if len(mpaths) == 0 {
 		return nil
 	}
-	mpm := map[string]bool{}
-	for _, r := range rs {
-		mpm[r.ModulePath] = true
-	}
 	var mps []string
-	for m := range mpm {
+	for m := range mpaths {
 		mps = append(mps, m)
 	}
 	sort.Slice(mps, func(i, j int) bool {

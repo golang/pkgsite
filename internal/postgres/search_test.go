@@ -1253,6 +1253,7 @@ func TestGroupSearchResults(t *testing.T) {
 	rs := []*internal.SearchResult{
 		{PackagePath: "m.com/p", ModulePath: "m.com", Score: 10},
 		{PackagePath: "m.com/p2", ModulePath: "m.com", Score: 8},
+		{PackagePath: "a.com/p", ModulePath: "a.com", Score: 7},
 		{PackagePath: "m.com/v2/p", ModulePath: "m.com/v2", Score: 6},
 		{PackagePath: "m.com/v2/p2", ModulePath: "m.com/v2", Score: 4},
 	}
@@ -1272,13 +1273,19 @@ func TestGroupSearchResults(t *testing.T) {
 		{
 			PackagePath: "m.com/v2/p",
 			ModulePath:  "m.com/v2",
-			Score:       6,
+			Score:       10.00001,
 			SameModule: []*internal.SearchResult{
 				{PackagePath: "m.com/v2/p2", ModulePath: "m.com/v2", Score: 4},
 			},
-			LowerMajor: []*internal.SearchResult{sp, sp2},
+			OtherMajor: map[string]bool{"m.com": true},
 		},
 		sp,
+		{
+			PackagePath: "a.com/p",
+			ModulePath:  "a.com",
+			Score:       7,
+			OtherMajor:  map[string]bool{},
+		},
 	}
 	if diff := cmp.Diff(want, got); diff != "" {
 		t.Errorf("mismatch (-want, +got)\n%s", diff)

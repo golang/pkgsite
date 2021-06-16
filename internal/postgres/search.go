@@ -517,23 +517,14 @@ func sortAndDedup(s []string) []string {
 // package of the highest major version. But they are not removed from the
 // top-level list.
 func groupSearchResults(rs []*internal.SearchResult) []*internal.SearchResult {
-	// Put higher major versions first, otherwise observing score.
-	sort.Slice(rs, func(i, j int) bool {
-		sp1, v1 := internal.SeriesPathAndMajorVersion(rs[i].ModulePath)
-		sp2, v2 := internal.SeriesPathAndMajorVersion(rs[j].ModulePath)
-		if sp1 != sp2 {
-			return rs[i].Score > rs[j].Score
-		}
-		return v1 > v2
-	})
-
-	modules := map[string]*internal.SearchResult{} // from module path to first result
-	series := map[string]*internal.SearchResult{}  // for series path to first result
+	modules := map[string]*internal.SearchResult{} // module path to first result
+	series := map[string]*internal.SearchResult{}  // series path to result with max major version
 	var results []*internal.SearchResult
 	for _, r := range rs {
 		f := modules[r.ModulePath]
 		if f == nil {
-			// First result with this module path; remember it and keep it.
+			// First result (package) with this module path; remember it and
+			// keep it.
 			modules[r.ModulePath] = r
 			results = append(results, r)
 		} else {
@@ -541,17 +532,33 @@ func groupSearchResults(rs []*internal.SearchResult) []*internal.SearchResult {
 			f.SameModule = append(f.SameModule, r)
 		}
 
-		seriesPath := internal.SeriesPathForModule(r.ModulePath)
+		seriesPath, vr := internal.SeriesPathAndMajorVersion(r.ModulePath)
 		f = series[seriesPath]
 		if f == nil {
 			// First time we've seen anything from this series: remember it.
+			r.OtherMajor = map[string]bool{}
 			series[seriesPath] = r
 		} else if r.ModulePath != f.ModulePath {
-			// Result is from a different (lower) major version. Record this result
-			// under the first.
-			f.LowerMajor = append(f.LowerMajor, r)
+			// Result is from a different major version.
+			// Record the larger one, and give it a higher score.
+			_, vf := internal.SeriesPathAndMajorVersion(f.ModulePath)
+			if vr > vf {
+				series[seriesPath] = r
+				r.OtherMajor = f.OtherMajor
+				f.OtherMajor = nil
+				r.OtherMajor[f.ModulePath] = true
+				if f.Score > r.Score {
+					r.Score = f.Score + 1e-5
+				}
+			} else {
+				f.OtherMajor[r.ModulePath] = true
+			}
 		}
 	}
+	// Re-sort by score, since we may have changed some.
+	sort.Slice(results, func(i, j int) bool {
+		return results[i].Score > results[j].Score
+	})
 	return results
 }
 

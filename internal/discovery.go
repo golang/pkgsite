@@ -248,9 +248,9 @@ type SearchResult struct {
 	// with lower scores.
 	SameModule []*SearchResult
 
-	// LowerMajor is a list of SearchResults with the same v1 path but at lower
-	// major versions of this module.
-	LowerMajor []*SearchResult
+	// OtherMajor is a set of module paths with the same series path but at
+	// different major versions of this module.
+	OtherMajor map[string]bool
 
 	// NumResults is the total number of packages that were returned for this
 	// search.
