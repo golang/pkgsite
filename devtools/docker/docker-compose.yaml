@@ -32,8 +32,12 @@ services:
     image: golang:1.15.5
     depends_on:
       - migrate
+    # Note: technically we should check that migrations have completed before
+    # running seeddb, but in general, migrations will have completed by the
+    # time seeddb runs. If this ends up being flaky, we should add a check here.
     command: bash -c "
         ./third_party/wait-for-it/wait-for-it.sh db:5432 --
+          go run ./devtools/cmd/seeddb/seeddb/main.go &&
           go run ./cmd/frontend -host=0.0.0.0:8080
         "
     environment:
@@ -41,6 +45,7 @@ services:
       - GO_DISCOVERY_DATABASE_PASSWORD=postgres
       - GO_DISCOVERY_DATABASE_HOST=db
       - GO_DISCOVERY_DATABASE_NAME=discovery_e2e_test
+      - GO_DISCOVERY_LOG_LEVEL=info
       - WAITFORIT_TIMEOUT=300
       - PORT=8080
     ports:
