@@ -41,18 +41,6 @@ keyboard.on('y', 'set canonical url', () => {
   }
 });
 
-interface TagManagerEvent {
-  event: string;
-  'gtm.start': number;
-}
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-declare global {
-  interface Window {
-    dataLayer?: (TagManagerEvent | VoidFunction)[];
-  }
-}
-
 /**
  * setupGoogleTagManager intializes Google Tag Manager.
  */

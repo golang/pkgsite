@@ -12,6 +12,7 @@ import { SelectNavController } from './outline/select';
 import { ModalController } from './modal/modal';
 
 export { keyboard } from './keyboard/keyboard';
+export * as analytics from './analytics/analytics';
 
 for (const el of document.querySelectorAll<HTMLButtonElement>('.js-clipboard')) {
   new ClipboardController(el);
