@@ -16,7 +16,7 @@ services:
       - WAITFORIT_TIMEOUT=300
     command: bash -c "
         ./third_party/wait-for-it/wait-for-it.sh frontend:8080 --
-          npx jest e2e/basic.test.ts"
+        npx jest $GO_DISCOVERY_E2E_ARGS"
     volumes:
       - ../../:/pkgsite
     working_dir: /pkgsite

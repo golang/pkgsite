@@ -5,6 +5,12 @@
  * license that can be found in the LICENSE file.
  */
 
+/*
+TODO: replace these cases with something in seeddb
+  ${'package with multiple nested modules'}                        | ${'/github.com/Azure/go-autorest/autorest@v0.11.18#section-directories'}
+  ${'page that will redirect'}                                     | ${'/github.com/jackc/pgx/pgxpool'}
+*/
+
 export const testcases = test.each`
   name                                                             | path
   ${'standard library'}                                            | ${'/std@go1.16.3'}
@@ -22,10 +28,8 @@ export const testcases = test.each`
   ${'no documentation'}                                            | ${'/github.com/tendermint/tendermint@v0.34.10/cmd/contract_tests'}
   ${'package with multiple licenses'}                              | ${'/github.com/apache/thrift@v0.14.1?tab=licenses'}
   ${'package that exists in multiple modules at the same version'} | ${'/github.com/hashicorp/vault/api@v1.0.3'}
-  ${'package with multiple nested modules'}                        | ${'/github.com/Azure/go-autorest/autorest@v0.11.18#section-directories'}
   ${'package not at latest version of module'}                     | ${'/golang.org/x/tools/cmd/vet'}
   ${'package with higher major version'}                           | ${'/mvdan.cc/sh/syntax'}
-  ${'page that will redirect'}                                     | ${'/github.com/jackc/pgx/pgxpool'}
   ${'package with multi-GOOS'}                                     | ${'/github.com/creack/pty@v1.1.11'}
   ${'retracted package'}                                           | ${'/k8s.io/client-go@v1.5.2'}
   ${'deprecated package'}                                          | ${'/github.com/jba/bit'}

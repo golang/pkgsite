@@ -38,6 +38,10 @@ main() {
     fi
   done
 
+  # GO_DISCOVERY_E2E_ARGS is used to pass arguments to the e2e tests and
+  # indicate which tests to run.
+  export GO_DISCOVERY_E2E_ARGS="$files $@"
+  echo "GO_DISCOVERY_E2E_ARGS=$GO_DISCOVERY_E2E_ARGS"
   docker-compose -f devtools/docker/docker-compose.yaml build &&
   docker-compose -f devtools/docker/docker-compose.yaml run e2e
 
