@@ -41,26 +41,6 @@ Object {
       "role": "link",
     },
     Object {
-      "name": "Go.",
-      "role": "link",
-    },
-    Object {
-      "name": "Why Go",
-      "role": "link",
-    },
-    Object {
-      "name": "Getting Started",
-      "role": "link",
-    },
-    Object {
-      "name": "Discover Packages",
-      "role": "link",
-    },
-    Object {
-      "name": "About",
-      "role": "link",
-    },
-    Object {
       "name": "The Go Gopher",
       "role": "img",
     },
@@ -230,26 +210,6 @@ Object {
       "description": "Search for a package",
       "name": "Search for a package",
       "role": "textbox",
-    },
-    Object {
-      "name": "Why Go",
-      "role": "link",
-    },
-    Object {
-      "name": "Getting Started",
-      "role": "link",
-    },
-    Object {
-      "name": "Discover Packages",
-      "role": "link",
-    },
-    Object {
-      "name": "About",
-      "role": "link",
-    },
-    Object {
-      "name": "Go.",
-      "role": "link",
     },
     Object {
       "name": "Why Go",
@@ -467,26 +427,6 @@ Object {
       "role": "link",
     },
     Object {
-      "name": "Go.",
-      "role": "link",
-    },
-    Object {
-      "name": "Why Go",
-      "role": "link",
-    },
-    Object {
-      "name": "Getting Started",
-      "role": "link",
-    },
-    Object {
-      "name": "Discover Packages",
-      "role": "link",
-    },
-    Object {
-      "name": "About",
-      "role": "link",
-    },
-    Object {
       "name": "The Go Gopher",
       "role": "img",
     },
@@ -642,26 +582,6 @@ Object {
     },
     Object {
       "name": "Go",
-      "role": "link",
-    },
-    Object {
-      "name": "Why Go",
-      "role": "link",
-    },
-    Object {
-      "name": "Getting Started",
-      "role": "link",
-    },
-    Object {
-      "name": "Discover Packages",
-      "role": "link",
-    },
-    Object {
-      "name": "About",
-      "role": "link",
-    },
-    Object {
-      "name": "Go.",
       "role": "link",
     },
     Object {
@@ -875,26 +795,6 @@ Object {
       "description": "Search for a package",
       "name": "Search for a package",
       "role": "textbox",
-    },
-    Object {
-      "name": "Why Go",
-      "role": "link",
-    },
-    Object {
-      "name": "Getting Started",
-      "role": "link",
-    },
-    Object {
-      "name": "Discover Packages",
-      "role": "link",
-    },
-    Object {
-      "name": "About",
-      "role": "link",
-    },
-    Object {
-      "name": "Go.",
-      "role": "link",
     },
     Object {
       "name": "Why Go",
@@ -1530,26 +1430,6 @@ Object {
       "description": "Search for a package",
       "name": "Search for a package",
       "role": "textbox",
-    },
-    Object {
-      "name": "Why Go",
-      "role": "link",
-    },
-    Object {
-      "name": "Getting Started",
-      "role": "link",
-    },
-    Object {
-      "name": "Discover Packages",
-      "role": "link",
-    },
-    Object {
-      "name": "About",
-      "role": "link",
-    },
-    Object {
-      "name": "Go.",
-      "role": "link",
     },
     Object {
       "name": "Why Go",

@@ -41,26 +41,6 @@ Object {
       "role": "link",
     },
     Object {
-      "name": "Go.",
-      "role": "link",
-    },
-    Object {
-      "name": "Why Go",
-      "role": "link",
-    },
-    Object {
-      "name": "Getting Started",
-      "role": "link",
-    },
-    Object {
-      "name": "Discover Packages",
-      "role": "link",
-    },
-    Object {
-      "name": "About",
-      "role": "link",
-    },
-    Object {
       "level": 1,
       "name": "Results for “http”",
       "role": "heading",
