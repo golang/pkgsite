@@ -145,6 +145,8 @@ export async function a11ySnapshotTest(
 ): Promise<void> {
   if (opts.mobile) {
     await page.setViewport({ width: 411, height: 731 });
+  } else {
+    await page.setViewport({ width: 1600, height: 900 });
   }
   await page.goto(opts.path);
   await (opts.prepare ?? prepare)(page);
@@ -165,6 +167,8 @@ export async function fullScreenshotTest(
 ): Promise<void> {
   if (opts.mobile) {
     await page.setViewport({ width: 411, height: 731 });
+  } else {
+    await page.setViewport({ width: 1600, height: 900 });
   }
   await page.goto(opts.path);
   await (opts.prepare ?? prepare)(page);
