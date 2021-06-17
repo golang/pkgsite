@@ -272,6 +272,7 @@ main() {
       runcmd go mod tidy
       runcmd env GO_DISCOVERY_TESTDB=true go test ./...
       runcmd go test ./internal/secrets
+      run_npm audit
       ;;
     cl)
       # Similar to the above, but only run checks that apply to files in this commit.
