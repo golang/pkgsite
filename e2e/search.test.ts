@@ -43,6 +43,23 @@ test('mobile screenshot', async () => {
   });
 });
 
+test('desktop no results', async () => {
+  const page = await pg.newPage();
+  await pg.fullScreenshotTest(page, {
+    path: '/search?q=aoeuidhtns',
+    prepare: search.prepare,
+  });
+});
+
+test('mobile no results', async () => {
+  const page = await pg.newPage();
+  await pg.fullScreenshotTest(page, {
+    path: '/search?q=aoeuidhtns',
+    mobile: true,
+    prepare: search.prepare,
+  });
+});
+
 test('no page errors', () => {
   expect(pageErrors).toHaveLength(0);
 });
