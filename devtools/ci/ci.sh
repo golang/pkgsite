@@ -92,19 +92,9 @@ echo "----------------------------------------"
 print_duration_and_reset
 
 echo "----------------------------------------"
-echo "Running postgres"
-echo "----------------------------------------"
-pg_container=$(${maybe_sudo}docker run --rm -d -e LANG=C postgres:11.4)
-trap "${maybe_sudo} docker stop ${pg_container}" EXIT
-print_duration_and_reset
-
-echo "----------------------------------------"
 echo "Running all.bash"
 echo "----------------------------------------"
-${maybe_sudo}docker run --rm -t \
-  --network container:${pg_container} \
-  -v $(pwd):"/workspace" -w "/workspace" \
-  -e GO_DISCOVERY_TESTDB=true golang:1.15 ./all.bash ci
+docker-compose -f devtools/docker/docker-compose.yaml run allbash ci
 print_duration_and_reset
 
 echo "----------------------------------------"
