@@ -24,7 +24,6 @@ import (
 // table with a status of zero.
 func (db *DB) InsertIndexVersions(ctx context.Context, versions []*internal.IndexVersion) (err error) {
 	defer derrors.WrapStack(&err, "InsertIndexVersions(ctx, %v)", versions)
-
 	var vals []interface{}
 	for _, v := range versions {
 		vals = append(vals, v.Path, v.Version, version.ForSorting(v.Version), v.Timestamp, 0, "", "", version.IsIncompatible(v.Version))
@@ -35,10 +34,44 @@ func (db *DB) InsertIndexVersions(ctx context.Context, versions []*internal.Inde
 			(module_path, version)
 		DO UPDATE SET
 			index_timestamp=excluded.index_timestamp,
-			next_processed_after=CURRENT_TIMESTAMP,
-			status=0`
+			next_processed_after=CURRENT_TIMESTAMP
+	`
 	return db.db.Transact(ctx, sql.LevelDefault, func(tx *database.DB) error {
-		return tx.BulkInsert(ctx, "module_version_states", cols, vals, conflictAction)
+		var updates [][2]string // (module_path, version) to update status
+		err := tx.BulkInsertReturning(ctx, "module_version_states", cols, vals, conflictAction,
+			[]string{"module_path", "version", "status"},
+			func(rows *sql.Rows) error {
+				var (
+					mod, ver string
+					status   int
+				)
+				if err := rows.Scan(&mod, &ver, &status); err != nil {
+					return err
+				}
+				// Update a module's status to 0 if it wasn't found previously.
+				// See https://golang.org/issue/46117.
+				if status == http.StatusNotFound {
+					updates = append(updates, [2]string{mod, ver})
+				}
+				return nil
+			})
+		if err != nil {
+			return err
+		}
+		// We don't have a BulkUpdate function that works for us here
+		// (database.BulkUpdate can use only one column as a key). But we expect
+		// very few of these, so it's fine to run them individually.
+		for _, mv := range updates {
+			_, err = tx.Exec(ctx, `
+				UPDATE module_version_states
+				SET status = 0
+				WHERE module_path = $1 AND version = $2
+			`, mv[0], mv[1])
+			if err != nil {
+				return err
+			}
+		}
+		return nil
 	})
 }
 

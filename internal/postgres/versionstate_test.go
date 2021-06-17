@@ -20,6 +20,61 @@ import (
 	"golang.org/x/pkgsite/internal/testing/sample"
 )
 
+func TestInsertIndexVersions(t *testing.T) {
+	t.Parallel()
+	testDB, release := acquire(t)
+	defer release()
+	ctx := context.Background()
+	const v1 = "v1.0.0"
+
+	// Insert some modules into an empty table.
+	must(t, testDB.InsertIndexVersions(ctx, []*internal.IndexVersion{
+		{Path: "a.com", Version: v1},
+		{Path: "b.com", Version: v1},
+		{Path: "c.com", Version: v1},
+		{Path: "d.com", Version: v1},
+	}))
+
+	// Modify the status of some of the modules to simulate processing.
+	type row struct {
+		Path   string
+		Status int
+	}
+	rows := []row{
+		{"a.com", 0},   // not yet processed; not updated
+		{"b.com", 200}, // successfully processed; not updated
+		{"c.com", 404}, // not found; updated to 0
+		{"d.com", 491}, // alternative module; not updated
+	}
+	for _, r := range rows {
+		_, err := testDB.db.Exec(ctx, `
+			UPDATE module_version_states SET status = $1 WHERE module_path= $2 AND version = $3
+		`, r.Status, r.Path, v1)
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	// Insert the modules again.
+	must(t, testDB.InsertIndexVersions(ctx, []*internal.IndexVersion{
+		{Path: "a.com", Version: v1},
+		{Path: "b.com", Version: v1},
+		{Path: "c.com", Version: v1},
+		{Path: "d.com", Version: v1},
+	}))
+
+	// Verify that only the desired status updates occurred.
+	want := rows
+	want[2].Status = 0 // c.com was 404, should be 0
+	var got []row
+	must(t, testDB.db.CollectStructs(ctx, &got, `
+		SELECT module_path, status FROM module_version_states ORDER BY module_path
+	`))
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Fatalf("mismatch (-want, +got):\n%s", diff)
+	}
+}
+
 func TestModuleVersionState(t *testing.T) {
 	t.Parallel()
 	testDB, release := acquire(t)
@@ -44,9 +99,7 @@ func TestModuleVersionState(t *testing.T) {
 		Path:    "foo.com/bar",
 		Version: "v1.0.0",
 	}
-	if err := testDB.InsertIndexVersions(ctx, []*internal.IndexVersion{initialFooVersion}); err != nil {
-		t.Fatal(err)
-	}
+	must(t, testDB.InsertIndexVersions(ctx, []*internal.IndexVersion{initialFooVersion}))
 	fooVersion := &internal.IndexVersion{
 		Path:      "foo.com/bar",
 		Version:   "v1.0.0",
@@ -58,10 +111,7 @@ func TestModuleVersionState(t *testing.T) {
 		Timestamp: latest,
 	}
 	versions := []*internal.IndexVersion{fooVersion, bazVersion}
-	if err := testDB.InsertIndexVersions(ctx, versions); err != nil {
-		t.Fatal(err)
-	}
-
+	must(t, testDB.InsertIndexVersions(ctx, versions))
 	gotVersions, err := testDB.GetNextModulesToFetch(ctx, 10)
 	if err != nil {
 		t.Fatal(err)
@@ -96,9 +146,7 @@ func TestModuleVersionState(t *testing.T) {
 		FetchErr:             fetchErr,
 		PackageVersionStates: []*internal.PackageVersionState{pkgVersionState},
 	}
-	if err := testDB.UpsertModuleVersionState(ctx, mvs); err != nil {
-		t.Fatal(err)
-	}
+	must(t, testDB.UpsertModuleVersionState(ctx, mvs))
 	errString := fetchErr.Error()
 	numPackages := 1
 	wantFooState := &internal.ModuleVersionState{
@@ -258,14 +306,11 @@ func TestUpsertModuleVersionStates(t *testing.T) {
 			}
 
 			var gotStatus sql.NullInt64
-			err = testDB.db.QueryRow(ctx, `
+			must(t, testDB.db.QueryRow(ctx, `
                     SELECT status
                     FROM modules
                     WHERE module_path = $1 AND version = $2;`,
-				m.ModulePath, m.Version).Scan(&gotStatus)
-			if err != nil {
-				t.Fatalf("db.QueryRow(): %v", err)
-			}
+				m.ModulePath, m.Version).Scan(&gotStatus))
 			if test.insertModuleBeforeMVS != gotStatus.Valid {
 				t.Fatalf("modules.Status = %+v, want status: %t", gotStatus, test.insertModuleBeforeMVS)
 			}
@@ -289,15 +334,10 @@ func TestUpdateModuleVersionStatus(t *testing.T) {
 		Timestamp:  time.Now(),
 		Status:     200,
 	}
-	if err := testDB.UpsertModuleVersionState(ctx, mvs); err != nil {
-		t.Fatal(err)
-	}
-
+	must(t, testDB.UpsertModuleVersionState(ctx, mvs))
 	wantStatus := 999
 	wantError := "Error"
-	if err := testDB.UpdateModuleVersionStatus(ctx, mvs.ModulePath, mvs.Version, wantStatus, wantError); err != nil {
-		t.Fatal(err)
-	}
+	must(t, testDB.UpdateModuleVersionStatus(ctx, mvs.ModulePath, mvs.Version, wantStatus, wantError))
 	got, err := testDB.GetModuleVersionState(ctx, mvs.ModulePath, mvs.Version)
 	if err != nil {
 		t.Fatal(err)
@@ -393,5 +433,12 @@ func TestHasGoMod(t *testing.T) {
 				t.Errorf("not found: got %t, want %t", got, test.wantNotFound)
 			}
 		})
+	}
+}
+
+func must(t *testing.T, err error) {
+	t.Helper()
+	if err != nil {
+		t.Fatal(err)
 	}
 }
