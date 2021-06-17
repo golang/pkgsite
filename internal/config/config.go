@@ -472,19 +472,17 @@ func Init(ctx context.Context) (_ *Config, err error) {
 		log.Print("quota enforcement disabled")
 	}
 
-	// If GO_DISCOVERY_CONFIG_OVERRIDE is set, it should point to a file in a
-	// configured bucket which provides overrides for selected configuration.
+	// If the <env>-override.yaml file exists in the configured bucket, it
+	// should provide overrides for selected configuration.
 	// Use this when you want to fix something in prod quickly, without waiting
 	// to re-deploy. (Otherwise, do not use it.)
-	overrideObj := os.Getenv("GO_DISCOVERY_CONFIG_OVERRIDE")
-	if overrideObj != "" {
-		overrideBytes, err := readOverrideFile(ctx, bucket, overrideObj)
-		if err != nil {
-			log.Print(err)
-		} else {
-			log.Printf("processing overrides from gs://%s/%s", bucket, overrideObj)
-			processOverrides(cfg, overrideBytes)
-		}
+	overrideObj := fmt.Sprintf("%s-override.yaml", cfg.DeploymentEnvironment())
+	overrideBytes, err := readOverrideFile(ctx, bucket, overrideObj)
+	if err != nil {
+		log.Print(err)
+	} else {
+		log.Printf("processing overrides from gs://%s/%s", bucket, overrideObj)
+		processOverrides(cfg, overrideBytes)
 	}
 	return cfg, nil
 }
