@@ -31,7 +31,7 @@ main() {
   trap cleanup EXIT
   trap error ERR
 
-  local files="e2e"
+  local files="e2e --runInBand"
   for arg in "$@"; do
     if [[ $arg == e2e/* ]];then
       files=""

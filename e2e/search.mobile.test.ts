@@ -9,23 +9,7 @@ import './global-types';
 import * as pg from './helpers/page';
 import * as search from './helpers/search.page';
 
-test('desktop accessibility tree', async () => {
-  const page = await pg.newPage();
-  await pg.a11ySnapshotTest(page, {
-    path: '/search?q=http',
-    prepare: search.prepare,
-  });
-});
-
-test('desktop screenshot', async () => {
-  const page = await pg.newPage();
-  await pg.fullScreenshotTest(page, {
-    path: '/search?q=http',
-    prepare: search.prepare,
-  });
-});
-
-test('mobile accessibility tree', async () => {
+test('accessibility tree', async () => {
   const page = await pg.newPage();
   await pg.a11ySnapshotTest(page, {
     path: '/search?q=http',
@@ -34,7 +18,7 @@ test('mobile accessibility tree', async () => {
   });
 });
 
-test('mobile screenshot', async () => {
+test('screenshot', async () => {
   const page = await pg.newPage();
   await pg.fullScreenshotTest(page, {
     path: '/search?q=http',
@@ -43,15 +27,7 @@ test('mobile screenshot', async () => {
   });
 });
 
-test('desktop no results', async () => {
-  const page = await pg.newPage();
-  await pg.fullScreenshotTest(page, {
-    path: '/search?q=aoeuidhtns',
-    prepare: search.prepare,
-  });
-});
-
-test('mobile no results', async () => {
+test('no results', async () => {
   const page = await pg.newPage();
   await pg.fullScreenshotTest(page, {
     path: '/search?q=aoeuidhtns',
