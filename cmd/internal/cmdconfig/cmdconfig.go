@@ -99,7 +99,7 @@ func OpenDB(ctx context.Context, cfg *config.Config, bypassLicenseCheck bool) (_
 	defer derrors.Wrap(&err, "cmdconfig.OpenDB(ctx, cfg)")
 
 	// Wrap the postgres driver with our own wrapper, which adds OpenCensus instrumentation.
-	ocDriver, err := database.RegisterOCWrapper(cfg.DBDriver, ocsql.WithAllTraceOptions())
+	ocDriver, err := database.RegisterOCWrapper("pgx", ocsql.WithAllTraceOptions())
 	if err != nil {
 		return nil, fmt.Errorf("unable to register the ocsql driver: %v", err)
 	}

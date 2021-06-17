@@ -157,7 +157,6 @@ type Config struct {
 	DBSecret, DBUser, DBHost, DBPort, DBName string
 	DBSecondaryHost                          string // DB host to use if first one is down
 	DBPassword                               string `json:"-"`
-	DBDriver                                 string
 
 	// Configuration for redis page cache.
 	RedisCacheHost, RedisCachePort string
@@ -367,7 +366,6 @@ func Init(ctx context.Context) (_ *Config, err error) {
 		DBPort:               GetEnv("GO_DISCOVERY_DATABASE_PORT", "5432"),
 		DBName:               GetEnv("GO_DISCOVERY_DATABASE_NAME", "discovery-db"),
 		DBSecret:             os.Getenv("GO_DISCOVERY_DATABASE_SECRET"),
-		DBDriver:             GetEnv("GO_DISCOVERY_DATABASE_DRIVER", "pgx"),
 		RedisCacheHost:       os.Getenv("GO_DISCOVERY_REDIS_HOST"),
 		RedisCachePort:       GetEnv("GO_DISCOVERY_REDIS_PORT", "6379"),
 		RedisHAHost:          os.Getenv("GO_DISCOVERY_REDIS_HA_HOST"),

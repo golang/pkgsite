@@ -28,8 +28,6 @@ import (
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	// imported to register the file source migration driver
 	_ "github.com/golang-migrate/migrate/v4/source/file"
-	// imported to register the postgres database driver
-	_ "github.com/lib/pq"
 )
 
 // recreateDB drops and recreates the database named dbName.
@@ -91,11 +89,7 @@ func SetupTestDB(dbName string) (_ *DB, err error) {
 			return nil, fmt.Errorf("unfixable error migrating database: %v.\nConsider running ./devtools/drop_test_dbs.sh", err)
 		}
 	}
-	driver := os.Getenv("GO_DISCOVERY_DATABASE_DRIVER")
-	if driver == "" {
-		driver = "pgx"
-	}
-	db, err := database.Open(driver, dbtest.DBConnURI(dbName), "test")
+	db, err := database.Open("pgx", dbtest.DBConnURI(dbName), "test")
 	if err != nil {
 		return nil, err
 	}
