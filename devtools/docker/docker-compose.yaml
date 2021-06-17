@@ -41,9 +41,8 @@ services:
       - GO_DISCOVERY_E2E_BASE_URL=http://frontend:8080
       - GO_DISCOVERY_E2E_CHROME_URL=ws://chrome:3000
       - WAITFORIT_TIMEOUT=300
-    command: bash -c "
-        ./third_party/wait-for-it/wait-for-it.sh frontend:8080 --
-        npx jest $GO_DISCOVERY_E2E_ARGS"
+    entrypoint: ./third_party/wait-for-it/wait-for-it.sh frontend:8080 -- npx jest
+    command: e2e
     volumes:
       - ../../:/pkgsite
     working_dir: /pkgsite
@@ -102,3 +101,15 @@ services:
       - POSTGRES_DB=discovery_e2e_test
     ports:
         - 5428:5432
+  nodejs:
+    image: node:14.17.0
+    environment:
+      # Use the values set on the host machine environment.
+      - CI
+      - GO_DISCOVERY_E2E_BASE_URL
+      - GO_DISCOVERY_E2E_AUTHORIZATION
+      - GO_DISCOVERY_E2E_QUOTA_BYPASS
+      - PUPPETEER_SKIP_CHROMIUM_DOWNLOAD
+    volumes:
+      - ../../:/pkgsite
+    working_dir: /pkgsite
