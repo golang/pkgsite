@@ -24,7 +24,6 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/derrors"
-	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/stdlib"
@@ -659,18 +658,9 @@ func TestIsAlternativeModulePath(t *testing.T) {
 }
 
 func TestReInsertLatestVersion(t *testing.T) {
-	t.Parallel()
-	t.Run("package_imports", func(t *testing.T) {
-		testReInsertLatestVersion(t, context.Background())
-	})
-	t.Run("imports", func(t *testing.T) {
-		testReInsertLatestVersion(t, experiment.NewContext(context.Background(), internal.ExperimentReadImports))
-	})
-}
-
-func testReInsertLatestVersion(t *testing.T, ctx context.Context) {
 	testDB, release := acquire(t)
 	defer release()
+	ctx := context.Background()
 
 	const modulePath = "m.com/a"
 

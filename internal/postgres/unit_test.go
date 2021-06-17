@@ -15,7 +15,6 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/google/safehtml"
 	"golang.org/x/pkgsite/internal"
-	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/stdlib"
@@ -743,19 +742,13 @@ func TestGetUnit(t *testing.T) {
 				test.want.IsRedistributable,
 			)
 			test.want.CommitTime = um.CommitTime
-			t.Run("none", func(t *testing.T) {
-				checkUnit(ctx, t, testDB, um, test.want)
-			})
-			t.Run(internal.ExperimentReadImports, func(t *testing.T) {
-				checkUnit(ctx, t, testDB, um, test.want, internal.ExperimentReadImports)
-			})
+			checkUnit(ctx, t, testDB, um, test.want)
 		})
 	}
 }
 
-func checkUnit(ctx context.Context, t *testing.T, db *DB, um *internal.UnitMeta, want *internal.Unit, experiments ...string) {
+func checkUnit(ctx context.Context, t *testing.T, db *DB, um *internal.UnitMeta, want *internal.Unit) {
 	t.Helper()
-	ctx = experiment.NewContext(ctx, experiments...)
 	got, err := db.GetUnit(ctx, um, internal.AllFields, internal.BuildContext{})
 	if err != nil {
 		t.Fatal(err)

@@ -317,15 +317,9 @@ func (db *DB) getImports(ctx context.Context, unitID int) (_ []string, err error
 	defer derrors.WrapStack(&err, "getImports(ctx, %d)", unitID)
 	defer middleware.ElapsedStat(ctx, "getImports")()
 	query := `
-		SELECT to_path
-		FROM package_imports
-		WHERE unit_id = $1`
-	if experiment.IsActive(ctx, internal.ExperimentReadImports) {
-		query = `
 		SELECT p.path
 		FROM paths p INNER JOIN imports i ON p.id = i.to_path_id
 		WHERE i.unit_id = $1`
-	}
 	return collectStrings(ctx, db.db, query, unitID)
 }
 
@@ -471,11 +465,7 @@ func (db *DB) getUnitWithAllFields(ctx context.Context, um *internal.UnitMeta, b
 		}
 	}
 	// Get README, documentation and import counts.
-	importTableName := "package_imports"
-	if experiment.IsActive(ctx, internal.ExperimentReadImports) {
-		importTableName = "imports"
-	}
-	query := fmt.Sprintf(`
+	query := `
         SELECT
 			r.file_path,
 			r.contents,
@@ -483,7 +473,7 @@ func (db *DB) getUnitWithAllFields(ctx context.Context, um *internal.UnitMeta, b
 			d.source,
 			COALESCE((
 				SELECT COUNT(unit_id)
-				FROM %s
+				FROM imports
 				WHERE unit_id = u.id
 				GROUP BY unit_id
 				), 0) AS num_imports,
@@ -505,7 +495,7 @@ func (db *DB) getUnitWithAllFields(ctx context.Context, um *internal.UnitMeta, b
         ) d
 		ON d.unit_id = u.id
 		WHERE u.id = $2
-	`, importTableName)
+	`
 	var (
 		r internal.Readme
 		u internal.Unit

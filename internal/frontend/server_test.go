@@ -1173,13 +1173,6 @@ func TestServer(t *testing.T) {
 				internal.ExperimentSymbolHistoryVersionsPage,
 			},
 		},
-		{
-			name: "imports experiment",
-			testCasesFunc: func() []serverTestCase {
-				return append(serverTestCases(), linksTestCases...)
-			},
-			experiments: []string{internal.ExperimentReadImports},
-		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			testServer(t, test.testCasesFunc(), test.experiments...)
