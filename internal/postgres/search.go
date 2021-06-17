@@ -8,6 +8,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"io"
 	"math"
 	"sort"
 	"strings"
@@ -124,7 +125,9 @@ func (db *DB) Search(ctx context.Context, q string, limit, offset, maxResultCoun
 	queryLimit := limit
 	if experiment.IsActive(ctx, internal.ExperimentSearchGrouping) {
 		// Gather extra results for better grouping by module and series.
-		queryLimit *= 5
+		// Since deep search is using incremental querying, we can make this large.
+		// TODO(jba): For performance, modify the popular_search stored procedure.
+		queryLimit *= 100
 	}
 
 	var searchers map[string]searcher
@@ -271,17 +274,47 @@ func (db *DB) deepSearch(ctx context.Context, q string, limit, offset, maxResult
 		WHERE r.score > 0.1
 		LIMIT $2
 		OFFSET $3`, scoreExpr)
-	var results []*internal.SearchResult
-	collect := func(rows *sql.Rows) error {
-		var r internal.SearchResult
-		if err := rows.Scan(&r.PackagePath, &r.Version, &r.ModulePath, &r.CommitTime,
-			&r.NumImportedBy, &r.Score, &r.NumResults); err != nil {
-			return fmt.Errorf("rows.Scan(): %v", err)
+
+	var (
+		results []*internal.SearchResult
+		collect func(rows *sql.Rows) error
+		err     error
+	)
+	if experiment.IsActive(ctx, internal.ExperimentSearchGrouping) {
+		modulePaths := map[string]bool{}
+		const pageSize = 10  // TODO(jba): get from elsewhere
+		additionalRows := 10 // after reaching pageSize module paths
+		collect = func(rows *sql.Rows) error {
+			var r internal.SearchResult
+			if err := rows.Scan(&r.PackagePath, &r.Version, &r.ModulePath, &r.CommitTime,
+				&r.NumImportedBy, &r.Score, &r.NumResults); err != nil {
+				return fmt.Errorf("rows.Scan(): %v", err)
+			}
+			results = append(results, &r)
+			// Stop a few rows after we've seen pageSize module paths.
+			modulePaths[r.ModulePath] = true
+			if len(modulePaths) >= pageSize {
+				additionalRows--
+				if additionalRows <= 0 {
+					return io.EOF
+				}
+			}
+			return nil
 		}
-		results = append(results, &r)
-		return nil
+		const fetchSize = 10 // number of rows to fetch at a time
+		err = db.db.RunQueryIncrementally(ctx, query, fetchSize, collect, q, limit, offset)
+	} else {
+		collect = func(rows *sql.Rows) error {
+			var r internal.SearchResult
+			if err := rows.Scan(&r.PackagePath, &r.Version, &r.ModulePath, &r.CommitTime,
+				&r.NumImportedBy, &r.Score, &r.NumResults); err != nil {
+				return fmt.Errorf("rows.Scan(): %v", err)
+			}
+			results = append(results, &r)
+			return nil
+		}
+		err = db.db.RunQuery(ctx, query, collect, q, limit, offset)
 	}
-	err := db.db.RunQuery(ctx, query, collect, q, limit, offset)
 	if err != nil {
 		results = nil
 	}

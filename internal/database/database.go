@@ -12,6 +12,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"io"
 	"regexp"
 	"strings"
 	"sync"
@@ -141,23 +142,57 @@ func (db *DB) Prepare(ctx context.Context, query string) (*sql.Stmt, error) {
 	return db.db.PrepareContext(ctx, query)
 }
 
-// RunQuery executes query, then calls f on each row.
+// RunQuery executes query, then calls f on each row. It stops when there are no
+// more rows or f returns a non-nil error.
 func (db *DB) RunQuery(ctx context.Context, query string, f func(*sql.Rows) error, params ...interface{}) error {
 	rows, err := db.Query(ctx, query, params...)
 	if err != nil {
 		return err
 	}
-	return processRows(rows, f)
+	_, err = processRows(rows, f)
+	return err
 }
 
-func processRows(rows *sql.Rows, f func(*sql.Rows) error) error {
+func processRows(rows *sql.Rows, f func(*sql.Rows) error) (int, error) {
 	defer rows.Close()
+	n := 0
 	for rows.Next() {
+		n++
 		if err := f(rows); err != nil {
-			return err
+			return n, err
 		}
 	}
-	return rows.Err()
+	return n, rows.Err()
+}
+
+// RunQueryIncrementally executes query, then calls f on each row. It fetches
+// rows in groups of size batchSize. It stops when there are no more rows, or
+// when f returns io.EOF.
+func (db *DB) RunQueryIncrementally(ctx context.Context, query string, batchSize int, f func(*sql.Rows) error, params ...interface{}) (err error) {
+	// Run in a transaction, because cursors require one.
+	return db.Transact(ctx, sql.LevelDefault, func(tx *DB) error {
+		// Declare a cursor and associate it with the query.
+		// It will be closed when the transaction commits.
+		_, err = tx.Exec(ctx, fmt.Sprintf(`DECLARE c CURSOR FOR %s`, query), params...)
+		if err != nil {
+			return err
+		}
+		for {
+			// Fetch batchSize rows and process them.
+			rows, err := tx.Query(ctx, fmt.Sprintf(`FETCH %d FROM c`, batchSize))
+			if err != nil {
+				return err
+			}
+			n, err := processRows(rows, f)
+			// Stop if there were no rows, or the processing function returned io.EOF.
+			if n == 0 || err == io.EOF {
+				return nil
+			}
+			if err != nil {
+				return err
+			}
+		}
+	})
 }
 
 // Transact executes the given function in the context of a SQL transaction at
@@ -369,7 +404,7 @@ func (db *DB) bulkInsert(ctx context.Context, table string, columns, returningCo
 			if err != nil {
 				return err
 			}
-			err = processRows(rows, scanFunc)
+			_, err = processRows(rows, scanFunc)
 		}
 		if err != nil {
 			return fmt.Errorf("running bulk insert query, values[%d:%d]): %w", leftBound, rightBound, err)

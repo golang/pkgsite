@@ -9,6 +9,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"sort"
@@ -501,4 +502,58 @@ func TestCopyDoesNotUpsert(t *testing.T) {
 	if !errors.As(err, &gerr) || gerr.Code != constraintViolationCode {
 		t.Errorf("got %v, wanted code %s", gerr, constraintViolationCode)
 	}
+}
+
+func TestRunQueryIncrementally(t *testing.T) {
+	ctx := context.Background()
+	for _, stmt := range []string{
+		`DROP TABLE IF EXISTS test_rqi`,
+		`CREATE TABLE test_rqi (i  INTEGER PRIMARY KEY)`,
+		`INSERT INTO test_rqi (i) VALUES (1), (2), (3), (4), (5)`,
+	} {
+		if _, err := testDB.Exec(ctx, stmt); err != nil {
+			t.Fatal(err)
+		}
+	}
+	query := `SELECT i FROM test_rqi ORDER BY i LIMIT $1`
+	var got []int
+
+	// Run until all rows consumed.
+	err := testDB.RunQueryIncrementally(ctx, query, 2, func(rows *sql.Rows) error {
+		var i int
+		if err := rows.Scan(&i); err != nil {
+			return err
+		}
+		got = append(got, i)
+		return nil
+	}, 4)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := []int{1, 2, 3, 4}
+	if !cmp.Equal(got, want) {
+		t.Errorf("got %v, want %v", got, want)
+	}
+
+	// Stop early.
+	got = nil
+	err = testDB.RunQueryIncrementally(ctx, query, 2, func(rows *sql.Rows) error {
+		var i int
+		if err := rows.Scan(&i); err != nil {
+			return err
+		}
+		got = append(got, i)
+		if len(got) == 3 {
+			return io.EOF
+		}
+		return nil
+	}, 10)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want = []int{1, 2, 3}
+	if !cmp.Equal(got, want) {
+		t.Errorf("got %v, want %v", got, want)
+	}
+
 }
