@@ -474,13 +474,15 @@ func Init(ctx context.Context) (_ *Config, err error) {
 	// should provide overrides for selected configuration.
 	// Use this when you want to fix something in prod quickly, without waiting
 	// to re-deploy. (Otherwise, do not use it.)
-	overrideObj := fmt.Sprintf("%s-override.yaml", cfg.DeploymentEnvironment())
-	overrideBytes, err := readOverrideFile(ctx, bucket, overrideObj)
-	if err != nil {
-		log.Print(err)
-	} else {
-		log.Printf("processing overrides from gs://%s/%s", bucket, overrideObj)
-		processOverrides(cfg, overrideBytes)
+	if cfg.DeploymentEnvironment() != "local" {
+		overrideObj := fmt.Sprintf("%s-override.yaml", cfg.DeploymentEnvironment())
+		overrideBytes, err := readOverrideFile(ctx, bucket, overrideObj)
+		if err != nil {
+			log.Print(err)
+		} else {
+			log.Printf("processing overrides from gs://%s/%s", bucket, overrideObj)
+			processOverrides(cfg, overrideBytes)
+		}
 	}
 	return cfg, nil
 }
