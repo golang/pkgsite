@@ -33,10 +33,10 @@ func getEnv(key, fallback string) string {
 // necessary as migrate expects a URI.
 func DBConnURI(dbName string) string {
 	var (
-		user     = getEnv("GO_DISCOVERY_DATABASE_TEST_USER", "postgres")
-		password = getEnv("GO_DISCOVERY_DATABASE_TEST_PASSWORD", "")
-		host     = getEnv("GO_DISCOVERY_DATABASE_TEST_HOST", "localhost")
-		port     = getEnv("GO_DISCOVERY_DATABASE_TEST_PORT", "5432")
+		user     = getEnv("GO_DISCOVERY_DATABASE_USER", "postgres")
+		password = getEnv("GO_DISCOVERY_DATABASE_PASSWORD", "")
+		host     = getEnv("GO_DISCOVERY_DATABASE_HOST", "localhost")
+		port     = getEnv("GO_DISCOVERY_DATABASE_PORT", "5432")
 	)
 	cs := fmt.Sprintf("postgres://%s/%s?sslmode=disable&user=%s&password=%s&port=%s&timezone=UTC",
 		host, dbName, url.QueryEscape(user), url.QueryEscape(password), url.QueryEscape(port))

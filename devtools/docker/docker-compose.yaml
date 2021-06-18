@@ -20,10 +20,10 @@ services:
     image: golang:1.15.5
     environment:
       - GO_DISCOVERY_TESTDB=true
-      - GO_DISCOVERY_DATABASE_TEST_PORT=5432
-      - GO_DISCOVERY_DATABASE_TEST_HOST=db
-      - GO_DISCOVERY_DATABASE_TEST_USER=postgres
-      - GO_DISCOVERY_DATABASE_TEST_PASSWORD=postgres
+      - GO_DISCOVERY_DATABASE_PORT=5432
+      - GO_DISCOVERY_DATABASE_HOST=db
+      - GO_DISCOVERY_DATABASE_USER=postgres
+      - GO_DISCOVERY_DATABASE_PASSWORD=postgres
       - GOMODCACHE=/gomodcache
       # TERM is set to xterm-256color for use by devtools/lib.sh.
       - TERM=xterm-256color

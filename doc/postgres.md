@@ -67,10 +67,10 @@ Alternatively, you can run `./all.bash`, which will run the database tests.
 
 Tests use the following environment variables:
 
-- `GO_DISCOVERY_DATABASE_TEST_USER` (default: postgres)
-- `GO_DISCOVERY_DATABASE_TEST_PASSWORD` (default: '')
-- `GO_DISCOVERY_DATABASE_TEST_HOST` (default: localhost)
-- `GO_DISCOVERY_DATABASE_TEST_PORT` (default: 5432)
+- `GO_DISCOVERY_DATABASE_USER` (default: postgres)
+- `GO_DISCOVERY_DATABASE_PASSWORD` (default: '')
+- `GO_DISCOVERY_DATABASE_HOST` (default: localhost)
+- `GO_DISCOVERY_DATABASE_PORT` (default: 5432)
 
 If you followed the instructions for setting up with docker in step 1 of
 [local development database](postgres.md#local-development-database) above,
