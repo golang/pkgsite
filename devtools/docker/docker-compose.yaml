@@ -19,11 +19,11 @@ services:
      # This should match the version we are using on AppEngine.
     image: golang:1.15.5
     environment:
-      - GO_DISCOVERY_TESTDB=true
-      - GO_DISCOVERY_DATABASE_PORT=5432
       - GO_DISCOVERY_DATABASE_HOST=db
-      - GO_DISCOVERY_DATABASE_USER=postgres
-      - GO_DISCOVERY_DATABASE_PASSWORD=postgres
+      - GO_DISCOVERY_DATABASE_NAME=${GO_DISCOVERY_DATABASE_NAME:-"discovery-db"}
+      - GO_DISCOVERY_DATABASE_USER=${GO_DISCOVERY_DATABASE_USER:-postgres}
+      - GO_DISCOVERY_DATABASE_PASSWORD=${GO_DISCOVERY_DATABASE_PASSWORD:-postgres}
+      - GO_DISCOVERY_TESTDB=${GO_DISCOVERY_TESTDB:-true}
       - GOMODCACHE=/gomodcache
       # TERM is set to xterm-256color for use by devtools/lib.sh.
       - TERM=xterm-256color
@@ -64,11 +64,11 @@ services:
         ./third_party/wait-for-it/wait-for-it.sh db:5432 --
           go run ./cmd/frontend -host=0.0.0.0:8080"
     environment:
-      - GO_DISCOVERY_DATABASE_NAME
-      - GO_DISCOVERY_DATABASE_USER=postgres
-      - GO_DISCOVERY_DATABASE_PASSWORD=postgres
       - GO_DISCOVERY_DATABASE_HOST=db
-      - GO_DISCOVERY_LOG_LEVEL=info
+      - GO_DISCOVERY_DATABASE_NAME=${GO_DISCOVERY_DATABASE_NAME:-"discovery-db"}
+      - GO_DISCOVERY_DATABASE_USER=${GO_DISCOVERY_DATABASE_USER:-postgres}
+      - GO_DISCOVERY_DATABASE_PASSWORD=${GO_DISCOVERY_DATABASE_PASSWORD:-postgres}
+      - GO_DISCOVERY_LOG_LEVEL=${GO_DISCOVERY_LOG_LEVEL:-info}
       - GOMODCACHE=/gomodcache
       - WAITFORIT_TIMEOUT=300
       - PORT=8080
@@ -90,11 +90,11 @@ services:
         ./third_party/wait-for-it/wait-for-it.sh db:5432 --
           go run ./devtools/cmd/seeddb/seeddb/main.go"
     environment:
-      - GO_DISCOVERY_DATABASE_NAME
-      - GO_DISCOVERY_DATABASE_USER=postgres
-      - GO_DISCOVERY_DATABASE_PASSWORD=postgres
       - GO_DISCOVERY_DATABASE_HOST=db
-      - GO_DISCOVERY_LOG_LEVEL=info
+      - GO_DISCOVERY_DATABASE_NAME=${GO_DISCOVERY_DATABASE_NAME:-"discovery-db"}
+      - GO_DISCOVERY_DATABASE_USER=${GO_DISCOVERY_DATABASE_USER:-postgres}
+      - GO_DISCOVERY_DATABASE_PASSWORD=${GO_DISCOVERY_DATABASE_PASSWORD:-postgres}
+      - GO_DISCOVERY_LOG_LEVEL=${GO_DISCOVERY_LOG_LEVEL:-info}
       - GOMODCACHE=/gomodcache
       - WAITFORIT_TIMEOUT=300
       - PORT=8080
@@ -107,15 +107,13 @@ services:
   migrate:
     depends_on:
       - db
-    environment:
-      - GO_DISCOVERY_DATABASE_NAME
     image: migrate/migrate:v4.14.1
     entrypoint: ""
     command: sh -c "
         apk add --no-cache bash &&
         ./third_party/wait-for-it/wait-for-it.sh db:5432 --
           migrate -path /pkgsite/migrations
-            -database postgres://postgres:postgres@db:5432/$GO_DISCOVERY_DATABASE_NAME?sslmode=disable up"
+            -database postgres://postgres:postgres@db:5432/${GO_DISCOVERY_DATABASE_NAME:-'discovery-db'}?sslmode=disable up"
     environment:
       - WAITFORIT_TIMEOUT=300
     volumes:
@@ -125,9 +123,9 @@ services:
     image: postgres:11.12
     environment:
       - LANG=C
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_USER=postgres
-      - POSTGRES_DB=${GO_DISCOVERY_DATABASE_NAME}
+      - POSTGRES_DB=${GO_DISCOVERY_DATABASE_NAME:-"discovery-db"}
+      - POSTGRES_USER=${GO_DISCOVERY_DATABASE_USER:-postgres}
+      - POSTGRES_PASSWORD=${GO_DISCOVERY_DATABASE_PASSWORD:-postgres}
     ports:
         - ${GO_DISCOVERY_DATABASE_PORT:-5432}:5432
   nodejs:
