@@ -56,6 +56,55 @@ func insertSymbols(ctx context.Context, tx *database.DB, modulePath, v string,
 	return nil
 }
 
+func upsertSymbolSearchDocuments(ctx context.Context, tx *database.DB, modulePath, v string, unitIDs []int) (err error) {
+	defer derrors.Wrap(&err, "upsertSymbolSearchDocuments(ctx, ddb, %q, %q)", modulePath, v)
+
+	if !experiment.IsActive(ctx, internal.ExperimentInsertSymbolSearchDocuments) {
+		return nil
+	}
+
+	// If a user is looking for the symbol "DB.Begin", from package
+	// database/sql, we want them to be able to find this by searching for
+	// "DB.Begin" and "sql.DB.Begin". Searching for "sql.DB", "DB", "Begin" or
+	// "sql.DB" will not return "DB.Begin".
+	// If a user is looking for the symbol "DB.Begin", from package
+	// database/sql, we want them to be able to find this by searching for
+	// "DB.Begin", "Begin", and "sql.DB.Begin". Searching for "sql.DB" or
+	// "DB" will not return "DB.Begin".
+	q := `
+		INSERT INTO symbol_search_documents
+		(package_path_id, symbol_name_id, unit_id, tsv_symbol_tokens)
+			SELECT
+				u.path_id,
+				s.id,
+				u.id,` +
+		// Index <package>.<identifier> (i.e. "sql.DB.Begin")
+		`SETWEIGHT( TO_TSVECTOR('simple', concat(s.name, ' ', concat(u.name, '.', s.name))), 'A') ||` +
+		// Index <identifier>, including the parent name (i.e. DB.Begin).
+		`SETWEIGHT( TO_TSVECTOR('simple', s.name), 'A') ||` +
+		// Index <identifier> without parent name (i.e. "Begin").
+		//
+		// This is weighted less, so that if other symbols are just named
+		// "Begin" they will rank higher in a search for "Begin".
+		`SETWEIGHT( TO_TSVECTOR('simple', split_part(s.name, '.', 2)), 'B') AS tokens` +
+		`
+			FROM symbol_names s
+			INNER JOIN package_symbols ps ON s.id = ps.symbol_name_id
+			INNER JOIN documentation_symbols ds ON ps.id = ds.package_symbol_id
+			INNER JOIN documentation d ON d.id = ds.documentation_id
+			INNER JOIN units u ON u.id = d.unit_id
+			WHERE u.id = ANY($1)
+			-- We will get a row for every unit/symbol/goos/goarch, but we only
+			-- care about the unit/symbol.
+			GROUP BY s.id, u.id, u.path_id
+		ON CONFLICT (package_path_id, symbol_name_id)
+		DO UPDATE SET
+			unit_id=excluded.unit_id,
+			tsv_symbol_tokens=excluded.tsv_symbol_tokens`
+	_, err = tx.Exec(ctx, q, pq.Array(unitIDs))
+	return err
+}
+
 type packageSymbol struct {
 	name     string
 	synopsis string

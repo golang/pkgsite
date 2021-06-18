@@ -341,7 +341,6 @@ func testSearch(t *testing.T, ctx context.Context) {
 }
 
 func TestSymbolSearch(t *testing.T) {
-	t.Skip()
 	ctx := context.Background()
 	ctx = experiment.NewContext(ctx, internal.ExperimentInsertSymbolSearchDocuments)
 	testDB, release := acquire(t)

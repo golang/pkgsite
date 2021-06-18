@@ -139,7 +139,6 @@ func (db *DB) saveModule(ctx context.Context, m *internal.Module, lmv *internal.
 		if err := insertSymbols(ctx, tx, m.ModulePath, m.Version, isLatest, pathToID, pathToUnitID, pathToDocs); err != nil {
 			return err
 		}
-
 		if !isLatest {
 			return nil
 		}
@@ -179,7 +178,14 @@ func (db *DB) saveModule(ctx context.Context, m *internal.Module, lmv *internal.
 			return nil
 		}
 		// Insert the module's packages into search_documents.
-		return upsertSearchDocuments(ctx, tx, m)
+		if err := upsertSearchDocuments(ctx, tx, m); err != nil {
+			return err
+		}
+		var unitIDs []int
+		for _, uid := range pathToUnitID {
+			unitIDs = append(unitIDs, uid)
+		}
+		return upsertSymbolSearchDocuments(ctx, tx, m.ModulePath, m.Version, unitIDs)
 	})
 	if err != nil {
 		return false, err
