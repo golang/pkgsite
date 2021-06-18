@@ -268,4 +268,9 @@ type SearchResult struct {
 	SymbolSynopsis string
 	SymbolGOOS     string
 	SymbolGOARCH   string
+
+	// Offset is the 0-based number of this row in the DB query results, which
+	// is the value to use in a SQL OFFSET clause to have this row be the first
+	// one returned.
+	Offset int
 }

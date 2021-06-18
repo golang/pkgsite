@@ -518,7 +518,7 @@ func TestInsertSearchDocumentAndSearch(t *testing.T) {
 			}
 		}
 
-		goCdkResult = func(score float64, numResults uint64) *internal.SearchResult {
+		goCDKResult = func(score float64, numResults uint64) *internal.SearchResult {
 			return &internal.SearchResult{
 				Name:        pkgGoCDK.Name,
 				PackagePath: pkgGoCDK.Path,
@@ -530,6 +530,11 @@ func TestInsertSearchDocumentAndSearch(t *testing.T) {
 				Score:       score,
 				NumResults:  numResults,
 			}
+		}
+
+		offset = func(r *internal.SearchResult, n int) *internal.SearchResult {
+			r.Offset = n
+			return r
 		}
 	)
 
@@ -554,8 +559,8 @@ func TestInsertSearchDocumentAndSearch(t *testing.T) {
 				modKube:  pkgKube,
 			},
 			want: []*internal.SearchResult{
-				goCdkResult(packageScore, 2),
-				kubeResult(packageScore, 2),
+				goCDKResult(packageScore, 2),
+				offset(kubeResult(packageScore, 2), 1),
 			},
 		},
 		{
@@ -568,7 +573,7 @@ func TestInsertSearchDocumentAndSearch(t *testing.T) {
 				modGoCDK: pkgGoCDK,
 			},
 			want: []*internal.SearchResult{
-				goCdkResult(packageScore, 2),
+				goCDKResult(packageScore, 2),
 			},
 		},
 		{
@@ -581,7 +586,7 @@ func TestInsertSearchDocumentAndSearch(t *testing.T) {
 				modKube:  pkgKube,
 			},
 			want: []*internal.SearchResult{
-				kubeResult(packageScore, 2),
+				offset(kubeResult(packageScore, 2), 1),
 			},
 		},
 		{
@@ -592,7 +597,7 @@ func TestInsertSearchDocumentAndSearch(t *testing.T) {
 				modKube:  pkgKube,
 			},
 			want: []*internal.SearchResult{
-				goCdkResult(goAndCDKScore, 1),
+				goCDKResult(goAndCDKScore, 1),
 			},
 		},
 		{
@@ -602,7 +607,7 @@ func TestInsertSearchDocumentAndSearch(t *testing.T) {
 				modGoCDK: pkgGoCDK,
 			},
 			want: []*internal.SearchResult{
-				goCdkResult(cloudScore, 1),
+				goCDKResult(cloudScore, 1),
 			},
 		},
 	} {

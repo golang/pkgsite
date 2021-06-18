@@ -119,15 +119,15 @@ var symbolSearchers = map[string]searcher{
 // The gap in this optimization is search terms that are very frequent, but
 // rarely relevant: "int" or "package", for example. In these cases we'll pay
 // the penalty of a deep search that scans nearly every package.
-func (db *DB) Search(ctx context.Context, q string, limit, offset, maxResultCount int, searchSymbols bool) (_ []*internal.SearchResult, err error) {
-	defer derrors.WrapStack(&err, "DB.Search(ctx, %q, %d, %d)", q, limit, offset)
+func (db *DB) Search(ctx context.Context, q string, maxResults, offset, maxResultCount int, searchSymbols bool) (_ []*internal.SearchResult, err error) {
+	defer derrors.WrapStack(&err, "DB.Search(ctx, %q, %d, %d)", q, maxResults, offset)
 
-	queryLimit := limit
+	limit := maxResults
 	if experiment.IsActive(ctx, internal.ExperimentSearchGrouping) {
 		// Gather extra results for better grouping by module and series.
 		// Since deep search is using incremental querying, we can make this large.
 		// TODO(jba): For performance, modify the popular_search stored procedure.
-		queryLimit *= 100
+		limit *= 100
 	}
 
 	var searchers map[string]searcher
@@ -138,7 +138,7 @@ func (db *DB) Search(ctx context.Context, q string, limit, offset, maxResultCoun
 	} else {
 		searchers = pkgSearchers
 	}
-	resp, err := db.hedgedSearch(ctx, q, queryLimit, offset, maxResultCount, searchers, nil)
+	resp, err := db.hedgedSearch(ctx, q, limit, offset, maxResultCount, searchers, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -156,8 +156,8 @@ func (db *DB) Search(ctx context.Context, q string, limit, offset, maxResultCoun
 	if experiment.IsActive(ctx, internal.ExperimentSearchGrouping) && !searchSymbols {
 		results = groupSearchResults(results)
 	}
-	if len(results) > limit {
-		results = results[:limit]
+	if len(results) > maxResults {
+		results = results[:maxResults]
 	}
 	return results, nil
 }
@@ -318,6 +318,9 @@ func (db *DB) deepSearch(ctx context.Context, q string, limit, offset, maxResult
 	if err != nil {
 		results = nil
 	}
+	for i, r := range results {
+		r.Offset = offset + i
+	}
 	if len(results) > 0 && results[0].NumResults > uint64(maxResultCount) {
 		for _, r := range results {
 			r.NumResults = uint64(maxResultCount)
@@ -362,7 +365,8 @@ func (db *DB) popularSearch(ctx context.Context, searchQuery string, limit, offs
 		// results are partial we know that we have exhausted all results.
 		numResults = offset + len(results)
 	}
-	for _, r := range results {
+	for i, r := range results {
+		r.Offset = offset + i
 		r.NumResults = uint64(numResults)
 	}
 	return searchResponse{
