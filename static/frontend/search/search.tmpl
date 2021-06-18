@@ -49,17 +49,8 @@
               data-test-id="snippet-title">
             {{$v.Name}}
           </a>
-	  <span class="SearchSnippet-header-path">{{$v.PackagePath}}</span>
+	    <span class="SearchSnippet-header-path">{{$v.PackagePath}}</span>
         </h2>
-        {{with .Symbols}}
-          <div class="SearchSnippet-symbolContainer">
-            <span class="SearchSnippet-symbolHeading">{{.Heading}}</span>
-            {{range $i, $v := .Links}}
-              <a class="SearchSnippet-symbol" href="/{{$v.Href}}">{{$v.Body}}</a>
-            {{end}}
-            <span>{{.Suffix}}</span>
-          </div>
-        {{end}}
       </div>
       <p class="SearchSnippet-synopsis" data-test-id="snippet-synopsis">
         {{$v.Synopsis}}
