@@ -16,6 +16,9 @@ error() {
   echo "---------- ERROR: docker-compose migrate logs ----------"
   docker-compose -f devtools/docker/docker-compose.yaml logs migrate
   echo ""
+  echo "---------- ERROR: docker-compose seeddb logs ----------"
+  docker-compose -f devtools/docker/docker-compose.yaml logs seeddb
+  echo ""
   echo "---------- ERROR: docker-compose frontend logs ----------"
   docker-compose -f devtools/docker/docker-compose.yaml logs frontend
   echo ""
@@ -39,6 +42,7 @@ main() {
   done
 
   docker-compose -f devtools/docker/docker-compose.yaml build &&
+  docker-compose -f devtools/docker/docker-compose.yaml run seeddb &&
   docker-compose -f devtools/docker/docker-compose.yaml run e2e $files $@
 
   local status=$?
