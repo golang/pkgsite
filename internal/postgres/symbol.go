@@ -15,26 +15,45 @@ import (
 	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/experiment"
+	"golang.org/x/pkgsite/internal/version"
 )
 
-func insertSymbols(ctx context.Context, db *database.DB, modulePath, version string,
+func insertSymbols(ctx context.Context, tx *database.DB, modulePath, v string,
+	isLatest bool,
 	pathToID map[string]int,
-	pathToDocIDToDoc map[string]map[int]*internal.Documentation) (err error) {
-	defer derrors.WrapStack(&err, "insertSymbols(ctx, db, %q, %q, pathToID, pathToDocs)", modulePath, version)
+	pathToUnitID map[string]int,
+	pathToDocs map[string][]*internal.Documentation) (err error) {
+	defer derrors.WrapStack(&err, "insertSymbols(ctx, db, %q, %q, pathToID, pathToDocs)", modulePath, v)
 
-	nameToID, err := upsertSymbolNamesReturningIDs(ctx, db, pathToDocIDToDoc)
+	// Only update symbol history if the version type is release.
+	versionType, err := version.ParseType(v)
 	if err != nil {
 		return err
 	}
-	pathToPkgsymToID, err := upsertPackageSymbolsReturningIDs(ctx, db, modulePath, pathToID, nameToID, pathToDocIDToDoc)
+	if versionType != version.TypeRelease && !isLatest {
+		return nil
+	}
+
+	pathToDocIDToDoc, err := getDocIDsForPath(ctx, tx, pathToUnitID, pathToDocs)
 	if err != nil {
 		return err
 	}
-	if err := upsertDocumentationSymbols(ctx, db, pathToPkgsymToID, pathToDocIDToDoc); err != nil {
+	nameToID, err := upsertSymbolNamesReturningIDs(ctx, tx, pathToDocIDToDoc)
+	if err != nil {
 		return err
 	}
-	return upsertSymbolHistory(ctx, db, modulePath, version, nameToID,
-		pathToID, pathToPkgsymToID, pathToDocIDToDoc)
+	pathToPkgsymToID, err := upsertPackageSymbolsReturningIDs(ctx, tx, modulePath, pathToID, nameToID, pathToDocIDToDoc)
+	if err != nil {
+		return err
+	}
+	if err := upsertDocumentationSymbols(ctx, tx, pathToPkgsymToID, pathToDocIDToDoc); err != nil {
+		return err
+	}
+	if versionType == version.TypeRelease {
+		return upsertSymbolHistory(ctx, tx, modulePath, v, nameToID,
+			pathToID, pathToPkgsymToID, pathToDocIDToDoc)
+	}
+	return nil
 }
 
 type packageSymbol struct {

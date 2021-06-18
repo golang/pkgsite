@@ -106,7 +106,8 @@ func (db *DB) saveModule(ctx context.Context, m *internal.Module, lmv *internal.
 		if err := insertLicenses(ctx, tx, m, moduleID); err != nil {
 			return err
 		}
-		if err := db.insertUnits(ctx, tx, m, moduleID, pathToID); err != nil {
+		pathToUnitID, pathToDocs, err := db.insertUnits(ctx, tx, m, moduleID, pathToID)
+		if err != nil {
 			return err
 		}
 
@@ -135,9 +136,14 @@ func (db *DB) saveModule(ctx context.Context, m *internal.Module, lmv *internal.
 			return err
 		}
 		isLatest = m.Version == latest
+		if err := insertSymbols(ctx, tx, m.ModulePath, m.Version, isLatest, pathToID, pathToUnitID, pathToDocs); err != nil {
+			return err
+		}
+
 		if !isLatest {
 			return nil
 		}
+
 		// Here, this module is the latest good version.
 
 		if err := insertImportsUnique(ctx, tx, m); err != nil {
@@ -327,7 +333,9 @@ func insertImportsUnique(ctx context.Context, tx *database.DB, m *internal.Modul
 //
 // It can be assume that at least one unit is a package, and there are one or
 // more units in the module.
-func (pdb *DB) insertUnits(ctx context.Context, tx *database.DB, m *internal.Module, moduleID int, pathToID map[string]int) (err error) {
+func (pdb *DB) insertUnits(ctx context.Context, tx *database.DB,
+	m *internal.Module, moduleID int, pathToID map[string]int) (
+	pathToUnitID map[string]int, pathToDocs map[string][]*internal.Documentation, err error) {
 	defer derrors.WrapStack(&err, "insertUnits(ctx, tx, %q, %q)", m.ModulePath, m.Version)
 	ctx, span := trace.StartSpan(ctx, "insertUnits")
 	defer span.End()
@@ -345,10 +353,10 @@ func (pdb *DB) insertUnits(ctx context.Context, tx *database.DB, m *internal.Mod
 		paths         []string
 		unitValues    []interface{}
 		pathToReadme  = map[string]*internal.Readme{}
-		pathToDocs    = map[string][]*internal.Documentation{}
 		pathToImports = map[string][]string{}
 		pathIDToPath  = map[int]string{}
 	)
+	pathToDocs = map[string][]*internal.Documentation{}
 	for _, u := range m.Units {
 		var licenseTypes, licensePaths []string
 		for _, l := range u.Licenses {
@@ -369,7 +377,7 @@ func (pdb *DB) insertUnits(ctx context.Context, tx *database.DB, m *internal.Mod
 		v1path := internal.V1Path(u.Path, m.ModulePath)
 		pathID, ok := pathToID[u.Path]
 		if !ok {
-			return fmt.Errorf("no entry in paths table for %q; should be impossible", u.Path)
+			return nil, nil, fmt.Errorf("no entry in paths table for %q; should be impossible", u.Path)
 		}
 		pathIDToPath[pathID] = u.Path
 		unitValues = append(unitValues,
@@ -386,7 +394,7 @@ func (pdb *DB) insertUnits(ctx context.Context, tx *database.DB, m *internal.Mod
 		}
 		for _, d := range u.Documentation {
 			if d.Source == nil {
-				return fmt.Errorf("insertUnits: unit %q missing source files for %q, %q", u.Path, d.GOOS, d.GOARCH)
+				return nil, nil, fmt.Errorf("insertUnits: unit %q missing source files for %q, %q", u.Path, d.GOOS, d.GOARCH)
 			}
 		}
 		pathToDocs[u.Path] = u.Documentation
@@ -397,42 +405,22 @@ func (pdb *DB) insertUnits(ctx context.Context, tx *database.DB, m *internal.Mod
 	}
 	pathIDToUnitID, err := insertUnits(ctx, tx, unitValues)
 	if err != nil {
-		return err
+		return nil, nil, err
 	}
-	pathToUnitID := map[string]int{}
+	pathToUnitID = map[string]int{}
 	for pid, uid := range pathIDToUnitID {
 		pathToUnitID[pathIDToPath[pid]] = uid
 	}
 	if err := insertReadmes(ctx, tx, paths, pathToUnitID, pathToReadme); err != nil {
-		return err
+		return nil, nil, err
 	}
 	if err := insertDocs(ctx, tx, paths, pathToUnitID, pathToDocs); err != nil {
-		return err
+		return nil, nil, err
 	}
 	if err := insertImports(ctx, tx, paths, pathToUnitID, pathToImports); err != nil {
-		return err
+		return nil, nil, err
 	}
-
-	pathToDocIDToDoc, err := getDocIDsForPath(ctx, tx, pathToUnitID, pathToDocs)
-	if err != nil {
-		return err
-	}
-	// Only update symbols if the version type is release.
-	versionType, err := version.ParseType(m.Version)
-	if err != nil {
-		return err
-	}
-
-	if versionType == version.TypeRelease {
-		// Lock the module path here to prevent conflicts in upsertSymbolHistory.
-		// The lock function will also be called after this, in saveModule, but
-		// that is OK; the same transaction can acquire a lock multiple times.
-		if err := lock(ctx, tx, m.ModulePath); err != nil {
-			return err
-		}
-		return insertSymbols(ctx, tx, m.ModulePath, m.Version, pathToID, pathToDocIDToDoc)
-	}
-	return nil
+	return pathToUnitID, pathToDocs, nil
 }
 
 // insertPaths inserts all paths in m that aren't already there, and returns a map from each path to its
