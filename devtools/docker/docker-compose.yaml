@@ -64,10 +64,10 @@ services:
         ./third_party/wait-for-it/wait-for-it.sh db:5432 --
           go run ./cmd/frontend -host=0.0.0.0:8080"
     environment:
+      - GO_DISCOVERY_DATABASE_NAME
       - GO_DISCOVERY_DATABASE_USER=postgres
       - GO_DISCOVERY_DATABASE_PASSWORD=postgres
       - GO_DISCOVERY_DATABASE_HOST=db
-      - GO_DISCOVERY_DATABASE_NAME=discovery_e2e_test
       - GO_DISCOVERY_LOG_LEVEL=info
       - GOMODCACHE=/gomodcache
       - WAITFORIT_TIMEOUT=300
@@ -90,10 +90,10 @@ services:
         ./third_party/wait-for-it/wait-for-it.sh db:5432 --
           go run ./devtools/cmd/seeddb/seeddb/main.go"
     environment:
+      - GO_DISCOVERY_DATABASE_NAME
       - GO_DISCOVERY_DATABASE_USER=postgres
       - GO_DISCOVERY_DATABASE_PASSWORD=postgres
       - GO_DISCOVERY_DATABASE_HOST=db
-      - GO_DISCOVERY_DATABASE_NAME=discovery_e2e_test
       - GO_DISCOVERY_LOG_LEVEL=info
       - GOMODCACHE=/gomodcache
       - WAITFORIT_TIMEOUT=300
@@ -107,13 +107,15 @@ services:
   migrate:
     depends_on:
       - db
+    environment:
+      - GO_DISCOVERY_DATABASE_NAME
     image: migrate/migrate:v4.14.1
     entrypoint: ""
     command: sh -c "
         apk add --no-cache bash &&
         ./third_party/wait-for-it/wait-for-it.sh db:5432 --
           migrate -path /pkgsite/migrations
-            -database postgres://postgres:postgres@db:5432/discovery_e2e_test?sslmode=disable up"
+            -database postgres://postgres:postgres@db:5432/$GO_DISCOVERY_DATABASE_NAME?sslmode=disable up"
     environment:
       - WAITFORIT_TIMEOUT=300
     volumes:
@@ -125,7 +127,7 @@ services:
       - LANG=C
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_USER=postgres
-      - POSTGRES_DB=discovery_e2e_test
+      - POSTGRES_DB=${GO_DISCOVERY_DATABASE_NAME}
     ports:
         - ${GO_DISCOVERY_DATABASE_PORT:-5432}:5432
   nodejs:
