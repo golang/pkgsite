@@ -50,10 +50,11 @@ type SearchResult struct {
 	SameModule     *subResult // package paths in the same module
 	OtherMajor     *subResult // package paths in lower major versions
 	SymbolName     string
-	SymbolKind     internal.SymbolKind
+	SymbolKind     string
 	SymbolSynopsis string
 	SymbolGOOS     string
 	SymbolGOARCH   string
+	SymbolLink     string
 }
 
 type subResult struct {
@@ -74,7 +75,7 @@ func fetchSearchPage(ctx context.Context, db *postgres.DB, query string, pagePar
 
 	var results []*SearchResult
 	for _, r := range dbresults {
-		results = append(results, &SearchResult{
+		sr := &SearchResult{
 			Name:           r.Name,
 			PackagePath:    r.PackagePath,
 			ModulePath:     r.ModulePath,
@@ -87,13 +88,25 @@ func fetchSearchPage(ctx context.Context, db *postgres.DB, query string, pagePar
 			// Say "other" instead of "lower" because at some point we may
 			// prefer to show a tagged, lower major version over an untagged
 			// higher major version.
-			OtherMajor:     modulePaths("Other module versions:", r.OtherMajor),
-			SymbolName:     r.SymbolName,
-			SymbolKind:     r.SymbolKind,
-			SymbolSynopsis: r.SymbolSynopsis,
-			SymbolGOOS:     r.SymbolGOOS,
-			SymbolGOARCH:   r.SymbolGOARCH,
-		})
+			OtherMajor: modulePaths("Other module versions:", r.OtherMajor),
+		}
+		if searchSymbols {
+			sr.SymbolName = r.SymbolName
+			sr.SymbolKind = strings.ToLower(string(r.SymbolKind))
+			sr.SymbolSynopsis = r.SymbolSynopsis
+			sr.SymbolGOOS = r.SymbolGOOS
+			sr.SymbolGOARCH = r.SymbolGOARCH
+			// If the GOOS is "all" or "linux", it doesn't need to be
+			// specified as a query param. "linux" is the default GOOS when a
+			// package has multiple build contexts, since it is first item
+			// listed in internal.BuildContexts.
+			if r.SymbolGOOS == internal.All || r.SymbolGOOS == "linux" {
+				sr.SymbolLink = fmt.Sprintf("/%s#%s", r.PackagePath, r.SymbolName)
+			} else {
+				sr.SymbolLink = fmt.Sprintf("/%s?GOOS=%s#%s", r.PackagePath, r.SymbolGOOS, r.SymbolName)
+			}
+		}
+		results = append(results, sr)
 	}
 
 	var (

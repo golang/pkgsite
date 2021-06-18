@@ -3,50 +3,25 @@
   Use of this source code is governed by a BSD-style
   license that can be found in the LICENSE file.
 -->
-
 {{define "symbol_search"}}
   {{$query := .Query}}
-  {{range $i, $v := .Results}}
+  {{range $i, $r := .Results}}
     <div class="SearchSnippet">
       <div class="SearchSnippet-headerContainer">
         <h2 class="SearchSnippet-header">
-          <a href="/{{$v.PackagePath}}" data-gtmc="search result" data-gtmv="{{$i}}"
+          <span class="SearchSnippet-symbolKind">{{.SymbolKind}}</span>
+          <a href="{{.SymbolLink}}" data-gtmc="search result" data-gtmv="{{$i}}"
               data-test-id="snippet-title">
-            {{$v.Name}}
+            {{.SymbolName}}
           </a>
-	  <span class="SearchSnippet-header-path">{{$v.PackagePath}}</span>
+          <span class="SearchSnippet-symbolPackagePath SearchSnippet-infoLabel go-textSubtle">package: </span>
+          <a href="/{{$r.PackagePath}}"
+             class="SearchSnippet-header-path">{{$r.PackagePath}}</a>
         </h2>
-        {{with .Symbols}}
-          <div class="SearchSnippet-symbolContainer">
-            <span class="SearchSnippet-symbolHeading">{{.Heading}}</span>
-            {{range $i, $v := .Links}}
-              <a class="SearchSnippet-symbol" href="/{{$v.Href}}">{{$v.Body}}</a>
-            {{end}}
-            <span>{{.Suffix}}</span>
-          </div>
-        {{end}}
       </div>
-      <p class="SearchSnippet-synopsis" data-test-id="snippet-synopsis">
-        {{$v.Synopsis}}
-      </p>
-      {{template "search_metadata" $v}}
-      {{with .SameModule}}
-        <div class="SearchSnippet-sub go-textSubtle">
-          <span>{{.Heading}}</span>
-          {{range $i, $v := .Links}}
-            <a href="/{{$v.Href}}" data-gtmc="search result same module" data-gtmv="{{$i}}">{{$v.Body}}</a>
-          {{end}}
-          <span>{{.Suffix}}</span>
-        </div>
-      {{end}}
-      {{with .OtherMajor}}
-        <div class="SearchSnippet-sub go-textSubtle">
-          <span>{{.Heading}}</span>
-          {{range $i, $v := .Links}}
-            <a href="/{{$v.Href}}" data-gtmc="search result lower major" data-gtmv="{{$i}}">{{$v.Body}}</a>
-          {{end}}
-        </div>
-      {{end}}
+      <div class="SearchSnippet-infoLabel go-textSubtle" data-test-id="snippet-synopsis">{{$r.Synopsis}}</div>
+      <pre class="SearchSnippet-symbolCode">{{.SymbolSynopsis}}</pre>
+      {{template "search_metadata" $r}}
     </div> <!-- SearchSnippet -->
   {{end}}
 {{end}}
