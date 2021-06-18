@@ -27,6 +27,7 @@ services:
       - GOMODCACHE=/gomodcache
       # TERM is set to xterm-256color for use by devtools/lib.sh.
       - TERM=xterm-256color
+      - WAITFORIT_TIMEOUT=300
     entrypoint: "./third_party/wait-for-it/wait-for-it.sh db:5432 -- ./all.bash"
     volumes:
       - ../../:/pkgsite
@@ -126,7 +127,7 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_DB=discovery_e2e_test
     ports:
-        - 5428:5432
+        - ${GO_DISCOVERY_DATABASE_PORT:-5432}:5432
   nodejs:
     image: node:14.17.0
     environment:
