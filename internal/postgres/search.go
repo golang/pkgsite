@@ -385,48 +385,68 @@ func (db *DB) symbolSearch(ctx context.Context, q string, limit, offset, maxResu
 			module_path,
 			commit_time,
 			imported_by_count,
-			ARRAY_AGG(name) AS symbol_names,
+			symbol_name,
+		    type,
+		    synopsis,
+		    goos,
+		    goarch,
 			COUNT(*) OVER() AS total
 		FROM (
 			SELECT
+				DISTINCT ON (s.name) s.name AS symbol_name,
 				sd.package_path,
 				sd.version,
 				sd.module_path,
 				sd.commit_time,
 				sd.imported_by_count,
-				(%s) AS score,
-				s.name
+				ps.type,
+				ps.synopsis,
+				d.goos,
+				d.goarch,
+				(%s) AS score
 			FROM search_documents sd
-			INNER JOIN symbol_search_documents ssd
-				ON sd.package_path_id = ssd.package_path_id
-			INNER JOIN symbol_names s
-				ON s.id = ssd.symbol_name_id
+			INNER JOIN symbol_search_documents ssd ON sd.package_path_id = ssd.package_path_id
+			INNER JOIN symbol_names s ON s.id = ssd.symbol_name_id
+			INNER JOIN units u ON u.id = ssd.unit_id
+			INNER JOIN documentation d ON d.unit_id = u.id
+			INNER JOIN documentation_symbols ds ON ds.documentation_id = d.id
+			INNER JOIN package_symbols ps ON ps.id = ds.package_symbol_id
 			WHERE
 				ssd.tsv_symbol_tokens @@ to_tsquery('simple', $1)
 			ORDER BY
-				score DESC,
-				commit_time DESC,
-				package_path
+				symbol_name,
+				CASE WHEN goos = 'all' THEN 0
+					 WHEN goos = 'linux' THEN 1
+					 WHEN goos = 'windows' THEN 2
+					 WHEN goos = 'darwin' THEN 3
+					 WHEN goos = 'js' THEN 4
+					 END
 		) r
 		WHERE r.score > 0.1
-		GROUP BY 1, 2, 3, 4, 5
+		ORDER BY
+			score DESC,
+			commit_time DESC,
+			symbol_name,
+			package_path
 		LIMIT $2
 		OFFSET $3`, symbolScoreExpr)
 
 	var results []*internal.SearchResult
 	collect := func(rows *sql.Rows) error {
-		var (
-			r    internal.SearchResult
-			syms []sql.NullString
-		)
-		if err := rows.Scan(&r.PackagePath, &r.Version, &r.ModulePath, &r.CommitTime,
-			&r.NumImportedBy, pq.Array(&syms), &r.NumResults); err != nil {
+		var r internal.SearchResult
+		if err := rows.Scan(
+			&r.PackagePath,
+			&r.Version,
+			&r.ModulePath,
+			&r.CommitTime,
+			&r.NumImportedBy,
+			&r.SymbolName,
+			&r.SymbolKind,
+			&r.SymbolSynopsis,
+			&r.SymbolGOOS,
+			&r.SymbolGOARCH,
+			&r.NumResults); err != nil {
 			return fmt.Errorf("symbolSearch: rows.Scan(): %v", err)
-		}
-		for _, s := range syms {
-			if s.Valid {
-				r.Symbols = append(r.Symbols, s.String)
-			}
 		}
 		results = append(results, &r)
 		return nil
@@ -454,7 +474,7 @@ func (db *DB) symbolSearch(ctx context.Context, q string, limit, offset, maxResu
 var symbolScoreExpr = fmt.Sprintf(`
 		ts_rank('{0.1, 0.2, 1.0, 1.0}', ssd.tsv_symbol_tokens, to_tsquery('simple', $1)) *
 		ln(exp(1)+imported_by_count) *
-		CASE WHEN redistributable THEN 1 ELSE %f END *
+		CASE WHEN u.redistributable THEN 1 ELSE %f END *
 		CASE WHEN COALESCE(has_go_mod, true) THEN 1 ELSE %f END
 	`, nonRedistributablePenalty, noGoModPenalty)
 

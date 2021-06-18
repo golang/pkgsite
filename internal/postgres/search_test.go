@@ -373,15 +373,19 @@ func TestSymbolSearch(t *testing.T) {
 			}
 			for _, r := range resp.results {
 				want := &internal.SearchResult{
-					Name:        sample.PackageName,
-					PackagePath: sample.PackagePath,
-					ModulePath:  sample.ModulePath,
-					Version:     sample.VersionString,
-					Synopsis:    m.Packages()[0].Documentation[0].Synopsis,
-					Licenses:    []string{"MIT"},
-					CommitTime:  sample.CommitTime,
-					NumResults:  1,
-					Symbols:     []string{"V"},
+					Name:           sample.PackageName,
+					PackagePath:    sample.PackagePath,
+					ModulePath:     sample.ModulePath,
+					Version:        sample.VersionString,
+					Synopsis:       m.Packages()[0].Documentation[0].Synopsis,
+					Licenses:       []string{"MIT"},
+					CommitTime:     sample.CommitTime,
+					NumResults:     1,
+					SymbolName:     "V",
+					SymbolKind:     internal.SymbolKindVariable,
+					SymbolSynopsis: "var V int",
+					SymbolGOOS:     internal.All,
+					SymbolGOARCH:   internal.All,
 				}
 				if diff := cmp.Diff(want, r); diff != "" {
 					t.Errorf("mismatch (-want +got):\n%s", diff)

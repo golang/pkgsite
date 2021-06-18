@@ -49,6 +49,11 @@ type SearchResult struct {
 	Symbols        *subResult
 	SameModule     *subResult // package paths in the same module
 	OtherMajor     *subResult // package paths in lower major versions
+	SymbolName     string
+	SymbolKind     internal.SymbolKind
+	SymbolSynopsis string
+	SymbolGOOS     string
+	SymbolGOARCH   string
 }
 
 type subResult struct {
@@ -87,8 +92,12 @@ func fetchSearchPage(ctx context.Context, db *postgres.DB, query string, pagePar
 			// Say "other" instead of "lower" because at some point we may
 			// prefer to show a tagged, lower major version over an untagged
 			// higher major version.
-			OtherMajor: modulePaths("Other module versions:", r.OtherMajor),
-			Symbols:    symbolResults("Identifiers:", r.PackagePath, r.Symbols, 5),
+			OtherMajor:     modulePaths("Other module versions:", r.OtherMajor),
+			SymbolName:     r.SymbolName,
+			SymbolKind:     r.SymbolKind,
+			SymbolSynopsis: r.SymbolSynopsis,
+			SymbolGOOS:     r.SymbolGOOS,
+			SymbolGOARCH:   r.SymbolGOARCH,
 		})
 	}
 
@@ -179,29 +188,6 @@ func modulePaths(heading string, mpaths map[string]bool) *subResult {
 	return &subResult{
 		Heading: heading,
 		Links:   links,
-	}
-}
-
-func symbolResults(heading, packagePath string, symbols []string, max int) *subResult {
-	if len(symbols) == 0 {
-		return nil
-	}
-	var links []link
-	for i, s := range symbols {
-		if i >= max {
-			break
-		}
-		href := symbolLink(packagePath, s, internal.BuildContexts)
-		links = append(links, link{Href: href, Body: s})
-	}
-	suffix := ""
-	if len(symbols) > len(links) {
-		suffix = fmt.Sprintf("(and %d more)", len(symbols)-len(links))
-	}
-	return &subResult{
-		Heading: heading,
-		Links:   links,
-		Suffix:  suffix,
 	}
 }
 

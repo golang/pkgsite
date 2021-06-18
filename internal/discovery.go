@@ -261,6 +261,11 @@ type SearchResult struct {
 	// result count is estimated using the hyperloglog algorithm.
 	Approximate bool
 
-	// Symbols are the symbols returned by a search request.
-	Symbols []string
+	// Symbol information returned by a search request.
+	// Only populated for symbol search mode.
+	SymbolName     string
+	SymbolKind     SymbolKind
+	SymbolSynopsis string
+	SymbolGOOS     string
+	SymbolGOARCH   string
 }
