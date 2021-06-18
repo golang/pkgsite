@@ -24,11 +24,13 @@ services:
       - GO_DISCOVERY_DATABASE_TEST_HOST=db
       - GO_DISCOVERY_DATABASE_TEST_USER=postgres
       - GO_DISCOVERY_DATABASE_TEST_PASSWORD=postgres
+      - GOMODCACHE=/gomodcache
       # TERM is set to xterm-256color for use by devtools/lib.sh.
       - TERM=xterm-256color
     entrypoint: "./third_party/wait-for-it/wait-for-it.sh db:5432 -- ./all.bash"
     volumes:
       - ../../:/pkgsite
+      - $GOPATH/pkg/mod:/gomodcache
     working_dir: /pkgsite
   e2e:
     image: node:14.17.0
@@ -66,12 +68,14 @@ services:
       - GO_DISCOVERY_DATABASE_HOST=db
       - GO_DISCOVERY_DATABASE_NAME=discovery_e2e_test
       - GO_DISCOVERY_LOG_LEVEL=info
+      - GOMODCACHE=/gomodcache
       - WAITFORIT_TIMEOUT=300
       - PORT=8080
     ports:
       - 8080:8080
     volumes:
       - ../../:/pkgsite
+      - $GOPATH/pkg/mod:/gomodcache
     working_dir: /pkgsite
   seeddb:
      # This should match the version we are using on AppEngine.
@@ -90,12 +94,14 @@ services:
       - GO_DISCOVERY_DATABASE_HOST=db
       - GO_DISCOVERY_DATABASE_NAME=discovery_e2e_test
       - GO_DISCOVERY_LOG_LEVEL=info
+      - GOMODCACHE=/gomodcache
       - WAITFORIT_TIMEOUT=300
       - PORT=8080
     ports:
       - 8080:8080
     volumes:
       - ../../:/pkgsite
+      - $GOPATH/pkg/mod:/gomodcache
     working_dir: /pkgsite
   migrate:
     depends_on:
