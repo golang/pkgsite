@@ -34,7 +34,6 @@
   width: 40rem;
 }
 .go-Modal-header {
-  border-bottom: var(--border);
   display: flex;
   justify-content: space-between;
   padding-bottom: 1rem;
