@@ -76,6 +76,9 @@
   justify-content: flex-end;
   width: 100%;
 }
+.go-Header-rightContent form {
+  flex-grow: 1;
+}
 .go-Header-inner--dark {
   border-bottom: none;
   color: var(--white);

@@ -21,6 +21,9 @@
           <img class="js-headerLogo go-Header-logo" src="/static/shared/logo/go-white.svg" alt="Go">
         </a>
         <div class="go-Header-rightContent">
+          {{if .Experiments.IsActive "symbol-search"}}
+            {{template "symbol_search_bar" .}}
+          {{else}}
           <form class="js-searchForm go-SearchForm" action="/search" role="search" data-gtmc="header search form" >
             <button class="js-searchFormSubmit go-SearchForm-submit" aria-label="Search for a package">
               <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -31,10 +34,8 @@
                 type="text" name="q" size="1" placeholder="Search for a package"
                 autocapitalize="off" autocomplete="off" autocorrect="off" spellcheck="false"
                 title="Search for a package">
-            {{if .Experiments.IsActive "symbol-search"}}
-              <input type="hidden" name="m" value="{{.SearchMode}}" />
-            {{end}}
           </form>
+          {{end}}
           <ul class="go-Header-menu">
             <li class="go-Header-menuItem">
               <a href="https://go.dev/solutions/" data-gtmc="nav link">Why Go</a>
@@ -79,4 +80,29 @@
     </nav>
   </aside>
   <div class="go-NavigationDrawer-scrim js-scrim" role="presentation"></div>
+{{end}}
+
+{{define "symbol_search_bar"}}
+<form
+  class="go-InputGroup"
+  action="/search"
+  data-gtmc="search form"
+  aria-label="Search for a package"
+  role="search"
+>
+  <select name="m" class="go-Select js-searchModeSelect">
+    <option value="packages">Packages</option>
+    <option {{if eq .SearchMode "identifiers"}}selected{{end}} value="identifiers">Identifiers</option>
+  </select>
+  <input name="q" class="go-Input" placeholder="Search for a package" />
+  <button class="go-Button go-Button--inverted" aria-label="Submit search">
+    <img
+      class="go-Icon"
+      height="24"
+      width="24"
+      src="/static/shared/icon/search_gm_grey_24dp.svg"
+      alt=""
+    />
+  </button>
+</form>
 {{end}}
