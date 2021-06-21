@@ -19,12 +19,12 @@ services:
      # This should match the version we are using on AppEngine.
     image: golang:1.15.5
     environment:
+      - GOMODCACHE=/gomodcache
       - GO_DISCOVERY_DATABASE_HOST=db
       - GO_DISCOVERY_DATABASE_NAME=${GO_DISCOVERY_DATABASE_NAME:-"discovery-db"}
-      - GO_DISCOVERY_DATABASE_USER=${GO_DISCOVERY_DATABASE_USER:-postgres}
       - GO_DISCOVERY_DATABASE_PASSWORD=${GO_DISCOVERY_DATABASE_PASSWORD:-postgres}
+      - GO_DISCOVERY_DATABASE_USER=${GO_DISCOVERY_DATABASE_USER:-postgres}
       - GO_DISCOVERY_TESTDB=${GO_DISCOVERY_TESTDB:-true}
-      - GOMODCACHE=/gomodcache
       # TERM is set to xterm-256color for use by devtools/lib.sh.
       - TERM=xterm-256color
       - WAITFORIT_TIMEOUT=300
@@ -64,14 +64,14 @@ services:
         ./third_party/wait-for-it/wait-for-it.sh db:5432 --
           go run ./cmd/frontend -host=0.0.0.0:8080"
     environment:
+      - GOMODCACHE=/gomodcache
       - GO_DISCOVERY_DATABASE_HOST=db
       - GO_DISCOVERY_DATABASE_NAME=${GO_DISCOVERY_DATABASE_NAME:-"discovery-db"}
-      - GO_DISCOVERY_DATABASE_USER=${GO_DISCOVERY_DATABASE_USER:-postgres}
       - GO_DISCOVERY_DATABASE_PASSWORD=${GO_DISCOVERY_DATABASE_PASSWORD:-postgres}
+      - GO_DISCOVERY_DATABASE_USER=${GO_DISCOVERY_DATABASE_USER:-postgres}
       - GO_DISCOVERY_LOG_LEVEL=${GO_DISCOVERY_LOG_LEVEL:-info}
-      - GOMODCACHE=/gomodcache
-      - WAITFORIT_TIMEOUT=300
       - PORT=8080
+      - WAITFORIT_TIMEOUT=300
     ports:
       - 8080:8080
     volumes:
@@ -90,14 +90,14 @@ services:
         ./third_party/wait-for-it/wait-for-it.sh db:5432 --
           go run ./devtools/cmd/seeddb/seeddb/main.go"
     environment:
+      - GOMODCACHE=/gomodcache
       - GO_DISCOVERY_DATABASE_HOST=db
       - GO_DISCOVERY_DATABASE_NAME=${GO_DISCOVERY_DATABASE_NAME:-"discovery-db"}
-      - GO_DISCOVERY_DATABASE_USER=${GO_DISCOVERY_DATABASE_USER:-postgres}
       - GO_DISCOVERY_DATABASE_PASSWORD=${GO_DISCOVERY_DATABASE_PASSWORD:-postgres}
+      - GO_DISCOVERY_DATABASE_USER=${GO_DISCOVERY_DATABASE_USER:-postgres}
       - GO_DISCOVERY_LOG_LEVEL=${GO_DISCOVERY_LOG_LEVEL:-info}
-      - GOMODCACHE=/gomodcache
-      - WAITFORIT_TIMEOUT=300
       - PORT=8080
+      - WAITFORIT_TIMEOUT=300
     ports:
       - 8080:8080
     volumes:
@@ -126,8 +126,8 @@ services:
       # GO_DISCOVERY_DATABASE* variables are set so that this docker file can
       # be used for local development.
       - POSTGRES_DB=${GO_DISCOVERY_DATABASE_NAME:-"discovery-db"}
-      - POSTGRES_USER=${GO_DISCOVERY_DATABASE_USER:-postgres}
       - POSTGRES_PASSWORD=${GO_DISCOVERY_DATABASE_PASSWORD:-postgres}
+      - POSTGRES_USER=${GO_DISCOVERY_DATABASE_USER:-postgres}
     ports:
         - ${GO_DISCOVERY_DATABASE_PORT:-5432}:5432
   nodejs:
@@ -136,8 +136,8 @@ services:
       # Use the values set on the host machine environment.
       - CI
       # GO_DISCOVERY_E2E_* variables are used by the deployment script.
-      - GO_DISCOVERY_E2E_BASE_URL
       - GO_DISCOVERY_E2E_AUTHORIZATION
+      - GO_DISCOVERY_E2E_BASE_URL
       - GO_DISCOVERY_E2E_QUOTA_BYPASS
       - PUPPETEER_SKIP_CHROMIUM_DOWNLOAD
     volumes:
