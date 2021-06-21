@@ -31,6 +31,9 @@
                 type="text" name="q" size="1" placeholder="Search for a package"
                 autocapitalize="off" autocomplete="off" autocorrect="off" spellcheck="false"
                 title="Search for a package">
+            {{if .Experiments.IsActive "symbol-search"}}
+              <input type="hidden" name="m" value="{{.SearchMode}}" />
+            {{end}}
           </form>
           <ul class="go-Header-menu">
             <li class="go-Header-menuItem">
