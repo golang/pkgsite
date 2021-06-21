@@ -113,7 +113,7 @@ services:
         apk add --no-cache bash &&
         ./third_party/wait-for-it/wait-for-it.sh db:5432 --
           migrate -path /pkgsite/migrations
-            -database postgres://postgres:postgres@db:5432/${GO_DISCOVERY_DATABASE_NAME:-'discovery-db'}?sslmode=disable up"
+            -database postgres://${GO_DISCOVERY_DATABASE_USER:-postgres}:${GO_DISCOVERY_DATABASE_PASSWORD:-postgres}@db:5432/${GO_DISCOVERY_DATABASE_NAME:-'discovery-db'}?sslmode=disable up"
     environment:
       - WAITFORIT_TIMEOUT=300
     volumes:
@@ -123,6 +123,8 @@ services:
     image: postgres:11.12
     environment:
       - LANG=C
+      # GO_DISCOVERY_DATABASE* variables are set so that this docker file can
+      # be used for local development.
       - POSTGRES_DB=${GO_DISCOVERY_DATABASE_NAME:-"discovery-db"}
       - POSTGRES_USER=${GO_DISCOVERY_DATABASE_USER:-postgres}
       - POSTGRES_PASSWORD=${GO_DISCOVERY_DATABASE_PASSWORD:-postgres}
@@ -133,6 +135,7 @@ services:
     environment:
       # Use the values set on the host machine environment.
       - CI
+      # GO_DISCOVERY_E2E_* variables are used by the deployment script.
       - GO_DISCOVERY_E2E_BASE_URL
       - GO_DISCOVERY_E2E_AUTHORIZATION
       - GO_DISCOVERY_E2E_QUOTA_BYPASS
