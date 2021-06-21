@@ -28,7 +28,7 @@ services:
       # TERM is set to xterm-256color for use by devtools/lib.sh.
       - TERM=xterm-256color
       - WAITFORIT_TIMEOUT=300
-    entrypoint: "./third_party/wait-for-it/wait-for-it.sh db:5432 -- ./all.bash"
+    entrypoint: ./third_party/wait-for-it/wait-for-it.sh db:5432 -- ./all.bash
     volumes:
       - ../../:/pkgsite
       - ${GOPATH:-$HOME/go}/pkg/mod:/gomodcache
@@ -42,19 +42,13 @@ services:
       # CI is used for cleaner log output from jest and npm install
       - CI=true
       - GO_DISCOVERY_E2E_BASE_URL=http://frontend:8080
-      - GO_DISCOVERY_E2E_CHROME_URL=ws://chrome:3000
+      - GO_DISCOVERY_E2E_CHROME_URL=ws://chrome:${GO_DISCOVERY_E2E_TEST_PORT:-3000}
       - WAITFORIT_TIMEOUT=300
     entrypoint: ./third_party/wait-for-it/wait-for-it.sh frontend:8080 -- npx jest
     command: e2e
     volumes:
       - ../../:/pkgsite
     working_dir: /pkgsite
-  chrome:
-    image: browserless/chrome:1.46-chrome-stable
-    ports:
-      - 3000:3000
-    environment:
-      - CONNECTION_TIMEOUT=120000
   frontend:
      # This should match the version we are using on AppEngine.
     image: golang:1.15.5
@@ -132,14 +126,25 @@ services:
         - ${GO_DISCOVERY_DATABASE_PORT:-5432}:5432
   nodejs:
     image: node:14.17.0
+    depends_on:
+      - chrome
     environment:
       # Use the values set on the host machine environment.
       - CI
       # GO_DISCOVERY_E2E_* variables are used by the deployment script.
       - GO_DISCOVERY_E2E_AUTHORIZATION
       - GO_DISCOVERY_E2E_BASE_URL
+      - GO_DISCOVERY_E2E_CHROME_URL=ws://chrome:${GO_DISCOVERY_E2E_TEST_PORT:-3000}
       - GO_DISCOVERY_E2E_QUOTA_BYPASS
       - PUPPETEER_SKIP_CHROMIUM_DOWNLOAD
+      - WAITFORIT_TIMEOUT=300
+    entrypoint: "./third_party/wait-for-it/wait-for-it.sh chrome:3000 -- "
     volumes:
       - ../../:/pkgsite
     working_dir: /pkgsite
+  chrome:
+    image: browserless/chrome:1.46-chrome-stable
+    ports:
+      - 3000:3000
+    environment:
+      - CONNECTION_TIMEOUT=120000
