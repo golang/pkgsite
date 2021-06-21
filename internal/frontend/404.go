@@ -70,7 +70,7 @@ func (s *Server) servePathNotFoundPage(w http.ResponseWriter, r *http.Request,
 			return &serverError{
 				status: http.StatusNotFound,
 				epage: &errorPage{
-					templateName: "fetch.tmpl",
+					templateName: "fetch",
 					MessageData:  stdlib.ModulePath,
 				},
 			}
@@ -177,7 +177,7 @@ func pathNotFoundError(ctx context.Context, fullPath, requestedVersion string) e
 			return &serverError{
 				status: http.StatusNotFound,
 				epage: &errorPage{
-					templateName: "fetch.tmpl",
+					templateName: "fetch",
 					MessageData:  stdlib.ModulePath,
 				},
 			}
