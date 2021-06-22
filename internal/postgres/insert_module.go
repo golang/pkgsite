@@ -181,11 +181,7 @@ func (db *DB) saveModule(ctx context.Context, m *internal.Module, lmv *internal.
 		if err := upsertSearchDocuments(ctx, tx, m); err != nil {
 			return err
 		}
-		var unitIDs []int
-		for _, uid := range pathToUnitID {
-			unitIDs = append(unitIDs, uid)
-		}
-		return upsertSymbolSearchDocuments(ctx, tx, m.ModulePath, m.Version, unitIDs)
+		return upsertSymbolSearchDocuments(ctx, tx, m.ModulePath, m.Version)
 	})
 	if err != nil {
 		return false, err

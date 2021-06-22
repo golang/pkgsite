@@ -53,17 +53,10 @@ var (
 	GOARCH         = internal.All
 	Doc            = Documentation(GOOS, GOARCH, DocContents)
 	API            = []*internal.Symbol{
-		{
-			SymbolMeta: internal.SymbolMeta{
-				Name:       "V",
-				ParentName: "V",
-				Synopsis:   "var V int",
-				Section:    internal.SymbolSectionVariables,
-				Kind:       internal.SymbolKindVariable,
-			},
-			GOOS:   GOOS,
-			GOARCH: GOARCH,
-		},
+		Constant,
+		Variable,
+		Function,
+		Type,
 	}
 	DocContents = `
 		// Package p is a package.
@@ -126,25 +119,24 @@ var (
 		GOOS:   internal.All,
 		GOARCH: internal.All,
 		Children: []*internal.SymbolMeta{
-			func() *internal.SymbolMeta {
-				n := FunctionNew.SymbolMeta
-				return &n
-			}(),
-			{
-				Name:       "Type.Field",
-				Synopsis:   "field",
-				Section:    internal.SymbolSectionTypes,
-				Kind:       internal.SymbolKindField,
-				ParentName: "Type",
-			},
-			{
-				Name:       "Type.Method",
-				Synopsis:   "method",
-				Section:    internal.SymbolSectionTypes,
-				Kind:       internal.SymbolKindMethod,
-				ParentName: "Type",
-			},
+			&FunctionNew.SymbolMeta,
+			&Field,
+			&Method,
 		},
+	}
+	Field = internal.SymbolMeta{
+		Name:       "Type.Field",
+		Synopsis:   "field",
+		Section:    internal.SymbolSectionTypes,
+		Kind:       internal.SymbolKindField,
+		ParentName: "Type",
+	}
+	Method = internal.SymbolMeta{
+		Name:       "Type.Method",
+		Synopsis:   "method",
+		Section:    internal.SymbolSectionTypes,
+		Kind:       internal.SymbolKindMethod,
+		ParentName: "Type",
 	}
 )
 

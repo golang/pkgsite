@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/lib/pq"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/derrors"
@@ -18,7 +17,7 @@ import (
 )
 
 func upsertSymbolSearchDocuments(ctx context.Context, tx *database.DB,
-	modulePath, v string, unitIDs []int) (err error) {
+	modulePath, v string) (err error) {
 	defer derrors.Wrap(&err, "upsertSymbolSearchDocuments(ctx, ddb, %q, %q)", modulePath, v)
 
 	if !experiment.IsActive(ctx, internal.ExperimentInsertSymbolSearchDocuments) {
@@ -52,20 +51,23 @@ func upsertSymbolSearchDocuments(ctx context.Context, tx *database.DB,
 		// TODO(https://golang.org/issue/44142): allow searching for "A_B" when
 		// querying for either "A" or "B", but at a lower rank.
 		`
-			FROM symbol_names s
-			INNER JOIN package_symbols ps ON s.id = ps.symbol_name_id
-			INNER JOIN documentation_symbols ds ON ps.id = ds.package_symbol_id
-			INNER JOIN documentation d ON d.id = ds.documentation_id
-			INNER JOIN units u ON u.id = d.unit_id
-			WHERE u.id = ANY($1)
-			-- We will get a row for every unit/symbol/goos/goarch, but we only
-			-- care about the unit/symbol.
-			GROUP BY s.id, u.id, u.path_id
+		FROM symbol_names s
+		INNER JOIN package_symbols ps ON s.id = ps.symbol_name_id
+		INNER JOIN documentation_symbols ds ON ps.id = ds.package_symbol_id
+		INNER JOIN documentation d ON d.id = ds.documentation_id
+		INNER JOIN units u ON u.id = d.unit_id
+		INNER JOIN search_documents sd ON sd.package_path_id = u.path_id
+		WHERE sd.module_path = $1 AND sd.version = $2` +
+		// The GROUP BY is necessary because a row will be returned for each
+		// build context that the package supports. In case there are
+		// duplicates, we only care about an individual (unit, symbol) combo.
+		`
+		GROUP BY s.id, u.id, u.path_id
 		ON CONFLICT (package_path_id, symbol_name_id)
 		DO UPDATE SET
 			unit_id=excluded.unit_id,
 			tsv_symbol_tokens=excluded.tsv_symbol_tokens`
-	_, err = tx.Exec(ctx, q, pq.Array(unitIDs))
+	_, err = tx.Exec(ctx, q, modulePath, v)
 	return err
 }
 
@@ -107,7 +109,9 @@ func (db *DB) symbolSearch(ctx context.Context, q string, limit, offset, maxResu
 			INNER JOIN units u ON u.id = ssd.unit_id
 			INNER JOIN documentation d ON d.unit_id = u.id
 			INNER JOIN documentation_symbols ds ON ds.documentation_id = d.id
-			INNER JOIN package_symbols ps ON ps.id = ds.package_symbol_id
+			INNER JOIN package_symbols ps
+				ON ps.id = ds.package_symbol_id
+				AND ps.symbol_name_id = ssd.symbol_name_id
 			WHERE
 				ssd.tsv_symbol_tokens @@ `+symbolToTSQuery+
 		`ORDER BY
