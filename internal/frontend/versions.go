@@ -108,7 +108,7 @@ func fetchVersionsDetails(ctx context.Context, ds internal.DataSource, fullPath,
 		} else {
 			versionPath = pathInVersion(internal.V1Path(fullPath, modulePath), mi)
 		}
-		return constructUnitURL(versionPath, mi.ModulePath, linkVersion(mi.Version, mi.ModulePath))
+		return constructUnitURL(versionPath, mi.ModulePath, linkVersion(mi.ModulePath, mi.Version, mi.Version))
 	}
 	return buildVersionDetails(modulePath, versions, sh, linkify), nil
 }
@@ -181,7 +181,7 @@ func buildVersionDetails(currentModulePath string,
 		vs := &VersionSummary{
 			Link:       linkify(mi),
 			CommitTime: absoluteTime(mi.CommitTime),
-			Version:    linkVersion(mi.Version, mi.ModulePath),
+			Version:    linkVersion(mi.ModulePath, mi.Version, mi.Version),
 			IsMinor:    isMinor(mi.Version),
 		}
 		key.Deprecated = mi.Deprecated
@@ -358,16 +358,18 @@ func displayVersion(modulePath, requestedVersion, resolvedVersion string) string
 
 // linkVersion returns the version string, suitable for use in
 // a link to this site.
-// TODO(golang/go#41855): Clarify definition / use case for linkVersion and
-// other version strings.
-func linkVersion(v string, modulePath string) string {
+// See TestLinkVersion for examples.
+func linkVersion(modulePath, requestedVersion, resolvedVersion string) string {
 	if modulePath == stdlib.ModulePath {
-		if strings.HasPrefix(v, "go") {
-			return v
+		if strings.HasPrefix(resolvedVersion, "go") {
+			return resolvedVersion
 		}
-		return goTagForVersion(v)
+		if strings.HasPrefix(requestedVersion, "v0.0.0") || requestedVersion == version.Master {
+			return version.Master
+		}
+		return goTagForVersion(resolvedVersion)
 	}
-	return v
+	return resolvedVersion
 }
 
 // goTagForVersion returns the Go tag corresponding to a given semantic

@@ -62,11 +62,7 @@ func TestCanonicalURLPath(t *testing.T) {
 			"/math@go1.2.3",
 		},
 	} {
-		um := &internal.UnitMeta{
-			Path:       test.path,
-			ModuleInfo: internal.ModuleInfo{ModulePath: test.modpath, Version: test.version},
-		}
-		got := canonicalURLPath(um)
+		got := canonicalURLPath(test.path, test.modpath, test.version, test.version)
 		if got != test.want {
 			t.Errorf("canonicalURLPath(%q, %q, %q) = %q, want %q", test.path, test.modpath, test.version, got, test.want)
 		}

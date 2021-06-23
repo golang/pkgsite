@@ -30,7 +30,7 @@ func (s *Server) GetLatestInfo(ctx context.Context, unitPath, modulePath string,
 	if err != nil {
 		log.Errorf(ctx, "Server.GetLatestInfo: %v", err)
 	} else {
-		latest.MinorVersion = linkVersion(latest.MinorVersion, latest.MinorModulePath)
+		latest.MinorVersion = linkVersion(latest.MinorModulePath, latest.MinorVersion, latest.MinorVersion)
 	}
 	return latest
 }

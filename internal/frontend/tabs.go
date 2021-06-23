@@ -101,12 +101,13 @@ func init() {
 
 // fetchDetailsForPackage returns tab details by delegating to the correct detail
 // handler.
-func fetchDetailsForUnit(ctx context.Context, r *http.Request, tab string, ds internal.DataSource, um *internal.UnitMeta, bc internal.BuildContext) (_ interface{}, err error) {
+func fetchDetailsForUnit(ctx context.Context, r *http.Request, tab string, ds internal.DataSource, um *internal.UnitMeta,
+	requestedVersion string, bc internal.BuildContext) (_ interface{}, err error) {
 	defer derrors.Wrap(&err, "fetchDetailsForUnit(r, %q, ds, um=%q,%q,%q)", tab, um.Path, um.ModulePath, um.Version)
 	switch tab {
 	case tabMain:
 		_, expandReadme := r.URL.Query()["readme"]
-		return fetchMainDetails(ctx, ds, um, expandReadme, bc)
+		return fetchMainDetails(ctx, ds, um, requestedVersion, expandReadme, bc)
 	case tabVersions:
 		return fetchVersionsDetails(ctx, ds, um.Path, um.ModulePath)
 	case tabImports:

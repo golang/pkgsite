@@ -336,3 +336,70 @@ func TestDisplayVersion(t *testing.T) {
 		})
 	}
 }
+
+func TestLinkVersion(t *testing.T) {
+	for _, test := range []struct {
+		name             string
+		fullPath         string
+		requestedVersion string
+		resolvedVersion  string
+		want             string
+	}{
+		{
+			"std @ master",
+			stdlib.ModulePath,
+			version.Master,
+			stdlib.TestVersion,
+			version.Master,
+		},
+		{
+			"std @ latest is master",
+			stdlib.ModulePath,
+			version.Latest,
+			stdlib.TestVersion,
+			version.Master,
+		},
+		{
+			"std @ latest is go1.16",
+			stdlib.ModulePath,
+			version.Latest,
+			"v1.16.0",
+			"go1.16",
+		},
+		{
+			"std @ go1.16",
+			stdlib.ModulePath,
+			"v1.16.0",
+			"v1.16.0",
+			"go1.16",
+		},
+		{
+			"github.com path @ latest is v1.5.2",
+			sample.ModulePath,
+			version.Latest,
+			"v1.5.2",
+			"v1.5.2",
+		},
+		{
+			"github.com path @ master is v1.5.2",
+			sample.ModulePath,
+			version.Master,
+			"v1.5.2",
+			"v1.5.2",
+		},
+		{
+			"github.com path @ v1.5.2",
+			sample.ModulePath,
+			"v1.5.2",
+			"v1.5.2",
+			"v1.5.2",
+		},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			if got := linkVersion(test.fullPath, test.requestedVersion, test.resolvedVersion); got != test.want {
+				t.Errorf("linkVersion(%q, %q, %q) = %q, want %q",
+					test.fullPath, test.requestedVersion, test.resolvedVersion, got, test.want)
+			}
+		})
+	}
+}

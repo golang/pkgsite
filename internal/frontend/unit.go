@@ -120,7 +120,7 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 	// It's also okay to provide just one (e.g. GOOS=windows), which will select
 	// the first doc with that value, ignoring the other one.
 	bc := internal.BuildContext{GOOS: r.FormValue("GOOS"), GOARCH: r.FormValue("GOARCH")}
-	d, err := fetchDetailsForUnit(ctx, r, tab, ds, um, bc)
+	d, err := fetchDetailsForUnit(ctx, r, tab, ds, um, info.requestedVersion, bc)
 	if err != nil {
 		return err
 	}
@@ -188,7 +188,7 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 			basePage.UseResponsiveLayout = true
 		}
 	}
-	lv := linkVersion(um.Version, um.ModulePath)
+	lv := linkVersion(um.ModulePath, info.requestedVersion, um.Version)
 	page := UnitPage{
 		basePage:              basePage,
 		Unit:                  um,
@@ -196,7 +196,7 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 		Title:                 title,
 		SelectedTab:           tabSettings,
 		URLPath:               constructUnitURL(um.Path, um.ModulePath, info.requestedVersion),
-		CanonicalURLPath:      canonicalURLPath(um),
+		CanonicalURLPath:      canonicalURLPath(um.Path, um.ModulePath, info.requestedVersion, um.Version),
 		DisplayVersion:        displayVersion(um.ModulePath, info.requestedVersion, um.Version),
 		LinkVersion:           lv,
 		LatestURL:             constructUnitURL(um.Path, um.ModulePath, version.Latest),
@@ -271,7 +271,7 @@ func constructUnitURL(fullPath, modulePath, requestedVersion string) string {
 	if requestedVersion == version.Latest {
 		return "/" + fullPath
 	}
-	v := linkVersion(requestedVersion, modulePath)
+	v := linkVersion(modulePath, requestedVersion, requestedVersion)
 	if fullPath == modulePath || modulePath == stdlib.ModulePath {
 		return fmt.Sprintf("/%s@%s", fullPath, v)
 	}
@@ -280,6 +280,7 @@ func constructUnitURL(fullPath, modulePath, requestedVersion string) string {
 
 // canonicalURLPath constructs a URL path to the unit that always includes the
 // resolved version.
-func canonicalURLPath(um *internal.UnitMeta) string {
-	return constructUnitURL(um.Path, um.ModulePath, linkVersion(um.Version, um.ModulePath))
+func canonicalURLPath(fullPath, modulePath, requestedVersion, resolvedVersion string) string {
+	return constructUnitURL(fullPath, modulePath,
+		linkVersion(modulePath, requestedVersion, resolvedVersion))
 }

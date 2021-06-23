@@ -104,14 +104,15 @@ type File struct {
 	URL  string
 }
 
-func fetchMainDetails(ctx context.Context, ds internal.DataSource, um *internal.UnitMeta, expandReadme bool, bc internal.BuildContext) (_ *MainDetails, err error) {
+func fetchMainDetails(ctx context.Context, ds internal.DataSource, um *internal.UnitMeta,
+	requestedVersion string, expandReadme bool, bc internal.BuildContext) (_ *MainDetails, err error) {
 	defer middleware.ElapsedStat(ctx, "fetchMainDetails")()
 
 	unit, err := ds.GetUnit(ctx, um, internal.WithMain, bc)
 	if err != nil {
 		return nil, err
 	}
-	subdirectories := getSubdirectories(um, unit.Subdirectories)
+	subdirectories := getSubdirectories(um, unit.Subdirectories, requestedVersion)
 	if err != nil {
 		return nil, err
 	}
