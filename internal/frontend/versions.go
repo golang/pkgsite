@@ -346,10 +346,17 @@ func pseudoVersionRev(v string) string {
 // displayVersion returns the version string, formatted for display.
 func displayVersion(modulePath, requestedVersion, resolvedVersion string) string {
 	if modulePath == stdlib.ModulePath {
-		if requestedVersion == version.Master || strings.HasPrefix(resolvedVersion, "v0.0.0") {
-			// resolvedVersion should always be a pseudoversion string.
-			commit := strings.Split(resolvedVersion, "-")[2][0:7]
-			return fmt.Sprintf("%s (%s)", version.Master, commit)
+		if stdlib.SupportedBranches[requestedVersion] || strings.HasPrefix(resolvedVersion, "v0.0.0") {
+			commit := strings.Split(resolvedVersion, "-")[2]
+			// If the resolvedVersion is a pseudoversion and the
+			// requestedVersion is not dev.fuzz, display "master (<commit>)".
+			// std doesn't have actual pseudoversions, so the only ones we
+			// support are "master" and "dev.fuzz".
+			v := version.Master
+			if requestedVersion == stdlib.DevFuzz {
+				v = stdlib.DevFuzz
+			}
+			return fmt.Sprintf("%s (%s)", v, commit[0:7])
 		}
 		return goTagForVersion(resolvedVersion)
 	}
@@ -364,8 +371,8 @@ func linkVersion(modulePath, requestedVersion, resolvedVersion string) string {
 		if strings.HasPrefix(resolvedVersion, "go") {
 			return resolvedVersion
 		}
-		if strings.HasPrefix(requestedVersion, "v0.0.0") || requestedVersion == version.Master {
-			return version.Master
+		if stdlib.SupportedBranches[requestedVersion] {
+			return requestedVersion
 		}
 		return goTagForVersion(resolvedVersion)
 	}

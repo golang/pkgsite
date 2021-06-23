@@ -22,6 +22,7 @@ import (
 	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/source"
+	"golang.org/x/pkgsite/internal/stdlib"
 )
 
 // A goPackage is a group of one or more Go source files with the same
@@ -48,7 +49,7 @@ type goPackage struct {
 // * a maximum file size (MaxFileSize)
 // * the particular set of build contexts we consider (goEnvs)
 // * whether the import path is valid.
-func extractPackagesFromZip(ctx context.Context, modulePath, resolvedVersion string, r *zip.Reader, d *licenses.Detector, sourceInfo *source.Info) (_ []*goPackage, _ []*internal.PackageVersionState, err error) {
+func extractPackagesFromZip(ctx context.Context, modulePath, resolvedVersion, requestedVersion string, r *zip.Reader, d *licenses.Detector, sourceInfo *source.Info) (_ []*goPackage, _ []*internal.PackageVersionState, err error) {
 	defer derrors.Wrap(&err, "extractPackagesFromZip(ctx, %q, %q, r, d)", modulePath, resolvedVersion)
 	ctx, span := trace.StartSpan(ctx, "fetch.extractPackagesFromZip")
 	defer span.End()
@@ -70,12 +71,16 @@ func extractPackagesFromZip(ctx context.Context, modulePath, resolvedVersion str
 	// During phase 1, we populate the dirs map for each directory
 	// that contains at least one .go file.
 
-	var (
-		// modulePrefix is the "<module>@<resolvedVersion>/" prefix that all files
-		// are expected to have according to the zip archive layout specification
-		// at the bottom of https://golang.org/cmd/go/#hdr-Module_proxy_protocol.
-		modulePrefix = moduleVersionDir(modulePath, resolvedVersion) + "/"
+	// modulePrefix is the "<module>@<resolvedVersion>/" prefix that all files
+	// are expected to have according to the zip archive layout specification
+	// at the bottom of https://golang.org/cmd/go/#hdr-Module_proxy_protocol.
+	v := resolvedVersion
+	if modulePath == stdlib.ModulePath && stdlib.SupportedBranches[requestedVersion] {
+		v = requestedVersion
+	}
+	modulePrefix := moduleVersionDir(modulePath, v) + "/"
 
+	var (
 		// dirs is the set of directories with at least one .go file,
 		// to be populated during phase 1 and used during phase 2.
 		//

@@ -71,7 +71,7 @@ func (db *DB) getUnitMetaWithKnownLatestVersion(ctx context.Context, fullPath, m
 		Join("paths p ON p.id = u.path_id").Where(squirrel.Eq{"p.path": fullPath}).
 		PlaceholderFormat(squirrel.Dollar)
 
-	if internal.DefaultBranches[version] {
+	if internal.DefaultBranches[version] || stdlib.SupportedBranches[version] {
 		query = query.
 			Join("version_map vm ON m.id = vm.module_id").
 			Where("vm.requested_version = ?", version)

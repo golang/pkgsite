@@ -815,12 +815,12 @@ var moduleStdMaster = &testModule{
 	},
 	fr: &FetchResult{
 		RequestedVersion: "master",
-		ResolvedVersion:  stdlib.TestVersion,
+		ResolvedVersion:  stdlib.TestMasterVersion,
 		HasGoMod:         true,
 		Module: &internal.Module{
 			ModuleInfo: internal.ModuleInfo{
 				ModulePath:        stdlib.ModulePath,
-				Version:           stdlib.TestVersion,
+				Version:           stdlib.TestMasterVersion,
 				CommitTime:        stdlib.TestCommitTime,
 				HasGoMod:          true,
 				SourceInfo:        source.NewStdlibInfo("master"),
@@ -833,7 +833,7 @@ var moduleStdMaster = &testModule{
 						Name:              "errors",
 						IsRedistributable: true,
 						ModuleInfo: internal.ModuleInfo{
-							Version:           stdlib.TestVersion,
+							Version:           stdlib.TestMasterVersion,
 							ModulePath:        stdlib.ModulePath,
 							IsRedistributable: true,
 						},
@@ -863,7 +863,7 @@ var moduleStdMaster = &testModule{
 						Path:              "std",
 						IsRedistributable: true,
 						ModuleInfo: internal.ModuleInfo{
-							Version:           stdlib.TestVersion,
+							Version:           stdlib.TestMasterVersion,
 							ModulePath:        "std",
 							IsRedistributable: true,
 						},
@@ -875,7 +875,7 @@ var moduleStdMaster = &testModule{
 			{
 				PackagePath: "errors",
 				ModulePath:  "std",
-				Version:     stdlib.TestVersion,
+				Version:     stdlib.TestMasterVersion,
 				Status:      200,
 			},
 		},

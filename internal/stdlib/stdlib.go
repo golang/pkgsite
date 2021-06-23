@@ -34,8 +34,13 @@ import (
 	"github.com/go-git/go-git/v5/storage/memory"
 )
 
-// ModulePath is the name of the module for the standard library.
-const ModulePath = "std"
+const (
+	// ModulePath is the name of the module for the standard library.
+	ModulePath = "std"
+
+	// DevFuzz is the branch name for fuzzing in beta.
+	DevFuzz = "dev.fuzz"
+)
 
 var (
 	// Regexp for matching go tags. The groups are:
@@ -46,6 +51,12 @@ var (
 	// 5  the prerelease number
 	tagRegexp = regexp.MustCompile(`^go(\d+\.\d+)(\.\d+|)((beta|rc)(\d+))?$`)
 )
+
+// SupportedBranches are the branches of the stdlib repo supported by pkgsite.
+var SupportedBranches = map[string]bool{
+	version.Master: true,
+	DevFuzz:        true,
+}
 
 // VersionForTag returns the semantic version for the Go tag, or "" if
 // tag doesn't correspond to a Go release or beta tag. In special cases,
@@ -66,7 +77,7 @@ func VersionForTag(tag string) string {
 		return ""
 	}
 	// Special case for latest and master.
-	if tag == version.Latest || tag == version.Master {
+	if tag == version.Latest || SupportedBranches[tag] {
 		return tag
 	}
 	m := tagRegexp.FindStringSubmatch(tag)
@@ -91,8 +102,11 @@ func VersionForTag(tag string) string {
 func TagForVersion(v string) (_ string, err error) {
 	defer derrors.Wrap(&err, "TagForVersion(%q)", v)
 
-	// Special case: master => master
-	if v == version.Master || strings.HasPrefix(v, "v0.0.0") {
+	// Special case: master => master or dev.fuzz => dev.fuzz
+	if SupportedBranches[v] {
+		return v, nil
+	}
+	if strings.HasPrefix(v, "v0.0.0") {
 		return version.Master, nil
 	}
 	// Special case: v1.0.0 => go1.
@@ -173,8 +187,9 @@ var UseTestData = false
 
 // TestCommitTime is the time used for all commits when UseTestData is true.
 var (
-	TestCommitTime = time.Date(2019, 9, 4, 1, 2, 3, 0, time.UTC)
-	TestVersion    = "v0.0.0-20190904010203-89fb59e2e920"
+	TestCommitTime     = time.Date(2019, 9, 4, 1, 2, 3, 0, time.UTC)
+	TestMasterVersion  = "v0.0.0-20190904010203-89fb59e2e920"
+	TestDevFuzzVersion = "v0.0.0-20190904010203-12de34vf56uz"
 )
 
 // getGoRepo returns a repo object for the Go repo at version.
@@ -184,6 +199,8 @@ func getGoRepo(v string) (_ *git.Repository, err error) {
 	var ref plumbing.ReferenceName
 	if v == version.Master {
 		ref = plumbing.HEAD
+	} else if v == DevFuzz {
+		ref = "refs/heads/dev.fuzz"
 	} else {
 		tag, err := TagForVersion(v)
 		if err != nil {
@@ -203,22 +220,24 @@ func getGoRepo(v string) (_ *git.Repository, err error) {
 // getTestGoRepo gets a Go repo for testing.
 func getTestGoRepo(v string) (_ *git.Repository, err error) {
 	defer derrors.Wrap(&err, "getTestGoRepo(%q)", v)
-	if strings.HasPrefix(v, "v0.0.0") {
+	if v == TestMasterVersion {
 		v = version.Master
 	}
-
+	if v == TestDevFuzzVersion {
+		v = DevFuzz
+	}
 	fs := osfs.New(filepath.Join(testhelper.TestDataPath("testdata"), v))
 	repo, err := git.Init(memory.NewStorage(), fs)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("git.Initi: %v", err)
 	}
 	wt, err := repo.Worktree()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("repo.Worktree: %v", err)
 	}
 	// Add all files in the directory.
 	if _, err := wt.Add(""); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("wt.Add(): %v", err)
 	}
 	_, err = wt.Commit("", &git.CommitOptions{All: true, Author: &object.Signature{
 		Name:  "Joe Random",
@@ -226,7 +245,7 @@ func getTestGoRepo(v string) (_ *git.Repository, err error) {
 		When:  TestCommitTime,
 	}})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("wt.Commit: %v", err)
 	}
 	return repo, nil
 }
@@ -267,7 +286,7 @@ func Versions() (_ []string, err error) {
 // Directory returns the directory of the standard library relative to the repo root.
 func Directory(v string) string {
 	if semver.Compare(v, "v1.4.0-beta.1") >= 0 ||
-		v == version.Master || strings.HasPrefix(v, "v0.0.0") {
+		SupportedBranches[v] || strings.HasPrefix(v, "v0.0.0") {
 		return "src"
 	}
 	// For versions older than v1.4.0-beta.1, the stdlib is in src/pkg.
@@ -303,7 +322,7 @@ func ZipInfo(requestedVersion string) (resolvedVersion string, err error) {
 //
 // Zip ignores go.mod files in the standard library, treating it as if it were a
 // single module named "std" at the given version.
-func Zip(requestedVersion string) (_ *zip.Reader, resolvedVersion2 string, commitTime time.Time, err error) {
+func Zip(requestedVersion string) (_ *zip.Reader, resolvedVersion string, commitTime time.Time, err error) {
 	// This code taken, with modifications, from
 	// https://github.com/shurcooL/play/blob/master/256/moduleproxy/std/std.go.
 	defer derrors.Wrap(&err, "stdlib.Zip(%q)", requestedVersion)
@@ -333,8 +352,9 @@ func Zip(requestedVersion string) (_ *zip.Reader, resolvedVersion2 string, commi
 	if err != nil {
 		return nil, "", time.Time{}, err
 	}
-	if requestedVersion == version.Master {
-		requestedVersion = newPseudoVersion("v0.0.0", commit.Committer.When, commit.Hash)
+	resolvedVersion = requestedVersion
+	if SupportedBranches[requestedVersion] {
+		resolvedVersion = newPseudoVersion("v0.0.0", commit.Committer.When, commit.Hash)
 	}
 	root, err := repo.TreeObject(commit.TreeHash)
 	if err != nil {
@@ -347,7 +367,7 @@ func Zip(requestedVersion string) (_ *zip.Reader, resolvedVersion2 string, commi
 	}
 	// Add files from the stdlib directory.
 	libdir := root
-	for _, d := range strings.Split(Directory(requestedVersion), "/") {
+	for _, d := range strings.Split(Directory(resolvedVersion), "/") {
 		libdir, err = subTree(repo, libdir, d)
 		if err != nil {
 			return nil, "", time.Time{}, err
@@ -364,7 +384,7 @@ func Zip(requestedVersion string) (_ *zip.Reader, resolvedVersion2 string, commi
 	if err != nil {
 		return nil, "", time.Time{}, err
 	}
-	return zr, requestedVersion, commit.Committer.When, nil
+	return zr, resolvedVersion, commit.Committer.When, nil
 }
 
 func newPseudoVersion(version string, commitTime time.Time, hash plumbing.Hash) string {
@@ -378,8 +398,8 @@ func newPseudoVersion(version string, commitTime time.Time, hash plumbing.Hash) 
 func semanticVersion(requestedVersion string) (_ string, err error) {
 	defer derrors.Wrap(&err, "semanticVersion(%q)", requestedVersion)
 
-	if requestedVersion == version.Master {
-		return version.Master, nil
+	if SupportedBranches[requestedVersion] {
+		return requestedVersion, nil
 	}
 
 	knownVersions, err := Versions()
@@ -532,6 +552,7 @@ var testRefs = []plumbing.ReferenceName{
 	"refs/tags/go1.13",
 	"refs/tags/go1.13beta1",
 	"refs/tags/go1.14.6",
+	"refs/heads/dev.fuzz",
 	"refs/heads/master",
 	// other tags
 	"refs/changes/56/93156/13",

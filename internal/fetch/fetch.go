@@ -237,7 +237,8 @@ func fetchModule(ctx context.Context, fr *FetchResult, proxyClient *proxy.Client
 		}
 	}
 
-	mod, pvs, err := processZipFile(ctx, fr.ModulePath, fr.ResolvedVersion, commitTime, zipReader, sourceClient)
+	mod, pvs, err := processZipFile(ctx, fr.ModulePath, fr.ResolvedVersion, fr.RequestedVersion,
+		commitTime, zipReader, sourceClient)
 	if err != nil {
 		return fi, err
 	}
@@ -303,13 +304,18 @@ func getGoModPath(ctx context.Context, modulePath, resolvedVersion string, proxy
 }
 
 // processZipFile extracts information from the module version zip.
-func processZipFile(ctx context.Context, modulePath string, resolvedVersion string, commitTime time.Time, zipReader *zip.Reader, sourceClient *source.Client) (_ *internal.Module, _ []*internal.PackageVersionState, err error) {
+func processZipFile(ctx context.Context, modulePath, resolvedVersion, requestedVersion string,
+	commitTime time.Time, zipReader *zip.Reader, sourceClient *source.Client) (_ *internal.Module, _ []*internal.PackageVersionState, err error) {
 	defer derrors.Wrap(&err, "processZipFile(%q, %q)", modulePath, resolvedVersion)
 
 	ctx, span := trace.StartSpan(ctx, "fetch.processZipFile")
 	defer span.End()
 
-	sourceInfo, err := source.ModuleInfo(ctx, sourceClient, modulePath, resolvedVersion)
+	v := resolvedVersion
+	if modulePath == stdlib.ModulePath && stdlib.SupportedBranches[requestedVersion] {
+		v = requestedVersion
+	}
+	sourceInfo, err := source.ModuleInfo(ctx, sourceClient, modulePath, v)
 	if err != nil {
 		log.Infof(ctx, "error getting source info: %v", err)
 	}
@@ -320,9 +326,9 @@ func processZipFile(ctx context.Context, modulePath string, resolvedVersion stri
 	logf := func(format string, args ...interface{}) {
 		log.Infof(ctx, format, args...)
 	}
-	d := licenses.NewDetector(modulePath, resolvedVersion, zipReader, logf)
+	d := licenses.NewDetector(modulePath, v, zipReader, logf)
 	allLicenses := d.AllLicenses()
-	packages, packageVersionStates, err := extractPackagesFromZip(ctx, modulePath, resolvedVersion, zipReader, d, sourceInfo)
+	packages, packageVersionStates, err := extractPackagesFromZip(ctx, modulePath, resolvedVersion, requestedVersion, zipReader, d, sourceInfo)
 	if errors.Is(err, ErrModuleContainsNoPackages) || errors.Is(err, errMalformedZip) {
 		return nil, nil, fmt.Errorf("%v: %w", err.Error(), derrors.BadModule)
 	}

@@ -106,7 +106,7 @@ func FetchLocalModule(ctx context.Context, modulePath, localPath string, sourceC
 		return fr
 	}
 
-	mod, pvs, err := processZipFile(ctx, fr.GoModPath, LocalVersion, LocalCommitTime, zipReader, sourceClient)
+	mod, pvs, err := processZipFile(ctx, fr.GoModPath, LocalVersion, LocalVersion, LocalCommitTime, zipReader, sourceClient)
 	if err != nil {
 		fr.Error = err
 		return fr
