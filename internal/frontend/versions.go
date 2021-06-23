@@ -344,14 +344,16 @@ func pseudoVersionRev(v string) string {
 }
 
 // displayVersion returns the version string, formatted for display.
-func displayVersion(v string, modulePath string) string {
+func displayVersion(modulePath, requestedVersion, resolvedVersion string) string {
 	if modulePath == stdlib.ModulePath {
-		if strings.HasPrefix(v, "v0.0.0") {
-			return strings.Split(v, "-")[2]
+		if requestedVersion == version.Master || strings.HasPrefix(resolvedVersion, "v0.0.0") {
+			// resolvedVersion should always be a pseudoversion string.
+			commit := strings.Split(resolvedVersion, "-")[2][0:7]
+			return fmt.Sprintf("%s (%s)", version.Master, commit)
 		}
-		return goTagForVersion(v)
+		return goTagForVersion(resolvedVersion)
 	}
-	return formatVersion(v)
+	return formatVersion(resolvedVersion)
 }
 
 // linkVersion returns the version string, suitable for use in

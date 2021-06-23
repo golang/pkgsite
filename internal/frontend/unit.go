@@ -197,7 +197,7 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 		SelectedTab:           tabSettings,
 		URLPath:               constructUnitURL(um.Path, um.ModulePath, info.requestedVersion),
 		CanonicalURLPath:      canonicalURLPath(um),
-		DisplayVersion:        displayVersion(um.Version, um.ModulePath),
+		DisplayVersion:        displayVersion(um.ModulePath, info.requestedVersion, um.Version),
 		LinkVersion:           lv,
 		LatestURL:             constructUnitURL(um.Path, um.ModulePath, version.Latest),
 		LatestMinorClass:      latestMinorClass(lv, latestInfo),

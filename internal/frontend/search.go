@@ -80,7 +80,7 @@ func fetchSearchPage(ctx context.Context, db *postgres.DB, query string, pagePar
 			PackagePath:    r.PackagePath,
 			ModulePath:     r.ModulePath,
 			Synopsis:       r.Synopsis,
-			DisplayVersion: displayVersion(r.Version, r.ModulePath),
+			DisplayVersion: displayVersion(r.ModulePath, r.Version, r.Version),
 			Licenses:       r.Licenses,
 			CommitTime:     elapsedTime(r.CommitTime),
 			NumImportedBy:  int(r.NumImportedBy),

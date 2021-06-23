@@ -12,6 +12,7 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/postgres"
+	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/testing/sample"
 	"golang.org/x/pkgsite/internal/version"
 )
@@ -264,6 +265,73 @@ func TestIsMinor(t *testing.T) {
 		t.Run(test.version, func(t *testing.T) {
 			if got := isMinor(test.version); got != test.want {
 				t.Errorf("isMinor(%q) = %t, want %t", test.version, got, test.want)
+			}
+		})
+	}
+}
+
+func TestDisplayVersion(t *testing.T) {
+	for _, test := range []struct {
+		name             string
+		fullPath         string
+		requestedVersion string
+		resolvedVersion  string
+		want             string
+	}{
+		{
+			"std @ master",
+			stdlib.ModulePath,
+			version.Master,
+			stdlib.TestVersion,
+			"master (89fb59e)",
+		},
+		{
+			"std @ latest is master",
+			stdlib.ModulePath,
+			version.Latest,
+			stdlib.TestVersion,
+			"master (89fb59e)",
+		},
+		{
+			"std @ latest is go1.16",
+			stdlib.ModulePath,
+			version.Latest,
+			"v1.16.0",
+			"go1.16",
+		},
+		{
+			"std @ go1.16",
+			stdlib.ModulePath,
+			"v1.16.0",
+			"v1.16.0",
+			"go1.16",
+		},
+		{
+			"github.com path @ latest is v1.5.2",
+			sample.ModulePath,
+			version.Latest,
+			"v1.5.2",
+			"v1.5.2",
+		},
+		{
+			"github.com path @ master is v1.5.2",
+			sample.ModulePath,
+			version.Master,
+			"v1.5.2",
+			"v1.5.2",
+		},
+		{
+			"github.com path @ v1.5.2",
+			sample.ModulePath,
+			"v1.5.2",
+			"v1.5.2",
+			"v1.5.2",
+		},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			if got := displayVersion(test.fullPath, test.requestedVersion, test.resolvedVersion); got != test.want {
+				t.Errorf("displayVersion(%q, %q, %q) = %q, want %q",
+					test.fullPath, test.requestedVersion, test.resolvedVersion, got, test.want)
 			}
 		})
 	}
