@@ -156,7 +156,7 @@ func (s *Server) Install(handle func(string, http.Handler)) {
 	// scheduled: fetch-std-master checks if the std@master version in the
 	// database is up to date with the version at HEAD. If not, a fetch request
 	// is queued to refresh the std@master version.
-	handle("/fetch-std-master/", rmw(s.errorHandler(s.handleFetchStdMaster)))
+	handle("/fetch-std-master/", rmw(s.errorHandler(s.handleFetchStdSupportedBranches)))
 
 	// scheduled: enqueue queries the module_version_states table for the next
 	// batch of module versions to process, and enqueues them for processing.
@@ -482,21 +482,27 @@ func (s *Server) handleHTMLPage(f func(w http.ResponseWriter, r *http.Request) e
 	}
 }
 
-func (s *Server) handleFetchStdMaster(w http.ResponseWriter, r *http.Request) error {
-	_, resolvedVersion, _, err := stdlib.Zip("master")
-	if err != nil {
-		return err
-	}
-	vm, err := s.db.GetVersionMap(r.Context(), stdlib.ModulePath, "master")
-	if err != nil {
-		return err
-	}
-	if vm.ResolvedVersion != resolvedVersion {
-		if _, err := s.queue.ScheduleFetch(r.Context(), stdlib.ModulePath, "master", "", false); err != nil {
-			return fmt.Errorf("error scheduling fetch for %s: %w", "master", err)
+func (s *Server) handleFetchStdSupportedBranches(w http.ResponseWriter, r *http.Request) (err error) {
+	defer derrors.Wrap(&err, "handleFetchStdSupportedBranches")
+	for requestedVersion := range stdlib.SupportedBranches {
+		_, resolvedVersion, _, err := stdlib.Zip(requestedVersion)
+		if err != nil {
+			return err
+		}
+		vm, err := s.db.GetVersionMap(r.Context(), stdlib.ModulePath, requestedVersion)
+		if err != nil {
+			return err
+		}
+		if vm.ResolvedVersion != resolvedVersion {
+			if _, err := s.queue.ScheduleFetch(r.Context(), stdlib.ModulePath, requestedVersion, "", false); err != nil {
+				return fmt.Errorf("error scheduling fetch for %s: %w", requestedVersion, err)
+			}
+		}
+		if err := s.db.DeletePseudoversionsExcept(r.Context(), stdlib.ModulePath, vm.ResolvedVersion); err != nil {
+			return err
 		}
 	}
-	return s.db.DeletePseudoversionsExcept(r.Context(), stdlib.ModulePath, vm.ResolvedVersion)
+	return nil
 }
 
 func (s *Server) handlePopulateStdLib(w http.ResponseWriter, r *http.Request) error {
