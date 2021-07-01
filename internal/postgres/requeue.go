@@ -142,11 +142,8 @@ func (db *DB) GetNextModulesToFetch(ctx context.Context, limit int) (_ []*intern
 	collect := func(rows *sql.Rows) error {
 		// Scan the last two columns separately; they are in the query only for sorting.
 		scan := func(dests ...interface{}) error {
-			var (
-				latest bool
-				npkg   int
-			)
-			return rows.Scan(append(dests, &latest, &npkg)...)
+			var npkg int
+			return rows.Scan(append(dests, &npkg)...)
 		}
 		mv, err := scanModuleVersionState(scan)
 		if err != nil {
@@ -198,21 +195,10 @@ func (db *DB) GetNextModulesToFetch(ctx context.Context, limit int) (_ []*intern
 // rather than actually choosing a random number. md5 is built in to postgres and
 // is an adequate hash for this purpose.
 const nextModulesToProcessQuery = `
-	-- Make a table of the latest versions of each module.
-	WITH latest_versions AS (
-		SELECT DISTINCT ON (module_path) module_path, version
-		FROM module_version_states
-		ORDER BY
-			module_path,
-			incompatible,
-			right(sort_version, 1) = '~' DESC, -- prefer release versions
-			sort_version DESC
-	)
-	SELECT %s, latest, npkg
+	SELECT %s, npkg
 	FROM (
 		SELECT
 			%[1]s,
-			((module_path, version) IN (SELECT * FROM latest_versions)) AS latest,
 			COALESCE(num_packages, 0) AS npkg
 		FROM module_version_states
 	) s
@@ -222,15 +208,6 @@ const nextModulesToProcessQuery = `
 		CASE
 			-- new modules
 			WHEN status = 0 THEN 0
-			WHEN latest THEN
-				CASE
-					-- with SheddingLoad or ReprocessStatusOK or ReprocessHasIncompletePackages
-					WHEN status = 503 or status = 520 OR status = 521 THEN 1
-					-- with ReprocessBadModule or ReprocessAlternative or ReprocessDBModuleInsertInvalid
-					WHEN status = 540 OR status = 541 OR status = 542 THEN 2
-					ELSE 5
-				END
-			-- non-latest
 			WHEN status = 503 or status = 520 OR status = 521 THEN 3
 			WHEN status = 540 OR status = 541 OR status = 542 THEN 4
 			ELSE 5
