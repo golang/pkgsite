@@ -37,7 +37,7 @@ type DynamicConfig struct {
 func Read(ctx context.Context, location string) (_ *DynamicConfig, err error) {
 	defer derrors.Wrap(&err, "dynconfig.Read(%q)", location)
 
-	log.Infof(ctx, "reading dynamic config from %s", location)
+	log.Debugf(ctx, "reading dynamic config from %s", location)
 	var r io.ReadCloser
 	if strings.HasPrefix(location, "gs://") {
 		parts := strings.SplitN(location[5:], "/", 2)

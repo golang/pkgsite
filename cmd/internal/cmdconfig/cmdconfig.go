@@ -69,7 +69,7 @@ func ExperimentGetter(ctx context.Context, cfg *config.Config) middleware.Experi
 		log.Warningf(ctx, "experiments are not configured")
 		return func(context.Context) ([]*internal.Experiment, error) { return nil, nil }
 	}
-	log.Infof(ctx, "using dynamic config from %s for experiments", cfg.DynamicConfigLocation)
+	log.Debugf(ctx, "using dynamic config from %s for experiments", cfg.DynamicConfigLocation)
 	return func(ctx context.Context) ([]*internal.Experiment, error) {
 		dc, err := dynconfig.Read(ctx, cfg.DynamicConfigLocation)
 		if err != nil {
@@ -87,7 +87,7 @@ func ExperimentGetter(ctx context.Context, cfg *config.Config) middleware.Experi
 				log.Errorf(ctx, "unknown experiment %q", e.Name)
 			}
 		}
-		log.Infof(ctx, "read experiments %s", strings.Join(s, ", "))
+		log.Debugf(ctx, "read experiments %s", strings.Join(s, ", "))
 		return dc.Experiments, nil
 	}
 }
