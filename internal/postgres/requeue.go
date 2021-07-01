@@ -95,6 +95,39 @@ func (db *DB) UpdateModuleVersionStatesForReprocessingLatestOnly(ctx context.Con
 	return nil
 }
 
+// UpdateModuleVersionStatesForReprocessingSearchDocumentsOnly marks modules to be
+// reprocessed that are in the search_documents table.
+func (db *DB) UpdateModuleVersionStatesForReprocessingSearchDocumentsOnly(ctx context.Context, appVersion string) (err error) {
+	query := `
+		UPDATE module_version_states mvs
+		SET
+			status = (
+				CASE WHEN status=200 THEN 520
+					 WHEN status=290 THEN 521
+					 END
+				),
+			next_processed_after = CURRENT_TIMESTAMP
+		FROM (
+			SELECT
+				module_path,
+				version
+			FROM search_documents
+			GROUP BY 1, 2
+			ORDER BY 1, 2
+		) sd
+		WHERE
+			app_version < $1
+			AND (mvs.status = 200 OR mvs.status = 290)
+			AND mvs.module_path = sd.module_path
+			AND mvs.version = sd.version;`
+	affected, err := db.db.Exec(ctx, query, appVersion)
+	if err != nil {
+		return err
+	}
+	log.Infof(ctx, "Updated module versions in search_documents to be reprocessed", appVersion, affected)
+	return nil
+}
+
 func (db *DB) UpdateModuleVersionStatesWithStatus(ctx context.Context, status int, appVersion string) (err error) {
 	query := `UPDATE module_version_states
 			SET

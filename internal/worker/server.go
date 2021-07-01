@@ -548,6 +548,14 @@ func (s *Server) handleReprocess(w http.ResponseWriter, r *http.Request) error {
 		fmt.Fprintf(w, "Scheduled latest version of modules to be reprocessed for appVersion > %q.", appVersion)
 		return nil
 	}
+	searchDocuments := r.FormValue("search_documents") == "true"
+	if searchDocuments {
+		if err := s.db.UpdateModuleVersionStatesForReprocessingSearchDocumentsOnly(r.Context(), appVersion); err != nil {
+			return err
+		}
+		fmt.Fprintf(w, "Scheduled modules in search_documents to be reprocessed for appVersion > %q.", appVersion)
+		return nil
+	}
 
 	// Reprocess only module versions with the given status code.
 	status := r.FormValue("status")
