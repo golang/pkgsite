@@ -620,24 +620,26 @@ func TestIsAlternativeModulePath(t *testing.T) {
 	testDB, release := acquire(t)
 	defer release()
 
-	const modulePath = "m.com/a"
+	const modulePathA = "m.com/a"
 	altModuleStatus := derrors.ToStatus(derrors.AlternativeModule)
 	// These tests form a sequence. Each test's state affects the next's.
 	for _, test := range []struct {
-		version string
-		status  int
-		want    bool
+		modulePath string
+		version    string
+		status     int
+		want       bool
 	}{
-		{"v1.2.0", 200, false},                 // no 491s
-		{"v1.1.0", altModuleStatus, false},     // 491 is earlier
-		{"v1.3.0-pre", altModuleStatus, false}, // still earlier: release beats pre-release
-		{"v1.3.0", altModuleStatus, true},      // latest version is 491
-		{"v1.4.0", 200, false},                 // new latest version is OK
-		{"v1.5.0", altModuleStatus, true},      // "I can do this all day." --Captain America
+		{"a.com", "v1.4.0", altModuleStatus, false},         // preseeding a different module should not change result for modulePathA
+		{modulePathA, "v1.2.0", 200, false},                 // no 491s
+		{modulePathA, "v1.1.0", altModuleStatus, false},     // 491 is earlier
+		{modulePathA, "v1.3.0-pre", altModuleStatus, false}, // still earlier: release beats pre-release
+		{modulePathA, "v1.3.0", altModuleStatus, true},      // latest version is 491
+		{modulePathA, "v1.4.0", 200, false},                 // new latest version is OK
+		{modulePathA, "v1.5.0", altModuleStatus, true},      // "I can do this all day." --Captain America
 	} {
-		addLatest(ctx, t, testDB, modulePath, test.version, "")
+		addLatest(ctx, t, testDB, test.modulePath, test.version, "")
 		if err := testDB.UpsertModuleVersionState(ctx, &ModuleVersionStateForUpsert{
-			ModulePath: modulePath,
+			ModulePath: test.modulePath,
 			Version:    test.version,
 			AppVersion: "appVersion",
 			Timestamp:  time.Now(),
@@ -647,12 +649,12 @@ func TestIsAlternativeModulePath(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		got, err := isAlternativeModulePath(ctx, testDB.db, modulePath)
+		got, err := isAlternativeModulePath(ctx, testDB.db, modulePathA)
 		if err != nil {
 			t.Fatal(err)
 		}
 		if got != test.want {
-			t.Fatalf("%q, %d: got %t, want %t", test.version, test.status, got, test.want)
+			t.Fatalf("%s@%s, %d: got %t, want %t", test.modulePath, test.version, test.status, got, test.want)
 		}
 	}
 }

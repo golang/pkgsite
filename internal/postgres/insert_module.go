@@ -205,7 +205,8 @@ func isAlternativeModulePath(ctx context.Context, db *database.DB, modulePath st
 		WHERE p.id = l.module_path_id
 		AND p.path = s.module_path
 		AND l.cooked_version = s.version
-	`).Scan(&status); err {
+		AND s.module_path = $1
+	`, modulePath).Scan(&status); err {
 	case sql.ErrNoRows:
 		// Not enough information; assume false so we don't omit a valid module
 		// from search.
