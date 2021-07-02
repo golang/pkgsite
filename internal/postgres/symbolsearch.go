@@ -41,14 +41,16 @@ func upsertSymbolSearchDocuments(ctx context.Context, tx *database.DB,
 				s.id,
 				u.id,` +
 		// Index <package>.<identifier> (i.e. "sql.DB.Begin")
-		`SETWEIGHT( TO_TSVECTOR('simple', concat(s.name, ' ', concat(u.name, '.', s.name))), 'A') ||` +
+		symbolSetWeight("concat(s.name, ' ', concat(u.name, '.', s.name))", "A") + " || " +
 		// Index <identifier>, including the parent name (i.e. DB.Begin).
-		`SETWEIGHT( TO_TSVECTOR('simple', s.name), 'A') ||` +
+		symbolSetWeight("s.name", "A") + " || " +
 		// Index <identifier> without parent name (i.e. "Begin").
 		//
 		// This is weighted less, so that if other symbols are just named
 		// "Begin" they will rank higher in a search for "Begin".
-		`SETWEIGHT( TO_TSVECTOR('simple', split_part(s.name, '.', 2)), 'B') AS tokens` +
+		symbolSetWeight("split_part(s.name, '.', 2)", "C") +
+		// TODO(https://golang.org/issue/44142): allow searching for "A_B" when
+		// querying for either "A" or "B", but at a lower rank.
 		`
 			FROM symbol_names s
 			INNER JOIN package_symbols ps ON s.id = ps.symbol_name_id
@@ -107,8 +109,8 @@ func (db *DB) symbolSearch(ctx context.Context, q string, limit, offset, maxResu
 			INNER JOIN documentation_symbols ds ON ds.documentation_id = d.id
 			INNER JOIN package_symbols ps ON ps.id = ds.package_symbol_id
 			WHERE
-				ssd.tsv_symbol_tokens @@ to_tsquery('simple', $1)
-			ORDER BY
+				ssd.tsv_symbol_tokens @@ `+symbolToTSQuery+
+		`ORDER BY
 				symbol_name,
 				CASE WHEN goos = 'all' THEN 0
 					 WHEN goos = 'linux' THEN 1
@@ -166,8 +168,27 @@ func (db *DB) symbolSearch(ctx context.Context, q string, limit, offset, maxResu
 	}
 }
 
+// symbolTextSearchConfiguration is the search configuration that is used for
+// indexing and searching for symbols.
+const symbolTextSearchConfiguration = "simple"
+
+// processSymbol converts a symbol with underscores to slashes (for example,
+// "A_B" -> "A/B"). This is because the postgres parser treats underscores as
+// slashes, but we want a search for "A" to rank "A_B" lower than just "A". We
+// also want to be able to search specificially for "A_B".
+func processSymbol(s string) string {
+	return fmt.Sprintf("replace(%s, '_', '/')", s)
+}
+
+var symbolToTSQuery = fmt.Sprintf("to_tsquery('%s', %s)", symbolTextSearchConfiguration, processSymbol("$1"))
+
+func symbolSetWeight(s, w string) string {
+	return fmt.Sprintf("SETWEIGHT(TO_TSVECTOR('%s', %s), '%s')",
+		symbolTextSearchConfiguration, processSymbol(s), w)
+}
+
 var symbolScoreExpr = fmt.Sprintf(`
-		ts_rank('{0.1, 0.2, 1.0, 1.0}', ssd.tsv_symbol_tokens, to_tsquery('simple', $1)) *
+		ts_rank('{0.1, 0.2, 1.0, 1.0}', ssd.tsv_symbol_tokens, `+symbolToTSQuery+`) *
 		ln(exp(1)+imported_by_count) *
 		CASE WHEN u.redistributable THEN 1 ELSE %f END *
 		CASE WHEN COALESCE(has_go_mod, true) THEN 1 ELSE %f END
