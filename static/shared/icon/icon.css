@@ -27,3 +27,13 @@
   filter: brightness(0) invert(69%) sepia(46%) saturate(466%) hue-rotate(153deg) brightness(90%)
     contrast(88%);
 }
+@media (prefers-color-scheme: dark) {
+  .go-Icon:not(.go-Icon--accented) {
+    filter: brightness(0) saturate(100%) invert(100%) sepia(97%) saturate(13%) hue-rotate(245deg)
+      brightness(103%) contrast(107%);
+  }
+  .go-Icon--accented {
+    filter: brightness(0) invert(57%) sepia(63%) saturate(4864%) hue-rotate(160deg) brightness(100%)
+      contrast(101%);
+  }
+}

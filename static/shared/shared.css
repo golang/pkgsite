@@ -44,8 +44,13 @@
   --focus-box-shadow: 0 0 0.0625rem 0.0625rem rgba(0, 112, 210, 0.6);
 }
 
-[data-theme='dark'] :root {
+[data-theme='dark'] {
   --box-shadow: 0 0.3125rem 0.9375rem rgb(0 0 0 / 45%);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --box-shadow: 0 0.3125rem 0.9375rem rgb(0 0 0 / 45%);
+  }
 }
 @media (min-width: 50rem) {
   :root {

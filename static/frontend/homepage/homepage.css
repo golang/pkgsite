@@ -18,6 +18,11 @@
 [data-theme='dark'] .Homepage-logo {
   mix-blend-mode: difference;
 }
+@media (prefers-color-scheme: dark) {
+  .Homepage-logo {
+    mix-blend-mode: difference;
+  }
+}
 @media only screen and (min-width: 52rem) {
   .Homepage {
     margin: 2rem auto;
