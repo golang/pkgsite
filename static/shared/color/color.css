@@ -17,7 +17,7 @@
   --gray-9: #f0f1f2;
   --gray-10: #fafafa;
   --turq-light: #5dc9e2;
-  --turq-med: #00add8;
+  --turq-med: #50b7e0;
   --turq-dark: #007d9c;
   --blue: #bfeaf4;
   --black: #000;
@@ -65,12 +65,12 @@
 [data-theme='dark'] {
   --color-brand-primary: var(--turq-med);
   --color-background: var(--gray-1);
-  --color-background-accented: var(--slate);
+  --color-background-accented: var(--gray-2);
   --color-background-highlighted: var(--gray-2);
   --color-background-warning: var(--yellow);
   --color-background-alert: var(--pink);
   --color-border: var(--gray-4);
-  --color-text: var(--white);
+  --color-text: var(--gray-9);
   --color-text-subtle: var(--gray-7);
   --color-code-comment: var(--green-light);
 }
