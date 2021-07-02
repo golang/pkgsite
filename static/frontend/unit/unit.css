@@ -38,6 +38,12 @@
   transition: box-shadow 0.25s linear;
   z-index: 10;
 }
+.go-Main-header[data-fixed] {
+  border-bottom: none;
+}
+.go-Main-header[data-raised] {
+  border-bottom: var(--border);
+}
 .go-Main-nav {
   background-color: var(--color-background);
   border-bottom: var(--border);
@@ -53,10 +59,15 @@
   padding: 0 var(--gutter);
 }
 .go-Main-aside {
-  background-color: var(--color-background);
+  background-color: var(--color-background-accented);
+  border-bottom: var(--border);
   font-size: 0.875rem;
   grid-area: aside;
   padding: 1rem var(--gutter);
+}
+.go-Main-aside--empty {
+  border-bottom: none;
+  padding: 0;
 }
 .go-Main-footer {
   background-color: var(--color-background);
@@ -88,9 +99,6 @@
   .go-Main-headerContent[data-fixed] {
     justify-content: space-between;
   }
-}
-.go-Main-headerContent[data-fixed] .go-Chip {
-  display: none;
 }
 
 .go-Main-headerTitle {
@@ -132,16 +140,10 @@
 
 .go-Main-headerDetails {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   flex-wrap: wrap;
+  gap: 0 1rem;
   white-space: nowrap;
-}
-@media only screen and (min-width: 50rem) {
-  .go-Main-headerDetails {
-    display: flex;
-    flex-direction: row;
-    gap: 0 1rem;
-  }
 }
 .go-Main-headerDetails[data-fixed] {
   display: none;
@@ -158,11 +160,9 @@
   height: 1.75rem;
   line-height: 1.75rem;
 }
-@media only screen and (min-width: 50rem) {
-  .go-Main-headerDetailItem:not(:last-of-type)::after {
-    content: '|';
-    padding-left: 1rem;
-  }
+.go-Main-headerDetailItem:not(:last-of-type)::after {
+  content: '|';
+  padding-left: 1rem;
 }
 
 .go-Main-nav--sticky {
@@ -235,7 +235,7 @@
     border-top: none;
     padding: 0 0 0 var(--gutter);
   }
-  :root[data-layout='responsive'] .go-Main-header[data-fixed] {
+  :root:not([data-layout='stacked']) .go-Main-header[data-raised] {
     box-shadow: var(--box-shadow);
   }
   :root[data-layout='responsive'] .go-Main-article {
@@ -276,6 +276,7 @@
     padding: 0;
   }
   :root[data-layout='responsive'] .go-Main-aside {
+    background-color: var(--color-background);
     border-bottom: none;
     margin: var(--gap) 0 0 0;
     padding: 0 var(--gutter) 0 0;

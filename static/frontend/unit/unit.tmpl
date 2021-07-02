@@ -21,7 +21,7 @@
     <header class="go-Main-header js-mainHeader">
       {{- block "main-header" .}}{{end -}}
     </header>
-    <aside class="go-Main-aside">
+    <aside class="go-Main-aside {{if not (eq .SelectedTab.Name "")}}go-Main-aside--empty{{end}} js-mainAside">
       {{- block "main-aside" .}}{{end -}}
     </aside>
     <nav class="go-Main-nav go-Main-nav--sticky js-mainNav" aria-label="Outline">

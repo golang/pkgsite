@@ -83,6 +83,7 @@
 .Version-major {
   align-items: baseline;
   display: flex;
+  gap: 1rem;
   margin-bottom: 1rem;
   min-width: 4rem;
 }
@@ -123,6 +124,7 @@
 .Version-commitTime {
   align-items: center;
   display: flex;
+  gap: 0.75rem;
   margin-left: 1rem;
   white-space: nowrap;
 }

@@ -62,7 +62,7 @@
         <div class="Version-major">
           {{if and (eq $i 0) (not $major.Incompatible)}}
             <strong>{{$major.Major}}</strong>
-            {{if $major.Deprecated}}<span class="go-Chip go-Chip--inverted">deprecated</span>{{end}}
+            {{if $major.Deprecated}}<div><span class="go-Chip go-Chip--inverted">deprecated</span></div>{{end}}
           {{end}}
         </div>
         <div class="Version-tag">
@@ -73,7 +73,7 @@
           {{template "symbol-history" $v}}
         {{else}}
           <div class="Version-commitTime">
-            {{$v.CommitTime}}{{if $v.Retracted}}<span class="go-Chip go-Chip--inverted">retracted</span>{{end}}
+            {{$v.CommitTime}}{{if $v.Retracted}}<div><span class="go-Chip go-Chip--inverted">retracted</span></div>{{end}}
           </div>
         {{end}}
       {{end}}
@@ -84,7 +84,7 @@
 {{define "symbol-history"}}
   <details class="Version-details js-versionDetails">
     <summary class="Version-summary">
-      {{.CommitTime}}{{if .Retracted}}<span class="go-Chip go-Chip--inverted">retracted</span>{{end}}
+      {{.CommitTime}}{{if .Retracted}}<div><span class="go-Chip go-Chip--inverted">retracted</span></div>{{end}}
     </summary>
     <div class="Versions-symbols">
       <div class="Versions-symbolsHeader">Changes in this version</div>

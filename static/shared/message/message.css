@@ -12,7 +12,7 @@
   width: 100%;
 }
 .go-Message--notice {
-  background-color: var(--color-background-accented);
+  background-color: var(--color-background-info);
 }
 .go-Message--warning {
   background-color: var(--color-background-warning);

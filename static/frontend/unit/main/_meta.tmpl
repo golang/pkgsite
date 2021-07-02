@@ -8,9 +8,6 @@
   <div class="UnitMeta">
     <h2 class="go-textLabel">Details</h2>
     {{template "unit-meta-details" .}}
-    <div class="UnitMeta-learn">
-      <a href="/about#best-practices-h2" data-gtmc="meta link">Learn more</a>
-    </div>
     <h2 class="go-textLabel">Repository</h2>
     <div class="UnitMeta-repo">
       {{if .Details.RepositoryURL}}
@@ -22,7 +19,6 @@
       {{end}}
     </div>
     {{if or .Details.ReadmeLinks .Details.DocLinks .Details.ModuleReadmeLinks}}
-      <span class="UnitMeta-linkSpacer"></span>
       <h2 class="go-textLabel">Links</h2>
       <ul class="UnitMeta-links">
         {{template "unit-meta-links" .Details.ReadmeLinks}}
@@ -99,6 +95,9 @@
         </summary>
         <p>When a project reaches major version v1 it is considered stable.</p>
       </details>
+    </li>
+    <li class="UnitMeta-detailsLearn">
+      <a href="/about#best-practices-h2" data-gtmc="meta link">Learn more</a>
     </li>
   </ul>
 {{end}}

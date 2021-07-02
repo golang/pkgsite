@@ -6,16 +6,16 @@
 
 .UnitMeta {
   display: grid;
-  gap: 1rem;
-  grid-template-columns: 100%;
+  gap: 1rem 2rem;
+  grid-template-columns: max-content auto;
   white-space: nowrap;
 }
 .UnitMeta-details,
 .UnitMeta-links {
   display: flex;
   flex-flow: wrap;
-  flex-direction: column;
-  gap: 1rem;
+  flex-direction: row;
+  gap: 1rem 2rem;
 }
 .UnitMeta-repo {
   align-items: center;
@@ -25,19 +25,13 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.UnitMeta-linkSpacer {
-  display: none;
-}
 @media (min-width: 50rem) {
   .UnitMeta {
-    grid-template-columns: max-content auto max-content;
+    grid-template-columns: max-content auto;
   }
   .UnitMeta-details,
   .UnitMeta-links {
     flex-direction: row;
-  }
-  .UnitMeta-linkSpacer {
-    display: initial;
   }
 }
 @media (min-width: 112rem) {
@@ -49,7 +43,12 @@
     flex-direction: column;
     white-space: nowrap;
   }
-  :root[data-layout='responsive'] .UnitMeta-linkSpacer {
-    display: none;
+}
+.UnitMeta-detailsLearn {
+  width: 100%;
+}
+@media (min-width: 50rem) {
+  .UnitMeta-detailsLearn {
+    width: initial;
   }
 }

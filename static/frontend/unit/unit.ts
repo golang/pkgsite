@@ -24,12 +24,18 @@ document
  */
 
 const headerHeight = 3.5;
+const breadcumbHeight = 2.5;
 
 export class MainLayoutController {
   private headerObserver: IntersectionObserver;
   private navObserver: IntersectionObserver;
+  private asideObserver: IntersectionObserver;
 
-  constructor(private mainHeader?: Element | null, private mainNav?: Element | null) {
+  constructor(
+    private mainHeader?: Element | null,
+    private mainNav?: Element | null,
+    private mainAside?: Element | null
+  ) {
     this.headerObserver = new IntersectionObserver(
       ([e]) => {
         if (e.intersectionRatio < 1) {
@@ -43,7 +49,7 @@ export class MainLayoutController {
           this.handleResize();
         }
       },
-      { threshold: 1 }
+      { threshold: 1, rootMargin: `${breadcumbHeight * 16}px` }
     );
     this.navObserver = new IntersectionObserver(
       ([e]) => {
@@ -55,7 +61,17 @@ export class MainLayoutController {
           this.mainNav?.removeAttribute('data-fixed');
         }
       },
-      { threshold: 1, rootMargin: `-${(headerHeight ?? 0) * 16 + 10}px` }
+      { threshold: 1, rootMargin: `-${headerHeight * 16 + 10}px` }
+    );
+    this.asideObserver = new IntersectionObserver(
+      ([e]) => {
+        if (e.intersectionRatio < 1) {
+          this.mainHeader?.setAttribute('data-raised', 'true');
+        } else {
+          this.mainHeader?.removeAttribute('data-raised');
+        }
+      },
+      { threshold: 1, rootMargin: `-${headerHeight * 16 + 20}px 0px 0px 0px` }
     );
     this.init();
   }
@@ -66,13 +82,18 @@ export class MainLayoutController {
     this.mainHeader?.addEventListener('dblclick', this.handleDoubleClick);
     if (this.mainHeader?.hasChildNodes()) {
       const headerSentinel = document.createElement('div');
-      this.mainHeader?.prepend(headerSentinel);
+      this.mainHeader.prepend(headerSentinel);
       this.headerObserver.observe(headerSentinel);
     }
     if (this.mainNav?.hasChildNodes()) {
       const navSentinel = document.createElement('div');
-      this.mainNav?.prepend(navSentinel);
+      this.mainNav.prepend(navSentinel);
       this.navObserver.observe(navSentinel);
+    }
+    if (this.mainAside) {
+      const asideSentinel = document.createElement('div');
+      this.mainAside.prepend(asideSentinel);
+      this.asideObserver.observe(asideSentinel);
     }
   }
 
@@ -98,4 +119,4 @@ export class MainLayoutController {
 }
 
 const el = <T extends HTMLElement>(selector: string) => document.querySelector<T>(selector);
-new MainLayoutController(el('.js-mainHeader'), el('.js-mainNav'));
+new MainLayoutController(el('.js-mainHeader'), el('.js-mainNav'), el('.js-mainAside'));

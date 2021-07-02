@@ -36,7 +36,6 @@
 .go-Modal-header {
   display: flex;
   justify-content: space-between;
-  padding-bottom: 1rem;
 }
 .go-Modal-header h2 {
   font-size: 1.15rem;

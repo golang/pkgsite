@@ -15,7 +15,7 @@
   --gray-7: #c6c8ca;
   --gray-8: #dcdee0;
   --gray-9: #f0f1f2;
-  --gray-10: #fafafa;
+  --gray-10: #f8f8f8;
   --turq-light: #5dc9e2;
   --turq-med: #50b7e0;
   --turq-dark: #007d9c;
@@ -37,6 +37,7 @@
   --color-background-inverted: var(--slate);
   --color-background-accented: var(--gray-10);
   --color-background-highlighted: var(--blue);
+  --color-background-info: var(--gray-9);
   --color-background-warning: var(--yellow-light);
   --color-background-alert: var(--pink-light);
   --color-border: var(--gray-7);

@@ -117,6 +117,9 @@ a.UnitHeader-backLink {
   top: -0.125rem;
 }
 
+.DetailsHeader-badge--latest {
+  margin-left: 0.25rem;
+}
 .DetailsHeader-badge--latest a {
   display: none;
 }
