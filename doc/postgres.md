@@ -20,13 +20,13 @@ For additional information on our architecture, see the
    `postgres`).
 
    ```
-   docker run -d -p 5432:5432 -e POSTGRES_PASSWORD=pick_a_secret -e LANG=C postgres
+   docker-compose -f devtools/docker/docker-compose.yaml up -d db
    ```
 
    (NOTE: If you have already installed postgres on a workstation using
    `sudo apt-get install postgres`, you may have a server already running, and
    the above docker command will fail because it can't bind the port. At that
-   point you can set `GO_DISCOVERY_DATABASE_TEST_`XXX environment variables to
+   point you can set `GO_DISCOVERY_DATABASE_`XXX environment variables to
    use your installed server, or stop the server using `pg_ctl stop` and use
    docker. The following assumes docker.)
 
@@ -74,7 +74,7 @@ Tests use the following environment variables:
 
 If you followed the instructions for setting up with docker in step 1 of
 [local development database](postgres.md#local-development-database) above,
-then you only need to set `GO_DISCOVERY_DATABASE_TEST_PASSWORD`.
+then you only need to set `GO_DISCOVERY_DATABASE_PASSWORD`.
 
 You don't need to create a database for testing; the tests will automatically
 create a database for each package, with the name `discovery_{pkg}_test`. For
