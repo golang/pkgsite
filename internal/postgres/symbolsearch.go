@@ -56,7 +56,7 @@ func upsertSymbolSearchDocuments(ctx context.Context, tx *database.DB,
 		INNER JOIN documentation_symbols ds ON ps.id = ds.package_symbol_id
 		INNER JOIN documentation d ON d.id = ds.documentation_id
 		INNER JOIN units u ON u.id = d.unit_id
-		INNER JOIN search_documents sd ON sd.package_path_id = u.path_id
+		INNER JOIN search_documents sd ON sd.unit_id = u.id
 		WHERE sd.module_path = $1 AND sd.version = $2` +
 		// The GROUP BY is necessary because a row will be returned for each
 		// build context that the package supports. In case there are
@@ -103,10 +103,10 @@ func (db *DB) symbolSearch(ctx context.Context, q string, limit, offset, maxResu
 				d.goos,
 				d.goarch,
 				(%s) AS score
-			FROM search_documents sd
-			INNER JOIN symbol_search_documents ssd ON sd.package_path_id = ssd.package_path_id
+			FROM symbol_search_documents ssd
 			INNER JOIN symbol_names s ON s.id = ssd.symbol_name_id
 			INNER JOIN units u ON u.id = ssd.unit_id
+			INNER JOIN search_documents sd ON sd.unit_id = u.id
 			INNER JOIN documentation d ON d.unit_id = u.id
 			INNER JOIN documentation_symbols ds ON ds.documentation_id = d.id
 			INNER JOIN package_symbols ps

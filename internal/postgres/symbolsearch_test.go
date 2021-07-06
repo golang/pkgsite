@@ -92,3 +92,22 @@ func TestSymbolSearch(t *testing.T) {
 		})
 	}
 }
+
+// TestUpsertSymbolSearch_UniqueConstraints tests for this upsert error:
+// ERROR: ON CONFLICT DO UPDATE command cannot affect row a second time
+// (SQLSTATE 21000)
+func TestUpsertSymbolSearch_UniqueConstraints(t *testing.T) {
+	ctx := context.Background()
+	ctx = experiment.NewContext(ctx, internal.ExperimentInsertSymbolSearchDocuments)
+	testDB, release := acquire(t)
+	defer release()
+
+	m := sample.DefaultModule()
+	m.Packages()[0].Documentation[0].API = sample.API
+	MustInsertModule(ctx, t, testDB, m)
+
+	m2 := sample.DefaultModule()
+	m2.Version = "v1.1.0"
+	m2.Packages()[0].Documentation[0].API = sample.API
+	MustInsertModule(ctx, t, testDB, m2)
+}
