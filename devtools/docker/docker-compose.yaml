@@ -78,7 +78,7 @@ services:
     # time seeddb runs. If this ends up being flaky, we should add a check here.
     command: bash -c "
         ./third_party/wait-for-it/wait-for-it.sh db:5432 --
-          go run ./devtools/cmd/seeddb/main.go"
+          go run ./devtools/cmd/seeddb/main.go -seed ${GO_DISCOVERY_SEED_DB_FILE:-seed.txt}"
     environment:
       - GO_DISCOVERY_DATABASE_HOST=db
       - GO_DISCOVERY_DATABASE_NAME=${GO_DISCOVERY_DATABASE_NAME:-discovery-db}

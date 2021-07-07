@@ -33,7 +33,7 @@ import (
 )
 
 var (
-	seedfile = flag.String("static", "devtools/cmd/seeddb/seed.txt", "filename containing modules for seeding the database")
+	seedfile = flag.String("seed", "seed.txt", "filename containing modules for seeding the database; relative to devtools/cmd/seeddb")
 )
 
 func main() {
@@ -84,7 +84,8 @@ func run(ctx context.Context, db *postgres.DB, proxyURL string) error {
 		return code, err
 	}
 
-	seedModules, err := readSeedFile(ctx)
+	sf := fmt.Sprintf("devtools/cmd/seeddb/%s", *seedfile)
+	seedModules, err := readSeedFile(ctx, sf)
 	if err != nil {
 		return err
 	}
@@ -160,13 +161,13 @@ type module struct {
 // seeding the database. Format of the file:
 // each line is
 //     module@version
-func readSeedFile(ctx context.Context) (_ []*module, err error) {
-	defer derrors.Wrap(&err, "readSeedFile %q", *seedfile)
-	lines, err := readFileLines(*seedfile)
+func readSeedFile(ctx context.Context, seedfile string) (_ []*module, err error) {
+	defer derrors.Wrap(&err, "readSeedFile %q", seedfile)
+	lines, err := readFileLines(seedfile)
 	if err != nil {
 		return nil, err
 	}
-	log.Infof(ctx, "read %d module versions from %s", len(lines), *seedfile)
+	log.Infof(ctx, "read %d module versions from %s", len(lines), seedfile)
 
 	var modules []*module
 	for _, l := range lines {
