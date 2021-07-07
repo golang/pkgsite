@@ -31,7 +31,7 @@ import (
 )
 
 var (
-	seedfile = flag.String("static", "devtools/cmd/seeddb/seeddb/seed.txt", "filename containing modules for seeding the database")
+	seedfile = flag.String("static", "devtools/cmd/seeddb/seed.txt", "filename containing modules for seeding the database")
 )
 
 func main() {
