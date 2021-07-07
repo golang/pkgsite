@@ -28,6 +28,7 @@ import (
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/proxy"
 	"golang.org/x/pkgsite/internal/source"
+	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/worker"
 	"golang.org/x/sync/errgroup"
 )
@@ -74,15 +75,6 @@ func run(ctx context.Context, db *postgres.DB, proxyURL string) error {
 	}
 
 	sourceClient := source.NewClient(config.SourceTimeout)
-	fetchFunc := func(ctx context.Context, modulePath, version string) (int, error) {
-		f := &worker.Fetcher{
-			ProxyClient:  proxyClient,
-			SourceClient: sourceClient,
-			DB:           db,
-		}
-		code, _, err := f.FetchAndUpdateState(ctx, modulePath, version, "")
-		return code, err
-	}
 
 	sf := fmt.Sprintf("devtools/cmd/seeddb/%s", *seedfile)
 	seedModules, err := readSeedFile(ctx, sf)
@@ -92,33 +84,36 @@ func run(ctx context.Context, db *postgres.DB, proxyURL string) error {
 
 	r := results{}
 	g := new(errgroup.Group)
+	f := &worker.Fetcher{
+		ProxyClient:  proxyClient,
+		SourceClient: sourceClient,
+		DB:           db,
+	}
 	for _, m := range seedModules {
 		m := m
-
-		g.Go(func() error {
-			log.Infof(ctx, "Fetch requested: %q %q", m.path, m.version)
-			start := time.Now()
-			defer func() {
-				// Log the duration of this fetch request.
-				r.add(m.path, m.version, start)
-			}()
-
-			fetchCtx, cancel := context.WithTimeout(ctx, 5*time.Minute)
-			defer cancel()
-
-			code, err := fetchFunc(fetchCtx, m.path, m.version)
+		vers := []string{m.version}
+		if m.version == "all" {
+			if m.path == stdlib.ModulePath {
+				vers, err = stdlib.Versions()
+			} else {
+				vers, err = proxyClient.Versions(ctx, m.path)
+			}
 			if err != nil {
-				if code == http.StatusNotFound {
-					// We expect
-					// github.com/jackc/pgx/pgxpool@v3.6.2+incompatible
-					// to fail from seed.txt, so that it will redirect to
-					// github.com/jackc/pgx/v4/pgxpool in tests.
-					return nil
-				}
 				return err
 			}
-			return nil
-		})
+		}
+		for _, v := range vers {
+			v := v
+			g.Go(func() error {
+				// Log the duration of this fetch request.
+				start := time.Now()
+				defer func() {
+					r.add(m.path, v, start)
+				}()
+
+				return fetchFunc(ctx, f, m.path, v)
+			})
+		}
 	}
 	if err := g.Wait(); err != nil {
 		return err
@@ -133,6 +128,27 @@ func run(ctx context.Context, db *postgres.DB, proxyURL string) error {
 	sort.Strings(keys)
 	for _, k := range keys {
 		log.Infof(ctx, "%s | %v", k, r.paths[k])
+	}
+	return nil
+}
+
+func fetchFunc(ctx context.Context, f *worker.Fetcher, m, v string) (err error) {
+	defer derrors.Wrap(&err, "fetchFunc(ctx, f, %q, %q)", m, v)
+
+	log.Infof(ctx, "Fetch requested: %q %q", m, v)
+	fetchCtx, cancel := context.WithTimeout(ctx, 5*time.Minute)
+	defer cancel()
+
+	code, _, err := f.FetchAndUpdateState(fetchCtx, m, v, "")
+	if err != nil {
+		if code == http.StatusNotFound {
+			// We expect
+			// github.com/jackc/pgx/pgxpool@v3.6.2+incompatible
+			// to fail from seed.txt, so that it will redirect to
+			// github.com/jackc/pgx/v4/pgxpool in tests.
+			return nil
+		}
+		return err
 	}
 	return nil
 }

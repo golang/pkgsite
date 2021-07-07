@@ -3,3 +3,5 @@
 # license that can be found in the LICENSE file.
 
 github.com/julieqiu/api-demo@main
+golang.org/x/tools@all
+std@all
