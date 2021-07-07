@@ -92,7 +92,8 @@ func (db *DB) symbolSearch(ctx context.Context, q string, limit, offset, maxResu
 			COUNT(*) OVER() AS total
 		FROM (
 			SELECT
-				DISTINCT ON (s.name) s.name AS symbol_name,
+				DISTINCT ON (s.name, sd.package_path)
+				s.name AS symbol_name,
 				sd.package_path,
 				sd.version,
 				sd.module_path,
@@ -116,6 +117,7 @@ func (db *DB) symbolSearch(ctx context.Context, q string, limit, offset, maxResu
 				ssd.tsv_symbol_tokens @@ `+symbolToTSQuery+
 		`ORDER BY
 				symbol_name,
+				package_path,
 				CASE WHEN goos = 'all' THEN 0
 					 WHEN goos = 'linux' THEN 1
 					 WHEN goos = 'windows' THEN 2
@@ -156,6 +158,7 @@ func (db *DB) symbolSearch(ctx context.Context, q string, limit, offset, maxResu
 	// Search for an OR of the terms, so that if the user searches for
 	// "db begin", queries matching "db" and "begin" will be returned.
 	q = strings.Join(strings.Split(q, " "), " | ")
+
 	err := db.db.RunQuery(ctx, query, collect, q, limit, offset)
 	if err != nil {
 		results = nil
