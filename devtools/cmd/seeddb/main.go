@@ -20,8 +20,10 @@ import (
 
 	_ "github.com/jackc/pgx/v4/stdlib" // for pgx driver
 	"golang.org/x/pkgsite/internal/config"
+	"golang.org/x/pkgsite/internal/config/dynconfig"
 	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/proxy"
@@ -43,6 +45,12 @@ func main() {
 		log.Fatal(ctx, err)
 	}
 	log.SetLevel(cfg.LogLevel)
+
+	exps, err := fetchExperiments(ctx, cfg)
+	if err != nil {
+		log.Fatal(ctx, err)
+	}
+	ctx = experiment.NewContext(ctx, exps...)
 
 	// Wrap the postgres driver with our own wrapper, which adds OpenCensus instrumentation.
 	ddb, err := database.Open("pgx", cfg.DBConnInfo(), "seeddb")
@@ -192,4 +200,21 @@ func readFileLines(filename string) ([]string, error) {
 		return nil, err
 	}
 	return lines, nil
+}
+
+func fetchExperiments(ctx context.Context, cfg *config.Config) ([]string, error) {
+	if cfg.DynamicConfigLocation == "" {
+		return nil, nil
+	}
+	dc, err := dynconfig.Read(ctx, cfg.DynamicConfigLocation)
+	if err != nil {
+		return nil, err
+	}
+	var exps []string
+	for _, e := range dc.Experiments {
+		if e.Rollout > 0 {
+			exps = append(exps, e.Name)
+		}
+	}
+	return exps, nil
 }
