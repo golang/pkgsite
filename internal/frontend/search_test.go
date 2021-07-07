@@ -286,3 +286,45 @@ func TestElapsedTime(t *testing.T) {
 		})
 	}
 }
+
+func TestSymbolSynopsis(t *testing.T) {
+	for _, test := range []struct {
+		name string
+		r    *postgres.SearchResult
+		want string
+	}{
+		{
+			"struct field",
+			&postgres.SearchResult{
+				SymbolName:     "Foo.Bar",
+				SymbolSynopsis: "Bar string",
+				SymbolKind:     internal.SymbolKindField,
+			},
+			`
+type Foo struct {
+	Bar string
+}
+`,
+		},
+		{
+			"interface method",
+			&postgres.SearchResult{
+				SymbolName:     "Foo.Bar",
+				SymbolSynopsis: "Bar func() string",
+				SymbolKind:     internal.SymbolKindMethod,
+			},
+			`
+type Foo interface {
+	Bar func() string
+}
+`,
+		},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			got := symbolSynopsis(test.r)
+			if diff := cmp.Diff(test.want, got); diff != "" {
+				t.Errorf("mismatch(-want, +got): %s", diff)
+			}
+		})
+	}
+}

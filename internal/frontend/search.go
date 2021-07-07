@@ -98,7 +98,7 @@ func fetchSearchPage(ctx context.Context, db *postgres.DB, query string, pagePar
 		if searchSymbols {
 			sr.SymbolName = r.SymbolName
 			sr.SymbolKind = strings.ToLower(string(r.SymbolKind))
-			sr.SymbolSynopsis = r.SymbolSynopsis
+			sr.SymbolSynopsis = symbolSynopsis(r)
 			sr.SymbolGOOS = r.SymbolGOOS
 			sr.SymbolGOARCH = r.SymbolGOARCH
 			// If the GOOS is "all" or "linux", it doesn't need to be
@@ -145,6 +145,26 @@ func fetchSearchPage(ctx context.Context, db *postgres.DB, query string, pagePar
 		Pagination: pgs,
 	}
 	return sp, nil
+}
+
+func symbolSynopsis(r *postgres.SearchResult) string {
+	switch r.SymbolKind {
+	case internal.SymbolKindField:
+		return fmt.Sprintf(`
+type %s struct {
+	%s
+}
+`, strings.Split(r.SymbolName, ".")[0], r.SymbolSynopsis)
+	case internal.SymbolKindMethod:
+		if !strings.HasPrefix(r.SymbolSynopsis, "func (") {
+			return fmt.Sprintf(`
+type %s interface {
+	%s
+}
+`, strings.Split(r.SymbolName, ".")[0], r.SymbolSynopsis)
+		}
+	}
+	return r.SymbolSynopsis
 }
 
 // approximateNumber returns an approximation of the estimate, calibrated by
