@@ -30,9 +30,13 @@ import (
 
 func TestPathTokens(t *testing.T) {
 	t.Parallel()
+	testDB, release := acquire(t)
+	defer release()
+
 	for _, test := range []struct {
-		path string
-		want []string
+		path  string
+		want  []string
+		want2 []string
 	}{
 		{
 			path: "context",
@@ -67,12 +71,66 @@ func TestPathTokens(t *testing.T) {
 				"github.com/foo",
 				"github.com/foo/bar",
 			},
+			want2: []string{
+				"bar",
+				"foo",
+				"foo/bar",
+				// TO_TSVECTOR produces this because github.com/foo and
+				// github.com/foo/bar is tokenized to "github.com" with the
+				// mapping "host".
+				// Removing this mapping would remove all hosts (anything with
+				// a "." will be parsed as the empty string).
+				"github.com",
+				"github.com/foo",
+				"github.com/foo/bar",
+			},
+		},
+		{
+			path: "github.com/julieqiu/api-demo",
+			want: []string{
+				"api",
+				"api-demo",
+				"demo",
+				"github.com/julieqiu",
+				"github.com/julieqiu/api-demo",
+				"julieqiu",
+				"julieqiu/api-demo",
+			},
+			want2: []string{
+				"api",
+				"api-demo",
+				"demo",
+				"github.com",
+				"github.com/julieqiu",
+				"github.com/julieqiu/api-demo",
+				"julieqiu",
+				"julieqiu/api-demo",
+			},
 		},
 		{
 			path: "golang.org/x/tools/go/packages",
 			want: []string{
 				"go",
 				"go/packages",
+				"golang.org/x",
+				"golang.org/x/tools",
+				"golang.org/x/tools/go",
+				"golang.org/x/tools/go/packages",
+				"packages",
+				"tools",
+				"tools/go",
+				"tools/go/packages",
+				"x",
+				"x/tools",
+				"x/tools/go",
+				"x/tools/go/packages",
+			},
+			want2: []string{
+				"go",
+				"go/packages",
+				// TO_TSVECTOR produces this because golang.org/<anything>
+				// is tokenized to "golang.org".
+				"golang.org",
 				"golang.org/x",
 				"golang.org/x/tools",
 				"golang.org/x/tools/go",
@@ -98,6 +156,25 @@ func TestPathTokens(t *testing.T) {
 				"foo",
 				"foo-bar",
 				"foo-bar///package",
+				"package",
+			},
+			want2: []string{
+				// This is produced by the TO_TSVECTOR output of anything containing a
+				// "/package" element.
+				"/package",
+				"bar",
+				"example",
+				"example.com",
+				"example.com/foo-bar",
+				"example.com/foo-bar///package",
+				"foo",
+				"foo-bar",
+				// "foo-bar///package" from the want array above is  is not
+				// indexed. It is tokenized into "foo-bar"
+				// (asciihword,"Hyphenated word, all ASCII"), and "/package"
+				// (file). hword_asciipart and hword_asciipart are dropped from
+				// the symbols configuration, but indexed for the simple
+				// configuration.
 				"package",
 			},
 		},
@@ -129,6 +206,44 @@ func TestPathTokens(t *testing.T) {
 				"internal/valuecollector",
 				"valuecollector",
 			},
+			want2: []string{
+				// "/internal" and "/internal/valuecollector"
+				// are produced by the TO_TSVECTOR output of anything
+				// containing "/package".
+				"/internal",
+				"/internal/valuecollector",
+				"agent",
+				"cloud",
+				"cloud.google.com",
+				"cloud.google.com/go",
+				"cloud.google.com/go/cmd",
+				"cloud.google.com/go/cmd/go-cloud-debug-agent",
+				"cloud.google.com/go/cmd/go-cloud-debug-agent/internal",
+				"cloud.google.com/go/cmd/go-cloud-debug-agent/internal/valuecollector",
+				"cmd",
+				"cmd/go-cloud-debug-agent",
+				"cmd/go-cloud-debug-agent/internal",
+				"cmd/go-cloud-debug-agent/internal/valuecollector",
+				"debug",
+				"go",
+				"go-cloud-debug-agent",
+				// go/cmd/go-cloud-debug-agent/internal and
+				// go/cmd/go-cloud-debug-agent/internal/valuecollector
+				// are not indexed, because they are considered the combination
+				// of a asciihword (go-cloud-debug-agent) and file (/internal),
+				// but are not themselves words.
+				// Because of the hyphens in the *leading* part, they are also
+				// not considered a file (This could be changed if the hyphens
+				// were encoded as some other character, but it is not clear
+				// which one. Underscores are treated as blanks).
+				"go/cmd",
+				"go/cmd/go-cloud-debug-agent",
+				"go/cmd/go-cloud-debug-agent/internal",
+				"go/cmd/go-cloud-debug-agent/internal/valuecollector",
+				"internal",
+				"internal/valuecollector",
+				"valuecollector",
+			},
 		},
 		{
 			path: "code.cloud.gitlab.google.k8s.io",
@@ -143,10 +258,36 @@ func TestPathTokens(t *testing.T) {
 			want: nil,
 		},
 	} {
-		t.Run(test.path, func(t *testing.T) {
+		t.Run(strings.ReplaceAll(test.path, "/", "_"), func(t *testing.T) {
 			got := GeneratePathTokens(test.path)
 			if diff := cmp.Diff(test.want, got); diff != "" {
 				t.Errorf("generatePathTokens(%q) mismatch (-want +got):\n%s", test.path, diff)
+			}
+
+			var tsv string
+			q := "SELECT TO_TSVECTOR('symbols', $1)"
+			arg := strings.Join(got, " ")
+			if err := testDB.db.QueryRow(context.Background(), q, arg).Scan(&tsv); err != nil {
+				t.Fatal(err)
+			}
+
+			var got2 []string
+			parts := strings.Split(tsv, "'")
+			for _, p := range parts {
+				p = strings.TrimSpace(p)
+				if p == "" {
+					continue
+				}
+				if strings.HasPrefix(p, ":") {
+					continue
+				}
+				got2 = append(got2, p)
+			}
+			if test.want2 == nil {
+				test.want2 = test.want
+			}
+			if diff := cmp.Diff(test.want2, got2); diff != "" {
+				t.Errorf("%s: mismatch (-want +got):\n%s", strings.Replace(q, "$1", arg, 1), diff)
 			}
 		})
 	}
