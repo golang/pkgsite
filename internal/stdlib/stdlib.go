@@ -236,7 +236,7 @@ func getTestGoRepo(v string) (_ *git.Repository, err error) {
 // "goN.N.N", where N is a number) and beta or rc versions (tags of the forms
 // "goN.NbetaN" and "goN.N.NbetaN", and similarly for "rc" replacing "beta").
 func Versions() (_ []string, err error) {
-	defer derrors.Wrap(&err, "Versions()")
+	defer derrors.Wrap(&err, "stdlib.Versions()")
 
 	var refNames []plumbing.ReferenceName
 	if UseTestData {

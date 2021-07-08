@@ -219,6 +219,7 @@ func (c *Client) readBody(ctx context.Context, modulePath, requestedVersion, suf
 // Versions makes a request to $GOPROXY/<path>/@v/list and returns the
 // resulting version strings.
 func (c *Client) Versions(ctx context.Context, modulePath string) (_ []string, err error) {
+	defer derrors.Wrap(&err, "Versions(ctx, %q)", modulePath)
 	escapedPath, err := module.EscapePath(modulePath)
 	if err != nil {
 		return nil, fmt.Errorf("module.EscapePath(%q): %w", modulePath, derrors.InvalidArgument)
