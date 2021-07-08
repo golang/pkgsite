@@ -535,6 +535,7 @@ var upsertSearchStatement = fmt.Sprintf(`
 		version_updated_at,
 		commit_time,
 		has_go_mod,
+		path_tokens,
 		tsv_search_tokens,
 		hll_register,
 		hll_leading_zeros
@@ -553,6 +554,7 @@ var upsertSearchStatement = fmt.Sprintf(`
 		CURRENT_TIMESTAMP,
 		m.commit_time,
 		m.has_go_mod,
+		$4,
 		(
 			SETWEIGHT(TO_TSVECTOR('path_tokens', $4), 'A') ||
 			SETWEIGHT(TO_TSVECTOR($5), 'B') ||
@@ -583,6 +585,7 @@ var upsertSearchStatement = fmt.Sprintf(`
 		redistributable=excluded.redistributable,
 		commit_time=excluded.commit_time,
 		has_go_mod=excluded.has_go_mod,
+		path_tokens=excluded.path_tokens,
 		tsv_search_tokens=excluded.tsv_search_tokens,
 		-- the hll fields are functions of path, so they don't change
 		version_updated_at=(
