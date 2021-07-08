@@ -94,12 +94,23 @@ func run(ctx context.Context, db *postgres.DB, proxyURL string) error {
 		vers := []string{m.version}
 		if m.version == "all" {
 			if m.path == stdlib.ModulePath {
-				vers, err = stdlib.Versions()
+				stdVersions, err := stdlib.Versions()
+				if err != nil {
+					return err
+				}
+				// As an optimization, only fetch release versions for the
+				// standard library.
+				vers = nil
+				for _, v := range stdVersions {
+					if strings.HasSuffix(v, ".0") {
+						vers = append(vers, v)
+					}
+				}
 			} else {
 				vers, err = proxyClient.Versions(ctx, m.path)
-			}
-			if err != nil {
-				return err
+				if err != nil {
+					return err
+				}
 			}
 		}
 		for _, v := range vers {
