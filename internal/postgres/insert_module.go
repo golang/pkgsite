@@ -341,7 +341,7 @@ func insertImportsUnique(ctx context.Context, tx *database.DB, m *internal.Modul
 // more units in the module.
 func (pdb *DB) insertUnits(ctx context.Context, tx *database.DB,
 	m *internal.Module, moduleID int, pathToID map[string]int) (
-	pathToUnitID map[string]int, pathToDocs map[string][]*internal.Documentation, err error) {
+	pathToUnitID map[string]int, pathToPkgDocs map[string][]*internal.Documentation, err error) {
 	defer derrors.WrapStack(&err, "insertUnits(ctx, tx, %q, %q)", m.ModulePath, m.Version)
 	ctx, span := trace.StartSpan(ctx, "insertUnits")
 	defer span.End()
@@ -361,8 +361,9 @@ func (pdb *DB) insertUnits(ctx context.Context, tx *database.DB,
 		pathToReadme  = map[string]*internal.Readme{}
 		pathToImports = map[string][]string{}
 		pathIDToPath  = map[int]string{}
+		pathToAllDocs = map[string][]*internal.Documentation{}
 	)
-	pathToDocs = map[string][]*internal.Documentation{}
+	pathToPkgDocs = map[string][]*internal.Documentation{}
 	for _, u := range m.Units {
 		var licenseTypes, licensePaths []string
 		for _, l := range u.Licenses {
@@ -403,7 +404,12 @@ func (pdb *DB) insertUnits(ctx context.Context, tx *database.DB,
 				return nil, nil, fmt.Errorf("insertUnits: unit %q missing source files for %q, %q", u.Path, d.GOOS, d.GOARCH)
 			}
 		}
-		pathToDocs[u.Path] = u.Documentation
+		pathToAllDocs[u.Path] = u.Documentation
+		if !u.IsCommand() {
+			// We don't care about symbols for commands, since they won't
+			// appear in the documentation.
+			pathToPkgDocs[u.Path] = u.Documentation
+		}
 		if len(u.Imports) > 0 {
 			pathToImports[u.Path] = u.Imports
 		}
@@ -420,13 +426,13 @@ func (pdb *DB) insertUnits(ctx context.Context, tx *database.DB,
 	if err := insertReadmes(ctx, tx, paths, pathToUnitID, pathToReadme); err != nil {
 		return nil, nil, err
 	}
-	if err := insertDocs(ctx, tx, paths, pathToUnitID, pathToDocs); err != nil {
+	if err := insertDocs(ctx, tx, paths, pathToUnitID, pathToAllDocs); err != nil {
 		return nil, nil, err
 	}
 	if err := insertImports(ctx, tx, paths, pathToUnitID, pathToImports); err != nil {
 		return nil, nil, err
 	}
-	return pathToUnitID, pathToDocs, nil
+	return pathToUnitID, pathToPkgDocs, nil
 }
 
 // insertPaths inserts all paths in m that aren't already there, and returns a map from each path to its
