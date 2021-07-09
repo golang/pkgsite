@@ -81,20 +81,22 @@ type VersionSummary struct {
 	Symbols             [][]*Symbol
 }
 
-func fetchVersionsDetails(ctx context.Context, ds internal.DataSource, fullPath, modulePath string) (*VersionsDetails, error) {
+func fetchVersionsDetails(ctx context.Context, ds internal.DataSource, um *internal.UnitMeta) (*VersionsDetails, error) {
 	db, ok := ds.(*postgres.DB)
 	if !ok {
 		// The proxydatasource does not support the imported by page.
 		return nil, proxydatasourceNotSupportedErr()
 	}
-	versions, err := db.GetVersionsForPath(ctx, fullPath)
+	versions, err := db.GetVersionsForPath(ctx, um.Path)
 	if err != nil {
 		return nil, err
 	}
 
 	sh := internal.NewSymbolHistory()
-	if modulePath == stdlib.ModulePath || experiment.IsActive(ctx, internal.ExperimentSymbolHistoryVersionsPage) {
-		sh, err = db.GetSymbolHistory(ctx, fullPath, modulePath)
+	if !um.IsCommand() &&
+		(um.ModulePath == stdlib.ModulePath ||
+			experiment.IsActive(ctx, internal.ExperimentSymbolHistoryVersionsPage)) {
+		sh, err = db.GetSymbolHistory(ctx, um.Path, um.ModulePath)
 		if err != nil {
 			return nil, err
 		}
@@ -104,13 +106,13 @@ func fetchVersionsDetails(ctx context.Context, ds internal.DataSource, fullPath,
 		// import path of the package corresponding to this version.
 		var versionPath string
 		if mi.ModulePath == stdlib.ModulePath {
-			versionPath = fullPath
+			versionPath = um.Path
 		} else {
-			versionPath = pathInVersion(internal.V1Path(fullPath, modulePath), mi)
+			versionPath = pathInVersion(internal.V1Path(um.Path, um.ModulePath), mi)
 		}
 		return constructUnitURL(versionPath, mi.ModulePath, linkVersion(mi.ModulePath, mi.Version, mi.Version))
 	}
-	return buildVersionDetails(modulePath, versions, sh, linkify), nil
+	return buildVersionDetails(um.ModulePath, versions, sh, linkify), nil
 }
 
 // pathInVersion constructs the full import path of the package corresponding

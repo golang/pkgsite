@@ -109,7 +109,7 @@ func fetchDetailsForUnit(ctx context.Context, r *http.Request, tab string, ds in
 		_, expandReadme := r.URL.Query()["readme"]
 		return fetchMainDetails(ctx, ds, um, requestedVersion, expandReadme, bc)
 	case tabVersions:
-		return fetchVersionsDetails(ctx, ds, um.Path, um.ModulePath)
+		return fetchVersionsDetails(ctx, ds, um)
 	case tabImports:
 		return fetchImportsDetails(ctx, ds, um.Path, um.ModulePath, um.Version)
 	case tabImportedBy:

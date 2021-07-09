@@ -538,7 +538,7 @@ func (db *DB) getUnitWithAllFields(ctx context.Context, um *internal.UnitMeta, b
 	u.Subdirectories = pkgs
 	u.UnitMeta = *um
 
-	if um.IsPackage() && doc.Source != nil {
+	if um.IsPackage() && !um.IsCommand() && doc.Source != nil {
 		if um.ModulePath == stdlib.ModulePath {
 			u.SymbolHistory, err = GetSymbolHistoryForBuildContext(ctx, db.db, pathID, um.ModulePath, bcMatched)
 			if err != nil {
