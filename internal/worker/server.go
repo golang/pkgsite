@@ -353,7 +353,12 @@ func parseModulePathAndVersion(requestPath string) (string, string, error) {
 		}
 		return modulePath, version.Latest, nil
 	}
-	parts := strings.Split(p, "/@v/")
+	var parts []string
+	if strings.Contains(requestPath, "/@v") {
+		parts = strings.Split(p, "/@v/")
+	} else {
+		parts = strings.Split(p, "@v")
+	}
 	if len(parts) != 2 {
 		return "", "", fmt.Errorf("invalid path: %q", requestPath)
 	}
