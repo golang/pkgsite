@@ -5,14 +5,15 @@
 package database
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"log"
 	"net/url"
-	"os"
 	"path/filepath"
 	"strings"
 
+	"golang.org/x/pkgsite/internal/config"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/testing/testhelper"
 
@@ -26,21 +27,14 @@ import (
 	_ "github.com/lib/pq"
 )
 
-func getEnv(key, fallback string) string {
-	if value, ok := os.LookupEnv(key); ok {
-		return value
-	}
-	return fallback
-}
-
 // DBConnURI generates a postgres connection string in URI format.  This is
 // necessary as migrate expects a URI.
 func DBConnURI(dbName string) string {
 	var (
-		user     = getEnv("GO_DISCOVERY_DATABASE_USER", "postgres")
-		password = getEnv("GO_DISCOVERY_DATABASE_PASSWORD", "")
-		host     = getEnv("GO_DISCOVERY_DATABASE_HOST", "localhost")
-		port     = getEnv("GO_DISCOVERY_DATABASE_PORT", "5432")
+		user     = config.GetEnv("GO_DISCOVERY_DATABASE_USER", "postgres")
+		password = config.GetEnv("GO_DISCOVERY_DATABASE_PASSWORD", "")
+		host     = config.GetEnv("GO_DISCOVERY_DATABASE_HOST", "localhost")
+		port     = config.GetEnv("GO_DISCOVERY_DATABASE_PORT", "5432")
 	)
 	cs := fmt.Sprintf("postgres://%s/%s?sslmode=disable&user=%s&password=%s&port=%s&timezone=UTC",
 		host, dbName, url.QueryEscape(user), url.QueryEscape(password), url.QueryEscape(port))
@@ -168,4 +162,31 @@ func TryToMigrate(dbName string) (isMigrationError bool, outerErr error) {
 func migrationsSource() string {
 	migrationsDir := testhelper.TestDataPath("../../migrations")
 	return "file://" + filepath.ToSlash(migrationsDir)
+}
+
+// ResetDB truncates all data from the given test DB.  It should be called
+// after every test that mutates the database.
+func ResetDB(ctx context.Context, db *DB) error {
+	if err := db.Transact(ctx, sql.LevelDefault, func(tx *DB) error {
+		if _, err := tx.Exec(ctx, `
+			TRUNCATE modules CASCADE;
+			TRUNCATE search_documents;
+			TRUNCATE version_map;
+			TRUNCATE paths CASCADE;
+			TRUNCATE symbol_names CASCADE;
+			TRUNCATE imports_unique;
+			TRUNCATE latest_module_versions;`); err != nil {
+			return err
+		}
+		if _, err := tx.Exec(ctx, `TRUNCATE module_version_states CASCADE;`); err != nil {
+			return err
+		}
+		if _, err := tx.Exec(ctx, `TRUNCATE excluded_prefixes;`); err != nil {
+			return err
+		}
+		return nil
+	}); err != nil {
+		return fmt.Errorf("error resetting test DB: %v", err)
+	}
+	return nil
 }

@@ -67,27 +67,9 @@ func SetupTestDB(dbName string) (_ *DB, err error) {
 // ResetTestDB truncates all data from the given test DB.  It should be called
 // after every test that mutates the database.
 func ResetTestDB(db *DB, t *testing.T) {
-	ctx := context.Background()
 	t.Helper()
-	if err := db.db.Transact(ctx, sql.LevelDefault, func(tx *database.DB) error {
-		if _, err := tx.Exec(ctx, `
-			TRUNCATE modules CASCADE;
-			TRUNCATE search_documents;
-			TRUNCATE version_map;
-			TRUNCATE paths CASCADE;
-			TRUNCATE symbol_names CASCADE;
-			TRUNCATE imports_unique;
-			TRUNCATE latest_module_versions;`); err != nil {
-			return err
-		}
-		if _, err := tx.Exec(ctx, `TRUNCATE module_version_states CASCADE;`); err != nil {
-			return err
-		}
-		if _, err := tx.Exec(ctx, `TRUNCATE excluded_prefixes;`); err != nil {
-			return err
-		}
-		return nil
-	}); err != nil {
+	ctx := context.Background()
+	if err := database.ResetDB(ctx, db.db); err != nil {
 		t.Fatalf("error resetting test DB: %v", err)
 	}
 	db.expoller.Poll(ctx) // clear excluded prefixes
