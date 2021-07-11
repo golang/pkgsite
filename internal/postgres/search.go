@@ -777,6 +777,11 @@ func (db *DB) UpdateSearchDocumentsImportedByCount(ctx context.Context) (nUpdate
 	if err != nil {
 		return 0, err
 	}
+	return db.UpdateSearchDocumentsImportedByCountWithCounts(ctx, counts)
+}
+
+func (db *DB) UpdateSearchDocumentsImportedByCountWithCounts(ctx context.Context, counts map[string]int) (nUpdated int64, err error) {
+	defer derrors.WrapStack(&err, "UpdateSearchDocumentsImportedByCountWithCounts")
 	err = db.db.Transact(ctx, sql.LevelDefault, func(tx *database.DB) error {
 		if err := insertImportedByCounts(ctx, tx, counts); err != nil {
 			return err
