@@ -2,6 +2,6 @@
 # Use of this source code is governed by a BSD-style
 # license that can be found in the LICENSE file.
 
-github.com/go-openapi/strfmt@v0.20.1
-github.com/julieqiu/api-demo@latest
-std@v1.16.6
+math/bits, 9848
+math/big, 88393
+github.com/go-openapi/strfmt, 11101

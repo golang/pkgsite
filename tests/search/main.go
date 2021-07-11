@@ -13,6 +13,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 
 	_ "github.com/jackc/pgx/v4/stdlib" // for pgx driver
@@ -52,6 +53,14 @@ func main() {
 }
 
 func run(ctx context.Context, db *postgres.DB) error {
+	counts, err := readImportedByCounts("tests/search/importedby.txt")
+	if err != nil {
+		return err
+	}
+	if _, err := db.UpdateSearchDocumentsImportedByCountWithCounts(ctx, counts); err != nil {
+		return err
+	}
+
 	tests, err := readSearchTests("tests/search/scripts/symbolsearch.txt")
 	if err != nil {
 		return err
@@ -67,7 +76,7 @@ func run(ctx context.Context, db *postgres.DB) error {
 		}
 		var errors []string
 		for i, want := range st.results {
-			var got *postgres.SearchResult
+			got := &postgres.SearchResult{}
 			if len(results) > i {
 				got = results[i]
 			}
@@ -183,6 +192,34 @@ func readSearchTests(filename string) ([]*searchTest, error) {
 	}
 	tests = append(tests, &test)
 	return tests, nil
+}
+
+// readSearchTests reads filename and returns a map of package path to imported
+// by count. See tests/README.md for a description of the syntax.
+func readImportedByCounts(filename string) (map[string]int, error) {
+	counts := map[string]int{}
+	f, err := os.Open(filename)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+	scan := bufio.NewScanner(f)
+	for scan.Scan() {
+		line := strings.TrimSpace(scan.Text())
+		if line == "" || line[0] == '#' {
+			continue
+		}
+		parts := strings.SplitN(line, ", ", 2)
+		c, err := strconv.Atoi(parts[1])
+		if err != nil {
+			return nil, err
+		}
+		counts[parts[0]] = c
+	}
+	if err := scan.Err(); err != nil {
+		return nil, err
+	}
+	return counts, nil
 }
 
 const (

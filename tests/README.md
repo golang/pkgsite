@@ -32,6 +32,16 @@ Expected result B2
 Each test set is separated by a newline. Comments (lines that being with a #),
 are ignored.
 
+The imported by counts for a dataset can also be updated in
+search/importedby.txt. The file has the format:
+
+```
+<package-path>, <imported-by-count>
+```
+
+It is expected that the modules for these packages are in
+tests/search/seed.txt.
+
 ## End-to-End (E2E) Tests
 
 Th e2e/ directory contains end-to-end tests for pages on pkg.go.dev, which can
