@@ -87,6 +87,7 @@ services:
     # running seeddb, but in general, migrations will have completed by the
     # time seeddb runs. If this ends up being flaky, we should add a check here.
     command: bash -c "
+        echo GO_DISCOVERY_CONFIG_DYNAMIC=$GO_DISCOVERY_CONFIG_DYNAMIC &&
         ./third_party/wait-for-it/wait-for-it.sh db:5432 --
           go run ./devtools/cmd/db/main.go create &&
           go run ./devtools/cmd/db/main.go migrate &&
@@ -95,8 +96,6 @@ services:
       <<: *database-variables
       <<: *go-variables
       WAITFORIT_TIMEOUT: 300
-    ports:
-      - 8080:8080
     volumes:
       - ../../:/pkgsite
       - gomodcache:/gomodcache

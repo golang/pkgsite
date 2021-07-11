@@ -3,9 +3,34 @@
 The tests directory contains integration tests that require a pre-seeded
 database.
 
+Each tests/<group> contains a seed.txt file at tests/<group>/seed.txt, which is
+used by the docker seeddb container to setup the test database.
+
+The tests can be run using tests/<group>/run.sh.
+
 ## Search Tests
 
-TODO(golang/go#44142): Add this section.
+The tests/search/scripts directory contains test scripts \*.txt that are run
+using tests/search/run.sh.
+
+These scripts follow the format:
+
+```
+Test name A
+search query A
+Expected result A1
+Expected result A2
+
+Test name B
+search query B
+Expected result B1
+Expected result B2
+
+...
+```
+
+Each test set is separated by a newline. Comments (lines that being with a #),
+are ignored.
 
 ## End-to-End (E2E) Tests
 

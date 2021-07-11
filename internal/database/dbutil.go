@@ -152,7 +152,7 @@ func TryToMigrate(dbName string) (isMigrationError bool, outerErr error) {
 		}
 	}()
 	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
-		return true, fmt.Errorf("m.Up(): %v", err)
+		return true, fmt.Errorf("m.Up() %q: %v", source, err)
 	}
 	return false, nil
 }

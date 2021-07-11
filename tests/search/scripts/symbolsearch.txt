@@ -1,0 +1,11 @@
+# Copyright 2021 The Go Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style
+# license that can be found in the LICENSE file.
+#
+# This file contains test scripts for symbol search.
+
+Same symbol appears multiple times in one package.
+Foo
+FOO github.com/julieqiu/api-demo
+FoO github.com/julieqiu/api-demo
+Foo github.com/julieqiu/api-demo
