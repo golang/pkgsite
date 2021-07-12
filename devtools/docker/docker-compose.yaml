@@ -19,7 +19,6 @@ services:
      # This should match the version we are using on AppEngine.
     image: golang:1.15.5
     environment:
-      - GOMODCACHE=/gomodcache
       - GO_DISCOVERY_DATABASE_HOST=db
       - GO_DISCOVERY_DATABASE_NAME=${GO_DISCOVERY_DATABASE_NAME:-"discovery-db"}
       - GO_DISCOVERY_DATABASE_PASSWORD=${GO_DISCOVERY_DATABASE_PASSWORD:-postgres}
@@ -31,7 +30,6 @@ services:
     entrypoint: ./third_party/wait-for-it/wait-for-it.sh db:5432 -- ./all.bash
     volumes:
       - ../../:/pkgsite
-      - ${GOPATH:-$HOME/go}/pkg/mod:/gomodcache
     working_dir: /pkgsite
   e2e:
     image: node:14.17.0
@@ -58,7 +56,6 @@ services:
         ./third_party/wait-for-it/wait-for-it.sh db:5432 --
           go run ./cmd/frontend -host=0.0.0.0:8080"
     environment:
-      - GOMODCACHE=/gomodcache
       - GO_DISCOVERY_DATABASE_HOST=db
       - GO_DISCOVERY_DATABASE_NAME=${GO_DISCOVERY_DATABASE_NAME:-"discovery-db"}
       - GO_DISCOVERY_DATABASE_PASSWORD=${GO_DISCOVERY_DATABASE_PASSWORD:-postgres}
@@ -70,7 +67,6 @@ services:
       - 8080:8080
     volumes:
       - ../../:/pkgsite
-      - ${GOPATH:-$HOME/go}/pkg/mod:/gomodcache
     working_dir: /pkgsite
   seeddb:
      # This should match the version we are using on AppEngine.
@@ -84,7 +80,6 @@ services:
         ./third_party/wait-for-it/wait-for-it.sh db:5432 --
           go run ./devtools/cmd/seeddb/seeddb/main.go"
     environment:
-      - GOMODCACHE=/gomodcache
       - GO_DISCOVERY_DATABASE_HOST=db
       - GO_DISCOVERY_DATABASE_NAME=${GO_DISCOVERY_DATABASE_NAME:-"discovery-db"}
       - GO_DISCOVERY_DATABASE_PASSWORD=${GO_DISCOVERY_DATABASE_PASSWORD:-postgres}
@@ -96,7 +91,6 @@ services:
       - 8080:8080
     volumes:
       - ../../:/pkgsite
-      - ${GOPATH:-$HOME/go}/pkg/mod:/gomodcache
     working_dir: /pkgsite
   migrate:
     depends_on:
