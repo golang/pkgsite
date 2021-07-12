@@ -18,6 +18,7 @@ import (
 	"text/template"
 	"time"
 
+	"cloud.google.com/go/logging"
 	"contrib.go.opencensus.io/exporter/stackdriver"
 	"go.opencensus.io/metric/metricexport"
 	"go.opencensus.io/plugin/ochttp"
@@ -220,7 +221,8 @@ func main() {
 
 	log.SetLevel(cfg.LogLevel)
 	if cfg.OnGCP() {
-		if _, err := log.UseStackdriver(ctx, cfg, "prober-log"); err != nil {
+		opts := []logging.LoggerOption{logging.CommonResource(cfg.MonitoredResource)}
+		if _, err := log.UseStackdriver(ctx, "prober-log", cfg.ProjectID, opts); err != nil {
 			log.Fatal(ctx, err)
 		}
 	}

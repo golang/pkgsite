@@ -15,7 +15,6 @@ import (
 	"sync"
 
 	"cloud.google.com/go/logging"
-	"golang.org/x/pkgsite/internal/config"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/experiment"
 )
@@ -144,20 +143,11 @@ func experimentString(ctx context.Context) string {
 // See https://cloud.google.com/appengine/docs/standard/go/writing-application-logs.
 //
 // UseStackdriver can only be called once. If it is called a second time, it returns an error.
-func UseStackdriver(ctx context.Context, cfg *config.Config, logName string) (_ *logging.Logger, err error) {
+func UseStackdriver(ctx context.Context, logName, projectID string, opts []logging.LoggerOption) (_ *logging.Logger, err error) {
 	defer derrors.Wrap(&err, "UseStackdriver(ctx, %q)", logName)
-
-	client, err := logging.NewClient(ctx, cfg.ProjectID)
+	client, err := logging.NewClient(ctx, projectID)
 	if err != nil {
 		return nil, err
-	}
-
-	opts := []logging.LoggerOption{logging.CommonResource(cfg.MonitoredResource)}
-	if cfg.OnGKE() {
-		opts = append(opts, logging.CommonLabels(map[string]string{
-			"k8s-pod/env": cfg.DeploymentEnvironment(),
-			"k8s-pod/app": cfg.Application(),
-		}))
 	}
 	parent := client.Logger(logName, opts...)
 	child := client.Logger(logName+"-child", opts...)

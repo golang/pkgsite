@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"cloud.google.com/go/errorreporting"
+	"cloud.google.com/go/logging"
 	"contrib.go.opencensus.io/integrations/ocsql"
 	_ "github.com/jackc/pgx/v4/stdlib" // for pgx driver
 	"golang.org/x/pkgsite/internal"
@@ -27,7 +28,14 @@ import (
 // Logger configures a middleware.Logger.
 func Logger(ctx context.Context, cfg *config.Config, logName string) middleware.Logger {
 	if cfg.OnGCP() {
-		logger, err := log.UseStackdriver(ctx, cfg, logName)
+		opts := []logging.LoggerOption{logging.CommonResource(cfg.MonitoredResource)}
+		if cfg.OnGKE() {
+			opts = append(opts, logging.CommonLabels(map[string]string{
+				"k8s-pod/env": cfg.DeploymentEnvironment(),
+				"k8s-pod/app": cfg.Application(),
+			}))
+		}
+		logger, err := log.UseStackdriver(ctx, logName, cfg.ProjectID, opts)
 		if err != nil {
 			log.Fatal(ctx, err)
 		}
