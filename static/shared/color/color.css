@@ -68,6 +68,7 @@
   --color-background: var(--gray-1);
   --color-background-accented: var(--gray-2);
   --color-background-highlighted: var(--gray-2);
+  --color-background-info: var(--gray-3);
   --color-background-warning: var(--yellow);
   --color-background-alert: var(--pink);
   --color-border: var(--gray-4);
@@ -81,6 +82,7 @@
     --color-background: var(--gray-1);
     --color-background-accented: var(--gray-2);
     --color-background-highlighted: var(--gray-2);
+    --color-background-info: var(--gray-3);
     --color-background-warning: var(--yellow);
     --color-background-alert: var(--pink);
     --color-border: var(--gray-4);
