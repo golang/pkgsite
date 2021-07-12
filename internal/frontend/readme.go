@@ -22,6 +22,7 @@ import (
 	"github.com/yuin/goldmark/util"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/source"
 )
 
@@ -68,7 +69,7 @@ func ProcessReadme(ctx context.Context, u *internal.Unit) (_ *Readme, err error)
 	return processReadme(ctx, u.Readme, u.SourceInfo)
 }
 
-func processReadme(ctx context.Context, readme *internal.Readme, sourceInfo *source.Info) (_ *Readme, err error) {
+func processReadme(ctx context.Context, readme *internal.Readme, sourceInfo *source.Info) (frontendReadme *Readme, err error) {
 	if readme == nil || readme.Contents == "" {
 		return &Readme{}, nil
 	}
@@ -131,7 +132,22 @@ func processReadme(ctx context.Context, readme *internal.Readme, sourceInfo *sou
 	gdRenderer := gdMarkdown.Renderer()
 
 	var b bytes.Buffer
+	defer func() {
+		// It's possible for gdRenderer.Render to panic. For exmaple,
+		// https://pkg.go.dev/github.com/jinghzhu/k8scrd/pkg/crd/jinghzhu/v1
+		// results in a panic because gdRenderer.Render tries to index a slice
+		// out of bounds.
+		//
+		// In case of a panic from gdRenderer.Render, treat this as a normal
+		// error from that function.
+		if p := recover(); p != nil {
+			log.Debugf(ctx, "gdRenderer.Render: %v", p)
+			frontendReadme = &Readme{}
+			err = nil
+		}
+	}()
 	if err := gdRenderer.Render(&b, contents, doc); err != nil {
+		log.Debugf(ctx, "gdRenderer.Render: %v", err)
 		return &Readme{}, nil
 	}
 	return &Readme{
