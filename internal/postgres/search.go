@@ -277,14 +277,13 @@ func (db *DB) deepSearch(ctx context.Context, q string, limit, offset, maxResult
 
 	var (
 		results []*internal.SearchResult
-		collect func(rows *sql.Rows) error
 		err     error
 	)
-	if experiment.IsActive(ctx, internal.ExperimentSearchGrouping) {
+	if experiment.IsActive(ctx, internal.ExperimentSearchIncrementally) {
 		modulePaths := map[string]bool{}
 		const pageSize = 10  // TODO(jba): get from elsewhere
 		additionalRows := 10 // after reaching pageSize module paths
-		collect = func(rows *sql.Rows) error {
+		collect := func(rows *sql.Rows) error {
 			var r internal.SearchResult
 			if err := rows.Scan(&r.PackagePath, &r.Version, &r.ModulePath, &r.CommitTime,
 				&r.NumImportedBy, &r.Score, &r.NumResults); err != nil {
@@ -304,7 +303,7 @@ func (db *DB) deepSearch(ctx context.Context, q string, limit, offset, maxResult
 		const fetchSize = 10 // number of rows to fetch at a time
 		err = db.db.RunQueryIncrementally(ctx, query, fetchSize, collect, q, limit, offset)
 	} else {
-		collect = func(rows *sql.Rows) error {
+		collect := func(rows *sql.Rows) error {
 			var r internal.SearchResult
 			if err := rows.Scan(&r.PackagePath, &r.Version, &r.ModulePath, &r.CommitTime,
 				&r.NumImportedBy, &r.Score, &r.NumResults); err != nil {

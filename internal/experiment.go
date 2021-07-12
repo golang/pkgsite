@@ -12,6 +12,7 @@ const (
 	ExperimentNewUnitLayout               = "new-unit-layout"
 	ExperimentReadSymbolHistory           = "read-symbol-history"
 	ExperimentSearchGrouping              = "search-grouping"
+	ExperimentSearchIncrementally         = "search-incrementally"
 	ExperimentSkipInsertSymbols           = "skip-insert-symbols"
 	ExperimentStyleGuide                  = "styleguide"
 	ExperimentSymbolHistoryMainPage       = "symbol-history-main-page"
@@ -28,6 +29,7 @@ var Experiments = map[string]string{
 	ExperimentNewUnitLayout:               "Enable the new layout on the unit page.",
 	ExperimentReadSymbolHistory:           "Read data from the symbol_history table.",
 	ExperimentSearchGrouping:              "Group search results.",
+	ExperimentSearchIncrementally:         "Use incremental query for search results.",
 	ExperimentSkipInsertSymbols:           "Don't insert data into symbols tables.",
 	ExperimentStyleGuide:                  "Enable the styleguide.",
 	ExperimentSymbolHistoryMainPage:       "Show package API history on the main unit page.",
