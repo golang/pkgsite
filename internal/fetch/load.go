@@ -379,7 +379,7 @@ const mib = 1024 * 1024
 var maxModuleZipSize int64 = math.MaxInt64
 
 func init() {
-	v := config.GetEnvInt("GO_DISCOVERY_MAX_MODULE_ZIP_MI", -1)
+	v := config.GetEnvInt(context.Background(), "GO_DISCOVERY_MAX_MODULE_ZIP_MI", -1)
 	if v > 0 {
 		maxModuleZipSize = int64(v) * mib
 	}
@@ -389,7 +389,7 @@ var zipLoadShedder *loadShedder
 
 func init() {
 	ctx := context.Background()
-	mebis := config.GetEnvInt("GO_DISCOVERY_MAX_IN_FLIGHT_ZIP_MI", -1)
+	mebis := config.GetEnvInt(ctx, "GO_DISCOVERY_MAX_IN_FLIGHT_ZIP_MI", -1)
 	if mebis > 0 {
 		log.Infof(ctx, "shedding load over %dMi", mebis)
 		zipLoadShedder = &loadShedder{maxSizeInFlight: uint64(mebis) * mib}

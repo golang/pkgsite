@@ -5,6 +5,7 @@
 package config
 
 import (
+	"context"
 	"regexp"
 	"testing"
 
@@ -66,7 +67,7 @@ func TestProcessOverrides(t *testing.T) {
            MaxEntries: 17
            RecordOnly: false
     `
-	processOverrides(&cfg, []byte(ov))
+	processOverrides(context.Background(), &cfg, []byte(ov))
 	got := cfg
 	want := Config{
 		DBHost: "newHost",

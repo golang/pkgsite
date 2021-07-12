@@ -34,7 +34,7 @@ import (
 )
 
 var (
-	timeout   = config.GetEnvInt("GO_DISCOVERY_WORKER_TIMEOUT_MINUTES", 10)
+	timeout   = config.GetEnvInt(context.Background(), "GO_DISCOVERY_WORKER_TIMEOUT_MINUTES", 10)
 	queueName = config.GetEnv("GO_DISCOVERY_WORKER_TASK_QUEUE", "")
 	workers   = flag.Int("workers", 10, "number of concurrent requests to the fetch service, when running locally")
 	// flag used in call to safehtml/template.TrustedSourceFromFlag

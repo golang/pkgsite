@@ -16,7 +16,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"math/rand"
 	"net/http"
 	"os"
@@ -29,6 +28,7 @@ import (
 	"github.com/ghodss/yaml"
 	"golang.org/x/net/context/ctxhttp"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/secrets"
 	mrpb "google.golang.org/genproto/googleapis/api/monitoredres"
 )
@@ -47,11 +47,11 @@ func GetEnv(key, fallback string) string {
 // fallback value.
 // If the environment variable has a value but it can't be parsed as an integer,
 // GetEnvInt terminates the program.
-func GetEnvInt(key string, fallback int) int {
+func GetEnvInt(ctx context.Context, key string, fallback int) int {
 	if s, ok := os.LookupEnv(key); ok {
 		v, err := strconv.Atoi(s)
 		if err != nil {
-			log.Fatalf("bad value %q for %s: %v", s, key, err)
+			log.Fatalf(ctx, "bad value %q for %s: %v", s, key, err)
 		}
 		return v
 	}
@@ -372,7 +372,7 @@ func Init(ctx context.Context) (_ *Config, err error) {
 		RedisHAPort:          GetEnv("GO_DISCOVERY_REDIS_HA_PORT", "6379"),
 		Quota: QuotaSettings{
 			Enable:     os.Getenv("GO_DISCOVERY_ENABLE_QUOTA") == "true",
-			QPS:        GetEnvInt("GO_DISCOVERY_QUOTA_QPS", 10),
+			QPS:        GetEnvInt(ctx, "GO_DISCOVERY_QUOTA_QPS", 10),
 			Burst:      20,   // ignored in redis-based quota implementation
 			MaxEntries: 1000, // ignored in redis-based quota implementation
 			RecordOnly: func() *bool {
@@ -467,7 +467,7 @@ func Init(ctx context.Context) (_ *Config, err error) {
 		}
 		cfg.Quota.HMACKey = hmacKey
 	} else {
-		log.Print("quota enforcement disabled")
+		log.Debugf(ctx, "quota enforcement disabled")
 	}
 
 	// If the <env>-override.yaml file exists in the configured bucket, it
@@ -478,10 +478,10 @@ func Init(ctx context.Context) (_ *Config, err error) {
 		overrideObj := fmt.Sprintf("%s-override.yaml", cfg.DeploymentEnvironment())
 		overrideBytes, err := readOverrideFile(ctx, bucket, overrideObj)
 		if err != nil {
-			log.Print(err)
+			log.Error(ctx, err)
 		} else {
-			log.Printf("processing overrides from gs://%s/%s", bucket, overrideObj)
-			processOverrides(cfg, overrideBytes)
+			log.Infof(ctx, "processing overrides from gs://%s/%s", bucket, overrideObj)
+			processOverrides(ctx, cfg, overrideBytes)
 		}
 	}
 	return cfg, nil
@@ -503,39 +503,39 @@ func readOverrideFile(ctx context.Context, bucketName, objName string) (_ []byte
 	return ioutil.ReadAll(r)
 }
 
-func processOverrides(cfg *Config, bytes []byte) {
+func processOverrides(ctx context.Context, cfg *Config, bytes []byte) {
 	var ov configOverride
 	if err := yaml.Unmarshal(bytes, &ov); err != nil {
-		log.Printf("processOverrides: %v", err)
+		log.Errorf(ctx, "processOverrides: yaml.Unmarshal: %v", err)
 		return
 	}
-	overrideString("DBHost", &cfg.DBHost, ov.DBHost)
-	overrideString("DBSecondaryHost", &cfg.DBSecondaryHost, ov.DBSecondaryHost)
-	overrideString("DBName", &cfg.DBName, ov.DBName)
-	overrideInt("Quota.QPS", &cfg.Quota.QPS, ov.Quota.QPS)
-	overrideInt("Quota.Burst", &cfg.Quota.Burst, ov.Quota.Burst)
-	overrideInt("Quota.MaxEntries", &cfg.Quota.MaxEntries, ov.Quota.MaxEntries)
-	overrideBool("Quota.RecordOnly", &cfg.Quota.RecordOnly, ov.Quota.RecordOnly)
+	overrideString(ctx, "DBHost", &cfg.DBHost, ov.DBHost)
+	overrideString(ctx, "DBSecondaryHost", &cfg.DBSecondaryHost, ov.DBSecondaryHost)
+	overrideString(ctx, "DBName", &cfg.DBName, ov.DBName)
+	overrideInt(ctx, "Quota.QPS", &cfg.Quota.QPS, ov.Quota.QPS)
+	overrideInt(ctx, "Quota.Burst", &cfg.Quota.Burst, ov.Quota.Burst)
+	overrideInt(ctx, "Quota.MaxEntries", &cfg.Quota.MaxEntries, ov.Quota.MaxEntries)
+	overrideBool(ctx, "Quota.RecordOnly", &cfg.Quota.RecordOnly, ov.Quota.RecordOnly)
 }
 
-func overrideString(name string, field *string, val string) {
+func overrideString(ctx context.Context, name string, field *string, val string) {
 	if val != "" {
 		*field = val
-		log.Printf("overriding %s with %q", name, val)
+		log.Infof(ctx, "overriding %s with %q", name, val)
 	}
 }
 
-func overrideInt(name string, field *int, val int) {
+func overrideInt(ctx context.Context, name string, field *int, val int) {
 	if val != 0 {
 		*field = val
-		log.Printf("overriding %s with %d", name, val)
+		log.Debugf(ctx, "overriding %s with %d", name, val)
 	}
 }
 
-func overrideBool(name string, field **bool, val *bool) {
+func overrideBool(ctx context.Context, name string, field **bool, val *bool) {
 	if val != nil {
 		*field = val
-		log.Printf("overriding %s with %t", name, *val)
+		log.Debugf(ctx, "overriding %s with %t", name, *val)
 	}
 }
 
