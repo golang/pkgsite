@@ -8,7 +8,7 @@
 
 source devtools/lib.sh || { echo "Are you at repo root?"; exit 1; }
 
-docker-compose -f devtools/docker/docker-compose.yaml stop
-docker-compose -f devtools/docker/docker-compose.yaml down --remove-orphans
-docker-compose -f devtools/docker/docker-compose.yaml up -d db
-docker-compose -f devtools/docker/docker-compose.yaml run migrate
+docker-compose -f devtools/docker/compose.yaml stop
+docker-compose -f devtools/docker/compose.yaml down --remove-orphans
+docker-compose -f devtools/docker/compose.yaml up -d db
+docker-compose -f devtools/docker/compose.yaml run migrate

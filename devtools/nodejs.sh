@@ -10,4 +10,4 @@ set -e
 # It passes env variables for e2e tests,
 # mounts the pwd into a volume in the container at /pkgsite,
 # and sets the working directory in the container to /pkgsite.
-docker-compose -f devtools/docker/docker-compose.yaml run nodejs $@
+docker-compose -f devtools/docker/compose.yaml run nodejs $@

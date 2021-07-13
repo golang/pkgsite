@@ -5,28 +5,28 @@
 # license that can be found in the LICENSE file.
 
 cleanup() {
-  docker-compose -f devtools/docker/docker-compose.yaml down --remove-orphans
+  docker-compose -f devtools/docker/compose.yaml down --remove-orphans
 }
 
 error() {
   echo ""
   echo "---------- ERROR: docker-compose db logs ----------"
-  docker-compose -f devtools/docker/docker-compose.yaml logs db
+  docker-compose -f devtools/docker/compose.yaml logs db
   echo ""
   echo "---------- ERROR: docker-compose migrate logs ----------"
-  docker-compose -f devtools/docker/docker-compose.yaml logs migrate
+  docker-compose -f devtools/docker/compose.yaml logs migrate
   echo ""
   echo "---------- ERROR: docker-compose seeddb logs ----------"
-  docker-compose -f devtools/docker/docker-compose.yaml logs seeddb
+  docker-compose -f devtools/docker/compose.yaml logs seeddb
   echo ""
   echo "---------- ERROR: docker-compose frontend logs ----------"
-  docker-compose -f devtools/docker/docker-compose.yaml logs frontend
+  docker-compose -f devtools/docker/compose.yaml logs frontend
   echo ""
   echo "---------- ERROR: docker-compose chrome logs ----------"
-  docker-compose -f devtools/docker/docker-compose.yaml logs chrome
+  docker-compose -f devtools/docker/compose.yaml logs chrome
   echo ""
   echo "---------- ERROR: docker-compose e2e logs ----------"
-  docker-compose -f devtools/docker/docker-compose.yaml logs e2e
+  docker-compose -f devtools/docker/compose.yaml logs e2e
   cleanup
 }
 
@@ -42,9 +42,9 @@ main() {
   done
 
   export GO_DISCOVERY_SEED_DB_FILE=e2e_test_modules.txt
-  docker-compose -f devtools/docker/docker-compose.yaml build &&
-  docker-compose -f devtools/docker/docker-compose.yaml run seeddb &&
-  docker-compose -f devtools/docker/docker-compose.yaml run e2e $files $@
+  docker-compose -f devtools/docker/compose.yaml build &&
+  docker-compose -f devtools/docker/compose.yaml run seeddb &&
+  docker-compose -f devtools/docker/compose.yaml run e2e $files $@
 
   local status=$?
   if [ $status -eq 0 ]

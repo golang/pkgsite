@@ -20,7 +20,7 @@ For additional information on our architecture, see the
    `postgres`).
 
    ```
-   docker-compose -f devtools/docker/docker-compose.yaml up -d db
+   docker-compose -f devtools/docker/compose.yaml up -d db
    ```
 
    (NOTE: If you have already installed postgres on a workstation using
