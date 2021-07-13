@@ -121,8 +121,6 @@ services:
         - ${GO_DISCOVERY_DATABASE_PORT:-5432}:5432
   nodejs:
     image: node:14.17.0
-    depends_on:
-      - chrome
     environment:
       # Use the values set on the host machine environment.
       - CI
@@ -132,8 +130,6 @@ services:
       - GO_DISCOVERY_E2E_CHROME_URL=ws://chrome:${GO_DISCOVERY_E2E_TEST_PORT:-3000}
       - GO_DISCOVERY_E2E_QUOTA_BYPASS
       - PUPPETEER_SKIP_CHROMIUM_DOWNLOAD
-      - WAITFORIT_TIMEOUT=300
-    entrypoint: "./third_party/wait-for-it/wait-for-it.sh chrome:3000 -- "
     volumes:
       - ../../:/pkgsite
     working_dir: /pkgsite
