@@ -21,8 +21,8 @@ const e2e = process.argv.some(arg => arg.includes('e2e'));
 if (e2e) {
   config = {
     ...config,
-    setupFilesAfterEnv: ['<rootDir>/e2e/setup.ts'],
-    testEnvironment: '<rootDir>/e2e/test-environment.js',
+    setupFilesAfterEnv: ['<rootDir>/tests/e2e/setup.ts'],
+    testEnvironment: '<rootDir>/tests/e2e/test-environment.js',
     testTimeout: 60000,
   };
 }

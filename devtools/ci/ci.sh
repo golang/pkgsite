@@ -102,7 +102,7 @@ print_duration_and_reset
 echo "----------------------------------------"
 echo "Running e2e tests"
 echo "----------------------------------------"
-./devtools/run_e2e.sh
+./tests/e2e/run.sh
 print_duration_and_reset
 
 echo

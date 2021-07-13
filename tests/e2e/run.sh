@@ -36,7 +36,7 @@ main() {
 
   local files="e2e --runInBand"
   for arg in "$@"; do
-    if [[ $arg == e2e/* ]];then
+    if [[ $arg == * ]];then
       files=""
     fi
   done

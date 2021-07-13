@@ -65,8 +65,8 @@ adjustments are needed to prevent test flakiness. See the
 [API](https://github.com/americanexpress/jest-image-snapshot#%EF%B8%8F-api) for
 jest image snapshots for more information.
 
-These tests are in the [e2e/ directory](../e2e). For details, see
-[e2e/README.md](../e2e/README.md).
+These tests are in the [tests/e2e/ directory](../tests/e2e). For details, see
+[tests/README.md](../tests/README.md).
 
 ## Static Assets
 

@@ -1,16 +1,27 @@
-# End-to-End (E2E) Tests
+# Tests
 
-This directory contains end-to-end tests for pages on pkg.go.dev.
+The tests directory contains integration tests that require a pre-seeded
+database.
 
-## Running E2E Tests
+## Search Tests
+
+TODO(golang/go#44142): Add this section.
+
+
+## End-to-End (E2E) Tests
+
+Th e2e/ directory contains end-to-end tests for pages on pkg.go.dev, which can
+be run using e2e.sh.
+
+### Running E2E Tests
 
 In order to run the tests, run this command from the root of the repository:
 
 ```
-$ ./devtools/run_e2e.sh
+$ ./tests/e2e/run.sh
 ```
 
-`./devtools/run_e2e.sh` sets up a series of docker containers that run a postgres
+`./tests/e2e/run.sh` sets up a series of docker containers that run a postgres
 database, frontend, and headless chrome, and runs the e2e tests using headless
 chrome.
 

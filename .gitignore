@@ -43,4 +43,4 @@ __debug_bin
 node_modules
 
 #### E2E Test Output ####
-e2e/__image_snapshots__/__diff_output__
+tests/e2e/__image_snapshots__/__diff_output__
