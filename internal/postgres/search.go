@@ -96,6 +96,19 @@ var symbolSearchers = map[string]searcher{
 	"symbol": (*DB).symbolSearch,
 }
 
+type SearchOptions struct {
+	// Maximum number of results to return (page size).
+	MaxResults int
+	// Limit for the DB query; defaults to MaxResults.
+	Limit int
+	// Offset for DB query.
+	Offset int
+	// Maximum number to use for total result count.
+	MaxResultCount int
+	// If true, perform a symbol search.
+	SearchSymbols bool
+}
+
 // Search executes two search requests concurrently:
 //   - a sequential scan of packages in descending order of popularity.
 //   - all packages ("deep" search) using an inverted index to filter to search
@@ -119,26 +132,21 @@ var symbolSearchers = map[string]searcher{
 // The gap in this optimization is search terms that are very frequent, but
 // rarely relevant: "int" or "package", for example. In these cases we'll pay
 // the penalty of a deep search that scans nearly every package.
-func (db *DB) Search(ctx context.Context, q string, maxResults, offset, maxResultCount int, searchSymbols bool) (_ []*internal.SearchResult, err error) {
-	defer derrors.WrapStack(&err, "DB.Search(ctx, %q, %d, %d)", q, maxResults, offset)
-
-	limit := maxResults
-	if experiment.IsActive(ctx, internal.ExperimentSearchGrouping) {
-		// Gather extra results for better grouping by module and series.
-		// Since deep search is using incremental querying, we can make this large.
-		// TODO(jba): For performance, modify the popular_search stored procedure.
-		limit *= 100
+func (db *DB) Search(ctx context.Context, q string, opts SearchOptions) (_ []*internal.SearchResult, err error) {
+	defer derrors.WrapStack(&err, "DB.Search(ctx, %q, %+v)", q, opts)
+	if opts.Limit == 0 {
+		opts.Limit = opts.MaxResults
 	}
 
 	var searchers map[string]searcher
-	if searchSymbols &&
+	if opts.SearchSymbols &&
 		experiment.IsActive(ctx, internal.ExperimentSearchGrouping) &&
 		experiment.IsActive(ctx, internal.ExperimentSymbolSearch) {
 		searchers = symbolSearchers
 	} else {
 		searchers = pkgSearchers
 	}
-	resp, err := db.hedgedSearch(ctx, q, limit, offset, maxResultCount, searchers, nil)
+	resp, err := db.hedgedSearch(ctx, q, opts.Limit, opts.Offset, opts.MaxResultCount, searchers, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -153,11 +161,11 @@ func (db *DB) Search(ctx context.Context, q string, maxResults, offset, maxResul
 			results = append(results, r)
 		}
 	}
-	if experiment.IsActive(ctx, internal.ExperimentSearchGrouping) && !searchSymbols {
+	if experiment.IsActive(ctx, internal.ExperimentSearchGrouping) && !opts.SearchSymbols {
 		results = groupSearchResults(results)
 	}
-	if len(results) > maxResults {
-		results = results[:maxResults]
+	if len(results) > opts.MaxResults {
+		results = results[:opts.MaxResults]
 	}
 	return results, nil
 }
@@ -300,7 +308,7 @@ func (db *DB) deepSearch(ctx context.Context, q string, limit, offset, maxResult
 			}
 			return nil
 		}
-		const fetchSize = 10 // number of rows to fetch at a time
+		const fetchSize = 20 // number of rows to fetch at a time
 		err = db.db.RunQueryIncrementally(ctx, query, fetchSize, collect, q, limit, offset)
 	} else {
 		collect := func(rows *sql.Rows) error {

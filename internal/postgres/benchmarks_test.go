@@ -43,14 +43,14 @@ func BenchmarkSearch(b *testing.B) {
 		b.Fatal(err)
 	}
 	db := New(ddb)
-	searchers := map[string]func(context.Context, string, int, int, int, bool) ([]*internal.SearchResult, error){
+	searchers := map[string]func(context.Context, string, SearchOptions) ([]*internal.SearchResult, error){
 		"db.Search": db.Search,
 	}
 	for name, search := range searchers {
 		for _, query := range testQueries {
 			b.Run(name+":"+query, func(b *testing.B) {
 				for i := 0; i < b.N; i++ {
-					if _, err := search(ctx, query, 10, 0, 100, false); err != nil {
+					if _, err := search(ctx, query, SearchOptions{MaxResults: 10, MaxResultCount: 100}); err != nil {
 						b.Fatal(err)
 					}
 				}

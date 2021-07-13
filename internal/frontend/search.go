@@ -68,7 +68,12 @@ type subResult struct {
 func fetchSearchPage(ctx context.Context, db *postgres.DB, query string, pageParams paginationParams, searchSymbols bool) (*SearchPage, error) {
 	maxResultCount := maxSearchOffset + pageParams.limit
 
-	dbresults, err := db.Search(ctx, query, pageParams.limit, pageParams.offset(), maxResultCount, searchSymbols)
+	dbresults, err := db.Search(ctx, query, postgres.SearchOptions{
+		MaxResults:     pageParams.limit,
+		Offset:         pageParams.offset(),
+		MaxResultCount: maxResultCount,
+		SearchSymbols:  searchSymbols,
+	})
 	if err != nil {
 		return nil, err
 	}

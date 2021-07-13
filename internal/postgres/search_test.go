@@ -661,7 +661,7 @@ func TestExcludedFromSearch(t *testing.T) {
 		t.Fatal(err)
 	}
 	// Search for both packages.
-	gotResults, err := testDB.Search(ctx, domain, 10, 0, 100, false)
+	gotResults, err := testDB.Search(ctx, domain, SearchOptions{MaxResults: 10})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -693,7 +693,7 @@ func TestSearchBypass(t *testing.T) {
 		{testDB, true},
 		{bypassDB, false},
 	} {
-		rs, err := test.db.Search(ctx, m.ModulePath, 10, 0, 100, false)
+		rs, err := test.db.Search(ctx, m.ModulePath, SearchOptions{MaxResults: 10})
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -719,7 +719,7 @@ func TestSearchLicenseDedup(t *testing.T) {
 		},
 	})
 	MustInsertModule(ctx, t, testDB, m)
-	got, err := testDB.Search(ctx, m.ModulePath, 10, 0, 100, false)
+	got, err := testDB.Search(ctx, m.ModulePath, SearchOptions{MaxResults: 10})
 	if err != nil {
 		t.Fatal(err)
 	}
