@@ -250,8 +250,10 @@ func (db *DB) hedgedSearch(ctx context.Context, q string, limit, offset, maxResu
 	// search_documents table and we enrich after getting the results. In the
 	// future, we may want to fully denormalize and put all search data in the
 	// search_documents table.
-	if err := db.addPackageDataToSearchResults(ctx, resp.results); err != nil {
-		return nil, err
+	if _, ok := searchers["symbol"]; !ok {
+		if err := db.addPackageDataToSearchResults(ctx, resp.results); err != nil {
+			return nil, err
+		}
 	}
 	return &resp, nil
 }

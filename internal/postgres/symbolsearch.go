@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/lib/pq"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/derrors"
@@ -80,13 +81,16 @@ func (db *DB) symbolSearch(ctx context.Context, q string, limit, offset, maxResu
 	query := fmt.Sprintf(`
 		SELECT
 			package_path,
-			version,
 			module_path,
+			version,
+			name,
+			synopsis,
+			license_types,
 			commit_time,
 			imported_by_count,
 			symbol_name,
 		    type,
-		    synopsis,
+		    symbol_synopsis,
 		    goos,
 		    goarch,
 			COUNT(*) OVER() AS total
@@ -95,12 +99,15 @@ func (db *DB) symbolSearch(ctx context.Context, q string, limit, offset, maxResu
 				DISTINCT ON (s.name, sd.package_path)
 				s.name AS symbol_name,
 				sd.package_path,
-				sd.version,
 				sd.module_path,
+				sd.version,
+			    sd.name,
+			    sd.synopsis,
+			    sd.license_types,
 				sd.commit_time,
 				sd.imported_by_count,
 				ps.type,
-				ps.synopsis,
+				ps.synopsis AS symbol_synopsis,
 				d.goos,
 				d.goarch,
 				(%s) AS score
@@ -139,8 +146,11 @@ func (db *DB) symbolSearch(ctx context.Context, q string, limit, offset, maxResu
 		var r internal.SearchResult
 		if err := rows.Scan(
 			&r.PackagePath,
-			&r.Version,
 			&r.ModulePath,
+			&r.Version,
+			&r.Name,
+			&r.Synopsis,
+			pq.Array(&r.Licenses),
 			&r.CommitTime,
 			&r.NumImportedBy,
 			&r.SymbolName,
