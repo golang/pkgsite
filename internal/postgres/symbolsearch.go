@@ -34,40 +34,49 @@ func upsertSymbolSearchDocuments(ctx context.Context, tx *database.DB,
 	// "DB.Begin", "Begin", and "sql.DB.Begin". Searching for "sql.DB" or
 	// "DB" will not return "DB.Begin".
 	q := `
-		INSERT INTO symbol_search_documents
-		(package_path_id, symbol_name_id, unit_id, tsv_symbol_tokens)
-			SELECT
-				u.path_id,
-				s.id,
-				u.id,` +
-		// Index <package>.<identifier> (i.e. "sql.DB.Begin")
-		symbolSetWeight("concat(s.name, ' ', concat(u.name, '.', s.name))", "A") + " || " +
-		// Index <identifier>, including the parent name (i.e. DB.Begin).
-		symbolSetWeight("s.name", "A") + " || " +
-		// Index <identifier> without parent name (i.e. "Begin").
-		//
-		// This is weighted less, so that if other symbols are just named
-		// "Begin" they will rank higher in a search for "Begin".
-		symbolSetWeight("split_part(s.name, '.', 2)", "C") +
-		// TODO(https://golang.org/issue/44142): allow searching for "A_B" when
-		// querying for either "A" or "B", but at a lower rank.
-		`
-		FROM symbol_names s
-		INNER JOIN package_symbols ps ON s.id = ps.symbol_name_id
-		INNER JOIN documentation_symbols ds ON ps.id = ds.package_symbol_id
-		INNER JOIN documentation d ON d.id = ds.documentation_id
-		INNER JOIN units u ON u.id = d.unit_id
-		INNER JOIN search_documents sd ON sd.unit_id = u.id
-		WHERE sd.module_path = $1 AND sd.version = $2` +
-		// The GROUP BY is necessary because a row will be returned for each
-		// build context that the package supports. In case there are
-		// duplicates, we only care about an individual (unit, symbol) combo.
-		`
-		GROUP BY s.id, u.id, u.path_id
+		INSERT INTO symbol_search_documents (
+			package_path_id,
+			symbol_name_id,
+			unit_id,
+			package_symbol_id,
+			goos,
+			goarch
+		)
+		SELECT DISTINCT ON (sd.package_path_id, ps.symbol_name_id)
+			sd.package_path_id,
+			ps.symbol_name_id,
+			sd.unit_id,
+			ps.id AS package_symbol_id,
+			d.goos,
+			d.goarch
+		FROM search_documents sd
+		INNER JOIN units u
+			ON sd.unit_id = u.id
+		INNER JOIN documentation d
+			ON d.unit_id = sd.unit_id
+		INNER JOIN documentation_symbols ds
+			ON d.id = ds.documentation_id
+		INNER JOIN package_symbols ps
+			ON ps.id = ds.package_symbol_id
+		WHERE
+			sd.module_path = $1 AND sd.version = $2
+			AND u.name != 'main' -- do not insert data for commands
+		ORDER BY
+			sd.package_path_id,
+			ps.symbol_name_id,
+			-- Order should match internal.BuildContexts.
+			CASE WHEN d.goos = 'all' THEN 0
+			WHEN d.goos = 'linux' THEN 1
+			WHEN d.goos = 'windows' THEN 2
+			WHEN d.goos = 'darwin' THEN 3
+			WHEN d.goos = 'js' THEN 4
+			END
 		ON CONFLICT (package_path_id, symbol_name_id)
 		DO UPDATE SET
-			unit_id=excluded.unit_id,
-			tsv_symbol_tokens=excluded.tsv_symbol_tokens`
+			unit_id = excluded.unit_id,
+			package_symbol_id = excluded.package_symbol_id,
+			goos = excluded.goos,
+			goarch = excluded.goarch;`
 	_, err = tx.Exec(ctx, q, modulePath, v)
 	return err
 }
@@ -198,11 +207,6 @@ func processSymbol(s string) string {
 }
 
 var symbolToTSQuery = fmt.Sprintf("to_tsquery('%s', %s)", symbolTextSearchConfiguration, processSymbol("$1"))
-
-func symbolSetWeight(s, w string) string {
-	return fmt.Sprintf("SETWEIGHT(TO_TSVECTOR('%s', %s), '%s')",
-		symbolTextSearchConfiguration, processSymbol(s), w)
-}
 
 var symbolScoreExpr = fmt.Sprintf(`
 		ts_rank('{0.1, 0.2, 1.0, 1.0}', ssd.tsv_symbol_tokens, `+symbolToTSQuery+`) *
