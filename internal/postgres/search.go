@@ -65,7 +65,7 @@ type searchResponse struct {
 	// 'popular'), to be used in logging and reporting.
 	source string
 	// results are partially filled out from only the search_documents table.
-	results []*internal.SearchResult
+	results []*SearchResult
 	// err indicates a technical failure of the search query, or that results are
 	// not provably complete.
 	err error
@@ -109,6 +109,54 @@ type SearchOptions struct {
 	SearchSymbols bool
 }
 
+// SearchResult represents a single search result from SearchDocuments.
+type SearchResult struct {
+	Name        string
+	PackagePath string
+	ModulePath  string
+	Version     string
+	Synopsis    string
+	Licenses    []string
+
+	CommitTime time.Time
+
+	// Score is used to sort items in an array of SearchResult.
+	Score float64
+
+	// NumImportedBy is the number of packages that import PackagePath.
+	NumImportedBy uint64
+
+	// SameModule is a list of SearchResults from the same module as this one,
+	// with lower scores.
+	SameModule []*SearchResult
+
+	// OtherMajor is a set of module paths with the same series path but at
+	// different major versions of this module.
+	OtherMajor map[string]bool
+
+	// NumResults is the total number of packages that were returned for this
+	// search.
+	NumResults uint64
+
+	// Approximate reports whether NumResults is an approximate count. NumResults
+	// can be approximate if search scanned only a subset of documents, and
+	// result count is estimated using the hyperloglog algorithm.
+	Approximate bool
+
+	// Symbol information returned by a search request.
+	// Only populated for symbol search mode.
+	SymbolName     string
+	SymbolKind     internal.SymbolKind
+	SymbolSynopsis string
+	SymbolGOOS     string
+	SymbolGOARCH   string
+
+	// Offset is the 0-based number of this row in the DB query results, which
+	// is the value to use in a SQL OFFSET clause to have this row be the first
+	// one returned.
+	Offset int
+}
+
 // Search executes two search requests concurrently:
 //   - a sequential scan of packages in descending order of popularity.
 //   - all packages ("deep" search) using an inverted index to filter to search
@@ -132,7 +180,7 @@ type SearchOptions struct {
 // The gap in this optimization is search terms that are very frequent, but
 // rarely relevant: "int" or "package", for example. In these cases we'll pay
 // the penalty of a deep search that scans nearly every package.
-func (db *DB) Search(ctx context.Context, q string, opts SearchOptions) (_ []*internal.SearchResult, err error) {
+func (db *DB) Search(ctx context.Context, q string, opts SearchOptions) (_ []*SearchResult, err error) {
 	defer derrors.WrapStack(&err, "DB.Search(ctx, %q, %+v)", q, opts)
 	if opts.Limit == 0 {
 		opts.Limit = opts.MaxResults
@@ -151,7 +199,7 @@ func (db *DB) Search(ctx context.Context, q string, opts SearchOptions) (_ []*in
 		return nil, err
 	}
 	// Filter out excluded paths.
-	var results []*internal.SearchResult
+	var results []*SearchResult
 	for _, r := range resp.results {
 		ex, err := db.IsExcluded(ctx, r.PackagePath)
 		if err != nil {
@@ -286,7 +334,7 @@ func (db *DB) deepSearch(ctx context.Context, q string, limit, offset, maxResult
 		OFFSET $3`, scoreExpr)
 
 	var (
-		results []*internal.SearchResult
+		results []*SearchResult
 		err     error
 	)
 	if experiment.IsActive(ctx, internal.ExperimentSearchIncrementally) {
@@ -294,7 +342,7 @@ func (db *DB) deepSearch(ctx context.Context, q string, limit, offset, maxResult
 		const pageSize = 10  // TODO(jba): get from elsewhere
 		additionalRows := 10 // after reaching pageSize module paths
 		collect := func(rows *sql.Rows) error {
-			var r internal.SearchResult
+			var r SearchResult
 			if err := rows.Scan(&r.PackagePath, &r.Version, &r.ModulePath, &r.CommitTime,
 				&r.NumImportedBy, &r.Score, &r.NumResults); err != nil {
 				return fmt.Errorf("rows.Scan(): %v", err)
@@ -314,7 +362,7 @@ func (db *DB) deepSearch(ctx context.Context, q string, limit, offset, maxResult
 		err = db.db.RunQueryIncrementally(ctx, query, fetchSize, collect, q, limit, offset)
 	} else {
 		collect := func(rows *sql.Rows) error {
-			var r internal.SearchResult
+			var r SearchResult
 			if err := rows.Scan(&r.PackagePath, &r.Version, &r.ModulePath, &r.CommitTime,
 				&r.NumImportedBy, &r.Score, &r.NumResults); err != nil {
 				return fmt.Errorf("rows.Scan(): %v", err)
@@ -352,9 +400,9 @@ func (db *DB) popularSearch(ctx context.Context, searchQuery string, limit, offs
 			imported_by_count,
 			score
 		FROM popular_search($1, $2, $3, $4, $5)`
-	var results []*internal.SearchResult
+	var results []*SearchResult
 	collect := func(rows *sql.Rows) error {
-		var r internal.SearchResult
+		var r SearchResult
 		if err := rows.Scan(&r.PackagePath, &r.Version, &r.ModulePath, &r.CommitTime,
 			&r.NumImportedBy, &r.Score); err != nil {
 			return fmt.Errorf("rows.Scan(): %v", err)
@@ -387,7 +435,7 @@ func (db *DB) popularSearch(ctx context.Context, searchQuery string, limit, offs
 
 // addPackageDataToSearchResults adds package information to SearchResults that is not stored
 // in the search_documents table.
-func (db *DB) addPackageDataToSearchResults(ctx context.Context, results []*internal.SearchResult) (err error) {
+func (db *DB) addPackageDataToSearchResults(ctx context.Context, results []*SearchResult) (err error) {
 	defer derrors.WrapStack(&err, "DB.addPackageDataToSearchResults(results)")
 	if len(results) == 0 {
 		return nil
@@ -396,7 +444,7 @@ func (db *DB) addPackageDataToSearchResults(ctx context.Context, results []*inte
 		keys []string
 		// resultMap tracks PackagePath->SearchResult, to allow joining with the
 		// returned package data.
-		resultMap = make(map[string]*internal.SearchResult)
+		resultMap = make(map[string]*SearchResult)
 	)
 	for _, r := range results {
 		resultMap[r.PackagePath] = r
@@ -476,10 +524,10 @@ func sortAndDedup(s []string) []string {
 // Packages from lower major versions of the module are grouped under the first
 // package of the highest major version. But they are not removed from the
 // top-level list.
-func groupSearchResults(rs []*internal.SearchResult) []*internal.SearchResult {
-	modules := map[string]*internal.SearchResult{} // module path to first result
-	series := map[string]*internal.SearchResult{}  // series path to result with max major version
-	var results []*internal.SearchResult
+func groupSearchResults(rs []*SearchResult) []*SearchResult {
+	modules := map[string]*SearchResult{} // module path to first result
+	series := map[string]*SearchResult{}  // series path to result with max major version
+	var results []*SearchResult
 	for _, r := range rs {
 		f := modules[r.ModulePath]
 		if f == nil {

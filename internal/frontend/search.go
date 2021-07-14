@@ -160,7 +160,7 @@ func approximateNumber(estimate int, sigma float64) int {
 	return int(unit * math.Round(float64(estimate)/unit))
 }
 
-func packagePaths(heading string, rs []*internal.SearchResult, max int) *subResult {
+func packagePaths(heading string, rs []*postgres.SearchResult, max int) *subResult {
 	if len(rs) == 0 {
 		return nil
 	}

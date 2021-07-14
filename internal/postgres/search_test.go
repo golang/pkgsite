@@ -590,8 +590,8 @@ func TestInsertSearchDocumentAndSearch(t *testing.T) {
 			}},
 		}
 
-		kubeResult = func(score float64, numResults uint64) *internal.SearchResult {
-			return &internal.SearchResult{
+		kubeResult = func(score float64, numResults uint64) *SearchResult {
+			return &SearchResult{
 				Name:        pkgKube.Name,
 				PackagePath: pkgKube.Path,
 				Synopsis:    pkgKube.Documentation[0].Synopsis,
@@ -604,8 +604,8 @@ func TestInsertSearchDocumentAndSearch(t *testing.T) {
 			}
 		}
 
-		goCDKResult = func(score float64, numResults uint64) *internal.SearchResult {
-			return &internal.SearchResult{
+		goCDKResult = func(score float64, numResults uint64) *SearchResult {
+			return &SearchResult{
 				Name:        pkgGoCDK.Name,
 				PackagePath: pkgGoCDK.Path,
 				Synopsis:    pkgGoCDK.Documentation[0].Synopsis,
@@ -618,7 +618,7 @@ func TestInsertSearchDocumentAndSearch(t *testing.T) {
 			}
 		}
 
-		offset = func(r *internal.SearchResult, n int) *internal.SearchResult {
+		offset = func(r *SearchResult, n int) *SearchResult {
 			r.Offset = n
 			return r
 		}
@@ -635,7 +635,7 @@ func TestInsertSearchDocumentAndSearch(t *testing.T) {
 		packages      map[string]*internal.Unit
 		limit, offset int
 		searchQuery   string
-		want          []*internal.SearchResult
+		want          []*SearchResult
 	}{
 		{
 			name:        "two documents, single term search",
@@ -644,7 +644,7 @@ func TestInsertSearchDocumentAndSearch(t *testing.T) {
 				modGoCDK: pkgGoCDK,
 				modKube:  pkgKube,
 			},
-			want: []*internal.SearchResult{
+			want: []*SearchResult{
 				goCDKResult(packageScore, 2),
 				offset(kubeResult(packageScore, 2), 1),
 			},
@@ -658,7 +658,7 @@ func TestInsertSearchDocumentAndSearch(t *testing.T) {
 				modKube:  pkgKube,
 				modGoCDK: pkgGoCDK,
 			},
-			want: []*internal.SearchResult{
+			want: []*SearchResult{
 				goCDKResult(packageScore, 2),
 			},
 		},
@@ -671,7 +671,7 @@ func TestInsertSearchDocumentAndSearch(t *testing.T) {
 				modGoCDK: pkgGoCDK,
 				modKube:  pkgKube,
 			},
-			want: []*internal.SearchResult{
+			want: []*SearchResult{
 				offset(kubeResult(packageScore, 2), 1),
 			},
 		},
@@ -682,7 +682,7 @@ func TestInsertSearchDocumentAndSearch(t *testing.T) {
 				modGoCDK: pkgGoCDK,
 				modKube:  pkgKube,
 			},
-			want: []*internal.SearchResult{
+			want: []*SearchResult{
 				goCDKResult(goAndCDKScore, 1),
 			},
 		},
@@ -692,7 +692,7 @@ func TestInsertSearchDocumentAndSearch(t *testing.T) {
 			packages: map[string]*internal.Unit{
 				modGoCDK: pkgGoCDK,
 			},
-			want: []*internal.SearchResult{
+			want: []*SearchResult{
 				goCDKResult(cloudScore, 1),
 			},
 		},
@@ -726,7 +726,7 @@ func TestInsertSearchDocumentAndSearch(t *testing.T) {
 				}
 
 				// The searchers differ in these two fields.
-				opt := cmpopts.IgnoreFields(internal.SearchResult{}, "Approximate", "NumResults")
+				opt := cmpopts.IgnoreFields(SearchResult{}, "Approximate", "NumResults")
 				if diff := cmp.Diff(test.want, got.results, opt); diff != "" {
 					t.Errorf("testDB.Search(%v, %d, %d) mismatch (-want +got):\n%s", test.searchQuery, test.limit, test.offset, diff)
 				}
@@ -1353,7 +1353,7 @@ func TestDeleteOlderVersionFromSearch(t *testing.T) {
 }
 
 func TestGroupSearchResults(t *testing.T) {
-	rs := []*internal.SearchResult{
+	rs := []*SearchResult{
 		{PackagePath: "m.com/p", ModulePath: "m.com", Score: 10},
 		{PackagePath: "m.com/p2", ModulePath: "m.com", Score: 8},
 		{PackagePath: "a.com/p", ModulePath: "a.com", Score: 7},
@@ -1361,23 +1361,23 @@ func TestGroupSearchResults(t *testing.T) {
 		{PackagePath: "m.com/v2/p2", ModulePath: "m.com/v2", Score: 4},
 	}
 	got := groupSearchResults(rs)
-	sp2 := &internal.SearchResult{
+	sp2 := &SearchResult{
 		PackagePath: "m.com/p2",
 		ModulePath:  "m.com",
 		Score:       8,
 	}
-	sp := &internal.SearchResult{
+	sp := &SearchResult{
 		PackagePath: "m.com/p",
 		ModulePath:  "m.com",
 		Score:       10,
-		SameModule:  []*internal.SearchResult{sp2},
+		SameModule:  []*SearchResult{sp2},
 	}
-	want := []*internal.SearchResult{
+	want := []*SearchResult{
 		{
 			PackagePath: "m.com/v2/p",
 			ModulePath:  "m.com/v2",
 			Score:       10.00001,
-			SameModule: []*internal.SearchResult{
+			SameModule: []*SearchResult{
 				{PackagePath: "m.com/v2/p2", ModulePath: "m.com/v2", Score: 4},
 			},
 			OtherMajor: map[string]bool{"m.com": true},

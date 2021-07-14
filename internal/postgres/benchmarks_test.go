@@ -8,7 +8,6 @@ import (
 	"context"
 	"testing"
 
-	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/config"
 	"golang.org/x/pkgsite/internal/database"
 )
@@ -43,7 +42,7 @@ func BenchmarkSearch(b *testing.B) {
 		b.Fatal(err)
 	}
 	db := New(ddb)
-	searchers := map[string]func(context.Context, string, SearchOptions) ([]*internal.SearchResult, error){
+	searchers := map[string]func(context.Context, string, SearchOptions) ([]*SearchResult, error){
 		"db.Search": db.Search,
 	}
 	for name, search := range searchers {

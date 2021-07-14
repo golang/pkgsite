@@ -25,11 +25,11 @@ func TestSymbolSearch(t *testing.T) {
 	m.Packages()[0].Documentation[0].API = sample.API
 	MustInsertModule(ctx, t, testDB, m)
 
-	checkResult := func(metas ...internal.SymbolMeta) []*internal.SearchResult {
-		var results []*internal.SearchResult
+	checkResult := func(metas ...internal.SymbolMeta) []*SearchResult {
+		var results []*SearchResult
 		for _, sm := range metas {
 			results = append(results,
-				&internal.SearchResult{
+				&SearchResult{
 					Name:           sample.PackageName,
 					PackagePath:    sample.PackagePath,
 					ModulePath:     sample.ModulePath,
@@ -50,7 +50,7 @@ func TestSymbolSearch(t *testing.T) {
 	for _, test := range []struct {
 		name string
 		q    string
-		want []*internal.SearchResult
+		want []*SearchResult
 	}{
 		{
 			name: "test search by <package>.<identifier>",

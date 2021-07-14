@@ -141,9 +141,9 @@ func (db *DB) symbolSearch(ctx context.Context, q string, limit, offset, maxResu
 		LIMIT $2
 		OFFSET $3`, symbolScoreExpr)
 
-	var results []*internal.SearchResult
+	var results []*SearchResult
 	collect := func(rows *sql.Rows) error {
-		var r internal.SearchResult
+		var r SearchResult
 		if err := rows.Scan(
 			&r.PackagePath,
 			&r.ModulePath,
