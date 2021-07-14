@@ -5,6 +5,7 @@
 package postgres
 
 import (
+	"context"
 	"testing"
 
 	"golang.org/x/pkgsite/internal/testing/sample"
@@ -45,5 +46,28 @@ func TestShouldUpdateSymbolHistory(t *testing.T) {
 					testSym, sample.VersionString, test.oldHist, got, test.want)
 			}
 		})
+	}
+}
+
+func TestTableExists(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testDB, release := acquire(t)
+	defer release()
+
+	for _, test := range []struct {
+		table string
+		want  bool
+	}{
+		{"units", true},
+		{"no_such_table", false},
+	} {
+		got, err := tableExists(ctx, testDB.Underlying(), test.table)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got != test.want {
+			t.Errorf("%s: got %t, want %t", test.table, got, test.want)
+		}
 	}
 }

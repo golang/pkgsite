@@ -107,6 +107,13 @@ func upsertSymbolHistory(ctx context.Context, ddb *database.DB,
 						continue
 					}
 				}
+				// Only insert if the table exists.
+				// TODO(jba): remove after new_symbol_history is renamed to symbol_history.
+				if exists, err := tableExists(ctx, ddb, table); err != nil {
+					return err
+				} else if !exists {
+					continue
+				}
 				if err := ddb.BulkInsert(ctx, table, cols, values,
 					fmt.Sprintf(`ON CONFLICT (package_path_id, module_path_id, symbol_name_id, goos, goarch)
 				DO UPDATE
@@ -128,6 +135,15 @@ func upsertSymbolHistory(ctx context.Context, ddb *database.DB,
 		}
 	}
 	return nil
+}
+
+// tableExists reports whether the table with the given name exists in the database.
+func tableExists(ctx context.Context, ddb *database.DB, table string) (bool, error) {
+	var x *string
+	if err := ddb.QueryRow(ctx, `SELECT to_regclass($1)`, table).Scan(&x); err != nil {
+		return false, err
+	}
+	return x != nil, nil
 }
 
 func appendSymbolHistoryRow(sm *internal.SymbolMeta, values []interface{},
