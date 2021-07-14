@@ -585,7 +585,11 @@ var upsertSearchStatement = fmt.Sprintf(`
 		version_updated_at,
 		commit_time,
 		has_go_mod,
+		-- TODO(https://golang.org/issue/44142): The path_tokens column is used
+		-- to easily iterate on tsv_path_tokens, and can be removed once
+		-- symbol search implementation is done.
 		path_tokens,
+		tsv_path_tokens,
 		tsv_search_tokens,
 		hll_register,
 		hll_leading_zeros
@@ -605,6 +609,7 @@ var upsertSearchStatement = fmt.Sprintf(`
 		m.commit_time,
 		m.has_go_mod,
 		$4,
+		SETWEIGHT(TO_TSVECTOR('symbols', $4), 'A'),
 		(
 			SETWEIGHT(TO_TSVECTOR('path_tokens', $4), 'A') ||
 			SETWEIGHT(TO_TSVECTOR($5), 'B') ||
@@ -636,6 +641,7 @@ var upsertSearchStatement = fmt.Sprintf(`
 		commit_time=excluded.commit_time,
 		has_go_mod=excluded.has_go_mod,
 		path_tokens=excluded.path_tokens,
+		tsv_path_tokens=excluded.tsv_path_tokens,
 		tsv_search_tokens=excluded.tsv_search_tokens,
 		-- the hll fields are functions of path, so they don't change
 		version_updated_at=(
