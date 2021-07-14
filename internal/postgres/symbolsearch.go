@@ -187,7 +187,7 @@ func (db *DB) symbolSearch(ctx context.Context, q string, limit, offset, maxResu
 
 // symbolTextSearchConfiguration is the search configuration that is used for
 // indexing and searching for symbols.
-const symbolTextSearchConfiguration = "simple"
+const symbolTextSearchConfiguration = "symbols"
 
 // processSymbol converts a symbol with underscores to slashes (for example,
 // "A_B" -> "A/B"). This is because the postgres parser treats underscores as
