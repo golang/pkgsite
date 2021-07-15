@@ -269,6 +269,9 @@ type basePage struct {
 	// Enables the two and three column layouts on the unit page.
 	UseResponsiveLayout bool
 
+	// Enables the dark theme.
+	UseDarkTheme bool
+
 	// UseSiteWrapper indicates whether the page content should be wrapped in the
 	// Site class. This is only used for unit pages until the migration to the new
 	// layout base page is completed.
@@ -296,8 +299,16 @@ func (s *Server) licensePolicyHandler() http.HandlerFunc {
 	})
 }
 
+// prefersColorScheme indicates that the server should render the dark theme.
+const prefersColorScheme = "prefers-color-scheme"
+
 // newBasePage returns a base page for the given request and title.
 func (s *Server) newBasePage(r *http.Request, title string) basePage {
+	c, err := r.Cookie(prefersColorScheme)
+	if err != nil && err != http.ErrNoCookie {
+		// Logging this error, it should not prevent the page from being served.
+		log.Errorf(r.Context(), "s.newBasePage(%q): %v", prefersColorScheme, err)
+	}
 	return basePage{
 		HTMLTitle:          title,
 		Query:              searchQuery(r),
@@ -306,6 +317,7 @@ func (s *Server) newBasePage(r *http.Request, title string) basePage {
 		AppVersionLabel:    s.appVersionLabel,
 		GoogleTagManagerID: s.googleTagManagerID,
 		SearchMode:         "packages",
+		UseDarkTheme:       c != nil && c.Value == "dark",
 	}
 }
 
