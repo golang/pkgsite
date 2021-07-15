@@ -1069,8 +1069,9 @@ func (db *DB) DeleteOlderVersionFromSearchDocuments(ctx context.Context, moduleP
 		}
 
 		// Delete all of those paths.
-		q := fmt.Sprintf(`DELETE FROM search_documents WHERE package_path IN ('%s')`, strings.Join(ppaths, `', '`))
-		n, err := tx.Exec(ctx, q)
+		q := fmt.Sprintf(`DELETE FROM search_documents WHERE module_path = $1 AND package_path IN ('%s')`,
+			strings.Join(ppaths, `', '`))
+		n, err := tx.Exec(ctx, q, modulePath)
 		if err != nil {
 			return err
 		}
