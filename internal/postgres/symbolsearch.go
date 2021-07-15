@@ -125,11 +125,11 @@ func (db *DB) symbolSearch(ctx context.Context, q string, limit, offset, maxResu
 		`ORDER BY
 				symbol_name,
 				package_path,
-				CASE WHEN goos = 'all' THEN 0
-					 WHEN goos = 'linux' THEN 1
-					 WHEN goos = 'windows' THEN 2
-					 WHEN goos = 'darwin' THEN 3
-					 WHEN goos = 'js' THEN 4
+				CASE WHEN d.goos = 'all' THEN 0
+					 WHEN d.goos = 'linux' THEN 1
+					 WHEN d.goos = 'windows' THEN 2
+					 WHEN d.goos = 'darwin' THEN 3
+					 WHEN d.goos = 'js' THEN 4
 					 END
 		) r
 		WHERE r.score > 0.1
