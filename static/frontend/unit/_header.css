@@ -4,11 +4,16 @@
  * license that can be found in the LICENSE file.
  */
 
+.UnitHeader-titleHeading {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .UnitHeader-overflowContainer {
   display: none;
   height: 1.5rem;
   position: absolute;
-  right: 1rem;
+  right: 0;
   width: 1.5rem;
 }
 .go-Main-header[data-fixed] .UnitHeader-overflowContainer {

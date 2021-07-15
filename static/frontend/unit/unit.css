@@ -106,6 +106,13 @@
   display: flex;
   gap: 0.5rem;
   height: 3.5rem;
+  max-width: 100%;
+  padding-right: 1.5rem;
+}
+@media screen and (min-width: 80rem) {
+  .go-Main-headerTitle[data-fixed] {
+    max-width: 40%;
+  }
 }
 .go-Main-headerTitle .go-Clipboard {
   display: none;
