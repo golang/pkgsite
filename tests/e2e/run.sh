@@ -13,9 +13,6 @@ error() {
   echo "---------- ERROR: docker-compose db logs ----------"
   docker-compose -f devtools/docker/compose.yaml logs db
   echo ""
-  echo "---------- ERROR: docker-compose migrate logs ----------"
-  docker-compose -f devtools/docker/compose.yaml logs migrate
-  echo ""
   echo "---------- ERROR: docker-compose seeddb logs ----------"
   docker-compose -f devtools/docker/compose.yaml logs seeddb
   echo ""

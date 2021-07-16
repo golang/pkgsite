@@ -51,9 +51,10 @@ services:
      # This should match the version we are using on AppEngine.
     image: golang:1.15.5
     depends_on:
-      - migrate
+      - db
     command: bash -c "
         ./third_party/wait-for-it/wait-for-it.sh db:5432 --
+          go run ./devtools/cmd/db/main.go migrate &&
           go run ./cmd/frontend -host=0.0.0.0:8080"
     environment:
       - GO_DISCOVERY_DATABASE_HOST=db
@@ -73,12 +74,13 @@ services:
      # This should match the version we are using on AppEngine.
     image: golang:1.15.5
     depends_on:
-      - migrate
+      - db
     # Note: technically we should check that migrations have completed before
     # running seeddb, but in general, migrations will have completed by the
     # time seeddb runs. If this ends up being flaky, we should add a check here.
     command: bash -c "
         ./third_party/wait-for-it/wait-for-it.sh db:5432 --
+          go run ./devtools/cmd/db/main.go migrate &&
           go run ./devtools/cmd/seeddb/main.go -seed ${GO_DISCOVERY_SEED_DB_FILE:-seed.txt}"
     environment:
       - GO_DISCOVERY_DATABASE_HOST=db
@@ -90,21 +92,6 @@ services:
       - WAITFORIT_TIMEOUT=300
     ports:
       - 8080:8080
-    volumes:
-      - ../../:/pkgsite
-    working_dir: /pkgsite
-  migrate:
-    depends_on:
-      - db
-    image: migrate/migrate:v4.14.1
-    entrypoint: ""
-    command: sh -c "
-        apk add --no-cache bash &&
-        ./third_party/wait-for-it/wait-for-it.sh db:5432 --
-          migrate -path /pkgsite/migrations
-            -database postgres://${GO_DISCOVERY_DATABASE_USER:-postgres}:${GO_DISCOVERY_DATABASE_PASSWORD:-postgres}@db:5432/${GO_DISCOVERY_DATABASE_NAME:-discovery-db}?sslmode=disable up"
-    environment:
-      - WAITFORIT_TIMEOUT=300
     volumes:
       - ../../:/pkgsite
     working_dir: /pkgsite
