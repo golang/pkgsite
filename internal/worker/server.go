@@ -498,9 +498,6 @@ func (s *Server) handleFetchStdSupportedBranches(w http.ResponseWriter, r *http.
 				return fmt.Errorf("error scheduling fetch for %s: %w", requestedVersion, err)
 			}
 		}
-		if err := s.db.DeletePseudoversionsExcept(r.Context(), stdlib.ModulePath, vm.ResolvedVersion); err != nil {
-			return err
-		}
 	}
 	return nil
 }
