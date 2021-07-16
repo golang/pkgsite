@@ -81,6 +81,14 @@ func getPathVersions(ctx context.Context, db *DB, path string, versionTypes ...v
 		return nil, fmt.Errorf("error: must specify at least one version type")
 	} else if len(versionTypes) == 1 && versionTypes[0] == version.TypePseudo {
 		queryEnd = `LIMIT 10;`
+	} else {
+		// When a page shows too many versions, it can result in a Chrome CSS
+		// bug: https://bugs.chromium.org/p/chromium/issues/detail?id=688640.
+		// For example,
+		// https://pkg.go.dev/github.com/aws/aws-sdk-go/aws/signer/v4?tab=versions.
+		// It's not that useful to see that many versions on a page anyway, so
+		// just limit to 800 versions.
+		queryEnd = `LIMIT 800;`
 	}
 	query := fmt.Sprintf(baseQuery, versionTypeExpr(versionTypes), queryEnd)
 	var versions []*internal.ModuleInfo
