@@ -21,18 +21,18 @@ import (
 
 func main() {
 	flag.Usage = func() {
-		fmt.Fprintf(flag.CommandLine.Output(), "usage: db [cmd] [dbname]\n")
-		fmt.Fprintf(flag.CommandLine.Output(), "  create [dbname]: creates a new database and run migrations\n")
-		fmt.Fprintf(flag.CommandLine.Output(), "  drop [dbname]: drops database\n")
-		fmt.Fprintf(flag.CommandLine.Output(), "  truncate [dbname]: truncates all tables in database\n")
-		fmt.Fprintf(flag.CommandLine.Output(), "  recreate [dbname]: drop, create and run migrations\n")
-		fmt.Fprintf(flag.CommandLine.Output(), "dbname is set using $GO_DISCOVERY_DATABASE_NAME. ")
+		fmt.Fprintf(flag.CommandLine.Output(), "usage: db [cmd]\n")
+		fmt.Fprintf(flag.CommandLine.Output(), "  create: creates a new database and run migrations\n")
+		fmt.Fprintf(flag.CommandLine.Output(), "  drop: drops database\n")
+		fmt.Fprintf(flag.CommandLine.Output(), "  truncate: truncates all tables in database\n")
+		fmt.Fprintf(flag.CommandLine.Output(), "  recreate: drop, create and run migrations\n")
+		fmt.Fprintf(flag.CommandLine.Output(), "Database name is set using $GO_DISCOVERY_DATABASE_NAME. ")
 		fmt.Fprintf(flag.CommandLine.Output(), "See doc/postgres.md for details.\n")
 		flag.PrintDefaults()
 	}
 
 	flag.Parse()
-	if flag.NArg() != 2 {
+	if flag.NArg() != 1 {
 		flag.Usage()
 		os.Exit(1)
 	}
@@ -51,7 +51,8 @@ func main() {
 	}
 	defer ddb.Close()
 
-	if err := run(ctx, ddb, flag.Args()[0], flag.Args()[1]); err != nil {
+	dbName := config.GetEnv("GO_DISCOVERY_DATABASE_NAME", "discovery-db")
+	if err := run(ctx, ddb, flag.Args()[0], dbName); err != nil {
 		log.Fatal(ctx, err)
 	}
 }
