@@ -1145,7 +1145,7 @@ var moduleStd = &testModule{
 								{
 									SymbolMeta: internal.SymbolMeta{
 										Name:     "error",
-										Synopsis: "type error interface",
+										Synopsis: "type error interface{ ... }",
 										Section:  "Types",
 										Kind:     "Type",
 									},
@@ -1404,7 +1404,7 @@ var moduleStd = &testModule{
 								{
 									SymbolMeta: internal.SymbolMeta{
 										Name:     "Context",
-										Synopsis: "type Context interface",
+										Synopsis: "type Context interface{ ... }",
 										Section:  "Types",
 										Kind:     "Type",
 									},
@@ -1540,7 +1540,7 @@ var moduleStd = &testModule{
 								{
 									SymbolMeta: internal.SymbolMeta{
 										Name:     "Decoder",
-										Synopsis: "type Decoder struct",
+										Synopsis: "type Decoder struct{}",
 										Section:  "Types",
 										Kind:     "Type",
 									},
@@ -1616,7 +1616,7 @@ var moduleStd = &testModule{
 								{
 									SymbolMeta: internal.SymbolMeta{
 										Name:     "Encoder",
-										Synopsis: "type Encoder struct",
+										Synopsis: "type Encoder struct{}",
 										Section:  "Types",
 										Kind:     "Type",
 									},
@@ -1654,7 +1654,7 @@ var moduleStd = &testModule{
 								{
 									SymbolMeta: internal.SymbolMeta{
 										Name:     "InvalidUTF8Error",
-										Synopsis: "type InvalidUTF8Error struct",
+										Synopsis: "type InvalidUTF8Error struct{ ... }",
 										Section:  "Types",
 										Kind:     "Type",
 									},
@@ -1678,7 +1678,7 @@ var moduleStd = &testModule{
 								{
 									SymbolMeta: internal.SymbolMeta{
 										Name:     "InvalidUnmarshalError",
-										Synopsis: "type InvalidUnmarshalError struct",
+										Synopsis: "type InvalidUnmarshalError struct{ ... }",
 										Section:  "Types",
 										Kind:     "Type",
 									},
@@ -1702,7 +1702,7 @@ var moduleStd = &testModule{
 								{
 									SymbolMeta: internal.SymbolMeta{
 										Name:     "Marshaler",
-										Synopsis: "type Marshaler interface",
+										Synopsis: "type Marshaler interface{ ... }",
 										Section:  "Types",
 										Kind:     "Type",
 									},
@@ -1719,7 +1719,7 @@ var moduleStd = &testModule{
 								{
 									SymbolMeta: internal.SymbolMeta{
 										Name:     "MarshalerError",
-										Synopsis: "type MarshalerError struct",
+										Synopsis: "type MarshalerError struct{ ... }",
 										Section:  "Types",
 										Kind:     "Type",
 									},
@@ -1805,7 +1805,7 @@ var moduleStd = &testModule{
 								{
 									SymbolMeta: internal.SymbolMeta{
 										Name:     "SyntaxError",
-										Synopsis: "type SyntaxError struct",
+										Synopsis: "type SyntaxError struct{ ... }",
 										Section:  "Types",
 										Kind:     "Type",
 									},
@@ -1829,7 +1829,7 @@ var moduleStd = &testModule{
 								{
 									SymbolMeta: internal.SymbolMeta{
 										Name:     "Token",
-										Synopsis: "type Token interface",
+										Synopsis: "type Token interface{}",
 										Section:  "Types",
 										Kind:     "Type",
 									},
@@ -1837,7 +1837,7 @@ var moduleStd = &testModule{
 								{
 									SymbolMeta: internal.SymbolMeta{
 										Name:     "UnmarshalFieldError",
-										Synopsis: "type UnmarshalFieldError struct",
+										Synopsis: "type UnmarshalFieldError struct{ ... }",
 										Section:  "Types",
 										Kind:     "Type",
 									},
@@ -1875,7 +1875,7 @@ var moduleStd = &testModule{
 								{
 									SymbolMeta: internal.SymbolMeta{
 										Name:     "UnmarshalTypeError",
-										Synopsis: "type UnmarshalTypeError struct",
+										Synopsis: "type UnmarshalTypeError struct{ ... }",
 										Section:  "Types",
 										Kind:     "Type",
 									},
@@ -1927,7 +1927,7 @@ var moduleStd = &testModule{
 								{
 									SymbolMeta: internal.SymbolMeta{
 										Name:     "Unmarshaler",
-										Synopsis: "type Unmarshaler interface",
+										Synopsis: "type Unmarshaler interface{ ... }",
 										Section:  "Types",
 										Kind:     "Type",
 									},
@@ -1944,7 +1944,7 @@ var moduleStd = &testModule{
 								{
 									SymbolMeta: internal.SymbolMeta{
 										Name:     "UnsupportedTypeError",
-										Synopsis: "type UnsupportedTypeError struct",
+										Synopsis: "type UnsupportedTypeError struct{ ... }",
 										Section:  "Types",
 										Kind:     "Type",
 									},
@@ -1968,7 +1968,7 @@ var moduleStd = &testModule{
 								{
 									SymbolMeta: internal.SymbolMeta{
 										Name:     "UnsupportedValueError",
-										Synopsis: "type UnsupportedValueError struct",
+										Synopsis: "type UnsupportedValueError struct{ ... }",
 										Section:  "Types",
 										Kind:     "Type",
 									},
@@ -2334,7 +2334,7 @@ var moduleStd = &testModule{
 								{
 									SymbolMeta: internal.SymbolMeta{
 										Name:     "Flag",
-										Synopsis: "type Flag struct",
+										Synopsis: "type Flag struct{ ... }",
 										Section:  "Types",
 										Kind:     "Type",
 									},
@@ -2379,7 +2379,7 @@ var moduleStd = &testModule{
 								{
 									SymbolMeta: internal.SymbolMeta{
 										Name:     "FlagSet",
-										Synopsis: "type FlagSet struct",
+										Synopsis: "type FlagSet struct{ ... }",
 										Section:  "Types",
 										Kind:     "Type",
 									},
@@ -2634,7 +2634,7 @@ var moduleStd = &testModule{
 								{
 									SymbolMeta: internal.SymbolMeta{
 										Name:     "Getter",
-										Synopsis: "type Getter interface",
+										Synopsis: "type Getter interface{ ... }",
 										Section:  "Types",
 										Kind:     "Type",
 									},
@@ -2651,7 +2651,7 @@ var moduleStd = &testModule{
 								{
 									SymbolMeta: internal.SymbolMeta{
 										Name:     "Value",
-										Synopsis: "type Value interface",
+										Synopsis: "type Value interface{ ... }",
 										Section:  "Types",
 										Kind:     "Type",
 									},
@@ -2875,7 +2875,7 @@ var moduleTypeExample = moduleWithExamples("type.example",
 		{
 			SymbolMeta: internal.SymbolMeta{
 				Name:     "T",
-				Synopsis: "type T struct",
+				Synopsis: "type T struct{}",
 				Section:  "Types",
 				Kind:     "Type",
 			},
@@ -2896,7 +2896,7 @@ var moduleMethodExample = moduleWithExamples("method.example",
 		{
 			SymbolMeta: internal.SymbolMeta{
 				Name:     "T",
-				Synopsis: "type T struct",
+				Synopsis: "type T struct{}",
 				Section:  "Types",
 				Kind:     "Type",
 			},

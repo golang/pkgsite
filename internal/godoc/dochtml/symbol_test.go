@@ -121,7 +121,7 @@ func TestGetSymbols(t *testing.T) {
 		{
 			SymbolMeta: internal.SymbolMeta{
 				Name:     "I1",
-				Synopsis: "type I1 interface",
+				Synopsis: "type I1 interface{ ... }",
 				Section:  "Types",
 				Kind:     "Type",
 			},
@@ -138,7 +138,7 @@ func TestGetSymbols(t *testing.T) {
 		{
 			SymbolMeta: internal.SymbolMeta{
 				Name:     "I2",
-				Synopsis: "type I2 interface",
+				Synopsis: "type I2 interface{ ... }",
 				Section:  "Types",
 				Kind:     "Type",
 			},
@@ -186,7 +186,7 @@ func TestGetSymbols(t *testing.T) {
 		{
 			SymbolMeta: internal.SymbolMeta{
 				Name:     "S1",
-				Synopsis: "type S1 struct",
+				Synopsis: "type S1 struct{ ... }",
 				Section:  "Types",
 				Kind:     "Type",
 			},
@@ -203,7 +203,7 @@ func TestGetSymbols(t *testing.T) {
 		{
 			SymbolMeta: internal.SymbolMeta{
 				Name:     "S2",
-				Synopsis: "type S2 struct",
+				Synopsis: "type S2 struct{ ... }",
 				Section:  "Types",
 				Kind:     "Type",
 			},

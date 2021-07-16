@@ -230,7 +230,7 @@ func sortSymbols(symbols []*Symbol) [][]*Symbol {
 	for _, parent := range symbols {
 		sm[parent.Section] = append(sm[parent.Section], parent)
 		cm := map[internal.SymbolKind][]*Symbol{}
-		parent.Synopsis = strings.TrimSuffix(parent.Synopsis, "{ ... }")
+		parent.Synopsis = strings.TrimSuffix(strings.TrimSuffix(parent.Synopsis, "{ ... }"), "{}")
 		for _, c := range parent.Children {
 			cm[c.Kind] = append(cm[c.Kind], c)
 		}

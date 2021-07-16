@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"go/ast"
 	"go/token"
-	"strings"
 
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
@@ -123,7 +122,7 @@ func types(p *doc.Package, fset *token.FileSet) ([]*internal.Symbol, error) {
 		t := &internal.Symbol{
 			SymbolMeta: internal.SymbolMeta{
 				Name:     typ.Name,
-				Synopsis: strings.TrimSuffix(strings.TrimSuffix(render.OneLineNodeDepth(fset, spec, 0), "{ ... }"), "{}"),
+				Synopsis: render.OneLineNodeDepth(fset, spec, 0),
 				Section:  internal.SymbolSectionTypes,
 				Kind:     internal.SymbolKindType,
 			},
