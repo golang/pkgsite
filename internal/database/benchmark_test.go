@@ -12,13 +12,12 @@ import (
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/stdlib"
 	"golang.org/x/pkgsite/internal/log"
-	"golang.org/x/pkgsite/internal/testing/dbtest"
 )
 
 func BenchmarkBulkInsert(b *testing.B) {
 	ctx := context.Background()
 	log.SetLevel("INFO")
-	pgxDB, err := Open("pgx", dbtest.DBConnURI(testDBName), "test")
+	pgxDB, err := Open("pgx", DBConnURI(testDBName), "test")
 	if err != nil {
 		b.Fatal(err)
 	}

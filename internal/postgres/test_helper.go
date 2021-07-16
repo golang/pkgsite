@@ -20,7 +20,6 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/derrors"
-	"golang.org/x/pkgsite/internal/testing/dbtest"
 	"golang.org/x/pkgsite/internal/testing/sample"
 	"golang.org/x/pkgsite/internal/testing/testhelper"
 
@@ -32,12 +31,12 @@ import (
 
 // recreateDB drops and recreates the database named dbName.
 func recreateDB(dbName string) error {
-	err := dbtest.DropDB(dbName)
+	err := database.DropDB(dbName)
 	if err != nil {
 		return err
 	}
 
-	return dbtest.CreateDB(dbName)
+	return database.CreateDB(dbName)
 }
 
 // migrationsSource returns a uri pointing to the migrations directory.  It
@@ -51,7 +50,7 @@ func migrationsSource() string {
 // migration. If this operation fails in the migration step, it returns
 // isMigrationError=true to signal that the database should be recreated.
 func tryToMigrate(dbName string) (isMigrationError bool, outerErr error) {
-	dbURI := dbtest.DBConnURI(dbName)
+	dbURI := database.DBConnURI(dbName)
 	source := migrationsSource()
 	m, err := migrate.New(source, dbURI)
 	if err != nil {
@@ -59,7 +58,7 @@ func tryToMigrate(dbName string) (isMigrationError bool, outerErr error) {
 	}
 	defer func() {
 		if srcErr, dbErr := m.Close(); srcErr != nil || dbErr != nil {
-			outerErr = dbtest.MultiErr{outerErr, srcErr, dbErr}
+			outerErr = database.MultiErr{outerErr, srcErr, dbErr}
 		}
 	}()
 	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
@@ -73,7 +72,7 @@ func tryToMigrate(dbName string) (isMigrationError bool, outerErr error) {
 func SetupTestDB(dbName string) (_ *DB, err error) {
 	defer derrors.Wrap(&err, "SetupTestDB(%q)", dbName)
 
-	if err := dbtest.CreateDBIfNotExists(dbName); err != nil {
+	if err := database.CreateDBIfNotExists(dbName); err != nil {
 		return nil, fmt.Errorf("CreateDBIfNotExists(%q): %w", dbName, err)
 	}
 	if isMigrationError, err := tryToMigrate(dbName); err != nil {
@@ -89,7 +88,7 @@ func SetupTestDB(dbName string) (_ *DB, err error) {
 			return nil, fmt.Errorf("unfixable error migrating database: %v.\nConsider running ./devtools/drop_test_dbs.sh", err)
 		}
 	}
-	db, err := database.Open("pgx", dbtest.DBConnURI(dbName), "test")
+	db, err := database.Open("pgx", database.DBConnURI(dbName), "test")
 	if err != nil {
 		return nil, err
 	}

@@ -22,7 +22,6 @@ import (
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/stdlib"
 	"golang.org/x/pkgsite/internal/derrors"
-	"golang.org/x/pkgsite/internal/testing/dbtest"
 )
 
 const testTimeout = 5 * time.Second
@@ -32,18 +31,18 @@ const testDBName = "discovery_postgres_test"
 var testDB *DB
 
 func TestMain(m *testing.M) {
-
-	if err := dbtest.CreateDBIfNotExists(testDBName); err != nil {
+	if err := CreateDBIfNotExists(testDBName); err != nil {
 		if errors.Is(err, derrors.NotFound) && os.Getenv("GO_DISCOVERY_TESTDB") != "true" {
 			log.Printf("SKIPPING: could not connect to DB (see doc/postgres.md to set up): %v", err)
 			return
 		}
 		log.Fatal(err)
 	}
+
 	var err error
 	for _, driver := range []string{"postgres", "pgx"} {
 		log.Printf("with driver %q", driver)
-		testDB, err = Open(driver, dbtest.DBConnURI(testDBName), "test")
+		testDB, err = Open(driver, DBConnURI(testDBName), "test")
 		if err != nil {
 			log.Fatalf("Open: %v %[1]T", err)
 		}
