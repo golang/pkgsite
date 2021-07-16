@@ -133,7 +133,7 @@ func processReadme(ctx context.Context, readme *internal.Readme, sourceInfo *sou
 
 	var b bytes.Buffer
 	defer func() {
-		// It's possible for gdRenderer.Render to panic. For exmaple,
+		// It's possible for gdRenderer.Render to panic. For example,
 		// https://pkg.go.dev/github.com/jinghzhu/k8scrd/pkg/crd/jinghzhu/v1
 		// results in a panic because gdRenderer.Render tries to index a slice
 		// out of bounds.
