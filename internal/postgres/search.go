@@ -14,6 +14,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Masterminds/squirrel"
 	"github.com/lib/pq"
 	"go.opencensus.io/plugin/ochttp"
 	"go.opencensus.io/stats"
@@ -1074,15 +1075,28 @@ func (db *DB) DeleteOlderVersionFromSearchDocuments(ctx context.Context, moduleP
 		}
 
 		// Delete all of those paths.
-		q := fmt.Sprintf(`DELETE FROM search_documents WHERE module_path = $1 AND package_path IN ('%s')`,
-			strings.Join(ppaths, `', '`))
-		n, err := tx.Exec(ctx, q, modulePath)
-		if err != nil {
-			return err
-		}
-		log.Infof(ctx, "deleted %d rows from search_documents", n)
-		return nil
+		return deleteModuleFromSearchDocuments(ctx, tx, modulePath, ppaths)
 	})
+}
+
+// deleteModuleFromSearchDocuments deletes module_path from search_documents.
+// If packages is non-empty, it only deletes those packages.
+func deleteModuleFromSearchDocuments(ctx context.Context, tx *database.DB, modulePath string, packages []string) error {
+	d := squirrel.Delete("search_documents").
+		Where(squirrel.Eq{"module_path": modulePath})
+	if len(packages) > 0 {
+		d = d.Where("package_path = ANY(?)", packages)
+	}
+	q, args, err := d.PlaceholderFormat(squirrel.Dollar).ToSql()
+	if err != nil {
+		return err
+	}
+	n, err := tx.Exec(ctx, q, args...)
+	if err != nil {
+		return err
+	}
+	log.Infof(ctx, "deleted %d rows of module %s from search_documents", n, modulePath)
+	return nil
 }
 
 // UpsertSearchDocumentWithImportedByCount is the same as UpsertSearchDocument,

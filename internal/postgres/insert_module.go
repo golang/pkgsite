@@ -149,11 +149,12 @@ func (db *DB) saveModule(ctx context.Context, m *internal.Module, lmv *internal.
 			return err
 		}
 
-		// If the most recent version of this module has an alternative
-		// module path, then do not insert its packages into search_documents. This
-		// happens when a module that initially does not have a go.mod file is
-		// forked or fetched via some non-canonical path (such as an alternative
-		// capitalization), and then in a later version acquires a go.mod file.
+		// If the most recent version of this module has an alternative module
+		// path, then do not insert its packages into search_documents (and
+		// delete whatever is there). This happens when a module that initially
+		// does not have a go.mod file is forked or fetched via some
+		// non-canonical path (such as an alternative capitalization), and then
+		// in a later version acquires a go.mod file.
 		//
 		// To take an actual example: github.com/sirupsen/logrus@v1.1.0 has a go.mod
 		// file that establishes that path as canonical. But v1.0.6 does not have a
@@ -175,7 +176,7 @@ func (db *DB) saveModule(ctx context.Context, m *internal.Module, lmv *internal.
 		}
 		if alt {
 			log.Infof(ctx, "%s@%s: not inserting into search documents", m.ModulePath, m.Version)
-			return nil
+			return deleteModuleFromSearchDocuments(ctx, tx, m.ModulePath, nil)
 		}
 		// Insert the module's packages into search_documents.
 		if err := upsertSearchDocuments(ctx, tx, m); err != nil {

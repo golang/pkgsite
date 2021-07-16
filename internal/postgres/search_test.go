@@ -1293,63 +1293,91 @@ func TestHllZeros(t *testing.T) {
 	}
 }
 
-func TestDeleteOlderVersionFromSearch(t *testing.T) {
+func TestDeleteFromSearch(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
-	testDB, release := acquire(t)
-	defer release()
 
-	const (
-		modulePath = "deleteme.com"
-		version    = "v1.2.3" // delete older than this
-	)
+	const modulePath = "deleteme.com"
 
-	type module struct {
-		path        string
-		version     string
-		pkg         string
-		wantDeleted bool
-	}
-	insert := func(m module) {
-		sm := sample.Module(m.path, m.version, m.pkg)
-		MustInsertModule(ctx, t, testDB, sm)
+	initial := []searchDocumentRow{
+		// These must be from oldest to newest version, or older ones won't be inserted.
+		{modulePath + "/p1", modulePath, "v0.0.9"}, // oldest version of same module
+		{modulePath + "/p2", modulePath, "v1.1.0"}, // older version of same module
+		{modulePath + "/p4", modulePath, "v1.9.0"}, // newer version of same module
+		{"other.org/p2", "other.org", "v1.1.0"},    // older version of a different module
 	}
 
-	check := func(m module) {
-		gotPath, gotVersion, found := GetFromSearchDocuments(ctx, t, testDB, m.path+"/"+m.pkg)
-		gotDeleted := !found
-		if gotDeleted != m.wantDeleted {
-			t.Errorf("%s: gotDeleted=%t, wantDeleted=%t", m.path, gotDeleted, m.wantDeleted)
-			return
+	insertInitial := func(db *DB) {
+		t.Helper()
+		for _, r := range initial {
+			sm := sample.Module(r.ModulePath, r.Version, strings.TrimPrefix(r.PackagePath, r.ModulePath+"/"))
+			MustInsertModule(ctx, t, db, sm)
 		}
-		if !gotDeleted {
-			if gotPath != m.path || gotVersion != m.version {
-				t.Errorf("got path, version (%q, %q), want (%q, %q)", gotPath, gotVersion, m.path, m.version)
-			}
-		}
+		checkSearchDocuments(ctx, t, db, initial)
 	}
 
-	modules := []module{
-		{modulePath, "v1.1.0", "p2", true},   // older version of same module
-		{modulePath, "v0.0.9", "p3", true},   // another older version of same module
-		{"other.org", "v1.1.2", "p4", false}, // older version of a different module
+	t.Run("DeleteOlderVersionFromSearchDocuments", func(t *testing.T) {
+		testDB, release := acquire(t)
+		defer release()
+		insertInitial(testDB)
+
+		if err := testDB.DeleteOlderVersionFromSearchDocuments(ctx, modulePath, "v1.2.3"); err != nil {
+			t.Fatal(err)
+		}
+
+		checkSearchDocuments(ctx, t, testDB, []searchDocumentRow{
+			{modulePath + "/p4", modulePath, "v1.9.0"}, // newer version not deleted
+			{"other.org/p2", "other.org", "v1.1.0"},    // other module not deleted
+		})
+	})
+	t.Run("deleteModuleFromSearchDocuments", func(t *testing.T) {
+		// Non-empty list of packages tested above. This tests an empty list.
+		testDB, release := acquire(t)
+		defer release()
+		insertInitial(testDB)
+
+		if err := deleteModuleFromSearchDocuments(ctx, testDB.db, modulePath, nil); err != nil {
+			t.Fatal(err)
+		}
+		checkSearchDocuments(ctx, t, testDB, []searchDocumentRow{
+			{"other.org/p2", "other.org", "v1.1.0"}, // other module not deleted
+		})
+	})
+}
+
+type searchDocumentRow struct {
+	PackagePath, ModulePath, Version string
+}
+
+func readSearchDocuments(ctx context.Context, db *DB) ([]searchDocumentRow, error) {
+	var rows []searchDocumentRow
+	err := db.db.CollectStructs(ctx, &rows, `SELECT package_path, module_path, version FROM search_documents`)
+	if err != nil {
+		return nil, err
 	}
-	for _, m := range modules {
-		insert(m)
-	}
-	if err := testDB.DeleteOlderVersionFromSearchDocuments(ctx, modulePath, version); err != nil {
+	return rows, err
+}
+
+func checkSearchDocuments(ctx context.Context, t *testing.T, db *DB, want []searchDocumentRow) {
+	t.Helper()
+	got, err := readSearchDocuments(ctx, db)
+	if err != nil {
 		t.Fatal(err)
 	}
-
-	for _, m := range modules {
-		check(m)
+	less := func(r1, r2 searchDocumentRow) bool {
+		if r1.PackagePath != r2.PackagePath {
+			return r1.PackagePath < r2.PackagePath
+		}
+		if r1.ModulePath != r2.ModulePath {
+			return r1.ModulePath < r2.ModulePath
+		}
+		return r1.Version < r2.Version
 	}
-
-	// Verify that a newer version is not deleted.
-	ResetTestDB(testDB, t)
-	mod := module{modulePath, "v1.2.4", "p5", false}
-	insert(mod)
-	check(mod)
+	sort.Slice(got, func(i, j int) bool { return less(got[i], got[j]) })
+	sort.Slice(want, func(i, j int) bool { return less(want[i], want[j]) })
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("search documents mismatch (-want, +got):\n%s", diff)
+	}
 }
 
 func TestGroupSearchResults(t *testing.T) {
