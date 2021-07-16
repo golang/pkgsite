@@ -11,17 +11,14 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"path/filepath"
 	"strings"
 	"testing"
 	"time"
 
-	"github.com/golang-migrate/migrate/v4"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/testing/sample"
-	"golang.org/x/pkgsite/internal/testing/testhelper"
 
 	// imported to register the postgres migration driver
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
@@ -39,34 +36,6 @@ func recreateDB(dbName string) error {
 	return database.CreateDB(dbName)
 }
 
-// migrationsSource returns a uri pointing to the migrations directory.  It
-// returns an error if unable to determine this path.
-func migrationsSource() string {
-	migrationsDir := testhelper.TestDataPath("../../migrations")
-	return "file://" + filepath.ToSlash(migrationsDir)
-}
-
-// tryToMigrate attempts to migrate the database named dbName to the latest
-// migration. If this operation fails in the migration step, it returns
-// isMigrationError=true to signal that the database should be recreated.
-func tryToMigrate(dbName string) (isMigrationError bool, outerErr error) {
-	dbURI := database.DBConnURI(dbName)
-	source := migrationsSource()
-	m, err := migrate.New(source, dbURI)
-	if err != nil {
-		return false, fmt.Errorf("migrate.New(): %v", err)
-	}
-	defer func() {
-		if srcErr, dbErr := m.Close(); srcErr != nil || dbErr != nil {
-			outerErr = database.MultiErr{outerErr, srcErr, dbErr}
-		}
-	}()
-	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
-		return true, fmt.Errorf("m.Up(): %v", err)
-	}
-	return false, nil
-}
-
 // SetupTestDB creates a test database named dbName if it does not already
 // exist, and migrates it to the latest schema from the migrations directory.
 func SetupTestDB(dbName string) (_ *DB, err error) {
@@ -75,14 +44,14 @@ func SetupTestDB(dbName string) (_ *DB, err error) {
 	if err := database.CreateDBIfNotExists(dbName); err != nil {
 		return nil, fmt.Errorf("CreateDBIfNotExists(%q): %w", dbName, err)
 	}
-	if isMigrationError, err := tryToMigrate(dbName); err != nil {
+	if isMigrationError, err := database.TryToMigrate(dbName); err != nil {
 		if isMigrationError {
 			// failed during migration stage, recreate and try again
 			log.Printf("Migration failed for %s: %v, recreating database.", dbName, err)
 			if err := recreateDB(dbName); err != nil {
 				return nil, fmt.Errorf("recreateDB(%q): %v", dbName, err)
 			}
-			_, err = tryToMigrate(dbName)
+			_, err = database.TryToMigrate(dbName)
 		}
 		if err != nil {
 			return nil, fmt.Errorf("unfixable error migrating database: %v.\nConsider running ./devtools/drop_test_dbs.sh", err)

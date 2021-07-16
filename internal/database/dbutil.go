@@ -10,11 +10,16 @@ import (
 	"log"
 	"net/url"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/testing/testhelper"
+
 	// imported to register the postgres migration driver
+	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
+
 	// imported to register the file source migration driver
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	// imported to register the postgres database driver
@@ -135,4 +140,32 @@ func checkIfDBExists(dbName string) (bool, error) {
 	})
 
 	return exists, err
+}
+
+// TryToMigrate attempts to migrate the database named dbName to the latest
+// migration. If this operation fails in the migration step, it returns
+// isMigrationError=true to signal that the database should be recreated.
+func TryToMigrate(dbName string) (isMigrationError bool, outerErr error) {
+	dbURI := DBConnURI(dbName)
+	source := migrationsSource()
+	m, err := migrate.New(source, dbURI)
+	if err != nil {
+		return false, fmt.Errorf("migrate.New(): %v", err)
+	}
+	defer func() {
+		if srcErr, dbErr := m.Close(); srcErr != nil || dbErr != nil {
+			outerErr = MultiErr{outerErr, srcErr, dbErr}
+		}
+	}()
+	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
+		return true, fmt.Errorf("m.Up(): %v", err)
+	}
+	return false, nil
+}
+
+// migrationsSource returns a uri pointing to the migrations directory.  It
+// returns an error if unable to determine this path.
+func migrationsSource() string {
+	migrationsDir := testhelper.TestDataPath("../../migrations")
+	return "file://" + filepath.ToSlash(migrationsDir)
 }
