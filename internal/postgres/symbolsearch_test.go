@@ -81,18 +81,21 @@ func TestSymbolSearch(t *testing.T) {
 			q:    "Type.Method",
 			want: checkResult(sample.Method),
 		},
-		/*
-			{
-				name: "test search by <package> <identifier>",
-				q:    sample.PackageName + " function",
-				want: checkResult(sample.Function.SymbolMeta),
-			},
-			{
-				name: "test search by <package-subpath> <identifier>",
-				q:    "module_name/foo function",
-				want: checkResult(sample.Function.SymbolMeta),
-			},
-		*/
+		{
+			name: "test search by <package> <identifier>",
+			q:    "foo function",
+			want: checkResult(sample.Function.SymbolMeta),
+		},
+		{
+			name: "test search by <package-subpath> <package-name> <identifier>",
+			q:    "github.com/valid foo function",
+			want: checkResult(sample.Function.SymbolMeta),
+		},
+		{
+			name: "test search by <package-subpath> <identifier> subpath contains _",
+			q:    "module_name/foo function",
+			want: checkResult(sample.Function.SymbolMeta),
+		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			resp, err := testDB.hedgedSearch(ctx, test.q, 2, 0, 100, symbolSearchers, nil)

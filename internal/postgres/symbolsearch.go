@@ -130,10 +130,14 @@ func (db *DB) symbolSearch(ctx context.Context, q string, limit, offset, maxResu
 			// There is only 1 element, split by 2 dots, so the search must
 			// be for <package>.<type>.<methodOrFieldName>.
 			query = symbolsearch.QueryPackageDotSymbol
+		default:
+			// There is no situation where we will get results for oe element
+			// containing more than 2 dots.
+			err = fmt.Errorf("unsupported query structure: %q", q)
 		}
 	} else {
-		// TODO: add additional queries based on q.
-		err = fmt.Errorf("unsupported query structure: %q", q)
+		// The search query contains multiple words, separated by spaces.
+		query = symbolsearch.QueryMultiWord
 	}
 	if err == nil {
 		err = db.db.RunQuery(ctx, query, collect, q, limit, offset)

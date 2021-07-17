@@ -55,10 +55,14 @@ package symbolsearch
 // QueryOneDot is used when the search query is one element
 // containing a dot. This means it can either be <package>.<symbol> or
 // <type>.<methodOrField>.
+%s
+
+// QueryMultiWord is used when the search query is multiple elements.
 %s`,
 	formatQuery("QuerySymbol", symbolsearch.RawQuerySymbol),
 	formatQuery("QueryPackageDotSymbol", symbolsearch.RawQueryPackageDotSymbol),
-	formatQuery("QueryOneDot", symbolsearch.RawQueryOneDot))
+	formatQuery("QueryOneDot", symbolsearch.RawQueryOneDot),
+	formatQuery("QueryMultiWord", symbolsearch.RawQueryMultiWord))
 
 func formatQuery(name, query string) string {
 	return fmt.Sprintf("const %s = `%s`", name, query)
