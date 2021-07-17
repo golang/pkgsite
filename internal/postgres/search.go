@@ -1085,7 +1085,7 @@ func deleteModuleFromSearchDocuments(ctx context.Context, tx *database.DB, modul
 	d := squirrel.Delete("search_documents").
 		Where(squirrel.Eq{"module_path": modulePath})
 	if len(packages) > 0 {
-		d = d.Where("package_path = ANY(?)", packages)
+		d = d.Where("package_path = ANY(?)", pq.Array(packages))
 	}
 	q, args, err := d.PlaceholderFormat(squirrel.Dollar).ToSql()
 	if err != nil {
