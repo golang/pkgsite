@@ -2,6 +2,13 @@
 # Use of this source code is governed by a BSD-style
 # license that can be found in the LICENSE file.
 version: '3.4'
+
+x-database-variables: &database-variables
+  GO_DISCOVERY_DATABASE_HOST: db
+  GO_DISCOVERY_DATABASE_NAME: ${GO_DISCOVERY_DATABASE_NAME:-discovery-db}
+  GO_DISCOVERY_DATABASE_PASSWORD: ${GO_DISCOVERY_DATABASE_PASSWORD:-postgres}
+  GO_DISCOVERY_DATABASE_USER: ${GO_DISCOVERY_DATABASE_USER:-postgres}
+
 services:
   allbash:
     # Allocate a pseudo-tty, which sets the TERM
@@ -19,14 +26,11 @@ services:
      # This should match the version we are using on AppEngine.
     image: golang:1.15.5
     environment:
-      - GO_DISCOVERY_DATABASE_HOST=db
-      - GO_DISCOVERY_DATABASE_NAME=${GO_DISCOVERY_DATABASE_NAME:-discovery-db}
-      - GO_DISCOVERY_DATABASE_PASSWORD=${GO_DISCOVERY_DATABASE_PASSWORD:-postgres}
-      - GO_DISCOVERY_DATABASE_USER=${GO_DISCOVERY_DATABASE_USER:-postgres}
-      - GO_DISCOVERY_TESTDB=${GO_DISCOVERY_TESTDB:-true}
+      <<: *database-variables
+      GO_DISCOVERY_TESTDB: ${GO_DISCOVERY_TESTDB:-true}
       # TERM is set to xterm-256color for use by devtools/lib.sh.
-      - TERM=xterm-256color
-      - WAITFORIT_TIMEOUT=300
+      TERM: xterm-256color
+      WAITFORIT_TIMEOUT: 300
     entrypoint: ./third_party/wait-for-it/wait-for-it.sh db:5432 -- ./all.bash
     volumes:
       - ../../:/pkgsite
@@ -57,14 +61,11 @@ services:
           go run ./devtools/cmd/db/main.go migrate &&
           go run ./cmd/frontend -host=0.0.0.0:8080"
     environment:
-      - GO_DISCOVERY_DATABASE_HOST=db
-      - GO_DISCOVERY_DATABASE_NAME=${GO_DISCOVERY_DATABASE_NAME:-discovery-db}
-      - GO_DISCOVERY_DATABASE_PASSWORD=${GO_DISCOVERY_DATABASE_PASSWORD:-postgres}
-      - GO_DISCOVERY_DATABASE_USER=${GO_DISCOVERY_DATABASE_USER:-postgres}
-      - GO_DISCOVERY_LOG_LEVEL=${GO_DISCOVERY_LOG_LEVEL:-info}
-      - GO_DISCOVERY_CONFIG_DYNAMIC=/pkgsite/devtools/docker/config.yaml
-      - PORT=8080
-      - WAITFORIT_TIMEOUT=300
+      <<: *database-variables
+      GO_DISCOVERY_LOG_LEVEL: ${GO_DISCOVERY_LOG_LEVEL:-info}
+      GO_DISCOVERY_CONFIG_DYNAMIC: /pkgsite/devtools/docker/config.yaml
+      PORT: 8080
+      WAITFORIT_TIMEOUT: 300
     ports:
       - 8080:8080
     volumes:
@@ -83,13 +84,10 @@ services:
           go run ./devtools/cmd/db/main.go migrate &&
           go run ./devtools/cmd/seeddb/main.go -seed ${GO_DISCOVERY_SEED_DB_FILE:-seed.txt}"
     environment:
-      - GO_DISCOVERY_DATABASE_HOST=db
-      - GO_DISCOVERY_DATABASE_NAME=${GO_DISCOVERY_DATABASE_NAME:-discovery-db}
-      - GO_DISCOVERY_DATABASE_PASSWORD=${GO_DISCOVERY_DATABASE_PASSWORD:-postgres}
-      - GO_DISCOVERY_DATABASE_USER=${GO_DISCOVERY_DATABASE_USER:-postgres}
-      - GO_DISCOVERY_LOG_LEVEL=${GO_DISCOVERY_LOG_LEVEL:-info}
-      - PORT=8080
-      - WAITFORIT_TIMEOUT=300
+      <<: *database-variables
+      GO_DISCOVERY_LOG_LEVEL: ${GO_DISCOVERY_LOG_LEVEL:-info}
+      PORT: 8080
+      WAITFORIT_TIMEOUT: 300
     ports:
       - 8080:8080
     volumes:
@@ -98,12 +96,13 @@ services:
   db:
     image: postgres:11.12
     environment:
-      - LANG=C
+      <<: *database-variables
+      LANG: C
       # GO_DISCOVERY_DATABASE* variables are set so that this docker file can
       # be used for local development.
-      - POSTGRES_DB=${GO_DISCOVERY_DATABASE_NAME:-discovery-db}
-      - POSTGRES_PASSWORD=${GO_DISCOVERY_DATABASE_PASSWORD:-postgres}
-      - POSTGRES_USER=${GO_DISCOVERY_DATABASE_USER:-postgres}
+      POSTGRES_DB: ${GO_DISCOVERY_DATABASE_NAME:-discovery-db}
+      POSTGRES_PASSWORD: ${GO_DISCOVERY_DATABASE_PASSWORD:-postgres}
+      POSTGRES_USER: ${GO_DISCOVERY_DATABASE_USER:-postgres}
     ports:
         - ${GO_DISCOVERY_DATABASE_PORT:-5432}:5432
   nodejs:
