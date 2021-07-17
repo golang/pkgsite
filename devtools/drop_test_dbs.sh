@@ -16,5 +16,5 @@ for dbname in \
     "discovery_postgres_test-2" \
     "discovery_postgres_test-3"
 do
-    GO_DISCOVERY_LOG_LEVEL=info go run devtools/cmd/db/main.go drop $dbname
+    GO_DISCOVERY_DATABASE_NAME=$dbname GO_DISCOVERY_LOG_LEVEL=info go run devtools/cmd/db/main.go drop
 done
