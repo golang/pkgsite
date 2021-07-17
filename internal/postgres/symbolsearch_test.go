@@ -6,7 +6,6 @@ package postgres
 
 import (
 	"context"
-	"fmt"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -16,11 +15,6 @@ import (
 )
 
 func TestSymbolSearch(t *testing.T) {
-	// Skip tests, since we no longer insert into
-	// symbol_search_documents.tsv_symbol_tokens.
-	// This will be fixed in a future CL once the symbol search query changes.
-	t.Skip()
-
 	ctx := context.Background()
 	ctx = experiment.NewContext(ctx, internal.ExperimentInsertSymbolSearchDocuments)
 	testDB, release := acquire(t)
@@ -58,11 +52,6 @@ func TestSymbolSearch(t *testing.T) {
 		want []*SearchResult
 	}{
 		{
-			name: "test search by <package>.<identifier>",
-			q:    fmt.Sprintf("%s.%s", sample.PackageName, sample.Variable.Name),
-			want: checkResult(sample.Variable.SymbolMeta),
-		},
-		{
 			name: "test search by <identifier>",
 			q:    sample.Variable.Name,
 			want: checkResult(sample.Variable.SymbolMeta),
@@ -72,16 +61,23 @@ func TestSymbolSearch(t *testing.T) {
 			q:    "Method",
 			want: checkResult(sample.Method),
 		},
-		{
-			name: "test search by <package> <identifier>",
-			q:    sample.PackageName + " function",
-			want: checkResult(sample.Function.SymbolMeta),
-		},
-		{
-			name: "test search by <package-subpath> <identifier>",
-			q:    "module_name/foo function",
-			want: checkResult(sample.Function.SymbolMeta),
-		},
+		/*
+			{
+				name: "test search by <package>.<identifier>",
+				q:    fmt.Sprintf("%s.%s", sample.PackageName, sample.Variable.Name),
+				want: checkResult(sample.Variable.SymbolMeta),
+			},
+			{
+				name: "test search by <package> <identifier>",
+				q:    sample.PackageName + " function",
+				want: checkResult(sample.Function.SymbolMeta),
+			},
+			{
+				name: "test search by <package-subpath> <identifier>",
+				q:    "module_name/foo function",
+				want: checkResult(sample.Function.SymbolMeta),
+			},
+		*/
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			resp, err := testDB.hedgedSearch(ctx, test.q, 2, 0, 100, symbolSearchers, nil)

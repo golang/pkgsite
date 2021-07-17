@@ -28,6 +28,7 @@ import (
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/log"
+	"golang.org/x/pkgsite/internal/postgres/symbolsearch"
 	"golang.org/x/pkgsite/internal/stdlib"
 )
 
@@ -651,7 +652,7 @@ var upsertSearchStatement = fmt.Sprintf(`
 			ELSE CURRENT_TIMESTAMP
 			END)
 	;`,
-	symbolTextSearchConfiguration,
+	symbolsearch.SymbolTextSearchConfiguration,
 	hllRegisterCount)
 
 // upsertSearchDocuments adds search information for mod to the search_documents table.
