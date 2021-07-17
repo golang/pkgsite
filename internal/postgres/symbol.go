@@ -79,7 +79,7 @@ func upsertDocumentationSymbols(ctx context.Context, db *database.DB,
 	pathToDocIDToDoc map[string]map[int]*internal.Documentation) (err error) {
 	defer derrors.WrapStack(&err, "upsertDocumentationSymbols(ctx, db, pathToPkgsymID, pathToDocIDToDoc)")
 
-	if experiment.IsActive(ctx, internal.ExperimentSkipInsertSymbols) {
+	if !experiment.IsActive(ctx, internal.ExperimentInsertSymbolSearchDocuments) {
 		return nil
 	}
 

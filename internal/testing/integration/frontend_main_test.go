@@ -45,7 +45,7 @@ func TestFrontendMainPage(t *testing.T) {
 		},
 	} {
 		t.Run(exp.name, func(t *testing.T) {
-			exps := exp.exps
+			exps := append(exp.exps, internal.ExperimentInsertSymbolSearchDocuments)
 			processVersions(
 				experiment.NewContext(context.Background(), exps...),
 				t, testModules)
