@@ -50,9 +50,15 @@ package symbolsearch
 // QueryPackageDotSymbol is used when the search query is one element
 // containing a dot, where the first part is assumed to be the package name and
 // the second the symbol name. For example, "sql.DB" or "sql.DB.Begin".
+%s
+
+// QueryOneDot is used when the search query is one element
+// containing a dot. This means it can either be <package>.<symbol> or
+// <type>.<methodOrField>.
 %s`,
 	formatQuery("QuerySymbol", symbolsearch.RawQuerySymbol),
-	formatQuery("QueryPackageDotSymbol", symbolsearch.RawQueryPackageDotSymbol))
+	formatQuery("QueryPackageDotSymbol", symbolsearch.RawQueryPackageDotSymbol),
+	formatQuery("QueryOneDot", symbolsearch.RawQueryOneDot))
 
 func formatQuery(name, query string) string {
 	return fmt.Sprintf("const %s = `%s`", name, query)

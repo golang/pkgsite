@@ -22,6 +22,7 @@ const SymbolTextSearchConfiguration = "symbols"
 var (
 	RawQuerySymbol           = fmt.Sprintf(symbolSearchBaseQuery, scoreMultipliers, filterSymbol)
 	RawQueryPackageDotSymbol = fmt.Sprintf(symbolSearchBaseQuery, scoreMultipliers, filterPackageDotSymbol)
+	RawQueryOneDot           = fmt.Sprintf(symbolSearchBaseQuery, scoreMultipliers, filterOneDot)
 )
 
 var (
@@ -38,6 +39,10 @@ var (
 		// Split the symbol name from $1, which can be assumed to be everything
 		// following the first dot.
 		toTSQuery("substring($1 from E'[^.]*\\.(.+)$')"))
+
+	// filterOneDot is used when $1 is one word containing a single dot, which
+	// means it is either <package>.<symbol> or <type>.<methodOrField>.
+	filterOneDot = fmt.Sprintf("(%s) OR (%s)", filterPackageDotSymbol, filterSymbol)
 )
 
 var (

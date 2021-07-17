@@ -66,12 +66,22 @@ func TestSymbolSearch(t *testing.T) {
 			q:    "foo.Type.Method",
 			want: checkResult(sample.Method),
 		},
+		{
+			name: "test search by <package>.<identifier>",
+			q:    "foo.Variable",
+			want: checkResult(sample.Variable.SymbolMeta),
+		},
+		{
+			name: "test search by <type>.<field>",
+			q:    "Type.Field",
+			want: checkResult(sample.Field),
+		},
+		{
+			name: "test search by <type>.<method>",
+			q:    "Type.Method",
+			want: checkResult(sample.Method),
+		},
 		/*
-			{
-				name: "test search by <package>.<identifier>",
-				q:    fmt.Sprintf("%s.%s", sample.PackageName, sample.Variable.Name),
-				want: checkResult(sample.Variable.SymbolMeta),
-			},
 			{
 				name: "test search by <package> <identifier>",
 				q:    sample.PackageName + " function",

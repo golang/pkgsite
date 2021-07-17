@@ -125,7 +125,7 @@ func (db *DB) symbolSearch(ctx context.Context, q string, limit, offset, maxResu
 		case 2:
 			// There is only 1 element, split by 1 dot, so the search must
 			// either be for <package>.<symbol> or <type>.<methodOrFieldName>.
-			// TODO: implement
+			query = symbolsearch.QueryOneDot
 		case 3:
 			// There is only 1 element, split by 2 dots, so the search must
 			// be for <package>.<type>.<methodOrFieldName>.
