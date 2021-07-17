@@ -58,8 +58,6 @@ func main() {
 		}
 	}
 
-	log.SetLevel(cfg.LogLevel)
-
 	var (
 		dsg        func(context.Context) internal.DataSource
 		fetchQueue queue.Queue

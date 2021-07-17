@@ -45,7 +45,6 @@ func main() {
 	if err != nil {
 		log.Fatal(ctx, err)
 	}
-	log.SetLevel(cfg.LogLevel)
 
 	exps, err := fetchExperiments(ctx, cfg)
 	if err != nil {

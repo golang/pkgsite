@@ -219,7 +219,6 @@ func main() {
 	}
 	cfg.Dump(os.Stderr)
 
-	log.SetLevel(cfg.LogLevel)
 	if cfg.OnGCP() {
 		opts := []logging.LoggerOption{logging.CommonResource(cfg.MonitoredResource)}
 		if _, err := log.UseStackdriver(ctx, "prober-log", cfg.ProjectID, opts); err != nil {

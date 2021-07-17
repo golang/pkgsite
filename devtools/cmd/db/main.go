@@ -43,7 +43,6 @@ func main() {
 	if err != nil {
 		log.Fatal(ctx, err)
 	}
-	log.SetLevel(cfg.LogLevel)
 
 	dbName := config.GetEnv("GO_DISCOVERY_DATABASE_NAME", "discovery-db")
 	if err := run(ctx, flag.Args()[0], dbName, cfg.DBConnInfo()); err != nil {

@@ -386,6 +386,8 @@ func Init(ctx context.Context) (_ *Config, err error) {
 		ServeStats:            os.Getenv("GO_DISCOVERY_SERVE_STATS") == "true",
 		DisableErrorReporting: os.Getenv("GO_DISCOVERY_DISABLE_ERROR_REPORTING") == "true",
 	}
+	log.SetLevel(cfg.LogLevel)
+
 	bucket := os.Getenv("GO_DISCOVERY_CONFIG_BUCKET")
 	object := os.Getenv("GO_DISCOVERY_CONFIG_DYNAMIC")
 	if bucket != "" {
