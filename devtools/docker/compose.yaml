@@ -133,5 +133,16 @@ services:
       - 3000:3000
     environment:
       - CONNECTION_TIMEOUT=120000
+  go:
+     # This should match the version we are using on AppEngine.
+    image: golang:1.15.5
+    entrypoint: go
+    environment:
+      <<: *database-variables
+      <<: *go-variables
+    volumes:
+      - ../../:/pkgsite
+      - gomodcache:/gomodcache
+    working_dir: /pkgsite
 volumes:
   gomodcache:
