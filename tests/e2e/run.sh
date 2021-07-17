@@ -18,9 +18,7 @@ main() {
   done
 
   export GO_DISCOVERY_SEED_DB_FILE=e2e_test_modules.txt
-  docker-compose -f devtools/docker/compose.yaml build &&
-  docker-compose -f devtools/docker/compose.yaml run seeddb &&
-  docker-compose -f devtools/docker/compose.yaml run e2e $files $@
+  dockercompose build && dockercompose run seeddb && dockercompose run e2e $files $@
 
   local status=$?
   if [ $status -eq 0 ]
