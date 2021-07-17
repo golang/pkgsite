@@ -19,15 +19,35 @@ import (
 
 const SymbolTextSearchConfiguration = "symbols"
 
-var RawQuerySymbol = fmt.Sprintf(symbolSearchBaseQuery, scoreSymbol, filterSymbol)
-
-// filterSymbol is used when $1 is the full symbol name, either
-// <symbol> or <type>.<methodOrField>.
-var filterSymbol = fmt.Sprintf(`s.tsv_name_tokens @@ %s`, toTSQuery("$1"))
+var (
+	RawQuerySymbol           = fmt.Sprintf(symbolSearchBaseQuery, scoreMultipliers, filterSymbol)
+	RawQueryPackageDotSymbol = fmt.Sprintf(symbolSearchBaseQuery, scoreMultipliers, filterPackageDotSymbol)
+)
 
 var (
-	// scoreSymbol is the score the for QuerySymbol.
-	scoreSymbol = fmt.Sprintf("%s\n\t\t* %s\n\t\t* %s",
+	// filterSymbol is used when $1 is the full symbol name, either
+	// <symbol> or <type>.<methodOrField>.
+	filterSymbol = fmt.Sprintf(`s.tsv_name_tokens @@ %s`, toTSQuery("$1"))
+
+	// filterPackageDotSymbol is used when $1 is either <package>.<symbol> OR
+	// <package>.<type>.<methodOrField>.
+	filterPackageDotSymbol = fmt.Sprintf(
+		// Split the package name from $1, which can be assumed to be the
+		// element preceding the first dot.
+		`sd.name = split_part($1, '.', 1) AND s.tsv_name_tokens @@ %s`,
+		// Split the symbol name from $1, which can be assumed to be everything
+		// following the first dot.
+		toTSQuery("substring($1 from E'[^.]*\\.(.+)$')"))
+)
+
+var (
+	// scoreMultipliers is the score of multiplying the multiplers.
+	//
+	// It is also used as the score for QuerySymbol and QueryPackageDotIdentifier.
+	// In both cases, the matching symbols will be filtered in the WHERE
+	// clause, and the only remaining information to rank the results by are
+	// the multiplers.
+	scoreMultipliers = fmt.Sprintf("%s\n\t\t* %s\n\t\t* %s",
 		popularityMultiplier, redistributableMultipler, goModMultipler)
 
 	// Popularity multipler to increase ranking of popular packages.

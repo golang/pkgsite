@@ -45,7 +45,14 @@ package symbolsearch
 // QuerySymbol is used when the search query is only one word, with no dots.
 // In this case, the word must match a symbol name and ranking is completely
 // determined by the path_tokens.
-%s`, formatQuery("QuerySymbol", symbolsearch.RawQuerySymbol))
+%s
+
+// QueryPackageDotSymbol is used when the search query is one element
+// containing a dot, where the first part is assumed to be the package name and
+// the second the symbol name. For example, "sql.DB" or "sql.DB.Begin".
+%s`,
+	formatQuery("QuerySymbol", symbolsearch.RawQuerySymbol),
+	formatQuery("QueryPackageDotSymbol", symbolsearch.RawQueryPackageDotSymbol))
 
 func formatQuery(name, query string) string {
 	return fmt.Sprintf("const %s = `%s`", name, query)

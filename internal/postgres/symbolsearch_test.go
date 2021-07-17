@@ -52,13 +52,18 @@ func TestSymbolSearch(t *testing.T) {
 		want []*SearchResult
 	}{
 		{
-			name: "test search by <identifier>",
+			name: "test search by <symbol>",
 			q:    sample.Variable.Name,
 			want: checkResult(sample.Variable.SymbolMeta),
 		},
 		{
-			name: "test search by <recv>",
+			name: "test search by <methodName>",
 			q:    "Method",
+			want: checkResult(sample.Method),
+		},
+		{
+			name: "test search by <package>.<type>.<methodName>",
+			q:    "foo.Type.Method",
 			want: checkResult(sample.Method),
 		},
 		/*

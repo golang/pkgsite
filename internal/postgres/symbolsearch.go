@@ -8,6 +8,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strings"
 
 	"github.com/lib/pq"
 	"golang.org/x/pkgsite/internal"
@@ -111,15 +112,38 @@ func (db *DB) symbolSearch(ctx context.Context, q string, limit, offset, maxResu
 		return nil
 	}
 
-	// TODO: add additional queries based on q.
-	query := symbolsearch.QuerySymbol
-	err := db.db.RunQuery(ctx, query, collect, q, limit, offset)
-	if err != nil {
-		results = nil
+	var (
+		query string
+		err   error
+	)
+	if len(strings.Fields(q)) == 1 {
+		switch len(strings.Split(q, ".")) {
+		case 1:
+			// There is only 1 word in the search, and there are no dots, so
+			// this must be the symbol name.
+			query = symbolsearch.QuerySymbol
+		case 2:
+			// There is only 1 element, split by 1 dot, so the search must
+			// either be for <package>.<symbol> or <type>.<methodOrFieldName>.
+			// TODO: implement
+		case 3:
+			// There is only 1 element, split by 2 dots, so the search must
+			// be for <package>.<type>.<methodOrFieldName>.
+			query = symbolsearch.QueryPackageDotSymbol
+		}
+	} else {
+		// TODO: add additional queries based on q.
+		err = fmt.Errorf("unsupported query structure: %q", q)
 	}
-	if len(results) > 0 && results[0].NumResults > uint64(maxResultCount) {
-		for _, r := range results {
-			r.NumResults = uint64(maxResultCount)
+	if err == nil {
+		err = db.db.RunQuery(ctx, query, collect, q, limit, offset)
+		if err != nil {
+			results = nil
+		}
+		if len(results) > 0 && results[0].NumResults > uint64(maxResultCount) {
+			for _, r := range results {
+				r.NumResults = uint64(maxResultCount)
+			}
 		}
 	}
 	return searchResponse{
