@@ -22,7 +22,8 @@ import (
 func main() {
 	flag.Usage = func() {
 		fmt.Fprintf(flag.CommandLine.Output(), "usage: db [cmd]\n")
-		fmt.Fprintf(flag.CommandLine.Output(), "  create: creates a new database and run migrations\n")
+		fmt.Fprintf(flag.CommandLine.Output(), "  create: creates a new database. It does not run migrations\n")
+		fmt.Fprintf(flag.CommandLine.Output(), "  migrate: runs all migrations \n")
 		fmt.Fprintf(flag.CommandLine.Output(), "  drop: drops database\n")
 		fmt.Fprintf(flag.CommandLine.Output(), "  truncate: truncates all tables in database\n")
 		fmt.Fprintf(flag.CommandLine.Output(), "  recreate: drop, create and run migrations\n")
@@ -44,49 +45,82 @@ func main() {
 	}
 	log.SetLevel(cfg.LogLevel)
 
-	// Wrap the postgres driver with our own wrapper, which adds OpenCensus instrumentation.
-	ddb, err := database.Open("pgx", cfg.DBConnInfo(), "dbadmin")
-	if err != nil {
-		log.Fatalf(ctx, "database.Open for host %s failed with %v", cfg.DBHost, err)
-	}
-	defer ddb.Close()
-
 	dbName := config.GetEnv("GO_DISCOVERY_DATABASE_NAME", "discovery-db")
-	if err := run(ctx, ddb, flag.Args()[0], dbName); err != nil {
+	if err := run(ctx, flag.Args()[0], dbName, cfg.DBConnInfo()); err != nil {
 		log.Fatal(ctx, err)
 	}
 }
 
-func run(ctx context.Context, db *database.DB, cmd, dbName string) error {
+func run(ctx context.Context, cmd, dbName, connectionInfo string) error {
 	switch cmd {
 	case "create":
-		return createDB(dbName)
+		return create(ctx, dbName)
 	case "migrate":
-		_, err := database.TryToMigrate(dbName)
-		return err
+		return migrate(dbName)
 	case "drop":
-		err := database.DropDB(dbName)
-		if err != nil && strings.HasSuffix(err.Error(), "does not exist") {
-			fmt.Printf("%q does not exist\n", dbName)
-			return nil
-		}
-		return nil
+		return drop(ctx, dbName)
 	case "recreate":
-		if err := database.DropDB(dbName); err != nil {
-			return err
-		}
-		return createDB(dbName)
+		return recreate(ctx, dbName)
 	case "truncate":
-		return database.ResetDB(ctx, db)
+		return truncate(ctx, connectionInfo)
 	default:
 		return fmt.Errorf("unsupported arg: %q", cmd)
 	}
 }
 
-func createDB(dbName string) error {
+func create(ctx context.Context, dbName string) error {
+	if err := database.CreateDBIfNotExists(dbName); err != nil {
+		if strings.HasSuffix(err.Error(), "already exists") {
+			// The error will have the format:
+			// error creating "discovery-db": pq: database "discovery-db" already exists
+			// Trim the beginning to make it clear that this is not an error
+			// that matters.
+			log.Debugf(ctx, strings.TrimPrefix(err.Error(), "error creating "))
+			return nil
+		}
+		return err
+	}
+	return nil
+}
+
+func migrate(dbName string) error {
+	_, err := database.TryToMigrate(dbName)
+	return err
+}
+
+func drop(ctx context.Context, dbName string) error {
+	err := database.DropDB(dbName)
+	if err != nil {
+		if strings.Contains(err.Error(), "does not exist") {
+			// The error will have the format:
+			// ...server error (FATAL: database "discovery-dbasdasdas" does not exist (SQLSTATE 3D000))
+			// or
+			// error dropping "discovery_frontend_test": pq: database "discovery_frontend_test" does not exist
+			log.Infof(ctx, "Database does not exist: %q", dbName)
+			return nil
+		}
+		return err
+	}
+	log.Infof(ctx, "Dropped database: %q", dbName)
+	return nil
+}
+
+func recreate(ctx context.Context, dbName string) error {
+	if err := drop(ctx, dbName); err != nil {
+		return err
+	}
 	if err := database.CreateDB(dbName); err != nil {
 		return err
 	}
-	_, err := database.TryToMigrate(dbName)
-	return err
+	return migrate(dbName)
+}
+
+func truncate(ctx context.Context, connectionInfo string) error {
+	// Wrap the postgres driver with our own wrapper, which adds OpenCensus instrumentation.
+	ddb, err := database.Open("pgx", connectionInfo, "dbadmin")
+	if err != nil {
+		return err
+	}
+	defer ddb.Close()
+	return database.ResetDB(ctx, ddb)
 }

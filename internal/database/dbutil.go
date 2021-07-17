@@ -110,7 +110,7 @@ func CreateDBIfNotExists(dbName string) error {
 		return err
 	}
 
-	log.Printf("Test database %q does not exist, creating.", dbName)
+	log.Printf("Database %q does not exist, creating.", dbName)
 	return CreateDB(dbName)
 }
 
