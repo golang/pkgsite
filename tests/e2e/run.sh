@@ -4,32 +4,11 @@
 # Use of this source code is governed by a BSD-style
 # license that can be found in the LICENSE file.
 
-cleanup() {
-  docker-compose -f devtools/docker/compose.yaml down --remove-orphans
-}
-
-error() {
-  echo ""
-  echo "---------- ERROR: docker-compose db logs ----------"
-  docker-compose -f devtools/docker/compose.yaml logs db
-  echo ""
-  echo "---------- ERROR: docker-compose seeddb logs ----------"
-  docker-compose -f devtools/docker/compose.yaml logs seeddb
-  echo ""
-  echo "---------- ERROR: docker-compose frontend logs ----------"
-  docker-compose -f devtools/docker/compose.yaml logs frontend
-  echo ""
-  echo "---------- ERROR: docker-compose chrome logs ----------"
-  docker-compose -f devtools/docker/compose.yaml logs chrome
-  echo ""
-  echo "---------- ERROR: docker-compose e2e logs ----------"
-  docker-compose -f devtools/docker/compose.yaml logs e2e
-  cleanup
-}
+source devtools/docker.sh || { echo "Are you at repo root?"; exit 1; }
 
 main() {
-  trap cleanup EXIT
-  trap error ERR
+  trap docker_cleanup EXIT
+  trap docker_error ERR
 
   local files="e2e --runInBand"
   for arg in "$@"; do
