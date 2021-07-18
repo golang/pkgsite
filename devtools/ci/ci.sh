@@ -105,5 +105,11 @@ echo "----------------------------------------"
 ./tests/e2e/run.sh
 print_duration_and_reset
 
+echo "----------------------------------------"
+echo "Running search tests"
+echo "----------------------------------------"
+./tests/search/run.sh
+print_duration_and_reset
+
 echo
 echo "----------------------------------------"
