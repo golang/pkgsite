@@ -14,8 +14,8 @@ main() {
 
   # These variables are used by the seedddb script.
   export GO_DISCOVERY_DATABASE_NAME=discovery_symbol_test
-  export GO_DISCOVERY_SEED_DB_FILE=symbolsearch.txt
   export GO_DISCOVERY_CONFIG_DYNAMIC=tests/search/config.yaml
+  export GO_DISCOVERY_SEED_DB_FILE=tests/search/seed.txt
   dockercompose build && dockercompose run seeddb && ./devtools/go.sh run tests/search/main.go
 
   local status=$?

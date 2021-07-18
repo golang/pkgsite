@@ -34,7 +34,7 @@ import (
 )
 
 var (
-	seedfile = flag.String("seed", "seed.txt", "filename containing modules for seeding the database; relative to devtools/cmd/seeddb")
+	seedfile = flag.String("seed", "devtools/cmd/seeddb/seed.txt", "filename containing modules for seeding the database; relative to devtools/cmd/seeddb")
 )
 
 func main() {
@@ -74,9 +74,7 @@ func run(ctx context.Context, db *postgres.DB, proxyURL string) error {
 	}
 
 	sourceClient := source.NewClient(config.SourceTimeout)
-
-	sf := fmt.Sprintf("devtools/cmd/seeddb/%s", *seedfile)
-	seedModules, err := readSeedFile(ctx, sf)
+	seedModules, err := readSeedFile(ctx, *seedfile)
 	if err != nil {
 		return err
 	}

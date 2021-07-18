@@ -17,9 +17,9 @@ main() {
     fi
   done
 
-  export GO_DISCOVERY_SEED_DB_FILE=e2e_test_modules.txt
-  export GO_DISCOVERY_DATABASE_NAME=discovery_e2e_test
   export GO_DISCOVERY_CONFIG_DYNAMIC=tests/e2e/config.yaml
+  export GO_DISCOVERY_DATABASE_NAME=discovery_e2e_test
+  export GO_DISCOVERY_SEED_DB_FILE=tests/e2e/seed.txt
   dockercompose build && dockercompose run seeddb && dockercompose run e2e $files $@
 
   local status=$?
