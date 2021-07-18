@@ -11,7 +11,7 @@ x-database-variables: &database-variables
 
 x-go-variables: &go-variables
   GOMODCACHE: /gomodcache
-  GO_DISCOVERY_CONFIG_DYNAMIC: ${GO_DISCOVERY_CONFIG_DYNAMIC:-/pkgsite/devtools/docker/config.yaml}
+  GO_DISCOVERY_CONFIG_DYNAMIC:
   GO_DISCOVERY_LOG_LEVEL: ${GO_DISCOVERY_LOG_LEVEL:-info}
 
 services:
