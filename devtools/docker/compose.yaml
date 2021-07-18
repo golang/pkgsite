@@ -10,6 +10,7 @@ x-database-variables: &database-variables
   GO_DISCOVERY_DATABASE_USER: ${GO_DISCOVERY_DATABASE_USER:-postgres}
 
 x-go-variables: &go-variables
+  GOMODCACHE: /gomodcache
   GO_DISCOVERY_CONFIG_DYNAMIC: ${GO_DISCOVERY_CONFIG_DYNAMIC:-/pkgsite/devtools/docker/config.yaml}
   GO_DISCOVERY_LOG_LEVEL: ${GO_DISCOVERY_LOG_LEVEL:-info}
 
@@ -74,6 +75,7 @@ services:
       - 8080:8080
     volumes:
       - ../../:/pkgsite
+      - gomodcache:/gomodcache
     working_dir: /pkgsite
   seeddb:
      # This should match the version we are using on AppEngine.
@@ -95,6 +97,7 @@ services:
       - 8080:8080
     volumes:
       - ../../:/pkgsite
+      - gomodcache:/gomodcache
     working_dir: /pkgsite
   db:
     image: postgres:11.12
@@ -128,3 +131,5 @@ services:
       - 3000:3000
     environment:
       - CONNECTION_TIMEOUT=120000
+volumes:
+  gomodcache:
