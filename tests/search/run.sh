@@ -17,6 +17,15 @@ main() {
   export GO_DISCOVERY_SEED_DB_FILE=symbolsearch.txt
   export GO_DISCOVERY_CONFIG_DYNAMIC=tests/search/config.yaml
   dockercompose build && dockercompose run seeddb && ./devtools/go.sh run tests/search/main.go
+
+  local status=$?
+  if [ $status -eq 0 ]
+  then
+    echo "Done!"
+  else
+    echo "Search tests failed."
+  fi
+  exit $status
 }
 
 main $@
