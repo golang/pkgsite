@@ -337,10 +337,8 @@ func upsertSymbolNamesReturningIDs(ctx context.Context, db *database.DB,
 			}
 		}
 	}
-	query := `
-        SELECT id, name
-        FROM symbol_names
-        WHERE name = ANY($1);`
+	sort.Strings(names)
+
 	nameToID := map[string]int{}
 	collect := func(rows *sql.Rows) error {
 		var (
@@ -356,11 +354,25 @@ func upsertSymbolNamesReturningIDs(ctx context.Context, db *database.DB,
 		}
 		return nil
 	}
+	query := `
+		SELECT id, name
+		FROM symbol_names
+		WHERE name = ANY($1);`
 	if err := db.RunQuery(ctx, query, collect, pq.Array(names)); err != nil {
 		return nil, err
 	}
 
-	sort.Strings(names)
+	// Trigger tsv_name_tokens to update.
+	// TODO(golang/go#44142): Remove this once tsv_name_tokens is populated in
+	// all environments.
+	if _, err := db.Exec(ctx, `
+		UPDATE symbol_names
+		SET name=name
+		WHERE name = ANY($1)
+		AND tsv_name_tokens IS NULL;`, pq.Array(names)); err != nil {
+		return nil, err
+	}
+
 	var values []interface{}
 	for _, name := range names {
 		if _, ok := nameToID[name]; !ok {
