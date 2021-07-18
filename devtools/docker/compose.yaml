@@ -64,6 +64,7 @@ services:
       - db
     command: bash -c "
         ./third_party/wait-for-it/wait-for-it.sh db:5432 --
+          go run ./devtools/cmd/db/main.go create &&
           go run ./devtools/cmd/db/main.go migrate &&
           go run ./cmd/frontend -host=0.0.0.0:8080"
     environment:
@@ -87,6 +88,7 @@ services:
     # time seeddb runs. If this ends up being flaky, we should add a check here.
     command: bash -c "
         ./third_party/wait-for-it/wait-for-it.sh db:5432 --
+          go run ./devtools/cmd/db/main.go create &&
           go run ./devtools/cmd/db/main.go migrate &&
           go run ./devtools/cmd/seeddb/main.go -seed ${GO_DISCOVERY_SEED_DB_FILE:-seed.txt}"
     environment:
