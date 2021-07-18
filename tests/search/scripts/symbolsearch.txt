@@ -17,3 +17,16 @@ Int.Add math/big
 Rat.Add math/big
 Registry.Add github.com/go-openapi/strfmt
 Add math/bits
+
+# Search for package path element and symbol.
+"math Add"
+Float.Add math/big
+Int.Add math/big
+Rat.Add math/big
+Add math/bits
+
+# Search for package path element with slash and symbol.
+"math/big Add"
+Float.Add math/big
+Int.Add math/big
+Rat.Add math/big
