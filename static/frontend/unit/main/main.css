@@ -57,8 +57,11 @@
   }
 }
 .UnitDetails-contentEmpty {
+  align-items: center;
   background-color: var(--color-background-accented);
   color: var(--color-text-subtle);
+  display: flex;
+  flex-direction: column;
   height: 15rem;
   padding-top: 1rem;
   text-align: center;
