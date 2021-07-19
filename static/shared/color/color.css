@@ -20,6 +20,7 @@
   --turq-med: #50b7e0;
   --turq-dark: #007d9c;
   --blue: #bfeaf4;
+  --blue-light: #f2fafd;
   --black: #000;
   --green: #3a6e11;
   --green-light: #5fda64;
@@ -37,6 +38,7 @@
   --color-background-inverted: var(--slate);
   --color-background-accented: var(--gray-10);
   --color-background-highlighted: var(--blue);
+  --color-background-highlighted-link: var(--blue-light);
   --color-background-info: var(--gray-9);
   --color-background-warning: var(--yellow-light);
   --color-background-alert: var(--pink-light);
@@ -68,6 +70,7 @@
   --color-background: var(--gray-1);
   --color-background-accented: var(--gray-2);
   --color-background-highlighted: var(--gray-2);
+  --color-background-highlighted-link: var(--gray-2);
   --color-background-info: var(--gray-3);
   --color-background-warning: var(--yellow);
   --color-background-alert: var(--pink);
@@ -82,6 +85,7 @@
     --color-background: var(--gray-1);
     --color-background-accented: var(--gray-2);
     --color-background-highlighted: var(--gray-2);
+    --color-background-highlighted-link: var(--gray-2);
     --color-background-info: var(--gray-3);
     --color-background-warning: var(--yellow);
     --color-background-alert: var(--pink);

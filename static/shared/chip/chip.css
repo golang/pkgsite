@@ -23,9 +23,9 @@
   color: var(--color-text);
 }
 .go-Chip--highlighted {
-  background: var(--blue);
-  border-color: var(--blue);
-  color: var(--turq-dark);
+  background: var(--color-background-highlighted-link);
+  border-color: var(--color-background-highlighted-link);
+  color: var(--color-brand-primary);
 }
 .go-Chip--alert {
   background: var(--pink);
