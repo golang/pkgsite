@@ -34,4 +34,5 @@ export const testcases = test.each`
   ${'retracted package'}                                           | ${'/k8s.io/client-go@v1.5.2'}
   ${'deprecated package'}                                          | ${'/github.com/jba/bit'}
   ${'package with deprecated symbols'}                             | ${'/cuelang.org/go@v0.3.2/cue'}
+  ${'mvdan versions'}                                              | ${'/mvdan.cc/sh?tab=versions'}
 `;
