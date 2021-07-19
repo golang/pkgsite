@@ -60,7 +60,6 @@ type SearchResult struct {
 type subResult struct {
 	Heading string
 	Links   []link
-	Suffix  string
 }
 
 // fetchSearchPage fetches data matching the search query from the database and
@@ -89,7 +88,7 @@ func fetchSearchPage(ctx context.Context, db *postgres.DB, query string, pagePar
 			Licenses:       r.Licenses,
 			CommitTime:     elapsedTime(r.CommitTime),
 			NumImportedBy:  int(r.NumImportedBy),
-			SameModule:     packagePaths("Other packages in module "+r.ModulePath+":", r.SameModule, 5),
+			SameModule:     packagePaths("Other packages in module "+r.ModulePath+":", r.SameModule),
 			// Say "other" instead of "lower" because at some point we may
 			// prefer to show a tagged, lower major version over an untagged
 			// higher major version.
@@ -180,25 +179,17 @@ func approximateNumber(estimate int, sigma float64) int {
 	return int(unit * math.Round(float64(estimate)/unit))
 }
 
-func packagePaths(heading string, rs []*postgres.SearchResult, max int) *subResult {
+func packagePaths(heading string, rs []*postgres.SearchResult) *subResult {
 	if len(rs) == 0 {
 		return nil
 	}
 	var links []link
-	for i, r := range rs {
-		if i >= max {
-			break
-		}
+	for _, r := range rs {
 		links = append(links, link{Href: r.PackagePath, Body: internal.Suffix(r.PackagePath, r.ModulePath)})
-	}
-	suffix := ""
-	if len(rs) > len(links) {
-		suffix = fmt.Sprintf("(and %d more)", len(rs)-len(links))
 	}
 	return &subResult{
 		Heading: heading,
 		Links:   links,
-		Suffix:  suffix,
 	}
 }
 
