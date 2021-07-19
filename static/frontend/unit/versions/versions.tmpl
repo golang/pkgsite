@@ -41,11 +41,11 @@
     </div>
     {{template "version-list" .ThisModule}}
     {{if .IncompatibleModules}}
-      <h2>Incompatible versions in this module</h2>
+      <h2 class="Versions-modulesTitle">Incompatible versions in this module</h2>
       {{template "version-list" .IncompatibleModules}}
     {{end}}
     {{if .OtherModules}}
-      <h2>Other modules containing this package</h2>
+      <h2 class="Versions-modulesTitle">Other modules containing this package</h2>
       {{range .OtherModules}}
         <div><a href="/{{.}}">{{.}}</a></div>
       {{end}}

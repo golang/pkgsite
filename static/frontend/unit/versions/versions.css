@@ -70,6 +70,10 @@
 .Versions-titleButtonGroup button {
   font-size: 0.875rem;
 }
+.Versions-modulesTitle {
+  font-size: 1rem;
+  margin: 1rem 0;
+}
 .Versions-list {
   gap: 0 1rem;
   line-height: 2.25rem;
