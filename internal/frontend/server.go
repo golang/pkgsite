@@ -532,7 +532,8 @@ func executeTemplate(ctx context.Context, templateName string, tmpl *template.Te
 }
 
 var templateFuncs = template.FuncMap{
-	"add": func(i, j int) int { return i + j },
+	"add":      func(i, j int) int { return i + j },
+	"subtract": func(i, j int) int { return i - j },
 	"pluralize": func(i int, s string) string {
 		if i == 1 {
 			return s
