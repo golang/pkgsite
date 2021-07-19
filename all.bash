@@ -197,7 +197,7 @@ run_npx() {
   runcmd $npxcmd $@
 }
 
-prettier_file_globs='static/**/*.{ts,css} **/*.md'
+prettier_file_globs='**/*.md'
 
 # run_prettier runs prettier on CSS, JS, and MD files. Uses globally
 # installed prettier if available or a dockerized installation as a
@@ -267,7 +267,7 @@ main() {
     "")
       standard_linters
       run_prettier
-      run_npm run lint
+      run_npm run lint -- --fix
       run_npm run test
       runcmd go mod tidy
       runcmd env GO_DISCOVERY_TESTDB=true go test ./...
@@ -300,7 +300,7 @@ main() {
         run_prettier $pfiles
       fi
       if [[ $(filter "$files" 'static/**') != '' ]]; then
-        run_npm run lint
+        run_npm run lint -- --fix
         run_npm run test
       fi
       runcmd go mod tidy
