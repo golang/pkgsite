@@ -19,17 +19,7 @@ import (
 
 const SymbolTextSearchConfiguration = "symbols"
 
-// ConstructQuerySymbol is used by gen_query.go to construct `const QuerySymbol`.
-func ConstructQuerySymbol() string {
-	contents := `// QuerySymbol is used when the search query is only one word, with no dots.
-// In this case, the word must match a symbol name and ranking is completely
-// determined by the path_tokens.`
-	contents += "\n"
-	contents += fmt.Sprintf("const QuerySymbol = `%s`", querySymbol)
-	return contents
-}
-
-var querySymbol = fmt.Sprintf(symbolSearchBaseQuery, scoreSymbol, filterSymbol)
+var RawQuerySymbol = fmt.Sprintf(symbolSearchBaseQuery, scoreSymbol, filterSymbol)
 
 // filterSymbol is used when $1 is the full symbol name, either
 // <symbol> or <type>.<methodOrField>.
@@ -37,7 +27,8 @@ var filterSymbol = fmt.Sprintf(`s.tsv_name_tokens @@ %s`, toTSQuery("$1"))
 
 var (
 	// scoreSymbol is the score the for QuerySymbol.
-	scoreSymbol = fmt.Sprintf("%s\n\t\t* %s\n\t\t* %s", popularityMultiplier, redistributableMultipler, goModMultipler)
+	scoreSymbol = fmt.Sprintf("%s\n\t\t* %s\n\t\t* %s",
+		popularityMultiplier, redistributableMultipler, goModMultipler)
 
 	// Popularity multipler to increase ranking of popular packages.
 	popularityMultiplier = `ln(exp(1)+imported_by_count)`
