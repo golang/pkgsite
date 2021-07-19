@@ -89,7 +89,6 @@ body {
    * It also must be set to 'touch' for the fix to work.
    */
   -webkit-overflow-scrolling: touch;
-  overscroll-behavior: none;
 }
 
 .go-Container {
