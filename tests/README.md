@@ -7,7 +7,6 @@ database.
 
 TODO(golang/go#44142): Add this section.
 
-
 ## End-to-End (E2E) Tests
 
 Th e2e/ directory contains end-to-end tests for pages on pkg.go.dev, which can
