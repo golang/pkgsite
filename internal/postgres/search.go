@@ -610,7 +610,7 @@ var upsertSearchStatement = fmt.Sprintf(`
 		m.commit_time,
 		m.has_go_mod,
 		$4,
-		SETWEIGHT(TO_TSVECTOR('symbols', $4), 'A'),
+		SETWEIGHT(TO_TSVECTOR('%s', replace($4, '_', '-')), 'A'),
 		(
 			SETWEIGHT(TO_TSVECTOR('path_tokens', $4), 'A') ||
 			SETWEIGHT(TO_TSVECTOR($5), 'B') ||
@@ -650,7 +650,9 @@ var upsertSearchStatement = fmt.Sprintf(`
 			THEN search_documents.version_updated_at
 			ELSE CURRENT_TIMESTAMP
 			END)
-	;`, hllRegisterCount)
+	;`,
+	symbolTextSearchConfiguration,
+	hllRegisterCount)
 
 // upsertSearchDocuments adds search information for mod to the search_documents table.
 // It assumes that all non-redistributable data has been removed from mod.
