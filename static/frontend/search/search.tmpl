@@ -12,14 +12,19 @@
   <link href="/static/frontend/search/search.css?version={{.AppVersionLabel}}" rel="stylesheet">
 {{end}}
 
+{{define "post-content"}}
+  <script>
+    loadScript("/static/frontend/search/search.js")
+  </script>
+{{end}}
+
 {{define "main"}}
   <main class="go-Container">
     <div class="go-Content">
       <h1 class="SearchResults-header">Results for “{{.Query}}”</h1>
-      <div class="SearchResults-help"><a href="/search-help">Search help</a></div>
       <div class="SearchResults-resultCount go-textSubtle">
         {{template "pagination_summary" .Pagination}} {{pluralize .Pagination.TotalCount "result"}}
-        {{template "pagination_nav" .Pagination}}
+        <div class="SearchResults-help"><a href="/search-help">Search help</a></div>
       </div>
         {{if eq (len .Results) 0}}
           {{template "gopher-airplane" "No results found."}}
@@ -53,8 +58,8 @@
               data-test-id="snippet-title">
             {{$v.Name}}
           </a>
-	    <span class="SearchSnippet-header-path">{{$v.PackagePath}}</span>
         </h2>
+  	    <span class="SearchSnippet-header-path">{{$v.PackagePath}}</span>
       </div>
       <p class="SearchSnippet-synopsis" data-test-id="snippet-synopsis">
         {{$v.Synopsis}}
@@ -64,7 +69,20 @@
         <div class="SearchSnippet-sub go-textSubtle">
           <span>{{.Heading}}</span>
           {{range $i, $v := .Links}}
-            <a href="/{{$v.Href}}" data-gtmc="search result same module" data-gtmv="{{$i}}">{{$v.Body}}</a>
+            <a class="go-Chip go-Chip--highlighted js-sameModChip"
+                href="/{{$v.Href}}"
+                {{if gt $i 4 }}data-hidden="true"{{end}}
+                data-gtmc="search result same module"
+                data-gtmv="{{$i}}">
+              {{$v.Body}}
+            </a>
+          {{end}}
+          {{$more := subtract (len .Links) 5}}
+          {{if gt (len .Links) 5}}
+            <button class="go-Chip go-Chip--highlighted js-showMoreChip"
+                data-gtmc="search result same module" data-gtmv="{{$i}}">
+              +{{$more}} more
+            </button>
           {{end}}
           <span>{{.Suffix}}</span>
         </div>
@@ -73,7 +91,8 @@
         <div class="SearchSnippet-sub go-textSubtle">
           <span>{{.Heading}}</span>
           {{range $i, $v := .Links}}
-            <a href="/{{$v.Href}}" data-gtmc="search result lower major" data-gtmv="{{$i}}">{{$v.Body}}</a>
+            <a class="go-Chip go-Chip--highlighted" href="/{{$v.Href}}"
+                data-gtmc="search result lower major" data-gtmv="{{$i}}">{{$v.Body}}</a>
           {{end}}
         </div>
       {{end}}
@@ -86,13 +105,9 @@
     <a href="/{{$.PackagePath}}?tab=importedby" aria-label="Go to Imported By">
        <span class="go-textSubtle">Imported by: </span><strong>{{.NumImportedBy}}</strong>
     </a>
-
-    <span class="SearchSnippet-infoLabelDivider"></span>
-    <span class="go-textSubtle">Published: </span>
-    <span class="go-textSubtle">{{.DisplayVersion}} • </span>
-    <span class="go-textSubtle" data-test-id="snippet-published">{{.CommitTime}}</span>
-
-    <span class="SearchSnippet-infoLabelDivider"></span>
+    <span class="go-textSubtle">
+      Published: {{.DisplayVersion}} • <span data-test-id="snippet-published">{{.CommitTime}}</span>
+    </span>
     <span data-test-id="snippet-license">
     {{if .Licenses}}
       <a href="/{{$.PackagePath}}?tab=licenses" aria-label="Go to Licenses">
