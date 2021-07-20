@@ -33,7 +33,7 @@ services:
     environment:
       <<: *database-variables
       <<: *go-variables
-      GO_DISCOVERY_TESTDB: ${GO_DISCOVERY_TESTDB:-true}
+      GO_DISCOVERY_TESTDB: ${GO_DISCOVERY_TESTDB:-"true"}
       # TERM is set to xterm-256color for use by devtools/lib.sh.
       TERM: xterm-256color
       WAITFORIT_TIMEOUT: 300
