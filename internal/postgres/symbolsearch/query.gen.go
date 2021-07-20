@@ -82,9 +82,7 @@ WITH results AS (
 	FROM symbol_search_documents ssd
 	INNER JOIN search_documents sd ON sd.unit_id = ssd.unit_id
 	INNER JOIN symbol_names s ON s.id = ssd.symbol_name_id
-	WHERE (
-			sd.name = split_part($1, '.', 1)
-		) AND (
+	WHERE (sd.name=split_part($1, '.', 1) OR sd.package_path=split_part($1, '.', 1)) AND (
 			s.tsv_name_tokens @@ to_tsquery('symbols', substring(replace($1, '_', '-') from E'[^.]*\.(.+)$'))
 		)
 )
@@ -138,9 +136,7 @@ WITH results AS (
 	FROM symbol_search_documents ssd
 	INNER JOIN search_documents sd ON sd.unit_id = ssd.unit_id
 	INNER JOIN symbol_names s ON s.id = ssd.symbol_name_id
-	WHERE (
-			sd.name = split_part($1, '.', 1)
-		) AND (
+	WHERE (sd.name=split_part($1, '.', 1) OR sd.package_path=split_part($1, '.', 1)) AND (
 			s.tsv_name_tokens @@ to_tsquery('symbols', substring(replace($1, '_', '-') from E'[^.]*\.(.+)$'))
 		) OR s.tsv_name_tokens @@ to_tsquery('symbols', replace($1, '_', '-'))
 )

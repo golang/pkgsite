@@ -38,13 +38,12 @@ var (
 	// filterPackageDotSymbol is used when $1 is either <package>.<symbol> OR
 	// <package>.<type>.<methodOrField>.
 	filterPackageDotSymbol = fmt.Sprintf("%s AND %s",
-		// Split the package name from $1, which can be assumed to be the
-		// element preceding the first dot.
-		formatFilter("sd.name = split_part($1, '.', 1)"),
-		// Split the symbol name from $1, which can be assumed to be everything
-		// following the first dot.
+		filterPackageNameOrPath,
 		fmt.Sprintf(formatFilter("s.tsv_name_tokens @@ %s"),
 			toTSQuery("substring($1 from E'[^.]*\\.(.+)$')")))
+
+	filterPackageNameOrPath = fmt.Sprintf(
+		"(sd.name=%s OR sd.package_path=%[1]s)", splitFirstDot)
 
 	// filterOneDot is used when $1 is one word containing a single dot, which
 	// means it is either <package>.<symbol> or <type>.<methodOrField>.
@@ -115,7 +114,13 @@ func indent(s string, n int) string {
 	return "\n" + s
 }
 
-const splitOR = "replace($1, ' ', ' | ')"
+const (
+	splitOR = "replace($1, ' ', ' | ')"
+
+	// splitFirstDot splits everything preceding the first dot in $1.
+	// This is used to parse th package name or path.
+	splitFirstDot = "split_part($1, '.', 1)"
+)
 
 // Penalties to search scores, applied as multipliers to the score.
 const (

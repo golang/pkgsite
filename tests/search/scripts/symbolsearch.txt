@@ -30,3 +30,11 @@ math/big Add
 Float.Add math/big
 Int.Add math/big
 Rat.Add math/big
+
+Search for <package path>.<symbol>.
+math/big.Float
+Float math/big
+
+Search for <package name>.<symbol>.
+big.Float
+Float math/big
