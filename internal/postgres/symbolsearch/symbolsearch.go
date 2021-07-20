@@ -20,10 +20,10 @@ import (
 const SymbolTextSearchConfiguration = "symbols"
 
 var (
-	RawQuerySymbol           = fmt.Sprintf(symbolSearchBaseQuery, scoreMultipliers, filterSymbol)
-	RawQueryPackageDotSymbol = fmt.Sprintf(symbolSearchBaseQuery, scoreMultipliers, filterPackageDotSymbol)
-	RawQueryOneDot           = fmt.Sprintf(symbolSearchBaseQuery, scoreMultipliers, filterOneDot)
-	RawQueryMultiWord        = fmt.Sprintf(symbolSearchBaseQuery, formatScore(scoreMultiWord), filterMultiWord)
+	rawQuerySymbol           = fmt.Sprintf(symbolSearchBaseQuery, scoreMultipliers, filterSymbol)
+	rawQueryPackageDotSymbol = fmt.Sprintf(symbolSearchBaseQuery, scoreMultipliers, filterPackageDotSymbol)
+	rawQueryOneDot           = fmt.Sprintf(symbolSearchBaseQuery, scoreMultipliers, filterOneDot)
+	rawQueryMultiWord        = fmt.Sprintf(symbolSearchBaseQuery, formatScore(scoreMultiWord), filterMultiWord)
 )
 
 var (
