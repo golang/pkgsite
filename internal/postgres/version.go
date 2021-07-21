@@ -392,7 +392,7 @@ func getLatestGoodVersion(ctx context.Context, tx *database.DB, modulePath strin
 	if err != nil {
 		return "", err
 	}
-	vs, err := collectStrings(ctx, tx, query, args...)
+	vs, err := tx.CollectStrings(ctx, query, args...)
 	if err != nil {
 		return "", err
 	}

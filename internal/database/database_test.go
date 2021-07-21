@@ -556,3 +556,25 @@ func TestRunQueryIncrementally(t *testing.T) {
 	}
 
 }
+
+func TestCollectStrings(t *testing.T) {
+	ctx := context.Background()
+	for _, stmt := range []string{
+		`DROP TABLE IF EXISTS test_cs`,
+		`CREATE TABLE test_cs (s TEXT)`,
+		`INSERT INTO test_cs (s) VALUES ('a'), ('b'), ('c')`,
+	} {
+		if _, err := testDB.Exec(ctx, stmt); err != nil {
+			t.Fatal(err)
+		}
+	}
+	got, err := testDB.CollectStrings(ctx, `SELECT s FROM test_cs`)
+	if err != nil {
+		t.Fatal(err)
+	}
+	sort.Strings(got)
+	want := []string{"a", "b", "c"}
+	if !cmp.Equal(got, want) {
+		t.Errorf("got %v, want %v", got, want)
+	}
+}

@@ -39,5 +39,5 @@ func (db *DB) GetStdlibPathsWithSuffix(ctx context.Context, suffix string) (path
 			AND p.path LIKE '%/' || $2
 		ORDER BY p.path
 	`
-	return collectStrings(ctx, db.db, q, stdlib.ModulePath, suffix)
+	return db.db.CollectStrings(ctx, q, stdlib.ModulePath, suffix)
 }

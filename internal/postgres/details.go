@@ -95,7 +95,7 @@ func (db *DB) GetImportedBy(ctx context.Context, pkgPath, modulePath string, lim
 			from_path
 		LIMIT $3`
 
-	return collectStrings(ctx, db.db, query, pkgPath, modulePath, limit)
+	return db.db.CollectStrings(ctx, query, pkgPath, modulePath, limit)
 }
 
 // GetImportedByCount returns the number of packages that import pkgPath.

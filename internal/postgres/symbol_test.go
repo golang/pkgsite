@@ -47,7 +47,7 @@ func TestInsertSymbolNamesAndHistory(t *testing.T) {
 	mod.Packages()[0].Documentation[0].API = api
 	MustInsertModule(ctx, t, testDB, mod)
 
-	got, err := collectStrings(ctx, testDB.db, `SELECT name FROM symbol_names;`)
+	got, err := testDB.db.CollectStrings(ctx, `SELECT name FROM symbol_names;`)
 	if err != nil {
 		t.Fatal(err)
 	}

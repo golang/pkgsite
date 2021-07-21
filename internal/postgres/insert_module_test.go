@@ -706,7 +706,7 @@ func TestReInsertLatestVersion(t *testing.T) {
 			t.Fatalf("got version %s, synopsis %q, want %s for both", gotVersion, gotSynopsis, wantVersion)
 		}
 
-		gotImports, err := collectStrings(ctx, testDB.db, `
+		gotImports, err := testDB.db.CollectStrings(ctx, `
 			SELECT to_path
 			FROM imports_unique
 			WHERE from_path = 'm.com/a/pkg'

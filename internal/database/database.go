@@ -535,6 +535,25 @@ func buildBulkUpdateQuery(table string, columns, types []string) string {
 	)
 }
 
+// CollectStrings runs the query, which must select for a single string column, and returns
+// a slice of the resulting strings.
+func (db *DB) CollectStrings(ctx context.Context, query string, args ...interface{}) (ss []string, err error) {
+	defer derrors.WrapStack(&err, "DB.CollectStrings(%q)", query)
+
+	err = db.RunQuery(ctx, query, func(rows *sql.Rows) error {
+		var s string
+		if err := rows.Scan(&s); err != nil {
+			return err
+		}
+		ss = append(ss, s)
+		return nil
+	}, args...)
+	if err != nil {
+		return nil, err
+	}
+	return ss, nil
+}
+
 // emptyStringScanner wraps the functionality of sql.NullString to just write
 // an empty string if the value is NULL.
 type emptyStringScanner struct {

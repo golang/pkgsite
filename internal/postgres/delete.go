@@ -22,7 +22,7 @@ func (db *DB) DeletePseudoversionsExcept(ctx context.Context, modulePath, resolv
 			DELETE FROM modules
 			WHERE version_type = 'pseudo' AND module_path=$1 AND version != $2
 			RETURNING version`
-		versions, err := collectStrings(ctx, tx, stmt, modulePath, resolvedVersion)
+		versions, err := tx.CollectStrings(ctx, stmt, modulePath, resolvedVersion)
 		if err != nil {
 			return err
 		}
