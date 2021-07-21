@@ -28,9 +28,15 @@
       </div>
         {{if eq (len .Results) 0}}
           {{template "gopher-airplane" "No results found."}}
-          <p class="SearchResults-emptyContentMessage">
-            If you think “{{.Query}}” is a valid package or module, you could try downloading it by visiting <a href="https://pkg.go.dev/{{.Query}}">pkg.go.dev/{{.Query}}</a>.
-          </p>
+          {{if eq .SearchMode "identifiers"}}
+            <p class="SearchResults-emptyContentMessage">
+              Try searching for a package by visiting <a href="https://pkg.go.dev/search?q={{.Query}}">pkg.go.dev/search?q={{.Query}}</a>.
+            </p>
+          {{else}}
+            <p class="SearchResults-emptyContentMessage">
+              If you think “{{.Query}}” is a valid package or module, you could try downloading it by visiting <a href="https://pkg.go.dev/{{.Query}}">pkg.go.dev/{{.Query}}</a>.
+            </p>
+          {{end}}
         {{else if eq .SearchMode "identifiers"}}
           <div>{{/* Containing element is needed to use *-of-type selectors */}}
             {{template "symbol_search" .}}
