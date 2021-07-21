@@ -25,7 +25,6 @@ afterAll(async () => {
 
 test.each`
   href
-  ${'#section-documentation'}
   ${'#pkg-overview'}
   ${'#pkg-index'}
   ${'#pkg-constants'}
@@ -35,6 +34,7 @@ test.each`
   ${'#pkg-types'}
   ${'#section-sourcefiles'}
 `('doc outline $href', async ({ href }) => {
+  await page.waitForSelector(`[href="#section-documentation"][aria-expanded="true"]`);
   await page.click(`[href="${href}"][role="treeitem"]`);
   const image = await page.screenshot();
   expect(image).toMatchImageSnapshot();
