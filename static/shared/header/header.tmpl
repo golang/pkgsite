@@ -17,8 +17,9 @@
     </div>
     <div class="go-Header-inner go-Header-inner--dark">
       <nav class="go-Header-nav">
-        <a href="https://go.dev/" data-gtmc="nav link" data-test-id="go-header-logo-link">
-          <img class="js-headerLogo go-Header-logo" src="/static/shared/logo/go-white.svg" alt="Go">
+        <a href="https://go.dev/" class="js-headerLogo" data-gtmc="nav link"
+            data-test-id="go-header-logo-link">
+          <img class="go-Header-logo" src="/static/shared/logo/go-white.svg" alt="Go">
         </a>
         <div class="go-Header-rightContent">
           {{if .Experiments.IsActive "symbol-search"}}
@@ -83,26 +84,33 @@
 {{end}}
 
 {{define "symbol_search_bar"}}
-<form
-  class="go-InputGroup"
-  action="/search"
-  data-gtmc="search form"
-  aria-label="Search for a package"
-  role="search"
->
-  <select name="m" class="go-Select js-searchModeSelect">
-    <option value="packages">Packages</option>
-    <option {{if eq .SearchMode "identifiers"}}selected{{end}} value="identifiers">Identifiers</option>
-  </select>
-  <input name="q" class="go-Input" placeholder="Search for a package" />
-  <button class="go-Button go-Button--inverted" aria-label="Submit search">
-    <img
-      class="go-Icon"
-      height="24"
-      width="24"
-      src="/static/shared/icon/search_gm_grey_24dp.svg"
-      alt=""
-    />
+<div class="go-SearchForm js-searchForm">
+  <form
+    class="go-InputGroup go-SearchForm-form"
+    action="/search"
+    data-gtmc="search form"
+    aria-label="Search for a package"
+    role="search"
+  >
+    <select name="m" class="go-Select js-searchModeSelect">
+      <option value="packages">Packages</option>
+      <option {{if eq .SearchMode "identifiers"}}selected{{end}} value="identifiers">Identifiers</option>
+    </select>
+    <input name="q" class="go-Input" placeholder="Search for a package" />
+    <button class="go-Button go-Button--inverted" aria-label="Submit search">
+      <img
+        class="go-Icon"
+        height="24"
+        width="24"
+        src="/static/shared/icon/search_gm_grey_24dp.svg"
+        alt=""
+      />
+    </button>
+  </form>
+  <button class="go-SearchForm-expandSearch js-expandSearch" data-gtmc="nav button"
+      aria-label="Open search" data-test-id="expand-search">
+    <img class="go-Icon go-Icon--inverted" height="24" width="24"
+        src="/static/shared/icon/search_gm_grey_24dp.svg" alt="">
   </button>
-</form>
+</div>
 {{end}}

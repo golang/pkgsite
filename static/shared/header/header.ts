@@ -20,65 +20,24 @@ function registerHeaderListeners() {
 }
 
 function registerSearchFormListeners() {
-  const BREAKPOINT = 512;
-  const logo = document.querySelector('.js-headerLogo');
-  const form = document.querySelector<HTMLFormElement>('.js-searchForm');
-  const button = document.querySelector('.js-searchFormSubmit');
-  const input = form?.querySelector('input');
-
-  renderForm();
-
-  window.addEventListener('resize', renderForm);
-
-  function renderForm() {
-    if (window.innerWidth > BREAKPOINT) {
-      logo?.classList.remove('go-Header-logo--hidden');
-      form?.classList.remove('go-SearchForm--open');
-      input?.removeEventListener('focus', showSearchBox);
-      input?.removeEventListener('keypress', handleKeypress);
-      input?.removeEventListener('focusout', hideSearchBox);
-    } else {
-      button?.addEventListener('click', handleSearchClick);
-      input?.addEventListener('focus', showSearchBox);
-      input?.addEventListener('keypress', handleKeypress);
-      input?.addEventListener('focusout', hideSearchBox);
-    }
-  }
-
-  /**
-   * Submits form if Enter key is pressed
-   */
-  function handleKeypress(e: KeyboardEvent) {
-    if (e.key === 'Enter') form?.submit();
-  }
-
-  /**
-   * Shows the search box when it receives focus (expands it from
-   * just the spyglass if we're on mobile).
-   */
-  function showSearchBox() {
-    logo?.classList.add('go-Header-logo--hidden');
-    form?.classList.add('go-SearchForm--open');
-  }
-
-  /**
-   * Hides the search box (shrinks to just the spyglass icon).
-   */
-  function hideSearchBox() {
-    logo?.classList.remove('go-Header-logo--hidden');
-    form?.classList.remove('go-SearchForm--open');
-  }
-
-  /**
-   * Expands the searchbox so input is visible and gives
-   * the input focus.
-   */
-  function handleSearchClick(e: Event) {
-    e.preventDefault();
-
-    showSearchBox();
+  const searchForm = document.querySelector('.js-searchForm');
+  const expandSearch = document.querySelector('.js-expandSearch');
+  const input = searchForm?.querySelector('input');
+  const headerLogo = document.querySelector('.js-headerLogo');
+  const menuButton = document.querySelector('.js-headerMenuButton');
+  expandSearch?.addEventListener('click', () => {
+    searchForm?.classList.add('go-SearchForm--expanded');
+    headerLogo?.classList.add('go-Header-logo--hidden');
+    menuButton?.classList.add('go-Header-navOpen--hidden');
     input?.focus();
-  }
+  });
+  document?.addEventListener('click', e => {
+    if (!searchForm?.contains(e.target as Node)) {
+      searchForm?.classList.remove('go-SearchForm--expanded');
+      headerLogo?.classList.remove('go-Header-logo--hidden');
+      menuButton?.classList.remove('go-Header-navOpen--hidden');
+    }
+  });
 }
 
 /**

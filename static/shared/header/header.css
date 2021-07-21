@@ -156,70 +156,31 @@
   margin-left: 1rem;
   width: 2.5rem;
 }
+.go-Header-navOpen--hidden {
+  display: none;
+}
 .go-Header-navOpen--white {
   background: no-repeat center/2rem url('/static/shared/icon/menu_gm_grey_24dp.svg');
   filter: brightness(0) saturate(100%) invert(100%) sepia(97%) saturate(13%) hue-rotate(245deg)
     brightness(103%) contrast(107%);
 }
 
-.go-SearchForm {
-  align-items: center;
-  background-color: transparent;
-  border-radius: 0.25rem;
+.go-SearchForm--expanded {
+  flex-grow: 1;
+}
+.go-SearchForm-form {
+  display: none;
+}
+.go-SearchForm--expanded .go-SearchForm-form {
   display: flex;
-  flex: 1;
-  font-size: 1rem;
-  height: 2rem;
-  margin: 0.6875rem 0;
-  max-width: 2rem;
-  transition: max-width 200ms;
 }
-.go-SearchForm--open {
-  background-color: var(--color-background);
-  margin-left: 1.5rem;
-  max-width: min(100%, 30rem);
+.go-SearchForm-expandSearch {
+  appearance: none;
+  background: none;
+  font-size: 1.5rem;
 }
-.go-SearchForm svg {
-  box-sizing: border-box;
-  cursor: pointer;
-  fill: var(--white);
-  margin-left: 0.5rem;
-  width: 1.4375rem;
-}
-.go-SearchForm--open svg {
-  fill: var(--color-text-subtle);
-  margin-right: 0.5rem;
-}
-.go-SearchForm-input {
-  background-color: transparent;
-  border: none;
-  box-sizing: border-box;
-  font: inherit;
-  height: 100%;
-  opacity: 0;
-  outline: none;
-  padding: 0;
-  transition: width 200ms, padding 200ms, opacity 200ms;
-  width: 0;
-}
-.go-SearchForm--open .go-SearchForm-input {
-  flex: 1;
-  opacity: 1;
-  padding: 0.5rem;
-  transition: width 200ms, padding 200ms;
-  width: 100%;
-}
-.go-SearchForm-input::placeholder {
-  color: var(--color-text-subtle);
-}
-.go-SearchForm-submit {
-  background-color: transparent;
-  border: none;
-  box-sizing: border-box;
-  cursor: pointer;
-  display: flex;
-  outline: 0;
-  padding: 0;
+.go-SearchForm--expanded .go-SearchForm-expandSearch {
+  display: none;
 }
 
 @media only screen and (min-width: 32rem) {
@@ -227,18 +188,16 @@
     width: 100%;
   }
   .go-SearchForm {
-    background-color: var(--color-background);
-    margin: 0.6rem 1.4rem 0.6rem 0;
-    max-width: none;
+    flex: 1;
   }
-  .go-SearchForm-input {
-    opacity: 1;
-    padding: initial;
-    width: 100%;
+  .go-SearchForm-form {
+    display: flex;
   }
-  .go-SearchForm svg {
-    fill: var(--color-text-subtle);
-    margin-right: 0.5rem;
+  .go-SearchForm-expandSearch {
+    display: none;
+  }
+  .go-Header-logo--hidden {
+    display: initial;
   }
 }
 
