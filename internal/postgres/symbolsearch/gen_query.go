@@ -10,6 +10,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"go/format"
 	"io/ioutil"
 
 	"golang.org/x/pkgsite/internal/log"
@@ -28,7 +29,11 @@ func main() {
 
 // generateFile writes symbol search queries to filename.
 func generateFile(ctx context.Context, filename string) error {
-	if err := ioutil.WriteFile(filename, []byte(symbolsearch.Contents), 0644); err != nil {
+	content, err := format.Source([]byte(symbolsearch.Content))
+	if err != nil {
+		return err
+	}
+	if err := ioutil.WriteFile(filename, []byte(content), 0644); err != nil {
 		return fmt.Errorf("ioutil.WriteFile(f, '', 0644): %v", err)
 	}
 	return nil
