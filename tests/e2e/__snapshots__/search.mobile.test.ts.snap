@@ -8,13 +8,8 @@ Object {
       "role": "link",
     },
     Object {
-      "name": "Search for a package",
+      "name": "Open search",
       "role": "button",
-    },
-    Object {
-      "description": "Search for a package",
-      "name": "Search for a package",
-      "role": "textbox",
     },
     Object {
       "name": "Open navigation",

@@ -17,12 +17,11 @@ Object {
     },
     Object {
       "name": "Search for a package",
-      "role": "button",
+      "role": "textbox",
     },
     Object {
-      "description": "Search for a package",
-      "name": "Search for a package",
-      "role": "textbox",
+      "name": "Submit search",
+      "role": "button",
     },
     Object {
       "name": "Why Go",
@@ -204,12 +203,11 @@ Object {
     },
     Object {
       "name": "Search for a package",
-      "role": "button",
+      "role": "textbox",
     },
     Object {
-      "description": "Search for a package",
-      "name": "Search for a package",
-      "role": "textbox",
+      "name": "Submit search",
+      "role": "button",
     },
     Object {
       "name": "Why Go",
@@ -403,12 +401,11 @@ Object {
     },
     Object {
       "name": "Search for a package",
-      "role": "button",
+      "role": "textbox",
     },
     Object {
-      "description": "Search for a package",
-      "name": "Search for a package",
-      "role": "textbox",
+      "name": "Submit search",
+      "role": "button",
     },
     Object {
       "name": "Why Go",
@@ -789,12 +786,11 @@ Object {
     },
     Object {
       "name": "Search for a package",
-      "role": "button",
+      "role": "textbox",
     },
     Object {
-      "description": "Search for a package",
-      "name": "Search for a package",
-      "role": "textbox",
+      "name": "Submit search",
+      "role": "button",
     },
     Object {
       "name": "Why Go",
@@ -1424,12 +1420,11 @@ Object {
     },
     Object {
       "name": "Search for a package",
-      "role": "button",
+      "role": "textbox",
     },
     Object {
-      "description": "Search for a package",
-      "name": "Search for a package",
-      "role": "textbox",
+      "name": "Submit search",
+      "role": "button",
     },
     Object {
       "name": "Why Go",
