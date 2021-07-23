@@ -111,9 +111,10 @@ func TestFetchSearchPage(t *testing.T) {
 					ResultCount: 1,
 					PrevPage:    0,
 					NextPage:    0,
-					limit:       20,
+					Limit:       20,
 					Page:        1,
 					Pages:       []int{1},
+					Limits:      []int{10, 30, 100},
 				},
 				Results: []*SearchResult{
 					{
@@ -137,9 +138,10 @@ func TestFetchSearchPage(t *testing.T) {
 					ResultCount: 1,
 					PrevPage:    0,
 					NextPage:    0,
-					limit:       20,
+					Limit:       20,
 					Page:        1,
 					Pages:       []int{1},
+					Limits:      []int{10, 30, 100},
 				},
 				Results: []*SearchResult{
 					{

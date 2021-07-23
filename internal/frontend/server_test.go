@@ -703,17 +703,6 @@ func serverTestCases() []serverTestCase {
 			want:           in("", hasText("User-agent: *"), hasText(regexp.QuoteMeta("Disallow: /search?*"))),
 		},
 		{
-			name:           "search",
-			urlPath:        fmt.Sprintf("/search?q=%s", sample.PackageName),
-			wantStatusCode: http.StatusOK,
-			want: in("",
-				in(".SearchResults-resultCount", hasText("2 results")),
-				in(".LegacySearchSnippet-header",
-					in("a",
-						href("/"+sample.ModulePath+"/foo"),
-						hasText(sample.ModulePath+"/foo")))),
-		},
-		{
 			name:           "search large offset",
 			urlPath:        "/search?q=github.com&page=1002",
 			wantStatusCode: http.StatusBadRequest,
@@ -1129,6 +1118,48 @@ var linksTestCases = []serverTestCase{
 	},
 }
 
+var searchTestCase = serverTestCase{
+	name:           "search",
+	urlPath:        fmt.Sprintf("/search?q=%s", sample.PackageName),
+	wantStatusCode: http.StatusOK,
+	want: in("",
+		in(".SearchResults-resultCount", hasText("2 results")),
+		in(".LegacySearchSnippet-header",
+			in("a",
+				href("/"+sample.ModulePath+"/foo"),
+				hasText(sample.ModulePath+"/foo")))),
+}
+
+var searchGroupingTestCases = []serverTestCase{
+	{
+		name:           "search",
+		urlPath:        fmt.Sprintf("/search?q=%s", sample.PackageName),
+		wantStatusCode: http.StatusOK,
+		want: in("",
+			in(".SearchResults-resultCount", hasText("2 results")),
+			in(".SearchSnippet-header",
+				in("a",
+					href("/"+sample.ModulePath+"/foo"),
+					hasText("foo")))),
+	},
+	{
+		name:           "pageless search",
+		urlPath:        fmt.Sprintf("/search?q=%s", sample.PackageName),
+		wantStatusCode: http.StatusOK,
+		want: in("",
+			in(".SearchResults-resultCount",
+				hasText("2 results"),
+				hasText("Fetch"),
+				hasText("results.")),
+			notIn(".Pagination-navInner")),
+	},
+	{
+		name:           "search large limit",
+		urlPath:        fmt.Sprintf("/search?q=%s&limit=101", sample.PackageName),
+		wantStatusCode: http.StatusBadRequest,
+	},
+}
+
 // TestServer checks the contents of served pages by looking for
 // strings and elements in the parsed HTML response body.
 //
@@ -1150,7 +1181,7 @@ func TestServer(t *testing.T) {
 		{
 			name: "no experiments",
 			testCasesFunc: func() []serverTestCase {
-				return append(serverTestCases(), linksTestCases...)
+				return append(append(serverTestCases(), linksTestCases...), searchTestCase)
 			},
 		},
 		{
@@ -1172,6 +1203,13 @@ func TestServer(t *testing.T) {
 				internal.ExperimentSymbolHistoryMainPage,
 				internal.ExperimentSymbolHistoryVersionsPage,
 			},
+		},
+		{
+			name: "search grouping",
+			testCasesFunc: func() []serverTestCase {
+				return append(serverTestCases(), searchGroupingTestCases...)
+			},
+			experiments: []string{internal.ExperimentSearchGrouping},
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
@@ -1565,6 +1603,7 @@ func TestCheckTemplates(t *testing.T) {
 		{"homepage", nil, basePage{}},
 		{"license-policy", nil, licensePolicyPage{}},
 		{"search", nil, SearchPage{}},
+		{"legacy_search", nil, SearchPage{}},
 		{"search-help", nil, basePage{}},
 		{"unit_details.tmpl", nil, UnitPage{}},
 		{

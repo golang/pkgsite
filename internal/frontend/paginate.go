@@ -20,7 +20,7 @@ import (
 // 1, 2, 3, .... Each page except possibly the last has the same number of results.
 type pagination struct {
 	baseURL     *url.URL // URL common to all pages
-	limit       int      // the maximum number of results on a page
+	Limit       int      // the maximum number of results on a page
 	ResultCount int      // number of results on this page
 	TotalCount  int      // total number of results
 	Approximate bool     // whether or not the total count is approximate
@@ -29,6 +29,7 @@ type pagination struct {
 	NextPage    int      //   "    "   "  next page, usually Page+1, but zero on the last page
 	Offset      int      // offset of the first item on the current page
 	Pages       []int    // consecutive page numbers to be displayed for navigation
+	Limits      []int    // limits to be displayed
 }
 
 // PageURL constructs a URL that displays the given page.
@@ -36,6 +37,15 @@ type pagination struct {
 func (p pagination) PageURL(page int) string {
 	newQuery := p.baseURL.Query()
 	newQuery.Set("page", strconv.Itoa(page))
+	p.baseURL.RawQuery = newQuery.Encode()
+	return p.baseURL.String()
+}
+
+// LimitURL constructs a URL that adds a "limit" query parameter to the base
+// URL.
+func (p pagination) LimitURL(limit int) string {
+	newQuery := p.baseURL.Query()
+	newQuery.Set("limit", strconv.Itoa(limit))
 	p.baseURL.RawQuery = newQuery.Encode()
 	return p.baseURL.String()
 }
@@ -50,11 +60,12 @@ func newPagination(params paginationParams, resultCount, totalCount int) paginat
 		TotalCount:  totalCount,
 		ResultCount: resultCount,
 		Offset:      params.offset(),
-		limit:       params.limit,
+		Limit:       params.limit,
 		Page:        params.page,
 		PrevPage:    prev(params.page),
 		NextPage:    next(params.page, params.limit, totalCount),
 		Pages:       pagesToLink(params.page, numPages(params.limit, totalCount), defaultNumPagesToLink),
+		Limits:      []int{10, 30, maxSearchPageSize},
 	}
 }
 

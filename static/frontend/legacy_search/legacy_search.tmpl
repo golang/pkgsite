@@ -75,7 +75,6 @@
           {{range $i, $v := .Links}}
             <a href="/{{$v.Href}}" data-gtmc="search result" data-gtmv="{{$i}}">{{$v.Body}}</a>
           {{end}}
-          <span>{{.Suffix}}</span>
         </div>
       {{end}}
       {{with .OtherMajor}}

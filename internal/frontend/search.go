@@ -67,9 +67,14 @@ type subResult struct {
 func fetchSearchPage(ctx context.Context, db *postgres.DB, query string, pageParams paginationParams, searchSymbols bool) (*SearchPage, error) {
 	maxResultCount := maxSearchOffset + pageParams.limit
 
+	offset := pageParams.offset()
+	if experiment.IsActive(ctx, internal.ExperimentSearchGrouping) {
+		// When using search grouping, do pageless search: always start from the beginning.
+		offset = 0
+	}
 	dbresults, err := db.Search(ctx, query, postgres.SearchOptions{
 		MaxResults:     pageParams.limit,
-		Offset:         pageParams.offset(),
+		Offset:         offset,
 		MaxResultCount: maxResultCount,
 		SearchSymbols:  searchSymbols,
 	})
