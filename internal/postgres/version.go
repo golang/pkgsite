@@ -589,6 +589,14 @@ func upsertLatestModuleVersions(ctx context.Context, tx *database.DB, modulePath
 	return err
 }
 
+func (db *DB) UpdateLatestGoodVersion(ctx context.Context, modulePath string) error {
+	latest, err := getLatestGoodVersion(ctx, db.db, modulePath, nil)
+	if err != nil {
+		return err
+	}
+	return updateLatestGoodVersion(ctx, db.db, modulePath, latest)
+}
+
 // updateLatestGoodVersion updates latest_module_versions.good_version for modulePath to version.
 func updateLatestGoodVersion(ctx context.Context, tx *database.DB, modulePath, version string) (err error) {
 	defer derrors.WrapStack(&err, "updateLatestGoodVersion(%q, %q)", modulePath, version)

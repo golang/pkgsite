@@ -375,6 +375,12 @@ func deleteModule(ctx context.Context, db *postgres.DB, ft *fetchTask) (err erro
 	if err := db.DeleteModule(ctx, ft.ModulePath, ft.ResolvedVersion); err != nil {
 		return err
 	}
+	// Update the latest good version for this module, because deleting this
+	// version may have changed it.
+	if err := db.UpdateLatestGoodVersion(ctx, ft.ModulePath); err != nil {
+		return err
+	}
+
 	// If this was an alternative path (ft.Status == 491) and there is an older
 	// version in search_documents, delete it. This is the case where a module's
 	// canonical path was changed by the addition of a go.mod file. For example,
