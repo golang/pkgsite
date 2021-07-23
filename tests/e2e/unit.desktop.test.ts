@@ -16,7 +16,7 @@ let page: Page;
 
 beforeAll(async () => {
   page = await pg.newPage();
-  await page.setViewport({ height: 2732, width: 1366 });
+  await page.setViewport({ height: 1366, width: 1366 });
 });
 
 afterAll(async () => {

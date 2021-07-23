@@ -9,7 +9,7 @@ import { Page } from 'puppeteer';
 
 import './global-types';
 import * as pg from './helpers/page';
-import * as golangxtools from './helpers/golang-x-tools.page.ts';
+import * as golangxtools from './helpers/golang-x-tools.page';
 
 let page: Page;
 
@@ -25,6 +25,8 @@ afterAll(async () => {
 
 test('fixed header appears after scrolling', async () => {
   await page.evaluate(() => window.scrollTo({ top: 250 }));
+  // Wait for header transition
+  await page.evaluate(() => new Promise(r => setTimeout(r, 250)));
   const image = await page.screenshot();
   expect(image).toMatchImageSnapshot();
   await page.evaluate(() => window.scrollTo({ top: 0 }));
@@ -33,14 +35,14 @@ test('fixed header appears after scrolling', async () => {
 describe('readme', () => {
   test('expands', async () => {
     await page.click(pg.select('readme-expand'));
-    await page.evaluate(() => window.scrollTo({ top: 0 }));
+    await scrollTop(page);
     const expanded = await page.screenshot({ fullPage: true });
     expect(expanded).toMatchImageSnapshot();
   });
 
   test('collapses', async () => {
     await page.click(pg.select('readme-collapse'));
-    await page.evaluate(() => window.scrollTo({ top: 0 }));
+    await scrollTop(page);
     const collapsed = await page.screenshot({ fullPage: true });
     expect(collapsed).toMatchImageSnapshot();
   });
@@ -49,14 +51,14 @@ describe('readme', () => {
 describe('directories', () => {
   test('expand', async () => {
     await page.click(pg.select('directories-toggle'));
-    await page.evaluate(() => window.scrollTo({ top: 0 }));
+    await scrollTop(page);
     const expanded = await page.screenshot({ fullPage: true });
     expect(expanded).toMatchImageSnapshot();
   });
 
   test('collapse', async () => {
     await page.click(pg.select('directories-toggle'));
-    await page.evaluate(() => window.scrollTo({ top: 0 }));
+    await scrollTop(page);
     const collapsed = await page.screenshot({ fullPage: true });
     expect(collapsed).toMatchImageSnapshot();
   });
@@ -65,14 +67,14 @@ describe('directories', () => {
 describe('jump to modal', () => {
   test('opens', async () => {
     await page.click(pg.select('jump-to-button'));
-    await page.evaluate(() => window.scrollTo({ top: 0 }));
+    await scrollTop(page);
     const expanded = await page.screenshot();
     expect(expanded).toMatchImageSnapshot();
   });
 
   test('closes', async () => {
     await page.click(pg.select('close-dialog'));
-    await page.evaluate(() => window.scrollTo({ top: 0 }));
+    await scrollTop(page);
     const collapsed = await page.screenshot();
     expect(collapsed).toMatchImageSnapshot();
   });
@@ -81,3 +83,15 @@ describe('jump to modal', () => {
 test('no page errors', () => {
   expect(pageErrors).toHaveLength(0);
 });
+
+/**
+ * scrollTop scrolls to the top of a given page and waits
+ * a short amount of time for any style transitions to
+ * complete. Used to make sure the documentation page
+ * header has completed transitioning.
+ * @param page the page to scroll.
+ */
+async function scrollTop(page: Page): Promise<void> {
+  await page.evaluate(() => window.scrollTo({ top: 0 }));
+  await page.evaluate(() => new Promise(r => setTimeout(r, 250)));
+}

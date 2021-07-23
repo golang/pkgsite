@@ -14,12 +14,16 @@ github.com/tendermint/tendermint@v0.34.10
 gocloud.dev@v0.22.0
 golang.org/x/tools@v0.0.0-20160406004205-fe1488f8abd7
 golang.org/x/tools@v0.1.1
+golang.org/x/tools@v0.1.2
 k8s.io/client-go@v1.5.2
 mvdan.cc/sh/v3@v3.3.0
 mvdan.cc/sh@v2.6.4+incompatible
 golang.org/x/tools/gopls@v0.6.11
 github.com/jackc/pgx@v3.6.2+incompatible
+std@v1.0.0
+std@v1.13.0
 std@v1.16.3
+std@v1.16.4
 
 # This module is expected to return a 404, so that  the path will redirect
 # to github.com/jackc/pgx/v4/pgxpool.

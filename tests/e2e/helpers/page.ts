@@ -44,7 +44,7 @@ export async function newPage(): Promise<Page> {
   });
   const go = page.goto;
   page.goto = (path: string, opts?: DirectNavigationOptions) =>
-    go.call(page, GO_DISCOVERY_E2E_BASE_URL + path, opts);
+    go.call(page, GO_DISCOVERY_E2E_BASE_URL + path, { waitUntil: 'networkidle0', ...opts });
   return page;
 }
 
