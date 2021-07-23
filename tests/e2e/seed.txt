@@ -16,10 +16,11 @@ golang.org/x/tools@v0.0.0-20160406004205-fe1488f8abd7
 golang.org/x/tools@v0.1.1
 golang.org/x/tools@v0.1.2
 k8s.io/client-go@v1.5.2
-mvdan.cc/sh/v3@v3.3.0
-mvdan.cc/sh@v2.6.4+incompatible
 golang.org/x/tools/gopls@v0.6.11
 github.com/jackc/pgx@v3.6.2+incompatible
+rsc.io/quote@all
+rsc.io/quote/v2@all
+rsc.io/quote/v3@all
 std@v1.0.0
 std@v1.13.0
 std@v1.16.3

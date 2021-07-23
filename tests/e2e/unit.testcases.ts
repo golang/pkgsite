@@ -32,10 +32,10 @@ export const testcases = (isCI ? test.skip.each : test.each)`
   ${'package with multiple licenses'}                              | ${'/github.com/apache/thrift@v0.14.1?tab=licenses'}
   ${'package that exists in multiple modules at the same version'} | ${'/github.com/hashicorp/vault/api@v1.0.3'}
   ${'package not at latest version of module'}                     | ${'/golang.org/x/tools/cmd/vet'}
-  ${'package with higher major version'}                           | ${'/mvdan.cc/sh/syntax'}
+  ${'package with higher major version'}                           | ${'/rsc.io/quote'}
   ${'package with multi-GOOS'}                                     | ${'/github.com/creack/pty@v1.1.11'}
   ${'retracted package'}                                           | ${'/k8s.io/client-go@v1.5.2'}
   ${'deprecated package'}                                          | ${'/github.com/jba/bit'}
   ${'package with deprecated symbols'}                             | ${'/cuelang.org/go@v0.3.2/cue'}
-  ${'mvdan versions'}                                              | ${'/mvdan.cc/sh?tab=versions'}
+  ${'package exists in other modules'}                             | ${'/rsc.io/quote?tab=versions'}
 `;
