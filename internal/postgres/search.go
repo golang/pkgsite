@@ -101,8 +101,6 @@ var symbolSearchers = map[string]searcher{
 type SearchOptions struct {
 	// Maximum number of results to return (page size).
 	MaxResults int
-	// Limit for the DB query; defaults to MaxResults.
-	Limit int
 	// Offset for DB query.
 	Offset int
 	// Maximum number to use for total result count.
@@ -184,9 +182,30 @@ type SearchResult struct {
 // the penalty of a deep search that scans nearly every package.
 func (db *DB) Search(ctx context.Context, q string, opts SearchOptions) (_ []*SearchResult, err error) {
 	defer derrors.WrapStack(&err, "DB.Search(ctx, %q, %+v)", q, opts)
-	if opts.Limit == 0 {
-		opts.Limit = opts.MaxResults
+	if experiment.IsActive(ctx, internal.ExperimentSearchGrouping) && !opts.SearchSymbols {
+		const (
+			limitMultiplier1 = 3
+			limitMultiplier2 = 5
+		)
+		// Limit search to more rows than the requested number of results, so
+		// that it can find other packages in the modules it selects.
+		srs, err := db.search(ctx, q, opts, limitMultiplier1*opts.MaxResults)
+		if err != nil {
+			return nil, err
+		}
+		if len(srs) >= opts.MaxResults || numRows(srs) <= limitMultiplier1*opts.MaxResults {
+			return srs, nil
+		}
+		// Grouped search didn't find enough results, but there are more
+		// rows that could potentially match. Try one more time, with a
+		// larger limit.
+		return db.search(ctx, q, opts, limitMultiplier2*opts.MaxResults)
 	}
+	return db.search(ctx, q, opts, opts.MaxResults)
+}
+
+func (db *DB) search(ctx context.Context, q string, opts SearchOptions, limit int) (_ []*SearchResult, err error) {
+	defer derrors.WrapStack(&err, "search(limit=%d)", limit)
 
 	var searchers map[string]searcher
 	if opts.SearchSymbols &&
@@ -196,7 +215,7 @@ func (db *DB) Search(ctx context.Context, q string, opts SearchOptions) (_ []*Se
 	} else {
 		searchers = pkgSearchers
 	}
-	resp, err := db.hedgedSearch(ctx, q, opts.Limit, opts.Offset, opts.MaxResultCount, searchers, nil)
+	resp, err := db.hedgedSearch(ctx, q, limit, opts.Offset, opts.MaxResultCount, searchers, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -570,6 +589,16 @@ func groupSearchResults(rs []*SearchResult) []*SearchResult {
 		return results[i].Score > results[j].Score
 	})
 	return results
+}
+
+// numRows counts the number of rows in a slice of SearchResults.
+// Grouping will put some rows inside a SearchResult.
+func numRows(rs []*SearchResult) int {
+	n := 0
+	for _, r := range rs {
+		n += 1 + len(r.SameModule)
+	}
+	return n
 }
 
 var upsertSearchStatement = fmt.Sprintf(`
