@@ -40,6 +40,7 @@ type SearchResult struct {
 	Name           string
 	PackagePath    string
 	ModulePath     string
+	IsCommand      bool
 	Synopsis       string
 	DisplayVersion string
 	Licenses       []string
@@ -84,10 +85,20 @@ func fetchSearchPage(ctx context.Context, db *postgres.DB, query string, pagePar
 
 	var results []*SearchResult
 	for _, r := range dbresults {
+		// For commands, change the name from "main" to the last component of the import path.
+		isCommand := false
+		name := r.Name
+		if name == "main" {
+			isCommand = true
+			if i := strings.LastIndexByte(r.PackagePath, '/'); i >= 0 {
+				name = r.PackagePath[i+1:]
+			}
+		}
 		sr := &SearchResult{
-			Name:           r.Name,
+			Name:           name,
 			PackagePath:    r.PackagePath,
 			ModulePath:     r.ModulePath,
+			IsCommand:      isCommand,
 			Synopsis:       r.Synopsis,
 			DisplayVersion: displayVersion(r.ModulePath, r.Version, r.Version),
 			Licenses:       r.Licenses,
