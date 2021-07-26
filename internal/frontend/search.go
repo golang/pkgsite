@@ -22,6 +22,7 @@ import (
 	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/postgres"
+	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/version"
 )
 
@@ -90,9 +91,11 @@ func fetchSearchPage(ctx context.Context, db *postgres.DB, query string, pagePar
 		name := r.Name
 		if name == "main" {
 			isCommand = true
-			if i := strings.LastIndexByte(r.PackagePath, '/'); i >= 0 {
-				name = r.PackagePath[i+1:]
-			}
+			name = effectiveName(r.PackagePath, r.Name)
+		}
+		moduleDesc := "module " + r.ModulePath
+		if r.ModulePath == stdlib.ModulePath {
+			moduleDesc = "the standard library"
 		}
 		sr := &SearchResult{
 			Name:           name,
@@ -104,7 +107,7 @@ func fetchSearchPage(ctx context.Context, db *postgres.DB, query string, pagePar
 			Licenses:       r.Licenses,
 			CommitTime:     elapsedTime(r.CommitTime),
 			NumImportedBy:  int(r.NumImportedBy),
-			SameModule:     packagePaths("Other packages in module "+r.ModulePath+":", r.SameModule),
+			SameModule:     packagePaths("Other packages in "+moduleDesc+":", r.SameModule),
 			// Say "other" instead of "lower" because at some point we may
 			// prefer to show a tagged, lower major version over an untagged
 			// higher major version.

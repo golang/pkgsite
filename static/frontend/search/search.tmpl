@@ -79,7 +79,7 @@
           </a>
         </h2>
         <span class="SearchSnippet-header-path">{{$v.PackagePath}}</span>
-        {{if $v.IsCommand}} (Command){{end}}
+        {{if $v.IsCommand}} <span class="go-Chip go-Chip--inverted">command</span>{{end}}
       </div>
       <p class="SearchSnippet-synopsis" data-test-id="snippet-synopsis">
         {{$v.Synopsis}}
