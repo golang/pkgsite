@@ -1158,6 +1158,12 @@ var searchGroupingTestCases = []serverTestCase{
 		urlPath:        fmt.Sprintf("/search?q=%s&limit=101", sample.PackageName),
 		wantStatusCode: http.StatusBadRequest,
 	},
+	{
+		name:           "no results",
+		urlPath:        "/search?q=xyzzy",
+		wantStatusCode: http.StatusOK,
+		want:           notIn(".Pagination-nav"),
+	},
 }
 
 // TestServer checks the contents of served pages by looking for
