@@ -20,11 +20,20 @@ import (
 const SymbolTextSearchConfiguration = "symbols"
 
 var (
-	rawQuerySymbol           = fmt.Sprintf(symbolSearchBaseQuery, scoreMultipliers, filterSymbol)
-	rawQueryPackageDotSymbol = fmt.Sprintf(symbolSearchBaseQuery, scoreMultipliers, filterPackageDotSymbol)
-	rawQueryOneDot           = fmt.Sprintf(symbolSearchBaseQuery, scoreMultipliers, filterOneDot)
-	rawQueryMultiWord        = fmt.Sprintf(symbolSearchBaseQuery, formatScore(scoreMultiWord), filterMultiWord)
+	rawQuerySymbol           = constructQuery(filterSymbol)
+	rawQueryPackageDotSymbol = constructQuery(filterPackageDotSymbol)
+	rawQueryOneDot           = constructQuery(filterOneDot)
+	rawQueryMultiWord        = constructQuery(filterMultiWord)
 )
+
+// constructQuery is used to construct a symbol search query.
+func constructQuery(where string) string {
+	score := scoreMultipliers
+	if where == filterMultiWord {
+		score = formatScore(scoreMultiWord)
+	}
+	return fmt.Sprintf(symbolSearchBaseQuery, score, where)
+}
 
 var (
 	// filterSymbol is used when $1 is the full symbol name, either
