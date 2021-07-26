@@ -7,7 +7,6 @@
 package main
 
 import (
-	"bufio"
 	"context"
 	"flag"
 	"net/http"
@@ -20,6 +19,7 @@ import (
 	"github.com/google/safehtml/template"
 	_ "github.com/jackc/pgx/v4/stdlib" // for pgx driver
 	"golang.org/x/pkgsite/cmd/internal/cmdconfig"
+	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/config"
 	"golang.org/x/pkgsite/internal/dcensus"
 	"golang.org/x/pkgsite/internal/fetch"
@@ -191,7 +191,7 @@ func readProxyRemoved(ctx context.Context) {
 	if filename == "" {
 		return
 	}
-	lines, err := readFileLines(filename)
+	lines, err := internal.ReadFileLines(filename)
 	if err != nil {
 		log.Fatal(ctx, err)
 	}
@@ -208,7 +208,7 @@ func populateExcluded(ctx context.Context, db *postgres.DB) {
 	if filename == "" {
 		return
 	}
-	lines, err := readFileLines(filename)
+	lines, err := internal.ReadFileLines(filename)
 	if err != nil {
 		log.Fatal(ctx, err)
 	}
@@ -236,27 +236,4 @@ func populateExcluded(ctx context.Context, db *postgres.DB) {
 			}
 		}
 	}
-}
-
-// readFileLines reads filename and returns its lines, trimmed of whitespace.
-// Blank lines and lines whose first non-blank character is '#' are omitted.
-func readFileLines(filename string) ([]string, error) {
-	var lines []string
-	f, err := os.Open(filename)
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-	scan := bufio.NewScanner(f)
-	for scan.Scan() {
-		line := strings.TrimSpace(scan.Text())
-		if line == "" || line[0] == '#' {
-			continue
-		}
-		lines = append(lines, line)
-	}
-	if err := scan.Err(); err != nil {
-		return nil, err
-	}
-	return lines, nil
 }

@@ -2,23 +2,21 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// The seeddb command is used to populates a database with an initial set of
-// modules.
+// The seeddb command populates a database with an initial set of modules.
 package main
 
 import (
-	"bufio"
 	"context"
 	"flag"
 	"fmt"
 	"net/http"
-	"os"
 	"sort"
 	"strings"
 	"sync"
 	"time"
 
 	_ "github.com/jackc/pgx/v4/stdlib" // for pgx driver
+	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/config"
 	"golang.org/x/pkgsite/internal/config/dynconfig"
 	"golang.org/x/pkgsite/internal/database"
@@ -34,7 +32,7 @@ import (
 )
 
 var (
-	seedfile = flag.String("seed", "devtools/cmd/seeddb/seed.txt", "filename containing modules for seeding the database; relative to devtools/cmd/seeddb")
+	seedfile = flag.String("seed", "devtools/cmd/seeddb/seed.txt", "filename containing modules for seeding the database")
 )
 
 func main() {
@@ -52,7 +50,6 @@ func main() {
 	}
 	ctx = experiment.NewContext(ctx, exps...)
 
-	// Wrap the postgres driver with our own wrapper, which adds OpenCensus instrumentation.
 	ddb, err := database.Open("pgx", cfg.DBConnInfo(), "seeddb")
 	if err != nil {
 		log.Fatalf(ctx, "database.Open for host %s failed with %v", cfg.DBHost, err)
@@ -113,7 +110,7 @@ func run(ctx context.Context, db *postgres.DB, proxyURL string) error {
 		for _, v := range vers {
 			v := v
 			g.Go(func() error {
-				// Log the duration of this fetch request.
+				// Record the duration of this fetch request.
 				start := time.Now()
 				defer func() {
 					r.add(m.path, v, start)
@@ -162,8 +159,8 @@ func fetchFunc(ctx context.Context, f *worker.Fetcher, m, v string) (err error) 
 }
 
 type results struct {
-	paths map[string]time.Duration
 	mu    sync.Mutex
+	paths map[string]time.Duration
 }
 
 func (r *results) add(modPath, version string, start time.Time) {
@@ -182,12 +179,11 @@ type module struct {
 }
 
 // readSeedFile reads a file of module versions that we want to fetch for
-// seeding the database. Format of the file:
-// each line is
+// seeding the database. Each line of the file should be of the form:
 //     module@version
 func readSeedFile(ctx context.Context, seedfile string) (_ []*module, err error) {
 	defer derrors.Wrap(&err, "readSeedFile %q", seedfile)
-	lines, err := readFileLines(seedfile)
+	lines, err := internal.ReadFileLines(seedfile)
 	if err != nil {
 		return nil, err
 	}
@@ -202,29 +198,6 @@ func readSeedFile(ctx context.Context, seedfile string) (_ []*module, err error)
 		})
 	}
 	return modules, nil
-}
-
-// readFileLines reads filename and returns its lines, trimmed of whitespace.
-// Blank lines and lines whose first non-blank character is '#' are omitted.
-func readFileLines(filename string) ([]string, error) {
-	var lines []string
-	f, err := os.Open(filename)
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-	scan := bufio.NewScanner(f)
-	for scan.Scan() {
-		line := strings.TrimSpace(scan.Text())
-		if line == "" || line[0] == '#' {
-			continue
-		}
-		lines = append(lines, line)
-	}
-	if err := scan.Err(); err != nil {
-		return nil, err
-	}
-	return lines, nil
 }
 
 func fetchExperiments(ctx context.Context, cfg *config.Config) ([]string, error) {
