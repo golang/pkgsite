@@ -24,9 +24,7 @@ WITH results AS (
 			ssd.package_symbol_id,
 			ssd.goos,
 			ssd.goarch,
-			ln(exp(1)+imported_by_count)
-				* CASE WHEN sd.redistributable THEN 1 ELSE 0.500000 END
-				* CASE WHEN COALESCE(has_go_mod, true) THEN 1 ELSE 0.800000 END AS score
+			ln(exp(1)+sd.imported_by_count) AS score
 	FROM symbol_search_documents ssd
 	INNER JOIN search_documents sd ON sd.unit_id = ssd.unit_id
 	INNER JOIN symbol_names s ON s.id = ssd.symbol_name_id
@@ -76,9 +74,7 @@ WITH results AS (
 			ssd.package_symbol_id,
 			ssd.goos,
 			ssd.goarch,
-			ln(exp(1)+imported_by_count)
-				* CASE WHEN sd.redistributable THEN 1 ELSE 0.500000 END
-				* CASE WHEN COALESCE(has_go_mod, true) THEN 1 ELSE 0.800000 END AS score
+			ln(exp(1)+sd.imported_by_count) AS score
 	FROM symbol_search_documents ssd
 	INNER JOIN search_documents sd ON sd.unit_id = ssd.unit_id
 	INNER JOIN symbol_names s ON s.id = ssd.symbol_name_id
@@ -130,9 +126,7 @@ WITH results AS (
 			ssd.package_symbol_id,
 			ssd.goos,
 			ssd.goarch,
-			ln(exp(1)+imported_by_count)
-				* CASE WHEN sd.redistributable THEN 1 ELSE 0.500000 END
-				* CASE WHEN COALESCE(has_go_mod, true) THEN 1 ELSE 0.800000 END AS score
+			ln(exp(1)+sd.imported_by_count) AS score
 	FROM symbol_search_documents ssd
 	INNER JOIN search_documents sd ON sd.unit_id = ssd.unit_id
 	INNER JOIN symbol_names s ON s.id = ssd.symbol_name_id
@@ -188,9 +182,7 @@ WITH results AS (
 					sd.tsv_path_tokens,
 					to_tsquery('symbols', replace(replace($1, '_', '-'), ' ', ' | '))
 				)
-				* ln(exp(1)+imported_by_count)
-				* CASE WHEN sd.redistributable THEN 1 ELSE 0.500000 END
-				* CASE WHEN COALESCE(has_go_mod, true) THEN 1 ELSE 0.800000 END
+				* ln(exp(1)+sd.imported_by_count)
 			) AS score
 	FROM symbol_search_documents ssd
 	INNER JOIN search_documents sd ON sd.unit_id = ssd.unit_id

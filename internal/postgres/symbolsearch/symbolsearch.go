@@ -28,7 +28,9 @@ var (
 
 // constructQuery is used to construct a symbol search query.
 func constructQuery(where string) string {
-	score := scoreMultipliers
+	// When there is only one word in the query, popularity is the only score
+	// that matters.
+	score := popularityMultiplier
 	if where == filterMultiWord {
 		score = formatScore(scoreMultiWord)
 	}
@@ -71,18 +73,7 @@ var (
 
 var (
 	// scoreMultiWord is the score when $1 contains multiple words.
-	scoreMultiWord = fmt.Sprintf("%s%s", rankPathTokens, formatMultiplier(scoreMultipliers))
-
-	// scoreMultipliers is the score of multiplying the multiplers.
-	//
-	// It is also used as the score for QuerySymbol and QueryPackageDotIdentifier.
-	// In both cases, the matching symbols will be filtered in the WHERE
-	// clause, and the only remaining information to rank the results by are
-	// the multiplers.
-	scoreMultipliers = fmt.Sprintf("%s%s%s",
-		popularityMultiplier,
-		formatMultiplier(redistributableMultipler),
-		formatMultiplier(goModMultipler))
+	scoreMultiWord = fmt.Sprintf("%s%s", rankPathTokens, formatMultiplier(popularityMultiplier))
 
 	rankPathTokens = fmt.Sprintf(
 		"ts_rank(%s,%s,%s"+indent(")", 3),
@@ -91,17 +82,7 @@ var (
 		indent(toTSQuery(splitOR), 4))
 
 	// Popularity multipler to increase ranking of popular packages.
-	popularityMultiplier = `ln(exp(1)+imported_by_count)`
-
-	// Multipler based on whether the module license is non-redistributable.
-	redistributableMultipler = fmt.Sprintf(
-		`CASE WHEN sd.redistributable THEN 1 ELSE %f END`,
-		nonRedistributablePenalty)
-
-	// Multipler based on wehther the module has a go.mod file.
-	goModMultipler = fmt.Sprintf(
-		`CASE WHEN COALESCE(has_go_mod, true) THEN 1 ELSE %f END`,
-		noGoModPenalty)
+	popularityMultiplier = `ln(exp(1)+sd.imported_by_count)`
 )
 
 func formatScore(s string) string {
@@ -129,16 +110,6 @@ const (
 	// splitFirstDot splits everything preceding the first dot in $1.
 	// This is used to parse th package name or path.
 	splitFirstDot = "split_part($1, '.', 1)"
-)
-
-// Penalties to search scores, applied as multipliers to the score.
-const (
-	// Module license is non-redistributable.
-	nonRedistributablePenalty = 0.5
-	// Module does not have a go.mod file.
-	// Start this off gently (close to 1), but consider lowering
-	// it as time goes by and more of the ecosystem converts to modules.
-	noGoModPenalty = 0.8
 )
 
 func toTSQuery(arg string) string {
