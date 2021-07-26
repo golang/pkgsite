@@ -4,17 +4,25 @@
 
 # Modules that are expected to return a 200.
 cuelang.org/go@v0.3.2
+cuelang.org/go@v0.4.0
 github.com/apache/thrift@v0.14.1
+github.com/apache/thrift@v0.14.2
 github.com/creack/pty@v1.1.11
+github.com/creack/pty@v1.1.13
 github.com/envoyproxy/go-control-plane@v0.9.8
+github.com/envoyproxy/go-control-plane@v0.9.9
 github.com/hashicorp/vault/api@v1.0.3
+github.com/hashicorp/vault/api@v1.1.1
 github.com/jackc/pgx/v4@v4.11.0
 github.com/jba/bit@v0.2.0
 github.com/tendermint/tendermint@v0.34.10
+github.com/tendermint/tendermint@v0.34.11
 gocloud.dev@v0.22.0
+gocloud.dev@v0.23.0
 golang.org/x/tools@v0.0.0-20160406004205-fe1488f8abd7
 golang.org/x/tools@v0.1.1
 golang.org/x/tools@v0.1.2
+k8s.io/client-go@v0.21.3
 k8s.io/client-go@v1.5.2
 golang.org/x/tools/gopls@v0.6.11
 github.com/jackc/pgx@v3.6.2+incompatible

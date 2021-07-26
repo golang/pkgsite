@@ -10,33 +10,58 @@ import { Page } from 'puppeteer';
 import './global-types';
 import * as pg from './helpers/page';
 import * as unit from './helpers/unit.page';
-import { testcases } from './unit.testcases';
+import { testcases, tab } from './unit.testcases';
+
+const { CI = false } = process.env;
 
 let page: Page;
 
 beforeAll(async () => {
   page = await pg.newPage();
-  await page.setViewport({ height: 1366, width: 1366 });
 });
 
 afterAll(async () => {
   await page.close();
 });
 
-testcases('$name', async ({ path }) => {
-  await page.goto(path);
-  await prepare(page);
-  const image = await page.screenshot();
+for (const tc of testcases) {
+  // Snapshot top of unit page.
+  test(`main - ${tc.description} (${tc.path})`, async () => {
+    await page.goto(`${tc.path}`);
+    await unit.prepare(page);
+    const image = await page.screenshot();
+    expect(image).toMatchImageSnapshot({ customSnapshotIdentifier: snapshotId(tc.path) });
+  });
 
-  // eslint-disable-next-line jest/no-standalone-expect
-  expect(image).toMatchImageSnapshot();
-});
+  // Snapshot additional unit page sections.
+  for (const id of tc.ids) {
+    const path = `${tc.path}${id}`;
+    test(`main - ${tc.description} (${path})`, async () => {
+      await page.goto(path);
+      await unit.prepare(page);
+      const image = await page.screenshot();
+      expect(image).toMatchImageSnapshot({ customSnapshotIdentifier: snapshotId(path) });
+    });
+  }
+
+  // Snapshot additional unit page tabs.
+  for (const t of tc.tabs) {
+    // Skip versions tab in CI.
+    if (CI && t == tab.VERSIONS) continue;
+    const path = `${tc.path}?tab=${t}`;
+    test(`${t} - ${tc.description} (${path})`, async () => {
+      await page.goto(path);
+      await unit.prepare(page);
+      const image = await page.screenshot();
+      expect(image).toMatchImageSnapshot({ customSnapshotIdentifier: snapshotId(path) });
+    });
+  }
+}
 
 test('no page errors', () => {
   expect(pageErrors).toHaveLength(0);
 });
 
-async function prepare(page: Page): Promise<void> {
-  await unit.prepare(page);
-  return pg.$eval(page, '.Documentation-index', index => index.remove());
+function snapshotId(path: string): string {
+  return 'unit-desktop-' + path.replace(/\//g, '-');
 }
