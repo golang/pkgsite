@@ -26,7 +26,7 @@ afterAll(async () => {
 
 for (const tc of testcases) {
   // Snapshot top of unit page.
-  test(`main - ${tc.description} (${tc.path})`, async () => {
+  test(`main - ${tc.name} (${tc.path})`, async () => {
     await page.goto(`${tc.path}`);
     await unit.prepare(page);
     const image = await page.screenshot();
@@ -36,7 +36,7 @@ for (const tc of testcases) {
   // Snapshot additional unit page sections.
   for (const id of tc.ids) {
     const path = `${tc.path}${id}`;
-    test(`main - ${tc.description} (${path})`, async () => {
+    test(`main - ${tc.name} (${path})`, async () => {
       await page.goto(path);
       await unit.prepare(page);
       const image = await page.screenshot();
@@ -49,7 +49,7 @@ for (const tc of testcases) {
     // Skip versions tab in CI.
     if (CI && t == tab.VERSIONS) continue;
     const path = `${tc.path}?tab=${t}`;
-    test(`${t} - ${tc.description} (${path})`, async () => {
+    test(`${t} - ${tc.name} (${path})`, async () => {
       await page.goto(path);
       await unit.prepare(page);
       const image = await page.screenshot();
