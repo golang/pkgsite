@@ -15,7 +15,6 @@ keyboard.on('t', 'toggle theme', () => {
     nextTheme = 'light';
   }
   document.documentElement.setAttribute('data-theme', nextTheme);
-  document.cookie = `prefers-color-scheme=${nextTheme};path=/;max-age=31536000;`;
 });
 
 // Pressing '/' focuses the search box
