@@ -94,30 +94,6 @@ func upsertSymbolSearchDocuments(ctx context.Context, tx *database.DB,
 // TODO(https://golang.org/issue/44142): factor out common code between
 // symbolSearch and deepSearch.
 func (db *DB) symbolSearch(ctx context.Context, q string, limit, offset, maxResultCount int) searchResponse {
-	var results []*SearchResult
-	collect := func(rows *sql.Rows) error {
-		var r SearchResult
-		if err := rows.Scan(
-			&r.PackagePath,
-			&r.ModulePath,
-			&r.Version,
-			&r.Name,
-			&r.Synopsis,
-			pq.Array(&r.Licenses),
-			&r.CommitTime,
-			&r.NumImportedBy,
-			&r.SymbolName,
-			&r.SymbolGOOS,
-			&r.SymbolGOARCH,
-			&r.SymbolKind,
-			&r.SymbolSynopsis,
-			&r.NumResults); err != nil {
-			return fmt.Errorf("symbolSearch: rows.Scan(): %v", err)
-		}
-		results = append(results, &r)
-		return nil
-	}
-
 	var query string
 	sr := searchResponse{source: "symbol"}
 	if len(strings.Fields(q)) == 1 {
@@ -146,15 +122,45 @@ func (db *DB) symbolSearch(ctx context.Context, q string, limit, offset, maxResu
 		query = symbolsearch.QueryMultiWord
 	}
 
-	if err := db.db.RunQuery(ctx, query, collect, q, limit); err != nil {
+	results, err := runSymbolSearch(ctx, db.db, query, q, limit)
+	if err != nil {
 		sr.err = err
 		return sr
 	}
-	if len(results) > 0 && results[0].NumResults > uint64(maxResultCount) {
-		for _, r := range results {
-			r.NumResults = uint64(maxResultCount)
-		}
+	for _, r := range results {
+		r.NumResults = uint64(len(results))
 	}
 	sr.results = results
 	return sr
+}
+
+func runSymbolSearch(ctx context.Context, ddb *database.DB, query, q string, limit int) (_ []*SearchResult, err error) {
+	defer derrors.Wrap(&err, "runSymbolSearch(ctx, ddb, query, %q, %d)", q, limit)
+
+	var results []*SearchResult
+	collect := func(rows *sql.Rows) error {
+		var r SearchResult
+		if err := rows.Scan(
+			&r.SymbolName,
+			&r.PackagePath,
+			&r.ModulePath,
+			&r.Version,
+			&r.Name,
+			&r.Synopsis,
+			pq.Array(&r.Licenses),
+			&r.CommitTime,
+			&r.NumImportedBy,
+			&r.SymbolGOOS,
+			&r.SymbolGOARCH,
+			&r.SymbolKind,
+			&r.SymbolSynopsis); err != nil {
+			return fmt.Errorf("symbolSearch: rows.Scan(): %v", err)
+		}
+		results = append(results, &r)
+		return nil
+	}
+	if err := ddb.RunQuery(ctx, query, collect, q, limit); err != nil {
+		return nil, err
+	}
+	return results, nil
 }

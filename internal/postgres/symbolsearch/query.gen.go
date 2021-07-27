@@ -31,6 +31,7 @@ WITH results AS (
 	WHERE s.tsv_name_tokens @@ to_tsquery('symbols', replace($1, '_', '-'))
 )
 SELECT
+	r.symbol_name,
 	r.package_path,
 	r.module_path,
 	r.version,
@@ -39,12 +40,10 @@ SELECT
 	r.license_types,
 	r.commit_time,
 	r.imported_by_count,
-	r.symbol_name,
 	r.goos,
 	r.goarch,
 	ps.type AS symbol_type,
-	ps.synopsis AS symbol_synopsis,
-	COUNT(*) OVER() AS total
+	ps.synopsis AS symbol_synopsis
 FROM results r
 INNER JOIN package_symbols ps ON r.package_symbol_id = ps.id
 WHERE r.score > 0.1
@@ -82,6 +81,7 @@ WITH results AS (
 		)
 )
 SELECT
+	r.symbol_name,
 	r.package_path,
 	r.module_path,
 	r.version,
@@ -90,12 +90,10 @@ SELECT
 	r.license_types,
 	r.commit_time,
 	r.imported_by_count,
-	r.symbol_name,
 	r.goos,
 	r.goarch,
 	ps.type AS symbol_type,
-	ps.synopsis AS symbol_synopsis,
-	COUNT(*) OVER() AS total
+	ps.synopsis AS symbol_synopsis
 FROM results r
 INNER JOIN package_symbols ps ON r.package_symbol_id = ps.id
 WHERE r.score > 0.1
@@ -133,6 +131,7 @@ WITH results AS (
 		) OR s.tsv_name_tokens @@ to_tsquery('symbols', replace($1, '_', '-'))
 )
 SELECT
+	r.symbol_name,
 	r.package_path,
 	r.module_path,
 	r.version,
@@ -141,12 +140,10 @@ SELECT
 	r.license_types,
 	r.commit_time,
 	r.imported_by_count,
-	r.symbol_name,
 	r.goos,
 	r.goarch,
 	ps.type AS symbol_type,
-	ps.synopsis AS symbol_synopsis,
-	COUNT(*) OVER() AS total
+	ps.synopsis AS symbol_synopsis
 FROM results r
 INNER JOIN package_symbols ps ON r.package_symbol_id = ps.id
 WHERE r.score > 0.1
@@ -191,6 +188,7 @@ WITH results AS (
 		)
 )
 SELECT
+	r.symbol_name,
 	r.package_path,
 	r.module_path,
 	r.version,
@@ -199,12 +197,10 @@ SELECT
 	r.license_types,
 	r.commit_time,
 	r.imported_by_count,
-	r.symbol_name,
 	r.goos,
 	r.goarch,
 	ps.type AS symbol_type,
-	ps.synopsis AS symbol_synopsis,
-	COUNT(*) OVER() AS total
+	ps.synopsis AS symbol_synopsis
 FROM results r
 INNER JOIN package_symbols ps ON r.package_symbol_id = ps.id
 WHERE r.score > 0.1
