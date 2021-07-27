@@ -21,28 +21,44 @@
 {{define "main"}}
   <main class="go-Container">
     <div class="go-Content">
-      <h1 class="SearchResults-header">Results for “{{.Query}}”</h1>
+      <h1 class="SearchResults-header">
+        {{if eq .SearchMode "identifiers"}}Identifiers{{else}}Packages{{end}}
+        matching “{{.Query}}”
+      </h1>
+      <span>
+        Search instead for
+        {{if eq .SearchMode "identifiers"}}
+          <a href="/search?q={{.Query}}&limit={{.Pagination.Limit}}">packages</a>
+        {{else}}
+          <a href="/search?q={{.Query}}&limit={{.Pagination.Limit}}&m=identifiers">symbols</a>
+        {{end}}
+      </span>
       <div class="SearchResults-resultCount go-textSubtle">
         {{if gt (len .Results) 0}}
-	  {{with .Pagination}}
-	    {{ $p := . }}
-	    <div class="Pagination-nav">
-	      Displaying {{.ResultCount}} of {{if .Approximate}}about {{end}}{{.TotalCount}} {{pluralize .TotalCount "result"}}.
-	      Fetch
-	      {{range .Limits}}
-		{{if eq . $p.Limit}}
-		  <b class="Pagination-number">{{.}}</b>
-		{{else}}
-		  <a class="Pagination-number" href="{{$p.LimitURL .}}">{{.}}</a>
-		{{end}}
-	      {{end}}
-	      results.
-	    </div>
-	  {{end}}
-	{{end}}
+          {{with .Pagination}}
+            {{ $p := . }}
+            <div class="Pagination-nav">
+              Displaying {{.ResultCount}} of {{if .Approximate}}about {{end}}{{.TotalCount}} {{pluralize .TotalCount "result"}}.
+              Fetch
+              {{range .Limits}}
+                {{if eq . $p.Limit}}
+                  <b class="Pagination-number">{{.}}</b>
+                {{else}}
+                  <a class="Pagination-number" href="{{$p.LimitURL .}}">{{.}}</a>
+                {{end}}
+              {{end}}
+              results.
+            </div>
+          {{end}}
+        {{end}}
         <div class="SearchResults-help"><a href="/search-help">Search help</a></div>
       </div>
         {{if eq (len .Results) 0}}
+          {{if eq .SearchMode "identifiers"}}
+            {{ $r := "symbols" }}
+          {{else}}
+            {{ $r := "packages" }}
+          {{end}}
           {{template "gopher-airplane" "No results found."}}
           {{if eq .SearchMode "identifiers"}}
             <p class="SearchResults-emptyContentMessage">
@@ -79,7 +95,7 @@
           </a>
         </h2>
         <span class="SearchSnippet-header-path">{{$v.PackagePath}}</span>
-        {{if $v.IsCommand}} <span class="go-Chip go-Chip--inverted">command</span>{{end}}
+        {{with $v.ChipText}}<span class="go-Chip go-Chip--inverted">{{.}}</span>{{end}}
       </div>
       <p class="SearchSnippet-synopsis" data-test-id="snippet-synopsis">
         {{$v.Synopsis}}
@@ -122,20 +138,19 @@
 {{define "search_metadata"}}
   <div class="SearchSnippet-infoLabel">
     <a href="/{{$.PackagePath}}?tab=importedby" aria-label="Go to Imported By">
-       <span class="go-textSubtle">Imported by: </span><strong>{{.NumImportedBy}}</strong>
+       <span class="go-textSubtle">Imported by </span><strong>{{.NumImportedBy}}</strong>
     </a>
     <span class="go-textSubtle">
-      Published: {{.DisplayVersion}} • <span data-test-id="snippet-published">{{.CommitTime}}</span>
+      {{.DisplayVersion}} on <span data-test-id="snippet-published">{{.CommitTime}}</span>
     </span>
     <span data-test-id="snippet-license">
     {{if .Licenses}}
       <a href="/{{$.PackagePath}}?tab=licenses" aria-label="Go to Licenses">
-        <span class="go-textSubtle">License: </span>
+        <span class="go-textSubtle">under</span>
         {{commaseparate .Licenses}}
       </a>
     {{else}}
-      <span class="go-textSubtle">License: </span>
-      <span class="go-textSubtle">N/A</span>
+      <span class="go-textSubtle">License N/A</span>
     {{end}}
     </span>
   </div>
