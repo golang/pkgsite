@@ -146,7 +146,7 @@ func (db *DB) symbolSearch(ctx context.Context, q string, limit, offset, maxResu
 		query = symbolsearch.QueryMultiWord
 	}
 	if err == nil {
-		err = db.db.RunQuery(ctx, query, collect, q, limit, offset)
+		err = db.db.RunQuery(ctx, query, collect, q, limit)
 		if err != nil {
 			results = nil
 		}

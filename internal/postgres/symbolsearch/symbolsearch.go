@@ -168,5 +168,4 @@ ORDER BY
 	commit_time DESC,
 	symbol_name,
 	package_path
-LIMIT $2
-OFFSET $3;`
+LIMIT $2;`

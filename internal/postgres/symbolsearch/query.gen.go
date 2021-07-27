@@ -53,8 +53,7 @@ ORDER BY
 	commit_time DESC,
 	symbol_name,
 	package_path
-LIMIT $2
-OFFSET $3;`
+LIMIT $2;`
 
 // QueryPackageDotSymbol is used when the search query is one element
 // containing a dot, where the first part is assumed to be the package name and
@@ -105,8 +104,7 @@ ORDER BY
 	commit_time DESC,
 	symbol_name,
 	package_path
-LIMIT $2
-OFFSET $3;`
+LIMIT $2;`
 
 // QueryOneDot is used when the search query is one element
 // containing a dot. This means it can either be <package>.<symbol> or
@@ -157,8 +155,7 @@ ORDER BY
 	commit_time DESC,
 	symbol_name,
 	package_path
-LIMIT $2
-OFFSET $3;`
+LIMIT $2;`
 
 // QueryMultiWord is used when the search query is multiple elements.
 const QueryMultiWord = `
@@ -216,5 +213,4 @@ ORDER BY
 	commit_time DESC,
 	symbol_name,
 	package_path
-LIMIT $2
-OFFSET $3;`
+LIMIT $2;`
