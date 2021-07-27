@@ -9,7 +9,7 @@ package symbolsearch
 // QuerySymbol is used when the search query is only one word, with no dots.
 // In this case, the word must match a symbol name and ranking is completely
 // determined by the path_tokens.
-const QuerySymbol = `
+const querySymbol = `
 WITH results AS (
 	SELECT
 			s.name AS symbol_name,
@@ -57,7 +57,7 @@ LIMIT $2;`
 // QueryPackageDotSymbol is used when the search query is one element
 // containing a dot, where the first part is assumed to be the package name and
 // the second the symbol name. For example, "sql.DB" or "sql.DB.Begin".
-const QueryPackageDotSymbol = `
+const queryPackageDotSymbol = `
 WITH results AS (
 	SELECT
 			s.name AS symbol_name,
@@ -105,7 +105,7 @@ ORDER BY
 LIMIT $2;`
 
 // QueryMultiWord is used when the search query is multiple elements.
-const QueryMultiWord = `
+const queryMultiWord = `
 WITH results AS (
 	SELECT
 			s.name AS symbol_name,

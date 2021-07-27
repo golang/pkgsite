@@ -26,9 +26,9 @@ package symbolsearch
 
 // QueryMultiWord is used when the search query is multiple elements.
 %s`,
-	formatQuery("QuerySymbol", rawQuerySymbol),
-	formatQuery("QueryPackageDotSymbol", rawQueryPackageDotSymbol),
-	formatQuery("QueryMultiWord", rawQueryMultiWord))
+	formatQuery("querySymbol", rawQuerySymbol),
+	formatQuery("queryPackageDotSymbol", rawQueryPackageDotSymbol),
+	formatQuery("queryMultiWord", rawQueryMultiWord))
 
 func formatQuery(name, query string) string {
 	return fmt.Sprintf("const %s = `%s`", name, query)
