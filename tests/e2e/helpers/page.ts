@@ -5,9 +5,22 @@
  * license that can be found in the LICENSE file.
  */
 
-import { DirectNavigationOptions, Page } from 'puppeteer';
+import { Browser, DirectNavigationOptions, Page } from 'puppeteer';
 
-import '../global-types';
+/**
+ * global declares global variables available in e2e test files.
+ */
+declare global {
+  /**
+   * A controller for the instance of Chrome used in for the tests.
+   */
+  const browser: Browser;
+
+  /**
+   * pageErrors is a record of uncaught exceptions that have occured in a test suite.
+   */
+  const pageErrors: Error[];
+}
 
 const {
   GO_DISCOVERY_E2E_AUTHORIZATION = null,

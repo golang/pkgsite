@@ -5,7 +5,6 @@
  * license that can be found in the LICENSE file.
  */
 
-import './global-types';
 import * as pg from './helpers/page';
 import * as search from './helpers/search.page';
 

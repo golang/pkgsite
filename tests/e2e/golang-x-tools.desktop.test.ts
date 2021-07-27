@@ -7,7 +7,6 @@
 
 import { Page } from 'puppeteer';
 
-import './global-types';
 import * as pg from './helpers/page';
 import * as golangxtools from './helpers/golang-x-tools.page';
 
