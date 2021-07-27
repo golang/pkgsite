@@ -118,10 +118,8 @@ func (db *DB) symbolSearch(ctx context.Context, q string, limit, offset, maxResu
 		return nil
 	}
 
-	var (
-		query string
-		err   error
-	)
+	var query string
+	sr := searchResponse{source: "symbol"}
 	if len(strings.Fields(q)) == 1 {
 		switch len(strings.Split(q, ".")) {
 		case 1:
@@ -139,26 +137,24 @@ func (db *DB) symbolSearch(ctx context.Context, q string, limit, offset, maxResu
 		default:
 			// There is no situation where we will get results for oe element
 			// containing more than 2 dots.
-			err = fmt.Errorf("unsupported query structure: %q", q)
+			//
+			// In this case, return no results.
+			return sr
 		}
 	} else {
 		// The search query contains multiple words, separated by spaces.
 		query = symbolsearch.QueryMultiWord
 	}
-	if err == nil {
-		err = db.db.RunQuery(ctx, query, collect, q, limit)
-		if err != nil {
-			results = nil
-		}
-		if len(results) > 0 && results[0].NumResults > uint64(maxResultCount) {
-			for _, r := range results {
-				r.NumResults = uint64(maxResultCount)
-			}
+
+	if err := db.db.RunQuery(ctx, query, collect, q, limit); err != nil {
+		sr.err = err
+		return sr
+	}
+	if len(results) > 0 && results[0].NumResults > uint64(maxResultCount) {
+		for _, r := range results {
+			r.NumResults = uint64(maxResultCount)
 		}
 	}
-	return searchResponse{
-		source:  "symbol",
-		results: results,
-		err:     err,
-	}
+	sr.results = results
+	return sr
 }
