@@ -70,19 +70,16 @@ if (readme && readmeContent && readmeOutline && readmeExpand.length && readmeCol
  * deprecated symbols when they are navigated to from the index
  * or a direct link.
  */
-for (const a of document.querySelectorAll<HTMLAnchorElement>('.js-deprecatedTagLink')) {
-  const hash = new URL(a.href).hash;
-  const heading = document.querySelector(hash);
-  const details = heading?.parentElement?.parentElement as HTMLDetailsElement | null;
-  if (details) {
-    a.addEventListener('click', () => {
-      details.open = true;
-    });
-    if (location.hash === hash) {
-      details.open = true;
-    }
+function openDeprecatedSymbol() {
+  if (!location.hash) return;
+  const heading = document.querySelector(location.hash);
+  const grandParent = heading?.parentElement?.parentElement as HTMLDetailsElement | null;
+  if (grandParent?.nodeName === 'DETAILS') {
+    grandParent.open = true;
   }
 }
+openDeprecatedSymbol();
+window.addEventListener('hashchange', () => openDeprecatedSymbol());
 
 /**
  * Listen for changes in the build context dropdown.
