@@ -30,7 +30,7 @@
   filter: none;
 }
 @media (prefers-color-scheme: dark) {
-  .go-Message--warning .go-Icon {
+  :root:not([data-theme='light']) .go-Message--warning .go-Icon {
     filter: none;
   }
 }

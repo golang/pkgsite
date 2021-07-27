@@ -80,7 +80,7 @@
   --color-code-comment: var(--green-light);
 }
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme='light']) {
     --color-brand-primary: var(--turq-med);
     --color-background: var(--gray-1);
     --color-background-accented: var(--gray-2);

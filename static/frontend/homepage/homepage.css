@@ -19,7 +19,7 @@
   mix-blend-mode: difference;
 }
 @media (prefers-color-scheme: dark) {
-  .Homepage-logo {
+  :root:not([data-theme='light']) .Homepage-logo {
     mix-blend-mode: difference;
   }
 }

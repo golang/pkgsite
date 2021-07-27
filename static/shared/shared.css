@@ -48,7 +48,7 @@
   --box-shadow: 0 0.3125rem 0.9375rem rgb(0 0 0 / 45%);
 }
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme='light']) {
     --box-shadow: 0 0.3125rem 0.9375rem rgb(0 0 0 / 45%);
   }
 }

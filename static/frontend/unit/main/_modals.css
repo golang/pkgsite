@@ -33,4 +33,19 @@
 
 .ShortcutsDialog td {
   padding-bottom: 0.5rem;
+  padding-left: 0.5rem;
+}
+
+.ShortcutsDialog-theme span {
+  display: none;
+}
+[data-theme='light'] .ShortcutsDialog-themeLight {
+  display: initial;
+}
+[data-theme='dark'] .ShortcutsDialog-themeDark {
+  display: initial;
+}
+[data-theme=''] .ShortcutsDialog-themeAuto,
+[data-theme='auto'] .ShortcutsDialog-themeAuto {
+  display: initial;
 }

@@ -13,8 +13,11 @@ keyboard.on('t', 'toggle theme', () => {
   const theme = document.documentElement.getAttribute('data-theme');
   if (theme === 'dark') {
     nextTheme = 'light';
+  } else if (theme === 'light') {
+    nextTheme = 'auto';
   }
   document.documentElement.setAttribute('data-theme', nextTheme);
+  document.cookie = `prefers-color-scheme=${nextTheme};path=/;max-age=31536000;`;
 });
 
 // Pressing '/' focuses the search box
