@@ -22,7 +22,6 @@ const SymbolTextSearchConfiguration = "symbols"
 var (
 	rawQuerySymbol           = constructQuery(filterSymbol)
 	rawQueryPackageDotSymbol = constructQuery(filterPackageDotSymbol)
-	rawQueryOneDot           = constructQuery(filterOneDot)
 	rawQueryMultiWord        = constructQuery(filterMultiWord)
 )
 
@@ -55,10 +54,6 @@ var (
 
 	filterPackageNameOrPath = fmt.Sprintf(
 		"(sd.name=%s OR sd.package_path=%[1]s)", splitFirstDot)
-
-	// filterOneDot is used when $1 is one word containing a single dot, which
-	// means it is either <package>.<symbol> or <type>.<methodOrField>.
-	filterOneDot = fmt.Sprintf("%s OR %s", filterPackageDotSymbol, filterSymbol)
 
 	// filterPackage is used to filter matching elements from
 	// sd.tsv_path_tokens.

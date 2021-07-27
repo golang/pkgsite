@@ -24,16 +24,10 @@ package symbolsearch
 // the second the symbol name. For example, "sql.DB" or "sql.DB.Begin".
 %s
 
-// QueryOneDot is used when the search query is one element
-// containing a dot. This means it can either be <package>.<symbol> or
-// <type>.<methodOrField>.
-%s
-
 // QueryMultiWord is used when the search query is multiple elements.
 %s`,
 	formatQuery("QuerySymbol", rawQuerySymbol),
 	formatQuery("QueryPackageDotSymbol", rawQueryPackageDotSymbol),
-	formatQuery("QueryOneDot", rawQueryOneDot),
 	formatQuery("QueryMultiWord", rawQueryMultiWord))
 
 func formatQuery(name, query string) string {

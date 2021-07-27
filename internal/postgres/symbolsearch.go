@@ -8,6 +8,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/lib/pq"
@@ -16,6 +17,7 @@ import (
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/postgres/symbolsearch"
+	"golang.org/x/sync/errgroup"
 )
 
 func upsertSymbolSearchDocuments(ctx context.Context, tx *database.DB,
@@ -94,19 +96,23 @@ func upsertSymbolSearchDocuments(ctx context.Context, tx *database.DB,
 // TODO(https://golang.org/issue/44142): factor out common code between
 // symbolSearch and deepSearch.
 func (db *DB) symbolSearch(ctx context.Context, q string, limit, offset, maxResultCount int) searchResponse {
-	var query string
+	var (
+		query   string
+		err     error
+		results []*SearchResult
+	)
 	sr := searchResponse{source: "symbol"}
-	if len(strings.Fields(q)) == 1 {
-		switch len(strings.Split(q, ".")) {
-		case 1:
+	if strings.Count(q, " ") == 0 {
+		switch strings.Count(q, ".") {
+		case 0:
 			// There is only 1 word in the search, and there are no dots, so
 			// this must be the symbol name.
 			query = symbolsearch.QuerySymbol
-		case 2:
+		case 1:
 			// There is only 1 element, split by 1 dot, so the search must
 			// either be for <package>.<symbol> or <type>.<methodOrFieldName>.
-			query = symbolsearch.QueryOneDot
-		case 3:
+			results, err = runSymbolSearchOneDot(ctx, db.db, q, limit)
+		case 2:
 			// There is only 1 element, split by 2 dots, so the search must
 			// be for <package>.<type>.<methodOrFieldName>.
 			query = symbolsearch.QueryPackageDotSymbol
@@ -121,8 +127,9 @@ func (db *DB) symbolSearch(ctx context.Context, q string, limit, offset, maxResu
 		// The search query contains multiple words, separated by spaces.
 		query = symbolsearch.QueryMultiWord
 	}
-
-	results, err := runSymbolSearch(ctx, db.db, query, q, limit)
+	if query != "" {
+		results, err = runSymbolSearch(ctx, db.db, query, q, limit)
+	}
 	if err != nil {
 		sr.err = err
 		return sr
@@ -132,6 +139,40 @@ func (db *DB) symbolSearch(ctx context.Context, q string, limit, offset, maxResu
 	}
 	sr.results = results
 	return sr
+}
+
+// runSymbolSearchOneDot is used when q contains only 1 dot, so the search must
+// either be for <package>.<symbol> or <type>.<methodOrFieldName>.
+//
+// This search is split into two parallel queries, since the query is very slow
+// when using an OR in the WHERE clause.
+func runSymbolSearchOneDot(ctx context.Context, ddb *database.DB, q string, limit int) (_ []*SearchResult, err error) {
+	group, searchCtx := errgroup.WithContext(ctx)
+	resultsArray := make([][]*SearchResult, 2)
+	for i, query := range []string{
+		symbolsearch.QuerySymbol,
+		symbolsearch.QueryPackageDotSymbol,
+	} {
+		i := i
+		query := query
+		group.Go(func() error {
+			results, err := runSymbolSearch(searchCtx, ddb, query, q, limit)
+			if err != nil {
+				return err
+			}
+			resultsArray[i] = results
+			return nil
+		})
+	}
+	if err := group.Wait(); err != nil {
+		return nil, err
+	}
+	results := append(resultsArray[0], resultsArray[1]...)
+	sort.Slice(results, func(i, j int) bool { return results[i].NumImportedBy > results[j].NumImportedBy })
+	if len(results) > limit {
+		results = results[0:limit]
+	}
+	return results, nil
 }
 
 func runSymbolSearch(ctx context.Context, ddb *database.DB, query, q string, limit int) (_ []*SearchResult, err error) {

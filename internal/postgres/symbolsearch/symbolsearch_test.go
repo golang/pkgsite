@@ -18,7 +18,6 @@ func TestGenerateQuery(t *testing.T) {
 	}{
 		{"querySymbol", rawQuerySymbol, QuerySymbol},
 		{"queryPackageDotSymbol", rawQueryPackageDotSymbol, QueryPackageDotSymbol},
-		{"queryOneDot", rawQueryOneDot, QueryOneDot},
 		{"queryMultiWord", rawQueryMultiWord, QueryMultiWord},
 	} {
 		t.Run(test.name, func(t *testing.T) {
