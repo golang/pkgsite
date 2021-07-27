@@ -45,15 +45,19 @@ tests/search/seed.txt.
 ## End-to-End (E2E) Tests
 
 Th e2e/ directory contains end-to-end tests for pages on pkg.go.dev, which can
-be run using e2e.sh.
+be run using `./tests/e2e/run.sh`.
 
 ### Running E2E Tests
 
 In order to run the tests, run this command from the root of the repository:
 
 ```
-$ ./tests/e2e/run.sh
+./tests/e2e/run.sh
 ```
+
+To run a set of tests with a custom experiment set active create a directory
+with a config.yaml file and a seed.txt file if a custom set of seed modules
+is desired. Then run `./tests/e2e/run.sh <directory>`.
 
 `./tests/e2e/run.sh` sets up a series of docker containers that run a postgres
 database, frontend, and headless chrome, and runs the e2e tests using headless
