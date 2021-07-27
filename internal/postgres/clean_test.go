@@ -29,10 +29,9 @@ func TestCleanBulk(t *testing.T) {
 	}
 	for _, mv := range append(want,
 		// These should not be cleaned.
-		"a.c@v1.0.0", // tagged
-		"b.c@v0.0.0-20170101000000-abcdef012345/p", // p is in search_documents (must be inserted first)
-		"b.c@v0.0.0-20190101000000-abcdef012345",   // latest version
-		"b.c@v0.0.0-20180101000000-abcdef012345",   // 'main' in version_map (see UpsertVersionMap below)
+		"a.c@v1.0.0",                             // tagged
+		"b.c@v0.0.0-20190101000000-abcdef012345", // latest version
+		"b.c@v0.0.0-20180101000000-abcdef012345", // 'main' in version_map (see UpsertVersionMap below)
 	) {
 		mod, ver, pkg := parseModuleVersionPackage(mv)
 		m := sample.Module(mod, ver, pkg)

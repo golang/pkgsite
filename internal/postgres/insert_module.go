@@ -149,6 +149,13 @@ func (db *DB) saveModule(ctx context.Context, m *internal.Module, lmv *internal.
 			return err
 		}
 
+		// Delete this module from search_documents completely. Below we'll
+		// insert the packages from this module. This will effectively remove
+		// packages from older module versions that are not in the latest one.
+		if err := deleteModuleFromSearchDocuments(ctx, tx, m.ModulePath, nil); err != nil {
+			return err
+		}
+
 		// If the most recent version of this module has an alternative module
 		// path, then do not insert its packages into search_documents (and
 		// delete whatever is there). This happens when a module that initially
@@ -176,7 +183,7 @@ func (db *DB) saveModule(ctx context.Context, m *internal.Module, lmv *internal.
 		}
 		if alt {
 			log.Infof(ctx, "%s@%s: not inserting into search documents", m.ModulePath, m.Version)
-			return deleteModuleFromSearchDocuments(ctx, tx, m.ModulePath, nil)
+			return nil
 		}
 		// Insert the module's packages into search_documents.
 		if err := upsertSearchDocuments(ctx, tx, m); err != nil {

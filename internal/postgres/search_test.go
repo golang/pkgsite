@@ -1300,7 +1300,6 @@ func TestDeleteFromSearch(t *testing.T) {
 	const modulePath = "deleteme.com"
 
 	initial := []searchDocumentRow{
-		// These must be from oldest to newest version, or older ones won't be inserted.
 		{modulePath + "/p1", modulePath, "v0.0.9"}, // oldest version of same module
 		{modulePath + "/p2", modulePath, "v1.1.0"}, // older version of same module
 		{modulePath + "/p4", modulePath, "v1.9.0"}, // newer version of same module
@@ -1313,7 +1312,8 @@ func TestDeleteFromSearch(t *testing.T) {
 			sm := sample.Module(r.ModulePath, r.Version, strings.TrimPrefix(r.PackagePath, r.ModulePath+"/"))
 			MustInsertModule(ctx, t, db, sm)
 		}
-		checkSearchDocuments(ctx, t, db, initial)
+		// Older versions are deleted by InsertModule, so only the newest versions are here.
+		checkSearchDocuments(ctx, t, db, initial[2:])
 	}
 
 	t.Run("DeleteOlderVersionFromSearchDocuments", func(t *testing.T) {
