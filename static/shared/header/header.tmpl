@@ -84,7 +84,7 @@
         <option {{if eq .SearchMode "identifiers"}}selected{{end}} value="identifiers">Identifiers</option>
       </select>
     {{end}}
-    <input name="q" class="go-Input" aria-label="Search for a package" type="text"
+    <input name="q" class="go-Input js-searchFocus" aria-label="Search for a package" type="text"
         autocapitalize="off" autocomplete="off" autocorrect="off" spellcheck="false"
         placeholder="Search for a package" />
     <button class="go-Button go-Button--inverted" aria-label="Submit search">
