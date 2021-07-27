@@ -3,8 +3,6 @@
 # license that can be found in the LICENSE file.
 
 # Modules that are expected to return a 200.
-cuelang.org/go@v0.3.2
-cuelang.org/go@v0.4.0
 github.com/apache/thrift@v0.14.1
 github.com/apache/thrift@v0.14.2
 github.com/creack/pty@v1.1.11

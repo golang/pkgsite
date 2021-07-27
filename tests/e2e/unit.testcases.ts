@@ -173,8 +173,8 @@ export const testcases: TestCase[] = [
   },
   {
     name: 'package with deprecated symbols',
-    path: '/cuelang.org/go@v0.3.2/cue',
+    path: '/database/sql/driver@go1.16.3',
     tabs: [],
-    ids: [id.INDEX, '#Merge'],
+    ids: [id.INDEX, '#Execer'],
   },
 ];
