@@ -38,26 +38,13 @@ package symbolsearch
 // queryMatchingSymbolIDsMultiWord is used to find the matching symbol ids when
 // the SearchType is SearchTypeMultiWord.
 %s
-
-// legacyQuerySymbol - TODO(golang/go#44142): replace with querySearchSymbol.
-%s
-
-// legacyQueryPackageDotSymbol - TODO(golang/go#44142): replace with
-// querySearchPackageDotSymbol.
-%s
-
-// legacyQueryMultiWord - TODO(golang/go#44142): replace with queryMultiWord.
-%s
 `,
 	formatQuery("querySearchSymbol", Query(SearchTypeSymbol)),
 	formatQuery("querySearchPackageDotSymbol", Query(SearchTypePackageDotSymbol)),
 	formatQuery("querySearchMultiWord", Query(SearchTypeMultiWord)),
 	formatQuery("queryMatchingSymbolIDsSymbol", MatchingSymbolIDsQuery(SearchTypeSymbol)),
 	formatQuery("queryMatchingSymbolIDsPackageDotSymbol", MatchingSymbolIDsQuery(SearchTypePackageDotSymbol)),
-	formatQuery("queryMatchingSymbolIDsMultiWord", MatchingSymbolIDsQuery(SearchTypeMultiWord)),
-	formatQuery("legacyQuerySymbol", rawLegacyQuerySymbol),
-	formatQuery("legacyQueryPackageDotSymbol", rawLegacyQueryPackageDotSymbol),
-	formatQuery("legacyQueryMultiWord", rawLegacyQueryMultiWord))
+	formatQuery("queryMatchingSymbolIDsMultiWord", MatchingSymbolIDsQuery(SearchTypeMultiWord)))
 
 func formatQuery(name, query string) string {
 	return fmt.Sprintf("const %s = `%s`", name, query)
