@@ -25,12 +25,11 @@
         {{if eq .SearchMode "identifiers"}}Identifiers{{else}}Packages{{end}}
         matching “{{.Query}}”
       </h1>
-      <span>
-        Search instead for
+      <span class="SearchResults-instead">
         {{if eq .SearchMode "identifiers"}}
-          <a href="/search?q={{.Query}}&limit={{.Pagination.Limit}}">packages</a>
+          <a href="/search?q={{.Query}}&limit={{.Pagination.Limit}}">Search instead for packages</a>
         {{else}}
-          <a href="/search?q={{.Query}}&limit={{.Pagination.Limit}}&m=identifiers">symbols</a>
+          <a href="/search?q={{.Query}}&limit={{.Pagination.Limit}}&m=identifiers">Search instead for identifiers</a>
         {{end}}
       </span>
       <div class="SearchResults-resultCount go-textSubtle">
@@ -91,10 +90,10 @@
         <h2 class="SearchSnippet-header">
           <a href="/{{$v.PackagePath}}" data-gtmc="search result" data-gtmv="{{$i}}"
               data-test-id="snippet-title">
-            {{$v.Name}}
+            <span class="SearchSnippet-header-name">{{$v.Name}}</span>
+            {{$v.PackagePath}}
           </a>
         </h2>
-        <span class="SearchSnippet-header-path">{{$v.PackagePath}}</span>
         {{with $v.ChipText}}<span class="go-Chip go-Chip--inverted">{{.}}</span>{{end}}
       </div>
       <p class="SearchSnippet-synopsis" data-test-id="snippet-synopsis">
@@ -140,17 +139,18 @@
     <a href="/{{$.PackagePath}}?tab=importedby" aria-label="Go to Imported By">
        <span class="go-textSubtle">Imported by </span><strong>{{.NumImportedBy}}</strong>
     </a>
+    <span class="go-textSubtle">|</span>
     <span class="go-textSubtle">
-      {{.DisplayVersion}} on <span data-test-id="snippet-published">{{.CommitTime}}</span>
+      {{.DisplayVersion}} published on <span data-test-id="snippet-published">{{.CommitTime}}</span>
     </span>
+    <span class="go-textSubtle">|</span>
     <span data-test-id="snippet-license">
     {{if .Licenses}}
       <a href="/{{$.PackagePath}}?tab=licenses" aria-label="Go to Licenses">
-        <span class="go-textSubtle">under</span>
         {{commaseparate .Licenses}}
       </a>
     {{else}}
-      <span class="go-textSubtle">License N/A</span>
+      <span class="go-textSubtle">No license</span>
     {{end}}
     </span>
   </div>
