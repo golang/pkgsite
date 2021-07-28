@@ -16,9 +16,15 @@ func TestGenerateQuery(t *testing.T) {
 	for _, test := range []struct {
 		name, q, want string
 	}{
-		{"querySymbol", rawQuerySymbol, querySymbol},
-		{"queryPackageDotSymbol", rawQueryPackageDotSymbol, queryPackageDotSymbol},
-		{"queryMultiWord", rawQueryMultiWord, queryMultiWord},
+		{"querySearchSymbol", newQuery(SearchTypeSymbol), querySearchSymbol},
+		{"querySearchPackageDotSymbol", newQuery(SearchTypePackageDotSymbol), querySearchPackageDotSymbol},
+		{"querySearchMultiWord", newQuery(SearchTypeMultiWord), querySearchMultiWord},
+		{"queryMatchingSymbolIDsSymbol", matchingIDsQuery(SearchTypeSymbol), queryMatchingSymbolIDsSymbol},
+		{"queryMatchingSymbolIDsPackageDotSymbol", matchingIDsQuery(SearchTypePackageDotSymbol), queryMatchingSymbolIDsPackageDotSymbol},
+		{"queryMatchingSymbolIDsMultiWord", matchingIDsQuery(SearchTypeMultiWord), queryMatchingSymbolIDsMultiWord},
+		{"oldQuerySymbol", rawQuerySymbol, oldQuerySymbol},
+		{"oldQueryPackageDotSymbol", rawQueryPackageDotSymbol, oldQueryPackageDotSymbol},
+		{"oldQueryMultiWord", rawQueryMultiWord, oldQueryMultiWord},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			if diff := cmp.Diff(test.want, test.q); diff != "" {

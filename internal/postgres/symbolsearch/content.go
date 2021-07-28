@@ -14,21 +14,50 @@ var Content = fmt.Sprintf(`// Copyright 2021 The Go Authors. All rights reserved
 
 package symbolsearch
 
-// QuerySymbol is used when the search query is only one word, with no dots.
+// querySearchSymbol is used when the search query is only one word, with no dots.
 // In this case, the word must match a symbol name and ranking is completely
 // determined by the path_tokens.
 %s
 
-// QueryPackageDotSymbol is used when the search query is one element
+// querySearchPackageDotSymbol is used when the search query is one element
 // containing a dot, where the first part is assumed to be the package name and
 // the second the symbol name. For example, "sql.DB" or "sql.DB.Begin".
 %s
 
-// QueryMultiWord is used when the search query is multiple elements.
-%s`,
-	formatQuery("querySymbol", rawQuerySymbol),
-	formatQuery("queryPackageDotSymbol", rawQueryPackageDotSymbol),
-	formatQuery("queryMultiWord", rawQueryMultiWord))
+// querySearchMultiWord is used when the search query is multiple elements.
+%s
+
+// queryMatchingSymbolIDsSymbol is used to find the matching symbol
+// ids when the SearchType is SearchTypeSymbol.
+%s
+
+// queryMatchingSymbolIDsPackageDotSymbol is used to find the matching symbol
+// ids when the SearchType is SearchTypePackageDotSymbol.
+%s
+
+// queryMatchingSymbolIDsMultiWord is used to find the matching symbol ids when
+// the SearchType is SearchTypeMultiWord.
+%s
+
+// oldQuerySymbol - TODO(golang/go#44142): replace with querySearchSymbol.
+%s
+
+// oldQueryPackageDotSymbol - TODO(golang/go#44142): replace with
+// querySearchPackageDotSymbol.
+%s
+
+// oldQueryMultiWord - TODO(golang/go#44142): replace with queryMultiWord.
+%s
+`,
+	formatQuery("querySearchSymbol", newQuery(SearchTypeSymbol)),
+	formatQuery("querySearchPackageDotSymbol", newQuery(SearchTypePackageDotSymbol)),
+	formatQuery("querySearchMultiWord", newQuery(SearchTypeMultiWord)),
+	formatQuery("queryMatchingSymbolIDsSymbol", matchingIDsQuery(SearchTypeSymbol)),
+	formatQuery("queryMatchingSymbolIDsPackageDotSymbol", matchingIDsQuery(SearchTypePackageDotSymbol)),
+	formatQuery("queryMatchingSymbolIDsMultiWord", matchingIDsQuery(SearchTypeMultiWord)),
+	formatQuery("oldQuerySymbol", rawQuerySymbol),
+	formatQuery("oldQueryPackageDotSymbol", rawQueryPackageDotSymbol),
+	formatQuery("oldQueryMultiWord", rawQueryMultiWord))
 
 func formatQuery(name, query string) string {
 	return fmt.Sprintf("const %s = `%s`", name, query)

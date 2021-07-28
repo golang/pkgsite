@@ -125,12 +125,17 @@ func toTSQuery(arg string) string {
 	return fmt.Sprintf("to_tsquery('%s', %s)", SymbolTextSearchConfiguration, processArg(arg))
 }
 
-// processSymbol converts a symbol with underscores to slashes (for example,
+// processArg converts a symbol with underscores to slashes (for example,
 // "A_B" -> "A-B"). This is because the postgres parser treats underscores as
 // slashes, but we want a search for "A" to rank "A_B" lower than just "A". We
 // also want to be able to search specificially for "A_B".
 func processArg(arg string) string {
-	return strings.ReplaceAll(arg, "$1", "replace($1, '_', '-')")
+	s := "$1"
+	if len(arg) == 2 && strings.HasPrefix(arg, "$") {
+		// If the arg is a different $N, substitute that instead.
+		s = arg
+	}
+	return strings.ReplaceAll(arg, s, fmt.Sprintf("replace(%s, '_', '-')", s))
 }
 
 const symbolSearchBaseQuery = `
