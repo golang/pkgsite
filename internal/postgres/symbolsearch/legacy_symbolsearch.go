@@ -20,24 +20,10 @@ import (
 const SymbolTextSearchConfiguration = "symbols"
 
 var (
-	rawQuerySymbol           = constructQuery(filterSymbol)
-	rawQueryPackageDotSymbol = constructQuery(filterPackageDotSymbol)
-	rawQueryMultiWord        = constructQuery(filterMultiWord)
+	rawLegacyQuerySymbol           = constructQuery(filterSymbol)
+	rawLegacyQueryPackageDotSymbol = constructQuery(filterPackageDotSymbol)
+	rawLegacyQueryMultiWord        = constructQuery(filterMultiWord)
 )
-
-// Query returns a search query to be used in internal/postgres for symbol
-// search.
-func Query(st SearchType) string {
-	switch st {
-	case SearchTypeSymbol:
-		return rawQuerySymbol
-	case SearchTypePackageDotSymbol:
-		return rawQueryPackageDotSymbol
-	case SearchTypeMultiWord:
-		return rawQueryMultiWord
-	}
-	return ""
-}
 
 // constructQuery is used to construct a symbol search query.
 func constructQuery(where string) string {

@@ -39,25 +39,25 @@ package symbolsearch
 // the SearchType is SearchTypeMultiWord.
 %s
 
-// oldQuerySymbol - TODO(golang/go#44142): replace with querySearchSymbol.
+// legacyQuerySymbol - TODO(golang/go#44142): replace with querySearchSymbol.
 %s
 
-// oldQueryPackageDotSymbol - TODO(golang/go#44142): replace with
+// legacyQueryPackageDotSymbol - TODO(golang/go#44142): replace with
 // querySearchPackageDotSymbol.
 %s
 
-// oldQueryMultiWord - TODO(golang/go#44142): replace with queryMultiWord.
+// legacyQueryMultiWord - TODO(golang/go#44142): replace with queryMultiWord.
 %s
 `,
-	formatQuery("querySearchSymbol", newQuery(SearchTypeSymbol)),
-	formatQuery("querySearchPackageDotSymbol", newQuery(SearchTypePackageDotSymbol)),
-	formatQuery("querySearchMultiWord", newQuery(SearchTypeMultiWord)),
-	formatQuery("queryMatchingSymbolIDsSymbol", matchingIDsQuery(SearchTypeSymbol)),
-	formatQuery("queryMatchingSymbolIDsPackageDotSymbol", matchingIDsQuery(SearchTypePackageDotSymbol)),
-	formatQuery("queryMatchingSymbolIDsMultiWord", matchingIDsQuery(SearchTypeMultiWord)),
-	formatQuery("oldQuerySymbol", rawQuerySymbol),
-	formatQuery("oldQueryPackageDotSymbol", rawQueryPackageDotSymbol),
-	formatQuery("oldQueryMultiWord", rawQueryMultiWord))
+	formatQuery("querySearchSymbol", Query(SearchTypeSymbol)),
+	formatQuery("querySearchPackageDotSymbol", Query(SearchTypePackageDotSymbol)),
+	formatQuery("querySearchMultiWord", Query(SearchTypeMultiWord)),
+	formatQuery("queryMatchingSymbolIDsSymbol", MatchingSymbolIDsQuery(SearchTypeSymbol)),
+	formatQuery("queryMatchingSymbolIDsPackageDotSymbol", MatchingSymbolIDsQuery(SearchTypePackageDotSymbol)),
+	formatQuery("queryMatchingSymbolIDsMultiWord", MatchingSymbolIDsQuery(SearchTypeMultiWord)),
+	formatQuery("legacyQuerySymbol", rawLegacyQuerySymbol),
+	formatQuery("legacyQueryPackageDotSymbol", rawLegacyQueryPackageDotSymbol),
+	formatQuery("legacyQueryMultiWord", rawLegacyQueryMultiWord))
 
 func formatQuery(name, query string) string {
 	return fmt.Sprintf("const %s = `%s`", name, query)

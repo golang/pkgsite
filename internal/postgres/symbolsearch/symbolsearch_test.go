@@ -16,15 +16,15 @@ func TestGenerateQuery(t *testing.T) {
 	for _, test := range []struct {
 		name, q, want string
 	}{
-		{"querySearchSymbol", newQuery(SearchTypeSymbol), querySearchSymbol},
-		{"querySearchPackageDotSymbol", newQuery(SearchTypePackageDotSymbol), querySearchPackageDotSymbol},
-		{"querySearchMultiWord", newQuery(SearchTypeMultiWord), querySearchMultiWord},
-		{"queryMatchingSymbolIDsSymbol", matchingIDsQuery(SearchTypeSymbol), queryMatchingSymbolIDsSymbol},
-		{"queryMatchingSymbolIDsPackageDotSymbol", matchingIDsQuery(SearchTypePackageDotSymbol), queryMatchingSymbolIDsPackageDotSymbol},
-		{"queryMatchingSymbolIDsMultiWord", matchingIDsQuery(SearchTypeMultiWord), queryMatchingSymbolIDsMultiWord},
-		{"oldQuerySymbol", rawQuerySymbol, oldQuerySymbol},
-		{"oldQueryPackageDotSymbol", rawQueryPackageDotSymbol, oldQueryPackageDotSymbol},
-		{"oldQueryMultiWord", rawQueryMultiWord, oldQueryMultiWord},
+		{"querySearchSymbol", Query(SearchTypeSymbol), querySearchSymbol},
+		{"querySearchPackageDotSymbol", Query(SearchTypePackageDotSymbol), querySearchPackageDotSymbol},
+		{"querySearchMultiWord", Query(SearchTypeMultiWord), querySearchMultiWord},
+		{"queryMatchingSymbolIDsSymbol", MatchingSymbolIDsQuery(SearchTypeSymbol), queryMatchingSymbolIDsSymbol},
+		{"queryMatchingSymbolIDsPackageDotSymbol", MatchingSymbolIDsQuery(SearchTypePackageDotSymbol), queryMatchingSymbolIDsPackageDotSymbol},
+		{"queryMatchingSymbolIDsMultiWord", MatchingSymbolIDsQuery(SearchTypeMultiWord), queryMatchingSymbolIDsMultiWord},
+		{"legacyQuerySymbol", rawLegacyQuerySymbol, legacyQuerySymbol},
+		{"legacyQueryPackageDotSymbol", rawLegacyQueryPackageDotSymbol, legacyQueryPackageDotSymbol},
+		{"legacyQueryMultiWord", rawLegacyQueryMultiWord, legacyQueryMultiWord},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			if diff := cmp.Diff(test.want, test.q); diff != "" {

@@ -167,6 +167,11 @@ func runSymbolSearchOneDot(ctx context.Context, ddb *database.DB, q string, limi
 func runSymbolSearch(ctx context.Context, ddb *database.DB, st symbolsearch.SearchType, q string, limit int) (_ []*SearchResult, err error) {
 	defer derrors.Wrap(&err, "runSymbolSearch(ctx, ddb, query, %q, %d)", q, limit)
 
+	ids, err := fetchMatchingSymbolIDs(ctx, ddb, st, q)
+	if err != nil {
+		return nil, err
+	}
+
 	var results []*SearchResult
 	collect := func(rows *sql.Rows) error {
 		var r SearchResult
@@ -190,8 +195,34 @@ func runSymbolSearch(ctx context.Context, ddb *database.DB, st symbolsearch.Sear
 		return nil
 	}
 	query := symbolsearch.Query(st)
-	if err := ddb.RunQuery(ctx, query, collect, q, limit); err != nil {
+	args := []interface{}{pq.Array(ids), limit}
+	if st != symbolsearch.SearchTypeSymbol {
+		args = append(args, q)
+	}
+	if err := ddb.RunQuery(ctx, query, collect, args...); err != nil {
 		return nil, err
 	}
 	return results, nil
+}
+
+// fetchMatchingSymbolIDs fetches the symbol ids to be used for a given
+// symbolsearch.SearchType. It runs the query returned by
+// symbolsearch.MatchingSymbolIDsQuery. The ids returned will be used by in
+// runSymbolSearch.
+func fetchMatchingSymbolIDs(ctx context.Context, ddb *database.DB, st symbolsearch.SearchType, q string) (_ []int, err error) {
+	defer derrors.Wrap(&err, "fetchMatchingSymbolIDs(ctx, ddb, %d, %q)", st, q)
+	var ids []int
+	collect := func(rows *sql.Rows) error {
+		var id int
+		if err := rows.Scan(&id); err != nil {
+			return err
+		}
+		ids = append(ids, id)
+		return nil
+	}
+	query := symbolsearch.MatchingSymbolIDsQuery(st)
+	if err := ddb.RunQuery(ctx, query, collect, q); err != nil {
+		return nil, err
+	}
+	return ids, nil
 }

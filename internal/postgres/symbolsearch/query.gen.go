@@ -151,8 +151,8 @@ const queryMatchingSymbolIDsMultiWord = `
 		FROM symbol_names
 		WHERE tsv_name_tokens @@ to_tsquery('symbols', replace(replace($1, '_', '-'), ' ', ' | '))`
 
-// oldQuerySymbol - TODO(golang/go#44142): replace with querySearchSymbol.
-const oldQuerySymbol = `
+// legacyQuerySymbol - TODO(golang/go#44142): replace with querySearchSymbol.
+const legacyQuerySymbol = `
 WITH results AS (
 	SELECT
 			s.name AS symbol_name,
@@ -197,9 +197,9 @@ ORDER BY
 	package_path
 LIMIT $2;`
 
-// oldQueryPackageDotSymbol - TODO(golang/go#44142): replace with
+// legacyQueryPackageDotSymbol - TODO(golang/go#44142): replace with
 // querySearchPackageDotSymbol.
-const oldQueryPackageDotSymbol = `
+const legacyQueryPackageDotSymbol = `
 WITH results AS (
 	SELECT
 			s.name AS symbol_name,
@@ -246,8 +246,8 @@ ORDER BY
 	package_path
 LIMIT $2;`
 
-// oldQueryMultiWord - TODO(golang/go#44142): replace with queryMultiWord.
-const oldQueryMultiWord = `
+// legacyQueryMultiWord - TODO(golang/go#44142): replace with queryMultiWord.
+const legacyQueryMultiWord = `
 WITH results AS (
 	SELECT
 			s.name AS symbol_name,

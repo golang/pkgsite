@@ -8,7 +8,12 @@ import (
 	"fmt"
 )
 
-func newQuery(st SearchType) string {
+// Query returns a symbol search query to be used in internal/postgres.
+// Each query that is returned accepts the following args:
+// $1 = ids
+// $2 = limit
+// $3 = search query input (not used by SearchTypeSymbol)
+func Query(st SearchType) string {
 	var filter string
 	switch st {
 	case SearchTypeMultiWord:
@@ -94,9 +99,9 @@ INNER JOIN search_documents sd ON sd.unit_id = ssd.unit_id
 INNER JOIN package_symbols ps ON ps.id=ssd.package_symbol_id
 ORDER BY score DESC;`
 
-// matchingIDsQuery returns a query to fetch the symbol ids that match the
+// MatchingSymbolIDsQuery returns a query to fetch the symbol ids that match the
 // search input, based on the SearchType.
-func matchingIDsQuery(st SearchType) string {
+func MatchingSymbolIDsQuery(st SearchType) string {
 	var filter string
 	switch st {
 	case SearchTypeSymbol:
