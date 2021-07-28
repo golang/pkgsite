@@ -80,7 +80,7 @@ func multiwordCTE() string {
 	LIMIT $2
 `,
 		SymbolTextSearchConfiguration,
-		splitORFunc(processArg("$3")))
+		processArg("$3"))
 }
 
 const baseQuery = `
@@ -131,16 +131,12 @@ func MatchingSymbolIDsQuery(st SearchType) string {
 		//
 		// TODO(44142): This is currently somewhat slow, since many IDs can be
 		// returned.
-		filter = fmt.Sprintf(`tsv_name_tokens @@ %s`, toTSQuery(splitORFunc("$1")))
+		filter = fmt.Sprintf(`tsv_name_tokens @@ %s`, toTSQuery("replace($1, ' ', ' | ')"))
 	}
 	return fmt.Sprintf(`
 		SELECT id
 		FROM symbol_names
 		WHERE %s`, filter)
-}
-
-func splitORFunc(arg string) string {
-	return fmt.Sprintf("replace(%s, ' ', ' | ')", arg)
 }
 
 func toTSQuery(arg string) string {

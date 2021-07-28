@@ -9,6 +9,7 @@ import (
 	"database/sql"
 	"fmt"
 	"sort"
+	"strings"
 
 	"github.com/lib/pq"
 	"golang.org/x/pkgsite/internal"
@@ -196,13 +197,41 @@ func runSymbolSearch(ctx context.Context, ddb *database.DB, st symbolsearch.Sear
 	}
 	query := symbolsearch.Query(st)
 	args := []interface{}{pq.Array(ids), limit}
-	if st != symbolsearch.SearchTypeSymbol {
+
+	switch st {
+	case symbolsearch.SearchTypePackageDotSymbol:
 		args = append(args, q)
+	case symbolsearch.SearchTypeMultiWord:
+		args = append(args, multiwordArg(q))
 	}
 	if err := ddb.RunQuery(ctx, query, collect, args...); err != nil {
 		return nil, err
 	}
 	return results, nil
+}
+
+// mulitwordArg returns the tsv_path_tokens search query used for
+// symbolsearch.SearchTypeMultiWord.
+//
+// For each word, check if there is a "/" or if it matches a common
+// hostname. If so, the search on tsv_path_tokens must match that
+// search. If not, an OR query is returned for search on tsv_path_tokens.
+func multiwordArg(q string) string {
+	words := strings.Fields(q)
+	var pathTokens []string
+	for _, w := range words {
+		if strings.Contains(w, "/") || commonHostnames[w] {
+			pathTokens = append(pathTokens, w)
+		}
+	}
+	if len(pathTokens) > 0 {
+		// The words in pathTokens can't be symbol names, so they must
+		// appear in the tsv_path_tokens column.
+		return strings.Join(pathTokens, " & ")
+	}
+	// Everything the user typed is a random word, so search for it
+	// all.
+	return strings.Join(words, " | ")
 }
 
 // fetchMatchingSymbolIDs fetches the symbol ids to be used for a given

@@ -4,4 +4,5 @@
 
 github.com/go-openapi/strfmt@v0.20.1
 github.com/julieqiu/api-demo@latest
+gopkg.in/foo.v1@v1.0.4
 std@v1.16.6

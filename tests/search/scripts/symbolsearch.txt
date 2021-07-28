@@ -38,3 +38,21 @@ Float math/big
 Search for <package name>.<symbol>.
 big.Float
 Float math/big
+
+Multi-word search without subpaths
+foo gopkg.in/foo.v1
+FOO github.com/julieqiu/api-demo
+FoO github.com/julieqiu/api-demo
+Foo github.com/julieqiu/api-demo
+
+Multi-word search with subpaths
+github.com/julieqiu foo
+FOO github.com/julieqiu/api-demo
+FoO github.com/julieqiu/api-demo
+Foo github.com/julieqiu/api-demo
+
+Multi-word search with hostname
+github.com foo
+FOO github.com/julieqiu/api-demo
+FoO github.com/julieqiu/api-demo
+Foo github.com/julieqiu/api-demo

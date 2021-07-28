@@ -99,14 +99,14 @@ WITH ssd AS (
 			ts_rank(
 				'{0.1, 0.2, 1.0, 1.0}',
 				sd.tsv_path_tokens,
-				to_tsquery('symbols', replace(replace($3, '_', '-'), ' ', ' | '))
+				to_tsquery('symbols', replace($3, '_', '-'))
 			) * ssd.ln_imported_by_count
 		) AS score
 	FROM symbol_search_documents ssd
 	INNER JOIN search_documents sd ON sd.package_path_id = ssd.package_path_id
 	WHERE
 		symbol_name_id = ANY($1)
-		AND sd.tsv_path_tokens @@ to_tsquery('symbols', replace(replace($3, '_', '-'), ' ', ' | '))
+		AND sd.tsv_path_tokens @@ to_tsquery('symbols', replace($3, '_', '-'))
 	ORDER BY score DESC
 	LIMIT $2
 )

@@ -5,3 +5,4 @@
 math/bits, 9848
 math/big, 88393
 github.com/go-openapi/strfmt, 11101
+gopkg.in/foo.v1, 1
