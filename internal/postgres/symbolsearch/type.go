@@ -15,12 +15,20 @@ func ParseInputType(q string) InputType {
 	if strings.ContainsAny(q, " \t\n") {
 		return InputTypeMultiWord
 	}
+	parts := strings.Split(q, ".")
 	switch strings.Count(q, ".") {
 	case 0:
 		return InputTypeNoDot
 	case 1:
 		return InputTypeOneDot
 	case 2:
+		if strings.Contains(parts[1], "/") {
+			// Example: if q = "github.com/foo/bar", parts[1] will be
+			// "com/foo/bar.DB".
+			// <package-path>.<symbol> is currently not a supported search when
+			// package path is not a standard library path.
+			return InputTypeNoMatch
+		}
 		return InputTypeTwoDots
 	default:
 		return InputTypeNoMatch
