@@ -6,7 +6,7 @@ package symbolsearch
 
 import (
 	"fmt"
-	"strings"
+	"regexp"
 )
 
 // SymbolTextSearchConfiguration is a custom postgres text search configuration
@@ -147,15 +147,20 @@ func toTSQuery(arg string) string {
 	return fmt.Sprintf("to_tsquery('%s', %s)", SymbolTextSearchConfiguration, processArg(arg))
 }
 
-// processArg converts a symbol with underscores to slashes (for example,
-// "A_B" -> "A-B"). This is because the postgres parser treats underscores as
-// slashes, but we want a search for "A" to rank "A_B" lower than just "A". We
-// also want to be able to search specificially for "A_B".
+// regexpPostgresArg finds $N arg in a postgres expression.
+var regexpPostgresArg = regexp.MustCompile(`\$[0-9]+`)
+
+// processArg returns a postgres expression which converts all of the
+// underscores in arg to dashes.
+//
+// arg is expected to be a postgres expression containing a $N.
+//
+// For example, if arg is to_tsquery($1), processArg will return
+// to_tsquery(replace($1, '_', '-')). This means that if $1 has a value of
+// "A_B", to_tsquery will actually run on "A-B".
+// This preprocessing step is necessary because the postgres parser treats
+// underscores as whitespace, but if a user searches for "A_B", we don't want
+// results for "A" or "B" to be returned with the same weight as "A_B".
 func processArg(arg string) string {
-	s := "$1"
-	if len(arg) == 2 && strings.HasPrefix(arg, "$") {
-		// If the arg is a different $N, substitute that instead.
-		s = arg
-	}
-	return strings.ReplaceAll(arg, s, fmt.Sprintf("replace(%s, '_', '-')", s))
+	return regexpPostgresArg.ReplaceAllString(arg, "replace($0, '_', '-')")
 }
