@@ -33,6 +33,11 @@ describe('KeyboardController', () => {
     expect(fn).toBeCalled();
   });
 
+  it('fires a callback when a key is capitalized', () => {
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Y' }));
+    expect(fn).toBeCalled();
+  });
+
   it('skips callback when a meta key is used', () => {
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'y', metaKey: true }));
     expect(fn).not.toBeCalled();

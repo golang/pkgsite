@@ -61,7 +61,7 @@ class KeyboardController {
   }
 
   private handleKeyPress(e: KeyboardEvent) {
-    for (const handler of this.handlers[e.key] ?? new Set()) {
+    for (const handler of this.handlers[e.key.toLowerCase()] ?? new Set()) {
       if (handler.target && handler.target !== e.target) {
         return;
       }
