@@ -589,12 +589,15 @@ func upsertLatestModuleVersions(ctx context.Context, tx *database.DB, modulePath
 	return err
 }
 
+// UpdateLatestModuleVersionsStatus updates the latest version of modulePath.
 func (db *DB) UpdateLatestGoodVersion(ctx context.Context, modulePath string) error {
-	latest, err := getLatestGoodVersion(ctx, db.db, modulePath, nil)
-	if err != nil {
-		return err
-	}
-	return updateLatestGoodVersion(ctx, db.db, modulePath, latest)
+	return db.db.Transact(ctx, sql.LevelRepeatableRead, func(tx *database.DB) error {
+		latest, err := getLatestGoodVersion(ctx, tx, modulePath, nil)
+		if err != nil {
+			return err
+		}
+		return updateLatestGoodVersion(ctx, tx, modulePath, latest)
+	})
 }
 
 // updateLatestGoodVersion updates latest_module_versions.good_version for modulePath to version.
