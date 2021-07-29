@@ -28,7 +28,7 @@
     contrast(88%);
 }
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme='light']) .go-Icon:root:not(.go-Icon--accented) {
+  :root:not([data-theme='light']) .go-Icon:not(.go-Icon--accented) {
     filter: brightness(0) saturate(100%) invert(100%) sepia(97%) saturate(13%) hue-rotate(245deg)
       brightness(103%) contrast(107%);
   }

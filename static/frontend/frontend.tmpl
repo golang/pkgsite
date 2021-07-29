@@ -13,7 +13,7 @@
     </script>
     <script>
       (function() {
-        const theme = document.cookie.match(/prefers-color-scheme=(.+)/)?.[1]
+        const theme = document.cookie.match(/prefers-color-scheme=(light|dark|auto)/)?.[1]
         if (theme) {
           document.querySelector('html').setAttribute('data-theme', theme);
         }
@@ -29,9 +29,9 @@
     <link rel="shortcut icon" href="/static/shared/icon/favicon.ico">
     <!-- Only load the css reset for non-legacy pages -->
     {{if not .UseSiteWrapper}}
-      <link href="/static/shared/reset.css" rel="stylesheet">
+      <link href="/static/shared/reset.css?version={{.AppVersionLabel}}" rel="stylesheet">
     {{end}}
-    <link href="/static/frontend/frontend.css" rel="stylesheet">
+    <link href="/static/frontend/frontend.css?version={{.AppVersionLabel}}" rel="stylesheet">
     {{block "title" .}}
       <title>pkg.go.dev</title>
     {{end}}
