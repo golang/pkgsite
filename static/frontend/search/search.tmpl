@@ -32,21 +32,18 @@
           modules with matching packages.
         {{end}}
         {{if eq .SearchMode "identifiers"}}
-          <a href="/search?q={{.Query}}&limit={{.Pagination.Limit}}">Search instead for packages.</a>
+          <a href="{{.Pagination.URL .Pagination.Limit "packages"}}">Search instead for packages.</a>
         {{else}}
-          <a href="/search?q={{.Query}}&limit={{.Pagination.Limit}}&m=identifiers">Search instead for identifiers.</a>
+          <a href="{{.Pagination.URL .Pagination.Limit "identifiers"}}">Search instead for identifiers.</a>
         {{end}}
       </span>
       <div class="SearchResults-resultCount go-textSubtle">
         {{if gt (len .Results) 0}}
-	  {{ $a := print "/search?q=" .Query }}
-	  {{if eq .SearchMode "identifiers"}}
-	    {{ $a = print $a "&m=identifiers" }}
-	  {{end}}
+          {{ $m := .SearchMode }}
           {{with .Pagination}}
             {{ $p := . }}
             <div class="Pagination-nav">
-	      <form class="go-InputGroup" action="{{$a}}" data-gtmc="search form" aria-label="Search for a package" role="search">
+	      <form class="go-InputGroup" action="{{.URL 0 $m}}" data-gtmc="search form" aria-label="Search for a package" role="search">
 		Show
 		<select name="limit" class="go-Select js-searchLimit">
 		{{range .Limits}}

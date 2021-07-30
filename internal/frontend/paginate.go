@@ -41,11 +41,16 @@ func (p pagination) PageURL(page int) string {
 	return p.baseURL.String()
 }
 
-// LimitURL constructs a URL that adds a "limit" query parameter to the base
-// URL.
-func (p pagination) LimitURL(limit int) string {
+// URL constructs a URL that adds limit and mode query parameters to the base
+// URL. Passing a zero value omits the parameter.
+func (p pagination) URL(limit int, mode string) string {
 	newQuery := p.baseURL.Query()
-	newQuery.Set("limit", strconv.Itoa(limit))
+	if limit != 0 {
+		newQuery.Set("limit", strconv.Itoa(limit))
+	}
+	if mode != "" {
+		newQuery.Set("m", mode)
+	}
 	p.baseURL.RawQuery = newQuery.Encode()
 	return p.baseURL.String()
 }
