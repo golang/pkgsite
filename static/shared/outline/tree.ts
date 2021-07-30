@@ -48,13 +48,7 @@ export class TreeNavController {
     this.addObserver(treeitem => {
       this.expandTreeitem(treeitem);
       this.setSelected(treeitem);
-      // The current version of TypeScript is not aware of HTMLElement.scrollIntoViewIfNeeded.
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      if ((treeitem.el as any)?.scrollIntoViewIfNeeded) {
-        // The current version of TypeScript is not aware of HTMLElement.scrollIntoViewIfNeeded.
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (treeitem.el as any)?.scrollIntoViewIfNeeded();
-      }
+      treeitem.el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     });
 
     const targets = new Map<string, boolean>();
