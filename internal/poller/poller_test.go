@@ -63,7 +63,7 @@ func Test(t *testing.T) {
 	bs := bads
 	mu.Unlock()
 	for i, b := range bs {
-		if b%2 == 0 || (i > 0 && bads[i-1]+2 != b) {
+		if b%2 == 0 || (i > 0 && bs[i-1]+2 != b) {
 			t.Errorf("incorrect 'bad' value %d", b)
 		}
 	}
