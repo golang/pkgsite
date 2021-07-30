@@ -7,6 +7,7 @@ package postgres
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"sort"
 	"strings"
@@ -98,30 +99,29 @@ func upsertSymbolSearchDocuments(ctx context.Context, tx *database.DB,
 func (db *DB) symbolSearch(ctx context.Context, q string, limit, offset, maxResultCount int) searchResponse {
 	var (
 		results []*SearchResult
-		st      symbolsearch.SearchType
 		err     error
 	)
 	sr := searchResponse{source: "symbol"}
 	it := symbolsearch.ParseInputType(q)
 	switch it {
-	case symbolsearch.InputTypeNoDot:
-		st = symbolsearch.SearchTypeSymbol
-	case symbolsearch.InputTypeTwoDots:
-		st = symbolsearch.SearchTypePackageDotSymbol
-	case symbolsearch.InputTypeMultiWord:
-		st = symbolsearch.SearchTypeMultiWord
 	case symbolsearch.InputTypeOneDot:
 		results, err = runSymbolSearchOneDot(ctx, db.db, q, limit)
+	case symbolsearch.InputTypeMultiWord:
+		results, err = runSymbolSearch(ctx, db.db, symbolsearch.SearchTypeMultiWord, q, limit, multiwordArg(q))
+	case symbolsearch.InputTypeNoDot:
+		results, err = runSymbolSearch(ctx, db.db, symbolsearch.SearchTypeSymbol, q, limit)
+	case symbolsearch.InputTypeTwoDots:
+		results, err = runSymbolSearch(ctx, db.db, symbolsearch.SearchTypePackageDotSymbol, q, limit, q)
 	default:
 		// There is no supported situation where we will get results for one
 		// element containing more than 2 dots.
 		return sr
 	}
-	if it != symbolsearch.InputTypeOneDot {
-		results, err = runSymbolSearch(ctx, db.db, st, q, limit)
-	}
-	if err != nil {
-		sr.err = err
+
+	if len(results) == 0 {
+		if err != nil && !errors.Is(err, derrors.NotFound) {
+			sr.err = err
+		}
 		return sr
 	}
 	for _, r := range results {
@@ -146,7 +146,11 @@ func runSymbolSearchOneDot(ctx context.Context, ddb *database.DB, q string, limi
 		i := i
 		st := st
 		group.Go(func() error {
-			results, err := runSymbolSearch(searchCtx, ddb, st, q, limit)
+			var args []interface{}
+			if st == symbolsearch.SearchTypePackageDotSymbol {
+				args = append(args, q)
+			}
+			results, err := runSymbolSearch(searchCtx, ddb, st, q, limit, args...)
 			if err != nil {
 				return err
 			}
@@ -165,14 +169,48 @@ func runSymbolSearchOneDot(ctx context.Context, ddb *database.DB, q string, limi
 	return results, nil
 }
 
-func runSymbolSearch(ctx context.Context, ddb *database.DB, st symbolsearch.SearchType, q string, limit int) (_ []*SearchResult, err error) {
+func runSymbolSearch(ctx context.Context, ddb *database.DB,
+	st symbolsearch.SearchType, q string, limit int, args ...interface{}) (_ []*SearchResult, err error) {
 	defer derrors.Wrap(&err, "runSymbolSearch(ctx, ddb, query, %q, %d)", q, limit)
-
 	ids, err := fetchMatchingSymbolIDs(ctx, ddb, st, q)
 	if err != nil {
+		if errors.Is(err, derrors.NotFound) {
+			return nil, nil
+		}
 		return nil, err
 	}
+	return fetchSymbolSearchResults(ctx, ddb, st, ids, limit, args...)
+}
 
+// fetchMatchingSymbolIDs fetches the symbol ids to be used for a given
+// symbolsearch.SearchType. It runs the query returned by
+// symbolsearch.MatchingSymbolIDsQuery. The ids returned will be used by in
+// runSymbolSearch.
+func fetchMatchingSymbolIDs(ctx context.Context, ddb *database.DB, st symbolsearch.SearchType, q string) (_ []int, err error) {
+	defer derrors.Wrap(&err, "fetchMatchingSymbolIDs(ctx, ddb, %d, %q)", st, q)
+	var ids []int
+	collect := func(rows *sql.Rows) error {
+		var id int
+		if err := rows.Scan(&id); err != nil {
+			return err
+		}
+		ids = append(ids, id)
+		return nil
+	}
+	query := symbolsearch.MatchingSymbolIDsQuery(st)
+	if err := ddb.RunQuery(ctx, query, collect, q); err != nil {
+		return nil, err
+	}
+	if len(ids) == 0 {
+		return nil, derrors.NotFound
+	}
+	return ids, nil
+}
+
+// fetchSymbolSearchResults executes a symbol search for the given
+// symbolsearch.SearchType and args.
+func fetchSymbolSearchResults(ctx context.Context, ddb *database.DB,
+	st symbolsearch.SearchType, ids []int, limit int, args ...interface{}) (_ []*SearchResult, err error) {
 	var results []*SearchResult
 	collect := func(rows *sql.Rows) error {
 		var r SearchResult
@@ -196,14 +234,7 @@ func runSymbolSearch(ctx context.Context, ddb *database.DB, st symbolsearch.Sear
 		return nil
 	}
 	query := symbolsearch.Query(st)
-	args := []interface{}{pq.Array(ids), limit}
-
-	switch st {
-	case symbolsearch.SearchTypePackageDotSymbol:
-		args = append(args, q)
-	case symbolsearch.SearchTypeMultiWord:
-		args = append(args, multiwordArg(q))
-	}
+	args = append([]interface{}{pq.Array(ids), limit}, args...)
 	if err := ddb.RunQuery(ctx, query, collect, args...); err != nil {
 		return nil, err
 	}
@@ -232,26 +263,4 @@ func multiwordArg(q string) string {
 	// Everything the user typed is a random word, so search for it
 	// all.
 	return strings.Join(words, " | ")
-}
-
-// fetchMatchingSymbolIDs fetches the symbol ids to be used for a given
-// symbolsearch.SearchType. It runs the query returned by
-// symbolsearch.MatchingSymbolIDsQuery. The ids returned will be used by in
-// runSymbolSearch.
-func fetchMatchingSymbolIDs(ctx context.Context, ddb *database.DB, st symbolsearch.SearchType, q string) (_ []int, err error) {
-	defer derrors.Wrap(&err, "fetchMatchingSymbolIDs(ctx, ddb, %d, %q)", st, q)
-	var ids []int
-	collect := func(rows *sql.Rows) error {
-		var id int
-		if err := rows.Scan(&id); err != nil {
-			return err
-		}
-		ids = append(ids, id)
-		return nil
-	}
-	query := symbolsearch.MatchingSymbolIDsQuery(st)
-	if err := ddb.RunQuery(ctx, query, collect, q); err != nil {
-		return nil, err
-	}
-	return ids, nil
 }
