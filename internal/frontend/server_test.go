@@ -1205,7 +1205,6 @@ func TestServer(t *testing.T) {
 				return append(serverTestCases(), linksTestCases...)
 			},
 			experiments: []string{
-				internal.ExperimentReadSymbolHistory,
 				internal.ExperimentSymbolHistoryMainPage,
 				internal.ExperimentSymbolHistoryVersionsPage,
 			},

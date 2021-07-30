@@ -545,30 +545,12 @@ func (db *DB) getUnitWithAllFields(ctx context.Context, um *internal.UnitMeta, b
 				return nil, err
 			}
 		}
-
-		if !experiment.IsActive(ctx, internal.ExperimentSymbolHistoryMainPage) {
-			return &u, nil
-		}
-		if experiment.IsActive(ctx, internal.ExperimentReadSymbolHistory) {
+		if experiment.IsActive(ctx, internal.ExperimentSymbolHistoryMainPage) {
 			u.SymbolHistory, err = GetSymbolHistoryForBuildContext(ctx, db.db, pathID, um.ModulePath, bcMatched)
 			if err != nil {
 				return nil, err
 			}
-			return &u, nil
 		}
-		sh, err := GetSymbolHistoryWithPackageSymbols(ctx, db.db, um.Path,
-			um.ModulePath)
-		if err != nil {
-			return nil, err
-		}
-		nameToVersion := map[string]string{}
-		for _, v := range sh.Versions() {
-			nts := sh.SymbolsAtVersion(v)
-			for n := range nts {
-				nameToVersion[n] = v
-			}
-		}
-		u.SymbolHistory = nameToVersion
 	}
 	return &u, nil
 }

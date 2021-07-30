@@ -10,7 +10,6 @@ const (
 	ExperimentEnableStdFrontendFetch      = "enable-std-frontend-fetch"
 	ExperimentInsertSymbolSearchDocuments = "insert-symbol-search-documents"
 	ExperimentNewUnitLayout               = "new-unit-layout"
-	ExperimentReadSymbolHistory           = "read-symbol-history"
 	ExperimentSearchGrouping              = "search-grouping"
 	ExperimentSearchIncrementally         = "search-incrementally"
 	ExperimentSkipInsertSymbols           = "skip-insert-symbols"
@@ -27,7 +26,6 @@ var Experiments = map[string]string{
 	ExperimentEnableStdFrontendFetch:      "Enable frontend fetching for module std.",
 	ExperimentInsertSymbolSearchDocuments: "Insert data into symbol_search_documents and documentation_symbols.",
 	ExperimentNewUnitLayout:               "Enable the new layout on the unit page.",
-	ExperimentReadSymbolHistory:           "Read data from the symbol_history table.",
 	ExperimentSearchGrouping:              "Group search results.",
 	ExperimentSearchIncrementally:         "Use incremental query for search results.",
 	ExperimentSkipInsertSymbols:           "Don't insert data into symbols tables.",
