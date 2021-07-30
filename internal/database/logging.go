@@ -109,10 +109,12 @@ func logQuery(ctx context.Context, query string, args []interface{}, instanceID 
 					logf = log.Debug
 				}
 				// If the transaction is retryable and this is a serialization error,
-				// then it's not really an error at all. Log it as a warning, so if
-				// we get a "failed due to max retries" error, we can find these easily.
+				// then it's not really an error at all. Log it as debug, so if
+				// we get a "failed due to max retries" error, we can find
+				// these easily. However, these errors can also be noisy, so we
+				// can also hide them by setting GO_DISCOVERY_LOG_LEVEL=info.
 				if retryable && isSerializationFailure(*errp) {
-					logf = log.Warning
+					logf = log.Debug
 				}
 				logf(ctx, entry)
 			}
