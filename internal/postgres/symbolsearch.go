@@ -107,7 +107,7 @@ func (db *DB) symbolSearch(ctx context.Context, q string, limit, offset, maxResu
 	case symbolsearch.InputTypeOneDot:
 		results, err = runSymbolSearchOneDot(ctx, db.db, q, limit)
 	case symbolsearch.InputTypeMultiWord:
-		results, err = runSymbolSearch(ctx, db.db, symbolsearch.SearchTypeMultiWord, q, limit, multiwordArg(q))
+		results, err = runSymbolSearchMultiWord(ctx, db.db, q, limit)
 	case symbolsearch.InputTypeNoDot:
 		results, err = runSymbolSearch(ctx, db.db, symbolsearch.SearchTypeSymbol, q, limit)
 	case symbolsearch.InputTypeTwoDots:
@@ -140,6 +140,91 @@ func (db *DB) symbolSearch(ctx context.Context, q string, limit, offset, maxResu
 	return sr
 }
 
+// runSymbolSearchMultiWord executes a symbol search for SearchTypeMultiWord.
+func runSymbolSearchMultiWord(ctx context.Context, ddb *database.DB, q string, limit int) (_ []*SearchResult, err error) {
+	defer derrors.Wrap(&err, "runSymbolSearchMultiWord(ctx, ddb, query, %q, %d)", q, limit)
+	symbolToPathTokens := multiwordSearchCombinations(q)
+	if len(symbolToPathTokens) == 0 {
+		// There are no words in the query that could be a symbol name.
+		return nil, derrors.NotFound
+	}
+	group, searchCtx := errgroup.WithContext(ctx)
+	resultsArray := make([][]*SearchResult, len(symbolToPathTokens))
+	count := 0
+	for symbol, pathTokens := range symbolToPathTokens {
+		symbol := symbol
+		pathTokens := pathTokens
+		i := count
+		count += 1
+		group.Go(func() error {
+			st := symbolsearch.SearchTypeSymbol
+			if strings.Contains(q, "|") {
+				st = symbolsearch.SearchTypeMultiWord
+			}
+			ids, err := fetchMatchingSymbolIDs(searchCtx, ddb, st, symbol)
+			if err != nil {
+				if !errors.Is(err, derrors.NotFound) {
+					return err
+				}
+				return nil
+			}
+			r, err := fetchSymbolSearchResults(ctx, ddb, symbolsearch.SearchTypeMultiWord, ids, limit, pathTokens)
+			if err != nil {
+				return err
+			}
+			resultsArray[i] = r
+			return nil
+		})
+	}
+	if err := group.Wait(); err != nil {
+		return nil, err
+	}
+	return mergedResults(resultsArray, limit), nil
+}
+
+func mergedResults(resultsArray [][]*SearchResult, limit int) []*SearchResult {
+	var results []*SearchResult
+	for _, r := range resultsArray {
+		results = append(results, r...)
+	}
+	sort.Slice(results, func(i, j int) bool { return results[i].NumImportedBy > results[j].NumImportedBy })
+	if len(results) > limit {
+		results = results[0:limit]
+	}
+	return results
+}
+
+// multiwordSearchCombinations returns a map of symbol name to path_tokens to
+// be used for possible search combinations.
+//
+// For each word, check if there is an invalid symbol character or if it
+// matches a common hostname. If so, the search on tsv_path_tokens must match
+// that search.
+//
+// It is assumed that the symbol name is always 1 word. For example, if the
+// user wants sql.DB.Begin, "sql DB.Begin", "sql Begin", or "sql DB" will all
+// be return the relevant result, but "sql DB Begin" will not.
+func multiwordSearchCombinations(q string) map[string]string {
+	words := strings.Fields(q)
+	symbolToPathTokens := map[string]string{}
+	for i, w := range words {
+		// Is this word a possible symbol name? If not, continue.
+		if strings.Contains(w, "/") || strings.Contains(w, "-") || commonHostnames[w] {
+			continue
+		}
+		// If it is, try search for this word assuming it is the symbol name
+		// and everything else is a path element.
+		symbolToPathTokens[w] = strings.Join(append(append([]string{}, words[0:i]...), words[i+1:]...), " & ")
+	}
+	if len(symbolToPathTokens) > 2 {
+		// There are more than 2 possible searches that can be performed, so
+		// just perform an OR query.
+		orQuery := strings.Join(strings.Fields(q), " | ")
+		return map[string]string{orQuery: orQuery}
+	}
+	return symbolToPathTokens
+}
+
 // runSymbolSearchOneDot is used when q contains only 1 dot, so the search must
 // either be for <package>.<symbol> or <type>.<methodOrFieldName>.
 //
@@ -170,7 +255,7 @@ func runSymbolSearchOneDot(ctx context.Context, ddb *database.DB, q string, limi
 	if err := group.Wait(); err != nil {
 		return nil, err
 	}
-	return append(resultsArray[0], resultsArray[1]...), nil
+	return mergedResults(resultsArray, limit), nil
 }
 
 func runSymbolSearch(ctx context.Context, ddb *database.DB,
@@ -214,8 +299,8 @@ func fetchMatchingSymbolIDs(ctx context.Context, ddb *database.DB, st symbolsear
 // fetchSymbolSearchResults executes a symbol search for the given
 // symbolsearch.SearchType and args.
 func fetchSymbolSearchResults(ctx context.Context, ddb *database.DB,
-	st symbolsearch.SearchType, ids []int, limit int, args ...interface{}) (_ []*SearchResult, err error) {
-	var results []*SearchResult
+	st symbolsearch.SearchType, ids []int, limit int, args ...interface{}) (results []*SearchResult, err error) {
+	defer derrors.Wrap(&err, "fetchSymbolSearchResults(ctx, ddb, st: %d, ids: %v, limit:  %d, args: %v)", st, ids, limit, args)
 	collect := func(rows *sql.Rows) error {
 		var r SearchResult
 		if err := rows.Scan(
@@ -243,28 +328,4 @@ func fetchSymbolSearchResults(ctx context.Context, ddb *database.DB,
 		return nil, err
 	}
 	return results, nil
-}
-
-// mulitwordArg returns the tsv_path_tokens search query used for
-// symbolsearch.SearchTypeMultiWord.
-//
-// For each word, check if there is a "/" or if it matches a common
-// hostname. If so, the search on tsv_path_tokens must match that
-// search. If not, an OR query is returned for search on tsv_path_tokens.
-func multiwordArg(q string) string {
-	words := strings.Fields(q)
-	var pathTokens []string
-	for _, w := range words {
-		if strings.Contains(w, "/") || commonHostnames[w] {
-			pathTokens = append(pathTokens, w)
-		}
-	}
-	if len(pathTokens) > 0 {
-		// The words in pathTokens can't be symbol names, so they must
-		// appear in the tsv_path_tokens column.
-		return strings.Join(pathTokens, " & ")
-	}
-	// Everything the user typed is a random word, so search for it
-	// all.
-	return strings.Join(words, " | ")
 }

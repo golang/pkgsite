@@ -57,7 +57,6 @@ Float math/big
 
 Multi-word search without subpaths
 julieqiu foo
-Foo gopkg.in/foo.v1
 FOO github.com/julieqiu/api-demo
 FoO github.com/julieqiu/api-demo
 Foo github.com/julieqiu/api-demo

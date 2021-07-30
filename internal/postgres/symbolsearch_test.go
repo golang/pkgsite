@@ -68,7 +68,7 @@ func TestSymbolSearch(t *testing.T) {
 			want: checkResult(sample.Method),
 		},
 		{
-			name: "test search by <package>.<identifier>",
+			name: "test search by <package> dot <identifier>",
 			q:    "foo.Variable",
 			want: checkResult(sample.Variable.SymbolMeta),
 		},
@@ -83,7 +83,7 @@ func TestSymbolSearch(t *testing.T) {
 			want: checkResult(sample.Method),
 		},
 		{
-			name: "test search by <package> <identifier>",
+			name: "test search by <package> space <identifier>",
 			q:    "foo function",
 			want: checkResult(sample.Function.SymbolMeta),
 		},
