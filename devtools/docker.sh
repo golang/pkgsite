@@ -5,6 +5,10 @@
 # Library of useful docker functions and variables.
 
 docker_cleanup() {
+  if $GO_DISCOVERY_DOCKER_SKIP_CLEANUP; then
+    echo "Skipping docker cleanup because GO_DISCOVERY_DOCKER_SKIP_CLEANUP=true."
+    return
+  fi
   dockercompose down --remove-orphans
 }
 
@@ -24,7 +28,6 @@ docker_error() {
   echo ""
   echo "---------- ERROR: docker-compose e2e logs ----------"
   dockercompose logs e2e
-  cleanup
 }
 
 dockercompose() {
