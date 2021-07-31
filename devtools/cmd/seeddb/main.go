@@ -7,6 +7,8 @@ package main
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	"flag"
 	"fmt"
 	"net/http"
@@ -33,6 +35,7 @@ import (
 
 var (
 	seedfile = flag.String("seed", "devtools/cmd/seeddb/seed.txt", "filename containing modules for seeding the database")
+	refetch  = flag.Bool("refetch", false, "refetch modules in the seedfile even if they already exist")
 )
 
 func main() {
@@ -50,11 +53,10 @@ func main() {
 	}
 	ctx = experiment.NewContext(ctx, exps...)
 
-	ddb, err := database.Open("pgx", cfg.DBConnInfo(), "seeddb")
+	db, err := database.Open("pgx", cfg.DBConnInfo(), "seeddb")
 	if err != nil {
 		log.Fatalf(ctx, "database.Open for host %s failed with %v", cfg.DBHost, err)
 	}
-	db := postgres.New(ddb)
 	defer db.Close()
 
 	if err := run(ctx, db, cfg.ProxyURL); err != nil {
@@ -62,7 +64,7 @@ func main() {
 	}
 }
 
-func run(ctx context.Context, db *postgres.DB, proxyURL string) error {
+func run(ctx context.Context, db *database.DB, proxyURL string) error {
 	start := time.Now()
 
 	proxyClient, err := proxy.New(proxyURL)
@@ -81,7 +83,7 @@ func run(ctx context.Context, db *postgres.DB, proxyURL string) error {
 	f := &worker.Fetcher{
 		ProxyClient:  proxyClient,
 		SourceClient: sourceClient,
-		DB:           db,
+		DB:           postgres.New(db),
 	}
 	for _, m := range seedModules {
 		m := m
@@ -112,11 +114,19 @@ func run(ctx context.Context, db *postgres.DB, proxyURL string) error {
 			g.Go(func() error {
 				// Record the duration of this fetch request.
 				start := time.Now()
-				defer func() {
-					r.add(m.path, v, start)
-				}()
 
-				return fetchFunc(ctx, f, m.path, v)
+				var exists bool
+				defer func() {
+					r.add(m.path, v, start, exists)
+				}()
+				err := db.QueryRow(ctx, `SELECT 1 FROM modules WHERE module_path = $1 AND version = $2;`, m.path, v).Scan(&exists)
+				if err != nil && !errors.Is(err, sql.ErrNoRows) {
+					return err
+				}
+				if errors.Is(err, sql.ErrNoRows) || *refetch {
+					return fetchFunc(ctx, f, m.path, v)
+				}
+				return nil
 			})
 		}
 	}
@@ -163,14 +173,18 @@ type results struct {
 	paths map[string]time.Duration
 }
 
-func (r *results) add(modPath, version string, start time.Time) {
+func (r *results) add(modPath, version string, start time.Time, exists bool) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
 	if r.paths == nil {
 		r.paths = map[string]time.Duration{}
 	}
-	r.paths[fmt.Sprintf("%s@%s", modPath, version)] = time.Since(start)
+	key := fmt.Sprintf("%s@%s", modPath, version)
+	if exists {
+		key = fmt.Sprintf("%s (exists)", key)
+	}
+	r.paths[key] = time.Since(start)
 }
 
 type module struct {
