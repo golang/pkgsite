@@ -20,6 +20,7 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/config"
 	"golang.org/x/pkgsite/internal/database"
+	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/postgres"
@@ -28,11 +29,7 @@ import (
 func main() {
 	flag.Parse()
 
-	ctx := context.Background()
-	ctx = experiment.NewContext(ctx,
-		internal.ExperimentInsertSymbolSearchDocuments,
-		internal.ExperimentSearchGrouping,
-		internal.ExperimentSymbolSearch)
+	ctx := experiment.NewContext(context.Background(), symbolSearchExperiments...)
 	cfg, err := config.Init(ctx)
 	if err != nil {
 		log.Fatal(ctx, err)
@@ -52,52 +49,66 @@ func main() {
 	}
 }
 
+const (
+	importedbyFile = "tests/search/importedby.txt"
+	testFile       = "tests/search/scripts/symbolsearch.txt"
+)
+
+var symbolSearchExperiments = []string{
+	internal.ExperimentInsertSymbolSearchDocuments,
+	internal.ExperimentSearchGrouping,
+	internal.ExperimentSymbolSearch,
+}
+
 func run(ctx context.Context, db *postgres.DB) error {
-	counts, err := readImportedByCounts("tests/search/importedby.txt")
+	counts, err := readImportedByCounts(importedbyFile)
 	if err != nil {
 		return err
 	}
 	if _, err := db.UpdateSearchDocumentsImportedByCountWithCounts(ctx, counts); err != nil {
 		return err
 	}
-
-	tests, err := readSearchTests("tests/search/scripts/symbolsearch.txt")
+	tests, err := readSearchTests(testFile)
 	if err != nil {
 		return err
 	}
-	ctx = experiment.NewContext(ctx,
-		internal.ExperimentInsertSymbolSearchDocuments,
-		internal.ExperimentSearchGrouping,
-		internal.ExperimentSymbolSearch)
 	for _, st := range tests {
-		results, err := db.Search(ctx, st.query, postgres.SearchOptions{MaxResults: 10, SearchSymbols: true})
+		output, err := runTest(ctx, db, st)
 		if err != nil {
 			return err
 		}
-		var errors []string
-		for i, want := range st.results {
-			got := &postgres.SearchResult{}
-			if len(results) > i {
-				got = results[i]
-			}
-			if want.symbol != got.SymbolName || want.pkg != got.PackagePath {
-				errors = append(errors,
-					fmt.Sprintf("query %s, mismatch result %d:\n\twant: %q %q\n\t got: %q %q\n",
-						st.query, i+1,
-						want.pkg, want.symbol,
-						got.PackagePath, got.SymbolName))
-			}
-		}
-		if len(errors) > 0 {
-			fmt.Println("--- FAILED: ", st.title)
-			for _, e := range errors {
-				fmt.Println(e)
-			}
-		} else {
+		if len(output) == 0 {
 			fmt.Println("--- PASSED: ", st.title)
+			continue
+		}
+		fmt.Println("--- FAILED: ", st.title)
+		for _, e := range output {
+			fmt.Println(e)
 		}
 	}
 	return nil
+}
+
+func runTest(ctx context.Context, db *postgres.DB, st *searchTest) (output []string, err error) {
+	defer derrors.Wrap(&err, "runTest(ctx, db, st.title: %q)", st.title)
+	results, err := db.Search(ctx, st.query, postgres.SearchOptions{MaxResults: 10, SearchSymbols: true})
+	if err != nil {
+		return nil, err
+	}
+	for i, want := range st.results {
+		got := &postgres.SearchResult{}
+		if len(results) > i {
+			got = results[i]
+		}
+		if want.symbol != got.SymbolName || want.pkg != got.PackagePath {
+			output = append(output,
+				fmt.Sprintf("query %s, mismatch result %d:\n\twant: %q %q\n\t got: %q %q\n",
+					st.query, i+1,
+					want.pkg, want.symbol,
+					got.PackagePath, got.SymbolName))
+		}
+	}
+	return output, nil
 }
 
 type searchTest struct {
