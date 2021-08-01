@@ -13,6 +13,10 @@ docker_cleanup() {
 }
 
 docker_error() {
+  if $GO_DISCOVERY_DOCKER_SKIP_LOGS; then
+    echo "Skipping docker logs because GO_DISCOVERY_DOCKER_SKIP_LOGS=true."
+    return
+  fi
   echo ""
   echo "---------- ERROR: docker-compose db logs ----------"
   dockercompose logs db
