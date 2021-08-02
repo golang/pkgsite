@@ -170,7 +170,7 @@ func ResetDB(ctx context.Context, db *DB) error {
 	if err := db.Transact(ctx, sql.LevelDefault, func(tx *DB) error {
 		if _, err := tx.Exec(ctx, `
 			TRUNCATE modules CASCADE;
-			TRUNCATE search_documents;
+			TRUNCATE search_documents CASCADE;
 			TRUNCATE version_map;
 			TRUNCATE paths CASCADE;
 			TRUNCATE symbol_names CASCADE;
