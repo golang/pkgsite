@@ -124,6 +124,15 @@ func (db *DB) symbolSearch(ctx context.Context, q string, limit, offset, maxResu
 		}
 		return sr
 	}
+	sort.Slice(results, func(i, j int) bool {
+		if results[i].NumImportedBy == results[j].NumImportedBy {
+			return results[i].SymbolName < results[j].SymbolName
+		}
+		return results[i].NumImportedBy > results[j].NumImportedBy
+	})
+	if len(results) > limit {
+		results = results[0:limit]
+	}
 	for _, r := range results {
 		r.NumResults = uint64(len(results))
 	}
@@ -161,12 +170,7 @@ func runSymbolSearchOneDot(ctx context.Context, ddb *database.DB, q string, limi
 	if err := group.Wait(); err != nil {
 		return nil, err
 	}
-	results := append(resultsArray[0], resultsArray[1]...)
-	sort.Slice(results, func(i, j int) bool { return results[i].NumImportedBy > results[j].NumImportedBy })
-	if len(results) > limit {
-		results = results[0:limit]
-	}
-	return results, nil
+	return append(resultsArray[0], resultsArray[1]...), nil
 }
 
 func runSymbolSearch(ctx context.Context, ddb *database.DB,
