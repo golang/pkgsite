@@ -11,13 +11,28 @@ FOO github.com/julieqiu/api-demo
 FoO github.com/julieqiu/api-demo
 Foo github.com/julieqiu/api-demo
 
-Prefer symbols by popularity, then alphabetically
+Prefer symbols by popularity, then alphabetically, Add
 Add
 Float.Add math/big
 Int.Add math/big
 Rat.Add math/big
 Registry.Add github.com/go-openapi/strfmt
 Add math/bits
+
+Prefer symbols by package path, then symbol name
+# TODO: derank fields and methods; log.Logger.Writer should not
+# appear in this list.
+Writer
+Logger.Writer, log
+Writer, archive/tar
+Writer, bufio
+Writer, compress/flat
+Writer, compress/gzip
+Writer, compress/zlib
+Writer, encoding/csv
+Writer, io
+Writer, log
+Writer, archive/zip
 
 Search for package path element and symbol.
 math Add
