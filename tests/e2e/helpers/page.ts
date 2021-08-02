@@ -29,6 +29,13 @@ const {
 } = process.env;
 
 /**
+ * blockedOrigins is used to block requests to badge URLs typically
+ * found in project READMEs. When code coverage updates or builds fail
+ * these badges can causes the e2e tests to fail.
+ */
+const blockedOrigins = ['https://codecov.io', 'https://travis-ci.com'];
+
+/**
  * newPage opens a new chrome tab, sets up a request intercept
  * to provide an authorization header for relevant requests, and
  * prefixes page.goto urls with the base URL for the test current
@@ -37,21 +44,23 @@ const {
  */
 export async function newPage(): Promise<Page> {
   const page = await browser.newPage();
-  if (GO_DISCOVERY_E2E_AUTHORIZATION) {
-    await page.setRequestInterception(true);
-    page.on('request', r => {
-      const url = new URL(r.url());
-      let headers = r.headers();
-      if (url.origin === GO_DISCOVERY_E2E_BASE_URL) {
-        headers = {
-          ...r.headers(),
-          Authorization: `Bearer ${GO_DISCOVERY_E2E_AUTHORIZATION}`,
-          'X-Go-Discovery-Auth-Bypass-Quota': GO_DISCOVERY_E2E_QUOTA_BYPASS,
-        };
-      }
-      r.continue({ headers });
-    });
-  }
+  await page.setRequestInterception(true);
+  page.on('request', r => {
+    if (blockedOrigins.some(o => r.url().startsWith(o))) {
+      r.abort();
+      return;
+    }
+    const url = new URL(r.url());
+    let headers = r.headers();
+    if (GO_DISCOVERY_E2E_AUTHORIZATION && url.origin === GO_DISCOVERY_E2E_BASE_URL) {
+      headers = {
+        ...r.headers(),
+        Authorization: `Bearer ${GO_DISCOVERY_E2E_AUTHORIZATION}`,
+        'X-Go-Discovery-Auth-Bypass-Quota': GO_DISCOVERY_E2E_QUOTA_BYPASS,
+      };
+    }
+    r.continue({ headers });
+  });
   page.on('pageerror', err => {
     this.global.pageErrors.push(err);
   });
