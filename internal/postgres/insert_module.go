@@ -872,34 +872,6 @@ func (db *DB) comparePaths(ctx context.Context, m *internal.Module) (err error) 
 	return nil
 }
 
-// DeleteModule deletes a Version from the database.
-func (db *DB) DeleteModule(ctx context.Context, modulePath, resolvedVersion string) (err error) {
-	defer derrors.WrapStack(&err, "DeleteModule(ctx, db, %q, %q)", modulePath, resolvedVersion)
-	return db.db.Transact(ctx, sql.LevelDefault, func(tx *database.DB) error {
-		// We only need to delete from the modules table. Thanks to ON DELETE
-		// CASCADE constraints, that will trigger deletions from all other tables.
-		const stmt = `DELETE FROM modules WHERE module_path=$1 AND version=$2`
-		if _, err := tx.Exec(ctx, stmt, modulePath, resolvedVersion); err != nil {
-			return err
-		}
-		if _, err = tx.Exec(ctx, `DELETE FROM version_map WHERE module_path = $1 AND resolved_version = $2`, modulePath, resolvedVersion); err != nil {
-			return err
-		}
-		if _, err = tx.Exec(ctx, `DELETE FROM search_documents WHERE module_path = $1 AND version = $2`, modulePath, resolvedVersion); err != nil {
-			return err
-		}
-
-		var x int
-		err = tx.QueryRow(ctx, `SELECT 1 FROM modules WHERE module_path=$1 LIMIT 1`, modulePath).Scan(&x)
-		if err != sql.ErrNoRows || err == nil {
-			return err
-		}
-		// No versions of this module exist; remove it from imports_unique.
-		_, err = tx.Exec(ctx, `DELETE FROM imports_unique WHERE from_module_path = $1`, modulePath)
-		return err
-	})
-}
-
 // makeValidUnicode removes null runes from a string that will be saved in a
 // column of type TEXT, because pq doesn't like them. It also replaces non-unicode
 // characters with the Unicode replacement character, which is the behavior of
