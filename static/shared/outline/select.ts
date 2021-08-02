@@ -51,7 +51,8 @@ export function makeSelectNav(tree: TreeNavController): HTMLLabelElement {
     group.appendChild(o);
   }
   tree.addObserver(t => {
-    const value = select.querySelector<HTMLOptionElement>(`[label="${t.label}"]`)?.value;
+    const hash = (t.el as HTMLAnchorElement).hash;
+    const value = select.querySelector<HTMLOptionElement>(`[value$="${hash}"]`)?.value;
     if (value) {
       select.value = value;
     }
