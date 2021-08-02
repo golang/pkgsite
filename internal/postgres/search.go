@@ -659,7 +659,7 @@ var upsertSearchStatement = fmt.Sprintf(`
 		AND m.module_path = $2
 		AND m.version = $3
 	LIMIT 1 -- could be multiple build contexts
-	ON CONFLICT (package_path)
+	ON CONFLICT (package_path_id)
 	DO UPDATE SET
 		package_path=excluded.package_path,
 		version=excluded.version,
