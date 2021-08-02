@@ -5,7 +5,7 @@
 # Library of useful docker functions and variables.
 
 docker_cleanup() {
-  if $GO_DISCOVERY_DOCKER_SKIP_CLEANUP; then
+  if [ "$GO_DISCOVERY_DOCKER_SKIP_CLEANUP" = "true" ]; then
     echo "Skipping docker cleanup because GO_DISCOVERY_DOCKER_SKIP_CLEANUP=true."
     return
   fi
@@ -13,7 +13,7 @@ docker_cleanup() {
 }
 
 docker_error() {
-  if $GO_DISCOVERY_DOCKER_SKIP_LOGS; then
+  if [ "$GO_DISCOVERY_DOCKER_SKIP_LOGS" = "true" ]; then
     echo "Skipping docker logs because GO_DISCOVERY_DOCKER_SKIP_LOGS=true."
     return
   fi
