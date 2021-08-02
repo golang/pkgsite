@@ -48,7 +48,7 @@ export class TreeNavController {
     this.addObserver(treeitem => {
       this.expandTreeitem(treeitem);
       this.setSelected(treeitem);
-      treeitem.el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      treeitem.el.scrollIntoView({ block: 'nearest' });
     });
 
     const targets = new Map<string, boolean>();
