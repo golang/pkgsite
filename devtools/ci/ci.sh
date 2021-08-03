@@ -96,7 +96,7 @@ print_duration_and_reset
 echo "----------------------------------------"
 echo "Running all.bash"
 echo "----------------------------------------"
-docker-compose -f devtools/docker/compose.yaml run allbash ci
+./devtools/docker/compose.sh run allbash ci
 print_duration_and_reset
 
 echo "----------------------------------------"

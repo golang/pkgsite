@@ -6,10 +6,10 @@
 
 # Script for dropping and creating a new database locally using docker.
 
-source devtools/lib.sh || { echo "Are you at repo root?"; exit 1; }
+source devtools/docker.sh || { echo "Are you at repo root?"; exit 1; }
 
-docker-compose -f devtools/docker/compose.yaml stop
-docker-compose -f devtools/docker/compose.yaml down --remove-orphans
-docker-compose -f devtools/docker/compose.yaml up -d db
+dockercompose stop
+dockercompose down --remove-orphans
+dockercompose up -d db
 go run devtools/cmd/db/main.go drop
 ./devtools/create_local_db.sh
