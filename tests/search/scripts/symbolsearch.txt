@@ -23,16 +23,16 @@ Prefer symbols by package path, then symbol name
 # TODO: derank fields and methods; log.Logger.Writer should not
 # appear in this list.
 Writer
-Logger.Writer, log
-Writer, archive/tar
-Writer, bufio
-Writer, compress/flat
-Writer, compress/gzip
-Writer, compress/zlib
-Writer, encoding/csv
-Writer, io
-Writer, log
-Writer, archive/zip
+Writer archive/tar
+Writer archive/zip
+Writer bufio
+Writer compress/flate
+Writer compress/gzip
+Writer compress/zlib
+Writer encoding/csv
+Writer io
+Logger.Writer log
+Writer log
 
 Search for package path element and symbol.
 math Add
