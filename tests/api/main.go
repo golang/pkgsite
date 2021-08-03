@@ -22,12 +22,15 @@ import (
 	"golang.org/x/mod/semver"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/frontend"
 	"golang.org/x/pkgsite/internal/proxy"
 	"golang.org/x/pkgsite/internal/symbol"
 	"golang.org/x/pkgsite/internal/version"
 )
 
 var (
+	frontendHost = flag.String("frontend", "http://localhost:8080",
+		"Use the frontend host referred to by this URL for comparing data")
 	proxyURL = flag.String("proxy", "https://proxy.golang.org",
 		"Use the module proxy referred to by this URL for fetching packages")
 )
@@ -37,6 +40,8 @@ func main() {
 		out := flag.CommandLine.Output()
 		fmt.Fprintln(out, "api [cmd] [module path]:[package path suffix]")
 		fmt.Fprintf(out, "  generate: generates the API history for a package and writes to %s\n", testdataDir)
+		fmt.Fprintf(out, "  compare: compares the API history for a package in %s to %s\n", testdataDir, *frontendHost)
+		fmt.Fprintln(out)
 		flag.PrintDefaults()
 	}
 	flag.Parse()
@@ -48,7 +53,7 @@ func main() {
 	ctx := context.Background()
 	cmd := flag.Args()[0]
 	pkgPath, modulePath := parsePath(flag.Args()[1])
-	if err := run(ctx, cmd, pkgPath, modulePath, *proxyURL); err != nil {
+	if err := run(ctx, cmd, pkgPath, modulePath, *frontendHost, *proxyURL); err != nil {
 		log.Fatal(err)
 	}
 }
@@ -61,10 +66,15 @@ func parsePath(arg string) (pkgPath, modulePath string) {
 	return strings.Join(parts, "/"), parts[0]
 }
 
-const tmpDir = "/tmp/api"
+const (
+	testdataDir = "tests/api/testdata"
+	tmpDir      = "/tmp/api"
+)
 
-func run(ctx context.Context, cmd, pkgPath, modulePath, proxyURL string) error {
+func run(ctx context.Context, cmd, pkgPath, modulePath, frontendHost, proxyURL string) error {
 	switch cmd {
+	case "compare":
+		return compare(frontendHost, pkgPath)
 	case "generate":
 		return generate(ctx, pkgPath, modulePath, tmpDir, proxyURL)
 	}
@@ -115,6 +125,46 @@ func generate(ctx context.Context, pkgPath, modulePath, tmpPath, proxyURL string
 	return nil
 }
 
+// compare compares data from the testdata directory with the frontend.
+func compare(frontendHost, pkgPath string) (err error) {
+	defer derrors.Wrap(&err, "compare(ctx, %q, %q, %q)", frontendHost, pkgPath, testdataDir)
+	files, err := symbol.LoadAPIFiles(pkgPath, testdataDir)
+	if err != nil {
+		return err
+	}
+	apiVersions, err := symbol.ParsePackageAPIInfo(files)
+	if err != nil {
+		return err
+	}
+
+	// Parse API data from the frontend versions page.
+	client := frontend.NewClient(frontendHost)
+	vd, err := client.GetVersions(pkgPath)
+	if err != nil {
+		return err
+	}
+
+	sh, err := frontend.ParseVersionsDetails(vd)
+	if err != nil {
+		return err
+	}
+
+	// Compare the output of these two data sources.
+	errors, err := symbol.CompareAPIVersions(pkgPath, apiVersions[pkgPath], sh)
+	if err != nil {
+		return err
+	}
+	if len(errors) == 0 {
+		fmt.Printf("The APIs match for %s!\n", pkgPath)
+		return nil
+	}
+	fmt.Printf("---------- Errors for %s\n", pkgPath)
+	for _, e := range errors {
+		fmt.Print(e)
+	}
+	return nil
+}
+
 func fetchFeatureContext(ctx context.Context, proxyClient *proxy.Client,
 	modulePath, pkgPath, ver, dirPath string) (_ map[string]map[string]bool, err error) {
 	defer derrors.Wrap(&err, "fetchFeatureContext(ctx, proxyClient, %q, %q, %q, %q)",
@@ -148,8 +198,6 @@ func fetchFeatureContext(ctx context.Context, proxyClient *proxy.Client,
 	}
 	return symbol.GenerateFeatureContexts(ctx, pkgPath, pkgDir)
 }
-
-const testdataDir = "tests/api/testdata"
 
 func writeFeatures(features []string, pkgPath, ver, outDir string) (err error) {
 	defer derrors.Wrap(&err, "writeFeatures(%v, %q, %q, %q)", features, pkgPath, ver, outDir)

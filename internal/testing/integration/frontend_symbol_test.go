@@ -55,7 +55,7 @@ func TestSymbols(t *testing.T) {
 			if err := json.Unmarshal([]byte(body), &vd); err != nil {
 				t.Fatalf("json.Unmarshal: %v\n %s", err, body)
 			}
-			sh, err := frontend.ParseVersionsDetails(vd)
+			sh, err := frontend.ParseVersionsDetails(&vd)
 			if err != nil {
 				t.Fatal(err)
 			}
