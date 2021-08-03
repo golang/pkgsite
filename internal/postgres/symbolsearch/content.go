@@ -24,7 +24,10 @@ package symbolsearch
 // the second the symbol name. For example, "sql.DB" or "sql.DB.Begin".
 %s
 
-// querySearchMultiWord is used when the search query is multiple elements.
+// querySearchMultiWordExact is used when the search query is multiple elements.
+%s
+
+// querySearchMultiWordOr is used when the search query is multiple elements.
 %s
 
 // queryMatchingSymbolIDsSymbol is used to find the matching symbol
@@ -35,16 +38,22 @@ package symbolsearch
 // ids when the SearchType is SearchTypePackageDotSymbol.
 %s
 
-// queryMatchingSymbolIDsMultiWord is used to find the matching symbol ids when
-// the SearchType is SearchTypeMultiWord.
+// queryMatchingSymbolIDsMultiWordExact is used to find the matching symbol ids when
+// the SearchType is SearchTypeMultiWordExact.
+%s
+
+// queryMatchingSymbolIDsMultiWordOr is used to find the matching symbol ids when
+// the SearchType is SearchTypeMultiWordOr.
 %s
 `,
 	formatQuery("querySearchSymbol", Query(SearchTypeSymbol)),
 	formatQuery("querySearchPackageDotSymbol", Query(SearchTypePackageDotSymbol)),
-	formatQuery("querySearchMultiWord", Query(SearchTypeMultiWord)),
+	formatQuery("querySearchMultiWordOr", Query(SearchTypeMultiWordOr)),
+	formatQuery("querySearchMultiWordExact", Query(SearchTypeMultiWordExact)),
 	formatQuery("queryMatchingSymbolIDsSymbol", MatchingSymbolIDsQuery(SearchTypeSymbol)),
 	formatQuery("queryMatchingSymbolIDsPackageDotSymbol", MatchingSymbolIDsQuery(SearchTypePackageDotSymbol)),
-	formatQuery("queryMatchingSymbolIDsMultiWord", MatchingSymbolIDsQuery(SearchTypeMultiWord)))
+	formatQuery("queryMatchingSymbolIDsMultiWordOr", MatchingSymbolIDsQuery(SearchTypeMultiWordOr)),
+	formatQuery("queryMatchingSymbolIDsMultiWordExact", MatchingSymbolIDsQuery(SearchTypeMultiWordExact)))
 
 func formatQuery(name, query string) string {
 	return fmt.Sprintf("const %s = `%s`", name, query)

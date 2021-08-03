@@ -157,9 +157,9 @@ func runSymbolSearchMultiWord(ctx context.Context, ddb *database.DB, q string, l
 		i := count
 		count += 1
 		group.Go(func() error {
-			st := symbolsearch.SearchTypeSymbol
+			st := symbolsearch.SearchTypeMultiWordExact
 			if strings.Contains(q, "|") {
-				st = symbolsearch.SearchTypeMultiWord
+				st = symbolsearch.SearchTypeMultiWordOr
 			}
 			ids, err := fetchMatchingSymbolIDs(searchCtx, ddb, st, symbol)
 			if err != nil {
@@ -168,7 +168,7 @@ func runSymbolSearchMultiWord(ctx context.Context, ddb *database.DB, q string, l
 				}
 				return nil
 			}
-			r, err := fetchSymbolSearchResults(ctx, ddb, symbolsearch.SearchTypeMultiWord, ids, limit, pathTokens)
+			r, err := fetchSymbolSearchResults(ctx, ddb, st, ids, limit, pathTokens)
 			if err != nil {
 				return err
 			}

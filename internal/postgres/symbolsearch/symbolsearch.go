@@ -23,7 +23,7 @@ const SymbolTextSearchConfiguration = "symbols"
 func Query(st SearchType) string {
 	var filter string
 	switch st {
-	case SearchTypeMultiWord:
+	case SearchTypeMultiWordOr, SearchTypeMultiWordExact:
 		return fmt.Sprintf(baseQuery, multiwordCTE())
 	case SearchTypePackageDotSymbol:
 		// PackageDotSymbol case.
@@ -115,7 +115,7 @@ ORDER BY score DESC;`
 func MatchingSymbolIDsQuery(st SearchType) string {
 	var filter string
 	switch st {
-	case SearchTypeSymbol:
+	case SearchTypeSymbol, SearchTypeMultiWordExact:
 		// When $1 is the full symbol name, either <symbol> or
 		// <type>.<methodOrField>, match on both the identifier name
 		// and just the field or method name.
@@ -123,14 +123,13 @@ func MatchingSymbolIDsQuery(st SearchType) string {
 		//
 		// tsv_name_tokens does a bad job of indexing symbol names with
 		// multiple "_", so also do an exact match search.
-		filter = fmt.Sprintf(`tsv_name_tokens @@ %s OR lower(name) = lower($1)`,
-			toTSQuery("$1"))
+		filter = fmt.Sprintf(`tsv_name_tokens @@ %s OR lower(name) = lower($1)`, toTSQuery("$1"))
 	case SearchTypePackageDotSymbol:
 		// When $1 is either <package>.<symbol> OR
 		// <package>.<type>.<methodOrField>, only match on the exact
 		// symbol name.
 		filter = fmt.Sprintf("lower(name) = lower(%s)", "substring($1 from E'[^.]*\\.(.+)$')")
-	case SearchTypeMultiWord:
+	case SearchTypeMultiWordOr:
 		// When $1 contains multiple words, separated by spaces, at least one
 		// element for the query must match a symbol name.
 		//

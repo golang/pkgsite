@@ -83,6 +83,15 @@ const (
 	// InputTypeTwoDots (input is <package>.<type>.<fieldOrMethod>).
 	SearchTypePackageDotSymbol
 
-	// SearchTypeMultiWord is used for InputTypeMultiWord.
-	SearchTypeMultiWord
+	// SearchTypeMultiWordOr is used for InputTypeMultiWord when the
+	// search query cannot be used to generate a reasonable number of symbol
+	// and path token combinations. In that case, an OR search is performed on
+	// all of the words in the search input.
+	SearchTypeMultiWordOr
+
+	// SearchTypeMultiExact is used for InputTypeMultiWord when the search
+	// query can be used to construct a reasonable number of symbol and path
+	// token combinations. In that case, multiple queries are run in parallel
+	// and the results are combined.
+	SearchTypeMultiWordExact
 )
