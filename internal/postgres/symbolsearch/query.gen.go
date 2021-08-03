@@ -20,8 +20,11 @@ WITH ssd AS (
 		ssd.ln_imported_by_count AS score
 	FROM symbol_search_documents ssd
 	WHERE
-		symbol_name_id = ANY($1) 
-	ORDER BY score DESC
+		symbol_name_id = ANY($1)
+	ORDER BY
+		score DESC,
+		package_path,
+		symbol_name_id
 	LIMIT $2
 )
 SELECT
@@ -58,12 +61,15 @@ WITH ssd AS (
 		ssd.ln_imported_by_count AS score
 	FROM symbol_search_documents ssd
 	WHERE
-		symbol_name_id = ANY($1) 
+		symbol_name_id = ANY($1)
 	AND (
 		ssd.uuid_package_name=uuid_generate_v5(uuid_nil(), split_part($3, '.', 1)) OR
 		ssd.uuid_package_path=uuid_generate_v5(uuid_nil(), split_part($3, '.', 1))
 	)
-	ORDER BY score DESC
+	ORDER BY
+		score DESC,
+		package_path,
+		symbol_name_id
 	LIMIT $2
 )
 SELECT

@@ -44,8 +44,11 @@ const symbolCTE = `
 		ssd.ln_imported_by_count AS score
 	FROM symbol_search_documents ssd
 	WHERE
-		symbol_name_id = ANY($1) %s
-	ORDER BY score DESC
+		symbol_name_id = ANY($1)%s
+	ORDER BY
+		score DESC,
+		package_path,
+		symbol_name_id
 	LIMIT $2
 `
 
