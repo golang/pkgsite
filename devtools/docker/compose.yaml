@@ -13,6 +13,7 @@ x-go-variables: &go-variables
   GOMODCACHE: /gomodcache
   GO_DISCOVERY_CONFIG_DYNAMIC:
   GO_DISCOVERY_LOG_LEVEL: ${GO_DISCOVERY_LOG_LEVEL:-info}
+  GO_DISCOVERY_SERVE_STATS: "true"
 
 services:
   allbash:
@@ -38,6 +39,18 @@ services:
       TERM: xterm-256color
       WAITFORIT_TIMEOUT: 300
     entrypoint: ./third_party/wait-for-it/wait-for-it.sh db:5432 -- ./all.bash
+    volumes:
+      - ../../:/pkgsite
+    working_dir: /pkgsite
+  api:
+    image: golang:1.15.5
+    depends_on:
+      - frontend
+    environment:
+      <<: *go-variables
+      WAITFORIT_TIMEOUT: 300
+    entrypoint: ./third_party/wait-for-it/wait-for-it.sh frontend:8080 -- go run
+    command: "tests/api/main.go -frontend http://host.docker.internal:8080 -all compare "
     volumes:
       - ../../:/pkgsite
     working_dir: /pkgsite
