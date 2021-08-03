@@ -52,7 +52,7 @@ func (db *DB) GetModuleVersionsToClean(ctx context.Context, daysOld, limit int) 
 		EXCEPT (
 			SELECT module_path, resolved_version
 			FROM version_map
-			WHERE requested_version IN ('master', 'main')
+			WHERE requested_version IN ('master', 'main', 'dev.fuzz')
 		)
 		LIMIT $2
 	`
