@@ -29,6 +29,8 @@ import (
 )
 
 var (
+	compareAll = flag.Bool("all", false,
+		"compare all packages in tests/api/testdata if true")
 	frontendHost = flag.String("frontend", "http://localhost:8080",
 		"Use the frontend host referred to by this URL for comparing data")
 	proxyURL = flag.String("proxy", "https://proxy.golang.org",
@@ -45,15 +47,24 @@ func main() {
 		flag.PrintDefaults()
 	}
 	flag.Parse()
-	if flag.NArg() != 2 {
+
+	if *compareAll {
+		if flag.NArg() != 1 {
+			flag.Usage()
+			log.Fatalf("unexpected number of arguments for -all: %v", flag.Args())
+		}
+	} else if flag.NArg() != 2 {
 		flag.Usage()
 		log.Fatalf("unexpected number of arguments: %v", flag.Args())
 	}
 
 	ctx := context.Background()
 	cmd := flag.Args()[0]
-	pkgPath, modulePath := parsePath(flag.Args()[1])
-	if err := run(ctx, cmd, pkgPath, modulePath, *frontendHost, *proxyURL); err != nil {
+	var pkgPath, modulePath string
+	if !*compareAll {
+		pkgPath, modulePath = parsePath(flag.Args()[1])
+	}
+	if err := run(ctx, cmd, pkgPath, modulePath, *frontendHost, *proxyURL, *compareAll); err != nil {
 		log.Fatal(err)
 	}
 }
@@ -71,9 +82,21 @@ const (
 	tmpDir      = "/tmp/api"
 )
 
-func run(ctx context.Context, cmd, pkgPath, modulePath, frontendHost, proxyURL string) error {
+func run(ctx context.Context, cmd, pkgPath, modulePath, frontendHost, proxyURL string, compareAll bool) error {
 	switch cmd {
 	case "compare":
+		if compareAll {
+			pkgPaths, err := allPackages()
+			if err != nil {
+				return err
+			}
+			for _, p := range pkgPaths {
+				if err := compare(frontendHost, p); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
 		return compare(frontendHost, pkgPath)
 	case "generate":
 		return generate(ctx, pkgPath, modulePath, tmpDir, proxyURL)
@@ -123,6 +146,33 @@ func generate(ctx context.Context, pkgPath, modulePath, tmpPath, proxyURL string
 		}
 	}
 	return nil
+}
+
+// allPackages returns all package paths in tests/api/testdata.
+func allPackages() (_ []string, err error) {
+	defer derrors.Wrap(&err, "allPackages")
+	dirToFiles := map[string][]string{}
+	err = filepath.Walk(
+		"tests/api/testdata",
+		func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
+			if info.IsDir() {
+				return nil
+			}
+			dir := filepath.Dir(path)
+			dirToFiles[dir] = append(dirToFiles[dir], path)
+			return nil
+		})
+	if err != nil {
+		return nil, err
+	}
+	var paths []string
+	for p := range dirToFiles {
+		paths = append(paths, strings.TrimPrefix(p, testdataDir+"/"))
+	}
+	return paths, nil
 }
 
 // compare compares data from the testdata directory with the frontend.
