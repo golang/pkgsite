@@ -48,7 +48,8 @@ export class TreeNavController {
     this.addObserver(treeitem => {
       this.expandTreeitem(treeitem);
       this.setSelected(treeitem);
-      treeitem.el.scrollIntoView({ block: 'nearest' });
+      // TODO: Fix scroll issue in https://golang.org/issue/47450.
+      // treeitem.el.scrollIntoView({ block: 'nearest' });
     });
 
     const targets = new Map<string, boolean>();
