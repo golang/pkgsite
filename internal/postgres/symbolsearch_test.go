@@ -97,13 +97,17 @@ func TestSymbolSearch(t *testing.T) {
 			q:    "module_name/foo function",
 			want: checkResult(sample.Function.SymbolMeta),
 		},
+		{
+			name: "test invalid to_tsquery input returns no results instead of error",
+			q:    "foo:function",
+		},
 	} {
 		t.Run(strings.ReplaceAll(strings.ReplaceAll(test.name, "<", "_"), ">", "_"), func(t *testing.T) {
 			resp, err := testDB.hedgedSearch(ctx, test.q, 2, 0, 100, symbolSearchers, nil)
 			if err != nil {
 				t.Fatal(err)
 			}
-			if len(resp.results) == 0 {
+			if len(resp.results) == 0 && test.want != nil {
 				t.Fatalf("expected results")
 			}
 			if diff := cmp.Diff(test.want, resp.results); diff != "" {

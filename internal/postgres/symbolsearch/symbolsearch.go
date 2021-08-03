@@ -73,19 +73,17 @@ func multiwordCTE() string {
 			ts_rank(
 				'{0.1, 0.2, 1.0, 1.0}',
 				sd.tsv_path_tokens,
-				to_tsquery('%s', %s)
+				%s
 			) * ssd.ln_imported_by_count
 		) AS score
 	FROM symbol_search_documents ssd
 	INNER JOIN search_documents sd ON sd.package_path_id = ssd.package_path_id
 	WHERE
 		symbol_name_id = ANY($1)
-		AND sd.tsv_path_tokens @@ to_tsquery('%[1]s', %[2]s)
+		AND sd.tsv_path_tokens @@ %[1]s
 	ORDER BY score DESC
 	LIMIT $2
-`,
-		SymbolTextSearchConfiguration,
-		processArg("$3"))
+`, toTSQuery("$3"))
 }
 
 const baseQuery = `
@@ -144,7 +142,7 @@ func MatchingSymbolIDsQuery(st SearchType) string {
 }
 
 func toTSQuery(arg string) string {
-	return fmt.Sprintf("to_tsquery('%s', %s)", SymbolTextSearchConfiguration, processArg(arg))
+	return fmt.Sprintf("to_tsquery('%s', quote_literal(%s))", SymbolTextSearchConfiguration, processArg(arg))
 }
 
 // regexpPostgresArg finds $N arg in a postgres expression.
