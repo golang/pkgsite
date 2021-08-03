@@ -125,10 +125,19 @@ func (db *DB) symbolSearch(ctx context.Context, q string, limit, offset, maxResu
 		return sr
 	}
 	sort.Slice(results, func(i, j int) bool {
-		if results[i].NumImportedBy == results[j].NumImportedBy {
-			return results[i].SymbolName < results[j].SymbolName
+		if results[i].NumImportedBy != results[j].NumImportedBy {
+			return results[i].NumImportedBy > results[j].NumImportedBy
 		}
-		return results[i].NumImportedBy > results[j].NumImportedBy
+
+		// If two packages have the same imported by count, return them in
+		// alphabetical order by packge path.
+		if results[i].PackagePath != results[j].PackagePath {
+			return results[i].PackagePath < results[j].PackagePath
+		}
+
+		// If one package has multiple matching symbols, return them by
+		// alphabetical order of symbol name.
+		return results[i].SymbolName < results[j].SymbolName
 	})
 	if len(results) > limit {
 		results = results[0:limit]
