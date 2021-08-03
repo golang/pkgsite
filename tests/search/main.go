@@ -72,6 +72,7 @@ func run(ctx context.Context, db *postgres.DB) error {
 	if err != nil {
 		return err
 	}
+	var failed bool
 	for _, st := range tests {
 		output, err := runTest(ctx, db, st)
 		if err != nil {
@@ -81,10 +82,14 @@ func run(ctx context.Context, db *postgres.DB) error {
 			fmt.Println("--- PASSED: ", st.title)
 			continue
 		}
+		failed = true
 		fmt.Println("--- FAILED: ", st.title)
 		for _, e := range output {
 			fmt.Println(e)
 		}
+	}
+	if failed {
+		return fmt.Errorf("SEARCH TESTS FAILED: see output above")
 	}
 	return nil
 }
