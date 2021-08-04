@@ -9,6 +9,9 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
+
+	"golang.org/x/pkgsite/internal/auth"
 )
 
 // A Client for interacting with the frontend. This is only used for tests.
@@ -22,10 +25,15 @@ type Client struct {
 
 // NewClient creates a new frontend client. This is only used for tests.
 func NewClient(url string) *Client {
-	return &Client{
+	tok, ok := os.LookupEnv("GO_DISCOVERY_FRONTEND_AUTHORIZATION")
+	c := &Client{
 		url:        url,
 		httpClient: http.DefaultClient,
 	}
+	if ok {
+		c.httpClient = auth.NewClientBearer(tok)
+	}
+	return c
 }
 
 // GetVersions returns a VersionsDetails for the specified pkgPath.
