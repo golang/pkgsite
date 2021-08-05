@@ -1,0 +1,252 @@
+pkg golang.org/x/tools/godoc, const AllMethods = 4
+pkg golang.org/x/tools/godoc, const AllMethods PageInfoMode
+pkg golang.org/x/tools/godoc, const ConstDecl = 2
+pkg golang.org/x/tools/godoc, const ConstDecl SpotKind
+pkg golang.org/x/tools/godoc, const FlatDir = 16
+pkg golang.org/x/tools/godoc, const FlatDir PageInfoMode
+pkg golang.org/x/tools/godoc, const FuncDecl = 5
+pkg golang.org/x/tools/godoc, const FuncDecl SpotKind
+pkg golang.org/x/tools/godoc, const ImportDecl = 1
+pkg golang.org/x/tools/godoc, const ImportDecl SpotKind
+pkg golang.org/x/tools/godoc, const MethodDecl = 6
+pkg golang.org/x/tools/godoc, const MethodDecl SpotKind
+pkg golang.org/x/tools/godoc, const NoFiltering = 2
+pkg golang.org/x/tools/godoc, const NoFiltering PageInfoMode
+pkg golang.org/x/tools/godoc, const NoTypeAssoc = 32
+pkg golang.org/x/tools/godoc, const NoTypeAssoc PageInfoMode
+pkg golang.org/x/tools/godoc, const PackageClause = 0
+pkg golang.org/x/tools/godoc, const PackageClause SpotKind
+pkg golang.org/x/tools/godoc, const PageInfoModeQueryString = "m"
+pkg golang.org/x/tools/godoc, const PageInfoModeQueryString ideal-string
+pkg golang.org/x/tools/godoc, const ShowSource = 8
+pkg golang.org/x/tools/godoc, const ShowSource PageInfoMode
+pkg golang.org/x/tools/godoc, const TypeDecl = 3
+pkg golang.org/x/tools/godoc, const TypeDecl SpotKind
+pkg golang.org/x/tools/godoc, const Use = 7
+pkg golang.org/x/tools/godoc, const Use SpotKind
+pkg golang.org/x/tools/godoc, const VarDecl = 4
+pkg golang.org/x/tools/godoc, const VarDecl SpotKind
+pkg golang.org/x/tools/godoc, func FormatSelections(io.Writer, []uint8, LinkWriter, Selection, SegmentWriter, ...Selection)
+pkg golang.org/x/tools/godoc, func FormatText(io.Writer, []uint8, int, bool, string, Selection)
+pkg golang.org/x/tools/godoc, func Linkify(io.Writer, []uint8)
+pkg golang.org/x/tools/godoc, func LinkifyText(io.Writer, []uint8, ast.Node)
+pkg golang.org/x/tools/godoc, func NewCorpus(vfs.FileSystem) *Corpus
+pkg golang.org/x/tools/godoc, func NewPresentation(*Corpus) *Presentation
+pkg golang.org/x/tools/godoc, func NewSnippet(*token.FileSet, ast.Decl, *ast.Ident) *Snippet
+pkg golang.org/x/tools/godoc, func RangeSelection(string) Selection
+pkg golang.org/x/tools/godoc, method (*Corpus) CurrentIndex() (*Index, time.Time)
+pkg golang.org/x/tools/godoc, method (*Corpus) FSModifiedTime() time.Time
+pkg golang.org/x/tools/godoc, method (*Corpus) Init() error
+pkg golang.org/x/tools/godoc, method (*Corpus) InitVersionInfo()
+pkg golang.org/x/tools/godoc, method (*Corpus) Lookup(string) SearchResult
+pkg golang.org/x/tools/godoc, method (*Corpus) MetadataFor(string) *Metadata
+pkg golang.org/x/tools/godoc, method (*Corpus) NewIndex() *Index
+pkg golang.org/x/tools/godoc, method (*Corpus) ReadIndexFrom(io.Reader) error
+pkg golang.org/x/tools/godoc, method (*Corpus) RunIndexer()
+pkg golang.org/x/tools/godoc, method (*Corpus) UpdateIndex()
+pkg golang.org/x/tools/godoc, method (*File) Path() string
+pkg golang.org/x/tools/godoc, method (*Index) CompatibleWith(*Corpus) bool
+pkg golang.org/x/tools/godoc, method (*Index) Exports() map[string]map[string]SpotKind
+pkg golang.org/x/tools/godoc, method (*Index) Idents() map[SpotKind]map[string][]Ident
+pkg golang.org/x/tools/godoc, method (*Index) ImportCount() map[string]int
+pkg golang.org/x/tools/godoc, method (*Index) Lookup(string) (*SearchResult, error)
+pkg golang.org/x/tools/godoc, method (*Index) LookupRegexp(*regexp.Regexp, int) (int, []FileLines)
+pkg golang.org/x/tools/godoc, method (*Index) PackagePath() map[string]map[string]bool
+pkg golang.org/x/tools/godoc, method (*Index) ReadFrom(io.Reader) (int64, error)
+pkg golang.org/x/tools/godoc, method (*Index) Snippet(int) *Snippet
+pkg golang.org/x/tools/godoc, method (*Index) Stats() Statistics
+pkg golang.org/x/tools/godoc, method (*Index) WriteTo(io.Writer) (int64, error)
+pkg golang.org/x/tools/godoc, method (*Indexer) Visit(ast.Node) ast.Visitor
+pkg golang.org/x/tools/godoc, method (*Metadata) FilePath() string
+pkg golang.org/x/tools/godoc, method (*PageInfo) IsEmpty() bool
+pkg golang.org/x/tools/godoc, method (*PakRun) Len() int
+pkg golang.org/x/tools/godoc, method (*PakRun) Less(int, int) bool
+pkg golang.org/x/tools/godoc, method (*PakRun) Swap(int, int)
+pkg golang.org/x/tools/godoc, method (*Presentation) CmdFSRoot() string
+pkg golang.org/x/tools/godoc, method (*Presentation) FileServer() http.Handler
+pkg golang.org/x/tools/godoc, method (*Presentation) FuncMap() template.FuncMap
+pkg golang.org/x/tools/godoc, method (*Presentation) GetCmdPageInfo(string, string, PageInfoMode) *PageInfo
+pkg golang.org/x/tools/godoc, method (*Presentation) GetPageInfoMode(*http.Request) PageInfoMode
+pkg golang.org/x/tools/godoc, method (*Presentation) GetPkgPageInfo(string, string, PageInfoMode) *PageInfo
+pkg golang.org/x/tools/godoc, method (*Presentation) HandleSearch(http.ResponseWriter, *http.Request)
+pkg golang.org/x/tools/godoc, method (*Presentation) NewSnippet(*token.FileSet, ast.Decl, *ast.Ident) *Snippet
+pkg golang.org/x/tools/godoc, method (*Presentation) PkgFSRoot() string
+pkg golang.org/x/tools/godoc, method (*Presentation) SearchResultCode(SearchResult) []uint8
+pkg golang.org/x/tools/godoc, method (*Presentation) SearchResultDoc(SearchResult) []uint8
+pkg golang.org/x/tools/godoc, method (*Presentation) SearchResultTxt(SearchResult) []uint8
+pkg golang.org/x/tools/godoc, method (*Presentation) ServeError(http.ResponseWriter, *http.Request, string, error)
+pkg golang.org/x/tools/godoc, method (*Presentation) ServeFile(http.ResponseWriter, *http.Request)
+pkg golang.org/x/tools/godoc, method (*Presentation) ServeHTMLDoc(http.ResponseWriter, *http.Request, string, string)
+pkg golang.org/x/tools/godoc, method (*Presentation) ServeHTTP(http.ResponseWriter, *http.Request)
+pkg golang.org/x/tools/godoc, method (*Presentation) ServePage(http.ResponseWriter, Page)
+pkg golang.org/x/tools/godoc, method (*Presentation) ServeText(http.ResponseWriter, []uint8)
+pkg golang.org/x/tools/godoc, method (*Presentation) TemplateFuncs() template.FuncMap
+pkg golang.org/x/tools/godoc, method (*Presentation) WriteNode(io.Writer, *token.FileSet, interface{})
+pkg golang.org/x/tools/godoc, method (KindRun) Len() int
+pkg golang.org/x/tools/godoc, method (KindRun) Less(int, int) bool
+pkg golang.org/x/tools/godoc, method (KindRun) Swap(int, int)
+pkg golang.org/x/tools/godoc, method (SpotInfo) IsIndex() bool
+pkg golang.org/x/tools/godoc, method (SpotInfo) Kind() SpotKind
+pkg golang.org/x/tools/godoc, method (SpotInfo) Lori() int
+pkg golang.org/x/tools/godoc, method (SpotKind) Name() string
+pkg golang.org/x/tools/godoc, type AltWords struct
+pkg golang.org/x/tools/godoc, type AltWords struct, Alts []string
+pkg golang.org/x/tools/godoc, type AltWords struct, Canon string
+pkg golang.org/x/tools/godoc, type Corpus struct
+pkg golang.org/x/tools/godoc, type Corpus struct, Analysis analysis.Result
+pkg golang.org/x/tools/godoc, type Corpus struct, IndexDirectory func(string) bool
+pkg golang.org/x/tools/godoc, type Corpus struct, IndexDocs bool
+pkg golang.org/x/tools/godoc, type Corpus struct, IndexEnabled bool
+pkg golang.org/x/tools/godoc, type Corpus struct, IndexFiles string
+pkg golang.org/x/tools/godoc, type Corpus struct, IndexFullText bool
+pkg golang.org/x/tools/godoc, type Corpus struct, IndexGoCode bool
+pkg golang.org/x/tools/godoc, type Corpus struct, IndexInterval time.Duration
+pkg golang.org/x/tools/godoc, type Corpus struct, IndexThrottle float64
+pkg golang.org/x/tools/godoc, type Corpus struct, MaxResults int
+pkg golang.org/x/tools/godoc, type Corpus struct, SummarizePackage func(string) (string, bool, bool)
+pkg golang.org/x/tools/godoc, type Corpus struct, Verbose bool
+pkg golang.org/x/tools/godoc, type DirEntry struct
+pkg golang.org/x/tools/godoc, type DirEntry struct, Depth int
+pkg golang.org/x/tools/godoc, type DirEntry struct, HasPkg bool
+pkg golang.org/x/tools/godoc, type DirEntry struct, Height int
+pkg golang.org/x/tools/godoc, type DirEntry struct, Name string
+pkg golang.org/x/tools/godoc, type DirEntry struct, Path string
+pkg golang.org/x/tools/godoc, type DirEntry struct, RootType vfs.RootType
+pkg golang.org/x/tools/godoc, type DirEntry struct, Synopsis string
+pkg golang.org/x/tools/godoc, type DirList struct
+pkg golang.org/x/tools/godoc, type DirList struct, List []DirEntry
+pkg golang.org/x/tools/godoc, type DirList struct, MaxHeight int
+pkg golang.org/x/tools/godoc, type Directory struct
+pkg golang.org/x/tools/godoc, type Directory struct, Depth int
+pkg golang.org/x/tools/godoc, type Directory struct, Dirs []*Directory
+pkg golang.org/x/tools/godoc, type Directory struct, HasPkg bool
+pkg golang.org/x/tools/godoc, type Directory struct, Name string
+pkg golang.org/x/tools/godoc, type Directory struct, Path string
+pkg golang.org/x/tools/godoc, type Directory struct, RootType vfs.RootType
+pkg golang.org/x/tools/godoc, type Directory struct, Synopsis string
+pkg golang.org/x/tools/godoc, type File struct
+pkg golang.org/x/tools/godoc, type File struct, Name string
+pkg golang.org/x/tools/godoc, type File struct, Pak *Pak
+pkg golang.org/x/tools/godoc, type FileLines struct
+pkg golang.org/x/tools/godoc, type FileLines struct, Filename string
+pkg golang.org/x/tools/godoc, type FileLines struct, Lines []int
+pkg golang.org/x/tools/godoc, type FileRun struct
+pkg golang.org/x/tools/godoc, type FileRun struct, File *File
+pkg golang.org/x/tools/godoc, type FileRun struct, Groups []KindRun
+pkg golang.org/x/tools/godoc, type HitList []*PakRun
+pkg golang.org/x/tools/godoc, type Ident struct
+pkg golang.org/x/tools/godoc, type Ident struct, Doc string
+pkg golang.org/x/tools/godoc, type Ident struct, Name string
+pkg golang.org/x/tools/godoc, type Ident struct, Package string
+pkg golang.org/x/tools/godoc, type Ident struct, Path string
+pkg golang.org/x/tools/godoc, type Index struct
+pkg golang.org/x/tools/godoc, type IndexResult struct
+pkg golang.org/x/tools/godoc, type IndexResult struct, Decls RunList
+pkg golang.org/x/tools/godoc, type IndexResult struct, Others RunList
+pkg golang.org/x/tools/godoc, type Indexer struct
+pkg golang.org/x/tools/godoc, type KindRun []SpotInfo
+pkg golang.org/x/tools/godoc, type LinkWriter func(io.Writer, int, bool)
+pkg golang.org/x/tools/godoc, type LookupResult struct
+pkg golang.org/x/tools/godoc, type LookupResult struct, Decls HitList
+pkg golang.org/x/tools/godoc, type LookupResult struct, Others HitList
+pkg golang.org/x/tools/godoc, type Metadata struct
+pkg golang.org/x/tools/godoc, type Metadata struct, Path string
+pkg golang.org/x/tools/godoc, type Metadata struct, Subtitle string
+pkg golang.org/x/tools/godoc, type Metadata struct, Template bool
+pkg golang.org/x/tools/godoc, type Metadata struct, Title string
+pkg golang.org/x/tools/godoc, type Page struct
+pkg golang.org/x/tools/godoc, type Page struct, Body []uint8
+pkg golang.org/x/tools/godoc, type Page struct, GoogleAnalytics string
+pkg golang.org/x/tools/godoc, type Page struct, GoogleCN bool
+pkg golang.org/x/tools/godoc, type Page struct, Playground bool
+pkg golang.org/x/tools/godoc, type Page struct, Query string
+pkg golang.org/x/tools/godoc, type Page struct, SearchBox bool
+pkg golang.org/x/tools/godoc, type Page struct, SrcPath string
+pkg golang.org/x/tools/godoc, type Page struct, Subtitle string
+pkg golang.org/x/tools/godoc, type Page struct, Tabtitle string
+pkg golang.org/x/tools/godoc, type Page struct, Title string
+pkg golang.org/x/tools/godoc, type Page struct, TreeView bool
+pkg golang.org/x/tools/godoc, type Page struct, Version string
+pkg golang.org/x/tools/godoc, type PageInfo struct
+pkg golang.org/x/tools/godoc, type PageInfo struct, AnalysisData template.JS
+pkg golang.org/x/tools/godoc, type PageInfo struct, CallGraph template.JS
+pkg golang.org/x/tools/godoc, type PageInfo struct, CallGraphIndex map[string]int
+pkg golang.org/x/tools/godoc, type PageInfo struct, DirFlat bool
+pkg golang.org/x/tools/godoc, type PageInfo struct, DirTime time.Time
+pkg golang.org/x/tools/godoc, type PageInfo struct, Dirname string
+pkg golang.org/x/tools/godoc, type PageInfo struct, Dirs *DirList
+pkg golang.org/x/tools/godoc, type PageInfo struct, Err error
+pkg golang.org/x/tools/godoc, type PageInfo struct, Examples []*doc.Example
+pkg golang.org/x/tools/godoc, type PageInfo struct, FSet *token.FileSet
+pkg golang.org/x/tools/godoc, type PageInfo struct, GoogleCN bool
+pkg golang.org/x/tools/godoc, type PageInfo struct, IsFiltered bool
+pkg golang.org/x/tools/godoc, type PageInfo struct, IsMain bool
+pkg golang.org/x/tools/godoc, type PageInfo struct, Mode PageInfoMode
+pkg golang.org/x/tools/godoc, type PageInfo struct, Notes map[string][]*doc.Note
+pkg golang.org/x/tools/godoc, type PageInfo struct, PAst map[string]*ast.File
+pkg golang.org/x/tools/godoc, type PageInfo struct, PDoc *doc.Package
+pkg golang.org/x/tools/godoc, type PageInfo struct, TypeInfoIndex map[string]int
+pkg golang.org/x/tools/godoc, type PageInfoMode uint
+pkg golang.org/x/tools/godoc, type Pak struct
+pkg golang.org/x/tools/godoc, type Pak struct, Name string
+pkg golang.org/x/tools/godoc, type Pak struct, Path string
+pkg golang.org/x/tools/godoc, type PakRun struct
+pkg golang.org/x/tools/godoc, type PakRun struct, Files []*FileRun
+pkg golang.org/x/tools/godoc, type PakRun struct, Pak *Pak
+pkg golang.org/x/tools/godoc, type Presentation struct
+pkg golang.org/x/tools/godoc, type Presentation struct, AdjustPageInfoMode func(*http.Request, PageInfoMode) PageInfoMode
+pkg golang.org/x/tools/godoc, type Presentation struct, CallGraphHTML *template.Template
+pkg golang.org/x/tools/godoc, type Presentation struct, Corpus *Corpus
+pkg golang.org/x/tools/godoc, type Presentation struct, DeclLinks bool
+pkg golang.org/x/tools/godoc, type Presentation struct, DirlistHTML *template.Template
+pkg golang.org/x/tools/godoc, type Presentation struct, ErrorHTML *template.Template
+pkg golang.org/x/tools/godoc, type Presentation struct, ExampleHTML *template.Template
+pkg golang.org/x/tools/godoc, type Presentation struct, GodocHTML *template.Template
+pkg golang.org/x/tools/godoc, type Presentation struct, GoogleAnalytics string
+pkg golang.org/x/tools/godoc, type Presentation struct, ImplementsHTML *template.Template
+pkg golang.org/x/tools/godoc, type Presentation struct, MethodSetHTML *template.Template
+pkg golang.org/x/tools/godoc, type Presentation struct, NotesRx *regexp.Regexp
+pkg golang.org/x/tools/godoc, type Presentation struct, PackageHTML *template.Template
+pkg golang.org/x/tools/godoc, type Presentation struct, PackageRootHTML *template.Template
+pkg golang.org/x/tools/godoc, type Presentation struct, SearchCodeHTML *template.Template
+pkg golang.org/x/tools/godoc, type Presentation struct, SearchDescXML *template.Template
+pkg golang.org/x/tools/godoc, type Presentation struct, SearchDocHTML *template.Template
+pkg golang.org/x/tools/godoc, type Presentation struct, SearchHTML *template.Template
+pkg golang.org/x/tools/godoc, type Presentation struct, SearchResults []SearchResultFunc
+pkg golang.org/x/tools/godoc, type Presentation struct, SearchTxtHTML *template.Template
+pkg golang.org/x/tools/godoc, type Presentation struct, ShowPlayground bool
+pkg golang.org/x/tools/godoc, type Presentation struct, ShowTimestamps bool
+pkg golang.org/x/tools/godoc, type Presentation struct, TabWidth int
+pkg golang.org/x/tools/godoc, type Presentation struct, URLForSrc func(string) string
+pkg golang.org/x/tools/godoc, type Presentation struct, URLForSrcPos func(string, int, int, int) string
+pkg golang.org/x/tools/godoc, type Presentation struct, URLForSrcQuery func(string, string, int) string
+pkg golang.org/x/tools/godoc, type RunList []interface{}
+pkg golang.org/x/tools/godoc, type SearchResult struct
+pkg golang.org/x/tools/godoc, type SearchResult struct, Alert string
+pkg golang.org/x/tools/godoc, type SearchResult struct, Alt *AltWords
+pkg golang.org/x/tools/godoc, type SearchResult struct, Complete bool
+pkg golang.org/x/tools/godoc, type SearchResult struct, Found int
+pkg golang.org/x/tools/godoc, type SearchResult struct, Hit *LookupResult
+pkg golang.org/x/tools/godoc, type SearchResult struct, Idents map[SpotKind][]Ident
+pkg golang.org/x/tools/godoc, type SearchResult struct, Pak HitList
+pkg golang.org/x/tools/godoc, type SearchResult struct, Query string
+pkg golang.org/x/tools/godoc, type SearchResult struct, Textual []FileLines
+pkg golang.org/x/tools/godoc, type SearchResultFunc func(*Presentation, SearchResult) []uint8
+pkg golang.org/x/tools/godoc, type Segment struct
+pkg golang.org/x/tools/godoc, type SegmentWriter func(io.Writer, []uint8, int)
+pkg golang.org/x/tools/godoc, type Selection func() Segment
+pkg golang.org/x/tools/godoc, type Snippet struct
+pkg golang.org/x/tools/godoc, type Snippet struct, Line int
+pkg golang.org/x/tools/godoc, type Snippet struct, Text string
+pkg golang.org/x/tools/godoc, type Spot struct
+pkg golang.org/x/tools/godoc, type Spot struct, File *File
+pkg golang.org/x/tools/godoc, type Spot struct, Info SpotInfo
+pkg golang.org/x/tools/godoc, type SpotInfo uint32
+pkg golang.org/x/tools/godoc, type SpotKind uint32
+pkg golang.org/x/tools/godoc, type Statistics struct
+pkg golang.org/x/tools/godoc, type Statistics struct, Bytes int
+pkg golang.org/x/tools/godoc, type Statistics struct, Files int
+pkg golang.org/x/tools/godoc, type Statistics struct, Lines int
+pkg golang.org/x/tools/godoc, type Statistics struct, Spots int
+pkg golang.org/x/tools/godoc, type Statistics struct, Words int
+pkg golang.org/x/tools/godoc, var ErrFileIndexVersion error

@@ -1,0 +1,1 @@
+pkg golang.org/x/tools/godoc, type Metadata struct, AltPaths []string
