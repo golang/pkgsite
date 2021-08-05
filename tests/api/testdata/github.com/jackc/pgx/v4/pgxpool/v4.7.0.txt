@@ -1,0 +1,4 @@
+pkg github.com/jackc/pgx/v4/pgxpool, method (*Config) ConnString() string
+pkg github.com/jackc/pgx/v4/pgxpool, method (*Config) Copy() *Config
+pkg github.com/jackc/pgx/v4/pgxpool, method (*Pool) Config() *Config
+pkg github.com/jackc/pgx/v4/pgxpool, type Config struct, LazyConnect bool

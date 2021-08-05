@@ -1,0 +1,54 @@
+pkg github.com/jackc/pgx/v4/pgxpool, func Connect(context.Context, string) (*Pool, error)
+pkg github.com/jackc/pgx/v4/pgxpool, func ConnectConfig(context.Context, *Config) (*Pool, error)
+pkg github.com/jackc/pgx/v4/pgxpool, func ParseConfig(string) (*Config, error)
+pkg github.com/jackc/pgx/v4/pgxpool, method (*Conn) Begin(context.Context) (pgx.Tx, error)
+pkg github.com/jackc/pgx/v4/pgxpool, method (*Conn) BeginTx(context.Context, pgx.TxOptions) (pgx.Tx, error)
+pkg github.com/jackc/pgx/v4/pgxpool, method (*Conn) Conn() *pgx.Conn
+pkg github.com/jackc/pgx/v4/pgxpool, method (*Conn) CopyFrom(context.Context, pgx.Identifier, []string, pgx.CopyFromSource) (int64, error)
+pkg github.com/jackc/pgx/v4/pgxpool, method (*Conn) Exec(context.Context, string, ...interface{}) (pgconn.CommandTag, error)
+pkg github.com/jackc/pgx/v4/pgxpool, method (*Conn) Query(context.Context, string, ...interface{}) (pgx.Rows, error)
+pkg github.com/jackc/pgx/v4/pgxpool, method (*Conn) QueryRow(context.Context, string, ...interface{}) pgx.Row
+pkg github.com/jackc/pgx/v4/pgxpool, method (*Conn) Release()
+pkg github.com/jackc/pgx/v4/pgxpool, method (*Conn) SendBatch(context.Context, *pgx.Batch) pgx.BatchResults
+pkg github.com/jackc/pgx/v4/pgxpool, method (*Pool) Acquire(context.Context) (*Conn, error)
+pkg github.com/jackc/pgx/v4/pgxpool, method (*Pool) AcquireAllIdle(context.Context) []*Conn
+pkg github.com/jackc/pgx/v4/pgxpool, method (*Pool) Begin(context.Context) (pgx.Tx, error)
+pkg github.com/jackc/pgx/v4/pgxpool, method (*Pool) BeginTx(context.Context, pgx.TxOptions) (pgx.Tx, error)
+pkg github.com/jackc/pgx/v4/pgxpool, method (*Pool) Close()
+pkg github.com/jackc/pgx/v4/pgxpool, method (*Pool) CopyFrom(context.Context, pgx.Identifier, []string, pgx.CopyFromSource) (int64, error)
+pkg github.com/jackc/pgx/v4/pgxpool, method (*Pool) Exec(context.Context, string, ...interface{}) (pgconn.CommandTag, error)
+pkg github.com/jackc/pgx/v4/pgxpool, method (*Pool) Query(context.Context, string, ...interface{}) (pgx.Rows, error)
+pkg github.com/jackc/pgx/v4/pgxpool, method (*Pool) QueryRow(context.Context, string, ...interface{}) pgx.Row
+pkg github.com/jackc/pgx/v4/pgxpool, method (*Pool) SendBatch(context.Context, *pgx.Batch) pgx.BatchResults
+pkg github.com/jackc/pgx/v4/pgxpool, method (*Pool) Stat() *Stat
+pkg github.com/jackc/pgx/v4/pgxpool, method (*Stat) AcquireCount() int64
+pkg github.com/jackc/pgx/v4/pgxpool, method (*Stat) AcquireDuration() time.Duration
+pkg github.com/jackc/pgx/v4/pgxpool, method (*Stat) AcquiredConns() int32
+pkg github.com/jackc/pgx/v4/pgxpool, method (*Stat) CanceledAcquireCount() int64
+pkg github.com/jackc/pgx/v4/pgxpool, method (*Stat) ConstructingConns() int32
+pkg github.com/jackc/pgx/v4/pgxpool, method (*Stat) EmptyAcquireCount() int64
+pkg github.com/jackc/pgx/v4/pgxpool, method (*Stat) IdleConns() int32
+pkg github.com/jackc/pgx/v4/pgxpool, method (*Stat) MaxConns() int32
+pkg github.com/jackc/pgx/v4/pgxpool, method (*Stat) TotalConns() int32
+pkg github.com/jackc/pgx/v4/pgxpool, method (*Tx) Begin(context.Context) (pgx.Tx, error)
+pkg github.com/jackc/pgx/v4/pgxpool, method (*Tx) Commit(context.Context) error
+pkg github.com/jackc/pgx/v4/pgxpool, method (*Tx) CopyFrom(context.Context, pgx.Identifier, []string, pgx.CopyFromSource) (int64, error)
+pkg github.com/jackc/pgx/v4/pgxpool, method (*Tx) Exec(context.Context, string, ...interface{}) (pgconn.CommandTag, error)
+pkg github.com/jackc/pgx/v4/pgxpool, method (*Tx) LargeObjects() pgx.LargeObjects
+pkg github.com/jackc/pgx/v4/pgxpool, method (*Tx) Prepare(context.Context, string, string) (*pgconn.StatementDescription, error)
+pkg github.com/jackc/pgx/v4/pgxpool, method (*Tx) Query(context.Context, string, ...interface{}) (pgx.Rows, error)
+pkg github.com/jackc/pgx/v4/pgxpool, method (*Tx) QueryRow(context.Context, string, ...interface{}) pgx.Row
+pkg github.com/jackc/pgx/v4/pgxpool, method (*Tx) Rollback(context.Context) error
+pkg github.com/jackc/pgx/v4/pgxpool, method (*Tx) SendBatch(context.Context, *pgx.Batch) pgx.BatchResults
+pkg github.com/jackc/pgx/v4/pgxpool, type Config struct
+pkg github.com/jackc/pgx/v4/pgxpool, type Config struct, AfterConnect func(context.Context, *pgx.Conn) error
+pkg github.com/jackc/pgx/v4/pgxpool, type Config struct, AfterRelease func(*pgx.Conn) bool
+pkg github.com/jackc/pgx/v4/pgxpool, type Config struct, BeforeAcquire func(context.Context, *pgx.Conn) bool
+pkg github.com/jackc/pgx/v4/pgxpool, type Config struct, ConnConfig *pgx.ConnConfig
+pkg github.com/jackc/pgx/v4/pgxpool, type Config struct, HealthCheckPeriod time.Duration
+pkg github.com/jackc/pgx/v4/pgxpool, type Config struct, MaxConnLifetime time.Duration
+pkg github.com/jackc/pgx/v4/pgxpool, type Config struct, MaxConns int32
+pkg github.com/jackc/pgx/v4/pgxpool, type Conn struct
+pkg github.com/jackc/pgx/v4/pgxpool, type Pool struct
+pkg github.com/jackc/pgx/v4/pgxpool, type Stat struct
+pkg github.com/jackc/pgx/v4/pgxpool, type Tx struct

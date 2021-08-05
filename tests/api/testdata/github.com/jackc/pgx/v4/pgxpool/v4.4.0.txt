@@ -1,0 +1,2 @@
+pkg github.com/jackc/pgx/v4/pgxpool, type Config struct, MaxConnIdleTime time.Duration
+pkg github.com/jackc/pgx/v4/pgxpool, type Config struct, MinConns int32

@@ -1,0 +1,9 @@
+pkg github.com/jackc/pgx/v4/pgxpool, method (*Conn) BeginFunc(context.Context, func(pgx.Tx) error) error
+pkg github.com/jackc/pgx/v4/pgxpool, method (*Conn) BeginTxFunc(context.Context, pgx.TxOptions, func(pgx.Tx) error) error
+pkg github.com/jackc/pgx/v4/pgxpool, method (*Conn) Ping(context.Context) error
+pkg github.com/jackc/pgx/v4/pgxpool, method (*Pool) AcquireFunc(context.Context, func(*Conn) error) error
+pkg github.com/jackc/pgx/v4/pgxpool, method (*Pool) BeginFunc(context.Context, func(pgx.Tx) error) error
+pkg github.com/jackc/pgx/v4/pgxpool, method (*Pool) BeginTxFunc(context.Context, pgx.TxOptions, func(pgx.Tx) error) error
+pkg github.com/jackc/pgx/v4/pgxpool, method (*Pool) Ping(context.Context) error
+pkg github.com/jackc/pgx/v4/pgxpool, method (*Tx) BeginFunc(context.Context, func(pgx.Tx) error) error
+pkg github.com/jackc/pgx/v4/pgxpool, type Config struct, BeforeConnect func(context.Context, *pgx.ConnConfig) error
