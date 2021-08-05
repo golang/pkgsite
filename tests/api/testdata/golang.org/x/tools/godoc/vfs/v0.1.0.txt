@@ -1,0 +1,34 @@
+pkg golang.org/x/tools/godoc/vfs, const BindAfter = 2
+pkg golang.org/x/tools/godoc/vfs, const BindAfter BindMode
+pkg golang.org/x/tools/godoc/vfs, const BindBefore = 1
+pkg golang.org/x/tools/godoc/vfs, const BindBefore BindMode
+pkg golang.org/x/tools/godoc/vfs, const BindReplace = 0
+pkg golang.org/x/tools/godoc/vfs, const BindReplace BindMode
+pkg golang.org/x/tools/godoc/vfs, const RootTypeGoPath = "GOPATH"
+pkg golang.org/x/tools/godoc/vfs, const RootTypeGoPath RootType
+pkg golang.org/x/tools/godoc/vfs, const RootTypeGoRoot = "GOROOT"
+pkg golang.org/x/tools/godoc/vfs, const RootTypeGoRoot RootType
+pkg golang.org/x/tools/godoc/vfs, func NewNameSpace() NameSpace
+pkg golang.org/x/tools/godoc/vfs, func OS(string) FileSystem
+pkg golang.org/x/tools/godoc/vfs, func ReadFile(Opener, string) ([]uint8, error)
+pkg golang.org/x/tools/godoc/vfs, method (NameSpace) Bind(string, FileSystem, string, BindMode)
+pkg golang.org/x/tools/godoc/vfs, method (NameSpace) Fprint(io.Writer)
+pkg golang.org/x/tools/godoc/vfs, method (NameSpace) Lstat(string) (fs.FileInfo, error)
+pkg golang.org/x/tools/godoc/vfs, method (NameSpace) Open(string) (ReadSeekCloser, error)
+pkg golang.org/x/tools/godoc/vfs, method (NameSpace) ReadDir(string) ([]fs.FileInfo, error)
+pkg golang.org/x/tools/godoc/vfs, method (NameSpace) RootType(string) RootType
+pkg golang.org/x/tools/godoc/vfs, method (NameSpace) Stat(string) (fs.FileInfo, error)
+pkg golang.org/x/tools/godoc/vfs, method (NameSpace) String() string
+pkg golang.org/x/tools/godoc/vfs, type BindMode int
+pkg golang.org/x/tools/godoc/vfs, type FileSystem interface
+pkg golang.org/x/tools/godoc/vfs, type FileSystem interface, Lstat(string) (fs.FileInfo, error)
+pkg golang.org/x/tools/godoc/vfs, type FileSystem interface, ReadDir(string) ([]fs.FileInfo, error)
+pkg golang.org/x/tools/godoc/vfs, type FileSystem interface, RootType(string) RootType
+pkg golang.org/x/tools/godoc/vfs, type FileSystem interface, Stat(string) (fs.FileInfo, error)
+pkg golang.org/x/tools/godoc/vfs, type FileSystem interface, String() string
+pkg golang.org/x/tools/godoc/vfs, type NameSpace map[string][]mountedFS
+pkg golang.org/x/tools/godoc/vfs, type Opener interface
+pkg golang.org/x/tools/godoc/vfs, type Opener interface, Open(string) (ReadSeekCloser, error)
+pkg golang.org/x/tools/godoc/vfs, type ReadSeekCloser interface
+pkg golang.org/x/tools/godoc/vfs, type RootType string
+pkg golang.org/x/tools/godoc/vfs, var GOROOT string
