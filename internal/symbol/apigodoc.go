@@ -22,11 +22,14 @@ import (
 	"unicode"
 
 	"golang.org/x/mod/semver"
+	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/stdlib"
 )
 
 // ParseAPIInfo parses apiVersions using contents of the specified directory.
-func ParsePackageAPIInfo(files []string) (apiVersions, error) {
+func ParsePackageAPIInfo(files []string) (_ apiVersions, err error) {
+	defer derrors.Wrap(&err, "ParsePackageAPIInfo")
+
 	// Process files in reverse semver order (vx.y.z, vz.y.z-1, ...).
 	//
 	// The signature of an identifier may change
@@ -121,13 +124,14 @@ type versionParser struct {
 //
 // For each row, it updates the corresponding entry in
 // vp.res to VERSION, overwriting any previous value.
-func (vp *versionParser) parseFile(name string) error {
-	f, err := os.Open(name)
+func (vp *versionParser) parseFile(filename string) (err error) {
+	defer derrors.Wrap(&err, "parseFile(%q)", filename)
+	f, err := os.Open(filename)
 	if err != nil {
 		return err
 	}
 	defer f.Close()
-	base := filepath.Base(name)
+	base := filepath.Base(filename)
 	ver := strings.TrimSuffix(base, ".txt")
 	sc := bufio.NewScanner(f)
 	for sc.Scan() {

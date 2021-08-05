@@ -23,7 +23,7 @@ func CompareAPIVersions(path string, apiVersions pkgAPIVersions, inSH *internal.
 
 	// Create a map of name to the first version when the symbol name was found
 	// in the package.
-	nameToVersion := map[string]string{}
+	gotNameToVersion := map[string]string{}
 	for _, v := range sh.Versions() {
 		nts := sh.SymbolsAtVersion(v)
 		if stdlib.Contains(path) {
@@ -38,8 +38,8 @@ func CompareAPIVersions(path string, apiVersions pkgAPIVersions, inSH *internal.
 			// it is introduced at different build contexts. The godoc
 			// logic that generates apiVersions does not take build
 			// context info into account.
-			if _, ok := nameToVersion[name]; !ok {
-				nameToVersion[name] = v
+			if _, ok := gotNameToVersion[name]; !ok {
+				gotNameToVersion[name] = v
 			}
 		}
 	}
@@ -77,8 +77,8 @@ func CompareAPIVersions(path string, apiVersions pkgAPIVersions, inSH *internal.
 			return
 		}
 
-		got, ok := nameToVersion[name]
-		delete(nameToVersion, name)
+		got, ok := gotNameToVersion[name]
+		delete(gotNameToVersion, name)
 		if !ok {
 			if !stdlib.Contains(path) {
 				// The api/goN.txt files contain embedded fields and methods,
@@ -114,8 +114,8 @@ func CompareAPIVersions(path string, apiVersions pkgAPIVersions, inSH *internal.
 	if !stdlib.Contains(path) {
 		// Some symbols may be missing when parsing the api/goN.txt files due
 		// to build contexts. Ignore these errors to reduce noise.
-		for name, version := range nameToVersion {
-			errors = append(errors, fmt.Sprintf("extra symbol: %q %q\n", name, version))
+		for name, version := range gotNameToVersion {
+			errors = append(errors, fmt.Sprintf("got extra symbol: %q %q\n", name, version))
 		}
 	}
 	sort.Strings(errors)
