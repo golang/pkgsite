@@ -5,7 +5,7 @@
  * license that can be found in the LICENSE file.
  */
 
-import { Browser, DirectNavigationOptions, Page } from 'puppeteer';
+import { Browser, Page, ScreenshotOptions, WaitForOptions } from 'puppeteer';
 
 /**
  * global declares global variables available in e2e test files.
@@ -65,8 +65,15 @@ export async function newPage(): Promise<Page> {
     this.global.pageErrors.push(err);
   });
   const go = page.goto;
-  page.goto = (path: string, opts?: DirectNavigationOptions) =>
+  page.goto = (path: string, opts?: WaitForOptions) =>
     go.call(page, GO_DISCOVERY_E2E_BASE_URL + path, { waitUntil: 'networkidle0', ...opts });
+
+  // Setting captureBeyondViewport false to avoid a chromium bug
+  // where the page size becomes unstable during screenshots:
+  // https://github.com/puppeteer/puppeteer/issues/7043.
+  const screenshot = page.screenshot;
+  page.screenshot = (options: ScreenshotOptions) =>
+    screenshot.call(page, { captureBeyondViewport: false, ...options });
   return page;
 }
 

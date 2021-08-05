@@ -25,7 +25,7 @@ afterAll(async () => {
 test('fixed header appears after scrolling', async () => {
   await page.evaluate(() => window.scrollTo({ top: 250 }));
   // Wait for header transition
-  await page.evaluate(() => new Promise(r => setTimeout(r, 250)));
+  await new Promise(r => setTimeout(r, 250));
   const image = await page.screenshot();
   expect(image).toMatchImageSnapshot();
   await page.evaluate(() => window.scrollTo({ top: 0 }));
@@ -33,14 +33,18 @@ test('fixed header appears after scrolling', async () => {
 
 describe('readme', () => {
   test('expands', async () => {
-    await page.click(pg.select('readme-expand'));
+    const expand = pg.select('readme-expand');
+    await page.$eval(expand, el => el.scrollIntoView({ block: 'center' }));
+    await page.click(expand);
     await scrollTop(page);
     const expanded = await page.screenshot({ fullPage: true });
     expect(expanded).toMatchImageSnapshot();
   });
 
   test('collapses', async () => {
-    await page.click(pg.select('readme-collapse'));
+    const collapse = pg.select('readme-collapse');
+    await page.$eval(collapse, el => el.scrollIntoView({ block: 'center' }));
+    await page.click(collapse);
     await scrollTop(page);
     const collapsed = await page.screenshot({ fullPage: true });
     expect(collapsed).toMatchImageSnapshot();
@@ -49,14 +53,18 @@ describe('readme', () => {
 
 describe('directories', () => {
   test('expand', async () => {
-    await page.click(pg.select('directories-toggle'));
+    const toggle = pg.select('directories-toggle');
+    await page.$eval(toggle, el => el.scrollIntoView({ block: 'center' }));
+    await page.click(toggle);
     await scrollTop(page);
     const expanded = await page.screenshot({ fullPage: true });
     expect(expanded).toMatchImageSnapshot();
   });
 
   test('collapse', async () => {
-    await page.click(pg.select('directories-toggle'));
+    const toggle = pg.select('directories-toggle');
+    await page.$eval(toggle, el => el.scrollIntoView({ block: 'center' }));
+    await page.click(toggle);
     await scrollTop(page);
     const collapsed = await page.screenshot({ fullPage: true });
     expect(collapsed).toMatchImageSnapshot();
@@ -92,5 +100,5 @@ test('no page errors', () => {
  */
 async function scrollTop(page: Page): Promise<void> {
   await page.evaluate(() => window.scrollTo({ top: 0 }));
-  await page.evaluate(() => new Promise(r => setTimeout(r, 250)));
+  await new Promise(r => setTimeout(r, 250));
 }

@@ -26,7 +26,7 @@ afterAll(async () => {
 test('fixed header appears after scrolling', async () => {
   await page.evaluate(() => window.scrollTo({ top: 250 }));
   // Wait for header transition
-  await page.evaluate(() => new Promise(r => setTimeout(r, 250)));
+  await new Promise(r => setTimeout(r, 250));
   const image = await page.screenshot();
   expect(image).toMatchImageSnapshot();
 });

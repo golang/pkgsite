@@ -54,6 +54,7 @@ describe('jump to modal', () => {
 
   test('jumps to selected identifier', async () => {
     await page.keyboard.press('Enter');
+    await new Promise(r => setTimeout(r, 250));
     const wrap = await page.screenshot();
     expect(wrap).toMatchImageSnapshot();
   });
