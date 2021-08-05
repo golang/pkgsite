@@ -1,0 +1,14 @@
+pkg gopkg.in/yaml.v2, func Marshal(interface{}) ([]uint8, error)
+pkg gopkg.in/yaml.v2, func Unmarshal([]uint8, interface{}) error
+pkg gopkg.in/yaml.v2, func UnmarshalStrict([]uint8, interface{}) error
+pkg gopkg.in/yaml.v2, method (*TypeError) Error() string
+pkg gopkg.in/yaml.v2, type MapItem struct
+pkg gopkg.in/yaml.v2, type MapItem struct, Key interface{}
+pkg gopkg.in/yaml.v2, type MapItem struct, Value interface{}
+pkg gopkg.in/yaml.v2, type MapSlice []MapItem
+pkg gopkg.in/yaml.v2, type Marshaler interface
+pkg gopkg.in/yaml.v2, type Marshaler interface, MarshalYAML() (interface{}, error)
+pkg gopkg.in/yaml.v2, type TypeError struct
+pkg gopkg.in/yaml.v2, type TypeError struct, Errors []string
+pkg gopkg.in/yaml.v2, type Unmarshaler interface
+pkg gopkg.in/yaml.v2, type Unmarshaler interface, UnmarshalYAML(func(interface{}) error) error

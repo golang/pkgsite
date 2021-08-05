@@ -1,0 +1,10 @@
+pkg gopkg.in/yaml.v2, func NewDecoder(io.Reader) *Decoder
+pkg gopkg.in/yaml.v2, func NewEncoder(io.Writer) *Encoder
+pkg gopkg.in/yaml.v2, method (*Decoder) Decode(interface{}) error
+pkg gopkg.in/yaml.v2, method (*Decoder) SetStrict(bool)
+pkg gopkg.in/yaml.v2, method (*Encoder) Close() error
+pkg gopkg.in/yaml.v2, method (*Encoder) Encode(interface{}) error
+pkg gopkg.in/yaml.v2, type Decoder struct
+pkg gopkg.in/yaml.v2, type Encoder struct
+pkg gopkg.in/yaml.v2, type IsZeroer interface
+pkg gopkg.in/yaml.v2, type IsZeroer interface, IsZero() bool
