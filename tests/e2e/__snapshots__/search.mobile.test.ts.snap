@@ -46,15 +46,15 @@ Object {
     },
     Object {
       "name": "1 – 10 of 100 results",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "Previous",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "1",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "2",
@@ -82,51 +82,51 @@ Object {
     },
     Object {
       "name": "Package pprof serves via its HTTP server runtime profiling data in the format expected by the pprof visualization tool.",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "Version:",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "go1.16.3",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "|",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "Published:",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "Apr 1, 2021",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "|",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "Imported by:",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "11632",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "|",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "License:",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "BSD-3-Clause",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "net/http/pprof",
@@ -134,51 +134,51 @@ Object {
     },
     Object {
       "name": "Package pprof serves via its HTTP server runtime profiling data in the format expected by the pprof visualization tool.",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "Version:",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "go1.16.3",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "|",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "Published:",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "Apr 1, 2021",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "|",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "Imported by:",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "11632",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "|",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "License:",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "BSD-3-Clause",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "net/http/pprof",
@@ -186,51 +186,51 @@ Object {
     },
     Object {
       "name": "Package pprof serves via its HTTP server runtime profiling data in the format expected by the pprof visualization tool.",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "Version:",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "go1.16.3",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "|",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "Published:",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "Apr 1, 2021",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "|",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "Imported by:",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "11632",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "|",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "License:",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "BSD-3-Clause",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "net/http/pprof",
@@ -238,51 +238,51 @@ Object {
     },
     Object {
       "name": "Package pprof serves via its HTTP server runtime profiling data in the format expected by the pprof visualization tool.",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "Version:",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "go1.16.3",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "|",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "Published:",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "Apr 1, 2021",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "|",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "Imported by:",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "11632",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "|",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "License:",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "BSD-3-Clause",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "net/http/pprof",
@@ -290,51 +290,51 @@ Object {
     },
     Object {
       "name": "Package pprof serves via its HTTP server runtime profiling data in the format expected by the pprof visualization tool.",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "Version:",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "go1.16.3",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "|",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "Published:",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "Apr 1, 2021",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "|",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "Imported by:",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "11632",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "|",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "License:",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "BSD-3-Clause",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "net/http/pprof",
@@ -342,51 +342,51 @@ Object {
     },
     Object {
       "name": "Package pprof serves via its HTTP server runtime profiling data in the format expected by the pprof visualization tool.",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "Version:",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "go1.16.3",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "|",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "Published:",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "Apr 1, 2021",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "|",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "Imported by:",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "11632",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "|",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "License:",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "BSD-3-Clause",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "net/http/pprof",
@@ -394,51 +394,51 @@ Object {
     },
     Object {
       "name": "Package pprof serves via its HTTP server runtime profiling data in the format expected by the pprof visualization tool.",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "Version:",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "go1.16.3",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "|",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "Published:",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "Apr 1, 2021",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "|",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "Imported by:",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "11632",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "|",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "License:",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "BSD-3-Clause",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "net/http/pprof",
@@ -446,51 +446,51 @@ Object {
     },
     Object {
       "name": "Package pprof serves via its HTTP server runtime profiling data in the format expected by the pprof visualization tool.",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "Version:",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "go1.16.3",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "|",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "Published:",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "Apr 1, 2021",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "|",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "Imported by:",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "11632",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "|",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "License:",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "BSD-3-Clause",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "net/http/pprof",
@@ -498,51 +498,51 @@ Object {
     },
     Object {
       "name": "Package pprof serves via its HTTP server runtime profiling data in the format expected by the pprof visualization tool.",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "Version:",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "go1.16.3",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "|",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "Published:",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "Apr 1, 2021",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "|",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "Imported by:",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "11632",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "|",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "License:",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "BSD-3-Clause",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "net/http/pprof",
@@ -550,59 +550,59 @@ Object {
     },
     Object {
       "name": "Package pprof serves via its HTTP server runtime profiling data in the format expected by the pprof visualization tool.",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "Version:",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "go1.16.3",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "|",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "Published:",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "Apr 1, 2021",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "|",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "Imported by:",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "11632",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "|",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "License:",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "BSD-3-Clause",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "Previous",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "1",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "2",
@@ -742,6 +742,6 @@ Object {
     },
   ],
   "name": "http - Search Results · pkg.go.dev",
-  "role": "WebArea",
+  "role": "RootWebArea",
 }
 `;

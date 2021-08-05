@@ -46,7 +46,7 @@ Object {
     },
     Object {
       "name": "Check that you entered the URL correctly, try fetching it following the",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "instructions here",
@@ -54,7 +54,7 @@ Object {
     },
     Object {
       "name": ", or request to add “github.com/package/does/not/exist” to pkg.go.dev.",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "Request “github.com/package/does/not/exist”",
@@ -178,7 +178,7 @@ Object {
     },
   ],
   "name": "github.com/package/does/not/exist · pkg.go.dev",
-  "role": "WebArea",
+  "role": "RootWebArea",
 }
 `;
 
@@ -224,11 +224,11 @@ Object {
     },
     Object {
       "name": "Create a badge to link to pkg.go.dev from your project website or README file.",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "Badge",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "Go Reference",
@@ -236,7 +236,7 @@ Object {
     },
     Object {
       "name": "URL",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "URL",
@@ -252,7 +252,7 @@ Object {
     },
     Object {
       "name": "Type a pkg.go.dev URL above to create a badge link.",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "Why Go",
@@ -372,7 +372,7 @@ Object {
     },
   ],
   "name": "Badge · pkg.go.dev",
-  "role": "WebArea",
+  "role": "RootWebArea",
 }
 `;
 
@@ -422,7 +422,7 @@ Object {
     },
     Object {
       "name": "To search for packages like bad.package,",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "click here",
@@ -430,7 +430,7 @@ Object {
     },
     Object {
       "name": ".",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "Why Go",
@@ -550,7 +550,7 @@ Object {
     },
   ],
   "name": "400 Bad Request · pkg.go.dev",
-  "role": "WebArea",
+  "role": "RootWebArea",
 }
 `;
 
@@ -601,7 +601,7 @@ Object {
     },
     Object {
       "name": "EXAMPLE SEARCHES:",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "“http”",
@@ -621,7 +621,7 @@ Object {
     },
     Object {
       "name": "Frequently asked questions:",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "How can I add a package?",
@@ -753,7 +753,7 @@ Object {
     },
   ],
   "name": "pkg.go.dev",
-  "role": "WebArea",
+  "role": "RootWebArea",
 }
 `;
 
@@ -799,15 +799,15 @@ Object {
     },
     Object {
       "name": "The Go website displays license information in order to help users evaluate packages for their intended use. Licenses are detected using heuristics based on their file name and contents. We hope this information is helpful, but this is not legal advice and we do not make any guarantees regarding the accuracy of our license detection.",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "If we are not able to detect one of the licenses below, only limited package and module information will be made available. If you are a package author seeking to make your content available on the Go website, please be aware that our detection algorithms can be affected by any modifications of the license text, or by the use of an uncommon license file name.",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "We currently use",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "github.com/google/licensecheck",
@@ -815,15 +815,15 @@ Object {
     },
     Object {
       "name": "for license detection, and look for licenses in files with the following names: COPYING, COPYING.md, COPYING.markdown, COPYING.txt, LICENCE, LICENCE.md, LICENCE.markdown, LICENCE.txt, LICENSE, LICENSE.md, LICENSE.markdown, LICENSE.txt, LICENSE-2.0.txt, LICENCE-2.0.txt, LICENSE-APACHE, LICENCE-APACHE, LICENSE-APACHE-2.0.txt, LICENCE-APACHE-2.0.txt, LICENSE-MIT, LICENCE-MIT, LICENSE.MIT, LICENCE.MIT, LICENSE.code, LICENCE.code, LICENSE.docs, LICENCE.docs, LICENSE.rst, LICENCE.rst, MIT-LICENSE, MIT-LICENCE, MIT-LICENSE.md, MIT-LICENCE.md, MIT-LICENSE.markdown, MIT-LICENCE.markdown, MIT-LICENSE.txt, MIT-LICENCE.txt, MIT_LICENSE, MIT_LICENCE, UNLICENSE, UNLICENCE. The match is case-insensitive.",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "We currently detect and recognize the following licenses:",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "•",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "0BSD",
@@ -831,7 +831,7 @@ Object {
     },
     Object {
       "name": "•",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "AFL-3.0",
@@ -839,7 +839,7 @@ Object {
     },
     Object {
       "name": "•",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "AGPL-3.0",
@@ -847,7 +847,7 @@ Object {
     },
     Object {
       "name": "•",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "AGPL-3.0-only",
@@ -855,7 +855,7 @@ Object {
     },
     Object {
       "name": "•",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "AGPL-3.0-or-later",
@@ -863,7 +863,7 @@ Object {
     },
     Object {
       "name": "•",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "Apache-1.1",
@@ -871,7 +871,7 @@ Object {
     },
     Object {
       "name": "•",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "Apache-2.0",
@@ -879,7 +879,7 @@ Object {
     },
     Object {
       "name": "•",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "Artistic-2.0",
@@ -887,7 +887,7 @@ Object {
     },
     Object {
       "name": "•",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "BSD-1-Clause",
@@ -895,7 +895,7 @@ Object {
     },
     Object {
       "name": "•",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "BSD-2-Clause",
@@ -903,7 +903,7 @@ Object {
     },
     Object {
       "name": "•",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "BSD-2-Clause-Patent",
@@ -911,7 +911,7 @@ Object {
     },
     Object {
       "name": "•",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "BSD-2-Clause-Views",
@@ -919,7 +919,7 @@ Object {
     },
     Object {
       "name": "•",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "BSD-3-Clause",
@@ -927,7 +927,7 @@ Object {
     },
     Object {
       "name": "•",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "BSD-3-Clause-Clear",
@@ -935,7 +935,7 @@ Object {
     },
     Object {
       "name": "•",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "BSD-3-Clause-Open-MPI",
@@ -943,7 +943,7 @@ Object {
     },
     Object {
       "name": "•",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "BSD-4-Clause",
@@ -951,7 +951,7 @@ Object {
     },
     Object {
       "name": "•",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "BSD-4-Clause-UC",
@@ -959,7 +959,7 @@ Object {
     },
     Object {
       "name": "•",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "BSL-1.0",
@@ -967,7 +967,7 @@ Object {
     },
     Object {
       "name": "•",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "BlueOak-1.0.0",
@@ -975,7 +975,7 @@ Object {
     },
     Object {
       "name": "•",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "CC-BY-3.0",
@@ -983,7 +983,7 @@ Object {
     },
     Object {
       "name": "•",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "CC-BY-4.0",
@@ -991,7 +991,7 @@ Object {
     },
     Object {
       "name": "•",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "CC-BY-SA-3.0",
@@ -999,7 +999,7 @@ Object {
     },
     Object {
       "name": "•",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "CC-BY-SA-4.0",
@@ -1007,7 +1007,7 @@ Object {
     },
     Object {
       "name": "•",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "CC0-1.0",
@@ -1015,7 +1015,7 @@ Object {
     },
     Object {
       "name": "•",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "EPL-1.0",
@@ -1023,7 +1023,7 @@ Object {
     },
     Object {
       "name": "•",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "EPL-2.0",
@@ -1031,7 +1031,7 @@ Object {
     },
     Object {
       "name": "•",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "EUPL-1.2",
@@ -1039,7 +1039,7 @@ Object {
     },
     Object {
       "name": "•",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "GPL-2.0",
@@ -1047,7 +1047,7 @@ Object {
     },
     Object {
       "name": "•",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "GPL-2.0-only",
@@ -1055,7 +1055,7 @@ Object {
     },
     Object {
       "name": "•",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "GPL-2.0-or-later",
@@ -1063,7 +1063,7 @@ Object {
     },
     Object {
       "name": "•",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "GPL-3.0",
@@ -1071,7 +1071,7 @@ Object {
     },
     Object {
       "name": "•",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "GPL-3.0-only",
@@ -1079,7 +1079,7 @@ Object {
     },
     Object {
       "name": "•",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "GPL-3.0-or-later",
@@ -1087,7 +1087,7 @@ Object {
     },
     Object {
       "name": "•",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "HPND",
@@ -1095,7 +1095,7 @@ Object {
     },
     Object {
       "name": "•",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "ISC",
@@ -1103,7 +1103,7 @@ Object {
     },
     Object {
       "name": "•",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "JSON",
@@ -1111,7 +1111,7 @@ Object {
     },
     Object {
       "name": "•",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "LGPL-2.1",
@@ -1119,7 +1119,7 @@ Object {
     },
     Object {
       "name": "•",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "LGPL-2.1-or-later",
@@ -1127,7 +1127,7 @@ Object {
     },
     Object {
       "name": "•",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "LGPL-3.0",
@@ -1135,7 +1135,7 @@ Object {
     },
     Object {
       "name": "•",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "LGPL-3.0-or-later",
@@ -1143,7 +1143,7 @@ Object {
     },
     Object {
       "name": "•",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "MIT",
@@ -1151,7 +1151,7 @@ Object {
     },
     Object {
       "name": "•",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "MIT-0",
@@ -1159,7 +1159,7 @@ Object {
     },
     Object {
       "name": "•",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "MPL-2.0",
@@ -1167,7 +1167,7 @@ Object {
     },
     Object {
       "name": "•",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "MPL-2.0-no-copyleft-exception",
@@ -1175,7 +1175,7 @@ Object {
     },
     Object {
       "name": "•",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "NCSA",
@@ -1183,7 +1183,7 @@ Object {
     },
     Object {
       "name": "•",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "NIST-PD",
@@ -1191,7 +1191,7 @@ Object {
     },
     Object {
       "name": "•",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "NIST-PD-fallback",
@@ -1199,7 +1199,7 @@ Object {
     },
     Object {
       "name": "•",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "OSL-3.0",
@@ -1207,7 +1207,7 @@ Object {
     },
     Object {
       "name": "•",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "OpenSSL",
@@ -1215,7 +1215,7 @@ Object {
     },
     Object {
       "name": "•",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "PostgreSQL",
@@ -1223,7 +1223,7 @@ Object {
     },
     Object {
       "name": "•",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "Python-2.0",
@@ -1231,7 +1231,7 @@ Object {
     },
     Object {
       "name": "•",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "UPL-1.0",
@@ -1239,7 +1239,7 @@ Object {
     },
     Object {
       "name": "•",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "Unlicense",
@@ -1247,7 +1247,7 @@ Object {
     },
     Object {
       "name": "•",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "Zlib",
@@ -1255,7 +1255,7 @@ Object {
     },
     Object {
       "name": "If you use a package whose license is not detected, please inform the package author. If you are a package author who believes a license for one of your packages should have been detected and was not, please check for discrepancies between your license and the official text. If you still believe there is an error, please",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "file an issue",
@@ -1263,7 +1263,7 @@ Object {
     },
     Object {
       "name": ".",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "Why Go",
@@ -1383,7 +1383,7 @@ Object {
     },
   ],
   "name": "License Policy · pkg.go.dev",
-  "role": "WebArea",
+  "role": "RootWebArea",
 }
 `;
 
@@ -1429,7 +1429,7 @@ Object {
     },
     Object {
       "name": "You can use symbols or words in your search to make your search results more precise.",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "level": 2,
@@ -1438,7 +1438,7 @@ Object {
     },
     Object {
       "name": "Put a word or phrase inside quotes. For example,",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "\\"go cloud\\"",
@@ -1446,7 +1446,7 @@ Object {
     },
     Object {
       "name": ".",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "level": 2,
@@ -1455,7 +1455,7 @@ Object {
     },
     Object {
       "name": "Put OR between each search query. For example,",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "yaml OR json",
@@ -1463,7 +1463,7 @@ Object {
     },
     Object {
       "name": ".",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "level": 2,
@@ -1472,7 +1472,7 @@ Object {
     },
     Object {
       "name": "You can search for a package by its full or partial import path. For example,",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "go/packages",
@@ -1480,11 +1480,11 @@ Object {
     },
     Object {
       "name": ".",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "If the query matches a package import path, you will be redirected to the package details page for the latest version of that package. For example,",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "golang.org/x/tools/go/packages",
@@ -1492,7 +1492,7 @@ Object {
     },
     Object {
       "name": ".",
-      "role": "text",
+      "role": "StaticText",
     },
     Object {
       "name": "Why Go",
@@ -1612,6 +1612,6 @@ Object {
     },
   ],
   "name": "Search Help · pkg.go.dev",
-  "role": "WebArea",
+  "role": "RootWebArea",
 }
 `;
