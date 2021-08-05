@@ -179,7 +179,9 @@ func parseRow(s string) (vr versionedRow, ok bool) {
 		return
 	}
 	rest := s[len("pkg "):]
-	endPkg := strings.IndexFunc(rest, func(r rune) bool { return !(unicode.IsLetter(r) || r == '.' || r == '/' || unicode.IsDigit(r)) })
+	endPkg := strings.IndexFunc(rest, func(r rune) bool {
+		return !(unicode.IsLetter(r) || r == '.' || r == '/' || r == '-' || unicode.IsDigit(r))
+	})
 	if endPkg == -1 {
 		return
 	}
