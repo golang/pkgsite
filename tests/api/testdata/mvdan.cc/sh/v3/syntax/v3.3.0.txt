@@ -1,0 +1,2 @@
+pkg mvdan.cc/sh/v3/syntax, func IsKeyword(string) bool
+pkg mvdan.cc/sh/v3/syntax, func SingleLine(bool) PrinterOption

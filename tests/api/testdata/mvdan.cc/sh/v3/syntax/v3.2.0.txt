@@ -1,0 +1,10 @@
+pkg mvdan.cc/sh/v3/syntax, const LangBats = 3
+pkg mvdan.cc/sh/v3/syntax, const LangBats LangVariant
+pkg mvdan.cc/sh/v3/syntax, method (*LangVariant) Set(string) error
+pkg mvdan.cc/sh/v3/syntax, method (*TestDecl) End() Pos
+pkg mvdan.cc/sh/v3/syntax, method (*TestDecl) Pos() Pos
+pkg mvdan.cc/sh/v3/syntax, type FuncDecl struct, Parens bool
+pkg mvdan.cc/sh/v3/syntax, type TestDecl struct
+pkg mvdan.cc/sh/v3/syntax, type TestDecl struct, Body *Stmt
+pkg mvdan.cc/sh/v3/syntax, type TestDecl struct, Description *Word
+pkg mvdan.cc/sh/v3/syntax, type TestDecl struct, Position Pos

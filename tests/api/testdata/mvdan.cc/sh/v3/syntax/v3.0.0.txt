@@ -1,0 +1,648 @@
+pkg mvdan.cc/sh/v3/syntax, const Add = 68
+pkg mvdan.cc/sh/v3/syntax, const Add BinAritOperator
+pkg mvdan.cc/sh/v3/syntax, const AddAssgn = 44
+pkg mvdan.cc/sh/v3/syntax, const AddAssgn BinAritOperator
+pkg mvdan.cc/sh/v3/syntax, const AlternateUnset = 68
+pkg mvdan.cc/sh/v3/syntax, const AlternateUnset ParExpOperator
+pkg mvdan.cc/sh/v3/syntax, const AlternateUnsetOrNull = 69
+pkg mvdan.cc/sh/v3/syntax, const AlternateUnsetOrNull ParExpOperator
+pkg mvdan.cc/sh/v3/syntax, const And = 9
+pkg mvdan.cc/sh/v3/syntax, const And BinAritOperator
+pkg mvdan.cc/sh/v3/syntax, const AndArit = 10
+pkg mvdan.cc/sh/v3/syntax, const AndArit BinAritOperator
+pkg mvdan.cc/sh/v3/syntax, const AndAssgn = 49
+pkg mvdan.cc/sh/v3/syntax, const AndAssgn BinAritOperator
+pkg mvdan.cc/sh/v3/syntax, const AndStmt = 10
+pkg mvdan.cc/sh/v3/syntax, const AndStmt BinCmdOperator
+pkg mvdan.cc/sh/v3/syntax, const AndTest = 10
+pkg mvdan.cc/sh/v3/syntax, const AndTest BinTestOperator
+pkg mvdan.cc/sh/v3/syntax, const AppAll = 65
+pkg mvdan.cc/sh/v3/syntax, const AppAll RedirOperator
+pkg mvdan.cc/sh/v3/syntax, const AppOut = 55
+pkg mvdan.cc/sh/v3/syntax, const AppOut RedirOperator
+pkg mvdan.cc/sh/v3/syntax, const Assgn = 74
+pkg mvdan.cc/sh/v3/syntax, const Assgn BinAritOperator
+pkg mvdan.cc/sh/v3/syntax, const AssignUnset = 74
+pkg mvdan.cc/sh/v3/syntax, const AssignUnset ParExpOperator
+pkg mvdan.cc/sh/v3/syntax, const AssignUnsetOrNull = 75
+pkg mvdan.cc/sh/v3/syntax, const AssignUnsetOrNull ParExpOperator
+pkg mvdan.cc/sh/v3/syntax, const BitNegation = 35
+pkg mvdan.cc/sh/v3/syntax, const BitNegation UnAritOperator
+pkg mvdan.cc/sh/v3/syntax, const Break = 30
+pkg mvdan.cc/sh/v3/syntax, const Break CaseOperator
+pkg mvdan.cc/sh/v3/syntax, const ClbOut = 60
+pkg mvdan.cc/sh/v3/syntax, const ClbOut RedirOperator
+pkg mvdan.cc/sh/v3/syntax, const CmdIn = 66
+pkg mvdan.cc/sh/v3/syntax, const CmdIn ProcOperator
+pkg mvdan.cc/sh/v3/syntax, const CmdOut = 67
+pkg mvdan.cc/sh/v3/syntax, const CmdOut ProcOperator
+pkg mvdan.cc/sh/v3/syntax, const Comma = 82
+pkg mvdan.cc/sh/v3/syntax, const Comma BinAritOperator
+pkg mvdan.cc/sh/v3/syntax, const DashHdoc = 62
+pkg mvdan.cc/sh/v3/syntax, const DashHdoc RedirOperator
+pkg mvdan.cc/sh/v3/syntax, const Dec = 37
+pkg mvdan.cc/sh/v3/syntax, const Dec UnAritOperator
+pkg mvdan.cc/sh/v3/syntax, const DefaultUnset = 70
+pkg mvdan.cc/sh/v3/syntax, const DefaultUnset ParExpOperator
+pkg mvdan.cc/sh/v3/syntax, const DefaultUnsetOrNull = 71
+pkg mvdan.cc/sh/v3/syntax, const DefaultUnsetOrNull ParExpOperator
+pkg mvdan.cc/sh/v3/syntax, const DplIn = 58
+pkg mvdan.cc/sh/v3/syntax, const DplIn RedirOperator
+pkg mvdan.cc/sh/v3/syntax, const DplOut = 59
+pkg mvdan.cc/sh/v3/syntax, const DplOut RedirOperator
+pkg mvdan.cc/sh/v3/syntax, const Eql = 40
+pkg mvdan.cc/sh/v3/syntax, const Eql BinAritOperator
+pkg mvdan.cc/sh/v3/syntax, const ErrorUnset = 72
+pkg mvdan.cc/sh/v3/syntax, const ErrorUnset ParExpOperator
+pkg mvdan.cc/sh/v3/syntax, const ErrorUnsetOrNull = 73
+pkg mvdan.cc/sh/v3/syntax, const ErrorUnsetOrNull ParExpOperator
+pkg mvdan.cc/sh/v3/syntax, const Fallthrough = 31
+pkg mvdan.cc/sh/v3/syntax, const Fallthrough CaseOperator
+pkg mvdan.cc/sh/v3/syntax, const Geq = 43
+pkg mvdan.cc/sh/v3/syntax, const Geq BinAritOperator
+pkg mvdan.cc/sh/v3/syntax, const GlobExcept = 126
+pkg mvdan.cc/sh/v3/syntax, const GlobExcept GlobOperator
+pkg mvdan.cc/sh/v3/syntax, const GlobOne = 125
+pkg mvdan.cc/sh/v3/syntax, const GlobOne GlobOperator
+pkg mvdan.cc/sh/v3/syntax, const GlobOneOrMore = 124
+pkg mvdan.cc/sh/v3/syntax, const GlobOneOrMore GlobOperator
+pkg mvdan.cc/sh/v3/syntax, const GlobZeroOrMore = 123
+pkg mvdan.cc/sh/v3/syntax, const GlobZeroOrMore GlobOperator
+pkg mvdan.cc/sh/v3/syntax, const GlobZeroOrOne = 122
+pkg mvdan.cc/sh/v3/syntax, const GlobZeroOrOne GlobOperator
+pkg mvdan.cc/sh/v3/syntax, const Gtr = 54
+pkg mvdan.cc/sh/v3/syntax, const Gtr BinAritOperator
+pkg mvdan.cc/sh/v3/syntax, const Hdoc = 61
+pkg mvdan.cc/sh/v3/syntax, const Hdoc RedirOperator
+pkg mvdan.cc/sh/v3/syntax, const Inc = 36
+pkg mvdan.cc/sh/v3/syntax, const Inc UnAritOperator
+pkg mvdan.cc/sh/v3/syntax, const LangBash = 0
+pkg mvdan.cc/sh/v3/syntax, const LangBash LangVariant
+pkg mvdan.cc/sh/v3/syntax, const LangMirBSDKorn = 2
+pkg mvdan.cc/sh/v3/syntax, const LangMirBSDKorn LangVariant
+pkg mvdan.cc/sh/v3/syntax, const LangPOSIX = 1
+pkg mvdan.cc/sh/v3/syntax, const LangPOSIX LangVariant
+pkg mvdan.cc/sh/v3/syntax, const Leq = 42
+pkg mvdan.cc/sh/v3/syntax, const Leq BinAritOperator
+pkg mvdan.cc/sh/v3/syntax, const LowerAll = 83
+pkg mvdan.cc/sh/v3/syntax, const LowerAll ParExpOperator
+pkg mvdan.cc/sh/v3/syntax, const LowerFirst = 82
+pkg mvdan.cc/sh/v3/syntax, const LowerFirst ParExpOperator
+pkg mvdan.cc/sh/v3/syntax, const Lss = 56
+pkg mvdan.cc/sh/v3/syntax, const Lss BinAritOperator
+pkg mvdan.cc/sh/v3/syntax, const Minus = 70
+pkg mvdan.cc/sh/v3/syntax, const Minus UnAritOperator
+pkg mvdan.cc/sh/v3/syntax, const Mul = 38
+pkg mvdan.cc/sh/v3/syntax, const Mul BinAritOperator
+pkg mvdan.cc/sh/v3/syntax, const MulAssgn = 46
+pkg mvdan.cc/sh/v3/syntax, const MulAssgn BinAritOperator
+pkg mvdan.cc/sh/v3/syntax, const NamesPrefix = 38
+pkg mvdan.cc/sh/v3/syntax, const NamesPrefix ParNamesOperator
+pkg mvdan.cc/sh/v3/syntax, const NamesPrefixWords = 84
+pkg mvdan.cc/sh/v3/syntax, const NamesPrefixWords ParNamesOperator
+pkg mvdan.cc/sh/v3/syntax, const Neq = 41
+pkg mvdan.cc/sh/v3/syntax, const Neq BinAritOperator
+pkg mvdan.cc/sh/v3/syntax, const Not = 34
+pkg mvdan.cc/sh/v3/syntax, const Not UnAritOperator
+pkg mvdan.cc/sh/v3/syntax, const Or = 12
+pkg mvdan.cc/sh/v3/syntax, const Or BinAritOperator
+pkg mvdan.cc/sh/v3/syntax, const OrArit = 11
+pkg mvdan.cc/sh/v3/syntax, const OrArit BinAritOperator
+pkg mvdan.cc/sh/v3/syntax, const OrAssgn = 50
+pkg mvdan.cc/sh/v3/syntax, const OrAssgn BinAritOperator
+pkg mvdan.cc/sh/v3/syntax, const OrStmt = 11
+pkg mvdan.cc/sh/v3/syntax, const OrStmt BinCmdOperator
+pkg mvdan.cc/sh/v3/syntax, const OrTest = 11
+pkg mvdan.cc/sh/v3/syntax, const OrTest BinTestOperator
+pkg mvdan.cc/sh/v3/syntax, const OtherParamOps = 84
+pkg mvdan.cc/sh/v3/syntax, const OtherParamOps ParExpOperator
+pkg mvdan.cc/sh/v3/syntax, const Pipe = 12
+pkg mvdan.cc/sh/v3/syntax, const Pipe BinCmdOperator
+pkg mvdan.cc/sh/v3/syntax, const PipeAll = 13
+pkg mvdan.cc/sh/v3/syntax, const PipeAll BinCmdOperator
+pkg mvdan.cc/sh/v3/syntax, const Plus = 68
+pkg mvdan.cc/sh/v3/syntax, const Plus UnAritOperator
+pkg mvdan.cc/sh/v3/syntax, const Pow = 39
+pkg mvdan.cc/sh/v3/syntax, const Pow BinAritOperator
+pkg mvdan.cc/sh/v3/syntax, const Quo = 85
+pkg mvdan.cc/sh/v3/syntax, const Quo BinAritOperator
+pkg mvdan.cc/sh/v3/syntax, const QuoAssgn = 47
+pkg mvdan.cc/sh/v3/syntax, const QuoAssgn BinAritOperator
+pkg mvdan.cc/sh/v3/syntax, const RdrAll = 64
+pkg mvdan.cc/sh/v3/syntax, const RdrAll RedirOperator
+pkg mvdan.cc/sh/v3/syntax, const RdrIn = 56
+pkg mvdan.cc/sh/v3/syntax, const RdrIn RedirOperator
+pkg mvdan.cc/sh/v3/syntax, const RdrInOut = 57
+pkg mvdan.cc/sh/v3/syntax, const RdrInOut RedirOperator
+pkg mvdan.cc/sh/v3/syntax, const RdrOut = 54
+pkg mvdan.cc/sh/v3/syntax, const RdrOut RedirOperator
+pkg mvdan.cc/sh/v3/syntax, const Rem = 76
+pkg mvdan.cc/sh/v3/syntax, const Rem BinAritOperator
+pkg mvdan.cc/sh/v3/syntax, const RemAssgn = 48
+pkg mvdan.cc/sh/v3/syntax, const RemAssgn BinAritOperator
+pkg mvdan.cc/sh/v3/syntax, const RemLargePrefix = 79
+pkg mvdan.cc/sh/v3/syntax, const RemLargePrefix ParExpOperator
+pkg mvdan.cc/sh/v3/syntax, const RemLargeSuffix = 77
+pkg mvdan.cc/sh/v3/syntax, const RemLargeSuffix ParExpOperator
+pkg mvdan.cc/sh/v3/syntax, const RemSmallPrefix = 78
+pkg mvdan.cc/sh/v3/syntax, const RemSmallPrefix ParExpOperator
+pkg mvdan.cc/sh/v3/syntax, const RemSmallSuffix = 76
+pkg mvdan.cc/sh/v3/syntax, const RemSmallSuffix ParExpOperator
+pkg mvdan.cc/sh/v3/syntax, const Resume = 32
+pkg mvdan.cc/sh/v3/syntax, const Resume CaseOperator
+pkg mvdan.cc/sh/v3/syntax, const ResumeKorn = 33
+pkg mvdan.cc/sh/v3/syntax, const ResumeKorn CaseOperator
+pkg mvdan.cc/sh/v3/syntax, const Shl = 61
+pkg mvdan.cc/sh/v3/syntax, const Shl BinAritOperator
+pkg mvdan.cc/sh/v3/syntax, const ShlAssgn = 52
+pkg mvdan.cc/sh/v3/syntax, const ShlAssgn BinAritOperator
+pkg mvdan.cc/sh/v3/syntax, const Shr = 55
+pkg mvdan.cc/sh/v3/syntax, const Shr BinAritOperator
+pkg mvdan.cc/sh/v3/syntax, const ShrAssgn = 53
+pkg mvdan.cc/sh/v3/syntax, const ShrAssgn BinAritOperator
+pkg mvdan.cc/sh/v3/syntax, const Sub = 70
+pkg mvdan.cc/sh/v3/syntax, const Sub BinAritOperator
+pkg mvdan.cc/sh/v3/syntax, const SubAssgn = 45
+pkg mvdan.cc/sh/v3/syntax, const SubAssgn BinAritOperator
+pkg mvdan.cc/sh/v3/syntax, const TernColon = 87
+pkg mvdan.cc/sh/v3/syntax, const TernColon BinAritOperator
+pkg mvdan.cc/sh/v3/syntax, const TernQuest = 72
+pkg mvdan.cc/sh/v3/syntax, const TernQuest BinAritOperator
+pkg mvdan.cc/sh/v3/syntax, const TsAfter = 54
+pkg mvdan.cc/sh/v3/syntax, const TsAfter BinTestOperator
+pkg mvdan.cc/sh/v3/syntax, const TsBefore = 56
+pkg mvdan.cc/sh/v3/syntax, const TsBefore BinTestOperator
+pkg mvdan.cc/sh/v3/syntax, const TsBlckSp = 92
+pkg mvdan.cc/sh/v3/syntax, const TsBlckSp UnTestOperator
+pkg mvdan.cc/sh/v3/syntax, const TsCharSp = 91
+pkg mvdan.cc/sh/v3/syntax, const TsCharSp UnTestOperator
+pkg mvdan.cc/sh/v3/syntax, const TsDevIno = 115
+pkg mvdan.cc/sh/v3/syntax, const TsDevIno BinTestOperator
+pkg mvdan.cc/sh/v3/syntax, const TsDirect = 90
+pkg mvdan.cc/sh/v3/syntax, const TsDirect UnTestOperator
+pkg mvdan.cc/sh/v3/syntax, const TsEmpStr = 107
+pkg mvdan.cc/sh/v3/syntax, const TsEmpStr UnTestOperator
+pkg mvdan.cc/sh/v3/syntax, const TsEql = 116
+pkg mvdan.cc/sh/v3/syntax, const TsEql BinTestOperator
+pkg mvdan.cc/sh/v3/syntax, const TsExec = 104
+pkg mvdan.cc/sh/v3/syntax, const TsExec UnTestOperator
+pkg mvdan.cc/sh/v3/syntax, const TsExists = 88
+pkg mvdan.cc/sh/v3/syntax, const TsExists UnTestOperator
+pkg mvdan.cc/sh/v3/syntax, const TsFdTerm = 106
+pkg mvdan.cc/sh/v3/syntax, const TsFdTerm UnTestOperator
+pkg mvdan.cc/sh/v3/syntax, const TsGIDSet = 97
+pkg mvdan.cc/sh/v3/syntax, const TsGIDSet UnTestOperator
+pkg mvdan.cc/sh/v3/syntax, const TsGeq = 119
+pkg mvdan.cc/sh/v3/syntax, const TsGeq BinTestOperator
+pkg mvdan.cc/sh/v3/syntax, const TsGrpOwn = 99
+pkg mvdan.cc/sh/v3/syntax, const TsGrpOwn UnTestOperator
+pkg mvdan.cc/sh/v3/syntax, const TsGtr = 121
+pkg mvdan.cc/sh/v3/syntax, const TsGtr BinTestOperator
+pkg mvdan.cc/sh/v3/syntax, const TsLeq = 118
+pkg mvdan.cc/sh/v3/syntax, const TsLeq BinTestOperator
+pkg mvdan.cc/sh/v3/syntax, const TsLss = 120
+pkg mvdan.cc/sh/v3/syntax, const TsLss BinTestOperator
+pkg mvdan.cc/sh/v3/syntax, const TsMatch = 40
+pkg mvdan.cc/sh/v3/syntax, const TsMatch BinTestOperator
+pkg mvdan.cc/sh/v3/syntax, const TsMatchShort = 74
+pkg mvdan.cc/sh/v3/syntax, const TsMatchShort BinTestOperator
+pkg mvdan.cc/sh/v3/syntax, const TsModif = 101
+pkg mvdan.cc/sh/v3/syntax, const TsModif UnTestOperator
+pkg mvdan.cc/sh/v3/syntax, const TsNempStr = 108
+pkg mvdan.cc/sh/v3/syntax, const TsNempStr UnTestOperator
+pkg mvdan.cc/sh/v3/syntax, const TsNeq = 117
+pkg mvdan.cc/sh/v3/syntax, const TsNeq BinTestOperator
+pkg mvdan.cc/sh/v3/syntax, const TsNewer = 113
+pkg mvdan.cc/sh/v3/syntax, const TsNewer BinTestOperator
+pkg mvdan.cc/sh/v3/syntax, const TsNmPipe = 93
+pkg mvdan.cc/sh/v3/syntax, const TsNmPipe UnTestOperator
+pkg mvdan.cc/sh/v3/syntax, const TsNoEmpty = 105
+pkg mvdan.cc/sh/v3/syntax, const TsNoEmpty UnTestOperator
+pkg mvdan.cc/sh/v3/syntax, const TsNoMatch = 41
+pkg mvdan.cc/sh/v3/syntax, const TsNoMatch BinTestOperator
+pkg mvdan.cc/sh/v3/syntax, const TsNot = 34
+pkg mvdan.cc/sh/v3/syntax, const TsNot UnTestOperator
+pkg mvdan.cc/sh/v3/syntax, const TsOlder = 114
+pkg mvdan.cc/sh/v3/syntax, const TsOlder BinTestOperator
+pkg mvdan.cc/sh/v3/syntax, const TsOptSet = 109
+pkg mvdan.cc/sh/v3/syntax, const TsOptSet UnTestOperator
+pkg mvdan.cc/sh/v3/syntax, const TsReMatch = 112
+pkg mvdan.cc/sh/v3/syntax, const TsReMatch BinTestOperator
+pkg mvdan.cc/sh/v3/syntax, const TsRead = 102
+pkg mvdan.cc/sh/v3/syntax, const TsRead UnTestOperator
+pkg mvdan.cc/sh/v3/syntax, const TsRefVar = 111
+pkg mvdan.cc/sh/v3/syntax, const TsRefVar UnTestOperator
+pkg mvdan.cc/sh/v3/syntax, const TsRegFile = 89
+pkg mvdan.cc/sh/v3/syntax, const TsRegFile UnTestOperator
+pkg mvdan.cc/sh/v3/syntax, const TsSmbLink = 95
+pkg mvdan.cc/sh/v3/syntax, const TsSmbLink UnTestOperator
+pkg mvdan.cc/sh/v3/syntax, const TsSocket = 94
+pkg mvdan.cc/sh/v3/syntax, const TsSocket UnTestOperator
+pkg mvdan.cc/sh/v3/syntax, const TsSticky = 96
+pkg mvdan.cc/sh/v3/syntax, const TsSticky UnTestOperator
+pkg mvdan.cc/sh/v3/syntax, const TsUIDSet = 98
+pkg mvdan.cc/sh/v3/syntax, const TsUIDSet UnTestOperator
+pkg mvdan.cc/sh/v3/syntax, const TsUsrOwn = 100
+pkg mvdan.cc/sh/v3/syntax, const TsUsrOwn UnTestOperator
+pkg mvdan.cc/sh/v3/syntax, const TsVarSet = 110
+pkg mvdan.cc/sh/v3/syntax, const TsVarSet UnTestOperator
+pkg mvdan.cc/sh/v3/syntax, const TsWrite = 103
+pkg mvdan.cc/sh/v3/syntax, const TsWrite UnTestOperator
+pkg mvdan.cc/sh/v3/syntax, const UpperAll = 81
+pkg mvdan.cc/sh/v3/syntax, const UpperAll ParExpOperator
+pkg mvdan.cc/sh/v3/syntax, const UpperFirst = 80
+pkg mvdan.cc/sh/v3/syntax, const UpperFirst ParExpOperator
+pkg mvdan.cc/sh/v3/syntax, const WordHdoc = 63
+pkg mvdan.cc/sh/v3/syntax, const WordHdoc RedirOperator
+pkg mvdan.cc/sh/v3/syntax, const Xor = 80
+pkg mvdan.cc/sh/v3/syntax, const Xor BinAritOperator
+pkg mvdan.cc/sh/v3/syntax, const XorAssgn = 51
+pkg mvdan.cc/sh/v3/syntax, const XorAssgn BinAritOperator
+pkg mvdan.cc/sh/v3/syntax, func BinaryNextLine(bool) PrinterOption
+pkg mvdan.cc/sh/v3/syntax, func DebugPrint(io.Writer, Node) error
+pkg mvdan.cc/sh/v3/syntax, func Indent(uint) PrinterOption
+pkg mvdan.cc/sh/v3/syntax, func IsIncomplete(error) bool
+pkg mvdan.cc/sh/v3/syntax, func KeepComments(bool) ParserOption
+pkg mvdan.cc/sh/v3/syntax, func KeepPadding(bool) PrinterOption
+pkg mvdan.cc/sh/v3/syntax, func Minify(bool) PrinterOption
+pkg mvdan.cc/sh/v3/syntax, func NewParser(...ParserOption) *Parser
+pkg mvdan.cc/sh/v3/syntax, func NewPrinter(...PrinterOption) *Printer
+pkg mvdan.cc/sh/v3/syntax, func Simplify(Node) bool
+pkg mvdan.cc/sh/v3/syntax, func SpaceRedirects(bool) PrinterOption
+pkg mvdan.cc/sh/v3/syntax, func SplitBraces(*Word) bool
+pkg mvdan.cc/sh/v3/syntax, func StopAt(string) ParserOption
+pkg mvdan.cc/sh/v3/syntax, func SwitchCaseIndent(bool) PrinterOption
+pkg mvdan.cc/sh/v3/syntax, func ValidName(string) bool
+pkg mvdan.cc/sh/v3/syntax, func Variant(LangVariant) ParserOption
+pkg mvdan.cc/sh/v3/syntax, func Walk(Node, func(Node) bool)
+pkg mvdan.cc/sh/v3/syntax, method (*ArithmCmd) End() Pos
+pkg mvdan.cc/sh/v3/syntax, method (*ArithmCmd) Pos() Pos
+pkg mvdan.cc/sh/v3/syntax, method (*ArithmExp) End() Pos
+pkg mvdan.cc/sh/v3/syntax, method (*ArithmExp) Pos() Pos
+pkg mvdan.cc/sh/v3/syntax, method (*ArrayElem) End() Pos
+pkg mvdan.cc/sh/v3/syntax, method (*ArrayElem) Pos() Pos
+pkg mvdan.cc/sh/v3/syntax, method (*ArrayExpr) End() Pos
+pkg mvdan.cc/sh/v3/syntax, method (*ArrayExpr) Pos() Pos
+pkg mvdan.cc/sh/v3/syntax, method (*Assign) End() Pos
+pkg mvdan.cc/sh/v3/syntax, method (*Assign) Pos() Pos
+pkg mvdan.cc/sh/v3/syntax, method (*BinaryArithm) End() Pos
+pkg mvdan.cc/sh/v3/syntax, method (*BinaryArithm) Pos() Pos
+pkg mvdan.cc/sh/v3/syntax, method (*BinaryCmd) End() Pos
+pkg mvdan.cc/sh/v3/syntax, method (*BinaryCmd) Pos() Pos
+pkg mvdan.cc/sh/v3/syntax, method (*BinaryTest) End() Pos
+pkg mvdan.cc/sh/v3/syntax, method (*BinaryTest) Pos() Pos
+pkg mvdan.cc/sh/v3/syntax, method (*Block) End() Pos
+pkg mvdan.cc/sh/v3/syntax, method (*Block) Pos() Pos
+pkg mvdan.cc/sh/v3/syntax, method (*BraceExp) End() Pos
+pkg mvdan.cc/sh/v3/syntax, method (*BraceExp) Pos() Pos
+pkg mvdan.cc/sh/v3/syntax, method (*CStyleLoop) End() Pos
+pkg mvdan.cc/sh/v3/syntax, method (*CStyleLoop) Pos() Pos
+pkg mvdan.cc/sh/v3/syntax, method (*CallExpr) End() Pos
+pkg mvdan.cc/sh/v3/syntax, method (*CallExpr) Pos() Pos
+pkg mvdan.cc/sh/v3/syntax, method (*CaseClause) End() Pos
+pkg mvdan.cc/sh/v3/syntax, method (*CaseClause) Pos() Pos
+pkg mvdan.cc/sh/v3/syntax, method (*CaseItem) End() Pos
+pkg mvdan.cc/sh/v3/syntax, method (*CaseItem) Pos() Pos
+pkg mvdan.cc/sh/v3/syntax, method (*CmdSubst) End() Pos
+pkg mvdan.cc/sh/v3/syntax, method (*CmdSubst) Pos() Pos
+pkg mvdan.cc/sh/v3/syntax, method (*Comment) End() Pos
+pkg mvdan.cc/sh/v3/syntax, method (*Comment) Pos() Pos
+pkg mvdan.cc/sh/v3/syntax, method (*CoprocClause) End() Pos
+pkg mvdan.cc/sh/v3/syntax, method (*CoprocClause) Pos() Pos
+pkg mvdan.cc/sh/v3/syntax, method (*DblQuoted) End() Pos
+pkg mvdan.cc/sh/v3/syntax, method (*DblQuoted) Pos() Pos
+pkg mvdan.cc/sh/v3/syntax, method (*DeclClause) End() Pos
+pkg mvdan.cc/sh/v3/syntax, method (*DeclClause) Pos() Pos
+pkg mvdan.cc/sh/v3/syntax, method (*ExtGlob) End() Pos
+pkg mvdan.cc/sh/v3/syntax, method (*ExtGlob) Pos() Pos
+pkg mvdan.cc/sh/v3/syntax, method (*File) End() Pos
+pkg mvdan.cc/sh/v3/syntax, method (*File) Pos() Pos
+pkg mvdan.cc/sh/v3/syntax, method (*ForClause) End() Pos
+pkg mvdan.cc/sh/v3/syntax, method (*ForClause) Pos() Pos
+pkg mvdan.cc/sh/v3/syntax, method (*FuncDecl) End() Pos
+pkg mvdan.cc/sh/v3/syntax, method (*FuncDecl) Pos() Pos
+pkg mvdan.cc/sh/v3/syntax, method (*IfClause) End() Pos
+pkg mvdan.cc/sh/v3/syntax, method (*IfClause) Pos() Pos
+pkg mvdan.cc/sh/v3/syntax, method (*LetClause) End() Pos
+pkg mvdan.cc/sh/v3/syntax, method (*LetClause) Pos() Pos
+pkg mvdan.cc/sh/v3/syntax, method (*Lit) End() Pos
+pkg mvdan.cc/sh/v3/syntax, method (*Lit) Pos() Pos
+pkg mvdan.cc/sh/v3/syntax, method (*ParamExp) End() Pos
+pkg mvdan.cc/sh/v3/syntax, method (*ParamExp) Pos() Pos
+pkg mvdan.cc/sh/v3/syntax, method (*ParenArithm) End() Pos
+pkg mvdan.cc/sh/v3/syntax, method (*ParenArithm) Pos() Pos
+pkg mvdan.cc/sh/v3/syntax, method (*ParenTest) End() Pos
+pkg mvdan.cc/sh/v3/syntax, method (*ParenTest) Pos() Pos
+pkg mvdan.cc/sh/v3/syntax, method (*Parser) Arithmetic(io.Reader) (ArithmExpr, error)
+pkg mvdan.cc/sh/v3/syntax, method (*Parser) Document(io.Reader) (*Word, error)
+pkg mvdan.cc/sh/v3/syntax, method (*Parser) Incomplete() bool
+pkg mvdan.cc/sh/v3/syntax, method (*Parser) Interactive(io.Reader, func([]*Stmt) bool) error
+pkg mvdan.cc/sh/v3/syntax, method (*Parser) Parse(io.Reader, string) (*File, error)
+pkg mvdan.cc/sh/v3/syntax, method (*Parser) Stmts(io.Reader, func(*Stmt) bool) error
+pkg mvdan.cc/sh/v3/syntax, method (*Parser) Words(io.Reader, func(*Word) bool) error
+pkg mvdan.cc/sh/v3/syntax, method (*Printer) Print(io.Writer, Node) error
+pkg mvdan.cc/sh/v3/syntax, method (*ProcSubst) End() Pos
+pkg mvdan.cc/sh/v3/syntax, method (*ProcSubst) Pos() Pos
+pkg mvdan.cc/sh/v3/syntax, method (*Redirect) End() Pos
+pkg mvdan.cc/sh/v3/syntax, method (*Redirect) Pos() Pos
+pkg mvdan.cc/sh/v3/syntax, method (*SglQuoted) End() Pos
+pkg mvdan.cc/sh/v3/syntax, method (*SglQuoted) Pos() Pos
+pkg mvdan.cc/sh/v3/syntax, method (*Stmt) End() Pos
+pkg mvdan.cc/sh/v3/syntax, method (*Stmt) Pos() Pos
+pkg mvdan.cc/sh/v3/syntax, method (*Subshell) End() Pos
+pkg mvdan.cc/sh/v3/syntax, method (*Subshell) Pos() Pos
+pkg mvdan.cc/sh/v3/syntax, method (*TestClause) End() Pos
+pkg mvdan.cc/sh/v3/syntax, method (*TestClause) Pos() Pos
+pkg mvdan.cc/sh/v3/syntax, method (*TimeClause) End() Pos
+pkg mvdan.cc/sh/v3/syntax, method (*TimeClause) Pos() Pos
+pkg mvdan.cc/sh/v3/syntax, method (*UnaryArithm) End() Pos
+pkg mvdan.cc/sh/v3/syntax, method (*UnaryArithm) Pos() Pos
+pkg mvdan.cc/sh/v3/syntax, method (*UnaryTest) End() Pos
+pkg mvdan.cc/sh/v3/syntax, method (*UnaryTest) Pos() Pos
+pkg mvdan.cc/sh/v3/syntax, method (*WhileClause) End() Pos
+pkg mvdan.cc/sh/v3/syntax, method (*WhileClause) Pos() Pos
+pkg mvdan.cc/sh/v3/syntax, method (*Word) End() Pos
+pkg mvdan.cc/sh/v3/syntax, method (*Word) Lit() string
+pkg mvdan.cc/sh/v3/syntax, method (*Word) Pos() Pos
+pkg mvdan.cc/sh/v3/syntax, method (*WordIter) End() Pos
+pkg mvdan.cc/sh/v3/syntax, method (*WordIter) Pos() Pos
+pkg mvdan.cc/sh/v3/syntax, method (BinAritOperator) String() string
+pkg mvdan.cc/sh/v3/syntax, method (BinCmdOperator) String() string
+pkg mvdan.cc/sh/v3/syntax, method (BinTestOperator) String() string
+pkg mvdan.cc/sh/v3/syntax, method (CaseOperator) String() string
+pkg mvdan.cc/sh/v3/syntax, method (GlobOperator) String() string
+pkg mvdan.cc/sh/v3/syntax, method (LangError) Error() string
+pkg mvdan.cc/sh/v3/syntax, method (LangVariant) String() string
+pkg mvdan.cc/sh/v3/syntax, method (ParExpOperator) String() string
+pkg mvdan.cc/sh/v3/syntax, method (ParNamesOperator) String() string
+pkg mvdan.cc/sh/v3/syntax, method (ParseError) Error() string
+pkg mvdan.cc/sh/v3/syntax, method (Pos) After(Pos) bool
+pkg mvdan.cc/sh/v3/syntax, method (Pos) Col() uint
+pkg mvdan.cc/sh/v3/syntax, method (Pos) IsValid() bool
+pkg mvdan.cc/sh/v3/syntax, method (Pos) Line() uint
+pkg mvdan.cc/sh/v3/syntax, method (Pos) Offset() uint
+pkg mvdan.cc/sh/v3/syntax, method (Pos) String() string
+pkg mvdan.cc/sh/v3/syntax, method (ProcOperator) String() string
+pkg mvdan.cc/sh/v3/syntax, method (RedirOperator) String() string
+pkg mvdan.cc/sh/v3/syntax, method (UnAritOperator) String() string
+pkg mvdan.cc/sh/v3/syntax, method (UnTestOperator) String() string
+pkg mvdan.cc/sh/v3/syntax, type ArithmCmd struct
+pkg mvdan.cc/sh/v3/syntax, type ArithmCmd struct, Left Pos
+pkg mvdan.cc/sh/v3/syntax, type ArithmCmd struct, Right Pos
+pkg mvdan.cc/sh/v3/syntax, type ArithmCmd struct, Unsigned bool
+pkg mvdan.cc/sh/v3/syntax, type ArithmCmd struct, X ArithmExpr
+pkg mvdan.cc/sh/v3/syntax, type ArithmExp struct
+pkg mvdan.cc/sh/v3/syntax, type ArithmExp struct, Bracket bool
+pkg mvdan.cc/sh/v3/syntax, type ArithmExp struct, Left Pos
+pkg mvdan.cc/sh/v3/syntax, type ArithmExp struct, Right Pos
+pkg mvdan.cc/sh/v3/syntax, type ArithmExp struct, Unsigned bool
+pkg mvdan.cc/sh/v3/syntax, type ArithmExp struct, X ArithmExpr
+pkg mvdan.cc/sh/v3/syntax, type ArithmExpr interface
+pkg mvdan.cc/sh/v3/syntax, type ArrayElem struct
+pkg mvdan.cc/sh/v3/syntax, type ArrayElem struct, Comments []Comment
+pkg mvdan.cc/sh/v3/syntax, type ArrayElem struct, Index ArithmExpr
+pkg mvdan.cc/sh/v3/syntax, type ArrayElem struct, Value *Word
+pkg mvdan.cc/sh/v3/syntax, type ArrayExpr struct
+pkg mvdan.cc/sh/v3/syntax, type ArrayExpr struct, Elems []*ArrayElem
+pkg mvdan.cc/sh/v3/syntax, type ArrayExpr struct, Last []Comment
+pkg mvdan.cc/sh/v3/syntax, type ArrayExpr struct, Lparen Pos
+pkg mvdan.cc/sh/v3/syntax, type ArrayExpr struct, Rparen Pos
+pkg mvdan.cc/sh/v3/syntax, type Assign struct
+pkg mvdan.cc/sh/v3/syntax, type Assign struct, Append bool
+pkg mvdan.cc/sh/v3/syntax, type Assign struct, Array *ArrayExpr
+pkg mvdan.cc/sh/v3/syntax, type Assign struct, Index ArithmExpr
+pkg mvdan.cc/sh/v3/syntax, type Assign struct, Naked bool
+pkg mvdan.cc/sh/v3/syntax, type Assign struct, Name *Lit
+pkg mvdan.cc/sh/v3/syntax, type Assign struct, Value *Word
+pkg mvdan.cc/sh/v3/syntax, type BinAritOperator uint32
+pkg mvdan.cc/sh/v3/syntax, type BinCmdOperator uint32
+pkg mvdan.cc/sh/v3/syntax, type BinTestOperator uint32
+pkg mvdan.cc/sh/v3/syntax, type BinaryArithm struct
+pkg mvdan.cc/sh/v3/syntax, type BinaryArithm struct, Op BinAritOperator
+pkg mvdan.cc/sh/v3/syntax, type BinaryArithm struct, OpPos Pos
+pkg mvdan.cc/sh/v3/syntax, type BinaryArithm struct, X ArithmExpr
+pkg mvdan.cc/sh/v3/syntax, type BinaryArithm struct, Y ArithmExpr
+pkg mvdan.cc/sh/v3/syntax, type BinaryCmd struct
+pkg mvdan.cc/sh/v3/syntax, type BinaryCmd struct, Op BinCmdOperator
+pkg mvdan.cc/sh/v3/syntax, type BinaryCmd struct, OpPos Pos
+pkg mvdan.cc/sh/v3/syntax, type BinaryCmd struct, X *Stmt
+pkg mvdan.cc/sh/v3/syntax, type BinaryCmd struct, Y *Stmt
+pkg mvdan.cc/sh/v3/syntax, type BinaryTest struct
+pkg mvdan.cc/sh/v3/syntax, type BinaryTest struct, Op BinTestOperator
+pkg mvdan.cc/sh/v3/syntax, type BinaryTest struct, OpPos Pos
+pkg mvdan.cc/sh/v3/syntax, type BinaryTest struct, X TestExpr
+pkg mvdan.cc/sh/v3/syntax, type BinaryTest struct, Y TestExpr
+pkg mvdan.cc/sh/v3/syntax, type Block struct
+pkg mvdan.cc/sh/v3/syntax, type Block struct, Last []Comment
+pkg mvdan.cc/sh/v3/syntax, type Block struct, Lbrace Pos
+pkg mvdan.cc/sh/v3/syntax, type Block struct, Rbrace Pos
+pkg mvdan.cc/sh/v3/syntax, type Block struct, Stmts []*Stmt
+pkg mvdan.cc/sh/v3/syntax, type BraceExp struct
+pkg mvdan.cc/sh/v3/syntax, type BraceExp struct, Elems []*Word
+pkg mvdan.cc/sh/v3/syntax, type BraceExp struct, Sequence bool
+pkg mvdan.cc/sh/v3/syntax, type CStyleLoop struct
+pkg mvdan.cc/sh/v3/syntax, type CStyleLoop struct, Cond ArithmExpr
+pkg mvdan.cc/sh/v3/syntax, type CStyleLoop struct, Init ArithmExpr
+pkg mvdan.cc/sh/v3/syntax, type CStyleLoop struct, Lparen Pos
+pkg mvdan.cc/sh/v3/syntax, type CStyleLoop struct, Post ArithmExpr
+pkg mvdan.cc/sh/v3/syntax, type CStyleLoop struct, Rparen Pos
+pkg mvdan.cc/sh/v3/syntax, type CallExpr struct
+pkg mvdan.cc/sh/v3/syntax, type CallExpr struct, Args []*Word
+pkg mvdan.cc/sh/v3/syntax, type CallExpr struct, Assigns []*Assign
+pkg mvdan.cc/sh/v3/syntax, type CaseClause struct
+pkg mvdan.cc/sh/v3/syntax, type CaseClause struct, Case Pos
+pkg mvdan.cc/sh/v3/syntax, type CaseClause struct, Esac Pos
+pkg mvdan.cc/sh/v3/syntax, type CaseClause struct, Items []*CaseItem
+pkg mvdan.cc/sh/v3/syntax, type CaseClause struct, Last []Comment
+pkg mvdan.cc/sh/v3/syntax, type CaseClause struct, Word *Word
+pkg mvdan.cc/sh/v3/syntax, type CaseItem struct
+pkg mvdan.cc/sh/v3/syntax, type CaseItem struct, Comments []Comment
+pkg mvdan.cc/sh/v3/syntax, type CaseItem struct, Last []Comment
+pkg mvdan.cc/sh/v3/syntax, type CaseItem struct, Op CaseOperator
+pkg mvdan.cc/sh/v3/syntax, type CaseItem struct, OpPos Pos
+pkg mvdan.cc/sh/v3/syntax, type CaseItem struct, Patterns []*Word
+pkg mvdan.cc/sh/v3/syntax, type CaseItem struct, Stmts []*Stmt
+pkg mvdan.cc/sh/v3/syntax, type CaseOperator uint32
+pkg mvdan.cc/sh/v3/syntax, type CmdSubst struct
+pkg mvdan.cc/sh/v3/syntax, type CmdSubst struct, Backquotes bool
+pkg mvdan.cc/sh/v3/syntax, type CmdSubst struct, Last []Comment
+pkg mvdan.cc/sh/v3/syntax, type CmdSubst struct, Left Pos
+pkg mvdan.cc/sh/v3/syntax, type CmdSubst struct, ReplyVar bool
+pkg mvdan.cc/sh/v3/syntax, type CmdSubst struct, Right Pos
+pkg mvdan.cc/sh/v3/syntax, type CmdSubst struct, Stmts []*Stmt
+pkg mvdan.cc/sh/v3/syntax, type CmdSubst struct, TempFile bool
+pkg mvdan.cc/sh/v3/syntax, type Command interface
+pkg mvdan.cc/sh/v3/syntax, type Comment struct
+pkg mvdan.cc/sh/v3/syntax, type Comment struct, Hash Pos
+pkg mvdan.cc/sh/v3/syntax, type Comment struct, Text string
+pkg mvdan.cc/sh/v3/syntax, type CoprocClause struct
+pkg mvdan.cc/sh/v3/syntax, type CoprocClause struct, Coproc Pos
+pkg mvdan.cc/sh/v3/syntax, type CoprocClause struct, Name *Word
+pkg mvdan.cc/sh/v3/syntax, type CoprocClause struct, Stmt *Stmt
+pkg mvdan.cc/sh/v3/syntax, type DblQuoted struct
+pkg mvdan.cc/sh/v3/syntax, type DblQuoted struct, Dollar bool
+pkg mvdan.cc/sh/v3/syntax, type DblQuoted struct, Left Pos
+pkg mvdan.cc/sh/v3/syntax, type DblQuoted struct, Parts []WordPart
+pkg mvdan.cc/sh/v3/syntax, type DblQuoted struct, Right Pos
+pkg mvdan.cc/sh/v3/syntax, type DeclClause struct
+pkg mvdan.cc/sh/v3/syntax, type DeclClause struct, Args []*Assign
+pkg mvdan.cc/sh/v3/syntax, type DeclClause struct, Variant *Lit
+pkg mvdan.cc/sh/v3/syntax, type Expansion struct
+pkg mvdan.cc/sh/v3/syntax, type Expansion struct, Op ParExpOperator
+pkg mvdan.cc/sh/v3/syntax, type Expansion struct, Word *Word
+pkg mvdan.cc/sh/v3/syntax, type ExtGlob struct
+pkg mvdan.cc/sh/v3/syntax, type ExtGlob struct, Op GlobOperator
+pkg mvdan.cc/sh/v3/syntax, type ExtGlob struct, OpPos Pos
+pkg mvdan.cc/sh/v3/syntax, type ExtGlob struct, Pattern *Lit
+pkg mvdan.cc/sh/v3/syntax, type File struct
+pkg mvdan.cc/sh/v3/syntax, type File struct, Last []Comment
+pkg mvdan.cc/sh/v3/syntax, type File struct, Name string
+pkg mvdan.cc/sh/v3/syntax, type File struct, Stmts []*Stmt
+pkg mvdan.cc/sh/v3/syntax, type ForClause struct
+pkg mvdan.cc/sh/v3/syntax, type ForClause struct, Do []*Stmt
+pkg mvdan.cc/sh/v3/syntax, type ForClause struct, DoLast []Comment
+pkg mvdan.cc/sh/v3/syntax, type ForClause struct, DoPos Pos
+pkg mvdan.cc/sh/v3/syntax, type ForClause struct, DonePos Pos
+pkg mvdan.cc/sh/v3/syntax, type ForClause struct, ForPos Pos
+pkg mvdan.cc/sh/v3/syntax, type ForClause struct, Loop Loop
+pkg mvdan.cc/sh/v3/syntax, type ForClause struct, Select bool
+pkg mvdan.cc/sh/v3/syntax, type FuncDecl struct
+pkg mvdan.cc/sh/v3/syntax, type FuncDecl struct, Body *Stmt
+pkg mvdan.cc/sh/v3/syntax, type FuncDecl struct, Name *Lit
+pkg mvdan.cc/sh/v3/syntax, type FuncDecl struct, Position Pos
+pkg mvdan.cc/sh/v3/syntax, type FuncDecl struct, RsrvWord bool
+pkg mvdan.cc/sh/v3/syntax, type GlobOperator uint32
+pkg mvdan.cc/sh/v3/syntax, type IfClause struct
+pkg mvdan.cc/sh/v3/syntax, type IfClause struct, Cond []*Stmt
+pkg mvdan.cc/sh/v3/syntax, type IfClause struct, CondLast []Comment
+pkg mvdan.cc/sh/v3/syntax, type IfClause struct, Else *IfClause
+pkg mvdan.cc/sh/v3/syntax, type IfClause struct, FiPos Pos
+pkg mvdan.cc/sh/v3/syntax, type IfClause struct, Last []Comment
+pkg mvdan.cc/sh/v3/syntax, type IfClause struct, Position Pos
+pkg mvdan.cc/sh/v3/syntax, type IfClause struct, Then []*Stmt
+pkg mvdan.cc/sh/v3/syntax, type IfClause struct, ThenLast []Comment
+pkg mvdan.cc/sh/v3/syntax, type IfClause struct, ThenPos Pos
+pkg mvdan.cc/sh/v3/syntax, type LangError struct
+pkg mvdan.cc/sh/v3/syntax, type LangError struct, Feature string
+pkg mvdan.cc/sh/v3/syntax, type LangError struct, Filename string
+pkg mvdan.cc/sh/v3/syntax, type LangError struct, Langs []LangVariant
+pkg mvdan.cc/sh/v3/syntax, type LangVariant int
+pkg mvdan.cc/sh/v3/syntax, type LetClause struct
+pkg mvdan.cc/sh/v3/syntax, type LetClause struct, Exprs []ArithmExpr
+pkg mvdan.cc/sh/v3/syntax, type LetClause struct, Let Pos
+pkg mvdan.cc/sh/v3/syntax, type Lit struct
+pkg mvdan.cc/sh/v3/syntax, type Lit struct, Value string
+pkg mvdan.cc/sh/v3/syntax, type Lit struct, ValueEnd Pos
+pkg mvdan.cc/sh/v3/syntax, type Lit struct, ValuePos Pos
+pkg mvdan.cc/sh/v3/syntax, type Loop interface
+pkg mvdan.cc/sh/v3/syntax, type Node interface
+pkg mvdan.cc/sh/v3/syntax, type Node interface, End() Pos
+pkg mvdan.cc/sh/v3/syntax, type Node interface, Pos() Pos
+pkg mvdan.cc/sh/v3/syntax, type ParExpOperator uint32
+pkg mvdan.cc/sh/v3/syntax, type ParNamesOperator uint32
+pkg mvdan.cc/sh/v3/syntax, type ParamExp struct
+pkg mvdan.cc/sh/v3/syntax, type ParamExp struct, Dollar Pos
+pkg mvdan.cc/sh/v3/syntax, type ParamExp struct, Excl bool
+pkg mvdan.cc/sh/v3/syntax, type ParamExp struct, Exp *Expansion
+pkg mvdan.cc/sh/v3/syntax, type ParamExp struct, Index ArithmExpr
+pkg mvdan.cc/sh/v3/syntax, type ParamExp struct, Length bool
+pkg mvdan.cc/sh/v3/syntax, type ParamExp struct, Names ParNamesOperator
+pkg mvdan.cc/sh/v3/syntax, type ParamExp struct, Param *Lit
+pkg mvdan.cc/sh/v3/syntax, type ParamExp struct, Rbrace Pos
+pkg mvdan.cc/sh/v3/syntax, type ParamExp struct, Repl *Replace
+pkg mvdan.cc/sh/v3/syntax, type ParamExp struct, Short bool
+pkg mvdan.cc/sh/v3/syntax, type ParamExp struct, Slice *Slice
+pkg mvdan.cc/sh/v3/syntax, type ParamExp struct, Width bool
+pkg mvdan.cc/sh/v3/syntax, type ParenArithm struct
+pkg mvdan.cc/sh/v3/syntax, type ParenArithm struct, Lparen Pos
+pkg mvdan.cc/sh/v3/syntax, type ParenArithm struct, Rparen Pos
+pkg mvdan.cc/sh/v3/syntax, type ParenArithm struct, X ArithmExpr
+pkg mvdan.cc/sh/v3/syntax, type ParenTest struct
+pkg mvdan.cc/sh/v3/syntax, type ParenTest struct, Lparen Pos
+pkg mvdan.cc/sh/v3/syntax, type ParenTest struct, Rparen Pos
+pkg mvdan.cc/sh/v3/syntax, type ParenTest struct, X TestExpr
+pkg mvdan.cc/sh/v3/syntax, type ParseError struct
+pkg mvdan.cc/sh/v3/syntax, type ParseError struct, Filename string
+pkg mvdan.cc/sh/v3/syntax, type ParseError struct, Incomplete bool
+pkg mvdan.cc/sh/v3/syntax, type ParseError struct, Text string
+pkg mvdan.cc/sh/v3/syntax, type Parser struct
+pkg mvdan.cc/sh/v3/syntax, type ParserOption func(*Parser)
+pkg mvdan.cc/sh/v3/syntax, type Pos struct
+pkg mvdan.cc/sh/v3/syntax, type Printer struct
+pkg mvdan.cc/sh/v3/syntax, type PrinterOption func(*Printer)
+pkg mvdan.cc/sh/v3/syntax, type ProcOperator uint32
+pkg mvdan.cc/sh/v3/syntax, type ProcSubst struct
+pkg mvdan.cc/sh/v3/syntax, type ProcSubst struct, Last []Comment
+pkg mvdan.cc/sh/v3/syntax, type ProcSubst struct, Op ProcOperator
+pkg mvdan.cc/sh/v3/syntax, type ProcSubst struct, OpPos Pos
+pkg mvdan.cc/sh/v3/syntax, type ProcSubst struct, Rparen Pos
+pkg mvdan.cc/sh/v3/syntax, type ProcSubst struct, Stmts []*Stmt
+pkg mvdan.cc/sh/v3/syntax, type RedirOperator uint32
+pkg mvdan.cc/sh/v3/syntax, type Redirect struct
+pkg mvdan.cc/sh/v3/syntax, type Redirect struct, Hdoc *Word
+pkg mvdan.cc/sh/v3/syntax, type Redirect struct, N *Lit
+pkg mvdan.cc/sh/v3/syntax, type Redirect struct, Op RedirOperator
+pkg mvdan.cc/sh/v3/syntax, type Redirect struct, OpPos Pos
+pkg mvdan.cc/sh/v3/syntax, type Redirect struct, Word *Word
+pkg mvdan.cc/sh/v3/syntax, type Replace struct
+pkg mvdan.cc/sh/v3/syntax, type Replace struct, All bool
+pkg mvdan.cc/sh/v3/syntax, type Replace struct, Orig *Word
+pkg mvdan.cc/sh/v3/syntax, type Replace struct, With *Word
+pkg mvdan.cc/sh/v3/syntax, type SglQuoted struct
+pkg mvdan.cc/sh/v3/syntax, type SglQuoted struct, Dollar bool
+pkg mvdan.cc/sh/v3/syntax, type SglQuoted struct, Left Pos
+pkg mvdan.cc/sh/v3/syntax, type SglQuoted struct, Right Pos
+pkg mvdan.cc/sh/v3/syntax, type SglQuoted struct, Value string
+pkg mvdan.cc/sh/v3/syntax, type Slice struct
+pkg mvdan.cc/sh/v3/syntax, type Slice struct, Length ArithmExpr
+pkg mvdan.cc/sh/v3/syntax, type Slice struct, Offset ArithmExpr
+pkg mvdan.cc/sh/v3/syntax, type Stmt struct
+pkg mvdan.cc/sh/v3/syntax, type Stmt struct, Background bool
+pkg mvdan.cc/sh/v3/syntax, type Stmt struct, Cmd Command
+pkg mvdan.cc/sh/v3/syntax, type Stmt struct, Comments []Comment
+pkg mvdan.cc/sh/v3/syntax, type Stmt struct, Coprocess bool
+pkg mvdan.cc/sh/v3/syntax, type Stmt struct, Negated bool
+pkg mvdan.cc/sh/v3/syntax, type Stmt struct, Position Pos
+pkg mvdan.cc/sh/v3/syntax, type Stmt struct, Redirs []*Redirect
+pkg mvdan.cc/sh/v3/syntax, type Stmt struct, Semicolon Pos
+pkg mvdan.cc/sh/v3/syntax, type Subshell struct
+pkg mvdan.cc/sh/v3/syntax, type Subshell struct, Last []Comment
+pkg mvdan.cc/sh/v3/syntax, type Subshell struct, Lparen Pos
+pkg mvdan.cc/sh/v3/syntax, type Subshell struct, Rparen Pos
+pkg mvdan.cc/sh/v3/syntax, type Subshell struct, Stmts []*Stmt
+pkg mvdan.cc/sh/v3/syntax, type TestClause struct
+pkg mvdan.cc/sh/v3/syntax, type TestClause struct, Left Pos
+pkg mvdan.cc/sh/v3/syntax, type TestClause struct, Right Pos
+pkg mvdan.cc/sh/v3/syntax, type TestClause struct, X TestExpr
+pkg mvdan.cc/sh/v3/syntax, type TestExpr interface
+pkg mvdan.cc/sh/v3/syntax, type TimeClause struct
+pkg mvdan.cc/sh/v3/syntax, type TimeClause struct, PosixFormat bool
+pkg mvdan.cc/sh/v3/syntax, type TimeClause struct, Stmt *Stmt
+pkg mvdan.cc/sh/v3/syntax, type TimeClause struct, Time Pos
+pkg mvdan.cc/sh/v3/syntax, type UnAritOperator uint32
+pkg mvdan.cc/sh/v3/syntax, type UnTestOperator uint32
+pkg mvdan.cc/sh/v3/syntax, type UnaryArithm struct
+pkg mvdan.cc/sh/v3/syntax, type UnaryArithm struct, Op UnAritOperator
+pkg mvdan.cc/sh/v3/syntax, type UnaryArithm struct, OpPos Pos
+pkg mvdan.cc/sh/v3/syntax, type UnaryArithm struct, Post bool
+pkg mvdan.cc/sh/v3/syntax, type UnaryArithm struct, X ArithmExpr
+pkg mvdan.cc/sh/v3/syntax, type UnaryTest struct
+pkg mvdan.cc/sh/v3/syntax, type UnaryTest struct, Op UnTestOperator
+pkg mvdan.cc/sh/v3/syntax, type UnaryTest struct, OpPos Pos
+pkg mvdan.cc/sh/v3/syntax, type UnaryTest struct, X TestExpr
+pkg mvdan.cc/sh/v3/syntax, type WhileClause struct
+pkg mvdan.cc/sh/v3/syntax, type WhileClause struct, Cond []*Stmt
+pkg mvdan.cc/sh/v3/syntax, type WhileClause struct, CondLast []Comment
+pkg mvdan.cc/sh/v3/syntax, type WhileClause struct, Do []*Stmt
+pkg mvdan.cc/sh/v3/syntax, type WhileClause struct, DoLast []Comment
+pkg mvdan.cc/sh/v3/syntax, type WhileClause struct, DoPos Pos
+pkg mvdan.cc/sh/v3/syntax, type WhileClause struct, DonePos Pos
+pkg mvdan.cc/sh/v3/syntax, type WhileClause struct, Until bool
+pkg mvdan.cc/sh/v3/syntax, type WhileClause struct, WhilePos Pos
+pkg mvdan.cc/sh/v3/syntax, type Word struct
+pkg mvdan.cc/sh/v3/syntax, type Word struct, Parts []WordPart
+pkg mvdan.cc/sh/v3/syntax, type WordIter struct
+pkg mvdan.cc/sh/v3/syntax, type WordIter struct, InPos Pos
+pkg mvdan.cc/sh/v3/syntax, type WordIter struct, Items []*Word
+pkg mvdan.cc/sh/v3/syntax, type WordIter struct, Name *Lit
+pkg mvdan.cc/sh/v3/syntax, type WordPart interface

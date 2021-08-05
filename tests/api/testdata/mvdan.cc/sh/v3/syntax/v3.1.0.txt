@@ -1,0 +1,4 @@
+pkg mvdan.cc/sh/v3/syntax, func FunctionNextLine(bool) PrinterOption
+pkg mvdan.cc/sh/v3/syntax, type CaseClause struct, Braces bool
+pkg mvdan.cc/sh/v3/syntax, type CaseClause struct, In Pos
+pkg mvdan.cc/sh/v3/syntax, type ForClause struct, Braces bool
