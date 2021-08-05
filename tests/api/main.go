@@ -123,9 +123,11 @@ func generate(ctx context.Context, pkgPath, modulePath, tmpPath, proxyURL string
 			return err
 		}
 		if typ != version.TypeRelease {
+			fmt.Printf("----- %s (SKIPPED, not a release version) -----\n", ver)
 			continue
 		}
 		if version.IsIncompatible(ver) {
+			fmt.Printf("----- %s (SKIPPED, incompatible) -----\n", ver)
 			continue
 		}
 		featureCtx, err := fetchFeatureContext(ctx, proxyClient, modulePath, pkgPath, ver, tmpPath)

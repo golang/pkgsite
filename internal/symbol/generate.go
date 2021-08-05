@@ -157,6 +157,12 @@ type listImports struct {
 	importMap map[string]map[string]string // import path → canonical import path
 }
 
+// loadImports is the same as
+// https://go.googlesource.com/go/+/refs/tags/go1.16.6/src/cmd/api/goapi.go#483,
+// except we accept pkgPath as an argument to check that pkg.ImportPath ==
+// pkgPath and retry on various go list errors.
+//
+//
 // loadImports populates w with information about the packages in the standard
 // library and the packages they themselves import in w's build context.
 //
@@ -172,18 +178,10 @@ type listImports struct {
 // Since the set of packages that exist depends on context, the result of
 // loadImports also depends on context. However, to improve test running time
 // the configuration for each environment is cached across runs.
-//
-// loadImports is the same as
-// https://go.googlesource.com/go/+/refs/tags/go1.16.6/src/cmd/api/goapi.go#483,
-// except we accept pkgPath as an argument to check that pkg.ImportPath ==
-// pkgPath.
 func (w *Walker) loadImports(pkgPath string) {
 	if w.context == nil {
 		return // test-only Walker; does not use the import map
 	}
-	name := contextName(w.context)
-	imports, ok := listCache.Load(name)
-
 	generateOutput := func() ([]byte, error) {
 		cmd := exec.Command(goCmd(), "list", "-e", "-deps", "-json")
 		cmd.Env = listEnv(w.context)
@@ -192,25 +190,49 @@ func (w *Walker) loadImports(pkgPath string) {
 		}
 		return cmd.CombinedOutput()
 	}
+
+	goModDownload := func(out []byte) ([]byte, error) {
+		words := strings.Fields(string(out))
+		modPath := words[len(words)-1]
+		cmd := exec.Command("go", "mod", "download", modPath)
+		if w.context.Dir != "" {
+			cmd.Dir = w.context.Dir
+		}
+		return cmd.CombinedOutput()
+	}
+
+	retryOrFail := func(out []byte, err error) {
+		if strings.Contains(string(out), "missing go.sum entry") {
+			out2, err2 := goModDownload(out)
+			if err2 != nil {
+				log.Fatalf("loadImports: initial error: %v\n%s \n\n error running go mod download: %v\n%s",
+					err, string(out), err2, string(out2))
+			}
+			return
+		}
+		log.Fatalf("loadImports: %v\n%s", err, out)
+	}
+
+	name := contextName(w.context)
+	imports, ok := listCache.Load(name)
 	if !ok {
 		listSem <- semToken{}
 		defer func() { <-listSem }()
 		out, err := generateOutput()
 		if err != nil {
-			if strings.Contains(string(out), "missing go.sum entry") {
-				words := strings.Fields(string(out))
-				modPath := words[len(words)-1]
-				cmd := exec.Command("go", "mod", "download", modPath)
-				cmd.Dir = w.context.Dir
-				out2, err2 := cmd.CombinedOutput()
-				if err2 != nil {
-					log.Fatalf("loadImports: initial error: %v\n%s \n\n error running go mod download: %v\n%s",
-						err, string(out), err2, string(out2))
-				}
-			} else {
-				log.Fatalf("loadImports: %v\n%s", err, out)
+			retryOrFail(out, err)
+		}
+		if strings.HasPrefix(string(out), "go: downloading") {
+			// If a module was downloaded, we will see "go: downloading
+			// <module> ..." in the JSON output.
+			// This causes an error in json.NewDecoder below, so run
+			// generateOutput again to avoid that error.
+			out, err = generateOutput()
+			if err != nil {
+				retryOrFail(out, err)
 			}
 		}
+
 		var packages []string
 		importMap := make(map[string]map[string]string)
 		importDir := make(map[string]string)
@@ -226,7 +248,7 @@ func (w *Walker) loadImports(pkgPath string) {
 				break
 			}
 			if err != nil {
-				log.Fatalf("go list: invalid output: %v", err)
+				log.Fatalf("loadImports: go list: invalid output: %v", err)
 			}
 			// - Package "unsafe" contains special signatures requiring
 			//   extra care when printing them - ignore since it is not
