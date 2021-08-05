@@ -1,0 +1,29 @@
+pkg mvdan.cc/sh/syntax, type ArrayExpr struct, List []*Word
+pkg mvdan.cc/sh/syntax, type Assign struct, Value *Word
+pkg mvdan.cc/sh/syntax, type BinAritOperator uint32
+pkg mvdan.cc/sh/syntax, type BinCmdOperator uint32
+pkg mvdan.cc/sh/syntax, type BinTestOperator uint32
+pkg mvdan.cc/sh/syntax, type CallExpr struct, Args []*Word
+pkg mvdan.cc/sh/syntax, type CaseClause struct, Word *Word
+pkg mvdan.cc/sh/syntax, type CaseOperator uint32
+pkg mvdan.cc/sh/syntax, type DeclClause struct, Opts []*Word
+pkg mvdan.cc/sh/syntax, type Expansion struct, Word *Word
+pkg mvdan.cc/sh/syntax, type ExtGlob struct, OpPos Pos
+pkg mvdan.cc/sh/syntax, type ExtGlob struct, Pattern *Lit
+pkg mvdan.cc/sh/syntax, type FuncDecl struct, Name *Lit
+pkg mvdan.cc/sh/syntax, type GlobOperator uint32
+pkg mvdan.cc/sh/syntax, type Lit struct, ValueEnd Pos
+pkg mvdan.cc/sh/syntax, type ParExpOperator uint32
+pkg mvdan.cc/sh/syntax, type ParamExp struct, Param *Lit
+pkg mvdan.cc/sh/syntax, type PatternList struct, Patterns []*Word
+pkg mvdan.cc/sh/syntax, type Pos uint32
+pkg mvdan.cc/sh/syntax, type ProcOperator uint32
+pkg mvdan.cc/sh/syntax, type RedirOperator uint32
+pkg mvdan.cc/sh/syntax, type Redirect struct, Hdoc *Word
+pkg mvdan.cc/sh/syntax, type Redirect struct, Word *Word
+pkg mvdan.cc/sh/syntax, type Replace struct, Orig *Word
+pkg mvdan.cc/sh/syntax, type Replace struct, With *Word
+pkg mvdan.cc/sh/syntax, type UnAritOperator uint32
+pkg mvdan.cc/sh/syntax, type UnTestOperator uint32
+pkg mvdan.cc/sh/syntax, type WordIter struct, List []*Word
+pkg mvdan.cc/sh/syntax, type WordIter struct, Name *Lit

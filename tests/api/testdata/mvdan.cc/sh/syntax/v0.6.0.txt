@@ -1,0 +1,44 @@
+pkg mvdan.cc/sh/syntax, const Colon = 82
+pkg mvdan.cc/sh/syntax, const GlobAt = 116
+pkg mvdan.cc/sh/syntax, const GlobExcl = 117
+pkg mvdan.cc/sh/syntax, const GlobPlus = 115
+pkg mvdan.cc/sh/syntax, const GlobQuest = 113
+pkg mvdan.cc/sh/syntax, const GlobStar = 114
+pkg mvdan.cc/sh/syntax, const OtherParamOps = 79
+pkg mvdan.cc/sh/syntax, const OtherParamOps ParExpOperator
+pkg mvdan.cc/sh/syntax, const Quo = 80
+pkg mvdan.cc/sh/syntax, const TsBlckSp = 87
+pkg mvdan.cc/sh/syntax, const TsCharSp = 86
+pkg mvdan.cc/sh/syntax, const TsDevIno = 106
+pkg mvdan.cc/sh/syntax, const TsDirect = 85
+pkg mvdan.cc/sh/syntax, const TsEmpStr = 98
+pkg mvdan.cc/sh/syntax, const TsEql = 107
+pkg mvdan.cc/sh/syntax, const TsExec = 95
+pkg mvdan.cc/sh/syntax, const TsExists = 83
+pkg mvdan.cc/sh/syntax, const TsFdTerm = 97
+pkg mvdan.cc/sh/syntax, const TsGIDSet = 91
+pkg mvdan.cc/sh/syntax, const TsGeq = 110
+pkg mvdan.cc/sh/syntax, const TsGtr = 112
+pkg mvdan.cc/sh/syntax, const TsLeq = 109
+pkg mvdan.cc/sh/syntax, const TsLss = 111
+pkg mvdan.cc/sh/syntax, const TsNempStr = 99
+pkg mvdan.cc/sh/syntax, const TsNeq = 108
+pkg mvdan.cc/sh/syntax, const TsNewer = 104
+pkg mvdan.cc/sh/syntax, const TsNmPipe = 88
+pkg mvdan.cc/sh/syntax, const TsNoEmpty = 96
+pkg mvdan.cc/sh/syntax, const TsOlder = 105
+pkg mvdan.cc/sh/syntax, const TsOptSet = 100
+pkg mvdan.cc/sh/syntax, const TsReMatch = 103
+pkg mvdan.cc/sh/syntax, const TsRead = 93
+pkg mvdan.cc/sh/syntax, const TsRefVar = 102
+pkg mvdan.cc/sh/syntax, const TsRegFile = 84
+pkg mvdan.cc/sh/syntax, const TsSmbLink = 90
+pkg mvdan.cc/sh/syntax, const TsSocket = 89
+pkg mvdan.cc/sh/syntax, const TsUIDSet = 92
+pkg mvdan.cc/sh/syntax, const TsVarSet = 101
+pkg mvdan.cc/sh/syntax, const TsWrite = 94
+pkg mvdan.cc/sh/syntax, func Parse(io.Reader, string, ParseMode) (*File, error)
+pkg mvdan.cc/sh/syntax, func Walk(Node, func(Node) bool)
+pkg mvdan.cc/sh/syntax, method (Pos) IsValid() bool
+pkg mvdan.cc/sh/syntax, method (Position) IsValid() bool
+pkg mvdan.cc/sh/syntax, type Stmt struct, Semicolon Pos

@@ -1,0 +1,36 @@
+pkg mvdan.cc/sh/syntax, const GlobAt = 121
+pkg mvdan.cc/sh/syntax, const GlobExcl = 122
+pkg mvdan.cc/sh/syntax, const GlobPlus = 120
+pkg mvdan.cc/sh/syntax, const GlobQuest = 118
+pkg mvdan.cc/sh/syntax, const GlobStar = 119
+pkg mvdan.cc/sh/syntax, const TsDevIno = 111
+pkg mvdan.cc/sh/syntax, const TsEmpStr = 103
+pkg mvdan.cc/sh/syntax, const TsEql = 112
+pkg mvdan.cc/sh/syntax, const TsExec = 100
+pkg mvdan.cc/sh/syntax, const TsFdTerm = 102
+pkg mvdan.cc/sh/syntax, const TsGIDSet = 93
+pkg mvdan.cc/sh/syntax, const TsGeq = 115
+pkg mvdan.cc/sh/syntax, const TsGrpOwn = 95
+pkg mvdan.cc/sh/syntax, const TsGrpOwn UnTestOperator
+pkg mvdan.cc/sh/syntax, const TsGtr = 117
+pkg mvdan.cc/sh/syntax, const TsLeq = 114
+pkg mvdan.cc/sh/syntax, const TsLss = 116
+pkg mvdan.cc/sh/syntax, const TsModif = 97
+pkg mvdan.cc/sh/syntax, const TsModif UnTestOperator
+pkg mvdan.cc/sh/syntax, const TsNempStr = 104
+pkg mvdan.cc/sh/syntax, const TsNeq = 113
+pkg mvdan.cc/sh/syntax, const TsNewer = 109
+pkg mvdan.cc/sh/syntax, const TsNoEmpty = 101
+pkg mvdan.cc/sh/syntax, const TsOlder = 110
+pkg mvdan.cc/sh/syntax, const TsOptSet = 105
+pkg mvdan.cc/sh/syntax, const TsReMatch = 108
+pkg mvdan.cc/sh/syntax, const TsRead = 98
+pkg mvdan.cc/sh/syntax, const TsRefVar = 107
+pkg mvdan.cc/sh/syntax, const TsSticky = 92
+pkg mvdan.cc/sh/syntax, const TsSticky UnTestOperator
+pkg mvdan.cc/sh/syntax, const TsUIDSet = 94
+pkg mvdan.cc/sh/syntax, const TsUsrOwn = 96
+pkg mvdan.cc/sh/syntax, const TsUsrOwn UnTestOperator
+pkg mvdan.cc/sh/syntax, const TsVarSet = 106
+pkg mvdan.cc/sh/syntax, const TsWrite = 99
+pkg mvdan.cc/sh/syntax, type ParamExp struct, Excl bool
