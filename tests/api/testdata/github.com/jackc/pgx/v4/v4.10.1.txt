@@ -1,0 +1,5 @@
+pkg github.com/jackc/pgx/v4, method (*Conn) QueryFunc(context.Context, string, []interface{}, []interface{}, func(QueryFuncRow) error) (pgconn.CommandTag, error)
+pkg github.com/jackc/pgx/v4, type QueryFuncRow interface
+pkg github.com/jackc/pgx/v4, type QueryFuncRow interface, FieldDescriptions() []pgproto3.FieldDescription
+pkg github.com/jackc/pgx/v4, type QueryFuncRow interface, RawValues() [][]uint8
+pkg github.com/jackc/pgx/v4, type Tx interface, QueryFunc(context.Context, string, []interface{}, []interface{}, func(QueryFuncRow) error) (pgconn.CommandTag, error)

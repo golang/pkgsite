@@ -1,0 +1,1 @@
+pkg github.com/jackc/pgx/v4, method (*Batch) Len() int

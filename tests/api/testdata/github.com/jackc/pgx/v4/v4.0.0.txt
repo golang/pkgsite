@@ -1,0 +1,132 @@
+pkg github.com/jackc/pgx/v4, const BinaryFormatCode = 1
+pkg github.com/jackc/pgx/v4, const BinaryFormatCode ideal-int
+pkg github.com/jackc/pgx/v4, const Deferrable = "deferrable"
+pkg github.com/jackc/pgx/v4, const Deferrable TxDeferrableMode
+pkg github.com/jackc/pgx/v4, const LargeObjectModeRead = 262144
+pkg github.com/jackc/pgx/v4, const LargeObjectModeRead LargeObjectMode
+pkg github.com/jackc/pgx/v4, const LargeObjectModeWrite = 131072
+pkg github.com/jackc/pgx/v4, const LargeObjectModeWrite LargeObjectMode
+pkg github.com/jackc/pgx/v4, const LogLevelDebug = 5
+pkg github.com/jackc/pgx/v4, const LogLevelDebug ideal-int
+pkg github.com/jackc/pgx/v4, const LogLevelError = 2
+pkg github.com/jackc/pgx/v4, const LogLevelError ideal-int
+pkg github.com/jackc/pgx/v4, const LogLevelInfo = 4
+pkg github.com/jackc/pgx/v4, const LogLevelInfo ideal-int
+pkg github.com/jackc/pgx/v4, const LogLevelNone = 1
+pkg github.com/jackc/pgx/v4, const LogLevelNone ideal-int
+pkg github.com/jackc/pgx/v4, const LogLevelTrace = 6
+pkg github.com/jackc/pgx/v4, const LogLevelTrace ideal-int
+pkg github.com/jackc/pgx/v4, const LogLevelWarn = 3
+pkg github.com/jackc/pgx/v4, const LogLevelWarn ideal-int
+pkg github.com/jackc/pgx/v4, const NotDeferrable = "not deferrable"
+pkg github.com/jackc/pgx/v4, const NotDeferrable TxDeferrableMode
+pkg github.com/jackc/pgx/v4, const ReadCommitted = "read committed"
+pkg github.com/jackc/pgx/v4, const ReadCommitted TxIsoLevel
+pkg github.com/jackc/pgx/v4, const ReadOnly = "read only"
+pkg github.com/jackc/pgx/v4, const ReadOnly TxAccessMode
+pkg github.com/jackc/pgx/v4, const ReadUncommitted = "read uncommitted"
+pkg github.com/jackc/pgx/v4, const ReadUncommitted TxIsoLevel
+pkg github.com/jackc/pgx/v4, const ReadWrite = "read write"
+pkg github.com/jackc/pgx/v4, const ReadWrite TxAccessMode
+pkg github.com/jackc/pgx/v4, const RepeatableRead = "repeatable read"
+pkg github.com/jackc/pgx/v4, const RepeatableRead TxIsoLevel
+pkg github.com/jackc/pgx/v4, const Serializable = "serializable"
+pkg github.com/jackc/pgx/v4, const Serializable TxIsoLevel
+pkg github.com/jackc/pgx/v4, const TextFormatCode = 0
+pkg github.com/jackc/pgx/v4, const TextFormatCode ideal-int
+pkg github.com/jackc/pgx/v4, func Connect(context.Context, string) (*Conn, error)
+pkg github.com/jackc/pgx/v4, func ConnectConfig(context.Context, *ConnConfig) (*Conn, error)
+pkg github.com/jackc/pgx/v4, func CopyFromRows([][]interface{}) CopyFromSource
+pkg github.com/jackc/pgx/v4, func LogLevelFromString(string) (LogLevel, error)
+pkg github.com/jackc/pgx/v4, func ParseConfig(string) (*ConnConfig, error)
+pkg github.com/jackc/pgx/v4, func ScanRow(*pgtype.ConnInfo, []pgproto3.FieldDescription, [][]uint8, ...interface{}) error
+pkg github.com/jackc/pgx/v4, method (*Batch) Queue(string, ...interface{})
+pkg github.com/jackc/pgx/v4, method (*Conn) Begin(context.Context) (*dbTx, error)
+pkg github.com/jackc/pgx/v4, method (*Conn) BeginTx(context.Context, TxOptions) (*dbTx, error)
+pkg github.com/jackc/pgx/v4, method (*Conn) Close(context.Context) error
+pkg github.com/jackc/pgx/v4, method (*Conn) ConnInfo() *pgtype.ConnInfo
+pkg github.com/jackc/pgx/v4, method (*Conn) CopyFrom(context.Context, Identifier, []string, CopyFromSource) (int64, error)
+pkg github.com/jackc/pgx/v4, method (*Conn) Deallocate(context.Context, string) error
+pkg github.com/jackc/pgx/v4, method (*Conn) Exec(context.Context, string, ...interface{}) (pgconn.CommandTag, error)
+pkg github.com/jackc/pgx/v4, method (*Conn) IsClosed() bool
+pkg github.com/jackc/pgx/v4, method (*Conn) PgConn() *pgconn.PgConn
+pkg github.com/jackc/pgx/v4, method (*Conn) Ping(context.Context) error
+pkg github.com/jackc/pgx/v4, method (*Conn) Prepare(context.Context, string, string) (*pgconn.StatementDescription, error)
+pkg github.com/jackc/pgx/v4, method (*Conn) Query(context.Context, string, ...interface{}) (Rows, error)
+pkg github.com/jackc/pgx/v4, method (*Conn) QueryRow(context.Context, string, ...interface{}) Row
+pkg github.com/jackc/pgx/v4, method (*Conn) SendBatch(context.Context, *Batch) BatchResults
+pkg github.com/jackc/pgx/v4, method (*Conn) StatementCache() stmtcache.Cache
+pkg github.com/jackc/pgx/v4, method (*Conn) WaitForNotification(context.Context) (*pgconn.Notification, error)
+pkg github.com/jackc/pgx/v4, method (*LargeObject) Close() error
+pkg github.com/jackc/pgx/v4, method (*LargeObject) Read([]uint8) (int, error)
+pkg github.com/jackc/pgx/v4, method (*LargeObject) Seek(int64, int) (int64, error)
+pkg github.com/jackc/pgx/v4, method (*LargeObject) Tell() (int64, error)
+pkg github.com/jackc/pgx/v4, method (*LargeObject) Truncate(int64) error
+pkg github.com/jackc/pgx/v4, method (*LargeObject) Write([]uint8) (int, error)
+pkg github.com/jackc/pgx/v4, method (*LargeObjects) Create(context.Context, uint32) (uint32, error)
+pkg github.com/jackc/pgx/v4, method (*LargeObjects) Open(context.Context, uint32, LargeObjectMode) (*LargeObject, error)
+pkg github.com/jackc/pgx/v4, method (*LargeObjects) Unlink(context.Context, uint32) error
+pkg github.com/jackc/pgx/v4, method (Identifier) Sanitize() string
+pkg github.com/jackc/pgx/v4, method (LogLevel) String() string
+pkg github.com/jackc/pgx/v4, method (SerializationError) Error() string
+pkg github.com/jackc/pgx/v4, type Batch struct
+pkg github.com/jackc/pgx/v4, type BatchResults interface
+pkg github.com/jackc/pgx/v4, type BatchResults interface, Close() error
+pkg github.com/jackc/pgx/v4, type BatchResults interface, Exec() (pgconn.CommandTag, error)
+pkg github.com/jackc/pgx/v4, type BatchResults interface, Query() (Rows, error)
+pkg github.com/jackc/pgx/v4, type BatchResults interface, QueryRow() Row
+pkg github.com/jackc/pgx/v4, type BuildStatementCacheFunc func(*pgconn.PgConn) stmtcache.Cache
+pkg github.com/jackc/pgx/v4, type Conn struct
+pkg github.com/jackc/pgx/v4, type ConnConfig struct
+pkg github.com/jackc/pgx/v4, type ConnConfig struct, BuildStatementCache BuildStatementCacheFunc
+pkg github.com/jackc/pgx/v4, type ConnConfig struct, LogLevel LogLevel
+pkg github.com/jackc/pgx/v4, type ConnConfig struct, Logger Logger
+pkg github.com/jackc/pgx/v4, type ConnConfig struct, PreferSimpleProtocol bool
+pkg github.com/jackc/pgx/v4, type CopyFromSource interface
+pkg github.com/jackc/pgx/v4, type CopyFromSource interface, Err() error
+pkg github.com/jackc/pgx/v4, type CopyFromSource interface, Next() bool
+pkg github.com/jackc/pgx/v4, type CopyFromSource interface, Values() ([]interface{}, error)
+pkg github.com/jackc/pgx/v4, type Identifier []string
+pkg github.com/jackc/pgx/v4, type LargeObject struct
+pkg github.com/jackc/pgx/v4, type LargeObjectMode int32
+pkg github.com/jackc/pgx/v4, type LargeObjects struct
+pkg github.com/jackc/pgx/v4, type LogLevel int
+pkg github.com/jackc/pgx/v4, type Logger interface
+pkg github.com/jackc/pgx/v4, type Logger interface, Log(context.Context, LogLevel, string, map[string]interface{})
+pkg github.com/jackc/pgx/v4, type QueryResultFormats []int16
+pkg github.com/jackc/pgx/v4, type QueryResultFormatsByOID map[uint32]int16
+pkg github.com/jackc/pgx/v4, type QuerySimpleProtocol bool
+pkg github.com/jackc/pgx/v4, type Row interface
+pkg github.com/jackc/pgx/v4, type Row interface, Scan(...interface{}) error
+pkg github.com/jackc/pgx/v4, type Rows interface
+pkg github.com/jackc/pgx/v4, type Rows interface, Close()
+pkg github.com/jackc/pgx/v4, type Rows interface, CommandTag() pgconn.CommandTag
+pkg github.com/jackc/pgx/v4, type Rows interface, Err() error
+pkg github.com/jackc/pgx/v4, type Rows interface, FieldDescriptions() []pgproto3.FieldDescription
+pkg github.com/jackc/pgx/v4, type Rows interface, Next() bool
+pkg github.com/jackc/pgx/v4, type Rows interface, RawValues() [][]uint8
+pkg github.com/jackc/pgx/v4, type Rows interface, Scan(...interface{}) error
+pkg github.com/jackc/pgx/v4, type Rows interface, Values() ([]interface{}, error)
+pkg github.com/jackc/pgx/v4, type SerializationError string
+pkg github.com/jackc/pgx/v4, type Tx interface
+pkg github.com/jackc/pgx/v4, type Tx interface, Begin(context.Context) (Tx, error)
+pkg github.com/jackc/pgx/v4, type Tx interface, Commit(context.Context) error
+pkg github.com/jackc/pgx/v4, type Tx interface, CopyFrom(context.Context, Identifier, []string, CopyFromSource) (int64, error)
+pkg github.com/jackc/pgx/v4, type Tx interface, Exec(context.Context, string, ...interface{}) (pgconn.CommandTag, error)
+pkg github.com/jackc/pgx/v4, type Tx interface, LargeObjects() LargeObjects
+pkg github.com/jackc/pgx/v4, type Tx interface, Prepare(context.Context, string, string) (*pgconn.StatementDescription, error)
+pkg github.com/jackc/pgx/v4, type Tx interface, Query(context.Context, string, ...interface{}) (Rows, error)
+pkg github.com/jackc/pgx/v4, type Tx interface, QueryRow(context.Context, string, ...interface{}) Row
+pkg github.com/jackc/pgx/v4, type Tx interface, Rollback(context.Context) error
+pkg github.com/jackc/pgx/v4, type Tx interface, SendBatch(context.Context, *Batch) BatchResults
+pkg github.com/jackc/pgx/v4, type TxAccessMode string
+pkg github.com/jackc/pgx/v4, type TxDeferrableMode string
+pkg github.com/jackc/pgx/v4, type TxIsoLevel string
+pkg github.com/jackc/pgx/v4, type TxOptions struct
+pkg github.com/jackc/pgx/v4, type TxOptions struct, AccessMode TxAccessMode
+pkg github.com/jackc/pgx/v4, type TxOptions struct, DeferrableMode TxDeferrableMode
+pkg github.com/jackc/pgx/v4, type TxOptions struct, IsoLevel TxIsoLevel
+pkg github.com/jackc/pgx/v4, var ErrInvalidLogLevel error
+pkg github.com/jackc/pgx/v4, var ErrNoRows error
+pkg github.com/jackc/pgx/v4, var ErrTxClosed error
+pkg github.com/jackc/pgx/v4, var ErrTxCommitRollback error

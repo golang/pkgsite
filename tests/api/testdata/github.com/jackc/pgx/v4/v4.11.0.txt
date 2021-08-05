@@ -1,0 +1,8 @@
+pkg github.com/jackc/pgx/v4, method (*Conn) BeginFunc(context.Context, func(Tx) error) error
+pkg github.com/jackc/pgx/v4, method (*Conn) BeginTxFunc(context.Context, TxOptions, func(Tx) error) error
+pkg github.com/jackc/pgx/v4, method (ScanArgError) Error() string
+pkg github.com/jackc/pgx/v4, method (ScanArgError) Unwrap() error
+pkg github.com/jackc/pgx/v4, type ScanArgError struct
+pkg github.com/jackc/pgx/v4, type ScanArgError struct, ColumnIndex int
+pkg github.com/jackc/pgx/v4, type ScanArgError struct, Err error
+pkg github.com/jackc/pgx/v4, type Tx interface, BeginFunc(context.Context, func(Tx) error) error
