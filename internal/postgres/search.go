@@ -9,7 +9,6 @@ import (
 	"database/sql"
 	"fmt"
 	"io"
-	"math"
 	"sort"
 	"strings"
 	"time"
@@ -802,15 +801,28 @@ func (db *DB) GetPackagesForSearchDocumentUpsert(ctx context.Context, before tim
 func (db *DB) UpdateSearchDocumentsImportedByCount(ctx context.Context) (nUpdated int64, err error) {
 	defer derrors.WrapStack(&err, "UpdateSearchDocumentsImportedByCount(ctx)")
 
-	searchPackages, err := db.getSearchPackages(ctx)
+	curCounts, err := db.getSearchPackages(ctx)
 	if err != nil {
 		return 0, err
 	}
-	counts, err := db.computeImportedByCounts(ctx, searchPackages)
+	newCounts, err := db.computeImportedByCounts(ctx, curCounts)
 	if err != nil {
 		return 0, err
 	}
-	return db.UpdateSearchDocumentsImportedByCountWithCounts(ctx, counts)
+	// Include only changed counts.
+	log.Debugf(ctx, "update-imported-by-counts: got %d counts", len(newCounts))
+	changedCounts := map[string]int{}
+	for p, c := range newCounts {
+		if curCounts[p] != c {
+			changedCounts[p] = c
+		}
+	}
+	pct := 0
+	if len(curCounts) > 0 {
+		pct = len(changedCounts) * 100 / len(curCounts)
+	}
+	log.Debugf(ctx, "update-imported-by-counts: %d changed (%d%%)", len(changedCounts), pct)
+	return db.UpdateSearchDocumentsImportedByCountWithCounts(ctx, changedCounts)
 }
 
 func (db *DB) UpdateSearchDocumentsImportedByCountWithCounts(ctx context.Context, counts map[string]int) (nUpdated int64, err error) {
@@ -819,38 +831,42 @@ func (db *DB) UpdateSearchDocumentsImportedByCountWithCounts(ctx context.Context
 		if err := insertImportedByCounts(ctx, tx, counts); err != nil {
 			return err
 		}
-		if err := compareImportedByCounts(ctx, tx); err != nil {
-			return err
-		}
 		nUpdated, err = updateImportedByCounts(ctx, tx)
 		return err
 	})
 	return nUpdated, err
 }
 
-// getSearchPackages returns the set of package paths that are in the search_documents table.
-func (db *DB) getSearchPackages(ctx context.Context) (set map[string]bool, err error) {
+// getSearchPackages returns the set of package paths that are in the search_documents table,
+// along with their current imported-by count.
+func (db *DB) getSearchPackages(ctx context.Context) (counts map[string]int, err error) {
 	defer derrors.WrapStack(&err, "DB.getSearchPackages(ctx)")
 
-	set = map[string]bool{}
-	err = db.db.RunQuery(ctx, `SELECT package_path FROM search_documents`, func(rows *sql.Rows) error {
-		var p string
-		if err := rows.Scan(&p); err != nil {
+	counts = map[string]int{}
+	err = db.db.RunQuery(ctx, `
+		SELECT package_path, imported_by_count
+		FROM search_documents
+	`, func(rows *sql.Rows) error {
+		var (
+			p string
+			c int
+		)
+		if err := rows.Scan(&p, &c); err != nil {
 			return err
 		}
-		set[p] = true
+		counts[p] = c
 		return nil
 	})
 	if err != nil {
 		return nil, err
 	}
-	return set, nil
+	return counts, nil
 }
 
-func (db *DB) computeImportedByCounts(ctx context.Context, searchDocsPackages map[string]bool) (counts map[string]int, err error) {
+func (db *DB) computeImportedByCounts(ctx context.Context, curCounts map[string]int) (newCounts map[string]int, err error) {
 	defer derrors.WrapStack(&err, "db.computeImportedByCounts(ctx)")
 
-	counts = map[string]int{}
+	newCounts = map[string]int{}
 	// Get all (from_path, to_path) pairs, deduped.
 	// Also get the from_path's module path.
 	err = db.db.RunQuery(ctx, `
@@ -862,7 +878,7 @@ func (db *DB) computeImportedByCounts(ctx context.Context, searchDocsPackages ma
 			return err
 		}
 		// Don't count an importer if it's not in search_documents.
-		if !searchDocsPackages[from] {
+		if _, ok := curCounts[from]; !ok {
 			return nil
 		}
 		// Don't count an importer if it's in the same module as what it's importing.
@@ -871,13 +887,13 @@ func (db *DB) computeImportedByCounts(ctx context.Context, searchDocsPackages ma
 		if (fromMod == stdlib.ModulePath && stdlib.Contains(to)) || strings.HasPrefix(to+"/", fromMod+"/") {
 			return nil
 		}
-		counts[to]++
+		newCounts[to]++
 		return nil
 	})
 	if err != nil {
 		return nil, err
 	}
-	return counts, nil
+	return newCounts, nil
 }
 
 func insertImportedByCounts(ctx context.Context, db *database.DB, counts map[string]int) (err error) {
@@ -886,7 +902,7 @@ func insertImportedByCounts(ctx context.Context, db *database.DB, counts map[str
 	const createTableQuery = `
 		CREATE TEMPORARY TABLE computed_imported_by_counts (
 			package_path      TEXT NOT NULL,
-			imported_by_count INTEGER DEFAULT 0 NOT NULL
+			imported_by_count INTEGER NOT NULL
 		) ON COMMIT DROP;
     `
 	if _, err := db.Exec(ctx, createTableQuery); err != nil {
@@ -900,59 +916,10 @@ func insertImportedByCounts(ctx context.Context, db *database.DB, counts map[str
 	return db.BulkInsert(ctx, "computed_imported_by_counts", columns, values, "")
 }
 
-func compareImportedByCounts(ctx context.Context, db *database.DB) (err error) {
-	defer derrors.WrapStack(&err, "compareImportedByCounts(ctx, tx)")
-
-	query := `
-		SELECT
-			s.package_path,
-			s.imported_by_count,
-			c.imported_by_count
-		FROM
-			search_documents s
-		INNER JOIN
-			computed_imported_by_counts c
-		ON
-			s.package_path = c.package_path
-	`
-	// Compute some info about the changes to import-by counts.
-	const changeThreshold = 0.05 // count how many counts change by at least this fraction
-	var total, zero, change, diff int
-	err = db.RunQuery(ctx, query, func(rows *sql.Rows) error {
-		var path string
-		var old, new int
-		if err := rows.Scan(&path, &old, &new); err != nil {
-			return err
-		}
-		total++
-		if old != new {
-			change++
-		}
-		if old == 0 {
-			zero++
-			return nil
-		}
-		fracDiff := math.Abs(float64(new-old)) / float64(old)
-		if fracDiff > changeThreshold {
-			diff++
-		}
-		return nil
-	})
-	if err != nil {
-		return err
-	}
-	log.Debugf(ctx, "%6d total rows in search_documents match computed_imported_by_counts", total)
-	log.Debugf(ctx, "%6d will change", change)
-	log.Debugf(ctx, "%6d currently have a zero imported-by count", zero)
-	log.Debugf(ctx, "%6d of the non-zero rows will change by more than %d%%", diff, int(changeThreshold*100))
-	return nil
-}
-
 // updateImportedByCounts updates the imported_by_count column in search_documents
 // for every package in computed_imported_by_counts.
 //
-// A row is updated even if the value doesn't change, so that the imported_by_count_updated_at
-// column is set.
+// Rows that don't change aren't updated.
 //
 // Note that if a package is never imported, its imported_by_count column will
 // be the default (0) and its imported_by_count_updated_at column will never be set.
