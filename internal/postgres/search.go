@@ -853,36 +853,28 @@ func (db *DB) computeImportedByCounts(ctx context.Context, searchDocsPackages ma
 	counts = map[string]int{}
 	// Get all (from_path, to_path) pairs, deduped.
 	// Also get the from_path's module path.
-	rows, err := db.db.Query(ctx, `
-		SELECT
-			from_path, from_module_path, to_path
-		FROM
-			imports_unique
-		GROUP BY
-			from_path, from_module_path, to_path;
-	`)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	for rows.Next() {
+	err = db.db.RunQuery(ctx, `
+		SELECT DISTINCT from_path, from_module_path, to_path
+		FROM imports_unique
+	`, func(rows *sql.Rows) error {
 		var from, fromMod, to string
 		if err := rows.Scan(&from, &fromMod, &to); err != nil {
-			return nil, err
+			return err
 		}
 		// Don't count an importer if it's not in search_documents.
 		if !searchDocsPackages[from] {
-			continue
+			return nil
 		}
 		// Don't count an importer if it's in the same module as what it's importing.
 		// Approximate that check by seeing if from_module_path is a prefix of to_path.
 		// (In some cases, e.g. when to_path is in a nested module, that is not correct.)
 		if (fromMod == stdlib.ModulePath && stdlib.Contains(to)) || strings.HasPrefix(to+"/", fromMod+"/") {
-			continue
+			return nil
 		}
 		counts[to]++
-	}
-	if err := rows.Err(); err != nil {
+		return nil
+	})
+	if err != nil {
 		return nil, err
 	}
 	return counts, nil
