@@ -140,7 +140,7 @@ services:
       - ../../:/pkgsite
     working_dir: /pkgsite
   chrome:
-    image: browserless/chrome:1.46-chrome-stable
+    image: browserless/chrome:1.46.0-puppeteer-10.1.0
     ports:
       - 3000:3000
     environment:
