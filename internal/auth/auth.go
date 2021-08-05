@@ -65,3 +65,36 @@ func idtokenArgs(jsonCreds []byte, useExp bool) (string, []idtoken.ClientOption)
 	}
 	return audience, opts
 }
+
+// NewClient creates an http.Client that adds an Authorization header
+// containing its argument as a bearer token.
+func NewClientBearer(token string) *http.Client {
+	return &http.Client{
+		Transport: &HeadersTransport{
+			Base: http.DefaultTransport,
+			Headers: map[string]string{
+				"Authorization": fmt.Sprintf("Bearer %s", token),
+			},
+		},
+	}
+}
+
+// HeadersTransport is an http.Transport that adds headers to the request.
+type HeadersTransport struct {
+	Headers map[string]string
+	Base    http.RoundTripper
+}
+
+func (t *HeadersTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	// Copy req and its headers.
+	newReq := *req
+	newReq.Header = make(http.Header)
+	for k, v := range req.Header {
+		newReq.Header[k] = v
+	}
+	// Add or overwrite our headers.
+	for h, v := range t.Headers {
+		newReq.Header.Set(h, v)
+	}
+	return t.Base.RoundTrip(&newReq)
+}
