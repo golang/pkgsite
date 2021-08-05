@@ -10,23 +10,14 @@ import (
 	"context"
 	"database/sql"
 
+	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 )
-
-// A ModuleVersion holds a module path and version.
-type ModuleVersion struct {
-	ModulePath string
-	Version    string
-}
-
-func (mv ModuleVersion) String() string {
-	return mv.ModulePath + "@" + mv.Version
-}
 
 // GetModuleVersionsToClean returns module versions that can be removed from the database.
 // Only module versions that were updated more than daysOld days ago will be considered.
 // At most limit module versions will be returned.
-func (db *DB) GetModuleVersionsToClean(ctx context.Context, daysOld, limit int) (modvers []ModuleVersion, err error) {
+func (db *DB) GetModuleVersionsToClean(ctx context.Context, daysOld, limit int) (modvers []internal.Modver, err error) {
 	defer derrors.WrapStack(&err, "GetModuleVersionsToClean(%d, %d)", daysOld, limit)
 
 	// Get all pseudo-versions that were added before the given number of days.
@@ -58,8 +49,8 @@ func (db *DB) GetModuleVersionsToClean(ctx context.Context, daysOld, limit int) 
 	`
 
 	err = db.db.RunQuery(ctx, query, func(rows *sql.Rows) error {
-		var mv ModuleVersion
-		if err := rows.Scan(&mv.ModulePath, &mv.Version); err != nil {
+		var mv internal.Modver
+		if err := rows.Scan(&mv.Path, &mv.Version); err != nil {
 			return err
 		}
 		modvers = append(modvers, mv)
@@ -73,15 +64,15 @@ func (db *DB) GetModuleVersionsToClean(ctx context.Context, daysOld, limit int) 
 
 // CleanModuleVersions deletes each module version from the DB and marks it as cleaned
 // in module_version_states.
-func (db *DB) CleanModuleVersions(ctx context.Context, mvs []ModuleVersion, reason string) (err error) {
+func (db *DB) CleanModuleVersions(ctx context.Context, mvs []internal.Modver, reason string) (err error) {
 	defer derrors.Wrap(&err, "CleanModuleVersions(%d modules)", len(mvs))
 
 	status := derrors.ToStatus(derrors.Cleaned)
 	for _, mv := range mvs {
-		if err := db.UpdateModuleVersionStatus(ctx, mv.ModulePath, mv.Version, status, reason); err != nil {
+		if err := db.UpdateModuleVersionStatus(ctx, mv.Path, mv.Version, status, reason); err != nil {
 			return err
 		}
-		if err := db.DeleteModule(ctx, mv.ModulePath, mv.Version); err != nil {
+		if err := db.DeleteModule(ctx, mv.Path, mv.Version); err != nil {
 			return err
 		}
 	}
@@ -93,7 +84,7 @@ func (db *DB) CleanModuleVersions(ctx context.Context, mvs []ModuleVersion, reas
 func (db *DB) CleanModule(ctx context.Context, modulePath, reason string) (err error) {
 	defer derrors.Wrap(&err, "CleanModule(%q)", modulePath)
 
-	var mvs []ModuleVersion
+	var mvs []internal.Modver
 	err = db.db.RunQuery(ctx, `
 		SELECT version
 		FROM modules
@@ -103,7 +94,7 @@ func (db *DB) CleanModule(ctx context.Context, modulePath, reason string) (err e
 		if err := rows.Scan(&v); err != nil {
 			return err
 		}
-		mvs = append(mvs, ModuleVersion{modulePath, v})
+		mvs = append(mvs, internal.Modver{Path: modulePath, Version: v})
 		return nil
 	}, modulePath)
 	if err != nil {

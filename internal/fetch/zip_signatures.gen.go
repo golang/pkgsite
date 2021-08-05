@@ -6,5631 +6,5636 @@
 
 package fetch
 
-var ZipSignatures = map[string][]Modver{
+import "golang.org/x/pkgsite/internal"
 
-	"1c32062dd9aea3dc5ea2e86fbdb2715e17106d10f20381066c29f640dd416d95": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v0.2.0-beta"},
+var ZipSignatures = map[string][]internal.Modver{
+
+	"1c32062dd9aea3dc5ea2e86fbdb2715e17106d10f20381066c29f640dd416d95": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v0.2.0-beta"},
 	},
-	"d8df832c2e5993b25373960029b8ddfca5f2ddf747010e44c1c2caf8e5d9fbd9": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v10.0.0-beta+incompatible"},
+	"d8df832c2e5993b25373960029b8ddfca5f2ddf747010e44c1c2caf8e5d9fbd9": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v10.0.0-beta+incompatible"},
 	},
-	"e717f893b931f4f4e38fb8c492d7234a77eeaa0648768e5b955ecb6d964601d4": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v10.0.1-beta+incompatible"},
+	"e717f893b931f4f4e38fb8c492d7234a77eeaa0648768e5b955ecb6d964601d4": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v10.0.1-beta+incompatible"},
 	},
-	"d2c500fcf5a9e71693f9d9d19fa7b23d6c3e827adac988816d3d0b79989e53f1": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v10.0.2-beta+incompatible"},
+	"d2c500fcf5a9e71693f9d9d19fa7b23d6c3e827adac988816d3d0b79989e53f1": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v10.0.2-beta+incompatible"},
 	},
-	"5ef4dc0ac88ffa17075f7252233fa8e6a14b6c4f66592ac950135b5b5e2ec293": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v10.0.3-beta+incompatible"},
+	"5ef4dc0ac88ffa17075f7252233fa8e6a14b6c4f66592ac950135b5b5e2ec293": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v10.0.3-beta+incompatible"},
 	},
-	"7404987ce11eec1dae1b3e07c2bfac1eab66d06f9638b3b4eacff3100a1363dc": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v10.0.4-beta+incompatible"},
+	"7404987ce11eec1dae1b3e07c2bfac1eab66d06f9638b3b4eacff3100a1363dc": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v10.0.4-beta+incompatible"},
 	},
-	"2274fe6aa07141a13075b0aad982bd7065efd4fdd2d7987ba2c18338f06419e2": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v10.1.0-beta+incompatible"},
+	"2274fe6aa07141a13075b0aad982bd7065efd4fdd2d7987ba2c18338f06419e2": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v10.1.0-beta+incompatible"},
 	},
-	"5461ea172fbe6b48c93c515c6fc10658ae288a5251d296e668de51821e13cd5a": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v10.1.1-beta+incompatible"},
+	"5461ea172fbe6b48c93c515c6fc10658ae288a5251d296e668de51821e13cd5a": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v10.1.1-beta+incompatible"},
 	},
-	"41f4eadf4180617f510c1ef5950b185281cfe2537d6f4789c0dbe692b674b0b9": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v10.2.0-beta+incompatible"},
+	"41f4eadf4180617f510c1ef5950b185281cfe2537d6f4789c0dbe692b674b0b9": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v10.2.0-beta+incompatible"},
 	},
-	"c58e2689f3893bf1845f81d1e55c0bf5ea47f5a106959ef9c7c6d60424a599fa": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v10.2.1-beta+incompatible"},
+	"c58e2689f3893bf1845f81d1e55c0bf5ea47f5a106959ef9c7c6d60424a599fa": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v10.2.1-beta+incompatible"},
 	},
-	"a2e3b78ffafc377dcb416a999fb840b5f7664c73a3010a2a1654848aed419c80": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v10.3.0-beta+incompatible"},
+	"a2e3b78ffafc377dcb416a999fb840b5f7664c73a3010a2a1654848aed419c80": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v10.3.0-beta+incompatible"},
 	},
-	"87b42d2e6d838bb35a2c04f4f37f6eab72ce3614bedf80e71925a6c831d36761": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v10.3.1-beta+incompatible"},
+	"87b42d2e6d838bb35a2c04f4f37f6eab72ce3614bedf80e71925a6c831d36761": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v10.3.1-beta+incompatible"},
 	},
-	"168079c876f960f8076652bcc34e9c7bbb7ba05e60eb7bd79e9708e43d6d9caa": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v11.0.0-beta+incompatible"},
+	"168079c876f960f8076652bcc34e9c7bbb7ba05e60eb7bd79e9708e43d6d9caa": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v11.0.0-beta+incompatible"},
 	},
-	"1e1183501d02ebd7b21c095ac39a071af77642677a918a074372b8ae1a1b6098": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v11.1.0-beta+incompatible"},
+	"1e1183501d02ebd7b21c095ac39a071af77642677a918a074372b8ae1a1b6098": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v11.1.0-beta+incompatible"},
 	},
-	"b891821071dbf946dbd8c4d16781a4fe21d70a622b49462248e213aecf08f3e4": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v11.1.1-beta+incompatible"},
+	"b891821071dbf946dbd8c4d16781a4fe21d70a622b49462248e213aecf08f3e4": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v11.1.1-beta+incompatible"},
 	},
-	"790238f4b2eebb69b6a2dfd4fdf6ab292ba888b53fc70733ec013652cdc5c3c9": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v11.2.0-beta+incompatible"},
+	"790238f4b2eebb69b6a2dfd4fdf6ab292ba888b53fc70733ec013652cdc5c3c9": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v11.2.0-beta+incompatible"},
 	},
-	"f90f20f119a74da9a62009559e8f536a268ef16a3559f37051e1f42e4a72c93e": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v11.2.1-beta+incompatible"},
+	"f90f20f119a74da9a62009559e8f536a268ef16a3559f37051e1f42e4a72c93e": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v11.2.1-beta+incompatible"},
 	},
-	"ab6685c39b9f90114f2d1624067abee3cd3ed40df049cf472c8538aa98007cf8": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v11.2.2-beta+incompatible"},
+	"ab6685c39b9f90114f2d1624067abee3cd3ed40df049cf472c8538aa98007cf8": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v11.2.2-beta+incompatible"},
 	},
-	"1983a101f94ac85bdfc85116858e90332710ae3acdd3cb0ed8a5fc9613a0f621": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v11.3.0-beta+incompatible"},
+	"1983a101f94ac85bdfc85116858e90332710ae3acdd3cb0ed8a5fc9613a0f621": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v11.3.0-beta+incompatible"},
 	},
-	"b5ed2dda4045708f16e9080e6295b420788efdec41b99ee83f0cdb67fbc69e8f": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v12.0.0-beta+incompatible"},
+	"b5ed2dda4045708f16e9080e6295b420788efdec41b99ee83f0cdb67fbc69e8f": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v12.0.0-beta+incompatible"},
 	},
-	"bac13f70130b193df6610ff7ec5fba206b23d79cab1c1c8e63624fd1135a077b": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v12.1.0-beta+incompatible"},
+	"bac13f70130b193df6610ff7ec5fba206b23d79cab1c1c8e63624fd1135a077b": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v12.1.0-beta+incompatible"},
 	},
-	"33d1f0a388bbb7def8fa45f0b9f65081c0cef33a9a4222b3e21eca98bc091a0b": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v12.1.1-beta+incompatible"},
+	"33d1f0a388bbb7def8fa45f0b9f65081c0cef33a9a4222b3e21eca98bc091a0b": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v12.1.1-beta+incompatible"},
 	},
-	"4c9fa27ff1ec6edeb9e30aaf69f5945cacc405c35d4958edb9793d4cd52bae91": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v12.2.0-beta+incompatible"},
+	"4c9fa27ff1ec6edeb9e30aaf69f5945cacc405c35d4958edb9793d4cd52bae91": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v12.2.0-beta+incompatible"},
 	},
-	"5aed64b8be5d08714772eb8e9a35c572ffc16e6bed3504af6b0097f451db9568": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v12.3.0-beta+incompatible"},
+	"5aed64b8be5d08714772eb8e9a35c572ffc16e6bed3504af6b0097f451db9568": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v12.3.0-beta+incompatible"},
 	},
-	"ccf2245e0901e71bdbea5707becd3bff542c71463f1a5896cfc69451c73bd007": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v12.4.0-beta+incompatible"},
+	"ccf2245e0901e71bdbea5707becd3bff542c71463f1a5896cfc69451c73bd007": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v12.4.0-beta+incompatible"},
 	},
-	"8e217cd6f727a2b70ab71e93d5a9f64812e345385f7b33e796ccb7ca92d87672": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v12.5.0-beta+incompatible"},
+	"8e217cd6f727a2b70ab71e93d5a9f64812e345385f7b33e796ccb7ca92d87672": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v12.5.0-beta+incompatible"},
 	},
-	"2e676cf39d39afd68d063ce84131b70905634b00899029c2efac2d3c4f62cdc8": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v14.0.0+incompatible"},
+	"2e676cf39d39afd68d063ce84131b70905634b00899029c2efac2d3c4f62cdc8": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v14.0.0+incompatible"},
 	},
-	"03d6dcbb51d148f1bd215fb529acd0a9a4455542ef6ce7096cf26bc766422d67": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v14.0.1+incompatible"},
+	"03d6dcbb51d148f1bd215fb529acd0a9a4455542ef6ce7096cf26bc766422d67": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v14.0.1+incompatible"},
 	},
-	"a7128226ebe59a905996e34c1dc2b56f535b5b8eebb03d2a5ddba5584aa6a9c8": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v14.0.2+incompatible"},
+	"a7128226ebe59a905996e34c1dc2b56f535b5b8eebb03d2a5ddba5584aa6a9c8": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v14.0.2+incompatible"},
 	},
-	"164e7505ea2ff703754d1e6a8282509ab53b40e8415ae14baab6ab78743d1eab": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v14.1.0+incompatible"},
+	"164e7505ea2ff703754d1e6a8282509ab53b40e8415ae14baab6ab78743d1eab": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v14.1.0+incompatible"},
 	},
-	"664df8ef92454590b081dbbc350e1b5cd1a783a6d0afc65d8dff9dd3e4fc9459": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v14.1.1+incompatible"},
+	"664df8ef92454590b081dbbc350e1b5cd1a783a6d0afc65d8dff9dd3e4fc9459": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v14.1.1+incompatible"},
 	},
-	"3a2d21909fdf89cedb773cabe41813f964f78ba69450cdf27a816590f005c7ec": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v14.2.0+incompatible"},
+	"3a2d21909fdf89cedb773cabe41813f964f78ba69450cdf27a816590f005c7ec": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v14.2.0+incompatible"},
 	},
-	"3168e9fa702f9b39657d9d30cd906dc9b5c680bc014f9cc8c4c0996ff45822ee": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v14.3.0+incompatible"},
+	"3168e9fa702f9b39657d9d30cd906dc9b5c680bc014f9cc8c4c0996ff45822ee": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v14.3.0+incompatible"},
 	},
-	"c018ee17848d177813a22d557eed9c910ce236df16d8a32c52fc3271d2c09969": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v14.4.0+incompatible"},
+	"c018ee17848d177813a22d557eed9c910ce236df16d8a32c52fc3271d2c09969": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v14.4.0+incompatible"},
 	},
-	"6725fa9e6740ff0105e3d62ead39ff29017f633c9b3492db19a777e26c81497e": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v14.5.0+incompatible"},
+	"6725fa9e6740ff0105e3d62ead39ff29017f633c9b3492db19a777e26c81497e": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v14.5.0+incompatible"},
 	},
-	"ad3b4e533bc8a3b20f365056dcef557e39e744d962c2c271753391f83c00d170": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v14.6.0+incompatible"},
+	"ad3b4e533bc8a3b20f365056dcef557e39e744d962c2c271753391f83c00d170": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v14.6.0+incompatible"},
 	},
-	"71997123f9cea9307703774219b20dbb75520cc4cb6d2a44d81ca8c4c5e4ebd1": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v14.7.0+incompatible"},
+	"71997123f9cea9307703774219b20dbb75520cc4cb6d2a44d81ca8c4c5e4ebd1": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v14.7.0+incompatible"},
 	},
-	"d7fd8f35e97ad8d65a86ec211cbc54a13381f8fe0124a3a2cd2e1c502d604c24": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v15.0.0+incompatible"},
+	"d7fd8f35e97ad8d65a86ec211cbc54a13381f8fe0124a3a2cd2e1c502d604c24": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v15.0.0+incompatible"},
 	},
-	"27f119bdd0551e7707f6e3a7143518ead864d1a22b41eedf90fa2dcbe51b5460": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v15.0.1+incompatible"},
+	"27f119bdd0551e7707f6e3a7143518ead864d1a22b41eedf90fa2dcbe51b5460": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v15.0.1+incompatible"},
 	},
-	"63e92b83b8a8f405d23f9e988fab9520236e087bb972d10af9838e8cacbea30e": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v15.1.0+incompatible"},
+	"63e92b83b8a8f405d23f9e988fab9520236e087bb972d10af9838e8cacbea30e": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v15.1.0+incompatible"},
 	},
-	"46c0b8e705347417c2263c3e6bfe7140e49d481b965cd78632b55d55bf960bb2": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v15.1.1+incompatible"},
+	"46c0b8e705347417c2263c3e6bfe7140e49d481b965cd78632b55d55bf960bb2": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v15.1.1+incompatible"},
 	},
-	"b740ae876669cbc7de043d37c085dd037d21e9ec9ea790a2aeeed8da8eed6444": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v15.2.0+incompatible"},
+	"b740ae876669cbc7de043d37c085dd037d21e9ec9ea790a2aeeed8da8eed6444": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v15.2.0+incompatible"},
 	},
-	"d9e874da35c3424f1c59f010c4e6b3ba933f09a624a49ff3808fa49256f437e2": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v15.3.0+incompatible"},
+	"d9e874da35c3424f1c59f010c4e6b3ba933f09a624a49ff3808fa49256f437e2": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v15.3.0+incompatible"},
 	},
-	"66b74c969f0dfbe1873e9f5c56f65854efa462b855776d0c1155066b92ee85e4": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v16.0.0+incompatible"},
+	"66b74c969f0dfbe1873e9f5c56f65854efa462b855776d0c1155066b92ee85e4": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v16.0.0+incompatible"},
 	},
-	"0fc5277a7fadff237101252e6a6817ecc977c9126d9793c7c549e8be16e0c01b": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v16.1.0+incompatible"},
+	"0fc5277a7fadff237101252e6a6817ecc977c9126d9793c7c549e8be16e0c01b": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v16.1.0+incompatible"},
 	},
-	"277fe775bbebc19097c2e792ff986e3ef1a1e54a2680a0c9de357f6d319468f5": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v16.2.0+incompatible"},
+	"277fe775bbebc19097c2e792ff986e3ef1a1e54a2680a0c9de357f6d319468f5": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v16.2.0+incompatible"},
 	},
-	"847f6c1f71fe9bdb005239a0a1d42ce1590af51107cdb19307c647d34210c7ee": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v16.2.1+incompatible"},
+	"847f6c1f71fe9bdb005239a0a1d42ce1590af51107cdb19307c647d34210c7ee": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v16.2.1+incompatible"},
 	},
-	"3058caa198e413ed7a1e5a2de0f897c91694aecf036d7045512fe4d266a73a19": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v17.0.0+incompatible"},
+	"3058caa198e413ed7a1e5a2de0f897c91694aecf036d7045512fe4d266a73a19": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v17.0.0+incompatible"},
 	},
-	"6f046815b15ccdadf8f921104c1979c6ea951b5efe00c175831ea89aee74bb4e": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v17.1.0+incompatible"},
+	"6f046815b15ccdadf8f921104c1979c6ea951b5efe00c175831ea89aee74bb4e": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v17.1.0+incompatible"},
 	},
-	"4a1624b9aafe8b7f4fd43fa7f630e580508dca03edaeed5c7a2fc7ce97d6c8f9": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v17.2.0+incompatible"},
+	"4a1624b9aafe8b7f4fd43fa7f630e580508dca03edaeed5c7a2fc7ce97d6c8f9": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v17.2.0+incompatible"},
 	},
-	"63fe07182b095d0b88099c2b5554f8db59df99bd2b7c0f9e6f1e9718308a8716": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v17.3.0+incompatible"},
+	"63fe07182b095d0b88099c2b5554f8db59df99bd2b7c0f9e6f1e9718308a8716": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v17.3.0+incompatible"},
 	},
-	"de1816bba70cff91834ea23c281e31b61a0b56d7a219110c9da812a1c68dbf48": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v17.3.1+incompatible"},
+	"de1816bba70cff91834ea23c281e31b61a0b56d7a219110c9da812a1c68dbf48": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v17.3.1+incompatible"},
 	},
-	"75feb95395862fe2461cf78a9485caa49ccfbc015869de11a02e8a0e7ce28258": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v17.4.0+incompatible"},
+	"75feb95395862fe2461cf78a9485caa49ccfbc015869de11a02e8a0e7ce28258": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v17.4.0+incompatible"},
 	},
-	"316d374348affab7128239d2e44732431cb7c9137ba62be23c6aacb44544734c": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v18.0.0+incompatible"},
+	"316d374348affab7128239d2e44732431cb7c9137ba62be23c6aacb44544734c": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v18.0.0+incompatible"},
 	},
-	"67b7ba2bdc03a3c0041f589e69fd48f80a08056e2c175a58a4528b711e922174": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v18.1.0+incompatible"},
+	"67b7ba2bdc03a3c0041f589e69fd48f80a08056e2c175a58a4528b711e922174": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v18.1.0+incompatible"},
 	},
-	"18d4b107d26799d015948659abe9c99a61625bb1a3f6cccb584715d0bc76446a": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v19.0.0+incompatible"},
+	"18d4b107d26799d015948659abe9c99a61625bb1a3f6cccb584715d0bc76446a": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v19.0.0+incompatible"},
 	},
-	"a87f8c27e5ed85d6079780bcfc809f51629b181e6ddac0801b9e23981d38d0d2": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v19.1.0+incompatible"},
+	"a87f8c27e5ed85d6079780bcfc809f51629b181e6ddac0801b9e23981d38d0d2": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v19.1.0+incompatible"},
 	},
-	"7de7cb08c840994c3c1c3e31c8386329a3d02ed2dc1dbcf141df33024403927c": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v19.1.1+incompatible"},
+	"7de7cb08c840994c3c1c3e31c8386329a3d02ed2dc1dbcf141df33024403927c": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v19.1.1+incompatible"},
 	},
-	"1cd1eb47a8200c1490e15483575d77d5ba707a5efa0ccfb7c7d3981939e74841": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v19.2.0+incompatible"},
+	"1cd1eb47a8200c1490e15483575d77d5ba707a5efa0ccfb7c7d3981939e74841": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v19.2.0+incompatible"},
 	},
-	"e681c80eb00af68f367557e22a16e0698a77b255786c1d6311acdeed01ffaeda": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v2.0.0-beta+incompatible"},
+	"e681c80eb00af68f367557e22a16e0698a77b255786c1d6311acdeed01ffaeda": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v2.0.0-beta+incompatible"},
 	},
-	"4a3f0448d807c0402702672a24758989fe8fd986ff39c787fe2cd5c2adb50411": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v2.1.0-beta+incompatible"},
+	"4a3f0448d807c0402702672a24758989fe8fd986ff39c787fe2cd5c2adb50411": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v2.1.0-beta+incompatible"},
 	},
-	"77eea0ff534cbfbd418e96edd3553b93d36c1abd13d7b391c7078c39403cfe62": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v2.1.1-beta+incompatible"},
+	"77eea0ff534cbfbd418e96edd3553b93d36c1abd13d7b391c7078c39403cfe62": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v2.1.1-beta+incompatible"},
 	},
-	"369586e47d9a1bc7b23885d6a18935c05177d899e2459e0c44f101d05dbd1060": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v2.2.0-beta+incompatible"},
+	"369586e47d9a1bc7b23885d6a18935c05177d899e2459e0c44f101d05dbd1060": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v2.2.0-beta+incompatible"},
 	},
-	"d085c04673ddf4901e2b9dff822aaf761bd7f6b9f52c9a2d3008e193680c13b0": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v20.0.0+incompatible"},
+	"d085c04673ddf4901e2b9dff822aaf761bd7f6b9f52c9a2d3008e193680c13b0": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v20.0.0+incompatible"},
 	},
-	"3a07b20939835be77398a7c924fc8e3165944af75aec84b9467aad580cdd8217": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v20.1.0+incompatible"},
+	"3a07b20939835be77398a7c924fc8e3165944af75aec84b9467aad580cdd8217": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v20.1.0+incompatible"},
 	},
-	"dd71205b53cbaac55abdb8de0ffe42d98d89026ae9927640960bd741e3d06ebe": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v20.2.0+incompatible"},
+	"dd71205b53cbaac55abdb8de0ffe42d98d89026ae9927640960bd741e3d06ebe": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v20.2.0+incompatible"},
 	},
-	"7f13d9e5be46eb42e1a0be7ee25698e4f1fd61af4b6955e6c422db309acb47e9": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v21.0.0+incompatible"},
+	"7f13d9e5be46eb42e1a0be7ee25698e4f1fd61af4b6955e6c422db309acb47e9": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v21.0.0+incompatible"},
 	},
-	"076e2880561681b51a223f0da6e2e56e92c7f48464bdaeb8c4d967a3b86c35bc": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v21.1.0+incompatible"},
+	"076e2880561681b51a223f0da6e2e56e92c7f48464bdaeb8c4d967a3b86c35bc": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v21.1.0+incompatible"},
 	},
-	"d65c88a025ca1d09b09b20f39c8721789e510c6592a8771f5777b90b4d2ae2e0": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v21.2.0+incompatible"},
+	"d65c88a025ca1d09b09b20f39c8721789e510c6592a8771f5777b90b4d2ae2e0": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v21.2.0+incompatible"},
 	},
-	"81c11823d47dadc594e7499c7273c9ead5c60e5a233a7f4280c850ab10c567b6": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v21.3.0+incompatible"},
+	"81c11823d47dadc594e7499c7273c9ead5c60e5a233a7f4280c850ab10c567b6": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v21.3.0+incompatible"},
 	},
-	"0941c54ea2290b7fce38f330788b877ff6e17240288d51422325b3a57a1c2cad": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v21.4.0+incompatible"},
+	"0941c54ea2290b7fce38f330788b877ff6e17240288d51422325b3a57a1c2cad": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v21.4.0+incompatible"},
 	},
-	"f2e11664c1020ada06824cb6ec89ca36eaa5ea9cd20eefd50cf3bbc9d6168cdc": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v22.0.0+incompatible"},
+	"f2e11664c1020ada06824cb6ec89ca36eaa5ea9cd20eefd50cf3bbc9d6168cdc": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v22.0.0+incompatible"},
 	},
-	"978fcf2db1bb7d91393762a18f4991b6bfa7235130f4e0af989a7a0c7d7e8a10": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v22.1.0+incompatible"},
+	"978fcf2db1bb7d91393762a18f4991b6bfa7235130f4e0af989a7a0c7d7e8a10": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v22.1.0+incompatible"},
 	},
-	"8b0087627235d35720cc3e56e42a3a44dcd813dbf4c36a02f886a7a49157322f": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v22.1.1+incompatible"},
+	"8b0087627235d35720cc3e56e42a3a44dcd813dbf4c36a02f886a7a49157322f": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v22.1.1+incompatible"},
 	},
-	"3472347d8f51343df549fd2a22935b0589b27fd3348fda1f9bc514b1df2b087e": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v22.2.2+incompatible"},
+	"3472347d8f51343df549fd2a22935b0589b27fd3348fda1f9bc514b1df2b087e": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v22.2.2+incompatible"},
 	},
-	"16a2c7b1f16152424d347d53d68b3317718e1fffe43b43d8ae78f3298115fc2a": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v23.0.0+incompatible"},
+	"16a2c7b1f16152424d347d53d68b3317718e1fffe43b43d8ae78f3298115fc2a": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v23.0.0+incompatible"},
 	},
-	"47d97ed58f6fdb1ba7ac9e17b67134a029dfe5bb018946fa066e5e4f86f58ff8": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v23.1.0+incompatible"},
+	"47d97ed58f6fdb1ba7ac9e17b67134a029dfe5bb018946fa066e5e4f86f58ff8": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v23.1.0+incompatible"},
 	},
-	"49aa361bda3e71f5f31d72e34531c9024eb7c8bfa3d8be96314061f606a0fce1": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v23.2.0+incompatible"},
+	"49aa361bda3e71f5f31d72e34531c9024eb7c8bfa3d8be96314061f606a0fce1": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v23.2.0+incompatible"},
 	},
-	"6f311e6363cbf07206cc289849d10e6cac737c849ed78081bba8c09eef837200": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v24.0.0+incompatible"},
+	"6f311e6363cbf07206cc289849d10e6cac737c849ed78081bba8c09eef837200": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v24.0.0+incompatible"},
 	},
-	"a98294305fbad92c86248d1a46ef006cfbfcbeb60e2251faad4bb7f4bee4e46d": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v24.1.0+incompatible"},
+	"a98294305fbad92c86248d1a46ef006cfbfcbeb60e2251faad4bb7f4bee4e46d": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v24.1.0+incompatible"},
 	},
-	"5d0c241ced4dd6ca1604accaec241662bcd68be9a60668f929aa1762c72ccd17": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v25.0.0+incompatible"},
+	"5d0c241ced4dd6ca1604accaec241662bcd68be9a60668f929aa1762c72ccd17": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v25.0.0+incompatible"},
 	},
-	"16d17aa7264b679ad444e71dd8aff9a03be2bc43211d1571a98cf00c885dbca6": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v25.1.0+incompatible"},
+	"16d17aa7264b679ad444e71dd8aff9a03be2bc43211d1571a98cf00c885dbca6": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v25.1.0+incompatible"},
 	},
-	"fe66b68a2d49239bf42c84ff0f49719e25b528da3ab8e4139e3e53843899f21c": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v26.0.0+incompatible"},
+	"fe66b68a2d49239bf42c84ff0f49719e25b528da3ab8e4139e3e53843899f21c": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v26.0.0+incompatible"},
 	},
-	"5693f98d4d0b0bac19f4373654a6cb6c0bcf589ae2b42e389e742bbc58e65d0b": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v26.1.0+incompatible"},
+	"5693f98d4d0b0bac19f4373654a6cb6c0bcf589ae2b42e389e742bbc58e65d0b": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v26.1.0+incompatible"},
 	},
-	"d403848736e7df3eebde44492bae6cbe865043290c4cbbd031caf6dae1c46ada": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v26.2.0+incompatible"},
+	"d403848736e7df3eebde44492bae6cbe865043290c4cbbd031caf6dae1c46ada": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v26.2.0+incompatible"},
 	},
-	"2cb4e5eccdb943ff4e8f376f8598f949a03032f40bae92bdc38466d1b5d2af90": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v26.3.0+incompatible"},
+	"2cb4e5eccdb943ff4e8f376f8598f949a03032f40bae92bdc38466d1b5d2af90": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v26.3.0+incompatible"},
 	},
-	"6e27ddeb1f05f08bb3715575b60aa5571370814775a2bbfbbea590cae16f25e6": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v26.3.1+incompatible"},
+	"6e27ddeb1f05f08bb3715575b60aa5571370814775a2bbfbbea590cae16f25e6": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v26.3.1+incompatible"},
 	},
-	"6e4408956fa7f8aac3de9d4a8c25cc2682c0fb6559c7c19a19839a3c18762528": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v26.4.0+incompatible"},
+	"6e4408956fa7f8aac3de9d4a8c25cc2682c0fb6559c7c19a19839a3c18762528": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v26.4.0+incompatible"},
 	},
-	"699f0c45fe7657b2e30270de3982d2c8d4e52a6f593eea720ccd06e2155f02e8": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v26.5.0+incompatible"},
+	"699f0c45fe7657b2e30270de3982d2c8d4e52a6f593eea720ccd06e2155f02e8": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v26.5.0+incompatible"},
 	},
-	"180c50e8e8749def85b0f8d48634f89ce32fc82028491be14177f8474c356bd8": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v26.6.0+incompatible"},
+	"180c50e8e8749def85b0f8d48634f89ce32fc82028491be14177f8474c356bd8": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v26.6.0+incompatible"},
 	},
-	"3b6c224d4ef44facc76c3cabae4762f39e78e29dbcd1f494a6592610563f2728": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v26.7.0+incompatible"},
+	"3b6c224d4ef44facc76c3cabae4762f39e78e29dbcd1f494a6592610563f2728": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v26.7.0+incompatible"},
 	},
-	"154b9811bdefdfc0fca91af7ab1bb8ec5a240d865aa302dfd816a64bafc57dd7": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v27.0.0+incompatible"},
+	"154b9811bdefdfc0fca91af7ab1bb8ec5a240d865aa302dfd816a64bafc57dd7": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v27.0.0+incompatible"},
 	},
-	"d7db3d9aae76014113cdcd9e0c4ac076c7b32ec134c78266d36e04eb79e59029": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v27.1.0+incompatible"},
+	"d7db3d9aae76014113cdcd9e0c4ac076c7b32ec134c78266d36e04eb79e59029": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v27.1.0+incompatible"},
 	},
-	"f579b7ffa04ada055da2e9bb08a5a2235a335e794d3a310367e77132f204c645": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v27.2.0+incompatible"},
+	"f579b7ffa04ada055da2e9bb08a5a2235a335e794d3a310367e77132f204c645": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v27.2.0+incompatible"},
 	},
-	"092c775e7fa0e8f98a58a7391b05c87829ff531a2ad532f8493a3b3dd3fa27ad": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v27.3.0+incompatible"},
+	"092c775e7fa0e8f98a58a7391b05c87829ff531a2ad532f8493a3b3dd3fa27ad": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v27.3.0+incompatible"},
 	},
-	"18a59a2fb858a23b39987e9f702018833ce218b4199105d86a6e52c8fad72d70": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v28.0.0+incompatible"},
+	"18a59a2fb858a23b39987e9f702018833ce218b4199105d86a6e52c8fad72d70": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v28.0.0+incompatible"},
 	},
-	"4dd4e97205c9eebdd825b7dcab8cd2ced581a65340004a81480dbc53a87a5bf3": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v28.1.0+incompatible"},
+	"4dd4e97205c9eebdd825b7dcab8cd2ced581a65340004a81480dbc53a87a5bf3": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v28.1.0+incompatible"},
 	},
-	"b0efc3028e06982c36c7e9e6c9db7c380724e97440606db1f24b9cf5b3a55841": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v29.0.0+incompatible"},
+	"b0efc3028e06982c36c7e9e6c9db7c380724e97440606db1f24b9cf5b3a55841": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v29.0.0+incompatible"},
 	},
-	"ea6d015f74f11596c1ecf469ae7715ec4f4f4ca8a06091c887f94e96bacb9cd4": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v3.0.0-beta+incompatible"},
+	"ea6d015f74f11596c1ecf469ae7715ec4f4f4ca8a06091c887f94e96bacb9cd4": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v3.0.0-beta+incompatible"},
 	},
-	"206016b91352f9237f22b276739f1023b2894fa1210a1d40076fae95a5eca06b": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v3.1.0-beta+incompatible"},
+	"206016b91352f9237f22b276739f1023b2894fa1210a1d40076fae95a5eca06b": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v3.1.0-beta+incompatible"},
 	},
-	"0f3756913656f071a2e608e7ab2553b7ff7818401eb5732e5a28f92a370002e7": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v3.2.0-beta+incompatible"},
+	"0f3756913656f071a2e608e7ab2553b7ff7818401eb5732e5a28f92a370002e7": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v3.2.0-beta+incompatible"},
 	},
-	"79b63b3405d8ebc0c4150edf85ae37339a83b2353d03b4e0745a78971a2e0031": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v30.0.0+incompatible"},
+	"79b63b3405d8ebc0c4150edf85ae37339a83b2353d03b4e0745a78971a2e0031": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v30.0.0+incompatible"},
 	},
-	"a861bb9e4b1bd7f9a62a29c4d2e8c2ad000af827941dfc2c922c371b9c691deb": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v30.1.0+incompatible"},
+	"a861bb9e4b1bd7f9a62a29c4d2e8c2ad000af827941dfc2c922c371b9c691deb": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v30.1.0+incompatible"},
 	},
-	"5efbe7e5cd8933fc4633848f630331867ebfa4ef21ae2c0e7b42cf18597ae05a": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v31.0.0+incompatible"},
+	"5efbe7e5cd8933fc4633848f630331867ebfa4ef21ae2c0e7b42cf18597ae05a": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v31.0.0+incompatible"},
 	},
-	"7398102f95a08356e598987ea74954ffc28180296bb6569c06a824260d522a46": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v31.1.0+incompatible"},
+	"7398102f95a08356e598987ea74954ffc28180296bb6569c06a824260d522a46": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v31.1.0+incompatible"},
 	},
-	"41351d14feb913dd73f3c2a294331cdc4b6f701693862ea0e1ba5de77d87d419": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v31.2.0+incompatible"},
+	"41351d14feb913dd73f3c2a294331cdc4b6f701693862ea0e1ba5de77d87d419": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v31.2.0+incompatible"},
 	},
-	"1e0803b3415c41a855032a5081e14bbc75ea7e402d18c144be5cfaa7e4524f17": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v32.0.0+incompatible"},
+	"1e0803b3415c41a855032a5081e14bbc75ea7e402d18c144be5cfaa7e4524f17": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v32.0.0+incompatible"},
 	},
-	"5ed31a38bce8150073b2e8d4727b09ce2c8712fcc336f394ee54bd280a20e375": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v32.1.0+incompatible"},
+	"5ed31a38bce8150073b2e8d4727b09ce2c8712fcc336f394ee54bd280a20e375": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v32.1.0+incompatible"},
 	},
-	"b1122ca870baffff58a4027c6855d3a68c5bb1391a502dcdf5225091d9171055": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v32.2.0+incompatible"},
+	"b1122ca870baffff58a4027c6855d3a68c5bb1391a502dcdf5225091d9171055": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v32.2.0+incompatible"},
 	},
-	"30dabf4c2d2e9f5a5602623eea5b01fb4bb985869928db580f367b7ac7382b02": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v32.3.0+incompatible"},
+	"30dabf4c2d2e9f5a5602623eea5b01fb4bb985869928db580f367b7ac7382b02": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v32.3.0+incompatible"},
 	},
-	"e5cb9ce70e694cf7f39457bc925ef5dbfbd3616e9fe751a4e930c8e34880f9c7": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v32.4.0+incompatible"},
+	"e5cb9ce70e694cf7f39457bc925ef5dbfbd3616e9fe751a4e930c8e34880f9c7": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v32.4.0+incompatible"},
 	},
-	"4f6e546129050eef3fc9fa7938cc487abe8efa739b329797e68a8cf4f1a7a88d": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v32.5.0+incompatible"},
+	"4f6e546129050eef3fc9fa7938cc487abe8efa739b329797e68a8cf4f1a7a88d": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v32.5.0+incompatible"},
 	},
-	"2da520901cef44906aa682d0fb9f23cfa0ecd25ff35d57aa932f261791c115ee": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v32.6.0+incompatible"},
+	"2da520901cef44906aa682d0fb9f23cfa0ecd25ff35d57aa932f261791c115ee": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v32.6.0+incompatible"},
 	},
-	"b669db8cbec483064fd2829d7805f7f8591659b928377530fe98ce1d1d7bb6f5": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v33.0.0+incompatible"},
+	"b669db8cbec483064fd2829d7805f7f8591659b928377530fe98ce1d1d7bb6f5": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v33.0.0+incompatible"},
 	},
-	"3eafb7bfea4e4f97a6468b5da60517169970a27ab480ccc6a3dff4a0dbf450bf": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v33.1.0+incompatible"},
+	"3eafb7bfea4e4f97a6468b5da60517169970a27ab480ccc6a3dff4a0dbf450bf": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v33.1.0+incompatible"},
 	},
-	"9f4952695ba7fe4fea5f4957b6b96152c91fdb9fa1fccdd96c0026c10801402a": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v33.2.0+incompatible"},
+	"9f4952695ba7fe4fea5f4957b6b96152c91fdb9fa1fccdd96c0026c10801402a": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v33.2.0+incompatible"},
 	},
-	"dc3d25c2a944495b2745ea53f5360211377f5af71705caeae9d0e46984c7b1e9": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v33.3.0+incompatible"},
+	"dc3d25c2a944495b2745ea53f5360211377f5af71705caeae9d0e46984c7b1e9": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v33.3.0+incompatible"},
 	},
-	"6d77b040c383892030a6660137777496e533a7cfdd859325a2d9093b00139f1f": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v33.4.0+incompatible"},
+	"6d77b040c383892030a6660137777496e533a7cfdd859325a2d9093b00139f1f": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v33.4.0+incompatible"},
 	},
-	"94c82c99b4862e12ab4d1d12c54055d3b89584cab9eb5e717979535eef186a7b": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v34.0.0+incompatible"},
+	"94c82c99b4862e12ab4d1d12c54055d3b89584cab9eb5e717979535eef186a7b": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v34.0.0+incompatible"},
 	},
-	"fdac0c6c52f70716c8eea7e3f324d91dbcc229806804b4ee9a4a424ed19884bf": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v34.1.0+incompatible"},
+	"fdac0c6c52f70716c8eea7e3f324d91dbcc229806804b4ee9a4a424ed19884bf": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v34.1.0+incompatible"},
 	},
-	"cb1bc3a11e03107d292d03111c92d1a6e1f5f69579493e0beda518d41c3335bc": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v34.2.0+incompatible"},
+	"cb1bc3a11e03107d292d03111c92d1a6e1f5f69579493e0beda518d41c3335bc": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v34.2.0+incompatible"},
 	},
-	"5a5de2f2b21976d3b85df98124e8f226451f15c0a4abde399cc5e2ee56aef31a": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v34.3.0+incompatible"},
+	"5a5de2f2b21976d3b85df98124e8f226451f15c0a4abde399cc5e2ee56aef31a": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v34.3.0+incompatible"},
 	},
-	"b4e87f3570df643ae29f9f5fab490a093699409b69e84e9f2858bd6e7c4416ed": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v34.4.0+incompatible"},
+	"b4e87f3570df643ae29f9f5fab490a093699409b69e84e9f2858bd6e7c4416ed": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v34.4.0+incompatible"},
 	},
-	"c55777592d801c2afe2b3129271afa31ddd6e36ec3c1f18d24760dd62300c5d2": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v35.0.0+incompatible"},
+	"c55777592d801c2afe2b3129271afa31ddd6e36ec3c1f18d24760dd62300c5d2": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v35.0.0+incompatible"},
 	},
-	"1ae1daeb8efa17fcf166597fe981b29595e72790924c15e1bf7e7a76e80b8633": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v35.1.0+incompatible"},
+	"1ae1daeb8efa17fcf166597fe981b29595e72790924c15e1bf7e7a76e80b8633": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v35.1.0+incompatible"},
 	},
-	"5bdf5843bf2f692918c1de3a8048e06ee68839b9d731ef0ca4ced921097c3b0a": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v36.0.0+incompatible"},
+	"5bdf5843bf2f692918c1de3a8048e06ee68839b9d731ef0ca4ced921097c3b0a": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v36.0.0+incompatible"},
 	},
-	"1b125cfbda4f7fec6c859f13db9ba68b336ef91b977c0d7822759b4d4f1f968c": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v36.1.0+incompatible"},
+	"1b125cfbda4f7fec6c859f13db9ba68b336ef91b977c0d7822759b4d4f1f968c": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v36.1.0+incompatible"},
 	},
-	"f527c2bedf5d54c6794f315bd44f7adadc0a1402e0d4a9aff81f0a8075e8b2ca": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v36.2.0+incompatible"},
+	"f527c2bedf5d54c6794f315bd44f7adadc0a1402e0d4a9aff81f0a8075e8b2ca": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v36.2.0+incompatible"},
 	},
-	"47fe56523170a2a459e959eb3e6d6a2c8ba43563d63d90021f5047b4399a0f10": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v37.0.0+incompatible"},
+	"47fe56523170a2a459e959eb3e6d6a2c8ba43563d63d90021f5047b4399a0f10": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v37.0.0+incompatible"},
 	},
-	"55e59ee51b68437da77f5359bc7e89b6cbd6bd0b089f02cdd4a1d1da05c7b3c0": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v37.1.0+incompatible"},
+	"55e59ee51b68437da77f5359bc7e89b6cbd6bd0b089f02cdd4a1d1da05c7b3c0": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v37.1.0+incompatible"},
 	},
-	"ad368a23af47441b0dd6bc3f9523aca5fd19824c3620429daa221cfbd5336d62": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v37.2.0+incompatible"},
+	"ad368a23af47441b0dd6bc3f9523aca5fd19824c3620429daa221cfbd5336d62": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v37.2.0+incompatible"},
 	},
-	"455829483b4d66652cbb978137f86e4d9c700ef2a607fa7cc00643986be626d0": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v38.0.0+incompatible"},
+	"455829483b4d66652cbb978137f86e4d9c700ef2a607fa7cc00643986be626d0": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v38.0.0+incompatible"},
 	},
-	"2421178450a7944134821ee7463a80ab042fc6da95e8718090c38767f34b5e52": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v38.1.0+incompatible"},
+	"2421178450a7944134821ee7463a80ab042fc6da95e8718090c38767f34b5e52": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v38.1.0+incompatible"},
 	},
-	"6324297ba86c23fb638426c40ca688d5a7793ceb571913402b72be090784c3a3": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v38.2.0+incompatible"},
+	"6324297ba86c23fb638426c40ca688d5a7793ceb571913402b72be090784c3a3": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v38.2.0+incompatible"},
 	},
-	"b4c6abc23d4262a39fd5307da69bbb7b18f3f49cf59ad363253d70a3cc53da42": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v39.0.0+incompatible"},
+	"b4c6abc23d4262a39fd5307da69bbb7b18f3f49cf59ad363253d70a3cc53da42": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v39.0.0+incompatible"},
 	},
-	"5994452f6fa5d133040bac4887a621378d45a6155f0ed5070c345d9aa2759f81": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v39.1.0+incompatible"},
+	"5994452f6fa5d133040bac4887a621378d45a6155f0ed5070c345d9aa2759f81": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v39.1.0+incompatible"},
 	},
-	"e2a477a84260e9e1897b651e572b67da8415e8cac50d005f16db2769832caf82": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v39.2.0+incompatible"},
+	"e2a477a84260e9e1897b651e572b67da8415e8cac50d005f16db2769832caf82": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v39.2.0+incompatible"},
 	},
-	"620b1c4bd1b9f2bf4dbd7f40a945f8b7a812c7e1d3a011e5a470d52468f2a33a": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v39.3.0+incompatible"},
+	"620b1c4bd1b9f2bf4dbd7f40a945f8b7a812c7e1d3a011e5a470d52468f2a33a": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v39.3.0+incompatible"},
 	},
-	"8ab286555a9c2b8e95b53a08c820f9d9732b7c519585d816b357412434df04b2": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v4.0.0-beta+incompatible"},
+	"8ab286555a9c2b8e95b53a08c820f9d9732b7c519585d816b357412434df04b2": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v4.0.0-beta+incompatible"},
 	},
-	"c661c038a98d9f4b502676730d770c89b1d8f538f4904c447b9e2c1dd439c91a": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v40.0.0+incompatible"},
+	"c661c038a98d9f4b502676730d770c89b1d8f538f4904c447b9e2c1dd439c91a": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v40.0.0+incompatible"},
 	},
-	"0cc4632135e3184cedd6bfc233b844083f8a2c0b1b00125852a6e46677103f27": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v40.1.0+incompatible"},
+	"0cc4632135e3184cedd6bfc233b844083f8a2c0b1b00125852a6e46677103f27": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v40.1.0+incompatible"},
 	},
-	"05774be92208e601dca52114363af52d29111a55d101db270e78eecfb862d400": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v40.2.0+incompatible"},
+	"05774be92208e601dca52114363af52d29111a55d101db270e78eecfb862d400": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v40.2.0+incompatible"},
 	},
-	"c3468b433c6840a605a12ef34ca7da5256be8f736651ed2a499b0f586f099ce2": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v40.3.0+incompatible"},
+	"c3468b433c6840a605a12ef34ca7da5256be8f736651ed2a499b0f586f099ce2": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v40.3.0+incompatible"},
 	},
-	"5cb727ff730766d7b92dda3d9773bcb299ad732f9011f7912b7c346f631c469f": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v40.4.0+incompatible"},
+	"5cb727ff730766d7b92dda3d9773bcb299ad732f9011f7912b7c346f631c469f": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v40.4.0+incompatible"},
 	},
-	"b0d1ad158b4e0bc4490eea6bb6d443dc8274ac14a8c6d2d1439ccd517ff97b4a": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v40.5.0+incompatible"},
+	"b0d1ad158b4e0bc4490eea6bb6d443dc8274ac14a8c6d2d1439ccd517ff97b4a": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v40.5.0+incompatible"},
 	},
-	"62da389132318448bb1bdef398369d1ae9f1eaacad7ca2e253bab6df1417f2f2": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v40.6.0+incompatible"},
+	"62da389132318448bb1bdef398369d1ae9f1eaacad7ca2e253bab6df1417f2f2": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v40.6.0+incompatible"},
 	},
-	"afc12e7d92ae8a542cf7b0da371d3571dea3daf63cf117170f08e7ca1b7f806f": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v41.0.0+incompatible"},
+	"afc12e7d92ae8a542cf7b0da371d3571dea3daf63cf117170f08e7ca1b7f806f": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v41.0.0+incompatible"},
 	},
-	"c1401db85c52d8bc7ec7f7192754257956062364a28cbf467991aa466d4c43eb": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v41.1.0+incompatible"},
+	"c1401db85c52d8bc7ec7f7192754257956062364a28cbf467991aa466d4c43eb": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v41.1.0+incompatible"},
 	},
-	"8260bf8694a13668a5eb48b1929ef3375732e1be4d311dbe87a271562664a73a": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v41.2.0+incompatible"},
+	"8260bf8694a13668a5eb48b1929ef3375732e1be4d311dbe87a271562664a73a": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v41.2.0+incompatible"},
 	},
-	"b6167280283e99718d382d30863bfff576e0175cfd4badd46755bbd8d423457e": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v41.3.0+incompatible"},
+	"b6167280283e99718d382d30863bfff576e0175cfd4badd46755bbd8d423457e": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v41.3.0+incompatible"},
 	},
-	"41f8c84eb835a3c7531bf2c86613140f11c86263dad376b44f5b9c0f0226c03b": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v42.0.0+incompatible"},
+	"41f8c84eb835a3c7531bf2c86613140f11c86263dad376b44f5b9c0f0226c03b": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v42.0.0+incompatible"},
 	},
-	"b051a9fa67b0d040fde2332f32a9476bdb96cf4dae16c88bf481db2c4bb85d17": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v42.1.0+incompatible"},
+	"b051a9fa67b0d040fde2332f32a9476bdb96cf4dae16c88bf481db2c4bb85d17": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v42.1.0+incompatible"},
 	},
-	"aee1c556d7c5b3cb42ddfe91e2c0327f7d608a0b9a04c9338be6f4c2763c4c80": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v42.2.0+incompatible"},
+	"aee1c556d7c5b3cb42ddfe91e2c0327f7d608a0b9a04c9338be6f4c2763c4c80": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v42.2.0+incompatible"},
 	},
-	"6fedc8e1658214befaa90696f26b705cbcebb6fc8dc15c8e5830c2585eb29815": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v42.3.0+incompatible"},
+	"6fedc8e1658214befaa90696f26b705cbcebb6fc8dc15c8e5830c2585eb29815": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v42.3.0+incompatible"},
 	},
-	"26fbf4985fa3a9f8e6c46a65799c377671c5cf73b2579f87fc53b5712bc5cf50": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v43.0.0+incompatible"},
+	"26fbf4985fa3a9f8e6c46a65799c377671c5cf73b2579f87fc53b5712bc5cf50": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v43.0.0+incompatible"},
 	},
-	"01002cde5d8eeeec94f50c003720c355a6012feeb42c351283229256fbc3ab41": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v43.1.0+incompatible"},
+	"01002cde5d8eeeec94f50c003720c355a6012feeb42c351283229256fbc3ab41": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v43.1.0+incompatible"},
 	},
-	"e9578ceace83d3dc6ab030be09966c7e47bcda985993ba76e332bda5b747509d": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v43.2.0+incompatible"},
+	"e9578ceace83d3dc6ab030be09966c7e47bcda985993ba76e332bda5b747509d": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v43.2.0+incompatible"},
 	},
-	"4b446ac5074d88c20c39cc1f24466776b8549270079e5a705b71b0f4684821d9": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v43.3.0+incompatible"},
+	"4b446ac5074d88c20c39cc1f24466776b8549270079e5a705b71b0f4684821d9": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v43.3.0+incompatible"},
 	},
-	"7d0eb9d6228f19163908d00e15d2c8e5d8d8d38dc9d5d554eb6dc06a5c4c968b": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v44.0.0+incompatible"},
+	"7d0eb9d6228f19163908d00e15d2c8e5d8d8d38dc9d5d554eb6dc06a5c4c968b": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v44.0.0+incompatible"},
 	},
-	"d0486b65db28ee29a54ccc65d1d99a0ff40af6724b09cf7d3151375b982eb096": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v44.1.0+incompatible"},
+	"d0486b65db28ee29a54ccc65d1d99a0ff40af6724b09cf7d3151375b982eb096": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v44.1.0+incompatible"},
 	},
-	"cc47a620207dc00ea77787140a252a5f4cc7440a304de78d7f86b88a9c9793b6": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v44.2.0+incompatible"},
+	"cc47a620207dc00ea77787140a252a5f4cc7440a304de78d7f86b88a9c9793b6": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v44.2.0+incompatible"},
 	},
-	"e8e2cc8d9ba7c849cc0bafb1d327540d687d88802f41e01c7c92b12e91d061a5": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v45.0.0+incompatible"},
+	"e8e2cc8d9ba7c849cc0bafb1d327540d687d88802f41e01c7c92b12e91d061a5": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v45.0.0+incompatible"},
 	},
-	"f92853b0689a11616c930e45ee97e0a2e8ae56c61e3dcdb5b346a626a95da7a8": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v45.1.0+incompatible"},
+	"f92853b0689a11616c930e45ee97e0a2e8ae56c61e3dcdb5b346a626a95da7a8": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v45.1.0+incompatible"},
 	},
-	"84a8c28d53708782449dd3476d218e31af3918bc01f8e91bb655b6f8a992433f": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v45.1.1+incompatible"},
+	"84a8c28d53708782449dd3476d218e31af3918bc01f8e91bb655b6f8a992433f": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v45.1.1+incompatible"},
 	},
-	"e067eeee88d5ea91a56deeb3d39ae49634e24d306692d351ebe36d5c4c4b0a21": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v45.1.2+incompatible"},
+	"e067eeee88d5ea91a56deeb3d39ae49634e24d306692d351ebe36d5c4c4b0a21": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v45.1.2+incompatible"},
 	},
-	"15e425ece5fa41587fe0830c4890219b0de0f5256a82a3b0bc2c37d9b4f545fd": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v46.0.0+incompatible"},
+	"15e425ece5fa41587fe0830c4890219b0de0f5256a82a3b0bc2c37d9b4f545fd": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v46.0.0+incompatible"},
 	},
-	"36534540807a0fc07ae0e5740d6aecadd58dae8f120c0b0924f4eca762242449": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v46.1.0+incompatible"},
+	"36534540807a0fc07ae0e5740d6aecadd58dae8f120c0b0924f4eca762242449": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v46.1.0+incompatible"},
 	},
-	"23655cf05fc2661d19a0b1d50d57ed53c544bb6c67c2dd35ef4d3ced21d0d3aa": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v46.2.0+incompatible"},
+	"23655cf05fc2661d19a0b1d50d57ed53c544bb6c67c2dd35ef4d3ced21d0d3aa": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v46.2.0+incompatible"},
 	},
-	"03b3f472bbab9e3a4c47d7c689aab398088b1a58a94de6425fbfc912f277f2fe": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v46.3.0+incompatible"},
+	"03b3f472bbab9e3a4c47d7c689aab398088b1a58a94de6425fbfc912f277f2fe": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v46.3.0+incompatible"},
 	},
-	"72c51062301287881cc3f1af01b621dae52a06415cad0b5cddf40af0d86dfb13": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v46.4.0+incompatible"},
+	"72c51062301287881cc3f1af01b621dae52a06415cad0b5cddf40af0d86dfb13": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v46.4.0+incompatible"},
 	},
-	"c31dbfe3e4b44bcf3269a93850739a27edb1272e3057267bb85bb32f94f6bace": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v47.0.0+incompatible"},
+	"c31dbfe3e4b44bcf3269a93850739a27edb1272e3057267bb85bb32f94f6bace": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v47.0.0+incompatible"},
 	},
-	"8f3224d8e1e4f3ef6083a4ff3b08f34c90f9e4b98f1c477727d77aa57ea6eff3": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v47.1.0+incompatible"},
+	"8f3224d8e1e4f3ef6083a4ff3b08f34c90f9e4b98f1c477727d77aa57ea6eff3": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v47.1.0+incompatible"},
 	},
-	"4f39c676ade97497b4b406def7968385cc0e0fa6747572433f8b19e29f56585c": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v48.0.0+incompatible"},
+	"4f39c676ade97497b4b406def7968385cc0e0fa6747572433f8b19e29f56585c": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v48.0.0+incompatible"},
 	},
-	"69e46a88037606dd38dc1d56de295c842efab61de3cb017a5369eccb51e756e9": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v48.1.0+incompatible"},
+	"69e46a88037606dd38dc1d56de295c842efab61de3cb017a5369eccb51e756e9": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v48.1.0+incompatible"},
 	},
-	"c964dd7fa7e5682b10ada03fd92853328864c3c65769d7d5dbbd1f023097f2c2": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v48.2.0+incompatible"},
+	"c964dd7fa7e5682b10ada03fd92853328864c3c65769d7d5dbbd1f023097f2c2": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v48.2.0+incompatible"},
 	},
-	"480b104015c3917252bfa606897e42584fbfcb459693d8a1acc2f13b53fc3faf": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v48.2.1+incompatible"},
+	"480b104015c3917252bfa606897e42584fbfcb459693d8a1acc2f13b53fc3faf": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v48.2.1+incompatible"},
 	},
-	"c3bc138e653104bf43025c29fc06464450587da5fae7f3ae8f21175664b78431": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v48.2.2+incompatible"},
+	"c3bc138e653104bf43025c29fc06464450587da5fae7f3ae8f21175664b78431": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v48.2.2+incompatible"},
 	},
-	"b0f151b2bbf85263782a12a71a5dd559518a91d95f56c9e5e92d34ed0ecbbdb0": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v49.0.0+incompatible"},
+	"b0f151b2bbf85263782a12a71a5dd559518a91d95f56c9e5e92d34ed0ecbbdb0": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v49.0.0+incompatible"},
 	},
-	"50066669cbaebff92dca236e1e36db6337bad714eea5eeefabb13930d9b97716": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v49.1.0+incompatible"},
+	"50066669cbaebff92dca236e1e36db6337bad714eea5eeefabb13930d9b97716": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v49.1.0+incompatible"},
 	},
-	"36789bbab6b9da42639d496138bd20dad91caae0c754818caaaa51f42de949c1": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v49.1.1+incompatible"},
+	"36789bbab6b9da42639d496138bd20dad91caae0c754818caaaa51f42de949c1": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v49.1.1+incompatible"},
 	},
-	"4baff4a3b93b1666e8e57ba12d2a285079a469b75a034fb3b4abd6c8aefd223b": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v49.2.0+incompatible"},
+	"4baff4a3b93b1666e8e57ba12d2a285079a469b75a034fb3b4abd6c8aefd223b": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v49.2.0+incompatible"},
 	},
-	"14496566903d85122d2d09e670741d49643e4c82f692c4864c359752d79956ab": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v49.2.1+incompatible"},
+	"14496566903d85122d2d09e670741d49643e4c82f692c4864c359752d79956ab": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v49.2.1+incompatible"},
 	},
-	"48186369b2a0c8e44ebaf5f03b152493039c5b63df5a3c2ad8cdff177589857e": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v5.0.0-beta+incompatible"},
+	"48186369b2a0c8e44ebaf5f03b152493039c5b63df5a3c2ad8cdff177589857e": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v5.0.0-beta+incompatible"},
 	},
-	"8026c0912f3bf1ca931a90c63ecae05130aa01b53d089eb13e0e40281ea2ce5a": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v50.0.0+incompatible"},
+	"8026c0912f3bf1ca931a90c63ecae05130aa01b53d089eb13e0e40281ea2ce5a": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v50.0.0+incompatible"},
 	},
-	"df20860cdd28b408d58fd4e6ddf6deeaef227d060c21d2243caa0745c3917a74": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v50.1.0+incompatible"},
+	"df20860cdd28b408d58fd4e6ddf6deeaef227d060c21d2243caa0745c3917a74": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v50.1.0+incompatible"},
 	},
-	"9c1a9e489ab352b039bb73d575d0683b8b0cef0b90102ef350ac07215c75066f": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v50.2.0+incompatible"},
+	"9c1a9e489ab352b039bb73d575d0683b8b0cef0b90102ef350ac07215c75066f": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v50.2.0+incompatible"},
 	},
-	"57e2eec77b23d04f176f4d034b05bfb592109fd6206f8cddb08b998bc3d19d16": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v51.0.0+incompatible"},
+	"57e2eec77b23d04f176f4d034b05bfb592109fd6206f8cddb08b998bc3d19d16": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v51.0.0+incompatible"},
 	},
-	"4600df09798f318ea88dc1d5f0183c30bfec8697df8c1b503e42021bf4c8dc44": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v51.1.0+incompatible"},
+	"4600df09798f318ea88dc1d5f0183c30bfec8697df8c1b503e42021bf4c8dc44": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v51.1.0+incompatible"},
 	},
-	"4cd2cf72ca56efa2b68616a95953ce09f2fbf84247b1c65717d10dafc3a29e15": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v51.2.0+incompatible"},
+	"4cd2cf72ca56efa2b68616a95953ce09f2fbf84247b1c65717d10dafc3a29e15": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v51.2.0+incompatible"},
 	},
-	"9ab556f77bbb9c5b89b7f054f78271f15ef775cf78e9a201db1dd53472c94d46": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v51.3.0+incompatible"},
+	"9ab556f77bbb9c5b89b7f054f78271f15ef775cf78e9a201db1dd53472c94d46": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v51.3.0+incompatible"},
 	},
-	"97ba2811cf61f4d4ec1b6b6608e326c2b4340f545318d763413fad47d696f584": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v52.0.0+incompatible"},
+	"97ba2811cf61f4d4ec1b6b6608e326c2b4340f545318d763413fad47d696f584": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v52.0.0+incompatible"},
 	},
-	"b425901471a810bac0078229d64e783893b8e638458628883a9a3ed07b57c54d": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v52.1.0+incompatible"},
+	"b425901471a810bac0078229d64e783893b8e638458628883a9a3ed07b57c54d": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v52.1.0+incompatible"},
 	},
-	"c58d8afb0026c89b72c1ec08a070147c695960e93c1e18546f1bb42884d008b3": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v52.2.0+incompatible"},
+	"c58d8afb0026c89b72c1ec08a070147c695960e93c1e18546f1bb42884d008b3": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v52.2.0+incompatible"},
 	},
-	"5dd6411fb2bf854acda611981881b7140dc8fab7fccc5848b3c935be52276c76": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v52.3.0+incompatible"},
+	"5dd6411fb2bf854acda611981881b7140dc8fab7fccc5848b3c935be52276c76": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v52.3.0+incompatible"},
 	},
-	"5aebb5bc67c630729a084a4150fad7f31357a3c322ae0660cf342a2640fa165f": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v52.3.1+incompatible"},
+	"5aebb5bc67c630729a084a4150fad7f31357a3c322ae0660cf342a2640fa165f": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v52.3.1+incompatible"},
 	},
-	"53223f53b2eb491ebf0650840f5bf7963b701deb993f49331d0e2d7b7c36af39": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v52.4.0+incompatible"},
+	"53223f53b2eb491ebf0650840f5bf7963b701deb993f49331d0e2d7b7c36af39": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v52.4.0+incompatible"},
 	},
-	"c9296bf8a7ccc9f838846297bebd447eff379a911219c0d53f4f370158c834ae": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v52.5.0+incompatible"},
+	"c9296bf8a7ccc9f838846297bebd447eff379a911219c0d53f4f370158c834ae": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v52.5.0+incompatible"},
 	},
-	"137d53691631315608e1ab445c6d979aef5510069afc9f95e9f359c4317c1c05": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v52.6.0+incompatible"},
+	"137d53691631315608e1ab445c6d979aef5510069afc9f95e9f359c4317c1c05": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v52.6.0+incompatible"},
 	},
-	"31003bdb2e405b6ca43aeeef1728033b1ca84a5da02a5daf9ada45b5ca600b94": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v53.0.0+incompatible"},
+	"31003bdb2e405b6ca43aeeef1728033b1ca84a5da02a5daf9ada45b5ca600b94": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v53.0.0+incompatible"},
 	},
-	"77e8c7b5a46e00a277ca3b44b31227cd6866764b860b4ee87806a61431645f3e": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v53.1.0+incompatible"},
+	"77e8c7b5a46e00a277ca3b44b31227cd6866764b860b4ee87806a61431645f3e": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v53.1.0+incompatible"},
 	},
-	"e8db71ba38c9656b5996e10db3bc7ab1df51e2052e454b8f2e03de24346cecfa": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v53.2.0+incompatible"},
+	"e8db71ba38c9656b5996e10db3bc7ab1df51e2052e454b8f2e03de24346cecfa": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v53.2.0+incompatible"},
 	},
-	"aed85874e269cc2946d23d7dec16ff5c651bf4a0f1556325f254c3d8748c111c": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v53.3.0+incompatible"},
+	"aed85874e269cc2946d23d7dec16ff5c651bf4a0f1556325f254c3d8748c111c": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v53.3.0+incompatible"},
 	},
-	"c8cfa8240489c31d8b21d589e735063b693cc1334f2af4654acd784d89dfac9d": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v53.4.0+incompatible"},
+	"c8cfa8240489c31d8b21d589e735063b693cc1334f2af4654acd784d89dfac9d": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v53.4.0+incompatible"},
 	},
-	"e00bea8b4b7549e63a83f54cccccd1d63ea84d71940b144e4a45d815ee75f1c0": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v54.0.0+incompatible"},
+	"e00bea8b4b7549e63a83f54cccccd1d63ea84d71940b144e4a45d815ee75f1c0": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v54.0.0+incompatible"},
 	},
-	"07892d773f4601d0fc476bd2e79bcefe21bf1264c4769c7233eea068366ed9c2": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v54.1.0+incompatible"},
+	"07892d773f4601d0fc476bd2e79bcefe21bf1264c4769c7233eea068366ed9c2": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v54.1.0+incompatible"},
 	},
-	"c44bf96b94f70b1a53a80950b1b75c9fe091cfe86c0ff867ce7ce50bb369b810": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v54.2.0+incompatible"},
+	"c44bf96b94f70b1a53a80950b1b75c9fe091cfe86c0ff867ce7ce50bb369b810": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v54.2.0+incompatible"},
 	},
-	"797bfa237bd3b65ac789493d38a6983d7e279f3ea8d97b987166adc74918a1ac": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v54.2.1+incompatible"},
+	"797bfa237bd3b65ac789493d38a6983d7e279f3ea8d97b987166adc74918a1ac": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v54.2.1+incompatible"},
 	},
-	"d7dbffa0c5e2a5d93658bcc047556ddb6e504a9e8a26eddabaffb291d9880fb1": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v54.3.0+incompatible"},
+	"d7dbffa0c5e2a5d93658bcc047556ddb6e504a9e8a26eddabaffb291d9880fb1": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v54.3.0+incompatible"},
 	},
-	"88d8d8128e0dd0ab9c4c31268e488e63e368b2002e6a3ccf832c7ee036451157": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v6.0.0-beta+incompatible"},
+	"88d8d8128e0dd0ab9c4c31268e488e63e368b2002e6a3ccf832c7ee036451157": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v6.0.0-beta+incompatible"},
 	},
-	"971578d38a7d08abce8b0ec5fa545b9673acb5bcf4a6c574a7a4747cfe87e484": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v7.0.0-beta+incompatible"},
+	"971578d38a7d08abce8b0ec5fa545b9673acb5bcf4a6c574a7a4747cfe87e484": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v7.0.0-beta+incompatible"},
 	},
-	"c544242503f082be53f55719b00f1f49c6af1b7733a7eadf588d8d1915f46352": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v7.0.1-beta+incompatible"},
+	"c544242503f082be53f55719b00f1f49c6af1b7733a7eadf588d8d1915f46352": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v7.0.1-beta+incompatible"},
 	},
-	"6ddf7cdc426f1b43f3a72340ed0a075ef85ee2369d7aac4b345116b2257bc70f": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v8.0.0-beta+incompatible"},
+	"6ddf7cdc426f1b43f3a72340ed0a075ef85ee2369d7aac4b345116b2257bc70f": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v8.0.0-beta+incompatible"},
 	},
-	"937cc7a4e09a4232661dbf9fd7e0d669714212243dfdcf6237bb9429347d246a": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v8.0.1-beta+incompatible"},
+	"937cc7a4e09a4232661dbf9fd7e0d669714212243dfdcf6237bb9429347d246a": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v8.0.1-beta+incompatible"},
 	},
-	"59479ba0bbae9492edad311cbb50175ac4300b5489702d1dc7c79a0b6218a857": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v8.1.0-beta+incompatible"},
+	"59479ba0bbae9492edad311cbb50175ac4300b5489702d1dc7c79a0b6218a857": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v8.1.0-beta+incompatible"},
 	},
-	"adc5389c6a8728babf145fe4c0be0a2ddc8030d52429bca7e8601ca8350075d9": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v8.1.1-beta+incompatible"},
+	"adc5389c6a8728babf145fe4c0be0a2ddc8030d52429bca7e8601ca8350075d9": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v8.1.1-beta+incompatible"},
 	},
-	"12568fd1835d96ee7716a39429c784ea3a9a5f4941ddf47e105beaa040c63b47": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v9.0.0-beta+incompatible"},
+	"12568fd1835d96ee7716a39429c784ea3a9a5f4941ddf47e105beaa040c63b47": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v9.0.0-beta+incompatible"},
 	},
-	"53fa781496d1231b6ce34f32d309741e0335d6c8d91327ae14545b94cdb0706b": []Modver{
-		{"github.com/Azure/azure-sdk-for-go", "v9.0.1-beta+incompatible"},
+	"53fa781496d1231b6ce34f32d309741e0335d6c8d91327ae14545b94cdb0706b": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v9.0.1-beta+incompatible"},
 	},
-	"85106a1d11a7ce252aeb747bc3066edf0fe670b81c243b7d2c6724a1f14b96a1": []Modver{
-		{"github.com/aws/aws-sdk-go", "v0.10.0"},
+	"85106a1d11a7ce252aeb747bc3066edf0fe670b81c243b7d2c6724a1f14b96a1": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v0.10.0"},
 	},
-	"4c852c6129709e73ab115ec0fb4983a6d2039fdefbbfa22c7b5bbe181bb3a950": []Modver{
-		{"github.com/aws/aws-sdk-go", "v0.10.1"},
+	"4c852c6129709e73ab115ec0fb4983a6d2039fdefbbfa22c7b5bbe181bb3a950": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v0.10.1"},
 	},
-	"ba2414067ed1a0b6121d2eadd437a69dc48bc18aebd60c445c6f292022147772": []Modver{
-		{"github.com/aws/aws-sdk-go", "v0.10.2"},
+	"ba2414067ed1a0b6121d2eadd437a69dc48bc18aebd60c445c6f292022147772": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v0.10.2"},
 	},
-	"0564efa92a7f5ebf8a063f033463f490442e4ecb5c03c5c4b33432e0086580d1": []Modver{
-		{"github.com/aws/aws-sdk-go", "v0.10.3"},
+	"0564efa92a7f5ebf8a063f033463f490442e4ecb5c03c5c4b33432e0086580d1": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v0.10.3"},
 	},
-	"b54e3c1f66a38c1f80dc07bcfd1273f2e71743749c8aa47e923f590869bd0c52": []Modver{
-		{"github.com/aws/aws-sdk-go", "v0.10.4"},
+	"b54e3c1f66a38c1f80dc07bcfd1273f2e71743749c8aa47e923f590869bd0c52": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v0.10.4"},
 	},
-	"38d2e07504b4bce0f9fb84e422495674b4c76c1013e45cedf7b98b60f11a0bce": []Modver{
-		{"github.com/aws/aws-sdk-go", "v0.6.0"},
+	"38d2e07504b4bce0f9fb84e422495674b4c76c1013e45cedf7b98b60f11a0bce": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v0.6.0"},
 	},
-	"1591e025384941bdae088d0bf275e6d4318f1473dcb711baa758264809c9f161": []Modver{
-		{"github.com/aws/aws-sdk-go", "v0.6.1"},
+	"1591e025384941bdae088d0bf275e6d4318f1473dcb711baa758264809c9f161": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v0.6.1"},
 	},
-	"f4f5fcb0cd567068065a61bc6a055521acbd3ddb32dc7a20fb966c838101d976": []Modver{
-		{"github.com/aws/aws-sdk-go", "v0.6.2"},
+	"f4f5fcb0cd567068065a61bc6a055521acbd3ddb32dc7a20fb966c838101d976": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v0.6.2"},
 	},
-	"1862f20e3fc7331d33f2d0b8814ff799e67b57b2c47277ac812f96f49729f2a5": []Modver{
-		{"github.com/aws/aws-sdk-go", "v0.6.3"},
+	"1862f20e3fc7331d33f2d0b8814ff799e67b57b2c47277ac812f96f49729f2a5": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v0.6.3"},
 	},
-	"91819ad5ad648a2927c20009cee00d31c5d281258d78df65ddd830ddf604e0ec": []Modver{
-		{"github.com/aws/aws-sdk-go", "v0.6.4"},
+	"91819ad5ad648a2927c20009cee00d31c5d281258d78df65ddd830ddf604e0ec": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v0.6.4"},
 	},
-	"7ca6fa81d95268c244a452facc767853af35af112a2de9cc9c5282592bb372b1": []Modver{
-		{"github.com/aws/aws-sdk-go", "v0.6.5"},
+	"7ca6fa81d95268c244a452facc767853af35af112a2de9cc9c5282592bb372b1": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v0.6.5"},
 	},
-	"9bb0b1f384b0e7f0d86fb60be6fff32fe22f11c7d81f5f1c0ac01183abd28551": []Modver{
-		{"github.com/aws/aws-sdk-go", "v0.6.6"},
+	"9bb0b1f384b0e7f0d86fb60be6fff32fe22f11c7d81f5f1c0ac01183abd28551": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v0.6.6"},
 	},
-	"1cdf2833181e6ada353085899360b379207ff1d7174a0cf6b145e9dbe4cc35ac": []Modver{
-		{"github.com/aws/aws-sdk-go", "v0.6.7"},
+	"1cdf2833181e6ada353085899360b379207ff1d7174a0cf6b145e9dbe4cc35ac": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v0.6.7"},
 	},
-	"d61bac5bfbdee5372f07be040119096b0dae533b5b940a7a2eb539e48df944e5": []Modver{
-		{"github.com/aws/aws-sdk-go", "v0.6.8"},
+	"d61bac5bfbdee5372f07be040119096b0dae533b5b940a7a2eb539e48df944e5": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v0.6.8"},
 	},
-	"8ca992ea464de926b9ebfa82232ba59a4bd4df4afc21420ae5bc1fa84b47aa15": []Modver{
-		{"github.com/aws/aws-sdk-go", "v0.7.0"},
+	"8ca992ea464de926b9ebfa82232ba59a4bd4df4afc21420ae5bc1fa84b47aa15": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v0.7.0"},
 	},
-	"2ad1323938136b47a98527cd3ae3a1d5c023ec8757f56d0ff85172764a0defd6": []Modver{
-		{"github.com/aws/aws-sdk-go", "v0.7.1"},
+	"2ad1323938136b47a98527cd3ae3a1d5c023ec8757f56d0ff85172764a0defd6": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v0.7.1"},
 	},
-	"fb8476c9ec1acea3cd9cbf3cc12279144921f64447e1f06bf55b8ec61be6f7d4": []Modver{
-		{"github.com/aws/aws-sdk-go", "v0.7.2"},
+	"fb8476c9ec1acea3cd9cbf3cc12279144921f64447e1f06bf55b8ec61be6f7d4": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v0.7.2"},
 	},
-	"c404b7f94a47e7bc81885edf845d87e133002c9824b44b6eaa3399ce1b07f13f": []Modver{
-		{"github.com/aws/aws-sdk-go", "v0.7.3"},
+	"c404b7f94a47e7bc81885edf845d87e133002c9824b44b6eaa3399ce1b07f13f": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v0.7.3"},
 	},
-	"82e4734b3bd81663ac93ab8c416dc91611133f5bb1bce052c0406e8c35c6c026": []Modver{
-		{"github.com/aws/aws-sdk-go", "v0.7.4"},
+	"82e4734b3bd81663ac93ab8c416dc91611133f5bb1bce052c0406e8c35c6c026": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v0.7.4"},
 	},
-	"7df2253669010a441f9a5d454df2e57232574c86fb6e4cadbc58c587bbdf81b8": []Modver{
-		{"github.com/aws/aws-sdk-go", "v0.9.10"},
+	"7df2253669010a441f9a5d454df2e57232574c86fb6e4cadbc58c587bbdf81b8": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v0.9.10"},
 	},
-	"14ffed9e9b4e8a87c4c0f2293dee4512793782084d5e841e6f657a4fff3e96be": []Modver{
-		{"github.com/aws/aws-sdk-go", "v0.9.11"},
+	"14ffed9e9b4e8a87c4c0f2293dee4512793782084d5e841e6f657a4fff3e96be": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v0.9.11"},
 	},
-	"d7f1bab2eff9d993284f2c8fbd778a4377176ce6827f2bdc98e6786cc38b878a": []Modver{
-		{"github.com/aws/aws-sdk-go", "v0.9.12"},
+	"d7f1bab2eff9d993284f2c8fbd778a4377176ce6827f2bdc98e6786cc38b878a": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v0.9.12"},
 	},
-	"012f15ae2babab5dc92f00e248b041dd83e33f8d80daab61a056ce870d50c204": []Modver{
-		{"github.com/aws/aws-sdk-go", "v0.9.13"},
+	"012f15ae2babab5dc92f00e248b041dd83e33f8d80daab61a056ce870d50c204": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v0.9.13"},
 	},
-	"1da2c97642952213538a8e6cdaa6c425f2fb31922d20685806856cf734eec25d": []Modver{
-		{"github.com/aws/aws-sdk-go", "v0.9.14"},
+	"1da2c97642952213538a8e6cdaa6c425f2fb31922d20685806856cf734eec25d": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v0.9.14"},
 	},
-	"729d3fb6216f1912450b4b1e46768a7c5b0ab6210bb7f07670c83fc19c2e435d": []Modver{
-		{"github.com/aws/aws-sdk-go", "v0.9.15"},
+	"729d3fb6216f1912450b4b1e46768a7c5b0ab6210bb7f07670c83fc19c2e435d": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v0.9.15"},
 	},
-	"59bd900cef030cbee1eda510fbf75a78560765cea200ea5667f6dcd0ceadba6b": []Modver{
-		{"github.com/aws/aws-sdk-go", "v0.9.16"},
+	"59bd900cef030cbee1eda510fbf75a78560765cea200ea5667f6dcd0ceadba6b": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v0.9.16"},
 	},
-	"ba0dc01ea6aed7ee65289f25dfdf5b18b573b2bb6b34f107963cd35ba4a2e857": []Modver{
-		{"github.com/aws/aws-sdk-go", "v0.9.17"},
+	"ba0dc01ea6aed7ee65289f25dfdf5b18b573b2bb6b34f107963cd35ba4a2e857": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v0.9.17"},
 	},
-	"e5124f094a85897a0cd0fcced4e163a4b9b40f6d818b4ee487a8592841a301d0": []Modver{
-		{"github.com/aws/aws-sdk-go", "v0.9.5"},
+	"e5124f094a85897a0cd0fcced4e163a4b9b40f6d818b4ee487a8592841a301d0": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v0.9.5"},
 	},
-	"3f185941761b8794dedd71f58b53cc5e43f42cf378a5f502af15d56da93b3688": []Modver{
-		{"github.com/aws/aws-sdk-go", "v0.9.6"},
+	"3f185941761b8794dedd71f58b53cc5e43f42cf378a5f502af15d56da93b3688": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v0.9.6"},
 	},
-	"dfcef1682cd0caa089c89d9894351f9a796fa977c95fe3bf298437ed9f1b5b52": []Modver{
-		{"github.com/aws/aws-sdk-go", "v0.9.7"},
+	"dfcef1682cd0caa089c89d9894351f9a796fa977c95fe3bf298437ed9f1b5b52": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v0.9.7"},
 	},
-	"d858942c5796c5ee69278b59f60bb7185d3c08e39dcb5e84c96e84fd1aac35bc": []Modver{
-		{"github.com/aws/aws-sdk-go", "v0.9.8"},
+	"d858942c5796c5ee69278b59f60bb7185d3c08e39dcb5e84c96e84fd1aac35bc": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v0.9.8"},
 	},
-	"db7832bf78760429656f71cb0351a5f4f1f935a9f997163a4ce2cdf189fb771e": []Modver{
-		{"github.com/aws/aws-sdk-go", "v0.9.9"},
+	"db7832bf78760429656f71cb0351a5f4f1f935a9f997163a4ce2cdf189fb771e": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v0.9.9"},
 	},
-	"3cce72f99827c2a753724d84f44a334b52b05dae929359054c1769081063ea4e": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.0.0"},
+	"3cce72f99827c2a753724d84f44a334b52b05dae929359054c1769081063ea4e": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.0.0"},
 	},
-	"13a1bcfb4daed19f6f0a1198442a8d08caa0a952ffd6617e6a44fcf2b4a3ed46": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.0.1"},
+	"13a1bcfb4daed19f6f0a1198442a8d08caa0a952ffd6617e6a44fcf2b4a3ed46": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.0.1"},
 	},
-	"21e57c9b4b781012fd6ec7c58386a022f011a8a3239af44be6b4deec2a0a63c3": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.0.10"},
+	"21e57c9b4b781012fd6ec7c58386a022f011a8a3239af44be6b4deec2a0a63c3": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.0.10"},
 	},
-	"1b893f297c24cb18c75043e3604ce3003405d4018cc2cc4f1ffd49c3bd8c3ec9": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.0.11"},
+	"1b893f297c24cb18c75043e3604ce3003405d4018cc2cc4f1ffd49c3bd8c3ec9": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.0.11"},
 	},
-	"499ae540e8368f072ad7abe1d00e17570547c76839a2a04242efa0875c8557fe": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.0.2"},
+	"499ae540e8368f072ad7abe1d00e17570547c76839a2a04242efa0875c8557fe": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.0.2"},
 	},
-	"1fcd663acf1965e3af7cb000885ff49768afacc9363a6f926b1b24354797a5d0": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.0.3"},
+	"1fcd663acf1965e3af7cb000885ff49768afacc9363a6f926b1b24354797a5d0": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.0.3"},
 	},
-	"f46fd31e74c98730b2f6d9e5bd01cab2e6365dc1bd38edadcbc5d0713a9dfc56": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.0.4"},
+	"f46fd31e74c98730b2f6d9e5bd01cab2e6365dc1bd38edadcbc5d0713a9dfc56": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.0.4"},
 	},
-	"e0931892923fa013a833b081990884239062691eeaa07b8dde0c3a96816ffb91": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.0.5"},
+	"e0931892923fa013a833b081990884239062691eeaa07b8dde0c3a96816ffb91": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.0.5"},
 	},
-	"3f17fb46ffea8eed4ad3ac53d098f13eb242f97a4b77e46ee5305530d6844b82": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.0.6"},
+	"3f17fb46ffea8eed4ad3ac53d098f13eb242f97a4b77e46ee5305530d6844b82": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.0.6"},
 	},
-	"1815142fa55753742fd728b42f35ba0410336314165d083dc1c13e7d0c07b1a0": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.0.7"},
+	"1815142fa55753742fd728b42f35ba0410336314165d083dc1c13e7d0c07b1a0": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.0.7"},
 	},
-	"b121ecb90adcb48d197c91630f0ab1dbf29b8dbb0c8fedcdb6671c9093e46ec2": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.0.8"},
+	"b121ecb90adcb48d197c91630f0ab1dbf29b8dbb0c8fedcdb6671c9093e46ec2": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.0.8"},
 	},
-	"3d6e8ffdc311a9e349ae5e7d151ad74e0247fbda72bcc33b6771e8a8710cec28": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.0.9"},
+	"3d6e8ffdc311a9e349ae5e7d151ad74e0247fbda72bcc33b6771e8a8710cec28": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.0.9"},
 	},
-	"7d2a6c125b5ec8f37db93b3df811d8021aa06005801bf484e1d434bd983d83a6": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.1.0"},
+	"7d2a6c125b5ec8f37db93b3df811d8021aa06005801bf484e1d434bd983d83a6": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.1.0"},
 	},
-	"49108d3bd57f6f3611597cf8e538514f0c0864dda345838b518f4da5bff6ca53": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.1.1"},
+	"49108d3bd57f6f3611597cf8e538514f0c0864dda345838b518f4da5bff6ca53": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.1.1"},
 	},
-	"d07999a8116a78797cd51dd20e43eb03f286d6e06e2ecbb2431293552085dbea": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.1.10"},
+	"d07999a8116a78797cd51dd20e43eb03f286d6e06e2ecbb2431293552085dbea": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.1.10"},
 	},
-	"7e95d6693a7262337d4f3e691acf47979cd447fcdd557d85c61066fc0ef43d19": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.1.11"},
+	"7e95d6693a7262337d4f3e691acf47979cd447fcdd557d85c61066fc0ef43d19": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.1.11"},
 	},
-	"6977df55401f087976ba4ffbe06db75d50e89d085e7021d440b5d8ebbc121d1b": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.1.12"},
+	"6977df55401f087976ba4ffbe06db75d50e89d085e7021d440b5d8ebbc121d1b": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.1.12"},
 	},
-	"ce30bddfdb91f805313a0e2667bf1a3c1da669d8ad67b1e9a30f901046894c51": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.1.13"},
+	"ce30bddfdb91f805313a0e2667bf1a3c1da669d8ad67b1e9a30f901046894c51": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.1.13"},
 	},
-	"293cdd551c271da4ba2d12c3d65361e4f1ba794262cb2109c2fb1b7e15a0fa06": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.1.14"},
+	"293cdd551c271da4ba2d12c3d65361e4f1ba794262cb2109c2fb1b7e15a0fa06": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.1.14"},
 	},
-	"c9217cf12f626162d9c5a3be4308d1d86bc88998cc86531469a60f6138ac0fdb": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.1.15"},
+	"c9217cf12f626162d9c5a3be4308d1d86bc88998cc86531469a60f6138ac0fdb": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.1.15"},
 	},
-	"3b371010d16ed29cb686eab34c12cc28846fbb89cbcca5328b858f717b372e81": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.1.16"},
+	"3b371010d16ed29cb686eab34c12cc28846fbb89cbcca5328b858f717b372e81": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.1.16"},
 	},
-	"141aee89654032bbe8206e0b899390043136612d59de542455794fae8d2592fb": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.1.17"},
+	"141aee89654032bbe8206e0b899390043136612d59de542455794fae8d2592fb": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.1.17"},
 	},
-	"4e942b85f9860ead36ff2fa78577a351ae4958bf953bcafea8e12a10a647e3f2": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.1.18"},
+	"4e942b85f9860ead36ff2fa78577a351ae4958bf953bcafea8e12a10a647e3f2": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.1.18"},
 	},
-	"fc48b8a388e1f0dc9deda9bae8215211fff0e06fc7b1c610a529e01759680cc2": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.1.19"},
+	"fc48b8a388e1f0dc9deda9bae8215211fff0e06fc7b1c610a529e01759680cc2": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.1.19"},
 	},
-	"a482f31dd72f4fa437838c486564adf831e7fff97e77a9f8df57cf0a1aba19ca": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.1.2"},
+	"a482f31dd72f4fa437838c486564adf831e7fff97e77a9f8df57cf0a1aba19ca": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.1.2"},
 	},
-	"e332eb75ecea0041794df292a08eeabb8f6c596039dd0e796a5021cf56457731": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.1.20"},
+	"e332eb75ecea0041794df292a08eeabb8f6c596039dd0e796a5021cf56457731": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.1.20"},
 	},
-	"740d7ac4fe13ea5e31237c8137d5402c776a8083962b02deb56466739c010a6a": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.1.21"},
+	"740d7ac4fe13ea5e31237c8137d5402c776a8083962b02deb56466739c010a6a": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.1.21"},
 	},
-	"5a375386828105f37d370d8970ed04264c9b5b1429f99c791b8f2b8c6af81a4d": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.1.22"},
+	"5a375386828105f37d370d8970ed04264c9b5b1429f99c791b8f2b8c6af81a4d": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.1.22"},
 	},
-	"36a928e5832de287da1175156d841fc634322218638299d395dd8952f8996c22": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.1.23"},
+	"36a928e5832de287da1175156d841fc634322218638299d395dd8952f8996c22": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.1.23"},
 	},
-	"20f09d91e08f4dfdc23c85a282a8a6f360abd42711672d902b29f4a936bb92b0": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.1.24"},
+	"20f09d91e08f4dfdc23c85a282a8a6f360abd42711672d902b29f4a936bb92b0": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.1.24"},
 	},
-	"72334b50c369aeba7c280d2b1c31a9cce335e94b83e212e074f8154930b69f1a": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.1.25"},
+	"72334b50c369aeba7c280d2b1c31a9cce335e94b83e212e074f8154930b69f1a": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.1.25"},
 	},
-	"3051ec527081bc3aeb64dce8f591eed1b9431c1cba594e8ec8275184fb2d8f7f": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.1.26"},
+	"3051ec527081bc3aeb64dce8f591eed1b9431c1cba594e8ec8275184fb2d8f7f": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.1.26"},
 	},
-	"ce6c3731b313f7efd558297b97a37e6335fca86d78cb72769d00ca5f3e0b2c09": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.1.27"},
+	"ce6c3731b313f7efd558297b97a37e6335fca86d78cb72769d00ca5f3e0b2c09": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.1.27"},
 	},
-	"a02390c2d8dd383df82a7795bb7bbc40b5f62dda34726a2b80681f0a7818e25f": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.1.28"},
+	"a02390c2d8dd383df82a7795bb7bbc40b5f62dda34726a2b80681f0a7818e25f": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.1.28"},
 	},
-	"dd946f6a7c3f719f71c57835b624a90936e485b7cd37f596408dc33c9eb58cac": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.1.29"},
+	"dd946f6a7c3f719f71c57835b624a90936e485b7cd37f596408dc33c9eb58cac": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.1.29"},
 	},
-	"7f8e878442e8958887ee9201c087167951249baa626fc2c329ece8ac639a768f": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.1.3"},
+	"7f8e878442e8958887ee9201c087167951249baa626fc2c329ece8ac639a768f": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.1.3"},
 	},
-	"282557411d1cc5191e0888532eefce242f0e8a059388b82d3e735e94ebffad81": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.1.30"},
+	"282557411d1cc5191e0888532eefce242f0e8a059388b82d3e735e94ebffad81": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.1.30"},
 	},
-	"9adc4f287e80d9f635c144f6abd6c2187f94742b03e1cc27b62aa1d119843835": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.1.31"},
+	"9adc4f287e80d9f635c144f6abd6c2187f94742b03e1cc27b62aa1d119843835": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.1.31"},
 	},
-	"ad2bc0b4e758fb5be9dcba21f30c49a78833c2437b1c5f7fc01316f1565d3a4d": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.1.32"},
+	"ad2bc0b4e758fb5be9dcba21f30c49a78833c2437b1c5f7fc01316f1565d3a4d": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.1.32"},
 	},
-	"9ba3d60ae2851e9672c99f012f6569c0f80c3187651f25954da18c8755792cba": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.1.33"},
+	"9ba3d60ae2851e9672c99f012f6569c0f80c3187651f25954da18c8755792cba": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.1.33"},
 	},
-	"9d01dd6603100a90f34ddb45c3d82364c93327ae89b655c0886777825c07408a": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.1.34"},
+	"9d01dd6603100a90f34ddb45c3d82364c93327ae89b655c0886777825c07408a": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.1.34"},
 	},
-	"82d779236a2e4f24ea279e2007cd888d625fe322155012038c06bb5877bf73ff": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.1.35"},
+	"82d779236a2e4f24ea279e2007cd888d625fe322155012038c06bb5877bf73ff": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.1.35"},
 	},
-	"1e0fee6d5ecf83e6b9870d5d1bef0115049bcb60216218defe54576418227e69": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.1.36"},
+	"1e0fee6d5ecf83e6b9870d5d1bef0115049bcb60216218defe54576418227e69": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.1.36"},
 	},
-	"021d3944e21413f0de6e648bda6ecbb2e19f77695079b635098efbd1a2c29f4a": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.1.4"},
+	"021d3944e21413f0de6e648bda6ecbb2e19f77695079b635098efbd1a2c29f4a": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.1.4"},
 	},
-	"77bf0d6522305b6f59d78b385dba789533c2b82ea3ce0cc831f3748c9e1e1899": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.1.5"},
+	"77bf0d6522305b6f59d78b385dba789533c2b82ea3ce0cc831f3748c9e1e1899": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.1.5"},
 	},
-	"eb1c93b7aafb5767201e0d8f933cf9cae0f93e18afcd8b9280d1486228c7cc32": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.1.6"},
+	"eb1c93b7aafb5767201e0d8f933cf9cae0f93e18afcd8b9280d1486228c7cc32": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.1.6"},
 	},
-	"21486f3378f32b701f83c7b02081f1123ed2ffdb10c9b13b02fba404f10bee96": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.1.7"},
+	"21486f3378f32b701f83c7b02081f1123ed2ffdb10c9b13b02fba404f10bee96": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.1.7"},
 	},
-	"e2164a8f836294fb68e2f01b198fec3adf636e1a387e9d5922bdac89bd03f8cd": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.1.8"},
+	"e2164a8f836294fb68e2f01b198fec3adf636e1a387e9d5922bdac89bd03f8cd": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.1.8"},
 	},
-	"3c85c82d7e9f8a90d6e86f1dcab35468913b1b6896fdfdb705251f09d8dd2fac": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.1.9"},
+	"3c85c82d7e9f8a90d6e86f1dcab35468913b1b6896fdfdb705251f09d8dd2fac": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.1.9"},
 	},
-	"7ced82d4a74f5c5b36767e0955e0d93e0f0972bc88f2bfe4d40c831a8806c29e": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.0"},
+	"7ced82d4a74f5c5b36767e0955e0d93e0f0972bc88f2bfe4d40c831a8806c29e": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.10.0"},
 	},
-	"1c1f7d938afac43062e33e015b5f9c72363492ddf1a790c1bf932cc8e3fccaca": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.1"},
+	"1c1f7d938afac43062e33e015b5f9c72363492ddf1a790c1bf932cc8e3fccaca": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.10.1"},
 	},
-	"62258ed5f9006c441b162271b04a3e0ee1beaf669760d664f13e21eb4eb7d1df": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.10"},
+	"62258ed5f9006c441b162271b04a3e0ee1beaf669760d664f13e21eb4eb7d1df": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.10.10"},
 	},
-	"ab77934da39b689f5d4384a67691b99f12bd77c05e441a0c86b37c5b08ae851b": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.11"},
+	"ab77934da39b689f5d4384a67691b99f12bd77c05e441a0c86b37c5b08ae851b": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.10.11"},
 	},
-	"b33bf32f1f8f60e34be5dbe176ac77f8ac094d8d22dd9140e82aa643332c6a02": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.12"},
+	"b33bf32f1f8f60e34be5dbe176ac77f8ac094d8d22dd9140e82aa643332c6a02": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.10.12"},
 	},
-	"facf252e38bac6853a098dee7fccd6424627451dcaec36d8d6dfcbbe5c68c39a": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.13"},
+	"facf252e38bac6853a098dee7fccd6424627451dcaec36d8d6dfcbbe5c68c39a": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.10.13"},
 	},
-	"5de491e17e39412c1ae3e6f8e9aadb21ccddafb8695e2b73dc100a67060365e7": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.14"},
+	"5de491e17e39412c1ae3e6f8e9aadb21ccddafb8695e2b73dc100a67060365e7": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.10.14"},
 	},
-	"e1b41a770414ed40e9bf119f418a780fc735cdbbcf42a474fc35feccaf00da82": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.15"},
+	"e1b41a770414ed40e9bf119f418a780fc735cdbbcf42a474fc35feccaf00da82": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.10.15"},
 	},
-	"39faed0060d6e20e7e31d6226adcae4f902d5c5f51ba35c654532dc3b87f5662": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.16"},
+	"39faed0060d6e20e7e31d6226adcae4f902d5c5f51ba35c654532dc3b87f5662": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.10.16"},
 	},
-	"c61d7101ee2a8ec78dfa9dbeb16494eb31c8ec0f209a3d584bbeb89baceb94bc": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.17"},
+	"c61d7101ee2a8ec78dfa9dbeb16494eb31c8ec0f209a3d584bbeb89baceb94bc": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.10.17"},
 	},
-	"b605031e461eec4f526fc7ae3d2eac5f63b2375b37810ae0a6b5312d9feb8b85": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.18"},
+	"b605031e461eec4f526fc7ae3d2eac5f63b2375b37810ae0a6b5312d9feb8b85": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.10.18"},
 	},
-	"462fa3303e4f5055abc34add02ae8e436b8873167beff60144d3a3712634562d": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.19"},
+	"462fa3303e4f5055abc34add02ae8e436b8873167beff60144d3a3712634562d": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.10.19"},
 	},
-	"bfba1cf8750b753ff5dcfc4531de324a8c3f06c4ec659c8f51457fb96c14c33e": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.2"},
+	"bfba1cf8750b753ff5dcfc4531de324a8c3f06c4ec659c8f51457fb96c14c33e": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.10.2"},
 	},
-	"6330413bdffed6b02e030b312846d85f773b6f0c362803e41174f3b2445821cc": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.20"},
+	"6330413bdffed6b02e030b312846d85f773b6f0c362803e41174f3b2445821cc": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.10.20"},
 	},
-	"72bc7a932d8ff85dcba098860b8838324f9d4ab4c8be2eded52974ce40ef3db5": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.21"},
+	"72bc7a932d8ff85dcba098860b8838324f9d4ab4c8be2eded52974ce40ef3db5": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.10.21"},
 	},
-	"8794c8b262c1b6156262632f386a83480a661ec08b40f9a0338049e31fcb2454": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.22"},
+	"8794c8b262c1b6156262632f386a83480a661ec08b40f9a0338049e31fcb2454": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.10.22"},
 	},
-	"38d558e46e9de0b75a55e60a93e028673deca04cf53d45d41203c0a4e415c1c6": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.23"},
+	"38d558e46e9de0b75a55e60a93e028673deca04cf53d45d41203c0a4e415c1c6": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.10.23"},
 	},
-	"fbef79a719172c6fca21d448e9d9f8e18c2ccbd15780c0b5f94f6f813f060041": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.24"},
+	"fbef79a719172c6fca21d448e9d9f8e18c2ccbd15780c0b5f94f6f813f060041": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.10.24"},
 	},
-	"7264045f9155641b5b64d64e36072885c74e892aebd10889e6157d21605286bf": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.25"},
+	"7264045f9155641b5b64d64e36072885c74e892aebd10889e6157d21605286bf": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.10.25"},
 	},
-	"299d627af7aac09f73aa88f5d9860f2dce27cb558412bf9c8fd4dac5c52e61b7": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.26"},
+	"299d627af7aac09f73aa88f5d9860f2dce27cb558412bf9c8fd4dac5c52e61b7": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.10.26"},
 	},
-	"d66262052a1d8d9e3e81d0c2b6d8cb0bfbb749af2d7b3161a432aadb8bc767a1": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.27"},
+	"d66262052a1d8d9e3e81d0c2b6d8cb0bfbb749af2d7b3161a432aadb8bc767a1": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.10.27"},
 	},
-	"f4319bfc9a8cc81cae83a435a44322db78ec9605c4589006ce50dde99c1c6329": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.28"},
+	"f4319bfc9a8cc81cae83a435a44322db78ec9605c4589006ce50dde99c1c6329": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.10.28"},
 	},
-	"7d4a185ff25196cc79e7600190998ec2dc25c3a732f82cff10e7c8f16092ce05": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.29"},
+	"7d4a185ff25196cc79e7600190998ec2dc25c3a732f82cff10e7c8f16092ce05": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.10.29"},
 	},
-	"bdcd93b6a56cb785d5171daa6fe2b1716d9f76db446ee9c666ef78229fabc497": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.3"},
+	"bdcd93b6a56cb785d5171daa6fe2b1716d9f76db446ee9c666ef78229fabc497": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.10.3"},
 	},
-	"7256b46eebe8585d57163f8c40ace06aa407fcf0e4748112f33d76e8d10c170f": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.30"},
+	"7256b46eebe8585d57163f8c40ace06aa407fcf0e4748112f33d76e8d10c170f": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.10.30"},
 	},
-	"766bd823640cc788902a1b0b2c4f475a78eae6143897a6bd456deaf0df9651d6": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.31"},
+	"766bd823640cc788902a1b0b2c4f475a78eae6143897a6bd456deaf0df9651d6": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.10.31"},
 	},
-	"1e0fad7d8718ca2c4e6a40fb602fb25d3ad614bbee768d79dedff59a477bcb25": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.32"},
+	"1e0fad7d8718ca2c4e6a40fb602fb25d3ad614bbee768d79dedff59a477bcb25": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.10.32"},
 	},
-	"13fcff91d5e2487c134dd1e66d6a6ec11b15f42965794bf287d31d3ed05ba039": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.33"},
+	"13fcff91d5e2487c134dd1e66d6a6ec11b15f42965794bf287d31d3ed05ba039": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.10.33"},
 	},
-	"33818140d49c09a42929cf8afc654f340ee6c6e62f103d4afd9a512ed338ed94": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.34"},
+	"33818140d49c09a42929cf8afc654f340ee6c6e62f103d4afd9a512ed338ed94": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.10.34"},
 	},
-	"b05d18e10fde89ae767a34d3e71f0f97740f61fed6858897b38e63d181acca94": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.35"},
+	"b05d18e10fde89ae767a34d3e71f0f97740f61fed6858897b38e63d181acca94": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.10.35"},
 	},
-	"e1d08b2bf8b1887233f4e89d9df269db5ddacb6ceee5c01481b49947f1bf5cb5": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.36"},
+	"e1d08b2bf8b1887233f4e89d9df269db5ddacb6ceee5c01481b49947f1bf5cb5": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.10.36"},
 	},
-	"6c33deaa6911273e87d15d3b8bc56d0b9caa7d2c4cef1f0617720ea598821d2f": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.37"},
+	"6c33deaa6911273e87d15d3b8bc56d0b9caa7d2c4cef1f0617720ea598821d2f": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.10.37"},
 	},
-	"21f190fb2b62f496de781ff69c82687fbe8ca473f5c29ed8b16ec204c269fdfe": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.38"},
+	"21f190fb2b62f496de781ff69c82687fbe8ca473f5c29ed8b16ec204c269fdfe": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.10.38"},
 	},
-	"138df3d1f4e0a6bd4fd15e41d81f9ae2200ded75e49bc911a612cb77f55921de": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.39"},
+	"138df3d1f4e0a6bd4fd15e41d81f9ae2200ded75e49bc911a612cb77f55921de": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.10.39"},
 	},
-	"782af93181006dbde7122dd8de4ac714a62e53832393ee72cbe420c60fde550f": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.4"},
+	"782af93181006dbde7122dd8de4ac714a62e53832393ee72cbe420c60fde550f": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.10.4"},
 	},
-	"0ac7d7731d2666c93a625d0be7cfd7835bc807ea3eeebbdc906c37103a38cc39": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.40"},
+	"0ac7d7731d2666c93a625d0be7cfd7835bc807ea3eeebbdc906c37103a38cc39": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.10.40"},
 	},
-	"21e8cd93fb60ac8271970b6628316979abb20bd5c8822b1310477a0789598927": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.41"},
+	"21e8cd93fb60ac8271970b6628316979abb20bd5c8822b1310477a0789598927": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.10.41"},
 	},
-	"7ca669e4f053223112586b08645572f6824ac3bd438db313c1e46fb99d853f79": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.42"},
+	"7ca669e4f053223112586b08645572f6824ac3bd438db313c1e46fb99d853f79": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.10.42"},
 	},
-	"46143f5bd84f61d087c45914555bdf0935ba703d23bec068f133ddbbd5c628e7": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.43"},
+	"46143f5bd84f61d087c45914555bdf0935ba703d23bec068f133ddbbd5c628e7": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.10.43"},
 	},
-	"2d812b679bceefde22b9944e888a924922ab3e434fd515bc96a6cddf22259225": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.44"},
+	"2d812b679bceefde22b9944e888a924922ab3e434fd515bc96a6cddf22259225": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.10.44"},
 	},
-	"9c17f7d52eeea7b9b98d3397a05bd2544a99a43df7063b1ad33a4bc1cdfb9531": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.45"},
+	"9c17f7d52eeea7b9b98d3397a05bd2544a99a43df7063b1ad33a4bc1cdfb9531": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.10.45"},
 	},
-	"0fbf79157bc496154ab2982947e24c0dd91aa0f34e65f60c5322ed9cf9cd6674": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.46"},
+	"0fbf79157bc496154ab2982947e24c0dd91aa0f34e65f60c5322ed9cf9cd6674": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.10.46"},
 	},
-	"63cbd989a0c361ec2f1a90c39b3b9d14c3a9d6b5c2b0f49c61459d11ea48423e": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.47"},
+	"63cbd989a0c361ec2f1a90c39b3b9d14c3a9d6b5c2b0f49c61459d11ea48423e": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.10.47"},
 	},
-	"721160692fcb6bdea166608298f86b36be57f9f383c78b049158e36194fbc40a": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.48"},
+	"721160692fcb6bdea166608298f86b36be57f9f383c78b049158e36194fbc40a": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.10.48"},
 	},
-	"576686c413a425925bd4d300122efa9af5fadb908a2bded181fff975dc44315a": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.5"},
+	"576686c413a425925bd4d300122efa9af5fadb908a2bded181fff975dc44315a": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.10.5"},
 	},
-	"4101f3452461e5871c610f295f2195517bf4d16e0bf751aa2e97aa86cfd99142": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.50"},
+	"4101f3452461e5871c610f295f2195517bf4d16e0bf751aa2e97aa86cfd99142": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.10.50"},
 	},
-	"148fb5565f186c8a76fd373567af1743a4e52437bc5e4f43489e136dd1950a94": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.51"},
+	"148fb5565f186c8a76fd373567af1743a4e52437bc5e4f43489e136dd1950a94": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.10.51"},
 	},
-	"0f4a0214145f3858d6ae99a82b1929cd8c69e2daa133e135fab64bbcb178689f": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.6"},
+	"0f4a0214145f3858d6ae99a82b1929cd8c69e2daa133e135fab64bbcb178689f": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.10.6"},
 	},
-	"ba82ba72a0ed408e811787ffc63e1c77577271534138ced2b717c18cfae6616f": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.7"},
+	"ba82ba72a0ed408e811787ffc63e1c77577271534138ced2b717c18cfae6616f": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.10.7"},
 	},
-	"bdd5f0e83be169ffce9a32c9eb5290ebd0f1c08f32e66433eb3d2cd1df27e2b9": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.8"},
+	"bdd5f0e83be169ffce9a32c9eb5290ebd0f1c08f32e66433eb3d2cd1df27e2b9": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.10.8"},
 	},
-	"8a3a66c5beb4e7f7bd8637aba10af113820e1750a6c47535481d2aaf9cacd6a3": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.10.9"},
+	"8a3a66c5beb4e7f7bd8637aba10af113820e1750a6c47535481d2aaf9cacd6a3": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.10.9"},
 	},
-	"932dd2b40fe26d3eef1947a357eecc8e755cd17fca1fd707cb5e882e66118488": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.11.0"},
+	"932dd2b40fe26d3eef1947a357eecc8e755cd17fca1fd707cb5e882e66118488": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.11.0"},
 	},
-	"46d5a07a19f6981d03806d3230ad6c10b58929bc8d8c940a0383cbf065eabb95": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.0"},
+	"46d5a07a19f6981d03806d3230ad6c10b58929bc8d8c940a0383cbf065eabb95": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.12.0"},
 	},
-	"5c385baaa09fb7e970d88821c3dc51113475330899b0be6b364e8db2efde0afb": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.1"},
+	"5c385baaa09fb7e970d88821c3dc51113475330899b0be6b364e8db2efde0afb": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.12.1"},
 	},
-	"28de334f03b2e25cfc9a14865de8a454dbdde4bfb464742ae2100f7161c48fdf": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.10"},
+	"28de334f03b2e25cfc9a14865de8a454dbdde4bfb464742ae2100f7161c48fdf": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.12.10"},
 	},
-	"8c398f163dcc1c09cb2a06267e2f3d333276e308b99aac240e9d55c68287c29b": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.11"},
+	"8c398f163dcc1c09cb2a06267e2f3d333276e308b99aac240e9d55c68287c29b": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.12.11"},
 	},
-	"b820072df7baefaa9e3afd0a6234ec981372b4ef1bace1d5f40852e47dcb0fea": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.12"},
+	"b820072df7baefaa9e3afd0a6234ec981372b4ef1bace1d5f40852e47dcb0fea": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.12.12"},
 	},
-	"50c24a59af1f79f5211c0ed17d12b0ce53a414f0562dad817a9527fa47d48b33": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.13"},
+	"50c24a59af1f79f5211c0ed17d12b0ce53a414f0562dad817a9527fa47d48b33": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.12.13"},
 	},
-	"f86211b26e0d08dcc478325ed6366c65ba06e2467d482e5233376bcd1b5a0d07": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.14"},
+	"f86211b26e0d08dcc478325ed6366c65ba06e2467d482e5233376bcd1b5a0d07": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.12.14"},
 	},
-	"7a0eb08e48e7f1a8b43a626eeaf4cdd1a787765b78ba7448470991d7964d694f": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.15"},
+	"7a0eb08e48e7f1a8b43a626eeaf4cdd1a787765b78ba7448470991d7964d694f": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.12.15"},
 	},
-	"a2061e0fa2dfbb074e56a9dfada2d227ff405a3f80f8c84192a812d64534d549": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.16"},
+	"a2061e0fa2dfbb074e56a9dfada2d227ff405a3f80f8c84192a812d64534d549": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.12.16"},
 	},
-	"75d6c953b2ea95cbefb730bd59b290568f4f3327cea6a01256b39757a9ed0a24": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.17"},
+	"75d6c953b2ea95cbefb730bd59b290568f4f3327cea6a01256b39757a9ed0a24": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.12.17"},
 	},
-	"e690b0559769f476dcf9229fbc8292b1cfd24138abb8091e61856a26de9999a4": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.18"},
+	"e690b0559769f476dcf9229fbc8292b1cfd24138abb8091e61856a26de9999a4": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.12.18"},
 	},
-	"a01aeb26ac016b3b7e0b4337919a955df992b1dcf68929834b26f0d5de6efd32": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.19"},
+	"a01aeb26ac016b3b7e0b4337919a955df992b1dcf68929834b26f0d5de6efd32": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.12.19"},
 	},
-	"a0e398222e6ed7470b948ba826bf8eacf0c92828f90253ae37281d98ff460c6e": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.2"},
+	"a0e398222e6ed7470b948ba826bf8eacf0c92828f90253ae37281d98ff460c6e": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.12.2"},
 	},
-	"02f854e7a9f1c68ad114b8ed48c2aa1a6baae2566134e484a93f2d879f74fbed": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.20"},
+	"02f854e7a9f1c68ad114b8ed48c2aa1a6baae2566134e484a93f2d879f74fbed": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.12.20"},
 	},
-	"d21fac302382ef6b3eba71fe4c7fba8ce43d372488eecb15dec7f039c0a4f8e2": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.21"},
+	"d21fac302382ef6b3eba71fe4c7fba8ce43d372488eecb15dec7f039c0a4f8e2": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.12.21"},
 	},
-	"56ce50014cc8739b24601964245fbb21da1a73c91100067dc8380beb83e9a478": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.22"},
+	"56ce50014cc8739b24601964245fbb21da1a73c91100067dc8380beb83e9a478": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.12.22"},
 	},
-	"a4cd6787d5efa8ade3c8189120643610f37e653c02f50c485a4039d3e0535695": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.23"},
+	"a4cd6787d5efa8ade3c8189120643610f37e653c02f50c485a4039d3e0535695": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.12.23"},
 	},
-	"dbf7d495fed7b8e912352d4731fc48ea5fc76efb5f3680c7b560e752bd532f86": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.24"},
+	"dbf7d495fed7b8e912352d4731fc48ea5fc76efb5f3680c7b560e752bd532f86": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.12.24"},
 	},
-	"8cd7ca25e0af7f2473312fd708e4c7e79266c4a4d6dcfd5c3b971e4f64662506": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.25"},
+	"8cd7ca25e0af7f2473312fd708e4c7e79266c4a4d6dcfd5c3b971e4f64662506": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.12.25"},
 	},
-	"adc1efeabebbb73669ead16ba5e1a47a2d7092c43eb39586dd981054354ce00a": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.26"},
+	"adc1efeabebbb73669ead16ba5e1a47a2d7092c43eb39586dd981054354ce00a": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.12.26"},
 	},
-	"c5efee2617f4a0ddaa40babaf92b2a31b7e302e3cb025aa71cc2d7b170f39d3d": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.27"},
+	"c5efee2617f4a0ddaa40babaf92b2a31b7e302e3cb025aa71cc2d7b170f39d3d": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.12.27"},
 	},
-	"b29eab61918f28211b024788704b2234b4ee9b29a12498437840c8732fcffe85": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.28"},
+	"b29eab61918f28211b024788704b2234b4ee9b29a12498437840c8732fcffe85": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.12.28"},
 	},
-	"822b8e9315ec22a5dd0ed0b43ca0f15e93c7597a91b8ad764edd53941b0fc778": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.29"},
+	"822b8e9315ec22a5dd0ed0b43ca0f15e93c7597a91b8ad764edd53941b0fc778": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.12.29"},
 	},
-	"c0f39eb2967f8cea15b87fd3472e26ec778720664fde12a54bd4ad12c125d0bd": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.3"},
+	"c0f39eb2967f8cea15b87fd3472e26ec778720664fde12a54bd4ad12c125d0bd": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.12.3"},
 	},
-	"856f70e494d872e13fb0d49171f5ab3b007a4f59d802828403741eba4f1fb299": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.30"},
+	"856f70e494d872e13fb0d49171f5ab3b007a4f59d802828403741eba4f1fb299": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.12.30"},
 	},
-	"f1815af9489d5254297b9671fcd7c8cf087083821268178e62fee7959fd7604c": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.31"},
+	"f1815af9489d5254297b9671fcd7c8cf087083821268178e62fee7959fd7604c": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.12.31"},
 	},
-	"5d7711889af5018a6f13240c1272bb6799e0c94524fd0f048586114ddb8abeaf": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.32"},
+	"5d7711889af5018a6f13240c1272bb6799e0c94524fd0f048586114ddb8abeaf": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.12.32"},
 	},
-	"eb2980a66df4153cf037d1f9fb8c79db9cdbd58a913ea2294b679f6241aa4da0": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.33"},
+	"eb2980a66df4153cf037d1f9fb8c79db9cdbd58a913ea2294b679f6241aa4da0": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.12.33"},
 	},
-	"fcb9d2ebdb73d1797db76332b0c35f2f65aaebc8f0ae55869b139a07f82316f4": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.34"},
+	"fcb9d2ebdb73d1797db76332b0c35f2f65aaebc8f0ae55869b139a07f82316f4": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.12.34"},
 	},
-	"5df9612b3f4b8262b246f042c8454b2e2e2cc0be8579e2429e9b02f8ac153bc5": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.35"},
+	"5df9612b3f4b8262b246f042c8454b2e2e2cc0be8579e2429e9b02f8ac153bc5": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.12.35"},
 	},
-	"0813a1321df36deceb3727ee60b8e61bdbae3602bad60a4c488a7fb07e1b45a5": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.36"},
+	"0813a1321df36deceb3727ee60b8e61bdbae3602bad60a4c488a7fb07e1b45a5": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.12.36"},
 	},
-	"97d06c1edcabd03178188388bdc1aedf693eb40f063a4a32c9586c0e5615c649": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.37"},
+	"97d06c1edcabd03178188388bdc1aedf693eb40f063a4a32c9586c0e5615c649": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.12.37"},
 	},
-	"cd1f3cbd5a155628ac3c3644b368bcde18f59d6a85ebb13a8edf9c1d1578e680": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.38"},
+	"cd1f3cbd5a155628ac3c3644b368bcde18f59d6a85ebb13a8edf9c1d1578e680": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.12.38"},
 	},
-	"97237376350272865e08eedfbf3198e2ada749f723783ec39bb9899de482930f": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.39"},
+	"97237376350272865e08eedfbf3198e2ada749f723783ec39bb9899de482930f": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.12.39"},
 	},
-	"eae8ee1888d4d8681f131424e2c9b6923dcc9a12b77b8d99f3bdde3ab590b599": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.4"},
+	"eae8ee1888d4d8681f131424e2c9b6923dcc9a12b77b8d99f3bdde3ab590b599": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.12.4"},
 	},
-	"eb33e9f10145c827dc58198658dd78edb50568108186d6b1659dcf05371f10f9": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.40"},
+	"eb33e9f10145c827dc58198658dd78edb50568108186d6b1659dcf05371f10f9": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.12.40"},
 	},
-	"0b469b69e2fe0505040232f1a68d284ff06e3e3167f6ce2a491040a4c721ebc2": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.41"},
+	"0b469b69e2fe0505040232f1a68d284ff06e3e3167f6ce2a491040a4c721ebc2": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.12.41"},
 	},
-	"35dd6d0a81f5e9b1550c572ba4fd20950663c17a6f04f4350b4c697aa03bf60b": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.43"},
+	"35dd6d0a81f5e9b1550c572ba4fd20950663c17a6f04f4350b4c697aa03bf60b": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.12.43"},
 	},
-	"585d0d3082110684bc2f1a2287fcbeca2d36ca3d7cfc986bee425da5eb5dab37": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.44"},
+	"585d0d3082110684bc2f1a2287fcbeca2d36ca3d7cfc986bee425da5eb5dab37": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.12.44"},
 	},
-	"1eaa8dab0ed6cf3020eab12c962c6d450599762b4118393693c64c7e56bd8dd3": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.45"},
+	"1eaa8dab0ed6cf3020eab12c962c6d450599762b4118393693c64c7e56bd8dd3": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.12.45"},
 	},
-	"025173bb9b09e9a643221adbe57437d8b92fecffbe13b007a33c6b63391515b1": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.46"},
+	"025173bb9b09e9a643221adbe57437d8b92fecffbe13b007a33c6b63391515b1": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.12.46"},
 	},
-	"f1660a7f7e849eeec41a83527c02593705c82a6b9f546727050a27815a88ce59": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.47"},
+	"f1660a7f7e849eeec41a83527c02593705c82a6b9f546727050a27815a88ce59": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.12.47"},
 	},
-	"f83760c92c83ca1c4b8a658e10a208bbd74f98596425ee7e8c5716b9b7b87217": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.48"},
+	"f83760c92c83ca1c4b8a658e10a208bbd74f98596425ee7e8c5716b9b7b87217": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.12.48"},
 	},
-	"359cd9dcf0c1da4bf0f757c76f9442699d560f3a3aac1537b4b49bdc6467433b": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.49"},
+	"359cd9dcf0c1da4bf0f757c76f9442699d560f3a3aac1537b4b49bdc6467433b": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.12.49"},
 	},
-	"21d38c3c8b560ecd68d6b3cc9ba4e5f5067e4294f09c1420493bdf6690981703": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.5"},
+	"21d38c3c8b560ecd68d6b3cc9ba4e5f5067e4294f09c1420493bdf6690981703": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.12.5"},
 	},
-	"d6463a302a09eb3e44ef93c6b87ef2b2d90a0b8a514b5d8655718c5fa8bf4d12": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.50"},
+	"d6463a302a09eb3e44ef93c6b87ef2b2d90a0b8a514b5d8655718c5fa8bf4d12": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.12.50"},
 	},
-	"49e238c82492767b23983e1137c8c4f9d1875b44b33a4ca04684581449756fe4": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.51"},
+	"49e238c82492767b23983e1137c8c4f9d1875b44b33a4ca04684581449756fe4": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.12.51"},
 	},
-	"ce4c670eed03ad91f82e813208d69a94f1353d4002c00d35949f9223783c2123": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.52"},
+	"ce4c670eed03ad91f82e813208d69a94f1353d4002c00d35949f9223783c2123": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.12.52"},
 	},
-	"62df505ace076f2983fb09afe07316776893e6886d7a2c23366ba6dcc1b2bd19": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.53"},
+	"62df505ace076f2983fb09afe07316776893e6886d7a2c23366ba6dcc1b2bd19": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.12.53"},
 	},
-	"f920225c4455dd6c6e003455a0a13c5209f124fa25006d0b5689a2e17395cc8b": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.54"},
+	"f920225c4455dd6c6e003455a0a13c5209f124fa25006d0b5689a2e17395cc8b": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.12.54"},
 	},
-	"01006cd4a7a3be6f1fdacfd2108596431302e40698ca2f87838c123f53f060ec": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.55"},
+	"01006cd4a7a3be6f1fdacfd2108596431302e40698ca2f87838c123f53f060ec": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.12.55"},
 	},
-	"e732ef222a8b2a0ffe8067ea651bd4d5306d0f227c34ceba1cc5db570e1afb07": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.56"},
+	"e732ef222a8b2a0ffe8067ea651bd4d5306d0f227c34ceba1cc5db570e1afb07": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.12.56"},
 	},
-	"349efb73c7cd02881c5166f2547854d36940c9986e7305efa08e0fe850e7bfe6": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.57"},
+	"349efb73c7cd02881c5166f2547854d36940c9986e7305efa08e0fe850e7bfe6": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.12.57"},
 	},
-	"a95f85f501499f93d5bd2eac1cfbf526d1fcd0f5b266dfb1c44e89604dc113b6": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.58"},
+	"a95f85f501499f93d5bd2eac1cfbf526d1fcd0f5b266dfb1c44e89604dc113b6": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.12.58"},
 	},
-	"70d1133a3b946e662ad336b65987ca61226744135edd6a11b2e164d37b27846c": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.59"},
+	"70d1133a3b946e662ad336b65987ca61226744135edd6a11b2e164d37b27846c": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.12.59"},
 	},
-	"0df4d9c70273379b9b5f2b16b0e39abb8ec2e4ce83bcd1662194d3b69c807305": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.6"},
+	"0df4d9c70273379b9b5f2b16b0e39abb8ec2e4ce83bcd1662194d3b69c807305": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.12.6"},
 	},
-	"0bdd0a29dbe2be132d2f4b642cd9a7447b1da7c10f682f4028f68f519b58e733": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.60"},
+	"0bdd0a29dbe2be132d2f4b642cd9a7447b1da7c10f682f4028f68f519b58e733": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.12.60"},
 	},
-	"8fc37c9c2f8f758b25a456f535f913b1a64dbc1ab6965bf90c0658b45f789e72": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.61"},
+	"8fc37c9c2f8f758b25a456f535f913b1a64dbc1ab6965bf90c0658b45f789e72": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.12.61"},
 	},
-	"c5e4f7e2a0fce6ed8532d2dbde97f3803a76f922e8d666278555269721e81807": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.62"},
+	"c5e4f7e2a0fce6ed8532d2dbde97f3803a76f922e8d666278555269721e81807": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.12.62"},
 	},
-	"7e3b86c3e3a9cd77902755ccc9d2252624b5d52edcedb80a7cfdbe7493eba758": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.63"},
+	"7e3b86c3e3a9cd77902755ccc9d2252624b5d52edcedb80a7cfdbe7493eba758": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.12.63"},
 	},
-	"d65e4d5afb087b25889fa876a10551f84dac2f8998506d221efd6494206d8c33": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.64"},
+	"d65e4d5afb087b25889fa876a10551f84dac2f8998506d221efd6494206d8c33": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.12.64"},
 	},
-	"a3670093265edb6c98bf18233b1771c7b345c4960d9e78d02f00953a465a8035": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.65"},
+	"a3670093265edb6c98bf18233b1771c7b345c4960d9e78d02f00953a465a8035": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.12.65"},
 	},
-	"cb1c4085a562ddf49db0cd25c2cb3080c10d1875315215fa59298b17aa1eb33e": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.66"},
+	"cb1c4085a562ddf49db0cd25c2cb3080c10d1875315215fa59298b17aa1eb33e": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.12.66"},
 	},
-	"52b9e2f8f8817e65f723bfb03caa056eb8410c008a01b932e5989e68dd1a2bb3": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.67"},
+	"52b9e2f8f8817e65f723bfb03caa056eb8410c008a01b932e5989e68dd1a2bb3": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.12.67"},
 	},
-	"d182011c210e5bb52d218631880ab660db7470b386470c482ba32b58f76efd97": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.69"},
+	"d182011c210e5bb52d218631880ab660db7470b386470c482ba32b58f76efd97": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.12.69"},
 	},
-	"98ffc6f4fd04f958ed0f5fba6185db6893a670a50908f15b10478ccd05cac196": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.7"},
+	"98ffc6f4fd04f958ed0f5fba6185db6893a670a50908f15b10478ccd05cac196": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.12.7"},
 	},
-	"db4dcebc35e050bdf86117a6ea9ec662f1f9f90b7506b8e2e39c53094b8cb70f": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.70"},
+	"db4dcebc35e050bdf86117a6ea9ec662f1f9f90b7506b8e2e39c53094b8cb70f": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.12.70"},
 	},
-	"b4c8a9038e05e76a24c5b1bf24f0031727d6418275d28dc1962bce2c69f28c34": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.71"},
+	"b4c8a9038e05e76a24c5b1bf24f0031727d6418275d28dc1962bce2c69f28c34": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.12.71"},
 	},
-	"6b151eb5c5a98e6f06f8f46bbec53e45c63620566e9980f7e2a638feaf644994": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.72"},
+	"6b151eb5c5a98e6f06f8f46bbec53e45c63620566e9980f7e2a638feaf644994": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.12.72"},
 	},
-	"d53259b1aab5464fc6ded0d8f6b60a2249c96a2d6f3b5e8bfb854d70f3317be1": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.73"},
+	"d53259b1aab5464fc6ded0d8f6b60a2249c96a2d6f3b5e8bfb854d70f3317be1": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.12.73"},
 	},
-	"bed084ee7e01ef4ded069eef627b9d74a2d67ab247fc21a907ce50dca363570e": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.74"},
+	"bed084ee7e01ef4ded069eef627b9d74a2d67ab247fc21a907ce50dca363570e": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.12.74"},
 	},
-	"e8b855a2c94dbf3dd30e9a23bb5df5b38bfd6315cc3d03e2844a3092829cebe2": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.75"},
+	"e8b855a2c94dbf3dd30e9a23bb5df5b38bfd6315cc3d03e2844a3092829cebe2": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.12.75"},
 	},
-	"3e921f75fd36b0fd9d8d48a5a132450bff0fd7a22b58cd036e75e231bf3be118": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.76"},
+	"3e921f75fd36b0fd9d8d48a5a132450bff0fd7a22b58cd036e75e231bf3be118": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.12.76"},
 	},
-	"6dc02204e16ceb5a23e24be21040ba20e411a9f097509b6c1223c79e193def06": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.77"},
+	"6dc02204e16ceb5a23e24be21040ba20e411a9f097509b6c1223c79e193def06": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.12.77"},
 	},
-	"56ee2cc1ab43dd75cb4913b8bf2c3b4020d0fa48ff81c4f96f01a9027603e563": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.78"},
+	"56ee2cc1ab43dd75cb4913b8bf2c3b4020d0fa48ff81c4f96f01a9027603e563": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.12.78"},
 	},
-	"161f220fabecd1439a7ec6b78ebeacc9ca7aa174227f6b4963a73fb55a436cb1": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.79"},
+	"161f220fabecd1439a7ec6b78ebeacc9ca7aa174227f6b4963a73fb55a436cb1": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.12.79"},
 	},
-	"3824ed404dccb537228ff17c2a4ec12265bb2ece53fd68aace0288957600a5f5": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.8"},
+	"3824ed404dccb537228ff17c2a4ec12265bb2ece53fd68aace0288957600a5f5": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.12.8"},
 	},
-	"d55f1e5b5738e08bab3bba904dc085b1cc40a66c13524fafa154206f96bbff1d": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.12.9"},
+	"d55f1e5b5738e08bab3bba904dc085b1cc40a66c13524fafa154206f96bbff1d": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.12.9"},
 	},
-	"e0bc39c5d159021770ec13ee4893f5e8ed3305f1e645eded670d4bcf3c5641a8": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.0"},
+	"e0bc39c5d159021770ec13ee4893f5e8ed3305f1e645eded670d4bcf3c5641a8": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.13.0"},
 	},
-	"1695ebca04185f37e47dc945cbc3dddda0fdc6173e12e5fe388720d0614a51fe": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.1"},
+	"1695ebca04185f37e47dc945cbc3dddda0fdc6173e12e5fe388720d0614a51fe": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.13.1"},
 	},
-	"57d7524ce029015dc8b34d2faf34650eaea4b063de7b3a2c504c69c463c15b80": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.10"},
+	"57d7524ce029015dc8b34d2faf34650eaea4b063de7b3a2c504c69c463c15b80": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.13.10"},
 	},
-	"e119d051768d87de66ff4e2727232f7de44c4162aeea9afd94c3b36711241ca5": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.11"},
+	"e119d051768d87de66ff4e2727232f7de44c4162aeea9afd94c3b36711241ca5": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.13.11"},
 	},
-	"504c699600fc0bb03fe65e7ef2b0e969af65574df246397b22e08d30f00b6e4b": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.12"},
+	"504c699600fc0bb03fe65e7ef2b0e969af65574df246397b22e08d30f00b6e4b": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.13.12"},
 	},
-	"00fc6544f83d90a60663df8b9067b9ce39ed66fe82c2a1b9759d4f41d00c4321": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.13"},
+	"00fc6544f83d90a60663df8b9067b9ce39ed66fe82c2a1b9759d4f41d00c4321": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.13.13"},
 	},
-	"1cfec04c24662f042a524c859ecb71091496827edd56a77a7d61b5d5f46cac22": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.14"},
+	"1cfec04c24662f042a524c859ecb71091496827edd56a77a7d61b5d5f46cac22": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.13.14"},
 	},
-	"44b25449949fcfbc5e9270c1cf99a7425a66d45d1ccb7d3344b04c9ec6584184": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.15"},
+	"44b25449949fcfbc5e9270c1cf99a7425a66d45d1ccb7d3344b04c9ec6584184": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.13.15"},
 	},
-	"ced8d770cc0cdb0e4fbb2781ef521dd065ab1d30272b23deac54f3aeaec59019": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.16"},
+	"ced8d770cc0cdb0e4fbb2781ef521dd065ab1d30272b23deac54f3aeaec59019": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.13.16"},
 	},
-	"5dfc0a5960e96c5380bf40ff09bf43031b33fa25ea52d0b2d49db7d16151750d": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.17"},
+	"5dfc0a5960e96c5380bf40ff09bf43031b33fa25ea52d0b2d49db7d16151750d": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.13.17"},
 	},
-	"a8aba898b18e9cbdacc28e1460948d4d7b2b09176c7c7d7cc33c62ab237b7b7e": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.18"},
+	"a8aba898b18e9cbdacc28e1460948d4d7b2b09176c7c7d7cc33c62ab237b7b7e": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.13.18"},
 	},
-	"a859c0d1c0ae79d0359d5e50100716b9e81112a752f0d9b9c28e1b1312ee0383": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.19"},
+	"a859c0d1c0ae79d0359d5e50100716b9e81112a752f0d9b9c28e1b1312ee0383": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.13.19"},
 	},
-	"d87b79ab98cf01d0628c4d96277718c27b64223ffeb8334c315cd8b609c5264c": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.2"},
+	"d87b79ab98cf01d0628c4d96277718c27b64223ffeb8334c315cd8b609c5264c": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.13.2"},
 	},
-	"cb1cad870c2552672c9012abb89de0ae518f30be4a932e5139d8e726eb74a15f": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.20"},
+	"cb1cad870c2552672c9012abb89de0ae518f30be4a932e5139d8e726eb74a15f": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.13.20"},
 	},
-	"92fe882eb361789e6c530bcf1008ae7c2fc5651dee5fda62f9d4f186290c6add": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.21"},
+	"92fe882eb361789e6c530bcf1008ae7c2fc5651dee5fda62f9d4f186290c6add": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.13.21"},
 	},
-	"53fc9e80e8c84b4fa37d5c0a974ec6a62d6af083155ace44eddb81abd4e90b4a": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.22"},
+	"53fc9e80e8c84b4fa37d5c0a974ec6a62d6af083155ace44eddb81abd4e90b4a": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.13.22"},
 	},
-	"81d4ab2b47ac53e5e69d6c09a0f1bbdba4cef2863d2418a6314d744bb1a654d6": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.23"},
+	"81d4ab2b47ac53e5e69d6c09a0f1bbdba4cef2863d2418a6314d744bb1a654d6": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.13.23"},
 	},
-	"3acc6e304818224d548c3927717336d4dd992ff4af1fb2b95735f397effcc85b": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.24"},
+	"3acc6e304818224d548c3927717336d4dd992ff4af1fb2b95735f397effcc85b": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.13.24"},
 	},
-	"97ba8959c59c895b9993ac2a24e11f40ade7c4ffad33adbc31e5db59e1616c74": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.25"},
+	"97ba8959c59c895b9993ac2a24e11f40ade7c4ffad33adbc31e5db59e1616c74": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.13.25"},
 	},
-	"87d6af8f335064b709024582cb751c351a0a7f1093d4e54481f900a61a4c14f5": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.26"},
+	"87d6af8f335064b709024582cb751c351a0a7f1093d4e54481f900a61a4c14f5": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.13.26"},
 	},
-	"4e43cc9078f8b52483fc9404293ad6dfcfa2bb8d921bd8edc8df978f96df9e7f": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.27"},
+	"4e43cc9078f8b52483fc9404293ad6dfcfa2bb8d921bd8edc8df978f96df9e7f": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.13.27"},
 	},
-	"4bed5f2a761e4084a7e6fb241da7a6c12164362fa7aacf6dfc6842a2f16a3c87": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.28"},
+	"4bed5f2a761e4084a7e6fb241da7a6c12164362fa7aacf6dfc6842a2f16a3c87": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.13.28"},
 	},
-	"5ecc3f8dbb870a194175e7fd55cb40a40f72811596702e3401e35def698243a9": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.29"},
+	"5ecc3f8dbb870a194175e7fd55cb40a40f72811596702e3401e35def698243a9": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.13.29"},
 	},
-	"94c10ba8665537879830529885f50da7153a7d46109ee6e77515baaaa9746c7b": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.3"},
+	"94c10ba8665537879830529885f50da7153a7d46109ee6e77515baaaa9746c7b": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.13.3"},
 	},
-	"d3d5d3510f57ac2eeb742096faafc004d0853d4e2fed1900a828df80733e7aeb": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.30"},
+	"d3d5d3510f57ac2eeb742096faafc004d0853d4e2fed1900a828df80733e7aeb": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.13.30"},
 	},
-	"85cae8ad2e6c265b60b88cf6d1187cf78c685852651171cee11285cbe788d0ea": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.31"},
+	"85cae8ad2e6c265b60b88cf6d1187cf78c685852651171cee11285cbe788d0ea": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.13.31"},
 	},
-	"c9422700d5aa75f886cfcea44233388601c1e8759365bd64d755aedbcdd2f6bf": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.32"},
+	"c9422700d5aa75f886cfcea44233388601c1e8759365bd64d755aedbcdd2f6bf": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.13.32"},
 	},
-	"aff0e936fdf2350fc12907be91903d00ae41c60e7b790ab4c2b09a835e630319": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.33"},
+	"aff0e936fdf2350fc12907be91903d00ae41c60e7b790ab4c2b09a835e630319": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.13.33"},
 	},
-	"ca17793b617e2860110c2d87ec28661c96b85d04b1a2d5e861b31964c3f1e9f3": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.34"},
+	"ca17793b617e2860110c2d87ec28661c96b85d04b1a2d5e861b31964c3f1e9f3": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.13.34"},
 	},
-	"9618b7d9e3758e3643f328f5db76dddbc975907372038e10efba50900684163e": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.35"},
+	"9618b7d9e3758e3643f328f5db76dddbc975907372038e10efba50900684163e": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.13.35"},
 	},
-	"a7172ebd897ec0bdd5896ef003956496e0b852fdde5d3e8ed44ec07394b8239d": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.36"},
+	"a7172ebd897ec0bdd5896ef003956496e0b852fdde5d3e8ed44ec07394b8239d": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.13.36"},
 	},
-	"7cd43b1bdeaf4a7343a058b16fd8195fc257f84a10f9cce2bd888a3e86929972": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.37"},
+	"7cd43b1bdeaf4a7343a058b16fd8195fc257f84a10f9cce2bd888a3e86929972": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.13.37"},
 	},
-	"53c21cde40a2c0ff5b75bd7a1c48225fc7f30522ef3e766e366c8a3009813697": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.38"},
+	"53c21cde40a2c0ff5b75bd7a1c48225fc7f30522ef3e766e366c8a3009813697": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.13.38"},
 	},
-	"a2e9f173a63db6bedc2a626ab975856baada20a7906df38d2ff8fbdb7c71eac5": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.39"},
+	"a2e9f173a63db6bedc2a626ab975856baada20a7906df38d2ff8fbdb7c71eac5": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.13.39"},
 	},
-	"2ed954440e7319af0838fa3f57b90ab85af32de152ca4f7888b6fcc2db2dacc0": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.4"},
+	"2ed954440e7319af0838fa3f57b90ab85af32de152ca4f7888b6fcc2db2dacc0": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.13.4"},
 	},
-	"c6bce80931304e169b61588cf2f7940a324325f1b4e5fece77e4158d996bffd5": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.40"},
+	"c6bce80931304e169b61588cf2f7940a324325f1b4e5fece77e4158d996bffd5": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.13.40"},
 	},
-	"df90a88e0c32d5f01e95a91ca4236a3e03a4d32801143415bc1a644aed210b80": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.41"},
+	"df90a88e0c32d5f01e95a91ca4236a3e03a4d32801143415bc1a644aed210b80": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.13.41"},
 	},
-	"f4046f620abc58e5f69fbaf1fd302cece178a9f2241cd099756fa213cd45453e": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.42"},
+	"f4046f620abc58e5f69fbaf1fd302cece178a9f2241cd099756fa213cd45453e": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.13.42"},
 	},
-	"32ca284475908376c2468290a22cd45cdba289090e19c3fff70f87e1df354634": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.43"},
+	"32ca284475908376c2468290a22cd45cdba289090e19c3fff70f87e1df354634": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.13.43"},
 	},
-	"d34db4acb9fb08d862e8dcc1f6de37fdf565240b2236c0f1cb824e76ce2ec9be": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.44"},
+	"d34db4acb9fb08d862e8dcc1f6de37fdf565240b2236c0f1cb824e76ce2ec9be": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.13.44"},
 	},
-	"557cf5fdf4e651e8383981e159fe77e097a9e419ece86416372f2d781949b4c5": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.45"},
+	"557cf5fdf4e651e8383981e159fe77e097a9e419ece86416372f2d781949b4c5": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.13.45"},
 	},
-	"62f2276a2c5bd9761f35720679e7b5354deb8b3bbfa20eeeffec3055483cae08": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.46"},
+	"62f2276a2c5bd9761f35720679e7b5354deb8b3bbfa20eeeffec3055483cae08": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.13.46"},
 	},
-	"c13146db8e9a8badb0228e2542c01c49e31921994da294b7f96b8381d104ec9d": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.47"},
+	"c13146db8e9a8badb0228e2542c01c49e31921994da294b7f96b8381d104ec9d": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.13.47"},
 	},
-	"d907f146c13eff309c1d1ee8468ff2821e93105734353d016044c1570335b724": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.48"},
+	"d907f146c13eff309c1d1ee8468ff2821e93105734353d016044c1570335b724": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.13.48"},
 	},
-	"ca8e018c638e0e85abce5563d75b92910f88c662c5dac469650c103bc6e340b1": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.49"},
+	"ca8e018c638e0e85abce5563d75b92910f88c662c5dac469650c103bc6e340b1": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.13.49"},
 	},
-	"03417e775446e2d1ad0e1da4f420cb14d0a893445eb311dd8ce2e012f00f71fe": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.5"},
+	"03417e775446e2d1ad0e1da4f420cb14d0a893445eb311dd8ce2e012f00f71fe": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.13.5"},
 	},
-	"e3a49e7a64d75128384161cbbd65c2a97b5188ca3791c9bd4c935aacdd237855": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.50"},
+	"e3a49e7a64d75128384161cbbd65c2a97b5188ca3791c9bd4c935aacdd237855": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.13.50"},
 	},
-	"9b8b7f71a56e811f5cbc68dfddd391cec5cfbca5dc7694926224c2195a3ceb92": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.51"},
+	"9b8b7f71a56e811f5cbc68dfddd391cec5cfbca5dc7694926224c2195a3ceb92": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.13.51"},
 	},
-	"5c020239be9374d6109856230dcda18ba91dcee786f4147d7c35706121e4e716": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.52"},
+	"5c020239be9374d6109856230dcda18ba91dcee786f4147d7c35706121e4e716": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.13.52"},
 	},
-	"ce5c8dd103671fb3e122d80c5bd52a0f448ddd9c6939530032524138b3ca3ee8": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.53"},
+	"ce5c8dd103671fb3e122d80c5bd52a0f448ddd9c6939530032524138b3ca3ee8": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.13.53"},
 	},
-	"71db83340849d913fc05e1578740417f8c799acf290ad46e83cf4243f53b8bb8": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.54"},
+	"71db83340849d913fc05e1578740417f8c799acf290ad46e83cf4243f53b8bb8": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.13.54"},
 	},
-	"83cef6faefee7353bdada8afae2222fb75aa342964e255df14e55fd812ee2ade": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.55"},
+	"83cef6faefee7353bdada8afae2222fb75aa342964e255df14e55fd812ee2ade": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.13.55"},
 	},
-	"4de106a9fb451cf6eb91d8ad08e7f5e69a78eb9bc0d003ab04738c82a312861e": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.56"},
+	"4de106a9fb451cf6eb91d8ad08e7f5e69a78eb9bc0d003ab04738c82a312861e": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.13.56"},
 	},
-	"44f08b8095412f3b1e954a6265a57b79340edb2586f012f30581b5702436bc5f": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.57"},
+	"44f08b8095412f3b1e954a6265a57b79340edb2586f012f30581b5702436bc5f": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.13.57"},
 	},
-	"c56ec9ab483c28135ff229664123dfb5442fff2c35e12cb49f5dcfe8d40b4025": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.58"},
+	"c56ec9ab483c28135ff229664123dfb5442fff2c35e12cb49f5dcfe8d40b4025": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.13.58"},
 	},
-	"cb010e8f46f6ab7b800387d0d5f3443bdb526fa9186ae813af37aef95e44bacb": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.59"},
+	"cb010e8f46f6ab7b800387d0d5f3443bdb526fa9186ae813af37aef95e44bacb": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.13.59"},
 	},
-	"f7370500e2e3f7ba04b89789996d153efa9888f0f5c9aebdaf5a5dd46ff10361": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.6"},
+	"f7370500e2e3f7ba04b89789996d153efa9888f0f5c9aebdaf5a5dd46ff10361": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.13.6"},
 	},
-	"240c9cec5f30b638d332eef6e4f9f54554b1f0c4fc13066de05844d35bdb65be": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.60"},
+	"240c9cec5f30b638d332eef6e4f9f54554b1f0c4fc13066de05844d35bdb65be": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.13.60"},
 	},
-	"cd68b3e4ec5d3fca144be7c3539e4bf9c6053bfe6f2e2396a888db248e3cbd3d": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.7"},
+	"cd68b3e4ec5d3fca144be7c3539e4bf9c6053bfe6f2e2396a888db248e3cbd3d": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.13.7"},
 	},
-	"67005e3acade9eb0be4ab95b47fa1d415358c073e1459f47e953b230d3e01b5b": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.8"},
+	"67005e3acade9eb0be4ab95b47fa1d415358c073e1459f47e953b230d3e01b5b": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.13.8"},
 	},
-	"5eda578e84a5bf023a60095deb83fdc54524e2405f14deea4a7e78531bef64ed": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.13.9"},
+	"5eda578e84a5bf023a60095deb83fdc54524e2405f14deea4a7e78531bef64ed": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.13.9"},
 	},
-	"3e5501923bebac98d7da4aad12c4ca10c44fd246e53cd1c91ed9e56a8bfc1e9f": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.14.0"},
+	"3e5501923bebac98d7da4aad12c4ca10c44fd246e53cd1c91ed9e56a8bfc1e9f": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.14.0"},
 	},
-	"90069c9b8b5679605784d86b4be648ce8f7f83a3463ee69b1ddffdf48cdbb298": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.14.1"},
+	"90069c9b8b5679605784d86b4be648ce8f7f83a3463ee69b1ddffdf48cdbb298": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.14.1"},
 	},
-	"1c973d1fff85d26a47b9802063c0c571a881430eb2ac858cc2f41921d23d4e0e": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.14.10"},
+	"1c973d1fff85d26a47b9802063c0c571a881430eb2ac858cc2f41921d23d4e0e": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.14.10"},
 	},
-	"44514d3926da9e7fa2eb33b82eac42376c68f4e6fe9f45630b20c5d2391a82bb": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.14.11"},
+	"44514d3926da9e7fa2eb33b82eac42376c68f4e6fe9f45630b20c5d2391a82bb": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.14.11"},
 	},
-	"179d1a966d113086ef41304821feb882ba9d2d611eff049711ad049aeb0c428d": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.14.12"},
+	"179d1a966d113086ef41304821feb882ba9d2d611eff049711ad049aeb0c428d": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.14.12"},
 	},
-	"2f0db689e0d466e269ed1b7c23736419765799a3b26bb798e41ff5fd3980a525": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.14.13"},
+	"2f0db689e0d466e269ed1b7c23736419765799a3b26bb798e41ff5fd3980a525": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.14.13"},
 	},
-	"b1cf460a2baf2fbaffab860470be91ad47d51db221e995a1a6247ba02a8c8015": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.14.14"},
+	"b1cf460a2baf2fbaffab860470be91ad47d51db221e995a1a6247ba02a8c8015": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.14.14"},
 	},
-	"9bfac6c8a5243ac55fbc1661b0bf699989eeab2e88b8300f3de256ba6746b0bf": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.14.15"},
+	"9bfac6c8a5243ac55fbc1661b0bf699989eeab2e88b8300f3de256ba6746b0bf": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.14.15"},
 	},
-	"077a871764f48534cea9cb0c1b711941b1ef1c8798d5fe1ed4231318fcc1d25e": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.14.16"},
+	"077a871764f48534cea9cb0c1b711941b1ef1c8798d5fe1ed4231318fcc1d25e": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.14.16"},
 	},
-	"f0afa0f13fd8f3ed26c91b4994c9737b3463dc9e5f28c961ebd8415b9bbeb849": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.14.17"},
+	"f0afa0f13fd8f3ed26c91b4994c9737b3463dc9e5f28c961ebd8415b9bbeb849": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.14.17"},
 	},
-	"aa4d38c51f50b5793a43083a7698161c402d678a00f91e5c5c8d4f190315156a": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.14.18"},
+	"aa4d38c51f50b5793a43083a7698161c402d678a00f91e5c5c8d4f190315156a": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.14.18"},
 	},
-	"e01a71d3de71146dcd91ccd0b849b487c222e0619c2c42e240c06f442dc7c751": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.14.19"},
+	"e01a71d3de71146dcd91ccd0b849b487c222e0619c2c42e240c06f442dc7c751": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.14.19"},
 	},
-	"d9d826fa574ba6ba8cdd19b0caf9e752601c8d1324f7e6f895570d6ccb8e11ce": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.14.2"},
+	"d9d826fa574ba6ba8cdd19b0caf9e752601c8d1324f7e6f895570d6ccb8e11ce": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.14.2"},
 	},
-	"539a0beb52fa91735ce033b3cc238109e62c793b450bb632b557a9f522f69fda": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.14.20"},
+	"539a0beb52fa91735ce033b3cc238109e62c793b450bb632b557a9f522f69fda": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.14.20"},
 	},
-	"605b96752d5e1a3f2f3e25b6669b04bde966155ab99ac01920aa646fcf7e0c9a": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.14.21"},
+	"605b96752d5e1a3f2f3e25b6669b04bde966155ab99ac01920aa646fcf7e0c9a": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.14.21"},
 	},
-	"ab436680162a7bb1a3340b41b96b667c52d2ad44b29ddf570ce3c102494cb383": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.14.22"},
+	"ab436680162a7bb1a3340b41b96b667c52d2ad44b29ddf570ce3c102494cb383": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.14.22"},
 	},
-	"04730a4257855f348c5893d52bf9cf8ef61b7d2599d3cf0077885c5b0dafc73b": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.14.23"},
+	"04730a4257855f348c5893d52bf9cf8ef61b7d2599d3cf0077885c5b0dafc73b": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.14.23"},
 	},
-	"2a2e3ca5184ae9c76ee11cf263973db2e47d5330ec495c7237c32560d9a58cd0": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.14.24"},
+	"2a2e3ca5184ae9c76ee11cf263973db2e47d5330ec495c7237c32560d9a58cd0": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.14.24"},
 	},
-	"3d0b4dc4bb28cc889e57ababba4a8c0311c18194d514bcd8a18e1c6c8a43ecc0": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.14.25"},
+	"3d0b4dc4bb28cc889e57ababba4a8c0311c18194d514bcd8a18e1c6c8a43ecc0": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.14.25"},
 	},
-	"cd732ddad3a59e486f2b19f88d2be2ce1eb75ec112323959d3ea0f8fd1130875": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.14.26"},
+	"cd732ddad3a59e486f2b19f88d2be2ce1eb75ec112323959d3ea0f8fd1130875": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.14.26"},
 	},
-	"3cd9d93645925be3648b76f535b7390a7f4fc5ab031b98f711f2e1c657573f50": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.14.27"},
+	"3cd9d93645925be3648b76f535b7390a7f4fc5ab031b98f711f2e1c657573f50": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.14.27"},
 	},
-	"1343849bf083e0df8a0d59f74e79ed5d144a5da54cc8b2439f97efb32d42d078": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.14.28"},
+	"1343849bf083e0df8a0d59f74e79ed5d144a5da54cc8b2439f97efb32d42d078": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.14.28"},
 	},
-	"e2062fab0e53fa5c702b4c942a4a25b83f9bebce5fb3448e91b299dbbbc3424b": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.14.29"},
+	"e2062fab0e53fa5c702b4c942a4a25b83f9bebce5fb3448e91b299dbbbc3424b": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.14.29"},
 	},
-	"506b12466c485998bebf400068365c3018b2c47c77ad85d138aadc32f10d59a9": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.14.3"},
+	"506b12466c485998bebf400068365c3018b2c47c77ad85d138aadc32f10d59a9": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.14.3"},
 	},
-	"74e40cf266397adebd19d155e15070152e5d68bb0bb358b210eec26372d38e9e": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.14.30"},
+	"74e40cf266397adebd19d155e15070152e5d68bb0bb358b210eec26372d38e9e": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.14.30"},
 	},
-	"40ff69b3cb2d2ffaef8a73747db843d5e5337c389ee52e3d71c192d212f99adf": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.14.4"},
+	"40ff69b3cb2d2ffaef8a73747db843d5e5337c389ee52e3d71c192d212f99adf": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.14.4"},
 	},
-	"391efbfb5e997f9f2857cda24b866e3c3bb17b33fd4d9d811fdc792a85810f7b": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.14.5"},
+	"391efbfb5e997f9f2857cda24b866e3c3bb17b33fd4d9d811fdc792a85810f7b": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.14.5"},
 	},
-	"9b3ef598b5465eee921e108dca77c4a0b81e4fe28169c9ed40e37c57783150ad": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.14.6"},
+	"9b3ef598b5465eee921e108dca77c4a0b81e4fe28169c9ed40e37c57783150ad": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.14.6"},
 	},
-	"f8b886081d445af9e9b8a28fa38b0d5c4ff9bc792b069d960df1a6984a305869": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.14.7"},
+	"f8b886081d445af9e9b8a28fa38b0d5c4ff9bc792b069d960df1a6984a305869": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.14.7"},
 	},
-	"649833f6183f125b0edfb6865f9f467a78c84d2813de598c8dd718405b6b9a63": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.14.8"},
+	"649833f6183f125b0edfb6865f9f467a78c84d2813de598c8dd718405b6b9a63": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.14.8"},
 	},
-	"e7ce23fb7fbea352f56ceda1f3d2aed209481e69629d72a7f702882e50e9bb5e": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.14.9"},
+	"e7ce23fb7fbea352f56ceda1f3d2aed209481e69629d72a7f702882e50e9bb5e": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.14.9"},
 	},
-	"56f7e9ad880268a73e10595126df7dd485f73fd9a4ef3ab5cc48ca2df8d84cf6": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.2.0"},
+	"56f7e9ad880268a73e10595126df7dd485f73fd9a4ef3ab5cc48ca2df8d84cf6": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.2.0"},
 	},
-	"b8a5da148a172d9124eef42891c124e740bc1bd96370c62d00f3ed8d1759956d": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.2.1"},
+	"b8a5da148a172d9124eef42891c124e740bc1bd96370c62d00f3ed8d1759956d": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.2.1"},
 	},
-	"9b118a73452bfe822e07663d433a40fa44e4768703fdb9be2aa2294ff61aa553": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.2.10"},
+	"9b118a73452bfe822e07663d433a40fa44e4768703fdb9be2aa2294ff61aa553": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.2.10"},
 	},
-	"50e8385c3900c7bcf9c20838d9214be60a738b369c14e7b3bb13bcd09d074c37": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.2.2"},
+	"50e8385c3900c7bcf9c20838d9214be60a738b369c14e7b3bb13bcd09d074c37": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.2.2"},
 	},
-	"546625924bddd0653238b2a24917ae24f389c9a6d05377b4ab7f3c94f00a8f1f": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.2.3"},
+	"546625924bddd0653238b2a24917ae24f389c9a6d05377b4ab7f3c94f00a8f1f": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.2.3"},
 	},
-	"4f32d3f18fefac3af6c3e0ffbb8cd372ea467663daf63bb83b457672e511080e": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.2.4"},
+	"4f32d3f18fefac3af6c3e0ffbb8cd372ea467663daf63bb83b457672e511080e": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.2.4"},
 	},
-	"012d1955932cc2931798f3a14a15f6ea5c96ec7b710282cd1280384c160da5bb": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.2.5"},
+	"012d1955932cc2931798f3a14a15f6ea5c96ec7b710282cd1280384c160da5bb": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.2.5"},
 	},
-	"7b1e7ed3e2738315f854b7d911b7c1134164ea5e55d66f36fa60be234bdca9e3": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.2.6"},
+	"7b1e7ed3e2738315f854b7d911b7c1134164ea5e55d66f36fa60be234bdca9e3": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.2.6"},
 	},
-	"c472b2d2affd375ba2192f78556efe23f00bdcbcb46f698517eebdedf11ac7c1": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.2.7"},
+	"c472b2d2affd375ba2192f78556efe23f00bdcbcb46f698517eebdedf11ac7c1": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.2.7"},
 	},
-	"8986573cfd66d4255cc0fc39b29aace8b1375684a3ff1548dc9e8e381e93fa8e": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.2.8"},
+	"8986573cfd66d4255cc0fc39b29aace8b1375684a3ff1548dc9e8e381e93fa8e": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.2.8"},
 	},
-	"edea33bc34a244dc8e73f82272955be20e017b13316f4657b612c5dca2307bd8": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.3.0"},
+	"edea33bc34a244dc8e73f82272955be20e017b13316f4657b612c5dca2307bd8": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.3.0"},
 	},
-	"fca386056bdc08769b70d8bd8d706138238c1c36328bf24596c42b864c02a89e": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.3.1"},
+	"fca386056bdc08769b70d8bd8d706138238c1c36328bf24596c42b864c02a89e": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.3.1"},
 	},
-	"39c46fd0873c5c87d9651b5525299ca6622924a0a355653c76d413f6292c9c03": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.4.0"},
+	"39c46fd0873c5c87d9651b5525299ca6622924a0a355653c76d413f6292c9c03": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.4.0"},
 	},
-	"5413e2c36eb312371f9769969ba2e2260072f3e65d68e5df08c195d383de2de9": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.4.1"},
+	"5413e2c36eb312371f9769969ba2e2260072f3e65d68e5df08c195d383de2de9": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.4.1"},
 	},
-	"bf468a9b3474abf00d06031d7f14aa226d8fd35c93b45fc88b6ac67821b93ed3": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.4.10"},
+	"bf468a9b3474abf00d06031d7f14aa226d8fd35c93b45fc88b6ac67821b93ed3": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.4.10"},
 	},
-	"d2c0f9ce7cedfc80aafd7b4c2ecd84b80a56d422acacbcd86bd63c489488f33a": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.4.11"},
+	"d2c0f9ce7cedfc80aafd7b4c2ecd84b80a56d422acacbcd86bd63c489488f33a": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.4.11"},
 	},
-	"cb2a904974fbf01db3692e7945a88a3b176a892793f8c66ffa7a5c9a3e2c97ad": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.4.12"},
+	"cb2a904974fbf01db3692e7945a88a3b176a892793f8c66ffa7a5c9a3e2c97ad": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.4.12"},
 	},
-	"e2332bf793196d7b05747214fcedd474503df96701e4005156c30eef05f1a2a6": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.4.15"},
+	"e2332bf793196d7b05747214fcedd474503df96701e4005156c30eef05f1a2a6": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.4.15"},
 	},
-	"7638dd42963ae295425d7b61c6ba6892d29bbcaa228f4b293503c748ffd752f8": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.4.16"},
+	"7638dd42963ae295425d7b61c6ba6892d29bbcaa228f4b293503c748ffd752f8": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.4.16"},
 	},
-	"6753ffe24b836b7b182d91b7593a320a4da7aeb5841ad0b4f2062c2d3d47e189": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.4.17"},
+	"6753ffe24b836b7b182d91b7593a320a4da7aeb5841ad0b4f2062c2d3d47e189": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.4.17"},
 	},
-	"1ee2cfc0a11c390786deeae93ea7ce1691b7acbf26dde1b20cc08deeb02ce75a": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.4.18"},
+	"1ee2cfc0a11c390786deeae93ea7ce1691b7acbf26dde1b20cc08deeb02ce75a": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.4.18"},
 	},
-	"328febad29b3a38937231b2838dacb6dfa508a66abb789917a1b566525cf61bb": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.4.19"},
+	"328febad29b3a38937231b2838dacb6dfa508a66abb789917a1b566525cf61bb": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.4.19"},
 	},
-	"2d578222931bfc313a686e03b6aa7332253b41f92b52c30b60a684c82dad828f": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.4.2"},
+	"2d578222931bfc313a686e03b6aa7332253b41f92b52c30b60a684c82dad828f": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.4.2"},
 	},
-	"afe432b1d5ecbc9e428a5cd622239b228d72529c3ef8ca64a1c7783e8b30b81d": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.4.20"},
+	"afe432b1d5ecbc9e428a5cd622239b228d72529c3ef8ca64a1c7783e8b30b81d": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.4.20"},
 	},
-	"f5e5e9c9882c365c076b2dbf342b750505a98902a4c1b7070567ecde83ffeceb": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.4.21"},
+	"f5e5e9c9882c365c076b2dbf342b750505a98902a4c1b7070567ecde83ffeceb": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.4.21"},
 	},
-	"e6259b965f3109ebb10db93218941dd54bde526943e99d94eb095ed0cac2b0e7": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.4.22"},
+	"e6259b965f3109ebb10db93218941dd54bde526943e99d94eb095ed0cac2b0e7": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.4.22"},
 	},
-	"6cc67d190cac79e8d38d6b4fee0e876e5e078bc31f996b3854cda853578724e1": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.4.3"},
+	"6cc67d190cac79e8d38d6b4fee0e876e5e078bc31f996b3854cda853578724e1": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.4.3"},
 	},
-	"3c60dfeaa67f1fb812bfcc0097d9f14b22349556a21968ae016125c307884fdc": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.4.4"},
+	"3c60dfeaa67f1fb812bfcc0097d9f14b22349556a21968ae016125c307884fdc": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.4.4"},
 	},
-	"bb685200411ab4a7e3790f9626ede3cb512ceec6d1fcfe0f90e3d7a8de0b9e4e": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.4.5"},
+	"bb685200411ab4a7e3790f9626ede3cb512ceec6d1fcfe0f90e3d7a8de0b9e4e": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.4.5"},
 	},
-	"448e33d2e0806f43a9aa3dbc1361b282ab5f46f90aa9807761ce98df3132e05d": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.4.6"},
+	"448e33d2e0806f43a9aa3dbc1361b282ab5f46f90aa9807761ce98df3132e05d": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.4.6"},
 	},
-	"9a37adc9706a60547d079799af88a9552f20b4ecbf399d1ec1a8ad2bfb7c7590": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.4.7"},
+	"9a37adc9706a60547d079799af88a9552f20b4ecbf399d1ec1a8ad2bfb7c7590": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.4.7"},
 	},
-	"0fbebe6ff81e4714160ce14daec7f110db3a392640932fc148e771f22cb788a4": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.4.8"},
+	"0fbebe6ff81e4714160ce14daec7f110db3a392640932fc148e771f22cb788a4": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.4.8"},
 	},
-	"59c3ae174388647d37586a845542ff202e9c8d64ac885a8d5446387f35169dcc": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.4.9"},
+	"59c3ae174388647d37586a845542ff202e9c8d64ac885a8d5446387f35169dcc": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.4.9"},
 	},
-	"1ad7ea9a140faf7e5abab6dd2a1c3be14d702b048824ed57a6af3add60ef2aa5": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.5.0"},
+	"1ad7ea9a140faf7e5abab6dd2a1c3be14d702b048824ed57a6af3add60ef2aa5": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.5.0"},
 	},
-	"0b2025f63c87db6396f4cd3127c94b076316b920bdf2b24d5aceafff64ba5cd7": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.5.1"},
+	"0b2025f63c87db6396f4cd3127c94b076316b920bdf2b24d5aceafff64ba5cd7": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.5.1"},
 	},
-	"843efb3d4d053204b1922bde8bc8d0290fa0270116eb708fa09baf5d05cacf99": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.5.10"},
+	"843efb3d4d053204b1922bde8bc8d0290fa0270116eb708fa09baf5d05cacf99": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.5.10"},
 	},
-	"eddb064e987b8a441e2f0ab8b635d331fbbfa21342ec7c6975852a1749ea9011": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.5.11"},
+	"eddb064e987b8a441e2f0ab8b635d331fbbfa21342ec7c6975852a1749ea9011": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.5.11"},
 	},
-	"726f2c247b1042ce8cd6c5c0fa0ab589fcec407364320e8188a7fc8199e5202b": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.5.12"},
+	"726f2c247b1042ce8cd6c5c0fa0ab589fcec407364320e8188a7fc8199e5202b": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.5.12"},
 	},
-	"0d5d957fb29b98a0332c77b43dbdd96e372996145171930b075ec3b70c6a57cf": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.5.13"},
+	"0d5d957fb29b98a0332c77b43dbdd96e372996145171930b075ec3b70c6a57cf": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.5.13"},
 	},
-	"6a3deac9c66210d882c51e6c0d8bd84e9e8cf4293bc2ccb69e2578b594327190": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.5.2"},
+	"6a3deac9c66210d882c51e6c0d8bd84e9e8cf4293bc2ccb69e2578b594327190": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.5.2"},
 	},
-	"7f7689e6d7a16179e3496aefa798793615fecfff346ebc2a2355ab0900a1b0e0": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.5.3"},
+	"7f7689e6d7a16179e3496aefa798793615fecfff346ebc2a2355ab0900a1b0e0": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.5.3"},
 	},
-	"bae9a07e4e3b32655b4ce2557cb921bd95ad099981dd73c9c399c55862a8a885": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.5.4"},
+	"bae9a07e4e3b32655b4ce2557cb921bd95ad099981dd73c9c399c55862a8a885": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.5.4"},
 	},
-	"fb7e4ba88db2f40423ac9a8a64ae1c0bed170999112109bab0e81be1cf70b9d7": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.5.5"},
+	"fb7e4ba88db2f40423ac9a8a64ae1c0bed170999112109bab0e81be1cf70b9d7": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.5.5"},
 	},
-	"36e2cdd881505efc55ffe272e8f5ee0f41fe3137ac5d62f4dd2dd4b3340a04cd": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.5.6"},
+	"36e2cdd881505efc55ffe272e8f5ee0f41fe3137ac5d62f4dd2dd4b3340a04cd": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.5.6"},
 	},
-	"7a122c81ae94c3f34a64c5a70a310d3270fbeb46824429f871cdb6c9998b861a": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.5.7"},
+	"7a122c81ae94c3f34a64c5a70a310d3270fbeb46824429f871cdb6c9998b861a": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.5.7"},
 	},
-	"9312ffca6a1ca514b093f2b2c45582cce9de6ea18d36feb61fcd4f6370ffcf20": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.5.8"},
+	"9312ffca6a1ca514b093f2b2c45582cce9de6ea18d36feb61fcd4f6370ffcf20": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.5.8"},
 	},
-	"81813bf9fa70ccc28bb2745b474c139927b3fdec37ac9132a3cb6af38705a793": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.5.9"},
+	"81813bf9fa70ccc28bb2745b474c139927b3fdec37ac9132a3cb6af38705a793": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.5.9"},
 	},
-	"f53d56e7aab4c0acf97ea01925f56174bcc66b435bc01ee54313562cf05d0975": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.6.0"},
+	"f53d56e7aab4c0acf97ea01925f56174bcc66b435bc01ee54313562cf05d0975": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.6.0"},
 	},
-	"7cc590aa28a6c3b1f02de525801fed67d5527037a8436146304e3a7c79d3d905": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.6.1"},
+	"7cc590aa28a6c3b1f02de525801fed67d5527037a8436146304e3a7c79d3d905": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.6.1"},
 	},
-	"8fab318eb26ce608f91011f2e7a09b1fcc4010ccb90570497cf19702ecb74eea": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.6.10"},
+	"8fab318eb26ce608f91011f2e7a09b1fcc4010ccb90570497cf19702ecb74eea": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.6.10"},
 	},
-	"a685ea3ad626e5676787d61251633ce7ae860d7abebe90d26c39dbcdbd1bcb7f": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.6.11"},
+	"a685ea3ad626e5676787d61251633ce7ae860d7abebe90d26c39dbcdbd1bcb7f": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.6.11"},
 	},
-	"1793ebeb93ada3c48092edc099472f5bba311848bf7b1536b619c52970382d35": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.6.12"},
+	"1793ebeb93ada3c48092edc099472f5bba311848bf7b1536b619c52970382d35": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.6.12"},
 	},
-	"b2ae6744ffb6d75b98294b8e9e3fcf08457d32fc02c1e378e59e4af0eab21977": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.6.13"},
+	"b2ae6744ffb6d75b98294b8e9e3fcf08457d32fc02c1e378e59e4af0eab21977": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.6.13"},
 	},
-	"d362a7923097bea49e236f33ffb0ec96a2d63daab19ef8804174ef73b9a15182": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.6.14"},
+	"d362a7923097bea49e236f33ffb0ec96a2d63daab19ef8804174ef73b9a15182": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.6.14"},
 	},
-	"0070ef7a948597230c7710d62b935cc5fa8bc610d5aae4d5e9c5dba7134b26b8": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.6.15"},
+	"0070ef7a948597230c7710d62b935cc5fa8bc610d5aae4d5e9c5dba7134b26b8": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.6.15"},
 	},
-	"d0f74a3a6da991ea1b105fa8779d8e4c51a114bad24e4372161eb5820a637b47": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.6.16"},
+	"d0f74a3a6da991ea1b105fa8779d8e4c51a114bad24e4372161eb5820a637b47": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.6.16"},
 	},
-	"1602a28be9cd4d8e72e90a4e97a6f2018db42a780894841adcb8f33ea3f448fe": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.6.17"},
+	"1602a28be9cd4d8e72e90a4e97a6f2018db42a780894841adcb8f33ea3f448fe": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.6.17"},
 	},
-	"d7a3261843094f838a51ff6eacea3f1e4a7b81649a6969e7fd5a175c85a504fd": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.6.18"},
+	"d7a3261843094f838a51ff6eacea3f1e4a7b81649a6969e7fd5a175c85a504fd": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.6.18"},
 	},
-	"3ff68a00d41d69f84764dd0494f9b5f4afb285fd775d1dc45813463e391f3073": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.6.19"},
+	"3ff68a00d41d69f84764dd0494f9b5f4afb285fd775d1dc45813463e391f3073": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.6.19"},
 	},
-	"8f0450605d0fe501dfd62f917b9df8735d0bc902ed2356a4428ab3c1e01c4ed5": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.6.2"},
+	"8f0450605d0fe501dfd62f917b9df8735d0bc902ed2356a4428ab3c1e01c4ed5": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.6.2"},
 	},
-	"8db47f50c2592c6fee9281c3d8e682278384a9207b4c7c2f70dbf613173e237c": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.6.20"},
+	"8db47f50c2592c6fee9281c3d8e682278384a9207b4c7c2f70dbf613173e237c": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.6.20"},
 	},
-	"8bdf7fd57c37473a2254c2d7c01ab9d5b4f38f3bb467955d359fb2e54c38f2d7": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.6.21"},
+	"8bdf7fd57c37473a2254c2d7c01ab9d5b4f38f3bb467955d359fb2e54c38f2d7": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.6.21"},
 	},
-	"9ddc026590f43f584d5e072418d74169b87ff9d664cbb6d9d07bc41c84ceaf62": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.6.22"},
+	"9ddc026590f43f584d5e072418d74169b87ff9d664cbb6d9d07bc41c84ceaf62": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.6.22"},
 	},
-	"047014c07bcf3045c902b061654e5c29c2deae1a8b7cf4342c20964106549370": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.6.23"},
+	"047014c07bcf3045c902b061654e5c29c2deae1a8b7cf4342c20964106549370": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.6.23"},
 	},
-	"b48947c676a53f168c17ec5d95f15149ada2a0a60fe745b1f53d1f5e3087d5a0": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.6.24"},
+	"b48947c676a53f168c17ec5d95f15149ada2a0a60fe745b1f53d1f5e3087d5a0": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.6.24"},
 	},
-	"02f8fea651ab4b7f5be6b763dc31db552caad5ec71cc77f9bd499a45bf71e8e5": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.6.25"},
+	"02f8fea651ab4b7f5be6b763dc31db552caad5ec71cc77f9bd499a45bf71e8e5": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.6.25"},
 	},
-	"ba2c3bfa64e78026c49cd2e1a12c14176eed963b18e69612201529c2ca1792d7": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.6.26"},
+	"ba2c3bfa64e78026c49cd2e1a12c14176eed963b18e69612201529c2ca1792d7": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.6.26"},
 	},
-	"51a6cf99048dc226e1952055442df3d9e995cff52723e3f04b27f00972cd440e": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.6.27"},
+	"51a6cf99048dc226e1952055442df3d9e995cff52723e3f04b27f00972cd440e": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.6.27"},
 	},
-	"86894d3a9db498c2019b4f3ea7dae8728a305026e507eedc036637ac23523349": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.6.3"},
+	"86894d3a9db498c2019b4f3ea7dae8728a305026e507eedc036637ac23523349": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.6.3"},
 	},
-	"9752b4ecf2998ef26db2fc1b055c085990d2dd5e91ff7d4b346000b18ff7783b": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.6.4"},
+	"9752b4ecf2998ef26db2fc1b055c085990d2dd5e91ff7d4b346000b18ff7783b": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.6.4"},
 	},
-	"eed74a5552785f1f8c14541ab48ed0cd166e18f4a361f5ad1d35b39e00a61e4e": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.6.5"},
+	"eed74a5552785f1f8c14541ab48ed0cd166e18f4a361f5ad1d35b39e00a61e4e": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.6.5"},
 	},
-	"02c072786da17cad6844fead29018c3e2496c1dd3204f1721115e815f1201337": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.6.6"},
+	"02c072786da17cad6844fead29018c3e2496c1dd3204f1721115e815f1201337": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.6.6"},
 	},
-	"aa86127091855ec42181f5e0baa9501ae539ba31e0db7e4defda9d6f2e35bcab": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.6.7"},
+	"aa86127091855ec42181f5e0baa9501ae539ba31e0db7e4defda9d6f2e35bcab": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.6.7"},
 	},
-	"bc2dd541f4f6211fb175e61b837fe3851568ba1bfab228a49a958a0e8ad8288a": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.6.8"},
+	"bc2dd541f4f6211fb175e61b837fe3851568ba1bfab228a49a958a0e8ad8288a": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.6.8"},
 	},
-	"541b1501ff913215936e6fec65337b259587d063211731e99ca9a612cc26e497": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.6.9"},
+	"541b1501ff913215936e6fec65337b259587d063211731e99ca9a612cc26e497": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.6.9"},
 	},
-	"587382b9426c6d38f1ad71407d3e22202190dd3d73e60a0a1ed327911e7bfc30": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.7.0"},
+	"587382b9426c6d38f1ad71407d3e22202190dd3d73e60a0a1ed327911e7bfc30": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.7.0"},
 	},
-	"5f178588498824e28deeb24eb55b94e9dc29d5a6f32fde89c50189cf77f17b46": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.7.1"},
+	"5f178588498824e28deeb24eb55b94e9dc29d5a6f32fde89c50189cf77f17b46": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.7.1"},
 	},
-	"b836f08db6c6b390372261d812d37f544d2749942e5683d7e6a597e1866fdacb": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.7.2"},
+	"b836f08db6c6b390372261d812d37f544d2749942e5683d7e6a597e1866fdacb": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.7.2"},
 	},
-	"297c06fb895dec1030098623338c9abfe432c84fb61810b2ba0a7ab61a578af7": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.7.3"},
+	"297c06fb895dec1030098623338c9abfe432c84fb61810b2ba0a7ab61a578af7": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.7.3"},
 	},
-	"845349955994e0a8771f9a01a08c91862e155064248ec5aab8c12c94357bc203": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.7.4"},
+	"845349955994e0a8771f9a01a08c91862e155064248ec5aab8c12c94357bc203": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.7.4"},
 	},
-	"6ae51447a01200e3c4adf6aed29b33a9459d0f8f12cf58cfe2824a8c71ce3137": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.7.5"},
+	"6ae51447a01200e3c4adf6aed29b33a9459d0f8f12cf58cfe2824a8c71ce3137": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.7.5"},
 	},
-	"83bf0629935b7ba1b53eb1eac50e3babb11b6bca57fc8ece320fb5cd21a66ae7": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.7.6"},
+	"83bf0629935b7ba1b53eb1eac50e3babb11b6bca57fc8ece320fb5cd21a66ae7": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.7.6"},
 	},
-	"55ddf50d68d3f453d7c78f891cd4359bf0294419b00bd70e92fad19c215d8fc4": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.7.7"},
+	"55ddf50d68d3f453d7c78f891cd4359bf0294419b00bd70e92fad19c215d8fc4": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.7.7"},
 	},
-	"19612dcf543ac53ec07e39d22d14c523815082dced201916d5ee7762b1108074": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.7.8"},
+	"19612dcf543ac53ec07e39d22d14c523815082dced201916d5ee7762b1108074": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.7.8"},
 	},
-	"c8d836190dc536f312f5037aa77b47c7bbdfaf93a7fd521002f9d44b8f2db37e": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.7.9"},
+	"c8d836190dc536f312f5037aa77b47c7bbdfaf93a7fd521002f9d44b8f2db37e": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.7.9"},
 	},
-	"cf828b5564ae3f2ee6b1bbb3adc1bab0012c7a6df12aae29ad513718b70696f8": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.0"},
+	"cf828b5564ae3f2ee6b1bbb3adc1bab0012c7a6df12aae29ad513718b70696f8": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.8.0"},
 	},
-	"0b10c7483ad896c345f11a3db33eda4010c25715980b215d0db0aba031c88153": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.1"},
+	"0b10c7483ad896c345f11a3db33eda4010c25715980b215d0db0aba031c88153": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.8.1"},
 	},
-	"33fddb8dbf05fdc6f75f76cec2c4446dc5c56208a5c7661797f29cd01e6c48b8": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.10"},
+	"33fddb8dbf05fdc6f75f76cec2c4446dc5c56208a5c7661797f29cd01e6c48b8": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.8.10"},
 	},
-	"0d89995fa86e776a1b3d5b06ec1bb0bbe3f44154a7f95e27c7ec3424368cae2f": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.11"},
+	"0d89995fa86e776a1b3d5b06ec1bb0bbe3f44154a7f95e27c7ec3424368cae2f": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.8.11"},
 	},
-	"f3fe19b65dab0d023751fa1cb4e4951907bfacf948527577f6c19bbfea505870": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.12"},
+	"f3fe19b65dab0d023751fa1cb4e4951907bfacf948527577f6c19bbfea505870": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.8.12"},
 	},
-	"da39e3800531c2ffc16792cd1d99b28ec5573701e977cfaa4fd3192e09e67969": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.13"},
+	"da39e3800531c2ffc16792cd1d99b28ec5573701e977cfaa4fd3192e09e67969": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.8.13"},
 	},
-	"a36d54aca40b41c144e7c72e79365d3f6d3374a0b38f1708fa521cf3f57e31f7": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.14"},
+	"a36d54aca40b41c144e7c72e79365d3f6d3374a0b38f1708fa521cf3f57e31f7": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.8.14"},
 	},
-	"f9b57c361528b04f82c74f474708cb9f0bd066d063644c1ae5fccae107a16870": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.15"},
+	"f9b57c361528b04f82c74f474708cb9f0bd066d063644c1ae5fccae107a16870": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.8.15"},
 	},
-	"bb95cd16d76ea8b84020a1d34da0507128820b3232f3575bee9f74a77b3c8c5d": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.16"},
+	"bb95cd16d76ea8b84020a1d34da0507128820b3232f3575bee9f74a77b3c8c5d": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.8.16"},
 	},
-	"6d67c8aefedee863ec0efc2cb61af89ae74f39f509647207ab844f6a8b5f505b": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.17"},
+	"6d67c8aefedee863ec0efc2cb61af89ae74f39f509647207ab844f6a8b5f505b": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.8.17"},
 	},
-	"f2d55933bb62973a5659b8ce51469edc130127460889ccf26d9373ddcfb80746": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.18"},
+	"f2d55933bb62973a5659b8ce51469edc130127460889ccf26d9373ddcfb80746": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.8.18"},
 	},
-	"7d5c06ed703960b238050d87ce06a4bcac684af30293ba0a2656b673c5c84b25": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.19"},
+	"7d5c06ed703960b238050d87ce06a4bcac684af30293ba0a2656b673c5c84b25": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.8.19"},
 	},
-	"4b0d0d28927489d358eb83eeeaeaf21861b87a37f3f538bad768eb7dc2adf0db": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.2"},
+	"4b0d0d28927489d358eb83eeeaeaf21861b87a37f3f538bad768eb7dc2adf0db": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.8.2"},
 	},
-	"8766ca8e769b28d2cb6ddaf9906506595537f0597b63bbe01948066965cde7a5": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.20"},
+	"8766ca8e769b28d2cb6ddaf9906506595537f0597b63bbe01948066965cde7a5": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.8.20"},
 	},
-	"1f7cabc463bcc2e0e1bd580a57aef1de1a816c9dd29aa009221d54f5f4b7a9df": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.21"},
+	"1f7cabc463bcc2e0e1bd580a57aef1de1a816c9dd29aa009221d54f5f4b7a9df": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.8.21"},
 	},
-	"2769f57b7e09852c1dfe1fefc5b531857cbcfc689a70e64760b524773295a307": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.22"},
+	"2769f57b7e09852c1dfe1fefc5b531857cbcfc689a70e64760b524773295a307": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.8.22"},
 	},
-	"ed4309d0d51b01b596de6ebc4f6275e47d24e6fbd3b19969eae59f7bb492f29c": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.23"},
+	"ed4309d0d51b01b596de6ebc4f6275e47d24e6fbd3b19969eae59f7bb492f29c": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.8.23"},
 	},
-	"814a5a8ee3e9e501321515250492e20b2c8cb2ecd14280af039439e98c6b9cfe": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.24"},
+	"814a5a8ee3e9e501321515250492e20b2c8cb2ecd14280af039439e98c6b9cfe": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.8.24"},
 	},
-	"fa778c167772a3ef8d409e8039d73cc2f07bb8d040ade4f8b1c72ce0b317664e": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.25"},
+	"fa778c167772a3ef8d409e8039d73cc2f07bb8d040ade4f8b1c72ce0b317664e": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.8.25"},
 	},
-	"f68f0f7f0a7c758709daa4ab286696e2ddc5ec5281c7258abf369e12138905d2": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.26"},
+	"f68f0f7f0a7c758709daa4ab286696e2ddc5ec5281c7258abf369e12138905d2": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.8.26"},
 	},
-	"0d757d537428e4fe3bd2faf887391e3d11d9321c42d60aaafe79ca9ca872f159": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.27"},
+	"0d757d537428e4fe3bd2faf887391e3d11d9321c42d60aaafe79ca9ca872f159": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.8.27"},
 	},
-	"aac95bf8a33cc5e124661ae1ee55c2c1099b71f35240e27cf367cebd4e60da20": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.28"},
+	"aac95bf8a33cc5e124661ae1ee55c2c1099b71f35240e27cf367cebd4e60da20": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.8.28"},
 	},
-	"e696958a4263caf2b3f15d19450e66c6d7ecbee7849dcdf8c8b82c45273ae0a9": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.29"},
+	"e696958a4263caf2b3f15d19450e66c6d7ecbee7849dcdf8c8b82c45273ae0a9": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.8.29"},
 	},
-	"af94c47dd150063aaff2272623b0891d7229d1037c9db22cb9d3b36b61696fdb": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.3"},
+	"af94c47dd150063aaff2272623b0891d7229d1037c9db22cb9d3b36b61696fdb": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.8.3"},
 	},
-	"ce711d06869e6292401f47a072a4542e9820fe808aac234a82b830b3c1881483": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.30"},
+	"ce711d06869e6292401f47a072a4542e9820fe808aac234a82b830b3c1881483": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.8.30"},
 	},
-	"45984709ed51d4af5fcaa20772cb97fb81c87775488d83f7c7d6d4bbabdc9d77": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.31"},
+	"45984709ed51d4af5fcaa20772cb97fb81c87775488d83f7c7d6d4bbabdc9d77": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.8.31"},
 	},
-	"9776578a3021183b043188b02e24204965e19a9d75c02fd4da2eb44222b24649": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.32"},
+	"9776578a3021183b043188b02e24204965e19a9d75c02fd4da2eb44222b24649": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.8.32"},
 	},
-	"b33e2f63f60cbb96223a806069a99413ade2e4fba98c06489cb00ec77667982d": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.33"},
+	"b33e2f63f60cbb96223a806069a99413ade2e4fba98c06489cb00ec77667982d": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.8.33"},
 	},
-	"0a510b9459b94608cc366fdb64bcc9069326c71430887440bbdb06709e915fea": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.34"},
+	"0a510b9459b94608cc366fdb64bcc9069326c71430887440bbdb06709e915fea": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.8.34"},
 	},
-	"0193c97e31c2053651cfce4ee4e58590b49ce01d1b0b035b64aaef74d9ed336d": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.35"},
+	"0193c97e31c2053651cfce4ee4e58590b49ce01d1b0b035b64aaef74d9ed336d": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.8.35"},
 	},
-	"9f811d940f696e281efc8304078b7e4828a2a5319808d116424011d8c6f6c0f4": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.36"},
+	"9f811d940f696e281efc8304078b7e4828a2a5319808d116424011d8c6f6c0f4": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.8.36"},
 	},
-	"1d1bd99404a30dd0c6dc522de74dae93e9f8751a48760601e5bd79d8ec226a56": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.37"},
+	"1d1bd99404a30dd0c6dc522de74dae93e9f8751a48760601e5bd79d8ec226a56": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.8.37"},
 	},
-	"dd688d526fe1acb41417e3cabb54ef9fcbe72508705478569d7a62f255adfeda": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.38"},
+	"dd688d526fe1acb41417e3cabb54ef9fcbe72508705478569d7a62f255adfeda": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.8.38"},
 	},
-	"cbb2943e5502cdd151eee1d6643f407af8113b3637c45919e98340a5feb31a63": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.39"},
+	"cbb2943e5502cdd151eee1d6643f407af8113b3637c45919e98340a5feb31a63": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.8.39"},
 	},
-	"91d367ac7b1c45144cc1f6de7bcc5e96df437922f578cdc484bf24644a837015": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.4"},
+	"91d367ac7b1c45144cc1f6de7bcc5e96df437922f578cdc484bf24644a837015": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.8.4"},
 	},
-	"111ccccfe6b265f392d87cd9a5df2708406e4f779e3674d2a8b270a2eace4022": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.40"},
+	"111ccccfe6b265f392d87cd9a5df2708406e4f779e3674d2a8b270a2eace4022": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.8.40"},
 	},
-	"8daf0690ce1eaae5abb3c0cfb57a5b448c92a170dd509e934c3b708eeebfce77": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.41"},
+	"8daf0690ce1eaae5abb3c0cfb57a5b448c92a170dd509e934c3b708eeebfce77": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.8.41"},
 	},
-	"999e6ce423a7f8168fdfbe4e65916b32bff5c64e72ec47afd2a605b75f1e6f8d": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.42"},
+	"999e6ce423a7f8168fdfbe4e65916b32bff5c64e72ec47afd2a605b75f1e6f8d": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.8.42"},
 	},
-	"acd55c1c6a3412d92563d5900007b8e6d29e918abd1d4322b40c68cd2e5d94d0": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.43"},
+	"acd55c1c6a3412d92563d5900007b8e6d29e918abd1d4322b40c68cd2e5d94d0": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.8.43"},
 	},
-	"53459784c777e76f487c94d39350a6d3308ec452d7d7319013fadad7ee927f05": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.44"},
+	"53459784c777e76f487c94d39350a6d3308ec452d7d7319013fadad7ee927f05": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.8.44"},
 	},
-	"4c05588eb813098d097a625727806f5a60d91b2d9b625473ba7126a975567551": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.5"},
+	"4c05588eb813098d097a625727806f5a60d91b2d9b625473ba7126a975567551": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.8.5"},
 	},
-	"38bcf45c954fad3a15ab68d419e5a3b9187106d1c07b6087f04a79f2ea337709": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.6"},
+	"38bcf45c954fad3a15ab68d419e5a3b9187106d1c07b6087f04a79f2ea337709": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.8.6"},
 	},
-	"c94ae255ce909dee1db9eaa3d7cc64557ad9299a469a96026e556d81f3f21f6b": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.7"},
+	"c94ae255ce909dee1db9eaa3d7cc64557ad9299a469a96026e556d81f3f21f6b": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.8.7"},
 	},
-	"2dde72dd1df899557706b393ab4ab3caed903bc5f75d8593a9e6d970aba14858": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.8"},
+	"2dde72dd1df899557706b393ab4ab3caed903bc5f75d8593a9e6d970aba14858": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.8.8"},
 	},
-	"df65b10f538ab7aff99c7e3f83cfe34b89eb003eddec3c140dac7750d3d73fba": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.8.9"},
+	"df65b10f538ab7aff99c7e3f83cfe34b89eb003eddec3c140dac7750d3d73fba": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.8.9"},
 	},
-	"ca574c4591982f836bd397389a94e77ffa5d5e44edbe226303d86550d5fc915d": []Modver{
-		{"github.com/aws/aws-sdk-go", "v1.9.0"}, {"github.com/aws/aws-sdk-go", "v1.9.44"},
+	"ca574c4591982f836bd397389a94e77ffa5d5e44edbe226303d86550d5fc915d": []internal.Modver{
+		{Path: "github.com/aws/aws-sdk-go", Version: "v1.9.0"}, {Path: "github.com/aws/aws-sdk-go", Version: "v1.9.44"},
 	},
-	"6e7946a44ef45ca50354dd6a2514b8d1aa1857c4feb71b8e5d8e5b3d72fd672e": []Modver{
-		{"github.com/etcd-io/etcd", "v0.1.0"},
+	"6e7946a44ef45ca50354dd6a2514b8d1aa1857c4feb71b8e5d8e5b3d72fd672e": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v0.1.0"},
 	},
-	"b09f603a23483c811b776e0ee0487a4fb0feadddc536fad2beb75db6563471e7": []Modver{
-		{"github.com/etcd-io/etcd", "v0.1.1"},
+	"b09f603a23483c811b776e0ee0487a4fb0feadddc536fad2beb75db6563471e7": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v0.1.1"},
 	},
-	"6da3d120d6daf515576a3b70373d972ff75cdb36c9598b32816f71058196eccf": []Modver{
-		{"github.com/etcd-io/etcd", "v0.1.2"},
+	"6da3d120d6daf515576a3b70373d972ff75cdb36c9598b32816f71058196eccf": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v0.1.2"},
 	},
-	"f76d3412e44121a60015ecb0c1ca20197d48528508c055c683090226558b5a8e": []Modver{
-		{"github.com/etcd-io/etcd", "v0.2.0"},
+	"f76d3412e44121a60015ecb0c1ca20197d48528508c055c683090226558b5a8e": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v0.2.0"},
 	},
-	"90bd27dfc564cc97fe7cde5e4439297ceac10b47fd7cf75f6d52371a9376a07b": []Modver{
-		{"github.com/etcd-io/etcd", "v0.2.0-rc0"},
+	"90bd27dfc564cc97fe7cde5e4439297ceac10b47fd7cf75f6d52371a9376a07b": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v0.2.0-rc0"},
 	},
-	"a93e52ea8f5c61c45b698f8a58486a5ba61d5dc18427f132cfbf17f62c12ba33": []Modver{
-		{"github.com/etcd-io/etcd", "v0.2.0-rc1"},
+	"a93e52ea8f5c61c45b698f8a58486a5ba61d5dc18427f132cfbf17f62c12ba33": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v0.2.0-rc1"},
 	},
-	"e8c736d0d780919b33a8f5869072d334687b25ccb4b30e65d66e6b283432cc4d": []Modver{
-		{"github.com/etcd-io/etcd", "v0.2.0-rc2"},
+	"e8c736d0d780919b33a8f5869072d334687b25ccb4b30e65d66e6b283432cc4d": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v0.2.0-rc2"},
 	},
-	"4da841fa908bf265e3ed54cc0015503d0d8ec8ccdc20af48a0ec53570c306f5d": []Modver{
-		{"github.com/etcd-io/etcd", "v0.2.0-rc3"},
+	"4da841fa908bf265e3ed54cc0015503d0d8ec8ccdc20af48a0ec53570c306f5d": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v0.2.0-rc3"},
 	},
-	"f018375128f3848ae4b4968eaf781b60d65a97731b3a97c6a024bc20f8727ac9": []Modver{
-		{"github.com/etcd-io/etcd", "v0.2.0-rc4"},
+	"f018375128f3848ae4b4968eaf781b60d65a97731b3a97c6a024bc20f8727ac9": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v0.2.0-rc4"},
 	},
-	"882ba19e8847da4649db25057f61cea5208e9d428946a98be96d52af7c7e63c9": []Modver{
-		{"github.com/etcd-io/etcd", "v0.3.0"},
+	"882ba19e8847da4649db25057f61cea5208e9d428946a98be96d52af7c7e63c9": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v0.3.0"},
 	},
-	"8bbc53b7e1d97ce7c5664a9e1f246b2586d1d16e748e718c3b1daf52724875ac": []Modver{
-		{"github.com/etcd-io/etcd", "v0.4.0"},
+	"8bbc53b7e1d97ce7c5664a9e1f246b2586d1d16e748e718c3b1daf52724875ac": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v0.4.0"},
 	},
-	"2b809c54138fc694b8dbdd3c6b5f8e40e5e8368ef4d6bb145c5f59034f899789": []Modver{
-		{"github.com/etcd-io/etcd", "v0.4.1"},
+	"2b809c54138fc694b8dbdd3c6b5f8e40e5e8368ef4d6bb145c5f59034f899789": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v0.4.1"},
 	},
-	"584e89bc2a8e82017fef1932812d4d1fbe253932bdf0f27745f7ab5bc02bd4b9": []Modver{
-		{"github.com/etcd-io/etcd", "v0.4.2"},
+	"584e89bc2a8e82017fef1932812d4d1fbe253932bdf0f27745f7ab5bc02bd4b9": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v0.4.2"},
 	},
-	"ca09f765ae99cef707b0a1ef9e9f7a1c95fc77ba4f5ec2a58f2c47bd6b263801": []Modver{
-		{"github.com/etcd-io/etcd", "v0.4.3"},
+	"ca09f765ae99cef707b0a1ef9e9f7a1c95fc77ba4f5ec2a58f2c47bd6b263801": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v0.4.3"},
 	},
-	"951fa2f645de6b4ff4937fff47b9c21961ff4f813d50cd27f65d76dcdfa3c29c": []Modver{
-		{"github.com/etcd-io/etcd", "v0.4.4"},
+	"951fa2f645de6b4ff4937fff47b9c21961ff4f813d50cd27f65d76dcdfa3c29c": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v0.4.4"},
 	},
-	"b7ffc634404c0052388b5550e61b4c9e3566b3ae01e61d807b8a81f1b86e329c": []Modver{
-		{"github.com/etcd-io/etcd", "v0.4.5"},
+	"b7ffc634404c0052388b5550e61b4c9e3566b3ae01e61d807b8a81f1b86e329c": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v0.4.5"},
 	},
-	"da8c8384765663b9100fbebe5b3ddc2f9e31773972eeba5864f795f57e6e4df7": []Modver{
-		{"github.com/etcd-io/etcd", "v0.4.6"},
+	"da8c8384765663b9100fbebe5b3ddc2f9e31773972eeba5864f795f57e6e4df7": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v0.4.6"},
 	},
-	"1a36dd67cbfdf2f7ca40c68e591da5784bfb071a1e7a9c7d3b2c5d5c035f4f49": []Modver{
-		{"github.com/etcd-io/etcd", "v0.4.7"},
+	"1a36dd67cbfdf2f7ca40c68e591da5784bfb071a1e7a9c7d3b2c5d5c035f4f49": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v0.4.7"},
 	},
-	"d79bff732dc87762849864db2fc24c3041330a5bdc1014a3fabf0d9361328e86": []Modver{
-		{"github.com/etcd-io/etcd", "v0.4.8"},
+	"d79bff732dc87762849864db2fc24c3041330a5bdc1014a3fabf0d9361328e86": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v0.4.8"},
 	},
-	"1de0c075e870ea7f4266312157d978720ef776d61d437b26e6d1666d7cd702c4": []Modver{
-		{"github.com/etcd-io/etcd", "v0.4.9"},
+	"1de0c075e870ea7f4266312157d978720ef776d61d437b26e6d1666d7cd702c4": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v0.4.9"},
 	},
-	"3072586e8b36c29b2e159bc32d5c9bffe3d1015ebdee4cc27a7549cbeeae946b": []Modver{
-		{"github.com/etcd-io/etcd", "v0.5.0-alpha.0"},
+	"3072586e8b36c29b2e159bc32d5c9bffe3d1015ebdee4cc27a7549cbeeae946b": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v0.5.0-alpha.0"},
 	},
-	"4824a676000bfac0a7aa733385440ba603a70ef59ee6f810804be62aea754042": []Modver{
-		{"github.com/etcd-io/etcd", "v0.5.0-alpha.1"},
+	"4824a676000bfac0a7aa733385440ba603a70ef59ee6f810804be62aea754042": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v0.5.0-alpha.1"},
 	},
-	"3bdc0467e4254b7b4e92a053f202b82a991d0bbf17a3a7160eab97000fdb3051": []Modver{
-		{"github.com/etcd-io/etcd", "v0.5.0-alpha.2"},
+	"3bdc0467e4254b7b4e92a053f202b82a991d0bbf17a3a7160eab97000fdb3051": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v0.5.0-alpha.2"},
 	},
-	"5133892f48e12191c6d7f75fece2c87ea779a224dff6cad475fba500916ba8b8": []Modver{
-		{"github.com/etcd-io/etcd", "v0.5.0-alpha.3"},
+	"5133892f48e12191c6d7f75fece2c87ea779a224dff6cad475fba500916ba8b8": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v0.5.0-alpha.3"},
 	},
-	"97eaa01c10ef36da805d062d177ea2b1b178ff15db373923f4493c3a9e048c1f": []Modver{
-		{"github.com/etcd-io/etcd", "v0.5.0-alpha.4"},
+	"97eaa01c10ef36da805d062d177ea2b1b178ff15db373923f4493c3a9e048c1f": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v0.5.0-alpha.4"},
 	},
-	"b12ad19b14bb360a976d446d8703bc5cdfe3803e32a4c5f1ef11bcf2340e75dc": []Modver{
-		{"github.com/etcd-io/etcd", "v0.5.0-alpha.5"},
+	"b12ad19b14bb360a976d446d8703bc5cdfe3803e32a4c5f1ef11bcf2340e75dc": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v0.5.0-alpha.5"},
 	},
-	"6d854991c6b4b339cfa181be6c97fe6463201cdfa53f467c98ddbc2317a85c37": []Modver{
-		{"github.com/etcd-io/etcd", "v2.0.0+incompatible"},
+	"6d854991c6b4b339cfa181be6c97fe6463201cdfa53f467c98ddbc2317a85c37": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v2.0.0+incompatible"},
 	},
-	"31011b0167201a60adce707171bdb68df06065be816707974c1b8a42738c8658": []Modver{
-		{"github.com/etcd-io/etcd", "v2.0.0-rc.1+incompatible"},
+	"31011b0167201a60adce707171bdb68df06065be816707974c1b8a42738c8658": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v2.0.0-rc.1+incompatible"},
 	},
-	"c651e8f30f8b73ea115f76ace6dbed295c9f947265289544020b2a8453d2826b": []Modver{
-		{"github.com/etcd-io/etcd", "v2.0.1+incompatible"},
+	"c651e8f30f8b73ea115f76ace6dbed295c9f947265289544020b2a8453d2826b": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v2.0.1+incompatible"},
 	},
-	"87d76a5fec250a77e43ab2fea205730f967cf14a2f87e81d8d802cb38b664895": []Modver{
-		{"github.com/etcd-io/etcd", "v2.0.10+incompatible"},
+	"87d76a5fec250a77e43ab2fea205730f967cf14a2f87e81d8d802cb38b664895": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v2.0.10+incompatible"},
 	},
-	"e27e22b88abbba6a88f8b9d7b2ba32519a07ad5c971295de48951b993d17fd45": []Modver{
-		{"github.com/etcd-io/etcd", "v2.0.11+incompatible"},
+	"e27e22b88abbba6a88f8b9d7b2ba32519a07ad5c971295de48951b993d17fd45": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v2.0.11+incompatible"},
 	},
-	"5b76781d4b6e1fd682e653c742bf81503054b0eea0c2f945b7e4cae733eed60a": []Modver{
-		{"github.com/etcd-io/etcd", "v2.0.12+incompatible"},
+	"5b76781d4b6e1fd682e653c742bf81503054b0eea0c2f945b7e4cae733eed60a": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v2.0.12+incompatible"},
 	},
-	"78fb3551f26ac9f198b2c1eaf7e9a127cf6eb3a2f3d8ea037c2256c03cdb6785": []Modver{
-		{"github.com/etcd-io/etcd", "v2.0.13+incompatible"},
+	"78fb3551f26ac9f198b2c1eaf7e9a127cf6eb3a2f3d8ea037c2256c03cdb6785": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v2.0.13+incompatible"},
 	},
-	"ec5cc3c41099a11928ebdd505135607813f6f621c56b0d04b19854a6ff1a6083": []Modver{
-		{"github.com/etcd-io/etcd", "v2.0.2+incompatible"},
+	"ec5cc3c41099a11928ebdd505135607813f6f621c56b0d04b19854a6ff1a6083": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v2.0.2+incompatible"},
 	},
-	"f458ff2423c1439f484d864a11bc10567a777398475fd2de256aae4c2db76722": []Modver{
-		{"github.com/etcd-io/etcd", "v2.0.3+incompatible"},
+	"f458ff2423c1439f484d864a11bc10567a777398475fd2de256aae4c2db76722": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v2.0.3+incompatible"},
 	},
-	"17a16f6ce8fc871e88e0a0555124021e1e79cfd484190697d447e295592752fa": []Modver{
-		{"github.com/etcd-io/etcd", "v2.0.4+incompatible"},
+	"17a16f6ce8fc871e88e0a0555124021e1e79cfd484190697d447e295592752fa": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v2.0.4+incompatible"},
 	},
-	"fbc1ecc802cdecb28d7373cf10d275ed95e0309c77d3636b583b108b5be7e2fd": []Modver{
-		{"github.com/etcd-io/etcd", "v2.0.5+incompatible"},
+	"fbc1ecc802cdecb28d7373cf10d275ed95e0309c77d3636b583b108b5be7e2fd": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v2.0.5+incompatible"},
 	},
-	"44f9d47ed676d99d58759e604a163094b640c34c9596531ec4760d969f14c953": []Modver{
-		{"github.com/etcd-io/etcd", "v2.0.6+incompatible"},
+	"44f9d47ed676d99d58759e604a163094b640c34c9596531ec4760d969f14c953": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v2.0.6+incompatible"},
 	},
-	"b63525b0beb459eca27348dc9582fa74b0dc87f7d38323201f25318aef7c6204": []Modver{
-		{"github.com/etcd-io/etcd", "v2.0.7+incompatible"},
+	"b63525b0beb459eca27348dc9582fa74b0dc87f7d38323201f25318aef7c6204": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v2.0.7+incompatible"},
 	},
-	"bb78d17fb4a71cb7d65f444dffa9abcebc43a94166e81dd0508c1cb2745c88d0": []Modver{
-		{"github.com/etcd-io/etcd", "v2.0.8+incompatible"},
+	"bb78d17fb4a71cb7d65f444dffa9abcebc43a94166e81dd0508c1cb2745c88d0": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v2.0.8+incompatible"},
 	},
-	"0d641e00af6a80c28308d14adf454fa04f1e79ff0da7b030e7a3facb96ed9745": []Modver{
-		{"github.com/etcd-io/etcd", "v2.0.9+incompatible"},
+	"0d641e00af6a80c28308d14adf454fa04f1e79ff0da7b030e7a3facb96ed9745": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v2.0.9+incompatible"},
 	},
-	"26db9e63f1b80acd57d020aced1b1b6b04dd30588631a61e56b4c485fccf60cb": []Modver{
-		{"github.com/etcd-io/etcd", "v2.1.0+incompatible"},
+	"26db9e63f1b80acd57d020aced1b1b6b04dd30588631a61e56b4c485fccf60cb": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v2.1.0+incompatible"},
 	},
-	"817ec6224d4ba6cf746b9f349f3aa8633163e241f275799c7a65bfb0828c4e3b": []Modver{
-		{"github.com/etcd-io/etcd", "v2.1.0-alpha.0+incompatible"},
+	"817ec6224d4ba6cf746b9f349f3aa8633163e241f275799c7a65bfb0828c4e3b": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v2.1.0-alpha.0+incompatible"},
 	},
-	"f8e61a49b2bbe290cc139e9ef50016a71dd0673cbb977d43434b3c6032290871": []Modver{
-		{"github.com/etcd-io/etcd", "v2.1.0-alpha.1+incompatible"},
+	"f8e61a49b2bbe290cc139e9ef50016a71dd0673cbb977d43434b3c6032290871": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v2.1.0-alpha.1+incompatible"},
 	},
-	"69a5758dc36943717ddf42328d247d973aac1fc090e41f39dda2c4eaf061f668": []Modver{
-		{"github.com/etcd-io/etcd", "v2.1.0-rc.0+incompatible"},
+	"69a5758dc36943717ddf42328d247d973aac1fc090e41f39dda2c4eaf061f668": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v2.1.0-rc.0+incompatible"},
 	},
-	"0d5e281113e55da41f4ab90763a2f72478ce00062beb1e564dc8b90aed553e8c": []Modver{
-		{"github.com/etcd-io/etcd", "v2.1.1+incompatible"},
+	"0d5e281113e55da41f4ab90763a2f72478ce00062beb1e564dc8b90aed553e8c": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v2.1.1+incompatible"},
 	},
-	"736b3ea9c498daa65ddc4d89faae87b7e7a2deb97b8cf2db3d74a603f8cb5200": []Modver{
-		{"github.com/etcd-io/etcd", "v2.1.2+incompatible"},
+	"736b3ea9c498daa65ddc4d89faae87b7e7a2deb97b8cf2db3d74a603f8cb5200": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v2.1.2+incompatible"},
 	},
-	"4763fac750368314754b1c48a59b691bdea5e40ba96a225eed9df78ac2b6936e": []Modver{
-		{"github.com/etcd-io/etcd", "v2.1.3+incompatible"},
+	"4763fac750368314754b1c48a59b691bdea5e40ba96a225eed9df78ac2b6936e": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v2.1.3+incompatible"},
 	},
-	"636e3f140522ca0634437d87571ccbdd971c99c9249fc93a3d2626ebbfa4dd65": []Modver{
-		{"github.com/etcd-io/etcd", "v2.2.0+incompatible"},
+	"636e3f140522ca0634437d87571ccbdd971c99c9249fc93a3d2626ebbfa4dd65": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v2.2.0+incompatible"},
 	},
-	"0ef458374ec4655966f4b1e1db2758331520a443a0d2552bcac42a7eac340652": []Modver{
-		{"github.com/etcd-io/etcd", "v2.2.0-alpha.0+incompatible"},
+	"0ef458374ec4655966f4b1e1db2758331520a443a0d2552bcac42a7eac340652": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v2.2.0-alpha.0+incompatible"},
 	},
-	"a2d472b472fed9993dbf75f1ba600602b591ff31a6e0b0e49e56fcb643125a89": []Modver{
-		{"github.com/etcd-io/etcd", "v2.2.0-alpha.1+incompatible"},
+	"a2d472b472fed9993dbf75f1ba600602b591ff31a6e0b0e49e56fcb643125a89": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v2.2.0-alpha.1+incompatible"},
 	},
-	"f7804386bd2882ad1c73c0f2afc082144c2f01939db136f2776fb5d7bc0f5a9d": []Modver{
-		{"github.com/etcd-io/etcd", "v2.2.0-rc.0+incompatible"},
+	"f7804386bd2882ad1c73c0f2afc082144c2f01939db136f2776fb5d7bc0f5a9d": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v2.2.0-rc.0+incompatible"},
 	},
-	"e34c9485003337cc85e77eecdcf467448e07ab60446057d26ee1317837b6fbc2": []Modver{
-		{"github.com/etcd-io/etcd", "v2.2.1+incompatible"},
+	"e34c9485003337cc85e77eecdcf467448e07ab60446057d26ee1317837b6fbc2": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v2.2.1+incompatible"},
 	},
-	"e69b0093220979a9714fdac95f681d81ac0592acb79dd6ecf121399d5588e446": []Modver{
-		{"github.com/etcd-io/etcd", "v2.2.2+incompatible"},
+	"e69b0093220979a9714fdac95f681d81ac0592acb79dd6ecf121399d5588e446": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v2.2.2+incompatible"},
 	},
-	"69c7389880570a8b57e495c7cf8bdba967c212b92b0a61b626aef548ed8558bc": []Modver{
-		{"github.com/etcd-io/etcd", "v2.2.3+incompatible"},
+	"69c7389880570a8b57e495c7cf8bdba967c212b92b0a61b626aef548ed8558bc": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v2.2.3+incompatible"},
 	},
-	"b03ea2ab2ec5a9c552fcb9f22146f10ba2a3d471be92c3a16fe29f0408be7a59": []Modver{
-		{"github.com/etcd-io/etcd", "v2.2.4+incompatible"},
+	"b03ea2ab2ec5a9c552fcb9f22146f10ba2a3d471be92c3a16fe29f0408be7a59": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v2.2.4+incompatible"},
 	},
-	"4eafda264df6291523476d48610fafd7c7c2386115e953170fede99083d06a43": []Modver{
-		{"github.com/etcd-io/etcd", "v2.2.5+incompatible"},
+	"4eafda264df6291523476d48610fafd7c7c2386115e953170fede99083d06a43": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v2.2.5+incompatible"},
 	},
-	"9a56221f4e9f0dafa1a78d30931b962535093de8d43ca44213dd9d2de3433feb": []Modver{
-		{"github.com/etcd-io/etcd", "v2.3.0+incompatible"},
+	"9a56221f4e9f0dafa1a78d30931b962535093de8d43ca44213dd9d2de3433feb": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v2.3.0+incompatible"},
 	},
-	"bb1a076ab5ed073f3e73ed5117614a00d62d05fdca08e661eff0244aaad9e74f": []Modver{
-		{"github.com/etcd-io/etcd", "v2.3.0-alpha.0+incompatible"},
+	"bb1a076ab5ed073f3e73ed5117614a00d62d05fdca08e661eff0244aaad9e74f": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v2.3.0-alpha.0+incompatible"},
 	},
-	"d1527a329930f6fc52e544993dbfc4e40525a48e8c303668dac01304ebca9dad": []Modver{
-		{"github.com/etcd-io/etcd", "v2.3.0-alpha.1+incompatible"},
+	"d1527a329930f6fc52e544993dbfc4e40525a48e8c303668dac01304ebca9dad": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v2.3.0-alpha.1+incompatible"},
 	},
-	"486f4e361ed3da7f058351f010818a19aec7f956ea36b9fda8f8b7e0334ad97f": []Modver{
-		{"github.com/etcd-io/etcd", "v2.3.1+incompatible"},
+	"486f4e361ed3da7f058351f010818a19aec7f956ea36b9fda8f8b7e0334ad97f": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v2.3.1+incompatible"},
 	},
-	"005be95847e445ef949b15e7deceb17f29c5044d9b492395166d784e55cfc667": []Modver{
-		{"github.com/etcd-io/etcd", "v2.3.2+incompatible"},
+	"005be95847e445ef949b15e7deceb17f29c5044d9b492395166d784e55cfc667": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v2.3.2+incompatible"},
 	},
-	"eca5a7074e045577f8e5dce3e2d137fb9ff8e1d31bac999abc08d714c2f02a2d": []Modver{
-		{"github.com/etcd-io/etcd", "v2.3.3+incompatible"},
+	"eca5a7074e045577f8e5dce3e2d137fb9ff8e1d31bac999abc08d714c2f02a2d": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v2.3.3+incompatible"},
 	},
-	"d56f26cc082fa416e17208787dadf6a3646fb86338adb82e3c4d4bccb6fa5b96": []Modver{
-		{"github.com/etcd-io/etcd", "v2.3.4+incompatible"},
+	"d56f26cc082fa416e17208787dadf6a3646fb86338adb82e3c4d4bccb6fa5b96": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v2.3.4+incompatible"},
 	},
-	"75f091f3b6f82d3d6cc5caa606f5079e682ce04e3c5a242560c6e4611b11aaa8": []Modver{
-		{"github.com/etcd-io/etcd", "v2.3.5+incompatible"},
+	"75f091f3b6f82d3d6cc5caa606f5079e682ce04e3c5a242560c6e4611b11aaa8": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v2.3.5+incompatible"},
 	},
-	"0478def07d94a12f864274689fc8134e873ad4b14fe7e9e29f115624b2f38757": []Modver{
-		{"github.com/etcd-io/etcd", "v2.3.6+incompatible"},
+	"0478def07d94a12f864274689fc8134e873ad4b14fe7e9e29f115624b2f38757": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v2.3.6+incompatible"},
 	},
-	"a19792445f8b31e4b4d768fa064125edf1692917d29482ac3ca9afdd48c10463": []Modver{
-		{"github.com/etcd-io/etcd", "v2.3.7+incompatible"},
+	"a19792445f8b31e4b4d768fa064125edf1692917d29482ac3ca9afdd48c10463": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v2.3.7+incompatible"},
 	},
-	"14bac9460dc7218d0c1efb4d8a59b4c6eed7a000ec339b75852d363207056eae": []Modver{
-		{"github.com/etcd-io/etcd", "v2.3.8+incompatible"},
+	"14bac9460dc7218d0c1efb4d8a59b4c6eed7a000ec339b75852d363207056eae": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v2.3.8+incompatible"},
 	},
-	"db6cc38ecdbb9d1e417e64f4b035ca459259f1ce186beef79b197201d8325f1e": []Modver{
-		{"github.com/etcd-io/etcd", "v3.0.0+incompatible"},
+	"db6cc38ecdbb9d1e417e64f4b035ca459259f1ce186beef79b197201d8325f1e": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.0.0+incompatible"},
 	},
-	"2f0233860d682679a71668a8083fde5443e142b82940fc4e8919ba39b4638a9b": []Modver{
-		{"github.com/etcd-io/etcd", "v3.0.0-beta.0+incompatible"},
+	"2f0233860d682679a71668a8083fde5443e142b82940fc4e8919ba39b4638a9b": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.0.0-beta.0+incompatible"},
 	},
-	"cefceafbf72dbc08f382ede1ae4b24e67cc7a00a09c84490805f09288c30a573": []Modver{
-		{"github.com/etcd-io/etcd", "v3.0.1+incompatible"},
+	"cefceafbf72dbc08f382ede1ae4b24e67cc7a00a09c84490805f09288c30a573": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.0.1+incompatible"},
 	},
-	"4340ef5fcc64b1eb0d8b1851938abd5f544a16e968637c8b01459eab7fcdc719": []Modver{
-		{"github.com/etcd-io/etcd", "v3.0.10+incompatible"},
+	"4340ef5fcc64b1eb0d8b1851938abd5f544a16e968637c8b01459eab7fcdc719": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.0.10+incompatible"},
 	},
-	"51cb98e017c42b886882fccbb0420dd11a1cb933c307417ea98aad097ade49e0": []Modver{
-		{"github.com/etcd-io/etcd", "v3.0.11+incompatible"},
+	"51cb98e017c42b886882fccbb0420dd11a1cb933c307417ea98aad097ade49e0": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.0.11+incompatible"},
 	},
-	"20f1872a98589dbf0e098753c883850356830e9e019229c8ceeacf7467778567": []Modver{
-		{"github.com/etcd-io/etcd", "v3.0.12+incompatible"},
+	"20f1872a98589dbf0e098753c883850356830e9e019229c8ceeacf7467778567": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.0.12+incompatible"},
 	},
-	"8970de96e937780cc4b2f2826a5497d5334d22ab5906522ac4056680903f4ef7": []Modver{
-		{"github.com/etcd-io/etcd", "v3.0.13+incompatible"},
+	"8970de96e937780cc4b2f2826a5497d5334d22ab5906522ac4056680903f4ef7": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.0.13+incompatible"},
 	},
-	"f27b2232bf0297e57200b30ad92a2ce8b3f9dedee7695a23be1a1a5013f64cfa": []Modver{
-		{"github.com/etcd-io/etcd", "v3.0.14+incompatible"},
+	"f27b2232bf0297e57200b30ad92a2ce8b3f9dedee7695a23be1a1a5013f64cfa": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.0.14+incompatible"},
 	},
-	"afd52909939f57b1e7682de9b9b8d5e2325add143b7c894e5737f7a2d5915489": []Modver{
-		{"github.com/etcd-io/etcd", "v3.0.15+incompatible"},
+	"afd52909939f57b1e7682de9b9b8d5e2325add143b7c894e5737f7a2d5915489": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.0.15+incompatible"},
 	},
-	"63b2dba5bdce3c828e12b909f8676edb27a1fce1dee773cf4bfe047ff3e7e5cc": []Modver{
-		{"github.com/etcd-io/etcd", "v3.0.16+incompatible"},
+	"63b2dba5bdce3c828e12b909f8676edb27a1fce1dee773cf4bfe047ff3e7e5cc": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.0.16+incompatible"},
 	},
-	"04eecbbfccbe4842d5e69390091c18475195ff1be46c6a5ccc2c48ac761223ba": []Modver{
-		{"github.com/etcd-io/etcd", "v3.0.17+incompatible"},
+	"04eecbbfccbe4842d5e69390091c18475195ff1be46c6a5ccc2c48ac761223ba": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.0.17+incompatible"},
 	},
-	"235557b1fb2794feff0a2f7a6fa11ba28719431ae9f638362c01010127452786": []Modver{
-		{"github.com/etcd-io/etcd", "v3.0.2+incompatible"},
+	"235557b1fb2794feff0a2f7a6fa11ba28719431ae9f638362c01010127452786": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.0.2+incompatible"},
 	},
-	"001e709281cf58673c20173593b7337dceeaf9ccbe325ffb88bbd0f816905dd6": []Modver{
-		{"github.com/etcd-io/etcd", "v3.0.3+incompatible"},
+	"001e709281cf58673c20173593b7337dceeaf9ccbe325ffb88bbd0f816905dd6": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.0.3+incompatible"},
 	},
-	"a9cfab7b58971e17b39ce36e1c3788598212fb6c0f98b464422e06d29d65fa76": []Modver{
-		{"github.com/etcd-io/etcd", "v3.0.4+incompatible"},
+	"a9cfab7b58971e17b39ce36e1c3788598212fb6c0f98b464422e06d29d65fa76": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.0.4+incompatible"},
 	},
-	"0668bdbfe2e2076ae413e9ce140f9ad1a743d18f909b6d7bdf89aeea55f40410": []Modver{
-		{"github.com/etcd-io/etcd", "v3.0.5+incompatible"},
+	"0668bdbfe2e2076ae413e9ce140f9ad1a743d18f909b6d7bdf89aeea55f40410": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.0.5+incompatible"},
 	},
-	"10630a3854105bb0de4733d707f17f93679278896daafe07917a916825a41524": []Modver{
-		{"github.com/etcd-io/etcd", "v3.0.6+incompatible"},
+	"10630a3854105bb0de4733d707f17f93679278896daafe07917a916825a41524": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.0.6+incompatible"},
 	},
-	"653fa6694d739898d9e932846e2ffe48cb349ecbdb4ae5a84a026da25a86471e": []Modver{
-		{"github.com/etcd-io/etcd", "v3.0.7+incompatible"},
+	"653fa6694d739898d9e932846e2ffe48cb349ecbdb4ae5a84a026da25a86471e": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.0.7+incompatible"},
 	},
-	"d89ea35bf069db6ad925a020fe4775e1a26941fd6838e2585b90e1f67fd0ea46": []Modver{
-		{"github.com/etcd-io/etcd", "v3.0.8+incompatible"},
+	"d89ea35bf069db6ad925a020fe4775e1a26941fd6838e2585b90e1f67fd0ea46": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.0.8+incompatible"},
 	},
-	"e573679c2f26f17d9975b3502e8ee33c74665d235b1075017420a43ff13159ed": []Modver{
-		{"github.com/etcd-io/etcd", "v3.0.9+incompatible"},
+	"e573679c2f26f17d9975b3502e8ee33c74665d235b1075017420a43ff13159ed": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.0.9+incompatible"},
 	},
-	"e2765693067c5a9aed5b77928b02413eaee113ca1315afe74af045eb0b71a872": []Modver{
-		{"github.com/etcd-io/etcd", "v3.1.0+incompatible"},
+	"e2765693067c5a9aed5b77928b02413eaee113ca1315afe74af045eb0b71a872": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.1.0+incompatible"},
 	},
-	"5ccf3f491c17756297c8f728d37cccbafbb9f8761cda268ddf43072c0ae457cc": []Modver{
-		{"github.com/etcd-io/etcd", "v3.1.0-alpha.0+incompatible"},
+	"5ccf3f491c17756297c8f728d37cccbafbb9f8761cda268ddf43072c0ae457cc": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.1.0-alpha.0+incompatible"},
 	},
-	"07f70e191a7a104ad003e3cb24c99f1285a75a232a0bc6e0ea82356ea5d8b0f9": []Modver{
-		{"github.com/etcd-io/etcd", "v3.1.0-alpha.1+incompatible"},
+	"07f70e191a7a104ad003e3cb24c99f1285a75a232a0bc6e0ea82356ea5d8b0f9": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.1.0-alpha.1+incompatible"},
 	},
-	"719698335edbcde124e2c5cee82a271388d5ef411551c0ccb6cfc7bffc6d533a": []Modver{
-		{"github.com/etcd-io/etcd", "v3.1.0-rc.0+incompatible"},
+	"719698335edbcde124e2c5cee82a271388d5ef411551c0ccb6cfc7bffc6d533a": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.1.0-rc.0+incompatible"},
 	},
-	"527c041ca603177572247eea44677a31f647483059ee4e76261661e6f02b5c61": []Modver{
-		{"github.com/etcd-io/etcd", "v3.1.0-rc.1+incompatible"},
+	"527c041ca603177572247eea44677a31f647483059ee4e76261661e6f02b5c61": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.1.0-rc.1+incompatible"},
 	},
-	"54aa0d6747533271ab4ee063d94265e54851ae195e82b38abc0f0f1e23792504": []Modver{
-		{"github.com/etcd-io/etcd", "v3.1.1+incompatible"},
+	"54aa0d6747533271ab4ee063d94265e54851ae195e82b38abc0f0f1e23792504": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.1.1+incompatible"},
 	},
-	"f9ddaa5b2d557f29d95359ca031f4a94badd29dd0709a6c56a6c1686cd9b39a9": []Modver{
-		{"github.com/etcd-io/etcd", "v3.1.10+incompatible"},
+	"f9ddaa5b2d557f29d95359ca031f4a94badd29dd0709a6c56a6c1686cd9b39a9": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.1.10+incompatible"},
 	},
-	"94044931b96c4c49858adca7a7bccada73d3e84f55fc466b5406507438da0399": []Modver{
-		{"github.com/etcd-io/etcd", "v3.1.11+incompatible"},
+	"94044931b96c4c49858adca7a7bccada73d3e84f55fc466b5406507438da0399": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.1.11+incompatible"},
 	},
-	"0a51d6e06e3630507757f259dbf42d4e6c483b5c3b909fae839b16b2e6c0c755": []Modver{
-		{"github.com/etcd-io/etcd", "v3.1.12+incompatible"},
+	"0a51d6e06e3630507757f259dbf42d4e6c483b5c3b909fae839b16b2e6c0c755": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.1.12+incompatible"},
 	},
-	"32c7357a99de9e1b9990276b967831d10b054733c18e033e7637d4843b4e5b77": []Modver{
-		{"github.com/etcd-io/etcd", "v3.1.13+incompatible"},
+	"32c7357a99de9e1b9990276b967831d10b054733c18e033e7637d4843b4e5b77": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.1.13+incompatible"},
 	},
-	"01bc10caff302dad5dd992e21a74a2ba491da98cfcf5d9b8dabefe114dbf454a": []Modver{
-		{"github.com/etcd-io/etcd", "v3.1.14+incompatible"},
+	"01bc10caff302dad5dd992e21a74a2ba491da98cfcf5d9b8dabefe114dbf454a": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.1.14+incompatible"},
 	},
-	"ba0da82cf0a1c4260600b23ece72a60f20b174878a21a8ee9441a7bed92f62e5": []Modver{
-		{"github.com/etcd-io/etcd", "v3.1.15+incompatible"},
+	"ba0da82cf0a1c4260600b23ece72a60f20b174878a21a8ee9441a7bed92f62e5": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.1.15+incompatible"},
 	},
-	"8232362a8714f135e95fcf890c5a7ebf5266a953ad64603ad4946cefe4b0ecf7": []Modver{
-		{"github.com/etcd-io/etcd", "v3.1.16+incompatible"},
+	"8232362a8714f135e95fcf890c5a7ebf5266a953ad64603ad4946cefe4b0ecf7": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.1.16+incompatible"},
 	},
-	"8dcf86a4f4a610fc3c4738e18986bc0071494b2fb16f68a33652b96ee92e67e1": []Modver{
-		{"github.com/etcd-io/etcd", "v3.1.17+incompatible"},
+	"8dcf86a4f4a610fc3c4738e18986bc0071494b2fb16f68a33652b96ee92e67e1": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.1.17+incompatible"},
 	},
-	"ed5c576d6e8d4ba5a9c89845d41363ff125bc39d0dab27ccda69a3d1cbc820fb": []Modver{
-		{"github.com/etcd-io/etcd", "v3.1.18+incompatible"},
+	"ed5c576d6e8d4ba5a9c89845d41363ff125bc39d0dab27ccda69a3d1cbc820fb": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.1.18+incompatible"},
 	},
-	"4fe3d63a544d8bbc97b77bb3eecf77260bd324d3dec0dcc063d25652899e7d0a": []Modver{
-		{"github.com/etcd-io/etcd", "v3.1.19+incompatible"},
+	"4fe3d63a544d8bbc97b77bb3eecf77260bd324d3dec0dcc063d25652899e7d0a": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.1.19+incompatible"},
 	},
-	"40228d01896028742b21f16ec2b090940e8434e40ac63a2e0dbee665a9e408d2": []Modver{
-		{"github.com/etcd-io/etcd", "v3.1.2+incompatible"},
+	"40228d01896028742b21f16ec2b090940e8434e40ac63a2e0dbee665a9e408d2": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.1.2+incompatible"},
 	},
-	"efaa82ba2b52a4d6c963603a114b1e23328aa70348c00e7209d4598ff102f9d2": []Modver{
-		{"github.com/etcd-io/etcd", "v3.1.20+incompatible"},
+	"efaa82ba2b52a4d6c963603a114b1e23328aa70348c00e7209d4598ff102f9d2": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.1.20+incompatible"},
 	},
-	"8f0753d3c56a6aabb877d10ba7764f1a98a9059664959f6e73afe2b7e6e3dda7": []Modver{
-		{"github.com/etcd-io/etcd", "v3.1.3+incompatible"},
+	"8f0753d3c56a6aabb877d10ba7764f1a98a9059664959f6e73afe2b7e6e3dda7": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.1.3+incompatible"},
 	},
-	"bdbeeaa40696cb8cd92fb10b7cba320c68452aad85ab59b20cc97ce5363d8fd2": []Modver{
-		{"github.com/etcd-io/etcd", "v3.1.4+incompatible"},
+	"bdbeeaa40696cb8cd92fb10b7cba320c68452aad85ab59b20cc97ce5363d8fd2": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.1.4+incompatible"},
 	},
-	"27cbb92307b827d6934f58fa31cee0d0263f7b7c9322ac7c2fa5a883f5200f20": []Modver{
-		{"github.com/etcd-io/etcd", "v3.1.5+incompatible"},
+	"27cbb92307b827d6934f58fa31cee0d0263f7b7c9322ac7c2fa5a883f5200f20": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.1.5+incompatible"},
 	},
-	"18016c159fe79f6e130e79c09502a98b99e878c1877253ebb2448e19fa4356fb": []Modver{
-		{"github.com/etcd-io/etcd", "v3.1.6+incompatible"},
+	"18016c159fe79f6e130e79c09502a98b99e878c1877253ebb2448e19fa4356fb": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.1.6+incompatible"},
 	},
-	"74f1825c27c8fbbf79595f9569e354a8ae5b8eadb4f24a2e58e10f070f7236de": []Modver{
-		{"github.com/etcd-io/etcd", "v3.1.7+incompatible"},
+	"74f1825c27c8fbbf79595f9569e354a8ae5b8eadb4f24a2e58e10f070f7236de": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.1.7+incompatible"},
 	},
-	"320cf0086320932ec70b1716f76745af4a809b357dd1844d40897220278b2910": []Modver{
-		{"github.com/etcd-io/etcd", "v3.1.8+incompatible"},
+	"320cf0086320932ec70b1716f76745af4a809b357dd1844d40897220278b2910": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.1.8+incompatible"},
 	},
-	"7e6932ce0f8ba4e8b93fe482642372cc562c8df9ea87669dea9c069a7e457998": []Modver{
-		{"github.com/etcd-io/etcd", "v3.1.9+incompatible"},
+	"7e6932ce0f8ba4e8b93fe482642372cc562c8df9ea87669dea9c069a7e457998": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.1.9+incompatible"},
 	},
-	"98ff1fb2c642ab3cbbba2876f161f61b8b27ae05161d8b1355feaceb20d80015": []Modver{
-		{"github.com/etcd-io/etcd", "v3.2.0+incompatible"},
+	"98ff1fb2c642ab3cbbba2876f161f61b8b27ae05161d8b1355feaceb20d80015": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.2.0+incompatible"},
 	},
-	"c8755775888e7d89cdd42f1d586a98cb760c84e9951275743ac3eed05acb73c9": []Modver{
-		{"github.com/etcd-io/etcd", "v3.2.0-rc.0+incompatible"},
+	"c8755775888e7d89cdd42f1d586a98cb760c84e9951275743ac3eed05acb73c9": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.2.0-rc.0+incompatible"},
 	},
-	"6099c3e07f1fbee016f081ac810e7f2c3e5240b8e4600ec358a20494d2b34504": []Modver{
-		{"github.com/etcd-io/etcd", "v3.2.0-rc.1+incompatible"},
+	"6099c3e07f1fbee016f081ac810e7f2c3e5240b8e4600ec358a20494d2b34504": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.2.0-rc.1+incompatible"},
 	},
-	"40d501d969c2cb1340438fde610570c543d4b5565940106454f30609b91fb718": []Modver{
-		{"github.com/etcd-io/etcd", "v3.2.1+incompatible"},
+	"40d501d969c2cb1340438fde610570c543d4b5565940106454f30609b91fb718": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.2.1+incompatible"},
 	},
-	"851fbed6ad3f60b99b05dd2fa6213ab2d26ce8de00919d72a9819ab05292cf81": []Modver{
-		{"github.com/etcd-io/etcd", "v3.2.10+incompatible"},
+	"851fbed6ad3f60b99b05dd2fa6213ab2d26ce8de00919d72a9819ab05292cf81": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.2.10+incompatible"},
 	},
-	"0ac1d29f2290a87af341e945d414eff8bffd7fc519926903e5505311469dedba": []Modver{
-		{"github.com/etcd-io/etcd", "v3.2.11+incompatible"},
+	"0ac1d29f2290a87af341e945d414eff8bffd7fc519926903e5505311469dedba": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.2.11+incompatible"},
 	},
-	"d9c656371acfa27750eff6789d9f3db23900055669e50f853f9a6dccee871b73": []Modver{
-		{"github.com/etcd-io/etcd", "v3.2.12+incompatible"},
+	"d9c656371acfa27750eff6789d9f3db23900055669e50f853f9a6dccee871b73": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.2.12+incompatible"},
 	},
-	"581afed53b6f7518c53ac78ec7d7deebeecab237e6477d20c6c70fa83529e1e5": []Modver{
-		{"github.com/etcd-io/etcd", "v3.2.13+incompatible"},
+	"581afed53b6f7518c53ac78ec7d7deebeecab237e6477d20c6c70fa83529e1e5": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.2.13+incompatible"},
 	},
-	"3beebcf2aff111462026307f42be8161b3fe243a1d83b7e9a80b4f4a31794aba": []Modver{
-		{"github.com/etcd-io/etcd", "v3.2.14+incompatible"},
+	"3beebcf2aff111462026307f42be8161b3fe243a1d83b7e9a80b4f4a31794aba": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.2.14+incompatible"},
 	},
-	"fc924115e075e4c455f44f2c4604c31fbb0852531830c805af5cb35f4f1ff202": []Modver{
-		{"github.com/etcd-io/etcd", "v3.2.15+incompatible"},
+	"fc924115e075e4c455f44f2c4604c31fbb0852531830c805af5cb35f4f1ff202": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.2.15+incompatible"},
 	},
-	"3d1b502458274464be2fc56f6b391f8f20485232d76e35b5cc13192c3785964d": []Modver{
-		{"github.com/etcd-io/etcd", "v3.2.16+incompatible"},
+	"3d1b502458274464be2fc56f6b391f8f20485232d76e35b5cc13192c3785964d": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.2.16+incompatible"},
 	},
-	"4763c9c079b217f1befa915a92c4285fc5dfa17080b1289ce5819b35add77d65": []Modver{
-		{"github.com/etcd-io/etcd", "v3.2.17+incompatible"},
+	"4763c9c079b217f1befa915a92c4285fc5dfa17080b1289ce5819b35add77d65": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.2.17+incompatible"},
 	},
-	"fc82c3e50d75bf61ae51d2e8b8211eec2b4545c9926e62b6c290d0a36efb506a": []Modver{
-		{"github.com/etcd-io/etcd", "v3.2.18+incompatible"},
+	"fc82c3e50d75bf61ae51d2e8b8211eec2b4545c9926e62b6c290d0a36efb506a": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.2.18+incompatible"},
 	},
-	"bc909a7525b6634844252ef0b402c6616a439154a56d8da6771af9ba7719df77": []Modver{
-		{"github.com/etcd-io/etcd", "v3.2.19+incompatible"},
+	"bc909a7525b6634844252ef0b402c6616a439154a56d8da6771af9ba7719df77": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.2.19+incompatible"},
 	},
-	"21712f96962788ae128a56fc66402dd1f017145e4feb608a3da427b0ac347e7b": []Modver{
-		{"github.com/etcd-io/etcd", "v3.2.2+incompatible"},
+	"21712f96962788ae128a56fc66402dd1f017145e4feb608a3da427b0ac347e7b": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.2.2+incompatible"},
 	},
-	"59736055450b82aa768be9ba019f58af44cfb2eeb94d1560217878fab26a4e2a": []Modver{
-		{"github.com/etcd-io/etcd", "v3.2.20+incompatible"},
+	"59736055450b82aa768be9ba019f58af44cfb2eeb94d1560217878fab26a4e2a": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.2.20+incompatible"},
 	},
-	"ff910409746eb6fd9ab25e5cd56c3326c5f10fe2dee2b931f5c0387ec34d62ae": []Modver{
-		{"github.com/etcd-io/etcd", "v3.2.21+incompatible"},
+	"ff910409746eb6fd9ab25e5cd56c3326c5f10fe2dee2b931f5c0387ec34d62ae": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.2.21+incompatible"},
 	},
-	"f7c78a93e46410e328fbeb19c9986da1cf59d39de03d8290a3dabbe3d74237ee": []Modver{
-		{"github.com/etcd-io/etcd", "v3.2.22+incompatible"},
+	"f7c78a93e46410e328fbeb19c9986da1cf59d39de03d8290a3dabbe3d74237ee": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.2.22+incompatible"},
 	},
-	"23ed22951f8d80cdb7067c313ad58ad911b7fab81f1c7826172d8716b47309db": []Modver{
-		{"github.com/etcd-io/etcd", "v3.2.23+incompatible"},
+	"23ed22951f8d80cdb7067c313ad58ad911b7fab81f1c7826172d8716b47309db": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.2.23+incompatible"},
 	},
-	"9396942c1e59e7cc2ca753c1ce3acddafc652d3416ffd88c437226e563626095": []Modver{
-		{"github.com/etcd-io/etcd", "v3.2.24+incompatible"},
+	"9396942c1e59e7cc2ca753c1ce3acddafc652d3416ffd88c437226e563626095": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.2.24+incompatible"},
 	},
-	"28a3432f8474da839c16b46d420e520b04bad872974cb8863ad40e96c5ed261d": []Modver{
-		{"github.com/etcd-io/etcd", "v3.2.25+incompatible"},
+	"28a3432f8474da839c16b46d420e520b04bad872974cb8863ad40e96c5ed261d": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.2.25+incompatible"},
 	},
-	"a27b2e5bf29a6c49ea1a3b125c5bf6cbef476834f5f38691c2dca21b7f4888c4": []Modver{
-		{"github.com/etcd-io/etcd", "v3.2.26+incompatible"},
+	"a27b2e5bf29a6c49ea1a3b125c5bf6cbef476834f5f38691c2dca21b7f4888c4": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.2.26+incompatible"},
 	},
-	"7362ca32af748cfb198000bf9e29d7db56e68e3e1bd18411cd1566030a99e73a": []Modver{
-		{"github.com/etcd-io/etcd", "v3.2.27+incompatible"},
+	"7362ca32af748cfb198000bf9e29d7db56e68e3e1bd18411cd1566030a99e73a": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.2.27+incompatible"},
 	},
-	"817255e7a8a8c2b132d8d5031bd851fd4250609d1fa99923f4067fce221078d2": []Modver{
-		{"github.com/etcd-io/etcd", "v3.2.28+incompatible"},
+	"817255e7a8a8c2b132d8d5031bd851fd4250609d1fa99923f4067fce221078d2": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.2.28+incompatible"},
 	},
-	"96acd30c78a92da2c3d4da400f401d4d2a5e1a7dd7af6f529ab2508efda19bdd": []Modver{
-		{"github.com/etcd-io/etcd", "v3.2.29+incompatible"},
+	"96acd30c78a92da2c3d4da400f401d4d2a5e1a7dd7af6f529ab2508efda19bdd": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.2.29+incompatible"},
 	},
-	"2958afc610ba26f95f8ff6d3338d4a11a90ea74291b0afac913582f39f871751": []Modver{
-		{"github.com/etcd-io/etcd", "v3.2.3+incompatible"},
+	"2958afc610ba26f95f8ff6d3338d4a11a90ea74291b0afac913582f39f871751": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.2.3+incompatible"},
 	},
-	"6d31096923a13216bff6470db11eb5205b222e35901cd6dc60fe96e465ff9147": []Modver{
-		{"github.com/etcd-io/etcd", "v3.2.30+incompatible"},
+	"6d31096923a13216bff6470db11eb5205b222e35901cd6dc60fe96e465ff9147": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.2.30+incompatible"},
 	},
-	"198b80dca12d00545589c4b97e9a714a698bec8c405564da8dcc0d77f6d36d56": []Modver{
-		{"github.com/etcd-io/etcd", "v3.2.31+incompatible"},
+	"198b80dca12d00545589c4b97e9a714a698bec8c405564da8dcc0d77f6d36d56": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.2.31+incompatible"},
 	},
-	"775e7c2053f318c73f8807960833bbc429693b2d49227fadc208256b75dc32bc": []Modver{
-		{"github.com/etcd-io/etcd", "v3.2.32+incompatible"},
+	"775e7c2053f318c73f8807960833bbc429693b2d49227fadc208256b75dc32bc": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.2.32+incompatible"},
 	},
-	"b90238f13ae3918de24b2d2a7535a88459f992f8dc84c3f57c395ec21f73dea9": []Modver{
-		{"github.com/etcd-io/etcd", "v3.2.4+incompatible"},
+	"b90238f13ae3918de24b2d2a7535a88459f992f8dc84c3f57c395ec21f73dea9": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.2.4+incompatible"},
 	},
-	"06f22974b053a03c472efd92c3950a10b952da273e544918e983b9c6dad63b31": []Modver{
-		{"github.com/etcd-io/etcd", "v3.2.5+incompatible"},
+	"06f22974b053a03c472efd92c3950a10b952da273e544918e983b9c6dad63b31": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.2.5+incompatible"},
 	},
-	"d539a2e94a0bfe71e33fa39a20d3846ecfc2dcc245a34a284d2eebbfd027e91d": []Modver{
-		{"github.com/etcd-io/etcd", "v3.2.6+incompatible"},
+	"d539a2e94a0bfe71e33fa39a20d3846ecfc2dcc245a34a284d2eebbfd027e91d": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.2.6+incompatible"},
 	},
-	"cff2d99e5d4cdccb358f8cf41a507e043c69690eb3e0b5536b9f2969242a5cc7": []Modver{
-		{"github.com/etcd-io/etcd", "v3.2.7+incompatible"},
+	"cff2d99e5d4cdccb358f8cf41a507e043c69690eb3e0b5536b9f2969242a5cc7": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.2.7+incompatible"},
 	},
-	"cbd78dcf22d4ccd27e6d1316dfd708692d8b4f365e47c5c259053e9f2972cc56": []Modver{
-		{"github.com/etcd-io/etcd", "v3.2.8+incompatible"},
+	"cbd78dcf22d4ccd27e6d1316dfd708692d8b4f365e47c5c259053e9f2972cc56": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.2.8+incompatible"},
 	},
-	"02b6a12b3c6c3ede42761c29c820601ce547b7654d19596e5f7a1cf554198e30": []Modver{
-		{"github.com/etcd-io/etcd", "v3.2.9+incompatible"},
+	"02b6a12b3c6c3ede42761c29c820601ce547b7654d19596e5f7a1cf554198e30": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.2.9+incompatible"},
 	},
-	"70c273f379164440a69f81a47507563fe68ae7c33912b71d8e3a7aa2ed039158": []Modver{
-		{"github.com/etcd-io/etcd", "v3.3.0+incompatible"},
+	"70c273f379164440a69f81a47507563fe68ae7c33912b71d8e3a7aa2ed039158": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.3.0+incompatible"},
 	},
-	"6f4220ec6433fe3d239ef73f43e0188ca752c477ae15a6c7a7c70c9407bef98c": []Modver{
-		{"github.com/etcd-io/etcd", "v3.3.0-rc.0+incompatible"},
+	"6f4220ec6433fe3d239ef73f43e0188ca752c477ae15a6c7a7c70c9407bef98c": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.3.0-rc.0+incompatible"},
 	},
-	"2072931f86bac368add03ac06566cab22bd55769de57acc6bd1be1e7913dafdb": []Modver{
-		{"github.com/etcd-io/etcd", "v3.3.0-rc.1+incompatible"},
+	"2072931f86bac368add03ac06566cab22bd55769de57acc6bd1be1e7913dafdb": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.3.0-rc.1+incompatible"},
 	},
-	"aa9ba018b4d913a46a8a584bf8b31166c6023a01377587fb29148df8d9cd5b2c": []Modver{
-		{"github.com/etcd-io/etcd", "v3.3.0-rc.2+incompatible"},
+	"aa9ba018b4d913a46a8a584bf8b31166c6023a01377587fb29148df8d9cd5b2c": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.3.0-rc.2+incompatible"},
 	},
-	"6b58f73a01df4f90ec836a4454c8c27c29bad01042e64831b1c13261259ba58e": []Modver{
-		{"github.com/etcd-io/etcd", "v3.3.0-rc.3+incompatible"},
+	"6b58f73a01df4f90ec836a4454c8c27c29bad01042e64831b1c13261259ba58e": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.3.0-rc.3+incompatible"},
 	},
-	"35b3691764b94162d718cdf4b8667500776ecb5afb9994abd63cd6b2410b6d90": []Modver{
-		{"github.com/etcd-io/etcd", "v3.3.0-rc.4+incompatible"},
+	"35b3691764b94162d718cdf4b8667500776ecb5afb9994abd63cd6b2410b6d90": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.3.0-rc.4+incompatible"},
 	},
-	"10f3d76b9fe4cdb74f40be71b580dafa79112d7da10571457e207250d0ef9e46": []Modver{
-		{"github.com/etcd-io/etcd", "v3.3.1+incompatible"},
+	"10f3d76b9fe4cdb74f40be71b580dafa79112d7da10571457e207250d0ef9e46": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.3.1+incompatible"},
 	},
-	"e13b4764889be28e9c3ee1d2dc72554bf878099b94ab1cbad19f9ee2fb1a7736": []Modver{
-		{"github.com/etcd-io/etcd", "v3.3.10+incompatible"},
+	"e13b4764889be28e9c3ee1d2dc72554bf878099b94ab1cbad19f9ee2fb1a7736": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.3.10+incompatible"},
 	},
-	"a1f176b191467864c351612c00476d28b4a31c8e951e3655f453617096341200": []Modver{
-		{"github.com/etcd-io/etcd", "v3.3.11+incompatible"},
+	"a1f176b191467864c351612c00476d28b4a31c8e951e3655f453617096341200": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.3.11+incompatible"},
 	},
-	"1c731041bbd5f5dad5e79753672f6fb7a784697e74fbd7387b13487687c7b2b5": []Modver{
-		{"github.com/etcd-io/etcd", "v3.3.12+incompatible"},
+	"1c731041bbd5f5dad5e79753672f6fb7a784697e74fbd7387b13487687c7b2b5": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.3.12+incompatible"},
 	},
-	"353487143bb880a24a165fbed2873c0aaf4a2c3537a9cc7f49e2d8c24ba3724c": []Modver{
-		{"github.com/etcd-io/etcd", "v3.3.13+incompatible"},
+	"353487143bb880a24a165fbed2873c0aaf4a2c3537a9cc7f49e2d8c24ba3724c": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.3.13+incompatible"},
 	},
-	"445dafd80dfb67dbb32294896cd8304d36acf4a2aeb38f8000277b87d3971ec6": []Modver{
-		{"github.com/etcd-io/etcd", "v3.3.15+incompatible"},
+	"445dafd80dfb67dbb32294896cd8304d36acf4a2aeb38f8000277b87d3971ec6": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.3.15+incompatible"},
 	},
-	"fc8a30a1fd569eb39023c99551762739b80775ee36557c041ac98cee5ee4944d": []Modver{
-		{"github.com/etcd-io/etcd", "v3.3.16+incompatible"},
+	"fc8a30a1fd569eb39023c99551762739b80775ee36557c041ac98cee5ee4944d": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.3.16+incompatible"},
 	},
-	"31e70f03d7278989076b649e9b40bf0f78e583e634f5d09a5918caa5709bf4b5": []Modver{
-		{"github.com/etcd-io/etcd", "v3.3.17+incompatible"},
+	"31e70f03d7278989076b649e9b40bf0f78e583e634f5d09a5918caa5709bf4b5": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.3.17+incompatible"},
 	},
-	"5a1d1135c721ff28807b43a214b9320f2a6379717c9d0de21d6da61273d120fb": []Modver{
-		{"github.com/etcd-io/etcd", "v3.3.18+incompatible"},
+	"5a1d1135c721ff28807b43a214b9320f2a6379717c9d0de21d6da61273d120fb": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.3.18+incompatible"},
 	},
-	"845e9b777433ca25658a06633084732931c695a2b47512ca7e3e43f29f1d5ff7": []Modver{
-		{"github.com/etcd-io/etcd", "v3.3.19+incompatible"},
+	"845e9b777433ca25658a06633084732931c695a2b47512ca7e3e43f29f1d5ff7": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.3.19+incompatible"},
 	},
-	"ea94dfd5079064484bbf71b44cfca02d978b2f65eefe6a8e3bb6a10acdd6b87d": []Modver{
-		{"github.com/etcd-io/etcd", "v3.3.2+incompatible"},
+	"ea94dfd5079064484bbf71b44cfca02d978b2f65eefe6a8e3bb6a10acdd6b87d": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.3.2+incompatible"},
 	},
-	"c296563ccf88cdd520da5cb7a97f38271483e1238c42050fc070c72d00e1dc1b": []Modver{
-		{"github.com/etcd-io/etcd", "v3.3.20+incompatible"},
+	"c296563ccf88cdd520da5cb7a97f38271483e1238c42050fc070c72d00e1dc1b": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.3.20+incompatible"},
 	},
-	"c8a89ab0a8723b1df9e6ceaa794465ec2c3a08e41107e0f5bd9a21e6ff028093": []Modver{
-		{"github.com/etcd-io/etcd", "v3.3.21+incompatible"},
+	"c8a89ab0a8723b1df9e6ceaa794465ec2c3a08e41107e0f5bd9a21e6ff028093": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.3.21+incompatible"},
 	},
-	"4525d7234b154fed7e40a93b93ac855a4e490e0e90bbb7f2ef1129f9e4d518e5": []Modver{
-		{"github.com/etcd-io/etcd", "v3.3.22+incompatible"},
+	"4525d7234b154fed7e40a93b93ac855a4e490e0e90bbb7f2ef1129f9e4d518e5": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.3.22+incompatible"},
 	},
-	"bc9006d791d4a25df6ff15ad82c7eef9ae3ae5d8bd53cd9d5472b96e2cfd5a52": []Modver{
-		{"github.com/etcd-io/etcd", "v3.3.24+incompatible"},
+	"bc9006d791d4a25df6ff15ad82c7eef9ae3ae5d8bd53cd9d5472b96e2cfd5a52": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.3.24+incompatible"},
 	},
-	"7e7f2901857ee0ce7b68e954713abc96c5d45301b2a3a6204192fde6b841d877": []Modver{
-		{"github.com/etcd-io/etcd", "v3.3.25+incompatible"},
+	"7e7f2901857ee0ce7b68e954713abc96c5d45301b2a3a6204192fde6b841d877": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.3.25+incompatible"},
 	},
-	"7c69782dde62c58fbf3ad571e4f4abf4b14a82aba04c8884bb9554a653af2bfe": []Modver{
-		{"github.com/etcd-io/etcd", "v3.3.3+incompatible"},
+	"7c69782dde62c58fbf3ad571e4f4abf4b14a82aba04c8884bb9554a653af2bfe": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.3.3+incompatible"},
 	},
-	"18f83f16d843fab04feed7aaffe381d690d980aed14065618de9cc4ace1470cf": []Modver{
-		{"github.com/etcd-io/etcd", "v3.3.4+incompatible"},
+	"18f83f16d843fab04feed7aaffe381d690d980aed14065618de9cc4ace1470cf": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.3.4+incompatible"},
 	},
-	"058d457e380244598f5aa74b4bbe20aab99c465f15896c213aceecec16d3ce0a": []Modver{
-		{"github.com/etcd-io/etcd", "v3.3.5+incompatible"},
+	"058d457e380244598f5aa74b4bbe20aab99c465f15896c213aceecec16d3ce0a": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.3.5+incompatible"},
 	},
-	"0376eea55c85e289c3f36335f12d698d962cfb8739e527514e729cb1afd918d3": []Modver{
-		{"github.com/etcd-io/etcd", "v3.3.6+incompatible"},
+	"0376eea55c85e289c3f36335f12d698d962cfb8739e527514e729cb1afd918d3": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.3.6+incompatible"},
 	},
-	"cd7741b251439ae6373d39d25182e6f9e205e95053ab2770de86e0116ea02bce": []Modver{
-		{"github.com/etcd-io/etcd", "v3.3.7+incompatible"},
+	"cd7741b251439ae6373d39d25182e6f9e205e95053ab2770de86e0116ea02bce": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.3.7+incompatible"},
 	},
-	"27ce3602a03c53c66c0da76b220e581c1d38481b7971195693c85ad102c4ea48": []Modver{
-		{"github.com/etcd-io/etcd", "v3.3.8+incompatible"},
+	"27ce3602a03c53c66c0da76b220e581c1d38481b7971195693c85ad102c4ea48": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.3.8+incompatible"},
 	},
-	"e413edd3588170fdaec3c59673c43136375558a5b93d1b6af7a0977d7023a765": []Modver{
-		{"github.com/etcd-io/etcd", "v3.3.9+incompatible"},
+	"e413edd3588170fdaec3c59673c43136375558a5b93d1b6af7a0977d7023a765": []internal.Modver{
+		{Path: "github.com/etcd-io/etcd", Version: "v3.3.9+incompatible"},
 	},
-	"3750f6f60e8e65a843455c00323fe3be7e79c8ca8bd634de99ca4fcd09ccaa92": []Modver{
-		{"github.com/ethereum/go-ethereum", "v0.4.1"},
+	"3750f6f60e8e65a843455c00323fe3be7e79c8ca8bd634de99ca4fcd09ccaa92": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v0.4.1"},
 	},
-	"72dad7a762569f25c801592ee3bc0e15c315f6c3c09a6286dc2e2b0e7d107ada": []Modver{
-		{"github.com/ethereum/go-ethereum", "v0.4.2"},
+	"72dad7a762569f25c801592ee3bc0e15c315f6c3c09a6286dc2e2b0e7d107ada": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v0.4.2"},
 	},
-	"295ca15590054427dd823995ecb37a4c18dfc20b12da12ca8d120956d9e58339": []Modver{
-		{"github.com/ethereum/go-ethereum", "v0.4.3"},
+	"295ca15590054427dd823995ecb37a4c18dfc20b12da12ca8d120956d9e58339": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v0.4.3"},
 	},
-	"1743354d75cf2b8f3858a0f9ebfb6e46650fc4315cc2317fffd76faeedc93377": []Modver{
-		{"github.com/ethereum/go-ethereum", "v0.6.0"},
+	"1743354d75cf2b8f3858a0f9ebfb6e46650fc4315cc2317fffd76faeedc93377": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v0.6.0"},
 	},
-	"e19200a3d68086465e1ed1c8b0bcfcce79805b06e7b3ce1a2be7b8e2c3b8cc61": []Modver{
-		{"github.com/ethereum/go-ethereum", "v0.6.3"},
+	"e19200a3d68086465e1ed1c8b0bcfcce79805b06e7b3ce1a2be7b8e2c3b8cc61": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v0.6.3"},
 	},
-	"1d4582341d8f9360d2561bc9ab48464b611a6a096e4ca575d56483e47caa2dea": []Modver{
-		{"github.com/ethereum/go-ethereum", "v0.6.4"},
+	"1d4582341d8f9360d2561bc9ab48464b611a6a096e4ca575d56483e47caa2dea": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v0.6.4"},
 	},
-	"c0f2e0081a9d6fc9115faa58b92f3f2aa464706f40d87e479cabbb098008ace0": []Modver{
-		{"github.com/ethereum/go-ethereum", "v0.6.5"},
+	"c0f2e0081a9d6fc9115faa58b92f3f2aa464706f40d87e479cabbb098008ace0": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v0.6.5"},
 	},
-	"933cfcf975559ae245c929120506d7c8194a67820fef15e2611022f0358e5c0c": []Modver{
-		{"github.com/ethereum/go-ethereum", "v0.6.5-1"},
+	"933cfcf975559ae245c929120506d7c8194a67820fef15e2611022f0358e5c0c": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v0.6.5-1"},
 	},
-	"bdeb32688d612b15c48cf08201d3d1a34f4c3d772df15dcd731cbc8275516a7e": []Modver{
-		{"github.com/ethereum/go-ethereum", "v0.6.5-2"},
+	"bdeb32688d612b15c48cf08201d3d1a34f4c3d772df15dcd731cbc8275516a7e": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v0.6.5-2"},
 	},
-	"ec86a8820d4b327e8ba1b6cc2d94a4db6cd59e6ff87db0c9f9804e8e47a22d72": []Modver{
-		{"github.com/ethereum/go-ethereum", "v0.6.6"},
+	"ec86a8820d4b327e8ba1b6cc2d94a4db6cd59e6ff87db0c9f9804e8e47a22d72": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v0.6.6"},
 	},
-	"411bd44c6a52a47b6478136cdd41edf0343e8eb97b20a1cf67ca0a042dc0432c": []Modver{
-		{"github.com/ethereum/go-ethereum", "v0.6.7"},
+	"411bd44c6a52a47b6478136cdd41edf0343e8eb97b20a1cf67ca0a042dc0432c": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v0.6.7"},
 	},
-	"d6826807f91b0cd1204ecc90dac3252235ea1502b97cba412527c24c9cac9e9c": []Modver{
-		{"github.com/ethereum/go-ethereum", "v0.6.8"},
+	"d6826807f91b0cd1204ecc90dac3252235ea1502b97cba412527c24c9cac9e9c": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v0.6.8"},
 	},
-	"257b399505b8124ad3302035730e833dd855d4070838517d5c0ac7a831419461": []Modver{
-		{"github.com/ethereum/go-ethereum", "v0.7.10"},
+	"257b399505b8124ad3302035730e833dd855d4070838517d5c0ac7a831419461": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v0.7.10"},
 	},
-	"8b81f4313942fae14d448a95911baa9ebb80a12d6665896da7c3a15a12b8fff9": []Modver{
-		{"github.com/ethereum/go-ethereum", "v0.7.10-broken"},
+	"8b81f4313942fae14d448a95911baa9ebb80a12d6665896da7c3a15a12b8fff9": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v0.7.10-broken"},
 	},
-	"fe1f22cbb22953385714465bc476bc86a4687d8b5f98f7dd7bf9d081714d1137": []Modver{
-		{"github.com/ethereum/go-ethereum", "v0.7.11"},
+	"fe1f22cbb22953385714465bc476bc86a4687d8b5f98f7dd7bf9d081714d1137": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v0.7.11"},
 	},
-	"4303f6d046672fbd672b458c225ce40aedd7980bebdd1854a95038f7f5927903": []Modver{
-		{"github.com/ethereum/go-ethereum", "v0.8.4"}, {"github.com/ethereum/go-ethereum", "v0.8.4-1"},
+	"4303f6d046672fbd672b458c225ce40aedd7980bebdd1854a95038f7f5927903": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v0.8.4"}, {Path: "github.com/ethereum/go-ethereum", Version: "v0.8.4-1"},
 	},
-	"b4a7a0df3cb06678acde97ecab828ff71076b73273d486770fb362c0f9241cbf": []Modver{
-		{"github.com/ethereum/go-ethereum", "v0.8.5"},
+	"b4a7a0df3cb06678acde97ecab828ff71076b73273d486770fb362c0f9241cbf": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v0.8.5"},
 	},
-	"61825264ed83b4589c2c0d8acdb1c6cd383ebece33109f74a0149ecc7abb2ca7": []Modver{
-		{"github.com/ethereum/go-ethereum", "v0.8.5-2"},
+	"61825264ed83b4589c2c0d8acdb1c6cd383ebece33109f74a0149ecc7abb2ca7": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v0.8.5-2"},
 	},
-	"03ca3f4f91e57c2b2f7720f3e793f46fcc69ee07dd962e07ec18c4f330ba5ae2": []Modver{
-		{"github.com/ethereum/go-ethereum", "v0.9.17"},
+	"03ca3f4f91e57c2b2f7720f3e793f46fcc69ee07dd962e07ec18c4f330ba5ae2": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v0.9.17"},
 	},
-	"086f052b252f86bd2b04a1c57750e136a984b7f352e9a9f5c906a911abc559a5": []Modver{
-		{"github.com/ethereum/go-ethereum", "v0.9.18"},
+	"086f052b252f86bd2b04a1c57750e136a984b7f352e9a9f5c906a911abc559a5": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v0.9.18"},
 	},
-	"4942ea68d53dc6d5704286a5e62fe3cc706c0299115d21e5ee9153823af8fcde": []Modver{
-		{"github.com/ethereum/go-ethereum", "v0.9.20"},
+	"4942ea68d53dc6d5704286a5e62fe3cc706c0299115d21e5ee9153823af8fcde": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v0.9.20"},
 	},
-	"7e0304483452ea2ece860b562cd6a98bb1c040ef8a0910082d6ba351ef0dc1bb": []Modver{
-		{"github.com/ethereum/go-ethereum", "v0.9.21"},
+	"7e0304483452ea2ece860b562cd6a98bb1c040ef8a0910082d6ba351ef0dc1bb": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v0.9.21"},
 	},
-	"f8026f16754b033f0ec0a5e1c50dbf8cdd161477e81e178fd8e31cdda1e07380": []Modver{
-		{"github.com/ethereum/go-ethereum", "v0.9.22"},
+	"f8026f16754b033f0ec0a5e1c50dbf8cdd161477e81e178fd8e31cdda1e07380": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v0.9.22"},
 	},
-	"a2bee6b37698f2665492e87b73b7bed944eaaa64ce1726b5207c96609deb09ee": []Modver{
-		{"github.com/ethereum/go-ethereum", "v0.9.23"},
+	"a2bee6b37698f2665492e87b73b7bed944eaaa64ce1726b5207c96609deb09ee": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v0.9.23"},
 	},
-	"d129e8e321d0808e88873ff734ce5438aa6d4a655157a2dd923f4ab15bd902fb": []Modver{
-		{"github.com/ethereum/go-ethereum", "v0.9.24"},
+	"d129e8e321d0808e88873ff734ce5438aa6d4a655157a2dd923f4ab15bd902fb": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v0.9.24"},
 	},
-	"b373d4bf08aa4f7ac1af9cb920bf93e5b8d6d57e580d3a13e5595a7ac5b6bf1c": []Modver{
-		{"github.com/ethereum/go-ethereum", "v0.9.25"},
+	"b373d4bf08aa4f7ac1af9cb920bf93e5b8d6d57e580d3a13e5595a7ac5b6bf1c": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v0.9.25"},
 	},
-	"f18a57255d9ae03e378fb6aa463ab4a9a5e86af24e4a7eab80bf52836cb51e7e": []Modver{
-		{"github.com/ethereum/go-ethereum", "v0.9.26"},
+	"f18a57255d9ae03e378fb6aa463ab4a9a5e86af24e4a7eab80bf52836cb51e7e": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v0.9.26"},
 	},
-	"8e596db55e72b24b115362a165bec1c576885ef055c96c5310a53daddbc13baf": []Modver{
-		{"github.com/ethereum/go-ethereum", "v0.9.28"},
+	"8e596db55e72b24b115362a165bec1c576885ef055c96c5310a53daddbc13baf": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v0.9.28"},
 	},
-	"8a6054b579cb2e8fc9da73319bfb1f75e5564efad40b83c26bb414f1b3b7edd9": []Modver{
-		{"github.com/ethereum/go-ethereum", "v0.9.30"},
+	"8a6054b579cb2e8fc9da73319bfb1f75e5564efad40b83c26bb414f1b3b7edd9": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v0.9.30"},
 	},
-	"aa934a916f77221f69cec0d6477093d6742855eb9c28fc654c69ea20dab1632d": []Modver{
-		{"github.com/ethereum/go-ethereum", "v0.9.32"},
+	"aa934a916f77221f69cec0d6477093d6742855eb9c28fc654c69ea20dab1632d": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v0.9.32"},
 	},
-	"62242e8ab0510fa025075bd5c3e14451e2d32cb4853c89aca59382b7dd581494": []Modver{
-		{"github.com/ethereum/go-ethereum", "v0.9.34"},
+	"62242e8ab0510fa025075bd5c3e14451e2d32cb4853c89aca59382b7dd581494": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v0.9.34"},
 	},
-	"4741ae8ad243f8bb560d5373564a32a9bbd0d9b683a1b24ff62efd60285a77b8": []Modver{
-		{"github.com/ethereum/go-ethereum", "v0.9.34-1"},
+	"4741ae8ad243f8bb560d5373564a32a9bbd0d9b683a1b24ff62efd60285a77b8": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v0.9.34-1"},
 	},
-	"eddea2e92a2b9f526c776d4151900631e6fc1866a0cbeee9b21c7f012a523341": []Modver{
-		{"github.com/ethereum/go-ethereum", "v0.9.36"},
+	"eddea2e92a2b9f526c776d4151900631e6fc1866a0cbeee9b21c7f012a523341": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v0.9.36"},
 	},
-	"d91c5cff7035ead11f430a07804735d71f894c479ee2c885df67390a017ff058": []Modver{
-		{"github.com/ethereum/go-ethereum", "v0.9.38"},
+	"d91c5cff7035ead11f430a07804735d71f894c479ee2c885df67390a017ff058": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v0.9.38"},
 	},
-	"df95e1a0c98c1ba2b1d57a292a8a784d3afbe9e7fcf237eee873e49952cbf0b0": []Modver{
-		{"github.com/ethereum/go-ethereum", "v0.9.39"},
+	"df95e1a0c98c1ba2b1d57a292a8a784d3afbe9e7fcf237eee873e49952cbf0b0": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v0.9.39"},
 	},
-	"fef7bc630b04422b82edf62f84704ef828906ec1cbff84414f9b409644804ea9": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.0.0"},
+	"fef7bc630b04422b82edf62f84704ef828906ec1cbff84414f9b409644804ea9": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.0.0"},
 	},
-	"991508799cb60ea6dabb1aefcfd5c867c640c1571bc35fe11521c282331570c9": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.0.1"},
+	"991508799cb60ea6dabb1aefcfd5c867c640c1571bc35fe11521c282331570c9": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.0.1"},
 	},
-	"68b921433606ee4148364c6712386f76a1c989e385f2641f8f46c58a4839ba91": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.0.2"},
+	"68b921433606ee4148364c6712386f76a1c989e385f2641f8f46c58a4839ba91": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.0.2"},
 	},
-	"ffc696cc120ba15ebd1638dde1331c8c37174be2d2a9f302f582d634c2c0d01b": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.0.3"},
+	"ffc696cc120ba15ebd1638dde1331c8c37174be2d2a9f302f582d634c2c0d01b": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.0.3"},
 	},
-	"f125c40184ee7cebbd528cc8104fde2c6f1979229f7bb45f1bc9fb973e2ab428": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.0.4"},
+	"f125c40184ee7cebbd528cc8104fde2c6f1979229f7bb45f1bc9fb973e2ab428": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.0.4"},
 	},
-	"7c72461e84540879354cab8110fea9673ba748e032ef63fd6a88a76619956754": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.0.5"},
+	"7c72461e84540879354cab8110fea9673ba748e032ef63fd6a88a76619956754": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.0.5"},
 	},
-	"ab35aad1c41f6e43f9ef189ff8c8436c954d5221edc9ae974cb480688a50c688": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.1.0"},
+	"ab35aad1c41f6e43f9ef189ff8c8436c954d5221edc9ae974cb480688a50c688": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.1.0"},
 	},
-	"0d45d30f1d3b8a9ed7fb4ce95e163403eda729d88f85514cfaa8a57cbc86e739": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.1.1"},
+	"0d45d30f1d3b8a9ed7fb4ce95e163403eda729d88f85514cfaa8a57cbc86e739": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.1.1"},
 	},
-	"b561e624a10e48abad1411f434241b243060ad3f8bc5d89981d966753a26ba10": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.1.2"},
+	"b561e624a10e48abad1411f434241b243060ad3f8bc5d89981d966753a26ba10": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.1.2"},
 	},
-	"f41585de3d7a79733cfdbb318539debbd338b056cbd0e944afb3f8c657cc005d": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.1.3"},
+	"f41585de3d7a79733cfdbb318539debbd338b056cbd0e944afb3f8c657cc005d": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.1.3"},
 	},
-	"b73a2c2b617afe4bbc2381c680f867fc6d1be7bf9215cf7a89aeead5b19cbc84": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.2.2"},
+	"b73a2c2b617afe4bbc2381c680f867fc6d1be7bf9215cf7a89aeead5b19cbc84": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.2.2"},
 	},
-	"cfe17b6c9ee5f9189d29fbb2e6faef23c6a02648125b00dc3e718f15cb2afa12": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.2.3"},
+	"cfe17b6c9ee5f9189d29fbb2e6faef23c6a02648125b00dc3e718f15cb2afa12": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.2.3"},
 	},
-	"29d45e5f7665c509d134a8f2bc3c19f8423cc302fcff9f908ec779ce0cba1e4a": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.3.1"},
+	"29d45e5f7665c509d134a8f2bc3c19f8423cc302fcff9f908ec779ce0cba1e4a": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.3.1"},
 	},
-	"490bffe0ed7c50f85d93274e9f9430b4a16c0efef2f0b973cc08879e380ef978": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.3.2"},
+	"490bffe0ed7c50f85d93274e9f9430b4a16c0efef2f0b973cc08879e380ef978": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.3.2"},
 	},
-	"29cc888f657e46cf010dd449a451e632416f3a935c333bd55b7f231798fdca0f": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.3.3"},
+	"29cc888f657e46cf010dd449a451e632416f3a935c333bd55b7f231798fdca0f": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.3.3"},
 	},
-	"e1088985e1332750e044404adcf36094ed58663741ee2cb12c4d3b9a5fcfc36e": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.3.4"},
+	"e1088985e1332750e044404adcf36094ed58663741ee2cb12c4d3b9a5fcfc36e": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.3.4"},
 	},
-	"6a6235b5bb7bf0fdaf3b609943b2eec1578e9d7e8bfc4ff7fb998b145554ded6": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.3.5"},
+	"6a6235b5bb7bf0fdaf3b609943b2eec1578e9d7e8bfc4ff7fb998b145554ded6": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.3.5"},
 	},
-	"79ddcb3d9c12de090d8205f11860dad313fcf84401a5662836940f123eacd419": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.3.6"},
+	"79ddcb3d9c12de090d8205f11860dad313fcf84401a5662836940f123eacd419": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.3.6"},
 	},
-	"86d90213e4fadb8423a7b1c8e86413f2807595e545e952979096b2b2652b101a": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.4.0"},
+	"86d90213e4fadb8423a7b1c8e86413f2807595e545e952979096b2b2652b101a": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.4.0"},
 	},
-	"f1e3fb39d87b30523700927984cc7265e5cdf6582fbda96c60b372bcdee1534e": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.4.1"},
+	"f1e3fb39d87b30523700927984cc7265e5cdf6582fbda96c60b372bcdee1534e": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.4.1"},
 	},
-	"8a0ff6a5bd7dcf9c690722a1eb6660f2d468ee36ef0c14298e0fd18c11979f40": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.4.10"},
+	"8a0ff6a5bd7dcf9c690722a1eb6660f2d468ee36ef0c14298e0fd18c11979f40": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.4.10"},
 	},
-	"957a7fb834bde2f94e7b86845c3fbe56d9c79008e1017d53f8af704489b0bd07": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.4.11"},
+	"957a7fb834bde2f94e7b86845c3fbe56d9c79008e1017d53f8af704489b0bd07": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.4.11"},
 	},
-	"61a90a391991eff2f03cca77933a75f83ae3c6c3d2fc669dd9501b596548646c": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.4.12"},
+	"61a90a391991eff2f03cca77933a75f83ae3c6c3d2fc669dd9501b596548646c": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.4.12"},
 	},
-	"18e83a94531b7c2e61fbc74527cfd8adfd0b56fb16e9484748dbe9afa9ccaaef": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.4.13"},
+	"18e83a94531b7c2e61fbc74527cfd8adfd0b56fb16e9484748dbe9afa9ccaaef": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.4.13"},
 	},
-	"6380bc7cc0723acb529a2913467ef5810cb3dd936bde539082919df6afec359d": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.4.14"},
+	"6380bc7cc0723acb529a2913467ef5810cb3dd936bde539082919df6afec359d": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.4.14"},
 	},
-	"3329bc0e75b8725b385a3dca0a38f37e6b1f6c793937149bd241a4192af2a382": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.4.15"},
+	"3329bc0e75b8725b385a3dca0a38f37e6b1f6c793937149bd241a4192af2a382": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.4.15"},
 	},
-	"3fb71e0162a06695beea0d21022a0a58c84455572ecc5af9f756c865a230a2ef": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.4.16"},
+	"3fb71e0162a06695beea0d21022a0a58c84455572ecc5af9f756c865a230a2ef": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.4.16"},
 	},
-	"77de25aef601cc247c65dae5fac60c5268cf3be960752775c77cdcdc6d1d6aa5": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.4.17"},
+	"77de25aef601cc247c65dae5fac60c5268cf3be960752775c77cdcdc6d1d6aa5": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.4.17"},
 	},
-	"5b8d2a99d1cabb4aec93ebbb0e6504e06a8e86a88582312ba40b18e69fd7591e": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.4.18"},
+	"5b8d2a99d1cabb4aec93ebbb0e6504e06a8e86a88582312ba40b18e69fd7591e": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.4.18"},
 	},
-	"86137ca33d39d0a2d01bf648b143a42db227c59ad6a4b6c2f304995a20019377": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.4.19"},
+	"86137ca33d39d0a2d01bf648b143a42db227c59ad6a4b6c2f304995a20019377": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.4.19"},
 	},
-	"31ccb49574787743d3e4e77709d7fadf7d3fb85dd6c6e967813c1d3c673ca906": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.4.2"},
+	"31ccb49574787743d3e4e77709d7fadf7d3fb85dd6c6e967813c1d3c673ca906": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.4.2"},
 	},
-	"f606bd845d2dbbe96b76c352289f9d24157e5cefea323d9a97a717fd3afff7e8": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.4.3"},
+	"f606bd845d2dbbe96b76c352289f9d24157e5cefea323d9a97a717fd3afff7e8": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.4.3"},
 	},
-	"43b7b56ec9a6d241148659b697b21c363846b17073922cde6dfc9dd37c2e7968": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.4.4"},
+	"43b7b56ec9a6d241148659b697b21c363846b17073922cde6dfc9dd37c2e7968": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.4.4"},
 	},
-	"15bdc877132debd6fffb0655af918b2045a69e089db26d291c3cd825a2da2cf9": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.4.5"},
+	"15bdc877132debd6fffb0655af918b2045a69e089db26d291c3cd825a2da2cf9": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.4.5"},
 	},
-	"147ec7d1676beec2a57686c0b9682d439b2841748925bf62916f8556101e9823": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.4.6"},
+	"147ec7d1676beec2a57686c0b9682d439b2841748925bf62916f8556101e9823": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.4.6"},
 	},
-	"4a7c4ab1f8e39254ad9b3137014a247c2e1609cba09053bc7d13c0218e4be252": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.4.7"},
+	"4a7c4ab1f8e39254ad9b3137014a247c2e1609cba09053bc7d13c0218e4be252": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.4.7"},
 	},
-	"dbb351d26e4e7b97f7465b8bda4a86593e4edc6e5ea1cc479c1e4163920492a7": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.4.8"},
+	"dbb351d26e4e7b97f7465b8bda4a86593e4edc6e5ea1cc479c1e4163920492a7": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.4.8"},
 	},
-	"d267ef2a1553af9c95c0edccb3768e744db5112520f453a0dd4d87f02fd5472c": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.4.9"},
+	"d267ef2a1553af9c95c0edccb3768e744db5112520f453a0dd4d87f02fd5472c": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.4.9"},
 	},
-	"0400c9f1453840a47d7b3c3abf5d7c0cddb3641e8850486ad136f0b8ce29b1d6": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.5.0"},
+	"0400c9f1453840a47d7b3c3abf5d7c0cddb3641e8850486ad136f0b8ce29b1d6": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.5.0"},
 	},
-	"50bd4ad5e39dd5a7d7c958d29b9448f22bdb152ba447ad91c409b24d584ccfc2": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.5.1"},
+	"50bd4ad5e39dd5a7d7c958d29b9448f22bdb152ba447ad91c409b24d584ccfc2": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.5.1"},
 	},
-	"f807b1d018a17b160eefc89ac6be3af806f989daf7d404a711d84bf21f28b681": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.5.2"},
+	"f807b1d018a17b160eefc89ac6be3af806f989daf7d404a711d84bf21f28b681": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.5.2"},
 	},
-	"5a33d75f2f8401f1da11af8c7fbbe7d42f64a336fdcaccfcfc3dfb68bc6134bb": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.5.3"},
+	"5a33d75f2f8401f1da11af8c7fbbe7d42f64a336fdcaccfcfc3dfb68bc6134bb": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.5.3"},
 	},
-	"402ab2901c65377d31eefdbd42ea7ba1059e3603b5158bdfd407be4e81b5e26d": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.5.4"},
+	"402ab2901c65377d31eefdbd42ea7ba1059e3603b5158bdfd407be4e81b5e26d": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.5.4"},
 	},
-	"8634cc053ec11a17eeea5c58241d880f0c4d41343495789dce625bee21dd464a": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.5.5"},
+	"8634cc053ec11a17eeea5c58241d880f0c4d41343495789dce625bee21dd464a": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.5.5"},
 	},
-	"93b01d8bb7b4f0056e93cec3539ef91fb04b2b19bc41e7f64bb7e32bcc7655e0": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.5.6"},
+	"93b01d8bb7b4f0056e93cec3539ef91fb04b2b19bc41e7f64bb7e32bcc7655e0": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.5.6"},
 	},
-	"54a06845ac5319765a34fe2eaecd9fddd066dc6355ec5a5c7b02f6c42d0c635d": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.5.7"},
+	"54a06845ac5319765a34fe2eaecd9fddd066dc6355ec5a5c7b02f6c42d0c635d": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.5.7"},
 	},
-	"ad14382b5545d3a8f49c76f87257fb3939ec066dadb98c2fb1bd16ab41d0cade": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.5.8"},
+	"ad14382b5545d3a8f49c76f87257fb3939ec066dadb98c2fb1bd16ab41d0cade": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.5.8"},
 	},
-	"2f981788cf813f7f088b9abb87452809bf62f4bed5c9173dc9a40091f19b1866": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.5.9"},
+	"2f981788cf813f7f088b9abb87452809bf62f4bed5c9173dc9a40091f19b1866": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.5.9"},
 	},
-	"7423b15273d0cabd0a8543e1dce929c335c7c55673f62375d1b6338eeee0afd7": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.6.0"},
+	"7423b15273d0cabd0a8543e1dce929c335c7c55673f62375d1b6338eeee0afd7": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.6.0"},
 	},
-	"3f837f47f01b08174f4577f2c063a81c8f38473e27f7e6c7a24de443a9164be0": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.6.1"},
+	"3f837f47f01b08174f4577f2c063a81c8f38473e27f7e6c7a24de443a9164be0": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.6.1"},
 	},
-	"f16ff73833113aa712866bd87e7f05eb6ca5a7babe12718547988aeeda057fa5": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.6.2"},
+	"f16ff73833113aa712866bd87e7f05eb6ca5a7babe12718547988aeeda057fa5": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.6.2"},
 	},
-	"c6c24d1b1035d8a37c4107d7fc2cfd7161958db730e2e872ac221fe68d5e8bf6": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.6.3"},
+	"c6c24d1b1035d8a37c4107d7fc2cfd7161958db730e2e872ac221fe68d5e8bf6": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.6.3"},
 	},
-	"5eef05061f35ca7e8f547f7ad4a1bae9d33bea90f1115f301f40d55ec2c3e878": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.6.4"},
+	"5eef05061f35ca7e8f547f7ad4a1bae9d33bea90f1115f301f40d55ec2c3e878": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.6.4"},
 	},
-	"8daa460cd43cee74c3760f80f9e119f6c582fcab10f4c0a350f45ce432a5f5b3": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.6.5"},
+	"8daa460cd43cee74c3760f80f9e119f6c582fcab10f4c0a350f45ce432a5f5b3": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.6.5"},
 	},
-	"a7434906186738fdb726c0f1b9ede131784d61e3d253ee1c531a55c5f3d51a61": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.6.6"},
+	"a7434906186738fdb726c0f1b9ede131784d61e3d253ee1c531a55c5f3d51a61": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.6.6"},
 	},
-	"4aa6c03eedb8b37f758996a74d3bbc0b611d97154c2eccef550ca60deac78d00": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.6.7"},
+	"4aa6c03eedb8b37f758996a74d3bbc0b611d97154c2eccef550ca60deac78d00": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.6.7"},
 	},
-	"11723cf37c44be8c226c11736050676a15d87134ee2e7900b2532557e8211c90": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.7.0"},
+	"11723cf37c44be8c226c11736050676a15d87134ee2e7900b2532557e8211c90": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.7.0"},
 	},
-	"62b8295c18ddecc87d7634e257a634575e299628da3a6b9ca4eee907fd5802e3": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.7.1"},
+	"62b8295c18ddecc87d7634e257a634575e299628da3a6b9ca4eee907fd5802e3": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.7.1"},
 	},
-	"9b121a7f41144f440f7e9fe29973a2ff8a70d27ca7a19cf35de52015a958bd7a": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.7.2"},
+	"9b121a7f41144f440f7e9fe29973a2ff8a70d27ca7a19cf35de52015a958bd7a": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.7.2"},
 	},
-	"8151dd18c7591266fc4b14ed9d2cd9b8977516c1eaa9578d30859d1b6f121a03": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.7.3"},
+	"8151dd18c7591266fc4b14ed9d2cd9b8977516c1eaa9578d30859d1b6f121a03": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.7.3"},
 	},
-	"d4a032bb6611368cd359a1de5b5c2f587c95c71f211d2a7d6ce89718a9d1bc6a": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.8.0"},
+	"d4a032bb6611368cd359a1de5b5c2f587c95c71f211d2a7d6ce89718a9d1bc6a": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.8.0"},
 	},
-	"c02ec3f1b3956eedc5d835714612dafd4f164cd4cade3f0f7bf3283d04891d1e": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.8.1"},
+	"c02ec3f1b3956eedc5d835714612dafd4f164cd4cade3f0f7bf3283d04891d1e": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.8.1"},
 	},
-	"4d6179dd141f35b746ba662fa3c125c9924317670628419d1ce1e151c76091fb": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.8.10"},
+	"4d6179dd141f35b746ba662fa3c125c9924317670628419d1ce1e151c76091fb": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.8.10"},
 	},
-	"21b35a659a10b473e201e7c244cede7c0383920b85c38cb266d97066066429db": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.8.11"},
+	"21b35a659a10b473e201e7c244cede7c0383920b85c38cb266d97066066429db": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.8.11"},
 	},
-	"89680438dfb09e0dac8034991559f96c9a6d6cb0bab38db787aa00866b4638e5": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.8.12"},
+	"89680438dfb09e0dac8034991559f96c9a6d6cb0bab38db787aa00866b4638e5": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.8.12"},
 	},
-	"ea27fc5f54961530dff95273b72e97d424e3b9cc93d24719e8bcf1d0c2341f83": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.8.13"},
+	"ea27fc5f54961530dff95273b72e97d424e3b9cc93d24719e8bcf1d0c2341f83": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.8.13"},
 	},
-	"a414b27066b927021fc565fc13a9b399924225fe5120b5b19ada601fd5f30bdf": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.8.14"},
+	"a414b27066b927021fc565fc13a9b399924225fe5120b5b19ada601fd5f30bdf": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.8.14"},
 	},
-	"1e76f6dbc29a169fc93ecb0a562491387854c355b8b3b28adca600dfa3f47034": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.8.15"},
+	"1e76f6dbc29a169fc93ecb0a562491387854c355b8b3b28adca600dfa3f47034": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.8.15"},
 	},
-	"7a18565f73b676e25e4a53f2ab36d7e753bd4d136f9a1f436c04b23ab0c95398": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.8.16"},
+	"7a18565f73b676e25e4a53f2ab36d7e753bd4d136f9a1f436c04b23ab0c95398": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.8.16"},
 	},
-	"045b0acd3fe8d00ad089c99c1fca7313e38411b36be7ad70f63d17570f4467c1": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.8.17"},
+	"045b0acd3fe8d00ad089c99c1fca7313e38411b36be7ad70f63d17570f4467c1": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.8.17"},
 	},
-	"2352e64973095bd862df9538df52b67861a8b0c37addc9327793fb93088e2125": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.8.18"},
+	"2352e64973095bd862df9538df52b67861a8b0c37addc9327793fb93088e2125": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.8.18"},
 	},
-	"35a7612aa91f3786c08abed6c06a0c4be5b325aa1caadb9443bd22fd2cfa2dc1": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.8.19"},
+	"35a7612aa91f3786c08abed6c06a0c4be5b325aa1caadb9443bd22fd2cfa2dc1": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.8.19"},
 	},
-	"870dd6185402c9123e106c1bf7a54e6c3d7a4644079aace94ce6a500449f1d75": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.8.2"},
+	"870dd6185402c9123e106c1bf7a54e6c3d7a4644079aace94ce6a500449f1d75": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.8.2"},
 	},
-	"fb92a3e383ff9be9f1f8ab20feba0a01d58a947397200a7b10d403f95ee0dddc": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.8.20"},
+	"fb92a3e383ff9be9f1f8ab20feba0a01d58a947397200a7b10d403f95ee0dddc": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.8.20"},
 	},
-	"0b15b98c972176f644b5327dc261fa496c784ff6add4ff0d234c5caace36d9be": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.8.21"},
+	"0b15b98c972176f644b5327dc261fa496c784ff6add4ff0d234c5caace36d9be": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.8.21"},
 	},
-	"9119ed96cfc316d16aa322820d497900aef2d6f1fe81f57d9e9bfa314881c54a": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.8.22"},
+	"9119ed96cfc316d16aa322820d497900aef2d6f1fe81f57d9e9bfa314881c54a": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.8.22"},
 	},
-	"533b078adb691e834ec3a6a2555f02b6d996996713d72741aba6e465c4f934e8": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.8.23"},
+	"533b078adb691e834ec3a6a2555f02b6d996996713d72741aba6e465c4f934e8": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.8.23"},
 	},
-	"e2b3209c816dca91ef7443600e182a982f325189ce96f6255e8fff817606d1cf": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.8.24"},
+	"e2b3209c816dca91ef7443600e182a982f325189ce96f6255e8fff817606d1cf": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.8.24"},
 	},
-	"2667b69bd23a2261e80a7ddc36f4f7f9ec54b22b4964c132bc569f661bced985": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.8.25"},
+	"2667b69bd23a2261e80a7ddc36f4f7f9ec54b22b4964c132bc569f661bced985": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.8.25"},
 	},
-	"92744cbe8702dd6de2c172b7f62d24d4831dc2097f9fa0329ed932ae4f78ae96": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.8.26"},
+	"92744cbe8702dd6de2c172b7f62d24d4831dc2097f9fa0329ed932ae4f78ae96": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.8.26"},
 	},
-	"3c10d2c28b7a18eaf4e0a2c58449171158e61d88a5d1d0e4cc3b8c3399a9d552": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.8.27"},
+	"3c10d2c28b7a18eaf4e0a2c58449171158e61d88a5d1d0e4cc3b8c3399a9d552": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.8.27"},
 	},
-	"e76f2612e4a7f559893e5cfcd1c3bb53801dd118507e9c8d72fc427d9c330390": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.8.3"},
+	"e76f2612e4a7f559893e5cfcd1c3bb53801dd118507e9c8d72fc427d9c330390": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.8.3"},
 	},
-	"0f7fdeadacf43465f7d9a20f4e7ddc30f2f450edfab4b5da41667174f804d0a8": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.8.4"},
+	"0f7fdeadacf43465f7d9a20f4e7ddc30f2f450edfab4b5da41667174f804d0a8": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.8.4"},
 	},
-	"e46081c2c0ad7a42a44699dc3da34c000a57bca0ca2d97ba35df279df446d866": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.8.5"},
+	"e46081c2c0ad7a42a44699dc3da34c000a57bca0ca2d97ba35df279df446d866": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.8.5"},
 	},
-	"f58abafcdb41a29af4c3fe1d9b2c6b8f7c6e587e918edf538d67e92f986dae83": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.8.6"},
+	"f58abafcdb41a29af4c3fe1d9b2c6b8f7c6e587e918edf538d67e92f986dae83": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.8.6"},
 	},
-	"a57a12be41beac81957296987914d40ee0434094f07caac46e2d5268429d83f8": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.8.7"},
+	"a57a12be41beac81957296987914d40ee0434094f07caac46e2d5268429d83f8": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.8.7"},
 	},
-	"4af458d303dfb5c68ce30465b7e92914332ef14fdabd5e61d9a71d8396c9d3b1": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.8.8"},
+	"4af458d303dfb5c68ce30465b7e92914332ef14fdabd5e61d9a71d8396c9d3b1": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.8.8"},
 	},
-	"106fa81d7da6c7503eeb5174c3aae9b9843102e6ba136817def10e7729b385cc": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.8.9"},
+	"106fa81d7da6c7503eeb5174c3aae9b9843102e6ba136817def10e7729b385cc": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.8.9"},
 	},
-	"7ea6d21f212034d6da6cd45ffa0d31bddce188ae861d0cce95d33c82261e5d17": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.9.0"},
+	"7ea6d21f212034d6da6cd45ffa0d31bddce188ae861d0cce95d33c82261e5d17": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.9.0"},
 	},
-	"bf24736e30ede791431d474c0d5c34400c68f56c50c3842d898e5378bb3c2f87": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.9.1"},
+	"bf24736e30ede791431d474c0d5c34400c68f56c50c3842d898e5378bb3c2f87": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.9.1"},
 	},
-	"614fa9517ec50fc75afd3e82b70440c874153d1171e6e1c96083a3e5fac494b8": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.9.2"},
+	"614fa9517ec50fc75afd3e82b70440c874153d1171e6e1c96083a3e5fac494b8": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.9.2"},
 	},
-	"979a7ce5ce2755c431307a211d5b04e5d436199f8db67426544048ebe4190caf": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.9.3"},
+	"979a7ce5ce2755c431307a211d5b04e5d436199f8db67426544048ebe4190caf": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.9.3"},
 	},
-	"c2936842ae284bdb3219a1f0d6743458af857526072596fa0662ed29cf60c5b0": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.9.4"},
+	"c2936842ae284bdb3219a1f0d6743458af857526072596fa0662ed29cf60c5b0": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.9.4"},
 	},
-	"e1e0c56b82c4fb3ad1b27cb2882074aa41220154cb8e03ffe0877d4574a759a9": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.9.5"},
+	"e1e0c56b82c4fb3ad1b27cb2882074aa41220154cb8e03ffe0877d4574a759a9": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.9.5"},
 	},
-	"41ba853f3cd5b4bb126d9dec1f424dc08a171e67f6810dc2e01d4f6a750aff02": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.9.6"},
+	"41ba853f3cd5b4bb126d9dec1f424dc08a171e67f6810dc2e01d4f6a750aff02": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.9.6"},
 	},
-	"28c519ee605b4d78187e5062ac9984f496c9a5f98af0ba44f7959f1385a84a0c": []Modver{
-		{"github.com/ethereum/go-ethereum", "v1.9.7"},
+	"28c519ee605b4d78187e5062ac9984f496c9a5f98af0ba44f7959f1385a84a0c": []internal.Modver{
+		{Path: "github.com/ethereum/go-ethereum", Version: "v1.9.7"},
 	},
-	"e572dae095d2b120e67e54e6ac651682dd3b0f1f969ad9feb74ba7148e82a9be": []Modver{
-		{"github.com/influxdata/influxdb", "v0.0.1"},
+	"e572dae095d2b120e67e54e6ac651682dd3b0f1f969ad9feb74ba7148e82a9be": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.0.1"},
 	},
-	"d65c74a9dae5007d129d6bc06eb94e9fc4a2adae1f40fbebe860f083c3258035": []Modver{
-		{"github.com/influxdata/influxdb", "v0.0.2"},
+	"d65c74a9dae5007d129d6bc06eb94e9fc4a2adae1f40fbebe860f083c3258035": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.0.2"},
 	},
-	"1d94c4ab9972c4c245b510ef2515bea6646f02dc124f63a6927e0cef15e09bb9": []Modver{
-		{"github.com/influxdata/influxdb", "v0.0.3"},
+	"1d94c4ab9972c4c245b510ef2515bea6646f02dc124f63a6927e0cef15e09bb9": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.0.3"},
 	},
-	"538bceb0015fa94c96535ee60a46e429ac80393b4d0fdacac25aba11a441afa5": []Modver{
-		{"github.com/influxdata/influxdb", "v0.0.4"},
+	"538bceb0015fa94c96535ee60a46e429ac80393b4d0fdacac25aba11a441afa5": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.0.4"},
 	},
-	"655d9caa9f366bde11ff95f27da404fdfba455445f328d00a62d4c70af5c4708": []Modver{
-		{"github.com/influxdata/influxdb", "v0.0.5"},
+	"655d9caa9f366bde11ff95f27da404fdfba455445f328d00a62d4c70af5c4708": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.0.5"},
 	},
-	"23afc5706ef6b2e01cd71b501ea603e6e72f3709f0e4c3fd26d437bf848459da": []Modver{
-		{"github.com/influxdata/influxdb", "v0.0.6"},
+	"23afc5706ef6b2e01cd71b501ea603e6e72f3709f0e4c3fd26d437bf848459da": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.0.6"},
 	},
-	"9fe1412fb805542a2d0578eb530b10578740b17658a8c933b3ab3516ba921d41": []Modver{
-		{"github.com/influxdata/influxdb", "v0.0.7"},
+	"9fe1412fb805542a2d0578eb530b10578740b17658a8c933b3ab3516ba921d41": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.0.7"},
 	},
-	"40cf66b3d065fba5c10a4dbd839758a006a4994437958ddb7d2674791faac812": []Modver{
-		{"github.com/influxdata/influxdb", "v0.0.8"},
+	"40cf66b3d065fba5c10a4dbd839758a006a4994437958ddb7d2674791faac812": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.0.8"},
 	},
-	"cd871589d5a1dc90c46468f3e11066c9d7a6519697c8ea3445bcbb0d63e535b6": []Modver{
-		{"github.com/influxdata/influxdb", "v0.0.9"},
+	"cd871589d5a1dc90c46468f3e11066c9d7a6519697c8ea3445bcbb0d63e535b6": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.0.9"},
 	},
-	"c76fa748b9b643b4b6dd69463eee14c677e110136b34c28b9bc73cccee860a26": []Modver{
-		{"github.com/influxdata/influxdb", "v0.1.0"},
+	"c76fa748b9b643b4b6dd69463eee14c677e110136b34c28b9bc73cccee860a26": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.1.0"},
 	},
-	"0ad5d52ee76e6fbec6a7d710fe3481fb8c98ed5919812bc5ca514853ab190526": []Modver{
-		{"github.com/influxdata/influxdb", "v0.10.0"},
+	"0ad5d52ee76e6fbec6a7d710fe3481fb8c98ed5919812bc5ca514853ab190526": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.10.0"},
 	},
-	"dd8b185394e3f59b0a14e09c0068025a6e63d9d4e5efe562ca76538d98d9dc78": []Modver{
-		{"github.com/influxdata/influxdb", "v0.10.0-beta1"},
+	"dd8b185394e3f59b0a14e09c0068025a6e63d9d4e5efe562ca76538d98d9dc78": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.10.0-beta1"},
 	},
-	"c9b87e5d8521718f2da21f5941db5f04c47d83e79f9acc087e8bd49b696ea73e": []Modver{
-		{"github.com/influxdata/influxdb", "v0.10.0-beta2"},
+	"c9b87e5d8521718f2da21f5941db5f04c47d83e79f9acc087e8bd49b696ea73e": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.10.0-beta2"},
 	},
-	"1c08c034b0338828cbc07604dc79f7a5ab313ab474b2acc4068d92d8f8ea47c1": []Modver{
-		{"github.com/influxdata/influxdb", "v0.10.0-rc1"},
+	"1c08c034b0338828cbc07604dc79f7a5ab313ab474b2acc4068d92d8f8ea47c1": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.10.0-rc1"},
 	},
-	"c75341603ac7926d97f705a2e6b586f710c77f8b3b7d251e9691af12830090a6": []Modver{
-		{"github.com/influxdata/influxdb", "v0.10.0-rc2"},
+	"c75341603ac7926d97f705a2e6b586f710c77f8b3b7d251e9691af12830090a6": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.10.0-rc2"},
 	},
-	"57e99845b54e0df41a39a10a9bade61cf9dae62eb76583394e4327bd605bf896": []Modver{
-		{"github.com/influxdata/influxdb", "v0.10.1"},
+	"57e99845b54e0df41a39a10a9bade61cf9dae62eb76583394e4327bd605bf896": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.10.1"},
 	},
-	"48db7a11144440c24e2539c2e7b26cc9ad89c59582e38180f6be531136911e00": []Modver{
-		{"github.com/influxdata/influxdb", "v0.10.2"},
+	"48db7a11144440c24e2539c2e7b26cc9ad89c59582e38180f6be531136911e00": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.10.2"},
 	},
-	"2653359d17c9948913aaa982d6893fcbbcfd3adc1387ee86c6a9db19363d0259": []Modver{
-		{"github.com/influxdata/influxdb", "v0.10.3"},
+	"2653359d17c9948913aaa982d6893fcbbcfd3adc1387ee86c6a9db19363d0259": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.10.3"},
 	},
-	"8ba4b4148f447b157e922caef44206faa4507d0187d20a2394073cc4a09725be": []Modver{
-		{"github.com/influxdata/influxdb", "v0.11.0"},
+	"8ba4b4148f447b157e922caef44206faa4507d0187d20a2394073cc4a09725be": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.11.0"},
 	},
-	"8b2c27f834e2f515ac34c46be71c574256643b2bd737ecbe7aee8e9b3d8dc9ff": []Modver{
-		{"github.com/influxdata/influxdb", "v0.11.0-rc1"},
+	"8b2c27f834e2f515ac34c46be71c574256643b2bd737ecbe7aee8e9b3d8dc9ff": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.11.0-rc1"},
 	},
-	"4f1a1ae21828413983c3d8fd057742267dfab72a34ccaab23243ad4cc641246a": []Modver{
-		{"github.com/influxdata/influxdb", "v0.11.1"},
+	"4f1a1ae21828413983c3d8fd057742267dfab72a34ccaab23243ad4cc641246a": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.11.1"},
 	},
-	"dcc53058b0393fb3912c0f575099b73a41d645f9a3c1db48078cec931455720e": []Modver{
-		{"github.com/influxdata/influxdb", "v0.12.0"},
+	"dcc53058b0393fb3912c0f575099b73a41d645f9a3c1db48078cec931455720e": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.12.0"},
 	},
-	"15395e44baa1bc002504b7444a7b165db999ec49813b84295453f3ad4bf3f8c4": []Modver{
-		{"github.com/influxdata/influxdb", "v0.12.1"},
+	"15395e44baa1bc002504b7444a7b165db999ec49813b84295453f3ad4bf3f8c4": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.12.1"},
 	},
-	"be7dd6ec624bdc5023ef011db9f60f3660304be15bde2b8a6dfcd9b74e66af6a": []Modver{
-		{"github.com/influxdata/influxdb", "v0.12.2"},
+	"be7dd6ec624bdc5023ef011db9f60f3660304be15bde2b8a6dfcd9b74e66af6a": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.12.2"},
 	},
-	"1db58ba175f02d85299a3d6e9e68be6e7adab30edd4b216363d6f562943d9811": []Modver{
-		{"github.com/influxdata/influxdb", "v0.13.0"},
+	"1db58ba175f02d85299a3d6e9e68be6e7adab30edd4b216363d6f562943d9811": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.13.0"},
 	},
-	"3f018522d7f2d6238f521c84787ea2ca2966c881b1df5c84f42b5033880bf4f1": []Modver{
-		{"github.com/influxdata/influxdb", "v0.13.0-rc1"},
+	"3f018522d7f2d6238f521c84787ea2ca2966c881b1df5c84f42b5033880bf4f1": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.13.0-rc1"},
 	},
-	"4d4898b1098f688dc6e2dee714504764a5fa78c6dd9d5d90b0b6bbdc0a9235e2": []Modver{
-		{"github.com/influxdata/influxdb", "v0.13.0-rc2"},
+	"4d4898b1098f688dc6e2dee714504764a5fa78c6dd9d5d90b0b6bbdc0a9235e2": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.13.0-rc2"},
 	},
-	"7eea763eaeccfb73cf0350595194041f07c06c497e96487718f8aa1316e92554": []Modver{
-		{"github.com/influxdata/influxdb", "v0.2.0"},
+	"7eea763eaeccfb73cf0350595194041f07c06c497e96487718f8aa1316e92554": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.2.0"},
 	},
-	"420ac2352e3dde9c94ed01e676213c2ed8c3249ba36030764ea28d2bc6ba7b77": []Modver{
-		{"github.com/influxdata/influxdb", "v0.3.0"},
+	"420ac2352e3dde9c94ed01e676213c2ed8c3249ba36030764ea28d2bc6ba7b77": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.3.0"},
 	},
-	"127ec9225931c6ca7a68479d8eba190003ede96e5de0a9a1b809b277c68bc898": []Modver{
-		{"github.com/influxdata/influxdb", "v0.3.1"},
+	"127ec9225931c6ca7a68479d8eba190003ede96e5de0a9a1b809b277c68bc898": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.3.1"},
 	},
-	"d87c35cfe6feebd1cee6d19a8e89e41060041a89b569968ca4f4e7d22dd87543": []Modver{
-		{"github.com/influxdata/influxdb", "v0.3.2"},
+	"d87c35cfe6feebd1cee6d19a8e89e41060041a89b569968ca4f4e7d22dd87543": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.3.2"},
 	},
-	"61d6539f6a2d1aa2587f585334e022235eee8c794db252559dc6cd72f876c3a4": []Modver{
-		{"github.com/influxdata/influxdb", "v0.4.0"},
+	"61d6539f6a2d1aa2587f585334e022235eee8c794db252559dc6cd72f876c3a4": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.4.0"},
 	},
-	"0ea1e65125bfbf9c21500f43a1e9e04e83f25c0d5bcdd31892c905d5515b9396": []Modver{
-		{"github.com/influxdata/influxdb", "v0.4.1"},
+	"0ea1e65125bfbf9c21500f43a1e9e04e83f25c0d5bcdd31892c905d5515b9396": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.4.1"},
 	},
-	"7cd0505ef5e844db505a71fe3dda6196f13a2d9eeba6144dc968996ee818fa7d": []Modver{
-		{"github.com/influxdata/influxdb", "v0.4.2"},
+	"7cd0505ef5e844db505a71fe3dda6196f13a2d9eeba6144dc968996ee818fa7d": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.4.2"},
 	},
-	"d4b2e97958c92f9b470cb70df950e9e1c7edbdffd60b0d8ef3ea6079ea29e8fd": []Modver{
-		{"github.com/influxdata/influxdb", "v0.4.3"},
+	"d4b2e97958c92f9b470cb70df950e9e1c7edbdffd60b0d8ef3ea6079ea29e8fd": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.4.3"},
 	},
-	"330f024837ea9fc4aefc7aacf749993030e60a15d76555276e1089a70001f953": []Modver{
-		{"github.com/influxdata/influxdb", "v0.4.4"},
+	"330f024837ea9fc4aefc7aacf749993030e60a15d76555276e1089a70001f953": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.4.4"},
 	},
-	"53179fdaedd6a3496fe1579065c0352f776928d673caebb269f68fa0039044a0": []Modver{
-		{"github.com/influxdata/influxdb", "v0.5.0"},
+	"53179fdaedd6a3496fe1579065c0352f776928d673caebb269f68fa0039044a0": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.5.0"},
 	},
-	"77f2b8788f72e69652ae44a84664191156310074e155fb7380a392b9d31b238c": []Modver{
-		{"github.com/influxdata/influxdb", "v0.5.0-rc.1"},
+	"77f2b8788f72e69652ae44a84664191156310074e155fb7380a392b9d31b238c": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.5.0-rc.1"},
 	},
-	"6c600248fd3f020185b490d7a70ede8b2c1a111d69e1b08079092db295a00679": []Modver{
-		{"github.com/influxdata/influxdb", "v0.5.0-rc.2"},
+	"6c600248fd3f020185b490d7a70ede8b2c1a111d69e1b08079092db295a00679": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.5.0-rc.2"},
 	},
-	"5e538c20df5730b79f253027597e91000f733cf876adfe42a694ee6a097d3794": []Modver{
-		{"github.com/influxdata/influxdb", "v0.5.0-rc.3"},
+	"5e538c20df5730b79f253027597e91000f733cf876adfe42a694ee6a097d3794": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.5.0-rc.3"},
 	},
-	"381537b6cb33c9b91e09a5a0c3a93258d1740ec6414282d83c3c2374a6a100ad": []Modver{
-		{"github.com/influxdata/influxdb", "v0.5.0-rc.4"},
+	"381537b6cb33c9b91e09a5a0c3a93258d1740ec6414282d83c3c2374a6a100ad": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.5.0-rc.4"},
 	},
-	"5eeda86c28309e48d4af65ef25d78135eb521d943d791325d9e3183a3f9cf6de": []Modver{
-		{"github.com/influxdata/influxdb", "v0.5.0-rc.5"},
+	"5eeda86c28309e48d4af65ef25d78135eb521d943d791325d9e3183a3f9cf6de": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.5.0-rc.5"},
 	},
-	"f48a3d7dedfdef966f96fe809f6f74614ac0f6fd1affe412b7b39867acf32906": []Modver{
-		{"github.com/influxdata/influxdb", "v0.5.0-rc.6"},
+	"f48a3d7dedfdef966f96fe809f6f74614ac0f6fd1affe412b7b39867acf32906": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.5.0-rc.6"},
 	},
-	"fec3e6488429016773c258c387230d9fd8c16d15678f2bc7c1edeac8967fd2ea": []Modver{
-		{"github.com/influxdata/influxdb", "v0.5.1"},
+	"fec3e6488429016773c258c387230d9fd8c16d15678f2bc7c1edeac8967fd2ea": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.5.1"},
 	},
-	"0fe1eefc892f6bdfcecf002c30456e95114e2ac409f7af94c76cbc10b5a00c15": []Modver{
-		{"github.com/influxdata/influxdb", "v0.5.10"},
+	"0fe1eefc892f6bdfcecf002c30456e95114e2ac409f7af94c76cbc10b5a00c15": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.5.10"},
 	},
-	"40aa6b766cfe9a9dee714737ff6aead75451a8b3cbec60a06494e37eb629a360": []Modver{
-		{"github.com/influxdata/influxdb", "v0.5.11"},
+	"40aa6b766cfe9a9dee714737ff6aead75451a8b3cbec60a06494e37eb629a360": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.5.11"},
 	},
-	"b29bc5339b45fc675f7f2fc14cd128b595d01c577a86e9bafc0552a644081d77": []Modver{
-		{"github.com/influxdata/influxdb", "v0.5.12"},
+	"b29bc5339b45fc675f7f2fc14cd128b595d01c577a86e9bafc0552a644081d77": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.5.12"},
 	},
-	"4c5752c65ae6618ec2af5641fcecdea9080dfb0ef999911bb8ed8c21bf623f86": []Modver{
-		{"github.com/influxdata/influxdb", "v0.5.2"},
+	"4c5752c65ae6618ec2af5641fcecdea9080dfb0ef999911bb8ed8c21bf623f86": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.5.2"},
 	},
-	"5560499c6267eaaaebac2c0b3ab93274a05cab905a0da5c74394fb359cf84769": []Modver{
-		{"github.com/influxdata/influxdb", "v0.5.3"},
+	"5560499c6267eaaaebac2c0b3ab93274a05cab905a0da5c74394fb359cf84769": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.5.3"},
 	},
-	"6f704b422c99e15e1435cfcc6cad688cb0dcafd536a683051d42d747a56a99ff": []Modver{
-		{"github.com/influxdata/influxdb", "v0.5.4"},
+	"6f704b422c99e15e1435cfcc6cad688cb0dcafd536a683051d42d747a56a99ff": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.5.4"},
 	},
-	"e766db0cf017fc1b02dcd3b69cc50cf1bb0872d2544f3df3b6bd038cce0c45ea": []Modver{
-		{"github.com/influxdata/influxdb", "v0.5.5"},
+	"e766db0cf017fc1b02dcd3b69cc50cf1bb0872d2544f3df3b6bd038cce0c45ea": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.5.5"},
 	},
-	"d44d072904aa1a1ef6d592c1bef818546f834446d101f97602328fc6cddc981e": []Modver{
-		{"github.com/influxdata/influxdb", "v0.5.6"},
+	"d44d072904aa1a1ef6d592c1bef818546f834446d101f97602328fc6cddc981e": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.5.6"},
 	},
-	"8e19c783f30e0b8098095b58f2ffe430177004c119a92f3f787e00709022dd25": []Modver{
-		{"github.com/influxdata/influxdb", "v0.5.7"},
+	"8e19c783f30e0b8098095b58f2ffe430177004c119a92f3f787e00709022dd25": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.5.7"},
 	},
-	"570787cf621221febd33925ba9f7358f82fce2db6d8f1506733969900fb10e9f": []Modver{
-		{"github.com/influxdata/influxdb", "v0.5.8"},
+	"570787cf621221febd33925ba9f7358f82fce2db6d8f1506733969900fb10e9f": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.5.8"},
 	},
-	"6a296c9de73a084e192209a08ecf6df20f262c3fc88ac5cf7ec01061460daf2b": []Modver{
-		{"github.com/influxdata/influxdb", "v0.5.9"},
+	"6a296c9de73a084e192209a08ecf6df20f262c3fc88ac5cf7ec01061460daf2b": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.5.9"},
 	},
-	"d71b24b0a33f9fe8f4300fd8d154b7a24bebf5172020eb47e4e398b3bd4ece11": []Modver{
-		{"github.com/influxdata/influxdb", "v0.6.0"},
+	"d71b24b0a33f9fe8f4300fd8d154b7a24bebf5172020eb47e4e398b3bd4ece11": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.6.0"},
 	},
-	"27a98ec89d669d2d4558b97964fc7783a6b4eb65b285a29e9dd193dc2a639918": []Modver{
-		{"github.com/influxdata/influxdb", "v0.6.1"},
+	"27a98ec89d669d2d4558b97964fc7783a6b4eb65b285a29e9dd193dc2a639918": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.6.1"},
 	},
-	"699e6e04df256d4ef520884ed5cf17ea9b18aa23401381ae223bcb7e4ff6876f": []Modver{
-		{"github.com/influxdata/influxdb", "v0.6.2"},
+	"699e6e04df256d4ef520884ed5cf17ea9b18aa23401381ae223bcb7e4ff6876f": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.6.2"},
 	},
-	"dc529e8d44a568194ba396e74e37ebc9c4f704bc4d6cc3d88673e124a504d11c": []Modver{
-		{"github.com/influxdata/influxdb", "v0.6.3"},
+	"dc529e8d44a568194ba396e74e37ebc9c4f704bc4d6cc3d88673e124a504d11c": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.6.3"},
 	},
-	"2979d61ce70eb1e41596d4659410a7e784de6a59474f29e9b0dacc741791c125": []Modver{
-		{"github.com/influxdata/influxdb", "v0.6.4"},
+	"2979d61ce70eb1e41596d4659410a7e784de6a59474f29e9b0dacc741791c125": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.6.4"},
 	},
-	"3b3be056f492463dc8d44686bda08e8dbee85318d2245e3afc399b6dc7fe030a": []Modver{
-		{"github.com/influxdata/influxdb", "v0.6.5"},
+	"3b3be056f492463dc8d44686bda08e8dbee85318d2245e3afc399b6dc7fe030a": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.6.5"},
 	},
-	"40cc123cb9d32ebbcf54cd0642aeda645842597467fd1f43d54fdf629767d7a2": []Modver{
-		{"github.com/influxdata/influxdb", "v0.7.0"},
+	"40cc123cb9d32ebbcf54cd0642aeda645842597467fd1f43d54fdf629767d7a2": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.7.0"},
 	},
-	"a38ed9f635c483c7699c28acb7b8835bcd55468d4951a9deed75cd56a910b863": []Modver{
-		{"github.com/influxdata/influxdb", "v0.7.1"},
+	"a38ed9f635c483c7699c28acb7b8835bcd55468d4951a9deed75cd56a910b863": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.7.1"},
 	},
-	"38a36594a0613370f6e1ad4217b482a65782951c82566d0e14441d1a0f946fed": []Modver{
-		{"github.com/influxdata/influxdb", "v0.7.2"},
+	"38a36594a0613370f6e1ad4217b482a65782951c82566d0e14441d1a0f946fed": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.7.2"},
 	},
-	"7265efce35e9839f038cba95d27b3e959f5d3dd93f3a820f03e65082e9e9e879": []Modver{
-		{"github.com/influxdata/influxdb", "v0.7.3"},
+	"7265efce35e9839f038cba95d27b3e959f5d3dd93f3a820f03e65082e9e9e879": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.7.3"},
 	},
-	"4044bfbca16f18d84db81f218d8b293dc030d08cae8fa31a6a593567c57c8bb2": []Modver{
-		{"github.com/influxdata/influxdb", "v0.8.0"},
+	"4044bfbca16f18d84db81f218d8b293dc030d08cae8fa31a6a593567c57c8bb2": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.8.0"},
 	},
-	"b47da04d8b8cd552319441db4744eb8ebc8e2e37f63e3d75053c783e5f7958f0": []Modver{
-		{"github.com/influxdata/influxdb", "v0.8.0-rc.1"},
+	"b47da04d8b8cd552319441db4744eb8ebc8e2e37f63e3d75053c783e5f7958f0": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.8.0-rc.1"},
 	},
-	"e688a774a12256b87c73218ffede05f76b53d6fba66df0131d861b136019bf30": []Modver{
-		{"github.com/influxdata/influxdb", "v0.8.0-rc.2"},
+	"e688a774a12256b87c73218ffede05f76b53d6fba66df0131d861b136019bf30": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.8.0-rc.2"},
 	},
-	"66b0261a54a102a63ac0f882a2bd0d281e46272a53f92f013b36ea186411a4bc": []Modver{
-		{"github.com/influxdata/influxdb", "v0.8.0-rc.3"},
+	"66b0261a54a102a63ac0f882a2bd0d281e46272a53f92f013b36ea186411a4bc": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.8.0-rc.3"},
 	},
-	"c1743dbf28b90dc00a4ea092ca54036c3deafe88656d69e1dc799b2c788d3437": []Modver{
-		{"github.com/influxdata/influxdb", "v0.8.0-rc.4"},
+	"c1743dbf28b90dc00a4ea092ca54036c3deafe88656d69e1dc799b2c788d3437": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.8.0-rc.4"},
 	},
-	"3c9bbe9791d2f5cb1975200a6e8a8a1f52abe713959d2cb7cb1a4882ace0089f": []Modver{
-		{"github.com/influxdata/influxdb", "v0.8.0-rc.5"},
+	"3c9bbe9791d2f5cb1975200a6e8a8a1f52abe713959d2cb7cb1a4882ace0089f": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.8.0-rc.5"},
 	},
-	"601a05df2a611b13b66392c9796b523234076f215fe03844ef3478bcb78f3b1c": []Modver{
-		{"github.com/influxdata/influxdb", "v0.8.1"},
+	"601a05df2a611b13b66392c9796b523234076f215fe03844ef3478bcb78f3b1c": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.8.1"},
 	},
-	"997471cd2e30bfc17352b6cf47000cda75b7d5d1ecc68f9b8396a681489b4f8d": []Modver{
-		{"github.com/influxdata/influxdb", "v0.8.2"},
+	"997471cd2e30bfc17352b6cf47000cda75b7d5d1ecc68f9b8396a681489b4f8d": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.8.2"},
 	},
-	"c079fed686056beb16bf3ee963fb8cc2faaaa51e6fb4bfc7450f74742375351d": []Modver{
-		{"github.com/influxdata/influxdb", "v0.8.3"},
+	"c079fed686056beb16bf3ee963fb8cc2faaaa51e6fb4bfc7450f74742375351d": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.8.3"},
 	},
-	"a8d8861c330dad8c3aab7bf262d61d9680d204e3d80b2509c5841aa5c43c8bc1": []Modver{
-		{"github.com/influxdata/influxdb", "v0.8.4"},
+	"a8d8861c330dad8c3aab7bf262d61d9680d204e3d80b2509c5841aa5c43c8bc1": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.8.4"},
 	},
-	"8df4e7915a77321e7604b22bdcc0970db2d16c2db8dd0d14388cefb9302487e8": []Modver{
-		{"github.com/influxdata/influxdb", "v0.8.4-rc.1"},
+	"8df4e7915a77321e7604b22bdcc0970db2d16c2db8dd0d14388cefb9302487e8": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.8.4-rc.1"},
 	},
-	"59cdec7511324be044994dbf76d87f81bb014c6ca817dc1ce3ecaea10a35005c": []Modver{
-		{"github.com/influxdata/influxdb", "v0.8.5"},
+	"59cdec7511324be044994dbf76d87f81bb014c6ca817dc1ce3ecaea10a35005c": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.8.5"},
 	},
-	"a883c82d13ffabd7012fe5052bd72a9fbbae5c6ab2507f3d570cb6c8d2eedcc4": []Modver{
-		{"github.com/influxdata/influxdb", "v0.8.7"}, {"github.com/influxdata/influxdb", "v0.8.6"},
+	"a883c82d13ffabd7012fe5052bd72a9fbbae5c6ab2507f3d570cb6c8d2eedcc4": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.8.7"}, {Path: "github.com/influxdata/influxdb", Version: "v0.8.6"},
 	},
-	"c9f383b654fef959340028966ce1af8a3c0917f94a2fc136688daa9facc11df3": []Modver{
-		{"github.com/influxdata/influxdb", "v0.8.8"},
+	"c9f383b654fef959340028966ce1af8a3c0917f94a2fc136688daa9facc11df3": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.8.8"},
 	},
-	"f78cc7680c94554193998a96d60e7682540f6f1666f7bb9f6be5bae9fe3102c3": []Modver{
-		{"github.com/influxdata/influxdb", "v0.9.0"},
+	"c0f6d8b988f20d6444522e3111d7e0269c88f03136d89325c33d565eef0796eb": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.8.9"},
 	},
-	"430ff7d269193f426a46c241951f7c965204c85951d78cee798c4d9fb0c4cd48": []Modver{
-		{"github.com/influxdata/influxdb", "v0.9.0-rc10"},
+	"f78cc7680c94554193998a96d60e7682540f6f1666f7bb9f6be5bae9fe3102c3": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.9.0"},
 	},
-	"e7a509222406c99c7da09954eb016f1c15e4070feadc5caa8481b9fdf49d3c3d": []Modver{
-		{"github.com/influxdata/influxdb", "v0.9.0-rc11"},
+	"430ff7d269193f426a46c241951f7c965204c85951d78cee798c4d9fb0c4cd48": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.9.0-rc10"},
 	},
-	"c60fc9025042a1d2cc5f219a99f6571591bfc15fc105d7416de64c470a975009": []Modver{
-		{"github.com/influxdata/influxdb", "v0.9.0-rc12"},
+	"e7a509222406c99c7da09954eb016f1c15e4070feadc5caa8481b9fdf49d3c3d": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.9.0-rc11"},
 	},
-	"bc93d85b963e4f311e6b6585a1dfb68f5a029ab707c41d38b7bb64a50399d77b": []Modver{
-		{"github.com/influxdata/influxdb", "v0.9.0-rc13"},
+	"c60fc9025042a1d2cc5f219a99f6571591bfc15fc105d7416de64c470a975009": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.9.0-rc12"},
 	},
-	"8d5a41f2d9b5333906996dda9dd6fdb09be05a09fb82fab9179633d92dc7bb64": []Modver{
-		{"github.com/influxdata/influxdb", "v0.9.0-rc14"},
+	"bc93d85b963e4f311e6b6585a1dfb68f5a029ab707c41d38b7bb64a50399d77b": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.9.0-rc13"},
 	},
-	"a12833d177b7fe4f360e24c6cf49fb65546c254a74c23c9ebb21134372561322": []Modver{
-		{"github.com/influxdata/influxdb", "v0.9.0-rc15"},
+	"8d5a41f2d9b5333906996dda9dd6fdb09be05a09fb82fab9179633d92dc7bb64": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.9.0-rc14"},
 	},
-	"116b7d0455c4f14d632826f63bc4d19125026850d2a47f7cb26b69b1f5e0e99d": []Modver{
-		{"github.com/influxdata/influxdb", "v0.9.0-rc16"},
+	"a12833d177b7fe4f360e24c6cf49fb65546c254a74c23c9ebb21134372561322": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.9.0-rc15"},
 	},
-	"455e31dd0041369cfcdca018ff322146e3169af60ec108d82110c42c8b5f98d2": []Modver{
-		{"github.com/influxdata/influxdb", "v0.9.0-rc17"},
+	"116b7d0455c4f14d632826f63bc4d19125026850d2a47f7cb26b69b1f5e0e99d": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.9.0-rc16"},
 	},
-	"e9bdbfbe8a26646a7bd7e5727cd113a5fa8eef6737df945321a1a4e0a269cff9": []Modver{
-		{"github.com/influxdata/influxdb", "v0.9.0-rc18"},
+	"455e31dd0041369cfcdca018ff322146e3169af60ec108d82110c42c8b5f98d2": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.9.0-rc17"},
 	},
-	"c081386d4b0eea8886ed32d383505c9e6a05c5432880e5a4462cfbd5e218aacb": []Modver{
-		{"github.com/influxdata/influxdb", "v0.9.0-rc19"},
+	"e9bdbfbe8a26646a7bd7e5727cd113a5fa8eef6737df945321a1a4e0a269cff9": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.9.0-rc18"},
 	},
-	"dea1779ab2b7edeea555924dd4aebfe97fbb7527a4e7e5fda2823db1c332522e": []Modver{
-		{"github.com/influxdata/influxdb", "v0.9.0-rc2"},
+	"c081386d4b0eea8886ed32d383505c9e6a05c5432880e5a4462cfbd5e218aacb": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.9.0-rc19"},
 	},
-	"f223f56bffd880cea85d61334dfcf60d00522f82cf71c20b7099bec64c9e8b14": []Modver{
-		{"github.com/influxdata/influxdb", "v0.9.0-rc20"},
+	"dea1779ab2b7edeea555924dd4aebfe97fbb7527a4e7e5fda2823db1c332522e": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.9.0-rc2"},
 	},
-	"fb718b52fb2d2dc6fbf46a31cfb2847ec4f6138cf8b87fab304c15f7b7d7f668": []Modver{
-		{"github.com/influxdata/influxdb", "v0.9.0-rc21"},
+	"f223f56bffd880cea85d61334dfcf60d00522f82cf71c20b7099bec64c9e8b14": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.9.0-rc20"},
 	},
-	"12d5b33b431d46275d1eae211f7eb898d4705d5232cd037ed543c6beea9e4e52": []Modver{
-		{"github.com/influxdata/influxdb", "v0.9.0-rc22"},
+	"fb718b52fb2d2dc6fbf46a31cfb2847ec4f6138cf8b87fab304c15f7b7d7f668": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.9.0-rc21"},
 	},
-	"6c40a9f5b000f4d8dc5072f00d3e90d1cc57e28e6a746aceb615060d6251c3c9": []Modver{
-		{"github.com/influxdata/influxdb", "v0.9.0-rc23"},
+	"12d5b33b431d46275d1eae211f7eb898d4705d5232cd037ed543c6beea9e4e52": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.9.0-rc22"},
 	},
-	"da9473b13822c62c3f6fd9d974daa10c9d6b8c9ca6bc3f68190a3083635a2406": []Modver{
-		{"github.com/influxdata/influxdb", "v0.9.0-rc24"},
+	"6c40a9f5b000f4d8dc5072f00d3e90d1cc57e28e6a746aceb615060d6251c3c9": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.9.0-rc23"},
 	},
-	"06c801ed961c8a8e5f0c60a00d2591d13c3951f23f876b192ceb781a2f8ebb1e": []Modver{
-		{"github.com/influxdata/influxdb", "v0.9.0-rc25"},
+	"da9473b13822c62c3f6fd9d974daa10c9d6b8c9ca6bc3f68190a3083635a2406": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.9.0-rc24"},
 	},
-	"7dd91de38cd4bf528ba75249e8e2b2c920bd29be053722482887d7c2d991630a": []Modver{
-		{"github.com/influxdata/influxdb", "v0.9.0-rc26"},
+	"06c801ed961c8a8e5f0c60a00d2591d13c3951f23f876b192ceb781a2f8ebb1e": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.9.0-rc25"},
 	},
-	"bae003e7563cb9cb9882b3ee41e91f72b4b494232fb74bddbe18ccf9f0402b09": []Modver{
-		{"github.com/influxdata/influxdb", "v0.9.0-rc27"},
+	"7dd91de38cd4bf528ba75249e8e2b2c920bd29be053722482887d7c2d991630a": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.9.0-rc26"},
 	},
-	"53599fbd94bf4600bbe9cb2e8297003c62482ff67ce43edcb9321533500fd18f": []Modver{
-		{"github.com/influxdata/influxdb", "v0.9.0-rc28"},
+	"bae003e7563cb9cb9882b3ee41e91f72b4b494232fb74bddbe18ccf9f0402b09": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.9.0-rc27"},
 	},
-	"ba86dca09585b430ce83a24e5376e82198c23f85f49204314a2e37a1a765ab23": []Modver{
-		{"github.com/influxdata/influxdb", "v0.9.0-rc29"},
+	"53599fbd94bf4600bbe9cb2e8297003c62482ff67ce43edcb9321533500fd18f": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.9.0-rc28"},
 	},
-	"0d133256548112f5c0a4ab74c63f3250fed443ede5c4fa484e0ffd8d57cde94d": []Modver{
-		{"github.com/influxdata/influxdb", "v0.9.0-rc3"},
+	"ba86dca09585b430ce83a24e5376e82198c23f85f49204314a2e37a1a765ab23": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.9.0-rc29"},
 	},
-	"b8e5ff33e33412e014d638b8eba2c7239f8516a6419b6c57c6e5dcad6205bc7a": []Modver{
-		{"github.com/influxdata/influxdb", "v0.9.0-rc30"},
+	"0d133256548112f5c0a4ab74c63f3250fed443ede5c4fa484e0ffd8d57cde94d": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.9.0-rc3"},
 	},
-	"f9482391f56da40ec7eddc382a09f5b5a980e423a8521c53da9dae74b5c0c645": []Modver{
-		{"github.com/influxdata/influxdb", "v0.9.0-rc31"},
+	"b8e5ff33e33412e014d638b8eba2c7239f8516a6419b6c57c6e5dcad6205bc7a": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.9.0-rc30"},
 	},
-	"131091d4d359021d056f4a700f775978c14b6cb377ecc53ca9ca5199567ef4bf": []Modver{
-		{"github.com/influxdata/influxdb", "v0.9.0-rc32"},
+	"f9482391f56da40ec7eddc382a09f5b5a980e423a8521c53da9dae74b5c0c645": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.9.0-rc31"},
 	},
-	"f2f7e01b3b9d235f388a1414b3449268691c1966af5ee8c4ce35d61a6ccd94a9": []Modver{
-		{"github.com/influxdata/influxdb", "v0.9.0-rc33"},
+	"131091d4d359021d056f4a700f775978c14b6cb377ecc53ca9ca5199567ef4bf": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.9.0-rc32"},
 	},
-	"6effc7a3c8ea9320afb8804f93e8415911eb60971e6219678d4946a3d1e500a3": []Modver{
-		{"github.com/influxdata/influxdb", "v0.9.0-rc4"},
+	"f2f7e01b3b9d235f388a1414b3449268691c1966af5ee8c4ce35d61a6ccd94a9": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.9.0-rc33"},
 	},
-	"1d62d57d095e78f0b80ead6a67b97e6af9304ad62da51d54cddacf11e2df0c95": []Modver{
-		{"github.com/influxdata/influxdb", "v0.9.0-rc5"},
+	"6effc7a3c8ea9320afb8804f93e8415911eb60971e6219678d4946a3d1e500a3": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.9.0-rc4"},
 	},
-	"a7fe67eb351c8acdbe24dd8f0837219476dd4abe6a6e43f705692cc4946b6b14": []Modver{
-		{"github.com/influxdata/influxdb", "v0.9.0-rc6"},
+	"1d62d57d095e78f0b80ead6a67b97e6af9304ad62da51d54cddacf11e2df0c95": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.9.0-rc5"},
 	},
-	"2132ab2b15a26b131f59f96c4c5a84352d2473459de3778e1d4abe15cc51f63c": []Modver{
-		{"github.com/influxdata/influxdb", "v0.9.0-rc7"},
+	"a7fe67eb351c8acdbe24dd8f0837219476dd4abe6a6e43f705692cc4946b6b14": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.9.0-rc6"},
 	},
-	"20902abc7ae8f861ac735fceb730f6770fba60164374e56ad647a089335be8ba": []Modver{
-		{"github.com/influxdata/influxdb", "v0.9.0-rc8"},
+	"2132ab2b15a26b131f59f96c4c5a84352d2473459de3778e1d4abe15cc51f63c": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.9.0-rc7"},
 	},
-	"7aa9491eec219a8aa663327e7e587bdb855a777235c178a2d1bdfab1caaa8102": []Modver{
-		{"github.com/influxdata/influxdb", "v0.9.0-rc9"},
+	"20902abc7ae8f861ac735fceb730f6770fba60164374e56ad647a089335be8ba": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.9.0-rc8"},
 	},
-	"4dc3e6abb792a6196f195b0bf7019a4c89332d991e399418b7a1c9fca9f54c80": []Modver{
-		{"github.com/influxdata/influxdb", "v0.9.1"},
+	"7aa9491eec219a8aa663327e7e587bdb855a777235c178a2d1bdfab1caaa8102": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.9.0-rc9"},
 	},
-	"aa8054418d8a537ec125992b90cfb97c50e1fb7eb34730cfc5ab1a4f23ca41e7": []Modver{
-		{"github.com/influxdata/influxdb", "v0.9.1-rc1"},
+	"4dc3e6abb792a6196f195b0bf7019a4c89332d991e399418b7a1c9fca9f54c80": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.9.1"},
 	},
-	"a5cb7d181ca74acc3aa611df59dd58fd6f779d33f6a528ebb1074f9a15e4d30b": []Modver{
-		{"github.com/influxdata/influxdb", "v0.9.1-rc2"},
+	"aa8054418d8a537ec125992b90cfb97c50e1fb7eb34730cfc5ab1a4f23ca41e7": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.9.1-rc1"},
 	},
-	"d2402ac27990b797befc613a3377052400487b88e7c491f2c244ffc67e4e8698": []Modver{
-		{"github.com/influxdata/influxdb", "v0.9.2"},
+	"a5cb7d181ca74acc3aa611df59dd58fd6f779d33f6a528ebb1074f9a15e4d30b": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.9.1-rc2"},
 	},
-	"c9aa9a0d7ad5239e9abc8b7b3417b440c6406210eeaa14c1693e257b53fae6d4": []Modver{
-		{"github.com/influxdata/influxdb", "v0.9.2-rc1"},
+	"d2402ac27990b797befc613a3377052400487b88e7c491f2c244ffc67e4e8698": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.9.2"},
 	},
-	"a1ed75b962b82db9849eb78894ffbfe10167dd2a1926bed52702c956863c6431": []Modver{
-		{"github.com/influxdata/influxdb", "v0.9.3"},
+	"c9aa9a0d7ad5239e9abc8b7b3417b440c6406210eeaa14c1693e257b53fae6d4": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.9.2-rc1"},
 	},
-	"a00fe0b768cbdd691c40e53566b18ac9d328342a505d4b91207349e84d4e2c81": []Modver{
-		{"github.com/influxdata/influxdb", "v0.9.3-rc1"},
+	"a1ed75b962b82db9849eb78894ffbfe10167dd2a1926bed52702c956863c6431": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.9.3"},
 	},
-	"fc80196db0060802e20ad686b4ef62a9bc5fb1325094dc8618999265995e25d9": []Modver{
-		{"github.com/influxdata/influxdb", "v0.9.3-rc2"},
+	"a00fe0b768cbdd691c40e53566b18ac9d328342a505d4b91207349e84d4e2c81": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.9.3-rc1"},
 	},
-	"01618e8499318bd5854e204987fb2fd62623bc1bb7cc770cfae835a49bd1fc90": []Modver{
-		{"github.com/influxdata/influxdb", "v0.9.3-rc3"},
+	"fc80196db0060802e20ad686b4ef62a9bc5fb1325094dc8618999265995e25d9": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.9.3-rc2"},
 	},
-	"a0a78d427374cfc9424f6b049ff905070bf19ee91c481bf7c39428fd1f1e557b": []Modver{
-		{"github.com/influxdata/influxdb", "v0.9.4"},
+	"01618e8499318bd5854e204987fb2fd62623bc1bb7cc770cfae835a49bd1fc90": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.9.3-rc3"},
 	},
-	"d4d091d6caba681350f1bcd1206415fb61c7e48c5fd446ca2d3171e195efb4aa": []Modver{
-		{"github.com/influxdata/influxdb", "v0.9.4-rc1"},
+	"a0a78d427374cfc9424f6b049ff905070bf19ee91c481bf7c39428fd1f1e557b": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.9.4"},
 	},
-	"26c3bd99342219379a9bf381c3791f3d0bcc155447206bdd01418808f24533e8": []Modver{
-		{"github.com/influxdata/influxdb", "v0.9.5"},
+	"d4d091d6caba681350f1bcd1206415fb61c7e48c5fd446ca2d3171e195efb4aa": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.9.4-rc1"},
 	},
-	"d58d6d1e2d08c96e1031b9fc44438e32472e2f9a1454b604b6bc4dc63e0749b6": []Modver{
-		{"github.com/influxdata/influxdb", "v0.9.5-rc1"},
+	"26c3bd99342219379a9bf381c3791f3d0bcc155447206bdd01418808f24533e8": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.9.5"},
 	},
-	"523dea4b643942f9f51395e0e5182deae09c2044bb424be6b6cdb068710ca76d": []Modver{
-		{"github.com/influxdata/influxdb", "v0.9.5-rc2"},
+	"d58d6d1e2d08c96e1031b9fc44438e32472e2f9a1454b604b6bc4dc63e0749b6": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.9.5-rc1"},
 	},
-	"c1cc438b9e384b544b77f49e8ca583a1f5228c6495e0e54d58bda29456412711": []Modver{
-		{"github.com/influxdata/influxdb", "v0.9.5-rc3"},
+	"523dea4b643942f9f51395e0e5182deae09c2044bb424be6b6cdb068710ca76d": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.9.5-rc2"},
 	},
-	"7f90a853f2bd5d4a9baa636e399db5d36bf6c7b7886fbda31f58c476265256d4": []Modver{
-		{"github.com/influxdata/influxdb", "v0.9.6-rc1"},
+	"c1cc438b9e384b544b77f49e8ca583a1f5228c6495e0e54d58bda29456412711": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.9.5-rc3"},
 	},
-	"6995f13baee0bf325e21eefa6076b553afb2c45950441e559bf8a1ccf710619f": []Modver{
-		{"github.com/influxdata/influxdb", "v0.9.6-rc2"}, {"github.com/influxdata/influxdb", "v0.9.6"},
+	"7f90a853f2bd5d4a9baa636e399db5d36bf6c7b7886fbda31f58c476265256d4": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.9.6-rc1"},
 	},
-	"ac34180e35e6c5d660ff56765c2f36cebd0ac6be9a05e09dd8497864018d2518": []Modver{
-		{"github.com/influxdata/influxdb", "v1.0.0"},
+	"6995f13baee0bf325e21eefa6076b553afb2c45950441e559bf8a1ccf710619f": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v0.9.6-rc2"}, {Path: "github.com/influxdata/influxdb", Version: "v0.9.6"},
 	},
-	"14574eff800a6ca5f0792fc4ce1f2ef5c4173475fef0dca76d17dbaea3872efb": []Modver{
-		{"github.com/influxdata/influxdb", "v1.0.0-beta1"},
+	"ac34180e35e6c5d660ff56765c2f36cebd0ac6be9a05e09dd8497864018d2518": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v1.0.0"},
 	},
-	"b231b0a2d55a662812523490b4a7822e0ff805e23278dda877e9ef6c9fa67f7a": []Modver{
-		{"github.com/influxdata/influxdb", "v1.0.0-beta2"},
+	"14574eff800a6ca5f0792fc4ce1f2ef5c4173475fef0dca76d17dbaea3872efb": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v1.0.0-beta1"},
 	},
-	"7cc16103dd57da486f751cbb0c5810322a23cc9dd2b5bef257d546d48d6c8a47": []Modver{
-		{"github.com/influxdata/influxdb", "v1.0.0-beta3"},
+	"b231b0a2d55a662812523490b4a7822e0ff805e23278dda877e9ef6c9fa67f7a": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v1.0.0-beta2"},
 	},
-	"698821e2ecc817e210e4775baaae3febb735fc516eeb921dea0a30677a595290": []Modver{
-		{"github.com/influxdata/influxdb", "v1.0.0-rc1"},
+	"7cc16103dd57da486f751cbb0c5810322a23cc9dd2b5bef257d546d48d6c8a47": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v1.0.0-beta3"},
 	},
-	"f97fae67b4406dec9d6c406f48db7f548e4f2c8e522c33105e56bf1dfa0639e9": []Modver{
-		{"github.com/influxdata/influxdb", "v1.0.0-rc2"},
+	"698821e2ecc817e210e4775baaae3febb735fc516eeb921dea0a30677a595290": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v1.0.0-rc1"},
 	},
-	"fa803a256392483e324ad1be602eae1dfb2584bdaec4230239939dbb21354419": []Modver{
-		{"github.com/influxdata/influxdb", "v1.0.1"},
+	"f97fae67b4406dec9d6c406f48db7f548e4f2c8e522c33105e56bf1dfa0639e9": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v1.0.0-rc2"},
 	},
-	"7281141a714ecaabae1fa76c4a6769d7042750557ee4a71dba102bee157758fe": []Modver{
-		{"github.com/influxdata/influxdb", "v1.0.2"},
+	"fa803a256392483e324ad1be602eae1dfb2584bdaec4230239939dbb21354419": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v1.0.1"},
 	},
-	"0a8ff4f7ffd01f12ae6be4919814e9539abe2189f908b0b085adfdf40897e5b7": []Modver{
-		{"github.com/influxdata/influxdb", "v1.1.0"},
+	"7281141a714ecaabae1fa76c4a6769d7042750557ee4a71dba102bee157758fe": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v1.0.2"},
 	},
-	"2845ec333ab4d5a40f1cff9b9185669d4dabe7ffbc6698980a1e38172d91051c": []Modver{
-		{"github.com/influxdata/influxdb", "v1.1.0-rc1"},
+	"0a8ff4f7ffd01f12ae6be4919814e9539abe2189f908b0b085adfdf40897e5b7": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v1.1.0"},
 	},
-	"7eec0c25f63c21933720ffdf38ea3ae021e286f862fbe363863aa8cf898a0d9a": []Modver{
-		{"github.com/influxdata/influxdb", "v1.1.0-rc2"},
+	"2845ec333ab4d5a40f1cff9b9185669d4dabe7ffbc6698980a1e38172d91051c": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v1.1.0-rc1"},
 	},
-	"599856a08105b0bd35aedd73f2f08c1583ba1bc215edd38e5a05fd753171a983": []Modver{
-		{"github.com/influxdata/influxdb", "v1.1.1"},
+	"7eec0c25f63c21933720ffdf38ea3ae021e286f862fbe363863aa8cf898a0d9a": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v1.1.0-rc2"},
 	},
-	"e31d89909c3ac4a8168edb489321f2987b861a645e2c03d922ada7f5b47d6965": []Modver{
-		{"github.com/influxdata/influxdb", "v1.1.2"},
+	"599856a08105b0bd35aedd73f2f08c1583ba1bc215edd38e5a05fd753171a983": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v1.1.1"},
 	},
-	"9ca50a73386e0a5fc9e52eca963bbc1eee99d8b2919b400d18194604ffb66cb7": []Modver{
-		{"github.com/influxdata/influxdb", "v1.1.3"},
+	"e31d89909c3ac4a8168edb489321f2987b861a645e2c03d922ada7f5b47d6965": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v1.1.2"},
 	},
-	"bd123a76fd10de74f9376c3e1ce97942cb0dd979a32315d4c23e6a87402bdcfa": []Modver{
-		{"github.com/influxdata/influxdb", "v1.1.4"},
+	"9ca50a73386e0a5fc9e52eca963bbc1eee99d8b2919b400d18194604ffb66cb7": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v1.1.3"},
 	},
-	"b086888bdc34f34d4eac65915e62348692c1c8f967ba51b364df955bef4719df": []Modver{
-		{"github.com/influxdata/influxdb", "v1.1.5"},
+	"bd123a76fd10de74f9376c3e1ce97942cb0dd979a32315d4c23e6a87402bdcfa": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v1.1.4"},
 	},
-	"833b1ab70b8c6004bcce3198a28d6dafc0a8a7589c9c2e1a4e99f97e728f315d": []Modver{
-		{"github.com/influxdata/influxdb", "v1.2.0"},
+	"b086888bdc34f34d4eac65915e62348692c1c8f967ba51b364df955bef4719df": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v1.1.5"},
 	},
-	"ad0d577f29401cf78cfc41b4f373b5bb8695725e4ef0be14931efd32f8286267": []Modver{
-		{"github.com/influxdata/influxdb", "v1.2.0-rc1"},
+	"833b1ab70b8c6004bcce3198a28d6dafc0a8a7589c9c2e1a4e99f97e728f315d": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v1.2.0"},
 	},
-	"16caf1452688b2fbdfd99426f428ed81462397609b8b7e8921f0e2f4b2ea0b79": []Modver{
-		{"github.com/influxdata/influxdb", "v1.2.0-rc2"},
+	"ad0d577f29401cf78cfc41b4f373b5bb8695725e4ef0be14931efd32f8286267": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v1.2.0-rc1"},
 	},
-	"d46426dc6b2c940de8d39e7f5cf4fcb7ee29ac26e500891b2035a43366595d1d": []Modver{
-		{"github.com/influxdata/influxdb", "v1.2.1"},
+	"16caf1452688b2fbdfd99426f428ed81462397609b8b7e8921f0e2f4b2ea0b79": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v1.2.0-rc2"},
 	},
-	"44286cb44cfa86b2102bd4dd7e5ab1e0cb3ad6d1d11a481d20df74eaac3e172f": []Modver{
-		{"github.com/influxdata/influxdb", "v1.2.1-rc1"},
+	"d46426dc6b2c940de8d39e7f5cf4fcb7ee29ac26e500891b2035a43366595d1d": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v1.2.1"},
 	},
-	"b0f66a5f03a76138e1a5795e247c18dc05b69cc5cc08c517b55e1ae7955d7bab": []Modver{
-		{"github.com/influxdata/influxdb", "v1.2.1-rc2"},
+	"44286cb44cfa86b2102bd4dd7e5ab1e0cb3ad6d1d11a481d20df74eaac3e172f": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v1.2.1-rc1"},
 	},
-	"29d3de0e3adf4b2c77df17b4eac38d9b61d495f3efb04dd8b795c20682ea8877": []Modver{
-		{"github.com/influxdata/influxdb", "v1.2.1-rc3"},
+	"b0f66a5f03a76138e1a5795e247c18dc05b69cc5cc08c517b55e1ae7955d7bab": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v1.2.1-rc2"},
 	},
-	"857e384199f84f0b9bb868c9857ebcf67cf8bf6fe7f3dca0a50853836034a851": []Modver{
-		{"github.com/influxdata/influxdb", "v1.2.1-rc4"},
+	"29d3de0e3adf4b2c77df17b4eac38d9b61d495f3efb04dd8b795c20682ea8877": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v1.2.1-rc3"},
 	},
-	"6d3b6e5dd33476d42df85db15a8e6733d2539d1f9339ad2eedb0cfc4f28d7b4b": []Modver{
-		{"github.com/influxdata/influxdb", "v1.2.1-rc5"},
+	"857e384199f84f0b9bb868c9857ebcf67cf8bf6fe7f3dca0a50853836034a851": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v1.2.1-rc4"},
 	},
-	"ee1105310c463b6172a10bc901827476fc1dc5c7e9a29cf3637545de2217068d": []Modver{
-		{"github.com/influxdata/influxdb", "v1.2.2"},
+	"6d3b6e5dd33476d42df85db15a8e6733d2539d1f9339ad2eedb0cfc4f28d7b4b": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v1.2.1-rc5"},
 	},
-	"add18b877815bcc5daeed6713c97e6ea76c2f308237ef736f31ea609d8ed0e04": []Modver{
-		{"github.com/influxdata/influxdb", "v1.2.3"},
+	"ee1105310c463b6172a10bc901827476fc1dc5c7e9a29cf3637545de2217068d": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v1.2.2"},
 	},
-	"c57e99099b5fefd8c35ab5fd161e4bb4c93308cf3e984890089fd36d6c967444": []Modver{
-		{"github.com/influxdata/influxdb", "v1.2.4"},
+	"add18b877815bcc5daeed6713c97e6ea76c2f308237ef736f31ea609d8ed0e04": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v1.2.3"},
 	},
-	"f7c5db7f35d31a84f4df1b5b00ef923b57ceac8986732da24b2f33437a17190a": []Modver{
-		{"github.com/influxdata/influxdb", "v1.3.0"},
+	"c57e99099b5fefd8c35ab5fd161e4bb4c93308cf3e984890089fd36d6c967444": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v1.2.4"},
 	},
-	"65d9e43e5b261db5b895094ea8004047448c4c63fb67daa13699159a8a736139": []Modver{
-		{"github.com/influxdata/influxdb", "v1.3.1"},
+	"f7c5db7f35d31a84f4df1b5b00ef923b57ceac8986732da24b2f33437a17190a": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v1.3.0"},
 	},
-	"f0a6cf8bd75a7faeceae6fa93e45fa51149433669b09db6faa0f67a3925583e7": []Modver{
-		{"github.com/influxdata/influxdb", "v1.3.2"},
+	"65d9e43e5b261db5b895094ea8004047448c4c63fb67daa13699159a8a736139": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v1.3.1"},
 	},
-	"004e653b5b5988ecb9e3ae3b73988e2e61d176ca219ac50097e935b385b192c7": []Modver{
-		{"github.com/influxdata/influxdb", "v1.3.3"},
+	"f0a6cf8bd75a7faeceae6fa93e45fa51149433669b09db6faa0f67a3925583e7": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v1.3.2"},
 	},
-	"31f1dd652c0e61e73f2455088e4e7056d31492aeb3807180c786b0452e21db23": []Modver{
-		{"github.com/influxdata/influxdb", "v1.3.4"},
+	"004e653b5b5988ecb9e3ae3b73988e2e61d176ca219ac50097e935b385b192c7": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v1.3.3"},
 	},
-	"1a8baa42d195668597a209ea1a6f06f693e54bb8d83414f1146285f8e0d69740": []Modver{
-		{"github.com/influxdata/influxdb", "v1.3.5"},
+	"31f1dd652c0e61e73f2455088e4e7056d31492aeb3807180c786b0452e21db23": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v1.3.4"},
 	},
-	"0650886739532719e2b4b049b524974dc5d80abcc3cd1a419289f144f273055b": []Modver{
-		{"github.com/influxdata/influxdb", "v1.3.6"},
+	"1a8baa42d195668597a209ea1a6f06f693e54bb8d83414f1146285f8e0d69740": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v1.3.5"},
 	},
-	"f1fbba21110769792c3756df4325163a71161a7f1c20c90c66dbec61e7a59996": []Modver{
-		{"github.com/influxdata/influxdb", "v1.3.7"},
+	"0650886739532719e2b4b049b524974dc5d80abcc3cd1a419289f144f273055b": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v1.3.6"},
 	},
-	"dd69c7f9b11fb43ba5a758ad95102cfb91b403836bce62812ffcaf2ecdf71863": []Modver{
-		{"github.com/influxdata/influxdb", "v1.3.8"},
+	"f1fbba21110769792c3756df4325163a71161a7f1c20c90c66dbec61e7a59996": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v1.3.7"},
 	},
-	"7ab3d0e0a23a5aafb7ba3a70d06b8ec8acd1721ad316583d5b9bdf818f92d00f": []Modver{
-		{"github.com/influxdata/influxdb", "v1.3.9"},
+	"dd69c7f9b11fb43ba5a758ad95102cfb91b403836bce62812ffcaf2ecdf71863": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v1.3.8"},
 	},
-	"47190fca367b7c147bcaac613ae05f70b3b4fc8900af944b9fe608efdc3cfa58": []Modver{
-		{"github.com/influxdata/influxdb", "v1.4.0"},
+	"7ab3d0e0a23a5aafb7ba3a70d06b8ec8acd1721ad316583d5b9bdf818f92d00f": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v1.3.9"},
 	},
-	"926334e61d5dc18c0fae520f602277bb31fde23cefef83f6c19bc31cb7b29161": []Modver{
-		{"github.com/influxdata/influxdb", "v1.4.1"},
+	"47190fca367b7c147bcaac613ae05f70b3b4fc8900af944b9fe608efdc3cfa58": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v1.4.0"},
 	},
-	"f06d7c0575f174520f8fb60cc4f7f9e2184f777f512dc66bd9c04c77fed77965": []Modver{
-		{"github.com/influxdata/influxdb", "v1.4.2"},
+	"926334e61d5dc18c0fae520f602277bb31fde23cefef83f6c19bc31cb7b29161": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v1.4.1"},
 	},
-	"718d6512470136c9dc7a8eff1ae7e1704863deb8d86f51f09c04024ea4def3bd": []Modver{
-		{"github.com/influxdata/influxdb", "v1.4.3"},
+	"f06d7c0575f174520f8fb60cc4f7f9e2184f777f512dc66bd9c04c77fed77965": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v1.4.2"},
 	},
-	"46b9b4ae700edef8d0547d20756a3ed80e8b1cf8c8418df8db77b54189b53e45": []Modver{
-		{"github.com/influxdata/influxdb", "v1.5.0"},
+	"718d6512470136c9dc7a8eff1ae7e1704863deb8d86f51f09c04024ea4def3bd": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v1.4.3"},
 	},
-	"f91dff7c605025ad84c03bed46af2a1fba2782aa6ae38148498a261e035722b9": []Modver{
-		{"github.com/influxdata/influxdb", "v1.5.1"},
+	"46b9b4ae700edef8d0547d20756a3ed80e8b1cf8c8418df8db77b54189b53e45": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v1.5.0"},
 	},
-	"6a37edcc1f85532fdb9febb6f75a9075ab10948dd072a7d566120d2c3e4c0381": []Modver{
-		{"github.com/influxdata/influxdb", "v1.5.2"},
+	"f91dff7c605025ad84c03bed46af2a1fba2782aa6ae38148498a261e035722b9": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v1.5.1"},
 	},
-	"a92d94922dac5efa1edebcb7856d6e200ab7a5777f842f633a8204e8f599f837": []Modver{
-		{"github.com/influxdata/influxdb", "v1.5.3"},
+	"6a37edcc1f85532fdb9febb6f75a9075ab10948dd072a7d566120d2c3e4c0381": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v1.5.2"},
 	},
-	"1d2acbbf74e3a053defcf8f6092df75ac8aa4a1039348026bccdcd297c4d03cf": []Modver{
-		{"github.com/influxdata/influxdb", "v1.5.4"},
+	"a92d94922dac5efa1edebcb7856d6e200ab7a5777f842f633a8204e8f599f837": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v1.5.3"},
 	},
-	"62daaad3a4d06e317aa76b3dfdc52d7e49ce712124f9db50a9f7f8b85d6d14d2": []Modver{
-		{"github.com/influxdata/influxdb", "v1.5.5"},
+	"1d2acbbf74e3a053defcf8f6092df75ac8aa4a1039348026bccdcd297c4d03cf": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v1.5.4"},
 	},
-	"524f7a217031800a32b1a95d4086f520ff81e87fda20e3343da3a3d6e7707c6a": []Modver{
-		{"github.com/influxdata/influxdb", "v1.6.0"},
+	"62daaad3a4d06e317aa76b3dfdc52d7e49ce712124f9db50a9f7f8b85d6d14d2": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v1.5.5"},
 	},
-	"61bf59b9c5b9aa206ee14411b8ece103e9cb85019a13e7e42727685daa0d8d5d": []Modver{
-		{"github.com/influxdata/influxdb", "v1.6.1"},
+	"524f7a217031800a32b1a95d4086f520ff81e87fda20e3343da3a3d6e7707c6a": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v1.6.0"},
 	},
-	"5f80c3636ce7d047fe752594df04397f75a88be1a84b4c531d517b12bb26eb09": []Modver{
-		{"github.com/influxdata/influxdb", "v1.6.1-exp-2-tr"},
+	"61bf59b9c5b9aa206ee14411b8ece103e9cb85019a13e7e42727685daa0d8d5d": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v1.6.1"},
 	},
-	"c47d30216d700df43065a7dbcd771bf3401b1ced0debcf2bee74ce2d53c5bdf8": []Modver{
-		{"github.com/influxdata/influxdb", "v1.6.1-exp-tr"},
+	"5f80c3636ce7d047fe752594df04397f75a88be1a84b4c531d517b12bb26eb09": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v1.6.1-exp-2-tr"},
 	},
-	"738a536977530a5b935ad9cded00295b09fb7013f29c269090eed0f48dad371b": []Modver{
-		{"github.com/influxdata/influxdb", "v1.6.2"},
+	"c47d30216d700df43065a7dbcd771bf3401b1ced0debcf2bee74ce2d53c5bdf8": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v1.6.1-exp-tr"},
 	},
-	"bca1d9a6568e342485b427ca07fe57292b769a83cae0eb602b1d2631b1fb2199": []Modver{
-		{"github.com/influxdata/influxdb", "v1.6.3"},
+	"738a536977530a5b935ad9cded00295b09fb7013f29c269090eed0f48dad371b": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v1.6.2"},
 	},
-	"1c16b300f33674d20d2d5c630ea7f501a0a2f01588708720011e1baacdf4e407": []Modver{
-		{"github.com/influxdata/influxdb", "v1.6.4"},
+	"bca1d9a6568e342485b427ca07fe57292b769a83cae0eb602b1d2631b1fb2199": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v1.6.3"},
 	},
-	"bc2a3256b675b0f061eae3613df09293d9fb0afdb78eb8090e5005937c95c3ff": []Modver{
-		{"github.com/influxdata/influxdb", "v1.6.5"},
+	"1c16b300f33674d20d2d5c630ea7f501a0a2f01588708720011e1baacdf4e407": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v1.6.4"},
 	},
-	"79d31dec85c15666e15ef4e73e644f4d9a5621e7faa28ac4cc750c81b7d8ba1f": []Modver{
-		{"github.com/influxdata/influxdb", "v1.6.6"},
+	"bc2a3256b675b0f061eae3613df09293d9fb0afdb78eb8090e5005937c95c3ff": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v1.6.5"},
 	},
-	"596cf94092efc4a647cf35bad265398097cbdde2869c4144f886d41263fe33bd": []Modver{
-		{"github.com/influxdata/influxdb", "v1.7.0"},
+	"79d31dec85c15666e15ef4e73e644f4d9a5621e7faa28ac4cc750c81b7d8ba1f": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v1.6.6"},
 	},
-	"947dbd17e3e45fa7170f7f04caf7ad4ba3ca158c61caefde3bc369adf07d13f8": []Modver{
-		{"github.com/influxdata/influxdb", "v1.7.1"},
+	"596cf94092efc4a647cf35bad265398097cbdde2869c4144f886d41263fe33bd": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v1.7.0"},
 	},
-	"0370a7e5fb2a3eae2bea2b3eabc64d9d3c62b078143f8d136dd0a8f8a9b72683": []Modver{
-		{"github.com/influxdata/influxdb", "v1.7.2"},
+	"947dbd17e3e45fa7170f7f04caf7ad4ba3ca158c61caefde3bc369adf07d13f8": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v1.7.1"},
 	},
-	"554e9cdd21a0dcda7aaf7302cfce1d4b429e5424cf08a89661c8eccd6f64bbee": []Modver{
-		{"github.com/influxdata/influxdb", "v1.7.3"},
+	"0370a7e5fb2a3eae2bea2b3eabc64d9d3c62b078143f8d136dd0a8f8a9b72683": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v1.7.2"},
 	},
-	"b810008d7f77b9851df013bdf7433271afee9fe5966745a881099c64568f3de1": []Modver{
-		{"github.com/influxdata/influxdb", "v1.7.4"},
+	"554e9cdd21a0dcda7aaf7302cfce1d4b429e5424cf08a89661c8eccd6f64bbee": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v1.7.3"},
 	},
-	"8019aab393aba9589ca6b3d63e2560bff802dc494a145e7f5c3f429ff532011b": []Modver{
-		{"github.com/influxdata/influxdb", "v1.7.5"},
+	"b810008d7f77b9851df013bdf7433271afee9fe5966745a881099c64568f3de1": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v1.7.4"},
 	},
-	"325b534151fd86a00ff17c502c2061b0c4246094a7a3828978e9d6752ea53aa8": []Modver{
-		{"github.com/influxdata/influxdb", "v1.7.6"},
+	"8019aab393aba9589ca6b3d63e2560bff802dc494a145e7f5c3f429ff532011b": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v1.7.5"},
 	},
-	"ab5ed8f4f99c7a9781338e7fb22e85951e8d8253f79a86b663ce0386fcc93eee": []Modver{
-		{"github.com/influxdata/influxdb", "v1.7.7"},
+	"325b534151fd86a00ff17c502c2061b0c4246094a7a3828978e9d6752ea53aa8": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v1.7.6"},
 	},
-	"ebb10a8838b15173fb15c09b47a88a0f618f8d95ef082439c9a11357150c9cfe": []Modver{
-		{"github.com/influxdata/influxdb", "v1.7.8"},
+	"ab5ed8f4f99c7a9781338e7fb22e85951e8d8253f79a86b663ce0386fcc93eee": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v1.7.7"},
 	},
-	"32e41ef7f06a99730ba87d22a8632cc18ed79ee79ea5f7bf48c0547f6052990d": []Modver{
-		{"github.com/influxdata/influxdb", "v1.7.9-dev1"},
+	"ebb10a8838b15173fb15c09b47a88a0f618f8d95ef082439c9a11357150c9cfe": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v1.7.8"},
 	},
-	"3ce659650444223e69accec5f74f43e6e123691d7fb5dabecf6a6d10ebeb699b": []Modver{
-		{"github.com/kubernetes/kubernetes", "v0.10.0"},
+	"32e41ef7f06a99730ba87d22a8632cc18ed79ee79ea5f7bf48c0547f6052990d": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v1.7.9-dev1"},
 	},
-	"0f76721651f3169fdca9e64726d3255a06f3982dacf76abbdebc1792334bf1d8": []Modver{
-		{"github.com/kubernetes/kubernetes", "v0.10.1"},
+	"3ce659650444223e69accec5f74f43e6e123691d7fb5dabecf6a6d10ebeb699b": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v0.10.0"},
 	},
-	"8f5ab0050753cd211fd2e742312e5f847856337fb131e603b141a91ad98a69a5": []Modver{
-		{"github.com/kubernetes/kubernetes", "v0.11.0"},
+	"0f76721651f3169fdca9e64726d3255a06f3982dacf76abbdebc1792334bf1d8": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v0.10.1"},
 	},
-	"a299efd50cd1b5b1cf86141b9a1b3b2baca4066b55de8a2d07b5a7abb8b57ce0": []Modver{
-		{"github.com/kubernetes/kubernetes", "v0.12.0"},
+	"8f5ab0050753cd211fd2e742312e5f847856337fb131e603b141a91ad98a69a5": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v0.11.0"},
 	},
-	"0ee994816fad6e85d5c797568bb06d4eabf098155d78cab9508687ef34d228df": []Modver{
-		{"github.com/kubernetes/kubernetes", "v0.12.1"},
+	"a299efd50cd1b5b1cf86141b9a1b3b2baca4066b55de8a2d07b5a7abb8b57ce0": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v0.12.0"},
 	},
-	"0bb1202477084d4b0e47e4b5458a9548a258a0c802d026149d6f67b1f5d3462c": []Modver{
-		{"github.com/kubernetes/kubernetes", "v0.12.2"},
+	"0ee994816fad6e85d5c797568bb06d4eabf098155d78cab9508687ef34d228df": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v0.12.1"},
 	},
-	"84e3c08f55d4f416cc8c630a63262e43ea9b37e512fb7d6ceede82cb70b650be": []Modver{
-		{"github.com/kubernetes/kubernetes", "v0.13.0"},
+	"0bb1202477084d4b0e47e4b5458a9548a258a0c802d026149d6f67b1f5d3462c": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v0.12.2"},
 	},
-	"63f2c7eb59194e7c304e005159ef67dba9a0bbf27b8044ea12a069b98adcbd3e": []Modver{
-		{"github.com/kubernetes/kubernetes", "v0.13.1"},
+	"84e3c08f55d4f416cc8c630a63262e43ea9b37e512fb7d6ceede82cb70b650be": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v0.13.0"},
 	},
-	"750755cf86aa0829606e568f3151b843227a54b71afa86c22fc3ac597458de1a": []Modver{
-		{"github.com/kubernetes/kubernetes", "v0.13.1-dev"},
+	"63f2c7eb59194e7c304e005159ef67dba9a0bbf27b8044ea12a069b98adcbd3e": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v0.13.1"},
 	},
-	"2b3681189b23ee0f4e17ca009b9b75dd41c69e2041f2be09ed60f919fa48d111": []Modver{
-		{"github.com/kubernetes/kubernetes", "v0.13.2"},
+	"750755cf86aa0829606e568f3151b843227a54b71afa86c22fc3ac597458de1a": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v0.13.1-dev"},
 	},
-	"a4a4e19f2336c53569775560849963a8ff73bcffd25cb398b34778fee2f94230": []Modver{
-		{"github.com/kubernetes/kubernetes", "v0.14.0"},
+	"2b3681189b23ee0f4e17ca009b9b75dd41c69e2041f2be09ed60f919fa48d111": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v0.13.2"},
 	},
-	"825bce22e459bb91f5d4a22fa90f0b928c90fc3409f08ed8f96593c1b97f052a": []Modver{
-		{"github.com/kubernetes/kubernetes", "v0.14.1"},
+	"a4a4e19f2336c53569775560849963a8ff73bcffd25cb398b34778fee2f94230": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v0.14.0"},
 	},
-	"f9070a54bda3d9253853961a41dc13d1a66449e1af96b7bb8b4125d73439f247": []Modver{
-		{"github.com/kubernetes/kubernetes", "v0.14.2"},
+	"825bce22e459bb91f5d4a22fa90f0b928c90fc3409f08ed8f96593c1b97f052a": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v0.14.1"},
 	},
-	"d427d3a519b29ec17f077cc0bc910cfe6bcac456c68d55b409d5c33c7f0fe86a": []Modver{
-		{"github.com/kubernetes/kubernetes", "v0.15.0"},
+	"f9070a54bda3d9253853961a41dc13d1a66449e1af96b7bb8b4125d73439f247": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v0.14.2"},
 	},
-	"425fa3ec949de04245a0aa8bfb30cb17e590062deef05fdae3f0075080b77699": []Modver{
-		{"github.com/kubernetes/kubernetes", "v0.16.0"},
+	"d427d3a519b29ec17f077cc0bc910cfe6bcac456c68d55b409d5c33c7f0fe86a": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v0.15.0"},
 	},
-	"e0839c6d0e60258d330a17ba4e16e71756fac71e11d148d233e3b37dd2530478": []Modver{
-		{"github.com/kubernetes/kubernetes", "v0.16.1"},
+	"425fa3ec949de04245a0aa8bfb30cb17e590062deef05fdae3f0075080b77699": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v0.16.0"},
 	},
-	"c46464b07481a9048014e5ae1150834ce1d94a61772453f4e9a3b85eaf11135c": []Modver{
-		{"github.com/kubernetes/kubernetes", "v0.16.2"},
+	"e0839c6d0e60258d330a17ba4e16e71756fac71e11d148d233e3b37dd2530478": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v0.16.1"},
 	},
-	"9ebb6c898def25599644246383e082ece76112744dc9e2bea10b7f8384d00905": []Modver{
-		{"github.com/kubernetes/kubernetes", "v0.17.0"},
+	"c46464b07481a9048014e5ae1150834ce1d94a61772453f4e9a3b85eaf11135c": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v0.16.2"},
 	},
-	"2e1d9df3995c0a88808bc145f96e673de9d5cb21f7b8cf489c94a262556b1d23": []Modver{
-		{"github.com/kubernetes/kubernetes", "v0.17.1"},
+	"9ebb6c898def25599644246383e082ece76112744dc9e2bea10b7f8384d00905": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v0.17.0"},
 	},
-	"06199b3c6cb3334a732cd48b7a3e0b4344cdda010b652ff3aa78f05a98d88b59": []Modver{
-		{"github.com/kubernetes/kubernetes", "v0.18.0"},
+	"2e1d9df3995c0a88808bc145f96e673de9d5cb21f7b8cf489c94a262556b1d23": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v0.17.1"},
 	},
-	"e0ddba7f89aebc52eadc7d807c8eb90088fb476533a0888ba318f3594715f9f4": []Modver{
-		{"github.com/kubernetes/kubernetes", "v0.18.1"},
+	"06199b3c6cb3334a732cd48b7a3e0b4344cdda010b652ff3aa78f05a98d88b59": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v0.18.0"},
 	},
-	"6c5a59b594163807674d3f018f1f4c7f5fc7e65ab9b6c6b34abe1d0a242d84a8": []Modver{
-		{"github.com/kubernetes/kubernetes", "v0.18.2"},
+	"e0ddba7f89aebc52eadc7d807c8eb90088fb476533a0888ba318f3594715f9f4": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v0.18.1"},
 	},
-	"3a03cbf8cafeb9ebe5bb75b50cc02e121b07c365f8401287a55981052cb085ab": []Modver{
-		{"github.com/kubernetes/kubernetes", "v0.19.0"},
+	"6c5a59b594163807674d3f018f1f4c7f5fc7e65ab9b6c6b34abe1d0a242d84a8": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v0.18.2"},
 	},
-	"ef6d218060c3736a846638e5def788d1b9b419fc7418f808b9b38da71185854e": []Modver{
-		{"github.com/kubernetes/kubernetes", "v0.19.1"},
+	"3a03cbf8cafeb9ebe5bb75b50cc02e121b07c365f8401287a55981052cb085ab": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v0.19.0"},
 	},
-	"ee11c283168d73cdfbbf3fa868bf0ebb10858a4882c0b41bad0d9abb61f2bf82": []Modver{
-		{"github.com/kubernetes/kubernetes", "v0.19.2"},
+	"ef6d218060c3736a846638e5def788d1b9b419fc7418f808b9b38da71185854e": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v0.19.1"},
 	},
-	"1be1e9deeee8b283e1f24997229e53d888f67ece9a1bed6cd81e2c6b5c7757e7": []Modver{
-		{"github.com/kubernetes/kubernetes", "v0.19.3"},
+	"ee11c283168d73cdfbbf3fa868bf0ebb10858a4882c0b41bad0d9abb61f2bf82": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v0.19.2"},
 	},
-	"71bb1d7cad64ed3621e019148f1d412b0cc9c281b91b4ff82e40b69937f7d5fc": []Modver{
-		{"github.com/kubernetes/kubernetes", "v0.20.0"},
+	"1be1e9deeee8b283e1f24997229e53d888f67ece9a1bed6cd81e2c6b5c7757e7": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v0.19.3"},
 	},
-	"f7d71df6af891dac39a2bb0cb5bf4ea021affc1b423fcf93edffe605b5f400c8": []Modver{
-		{"github.com/kubernetes/kubernetes", "v0.20.1"},
+	"71bb1d7cad64ed3621e019148f1d412b0cc9c281b91b4ff82e40b69937f7d5fc": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v0.20.0"},
 	},
-	"ed8e604e3f28c379ab1c705d3ce43570bfd83714aefbde58acd45c66e4caefe2": []Modver{
-		{"github.com/kubernetes/kubernetes", "v0.20.2"},
+	"f7d71df6af891dac39a2bb0cb5bf4ea021affc1b423fcf93edffe605b5f400c8": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v0.20.1"},
 	},
-	"2f3b2cc27a94c104732e5a04ac45365db19242735e5ced12bb7dd089f9976903": []Modver{
-		{"github.com/kubernetes/kubernetes", "v0.21.0"},
+	"ed8e604e3f28c379ab1c705d3ce43570bfd83714aefbde58acd45c66e4caefe2": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v0.20.2"},
 	},
-	"36b0cdbdcd9a0b68c9598c3a5d139896741d90930431f6915d290d4bf448ce71": []Modver{
-		{"github.com/kubernetes/kubernetes", "v0.21.1"},
+	"2f3b2cc27a94c104732e5a04ac45365db19242735e5ced12bb7dd089f9976903": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v0.21.0"},
 	},
-	"29c6d90505e6aaac581464a01736316d7faef6e2dd1c520af6b68d78e1d9bfb3": []Modver{
-		{"github.com/kubernetes/kubernetes", "v0.21.2"},
+	"36b0cdbdcd9a0b68c9598c3a5d139896741d90930431f6915d290d4bf448ce71": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v0.21.1"},
 	},
-	"540637ab3b2a78d30db58bcd90b9d37d0d055fc47f5f7d945702ee8fdd93e8b2": []Modver{
-		{"github.com/kubernetes/kubernetes", "v0.21.3"},
+	"29c6d90505e6aaac581464a01736316d7faef6e2dd1c520af6b68d78e1d9bfb3": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v0.21.2"},
 	},
-	"7ad1098df3fd976eca698170790196a0d1949be106c0d49917978c31c1f5c857": []Modver{
-		{"github.com/kubernetes/kubernetes", "v0.21.4"},
+	"540637ab3b2a78d30db58bcd90b9d37d0d055fc47f5f7d945702ee8fdd93e8b2": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v0.21.3"},
 	},
-	"e63250d83a5ff5311f5419fcafe029cbb5ceac0ece61c78489bf2b4845e55a33": []Modver{
-		{"github.com/kubernetes/kubernetes", "v0.4.1"},
+	"7ad1098df3fd976eca698170790196a0d1949be106c0d49917978c31c1f5c857": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v0.21.4"},
 	},
-	"28995363e1a003a2fb84da1942aee35664d3eb6960d6f79503d15754aeeb6616": []Modver{
-		{"github.com/kubernetes/kubernetes", "v0.4.2"},
+	"e63250d83a5ff5311f5419fcafe029cbb5ceac0ece61c78489bf2b4845e55a33": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v0.4.1"},
 	},
-	"85b30d3f4fa6922fb5d5e7ff0e13d1060525e17271365236616f7a577df05fae": []Modver{
-		{"github.com/kubernetes/kubernetes", "v0.4.3"},
+	"28995363e1a003a2fb84da1942aee35664d3eb6960d6f79503d15754aeeb6616": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v0.4.2"},
 	},
-	"ce20cf653c54cd890b711d88d534d6af93afb9c5c0876bcb3b71a7ffd3e6ad12": []Modver{
-		{"github.com/kubernetes/kubernetes", "v0.4.4"},
+	"85b30d3f4fa6922fb5d5e7ff0e13d1060525e17271365236616f7a577df05fae": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v0.4.3"},
 	},
-	"766444f636d2926c9b115ab6c4a1bfa941da3b2a11acd14acc14cc448046e1b0": []Modver{
-		{"github.com/kubernetes/kubernetes", "v0.5.1"},
+	"ce20cf653c54cd890b711d88d534d6af93afb9c5c0876bcb3b71a7ffd3e6ad12": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v0.4.4"},
 	},
-	"5a6c51d311462de6a63f19a32303e7dbec2b4993c3f854379829d9d484ee6dae": []Modver{
-		{"github.com/kubernetes/kubernetes", "v0.5.2"},
+	"766444f636d2926c9b115ab6c4a1bfa941da3b2a11acd14acc14cc448046e1b0": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v0.5.1"},
 	},
-	"9ba9c850009ad64d87c9141fb8508f9085afdeaa2fa1b1b97ed1ff27f86d3b87": []Modver{
-		{"github.com/kubernetes/kubernetes", "v0.5.3"},
+	"5a6c51d311462de6a63f19a32303e7dbec2b4993c3f854379829d9d484ee6dae": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v0.5.2"},
 	},
-	"767c30c34c8e14056fe3ce5dc5ef23ac5d69b3bbad64c38b9697d66ed00203ee": []Modver{
-		{"github.com/kubernetes/kubernetes", "v0.5.4"},
+	"9ba9c850009ad64d87c9141fb8508f9085afdeaa2fa1b1b97ed1ff27f86d3b87": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v0.5.3"},
 	},
-	"3dac01f062c1e401cd91bd69106a281cdf9a81af6868e7862936d500412fd1f5": []Modver{
-		{"github.com/kubernetes/kubernetes", "v0.5.5"},
+	"767c30c34c8e14056fe3ce5dc5ef23ac5d69b3bbad64c38b9697d66ed00203ee": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v0.5.4"},
 	},
-	"b369eda84887c8013edaf4cfcf78fde2f9ea2bffb68de1e6de3b52ab1af1ce12": []Modver{
-		{"github.com/kubernetes/kubernetes", "v0.5.6"},
+	"3dac01f062c1e401cd91bd69106a281cdf9a81af6868e7862936d500412fd1f5": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v0.5.5"},
 	},
-	"6c8cae42f83c86048dd98c360411c4b258687b134d4d298ff3b850499f4cd213": []Modver{
-		{"github.com/kubernetes/kubernetes", "v0.6.0"},
+	"b369eda84887c8013edaf4cfcf78fde2f9ea2bffb68de1e6de3b52ab1af1ce12": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v0.5.6"},
 	},
-	"aacde6ecf300a7fe0540407fec22eac7c9e90d6d0335a4538c3cc5134cdccecf": []Modver{
-		{"github.com/kubernetes/kubernetes", "v0.6.1"},
+	"6c8cae42f83c86048dd98c360411c4b258687b134d4d298ff3b850499f4cd213": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v0.6.0"},
 	},
-	"3de9dc5aad416ee01040f1e68798599fedd7a7ec9e433250f6fe3b58979c6a95": []Modver{
-		{"github.com/kubernetes/kubernetes", "v0.6.2"},
+	"aacde6ecf300a7fe0540407fec22eac7c9e90d6d0335a4538c3cc5134cdccecf": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v0.6.1"},
 	},
-	"36fbf54061877a81aa5a58d6e8d626fd820396b6f685a3f205dc466166541ed6": []Modver{
-		{"github.com/kubernetes/kubernetes", "v0.7.0"},
+	"3de9dc5aad416ee01040f1e68798599fedd7a7ec9e433250f6fe3b58979c6a95": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v0.6.2"},
 	},
-	"989109f01d20a7de1729dba26d84bb9a628ea43c758d5e5f21b03c78bb00d488": []Modver{
-		{"github.com/kubernetes/kubernetes", "v0.7.1"},
+	"36fbf54061877a81aa5a58d6e8d626fd820396b6f685a3f205dc466166541ed6": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v0.7.0"},
 	},
-	"6b2d1571bc2e4e2e45591364e963f1d0697a08cda83c7017170d91df77ff3fed": []Modver{
-		{"github.com/kubernetes/kubernetes", "v0.7.2"},
+	"989109f01d20a7de1729dba26d84bb9a628ea43c758d5e5f21b03c78bb00d488": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v0.7.1"},
 	},
-	"56cfd145d55ee4d41a092e877f7b69945c7245cd649ae02b7899bd43bd2a5560": []Modver{
-		{"github.com/kubernetes/kubernetes", "v0.7.3"},
+	"6b2d1571bc2e4e2e45591364e963f1d0697a08cda83c7017170d91df77ff3fed": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v0.7.2"},
 	},
-	"6b863e072aece06169a5aec79d0d620187b57f5b8b98bb3962aefd133dc32d95": []Modver{
-		{"github.com/kubernetes/kubernetes", "v0.7.4"},
+	"56cfd145d55ee4d41a092e877f7b69945c7245cd649ae02b7899bd43bd2a5560": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v0.7.3"},
 	},
-	"d5fd088a3c158c5670f23a124bb223a69e26ed0e94e4729a070b9d59d12149df": []Modver{
-		{"github.com/kubernetes/kubernetes", "v0.8.0"},
+	"6b863e072aece06169a5aec79d0d620187b57f5b8b98bb3962aefd133dc32d95": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v0.7.4"},
 	},
-	"1415cfd164f247f451a53ac56ebebb94ac2cb1468ec62d223cceb4b3c797d2c7": []Modver{
-		{"github.com/kubernetes/kubernetes", "v0.8.1"},
+	"d5fd088a3c158c5670f23a124bb223a69e26ed0e94e4729a070b9d59d12149df": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v0.8.0"},
 	},
-	"0a49d76e7639da4c9e81fff634855ed5de379fb79119f2edb50452d7dd338504": []Modver{
-		{"github.com/kubernetes/kubernetes", "v0.8.2"},
+	"1415cfd164f247f451a53ac56ebebb94ac2cb1468ec62d223cceb4b3c797d2c7": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v0.8.1"},
 	},
-	"0044d787f9bfef6a3e528d6b1974cbba021f90540312cfc3b03dfa6740acf6e6": []Modver{
-		{"github.com/kubernetes/kubernetes", "v0.8.4"},
+	"0a49d76e7639da4c9e81fff634855ed5de379fb79119f2edb50452d7dd338504": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v0.8.2"},
 	},
-	"304d83266e7953e16955aec7a86600e6d8df199c0fb2771788f013b764098a30": []Modver{
-		{"github.com/kubernetes/kubernetes", "v0.9.0"},
+	"0044d787f9bfef6a3e528d6b1974cbba021f90540312cfc3b03dfa6740acf6e6": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v0.8.4"},
 	},
-	"768c4a9e2c54c48ad86f104a457f7026ebb1eded057145a6c51d2f26f5d3597b": []Modver{
-		{"github.com/kubernetes/kubernetes", "v0.9.1"},
+	"304d83266e7953e16955aec7a86600e6d8df199c0fb2771788f013b764098a30": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v0.9.0"},
 	},
-	"43a4a6ee32795b2a6c7c4b73c16762329059c062ade68da77c3d4f2af4aadfde": []Modver{
-		{"github.com/kubernetes/kubernetes", "v0.9.2"},
+	"768c4a9e2c54c48ad86f104a457f7026ebb1eded057145a6c51d2f26f5d3597b": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v0.9.1"},
 	},
-	"fff52acad8564317aec3db095329dcfcd0a1c008dc6da8b4d0931a2607127fca": []Modver{
-		{"github.com/kubernetes/kubernetes", "v0.9.3"},
+	"43a4a6ee32795b2a6c7c4b73c16762329059c062ade68da77c3d4f2af4aadfde": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v0.9.2"},
 	},
-	"c7f400885b3a034c3951b0337468843496df81b0921b19cd031f3a9ea3ffa713": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.0.0"},
+	"fff52acad8564317aec3db095329dcfcd0a1c008dc6da8b4d0931a2607127fca": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v0.9.3"},
 	},
-	"35135c90f6daf68e07dc0b7112713f957300f77cc0a8e4d6545b033a6a473793": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.0.1"},
+	"c7f400885b3a034c3951b0337468843496df81b0921b19cd031f3a9ea3ffa713": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.0.0"},
 	},
-	"533192082dc6ca63e1c9b85bf495ccbcefef08aa1af34abe566dd7dd322968b3": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.0.2"},
+	"35135c90f6daf68e07dc0b7112713f957300f77cc0a8e4d6545b033a6a473793": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.0.1"},
 	},
-	"1b442e97fc323d025db2a2dfc3313009172cc12b777f50b2d50d8314e4fcd107": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.0.3"},
+	"533192082dc6ca63e1c9b85bf495ccbcefef08aa1af34abe566dd7dd322968b3": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.0.2"},
 	},
-	"1175a938709b42504d0c5d2112d0d44a150234dde754d9a98a1a842ff0026487": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.0.4"},
+	"1b442e97fc323d025db2a2dfc3313009172cc12b777f50b2d50d8314e4fcd107": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.0.3"},
 	},
-	"7e1d4720577867b63e9f722a0ac10b15b7616764475bd59f1d0c003bb4bb53c2": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.0.5"},
+	"1175a938709b42504d0c5d2112d0d44a150234dde754d9a98a1a842ff0026487": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.0.4"},
 	},
-	"12a80f93ebf09f4707cff61f6389b2d9e1fd88f4d5a1fb87d84210237d704b05": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.0.6"},
+	"7e1d4720577867b63e9f722a0ac10b15b7616764475bd59f1d0c003bb4bb53c2": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.0.5"},
 	},
-	"66f0203f19ae5777b36b31843419b7653c5a7ed3e439a9a59fd94a3eeff1561d": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.0.8-beta"}, {"github.com/kubernetes/kubernetes", "v1.0.7"},
+	"12a80f93ebf09f4707cff61f6389b2d9e1fd88f4d5a1fb87d84210237d704b05": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.0.6"},
 	},
-	"f9f93974eaafd330811a21e5629baf5490ab588b313aea6d45a0c284596d950b": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.1.0-alpha.0"},
+	"66f0203f19ae5777b36b31843419b7653c5a7ed3e439a9a59fd94a3eeff1561d": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.0.8-beta"}, {Path: "github.com/kubernetes/kubernetes", Version: "v1.0.7"},
 	},
-	"cbff22296b0764b164e0e7ad97e92eb1c84250818ca6d99eff8a3e0369a3e92f": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.1.0-alpha.1"},
+	"f9f93974eaafd330811a21e5629baf5490ab588b313aea6d45a0c284596d950b": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.1.0-alpha.0"},
 	},
-	"83b05453e9370025149222568f5f176dbebac6bc8aa8dc732efd042f404d3ab2": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.1.0-beta"}, {"github.com/kubernetes/kubernetes", "v1.1.1-beta"}, {"github.com/kubernetes/kubernetes", "v1.1.1-beta.0"}, {"github.com/kubernetes/kubernetes", "v1.1.0"},
+	"cbff22296b0764b164e0e7ad97e92eb1c84250818ca6d99eff8a3e0369a3e92f": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.1.0-alpha.1"},
 	},
-	"cf0b5e0d7e05923f6d6841bcb4298fb6e60a33a1eb8caa4beb817a0ee101b99c": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.1.1"},
+	"83b05453e9370025149222568f5f176dbebac6bc8aa8dc732efd042f404d3ab2": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.1.0-beta"}, {Path: "github.com/kubernetes/kubernetes", Version: "v1.1.1-beta"}, {Path: "github.com/kubernetes/kubernetes", Version: "v1.1.1-beta.0"}, {Path: "github.com/kubernetes/kubernetes", Version: "v1.1.0"},
 	},
-	"d154bf405af01d457db2c6738b7d528338dcd5df43af607acac1fb0b8db3c9be": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.1.1-beta.1"},
+	"cf0b5e0d7e05923f6d6841bcb4298fb6e60a33a1eb8caa4beb817a0ee101b99c": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.1.1"},
 	},
-	"4349ecdd529afc75cc29bb7de46bab62c1729b765c0682ba0074b1269be62074": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.1.2"},
+	"d154bf405af01d457db2c6738b7d528338dcd5df43af607acac1fb0b8db3c9be": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.1.1-beta.1"},
 	},
-	"4c9b9225c19b8846dcf106dd6fff802d78b486b69af2726611c0af84b0b52eb2": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.1.2-beta.0"},
+	"4349ecdd529afc75cc29bb7de46bab62c1729b765c0682ba0074b1269be62074": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.1.2"},
 	},
-	"412e0e2d4b1b9c3a47be1f38b35c50dd9bbb33eef00081f9268adf4e5d75374e": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.1.3"},
+	"4c9b9225c19b8846dcf106dd6fff802d78b486b69af2726611c0af84b0b52eb2": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.1.2-beta.0"},
 	},
-	"ba723d09b5e123642bc7e2e69cadf63f5204b55d2f0e287f6914e8085571fe1e": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.1.3-beta.0"},
+	"412e0e2d4b1b9c3a47be1f38b35c50dd9bbb33eef00081f9268adf4e5d75374e": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.1.3"},
 	},
-	"529780fe9143c7f254ff66559c627b74900f3de864399773322cb0168165e19a": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.1.4"},
+	"ba723d09b5e123642bc7e2e69cadf63f5204b55d2f0e287f6914e8085571fe1e": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.1.3-beta.0"},
 	},
-	"a4d6be0f3c131f9843a7f4eeb5f34f7a122db2b54a9ff9c3547d2bb7303e6259": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.1.4-beta.0"},
+	"529780fe9143c7f254ff66559c627b74900f3de864399773322cb0168165e19a": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.1.4"},
 	},
-	"a4a4a18aff75368691d5f15d8226a9b30323d62da5715e68dedf4bbcffe7f7dc": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.1.5"},
+	"a4d6be0f3c131f9843a7f4eeb5f34f7a122db2b54a9ff9c3547d2bb7303e6259": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.1.4-beta.0"},
 	},
-	"b3c862599a10d37c865e1012b19c7b699d1475a112ded26ac9d8fc44924e9817": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.1.5-beta.0"},
+	"a4a4a18aff75368691d5f15d8226a9b30323d62da5715e68dedf4bbcffe7f7dc": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.1.5"},
 	},
-	"c39fc5cb595c2ef3a4060b3b82b2f5ab1279ed7ba4127ae95e804b6970899e0c": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.1.6"},
+	"b3c862599a10d37c865e1012b19c7b699d1475a112ded26ac9d8fc44924e9817": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.1.5-beta.0"},
 	},
-	"4c3172b76c6c45ef3e7f1f6bf26b8f064f63bc46a6762f511477e886d109bf00": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.1.6-beta.0"},
+	"c39fc5cb595c2ef3a4060b3b82b2f5ab1279ed7ba4127ae95e804b6970899e0c": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.1.6"},
 	},
-	"daa26b0518dda0a2465eea59cf5b008a8ea24baab0218feda23142b81fcc7ba7": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.1.7"},
+	"4c3172b76c6c45ef3e7f1f6bf26b8f064f63bc46a6762f511477e886d109bf00": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.1.6-beta.0"},
 	},
-	"30a4d778ce912adb1b042ed4794caf61a5daaf614428f0926627a18b1cd6270e": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.1.7-beta.0"},
+	"daa26b0518dda0a2465eea59cf5b008a8ea24baab0218feda23142b81fcc7ba7": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.1.7"},
 	},
-	"5b4e66b40f0e4cb873d4c3238eec7867aea467b5052121ce6085413753f356e8": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.1.8"},
+	"30a4d778ce912adb1b042ed4794caf61a5daaf614428f0926627a18b1cd6270e": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.1.7-beta.0"},
 	},
-	"9c76c85d2c1a862517469841f8dba5d6004687f57ac1b9d5122378218e97a7b5": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.1.8-beta.0"},
+	"5b4e66b40f0e4cb873d4c3238eec7867aea467b5052121ce6085413753f356e8": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.1.8"},
 	},
-	"e9c1969ebd9ee3fefc294f7718256a3bc81864829fb8eac79b9b91c4f62cf69b": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.1.9-beta.0"},
+	"9c76c85d2c1a862517469841f8dba5d6004687f57ac1b9d5122378218e97a7b5": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.1.8-beta.0"},
 	},
-	"2d658ee56d813a7246672e4a43ef644185af083b6cc7e0af5315b687e309697c": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.10.0"},
+	"e9c1969ebd9ee3fefc294f7718256a3bc81864829fb8eac79b9b91c4f62cf69b": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.1.9-beta.0"},
 	},
-	"8ad08da19df3dbf8477399a50567d16eee70bbab4d869ffa2a8d2a083f1f6452": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.10.0-alpha.0"},
+	"2d658ee56d813a7246672e4a43ef644185af083b6cc7e0af5315b687e309697c": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.10.0"},
 	},
-	"98fbe7716f6f555378193d040587c8e22433f8ade544a93e6f8726dc0fd1c2e8": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.10.0-alpha.1"},
+	"8ad08da19df3dbf8477399a50567d16eee70bbab4d869ffa2a8d2a083f1f6452": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.10.0-alpha.0"},
 	},
-	"db9fe388b0c132958bdb7b48d7216ccfc81fc53bb02f9f320c8ca09881a2dc81": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.10.0-alpha.2"},
+	"98fbe7716f6f555378193d040587c8e22433f8ade544a93e6f8726dc0fd1c2e8": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.10.0-alpha.1"},
 	},
-	"a6742c570e8f39dd8660f40f291b6314a4c598ae0d2ae1e195d954c618390c15": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.10.0-alpha.3"},
+	"db9fe388b0c132958bdb7b48d7216ccfc81fc53bb02f9f320c8ca09881a2dc81": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.10.0-alpha.2"},
 	},
-	"65afd854642e971c1598f081fef81f60af44286ebc6ac2d468390f0e502e8b0c": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.10.0-beta.0"},
+	"a6742c570e8f39dd8660f40f291b6314a4c598ae0d2ae1e195d954c618390c15": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.10.0-alpha.3"},
 	},
-	"bef36c228b089a788c32c6fec1a6a034bc44229ebfb33f3e9b61c08db26a4b51": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.10.0-beta.1"},
+	"65afd854642e971c1598f081fef81f60af44286ebc6ac2d468390f0e502e8b0c": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.10.0-beta.0"},
 	},
-	"6367cfa2cc5faaa643cdd568d649ce9228e89a4c5dfa5b3487daeb8869e796a6": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.10.0-beta.2"},
+	"bef36c228b089a788c32c6fec1a6a034bc44229ebfb33f3e9b61c08db26a4b51": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.10.0-beta.1"},
 	},
-	"6d8ff70a9623c3c1cc39b6584591960251e36dcb6ab8fbf8253c22691ed29ff7": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.10.0-beta.3"},
+	"6367cfa2cc5faaa643cdd568d649ce9228e89a4c5dfa5b3487daeb8869e796a6": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.10.0-beta.2"},
 	},
-	"0894b846a907cdef1f0035795ec819737beb68db8e62a931511b0b5af017d46b": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.10.0-beta.4"},
+	"6d8ff70a9623c3c1cc39b6584591960251e36dcb6ab8fbf8253c22691ed29ff7": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.10.0-beta.3"},
 	},
-	"5a11d1903a2932e8958e66caf3dc4ead0462d1bb78cc48da8844efd419c7828e": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.10.0-rc.1"},
+	"0894b846a907cdef1f0035795ec819737beb68db8e62a931511b0b5af017d46b": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.10.0-beta.4"},
 	},
-	"6b95569bd2e45042d845836f256c292ccfd6b0169ba693f08f25127f7eeb9604": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.10.1"},
+	"5a11d1903a2932e8958e66caf3dc4ead0462d1bb78cc48da8844efd419c7828e": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.10.0-rc.1"},
 	},
-	"305580b75e95ecfd22e5f4b71bd76b04fa7ddf29818036294089f2ad81b9c374": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.10.1-beta.0"},
+	"6b95569bd2e45042d845836f256c292ccfd6b0169ba693f08f25127f7eeb9604": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.10.1"},
 	},
-	"ee96c2c71211a69c1b1307d212f860ea889bd32775dd1ac6294714a3d9d04c32": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.10.10"},
+	"305580b75e95ecfd22e5f4b71bd76b04fa7ddf29818036294089f2ad81b9c374": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.10.1-beta.0"},
 	},
-	"8fb0bd84e75e147de4fb44b05d4f958f48ceea3fe192fb8457f86f69ae858bc1": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.10.10-beta.0"},
+	"ee96c2c71211a69c1b1307d212f860ea889bd32775dd1ac6294714a3d9d04c32": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.10.10"},
 	},
-	"9517b96e76b1e00a42b18877c5fd792686da79e72480ebec3ddd8c9e8c2a563a": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.10.11"},
+	"8fb0bd84e75e147de4fb44b05d4f958f48ceea3fe192fb8457f86f69ae858bc1": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.10.10-beta.0"},
 	},
-	"ecad12fd35be3b20ef20d7b7e0ec339571ba5fb2f9bfa892e72b2ba11c9fdaf4": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.10.11-beta.0"},
+	"9517b96e76b1e00a42b18877c5fd792686da79e72480ebec3ddd8c9e8c2a563a": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.10.11"},
 	},
-	"305af8667c32b3f1c5241ed3243f6a4b1876299687eed3766df07f5fb0631cc9": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.10.12"},
+	"ecad12fd35be3b20ef20d7b7e0ec339571ba5fb2f9bfa892e72b2ba11c9fdaf4": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.10.11-beta.0"},
 	},
-	"27445a7a8e59c78766c9ee52588da38cf8046452bd68968e153c563c77dd6f3d": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.10.12-beta.0"},
+	"305af8667c32b3f1c5241ed3243f6a4b1876299687eed3766df07f5fb0631cc9": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.10.12"},
 	},
-	"566f860db336082cab4b2df940b13a926f21a076d9cf26b380dd0c4470f96b62": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.10.13"},
+	"27445a7a8e59c78766c9ee52588da38cf8046452bd68968e153c563c77dd6f3d": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.10.12-beta.0"},
 	},
-	"83a0a51a30d612221d92fa7be7cc9800cd2ef0536e70dc07cb536392fed1fb53": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.10.13-beta.0"},
+	"566f860db336082cab4b2df940b13a926f21a076d9cf26b380dd0c4470f96b62": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.10.13"},
 	},
-	"d8821dad8432da4c5827fb8d707c7d4674720612e344c24fea2b1b5ef659f0d4": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.10.14-beta.0"},
+	"83a0a51a30d612221d92fa7be7cc9800cd2ef0536e70dc07cb536392fed1fb53": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.10.13-beta.0"},
 	},
-	"4aebfe7f86d6ba2de3367ed284d59a730f4c75c8dcd7aa4b9ce5c141c1020953": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.10.2"},
+	"d8821dad8432da4c5827fb8d707c7d4674720612e344c24fea2b1b5ef659f0d4": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.10.14-beta.0"},
 	},
-	"b11befe23b33a0e9bfd5a087279e54a04f2a14c5d22ab5e74b2c9c2007afc004": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.10.2-beta.0"},
+	"4aebfe7f86d6ba2de3367ed284d59a730f4c75c8dcd7aa4b9ce5c141c1020953": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.10.2"},
 	},
-	"8d797782ae99c158aada50d7356c2561a66a835f43f9df9b26a028d0950fa093": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.10.3"},
+	"b11befe23b33a0e9bfd5a087279e54a04f2a14c5d22ab5e74b2c9c2007afc004": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.10.2-beta.0"},
 	},
-	"0f8d0b5420d8519a5e345c96c81a3a3d510e1095ae441947ca615eed829aa99f": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.10.3-beta.0"},
+	"8d797782ae99c158aada50d7356c2561a66a835f43f9df9b26a028d0950fa093": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.10.3"},
 	},
-	"bc811b29fe7d8ad0c8bae9fe1eb9ff3f936c3bab617de61e9f6d026c9477e7e2": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.10.4"},
+	"0f8d0b5420d8519a5e345c96c81a3a3d510e1095ae441947ca615eed829aa99f": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.10.3-beta.0"},
 	},
-	"33ea760dae728131ef19975a9cb69db19b5ed2e25c9149862a7fb086806d4583": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.10.4-beta.0"},
+	"bc811b29fe7d8ad0c8bae9fe1eb9ff3f936c3bab617de61e9f6d026c9477e7e2": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.10.4"},
 	},
-	"835f42c0b4330936296af71f8c7eb1e87839f42a8ce5c329262ee4ce8c242ce9": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.10.5"},
+	"33ea760dae728131ef19975a9cb69db19b5ed2e25c9149862a7fb086806d4583": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.10.4-beta.0"},
 	},
-	"c08ffaad551da82ad39425bd34f4fa8479372cc66a1b15d6c009248d9f263afd": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.10.5-beta.0"},
+	"835f42c0b4330936296af71f8c7eb1e87839f42a8ce5c329262ee4ce8c242ce9": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.10.5"},
 	},
-	"f6896cd43fcbd36af577f9d87f0f4bf172039a554a6ea66b8660af73cc8fa2d0": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.10.6"},
+	"c08ffaad551da82ad39425bd34f4fa8479372cc66a1b15d6c009248d9f263afd": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.10.5-beta.0"},
 	},
-	"252788c47a8808cdbbb5a5a8dd580b68fef9e0f10aff095d200d52e593e4e9b5": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.10.6-beta.0"},
+	"f6896cd43fcbd36af577f9d87f0f4bf172039a554a6ea66b8660af73cc8fa2d0": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.10.6"},
 	},
-	"2bc7fcc557b68163729e4633f66d6636a266072bac9c615d65d59e334ae58058": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.10.7"},
+	"252788c47a8808cdbbb5a5a8dd580b68fef9e0f10aff095d200d52e593e4e9b5": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.10.6-beta.0"},
 	},
-	"663b83ac1409341fa68fbdea85fa7264aeadfe5b26f10f3f804c4f9f3193d1c2": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.10.7-beta.0"},
+	"2bc7fcc557b68163729e4633f66d6636a266072bac9c615d65d59e334ae58058": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.10.7"},
 	},
-	"97d75c1fb7cdec7b6d877668690c2aa442eb44774248332f95ef62d3eabcca0c": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.10.8"},
+	"663b83ac1409341fa68fbdea85fa7264aeadfe5b26f10f3f804c4f9f3193d1c2": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.10.7-beta.0"},
 	},
-	"067413fecfed3b48a65b451e06b3c225b3fe992c861b345a5e6634288e623e5c": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.10.8-beta.0"},
+	"97d75c1fb7cdec7b6d877668690c2aa442eb44774248332f95ef62d3eabcca0c": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.10.8"},
 	},
-	"be13f691f16a0b45061ba691e7fb5cbfa6fdf5a6834eca14586581cc4a0a6dc9": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.10.9"},
+	"067413fecfed3b48a65b451e06b3c225b3fe992c861b345a5e6634288e623e5c": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.10.8-beta.0"},
 	},
-	"45ac50cf2a490f4f5ff35cf9bc271a959209b67976a5925d0a471323ac66458e": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.10.9-beta.0"},
+	"be13f691f16a0b45061ba691e7fb5cbfa6fdf5a6834eca14586581cc4a0a6dc9": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.10.9"},
 	},
-	"8b3d21fa885c577c3e60f14693c39fae43fdf7c842d7d6fecb48618fe88f4c9f": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.11.0"},
+	"45ac50cf2a490f4f5ff35cf9bc271a959209b67976a5925d0a471323ac66458e": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.10.9-beta.0"},
 	},
-	"8065a6ce0c87b36be849a01e44d620b351bf646ff42598d875cb5b86796d005d": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.11.0-alpha.0"},
+	"8b3d21fa885c577c3e60f14693c39fae43fdf7c842d7d6fecb48618fe88f4c9f": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.11.0"},
 	},
-	"3295992fef9eac1e2331fff995051b5d2162ee527d0247c984ac98f51ca788de": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.11.0-alpha.1"},
+	"8065a6ce0c87b36be849a01e44d620b351bf646ff42598d875cb5b86796d005d": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.11.0-alpha.0"},
 	},
-	"5522111fe04db61bcccd188e94caa120351823682579af8716d4d6e9d180a227": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.11.0-alpha.2"},
+	"3295992fef9eac1e2331fff995051b5d2162ee527d0247c984ac98f51ca788de": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.11.0-alpha.1"},
 	},
-	"8c53dbc1ed3561d0ef58304aa8c6f6dfc1f87826a534c55aa43d321a7623980b": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.11.0-beta.0"},
+	"5522111fe04db61bcccd188e94caa120351823682579af8716d4d6e9d180a227": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.11.0-alpha.2"},
 	},
-	"eee53c0abb7b9f7c2c912fe61a7a844ecad3910de5afcdb238c25d8636bbbdd4": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.11.0-beta.1"},
+	"8c53dbc1ed3561d0ef58304aa8c6f6dfc1f87826a534c55aa43d321a7623980b": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.11.0-beta.0"},
 	},
-	"0334a7d98f04a3a75a14d5e4ec1137923a64a3db18130f5b8297081100da7b5e": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.11.0-beta.2"},
+	"eee53c0abb7b9f7c2c912fe61a7a844ecad3910de5afcdb238c25d8636bbbdd4": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.11.0-beta.1"},
 	},
-	"6ba549dd96afb80bfcda3524d1a87e9c496302597d592cdc679f502eca286841": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.11.0-rc.1"},
+	"0334a7d98f04a3a75a14d5e4ec1137923a64a3db18130f5b8297081100da7b5e": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.11.0-beta.2"},
 	},
-	"3f7b3b175ced87903ecfd3ffa7a76116f3a6a790c7dba0f11a03614793f37309": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.11.0-rc.2"},
+	"6ba549dd96afb80bfcda3524d1a87e9c496302597d592cdc679f502eca286841": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.11.0-rc.1"},
 	},
-	"1b9c7628a72c784cd4b2f8b9d814da85180cf2f371f5de3d784ef01f820755dd": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.11.0-rc.3"},
+	"3f7b3b175ced87903ecfd3ffa7a76116f3a6a790c7dba0f11a03614793f37309": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.11.0-rc.2"},
 	},
-	"4791342267427a9851f2747c509c8ac335807a375187dd98a6b4c82cbd6804cc": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.11.1"},
+	"1b9c7628a72c784cd4b2f8b9d814da85180cf2f371f5de3d784ef01f820755dd": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.11.0-rc.3"},
 	},
-	"9b093cd7aabec2cf54fbc98750a27d69bc8887e028777f688669e86e33944694": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.11.1-beta.0"},
+	"4791342267427a9851f2747c509c8ac335807a375187dd98a6b4c82cbd6804cc": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.11.1"},
 	},
-	"1ef8a56fa1492ed56066143d655500821e758b8737ae2ebf554a32aba6eda119": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.11.10"},
+	"9b093cd7aabec2cf54fbc98750a27d69bc8887e028777f688669e86e33944694": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.11.1-beta.0"},
 	},
-	"3c52eab0415c2aafba92392e7a8e2a25df3f2b9ce5b93a7ab3963a52995989b4": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.11.10-beta.0"},
+	"1ef8a56fa1492ed56066143d655500821e758b8737ae2ebf554a32aba6eda119": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.11.10"},
 	},
-	"6058b3e88e29bd372e22f45c5bd381c0345e2da1496790167708a4885717614a": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.11.11-beta.0"},
+	"3c52eab0415c2aafba92392e7a8e2a25df3f2b9ce5b93a7ab3963a52995989b4": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.11.10-beta.0"},
 	},
-	"0e650cce1469c5ffed9ea0aeef276d05169e8b48f32479a3e59a6121acf4f98f": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.11.2"},
+	"6058b3e88e29bd372e22f45c5bd381c0345e2da1496790167708a4885717614a": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.11.11-beta.0"},
 	},
-	"a59705f6ad0a8ce175d73857775ec12e5d58cc453d3e36dab0f790180cb4f08e": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.11.2-beta.0"},
+	"0e650cce1469c5ffed9ea0aeef276d05169e8b48f32479a3e59a6121acf4f98f": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.11.2"},
 	},
-	"37496284cb3057a664cb672581959f5ec1fc54419b92f762428c92c5b6feb035": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.11.3"},
+	"a59705f6ad0a8ce175d73857775ec12e5d58cc453d3e36dab0f790180cb4f08e": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.11.2-beta.0"},
 	},
-	"afa4fc8f92e2679a87d9851927eef8cf08ad02762738acb33c9a56d27df36321": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.11.3-beta.0"},
+	"37496284cb3057a664cb672581959f5ec1fc54419b92f762428c92c5b6feb035": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.11.3"},
 	},
-	"b83bfb6671e6eebba48878f9ef63b15a0853ae6975a3dfe7a2f77a26f1eedc82": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.11.4"},
+	"afa4fc8f92e2679a87d9851927eef8cf08ad02762738acb33c9a56d27df36321": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.11.3-beta.0"},
 	},
-	"367e5ee74b3fac42541f3864d9e992e78986a5e8a6d5eb78852ca85e4ffbccfd": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.11.4-beta.0"},
+	"b83bfb6671e6eebba48878f9ef63b15a0853ae6975a3dfe7a2f77a26f1eedc82": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.11.4"},
 	},
-	"8f51f2f8d084843e6a2acd2fd2a919363ea6aaf53aab7a344698207632d6940d": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.11.5"},
+	"367e5ee74b3fac42541f3864d9e992e78986a5e8a6d5eb78852ca85e4ffbccfd": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.11.4-beta.0"},
 	},
-	"f8a04d3a1f37a83c4847ccf36b0a49a2e9a3f398d1d41ea0174cbb09d34b9923": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.11.5-beta.0"},
+	"8f51f2f8d084843e6a2acd2fd2a919363ea6aaf53aab7a344698207632d6940d": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.11.5"},
 	},
-	"88ca80eb6d9e291956ba66e5a43cf4e93f4ff2fd61736c022a7d130e7ed9d8d4": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.11.6"},
+	"f8a04d3a1f37a83c4847ccf36b0a49a2e9a3f398d1d41ea0174cbb09d34b9923": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.11.5-beta.0"},
 	},
-	"6e96219839544d40494cf1a4e230479d8e3d0e2c0c29b0075efd88c073f42311": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.11.6-beta.0"},
+	"88ca80eb6d9e291956ba66e5a43cf4e93f4ff2fd61736c022a7d130e7ed9d8d4": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.11.6"},
 	},
-	"0e46d32f4f06020212faeca59be1cc8f18b68b08b2edb01972ae493b159d88d5": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.11.7"},
+	"6e96219839544d40494cf1a4e230479d8e3d0e2c0c29b0075efd88c073f42311": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.11.6-beta.0"},
 	},
-	"fb311cfcb42365a5dd9a20462059637991e16b302ca18605ffea281a1892704b": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.11.7-beta.0"},
+	"0e46d32f4f06020212faeca59be1cc8f18b68b08b2edb01972ae493b159d88d5": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.11.7"},
 	},
-	"63d4dbd6dcb0836cb5552b9b6278b7a3787153083888ab75f470dd8c42b0933b": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.11.8"},
+	"fb311cfcb42365a5dd9a20462059637991e16b302ca18605ffea281a1892704b": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.11.7-beta.0"},
 	},
-	"b018ceddf33838f291fab8144def4fb167e7f85991908d54bfc2a081a6127328": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.11.8-beta.0"},
+	"63d4dbd6dcb0836cb5552b9b6278b7a3787153083888ab75f470dd8c42b0933b": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.11.8"},
 	},
-	"b0b1be5de4c2e5d66e3c1956763b22fc0dbde16674b1500a1f70b0d6540402fc": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.11.9"},
+	"b018ceddf33838f291fab8144def4fb167e7f85991908d54bfc2a081a6127328": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.11.8-beta.0"},
 	},
-	"2ae86a179196110ea8d106dc78a7fbde4d3b44ce4b2bbe54ac7b8164147d9154": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.11.9-beta.0"},
+	"b0b1be5de4c2e5d66e3c1956763b22fc0dbde16674b1500a1f70b0d6540402fc": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.11.9"},
 	},
-	"bb149db7fc7680b460026ae41365f32dee4d4471e05c15d8df1d3d1aadbca114": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.12.0"},
+	"2ae86a179196110ea8d106dc78a7fbde4d3b44ce4b2bbe54ac7b8164147d9154": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.11.9-beta.0"},
 	},
-	"07a360bde8e554e29bea48f8200f76ff1c9bca198f6d72eb98f0002149bfe89c": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.12.0-alpha.0"},
+	"bb149db7fc7680b460026ae41365f32dee4d4471e05c15d8df1d3d1aadbca114": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.12.0"},
 	},
-	"1297fd3bdd4b47ddb31bfdcec6ca456c593fe11caf411918f27e239e667caf31": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.12.0-alpha.1"},
+	"07a360bde8e554e29bea48f8200f76ff1c9bca198f6d72eb98f0002149bfe89c": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.12.0-alpha.0"},
 	},
-	"cb9c72abcc9d2edd7d8f8ae232e0cddb84acb6b859c922f2f2f71a40e657a4dc": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.12.0-beta.0"},
+	"1297fd3bdd4b47ddb31bfdcec6ca456c593fe11caf411918f27e239e667caf31": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.12.0-alpha.1"},
 	},
-	"0d8c5fa455c5a835e0687b8bd6557467f1db2ef1e8b66c75cacb29bad291c2fc": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.12.0-beta.1"},
+	"cb9c72abcc9d2edd7d8f8ae232e0cddb84acb6b859c922f2f2f71a40e657a4dc": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.12.0-beta.0"},
 	},
-	"25cf3198de43352e88a2c20654473f6fd5940dc6d577eb6c3ce0bb0b7da3cf05": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.12.0-beta.2"},
+	"0d8c5fa455c5a835e0687b8bd6557467f1db2ef1e8b66c75cacb29bad291c2fc": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.12.0-beta.1"},
 	},
-	"741550b2724d9ee0c22d58fbb3b029f4b5526ac0df48736c86df87a3af624e8a": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.12.0-rc.1"},
+	"25cf3198de43352e88a2c20654473f6fd5940dc6d577eb6c3ce0bb0b7da3cf05": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.12.0-beta.2"},
 	},
-	"a14bc9f9e56ef08a2f81688bc893fd52dd0ed00511fc0260dafdb237bb51d9f5": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.12.0-rc.2"},
+	"741550b2724d9ee0c22d58fbb3b029f4b5526ac0df48736c86df87a3af624e8a": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.12.0-rc.1"},
 	},
-	"631ddeb82917567374c0cffa5145e2e345d0f4f64caa58b2d0eeb5581bc34a48": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.12.1"},
+	"a14bc9f9e56ef08a2f81688bc893fd52dd0ed00511fc0260dafdb237bb51d9f5": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.12.0-rc.2"},
 	},
-	"f9a9aeeece480cc974ee55838cad04eedd62b8cb405b98659e6681d9063e52da": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.12.1-beta.0"},
+	"631ddeb82917567374c0cffa5145e2e345d0f4f64caa58b2d0eeb5581bc34a48": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.12.1"},
 	},
-	"cd74dfb2900bd2c272377fd5ab445e72c498c40d0ef67e5eb44e94c40edd4a5c": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.12.10"},
+	"f9a9aeeece480cc974ee55838cad04eedd62b8cb405b98659e6681d9063e52da": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.12.1-beta.0"},
 	},
-	"b85050c2cbb3d7022d8e1f2d24ca89c67b9ed115411911c871427b8ecd2e2a43": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.12.10-beta.0"},
+	"cd74dfb2900bd2c272377fd5ab445e72c498c40d0ef67e5eb44e94c40edd4a5c": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.12.10"},
 	},
-	"10e7e77ad26d8fd37d445b24530956733683274731008dee808d015be7b53c3e": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.12.11-beta.0"},
+	"b85050c2cbb3d7022d8e1f2d24ca89c67b9ed115411911c871427b8ecd2e2a43": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.12.10-beta.0"},
 	},
-	"1c46b0b3f2f614eb70381e3d0805b4d48f238de941b864f63c2769194b824b36": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.12.2"},
+	"10e7e77ad26d8fd37d445b24530956733683274731008dee808d015be7b53c3e": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.12.11-beta.0"},
 	},
-	"cbd126e9ab3e012c205e30cfb490b3750ea868655b51862771d740a7740ec22e": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.12.2-beta.0"},
+	"1c46b0b3f2f614eb70381e3d0805b4d48f238de941b864f63c2769194b824b36": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.12.2"},
 	},
-	"2e0b1f7c2501378a004671c01c02ed4b02560fc3d80d16deb183720de33a43a3": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.12.3"},
+	"cbd126e9ab3e012c205e30cfb490b3750ea868655b51862771d740a7740ec22e": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.12.2-beta.0"},
 	},
-	"e117881ea0b262437cd0632f3a85598125d49c3a814429f49bd24432a4dea6dd": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.12.3-beta.0"},
+	"2e0b1f7c2501378a004671c01c02ed4b02560fc3d80d16deb183720de33a43a3": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.12.3"},
 	},
-	"01531850b9a77fbf2834a7c8c18c9aea92b6ee40cc22b325f9dcefe6cdd57f90": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.12.4"},
+	"e117881ea0b262437cd0632f3a85598125d49c3a814429f49bd24432a4dea6dd": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.12.3-beta.0"},
 	},
-	"4e12f728fb501a4579a7523c82787a0ddbd09ac49733df4ae399aad033242f46": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.12.4-beta.0"},
+	"01531850b9a77fbf2834a7c8c18c9aea92b6ee40cc22b325f9dcefe6cdd57f90": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.12.4"},
 	},
-	"28d6823ced82ddd61d9ceebc855b64e976300dc058139ce604863ceb709bb4b9": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.12.5"},
+	"4e12f728fb501a4579a7523c82787a0ddbd09ac49733df4ae399aad033242f46": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.12.4-beta.0"},
 	},
-	"b6e8c296343954b12a3b1e02744e4509adf25245b8f6aacd752b0be367ea1c42": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.12.5-beta.0"},
+	"28d6823ced82ddd61d9ceebc855b64e976300dc058139ce604863ceb709bb4b9": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.12.5"},
 	},
-	"2330ab228da81ed23dffc3a6b42362d2459439884dd1951b49e049d5a793bdcc": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.12.6"},
+	"b6e8c296343954b12a3b1e02744e4509adf25245b8f6aacd752b0be367ea1c42": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.12.5-beta.0"},
 	},
-	"2d56798197d34a91d6d0fa71413d22571594c0c8605c091c35bc6a7d59742134": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.12.6-beta.0"},
+	"2330ab228da81ed23dffc3a6b42362d2459439884dd1951b49e049d5a793bdcc": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.12.6"},
 	},
-	"921d7ae8c8004c129fc5a3d762a8b7afab8cfe3030735afb5874e6b40fcb61b7": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.12.7"},
+	"2d56798197d34a91d6d0fa71413d22571594c0c8605c091c35bc6a7d59742134": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.12.6-beta.0"},
 	},
-	"ba95464aed09d5680dae736abfb58c58266342f7ab719837c372a35ba01430cf": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.12.7-beta.0"},
+	"921d7ae8c8004c129fc5a3d762a8b7afab8cfe3030735afb5874e6b40fcb61b7": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.12.7"},
 	},
-	"e0a4006b85b2711a28581ba8a22a24d3064557b98073e92689a947f655f9c642": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.12.8"},
+	"ba95464aed09d5680dae736abfb58c58266342f7ab719837c372a35ba01430cf": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.12.7-beta.0"},
 	},
-	"08b1c6ee50e0290b85aa346ef774bdb1643eab183a790043f06e717d8515ce20": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.12.8-beta.0"},
+	"e0a4006b85b2711a28581ba8a22a24d3064557b98073e92689a947f655f9c642": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.12.8"},
 	},
-	"a8b01ffd88ce963b2d1818b0a98da164a4aeb0be1ec362c248ca6c9e3255f2b8": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.12.9"},
+	"08b1c6ee50e0290b85aa346ef774bdb1643eab183a790043f06e717d8515ce20": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.12.8-beta.0"},
 	},
-	"1217fedbeee375cf1cf5fbe44aee4fcf831c4cea2abcb939907130900834b766": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.12.9-beta.0"},
+	"a8b01ffd88ce963b2d1818b0a98da164a4aeb0be1ec362c248ca6c9e3255f2b8": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.12.9"},
 	},
-	"793c66a605b2b6906fa32b11a19ff80d57a666c2f185421d7e4704788d22fc3c": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.13.0"},
+	"1217fedbeee375cf1cf5fbe44aee4fcf831c4cea2abcb939907130900834b766": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.12.9-beta.0"},
 	},
-	"b970d80031a94eb55a6b76ff81ed62a682bddcb40f3f5f9a43f30d2bf865e216": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.13.0-alpha.0"},
+	"793c66a605b2b6906fa32b11a19ff80d57a666c2f185421d7e4704788d22fc3c": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.13.0"},
 	},
-	"8681417ab68c53b43c9489d9285dcd78efaddf2309d9c0afd42c69b07e86c011": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.13.0-alpha.1"},
+	"b970d80031a94eb55a6b76ff81ed62a682bddcb40f3f5f9a43f30d2bf865e216": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.13.0-alpha.0"},
 	},
-	"a9219667c5adcb2d58a89e915ffcbcff76c7c2a7b71a2c8ab9b90a95c99f1fb5": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.13.0-alpha.2"},
+	"8681417ab68c53b43c9489d9285dcd78efaddf2309d9c0afd42c69b07e86c011": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.13.0-alpha.1"},
 	},
-	"eecc089518346beb3b3b4dd528545faabc092294ad2101398e26c5e62b4457f6": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.13.0-alpha.3"},
+	"a9219667c5adcb2d58a89e915ffcbcff76c7c2a7b71a2c8ab9b90a95c99f1fb5": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.13.0-alpha.2"},
 	},
-	"dea42459ba1fb9692522f84213dfa0bc85d5d1424fdf1803efda74601b5544e9": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.13.0-beta.0"},
+	"eecc089518346beb3b3b4dd528545faabc092294ad2101398e26c5e62b4457f6": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.13.0-alpha.3"},
 	},
-	"b674276263debb6338ed951e14442b41f7e8d4c95f11e92c7ac6afa42ef2d9ac": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.13.0-beta.1"},
+	"dea42459ba1fb9692522f84213dfa0bc85d5d1424fdf1803efda74601b5544e9": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.13.0-beta.0"},
 	},
-	"015b4c98d2605f27d1fe89a24e8401641e3cbabc33f47e7dfff390c66a8f0df4": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.13.0-beta.2"},
+	"b674276263debb6338ed951e14442b41f7e8d4c95f11e92c7ac6afa42ef2d9ac": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.13.0-beta.1"},
 	},
-	"acbe18913140da5d0b07a9106381d791a28e49a353b87f3a28380a50d8288563": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.13.0-rc.1"},
+	"015b4c98d2605f27d1fe89a24e8401641e3cbabc33f47e7dfff390c66a8f0df4": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.13.0-beta.2"},
 	},
-	"79c0d4cfc633e135a233c040127d29a64dfb73ef9a061be9e0508ce2f50cc449": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.13.0-rc.2"},
+	"acbe18913140da5d0b07a9106381d791a28e49a353b87f3a28380a50d8288563": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.13.0-rc.1"},
 	},
-	"2d246e802330ef4bc16bdd6a4ada86d18cc422cb2ce354e20c38a05cf3fd1574": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.13.1"},
+	"79c0d4cfc633e135a233c040127d29a64dfb73ef9a061be9e0508ce2f50cc449": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.13.0-rc.2"},
 	},
-	"a2c56a65c09f868619e5ad6c0e953b24cc17662420dc824f5c664b5b26a88726": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.13.1-beta.0"},
+	"2d246e802330ef4bc16bdd6a4ada86d18cc422cb2ce354e20c38a05cf3fd1574": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.13.1"},
 	},
-	"1e81deb2da8dd3a617e88765bcbf5df0f85ffc2a67c7500c54c1d2366785660a": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.13.10"},
+	"a2c56a65c09f868619e5ad6c0e953b24cc17662420dc824f5c664b5b26a88726": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.13.1-beta.0"},
 	},
-	"86542282220d86fef9571df6e6fa8fede3d2c1b62e1b5ec745039138bd019c64": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.13.10-beta.0"},
+	"1e81deb2da8dd3a617e88765bcbf5df0f85ffc2a67c7500c54c1d2366785660a": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.13.10"},
 	},
-	"354cc549c3e9c6e640315ce6e36a529411b5d3d1055edcbc474979d2fb6c8a42": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.13.11"},
+	"86542282220d86fef9571df6e6fa8fede3d2c1b62e1b5ec745039138bd019c64": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.13.10-beta.0"},
 	},
-	"1295c14fcc31cdfe5996fd41067f1af020bf841ea50d8113c626f70b9f8adb20": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.13.11-beta.0"},
+	"354cc549c3e9c6e640315ce6e36a529411b5d3d1055edcbc474979d2fb6c8a42": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.13.11"},
 	},
-	"915438d14920b1f0ec76bfaf8de7b6778626daac7c7a9b1a5055ccdc63065f1d": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.13.12"},
+	"1295c14fcc31cdfe5996fd41067f1af020bf841ea50d8113c626f70b9f8adb20": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.13.11-beta.0"},
 	},
-	"e1f791d8acb7301ae7b6e29b78b8d22ce893112c489e4f916ac3bd57288e5690": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.13.12-beta.0"},
+	"915438d14920b1f0ec76bfaf8de7b6778626daac7c7a9b1a5055ccdc63065f1d": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.13.12"},
 	},
-	"b4b163191edf79f7639ebdeb2d1c71a92dc32ea339290bfd1688e289f7abba89": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.13.13-beta.0"},
+	"e1f791d8acb7301ae7b6e29b78b8d22ce893112c489e4f916ac3bd57288e5690": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.13.12-beta.0"},
 	},
-	"5de47829b403d69a44d91eebd4b6f5d11237fd759ecebc2180fc5f54c0200c50": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.13.2"},
+	"b4b163191edf79f7639ebdeb2d1c71a92dc32ea339290bfd1688e289f7abba89": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.13.13-beta.0"},
 	},
-	"a475e9b33aa478827fa415dbcfc996fa640f47714ca86758bc3a1d4829c254fe": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.13.2-beta.0"},
+	"5de47829b403d69a44d91eebd4b6f5d11237fd759ecebc2180fc5f54c0200c50": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.13.2"},
 	},
-	"896554cf14863417ed93d18c022a932a4a161625ee9f1197e0547a0a60822e69": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.13.3"},
+	"a475e9b33aa478827fa415dbcfc996fa640f47714ca86758bc3a1d4829c254fe": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.13.2-beta.0"},
 	},
-	"dfd8be356f27bff1777be46f0d0b26b12e0a7e3797efa45190f94cb4045cfd43": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.13.3-beta.0"},
+	"896554cf14863417ed93d18c022a932a4a161625ee9f1197e0547a0a60822e69": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.13.3"},
 	},
-	"208bf6fa40df0ac50f82889875c16996be0b4dde1e47d931336a1c89558aaa17": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.13.4"},
+	"dfd8be356f27bff1777be46f0d0b26b12e0a7e3797efa45190f94cb4045cfd43": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.13.3-beta.0"},
 	},
-	"011cf507796691ea5ffe74f970169a94b3140cd5e7cb993475a03b394f99bb6f": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.13.4-beta.0"},
+	"208bf6fa40df0ac50f82889875c16996be0b4dde1e47d931336a1c89558aaa17": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.13.4"},
 	},
-	"f7e2925b1b607d1d9b78802d882123e0be3800aa8a5c0614279dfe1ee13c2952": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.13.5"},
+	"011cf507796691ea5ffe74f970169a94b3140cd5e7cb993475a03b394f99bb6f": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.13.4-beta.0"},
 	},
-	"6e6d4acab20a7e93f4aac414ac7c54cca21beb6c27ed23146453399e3cb64ca3": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.13.5-beta.0"},
+	"f7e2925b1b607d1d9b78802d882123e0be3800aa8a5c0614279dfe1ee13c2952": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.13.5"},
 	},
-	"f200759f037b12097010de0d4b045a69cd03d30e6a5ed62ec826f6cbc7c71567": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.13.6"},
+	"6e6d4acab20a7e93f4aac414ac7c54cca21beb6c27ed23146453399e3cb64ca3": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.13.5-beta.0"},
 	},
-	"3bc431c14040ce7638557f26bed512cdcc128e7cce7dbac4a3d425b19b6fc648": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.13.6-beta.0"},
+	"f200759f037b12097010de0d4b045a69cd03d30e6a5ed62ec826f6cbc7c71567": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.13.6"},
 	},
-	"e23490dd02a2f532b1eac30079749759a2123da7b9c11e3facbbd7b92c2b5786": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.13.7"},
+	"3bc431c14040ce7638557f26bed512cdcc128e7cce7dbac4a3d425b19b6fc648": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.13.6-beta.0"},
 	},
-	"5945f2e09c174b31051fb52e1acde449de357d96e254acdd5fa99b321e227550": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.13.7-beta.0"},
+	"e23490dd02a2f532b1eac30079749759a2123da7b9c11e3facbbd7b92c2b5786": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.13.7"},
 	},
-	"3d2156a87dd47992d22cfe37f73974911df5619600590c02e9ac4e2a7a619884": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.13.8"},
+	"5945f2e09c174b31051fb52e1acde449de357d96e254acdd5fa99b321e227550": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.13.7-beta.0"},
 	},
-	"13459bbea0d2be3fcb0d51ce505199f5913f4d056b6f5db675a8b7b665461a9f": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.13.8-beta.0"},
+	"3d2156a87dd47992d22cfe37f73974911df5619600590c02e9ac4e2a7a619884": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.13.8"},
 	},
-	"08521258662322b7e300c39e7c74285bd8e4c34844915b522d1f9d678d57467e": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.13.9"},
+	"13459bbea0d2be3fcb0d51ce505199f5913f4d056b6f5db675a8b7b665461a9f": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.13.8-beta.0"},
 	},
-	"ffc1d2372e3ac083ed6792b27d362d9e1e5178435ea9b6d093ae9e3b2e6aaba5": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.13.9-beta.0"},
+	"08521258662322b7e300c39e7c74285bd8e4c34844915b522d1f9d678d57467e": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.13.9"},
 	},
-	"fdc28e8da105dd8201e81d32a58ee851889c17f9af9386d1618ef38725088291": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.14.0"},
+	"ffc1d2372e3ac083ed6792b27d362d9e1e5178435ea9b6d093ae9e3b2e6aaba5": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.13.9-beta.0"},
 	},
-	"34fd557cfd922d5d0134fa0932e0959a17c9f8d7f9c3a9f2fc097be8caa85e38": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.14.0-alpha.0"},
+	"fdc28e8da105dd8201e81d32a58ee851889c17f9af9386d1618ef38725088291": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.14.0"},
 	},
-	"9d81047400c4628a24d7b920ba333c97227c2b4c9727dffe6c1a58ea586d8ccd": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.14.0-alpha.1"},
+	"34fd557cfd922d5d0134fa0932e0959a17c9f8d7f9c3a9f2fc097be8caa85e38": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.14.0-alpha.0"},
 	},
-	"94062556b791bf97c34da46459a1534f7d686a9dcf569fb252898723de1484bc": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.14.0-alpha.2"},
+	"9d81047400c4628a24d7b920ba333c97227c2b4c9727dffe6c1a58ea586d8ccd": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.14.0-alpha.1"},
 	},
-	"6f2c22cf41538232df4d1b16c249439bdd71724780cfb0d09ecf2ccaed9b741d": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.14.0-alpha.3"},
+	"94062556b791bf97c34da46459a1534f7d686a9dcf569fb252898723de1484bc": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.14.0-alpha.2"},
 	},
-	"db86e2b1bdb232717ad0b002fec084d3859112452260a7da89cfb2831c43656d": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.14.0-beta.0"},
+	"6f2c22cf41538232df4d1b16c249439bdd71724780cfb0d09ecf2ccaed9b741d": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.14.0-alpha.3"},
 	},
-	"bffe86191b3f68746ed89f8c2045e9a5bbfc5c23540542272e8247f253d5b353": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.14.0-beta.1"},
+	"db86e2b1bdb232717ad0b002fec084d3859112452260a7da89cfb2831c43656d": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.14.0-beta.0"},
 	},
-	"da1652bd46d7d469dc07d55f191bf153dfb415e829e0cea45ad1cf241cf352c8": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.14.0-beta.2"},
+	"bffe86191b3f68746ed89f8c2045e9a5bbfc5c23540542272e8247f253d5b353": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.14.0-beta.1"},
 	},
-	"ec93cb889ed826c0674e63102ab0820ef3b10f6115c7fff3c35c839da4908d6c": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.14.0-rc.1"},
+	"da1652bd46d7d469dc07d55f191bf153dfb415e829e0cea45ad1cf241cf352c8": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.14.0-beta.2"},
 	},
-	"d85e75aac6c42cefbc5e76c9f9217636dc086f23c36f47fc45b6dd39bc1517a8": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.14.1"},
+	"ec93cb889ed826c0674e63102ab0820ef3b10f6115c7fff3c35c839da4908d6c": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.14.0-rc.1"},
 	},
-	"796d29bc102042e5b890ba242edfee21e5c3485df25b564dc618fca638d0e981": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.14.1-beta.0"},
+	"d85e75aac6c42cefbc5e76c9f9217636dc086f23c36f47fc45b6dd39bc1517a8": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.14.1"},
 	},
-	"5c7ab4c4ba1ad011368d42eec42a2c85d840b93e39aef168572345e4007abd52": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.14.10-beta.0"},
+	"796d29bc102042e5b890ba242edfee21e5c3485df25b564dc618fca638d0e981": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.14.1-beta.0"},
 	},
-	"b9c81eef0fc0b83f41e784dabbb682d1170792aff955a2c7ae7c8cb0fc707721": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.14.11-beta.0"}, {"github.com/kubernetes/kubernetes", "v1.14.10"},
+	"5c7ab4c4ba1ad011368d42eec42a2c85d840b93e39aef168572345e4007abd52": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.14.10-beta.0"},
 	},
-	"983cfa30b6cbfcf164f5d23faf3469f05aa986c478a1c28a9276ef11416b37cf": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.14.11-beta.1"},
+	"b9c81eef0fc0b83f41e784dabbb682d1170792aff955a2c7ae7c8cb0fc707721": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.14.11-beta.0"}, {Path: "github.com/kubernetes/kubernetes", Version: "v1.14.10"},
 	},
-	"dfc2060def884ed447f0a4a7445273be0cadf6faf65ba91795f45642cc4e1248": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.14.2"},
+	"983cfa30b6cbfcf164f5d23faf3469f05aa986c478a1c28a9276ef11416b37cf": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.14.11-beta.1"},
 	},
-	"23ce149751095b274520321675b3dee7f0edcb52d3c8812ae85f00e0e3f9f30d": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.14.2-beta.0"},
+	"dfc2060def884ed447f0a4a7445273be0cadf6faf65ba91795f45642cc4e1248": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.14.2"},
 	},
-	"4fcca7474a04607a3f23ccf8ddeb758eeefb014df9bff30a6f60534a6d16b419": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.14.3"},
+	"23ce149751095b274520321675b3dee7f0edcb52d3c8812ae85f00e0e3f9f30d": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.14.2-beta.0"},
 	},
-	"83ddf2524d547ddbe86ba4c99c0e4a2292bec226c20c8825830501ef9d261976": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.14.3-beta.0"},
+	"4fcca7474a04607a3f23ccf8ddeb758eeefb014df9bff30a6f60534a6d16b419": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.14.3"},
 	},
-	"a3fb3659dfbfc7c41e44cd679b364251f26dd32e9bcb51ade680b30b8196567d": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.14.4"},
+	"83ddf2524d547ddbe86ba4c99c0e4a2292bec226c20c8825830501ef9d261976": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.14.3-beta.0"},
 	},
-	"f5746d679f6bb9ebad4bf0e0f5a9bc56eccb005b96ffe6905e19fb30f52d6a32": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.14.4-beta.0"},
+	"a3fb3659dfbfc7c41e44cd679b364251f26dd32e9bcb51ade680b30b8196567d": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.14.4"},
 	},
-	"5878c468e7cd7603de2193cf0dc2721d69a7525d5c1a9052ce1458f6fbfabaa6": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.14.5"},
+	"f5746d679f6bb9ebad4bf0e0f5a9bc56eccb005b96ffe6905e19fb30f52d6a32": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.14.4-beta.0"},
 	},
-	"356c175d382ca9a3278c22e993577b4266531c56872cb7a8990b11f45dca24a7": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.14.5-beta.0"},
+	"5878c468e7cd7603de2193cf0dc2721d69a7525d5c1a9052ce1458f6fbfabaa6": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.14.5"},
 	},
-	"6ff2b0eec866b5087b1fa58b4d11def18dbe306b120504c01ff8ea7e2895c712": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.14.6"},
+	"356c175d382ca9a3278c22e993577b4266531c56872cb7a8990b11f45dca24a7": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.14.5-beta.0"},
 	},
-	"a84b4dc9d9df8ce70c8574ebcb4e7849875063d1b3e589293bd705619c9b4a34": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.14.6-beta.0"},
+	"6ff2b0eec866b5087b1fa58b4d11def18dbe306b120504c01ff8ea7e2895c712": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.14.6"},
 	},
-	"93a10c0fb631990bbb98492b1c27e08698bab041a42d191b40c81d205a0100ae": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.14.7"},
+	"a84b4dc9d9df8ce70c8574ebcb4e7849875063d1b3e589293bd705619c9b4a34": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.14.6-beta.0"},
 	},
-	"ff7337749bfa4d2ccdd6e32d6b426fe4edda40bd642ca1de08408507b04517f1": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.14.7-beta.0"},
+	"93a10c0fb631990bbb98492b1c27e08698bab041a42d191b40c81d205a0100ae": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.14.7"},
 	},
-	"f8bd5141d99cb9a6a33dcd0f85b0673905dc9bd9e3c542322a71dac2bdffe1b2": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.14.8"},
+	"ff7337749bfa4d2ccdd6e32d6b426fe4edda40bd642ca1de08408507b04517f1": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.14.7-beta.0"},
 	},
-	"9957ebabab4fda16957579d8358ca74f758bf8507bbe430a7abd1c30f67fd3cf": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.14.8-beta.0"},
+	"f8bd5141d99cb9a6a33dcd0f85b0673905dc9bd9e3c542322a71dac2bdffe1b2": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.14.8"},
 	},
-	"454440e1ac9e50ea00508c34e2065382e408a9f4ddc6dfa4b631e09679037be3": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.14.9"},
+	"9957ebabab4fda16957579d8358ca74f758bf8507bbe430a7abd1c30f67fd3cf": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.14.8-beta.0"},
 	},
-	"186ff0a3e82003a046cf7a291becc285c6b73b2378e2c874780ce05e551b3025": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.14.9-beta.0"},
+	"454440e1ac9e50ea00508c34e2065382e408a9f4ddc6dfa4b631e09679037be3": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.14.9"},
 	},
-	"a7338981cbd683e0d1591999bd251e5f84398fb34b6a6de1091d26b18b46dd39": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.15.0-alpha.0"},
+	"186ff0a3e82003a046cf7a291becc285c6b73b2378e2c874780ce05e551b3025": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.14.9-beta.0"},
 	},
-	"ce30433bfbcb61b053fd657b2a2b645c4f26234bb57f7a23a13285c17c459cc9": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.2.0"},
+	"a7338981cbd683e0d1591999bd251e5f84398fb34b6a6de1091d26b18b46dd39": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.15.0-alpha.0"},
 	},
-	"c3327ed2c634019be645e4f83259315b58eecaabfb4cd90e415a7c5eaef47625": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.2.0-alpha.0"},
+	"ce30433bfbcb61b053fd657b2a2b645c4f26234bb57f7a23a13285c17c459cc9": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.2.0"},
 	},
-	"435e40c71d573b8cc6f06820a4bc06180c2ad1a93a0e61bc3a13f06464a79827": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.2.0-alpha.1"},
+	"c3327ed2c634019be645e4f83259315b58eecaabfb4cd90e415a7c5eaef47625": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.2.0-alpha.0"},
 	},
-	"6e6b56bf937c1b206b69da0148f1bf44783c0d7ce4598dc6549c89d083153fd1": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.2.0-alpha.2"},
+	"435e40c71d573b8cc6f06820a4bc06180c2ad1a93a0e61bc3a13f06464a79827": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.2.0-alpha.1"},
 	},
-	"f403393e5a048d733f1c94a561311cce6c81c408566a2fafecb64f9552c5ddea": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.2.0-alpha.3"},
+	"6e6b56bf937c1b206b69da0148f1bf44783c0d7ce4598dc6549c89d083153fd1": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.2.0-alpha.2"},
 	},
-	"c02c4c7d7bc7ca6851f302779d876b2f5e4df8b4d86724bdbf0a2bab1febb2ab": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.2.0-alpha.4"},
+	"f403393e5a048d733f1c94a561311cce6c81c408566a2fafecb64f9552c5ddea": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.2.0-alpha.3"},
 	},
-	"ea4e62569120a4b65df481e924104fe3073134a03546b2d787c2d9960aba2bc8": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.2.0-alpha.5"},
+	"c02c4c7d7bc7ca6851f302779d876b2f5e4df8b4d86724bdbf0a2bab1febb2ab": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.2.0-alpha.4"},
 	},
-	"da4e24d001845e7b1406271b5c9c1765a551de5adfde9f6936e1219e82781ffa": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.2.0-alpha.6"},
+	"ea4e62569120a4b65df481e924104fe3073134a03546b2d787c2d9960aba2bc8": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.2.0-alpha.5"},
 	},
-	"564652f38c2836f10b8edb9306ac672cf0333e9243a2a30246a8cd757fd7946b": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.2.0-alpha.7"},
+	"da4e24d001845e7b1406271b5c9c1765a551de5adfde9f6936e1219e82781ffa": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.2.0-alpha.6"},
 	},
-	"ffd94402bc631cf9cc501195edbb61f5915fbe916c446f5ed4fd1045866e2dcf": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.2.0-alpha.8"},
+	"564652f38c2836f10b8edb9306ac672cf0333e9243a2a30246a8cd757fd7946b": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.2.0-alpha.7"},
 	},
-	"44640745cfe352cd3d3d1230970ed957bb009d64582e5241ba8936bc5e128d4f": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.2.0-beta.0"},
+	"ffd94402bc631cf9cc501195edbb61f5915fbe916c446f5ed4fd1045866e2dcf": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.2.0-alpha.8"},
 	},
-	"ce536d61b455e49480bdcf2d4a80fe154595ab27e1fc21c91c9dbad6247dc1e7": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.2.0-beta.1"},
+	"44640745cfe352cd3d3d1230970ed957bb009d64582e5241ba8936bc5e128d4f": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.2.0-beta.0"},
 	},
-	"f77d1e90c31564b1d7ae43d90004d4a2d64948962df349a235b065876d6b84a2": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.2.1"},
+	"ce536d61b455e49480bdcf2d4a80fe154595ab27e1fc21c91c9dbad6247dc1e7": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.2.0-beta.1"},
 	},
-	"53b0fe952851490b5c232a8e3a03be8c9025e7db38953155492381d5e6ebc0ef": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.2.1-beta.0"},
+	"f77d1e90c31564b1d7ae43d90004d4a2d64948962df349a235b065876d6b84a2": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.2.1"},
 	},
-	"2eee7a86a24dcf289cb099dcd6325feb8ec451fdcf9d850232420c924aeb662c": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.2.2"},
+	"53b0fe952851490b5c232a8e3a03be8c9025e7db38953155492381d5e6ebc0ef": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.2.1-beta.0"},
 	},
-	"8dd66d7badcf937f5c94ac595e61806d79dda307b34c096f9b3d7d82f95e339c": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.2.2-beta.0"},
+	"2eee7a86a24dcf289cb099dcd6325feb8ec451fdcf9d850232420c924aeb662c": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.2.2"},
 	},
-	"26af9cdfa3889af29d9c9ba476009e9ef8c6b73a2a65143031f28cb01a8eae1f": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.2.3"},
+	"8dd66d7badcf937f5c94ac595e61806d79dda307b34c096f9b3d7d82f95e339c": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.2.2-beta.0"},
 	},
-	"7d53a73aa7b9946cb117eb0ed97f8845d7ad2f8323699e4749bc3a275c369f1e": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.2.3-beta.0"},
+	"26af9cdfa3889af29d9c9ba476009e9ef8c6b73a2a65143031f28cb01a8eae1f": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.2.3"},
 	},
-	"46313b522ad6d4f66f6334a07a76c7765bdc505ba90d76671a35683ed95f64e4": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.2.4"},
+	"7d53a73aa7b9946cb117eb0ed97f8845d7ad2f8323699e4749bc3a275c369f1e": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.2.3-beta.0"},
 	},
-	"a131a5b9da76ee99972fdec2bd1502a7dec1d2f3375c560c65a49e2d00e740a7": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.2.4-beta.0"},
+	"46313b522ad6d4f66f6334a07a76c7765bdc505ba90d76671a35683ed95f64e4": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.2.4"},
 	},
-	"cee6d18c68afcf65c94568323561775a6edc38ce742f6240953d3c0eb658ee61": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.2.5"},
+	"a131a5b9da76ee99972fdec2bd1502a7dec1d2f3375c560c65a49e2d00e740a7": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.2.4-beta.0"},
 	},
-	"9d48b7687b716da0223391880783c0639f1703a2aa2ef1111f808942b3163992": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.2.5-beta.0"},
+	"cee6d18c68afcf65c94568323561775a6edc38ce742f6240953d3c0eb658ee61": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.2.5"},
 	},
-	"17c4da78cba188e67610531c38538428cb2a190e58ae4cad96f7fb390d0f7eaf": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.2.6"},
+	"9d48b7687b716da0223391880783c0639f1703a2aa2ef1111f808942b3163992": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.2.5-beta.0"},
 	},
-	"ea3b1e0cba75d5c79eb86b6fccbb6606330077af330c95d224ad98e9497302ff": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.2.6-beta.0"},
+	"17c4da78cba188e67610531c38538428cb2a190e58ae4cad96f7fb390d0f7eaf": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.2.6"},
 	},
-	"42c62f94b145857d62274b019a9c2574e844d0019cf5a904240c87ad8256bd00": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.2.7"},
+	"ea3b1e0cba75d5c79eb86b6fccbb6606330077af330c95d224ad98e9497302ff": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.2.6-beta.0"},
 	},
-	"c65c4c432b97d965fec6ed6011e32a09e465b392c7d7ddc5745c1758fdd36cb2": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.2.7-beta.0"},
+	"42c62f94b145857d62274b019a9c2574e844d0019cf5a904240c87ad8256bd00": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.2.7"},
 	},
-	"cbb5fcace64c924f0c4117b62b7324ac9cd0d003b927fbc633ccc3de602e5eb3": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.2.8-beta.0"},
+	"c65c4c432b97d965fec6ed6011e32a09e465b392c7d7ddc5745c1758fdd36cb2": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.2.7-beta.0"},
 	},
-	"4f3faa20561136045225cf70e99f06f70f8a1c14a11fa5020ed7babd162b5809": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.3.0"},
+	"cbb5fcace64c924f0c4117b62b7324ac9cd0d003b927fbc633ccc3de602e5eb3": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.2.8-beta.0"},
 	},
-	"bfb0c9d02843520697983c0b935d44dd6d20f38e291a3892e87fdd89cbd2aaa1": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.3.0-alpha.0"},
+	"4f3faa20561136045225cf70e99f06f70f8a1c14a11fa5020ed7babd162b5809": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.3.0"},
 	},
-	"463a46bfce2fdb14c50a37cd045b799ae4dfa99bf4a757d7165c8bd0c9203199": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.3.0-alpha.1"},
+	"bfb0c9d02843520697983c0b935d44dd6d20f38e291a3892e87fdd89cbd2aaa1": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.3.0-alpha.0"},
 	},
-	"b8cf4d175e67de909560fb358f92bea7a3e0df630b5fc2377a045bdb576db486": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.3.0-alpha.2"},
+	"463a46bfce2fdb14c50a37cd045b799ae4dfa99bf4a757d7165c8bd0c9203199": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.3.0-alpha.1"},
 	},
-	"d7532244065a02f28692bb52f38d35150634ae3784f5a4dd4eae5641ad0d5b92": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.3.0-alpha.3"},
+	"b8cf4d175e67de909560fb358f92bea7a3e0df630b5fc2377a045bdb576db486": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.3.0-alpha.2"},
 	},
-	"b832937a3e489d30b4296c6d4a8e2b4b115b2ac8dce842890fe0845a3e0eeef8": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.3.0-alpha.4"},
+	"d7532244065a02f28692bb52f38d35150634ae3784f5a4dd4eae5641ad0d5b92": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.3.0-alpha.3"},
 	},
-	"2d5c2aeb67bc048fc2cd202040bb0d097b2437756df0e1739bc262056313d84c": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.3.0-alpha.5"},
+	"b832937a3e489d30b4296c6d4a8e2b4b115b2ac8dce842890fe0845a3e0eeef8": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.3.0-alpha.4"},
 	},
-	"0b3178763735900332bcb29f3378ebbbaf255a7e630c1391840980909f2b228e": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.3.0-beta.0"},
+	"2d5c2aeb67bc048fc2cd202040bb0d097b2437756df0e1739bc262056313d84c": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.3.0-alpha.5"},
 	},
-	"dde648223cac6d919e6df014d150a88008125490681efdb045ff338e3794ca1f": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.3.0-beta.1"},
+	"0b3178763735900332bcb29f3378ebbbaf255a7e630c1391840980909f2b228e": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.3.0-beta.0"},
 	},
-	"d64d600ce73f7e3f874b94391bec4c63eb6fa9e8bbb970b594152e5f7799faf8": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.3.0-beta.2"},
+	"dde648223cac6d919e6df014d150a88008125490681efdb045ff338e3794ca1f": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.3.0-beta.1"},
 	},
-	"929380bbd2dbc17bb9fa075018e03a2c689895a649cd9a1c53c401583d3638d2": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.3.0-beta.3"},
+	"d64d600ce73f7e3f874b94391bec4c63eb6fa9e8bbb970b594152e5f7799faf8": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.3.0-beta.2"},
 	},
-	"551663dddb598620bae2e53b6492358c91a3afd691ac4fc446d8b905083518cd": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.3.1"},
+	"929380bbd2dbc17bb9fa075018e03a2c689895a649cd9a1c53c401583d3638d2": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.3.0-beta.3"},
 	},
-	"c83b78f54a7569ae6c15c6b0eee3eeff7e769ed92d9da987fe3102211cc851d4": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.3.1-beta.0"},
+	"551663dddb598620bae2e53b6492358c91a3afd691ac4fc446d8b905083518cd": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.3.1"},
 	},
-	"512e8ae17adef161b07f659f8d10ba4709541f7755f492ee9c6dbef89c1394df": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.3.1-beta.1"},
+	"c83b78f54a7569ae6c15c6b0eee3eeff7e769ed92d9da987fe3102211cc851d4": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.3.1-beta.0"},
 	},
-	"97e91fa404913cb885975453170d0138ad8b587117a63a35605c4dae22cb2426": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.3.10"},
+	"512e8ae17adef161b07f659f8d10ba4709541f7755f492ee9c6dbef89c1394df": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.3.1-beta.1"},
 	},
-	"cb61a14fa81aa729bd768fa57772f9597d32e28f7cdb3e64a01681ef9aca8d61": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.3.10-beta.0"},
+	"97e91fa404913cb885975453170d0138ad8b587117a63a35605c4dae22cb2426": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.3.10"},
 	},
-	"90264f935c1e2075db3ceb0855bdf7296daeda213cd8eae340b18b9a363b8199": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.3.11-beta.0"},
+	"cb61a14fa81aa729bd768fa57772f9597d32e28f7cdb3e64a01681ef9aca8d61": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.3.10-beta.0"},
 	},
-	"b8431718bf784f7610d2384aee402d5236801103524e07e86d17d77d0a352654": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.3.2"},
+	"90264f935c1e2075db3ceb0855bdf7296daeda213cd8eae340b18b9a363b8199": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.3.11-beta.0"},
 	},
-	"ad5356484524ed85455926bff5a3d080efaaf552fbf59ffda2bfb3fe096784de": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.3.2-beta.0"},
+	"b8431718bf784f7610d2384aee402d5236801103524e07e86d17d77d0a352654": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.3.2"},
 	},
-	"f7d9d8a12dddd51bf7134423aebeb499f83408dadc17f94708be3fdc707668fc": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.3.3"},
+	"ad5356484524ed85455926bff5a3d080efaaf552fbf59ffda2bfb3fe096784de": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.3.2-beta.0"},
 	},
-	"2c866e3254011de9de2ba65f9fec88e1a6abb0b6c1dff7c74468f4e053839e7d": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.3.3-beta.0"},
+	"f7d9d8a12dddd51bf7134423aebeb499f83408dadc17f94708be3fdc707668fc": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.3.3"},
 	},
-	"ab658b814140bb996f1ec8c328cd5742c915b3622e303cc7366eae668aca9277": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.3.4"},
+	"2c866e3254011de9de2ba65f9fec88e1a6abb0b6c1dff7c74468f4e053839e7d": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.3.3-beta.0"},
 	},
-	"555f048ad115a0e26b3486398ca0383af84a9159083737baad02a3b4b36b31a0": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.3.4-beta.0"},
+	"ab658b814140bb996f1ec8c328cd5742c915b3622e303cc7366eae668aca9277": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.3.4"},
 	},
-	"fef56dd43a56c4b6384a154ce362fc059b83c666a2cc74aab42a819f5813d0d1": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.3.5"},
+	"555f048ad115a0e26b3486398ca0383af84a9159083737baad02a3b4b36b31a0": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.3.4-beta.0"},
 	},
-	"277ac74b8905417713f0f800632e3fdef2ff8566538100bd2085833146604600": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.3.5-beta.0"},
+	"fef56dd43a56c4b6384a154ce362fc059b83c666a2cc74aab42a819f5813d0d1": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.3.5"},
 	},
-	"19606adc5fb54b7050daf441b51421fb56a088c67faa2e886938c8ecba75626f": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.3.6"},
+	"277ac74b8905417713f0f800632e3fdef2ff8566538100bd2085833146604600": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.3.5-beta.0"},
 	},
-	"c2b05db853cb507c4a8e0d9394e8fa6045ce468db6822d9b8f4449cb951d8cb1": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.3.6-beta.0"},
+	"19606adc5fb54b7050daf441b51421fb56a088c67faa2e886938c8ecba75626f": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.3.6"},
 	},
-	"c48c3f8e4eb3623ac32798380c480eafad47d01e3a33ea9b91c1a114dd8e094d": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.3.7"},
+	"c2b05db853cb507c4a8e0d9394e8fa6045ce468db6822d9b8f4449cb951d8cb1": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.3.6-beta.0"},
 	},
-	"d970a125fbfe73262d825c1fc1adde5c3d4b454c3a3c2b166f3ab13f815cd2d8": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.3.7-beta.0"},
+	"c48c3f8e4eb3623ac32798380c480eafad47d01e3a33ea9b91c1a114dd8e094d": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.3.7"},
 	},
-	"4ec5f4407de35043b69de53ff3428e7fc87a8e2d7aedb4e7ac22fea9451f2067": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.3.8"},
+	"d970a125fbfe73262d825c1fc1adde5c3d4b454c3a3c2b166f3ab13f815cd2d8": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.3.7-beta.0"},
 	},
-	"435e6e2a28387366d4bacae76cb1de1f8ea57fd66ecd1d69f8a2f5b7a1b6ee31": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.3.8-beta.0"},
+	"4ec5f4407de35043b69de53ff3428e7fc87a8e2d7aedb4e7ac22fea9451f2067": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.3.8"},
 	},
-	"937f0ae3a7a6054b54496f3aa667aef015c56e14cf938480f63ff39bf04c46cc": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.3.9"},
+	"435e6e2a28387366d4bacae76cb1de1f8ea57fd66ecd1d69f8a2f5b7a1b6ee31": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.3.8-beta.0"},
 	},
-	"2f9250d07c36a2798db861a6a56e50f390ac76367ff6ad544da898bc26822c95": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.3.9-beta.0"},
+	"937f0ae3a7a6054b54496f3aa667aef015c56e14cf938480f63ff39bf04c46cc": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.3.9"},
 	},
-	"09198da5c73e70f18553e2b5d82654e0926723094e9fda2288c1b0b58932fd57": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.4.0"},
+	"2f9250d07c36a2798db861a6a56e50f390ac76367ff6ad544da898bc26822c95": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.3.9-beta.0"},
 	},
-	"d5ba53e94b80f4e34269e15574a80a174668d1bb8fdf3d467f247a10b086c9e4": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.4.0-alpha.0"},
+	"09198da5c73e70f18553e2b5d82654e0926723094e9fda2288c1b0b58932fd57": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.4.0"},
 	},
-	"9eab01f2ba96149d39617ef2024ff80a71130c775363e6a934401b450fade25b": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.4.0-alpha.1"},
+	"d5ba53e94b80f4e34269e15574a80a174668d1bb8fdf3d467f247a10b086c9e4": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.4.0-alpha.0"},
 	},
-	"f50ca77022842fdd75f064278ee0f8b1b2f63f75184decfa223da1297aa61d38": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.4.0-alpha.2"},
+	"9eab01f2ba96149d39617ef2024ff80a71130c775363e6a934401b450fade25b": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.4.0-alpha.1"},
 	},
-	"8373841fc3526ef849984b6a10e0dfe066d47d07136700ffcdd351bac115592d": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.4.0-alpha.3"},
+	"f50ca77022842fdd75f064278ee0f8b1b2f63f75184decfa223da1297aa61d38": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.4.0-alpha.2"},
 	},
-	"02492d39ee23e1f8a3819efe5e8cced51e78d4fdbbfbe3098fdd1be5fd13094a": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.4.0-beta.0"},
+	"8373841fc3526ef849984b6a10e0dfe066d47d07136700ffcdd351bac115592d": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.4.0-alpha.3"},
 	},
-	"fc519881ebca747433710c61edda230029f875265d2d8dc394353e4d09a445ca": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.4.0-beta.1"},
+	"02492d39ee23e1f8a3819efe5e8cced51e78d4fdbbfbe3098fdd1be5fd13094a": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.4.0-beta.0"},
 	},
-	"84630415eb4dab2add76e86b10ae37ddffd7c3fa395a69303ab8f8009b127f88": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.4.0-beta.10"},
+	"fc519881ebca747433710c61edda230029f875265d2d8dc394353e4d09a445ca": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.4.0-beta.1"},
 	},
-	"5bb8475b07c9d51af207954209e649266798a87ae47df9c22668ed51efe8b4e4": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.4.0-beta.11"},
+	"84630415eb4dab2add76e86b10ae37ddffd7c3fa395a69303ab8f8009b127f88": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.4.0-beta.10"},
 	},
-	"8fc1bfb90ee943c09c7e08a7a590decae595581dda4f0497c3939a880ea80e1e": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.4.0-beta.2"},
+	"5bb8475b07c9d51af207954209e649266798a87ae47df9c22668ed51efe8b4e4": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.4.0-beta.11"},
 	},
-	"bfb050bf66cdf5d205ff7322b03bd0cc2e39fea3186cb4ab00bd17f9bd172727": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.4.0-beta.3"},
+	"8fc1bfb90ee943c09c7e08a7a590decae595581dda4f0497c3939a880ea80e1e": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.4.0-beta.2"},
 	},
-	"7f57f1401d4c302b0864f161c4c711ae04bbebfc9a661039704cdefce5ec1cc8": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.4.0-beta.4"},
+	"bfb050bf66cdf5d205ff7322b03bd0cc2e39fea3186cb4ab00bd17f9bd172727": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.4.0-beta.3"},
 	},
-	"21720e3b0b23de66c56e19a95b0d09f5bdb4a5932aea118b20413a9fc7b82b9b": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.4.0-beta.5"},
+	"7f57f1401d4c302b0864f161c4c711ae04bbebfc9a661039704cdefce5ec1cc8": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.4.0-beta.4"},
 	},
-	"cfca1b9d987c3091341beb158f8ac309054d7bdc855dc576b2701639bc0aa7a6": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.4.0-beta.6"},
+	"21720e3b0b23de66c56e19a95b0d09f5bdb4a5932aea118b20413a9fc7b82b9b": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.4.0-beta.5"},
 	},
-	"42716fc13b833f496c6685cf5071df669820c5db2e99fc7eae7518a379801d9d": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.4.0-beta.7"},
+	"cfca1b9d987c3091341beb158f8ac309054d7bdc855dc576b2701639bc0aa7a6": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.4.0-beta.6"},
 	},
-	"61c65ff7699e15ece319f1bdb7ba4e2aae8cc2e0d89d917218d22aae6a91702d": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.4.0-beta.8"},
+	"42716fc13b833f496c6685cf5071df669820c5db2e99fc7eae7518a379801d9d": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.4.0-beta.7"},
 	},
-	"66f304f8f6610c65c582e1aff33b9edc1bd35166108b2e5a38758bdeeb950b2e": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.4.0-beta.9"},
+	"61c65ff7699e15ece319f1bdb7ba4e2aae8cc2e0d89d917218d22aae6a91702d": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.4.0-beta.8"},
 	},
-	"71b42dbc011652c864d1224f730c8ea7b014c52245c9e218781834287865fcd7": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.4.1"},
+	"66f304f8f6610c65c582e1aff33b9edc1bd35166108b2e5a38758bdeeb950b2e": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.4.0-beta.9"},
 	},
-	"e8fa3c1b0bfc9a0d063e44274e6d236fb5385fa8662dc378372a892bd313664e": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.4.1-beta.0"},
+	"71b42dbc011652c864d1224f730c8ea7b014c52245c9e218781834287865fcd7": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.4.1"},
 	},
-	"003112556c5b09adcf62df5738d20afbb888986b89364c3325a37f96edd70974": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.4.1-beta.1"},
+	"e8fa3c1b0bfc9a0d063e44274e6d236fb5385fa8662dc378372a892bd313664e": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.4.1-beta.0"},
 	},
-	"6530189f080e02e8969ae89921c173b352feca75163c6710ad29ae8b312a80d2": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.4.1-beta.2"},
+	"003112556c5b09adcf62df5738d20afbb888986b89364c3325a37f96edd70974": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.4.1-beta.1"},
 	},
-	"874bb0fb4ffb42f5e747828f1f1418a1e5d6cd64ade1f4f3b92f885ee82cb78b": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.4.11-beta.0"},
+	"6530189f080e02e8969ae89921c173b352feca75163c6710ad29ae8b312a80d2": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.4.1-beta.2"},
 	},
-	"e3c3403a82ec0d54b8411f7ba645853b2fffd7bdbb1c260e41e65783c91fcf88": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.4.12"},
+	"874bb0fb4ffb42f5e747828f1f1418a1e5d6cd64ade1f4f3b92f885ee82cb78b": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.4.11-beta.0"},
 	},
-	"5c93d12537d53574b7088839c44b6b25918613c5a35cc08d5cb9a4712f03c78b": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.4.12-beta.0"},
+	"e3c3403a82ec0d54b8411f7ba645853b2fffd7bdbb1c260e41e65783c91fcf88": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.4.12"},
 	},
-	"712650e688cda08986436551142b9a8ee1b66bb78e95535c719803e3bd17f4a0": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.4.2"},
+	"5c93d12537d53574b7088839c44b6b25918613c5a35cc08d5cb9a4712f03c78b": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.4.12-beta.0"},
 	},
-	"1ded3ca2e1fa592a364a74df2a4ffdeebdb500e3b956c422aed3edeb12a825d7": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.4.2-beta.0"},
+	"712650e688cda08986436551142b9a8ee1b66bb78e95535c719803e3bd17f4a0": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.4.2"},
 	},
-	"e20e8a706e54ca03baa004efafa1862a99424ca729fa6e79fd984177565a3c01": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.4.2-beta.1"},
+	"1ded3ca2e1fa592a364a74df2a4ffdeebdb500e3b956c422aed3edeb12a825d7": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.4.2-beta.0"},
 	},
-	"d9d2807a538c15224f5443f09a4ae0b633e0052ff0c1c04825f328da3e07007d": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.4.3"},
+	"e20e8a706e54ca03baa004efafa1862a99424ca729fa6e79fd984177565a3c01": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.4.2-beta.1"},
 	},
-	"40f1495212f916f3b1da7134e60175104eb36104801874cfc4f8b56d9a77bed2": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.4.3-beta.0"},
+	"d9d2807a538c15224f5443f09a4ae0b633e0052ff0c1c04825f328da3e07007d": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.4.3"},
 	},
-	"b506cb1f8dbece159bd7cc7af6c3e941abb0a3a19ef94c239da5eef65bcaa46c": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.4.4"},
+	"40f1495212f916f3b1da7134e60175104eb36104801874cfc4f8b56d9a77bed2": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.4.3-beta.0"},
 	},
-	"e46c3b7a0ae91471d9ee1a3df349d890cbe07dc86c9b84828c57bf3875dac06e": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.4.4-beta.0"},
+	"b506cb1f8dbece159bd7cc7af6c3e941abb0a3a19ef94c239da5eef65bcaa46c": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.4.4"},
 	},
-	"d369fd514c43d2d1230c03d9fdb6a468d2b267ae8e4366f5c3aa248486017a7b": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.4.5"},
+	"e46c3b7a0ae91471d9ee1a3df349d890cbe07dc86c9b84828c57bf3875dac06e": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.4.4-beta.0"},
 	},
-	"dcd32ccbcb5c9300f8dc8fa4d4b81146f818e548a85cd395fb69b43cc013a561": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.4.5-beta.0"},
+	"d369fd514c43d2d1230c03d9fdb6a468d2b267ae8e4366f5c3aa248486017a7b": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.4.5"},
 	},
-	"5b734390be4b15a8116f99485f71c3fb5bcf21422a08204bfaf95231896156c4": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.4.6"},
+	"dcd32ccbcb5c9300f8dc8fa4d4b81146f818e548a85cd395fb69b43cc013a561": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.4.5-beta.0"},
 	},
-	"cdb67085f472706a33172d3881bd40990ec5b76395cce70c4823e06cd896502b": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.4.6-beta.0"},
+	"5b734390be4b15a8116f99485f71c3fb5bcf21422a08204bfaf95231896156c4": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.4.6"},
 	},
-	"e36260eef284af2eec246e291c8dfdca8860f2c51cc8040c2a3a0372362fe093": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.4.7"},
+	"cdb67085f472706a33172d3881bd40990ec5b76395cce70c4823e06cd896502b": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.4.6-beta.0"},
 	},
-	"a207c128589cafc88e01e43c077ea3a17ace8e145d0a046b0d0b84d7cd09da7c": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.4.7-beta.0"},
+	"e36260eef284af2eec246e291c8dfdca8860f2c51cc8040c2a3a0372362fe093": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.4.7"},
 	},
-	"84d9b89f267509f6663171d7df44bd41522211a97efa3f3774e96cf9ad844852": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.4.8"},
+	"a207c128589cafc88e01e43c077ea3a17ace8e145d0a046b0d0b84d7cd09da7c": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.4.7-beta.0"},
 	},
-	"387c51802fd7e7513489701581258fff9fae4667e1738d8462b75999bd3f17af": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.4.8-beta.0"},
+	"84d9b89f267509f6663171d7df44bd41522211a97efa3f3774e96cf9ad844852": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.4.8"},
 	},
-	"d9fb4cfafe596496903c08d4791de6ace2151f1cc86ccc6fe47b43dc60a6c465": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.4.9"},
+	"387c51802fd7e7513489701581258fff9fae4667e1738d8462b75999bd3f17af": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.4.8-beta.0"},
 	},
-	"953facd72821051139b1bfd7f0efb3a4edd001c2710fedaa2949b26e933c864a": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.4.9-beta.0"},
+	"d9fb4cfafe596496903c08d4791de6ace2151f1cc86ccc6fe47b43dc60a6c465": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.4.9"},
 	},
-	"70ac83ad0331d194ac38fc9be9a91a9a7e8b42d337f3727c1ece0388b9c12346": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.5.0"},
+	"953facd72821051139b1bfd7f0efb3a4edd001c2710fedaa2949b26e933c864a": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.4.9-beta.0"},
 	},
-	"c4da29a60e9edb54f0c37fa6a484539fb2e5bb72874a45757f1830c07b689f7f": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.5.0-alpha.0"},
+	"70ac83ad0331d194ac38fc9be9a91a9a7e8b42d337f3727c1ece0388b9c12346": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.5.0"},
 	},
-	"f07980c0a1750da0585574ca2ac9ed891b17202c8a3311e5bb2e8b89c0771663": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.5.0-alpha.1"},
+	"c4da29a60e9edb54f0c37fa6a484539fb2e5bb72874a45757f1830c07b689f7f": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.5.0-alpha.0"},
 	},
-	"d8a4afdf3112d53c8f835fd39cdf478eb7308570fa79eb370deda27c8fedd67e": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.5.0-alpha.2"},
+	"f07980c0a1750da0585574ca2ac9ed891b17202c8a3311e5bb2e8b89c0771663": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.5.0-alpha.1"},
 	},
-	"501430e09c8c21a9d7167d9470257d15f470525f3b4334390cbf2d7be62df0db": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.5.0-beta.0"},
+	"d8a4afdf3112d53c8f835fd39cdf478eb7308570fa79eb370deda27c8fedd67e": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.5.0-alpha.2"},
 	},
-	"fa7c8644a7f02232fde707b6ffecc7045734bd0c83b1de3a17357c71feb40a35": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.5.0-beta.1"},
+	"501430e09c8c21a9d7167d9470257d15f470525f3b4334390cbf2d7be62df0db": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.5.0-beta.0"},
 	},
-	"150e79d398b5f1ecd3b7697c162877125aecfc6952bfb9944acb451fbbdede1a": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.5.0-beta.2"},
+	"fa7c8644a7f02232fde707b6ffecc7045734bd0c83b1de3a17357c71feb40a35": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.5.0-beta.1"},
 	},
-	"8b650be06aad7eb111b9b98b50228e2133fac73dbc8a04e725b3f4ab872d0059": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.5.0-beta.3"},
+	"150e79d398b5f1ecd3b7697c162877125aecfc6952bfb9944acb451fbbdede1a": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.5.0-beta.2"},
 	},
-	"cd0fa7e5d104a266273872a63150801f8d33e2cf500e8f43bb5b5044aeab2163": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.5.1"},
+	"8b650be06aad7eb111b9b98b50228e2133fac73dbc8a04e725b3f4ab872d0059": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.5.0-beta.3"},
 	},
-	"9f81566fc7810b7bb555bba1ba2328699d2d25b52000b59c0cab6e41e86efbe2": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.5.1-beta.0"},
+	"cd0fa7e5d104a266273872a63150801f8d33e2cf500e8f43bb5b5044aeab2163": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.5.1"},
 	},
-	"9d4b08e41e78fdb35ea7b1db5b5ff252e073aad3dee7cb8ad4fd2d51bac57bd0": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.5.2"},
+	"9f81566fc7810b7bb555bba1ba2328699d2d25b52000b59c0cab6e41e86efbe2": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.5.1-beta.0"},
 	},
-	"4985970cc27b3ca5f9c99ef122be640ab17b3b0ae1d0ddb833e166d71d08e506": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.5.2-beta.0"},
+	"9d4b08e41e78fdb35ea7b1db5b5ff252e073aad3dee7cb8ad4fd2d51bac57bd0": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.5.2"},
 	},
-	"db27c0b1632d467605ffad6925b1f9e0294d33bc4a4ab4d6bdc1b2af2b371dd8": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.5.3"},
+	"4985970cc27b3ca5f9c99ef122be640ab17b3b0ae1d0ddb833e166d71d08e506": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.5.2-beta.0"},
 	},
-	"451eb05b6245b21d0436847cb327abb04540ebb142894966e18d3f19117cd7bf": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.5.3-beta.0"},
+	"db27c0b1632d467605ffad6925b1f9e0294d33bc4a4ab4d6bdc1b2af2b371dd8": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.5.3"},
 	},
-	"37abba9eab8627e5ef06b90c00481c79c1947b06117862ab8dd2b223bd8d6942": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.5.4"},
+	"451eb05b6245b21d0436847cb327abb04540ebb142894966e18d3f19117cd7bf": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.5.3-beta.0"},
 	},
-	"b8c3f22a0f0d5842b5c9aad417ae1038d2b1b69ce16657f33267041ac41070e5": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.5.4-beta.0"},
+	"37abba9eab8627e5ef06b90c00481c79c1947b06117862ab8dd2b223bd8d6942": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.5.4"},
 	},
-	"6313f13b339191ca419531a1027baed33ef8d92cd6ce86b127da02c8cb7e6175": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.5.5"},
+	"b8c3f22a0f0d5842b5c9aad417ae1038d2b1b69ce16657f33267041ac41070e5": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.5.4-beta.0"},
 	},
-	"efa1df005c722ded8c457f2c64ab62fa1b02f92c2cd84aa161417347654d4509": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.5.5-beta.0"},
+	"6313f13b339191ca419531a1027baed33ef8d92cd6ce86b127da02c8cb7e6175": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.5.5"},
 	},
-	"2742dc370656dd5dd955f3f11ef55e6b866e58f6206bd56a390d1b87afecf6f0": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.5.6"},
+	"efa1df005c722ded8c457f2c64ab62fa1b02f92c2cd84aa161417347654d4509": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.5.5-beta.0"},
 	},
-	"158f2a45a54d17ee66f3cbdcdf1ac90027a346042e5513c4b999acf820c6602a": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.5.6-beta.0"},
+	"2742dc370656dd5dd955f3f11ef55e6b866e58f6206bd56a390d1b87afecf6f0": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.5.6"},
 	},
-	"f6fcfbc27362426c4b86000fffc7c84a86bf755c6835935eb61b51a358e5998b": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.5.7"},
+	"158f2a45a54d17ee66f3cbdcdf1ac90027a346042e5513c4b999acf820c6602a": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.5.6-beta.0"},
 	},
-	"ce150554bed2a80f8917e816635bb2c65f3c74255e936a505e907500b6df2d24": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.5.7-beta.0"},
+	"f6fcfbc27362426c4b86000fffc7c84a86bf755c6835935eb61b51a358e5998b": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.5.7"},
 	},
-	"0808cc8fc5fdf7fc3f42e893fc306e48dca8deaae881d47125350bc6865c7b5c": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.5.8"},
+	"ce150554bed2a80f8917e816635bb2c65f3c74255e936a505e907500b6df2d24": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.5.7-beta.0"},
 	},
-	"e02f1e6bbca62668c33a736b197a14a0a46b7b9652f9a78caf5ce3ab45802344": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.5.8-beta.0"},
+	"0808cc8fc5fdf7fc3f42e893fc306e48dca8deaae881d47125350bc6865c7b5c": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.5.8"},
 	},
-	"9fde7206230b2f8edd252a271f61868bce7fc9334c35b31f1a77d19dcdf0ee73": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.5.9-beta.0"},
+	"e02f1e6bbca62668c33a736b197a14a0a46b7b9652f9a78caf5ce3ab45802344": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.5.8-beta.0"},
 	},
-	"14e75958d715d966edb556774dd6af60116e92d67f7d0b1df2384543491b5631": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.6.0"},
+	"9fde7206230b2f8edd252a271f61868bce7fc9334c35b31f1a77d19dcdf0ee73": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.5.9-beta.0"},
 	},
-	"b309b7f0b804f1438a65c60a92d6ac9d672d26286e85c9f7a8680ce089058724": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.6.0-alpha.0"},
+	"14e75958d715d966edb556774dd6af60116e92d67f7d0b1df2384543491b5631": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.6.0"},
 	},
-	"dcfcbcfb4113846d779d089d06dc2bf20745e6ed3a01632066dad9088f6e1a95": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.6.0-alpha.1"},
+	"b309b7f0b804f1438a65c60a92d6ac9d672d26286e85c9f7a8680ce089058724": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.6.0-alpha.0"},
 	},
-	"d5b682e55326dd4d4ec35a4bf6105abedb70baac2a541748a699b0439beaebda": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.6.0-alpha.2"},
+	"dcfcbcfb4113846d779d089d06dc2bf20745e6ed3a01632066dad9088f6e1a95": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.6.0-alpha.1"},
 	},
-	"a3e14fb0fd3eaa3d4697010c84651e7d501abc624cbef60a6ac6cfa91eb89bad": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.6.0-alpha.3"},
+	"d5b682e55326dd4d4ec35a4bf6105abedb70baac2a541748a699b0439beaebda": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.6.0-alpha.2"},
 	},
-	"190dcceae3f2006933c4ab3308811bdd1c265cd0f5c0303d943c4295d88ed95e": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.6.0-beta.0"},
+	"a3e14fb0fd3eaa3d4697010c84651e7d501abc624cbef60a6ac6cfa91eb89bad": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.6.0-alpha.3"},
 	},
-	"5687cbf830cd4c52ba2667f2619de3e91067cca796ce5ea8a2ffaf791d24f3e6": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.6.0-beta.1"},
+	"190dcceae3f2006933c4ab3308811bdd1c265cd0f5c0303d943c4295d88ed95e": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.6.0-beta.0"},
 	},
-	"5f7a79edc60bf1e430b343630ccf3ddcd2a1a43fcf80737790bb77ffc0b6ea87": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.6.0-beta.2"},
+	"5687cbf830cd4c52ba2667f2619de3e91067cca796ce5ea8a2ffaf791d24f3e6": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.6.0-beta.1"},
 	},
-	"0a98f4fd2710a90a2525c26ec417c529c5f101c0de9b7a3d2dfa7bb3b21b17ca": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.6.0-beta.3"},
+	"5f7a79edc60bf1e430b343630ccf3ddcd2a1a43fcf80737790bb77ffc0b6ea87": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.6.0-beta.2"},
 	},
-	"351dfc485705a9e4d44486b62a9f4a15920d66675f70afd32b2369d2e6f2ce7e": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.6.0-beta.4"},
+	"0a98f4fd2710a90a2525c26ec417c529c5f101c0de9b7a3d2dfa7bb3b21b17ca": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.6.0-beta.3"},
 	},
-	"51148e14b12aead0c2ca4fa1ee97a8d459aafbd71dc1558a5ae337a6398a9efa": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.6.0-rc.1"},
+	"351dfc485705a9e4d44486b62a9f4a15920d66675f70afd32b2369d2e6f2ce7e": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.6.0-beta.4"},
 	},
-	"eff3d9e2d40c2132f2908cb54546ac88b85bdc9c0bb068486720ab39c6516636": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.6.1"},
+	"51148e14b12aead0c2ca4fa1ee97a8d459aafbd71dc1558a5ae337a6398a9efa": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.6.0-rc.1"},
 	},
-	"f5eba50ca326058204aa5fcf0d7a8499195f9f3125f89f881ef0ba463fc6ecd1": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.6.1-beta.0"},
+	"eff3d9e2d40c2132f2908cb54546ac88b85bdc9c0bb068486720ab39c6516636": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.6.1"},
 	},
-	"c56b802542c62fc1c174858b61700c35786e2cbd1d84e20120bb5d50a4c9a1aa": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.6.10"},
+	"f5eba50ca326058204aa5fcf0d7a8499195f9f3125f89f881ef0ba463fc6ecd1": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.6.1-beta.0"},
 	},
-	"e010ad809abfc8c0a50b00f35b98374ca09ad152341a6e08bf01bfc0041d1851": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.6.10-beta.0"},
+	"c56b802542c62fc1c174858b61700c35786e2cbd1d84e20120bb5d50a4c9a1aa": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.6.10"},
 	},
-	"ec7f10990e9b6816c792e15ffb1ee63247fedfc1202c72d3704c62b73b461505": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.6.11"},
+	"e010ad809abfc8c0a50b00f35b98374ca09ad152341a6e08bf01bfc0041d1851": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.6.10-beta.0"},
 	},
-	"1fa1492545a6aaa80b328fcdb98a7de87e2947eef0905e9476c8dd9433c929c2": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.6.11-beta.0"},
+	"ec7f10990e9b6816c792e15ffb1ee63247fedfc1202c72d3704c62b73b461505": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.6.11"},
 	},
-	"999416edb0784b8e7edd3ffe5404da4f0f4701bdcc8a2be5c8df004a81ed4e03": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.6.12"},
+	"1fa1492545a6aaa80b328fcdb98a7de87e2947eef0905e9476c8dd9433c929c2": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.6.11-beta.0"},
 	},
-	"97c36a4fb3c532e746ad19ae6c5944fdd83cdac5c62e77ef172972aed01240fb": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.6.12-beta.0"},
+	"999416edb0784b8e7edd3ffe5404da4f0f4701bdcc8a2be5c8df004a81ed4e03": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.6.12"},
 	},
-	"f90d03f1fadf1a0419a5c69e6ec31f63fa8b23eac94963975a06285b81be1e35": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.6.13"},
+	"97c36a4fb3c532e746ad19ae6c5944fdd83cdac5c62e77ef172972aed01240fb": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.6.12-beta.0"},
 	},
-	"f26e13faec40781be291c69d0b908ff229840fb249641a8d2c6cf34e2a664b27": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.6.13-beta.0"},
+	"f90d03f1fadf1a0419a5c69e6ec31f63fa8b23eac94963975a06285b81be1e35": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.6.13"},
 	},
-	"86d76deedfbc851aa1ef2a49393f5679588f21400ae188a2e9b2e416ba0f5a0f": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.6.14-beta.0"},
+	"f26e13faec40781be291c69d0b908ff229840fb249641a8d2c6cf34e2a664b27": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.6.13-beta.0"},
 	},
-	"e6464c0a839f0647cdc268c9af480cf6413e7f1ae5ec0426ea92845932d84f03": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.6.2"},
+	"86d76deedfbc851aa1ef2a49393f5679588f21400ae188a2e9b2e416ba0f5a0f": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.6.14-beta.0"},
 	},
-	"6487f8449e98c92a46352e555d55f4acbaa18f11d9efe8530b3000a57d832f64": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.6.2-beta.0"},
+	"e6464c0a839f0647cdc268c9af480cf6413e7f1ae5ec0426ea92845932d84f03": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.6.2"},
 	},
-	"afae1ba685b27541b2f8d35a5c5a3638e19c17f95c0fb0712e63b621a628acb0": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.6.3"},
+	"6487f8449e98c92a46352e555d55f4acbaa18f11d9efe8530b3000a57d832f64": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.6.2-beta.0"},
 	},
-	"994de7364545b65c6312b80a7a771ce424caeb30a6e07c53b4f9d65ac8e8f630": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.6.3-beta.0"},
+	"afae1ba685b27541b2f8d35a5c5a3638e19c17f95c0fb0712e63b621a628acb0": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.6.3"},
 	},
-	"4e58cc4ed1992349788343edd60df0bcddc2488bda57f79733119e129bd19de3": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.6.3-beta.1"},
+	"994de7364545b65c6312b80a7a771ce424caeb30a6e07c53b4f9d65ac8e8f630": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.6.3-beta.0"},
 	},
-	"623eea3fe3df690ed99ceee04ee985c0aedaa2cab7a444b339c99ea15698ac6d": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.6.4"},
+	"4e58cc4ed1992349788343edd60df0bcddc2488bda57f79733119e129bd19de3": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.6.3-beta.1"},
 	},
-	"52077fe03d12f14b89507bdcf0d64bd9af861e022df6af3632e56424120f0975": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.6.4-beta.0"},
+	"623eea3fe3df690ed99ceee04ee985c0aedaa2cab7a444b339c99ea15698ac6d": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.6.4"},
 	},
-	"96a9bdfa0c6a16913162bbf30f9266c62e5f9d5b9bd4e5669f455b6fa49a34e9": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.6.4-beta.1"},
+	"52077fe03d12f14b89507bdcf0d64bd9af861e022df6af3632e56424120f0975": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.6.4-beta.0"},
 	},
-	"aa74d2436974286915cda12c3dc4fc2fe6c36ba771c4a82ea1f557fdb75155ff": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.6.5"},
+	"96a9bdfa0c6a16913162bbf30f9266c62e5f9d5b9bd4e5669f455b6fa49a34e9": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.6.4-beta.1"},
 	},
-	"dd19d94080bb2e5ed11b5373f52c7466124f1c08995f52365163bc0082fa4069": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.6.5-beta.0"},
+	"aa74d2436974286915cda12c3dc4fc2fe6c36ba771c4a82ea1f557fdb75155ff": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.6.5"},
 	},
-	"2f07acd07c19ed20d3da5c83e7d4ed1d7ba8b948f6173138df37e8e06149fbc8": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.6.6"},
+	"dd19d94080bb2e5ed11b5373f52c7466124f1c08995f52365163bc0082fa4069": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.6.5-beta.0"},
 	},
-	"724aa9de1c3aeb084229bb86425a0d907bf13837e39fac74702b3b96ce260ca2": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.6.6-beta.0"},
+	"2f07acd07c19ed20d3da5c83e7d4ed1d7ba8b948f6173138df37e8e06149fbc8": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.6.6"},
 	},
-	"a6e2aa5bb246f7390dde50520e247ebc80a6152b857d6dbd7610b480acc180a8": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.6.7"},
+	"724aa9de1c3aeb084229bb86425a0d907bf13837e39fac74702b3b96ce260ca2": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.6.6-beta.0"},
 	},
-	"aade28ccd52979560d5a51d1373af4496219ff54270868855f71a40c1359082f": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.6.7-beta.0"},
+	"a6e2aa5bb246f7390dde50520e247ebc80a6152b857d6dbd7610b480acc180a8": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.6.7"},
 	},
-	"c46c0d272c95b789e6bd608e3ee0a81dd78e28b0b1626586d597d7d2f0d65187": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.6.8"},
+	"aade28ccd52979560d5a51d1373af4496219ff54270868855f71a40c1359082f": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.6.7-beta.0"},
 	},
-	"c0de4f7e4ab9d7fc2ec1d642bd3b7342e43e3ef507700284111e4f9b7a49ba2c": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.6.8-beta.0"},
+	"c46c0d272c95b789e6bd608e3ee0a81dd78e28b0b1626586d597d7d2f0d65187": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.6.8"},
 	},
-	"d00e061b796c5920845ba366401e1c545fce39270b061a37546af9edffe62e08": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.6.9"},
+	"c0de4f7e4ab9d7fc2ec1d642bd3b7342e43e3ef507700284111e4f9b7a49ba2c": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.6.8-beta.0"},
 	},
-	"b5ef6f7113161ee021c2aaab6cce4767207832f39f6271e8ef0a2172c7237a3e": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.6.9-beta.0"},
+	"d00e061b796c5920845ba366401e1c545fce39270b061a37546af9edffe62e08": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.6.9"},
 	},
-	"811bc795000ae610573373bb1d263f4841218f3660dac92d774d28df379874ad": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.7.0"},
+	"b5ef6f7113161ee021c2aaab6cce4767207832f39f6271e8ef0a2172c7237a3e": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.6.9-beta.0"},
 	},
-	"7a6313fa33af818a78845aa772e4bcf58776e37aeb9d5b43e25bcecf4647aee0": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.7.0-alpha.0"},
+	"811bc795000ae610573373bb1d263f4841218f3660dac92d774d28df379874ad": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.7.0"},
 	},
-	"308d67bcb3a36593c9cc5aba81abc36015c2badfae71eaf0f93970d64506273d": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.7.0-alpha.1"},
+	"7a6313fa33af818a78845aa772e4bcf58776e37aeb9d5b43e25bcecf4647aee0": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.7.0-alpha.0"},
 	},
-	"38e83614ad3943e3bf704f7d68bd335caa6b5e7b2b8562f82f613dcf3a7f8c43": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.7.0-alpha.2"},
+	"308d67bcb3a36593c9cc5aba81abc36015c2badfae71eaf0f93970d64506273d": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.7.0-alpha.1"},
 	},
-	"dd364818fc59b2c6695d0f2cabffc5c2946b2263cc1618b3d3184f969edc7b28": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.7.0-alpha.3"},
+	"38e83614ad3943e3bf704f7d68bd335caa6b5e7b2b8562f82f613dcf3a7f8c43": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.7.0-alpha.2"},
 	},
-	"e5aa1fb0acaeb53c517917b7b37147016634cdcef280e51d474936e1315d8bea": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.7.0-alpha.4"},
+	"dd364818fc59b2c6695d0f2cabffc5c2946b2263cc1618b3d3184f969edc7b28": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.7.0-alpha.3"},
 	},
-	"b8d494622ff86ead8fcd79a3ffced536f3ca74804c0afc6972d0eb24bda6a97b": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.7.0-beta.0"},
+	"e5aa1fb0acaeb53c517917b7b37147016634cdcef280e51d474936e1315d8bea": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.7.0-alpha.4"},
 	},
-	"09ca1e869afde2312fb3936682e5a345b2c16213ffc60afc9fdf0e7903b97fa3": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.7.0-beta.1"},
+	"b8d494622ff86ead8fcd79a3ffced536f3ca74804c0afc6972d0eb24bda6a97b": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.7.0-beta.0"},
 	},
-	"364215d531a7c04c35b923a04cb055199783a996d095dfb041a14ad285e83af6": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.7.0-beta.2"},
+	"09ca1e869afde2312fb3936682e5a345b2c16213ffc60afc9fdf0e7903b97fa3": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.7.0-beta.1"},
 	},
-	"28d8133464b0c8d133d497acd8a2858705e85c71cf434177f39046742415e189": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.7.0-beta.3"},
+	"364215d531a7c04c35b923a04cb055199783a996d095dfb041a14ad285e83af6": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.7.0-beta.2"},
 	},
-	"29ecc1a049063d804d40edd044bcb0515d1c25bd8a2ca1fdcaea0115774afc64": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.7.0-rc.1"},
+	"28d8133464b0c8d133d497acd8a2858705e85c71cf434177f39046742415e189": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.7.0-beta.3"},
 	},
-	"35460d07a65e61c8f8ebaa6f35d23353603123211697325bbd57aecf5b945111": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.7.1"},
+	"29ecc1a049063d804d40edd044bcb0515d1c25bd8a2ca1fdcaea0115774afc64": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.7.0-rc.1"},
 	},
-	"061483295ab9b008dee9585195c79b87fabcc3b4861cf841558988bcf5e5b4c5": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.7.1-beta.0"},
+	"35460d07a65e61c8f8ebaa6f35d23353603123211697325bbd57aecf5b945111": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.7.1"},
 	},
-	"13b58ebc7a4e44e39904c8caf2cedebfe40ef5b7630d81e0ddcdf0f2e2bea0a5": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.7.10"},
+	"061483295ab9b008dee9585195c79b87fabcc3b4861cf841558988bcf5e5b4c5": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.7.1-beta.0"},
 	},
-	"d1bdb293a8eed4a0837673c1b3df7b9489e7e284ecbd46b2955cf33171868957": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.7.10-beta.0"},
+	"13b58ebc7a4e44e39904c8caf2cedebfe40ef5b7630d81e0ddcdf0f2e2bea0a5": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.7.10"},
 	},
-	"294744e6a1f0a0116e647374c4a45595728b6b4f015a62026131c0105d5e5c28": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.7.11"},
+	"d1bdb293a8eed4a0837673c1b3df7b9489e7e284ecbd46b2955cf33171868957": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.7.10-beta.0"},
 	},
-	"cd75ad6f1220d9c12194aab7bb4f97bfe6a90069cc139e5c600cdbd72956b559": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.7.11-beta.0"},
+	"294744e6a1f0a0116e647374c4a45595728b6b4f015a62026131c0105d5e5c28": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.7.11"},
 	},
-	"054e40a4ae5972636659b973843c208870e550a413dc1979e552938cf61a0096": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.7.12"},
+	"cd75ad6f1220d9c12194aab7bb4f97bfe6a90069cc139e5c600cdbd72956b559": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.7.11-beta.0"},
 	},
-	"b595b3ef2d5dae8f46efe942f4eca556dbe46ad9fb6727b0e455053cfcc13305": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.7.12-beta.0"},
+	"054e40a4ae5972636659b973843c208870e550a413dc1979e552938cf61a0096": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.7.12"},
 	},
-	"e0017a5d58fcc50a077c58784580182b0821f2b003a66b107ece522ba5bc3dc5": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.7.13"},
+	"b595b3ef2d5dae8f46efe942f4eca556dbe46ad9fb6727b0e455053cfcc13305": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.7.12-beta.0"},
 	},
-	"742118df76395f68c99b0fff8e4c77f7b9280543d6a8a3070dad8a008cd7026e": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.7.13-beta.0"},
+	"e0017a5d58fcc50a077c58784580182b0821f2b003a66b107ece522ba5bc3dc5": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.7.13"},
 	},
-	"55b71117ef48bd97876f2a507c8ac2f271e6522e63adc6c991c48df6f5af90ad": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.7.14"},
+	"742118df76395f68c99b0fff8e4c77f7b9280543d6a8a3070dad8a008cd7026e": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.7.13-beta.0"},
 	},
-	"b440bf1eb7f267ba0c62156e3866eb1587c6982d997aa6df9c2f17c3a0e13a2b": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.7.14-beta.0"},
+	"55b71117ef48bd97876f2a507c8ac2f271e6522e63adc6c991c48df6f5af90ad": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.7.14"},
 	},
-	"553d40df7eef955317a32b5b879b4848cb9045ea30b9e5418dca1bcaeb1983b5": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.7.15"},
+	"b440bf1eb7f267ba0c62156e3866eb1587c6982d997aa6df9c2f17c3a0e13a2b": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.7.14-beta.0"},
 	},
-	"8fc63ce8db7c42f1d02728942c2819f6f375667b5be815c97bebc7c7d0144800": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.7.15-beta.0"},
+	"553d40df7eef955317a32b5b879b4848cb9045ea30b9e5418dca1bcaeb1983b5": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.7.15"},
 	},
-	"8505efe50bd1f77046645b8765ff19ad3d63ad467bdbe4c9ed3e2a41a41dbf80": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.7.16"},
+	"8fc63ce8db7c42f1d02728942c2819f6f375667b5be815c97bebc7c7d0144800": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.7.15-beta.0"},
 	},
-	"3fc9b1df477a027c42c8f6fda9f846d4a61afd31e220d8e6ca9c81c604a5e137": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.7.16-beta.0"},
+	"8505efe50bd1f77046645b8765ff19ad3d63ad467bdbe4c9ed3e2a41a41dbf80": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.7.16"},
 	},
-	"c33a94697040561371a4ee05aaa7f50c82dda57e0f652e316d461b4b647c960d": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.7.17-beta.0"},
+	"3fc9b1df477a027c42c8f6fda9f846d4a61afd31e220d8e6ca9c81c604a5e137": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.7.16-beta.0"},
 	},
-	"258d293785070021c63d9812682c3ce4042c857b211aae217d0a4e18a2692f76": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.7.2"},
+	"c33a94697040561371a4ee05aaa7f50c82dda57e0f652e316d461b4b647c960d": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.7.17-beta.0"},
 	},
-	"294d436c118aa67d5899f2fdbb450995c59e97dc28891a5ab3b11be01e1648b6": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.7.2-beta.0"},
+	"258d293785070021c63d9812682c3ce4042c857b211aae217d0a4e18a2692f76": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.7.2"},
 	},
-	"2c95b0554e17aa39d3ccbce7271d988fdbcf13feaedb65963f1e6ed694b2b112": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.7.3"},
+	"294d436c118aa67d5899f2fdbb450995c59e97dc28891a5ab3b11be01e1648b6": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.7.2-beta.0"},
 	},
-	"c6a488fd295d3d31ad4fb0416e8224aec7ec1d0096d3c8327ca42bbcd1a84b75": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.7.3-beta.0"},
+	"2c95b0554e17aa39d3ccbce7271d988fdbcf13feaedb65963f1e6ed694b2b112": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.7.3"},
 	},
-	"fb28886af946fd70a66ccf4adfc67a3c7f961c7536e5ec6ee1bdf3c09aea77e3": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.7.4"},
+	"c6a488fd295d3d31ad4fb0416e8224aec7ec1d0096d3c8327ca42bbcd1a84b75": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.7.3-beta.0"},
 	},
-	"9038cda274ded24daab860e93952f325360b2f631a4d9e56113f49f5c7c30953": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.7.4-beta.0"},
+	"fb28886af946fd70a66ccf4adfc67a3c7f961c7536e5ec6ee1bdf3c09aea77e3": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.7.4"},
 	},
-	"189a4ac63e9e71d8d6b8d01db87e145dd75a0d64e568e5f85b6ef71f0bd41eb4": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.7.5"},
+	"9038cda274ded24daab860e93952f325360b2f631a4d9e56113f49f5c7c30953": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.7.4-beta.0"},
 	},
-	"ea57d490e70257c01b882eb0f20b4d3b75a9acb6d690a5bd562d811f3b94049a": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.7.5-beta.0"},
+	"189a4ac63e9e71d8d6b8d01db87e145dd75a0d64e568e5f85b6ef71f0bd41eb4": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.7.5"},
 	},
-	"e681018be68a19a40b5c96083d43a0ddabccbf0e6611621b855c5a3a2b07ed72": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.7.6"},
+	"ea57d490e70257c01b882eb0f20b4d3b75a9acb6d690a5bd562d811f3b94049a": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.7.5-beta.0"},
 	},
-	"2051a4297d795a76c5e3dbbed2986997392cce3d6a7555fff8f9a7aea95968ea": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.7.6-beta.0"},
+	"e681018be68a19a40b5c96083d43a0ddabccbf0e6611621b855c5a3a2b07ed72": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.7.6"},
 	},
-	"5c4cd6ac3c620bd548ca5f17dc4a1d3d0cadd4d087be2f2ad44ae294093403a1": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.7.7"},
+	"2051a4297d795a76c5e3dbbed2986997392cce3d6a7555fff8f9a7aea95968ea": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.7.6-beta.0"},
 	},
-	"73341055a0bd32d9e2778155409f0c4f836b9ab903948521239fca86706be882": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.7.7-beta.0"},
+	"5c4cd6ac3c620bd548ca5f17dc4a1d3d0cadd4d087be2f2ad44ae294093403a1": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.7.7"},
 	},
-	"474657930c18fad95410859d6428fb5e6040c6a3bf6740321b746269a1af862d": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.7.8"},
+	"73341055a0bd32d9e2778155409f0c4f836b9ab903948521239fca86706be882": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.7.7-beta.0"},
 	},
-	"730a080317e3f64f549637256218c46407dc99b15f45530cd395704179231e62": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.7.8-beta.0"},
+	"474657930c18fad95410859d6428fb5e6040c6a3bf6740321b746269a1af862d": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.7.8"},
 	},
-	"3fb1c733f7968a85e920800131479f61878847a7db2c423e6f374b06b459acea": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.7.9"},
+	"730a080317e3f64f549637256218c46407dc99b15f45530cd395704179231e62": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.7.8-beta.0"},
 	},
-	"edcc56be19d3bc4d45a74131802001f7b52933e840bd705cb900ff5a6d979999": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.7.9-beta.0"},
+	"3fb1c733f7968a85e920800131479f61878847a7db2c423e6f374b06b459acea": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.7.9"},
 	},
-	"b976723bc7c30335f438ff11982fb357bd59403e34d73bd260062a179c16a71a": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.8.0"},
+	"edcc56be19d3bc4d45a74131802001f7b52933e840bd705cb900ff5a6d979999": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.7.9-beta.0"},
 	},
-	"940dbbc1a94b489575cf90177e96da12eb307cff8a2b2d880bfcc5e62958d6a0": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.8.0-alpha.0"},
+	"b976723bc7c30335f438ff11982fb357bd59403e34d73bd260062a179c16a71a": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.8.0"},
 	},
-	"5803d2c7e9bbc70f7e1e936ea22c175353300807c2e7a69b5eadeacbf44feeef": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.8.0-alpha.1"},
+	"940dbbc1a94b489575cf90177e96da12eb307cff8a2b2d880bfcc5e62958d6a0": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.8.0-alpha.0"},
 	},
-	"37eed23854bcf9d91f139096a272044aeec0ade810ec29a1f90cb6ad27bdf8d1": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.8.0-alpha.2"},
+	"5803d2c7e9bbc70f7e1e936ea22c175353300807c2e7a69b5eadeacbf44feeef": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.8.0-alpha.1"},
 	},
-	"66588d7800eb5b3bb2aae0926c0f14b0abe2ef8b6ddd757b39730d78b2eb6002": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.8.0-alpha.3"},
+	"37eed23854bcf9d91f139096a272044aeec0ade810ec29a1f90cb6ad27bdf8d1": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.8.0-alpha.2"},
 	},
-	"67fa924bb1acc6707934386250ff018badcaad2dfc451342972cf90493b2d986": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.8.0-beta.0"},
+	"66588d7800eb5b3bb2aae0926c0f14b0abe2ef8b6ddd757b39730d78b2eb6002": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.8.0-alpha.3"},
 	},
-	"8a90bfa9d742ceb82979041a49267c815b0c4730ef34070d6002bea55c5c34e3": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.8.0-beta.1"},
+	"67fa924bb1acc6707934386250ff018badcaad2dfc451342972cf90493b2d986": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.8.0-beta.0"},
 	},
-	"fb8aac6fad9ff8959f20dc301ed1de0899945b7fa65d4c4a9872fc58386bbd11": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.8.0-rc.1"},
+	"8a90bfa9d742ceb82979041a49267c815b0c4730ef34070d6002bea55c5c34e3": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.8.0-beta.1"},
 	},
-	"9bf35924b25bed50537dadf944156f8c65bc93aa0d34d9213e0fabc5b82de5bb": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.8.1"},
+	"fb8aac6fad9ff8959f20dc301ed1de0899945b7fa65d4c4a9872fc58386bbd11": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.8.0-rc.1"},
 	},
-	"8c12690bd98891d158064dadf9ee2b366890acf90767d6bb12b6c3fef410c555": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.8.1-beta.0"},
+	"9bf35924b25bed50537dadf944156f8c65bc93aa0d34d9213e0fabc5b82de5bb": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.8.1"},
 	},
-	"e89803b82d0f40216783d485c23eec48e41d0b7d527c5a1cca8a45d953257ba4": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.8.10"},
+	"8c12690bd98891d158064dadf9ee2b366890acf90767d6bb12b6c3fef410c555": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.8.1-beta.0"},
 	},
-	"24b845b4bf2de6a992cf4199348004389b5ee897e96ceb60b3154a31d9ce76db": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.8.10-beta.0"},
+	"e89803b82d0f40216783d485c23eec48e41d0b7d527c5a1cca8a45d953257ba4": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.8.10"},
 	},
-	"d2e11f027a1df06132ed86493d919ccafa6c541cad88137cd0a918654b3f7898": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.8.11"},
+	"24b845b4bf2de6a992cf4199348004389b5ee897e96ceb60b3154a31d9ce76db": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.8.10-beta.0"},
 	},
-	"b6ae32153de8ed038add593d08eba16331f873a301ef8d8c4ca62482519bd06e": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.8.11-beta.0"},
+	"d2e11f027a1df06132ed86493d919ccafa6c541cad88137cd0a918654b3f7898": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.8.11"},
 	},
-	"dccc69526d8495b1104128478e13ae9020946c45299d4004542b00134e4bd112": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.8.12"},
+	"b6ae32153de8ed038add593d08eba16331f873a301ef8d8c4ca62482519bd06e": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.8.11-beta.0"},
 	},
-	"dd7969e39fa43248f67f0d2f6e2cce71e52d9ce3ed9a7e27a72ae4bdbbc40a3e": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.8.12-beta.0"},
+	"dccc69526d8495b1104128478e13ae9020946c45299d4004542b00134e4bd112": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.8.12"},
 	},
-	"7909dd02dc398a850900bafd2a9b18685b97ccf39ddaafd43fd35b608af6b82b": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.8.13"},
+	"dd7969e39fa43248f67f0d2f6e2cce71e52d9ce3ed9a7e27a72ae4bdbbc40a3e": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.8.12-beta.0"},
 	},
-	"407fdb2f69fb8b033f8d948cb6ac1f2108b0a7e3c87bc7a4e3a315f43cf1cdb9": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.8.13-beta.0"},
+	"7909dd02dc398a850900bafd2a9b18685b97ccf39ddaafd43fd35b608af6b82b": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.8.13"},
 	},
-	"58cab75f209848556328210de8a403c0892648052408212af4b9793aa54c9661": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.8.14"},
+	"407fdb2f69fb8b033f8d948cb6ac1f2108b0a7e3c87bc7a4e3a315f43cf1cdb9": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.8.13-beta.0"},
 	},
-	"0e7cc784b3cf79c9700b37ec870d8697b27d12c08d90c5153c5eda2f10824ada": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.8.14-beta.0"},
+	"58cab75f209848556328210de8a403c0892648052408212af4b9793aa54c9661": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.8.14"},
 	},
-	"58502ed3aa474fb1ab83d64bcba433caacd40ef285746795886ba4768cb1a4bb": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.8.15"},
+	"0e7cc784b3cf79c9700b37ec870d8697b27d12c08d90c5153c5eda2f10824ada": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.8.14-beta.0"},
 	},
-	"a506c0b10c0f3780158df43f24bab1a5a179289369e54b31c9f69abe3971a69f": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.8.15-beta.0"},
+	"58502ed3aa474fb1ab83d64bcba433caacd40ef285746795886ba4768cb1a4bb": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.8.15"},
 	},
-	"6300f609b67f0473756b722764d396acfcec520acb8134b940dd080754662470": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.8.16-beta.0"},
+	"a506c0b10c0f3780158df43f24bab1a5a179289369e54b31c9f69abe3971a69f": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.8.15-beta.0"},
 	},
-	"612b37ca064e0676375a2b133499ff562f2ca0e592904ebc4346fd12ccc3b300": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.8.2"},
+	"6300f609b67f0473756b722764d396acfcec520acb8134b940dd080754662470": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.8.16-beta.0"},
 	},
-	"0b12037e4b8d93d9bbfe078b51b1013c7f23736ef9d149484e8f126c6d6f80e1": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.8.2-beta.0"},
+	"612b37ca064e0676375a2b133499ff562f2ca0e592904ebc4346fd12ccc3b300": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.8.2"},
 	},
-	"0681a666b0a5eb6608a1ee0aa117f12885edac7aec15337749c531910bcdd884": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.8.3"},
+	"0b12037e4b8d93d9bbfe078b51b1013c7f23736ef9d149484e8f126c6d6f80e1": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.8.2-beta.0"},
 	},
-	"8713d033504559bca2eb6df539960ed66edd877a6302c5055d466c99b84ed062": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.8.3-beta.0"},
+	"0681a666b0a5eb6608a1ee0aa117f12885edac7aec15337749c531910bcdd884": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.8.3"},
 	},
-	"6b8a74b52bb529e2d20ad22072b7adc835b8cf27d4f7d992fc297f11b1b28e6a": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.8.4"},
+	"8713d033504559bca2eb6df539960ed66edd877a6302c5055d466c99b84ed062": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.8.3-beta.0"},
 	},
-	"00efd3d335825b14eb261341f6ef9d0971d5e7c00db74420997f8596fd00a55c": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.8.4-beta.0"},
+	"6b8a74b52bb529e2d20ad22072b7adc835b8cf27d4f7d992fc297f11b1b28e6a": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.8.4"},
 	},
-	"5a9e7e3bcf84ecf65c0319513bea231c5d4d9e63ba8aaf8afcca826ede5ced43": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.8.5"},
+	"00efd3d335825b14eb261341f6ef9d0971d5e7c00db74420997f8596fd00a55c": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.8.4-beta.0"},
 	},
-	"a234adf53441927ddf50b32d82437b3e93df74d81e4c80090eb2eb44465c3845": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.8.5-beta.0"},
+	"5a9e7e3bcf84ecf65c0319513bea231c5d4d9e63ba8aaf8afcca826ede5ced43": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.8.5"},
 	},
-	"7e4acd509b594c7dda3adb2df363cec6ad2a259ed4a789b06bf8d5ff57f7262c": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.8.6"},
+	"a234adf53441927ddf50b32d82437b3e93df74d81e4c80090eb2eb44465c3845": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.8.5-beta.0"},
 	},
-	"29edf531e82c45d58f64d9b7e2a5aadac2ada044c9a2c4326c8de8f8e752d86f": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.8.6-beta.0"},
+	"7e4acd509b594c7dda3adb2df363cec6ad2a259ed4a789b06bf8d5ff57f7262c": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.8.6"},
 	},
-	"f815d782c78ed63fda5cc029fd739171f9c97d54a0712637b2dea5094c44c5d0": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.8.7"},
+	"29edf531e82c45d58f64d9b7e2a5aadac2ada044c9a2c4326c8de8f8e752d86f": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.8.6-beta.0"},
 	},
-	"80448cff11c102f789a3643fde8961144d078b9ac3961f9a29f9ceaba1fecd72": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.8.7-beta.0"},
+	"f815d782c78ed63fda5cc029fd739171f9c97d54a0712637b2dea5094c44c5d0": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.8.7"},
 	},
-	"52647b6e24c5e2505417fe27131cecfa1897e4aa4d971ced73c0a0f730796ec8": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.8.8"},
+	"80448cff11c102f789a3643fde8961144d078b9ac3961f9a29f9ceaba1fecd72": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.8.7-beta.0"},
 	},
-	"a966654ef0cd8756a6e1e4db591451b23da5d2989518f1a52e9a347cf610619a": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.8.8-beta.0"},
+	"52647b6e24c5e2505417fe27131cecfa1897e4aa4d971ced73c0a0f730796ec8": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.8.8"},
 	},
-	"9107b4871f21a0dbf75a6beb82410bd7f2fbeb569858f638d21785b12fb35910": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.8.9"},
+	"a966654ef0cd8756a6e1e4db591451b23da5d2989518f1a52e9a347cf610619a": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.8.8-beta.0"},
 	},
-	"b1db78923a12a747b535f7a2a22ca1098ffe0476aadca0170f95b35303e829da": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.8.9-beta.0"},
+	"9107b4871f21a0dbf75a6beb82410bd7f2fbeb569858f638d21785b12fb35910": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.8.9"},
 	},
-	"7dc16f961604bbf6039538844c6ae26bb9218d9af1be50f741848f1f465ea424": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.9.0"},
+	"b1db78923a12a747b535f7a2a22ca1098ffe0476aadca0170f95b35303e829da": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.8.9-beta.0"},
 	},
-	"4ccdf1f54873c777cdd7f1bb71e9608344959645afd9b1b3ab5e13f8fa2456f6": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.9.0-alpha.0"},
+	"7dc16f961604bbf6039538844c6ae26bb9218d9af1be50f741848f1f465ea424": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.9.0"},
 	},
-	"52d764971af32a91cd38922f3c53bd2cb1bceebee929c42c81ae50eda90a2951": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.9.0-alpha.1"},
+	"4ccdf1f54873c777cdd7f1bb71e9608344959645afd9b1b3ab5e13f8fa2456f6": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.9.0-alpha.0"},
 	},
-	"c1359bb0c7e4386aa154e9b4fddca27a78b1b2e966a7bf66554f62b264a59284": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.9.0-alpha.2"},
+	"52d764971af32a91cd38922f3c53bd2cb1bceebee929c42c81ae50eda90a2951": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.9.0-alpha.1"},
 	},
-	"69013a11cbf0de13be3fe1c1858ab4eca7ac2f860f5a8923e65ee220f83ee088": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.9.0-alpha.3"},
+	"c1359bb0c7e4386aa154e9b4fddca27a78b1b2e966a7bf66554f62b264a59284": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.9.0-alpha.2"},
 	},
-	"631aa75ec92fc0abff32b8301020a316b97c520a7340929c8b4da120e76c35b3": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.9.0-beta.0"},
+	"69013a11cbf0de13be3fe1c1858ab4eca7ac2f860f5a8923e65ee220f83ee088": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.9.0-alpha.3"},
 	},
-	"4a101416f6fc3b15ce565b73984eda64de0825a28d3f2a3fa2164302d951992e": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.9.0-beta.1"},
+	"631aa75ec92fc0abff32b8301020a316b97c520a7340929c8b4da120e76c35b3": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.9.0-beta.0"},
 	},
-	"0c4250692a76d25c8c51973c44182290700e734387fa330741a36503ea7e39c4": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.9.0-beta.2"},
+	"4a101416f6fc3b15ce565b73984eda64de0825a28d3f2a3fa2164302d951992e": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.9.0-beta.1"},
 	},
-	"0e9e5af5a96546c07d75d1d418c45f3dcdb642657603cf8554a8539fc940425a": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.9.1"},
+	"0c4250692a76d25c8c51973c44182290700e734387fa330741a36503ea7e39c4": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.9.0-beta.2"},
 	},
-	"33695df5a2a0defa168f9be5c1d3ac0c101e1eab393259514de6eeac7e3309e9": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.9.1-beta.0"},
+	"0e9e5af5a96546c07d75d1d418c45f3dcdb642657603cf8554a8539fc940425a": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.9.1"},
 	},
-	"191d59c2b93e5f7a3920ffb6057a2291c0e70c9a64d6a2c32ebaebe111d19b04": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.9.10"},
+	"33695df5a2a0defa168f9be5c1d3ac0c101e1eab393259514de6eeac7e3309e9": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.9.1-beta.0"},
 	},
-	"236c851b77aaf170fa550af2c18d248358e3ef5c3f75d80f21df674f9c33f841": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.9.10-beta.0"},
+	"191d59c2b93e5f7a3920ffb6057a2291c0e70c9a64d6a2c32ebaebe111d19b04": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.9.10"},
 	},
-	"98f3554066a8a6fbb4b05e0b1d6a4379db48c06bdf5435bb34b35461313eb743": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.9.11"},
+	"236c851b77aaf170fa550af2c18d248358e3ef5c3f75d80f21df674f9c33f841": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.9.10-beta.0"},
 	},
-	"44127714f62a4c07a8fa8aec9a8fc921ab3472472b914e2e6a5868740a0f4057": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.9.11-beta.0"},
+	"98f3554066a8a6fbb4b05e0b1d6a4379db48c06bdf5435bb34b35461313eb743": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.9.11"},
 	},
-	"0fe7a0b52d541e95a417c7071aff812c8aad6168f017fd7bd6ca406f9ba03428": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.9.12-beta.0"},
+	"44127714f62a4c07a8fa8aec9a8fc921ab3472472b914e2e6a5868740a0f4057": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.9.11-beta.0"},
 	},
-	"08e87f5c7b745eec7bbcf658dba943d1ae1dd06ede5adb821f746df2b6fc4a85": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.9.2"},
+	"0fe7a0b52d541e95a417c7071aff812c8aad6168f017fd7bd6ca406f9ba03428": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.9.12-beta.0"},
 	},
-	"2a809e4fe48fb9a9418209adcbbc28e41e3fd3f7ea0a7d0950751bb342ce27c0": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.9.2-beta.0"},
+	"08e87f5c7b745eec7bbcf658dba943d1ae1dd06ede5adb821f746df2b6fc4a85": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.9.2"},
 	},
-	"22c858ce4ba26f0feaf0a901ab6effd37cb8735bfda98ba807f2dc169ce68362": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.9.3"},
+	"2a809e4fe48fb9a9418209adcbbc28e41e3fd3f7ea0a7d0950751bb342ce27c0": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.9.2-beta.0"},
 	},
-	"68631e9d755beb5641482c6378650947a6f779722f476469e5f044b4ab8d33df": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.9.3-beta.0"},
+	"22c858ce4ba26f0feaf0a901ab6effd37cb8735bfda98ba807f2dc169ce68362": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.9.3"},
 	},
-	"a62ee4d8ddafa7cf8c3cebdb0ab7356b4e46af7744d6a3f5fb59ed7a863e4cf6": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.9.4"},
+	"68631e9d755beb5641482c6378650947a6f779722f476469e5f044b4ab8d33df": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.9.3-beta.0"},
 	},
-	"8bcbfe7e56286992ac41f3de5246d8e5db9771647a51716e3c8708bc81e27e3e": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.9.4-beta.0"},
+	"a62ee4d8ddafa7cf8c3cebdb0ab7356b4e46af7744d6a3f5fb59ed7a863e4cf6": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.9.4"},
 	},
-	"05a62abdb2d363434a23903f7d27bd7be83521e25f7cc46369438daaa8a643ec": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.9.5"},
+	"8bcbfe7e56286992ac41f3de5246d8e5db9771647a51716e3c8708bc81e27e3e": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.9.4-beta.0"},
 	},
-	"4796d34bc5aaa8558aaf3f1f80c0b46e28e06de9bcbeaa954c78053ba20697c6": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.9.5-beta.0"},
+	"05a62abdb2d363434a23903f7d27bd7be83521e25f7cc46369438daaa8a643ec": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.9.5"},
 	},
-	"44d5b1c276c4f3de76be07d1486c68bbce227f86c4d8e559043d451e37b9a2b9": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.9.6"},
+	"4796d34bc5aaa8558aaf3f1f80c0b46e28e06de9bcbeaa954c78053ba20697c6": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.9.5-beta.0"},
 	},
-	"eee00f462b868f88f0777d6f46507e4b4bbeb8e227f701c3188585f361a0ef22": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.9.6-beta.0"},
+	"44d5b1c276c4f3de76be07d1486c68bbce227f86c4d8e559043d451e37b9a2b9": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.9.6"},
 	},
-	"6771c3c386e20c3589902d1bc819a1c503f4f3c8f702216c42a022fa1b68bf1f": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.9.7"},
+	"eee00f462b868f88f0777d6f46507e4b4bbeb8e227f701c3188585f361a0ef22": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.9.6-beta.0"},
 	},
-	"2fb3045f50c3be04522fbfccb09dc7db7bc83d48e1bf88d63d5cb05c72f4b3de": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.9.7-beta.0"},
+	"6771c3c386e20c3589902d1bc819a1c503f4f3c8f702216c42a022fa1b68bf1f": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.9.7"},
 	},
-	"b9531f619ce80af8ce5f1337e7d3b6346d4824d9d45ac8b78b72b08b7cd04e60": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.9.8"},
+	"2fb3045f50c3be04522fbfccb09dc7db7bc83d48e1bf88d63d5cb05c72f4b3de": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.9.7-beta.0"},
 	},
-	"e41b2f15480ca41536287f884bd8af0be99d0517859445eb4c52846eb24fbf59": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.9.8-beta.0"},
+	"b9531f619ce80af8ce5f1337e7d3b6346d4824d9d45ac8b78b72b08b7cd04e60": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.9.8"},
 	},
-	"5e82a7f75cb0a5d52b2081689cb8e9f1e55a51fcde7d5e2e3381026ccc1a3294": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.9.9"},
+	"e41b2f15480ca41536287f884bd8af0be99d0517859445eb4c52846eb24fbf59": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.9.8-beta.0"},
 	},
-	"daf73b80ce85708d972de64d6a873e71a6b6cef710ca1e2f164a3e93973f2cd8": []Modver{
-		{"github.com/kubernetes/kubernetes", "v1.9.9-beta.0"},
+	"5e82a7f75cb0a5d52b2081689cb8e9f1e55a51fcde7d5e2e3381026ccc1a3294": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.9.9"},
 	},
-	"a8bff6e0f871f47c1ee2e7cafad0950796f6e1ee2a41b2295ed638fb7b603232": []Modver{
-		{"github.com/moby/moby", "v0.1.0"},
+	"daf73b80ce85708d972de64d6a873e71a6b6cef710ca1e2f164a3e93973f2cd8": []internal.Modver{
+		{Path: "github.com/kubernetes/kubernetes", Version: "v1.9.9-beta.0"},
 	},
-	"08dfae91a286c708c116959bca84069d4c84e85c1fd511a97ae8f06125105579": []Modver{
-		{"github.com/moby/moby", "v0.1.1"},
+	"a8bff6e0f871f47c1ee2e7cafad0950796f6e1ee2a41b2295ed638fb7b603232": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v0.1.0"},
 	},
-	"43cd319168e8780d2ca79cb201dd4c18f57df3cbcd179d4e14821842a15bbce0": []Modver{
-		{"github.com/moby/moby", "v0.1.2"},
+	"08dfae91a286c708c116959bca84069d4c84e85c1fd511a97ae8f06125105579": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v0.1.1"},
 	},
-	"c2fffa5b0827577f957ee555e438a08e2544442198b3a48f0fa2e2eb039c3648": []Modver{
-		{"github.com/moby/moby", "v0.1.3"},
+	"43cd319168e8780d2ca79cb201dd4c18f57df3cbcd179d4e14821842a15bbce0": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v0.1.2"},
 	},
-	"3bb819ffbd6b37e48159fb90206a76dc5315f0398fd49f01ea2509d2e7adacc8": []Modver{
-		{"github.com/moby/moby", "v0.1.4"},
+	"c2fffa5b0827577f957ee555e438a08e2544442198b3a48f0fa2e2eb039c3648": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v0.1.3"},
 	},
-	"20082e6863cf6ebaa01d4f743e18b7c724c22d3e7c72529964be106e150a17d9": []Modver{
-		{"github.com/moby/moby", "v0.1.5"},
+	"3bb819ffbd6b37e48159fb90206a76dc5315f0398fd49f01ea2509d2e7adacc8": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v0.1.4"},
 	},
-	"33c946c9adeab108bee66236b1c809a699df5c04f88f8bde9c5e627082b67dfa": []Modver{
-		{"github.com/moby/moby", "v0.1.6"},
+	"20082e6863cf6ebaa01d4f743e18b7c724c22d3e7c72529964be106e150a17d9": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v0.1.5"},
 	},
-	"bb76a2286b68f92e7870f6f3cd18756dc1a9b5cdfcc32d8db6e5c66e27b7b82b": []Modver{
-		{"github.com/moby/moby", "v0.1.7"},
+	"33c946c9adeab108bee66236b1c809a699df5c04f88f8bde9c5e627082b67dfa": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v0.1.6"},
 	},
-	"7de10fc75098deb1bd597cff083e01a77a15c8fcfc8ea990f18076bc1722259d": []Modver{
-		{"github.com/moby/moby", "v0.1.8"},
+	"bb76a2286b68f92e7870f6f3cd18756dc1a9b5cdfcc32d8db6e5c66e27b7b82b": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v0.1.7"},
 	},
-	"e63680d900e063519fd7116048e08e000712b2e6489d6b4546bface4b93ceab3": []Modver{
-		{"github.com/moby/moby", "v0.10.0"},
+	"7de10fc75098deb1bd597cff083e01a77a15c8fcfc8ea990f18076bc1722259d": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v0.1.8"},
 	},
-	"15afb04111bd611d374ddbb9d5fc49abc653bdde6727ba20ec4cc8f92e9cff78": []Modver{
-		{"github.com/moby/moby", "v0.11.0"},
+	"e63680d900e063519fd7116048e08e000712b2e6489d6b4546bface4b93ceab3": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v0.10.0"},
 	},
-	"8b06cbdb887d4052ee331341f92be0d3d7e4ecfbbb889a438cab2fd677326e01": []Modver{
-		{"github.com/moby/moby", "v0.11.1"},
+	"15afb04111bd611d374ddbb9d5fc49abc653bdde6727ba20ec4cc8f92e9cff78": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v0.11.0"},
 	},
-	"0a39dfa5f99e66599371eec0088c899b78ddb1c5b1d8f540ed8f268e7fad5420": []Modver{
-		{"github.com/moby/moby", "v0.12.0"},
+	"8b06cbdb887d4052ee331341f92be0d3d7e4ecfbbb889a438cab2fd677326e01": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v0.11.1"},
 	},
-	"c814dcaa611689c521ac4e52bdc554548515631d45aa15a76220b01523e77de4": []Modver{
-		{"github.com/moby/moby", "v0.2.0"},
+	"0a39dfa5f99e66599371eec0088c899b78ddb1c5b1d8f540ed8f268e7fad5420": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v0.12.0"},
 	},
-	"e85198bdfab59e6d702e47183b9114b3057ec9bb5c30acf1005ff0f931995e39": []Modver{
-		{"github.com/moby/moby", "v0.2.1"},
+	"c814dcaa611689c521ac4e52bdc554548515631d45aa15a76220b01523e77de4": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v0.2.0"},
 	},
-	"8e6f3a061a77824a5f3372635f4dea320849e80bdfeeba5ce4779bb22238f7a6": []Modver{
-		{"github.com/moby/moby", "v0.2.2"},
+	"e85198bdfab59e6d702e47183b9114b3057ec9bb5c30acf1005ff0f931995e39": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v0.2.1"},
 	},
-	"84032f053459c1c8310f9f49b942489f2f0d3d31340e717b21bb86516dcc9891": []Modver{
-		{"github.com/moby/moby", "v0.3.0"},
+	"8e6f3a061a77824a5f3372635f4dea320849e80bdfeeba5ce4779bb22238f7a6": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v0.2.2"},
 	},
-	"6f1d6022c597cc95e35f69f0cd299efed80ee6942fa08a0274db935df545ee72": []Modver{
-		{"github.com/moby/moby", "v0.3.1"},
+	"84032f053459c1c8310f9f49b942489f2f0d3d31340e717b21bb86516dcc9891": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v0.3.0"},
 	},
-	"55a14a68ab4191de25e87da5756426752fcf63201da459fefa846e766bcff159": []Modver{
-		{"github.com/moby/moby", "v0.3.2"},
+	"6f1d6022c597cc95e35f69f0cd299efed80ee6942fa08a0274db935df545ee72": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v0.3.1"},
 	},
-	"6533aaa890729f273217b53e541ece63a3f8ab85db6b1c92ce1a3fd2dd306d81": []Modver{
-		{"github.com/moby/moby", "v0.3.3"},
+	"55a14a68ab4191de25e87da5756426752fcf63201da459fefa846e766bcff159": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v0.3.2"},
 	},
-	"0880046fcc743d1cf4126210ecd7d70ec930f142f3492f16b14e5b15f01f33e3": []Modver{
-		{"github.com/moby/moby", "v0.3.4"},
+	"6533aaa890729f273217b53e541ece63a3f8ab85db6b1c92ce1a3fd2dd306d81": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v0.3.3"},
 	},
-	"19caf5af397c0cbab15d1f91a0036bc68eec3a680d2ca52797c6360884555ac9": []Modver{
-		{"github.com/moby/moby", "v0.4.0"},
+	"0880046fcc743d1cf4126210ecd7d70ec930f142f3492f16b14e5b15f01f33e3": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v0.3.4"},
 	},
-	"2646acfc811547272364a51f1f7dc7a0d831bd69c25892ac6b861d1e3085d737": []Modver{
-		{"github.com/moby/moby", "v0.4.1"},
+	"19caf5af397c0cbab15d1f91a0036bc68eec3a680d2ca52797c6360884555ac9": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v0.4.0"},
 	},
-	"8b838a0924477ee3308de76bbfd45d09954760434fbdf0b60b0d9065bcce84a6": []Modver{
-		{"github.com/moby/moby", "v0.4.2"},
+	"2646acfc811547272364a51f1f7dc7a0d831bd69c25892ac6b861d1e3085d737": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v0.4.1"},
 	},
-	"4ef44b4e70a9e7459be773d27715a5be4d92288f88588ea7c34c8c55cb07787e": []Modver{
-		{"github.com/moby/moby", "v0.4.3"},
+	"8b838a0924477ee3308de76bbfd45d09954760434fbdf0b60b0d9065bcce84a6": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v0.4.2"},
 	},
-	"3b215cda7239260162bad7915938c0d7154129fb161122718ecdaab3eacd2222": []Modver{
-		{"github.com/moby/moby", "v0.4.4"},
+	"4ef44b4e70a9e7459be773d27715a5be4d92288f88588ea7c34c8c55cb07787e": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v0.4.3"},
 	},
-	"5e92aaff0d1f89899322ce28b6ca528db293153da7cb0a6c2edf8c748799e9e7": []Modver{
-		{"github.com/moby/moby", "v0.4.5"},
+	"3b215cda7239260162bad7915938c0d7154129fb161122718ecdaab3eacd2222": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v0.4.4"},
 	},
-	"6c0776823dfaf8c244e6f7aa38d905ccb90dea42c5c8e615f08b9d716f3b0d20": []Modver{
-		{"github.com/moby/moby", "v0.4.6"},
+	"5e92aaff0d1f89899322ce28b6ca528db293153da7cb0a6c2edf8c748799e9e7": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v0.4.5"},
 	},
-	"d58b110c6a565dc2f04b98eab5456b9892a151d648a0a93b7b7448b928605950": []Modver{
-		{"github.com/moby/moby", "v0.4.7"},
+	"6c0776823dfaf8c244e6f7aa38d905ccb90dea42c5c8e615f08b9d716f3b0d20": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v0.4.6"},
 	},
-	"36b48dba4adef2b7e6b2f7b4e85114590b24fa46d2bab33664fca3e2bc9018da": []Modver{
-		{"github.com/moby/moby", "v0.4.8"},
+	"d58b110c6a565dc2f04b98eab5456b9892a151d648a0a93b7b7448b928605950": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v0.4.7"},
 	},
-	"508ed44a1b882af8f489b98c4538721a3684d63f4cf7e84458e70dee21068771": []Modver{
-		{"github.com/moby/moby", "v0.5.0"},
+	"36b48dba4adef2b7e6b2f7b4e85114590b24fa46d2bab33664fca3e2bc9018da": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v0.4.8"},
 	},
-	"2606d258969cce72bc2a8938e0bb2798e19fa481ac82f091c18f2f0ba4c8cbf8": []Modver{
-		{"github.com/moby/moby", "v0.5.1"},
+	"508ed44a1b882af8f489b98c4538721a3684d63f4cf7e84458e70dee21068771": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v0.5.0"},
 	},
-	"d695d35638584cc4c07243abf314c93e06b2c78ec5f64e1820e3dc0649ffc97c": []Modver{
-		{"github.com/moby/moby", "v0.5.2"},
+	"2606d258969cce72bc2a8938e0bb2798e19fa481ac82f091c18f2f0ba4c8cbf8": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v0.5.1"},
 	},
-	"7e1bdf8af55520dfa00f41ce25d275f21e08c04548014ea1b4268b0f3c5b88e1": []Modver{
-		{"github.com/moby/moby", "v0.5.3"},
+	"d695d35638584cc4c07243abf314c93e06b2c78ec5f64e1820e3dc0649ffc97c": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v0.5.2"},
 	},
-	"9ac47b30e054458aea9702fccefc7901ec8a317abd14126f1fa404aa5531a178": []Modver{
-		{"github.com/moby/moby", "v0.6.0"},
+	"7e1bdf8af55520dfa00f41ce25d275f21e08c04548014ea1b4268b0f3c5b88e1": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v0.5.3"},
 	},
-	"5892bbebff8ed46e8f0067e58b1f3d3d5101c594f37971e5a6ac0a67d06cea25": []Modver{
-		{"github.com/moby/moby", "v0.6.1"},
+	"9ac47b30e054458aea9702fccefc7901ec8a317abd14126f1fa404aa5531a178": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v0.6.0"},
 	},
-	"63ef3c85a8b740ea0a71cd5732930e4a0e5441d58e3e24dc38355902a9f75482": []Modver{
-		{"github.com/moby/moby", "v0.6.2"},
+	"5892bbebff8ed46e8f0067e58b1f3d3d5101c594f37971e5a6ac0a67d06cea25": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v0.6.1"},
 	},
-	"d65021c1232e549e3569437a8ac9938948bb95a7017484054da55e030c44fc6c": []Modver{
-		{"github.com/moby/moby", "v0.6.3"},
+	"63ef3c85a8b740ea0a71cd5732930e4a0e5441d58e3e24dc38355902a9f75482": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v0.6.2"},
 	},
-	"ff906377a6ecdeefc6ee7f0afb3e0cb661bc8543e0be2d0d344ebc7f845e213e": []Modver{
-		{"github.com/moby/moby", "v0.6.4"},
+	"d65021c1232e549e3569437a8ac9938948bb95a7017484054da55e030c44fc6c": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v0.6.3"},
 	},
-	"5166f34c9b81a8958594da8a567879d4e5aece54620d9094bdf3c3a4f548fabb": []Modver{
-		{"github.com/moby/moby", "v0.6.5"},
+	"ff906377a6ecdeefc6ee7f0afb3e0cb661bc8543e0be2d0d344ebc7f845e213e": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v0.6.4"},
 	},
-	"d3ac7bbe5665a763c6cb50d4c50f5dc946575856858734706157582d6e148650": []Modver{
-		{"github.com/moby/moby", "v0.6.6"},
+	"5166f34c9b81a8958594da8a567879d4e5aece54620d9094bdf3c3a4f548fabb": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v0.6.5"},
 	},
-	"eb245d0cd3298f6d4f671efba9e68e290ab6793d5205390a138fc925601fe985": []Modver{
-		{"github.com/moby/moby", "v0.6.7"},
+	"d3ac7bbe5665a763c6cb50d4c50f5dc946575856858734706157582d6e148650": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v0.6.6"},
 	},
-	"077df6640451161dfb3e92199c414e694a0e2e4b0ac54bec718743c14c63cfc3": []Modver{
-		{"github.com/moby/moby", "v0.7.0"},
+	"eb245d0cd3298f6d4f671efba9e68e290ab6793d5205390a138fc925601fe985": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v0.6.7"},
 	},
-	"dbfe9511d9cbf9e21a3cb32f4f0f2d3f3b144720c19318650eb0e96634e6ab6f": []Modver{
-		{"github.com/moby/moby", "v0.7.0-rc1"},
+	"077df6640451161dfb3e92199c414e694a0e2e4b0ac54bec718743c14c63cfc3": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v0.7.0"},
 	},
-	"c6d20f9ad1f04a3371427cd82e2a7523064e0468ebb30d5186250e04e300cf89": []Modver{
-		{"github.com/moby/moby", "v0.7.0-rc2"},
+	"dbfe9511d9cbf9e21a3cb32f4f0f2d3f3b144720c19318650eb0e96634e6ab6f": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v0.7.0-rc1"},
 	},
-	"ebd43a070d031ce49106a1230304f48b183e3424dc4c582320e4ae13f2f4db89": []Modver{
-		{"github.com/moby/moby", "v0.7.0-rc3"},
+	"c6d20f9ad1f04a3371427cd82e2a7523064e0468ebb30d5186250e04e300cf89": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v0.7.0-rc2"},
 	},
-	"60db610b2d378a2a595e1145b4d8e4d9d53cd2ee0a92bb2cfc5d8202906317e6": []Modver{
-		{"github.com/moby/moby", "v0.7.0-rc4"},
+	"ebd43a070d031ce49106a1230304f48b183e3424dc4c582320e4ae13f2f4db89": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v0.7.0-rc3"},
 	},
-	"7e2094299ee1d4b42bba74b1c9f039a01af42316d5e1775ecb2e3fc83659fcb4": []Modver{
-		{"github.com/moby/moby", "v0.7.0-rc5"},
+	"60db610b2d378a2a595e1145b4d8e4d9d53cd2ee0a92bb2cfc5d8202906317e6": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v0.7.0-rc4"},
 	},
-	"e5c8a26a2e61c40b8996d471401c333cc2e0c47d6cebd63ce72dffccd432ccd6": []Modver{
-		{"github.com/moby/moby", "v0.7.0-rc6"},
+	"7e2094299ee1d4b42bba74b1c9f039a01af42316d5e1775ecb2e3fc83659fcb4": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v0.7.0-rc5"},
 	},
-	"de95efb0fbf9b04fb9733576a91b0f7421e9cb726956e9778969070190a6bffb": []Modver{
-		{"github.com/moby/moby", "v0.7.0-rc7"},
+	"e5c8a26a2e61c40b8996d471401c333cc2e0c47d6cebd63ce72dffccd432ccd6": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v0.7.0-rc6"},
 	},
-	"62bedea0b810ba35613a7fda9d215bd5387b603a3e03e158be4ab436c66f10b4": []Modver{
-		{"github.com/moby/moby", "v0.7.1"},
+	"de95efb0fbf9b04fb9733576a91b0f7421e9cb726956e9778969070190a6bffb": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v0.7.0-rc7"},
 	},
-	"a8a01407a8c51b6562d54569606b91a874914135127a9ee80f88d0adf5415ab1": []Modver{
-		{"github.com/moby/moby", "v0.7.2"},
+	"62bedea0b810ba35613a7fda9d215bd5387b603a3e03e158be4ab436c66f10b4": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v0.7.1"},
 	},
-	"0ecf5623852e286f774a85c62c09d1fe5656bf56501a522e51c60dc368eb06c2": []Modver{
-		{"github.com/moby/moby", "v0.7.3"},
+	"a8a01407a8c51b6562d54569606b91a874914135127a9ee80f88d0adf5415ab1": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v0.7.2"},
 	},
-	"97e4f77de779b50e5f151669794bc3c0c3aeb7882f3d7dfbbbf477456e726512": []Modver{
-		{"github.com/moby/moby", "v0.7.4"},
+	"0ecf5623852e286f774a85c62c09d1fe5656bf56501a522e51c60dc368eb06c2": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v0.7.3"},
 	},
-	"5f924d8ba7cc4c7791279e42313eeb3ed34a95b2b2d650287f8b2c5f7df898f6": []Modver{
-		{"github.com/moby/moby", "v0.7.5"},
+	"97e4f77de779b50e5f151669794bc3c0c3aeb7882f3d7dfbbbf477456e726512": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v0.7.4"},
 	},
-	"6353a3f4e92b12b69ae208f729e588e6ad8cd3286a0537b9b4415bbe805a0812": []Modver{
-		{"github.com/moby/moby", "v0.7.6"},
+	"5f924d8ba7cc4c7791279e42313eeb3ed34a95b2b2d650287f8b2c5f7df898f6": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v0.7.5"},
 	},
-	"3ffb4d99c3cb4bd83662f057758afccc9d056ebcd16c36c5fa836ccdb0c5c6b8": []Modver{
-		{"github.com/moby/moby", "v0.8.0"},
+	"6353a3f4e92b12b69ae208f729e588e6ad8cd3286a0537b9b4415bbe805a0812": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v0.7.6"},
 	},
-	"ef5833eb6b146ba87ca4e6416087e43cbd2dcdb26751a59f229bb94af0573d58": []Modver{
-		{"github.com/moby/moby", "v0.8.1"},
+	"3ffb4d99c3cb4bd83662f057758afccc9d056ebcd16c36c5fa836ccdb0c5c6b8": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v0.8.0"},
 	},
-	"8dace34da40a4e54cc90b8b954ff31ff65b62dfa3bc0b70b46c1609d6541d96f": []Modver{
-		{"github.com/moby/moby", "v0.9.0"},
+	"ef5833eb6b146ba87ca4e6416087e43cbd2dcdb26751a59f229bb94af0573d58": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v0.8.1"},
 	},
-	"9270cf27f718da2ff910620895778349d6b48db6bda24c54171072fb8d43fb24": []Modver{
-		{"github.com/moby/moby", "v0.9.1"},
+	"8dace34da40a4e54cc90b8b954ff31ff65b62dfa3bc0b70b46c1609d6541d96f": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v0.9.0"},
 	},
-	"914528045e610ed613509e9e2176420d16362bced30e4f37cbd042174bfe1aa7": []Modver{
-		{"github.com/moby/moby", "v1.0.0"},
+	"9270cf27f718da2ff910620895778349d6b48db6bda24c54171072fb8d43fb24": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v0.9.1"},
 	},
-	"6b4281344fe0afdeb528369fcc5d7ae33071cd761a1d8ed13e8e99acfe969801": []Modver{
-		{"github.com/moby/moby", "v1.0.1"},
+	"914528045e610ed613509e9e2176420d16362bced30e4f37cbd042174bfe1aa7": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.0.0"},
 	},
-	"bf7d1dd5c0721c75a1839ce0514f2f6df165ba446d4a7574f518711f65d87291": []Modver{
-		{"github.com/moby/moby", "v1.1.0"},
+	"6b4281344fe0afdeb528369fcc5d7ae33071cd761a1d8ed13e8e99acfe969801": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.0.1"},
 	},
-	"bcef0987e8d490683b7bb1b7617962a1c487afbbd8951f9566b0e01a58fda919": []Modver{
-		{"github.com/moby/moby", "v1.1.1"},
+	"bf7d1dd5c0721c75a1839ce0514f2f6df165ba446d4a7574f518711f65d87291": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.1.0"},
 	},
-	"dd693d4ef0e874a8255a9b251a223691c2fe681f5102eb220acb4e3417f2b262": []Modver{
-		{"github.com/moby/moby", "v1.1.2"},
+	"bcef0987e8d490683b7bb1b7617962a1c487afbbd8951f9566b0e01a58fda919": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.1.1"},
 	},
-	"334aa718220751ff8bef8b78283368c2d7092b123ae451d889e978ec0c82e399": []Modver{
-		{"github.com/moby/moby", "v1.10.0"},
+	"dd693d4ef0e874a8255a9b251a223691c2fe681f5102eb220acb4e3417f2b262": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.1.2"},
 	},
-	"96697489fe787dd4d871e9e86b61ab819f11c043b2c4ad22d62a13502b52a2d7": []Modver{
-		{"github.com/moby/moby", "v1.10.0-rc1"},
+	"334aa718220751ff8bef8b78283368c2d7092b123ae451d889e978ec0c82e399": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.10.0"},
 	},
-	"47138310d47e212a40f182045eb883f19d75d6b2227fa91dfbaa17d579fdba88": []Modver{
-		{"github.com/moby/moby", "v1.10.0-rc2"},
+	"96697489fe787dd4d871e9e86b61ab819f11c043b2c4ad22d62a13502b52a2d7": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.10.0-rc1"},
 	},
-	"f60c658bb1761d702b1ca54ff17a90cdc58dd76aaf6f7fe75bac591d9d20a36d": []Modver{
-		{"github.com/moby/moby", "v1.10.0-rc3"},
+	"47138310d47e212a40f182045eb883f19d75d6b2227fa91dfbaa17d579fdba88": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.10.0-rc2"},
 	},
-	"1ffe19afa754601af02a88e36964b49590f14abc1ecb192c6dff0ee99714736d": []Modver{
-		{"github.com/moby/moby", "v1.10.0-rc4"},
+	"f60c658bb1761d702b1ca54ff17a90cdc58dd76aaf6f7fe75bac591d9d20a36d": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.10.0-rc3"},
 	},
-	"0e50d088616f8d39029580326cd8c0b9dd9a47404dae00e9a9211e407076d3e4": []Modver{
-		{"github.com/moby/moby", "v1.10.1"},
+	"1ffe19afa754601af02a88e36964b49590f14abc1ecb192c6dff0ee99714736d": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.10.0-rc4"},
 	},
-	"84316bad1f00f01dbcc648807b49025da3172b174bba90fb1865d98e77d3ca2d": []Modver{
-		{"github.com/moby/moby", "v1.10.1-rc1"},
+	"0e50d088616f8d39029580326cd8c0b9dd9a47404dae00e9a9211e407076d3e4": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.10.1"},
 	},
-	"6517283ae1875710702345315e1854bc0d51f28d852a7f091568060f65dfd8ab": []Modver{
-		{"github.com/moby/moby", "v1.10.2"},
+	"84316bad1f00f01dbcc648807b49025da3172b174bba90fb1865d98e77d3ca2d": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.10.1-rc1"},
 	},
-	"9252d31ec3ec4c0e2ad9d6ac5321a762889d0e79229736b0e54be19514f4e9e8": []Modver{
-		{"github.com/moby/moby", "v1.10.2-rc1"},
+	"6517283ae1875710702345315e1854bc0d51f28d852a7f091568060f65dfd8ab": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.10.2"},
 	},
-	"95e68ea39023fbdd747417adf1ae7ecb0c8a6ff1c9ffcdab474b478e6fc343ba": []Modver{
-		{"github.com/moby/moby", "v1.10.3"},
+	"9252d31ec3ec4c0e2ad9d6ac5321a762889d0e79229736b0e54be19514f4e9e8": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.10.2-rc1"},
 	},
-	"087c1b1bad5949f730bc5a675f0338f83470ad555a05dddee75a6bb9e2770059": []Modver{
-		{"github.com/moby/moby", "v1.10.3-rc1"},
+	"95e68ea39023fbdd747417adf1ae7ecb0c8a6ff1c9ffcdab474b478e6fc343ba": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.10.3"},
 	},
-	"4ad5cd6a0713fa3484b3a25f1dc5437ad640d813b96fa1ac7943bf67a76f21a7": []Modver{
-		{"github.com/moby/moby", "v1.10.3-rc2"},
+	"087c1b1bad5949f730bc5a675f0338f83470ad555a05dddee75a6bb9e2770059": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.10.3-rc1"},
 	},
-	"a6e45f22f7044019ac4684c757d2beab3b0d48d2a259d9970d5a9e7548b05466": []Modver{
-		{"github.com/moby/moby", "v1.11.0"},
+	"4ad5cd6a0713fa3484b3a25f1dc5437ad640d813b96fa1ac7943bf67a76f21a7": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.10.3-rc2"},
 	},
-	"9d1332ed5744e248e6f19d36c2413966b058e68b9ce79a86d04c23d32c93eb1b": []Modver{
-		{"github.com/moby/moby", "v1.11.0-rc1"},
+	"a6e45f22f7044019ac4684c757d2beab3b0d48d2a259d9970d5a9e7548b05466": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.11.0"},
 	},
-	"169b172076576c6aa5141c16e84e549ec355fd8da49166e59216aaec1fe2b9c1": []Modver{
-		{"github.com/moby/moby", "v1.11.0-rc2"},
+	"9d1332ed5744e248e6f19d36c2413966b058e68b9ce79a86d04c23d32c93eb1b": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.11.0-rc1"},
 	},
-	"e8102a3d45ce204cd9e65493906b8537278de80f08630a803e401b134ed97da9": []Modver{
-		{"github.com/moby/moby", "v1.11.0-rc3"},
+	"169b172076576c6aa5141c16e84e549ec355fd8da49166e59216aaec1fe2b9c1": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.11.0-rc2"},
 	},
-	"3c7db2d039ebe8596e245cbf4e4c3e669b4c31aa9819121714bb50e90cd12076": []Modver{
-		{"github.com/moby/moby", "v1.11.0-rc4"},
+	"e8102a3d45ce204cd9e65493906b8537278de80f08630a803e401b134ed97da9": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.11.0-rc3"},
 	},
-	"cf89b47241029a55da27dc907fc70bc96ab55223823333ea2e364cbef0067267": []Modver{
-		{"github.com/moby/moby", "v1.11.0-rc5"},
+	"3c7db2d039ebe8596e245cbf4e4c3e669b4c31aa9819121714bb50e90cd12076": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.11.0-rc4"},
 	},
-	"95611ab8cfc9ac1918d884ee08c5af8d601ece2fd8263f815f61f4617be311a3": []Modver{
-		{"github.com/moby/moby", "v1.11.1"},
+	"cf89b47241029a55da27dc907fc70bc96ab55223823333ea2e364cbef0067267": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.11.0-rc5"},
 	},
-	"4c9e5e9ae0d2f4718457b54560db52bfcb2cfc822d93a7719528cd5b693b60c1": []Modver{
-		{"github.com/moby/moby", "v1.11.1-rc1"},
+	"95611ab8cfc9ac1918d884ee08c5af8d601ece2fd8263f815f61f4617be311a3": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.11.1"},
 	},
-	"2dbee02704c837272b34485b23655a20688ed29005df0b59cace614abfdda8cb": []Modver{
-		{"github.com/moby/moby", "v1.11.2"},
+	"4c9e5e9ae0d2f4718457b54560db52bfcb2cfc822d93a7719528cd5b693b60c1": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.11.1-rc1"},
 	},
-	"917ae93ec91279da873ffdd64bb131504ff95a9a3e8af019def41250ff8a54be": []Modver{
-		{"github.com/moby/moby", "v1.11.2-rc1"},
+	"2dbee02704c837272b34485b23655a20688ed29005df0b59cace614abfdda8cb": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.11.2"},
 	},
-	"5f7b3d059f5b2e9a9d1343c595b36b3b7cea206f016d6cc8a6d62bd84c7651ca": []Modver{
-		{"github.com/moby/moby", "v1.12.0"},
+	"917ae93ec91279da873ffdd64bb131504ff95a9a3e8af019def41250ff8a54be": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.11.2-rc1"},
 	},
-	"2b1afaa19191659163a6f1092732cd7866f84f1ce4cb1500a952c60c8e5f190e": []Modver{
-		{"github.com/moby/moby", "v1.12.0-rc1"},
+	"5f7b3d059f5b2e9a9d1343c595b36b3b7cea206f016d6cc8a6d62bd84c7651ca": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.12.0"},
 	},
-	"fe30a864bef95fbfda5027a1343d1b08bcbb45f0c4eb3baf6203d3ae94a03709": []Modver{
-		{"github.com/moby/moby", "v1.12.0-rc2"},
+	"2b1afaa19191659163a6f1092732cd7866f84f1ce4cb1500a952c60c8e5f190e": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.12.0-rc1"},
 	},
-	"eeb87cc9c3642f5adb570d8997c24a8e2ba03e9e32c60a69b9583f148561ab86": []Modver{
-		{"github.com/moby/moby", "v1.12.0-rc3"},
+	"fe30a864bef95fbfda5027a1343d1b08bcbb45f0c4eb3baf6203d3ae94a03709": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.12.0-rc2"},
 	},
-	"e289e5acc3318fc35f9f553361022ea36389dc177558c3ac2ab38b0d890f7770": []Modver{
-		{"github.com/moby/moby", "v1.12.0-rc4"},
+	"eeb87cc9c3642f5adb570d8997c24a8e2ba03e9e32c60a69b9583f148561ab86": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.12.0-rc3"},
 	},
-	"41d70799a1cbffdf01be2db5fc29c38512c5162ac6adbfe2f6a51e5e5ce8e3ad": []Modver{
-		{"github.com/moby/moby", "v1.12.0-rc5"},
+	"e289e5acc3318fc35f9f553361022ea36389dc177558c3ac2ab38b0d890f7770": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.12.0-rc4"},
 	},
-	"e5fa812c75778f7b82d6e72ef8bd3272018fcd957a392ee4699cf5affa4e407c": []Modver{
-		{"github.com/moby/moby", "v1.12.1"},
+	"41d70799a1cbffdf01be2db5fc29c38512c5162ac6adbfe2f6a51e5e5ce8e3ad": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.12.0-rc5"},
 	},
-	"17f027fcf31ea58d581a5ea4beb89d449990048c482cfa9eff342fb808e041ed": []Modver{
-		{"github.com/moby/moby", "v1.12.1-rc1"},
+	"e5fa812c75778f7b82d6e72ef8bd3272018fcd957a392ee4699cf5affa4e407c": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.12.1"},
 	},
-	"4a65a41a8f45acc3fcf72154c31ad5af1d1a1eb6c94ca83310ea0f9ef9f1eef5": []Modver{
-		{"github.com/moby/moby", "v1.12.1-rc2"},
+	"17f027fcf31ea58d581a5ea4beb89d449990048c482cfa9eff342fb808e041ed": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.12.1-rc1"},
 	},
-	"93f74649169c4fe48021123c78e695d1aca11d183b1708b5b4e22248e0924dad": []Modver{
-		{"github.com/moby/moby", "v1.12.2"},
+	"4a65a41a8f45acc3fcf72154c31ad5af1d1a1eb6c94ca83310ea0f9ef9f1eef5": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.12.1-rc2"},
 	},
-	"95c2c989e2a4d232ca82cbdebd87707f45a0d74efe310360c264c8174b716c6f": []Modver{
-		{"github.com/moby/moby", "v1.12.2-rc1"},
+	"93f74649169c4fe48021123c78e695d1aca11d183b1708b5b4e22248e0924dad": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.12.2"},
 	},
-	"628e749abdab4ed5f5920df466f335d868806db0aa17ab4b5981573f8b6a383e": []Modver{
-		{"github.com/moby/moby", "v1.12.2-rc2"},
+	"95c2c989e2a4d232ca82cbdebd87707f45a0d74efe310360c264c8174b716c6f": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.12.2-rc1"},
 	},
-	"339f4494eba97fb46117d5e024adf9eb3bd3c15c626679e7d51fe49f2f841c6b": []Modver{
-		{"github.com/moby/moby", "v1.12.2-rc3"},
+	"628e749abdab4ed5f5920df466f335d868806db0aa17ab4b5981573f8b6a383e": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.12.2-rc2"},
 	},
-	"0aa0e1f29cff85f1c06b7eeb39c79b5815966604b32146ce1042dcf2a1d402f3": []Modver{
-		{"github.com/moby/moby", "v1.12.3"},
+	"339f4494eba97fb46117d5e024adf9eb3bd3c15c626679e7d51fe49f2f841c6b": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.12.2-rc3"},
 	},
-	"d78884e8cbabd033ff3f92330156189f82cea854d5d63250c0ea6e39db080800": []Modver{
-		{"github.com/moby/moby", "v1.12.3-rc1"},
+	"0aa0e1f29cff85f1c06b7eeb39c79b5815966604b32146ce1042dcf2a1d402f3": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.12.3"},
 	},
-	"f3eb3921d624ab841e6c832641b56a18ecd3384ec03872e7a9f4caab2783ddf9": []Modver{
-		{"github.com/moby/moby", "v1.12.4"},
+	"d78884e8cbabd033ff3f92330156189f82cea854d5d63250c0ea6e39db080800": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.12.3-rc1"},
 	},
-	"54c8c33221bb5b894077a2dcd9907aeb75984c04393ff4c3105ebe7ef8bd8251": []Modver{
-		{"github.com/moby/moby", "v1.12.4-rc1"},
+	"f3eb3921d624ab841e6c832641b56a18ecd3384ec03872e7a9f4caab2783ddf9": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.12.4"},
 	},
-	"ae3bf627f6c593a73b9912cfda163b9b2e240dbf1f7ab38cb52a117d4ec85930": []Modver{
-		{"github.com/moby/moby", "v1.12.5"},
+	"54c8c33221bb5b894077a2dcd9907aeb75984c04393ff4c3105ebe7ef8bd8251": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.12.4-rc1"},
 	},
-	"952030dc34ec1f8526caf864684f8510be8b631b9253d7bdbe42583dfb1872ed": []Modver{
-		{"github.com/moby/moby", "v1.12.5-rc1"},
+	"ae3bf627f6c593a73b9912cfda163b9b2e240dbf1f7ab38cb52a117d4ec85930": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.12.5"},
 	},
-	"34e0f675de4150a894651731037225bcf162c8788f1348f9c816cb9539829c2e": []Modver{
-		{"github.com/moby/moby", "v1.12.6"},
+	"952030dc34ec1f8526caf864684f8510be8b631b9253d7bdbe42583dfb1872ed": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.12.5-rc1"},
 	},
-	"f7d9bdf5924cbc2cd52f6d3fa78ed703dab9ab618da19f17bf3e68e1dd9d9d1e": []Modver{
-		{"github.com/moby/moby", "v1.13.0"},
+	"34e0f675de4150a894651731037225bcf162c8788f1348f9c816cb9539829c2e": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.12.6"},
 	},
-	"2d3233b074e5b9ba8816fcae6ac607ac373d1be811296ed5fc33323bb63b5874": []Modver{
-		{"github.com/moby/moby", "v1.13.0-rc1"},
+	"f7d9bdf5924cbc2cd52f6d3fa78ed703dab9ab618da19f17bf3e68e1dd9d9d1e": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.13.0"},
 	},
-	"e4c6043c349557d2a7468e7034445bcd6593f2783315186ad86a29466c59a3e3": []Modver{
-		{"github.com/moby/moby", "v1.13.0-rc2"},
+	"2d3233b074e5b9ba8816fcae6ac607ac373d1be811296ed5fc33323bb63b5874": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.13.0-rc1"},
 	},
-	"9c5616139d87c7de8ee4d335fc6dbc8e74822092e44fc5cd2d1310e79cd34fca": []Modver{
-		{"github.com/moby/moby", "v1.13.0-rc3"},
+	"e4c6043c349557d2a7468e7034445bcd6593f2783315186ad86a29466c59a3e3": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.13.0-rc2"},
 	},
-	"9d7a5b5212133414daa1901d853c91268d45ab2c1343ab4b3056dfca30dc9987": []Modver{
-		{"github.com/moby/moby", "v1.13.0-rc4"},
+	"9c5616139d87c7de8ee4d335fc6dbc8e74822092e44fc5cd2d1310e79cd34fca": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.13.0-rc3"},
 	},
-	"e02df45b26b27e9b1d788464cc341356b901aa017b6413fd23aecad2c649960a": []Modver{
-		{"github.com/moby/moby", "v1.13.0-rc5"},
+	"9d7a5b5212133414daa1901d853c91268d45ab2c1343ab4b3056dfca30dc9987": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.13.0-rc4"},
 	},
-	"52bda153c9e87362d1bc22043d51a4ade039faf183032b43c7be6e9a9173e1cd": []Modver{
-		{"github.com/moby/moby", "v1.13.0-rc6"},
+	"e02df45b26b27e9b1d788464cc341356b901aa017b6413fd23aecad2c649960a": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.13.0-rc5"},
 	},
-	"c391584ce7414dbc13439430a3975226f93a2181eb795c87aa2960d6b172ea7c": []Modver{
-		{"github.com/moby/moby", "v1.13.0-rc7"},
+	"52bda153c9e87362d1bc22043d51a4ade039faf183032b43c7be6e9a9173e1cd": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.13.0-rc6"},
 	},
-	"8863c9ca71b83ae2064d050b671b9d004846cf459941f1d82e91693811d09286": []Modver{
-		{"github.com/moby/moby", "v1.13.1"},
+	"c391584ce7414dbc13439430a3975226f93a2181eb795c87aa2960d6b172ea7c": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.13.0-rc7"},
 	},
-	"4619d9cd5200e54d264d7f5baf0ccd5d2790f948cc24e5d26622c539197b0bd4": []Modver{
-		{"github.com/moby/moby", "v1.13.1-rc1"},
+	"8863c9ca71b83ae2064d050b671b9d004846cf459941f1d82e91693811d09286": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.13.1"},
 	},
-	"37e219ddaf9c315e3ad031cc11daafd15f48b2121a5e914955b7cb2d3cd09b7a": []Modver{
-		{"github.com/moby/moby", "v1.13.1-rc2"},
+	"4619d9cd5200e54d264d7f5baf0ccd5d2790f948cc24e5d26622c539197b0bd4": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.13.1-rc1"},
 	},
-	"f57b490ff89bc680d5102fa3693f927f69f1dfb6c7a090844a2384948ecafa9b": []Modver{
-		{"github.com/moby/moby", "v1.2.0"},
+	"37e219ddaf9c315e3ad031cc11daafd15f48b2121a5e914955b7cb2d3cd09b7a": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.13.1-rc2"},
 	},
-	"2d62ed5292e32af3e1d1fd3a5c958d82f9dda2f44a5df9af3fe2b007f2b2522e": []Modver{
-		{"github.com/moby/moby", "v1.3.0"},
+	"f57b490ff89bc680d5102fa3693f927f69f1dfb6c7a090844a2384948ecafa9b": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.2.0"},
 	},
-	"8d74b8b526772bbd25de709ed49f6315315bd1c58d4b429d600553d92bc7d563": []Modver{
-		{"github.com/moby/moby", "v1.3.1"},
+	"2d62ed5292e32af3e1d1fd3a5c958d82f9dda2f44a5df9af3fe2b007f2b2522e": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.3.0"},
 	},
-	"e604b0b07afd967acb81af0b3cf7d4a2aba4d1e7e514bfe6ad06270c1010f4ea": []Modver{
-		{"github.com/moby/moby", "v1.3.2"},
+	"8d74b8b526772bbd25de709ed49f6315315bd1c58d4b429d600553d92bc7d563": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.3.1"},
 	},
-	"ba7ecc22a1b9b2f3c5e06efd6064dea7afe64a78796226980d10c06ffaceb64a": []Modver{
-		{"github.com/moby/moby", "v1.3.3"},
+	"e604b0b07afd967acb81af0b3cf7d4a2aba4d1e7e514bfe6ad06270c1010f4ea": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.3.2"},
 	},
-	"712eb7a9b3c7b7c14f210fc890d4d22660fd229814d5071d4510f3fc21adc848": []Modver{
-		{"github.com/moby/moby", "v1.4.0"},
+	"ba7ecc22a1b9b2f3c5e06efd6064dea7afe64a78796226980d10c06ffaceb64a": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.3.3"},
 	},
-	"8d1164e0db8a77dac537710f808858578c161a81a0cc1ff92568438bf6b6ee12": []Modver{
-		{"github.com/moby/moby", "v1.4.1"},
+	"712eb7a9b3c7b7c14f210fc890d4d22660fd229814d5071d4510f3fc21adc848": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.4.0"},
 	},
-	"6f91ce3208f93cecd0df4d10642d2cab72042ede042db0d2f20bed008075268c": []Modver{
-		{"github.com/moby/moby", "v1.5.0"},
+	"8d1164e0db8a77dac537710f808858578c161a81a0cc1ff92568438bf6b6ee12": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.4.1"},
 	},
-	"f5989d01fac5ec800188dd4530a0875c9a813872ccc2d8d6311c1826a65fa14f": []Modver{
-		{"github.com/moby/moby", "v1.5.0-rc1"},
+	"6f91ce3208f93cecd0df4d10642d2cab72042ede042db0d2f20bed008075268c": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.5.0"},
 	},
-	"2f85790dcddbc78765a5de7e71b668354a1c2fbf0259ece620555416516ca2cd": []Modver{
-		{"github.com/moby/moby", "v1.5.0-rc2"},
+	"f5989d01fac5ec800188dd4530a0875c9a813872ccc2d8d6311c1826a65fa14f": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.5.0-rc1"},
 	},
-	"8242492dc53b9dfea1a6cd8cb51be3ca3e278902bb3fd4ef2a496759254bfa69": []Modver{
-		{"github.com/moby/moby", "v1.5.0-rc3"},
+	"2f85790dcddbc78765a5de7e71b668354a1c2fbf0259ece620555416516ca2cd": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.5.0-rc2"},
 	},
-	"4b1bb1a7e3605f595a67df595548a99f7a23026eeebcddb3fb929c8a4574c3f5": []Modver{
-		{"github.com/moby/moby", "v1.5.0-rc4"},
+	"8242492dc53b9dfea1a6cd8cb51be3ca3e278902bb3fd4ef2a496759254bfa69": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.5.0-rc3"},
 	},
-	"b89cecf2af6c50f3391c9ea6da84c62642d316afa93c75b062b7415accf8db81": []Modver{
-		{"github.com/moby/moby", "v1.6.0"},
+	"4b1bb1a7e3605f595a67df595548a99f7a23026eeebcddb3fb929c8a4574c3f5": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.5.0-rc4"},
 	},
-	"15fd3e2a2f0c8b4f212f86d072e02d65860ee337a69e6f7b0da7551c19530eed": []Modver{
-		{"github.com/moby/moby", "v1.6.0-rc1"},
+	"b89cecf2af6c50f3391c9ea6da84c62642d316afa93c75b062b7415accf8db81": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.6.0"},
 	},
-	"cc4de709218d0a5c8d724f9c8117d9cb8be962be504c6713af73f296b886106f": []Modver{
-		{"github.com/moby/moby", "v1.6.0-rc2"},
+	"15fd3e2a2f0c8b4f212f86d072e02d65860ee337a69e6f7b0da7551c19530eed": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.6.0-rc1"},
 	},
-	"5a138eb242bc514f8b4ee6cc93c55fae96991c241565815205628a3a3dcbbf9c": []Modver{
-		{"github.com/moby/moby", "v1.6.0-rc3"},
+	"cc4de709218d0a5c8d724f9c8117d9cb8be962be504c6713af73f296b886106f": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.6.0-rc2"},
 	},
-	"4070e5a5b9caf05dcc099dcb1739c3da33a9aa8241c38d03fed7bc506b34da33": []Modver{
-		{"github.com/moby/moby", "v1.6.0-rc4"},
+	"5a138eb242bc514f8b4ee6cc93c55fae96991c241565815205628a3a3dcbbf9c": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.6.0-rc3"},
 	},
-	"0cf2119f91c668838893c9390188a70aa958bf5894949f5c2f4548ba7b027e25": []Modver{
-		{"github.com/moby/moby", "v1.6.0-rc5"},
+	"4070e5a5b9caf05dcc099dcb1739c3da33a9aa8241c38d03fed7bc506b34da33": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.6.0-rc4"},
 	},
-	"5c1bed90a976c4fec21cf77759c3e726b65d5053333f61d61cbac85704f6997f": []Modver{
-		{"github.com/moby/moby", "v1.6.0-rc6"},
+	"0cf2119f91c668838893c9390188a70aa958bf5894949f5c2f4548ba7b027e25": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.6.0-rc5"},
 	},
-	"2c79415686b45f9c36c97e8b0c01b878aeef9a0038222ada6b4655f4bdf921a4": []Modver{
-		{"github.com/moby/moby", "v1.6.0-rc7"},
+	"5c1bed90a976c4fec21cf77759c3e726b65d5053333f61d61cbac85704f6997f": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.6.0-rc6"},
 	},
-	"8340d19568d39001ece31986fd49de9230e99ea3d89ba2c3c6cdc2d2532f1f3e": []Modver{
-		{"github.com/moby/moby", "v1.6.1"},
+	"2c79415686b45f9c36c97e8b0c01b878aeef9a0038222ada6b4655f4bdf921a4": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.6.0-rc7"},
 	},
-	"7bf2573a871cb40ebe814054261c554edf6a3c922e9b278db180979406009764": []Modver{
-		{"github.com/moby/moby", "v1.6.2"},
+	"8340d19568d39001ece31986fd49de9230e99ea3d89ba2c3c6cdc2d2532f1f3e": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.6.1"},
 	},
-	"c590bd388ce547623facab8d6e8aca876d41497549667295e1f650141f326e89": []Modver{
-		{"github.com/moby/moby", "v1.7.0"},
+	"7bf2573a871cb40ebe814054261c554edf6a3c922e9b278db180979406009764": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.6.2"},
 	},
-	"caf768a89581c9658e24f7ccbfff8599a08bdc52d36098c7f94719dc3a90b9ff": []Modver{
-		{"github.com/moby/moby", "v1.7.0-rc1"},
+	"c590bd388ce547623facab8d6e8aca876d41497549667295e1f650141f326e89": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.7.0"},
 	},
-	"355b60a84e918912837fbdd446b9729637efc7cc10cf015124ed5e318cecb012": []Modver{
-		{"github.com/moby/moby", "v1.7.0-rc2"},
+	"caf768a89581c9658e24f7ccbfff8599a08bdc52d36098c7f94719dc3a90b9ff": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.7.0-rc1"},
 	},
-	"3a18fbbcdd06d51b1b96a36293c18da284753e352c2d6cb425127adae99461f1": []Modver{
-		{"github.com/moby/moby", "v1.7.0-rc3"},
+	"355b60a84e918912837fbdd446b9729637efc7cc10cf015124ed5e318cecb012": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.7.0-rc2"},
 	},
-	"dd9aa38fdb94aae153142278413f28bc040c5443bc9db60d2ad59fc07eb21851": []Modver{
-		{"github.com/moby/moby", "v1.7.0-rc4"},
+	"3a18fbbcdd06d51b1b96a36293c18da284753e352c2d6cb425127adae99461f1": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.7.0-rc3"},
 	},
-	"ba6948fbb62de4bc801b3b817192e3b1b281f74e39ec1c01c495f3529eb47ca4": []Modver{
-		{"github.com/moby/moby", "v1.7.0-rc5"},
+	"dd9aa38fdb94aae153142278413f28bc040c5443bc9db60d2ad59fc07eb21851": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.7.0-rc4"},
 	},
-	"3683566df289daea7753b6207dce3b320ea2bbe91432ceff50fd34fb7f35d3ba": []Modver{
-		{"github.com/moby/moby", "v1.7.1"},
+	"ba6948fbb62de4bc801b3b817192e3b1b281f74e39ec1c01c495f3529eb47ca4": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.7.0-rc5"},
 	},
-	"f1a71e05142a2819acd669b5c2b6ef7590f3c62ef75008c10cb457104291e8e1": []Modver{
-		{"github.com/moby/moby", "v1.7.1-rc1"},
+	"3683566df289daea7753b6207dce3b320ea2bbe91432ceff50fd34fb7f35d3ba": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.7.1"},
 	},
-	"555fffa569bf73b5a1e91360536277ce70774eaafc2928fee9bb4bb254a8bfb8": []Modver{
-		{"github.com/moby/moby", "v1.7.1-rc2"},
+	"f1a71e05142a2819acd669b5c2b6ef7590f3c62ef75008c10cb457104291e8e1": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.7.1-rc1"},
 	},
-	"b0a9fc60c2518e0c1ab97c6ba6dcc1374185d9517bda90ef180400bd9091a5b6": []Modver{
-		{"github.com/moby/moby", "v1.7.1-rc3"},
+	"555fffa569bf73b5a1e91360536277ce70774eaafc2928fee9bb4bb254a8bfb8": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.7.1-rc2"},
 	},
-	"96b154aaf9bdefe2fa3d4f2103b732cbd5e60dc877e54bd00c97e86f6b1ecdb6": []Modver{
-		{"github.com/moby/moby", "v1.8.0"},
+	"b0a9fc60c2518e0c1ab97c6ba6dcc1374185d9517bda90ef180400bd9091a5b6": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.7.1-rc3"},
 	},
-	"66d6a5d58683cd02190ff803f35aa5cdfb6f90a880dac6b4ba93ddc19d9ce339": []Modver{
-		{"github.com/moby/moby", "v1.8.0-rc1"},
+	"96b154aaf9bdefe2fa3d4f2103b732cbd5e60dc877e54bd00c97e86f6b1ecdb6": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.8.0"},
 	},
-	"79eacdccc4d46b7b26867f0d30326c929d345e2853885b7f45b7e82cbc4af7a3": []Modver{
-		{"github.com/moby/moby", "v1.8.0-rc2"},
+	"66d6a5d58683cd02190ff803f35aa5cdfb6f90a880dac6b4ba93ddc19d9ce339": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.8.0-rc1"},
 	},
-	"5c39db5e74dae913d099f8d301075ea8548287f9c10ba8115f222f65bc0d994d": []Modver{
-		{"github.com/moby/moby", "v1.8.0-rc3"},
+	"79eacdccc4d46b7b26867f0d30326c929d345e2853885b7f45b7e82cbc4af7a3": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.8.0-rc2"},
 	},
-	"7f23f38587a88cf0343e15f43489d39e9b13e24cb673531237f8b67993c283e0": []Modver{
-		{"github.com/moby/moby", "v1.8.1"},
+	"5c39db5e74dae913d099f8d301075ea8548287f9c10ba8115f222f65bc0d994d": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.8.0-rc3"},
 	},
-	"cae9ea94b58a652acf77ad58a0848af728a3f12e211deafa982ac41980ed950c": []Modver{
-		{"github.com/moby/moby", "v1.8.2"},
+	"7f23f38587a88cf0343e15f43489d39e9b13e24cb673531237f8b67993c283e0": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.8.1"},
 	},
-	"b7abf0320c92128ae6dd412444befee374810a9d41971bb324a7529ce28a160e": []Modver{
-		{"github.com/moby/moby", "v1.8.2-rc1"},
+	"cae9ea94b58a652acf77ad58a0848af728a3f12e211deafa982ac41980ed950c": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.8.2"},
 	},
-	"9616fb3988e5d6e036c51ea20014712294c42c7d66451f09a11a8cc5955d056d": []Modver{
-		{"github.com/moby/moby", "v1.8.3"},
+	"b7abf0320c92128ae6dd412444befee374810a9d41971bb324a7529ce28a160e": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.8.2-rc1"},
 	},
-	"6ff4f6085dbefbaf43dbf6dee3cab8d345a065cfcec794fefef5cc00e38290e9": []Modver{
-		{"github.com/moby/moby", "v1.9.0"},
+	"9616fb3988e5d6e036c51ea20014712294c42c7d66451f09a11a8cc5955d056d": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.8.3"},
 	},
-	"6e0ed96e7c1bfa0d1eecaae2f7be0d6163eba9bcf20e88208acb5cbb4bcee9e5": []Modver{
-		{"github.com/moby/moby", "v1.9.0-rc1"},
+	"6ff4f6085dbefbaf43dbf6dee3cab8d345a065cfcec794fefef5cc00e38290e9": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.9.0"},
 	},
-	"cb03f708882713ca6a9a78a262493bc3d7311a269c7e950f9b4c9c1914e4ccc6": []Modver{
-		{"github.com/moby/moby", "v1.9.0-rc2"},
+	"6e0ed96e7c1bfa0d1eecaae2f7be0d6163eba9bcf20e88208acb5cbb4bcee9e5": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.9.0-rc1"},
 	},
-	"1eb15b875ddb042d65e645594317a2c267fac8aadda88262d405ed826739ed68": []Modver{
-		{"github.com/moby/moby", "v1.9.0-rc3"},
+	"cb03f708882713ca6a9a78a262493bc3d7311a269c7e950f9b4c9c1914e4ccc6": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.9.0-rc2"},
 	},
-	"342efff420f4daa98d9b7f01d2b197c7379c9483c04aabd7db8a3cdce58542c9": []Modver{
-		{"github.com/moby/moby", "v1.9.0-rc4"},
+	"1eb15b875ddb042d65e645594317a2c267fac8aadda88262d405ed826739ed68": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.9.0-rc3"},
 	},
-	"bffcd208024afdb0b3ff9341bb0a5bba38fe140d33b9f781d84996bf3500bbbd": []Modver{
-		{"github.com/moby/moby", "v1.9.0-rc5"},
+	"342efff420f4daa98d9b7f01d2b197c7379c9483c04aabd7db8a3cdce58542c9": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.9.0-rc4"},
 	},
-	"fbc2762978be46424b42c5bbf746186b231192de0ed996f53691eac0812233be": []Modver{
-		{"github.com/moby/moby", "v1.9.1"},
+	"bffcd208024afdb0b3ff9341bb0a5bba38fe140d33b9f781d84996bf3500bbbd": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.9.0-rc5"},
 	},
-	"098af568573a751ae0a2c42e43992f715303a540707cacc7bf6dcc7c77418f06": []Modver{
-		{"github.com/moby/moby", "v1.9.1-rc1"},
+	"fbc2762978be46424b42c5bbf746186b231192de0ed996f53691eac0812233be": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.9.1"},
 	},
-	"fdb98950bd479cee115fbe10fbe3e0d173dff4083e3f02af69f26bfa43aac36a": []Modver{
-		{"github.com/moby/moby", "v17.10.0-ce+incompatible"},
+	"098af568573a751ae0a2c42e43992f715303a540707cacc7bf6dcc7c77418f06": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v1.9.1-rc1"},
 	},
-	"3de71c1cc060fa8a06a7f3174e0297f36d3a080114b4446b21e8dbd3be314580": []Modver{
-		{"github.com/moby/moby", "v17.10.0-ce-rc1+incompatible"},
+	"fdb98950bd479cee115fbe10fbe3e0d173dff4083e3f02af69f26bfa43aac36a": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v17.10.0-ce+incompatible"},
 	},
-	"b51932eb0d518206c955a52da95a937c73a1afec8ff7b0392675cb1604580be9": []Modver{
-		{"github.com/moby/moby", "v17.10.0-ce-rc2+incompatible"},
+	"3de71c1cc060fa8a06a7f3174e0297f36d3a080114b4446b21e8dbd3be314580": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v17.10.0-ce-rc1+incompatible"},
 	},
-	"cbb58557d16d3bdd3384e8a88398163fc2bf08f6d1e521312cd1adece8748eb1": []Modver{
-		{"github.com/moby/moby", "v17.11.0-ce+incompatible"},
+	"b51932eb0d518206c955a52da95a937c73a1afec8ff7b0392675cb1604580be9": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v17.10.0-ce-rc2+incompatible"},
 	},
-	"921a23058526177ecd2236986955f81958abe6452b3e5b0f6592b841bbec5b70": []Modver{
-		{"github.com/moby/moby", "v17.11.0-ce-rc1+incompatible"},
+	"cbb58557d16d3bdd3384e8a88398163fc2bf08f6d1e521312cd1adece8748eb1": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v17.11.0-ce+incompatible"},
 	},
-	"fb62f1e17889c5fbf54de4bc1f545f829bf41bf0f68b78184199ef6e66508642": []Modver{
-		{"github.com/moby/moby", "v17.11.0-ce-rc2+incompatible"},
+	"921a23058526177ecd2236986955f81958abe6452b3e5b0f6592b841bbec5b70": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v17.11.0-ce-rc1+incompatible"},
 	},
-	"f2b818fa1f3604663552249e7812a3fec5231a454ca2268204103b88aa690051": []Modver{
-		{"github.com/moby/moby", "v17.11.0-ce-rc3+incompatible"},
+	"fb62f1e17889c5fbf54de4bc1f545f829bf41bf0f68b78184199ef6e66508642": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v17.11.0-ce-rc2+incompatible"},
 	},
-	"dd97ee0f3ab8ae4a01af50236441845c827ea0586c37f053280c896888a49fc2": []Modver{
-		{"github.com/moby/moby", "v17.11.0-ce-rc4+incompatible"},
+	"f2b818fa1f3604663552249e7812a3fec5231a454ca2268204103b88aa690051": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v17.11.0-ce-rc3+incompatible"},
 	},
-	"bac66487a366c14b645d192a6a95d084d8f3de6de64c8df32de62409c186023e": []Modver{
-		{"github.com/moby/moby", "v17.12.0-ce-rc1+incompatible"},
+	"dd97ee0f3ab8ae4a01af50236441845c827ea0586c37f053280c896888a49fc2": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v17.11.0-ce-rc4+incompatible"},
 	},
-	"efc1b827745e8d7ca6340ec6bce3b10a964bcf4a2f6d10251e91b634432338a4": []Modver{
-		{"github.com/moby/moby", "v17.12.0-ce-rc2+incompatible"},
+	"bac66487a366c14b645d192a6a95d084d8f3de6de64c8df32de62409c186023e": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v17.12.0-ce-rc1+incompatible"},
 	},
-	"d4157fc9239ee2dc75cb78adf934f86e695dde0526f72a69fe40edd7e61a9a36": []Modver{
-		{"github.com/moby/moby", "v17.12.0-ce-rc3+incompatible"},
+	"efc1b827745e8d7ca6340ec6bce3b10a964bcf4a2f6d10251e91b634432338a4": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v17.12.0-ce-rc2+incompatible"},
 	},
-	"409432948045c7fa1333c3d18fc41c600992cc5598c5830e22d80aff975282df": []Modver{
-		{"github.com/moby/moby", "v17.12.0-ce-rc4+incompatible"}, {"github.com/moby/moby", "v17.12.0-ce+incompatible"},
+	"d4157fc9239ee2dc75cb78adf934f86e695dde0526f72a69fe40edd7e61a9a36": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v17.12.0-ce-rc3+incompatible"},
 	},
-	"f04c67376f3331c07dba3aec0d75014de5e1e855a45b8cf9252884e2cd326082": []Modver{
-		{"github.com/moby/moby", "v17.12.1-ce+incompatible"}, {"github.com/moby/moby", "v17.12.1-ce-rc2+incompatible"},
+	"409432948045c7fa1333c3d18fc41c600992cc5598c5830e22d80aff975282df": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v17.12.0-ce-rc4+incompatible"}, {Path: "github.com/moby/moby", Version: "v17.12.0-ce+incompatible"},
 	},
-	"ed1fb5cac26ef5b2f9a323b2744230174672576a446d9974e829ea820e3cdfde": []Modver{
-		{"github.com/moby/moby", "v17.12.1-ce-rc1+incompatible"},
+	"f04c67376f3331c07dba3aec0d75014de5e1e855a45b8cf9252884e2cd326082": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v17.12.1-ce+incompatible"}, {Path: "github.com/moby/moby", Version: "v17.12.1-ce-rc2+incompatible"},
 	},
-	"4863e4435e31dc818dfd7b674eb8b9c981ef0c1b02bff4bec8087f3ec264a212": []Modver{
-		{"github.com/moby/moby", "v20.10.0+incompatible"},
+	"ed1fb5cac26ef5b2f9a323b2744230174672576a446d9974e829ea820e3cdfde": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v17.12.1-ce-rc1+incompatible"},
 	},
-	"ab1b47069b2878846305b2b0483115ed7c5880e772cbce7d0cb4f6b53190ae91": []Modver{
-		{"github.com/moby/moby", "v20.10.0-beta1+incompatible"},
+	"4863e4435e31dc818dfd7b674eb8b9c981ef0c1b02bff4bec8087f3ec264a212": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v20.10.0+incompatible"},
 	},
-	"b8b028527555bcddff87f71a10dcd454ca2b7572606aaef43cd95f7cf8aa24aa": []Modver{
-		{"github.com/moby/moby", "v20.10.0-rc1+incompatible"},
+	"ab1b47069b2878846305b2b0483115ed7c5880e772cbce7d0cb4f6b53190ae91": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v20.10.0-beta1+incompatible"},
 	},
-	"c49b05079d431aa739ee84fc894046dc6d03927314764dc0138dc752651a9f6f": []Modver{
-		{"github.com/moby/moby", "v20.10.0-rc2+incompatible"},
+	"b8b028527555bcddff87f71a10dcd454ca2b7572606aaef43cd95f7cf8aa24aa": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v20.10.0-rc1+incompatible"},
 	},
-	"ee708f64882d044343fd014e2be85d85990bfd422f8b9adf9a0a9c52c67f55c9": []Modver{
-		{"github.com/moby/moby", "v20.10.1+incompatible"},
+	"c49b05079d431aa739ee84fc894046dc6d03927314764dc0138dc752651a9f6f": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v20.10.0-rc2+incompatible"},
 	},
-	"cb7fa0d67b6d13b687ac5c9d401bd7553bfc233ffe561bd329cb490778ecd65a": []Modver{
-		{"github.com/moby/moby", "v20.10.2+incompatible"},
+	"ee708f64882d044343fd014e2be85d85990bfd422f8b9adf9a0a9c52c67f55c9": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v20.10.1+incompatible"},
 	},
-	"d679ad3c2221c3605c6017f7d1e0bcbd6d8fa989b27ddcacd23fb677f52ba30d": []Modver{
-		{"github.com/moby/moby", "v20.10.3+incompatible"},
+	"cb7fa0d67b6d13b687ac5c9d401bd7553bfc233ffe561bd329cb490778ecd65a": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v20.10.2+incompatible"},
 	},
-	"f47ab3043232bcfb875095f433db0310c54be247ae02a50a74aff73579014a95": []Modver{
-		{"github.com/moby/moby", "v20.10.4+incompatible"}, {"github.com/moby/moby", "v20.10.5+incompatible"},
+	"d679ad3c2221c3605c6017f7d1e0bcbd6d8fa989b27ddcacd23fb677f52ba30d": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v20.10.3+incompatible"},
 	},
-	"1e77a88d21ce401c70da764ace1be21d905b9e3b2316bfc6e0378f3a6e811702": []Modver{
-		{"github.com/moby/moby", "v20.10.6+incompatible"},
+	"f47ab3043232bcfb875095f433db0310c54be247ae02a50a74aff73579014a95": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v20.10.4+incompatible"}, {Path: "github.com/moby/moby", Version: "v20.10.5+incompatible"},
+	},
+	"1e77a88d21ce401c70da764ace1be21d905b9e3b2316bfc6e0378f3a6e811702": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v20.10.6+incompatible"},
 	},
 }

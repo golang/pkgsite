@@ -87,9 +87,9 @@ func run(ctx context.Context, db *database.DB, proxyURL string) error {
 	}
 	for _, m := range seedModules {
 		m := m
-		vers := []string{m.version}
-		if m.version == "all" {
-			if m.path == stdlib.ModulePath {
+		vers := []string{m.Version}
+		if m.Version == "all" {
+			if m.Path == stdlib.ModulePath {
 				stdVersions, err := stdlib.Versions()
 				if err != nil {
 					return err
@@ -103,7 +103,7 @@ func run(ctx context.Context, db *database.DB, proxyURL string) error {
 					}
 				}
 			} else {
-				vers, err = proxyClient.Versions(ctx, m.path)
+				vers, err = proxyClient.Versions(ctx, m.Path)
 				if err != nil {
 					return err
 				}
@@ -117,14 +117,14 @@ func run(ctx context.Context, db *database.DB, proxyURL string) error {
 
 				var exists bool
 				defer func() {
-					r.add(m.path, v, start, exists)
+					r.add(m.Path, v, start, exists)
 				}()
-				err := db.QueryRow(ctx, `SELECT 1 FROM modules WHERE module_path = $1 AND version = $2;`, m.path, v).Scan(&exists)
+				err := db.QueryRow(ctx, `SELECT 1 FROM modules WHERE module_path = $1 AND version = $2;`, m.Path, v).Scan(&exists)
 				if err != nil && !errors.Is(err, sql.ErrNoRows) {
 					return err
 				}
 				if errors.Is(err, sql.ErrNoRows) || *refetch {
-					return fetchFunc(ctx, f, m.path, v)
+					return fetchFunc(ctx, f, m.Path, v)
 				}
 				return nil
 			})
@@ -187,15 +187,10 @@ func (r *results) add(modPath, version string, start time.Time, exists bool) {
 	r.paths[key] = time.Since(start)
 }
 
-type module struct {
-	path    string
-	version string
-}
-
 // readSeedFile reads a file of module versions that we want to fetch for
 // seeding the database. Each line of the file should be of the form:
 //     module@version
-func readSeedFile(ctx context.Context, seedfile string) (_ []*module, err error) {
+func readSeedFile(ctx context.Context, seedfile string) (_ []internal.Modver, err error) {
 	defer derrors.Wrap(&err, "readSeedFile %q", seedfile)
 	lines, err := internal.ReadFileLines(seedfile)
 	if err != nil {
@@ -203,12 +198,12 @@ func readSeedFile(ctx context.Context, seedfile string) (_ []*module, err error)
 	}
 	log.Infof(ctx, "read %d module versions from %s", len(lines), seedfile)
 
-	var modules []*module
+	var modules []internal.Modver
 	for _, l := range lines {
 		parts := strings.SplitN(l, "@", 2)
-		modules = append(modules, &module{
-			path:    parts[0],
-			version: parts[1],
+		modules = append(modules, internal.Modver{
+			Path:    parts[0],
+			Version: parts[1],
 		})
 	}
 	return modules, nil

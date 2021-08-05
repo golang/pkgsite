@@ -226,3 +226,13 @@ type PackageVersionState struct {
 	Status      int
 	Error       string
 }
+
+// A Modver holds a module path and version.
+type Modver struct {
+	Path    string
+	Version string
+}
+
+func (mv Modver) String() string {
+	return mv.Path + "@" + mv.Version
+}

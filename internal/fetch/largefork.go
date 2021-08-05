@@ -17,16 +17,6 @@ import (
 	"strings"
 )
 
-// Modver is a module path and version.
-type Modver struct {
-	ModulePath string
-	Version    string
-}
-
-func (m Modver) String() string {
-	return m.ModulePath + "@" + m.Version
-}
-
 // ZipSignature calculates a signature that uniquely identifies a zip file.
 // It hashes every filename and its contents. Filenames must begin with prefix,
 // which is not included in the hash.
@@ -61,8 +51,8 @@ func forkedFrom(z *zip.Reader, module, version string) (string, error) {
 		return "", err
 	}
 	for _, mv := range ZipSignatures[sig] {
-		if mv.ModulePath != module && mv.Version == version {
-			return mv.ModulePath, nil
+		if mv.Path != module && mv.Version == version {
+			return mv.Path, nil
 		}
 	}
 	// Either signature or version didn't match.

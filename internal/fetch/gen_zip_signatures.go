@@ -26,6 +26,7 @@ import (
 	"time"
 
 	"golang.org/x/mod/semver"
+	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/fetch"
 	"golang.org/x/pkgsite/internal/proxy"
 )
@@ -54,7 +55,7 @@ var largeNoMods = []struct {
 const goFile = "zip_signatures.gen.go"
 
 type sig struct {
-	Modver    fetch.Modver
+	Modver    internal.Modver
 	Signature string
 }
 
@@ -78,8 +79,8 @@ func main() {
 }
 
 func generateSignatures(ctx context.Context, prox *proxy.Client) error {
-	// Remember all the modvers we've already computed, to avoid doing so again.
-	seen := map[fetch.Modver]bool{}
+	// Remember all the module versions we've already computed, to avoid doing so again.
+	seen := map[internal.Modver]bool{}
 	for _, mvs := range fetch.ZipSignatures {
 		for _, mv := range mvs {
 			seen[mv] = true
@@ -101,7 +102,7 @@ func generateSignatures(ctx context.Context, prox *proxy.Client) error {
 		}
 		// Compute the signature for each of those versions.
 		for _, v := range noGoModVersions {
-			modver := fetch.Modver{ModulePath: m.modulePath, Version: v}
+			modver := internal.Modver{Path: m.modulePath, Version: v}
 			if seen[modver] {
 				if *verbose {
 					fmt.Printf("%-40s already computed\n", modver)
@@ -125,7 +126,7 @@ func checkSignatures(ctx context.Context, prox *proxy.Client, args []string) err
 		if len(words) != 2 {
 			return fmt.Errorf("invalid module@version: %q", arg)
 		}
-		sig, err := computeSignature(ctx, prox, fetch.Modver{ModulePath: words[0], Version: words[1]})
+		sig, err := computeSignature(ctx, prox, internal.Modver{Path: words[0], Version: words[1]})
 		if err != nil {
 			return err
 		}
@@ -135,9 +136,9 @@ func checkSignatures(ctx context.Context, prox *proxy.Client, args []string) err
 	return nil
 }
 
-func computeSignature(ctx context.Context, prox *proxy.Client, mv fetch.Modver) (string, error) {
+func computeSignature(ctx context.Context, prox *proxy.Client, mv internal.Modver) (string, error) {
 	start := time.Now()
-	zr, err := prox.Zip(ctx, mv.ModulePath, mv.Version)
+	zr, err := prox.Zip(ctx, mv.Path, mv.Version)
 	if err != nil {
 		return "", err
 	}
@@ -157,7 +158,7 @@ func writeGoFile(filename string) error {
 	// Convert the ZipSignatures map to a slice of key-value pairs.
 	type kv struct {
 		Signature string
-		Modvers   []fetch.Modver
+		Modvers   []internal.Modver
 		key       string
 	}
 
@@ -195,11 +196,13 @@ var tmpl = template.Must(template.New("").Parse(`
 
 package fetch
 
-var ZipSignatures = map[string][]Modver{
+import "golang.org/x/pkgsite/internal"
+
+var ZipSignatures = map[string][]internal.Modver{
 {{range .}}
-    "{{.Signature}}": []Modver{
+    "{{.Signature}}": []internal.Modver{
 	{{range .Modvers -}}
-		{"{{.ModulePath}}", "{{.Version}}"},
+		{Path: "{{.Path}}", Version: "{{.Version}}"},
 	{{- end}}
 	},
 {{- end}}

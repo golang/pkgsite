@@ -210,17 +210,13 @@ func newTaskID(modulePath, version string) string {
 	return fmt.Sprintf("%04x-%s", hash, &b)
 }
 
-type moduleVersion struct {
-	modulePath, version string
-}
-
 // InMemory is a Queue implementation that schedules in-process fetch
 // operations. Unlike the GCP task queue, it will not automatically retry tasks
 // on failure.
 //
 // This should only be used for local development.
 type InMemory struct {
-	queue       chan moduleVersion
+	queue       chan internal.Modver
 	done        chan struct{}
 	experiments []string
 }
@@ -232,7 +228,7 @@ type inMemoryProcessFunc func(context.Context, string, string) (int, error)
 // execute these fetches.
 func NewInMemory(ctx context.Context, workerCount int, experiments []string, processFunc inMemoryProcessFunc) *InMemory {
 	q := &InMemory{
-		queue:       make(chan moduleVersion, 1000),
+		queue:       make(chan internal.Modver, 1000),
 		experiments: experiments,
 		done:        make(chan struct{}),
 	}
@@ -247,16 +243,16 @@ func NewInMemory(ctx context.Context, workerCount int, experiments []string, pro
 
 			// If a worker is available, make a request to the fetch service inside a
 			// goroutine and wait for it to finish.
-			go func(v moduleVersion) {
+			go func(v internal.Modver) {
 				defer func() { <-sem }()
 
-				log.Infof(ctx, "Fetch requested: %q %q (workerCount = %d)", v.modulePath, v.version, cap(sem))
+				log.Infof(ctx, "Fetch requested: %s (workerCount = %d)", v, cap(sem))
 
 				fetchCtx, cancel := context.WithTimeout(ctx, 5*time.Minute)
 				fetchCtx = experiment.NewContext(fetchCtx, experiments...)
 				defer cancel()
 
-				if _, err := processFunc(fetchCtx, v.modulePath, v.version); err != nil {
+				if _, err := processFunc(fetchCtx, v.Path, v.Version); err != nil {
 					log.Error(fetchCtx, err)
 				}
 			}(v)
@@ -276,7 +272,7 @@ func NewInMemory(ctx context.Context, workerCount int, experiments []string, pro
 // ScheduleFetch pushes a fetch task into the local queue to be processed
 // asynchronously.
 func (q *InMemory) ScheduleFetch(ctx context.Context, modulePath, version, _ string, _ bool) (bool, error) {
-	q.queue <- moduleVersion{modulePath, version}
+	q.queue <- internal.Modver{Path: modulePath, Version: version}
 	return true, nil
 }
 

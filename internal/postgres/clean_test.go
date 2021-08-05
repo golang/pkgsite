@@ -65,7 +65,7 @@ func TestCleanBulk(t *testing.T) {
 	}
 
 	for _, mv := range mvs {
-		_, err = testDB.GetModuleInfo(ctx, mv.ModulePath, mv.Version)
+		_, err = testDB.GetModuleInfo(ctx, mv.Path, mv.Version)
 		if !errors.Is(err, derrors.NotFound) {
 			t.Errorf("%s: got %v, want NotFound", mv, err)
 		}
