@@ -3,3 +3,5 @@ experiments:
     rollout: 100
   - name: new-unit-layout
     rollout: 100
+  - name: symbol-history-versions-page
+    rollout: 100
