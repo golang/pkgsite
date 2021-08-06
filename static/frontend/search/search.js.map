@@ -1,7 +1,7 @@
 {
   "version": 3,
   "sources": ["search.ts"],
-  "sourcesContent": ["/**\n * @license\n * Copyright 2021 The Go Authors. All rights reserved.\n * Use of this source code is governed by a BSD-style\n * license that can be found in the LICENSE file.\n */\n\nconst hiddenChips = document.querySelectorAll('.js-sameModChip[data-hidden]');\nconst showMore = document.querySelector<HTMLButtonElement>('.js-showMoreChip');\n\nshowMore?.addEventListener('click', () => {\n  for (const el of hiddenChips) {\n    el.removeAttribute('data-hidden');\n  }\n  showMore.parentElement?.removeChild(showMore);\n});\n"],
-  "mappings": "MAAA,AAOA,GAAM,GAAc,SAAS,iBAAiB,gCACxC,EAAW,SAAS,cAAiC,oBAE3D,GAAU,iBAAiB,QAAS,IAAM,CACxC,OAAW,KAAM,GACf,EAAG,gBAAgB,eAErB,EAAS,eAAe,YAAY",
+  "sourcesContent": ["/**\n * @license\n * Copyright 2021 The Go Authors. All rights reserved.\n * Use of this source code is governed by a BSD-style\n * license that can be found in the LICENSE file.\n */\n\nconst hiddenChips = document.querySelectorAll('.js-sameModChip[data-hidden]');\nconst showMore = document.querySelector<HTMLButtonElement>('.js-showMoreChip');\nconst searchLimit = document.querySelector<HTMLSelectElement>('.js-searchLimit');\n\nshowMore?.addEventListener('click', () => {\n  for (const el of hiddenChips) {\n    el.removeAttribute('data-hidden');\n  }\n  showMore.parentElement?.removeChild(showMore);\n});\n\nsearchLimit?.addEventListener('change', e => {\n  const target = e.target as HTMLElement;\n  const form = target.parentNode as HTMLFormElement;\n  form.submit();\n});\n"],
+  "mappings": "MAAA,AAOA,GAAM,GAAc,SAAS,iBAAiB,gCACxC,EAAW,SAAS,cAAiC,oBACrD,EAAc,SAAS,cAAiC,mBAE9D,GAAU,iBAAiB,QAAS,IAAM,CACxC,OAAW,KAAM,GACf,EAAG,gBAAgB,eAErB,EAAS,eAAe,YAAY,KAGtC,GAAa,iBAAiB,SAAU,GAAK,CAG3C,AADa,AADE,EAAE,OACG,WACf",
   "names": []
 }
