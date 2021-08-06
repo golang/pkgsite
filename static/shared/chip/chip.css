@@ -32,3 +32,8 @@
   border: 0.0625rem solid var(--pink);
   color: var(--color-text-inverted);
 }
+.go-Chip--subtle {
+  background-color: var(--color-background-accented);
+  border-color: transparent;
+  color: var(--color-text-subtle);
+}

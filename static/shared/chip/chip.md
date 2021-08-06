@@ -21,3 +21,7 @@
 ```html #chip-alert
 <span class="go-Chip go-Chip--alert">Alert</span>
 ```
+
+```html #chip-subtle
+<span class="go-Chip go-Chip--subtle">Subtle</span>
+```
