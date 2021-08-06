@@ -187,8 +187,15 @@ func runSymbolSearchMultiWord(ctx context.Context, ddb *database.DB, q string, l
 
 func mergedResults(resultsArray [][]*SearchResult, limit int) []*SearchResult {
 	var results []*SearchResult
-	for _, r := range resultsArray {
-		results = append(results, r...)
+	deduped := map[string]bool{}
+	for _, array := range resultsArray {
+		for _, r := range array {
+			key := fmt.Sprintf("%s@%s", r.PackagePath, r.SymbolName)
+			if !deduped[key] {
+				results = append(results, r)
+				deduped[key] = true
+			}
+		}
 	}
 	sort.Slice(results, func(i, j int) bool { return results[i].NumImportedBy > results[j].NumImportedBy })
 	if len(results) > limit {
