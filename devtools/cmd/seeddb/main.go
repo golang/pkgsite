@@ -87,48 +87,19 @@ func run(ctx context.Context, db *database.DB, proxyURL string) error {
 	}
 	for _, m := range seedModules {
 		m := m
-		vers := []string{m.Version}
-		if m.Version == "all" {
-			if m.Path == stdlib.ModulePath {
-				stdVersions, err := stdlib.Versions()
-				if err != nil {
-					return err
-				}
-				// As an optimization, only fetch release versions for the
-				// standard library.
-				vers = nil
-				for _, v := range stdVersions {
-					if strings.HasSuffix(v, ".0") {
-						vers = append(vers, v)
-					}
-				}
-			} else {
-				vers, err = proxyClient.Versions(ctx, m.Path)
-				if err != nil {
+		vers, err := versions(ctx, proxyClient, m)
+		if err != nil {
+			return err
+		}
+		// Process versions of the same module sequentially, to avoid DB contention.
+		g.Go(func() error {
+			for _, v := range vers {
+				if err := fetch(ctx, db, f, m.Path, v, &r); err != nil {
 					return err
 				}
 			}
-		}
-		for _, v := range vers {
-			v := v
-			g.Go(func() error {
-				// Record the duration of this fetch request.
-				start := time.Now()
-
-				var exists bool
-				defer func() {
-					r.add(m.Path, v, start, exists)
-				}()
-				err := db.QueryRow(ctx, `SELECT 1 FROM modules WHERE module_path = $1 AND version = $2;`, m.Path, v).Scan(&exists)
-				if err != nil && !errors.Is(err, sql.ErrNoRows) {
-					return err
-				}
-				if errors.Is(err, sql.ErrNoRows) || *refetch {
-					return fetchFunc(ctx, f, m.Path, v)
-				}
-				return nil
-			})
-		}
+			return nil
+		})
 	}
 	if err := g.Wait(); err != nil {
 		return err
@@ -143,6 +114,48 @@ func run(ctx context.Context, db *database.DB, proxyURL string) error {
 	sort.Strings(keys)
 	for _, k := range keys {
 		log.Infof(ctx, "%s | %v", k, r.paths[k])
+	}
+	return nil
+}
+
+func versions(ctx context.Context, proxyClient *proxy.Client, mv internal.Modver) ([]string, error) {
+	if mv.Version != "all" {
+		return []string{mv.Version}, nil
+	}
+	if mv.Path == stdlib.ModulePath {
+		stdVersions, err := stdlib.Versions()
+		if err != nil {
+			return nil, err
+		}
+		// As an optimization, only fetch release versions for the standard
+		// library.
+		var vers []string
+		for _, v := range stdVersions {
+			if strings.HasSuffix(v, ".0") {
+				vers = append(vers, v)
+			}
+		}
+		return vers, nil
+	}
+	return proxyClient.Versions(ctx, mv.Path)
+}
+
+func fetch(ctx context.Context, db *database.DB, f *worker.Fetcher, m, v string, r *results) error {
+	// Record the duration of this fetch request.
+	start := time.Now()
+
+	var exists bool
+	defer func() {
+		r.add(m, v, start, exists)
+	}()
+	err := db.QueryRow(ctx, `
+		SELECT 1 FROM modules WHERE module_path = $1 AND version = $2;
+	`, m, v).Scan(&exists)
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+		return err
+	}
+	if errors.Is(err, sql.ErrNoRows) || *refetch {
+		return fetchFunc(ctx, f, m, v)
 	}
 	return nil
 }

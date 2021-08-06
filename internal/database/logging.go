@@ -138,9 +138,10 @@ func (db *DB) logTransaction(ctx context.Context) func(*error) {
 func generateLoggingID(instanceID string) string {
 	if instanceID == "" {
 		instanceID = "local"
-	} else {
-		// Instance IDs are long strings. The low-order part seems quite random, so
-		// shortening the ID will still likely result in something unique.
+	} else if len(instanceID) > 8 {
+		// App Engine instance IDs are long strings. The low-order part seems
+		// quite random, so shortening the ID will still likely result in
+		// something unique.
 		instanceID = instanceID[len(instanceID)-4:]
 	}
 	n := atomic.AddInt64(&queryCounter, 1)
