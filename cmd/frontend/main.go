@@ -103,17 +103,10 @@ func main() {
 		}
 	}
 
-	var haClient *redis.Client
-	if cfg.RedisHAHost != "" {
-		haClient = redis.NewClient(&redis.Options{
-			Addr: cfg.RedisHAHost + ":" + cfg.RedisHAPort,
-		})
-	}
 	rc := cmdconfig.ReportingClient(ctx, cfg)
 	server, err := frontend.NewServer(frontend.ServerConfig{
 		DataSourceGetter:     dsg,
 		Queue:                fetchQueue,
-		CompletionClient:     haClient,
 		TaskIDChangeInterval: config.TaskIDChangeIntervalFrontend,
 		StaticPath:           template.TrustedSourceFromFlag(flag.Lookup("static").Value),
 		ThirdPartyPath:       *thirdPartyPath,

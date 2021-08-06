@@ -36,11 +36,8 @@ import (
 // Server can be installed to serve the go discovery frontend.
 type Server struct {
 	// getDataSource should never be called from a handler. It is called only in Server.errorHandler.
-	getDataSource func(context.Context) internal.DataSource
-	queue         queue.Queue
-	// cmplClient is a redis client that has access to the "completions" sorted
-	// set.
-	cmplClient           *redis.Client
+	getDataSource        func(context.Context) internal.DataSource
+	queue                queue.Queue
 	taskIDChangeInterval time.Duration
 	staticPath           template.TrustedSource
 	thirdPartyPath       string
@@ -62,7 +59,6 @@ type ServerConfig struct {
 	// It should be goroutine-safe.
 	DataSourceGetter     func(context.Context) internal.DataSource
 	Queue                queue.Queue
-	CompletionClient     *redis.Client
 	TaskIDChangeInterval time.Duration
 	StaticPath           template.TrustedSource
 	ThirdPartyPath       string
@@ -86,7 +82,6 @@ func NewServer(scfg ServerConfig) (_ *Server, err error) {
 	s := &Server{
 		getDataSource:        scfg.DataSourceGetter,
 		queue:                scfg.Queue,
-		cmplClient:           scfg.CompletionClient,
 		staticPath:           scfg.StaticPath,
 		thirdPartyPath:       scfg.ThirdPartyPath,
 		templateDir:          templateDir,

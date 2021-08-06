@@ -50,10 +50,7 @@ func TestEndToEndProcessing(t *testing.T) {
 	redisCacheClient, td := newRedisClient(t)
 	defer td()
 
-	redisHAClient, td := newRedisClient(t)
-	defer td()
-
-	workerHTTP, fetcher, queue := setupWorker(ctx, t, proxyClient, indexClient, redisCacheClient, redisHAClient)
+	workerHTTP, fetcher, queue := setupWorker(ctx, t, proxyClient, indexClient, redisCacheClient)
 	frontendHTTP := setupFrontend(ctx, t, queue, redisCacheClient)
 	if _, err := doGet(workerHTTP.URL + "/poll?limit=1000"); err != nil {
 		t.Fatal(err)

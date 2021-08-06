@@ -94,7 +94,6 @@ func main() {
 	}
 
 	reportingClient := cmdconfig.ReportingClient(ctx, cfg)
-	redisHAClient := getHARedis(ctx, cfg)
 	redisCacheClient := getCacheRedis(ctx, cfg)
 	experimenter := cmdconfig.Experimenter(ctx, cfg, expg, reportingClient)
 	server, err := worker.NewServer(cfg, worker.ServerConfig{
@@ -102,7 +101,6 @@ func main() {
 		IndexClient:      indexClient,
 		ProxyClient:      proxyClient,
 		SourceClient:     sourceClient,
-		RedisHAClient:    redisHAClient,
 		RedisCacheClient: redisCacheClient,
 		Queue:            fetchQueue,
 		ReportingClient:  reportingClient,
@@ -153,13 +151,6 @@ func main() {
 	addr := cfg.HostAddr("localhost:8000")
 	log.Infof(ctx, "Listening on addr %s", addr)
 	log.Fatal(ctx, http.ListenAndServe(addr, nil))
-}
-
-func getHARedis(ctx context.Context, cfg *config.Config) *redis.Client {
-	// We update completions with one big pipeline, so we need long write
-	// timeouts. ReadTimeout is increased only to be consistent with
-	// WriteTimeout.
-	return getRedis(ctx, cfg.RedisHAHost, cfg.RedisHAPort, 5*time.Minute, 5*time.Minute)
 }
 
 func getCacheRedis(ctx context.Context, cfg *config.Config) *redis.Client {

@@ -161,10 +161,6 @@ type Config struct {
 	// Configuration for redis page cache.
 	RedisCacheHost, RedisCachePort string
 
-	// Configuration for redis autocompletion. This is different from the page
-	// cache instance as it has different availability requirements.
-	RedisHAHost, RedisHAPort string
-
 	// UseProfiler specifies whether to enable Stackdriver Profiler.
 	UseProfiler bool
 
@@ -368,8 +364,6 @@ func Init(ctx context.Context) (_ *Config, err error) {
 		DBSecret:             os.Getenv("GO_DISCOVERY_DATABASE_SECRET"),
 		RedisCacheHost:       os.Getenv("GO_DISCOVERY_REDIS_HOST"),
 		RedisCachePort:       GetEnv("GO_DISCOVERY_REDIS_PORT", "6379"),
-		RedisHAHost:          os.Getenv("GO_DISCOVERY_REDIS_HA_HOST"),
-		RedisHAPort:          GetEnv("GO_DISCOVERY_REDIS_HA_PORT", "6379"),
 		Quota: QuotaSettings{
 			Enable:     os.Getenv("GO_DISCOVERY_ENABLE_QUOTA") == "true",
 			QPS:        GetEnvInt(ctx, "GO_DISCOVERY_QUOTA_QPS", 10),

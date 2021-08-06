@@ -45,7 +45,6 @@ type Server struct {
 	indexClient     *index.Client
 	proxyClient     *proxy.Client
 	sourceClient    *source.Client
-	redisHAClient   *redis.Client
 	cache           *cache.Cache
 	db              *postgres.DB
 	queue           queue.Queue
@@ -61,7 +60,6 @@ type ServerConfig struct {
 	IndexClient      *index.Client
 	ProxyClient      *proxy.Client
 	SourceClient     *source.Client
-	RedisHAClient    *redis.Client
 	RedisCacheClient *redis.Client
 	Queue            queue.Queue
 	ReportingClient  *errorreporting.Client
@@ -100,7 +98,6 @@ func NewServer(cfg *config.Config, scfg ServerConfig) (_ *Server, err error) {
 		indexClient:     scfg.IndexClient,
 		proxyClient:     scfg.ProxyClient,
 		sourceClient:    scfg.SourceClient,
-		redisHAClient:   scfg.RedisHAClient,
 		cache:           c,
 		queue:           scfg.Queue,
 		reportingClient: scfg.ReportingClient,
