@@ -480,9 +480,9 @@ func (db *DB) getUnitWithAllFields(ctx context.Context, um *internal.UnitMeta, b
 			COALESCE((
 				SELECT imported_by_count
 				FROM search_documents
-				-- Only package_path is needed b/c it is the PK for
+				-- Only package_path_id is needed b/c it is the PK for
 				-- search_documents.
-				WHERE package_path = $1
+				WHERE package_path_id = $1
 				), 0) AS num_imported_by
 		FROM units u
 		LEFT JOIN readmes r
@@ -508,7 +508,7 @@ func (db *DB) getUnitWithAllFields(ctx context.Context, um *internal.UnitMeta, b
 	}
 	doc := &internal.Documentation{GOOS: bcMatched.GOOS, GOARCH: bcMatched.GOARCH}
 	end := middleware.ElapsedStat(ctx, "getUnitWithAllFields-readme-and-imports")
-	err = db.db.QueryRow(ctx, query, um.Path, unitID, goos, goarch).Scan(
+	err = db.db.QueryRow(ctx, query, pathID, unitID, goos, goarch).Scan(
 		database.NullIsEmpty(&r.Filepath),
 		database.NullIsEmpty(&r.Contents),
 		database.NullIsEmpty(&doc.Synopsis),
