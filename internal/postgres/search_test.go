@@ -1019,6 +1019,47 @@ func TestUpsertSearchDocumentVersionHasGoMod(t *testing.T) {
 	}
 }
 
+func TestUpsertSearchDocumentLongerModulePath(t *testing.T) {
+	// Verify that if there are two packages with the same import path
+	// from different modules, the one with the longer module path
+	// is added to search_documents.
+	t.Parallel()
+	ctx := context.Background()
+
+	longer := sample.Module("a.com/b", "v1.0.0", "c")
+	shorter := sample.Module("a.com", "v1.0.0", "b/c", "b/d")
+
+	for _, test := range []struct {
+		name   string
+		m1, m2 *internal.Module
+	}{
+		{"longer first", longer, shorter},
+		{"shorter first", shorter, longer},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			testDB, release := acquire(t)
+			defer release()
+			MustInsertModule(ctx, t, testDB, test.m1)
+			MustInsertModule(ctx, t, testDB, test.m2)
+			sd, err := getSearchDocument(ctx, testDB, "a.com/b/c")
+			if err != nil {
+				t.Fatal(err)
+			}
+			if want := "a.com/b"; sd.modulePath != want {
+				t.Fatalf("got %q, want %q", sd.modulePath, want)
+			}
+			// Check that other packages in the shorter module are not affected.
+			sd, err = getSearchDocument(ctx, testDB, "a.com/b/d")
+			if err != nil {
+				t.Fatal(err)
+			}
+			if want := "a.com"; sd.modulePath != want {
+				t.Fatalf("got %q, want %q", sd.modulePath, want)
+			}
+		})
+	}
+}
+
 func TestUpdateSearchDocumentsImportedByCount(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()

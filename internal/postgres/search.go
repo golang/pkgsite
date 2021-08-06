@@ -689,8 +689,30 @@ func upsertSearchDocuments(ctx context.Context, ddb *database.DB, mod *internal.
 	defer derrors.WrapStack(&err, "upsertSearchDocuments(ctx, %q, %q)", mod.ModulePath, mod.Version)
 	ctx, span := trace.StartSpan(ctx, "UpsertSearchDocuments")
 	defer span.End()
+
+	// Don't upsert a package if it is already present under a longer module
+	// path. We need this because search_documents can have only one row per
+	// import path, and we, like the go tool, prefer the package with the longer
+	// module path. For example, if two packages have import path "a/b/c", one
+	// in module "a" and the other in "a/b", we keep only the latter.
+	lps, err := ddb.CollectStrings(ctx, `
+		SELECT package_path
+		FROM search_documents
+		WHERE module_path LIKE $1 || '/%'
+	`, mod.ModulePath)
+	if err != nil {
+		return err
+	}
+	longerPackages := map[string]bool{}
+	for _, lp := range lps {
+		longerPackages[lp] = true
+	}
+
 	for _, pkg := range mod.Packages() {
 		if isInternalPackage(pkg.Path) {
+			continue
+		}
+		if longerPackages[pkg.Path] {
 			continue
 		}
 		args := UpsertSearchDocumentArgs{
