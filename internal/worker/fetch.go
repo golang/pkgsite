@@ -66,6 +66,12 @@ func (f *Fetcher) FetchAndUpdateState(ctx context.Context, modulePath, requested
 		trace.StringAttribute("version", requestedVersion))
 	defer span.End()
 
+	// Begin by htting the proxy's info endpoint. That will make the proxy aware
+	// of the version if it isn't already, as can happen when we arrive here via
+	// frontend fetch. We ignore both the error and the information itself at
+	// this point; we will ask again later when we need it.
+	_, _ = f.ProxyClient.Info(ctx, modulePath, requestedVersion)
+
 	// Get the latest-version information first, and update the DB. We'll need
 	// it to determine if the current module version is the latest good one for
 	// its path.
@@ -411,6 +417,7 @@ func logTaskResult(ctx context.Context, ft *fetchTask, prefix string) {
 // it must be protected by the module-path advisory lock.
 func (f *Fetcher) FetchAndUpdateLatest(ctx context.Context, modulePath string) (_ *internal.LatestModuleVersions, err error) {
 	defer derrors.Wrap(&err, "FetchAndUpdateLatest(%q)", modulePath)
+
 	lmv, err := fetch.LatestModuleVersions(ctx, modulePath, f.ProxyClient, func(v string) (bool, error) {
 		return f.DB.HasGoMod(ctx, modulePath, v)
 	})
