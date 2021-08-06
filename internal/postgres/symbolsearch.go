@@ -130,7 +130,7 @@ func (db *DB) symbolSearch(ctx context.Context, q string, limit, offset, maxResu
 		}
 
 		// If two packages have the same imported by count, return them in
-		// alphabetical order by packge path.
+		// alphabetical order by package path.
 		if results[i].PackagePath != results[j].PackagePath {
 			return results[i].PackagePath < results[j].PackagePath
 		}
