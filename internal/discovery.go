@@ -5,12 +5,14 @@
 package internal
 
 import (
+	"errors"
 	"path"
 	"strconv"
 	"strings"
 	"time"
 
 	"golang.org/x/mod/module"
+	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/stdlib"
@@ -235,4 +237,14 @@ type Modver struct {
 
 func (mv Modver) String() string {
 	return mv.Path + "@" + mv.Version
+}
+
+// ParseModver parses a string of the form M@V into a Modver.
+func ParseModver(s string) (mv Modver, err error) {
+	defer derrors.Wrap(&err, "ParseModver(%q)", s)
+	parts := strings.Split(s, "@")
+	if len(parts) != 2 {
+		return mv, errors.New("should be module@version")
+	}
+	return Modver{Path: parts[0], Version: parts[1]}, nil
 }

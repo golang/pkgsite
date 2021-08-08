@@ -213,11 +213,11 @@ func readSeedFile(ctx context.Context, seedfile string) (_ []internal.Modver, er
 
 	var modules []internal.Modver
 	for _, l := range lines {
-		parts := strings.SplitN(l, "@", 2)
-		modules = append(modules, internal.Modver{
-			Path:    parts[0],
-			Version: parts[1],
-		})
+		mv, err := internal.ParseModver(l)
+		if err != nil {
+			return nil, err
+		}
+		modules = append(modules, mv)
 	}
 	return modules, nil
 }

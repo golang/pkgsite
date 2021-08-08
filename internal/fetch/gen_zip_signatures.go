@@ -21,7 +21,6 @@ import (
 	"io/ioutil"
 	"log"
 	"sort"
-	"strings"
 	"text/template"
 	"time"
 
@@ -122,11 +121,11 @@ func generateSignatures(ctx context.Context, prox *proxy.Client) error {
 
 func checkSignatures(ctx context.Context, prox *proxy.Client, args []string) error {
 	for _, arg := range args {
-		words := strings.Split(arg, "@")
-		if len(words) != 2 {
-			return fmt.Errorf("invalid module@version: %q", arg)
+		mv, err := internal.ParseModver(arg)
+		if err != nil {
+			return err
 		}
-		sig, err := computeSignature(ctx, prox, internal.Modver{Path: words[0], Version: words[1]})
+		sig, err := computeSignature(ctx, prox, mv)
 		if err != nil {
 			return err
 		}
