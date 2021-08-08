@@ -16,7 +16,7 @@ import (
 // Whitespace on each line is trimmed.
 // Blank lines and lines beginning with '#' are ignored.
 func ReadFileLines(filename string) (lines []string, err error) {
-	defer derrors.Wrap(&err, "readFileLines(%q)", filename)
+	defer derrors.Wrap(&err, "ReadFileLines(%q)", filename)
 
 	f, err := os.Open(filename)
 	if err != nil {
