@@ -144,7 +144,7 @@ services:
     ports:
       - 3000:3000
     environment:
-      - CONNECTION_TIMEOUT=120000
+      - CONNECTION_TIMEOUT=240000
   go:
      # This should match the version we are using on AppEngine.
     image: golang:1.15.5
