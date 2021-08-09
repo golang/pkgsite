@@ -100,5 +100,5 @@ test('no page errors', () => {
  */
 async function scrollTop(page: Page): Promise<void> {
   await page.evaluate(() => window.scrollTo({ top: 0 }));
-  await new Promise(r => setTimeout(r, 250));
+  await new Promise(r => setTimeout(r, 500));
 }
