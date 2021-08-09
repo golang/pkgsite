@@ -14,7 +14,15 @@ let config = {
   },
   moduleFileExtensions: ['ts', 'js'],
   testRunner: 'jest-circus/runner',
+  testPathIgnorePatterns: ['tests/e2e'],
 };
+
+// eslint-disable-next-line no-undef
+const env = process.env.GO_DISCOVERY_E2E_ENVIRONMENT;
+let ignore = 'ci';
+if (env == 'ci') {
+  ignore = 'staging';
+}
 
 // eslint-disable-next-line no-undef
 const e2e = process.argv.some(arg => arg.includes('e2e'));
@@ -23,7 +31,9 @@ if (e2e) {
     ...config,
     setupFilesAfterEnv: ['<rootDir>/tests/e2e/setup.ts'],
     testEnvironment: '<rootDir>/tests/e2e/test-environment.js',
+    snapshotResolver: '<rootDir>/tests/e2e/snapshotResolver.js',
     testTimeout: 60000,
+    testPathIgnorePatterns: ['static', 'tests/e2e/__snapshots__/' + ignore],
   };
 }
 
