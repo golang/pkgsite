@@ -10,6 +10,7 @@ input:focus:not([disabled]) {
   -webkit-box-shadow: var(--focus-box-shadow);
   box-shadow: var(--focus-box-shadow);
   outline: transparent;
+  z-index: 2;
 }
 
 input::placeholder {
@@ -50,7 +51,15 @@ input::placeholder {
   padding: 0.40625rem 0.5rem;
 }
 .go-Select {
-  padding: 0.34375rem 0.5rem;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background: url('/static/shared/icon/arrow_drop_down_gm_grey_24dp.svg') right no-repeat;
+  background-color: var(--color-background);
+  background-position: right center;
+  border-radius: var(--border-radius);
+  margin: 0;
+  padding: 0.34375rem 1.25rem 0.34375rem 0.5rem;
 }
 
 .go-InputGroup {
