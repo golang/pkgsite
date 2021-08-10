@@ -149,10 +149,7 @@ func (db *DB) saveModule(ctx context.Context, m *internal.Module, lmv *internal.
 			return err
 		}
 
-		// Delete this module from search_documents completely. Below we'll
-		// insert the packages from this module. This will effectively remove
-		// packages from older module versions that are not in the latest one.
-		if err := deleteModuleFromSearchDocuments(ctx, tx, m.ModulePath, nil); err != nil {
+		if err := deleteOtherModulePackagesFromSearchDocuments(ctx, tx, m); err != nil {
 			return err
 		}
 

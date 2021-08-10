@@ -1341,10 +1341,10 @@ func TestDeleteFromSearch(t *testing.T) {
 	const modulePath = "deleteme.com"
 
 	initial := []searchDocumentRow{
-		{modulePath + "/p1", modulePath, "v0.0.9"}, // oldest version of same module
-		{modulePath + "/p2", modulePath, "v1.1.0"}, // older version of same module
-		{modulePath + "/p4", modulePath, "v1.9.0"}, // newer version of same module
-		{"other.org/p2", "other.org", "v1.1.0"},    // older version of a different module
+		{modulePath + "/p1", modulePath, "v0.0.9", 0}, // oldest version of same module
+		{modulePath + "/p2", modulePath, "v1.1.0", 0}, // older version of same module
+		{modulePath + "/p4", modulePath, "v1.9.0", 0}, // newer version of same module
+		{"other.org/p2", "other.org", "v1.1.0", 0},    // older version of a different module
 	}
 
 	insertInitial := func(db *DB) {
@@ -1367,8 +1367,8 @@ func TestDeleteFromSearch(t *testing.T) {
 		}
 
 		checkSearchDocuments(ctx, t, testDB, []searchDocumentRow{
-			{modulePath + "/p4", modulePath, "v1.9.0"}, // newer version not deleted
-			{"other.org/p2", "other.org", "v1.1.0"},    // other module not deleted
+			{modulePath + "/p4", modulePath, "v1.9.0", 0}, // newer version not deleted
+			{"other.org/p2", "other.org", "v1.1.0", 0},    // other module not deleted
 		})
 	})
 	t.Run("deleteModuleFromSearchDocuments", func(t *testing.T) {
@@ -1381,18 +1381,43 @@ func TestDeleteFromSearch(t *testing.T) {
 			t.Fatal(err)
 		}
 		checkSearchDocuments(ctx, t, testDB, []searchDocumentRow{
-			{"other.org/p2", "other.org", "v1.1.0"}, // other module not deleted
+			{"other.org/p2", "other.org", "v1.1.0", 0}, // other module not deleted
 		})
+	})
+	t.Run("deleteOtherModulePackagesFromSearchDocuments", func(t *testing.T) {
+		testDB, release := acquire(t)
+		defer release()
+
+		// Insert a module with two packages.
+		m0 := sample.Module(modulePath, "v1.0.0", "p1", "p2")
+		MustInsertModule(ctx, t, testDB, m0)
+		// Set the imported-by count to a non-zero value so we can tell which
+		// rows were deleted.
+		if _, err := testDB.db.Exec(ctx, `UPDATE search_documents SET imported_by_count = 1`); err != nil {
+			t.Fatal(err)
+		}
+		// Later version of module does not have p1.
+		m1 := sample.Module(modulePath, "v1.1.0", "p2", "p3")
+		MustInsertModule(ctx, t, testDB, m1)
+
+		// p1 should be gone, p2 should be there with the same
+		// imported_by_count, and p3 should be there with a zero count.
+		want := []searchDocumentRow{
+			{modulePath + "/p2", modulePath, "v1.1.0", 1},
+			{modulePath + "/p3", modulePath, "v1.1.0", 0},
+		}
+		checkSearchDocuments(ctx, t, testDB, want)
 	})
 }
 
 type searchDocumentRow struct {
 	PackagePath, ModulePath, Version string
+	ImportedByCount                  int
 }
 
 func readSearchDocuments(ctx context.Context, db *DB) ([]searchDocumentRow, error) {
 	var rows []searchDocumentRow
-	err := db.db.CollectStructs(ctx, &rows, `SELECT package_path, module_path, version FROM search_documents`)
+	err := db.db.CollectStructs(ctx, &rows, `SELECT package_path, module_path, version, imported_by_count FROM search_documents`)
 	if err != nil {
 		return nil, err
 	}

@@ -1092,6 +1092,28 @@ func (db *DB) DeleteOlderVersionFromSearchDocuments(ctx context.Context, moduleP
 	})
 }
 
+// deleteOtherModulePackagesFromSearchDocuments deletes all packages from search
+// documents with the given module that are not in m.
+func deleteOtherModulePackagesFromSearchDocuments(ctx context.Context, tx *database.DB, m *internal.Module) error {
+	dbPkgs, err := tx.CollectStrings(ctx, `
+		SELECT package_path FROM search_documents WHERE module_path = $1
+	`, m.ModulePath)
+	if err != nil {
+		return err
+	}
+	pkgInModule := map[string]bool{}
+	for _, u := range m.Packages() {
+		pkgInModule[u.Path] = true
+	}
+	var otherPkgs []string
+	for _, p := range dbPkgs {
+		if !pkgInModule[p] {
+			otherPkgs = append(otherPkgs, p)
+		}
+	}
+	return deleteModuleFromSearchDocuments(ctx, tx, m.ModulePath, otherPkgs)
+}
+
 // deleteModuleFromSearchDocuments deletes module_path from search_documents.
 // If packages is non-empty, it only deletes those packages.
 func deleteModuleFromSearchDocuments(ctx context.Context, tx *database.DB, modulePath string, packages []string) error {
