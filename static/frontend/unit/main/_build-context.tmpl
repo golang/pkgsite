@@ -8,7 +8,8 @@
   {{if .BuildContexts}}
     {{if gt (len .BuildContexts) 1}}
       <div class="UnitBuildContext-titleContext">
-        <label><a href="https://go.dev/about#build-context">Rendered for</a>
+        <label>
+          <a href="https://go.dev/about#build-context" class="UnitBuildContext-link">Rendered for</a>
           <select class="go-Select js-buildContextSelect">
             {{range .BuildContexts}}
               <option{{if eq .GOOS $.GOOS}} selected{{end}} value="{{.GOOS}}">{{.GOOS}}/{{.GOARCH}}</option>
@@ -18,7 +19,9 @@
       </div>
     {{else if not (eq .GOOS "all")}}
       <div class="UnitBuildContext-titleContext">
-        <div class="UnitBuildContext-singleContext"><a href="/about#build-context">Rendered for</a> {{.GOOS}}/{{.GOARCH}}</div>
+        <div class="UnitBuildContext-singleContext">
+          <a href="/about#build-context" class="UnitBuildContext-link">Rendered for</a> {{.GOOS}}/{{.GOARCH}}
+        </div>
       </div>
     {{end}}
   {{end}}
