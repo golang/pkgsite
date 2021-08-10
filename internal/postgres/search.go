@@ -845,16 +845,27 @@ func (db *DB) UpdateSearchDocumentsImportedByCount(ctx context.Context) (nUpdate
 	return db.UpdateSearchDocumentsImportedByCountWithCounts(ctx, changedCounts)
 }
 
+// How many imported-by counts to update at a time.
+// A variable for testing.
+var countBatchSize = 20_000
+
 func (db *DB) UpdateSearchDocumentsImportedByCountWithCounts(ctx context.Context, counts map[string]int) (nUpdated int64, err error) {
 	defer derrors.WrapStack(&err, "UpdateSearchDocumentsImportedByCountWithCounts")
-	err = db.db.Transact(ctx, sql.LevelDefault, func(tx *database.DB) error {
-		if err := insertImportedByCounts(ctx, tx, counts); err != nil {
+	for len(counts) > 0 {
+		var nu int64
+		err := db.db.Transact(ctx, sql.LevelDefault, func(tx *database.DB) error {
+			if err := insertImportedByCounts(ctx, tx, counts, countBatchSize); err != nil {
+				return err
+			}
+			nu, err = updateImportedByCounts(ctx, tx)
 			return err
+		})
+		if err != nil {
+			return nUpdated, err
 		}
-		nUpdated, err = updateImportedByCounts(ctx, tx)
-		return err
-	})
-	return nUpdated, err
+		nUpdated += nu
+	}
+	return nUpdated, nil
 }
 
 // getSearchPackages returns the set of package paths that are in the search_documents table,
@@ -916,7 +927,10 @@ func (db *DB) computeImportedByCounts(ctx context.Context, curCounts map[string]
 	return newCounts, nil
 }
 
-func insertImportedByCounts(ctx context.Context, db *database.DB, counts map[string]int) (err error) {
+// insertImportedByCounts creates a temporary table and inserts at most limit
+// rows into it, where each row is a key and value from the counts map. The
+// inserted keys are deleted from counts.
+func insertImportedByCounts(ctx context.Context, db *database.DB, counts map[string]int, limit int) (err error) {
 	defer derrors.WrapStack(&err, "insertImportedByCounts(ctx, db, counts)")
 
 	const createTableQuery = `
@@ -928,9 +942,15 @@ func insertImportedByCounts(ctx context.Context, db *database.DB, counts map[str
 	if _, err := db.Exec(ctx, createTableQuery); err != nil {
 		return fmt.Errorf("CREATE TABLE: %v", err)
 	}
-	values := make([]interface{}, 0, 2*len(counts))
+	var values []interface{}
+	i := 0
 	for p, c := range counts {
+		if i >= limit {
+			break
+		}
 		values = append(values, p, c)
+		delete(counts, p)
+		i++
 	}
 	columns := []string{"package_path", "imported_by_count"}
 	return db.BulkInsert(ctx, "computed_imported_by_counts", columns, values, "")

@@ -1061,7 +1061,7 @@ func TestUpsertSearchDocumentLongerModulePath(t *testing.T) {
 }
 
 func TestUpdateSearchDocumentsImportedByCount(t *testing.T) {
-	t.Parallel()
+	// Dont' run in parallel because it changes countBatchSize.
 	ctx := context.Background()
 
 	pkgPath := func(m *internal.Module) string { return m.Packages()[0].Path }
@@ -1188,6 +1188,24 @@ func TestUpdateSearchDocumentsImportedByCount(t *testing.T) {
 		// imported-by count is 1.
 		updateImportedByCount(testDB)
 		validateImportedByCountAndGetSearchDocument(t, testDB, "mod.com/B/B", 1)
+	})
+	t.Run("multiple", func(t *testing.T) {
+		defer func(old int) { countBatchSize = old }(countBatchSize)
+		countBatchSize = 1
+
+		testDB, release := acquire(t)
+		defer release()
+
+		// Two modules with importers.
+		mA := insertPackageVersion(t, testDB, "A", "v1.0.0", nil)
+		mB := insertPackageVersion(t, testDB, "B", "v1.0.0", nil)
+		insertPackageVersion(t, testDB, "C", "v1.0.0", []string{"A"})
+		insertPackageVersion(t, testDB, "D", "v1.0.0", []string{"A"})
+		insertPackageVersion(t, testDB, "E", "v1.0.0", []string{"B"})
+
+		updateImportedByCount(testDB)
+		_ = validateImportedByCountAndGetSearchDocument(t, testDB, pkgPath(mA), 2)
+		_ = validateImportedByCountAndGetSearchDocument(t, testDB, pkgPath(mB), 1)
 	})
 }
 
