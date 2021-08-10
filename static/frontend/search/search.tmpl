@@ -56,12 +56,12 @@
       <div class="SearchSnippet">
         <div class="SearchSnippet-headerContainer">
           <h2>
-            <span class="SearchSnippet-symbolKind">{{.SymbolKind}}</span>
             <a href="{{.SymbolLink}}" data-gtmc="search result" data-gtmv="{{$i}}"
                 data-test-id="snippet-title">
+              <span class="SearchSnippet-symbolKind">{{.SymbolKind}}</span>
               {{.SymbolName}}
             </a>
-            <span class="SearchSnippet-symbolPackagePath">in</span>
+            <span class="SearchSnippet-header-dash">in</span>
             <a href="/{{$r.PackagePath}}"
               class="">{{$r.PackagePath}}</a>
           </h2>

@@ -72,3 +72,6 @@
 .SearchSnippet-header-dash {
   color: var(--color-text-subtle);
 }
+.SearchSnippet-symbolKind {
+  color: var(--color-text);
+}
