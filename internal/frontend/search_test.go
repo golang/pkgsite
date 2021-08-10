@@ -6,16 +6,80 @@ package frontend
 
 import (
 	"context"
+	"fmt"
+	"net/http/httptest"
 	"testing"
 	"time"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/testing/sample"
 )
+
+func TestSearchQuery(t *testing.T) {
+	for _, test := range []struct {
+		name, m, q, wantQuery string
+		wantSearchSymbols     bool
+	}{
+		{
+			name:              "package: prefix in symbol mode",
+			m:                 searchModeSymbol,
+			q:                 fmt.Sprintf("%s:foo", searchModePackage),
+			wantQuery:         "foo",
+			wantSearchSymbols: false,
+		},
+		{
+			name:              "package: prefix in package mode",
+			m:                 searchModePackage,
+			q:                 fmt.Sprintf("%s:foo", searchModePackage),
+			wantQuery:         "foo",
+			wantSearchSymbols: false,
+		},
+		{
+			name:              "identifier: prefix in symbol mode",
+			m:                 searchModeSymbol,
+			q:                 fmt.Sprintf("%s:foo", searchModeSymbol),
+			wantQuery:         "foo",
+			wantSearchSymbols: true,
+		},
+		{
+			name:              "identifier: prefix in package mode",
+			m:                 searchModeSymbol,
+			q:                 fmt.Sprintf("%s:foo", searchModeSymbol),
+			wantQuery:         "foo",
+			wantSearchSymbols: true,
+		},
+		{
+			name:              "search in package mode",
+			m:                 searchModePackage,
+			q:                 "foo",
+			wantQuery:         "foo",
+			wantSearchSymbols: false,
+		},
+		{
+			name:              "search in symbol mode",
+			m:                 searchModeSymbol,
+			q:                 "foo",
+			wantQuery:         "foo",
+			wantSearchSymbols: true,
+		},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			u := fmt.Sprintf("/search?q=%s&m=%s", test.q, test.m)
+			r := httptest.NewRequest("GET", u, nil)
+			r = r.WithContext(experiment.NewContext(r.Context(), internal.ExperimentSymbolSearch))
+			gotQuery, gotSearchSymbols := searchQuery(r)
+			if gotQuery != test.wantQuery || gotSearchSymbols != test.wantSearchSymbols {
+				t.Errorf("searchQuery(%q) = %q, %t; want = %q, %t", u, gotQuery, gotSearchSymbols,
+					test.wantQuery, test.wantSearchSymbols)
+			}
+		})
+	}
+}
 
 func TestFetchSearchPage(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)

@@ -29,7 +29,7 @@
 
 {{define "search_identifier"}}
   <h1>Identifiers matching “{{.Query}}”</h1>
-  <a class="SearchResults-instead" href="{{.Pagination.URL .Pagination.Limit "packages"}}">
+  <a class="SearchResults-instead" href="{{.Pagination.URL .Pagination.Limit "packages" .Query}}">
     <span>Search instead for </span>
     “package: {{.Query}}”
   </a>
@@ -82,7 +82,7 @@
 
 {{define "search_package"}}
   <h1>Search results for “{{.Query}}”</h1>
-  <a class="SearchResults-instead" href="{{.Pagination.URL .Pagination.Limit "identifiers"}}">
+  <a class="SearchResults-instead" href="{{.Pagination.URL .Pagination.Limit "identifiers" .Query}}">
     <span class="SearchSnippet-symbolPackagePath">Search instead for </span>
     “identifier: {{.Query}}”
   </a>
@@ -191,7 +191,7 @@
     Show
     <select name="limit" class="go-Select js-selectNav">
       {{range $p.Limits}}
-        <option value="{{$p.URL . $.SearchMode}}"{{if eq . $p.Limit}} selected{{end}}>{{.}}</option>
+        <option value="{{$p.URL . $.SearchMode ""}}"{{if eq . $p.Limit}} selected{{end}}>{{.}}</option>
       {{end}}
     </select>
     results

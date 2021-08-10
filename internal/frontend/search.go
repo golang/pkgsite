@@ -250,6 +250,14 @@ const (
 
 	// maxSearchPageSize is the maximum allowed limit for search results.
 	maxSearchPageSize = 100
+
+	// searchModePackage is the keyword prefix and query param for searching
+	// by packages.
+	searchModePackage = "packages"
+
+	// searchModeSymbol is the keyword prefix and query param for searching
+	// by symbols.
+	searchModeSymbol = "identifiers"
 )
 
 // serveSearch applies database data to the search template. Handles endpoint
@@ -266,7 +274,7 @@ func (s *Server) serveSearch(w http.ResponseWriter, r *http.Request, ds internal
 	}
 
 	ctx := r.Context()
-	query := searchQuery(r)
+	query, searchSymbols := searchQuery(r)
 	if !utf8.ValidString(query) {
 		return &serverError{status: http.StatusBadRequest}
 	}
@@ -308,14 +316,13 @@ func (s *Server) serveSearch(w http.ResponseWriter, r *http.Request, ds internal
 		return nil
 	}
 
-	searchSymbols := shouldSearchSymbols(r)
 	page, err := fetchSearchPage(ctx, db, query, pageParams, searchSymbols)
 	if err != nil {
 		return fmt.Errorf("fetchSearchPage(ctx, db, %q): %v", query, err)
 	}
 	page.basePage = s.newBasePage(r, fmt.Sprintf("%s - Search Results", query))
 	if searchSymbols {
-		page.SearchMode = "identifiers"
+		page.SearchMode = searchModeSymbol
 	}
 
 	tmpl := "legacy_search"
@@ -351,14 +358,22 @@ func searchRequestRedirectPath(ctx context.Context, ds internal.DataSource, quer
 	return fmt.Sprintf("/%s", requestedPath)
 }
 
-// searchQuery extracts a search query from the request.
-func searchQuery(r *http.Request) string {
-	return strings.TrimSpace(r.FormValue("q"))
-}
+// searchQuery extracts a search query from the request. It also reports
+// whether the search performed should be in symbolSearch mode.
+// See TestSearchQuery for examples.
+func searchQuery(r *http.Request) (q string, searchSymbols bool) {
+	q = strings.TrimSpace(r.FormValue("q"))
+	if !experiment.IsActive(r.Context(), internal.ExperimentSymbolSearch) {
+		return q, false
+	}
 
-// shouldSearchSymbols reports whether the search mode is to search for symbols.
-func shouldSearchSymbols(r *http.Request) bool {
-	return strings.TrimSpace(r.FormValue("m")) == "identifiers"
+	if prefix := searchModeSymbol + ":"; strings.HasPrefix(q, prefix) {
+		return strings.TrimPrefix(q, prefix), true
+	}
+	if prefix := searchModePackage + ":"; strings.HasPrefix(q, prefix) {
+		return strings.TrimPrefix(q, prefix), false
+	}
+	return q, strings.TrimSpace(r.FormValue("m")) == searchModeSymbol
 }
 
 // elapsedTime takes a date and returns returns human-readable,
