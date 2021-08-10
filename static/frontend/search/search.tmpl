@@ -29,12 +29,18 @@
 
 {{define "search_identifier"}}
   <h1>Identifiers matching “{{.Query}}”</h1>
-  <a href="{{.Pagination.URL .Pagination.Limit "packages"}}">Search instead for “package: {{.Query}}”</a>
+  <a class="SearchResults-instead" href="{{.Pagination.URL .Pagination.Limit "packages"}}">
+    <span>Search instead for </span>
+    “package: {{.Query}}”
+  </a>
   {{if gt (len .Results) 0}}
     <div class="SearchResults-summary">
       <div>
-        Found {{len $.Results}} matching identifiers (names of constants, variables, types,
-        functions, methods, and fields). <a href="/search-help">Search help.</a>
+        <div>
+          Showing <strong>{{len $.Results}}</strong> matching identifiers.
+          An identifier is a constant, variable, function, type, or field.
+          <a href="/search-help">Search help</a>
+        </div>
       </div>
       {{template "search_pagination" .}}
     </div>
@@ -76,11 +82,14 @@
 
 {{define "search_package"}}
   <h1>Search results for “{{.Query}}”</h1>
-  <a href="{{.Pagination.URL .Pagination.Limit "identifiers"}}">Search instead for “identifier: {{.Query}}”</a>
+  <a class="SearchResults-instead" href="{{.Pagination.URL .Pagination.Limit "identifiers"}}">
+    <span class="SearchSnippet-symbolPackagePath">Search instead for </span>
+    “identifier: {{.Query}}”
+  </a>
   {{if gt (len .Results) 0}}
     <div class="SearchResults-summary">
       <div>
-        Found {{len .Results}} modules with matching packages. <a href="/search-help">Search help.</a>
+        Showing <strong>{{len .Results}}</strong> modules with matching packages. <a href="/search-help">Search help</a>
       </div>
       {{template "search_pagination" .}}
     </div>

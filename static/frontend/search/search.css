@@ -7,12 +7,19 @@
 .SearchResults {
   font-size: 0.875rem;
 }
+.SearchResults-instead {
+  font-size: 1.25rem;
+}
+.SearchResults-instead span {
+  color: var(--color-text);
+}
 .SearchResults-summary {
   display: flex;
   flex-direction: column;
   gap: 1rem;
   justify-content: space-between;
   line-height: 1.5rem;
+  color: var(--color-text-subtle);
 }
 @media only screen and (min-width: 64rem) {
   .SearchResults-summary {
