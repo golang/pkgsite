@@ -10,8 +10,11 @@
 .SearchResults-instead {
   font-size: 1.25rem;
 }
-.SearchResults-instead span {
+.SearchResults-insteadPrefix {
   color: var(--color-text);
+}
+.SearchResults-instead:hover .SearchResults-insteadPrefix {
+   color: var(--color-brand-primary);
 }
 .SearchResults-summary {
   display: flex;
