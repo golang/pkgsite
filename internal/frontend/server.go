@@ -269,7 +269,16 @@ type basePage struct {
 	// layout base page is completed.
 	UseSiteWrapper bool
 
+	// SearchMode is the search mode for the current search request.
 	SearchMode string
+
+	// SearchModePackage is the value of const searchModePackage. It is used in
+	// the search bar dropdown.
+	SearchModePackage string
+
+	// SearchModeSymbol is the value of const searchModeSymbol. It is used in
+	// the search bar dropdown.
+	SearchModeSymbol string
 }
 
 // licensePolicyPage is used to generate the static license policy page.
@@ -301,7 +310,9 @@ func (s *Server) newBasePage(r *http.Request, title string) basePage {
 		DevMode:            s.devMode,
 		AppVersionLabel:    s.appVersionLabel,
 		GoogleTagManagerID: s.googleTagManagerID,
-		SearchMode:         "packages",
+		SearchMode:         searchModePackage,
+		SearchModePackage:  searchModePackage,
+		SearchModeSymbol:   searchModeSymbol,
 	}
 }
 

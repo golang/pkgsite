@@ -15,7 +15,7 @@
 {{define "main"}}
   <main class="go-Container">
     <div class="go-Content SearchResults">
-      {{if eq .SearchMode "identifiers"}}
+      {{if eq .SearchMode .SearchModeSymbol }}
         {{template "search_identifier" .}}
       {{else}}
         {{template "search_package" .}}
@@ -29,9 +29,8 @@
 
 {{define "search_identifier"}}
   <h1>Identifiers matching “{{.Query}}”</h1>
-  <a class="SearchResults-instead" href="{{.Pagination.URL .Pagination.Limit "packages" .Query}}">
-    <span>Search instead for </span>
-    “package: {{.Query}}”
+  <a class="SearchResults-instead" href="{{.Pagination.URL .Pagination.Limit .SearchModePackage .Query}}">
+    <span>Search instead for </span>“{{.SearchModePackage}}: {{.Query}}”
   </a>
   {{if gt (len .Results) 0}}
     <div class="SearchResults-summary">
@@ -82,9 +81,8 @@
 
 {{define "search_package"}}
   <h1>Search results for “{{.Query}}”</h1>
-  <a class="SearchResults-instead" href="{{.Pagination.URL .Pagination.Limit "identifiers" .Query}}">
-    <span class="SearchSnippet-symbolPackagePath">Search instead for </span>
-    “identifier: {{.Query}}”
+  <a class="SearchResults-instead" href="{{.Pagination.URL .Pagination.Limit .SearchModeSymbol .Query}}">
+    <span class="SearchSnippet-symbolPackagePath">Search instead for </span>“{{.SearchModeSymbol}}: {{.Query}}”
   </a>
   {{if gt (len .Results) 0}}
     <div class="SearchResults-summary">

@@ -253,11 +253,11 @@ const (
 
 	// searchModePackage is the keyword prefix and query param for searching
 	// by packages.
-	searchModePackage = "packages"
+	searchModePackage = "package"
 
 	// searchModeSymbol is the keyword prefix and query param for searching
 	// by symbols.
-	searchModeSymbol = "identifiers"
+	searchModeSymbol = "identifier"
 )
 
 // serveSearch applies database data to the search template. Handles endpoint
