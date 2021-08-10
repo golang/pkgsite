@@ -78,6 +78,16 @@ func run(ctx context.Context, db *database.DB, proxyURL string) error {
 		return err
 	}
 
+	// Expand versions and group by module path.
+	versionsByPath := map[string][]string{}
+	for _, m := range seedModules {
+		vers, err := versions(ctx, proxyClient, m)
+		if err != nil {
+			return err
+		}
+		versionsByPath[m.Path] = append(versionsByPath[m.Path], vers...)
+	}
+
 	r := results{}
 	g := new(errgroup.Group)
 	f := &worker.Fetcher{
@@ -85,16 +95,13 @@ func run(ctx context.Context, db *database.DB, proxyURL string) error {
 		SourceClient: sourceClient,
 		DB:           postgres.New(db),
 	}
-	for _, m := range seedModules {
-		m := m
-		vers, err := versions(ctx, proxyClient, m)
-		if err != nil {
-			return err
-		}
+	for path, vers := range versionsByPath {
+		path := path
+		vers := vers
 		// Process versions of the same module sequentially, to avoid DB contention.
 		g.Go(func() error {
 			for _, v := range vers {
-				if err := fetch(ctx, db, f, m.Path, v, &r); err != nil {
+				if err := fetch(ctx, db, f, path, v, &r); err != nil {
 					return err
 				}
 			}
