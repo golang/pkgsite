@@ -4,6 +4,7 @@
  * license that can be found in the LICENSE file.
  */
 
+/* Hide the search form in the header. */
 .go-SearchForm {
   display: none;
 }
@@ -31,33 +32,50 @@
     margin: 3.5rem auto;
   }
 }
-.Homepage-searchForm input {
-  background: url('/static/shared/icon/search_gm_grey_24dp.svg') right no-repeat;
-  background-position: left 0.75rem center;
-  background-size: 1.5rem;
-  border: var(--border);
-  border-radius: 0.5rem 0 0 0.5rem;
-  color: var(--color-text);
-  font-size: 1rem;
+.Homepage-search {
+  --border-radius: 0.5rem;
+
   height: 3rem;
-  padding-left: 2.75rem;
-  width: 37.6875rem;
+  margin: 2.5rem auto 0 auto;
+  max-width: 45.0625rem;
+  position: relative;
+  width: 100%;
 }
-.Homepage-buttonGroup {
-  display: flex;
+.Homepage-search::before {
+  background: url('/static/shared/icon/search_gm_grey_24dp.svg') left no-repeat;
+  content: '';
+  height: 3rem;
+  left: 0.75rem;
+  position: absolute;
+  width: 1.5rem;
+  z-index: 3;
+}
+.Homepage-search .go-Select {
+  padding-left: 2.5rem;
+}
+.Homepage-search .go-Input {
+  padding-left: 2.5rem;
+}
+.Homepage-search--symbol .go-Input {
+  border-bottom-right-radius: var(--border-radius);
+  border-top-right-radius: var(--border-radius);
+  padding-left: 1rem;
+}
+.Homepage-search .go-Button {
   justify-content: center;
-  margin: 2.5rem auto auto 0;
-}
-.Homepage-searchButton {
-  background-color: var(--color-button);
-  border: none;
-  border-radius: 0 0.5rem 0.5rem 0;
-  color: var(--color-button-text);
-  cursor: pointer;
-  font-size: 1em;
-  height: 3rem;
-  padding: 0 1.375rem;
   width: 7.375rem;
+}
+.Homepage-search--symbol .go-Button {
+  display: none;
+}
+@media only screen and (min-width: 30rem) {
+  .Homepage-search--symbol .go-Input {
+    border-bottom-right-radius: 0;
+    border-top-right-radius: 0;
+  }
+  .Homepage-search--symbol .go-Button {
+    display: inline-flex;
+  }
 }
 .Homepage-searchHelp {
   align-items: center;

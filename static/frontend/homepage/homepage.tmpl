@@ -13,26 +13,32 @@
     <div class="go-Content go-Content--center">
       <img class="Homepage-logo" width="700" height="300"
           src="/static/shared/gopher/package-search-700x300.jpeg" alt="Cartoon gopher typing">
-      <form class="Homepage-searchForm" action="/search" role="search" data-gtmc="homepage search form"
+      <form class="go-InputGroup Homepage-search
+          {{if .Experiments.IsActive "symbol-search"}}Homepage-search--symbol{{end}}"
+          action="/search" role="search" data-gtmc="homepage search form"
           aria-label="Search for a Package">
-        <div class="Homepage-buttonGroup">
-          <input
-            class="js-searchFocus"
-            data-test-id="homepage-search"
-            id="AutoComplete"
-            role="textbox"
-            aria-label="Search for Go packages"
-            type="text"
-            name="q"
-            placeholder="Search for Go packages"
-            autocapitalize="off"
-            autocomplete="off"
-            autocorrect="off"
-            spellcheck="false"
-            title="Search for Go packages"
-            autofocus="true">
-          <button type="submit" class="Homepage-searchButton">Search</button>
-        </div>
+        {{if .Experiments.IsActive "symbol-search"}}
+          <select name="m" class="go-Select">
+            <option value="packages">Packages</option>
+            <option value="identifiers">Identifiers</option>
+          </select>
+        {{end}}
+        <input
+          class="go-Input js-searchFocus"
+          data-test-id="homepage-search"
+          id="AutoComplete"
+          role="textbox"
+          aria-label="Search for Go packages"
+          type="text"
+          name="q"
+          placeholder="Search for Go packages"
+          autocapitalize="off"
+          autocomplete="off"
+          autocorrect="off"
+          spellcheck="false"
+          title="Search for Go packages"
+          autofocus="true">
+        <button type="submit" class="go-Button">Search</button>
       </form>
       <span class="Homepage-searchHelp">
         <div class="Homepage-exampleSearches">
