@@ -17,11 +17,16 @@ let config = {
   testPathIgnorePatterns: ['tests/e2e'],
 };
 
+// When GO_DISCOVERY_E2E_ENVIRONMENT is not set to staging or prod, use the
+// snapshots in tests/e2e/__snapshots__/ci. Otherwise, use
+// tests/e2e/__snapshots__/staging. Data in staging and prod are always expected
+// to be the same.
+//
 // eslint-disable-next-line no-undef
 const env = process.env.GO_DISCOVERY_E2E_ENVIRONMENT;
-let ignore = 'ci';
-if (env == 'ci') {
-  ignore = 'staging';
+let ignore = 'staging';
+if (env === 'staging' || env === 'prod') {
+  ignore = 'ci';
 }
 
 // eslint-disable-next-line no-undef
