@@ -831,12 +831,12 @@ func (db *DB) UpdateSearchDocumentsImportedByCount(ctx context.Context) (nUpdate
 	if err != nil {
 		return 0, err
 	}
-	// Include only changed counts.
-	log.Debugf(ctx, "update-imported-by-counts: got %d counts", len(newCounts))
+	// Include only changed counts for packages that are in search_documents.
 	changedCounts := map[string]int{}
-	for p, c := range newCounts {
-		if curCounts[p] != c {
-			changedCounts[p] = c
+	for p, nc := range newCounts {
+		cc, present := curCounts[p]
+		if present && cc != nc {
+			changedCounts[p] = nc
 		}
 	}
 	pct := 0
