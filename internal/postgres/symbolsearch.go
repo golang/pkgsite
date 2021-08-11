@@ -15,6 +15,7 @@ import (
 	"github.com/lib/pq"
 	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/middleware"
 	"golang.org/x/pkgsite/internal/postgres/symbolsearch"
 	"golang.org/x/sync/errgroup"
 )
@@ -22,6 +23,7 @@ import (
 func upsertSymbolSearchDocuments(ctx context.Context, tx *database.DB,
 	modulePath, v string) (err error) {
 	defer derrors.Wrap(&err, "upsertSymbolSearchDocuments(ctx, ddb, %q, %q)", modulePath, v)
+	defer middleware.ElapsedStat(ctx, "upsertSymbolSearchDocuments")()
 
 	// If a user is looking for the symbol "DB.Begin", from package
 	// database/sql, we want them to be able to find this by searching for
@@ -91,6 +93,8 @@ func upsertSymbolSearchDocuments(ctx context.Context, tx *database.DB,
 // TODO(https://golang.org/issue/44142): factor out common code between
 // symbolSearch and deepSearch.
 func (db *DB) symbolSearch(ctx context.Context, q string, limit, offset, maxResultCount int) searchResponse {
+	defer middleware.ElapsedStat(ctx, "symbolSearch")()
+
 	var (
 		results []*SearchResult
 		err     error
@@ -146,6 +150,8 @@ func (db *DB) symbolSearch(ctx context.Context, q string, limit, offset, maxResu
 // runSymbolSearchMultiWord executes a symbol search for SearchTypeMultiWord.
 func runSymbolSearchMultiWord(ctx context.Context, ddb *database.DB, q string, limit int) (_ []*SearchResult, err error) {
 	defer derrors.Wrap(&err, "runSymbolSearchMultiWord(ctx, ddb, query, %q, %d)", q, limit)
+	defer middleware.ElapsedStat(ctx, "runSymbolSearchMultiWord")()
+
 	symbolToPathTokens := multiwordSearchCombinations(q)
 	if len(symbolToPathTokens) == 0 {
 		// There are no words in the query that could be a symbol name.
@@ -241,6 +247,9 @@ func multiwordSearchCombinations(q string) map[string]string {
 // This search is split into two parallel queries, since the query is very slow
 // when using an OR in the WHERE clause.
 func runSymbolSearchOneDot(ctx context.Context, ddb *database.DB, q string, limit int) (_ []*SearchResult, err error) {
+	defer derrors.Wrap(&err, "runSymbolSearchOneDot(ctx, ddb, %q, %d)", q, limit)
+	defer middleware.ElapsedStat(ctx, "runSymbolSearchOneDot")()
+
 	group, searchCtx := errgroup.WithContext(ctx)
 	resultsArray := make([][]*SearchResult, 2)
 	for i, st := range []symbolsearch.SearchType{
@@ -271,6 +280,8 @@ func runSymbolSearchOneDot(ctx context.Context, ddb *database.DB, q string, limi
 func runSymbolSearch(ctx context.Context, ddb *database.DB,
 	st symbolsearch.SearchType, q string, limit int, args ...interface{}) (_ []*SearchResult, err error) {
 	defer derrors.Wrap(&err, "runSymbolSearch(ctx, ddb, query, %q, %d)", q, limit)
+	defer middleware.ElapsedStat(ctx, "runSymbolSearch")()
+
 	ids, err := fetchMatchingSymbolIDs(ctx, ddb, st, q)
 	if err != nil {
 		if errors.Is(err, derrors.NotFound) {
@@ -287,6 +298,8 @@ func runSymbolSearch(ctx context.Context, ddb *database.DB,
 // runSymbolSearch.
 func fetchMatchingSymbolIDs(ctx context.Context, ddb *database.DB, st symbolsearch.SearchType, q string) (_ []int, err error) {
 	defer derrors.Wrap(&err, "fetchMatchingSymbolIDs(ctx, ddb, %d, %q)", st, q)
+	defer middleware.ElapsedStat(ctx, "fetchMatchingSymbolIDs")()
+
 	var ids []int
 	collect := func(rows *sql.Rows) error {
 		var id int
@@ -311,6 +324,8 @@ func fetchMatchingSymbolIDs(ctx context.Context, ddb *database.DB, st symbolsear
 func fetchSymbolSearchResults(ctx context.Context, ddb *database.DB,
 	st symbolsearch.SearchType, ids []int, limit int, args ...interface{}) (results []*SearchResult, err error) {
 	defer derrors.Wrap(&err, "fetchSymbolSearchResults(ctx, ddb, st: %d, ids: %v, limit:  %d, args: %v)", st, ids, limit, args)
+	defer middleware.ElapsedStat(ctx, "fetchSymbolSearchResults")()
+
 	collect := func(rows *sql.Rows) error {
 		var r SearchResult
 		if err := rows.Scan(
