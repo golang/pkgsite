@@ -29,10 +29,6 @@ import (
 	"golang.org/x/pkgsite/internal/stdlib"
 )
 
-// ProxyRemoved is a set of module@version that have been removed from the proxy,
-// even though they are still in the index.
-var ProxyRemoved = map[string]bool{}
-
 // fetchTask represents the result of a fetch task that was processed.
 type fetchTask struct {
 	fetch.FetchResult
@@ -178,12 +174,6 @@ func (f *Fetcher) fetchAndInsertModule(ctx context.Context, modulePath, requeste
 			ft.ResolvedVersion = requestedVersion
 		}
 	}()
-
-	if ProxyRemoved[modulePath+"@"+requestedVersion] {
-		log.Infof(ctx, "not fetching %s@%s because it is on the ProxyRemoved list", modulePath, requestedVersion)
-		ft.Error = derrors.Excluded
-		return ft
-	}
 
 	exc, err := f.DB.IsExcluded(ctx, modulePath)
 	if err != nil {

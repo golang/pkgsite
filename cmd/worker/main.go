@@ -59,8 +59,6 @@ func main() {
 		}
 	}
 
-	readProxyRemoved(ctx)
-
 	db, err := cmdconfig.OpenDB(ctx, cfg, *bypassLicenseCheck)
 	if err != nil {
 		log.Fatalf(ctx, "%v", err)
@@ -171,25 +169,6 @@ func getRedis(ctx context.Context, host, port string, writeTimeout, readTimeout 
 		WriteTimeout: writeTimeout,
 		ReadTimeout:  readTimeout,
 	})
-}
-
-// Read a file of module versions that we should ignore because
-// the are in the index but not stored in the proxy.
-// Format of the file: each line is
-//     module@version
-func readProxyRemoved(ctx context.Context) {
-	filename := config.GetEnv("GO_DISCOVERY_PROXY_REMOVED", "")
-	if filename == "" {
-		return
-	}
-	lines, err := internal.ReadFileLines(filename)
-	if err != nil {
-		log.Fatal(ctx, err)
-	}
-	for _, line := range lines {
-		worker.ProxyRemoved[line] = true
-	}
-	log.Infof(ctx, "read %d excluded module versions from %s", len(worker.ProxyRemoved), filename)
 }
 
 // populateExcluded adds each element of excludedPrefixes to the excluded_prefixes
