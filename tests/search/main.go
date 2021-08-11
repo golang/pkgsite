@@ -55,7 +55,6 @@ const (
 )
 
 var symbolSearchExperiments = []string{
-	internal.ExperimentInsertSymbolSearchDocuments,
 	internal.ExperimentSearchGrouping,
 	internal.ExperimentSymbolSearch,
 }

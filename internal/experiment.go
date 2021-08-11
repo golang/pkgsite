@@ -6,33 +6,31 @@
 package internal
 
 const (
-	ExperimentDeprecatedDoc               = "deprecated-doc"
-	ExperimentEnableStdFrontendFetch      = "enable-std-frontend-fetch"
-	ExperimentInsertSymbolSearchDocuments = "insert-symbol-search-documents"
-	ExperimentNewUnitLayout               = "new-unit-layout"
-	ExperimentSearchGrouping              = "search-grouping"
-	ExperimentSearchIncrementally         = "search-incrementally"
-	ExperimentSkipInsertSymbols           = "skip-insert-symbols"
-	ExperimentStyleGuide                  = "styleguide"
-	ExperimentSymbolHistoryMainPage       = "symbol-history-main-page"
-	ExperimentSymbolHistoryVersionsPage   = "symbol-history-versions-page"
-	ExperimentSymbolSearch                = "symbol-search"
+	ExperimentDeprecatedDoc             = "deprecated-doc"
+	ExperimentEnableStdFrontendFetch    = "enable-std-frontend-fetch"
+	ExperimentNewUnitLayout             = "new-unit-layout"
+	ExperimentSearchGrouping            = "search-grouping"
+	ExperimentSearchIncrementally       = "search-incrementally"
+	ExperimentSkipInsertSymbols         = "skip-insert-symbols"
+	ExperimentStyleGuide                = "styleguide"
+	ExperimentSymbolHistoryMainPage     = "symbol-history-main-page"
+	ExperimentSymbolHistoryVersionsPage = "symbol-history-versions-page"
+	ExperimentSymbolSearch              = "symbol-search"
 )
 
 // Experiments represents all of the active experiments in the codebase and
 // a description of each experiment.
 var Experiments = map[string]string{
-	ExperimentDeprecatedDoc:               "Treat deprecated symbols specially in documentation.",
-	ExperimentEnableStdFrontendFetch:      "Enable frontend fetching for module std.",
-	ExperimentInsertSymbolSearchDocuments: "Insert data into symbol_search_documents and documentation_symbols.",
-	ExperimentNewUnitLayout:               "Enable the new layout on the unit page.",
-	ExperimentSearchGrouping:              "Group search results.",
-	ExperimentSearchIncrementally:         "Use incremental query for search results.",
-	ExperimentSkipInsertSymbols:           "Don't insert data into symbols tables.",
-	ExperimentStyleGuide:                  "Enable the styleguide.",
-	ExperimentSymbolHistoryMainPage:       "Show package API history on the main unit page.",
-	ExperimentSymbolHistoryVersionsPage:   "Show package API history on the versions page.",
-	ExperimentSymbolSearch:                "Enable searching for symbols.",
+	ExperimentDeprecatedDoc:             "Treat deprecated symbols specially in documentation.",
+	ExperimentEnableStdFrontendFetch:    "Enable frontend fetching for module std.",
+	ExperimentNewUnitLayout:             "Enable the new layout on the unit page.",
+	ExperimentSearchGrouping:            "Group search results.",
+	ExperimentSearchIncrementally:       "Use incremental query for search results.",
+	ExperimentSkipInsertSymbols:         "Don't insert data into symbols tables.",
+	ExperimentStyleGuide:                "Enable the styleguide.",
+	ExperimentSymbolHistoryMainPage:     "Show package API history on the main unit page.",
+	ExperimentSymbolHistoryVersionsPage: "Show package API history on the versions page.",
+	ExperimentSymbolSearch:              "Enable searching for symbols.",
 }
 
 // Experiment holds data associated with an experimental feature for frontend

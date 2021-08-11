@@ -16,7 +16,6 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/derrors"
-	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/testing/sample"
 )
 
@@ -25,9 +24,6 @@ func TestInsertSymbolNamesAndHistory(t *testing.T) {
 	testDB, release := acquire(t)
 	defer release()
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	ctx = experiment.NewContext(ctx,
-		internal.ExperimentInsertSymbolSearchDocuments,
-	)
 	defer cancel()
 
 	mod := sample.DefaultModule()
@@ -91,9 +87,6 @@ func TestInsertSymbolHistory_Basic(t *testing.T) {
 	testDB, release := acquire(t)
 	defer release()
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	ctx = experiment.NewContext(ctx,
-		internal.ExperimentInsertSymbolSearchDocuments,
-	)
 	defer cancel()
 
 	mod := sample.DefaultModule()
@@ -122,9 +115,6 @@ func TestInsertSymbolHistory_MultiVersions(t *testing.T) {
 	testDB, release := acquire(t)
 	defer release()
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	ctx = experiment.NewContext(ctx,
-		internal.ExperimentInsertSymbolSearchDocuments,
-	)
 	defer cancel()
 
 	typ := internal.Symbol{
@@ -225,9 +215,6 @@ func TestInsertSymbolHistory_MultiGOOS(t *testing.T) {
 	testDB, release := acquire(t)
 	defer release()
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	ctx = experiment.NewContext(ctx,
-		internal.ExperimentInsertSymbolSearchDocuments,
-	)
 	defer cancel()
 
 	typ := internal.Symbol{

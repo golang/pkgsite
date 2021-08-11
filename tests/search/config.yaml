@@ -1,6 +1,4 @@
 experiments:
-- Name: insert-symbol-search-documents
-  Rollout: 100
 - Name: search-grouping
   Rollout: 100
 - Name: symbol-search

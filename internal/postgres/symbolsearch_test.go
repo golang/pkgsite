@@ -11,13 +11,11 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/pkgsite/internal"
-	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/testing/sample"
 )
 
 func TestSymbolSearch(t *testing.T) {
 	ctx := context.Background()
-	ctx = experiment.NewContext(ctx, internal.ExperimentInsertSymbolSearchDocuments)
 	testDB, release := acquire(t)
 	defer release()
 
@@ -122,7 +120,6 @@ func TestSymbolSearch(t *testing.T) {
 // (SQLSTATE 21000)
 func TestUpsertSymbolSearch_UniqueConstraints(t *testing.T) {
 	ctx := context.Background()
-	ctx = experiment.NewContext(ctx, internal.ExperimentInsertSymbolSearchDocuments)
 	testDB, release := acquire(t)
 	defer release()
 
