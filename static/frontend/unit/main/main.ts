@@ -3,6 +3,19 @@ import '../../../shared/playground/playground';
 
 import { SelectNavController, makeSelectNav } from '../../../shared/outline/select';
 import { TreeNavController } from '../../../shared/outline/tree';
+import { ExpandableRowsTableController } from '../../../shared/table/table';
+
+const directories = document.querySelector<HTMLTableElement>('.js-expandableTable');
+if (directories) {
+  const table = new ExpandableRowsTableController(
+    directories,
+    document.querySelector<HTMLButtonElement>('.js-expandAllDirectories')
+  );
+  // Expand directories on page load with expand-directories query param.
+  if (window.location.search.includes('expand-directories')) {
+    table.expandAllItems();
+  }
+}
 
 const treeEl = document.querySelector<HTMLElement>('.js-tree');
 if (treeEl) {

@@ -77,7 +77,7 @@ export class ExpandableRowsTableController {
     this.update();
   }
 
-  private expandAllItems = () => {
+  expandAllItems = (): void => {
     this.toggles.map(t => t.setAttribute('aria-expanded', 'true'));
     this.update();
   };

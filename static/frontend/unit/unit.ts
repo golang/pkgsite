@@ -5,27 +5,14 @@
  * license that can be found in the LICENSE file.
  */
 
-import { ExpandableRowsTableController } from '../../shared/table/table';
-
-document
-  .querySelectorAll<HTMLTableElement>('.js-expandableTable')
-  .forEach(
-    el =>
-      new ExpandableRowsTableController(
-        el,
-        document.querySelector<HTMLButtonElement>('.js-expandAllDirectories')
-      )
-  );
+const headerHeight = 3.5;
+const breadcumbHeight = 2.5;
 
 /**
  * MainLayoutController calculates dynamic height values for header elements
  * to support variable size sticky positioned elements in the header so that
  * banners and breadcumbs may overflow to multiple lines.
  */
-
-const headerHeight = 3.5;
-const breadcumbHeight = 2.5;
-
 export class MainLayoutController {
   private headerObserver: IntersectionObserver;
   private navObserver: IntersectionObserver;
