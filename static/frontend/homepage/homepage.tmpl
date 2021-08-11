@@ -45,7 +45,11 @@
           <span class="Homepage-exampleSearchesLabel">Example searches:</span>
           <a class="Homepage-exampleSearch" href="/search?q=http">“http”</a>
           <a class="Homepage-exampleSearch" href="/search?q=command">“command”</a>
-          <a class="Homepage-exampleSearch" href="/search?q=yaml+OR+json+OR+xml">“yaml OR json OR xml”</a>
+          {{if .Experiments.IsActive "symbol-search"}}
+            <a class="Homepage-exampleSearch" href="/search?q=sql.DB&m={{.SearchModeSymbol}}">“identifier:sql.DB”</a>
+          {{else}}
+            <a class="Homepage-exampleSearch" href="/search?q=yaml+OR+json+OR+xml">“yaml OR json OR xml”</a>
+          {{end}}
         </div>
         <a href="/search-help" target="_blank" rel="noopener" class="Homepage-helpLink">
           Search help <span><img width="24" height="24" src="/static/shared/icon/launch_gm_grey_24dp.svg" alt=""></span>
