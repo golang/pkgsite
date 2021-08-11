@@ -17,7 +17,8 @@ Object {
     },
     Object {
       "name": "Search for a package",
-      "role": "textbox",
+      "role": "searchbox",
+      "value": "http",
     },
     Object {
       "name": "Submit search",
