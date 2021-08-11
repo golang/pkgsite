@@ -694,16 +694,20 @@ func TestReInsertLatestVersion(t *testing.T) {
 	check := func(wantVersion string, wantImports []string) {
 		t.Helper()
 		var gotVersion, gotSynopsis string
-		if err := testDB.db.QueryRow(ctx, `
+		err := testDB.db.QueryRow(ctx, `
 			SELECT version, synopsis
 			FROM search_documents
 			WHERE module_path = 'm.com/a'
 			AND package_path = 'm.com/a/pkg'
-		`).Scan(&gotVersion, &gotSynopsis); err != nil {
+		`).Scan(&gotVersion, &gotSynopsis)
+		if errors.Is(err, sql.ErrNoRows) {
+			gotVersion = ""
+			gotSynopsis = ""
+		} else if err != nil {
 			t.Fatal(err)
 		}
 		if gotVersion != wantVersion && gotSynopsis != wantVersion {
-			t.Fatalf("got version %s, synopsis %q, want %s for both", gotVersion, gotSynopsis, wantVersion)
+			t.Fatalf("got version %q, synopsis %q, want %q for both", gotVersion, gotSynopsis, wantVersion)
 		}
 
 		gotImports, err := testDB.db.CollectStrings(ctx, `
@@ -736,4 +740,9 @@ func TestReInsertLatestVersion(t *testing.T) {
 	// The search_documents and imports_unique tables should go back to v1.1.0.
 	insert("v1.3.0", 400, nil, "retract v1.2.0")
 	check("v1.1.0", imports1)
+
+	// Now a still higher version comes along that retracts everything. The
+	// module should no longer be in search_documents or imports_unique.
+	insert("v1.4.0", 200, nil, "retract [v1.0.0, v1.4.0]")
+	check("", nil)
 }

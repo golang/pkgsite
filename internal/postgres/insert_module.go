@@ -660,13 +660,19 @@ func (db *DB) ReInsertLatestVersion(ctx context.Context, modulePath string) (err
 			return nil
 		}
 		if lmv.GoodVersion == "" {
-			// TODO(golang/go#44710): once we are confident that
-			// latest_module_versions is accurate and up to date, we can assume
-			// that a missing GoodVersion should mean that there are no good
-			// versions remaining, and we should remove the current module from
+			// A missing GoodVersion means that there are no good versions
+			// remaining, and we should remove the current module from
 			// search_documents.
-			log.Debugf(ctx, "ReInsertLatestVersion(%q): no good version", modulePath)
-			return nil
+			if err := deleteModuleOrPackagesInModuleFromSearchDocuments(ctx, tx, modulePath, nil); err != nil {
+				return err
+			}
+			if _, err := tx.Exec(ctx, `
+				DELETE FROM imports_unique
+				WHERE from_module_path = $1
+			`, modulePath); err != nil {
+				return err
+			}
+			log.Debugf(ctx, "ReInsertLatestVersion(%q): no good version; removed from search_documents and imports_unique", modulePath)
 		}
 		// Is the latest good version in search_documents?
 		var x int
