@@ -112,7 +112,7 @@ func fetchSearchPage(ctx context.Context, db *postgres.DB, query string, pagePar
 			// Say "other" instead of "lower" because at some point we may
 			// prefer to show a tagged, lower major version over an untagged
 			// higher major version.
-			OtherMajor: modulePaths("Other module versions:", r.OtherMajor),
+			OtherMajor: modulePaths("Other major versions:", r.OtherMajor),
 		}
 		if searchSymbols {
 			sr.SymbolName = r.SymbolName

@@ -123,10 +123,18 @@
           {{$v.Synopsis}}
         </p>
         {{template "search_metadata" $v}}
+        {{with .OtherMajor}}
+          <div>
+            <span class="go-textSubtle">{{.Heading}}</span>
+            {{range $i, $v := .Links}}
+              <a href="/{{$v.Href}}" data-gtmc="search result lower major" data-gtmv="{{$i}}"><strong>{{$v.Body}}</strong></a>
+            {{end}}
+          </div>
+        {{end}}
         {{with .SameModule}}
           {{$m := .}}
           <div class="SearchSnippet-sub go-textSubtle">
-            <a href="{{$v.ModulePath}}#section-directories">{{.Heading}}</a>
+            <a href="{{$v.ModulePath}}#section-directories"><strong>{{.Heading}}</strong></a>
             {{range $i, $v := .Links}}
               {{if lt $i 5}}
                 <a class="go-Chip go-Chip--subtle"
@@ -144,15 +152,6 @@
                   data-gtmc="search result same module link">
                 +{{$more}} more
               </a>
-            {{end}}
-          </div>
-        {{end}}
-        {{with .OtherMajor}}
-          <div class="SearchSnippet-sub go-textSubtle">
-            <span>{{.Heading}}</span>
-            {{range $i, $v := .Links}}
-              <a class="go-Chip go-Chip--subtle" href="/{{$v.Href}}"
-                  data-gtmc="search result lower major" data-gtmv="{{$i}}">{{$v.Body}}</a>
             {{end}}
           </div>
         {{end}}
