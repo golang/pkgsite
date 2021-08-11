@@ -1088,7 +1088,7 @@ func (db *DB) DeleteOlderVersionFromSearchDocuments(ctx context.Context, moduleP
 		}
 
 		// Delete all of those paths.
-		return deleteModuleFromSearchDocuments(ctx, tx, modulePath, ppaths)
+		return deleteModuleOrPackagesInModuleFromSearchDocuments(ctx, tx, modulePath, ppaths)
 	})
 }
 
@@ -1111,12 +1111,12 @@ func deleteOtherModulePackagesFromSearchDocuments(ctx context.Context, tx *datab
 			otherPkgs = append(otherPkgs, p)
 		}
 	}
-	return deleteModuleFromSearchDocuments(ctx, tx, m.ModulePath, otherPkgs)
+	return deleteModuleOrPackagesInModuleFromSearchDocuments(ctx, tx, m.ModulePath, otherPkgs)
 }
 
-// deleteModuleFromSearchDocuments deletes module_path from search_documents.
-// If packages is non-empty, it only deletes those packages.
-func deleteModuleFromSearchDocuments(ctx context.Context, tx *database.DB, modulePath string, packages []string) error {
+// deleteModuleOrPackagesInModuleFromSearchDocuments deletes module_path from
+// search_documents. If packages is non-empty, it only deletes those packages.
+func deleteModuleOrPackagesInModuleFromSearchDocuments(ctx context.Context, tx *database.DB, modulePath string, packages []string) error {
 	d := squirrel.Delete("search_documents").
 		Where(squirrel.Eq{"module_path": modulePath})
 	if len(packages) > 0 {

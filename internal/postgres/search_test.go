@@ -1377,7 +1377,7 @@ func TestDeleteFromSearch(t *testing.T) {
 		defer release()
 		insertInitial(testDB)
 
-		if err := deleteModuleFromSearchDocuments(ctx, testDB.db, modulePath, nil); err != nil {
+		if err := deleteModuleOrPackagesInModuleFromSearchDocuments(ctx, testDB.db, modulePath, nil); err != nil {
 			t.Fatal(err)
 		}
 		checkSearchDocuments(ctx, t, testDB, []searchDocumentRow{
