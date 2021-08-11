@@ -33,13 +33,13 @@
   grid-area: header;
   min-height: var(--js-unit-header-height);
   padding: 0 var(--gutter);
+  position: sticky;
   top: var(--js-unit-header-top, 0);
   transition: box-shadow 0.25s linear;
   z-index: 10;
 }
 .go-Main-header[data-fixed] {
   border-bottom: none;
-  position: sticky;
 }
 .go-Main-header[data-raised] {
   border-bottom: var(--border);
