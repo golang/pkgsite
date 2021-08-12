@@ -29,15 +29,11 @@
 
 {{define "search_identifier"}}
   <h1>Identifiers matching “{{.Query}}”</h1>
-  <a class="SearchResults-instead" href="{{.Pagination.URL .Pagination.Limit .SearchModePackage .Query}}">
-    <span class="SearchResults-insteadPrefix">Search instead for </span>“{{.SearchModePackage}}: {{.Query}}”
-  </a>
   {{if gt (len .Results) 0}}
     <div class="SearchResults-summary">
       <div>
         <div>
           Showing <strong>{{len $.Results}}</strong> matching identifiers.
-          An identifier is a constant, variable, function, type, or field.
           <a href="/search-help">Search help</a>
         </div>
       </div>
