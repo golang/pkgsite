@@ -13,10 +13,6 @@ Foo github.com/julieqiu/api-demo
 
 Prefer symbols by popularity, then alphabetically, Add
 Add
-Float.Add math/big
-Int.Add math/big
-Rat.Add math/big
-Registry.Add github.com/go-openapi/strfmt
 Add math/bits
 
 Prefer symbols by package path, then symbol name
@@ -31,21 +27,15 @@ Writer compress/gzip
 Writer compress/zlib
 Writer encoding/csv
 Writer io
-Logger.Writer log
 Writer log
 
 Search for package path element and symbol.
 math Add
-Float.Add math/big
-Int.Add math/big
-Rat.Add math/big
 Add math/bits
 
 Search for package path element with slash and symbol.
-math/big Add
-Float.Add math/big
-Int.Add math/big
-Rat.Add math/big
+math/big Float
+Float math/big
 
 Search for <package path>.<symbol>.
 math/big.Float

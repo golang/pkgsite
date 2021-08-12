@@ -55,11 +55,15 @@ func TestSymbolSearch(t *testing.T) {
 			q:    sample.Variable.Name,
 			want: checkResult(sample.Variable.SymbolMeta),
 		},
-		{
-			name: "test search by <methodName>",
-			q:    "Method",
-			want: checkResult(sample.Method),
-		},
+		/*
+			TODO(golang/go#44142): Add support for searching just by field or
+			method name.
+			{
+				name: "test search by <methodName>",
+				q:    "Method",
+				want: checkResult(sample.Method),
+			},
+		*/
 		{
 			name: "test search by <package>.<type>.<methodName>",
 			q:    "foo.Type.Method",

@@ -115,13 +115,13 @@ func MatchingSymbolIDsQuery(st SearchType) string {
 	switch st {
 	case SearchTypeSymbol, SearchTypeMultiWordExact:
 		// When $1 is the full symbol name, either <symbol> or
-		// <type>.<methodOrField>, match on both the identifier name
-		// and just the field or method name.
-		// For example, "Begin" will return "DB.Begin".
+		// <type>.<methodOrField>, match on just the identifier name.
 		//
-		// tsv_name_tokens does a bad job of indexing symbol names with
-		// multiple "_", so also do an exact match search.
-		filter = fmt.Sprintf(`tsv_name_tokens @@ %s OR lower(name) = lower($1)`, toTSQuery("$1"))
+		// Matching on just <field> and <method> is too slow at the moment (can
+		// take several seconds to return results), but we
+		// might want to add support for that later. For example, searching for
+		// "Begin" should return "DB.Begin".
+		filter = `lower(name) = lower($1)`
 	case SearchTypePackageDotSymbol:
 		// When $1 is either <package>.<symbol> OR
 		// <package>.<type>.<methodOrField>, only match on the exact

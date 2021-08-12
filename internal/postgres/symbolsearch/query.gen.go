@@ -185,7 +185,7 @@ ORDER BY score DESC;`
 const queryMatchingSymbolIDsSymbol = `
 		SELECT id
 		FROM symbol_names
-		WHERE tsv_name_tokens @@ to_tsquery('symbols', quote_literal(replace($1, '_', '-'))) OR lower(name) = lower($1)`
+		WHERE lower(name) = lower($1)`
 
 // queryMatchingSymbolIDsPackageDotSymbol is used to find the matching symbol
 // ids when the SearchType is SearchTypePackageDotSymbol.
@@ -206,4 +206,4 @@ const queryMatchingSymbolIDsMultiWordOr = `
 const queryMatchingSymbolIDsMultiWordExact = `
 		SELECT id
 		FROM symbol_names
-		WHERE tsv_name_tokens @@ to_tsquery('symbols', quote_literal(replace($1, '_', '-'))) OR lower(name) = lower($1)`
+		WHERE lower(name) = lower($1)`
