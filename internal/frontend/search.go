@@ -257,7 +257,7 @@ const (
 
 	// searchModeSymbol is the keyword prefix and query param for searching
 	// by symbols.
-	searchModeSymbol = "identifier"
+	searchModeSymbol = "symbol"
 )
 
 // serveSearch applies database data to the search template. Handles endpoint

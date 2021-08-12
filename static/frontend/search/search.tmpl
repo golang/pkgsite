@@ -16,7 +16,7 @@
   <main class="go-Container">
     <div class="go-Content SearchResults">
       {{if eq .SearchMode .SearchModeSymbol }}
-        {{template "search_identifier" .}}
+        {{template "search_symbol" .}}
       {{else}}
         {{template "search_package" .}}
       {{end}}
@@ -27,13 +27,13 @@
   </main>
 {{end}}
 
-{{define "search_identifier"}}
-  <h1>Identifiers matching “{{.Query}}”</h1>
+{{define "search_symbol"}}
+  <h1>{{capitalize .SearchModeSymbol}}s matching “{{.Query}}”</h1>
   {{if gt (len .Results) 0}}
     <div class="SearchResults-summary">
       <div>
         <div>
-          Showing <strong>{{len $.Results}}</strong> matching identifiers.
+          Showing <strong>{{len $.Results}}</strong> matching {{.SearchModeSymbol}}s.
           <a href="/search-help">Search help</a>
         </div>
       </div>
@@ -46,11 +46,11 @@
       Try searching for a package by visiting <a href="https://pkg.go.dev/search?q={{.Query}}">pkg.go.dev/search?q={{.Query}}</a>.
     </p>
   {{else}}
-    {{template "search_identifier_results" .}}
+    {{template "search_symbol_results" .}}
   {{end}}
 {{end}}
 
-{{define "search_identifier_results"}}
+{{define "search_symbol_results"}}
   <div>
     {{$query := .Query}}
     {{range $i, $r := .Results}}

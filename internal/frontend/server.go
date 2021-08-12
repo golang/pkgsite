@@ -542,6 +542,7 @@ var templateFuncs = template.FuncMap{
 		return strings.Join(s, ", ")
 	},
 	"stripscheme": stripScheme,
+	"capitalize":  strings.Title,
 }
 
 func stripScheme(url string) string {

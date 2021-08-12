@@ -81,7 +81,7 @@
     {{if .Experiments.IsActive "symbol-search"}}
       <select name="m" class="go-Select js-searchModeSelect">
         <option value="{{.SearchModePackage}}">Packages</option>
-        <option {{if eq .SearchMode .SearchModeSymbol}}selected{{end}} value="{{.SearchModeSymbol}}">Identifiers</option>
+        <option {{if eq .SearchMode .SearchModeSymbol}}selected{{end}} value="{{.SearchModeSymbol}}">{{capitalize .SearchModeSymbol}}s</option>
       </select>
     {{end}}
     <input name="q" class="go-Input js-searchFocus" aria-label="Search for a package" type="search"

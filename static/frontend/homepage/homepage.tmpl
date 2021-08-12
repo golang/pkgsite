@@ -20,7 +20,7 @@
         {{if .Experiments.IsActive "symbol-search"}}
           <select name="m" class="go-Select">
             <option value="packages">Packages</option>
-            <option value="identifiers">Identifiers</option>
+            <option value="{{.SearchModeSymbol}}s">{{capitalize .SearchModeSymbol}}s</option>
           </select>
         {{end}}
         <input
