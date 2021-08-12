@@ -43,7 +43,8 @@ func upsertSymbolSearchDocuments(ctx context.Context, tx *database.DB,
 			goarch,
 			package_name,
 			package_path,
-			imported_by_count
+			imported_by_count,
+			symbol_name
 		)
 		SELECT DISTINCT ON (sd.package_path_id, ps.symbol_name_id)
 			sd.package_path_id,
@@ -54,12 +55,14 @@ func upsertSymbolSearchDocuments(ctx context.Context, tx *database.DB,
 			d.goarch,
 			sd.name,
 			sd.package_path,
-			sd.imported_by_count
+			sd.imported_by_count,
+			s.name
 		FROM search_documents sd
 		INNER JOIN units u ON sd.unit_id = u.id
 		INNER JOIN documentation d ON d.unit_id = sd.unit_id
 		INNER JOIN documentation_symbols ds ON d.id = ds.documentation_id
 		INNER JOIN package_symbols ps ON ps.id = ds.package_symbol_id
+		INNER JOIN symbol_names s ON s.id = ps.symbol_name_id
 		WHERE
 			sd.module_path = $1 AND sd.version = $2
 			AND u.name != 'main' -- do not insert data for commands
@@ -82,7 +85,8 @@ func upsertSymbolSearchDocuments(ctx context.Context, tx *database.DB,
 			goarch = excluded.goarch,
 			package_name = excluded.package_name,
 			package_path = excluded.package_path,
-			imported_by_count = excluded.imported_by_count;`
+			imported_by_count = excluded.imported_by_count,
+			symbol_name = excluded.symbol_name;`
 	_, err = tx.Exec(ctx, q, modulePath, v)
 	return err
 }
