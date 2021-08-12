@@ -283,8 +283,8 @@ func runSymbolSearchOneDot(ctx context.Context, ddb *database.DB, q string, limi
 
 func runSymbolSearch(ctx context.Context, ddb *database.DB,
 	st symbolsearch.SearchType, q string, limit int, args ...interface{}) (_ []*SearchResult, err error) {
-	defer derrors.Wrap(&err, "runSymbolSearch(ctx, ddb, query, %q, %d)", q, limit)
-	defer middleware.ElapsedStat(ctx, "runSymbolSearch")()
+	defer derrors.Wrap(&err, "runSymbolSearch(ctx, ddb, %q, %q, %d, %v)", st, q, limit, args)
+	defer middleware.ElapsedStat(ctx, fmt.Sprintf("%s-runSymbolSearch", st))()
 
 	ids, err := fetchMatchingSymbolIDs(ctx, ddb, st, q)
 	if err != nil {
@@ -301,8 +301,8 @@ func runSymbolSearch(ctx context.Context, ddb *database.DB,
 // symbolsearch.MatchingSymbolIDsQuery. The ids returned will be used by in
 // runSymbolSearch.
 func fetchMatchingSymbolIDs(ctx context.Context, ddb *database.DB, st symbolsearch.SearchType, q string) (_ []int, err error) {
-	defer derrors.Wrap(&err, "fetchMatchingSymbolIDs(ctx, ddb, %d, %q)", st, q)
-	defer middleware.ElapsedStat(ctx, "fetchMatchingSymbolIDs")()
+	defer derrors.Wrap(&err, "fetchMatchingSymbolIDs(ctx, ddb, %q, %q)", st, q)
+	defer middleware.ElapsedStat(ctx, fmt.Sprintf("%s-fetchMatchingSymbolIDs", st))()
 
 	var ids []int
 	collect := func(rows *sql.Rows) error {
@@ -327,8 +327,8 @@ func fetchMatchingSymbolIDs(ctx context.Context, ddb *database.DB, st symbolsear
 // symbolsearch.SearchType and args.
 func fetchSymbolSearchResults(ctx context.Context, ddb *database.DB,
 	st symbolsearch.SearchType, ids []int, limit int, args ...interface{}) (results []*SearchResult, err error) {
-	defer derrors.Wrap(&err, "fetchSymbolSearchResults(ctx, ddb, st: %d, ids: %v, limit:  %d, args: %v)", st, ids, limit, args)
-	defer middleware.ElapsedStat(ctx, "fetchSymbolSearchResults")()
+	defer derrors.Wrap(&err, "fetchSymbolSearchResults(ctx, ddb, %q, ids: %v, limit:  %d, args: %v)", st.String(), ids, limit, args)
+	defer middleware.ElapsedStat(ctx, fmt.Sprintf("%s-fetchSymbolSearchResults", st))()
 
 	collect := func(rows *sql.Rows) error {
 		var r SearchResult

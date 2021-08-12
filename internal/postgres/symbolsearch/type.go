@@ -95,3 +95,20 @@ const (
 	// and the results are combined.
 	SearchTypeMultiWordExact
 )
+
+// String returns the name of the search type as a string.
+func (st SearchType) String() string {
+	switch st {
+	case SearchTypeSymbol:
+		return "SearchTypeSymbol"
+	case SearchTypePackageDotSymbol:
+		return "SearchTypePackageDotSymbol"
+	case SearchTypeMultiWordOr:
+		return "SearchTypeMultiWordOr"
+	case SearchTypeMultiWordExact:
+		return "SearchTypeMultiWordExact"
+	default:
+		// This should never happen.
+		return "?unknown?"
+	}
+}
