@@ -13,11 +13,11 @@ github.com/hashicorp/vault/api@v1.0.3
 github.com/hashicorp/vault/api@v1.1.1
 github.com/jackc/pgx/v4@v4.11.0
 github.com/jba/bit@v0.2.0
+github.com/julieqiu/api-demo@all
 github.com/tendermint/tendermint@v0.34.10
 github.com/tendermint/tendermint@v0.34.11
 gocloud.dev@v0.22.0
 gocloud.dev@v0.23.0
-golang.org/x/tools@v0.0.0-20160406004205-fe1488f8abd7
 golang.org/x/tools@v0.1.1
 golang.org/x/tools@v0.1.2
 k8s.io/client-go@v0.21.3

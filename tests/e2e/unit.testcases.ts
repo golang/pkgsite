@@ -116,7 +116,7 @@ export const testcases: TestCase[] = [
   },
   {
     name: 'package not at latest version of a module',
-    path: '/golang.org/x/tools/cmd/vet',
+    path: '/github.com/julieqiu/api-demo/oldpkg',
     tabs: [],
     ids: [id.DOCUMENTATION, id.OVERVIEW, id.SOURCEFILES, id.DIRECTORIES],
   },
