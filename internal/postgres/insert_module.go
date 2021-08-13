@@ -657,17 +657,22 @@ func (db *DB) ReInsertLatestVersion(ctx context.Context, modulePath string) (err
 			log.Debugf(ctx, "ReInsertLatestVersion(%q): no latest-version info", modulePath)
 			return nil
 		}
-		if lmv.GoodVersion == "" {
+		alt, err := isAlternativeModulePath(ctx, tx, modulePath)
+		if err != nil {
+			return err
+		}
+		if alt || lmv.GoodVersion == "" {
 			// A missing GoodVersion means that there are no good versions
-			// remaining, and we should remove the current module from
-			// search_documents.
+			// remaining. In that case, or if this is an alternative module, we
+			// should remove the module from search.
 			if err := deleteModuleOrPackagesInModuleFromSearchDocuments(ctx, tx, modulePath, nil); err != nil {
 				return err
 			}
 			if err := deleteModuleFromImportsUnique(ctx, tx, modulePath); err != nil {
 				return err
 			}
-			log.Debugf(ctx, "ReInsertLatestVersion(%q): no good version; removed from search_documents and imports_unique", modulePath)
+			log.Debugf(ctx, "ReInsertLatestVersion(%q): alternative or no good version; removed from search_documents and imports_unique", modulePath)
+			return nil
 		}
 		// Is the latest good version in search_documents?
 		var x int
@@ -687,19 +692,10 @@ func (db *DB) ReInsertLatestVersion(ctx context.Context, modulePath string) (err
 			return err
 		}
 
-		// The latest good version is not in search_documents. Is this an
-		// alternative module path?
-		alt, err := isAlternativeModulePath(ctx, tx, modulePath)
-		if err != nil {
-			return err
-		}
-		if alt {
-			log.Debugf(ctx, "ReInsertLatestVersion(%q): alternative module path; doing nothing", modulePath)
-			return nil
-		}
+		// The latest good version is not in search_documents, and this is
+		// not an alternative module path. Insert the latest good version.
 
-		// Not an alternative module path. Read the module information at the
-		// latest good version.
+		// Read the module information at the latest good version.
 		pkgMetas, err := getPackagesInUnit(ctx, tx, modulePath, modulePath, lmv.GoodVersion, -1, db.bypassLicenseCheck)
 		if err != nil {
 			return err
