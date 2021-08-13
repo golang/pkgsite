@@ -8,9 +8,13 @@ import (
 	"context"
 	"database/sql"
 
+	"github.com/Masterminds/squirrel"
 	"github.com/lib/pq"
+	"golang.org/x/mod/semver"
+	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/log"
 )
 
 // DeleteModule deletes a Version from the database.
@@ -39,6 +43,85 @@ func (db *DB) DeleteModule(ctx context.Context, modulePath, resolvedVersion stri
 		_, err = tx.Exec(ctx, `DELETE FROM imports_unique WHERE from_module_path = $1`, modulePath)
 		return err
 	})
+}
+
+// DeleteOlderVersionFromSearchDocuments deletes from search_documents every package with
+// the given module path whose version is older than the given version.
+// It is used when fetching a module with an alternative path. See internal/worker/fetch.go:fetchAndUpdateState.
+func (db *DB) DeleteOlderVersionFromSearchDocuments(ctx context.Context, modulePath, resolvedVersion string) (err error) {
+	defer derrors.WrapStack(&err, "DeleteOlderVersionFromSearchDocuments(ctx, %q, %q)", modulePath, resolvedVersion)
+
+	return db.db.Transact(ctx, sql.LevelDefault, func(tx *database.DB) error {
+		// Collect all package paths in search_documents with the given module path
+		// and an older version. (package_path is the primary key of search_documents.)
+		var ppaths []string
+		query := `
+			SELECT package_path, version
+			FROM search_documents
+			WHERE module_path = $1
+		`
+		err := tx.RunQuery(ctx, query, func(rows *sql.Rows) error {
+			var ppath, v string
+			if err := rows.Scan(&ppath, &v); err != nil {
+				return err
+			}
+			if semver.Compare(v, resolvedVersion) < 0 {
+				ppaths = append(ppaths, ppath)
+			}
+			return nil
+		}, modulePath)
+		if err != nil {
+			return err
+		}
+		if len(ppaths) == 0 {
+			return nil
+		}
+
+		// Delete all of those paths.
+		return deleteModuleOrPackagesInModuleFromSearchDocuments(ctx, tx, modulePath, ppaths)
+	})
+}
+
+// deleteOtherModulePackagesFromSearchDocuments deletes all packages from search
+// documents with the given module that are not in m.
+func deleteOtherModulePackagesFromSearchDocuments(ctx context.Context, tx *database.DB, m *internal.Module) error {
+	dbPkgs, err := tx.CollectStrings(ctx, `
+		SELECT package_path FROM search_documents WHERE module_path = $1
+	`, m.ModulePath)
+	if err != nil {
+		return err
+	}
+	pkgInModule := map[string]bool{}
+	for _, u := range m.Packages() {
+		pkgInModule[u.Path] = true
+	}
+	var otherPkgs []string
+	for _, p := range dbPkgs {
+		if !pkgInModule[p] {
+			otherPkgs = append(otherPkgs, p)
+		}
+	}
+	return deleteModuleOrPackagesInModuleFromSearchDocuments(ctx, tx, m.ModulePath, otherPkgs)
+}
+
+// deleteModuleOrPackagesInModuleFromSearchDocuments deletes module_path from
+// search_documents. If packages is non-empty, it only deletes those packages.
+func deleteModuleOrPackagesInModuleFromSearchDocuments(ctx context.Context, tx *database.DB, modulePath string, packages []string) error {
+	d := squirrel.Delete("search_documents").
+		Where(squirrel.Eq{"module_path": modulePath})
+	if len(packages) > 0 {
+		d = d.Where("package_path = ANY(?)", pq.Array(packages))
+	}
+	q, args, err := d.PlaceholderFormat(squirrel.Dollar).ToSql()
+	if err != nil {
+		return err
+	}
+	n, err := tx.Exec(ctx, q, args...)
+	if err != nil {
+		return err
+	}
+	log.Infof(ctx, "deleted %d rows of module %s from search_documents", n, modulePath)
+	return nil
 }
 
 // DeletePseudoversionsExcept deletes all pseudoversions for the module except

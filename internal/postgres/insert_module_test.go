@@ -445,50 +445,6 @@ func TestInsertModuleLatest(t *testing.T) {
 	}
 }
 
-func TestDeleteModule(t *testing.T) {
-	t.Parallel()
-	testDB, release := acquire(t)
-	defer release()
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	defer cancel()
-
-	v := sample.DefaultModule()
-
-	MustInsertModule(ctx, t, testDB, v)
-	if _, err := testDB.GetModuleInfo(ctx, v.ModulePath, v.Version); err != nil {
-		t.Fatal(err)
-	}
-
-	vm := sample.DefaultVersionMap()
-	if err := testDB.UpsertVersionMap(ctx, vm); err != nil {
-		t.Fatal(err)
-	}
-	if _, err := testDB.GetVersionMap(ctx, v.ModulePath, v.Version); err != nil {
-		t.Fatal(err)
-	}
-
-	if err := testDB.DeleteModule(ctx, v.ModulePath, v.Version); err != nil {
-		t.Fatal(err)
-	}
-	if _, err := testDB.GetModuleInfo(ctx, v.ModulePath, v.Version); !errors.Is(err, derrors.NotFound) {
-		t.Errorf("got %v, want NotFound", err)
-	}
-
-	var x int
-	err := testDB.Underlying().QueryRow(ctx, "SELECT 1 FROM imports_unique WHERE from_module_path = $1",
-		v.ModulePath).Scan(&x)
-	if err != sql.ErrNoRows {
-		t.Errorf("imports_unique: got %v, want ErrNoRows", err)
-	}
-	err = testDB.Underlying().QueryRow(
-		ctx,
-		"SELECT 1 FROM version_map WHERE module_path = $1 AND resolved_version = $2",
-		v.ModulePath, v.Version).Scan(&x)
-	if err != sql.ErrNoRows {
-		t.Errorf("version_map: got %v, want ErrNoRows", err)
-	}
-}
-
 func TestPostgres_NewerAlternative(t *testing.T) {
 	t.Parallel()
 	// Verify that packages are not added to search_documents if the module has a newer
