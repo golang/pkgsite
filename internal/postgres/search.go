@@ -749,7 +749,7 @@ func UpsertSearchDocument(ctx context.Context, ddb *database.DB, args UpsertSear
 	defer derrors.WrapStack(&err, "DB.UpsertSearchDocument(ctx, ddb, %q, %q)", args.PackagePath, args.ModulePath)
 
 	// Only summarize the README if the package and module have the same path.
-	// If this changes, fix DB.ReInsertLatestVersion.
+	// If this changes, fix DB.ReconcileSearch.
 	if args.PackagePath != args.ModulePath {
 		args.ReadmeFilePath = ""
 		args.ReadmeContents = ""

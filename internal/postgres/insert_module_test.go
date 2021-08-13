@@ -615,7 +615,7 @@ func TestIsAlternativeModulePath(t *testing.T) {
 	}
 }
 
-func TestReInsertLatestVersion(t *testing.T) {
+func TestReconcileSearch(t *testing.T) {
 	testDB, release := acquire(t)
 	defer release()
 	ctx := context.Background()
@@ -640,7 +640,7 @@ func TestReInsertLatestVersion(t *testing.T) {
 		}); err != nil {
 			t.Fatal(err)
 		}
-		if err := testDB.ReInsertLatestVersion(ctx, modulePath, version, status); err != nil {
+		if err := testDB.ReconcileSearch(ctx, modulePath, version, status); err != nil {
 			t.Fatal(err)
 		}
 	}

@@ -637,13 +637,14 @@ func insertReadmes(ctx context.Context, db *database.DB,
 	return db.BulkUpsert(ctx, "readmes", readmeCols, readmeValues, []string{"unit_id"})
 }
 
-// ReInsertLatestVersion checks that the latest good version matches the version
-// in search_documents. If it doesn't, it inserts the latest good version into
-// search_documents and imports_unique.
-// The version and status arguments should come from the module currently being fetched.
-// They are used to determine if the module is alternative.
-func (db *DB) ReInsertLatestVersion(ctx context.Context, modulePath, version string, status int) (err error) {
-	defer derrors.WrapStack(&err, "ReInsertLatestVersion(%q)", modulePath)
+// ReconcileSearch reconciles the search data for modulePath. If the module is
+// alternative or has no good versions, it removes search data. Otherwise, if
+// the latest good version doesn't match the version in search_documents, and it
+// inserts the latest good version into search_documents and imports_unique.
+// The version and status arguments should come from the module currently being
+// fetched. They are used to determine if the module is alternative.
+func (db *DB) ReconcileSearch(ctx context.Context, modulePath, version string, status int) (err error) {
+	defer derrors.WrapStack(&err, "ReconcileSearch(%q)", modulePath)
 
 	return db.db.Transact(ctx, sql.LevelRepeatableRead, func(tx *database.DB) error {
 		// Hold the lock on the module path throughout.
@@ -656,12 +657,12 @@ func (db *DB) ReInsertLatestVersion(ctx context.Context, modulePath, version str
 			return err
 		}
 		if lmv == nil {
-			log.Debugf(ctx, "ReInsertLatestVersion(%q): no latest-version info", modulePath)
+			log.Debugf(ctx, "ReconcileSearch(%q): no latest-version info", modulePath)
 			return nil
 		}
 		// Determine if this is an alternative module. The
 		// isAlternativeModulePath function checks the DB, but at the time
-		// ReInsertLatestVersion is called, we haven't added the current module
+		// ReconcileSearch is called, we haven't added the current module
 		// version's status to the DB, so we use the version and status
 		// arguments.
 		alt := version == lmv.CookedVersion && status == derrors.ToStatus(derrors.AlternativeModule)
@@ -681,7 +682,7 @@ func (db *DB) ReInsertLatestVersion(ctx context.Context, modulePath, version str
 			if err := deleteModuleFromImportsUnique(ctx, tx, modulePath); err != nil {
 				return err
 			}
-			log.Debugf(ctx, "ReInsertLatestVersion(%q): alternative or no good version; removed from search_documents and imports_unique", modulePath)
+			log.Debugf(ctx, "ReconcileSearch(%q): alternative or no good version; removed from search_documents and imports_unique", modulePath)
 			return nil
 		}
 		// Is the latest good version in search_documents?
@@ -695,7 +696,7 @@ func (db *DB) ReInsertLatestVersion(ctx context.Context, modulePath, version str
 		case sql.ErrNoRows:
 			break
 		case nil:
-			log.Debugf(ctx, "ReInsertLatestVersion(%q): good version %s found in search_documents; doing nothing",
+			log.Debugf(ctx, "ReconcileSearch(%q): good version %s found in search_documents; doing nothing",
 				modulePath, lmv.GoodVersion)
 			return nil
 		default:
@@ -755,7 +756,7 @@ func (db *DB) ReInsertLatestVersion(ctx context.Context, modulePath, version str
 			return err
 		}
 
-		log.Debugf(ctx, "ReInsertLatestVersion(%q): re-inserted at latest good version %s", modulePath, lmv.GoodVersion)
+		log.Debugf(ctx, "ReconcileSearch(%q): re-inserted at latest good version %s", modulePath, lmv.GoodVersion)
 		return nil
 	})
 }

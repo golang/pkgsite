@@ -117,7 +117,7 @@ func (f *Fetcher) FetchAndUpdateState(ctx context.Context, modulePath, requested
 
 	// Make sure the latest version of the module is the one in search_documents
 	// and imports_unique.
-	if err := f.DB.ReInsertLatestVersion(ctx, modulePath, ft.ResolvedVersion, ft.Status); err != nil {
+	if err := f.DB.ReconcileSearch(ctx, modulePath, ft.ResolvedVersion, ft.Status); err != nil {
 		log.Error(ctx, err)
 		if ft.Status != http.StatusInternalServerError {
 			ft.Error = err
