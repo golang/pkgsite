@@ -40,8 +40,7 @@ func (db *DB) DeleteModule(ctx context.Context, modulePath, resolvedVersion stri
 			return err
 		}
 		// No versions of this module exist; remove it from imports_unique.
-		_, err = tx.Exec(ctx, `DELETE FROM imports_unique WHERE from_module_path = $1`, modulePath)
-		return err
+		return deleteModuleFromImportsUnique(ctx, tx, modulePath)
 	})
 }
 
@@ -122,6 +121,16 @@ func deleteModuleOrPackagesInModuleFromSearchDocuments(ctx context.Context, tx *
 	}
 	log.Infof(ctx, "deleted %d rows of module %s from search_documents", n, modulePath)
 	return nil
+}
+
+func deleteModuleFromImportsUnique(ctx context.Context, db *database.DB, modulePath string) (err error) {
+	defer derrors.Wrap(&err, "deleteModuleFromImportsUnique(%q)", modulePath)
+
+	_, err = db.Exec(ctx, `
+		DELETE FROM imports_unique
+		WHERE from_module_path = $1
+	`, modulePath)
+	return err
 }
 
 // DeletePseudoversionsExcept deletes all pseudoversions for the module except

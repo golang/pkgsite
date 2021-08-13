@@ -317,9 +317,7 @@ func insertImportsUnique(ctx context.Context, tx *database.DB, m *internal.Modul
 
 	// Remove the previous rows for this module. We'll replace them with
 	// new ones below.
-	if _, err := tx.Exec(ctx,
-		`DELETE FROM imports_unique WHERE from_module_path = $1`,
-		m.ModulePath); err != nil {
+	if err := deleteModuleFromImportsUnique(ctx, tx, m.ModulePath); err != nil {
 		return err
 	}
 
@@ -666,10 +664,7 @@ func (db *DB) ReInsertLatestVersion(ctx context.Context, modulePath string) (err
 			if err := deleteModuleOrPackagesInModuleFromSearchDocuments(ctx, tx, modulePath, nil); err != nil {
 				return err
 			}
-			if _, err := tx.Exec(ctx, `
-				DELETE FROM imports_unique
-				WHERE from_module_path = $1
-			`, modulePath); err != nil {
+			if err := deleteModuleFromImportsUnique(ctx, tx, modulePath); err != nil {
 				return err
 			}
 			log.Debugf(ctx, "ReInsertLatestVersion(%q): no good version; removed from search_documents and imports_unique", modulePath)
@@ -736,7 +731,7 @@ func (db *DB) ReInsertLatestVersion(ctx context.Context, modulePath string) (err
 		}
 
 		// Remove old rows from imports_unique.
-		if _, err := tx.Exec(ctx, `DELETE FROM imports_unique WHERE from_module_path = $1`, modulePath); err != nil {
+		if err := deleteModuleFromImportsUnique(ctx, tx, modulePath); err != nil {
 			return err
 		}
 
