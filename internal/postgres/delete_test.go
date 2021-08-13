@@ -85,20 +85,6 @@ func TestDeleteFromSearch(t *testing.T) {
 		checkSearchDocuments(ctx, t, db, initial[2:])
 	}
 
-	t.Run("DeleteOlderVersionFromSearchDocuments", func(t *testing.T) {
-		testDB, release := acquire(t)
-		defer release()
-		insertInitial(testDB)
-
-		if err := testDB.DeleteOlderVersionFromSearchDocuments(ctx, modulePath, "v1.2.3"); err != nil {
-			t.Fatal(err)
-		}
-
-		checkSearchDocuments(ctx, t, testDB, []searchDocumentRow{
-			{modulePath + "/p4", modulePath, "v1.9.0", 0}, // newer version not deleted
-			{"other.org/p2", "other.org", "v1.1.0", 0},    // other module not deleted
-		})
-	})
 	t.Run("deleteModuleFromSearchDocuments", func(t *testing.T) {
 		// Non-empty list of packages tested above. This tests an empty list.
 		testDB, release := acquire(t)

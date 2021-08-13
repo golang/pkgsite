@@ -371,25 +371,7 @@ func deleteModule(ctx context.Context, db *postgres.DB, ft *fetchTask) (err erro
 
 	// Update the latest good version for this module, because deleting this
 	// version may have changed it.
-	if err := db.UpdateLatestGoodVersion(ctx, ft.ModulePath); err != nil {
-		return err
-	}
-
-	// If this was an alternative path (ft.Status == 491) and there is an older
-	// version in search_documents, delete it. This is the case where a module's
-	// canonical path was changed by the addition of a go.mod file. For example,
-	// versions of logrus before it acquired a go.mod file could have the path
-	// github.com/Sirupsen/logrus, but once the go.mod file specifies that the
-	// path is all lower-case, the old versions should not show up in search. We
-	// still leave their pages in the database so users of those old versions
-	// can still view documentation.
-	if ft.Status == derrors.ToStatus(derrors.AlternativeModule) {
-		log.Infof(ctx, "%s@%s: code=491, deleting older version from search", ft.ModulePath, ft.ResolvedVersion)
-		if err := db.DeleteOlderVersionFromSearchDocuments(ctx, ft.ModulePath, ft.ResolvedVersion); err != nil {
-			return err
-		}
-	}
-	return nil
+	return db.UpdateLatestGoodVersion(ctx, ft.ModulePath)
 }
 
 func logTaskResult(ctx context.Context, ft *fetchTask, prefix string) {
