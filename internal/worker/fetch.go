@@ -140,6 +140,7 @@ func (f *Fetcher) FetchAndUpdateState(ctx context.Context, modulePath, requested
 	// to do load-shedding, but it's also important to make the proxy aware
 	// of the version if it isn't already, as can happen when we arrive here via
 	// frontend fetch.
+	//
 	// Don't fail on a non-nil error. If we return here, we won't record
 	// the error state in the DB.
 	info, err := getInfo(ctx, modulePath, requestedVersion, f.ProxyClient)
@@ -160,6 +161,20 @@ func (f *Fetcher) FetchAndUpdateState(ctx context.Context, modulePath, requested
 		}
 		startFetchInfo(fi)
 		defer func() { finishFetchInfo(fi, status, err) }()
+
+		// If this is a valid module, insert it into module_version_states.
+		//
+		// In case something happens later on, this will make sure we retry. Also,
+		// modules that are introduced to pkgsite for the first time via frontend
+		// fetch and not index.golang.org won't have a row in
+		// module_version_states, so that ensures the logic below works properly as
+		// well.
+		//
+		// Leave the index_timestamp as empty. This will be populated when the
+		// module appears in the index.
+		if err := f.DB.InsertNewModuleVersionFromFrontendFetch(ctx, modulePath, info.Version); err != nil {
+			return derrors.ToStatus(err), "", err
+		}
 	}
 
 	// Get the latest-version information first, and update the DB. We'll need

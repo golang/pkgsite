@@ -105,7 +105,7 @@ func TestWorker(t *testing.T) {
 			}
 			return &internal.ModuleVersionState{
 				ModulePath:     version.Path,
-				IndexTimestamp: version.Timestamp,
+				IndexTimestamp: &version.Timestamp,
 				Status:         code,
 				TryCount:       tryCount,
 				Version:        version.Version,

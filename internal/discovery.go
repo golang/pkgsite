@@ -180,7 +180,11 @@ type ModuleVersionState struct {
 	// IndexTimestamp is the timestamp received from the Index for this version,
 	// which should correspond to the time this version was committed to the
 	// Index.
-	IndexTimestamp time.Time
+	//
+	// This may be nil if the request only came via frontend fetch, or the
+	// status is not a 2xx status.
+	IndexTimestamp *time.Time
+
 	// CreatedAt is the time this version was originally inserted into the
 	// module version state table.
 	CreatedAt time.Time

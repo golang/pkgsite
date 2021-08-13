@@ -24,19 +24,49 @@ import (
 // table with a status of zero.
 func (db *DB) InsertIndexVersions(ctx context.Context, versions []*internal.IndexVersion) (err error) {
 	defer derrors.WrapStack(&err, "InsertIndexVersions(ctx, %v)", versions)
-	var vals []interface{}
-	for _, v := range versions {
-		vals = append(vals, v.Path, v.Version, version.ForSorting(v.Version), v.Timestamp, 0, "", "", version.IsIncompatible(v.Version))
-	}
-	cols := []string{"module_path", "version", "sort_version", "index_timestamp", "status", "error", "go_mod_path", "incompatible"}
 	conflictAction := `
 		ON CONFLICT
 			(module_path, version)
 		DO UPDATE SET
 			index_timestamp=excluded.index_timestamp,
-			next_processed_after=CURRENT_TIMESTAMP
-	`
-	return db.db.Transact(ctx, sql.LevelDefault, func(tx *database.DB) error {
+			next_processed_after=CURRENT_TIMESTAMP`
+	return insertIndexVersions(ctx, db.db, versions, conflictAction)
+}
+
+// InsertNewModuleVersionFromFrontendFetch inserts a new module version into
+// the module_version_states table with a status of zero that was requested
+// from frontend fetch.
+func (db *DB) InsertNewModuleVersionFromFrontendFetch(ctx context.Context, modulePath, resolvedVersion string) (err error) {
+	defer derrors.WrapStack(&err, "InsertIndexVersion(ctx, %v)", resolvedVersion)
+	conflictAction := `ON CONFLICT (module_path, version) DO NOTHING`
+	return insertIndexVersions(ctx, db.db, []*internal.IndexVersion{{Path: modulePath, Version: resolvedVersion}}, conflictAction)
+}
+
+func insertIndexVersions(ctx context.Context, ddb *database.DB, versions []*internal.IndexVersion, conflictAction string) (err error) {
+	var vals []interface{}
+	for _, v := range versions {
+		vals = append(vals,
+			v.Path,
+			v.Version,
+			version.ForSorting(v.Version),
+			0,
+			"",
+			"",
+			version.IsIncompatible(v.Version),
+			v.Timestamp,
+		)
+	}
+	cols := []string{
+		"module_path",
+		"version",
+		"sort_version",
+		"status",
+		"error",
+		"go_mod_path",
+		"incompatible",
+		"index_timestamp",
+	}
+	return ddb.Transact(ctx, sql.LevelDefault, func(tx *database.DB) error {
 		var updates [][2]string // (module_path, version) to update status
 		err := tx.BulkInsertReturning(ctx, "module_version_states", cols, vals, conflictAction,
 			[]string{"module_path", "version", "status"},
@@ -280,14 +310,19 @@ const moduleVersionStateColumns = `
 func scanModuleVersionState(scan func(dest ...interface{}) error) (*internal.ModuleVersionState, error) {
 	var (
 		v               internal.ModuleVersionState
+		indexTimestamp  pq.NullTime
 		lastProcessedAt pq.NullTime
 		numPackages     sql.NullInt64
 		hasGoMod        sql.NullBool
 	)
-	if err := scan(&v.ModulePath, &v.Version, &v.IndexTimestamp, &v.CreatedAt, &v.Status, &v.Error,
+	if err := scan(&v.ModulePath, &v.Version, &indexTimestamp, &v.CreatedAt, &v.Status, &v.Error,
 		&v.TryCount, &v.LastProcessedAt, &v.NextProcessedAfter, &v.AppVersion, &hasGoMod, &v.GoModPath,
 		&numPackages); err != nil {
 		return nil, err
+	}
+	if indexTimestamp.Valid {
+		it := indexTimestamp.Time
+		v.IndexTimestamp = &it
 	}
 	if lastProcessedAt.Valid {
 		lp := lastProcessedAt.Time

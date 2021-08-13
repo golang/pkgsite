@@ -118,8 +118,8 @@ func TestModuleVersionState(t *testing.T) {
 	}
 
 	wantVersions := []*internal.ModuleVersionState{
-		{ModulePath: "baz.com/quux", Version: "v2.0.1", IndexTimestamp: bazVersion.Timestamp},
-		{ModulePath: "foo.com/bar", Version: "v1.0.0", IndexTimestamp: fooVersion.Timestamp},
+		{ModulePath: "baz.com/quux", Version: "v2.0.1", IndexTimestamp: &bazVersion.Timestamp},
+		{ModulePath: "foo.com/bar", Version: "v1.0.0", IndexTimestamp: &fooVersion.Timestamp},
 	}
 	ignore := cmpopts.IgnoreFields(internal.ModuleVersionState{}, "CreatedAt", "LastProcessedAt", "NextProcessedAfter")
 	if diff := cmp.Diff(wantVersions, gotVersions, ignore); diff != "" {
@@ -152,7 +152,7 @@ func TestModuleVersionState(t *testing.T) {
 	wantFooState := &internal.ModuleVersionState{
 		ModulePath:     "foo.com/bar",
 		Version:        "v1.0.0",
-		IndexTimestamp: now,
+		IndexTimestamp: &now,
 		TryCount:       1,
 		GoModPath:      goModPath,
 		Error:          errString,
