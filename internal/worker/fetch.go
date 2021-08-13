@@ -198,8 +198,6 @@ func (f *Fetcher) FetchAndUpdateState(ctx context.Context, modulePath, requested
 			ft.Error = err
 			ft.Status = http.StatusInternalServerError
 		}
-		// Do not return an error here, because we want to insert into
-		// module_version_states below.
 	}
 	// Regardless of what the status code is, insert the result into
 	// version_map, so that a response can be returned for frontend_fetch.
@@ -220,6 +218,15 @@ func (f *Fetcher) FetchAndUpdateState(ctx context.Context, modulePath, requested
 		// modules that have been published to index.golang.org.
 		return ft.Status, ft.ResolvedVersion, ft.Error
 	}
+	// Return an error here if a row does not exist in module_version_states.
+	// This can happen if the source is frontend fetch, since we don't insert
+	// rows to avoid cluttering module_version_states.
+	if _, err := f.DB.GetModuleVersionState(ctx, modulePath, ft.ResolvedVersion); err != nil {
+		if errors.Is(err, derrors.NotFound) {
+			return ft.Status, "", ft.Error
+		}
+		return http.StatusInternalServerError, "", err
+	}
 
 	// Make sure the latest version of the module is the one in search_documents
 	// and imports_unique.
@@ -237,10 +244,8 @@ func (f *Fetcher) FetchAndUpdateState(ctx context.Context, modulePath, requested
 	// module@version. This must happen last, because if it succeeds with a
 	// code < 500 but a later action fails, we will never retry the later
 	// action.
-	// TODO(golang/go#39628): Split UpsertModuleVersionState into
-	// InsertModuleVersionState and UpdateModuleVersionState.
 	startUpdate := time.Now()
-	mvs := &postgres.ModuleVersionStateForUpsert{
+	mvs := &postgres.ModuleVersionStateForUpdate{
 		ModulePath:           ft.ModulePath,
 		Version:              ft.ResolvedVersion,
 		AppVersion:           appVersionLabel,
@@ -250,13 +255,13 @@ func (f *Fetcher) FetchAndUpdateState(ctx context.Context, modulePath, requested
 		FetchErr:             ft.Error,
 		PackageVersionStates: ft.PackageVersionStates,
 	}
-	err = f.DB.UpsertModuleVersionState(ctx, mvs)
-	ft.timings["db.UpsertModuleVersionState"] = time.Since(startUpdate)
+	err = f.DB.UpdateModuleVersionState(ctx, mvs)
+	ft.timings["db.UpdateModuleVersionState"] = time.Since(startUpdate)
 	if err != nil {
 		log.Error(ctx, err)
 		if ft.Error != nil {
 			ft.Status = http.StatusInternalServerError
-			ft.Error = fmt.Errorf("db.UpsertModuleVersionState: %v, original error: %v", err, ft.Error)
+			ft.Error = fmt.Errorf("db.UpdateModuleVersionState: %v, original error: %v", err, ft.Error)
 		}
 		logTaskResult(ctx, ft, "Failed to update module version state")
 		return http.StatusInternalServerError, ft.ResolvedVersion, ft.Error

@@ -105,7 +105,7 @@ func insertIndexVersions(ctx context.Context, ddb *database.DB, versions []*inte
 	})
 }
 
-type ModuleVersionStateForUpsert struct {
+type ModuleVersionStateForUpdate struct {
 	ModulePath           string
 	Version              string
 	AppVersion           string
@@ -117,9 +117,9 @@ type ModuleVersionStateForUpsert struct {
 	PackageVersionStates []*internal.PackageVersionState
 }
 
-// UpsertModuleVersionState inserts or updates the module_version_state table with
+// UpdateModuleVersionState inserts or updates the module_version_state table with
 // the results of a fetch operation for a given module version.
-func (db *DB) UpsertModuleVersionState(ctx context.Context, mvs *ModuleVersionStateForUpsert) (err error) {
+func (db *DB) UpdateModuleVersionState(ctx context.Context, mvs *ModuleVersionStateForUpdate) (err error) {
 	defer derrors.WrapStack(&err, "UpsertModuleVersionState(ctx, %s@%s)", mvs.ModulePath, mvs.Version)
 	ctx, span := trace.StartSpan(ctx, "UpsertModuleVersionState")
 	defer span.End()
@@ -131,9 +131,8 @@ func (db *DB) UpsertModuleVersionState(ctx context.Context, mvs *ModuleVersionSt
 		n := len(mvs.PackageVersionStates)
 		numPackages = &n
 	}
-
 	return db.db.Transact(ctx, sql.LevelDefault, func(tx *database.DB) error {
-		if err := upsertModuleVersionState(ctx, tx, numPackages, mvs); err != nil {
+		if err := updateModuleVersionState(ctx, tx, numPackages, mvs); err != nil {
 			return err
 		}
 		// Sync modules.status if the module exists in the modules table.
@@ -147,7 +146,7 @@ func (db *DB) UpsertModuleVersionState(ctx context.Context, mvs *ModuleVersionSt
 	})
 }
 
-func upsertModuleVersionState(ctx context.Context, db *database.DB, numPackages *int, mvs *ModuleVersionStateForUpsert) (err error) {
+func updateModuleVersionState(ctx context.Context, db *database.DB, numPackages *int, mvs *ModuleVersionStateForUpdate) (err error) {
 	defer derrors.WrapStack(&err, "upsertModuleVersionState(%q, %q, ...)", mvs.ModulePath, mvs.Version)
 	ctx, span := trace.StartSpan(ctx, "upsertModuleVersionState")
 	defer span.End()
@@ -158,42 +157,35 @@ func upsertModuleVersionState(ctx context.Context, db *database.DB, numPackages 
 	}
 
 	affected, err := db.Exec(ctx, `
-			INSERT INTO module_version_states AS mvs (
-				module_path,
-				version,
-				sort_version,
-				app_version,
-				index_timestamp,
-				status,
-				has_go_mod,
-				go_mod_path,
-				error,
-				num_packages,
-				incompatible)
-			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-			ON CONFLICT (module_path, version)
-			DO UPDATE
-			SET
-				app_version=excluded.app_version,
-				status=excluded.status,
-				has_go_mod=excluded.has_go_mod,
-				go_mod_path=excluded.go_mod_path,
-				error=excluded.error,
-				num_packages=excluded.num_packages,
-				try_count=mvs.try_count+1,
-				last_processed_at=CURRENT_TIMESTAMP,
-			    -- back off exponentially until 1 hour, then at constant 1-hour intervals
-				next_processed_after=CASE
-					WHEN mvs.last_processed_at IS NULL THEN
-						CURRENT_TIMESTAMP + INTERVAL '1 minute'
-					WHEN 2*(mvs.next_processed_after - mvs.last_processed_at) < INTERVAL '1 hour' THEN
-						CURRENT_TIMESTAMP + 2*(mvs.next_processed_after - mvs.last_processed_at)
-					ELSE
-						CURRENT_TIMESTAMP + INTERVAL '1 hour'
-					END;`,
-		mvs.ModulePath, mvs.Version, version.ForSorting(mvs.Version),
-		mvs.AppVersion, mvs.Timestamp, mvs.Status, mvs.HasGoMod, mvs.GoModPath, sqlErrorMsg, numPackages,
-		version.IsIncompatible(mvs.Version))
+		UPDATE module_version_states
+		SET app_version=$1,
+			status=$2,
+			has_go_mod=$3,
+			go_mod_path=$4,
+			error=$5,
+			num_packages=$6,
+			try_count=try_count+1,
+			last_processed_at=CURRENT_TIMESTAMP,
+			-- back off exponentially until 1 hour, then at constant 1-hour intervals
+			next_processed_after=CASE
+				WHEN last_processed_at IS NULL THEN
+					CURRENT_TIMESTAMP + INTERVAL '1 minute'
+				WHEN 2*(next_processed_after - last_processed_at) < INTERVAL '1 hour' THEN
+					CURRENT_TIMESTAMP + 2*(next_processed_after - last_processed_at)
+				ELSE
+					CURRENT_TIMESTAMP + INTERVAL '1 hour'
+				END
+		WHERE
+			module_path=$7
+			AND version=$8`,
+		mvs.AppVersion,
+		mvs.Status,
+		mvs.HasGoMod,
+		mvs.GoModPath,
+		sqlErrorMsg,
+		numPackages,
+		mvs.ModulePath,
+		mvs.Version)
 	if err != nil {
 		return err
 	}

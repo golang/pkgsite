@@ -458,7 +458,7 @@ func TestPostgres_NewerAlternative(t *testing.T) {
 		okVersion  = "v1.0.0"
 	)
 
-	mvs := &ModuleVersionStateForUpsert{
+	mvs := &ModuleVersionStateForUpdate{
 		ModulePath: "example.com/Mod",
 		Version:    altVersion,
 		AppVersion: "appVersion",
@@ -467,8 +467,17 @@ func TestPostgres_NewerAlternative(t *testing.T) {
 		GoModPath:  "example.com/mod",
 		FetchErr:   derrors.AlternativeModule,
 	}
+	if err := testDB.InsertIndexVersions(ctx, []*internal.IndexVersion{
+		{
+			Path:      mvs.ModulePath,
+			Version:   mvs.Version,
+			Timestamp: mvs.Timestamp,
+		},
+	}); err != nil {
+		t.Fatal(err)
+	}
 	addLatest(ctx, t, testDB, mvs.ModulePath, altVersion, "")
-	if err := testDB.UpsertModuleVersionState(ctx, mvs); err != nil {
+	if err := testDB.UpdateModuleVersionState(ctx, mvs); err != nil {
 		t.Fatal(err)
 	}
 	m := sample.Module(mvs.ModulePath, okVersion, "p")
@@ -592,15 +601,25 @@ func TestIsAlternativeModulePath(t *testing.T) {
 		{modulePathA, "v1.4.0", 200, false},                 // new latest version is OK
 		{modulePathA, "v1.5.0", altModuleStatus, true},      // "I can do this all day." --Captain America
 	} {
-		addLatest(ctx, t, testDB, test.modulePath, test.version, "")
-		if err := testDB.UpsertModuleVersionState(ctx, &ModuleVersionStateForUpsert{
+		mvs := &ModuleVersionStateForUpdate{
 			ModulePath: test.modulePath,
 			Version:    test.version,
 			AppVersion: "appVersion",
 			Timestamp:  time.Now(),
 			Status:     test.status,
 			HasGoMod:   true,
+		}
+		if err := testDB.InsertIndexVersions(ctx, []*internal.IndexVersion{
+			{
+				Path:      mvs.ModulePath,
+				Version:   mvs.Version,
+				Timestamp: mvs.Timestamp,
+			},
 		}); err != nil {
+			t.Fatal(err)
+		}
+		addLatest(ctx, t, testDB, test.modulePath, test.version, "")
+		if err := testDB.UpdateModuleVersionState(ctx, mvs); err != nil {
 			t.Fatal(err)
 		}
 
@@ -630,7 +649,17 @@ func TestReconcileSearch(t *testing.T) {
 			addLatest(ctx, t, testDB, modulePath, version, modfile)
 		}
 
-		if err := testDB.UpsertModuleVersionState(ctx, &ModuleVersionStateForUpsert{
+		if err := testDB.InsertIndexVersions(ctx,
+			[]*internal.IndexVersion{
+				{
+					Path:      modulePath,
+					Version:   version,
+					Timestamp: time.Now(),
+				},
+			}); err != nil {
+			t.Fatal(err)
+		}
+		if err := testDB.UpdateModuleVersionState(ctx, &ModuleVersionStateForUpdate{
 			ModulePath: modulePath,
 			Version:    version,
 			AppVersion: "app",

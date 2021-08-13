@@ -1185,14 +1185,23 @@ func TestUpdateSearchDocumentsImportedByCount(t *testing.T) {
 		// We add that information to module_version_states.
 		alternativeModulePath := strings.ToLower(canonicalModule.ModulePath)
 		alternativeStatus := derrors.ToStatus(derrors.AlternativeModule)
-		mvs := &ModuleVersionStateForUpsert{
+		mvs := &ModuleVersionStateForUpdate{
 			ModulePath: alternativeModulePath,
 			Version:    "v1.2.0",
 			Timestamp:  time.Now(),
 			Status:     alternativeStatus,
 			GoModPath:  canonicalModule.ModulePath,
 		}
-		if err := testDB.UpsertModuleVersionState(ctx, mvs); err != nil {
+		if err := testDB.InsertIndexVersions(ctx, []*internal.IndexVersion{
+			{
+				Path:      mvs.ModulePath,
+				Version:   mvs.Version,
+				Timestamp: mvs.Timestamp,
+			},
+		}); err != nil {
+			t.Fatal(err)
+		}
+		if err := testDB.UpdateModuleVersionState(ctx, mvs); err != nil {
 			t.Fatal(err)
 		}
 

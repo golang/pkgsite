@@ -16,7 +16,6 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	"golang.org/x/mod/semver"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/fetch"
@@ -376,11 +375,6 @@ func fetchAndCheckStatus(ctx context.Context, t *testing.T, proxyClient *proxy.C
 	default:
 		if !errors.Is(err, derrors.NotFound) {
 			t.Fatalf("GetModuleInfo: got %v, want Is(NotFound)", err)
-		}
-	}
-	if semver.IsValid(version) {
-		if _, err := testDB.GetModuleVersionState(ctx, modulePath, version); err != nil {
-			t.Fatal(err)
 		}
 	}
 	vm, err := testDB.GetVersionMap(ctx, modulePath, version)

@@ -137,7 +137,7 @@ func TestModuleVersionState(t *testing.T) {
 			Status:      500,
 		}
 	)
-	mvs := &ModuleVersionStateForUpsert{
+	mvs := &ModuleVersionStateForUpdate{
 		ModulePath:           fooVersion.Path,
 		Version:              fooVersion.Version,
 		Timestamp:            fooVersion.Timestamp,
@@ -146,7 +146,7 @@ func TestModuleVersionState(t *testing.T) {
 		FetchErr:             fetchErr,
 		PackageVersionStates: []*internal.PackageVersionState{pkgVersionState},
 	}
-	must(t, testDB.UpsertModuleVersionState(ctx, mvs))
+	must(t, testDB.UpdateModuleVersionState(ctx, mvs))
 	errString := fetchErr.Error()
 	numPackages := 1
 	wantFooState := &internal.ModuleVersionState{
@@ -274,7 +274,7 @@ func TestUpsertModuleVersionStates(t *testing.T) {
 				MustInsertModule(ctx, t, testDB, m)
 			}
 
-			mvsu := &ModuleVersionStateForUpsert{
+			mvsu := &ModuleVersionStateForUpdate{
 				ModulePath: m.ModulePath,
 				Version:    m.Version,
 				AppVersion: appVersion,
@@ -282,7 +282,16 @@ func TestUpsertModuleVersionStates(t *testing.T) {
 				Status:     test.status,
 				HasGoMod:   true,
 			}
-			err := testDB.UpsertModuleVersionState(ctx, mvsu)
+			if err := testDB.InsertIndexVersions(ctx, []*internal.IndexVersion{
+				{
+					Path:      mvsu.ModulePath,
+					Version:   mvsu.Version,
+					Timestamp: mvsu.Timestamp,
+				},
+			}); err != nil {
+				t.Fatal(err)
+			}
+			err := testDB.UpdateModuleVersionState(ctx, mvsu)
 			if test.wantUpsertMVSError != (err != nil) {
 				t.Fatalf("db.UpsertModuleVersionState(): %v, want error: %t", err, test.wantUpsertMVSError)
 			}
@@ -328,13 +337,17 @@ func TestUpdateModuleVersionStatus(t *testing.T) {
 	testDB, release := acquire(t)
 	defer release()
 
-	mvs := &ModuleVersionStateForUpsert{
+	mvs := &ModuleVersionStateForUpdate{
 		ModulePath: "m.com",
 		Version:    "v1.2.3",
 		Timestamp:  time.Now(),
 		Status:     200,
 	}
-	must(t, testDB.UpsertModuleVersionState(ctx, mvs))
+	must(t, testDB.InsertIndexVersions(
+		ctx,
+		[]*internal.IndexVersion{{Path: mvs.ModulePath, Version: mvs.Version, Timestamp: time.Now()}},
+	))
+	must(t, testDB.UpdateModuleVersionState(ctx, mvs))
 	wantStatus := 999
 	wantError := "Error"
 	must(t, testDB.UpdateModuleVersionStatus(ctx, mvs.ModulePath, mvs.Version, wantStatus, wantError))
