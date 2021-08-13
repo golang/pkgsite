@@ -27,6 +27,7 @@
     {{end}}
     <meta class="js-gtmID" data-gtmid="{{.GoogleTagManagerID}}">
     <link rel="shortcut icon" href="/static/shared/icon/favicon.ico">
+    {{block "canonical" .}}{{end}}
     <!-- Only load the css reset for non-legacy pages -->
     {{if not .UseSiteWrapper}}
       <link href="/static/shared/reset.css?version={{.AppVersionLabel}}" rel="stylesheet">
