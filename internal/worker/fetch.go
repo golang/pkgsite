@@ -115,18 +115,16 @@ func (f *Fetcher) FetchAndUpdateState(ctx context.Context, modulePath, requested
 		return ft.Status, ft.ResolvedVersion, ft.Error
 	}
 
-	// Check if the latest good version of the module is not the one in search_documents,
-	// and insert it there and in imports_unique if so.
-	if lmv == nil || lmv.CookedVersion != ft.ResolvedVersion {
-		if err := f.DB.ReInsertLatestVersion(ctx, modulePath); err != nil {
-			log.Error(ctx, err)
-			if ft.Status != http.StatusInternalServerError {
-				ft.Error = err
-				ft.Status = http.StatusInternalServerError
-			}
-			// Do not return an error here, because we want to insert into
-			// module_version_states below.
+	// Make sure the latest version of the module is the one in search_documents
+	// and imports_unique.
+	if err := f.DB.ReInsertLatestVersion(ctx, modulePath, ft.ResolvedVersion, ft.Status); err != nil {
+		log.Error(ctx, err)
+		if ft.Status != http.StatusInternalServerError {
+			ft.Error = err
+			ft.Status = http.StatusInternalServerError
 		}
+		// Do not return an error here, because we want to insert into
+		// module_version_states below.
 	}
 
 	// Update the module_version_states table with the new status of
@@ -370,6 +368,7 @@ func deleteModule(ctx context.Context, db *postgres.DB, ft *fetchTask) (err erro
 	if err := db.DeleteModule(ctx, ft.ModulePath, ft.ResolvedVersion); err != nil {
 		return err
 	}
+
 	// Update the latest good version for this module, because deleting this
 	// version may have changed it.
 	if err := db.UpdateLatestGoodVersion(ctx, ft.ModulePath); err != nil {

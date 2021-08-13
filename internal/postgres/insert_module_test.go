@@ -640,7 +640,7 @@ func TestReInsertLatestVersion(t *testing.T) {
 		}); err != nil {
 			t.Fatal(err)
 		}
-		if err := testDB.ReInsertLatestVersion(ctx, modulePath); err != nil {
+		if err := testDB.ReInsertLatestVersion(ctx, modulePath, version, status); err != nil {
 			t.Fatal(err)
 		}
 	}

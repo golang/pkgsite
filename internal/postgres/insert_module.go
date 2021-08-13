@@ -640,7 +640,9 @@ func insertReadmes(ctx context.Context, db *database.DB,
 // ReInsertLatestVersion checks that the latest good version matches the version
 // in search_documents. If it doesn't, it inserts the latest good version into
 // search_documents and imports_unique.
-func (db *DB) ReInsertLatestVersion(ctx context.Context, modulePath string) (err error) {
+// The version and status arguments should come from the module currently being fetched.
+// They are used to determine if the module is alternative.
+func (db *DB) ReInsertLatestVersion(ctx context.Context, modulePath, version string, status int) (err error) {
 	defer derrors.WrapStack(&err, "ReInsertLatestVersion(%q)", modulePath)
 
 	return db.db.Transact(ctx, sql.LevelRepeatableRead, func(tx *database.DB) error {
@@ -657,9 +659,17 @@ func (db *DB) ReInsertLatestVersion(ctx context.Context, modulePath string) (err
 			log.Debugf(ctx, "ReInsertLatestVersion(%q): no latest-version info", modulePath)
 			return nil
 		}
-		alt, err := isAlternativeModulePath(ctx, tx, modulePath)
-		if err != nil {
-			return err
+		// Determine if this is an alternative module. The
+		// isAlternativeModulePath function checks the DB, but at the time
+		// ReInsertLatestVersion is called, we haven't added the current module
+		// version's status to the DB, so we use the version and status
+		// arguments.
+		alt := version == lmv.CookedVersion && status == derrors.ToStatus(derrors.AlternativeModule)
+		if !alt {
+			alt, err = isAlternativeModulePath(ctx, tx, modulePath)
+			if err != nil {
+				return err
+			}
 		}
 		if alt || lmv.GoodVersion == "" {
 			// A missing GoodVersion means that there are no good versions
