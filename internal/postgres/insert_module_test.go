@@ -620,8 +620,8 @@ func TestReconcileSearch(t *testing.T) {
 	defer release()
 	ctx := context.Background()
 
-	insert := func(modulePath, version string, status int, imports []string, modfile string) {
-		m := sample.Module(modulePath, version, "pkg")
+	insert := func(modulePath, version, suffix string, status int, imports []string, modfile string) {
+		m := sample.Module(modulePath, version, suffix)
 		pkg := m.Packages()[0]
 		pkg.Documentation[0].Synopsis = version
 		pkg.Imports = imports
@@ -645,15 +645,19 @@ func TestReconcileSearch(t *testing.T) {
 		}
 	}
 
-	check := func(modPath, wantVersion string, wantImports []string) {
+	check := func(modPath, wantVersion, suffix string, wantImports []string) {
 		t.Helper()
+		pkgPath := modPath
+		if suffix != "" {
+			pkgPath += "/" + suffix
+		}
 		var gotVersion, gotSynopsis string
 		err := testDB.db.QueryRow(ctx, `
 			SELECT version, synopsis
 			FROM search_documents
 			WHERE module_path = $1
-			AND package_path = $1 || '/pkg'
-		`, modPath).Scan(&gotVersion, &gotSynopsis)
+			AND package_path = $2
+		`, modPath, pkgPath).Scan(&gotVersion, &gotSynopsis)
 		if errors.Is(err, sql.ErrNoRows) {
 			gotVersion = ""
 			gotSynopsis = ""
@@ -667,9 +671,9 @@ func TestReconcileSearch(t *testing.T) {
 		gotImports, err := testDB.db.CollectStrings(ctx, `
 			SELECT to_path
 			FROM imports_unique
-			WHERE from_path = $1 || '/pkg'
-			AND from_module_path = $1
-		`, modPath)
+			WHERE from_path = $1
+			AND from_module_path = $2
+		`, pkgPath, modPath)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -683,31 +687,40 @@ func TestReconcileSearch(t *testing.T) {
 	imports1 := []string{"fmt", "log"}
 	const modPath1 = "m.com/a"
 	// Insert a good module. It should be in search_documents and imports_unique.
-	insert(modPath1, "v1.1.0", 200, imports1, "")
-	check(modPath1, "v1.1.0", imports1)
+	insert(modPath1, "v1.1.0", "pkg", 200, imports1, "")
+	check(modPath1, "v1.1.0", "pkg", imports1)
 
 	// Insert a higher, good version. It should replace the first.
 	imports2 := []string{"log", "strings"}
-	insert(modPath1, "v1.2.0", 200, imports2, "")
-	check(modPath1, "v1.2.0", imports2)
+	insert(modPath1, "v1.2.0", "pkg", 200, imports2, "")
+	check(modPath1, "v1.2.0", "pkg", imports2)
 
 	// Now an even higher, bad version comes along that retracts v1.2.0.
 	// The search_documents and imports_unique tables should go back to v1.1.0.
-	insert(modPath1, "v1.3.0", 400, nil, "retract v1.2.0")
-	check(modPath1, "v1.1.0", imports1)
+	insert(modPath1, "v1.3.0", "pkg", 400, nil, "retract v1.2.0")
+	check(modPath1, "v1.1.0", "pkg", imports1)
 
 	// Now a still higher version comes along that retracts everything. The
 	// module should no longer be in search_documents or imports_unique.
-	insert(modPath1, "v1.4.0", 200, nil, "retract [v1.0.0, v1.4.0]")
-	check(modPath1, "", nil)
+	insert(modPath1, "v1.4.0", "pkg", 200, nil, "retract [v1.0.0, v1.4.0]")
+	check(modPath1, "", "pkg", nil)
 
 	// Insert another good module.
 	const modPath2 = "m.com/b"
-	insert(modPath2, "v1.1.0", 200, imports1, "")
-	check(modPath2, "v1.1.0", imports1)
+	insert(modPath2, "v1.1.0", "pkg", 200, imports1, "")
+	check(modPath2, "v1.1.0", "pkg", imports1)
 
 	// A later version makes this an alternative module.
 	// The module should be removed from search.
-	insert(modPath2, "v1.2.0", 491, imports1, "")
-	check(modPath2, "", nil)
+	insert(modPath2, "v1.2.0", "pkg", 491, imports1, "")
+	check(modPath2, "", "pkg", nil)
+
+	// Insert a module that is its own package.
+	const modPath3 = "m.com/c/pkg"
+	insert(modPath3, "v1.0.0", "", 200, imports1, "")
+	check(modPath3, "v1.0.0", "", imports1)
+
+	// Insert a module that is a prefix. It shouldn't change anything.
+	insert("m.com/c", "v1.0.0", "pkg", 200, imports1, "")
+	check(modPath3, "v1.0.0", "", imports1)
 }

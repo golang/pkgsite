@@ -639,8 +639,9 @@ func insertReadmes(ctx context.Context, db *database.DB,
 
 // ReconcileSearch reconciles the search data for modulePath. If the module is
 // alternative or has no good versions, it removes search data. Otherwise, if
-// the latest good version doesn't match the version in search_documents, and it
-// inserts the latest good version into search_documents and imports_unique.
+// the latest good version doesn't match the version in search_documents,
+// and the module path is not a prefix of one already in search_documents,
+// it inserts the latest good version into search_documents and imports_unique.
 // The version and status arguments should come from the module currently being
 // fetched. They are used to determine if the module is alternative.
 func (db *DB) ReconcileSearch(ctx context.Context, modulePath, version string, status int) (err error) {
@@ -685,18 +686,18 @@ func (db *DB) ReconcileSearch(ctx context.Context, modulePath, version string, s
 			log.Debugf(ctx, "ReconcileSearch(%q): alternative or no good version; removed from search_documents and imports_unique", modulePath)
 			return nil
 		}
-		// Is the latest good version in search_documents?
+		// Is the latest good version in search_documents, or is there a longer module path?
 		var x int
 		switch err := tx.QueryRow(ctx, `
 			SELECT 1
 			FROM search_documents
-			WHERE module_path = $1
-			AND version = $2
+			WHERE (module_path = $1 AND version = $2)
+			OR module_path LIKE $1 || '/%'
 		`, modulePath, lmv.GoodVersion).Scan(&x); err {
 		case sql.ErrNoRows:
 			break
 		case nil:
-			log.Debugf(ctx, "ReconcileSearch(%q): good version %s found in search_documents; doing nothing",
+			log.Debugf(ctx, "ReconcileSearch(%q): good version %s or suffix module path found in search_documents; doing nothing",
 				modulePath, lmv.GoodVersion)
 			return nil
 		default:
