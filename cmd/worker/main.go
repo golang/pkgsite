@@ -147,6 +147,7 @@ func main() {
 	http.Handle("/", mw(router))
 
 	addr := cfg.HostAddr("localhost:8000")
+	log.Infof(ctx, "Timeout is %d minutes", timeout)
 	log.Infof(ctx, "Listening on addr %s", addr)
 	log.Fatal(ctx, http.ListenAndServe(addr, nil))
 }
