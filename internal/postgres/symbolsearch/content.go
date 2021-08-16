@@ -26,34 +26,10 @@ package symbolsearch
 
 // querySearchMultiWordExact is used when the search query is multiple elements.
 %s
-
-// querySearchMultiWordOr is used when the search query is multiple elements.
-%s
-
-// queryMatchingSymbolIDsSymbol is used to find the matching symbol
-// ids when the SearchType is SearchTypeSymbol.
-%s
-
-// queryMatchingSymbolIDsPackageDotSymbol is used to find the matching symbol
-// ids when the SearchType is SearchTypePackageDotSymbol.
-%s
-
-// queryMatchingSymbolIDsMultiWordExact is used to find the matching symbol ids when
-// the SearchType is SearchTypeMultiWordExact.
-%s
-
-// queryMatchingSymbolIDsMultiWordOr is used to find the matching symbol ids when
-// the SearchType is SearchTypeMultiWordOr.
-%s
 `,
 	formatQuery("querySearchSymbol", Query(SearchTypeSymbol)),
 	formatQuery("querySearchPackageDotSymbol", Query(SearchTypePackageDotSymbol)),
-	formatQuery("querySearchMultiWordOr", Query(SearchTypeMultiWordOr)),
-	formatQuery("querySearchMultiWordExact", Query(SearchTypeMultiWordExact)),
-	formatQuery("queryMatchingSymbolIDsSymbol", MatchingSymbolIDsQuery(SearchTypeSymbol)),
-	formatQuery("queryMatchingSymbolIDsPackageDotSymbol", MatchingSymbolIDsQuery(SearchTypePackageDotSymbol)),
-	formatQuery("queryMatchingSymbolIDsMultiWordOr", MatchingSymbolIDsQuery(SearchTypeMultiWordOr)),
-	formatQuery("queryMatchingSymbolIDsMultiWordExact", MatchingSymbolIDsQuery(SearchTypeMultiWordExact)))
+	formatQuery("querySearchMultiWordExact", Query(SearchTypeMultiWordExact)))
 
 func formatQuery(name, query string) string {
 	return fmt.Sprintf("const %s = `%s`", name, query)

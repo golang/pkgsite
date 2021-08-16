@@ -7,6 +7,7 @@ package postgres
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"sort"
 	"testing"
@@ -528,4 +529,36 @@ func getUnitSymbols(ctx context.Context, db *database.DB, unitID int) (_ map[int
 		return nil, err
 	}
 	return buildToSymbols, nil
+}
+
+func TestSplitSymbolName(t *testing.T) {
+	for _, test := range []struct {
+		q, wantPkg, wantSym string
+	}{
+		{"sql.DB", "sql", "DB"},
+		{"sql.DB.Begin", "sql", "DB.Begin"},
+	} {
+		t.Run(test.q, func(t *testing.T) {
+			pkg, symbol, err := splitPackageAndSymbolNames(test.q)
+			if err != nil || pkg != test.wantPkg || symbol != test.wantSym {
+				t.Errorf("splitPackageAndSymbolNames(%q) = %q, %q, %v; want = %q, %q, nil",
+					test.q, pkg, symbol, err, test.wantPkg, test.wantSym)
+			}
+		})
+	}
+
+	for _, test := range []string{
+		"DB",
+		".DB",
+		"sql.",
+		"sql.DB.Begin.Blah",
+	} {
+		t.Run(test, func(t *testing.T) {
+			pkg, symbol, err := splitPackageAndSymbolNames(test)
+			if !errors.Is(err, derrors.NotFound) {
+				t.Errorf("splitPackageAndSymbolNames(%q) = %q, %q, %v; want %v",
+					test, pkg, symbol, err, derrors.NotFound)
+			}
+		})
+	}
 }

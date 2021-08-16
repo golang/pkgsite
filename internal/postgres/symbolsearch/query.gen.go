@@ -19,8 +19,8 @@ WITH ssd AS (
 		ssd.goarch,
 		ssd.ln_imported_by_count AS score
 	FROM symbol_search_documents ssd
-	WHERE
-		symbol_name_id = ANY($1)
+	WHERE 
+		lower(symbol_name) = lower($1)
 	ORDER BY
 		score DESC,
 		package_path,
@@ -60,12 +60,12 @@ WITH ssd AS (
 		ssd.goarch,
 		ssd.ln_imported_by_count AS score
 	FROM symbol_search_documents ssd
-	WHERE
-		symbol_name_id = ANY($1)
-	AND (
-		ssd.uuid_package_name=uuid_generate_v5(uuid_nil(), split_part($3, '.', 1)) OR
-		ssd.uuid_package_path=uuid_generate_v5(uuid_nil(), split_part($3, '.', 1))
-	)
+	WHERE 
+		lower(symbol_name) = lower($1)
+		AND (
+			ssd.uuid_package_name=uuid_generate_v5(uuid_nil(), split_part($3, '.', 1)) OR
+			ssd.uuid_package_path=uuid_generate_v5(uuid_nil(), split_part($3, '.', 1))
+		)
 	ORDER BY
 		score DESC,
 		package_path,
@@ -93,50 +93,6 @@ INNER JOIN package_symbols ps ON ps.id=ssd.package_symbol_id
 ORDER BY score DESC;`
 
 // querySearchMultiWordExact is used when the search query is multiple elements.
-const querySearchMultiWordOr = `
-WITH ssd AS (
-	SELECT
-		ssd.unit_id,
-		ssd.package_symbol_id,
-		ssd.symbol_name_id,
-		ssd.goos,
-		ssd.goarch,
-		(
-			ts_rank(
-				'{0.1, 0.2, 1.0, 1.0}',
-				sd.tsv_path_tokens,
-				to_tsquery('symbols', quote_literal(replace($3, '_', '-')))
-			) * ssd.ln_imported_by_count
-		) AS score
-	FROM symbol_search_documents ssd
-	INNER JOIN search_documents sd ON sd.package_path_id = ssd.package_path_id
-	WHERE
-		symbol_name_id = ANY($1)
-		AND sd.tsv_path_tokens @@ to_tsquery('symbols', quote_literal(replace($3, '_', '-')))
-	ORDER BY score DESC
-	LIMIT $2
-)
-SELECT
-	s.name AS symbol_name,
-	sd.package_path,
-	sd.module_path,
-	sd.version,
-	sd.name,
-	sd.synopsis,
-	sd.license_types,
-	sd.commit_time,
-	sd.imported_by_count,
-	ssd.goos,
-	ssd.goarch,
-	ps.type AS symbol_kind,
-	ps.synopsis AS symbol_synopsis
-FROM ssd
-INNER JOIN symbol_names s ON s.id=ssd.symbol_name_id
-INNER JOIN search_documents sd ON sd.unit_id = ssd.unit_id
-INNER JOIN package_symbols ps ON ps.id=ssd.package_symbol_id
-ORDER BY score DESC;`
-
-// querySearchMultiWordOr is used when the search query is multiple elements.
 const querySearchMultiWordExact = `
 WITH ssd AS (
 	SELECT
@@ -155,7 +111,7 @@ WITH ssd AS (
 	FROM symbol_search_documents ssd
 	INNER JOIN search_documents sd ON sd.package_path_id = ssd.package_path_id
 	WHERE
-		symbol_name_id = ANY($1)
+		lower(symbol_name) = lower($1)
 		AND sd.tsv_path_tokens @@ to_tsquery('symbols', quote_literal(replace($3, '_', '-')))
 	ORDER BY score DESC
 	LIMIT $2
@@ -179,31 +135,3 @@ INNER JOIN symbol_names s ON s.id=ssd.symbol_name_id
 INNER JOIN search_documents sd ON sd.unit_id = ssd.unit_id
 INNER JOIN package_symbols ps ON ps.id=ssd.package_symbol_id
 ORDER BY score DESC;`
-
-// queryMatchingSymbolIDsSymbol is used to find the matching symbol
-// ids when the SearchType is SearchTypeSymbol.
-const queryMatchingSymbolIDsSymbol = `
-		SELECT id
-		FROM symbol_names
-		WHERE lower(name) = lower($1)`
-
-// queryMatchingSymbolIDsPackageDotSymbol is used to find the matching symbol
-// ids when the SearchType is SearchTypePackageDotSymbol.
-const queryMatchingSymbolIDsPackageDotSymbol = `
-		SELECT id
-		FROM symbol_names
-		WHERE lower(name) = lower(substring($1 from E'[^.]*\.(.+)$'))`
-
-// queryMatchingSymbolIDsMultiWordExact is used to find the matching symbol ids when
-// the SearchType is SearchTypeMultiWordExact.
-const queryMatchingSymbolIDsMultiWordOr = `
-		SELECT id
-		FROM symbol_names
-		WHERE tsv_name_tokens @@ to_tsquery('symbols', quote_literal(replace(replace($1, '_', '-'), ' ', ' | ')))`
-
-// queryMatchingSymbolIDsMultiWordOr is used to find the matching symbol ids when
-// the SearchType is SearchTypeMultiWordOr.
-const queryMatchingSymbolIDsMultiWordExact = `
-		SELECT id
-		FROM symbol_names
-		WHERE lower(name) = lower($1)`

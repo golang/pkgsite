@@ -59,11 +59,6 @@ func TestGenerateQuery(t *testing.T) {
 		{"querySearchSymbol", Query(SearchTypeSymbol), querySearchSymbol},
 		{"querySearchPackageDotSymbol", Query(SearchTypePackageDotSymbol), querySearchPackageDotSymbol},
 		{"querySearchMultiWordExact", Query(SearchTypeMultiWordExact), querySearchMultiWordExact},
-		{"querySearchMultiWordOr", Query(SearchTypeMultiWordOr), querySearchMultiWordOr},
-		{"queryMatchingSymbolIDsSymbol", MatchingSymbolIDsQuery(SearchTypeSymbol), queryMatchingSymbolIDsSymbol},
-		{"queryMatchingSymbolIDsPackageDotSymbol", MatchingSymbolIDsQuery(SearchTypePackageDotSymbol), queryMatchingSymbolIDsPackageDotSymbol},
-		{"queryMatchingSymbolIDsMultiWordExact", MatchingSymbolIDsQuery(SearchTypeMultiWordExact), queryMatchingSymbolIDsMultiWordExact},
-		{"queryMatchingSymbolIDsMultiWordOr", MatchingSymbolIDsQuery(SearchTypeMultiWordOr), queryMatchingSymbolIDsMultiWordOr},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			if diff := cmp.Diff(test.want, test.q); diff != "" {

@@ -17,21 +17,29 @@ const SymbolTextSearchConfiguration = "symbols"
 
 // Query returns a symbol search query to be used in internal/postgres.
 // Each query that is returned accepts the following args:
-// $1 = ids
+// $1 = query
 // $2 = limit
-// $3 = search query input (not used by SearchTypeSymbol)
+// $3 = only used by multi-word-exact for path tokens
 func Query(st SearchType) string {
-	var filter string
 	switch st {
-	case SearchTypeMultiWordOr, SearchTypeMultiWordExact:
-		return fmt.Sprintf(baseQuery, multiwordCTE())
+	case SearchTypeMultiWordExact:
+		return fmt.Sprintf(baseQuery, multiwordCTE)
 	case SearchTypePackageDotSymbol:
-		// PackageDotSymbol case.
-		filter = filterPackageDotSymbol
+		// When $1 is either <package>.<symbol> OR
+		// <package>.<type>.<methodOrField>, only match on the exact
+		// symbol name.
+		return fmt.Sprintf(baseQuery, fmt.Sprintf(symbolCTE, filterPackageDotSymbol))
 	case SearchTypeSymbol:
-		filter = ""
+		// When $1 is the full symbol name, either <symbol> or
+		// <type>.<methodOrField>, match on just the identifier name.
+		//
+		// Matching on just <field> and <method> is too slow at the moment (can
+		// take several seconds to return results), but we
+		// might want to add support for that later. For example, searching for
+		// "Begin" should return "DB.Begin".
+		return fmt.Sprintf(baseQuery, fmt.Sprintf(symbolCTE, filterSymbol))
 	}
-	return fmt.Sprintf(baseQuery, fmt.Sprintf(symbolCTE, filter))
+	return ""
 }
 
 const symbolCTE = `
@@ -43,8 +51,7 @@ const symbolCTE = `
 		ssd.goarch,
 		ssd.ln_imported_by_count AS score
 	FROM symbol_search_documents ssd
-	WHERE
-		symbol_name_id = ANY($1)%s
+	WHERE %s
 	ORDER BY
 		score DESC,
 		package_path,
@@ -52,17 +59,21 @@ const symbolCTE = `
 	LIMIT $2
 `
 
+const filterSymbol = `
+		lower(symbol_name) = lower($1)`
+
 // TODO(golang/go#44142): Filtering on package path currently only works for
 // standard library packages, since non-standard library packages will have a
 // dot.
 var filterPackageDotSymbol = fmt.Sprintf(`
-	AND (
-		ssd.uuid_package_name=%s OR
-		ssd.uuid_package_path=%[1]s
-	)`, "uuid_generate_v5(uuid_nil(), split_part($3, '.', 1))")
+		lower(symbol_name) = lower($1)
+		AND (
+			ssd.uuid_package_name=%[1]s OR
+			ssd.uuid_package_path=%[1]s
+		)`,
+	"uuid_generate_v5(uuid_nil(), split_part($3, '.', 1))")
 
-func multiwordCTE() string {
-	return fmt.Sprintf(`
+var multiwordCTE = fmt.Sprintf(`
 	SELECT
 		ssd.unit_id,
 		ssd.package_symbol_id,
@@ -73,18 +84,17 @@ func multiwordCTE() string {
 			ts_rank(
 				'{0.1, 0.2, 1.0, 1.0}',
 				sd.tsv_path_tokens,
-				%s
+				%[1]s
 			) * ssd.ln_imported_by_count
 		) AS score
 	FROM symbol_search_documents ssd
 	INNER JOIN search_documents sd ON sd.package_path_id = ssd.package_path_id
 	WHERE
-		symbol_name_id = ANY($1)
+		lower(symbol_name) = lower($1)
 		AND sd.tsv_path_tokens @@ %[1]s
 	ORDER BY score DESC
 	LIMIT $2
 `, toTSQuery("$3"))
-}
 
 const baseQuery = `
 WITH ssd AS (%s)
@@ -107,39 +117,6 @@ INNER JOIN symbol_names s ON s.id=ssd.symbol_name_id
 INNER JOIN search_documents sd ON sd.unit_id = ssd.unit_id
 INNER JOIN package_symbols ps ON ps.id=ssd.package_symbol_id
 ORDER BY score DESC;`
-
-// MatchingSymbolIDsQuery returns a query to fetch the symbol ids that match the
-// search input, based on the SearchType.
-func MatchingSymbolIDsQuery(st SearchType) string {
-	var filter string
-	switch st {
-	case SearchTypeSymbol, SearchTypeMultiWordExact:
-		// When $1 is the full symbol name, either <symbol> or
-		// <type>.<methodOrField>, match on just the identifier name.
-		//
-		// Matching on just <field> and <method> is too slow at the moment (can
-		// take several seconds to return results), but we
-		// might want to add support for that later. For example, searching for
-		// "Begin" should return "DB.Begin".
-		filter = `lower(name) = lower($1)`
-	case SearchTypePackageDotSymbol:
-		// When $1 is either <package>.<symbol> OR
-		// <package>.<type>.<methodOrField>, only match on the exact
-		// symbol name.
-		filter = fmt.Sprintf("lower(name) = lower(%s)", "substring($1 from E'[^.]*\\.(.+)$')")
-	case SearchTypeMultiWordOr:
-		// When $1 contains multiple words, separated by spaces, at least one
-		// element for the query must match a symbol name.
-		//
-		// TODO(44142): This is currently somewhat slow, since many IDs can be
-		// returned.
-		filter = fmt.Sprintf(`tsv_name_tokens @@ %s`, toTSQuery("replace($1, ' ', ' | ')"))
-	}
-	return fmt.Sprintf(`
-		SELECT id
-		FROM symbol_names
-		WHERE %s`, filter)
-}
 
 func toTSQuery(arg string) string {
 	return fmt.Sprintf("to_tsquery('%s', quote_literal(%s))", SymbolTextSearchConfiguration, processArg(arg))
