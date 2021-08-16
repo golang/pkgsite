@@ -31,7 +31,10 @@ import (
 	"golang.org/x/pkgsite/internal/log"
 )
 
-var credsFile = flag.String("creds", "", "filename for credentials, when running locally")
+var (
+	credsFile     = flag.String("creds", "", "filename for credentials, when running locally")
+	exportMetrics = flag.Bool("metrics", true, "export metrics")
+)
 
 // A Probe represents a single HTTP GET request.
 type Probe struct {
@@ -46,6 +49,9 @@ type Probe struct {
 	// Whether or not to set a header that causes the frontend to skip the redis
 	// cache.
 	BypassCache bool
+
+	// If non-empty, the body should contain this string.
+	Contains string
 }
 
 var probes = []*Probe{
@@ -149,6 +155,12 @@ var probes = []*Probe{
 		RelativeURL: "search?q=github",
 		BypassCache: true,
 	},
+	{
+		Name:        "search-http",
+		RelativeURL: "search?q=http",
+		BypassCache: true,
+		Contains:    "net/http",
+	},
 }
 
 func init() {
@@ -244,13 +256,15 @@ func main() {
 	if err := view.Register(firstByteLatencyDistribution, probeCount); err != nil {
 		log.Fatalf(ctx, "view.Register: %v", err)
 	}
-	metricExporter, err = dcensus.NewViewExporter(cfg)
-	if err != nil {
-		log.Fatal(ctx, err)
-	}
+	if *exportMetrics {
+		metricExporter, err = dcensus.NewViewExporter(cfg)
+		if err != nil {
+			log.Fatal(ctx, err)
+		}
 
-	// To export metrics immediately, we use a metric reader.  See runProbes, below.
-	metricReader = metricexport.NewReader()
+		// To export metrics immediately, we use a metric reader.  See runProbes, below.
+		metricReader = metricexport.NewReader()
+	}
 
 	http.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "static/shared/icon/favicon.ico")
@@ -320,9 +334,11 @@ func runProbes(ctx context.Context) []*ProbeStatus {
 		s := runProbe(ctx, p)
 		statuses = append(statuses, s)
 	}
-	metricReader.ReadAndExport(metricExporter)
-	metricExporter.Flush()
-	log.Info(ctx, "metrics exported to StackDriver")
+	if metricReader != nil {
+		metricReader.ReadAndExport(metricExporter)
+		metricExporter.Flush()
+		log.Info(ctx, "metrics exported to StackDriver")
+	}
 	return statuses
 }
 
@@ -382,6 +398,11 @@ func runProbe(ctx context.Context, p *Probe) *ProbeStatus {
 	}
 	if !bytes.Contains(body, []byte("go.dev")) {
 		status.Text = "FAILED: body does not contain 'go.dev'"
+		record("FAILED wrong body")
+		return status
+	}
+	if p.Contains != "" && !bytes.Contains(body, []byte(p.Contains)) {
+		status.Text = fmt.Sprintf("FAILED: body does not contain %q", p.Contains)
 		record("FAILED wrong body")
 		return status
 	}
