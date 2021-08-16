@@ -677,7 +677,7 @@ func (db *DB) ReconcileSearch(ctx context.Context, modulePath, version string, s
 			// A missing GoodVersion means that there are no good versions
 			// remaining. In that case, or if this is an alternative module, we
 			// should remove the module from search.
-			if err := deleteModuleOrPackagesInModuleFromSearchDocuments(ctx, tx, modulePath, nil); err != nil {
+			if err := deleteModuleFromSearchDocuments(ctx, tx, modulePath); err != nil {
 				return err
 			}
 			if err := deleteModuleFromImportsUnique(ctx, tx, modulePath); err != nil {

@@ -66,16 +66,13 @@ func deleteOtherModulePackagesFromSearchDocuments(ctx context.Context, tx *datab
 		// Nothing to delete.
 		return nil
 	}
-	return deleteModuleOrPackagesInModuleFromSearchDocuments(ctx, tx, m.ModulePath, otherPkgs)
+	return deletePackagesInModuleFromSearchDocuments(ctx, tx, otherPkgs)
 }
 
-// deleteModuleOrPackagesInModuleFromSearchDocuments deletes module_path from
-// search_documents. If packages is non-empty, it only deletes those packages.
-func deleteModuleOrPackagesInModuleFromSearchDocuments(ctx context.Context, tx *database.DB, modulePath string, packages []string) error {
-	d := squirrel.Delete("search_documents").Where(squirrel.Eq{"module_path": modulePath})
-	if len(packages) > 0 {
-		d = d.Where("package_path = ANY(?)", pq.Array(packages))
-	}
+// deleteModuleFromSearchDocuments deletes module_path from search_documents.
+func deleteModuleFromSearchDocuments(ctx context.Context, tx *database.DB, modulePath string) error {
+	d := squirrel.Delete("search_documents").
+		Where(squirrel.Eq{"module_path": modulePath})
 	q, args, err := d.PlaceholderFormat(squirrel.Dollar).ToSql()
 	if err != nil {
 		return err
@@ -85,6 +82,22 @@ func deleteModuleOrPackagesInModuleFromSearchDocuments(ctx context.Context, tx *
 		return err
 	}
 	log.Infof(ctx, "deleted %d rows of module %s from search_documents", n, modulePath)
+	return nil
+}
+
+// deletePackagesInModuleFromSearchDocuments deletes packages from search_documents.
+func deletePackagesInModuleFromSearchDocuments(ctx context.Context, tx *database.DB, pkgPaths []string) error {
+	d := squirrel.Delete("search_documents").
+		Where("package_path = ANY(?)", pq.Array(pkgPaths))
+	q, args, err := d.PlaceholderFormat(squirrel.Dollar).ToSql()
+	if err != nil {
+		return err
+	}
+	n, err := tx.Exec(ctx, q, args...)
+	if err != nil {
+		return err
+	}
+	log.Infof(ctx, "deleted %d rows from search_documents: %v", n, pkgPaths)
 	return nil
 }
 
