@@ -159,6 +159,7 @@ func (s *Server) Install(handle func(string, http.Handler), redisClient *redis.C
 		http.ServeContent(w, r, "", time.Time{}, strings.NewReader(`User-agent: *
 Disallow: /search?*
 Disallow: /fetch/*
+Sitemap: https://pkg.go.dev/sitemap/index.xml
 `))
 	}))
 }
