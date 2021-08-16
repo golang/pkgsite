@@ -35,7 +35,8 @@ export class TreeNavController {
   }
 
   private init(): void {
-    this.el.style.setProperty('--js-tree-height', this.el.clientHeight + 'px');
+    this.handleResize();
+    window.addEventListener('resize', this.handleResize);
     this.findTreeItems();
     this.updateVisibleTreeitems();
     this.observeTargets();
@@ -43,6 +44,11 @@ export class TreeNavController {
       this.firstTreeitem.el.tabIndex = 0;
     }
   }
+
+  private handleResize = (): void => {
+    this.el.style.setProperty('--js-tree-height', '100vh');
+    this.el.style.setProperty('--js-tree-height', this.el.clientHeight + 'px');
+  };
 
   private observeTargets() {
     this.addObserver(treeitem => {
