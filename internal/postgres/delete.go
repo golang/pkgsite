@@ -62,14 +62,17 @@ func deleteOtherModulePackagesFromSearchDocuments(ctx context.Context, tx *datab
 			otherPkgs = append(otherPkgs, p)
 		}
 	}
+	if len(otherPkgs) == 0 {
+		// Nothing to delete.
+		return nil
+	}
 	return deleteModuleOrPackagesInModuleFromSearchDocuments(ctx, tx, m.ModulePath, otherPkgs)
 }
 
 // deleteModuleOrPackagesInModuleFromSearchDocuments deletes module_path from
 // search_documents. If packages is non-empty, it only deletes those packages.
 func deleteModuleOrPackagesInModuleFromSearchDocuments(ctx context.Context, tx *database.DB, modulePath string, packages []string) error {
-	d := squirrel.Delete("search_documents").
-		Where(squirrel.Eq{"module_path": modulePath})
+	d := squirrel.Delete("search_documents").Where(squirrel.Eq{"module_path": modulePath})
 	if len(packages) > 0 {
 		d = d.Where("package_path = ANY(?)", pq.Array(packages))
 	}
