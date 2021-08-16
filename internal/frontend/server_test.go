@@ -880,7 +880,7 @@ func serverTestCases() []serverTestCase {
 			urlPath:        fmt.Sprintf("/%s@%s/%s?tab=imports", sample.ModulePath, sample.VersionString, sample.Suffix),
 			wantStatusCode: http.StatusOK,
 			want: in("",
-				in(".Imports-heading", hasText(`Standard library Imports`)),
+				in(".Imports-heading", hasText(`Standard library imports`)),
 				in(".Imports-list",
 					in("li:nth-child(1) a", href("/fmt"), hasText("fmt")),
 					in("li:nth-child(2) a", href("/path/to/bar"), hasText("path/to/bar")))),
