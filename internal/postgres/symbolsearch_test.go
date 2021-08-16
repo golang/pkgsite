@@ -136,3 +136,59 @@ func TestUpsertSymbolSearch_UniqueConstraints(t *testing.T) {
 	m2.Packages()[0].Documentation[0].API = sample.API
 	MustInsertModule(ctx, t, testDB, m2)
 }
+
+func TestMultiwordSearchCombinations(t *testing.T) {
+	for _, test := range []struct {
+		q    string
+		want map[string]string
+	}{
+		{
+			q: "github.com foo",
+			want: map[string]string{
+				"foo": "github.com",
+			},
+		},
+		{
+			q: "julieqiu foo",
+			want: map[string]string{
+				"julieqiu": "foo",
+				"foo":      "julieqiu",
+			},
+		},
+		{
+			q: "github.com/julieqiu foo",
+			want: map[string]string{
+				"foo": "github.com/julieqiu",
+			},
+		},
+		{
+			q: "github.com julieqiu/api-demo foo",
+			want: map[string]string{
+				"foo": "github.com & julieqiu/api-demo",
+			},
+		},
+		{
+			q:    "github.com julieqiu/api-demo",
+			want: nil,
+		},
+		{
+			q: "bee cmd command",
+			want: map[string]string{
+				"bee":     "cmd & command",
+				"cmd":     "bee & command",
+				"command": "bee & cmd",
+			},
+		},
+		{
+			q:    "bee beego cmd command",
+			want: nil,
+		},
+	} {
+		t.Run(test.q, func(t *testing.T) {
+			got := multiwordSearchCombinations(test.q)
+			if diff := cmp.Diff(test.want, got); diff != "" {
+				t.Errorf("mismatch (-want +got):\n%s", diff)
+			}
+		})
+	}
+}

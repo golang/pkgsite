@@ -229,13 +229,18 @@ func multiwordSearchCombinations(q string) map[string]string {
 		}
 		// If it is, try search for this word assuming it is the symbol name
 		// and everything else is a path element.
-		symbolToPathTokens[w] = strings.Join(append(append([]string{}, words[0:i]...), words[i+1:]...), " & ")
+		pathTokens := append(append([]string{}, words[0:i]...), words[i+1:]...)
+		sort.Strings(pathTokens)
+		symbolToPathTokens[w] = strings.Join(pathTokens, " & ")
 	}
-	if len(symbolToPathTokens) > 2 {
-		// There are more than 2 possible searches that can be performed, so
-		// just perform an OR query.
-		orQuery := strings.Join(strings.Fields(q), " | ")
-		return map[string]string{orQuery: orQuery}
+	if len(symbolToPathTokens) == 0 {
+		return nil
+	}
+	if len(symbolToPathTokens) > 3 {
+		// There are too many searches that can be performed, so
+		// return no results.
+		// TODO(golang/go#44142): Leave add support for an OR query.
+		return nil
 	}
 	return symbolToPathTokens
 }
