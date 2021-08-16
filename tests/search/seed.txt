@@ -2,6 +2,7 @@
 # Use of this source code is governed by a BSD-style
 # license that can be found in the LICENSE file.
 
+github.com/beego/bee@latest
 github.com/go-openapi/strfmt@v0.20.1
 github.com/julieqiu/api-demo@latest
 gopkg.in/foo.v1@v1.0.4

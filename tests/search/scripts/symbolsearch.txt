@@ -62,3 +62,7 @@ github.com foo
 FOO github.com/julieqiu/api-demo
 FoO github.com/julieqiu/api-demo
 Foo github.com/julieqiu/api-demo
+
+Multi-word three word search
+bee cmd command
+Command github.com/beego/bee/cmd/commands
