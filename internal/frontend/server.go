@@ -147,6 +147,7 @@ func (s *Server) Install(handle func(string, http.Handler), redisClient *redis.C
 		// (This is what golang.org/C does.)
 		http.Redirect(w, r, "/cmd/cgo", http.StatusMovedPermanently)
 	}))
+	handle("/golang.org/x", s.staticPageHandler("subrepo", "Sub-repositories"))
 	handle("/", detailHandler)
 	if s.serveStats {
 		handle("/detail-stats/",
@@ -608,6 +609,7 @@ func parsePageTemplates(base template.TrustedSource) (map[string]*template.Templ
 		{tsc("search")},
 		{tsc("search-help")},
 		{tsc("styleguide")},
+		{tsc("subrepo")},
 		{tsc("unit/importedby"), tsc("unit")},
 		{tsc("unit/imports"), tsc("unit")},
 		{tsc("unit/licenses"), tsc("unit")},

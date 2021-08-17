@@ -1,0 +1,102 @@
+<!--
+  Copyright 2020 The Go Authors. All rights reserved.
+  Use of this source code is governed by a BSD-style
+  license that can be found in the LICENSE file.
+-->
+
+{{define "title"}}<title>Sub-repositories · pkg.go.dev</title>{{end}}
+
+{{define "description"}}
+  <meta name="description" content="Sub-repositories are part of the Go Project but outside the main
+      Go tree. They are developed under looser compatibility requirements than the Go core.">
+{{end}}
+
+{{define "pre-content"}}
+  <link href="/static/frontend/subrepo/subrepo.css?version={{.AppVersionLabel}}" rel="stylesheet">
+{{end}}
+
+{{define "main"}}
+  <main class="go-Container">
+    <div class="go-Content">
+      <h1>Sub-repositories</h1>
+      <p>
+        These packages are part of the Go Project but outside the main Go tree. They are developed
+        under looser compatibility requirements than the Go core. Install them with "go get".
+      </p>
+      <ul class="SubRepo-links">
+        <li>
+          <a data-gtmc="subrepo link" href="/golang.org/x/benchmarks">benchmarks</a>
+           — benchmarks to measure Go as it is developed.
+        </li>
+        <li>
+          <a data-gtmc="subrepo link" href="/golang.org/x/blog">blog</a>
+           — <a href="https://blog.golang.org">blog.golang.org</a>'s implementation.
+        </li>
+        <li>
+          <a data-gtmc="subrepo link" href="/golang.org/x/build">build</a>
+           — <a href="https://build.golang.org">build.golang.org</a>'s implementation.
+        </li>
+        <li>
+          <a data-gtmc="subrepo link" href="/golang.org/x/crypto">crypto</a>
+           — additional cryptography packages.
+        </li>
+        <li>
+          <a data-gtmc="subrepo link" href="/golang.org/x/debug">debug</a>
+           — an experimental debugger for Go.
+        </li>
+        <li>
+          <a data-gtmc="subrepo link" href="/golang.org/x/image">image</a>
+           — additional imaging packages.
+        </li>
+        <li>
+          <a data-gtmc="subrepo link" href="/golang.org/x/mobile">mobile</a>
+           — experimental support for Go on mobile platforms.
+        </li>
+        <li>
+          <a data-gtmc="subrepo link" href="/golang.org/x/net">net</a>
+           — additional networking packages.
+        </li>
+        <li>
+          <a data-gtmc="subrepo link" href="/golang.org/x/perf">perf</a>
+           — packages and tools for performance measurement, storage, and analysis.
+        </li>
+        <li>
+          <a data-gtmc="subrepo link" href="/golang.org/x/pkgsite">pkgsite</a>
+           — home of the pkg.go.dev website.
+        </li>
+        <li>
+          <a data-gtmc="subrepo link" href="/golang.org/x/review">review</a>
+           — a tool for working with Gerrit code reviews.
+        </li>
+        <li>
+          <a data-gtmc="subrepo link" href="/golang.org/x/sync">sync</a>
+           — additional concurrency primitives.
+        </li>
+        <li>
+          <a data-gtmc="subrepo link" href="/golang.org/x/sys">sys</a>
+           — packages for making system calls.
+        </li>
+        <li>
+          <a data-gtmc="subrepo link" href="/golang.org/x/text">text</a>
+           — packages for working with text.
+        </li>
+        <li>
+          <a data-gtmc="subrepo link" href="/golang.org/x/time">time</a>
+           — additional time packages.
+        </li>
+        <li>
+          <a data-gtmc="subrepo link" href="/golang.org/x/tools">tools</a>
+           — godoc, goimports, gorename, and other tools.
+        </li>
+        <li>
+          <a data-gtmc="subrepo link" href="/golang.org/x/tour">tour</a>
+           — <a href="https://tour.golang.org">tour.golang.org</a>'s implementation.
+        </li>
+        <li>
+          <a data-gtmc="subrepo link" href="/golang.org/x/exp">exp</a>
+           — experimental and deprecated packages (handle with care; may change without warning).
+        </li>
+      </ul>
+    </div>
+  </main>
+{{end}}

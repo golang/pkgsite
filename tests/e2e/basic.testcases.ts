@@ -22,4 +22,5 @@ export const testcases: TestCases = test.each`
   ${'home'}                  | ${'/'}
   ${'license policy'}        | ${'/license-policy'}
   ${'search help'}           | ${'/search-help'}
+  ${'sub-repositories'}      | ${'/golang.org/x'}
 `;
