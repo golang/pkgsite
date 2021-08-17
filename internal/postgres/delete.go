@@ -29,16 +29,21 @@ func (db *DB) DeleteModule(ctx context.Context, modulePath, resolvedVersion stri
 		if _, err = tx.Exec(ctx, `DELETE FROM version_map WHERE module_path = $1 AND resolved_version = $2`, modulePath, resolvedVersion); err != nil {
 			return err
 		}
-		if _, err = tx.Exec(ctx, `DELETE FROM search_documents WHERE module_path = $1 AND version = $2`, modulePath, resolvedVersion); err != nil {
-			return err
-		}
 
 		var x int
 		err = tx.QueryRow(ctx, `SELECT 1 FROM modules WHERE module_path=$1 LIMIT 1`, modulePath).Scan(&x)
 		if err != sql.ErrNoRows || err == nil {
 			return err
 		}
-		// No versions of this module exist; remove it from imports_unique.
+		// No versions of this module exist; remove it from paths and
+		// imports_unique.
+		//
+		// Deleting from paths will also cascade a DELETE to
+		// latest_module_versions. Other tables should already have removed any
+		// rows referencing the paths table.
+		if _, err = tx.Exec(ctx, `DELETE FROM paths WHERE path = $1`, modulePath); err != nil {
+			return err
+		}
 		return deleteModuleFromImportsUnique(ctx, tx, modulePath)
 	})
 }
