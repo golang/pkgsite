@@ -646,7 +646,7 @@ func (s *Server) handleClean(w http.ResponseWriter, r *http.Request) (err error)
 
 	default: // module != ""
 		log.Infof(ctx, "cleaning module %q", module)
-		if err := s.db.CleanModule(ctx, module, "Manually deleted via /clean endpoint"); err != nil {
+		if err := s.db.CleanAllModuleVersions(ctx, module, "Manually deleted via /clean endpoint"); err != nil {
 			return err
 		}
 		fmt.Fprintf(w, "Cleaned module %q\n", module)

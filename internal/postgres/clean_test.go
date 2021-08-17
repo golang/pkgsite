@@ -84,7 +84,7 @@ func TestCleanModule(t *testing.T) {
 		m := sample.Module(modulePath, v, "")
 		MustInsertModule(ctx, t, testDB, m)
 	}
-	if err := testDB.CleanModule(ctx, modulePath, ""); err != nil {
+	if err := testDB.CleanAllModuleVersions(ctx, modulePath, ""); err != nil {
 		t.Fatal(err)
 	}
 

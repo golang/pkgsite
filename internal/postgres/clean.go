@@ -79,9 +79,9 @@ func (db *DB) CleanModuleVersions(ctx context.Context, mvs []internal.Modver, re
 	return nil
 }
 
-// CleanModule deletes all versions of the given module path from the DB and marks them
+// CleanAllModuleVersions deletes all versions of the given module path from the DB and marks them
 // as cleaned in module_version_states.
-func (db *DB) CleanModule(ctx context.Context, modulePath, reason string) (err error) {
+func (db *DB) CleanAllModuleVersions(ctx context.Context, modulePath, reason string) (err error) {
 	defer derrors.Wrap(&err, "CleanModule(%q)", modulePath)
 
 	var mvs []internal.Modver
