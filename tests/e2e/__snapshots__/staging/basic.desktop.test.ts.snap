@@ -1652,22 +1652,6 @@ Object {
       "role": "link",
     },
     Object {
-      "children": Array [
-        Object {
-          "name": "Packages",
-          "role": "menuitem",
-          "selected": true,
-        },
-        Object {
-          "name": "Symbols",
-          "role": "menuitem",
-        },
-      ],
-      "name": "",
-      "role": "combobox",
-      "value": "Packages",
-    },
-    Object {
       "name": "Search for a package",
       "role": "searchbox",
     },

@@ -46,7 +46,7 @@
           <a class="Homepage-exampleSearch" href="/search?q=http">“http”</a>
           <a class="Homepage-exampleSearch" href="/search?q=command">“command”</a>
           {{if .Experiments.IsActive "symbol-search"}}
-            <a class="Homepage-exampleSearch" href="/search?q=sql.DB&m={{.SearchModeSymbol}}">“identifier:sql.DB”</a>
+            <a class="Homepage-exampleSearch" href="/search?q=sql.DB&m={{.SearchModeSymbol}}">“{{.SearchModeSymbol}}:sql.DB”</a>
           {{else}}
             <a class="Homepage-exampleSearch" href="/search?q=yaml+OR+json+OR+xml">“yaml OR json OR xml”</a>
           {{end}}

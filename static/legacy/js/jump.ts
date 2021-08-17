@@ -5,7 +5,7 @@
  * license that can be found in the LICENSE file.
  */
 
-// This file implements the behavior of the "jump to identifer" dialog for Go
+// This file implements the behavior of the "jump to symbol" dialog for Go
 // package documentation, as well as the simple dialog that displays keyboard
 // shortcuts.
 
@@ -13,9 +13,9 @@
 // The CSS is in content/static/legacy/css/stylesheet.css.
 
 // The dialog is activated by pressing the 'f' key. It presents a list
-// (#JumpDialog-list) of all Go identifiers displayed in the documentation.
+// (#JumpDialog-list) of all Go symbols displayed in the documentation.
 // Entering text in the dialog's text box (#JumpDialog-filter) restricts the
-// list to identifiers containing the text. Clicking on an identifier jumps to
+// list to symbols containing the text. Clicking on an symbol jumps to
 // its documentation.
 
 // This code is based on
@@ -46,13 +46,13 @@ interface JumpListItem {
   lower: string;
 }
 
-let jumpListItems: JumpListItem[] | undefined; // All the identifiers in the doc; computed only once.
+let jumpListItems: JumpListItem[] | undefined; // All the symbols in the doc; computed only once.
 
-// collectJumpListItems returns a list of items, one for each identifier in the
+// collectJumpListItems returns a list of items, one for each symbol in the
 // documentation on the current page.
 //
 // It uses the data-kind attribute generated in the documentation HTML to find
-// the identifiers and their id attributes.
+// the symbols and their id attributes.
 //
 // If there are no data-kind attributes, then we have older doc; fall back to
 // a less precise method.
@@ -69,7 +69,7 @@ function collectJumpListItems() {
       jumpDialog?.close();
     });
   }
-  // Sort case-insensitively by identifier name.
+  // Sort case-insensitively by symbol name.
   items.sort(function (a, b) {
     return a.lower.localeCompare(b.lower);
   });
@@ -164,7 +164,7 @@ function updateJumpList(filter: string) {
   } else {
     if (!jumpListItems || jumpListItems.length === 0) {
       const msg = document.createElement('i');
-      msg.innerHTML = 'There are no identifiers on this page.';
+      msg.innerHTML = 'There are no symbols on this page.';
       jumpList?.appendChild(msg);
     }
     // No filter set; display all items in their existing order.
@@ -268,7 +268,7 @@ if (shortcutsDialog && !shortcutsDialog.showModal) {
 
 // Keyboard shortcuts:
 // - Pressing '/' focuses the search box
-// - Pressing 'f' or 'F' opens the jump-to-identifier dialog.
+// - Pressing 'f' or 'F' opens the jump-to-symbol dialog.
 // - Pressing '?' opens up the shortcut dialog.
 // Ignore a keypress if a dialog is already open, or if it is pressed on a
 // component that wants to consume it.
