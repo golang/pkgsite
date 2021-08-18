@@ -20,6 +20,7 @@ import (
 	"golang.org/x/pkgsite/internal/middleware"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/proxy"
+	"golang.org/x/pkgsite/internal/proxy/proxytest"
 	"golang.org/x/pkgsite/internal/queue"
 	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/testing/htmlcheck"
@@ -72,9 +73,9 @@ func setupFrontend(ctx context.Context, t *testing.T, q queue.Queue, rc *redis.C
 
 // TODO(https://github.com/golang/go/issues/40098): factor out this code reduce
 // duplication
-func setupQueue(ctx context.Context, t *testing.T, proxyModules []*proxy.Module, experimentNames ...string) (queue.Queue, func()) {
+func setupQueue(ctx context.Context, t *testing.T, proxyModules []*proxytest.Module, experimentNames ...string) (queue.Queue, func()) {
 	cctx, cancel := context.WithCancel(ctx)
-	proxyClient, teardown := proxy.SetupTestClient(t, proxyModules)
+	proxyClient, teardown := proxytest.SetupTestClient(t, proxyModules)
 	sourceClient := source.NewClient(1 * time.Second)
 	q := queue.NewInMemory(cctx, 1, experimentNames,
 		func(ctx context.Context, mpath, version string) (_ int, err error) {
@@ -86,9 +87,9 @@ func setupQueue(ctx context.Context, t *testing.T, proxyModules []*proxy.Module,
 	}
 }
 
-func processVersions(ctx context.Context, t *testing.T, testModules []*proxy.Module) {
+func processVersions(ctx context.Context, t *testing.T, testModules []*proxytest.Module) {
 	t.Helper()
-	proxyClient, teardown := proxy.SetupTestClient(t, testModules)
+	proxyClient, teardown := proxytest.SetupTestClient(t, testModules)
 	defer teardown()
 
 	for _, tm := range testModules {
@@ -96,7 +97,7 @@ func processVersions(ctx context.Context, t *testing.T, testModules []*proxy.Mod
 	}
 }
 
-func fetchAndInsertModule(ctx context.Context, t *testing.T, tm *proxy.Module, proxyClient *proxy.Client) {
+func fetchAndInsertModule(ctx context.Context, t *testing.T, tm *proxytest.Module, proxyClient *proxy.Client) {
 	sourceClient := source.NewClient(1 * time.Second)
 	res := fetch.FetchModule(ctx, tm.ModulePath, tm.Version, proxyClient, sourceClient)
 	defer res.Defer()

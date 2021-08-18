@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-package proxy
+package proxytest
 
 import (
 	"fmt"
@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	"golang.org/x/mod/modfile"
+	"golang.org/x/pkgsite/internal/proxy"
 	"golang.org/x/pkgsite/internal/testing/testhelper"
 	"golang.org/x/tools/txtar"
 )
@@ -20,7 +21,7 @@ import (
 //
 // It returns a function for tearing down the proxy after the test is completed
 // and a Client for interacting with the test proxy.
-func SetupTestClient(t *testing.T, modules []*Module) (*Client, func()) {
+func SetupTestClient(t *testing.T, modules []*Module) (*proxy.Client, func()) {
 	t.Helper()
 	s := NewServer(modules)
 	client, serverClose, err := NewClientForServer(s)
@@ -32,14 +33,14 @@ func SetupTestClient(t *testing.T, modules []*Module) (*Client, func()) {
 
 // NewClientForServer starts serving proxyMux locally. It returns a client to the
 // server and a function to shut down the server.
-func NewClientForServer(s *Server) (*Client, func(), error) {
+func NewClientForServer(s *Server) (*proxy.Client, func(), error) {
 	// override client.httpClient to skip TLS verification
-	httpClient, proxy, serverClose := testhelper.SetupTestClientAndServer(s.mux)
-	client, err := New(proxy.URL)
+	httpClient, prox, serverClose := testhelper.SetupTestClientAndServer(s.mux)
+	client, err := proxy.New(prox.URL)
 	if err != nil {
 		return nil, nil, err
 	}
-	client.httpClient = httpClient
+	client.HTTPClient = httpClient
 	return client, serverClose, nil
 }
 

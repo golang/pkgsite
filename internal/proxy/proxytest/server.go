@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-package proxy
+package proxytest
 
 import (
 	"bytes"
@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"golang.org/x/mod/semver"
+	"golang.org/x/pkgsite/internal/proxy"
 	"golang.org/x/pkgsite/internal/testing/testhelper"
 	"golang.org/x/pkgsite/internal/version"
 )
@@ -42,7 +43,7 @@ func NewServer(modules []*Module) *Server {
 func (s *Server) handleInfo(modulePath, resolvedVersion string, uncached bool) {
 	urlPath := fmt.Sprintf("/%s/@v/%s.info", modulePath, resolvedVersion)
 	s.mux.HandleFunc(urlPath, func(w http.ResponseWriter, r *http.Request) {
-		if uncached && r.Header.Get(disableFetchHeader) == "true" {
+		if uncached && r.Header.Get(proxy.DisableFetchHeader) == "true" {
 			http.Error(w, "not found: temporarily unavailable", http.StatusGone)
 			return
 		}

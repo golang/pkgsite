@@ -12,7 +12,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/pkgsite/internal"
-	"golang.org/x/pkgsite/internal/proxy"
+	"golang.org/x/pkgsite/internal/proxy/proxytest"
 	"golang.org/x/pkgsite/internal/stdlib"
 )
 
@@ -92,7 +92,7 @@ func TestExtractReadmesFromZip(t *testing.T) {
 					t.Fatal(err)
 				}
 			} else {
-				proxyClient, teardownProxy := proxy.SetupTestClient(t, []*proxy.Module{
+				proxyClient, teardownProxy := proxytest.SetupTestClient(t, []*proxytest.Module{
 					{ModulePath: test.modulePath, Files: test.files}})
 				defer teardownProxy()
 				reader, err = proxyClient.Zip(ctx, test.modulePath, "v1.0.0")

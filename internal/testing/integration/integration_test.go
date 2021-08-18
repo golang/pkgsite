@@ -23,16 +23,17 @@ import (
 	"golang.org/x/pkgsite/internal/middleware"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/proxy"
+	"golang.org/x/pkgsite/internal/proxy/proxytest"
 )
 
 var (
 	testDB      *postgres.DB
-	testModules []*proxy.Module
+	testModules []*proxytest.Module
 )
 
 func TestMain(m *testing.M) {
 	dochtml.LoadTemplates(template.TrustedSourceFromConstant("../../../static/doc"))
-	testModules = proxy.LoadTestModules("../../proxy/testdata")
+	testModules = proxytest.LoadTestModules("../../proxy/testdata")
 	postgres.RunDBTests("discovery_integration_test", m, &testDB)
 }
 
@@ -101,7 +102,7 @@ func TestEndToEndProcessing(t *testing.T) {
 	// Process a newer version of a module, and verify that the cache has been invalidated.
 	modulePath := "example.com/single"
 	version := "v1.2.3"
-	proxyServer.AddModule(proxy.FindModule(testModules, modulePath, "v1.0.0").ChangeVersion(version))
+	proxyServer.AddModule(proxytest.FindModule(testModules, modulePath, "v1.0.0").ChangeVersion(version))
 	_, _, err := fetcher.FetchAndUpdateState(ctx, modulePath, version, "test")
 	if err != nil {
 		t.Fatal(err)
@@ -151,10 +152,10 @@ func doGet(url string) ([]byte, error) {
 	return body, nil
 }
 
-func setupProxyAndIndex(t *testing.T) (*proxy.Client, *proxy.Server, *index.Client, func()) {
+func setupProxyAndIndex(t *testing.T) (*proxy.Client, *proxytest.Server, *index.Client, func()) {
 	t.Helper()
-	proxyServer := proxy.NewServer(testModules)
-	proxyClient, teardownProxy, err := proxy.NewClientForServer(proxyServer)
+	proxyServer := proxytest.NewServer(testModules)
+	proxyClient, teardownProxy, err := proxytest.NewClientForServer(proxyServer)
 	if err != nil {
 		t.Fatal(err)
 	}

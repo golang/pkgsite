@@ -16,7 +16,7 @@ import (
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/postgres"
-	"golang.org/x/pkgsite/internal/proxy"
+	"golang.org/x/pkgsite/internal/proxy/proxytest"
 	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/testing/sample"
 	"golang.org/x/pkgsite/internal/testing/testhelper"
@@ -51,7 +51,7 @@ func TestReFetch(t *testing.T) {
 
 	// First fetch and insert a version containing package foo, and verify that
 	// foo can be retrieved.
-	proxyClient, teardownProxy := proxy.SetupTestClient(t, []*proxy.Module{
+	proxyClient, teardownProxy := proxytest.SetupTestClient(t, []*proxytest.Module{
 		{
 			ModulePath: modulePath,
 			Version:    version,
@@ -70,7 +70,7 @@ func TestReFetch(t *testing.T) {
 	}
 
 	// Now re-fetch and verify that contents were overwritten.
-	proxyClient, teardownProxy = proxy.SetupTestClient(t, []*proxy.Module{
+	proxyClient, teardownProxy = proxytest.SetupTestClient(t, []*proxytest.Module{
 		{
 			ModulePath: sample.ModulePath,
 			Version:    version,
@@ -148,7 +148,7 @@ func TestReFetch(t *testing.T) {
 	}
 
 	// Now re-fetch and verify that contents were overwritten.
-	proxyClient, teardownProxy = proxy.SetupTestClient(t, []*proxy.Module{
+	proxyClient, teardownProxy = proxytest.SetupTestClient(t, []*proxytest.Module{
 		{
 			ModulePath: modulePath,
 			Version:    version,

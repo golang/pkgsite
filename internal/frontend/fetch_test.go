@@ -15,7 +15,7 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/postgres"
-	"golang.org/x/pkgsite/internal/proxy"
+	"golang.org/x/pkgsite/internal/proxy/proxytest"
 	"golang.org/x/pkgsite/internal/testing/sample"
 	"golang.org/x/pkgsite/internal/testing/testhelper"
 	"golang.org/x/pkgsite/internal/version"
@@ -26,7 +26,7 @@ var (
 	testModulePath      = "github.com/module"
 	testSemver          = "v1.5.2"
 	testFetchTimeout    = 300 * time.Second
-	testModulesForProxy = []*proxy.Module{
+	testModulesForProxy = []*proxytest.Module{
 		{
 			ModulePath: testModulePath,
 			Version:    testSemver,

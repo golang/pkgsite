@@ -23,6 +23,7 @@ import (
 	"golang.org/x/pkgsite/internal/godoc"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/proxy"
+	"golang.org/x/pkgsite/internal/proxy/proxytest"
 	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/testing/sample"
 	"golang.org/x/pkgsite/internal/testing/testhelper"
@@ -35,7 +36,7 @@ func TestFetchAndUpdateState_NotFound(t *testing.T) {
 	defer cancel()
 	defer postgres.ResetTestDB(testDB, t)
 
-	proxyClient, teardown := proxy.SetupTestClient(t, []*proxy.Module{
+	proxyClient, teardown := proxytest.SetupTestClient(t, []*proxytest.Module{
 		{
 			ModulePath: sample.ModulePath,
 			Version:    sample.VersionString,
@@ -50,11 +51,11 @@ func TestFetchAndUpdateState_NotFound(t *testing.T) {
 	fetchAndCheckStatus(ctx, t, proxyClient, sample.ModulePath, sample.VersionString, http.StatusOK)
 
 	// Take down the module, by having the proxy serve a 404/410 for it.
-	proxyServer := proxy.NewServer([]*proxy.Module{})
+	proxyServer := proxytest.NewServer([]*proxytest.Module{})
 	proxyServer.AddRoute(
 		fmt.Sprintf("/%s/@v/%s.info", sample.ModulePath, sample.VersionString),
 		func(w http.ResponseWriter, r *http.Request) { http.Error(w, "taken down", http.StatusGone) })
-	proxyClient, teardownProxy2, err := proxy.NewClientForServer(proxyServer)
+	proxyClient, teardownProxy2, err := proxytest.NewClientForServer(proxyServer)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -97,7 +98,7 @@ func TestFetchAndUpdateState_Excluded(t *testing.T) {
 
 	defer postgres.ResetTestDB(testDB, t)
 
-	proxyClient, teardownProxy := proxy.SetupTestClient(t, nil)
+	proxyClient, teardownProxy := proxytest.SetupTestClient(t, nil)
 	defer teardownProxy()
 
 	if err := testDB.InsertExcludedPrefix(ctx, sample.ModulePath, "user", "for testing"); err != nil {
@@ -116,7 +117,7 @@ func TestFetchAndUpdateState_BadRequestedVersion(t *testing.T) {
 		modulePath = buildConstraintsModulePath
 		version    = "badversion"
 	)
-	proxyClient, teardownProxy := proxy.SetupTestClient(t, testModules)
+	proxyClient, teardownProxy := proxytest.SetupTestClient(t, testModules)
 	defer teardownProxy()
 	fetchAndCheckStatus(ctx, t, proxyClient, modulePath, version, http.StatusNotFound)
 }
@@ -128,7 +129,7 @@ func TestFetchAndUpdateState_Incomplete(t *testing.T) {
 
 	defer postgres.ResetTestDB(testDB, t)
 
-	proxyClient, teardownProxy := proxy.SetupTestClient(t, testModules)
+	proxyClient, teardownProxy := proxytest.SetupTestClient(t, testModules)
 	defer teardownProxy()
 
 	fetchAndCheckStatus(ctx, t, proxyClient, buildConstraintsModulePath, buildConstraintsVersion, hasIncompletePackagesCode)
@@ -156,7 +157,7 @@ func TestFetchAndUpdateState_Mismatch(t *testing.T) {
 	defer postgres.ResetTestDB(testDB, t)
 
 	const goModPath = "other"
-	proxyClient, teardownProxy := proxy.SetupTestClient(t, []*proxy.Module{
+	proxyClient, teardownProxy := proxytest.SetupTestClient(t, []*proxytest.Module{
 		{
 			ModulePath: sample.ModulePath,
 			Version:    sample.VersionString,
@@ -185,7 +186,7 @@ func TestFetchAndUpdateState_DeleteOlder(t *testing.T) {
 		olderVersion    = "v0.9.0"
 	)
 
-	proxyClient, teardownProxy := proxy.SetupTestClient(t, []*proxy.Module{
+	proxyClient, teardownProxy := proxytest.SetupTestClient(t, []*proxytest.Module{
 		{
 			// mismatched version; will cause deletion
 			ModulePath: sample.ModulePath,
@@ -234,7 +235,7 @@ func TestFetchAndUpdateState_SkipIncompletePackage(t *testing.T) {
 		bigFile.WriteString("// All work and no play makes Jack a dull boy.\n")
 	}
 	badModule["bar/bar.go"] = bigFile.String()
-	proxyClient, teardownProxy := proxy.SetupTestClient(t, []*proxy.Module{
+	proxyClient, teardownProxy := proxytest.SetupTestClient(t, []*proxytest.Module{
 		{
 			ModulePath: sample.ModulePath,
 			Version:    sample.VersionString,
@@ -252,7 +253,7 @@ func TestFetchAndUpdateState_SkipIncompletePackage(t *testing.T) {
 func TestFetchAndUpdateState_Timeout(t *testing.T) {
 	defer postgres.ResetTestDB(testDB, t)
 
-	proxyClient, teardownProxy := proxy.SetupTestClient(t, nil)
+	proxyClient, teardownProxy := proxytest.SetupTestClient(t, nil)
 	defer teardownProxy()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 0)
@@ -267,13 +268,13 @@ func TestFetchAndUpdateState_ProxyTimedOut(t *testing.T) {
 	defer cancel()
 	defer postgres.ResetTestDB(testDB, t)
 
-	proxyServer := proxy.NewServer(nil)
+	proxyServer := proxytest.NewServer(nil)
 	proxyServer.AddRoute(
 		fmt.Sprintf("/%s/@v/%s.info", sample.ModulePath, sample.VersionString),
 		func(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "not found: fetch timed out", http.StatusNotFound)
 		})
-	proxyClient, teardownProxy, err := proxy.NewClientForServer(proxyServer)
+	proxyClient, teardownProxy, err := proxytest.NewClientForServer(proxyServer)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -317,7 +318,7 @@ func TestTrimLargeCode(t *testing.T) {
 		b.WriteString("}\n")
 		trimmedModule["baz/baz.go"] = b.String()
 	}
-	proxyClient, teardownProxy := proxy.SetupTestClient(t, []*proxy.Module{
+	proxyClient, teardownProxy := proxytest.SetupTestClient(t, []*proxytest.Module{
 		{
 			ModulePath: sample.ModulePath,
 			Version:    sample.VersionString,

@@ -24,7 +24,7 @@ import (
 	"golang.org/x/pkgsite/internal/godoc/dochtml"
 	"golang.org/x/pkgsite/internal/index"
 	"golang.org/x/pkgsite/internal/postgres"
-	"golang.org/x/pkgsite/internal/proxy"
+	"golang.org/x/pkgsite/internal/proxy/proxytest"
 	"golang.org/x/pkgsite/internal/queue"
 	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/testing/sample"
@@ -35,13 +35,13 @@ const testTimeout = 120 * time.Second
 var (
 	testDB      *postgres.DB
 	httpClient  *http.Client
-	testModules []*proxy.Module
+	testModules []*proxytest.Module
 )
 
 func TestMain(m *testing.M) {
 	httpClient = &http.Client{Transport: fakeTransport{}}
 	dochtml.LoadTemplates(template.TrustedSourceFromConstant("../../static/doc"))
-	testModules = proxy.LoadTestModules("../proxy/testdata")
+	testModules = proxytest.LoadTestModules("../proxy/testdata")
 	postgres.RunDBTests("discovery_worker_test", m, &testDB)
 }
 
@@ -76,7 +76,7 @@ func TestWorker(t *testing.T) {
 			Timestamp: start.Add(time.Second),
 			Version:   "v0.0.1",
 		}
-		fooProxy = &proxy.Module{
+		fooProxy = &proxytest.Module{
 			ModulePath: fooIndex.Path,
 			Version:    fooIndex.Version,
 			Files: map[string]string{
@@ -84,7 +84,7 @@ func TestWorker(t *testing.T) {
 				"foo.go": "package foo\nconst Foo = \"Foo\"",
 			},
 		}
-		barProxy = &proxy.Module{
+		barProxy = &proxytest.Module{
 			ModulePath: barIndex.Path,
 			Version:    barIndex.Version,
 			Files: map[string]string{
@@ -125,7 +125,7 @@ func TestWorker(t *testing.T) {
 	tests := []struct {
 		label    string
 		index    []*internal.IndexVersion
-		proxy    []*proxy.Module
+		proxy    []*proxytest.Module
 		requests []*http.Request
 		wantFoo  *internal.ModuleVersionState
 		wantBar  *internal.ModuleVersionState
@@ -133,7 +133,7 @@ func TestWorker(t *testing.T) {
 		{
 			label: "poll only",
 			index: []*internal.IndexVersion{fooIndex, barIndex},
-			proxy: []*proxy.Module{fooProxy, barProxy},
+			proxy: []*proxytest.Module{fooProxy, barProxy},
 			requests: []*http.Request{
 				httptest.NewRequest("POST", "/poll", nil),
 			},
@@ -143,7 +143,7 @@ func TestWorker(t *testing.T) {
 		{
 			label: "full fetch",
 			index: []*internal.IndexVersion{fooIndex, barIndex},
-			proxy: []*proxy.Module{fooProxy, barProxy},
+			proxy: []*proxytest.Module{fooProxy, barProxy},
 			requests: []*http.Request{
 				httptest.NewRequest("POST", "/poll", nil),
 				httptest.NewRequest("POST", "/enqueue", nil),
@@ -153,7 +153,7 @@ func TestWorker(t *testing.T) {
 		}, {
 			label: "partial fetch",
 			index: []*internal.IndexVersion{fooIndex, barIndex},
-			proxy: []*proxy.Module{fooProxy, barProxy},
+			proxy: []*proxytest.Module{fooProxy, barProxy},
 			requests: []*http.Request{
 				httptest.NewRequest("POST", "/poll?limit=1", nil),
 				httptest.NewRequest("POST", "/enqueue", nil),
@@ -162,7 +162,7 @@ func TestWorker(t *testing.T) {
 		}, {
 			label: "fetch with errors",
 			index: []*internal.IndexVersion{fooIndex, barIndex},
-			proxy: []*proxy.Module{fooProxy},
+			proxy: []*proxytest.Module{fooProxy},
 			requests: []*http.Request{
 				httptest.NewRequest("POST", "/poll", nil),
 				httptest.NewRequest("POST", "/enqueue", nil),
@@ -176,7 +176,7 @@ func TestWorker(t *testing.T) {
 			indexClient, teardownIndex := index.SetupTestIndex(t, test.index)
 			defer teardownIndex()
 
-			proxyClient, teardownProxy := proxy.SetupTestClient(t, test.proxy)
+			proxyClient, teardownProxy := proxytest.SetupTestClient(t, test.proxy)
 			defer teardownProxy()
 			defer postgres.ResetTestDB(testDB, t)
 			f := &Fetcher{proxyClient, source.NewClient(sourceTimeout), testDB, nil}

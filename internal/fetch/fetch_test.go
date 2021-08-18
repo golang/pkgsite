@@ -25,7 +25,7 @@ import (
 	"golang.org/x/pkgsite/internal/godoc"
 	"golang.org/x/pkgsite/internal/godoc/dochtml"
 	"golang.org/x/pkgsite/internal/licenses"
-	"golang.org/x/pkgsite/internal/proxy"
+	"golang.org/x/pkgsite/internal/proxy/proxytest"
 	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/testing/sample"
@@ -35,14 +35,14 @@ var testTimeout = 30 * time.Second
 
 var (
 	templateSource = template.TrustedSourceFromConstant("../../static/doc")
-	testModules    []*proxy.Module
+	testModules    []*proxytest.Module
 )
 
-type fetchFunc func(t *testing.T, withLicenseDetector bool, ctx context.Context, mod *proxy.Module, fetchVersion string) (*FetchResult, *licenses.Detector)
+type fetchFunc func(t *testing.T, withLicenseDetector bool, ctx context.Context, mod *proxytest.Module, fetchVersion string) (*FetchResult, *licenses.Detector)
 
 func TestMain(m *testing.M) {
 	dochtml.LoadTemplates(templateSource)
-	testModules = proxy.LoadTestModules("../proxy/testdata")
+	testModules = proxytest.LoadTestModules("../proxy/testdata")
 	licenses.OmitExceptions = true
 	os.Exit(m.Run())
 }

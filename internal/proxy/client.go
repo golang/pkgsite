@@ -33,7 +33,7 @@ type Client struct {
 	url string
 
 	// Client used for HTTP requests. It is mutable for testing purposes.
-	httpClient *http.Client
+	HTTPClient *http.Client
 
 	// Whether fetch should be disabled.
 	disableFetch bool
@@ -54,7 +54,7 @@ type VersionInfo struct {
 
 // Setting this header to true prevents the proxy from fetching uncached
 // modules.
-const disableFetchHeader = "Disable-Module-Fetch"
+const DisableFetchHeader = "Disable-Module-Fetch"
 
 // New constructs a *Client using the provided url, which is expected to
 // be an absolute URI that can be directly passed to http.Get.
@@ -62,7 +62,7 @@ func New(u string) (_ *Client, err error) {
 	defer derrors.WrapStack(&err, "proxy.New(%q)", u)
 	return &Client{
 		url:          strings.TrimRight(u, "/"),
-		httpClient:   &http.Client{Transport: &ochttp.Transport{}},
+		HTTPClient:   &http.Client{Transport: &ochttp.Transport{}},
 		disableFetch: false,
 	}, nil
 }
@@ -156,11 +156,11 @@ func (c *Client) Zip(ctx context.Context, modulePath, resolvedVersion string) (_
 func (c *Client) ZipSize(ctx context.Context, modulePath, resolvedVersion string) (_ int64, err error) {
 	defer derrors.WrapStack(&err, "proxy.Client.ZipSize(ctx, %q, %q)", modulePath, resolvedVersion)
 
-	url, err := c.escapedURL(modulePath, resolvedVersion, "zip")
+	url, err := c.EscapedURL(modulePath, resolvedVersion, "zip")
 	if err != nil {
 		return 0, err
 	}
-	res, err := ctxhttp.Head(ctx, c.httpClient, url)
+	res, err := ctxhttp.Head(ctx, c.HTTPClient, url)
 	if err != nil {
 		return 0, fmt.Errorf("ctxhttp.Head(ctx, client, %q): %v", url, err)
 	}
@@ -174,7 +174,7 @@ func (c *Client) ZipSize(ctx context.Context, modulePath, resolvedVersion string
 	return res.ContentLength, nil
 }
 
-func (c *Client) escapedURL(modulePath, requestedVersion, suffix string) (_ string, err error) {
+func (c *Client) EscapedURL(modulePath, requestedVersion, suffix string) (_ string, err error) {
 	defer derrors.WrapStack(&err, "Client.escapedURL(%q, %q, %q)", modulePath, requestedVersion, suffix)
 
 	if suffix != "info" && suffix != "mod" && suffix != "zip" {
@@ -200,7 +200,7 @@ func (c *Client) escapedURL(modulePath, requestedVersion, suffix string) (_ stri
 func (c *Client) readBody(ctx context.Context, modulePath, requestedVersion, suffix string) (_ []byte, err error) {
 	defer derrors.WrapStack(&err, "Client.readBody(%q, %q, %q)", modulePath, requestedVersion, suffix)
 
-	u, err := c.escapedURL(modulePath, requestedVersion, suffix)
+	u, err := c.EscapedURL(modulePath, requestedVersion, suffix)
 	if err != nil {
 		return nil, err
 	}
@@ -254,9 +254,9 @@ func (c *Client) executeRequest(ctx context.Context, u string, bodyFunc func(bod
 		return err
 	}
 	if c.disableFetch {
-		req.Header.Set(disableFetchHeader, "true")
+		req.Header.Set(DisableFetchHeader, "true")
 	}
-	r, err := ctxhttp.Do(ctx, c.httpClient, req)
+	r, err := ctxhttp.Do(ctx, c.HTTPClient, req)
 	if err != nil {
 		return fmt.Errorf("ctxhttp.Do(ctx, client, %q): %v", u, err)
 	}

@@ -28,7 +28,7 @@ import (
 	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/middleware"
 	"golang.org/x/pkgsite/internal/postgres"
-	"golang.org/x/pkgsite/internal/proxy"
+	"golang.org/x/pkgsite/internal/proxy/proxytest"
 	"golang.org/x/pkgsite/internal/queue"
 	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/testing/htmlcheck"
@@ -1547,9 +1547,9 @@ func TestTagRoute(t *testing.T) {
 	}
 }
 
-func newTestServer(t *testing.T, proxyModules []*proxy.Module, redisClient *redis.Client, experimentNames ...string) (*Server, http.Handler, func()) {
+func newTestServer(t *testing.T, proxyModules []*proxytest.Module, redisClient *redis.Client, experimentNames ...string) (*Server, http.Handler, func()) {
 	t.Helper()
-	proxyClient, teardown := proxy.SetupTestClient(t, proxyModules)
+	proxyClient, teardown := proxytest.SetupTestClient(t, proxyModules)
 	sourceClient := source.NewClient(sourceTimeout)
 	ctx := context.Background()
 

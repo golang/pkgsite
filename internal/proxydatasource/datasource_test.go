@@ -19,23 +19,23 @@ import (
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/godoc/dochtml"
 	"golang.org/x/pkgsite/internal/licenses"
-	"golang.org/x/pkgsite/internal/proxy"
+	"golang.org/x/pkgsite/internal/proxy/proxytest"
 	"golang.org/x/pkgsite/internal/testing/sample"
 	"golang.org/x/pkgsite/internal/version"
 )
 
-var testModules []*proxy.Module
+var testModules []*proxytest.Module
 
 func TestMain(m *testing.M) {
 	dochtml.LoadTemplates(template.TrustedSourceFromConstant("../../static/doc"))
-	testModules = proxy.LoadTestModules("../proxy/testdata")
+	testModules = proxytest.LoadTestModules("../proxy/testdata")
 	licenses.OmitExceptions = true
 	os.Exit(m.Run())
 }
 
 func setup(t *testing.T) (context.Context, *DataSource, func()) {
 	t.Helper()
-	client, teardownProxy := proxy.SetupTestClient(t, testModules)
+	client, teardownProxy := proxytest.SetupTestClient(t, testModules)
 	ctx, cancel := context.WithTimeout(context.Background(), 40*time.Second)
 	return ctx, NewForTesting(client), func() {
 		teardownProxy()
@@ -237,7 +237,7 @@ func TestBypass(t *testing.T) {
 
 func TestGetLatestInfo(t *testing.T) {
 	t.Helper()
-	testModules := []*proxy.Module{
+	testModules := []*proxytest.Module{
 		{
 			ModulePath: "foo.com/bar",
 			Version:    "v1.1.0",
@@ -270,7 +270,7 @@ func TestGetLatestInfo(t *testing.T) {
 			ModulePath: "incompatible.com/bar/v3",
 		},
 	}
-	client, teardownProxy := proxy.SetupTestClient(t, testModules)
+	client, teardownProxy := proxytest.SetupTestClient(t, testModules)
 	defer teardownProxy()
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()

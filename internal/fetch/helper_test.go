@@ -17,6 +17,7 @@ import (
 	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/proxy"
+	"golang.org/x/pkgsite/internal/proxy/proxytest"
 	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/testing/sample"
@@ -129,7 +130,7 @@ func updateFetchResultVersions(t *testing.T, fr *FetchResult, local bool) *Fetch
 
 // proxyFetcher is a test helper function that sets up a test proxy, fetches
 // a module using FetchModule, and returns fetch result and a license detector.
-func proxyFetcher(t *testing.T, withLicenseDetector bool, ctx context.Context, mod *proxy.Module, fetchVersion string) (*FetchResult, *licenses.Detector) {
+func proxyFetcher(t *testing.T, withLicenseDetector bool, ctx context.Context, mod *proxytest.Module, fetchVersion string) (*FetchResult, *licenses.Detector) {
 	t.Helper()
 
 	modulePath := mod.ModulePath
@@ -141,7 +142,7 @@ func proxyFetcher(t *testing.T, withLicenseDetector bool, ctx context.Context, m
 		fetchVersion = version
 	}
 
-	proxyClient, teardownProxy := proxy.SetupTestClient(t, []*proxy.Module{{
+	proxyClient, teardownProxy := proxytest.SetupTestClient(t, []*proxytest.Module{{
 		ModulePath: modulePath,
 		Version:    version,
 		Files:      mod.Files,
@@ -159,7 +160,7 @@ func proxyFetcher(t *testing.T, withLicenseDetector bool, ctx context.Context, m
 // localFetcher is a helper function that creates a test directory to hold a module,
 // fetches the module from the directory using FetchLocalModule, and returns a fetch
 // result, and a license detector.
-func localFetcher(t *testing.T, withLicenseDetector bool, ctx context.Context, mod *proxy.Module, fetchVersion string) (*FetchResult, *licenses.Detector) {
+func localFetcher(t *testing.T, withLicenseDetector bool, ctx context.Context, mod *proxytest.Module, fetchVersion string) (*FetchResult, *licenses.Detector) {
 	t.Helper()
 
 	directory, err := testhelper.CreateTestDirectory(mod.Files)

@@ -11,15 +11,15 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/godoc"
-	"golang.org/x/pkgsite/internal/proxy"
+	"golang.org/x/pkgsite/internal/proxy/proxytest"
 	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/testing/testhelper"
 )
 
 type testModule struct {
-	mod        *proxy.Module
-	modfunc    func() *proxy.Module // call to get module if mod field is nil
+	mod        *proxytest.Module
+	modfunc    func() *proxytest.Module // call to get module if mod field is nil
 	fr         *FetchResult
 	docStrings map[string][]string
 }
@@ -92,8 +92,8 @@ var singleUnits = []*internal.Unit{
 }
 
 var moduleOnePackage = &testModule{
-	modfunc: func() *proxy.Module {
-		return proxy.FindModule(testModules, "example.com/single", "v1.0.0")
+	modfunc: func() *proxytest.Module {
+		return proxytest.FindModule(testModules, "example.com/single", "v1.0.0")
 	},
 	fr: &FetchResult{
 		HasGoMod: true,
@@ -110,8 +110,8 @@ var moduleOnePackage = &testModule{
 }
 
 var moduleNoGoMod = &testModule{
-	modfunc: func() *proxy.Module {
-		return proxy.FindModule(testModules, "example.com/basic", "v1.0.0").
+	modfunc: func() *proxytest.Module {
+		return proxytest.FindModule(testModules, "example.com/basic", "v1.0.0").
 			ChangePath("example.com/nogo").
 			DeleteFile("go.mod")
 	},
@@ -153,7 +153,7 @@ var moduleNoGoMod = &testModule{
 }
 
 var moduleMultiPackage = &testModule{
-	modfunc: func() *proxy.Module { return proxy.FindModule(testModules, "example.com/multi", "v1.0.0") },
+	modfunc: func() *proxytest.Module { return proxytest.FindModule(testModules, "example.com/multi", "v1.0.0") },
 	fr: &FetchResult{
 		HasGoMod: true,
 		Module: &internal.Module{
@@ -232,14 +232,14 @@ var moduleMultiPackage = &testModule{
 }
 
 var moduleEmpty = &testModule{
-	mod: &proxy.Module{
+	mod: &proxytest.Module{
 		ModulePath: "emp.ty/module",
 	},
 	fr: &FetchResult{Module: &internal.Module{}},
 }
 
 var moduleNoGo = &testModule{
-	mod: &proxy.Module{
+	mod: &proxytest.Module{
 		ModulePath: "no.go/files",
 		Files:      map[string]string{"go.mod": "module no.go/files"},
 	},
@@ -247,7 +247,7 @@ var moduleNoGo = &testModule{
 }
 
 var moduleBadPackages = &testModule{
-	mod: &proxy.Module{
+	mod: &proxytest.Module{
 		ModulePath: "bad.mod/module",
 		Files: map[string]string{
 			"LICENSE": testhelper.BSD0License,
@@ -334,7 +334,9 @@ var moduleBadPackages = &testModule{
 }
 
 var moduleBuildConstraints = &testModule{
-	modfunc: func() *proxy.Module { return proxy.FindModule(testModules, "example.com/build-constraints", "") },
+	modfunc: func() *proxytest.Module {
+		return proxytest.FindModule(testModules, "example.com/build-constraints", "")
+	},
 	fr: &FetchResult{
 		Status:   derrors.ToStatus(derrors.HasIncompletePackages),
 		HasGoMod: true,
@@ -433,7 +435,7 @@ var moduleBuildConstraints = &testModule{
 
 // The package in this module is broken for one build context, but not all.
 var moduleBadBuildContext = &testModule{
-	mod: &proxy.Module{
+	mod: &proxytest.Module{
 		ModulePath: "github.com/bad-context",
 		Files: map[string]string{
 			"pkg/linux.go": `
@@ -475,7 +477,7 @@ var moduleBadBuildContext = &testModule{
 }
 
 var moduleNonRedist = &testModule{
-	modfunc: func() *proxy.Module { return proxy.FindModule(testModules, "example.com/nonredist", "") },
+	modfunc: func() *proxytest.Module { return proxytest.FindModule(testModules, "example.com/nonredist", "") },
 	fr: &FetchResult{
 		HasGoMod: true,
 		Module: &internal.Module{
@@ -580,7 +582,7 @@ var moduleNonRedist = &testModule{
 }
 
 var moduleBadImportPath = &testModule{
-	mod: &proxy.Module{
+	mod: &proxytest.Module{
 		ModulePath: "bad.import.path.com",
 		Files: map[string]string{
 			"good/import/path/foo.go": "package foo",
@@ -636,7 +638,7 @@ var moduleBadImportPath = &testModule{
 }
 
 var moduleDocTest = &testModule{
-	mod: &proxy.Module{
+	mod: &proxytest.Module{
 		ModulePath: "doc.test",
 		Files: map[string]string{
 			"LICENSE": testhelper.BSD0License,
@@ -692,7 +694,7 @@ var moduleDocTest = &testModule{
 }
 
 var moduleDocTooLarge = &testModule{
-	mod: &proxy.Module{
+	mod: &proxytest.Module{
 		ModulePath: "bigdoc.test",
 		Files: map[string]string{
 			"LICENSE": testhelper.BSD0License,
@@ -739,7 +741,7 @@ var moduleDocTooLarge = &testModule{
 }
 
 var moduleWasm = &testModule{
-	mod: &proxy.Module{
+	mod: &proxytest.Module{
 		ModulePath: "github.com/my/module/js",
 		Files: map[string]string{
 			"README.md": "THIS IS A README",
@@ -797,7 +799,7 @@ var moduleWasm = &testModule{
 }
 
 var moduleAlternative = &testModule{
-	mod: &proxy.Module{
+	mod: &proxytest.Module{
 		ModulePath: "github.com/my/module",
 		Files:      map[string]string{"go.mod": "module canonical"},
 	},
@@ -807,7 +809,7 @@ var moduleAlternative = &testModule{
 }
 
 var moduleStdMaster = &testModule{
-	mod: &proxy.Module{
+	mod: &proxytest.Module{
 		ModulePath: stdlib.ModulePath,
 		Version:    "master",
 		// No files necessary because the internal/stdlib package will read from
@@ -883,7 +885,7 @@ var moduleStdMaster = &testModule{
 }
 
 var moduleStd = &testModule{
-	mod: &proxy.Module{
+	mod: &proxytest.Module{
 		ModulePath: stdlib.ModulePath,
 		Version:    "v1.12.5",
 		// No files necessary because the internal/stdlib package will read from
@@ -2682,7 +2684,7 @@ var moduleStd = &testModule{
 }
 
 var moduleMaster = &testModule{
-	mod: &proxy.Module{
+	mod: &proxytest.Module{
 		ModulePath: "github.com/my/module",
 		Files: map[string]string{
 			"foo/foo.go": "// package foo exports a helpful constant.\npackage foo\nconst Bar = 1",
@@ -2732,7 +2734,7 @@ var moduleMaster = &testModule{
 }
 
 var moduleLatest = &testModule{
-	mod: &proxy.Module{
+	mod: &proxytest.Module{
 		ModulePath: "github.com/my/module",
 		Files: map[string]string{
 			"foo/foo.go": "// package foo exports a helpful constant.\npackage foo\nconst Bar = 1",
@@ -2789,7 +2791,7 @@ var moduleLatest = &testModule{
 // The substrings are separated by a '~' character.
 func moduleWithExamples(path string, api []*internal.Symbol, source, test string, docSubstrings ...string) *testModule {
 	return &testModule{
-		mod: &proxy.Module{
+		mod: &proxytest.Module{
 			ModulePath: path,
 			Files: map[string]string{
 				"LICENSE": testhelper.BSD0License,

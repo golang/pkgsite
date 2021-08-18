@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-package proxy
+package proxy_test
 
 import (
 	"context"
@@ -14,6 +14,8 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/proxy"
+	"golang.org/x/pkgsite/internal/proxy/proxytest"
 	"golang.org/x/pkgsite/internal/testing/sample"
 	"golang.org/x/pkgsite/internal/testing/testhelper"
 	"golang.org/x/pkgsite/internal/version"
@@ -21,7 +23,7 @@ import (
 
 const testTimeout = 5 * time.Second
 
-var testModule = &Module{
+var testModule = &proxytest.Module{
 	ModulePath: sample.ModulePath,
 	Version:    sample.VersionString,
 	Files: map[string]string{
@@ -57,7 +59,7 @@ var testModule = &Module{
 
 const uncachedModulePath = "example.com/uncached"
 
-var uncachedModule = &Module{
+var uncachedModule = &proxytest.Module{
 	ModulePath: uncachedModulePath,
 	Version:    sample.VersionString,
 	NotCached:  true,
@@ -67,7 +69,7 @@ func TestGetLatestInfo(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
-	testModules := []*Module{
+	testModules := []*proxytest.Module{
 		{
 			ModulePath: sample.ModulePath,
 			Version:    "v1.1.0",
@@ -79,7 +81,7 @@ func TestGetLatestInfo(t *testing.T) {
 			Files:      map[string]string{"bar.go": "package bar\nconst Version = 1.2"},
 		},
 	}
-	client, teardownProxy := SetupTestClient(t, testModules)
+	client, teardownProxy := proxytest.SetupTestClient(t, testModules)
 	defer teardownProxy()
 
 	info, err := client.Info(ctx, sample.ModulePath, version.Latest)
@@ -96,7 +98,7 @@ func TestListVersions(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
-	testModules := []*Module{
+	testModules := []*proxytest.Module{
 		{
 			ModulePath: sample.ModulePath,
 			Version:    "v1.1.0",
@@ -113,7 +115,7 @@ func TestListVersions(t *testing.T) {
 			Files:      map[string]string{"bar.go": "package bar\nconst Version = 1.3"},
 		},
 	}
-	client, teardownProxy := SetupTestClient(t, testModules)
+	client, teardownProxy := proxytest.SetupTestClient(t, testModules)
 	defer teardownProxy()
 
 	want := []string{"v1.1.0", "v1.2.0"}
@@ -130,7 +132,7 @@ func TestInfo(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
-	client, teardownProxy := SetupTestClient(t, []*Module{testModule, uncachedModule})
+	client, teardownProxy := proxytest.SetupTestClient(t, []*proxytest.Module{testModule, uncachedModule})
 	defer teardownProxy()
 
 	info, err := client.Info(ctx, sample.ModulePath, sample.VersionString)
@@ -164,11 +166,11 @@ func TestInfo_Errors(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
-	proxyServer := NewServer(nil)
+	proxyServer := proxytest.NewServer(nil)
 	proxyServer.AddRoute(
 		fmt.Sprintf("/%s/@v/%s.info", "module.com/timeout", sample.VersionString),
 		func(w http.ResponseWriter, r *http.Request) { http.Error(w, "fetch timed out", http.StatusNotFound) })
-	client, teardownProxy, err := NewClientForServer(proxyServer)
+	client, teardownProxy, err := proxytest.NewClientForServer(proxyServer)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -197,7 +199,7 @@ func TestMod(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
-	client, teardownProxy := SetupTestClient(t, []*Module{testModule})
+	client, teardownProxy := proxytest.SetupTestClient(t, []*proxytest.Module{testModule})
 	defer teardownProxy()
 
 	bytes, err := client.Mod(ctx, sample.ModulePath, sample.VersionString)
@@ -215,7 +217,7 @@ func TestGetZip(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
-	client, teardownProxy := SetupTestClient(t, []*Module{testModule})
+	client, teardownProxy := proxytest.SetupTestClient(t, []*proxytest.Module{testModule})
 	defer teardownProxy()
 
 	zipReader, err := client.Zip(ctx, sample.ModulePath, sample.VersionString)
@@ -254,7 +256,7 @@ func TestZipNonExist(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
-	client, teardownProxy := SetupTestClient(t, nil)
+	client, teardownProxy := proxytest.SetupTestClient(t, nil)
 	defer teardownProxy()
 
 	if _, err := client.Zip(ctx, sample.ModulePath, sample.VersionString); !errors.Is(err, derrors.NotFound) {
@@ -264,7 +266,7 @@ func TestZipNonExist(t *testing.T) {
 
 func TestZipSize(t *testing.T) {
 	t.Run("found", func(t *testing.T) {
-		client, teardownProxy := SetupTestClient(t, []*Module{testModule})
+		client, teardownProxy := proxytest.SetupTestClient(t, []*proxytest.Module{testModule})
 		defer teardownProxy()
 		got, err := client.ZipSize(context.Background(), sample.ModulePath, sample.VersionString)
 		if err != nil {
@@ -276,7 +278,7 @@ func TestZipSize(t *testing.T) {
 		}
 	})
 	t.Run("not found", func(t *testing.T) {
-		client, teardownProxy := SetupTestClient(t, nil)
+		client, teardownProxy := proxytest.SetupTestClient(t, nil)
 		defer teardownProxy()
 		if _, err := client.ZipSize(context.Background(), sample.ModulePath, sample.VersionString); !errors.Is(err, derrors.NotFound) {
 			t.Errorf("got %v, want %v", err, derrors.NotFound)
@@ -285,7 +287,10 @@ func TestZipSize(t *testing.T) {
 }
 
 func TestEncodedURL(t *testing.T) {
-	c := &Client{url: "u"}
+	c, err := proxy.New("u")
+	if err != nil {
+		t.Fatal(err)
+	}
 	for _, test := range []struct {
 		path, version, suffix string
 		want                  string // empty => error
@@ -343,7 +348,7 @@ func TestEncodedURL(t *testing.T) {
 			"", // only "info" or "zip"
 		},
 	} {
-		got, err := c.escapedURL(test.path, test.version, test.suffix)
+		got, err := c.EscapedURL(test.path, test.version, test.suffix)
 		if got != test.want || (err != nil) != (test.want == "") {
 			t.Errorf("%s, %s, %s: got (%q, %v), want %q", test.path, test.version, test.suffix, got, err, test.want)
 		}

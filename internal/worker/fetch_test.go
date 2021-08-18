@@ -17,7 +17,7 @@ import (
 	"golang.org/x/pkgsite/internal/godoc"
 	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/postgres"
-	"golang.org/x/pkgsite/internal/proxy"
+	"golang.org/x/pkgsite/internal/proxy/proxytest"
 	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/testing/sample"
@@ -46,7 +46,7 @@ func TestFetchAndUpdateState(t *testing.T) {
 	stdlib.UseTestData = true
 	defer func() { stdlib.UseTestData = false }()
 
-	proxyClient, teardownProxy := proxy.SetupTestClient(t, testModules)
+	proxyClient, teardownProxy := proxytest.SetupTestClient(t, testModules)
 	defer teardownProxy()
 
 	myModuleV100 := &internal.Unit{
@@ -377,7 +377,7 @@ func TestFetchAndUpdateStateCacheZip(t *testing.T) {
 	// test confirms that that feature works.
 	ctx := context.Background()
 	defer postgres.ResetTestDB(testDB, t)
-	proxyServer := proxy.NewServer([]*proxy.Module{
+	proxyServer := proxytest.NewServer([]*proxytest.Module{
 		{
 			ModulePath: "m.com",
 			Version:    "v2.0.0+incompatible",
@@ -389,7 +389,7 @@ func TestFetchAndUpdateStateCacheZip(t *testing.T) {
 			Files:      map[string]string{"a.go": "package a"},
 		},
 	})
-	proxyClient, teardownProxy, err := proxy.NewClientForServer(proxyServer)
+	proxyClient, teardownProxy, err := proxytest.NewClientForServer(proxyServer)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -419,7 +419,7 @@ func TestFetchAndUpdateStateCacheZip(t *testing.T) {
 
 func TestFetchAndUpdateLatest(t *testing.T) {
 	ctx := context.Background()
-	prox, teardown := proxy.SetupTestClient(t, testModules)
+	prox, teardown := proxytest.SetupTestClient(t, testModules)
 	defer teardown()
 
 	const modulePath = "example.com/retractions"

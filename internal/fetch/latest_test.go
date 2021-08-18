@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"golang.org/x/pkgsite/internal/derrors"
-	"golang.org/x/pkgsite/internal/proxy"
+	"golang.org/x/pkgsite/internal/proxy/proxytest"
 	"golang.org/x/pkgsite/internal/stdlib"
 )
 
@@ -17,7 +17,7 @@ func TestLatestModuleVersions(t *testing.T) {
 	// latestVersion is tested above.
 	// Contents of the go.mod file are tested in proxydatasource.
 	// Here, test retractions and presence of a go.mod file.
-	prox, teardown := proxy.SetupTestClient(t, testModules)
+	prox, teardown := proxytest.SetupTestClient(t, testModules)
 	defer teardown()
 
 	stdlib.UseTestData = true
@@ -52,12 +52,12 @@ func TestLatestModuleVersions(t *testing.T) {
 func TestLatestModuleVersionsNotFound(t *testing.T) {
 	// Verify that we get (nil, nil) if there is no version information.
 	const modulePath = "example.com/no-versions"
-	server := proxy.NewServer(testModules)
-	server.AddModuleNoVersions(&proxy.Module{
+	server := proxytest.NewServer(testModules)
+	server.AddModuleNoVersions(&proxytest.Module{
 		ModulePath: modulePath,
 		Version:    "v0.0.0-20181107005212-dafb9c8d8707",
 	})
-	client, teardown, err := proxy.NewClientForServer(server)
+	client, teardown, err := proxytest.NewClientForServer(server)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -75,7 +75,7 @@ func TestLatestModuleVersionsNotFound(t *testing.T) {
 func TestLatestModuleVersionsBadGoMod(t *testing.T) {
 	// Verify that we get a BadModule error if the go.mod file is bad.
 	const modulePath = "example.com/bad-go-mod"
-	server := proxy.NewServer([]*proxy.Module{
+	server := proxytest.NewServer([]*proxytest.Module{
 		{
 			ModulePath: modulePath,
 			Version:    "v1.0.0",
@@ -84,7 +84,7 @@ func TestLatestModuleVersionsBadGoMod(t *testing.T) {
 			},
 		},
 	})
-	client, teardown, err := proxy.NewClientForServer(server)
+	client, teardown, err := proxytest.NewClientForServer(server)
 	if err != nil {
 		t.Fatal(err)
 	}
