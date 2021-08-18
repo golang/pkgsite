@@ -94,10 +94,12 @@ type ModuleGetter interface {
 	// Info returns basic information about the module.
 	Info(ctx context.Context, path, version string) (*proxy.VersionInfo, error)
 	// Mod returns the contents of the module's go.mod file.
+	// If the file does not exist, it returns a synthesized one.
 	Mod(ctx context.Context, path, version string) ([]byte, error)
 	// Zip returns a reader for the module's zip file.
 	Zip(ctx context.Context, path, version string) (*zip.Reader, error)
 	// ZipSize returns the approximate size of the zip file in bytes.
+	// It is used only for load-shedding.
 	ZipSize(ctx context.Context, path, version string) (int64, error)
 }
 
@@ -160,6 +162,19 @@ func FetchModule(ctx context.Context, modulePath, requestedVersion string, mg Mo
 }
 
 func fetchModule(ctx context.Context, fr *FetchResult, mg ModuleGetter, sourceClient *source.Client) (*FetchInfo, error) {
+	// If the module path is empty, get it from the go.mod file. This should only happen when fetching
+	// a local module.
+	if fr.ModulePath == "" {
+		goModBytes, err := mg.Mod(ctx, fr.ModulePath, fr.RequestedVersion)
+		if err != nil {
+			return nil, err
+		}
+		fr.ModulePath = modfile.ModulePath(goModBytes)
+		if fr.ModulePath == "" {
+			return nil, fmt.Errorf("go.mod has no module path: %w", derrors.BadModule)
+		}
+	}
+
 	info, err := GetInfo(ctx, fr.ModulePath, fr.RequestedVersion, mg)
 	if err != nil {
 		return nil, err
