@@ -57,13 +57,13 @@
       <div class="SearchSnippet">
         <div class="SearchSnippet-headerContainer">
           <h2>
-            <a href="{{.SymbolLink}}" data-gtmc="search result" data-gtmv="{{$i}}"
+            <a href="{{.SymbolLink}}" data-gtmc="symbol search result symbol" data-gtmv="{{$i}}"
                 data-test-id="snippet-title">
               <span class="SearchSnippet-symbolKind">{{.SymbolKind}}</span>
               {{.SymbolName}}
             </a>
             <span class="SearchSnippet-header-dash">in</span>
-            <a href="/{{$r.PackagePath}}"
+            <a href="/{{$r.PackagePath}}" data-gtmc="symbol search result package" data-gtmv="{{$i}}"
               class="">{{$r.PackagePath}}</a>
           </h2>
         </div>
@@ -77,7 +77,7 @@
 
 {{define "search_package"}}
   <h1>Search results for “{{.Query}}”</h1>
-  <a class="SearchResults-instead" href="{{.Pagination.URL .Pagination.Limit .SearchModeSymbol .Query}}">
+  <a class="SearchResults-instead" data-gtmc="toggle search mode" href="{{.Pagination.URL .Pagination.Limit .SearchModeSymbol .Query}}">
     <span class="SearchResults-insteadPrefix">Search instead for </span>“{{.SearchModeSymbol}}: {{.Query}}”
   </a>
   {{if gt (len .Results) 0}}
@@ -123,7 +123,7 @@
           <div>
             <span class="go-textSubtle">{{.Heading}}</span>
             {{range $i, $v := .Links}}
-              <a href="/{{$v.Href}}" data-gtmc="search result lower major" data-gtmv="{{$i}}"><strong>{{$v.Body}}</strong></a>
+              <a href="/{{$v.Href}}" data-gtmc="search result other major"><strong>{{$v.Body}}</strong></a>
             {{end}}
           </div>
         {{end}}
@@ -136,8 +136,7 @@
                 <a class="go-Chip go-Chip--subtle"
                     href="/{{$v.Href}}"
                     {{if gt $i 4 }}data-hidden="true"{{end}}
-                    data-gtmc="search result same module"
-                    data-gtmv="{{$i}}">
+                    data-gtmc="search result same module">
                   {{$v.Body}}
                 </a>
               {{end}}
@@ -145,7 +144,7 @@
             {{$more := subtract (len .Links) 5}}
             {{if gt (len .Links) 5}}
               <a href="{{$v.ModulePath}}#section-directories" class="go-Chip go-Chip--subtle"
-                  data-gtmc="search result same module link">
+                  data-gtmc="search result more packages">
                 +{{$more}} more
               </a>
             {{end}}
@@ -182,7 +181,7 @@
   {{ $p := .Pagination }}
   <label class="go-Label go-Label--inline" data-test-id="pagination">
     Show
-    <select name="limit" class="go-Select js-selectNav">
+    <select data-gtmc="search limit select" aria-label="Select number of results" name="limit" class="go-Select js-selectNav">
       {{range $p.Limits}}
         <option value="{{$p.URL . $.SearchMode ""}}"{{if eq . $p.Limit}} selected{{end}}>{{.}}</option>
       {{end}}
