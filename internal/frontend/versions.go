@@ -355,8 +355,9 @@ func displayVersion(modulePath, requestedVersion, resolvedVersion string) string
 			// std doesn't have actual pseudoversions, so the only ones we
 			// support are "master" and "dev.fuzz".
 			v := version.Master
-			if requestedVersion == stdlib.DevFuzz {
-				v = stdlib.DevFuzz
+			if requestedVersion == stdlib.DevFuzz ||
+				requestedVersion == stdlib.DevBoringCrypto {
+				v = requestedVersion
 			}
 			return fmt.Sprintf("%s (%s)", v, commit[0:7])
 		}

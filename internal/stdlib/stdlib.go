@@ -40,6 +40,9 @@ const (
 
 	// DevFuzz is the branch name for fuzzing in beta.
 	DevFuzz = "dev.fuzz"
+
+	// DevBoringCrypto is the branch name for dev.boringcrypto.
+	DevBoringCrypto = "dev.boringcrypto"
 )
 
 var (
@@ -54,8 +57,9 @@ var (
 
 // SupportedBranches are the branches of the stdlib repo supported by pkgsite.
 var SupportedBranches = map[string]bool{
-	version.Master: true,
-	DevFuzz:        true,
+	version.Master:  true,
+	DevBoringCrypto: true,
+	DevFuzz:         true,
 }
 
 // VersionForTag returns the semantic version for the Go tag, or "" if
@@ -199,8 +203,8 @@ func getGoRepo(v string) (_ *git.Repository, err error) {
 	var ref plumbing.ReferenceName
 	if v == version.Master {
 		ref = plumbing.HEAD
-	} else if v == DevFuzz {
-		ref = "refs/heads/dev.fuzz"
+	} else if SupportedBranches[v] {
+		ref = plumbing.NewBranchReferenceName(v)
 	} else {
 		tag, err := TagForVersion(v)
 		if err != nil {
