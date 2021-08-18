@@ -144,12 +144,15 @@ func (db *DB) saveModule(ctx context.Context, m *internal.Module, lmv *internal.
 		}
 
 		// Here, this module is the latest good version.
-
 		if err := insertImportsUnique(ctx, tx, m); err != nil {
 			return err
 		}
 
-		if err := deleteOtherModulePackagesFromSearchDocuments(ctx, tx, m); err != nil {
+		var pkgPaths []string
+		for _, u := range m.Packages() {
+			pkgPaths = append(pkgPaths, u.Path)
+		}
+		if err := deleteOtherModulePackagesFromSearchDocuments(ctx, tx, m.ModulePath, pkgPaths); err != nil {
 			return err
 		}
 
@@ -715,6 +718,15 @@ func (db *DB) ReconcileSearch(ctx context.Context, modulePath, version string, s
 		// We only need the readme for the module.
 		readme, err := getModuleReadme(ctx, tx, modulePath, lmv.GoodVersion)
 		if err != nil && !errors.Is(err, derrors.NotFound) {
+			return err
+		}
+
+		// Delete packages not in this version.
+		var pkgPaths []string
+		for _, pkg := range pkgMetas {
+			pkgPaths = append(pkgPaths, pkg.Path)
+		}
+		if err := deleteOtherModulePackagesFromSearchDocuments(ctx, tx, modulePath, pkgPaths); err != nil {
 			return err
 		}
 
