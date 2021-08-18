@@ -94,7 +94,6 @@ type ModuleGetter interface {
 	// Info returns basic information about the module.
 	Info(ctx context.Context, path, version string) (*proxy.VersionInfo, error)
 	// Mod returns the contents of the module's go.mod file.
-	// If the file does not exist, it returns a synthesized one.
 	Mod(ctx context.Context, path, version string) ([]byte, error)
 	// Zip returns a reader for the module's zip file.
 	Zip(ctx context.Context, path, version string) (*zip.Reader, error)
