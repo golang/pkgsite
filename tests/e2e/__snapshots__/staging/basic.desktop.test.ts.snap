@@ -28,15 +28,23 @@ Object {
       "role": "link",
     },
     Object {
-      "name": "Getting Started",
+      "name": "Get Started",
       "role": "link",
     },
     Object {
-      "name": "Discover Packages",
+      "name": "Docs",
       "role": "link",
     },
     Object {
-      "name": "About",
+      "name": "Packages",
+      "role": "link",
+    },
+    Object {
+      "name": "Play",
+      "role": "link",
+    },
+    Object {
+      "name": "Blog",
       "role": "link",
     },
     Object {
@@ -77,7 +85,7 @@ Object {
       "role": "link",
     },
     Object {
-      "name": "Getting Started",
+      "name": "Get Started",
       "role": "link",
     },
     Object {
@@ -93,7 +101,7 @@ Object {
       "role": "link",
     },
     Object {
-      "name": "Discover Packages",
+      "name": "Packages",
       "role": "link",
     },
     Object {
@@ -214,15 +222,23 @@ Object {
       "role": "link",
     },
     Object {
-      "name": "Getting Started",
+      "name": "Get Started",
       "role": "link",
     },
     Object {
-      "name": "Discover Packages",
+      "name": "Docs",
       "role": "link",
     },
     Object {
-      "name": "About",
+      "name": "Packages",
+      "role": "link",
+    },
+    Object {
+      "name": "Play",
+      "role": "link",
+    },
+    Object {
+      "name": "Blog",
       "role": "link",
     },
     Object {
@@ -275,7 +291,7 @@ Object {
       "role": "link",
     },
     Object {
-      "name": "Getting Started",
+      "name": "Get Started",
       "role": "link",
     },
     Object {
@@ -291,7 +307,7 @@ Object {
       "role": "link",
     },
     Object {
-      "name": "Discover Packages",
+      "name": "Packages",
       "role": "link",
     },
     Object {
@@ -412,15 +428,23 @@ Object {
       "role": "link",
     },
     Object {
-      "name": "Getting Started",
+      "name": "Get Started",
       "role": "link",
     },
     Object {
-      "name": "Discover Packages",
+      "name": "Docs",
       "role": "link",
     },
     Object {
-      "name": "About",
+      "name": "Packages",
+      "role": "link",
+    },
+    Object {
+      "name": "Play",
+      "role": "link",
+    },
+    Object {
+      "name": "Blog",
       "role": "link",
     },
     Object {
@@ -457,7 +481,7 @@ Object {
       "role": "link",
     },
     Object {
-      "name": "Getting Started",
+      "name": "Get Started",
       "role": "link",
     },
     Object {
@@ -473,7 +497,7 @@ Object {
       "role": "link",
     },
     Object {
-      "name": "Discover Packages",
+      "name": "Packages",
       "role": "link",
     },
     Object {
@@ -586,15 +610,23 @@ Object {
       "role": "link",
     },
     Object {
-      "name": "Getting Started",
+      "name": "Get Started",
       "role": "link",
     },
     Object {
-      "name": "Discover Packages",
+      "name": "Docs",
       "role": "link",
     },
     Object {
-      "name": "About",
+      "name": "Packages",
+      "role": "link",
+    },
+    Object {
+      "name": "Play",
+      "role": "link",
+    },
+    Object {
+      "name": "Blog",
       "role": "link",
     },
     Object {
@@ -660,7 +692,7 @@ Object {
       "role": "link",
     },
     Object {
-      "name": "Getting Started",
+      "name": "Get Started",
       "role": "link",
     },
     Object {
@@ -676,7 +708,7 @@ Object {
       "role": "link",
     },
     Object {
-      "name": "Discover Packages",
+      "name": "Packages",
       "role": "link",
     },
     Object {
@@ -797,15 +829,23 @@ Object {
       "role": "link",
     },
     Object {
-      "name": "Getting Started",
+      "name": "Get Started",
       "role": "link",
     },
     Object {
-      "name": "Discover Packages",
+      "name": "Docs",
       "role": "link",
     },
     Object {
-      "name": "About",
+      "name": "Packages",
+      "role": "link",
+    },
+    Object {
+      "name": "Play",
+      "role": "link",
+    },
+    Object {
+      "name": "Blog",
       "role": "link",
     },
     Object {
@@ -1294,7 +1334,7 @@ Object {
       "role": "link",
     },
     Object {
-      "name": "Getting Started",
+      "name": "Get Started",
       "role": "link",
     },
     Object {
@@ -1310,7 +1350,7 @@ Object {
       "role": "link",
     },
     Object {
-      "name": "Discover Packages",
+      "name": "Packages",
       "role": "link",
     },
     Object {
@@ -1431,15 +1471,23 @@ Object {
       "role": "link",
     },
     Object {
-      "name": "Getting Started",
+      "name": "Get Started",
       "role": "link",
     },
     Object {
-      "name": "Discover Packages",
+      "name": "Docs",
       "role": "link",
     },
     Object {
-      "name": "About",
+      "name": "Packages",
+      "role": "link",
+    },
+    Object {
+      "name": "Play",
+      "role": "link",
+    },
+    Object {
+      "name": "Blog",
       "role": "link",
     },
     Object {
@@ -1527,7 +1575,7 @@ Object {
       "role": "link",
     },
     Object {
-      "name": "Getting Started",
+      "name": "Get Started",
       "role": "link",
     },
     Object {
@@ -1543,7 +1591,7 @@ Object {
       "role": "link",
     },
     Object {
-      "name": "Discover Packages",
+      "name": "Packages",
       "role": "link",
     },
     Object {
@@ -1664,15 +1712,23 @@ Object {
       "role": "link",
     },
     Object {
-      "name": "Getting Started",
+      "name": "Get Started",
       "role": "link",
     },
     Object {
-      "name": "Discover Packages",
+      "name": "Docs",
       "role": "link",
     },
     Object {
-      "name": "About",
+      "name": "Packages",
+      "role": "link",
+    },
+    Object {
+      "name": "Play",
+      "role": "link",
+    },
+    Object {
+      "name": "Blog",
       "role": "link",
     },
     Object {
@@ -1865,7 +1921,7 @@ Object {
       "role": "link",
     },
     Object {
-      "name": "Getting Started",
+      "name": "Get Started",
       "role": "link",
     },
     Object {
@@ -1881,7 +1937,7 @@ Object {
       "role": "link",
     },
     Object {
-      "name": "Discover Packages",
+      "name": "Packages",
       "role": "link",
     },
     Object {
