@@ -29,23 +29,15 @@ Object {
       "role": "link",
     },
     Object {
-      "name": "Get Started",
+      "name": "Getting Started",
       "role": "link",
     },
     Object {
-      "name": "Docs",
+      "name": "Discover Packages",
       "role": "link",
     },
     Object {
-      "name": "Packages",
-      "role": "link",
-    },
-    Object {
-      "name": "Play",
-      "role": "link",
-    },
-    Object {
-      "name": "Blog",
+      "name": "About",
       "role": "link",
     },
     Object {
@@ -650,7 +642,7 @@ Object {
       "role": "link",
     },
     Object {
-      "name": "Get Started",
+      "name": "Getting Started",
       "role": "link",
     },
     Object {
@@ -666,7 +658,7 @@ Object {
       "role": "link",
     },
     Object {
-      "name": "Packages",
+      "name": "Discover Packages",
       "role": "link",
     },
     Object {
