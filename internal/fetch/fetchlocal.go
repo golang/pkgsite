@@ -17,6 +17,7 @@ import (
 	"strings"
 	"time"
 
+	"golang.org/x/mod/modfile"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/proxy"
 	"golang.org/x/pkgsite/internal/source"
@@ -32,16 +33,41 @@ var (
 // A directoryModuleGetter is a ModuleGetter whose source is a directory in the file system that contains
 // a module's files.
 type directoryModuleGetter struct {
-	dir string // the directory containing the module's files
+	modulePath string
+	dir        string
 }
 
 // NewDirectoryModuleGetter returns a ModuleGetter for reading a module from a directory.
-func NewDirectoryModuleGetter(dir string) ModuleGetter {
-	return &directoryModuleGetter{dir: dir}
+func NewDirectoryModuleGetter(modulePath, dir string) (*directoryModuleGetter, error) {
+	if modulePath == "" {
+		goModBytes, err := ioutil.ReadFile(filepath.Join(dir, "go.mod"))
+		if err != nil {
+			return nil, fmt.Errorf("cannot obtain module path for %q (%v): %w", dir, err, derrors.BadModule)
+		}
+		modulePath = modfile.ModulePath(goModBytes)
+		if modulePath == "" {
+			return nil, fmt.Errorf("go.mod in %q has no module path: %w", dir, derrors.BadModule)
+		}
+	}
+	return &directoryModuleGetter{
+		dir:        dir,
+		modulePath: modulePath,
+	}, nil
+}
+
+func (g *directoryModuleGetter) checkPath(path string) error {
+	if path != g.modulePath {
+		return fmt.Errorf("given module path %q does not match %q for directory %q: %w",
+			path, g.modulePath, g.dir, derrors.NotFound)
+	}
+	return nil
 }
 
 // Info returns basic information about the module.
 func (g *directoryModuleGetter) Info(ctx context.Context, path, version string) (*proxy.VersionInfo, error) {
+	if err := g.checkPath(path); err != nil {
+		return nil, err
+	}
 	return &proxy.VersionInfo{
 		Version: LocalVersion,
 		Time:    LocalCommitTime,
@@ -51,18 +77,21 @@ func (g *directoryModuleGetter) Info(ctx context.Context, path, version string) 
 // Mod returns the contents of the module's go.mod file.
 // If the file does not exist, it returns a synthesized one.
 func (g *directoryModuleGetter) Mod(ctx context.Context, path, version string) ([]byte, error) {
+	if err := g.checkPath(path); err != nil {
+		return nil, err
+	}
 	data, err := ioutil.ReadFile(filepath.Join(g.dir, "go.mod"))
 	if errors.Is(err, os.ErrNotExist) {
-		if path == "" {
-			return nil, fmt.Errorf("no module path: %w", derrors.BadModule)
-		}
-		return []byte(fmt.Sprintf("module %s\n", path)), nil
+		return []byte(fmt.Sprintf("module %s\n", g.modulePath)), nil
 	}
 	return data, err
 }
 
 // Zip returns a reader for the module's zip file.
 func (g *directoryModuleGetter) Zip(ctx context.Context, path, version string) (*zip.Reader, error) {
+	if err := g.checkPath(path); err != nil {
+		return nil, err
+	}
 	return createZipReader(g.dir, path, LocalVersion)
 }
 
@@ -77,7 +106,16 @@ func (g *directoryModuleGetter) ZipSize(ctx context.Context, path, version strin
 // FetchResult.Error should be checked to verify that the fetch succeeded. Even if the
 // error is non-nil the result may contain useful data.
 func FetchLocalModule(ctx context.Context, modulePath, localPath string, sourceClient *source.Client) *FetchResult {
-	g := NewDirectoryModuleGetter(localPath)
+	g, err := NewDirectoryModuleGetter(modulePath, localPath)
+	if err != nil {
+		return &FetchResult{
+			ModulePath: modulePath,
+			Error:      err,
+		}
+	}
+	if modulePath == "" {
+		modulePath = g.modulePath
+	}
 	fr := FetchModule(ctx, modulePath, LocalVersion, g, sourceClient)
 	if fr.Error != nil {
 		fr.Error = fmt.Errorf("FetchLocalModule(%q, %q): %w", modulePath, localPath, fr.Error)
