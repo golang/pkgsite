@@ -9,20 +9,19 @@
 }
 .SearchResults-instead {
   font-size: 1.25rem;
+  margin-top: -0.5rem;
 }
 .SearchResults-insteadPrefix {
   color: var(--color-text);
 }
-.SearchResults-instead:hover .SearchResults-insteadPrefix {
-   color: var(--color-brand-primary);
-}
 .SearchResults-summary {
+  color: var(--color-text-subtle);
   display: flex;
   flex-direction: column;
   gap: 1rem;
   justify-content: space-between;
   line-height: 1.5rem;
-  color: var(--color-text-subtle);
+  margin-top: 0.5rem;
 }
 @media only screen and (min-width: 64rem) {
   .SearchResults-summary {
@@ -39,6 +38,9 @@
   flex-direction: column;
   gap: 0.5rem;
   padding: 0 0 2.5rem 0;
+}
+.SearchSnippet h2 {
+  font-size: 1.25rem;
 }
 .SearchSnippet:last-of-type {
   padding: 0 0 1rem 0;
@@ -60,6 +62,10 @@
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
+}
+.SearchSnippet-symbolCode {
+  font-size: 0.75rem;
+  margin: 0.25rem 0;
 }
 .SearchSnippet-sub a[data-hidden] {
   display: none;
@@ -84,4 +90,7 @@
 }
 .SearchSnippet-symbolKind {
   color: var(--color-text);
+}
+.SearchPagination {
+  height: 1.5rem;
 }

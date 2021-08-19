@@ -27,7 +27,7 @@ test('package: no results', async () => {
 test('identifier: context', async () => {
   const page = await pg.newPage();
   await pg.fullScreenshotTest(page, {
-    path: '/search?m=identifiers&q=context',
+    path: '/search?m=symbol&q=context',
     prepare: search.prepare,
   });
 });
@@ -35,7 +35,7 @@ test('identifier: context', async () => {
 test('identifier: no results', async () => {
   const page = await pg.newPage();
   await pg.fullScreenshotTest(page, {
-    path: '/search?m=identifiers&q=zhttpz',
+    path: '/search?m=symbol&q=zhttpz',
     prepare: search.prepare,
   });
 });

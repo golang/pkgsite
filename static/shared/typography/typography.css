@@ -35,14 +35,14 @@ h2,
 h3,
 h4 {
   font-weight: 600;
-  word-break: break-word;
   line-height: 1.25em;
+  word-break: break-word;
 }
 h5,
 h6 {
   font-weight: 500;
-  word-break: break-word;
   line-height: 1.3em;
+  word-break: break-word;
 }
 
 hr {
@@ -110,6 +110,8 @@ a:visited {
   color: var(--color-brand-primary);
   text-decoration: none;
 }
-a:hover {
+a:hover,
+a:hover > * {
+  color: var(--color-brand-primary);
   text-decoration: underline;
 }

@@ -32,15 +32,16 @@
   {{if gt (len .Results) 0}}
     <div class="SearchResults-summary">
       <div>
-        <div>
-          Showing <strong>{{len $.Results}}</strong> matching {{.SearchModeSymbol}}s.
-          <a href="/search-help">Search help</a>
-        </div>
+        Showing <strong>{{len $.Results}}</strong> matching {{.SearchModeSymbol}}s.
+        <a href="/search-help">Search help</a>
       </div>
       {{template "search_pagination" .}}
     </div>
   {{end}}
   {{if eq (len .Results) 0}}
+    <a class="SearchResults-instead" data-gtmc="toggle search mode" href="{{.Pagination.URL .Pagination.Limit .SearchModePackage .Query}}">
+      <span class="SearchResults-insteadPrefix">Search instead for </span>“{{.SearchModePackage}}: {{.Query}}”
+    </a>
     {{template "gopher-airplane" "No results found."}}
     <p class="SearchResults-emptyContentMessage">
       Try searching for a package by visiting <a href="https://pkg.go.dev/search?q={{.Query}}">pkg.go.dev/search?q={{.Query}}</a>.
@@ -68,7 +69,7 @@
           </h2>
           {{with $r.ChipText}}<span class="go-Chip go-Chip--inverted">{{.}}</span>{{end}}
         </div>
-        <div class="SearchSnippet-infoLabel go-textSubtle" data-test-id="snippet-synopsis">{{$r.Synopsis}}</div>
+        {{with $r.Synopsis}}<p class="SearchSnippet-infoLabel" data-test-id="snippet-synopsis">{{.}}</p>{{end}}
         <pre class="SearchSnippet-symbolCode">{{.SymbolSynopsis}}</pre>
         {{template "search_metadata" $r}}
       </div> <!-- SearchSnippet -->
@@ -116,9 +117,11 @@
           </h2>
           {{with $v.ChipText}}<span class="go-Chip go-Chip--inverted">{{.}}</span>{{end}}
         </div>
-        <p class="SearchSnippet-synopsis" data-test-id="snippet-synopsis">
-          {{$v.Synopsis}}
-        </p>
+        {{with $v.Synopsis}}
+          <p class="SearchSnippet-synopsis" data-test-id="snippet-synopsis">
+            {{.}}
+          </p>
+        {{end}}
         {{template "search_metadata" $v}}
         {{with .OtherMajor}}
           <div>
@@ -180,7 +183,7 @@
 
 {{define "search_pagination"}}
   {{ $p := .Pagination }}
-  <label class="go-Label go-Label--inline" data-test-id="pagination">
+  <label class="go-Label go-Label--inline SearchPagination" data-test-id="pagination">
     Show
     <select data-gtmc="search limit select" aria-label="Select number of results" name="limit" class="go-Select js-selectNav">
       {{range $p.Limits}}
