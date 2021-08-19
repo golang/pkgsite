@@ -462,8 +462,8 @@ func TestDetectFile(t *testing.T) {
 // }
 
 func TestDetectFiles(t *testing.T) {
-	defer func(m uint64) { maxLicenseSize = m }(maxLicenseSize)
-	maxLicenseSize = uint64(len(mitLicense) * 10)
+	defer func(m int64) { maxLicenseSize = m }(maxLicenseSize)
+	maxLicenseSize = int64(len(mitLicense) * 10)
 	testCases := []struct {
 		name     string
 		contents map[string]string
@@ -587,8 +587,8 @@ func TestDetectFiles(t *testing.T) {
 	for _, test := range testCases {
 		t.Run(test.name, func(t *testing.T) {
 			d := NewDetector("m", "v1", newZipReader(t, "m@v1", test.contents), log.Printf)
-			files := d.Files(AllFiles)
-			gotLics := d.detectFiles(files)
+			paths := d.Paths(AllFiles)
+			gotLics := d.detectFiles(paths)
 			sort.Slice(gotLics, func(i, j int) bool {
 				return gotLics[i].FilePath < gotLics[j].FilePath
 			})

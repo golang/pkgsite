@@ -23,6 +23,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"io/fs"
 	"io/ioutil"
 	"path"
 	"path/filepath"
@@ -53,7 +54,7 @@ const (
 // There are some license files larger than 1 million bytes: https://github.com/vmware/vic/LICENSE
 // and github.com/goharbor/harbor/LICENSE, for example.
 // var for testing
-var maxLicenseSize uint64 = modzip.MaxLICENSE
+var maxLicenseSize int64 = modzip.MaxLICENSE
 
 // Metadata holds information extracted from a license file.
 type Metadata struct {
@@ -296,7 +297,7 @@ func scanner() *licensecheck.Scanner {
 type Detector struct {
 	modulePath     string
 	version        string
-	zr             *zip.Reader
+	fsys           fs.FS
 	logf           func(string, ...interface{})
 	moduleRedist   bool
 	moduleLicenses []*License // licenses at module root directory, or list from exceptions
@@ -307,14 +308,22 @@ type Detector struct {
 // NewDetector returns a Detector for the given module and version.
 // zr should be the zip file for that module and version.
 // logf is for logging; if nil, no logging is done.
+// Deprecated: use NewDetectorFS.
 func NewDetector(modulePath, version string, zr *zip.Reader, logf func(string, ...interface{})) *Detector {
+	return NewDetectorFS(modulePath, version, zr, logf)
+}
+
+// NewDetectorFS returns a Detector for the given module and version.
+// fsys should hold the module's files.
+// logf is for logging; if nil, no logging is done.
+func NewDetectorFS(modulePath, version string, fsys fs.FS, logf func(string, ...interface{})) *Detector {
 	if logf == nil {
 		logf = func(string, ...interface{}) {}
 	}
 	d := &Detector{
 		modulePath: modulePath,
 		version:    version,
-		zr:         zr,
+		fsys:       fsys,
 		logf:       logf,
 	}
 	d.computeModuleInfo()
@@ -373,7 +382,7 @@ func (d *Detector) PackageInfo(dir string) (isRedistributable bool, lics []*Lice
 // computeModuleInfo determines values for the moduleRedist and moduleLicenses fields of d.
 func (d *Detector) computeModuleInfo() {
 	// Check that all licenses in the contents directory are redistributable.
-	d.moduleLicenses = d.detectFiles(d.Files(RootFiles))
+	d.moduleLicenses = d.detectFiles(d.Paths(RootFiles))
 	d.moduleRedist = Redistributable(types(d.moduleLicenses))
 }
 
@@ -383,7 +392,7 @@ func (d *Detector) computeModuleInfo() {
 func (d *Detector) computeAllLicenseInfo() {
 	d.allLicenses = []*License{}
 	d.allLicenses = append(d.allLicenses, d.moduleLicenses...)
-	nonRootLicenses := d.detectFiles(d.Files(NonRootFiles))
+	nonRootLicenses := d.detectFiles(d.Paths(NonRootFiles))
 	d.allLicenses = append(d.allLicenses, nonRootLicenses...)
 	d.licsByDir = map[string][]*License{}
 	for _, l := range nonRootLicenses {
@@ -406,11 +415,13 @@ const (
 
 // Files returns a list of license files from the zip. The which argument
 // determines the location of the files considered.
+// Files panics if the Detector was not created with a *zip.Reader.
+// Deprecated: use Pathnames.
 func (d *Detector) Files(which WhichFiles) []*zip.File {
 	cdir := contentsDir(d.modulePath, d.version)
 	prefix := pathPrefix(cdir)
 	var files []*zip.File
-	for _, f := range d.zr.File {
+	for _, f := range d.fsys.(*zip.Reader).File {
 		if !fileNamesLowercase[strings.ToLower(path.Base(f.Name))] {
 			continue
 		}
@@ -444,6 +455,60 @@ func (d *Detector) Files(which WhichFiles) []*zip.File {
 	return files
 }
 
+// Paths returns a list of license file paths from the Detector's filesystem.
+// The which argument determines the location of the files considered.
+// If Paths encounters an error, it logs it and returns nil.
+func (d *Detector) Paths(which WhichFiles) []string {
+	// TODO(golang/go#47834): remove references to cdir when higher levels
+	// do so.
+	cdir := contentsDir(d.modulePath, d.version)
+	fsys, err := fs.Sub(d.fsys, cdir)
+	if err != nil {
+		d.logf("Paths: %v", err)
+		return nil
+	}
+	var paths []string
+	err = fs.WalkDir(fsys, ".", func(pathname string, de fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if de.IsDir() {
+			return nil
+		}
+		if !fileNamesLowercase[strings.ToLower(de.Name())] {
+			return nil
+		}
+		// Skip files we should ignore.
+		if ignoreFiles[d.modulePath+" "+pathname] {
+			return nil
+		}
+		if which == RootFiles && path.Dir(pathname) != "." {
+			// Skip f since it's not at root.
+			return nil
+		}
+		if which == NonRootFiles && path.Dir(pathname) == "." {
+			// Skip f since it is at root.
+			return nil
+		}
+		if isVendoredFile(pathname) {
+			// Skip if f is in the vendor directory.
+			return nil
+		}
+		if err := module.CheckFilePath(pathname); err != nil {
+			// Skip if the file path is bad.
+			d.logf("module.CheckFilePath(%q): %v", pathname, err)
+			return nil
+		}
+		paths = append(paths, path.Join(cdir, pathname))
+		return nil
+	})
+	if err != nil {
+		d.logf("Paths: %v", err)
+		return nil
+	}
+	return paths
+}
+
 // isVendoredFile reports if the given file is in a proper subdirectory nested
 // under a 'vendor' directory, to allow for Go packages named 'vendor'.
 //
@@ -466,32 +531,48 @@ func isVendoredFile(name string) bool {
 // detectFiles runs DetectFile on each of the given files.
 // If a file cannot be read, the error is logged and a license
 // of type unknown is added.
-func (d *Detector) detectFiles(files []*zip.File) []*License {
+func (d *Detector) detectFiles(pathnames []string) []*License {
 	prefix := pathPrefix(contentsDir(d.modulePath, d.version))
 	var licenses []*License
-	for _, f := range files {
-		bytes, err := readZipFile(f)
+	for _, p := range pathnames {
+		bytes, err := d.readFile(p)
 		if err != nil {
-			d.logf("reading zip file %s: %v", f.Name, err)
+			d.logf("reading file %s: %v", p, err)
 			licenses = append(licenses, &License{
 				Metadata: &Metadata{
 					Types:    []string{unknownLicenseType},
-					FilePath: strings.TrimPrefix(f.Name, prefix),
+					FilePath: strings.TrimPrefix(p, prefix),
 				},
 			})
 			continue
 		}
-		types, cov := DetectFile(bytes, f.Name, d.logf)
+		types, cov := DetectFile(bytes, p, d.logf)
 		licenses = append(licenses, &License{
 			Metadata: &Metadata{
 				Types:    types,
-				FilePath: strings.TrimPrefix(f.Name, prefix),
+				FilePath: strings.TrimPrefix(p, prefix),
 				Coverage: cov,
 			},
 			Contents: bytes,
 		})
 	}
 	return licenses
+}
+
+func (d *Detector) readFile(pathname string) ([]byte, error) {
+	f, err := d.fsys.Open(pathname)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+	info, err := f.Stat()
+	if err != nil {
+		return nil, err
+	}
+	if info.Size() > maxLicenseSize {
+		return nil, fmt.Errorf("file size %d exceeds max license size %d", info.Size(), maxLicenseSize)
+	}
+	return ioutil.ReadAll(io.LimitReader(f, int64(maxLicenseSize)))
 }
 
 // DetectFile return the set of license types for the given file contents. It
@@ -556,18 +637,6 @@ func setToSortedSlice(m map[string]bool) []string {
 	}
 	sort.Strings(s)
 	return s
-}
-
-func readZipFile(f *zip.File) ([]byte, error) {
-	if f.UncompressedSize64 > maxLicenseSize {
-		return nil, fmt.Errorf("file size %d exceeds max license size %d", f.UncompressedSize64, maxLicenseSize)
-	}
-	rc, err := f.Open()
-	if err != nil {
-		return nil, err
-	}
-	defer rc.Close()
-	return ioutil.ReadAll(io.LimitReader(rc, int64(maxLicenseSize)))
 }
 
 func contentsDir(modulePath, version string) string {
