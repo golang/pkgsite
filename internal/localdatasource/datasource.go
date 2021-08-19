@@ -16,10 +16,12 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+	"time"
 
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/fetch"
+	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/source"
 )
 
@@ -81,7 +83,12 @@ func (ds *DataSource) getFromCache(path, version string) *internal.Module {
 
 // fetch fetches a module using the configured ModuleGetters.
 // It tries each getter in turn until it finds one that has the module.
-func (ds *DataSource) fetch(ctx context.Context, modulePath, version string) (*internal.Module, error) {
+func (ds *DataSource) fetch(ctx context.Context, modulePath, version string) (_ *internal.Module, err error) {
+	log.Infof(ctx, "local DataSource: fetching %s@%s", modulePath, version)
+	start := time.Now()
+	defer func() {
+		log.Infof(ctx, "local DataSource: fetched %s@%s in %s with error %v", modulePath, version, time.Since(start), err)
+	}()
 	for _, g := range ds.getters {
 		fr := fetch.FetchModule(ctx, modulePath, version, g, ds.sourceClient)
 		if fr.Error == nil {

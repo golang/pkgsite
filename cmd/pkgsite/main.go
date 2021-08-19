@@ -55,36 +55,39 @@ func main() {
 		paths = "."
 	}
 
-	lds := localdatasource.New(source.NewClient(time.Second))
-	dsg := func(context.Context) internal.DataSource { return lds }
-	server, err := frontend.NewServer(frontend.ServerConfig{
-		DataSourceGetter: dsg,
-		StaticPath:       template.TrustedSourceFromFlag(flag.Lookup("static").Value),
-	})
+	server, err := newServer(ctx, strings.Split(paths, ","), *gopathMode)
 	if err != nil {
-		log.Fatalf(ctx, "frontend.NewServer: %v", err)
+		log.Fatalf(ctx, "newServer: %v", err)
 	}
-
-	load(ctx, lds, paths)
-
 	router := dcensus.NewRouter(frontend.TagRoute)
 	server.Install(router.Handle, nil, nil)
-
 	mw := middleware.Timeout(54 * time.Second)
 	log.Infof(ctx, "Listening on addr %s", *httpAddr)
 	log.Fatal(ctx, http.ListenAndServe(*httpAddr, mw(router)))
 }
 
+func newServer(ctx context.Context, paths []string, gopathMode bool) (*frontend.Server, error) {
+	lds := localdatasource.New(source.NewClient(time.Second))
+	server, err := frontend.NewServer(frontend.ServerConfig{
+		DataSourceGetter: func(context.Context) internal.DataSource { return lds },
+		StaticPath:       template.TrustedSourceFromFlag(flag.Lookup("static").Value),
+	})
+	if err != nil {
+		return nil, err
+	}
+	addGetters(ctx, lds, paths, gopathMode)
+	return server, nil
+}
+
 // load loads local modules from pathList.
-func load(ctx context.Context, ds *localdatasource.DataSource, pathList string) {
-	paths := strings.Split(pathList, ",")
+func addGetters(ctx context.Context, ds *localdatasource.DataSource, paths []string, gopathMode bool) {
 	loaded := len(paths)
 	for _, path := range paths {
 		var (
 			mg  fetch.ModuleGetter
 			err error
 		)
-		if *gopathMode {
+		if gopathMode {
 			mg, err = localdatasource.NewGOPATHModuleGetter(path)
 		} else {
 			mg, err = fetch.NewDirectoryModuleGetter("", path)
@@ -98,6 +101,6 @@ func load(ctx context.Context, ds *localdatasource.DataSource, pathList string) 
 	}
 
 	if loaded == 0 {
-		log.Fatalf(ctx, "failed to load module(s) at %s", pathList)
+		log.Fatalf(ctx, "failed to load module(s) at %v", paths)
 	}
 }

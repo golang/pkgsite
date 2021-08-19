@@ -16,7 +16,7 @@ func TestDirectoryModuleGetterEmpty(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if want := "testmod"; g.modulePath != want {
+	if want := "example.com/testmod"; g.modulePath != want {
 		t.Errorf("got %q, want %q", g.modulePath, want)
 	}
 

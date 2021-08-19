@@ -1,1 +1,1 @@
-module testmod
+module example.com/testmod
