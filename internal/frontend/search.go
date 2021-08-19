@@ -373,7 +373,21 @@ func searchQuery(r *http.Request) (q string, searchSymbols bool) {
 	if prefix := searchModePackage + ":"; strings.HasPrefix(q, prefix) {
 		return strings.TrimPrefix(q, prefix), false
 	}
+	if isPackageDotSymbol(q) {
+		return q, true
+	}
 	return q, strings.TrimSpace(r.FormValue("m")) == searchModeSymbol
+}
+
+// isPackageDotSymbol reports whether the search query is of the form
+// <package>.<symbol>. The <symbol> component should not be a top-level domain
+// that is in our database.
+func isPackageDotSymbol(q string) bool {
+	if len(strings.Fields(q)) != 1 || !strings.ContainsAny(q, ".") {
+		return false
+	}
+	parts := strings.Split(q, ".")
+	return !internal.TopLevelDomains[parts[len(parts)-1]]
 }
 
 // elapsedTime takes a date and returns returns human-readable,

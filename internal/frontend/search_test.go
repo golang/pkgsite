@@ -394,3 +394,25 @@ type Foo interface {
 		})
 	}
 }
+
+func TestIsPackageDotSymbol(t *testing.T) {
+	for _, test := range []struct {
+		q    string
+		want bool
+	}{
+		{"barista.run", false},
+		{"github.com", false},
+		{"julie.io", false},
+		{"my.name", false},
+		{"sql", false},
+		{"sql.DB", true},
+		{"sql.DB.Begin", true},
+	} {
+		t.Run(test.q, func(t *testing.T) {
+			got := isPackageDotSymbol(test.q)
+			if diff := cmp.Diff(test.want, got); diff != "" {
+				t.Errorf("mismatch (-want +got):\n%s", diff)
+			}
+		})
+	}
+}
