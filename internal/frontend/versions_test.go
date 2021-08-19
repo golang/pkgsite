@@ -10,7 +10,6 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/pkgsite/internal"
-	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/testing/sample"
@@ -162,7 +161,6 @@ func TestFetchPackageVersionsDetails(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), testTimeout*2)
-			ctx = experiment.NewContext(ctx, internal.ExperimentSymbolHistoryVersionsPage)
 			defer cancel()
 			defer postgres.ResetTestDB(testDB, t)
 

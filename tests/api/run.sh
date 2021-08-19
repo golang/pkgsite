@@ -13,7 +13,6 @@ main() {
   trap docker_error ERR
 
   export GO_DISCOVERY_DATABASE_NAME=discovery_api_test
-  export GO_DISCOVERY_CONFIG_DYNAMIC=tests/api/config.yaml
   export GO_DISCOVERY_SEED_DB_FILE=tests/api/seed.txt
   dockercompose build && dockercompose run seeddb && dockercompose run api
 

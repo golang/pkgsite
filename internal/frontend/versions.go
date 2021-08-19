@@ -14,7 +14,6 @@ import (
 
 	"golang.org/x/mod/semver"
 	"golang.org/x/pkgsite/internal"
-	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/stdlib"
@@ -93,9 +92,7 @@ func fetchVersionsDetails(ctx context.Context, ds internal.DataSource, um *inter
 	}
 
 	sh := internal.NewSymbolHistory()
-	if !um.IsCommand() &&
-		(um.ModulePath == stdlib.ModulePath ||
-			experiment.IsActive(ctx, internal.ExperimentSymbolHistoryVersionsPage)) {
+	if !um.IsCommand() {
 		sh, err = db.GetSymbolHistory(ctx, um.Path, um.ModulePath)
 		if err != nil {
 			return nil, err

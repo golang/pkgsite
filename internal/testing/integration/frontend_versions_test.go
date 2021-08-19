@@ -12,17 +12,14 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	"golang.org/x/pkgsite/internal"
-	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/frontend"
 	"golang.org/x/pkgsite/internal/postgres"
 )
 
 func TestFrontendVersionsPage(t *testing.T) {
 	defer postgres.ResetTestDB(testDB, t)
-	processVersions(
-		experiment.NewContext(context.Background(), internal.ExperimentSymbolHistoryVersionsPage),
-		t, testModules)
+	ctx := context.Background()
+	processVersions(ctx, t, testModules)
 
 	const modulePath = "example.com/symbols"
 	for _, test := range []struct {
@@ -37,7 +34,7 @@ func TestFrontendVersionsPage(t *testing.T) {
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			urlPath := fmt.Sprintf("/%s?tab=versions&m=json", test.pkgPath)
-			body := getFrontendPage(t, urlPath, internal.ExperimentSymbolHistoryVersionsPage)
+			body := getFrontendPage(t, urlPath)
 			var got frontend.VersionsDetails
 			if err := json.Unmarshal([]byte(body), &got); err != nil {
 				t.Fatalf("json.Unmarshal: %v", err)

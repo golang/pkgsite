@@ -1,5 +1,0 @@
-experiments:
-- Name: symbol-history-main-page
-  Rollout: 100
-- Name: symbol-history-versions-page
-  Rollout: 100

@@ -1198,16 +1198,6 @@ func TestServer(t *testing.T) {
 			},
 		},
 		{
-			name: "symbol history experiments",
-			testCasesFunc: func() []serverTestCase {
-				return append(serverTestCases(), linksTestCases...)
-			},
-			experiments: []string{
-				internal.ExperimentSymbolHistoryMainPage,
-				internal.ExperimentSymbolHistoryVersionsPage,
-			},
-		},
-		{
 			name: "search grouping",
 			testCasesFunc: func() []serverTestCase {
 				return append(serverTestCases(), searchGroupingTestCases...)

@@ -12,8 +12,6 @@ import (
 	"testing"
 
 	"golang.org/x/net/html"
-	"golang.org/x/pkgsite/internal"
-	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/testing/htmlcheck"
 )
@@ -26,9 +24,8 @@ var (
 func TestFrontendMainPage(t *testing.T) {
 	defer postgres.ResetTestDB(testDB, t)
 
-	processVersions(
-		experiment.NewContext(context.Background(), internal.ExperimentSymbolHistoryMainPage),
-		t, testModules)
+	ctx := context.Background()
+	processVersions(ctx, t, testModules)
 
 	const modulePath = "example.com/symbols"
 	for _, test := range []struct {
@@ -91,7 +88,7 @@ func TestFrontendMainPage(t *testing.T) {
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			urlPath := fmt.Sprintf("/%s", test.pkgPath)
-			body := getFrontendPage(t, urlPath, internal.ExperimentSymbolHistoryMainPage)
+			body := getFrontendPage(t, urlPath)
 			doc, err := html.Parse(strings.NewReader(body))
 			if err != nil {
 				t.Fatal(err)

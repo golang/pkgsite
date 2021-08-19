@@ -13,8 +13,6 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/safehtml/template"
 	"golang.org/x/net/html"
-	"golang.org/x/pkgsite/internal"
-	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/godoc/dochtml"
 	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/testing/htmlcheck"
@@ -88,8 +86,7 @@ func TestDocInfo(t *testing.T) {
 
 func TestRenderParts_SinceVersion(t *testing.T) {
 	dochtml.LoadTemplates(templateSource)
-	ctx := experiment.NewContext(context.Background(),
-		internal.ExperimentSymbolHistoryMainPage)
+	ctx := context.Background()
 	si := source.NewGitHubInfo("a.com/M", "", "abcde")
 	mi := &ModuleInfo{
 		ModulePath:      "a.com/M",

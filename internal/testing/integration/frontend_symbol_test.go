@@ -10,8 +10,6 @@ import (
 	"fmt"
 	"testing"
 
-	"golang.org/x/pkgsite/internal"
-	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/frontend"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/symbol"
@@ -19,9 +17,9 @@ import (
 
 func TestSymbols(t *testing.T) {
 	defer postgres.ResetTestDB(testDB, t)
-	processVersions(
-		experiment.NewContext(context.Background(), internal.ExperimentSymbolHistoryVersionsPage),
-		t, testModules)
+
+	ctx := context.Background()
+	processVersions(ctx, t, testModules)
 
 	for _, test := range []struct {
 		name, pkgPath, modulePath string
@@ -50,7 +48,7 @@ func TestSymbols(t *testing.T) {
 
 			// Get frontend data.
 			urlPath := fmt.Sprintf("/%s?tab=versions&m=json", test.pkgPath)
-			body := getFrontendPage(t, urlPath, internal.ExperimentSymbolHistoryVersionsPage)
+			body := getFrontendPage(t, urlPath)
 			var vd frontend.VersionsDetails
 			if err := json.Unmarshal([]byte(body), &vd); err != nil {
 				t.Fatalf("json.Unmarshal: %v\n %s", err, body)

@@ -117,6 +117,7 @@ func TestReFetch(t *testing.T) {
 				Licenses:          sample.LicenseMetadata(),
 			},
 		},
+		SymbolHistory: map[string]string{"Bar": "v1.0.0"},
 	}
 	got, err := testDB.GetUnitMeta(ctx, pkgBar, internal.UnknownModulePath, version)
 	if err != nil {
