@@ -7,6 +7,7 @@ package localdatasource
 import (
 	"context"
 	"errors"
+	"log"
 	"os"
 	"testing"
 	"time"
@@ -18,23 +19,18 @@ import (
 	"golang.org/x/pkgsite/internal/fetch"
 	"golang.org/x/pkgsite/internal/godoc/dochtml"
 	"golang.org/x/pkgsite/internal/licenses"
+	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/testing/testhelper"
 )
 
-var (
-	ctx        context.Context
-	cancel     func()
-	datasource *DataSource
-)
+func TestMain(m *testing.M) {
+	os.Exit(run(m))
+}
 
-func setup(t *testing.T) (context.Context, func(), *DataSource, error) {
-	t.Helper()
+var datasource *DataSource
 
-	// Setup only once.
-	if datasource != nil {
-		return ctx, cancel, datasource, nil
-	}
+func run(m *testing.M) int {
 	licenses.OmitExceptions = true
 	modules := []map[string]string{
 		{
@@ -82,31 +78,28 @@ func setup(t *testing.T) (context.Context, func(), *DataSource, error) {
 	}
 
 	dochtml.LoadTemplates(template.TrustedSourceFromConstant("../../static/doc"))
-	datasource = New()
-	ctx, cancel = context.WithTimeout(context.Background(), 20*time.Second)
+	datasource = New(source.NewClientForTesting())
 	for _, module := range modules {
 		directory, err := testhelper.CreateTestDirectory(module)
 		if err != nil {
-			return ctx, func() { cancel() }, nil, err
+			log.Fatal(err)
 		}
 		defer os.RemoveAll(directory)
 
-		err = datasource.Load(ctx, directory)
+		mg, err := fetch.NewDirectoryModuleGetter("", directory)
 		if err != nil {
-			return ctx, func() { cancel() }, nil, err
+			log.Fatal(err)
 		}
+		datasource.AddModuleGetter(mg)
 	}
-
-	return ctx, func() { cancel() }, datasource, nil
+	return m.Run()
 }
 
 func TestGetUnitMeta(t *testing.T) {
-	ctx, cancel, ds, err := setup(t)
-	if err != nil {
-		t.Fatalf("setup failed: %s", err.Error())
-	}
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 
+	sourceInfo := source.NewGitHubInfo("https://github.com/my/module", "", "v0.0.0")
 	for _, test := range []struct {
 		path, modulePath string
 		want             *internal.UnitMeta
@@ -122,6 +115,8 @@ func TestGetUnitMeta(t *testing.T) {
 					Version:           fetch.LocalVersion,
 					CommitTime:        fetch.LocalCommitTime,
 					IsRedistributable: true,
+					HasGoMod:          true,
+					SourceInfo:        sourceInfo,
 				},
 				IsRedistributable: true,
 			},
@@ -137,6 +132,8 @@ func TestGetUnitMeta(t *testing.T) {
 					Version:           fetch.LocalVersion,
 					CommitTime:        fetch.LocalCommitTime,
 					IsRedistributable: true,
+					HasGoMod:          true,
+					SourceInfo:        sourceInfo,
 				},
 				IsRedistributable: true,
 			},
@@ -152,6 +149,8 @@ func TestGetUnitMeta(t *testing.T) {
 					IsRedistributable: true,
 					Version:           fetch.LocalVersion,
 					CommitTime:        fetch.LocalCommitTime,
+					HasGoMod:          true,
+					SourceInfo:        sourceInfo,
 				},
 				IsRedistributable: true,
 			},
@@ -168,6 +167,8 @@ func TestGetUnitMeta(t *testing.T) {
 					Version:           fetch.LocalVersion,
 					CommitTime:        fetch.LocalCommitTime,
 					IsRedistributable: true,
+					HasGoMod:          true,
+					SourceInfo:        sourceInfo,
 				},
 			},
 		},
@@ -179,11 +180,11 @@ func TestGetUnitMeta(t *testing.T) {
 		{
 			path:       "net/http",
 			modulePath: stdlib.ModulePath,
-			wantErr:    derrors.NotFound,
+			wantErr:    derrors.InvalidArgument,
 		},
 	} {
 		t.Run(test.path, func(t *testing.T) {
-			got, err := ds.GetUnitMeta(ctx, test.path, test.modulePath, fetch.LocalVersion)
+			got, err := datasource.GetUnitMeta(ctx, test.path, test.modulePath, fetch.LocalVersion)
 			if test.wantErr != nil {
 				if !errors.Is(err, test.wantErr) {
 					t.Errorf("GetUnitMeta(%q, %q): %v; wantErr = %v)", test.path, test.modulePath, err, test.wantErr)
@@ -192,7 +193,7 @@ func TestGetUnitMeta(t *testing.T) {
 				if err != nil {
 					t.Fatal(err)
 				}
-				if diff := cmp.Diff(test.want, got); diff != "" {
+				if diff := cmp.Diff(test.want, got, cmp.AllowUnexported(source.Info{})); diff != "" {
 					t.Errorf("mismatch (-want +got):\n%s", diff)
 
 				}
@@ -205,10 +206,7 @@ func TestGetUnit(t *testing.T) {
 	// This is a simple test to verify that data is fetched correctly. The
 	// return value of FetchResult is tested in internal/fetch so no need
 	// to repeat it.
-	ctx, cancel, ds, err := setup(t)
-	if err != nil {
-		t.Fatalf("setup failed: %s", err.Error())
-	}
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 
 	for _, test := range []struct {
@@ -240,7 +238,7 @@ func TestGetUnit(t *testing.T) {
 				Path:       test.path,
 				ModuleInfo: internal.ModuleInfo{ModulePath: test.modulePath},
 			}
-			got, err := ds.GetUnit(ctx, um, 0, internal.BuildContext{})
+			got, err := datasource.GetUnit(ctx, um, 0, internal.BuildContext{})
 			if !test.wantLoaded {
 				if err == nil {
 					t.Fatalf("returned not loaded module %q", test.path)

@@ -30,10 +30,12 @@ import (
 	"github.com/google/safehtml/template"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/dcensus"
+	"golang.org/x/pkgsite/internal/fetch"
 	"golang.org/x/pkgsite/internal/frontend"
 	"golang.org/x/pkgsite/internal/localdatasource"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/middleware"
+	"golang.org/x/pkgsite/internal/source"
 )
 
 const defaultAddr = "localhost:8080" // default webserver address
@@ -53,7 +55,7 @@ func main() {
 		paths = "."
 	}
 
-	lds := localdatasource.New()
+	lds := localdatasource.New(source.NewClient(time.Second))
 	dsg := func(context.Context) internal.DataSource { return lds }
 	server, err := frontend.NewServer(frontend.ServerConfig{
 		DataSourceGetter: dsg,
@@ -78,15 +80,20 @@ func load(ctx context.Context, ds *localdatasource.DataSource, pathList string) 
 	paths := strings.Split(pathList, ",")
 	loaded := len(paths)
 	for _, path := range paths {
-		var err error
+		var (
+			mg  fetch.ModuleGetter
+			err error
+		)
 		if *gopathMode {
-			err = ds.LoadFromGOPATH(ctx, path)
+			mg, err = localdatasource.NewGOPATHModuleGetter(path)
 		} else {
-			err = ds.Load(ctx, path)
+			mg, err = fetch.NewDirectoryModuleGetter("", path)
 		}
 		if err != nil {
 			log.Error(ctx, err)
 			loaded--
+		} else {
+			ds.AddModuleGetter(mg)
 		}
 	}
 
