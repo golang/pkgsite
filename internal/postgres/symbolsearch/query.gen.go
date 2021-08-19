@@ -17,14 +17,13 @@ WITH ssd AS (
 		ssd.symbol_name_id,
 		ssd.goos,
 		ssd.goarch,
-		ssd.ln_imported_by_count AS score
+		ssd.imported_by_count AS score
 	FROM symbol_search_documents ssd
 	WHERE 
 		lower(symbol_name) = lower($1)
 	ORDER BY
 		score DESC,
-		package_path,
-		symbol_name_id
+		package_path
 	LIMIT $2
 )
 SELECT
@@ -58,7 +57,7 @@ WITH ssd AS (
 		ssd.symbol_name_id,
 		ssd.goos,
 		ssd.goarch,
-		ssd.ln_imported_by_count AS score
+		ssd.imported_by_count AS score
 	FROM symbol_search_documents ssd
 	WHERE 
 		lower(symbol_name) = lower($1)
@@ -68,8 +67,7 @@ WITH ssd AS (
 		)
 	ORDER BY
 		score DESC,
-		package_path,
-		symbol_name_id
+		package_path
 	LIMIT $2
 )
 SELECT

@@ -49,13 +49,12 @@ const symbolCTE = `
 		ssd.symbol_name_id,
 		ssd.goos,
 		ssd.goarch,
-		ssd.ln_imported_by_count AS score
+		ssd.imported_by_count AS score
 	FROM symbol_search_documents ssd
 	WHERE %s
 	ORDER BY
 		score DESC,
-		package_path,
-		symbol_name_id
+		package_path
 	LIMIT $2
 `
 
