@@ -96,6 +96,22 @@ func (s *Server) servePathNotFoundPage(w http.ResponseWriter, r *http.Request,
 	// Show a relevant page or redirect the use based on the previous fetch
 	// response.
 	switch fr.status {
+	case http.StatusOK, derrors.ToStatus(derrors.HasIncompletePackages):
+		// We will only reach a 2xx status if we found a row in version_map
+		// matching exactly the requested path.
+		if fr.resolvedVersion != requestedVersion {
+			u := constructUnitURL(fullPath, fr.goModPath, fr.resolvedVersion)
+			http.Redirect(w, r, u, http.StatusFound)
+			return
+		}
+		// For some reason version_map is telling us that the path@version
+		// exists, but earlier in this flow we didn't find it in the units
+		// table.
+		//
+		// Return the fetch page so the user can try requesting again, and log
+		// an error.
+		log.Errorf(ctx, "version_map reports that %s@%s has status=%d, but this was not found before reaching servePathNotFoundPage", fullPath, requestedVersion)
+		return pathNotFoundError(ctx, fullPath, requestedVersion)
 	case http.StatusFound, derrors.ToStatus(derrors.AlternativeModule):
 		if fr.goModPath == fullPath {
 			// The redirectPath and the fullpath are the same. Do not redirect
@@ -219,18 +235,22 @@ func previousFetchStatusAndResponse(ctx context.Context, db *postgres.DB,
 	}
 	// If the row has been fetched before, and the result was either a 490,
 	// 491, or 5xx, return that result, since it is a final state.
-	if vm != nil &&
-		(vm.Status >= 500 ||
+	if vm != nil {
+		fr := &fetchResult{
+			modulePath: vm.ModulePath,
+			goModPath:  vm.GoModPath,
+			status:     vm.Status,
+			err:        errors.New(vm.Error),
+		}
+		if vm.Status >= 200 && vm.Status < 300 {
+			fr.resolvedVersion = vm.ResolvedVersion
+			return fr, nil
+		}
+		if vm.Status >= 500 ||
 			vm.Status == derrors.ToStatus(derrors.AlternativeModule) ||
-			vm.Status == derrors.ToStatus(derrors.BadModule)) {
-		return resultFromFetchRequest([]*fetchResult{
-			{
-				modulePath: vm.ModulePath,
-				goModPath:  vm.GoModPath,
-				status:     vm.Status,
-				err:        errors.New(vm.Error),
-			},
-		}, fullPath, requestedVersion)
+			vm.Status == derrors.ToStatus(derrors.BadModule) {
+			return resultFromFetchRequest([]*fetchResult{fr}, fullPath, requestedVersion)
+		}
 	}
 
 	// Check if the unit path exists at a higher major version.

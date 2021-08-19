@@ -120,6 +120,9 @@ type fetchResult struct {
 	err          error
 	responseText string
 	updatedAt    time.Time
+
+	// Only populated if the fetchResult had a 2xx status.
+	resolvedVersion string
 }
 
 func (s *Server) fetchAndPoll(ctx context.Context, ds internal.DataSource, modulePath, fullPath, requestedVersion string) (status int, responseText string) {
