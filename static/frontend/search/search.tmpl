@@ -66,6 +66,7 @@
             <a href="/{{$r.PackagePath}}" data-gtmc="symbol search result package" data-gtmv="{{$i}}"
               class="">{{$r.PackagePath}}</a>
           </h2>
+          {{with $r.ChipText}}<span class="go-Chip go-Chip--inverted">{{.}}</span>{{end}}
         </div>
         <div class="SearchSnippet-infoLabel go-textSubtle" data-test-id="snippet-synopsis">{{$r.Synopsis}}</div>
         <pre class="SearchSnippet-symbolCode">{{.SymbolSynopsis}}</pre>
