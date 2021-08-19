@@ -5,28 +5,23 @@
 package fetch
 
 import (
-	"context"
 	"errors"
 	"testing"
 
 	"golang.org/x/pkgsite/internal/derrors"
-	"golang.org/x/pkgsite/internal/source"
 )
 
-func TestLocalEmptyModulePath(t *testing.T) {
-	// Test local fetching when the module path is empty (corresponding to the
-	// main module of a directory). Other cases are tested in TestFetchModule.
-	ctx := context.Background()
-	got := FetchLocalModule(ctx, "", "testdata/has_go_mod", source.NewClientForTesting())
-	if got.Error != nil {
-		t.Fatal(got.Error)
+func TestDirectoryModuleGetterEmpty(t *testing.T) {
+	g, err := NewDirectoryModuleGetter("", "testdata/has_go_mod")
+	if err != nil {
+		t.Fatal(err)
 	}
-	if want := "testmod"; got.ModulePath != want {
-		t.Errorf("got %q, want %q", got.ModulePath, want)
+	if want := "testmod"; g.modulePath != want {
+		t.Errorf("got %q, want %q", g.modulePath, want)
 	}
 
-	got = FetchLocalModule(ctx, "", "testdata/no_go_mod", source.NewClientForTesting())
-	if !errors.Is(got.Error, derrors.BadModule) {
-		t.Errorf("got %v, want BadModule", got.Error)
+	_, err = NewDirectoryModuleGetter("", "testdata/no_go_mod")
+	if !errors.Is(err, derrors.BadModule) {
+		t.Errorf("got %v, want BadModule", err)
 	}
 }

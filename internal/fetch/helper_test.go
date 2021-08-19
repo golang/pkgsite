@@ -157,9 +157,9 @@ func proxyFetcher(t *testing.T, withLicenseDetector bool, ctx context.Context, m
 	return got, d
 }
 
-// localFetcher is a helper function that creates a test directory to hold a module,
-// fetches the module from the directory using FetchLocalModule, and returns a fetch
-// result, and a license detector.
+// localFetcher is a helper function that creates a test directory to hold a
+// module, fetches the module from the directory, and returns a fetch result
+// and a license detector.
 func localFetcher(t *testing.T, withLicenseDetector bool, ctx context.Context, mod *proxytest.Module, fetchVersion string) (*FetchResult, *licenses.Detector) {
 	t.Helper()
 
@@ -170,7 +170,11 @@ func localFetcher(t *testing.T, withLicenseDetector bool, ctx context.Context, m
 	defer os.RemoveAll(directory)
 
 	modulePath := mod.ModulePath
-	got := FetchLocalModule(ctx, modulePath, directory, source.NewClientForTesting())
+	g, err := NewDirectoryModuleGetter(modulePath, directory)
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := FetchModule(ctx, modulePath, LocalVersion, g, source.NewClientForTesting())
 	if !withLicenseDetector {
 		return got, nil
 	}

@@ -20,7 +20,6 @@ import (
 	"golang.org/x/mod/modfile"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/proxy"
-	"golang.org/x/pkgsite/internal/source"
 )
 
 // Version and commit time are pre specified when fetching a local module, as these
@@ -98,29 +97,6 @@ func (g *directoryModuleGetter) Zip(ctx context.Context, path, version string) (
 // ZipSize returns the approximate size of the zip file in bytes.
 func (g *directoryModuleGetter) ZipSize(ctx context.Context, path, version string) (int64, error) {
 	return 0, errors.New("directoryModuleGetter.ZipSize unimplemented")
-}
-
-// FetchLocalModule fetches a module from a local directory and process its contents
-// to return an internal.Module and other related information. modulePath is not necessary
-// if the module has a go.mod file, but if both exist, then they must match.
-// FetchResult.Error should be checked to verify that the fetch succeeded. Even if the
-// error is non-nil the result may contain useful data.
-func FetchLocalModule(ctx context.Context, modulePath, localPath string, sourceClient *source.Client) *FetchResult {
-	g, err := NewDirectoryModuleGetter(modulePath, localPath)
-	if err != nil {
-		return &FetchResult{
-			ModulePath: modulePath,
-			Error:      err,
-		}
-	}
-	if modulePath == "" {
-		modulePath = g.modulePath
-	}
-	fr := FetchModule(ctx, modulePath, LocalVersion, g, sourceClient)
-	if fr.Error != nil {
-		fr.Error = fmt.Errorf("FetchLocalModule(%q, %q): %w", modulePath, localPath, fr.Error)
-	}
-	return fr
 }
 
 // createZipReader creates a zip file from a directory given a local path and
