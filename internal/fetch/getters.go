@@ -13,12 +13,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"io/fs"
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"golang.org/x/mod/modfile"
@@ -150,56 +148,12 @@ func (g *directoryModuleGetter) ContentDir(ctx context.Context, path, version st
 	if err := g.checkPath(path); err != nil {
 		return nil, err
 	}
-	zr, err := createZipReader(g.dir, path, LocalVersion)
-	if err != nil {
-		return nil, err
-	}
-	return fs.Sub(zr, path+"@"+LocalVersion)
+	return os.DirFS(g.dir), nil
 }
 
 // ZipSize returns the approximate size of the zip file in bytes.
 func (g *directoryModuleGetter) ZipSize(ctx context.Context, path, version string) (int64, error) {
 	return 0, errors.New("directoryModuleGetter.ZipSize unimplemented")
-}
-
-// createZipReader creates a zip file from a directory given a local path and
-// returns a zip.Reader to be passed to processZipFile. The purpose of the
-// function is to transform a local go module into a zip file to be processed by
-// existing functions.
-func createZipReader(localPath, modulePath, version string) (*zip.Reader, error) {
-	buf := new(bytes.Buffer)
-	w := zip.NewWriter(buf)
-	err := filepath.Walk(localPath, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-		if info.IsDir() {
-			return nil
-		}
-
-		readFrom, err := os.Open(path)
-		if err != nil {
-			return err
-		}
-		defer readFrom.Close()
-
-		writeTo, err := w.Create(filepath.Join(moduleVersionDir(modulePath, version), strings.TrimPrefix(path, localPath)))
-		if err != nil {
-			return err
-		}
-
-		_, err = io.Copy(writeTo, readFrom)
-		return err
-	})
-	if err != nil {
-		return nil, err
-	}
-	if err := w.Close(); err != nil {
-		return nil, err
-	}
-
-	reader := bytes.NewReader(buf.Bytes())
-	return zip.NewReader(reader, reader.Size())
 }
 
 // An fsModuleGetter gets modules from a directory in the filesystem

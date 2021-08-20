@@ -167,7 +167,7 @@ func localFetcher(t *testing.T, withLicenseDetector bool, ctx context.Context, m
 	if err != nil {
 		t.Fatalf("couldn't create test files")
 	}
-	defer os.RemoveAll(directory)
+	t.Cleanup(func() { os.RemoveAll(directory) })
 
 	modulePath := mod.ModulePath
 	g, err := NewDirectoryModuleGetter(modulePath, directory)
@@ -179,11 +179,7 @@ func localFetcher(t *testing.T, withLicenseDetector bool, ctx context.Context, m
 		return got, nil
 	}
 
-	zipReader, err := createZipReader(directory, modulePath, LocalVersion)
-	if err != nil {
-		t.Fatal("couldn't create zip reader")
-	}
-	d := licenses.NewDetector(modulePath, LocalVersion, zipReader, func(format string, args ...interface{}) {
+	d := licenses.NewDetectorFS(modulePath, LocalVersion, os.DirFS(directory), func(format string, args ...interface{}) {
 		log.Infof(ctx, format, args...)
 	})
 	return got, d

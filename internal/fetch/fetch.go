@@ -392,12 +392,6 @@ func extractDeprecatedComment(mf *modfile.File) (bool, string) {
 	return false, ""
 }
 
-// moduleVersionDir formats the content subdirectory for the given
-// modulePath and version.
-func moduleVersionDir(modulePath, version string) string {
-	return fmt.Sprintf("%s@%s", modulePath, version)
-}
-
 type FetchInfo struct {
 	ModulePath string
 	Version    string
