@@ -161,6 +161,22 @@ var probes = []*Probe{
 		BypassCache: true,
 		Contains:    "net/http",
 	},
+	{
+		Name:        "symbol-search-one-word-new",
+		RelativeURL: "search?q=new",
+	},
+	{
+		Name:        "symbol-search-one-word-error",
+		RelativeURL: "search?q=error",
+	},
+	{
+		Name:        "symbol-search-multiword",
+		RelativeURL: "search?q=new+version",
+	},
+	{
+		Name:        "symbol-search-package-dot-symbol",
+		RelativeURL: "search?q=client.error",
+	},
 }
 
 func init() {
