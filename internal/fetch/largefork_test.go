@@ -11,36 +11,36 @@ import (
 	"testing"
 )
 
-func TestZipSignature(t *testing.T) {
+func TestFSSignature(t *testing.T) {
 	zip1 := newzip(t, [][2]string{
-		{"p/file1", "abc"},
-		{"p/file2", "def"},
+		{"file1", "abc"},
+		{"file2", "def"},
 	})
 	zip2 := newzip(t, [][2]string{ // same files, different order, different prefix
-		{"q/file2", "def"},
-		{"q/file1", "abc"},
+		{"file2", "def"},
+		{"file1", "abc"},
 	})
 	zip3 := newzip(t, [][2]string{ // different files
-		{"r/file1", "abc"},
-		{"r/file2d", "ef"},
+		{"file1", "abc"},
+		{"file2d", "ef"},
 	})
 
-	sig := func(z []byte, prefix string) string {
+	sig := func(z []byte) string {
 		r, err := zip.NewReader(bytes.NewReader(z), int64(len(z)))
 		if err != nil {
 			t.Fatal(err)
 		}
-		s, err := ZipSignature(r, prefix)
+		s, err := FSSignature(r)
 		if err != nil {
 			t.Fatal(err)
 		}
 		return s
 	}
 
-	if sig(zip1, "p") != sig(zip2, "q") {
+	if sig(zip1) != sig(zip2) {
 		t.Error("same files, different order: got different signatures, want same")
 	}
-	if sig(zip1, "p") == sig(zip3, "r") {
+	if sig(zip1) == sig(zip3) {
 		t.Error("different files: got same signatures, wanted different")
 	}
 }

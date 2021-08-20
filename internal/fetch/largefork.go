@@ -9,29 +9,43 @@ package fetch
 //go:generate go run gen_zip_signatures.go -v
 
 import (
-	"archive/zip"
 	"crypto/sha256"
+	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"sort"
-	"strings"
 )
 
-// ZipSignature calculates a signature that uniquely identifies a zip file.
-// It hashes every filename and its contents. Filenames must begin with prefix,
-// which is not included in the hash.
-func ZipSignature(r *zip.Reader, prefix string) (string, error) {
-	files := make([]*zip.File, len(r.File))
-	copy(files, r.File)
-	sort.Slice(files, func(i, j int) bool { return files[i].Name < files[j].Name })
-	h := sha256.New()
-	for _, f := range files {
-		if !strings.HasPrefix(f.Name, prefix) {
-			return "", fmt.Errorf("zip file %q does not have prefix %q", f.Name, prefix)
+// FSSignature calculates a signature that uniquely identifies a filesystem.
+// It hashes every filename and its contents.
+func FSSignature(fsys fs.FS) (string, error) {
+	// To match the behavior of the old ZipSignatures function that this is
+	// based on, sort the paths from fs.WalkDir. Although fs.WalkDir traverses
+	// the files in lexical order within each directory, that is not the same
+	// order as sorting all the paths. For example, fs.WalkDir will return
+	// ["a/b", "a#b"], but because '#' comes before '/', sorting the paths
+	// swaps them.
+	var paths []string
+	err := fs.WalkDir(fsys, ".", func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
 		}
-		io.WriteString(h, f.Name[len(prefix):])
+		if !d.IsDir() {
+			paths = append(paths, path)
+		}
+		return nil
+	})
+	if err != nil && !errors.Is(err, fs.ErrNotExist) { // we can get NotExist on an empty FS
+		return "", err
+	}
+	sort.Strings(paths)
+
+	h := sha256.New()
+	for _, path := range paths {
+		io.WriteString(h, "/"+path) // slash needed to match ZipSignatures
 		h.Write([]byte{0})
-		rc, err := f.Open()
+		rc, err := fsys.Open(path)
 		if err != nil {
 			return "", err
 		}
@@ -42,11 +56,11 @@ func ZipSignature(r *zip.Reader, prefix string) (string, error) {
 }
 
 // forkedFrom returns a module that the current one has been forked from. It
-// consults a built-in list of modules and their zip signatures, and returns a
-// module path from that list if its zip file and version are identical to the
+// consults a built-in list of modules and their signatures, and returns a
+// module path from that list if its contents and version are identical to the
 // given ones. If there is no matching module, it returns the empty string.
-func forkedFrom(z *zip.Reader, module, version string) (string, error) {
-	sig, err := ZipSignature(z, module+"@"+version)
+func forkedFrom(moduleContents fs.FS, module, version string) (string, error) {
+	sig, err := FSSignature(moduleContents)
 	if err != nil {
 		return "", err
 	}

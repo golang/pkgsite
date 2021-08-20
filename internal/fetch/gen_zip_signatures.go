@@ -18,6 +18,7 @@ import (
 	"flag"
 	"fmt"
 	"go/format"
+	"io/fs"
 	"io/ioutil"
 	"log"
 	"sort"
@@ -141,7 +142,11 @@ func computeSignature(ctx context.Context, prox *proxy.Client, mv internal.Modve
 	if err != nil {
 		return "", err
 	}
-	sig, err := fetch.ZipSignature(zr, mv.String())
+	contentsDir, err := fs.Sub(zr, mv.String())
+	if err != nil {
+		return "", err
+	}
+	sig, err := fetch.FSSignature(contentsDir)
 	if err != nil {
 		return "", err
 	}

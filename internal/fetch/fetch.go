@@ -10,6 +10,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io/fs"
 	"net/http"
 	"path"
 	"sort"
@@ -254,7 +255,11 @@ func fetchModule(ctx context.Context, fr *FetchResult, mg ModuleGetter, sourceCl
 	// see if this is a fork. The intent is to avoid processing certain known
 	// large modules, not to find every fork.
 	if !fr.HasGoMod {
-		forkedModule, err := forkedFrom(zipReader, fr.ModulePath, fr.ResolvedVersion)
+		contentsDir, err := fs.Sub(zipReader, fr.ModulePath+"@"+fr.ResolvedVersion)
+		if err != nil {
+			return fi, err
+		}
+		forkedModule, err := forkedFrom(contentsDir, fr.ModulePath, fr.ResolvedVersion)
 		if err != nil {
 			return fi, err
 		}
