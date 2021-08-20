@@ -142,11 +142,11 @@ func computeSignature(ctx context.Context, prox *proxy.Client, mv internal.Modve
 	if err != nil {
 		return "", err
 	}
-	contentsDir, err := fs.Sub(zr, mv.String())
+	contentDir, err := fs.Sub(zr, mv.String())
 	if err != nil {
 		return "", err
 	}
-	sig, err := fetch.FSSignature(contentsDir)
+	sig, err := fetch.FSSignature(contentDir)
 	if err != nil {
 		return "", err
 	}

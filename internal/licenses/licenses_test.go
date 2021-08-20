@@ -700,11 +700,11 @@ func TestInvalidContentDirPath(t *testing.T) {
 }
 
 // newZipReader creates an in-memory zip of the given contents and returns a reader to it.
-func newZipReader(t *testing.T, contentsDir string, contents map[string]string) *zip.Reader {
+func newZipReader(t *testing.T, contentDir string, contents map[string]string) *zip.Reader {
 	var buf bytes.Buffer
 	zw := zip.NewWriter(&buf)
 	for name, content := range contents {
-		fw, err := zw.Create(path.Join(contentsDir, name))
+		fw, err := zw.Create(path.Join(contentDir, name))
 		if err != nil {
 			t.Fatal(err)
 		}

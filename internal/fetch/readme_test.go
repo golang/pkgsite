@@ -7,6 +7,7 @@ package fetch
 import (
 	"archive/zip"
 	"context"
+	"io/fs"
 	"sort"
 	"testing"
 
@@ -100,8 +101,11 @@ func TestExtractReadmes(t *testing.T) {
 					t.Fatal(err)
 				}
 			}
-
-			got, err := extractReadmes(test.modulePath, test.version, reader)
+			contentDir, err := fs.Sub(reader, test.modulePath+"@"+test.version)
+			if err != nil {
+				t.Fatal(err)
+			}
+			got, err := extractReadmes(test.modulePath, test.version, contentDir)
 			if err != nil {
 				t.Fatal(err)
 			}

@@ -22,7 +22,6 @@ import (
 	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/source"
-	"golang.org/x/pkgsite/internal/stdlib"
 )
 
 // A goPackage is a group of one or more Go source files with the same
@@ -50,7 +49,7 @@ type goPackage struct {
 // * a maximum file size (MaxFileSize)
 // * the particular set of build contexts we consider (goEnvs)
 // * whether the import path is valid.
-func extractPackages(ctx context.Context, modulePath, resolvedVersion, requestedVersion string, fsys fs.FS, d *licenses.Detector, sourceInfo *source.Info) (_ []*goPackage, _ []*internal.PackageVersionState, err error) {
+func extractPackages(ctx context.Context, modulePath, resolvedVersion string, contentDir fs.FS, d *licenses.Detector, sourceInfo *source.Info) (_ []*goPackage, _ []*internal.PackageVersionState, err error) {
 	defer derrors.Wrap(&err, "extractPackages(ctx, %q, %q, r, d)", modulePath, resolvedVersion)
 	ctx, span := trace.StartSpan(ctx, "fetch.extractPackages")
 	defer span.End()
@@ -71,15 +70,6 @@ func extractPackages(ctx context.Context, modulePath, resolvedVersion, requested
 	//
 	// During phase 1, we populate the dirs map for each directory
 	// that contains at least one .go file.
-
-	// modulePrefix is the "<module>@<resolvedVersion>/" prefix that all files
-	// are expected to have according to the zip archive layout specification
-	// at the bottom of https://golang.org/cmd/go/#hdr-Module_proxy_protocol.
-	v := resolvedVersion
-	if modulePath == stdlib.ModulePath && stdlib.SupportedBranches[requestedVersion] {
-		v = requestedVersion
-	}
-	modulePrefix := moduleVersionDir(modulePath, v) + "/"
 
 	var (
 		// dirs is the set of directories with at least one .go file,
@@ -111,7 +101,7 @@ func extractPackages(ctx context.Context, modulePath, resolvedVersion, requested
 	// that can be detected by looking at metadata alone.
 	// We'll be looking at file contents starting with phase 2 only,
 	// only after we're sure this phase passed without errors.
-	err = fs.WalkDir(fsys, ".", func(pathname string, d fs.DirEntry, err error) error {
+	err = fs.WalkDir(contentDir, ".", func(pathname string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
@@ -119,11 +109,7 @@ func extractPackages(ctx context.Context, modulePath, resolvedVersion, requested
 			// Skip directories.
 			return nil
 		}
-		if !strings.HasPrefix(pathname, modulePrefix) {
-			// Well-formed module zips have all files under modulePrefix.
-			return fmt.Errorf("expected file to have prefix %q; got = %q: %w", modulePrefix, pathname, errMalformedZip)
-		}
-		innerPath := path.Dir(pathname[len(modulePrefix):])
+		innerPath := path.Dir(pathname)
 		if incompleteDirs[innerPath] {
 			// We already know this directory cannot be processed, so skip.
 			return nil
@@ -177,6 +163,9 @@ func extractPackages(ctx context.Context, modulePath, resolvedVersion, requested
 		}
 		return nil
 	})
+	if errors.Is(err, fs.ErrNotExist) {
+		return nil, nil, fmt.Errorf("no files: %w", ErrModuleContainsNoPackages)
+	}
 	if err != nil {
 		return nil, nil, err
 	}
@@ -201,7 +190,7 @@ func extractPackages(ctx context.Context, modulePath, resolvedVersion, requested
 			status error
 			errMsg string
 		)
-		pkg, err := loadPackage(ctx, fsys, goFiles, innerPath, sourceInfo, modInfo)
+		pkg, err := loadPackage(ctx, contentDir, goFiles, innerPath, sourceInfo, modInfo)
 		if bpe := (*BadPackageError)(nil); errors.As(err, &bpe) {
 			incompleteDirs[innerPath] = true
 			status = derrors.PackageInvalidContents

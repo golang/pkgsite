@@ -8,6 +8,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io/fs"
 
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
@@ -85,7 +86,11 @@ func LatestModuleVersions(ctx context.Context, modulePath string, prox *proxy.Cl
 			if err != nil {
 				return false, err
 			}
-			result = hasGoModFile(zr, modulePath, v)
+			contentsDir, err := fs.Sub(zr, modulePath+"@"+v)
+			if err != nil {
+				return false, err
+			}
+			result = hasGoModFile(contentsDir)
 		}
 		hasGoModResults[v] = result
 		return result, nil

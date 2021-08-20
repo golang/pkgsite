@@ -53,7 +53,7 @@ func (bpe *BadPackageError) Error() string { return bpe.Err.Error() }
 //
 // If a package is fine except that its documentation is too large, loadPackage
 // returns a goPackage whose err field is a non-nil error with godoc.ErrTooLarge in its chain.
-func loadPackage(ctx context.Context, fsys fs.FS, goFilePaths []string, innerPath string,
+func loadPackage(ctx context.Context, contentDir fs.FS, goFilePaths []string, innerPath string,
 	sourceInfo *source.Info, modInfo *godoc.ModuleInfo) (_ *goPackage, err error) {
 	defer derrors.Wrap(&err, "loadPackage(ctx, zipGoFiles, %q, sourceInfo, modInfo)", innerPath)
 	ctx, span := trace.StartSpan(ctx, "fetch.loadPackage")
@@ -63,7 +63,7 @@ func loadPackage(ctx context.Context, fsys fs.FS, goFilePaths []string, innerPat
 	files := make(map[string][]byte)
 	for _, p := range goFilePaths {
 		_, name := path.Split(p)
-		b, err := readFSFile(fsys, p, MaxFileSize)
+		b, err := readFSFile(contentDir, p, MaxFileSize)
 		if err != nil {
 			return nil, err
 		}

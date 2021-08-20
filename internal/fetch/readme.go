@@ -18,14 +18,13 @@ import (
 
 // extractReadmes returns the file path and contents of all files from r
 // that are README files.
-func extractReadmes(modulePath, resolvedVersion string, fsys fs.FS) (_ []*internal.Readme, err error) {
+func extractReadmes(modulePath, resolvedVersion string, contentDir fs.FS) (_ []*internal.Readme, err error) {
 	defer derrors.Wrap(&err, "extractReadmes(ctx, %q, %q, r)", modulePath, resolvedVersion)
 
 	// The key is the README directory. Since we only store one README file per
 	// directory, we use this below to prioritize READMEs in markdown.
 	readmes := map[string]*internal.Readme{}
-	mvdir := moduleVersionDir(modulePath, resolvedVersion)
-	err = fs.WalkDir(fsys, mvdir, func(pathname string, d fs.DirEntry, err error) error {
+	err = fs.WalkDir(contentDir, ".", func(pathname string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
@@ -37,13 +36,12 @@ func extractReadmes(modulePath, resolvedVersion string, fsys fs.FS) (_ []*intern
 			if info.Size() > MaxFileSize {
 				return fmt.Errorf("file size %d exceeds max limit %d", info.Size(), MaxFileSize)
 			}
-			c, err := readFSFile(fsys, pathname, MaxFileSize)
+			c, err := readFSFile(contentDir, pathname, MaxFileSize)
 			if err != nil {
 				return err
 			}
 
-			f := strings.TrimPrefix(pathname, mvdir+"/")
-			key := path.Dir(f)
+			key := path.Dir(pathname)
 			if r, ok := readmes[key]; ok {
 				// Prefer READMEs written in markdown, since we style these on
 				// the frontend.
@@ -53,7 +51,7 @@ func extractReadmes(modulePath, resolvedVersion string, fsys fs.FS) (_ []*intern
 				}
 			}
 			readmes[key] = &internal.Readme{
-				Filepath: f,
+				Filepath: pathname,
 				Contents: string(c),
 			}
 		}

@@ -12,7 +12,6 @@ import (
 	"fmt"
 	"io/fs"
 	"net/http"
-	"path"
 	"sort"
 	"strconv"
 	"strings"
@@ -35,10 +34,7 @@ import (
 	"golang.org/x/pkgsite/internal/stdlib"
 )
 
-var (
-	ErrModuleContainsNoPackages = errors.New("module contains 0 packages")
-	errMalformedZip             = errors.New("module zip is malformed")
-)
+var ErrModuleContainsNoPackages = errors.New("module contains 0 packages")
 
 var (
 	fetchLatency = stats.Float64(
@@ -224,13 +220,26 @@ func fetchModule(ctx context.Context, fr *FetchResult, mg ModuleGetter, sourceCl
 		}
 	}
 
+	// Use the content directory of the module filesystem throughout. That is
+	// the "<module>@<resolvedVersion>" directory that all module zips are
+	// expected to have according to the zip archive layout specification at
+	// https://golang.org/ref/mod#zip-files.
+	v := fr.ResolvedVersion
+	if fr.ModulePath == stdlib.ModulePath && stdlib.SupportedBranches[fr.RequestedVersion] {
+		v = fr.RequestedVersion
+	}
+	contentDir, err := fs.Sub(fsys, fr.ModulePath+"@"+v)
+	if err != nil {
+		return fi, err
+	}
+
 	// Set fr.HasGoMod as early as possible, because the go command uses it to
 	// decide the latest version in some cases (see fetchRawLatestVersion in
 	// this package) and all it requires is a valid zip.
 	if fr.ModulePath == stdlib.ModulePath {
 		fr.HasGoMod = true
 	} else {
-		fr.HasGoMod = hasGoModFile(fsys, fr.ModulePath, fr.ResolvedVersion)
+		fr.HasGoMod = hasGoModFile(contentDir)
 	}
 
 	// getGoModPath may return a non-empty goModPath even if the error is
@@ -246,11 +255,7 @@ func fetchModule(ctx context.Context, fr *FetchResult, mg ModuleGetter, sourceCl
 	// see if this is a fork. The intent is to avoid processing certain known
 	// large modules, not to find every fork.
 	if !fr.HasGoMod {
-		contentsDir, err := fs.Sub(fsys, fr.ModulePath+"@"+fr.ResolvedVersion)
-		if err != nil {
-			return fi, err
-		}
-		forkedModule, err := forkedFrom(contentsDir, fr.ModulePath, fr.ResolvedVersion)
+		forkedModule, err := forkedFrom(contentDir, fr.ModulePath, fr.ResolvedVersion)
 		if err != nil {
 			return fi, err
 		}
@@ -259,7 +264,7 @@ func fetchModule(ctx context.Context, fr *FetchResult, mg ModuleGetter, sourceCl
 		}
 	}
 
-	mod, pvs, err := processModuleContents(ctx, fr.ModulePath, fr.ResolvedVersion, fr.RequestedVersion, commitTime, fsys, sourceClient)
+	mod, pvs, err := processModuleContents(ctx, fr.ModulePath, fr.ResolvedVersion, fr.RequestedVersion, commitTime, contentDir, sourceClient)
 	if err != nil {
 		return fi, err
 	}
@@ -327,10 +332,10 @@ func getGoModPath(ctx context.Context, modulePath, resolvedVersion string, mg Mo
 
 // processModuleContents extracts information from the module filesystem.
 func processModuleContents(ctx context.Context, modulePath, resolvedVersion, requestedVersion string,
-	commitTime time.Time, fsys fs.FS, sourceClient *source.Client) (_ *internal.Module, _ []*internal.PackageVersionState, err error) {
-	defer derrors.Wrap(&err, "processZipFile(%q, %q)", modulePath, resolvedVersion)
+	commitTime time.Time, contentDir fs.FS, sourceClient *source.Client) (_ *internal.Module, _ []*internal.PackageVersionState, err error) {
+	defer derrors.Wrap(&err, "processModuleContents(%q, %q)", modulePath, resolvedVersion)
 
-	ctx, span := trace.StartSpan(ctx, "fetch.processZipFile")
+	ctx, span := trace.StartSpan(ctx, "fetch.processModuleContents")
 	defer span.End()
 
 	v := resolvedVersion
@@ -341,21 +346,17 @@ func processModuleContents(ctx context.Context, modulePath, resolvedVersion, req
 	if err != nil {
 		log.Infof(ctx, "error getting source info: %v", err)
 	}
-	readmes, err := extractReadmes(modulePath, resolvedVersion, fsys)
+	readmes, err := extractReadmes(modulePath, resolvedVersion, contentDir)
 	if err != nil {
 		return nil, nil, err
 	}
 	logf := func(format string, args ...interface{}) {
 		log.Infof(ctx, format, args...)
 	}
-	contentDir, err := fs.Sub(fsys, moduleVersionDir(modulePath, v))
-	if err != nil {
-		return nil, nil, err
-	}
 	d := licenses.NewDetectorFS(modulePath, v, contentDir, logf)
 	allLicenses := d.AllLicenses()
-	packages, packageVersionStates, err := extractPackages(ctx, modulePath, resolvedVersion, requestedVersion, fsys, d, sourceInfo)
-	if errors.Is(err, ErrModuleContainsNoPackages) || errors.Is(err, errMalformedZip) {
+	packages, packageVersionStates, err := extractPackages(ctx, modulePath, resolvedVersion, contentDir, d, sourceInfo)
+	if errors.Is(err, ErrModuleContainsNoPackages) {
 		return nil, nil, fmt.Errorf("%v: %w", err.Error(), derrors.BadModule)
 	}
 	if err != nil {
@@ -375,8 +376,8 @@ func processModuleContents(ctx context.Context, modulePath, resolvedVersion, req
 	}, packageVersionStates, nil
 }
 
-func hasGoModFile(fsys fs.FS, m, v string) bool {
-	info, err := fs.Stat(fsys, path.Join(moduleVersionDir(m, v), "go.mod"))
+func hasGoModFile(contentDir fs.FS) bool {
+	info, err := fs.Stat(contentDir, "go.mod")
 	return err == nil && !info.IsDir()
 }
 
