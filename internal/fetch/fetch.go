@@ -6,7 +6,6 @@
 package fetch
 
 import (
-	"archive/zip"
 	"context"
 	"errors"
 	"fmt"
@@ -187,19 +186,8 @@ func fetchModule(ctx context.Context, fr *FetchResult, mg ModuleGetter, sourceCl
 
 	var contentDir fs.FS
 	if fr.ModulePath == stdlib.ModulePath {
-		var (
-			resolvedVersion string
-			zr              *zip.Reader
-		)
-		zr, resolvedVersion, commitTime, err = stdlib.Zip(fr.RequestedVersion)
-		if err != nil {
-			return fi, err
-		}
-		v := resolvedVersion
-		if stdlib.SupportedBranches[fr.RequestedVersion] {
-			v = fr.RequestedVersion
-		}
-		contentDir, err = fs.Sub(zr, fr.ModulePath+"@"+v)
+		var resolvedVersion string
+		contentDir, resolvedVersion, commitTime, err = stdlib.ContentDir(fr.RequestedVersion)
 		if err != nil {
 			return fi, err
 		}

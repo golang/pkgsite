@@ -313,29 +313,6 @@ func ZipInfo(requestedVersion string) (resolvedVersion string, err error) {
 	return resolvedVersion, nil
 }
 
-// Zip creates a module zip representing the entire Go standard library at the
-// given version (which must have been resolved with ZipInfo) and returns a
-// reader to it. It also returns the time of the commit for that version. The
-// zip file is in module form, with each path prefixed by ModuleName + "@" +
-// version.
-//
-// Normally, Zip returns the resolved version it was passed. If the resolved
-// version is version.Master, Zip returns a semantic version for the branch.
-//
-// Zip reads the standard library at the Go repository tag corresponding to to
-// the given semantic version.
-//
-// Zip ignores go.mod files in the standard library, treating it as if it were a
-// single module named "std" at the given version.
-func Zip(requestedVersion string) (_ *zip.Reader, resolvedVersion string, commitTime time.Time, err error) {
-	// This code taken, with modifications, from
-	// https://github.com/shurcooL/play/blob/master/256/moduleproxy/std/std.go.
-	defer derrors.Wrap(&err, "stdlib.Zip(%q)", requestedVersion)
-
-	zr, resolvedVersion, commitTime, _, err := zipInternal(requestedVersion)
-	return zr, resolvedVersion, commitTime, err
-}
-
 func zipInternal(requestedVersion string) (_ *zip.Reader, resolvedVersion string, commitTime time.Time, prefix string, err error) {
 	var repo *git.Repository
 	if UseTestData {

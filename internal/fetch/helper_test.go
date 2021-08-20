@@ -5,8 +5,8 @@
 package fetch
 
 import (
-	"archive/zip"
 	"context"
+	"io/fs"
 	"net/http"
 	"os"
 	"sort"
@@ -188,16 +188,20 @@ func localFetcher(t *testing.T, withLicenseDetector bool, ctx context.Context, m
 func licenseDetector(ctx context.Context, t *testing.T, modulePath, version string, proxyClient *proxy.Client) *licenses.Detector {
 	t.Helper()
 	var (
-		zipReader *zip.Reader
-		err       error
+		contentDir fs.FS
+		err        error
 	)
 	if modulePath == stdlib.ModulePath {
-		zipReader, _, _, err = stdlib.Zip(version)
+		contentDir, _, _, err = stdlib.ContentDir(version)
 		if err != nil {
 			t.Fatal(err)
 		}
 	} else {
-		zipReader, err = proxyClient.Zip(ctx, modulePath, version)
+		zipReader, err := proxyClient.Zip(ctx, modulePath, version)
+		if err != nil {
+			t.Fatal(err)
+		}
+		contentDir, err = fs.Sub(zipReader, modulePath+"@"+version)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -205,7 +209,7 @@ func licenseDetector(ctx context.Context, t *testing.T, modulePath, version stri
 	logf := func(format string, args ...interface{}) {
 		log.Infof(ctx, format, args...)
 	}
-	return licenses.NewDetector(modulePath, version, zipReader, logf)
+	return licenses.NewDetectorFS(modulePath, version, contentDir, logf)
 }
 
 func sortFetchResult(fr *FetchResult) {

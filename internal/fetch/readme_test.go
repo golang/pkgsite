@@ -5,7 +5,6 @@
 package fetch
 
 import (
-	"archive/zip"
 	"context"
 	"io/fs"
 	"sort"
@@ -84,11 +83,11 @@ func TestExtractReadmes(t *testing.T) {
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			var (
-				reader *zip.Reader
-				err    error
+				contentDir fs.FS
+				err        error
 			)
 			if test.modulePath == stdlib.ModulePath {
-				reader, _, _, err = stdlib.Zip(test.version)
+				contentDir, _, _, err = stdlib.ContentDir(test.version)
 				if err != nil {
 					t.Fatal(err)
 				}
@@ -96,14 +95,14 @@ func TestExtractReadmes(t *testing.T) {
 				proxyClient, teardownProxy := proxytest.SetupTestClient(t, []*proxytest.Module{
 					{ModulePath: test.modulePath, Files: test.files}})
 				defer teardownProxy()
-				reader, err = proxyClient.Zip(ctx, test.modulePath, "v1.0.0")
+				reader, err := proxyClient.Zip(ctx, test.modulePath, "v1.0.0")
 				if err != nil {
 					t.Fatal(err)
 				}
-			}
-			contentDir, err := fs.Sub(reader, test.modulePath+"@"+test.version)
-			if err != nil {
-				t.Fatal(err)
+				contentDir, err = fs.Sub(reader, test.modulePath+"@v1.0.0")
+				if err != nil {
+					t.Fatal(err)
+				}
 			}
 			got, err := extractReadmes(test.modulePath, test.version, contentDir)
 			if err != nil {

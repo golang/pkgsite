@@ -482,7 +482,7 @@ func (s *Server) handleHTMLPage(f func(w http.ResponseWriter, r *http.Request) e
 func (s *Server) handleFetchStdSupportedBranches(w http.ResponseWriter, r *http.Request) (err error) {
 	defer derrors.Wrap(&err, "handleFetchStdSupportedBranches")
 	for requestedVersion := range stdlib.SupportedBranches {
-		_, resolvedVersion, _, err := stdlib.Zip(requestedVersion)
+		_, resolvedVersion, _, err := stdlib.ContentDir(requestedVersion)
 		if err != nil {
 			return err
 		}
