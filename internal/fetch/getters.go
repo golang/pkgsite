@@ -31,11 +31,17 @@ import (
 type ModuleGetter interface {
 	// Info returns basic information about the module.
 	Info(ctx context.Context, path, version string) (*proxy.VersionInfo, error)
+
 	// Mod returns the contents of the module's go.mod file.
 	Mod(ctx context.Context, path, version string) ([]byte, error)
-	// FS returns an FS for the module's contents. The FS should match the format
-	// of a module zip file.
+
+	// FS returns an FS for the module's contents. The FS should match the
+	// format of a module zip file's content directory. That is the
+	// "<module>@<resolvedVersion>" directory that all module zips are expected
+	// to have according to the zip archive layout specification at
+	// https://golang.org/ref/mod#zip-files.
 	FS(ctx context.Context, path, version string) (fs.FS, error)
+
 	// ZipSize returns the approximate size of the zip file in bytes.
 	// It is used only for load-shedding.
 	ZipSize(ctx context.Context, path, version string) (int64, error)
@@ -62,7 +68,11 @@ func (g *proxyModuleGetter) Mod(ctx context.Context, path, version string) ([]by
 // FS returns an FS for the module's contents. The FS should match the format
 // of a module zip file.
 func (g *proxyModuleGetter) FS(ctx context.Context, path, version string) (fs.FS, error) {
-	return g.prox.Zip(ctx, path, version)
+	zr, err := g.prox.Zip(ctx, path, version)
+	if err != nil {
+		return nil, err
+	}
+	return fs.Sub(zr, path+"@"+version)
 }
 
 // ZipSize returns the approximate size of the zip file in bytes.
@@ -140,7 +150,11 @@ func (g *directoryModuleGetter) FS(ctx context.Context, path, version string) (f
 	if err := g.checkPath(path); err != nil {
 		return nil, err
 	}
-	return createZipReader(g.dir, path, LocalVersion)
+	zr, err := createZipReader(g.dir, path, LocalVersion)
+	if err != nil {
+		return nil, err
+	}
+	return fs.Sub(zr, path+"@"+LocalVersion)
 }
 
 // ZipSize returns the approximate size of the zip file in bytes.
@@ -231,7 +245,11 @@ func (g *fsModuleGetter) FS(ctx context.Context, path, version string) (_ fs.FS,
 	if err != nil {
 		return nil, err
 	}
-	return zip.NewReader(bytes.NewReader(data), int64(len(data)))
+	zr, err := zip.NewReader(bytes.NewReader(data), int64(len(data)))
+	if err != nil {
+		return nil, err
+	}
+	return fs.Sub(zr, path+"@"+version)
 }
 
 // ZipSize returns the approximate size of the zip file in bytes.

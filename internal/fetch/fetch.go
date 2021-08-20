@@ -185,7 +185,7 @@ func fetchModule(ctx context.Context, fr *FetchResult, mg ModuleGetter, sourceCl
 	}
 	startFetchInfo(fi)
 
-	var fsys fs.FS
+	var contentDir fs.FS
 	if fr.ModulePath == stdlib.ModulePath {
 		var (
 			resolvedVersion string
@@ -195,29 +195,23 @@ func fetchModule(ctx context.Context, fr *FetchResult, mg ModuleGetter, sourceCl
 		if err != nil {
 			return fi, err
 		}
-		fsys = zr
+		v := resolvedVersion
+		if stdlib.SupportedBranches[fr.RequestedVersion] {
+			v = fr.RequestedVersion
+		}
+		contentDir, err = fs.Sub(zr, fr.ModulePath+"@"+v)
+		if err != nil {
+			return fi, err
+		}
 		// If the requested version is a branch name like "master" or "main", we cannot
 		// determine the right resolved version until we start working with the repo.
 		fr.ResolvedVersion = resolvedVersion
 		fi.Version = resolvedVersion
 	} else {
-		fsys, err = mg.FS(ctx, fr.ModulePath, fr.ResolvedVersion)
+		contentDir, err = mg.FS(ctx, fr.ModulePath, fr.ResolvedVersion)
 		if err != nil {
 			return fi, err
 		}
-	}
-
-	// Use the content directory of the module filesystem throughout. That is
-	// the "<module>@<resolvedVersion>" directory that all module zips are
-	// expected to have according to the zip archive layout specification at
-	// https://golang.org/ref/mod#zip-files.
-	v := fr.ResolvedVersion
-	if fr.ModulePath == stdlib.ModulePath && stdlib.SupportedBranches[fr.RequestedVersion] {
-		v = fr.RequestedVersion
-	}
-	contentDir, err := fs.Sub(fsys, fr.ModulePath+"@"+v)
-	if err != nil {
-		return fi, err
 	}
 
 	// Set fr.HasGoMod as early as possible, because the go command uses it to

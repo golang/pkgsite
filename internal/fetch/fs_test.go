@@ -6,7 +6,6 @@ package fetch
 
 import (
 	"context"
-	"fmt"
 	"io/ioutil"
 	"testing"
 	"time"
@@ -78,7 +77,7 @@ func TestFSGetter(t *testing.T) {
 			t.Fatal(err)
 		}
 		// Just check that the go.mod file is there and has the right contents.
-		f, err := fsys.Open(fmt.Sprintf("%s@%s/go.mod", modulePath, version))
+		f, err := fsys.Open("go.mod")
 		if err != nil {
 			t.Fatal(err)
 		}
