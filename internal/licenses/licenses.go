@@ -382,7 +382,7 @@ func (d *Detector) PackageInfo(dir string) (isRedistributable bool, lics []*Lice
 // computeModuleInfo determines values for the moduleRedist and moduleLicenses fields of d.
 func (d *Detector) computeModuleInfo() {
 	// Check that all licenses in the contents directory are redistributable.
-	d.moduleLicenses = d.detectFiles(d.Paths(RootFiles))
+	d.moduleLicenses = d.detectFiles(d.paths(RootFiles))
 	d.moduleRedist = Redistributable(types(d.moduleLicenses))
 }
 
@@ -392,7 +392,7 @@ func (d *Detector) computeModuleInfo() {
 func (d *Detector) computeAllLicenseInfo() {
 	d.allLicenses = []*License{}
 	d.allLicenses = append(d.allLicenses, d.moduleLicenses...)
-	nonRootLicenses := d.detectFiles(d.Paths(NonRootFiles))
+	nonRootLicenses := d.detectFiles(d.paths(NonRootFiles))
 	d.allLicenses = append(d.allLicenses, nonRootLicenses...)
 	d.licsByDir = map[string][]*License{}
 	for _, l := range nonRootLicenses {
@@ -413,52 +413,10 @@ const (
 	AllFiles
 )
 
-// Files returns a list of license files from the zip. The which argument
-// determines the location of the files considered.
-// Files panics if the Detector was not created with a *zip.Reader.
-// Deprecated: use Pathnames.
-func (d *Detector) Files(which WhichFiles) []*zip.File {
-	cdir := contentsDir(d.modulePath, d.version)
-	prefix := pathPrefix(cdir)
-	var files []*zip.File
-	for _, f := range d.fsys.(*zip.Reader).File {
-		if !fileNamesLowercase[strings.ToLower(path.Base(f.Name))] {
-			continue
-		}
-		if !strings.HasPrefix(f.Name, prefix) {
-			d.logf("potential license file %q found outside of the expected path %q", f.Name, cdir)
-			continue
-		}
-		// Skip files we should ignore.
-		if ignoreFiles[d.modulePath+" "+strings.TrimPrefix(f.Name, prefix)] {
-			continue
-		}
-		if which == RootFiles && path.Dir(f.Name) != cdir {
-			// Skip f since it's not at root.
-			continue
-		}
-		if which == NonRootFiles && path.Dir(f.Name) == cdir {
-			// Skip f since it is at root.
-			continue
-		}
-		if isVendoredFile(f.Name) {
-			// Skip if f is in the vendor directory.
-			continue
-		}
-		if err := module.CheckFilePath(f.Name); err != nil {
-			// Skip if the file path is bad.
-			d.logf("module.CheckFilePath(%q): %v", f.Name, err)
-			continue
-		}
-		files = append(files, f)
-	}
-	return files
-}
-
-// Paths returns a list of license file paths from the Detector's filesystem.
+// paths returns a list of license file paths from the Detector's filesystem.
 // The which argument determines the location of the files considered.
-// If Paths encounters an error, it logs it and returns nil.
-func (d *Detector) Paths(which WhichFiles) []string {
+// If paths encounters an error, it logs it and returns nil.
+func (d *Detector) paths(which WhichFiles) []string {
 	// TODO(golang/go#47834): remove references to cdir when higher levels
 	// do so.
 	cdir := contentsDir(d.modulePath, d.version)

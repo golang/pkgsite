@@ -347,7 +347,7 @@ func TestRedistributable(t *testing.T) {
 	}
 }
 
-func TestFiles(t *testing.T) {
+func TestPaths(t *testing.T) {
 	zr := newZipReader(t, "m@v1", map[string]string{
 		"LICENSE":            "",
 		"LICENSE.md":         "",
@@ -391,11 +391,7 @@ func TestFiles(t *testing.T) {
 	} {
 		t.Run(fmt.Sprintf("which=%d", test.which), func(t *testing.T) {
 			d := NewDetector("m", "v1", zr, nil)
-			gotFiles := d.Files(test.which)
-			var got []string
-			for _, f := range gotFiles {
-				got = append(got, f.Name)
-			}
+			got := d.paths(test.which)
 			if diff := cmp.Diff(test.want, got,
 				cmpopts.SortSlices(func(a, b string) bool { return a < b })); diff != "" {
 				t.Errorf("mismatch(-want, +got):\n%s", diff)
@@ -587,7 +583,7 @@ func TestDetectFiles(t *testing.T) {
 	for _, test := range testCases {
 		t.Run(test.name, func(t *testing.T) {
 			d := NewDetector("m", "v1", newZipReader(t, "m@v1", test.contents), log.Printf)
-			paths := d.Paths(AllFiles)
+			paths := d.paths(AllFiles)
 			gotLics := d.detectFiles(paths)
 			sort.Slice(gotLics, func(i, j int) bool {
 				return gotLics[i].FilePath < gotLics[j].FilePath
