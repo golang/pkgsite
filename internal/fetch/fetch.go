@@ -145,19 +145,6 @@ func FetchModule(ctx context.Context, modulePath, requestedVersion string, mg Mo
 }
 
 func fetchModule(ctx context.Context, fr *FetchResult, mg ModuleGetter, sourceClient *source.Client) (*FetchInfo, error) {
-	// If the module path is empty, get it from the go.mod file. This should only happen when fetching
-	// a local module.
-	if fr.ModulePath == "" {
-		goModBytes, err := mg.Mod(ctx, fr.ModulePath, fr.RequestedVersion)
-		if err != nil {
-			return nil, err
-		}
-		fr.ModulePath = modfile.ModulePath(goModBytes)
-		if fr.ModulePath == "" {
-			return nil, fmt.Errorf("go.mod has no module path: %w", derrors.BadModule)
-		}
-	}
-
 	info, err := GetInfo(ctx, fr.ModulePath, fr.RequestedVersion, mg)
 	if err != nil {
 		return nil, err
