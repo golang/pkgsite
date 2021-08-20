@@ -9,6 +9,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"io/fs"
 	"io/ioutil"
 	"log"
 	"math"
@@ -370,22 +371,22 @@ func TestPaths(t *testing.T) {
 	}{
 		{
 			RootFiles,
-			[]string{"m@v1/LICENSE", "m@v1/LICENCE", "m@v1/License", "m@v1/COPYING", "m@v1/LICENSE.md",
-				"m@v1/liCeNse"},
+			[]string{"LICENSE", "LICENCE", "License", "COPYING", "LICENSE.md",
+				"liCeNse"},
 		},
 		{
 			NonRootFiles,
 			[]string{
-				"m@v1/foo/LICENSE", "m@v1/foo/LICENSE.md", "m@v1/foo/LICENCE", "m@v1/foo/License",
-				"m@v1/foo/COPYING", "m@v1/pkg/vendor/LICENSE", "m@v1/foo/license",
+				"foo/LICENSE", "foo/LICENSE.md", "foo/LICENCE", "foo/License",
+				"foo/COPYING", "pkg/vendor/LICENSE", "foo/license",
 			},
 		},
 		{
 			AllFiles,
 			[]string{
-				"m@v1/LICENSE", "m@v1/LICENCE", "m@v1/License", "m@v1/COPYING", "m@v1/LICENSE.md",
-				"m@v1/liCeNse", "m@v1/foo/LICENSE", "m@v1/foo/LICENSE.md", "m@v1/foo/LICENCE", "m@v1/foo/License",
-				"m@v1/foo/license", "m@v1/foo/COPYING", "m@v1/pkg/vendor/LICENSE",
+				"LICENSE", "LICENCE", "License", "COPYING", "LICENSE.md",
+				"liCeNse", "foo/LICENSE", "foo/LICENSE.md", "foo/LICENCE", "foo/License",
+				"foo/license", "foo/COPYING", "pkg/vendor/LICENSE",
 			},
 		},
 	} {
@@ -659,7 +660,7 @@ func TestPackageInfo(t *testing.T) {
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			zr := newZipReader(t, contentsDir(module, version), test.contents)
+			zr := newZipReader(t, module+"@"+version, test.contents)
 			d := NewDetector(module, version, zr, nil)
 			gotRedist, gotLics := d.PackageInfo("dir/pkg")
 			if gotRedist != test.wantRedist {
@@ -677,6 +678,24 @@ func TestPackageInfo(t *testing.T) {
 				t.Errorf("mismatch (-want +got):\n%s", diff)
 			}
 		})
+	}
+}
+
+func TestInvalidContentDirPath(t *testing.T) {
+	// Make sure we don't crash if the zip's content directory path is invalid according to fs.ValidPath.
+	invalidPath := "a//v1.0.0"
+	if fs.ValidPath(invalidPath) {
+		t.Fatalf("%q is valid", invalidPath)
+	}
+	zr := newZipReader(t, invalidPath, map[string]string{"a": "b"})
+	d := NewDetector("a", "v1.0.0", zr, nil)
+	got := d.ModuleLicenses()
+	if len(got) != 0 {
+		t.Errorf("got %v, want nothing", got)
+	}
+	got = d.AllLicenses()
+	if len(got) != 0 {
+		t.Errorf("got %v, want nothing", got)
 	}
 }
 

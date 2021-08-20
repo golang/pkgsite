@@ -348,7 +348,11 @@ func processModuleContents(ctx context.Context, modulePath, resolvedVersion, req
 	logf := func(format string, args ...interface{}) {
 		log.Infof(ctx, format, args...)
 	}
-	d := licenses.NewDetectorFS(modulePath, v, fsys, logf)
+	contentDir, err := fs.Sub(fsys, moduleVersionDir(modulePath, v))
+	if err != nil {
+		return nil, nil, err
+	}
+	d := licenses.NewDetectorFS(modulePath, v, contentDir, logf)
 	allLicenses := d.AllLicenses()
 	packages, packageVersionStates, err := extractPackages(ctx, modulePath, resolvedVersion, requestedVersion, fsys, d, sourceInfo)
 	if errors.Is(err, ErrModuleContainsNoPackages) || errors.Is(err, errMalformedZip) {

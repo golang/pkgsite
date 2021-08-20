@@ -310,11 +310,16 @@ type Detector struct {
 // logf is for logging; if nil, no logging is done.
 // Deprecated: use NewDetectorFS.
 func NewDetector(modulePath, version string, zr *zip.Reader, logf func(string, ...interface{})) *Detector {
-	return NewDetectorFS(modulePath, version, zr, logf)
+	sub, err := fs.Sub(zr, modulePath+"@"+version)
+	// This should only fail if the prefix is not a valid path, which shouldn't be possible.
+	if err != nil && logf != nil {
+		logf("fs.Sub: %v", err)
+	}
+	return NewDetectorFS(modulePath, version, sub, logf)
 }
 
 // NewDetectorFS returns a Detector for the given module and version.
-// fsys should hold the module's files.
+// fsys should represent the content directory of the module (not the zip root).
 // logf is for logging; if nil, no logging is done.
 func NewDetectorFS(modulePath, version string, fsys fs.FS, logf func(string, ...interface{})) *Detector {
 	if logf == nil {
@@ -417,16 +422,11 @@ const (
 // The which argument determines the location of the files considered.
 // If paths encounters an error, it logs it and returns nil.
 func (d *Detector) paths(which WhichFiles) []string {
-	// TODO(golang/go#47834): remove references to cdir when higher levels
-	// do so.
-	cdir := contentsDir(d.modulePath, d.version)
-	fsys, err := fs.Sub(d.fsys, cdir)
-	if err != nil {
-		d.logf("Paths: %v", err)
+	if d.fsys == nil {
 		return nil
 	}
 	var paths []string
-	err = fs.WalkDir(fsys, ".", func(pathname string, de fs.DirEntry, err error) error {
+	err := fs.WalkDir(d.fsys, ".", func(pathname string, de fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
@@ -457,11 +457,11 @@ func (d *Detector) paths(which WhichFiles) []string {
 			d.logf("module.CheckFilePath(%q): %v", pathname, err)
 			return nil
 		}
-		paths = append(paths, path.Join(cdir, pathname))
+		paths = append(paths, pathname)
 		return nil
 	})
 	if err != nil {
-		d.logf("Paths: %v", err)
+		d.logf("licenses.Detector.paths: %v", err)
 		return nil
 	}
 	return paths
@@ -490,7 +490,6 @@ func isVendoredFile(name string) bool {
 // If a file cannot be read, the error is logged and a license
 // of type unknown is added.
 func (d *Detector) detectFiles(pathnames []string) []*License {
-	prefix := pathPrefix(contentsDir(d.modulePath, d.version))
 	var licenses []*License
 	for _, p := range pathnames {
 		bytes, err := d.readFile(p)
@@ -499,7 +498,7 @@ func (d *Detector) detectFiles(pathnames []string) []*License {
 			licenses = append(licenses, &License{
 				Metadata: &Metadata{
 					Types:    []string{unknownLicenseType},
-					FilePath: strings.TrimPrefix(p, prefix),
+					FilePath: p,
 				},
 			})
 			continue
@@ -508,7 +507,7 @@ func (d *Detector) detectFiles(pathnames []string) []*License {
 		licenses = append(licenses, &License{
 			Metadata: &Metadata{
 				Types:    types,
-				FilePath: strings.TrimPrefix(p, prefix),
+				FilePath: p,
 				Coverage: cov,
 			},
 			Contents: bytes,
@@ -595,16 +594,4 @@ func setToSortedSlice(m map[string]bool) []string {
 	}
 	sort.Strings(s)
 	return s
-}
-
-func contentsDir(modulePath, version string) string {
-	return modulePath + "@" + version
-}
-
-// pathPrefix appends a "/" to its argument if the argument is non-empty.
-func pathPrefix(s string) string {
-	if s != "" {
-		return s + "/"
-	}
-	return ""
 }
