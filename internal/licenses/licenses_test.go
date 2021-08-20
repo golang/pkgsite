@@ -424,39 +424,6 @@ func TestDetectFile(t *testing.T) {
 	}
 }
 
-// func TestExceptions(t *testing.T) {
-// 	// This is the license in exception-files/atlantis, with different line wrapping and case.
-// 	const in = `
-// 		Atlantis was originally copyrighted and licensed under:
-// 			Copyright 2017 HootSuite Media Inc.
-// 			Licensed under the Apache License, Version 2.0 (the "License");
-// 			YOU MAY NOT USE THIS FILE EXCEPT IN COMPLIANCE WITH THE LICENSE.
-// 			You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
-// 			Unless required by applicable law or agreed to in writing, software
-// 			distributed under the License is distributed on an "as is" basis,
-// 			without warranties or conditions of any kind, either express or implied.
-// 			See the License for the specific language governing permissions and
-// 			limitations under the License.
-// 		In 2018 it was forked from github.com/hootsuite/atlantis to github.com/runatlantis/atlantis.
-// 		The contents of files created before the fork
-// 		are obviously still under the Hootsuite copyright and contain a header to that
-// 		effect in addition to a disclaimer that they have subsequently been modified by
-// 		contributors to github.com/runatlantis/atlantis. Modifications and new files
-// 		hereafter are still under the Apache 2.0 license, but are not under copyright of
-// 		Hootsuite Media Inc.`
-// 	got := exceptionFileTypes([]byte(in))
-// 	want := []string{"Apache-2.0"}
-// 	if !cmp.Equal(got, want) {
-// 		t.Errorf("got %v, want %v", got, want)
-// 	}
-
-// 	// If we don't have it, it shouldn't match.
-// 	got = exceptionFileTypes([]byte("Not an exception."))
-// 	if got != nil {
-// 		t.Errorf("got %v, want nil", got)
-// 	}
-// }
-
 func TestDetectFiles(t *testing.T) {
 	defer func(m int64) { maxLicenseSize = m }(maxLicenseSize)
 	maxLicenseSize = int64(len(mitLicense) * 10)
