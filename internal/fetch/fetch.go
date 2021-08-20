@@ -90,20 +90,6 @@ var (
 	}
 )
 
-// ModuleGetter gets module data.
-type ModuleGetter interface {
-	// Info returns basic information about the module.
-	Info(ctx context.Context, path, version string) (*proxy.VersionInfo, error)
-	// Mod returns the contents of the module's go.mod file.
-	Mod(ctx context.Context, path, version string) ([]byte, error)
-	// FS returns an FS for the module's contents. The FS should match the format
-	// of a module zip file.
-	FS(ctx context.Context, path, version string) (fs.FS, error)
-	// ZipSize returns the approximate size of the zip file in bytes.
-	// It is used only for load-shedding.
-	ZipSize(ctx context.Context, path, version string) (int64, error)
-}
-
 type FetchResult struct {
 	ModulePath       string
 	RequestedVersion string
