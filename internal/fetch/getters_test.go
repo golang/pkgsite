@@ -88,8 +88,8 @@ func TestFSGetter(t *testing.T) {
 			t.Errorf("got %q, want %q", got, want)
 		}
 	})
-	t.Run("fs", func(t *testing.T) {
-		fsys, err := g.FS(ctx, modulePath, version)
+	t.Run("contentdir", func(t *testing.T) {
+		fsys, err := g.ContentDir(ctx, modulePath, version)
 		if err != nil {
 			t.Fatal(err)
 		}

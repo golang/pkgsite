@@ -35,12 +35,12 @@ type ModuleGetter interface {
 	// Mod returns the contents of the module's go.mod file.
 	Mod(ctx context.Context, path, version string) ([]byte, error)
 
-	// FS returns an FS for the module's contents. The FS should match the
+	// ContentDir returns an FS for the module's contents. The FS should match the
 	// format of a module zip file's content directory. That is the
 	// "<module>@<resolvedVersion>" directory that all module zips are expected
 	// to have according to the zip archive layout specification at
 	// https://golang.org/ref/mod#zip-files.
-	FS(ctx context.Context, path, version string) (fs.FS, error)
+	ContentDir(ctx context.Context, path, version string) (fs.FS, error)
 
 	// ZipSize returns the approximate size of the zip file in bytes.
 	// It is used only for load-shedding.
@@ -65,9 +65,9 @@ func (g *proxyModuleGetter) Mod(ctx context.Context, path, version string) ([]by
 	return g.prox.Mod(ctx, path, version)
 }
 
-// FS returns an FS for the module's contents. The FS should match the format
+// ContentDir returns an FS for the module's contents. The FS should match the format
 // of a module zip file.
-func (g *proxyModuleGetter) FS(ctx context.Context, path, version string) (fs.FS, error) {
+func (g *proxyModuleGetter) ContentDir(ctx context.Context, path, version string) (fs.FS, error) {
 	zr, err := g.prox.Zip(ctx, path, version)
 	if err != nil {
 		return nil, err
@@ -145,8 +145,8 @@ func (g *directoryModuleGetter) Mod(ctx context.Context, path, version string) (
 	return data, err
 }
 
-// FS returns an fs.FS for the module.
-func (g *directoryModuleGetter) FS(ctx context.Context, path, version string) (fs.FS, error) {
+// ContentDir returns an fs.FS for the module's contents.
+func (g *directoryModuleGetter) ContentDir(ctx context.Context, path, version string) (fs.FS, error) {
 	if err := g.checkPath(path); err != nil {
 		return nil, err
 	}
@@ -237,9 +237,9 @@ func (g *fsModuleGetter) Mod(ctx context.Context, path, version string) (_ []byt
 	return g.readFile(path, version, "mod")
 }
 
-// FS returns an FS for the module's zip file.
-func (g *fsModuleGetter) FS(ctx context.Context, path, version string) (_ fs.FS, err error) {
-	defer derrors.Wrap(&err, "fsModuleGetter.FS(%q, %q)", path, version)
+// ContentDir returns an fs.FS for the module's contents.
+func (g *fsModuleGetter) ContentDir(ctx context.Context, path, version string) (_ fs.FS, err error) {
+	defer derrors.Wrap(&err, "fsModuleGetter.ContentDir(%q, %q)", path, version)
 
 	data, err := g.readFile(path, version, "zip")
 	if err != nil {

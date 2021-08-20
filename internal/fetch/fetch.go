@@ -208,7 +208,7 @@ func fetchModule(ctx context.Context, fr *FetchResult, mg ModuleGetter, sourceCl
 		fr.ResolvedVersion = resolvedVersion
 		fi.Version = resolvedVersion
 	} else {
-		contentDir, err = mg.FS(ctx, fr.ModulePath, fr.ResolvedVersion)
+		contentDir, err = mg.ContentDir(ctx, fr.ModulePath, fr.ResolvedVersion)
 		if err != nil {
 			return fi, err
 		}
