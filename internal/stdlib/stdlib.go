@@ -13,6 +13,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
 	"path"
 	"path/filepath"
@@ -331,6 +332,11 @@ func Zip(requestedVersion string) (_ *zip.Reader, resolvedVersion string, commit
 	// https://github.com/shurcooL/play/blob/master/256/moduleproxy/std/std.go.
 	defer derrors.Wrap(&err, "stdlib.Zip(%q)", requestedVersion)
 
+	zr, resolvedVersion, commitTime, _, err := zipInternal(requestedVersion)
+	return zr, resolvedVersion, commitTime, err
+}
+
+func zipInternal(requestedVersion string) (_ *zip.Reader, resolvedVersion string, commitTime time.Time, prefix string, err error) {
 	var repo *git.Repository
 	if UseTestData {
 		repo, err = getTestGoRepo(requestedVersion)
@@ -338,23 +344,23 @@ func Zip(requestedVersion string) (_ *zip.Reader, resolvedVersion string, commit
 		if requestedVersion == version.Latest {
 			requestedVersion, err = semanticVersion(requestedVersion)
 			if err != nil {
-				return nil, "", time.Time{}, err
+				return nil, "", time.Time{}, "", err
 			}
 		}
 		repo, err = getGoRepo(requestedVersion)
 	}
 	if err != nil {
-		return nil, "", time.Time{}, err
+		return nil, "", time.Time{}, "", err
 	}
 	var buf bytes.Buffer
 	z := zip.NewWriter(&buf)
 	head, err := repo.Head()
 	if err != nil {
-		return nil, "", time.Time{}, err
+		return nil, "", time.Time{}, "", err
 	}
 	commit, err := repo.CommitObject(head.Hash())
 	if err != nil {
-		return nil, "", time.Time{}, err
+		return nil, "", time.Time{}, "", err
 	}
 	resolvedVersion = requestedVersion
 	if SupportedBranches[requestedVersion] {
@@ -362,33 +368,60 @@ func Zip(requestedVersion string) (_ *zip.Reader, resolvedVersion string, commit
 	}
 	root, err := repo.TreeObject(commit.TreeHash)
 	if err != nil {
-		return nil, "", time.Time{}, err
+		return nil, "", time.Time{}, "", err
 	}
 	prefixPath := ModulePath + "@" + requestedVersion
 	// Add top-level files.
 	if err := addFiles(z, repo, root, prefixPath, false); err != nil {
-		return nil, "", time.Time{}, err
+		return nil, "", time.Time{}, "", err
 	}
 	// Add files from the stdlib directory.
 	libdir := root
 	for _, d := range strings.Split(Directory(resolvedVersion), "/") {
 		libdir, err = subTree(repo, libdir, d)
 		if err != nil {
-			return nil, "", time.Time{}, err
+			return nil, "", time.Time{}, "", err
 		}
 	}
 	if err := addFiles(z, repo, libdir, prefixPath, true); err != nil {
-		return nil, "", time.Time{}, err
+		return nil, "", time.Time{}, "", err
 	}
 	if err := z.Close(); err != nil {
-		return nil, "", time.Time{}, err
+		return nil, "", time.Time{}, "", err
 	}
 	br := bytes.NewReader(buf.Bytes())
 	zr, err := zip.NewReader(br, int64(br.Len()))
 	if err != nil {
+		return nil, "", time.Time{}, "", err
+	}
+	return zr, resolvedVersion, commit.Committer.When, prefixPath, nil
+}
+
+// ContentDir creates an fs.FS representing the entire Go standard library at the
+// given version (which must have been resolved with ZipInfo) and returns a
+// reader to it. It also returns the time of the commit for that version.
+//
+// Normally, ContentDir returns the resolved version it was passed. If the
+// resolved version is a supported branch like "master", ContentDir returns a
+// semantic version for the branch.
+//
+// ContentDir reads the standard library at the Go repository tag corresponding
+// to to the given semantic version.
+//
+// ContentDir ignores go.mod files in the standard library, treating it as if it
+// were a single module named "std" at the given version.
+func ContentDir(requestedVersion string) (_ fs.FS, resolvedVersion string, commitTime time.Time, err error) {
+	defer derrors.Wrap(&err, "stdlib.ContentDir(%q)", requestedVersion)
+
+	zr, resolvedVersion, commitTime, prefix, err := zipInternal(requestedVersion)
+	if err != nil {
 		return nil, "", time.Time{}, err
 	}
-	return zr, resolvedVersion, commit.Committer.When, nil
+	cdir, err := fs.Sub(zr, prefix)
+	if err != nil {
+		return nil, "", time.Time{}, err
+	}
+	return cdir, resolvedVersion, commitTime, nil
 }
 
 func newPseudoVersion(version string, commitTime time.Time, hash plumbing.Hash) string {
@@ -452,7 +485,7 @@ func addFiles(z *zip.Writer, r *git.Repository, t *object.Tree, dirpath string, 
 			continue
 		}
 		if e.Name == "go.mod" {
-			// ignore; we'll synthesize our own
+			// Ignore; we don't need it.
 			continue
 		}
 		if strings.HasPrefix(e.Name, "README") && !strings.Contains(dirpath, "/") {

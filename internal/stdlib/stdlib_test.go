@@ -5,9 +5,9 @@
 package stdlib
 
 import (
-	"io/ioutil"
+	"errors"
+	"io/fs"
 	"reflect"
-	"strings"
 	"testing"
 
 	"golang.org/x/mod/semver"
@@ -117,7 +117,7 @@ func TestMajorVersionForVersion(t *testing.T) {
 	}
 }
 
-func TestZip(t *testing.T) {
+func TestContentDir(t *testing.T) {
 	UseTestData = true
 	defer func() { UseTestData = false }()
 	for _, resolvedVersion := range []string{
@@ -128,7 +128,7 @@ func TestZip(t *testing.T) {
 		version.Master,
 	} {
 		t.Run(resolvedVersion, func(t *testing.T) {
-			zr, gotResolvedVersion, gotTime, err := Zip(resolvedVersion)
+			cdir, gotResolvedVersion, gotTime, err := ContentDir(resolvedVersion)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -151,37 +151,25 @@ func TestZip(t *testing.T) {
 				wantFiles["cmd/README.vendor"] = true
 			}
 
-			wantPrefix := "std@" + resolvedVersion + "/"
-			readmeVendorFile := wantPrefix + "README.vendor"
-			for _, f := range zr.File {
-				if f.Name == readmeVendorFile {
-					t.Fatalf("got %q; want file to be removed", readmeVendorFile)
+			const readmeVendorFile = "README.vendor"
+			if _, err := fs.Stat(cdir, readmeVendorFile); !errors.Is(err, fs.ErrNotExist) {
+				t.Fatalf("fs.Stat returned %v; want %q to be removed", err, readmeVendorFile)
+			}
+			err = fs.WalkDir(cdir, ".", func(path string, d fs.DirEntry, err error) error {
+				if err != nil {
+					return err
 				}
-				if !strings.HasPrefix(f.Name, wantPrefix) {
-					t.Errorf("filename %q missing prefix %q", f.Name, wantPrefix)
-					continue
+				if d.IsDir() {
+					return nil
 				}
-				delete(wantFiles, f.Name[len(wantPrefix):])
+				delete(wantFiles, path)
+				return nil
+			})
+			if err != nil {
+				t.Fatal(err)
 			}
 			if len(wantFiles) > 0 {
 				t.Errorf("zip missing files: %v", reflect.ValueOf(wantFiles).MapKeys())
-			}
-			for _, f := range zr.File {
-				if f.Name == wantPrefix+"go.mod" {
-					r, err := f.Open()
-					if err != nil {
-						t.Fatal(err)
-					}
-					defer r.Close()
-					b, err := ioutil.ReadAll(r)
-					if err != nil {
-						t.Fatal(err)
-					}
-					if got, want := string(b), "module std\n"; got != want {
-						t.Errorf("go.mod: got %q, want %q", got, want)
-					}
-					break
-				}
 			}
 		})
 	}
