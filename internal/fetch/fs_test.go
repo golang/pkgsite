@@ -72,31 +72,24 @@ func TestFSGetter(t *testing.T) {
 			t.Errorf("got %q, want %q", got, want)
 		}
 	})
-	t.Run("zip", func(t *testing.T) {
-		zr, err := g.Zip(ctx, modulePath, version)
+	t.Run("fs", func(t *testing.T) {
+		fsys, err := g.FS(ctx, modulePath, version)
 		if err != nil {
 			t.Fatal(err)
 		}
 		// Just check that the go.mod file is there and has the right contents.
-		goModPath := fmt.Sprintf("%s@%s/go.mod", modulePath, version)
-		for _, f := range zr.File {
-			if f.Name == goModPath {
-				f, err := f.Open()
-				if err != nil {
-					t.Fatal(err)
-				}
-				defer f.Close()
-				got, err := ioutil.ReadAll(f)
-				if err != nil {
-					t.Fatal(err)
-				}
-				want := []byte(goMod)
-				if !cmp.Equal(got, want) {
-					t.Errorf("got %q, want %q", got, want)
-				}
-				return
-			}
+		f, err := fsys.Open(fmt.Sprintf("%s@%s/go.mod", modulePath, version))
+		if err != nil {
+			t.Fatal(err)
 		}
-		t.Fatal("go.mod not found")
+		defer f.Close()
+		got, err := ioutil.ReadAll(f)
+		if err != nil {
+			t.Fatal(err)
+		}
+		want := []byte(goMod)
+		if !cmp.Equal(got, want) {
+			t.Errorf("got %q, want %q", got, want)
+		}
 	})
 }

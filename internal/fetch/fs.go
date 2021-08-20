@@ -11,6 +11,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/fs"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -55,9 +56,9 @@ func (g *fsModuleGetter) Mod(ctx context.Context, path, version string) (_ []byt
 	return g.readFile(path, version, "mod")
 }
 
-// Zip returns a reader for the module's zip file.
-func (g *fsModuleGetter) Zip(ctx context.Context, path, version string) (_ *zip.Reader, err error) {
-	defer derrors.Wrap(&err, "fsModuleGetter.Zip(%q, %q)", path, version)
+// FS returns an FS for the module's zip file.
+func (g *fsModuleGetter) FS(ctx context.Context, path, version string) (_ fs.FS, err error) {
+	defer derrors.Wrap(&err, "fsModuleGetter.FS(%q, %q)", path, version)
 
 	data, err := g.readFile(path, version, "zip")
 	if err != nil {

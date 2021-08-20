@@ -6,10 +6,10 @@
 package fetch
 
 import (
-	"archive/zip"
 	"context"
 	"errors"
 	"fmt"
+	"io/fs"
 	"path"
 	"runtime/debug"
 	"strings"
@@ -40,7 +40,8 @@ type goPackage struct {
 	err    error                     // non-fatal error when loading the package (e.g. documentation is too large)
 }
 
-// extractPackagesFromZip returns a slice of packages from the module zip r.
+// extractPackages returns a slice of packages from a filesystem arranged like a
+// module zip.
 // It matches against the given licenses to determine the subset of licenses
 // that applies to each package.
 // The second return value says whether any packages are "incomplete," meaning
@@ -49,9 +50,9 @@ type goPackage struct {
 // * a maximum file size (MaxFileSize)
 // * the particular set of build contexts we consider (goEnvs)
 // * whether the import path is valid.
-func extractPackagesFromZip(ctx context.Context, modulePath, resolvedVersion, requestedVersion string, r *zip.Reader, d *licenses.Detector, sourceInfo *source.Info) (_ []*goPackage, _ []*internal.PackageVersionState, err error) {
-	defer derrors.Wrap(&err, "extractPackagesFromZip(ctx, %q, %q, r, d)", modulePath, resolvedVersion)
-	ctx, span := trace.StartSpan(ctx, "fetch.extractPackagesFromZip")
+func extractPackages(ctx context.Context, modulePath, resolvedVersion, requestedVersion string, fsys fs.FS, d *licenses.Detector, sourceInfo *source.Info) (_ []*goPackage, _ []*internal.PackageVersionState, err error) {
+	defer derrors.Wrap(&err, "extractPackages(ctx, %q, %q, r, d)", modulePath, resolvedVersion)
+	ctx, span := trace.StartSpan(ctx, "fetch.extractPackages")
 	defer span.End()
 	defer func() {
 		if e := recover(); e != nil {
@@ -85,8 +86,8 @@ func extractPackagesFromZip(ctx context.Context, modulePath, resolvedVersion, re
 		// to be populated during phase 1 and used during phase 2.
 		//
 		// The map key is the directory path, with the modulePrefix trimmed.
-		// The map value is a slice of all .go files, and no other files.
-		dirs = make(map[string][]*zip.File)
+		// The map value is a slice of all .go file paths, and no other files.
+		dirs = make(map[string][]string)
 
 		// modInfo contains all the module information a package in the module
 		// needs to render its documentation, to be populated during phase 1
@@ -110,31 +111,31 @@ func extractPackagesFromZip(ctx context.Context, modulePath, resolvedVersion, re
 	// that can be detected by looking at metadata alone.
 	// We'll be looking at file contents starting with phase 2 only,
 	// only after we're sure this phase passed without errors.
-	for _, f := range r.File {
-		if f.Mode().IsDir() {
-			// While "go mod download" will never put a directory in a zip, anyone can serve their
-			// own zips. Example: go.felesatra.moe/binpack@v0.1.0.
-			// Directory entries are harmless, so we just ignore them.
-			continue
+	err = fs.WalkDir(fsys, ".", func(pathname string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
 		}
-		if !strings.HasPrefix(f.Name, modulePrefix) {
+		if d.IsDir() {
+			// Skip directories.
+			return nil
+		}
+		if !strings.HasPrefix(pathname, modulePrefix) {
 			// Well-formed module zips have all files under modulePrefix.
-			return nil, nil, fmt.Errorf("expected file to have prefix %q; got = %q: %w",
-				modulePrefix, f.Name, errMalformedZip)
+			return fmt.Errorf("expected file to have prefix %q; got = %q: %w", modulePrefix, pathname, errMalformedZip)
 		}
-		innerPath := path.Dir(f.Name[len(modulePrefix):])
+		innerPath := path.Dir(pathname[len(modulePrefix):])
 		if incompleteDirs[innerPath] {
 			// We already know this directory cannot be processed, so skip.
-			continue
+			return nil
 		}
 		importPath := path.Join(modulePath, innerPath)
 		if ignoredByGoTool(importPath) || isVendored(importPath) {
 			// File is in a directory we're not looking to process at this time, so skip it.
-			continue
+			return nil
 		}
-		if !strings.HasSuffix(f.Name, ".go") {
+		if !strings.HasSuffix(pathname, ".go") {
 			// We care about .go files only.
-			continue
+			return nil
 		}
 		// It's possible to have a Go package in a directory that does not result in a valid import path.
 		// That package cannot be imported, but that may be fine if it's a main package, intended to built
@@ -150,13 +151,17 @@ func extractPackagesFromZip(ctx context.Context, modulePath, resolvedVersion, re
 				Status:      derrors.ToStatus(derrors.PackageBadImportPath),
 				Error:       err.Error(),
 			})
-			continue
+			return nil
 		}
-		if f.UncompressedSize64 > MaxFileSize {
+		info, err := d.Info()
+		if err != nil {
+			return err
+		}
+		if info.Size() > MaxFileSize {
 			incompleteDirs[innerPath] = true
 			status := derrors.ToStatus(derrors.PackageMaxFileSizeLimitExceeded)
 			err := fmt.Sprintf("Unable to process %s: file size %d exceeds max limit %d",
-				f.Name, f.UncompressedSize64, MaxFileSize)
+				pathname, info.Size(), MaxFileSize)
 			packageVersionStates = append(packageVersionStates, &internal.PackageVersionState{
 				ModulePath:  modulePath,
 				PackagePath: importPath,
@@ -164,13 +169,18 @@ func extractPackagesFromZip(ctx context.Context, modulePath, resolvedVersion, re
 				Status:      status,
 				Error:       err,
 			})
-			continue
+			return nil
 		}
-		dirs[innerPath] = append(dirs[innerPath], f)
+		dirs[innerPath] = append(dirs[innerPath], pathname)
 		if len(dirs) > maxPackagesPerModule {
-			return nil, nil, fmt.Errorf("%d packages found in %q; exceeds limit %d for maxPackagePerModule", len(dirs), modulePath, maxPackagesPerModule)
+			return fmt.Errorf("%d packages found in %q; exceeds limit %d for maxPackagePerModule", len(dirs), modulePath, maxPackagesPerModule)
 		}
+		return nil
+	})
+	if err != nil {
+		return nil, nil, err
 	}
+
 	for pkgName := range dirs {
 		modInfo.ModulePackages[path.Join(modulePath, pkgName)] = true
 	}
@@ -191,7 +201,7 @@ func extractPackagesFromZip(ctx context.Context, modulePath, resolvedVersion, re
 			status error
 			errMsg string
 		)
-		pkg, err := loadPackage(ctx, goFiles, innerPath, sourceInfo, modInfo)
+		pkg, err := loadPackage(ctx, fsys, goFiles, innerPath, sourceInfo, modInfo)
 		if bpe := (*BadPackageError)(nil); errors.As(err, &bpe) {
 			incompleteDirs[innerPath] = true
 			status = derrors.PackageInvalidContents

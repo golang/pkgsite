@@ -16,7 +16,7 @@ import (
 	"golang.org/x/pkgsite/internal/stdlib"
 )
 
-func TestExtractReadmesFromZip(t *testing.T) {
+func TestExtractReadmes(t *testing.T) {
 	stdlib.UseTestData = true
 
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
@@ -101,7 +101,7 @@ func TestExtractReadmesFromZip(t *testing.T) {
 				}
 			}
 
-			got, err := extractReadmesFromZip(test.modulePath, test.version, reader)
+			got, err := extractReadmes(test.modulePath, test.version, reader)
 			if err != nil {
 				t.Fatal(err)
 			}

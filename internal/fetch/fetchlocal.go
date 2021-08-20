@@ -11,6 +11,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -86,8 +87,8 @@ func (g *directoryModuleGetter) Mod(ctx context.Context, path, version string) (
 	return data, err
 }
 
-// Zip returns a reader for the module's zip file.
-func (g *directoryModuleGetter) Zip(ctx context.Context, path, version string) (*zip.Reader, error) {
+// FS returns an fs.FS for the module.
+func (g *directoryModuleGetter) FS(ctx context.Context, path, version string) (fs.FS, error) {
 	if err := g.checkPath(path); err != nil {
 		return nil, err
 	}

@@ -6,7 +6,6 @@
 package fetch
 
 import (
-	"archive/zip"
 	"bytes"
 	"context"
 	"errors"
@@ -16,6 +15,7 @@ import (
 	"go/parser"
 	"go/token"
 	"io"
+	"io/fs"
 	"io/ioutil"
 	"math"
 	"net/http"
@@ -53,7 +53,7 @@ func (bpe *BadPackageError) Error() string { return bpe.Err.Error() }
 //
 // If a package is fine except that its documentation is too large, loadPackage
 // returns a goPackage whose err field is a non-nil error with godoc.ErrTooLarge in its chain.
-func loadPackage(ctx context.Context, zipGoFiles []*zip.File, innerPath string,
+func loadPackage(ctx context.Context, fsys fs.FS, goFilePaths []string, innerPath string,
 	sourceInfo *source.Info, modInfo *godoc.ModuleInfo) (_ *goPackage, err error) {
 	defer derrors.Wrap(&err, "loadPackage(ctx, zipGoFiles, %q, sourceInfo, modInfo)", innerPath)
 	ctx, span := trace.StartSpan(ctx, "fetch.loadPackage")
@@ -61,9 +61,9 @@ func loadPackage(ctx context.Context, zipGoFiles []*zip.File, innerPath string,
 
 	// Make a map with all the zip file contents.
 	files := make(map[string][]byte)
-	for _, f := range zipGoFiles {
-		_, name := path.Split(f.Name)
-		b, err := readZipFile(f, MaxFileSize)
+	for _, p := range goFilePaths {
+		_, name := path.Split(p)
+		b, err := readFSFile(fsys, p, MaxFileSize)
 		if err != nil {
 			return nil, err
 		}
@@ -348,27 +348,15 @@ func matchingFiles(goos, goarch string, allFiles map[string][]byte) (matchedFile
 	return matchedFiles, nil
 }
 
-// readZipFile decompresses zip file f and returns its uncompressed contents.
-// The caller can check f.UncompressedSize64 before calling readZipFile to
-// get the expected uncompressed size of f.
-//
-// limit is the maximum number of bytes to read.
-func readZipFile(f *zip.File, limit int64) (_ []byte, err error) {
-	defer derrors.Add(&err, "readZipFile(%q)", f.Name)
-
-	r, err := f.Open()
+// readFSFile reads up to limit bytes from path in fsys.
+func readFSFile(fsys fs.FS, path string, limit int64) (_ []byte, err error) {
+	defer derrors.Add(&err, "readFSFile(%q)", path)
+	f, err := fsys.Open(path)
 	if err != nil {
-		return nil, fmt.Errorf("f.Open(): %v", err)
+		return nil, err
 	}
-	b, err := ioutil.ReadAll(io.LimitReader(r, limit))
-	if err != nil {
-		r.Close()
-		return nil, fmt.Errorf("ioutil.ReadAll(r): %v", err)
-	}
-	if err := r.Close(); err != nil {
-		return nil, fmt.Errorf("closing: %v", err)
-	}
-	return b, nil
+	defer f.Close()
+	return ioutil.ReadAll(io.LimitReader(f, limit))
 }
 
 // mib is the number of bytes in a mebibyte (Mi).

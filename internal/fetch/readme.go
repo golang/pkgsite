@@ -6,8 +6,9 @@
 package fetch
 
 import (
-	"archive/zip"
+	"errors"
 	"fmt"
+	"io/fs"
 	"path"
 	"strings"
 
@@ -15,32 +16,40 @@ import (
 	"golang.org/x/pkgsite/internal/derrors"
 )
 
-// extractReadmesFromZip returns the file path and contents of all files from r
+// extractReadmes returns the file path and contents of all files from r
 // that are README files.
-func extractReadmesFromZip(modulePath, resolvedVersion string, r *zip.Reader) (_ []*internal.Readme, err error) {
-	defer derrors.Wrap(&err, "extractReadmesFromZip(ctx, %q, %q, r)", modulePath, resolvedVersion)
+func extractReadmes(modulePath, resolvedVersion string, fsys fs.FS) (_ []*internal.Readme, err error) {
+	defer derrors.Wrap(&err, "extractReadmes(ctx, %q, %q, r)", modulePath, resolvedVersion)
 
 	// The key is the README directory. Since we only store one README file per
 	// directory, we use this below to prioritize READMEs in markdown.
 	readmes := map[string]*internal.Readme{}
-	for _, zipFile := range r.File {
-		if isReadme(zipFile.Name) {
-			if zipFile.UncompressedSize64 > MaxFileSize {
-				return nil, fmt.Errorf("file size %d exceeds max limit %d", zipFile.UncompressedSize64, MaxFileSize)
-			}
-			c, err := readZipFile(zipFile, MaxFileSize)
+	mvdir := moduleVersionDir(modulePath, resolvedVersion)
+	err = fs.WalkDir(fsys, mvdir, func(pathname string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if isReadme(pathname) {
+			info, err := d.Info()
 			if err != nil {
-				return nil, err
+				return err
+			}
+			if info.Size() > MaxFileSize {
+				return fmt.Errorf("file size %d exceeds max limit %d", info.Size(), MaxFileSize)
+			}
+			c, err := readFSFile(fsys, pathname, MaxFileSize)
+			if err != nil {
+				return err
 			}
 
-			f := strings.TrimPrefix(zipFile.Name, moduleVersionDir(modulePath, resolvedVersion)+"/")
+			f := strings.TrimPrefix(pathname, mvdir+"/")
 			key := path.Dir(f)
 			if r, ok := readmes[key]; ok {
 				// Prefer READMEs written in markdown, since we style these on
 				// the frontend.
 				ext := path.Ext(r.Filepath)
 				if ext == ".md" || ext == ".markdown" {
-					continue
+					return nil
 				}
 			}
 			readmes[key] = &internal.Readme{
@@ -48,8 +57,11 @@ func extractReadmesFromZip(modulePath, resolvedVersion string, r *zip.Reader) (_
 				Contents: string(c),
 			}
 		}
+		return nil
+	})
+	if err != nil && !errors.Is(err, fs.ErrNotExist) { // we can get NotExist on an empty FS {
+		return nil, err
 	}
-
 	var rs []*internal.Readme
 	for _, r := range readmes {
 		rs = append(rs, r)

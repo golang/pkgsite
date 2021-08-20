@@ -188,6 +188,7 @@ func (f *Fetcher) fetchAndInsertModule(ctx context.Context, modulePath, requeste
 		return ft
 	}
 
+	proxyGetter := fetch.NewProxyModuleGetter(f.ProxyClient)
 	// Fetch the module, and the current @main and @master version of this module.
 	// The @main and @master version will be used to update the version_map
 	// target if applicable.
@@ -196,7 +197,7 @@ func (f *Fetcher) fetchAndInsertModule(ctx context.Context, modulePath, requeste
 	go func() {
 		defer wg.Done()
 		start := time.Now()
-		fr := fetch.FetchModule(ctx, modulePath, requestedVersion, f.ProxyClient, f.SourceClient)
+		fr := fetch.FetchModule(ctx, modulePath, requestedVersion, proxyGetter, f.SourceClient)
 		if fr == nil {
 			panic("fetch.FetchModule should never return a nil FetchResult")
 		}
@@ -210,7 +211,7 @@ func (f *Fetcher) fetchAndInsertModule(ctx context.Context, modulePath, requeste
 	go func() {
 		defer wg.Done()
 		if !f.ProxyClient.FetchDisabled() {
-			main = resolvedVersion(ctx, modulePath, internal.MainVersion, f.ProxyClient)
+			main = resolvedVersion(ctx, modulePath, internal.MainVersion, proxyGetter)
 		}
 	}()
 	var master string
@@ -218,7 +219,7 @@ func (f *Fetcher) fetchAndInsertModule(ctx context.Context, modulePath, requeste
 	go func() {
 		defer wg.Done()
 		if !f.ProxyClient.FetchDisabled() {
-			master = resolvedVersion(ctx, modulePath, internal.MasterVersion, f.ProxyClient)
+			master = resolvedVersion(ctx, modulePath, internal.MasterVersion, proxyGetter)
 		}
 	}()
 	wg.Wait()
@@ -298,15 +299,15 @@ func (f *Fetcher) invalidateCache(ctx context.Context, modulePath string) error 
 	return nil
 }
 
-func resolvedVersion(ctx context.Context, modulePath, requestedVersion string, proxyClient *proxy.Client) string {
+func resolvedVersion(ctx context.Context, modulePath, requestedVersion string, getter fetch.ModuleGetter) string {
 	if modulePath == stdlib.ModulePath && requestedVersion == internal.MainVersion {
 		return ""
 	}
-	info, err := fetch.GetInfo(ctx, modulePath, requestedVersion, proxyClient)
+	info, err := fetch.GetInfo(ctx, modulePath, requestedVersion, getter)
 	if err != nil {
 		if !errors.Is(err, derrors.NotFound) {
 			// If an error occurs, log it as a warning and insert the module as normal.
-			log.Warningf(ctx, "fetch.GetInfo(ctx, %q, %q, f.ProxyClient, false): %v", modulePath, requestedVersion, err)
+			log.Warningf(ctx, "fetch.GetInfo(ctx, %v, %q, getter, false): %v", modulePath, requestedVersion, err)
 		}
 		return ""
 	}

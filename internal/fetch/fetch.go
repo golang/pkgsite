@@ -96,8 +96,9 @@ type ModuleGetter interface {
 	Info(ctx context.Context, path, version string) (*proxy.VersionInfo, error)
 	// Mod returns the contents of the module's go.mod file.
 	Mod(ctx context.Context, path, version string) ([]byte, error)
-	// Zip returns a reader for the module's zip file.
-	Zip(ctx context.Context, path, version string) (*zip.Reader, error)
+	// FS returns an FS for the module's contents. The FS should match the format
+	// of a module zip file.
+	FS(ctx context.Context, path, version string) (fs.FS, error)
 	// ZipSize returns the approximate size of the zip file in bytes.
 	// It is used only for load-shedding.
 	ZipSize(ctx context.Context, path, version string) (int64, error)
@@ -215,19 +216,23 @@ func fetchModule(ctx context.Context, fr *FetchResult, mg ModuleGetter, sourceCl
 	}
 	startFetchInfo(fi)
 
-	var zipReader *zip.Reader
+	var fsys fs.FS
 	if fr.ModulePath == stdlib.ModulePath {
-		var resolvedVersion string
-		zipReader, resolvedVersion, commitTime, err = stdlib.Zip(fr.RequestedVersion)
+		var (
+			resolvedVersion string
+			zr              *zip.Reader
+		)
+		zr, resolvedVersion, commitTime, err = stdlib.Zip(fr.RequestedVersion)
 		if err != nil {
 			return fi, err
 		}
+		fsys = zr
 		// If the requested version is a branch name like "master" or "main", we cannot
 		// determine the right resolved version until we start working with the repo.
 		fr.ResolvedVersion = resolvedVersion
 		fi.Version = resolvedVersion
 	} else {
-		zipReader, err = mg.Zip(ctx, fr.ModulePath, fr.ResolvedVersion)
+		fsys, err = mg.FS(ctx, fr.ModulePath, fr.ResolvedVersion)
 		if err != nil {
 			return fi, err
 		}
@@ -239,7 +244,7 @@ func fetchModule(ctx context.Context, fr *FetchResult, mg ModuleGetter, sourceCl
 	if fr.ModulePath == stdlib.ModulePath {
 		fr.HasGoMod = true
 	} else {
-		fr.HasGoMod = hasGoModFile(zipReader, fr.ModulePath, fr.ResolvedVersion)
+		fr.HasGoMod = hasGoModFile(fsys, fr.ModulePath, fr.ResolvedVersion)
 	}
 
 	// getGoModPath may return a non-empty goModPath even if the error is
@@ -255,7 +260,7 @@ func fetchModule(ctx context.Context, fr *FetchResult, mg ModuleGetter, sourceCl
 	// see if this is a fork. The intent is to avoid processing certain known
 	// large modules, not to find every fork.
 	if !fr.HasGoMod {
-		contentsDir, err := fs.Sub(zipReader, fr.ModulePath+"@"+fr.ResolvedVersion)
+		contentsDir, err := fs.Sub(fsys, fr.ModulePath+"@"+fr.ResolvedVersion)
 		if err != nil {
 			return fi, err
 		}
@@ -268,8 +273,7 @@ func fetchModule(ctx context.Context, fr *FetchResult, mg ModuleGetter, sourceCl
 		}
 	}
 
-	mod, pvs, err := processZipFile(ctx, fr.ModulePath, fr.ResolvedVersion, fr.RequestedVersion,
-		commitTime, zipReader, sourceClient)
+	mod, pvs, err := processModuleContents(ctx, fr.ModulePath, fr.ResolvedVersion, fr.RequestedVersion, commitTime, fsys, sourceClient)
 	if err != nil {
 		return fi, err
 	}
@@ -335,9 +339,9 @@ func getGoModPath(ctx context.Context, modulePath, resolvedVersion string, mg Mo
 	return goModPath, goModBytes, nil
 }
 
-// processZipFile extracts information from the module version zip.
-func processZipFile(ctx context.Context, modulePath, resolvedVersion, requestedVersion string,
-	commitTime time.Time, zipReader *zip.Reader, sourceClient *source.Client) (_ *internal.Module, _ []*internal.PackageVersionState, err error) {
+// processModuleContents extracts information from the module filesystem.
+func processModuleContents(ctx context.Context, modulePath, resolvedVersion, requestedVersion string,
+	commitTime time.Time, fsys fs.FS, sourceClient *source.Client) (_ *internal.Module, _ []*internal.PackageVersionState, err error) {
 	defer derrors.Wrap(&err, "processZipFile(%q, %q)", modulePath, resolvedVersion)
 
 	ctx, span := trace.StartSpan(ctx, "fetch.processZipFile")
@@ -351,21 +355,21 @@ func processZipFile(ctx context.Context, modulePath, resolvedVersion, requestedV
 	if err != nil {
 		log.Infof(ctx, "error getting source info: %v", err)
 	}
-	readmes, err := extractReadmesFromZip(modulePath, resolvedVersion, zipReader)
+	readmes, err := extractReadmes(modulePath, resolvedVersion, fsys)
 	if err != nil {
-		return nil, nil, fmt.Errorf("extractReadmesFromZip(%q, %q, zipReader): %v", modulePath, resolvedVersion, err)
+		return nil, nil, err
 	}
 	logf := func(format string, args ...interface{}) {
 		log.Infof(ctx, format, args...)
 	}
-	d := licenses.NewDetector(modulePath, v, zipReader, logf)
+	d := licenses.NewDetectorFS(modulePath, v, fsys, logf)
 	allLicenses := d.AllLicenses()
-	packages, packageVersionStates, err := extractPackagesFromZip(ctx, modulePath, resolvedVersion, requestedVersion, zipReader, d, sourceInfo)
+	packages, packageVersionStates, err := extractPackages(ctx, modulePath, resolvedVersion, requestedVersion, fsys, d, sourceInfo)
 	if errors.Is(err, ErrModuleContainsNoPackages) || errors.Is(err, errMalformedZip) {
 		return nil, nil, fmt.Errorf("%v: %w", err.Error(), derrors.BadModule)
 	}
 	if err != nil {
-		return nil, nil, fmt.Errorf("extractPackagesFromZip(%q, %q, zipReader, %v): %v", modulePath, resolvedVersion, allLicenses, err)
+		return nil, nil, err
 	}
 	return &internal.Module{
 		ModuleInfo: internal.ModuleInfo{
@@ -381,8 +385,9 @@ func processZipFile(ctx context.Context, modulePath, resolvedVersion, requestedV
 	}, packageVersionStates, nil
 }
 
-func hasGoModFile(zr *zip.Reader, m, v string) bool {
-	return zipFile(zr, path.Join(moduleVersionDir(m, v), "go.mod")) != nil
+func hasGoModFile(fsys fs.FS, m, v string) bool {
+	info, err := fs.Stat(fsys, path.Join(moduleVersionDir(m, v), "go.mod"))
+	return err == nil && !info.IsDir()
 }
 
 // processGoModFile populates mod with information extracted from the contents of the go.mod file.
@@ -419,17 +424,6 @@ func extractDeprecatedComment(mf *modfile.File) (bool, string) {
 // modulePath and version.
 func moduleVersionDir(modulePath, version string) string {
 	return fmt.Sprintf("%s@%s", modulePath, version)
-}
-
-// zipFile returns the file in r whose name matches the given name, or nil
-// if there isn't one.
-func zipFile(r *zip.Reader, name string) *zip.File {
-	for _, f := range r.File {
-		if f.Name == name {
-			return f
-		}
-	}
-	return nil
 }
 
 type FetchInfo struct {
