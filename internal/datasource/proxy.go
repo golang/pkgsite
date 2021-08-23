@@ -2,9 +2,6 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// Package datasource provides internal.DataSource implementations backed solely
-// by a proxy instance, and backed by the local filesystem.
-// Search and other tabs are not supported by these implementations.
 package datasource
 
 import (
@@ -39,9 +36,9 @@ func NewForTesting(proxyClient *proxy.Client) *ProxyDataSource {
 
 func newProxyDataSource(proxyClient *proxy.Client, sourceClient *source.Client) *ProxyDataSource {
 	return &ProxyDataSource{
-		proxyClient:          proxyClient,
-		sourceClient:         sourceClient,
-		versionCache:         make(map[versionKey]*versionEntry),
+		ds:          newDataSource(sourceClient),
+		proxyClient: proxyClient,
+
 		modulePathToVersions: make(map[string][]string),
 		packagePathToModules: make(map[string][]string),
 		bypassLicenseCheck:   false,
@@ -60,13 +57,12 @@ func NewBypassingLicenseCheck(c *proxy.Client) *ProxyDataSource {
 // ProxyDataSource implements the frontend.DataSource interface, by querying a
 // module proxy directly and caching the results in memory.
 type ProxyDataSource struct {
-	proxyClient  *proxy.Client
-	sourceClient *source.Client
+	proxyClient *proxy.Client
 
+	mu sync.Mutex
+	ds *dataSource
 	// Use an extremely coarse lock for now - mu guards all maps below. The
 	// assumption is that this will only be used for local development.
-	mu           sync.RWMutex
-	versionCache map[versionKey]*versionEntry
 	// map of modulePath -> versions, with versions sorted in semver order
 	modulePathToVersions map[string][]string
 	// map of package path -> modules paths containing it, with module paths
@@ -75,28 +71,19 @@ type ProxyDataSource struct {
 	bypassLicenseCheck   bool
 }
 
-type versionKey struct {
-	modulePath, version string
-}
-
-// versionEntry holds the result of a call to worker.FetchModule.
-type versionEntry struct {
-	module *internal.Module
-	err    error
-}
-
 // getModule retrieves a version from the cache, or failing that queries and
 // processes the version from the proxy.
 func (ds *ProxyDataSource) getModule(ctx context.Context, modulePath, version string, _ internal.BuildContext) (_ *internal.Module, err error) {
 	defer derrors.Wrap(&err, "getModule(%q, %q)", modulePath, version)
 
-	key := versionKey{modulePath, version}
 	ds.mu.Lock()
 	defer ds.mu.Unlock()
-	if e, ok := ds.versionCache[key]; ok {
-		return e.module, e.err
+
+	mod, err := ds.ds.cacheGet(modulePath, version)
+	if mod != nil || err != nil {
+		return mod, err
 	}
-	res := fetch.FetchModule(ctx, modulePath, version, fetch.NewProxyModuleGetter(ds.proxyClient), ds.sourceClient)
+	res := fetch.FetchModule(ctx, modulePath, version, fetch.NewProxyModuleGetter(ds.proxyClient), ds.ds.sourceClient)
 	defer res.Defer()
 	m := res.Module
 	if m != nil {
@@ -121,12 +108,11 @@ func (ds *ProxyDataSource) getModule(ctx context.Context, modulePath, version st
 
 	if res.Error != nil {
 		if !errors.Is(ctx.Err(), context.Canceled) {
-			ds.versionCache[key] = &versionEntry{module: m, err: res.Error}
+			ds.ds.cachePut(modulePath, version, m, res.Error)
 		}
 		return nil, res.Error
 	}
-
-	ds.versionCache[key] = &versionEntry{module: m, err: err}
+	ds.ds.cachePut(modulePath, version, m, err)
 
 	// Since we hold the lock and missed the cache, we can assume that we have
 	// never seen this module version. Therefore the following insert-and-sort

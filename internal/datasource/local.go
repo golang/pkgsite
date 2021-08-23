@@ -26,17 +26,17 @@ import (
 type LocalDataSource struct {
 	sourceClient *source.Client
 
-	mu            sync.Mutex
-	getters       []fetch.ModuleGetter
-	loadedModules map[string]*internal.Module
+	mu      sync.Mutex
+	getters []fetch.ModuleGetter
+	ds      *dataSource
 }
 
 // New creates and returns a new local datasource that bypasses license
 // checks by default.
 func NewLocal(sc *source.Client) *LocalDataSource {
 	return &LocalDataSource{
-		sourceClient:  sc,
-		loadedModules: make(map[string]*internal.Module),
+		sourceClient: sc,
+		ds:           newDataSource(sc),
 	}
 }
 
@@ -52,29 +52,13 @@ func (ds *LocalDataSource) AddModuleGetter(g fetch.ModuleGetter) {
 // getModule gets the module at the given path and version. It first checks the
 // cache, and if it isn't there it then tries to fetch it.
 func (ds *LocalDataSource) getModule(ctx context.Context, path, version string) (*internal.Module, error) {
-	if m := ds.getFromCache(path, version); m != nil {
-		return m, nil
+	m, err := ds.ds.cacheGet(path, version)
+	if m != nil || err != nil {
+		return m, err
 	}
-	m, err := ds.fetch(ctx, path, version)
-	if err != nil {
-		return nil, err
-	}
-	ds.mu.Lock()
-	defer ds.mu.Unlock()
-	ds.loadedModules[m.ModulePath+"@"+m.Version] = m
-	return m, nil
-}
-
-// getFromCache returns a module from the cache if it is present, and nil otherwise.
-func (ds *LocalDataSource) getFromCache(path, version string) *internal.Module {
-	ds.mu.Lock()
-	defer ds.mu.Unlock()
-	// Look for an exact match first.
-	if m := ds.loadedModules[path+"@"+version]; m != nil {
-		return m
-	}
-	// Look for the module path with LocalVersion, as for a directory-based or GOPATH-mode module.
-	return ds.loadedModules[path+"@"+fetch.LocalVersion]
+	m, err = ds.fetch(ctx, path, version)
+	ds.ds.cachePut(path, version, m, err)
+	return m, err
 }
 
 // fetch fetches a module using the configured ModuleGetters.
