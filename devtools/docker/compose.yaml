@@ -30,7 +30,7 @@ services:
     depends_on:
       - db
      # This should match the version we are using on AppEngine.
-    image: golang:1.15.5
+    image: golang:1.16.7
     environment:
       <<: *database-variables
       <<: *go-variables
@@ -43,7 +43,7 @@ services:
       - ../../:/pkgsite
     working_dir: /pkgsite
   api:
-    image: golang:1.15.5
+    image: golang:1.16.7
     depends_on:
       - frontend
     environment:
@@ -73,7 +73,7 @@ services:
     working_dir: /pkgsite
   frontend:
      # This should match the version we are using on AppEngine.
-    image: golang:1.15.5
+    image: golang:1.16.7
     depends_on:
       - db
     command: bash -c "
@@ -94,7 +94,7 @@ services:
     working_dir: /pkgsite
   seeddb:
      # This should match the version we are using on AppEngine.
-    image: golang:1.15.5
+    image: golang:1.16.7
     depends_on:
       - db
     # Note: technically we should check that migrations have completed before
@@ -149,7 +149,7 @@ services:
       - CONNECTION_TIMEOUT=240000
   go:
      # This should match the version we are using on AppEngine.
-    image: golang:1.15.5
+    image: golang:1.16.7
     entrypoint: go
     environment:
       <<: *database-variables

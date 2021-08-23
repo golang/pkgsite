@@ -5,7 +5,7 @@
 # This Dockerfile expects the build context to be the public repo root.
 
 ################################################################
-FROM golang:1.15.5 AS builder
+FROM golang:1.16.7 AS builder
 # If you change the Go version above, change the FROM line below as well.
 
 # Set the working directory outside $GOPATH to ensure module mode is enabled.
@@ -28,7 +28,7 @@ COPY . /src
 RUN go build -mod=readonly ./cmd/frontend
 
 ################################################################
-FROM golang:1.15.5
+FROM golang:1.16.7
 
 WORKDIR app
 
