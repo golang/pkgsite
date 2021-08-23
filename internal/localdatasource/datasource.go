@@ -12,7 +12,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"path"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -188,14 +187,13 @@ func (ds *DataSource) GetUnitMeta(ctx context.Context, path, requestedModulePath
 // findModule finds the module with longest module path containing the given
 // package path. It returns an error if no module is found.
 func (ds *DataSource) findModule(ctx context.Context, pkgPath, modulePath, version string) (_ *internal.Module, err error) {
-	defer derrors.Wrap(&err, "findModule(%q)", pkgPath)
+	defer derrors.Wrap(&err, "findModule(%q, %q, %q)", pkgPath, modulePath, version)
 
 	if modulePath != internal.UnknownModulePath {
 		return ds.getModule(ctx, modulePath, version)
 	}
-
 	pkgPath = strings.TrimLeft(pkgPath, "/")
-	for modulePath := pkgPath; modulePath != "" && modulePath != "."; modulePath = path.Dir(modulePath) {
+	for _, modulePath := range internal.CandidateModulePaths(pkgPath) {
 		m, err := ds.getModule(ctx, modulePath, version)
 		if err == nil {
 			return m, nil
