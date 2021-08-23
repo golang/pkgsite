@@ -45,7 +45,7 @@ func TestEscapedPath(t *testing.T) {
 			"dir/github.com/a!bc/@v/v2.3.4.zip",
 		},
 	} {
-		g := NewFSModuleGetter("dir").(*fsModuleGetter)
+		g := NewFSProxyModuleGetter("dir").(*fsProxyModuleGetter)
 		got, err := g.escapedPath(test.path, test.version, test.suffix)
 		if err != nil {
 			t.Fatal(err)
@@ -56,7 +56,7 @@ func TestEscapedPath(t *testing.T) {
 	}
 }
 
-func TestFSGetter(t *testing.T) {
+func TestFSProxyGetter(t *testing.T) {
 	ctx := context.Background()
 	const (
 		modulePath = "github.com/jackc/pgio"
@@ -67,7 +67,7 @@ func TestFSGetter(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	g := NewFSModuleGetter("testdata/modcache")
+	g := NewFSProxyModuleGetter("testdata/modcache")
 	t.Run("info", func(t *testing.T) {
 		got, err := g.Info(ctx, modulePath, version)
 		if err != nil {
@@ -76,6 +76,10 @@ func TestFSGetter(t *testing.T) {
 		want := &proxy.VersionInfo{Version: version, Time: ts}
 		if !cmp.Equal(got, want) {
 			t.Errorf("got %+v, want %+v", got, want)
+		}
+
+		if _, err := g.Info(ctx, "nozip.com", version); !errors.Is(err, derrors.NotFound) {
+			t.Errorf("got %v, want NotFound", err)
 		}
 	})
 	t.Run("mod", func(t *testing.T) {
@@ -86,6 +90,10 @@ func TestFSGetter(t *testing.T) {
 		want := []byte(goMod)
 		if !cmp.Equal(got, want) {
 			t.Errorf("got %q, want %q", got, want)
+		}
+
+		if _, err := g.Mod(ctx, "nozip.com", version); !errors.Is(err, derrors.NotFound) {
+			t.Errorf("got %v, want NotFound", err)
 		}
 	})
 	t.Run("contentdir", func(t *testing.T) {
@@ -106,6 +114,10 @@ func TestFSGetter(t *testing.T) {
 		want := []byte(goMod)
 		if !cmp.Equal(got, want) {
 			t.Errorf("got %q, want %q", got, want)
+		}
+
+		if _, err := g.ContentDir(ctx, "nozip.com", version); !errors.Is(err, derrors.NotFound) {
+			t.Errorf("got %v, want NotFound", err)
 		}
 	})
 }
