@@ -37,15 +37,22 @@ type Config struct {
 // devtools/cmd/static/main.go with Watch=false for building
 // productionized assets.
 func Build(config Config) (*api.BuildResult, error) {
-	files, err := getEntry(config.EntryPoint)
+	files, err := getEntry(config.EntryPoint, config.Bundle)
 	if err != nil {
 		return nil, err
 	}
 	options := api.BuildOptions{
-		EntryPoints: files,
-		Bundle:      config.Bundle,
-		Outdir:      config.EntryPoint,
-		Write:       true,
+		EntryPoints:   files,
+		Bundle:        config.Bundle,
+		Outdir:        config.EntryPoint,
+		Write:         true,
+		OutExtensions: map[string]string{".css": ".min.css"},
+		External:      []string{"*.svg"},
+		Banner: map[string]string{"css": "/*!\n" +
+			" * Copyright 2021 The Go Authors. All rights reserved.\n" +
+			" * Use of this source code is governed by a BSD-style\n" +
+			" * license that can be found in the LICENSE file.\n" +
+			" */"},
 	}
 	if config.Watch {
 		options.Sourcemap = api.SourceMapInline
@@ -70,7 +77,7 @@ func Build(config Config) (*api.BuildResult, error) {
 // for esbuild. It ignores test files and files prefixed with an underscore.
 // Underscore prefixed files are assumed to be imported by and bundled together
 // with the output of an entry file.
-func getEntry(dir string) ([]string, error) {
+func getEntry(dir string, bundle bool) ([]string, error) {
 	var matches []string
 	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -82,11 +89,9 @@ func getEntry(dir string) ([]string, error) {
 		basePath := filepath.Base(path)
 		notPartial := !strings.HasPrefix(basePath, "_")
 		notTest := !strings.HasSuffix(basePath, ".test.ts")
-		matched, err := filepath.Match("*.ts", basePath)
-		if err != nil {
-			return err
-		}
-		if notPartial && notTest && matched {
+		isTS := strings.HasSuffix(basePath, ".ts")
+		isCSS := strings.HasSuffix(basePath, ".css") && !strings.HasSuffix(basePath, ".min.css")
+		if notPartial && notTest && (isTS || (bundle && isCSS)) {
 			matches = append(matches, path)
 		}
 		return nil
