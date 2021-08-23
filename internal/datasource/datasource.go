@@ -8,8 +8,7 @@
 package datasource
 
 import (
-	"sync"
-
+	lru "github.com/hashicorp/golang-lru"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/fetch"
 	"golang.org/x/pkgsite/internal/source"
@@ -20,8 +19,7 @@ import (
 type dataSource struct {
 	sourceClient *source.Client
 
-	mu    sync.Mutex
-	cache map[internal.Modver]cacheEntry
+	cache *lru.Cache
 }
 
 // cacheEntry holds a fetched module or an error, if the fetch failed.
@@ -30,31 +28,34 @@ type cacheEntry struct {
 	err    error
 }
 
+const maxCachedModules = 100
+
 func newDataSource(sc *source.Client) *dataSource {
+	cache, err := lru.New(maxCachedModules)
+	if err != nil {
+		// Can only happen if size is bad.
+		panic(err)
+	}
 	return &dataSource{
 		sourceClient: sc,
-		cache:        map[internal.Modver]cacheEntry{},
+		cache:        cache,
 	}
 }
 
 // cacheGet returns information from the cache if it is present, and (nil, nil) otherwise.
 func (ds *dataSource) cacheGet(path, version string) (*internal.Module, error) {
-	ds.mu.Lock()
-	defer ds.mu.Unlock()
-	// Look for an exact match first.
-	if e, ok := ds.cache[internal.Modver{Path: path, Version: version}]; ok {
-		return e.module, e.err
-	}
-	// Look for the module path with LocalVersion, as for a directory-based or GOPATH-mode module.
-	if e, ok := ds.cache[internal.Modver{Path: path, Version: fetch.LocalVersion}]; ok {
-		return e.module, e.err
+	// Look for an exact match first, then use LocalVersion, as for a
+	// directory-based or GOPATH-mode module.
+	for _, v := range []string{version, fetch.LocalVersion} {
+		if e, ok := ds.cache.Get(internal.Modver{Path: path, Version: v}); ok {
+			e := e.(cacheEntry)
+			return e.module, e.err
+		}
 	}
 	return nil, nil
 }
 
 // cachePut puts information into the cache.
 func (ds *dataSource) cachePut(path, version string, m *internal.Module, err error) {
-	ds.mu.Lock()
-	defer ds.mu.Unlock()
-	ds.cache[internal.Modver{Path: path, Version: version}] = cacheEntry{m, err}
+	ds.cache.Add(internal.Modver{Path: path, Version: version}, cacheEntry{m, err})
 }
