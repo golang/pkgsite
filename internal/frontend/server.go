@@ -268,11 +268,6 @@ type basePage struct {
 	// Enables the two and three column layouts on the unit page.
 	UseResponsiveLayout bool
 
-	// UseSiteWrapper indicates whether the page content should be wrapped in the
-	// Site class. This is only used for unit pages until the migration to the new
-	// layout base page is completed.
-	UseSiteWrapper bool
-
 	// SearchMode is the search mode for the current search request.
 	SearchMode string
 
@@ -565,40 +560,7 @@ func parsePageTemplates(base template.TrustedSource) (map[string]*template.Templ
 	tsc := template.TrustedSourceFromConstant
 	join := template.TrustedSourceJoin
 
-	legacyHtmlSets := [][]template.TrustedSource{
-		{tsc("unit_details.tmpl"), tsc("unit.tmpl")},
-		{tsc("unit_importedby.tmpl"), tsc("unit.tmpl")},
-		{tsc("unit_imports.tmpl"), tsc("unit.tmpl")},
-		{tsc("unit_licenses.tmpl"), tsc("unit.tmpl")},
-		{tsc("unit_versions.tmpl"), tsc("unit.tmpl")},
-	}
-
 	templates := make(map[string]*template.Template)
-	for _, set := range legacyHtmlSets {
-		t, err := template.New("frontend.tmpl").Funcs(templateFuncs).ParseFilesFromTrustedSources(join(base, tsc("frontend/frontend.tmpl")))
-		if err != nil {
-			return nil, fmt.Errorf("ParseFiles: %v", err)
-		}
-		helperGlob := join(base, tsc("legacy/html/helpers/*.tmpl"))
-		if _, err := t.ParseGlobFromTrustedSource(helperGlob); err != nil {
-			return nil, fmt.Errorf("ParseGlob(%q): %v", helperGlob, err)
-		}
-		header := join(base, tsc("shared/header/header.tmpl"))
-		footer := join(base, tsc("shared/footer/footer.tmpl"))
-		if _, err := t.ParseFilesFromTrustedSources(header, footer); err != nil {
-			return nil, fmt.Errorf("ParseFilesFromTrustedSources(%v, %v): %v", header, footer, err)
-		}
-
-		var files []template.TrustedSource
-		for _, f := range set {
-			files = append(files, join(base, tsc("legacy/html/pages"), f))
-		}
-		if _, err := t.ParseFilesFromTrustedSources(files...); err != nil {
-			return nil, fmt.Errorf("ParseFilesFromTrustedSources(%v): %v", files, err)
-		}
-		templates[set[0].String()] = t
-	}
-
 	htmlSets := [][]template.TrustedSource{
 		{tsc("badge")},
 		{tsc("error")},

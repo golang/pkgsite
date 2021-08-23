@@ -677,7 +677,7 @@ func serverTestCases() []serverTestCase {
 			name:           "static",
 			urlPath:        "/static/",
 			wantStatusCode: http.StatusOK,
-			want:           in("", hasText("doc"), hasText("frontend"), hasText("legacy"), hasText("markdown.ts"), hasText("shared"), hasText("worker")),
+			want:           in("", hasText("doc"), hasText("frontend"), hasText("markdown.ts"), hasText("shared"), hasText("worker")),
 		},
 		{
 			name:           "license policy",
@@ -1189,15 +1189,6 @@ func TestServer(t *testing.T) {
 			},
 		},
 		{
-			name: "new layout experiment",
-			testCasesFunc: func() []serverTestCase {
-				return append(serverTestCases(), linksTestCases...)
-			},
-			experiments: []string{
-				internal.ExperimentNewUnitLayout,
-			},
-		},
-		{
 			name: "search grouping",
 			testCasesFunc: func() []serverTestCase {
 				return append(serverTestCases(), searchGroupingTestCases...)
@@ -1598,20 +1589,20 @@ func TestCheckTemplates(t *testing.T) {
 		{"search", nil, SearchPage{}},
 		{"legacy_search", nil, SearchPage{}},
 		{"search-help", nil, basePage{}},
-		{"unit_details.tmpl", nil, UnitPage{}},
+		{"unit/main", nil, UnitPage{}},
 		{
-			"unit_details.tmpl",
-			[]string{"unit_outline", "unit_readme", "unit_doc", "unit_files", "unit_directories"},
+			"unit/main",
+			[]string{"unit-outline", "unit-readme", "unit-doc", "unit-files", "unit-directories"},
 			MainDetails{},
 		},
-		{"unit_importedby.tmpl", nil, UnitPage{}},
-		{"unit_importedby.tmpl", []string{"importedby"}, ImportedByDetails{}},
-		{"unit_imports.tmpl", nil, UnitPage{}},
-		{"unit_imports.tmpl", []string{"imports"}, ImportsDetails{}},
-		{"unit_licenses.tmpl", nil, UnitPage{}},
-		{"unit_licenses.tmpl", []string{"licenses"}, LicensesDetails{}},
-		{"unit_versions.tmpl", nil, UnitPage{}},
-		{"unit_versions.tmpl", []string{"versions"}, VersionsDetails{}},
+		{"unit/importedby", nil, UnitPage{}},
+		{"unit/importedby", []string{"importedby"}, ImportedByDetails{}},
+		{"unit/imports", nil, UnitPage{}},
+		{"unit/imports", []string{"imports"}, ImportsDetails{}},
+		{"unit/licenses", nil, UnitPage{}},
+		{"unit/licenses", []string{"licenses"}, LicensesDetails{}},
+		{"unit/versions", nil, UnitPage{}},
+		{"unit/versions", []string{"versions"}, VersionsDetails{}},
 	} {
 		t.Run(c.name, func(t *testing.T) {
 			tm := templates[c.name]

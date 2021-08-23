@@ -26,14 +26,6 @@ var scriptHashes = []string{
 	"'sha256-cB+y/oSfWGFf7lHk8KX+ZX2CZQz/dPamIICuPvHcB6w='",
 	// From static/frontend/unit/versions/versions.tmpl
 	"'sha256-7mi5SPcD1cogj2+ju8J/+/qJG99F6Qo+3pO4xQkRf6Q='",
-	// From static/legacy/html/pages/unit.tmpl
-	"'sha256-V0I0c9gVBohHALcsk23X2c1nd3GO+Kpc1BNCpLhEj7Y='",
-	// From static/legacy/html/pages/unit_details.tmpl
-	"'sha256-bHZGfbft0NNI4pr8JS2ajCVFIrvcY1o07hbUL2Lfdls='",
-	"'sha256-NgMe1ssApnbzZAEDkxSBAFfCNRfW6F7ajTmp08jUrPI='",
-	"'sha256-lK9quwyQtvjVXRYCc2nYBfam6X9NN7FitPdCEVd3wpE='",
-	// From static/legacy/html/pages/unit_versions.tmpl
-	"'sha256-86HQcJ6uexGUBJWyPdp/1pozG9N7B3EUGT0ooKXwWzY='",
 	// From static/worker/index.tmpl
 	"'sha256-rEbn/zvLCsDDvDrVWQuUkKGEQsjQjFvIvJK4NVIMqZ4='",
 }
