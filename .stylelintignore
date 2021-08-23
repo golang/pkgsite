@@ -6,3 +6,5 @@ static/frontend/unit/main/_readme_gen.css
 # Worker stylesheet
 content/static/css/worker.css
 
+# Minified stylesheets
+*.min.css
