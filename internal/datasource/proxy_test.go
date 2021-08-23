@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-package proxydatasource
+package datasource
 
 import (
 	"context"
@@ -30,10 +30,11 @@ func TestMain(m *testing.M) {
 	dochtml.LoadTemplates(template.TrustedSourceFromConstant("../../static/doc"))
 	testModules = proxytest.LoadTestModules("../proxy/testdata")
 	licenses.OmitExceptions = true
+	defer setupLocal()()
 	os.Exit(m.Run())
 }
 
-func setup(t *testing.T) (context.Context, *DataSource, func()) {
+func setup(t *testing.T) (context.Context, *ProxyDataSource, func()) {
 	t.Helper()
 	client, teardownProxy := proxytest.SetupTestClient(t, testModules)
 	ctx, cancel := context.WithTimeout(context.Background(), 40*time.Second)
@@ -123,7 +124,7 @@ func TestGetModuleInfo(t *testing.T) {
 
 }
 
-func TestGetUnitMeta(t *testing.T) {
+func TestProxyGetUnitMeta(t *testing.T) {
 	ctx, ds, teardown := setup(t)
 	defer teardown()
 

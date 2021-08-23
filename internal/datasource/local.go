@@ -2,10 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// Package localdatasource implements an in-memory internal.DataSource used to load
-// and display documentation for local modules that are not available via a proxy.
-// Similar to proxydatasource, search and other tabs are not supported in this mode.
-package localdatasource
+package datasource
 
 import (
 	"context"
@@ -24,9 +21,9 @@ import (
 	"golang.org/x/pkgsite/internal/source"
 )
 
-// DataSource implements an in-memory internal.DataSource used to display documentation
-// locally. DataSource is not backed by a database or a proxy instance.
-type DataSource struct {
+// LocalDataSource implements an in-memory internal.DataSource used to display documentation
+// locally. It is not backed by a database or a proxy instance.
+type LocalDataSource struct {
 	sourceClient *source.Client
 
 	mu            sync.Mutex
@@ -36,8 +33,8 @@ type DataSource struct {
 
 // New creates and returns a new local datasource that bypasses license
 // checks by default.
-func New(sc *source.Client) *DataSource {
-	return &DataSource{
+func NewLocal(sc *source.Client) *LocalDataSource {
+	return &LocalDataSource{
 		sourceClient:  sc,
 		loadedModules: make(map[string]*internal.Module),
 	}
@@ -46,7 +43,7 @@ func New(sc *source.Client) *DataSource {
 // AddModuleGetter adds a module getter to the DataSource. To look up a module,
 // the getters are tried in the order they were added until the desired module
 // is found.
-func (ds *DataSource) AddModuleGetter(g fetch.ModuleGetter) {
+func (ds *LocalDataSource) AddModuleGetter(g fetch.ModuleGetter) {
 	ds.mu.Lock()
 	defer ds.mu.Unlock()
 	ds.getters = append(ds.getters, g)
@@ -54,7 +51,7 @@ func (ds *DataSource) AddModuleGetter(g fetch.ModuleGetter) {
 
 // getModule gets the module at the given path and version. It first checks the
 // cache, and if it isn't there it then tries to fetch it.
-func (ds *DataSource) getModule(ctx context.Context, path, version string) (*internal.Module, error) {
+func (ds *LocalDataSource) getModule(ctx context.Context, path, version string) (*internal.Module, error) {
 	if m := ds.getFromCache(path, version); m != nil {
 		return m, nil
 	}
@@ -69,7 +66,7 @@ func (ds *DataSource) getModule(ctx context.Context, path, version string) (*int
 }
 
 // getFromCache returns a module from the cache if it is present, and nil otherwise.
-func (ds *DataSource) getFromCache(path, version string) *internal.Module {
+func (ds *LocalDataSource) getFromCache(path, version string) *internal.Module {
 	ds.mu.Lock()
 	defer ds.mu.Unlock()
 	// Look for an exact match first.
@@ -82,7 +79,7 @@ func (ds *DataSource) getFromCache(path, version string) *internal.Module {
 
 // fetch fetches a module using the configured ModuleGetters.
 // It tries each getter in turn until it finds one that has the module.
-func (ds *DataSource) fetch(ctx context.Context, modulePath, version string) (_ *internal.Module, err error) {
+func (ds *LocalDataSource) fetch(ctx context.Context, modulePath, version string) (_ *internal.Module, err error) {
 	log.Infof(ctx, "local DataSource: fetching %s@%s", modulePath, version)
 	start := time.Now()
 	defer func() {
@@ -145,7 +142,7 @@ func getFullPath(modulePath string) string {
 
 // GetUnit returns information about a unit. Both the module path and package
 // path must be known.
-func (ds *DataSource) GetUnit(ctx context.Context, pathInfo *internal.UnitMeta, fields internal.FieldSet, bc internal.BuildContext) (_ *internal.Unit, err error) {
+func (ds *LocalDataSource) GetUnit(ctx context.Context, pathInfo *internal.UnitMeta, fields internal.FieldSet, bc internal.BuildContext) (_ *internal.Unit, err error) {
 	defer derrors.Wrap(&err, "GetUnit(%q, %q)", pathInfo.Path, pathInfo.ModulePath)
 
 	module, err := ds.getModule(ctx, pathInfo.ModulePath, pathInfo.Version)
@@ -162,7 +159,7 @@ func (ds *DataSource) GetUnit(ctx context.Context, pathInfo *internal.UnitMeta, 
 }
 
 // GetUnitMeta returns information about a path.
-func (ds *DataSource) GetUnitMeta(ctx context.Context, path, requestedModulePath, requestedVersion string) (_ *internal.UnitMeta, err error) {
+func (ds *LocalDataSource) GetUnitMeta(ctx context.Context, path, requestedModulePath, requestedVersion string) (_ *internal.UnitMeta, err error) {
 	defer derrors.Wrap(&err, "GetUnitMeta(%q, %q, %q)", path, requestedModulePath, requestedVersion)
 
 	module, err := ds.findModule(ctx, path, requestedModulePath, requestedVersion)
@@ -186,7 +183,7 @@ func (ds *DataSource) GetUnitMeta(ctx context.Context, path, requestedModulePath
 
 // findModule finds the module with longest module path containing the given
 // package path. It returns an error if no module is found.
-func (ds *DataSource) findModule(ctx context.Context, pkgPath, modulePath, version string) (_ *internal.Module, err error) {
+func (ds *LocalDataSource) findModule(ctx context.Context, pkgPath, modulePath, version string) (_ *internal.Module, err error) {
 	defer derrors.Wrap(&err, "findModule(%q, %q, %q)", pkgPath, modulePath, version)
 
 	if modulePath != internal.UnknownModulePath {
@@ -206,16 +203,16 @@ func (ds *DataSource) findModule(ctx context.Context, pkgPath, modulePath, versi
 }
 
 // GetLatestInfo is not implemented.
-func (ds *DataSource) GetLatestInfo(ctx context.Context, unitPath, modulePath string, latestUnitMeta *internal.UnitMeta) (internal.LatestInfo, error) {
+func (ds *LocalDataSource) GetLatestInfo(ctx context.Context, unitPath, modulePath string, latestUnitMeta *internal.UnitMeta) (internal.LatestInfo, error) {
 	return internal.LatestInfo{}, nil
 }
 
 // GetNestedModules is not implemented.
-func (ds *DataSource) GetNestedModules(ctx context.Context, modulePath string) ([]*internal.ModuleInfo, error) {
+func (ds *LocalDataSource) GetNestedModules(ctx context.Context, modulePath string) ([]*internal.ModuleInfo, error) {
 	return nil, nil
 }
 
 // GetModuleReadme is not implemented.
-func (*DataSource) GetModuleReadme(ctx context.Context, modulePath, resolvedVersion string) (*internal.Readme, error) {
+func (*LocalDataSource) GetModuleReadme(ctx context.Context, modulePath, resolvedVersion string) (*internal.Readme, error) {
 	return nil, nil
 }

@@ -2,9 +2,10 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// Package proxydatasource implements an internal.DataSource backed solely by a
-// proxy instance.
-package proxydatasource
+// Package datasource provides internal.DataSource implementations backed solely
+// by a proxy instance, and backed by the local filesystem.
+// Search and other tabs are not supported by these implementations.
+package datasource
 
 import (
 	"context"
@@ -25,19 +26,19 @@ import (
 	"golang.org/x/pkgsite/internal/version"
 )
 
-var _ internal.DataSource = (*DataSource)(nil)
+var _ internal.DataSource = (*ProxyDataSource)(nil)
 
 // New returns a new direct proxy datasource.
-func New(proxyClient *proxy.Client) *DataSource {
-	return newDataSource(proxyClient, source.NewClient(1*time.Minute))
+func NewProxy(proxyClient *proxy.Client) *ProxyDataSource {
+	return newProxyDataSource(proxyClient, source.NewClient(1*time.Minute))
 }
 
-func NewForTesting(proxyClient *proxy.Client) *DataSource {
-	return newDataSource(proxyClient, source.NewClientForTesting())
+func NewForTesting(proxyClient *proxy.Client) *ProxyDataSource {
+	return newProxyDataSource(proxyClient, source.NewClientForTesting())
 }
 
-func newDataSource(proxyClient *proxy.Client, sourceClient *source.Client) *DataSource {
-	return &DataSource{
+func newProxyDataSource(proxyClient *proxy.Client, sourceClient *source.Client) *ProxyDataSource {
+	return &ProxyDataSource{
 		proxyClient:          proxyClient,
 		sourceClient:         sourceClient,
 		versionCache:         make(map[versionKey]*versionEntry),
@@ -50,15 +51,15 @@ func newDataSource(proxyClient *proxy.Client, sourceClient *source.Client) *Data
 // NewBypassingLicenseCheck returns a new direct proxy datasource that bypasses
 // license checks. That means all data will be returned for non-redistributable
 // modules, packages and directories.
-func NewBypassingLicenseCheck(c *proxy.Client) *DataSource {
-	ds := New(c)
+func NewBypassingLicenseCheck(c *proxy.Client) *ProxyDataSource {
+	ds := NewProxy(c)
 	ds.bypassLicenseCheck = true
 	return ds
 }
 
-// DataSource implements the frontend.DataSource interface, by querying a
+// ProxyDataSource implements the frontend.DataSource interface, by querying a
 // module proxy directly and caching the results in memory.
-type DataSource struct {
+type ProxyDataSource struct {
 	proxyClient  *proxy.Client
 	sourceClient *source.Client
 
@@ -86,7 +87,7 @@ type versionEntry struct {
 
 // getModule retrieves a version from the cache, or failing that queries and
 // processes the version from the proxy.
-func (ds *DataSource) getModule(ctx context.Context, modulePath, version string, _ internal.BuildContext) (_ *internal.Module, err error) {
+func (ds *ProxyDataSource) getModule(ctx context.Context, modulePath, version string, _ internal.BuildContext) (_ *internal.Module, err error) {
 	defer derrors.Wrap(&err, "getModule(%q, %q)", modulePath, version)
 
 	key := versionKey{modulePath, version}
@@ -163,7 +164,7 @@ func (ds *DataSource) getModule(ctx context.Context, modulePath, version string,
 // using the given finder func and iteratively testing parent directories of
 // the import path. It performs no testing as to whether the specified module
 // version that was found actually contains a package corresponding to pkgPath.
-func (ds *DataSource) findModule(ctx context.Context, pkgPath string, version string) (_ string, _ *proxy.VersionInfo, err error) {
+func (ds *ProxyDataSource) findModule(ctx context.Context, pkgPath string, version string) (_ string, _ *proxy.VersionInfo, err error) {
 	defer derrors.Wrap(&err, "findModule(%q, ...)", pkgPath)
 	pkgPath = strings.TrimLeft(pkgPath, "/")
 	for _, modulePath := range internal.CandidateModulePaths(pkgPath) {
@@ -180,7 +181,7 @@ func (ds *DataSource) findModule(ctx context.Context, pkgPath string, version st
 }
 
 // getUnit returns information about a unit.
-func (ds *DataSource) getUnit(ctx context.Context, fullPath, modulePath, version string, bc internal.BuildContext) (_ *internal.Unit, err error) {
+func (ds *ProxyDataSource) getUnit(ctx context.Context, fullPath, modulePath, version string, bc internal.BuildContext) (_ *internal.Unit, err error) {
 	var m *internal.Module
 	m, err = ds.getModule(ctx, modulePath, version, bc)
 	if err != nil {
@@ -195,7 +196,7 @@ func (ds *DataSource) getUnit(ctx context.Context, fullPath, modulePath, version
 }
 
 // GetLatestInfo returns latest information for unitPath and modulePath.
-func (ds *DataSource) GetLatestInfo(ctx context.Context, unitPath, modulePath string, latestUnitMeta *internal.UnitMeta) (latest internal.LatestInfo, err error) {
+func (ds *ProxyDataSource) GetLatestInfo(ctx context.Context, unitPath, modulePath string, latestUnitMeta *internal.UnitMeta) (latest internal.LatestInfo, err error) {
 	defer derrors.Wrap(&err, "GetLatestInfo(ctx, %q, %q)", unitPath, modulePath)
 
 	if latestUnitMeta == nil {
@@ -220,7 +221,7 @@ func (ds *DataSource) GetLatestInfo(ctx context.Context, unitPath, modulePath st
 // of the latest version found in the proxy by iterating through vN versions.
 // This function does not attempt to find whether the full path exists
 // in the new major version.
-func (ds *DataSource) getLatestMajorVersion(ctx context.Context, fullPath, modulePath string) (_ string, _ string, err error) {
+func (ds *ProxyDataSource) getLatestMajorVersion(ctx context.Context, fullPath, modulePath string) (_ string, _ string, err error) {
 	// We are checking if the full path is valid so that we can forward the error if not.
 	seriesPath := internal.SeriesPathForModule(modulePath)
 	info, err := ds.proxyClient.Info(ctx, seriesPath, version.Latest)

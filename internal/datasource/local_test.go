@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-package localdatasource
+package datasource
 
 import (
 	"context"
@@ -13,25 +13,17 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/google/safehtml/template"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/fetch"
-	"golang.org/x/pkgsite/internal/godoc/dochtml"
-	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/testing/testhelper"
 )
 
-func TestMain(m *testing.M) {
-	os.Exit(run(m))
-}
+var datasource *LocalDataSource
 
-var datasource *DataSource
-
-func run(m *testing.M) int {
-	licenses.OmitExceptions = true
+func setupLocal() func() {
 	modules := []map[string]string{
 		{
 			"go.mod":        "module github.com/my/module\n\ngo 1.12",
@@ -77,25 +69,28 @@ func run(m *testing.M) int {
 		},
 	}
 
-	dochtml.LoadTemplates(template.TrustedSourceFromConstant("../../static/doc"))
-	datasource = New(source.NewClientForTesting())
+	datasource = NewLocal(source.NewClientForTesting())
+	var dirs []string
 	for _, module := range modules {
 		directory, err := testhelper.CreateTestDirectory(module)
 		if err != nil {
 			log.Fatal(err)
 		}
-		defer os.RemoveAll(directory)
-
+		dirs = append(dirs, directory)
 		mg, err := fetch.NewDirectoryModuleGetter("", directory)
 		if err != nil {
 			log.Fatal(err)
 		}
 		datasource.AddModuleGetter(mg)
 	}
-	return m.Run()
+	return func() {
+		for _, d := range dirs {
+			os.RemoveAll(d)
+		}
+	}
 }
 
-func TestGetUnitMeta(t *testing.T) {
+func TestLocalGetUnitMeta(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 
@@ -202,7 +197,7 @@ func TestGetUnitMeta(t *testing.T) {
 	}
 }
 
-func TestGetUnit(t *testing.T) {
+func TestLocalGetUnit(t *testing.T) {
 	// This is a simple test to verify that data is fetched correctly. The
 	// return value of FetchResult is tested in internal/fetch so no need
 	// to repeat it.

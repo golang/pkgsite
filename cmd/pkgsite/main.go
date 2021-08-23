@@ -29,10 +29,10 @@ import (
 
 	"github.com/google/safehtml/template"
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/datasource"
 	"golang.org/x/pkgsite/internal/dcensus"
 	"golang.org/x/pkgsite/internal/fetch"
 	"golang.org/x/pkgsite/internal/frontend"
-	"golang.org/x/pkgsite/internal/localdatasource"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/middleware"
 	"golang.org/x/pkgsite/internal/source"
@@ -67,7 +67,7 @@ func main() {
 }
 
 func newServer(ctx context.Context, paths []string, gopathMode bool) (*frontend.Server, error) {
-	lds := localdatasource.New(source.NewClient(time.Second))
+	lds := datasource.NewLocal(source.NewClient(time.Second))
 	server, err := frontend.NewServer(frontend.ServerConfig{
 		DataSourceGetter: func(context.Context) internal.DataSource { return lds },
 		StaticPath:       template.TrustedSourceFromFlag(flag.Lookup("static").Value),
@@ -80,7 +80,7 @@ func newServer(ctx context.Context, paths []string, gopathMode bool) (*frontend.
 }
 
 // load loads local modules from pathList.
-func addGetters(ctx context.Context, ds *localdatasource.DataSource, paths []string, gopathMode bool) {
+func addGetters(ctx context.Context, ds *datasource.LocalDataSource, paths []string, gopathMode bool) {
 	loaded := len(paths)
 	for _, path := range paths {
 		var (
@@ -88,7 +88,7 @@ func addGetters(ctx context.Context, ds *localdatasource.DataSource, paths []str
 			err error
 		)
 		if gopathMode {
-			mg, err = localdatasource.NewGOPATHModuleGetter(path)
+			mg, err = datasource.NewGOPATHModuleGetter(path)
 		} else {
 			mg, err = fetch.NewDirectoryModuleGetter("", path)
 		}

@@ -18,13 +18,13 @@ import (
 	"golang.org/x/pkgsite/cmd/internal/cmdconfig"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/config"
+	"golang.org/x/pkgsite/internal/datasource"
 	"golang.org/x/pkgsite/internal/dcensus"
 	"golang.org/x/pkgsite/internal/frontend"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/middleware"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/proxy"
-	"golang.org/x/pkgsite/internal/proxydatasource"
 	"golang.org/x/pkgsite/internal/queue"
 	"golang.org/x/pkgsite/internal/source"
 )
@@ -76,11 +76,11 @@ func main() {
 	}
 
 	if *directProxy {
-		var pds *proxydatasource.DataSource
+		var pds *datasource.ProxyDataSource
 		if *bypassLicenseCheck {
-			pds = proxydatasource.NewBypassingLicenseCheck(proxyClient)
+			pds = datasource.NewBypassingLicenseCheck(proxyClient)
 		} else {
-			pds = proxydatasource.New(proxyClient)
+			pds = datasource.NewProxy(proxyClient)
 		}
 		dsg = func(context.Context) internal.DataSource { return pds }
 	} else {
