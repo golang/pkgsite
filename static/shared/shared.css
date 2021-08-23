@@ -4,12 +4,13 @@
  * license that can be found in the LICENSE file.
  */
 
+@import url('./reset.css');
+
 /**
- * Typography should be imported first to ensure expected CSS
- * inheritance on text elements.
+ * Typography should be imported first in the list below to ensure expected
+ * CSS rule inheritance on text elements.
  */
 @import url('./typography/typography.css');
-
 @import url('./button/button.css');
 @import url('./breadcrumb/breadcrumb.css');
 @import url('./chip/chip.css');

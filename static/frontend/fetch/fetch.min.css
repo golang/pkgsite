@@ -1,0 +1,7 @@
+/*!
+ * Copyright 2021 The Go Authors. All rights reserved.
+ * Use of this source code is governed by a BSD-style
+ * license that can be found in the LICENSE file.
+ */
+.Fetch-button{align-self:center}@keyframes blink{0%{opacity:.2}20%{opacity:1}to{opacity:.2}}.Fetch-dot{animation-duration:1.4s;animation-fill-mode:both;animation-iteration-count:infinite;animation-name:blink;background-color:var(--color-brand-primary);border-radius:50%;display:inline-block;height:.5rem;width:.5rem}.Fetch-loading{display:none;text-align:center}.Fetch-loading:nth-child(2){animation-delay:.2s}.Fetch-loading:nth-child(3){animation-delay:.4s}.Fetch-message,.Fetch-messageSecondary{text-align:center}
+/*# sourceMappingURL=fetch.min.css.map */

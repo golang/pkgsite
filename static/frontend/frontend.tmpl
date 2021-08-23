@@ -29,8 +29,7 @@
     <meta class="js-gtmID" data-gtmid="{{.GoogleTagManagerID}}">
     <link rel="shortcut icon" href="/static/shared/icon/favicon.ico">
     {{block "canonical" .}}{{end}}
-    <link href="/static/shared/reset.css?version={{.AppVersionLabel}}" rel="stylesheet">
-    <link href="/static/frontend/frontend.css?version={{.AppVersionLabel}}" rel="stylesheet">
+    <link href="/static/frontend/frontend.min.css?version={{.AppVersionLabel}}" rel="stylesheet">
     {{block "title" .}}
       <title>pkg.go.dev</title>
     {{end}}

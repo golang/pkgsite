@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["error.css"],
+  "sourcesContent": ["/*\n * Copyright 2021 The Go Authors. All rights reserved.\n * Use of this source code is governed by a BSD-style\n * license that can be found in the LICENSE file.\n */\n\n.Error-message {\n  text-align: center;\n}\n"],
+  "mappings": ";;;;;AAMA,eACE",
+  "names": []
+}

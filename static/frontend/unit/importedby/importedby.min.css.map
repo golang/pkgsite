@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["importedby.css"],
+  "sourcesContent": ["/*\n * Copyright 2021 The Go Authors. All rights reserved.\n * Use of this source code is governed by a BSD-style\n * license that can be found in the LICENSE file.\n */\n\n.ImportedBy-heading {\n  margin-bottom: 1rem;\n}\n.ImportedBy-list {\n  list-style: none;\n  padding: 0;\n}\n.ImportedBy .Pagination-nav,\n.ImportedBy .Pagination-navInner {\n  justify-content: flex-start;\n}\n.ImportedBy-details {\n  margin: 0.5rem 0;\n}\n.ImportedBy-detailsContent {\n  margin-left: 2.5rem;\n}\n.ImportedBy-detailsIndent {\n  margin-bottom: 0.5rem;\n  margin-left: 1.1rem;\n  margin-top: 0.5rem;\n}\n"],
+  "mappings": ";;;;;AAMA,oBACE,mBAEF,iBACE,gBAVF,UAaA,6DAEE,2BAEF,oBAjBA,eAoBA,2BACE,mBAEF,0BACE,oBACA,mBACA",
+  "names": []
+}

@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["worker.css"],
+  "sourcesContent": ["/*\n * Copyright 2019-2020 The Go Authors. All rights reserved.\n * Use of this source code is governed by a BSD-style\n * license that can be found in the LICENSE file.\n */\n\n:root {\n  --white: #eee;\n  --gray: #ccc;\n  --red: red;\n}\n\nbody {\n  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu',\n    'Helvetica Neue', Arial, sans-serif;\n}\nlabel {\n  display: inline-block;\n  text-align: right;\n  width: 12.5rem;\n}\ninput {\n  width: 12.5rem;\n}\nbutton {\n  background-color: var(--white);\n  border: 0.0625rem solid var(--gray);\n  border-radius: 0.125rem;\n  width: 16rem;\n}\ntable {\n  border-spacing: 0.625rem 0.125rem;\n  font-size: 0.75rem;\n  padding: 0.1875rem 0 0.125rem 0;\n}\ntd {\n  border-top: 0.0625rem solid var(--gray);\n}\n\n.Experiments input {\n  width: auto;\n}\n.Experiments input:invalid {\n  border: 0.0625rem dotted var(--red);\n  border-radius: 0.25rem;\n}\n.Experiments input:valid {\n  border: 0.0625rem solid var(--gray);\n  border-radius: 0.25rem;\n}\n.Experiments button {\n  width: auto;\n}\n\n.Experiments-updateResult {\n  border: none;\n  height: 2rem;\n  width: 100%;\n}\n"],
+  "mappings": ";;;;;AAMA,MACE,cACA,aACA,WAGF,KACE,qHAGF,MACE,qBACA,iBACA,cAEF,MACE,cAEF,OACE,8BACA,kCA1BF,sBA4BE,YAEF,MACE,+BACA,iBAhCF,2BAmCA,GACE,sCAGF,mBACE,WAEF,2BACE,kCA3CF,qBA8CA,yBACE,kCA/CF,qBAkDA,oBACE,WAGF,0BACE,YACA,YACA",
+  "names": []
+}
