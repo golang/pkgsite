@@ -14,7 +14,7 @@ require (
 	github.com/andybalholm/cascadia v1.1.0
 	github.com/aws/aws-sdk-go v1.34.29 // indirect
 	github.com/census-instrumentation/opencensus-proto v0.3.0 // indirect
-	github.com/evanw/esbuild v0.8.57
+	github.com/evanw/esbuild v0.12.22
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-git/go-billy/v5 v5.0.0
 	github.com/go-git/go-git/v5 v5.1.0
