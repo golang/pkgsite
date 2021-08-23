@@ -18,17 +18,16 @@ set -e
 
 gocmd="dockercompose run go"
 if type go > /dev/null; then
-  # pkgsite requires go1.15 or higher. If that's installed on the machine, just
+  # pkgsite requires go1.16 or higher. If that's installed on the machine, just
   # use the local go since it will be faster.
   # kokoro run go1.12.
   #
   # This awk program splits the third whitespace-separated field
   # (e.g. "go1.15.5") on the dot character and prints the second part.
   v=`go version | awk '{split($3, parts, /\./); print parts[2]}'`
-  if (( v >= 15 )); then
+  if (( v >= 16 )); then
     gocmd=go
   fi;
 fi;
 
 $gocmd $@
-
