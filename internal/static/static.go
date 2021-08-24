@@ -46,6 +46,8 @@ func Build(config Config) (*api.BuildResult, error) {
 		Bundle:        config.Bundle,
 		Outdir:        config.EntryPoint,
 		Write:         true,
+		Platform:      api.PlatformBrowser,
+		Format:        api.FormatESModule,
 		OutExtensions: map[string]string{".css": ".min.css"},
 		External:      []string{"*.svg"},
 		Banner: map[string]string{"css": "/*!\n" +

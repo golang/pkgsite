@@ -40,3 +40,5 @@ async function fetchPath() {
   const responseTextParsedDOM = new DOMParser().parseFromString(responseText, 'text/html');
   fetchMessageEl.innerHTML = responseTextParsedDOM.documentElement.textContent ?? '';
 }
+
+export {};

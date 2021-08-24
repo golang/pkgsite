@@ -13,7 +13,7 @@
  * it adds an indicator to the version that matches the version request
  * by the user for the page or the canonical url path.
  */
-class VersionsController {
+export class VersionsController {
   private expand = document.querySelector<HTMLButtonElement>('.js-versionsExpand');
   private collapse = document.querySelector<HTMLButtonElement>('.js-versionsCollapse');
   private details = [...document.querySelectorAll<HTMLDetailsElement>('.js-versionDetails')];

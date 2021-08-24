@@ -4,6 +4,11 @@
  * Use of this source code is governed by a BSD-style
  * license that can be found in the LICENSE file.
  */
+declare global {
+  interface Window {
+    submitForm: typeof submitForm;
+  }
+}
 
 function submitForm(formName: string, reload: boolean) {
   const form = document.querySelector<HTMLFormElement>(`form[name="${formName}" ]`);
@@ -30,3 +35,5 @@ function submitForm(formName: string, reload: boolean) {
 }
 
 window.submitForm = submitForm;
+
+export {};
