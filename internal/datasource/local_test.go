@@ -240,16 +240,22 @@ func TestLocalGetUnit(t *testing.T) {
 			got, err := datasource.GetUnit(ctx, um, 0, internal.BuildContext{})
 			if !test.wantLoaded {
 				if err == nil {
-					t.Fatalf("returned not loaded module %q", test.path)
+					t.Fatal("returned not loaded module")
 				}
 				return
 			}
 			if err != nil {
-				t.Fatalf("failed for %q: %q", test.path, err.Error())
+				t.Fatal(err)
 			}
 
 			if gotEmpty := (got.Documentation == nil && got.Readme == nil); gotEmpty {
-				t.Errorf("%q: gotEmpty = %t", test.path, gotEmpty)
+				t.Errorf("gotEmpty = %t", gotEmpty)
+			}
+			if got.Documentation != nil {
+				want := []internal.BuildContext{internal.BuildContextAll}
+				if !cmp.Equal(got.BuildContexts, want) {
+					t.Errorf("got %v, want %v", got.BuildContexts, want)
+				}
 			}
 		})
 	}

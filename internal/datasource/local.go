@@ -74,14 +74,6 @@ func adjust(m *internal.Module) {
 	for _, unit := range m.Units {
 		unit.IsRedistributable = true
 	}
-	for _, unit := range m.Units {
-		for _, d := range unit.Documentation {
-			unit.BuildContexts = append(unit.BuildContexts, internal.BuildContext{
-				GOOS:   d.GOOS,
-				GOARCH: d.GOARCH,
-			})
-		}
-	}
 }
 
 // NewGOPATHModuleGetter returns a module getter that uses the GOPATH
