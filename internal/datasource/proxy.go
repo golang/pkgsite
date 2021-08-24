@@ -26,19 +26,18 @@ var _ internal.DataSource = (*ProxyDataSource)(nil)
 
 // New returns a new direct proxy datasource.
 func NewProxy(proxyClient *proxy.Client) *ProxyDataSource {
-	return newProxyDataSource(proxyClient, source.NewClient(1*time.Minute))
+	return newProxyDataSource(proxyClient, source.NewClient(1*time.Minute), false)
 }
 
-func NewForTesting(proxyClient *proxy.Client) *ProxyDataSource {
-	return newProxyDataSource(proxyClient, source.NewClientForTesting())
+func NewForTesting(proxyClient *proxy.Client, bypassLicenseCheck bool) *ProxyDataSource {
+	return newProxyDataSource(proxyClient, source.NewClientForTesting(), bypassLicenseCheck)
 }
 
-func newProxyDataSource(proxyClient *proxy.Client, sourceClient *source.Client) *ProxyDataSource {
-	ds := newDataSource([]fetch.ModuleGetter{fetch.NewProxyModuleGetter(proxyClient)}, sourceClient)
+func newProxyDataSource(proxyClient *proxy.Client, sourceClient *source.Client, bypassLicenseCheck bool) *ProxyDataSource {
+	ds := newDataSource([]fetch.ModuleGetter{fetch.NewProxyModuleGetter(proxyClient)}, sourceClient, bypassLicenseCheck)
 	return &ProxyDataSource{
-		ds:                 ds,
-		proxyClient:        proxyClient,
-		bypassLicenseCheck: false,
+		ds:          ds,
+		proxyClient: proxyClient,
 	}
 }
 
@@ -46,9 +45,7 @@ func newProxyDataSource(proxyClient *proxy.Client, sourceClient *source.Client) 
 // license checks. That means all data will be returned for non-redistributable
 // modules, packages and directories.
 func NewBypassingLicenseCheck(c *proxy.Client) *ProxyDataSource {
-	ds := NewProxy(c)
-	ds.bypassLicenseCheck = true
-	return ds
+	return newProxyDataSource(c, source.NewClient(1*time.Minute), true)
 }
 
 // ProxyDataSource implements the frontend.DataSource interface, by querying a
@@ -56,9 +53,8 @@ func NewBypassingLicenseCheck(c *proxy.Client) *ProxyDataSource {
 type ProxyDataSource struct {
 	proxyClient *proxy.Client
 
-	mu                 sync.Mutex
-	ds                 *dataSource
-	bypassLicenseCheck bool
+	mu sync.Mutex
+	ds *dataSource
 }
 
 // getModule retrieves a version from the cache, or failing that queries and
@@ -76,15 +72,6 @@ func (ds *ProxyDataSource) getModule(ctx context.Context, modulePath, version st
 
 	m, err := ds.ds.fetch(ctx, modulePath, version)
 	if m != nil {
-		if ds.bypassLicenseCheck {
-			m.IsRedistributable = true
-			for _, pkg := range m.Packages() {
-				pkg.IsRedistributable = true
-			}
-		} else {
-			m.RemoveNonRedistributableData()
-		}
-		//
 		// Use the go.mod file at the raw latest version to fill in deprecation
 		// and retraction information.
 		lmv, err2 := fetch.LatestModuleVersions(ctx, modulePath, ds.proxyClient, nil)

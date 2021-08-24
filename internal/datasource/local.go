@@ -30,7 +30,7 @@ type LocalDataSource struct {
 func NewLocal(getters []fetch.ModuleGetter, sc *source.Client) *LocalDataSource {
 	return &LocalDataSource{
 		sourceClient: sc,
-		ds:           newDataSource(getters, sc),
+		ds:           newDataSource(getters, sc, true),
 	}
 }
 
@@ -49,19 +49,7 @@ func (ds *LocalDataSource) getModule(ctx context.Context, path, version string) 
 // fetch fetches a module using the configured ModuleGetters.
 // It tries each getter in turn until it finds one that has the module.
 func (ds *LocalDataSource) fetch(ctx context.Context, modulePath, version string) (_ *internal.Module, err error) {
-	m, err := ds.ds.fetch(ctx, modulePath, version)
-	if err != nil {
-		return nil, err
-	}
-	adjust(m)
-	return m, nil
-}
-
-func adjust(m *internal.Module) {
-	m.IsRedistributable = true
-	for _, unit := range m.Units {
-		unit.IsRedistributable = true
-	}
+	return ds.ds.fetch(ctx, modulePath, version)
 }
 
 // NewGOPATHModuleGetter returns a module getter that uses the GOPATH

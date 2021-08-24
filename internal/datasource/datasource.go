@@ -24,9 +24,24 @@ import (
 // dataSource implements the internal.DataSource interface, by trying a list of
 // fetch.ModuleGetters to fetch modules and caching the results.
 type dataSource struct {
-	getters      []fetch.ModuleGetter
-	sourceClient *source.Client
-	cache        *lru.Cache
+	getters            []fetch.ModuleGetter
+	sourceClient       *source.Client
+	bypassLicenseCheck bool
+	cache              *lru.Cache
+}
+
+func newDataSource(getters []fetch.ModuleGetter, sc *source.Client, bypassLicenseCheck bool) *dataSource {
+	cache, err := lru.New(maxCachedModules)
+	if err != nil {
+		// Can only happen if size is bad.
+		panic(err)
+	}
+	return &dataSource{
+		getters:            getters,
+		sourceClient:       sc,
+		bypassLicenseCheck: bypassLicenseCheck,
+		cache:              cache,
+	}
 }
 
 // cacheEntry holds a fetched module or an error, if the fetch failed.
@@ -36,19 +51,6 @@ type cacheEntry struct {
 }
 
 const maxCachedModules = 100
-
-func newDataSource(getters []fetch.ModuleGetter, sc *source.Client) *dataSource {
-	cache, err := lru.New(maxCachedModules)
-	if err != nil {
-		// Can only happen if size is bad.
-		panic(err)
-	}
-	return &dataSource{
-		getters:      getters,
-		sourceClient: sc,
-		cache:        cache,
-	}
-}
 
 // cacheGet returns information from the cache if it is present, and (nil, nil) otherwise.
 func (ds *dataSource) cacheGet(path, version string) (*internal.Module, error) {
@@ -80,7 +82,16 @@ func (ds *dataSource) fetch(ctx context.Context, modulePath, version string) (_ 
 		fr := fetch.FetchModule(ctx, modulePath, version, g, ds.sourceClient)
 		defer fr.Defer()
 		if fr.Error == nil {
-			return fr.Module, nil
+			m := fr.Module
+			if ds.bypassLicenseCheck {
+				m.IsRedistributable = true
+				for _, unit := range m.Units {
+					unit.IsRedistributable = true
+				}
+			} else {
+				m.RemoveNonRedistributableData()
+			}
+			return m, nil
 		}
 		if !errors.Is(fr.Error, derrors.NotFound) {
 			return nil, fr.Error

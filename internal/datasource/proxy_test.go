@@ -34,11 +34,11 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
-func setup(t *testing.T) (context.Context, *ProxyDataSource, func()) {
+func setup(t *testing.T, bypassLicenseCheck bool) (context.Context, *ProxyDataSource, func()) {
 	t.Helper()
 	client, teardownProxy := proxytest.SetupTestClient(t, testModules)
 	ctx, cancel := context.WithTimeout(context.Background(), 40*time.Second)
-	return ctx, NewForTesting(client), func() {
+	return ctx, NewForTesting(client, bypassLicenseCheck), func() {
 		teardownProxy()
 		cancel()
 	}
@@ -73,7 +73,7 @@ var (
 )
 
 func TestGetModuleInfo(t *testing.T) {
-	ctx, ds, teardown := setup(t)
+	ctx, ds, teardown := setup(t, false)
 	defer teardown()
 
 	modinfo := func(m, v string) *internal.ModuleInfo {
@@ -125,7 +125,7 @@ func TestGetModuleInfo(t *testing.T) {
 }
 
 func TestProxyGetUnitMeta(t *testing.T) {
-	ctx, ds, teardown := setup(t)
+	ctx, ds, teardown := setup(t, false)
 	defer teardown()
 
 	for _, test := range []struct {
@@ -205,9 +205,8 @@ func TestBypass(t *testing.T) {
 	for _, bypass := range []bool{false, true} {
 		t.Run(fmt.Sprintf("bypass=%t", bypass), func(t *testing.T) {
 			// re-create the data source to get around caching
-			ctx, ds, teardown := setup(t)
+			ctx, ds, teardown := setup(t, bypass)
 			defer teardown()
-			ds.bypassLicenseCheck = bypass
 			for _, test := range []struct {
 				path      string
 				wantEmpty bool
@@ -275,7 +274,7 @@ func TestGetLatestInfo(t *testing.T) {
 	defer teardownProxy()
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	ds := NewForTesting(client)
+	ds := NewForTesting(client, false)
 
 	for _, test := range []struct {
 		fullPath        string
