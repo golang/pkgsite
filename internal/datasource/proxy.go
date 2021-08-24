@@ -8,7 +8,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -37,11 +36,9 @@ func NewForTesting(proxyClient *proxy.Client) *ProxyDataSource {
 func newProxyDataSource(proxyClient *proxy.Client, sourceClient *source.Client) *ProxyDataSource {
 	ds := newDataSource([]fetch.ModuleGetter{fetch.NewProxyModuleGetter(proxyClient)}, sourceClient)
 	return &ProxyDataSource{
-		ds:                   ds,
-		proxyClient:          proxyClient,
-		modulePathToVersions: make(map[string][]string),
-		packagePathToModules: make(map[string][]string),
-		bypassLicenseCheck:   false,
+		ds:                 ds,
+		proxyClient:        proxyClient,
+		bypassLicenseCheck: false,
 	}
 }
 
@@ -59,16 +56,9 @@ func NewBypassingLicenseCheck(c *proxy.Client) *ProxyDataSource {
 type ProxyDataSource struct {
 	proxyClient *proxy.Client
 
-	mu sync.Mutex
-	ds *dataSource
-	// Use an extremely coarse lock for now - mu guards all maps below. The
-	// assumption is that this will only be used for local development.
-	// map of modulePath -> versions, with versions sorted in semver order
-	modulePathToVersions map[string][]string
-	// map of package path -> modules paths containing it, with module paths
-	// sorted by descending length
-	packagePathToModules map[string][]string
-	bypassLicenseCheck   bool
+	mu                 sync.Mutex
+	ds                 *dataSource
+	bypassLicenseCheck bool
 }
 
 // getModule retrieves a version from the cache, or failing that queries and
@@ -114,35 +104,6 @@ func (ds *ProxyDataSource) getModule(ctx context.Context, modulePath, version st
 	}
 	ds.ds.cachePut(modulePath, version, m, err)
 
-	// Since we hold the lock and missed the cache, we can assume that we have
-	// never seen this module version. Therefore the following insert-and-sort
-	// preserves uniqueness of versions in the module version list.
-	newVersions := append(ds.modulePathToVersions[modulePath], version)
-	sort.Slice(newVersions, func(i, j int) bool {
-		return semver.Compare(newVersions[i], newVersions[j]) < 0
-	})
-	ds.modulePathToVersions[modulePath] = newVersions
-
-	// Unlike the above, we don't know at this point whether or not we've seen
-	// this module path for this particular package before. Therefore, we need to
-	// be a bit more careful and check that it is new. To do this, we can
-	// leverage the invariant that module paths in packagePathToModules are kept
-	// sorted in descending order of length.
-	for _, pkg := range m.Packages() {
-		var (
-			i   int
-			mp  string
-			mps = ds.packagePathToModules[pkg.Path]
-		)
-		for i, mp = range mps {
-			if len(mp) <= len(modulePath) {
-				break
-			}
-		}
-		if mp != modulePath {
-			ds.packagePathToModules[pkg.Path] = append(mps[:i], append([]string{modulePath}, mps[i:]...)...)
-		}
-	}
 	return m, nil
 }
 
