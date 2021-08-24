@@ -8,9 +8,16 @@
 package datasource
 
 import (
+	"context"
+	"errors"
+	"fmt"
+	"time"
+
 	lru "github.com/hashicorp/golang-lru"
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/fetch"
+	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/source"
 )
 
@@ -59,4 +66,25 @@ func (ds *dataSource) cacheGet(path, version string) (*internal.Module, error) {
 // cachePut puts information into the cache.
 func (ds *dataSource) cachePut(path, version string, m *internal.Module, err error) {
 	ds.cache.Add(internal.Modver{Path: path, Version: version}, cacheEntry{m, err})
+}
+
+// fetch fetches a module using the configured ModuleGetters.
+// It tries each getter in turn until it finds one that has the module.
+func (ds *dataSource) fetch(ctx context.Context, modulePath, version string) (_ *internal.Module, err error) {
+	log.Infof(ctx, "DataSource: fetching %s@%s", modulePath, version)
+	start := time.Now()
+	defer func() {
+		log.Infof(ctx, "DataSource: fetched %s@%s in %s with error %v", modulePath, version, time.Since(start), err)
+	}()
+	for _, g := range ds.getters {
+		fr := fetch.FetchModule(ctx, modulePath, version, g, ds.sourceClient)
+		defer fr.Defer()
+		if fr.Error == nil {
+			return fr.Module, nil
+		}
+		if !errors.Is(fr.Error, derrors.NotFound) {
+			return nil, fr.Error
+		}
+	}
+	return nil, fmt.Errorf("%s@%s: %w", modulePath, version, derrors.NotFound)
 }

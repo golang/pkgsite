@@ -11,12 +11,10 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"time"
 
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/fetch"
-	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/source"
 )
 
@@ -51,22 +49,12 @@ func (ds *LocalDataSource) getModule(ctx context.Context, path, version string) 
 // fetch fetches a module using the configured ModuleGetters.
 // It tries each getter in turn until it finds one that has the module.
 func (ds *LocalDataSource) fetch(ctx context.Context, modulePath, version string) (_ *internal.Module, err error) {
-	log.Infof(ctx, "local DataSource: fetching %s@%s", modulePath, version)
-	start := time.Now()
-	defer func() {
-		log.Infof(ctx, "local DataSource: fetched %s@%s in %s with error %v", modulePath, version, time.Since(start), err)
-	}()
-	for _, g := range ds.ds.getters {
-		fr := fetch.FetchModule(ctx, modulePath, version, g, ds.sourceClient)
-		if fr.Error == nil {
-			adjust(fr.Module)
-			return fr.Module, nil
-		}
-		if !errors.Is(fr.Error, derrors.NotFound) {
-			return nil, fr.Error
-		}
+	m, err := ds.ds.fetch(ctx, modulePath, version)
+	if err != nil {
+		return nil, err
 	}
-	return nil, fmt.Errorf("%s@%s: %w", modulePath, version, derrors.NotFound)
+	adjust(m)
+	return m, nil
 }
 
 func adjust(m *internal.Module) {

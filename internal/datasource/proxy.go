@@ -73,9 +73,8 @@ func (ds *ProxyDataSource) getModule(ctx context.Context, modulePath, version st
 	if mod != nil || err != nil {
 		return mod, err
 	}
-	res := fetch.FetchModule(ctx, modulePath, version, ds.ds.getters[0], ds.ds.sourceClient)
-	defer res.Defer()
-	m := res.Module
+
+	m, err := ds.ds.fetch(ctx, modulePath, version)
 	if m != nil {
 		if ds.bypassLicenseCheck {
 			m.IsRedistributable = true
@@ -88,22 +87,21 @@ func (ds *ProxyDataSource) getModule(ctx context.Context, modulePath, version st
 		//
 		// Use the go.mod file at the raw latest version to fill in deprecation
 		// and retraction information.
-		lmv, err := fetch.LatestModuleVersions(ctx, modulePath, ds.proxyClient, nil)
-		if err != nil {
-			res.Error = err
+		lmv, err2 := fetch.LatestModuleVersions(ctx, modulePath, ds.proxyClient, nil)
+		if err2 != nil {
+			err = err2
 		} else {
 			lmv.PopulateModuleInfo(&m.ModuleInfo)
 		}
 	}
 
-	if res.Error != nil {
+	if err != nil {
 		if !errors.Is(ctx.Err(), context.Canceled) {
-			ds.ds.cachePut(modulePath, version, m, res.Error)
+			ds.ds.cachePut(modulePath, version, m, err)
 		}
-		return nil, res.Error
+		return nil, err
 	}
 	ds.ds.cachePut(modulePath, version, m, err)
-
 	return m, nil
 }
 
