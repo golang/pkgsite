@@ -189,7 +189,7 @@ Object {
       "role": "link",
     },
   ],
-  "name": "github.com/package/does/not/exist · pkg.go.dev",
+  "name": "github.com/package/does/not/exist - pkg.go.dev",
   "role": "RootWebArea",
 }
 `;
@@ -395,7 +395,7 @@ Object {
       "role": "link",
     },
   ],
-  "name": "Badge · pkg.go.dev",
+  "name": "Badge - pkg.go.dev",
   "role": "RootWebArea",
 }
 `;
@@ -585,7 +585,7 @@ Object {
       "role": "link",
     },
   ],
-  "name": "400 Bad Request · pkg.go.dev",
+  "name": "400 Bad Request - pkg.go.dev",
   "role": "RootWebArea",
 }
 `;
@@ -1438,7 +1438,7 @@ Object {
       "role": "link",
     },
   ],
-  "name": "License Policy · pkg.go.dev",
+  "name": "License Policy - pkg.go.dev",
   "role": "RootWebArea",
 }
 `;
@@ -1679,7 +1679,7 @@ Object {
       "role": "link",
     },
   ],
-  "name": "Search Help · pkg.go.dev",
+  "name": "Search Help - pkg.go.dev",
   "role": "RootWebArea",
 }
 `;
@@ -2025,7 +2025,7 @@ Object {
       "role": "link",
     },
   ],
-  "name": "Sub-repositories · pkg.go.dev",
+  "name": "Sub-repositories - pkg.go.dev",
   "role": "RootWebArea",
 }
 `;

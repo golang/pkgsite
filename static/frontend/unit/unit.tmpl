@@ -4,7 +4,7 @@
   license that can be found in the LICENSE file.
 -->
 
-{{define "title"}}<title>{{.Title}} · {{.Unit.Path}} · pkg.go.dev</title>{{end}}
+{{define "title"}}<title>{{.Title}} {{if ne .PageType "std"}}{{.PageType}} - {{.Unit.Path}}{{end}} - pkg.go.dev</title>{{end}}
 
 {{define "description"}}{{.MetaDescription}}{{end}}
 

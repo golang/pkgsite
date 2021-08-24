@@ -754,7 +754,7 @@ Object {
       "role": "link",
     },
   ],
-  "name": "http - Search Results · pkg.go.dev",
+  "name": "http - Search Results - pkg.go.dev",
   "role": "RootWebArea",
 }
 `;
