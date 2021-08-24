@@ -111,7 +111,6 @@ func checkModule(ctx context.Context, t *testing.T, db *DB, want *internal.Modul
 			}
 		}
 		wantu.Subdirectories = subdirectories
-		wantu.BuildContexts = got.BuildContexts
 		opts := cmp.Options{
 			cmpopts.EquateEmpty(),
 			cmpopts.IgnoreFields(licenses.Metadata{}, "Coverage", "OldCoverage"),

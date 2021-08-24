@@ -6,6 +6,7 @@ package fetch
 
 import (
 	"path"
+	"sort"
 
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/licenses"
@@ -65,6 +66,14 @@ func moduleUnits(modulePath, version string,
 			dir.Name = pkg.name
 			dir.Imports = pkg.imports
 			dir.Documentation = pkg.docs
+			var bcs []internal.BuildContext
+			for _, d := range dir.Documentation {
+				bcs = append(bcs, internal.BuildContext{GOOS: d.GOOS, GOARCH: d.GOARCH})
+			}
+			sort.Slice(bcs, func(i, j int) bool {
+				return internal.CompareBuildContexts(bcs[i], bcs[j]) < 0
+			})
+			dir.BuildContexts = bcs
 		}
 		units = append(units, dir)
 	}

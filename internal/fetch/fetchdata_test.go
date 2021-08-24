@@ -87,7 +87,8 @@ var singleUnits = []*internal.Unit{
 				},
 			},
 		}},
-		Imports: []string{"time"},
+		BuildContexts: []internal.BuildContext{internal.BuildContextAll},
+		Imports:       []string{"time"},
 	},
 }
 
@@ -142,7 +143,8 @@ var moduleNoGoMod = &testModule{
 							API:      singleUnits[1].Documentation[0].API,
 						},
 					},
-					Imports: []string{"time"},
+					BuildContexts: []internal.BuildContext{internal.BuildContextAll},
+					Imports:       []string{"time"},
 				},
 			},
 		},
@@ -199,6 +201,7 @@ var moduleMultiPackage = &testModule{
 							},
 						},
 					},
+					BuildContexts: []internal.BuildContext{internal.BuildContextAll},
 				},
 				{
 					UnitMeta: internal.UnitMeta{
@@ -220,7 +223,8 @@ var moduleMultiPackage = &testModule{
 							},
 						},
 					}},
-					Imports: []string{"example.com/multi/bar", "fmt"},
+					BuildContexts: []internal.BuildContext{internal.BuildContextAll},
+					Imports:       []string{"example.com/multi/bar", "fmt"},
 				},
 			},
 		},
@@ -304,6 +308,7 @@ var moduleBadPackages = &testModule{
 							},
 						}},
 					}},
+					BuildContexts: []internal.BuildContext{internal.BuildContextAll},
 				},
 			},
 		},
@@ -410,6 +415,10 @@ var moduleBuildConstraints = &testModule{
 							Synopsis: "Package cpu implements processor feature detection used by the Go standard library.",
 						},
 					},
+					BuildContexts: []internal.BuildContext{
+						internal.BuildContextLinux, internal.BuildContextWindows,
+						internal.BuildContextDarwin, internal.BuildContextJS,
+					},
 				},
 			},
 		},
@@ -470,6 +479,7 @@ var moduleBadBuildContext = &testModule{
 						GOOS:   "linux",
 						GOARCH: "amd64",
 					}},
+					BuildContexts: []internal.BuildContext{internal.BuildContextLinux},
 				},
 			},
 		},
@@ -519,6 +529,7 @@ var moduleNonRedist = &testModule{
 							},
 						},
 					},
+					BuildContexts: []internal.BuildContext{internal.BuildContextAll},
 				},
 				{
 					UnitMeta: internal.UnitMeta{
@@ -542,6 +553,7 @@ var moduleNonRedist = &testModule{
 							},
 						},
 					},
+					BuildContexts: []internal.BuildContext{internal.BuildContextAll},
 				},
 				{
 					UnitMeta: internal.UnitMeta{
@@ -569,7 +581,8 @@ var moduleNonRedist = &testModule{
 							},
 						},
 					},
-					Imports: []string{"example.com/nonredist/bar", "fmt"},
+					BuildContexts: []internal.BuildContext{internal.BuildContextAll},
+					Imports:       []string{"example.com/nonredist/bar", "fmt"},
 				},
 			},
 		},
@@ -617,6 +630,7 @@ var moduleBadImportPath = &testModule{
 						Path: "bad.import.path.com/good/import/path",
 					},
 					Documentation: []*internal.Documentation{{GOOS: internal.All, GOARCH: internal.All}},
+					BuildContexts: []internal.BuildContext{internal.BuildContextAll},
 				},
 			},
 		},
@@ -681,6 +695,7 @@ var moduleDocTest = &testModule{
 						GOARCH:   internal.All,
 						Synopsis: "Package permalink is for testing the heading permalink documentation rendering feature.",
 					}},
+					BuildContexts: []internal.BuildContext{internal.BuildContextAll},
 				},
 			},
 		},
@@ -723,6 +738,7 @@ var moduleDocTooLarge = &testModule{
 						GOARCH:   internal.All,
 						Synopsis: "This documentation is big.",
 					}},
+					BuildContexts: []internal.BuildContext{internal.BuildContextAll},
 				},
 			},
 		},
@@ -792,6 +808,7 @@ var moduleWasm = &testModule{
 							},
 						},
 					},
+					BuildContexts: []internal.BuildContext{internal.BuildContextJS},
 				},
 			},
 		},
@@ -859,6 +876,7 @@ var moduleStdMaster = &testModule{
 							},
 						},
 					},
+					BuildContexts: []internal.BuildContext{internal.BuildContextAll},
 				},
 				{
 					UnitMeta: internal.UnitMeta{
@@ -1284,6 +1302,7 @@ var moduleStd = &testModule{
 							},
 						},
 					},
+					BuildContexts: []internal.BuildContext{internal.BuildContextAll},
 				},
 				{
 					UnitMeta: internal.UnitMeta{
@@ -1323,6 +1342,10 @@ var moduleStd = &testModule{
 							GOARCH:   "wasm",
 							Synopsis: "Pprof interprets and displays profiles of Go programs.",
 						},
+					},
+					BuildContexts: []internal.BuildContext{
+						internal.BuildContextLinux, internal.BuildContextWindows,
+						internal.BuildContextDarwin, internal.BuildContextJS,
 					},
 					Imports: []string{
 						"cmd/internal/objfile",
@@ -1465,7 +1488,8 @@ var moduleStd = &testModule{
 							},
 						},
 					},
-					Imports: []string{"errors", "fmt", "reflect", "sync", "time"},
+					BuildContexts: []internal.BuildContext{internal.BuildContextAll},
+					Imports:       []string{"errors", "fmt", "reflect", "sync", "time"},
 				},
 				{
 					UnitMeta: internal.UnitMeta{
@@ -2001,6 +2025,7 @@ var moduleStd = &testModule{
 							},
 						},
 					},
+					BuildContexts: []internal.BuildContext{internal.BuildContextAll},
 					Imports: []string{
 						"bytes",
 						"encoding",
@@ -2041,6 +2066,7 @@ var moduleStd = &testModule{
 							},
 						},
 					},
+					BuildContexts: []internal.BuildContext{internal.BuildContextAll},
 				},
 				{
 					UnitMeta: internal.UnitMeta{
@@ -2677,6 +2703,7 @@ var moduleStd = &testModule{
 							},
 						},
 					},
+					BuildContexts: []internal.BuildContext{internal.BuildContextAll},
 				},
 			},
 		},
@@ -2727,6 +2754,7 @@ var moduleMaster = &testModule{
 							},
 						},
 					},
+					BuildContexts: []internal.BuildContext{internal.BuildContextAll},
 				},
 			},
 		},
@@ -2774,8 +2802,8 @@ var moduleLatest = &testModule{
 								},
 							},
 						},
-					},
-					},
+					}},
+					BuildContexts: []internal.BuildContext{internal.BuildContextAll},
 				},
 			},
 		},
@@ -2830,6 +2858,7 @@ package example_test
 							Synopsis: "Package example contains examples.",
 							API:      api,
 						}},
+						BuildContexts: []internal.BuildContext{internal.BuildContextAll},
 					},
 				},
 			},

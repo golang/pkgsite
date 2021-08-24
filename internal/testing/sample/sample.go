@@ -225,6 +225,7 @@ func UnitForPackage(path, modulePath, version, name string, isRedistributable bo
 	return &internal.Unit{
 		UnitMeta:        *UnitMeta(path, modulePath, version, name, isRedistributable),
 		Documentation:   []*internal.Documentation{&doc},
+		BuildContexts:   []internal.BuildContext{{GOOS: doc.GOOS, GOARCH: doc.GOARCH}},
 		LicenseContents: Licenses(),
 		Imports:         imps,
 		NumImports:      len(imps),
