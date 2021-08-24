@@ -35,10 +35,10 @@ func NewForTesting(proxyClient *proxy.Client) *ProxyDataSource {
 }
 
 func newProxyDataSource(proxyClient *proxy.Client, sourceClient *source.Client) *ProxyDataSource {
+	ds := newDataSource([]fetch.ModuleGetter{fetch.NewProxyModuleGetter(proxyClient)}, sourceClient)
 	return &ProxyDataSource{
-		ds:          newDataSource(sourceClient),
-		proxyClient: proxyClient,
-
+		ds:                   ds,
+		proxyClient:          proxyClient,
 		modulePathToVersions: make(map[string][]string),
 		packagePathToModules: make(map[string][]string),
 		bypassLicenseCheck:   false,
@@ -83,7 +83,7 @@ func (ds *ProxyDataSource) getModule(ctx context.Context, modulePath, version st
 	if mod != nil || err != nil {
 		return mod, err
 	}
-	res := fetch.FetchModule(ctx, modulePath, version, fetch.NewProxyModuleGetter(ds.proxyClient), ds.ds.sourceClient)
+	res := fetch.FetchModule(ctx, modulePath, version, ds.ds.getters[0], ds.ds.sourceClient)
 	defer res.Defer()
 	m := res.Module
 	if m != nil {

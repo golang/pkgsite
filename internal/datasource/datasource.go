@@ -17,9 +17,9 @@ import (
 // dataSource implements the internal.DataSource interface, by trying a list of
 // fetch.ModuleGetters to fetch modules and caching the results.
 type dataSource struct {
+	getters      []fetch.ModuleGetter
 	sourceClient *source.Client
-
-	cache *lru.Cache
+	cache        *lru.Cache
 }
 
 // cacheEntry holds a fetched module or an error, if the fetch failed.
@@ -30,13 +30,14 @@ type cacheEntry struct {
 
 const maxCachedModules = 100
 
-func newDataSource(sc *source.Client) *dataSource {
+func newDataSource(getters []fetch.ModuleGetter, sc *source.Client) *dataSource {
 	cache, err := lru.New(maxCachedModules)
 	if err != nil {
 		// Can only happen if size is bad.
 		panic(err)
 	}
 	return &dataSource{
+		getters:      getters,
 		sourceClient: sc,
 		cache:        cache,
 	}

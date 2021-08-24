@@ -67,7 +67,8 @@ func main() {
 }
 
 func newServer(ctx context.Context, paths []string, gopathMode bool) (*frontend.Server, error) {
-	lds := datasource.NewLocal(source.NewClient(time.Second))
+	getters := buildGetters(ctx, paths, gopathMode)
+	lds := datasource.NewLocal(getters, source.NewClient(time.Second))
 	server, err := frontend.NewServer(frontend.ServerConfig{
 		DataSourceGetter: func(context.Context) internal.DataSource { return lds },
 		StaticPath:       template.TrustedSourceFromFlag(flag.Lookup("static").Value),
@@ -75,12 +76,11 @@ func newServer(ctx context.Context, paths []string, gopathMode bool) (*frontend.
 	if err != nil {
 		return nil, err
 	}
-	addGetters(ctx, lds, paths, gopathMode)
 	return server, nil
 }
 
-// load loads local modules from pathList.
-func addGetters(ctx context.Context, ds *datasource.LocalDataSource, paths []string, gopathMode bool) {
+func buildGetters(ctx context.Context, paths []string, gopathMode bool) []fetch.ModuleGetter {
+	var getters []fetch.ModuleGetter
 	loaded := len(paths)
 	for _, path := range paths {
 		var (
@@ -96,11 +96,12 @@ func addGetters(ctx context.Context, ds *datasource.LocalDataSource, paths []str
 			log.Error(ctx, err)
 			loaded--
 		} else {
-			ds.AddModuleGetter(mg)
+			getters = append(getters, mg)
 		}
 	}
 
 	if loaded == 0 {
 		log.Fatalf(ctx, "failed to load module(s) at %v", paths)
 	}
+	return getters
 }

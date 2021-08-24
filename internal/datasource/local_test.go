@@ -69,8 +69,10 @@ func setupLocal() func() {
 		},
 	}
 
-	datasource = NewLocal(source.NewClientForTesting())
-	var dirs []string
+	var (
+		dirs    []string
+		getters []fetch.ModuleGetter
+	)
 	for _, module := range modules {
 		directory, err := testhelper.CreateTestDirectory(module)
 		if err != nil {
@@ -81,8 +83,10 @@ func setupLocal() func() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		datasource.AddModuleGetter(mg)
+		getters = append(getters, mg)
 	}
+	datasource = NewLocal(getters, source.NewClientForTesting())
+
 	return func() {
 		for _, d := range dirs {
 			os.RemoveAll(d)

@@ -11,7 +11,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"sync"
 	"time"
 
 	"golang.org/x/pkgsite/internal"
@@ -25,28 +24,16 @@ import (
 // locally. It is not backed by a database or a proxy instance.
 type LocalDataSource struct {
 	sourceClient *source.Client
-
-	mu      sync.Mutex
-	getters []fetch.ModuleGetter
-	ds      *dataSource
+	ds           *dataSource
 }
 
 // New creates and returns a new local datasource that bypasses license
 // checks by default.
-func NewLocal(sc *source.Client) *LocalDataSource {
+func NewLocal(getters []fetch.ModuleGetter, sc *source.Client) *LocalDataSource {
 	return &LocalDataSource{
 		sourceClient: sc,
-		ds:           newDataSource(sc),
+		ds:           newDataSource(getters, sc),
 	}
-}
-
-// AddModuleGetter adds a module getter to the DataSource. To look up a module,
-// the getters are tried in the order they were added until the desired module
-// is found.
-func (ds *LocalDataSource) AddModuleGetter(g fetch.ModuleGetter) {
-	ds.mu.Lock()
-	defer ds.mu.Unlock()
-	ds.getters = append(ds.getters, g)
 }
 
 // getModule gets the module at the given path and version. It first checks the
@@ -69,7 +56,7 @@ func (ds *LocalDataSource) fetch(ctx context.Context, modulePath, version string
 	defer func() {
 		log.Infof(ctx, "local DataSource: fetched %s@%s in %s with error %v", modulePath, version, time.Since(start), err)
 	}()
-	for _, g := range ds.getters {
+	for _, g := range ds.ds.getters {
 		fr := fetch.FetchModule(ctx, modulePath, version, g, ds.sourceClient)
 		if fr.Error == nil {
 			adjust(fr.Module)
