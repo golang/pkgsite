@@ -128,6 +128,14 @@ func TestProxyGetUnitMeta(t *testing.T) {
 	ctx, ds, teardown := setup(t, false)
 	defer teardown()
 
+	singleModInfo := internal.ModuleInfo{
+		ModulePath:        "example.com/single",
+		Version:           "v1.0.0",
+		IsRedistributable: true,
+		CommitTime:        proxytest.CommitTime,
+		HasGoMod:          true,
+	}
+
 	for _, test := range []struct {
 		path, modulePath, version string
 		want                      *internal.UnitMeta
@@ -137,11 +145,7 @@ func TestProxyGetUnitMeta(t *testing.T) {
 			modulePath: "example.com/single",
 			version:    "v1.0.0",
 			want: &internal.UnitMeta{
-				ModuleInfo: internal.ModuleInfo{
-					ModulePath:        "example.com/single",
-					Version:           "v1.0.0",
-					IsRedistributable: true,
-				},
+				ModuleInfo:        singleModInfo,
 				IsRedistributable: true,
 			},
 		},
@@ -150,11 +154,7 @@ func TestProxyGetUnitMeta(t *testing.T) {
 			modulePath: "example.com/single",
 			version:    "v1.0.0",
 			want: &internal.UnitMeta{
-				ModuleInfo: internal.ModuleInfo{
-					ModulePath:        "example.com/single",
-					Version:           "v1.0.0",
-					IsRedistributable: true,
-				},
+				ModuleInfo:        singleModInfo,
 				Name:              "pkg",
 				IsRedistributable: true,
 			},
@@ -164,11 +164,7 @@ func TestProxyGetUnitMeta(t *testing.T) {
 			modulePath: internal.UnknownModulePath,
 			version:    "v1.0.0",
 			want: &internal.UnitMeta{
-				ModuleInfo: internal.ModuleInfo{
-					ModulePath:        "example.com/single",
-					Version:           "v1.0.0",
-					IsRedistributable: true,
-				},
+				ModuleInfo:        singleModInfo,
 				Name:              "pkg",
 				IsRedistributable: true,
 			},
@@ -182,6 +178,8 @@ func TestProxyGetUnitMeta(t *testing.T) {
 					ModulePath:        "example.com/basic",
 					Version:           "v1.1.0",
 					IsRedistributable: true,
+					CommitTime:        proxytest.CommitTime,
+					HasGoMod:          true,
 				},
 				Name:              "basic",
 				IsRedistributable: true,
@@ -194,7 +192,7 @@ func TestProxyGetUnitMeta(t *testing.T) {
 				t.Fatal(err)
 			}
 			test.want.Path = test.path
-			if diff := cmp.Diff(got, test.want); diff != "" {
+			if diff := cmp.Diff(test.want, got, cmpopts.IgnoreFields(internal.ModuleInfo{}, "SourceInfo")); diff != "" {
 				t.Errorf("mismatch (-want +got):\n%s", diff)
 			}
 		})

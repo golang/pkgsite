@@ -9,13 +9,12 @@ import (
 
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
-	"golang.org/x/pkgsite/internal/proxy"
 )
 
 // GetUnit returns information about a directory at a path.
 func (ds *ProxyDataSource) GetUnit(ctx context.Context, um *internal.UnitMeta, field internal.FieldSet, bc internal.BuildContext) (_ *internal.Unit, err error) {
 	defer derrors.Wrap(&err, "GetUnit(%q, %q, %q)", um.Path, um.ModulePath, um.Version)
-	return ds.getUnit(ctx, um.Path, um.ModulePath, um.Version, bc)
+	return ds.ds.GetUnit(ctx, um, field, bc)
 }
 
 // GetModuleInfo returns the ModuleInfo as fetched from the proxy for module
@@ -29,38 +28,8 @@ func (ds *ProxyDataSource) GetModuleInfo(ctx context.Context, modulePath, versio
 	return &m.ModuleInfo, nil
 }
 
-// GetUnitMeta returns information about the given path.
-func (ds *ProxyDataSource) GetUnitMeta(ctx context.Context, path, inModulePath, inVersion string) (_ *internal.UnitMeta, err error) {
-	defer derrors.Wrap(&err, "GetUnitMeta(%q, %q, %q)", path, inModulePath, inVersion)
-
-	var info *proxy.VersionInfo
-	if inModulePath == internal.UnknownModulePath {
-		inModulePath, info, err = ds.findModule(ctx, path, inVersion)
-		if err != nil {
-			return nil, err
-		}
-		inVersion = info.Version
-	}
-	m, err := ds.ds.getModule(ctx, inModulePath, inVersion)
-	if err != nil {
-		return nil, err
-	}
-	um := &internal.UnitMeta{
-		Path: path,
-		ModuleInfo: internal.ModuleInfo{
-			ModulePath:        inModulePath,
-			Version:           inVersion,
-			IsRedistributable: m.IsRedistributable,
-		},
-	}
-	for _, d := range m.Units {
-		if d.Path == path {
-			um.Name = d.Name
-			um.IsRedistributable = d.IsRedistributable
-			break
-		}
-	}
-	return um, nil
+func (ds *ProxyDataSource) GetUnitMeta(ctx context.Context, path, requestedModulePath, requestedVersion string) (_ *internal.UnitMeta, err error) {
+	return ds.ds.GetUnitMeta(ctx, path, requestedModulePath, requestedVersion)
 }
 
 // GetExperiments is unimplemented.

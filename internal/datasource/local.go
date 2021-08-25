@@ -6,11 +6,9 @@ package datasource
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
@@ -61,66 +59,14 @@ func getFullPath(modulePath string) string {
 	return ""
 }
 
+func (ds *LocalDataSource) GetUnitMeta(ctx context.Context, path, requestedModulePath, requestedVersion string) (_ *internal.UnitMeta, err error) {
+	return ds.ds.GetUnitMeta(ctx, path, requestedModulePath, requestedVersion)
+}
+
 // GetUnit returns information about a unit. Both the module path and package
 // path must be known.
 func (ds *LocalDataSource) GetUnit(ctx context.Context, pathInfo *internal.UnitMeta, fields internal.FieldSet, bc internal.BuildContext) (_ *internal.Unit, err error) {
-	defer derrors.Wrap(&err, "GetUnit(%q, %q)", pathInfo.Path, pathInfo.ModulePath)
-
-	module, err := ds.ds.getModule(ctx, pathInfo.ModulePath, pathInfo.Version)
-	if err != nil {
-		return nil, err
-	}
-	for _, unit := range module.Units {
-		if unit.Path == pathInfo.Path {
-			return unit, nil
-		}
-	}
-
-	return nil, fmt.Errorf("import path %s not found in module %s: %w", pathInfo.Path, pathInfo.ModulePath, derrors.NotFound)
-}
-
-// GetUnitMeta returns information about a path.
-func (ds *LocalDataSource) GetUnitMeta(ctx context.Context, path, requestedModulePath, requestedVersion string) (_ *internal.UnitMeta, err error) {
-	defer derrors.Wrap(&err, "GetUnitMeta(%q, %q, %q)", path, requestedModulePath, requestedVersion)
-
-	module, err := ds.findModule(ctx, path, requestedModulePath, requestedVersion)
-	if err != nil {
-		return nil, err
-	}
-	um := &internal.UnitMeta{
-		Path:       path,
-		ModuleInfo: module.ModuleInfo,
-	}
-
-	for _, u := range module.Units {
-		if u.Path == path {
-			um.Name = u.Name
-			um.IsRedistributable = u.IsRedistributable
-		}
-	}
-
-	return um, nil
-}
-
-// findModule finds the module with longest module path containing the given
-// package path. It returns an error if no module is found.
-func (ds *LocalDataSource) findModule(ctx context.Context, pkgPath, modulePath, version string) (_ *internal.Module, err error) {
-	defer derrors.Wrap(&err, "findModule(%q, %q, %q)", pkgPath, modulePath, version)
-
-	if modulePath != internal.UnknownModulePath {
-		return ds.ds.getModule(ctx, modulePath, version)
-	}
-	pkgPath = strings.TrimLeft(pkgPath, "/")
-	for _, modulePath := range internal.CandidateModulePaths(pkgPath) {
-		m, err := ds.ds.getModule(ctx, modulePath, version)
-		if err == nil {
-			return m, nil
-		}
-		if !errors.Is(err, derrors.NotFound) {
-			return nil, err
-		}
-	}
-	return nil, fmt.Errorf("could not find module for import path %s: %w", pkgPath, derrors.NotFound)
+	return ds.ds.GetUnit(ctx, pathInfo, fields, bc)
 }
 
 // GetLatestInfo is not implemented.

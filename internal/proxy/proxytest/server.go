@@ -167,7 +167,8 @@ func (s *Server) ZipRequests() int {
 	return s.zipRequests
 }
 
-const versionTime = "2019-01-30T00:00:00Z"
+// CommitTime is the time returned by all calls to the .info endpoint.
+var CommitTime = time.Date(2019, time.January, 30, 0, 0, 0, 0, time.UTC)
 
 func cleanModule(m *Module) *Module {
 	if m.Version == "" {
@@ -188,5 +189,6 @@ func cleanModule(m *Module) *Module {
 }
 
 func defaultInfo(resolvedVersion string) *strings.Reader {
-	return strings.NewReader(fmt.Sprintf("{\n\t\"Version\": %q,\n\t\"Time\": %q\n}", resolvedVersion, versionTime))
+	return strings.NewReader(fmt.Sprintf("{\n\t\"Version\": %q,\n\t\"Time\": %q\n}",
+		resolvedVersion, CommitTime.Format(time.RFC3339)))
 }

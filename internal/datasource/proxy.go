@@ -52,41 +52,6 @@ type ProxyDataSource struct {
 	ds *dataSource
 }
 
-// findModule finds the longest module path containing the given package path,
-// using the given finder func and iteratively testing parent directories of
-// the import path. It performs no testing as to whether the specified module
-// version that was found actually contains a package corresponding to pkgPath.
-func (ds *ProxyDataSource) findModule(ctx context.Context, pkgPath string, version string) (_ string, _ *proxy.VersionInfo, err error) {
-	defer derrors.Wrap(&err, "findModule(%q, ...)", pkgPath)
-	pkgPath = strings.TrimLeft(pkgPath, "/")
-	for _, modulePath := range internal.CandidateModulePaths(pkgPath) {
-		info, err := ds.ds.prox.Info(ctx, modulePath, version)
-		if errors.Is(err, derrors.NotFound) {
-			continue
-		}
-		if err != nil {
-			return "", nil, err
-		}
-		return modulePath, info, nil
-	}
-	return "", nil, fmt.Errorf("unable to find module: %w", derrors.NotFound)
-}
-
-// getUnit returns information about a unit.
-func (ds *ProxyDataSource) getUnit(ctx context.Context, fullPath, modulePath, version string, _ internal.BuildContext) (_ *internal.Unit, err error) {
-	var m *internal.Module
-	m, err = ds.ds.getModule(ctx, modulePath, version)
-	if err != nil {
-		return nil, err
-	}
-	for _, d := range m.Units {
-		if d.Path == fullPath {
-			return d, nil
-		}
-	}
-	return nil, fmt.Errorf("%q missing from module %s: %w", fullPath, m.ModulePath, derrors.NotFound)
-}
-
 // GetLatestInfo returns latest information for unitPath and modulePath.
 func (ds *ProxyDataSource) GetLatestInfo(ctx context.Context, unitPath, modulePath string, latestUnitMeta *internal.UnitMeta) (latest internal.LatestInfo, err error) {
 	defer derrors.Wrap(&err, "GetLatestInfo(ctx, %q, %q)", unitPath, modulePath)

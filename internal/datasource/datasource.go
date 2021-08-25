@@ -11,6 +11,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	lru "github.com/hashicorp/golang-lru"
@@ -134,4 +135,69 @@ func (ds *dataSource) fetch(ctx context.Context, modulePath, version string) (_ 
 		}
 	}
 	return nil, fmt.Errorf("%s@%s: %w", modulePath, version, derrors.NotFound)
+}
+
+// findModule finds the module with longest module path containing the given
+// package path. It returns an error if no module is found.
+func (ds *dataSource) findModule(ctx context.Context, pkgPath, modulePath, version string) (_ *internal.Module, err error) {
+	defer derrors.Wrap(&err, "findModule(%q, %q, %q)", pkgPath, modulePath, version)
+
+	if modulePath != internal.UnknownModulePath {
+		return ds.getModule(ctx, modulePath, version)
+	}
+	pkgPath = strings.TrimLeft(pkgPath, "/")
+	for _, modulePath := range internal.CandidateModulePaths(pkgPath) {
+		m, err := ds.getModule(ctx, modulePath, version)
+		if err == nil {
+			return m, nil
+		}
+		if !errors.Is(err, derrors.NotFound) {
+			return nil, err
+		}
+	}
+	return nil, fmt.Errorf("could not find module for import path %s: %w", pkgPath, derrors.NotFound)
+}
+
+// GetUnitMeta returns information about a path.
+func (ds *dataSource) GetUnitMeta(ctx context.Context, path, requestedModulePath, requestedVersion string) (_ *internal.UnitMeta, err error) {
+	defer derrors.Wrap(&err, "GetUnitMeta(%q, %q, %q)", path, requestedModulePath, requestedVersion)
+
+	module, err := ds.findModule(ctx, path, requestedModulePath, requestedVersion)
+	if err != nil {
+		return nil, err
+	}
+	um := &internal.UnitMeta{
+		Path:       path,
+		ModuleInfo: module.ModuleInfo,
+	}
+	if u := findUnit(module, path); u != nil {
+		um.Name = u.Name
+		um.IsRedistributable = u.IsRedistributable
+	}
+	return um, nil
+}
+
+// GetUnit returns information about a unit. Both the module path and package
+// path must be known.
+func (ds *dataSource) GetUnit(ctx context.Context, um *internal.UnitMeta, fields internal.FieldSet, bc internal.BuildContext) (_ *internal.Unit, err error) {
+	defer derrors.Wrap(&err, "GetUnit(%q, %q)", um.Path, um.ModulePath)
+
+	m, err := ds.getModule(ctx, um.ModulePath, um.Version)
+	if err != nil {
+		return nil, err
+	}
+	if u := findUnit(m, um.Path); u != nil {
+		return u, nil
+	}
+	return nil, fmt.Errorf("import path %s not found in module %s: %w", um.Path, um.ModulePath, derrors.NotFound)
+}
+
+// findUnit returns the unit with the given path in m, or nil if none.
+func findUnit(m *internal.Module, path string) *internal.Unit {
+	for _, u := range m.Units {
+		if u.Path == path {
+			return u
+		}
+	}
+	return nil
 }
