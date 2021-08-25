@@ -71,7 +71,7 @@ func (ds *LocalDataSource) GetUnit(ctx context.Context, pathInfo *internal.UnitM
 
 // GetLatestInfo is not implemented.
 func (ds *LocalDataSource) GetLatestInfo(ctx context.Context, unitPath, modulePath string, latestUnitMeta *internal.UnitMeta) (internal.LatestInfo, error) {
-	return internal.LatestInfo{}, nil
+	return ds.ds.GetLatestInfo(ctx, unitPath, modulePath, latestUnitMeta)
 }
 
 // GetNestedModules is not implemented.

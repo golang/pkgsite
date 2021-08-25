@@ -17,17 +17,6 @@ func (ds *ProxyDataSource) GetUnit(ctx context.Context, um *internal.UnitMeta, f
 	return ds.ds.GetUnit(ctx, um, field, bc)
 }
 
-// GetModuleInfo returns the ModuleInfo as fetched from the proxy for module
-// version specified by modulePath and version.
-func (ds *ProxyDataSource) GetModuleInfo(ctx context.Context, modulePath, version string) (_ *internal.ModuleInfo, err error) {
-	defer derrors.Wrap(&err, "GetModuleInfo(%q, %q)", modulePath, version)
-	m, err := ds.ds.getModule(ctx, modulePath, version)
-	if err != nil {
-		return nil, err
-	}
-	return &m.ModuleInfo, nil
-}
-
 func (ds *ProxyDataSource) GetUnitMeta(ctx context.Context, path, requestedModulePath, requestedVersion string) (_ *internal.UnitMeta, err error) {
 	return ds.ds.GetUnitMeta(ctx, path, requestedModulePath, requestedVersion)
 }

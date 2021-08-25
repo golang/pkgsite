@@ -66,63 +66,7 @@ var (
 			GOARCH:   "amd64",
 		}},
 	}
-	cmpOpts = append([]cmp.Option{
-		cmpopts.IgnoreFields(licenses.License{}, "Contents"),
-		cmpopts.IgnoreFields(internal.ModuleInfo{}, "SourceInfo"),
-	}, sample.LicenseCmpOpts...)
 )
-
-func TestGetModuleInfo(t *testing.T) {
-	ctx, ds, teardown := setup(t, false)
-	defer teardown()
-
-	modinfo := func(m, v string) *internal.ModuleInfo {
-		t.Helper()
-		mi, err := ds.GetModuleInfo(ctx, m, v)
-		if err != nil {
-			t.Fatal(err)
-		}
-		return mi
-	}
-
-	wantModuleInfo := internal.ModuleInfo{
-		ModulePath:        "example.com/basic",
-		Version:           "v1.1.0",
-		CommitTime:        time.Date(2019, 1, 30, 0, 0, 0, 0, time.UTC),
-		IsRedistributable: true,
-		HasGoMod:          true,
-	}
-	got := modinfo("example.com/basic", "v1.1.0")
-	if diff := cmp.Diff(&wantModuleInfo, got, cmpOpts...); diff != "" {
-		t.Errorf("GetModuleInfo diff (-want +got):\n%s", diff)
-	}
-
-	// Get v1.0.0 of a deprecated module. The deprecation comment is in
-	// the latest version, v1.1.0.
-	got = modinfo("example.com/deprecated", "v1.0.0")
-	if !got.Deprecated {
-		t.Fatal("got not deprecated, want deprecated")
-	}
-	if want := "use something else"; got.DeprecationComment != want {
-		t.Errorf("got %q, want %q", got.DeprecationComment, want)
-	}
-
-	// Get v1.0.0 of a module with retractions. It should not be marked
-	// retracted, even though its own go.mod says it should be, because
-	// the latest go.mod does not retract it.
-	if modinfo("example.com/retractions", "v1.0.0").Retracted {
-		t.Fatal("got retracted, wanted false")
-	}
-	// v1.1.0 of the module is retracted.
-	got = modinfo("example.com/retractions", "v1.1.0")
-	if !got.Retracted {
-		t.Fatal("got retracted false, wanted true")
-	}
-	if want := "worse"; got.RetractionRationale != want {
-		t.Errorf("got rationale %q, want %q", got.RetractionRationale, want)
-	}
-
-}
 
 func TestProxyGetUnitMeta(t *testing.T) {
 	ctx, ds, teardown := setup(t, false)
