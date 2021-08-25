@@ -17,6 +17,7 @@ import (
 	"golang.org/x/mod/semver"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/middleware"
+	"golang.org/x/pkgsite/internal/stdlib"
 )
 
 // serveDetails handles requests for package/directory/module details pages. It
@@ -32,15 +33,6 @@ func (s *Server) serveDetails(w http.ResponseWriter, r *http.Request, ds interna
 	if r.URL.Path == "/" {
 		s.staticPageHandler("homepage", "Home")(w, r)
 		return nil
-	}
-	if strings.HasPrefix(r.URL.Path, "/github.com/golang/go") {
-		urlPath := strings.TrimPrefix(strings.TrimPrefix(r.URL.Path, "/github.com/golang/go"), "/src")
-		if urlPath == "" {
-			http.Redirect(w, r, "/std", http.StatusMovedPermanently)
-			return
-		}
-		http.Redirect(w, r, urlPath, http.StatusMovedPermanently)
-		return
 	}
 	if strings.HasSuffix(r.URL.Path, "/") {
 		http.Redirect(w, r, strings.TrimSuffix(r.URL.Path, "/"), http.StatusMovedPermanently)
@@ -69,10 +61,28 @@ func (s *Server) serveDetails(w http.ResponseWriter, r *http.Request, ds interna
 	if !isSupportedVersion(urlInfo.fullPath, urlInfo.requestedVersion) {
 		return invalidVersionError(urlInfo.fullPath, urlInfo.requestedVersion)
 	}
+	if urlPath := stdlibRedirectURL(urlInfo.fullPath); urlPath != "" {
+		http.Redirect(w, r, urlPath, http.StatusMovedPermanently)
+		return
+	}
 	if err := checkExcluded(ctx, ds, urlInfo.fullPath); err != nil {
 		return err
 	}
 	return s.serveUnitPage(ctx, w, r, ds, urlInfo)
+}
+
+func stdlibRedirectURL(fullPath string) string {
+	if !strings.HasPrefix(fullPath, stdlib.GitHubRepo) {
+		return ""
+	}
+	if fullPath == stdlib.GitHubRepo || fullPath == stdlib.GitHubRepo+"/src" {
+		return "/std"
+	}
+	urlPath2 := strings.TrimPrefix(strings.TrimPrefix(fullPath, stdlib.GitHubRepo+"/"), "src/")
+	if fullPath == urlPath2 {
+		return ""
+	}
+	return "/" + urlPath2
 }
 
 func invalidVersionError(fullPath, requestedVersion string) error {

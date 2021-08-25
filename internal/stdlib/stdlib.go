@@ -184,6 +184,8 @@ func finalDigitsIndex(s string) int {
 const (
 	GoRepoURL       = "https://go.googlesource.com/go"
 	GoSourceRepoURL = "https://cs.opensource.google/go/go"
+
+	GitHubRepo = "github.com/golang/go"
 )
 
 // UseTestData determines whether to really clone the Go repo, or use
