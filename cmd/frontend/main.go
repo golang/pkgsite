@@ -20,6 +20,7 @@ import (
 	"golang.org/x/pkgsite/internal/config"
 	"golang.org/x/pkgsite/internal/datasource"
 	"golang.org/x/pkgsite/internal/dcensus"
+	"golang.org/x/pkgsite/internal/fetch"
 	"golang.org/x/pkgsite/internal/frontend"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/middleware"
@@ -76,13 +77,13 @@ func main() {
 	}
 
 	if *directProxy {
-		var pds *datasource.ProxyDataSource
-		if *bypassLicenseCheck {
-			pds = datasource.NewBypassingLicenseCheck(proxyClient)
-		} else {
-			pds = datasource.NewProxy(proxyClient)
-		}
-		dsg = func(context.Context) internal.DataSource { return pds }
+		ds := datasource.Options{
+			Getters:              []fetch.ModuleGetter{fetch.NewProxyModuleGetter(proxyClient)},
+			ProxyClientForLatest: proxyClient,
+			BypassLicenseCheck:   *bypassLicenseCheck,
+			SourceClient:         source.NewClient(1 * time.Minute),
+		}.New()
+		dsg = func(context.Context) internal.DataSource { return ds }
 	} else {
 		db, err := cmdconfig.OpenDB(ctx, cfg, *bypassLicenseCheck)
 		if err != nil {

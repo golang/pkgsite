@@ -68,7 +68,11 @@ func main() {
 
 func newServer(ctx context.Context, paths []string, gopathMode bool) (*frontend.Server, error) {
 	getters := buildGetters(ctx, paths, gopathMode)
-	lds := datasource.NewLocal(getters, source.NewClient(time.Second))
+	lds := datasource.Options{
+		Getters:            getters,
+		SourceClient:       source.NewClient(time.Second),
+		BypassLicenseCheck: true,
+	}.New()
 	server, err := frontend.NewServer(frontend.ServerConfig{
 		DataSourceGetter: func(context.Context) internal.DataSource { return lds },
 		StaticPath:       template.TrustedSourceFromFlag(flag.Lookup("static").Value),

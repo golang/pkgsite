@@ -26,29 +26,38 @@ import (
 	"golang.org/x/pkgsite/internal/version"
 )
 
-// dataSource implements the internal.DataSource interface, by trying a list of
+// DataSource implements the internal.DataSource interface, by trying a list of
 // fetch.ModuleGetters to fetch modules and caching the results.
-type dataSource struct {
-	getters            []fetch.ModuleGetter
-	sourceClient       *source.Client
-	bypassLicenseCheck bool
-	cache              *lru.Cache
-	prox               *proxy.Client // used for latest-version info only
-
+type DataSource struct {
+	opts  Options
+	cache *lru.Cache
 }
 
-func newDataSource(getters []fetch.ModuleGetter, sc *source.Client, bypassLicenseCheck bool, prox *proxy.Client) *dataSource {
+// Options are parameters for creating a new DataSource.
+type Options struct {
+	// List of getters to try, in order.
+	Getters []fetch.ModuleGetter
+	// If set, this will be used for latest-version information. To fetch modules from the proxy,
+	// include a ProxyModuleGetter in Getters.
+	ProxyClientForLatest *proxy.Client
+	SourceClient         *source.Client
+	BypassLicenseCheck   bool
+}
+
+// New creates a new DataSource from the options.
+func (o Options) New() *DataSource {
 	cache, err := lru.New(maxCachedModules)
 	if err != nil {
-		// Can only happen if size is bad.
+		// Can only happen if size is bad, and we control it.
 		panic(err)
 	}
-	return &dataSource{
-		getters:            getters,
-		sourceClient:       sc,
-		bypassLicenseCheck: bypassLicenseCheck,
-		cache:              cache,
-		prox:               prox,
+	opts := o
+	// Copy getters slice so caller doesn't modify us.
+	opts.Getters = make([]fetch.ModuleGetter, len(opts.Getters))
+	copy(opts.Getters, o.Getters)
+	return &DataSource{
+		opts:  opts,
+		cache: cache,
 	}
 }
 
@@ -61,7 +70,7 @@ type cacheEntry struct {
 const maxCachedModules = 100
 
 // cacheGet returns information from the cache if it is present, and (nil, nil) otherwise.
-func (ds *dataSource) cacheGet(path, version string) (*internal.Module, error) {
+func (ds *DataSource) cacheGet(path, version string) (*internal.Module, error) {
 	// Look for an exact match first, then use LocalVersion, as for a
 	// directory-based or GOPATH-mode module.
 	for _, v := range []string{version, fetch.LocalVersion} {
@@ -74,13 +83,13 @@ func (ds *dataSource) cacheGet(path, version string) (*internal.Module, error) {
 }
 
 // cachePut puts information into the cache.
-func (ds *dataSource) cachePut(path, version string, m *internal.Module, err error) {
+func (ds *DataSource) cachePut(path, version string, m *internal.Module, err error) {
 	ds.cache.Add(internal.Modver{Path: path, Version: version}, cacheEntry{m, err})
 }
 
 // getModule gets the module at the given path and version. It first checks the
 // cache, and if it isn't there it then tries to fetch it.
-func (ds *dataSource) getModule(ctx context.Context, modulePath, version string) (_ *internal.Module, err error) {
+func (ds *DataSource) getModule(ctx context.Context, modulePath, version string) (_ *internal.Module, err error) {
 	defer derrors.Wrap(&err, "getModule(%q, %q)", modulePath, version)
 
 	mod, err := ds.cacheGet(modulePath, version)
@@ -92,10 +101,10 @@ func (ds *dataSource) getModule(ctx context.Context, modulePath, version string)
 	// module. At worst some work will be duplicated, but if that turns out to
 	// be a problem we could use golang.org/x/sync/singleflight.
 	m, err := ds.fetch(ctx, modulePath, version)
-	if m != nil && ds.prox != nil {
+	if m != nil && ds.opts.ProxyClientForLatest != nil {
 		// Use the go.mod file at the raw latest version to fill in deprecation
 		// and retraction information.
-		lmv, err2 := fetch.LatestModuleVersions(ctx, modulePath, ds.prox, nil)
+		lmv, err2 := fetch.LatestModuleVersions(ctx, modulePath, ds.opts.ProxyClientForLatest, nil)
 		if err2 != nil {
 			err = err2
 		} else {
@@ -112,18 +121,18 @@ func (ds *dataSource) getModule(ctx context.Context, modulePath, version string)
 
 // fetch fetches a module using the configured ModuleGetters.
 // It tries each getter in turn until it finds one that has the module.
-func (ds *dataSource) fetch(ctx context.Context, modulePath, version string) (_ *internal.Module, err error) {
+func (ds *DataSource) fetch(ctx context.Context, modulePath, version string) (_ *internal.Module, err error) {
 	log.Infof(ctx, "DataSource: fetching %s@%s", modulePath, version)
 	start := time.Now()
 	defer func() {
 		log.Infof(ctx, "DataSource: fetched %s@%s in %s with error %v", modulePath, version, time.Since(start), err)
 	}()
-	for _, g := range ds.getters {
-		fr := fetch.FetchModule(ctx, modulePath, version, g, ds.sourceClient)
+	for _, g := range ds.opts.Getters {
+		fr := fetch.FetchModule(ctx, modulePath, version, g, ds.opts.SourceClient)
 		defer fr.Defer()
 		if fr.Error == nil {
 			m := fr.Module
-			if ds.bypassLicenseCheck {
+			if ds.opts.BypassLicenseCheck {
 				m.IsRedistributable = true
 				for _, unit := range m.Units {
 					unit.IsRedistributable = true
@@ -142,7 +151,7 @@ func (ds *dataSource) fetch(ctx context.Context, modulePath, version string) (_ 
 
 // findModule finds the module with longest module path containing the given
 // package path. It returns an error if no module is found.
-func (ds *dataSource) findModule(ctx context.Context, pkgPath, modulePath, version string) (_ *internal.Module, err error) {
+func (ds *DataSource) findModule(ctx context.Context, pkgPath, modulePath, version string) (_ *internal.Module, err error) {
 	defer derrors.Wrap(&err, "findModule(%q, %q, %q)", pkgPath, modulePath, version)
 
 	if modulePath != internal.UnknownModulePath {
@@ -162,7 +171,7 @@ func (ds *dataSource) findModule(ctx context.Context, pkgPath, modulePath, versi
 }
 
 // GetUnitMeta returns information about a path.
-func (ds *dataSource) GetUnitMeta(ctx context.Context, path, requestedModulePath, requestedVersion string) (_ *internal.UnitMeta, err error) {
+func (ds *DataSource) GetUnitMeta(ctx context.Context, path, requestedModulePath, requestedVersion string) (_ *internal.UnitMeta, err error) {
 	defer derrors.Wrap(&err, "GetUnitMeta(%q, %q, %q)", path, requestedModulePath, requestedVersion)
 
 	module, err := ds.findModule(ctx, path, requestedModulePath, requestedVersion)
@@ -182,7 +191,7 @@ func (ds *dataSource) GetUnitMeta(ctx context.Context, path, requestedModulePath
 
 // GetUnit returns information about a unit. Both the module path and package
 // path must be known.
-func (ds *dataSource) GetUnit(ctx context.Context, um *internal.UnitMeta, fields internal.FieldSet, bc internal.BuildContext) (_ *internal.Unit, err error) {
+func (ds *DataSource) GetUnit(ctx context.Context, um *internal.UnitMeta, fields internal.FieldSet, bc internal.BuildContext) (_ *internal.Unit, err error) {
 	defer derrors.Wrap(&err, "GetUnit(%q, %q)", um.Path, um.ModulePath)
 
 	m, err := ds.getModule(ctx, um.ModulePath, um.Version)
@@ -206,10 +215,10 @@ func findUnit(m *internal.Module, path string) *internal.Unit {
 }
 
 // GetLatestInfo returns latest information for unitPath and modulePath.
-func (ds *dataSource) GetLatestInfo(ctx context.Context, unitPath, modulePath string, latestUnitMeta *internal.UnitMeta) (latest internal.LatestInfo, err error) {
+func (ds *DataSource) GetLatestInfo(ctx context.Context, unitPath, modulePath string, latestUnitMeta *internal.UnitMeta) (latest internal.LatestInfo, err error) {
 	defer derrors.Wrap(&err, "GetLatestInfo(ctx, %q, %q)", unitPath, modulePath)
 
-	if ds.prox == nil {
+	if ds.opts.ProxyClientForLatest == nil {
 		return internal.LatestInfo{}, nil
 	}
 
@@ -235,10 +244,10 @@ func (ds *dataSource) GetLatestInfo(ctx context.Context, unitPath, modulePath st
 // of the latest version found in the proxy by iterating through vN versions.
 // This function does not attempt to find whether the full path exists
 // in the new major version.
-func (ds *dataSource) getLatestMajorVersion(ctx context.Context, fullPath, modulePath string) (_ string, _ string, err error) {
+func (ds *DataSource) getLatestMajorVersion(ctx context.Context, fullPath, modulePath string) (_ string, _ string, err error) {
 	// We are checking if the full path is valid so that we can forward the error if not.
 	seriesPath := internal.SeriesPathForModule(modulePath)
-	info, err := ds.prox.Info(ctx, seriesPath, version.Latest)
+	info, err := ds.opts.ProxyClientForLatest.Info(ctx, seriesPath, version.Latest)
 	if err != nil {
 		return "", "", err
 	}
@@ -262,7 +271,7 @@ func (ds *dataSource) getLatestMajorVersion(ctx context.Context, fullPath, modul
 	for v := startVersion; ; v++ {
 		query := fmt.Sprintf("%s/v%d", seriesPath, v)
 
-		_, err := ds.prox.Info(ctx, query, version.Latest)
+		_, err := ds.opts.ProxyClientForLatest.Info(ctx, query, version.Latest)
 		if errors.Is(err, derrors.NotFound) {
 			if v == 2 {
 				return modulePath, fullPath, nil
@@ -274,4 +283,14 @@ func (ds *dataSource) getLatestMajorVersion(ctx context.Context, fullPath, modul
 			return "", "", err
 		}
 	}
+}
+
+// GetNestedModules is not implemented.
+func (ds *DataSource) GetNestedModules(ctx context.Context, modulePath string) ([]*internal.ModuleInfo, error) {
+	return nil, nil
+}
+
+// GetModuleReadme is not implemented.
+func (*DataSource) GetModuleReadme(ctx context.Context, modulePath, resolvedVersion string) (*internal.Readme, error) {
+	return nil, nil
 }
