@@ -85,7 +85,7 @@ if (readme && readmeContent && readmeOutline && readmeExpand.length && readmeCol
  */
 function openDeprecatedSymbol() {
   if (!location.hash) return;
-  const heading = document.querySelector(location.hash);
+  const heading = document.getElementById(location.hash.slice(1));
   const grandParent = heading?.parentElement?.parentElement as HTMLDetailsElement | null;
   if (grandParent?.nodeName === 'DETAILS') {
     grandParent.open = true;
