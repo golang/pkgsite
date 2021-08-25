@@ -34,13 +34,14 @@ func (db *DB) DeleteModule(ctx context.Context, modulePath, resolvedVersion stri
 		if err != sql.ErrNoRows || err == nil {
 			return err
 		}
-		// No versions of this module exist; remove it from paths and
-		// imports_unique.
-		//
-		// Deleting from paths will also cascade a DELETE to
-		// latest_module_versions. Other tables should already have removed any
-		// rows referencing the paths table.
-		if _, err = tx.Exec(ctx, `DELETE FROM paths WHERE path = $1`, modulePath); err != nil {
+		// No versions of this module exist.
+		// We can't remove it from paths, because the module path may be a package or directory
+		// path for a different module.
+		// But we can remove it from latest_module_versions and imports_unique.
+		if _, err = tx.Exec(ctx, `
+			DELETE FROM latest_module_versions
+			WHERE module_path_id = (SELECT id FROM paths WHERE path = $1)
+		`, modulePath); err != nil {
 			return err
 		}
 		return deleteModuleFromImportsUnique(ctx, tx, modulePath)
