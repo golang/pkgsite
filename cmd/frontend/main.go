@@ -18,9 +18,9 @@ import (
 	"golang.org/x/pkgsite/cmd/internal/cmdconfig"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/config"
-	"golang.org/x/pkgsite/internal/datasource"
 	"golang.org/x/pkgsite/internal/dcensus"
 	"golang.org/x/pkgsite/internal/fetch"
+	"golang.org/x/pkgsite/internal/fetchdatasource"
 	"golang.org/x/pkgsite/internal/frontend"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/middleware"
@@ -77,7 +77,7 @@ func main() {
 	}
 
 	if *directProxy {
-		ds := datasource.Options{
+		ds := fetchdatasource.Options{
 			Getters:              []fetch.ModuleGetter{fetch.NewProxyModuleGetter(proxyClient)},
 			ProxyClientForLatest: proxyClient,
 			BypassLicenseCheck:   *bypassLicenseCheck,

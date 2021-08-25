@@ -29,9 +29,9 @@ import (
 
 	"github.com/google/safehtml/template"
 	"golang.org/x/pkgsite/internal"
-	"golang.org/x/pkgsite/internal/datasource"
 	"golang.org/x/pkgsite/internal/dcensus"
 	"golang.org/x/pkgsite/internal/fetch"
+	"golang.org/x/pkgsite/internal/fetchdatasource"
 	"golang.org/x/pkgsite/internal/frontend"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/middleware"
@@ -68,7 +68,7 @@ func main() {
 
 func newServer(ctx context.Context, paths []string, gopathMode bool) (*frontend.Server, error) {
 	getters := buildGetters(ctx, paths, gopathMode)
-	lds := datasource.Options{
+	lds := fetchdatasource.Options{
 		Getters:            getters,
 		SourceClient:       source.NewClient(time.Second),
 		BypassLicenseCheck: true,
@@ -92,7 +92,7 @@ func buildGetters(ctx context.Context, paths []string, gopathMode bool) []fetch.
 			err error
 		)
 		if gopathMode {
-			mg, err = datasource.NewGOPATHModuleGetter(path)
+			mg, err = fetchdatasource.NewGOPATHModuleGetter(path)
 		} else {
 			mg, err = fetch.NewDirectoryModuleGetter("", path)
 		}

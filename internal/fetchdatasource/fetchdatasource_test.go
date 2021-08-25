@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-package datasource
+package fetchdatasource
 
 import (
 	"context"
@@ -113,7 +113,7 @@ func buildLocalGetters() ([]fetch.ModuleGetter, func()) {
 	}
 }
 
-func setup(t *testing.T, testModules []*proxytest.Module, bypassLicenseCheck bool) (context.Context, *DataSource, func()) {
+func setup(t *testing.T, testModules []*proxytest.Module, bypassLicenseCheck bool) (context.Context, *FetchDataSource, func()) {
 	t.Helper()
 	ctx, cancel := context.WithTimeout(context.Background(), 40*time.Second)
 
