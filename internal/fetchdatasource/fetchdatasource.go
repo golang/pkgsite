@@ -103,16 +103,15 @@ func (ds *FetchDataSource) getModule(ctx context.Context, modulePath, version st
 	m, err := ds.fetch(ctx, modulePath, version)
 	if m != nil && ds.opts.ProxyClientForLatest != nil {
 		// Use the go.mod file at the raw latest version to fill in deprecation
-		// and retraction information.
-		lmv, err2 := fetch.LatestModuleVersions(ctx, modulePath, ds.opts.ProxyClientForLatest, nil)
-		if err2 != nil {
-			err = err2
-		} else {
+		// and retraction information. Ignore any problems getting the
+		// information, because we may be trying to do this for a local module
+		// that the proxy doesn't know about.
+		if lmv, err := fetch.LatestModuleVersions(ctx, modulePath, ds.opts.ProxyClientForLatest, nil); err == nil {
 			lmv.PopulateModuleInfo(&m.ModuleInfo)
 		}
 	}
 
-	// Don't cache cancellations.
+	// Cache both successes and failures, but not cancellations.
 	if !errors.Is(err, context.Canceled) {
 		ds.cachePut(modulePath, version, m, err)
 	}

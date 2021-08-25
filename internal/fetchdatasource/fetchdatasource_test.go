@@ -338,7 +338,7 @@ func TestGetLatestInfo(t *testing.T) {
 }
 
 func TestLocalGetUnitMeta(t *testing.T) {
-	ctx, ds, teardown := setup(t, nil, true)
+	ctx, ds, teardown := setup(t, defaultTestModules, true)
 	defer teardown()
 
 	sourceInfo := source.NewGitHubInfo("https://github.com/my/module", "", "v0.0.0")
