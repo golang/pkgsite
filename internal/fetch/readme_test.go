@@ -80,6 +80,14 @@ func TestExtractReadmes(t *testing.T) {
 			version:    "v1.0.0",
 			files:      map[string]string{},
 		},
+		{
+			name:       "readme is a directory",
+			modulePath: "github.com/my/module",
+			version:    "v1.0.0",
+			files: map[string]string{
+				"foo/README/bar": "README",
+			},
+		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			var (

@@ -28,7 +28,7 @@ func extractReadmes(modulePath, resolvedVersion string, contentDir fs.FS) (_ []*
 		if err != nil {
 			return err
 		}
-		if isReadme(pathname) {
+		if !d.IsDir() && isReadme(pathname) {
 			info, err := d.Info()
 			if err != nil {
 				return err
