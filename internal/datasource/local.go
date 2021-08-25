@@ -30,26 +30,8 @@ type LocalDataSource struct {
 func NewLocal(getters []fetch.ModuleGetter, sc *source.Client) *LocalDataSource {
 	return &LocalDataSource{
 		sourceClient: sc,
-		ds:           newDataSource(getters, sc, true),
+		ds:           newDataSource(getters, sc, true, nil),
 	}
-}
-
-// getModule gets the module at the given path and version. It first checks the
-// cache, and if it isn't there it then tries to fetch it.
-func (ds *LocalDataSource) getModule(ctx context.Context, path, version string) (*internal.Module, error) {
-	m, err := ds.ds.cacheGet(path, version)
-	if m != nil || err != nil {
-		return m, err
-	}
-	m, err = ds.fetch(ctx, path, version)
-	ds.ds.cachePut(path, version, m, err)
-	return m, err
-}
-
-// fetch fetches a module using the configured ModuleGetters.
-// It tries each getter in turn until it finds one that has the module.
-func (ds *LocalDataSource) fetch(ctx context.Context, modulePath, version string) (_ *internal.Module, err error) {
-	return ds.ds.fetch(ctx, modulePath, version)
 }
 
 // NewGOPATHModuleGetter returns a module getter that uses the GOPATH
@@ -84,7 +66,7 @@ func getFullPath(modulePath string) string {
 func (ds *LocalDataSource) GetUnit(ctx context.Context, pathInfo *internal.UnitMeta, fields internal.FieldSet, bc internal.BuildContext) (_ *internal.Unit, err error) {
 	defer derrors.Wrap(&err, "GetUnit(%q, %q)", pathInfo.Path, pathInfo.ModulePath)
 
-	module, err := ds.getModule(ctx, pathInfo.ModulePath, pathInfo.Version)
+	module, err := ds.ds.getModule(ctx, pathInfo.ModulePath, pathInfo.Version)
 	if err != nil {
 		return nil, err
 	}
@@ -126,11 +108,11 @@ func (ds *LocalDataSource) findModule(ctx context.Context, pkgPath, modulePath, 
 	defer derrors.Wrap(&err, "findModule(%q, %q, %q)", pkgPath, modulePath, version)
 
 	if modulePath != internal.UnknownModulePath {
-		return ds.getModule(ctx, modulePath, version)
+		return ds.ds.getModule(ctx, modulePath, version)
 	}
 	pkgPath = strings.TrimLeft(pkgPath, "/")
 	for _, modulePath := range internal.CandidateModulePaths(pkgPath) {
-		m, err := ds.getModule(ctx, modulePath, version)
+		m, err := ds.ds.getModule(ctx, modulePath, version)
 		if err == nil {
 			return m, nil
 		}

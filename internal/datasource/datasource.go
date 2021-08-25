@@ -18,6 +18,7 @@ import (
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/fetch"
 	"golang.org/x/pkgsite/internal/log"
+	"golang.org/x/pkgsite/internal/proxy"
 	"golang.org/x/pkgsite/internal/source"
 )
 
@@ -28,9 +29,11 @@ type dataSource struct {
 	sourceClient       *source.Client
 	bypassLicenseCheck bool
 	cache              *lru.Cache
+	prox               *proxy.Client // used for latest-version info only
+
 }
 
-func newDataSource(getters []fetch.ModuleGetter, sc *source.Client, bypassLicenseCheck bool) *dataSource {
+func newDataSource(getters []fetch.ModuleGetter, sc *source.Client, bypassLicenseCheck bool, prox *proxy.Client) *dataSource {
 	cache, err := lru.New(maxCachedModules)
 	if err != nil {
 		// Can only happen if size is bad.
@@ -41,6 +44,7 @@ func newDataSource(getters []fetch.ModuleGetter, sc *source.Client, bypassLicens
 		sourceClient:       sc,
 		bypassLicenseCheck: bypassLicenseCheck,
 		cache:              cache,
+		prox:               prox,
 	}
 }
 
@@ -68,6 +72,38 @@ func (ds *dataSource) cacheGet(path, version string) (*internal.Module, error) {
 // cachePut puts information into the cache.
 func (ds *dataSource) cachePut(path, version string, m *internal.Module, err error) {
 	ds.cache.Add(internal.Modver{Path: path, Version: version}, cacheEntry{m, err})
+}
+
+// getModule gets the module at the given path and version. It first checks the
+// cache, and if it isn't there it then tries to fetch it.
+func (ds *dataSource) getModule(ctx context.Context, modulePath, version string) (_ *internal.Module, err error) {
+	defer derrors.Wrap(&err, "getModule(%q, %q)", modulePath, version)
+
+	mod, err := ds.cacheGet(modulePath, version)
+	if mod != nil || err != nil {
+		return mod, err
+	}
+
+	// There can be a benign race here, where two goroutines both fetch the same
+	// module. At worst some work will be duplicated, but if that turns out to
+	// be a problem we could use golang.org/x/sync/singleflight.
+	m, err := ds.fetch(ctx, modulePath, version)
+	if m != nil && ds.prox != nil {
+		// Use the go.mod file at the raw latest version to fill in deprecation
+		// and retraction information.
+		lmv, err2 := fetch.LatestModuleVersions(ctx, modulePath, ds.prox, nil)
+		if err2 != nil {
+			err = err2
+		} else {
+			lmv.PopulateModuleInfo(&m.ModuleInfo)
+		}
+	}
+
+	// Don't cache cancellations.
+	if !errors.Is(err, context.Canceled) {
+		ds.cachePut(modulePath, version, m, err)
+	}
+	return m, err
 }
 
 // fetch fetches a module using the configured ModuleGetters.

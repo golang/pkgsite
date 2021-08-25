@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	"golang.org/x/mod/semver"
@@ -34,10 +33,9 @@ func NewForTesting(proxyClient *proxy.Client, bypassLicenseCheck bool) *ProxyDat
 }
 
 func newProxyDataSource(proxyClient *proxy.Client, sourceClient *source.Client, bypassLicenseCheck bool) *ProxyDataSource {
-	ds := newDataSource([]fetch.ModuleGetter{fetch.NewProxyModuleGetter(proxyClient)}, sourceClient, bypassLicenseCheck)
+	ds := newDataSource([]fetch.ModuleGetter{fetch.NewProxyModuleGetter(proxyClient)}, sourceClient, bypassLicenseCheck, proxyClient)
 	return &ProxyDataSource{
-		ds:          ds,
-		proxyClient: proxyClient,
+		ds: ds,
 	}
 }
 
@@ -51,45 +49,7 @@ func NewBypassingLicenseCheck(c *proxy.Client) *ProxyDataSource {
 // ProxyDataSource implements the frontend.DataSource interface, by querying a
 // module proxy directly and caching the results in memory.
 type ProxyDataSource struct {
-	proxyClient *proxy.Client
-
-	mu sync.Mutex
 	ds *dataSource
-}
-
-// getModule retrieves a version from the cache, or failing that queries and
-// processes the version from the proxy.
-func (ds *ProxyDataSource) getModule(ctx context.Context, modulePath, version string, _ internal.BuildContext) (_ *internal.Module, err error) {
-	defer derrors.Wrap(&err, "getModule(%q, %q)", modulePath, version)
-
-	ds.mu.Lock()
-	defer ds.mu.Unlock()
-
-	mod, err := ds.ds.cacheGet(modulePath, version)
-	if mod != nil || err != nil {
-		return mod, err
-	}
-
-	m, err := ds.ds.fetch(ctx, modulePath, version)
-	if m != nil {
-		// Use the go.mod file at the raw latest version to fill in deprecation
-		// and retraction information.
-		lmv, err2 := fetch.LatestModuleVersions(ctx, modulePath, ds.proxyClient, nil)
-		if err2 != nil {
-			err = err2
-		} else {
-			lmv.PopulateModuleInfo(&m.ModuleInfo)
-		}
-	}
-
-	if err != nil {
-		if !errors.Is(ctx.Err(), context.Canceled) {
-			ds.ds.cachePut(modulePath, version, m, err)
-		}
-		return nil, err
-	}
-	ds.ds.cachePut(modulePath, version, m, err)
-	return m, nil
 }
 
 // findModule finds the longest module path containing the given package path,
@@ -100,7 +60,7 @@ func (ds *ProxyDataSource) findModule(ctx context.Context, pkgPath string, versi
 	defer derrors.Wrap(&err, "findModule(%q, ...)", pkgPath)
 	pkgPath = strings.TrimLeft(pkgPath, "/")
 	for _, modulePath := range internal.CandidateModulePaths(pkgPath) {
-		info, err := ds.proxyClient.Info(ctx, modulePath, version)
+		info, err := ds.ds.prox.Info(ctx, modulePath, version)
 		if errors.Is(err, derrors.NotFound) {
 			continue
 		}
@@ -113,9 +73,9 @@ func (ds *ProxyDataSource) findModule(ctx context.Context, pkgPath string, versi
 }
 
 // getUnit returns information about a unit.
-func (ds *ProxyDataSource) getUnit(ctx context.Context, fullPath, modulePath, version string, bc internal.BuildContext) (_ *internal.Unit, err error) {
+func (ds *ProxyDataSource) getUnit(ctx context.Context, fullPath, modulePath, version string, _ internal.BuildContext) (_ *internal.Unit, err error) {
 	var m *internal.Module
-	m, err = ds.getModule(ctx, modulePath, version, bc)
+	m, err = ds.ds.getModule(ctx, modulePath, version)
 	if err != nil {
 		return nil, err
 	}
@@ -156,7 +116,7 @@ func (ds *ProxyDataSource) GetLatestInfo(ctx context.Context, unitPath, modulePa
 func (ds *ProxyDataSource) getLatestMajorVersion(ctx context.Context, fullPath, modulePath string) (_ string, _ string, err error) {
 	// We are checking if the full path is valid so that we can forward the error if not.
 	seriesPath := internal.SeriesPathForModule(modulePath)
-	info, err := ds.proxyClient.Info(ctx, seriesPath, version.Latest)
+	info, err := ds.ds.prox.Info(ctx, seriesPath, version.Latest)
 	if err != nil {
 		return "", "", err
 	}
@@ -180,7 +140,7 @@ func (ds *ProxyDataSource) getLatestMajorVersion(ctx context.Context, fullPath, 
 	for v := startVersion; ; v++ {
 		query := fmt.Sprintf("%s/v%d", seriesPath, v)
 
-		_, err := ds.proxyClient.Info(ctx, query, version.Latest)
+		_, err := ds.ds.prox.Info(ctx, query, version.Latest)
 		if errors.Is(err, derrors.NotFound) {
 			if v == 2 {
 				return modulePath, fullPath, nil

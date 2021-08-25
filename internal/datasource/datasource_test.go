@@ -13,7 +13,7 @@ import (
 )
 
 func TestCache(t *testing.T) {
-	ds := newDataSource(nil, nil, false)
+	ds := newDataSource(nil, nil, false, nil)
 	m1 := &internal.Module{}
 	ds.cachePut("m1", fetch.LocalVersion, m1, nil)
 	ds.cachePut("m2", "v1.0.0", nil, derrors.NotFound)
