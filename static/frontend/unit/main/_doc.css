@@ -35,6 +35,9 @@
   height: 7.8125rem;
   width: auto;
 }
+.UnitDoc-emptySection p {
+  margin: 1rem auto;
+}
 .UnitDoc .Documentation h4 {
   margin-top: 1.5rem;
 }
