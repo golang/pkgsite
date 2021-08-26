@@ -199,10 +199,20 @@ func (ds *FetchDataSource) GetUnit(ctx context.Context, um *internal.UnitMeta, f
 	if err != nil {
 		return nil, err
 	}
-	if u := findUnit(m, um.Path); u != nil {
-		return u, nil
+	u := findUnit(m, um.Path)
+	if u == nil {
+		return nil, fmt.Errorf("import path %s not found in module %s: %w", um.Path, um.ModulePath, derrors.NotFound)
 	}
-	return nil, fmt.Errorf("import path %s not found in module %s: %w", um.Path, um.ModulePath, derrors.NotFound)
+	// Return only the Documentation matching the given BuildContext, if any.
+	// Since we cache the module and its units, we have to copy this unit before we modify it.
+	// It can be a shallow copy, since we're only modifying the Unit.Documentation field.
+	u2 := *u
+	if d := matchingDoc(u.Documentation, bc); d != nil {
+		u2.Documentation = []*internal.Documentation{d}
+	} else {
+		u2.Documentation = nil
+	}
+	return &u2, nil
 }
 
 // findUnit returns the unit with the given path in m, or nil if none.
@@ -213,6 +223,23 @@ func findUnit(m *internal.Module, path string) *internal.Unit {
 		}
 	}
 	return nil
+}
+
+// matchingDoc returns the Documentation that matches the given build context
+// and comes earliest in build-context order. It returns nil if there is none.
+func matchingDoc(docs []*internal.Documentation, bc internal.BuildContext) *internal.Documentation {
+	var (
+		dMin  *internal.Documentation
+		bcMin = internal.BuildContext{GOOS: "unk", GOARCH: "unk"} // sorts last
+	)
+	for _, d := range docs {
+		dbc := d.BuildContext()
+		if bc.Match(dbc) && internal.CompareBuildContexts(dbc, bcMin) < 0 {
+			dMin = d
+			bcMin = dbc
+		}
+	}
+	return dMin
 }
 
 // GetLatestInfo returns latest information for unitPath and modulePath.

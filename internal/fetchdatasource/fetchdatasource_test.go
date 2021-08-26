@@ -449,7 +449,7 @@ func TestLocalGetUnitMeta(t *testing.T) {
 	}
 }
 
-func TestLocalGetUnit(t *testing.T) {
+func TestGetUnit(t *testing.T) {
 	// This is a simple test to verify that data is fetched correctly. The
 	// return value of FetchResult is tested in internal/fetch so no need
 	// to repeat it.
@@ -504,6 +504,45 @@ func TestLocalGetUnit(t *testing.T) {
 				if !cmp.Equal(got.BuildContexts, want) {
 					t.Errorf("got %v, want %v", got.BuildContexts, want)
 				}
+			}
+		})
+	}
+}
+
+func TestBuildConstraints(t *testing.T) {
+	// The Unit returned by GetUnit should have a single Documentation that
+	// matches the BuildContext argument.
+	ctx, ds, teardown := setup(t, defaultTestModules, true)
+	defer teardown()
+
+	um := &internal.UnitMeta{
+		Path: "example.com/build-constraints/cpu",
+		ModuleInfo: internal.ModuleInfo{
+			ModulePath: "example.com/build-constraints",
+			Version:    version.Latest,
+		},
+	}
+	for _, test := range []struct {
+		in, want internal.BuildContext
+	}{
+		{internal.BuildContext{}, internal.BuildContextLinux},
+		{internal.BuildContextLinux, internal.BuildContextLinux},
+		{internal.BuildContextDarwin, internal.BuildContextDarwin},
+		{internal.BuildContext{GOOS: "LiverPaté", GOARCH: "DeTriomphe"}, internal.BuildContext{}},
+	} {
+		t.Run(test.in.String(), func(t *testing.T) {
+			u, err := ds.GetUnit(ctx, um, internal.AllFields, test.in)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if test.want == (internal.BuildContext{}) {
+				if len(u.Documentation) != 0 {
+					t.Error("got docs, want none")
+				}
+			} else if n := len(u.Documentation); n != 1 {
+				t.Errorf("got %d docs, want 1", n)
+			} else if got := u.Documentation[0].BuildContext(); got != test.want {
+				t.Errorf("got %s, want %s", got, test.want)
 			}
 		})
 	}
