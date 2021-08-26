@@ -23,7 +23,9 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -47,15 +49,20 @@ var (
 )
 
 func main() {
+	flag.Usage = func() {
+		fmt.Fprintf(flag.CommandLine.Output(), "usage: %s [flags] [PATHS ...]\n", os.Args[0])
+		fmt.Fprintf(flag.CommandLine.Output(), "    where PATHS is a single path or a comma-separated list\n")
+		flag.PrintDefaults()
+	}
 	flag.Parse()
 	ctx := context.Background()
 
-	paths := flag.Arg(0)
-	if paths == "" {
-		paths = "."
+	paths := collectPaths(flag.Args())
+	if len(paths) == 0 {
+		paths = []string{"."}
 	}
 
-	server, err := newServer(ctx, strings.Split(paths, ","), *gopathMode)
+	server, err := newServer(ctx, paths, *gopathMode)
 	if err != nil {
 		log.Fatalf(ctx, "newServer: %v", err)
 	}
@@ -64,6 +71,14 @@ func main() {
 	mw := middleware.Timeout(54 * time.Second)
 	log.Infof(ctx, "Listening on addr %s", *httpAddr)
 	log.Fatal(ctx, http.ListenAndServe(*httpAddr, mw(router)))
+}
+
+func collectPaths(args []string) []string {
+	var paths []string
+	for _, arg := range args {
+		paths = append(paths, strings.Split(arg, ",")...)
+	}
+	return paths
 }
 
 func newServer(ctx context.Context, paths []string, gopathMode bool) (*frontend.Server, error) {

@@ -10,6 +10,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/google/go-cmp/cmp"
 )
 
 func Test(t *testing.T) {
@@ -25,5 +27,13 @@ func Test(t *testing.T) {
 	mux.ServeHTTP(w, httptest.NewRequest("GET", "/example.com/testmod", nil))
 	if w.Code != http.StatusOK {
 		t.Errorf("%q: got status code = %d, want %d", "/testmod", w.Code, http.StatusOK)
+	}
+}
+
+func TestCollectPaths(t *testing.T) {
+	got := collectPaths([]string{"a", "b,c2,d3", "e4", "f,g"})
+	want := []string{"a", "b", "c2", "d3", "e4", "f", "g"}
+	if !cmp.Equal(got, want) {
+		t.Errorf("got %v, want %v", got, want)
 	}
 }
