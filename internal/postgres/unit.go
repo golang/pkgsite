@@ -47,12 +47,12 @@ func (db *DB) GetUnitMeta(ctx context.Context, fullPath, requestedModulePath, re
 			return nil, err
 		}
 	}
-	return db.getUnitMetaWithKnownLatestVersion(ctx, fullPath, modulePath, v, lmv)
+	return db.getUnitMetaWithKnownVersion(ctx, fullPath, modulePath, v, lmv)
 }
 
-func (db *DB) getUnitMetaWithKnownLatestVersion(ctx context.Context, fullPath, modulePath, version string, lmv *internal.LatestModuleVersions) (_ *internal.UnitMeta, err error) {
-	defer derrors.WrapStack(&err, "getUnitMetaKnownVersion")
-	defer middleware.ElapsedStat(ctx, "getUnitMetaKnownVersion")()
+func (db *DB) getUnitMetaWithKnownVersion(ctx context.Context, fullPath, modulePath, version string, lmv *internal.LatestModuleVersions) (_ *internal.UnitMeta, err error) {
+	defer derrors.WrapStack(&err, "getUnitMetaWithKnownVersion")
+	defer middleware.ElapsedStat(ctx, "getUnitMetaWithKnownVersion")()
 
 	query := squirrel.Select(
 		"m.module_path",
