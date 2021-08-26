@@ -14,6 +14,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/proxy"
+	"golang.org/x/pkgsite/internal/version"
 )
 
 func TestDirectoryModuleGetterEmpty(t *testing.T) {
@@ -60,7 +61,7 @@ func TestFSProxyGetter(t *testing.T) {
 	ctx := context.Background()
 	const (
 		modulePath = "github.com/jackc/pgio"
-		version    = "v1.0.0"
+		vers       = "v1.0.0"
 		goMod      = "module github.com/jackc/pgio\n\ngo 1.12\n"
 	)
 	ts, err := time.Parse(time.RFC3339, "2019-03-30T17:04:38Z")
@@ -69,21 +70,30 @@ func TestFSProxyGetter(t *testing.T) {
 	}
 	g := NewFSProxyModuleGetter("testdata/modcache")
 	t.Run("info", func(t *testing.T) {
-		got, err := g.Info(ctx, modulePath, version)
+		got, err := g.Info(ctx, modulePath, vers)
 		if err != nil {
 			t.Fatal(err)
 		}
-		want := &proxy.VersionInfo{Version: version, Time: ts}
+		want := &proxy.VersionInfo{Version: vers, Time: ts}
 		if !cmp.Equal(got, want) {
 			t.Errorf("got %+v, want %+v", got, want)
 		}
 
-		if _, err := g.Info(ctx, "nozip.com", version); !errors.Is(err, derrors.NotFound) {
+		// Asking for latest should give the same version.
+		got, err = g.Info(ctx, modulePath, version.Latest)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !cmp.Equal(got, want) {
+			t.Errorf("got %+v, want %+v", got, want)
+		}
+
+		if _, err := g.Info(ctx, "nozip.com", vers); !errors.Is(err, derrors.NotFound) {
 			t.Errorf("got %v, want NotFound", err)
 		}
 	})
 	t.Run("mod", func(t *testing.T) {
-		got, err := g.Mod(ctx, modulePath, version)
+		got, err := g.Mod(ctx, modulePath, vers)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -92,12 +102,12 @@ func TestFSProxyGetter(t *testing.T) {
 			t.Errorf("got %q, want %q", got, want)
 		}
 
-		if _, err := g.Mod(ctx, "nozip.com", version); !errors.Is(err, derrors.NotFound) {
+		if _, err := g.Mod(ctx, "nozip.com", vers); !errors.Is(err, derrors.NotFound) {
 			t.Errorf("got %v, want NotFound", err)
 		}
 	})
 	t.Run("contentdir", func(t *testing.T) {
-		fsys, err := g.ContentDir(ctx, modulePath, version)
+		fsys, err := g.ContentDir(ctx, modulePath, vers)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -116,7 +126,7 @@ func TestFSProxyGetter(t *testing.T) {
 			t.Errorf("got %q, want %q", got, want)
 		}
 
-		if _, err := g.ContentDir(ctx, "nozip.com", version); !errors.Is(err, derrors.NotFound) {
+		if _, err := g.ContentDir(ctx, "nozip.com", vers); !errors.Is(err, derrors.NotFound) {
 			t.Errorf("got %v, want NotFound", err)
 		}
 	})

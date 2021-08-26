@@ -41,6 +41,7 @@ func Test(t *testing.T) {
 	}{
 		{"local", "example.com/testmod", "There is no documentation for this package."},
 		{"modcache", "modcache.com@v1.0.0", "var V = 1"},
+		{"modcache", "modcache.com", "var V = 1"},
 		{"proxy", "example.com/single/pkg", "G is new in v1.1.0"},
 	} {
 		t.Run(test.name, func(t *testing.T) {

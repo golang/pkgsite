@@ -17,12 +17,14 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"golang.org/x/mod/modfile"
 	"golang.org/x/mod/module"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/proxy"
+	"golang.org/x/pkgsite/internal/version"
 )
 
 // ModuleGetter gets module data.
@@ -170,16 +172,23 @@ func NewFSProxyModuleGetter(dir string) ModuleGetter {
 }
 
 // Info returns basic information about the module.
-func (g *fsProxyModuleGetter) Info(ctx context.Context, path, version string) (_ *proxy.VersionInfo, err error) {
-	defer derrors.Wrap(&err, "fsProxyModuleGetter.Info(%q, %q)", path, version)
+func (g *fsProxyModuleGetter) Info(ctx context.Context, path, vers string) (_ *proxy.VersionInfo, err error) {
+	defer derrors.Wrap(&err, "fsProxyModuleGetter.Info(%q, %q)", path, vers)
+
+	if vers == version.Latest {
+		vers, err = g.latestVersion(path)
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	// Check for a .zip file. Some directories in the download cache have .info and .mod files but no .zip.
-	f, err := g.openFile(path, version, "zip")
+	f, err := g.openFile(path, vers, "zip")
 	if err != nil {
 		return nil, err
 	}
 	f.Close()
-	data, err := g.readFile(path, version, "info")
+	data, err := g.readFile(path, vers, "info")
 	if err != nil {
 		return nil, err
 	}
@@ -191,23 +200,36 @@ func (g *fsProxyModuleGetter) Info(ctx context.Context, path, version string) (_
 }
 
 // Mod returns the contents of the module's go.mod file.
-func (g *fsProxyModuleGetter) Mod(ctx context.Context, path, version string) (_ []byte, err error) {
-	defer derrors.Wrap(&err, "fsProxyModuleGetter.Mod(%q, %q)", path, version)
+func (g *fsProxyModuleGetter) Mod(ctx context.Context, path, vers string) (_ []byte, err error) {
+	defer derrors.Wrap(&err, "fsProxyModuleGetter.Mod(%q, %q)", path, vers)
+
+	if vers == version.Latest {
+		vers, err = g.latestVersion(path)
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	// Check that .zip is readable first.
-	f, err := g.openFile(path, version, "zip")
+	f, err := g.openFile(path, vers, "zip")
 	if err != nil {
 		return nil, err
 	}
 	f.Close()
-	return g.readFile(path, version, "mod")
+	return g.readFile(path, vers, "mod")
 }
 
 // ContentDir returns an fs.FS for the module's contents.
-func (g *fsProxyModuleGetter) ContentDir(ctx context.Context, path, version string) (_ fs.FS, err error) {
-	defer derrors.Wrap(&err, "fsProxyModuleGetter.ContentDir(%q, %q)", path, version)
+func (g *fsProxyModuleGetter) ContentDir(ctx context.Context, path, vers string) (_ fs.FS, err error) {
+	defer derrors.Wrap(&err, "fsProxyModuleGetter.ContentDir(%q, %q)", path, vers)
 
-	data, err := g.readFile(path, version, "zip")
+	if vers == version.Latest {
+		vers, err = g.latestVersion(path)
+		if err != nil {
+			return nil, err
+		}
+	}
+	data, err := g.readFile(path, vers, "zip")
 	if err != nil {
 		return nil, err
 	}
@@ -215,12 +237,34 @@ func (g *fsProxyModuleGetter) ContentDir(ctx context.Context, path, version stri
 	if err != nil {
 		return nil, err
 	}
-	return fs.Sub(zr, path+"@"+version)
+	return fs.Sub(zr, path+"@"+vers)
 }
 
 // ZipSize returns the approximate size of the zip file in bytes.
 func (g *fsProxyModuleGetter) ZipSize(ctx context.Context, path, version string) (int64, error) {
 	return 0, errors.New("fsProxyModuleGetter.ZipSize unimplemented")
+}
+
+// latestVersion gets the latest version that is in the directory.
+func (g *fsProxyModuleGetter) latestVersion(modulePath string) (_ string, err error) {
+	defer derrors.Wrap(&err, "fsProxyModuleGetter.latestVersion(%q)", modulePath)
+
+	dir, err := g.moduleDir(modulePath)
+	if err != nil {
+		return "", err
+	}
+	zips, err := filepath.Glob(filepath.Join(dir, "*.zip"))
+	if err != nil {
+		return "", err
+	}
+	if len(zips) == 0 {
+		return "", fmt.Errorf("no zips in %q for module %q: %w", g.dir, modulePath, derrors.NotFound)
+	}
+	var versions []string
+	for _, z := range zips {
+		versions = append(versions, strings.TrimSuffix(filepath.Base(z), ".zip"))
+	}
+	return version.LatestOf(versions), nil
 }
 
 func (g *fsProxyModuleGetter) readFile(path, version, suffix string) (_ []byte, err error) {
@@ -250,13 +294,21 @@ func (g *fsProxyModuleGetter) openFile(path, version, suffix string) (_ *os.File
 }
 
 func (g *fsProxyModuleGetter) escapedPath(modulePath, version, suffix string) (string, error) {
-	ep, err := module.EscapePath(modulePath)
+	dir, err := g.moduleDir(modulePath)
 	if err != nil {
-		return "", fmt.Errorf("path: %v: %w", err, derrors.InvalidArgument)
+		return "", err
 	}
 	ev, err := module.EscapeVersion(version)
 	if err != nil {
 		return "", fmt.Errorf("version: %v: %w", err, derrors.InvalidArgument)
 	}
-	return filepath.Join(g.dir, ep, "@v", fmt.Sprintf("%s.%s", ev, suffix)), nil
+	return filepath.Join(dir, fmt.Sprintf("%s.%s", ev, suffix)), nil
+}
+
+func (g *fsProxyModuleGetter) moduleDir(modulePath string) (string, error) {
+	ep, err := module.EscapePath(modulePath)
+	if err != nil {
+		return "", fmt.Errorf("path: %v: %w", err, derrors.InvalidArgument)
+	}
+	return filepath.Join(g.dir, ep, "@v"), nil
 }
