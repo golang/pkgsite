@@ -103,7 +103,7 @@
   margin: 0;
   padding: 0;
 }
-@media only screen and (min-width: 57.7rem) {
+@media only screen and (min-width: 65rem) {
   .go-Header-menuItem {
     align-items: stretch;
     display: inline-flex;
@@ -214,7 +214,7 @@
   width: 85%;
   z-index: 30;
 }
-@media only screen and (min-width: 50rem) {
+@media only screen and (min-width: 65rem) {
   .go-NavigationDrawer {
     display: none;
   }
