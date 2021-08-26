@@ -26,6 +26,9 @@ const toMatchImageSnapshot = configureToMatchImageSnapshot({
   failureThreshold: 0.001,
   failureThresholdType: 'percent',
   customSnapshotsDir: snapshotDir,
+  customDiffConfig: {
+    diffColorAlt: [0, 255, 0],
+  },
   customSnapshotIdentifier: ({ defaultIdentifier, counter }) => {
     return defaultIdentifier.replace('test-ts', '').replace(`-${counter}`, '');
   },
