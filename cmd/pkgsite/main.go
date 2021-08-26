@@ -37,6 +37,7 @@ import (
 	"golang.org/x/pkgsite/internal/frontend"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/middleware"
+	"golang.org/x/pkgsite/internal/proxy"
 	"golang.org/x/pkgsite/internal/source"
 )
 
@@ -46,6 +47,7 @@ var (
 	_          = flag.String("static", "static", "path to folder containing static files served")
 	gopathMode = flag.Bool("gopath_mode", false, "assume that local modules' paths are relative to GOPATH/src")
 	httpAddr   = flag.String("http", defaultAddr, "HTTP service address to listen for incoming requests on")
+	useProxy   = flag.Bool("proxy", false, "fetch from GOPROXY if not found locally")
 )
 
 func main() {
@@ -62,15 +64,33 @@ func main() {
 		paths = []string{"."}
 	}
 
-	server, err := newServer(ctx, paths, *gopathMode)
+	var prox *proxy.Client
+	if *useProxy {
+		fmt.Fprintf(os.Stderr, "BYPASSING LICENSE CHECKING: MAY DISPLAY NON-REDISTRIBUTABLE INFORMATION\n")
+		url := os.Getenv("GOPROXY")
+		if url == "" {
+			die("GOPROXY environment variable is not set")
+		}
+		var err error
+		prox, err = proxy.New(url)
+		if err != nil {
+			die("connecting to proxy: %s", err)
+		}
+	}
+	server, err := newServer(ctx, paths, *gopathMode, prox)
 	if err != nil {
-		log.Fatalf(ctx, "newServer: %v", err)
+		die("%s", err)
 	}
 	router := dcensus.NewRouter(frontend.TagRoute)
 	server.Install(router.Handle, nil, nil)
 	mw := middleware.Timeout(54 * time.Second)
 	log.Infof(ctx, "Listening on addr %s", *httpAddr)
-	log.Fatal(ctx, http.ListenAndServe(*httpAddr, mw(router)))
+	die("%v", http.ListenAndServe(*httpAddr, mw(router)))
+}
+
+func die(format string, args ...interface{}) {
+	fmt.Fprintf(os.Stderr, format, args...)
+	os.Exit(1)
 }
 
 func collectPaths(args []string) []string {
@@ -81,12 +101,16 @@ func collectPaths(args []string) []string {
 	return paths
 }
 
-func newServer(ctx context.Context, paths []string, gopathMode bool) (*frontend.Server, error) {
+func newServer(ctx context.Context, paths []string, gopathMode bool, prox *proxy.Client) (*frontend.Server, error) {
 	getters := buildGetters(ctx, paths, gopathMode)
+	if prox != nil {
+		getters = append(getters, fetch.NewProxyModuleGetter(prox))
+	}
 	lds := fetchdatasource.Options{
-		Getters:            getters,
-		SourceClient:       source.NewClient(time.Second),
-		BypassLicenseCheck: true,
+		Getters:              getters,
+		SourceClient:         source.NewClient(time.Second),
+		ProxyClientForLatest: prox,
+		BypassLicenseCheck:   true,
 	}.New()
 	server, err := frontend.NewServer(frontend.ServerConfig{
 		DataSourceGetter: func(context.Context) internal.DataSource { return lds },

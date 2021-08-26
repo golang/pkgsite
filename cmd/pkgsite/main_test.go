@@ -9,14 +9,22 @@ import (
 	"flag"
 	"net/http"
 	"net/http/httptest"
+	"path/filepath"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"golang.org/x/pkgsite/internal/proxy/proxytest"
 )
 
 func Test(t *testing.T) {
-	flag.Set("static", "../../static")
-	server, err := newServer(context.Background(), []string{"../../internal/fetch/testdata/has_go_mod"}, false)
+	repoPath := func(fn string) string { return filepath.Join("..", "..", fn) }
+	localModule := repoPath("internal/fetch/testdata/has_go_mod")
+	flag.Set("static", repoPath("static"))
+	testModules := proxytest.LoadTestModules(repoPath("internal/proxy/testdata"))
+	prox, teardown := proxytest.SetupTestClient(t, testModules)
+	defer teardown()
+
+	server, err := newServer(context.Background(), []string{localModule}, false, prox)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -24,9 +32,11 @@ func Test(t *testing.T) {
 	server.Install(mux.Handle, nil, nil)
 	w := httptest.NewRecorder()
 
-	mux.ServeHTTP(w, httptest.NewRequest("GET", "/example.com/testmod", nil))
-	if w.Code != http.StatusOK {
-		t.Errorf("%q: got status code = %d, want %d", "/testmod", w.Code, http.StatusOK)
+	for _, url := range []string{"/example.com/testmod", "/example.com/single/pkg"} {
+		mux.ServeHTTP(w, httptest.NewRequest("GET", url, nil))
+		if w.Code != http.StatusOK {
+			t.Errorf("%q: got status code = %d, want %d", url, w.Code, http.StatusOK)
+		}
 	}
 }
 
