@@ -35,7 +35,6 @@
         Showing <strong>{{len $.Results}}</strong> matching {{.SearchModeSymbol}}s.
         <a href="/search-help">Search help</a>
       </div>
-      {{template "search_pagination" .}}
     </div>
   {{end}}
   {{if eq (len .Results) 0}}
@@ -87,7 +86,6 @@
       <div>
         Showing <strong>{{len .Results}}</strong> modules with matching packages. <a href="/search-help">Search help</a>
       </div>
-      {{template "search_pagination" .}}
     </div>
   {{end}}
   {{if eq (len .Results) 0}}
@@ -182,14 +180,13 @@
 {{end}}
 
 {{define "search_pagination"}}
-  {{ $p := .Pagination }}
-  <label class="go-Label go-Label--inline SearchPagination" data-test-id="pagination">
-    Show
-    <select data-gtmc="search limit select" aria-label="Select number of results" name="limit" class="go-Select js-selectNav">
-      {{range $p.Limits}}
-        <option value="{{$p.URL . $.SearchMode ""}}"{{if eq . $p.Limit}} selected{{end}}>{{.}}</option>
-      {{end}}
-    </select>
-    results
-  </label>
+  {{$p := .Pagination}}
+  <div class="SearchPagination" data-test-id="pagination">
+    Didn't find what you were looking for?&nbsp;
+    {{- if and (lt $p.Limit $p.MaxLimit) (eq $p.Limit (len .Results)) -}}
+      <a href="{{$p.URL $p.MaxLimit $.SearchMode ""}}" data-gtmc="search more results">Show more results.</a>
+    {{- else -}}
+      See <a href="/search-help" data-gtmc="search help"> search help.</a>
+    {{- end -}}
+  </div>
 {{end}}

@@ -12,6 +12,8 @@ import (
 	"golang.org/x/pkgsite/internal/log"
 )
 
+const maxLimit = 100
+
 // pagination holds information related to paginated display. It is intended to
 // be part of a view model struct.
 //
@@ -20,7 +22,8 @@ import (
 // 1, 2, 3, .... Each page except possibly the last has the same number of results.
 type pagination struct {
 	baseURL     *url.URL // URL common to all pages
-	Limit       int      // the maximum number of results on a page
+	Limit       int      // the number of results requested on a page
+	MaxLimit    int      // the maximum number of results allowed for any request
 	ResultCount int      // number of results on this page
 	TotalCount  int      // total number of results
 	Approximate bool     // whether or not the total count is approximate
@@ -69,6 +72,7 @@ func newPagination(params paginationParams, resultCount, totalCount int) paginat
 		ResultCount: resultCount,
 		Offset:      params.offset(),
 		Limit:       params.limit,
+		MaxLimit:    maxLimit,
 		Page:        params.page,
 		PrevPage:    prev(params.page),
 		NextPage:    next(params.page, params.limit, totalCount),
