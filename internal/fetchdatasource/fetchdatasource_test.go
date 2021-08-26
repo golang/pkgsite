@@ -309,10 +309,9 @@ func TestGetLatestInfo(t *testing.T) {
 			wantErr:    derrors.NotFound,
 		},
 		{
-			fullPath:        "foo.com/bar/baz",
-			modulePath:      "foo.com/bar",
-			wantModulePath:  "foo.com/bar/v3",
-			wantPackagePath: "foo.com/bar/v3",
+			fullPath:   "foo.com/bar/baz",
+			modulePath: "foo.com/bar",
+			wantErr:    derrors.NotFound,
 		},
 		{
 			fullPath:        "incompatible.com/bar",
@@ -423,6 +422,12 @@ func TestLocalGetUnitMeta(t *testing.T) {
 			path:       "net/http",
 			modulePath: stdlib.ModulePath,
 			wantErr:    derrors.InvalidArgument,
+		},
+		{
+			// Module is known but path isn't in it.
+			path:       "github.com/my/module/unk",
+			modulePath: "github.com/my/module",
+			wantErr:    derrors.NotFound,
 		},
 	} {
 		t.Run(test.path, func(t *testing.T) {

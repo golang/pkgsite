@@ -181,10 +181,12 @@ func (ds *FetchDataSource) GetUnitMeta(ctx context.Context, path, requestedModul
 		Path:       path,
 		ModuleInfo: module.ModuleInfo,
 	}
-	if u := findUnit(module, path); u != nil {
-		um.Name = u.Name
-		um.IsRedistributable = u.IsRedistributable
+	u := findUnit(module, path)
+	if u == nil {
+		return nil, derrors.NotFound
 	}
+	um.Name = u.Name
+	um.IsRedistributable = u.IsRedistributable
 	return um, nil
 }
 
