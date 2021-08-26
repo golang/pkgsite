@@ -64,7 +64,6 @@ services:
       - CI=true
       - GO_DISCOVERY_E2E_BASE_URL=http://frontend:8080
       - GO_DISCOVERY_E2E_CHROME_URL=ws://chrome:${GO_DISCOVERY_E2E_TEST_PORT:-3000}
-      - GO_DISCOVERY_E2E_ENVIRONMENT=ci
       - WAITFORIT_TIMEOUT=300
     entrypoint: ./third_party/wait-for-it/wait-for-it.sh frontend:8080 -- npx jest
     command: e2e
