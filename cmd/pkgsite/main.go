@@ -26,6 +26,8 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"os/exec"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -47,6 +49,8 @@ var (
 	_          = flag.String("static", "static", "path to folder containing static files served")
 	gopathMode = flag.Bool("gopath_mode", false, "assume that local modules' paths are relative to GOPATH/src")
 	httpAddr   = flag.String("http", defaultAddr, "HTTP service address to listen for incoming requests on")
+	useCache   = flag.Bool("cache", false, "fetch from the module cache")
+	cacheDir   = flag.String("cachedir", "", "module cache directory (defaults to `go env GOMODCACHE`)")
 	useProxy   = flag.Bool("proxy", false, "fetch from GOPROXY if not found locally")
 )
 
@@ -64,6 +68,23 @@ func main() {
 		paths = []string{"."}
 	}
 
+	var downloadDir string
+	if *useCache {
+		downloadDir = *cacheDir
+		if downloadDir == "" {
+			var err error
+			downloadDir, err = defaultCacheDir()
+			if err != nil {
+				die("%v", err)
+			}
+			if downloadDir == "" {
+				die("empty value for GOMODCACHE")
+			}
+		}
+		// We actually serve from the download subdirectory.
+		downloadDir = filepath.Join(downloadDir, "cache", "download")
+	}
+
 	var prox *proxy.Client
 	if *useProxy {
 		fmt.Fprintf(os.Stderr, "BYPASSING LICENSE CHECKING: MAY DISPLAY NON-REDISTRIBUTABLE INFORMATION\n")
@@ -77,7 +98,7 @@ func main() {
 			die("connecting to proxy: %s", err)
 		}
 	}
-	server, err := newServer(ctx, paths, *gopathMode, prox)
+	server, err := newServer(ctx, paths, *gopathMode, downloadDir, prox)
 	if err != nil {
 		die("%s", err)
 	}
@@ -101,8 +122,11 @@ func collectPaths(args []string) []string {
 	return paths
 }
 
-func newServer(ctx context.Context, paths []string, gopathMode bool, prox *proxy.Client) (*frontend.Server, error) {
+func newServer(ctx context.Context, paths []string, gopathMode bool, downloadDir string, prox *proxy.Client) (*frontend.Server, error) {
 	getters := buildGetters(ctx, paths, gopathMode)
+	if downloadDir != "" {
+		getters = append(getters, fetch.NewFSProxyModuleGetter(downloadDir))
+	}
 	if prox != nil {
 		getters = append(getters, fetch.NewProxyModuleGetter(prox))
 	}
@@ -147,4 +171,12 @@ func buildGetters(ctx context.Context, paths []string, gopathMode bool) []fetch.
 		log.Fatalf(ctx, "failed to load module(s) at %v", paths)
 	}
 	return getters
+}
+
+func defaultCacheDir() (string, error) {
+	out, err := exec.Command("go", "env", "GOMODCACHE").CombinedOutput()
+	if err != nil {
+		return "", fmt.Errorf("running 'go env GOMODCACHE': %v: %s", err, out)
+	}
+	return strings.TrimSpace(string(out)), nil
 }

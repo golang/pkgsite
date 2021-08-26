@@ -251,7 +251,7 @@ func (ds *FetchDataSource) GetLatestInfo(ctx context.Context, unitPath, modulePa
 	}
 
 	if latestUnitMeta == nil {
-		latestUnitMeta, err = ds.GetUnitMeta(ctx, unitPath, internal.UnknownModulePath, version.Latest)
+		latestUnitMeta, err = ds.GetUnitMeta(ctx, unitPath, modulePath, version.Latest)
 		if err != nil {
 			return latest, err
 		}
