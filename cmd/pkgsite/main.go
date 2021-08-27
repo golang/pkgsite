@@ -2,22 +2,28 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// This is a work in progress.
-//
 // Pkgsite extracts and generates documentation for Go programs.
 // It runs as a web server and presents the documentation as a
 // web page.
-// Usage:
 //
-//  pkgsite [flag] # Load module from current directory.
-//  pkgsite [flag] [path1,path2] # Load modules from paths to memory.
+// After running `go install ./cmd/pkgsite` from the pkgsite repo root, you can
+// run `pkgsite` from anywhere, but if you don't run it from the pkgsite repo
+// root you must specify the location of the static assets with -static.
 //
-// The flags are:
+// With just -static, pkgsite will serve docs for the module in the current
+// directory, which must have a go.mod file:
 //
-//  -gopath_mode=false
-//      Assume that local modules' paths are relative to GOPATH/src
-//  -http=:8080
-//      HTTP service address to listen for incoming requests on
+//   cd ~/repos/cue && pkgsite -static ~/repos/pkgsite/static
+//
+// You can also serve docs from your module cache, directly from the proxy
+// (it uses the GOPROXY environment variable), or both:
+//
+//   pkgsite -static ~/repos/pkgsite/static -cache -proxy
+//
+// With either -cache or -proxy, it won't look for a module in the current directory.
+// You can still provide modules on the local filesystem by listing their paths:
+//
+//   pkgsite -static ~/repos/pkgsite/static -cache -proxy ~/repos/cue some/other/module
 package main
 
 import (
@@ -56,15 +62,17 @@ var (
 
 func main() {
 	flag.Usage = func() {
-		fmt.Fprintf(flag.CommandLine.Output(), "usage: %s [flags] [PATHS ...]\n", os.Args[0])
-		fmt.Fprintf(flag.CommandLine.Output(), "    where PATHS is a single path or a comma-separated list\n")
+		out := flag.CommandLine.Output()
+		fmt.Fprintf(out, "usage: %s [flags] [PATHS ...]\n", os.Args[0])
+		fmt.Fprintf(out, "    where each PATHS is a single path or a comma-separated list\n")
+		fmt.Fprintf(out, "    (default is current directory if neither -cache nor -proxy is provided)\n")
 		flag.PrintDefaults()
 	}
 	flag.Parse()
 	ctx := context.Background()
 
 	paths := collectPaths(flag.Args())
-	if len(paths) == 0 {
+	if len(paths) == 0 && !*useCache && !*useProxy {
 		paths = []string{"."}
 	}
 
@@ -85,9 +93,11 @@ func main() {
 		downloadDir = filepath.Join(downloadDir, "cache", "download")
 	}
 
+	if *useCache || *useProxy {
+		fmt.Fprintf(os.Stderr, "BYPASSING LICENSE CHECKING: MAY DISPLAY NON-REDISTRIBUTABLE INFORMATION\n")
+	}
 	var prox *proxy.Client
 	if *useProxy {
-		fmt.Fprintf(os.Stderr, "BYPASSING LICENSE CHECKING: MAY DISPLAY NON-REDISTRIBUTABLE INFORMATION\n")
 		url := os.Getenv("GOPROXY")
 		if url == "" {
 			die("GOPROXY environment variable is not set")
@@ -100,7 +110,7 @@ func main() {
 	}
 	server, err := newServer(ctx, paths, *gopathMode, downloadDir, prox)
 	if err != nil {
-		die("%s", err)
+		die("%s\nMaybe you need to provide the location of static assets with -static.", err)
 	}
 	router := dcensus.NewRouter(frontend.TagRoute)
 	server.Install(router.Handle, nil, nil)
@@ -111,6 +121,7 @@ func main() {
 
 func die(format string, args ...interface{}) {
 	fmt.Fprintf(os.Stderr, format, args...)
+	fmt.Fprintln(os.Stderr)
 	os.Exit(1)
 }
 
@@ -167,8 +178,8 @@ func buildGetters(ctx context.Context, paths []string, gopathMode bool) []fetch.
 		}
 	}
 
-	if loaded == 0 {
-		log.Fatalf(ctx, "failed to load module(s) at %v", paths)
+	if loaded == 0 && len(paths) > 0 {
+		die("failed to load module(s) at %v", paths)
 	}
 	return getters
 }
