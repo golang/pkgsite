@@ -1353,44 +1353,97 @@ func TestHllZeros(t *testing.T) {
 }
 
 func TestGroupSearchResults(t *testing.T) {
-	rs := []*SearchResult{
-		{PackagePath: "m.com/p", ModulePath: "m.com", Score: 10},
-		{PackagePath: "m.com/p2", ModulePath: "m.com", Score: 8},
-		{PackagePath: "a.com/p", ModulePath: "a.com", Score: 7},
-		{PackagePath: "m.com/v2/p", ModulePath: "m.com/v2", Score: 6},
-		{PackagePath: "m.com/v2/p2", ModulePath: "m.com/v2", Score: 4},
+	set := func(els ...string) map[string]bool {
+		s := map[string]bool{}
+		for _, e := range els {
+			s[e] = true
+		}
+		return s
 	}
-	got := groupSearchResults(rs)
-	sp2 := &SearchResult{
-		PackagePath: "m.com/p2",
-		ModulePath:  "m.com",
-		Score:       8,
-	}
-	sp := &SearchResult{
-		PackagePath: "m.com/p",
-		ModulePath:  "m.com",
-		Score:       10,
-		SameModule:  []*SearchResult{sp2},
-	}
-	want := []*SearchResult{
+
+	for _, test := range []struct {
+		name     string
+		in, want []*SearchResult
+	}{
 		{
-			PackagePath: "m.com/v2/p",
-			ModulePath:  "m.com/v2",
-			Score:       10.00001,
-			SameModule: []*SearchResult{
-				{PackagePath: "m.com/v2/p2", ModulePath: "m.com/v2", Score: 4},
+			name: "simple",
+			in: []*SearchResult{
+				{Name: "m1", ModulePath: "m1", Score: 10},
+				{Name: "m2", ModulePath: "m2", Score: 9},
 			},
-			OtherMajor: map[string]bool{"m.com": true},
+			want: []*SearchResult{
+				{Name: "m1", ModulePath: "m1", Score: 10},
+				{Name: "m2", ModulePath: "m2", Score: 9},
+			},
 		},
-		sp,
 		{
-			PackagePath: "a.com/p",
-			ModulePath:  "a.com",
-			Score:       7,
-			OtherMajor:  map[string]bool{},
+			name: "higher major first",
+			in: []*SearchResult{
+				{Name: "m1", ModulePath: "m1/v2", Score: 10},
+				{Name: "m2", ModulePath: "m2", Score: 9},
+				{Name: "m", ModulePath: "m1", Score: 8},
+			},
+			want: []*SearchResult{
+				{Name: "m1", ModulePath: "m1/v2", Score: 10, OtherMajor: set("m1")},
+				{Name: "m2", ModulePath: "m2", Score: 9},
+			},
 		},
-	}
-	if diff := cmp.Diff(want, got); diff != "" {
-		t.Errorf("mismatch (-want, +got)\n%s", diff)
+		{
+			name: "lower major first",
+			in: []*SearchResult{
+				{Name: "m1", ModulePath: "m1", Score: 10},
+				{Name: "m2", ModulePath: "m2", Score: 9},
+				{Name: "m12", ModulePath: "m1/v2", Score: 8},
+			},
+			want: []*SearchResult{
+				{Name: "m12", ModulePath: "m1/v2", Score: 10, OtherMajor: set("m1")},
+				{Name: "m2", ModulePath: "m2", Score: 9},
+			},
+		},
+		{
+			name: "multiple majors",
+			in: []*SearchResult{
+				{Name: "m1", ModulePath: "m1", Score: 10},
+				{Name: "m23", ModulePath: "m2/v3", Score: 9},
+				{Name: "m12", ModulePath: "m1/v2", Score: 8},
+				{Name: "m22", ModulePath: "m2/v2", Score: 7},
+				{Name: "m13", ModulePath: "m1/v3", Score: 6},
+				{Name: "m2", ModulePath: "m2", Score: 5},
+			},
+			want: []*SearchResult{
+				{Name: "m13", ModulePath: "m1/v3", Score: 10, OtherMajor: set("m1", "m1/v2")},
+				{Name: "m23", ModulePath: "m2/v3", Score: 9, OtherMajor: set("m2", "m2/v2")},
+			},
+		},
+		{
+			name: "higher untagged",
+			in: []*SearchResult{
+				{Name: "m1", ModulePath: "m1", Score: 10},
+				{Name: "m2", ModulePath: "m2", Score: 9},
+				{Name: "m12", ModulePath: "m1/v2", Version: "v0.0.0-12345678901234-A", Score: 8},
+			},
+			want: []*SearchResult{
+				{Name: "m1", ModulePath: "m1", Score: 10, OtherMajor: set("m1/v2")},
+				{Name: "m2", ModulePath: "m2", Score: 9},
+			},
+		},
+		{
+			name: "lowest tagged",
+			in: []*SearchResult{
+				{Name: "m13", ModulePath: "m1/v3", Version: "v0.0.0-12345678901234-A", Score: 10},
+				{Name: "m12", ModulePath: "m1/v2", Version: "v0.0.0-12345678901234-B", Score: 9},
+				{Name: "m1", ModulePath: "m1", Version: "v0.0.0", Score: 8},
+			},
+			want: []*SearchResult{
+				{Name: "m1", ModulePath: "m1", Version: "v0.0.0", Score: 10, OtherMajor: set("m1/v2", "m1/v3")},
+			},
+		},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			got := groupSearchResults(test.in)
+			if diff := cmp.Diff(test.want, got); diff != "" {
+				t.Errorf("mismatch (-want, +got)\n%s", diff)
+			}
+		})
 	}
 }

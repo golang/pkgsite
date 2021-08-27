@@ -27,6 +27,7 @@ import (
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/postgres/symbolsearch"
 	"golang.org/x/pkgsite/internal/stdlib"
+	"golang.org/x/pkgsite/internal/version"
 )
 
 var (
@@ -537,51 +538,48 @@ func sortAndDedup(s []string) []string {
 // The second and later packages from a module are grouped under the first package,
 // and removed from the top-level list.
 //
-// Higher major versions of a module are put before lower ones.
-//
-// Packages from lower major versions of the module are grouped under the first
-// package of the highest major version. But they are not removed from the
-// top-level list.
+// Higher tagged major versions of a module replace lower ones.
 func groupSearchResults(rs []*SearchResult) []*SearchResult {
-	modules := map[string]*SearchResult{} // module path to first result
-	series := map[string]*SearchResult{}  // series path to result with max major version
-	var results []*SearchResult
+	bestInSeries := map[string]*SearchResult{} // series path to result with max major version
+	// Since rs is sorted by score, the first package we see for a series is the
+	// highest-ranked one. However, we may prefer to show a lower-ranked one from a
+	// module in the same series with a higher major version.
 	for _, r := range rs {
-		f := modules[r.ModulePath]
-		if f == nil {
-			// First result (package) with this module path; remember it and
-			// keep it.
-			modules[r.ModulePath] = r
-			results = append(results, r)
-		} else {
-			// Record this result under the first result.
-			f.SameModule = append(f.SameModule, r)
-		}
-
-		seriesPath, vr := internal.SeriesPathAndMajorVersion(r.ModulePath)
-		f = series[seriesPath]
-		if f == nil {
-			// First time we've seen anything from this series: remember it.
+		seriesPath, rMajor := internal.SeriesPathAndMajorVersion(r.ModulePath)
+		b := bestInSeries[seriesPath]
+		if b == nil {
+			// First result (package) with this series path; remember it.
+			bestInSeries[seriesPath] = r
 			r.OtherMajor = map[string]bool{}
-			series[seriesPath] = r
-		} else if r.ModulePath != f.ModulePath {
-			// Result is from a different major version.
-			// Record the larger one, and give it a higher score.
-			_, vf := internal.SeriesPathAndMajorVersion(f.ModulePath)
-			if vr > vf {
-				series[seriesPath] = r
-				r.OtherMajor = f.OtherMajor
-				f.OtherMajor = nil
-				r.OtherMajor[f.ModulePath] = true
-				if f.Score > r.Score {
-					r.Score = f.Score + 1e-5
-				}
-			} else {
-				f.OtherMajor[r.ModulePath] = true
+		} else {
+			_, bMajor := internal.SeriesPathAndMajorVersion(b.ModulePath)
+			switch {
+			case !version.IsPseudo(r.Version) && (rMajor > bMajor || version.IsPseudo(b.Version)):
+				// r is tagged, and is either in a higher major version, or the current best
+				// is not tagged. Either way, prefer r to b.
+				bestInSeries[seriesPath] = r
+				r.OtherMajor = b.OtherMajor
+				r.OtherMajor[b.ModulePath] = true
+				r.Score = b.Score // inherit the lower major version's higher score
+			case rMajor == bMajor:
+				// r is another package from the module of b; remember it there.
+				b.SameModule = append(b.SameModule, r)
+
+			default:
+				// A package from a different major version (either lower, or
+				// higher untagged). Remember the major version.
+				b.OtherMajor[r.ModulePath] = true
 			}
 		}
 	}
-	// Re-sort by score, since we may have changed some.
+	// Collect new results and re-sort by score.
+	var results []*SearchResult
+	for _, r := range bestInSeries {
+		if len(r.OtherMajor) == 0 {
+			r.OtherMajor = nil
+		}
+		results = append(results, r)
+	}
 	sort.Slice(results, func(i, j int) bool {
 		return results[i].Score > results[j].Score
 	})
