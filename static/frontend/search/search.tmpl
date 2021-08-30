@@ -77,7 +77,7 @@
 {{end}}
 
 {{define "search_package"}}
-  <h1>Search results for “{{.Query}}”</h1>
+  <h1>{{capitalize .SearchModePackage}}s matching “{{.Query}}”</h1>
   <a class="SearchResults-instead" data-gtmc="toggle search mode" href="{{.Pagination.URL .Pagination.Limit .SearchModeSymbol .Query}}">
     <span class="SearchResults-insteadPrefix">Search instead for </span>“{{.SearchModeSymbol}}: {{.Query}}”
   </a>
