@@ -28,15 +28,27 @@
           data-test-id="homepage-search"
           id="AutoComplete"
           role="textbox"
-          aria-label="Search for Go packages"
+          {{- if .Experiments.IsActive "symbol-search" -}}
+            aria-label="Search packages or symbols"
+          {{else}}
+            aria-label="Search for Go packages"
+          {{- end -}}
           type="search"
           name="q"
-          placeholder="Search for Go packages"
+          {{- if .Experiments.IsActive "symbol-search" -}}
+            placeholder="Search packages or symbols"
+          {{else}}
+            placeholder="Search for Go packages"
+          {{- end -}}
           autocapitalize="off"
           autocomplete="off"
           autocorrect="off"
           spellcheck="false"
-          title="Search for Go packages"
+          {{- if .Experiments.IsActive "symbol-search" -}}
+            title="Search packages or symbols"
+          {{else}}
+            title="Search for Go packages"
+          {{- end -}}
           autofocus="true">
         <button type="submit" class="go-Button">Search</button>
       </form>

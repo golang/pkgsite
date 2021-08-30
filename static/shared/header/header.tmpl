@@ -92,7 +92,8 @@
     {{end}}
     <input name="q" class="go-Input js-searchFocus" aria-label="Search for a package" type="search"
         autocapitalize="off" autocomplete="off" autocorrect="off" spellcheck="false"
-        placeholder="Search for a package" value="{{.Query}}" />
+        {{- if .Experiments.IsActive "symbol-search" -}} placeholder="Search packages or symbols"
+        {{- else -}} placeholder="Search for a package"{{- end -}} value="{{.Query}}" />
     <button class="go-Button go-Button--inverted" aria-label="Submit search">
       <img
         class="go-Icon"
