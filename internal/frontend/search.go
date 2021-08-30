@@ -260,6 +260,22 @@ const (
 	searchModeSymbol = "symbol"
 )
 
+var (
+	// searchModeSymbolKeyboardShortcuts is the set of allow keyboard shortcuts
+	// for symbol search.
+	searchModeSymbolKeyboardShortcuts = map[string]bool{
+		"s":              true,
+		searchModeSymbol: true,
+	}
+
+	// searchModePackageKeyboardShortcuts is the set of allow keyboard shortcuts
+	// for package search.
+	searchModePackageKeyboardShortcuts = map[string]bool{
+		"p":               true,
+		searchModePackage: true,
+	}
+)
+
 // serveSearch applies database data to the search template. Handles endpoint
 // /search?q=<query>. If <query> is an exact match for a package path, the user
 // will be redirected to the details page.
@@ -368,12 +384,18 @@ func searchQuery(r *http.Request) (q string, searchSymbols bool) {
 	if !experiment.IsActive(r.Context(), internal.ExperimentSymbolSearch) {
 		return q, false
 	}
-
-	if prefix := searchModeSymbol + ":"; strings.HasPrefix(q, prefix) {
-		return strings.TrimPrefix(q, prefix), true
+	if strings.HasPrefix(q, "#") {
+		return strings.TrimPrefix(q, "#"), true
 	}
-	if prefix := searchModePackage + ":"; strings.HasPrefix(q, prefix) {
-		return strings.TrimPrefix(q, prefix), false
+	if strings.Contains(q, ":") {
+		parts := strings.SplitN(q, ":", 2)
+		if searchModeSymbolKeyboardShortcuts[parts[0]] {
+			return parts[1], true
+		}
+		if searchModePackageKeyboardShortcuts[parts[0]] {
+			return parts[1], false
+		}
+		return q, false
 	}
 	if shouldDefaultToSymbolSearch(q) {
 		return q, true

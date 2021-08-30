@@ -123,7 +123,7 @@ func runTest(client *frontend.Client, st *searchTest) (output []string, err erro
 		}
 		if want.symbol != got.SymbolName || want.pkg != got.PackagePath || st.mode != searchPage.SearchMode {
 			output = append(output,
-				fmt.Sprintf("query %s, mismatch result %d:\n\twant: %q %q [m=%q]\n\t got: %q %q [m=%q]\n",
+				fmt.Sprintf("query: %q, mismatch result %d:\n\twant: %q %q [m=%q]\n\t got: %q %q [m=%q]\n",
 					st.query, i+1,
 					want.pkg, want.symbol, st.mode,
 					got.PackagePath, got.SymbolName, searchPage.SearchMode))

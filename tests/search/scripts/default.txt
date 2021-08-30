@@ -5,15 +5,41 @@
 # This file contains test scripts for queries and their default search mode.
 
 github.com defaults to package mode
-[package] github.com
+[] github.com
 github.com/go-openapi/strfmt
 github.com/beego/bee/cmd/commands/api
 github.com/julieqiu/api-demo/tar
 
 gopkg.in search defaults to package mode
-[package] gopkg.in
+[] gopkg.in
 gopkg.in/foo.v1
 
 gopkg.in element search defaults to package mode
-[package] foo.v1
+[] foo.v1
+gopkg.in/foo.v1
+
+keyboard shorcut "#"
+[symbol] #big.Float
+Float math/big
+
+keyboard shorcut "s:"
+[symbol] s:foo
+Foo gopkg.in/foo.v1
+FOO github.com/julieqiu/api-demo
+FoO github.com/julieqiu/api-demo
+Foo github.com/julieqiu/api-demo
+
+keyboard shorcut "symbol:"
+[symbol] s:foo
+Foo gopkg.in/foo.v1
+FOO github.com/julieqiu/api-demo
+FoO github.com/julieqiu/api-demo
+Foo github.com/julieqiu/api-demo
+
+keyboard shorcut "p:"
+[] p:Foo
+gopkg.in/foo.v1
+
+keyboard shorcut "package:"
+[] package:Foo
 gopkg.in/foo.v1
