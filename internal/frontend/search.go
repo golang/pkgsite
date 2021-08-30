@@ -14,9 +14,11 @@ import (
 	"sort"
 	"strings"
 	"time"
+	"unicode"
 	"unicode/utf8"
 
 	"github.com/google/safehtml/template"
+	"golang.org/x/mod/semver"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/experiment"
@@ -407,18 +409,34 @@ func searchQuery(r *http.Request) (q string, searchSymbols bool) {
 	return q, mode == searchModeSymbol
 }
 
-// shouldDefaultToSymbolSearch reports whether the search query is of the form
-// <package>.<symbol>. The <symbol> component should not be a top-level domain
-// that is in our database.
+// shouldDefaultToSymbolSearch reports whether the symbol search mode should
+// default to symbol search mode based on the input.
 func shouldDefaultToSymbolSearch(q string) bool {
-	if len(strings.Fields(q)) != 1 || !strings.ContainsAny(q, ".") {
+	if len(strings.Fields(q)) != 1 {
 		return false
 	}
 	if internal.IsGoPkgInPathElement(q) {
 		return false
 	}
 	parts := strings.Split(q, ".")
-	return !internal.TopLevelDomains[parts[len(parts)-1]]
+	if len(parts) > 1 {
+		if len(parts) == 2 && semver.IsValid(parts[1]) {
+			// The q has the format <text>.<semver> which is likely a
+			// gopkg.in host, such as yaml.v2. Default to package search.
+			return false
+		}
+		return !internal.TopLevelDomains[parts[len(parts)-1]]
+	}
+	// If a user searches for "Unmarshal", assume that they are searching for
+	// the symbol name "Unmarshal", not the package unmarshal.
+	return isCapitalized(q)
+}
+
+func isCapitalized(s string) bool {
+	if len(s) == 0 {
+		return false
+	}
+	return unicode.IsUpper(rune(s[0]))
 }
 
 // elapsedTime takes a date and returns returns human-readable,

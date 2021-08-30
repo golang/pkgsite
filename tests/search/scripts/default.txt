@@ -43,3 +43,11 @@ gopkg.in/foo.v1
 keyboard shorcut "package:"
 [] package:Foo
 gopkg.in/foo.v1
+
+capital letter one word defaults to symbol mode
+[symbol] Float
+Float math/big
+
+non-TLD word.word defaults to symbol mode
+[symbol] big.Float
+Float math/big

@@ -411,6 +411,7 @@ func TestShouldDefaultToSymbolSearch(t *testing.T) {
 		{"sql.DB.Begin", true},
 		{"yaml.v2", false},
 		{"gopkg.in", false},
+		{"Unmarshal", true},
 	} {
 		t.Run(test.q, func(t *testing.T) {
 			got := shouldDefaultToSymbolSearch(test.q)
