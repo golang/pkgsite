@@ -397,10 +397,14 @@ func searchQuery(r *http.Request) (q string, searchSymbols bool) {
 		}
 		return q, false
 	}
+	mode := strings.TrimSpace(r.FormValue("m"))
+	if mode == searchModePackage {
+		return q, false
+	}
 	if shouldDefaultToSymbolSearch(q) {
 		return q, true
 	}
-	return q, strings.TrimSpace(r.FormValue("m")) == searchModeSymbol
+	return q, mode == searchModeSymbol
 }
 
 // shouldDefaultToSymbolSearch reports whether the search query is of the form
