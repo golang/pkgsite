@@ -218,11 +218,11 @@ go_linters() {
 }
 
 standard_linters() {
+  run_build_static
   check_headers
   check_bad_migrations
   go_linters
   check_script_hashes
-  run_build_static
 }
 
 
@@ -284,13 +284,13 @@ main() {
       info "Running checks on:"
       info "    " $files
 
-      check_headers $(filter "$files" '*.go' '*.sql' '*.sh')
-      if [[ $(filter "$files" 'migrations/*') != '' ]]; then
-        check_bad_migrations
-      fi
       if [[ $(filter "$files" $script_hash_glob) != '' ]]; then
         check_script_hashes
         run_build_static
+      fi
+      check_headers $(filter "$files" '*.go' '*.sql' '*.sh')
+      if [[ $(filter "$files" 'migrations/*') != '' ]]; then
+        check_bad_migrations
       fi
       if [[ $(filter "$files" '*.go') != '' ]]; then
         go_linters
