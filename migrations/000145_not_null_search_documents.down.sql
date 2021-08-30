@@ -4,6 +4,6 @@
 
 BEGIN;
 
--- DO NOTHING: this migration is split into 000145-000150.
+ALTER TABLE search_documents ALTER COLUMN tsv_path_tokens DROP NOT NULL;
 
 END;

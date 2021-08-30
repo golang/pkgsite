@@ -4,6 +4,7 @@
 
 BEGIN;
 
--- DO NOTHING: this migration is split into 000145-000150.
+ALTER TABLE symbol_search_documents ALTER COLUMN package_path DROP NOT NULL;
+ALTER TABLE symbol_search_documents ALTER COLUMN uuid_package_path DROP NOT NULL;
 
 END;

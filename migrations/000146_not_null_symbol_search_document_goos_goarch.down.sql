@@ -4,6 +4,7 @@
 
 BEGIN;
 
--- DO NOTHING: this migration is split into 000145-000150.
+ALTER TABLE symbol_search_documents ALTER COLUMN goos DROP NOT NULL;
+ALTER TABLE symbol_search_documents ALTER COLUMN goarch DROP NOT NULL;
 
 END;

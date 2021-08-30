@@ -4,16 +4,6 @@
 
 BEGIN;
 
-ALTER TABLE search_documents ALTER COLUMN tsv_path_tokens SET NOT NULL;
-ALTER TABLE symbol_search_documents ALTER COLUMN created_at SET NOT NULL;
-ALTER TABLE symbol_search_documents ALTER COLUMN updated_at SET NOT NULL;
-ALTER TABLE symbol_search_documents ALTER COLUMN updated_at SET NOT NULL;
-ALTER TABLE symbol_search_documents ALTER COLUMN goos SET NOT NULL;
-ALTER TABLE symbol_search_documents ALTER COLUMN goarch SET NOT NULL;
-ALTER TABLE symbol_search_documents ALTER COLUMN goarch SET NOT NULL;
-ALTER TABLE symbol_search_documents ALTER COLUMN package_name SET NOT NULL;
-ALTER TABLE symbol_search_documents ALTER COLUMN package_path SET NOT NULL;
-ALTER TABLE symbol_search_documents ALTER COLUMN uuid_package_name SET NOT NULL;
-ALTER TABLE symbol_search_documents ALTER COLUMN uuid_package_path SET NOT NULL;
+-- DO NOTHING: this migration is split into 000145-000150.
 
 END;
