@@ -309,7 +309,6 @@ func (s *Server) newBasePage(r *http.Request, title string) basePage {
 		DevMode:            s.devMode,
 		AppVersionLabel:    s.appVersionLabel,
 		GoogleTagManagerID: s.googleTagManagerID,
-		SearchMode:         searchModePackage,
 		SearchModePackage:  searchModePackage,
 		SearchModeSymbol:   searchModeSymbol,
 	}
