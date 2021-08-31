@@ -6,7 +6,6 @@ package frontend
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -123,15 +122,8 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 	if err != nil {
 		return err
 	}
-	if s.serveStats && r.FormValue("content") == "json" {
-		data, err := json.Marshal(d)
-		if err != nil {
-			return fmt.Errorf("json.Marshal: %v", err)
-		}
-		if _, err := w.Write(data); err != nil {
-			return fmt.Errorf("w.Write: %v", err)
-		}
-		return nil
+	if s.shouldServeJSON(r) {
+		return s.serveJSONPage(w, r, d)
 	}
 
 	recordVersionTypeMetric(ctx, info.requestedVersion)

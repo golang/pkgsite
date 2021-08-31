@@ -42,16 +42,7 @@ func NewClient(url string) *Client {
 func (c *Client) GetVersions(pkgPath string) (_ *VersionsDetails, err error) {
 	defer derrors.Wrap(&err, "GetVersions(%q)", pkgPath)
 	u := fmt.Sprintf("%s/%s?tab=versions&content=json", c.url, pkgPath)
-	r, err := c.httpClient.Get(u)
-	if err != nil {
-		return nil, err
-	}
-	defer r.Body.Close()
-	if r.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf(r.Status)
-	}
-
-	body, err := ioutil.ReadAll(r.Body)
+	body, err := c.fetchJSONPage(u)
 	if err != nil {
 		return nil, err
 	}
@@ -60,4 +51,40 @@ func (c *Client) GetVersions(pkgPath string) (_ *VersionsDetails, err error) {
 		return nil, fmt.Errorf("json.Unmarshal: %v:\nDoes GO_DISCOVERY_SERVE_STATS=true on the frontend?", err)
 	}
 	return &vd, nil
+}
+
+func (c *Client) fetchJSONPage(url string) (_ []byte, err error) {
+	defer derrors.Wrap(&err, "fetchJSONPage(%q)", url)
+	r, err := c.httpClient.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	defer r.Body.Close()
+	if r.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf(r.Status)
+	}
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return nil, err
+	}
+	return body, nil
+}
+
+func (s *Server) shouldServeJSON(r *http.Request) bool {
+	return s.serveStats && r.FormValue("content") == "json"
+}
+
+func (s *Server) serveJSONPage(w http.ResponseWriter, r *http.Request, d interface{}) (err error) {
+	defer derrors.Wrap(&err, "serveJSONPage(ctx, w, r)")
+	if !s.shouldServeJSON(r) {
+		return derrors.NotFound
+	}
+	data, err := json.Marshal(d)
+	if err != nil {
+		return fmt.Errorf("json.Marshal: %v", err)
+	}
+	if _, err := w.Write(data); err != nil {
+		return fmt.Errorf("w.Write: %v", err)
+	}
+	return nil
 }
