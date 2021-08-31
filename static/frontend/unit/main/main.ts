@@ -1,9 +1,11 @@
-import '../../../shared/jump/jump';
-import '../../../shared/playground/playground';
+import { initPlaygrounds } from 'static/shared/playground/playground';
+import { initModals } from 'static/shared/jump/jump';
+import { SelectNavController, makeSelectNav } from 'static/shared/outline/select';
+import { TreeNavController } from 'static/shared/outline/tree';
+import { ExpandableRowsTableController } from 'static/shared/table/table';
 
-import { SelectNavController, makeSelectNav } from '../../../shared/outline/select';
-import { TreeNavController } from '../../../shared/outline/tree';
-import { ExpandableRowsTableController } from '../../../shared/table/table';
+initModals();
+initPlaygrounds();
 
 const directories = document.querySelector<HTMLTableElement>('.js-expandableTable');
 if (directories) {

@@ -253,38 +253,40 @@ export class PlaygroundExampleController {
   }
 }
 
-const exampleHashRegex = location.hash.match(/^#(example-.*)$/);
-if (exampleHashRegex) {
-  const exampleHashEl = document.getElementById(exampleHashRegex[1]) as HTMLDetailsElement;
-  if (exampleHashEl) {
-    exampleHashEl.open = true;
+export function initPlaygrounds(): void {
+  const exampleHashRegex = location.hash.match(/^#(example-.*)$/);
+  if (exampleHashRegex) {
+    const exampleHashEl = document.getElementById(exampleHashRegex[1]) as HTMLDetailsElement;
+    if (exampleHashEl) {
+      exampleHashEl.open = true;
+    }
   }
-}
 
-// We use a spread operator to convert a nodelist into an array of elements.
-const exampleHrefs = [
-  ...document.querySelectorAll<HTMLAnchorElement>(PlayExampleClassName.PLAY_HREF),
-];
+  // We use a spread operator to convert a nodelist into an array of elements.
+  const exampleHrefs = [
+    ...document.querySelectorAll<HTMLAnchorElement>(PlayExampleClassName.PLAY_HREF),
+  ];
 
-/**
- * Sometimes exampleHrefs and playContainers are in different order, so we
- * find an exampleHref from a common hash.
- * @param playContainer - playground container
- */
-const findExampleHash = (playContainer: PlaygroundExampleController) =>
-  exampleHrefs.find(ex => {
-    return ex.hash === playContainer.getAnchorHash();
-  });
-
-for (const el of document.querySelectorAll(PlayExampleClassName.PLAY_CONTAINER)) {
-  // There should be the same amount of hrefs referencing examples as example containers.
-  const playContainer = new PlaygroundExampleController(el as HTMLDetailsElement);
-  const exampleHref = findExampleHash(playContainer);
-  if (exampleHref) {
-    exampleHref.addEventListener('click', () => {
-      playContainer.expand();
+  /**
+   * Sometimes exampleHrefs and playContainers are in different order, so we
+   * find an exampleHref from a common hash.
+   * @param playContainer - playground container
+   */
+  const findExampleHash = (playContainer: PlaygroundExampleController) =>
+    exampleHrefs.find(ex => {
+      return ex.hash === playContainer.getAnchorHash();
     });
-  } else {
-    console.warn('example href not found');
+
+  for (const el of document.querySelectorAll(PlayExampleClassName.PLAY_CONTAINER)) {
+    // There should be the same amount of hrefs referencing examples as example containers.
+    const playContainer = new PlaygroundExampleController(el as HTMLDetailsElement);
+    const exampleHref = findExampleHash(playContainer);
+    if (exampleHref) {
+      exampleHref.addEventListener('click', () => {
+        playContainer.expand();
+      });
+    } else {
+      console.warn('example href not found');
+    }
   }
 }

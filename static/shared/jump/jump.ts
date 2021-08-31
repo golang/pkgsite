@@ -216,87 +216,87 @@ function incActiveJumpItem(delta: number) {
   setActiveJumpItem(n);
 }
 
-// Pressing a key in the filter updates the list (if the filter actually changed).
-jumpFilter?.addEventListener('keyup', function () {
-  if (jumpFilter.value.toUpperCase() != lastFilterValue.toUpperCase()) {
-    updateJumpList(jumpFilter.value);
-  }
-});
+export function initModals(): void {
+  // Pressing a key in the filter updates the list (if the filter actually changed).
+  jumpFilter?.addEventListener('keyup', function () {
+    if (jumpFilter.value.toUpperCase() != lastFilterValue.toUpperCase()) {
+      updateJumpList(jumpFilter.value);
+    }
+  });
 
-// Pressing enter in the filter selects the first element in the list.
-jumpFilter?.addEventListener('keydown', function (event) {
-  const upArrow = 38;
-  const downArrow = 40;
-  const enterKey = 13;
-  switch (event.which) {
-    case upArrow:
-      incActiveJumpItem(-1);
-      event.preventDefault();
-      break;
-    case downArrow:
-      incActiveJumpItem(1);
-      event.preventDefault();
-      break;
-    case enterKey:
-      if (activeJumpItem >= 0) {
-        if (jumpList) {
-          (jumpList.children[activeJumpItem] as HTMLElement).click();
-          event.preventDefault();
+  // Pressing enter in the filter selects the first element in the list.
+  jumpFilter?.addEventListener('keydown', function (event) {
+    const upArrow = 38;
+    const downArrow = 40;
+    const enterKey = 13;
+    switch (event.which) {
+      case upArrow:
+        incActiveJumpItem(-1);
+        event.preventDefault();
+        break;
+      case downArrow:
+        incActiveJumpItem(1);
+        event.preventDefault();
+        break;
+      case enterKey:
+        if (activeJumpItem >= 0) {
+          if (jumpList) {
+            (jumpList.children[activeJumpItem] as HTMLElement).click();
+            event.preventDefault();
+          }
         }
-      }
-      break;
-  }
-});
+        break;
+    }
+  });
 
-const shortcutsDialog = document.querySelector<HTMLDialogElement>('.ShortcutsDialog');
+  const shortcutsDialog = document.querySelector<HTMLDialogElement>('.ShortcutsDialog');
 
-// Keyboard shortcuts:
-// - Pressing '/' focuses the search box
-// - Pressing 'f' or 'F' opens the jump-to-symbol dialog.
-// - Pressing '?' opens up the shortcut dialog.
-// Ignore a keypress if a dialog is already open, or if it is pressed on a
-// component that wants to consume it.
-document.addEventListener('keypress', function (e) {
-  if (jumpDialog?.open || shortcutsDialog?.open) {
-    return;
-  }
-  const target = e.target as HTMLElement | null;
-  const t = target?.tagName;
-  if (t == 'INPUT' || t == 'SELECT' || t == 'TEXTAREA') {
-    return;
-  }
-  if (target?.contentEditable == 'true') {
-    return;
-  }
-  if (e.metaKey || e.ctrlKey) {
-    return;
-  }
-  const ch = String.fromCharCode(e.which);
-  switch (ch) {
-    case 'f':
-    case 'F':
-      e.preventDefault();
+  // Keyboard shortcuts:
+  // - Pressing '/' focuses the search box
+  // - Pressing 'f' or 'F' opens the jump-to-symbol dialog.
+  // - Pressing '?' opens up the shortcut dialog.
+  // Ignore a keypress if a dialog is already open, or if it is pressed on a
+  // component that wants to consume it.
+  document.addEventListener('keypress', function (e) {
+    if (jumpDialog?.open || shortcutsDialog?.open) {
+      return;
+    }
+    const target = e.target as HTMLElement | null;
+    const t = target?.tagName;
+    if (t == 'INPUT' || t == 'SELECT' || t == 'TEXTAREA') {
+      return;
+    }
+    if (target?.contentEditable == 'true') {
+      return;
+    }
+    if (e.metaKey || e.ctrlKey) {
+      return;
+    }
+    const ch = String.fromCharCode(e.which);
+    switch (ch) {
+      case 'f':
+      case 'F':
+        e.preventDefault();
+        if (jumpFilter) {
+          jumpFilter.value = '';
+        }
+        jumpDialog?.showModal();
+        jumpFilter?.focus();
+        updateJumpList('');
+        break;
+      case '?':
+        shortcutsDialog?.showModal();
+        break;
+    }
+  });
+
+  const jumpOutlineInput = document.querySelector('.js-jumpToInput');
+  if (jumpOutlineInput) {
+    jumpOutlineInput.addEventListener('click', () => {
       if (jumpFilter) {
         jumpFilter.value = '';
       }
-      jumpDialog?.showModal();
-      jumpFilter?.focus();
       updateJumpList('');
-      break;
-    case '?':
-      shortcutsDialog?.showModal();
-      break;
+    });
   }
-});
-
-const jumpOutlineInput = document.querySelector('.js-jumpToInput');
-if (jumpOutlineInput) {
-  jumpOutlineInput.addEventListener('click', () => {
-    if (jumpFilter) {
-      jumpFilter.value = '';
-    }
-    updateJumpList('');
-  });
 }
-
-export {};
