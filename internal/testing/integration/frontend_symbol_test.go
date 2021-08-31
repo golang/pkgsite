@@ -47,7 +47,7 @@ func TestSymbols(t *testing.T) {
 			}
 
 			// Get frontend data.
-			urlPath := fmt.Sprintf("/%s?tab=versions&m=json", test.pkgPath)
+			urlPath := fmt.Sprintf("/%s?tab=versions&content=json", test.pkgPath)
 			body := getFrontendPage(t, urlPath)
 			var vd frontend.VersionsDetails
 			if err := json.Unmarshal([]byte(body), &vd); err != nil {

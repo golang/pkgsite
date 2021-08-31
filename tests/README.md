@@ -50,7 +50,7 @@ using tests/api/run.sh.
 The tests compare API data for a module `tests/api/testdata` with the API
 history on the frontend versions page. The frontend that is used for comparison
 must have `GO_DISCOVERY_SERVE_STATS` set so that the
-`/<path>?tab=versions&m=json` endpoint is available.
+`/<path>?tab=versions&content=json` endpoint is available.
 
 ### Adding a package
 

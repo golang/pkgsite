@@ -33,7 +33,7 @@ func TestFrontendVersionsPage(t *testing.T) {
 			modulePath + "/duplicate", versionsPageMultiGoosDuplicates},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			urlPath := fmt.Sprintf("/%s?tab=versions&m=json", test.pkgPath)
+			urlPath := fmt.Sprintf("/%s?tab=versions&content=json", test.pkgPath)
 			body := getFrontendPage(t, urlPath)
 			var got frontend.VersionsDetails
 			if err := json.Unmarshal([]byte(body), &got); err != nil {

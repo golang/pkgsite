@@ -41,7 +41,7 @@ func NewClient(url string) *Client {
 // This is only used for tests.
 func (c *Client) GetVersions(pkgPath string) (_ *VersionsDetails, err error) {
 	defer derrors.Wrap(&err, "GetVersions(%q)", pkgPath)
-	u := fmt.Sprintf("%s/%s?tab=versions&m=json", c.url, pkgPath)
+	u := fmt.Sprintf("%s/%s?tab=versions&content=json", c.url, pkgPath)
 	r, err := c.httpClient.Get(u)
 	if err != nil {
 		return nil, err

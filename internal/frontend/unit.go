@@ -123,7 +123,7 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 	if err != nil {
 		return err
 	}
-	if s.serveStats && r.FormValue("m") == "json" {
+	if s.serveStats && r.FormValue("content") == "json" {
 		data, err := json.Marshal(d)
 		if err != nil {
 			return fmt.Errorf("json.Marshal: %v", err)
