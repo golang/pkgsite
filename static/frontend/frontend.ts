@@ -5,7 +5,33 @@
  * license that can be found in the LICENSE file.
  */
 
-import { analytics, keyboard } from '../shared/shared';
+import { registerHeaderListeners, registerSearchFormListeners } from 'static/shared/header/header';
+import { ClipboardController } from 'static/shared/clipboard/clipboard';
+import { ToolTipController } from 'static/shared/tooltip/tooltip';
+import { SelectNavController } from 'static/shared/outline/select';
+import { ModalController } from 'static/shared/modal/modal';
+
+import { keyboard } from 'static/shared/keyboard/keyboard';
+import * as analytics from 'static/shared/analytics/analytics';
+
+registerHeaderListeners();
+registerSearchFormListeners();
+
+for (const el of document.querySelectorAll<HTMLButtonElement>('.js-clipboard')) {
+  new ClipboardController(el);
+}
+
+for (const el of document.querySelectorAll<HTMLDialogElement>('.js-modal')) {
+  new ModalController(el);
+}
+
+for (const t of document.querySelectorAll<HTMLDetailsElement>('.js-tooltip')) {
+  new ToolTipController(t);
+}
+
+for (const el of document.querySelectorAll<HTMLSelectElement>('.js-selectNav')) {
+  new SelectNavController(el);
+}
 
 // Temporary shortcut for testing out the dark theme.
 keyboard.on('t', 'toggle theme', () => {

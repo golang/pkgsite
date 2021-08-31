@@ -5,7 +5,7 @@
  * license that can be found in the LICENSE file.
  */
 
-function registerHeaderListeners() {
+export function registerHeaderListeners(): void {
   const header = document.querySelector('.js-header');
   const menuButtons = document.querySelectorAll('.js-headerMenuButton');
   menuButtons.forEach(button => {
@@ -26,7 +26,7 @@ function registerHeaderListeners() {
   });
 }
 
-function registerSearchFormListeners() {
+export function registerSearchFormListeners(): void {
   const searchForm = document.querySelector('.js-searchForm');
   const expandSearch = document.querySelector('.js-expandSearch');
   const input = searchForm?.querySelector('input');
@@ -46,8 +46,3 @@ function registerSearchFormListeners() {
     }
   });
 }
-
-registerHeaderListeners();
-registerSearchFormListeners();
-
-export {};
