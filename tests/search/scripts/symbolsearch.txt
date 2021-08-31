@@ -5,20 +5,20 @@
 # This file contains test scripts for symbol search.
 
 Same symbol appears multiple times in one package.
-Foo
+[symbol] symbol:Foo
 Foo gopkg.in/foo.v1
 FOO github.com/julieqiu/api-demo
 FoO github.com/julieqiu/api-demo
 Foo github.com/julieqiu/api-demo
 
 Prefer symbols by popularity, then alphabetically, Add
-Add
+[symbol] symbol:Add
 Add math/bits
 
 Prefer symbols by package path, then symbol name
 # TODO: derank fields and methods; log.Logger.Writer should not
 # appear in this list.
-Writer
+[symbol] symbol:Writer
 Writer archive/tar
 Writer archive/zip
 Writer bufio
@@ -30,39 +30,39 @@ Writer io
 Writer log
 
 Search for package path element and symbol.
-math Add
+[symbol] symbol:math Add
 Add math/bits
 
 Search for package path element with slash and symbol.
-math/big Float
+[symbol] symbol:math/big Float
 Float math/big
 
 Search for <package path>.<symbol>.
-math/big.Float
+[symbol] symbol:math/big.Float
 Float math/big
 
 Search for <package name>.<symbol>.
-big.Float
+[symbol] symbol:big.Float
 Float math/big
 
 Multi-word search without subpaths
-julieqiu foo
+[symbol] symbol:julieqiu foo
 FOO github.com/julieqiu/api-demo
 FoO github.com/julieqiu/api-demo
 Foo github.com/julieqiu/api-demo
 
 Multi-word search with subpaths
-github.com/julieqiu foo
+[symbol] symbol:github.com/julieqiu foo
 FOO github.com/julieqiu/api-demo
 FoO github.com/julieqiu/api-demo
 Foo github.com/julieqiu/api-demo
 
 Multi-word search with hostname
-github.com foo
+[symbol] symbol:github.com foo
 FOO github.com/julieqiu/api-demo
 FoO github.com/julieqiu/api-demo
 Foo github.com/julieqiu/api-demo
 
 Multi-word three word search
-bee cmd command
+[symbol] symbol:bee cmd command
 Command github.com/beego/bee/cmd/commands

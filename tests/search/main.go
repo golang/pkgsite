@@ -50,8 +50,11 @@ func main() {
 
 const (
 	importedbyFile = "tests/search/importedby.txt"
-	testFile       = "tests/search/scripts/symbolsearch.txt"
 )
+
+var testFiles = []string{
+	"tests/search/scripts/symbolsearch.txt",
+}
 
 var symbolSearchExperiments = []string{
 	internal.ExperimentSearchGrouping,
@@ -74,9 +77,13 @@ func runImportedByUpdates(ctx context.Context, dbConnInfo, dbHost string) error 
 }
 
 func run(frontendHost string) error {
-	tests, err := readSearchTests(testFile)
-	if err != nil {
-		return err
+	var tests []*searchTest
+	for _, testFile := range testFiles {
+		ts, err := readSearchTests(testFile)
+		if err != nil {
+			return err
+		}
+		tests = append(tests, ts...)
 	}
 	client := frontend.NewClient(frontendHost)
 	var failed bool
@@ -103,7 +110,7 @@ func run(frontendHost string) error {
 
 func runTest(client *frontend.Client, st *searchTest) (output []string, err error) {
 	defer derrors.Wrap(&err, "runTest(ctx, db, st.title: %q)", st.title)
-	searchPage, err := client.Search(st.query, "symbol")
+	searchPage, err := client.Search(st.query, "")
 	if err != nil {
 		return nil, err
 	}
@@ -113,12 +120,12 @@ func runTest(client *frontend.Client, st *searchTest) (output []string, err erro
 		if len(gotResults) > i {
 			got = gotResults[i]
 		}
-		if want.symbol != got.SymbolName || want.pkg != got.PackagePath {
+		if want.symbol != got.SymbolName || want.pkg != got.PackagePath || st.mode != searchPage.SearchMode {
 			output = append(output,
-				fmt.Sprintf("query %s, mismatch result %d:\n\twant: %q %q\n\t got: %q %q\n",
+				fmt.Sprintf("query %s, mismatch result %d:\n\twant: %q %q [%q]\n\t got: %q %q [%q]\n",
 					st.query, i+1,
-					want.pkg, want.symbol,
-					got.PackagePath, got.SymbolName))
+					want.pkg, want.symbol, st.mode,
+					got.PackagePath, got.SymbolName, searchPage.SearchMode))
 		}
 	}
 	return output, nil
@@ -127,6 +134,7 @@ func runTest(client *frontend.Client, st *searchTest) (output []string, err erro
 type searchTest struct {
 	title   string
 	query   string
+	mode    string
 	results []*searchResult
 }
 
@@ -191,7 +199,16 @@ func readSearchTests(filename string) ([]*searchTest, error) {
 				// The last position was a title, so this must be the start
 				// of a new test set.
 				curr = posQuery
-				test.query = line
+				parts := strings.Fields(line)
+				mode := strings.TrimSuffix(strings.TrimPrefix(parts[0], "["), "]")
+				if len(parts) <= 1 {
+					return nil, fmt.Errorf("invalid syntax on line %d: %q (not enough elements)", num, line)
+				}
+				if mode != "" && mode != "package" && mode != "symbol" {
+					return nil, fmt.Errorf("invalid syntax on line %d: %q (invalid mode: %q)", num, line, mode)
+				}
+				test.mode = mode
+				test.query = strings.Join(parts[1:], " ")
 			case posQuery, posResult:
 				// The last position was a query or a result, so this must be
 				// an expected search result.

@@ -56,7 +56,7 @@ func (c *Client) GetVersions(pkgPath string) (_ *VersionsDetails, err error) {
 
 // Search returns a SearchPage for a search query and mode.
 func (c *Client) Search(q, mode string) (_ *SearchPage, err error) {
-	defer derrors.Wrap(&err, "Search(%q)", q)
+	defer derrors.Wrap(&err, "Search(%q, %q)", q, mode)
 	u := fmt.Sprintf("%s/search?q=%s&content=json&m=%s", c.url, url.QueryEscape(q), mode)
 	body, err := c.fetchJSONPage(u)
 	if err != nil {
