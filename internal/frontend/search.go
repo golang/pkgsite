@@ -324,7 +324,9 @@ func (s *Server) serveSearch(w http.ResponseWriter, r *http.Request, ds internal
 	if searchSymbols {
 		page.SearchMode = searchModeSymbol
 	}
-
+	if s.shouldServeJSON(r) {
+		return s.serveJSONPage(w, r, page)
+	}
 	tmpl := "legacy_search"
 	if experiment.IsActive(ctx, internal.ExperimentSearchGrouping) {
 		tmpl = "search"

@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"os"
 
 	"golang.org/x/pkgsite/internal/auth"
@@ -51,6 +52,21 @@ func (c *Client) GetVersions(pkgPath string) (_ *VersionsDetails, err error) {
 		return nil, fmt.Errorf("json.Unmarshal: %v:\nDoes GO_DISCOVERY_SERVE_STATS=true on the frontend?", err)
 	}
 	return &vd, nil
+}
+
+// Search returns a SearchPage for a search query and mode.
+func (c *Client) Search(q, mode string) (_ *SearchPage, err error) {
+	defer derrors.Wrap(&err, "Search(%q)", q)
+	u := fmt.Sprintf("%s/search?q=%s&content=json&m=%s", c.url, url.QueryEscape(q), mode)
+	body, err := c.fetchJSONPage(u)
+	if err != nil {
+		return nil, err
+	}
+	var sp SearchPage
+	if err := json.Unmarshal(body, &sp); err != nil {
+		return nil, fmt.Errorf("json.Unmarshal: %v:\nDoes GO_DISCOVERY_SERVE_STATS=true on the frontend?", err)
+	}
+	return &sp, nil
 }
 
 func (c *Client) fetchJSONPage(url string) (_ []byte, err error) {
