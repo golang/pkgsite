@@ -1,0 +1,15 @@
+# Copyright 2021 The Go Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style
+# license that can be found in the LICENSE file.
+#
+# This file contains test scripts for queries and their default search mode.
+
+github.com defaults to package mode
+[package] github.com
+github.com/go-openapi/strfmt
+github.com/beego/bee/cmd/commands/api
+github.com/julieqiu/api-demo/tar
+
+gopkg.in search defaults to package mode
+[package] gopkg.in
+gopkg.in/foo.v1

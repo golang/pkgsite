@@ -53,6 +53,7 @@ const (
 )
 
 var testFiles = []string{
+	"tests/search/scripts/default.txt",
 	"tests/search/scripts/symbolsearch.txt",
 }
 
@@ -122,7 +123,7 @@ func runTest(client *frontend.Client, st *searchTest) (output []string, err erro
 		}
 		if want.symbol != got.SymbolName || want.pkg != got.PackagePath || st.mode != searchPage.SearchMode {
 			output = append(output,
-				fmt.Sprintf("query %s, mismatch result %d:\n\twant: %q %q [%q]\n\t got: %q %q [%q]\n",
+				fmt.Sprintf("query %s, mismatch result %d:\n\twant: %q %q [m=%q]\n\t got: %q %q [m=%q]\n",
 					st.query, i+1,
 					want.pkg, want.symbol, st.mode,
 					got.PackagePath, got.SymbolName, searchPage.SearchMode))
@@ -176,7 +177,7 @@ func readSearchTests(filename string) ([]*searchTest, error) {
 			// have passed a test case result, another newline, or a comment,
 			// otherwise this file can't be valid.
 			if curr != posNewline && curr != posResult {
-				return nil, fmt.Errorf("invalid syntax on line %d: %q", num, line)
+				return nil, fmt.Errorf("invalid syntax on line %d (%q): %q", num, filename, line)
 			}
 			if curr == posResult {
 				// This is the first time that we have seen a newline for this
@@ -214,12 +215,18 @@ func readSearchTests(filename string) ([]*searchTest, error) {
 				// an expected search result.
 				curr = posResult
 				parts := strings.Split(line, " ")
-				if len(parts) != 2 {
-					return nil, fmt.Errorf("invalid syntax on line %d: %q", num, line)
-				}
-				r := &searchResult{
-					symbol: parts[0],
-					pkg:    parts[1],
+				r := &searchResult{}
+				if test.mode == "symbol" {
+					if len(parts) != 2 {
+						return nil, fmt.Errorf("invalid syntax on line %d (%q): %q (want symbol result)", num, filename, line)
+					}
+					r.symbol = parts[0]
+					r.pkg = parts[1]
+				} else {
+					if len(parts) != 1 {
+						return nil, fmt.Errorf("invalid syntax on line %d (%q): %q (want package result)", num, filename, line)
+					}
+					r.pkg = parts[0]
 				}
 				test.results = append(test.results, r)
 			default:
