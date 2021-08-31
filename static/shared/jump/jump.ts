@@ -22,6 +22,8 @@
 // https://go.googlesource.com/gddo/+/refs/heads/master/gddo-server/assets/site.js.
 // It was modified to remove the dependence on jquery and bootstrap.
 
+import { keyboard } from '../keyboard/keyboard';
+
 const jumpDialog = document.querySelector<HTMLDialogElement>('.JumpDialog');
 const jumpBody = jumpDialog?.querySelector<HTMLDivElement>('.JumpDialog-body');
 const jumpList = jumpDialog?.querySelector<HTMLDivElement>('.JumpDialog-list');
@@ -251,44 +253,29 @@ export function initModals(): void {
 
   const shortcutsDialog = document.querySelector<HTMLDialogElement>('.ShortcutsDialog');
 
-  // Keyboard shortcuts:
-  // - Pressing '/' focuses the search box
   // - Pressing 'f' or 'F' opens the jump-to-symbol dialog.
   // - Pressing '?' opens up the shortcut dialog.
   // Ignore a keypress if a dialog is already open, or if it is pressed on a
   // component that wants to consume it.
-  document.addEventListener('keypress', function (e) {
-    if (jumpDialog?.open || shortcutsDialog?.open) {
-      return;
-    }
-    const target = e.target as HTMLElement | null;
-    const t = target?.tagName;
-    if (t == 'INPUT' || t == 'SELECT' || t == 'TEXTAREA') {
-      return;
-    }
-    if (target?.contentEditable == 'true') {
-      return;
-    }
-    if (e.metaKey || e.ctrlKey) {
-      return;
-    }
-    const ch = String.fromCharCode(e.which);
-    switch (ch) {
-      case 'f':
-      case 'F':
-        e.preventDefault();
-        if (jumpFilter) {
-          jumpFilter.value = '';
-        }
-        jumpDialog?.showModal();
-        jumpFilter?.focus();
-        updateJumpList('');
-        break;
-      case '?':
-        shortcutsDialog?.showModal();
-        break;
-    }
-  });
+  keyboard
+    .on('f', 'open jump to modal', e => {
+      if (jumpDialog?.open || shortcutsDialog?.open) {
+        return;
+      }
+      e.preventDefault();
+      if (jumpFilter) {
+        jumpFilter.value = '';
+      }
+      jumpDialog?.showModal();
+      jumpFilter?.focus();
+      updateJumpList('');
+    })
+    .on('?', 'open shortcuts modal', () => {
+      if (jumpDialog?.open || shortcutsDialog?.open) {
+        return;
+      }
+      shortcutsDialog?.showModal();
+    });
 
   const jumpOutlineInput = document.querySelector('.js-jumpToInput');
   if (jumpOutlineInput) {
