@@ -43,17 +43,17 @@ const readmeCollapse = document.querySelector('.js-readmeCollapse');
 const mobileNavSelect = document.querySelector<HTMLSelectElement>('.DocNavMobile-select');
 if (readme && readmeContent && readmeOutline && readmeExpand.length && readmeCollapse) {
   if (window.location.hash.includes('readme')) {
-    readme.classList.add('UnitReadme--expanded');
+    expandReadme();
   }
   mobileNavSelect?.addEventListener('change', e => {
     if ((e.target as HTMLSelectElement).value.startsWith('readme-')) {
-      readme.classList.add('UnitReadme--expanded');
+      expandReadme();
     }
   });
   readmeExpand.forEach(el =>
     el.addEventListener('click', e => {
       e.preventDefault();
-      readme.classList.add('UnitReadme--expanded');
+      expandReadme();
       readme.scrollIntoView();
     })
   );
@@ -65,19 +65,28 @@ if (readme && readmeContent && readmeOutline && readmeExpand.length && readmeCol
     }
   });
   readmeContent.addEventListener('keyup', () => {
-    readme.classList.add('UnitReadme--expanded');
+    expandReadme();
   });
   readmeContent.addEventListener('click', () => {
-    readme.classList.add('UnitReadme--expanded');
+    expandReadme();
   });
   readmeOutline.addEventListener('click', () => {
-    readme.classList.add('UnitReadme--expanded');
+    expandReadme();
   });
   document.addEventListener('keydown', e => {
     if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
-      readme.classList.add('UnitReadme--expanded');
+      expandReadme();
     }
   });
+}
+
+/**
+ * expandReadme expands the readme and adds the section-readme hash to the
+ * URL so it stays expanded when navigating back from an external link.
+ */
+function expandReadme() {
+  history.replaceState(null, '', `${location.pathname}#section-readme`);
+  readme?.classList.add('UnitReadme--expanded');
 }
 
 /**
