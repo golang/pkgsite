@@ -4,6 +4,12 @@
 
 package internal
 
+import (
+	"strings"
+
+	"golang.org/x/mod/semver"
+)
+
 // TopLevelDomains contains all of the top level domains in the discovery
 // database.
 var TopLevelDomains = map[string]bool{
@@ -183,4 +189,19 @@ var TopLevelDomains = map[string]bool{
 	"xyz":         true,
 	"yandex":      true,
 	"zone":        true,
+}
+
+// IsGoPkgInPathElement reports whether p is an element of a gopkg.in path.
+// It returns true if p has "gopkg.in" as a prefix, or the suffix is a major
+// version, for example "yaml.v2".
+func IsGoPkgInPathElement(p string) bool {
+	if strings.HasPrefix(strings.ToLower(p), "gopkg.in") {
+		return true
+	}
+	parts := strings.Split(p, ".")
+	if len(parts) <= 1 {
+		return false
+	}
+	maj := parts[len(parts)-1]
+	return semver.Major(maj) == maj
 }

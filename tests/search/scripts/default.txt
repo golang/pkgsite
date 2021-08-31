@@ -13,3 +13,7 @@ github.com/julieqiu/api-demo/tar
 gopkg.in search defaults to package mode
 [package] gopkg.in
 gopkg.in/foo.v1
+
+gopkg.in element search defaults to package mode
+[package] foo.v1
+gopkg.in/foo.v1

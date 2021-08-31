@@ -397,7 +397,7 @@ type Foo interface {
 	}
 }
 
-func TestIsPackageDotSymbol(t *testing.T) {
+func TestShouldDefaultToSymbolSearch(t *testing.T) {
 	for _, test := range []struct {
 		q    string
 		want bool
@@ -409,9 +409,11 @@ func TestIsPackageDotSymbol(t *testing.T) {
 		{"sql", false},
 		{"sql.DB", true},
 		{"sql.DB.Begin", true},
+		{"yaml.v2", false},
+		{"gopkg.in", false},
 	} {
 		t.Run(test.q, func(t *testing.T) {
-			got := isPackageDotSymbol(test.q)
+			got := shouldDefaultToSymbolSearch(test.q)
 			if diff := cmp.Diff(test.want, got); diff != "" {
 				t.Errorf("mismatch (-want +got):\n%s", diff)
 			}
