@@ -299,10 +299,10 @@ func TestFetchAndUpdateState(t *testing.T) {
 	}
 
 	sourceClient := source.NewClient(sourceTimeout)
-	f := &Fetcher{proxyClient.WithZipCache(), sourceClient, testDB, nil}
 	for _, test := range testCases {
 		t.Run(strings.ReplaceAll(test.pkg+"@"+test.version, "/", " "), func(t *testing.T) {
 			defer postgres.ResetTestDB(testDB, t)
+			f := &Fetcher{proxyClient.WithCache(), sourceClient, testDB, nil}
 			if _, _, err := f.FetchAndUpdateState(ctx, test.modulePath, test.version, testAppVersion); err != nil {
 				t.Fatalf("FetchAndUpdateState(%q, %q, %v, %v, %v): %v", test.modulePath, test.version, proxyClient, sourceClient, testDB, err)
 			}
@@ -406,7 +406,7 @@ func TestFetchAndUpdateStateCacheZip(t *testing.T) {
 
 	// With the cache, we download it only once.
 	postgres.ResetTestDB(testDB, t) // to avoid finding has_go_mod in the DB
-	f.ProxyClient = proxyClient.WithZipCache()
+	f.ProxyClient = proxyClient.WithCache()
 	if _, _, err := f.FetchAndUpdateState(ctx, "m.com", "v1.0.0", testAppVersion); err != nil {
 		t.Fatal(err)
 	}

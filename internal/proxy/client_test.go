@@ -354,3 +354,29 @@ func TestEncodedURL(t *testing.T) {
 		}
 	}
 }
+
+func TestCache(t *testing.T) {
+	ctx := context.Background()
+	c1, teardownProxy := proxytest.SetupTestClient(t, []*proxytest.Module{testModule})
+
+	c := c1.WithCache()
+	got, err := c.Info(ctx, sample.ModulePath, sample.VersionString)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_ = got
+	teardownProxy()
+	// Need server to satisfy different request.
+	_, err = c.Info(ctx, sample.ModulePath, "v4.5.6")
+	if err == nil {
+		t.Fatal("got nil, want error")
+	}
+	// Don't need server for cached request.
+	got2, err := c.Info(ctx, sample.ModulePath, sample.VersionString)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !cmp.Equal(got, got2) {
+		t.Errorf("got %+v first, then %+v", got, got2)
+	}
+}

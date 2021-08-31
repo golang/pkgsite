@@ -38,12 +38,7 @@ type Client struct {
 	// Whether fetch should be disabled.
 	disableFetch bool
 
-	// One-element zip cache, to avoid a double download.
-	// See TestFetchAndUpdateStateCacheZip in internal/worker/fetch_test.go.
-	// Not thread-safe; should be used by only a single request goroutine.
-	rememberLastZip                   bool
-	lastZipModulePath, lastZipVersion string
-	lastZipReader                     *zip.Reader
+	cache *cache
 }
 
 // A VersionInfo contains metadata about a given version of a module.
@@ -81,14 +76,10 @@ func (c *Client) FetchDisabled() bool {
 	return c.disableFetch
 }
 
-// WithZipCache returns a new client that caches the last zip
-// it downloads (not thread-safely).
-func (c *Client) WithZipCache() *Client {
+// WithCache returns a new client that caches some RPCs.
+func (c *Client) WithCache() *Client {
 	c2 := *c
-	c2.rememberLastZip = true
-	c2.lastZipModulePath = ""
-	c2.lastZipVersion = ""
-	c2.lastZipReader = nil
+	c2.cache = &cache{}
 	return &c2
 }
 
@@ -107,6 +98,10 @@ func (c *Client) Info(ctx context.Context, modulePath, requestedVersion string) 
 		}
 		wrap(&err, "proxy.Client.Info(%q, %q)", modulePath, requestedVersion)
 	}()
+
+	if v := c.cache.getInfo(modulePath, requestedVersion); v != nil {
+		return v, nil
+	}
 	data, err := c.readBody(ctx, modulePath, requestedVersion, "info")
 	if err != nil {
 		return nil, err
@@ -115,13 +110,23 @@ func (c *Client) Info(ctx context.Context, modulePath, requestedVersion string) 
 	if err := json.Unmarshal(data, &v); err != nil {
 		return nil, err
 	}
+	c.cache.putInfo(modulePath, requestedVersion, &v)
 	return &v, nil
 }
 
 // Mod makes a request to $GOPROXY/<module>/@v/<resolvedVersion>.mod and returns the raw data.
 func (c *Client) Mod(ctx context.Context, modulePath, resolvedVersion string) (_ []byte, err error) {
 	defer derrors.WrapStack(&err, "proxy.Client.Mod(%q, %q)", modulePath, resolvedVersion)
-	return c.readBody(ctx, modulePath, resolvedVersion, "mod")
+
+	if b := c.cache.getMod(modulePath, resolvedVersion); b != nil {
+		return b, nil
+	}
+	b, err := c.readBody(ctx, modulePath, resolvedVersion, "mod")
+	if err != nil {
+		return nil, err
+	}
+	c.cache.putMod(modulePath, resolvedVersion, b)
+	return b, nil
 }
 
 // Zip makes a request to $GOPROXY/<modulePath>/@v/<resolvedVersion>.zip and
@@ -132,8 +137,8 @@ func (c *Client) Mod(ctx context.Context, modulePath, resolvedVersion string) (_
 func (c *Client) Zip(ctx context.Context, modulePath, resolvedVersion string) (_ *zip.Reader, err error) {
 	defer derrors.WrapStack(&err, "proxy.Client.Zip(ctx, %q, %q)", modulePath, resolvedVersion)
 
-	if c.lastZipModulePath == modulePath && c.lastZipVersion == resolvedVersion {
-		return c.lastZipReader, nil
+	if r := c.cache.getZip(modulePath, resolvedVersion); r != nil {
+		return r, nil
 	}
 	bodyBytes, err := c.readBody(ctx, modulePath, resolvedVersion, "zip")
 	if err != nil {
@@ -143,11 +148,7 @@ func (c *Client) Zip(ctx context.Context, modulePath, resolvedVersion string) (_
 	if err != nil {
 		return nil, fmt.Errorf("zip.NewReader: %v: %w", err, derrors.BadModule)
 	}
-	if c.rememberLastZip {
-		c.lastZipModulePath = modulePath
-		c.lastZipVersion = resolvedVersion
-		c.lastZipReader = zipReader
-	}
+	c.cache.putZip(modulePath, resolvedVersion, zipReader)
 	return zipReader, nil
 }
 

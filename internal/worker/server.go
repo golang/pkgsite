@@ -299,7 +299,7 @@ func (s *Server) doFetch(w http.ResponseWriter, r *http.Request) (string, int) {
 	}
 
 	f := &Fetcher{
-		ProxyClient:  s.proxyClient.WithZipCache(),
+		ProxyClient:  s.proxyClient.WithCache(),
 		SourceClient: s.sourceClient,
 		DB:           s.db,
 		Cache:        s.cache,
