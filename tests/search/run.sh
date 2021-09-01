@@ -16,7 +16,7 @@ main() {
   export GO_DISCOVERY_DATABASE_NAME=discovery_symbol_test
   export GO_DISCOVERY_CONFIG_DYNAMIC=tests/search/config.yaml
   export GO_DISCOVERY_SEED_DB_FILE=tests/search/seed.txt
-  dockercompose build && dockercompose run seeddb && ./devtools/go.sh run tests/search/main.go
+  dockercompose build && dockercompose run seeddb && dockercompose run searchtest
 
   local status=$?
   if [ $status -eq 0 ]

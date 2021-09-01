@@ -22,9 +22,13 @@ import (
 	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/experiment"
+	"golang.org/x/pkgsite/internal/frontend"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/postgres"
 )
+
+var frontendHost = flag.String("frontend", "http://localhost:8080",
+	"Use the frontend host referred to by this URL for comparing data")
 
 func main() {
 	flag.Parse()
@@ -36,15 +40,10 @@ func main() {
 	}
 	log.SetLevel(cfg.LogLevel)
 
-	// Wrap the postgres driver with our own wrapper, which adds OpenCensus instrumentation.
-	ddb, err := database.Open("pgx", cfg.DBConnInfo(), "seeddb")
-	if err != nil {
-		log.Fatalf(ctx, "database.Open for host %s failed with %v", cfg.DBHost, err)
+	if err := runImportedByUpdates(ctx, cfg.DBConnInfo(), cfg.DBHost); err != nil {
+		log.Fatal(ctx, err)
 	}
-	db := postgres.New(ddb)
-	defer db.Close()
-
-	if err := run(ctx, db); err != nil {
+	if err := run(*frontendHost); err != nil {
 		log.Fatal(ctx, err)
 	}
 }
@@ -59,21 +58,30 @@ var symbolSearchExperiments = []string{
 	internal.ExperimentSymbolSearch,
 }
 
-func run(ctx context.Context, db *postgres.DB) error {
+func runImportedByUpdates(ctx context.Context, dbConnInfo, dbHost string) error {
+	ddb, err := database.Open("pgx", dbConnInfo, "seeddb")
+	if err != nil {
+		log.Fatalf(ctx, "database.Open for host %s failed with %v", dbHost, err)
+	}
+	db := postgres.New(ddb)
+	defer db.Close()
 	counts, err := readImportedByCounts(importedbyFile)
 	if err != nil {
 		return err
 	}
-	if _, err := db.UpdateSearchDocumentsImportedByCountWithCounts(ctx, counts); err != nil {
-		return err
-	}
+	_, err = db.UpdateSearchDocumentsImportedByCountWithCounts(ctx, counts)
+	return err
+}
+
+func run(frontendHost string) error {
 	tests, err := readSearchTests(testFile)
 	if err != nil {
 		return err
 	}
+	client := frontend.NewClient(frontendHost)
 	var failed bool
 	for _, st := range tests {
-		output, err := runTest(ctx, db, st)
+		output, err := runTest(client, st)
 		if err != nil {
 			return err
 		}
@@ -93,16 +101,17 @@ func run(ctx context.Context, db *postgres.DB) error {
 	return nil
 }
 
-func runTest(ctx context.Context, db *postgres.DB, st *searchTest) (output []string, err error) {
+func runTest(client *frontend.Client, st *searchTest) (output []string, err error) {
 	defer derrors.Wrap(&err, "runTest(ctx, db, st.title: %q)", st.title)
-	results, err := db.Search(ctx, st.query, postgres.SearchOptions{MaxResults: 10, SearchSymbols: true})
+	searchPage, err := client.Search(st.query, "symbol")
 	if err != nil {
 		return nil, err
 	}
+	gotResults := searchPage.Results
 	for i, want := range st.results {
-		got := &postgres.SearchResult{}
-		if len(results) > i {
-			got = results[i]
+		got := &frontend.SearchResult{}
+		if len(gotResults) > i {
+			got = gotResults[i]
 		}
 		if want.symbol != got.SymbolName || want.pkg != got.PackagePath {
 			output = append(output,

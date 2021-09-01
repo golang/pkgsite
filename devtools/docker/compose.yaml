@@ -42,6 +42,19 @@ services:
     volumes:
       - ../../:/pkgsite
     working_dir: /pkgsite
+  searchtest:
+    image: golang:1.16.7
+    depends_on:
+      - frontend
+    environment:
+      <<: *database-variables
+      <<: *go-variables
+      WAITFORIT_TIMEOUT: 300
+    entrypoint: ./third_party/wait-for-it/wait-for-it.sh frontend:8080 -- go run
+    command: "tests/search/main.go -frontend http://frontend:8080"
+    volumes:
+      - ../../:/pkgsite
+    working_dir: /pkgsite
   api:
     image: golang:1.16.7
     depends_on:
