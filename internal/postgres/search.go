@@ -9,6 +9,7 @@ import (
 	"database/sql"
 	"fmt"
 	"io"
+	"path"
 	"sort"
 	"strings"
 	"time"
@@ -540,29 +541,29 @@ func sortAndDedup(s []string) []string {
 //
 // Higher tagged major versions of a module replace lower ones.
 func groupSearchResults(rs []*SearchResult) []*SearchResult {
-	bestInSeries := map[string]*SearchResult{} // series path to result with max major version
+	bestInGroup := map[string]*SearchResult{} // series path to result with max major version
 	// Since rs is sorted by score, the first package we see for a series is the
 	// highest-ranked one. However, we may prefer to show a lower-ranked one from a
 	// module in the same series with a higher major version.
 	for _, r := range rs {
-		seriesPath, rMajor := internal.SeriesPathAndMajorVersion(r.ModulePath)
-		b := bestInSeries[seriesPath]
+		group, rMajor := groupAndMajorVersion(r)
+		b := bestInGroup[group]
 		if b == nil {
-			// First result (package) with this series path; remember it.
-			bestInSeries[seriesPath] = r
+			// First result (package) with this key; remember it.
+			bestInGroup[group] = r
 			r.OtherMajor = map[string]bool{}
 		} else {
-			_, bMajor := internal.SeriesPathAndMajorVersion(b.ModulePath)
+			_, bMajor := groupAndMajorVersion(b)
 			switch {
 			case !version.IsPseudo(r.Version) && (rMajor > bMajor || version.IsPseudo(b.Version)):
 				// r is tagged, and is either in a higher major version, or the current best
 				// is not tagged. Either way, prefer r to b.
-				bestInSeries[seriesPath] = r
+				bestInGroup[group] = r
 				r.OtherMajor = b.OtherMajor
 				r.OtherMajor[b.ModulePath] = true
 				r.Score = b.Score // inherit the lower major version's higher score
 			case rMajor == bMajor:
-				// r is another package from the module of b; remember it there.
+				// r is another package in b's group; remember it there.
 				b.SameModule = append(b.SameModule, r)
 
 			default:
@@ -574,7 +575,7 @@ func groupSearchResults(rs []*SearchResult) []*SearchResult {
 	}
 	// Collect new results and re-sort by score.
 	var results []*SearchResult
-	for _, r := range bestInSeries {
+	for _, r := range bestInGroup {
 		if len(r.OtherMajor) == 0 {
 			r.OtherMajor = nil
 		}
@@ -584,6 +585,19 @@ func groupSearchResults(rs []*SearchResult) []*SearchResult {
 		return results[i].Score > results[j].Score
 	})
 	return results
+}
+
+func groupAndMajorVersion(r *SearchResult) (string, int) {
+	// Packages in the standard library are grouped by their top-level
+	// directory, and we can consider them all part of the same major version.
+	if r.ModulePath == stdlib.ModulePath {
+		dir := r.PackagePath
+		if strings.ContainsRune(dir, '/') {
+			dir = path.Dir(dir)
+		}
+		return dir, 1
+	}
+	return internal.SeriesPathAndMajorVersion(r.ModulePath)
 }
 
 // numRows counts the number of rows in a slice of SearchResults.

@@ -25,6 +25,7 @@ import (
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/licenses"
+	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/testing/sample"
 )
 
@@ -1436,6 +1437,25 @@ func TestGroupSearchResults(t *testing.T) {
 			},
 			want: []*SearchResult{
 				{Name: "m1", ModulePath: "m1", Version: "v0.0.0", Score: 10, OtherMajor: set("m1/v2", "m1/v3")},
+			},
+		},
+		{
+			name: "stdlib",
+			in: []*SearchResult{
+				{PackagePath: "net", ModulePath: stdlib.ModulePath, Score: 10},
+				{PackagePath: "m1", ModulePath: "m1", Version: "v0.0.0", Score: 9},
+				{PackagePath: "net/http", ModulePath: stdlib.ModulePath, Score: 8},
+				{PackagePath: "encoding/json", ModulePath: stdlib.ModulePath, Score: 7},
+				{PackagePath: "encoding/gob", ModulePath: stdlib.ModulePath, Score: 6},
+			},
+			want: []*SearchResult{
+				{PackagePath: "net", ModulePath: stdlib.ModulePath, Score: 10, SameModule: []*SearchResult{
+					{PackagePath: "net/http", ModulePath: stdlib.ModulePath, Score: 8},
+				}},
+				{PackagePath: "m1", ModulePath: "m1", Version: "v0.0.0", Score: 9},
+				{PackagePath: "encoding/json", ModulePath: stdlib.ModulePath, Score: 7, SameModule: []*SearchResult{
+					{PackagePath: "encoding/gob", ModulePath: stdlib.ModulePath, Score: 6},
+				}},
 			},
 		},
 	} {
