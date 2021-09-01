@@ -39,7 +39,6 @@ import (
 
 	"github.com/google/safehtml/template"
 	"golang.org/x/pkgsite/internal"
-	"golang.org/x/pkgsite/internal/dcensus"
 	"golang.org/x/pkgsite/internal/fetch"
 	"golang.org/x/pkgsite/internal/fetchdatasource"
 	"golang.org/x/pkgsite/internal/frontend"
@@ -112,7 +111,7 @@ func main() {
 	if err != nil {
 		die("%s\nMaybe you need to provide the location of static assets with -static.", err)
 	}
-	router := dcensus.NewRouter(frontend.TagRoute)
+	router := http.NewServeMux()
 	server.Install(router.Handle, nil, nil)
 	mw := middleware.Timeout(54 * time.Second)
 	log.Infof(ctx, "Listening on addr %s", *httpAddr)
