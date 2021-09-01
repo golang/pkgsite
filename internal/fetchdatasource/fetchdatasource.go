@@ -128,7 +128,6 @@ func (ds *FetchDataSource) fetch(ctx context.Context, modulePath, version string
 	}()
 	for _, g := range ds.opts.Getters {
 		fr := fetch.FetchModule(ctx, modulePath, version, g, ds.opts.SourceClient)
-		defer fr.Defer()
 		if fr.Error == nil {
 			m := fr.Module
 			if ds.opts.BypassLicenseCheck {

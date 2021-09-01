@@ -17,7 +17,6 @@ import (
 	"io"
 	"io/fs"
 	"io/ioutil"
-	"math"
 	"net/http"
 	"os"
 	"path"
@@ -26,10 +25,8 @@ import (
 
 	"go.opencensus.io/trace"
 	"golang.org/x/pkgsite/internal"
-	"golang.org/x/pkgsite/internal/config"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/godoc"
-	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/stdlib"
 )
@@ -357,37 +354,4 @@ func readFSFile(fsys fs.FS, path string, limit int64) (_ []byte, err error) {
 	}
 	defer f.Close()
 	return ioutil.ReadAll(io.LimitReader(f, limit))
-}
-
-// mib is the number of bytes in a mebibyte (Mi).
-const mib = 1024 * 1024
-
-// The largest module zip size we can comfortably process.
-// We probably will OOM if we process a module whose zip is larger.
-var maxModuleZipSize int64 = math.MaxInt64
-
-func init() {
-	v := config.GetEnvInt(context.Background(), "GO_DISCOVERY_MAX_MODULE_ZIP_MI", -1)
-	if v > 0 {
-		maxModuleZipSize = int64(v) * mib
-	}
-}
-
-var zipLoadShedder *loadShedder
-
-func init() {
-	ctx := context.Background()
-	mebis := config.GetEnvInt(ctx, "GO_DISCOVERY_MAX_IN_FLIGHT_ZIP_MI", -1)
-	if mebis > 0 {
-		log.Infof(ctx, "shedding load over %dMi", mebis)
-		zipLoadShedder = &loadShedder{maxSizeInFlight: uint64(mebis) * mib}
-	}
-}
-
-// ZipLoadShedStats returns a snapshot of the current LoadShedStats for zip files.
-func ZipLoadShedStats() LoadShedStats {
-	if zipLoadShedder != nil {
-		return zipLoadShedder.stats()
-	}
-	return LoadShedStats{}
 }

@@ -94,7 +94,7 @@ func (s *Server) doIndexPage(w http.ResponseWriter, r *http.Request) (err error)
 		StartTime       time.Time
 		Experiments     []*internal.Experiment
 		Excluded        []string
-		LoadShedStats   fetch.LoadShedStats
+		LoadShedStats   LoadShedStats
 		GoMemStats      runtime.MemStats
 		ProcessStats    processMemStats
 		SystemStats     systemMemStats
@@ -110,7 +110,7 @@ func (s *Server) doIndexPage(w http.ResponseWriter, r *http.Request) (err error)
 		StartTime:      startTime,
 		Experiments:    experiments,
 		Excluded:       excluded,
-		LoadShedStats:  fetch.ZipLoadShedStats(),
+		LoadShedStats:  ZipLoadShedStats(),
 		GoMemStats:     gms,
 		ProcessStats:   pms,
 		SystemStats:    sms,

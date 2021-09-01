@@ -8,6 +8,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math"
 	"net/http"
 	"sort"
 	"strings"
@@ -15,10 +16,13 @@ import (
 	"time"
 	"unicode/utf8"
 
+	"go.opencensus.io/stats"
+	"go.opencensus.io/stats/view"
 	"go.opencensus.io/trace"
 	"golang.org/x/mod/semver"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/cache"
+	"golang.org/x/pkgsite/internal/config"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/fetch"
@@ -27,6 +31,22 @@ import (
 	"golang.org/x/pkgsite/internal/proxy"
 	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/stdlib"
+)
+
+var (
+	fetchesShedded = stats.Int64(
+		"go-discovery/worker/fetch-shedded",
+		"Count of shedded fetches.",
+		stats.UnitDimensionless,
+	)
+
+	// SheddedFetchCount counts the number of fetches that were shedded.
+	SheddedFetchCount = &view.View{
+		Name:        "go-discovery/worker/fetch-shedded",
+		Measure:     fetchesShedded,
+		Aggregation: view.Count(),
+		Description: "Count of shedded fetches",
+	}
 )
 
 // fetchTask represents the result of a fetch task that was processed.
@@ -65,6 +85,13 @@ func (f *Fetcher) FetchAndUpdateState(ctx context.Context, modulePath, requested
 		trace.StringAttribute("modulePath", modulePath),
 		trace.StringAttribute("version", requestedVersion))
 	defer span.End()
+
+	// If we're overloaded, shed load by not processing this module.
+	deferFunc, err := f.maybeShed(ctx, modulePath, requestedVersion)
+	defer deferFunc()
+	if err != nil {
+		return derrors.ToStatus(err), "", err
+	}
 
 	// Begin by htting the proxy's info endpoint. That will make the proxy aware
 	// of the version if it isn't already, as can happen when we arrive here via
@@ -201,7 +228,6 @@ func (f *Fetcher) fetchAndInsertModule(ctx context.Context, modulePath, requeste
 		if fr == nil {
 			panic("fetch.FetchModule should never return a nil FetchResult")
 		}
-		defer fr.Defer()
 		ft.FetchResult = *fr
 		ft.timings["fetch.FetchModule"] = time.Since(start)
 	}()
@@ -417,4 +443,69 @@ func (f *Fetcher) FetchAndUpdateLatest(ctx context.Context, modulePath string) (
 		return nil, f.DB.UpdateLatestModuleVersionsStatus(ctx, modulePath, status)
 	}
 	return f.DB.UpdateLatestModuleVersions(ctx, lmv)
+}
+
+func (f *Fetcher) maybeShed(ctx context.Context, modulePath, version string) (func(), error) {
+	if zipLoadShedder == nil {
+		return func() {}, nil
+	}
+	zipSize, err := getZipSize(ctx, modulePath, version, f.ProxyClient)
+	if err != nil {
+		return func() {}, err
+	}
+	// Load shed or mark module as too large.
+	// We treat zip size as a proxy for the total memory consumed by
+	// processing a module, and use it to decide whether we can currently
+	// afford to process a module.
+	shouldShed, deferFunc := zipLoadShedder.shouldShed(uint64(zipSize))
+	if shouldShed {
+		stats.Record(ctx, fetchesShedded.M(1))
+		return deferFunc, fmt.Errorf("%w: size=%dMi", derrors.SheddingLoad, zipSize/mib)
+	}
+	if zipSize > maxModuleZipSize {
+		log.Warningf(ctx, "FetchModule: %s@%s zip size %dMi exceeds max %dMi",
+			modulePath, version, zipSize/mib, maxModuleZipSize/mib)
+		return deferFunc, derrors.ModuleTooLarge
+	}
+	return deferFunc, nil
+}
+
+func getZipSize(ctx context.Context, modulePath, resolvedVersion string, prox *proxy.Client) (_ int64, err error) {
+	if modulePath == stdlib.ModulePath {
+		return stdlib.EstimatedZipSize, nil
+	}
+	return prox.ZipSize(ctx, modulePath, resolvedVersion)
+}
+
+// mib is the number of bytes in a mebibyte (Mi).
+const mib = 1024 * 1024
+
+// The largest module zip size we can comfortably process.
+// We probably will OOM if we process a module whose zip is larger.
+var maxModuleZipSize int64 = math.MaxInt64
+
+func init() {
+	v := config.GetEnvInt(context.Background(), "GO_DISCOVERY_MAX_MODULE_ZIP_MI", -1)
+	if v > 0 {
+		maxModuleZipSize = int64(v) * mib
+	}
+}
+
+var zipLoadShedder *loadShedder
+
+func init() {
+	ctx := context.Background()
+	mebis := config.GetEnvInt(ctx, "GO_DISCOVERY_MAX_IN_FLIGHT_ZIP_MI", -1)
+	if mebis > 0 {
+		log.Infof(ctx, "shedding load over %dMi", mebis)
+		zipLoadShedder = &loadShedder{maxSizeInFlight: uint64(mebis) * mib}
+	}
+}
+
+// ZipLoadShedStats returns a snapshot of the current LoadShedStats for zip files.
+func ZipLoadShedStats() LoadShedStats {
+	if zipLoadShedder != nil {
+		return zipLoadShedder.stats()
+	}
+	return LoadShedStats{}
 }

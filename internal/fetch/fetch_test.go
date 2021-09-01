@@ -118,7 +118,6 @@ func TestFetchModule(t *testing.T) {
 					defer cancel()
 
 					got, d := fetcher.fetch(t, true, ctx, mod, test.fetchVersion)
-					defer got.Defer()
 					if got.Error != nil {
 						t.Fatalf("fetching failed: %v", got.Error)
 					}
@@ -129,7 +128,6 @@ func TestFetchModule(t *testing.T) {
 					opts := []cmp.Option{
 						cmpopts.IgnoreFields(internal.Documentation{}, "Source"),
 						cmpopts.IgnoreFields(internal.PackageVersionState{}, "Error"),
-						cmpopts.IgnoreFields(FetchResult{}, "Defer"),
 						cmp.AllowUnexported(source.Info{}),
 						cmpopts.EquateEmpty(),
 					}
@@ -216,7 +214,6 @@ func TestFetchModule_Errors(t *testing.T) {
 		} {
 			t.Run(fmt.Sprintf("%s:%s", fetcher.name, test.name), func(t *testing.T) {
 				got, _ := fetcher.fetch(t, false, ctx, test.mod.mod, "")
-				defer got.Defer()
 				if !errors.Is(got.Error, test.wantErr) {
 					t.Fatalf("got error = %v; wantErr = %v)", got.Error, test.wantErr)
 				}

@@ -116,9 +116,9 @@ func main() {
 		worker.ProcessingLag,
 		worker.UnprocessedModules,
 		worker.UnprocessedNewModules,
+		worker.SheddedFetchCount,
 		fetch.FetchLatencyDistribution,
 		fetch.FetchResponseCount,
-		fetch.SheddedFetchCount,
 		fetch.FetchPackageCount)
 	if err := dcensus.Init(cfg, views...); err != nil {
 		log.Fatal(ctx, err)

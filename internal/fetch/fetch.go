@@ -41,11 +41,6 @@ var (
 		"Latency of a fetch request.",
 		stats.UnitSeconds,
 	)
-	fetchesShedded = stats.Int64(
-		"go-discovery/worker/fetch-shedded",
-		"Count of shedded fetches.",
-		stats.UnitDimensionless,
-	)
 	fetchedPackages = stats.Int64(
 		"go-discovery/worker/fetch-package-count",
 		"Count of successfully fetched packages.",
@@ -76,13 +71,6 @@ var (
 		Aggregation: view.Count(),
 		Description: "Count of packages successfully fetched",
 	}
-	// SheddedFetchCount counts the number of fetches that were shedded.
-	SheddedFetchCount = &view.View{
-		Name:        "go-discovery/worker/fetch-shedded",
-		Measure:     fetchesShedded,
-		Aggregation: view.Count(),
-		Description: "Count of shedded fetches",
-	}
 )
 
 type FetchResult struct {
@@ -98,7 +86,6 @@ type FetchResult struct {
 	GoModPath            string
 	Status               int
 	Error                error
-	Defer                func() // caller must defer this on all code paths
 	Module               *internal.Module
 	PackageVersionStates []*internal.PackageVersionState
 }
@@ -108,10 +95,6 @@ type FetchResult struct {
 // *internal.Module and related information.
 //
 // Even if err is non-nil, the result may contain useful information, like the go.mod path.
-//
-// Callers of FetchModule must
-//   defer fr.Defer()
-// immediately after the call.
 func FetchModule(ctx context.Context, modulePath, requestedVersion string, mg ModuleGetter, sourceClient *source.Client) (fr *FetchResult) {
 	start := time.Now()
 	defer func() {
@@ -125,7 +108,6 @@ func FetchModule(ctx context.Context, modulePath, requestedVersion string, mg Mo
 	fr = &FetchResult{
 		ModulePath:       modulePath,
 		RequestedVersion: requestedVersion,
-		Defer:            func() {},
 	}
 	defer derrors.Wrap(&fr.Error, "FetchModule(%q, %q)", modulePath, requestedVersion)
 
@@ -151,35 +133,11 @@ func fetchModule(ctx context.Context, fr *FetchResult, mg ModuleGetter, sourceCl
 	fr.ResolvedVersion = info.Version
 	commitTime := info.Time
 
-	var zipSize int64
-	if zipLoadShedder != nil {
-		var err error
-		zipSize, err = getZipSize(ctx, fr.ModulePath, fr.ResolvedVersion, mg)
-		if err != nil {
-			return nil, err
-		}
-		// Load shed or mark module as too large.
-		// We treat zip size as a proxy for the total memory consumed by
-		// processing a module, and use it to decide whether we can currently
-		// afford to process a module.
-		shouldShed, deferFunc := zipLoadShedder.shouldShed(uint64(zipSize))
-		fr.Defer = deferFunc
-		if shouldShed {
-			stats.Record(ctx, fetchesShedded.M(1))
-			return nil, fmt.Errorf("%w: size=%dMi", derrors.SheddingLoad, zipSize/mib)
-		}
-		if zipSize > maxModuleZipSize {
-			log.Warningf(ctx, "FetchModule: %s@%s zip size %dMi exceeds max %dMi",
-				fr.ModulePath, fr.ResolvedVersion, zipSize/mib, maxModuleZipSize/mib)
-			return nil, derrors.ModuleTooLarge
-		}
-	}
-
-	// Proceed with the fetch.
+	// TODO(golang/go#48010): move fetch info to the worker.
 	fi := &FetchInfo{
 		ModulePath: fr.ModulePath,
 		Version:    fr.ResolvedVersion,
-		ZipSize:    uint64(zipSize),
+		ZipSize:    uint64(0),
 		Start:      time.Now(),
 	}
 	startFetchInfo(fi)
@@ -266,13 +224,6 @@ func GetInfo(ctx context.Context, modulePath, requestedVersion string, mg Module
 		return &proxy.VersionInfo{Version: resolvedVersion}, nil
 	}
 	return mg.Info(ctx, modulePath, requestedVersion)
-}
-
-func getZipSize(ctx context.Context, modulePath, resolvedVersion string, mg ModuleGetter) (_ int64, err error) {
-	if modulePath == stdlib.ModulePath {
-		return stdlib.EstimatedZipSize, nil
-	}
-	return mg.ZipSize(ctx, modulePath, resolvedVersion)
 }
 
 // getGoModPath returns the module path from the go.mod file, as well as the
