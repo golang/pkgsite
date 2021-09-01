@@ -136,27 +136,31 @@ func (f *Fetcher) FetchAndUpdateState(ctx context.Context, modulePath, requested
 		trace.StringAttribute("version", requestedVersion))
 	defer span.End()
 
-	// If we're overloaded, shed load by not processing this module.
-	deferFunc, zipSize, err := f.maybeShed(ctx, modulePath, requestedVersion)
-	defer deferFunc()
-	if err != nil {
-		return derrors.ToStatus(err), "", err
-	}
-
-	fi := &FetchInfo{
-		ModulePath: modulePath,
-		Version:    requestedVersion,
-		ZipSize:    uint64(zipSize),
-		Start:      time.Now(),
-	}
-	startFetchInfo(fi)
-	defer func() { finishFetchInfo(fi, status, err) }()
-
-	// Begin by htting the proxy's info endpoint. That will make the proxy aware
+	// Begin by htting the proxy's info endpoint. We need the resolved version
+	// to do load-shedding, but it's also important to make the proxy aware
 	// of the version if it isn't already, as can happen when we arrive here via
-	// frontend fetch. We ignore both the error and the information itself at
-	// this point; we will ask again later when we need it.
-	_, _ = f.ProxyClient.Info(ctx, modulePath, requestedVersion)
+	// frontend fetch.
+	// Don't fail on a non-nil error. If we return here, we won't record
+	// the error state in the DB.
+	info, err := getInfo(ctx, modulePath, requestedVersion, f.ProxyClient)
+	if err == nil {
+		// If we're overloaded, shed load by not processing this module.
+		// The zip endpoint requires a resolved version.
+		deferFunc, zipSize, err := f.maybeShed(ctx, modulePath, info.Version)
+		defer deferFunc()
+		if err != nil {
+			return derrors.ToStatus(err), "", err
+		}
+
+		fi := &FetchInfo{
+			ModulePath: modulePath,
+			Version:    requestedVersion,
+			ZipSize:    uint64(zipSize),
+			Start:      time.Now(),
+		}
+		startFetchInfo(fi)
+		defer func() { finishFetchInfo(fi, status, err) }()
+	}
 
 	// Get the latest-version information first, and update the DB. We'll need
 	// it to determine if the current module version is the latest good one for
@@ -244,6 +248,18 @@ func (f *Fetcher) FetchAndUpdateState(ctx context.Context, modulePath, requested
 	}
 	logTaskResult(ctx, ft, "Updated module version state")
 	return ft.Status, ft.ResolvedVersion, ft.Error
+}
+
+func getInfo(ctx context.Context, modulePath, requestedVersion string, prox *proxy.Client) (_ *proxy.VersionInfo, err error) {
+	if modulePath == stdlib.ModulePath {
+		var resolvedVersion string
+		resolvedVersion, err = stdlib.ZipInfo(requestedVersion)
+		if err != nil {
+			return nil, err
+		}
+		return &proxy.VersionInfo{Version: resolvedVersion}, nil
+	}
+	return prox.Info(ctx, modulePath, requestedVersion)
 }
 
 // fetchAndInsertModule fetches the given module version from the module proxy

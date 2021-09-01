@@ -375,7 +375,7 @@ func fetchAndCheckStatus(ctx context.Context, t *testing.T, proxyClient *proxy.C
 		}
 	default:
 		if !errors.Is(err, derrors.NotFound) {
-			t.Fatalf("got %v, want Is(NotFound)", err)
+			t.Fatalf("GetModuleInfo: got %v, want Is(NotFound)", err)
 		}
 	}
 	if semver.IsValid(version) {
