@@ -50,7 +50,7 @@ services:
       <<: *go-variables
       WAITFORIT_TIMEOUT: 300
     entrypoint: ./third_party/wait-for-it/wait-for-it.sh frontend:8080 -- go run
-    command: "tests/api/main.go -frontend http://host.docker.internal:8080 -all compare "
+    command: "tests/api/main.go -frontend http://frontend:8080 -all compare "
     volumes:
       - ../../:/pkgsite
     working_dir: /pkgsite
