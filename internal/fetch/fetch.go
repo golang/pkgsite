@@ -12,19 +12,13 @@ import (
 	"io/fs"
 	"net/http"
 	"sort"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
 
-	"go.opencensus.io/plugin/ochttp"
-	"go.opencensus.io/stats"
-	"go.opencensus.io/stats/view"
-	"go.opencensus.io/tag"
 	"go.opencensus.io/trace"
 	"golang.org/x/mod/modfile"
 	"golang.org/x/pkgsite/internal"
-	"golang.org/x/pkgsite/internal/dcensus"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/log"
@@ -34,44 +28,6 @@ import (
 )
 
 var ErrModuleContainsNoPackages = errors.New("module contains 0 packages")
-
-var (
-	fetchLatency = stats.Float64(
-		"go-discovery/worker/fetch-latency",
-		"Latency of a fetch request.",
-		stats.UnitSeconds,
-	)
-	fetchedPackages = stats.Int64(
-		"go-discovery/worker/fetch-package-count",
-		"Count of successfully fetched packages.",
-		stats.UnitDimensionless,
-	)
-
-	// FetchLatencyDistribution aggregates frontend fetch request
-	// latency by status code. It does not count shedded requests.
-	FetchLatencyDistribution = &view.View{
-		Name:        "go-discovery/worker/fetch-latency",
-		Measure:     fetchLatency,
-		Aggregation: ochttp.DefaultLatencyDistribution,
-		Description: "Fetch latency by result status.",
-		TagKeys:     []tag.Key{dcensus.KeyStatus},
-	}
-	// FetchResponseCount counts fetch responses by status.
-	FetchResponseCount = &view.View{
-		Name:        "go-discovery/worker/fetch-count",
-		Measure:     fetchLatency,
-		Aggregation: view.Count(),
-		Description: "Fetch request count by result status",
-		TagKeys:     []tag.Key{dcensus.KeyStatus},
-	}
-	// FetchPackageCount counts how many packages were successfully fetched.
-	FetchPackageCount = &view.View{
-		Name:        "go-discovery/worker/fetch-package-count",
-		Measure:     fetchedPackages,
-		Aggregation: view.Count(),
-		Description: "Count of packages successfully fetched",
-	}
-)
 
 type FetchResult struct {
 	ModulePath       string
@@ -96,15 +52,6 @@ type FetchResult struct {
 //
 // Even if err is non-nil, the result may contain useful information, like the go.mod path.
 func FetchModule(ctx context.Context, modulePath, requestedVersion string, mg ModuleGetter, sourceClient *source.Client) (fr *FetchResult) {
-	start := time.Now()
-	defer func() {
-		latency := float64(time.Since(start).Seconds())
-		dcensus.RecordWithTag(ctx, dcensus.KeyStatus, strconv.Itoa(fr.Status), fetchLatency.M(latency))
-		if fr.Status < 300 {
-			stats.Record(ctx, fetchedPackages.M(int64(len(fr.PackageVersionStates))))
-		}
-	}()
-
 	fr = &FetchResult{
 		ModulePath:       modulePath,
 		RequestedVersion: requestedVersion,

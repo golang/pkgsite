@@ -22,7 +22,6 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/config"
 	"golang.org/x/pkgsite/internal/dcensus"
-	"golang.org/x/pkgsite/internal/fetch"
 	"golang.org/x/pkgsite/internal/index"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/middleware"
@@ -117,9 +116,9 @@ func main() {
 		worker.UnprocessedModules,
 		worker.UnprocessedNewModules,
 		worker.SheddedFetchCount,
-		fetch.FetchLatencyDistribution,
-		fetch.FetchResponseCount,
-		fetch.FetchPackageCount)
+		worker.FetchLatencyDistribution,
+		worker.FetchResponseCount,
+		worker.FetchPackageCount)
 	if err := dcensus.Init(cfg, views...); err != nil {
 		log.Fatal(ctx, err)
 	}
