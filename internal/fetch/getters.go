@@ -41,10 +41,6 @@ type ModuleGetter interface {
 	// to have according to the zip archive layout specification at
 	// https://golang.org/ref/mod#zip-files.
 	ContentDir(ctx context.Context, path, version string) (fs.FS, error)
-
-	// ZipSize returns the approximate size of the zip file in bytes.
-	// It is used only for load-shedding.
-	ZipSize(ctx context.Context, path, version string) (int64, error)
 }
 
 type proxyModuleGetter struct {
@@ -73,12 +69,6 @@ func (g *proxyModuleGetter) ContentDir(ctx context.Context, path, version string
 		return nil, err
 	}
 	return fs.Sub(zr, path+"@"+version)
-}
-
-// ZipSize returns the approximate size of the zip file in bytes.
-// It is used only for load-shedding.
-func (g *proxyModuleGetter) ZipSize(ctx context.Context, path, version string) (int64, error) {
-	return g.prox.ZipSize(ctx, path, version)
 }
 
 // Version and commit time are pre specified when fetching a local module, as these
@@ -151,11 +141,6 @@ func (g *directoryModuleGetter) ContentDir(ctx context.Context, path, version st
 		return nil, err
 	}
 	return os.DirFS(g.dir), nil
-}
-
-// ZipSize returns the approximate size of the zip file in bytes.
-func (g *directoryModuleGetter) ZipSize(ctx context.Context, path, version string) (int64, error) {
-	return 0, errors.New("directoryModuleGetter.ZipSize unimplemented")
 }
 
 // An fsProxyModuleGetter gets modules from a directory in the filesystem
@@ -238,11 +223,6 @@ func (g *fsProxyModuleGetter) ContentDir(ctx context.Context, path, vers string)
 		return nil, err
 	}
 	return fs.Sub(zr, path+"@"+vers)
-}
-
-// ZipSize returns the approximate size of the zip file in bytes.
-func (g *fsProxyModuleGetter) ZipSize(ctx context.Context, path, version string) (int64, error) {
-	return 0, errors.New("fsProxyModuleGetter.ZipSize unimplemented")
 }
 
 // latestVersion gets the latest version that is in the directory.
