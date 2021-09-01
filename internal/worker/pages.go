@@ -20,7 +20,6 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/config"
 	"golang.org/x/pkgsite/internal/derrors"
-	"golang.org/x/pkgsite/internal/fetch"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/sync/errgroup"
@@ -99,7 +98,7 @@ func (s *Server) doIndexPage(w http.ResponseWriter, r *http.Request) (err error)
 		ProcessStats    processMemStats
 		SystemStats     systemMemStats
 		CgroupStats     map[string]uint64
-		Fetches         []*fetch.FetchInfo
+		Fetches         []*FetchInfo
 		LogsURL         string
 	}{
 		Config:         s.cfg,
@@ -115,7 +114,7 @@ func (s *Server) doIndexPage(w http.ResponseWriter, r *http.Request) (err error)
 		ProcessStats:   pms,
 		SystemStats:    sms,
 		CgroupStats:    getCgroupMemStats(),
-		Fetches:        fetch.FetchInfos(),
+		Fetches:        FetchInfos(),
 		LogsURL:        logsURL,
 	}
 	return renderPage(ctx, w, page, s.templates[indexTemplate])

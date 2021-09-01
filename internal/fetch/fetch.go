@@ -11,9 +11,7 @@ import (
 	"fmt"
 	"io/fs"
 	"net/http"
-	"sort"
 	"strings"
-	"sync"
 	"time"
 
 	"go.opencensus.io/trace"
@@ -58,7 +56,7 @@ func FetchModule(ctx context.Context, modulePath, requestedVersion string, mg Mo
 	}
 	defer derrors.Wrap(&fr.Error, "FetchModule(%q, %q)", modulePath, requestedVersion)
 
-	fi, err := fetchModule(ctx, fr, mg, sourceClient)
+	err := fetchModule(ctx, fr, mg, sourceClient)
 	fr.Error = err
 	if err != nil {
 		fr.Status = derrors.ToStatus(fr.Error)
@@ -66,44 +64,31 @@ func FetchModule(ctx context.Context, modulePath, requestedVersion string, mg Mo
 	if fr.Status == 0 {
 		fr.Status = http.StatusOK
 	}
-	if fi != nil {
-		finishFetchInfo(fi, fr.Status, fr.Error)
-	}
 	return fr
 }
 
-func fetchModule(ctx context.Context, fr *FetchResult, mg ModuleGetter, sourceClient *source.Client) (*FetchInfo, error) {
+func fetchModule(ctx context.Context, fr *FetchResult, mg ModuleGetter, sourceClient *source.Client) error {
 	info, err := GetInfo(ctx, fr.ModulePath, fr.RequestedVersion, mg)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	fr.ResolvedVersion = info.Version
 	commitTime := info.Time
-
-	// TODO(golang/go#48010): move fetch info to the worker.
-	fi := &FetchInfo{
-		ModulePath: fr.ModulePath,
-		Version:    fr.ResolvedVersion,
-		ZipSize:    uint64(0),
-		Start:      time.Now(),
-	}
-	startFetchInfo(fi)
 
 	var contentDir fs.FS
 	if fr.ModulePath == stdlib.ModulePath {
 		var resolvedVersion string
 		contentDir, resolvedVersion, commitTime, err = stdlib.ContentDir(fr.RequestedVersion)
 		if err != nil {
-			return fi, err
+			return err
 		}
 		// If the requested version is a branch name like "master" or "main", we cannot
 		// determine the right resolved version until we start working with the repo.
 		fr.ResolvedVersion = resolvedVersion
-		fi.Version = resolvedVersion
 	} else {
 		contentDir, err = mg.ContentDir(ctx, fr.ModulePath, fr.ResolvedVersion)
 		if err != nil {
-			return fi, err
+			return err
 		}
 	}
 
@@ -121,7 +106,7 @@ func fetchModule(ctx context.Context, fr *FetchResult, mg ModuleGetter, sourceCl
 	var goModBytes []byte
 	fr.GoModPath, goModBytes, err = getGoModPath(ctx, fr.ModulePath, fr.ResolvedVersion, mg)
 	if err != nil {
-		return fi, err
+		return err
 	}
 
 	// If there is no go.mod file in the zip, try another way to detect
@@ -131,21 +116,21 @@ func fetchModule(ctx context.Context, fr *FetchResult, mg ModuleGetter, sourceCl
 	if !fr.HasGoMod {
 		forkedModule, err := forkedFrom(contentDir, fr.ModulePath, fr.ResolvedVersion)
 		if err != nil {
-			return fi, err
+			return err
 		}
 		if forkedModule != "" {
-			return fi, fmt.Errorf("forked from %s: %w", forkedModule, derrors.AlternativeModule)
+			return fmt.Errorf("forked from %s: %w", forkedModule, derrors.AlternativeModule)
 		}
 	}
 
 	mod, pvs, err := processModuleContents(ctx, fr.ModulePath, fr.ResolvedVersion, fr.RequestedVersion, commitTime, contentDir, sourceClient)
 	if err != nil {
-		return fi, err
+		return err
 	}
 	mod.HasGoMod = fr.HasGoMod
 	if goModBytes != nil {
 		if err := processGoModFile(goModBytes, mod); err != nil {
-			return fi, fmt.Errorf("%v: %w", err.Error(), derrors.BadModule)
+			return fmt.Errorf("%v: %w", err.Error(), derrors.BadModule)
 		}
 	}
 	fr.Module = mod
@@ -155,7 +140,7 @@ func fetchModule(ctx context.Context, fr *FetchResult, mg ModuleGetter, sourceCl
 			fr.Status = derrors.ToStatus(derrors.HasIncompletePackages)
 		}
 	}
-	return fi, nil
+	return nil
 }
 
 // GetInfo returns the result of a request to the proxy .info endpoint. If
@@ -276,72 +261,4 @@ func extractDeprecatedComment(mf *modfile.File) (bool, string) {
 		}
 	}
 	return false, ""
-}
-
-type FetchInfo struct {
-	ModulePath string
-	Version    string
-	ZipSize    uint64
-	Start      time.Time
-	Finish     time.Time
-	Status     int
-	Error      error
-}
-
-var (
-	fetchInfoMu  sync.Mutex
-	fetchInfoMap = map[*FetchInfo]struct{}{}
-)
-
-func init() {
-	const linger = time.Minute
-	go func() {
-		for {
-			now := time.Now()
-			fetchInfoMu.Lock()
-			for fi := range fetchInfoMap {
-				if !fi.Finish.IsZero() && now.Sub(fi.Finish) > linger {
-					delete(fetchInfoMap, fi)
-				}
-			}
-			fetchInfoMu.Unlock()
-			time.Sleep(linger)
-		}
-	}()
-}
-
-func startFetchInfo(fi *FetchInfo) {
-	fetchInfoMu.Lock()
-	defer fetchInfoMu.Unlock()
-	fetchInfoMap[fi] = struct{}{}
-}
-
-func finishFetchInfo(fi *FetchInfo, status int, err error) {
-	fetchInfoMu.Lock()
-	defer fetchInfoMu.Unlock()
-	fi.Finish = time.Now()
-	fi.Status = status
-	fi.Error = err
-}
-
-// FetchInfos returns information about all fetches in progress,
-// sorted by start time.
-func FetchInfos() []*FetchInfo {
-	var fis []*FetchInfo
-	fetchInfoMu.Lock()
-	for fi := range fetchInfoMap {
-		// Copy to avoid races on Status and Error when read by
-		// worker home page.
-		cfi := *fi
-		fis = append(fis, &cfi)
-	}
-	fetchInfoMu.Unlock()
-	// Order first by done-ness, then by age.
-	sort.Slice(fis, func(i, j int) bool {
-		if (fis[i].Status == 0) == (fis[j].Status == 0) {
-			return fis[i].Start.Before(fis[j].Start)
-		}
-		return fis[i].Status == 0
-	})
-	return fis
 }

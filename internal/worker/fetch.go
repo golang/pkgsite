@@ -137,11 +137,20 @@ func (f *Fetcher) FetchAndUpdateState(ctx context.Context, modulePath, requested
 	defer span.End()
 
 	// If we're overloaded, shed load by not processing this module.
-	deferFunc, err := f.maybeShed(ctx, modulePath, requestedVersion)
+	deferFunc, zipSize, err := f.maybeShed(ctx, modulePath, requestedVersion)
 	defer deferFunc()
 	if err != nil {
 		return derrors.ToStatus(err), "", err
 	}
+
+	fi := &FetchInfo{
+		ModulePath: modulePath,
+		Version:    requestedVersion,
+		ZipSize:    uint64(zipSize),
+		Start:      time.Now(),
+	}
+	startFetchInfo(fi)
+	defer func() { finishFetchInfo(fi, status, err) }()
 
 	// Begin by htting the proxy's info endpoint. That will make the proxy aware
 	// of the version if it isn't already, as can happen when we arrive here via
@@ -496,13 +505,13 @@ func (f *Fetcher) FetchAndUpdateLatest(ctx context.Context, modulePath string) (
 	return f.DB.UpdateLatestModuleVersions(ctx, lmv)
 }
 
-func (f *Fetcher) maybeShed(ctx context.Context, modulePath, version string) (func(), error) {
+func (f *Fetcher) maybeShed(ctx context.Context, modulePath, version string) (func(), int64, error) {
 	if zipLoadShedder == nil {
-		return func() {}, nil
+		return func() {}, 0, nil
 	}
 	zipSize, err := getZipSize(ctx, modulePath, version, f.ProxyClient)
 	if err != nil {
-		return func() {}, err
+		return func() {}, 0, err
 	}
 	// Load shed or mark module as too large.
 	// We treat zip size as a proxy for the total memory consumed by
@@ -511,14 +520,14 @@ func (f *Fetcher) maybeShed(ctx context.Context, modulePath, version string) (fu
 	shouldShed, deferFunc := zipLoadShedder.shouldShed(uint64(zipSize))
 	if shouldShed {
 		stats.Record(ctx, fetchesShedded.M(1))
-		return deferFunc, fmt.Errorf("%w: size=%dMi", derrors.SheddingLoad, zipSize/mib)
+		return deferFunc, 0, fmt.Errorf("%w: size=%dMi", derrors.SheddingLoad, zipSize/mib)
 	}
 	if zipSize > maxModuleZipSize {
 		log.Warningf(ctx, "FetchModule: %s@%s zip size %dMi exceeds max %dMi",
 			modulePath, version, zipSize/mib, maxModuleZipSize/mib)
-		return deferFunc, derrors.ModuleTooLarge
+		return deferFunc, 0, derrors.ModuleTooLarge
 	}
-	return deferFunc, nil
+	return deferFunc, zipSize, nil
 }
 
 func getZipSize(ctx context.Context, modulePath, resolvedVersion string, prox *proxy.Client) (_ int64, err error) {
