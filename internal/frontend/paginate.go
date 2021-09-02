@@ -12,8 +12,6 @@ import (
 	"golang.org/x/pkgsite/internal/log"
 )
 
-const maxLimit = 100
-
 // pagination holds information related to paginated display. It is intended to
 // be part of a view model struct.
 //
@@ -21,18 +19,19 @@ const maxLimit = 100
 // database query), we paginate it by dividing it into numbered pages
 // 1, 2, 3, .... Each page except possibly the last has the same number of results.
 type pagination struct {
-	baseURL     *url.URL // URL common to all pages
-	Limit       int      // the number of results requested on a page
-	MaxLimit    int      // the maximum number of results allowed for any request
-	ResultCount int      // number of results on this page
-	TotalCount  int      // total number of results
-	Approximate bool     // whether or not the total count is approximate
-	Page        int      // number of the current page
-	PrevPage    int      //   "    "   "  previous page, usually Page-1 but zero if Page == 1
-	NextPage    int      //   "    "   "  next page, usually Page+1, but zero on the last page
-	Offset      int      // offset of the first item on the current page
-	Pages       []int    // consecutive page numbers to be displayed for navigation
-	Limits      []int    // limits to be displayed
+	baseURL      *url.URL // URL common to all pages
+	Limit        int      // the number of results requested on a page
+	DefaultLimit int      // the default search limit
+	MaxLimit     int      // the maximum number of results allowed for any request
+	ResultCount  int      // number of results on this page
+	TotalCount   int      // total number of results
+	Approximate  bool     // whether or not the total count is approximate
+	Page         int      // number of the current page
+	PrevPage     int      //   "    "   "  previous page, usually Page-1 but zero if Page == 1
+	NextPage     int      //   "    "   "  next page, usually Page+1, but zero on the last page
+	Offset       int      // offset of the first item on the current page
+	Pages        []int    // consecutive page numbers to be displayed for navigation
+	Limits       []int    // limits to be displayed
 }
 
 // PageURL constructs a URL that displays the given page.
@@ -67,17 +66,17 @@ func (p pagination) URL(limit int, mode, q string) string {
 // totalCount is the total number of results.
 func newPagination(params paginationParams, resultCount, totalCount int) pagination {
 	return pagination{
-		baseURL:     params.baseURL,
-		TotalCount:  totalCount,
-		ResultCount: resultCount,
-		Offset:      params.offset(),
-		Limit:       params.limit,
-		MaxLimit:    maxLimit,
-		Page:        params.page,
-		PrevPage:    prev(params.page),
-		NextPage:    next(params.page, params.limit, totalCount),
-		Pages:       pagesToLink(params.page, numPages(params.limit, totalCount), defaultNumPagesToLink),
-		Limits:      []int{10, 30, maxSearchPageSize},
+		baseURL:      params.baseURL,
+		TotalCount:   totalCount,
+		ResultCount:  resultCount,
+		Offset:       params.offset(),
+		Limit:        params.limit,
+		DefaultLimit: defaultSearchLimit,
+		MaxLimit:     maxSearchPageSize,
+		Page:         params.page,
+		PrevPage:     prev(params.page),
+		NextPage:     next(params.page, params.limit, totalCount),
+		Pages:        pagesToLink(params.page, numPages(params.limit, totalCount), defaultNumPagesToLink),
 	}
 }
 

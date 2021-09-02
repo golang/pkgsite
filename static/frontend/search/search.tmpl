@@ -52,7 +52,8 @@
   <div>
     {{$query := .Query}}
     {{range $i, $r := .Results}}
-      <div class="SearchSnippet">
+      {{$moreLink := eq $i (subtract $.Pagination.DefaultLimit 1)}}
+      <div class="SearchSnippet" {{if $moreLink}}id="more-results"{{end}}>
         <div class="SearchSnippet-headerContainer">
           <h2>
             <a href="{{.SymbolLink}}" data-gtmc="symbol search result symbol" data-gtmv="{{$i}}"
@@ -99,7 +100,8 @@
   <div>
     {{$query := .Query}}
     {{range $i, $v := .Results}}
-      <div class="SearchSnippet">
+      {{$moreLink := eq $i (subtract $.Pagination.DefaultLimit 1)}}
+      <div class="SearchSnippet" {{if eq $i 9}}id="more-results"{{end}}>
         <div class="SearchSnippet-headerContainer">
           <h2>
             <a href="/{{$v.PackagePath}}" data-gtmc="search result" data-gtmv="{{$i}}"
@@ -180,7 +182,7 @@
     Didn't find what you were looking for?
     {{$m := or $.SearchMode .SearchModePackage}}
     {{- if and (lt $p.Limit $p.MaxLimit) (eq $p.Limit (len .Results)) -}}
-      <a href="{{$p.URL $p.MaxLimit $m ""}}" data-gtmc="search more results">Show more results.</a>
+      <a href="{{$p.URL $p.MaxLimit $m ""}}#more-results" data-gtmc="search more results">Show more results.</a>
     {{- else -}}
       See <a href="/search-help" data-gtmc="search help"> search help.</a>
     {{- end -}}

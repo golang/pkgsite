@@ -171,15 +171,15 @@ func TestFetchSearchPage(t *testing.T) {
 			query: "foo bar",
 			wantSearchPage: &SearchPage{
 				Pagination: pagination{
-					TotalCount:  1,
-					ResultCount: 1,
-					PrevPage:    0,
-					NextPage:    0,
-					Limit:       20,
-					MaxLimit:    100,
-					Page:        1,
-					Pages:       []int{1},
-					Limits:      []int{10, 30, 100},
+					TotalCount:   1,
+					ResultCount:  1,
+					PrevPage:     0,
+					NextPage:     0,
+					Limit:        20,
+					DefaultLimit: 10,
+					MaxLimit:     100,
+					Page:         1,
+					Pages:        []int{1},
 				},
 				Results: []*SearchResult{
 					{
@@ -199,15 +199,15 @@ func TestFetchSearchPage(t *testing.T) {
 			query: "package",
 			wantSearchPage: &SearchPage{
 				Pagination: pagination{
-					TotalCount:  1,
-					ResultCount: 1,
-					PrevPage:    0,
-					NextPage:    0,
-					Limit:       20,
-					MaxLimit:    100,
-					Page:        1,
-					Pages:       []int{1},
-					Limits:      []int{10, 30, 100},
+					TotalCount:   1,
+					ResultCount:  1,
+					PrevPage:     0,
+					NextPage:     0,
+					Limit:        20,
+					DefaultLimit: 10,
+					MaxLimit:     100,
+					Page:         1,
+					Pages:        []int{1},
 				},
 				Results: []*SearchResult{
 					{
