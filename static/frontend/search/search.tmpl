@@ -177,9 +177,10 @@
 {{define "search_pagination"}}
   {{$p := .Pagination}}
   <div class="SearchPagination" data-test-id="pagination">
-    Didn't find what you were looking for?&nbsp;
+    Didn't find what you were looking for?
+    {{$m := or $.SearchMode .SearchModePackage}}
     {{- if and (lt $p.Limit $p.MaxLimit) (eq $p.Limit (len .Results)) -}}
-      <a href="{{$p.URL $p.MaxLimit $.SearchMode ""}}" data-gtmc="search more results">Show more results.</a>
+      <a href="{{$p.URL $p.MaxLimit $m ""}}" data-gtmc="search more results">Show more results.</a>
     {{- else -}}
       See <a href="/search-help" data-gtmc="search help"> search help.</a>
     {{- end -}}
@@ -190,8 +191,8 @@
   <div>
     <nav class="go-TabNav">
       <ul>
-        <li {{if eq .SearchMode ""}}aria-current="page"{{end}}><a href="{{.Pagination.URL .Pagination.Limit .SearchModePackage .Query}}">Package</a></li>
-        <li {{if eq .SearchMode .SearchModeSymbol}}aria-current="page"{{end}}><a href="{{.Pagination.URL .Pagination.Limit .SearchModeSymbol .Query}}">Symbol</a></li>
+        <li {{if not (eq .SearchMode .SearchModeSymbol)}}aria-current="page"{{end}}><a href="{{.Pagination.URL .Pagination.Limit .SearchModePackage .Query}}">Packages</a></li>
+        <li {{if eq .SearchMode .SearchModeSymbol}}aria-current="page"{{end}}><a href="{{.Pagination.URL .Pagination.Limit .SearchModeSymbol .Query}}">Symbols</a></li>
       </ul>
       <hr />
     </nav>
