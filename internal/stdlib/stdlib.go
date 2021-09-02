@@ -200,10 +200,19 @@ var (
 )
 
 // getGoRepo returns a repo object for the Go repo at version.
-func getGoRepo(v string) (_ *git.Repository, err error) {
-	defer derrors.Wrap(&err, "getGoRepo(%q)", v)
+func getGoRepo(version string) (_ *git.Repository, _ plumbing.ReferenceName, err error) {
+	defer derrors.Wrap(&err, "getGoRepo(%q)", version)
+	if UseTestData {
+		return getTestGoRepo(version)
+	}
+	return cloneGoRepo(version)
+}
 
-	var ref plumbing.ReferenceName
+// cloneGoRepo returns a repo object for the Go repo at version by cloning the
+// Go repo.
+func cloneGoRepo(v string) (_ *git.Repository, ref plumbing.ReferenceName, err error) {
+	defer derrors.Wrap(&err, "cloneGoRepo(%q)", v)
+
 	if v == version.Master {
 		ref = plumbing.HEAD
 	} else if SupportedBranches[v] {
@@ -211,21 +220,25 @@ func getGoRepo(v string) (_ *git.Repository, err error) {
 	} else {
 		tag, err := TagForVersion(v)
 		if err != nil {
-			return nil, err
+			return nil, "", err
 		}
 		ref = plumbing.NewTagReferenceName(tag)
 	}
-	return git.Clone(memory.NewStorage(), nil, &git.CloneOptions{
+	repo, err := git.Clone(memory.NewStorage(), nil, &git.CloneOptions{
 		URL:           GoRepoURL,
 		ReferenceName: ref,
 		SingleBranch:  true,
 		Depth:         1,
 		Tags:          git.NoTags,
 	})
+	if err != nil {
+		return nil, "", err
+	}
+	return repo, ref, nil
 }
 
 // getTestGoRepo gets a Go repo for testing.
-func getTestGoRepo(v string) (_ *git.Repository, err error) {
+func getTestGoRepo(v string) (_ *git.Repository, _ plumbing.ReferenceName, err error) {
 	defer derrors.Wrap(&err, "getTestGoRepo(%q)", v)
 	if v == TestMasterVersion {
 		v = version.Master
@@ -236,15 +249,15 @@ func getTestGoRepo(v string) (_ *git.Repository, err error) {
 	fs := osfs.New(filepath.Join(testhelper.TestDataPath("testdata"), v))
 	repo, err := git.Init(memory.NewStorage(), fs)
 	if err != nil {
-		return nil, fmt.Errorf("git.Initi: %v", err)
+		return nil, "", fmt.Errorf("git.Initi: %v", err)
 	}
 	wt, err := repo.Worktree()
 	if err != nil {
-		return nil, fmt.Errorf("repo.Worktree: %v", err)
+		return nil, "", fmt.Errorf("repo.Worktree: %v", err)
 	}
 	// Add all files in the directory.
 	if _, err := wt.Add(""); err != nil {
-		return nil, fmt.Errorf("wt.Add(): %v", err)
+		return nil, "", fmt.Errorf("wt.Add(): %v", err)
 	}
 	_, err = wt.Commit("", &git.CommitOptions{All: true, Author: &object.Signature{
 		Name:  "Joe Random",
@@ -252,9 +265,9 @@ func getTestGoRepo(v string) (_ *git.Repository, err error) {
 		When:  TestCommitTime,
 	}})
 	if err != nil {
-		return nil, fmt.Errorf("wt.Commit: %v", err)
+		return nil, "", fmt.Errorf("wt.Commit: %v", err)
 	}
-	return repo, nil
+	return repo, plumbing.HEAD, nil
 }
 
 // Versions returns all the versions of Go that are relevant to the discovery
@@ -316,28 +329,24 @@ func ZipInfo(requestedVersion string) (resolvedVersion string, err error) {
 }
 
 func zipInternal(requestedVersion string) (_ *zip.Reader, resolvedVersion string, commitTime time.Time, prefix string, err error) {
-	var repo *git.Repository
-	if UseTestData {
-		repo, err = getTestGoRepo(requestedVersion)
-	} else {
-		if requestedVersion == version.Latest {
-			requestedVersion, err = semanticVersion(requestedVersion)
-			if err != nil {
-				return nil, "", time.Time{}, "", err
-			}
+	if !UseTestData && requestedVersion == version.Latest {
+		requestedVersion, err = semanticVersion(requestedVersion)
+		if err != nil {
+			return nil, "", time.Time{}, "", err
 		}
-		repo, err = getGoRepo(requestedVersion)
 	}
+	repo, refName, err := getGoRepo(requestedVersion)
 	if err != nil {
 		return nil, "", time.Time{}, "", err
 	}
 	var buf bytes.Buffer
 	z := zip.NewWriter(&buf)
-	head, err := repo.Head()
+
+	ref, err := repo.Reference(refName, true)
 	if err != nil {
 		return nil, "", time.Time{}, "", err
 	}
-	commit, err := repo.CommitObject(head.Hash())
+	commit, err := repo.CommitObject(ref.Hash())
 	if err != nil {
 		return nil, "", time.Time{}, "", err
 	}

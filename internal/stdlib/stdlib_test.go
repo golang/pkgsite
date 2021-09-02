@@ -6,6 +6,7 @@ package stdlib
 
 import (
 	"errors"
+	"flag"
 	"io/fs"
 	"reflect"
 	"testing"
@@ -13,6 +14,8 @@ import (
 	"golang.org/x/mod/semver"
 	"golang.org/x/pkgsite/internal/version"
 )
+
+var clone = flag.Bool("clone", false, "test actual clones of the Go repo")
 
 func TestTagForVersion(t *testing.T) {
 	for _, test := range []struct {
@@ -142,36 +145,62 @@ func TestContentDir(t *testing.T) {
 			if !gotTime.Equal(TestCommitTime) {
 				t.Errorf("commit time: got %s, want %s", gotTime, TestCommitTime)
 			}
-			wantFiles := map[string]bool{
-				"LICENSE":               true,
-				"errors/errors.go":      true,
-				"errors/errors_test.go": true,
-			}
-			if semver.Compare(resolvedVersion, "v1.13.0") > 0 || resolvedVersion == TestMasterVersion {
-				wantFiles["cmd/README.vendor"] = true
-			}
+			checkContentDirFiles(t, cdir, resolvedVersion)
+		})
+	}
+}
 
-			const readmeVendorFile = "README.vendor"
-			if _, err := fs.Stat(cdir, readmeVendorFile); !errors.Is(err, fs.ErrNotExist) {
-				t.Fatalf("fs.Stat returned %v; want %q to be removed", err, readmeVendorFile)
-			}
-			err = fs.WalkDir(cdir, ".", func(path string, d fs.DirEntry, err error) error {
-				if err != nil {
-					return err
-				}
-				if d.IsDir() {
-					return nil
-				}
-				delete(wantFiles, path)
-				return nil
-			})
+func TestContentDirClone(t *testing.T) {
+	if !*clone {
+		t.Skip("-clone not supplied")
+	}
+	for _, resolvedVersion := range []string{
+		"v1.3.2",
+		"v1.14.6",
+		version.Master,
+		version.Latest,
+	} {
+		t.Run(resolvedVersion, func(t *testing.T) {
+			cdir, _, _, err := ContentDir(resolvedVersion)
 			if err != nil {
 				t.Fatal(err)
 			}
-			if len(wantFiles) > 0 {
-				t.Errorf("zip missing files: %v", reflect.ValueOf(wantFiles).MapKeys())
-			}
+			checkContentDirFiles(t, cdir, resolvedVersion)
 		})
+	}
+}
+
+func checkContentDirFiles(t *testing.T, cdir fs.FS, resolvedVersion string) {
+	wantFiles := map[string]bool{
+		"LICENSE":               true,
+		"errors/errors.go":      true,
+		"errors/errors_test.go": true,
+	}
+	if semver.Compare(resolvedVersion, "v1.13.0") > 0 || resolvedVersion == TestMasterVersion {
+		wantFiles["cmd/README.vendor"] = true
+	}
+	if semver.Compare(resolvedVersion, "v1.14.0") > 0 {
+		wantFiles["context/context.go"] = true
+	}
+	const readmeVendorFile = "README.vendor"
+	if _, err := fs.Stat(cdir, readmeVendorFile); !errors.Is(err, fs.ErrNotExist) {
+		t.Fatalf("fs.Stat returned %v; want %q to be removed", err, readmeVendorFile)
+	}
+	err := fs.WalkDir(cdir, ".", func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if d.IsDir() {
+			return nil
+		}
+		delete(wantFiles, path)
+		return nil
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(wantFiles) > 0 {
+		t.Errorf("zip missing files: %v", reflect.ValueOf(wantFiles).MapKeys())
 	}
 }
 
