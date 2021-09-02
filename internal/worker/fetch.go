@@ -100,6 +100,7 @@ type Fetcher struct {
 	SourceClient *source.Client
 	DB           *postgres.DB
 	Cache        *cache.Cache
+	loadShedder  *loadShedder
 }
 
 // FetchAndUpdateState fetches and processes a module version, and then updates
@@ -522,7 +523,7 @@ func (f *Fetcher) FetchAndUpdateLatest(ctx context.Context, modulePath string) (
 }
 
 func (f *Fetcher) maybeShed(ctx context.Context, modulePath, version string) (func(), int64, error) {
-	if zipLoadShedder == nil {
+	if f.loadShedder == nil {
 		return func() {}, 0, nil
 	}
 	zipSize, err := getZipSize(ctx, modulePath, version, f.ProxyClient)
@@ -533,7 +534,7 @@ func (f *Fetcher) maybeShed(ctx context.Context, modulePath, version string) (fu
 	// We treat zip size as a proxy for the total memory consumed by
 	// processing a module, and use it to decide whether we can currently
 	// afford to process a module.
-	shouldShed, deferFunc := zipLoadShedder.shouldShed(uint64(zipSize))
+	shouldShed, deferFunc := f.loadShedder.shouldShed(uint64(zipSize))
 	if shouldShed {
 		stats.Record(ctx, fetchesShedded.M(1))
 		return deferFunc, 0, fmt.Errorf("%w: size=%dMi", derrors.SheddingLoad, zipSize/mib)

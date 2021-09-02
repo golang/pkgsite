@@ -303,6 +303,7 @@ func (s *Server) doFetch(w http.ResponseWriter, r *http.Request) (string, int) {
 		SourceClient: s.sourceClient,
 		DB:           s.db,
 		Cache:        s.cache,
+		loadShedder:  zipLoadShedder,
 	}
 	if r.FormValue(queue.DisableProxyFetchParam) == queue.DisableProxyFetchValue {
 		f.ProxyClient = f.ProxyClient.WithFetchDisabled()

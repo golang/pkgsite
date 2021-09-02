@@ -302,7 +302,13 @@ func TestFetchAndUpdateState(t *testing.T) {
 	for _, test := range testCases {
 		t.Run(strings.ReplaceAll(test.pkg+"@"+test.version, "/", " "), func(t *testing.T) {
 			defer postgres.ResetTestDB(testDB, t)
-			f := &Fetcher{proxyClient.WithCache(), sourceClient, testDB, nil}
+			f := &Fetcher{
+				ProxyClient:  proxyClient.WithCache(),
+				SourceClient: sourceClient,
+				DB:           testDB,
+				Cache:        nil,
+				loadShedder:  &loadShedder{maxSizeInFlight: 100 * mib},
+			}
 			if _, _, err := f.FetchAndUpdateState(ctx, test.modulePath, test.version, testAppVersion); err != nil {
 				t.Fatalf("FetchAndUpdateState(%q, %q, %v, %v, %v): %v", test.modulePath, test.version, proxyClient, sourceClient, testDB, err)
 			}
@@ -396,7 +402,7 @@ func TestFetchAndUpdateStateCacheZip(t *testing.T) {
 	defer teardownProxy()
 
 	// With a plain proxy, we download the zip twice.
-	f := &Fetcher{proxyClient, source.NewClient(sourceTimeout), testDB, nil}
+	f := &Fetcher{proxyClient, source.NewClient(sourceTimeout), testDB, nil, nil}
 	if _, _, err := f.FetchAndUpdateState(ctx, "m.com", "v1.0.0", testAppVersion); err != nil {
 		t.Fatal(err)
 	}
