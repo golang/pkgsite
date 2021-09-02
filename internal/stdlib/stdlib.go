@@ -19,6 +19,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"sync"
 	"time"
 
 	"golang.org/x/mod/semver"
@@ -199,11 +200,34 @@ var (
 	TestDevFuzzVersion = "v0.0.0-20190904010203-12de34vf56uz"
 )
 
+var (
+	goRepoPathMu sync.Mutex
+	goRepoPath   string
+)
+
+// SetGoRepoPath tells this package to obtain the Go repo from the
+// local filesystem at path, instead of cloning it.
+func SetGoRepoPath(path string) {
+	goRepoPathMu.Lock()
+	defer goRepoPathMu.Unlock()
+	goRepoPath = path
+
+}
+
+func getGoRepoPath() string {
+	goRepoPathMu.Lock()
+	defer goRepoPathMu.Unlock()
+	return goRepoPath
+}
+
 // getGoRepo returns a repo object for the Go repo at version.
 func getGoRepo(version string) (_ *git.Repository, _ plumbing.ReferenceName, err error) {
 	defer derrors.Wrap(&err, "getGoRepo(%q)", version)
 	if UseTestData {
 		return getTestGoRepo(version)
+	}
+	if path := getGoRepoPath(); path != "" {
+		return openGoRepo(path, version)
 	}
 	return cloneGoRepo(version)
 }
@@ -213,16 +237,9 @@ func getGoRepo(version string) (_ *git.Repository, _ plumbing.ReferenceName, err
 func cloneGoRepo(v string) (_ *git.Repository, ref plumbing.ReferenceName, err error) {
 	defer derrors.Wrap(&err, "cloneGoRepo(%q)", v)
 
-	if v == version.Master {
-		ref = plumbing.HEAD
-	} else if SupportedBranches[v] {
-		ref = plumbing.NewBranchReferenceName(v)
-	} else {
-		tag, err := TagForVersion(v)
-		if err != nil {
-			return nil, "", err
-		}
-		ref = plumbing.NewTagReferenceName(tag)
+	ref, err = refNameForVersion(v)
+	if err != nil {
+		return nil, "", err
 	}
 	repo, err := git.Clone(memory.NewStorage(), nil, &git.CloneOptions{
 		URL:           GoRepoURL,
@@ -235,6 +252,33 @@ func cloneGoRepo(v string) (_ *git.Repository, ref plumbing.ReferenceName, err e
 		return nil, "", err
 	}
 	return repo, ref, nil
+}
+
+func openGoRepo(path, v string) (_ *git.Repository, _ plumbing.ReferenceName, err error) {
+	defer derrors.Wrap(&err, "openGoRepo(%q)", v)
+	repo, err := git.PlainOpen(path)
+	if err != nil {
+		return nil, "", err
+	}
+	ref, err := refNameForVersion(v)
+	if err != nil {
+		return nil, "", err
+	}
+	return repo, ref, nil
+}
+
+func refNameForVersion(v string) (plumbing.ReferenceName, error) {
+	if v == version.Master {
+		return plumbing.HEAD, nil
+	}
+	if SupportedBranches[v] {
+		return plumbing.NewBranchReferenceName(v), nil
+	}
+	tag, err := TagForVersion(v)
+	if err != nil {
+		return "", err
+	}
+	return plumbing.NewTagReferenceName(tag), nil
 }
 
 // getTestGoRepo gets a Go repo for testing.

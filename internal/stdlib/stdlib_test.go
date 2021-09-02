@@ -15,7 +15,10 @@ import (
 	"golang.org/x/pkgsite/internal/version"
 )
 
-var clone = flag.Bool("clone", false, "test actual clones of the Go repo")
+var (
+	clone    = flag.Bool("clone", false, "test actual clones of the Go repo")
+	repoPath = flag.String("path", "", "path to Go repo to test")
+)
 
 func TestTagForVersion(t *testing.T) {
 	for _, test := range []struct {
@@ -150,23 +153,34 @@ func TestContentDir(t *testing.T) {
 	}
 }
 
-func TestContentDirClone(t *testing.T) {
-	if !*clone {
-		t.Skip("-clone not supplied")
+func TestContentDirCloneAndOpen(t *testing.T) {
+	if !*clone && *repoPath == "" {
+		t.Skip("-clone and -path not supplied")
 	}
-	for _, resolvedVersion := range []string{
-		"v1.3.2",
-		"v1.14.6",
-		version.Master,
-		version.Latest,
-	} {
-		t.Run(resolvedVersion, func(t *testing.T) {
-			cdir, _, _, err := ContentDir(resolvedVersion)
-			if err != nil {
-				t.Fatal(err)
-			}
-			checkContentDirFiles(t, cdir, resolvedVersion)
-		})
+
+	run := func(t *testing.T) {
+		for _, resolvedVersion := range []string{
+			"v1.3.2",
+			"v1.14.6",
+			version.Master,
+			version.Latest,
+		} {
+			t.Run(resolvedVersion, func(t *testing.T) {
+				cdir, _, _, err := ContentDir(resolvedVersion)
+				if err != nil {
+					t.Fatal(err)
+				}
+				checkContentDirFiles(t, cdir, resolvedVersion)
+			})
+		}
+	}
+
+	if *clone {
+		t.Run("clone", run)
+	}
+	if *repoPath != "" {
+		SetGoRepoPath(*repoPath)
+		t.Run("open", run)
 	}
 }
 
