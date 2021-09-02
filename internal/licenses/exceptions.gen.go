@@ -78,6 +78,7 @@ var exceptionLicenses = []licensecheck.License{
 	{ID: "tendermint", LRE: license_tendermint_lre},
 	{ID: "thepiachu", LRE: license_thepiachu_lre},
 	{ID: "transition", LRE: license_transition_lre},
+	{ID: "workiva", LRE: license_workiva_lre},
 	{ID: "yottadb", LRE: license_yottadb_lre},
 }
 
@@ -135,6 +136,7 @@ var exceptionTypes = map[string][]string{
 	"tendermint":     {"Apache-2.0"},
 	"thepiachu":      {"BSD-3-Clause"},
 	"transition":     {"MIT", "Apache-2.0"},
+	"workiva":        {"Apache-2.0"},
 	"yottadb":        {"AGPL-3.0"},
 }
 
@@ -10911,6 +10913,31 @@ are licensed under a dual MIT/Apache-2.0 license.
 
 MIT: https://www.opensource.org/licenses/mit
 Apache-2.0: https://www.apache.org/licenses/license-2.0
+`
+const license_workiva_lre = `//** https://raw.githubusercontent.com/Workiva/ssllabs-go/v0.1.4/LICENSE **//
+
+
+
+Copyright 2018 - __1__ Workiva Inc.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+This ssllabs-go software contains source code from the ssllabs-scan repository. Your use of the source
+code for ssllabs-scan repository is subject to the following terms and conditions:
+
+	- ssllabs-scan: https://github.com/ssllabs/ssllabs-scan
+		- Copyright (c) __5__ Qualys, Inc.
+    - License under the Apache License, Version 2.0: https://github.com/ssllabs/ssllabs-scan/blob/master/LICENSE
 `
 const license_yottadb_lre = `//** lang.yottadb.com/go/yottadb@v1.1.0 **//
 
