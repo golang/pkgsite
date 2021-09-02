@@ -37,10 +37,8 @@
       </div>
     </div>
   {{end}}
+  {{template "search_tabs" .}}
   {{if eq (len .Results) 0}}
-    <a class="SearchResults-instead" data-gtmc="toggle search mode" href="{{.Pagination.URL .Pagination.Limit .SearchModePackage .Query}}">
-      <span class="SearchResults-insteadPrefix">Search instead for </span>“{{.SearchModePackage}}: {{.Query}}”
-    </a>
     {{template "gopher-airplane" "No results found."}}
     <p class="SearchResults-emptyContentMessage">
       Try searching for a package by visiting <a href="https://pkg.go.dev/search?q={{.Query}}">pkg.go.dev/search?q={{.Query}}</a>.
@@ -78,9 +76,6 @@
 
 {{define "search_package"}}
   <h1>{{capitalize .SearchModePackage}}s matching “{{.Query}}”</h1>
-  <a class="SearchResults-instead" data-gtmc="toggle search mode" href="{{.Pagination.URL .Pagination.Limit .SearchModeSymbol .Query}}">
-    <span class="SearchResults-insteadPrefix">Search instead for </span>“{{.SearchModeSymbol}}: {{.Query}}”
-  </a>
   {{if gt (len .Results) 0}}
     <div class="SearchResults-summary">
       <div>
@@ -88,6 +83,7 @@
       </div>
     </div>
   {{end}}
+  {{template "search_tabs" .}}
   {{if eq (len .Results) 0}}
     {{template "gopher-airplane" "No results found."}}
     <p class="SearchResults-emptyContentMessage">
@@ -109,7 +105,6 @@
             <a href="/{{$v.PackagePath}}" data-gtmc="search result" data-gtmv="{{$i}}"
                 data-test-id="snippet-title">
               <span class="SearchSnippet-header-name">{{$v.Name}}</span>
-              <span class="SearchSnippet-header-dash">–</span>
               {{$v.PackagePath}}
             </a>
           </h2>
@@ -188,5 +183,17 @@
     {{- else -}}
       See <a href="/search-help" data-gtmc="search help"> search help.</a>
     {{- end -}}
+  </div>
+{{end}}
+
+{{define "search_tabs"}}
+  <div>
+    <nav class="go-TabNav">
+      <ul>
+        <li {{if eq .SearchMode ""}}aria-current="page"{{end}}><a href="{{.Pagination.URL .Pagination.Limit .SearchModePackage .Query}}">Package</a></li>
+        <li {{if eq .SearchMode .SearchModeSymbol}}aria-current="page"{{end}}><a href="{{.Pagination.URL .Pagination.Limit .SearchModeSymbol .Query}}">Symbol</a></li>
+      </ul>
+      <hr />
+    </nav>
   </div>
 {{end}}
