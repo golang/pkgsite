@@ -24,6 +24,7 @@
 @import url('./message/message.css');
 @import url('./modal/modal.css');
 @import url('./outline/tree.css');
+@import url('./tabnav/tabnav.css');
 @import url('./tooltip/tooltip.css');
 
 :root {
