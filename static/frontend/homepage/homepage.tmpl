@@ -17,12 +17,6 @@
           {{if .Experiments.IsActive "symbol-search"}}Homepage-search--symbol{{end}}"
           action="/search" role="search" data-gtmc="homepage search form"
           aria-label="Search for a Package">
-        {{if .Experiments.IsActive "symbol-search"}}
-          <select name="m" class="go-Select">
-            <option value="packages">Packages</option>
-            <option value="{{.SearchModeSymbol}}">{{capitalize .SearchModeSymbol}}s</option>
-          </select>
-        {{end}}
         <input
           class="go-Input js-searchFocus"
           data-test-id="homepage-search"

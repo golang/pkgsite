@@ -59,7 +59,7 @@
 .Homepage-search--symbol .go-Input {
   border-bottom-right-radius: var(--border-radius);
   border-top-right-radius: var(--border-radius);
-  padding-left: 1rem;
+  padding-left: 2.5rem;
 }
 .Homepage-search .go-Button {
   justify-content: center;
