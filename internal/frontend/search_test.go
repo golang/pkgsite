@@ -243,6 +243,70 @@ func TestFetchSearchPage(t *testing.T) {
 	}
 }
 
+func TestNewSearchResult(t *testing.T) {
+	for _, test := range []struct {
+		name string
+		in   postgres.SearchResult
+		want SearchResult
+	}{
+		{
+			name: "basic",
+			in: postgres.SearchResult{
+				Name:        "pkg",
+				PackagePath: "m.com/pkg",
+				ModulePath:  "m.com",
+				Version:     "v1.0.0",
+			},
+			want: SearchResult{
+				Name:           "pkg",
+				PackagePath:    "m.com/pkg",
+				ModulePath:     "m.com",
+				DisplayVersion: "v1.0.0",
+			},
+		},
+		{
+			name: "command",
+			in: postgres.SearchResult{
+				Name:        "main",
+				PackagePath: "m.com/cmd",
+				ModulePath:  "m.com",
+				Version:     "v1.0.0",
+			},
+			want: SearchResult{
+				Name:           "cmd",
+				PackagePath:    "m.com/cmd",
+				ModulePath:     "m.com",
+				DisplayVersion: "v1.0.0",
+				ChipText:       "command",
+			},
+		},
+		{
+			name: "stdlib",
+			in: postgres.SearchResult{
+				Name:        "math",
+				PackagePath: "math",
+				ModulePath:  "std",
+				Version:     "v1.14.0",
+			},
+			want: SearchResult{
+				Name:           "math",
+				PackagePath:    "math",
+				ModulePath:     "std",
+				DisplayVersion: "go1.14",
+				ChipText:       "standard library",
+			},
+		},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			got := newSearchResult(&test.in, false)
+			test.want.CommitTime = "Jan  1, 0001"
+			if diff := cmp.Diff(&test.want, got); diff != "" {
+				t.Errorf("mimatch (-want, +got):\n%s", diff)
+			}
+		})
+	}
+}
+
 func TestApproximateNumber(t *testing.T) {
 	tests := []struct {
 		estimate int

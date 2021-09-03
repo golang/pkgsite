@@ -88,51 +88,7 @@ func fetchSearchPage(ctx context.Context, db *postgres.DB, query string, pagePar
 
 	var results []*SearchResult
 	for _, r := range dbresults {
-		// For commands, change the name from "main" to the last component of the import path.
-		chipText := ""
-		name := r.Name
-		if name == "main" {
-			chipText = "command"
-			name = effectiveName(r.PackagePath, r.Name)
-		}
-		moduleDesc := "Other packages in module " + r.ModulePath
-		if r.ModulePath == stdlib.ModulePath {
-			moduleDesc = "Related packages in the standard library"
-			chipText = "standard library"
-		}
-		sr := &SearchResult{
-			Name:           name,
-			PackagePath:    r.PackagePath,
-			ModulePath:     r.ModulePath,
-			ChipText:       chipText,
-			Synopsis:       r.Synopsis,
-			DisplayVersion: displayVersion(r.ModulePath, r.Version, r.Version),
-			Licenses:       r.Licenses,
-			CommitTime:     elapsedTime(r.CommitTime),
-			NumImportedBy:  int(r.NumImportedBy),
-			SameModule:     packagePaths(moduleDesc+":", r.SameModule),
-			// Say "other" instead of "lower" because at some point we may
-			// prefer to show a tagged, lower major version over an untagged
-			// higher major version.
-			OtherMajor: modulePaths("Other major versions:", r.OtherMajor),
-		}
-		if searchSymbols {
-			sr.SymbolName = r.SymbolName
-			sr.SymbolKind = strings.ToLower(string(r.SymbolKind))
-			sr.SymbolSynopsis = symbolSynopsis(r)
-			sr.SymbolGOOS = r.SymbolGOOS
-			sr.SymbolGOARCH = r.SymbolGOARCH
-			// If the GOOS is "all" or "linux", it doesn't need to be
-			// specified as a query param. "linux" is the default GOOS when a
-			// package has multiple build contexts, since it is first item
-			// listed in internal.BuildContexts.
-			if r.SymbolGOOS == internal.All || r.SymbolGOOS == "linux" {
-				sr.SymbolLink = fmt.Sprintf("/%s#%s", r.PackagePath, r.SymbolName)
-			} else {
-				sr.SymbolLink = fmt.Sprintf("/%s?GOOS=%s#%s", r.PackagePath, r.SymbolGOOS, r.SymbolName)
-			}
-		}
-		results = append(results, sr)
+		results = append(results, newSearchResult(r, searchSymbols))
 	}
 
 	var (
@@ -166,6 +122,54 @@ func fetchSearchPage(ctx context.Context, db *postgres.DB, query string, pagePar
 		Pagination: pgs,
 	}
 	return sp, nil
+}
+
+func newSearchResult(r *postgres.SearchResult, searchSymbols bool) *SearchResult {
+	// For commands, change the name from "main" to the last component of the import path.
+	chipText := ""
+	name := r.Name
+	if name == "main" {
+		chipText = "command"
+		name = effectiveName(r.PackagePath, r.Name)
+	}
+	moduleDesc := "Other packages in module " + r.ModulePath
+	if r.ModulePath == stdlib.ModulePath {
+		moduleDesc = "Related packages in the standard library"
+		chipText = "standard library"
+	}
+	sr := &SearchResult{
+		Name:           name,
+		PackagePath:    r.PackagePath,
+		ModulePath:     r.ModulePath,
+		ChipText:       chipText,
+		Synopsis:       r.Synopsis,
+		DisplayVersion: displayVersion(r.ModulePath, r.Version, r.Version),
+		Licenses:       r.Licenses,
+		CommitTime:     elapsedTime(r.CommitTime),
+		NumImportedBy:  int(r.NumImportedBy),
+		SameModule:     packagePaths(moduleDesc+":", r.SameModule),
+		// Say "other" instead of "lower" because at some point we may
+		// prefer to show a tagged, lower major version over an untagged
+		// higher major version.
+		OtherMajor: modulePaths("Other major versions:", r.OtherMajor),
+	}
+	if searchSymbols {
+		sr.SymbolName = r.SymbolName
+		sr.SymbolKind = strings.ToLower(string(r.SymbolKind))
+		sr.SymbolSynopsis = symbolSynopsis(r)
+		sr.SymbolGOOS = r.SymbolGOOS
+		sr.SymbolGOARCH = r.SymbolGOARCH
+		// If the GOOS is "all" or "linux", it doesn't need to be
+		// specified as a query param. "linux" is the default GOOS when a
+		// package has multiple build contexts, since it is first item
+		// listed in internal.BuildContexts.
+		if r.SymbolGOOS == internal.All || r.SymbolGOOS == "linux" {
+			sr.SymbolLink = fmt.Sprintf("/%s#%s", r.PackagePath, r.SymbolName)
+		} else {
+			sr.SymbolLink = fmt.Sprintf("/%s?GOOS=%s#%s", r.PackagePath, r.SymbolGOOS, r.SymbolName)
+		}
+	}
+	return sr
 }
 
 func symbolSynopsis(r *postgres.SearchResult) string {
