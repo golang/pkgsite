@@ -37,3 +37,18 @@ func ReadFileLines(filename string) (lines []string, err error) {
 	}
 	return lines, nil
 }
+
+// Cut cuts s around the first instance of sep,
+// returning the text before and after sep.
+// The found result reports whether sep appears in s.
+// If sep does not appear in s, cut returns s, "", false.
+//
+// https://golang.org/issue/46336 is an accepted proposal to add this to the
+// standard library. It will presumably land in Go 1.18, so this can be removed
+// when pkgsite moves to that version.
+func Cut(s, sep string) (before, after string, found bool) {
+	if i := strings.Index(s, sep); i >= 0 {
+		return s[:i], s[i+len(sep):], true
+	}
+	return s, "", false
+}

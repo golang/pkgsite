@@ -1458,6 +1458,25 @@ func TestGroupSearchResults(t *testing.T) {
 				}},
 			},
 		},
+		{
+			name: "stdlib 2",
+			in: []*SearchResult{
+				{PackagePath: "m1", ModulePath: "m1", Version: "v0.0.0", Score: 9},
+				{PackagePath: "net/http", ModulePath: stdlib.ModulePath, Score: 8},
+				{PackagePath: "encoding/json", ModulePath: stdlib.ModulePath, Score: 7},
+				{PackagePath: "encoding/gob", ModulePath: stdlib.ModulePath, Score: 6},
+				{PackagePath: "net/http/prof", ModulePath: stdlib.ModulePath, Score: 5},
+			},
+			want: []*SearchResult{
+				{PackagePath: "m1", ModulePath: "m1", Version: "v0.0.0", Score: 9},
+				{PackagePath: "net/http", ModulePath: stdlib.ModulePath, Score: 8, SameModule: []*SearchResult{
+					{PackagePath: "net/http/prof", ModulePath: stdlib.ModulePath, Score: 5},
+				}},
+				{PackagePath: "encoding/json", ModulePath: stdlib.ModulePath, Score: 7, SameModule: []*SearchResult{
+					{PackagePath: "encoding/gob", ModulePath: stdlib.ModulePath, Score: 6},
+				}},
+			},
+		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			got := groupSearchResults(test.in)

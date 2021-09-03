@@ -9,7 +9,6 @@ import (
 	"database/sql"
 	"fmt"
 	"io"
-	"path"
 	"sort"
 	"strings"
 	"time"
@@ -591,11 +590,8 @@ func groupAndMajorVersion(r *SearchResult) (string, int) {
 	// Packages in the standard library are grouped by their top-level
 	// directory, and we can consider them all part of the same major version.
 	if r.ModulePath == stdlib.ModulePath {
-		dir := r.PackagePath
-		if strings.ContainsRune(dir, '/') {
-			dir = path.Dir(dir)
-		}
-		return dir, 1
+		before, _, _ := internal.Cut(r.PackagePath, "/")
+		return before, 1
 	}
 	return internal.SeriesPathAndMajorVersion(r.ModulePath)
 }
