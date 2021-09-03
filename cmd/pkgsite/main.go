@@ -24,6 +24,11 @@
 // You can still provide modules on the local filesystem by listing their paths:
 //
 //   pkgsite -static ~/repos/pkgsite/static -cache -proxy ~/repos/cue some/other/module
+//
+// Although standard library packages will work by default, the docs can take a
+// while to appear the first time because the Go repo must be cloned and
+// processed. If you clone the repo yourself (https://go.googlesource.com/go),
+// provide its location with the -gorepo flag to save a little time.
 package main
 
 import (
@@ -46,6 +51,7 @@ import (
 	"golang.org/x/pkgsite/internal/middleware"
 	"golang.org/x/pkgsite/internal/proxy"
 	"golang.org/x/pkgsite/internal/source"
+	"golang.org/x/pkgsite/internal/stdlib"
 )
 
 const defaultAddr = "localhost:8080" // default webserver address
@@ -57,6 +63,7 @@ var (
 	useCache   = flag.Bool("cache", false, "fetch from the module cache")
 	cacheDir   = flag.String("cachedir", "", "module cache directory (defaults to `go env GOMODCACHE`)")
 	useProxy   = flag.Bool("proxy", false, "fetch from GOPROXY if not found locally")
+	goRepoPath = flag.String("gorepo", "", "path to Go repo on local filesystem")
 )
 
 func main() {
@@ -107,6 +114,11 @@ func main() {
 			die("connecting to proxy: %s", err)
 		}
 	}
+
+	if *goRepoPath != "" {
+		stdlib.SetGoRepoPath(*goRepoPath)
+	}
+
 	server, err := newServer(ctx, paths, *gopathMode, downloadDir, prox)
 	if err != nil {
 		die("%s\nMaybe you need to provide the location of static assets with -static.", err)
