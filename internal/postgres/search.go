@@ -84,7 +84,7 @@ type searchEvent struct {
 }
 
 // A searcher is used to execute a single search request.
-type searcher func(db *DB, ctx context.Context, q string, limit, offset, maxResultCount int) searchResponse
+type searcher func(db *DB, ctx context.Context, q string, limit int, opts SearchOptions) searchResponse
 
 // The pkgSearchers used by Search.
 var pkgSearchers = map[string]searcher{
@@ -96,13 +96,17 @@ var symbolSearchers = map[string]searcher{
 	"symbol": (*DB).symbolSearch,
 }
 
+// SearchOptions provide information used by db.Search.
 type SearchOptions struct {
 	// Maximum number of results to return (page size).
 	MaxResults int
+
 	// Offset for DB query.
 	Offset int
+
 	// Maximum number to use for total result count.
 	MaxResultCount int
+
 	// If true, perform a symbol search.
 	SearchSymbols bool
 }
@@ -213,7 +217,7 @@ func (db *DB) search(ctx context.Context, q string, opts SearchOptions, limit in
 	} else {
 		searchers = pkgSearchers
 	}
-	resp, err := db.hedgedSearch(ctx, q, limit, opts.Offset, opts.MaxResultCount, searchers, nil)
+	resp, err := db.hedgedSearch(ctx, q, limit, opts, searchers, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -270,8 +274,8 @@ var scoreExpr = fmt.Sprintf(`
 // available result.
 // The optional guardTestResult func may be used to allow tests to control the
 // order in which search results are returned.
-func (db *DB) hedgedSearch(ctx context.Context, q string, limit, offset, maxResultCount int, searchers map[string]searcher, guardTestResult func(string) func()) (_ *searchResponse, err error) {
-	defer derrors.WrapStack(&err, "hedgedSearch(ctx, %q, %d, %d, %d)", q, limit, offset, maxResultCount)
+func (db *DB) hedgedSearch(ctx context.Context, q string, limit int, opts SearchOptions, searchers map[string]searcher, guardTestResult func(string) func()) (_ *searchResponse, err error) {
+	defer derrors.WrapStack(&err, "hedgedSearch(ctx, %q, %d, %+v)", q, limit, opts)
 
 	searchStart := time.Now()
 	responses := make(chan searchResponse, len(searchers))
@@ -285,7 +289,7 @@ func (db *DB) hedgedSearch(ctx context.Context, q string, limit, offset, maxResu
 		s := s
 		go func() {
 			start := time.Now()
-			resp := s(db, searchCtx, q, limit, offset, maxResultCount)
+			resp := s(db, searchCtx, q, limit, opts)
 			log.Debug(ctx, searchEvent{
 				Type:    resp.source,
 				Latency: time.Since(start),
@@ -329,7 +333,7 @@ const hllRegisterCount = 128
 
 // deepSearch searches all packages for the query. It is slower, but results
 // are always valid.
-func (db *DB) deepSearch(ctx context.Context, q string, limit, offset, maxResultCount int) searchResponse {
+func (db *DB) deepSearch(ctx context.Context, q string, limit int, opts SearchOptions) searchResponse {
 	query := fmt.Sprintf(`
 		SELECT *, COUNT(*) OVER() AS total
 		FROM (
@@ -378,7 +382,7 @@ func (db *DB) deepSearch(ctx context.Context, q string, limit, offset, maxResult
 			return nil
 		}
 		const fetchSize = 20 // number of rows to fetch at a time
-		err = db.db.RunQueryIncrementally(ctx, query, fetchSize, collect, q, limit, offset)
+		err = db.db.RunQueryIncrementally(ctx, query, fetchSize, collect, q, limit, opts.Offset)
 	} else {
 		collect := func(rows *sql.Rows) error {
 			var r SearchResult
@@ -389,17 +393,17 @@ func (db *DB) deepSearch(ctx context.Context, q string, limit, offset, maxResult
 			results = append(results, &r)
 			return nil
 		}
-		err = db.db.RunQuery(ctx, query, collect, q, limit, offset)
+		err = db.db.RunQuery(ctx, query, collect, q, limit, opts.Offset)
 	}
 	if err != nil {
 		results = nil
 	}
 	for i, r := range results {
-		r.Offset = offset + i
+		r.Offset = opts.Offset + i
 	}
-	if len(results) > 0 && results[0].NumResults > uint64(maxResultCount) {
+	if len(results) > 0 && results[0].NumResults > uint64(opts.MaxResultCount) {
 		for _, r := range results {
-			r.NumResults = uint64(maxResultCount)
+			r.NumResults = uint64(opts.MaxResultCount)
 		}
 	}
 	return searchResponse{
@@ -409,7 +413,7 @@ func (db *DB) deepSearch(ctx context.Context, q string, limit, offset, maxResult
 	}
 }
 
-func (db *DB) popularSearch(ctx context.Context, searchQuery string, limit, offset, maxResultCount int) searchResponse {
+func (db *DB) popularSearch(ctx context.Context, searchQuery string, limit int, opts SearchOptions) searchResponse {
 	query := `
 		SELECT
 			package_path,
@@ -429,20 +433,20 @@ func (db *DB) popularSearch(ctx context.Context, searchQuery string, limit, offs
 		results = append(results, &r)
 		return nil
 	}
-	err := db.db.RunQuery(ctx, query, collect, searchQuery, limit, offset, nonRedistributablePenalty, noGoModPenalty)
+	err := db.db.RunQuery(ctx, query, collect, searchQuery, limit, opts.Offset, nonRedistributablePenalty, noGoModPenalty)
 	if err != nil {
 		results = nil
 	}
-	numResults := maxResultCount
-	if offset+limit > maxResultCount || len(results) < limit {
+	numResults := opts.MaxResultCount
+	if opts.Offset+limit > opts.MaxResultCount || len(results) < limit {
 		// It is practically impossible that len(results) < limit, because popular
 		// search will never linearly scan everything before deep search completes,
 		// but just to be slightly more theoretically correct, if our search
 		// results are partial we know that we have exhausted all results.
-		numResults = offset + len(results)
+		numResults = opts.Offset + len(results)
 	}
 	for i, r := range results {
-		r.Offset = offset + i
+		r.Offset = opts.Offset + i
 		r.NumResults = uint64(numResults)
 	}
 	return searchResponse{

@@ -105,7 +105,11 @@ func TestSymbolSearch(t *testing.T) {
 		},
 	} {
 		t.Run(strings.ReplaceAll(strings.ReplaceAll(test.name, "<", "_"), ">", "_"), func(t *testing.T) {
-			resp, err := testDB.hedgedSearch(ctx, test.q, 2, 0, 100, symbolSearchers, nil)
+			opts := SearchOptions{
+				Offset:         0,
+				MaxResultCount: 100,
+			}
+			resp, err := testDB.hedgedSearch(ctx, test.q, 2, opts, symbolSearchers, nil)
 			if err != nil {
 				t.Fatal(err)
 			}

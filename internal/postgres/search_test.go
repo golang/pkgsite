@@ -455,7 +455,11 @@ func testSearch(t *testing.T, ctx context.Context) {
 				t.Fatal(err)
 			}
 			guardTestResult := resultGuard(t, test.resultOrder)
-			resp, err := testDB.hedgedSearch(ctx, "foo", 2, 0, 100, pkgSearchers, guardTestResult)
+			opts := SearchOptions{
+				Offset:         0,
+				MaxResultCount: 100,
+			}
+			resp, err := testDB.hedgedSearch(ctx, "foo", 2, opts, pkgSearchers, guardTestResult)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -492,7 +496,7 @@ func TestSearchErrors(t *testing.T) {
 		for name, search := range pkgSearchers {
 			if name == searcherName {
 				name := name
-				newSearchers[name] = func(*DB, context.Context, string, int, int, int) searchResponse {
+				newSearchers[name] = func(*DB, context.Context, string, int, SearchOptions) searchResponse {
 					return searchResponse{
 						source: name,
 						err:    errors.New("bad"),
@@ -543,7 +547,11 @@ func TestSearchErrors(t *testing.T) {
 				t.Fatal(err)
 			}
 			guardTestResult := resultGuard(t, test.resultOrder)
-			resp, err := testDB.hedgedSearch(ctx, "foo", 2, 0, 100, test.searchers, guardTestResult)
+			opts := SearchOptions{
+				Offset:         0,
+				MaxResultCount: 100,
+			}
+			resp, err := testDB.hedgedSearch(ctx, "foo", 2, opts, test.searchers, guardTestResult)
 			if (err != nil) != test.wantErr {
 				t.Fatalf("hedgedSearch(): got error %v, want error: %t", err, test.wantErr)
 			}
@@ -714,7 +722,11 @@ func TestInsertSearchDocumentAndSearch(t *testing.T) {
 					test.limit = 10
 				}
 
-				got := searcher(testDB, ctx, test.searchQuery, test.limit, test.offset, 100)
+				opts := SearchOptions{
+					Offset:         test.offset,
+					MaxResultCount: 100,
+				}
+				got := searcher(testDB, ctx, test.searchQuery, test.limit, opts)
 				if got.err != nil {
 					t.Fatal(got.err)
 				}
@@ -768,7 +780,11 @@ func TestSearchPenalties(t *testing.T) {
 
 	for method, searcher := range pkgSearchers {
 		t.Run(method, func(t *testing.T) {
-			res := searcher(testDB, ctx, "foo", 10, 0, 100)
+			opts := SearchOptions{
+				Offset:         0,
+				MaxResultCount: 100,
+			}
+			res := searcher(testDB, ctx, "foo", 10, opts)
 			if res.err != nil {
 				t.Fatal(res.err)
 			}

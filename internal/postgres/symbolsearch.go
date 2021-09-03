@@ -96,7 +96,7 @@ func upsertSymbolSearchDocuments(ctx context.Context, tx *database.DB,
 //
 // TODO(https://golang.org/issue/44142): factor out common code between
 // symbolSearch and deepSearch.
-func (db *DB) symbolSearch(ctx context.Context, q string, limit, offset, maxResultCount int) searchResponse {
+func (db *DB) symbolSearch(ctx context.Context, q string, limit int, opts SearchOptions) searchResponse {
 	defer middleware.ElapsedStat(ctx, "symbolSearch")()
 
 	var (
