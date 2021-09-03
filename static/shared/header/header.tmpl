@@ -88,6 +88,7 @@
         autocapitalize="off" autocomplete="off" autocorrect="off" spellcheck="false"
         {{- if .Experiments.IsActive "symbol-search" -}} placeholder="Search packages or symbols"
         {{- else -}} placeholder="Search for a package"{{- end -}} value="{{.Query}}" />
+    <input name="m" value="{{.SearchMode}}" hidden>
     <button class="go-Button go-Button--inverted" aria-label="Submit search">
       <img
         class="go-Icon"
