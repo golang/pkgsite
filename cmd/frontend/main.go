@@ -174,7 +174,6 @@ func main() {
 		middleware.Panic(panicHandler),
 		ermw,
 		middleware.Timeout(54*time.Second),
-		middleware.Language,
 	)
 	addr := cfg.HostAddr(*hostAddr)
 	log.Infof(ctx, "Listening on addr %s", addr)
