@@ -18,6 +18,8 @@ import (
 	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/testing/sample"
+	"golang.org/x/text/language"
+	"golang.org/x/text/message"
 )
 
 func TestSearchQuery(t *testing.T) {
@@ -246,31 +248,37 @@ func TestFetchSearchPage(t *testing.T) {
 func TestNewSearchResult(t *testing.T) {
 	for _, test := range []struct {
 		name string
+		tag  language.Tag
 		in   postgres.SearchResult
 		want SearchResult
 	}{
 		{
 			name: "basic",
+			tag:  language.English,
 			in: postgres.SearchResult{
-				Name:        "pkg",
-				PackagePath: "m.com/pkg",
-				ModulePath:  "m.com",
-				Version:     "v1.0.0",
+				Name:          "pkg",
+				PackagePath:   "m.com/pkg",
+				ModulePath:    "m.com",
+				Version:       "v1.0.0",
+				NumImportedBy: 3,
 			},
 			want: SearchResult{
 				Name:           "pkg",
 				PackagePath:    "m.com/pkg",
 				ModulePath:     "m.com",
 				DisplayVersion: "v1.0.0",
+				NumImportedBy:  "3",
 			},
 		},
 		{
 			name: "command",
+			tag:  language.English,
 			in: postgres.SearchResult{
-				Name:        "main",
-				PackagePath: "m.com/cmd",
-				ModulePath:  "m.com",
-				Version:     "v1.0.0",
+				Name:          "main",
+				PackagePath:   "m.com/cmd",
+				ModulePath:    "m.com",
+				Version:       "v1.0.0",
+				NumImportedBy: 1234,
 			},
 			want: SearchResult{
 				Name:           "cmd",
@@ -278,10 +286,12 @@ func TestNewSearchResult(t *testing.T) {
 				ModulePath:     "m.com",
 				DisplayVersion: "v1.0.0",
 				ChipText:       "command",
+				NumImportedBy:  "1,234",
 			},
 		},
 		{
 			name: "stdlib",
+			tag:  language.English,
 			in: postgres.SearchResult{
 				Name:        "math",
 				PackagePath: "math",
@@ -294,11 +304,31 @@ func TestNewSearchResult(t *testing.T) {
 				ModulePath:     "std",
 				DisplayVersion: "go1.14",
 				ChipText:       "standard library",
+				NumImportedBy:  "0",
+			},
+		},
+		{
+			name: "German",
+			tag:  language.German,
+			in: postgres.SearchResult{
+				Name:          "pkg",
+				PackagePath:   "m.com/pkg",
+				ModulePath:    "m.com",
+				Version:       "v1.0.0",
+				NumImportedBy: 3456,
+			},
+			want: SearchResult{
+				Name:           "pkg",
+				PackagePath:    "m.com/pkg",
+				ModulePath:     "m.com",
+				DisplayVersion: "v1.0.0",
+				NumImportedBy:  "3.456",
 			},
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			got := newSearchResult(&test.in, false)
+			pr := message.NewPrinter(test.tag)
+			got := newSearchResult(&test.in, false, pr)
 			test.want.CommitTime = "Jan  1, 0001"
 			if diff := cmp.Diff(&test.want, got); diff != "" {
 				t.Errorf("mimatch (-want, +got):\n%s", diff)

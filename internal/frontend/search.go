@@ -23,9 +23,11 @@ import (
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/log"
+	"golang.org/x/pkgsite/internal/middleware"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/version"
+	"golang.org/x/text/message"
 )
 
 const defaultSearchLimit = 10
@@ -48,7 +50,7 @@ type SearchResult struct {
 	DisplayVersion string
 	Licenses       []string
 	CommitTime     string
-	NumImportedBy  int
+	NumImportedBy  string
 	Approximate    bool
 	Symbols        *subResult
 	SameModule     *subResult // package paths in the same module
@@ -88,7 +90,8 @@ func fetchSearchPage(ctx context.Context, db *postgres.DB, query string, pagePar
 
 	var results []*SearchResult
 	for _, r := range dbresults {
-		results = append(results, newSearchResult(r, searchSymbols))
+		sr := newSearchResult(r, searchSymbols, message.NewPrinter(middleware.LanguageTag(ctx)))
+		results = append(results, sr)
 	}
 
 	var (
@@ -124,7 +127,7 @@ func fetchSearchPage(ctx context.Context, db *postgres.DB, query string, pagePar
 	return sp, nil
 }
 
-func newSearchResult(r *postgres.SearchResult, searchSymbols bool) *SearchResult {
+func newSearchResult(r *postgres.SearchResult, searchSymbols bool, pr *message.Printer) *SearchResult {
 	// For commands, change the name from "main" to the last component of the import path.
 	chipText := ""
 	name := r.Name
@@ -146,7 +149,7 @@ func newSearchResult(r *postgres.SearchResult, searchSymbols bool) *SearchResult
 		DisplayVersion: displayVersion(r.ModulePath, r.Version, r.Version),
 		Licenses:       r.Licenses,
 		CommitTime:     elapsedTime(r.CommitTime),
-		NumImportedBy:  int(r.NumImportedBy),
+		NumImportedBy:  pr.Sprint(r.NumImportedBy),
 		SameModule:     packagePaths(moduleDesc+":", r.SameModule),
 		// Say "other" instead of "lower" because at some point we may
 		// prefer to show a tagged, lower major version over an untagged

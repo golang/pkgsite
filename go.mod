@@ -43,6 +43,7 @@ require (
 	golang.org/x/mod v0.3.1-0.20200828183125-ce943fd02449
 	golang.org/x/net v0.0.0-20210226172049-e18ecbb05110
 	golang.org/x/sync v0.0.0-20200625203802-6e8e738ad208
+	golang.org/x/text v0.3.6
 	golang.org/x/tools v0.0.0-20200915173823-2db8f0ff891c
 	google.golang.org/api v0.32.0
 	google.golang.org/genproto v0.0.0-20200923140941-5646d36feee1
