@@ -93,7 +93,7 @@ func (c *Client) Info(ctx context.Context, modulePath, requestedVersion string) 
 		// an uncached module when fetch is disabled.
 		// Don't report timeouts, because they are relatively frequent and not actionable.
 		wrap := derrors.Wrap
-		if !errors.Is(err, derrors.NotFetched) && !errors.Is(err, derrors.ProxyTimedOut) {
+		if !errors.Is(err, derrors.NotFetched) && !errors.Is(err, derrors.ProxyTimedOut) && !errors.Is(err, derrors.NotFound) {
 			wrap = derrors.WrapAndReport
 		}
 		wrap(&err, "proxy.Client.Info(%q, %q)", modulePath, requestedVersion)
