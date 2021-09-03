@@ -348,6 +348,8 @@ func (s *Server) serveSearch(w http.ResponseWriter, r *http.Request, ds internal
 	page.basePage = s.newBasePage(r, fmt.Sprintf("%s - Search Results", query))
 	if searchSymbols {
 		page.SearchMode = searchModeSymbol
+	} else {
+		page.SearchMode = searchModePackage
 	}
 	if s.shouldServeJSON(r) {
 		return s.serveJSONPage(w, r, page)
