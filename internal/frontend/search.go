@@ -30,7 +30,7 @@ import (
 	"golang.org/x/text/message"
 )
 
-const defaultSearchLimit = 10
+const defaultSearchLimit = 25
 
 // SearchPage contains all of the data that the search template needs to
 // populate.
