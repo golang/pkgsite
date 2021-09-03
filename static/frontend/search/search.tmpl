@@ -29,14 +29,12 @@
 
 {{define "search_symbol"}}
   <h1>{{capitalize .SearchModeSymbol}}s matching “{{.Query}}”</h1>
-  {{if gt (len .Results) 0}}
-    <div class="SearchResults-summary">
-      <div>
-        Showing <strong>{{len $.Results}}</strong> matching {{.SearchModeSymbol}}s.
-        <a href="/search-help">Search help</a>
-      </div>
+  <div class="SearchResults-summary">
+    <div>
+      Showing <strong>{{len $.Results}}</strong> matching {{.SearchModeSymbol}}s.
+      <a href="/search-help">Search help</a>
     </div>
-  {{end}}
+  </div>
   {{template "search_tabs" .}}
   {{if eq (len .Results) 0}}
     {{template "gopher-airplane" "No results found."}}
@@ -77,13 +75,11 @@
 
 {{define "search_package"}}
   <h1>{{capitalize .SearchModePackage}}s matching “{{.Query}}”</h1>
-  {{if gt (len .Results) 0}}
-    <div class="SearchResults-summary">
-      <div>
-        Showing <strong>{{len .Results}}</strong> modules with matching packages. <a href="/search-help">Search help</a>
-      </div>
+  <div class="SearchResults-summary">
+    <div>
+      Showing <strong>{{len .Results}}</strong> modules with matching packages. <a href="/search-help">Search help</a>
     </div>
-  {{end}}
+  </div>
   {{template "search_tabs" .}}
   {{if eq (len .Results) 0}}
     {{template "gopher-airplane" "No results found."}}
