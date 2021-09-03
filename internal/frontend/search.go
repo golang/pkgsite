@@ -403,6 +403,9 @@ func searchQuery(r *http.Request) (q string, searchSymbols bool) {
 	if mode == searchModePackage {
 		return q, false
 	}
+	if mode == searchModeSymbol {
+		return q, true
+	}
 	if shouldDefaultToSymbolSearch(q) {
 		return q, true
 	}
