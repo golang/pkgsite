@@ -89,10 +89,10 @@ func (ds *FetchDataSource) cachePut(path, version string, m *internal.Module, er
 
 // getModule gets the module at the given path and version. It first checks the
 // cache, and if it isn't there it then tries to fetch it.
-func (ds *FetchDataSource) getModule(ctx context.Context, modulePath, version string) (_ *internal.Module, err error) {
-	defer derrors.Wrap(&err, "FetchDataSource.getModule(%q, %q)", modulePath, version)
+func (ds *FetchDataSource) getModule(ctx context.Context, modulePath, vers string) (_ *internal.Module, err error) {
+	defer derrors.Wrap(&err, "FetchDataSource.getModule(%q, %q)", modulePath, vers)
 
-	mod, err := ds.cacheGet(modulePath, version)
+	mod, err := ds.cacheGet(modulePath, vers)
 	if mod != nil || err != nil {
 		return mod, err
 	}
@@ -100,7 +100,7 @@ func (ds *FetchDataSource) getModule(ctx context.Context, modulePath, version st
 	// There can be a benign race here, where two goroutines both fetch the same
 	// module. At worst some work will be duplicated, but if that turns out to
 	// be a problem we could use golang.org/x/sync/singleflight.
-	m, err := ds.fetch(ctx, modulePath, version)
+	m, err := ds.fetch(ctx, modulePath, vers)
 	if m != nil && ds.opts.ProxyClientForLatest != nil {
 		// Use the go.mod file at the raw latest version to fill in deprecation
 		// and retraction information. Ignore any problems getting the
@@ -113,7 +113,12 @@ func (ds *FetchDataSource) getModule(ctx context.Context, modulePath, version st
 
 	// Cache both successes and failures, but not cancellations.
 	if !errors.Is(err, context.Canceled) {
-		ds.cachePut(modulePath, version, m, err)
+		ds.cachePut(modulePath, vers, m, err)
+		// Cache the resolved version of "latest" too. A useful optimization
+		// because the frontend redirects "latest", resulting in another fetch.
+		if m != nil && vers == version.Latest {
+			ds.cachePut(modulePath, m.Version, m, err)
+		}
 	}
 	return m, err
 }
