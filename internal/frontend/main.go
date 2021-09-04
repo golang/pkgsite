@@ -18,6 +18,7 @@ import (
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/middleware"
 	"golang.org/x/pkgsite/internal/version"
+	"golang.org/x/text/message"
 )
 
 // MainDetails contains data needed to render the unit template.
@@ -30,7 +31,7 @@ type MainDetails struct {
 	Licenses []LicenseMetadata
 
 	// NumImports is the number of imports for the package.
-	NumImports int
+	NumImports string
 
 	// CommitTime is time that this version was published, or the time that
 	// has elapsed since this version was committed if it was done so recently.
@@ -59,7 +60,7 @@ type MainDetails struct {
 	// ImportedByCount is the number of packages that import this path.
 	// When the count is > limit it will read as 'limit+'. This field
 	// is not supported when using a datasource proxy.
-	ImportedByCount int
+	ImportedByCount string
 
 	DocBody       safehtml.HTML
 	DocOutline    safehtml.HTML
@@ -194,6 +195,7 @@ func fetchMainDetails(ctx context.Context, ds internal.DataSource, um *internal.
 	}
 	isTaggedVersion := versionType != version.TypePseudo
 	isStableVersion := semver.Major(um.Version) != "v0" && versionType == version.TypeRelease
+	pr := message.NewPrinter(middleware.LanguageTag(ctx))
 	return &MainDetails{
 		ExpandReadme:      expandReadme,
 		Directories:       unitDirectories(append(subdirectories, nestedModules...)),
@@ -214,8 +216,8 @@ func fetchMainDetails(ctx context.Context, ds internal.DataSource, um *internal.
 		RepositoryURL:     um.SourceInfo.RepoURL(),
 		SourceURL:         um.SourceInfo.DirectoryURL(internal.Suffix(um.Path, um.ModulePath)),
 		MobileOutline:     docParts.MobileOutline,
-		NumImports:        unit.NumImports,
-		ImportedByCount:   unit.NumImportedBy,
+		NumImports:        pr.Sprint(unit.NumImports),
+		ImportedByCount:   pr.Sprint(unit.NumImportedBy),
 		IsPackage:         unit.IsPackage(),
 		ModFileURL:        um.SourceInfo.ModuleURL() + "/go.mod",
 		IsTaggedVersion:   isTaggedVersion,

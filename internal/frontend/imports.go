@@ -6,14 +6,14 @@ package frontend
 
 import (
 	"context"
-	"fmt"
-	"strconv"
 	"strings"
 
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/log"
+	"golang.org/x/pkgsite/internal/middleware"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/stdlib"
+	"golang.org/x/text/message"
 )
 
 // ImportsDetails contains information for a package's imports.
@@ -126,6 +126,7 @@ func fetchImportedByDetails(ctx context.Context, ds internal.DataSource, pkgPath
 	// Display the number of importers, taking into account the number we
 	// actually retrieved, the limit on that number, and the imported-by count
 	// in the search_documents table.
+	pr := message.NewPrinter(middleware.LanguageTag(ctx))
 	var (
 		display string
 		pkgword = "package"
@@ -137,21 +138,21 @@ func fetchImportedByDetails(ctx context.Context, ds internal.DataSource, pkgPath
 	// If there are more importers than the limit, and the search number is
 	// greater, use the search number and indicate that we're displaying fewer.
 	case numImportedBy >= importedByLimit && numImportedBySearch > numImportedBy:
-		display = fmt.Sprintf("%d (displaying %d %s)", numImportedBySearch, importedByLimit-1, pkgword)
+		display = pr.Sprintf("%d (displaying %d %s)", numImportedBySearch, importedByLimit-1, pkgword)
 	// If we've exceeded the limit but the search number is smaller, we don't
 	// know the true number, so say so.
 	case numImportedBy >= importedByLimit:
-		display = fmt.Sprintf("%d (displaying more than %d %s, including internal and invalid packages)", numImportedBySearch, importedByLimit-1, pkgword)
+		display = pr.Sprintf("%d (displaying more than %d %s, including internal and invalid packages)", numImportedBySearch, importedByLimit-1, pkgword)
 	// If we haven't exceeded the limit and we have more than the search number,
 	// then display both numbers so users coming from the search page won't see
 	// a mismatch.
 	case numImportedBy > numImportedBySearch:
-		display = fmt.Sprintf("%d (displaying %d %s, including internal and invalid packages)", numImportedBySearch, numImportedBy, pkgword)
+		display = pr.Sprintf("%d (displaying %d %s, including internal and invalid packages)", numImportedBySearch, numImportedBy, pkgword)
 	// Otherwise, we have all the packages, and the search number is either
 	// wrong (perhaps it hasn't been recomputed yet) or it is the same as the
 	// retrieved number. In that case, just display the retrieved number.
 	default:
-		display = strconv.Itoa(numImportedBy)
+		display = pr.Sprint(numImportedBy)
 	}
 	return &ImportedByDetails{
 		ModulePath:           modulePath,
