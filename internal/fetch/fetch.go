@@ -21,7 +21,6 @@ import (
 	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/proxy"
-	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/stdlib"
 )
 
@@ -49,14 +48,14 @@ type FetchResult struct {
 // *internal.Module and related information.
 //
 // Even if err is non-nil, the result may contain useful information, like the go.mod path.
-func FetchModule(ctx context.Context, modulePath, requestedVersion string, mg ModuleGetter, sourceClient *source.Client) (fr *FetchResult) {
+func FetchModule(ctx context.Context, modulePath, requestedVersion string, mg ModuleGetter) (fr *FetchResult) {
 	fr = &FetchResult{
 		ModulePath:       modulePath,
 		RequestedVersion: requestedVersion,
 	}
 	defer derrors.Wrap(&fr.Error, "FetchModule(%q, %q)", modulePath, requestedVersion)
 
-	err := fetchModule(ctx, fr, mg, sourceClient)
+	err := fetchModule(ctx, fr, mg)
 	fr.Error = err
 	if err != nil {
 		fr.Status = derrors.ToStatus(fr.Error)
@@ -67,7 +66,7 @@ func FetchModule(ctx context.Context, modulePath, requestedVersion string, mg Mo
 	return fr
 }
 
-func fetchModule(ctx context.Context, fr *FetchResult, mg ModuleGetter, sourceClient *source.Client) error {
+func fetchModule(ctx context.Context, fr *FetchResult, mg ModuleGetter) error {
 	info, err := GetInfo(ctx, fr.ModulePath, fr.RequestedVersion, mg)
 	if err != nil {
 		return err
@@ -123,7 +122,7 @@ func fetchModule(ctx context.Context, fr *FetchResult, mg ModuleGetter, sourceCl
 		}
 	}
 
-	mod, pvs, err := processModuleContents(ctx, fr.ModulePath, fr.ResolvedVersion, fr.RequestedVersion, commitTime, contentDir, sourceClient)
+	mod, pvs, err := processModuleContents(ctx, fr.ModulePath, fr.ResolvedVersion, fr.RequestedVersion, commitTime, contentDir, mg)
 	if err != nil {
 		return err
 	}
@@ -184,7 +183,7 @@ func getGoModPath(ctx context.Context, modulePath, resolvedVersion string, mg Mo
 
 // processModuleContents extracts information from the module filesystem.
 func processModuleContents(ctx context.Context, modulePath, resolvedVersion, requestedVersion string,
-	commitTime time.Time, contentDir fs.FS, sourceClient *source.Client) (_ *internal.Module, _ []*internal.PackageVersionState, err error) {
+	commitTime time.Time, contentDir fs.FS, mg ModuleGetter) (_ *internal.Module, _ []*internal.PackageVersionState, err error) {
 	defer derrors.Wrap(&err, "processModuleContents(%q, %q)", modulePath, resolvedVersion)
 
 	ctx, span := trace.StartSpan(ctx, "fetch.processModuleContents")
@@ -194,7 +193,7 @@ func processModuleContents(ctx context.Context, modulePath, resolvedVersion, req
 	if modulePath == stdlib.ModulePath && stdlib.SupportedBranches[requestedVersion] {
 		v = requestedVersion
 	}
-	sourceInfo, err := source.ModuleInfo(ctx, sourceClient, modulePath, v)
+	sourceInfo, err := mg.SourceInfo(ctx, modulePath, v)
 	if err != nil {
 		log.Infof(ctx, "error getting source info: %v", err)
 	}

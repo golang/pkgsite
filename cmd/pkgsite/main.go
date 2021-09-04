@@ -150,11 +150,10 @@ func newServer(ctx context.Context, paths []string, gopathMode bool, downloadDir
 		getters = append(getters, fetch.NewFSProxyModuleGetter(downloadDir))
 	}
 	if prox != nil {
-		getters = append(getters, fetch.NewProxyModuleGetter(prox))
+		getters = append(getters, fetch.NewProxyModuleGetter(prox, source.NewClient(time.Second)))
 	}
 	lds := fetchdatasource.Options{
 		Getters:              getters,
-		SourceClient:         source.NewClient(time.Second),
 		ProxyClientForLatest: prox,
 		BypassLicenseCheck:   true,
 	}.New()

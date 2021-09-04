@@ -78,10 +78,9 @@ func main() {
 
 	if *directProxy {
 		ds := fetchdatasource.Options{
-			Getters:              []fetch.ModuleGetter{fetch.NewProxyModuleGetter(proxyClient)},
+			Getters:              []fetch.ModuleGetter{fetch.NewProxyModuleGetter(proxyClient, source.NewClient(1*time.Minute))},
 			ProxyClientForLatest: proxyClient,
 			BypassLicenseCheck:   *bypassLicenseCheck,
-			SourceClient:         source.NewClient(1 * time.Minute),
 		}.New()
 		dsg = func(context.Context) internal.DataSource { return ds }
 	} else {

@@ -99,7 +99,7 @@ func processVersions(ctx context.Context, t *testing.T, testModules []*proxytest
 
 func fetchAndInsertModule(ctx context.Context, t *testing.T, tm *proxytest.Module, proxyClient *proxy.Client) {
 	sourceClient := source.NewClient(1 * time.Second)
-	res := fetch.FetchModule(ctx, tm.ModulePath, tm.Version, fetch.NewProxyModuleGetter(proxyClient), sourceClient)
+	res := fetch.FetchModule(ctx, tm.ModulePath, tm.Version, fetch.NewProxyModuleGetter(proxyClient, sourceClient))
 	if res.Error != nil {
 		t.Fatal(res.Error)
 	}

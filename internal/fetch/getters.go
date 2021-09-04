@@ -24,6 +24,7 @@ import (
 	"golang.org/x/mod/module"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/proxy"
+	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/version"
 )
 
@@ -41,14 +42,19 @@ type ModuleGetter interface {
 	// to have according to the zip archive layout specification at
 	// https://golang.org/ref/mod#zip-files.
 	ContentDir(ctx context.Context, path, version string) (fs.FS, error)
+
+	// SourceInfo returns information about where to find a module's repo and
+	// source files.
+	SourceInfo(ctx context.Context, path, version string) (*source.Info, error)
 }
 
 type proxyModuleGetter struct {
 	prox *proxy.Client
+	src  *source.Client
 }
 
-func NewProxyModuleGetter(p *proxy.Client) ModuleGetter {
-	return &proxyModuleGetter{p}
+func NewProxyModuleGetter(p *proxy.Client, s *source.Client) ModuleGetter {
+	return &proxyModuleGetter{p, s}
 }
 
 // Info returns basic information about the module.
@@ -69,6 +75,11 @@ func (g *proxyModuleGetter) ContentDir(ctx context.Context, path, version string
 		return nil, err
 	}
 	return fs.Sub(zr, path+"@"+version)
+}
+
+// SourceInfo gets information about a module's repo and source files by calling source.ModuleInfo.
+func (g *proxyModuleGetter) SourceInfo(ctx context.Context, path, version string) (*source.Info, error) {
+	return source.ModuleInfo(ctx, g.src, path, version)
 }
 
 // Version and commit time are pre specified when fetching a local module, as these
@@ -141,6 +152,11 @@ func (g *directoryModuleGetter) ContentDir(ctx context.Context, path, version st
 		return nil, err
 	}
 	return os.DirFS(g.dir), nil
+}
+
+// TODO(golang/go#47982): implement.
+func (g *directoryModuleGetter) SourceInfo(ctx context.Context, path, version string) (*source.Info, error) {
+	return nil, nil
 }
 
 // An fsProxyModuleGetter gets modules from a directory in the filesystem
@@ -223,6 +239,11 @@ func (g *fsProxyModuleGetter) ContentDir(ctx context.Context, path, vers string)
 		return nil, err
 	}
 	return fs.Sub(zr, path+"@"+vers)
+}
+
+// TODO(golang/go#47982): implement.
+func (g *fsProxyModuleGetter) SourceInfo(ctx context.Context, path, version string) (*source.Info, error) {
+	return nil, nil
 }
 
 // latestVersion gets the latest version that is in the directory.

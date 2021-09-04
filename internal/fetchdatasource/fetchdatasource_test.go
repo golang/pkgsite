@@ -125,12 +125,11 @@ func setup(t *testing.T, testModules []*proxytest.Module, bypassLicenseCheck boo
 
 	getters := localGetters
 	if testModules != nil {
-		getters = append(getters, fetch.NewProxyModuleGetter(client))
+		getters = append(getters, fetch.NewProxyModuleGetter(client, source.NewClientForTesting()))
 	}
 
 	return ctx, Options{
 			Getters:              getters,
-			SourceClient:         source.NewClientForTesting(),
 			ProxyClientForLatest: client,
 			BypassLicenseCheck:   bypassLicenseCheck,
 		}.New(), func() {
@@ -340,7 +339,9 @@ func TestLocalGetUnitMeta(t *testing.T) {
 	ctx, ds, teardown := setup(t, defaultTestModules, true)
 	defer teardown()
 
-	sourceInfo := source.NewGitHubInfo("https://github.com/my/module", "", "v0.0.0")
+	// TODO(golang/go#47982): use the correct sourceInfo here.
+	var sourceInfo *source.Info
+
 	for _, test := range []struct {
 		path, modulePath string
 		want             *internal.UnitMeta

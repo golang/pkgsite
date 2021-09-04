@@ -292,7 +292,7 @@ func (f *Fetcher) fetchAndInsertModule(ctx context.Context, modulePath, requeste
 		return ft
 	}
 
-	proxyGetter := fetch.NewProxyModuleGetter(f.ProxyClient)
+	proxyGetter := fetch.NewProxyModuleGetter(f.ProxyClient, f.SourceClient)
 	// Fetch the module, and the current @main and @master version of this module.
 	// The @main and @master version will be used to update the version_map
 	// target if applicable.
@@ -301,7 +301,7 @@ func (f *Fetcher) fetchAndInsertModule(ctx context.Context, modulePath, requeste
 	go func() {
 		defer wg.Done()
 		start := time.Now()
-		fr := fetch.FetchModule(ctx, modulePath, requestedVersion, proxyGetter, f.SourceClient)
+		fr := fetch.FetchModule(ctx, modulePath, requestedVersion, proxyGetter)
 		if fr == nil {
 			panic("fetch.FetchModule should never return a nil FetchResult")
 		}

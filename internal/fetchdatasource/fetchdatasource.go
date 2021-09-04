@@ -22,7 +22,6 @@ import (
 	"golang.org/x/pkgsite/internal/fetch"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/proxy"
-	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/version"
 )
 
@@ -40,7 +39,6 @@ type Options struct {
 	// If set, this will be used for latest-version information. To fetch modules from the proxy,
 	// include a ProxyModuleGetter in Getters.
 	ProxyClientForLatest *proxy.Client
-	SourceClient         *source.Client
 	BypassLicenseCheck   bool
 }
 
@@ -132,7 +130,7 @@ func (ds *FetchDataSource) fetch(ctx context.Context, modulePath, version string
 		log.Infof(ctx, "FetchDataSource: fetched %s@%s in %s with error %v", modulePath, version, time.Since(start), err)
 	}()
 	for _, g := range ds.opts.Getters {
-		fr := fetch.FetchModule(ctx, modulePath, version, g, ds.opts.SourceClient)
+		fr := fetch.FetchModule(ctx, modulePath, version, g)
 		if fr.Error == nil {
 			m := fr.Module
 			if ds.opts.BypassLicenseCheck {
