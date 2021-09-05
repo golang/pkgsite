@@ -159,9 +159,10 @@ func (g *directoryModuleGetter) SourceInfo(ctx context.Context, path, version st
 	return nil, nil
 }
 
-// An fsProxyModuleGetter gets modules from a directory in the filesystem
-// that is organized like the proxy, with paths that correspond to proxy
-// URLs. An example of such a directory is $(go env GOMODCACHE)/cache/download.
+// An fsProxyModuleGetter gets modules from a directory in the filesystem that
+// is organized like the module cache, with a cache/download directory that has
+// paths that correspond to proxy URLs. An example of such a directory is $(go
+// env GOMODCACHE).
 type fsProxyModuleGetter struct {
 	dir string
 }
@@ -311,5 +312,5 @@ func (g *fsProxyModuleGetter) moduleDir(modulePath string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("path: %v: %w", err, derrors.InvalidArgument)
 	}
-	return filepath.Join(g.dir, ep, "@v"), nil
+	return filepath.Join(g.dir, "cache", "download", filepath.FromSlash(ep), "@v"), nil
 }

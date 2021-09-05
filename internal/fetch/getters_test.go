@@ -39,11 +39,11 @@ func TestEscapedPath(t *testing.T) {
 	}{
 		{
 			"m.com", "v1", "info",
-			"dir/m.com/@v/v1.info",
+			"dir/cache/download/m.com/@v/v1.info",
 		},
 		{
 			"github.com/aBc", "v2.3.4", "zip",
-			"dir/github.com/a!bc/@v/v2.3.4.zip",
+			"dir/cache/download/github.com/a!bc/@v/v2.3.4.zip",
 		},
 	} {
 		g := NewFSProxyModuleGetter("dir").(*fsProxyModuleGetter)
@@ -68,7 +68,7 @@ func TestFSProxyGetter(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	g := NewFSProxyModuleGetter("testdata/modcache/cache/download")
+	g := NewFSProxyModuleGetter("testdata/modcache")
 	t.Run("info", func(t *testing.T) {
 		got, err := g.Info(ctx, modulePath, vers)
 		if err != nil {

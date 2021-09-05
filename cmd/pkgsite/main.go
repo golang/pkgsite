@@ -38,7 +38,6 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -95,8 +94,6 @@ func main() {
 				die("empty value for GOMODCACHE")
 			}
 		}
-		// We actually serve from the download subdirectory.
-		downloadDir = filepath.Join(downloadDir, "cache", "download")
 	}
 
 	if *useCache || *useProxy {

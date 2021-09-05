@@ -21,7 +21,7 @@ func Test(t *testing.T) {
 	repoPath := func(fn string) string { return filepath.Join("..", "..", fn) }
 
 	localModule := repoPath("internal/fetch/testdata/has_go_mod")
-	cacheDir := repoPath("internal/fetch/testdata/modcache/cache/download")
+	cacheDir := repoPath("internal/fetch/testdata/modcache")
 	flag.Set("static", repoPath("static"))
 	testModules := proxytest.LoadTestModules(repoPath("internal/proxy/testdata"))
 	prox, teardown := proxytest.SetupTestClient(t, testModules)
@@ -41,7 +41,7 @@ func Test(t *testing.T) {
 	}{
 		{"local", "example.com/testmod", "There is no documentation for this package."},
 		{"modcache", "modcache.com@v1.0.0", "var V = 1"},
-		{"modcache", "modcache.com", "var V = 1"},
+		{"modcache2", "modcache.com", "var V = 1"},
 		{"proxy", "example.com/single/pkg", "G is new in v1.1.0"},
 	} {
 		t.Run(test.name, func(t *testing.T) {
