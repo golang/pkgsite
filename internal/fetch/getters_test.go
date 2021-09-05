@@ -8,6 +8,7 @@ import (
 	"context"
 	"errors"
 	"io/ioutil"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -46,13 +47,20 @@ func TestEscapedPath(t *testing.T) {
 			"dir/cache/download/github.com/a!bc/@v/v2.3.4.zip",
 		},
 	} {
-		g := NewFSProxyModuleGetter("dir").(*fsProxyModuleGetter)
+		g, err := NewFSProxyModuleGetter("dir")
+		if err != nil {
+			t.Fatal(err)
+		}
 		got, err := g.escapedPath(test.path, test.version, test.suffix)
 		if err != nil {
 			t.Fatal(err)
 		}
-		if got != test.want {
-			t.Errorf("%s, %s, %s: got %q, want %q", test.path, test.version, test.suffix, got, test.want)
+		want, err := filepath.Abs(test.want)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got != want {
+			t.Errorf("%s, %s, %s: got %q, want %q", test.path, test.version, test.suffix, got, want)
 		}
 	}
 }
@@ -68,7 +76,10 @@ func TestFSProxyGetter(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	g := NewFSProxyModuleGetter("testdata/modcache")
+	g, err := NewFSProxyModuleGetter("testdata/modcache")
+	if err != nil {
+		t.Fatal(err)
+	}
 	t.Run("info", func(t *testing.T) {
 		got, err := g.Info(ctx, modulePath, vers)
 		if err != nil {

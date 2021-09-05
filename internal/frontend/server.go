@@ -11,6 +11,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"net/http"
 	"strings"
 	"sync"
@@ -48,6 +49,7 @@ type Server struct {
 	googleTagManagerID   string
 	serveStats           bool
 	reportingClient      *errorreporting.Client
+	fileMux              *http.ServeMux
 
 	mu        sync.Mutex // Protects all fields below
 	templates map[string]*template.Template
@@ -92,6 +94,7 @@ func NewServer(scfg ServerConfig) (_ *Server, err error) {
 		googleTagManagerID:   scfg.GoogleTagManagerID,
 		serveStats:           scfg.ServeStats,
 		reportingClient:      scfg.ReportingClient,
+		fileMux:              http.NewServeMux(),
 	}
 	errorPageBytes, err := s.renderErrorPage(context.Background(), http.StatusInternalServerError, "error", nil)
 	if err != nil {
@@ -148,6 +151,7 @@ func (s *Server) Install(handle func(string, http.Handler), redisClient *redis.C
 		http.Redirect(w, r, "/cmd/cgo", http.StatusMovedPermanently)
 	}))
 	handle("/golang.org/x", s.staticPageHandler("subrepo", "Sub-repositories"))
+	handle("/files/", http.StripPrefix("/files", s.fileMux))
 	handle("/", detailHandler)
 	if s.serveStats {
 		handle("/detail-stats/",
@@ -163,6 +167,11 @@ Disallow: /fetch/*
 Sitemap: https://pkg.go.dev/sitemap/index.xml
 `))
 	}))
+}
+
+// InstallFS adds path under the /files handler, serving the files in fsys.
+func (s *Server) InstallFS(path string, fsys fs.FS) {
+	s.fileMux.Handle(path+"/", http.StripPrefix(path, http.FileServer(http.FS(fsys))))
 }
 
 const (

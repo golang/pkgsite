@@ -1682,3 +1682,18 @@ func TestStripScheme(t *testing.T) {
 		}
 	}
 }
+
+func TestInstallFS(t *testing.T) {
+	s, handler, teardown := newTestServer(t, nil, nil)
+	defer teardown()
+	s.InstallFS("/dir", os.DirFS("."))
+	// Request this file.
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, httptest.NewRequest("GET", "/files/dir/server_test.go", nil))
+	if w.Code != http.StatusOK {
+		t.Errorf("got status code = %d, want %d", w.Code, http.StatusOK)
+	}
+	if want := "TestInstallFS"; !strings.Contains(w.Body.String(), want) {
+		t.Errorf("body does not contain %q", want)
+	}
+}

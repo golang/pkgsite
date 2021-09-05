@@ -81,16 +81,16 @@ func main() {
 		paths = []string{"."}
 	}
 
-	var downloadDir string
+	var modCacheDir string
 	if *useCache {
-		downloadDir = *cacheDir
-		if downloadDir == "" {
+		modCacheDir = *cacheDir
+		if modCacheDir == "" {
 			var err error
-			downloadDir, err = defaultCacheDir()
+			modCacheDir, err = defaultCacheDir()
 			if err != nil {
 				die("%v", err)
 			}
-			if downloadDir == "" {
+			if modCacheDir == "" {
 				die("empty value for GOMODCACHE")
 			}
 		}
@@ -116,7 +116,7 @@ func main() {
 		stdlib.SetGoRepoPath(*goRepoPath)
 	}
 
-	server, err := newServer(ctx, paths, *gopathMode, downloadDir, prox)
+	server, err := newServer(ctx, paths, *gopathMode, modCacheDir, prox)
 	if err != nil {
 		die("%s\nMaybe you need to provide the location of static assets with -static.", err)
 	}
@@ -144,7 +144,11 @@ func collectPaths(args []string) []string {
 func newServer(ctx context.Context, paths []string, gopathMode bool, downloadDir string, prox *proxy.Client) (*frontend.Server, error) {
 	getters := buildGetters(ctx, paths, gopathMode)
 	if downloadDir != "" {
-		getters = append(getters, fetch.NewFSProxyModuleGetter(downloadDir))
+		g, err := fetch.NewFSProxyModuleGetter(downloadDir)
+		if err != nil {
+			return nil, err
+		}
+		getters = append(getters, g)
 	}
 	if prox != nil {
 		getters = append(getters, fetch.NewProxyModuleGetter(prox, source.NewClient(time.Second)))
@@ -160,6 +164,12 @@ func newServer(ctx context.Context, paths []string, gopathMode bool, downloadDir
 	})
 	if err != nil {
 		return nil, err
+	}
+	for _, g := range getters {
+		p, fsys := g.SourceFS()
+		if p != "" {
+			server.InstallFS(p, fsys)
+		}
 	}
 	return server, nil
 }

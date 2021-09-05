@@ -921,3 +921,21 @@ func NewStdlibInfo(version string) *Info {
 	}
 	return info
 }
+
+// FilesInfo returns an Info that links to a path in the server's /files
+// namespace. The same path needs to be installed via frontend.Server.InstallFS.
+func FilesInfo(dir string) *Info {
+	// The repo and directory patterns need a final slash. Without it,
+	// http.FileServer redirects instead of serving the directory contents, with
+	// confusing results.
+	return &Info{
+		repoURL: path.Join("/files", dir),
+		templates: urlTemplates{
+			Repo:      "{repo}/",
+			Directory: "{repo}/{dir}/",
+			File:      "{repo}/{file}",
+			Line:      "{repo}/{file}#L{line}", // not supported now, but maybe someday
+			Raw:       "{repo}/{file}",
+		},
+	}
+}

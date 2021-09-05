@@ -1020,3 +1020,18 @@ func TestMatchLegacyTemplates(t *testing.T) {
 		}
 	}
 }
+
+func TestFilesInfo(t *testing.T) {
+	info := FilesInfo("/Users/bob")
+
+	check := func(got, want string) {
+		t.Helper()
+		if got != want {
+			t.Errorf("got %q, want %q", got, want)
+		}
+	}
+
+	check(info.RepoURL(), "/files/Users/bob/")
+	check(info.ModuleURL(), "/files/Users/bob/")
+	check(info.FileURL("dir/a.go"), "/files/Users/bob/dir/a.go")
+}

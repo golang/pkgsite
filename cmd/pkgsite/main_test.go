@@ -9,16 +9,39 @@ import (
 	"flag"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path"
 	"path/filepath"
-	"strings"
+	"regexp"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"golang.org/x/net/html"
 	"golang.org/x/pkgsite/internal/proxy/proxytest"
+	"golang.org/x/pkgsite/internal/testing/htmlcheck"
+)
+
+var (
+	in      = htmlcheck.In
+	hasText = htmlcheck.HasText
+	attr    = htmlcheck.HasAttr
+
+	// href checks for an exact match in an href attribute.
+	href = func(val string) htmlcheck.Checker {
+		return attr("href", "^"+regexp.QuoteMeta(val)+"$")
+	}
 )
 
 func Test(t *testing.T) {
 	repoPath := func(fn string) string { return filepath.Join("..", "..", fn) }
+
+	abs := func(dir string) string {
+		a, err := filepath.Abs(dir)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return a
+	}
 
 	localModule := repoPath("internal/fetch/testdata/has_go_mod")
 	cacheDir := repoPath("internal/fetch/testdata/modcache")
@@ -34,15 +57,37 @@ func Test(t *testing.T) {
 	mux := http.NewServeMux()
 	server.Install(mux.Handle, nil, nil)
 
+	modcacheChecker := in("",
+		in(".Documentation", hasText("var V = 1")),
+		sourceLinks(path.Join(abs(cacheDir), "modcache.com@v1.0.0"), "a.go"))
+
 	for _, test := range []struct {
-		name       string
-		url        string
-		wantInBody string
+		name string
+		url  string
+		want htmlcheck.Checker
 	}{
-		{"local", "example.com/testmod", "There is no documentation for this package."},
-		{"modcache", "modcache.com@v1.0.0", "var V = 1"},
-		{"modcache2", "modcache.com", "var V = 1"},
-		{"proxy", "example.com/single/pkg", "G is new in v1.1.0"},
+		{
+			"local",
+			"example.com/testmod",
+			in("",
+				in(".Documentation", hasText("There is no documentation for this package.")),
+				sourceLinks(path.Join(abs(localModule), "example.com/testmod"), "a.go")),
+		},
+		{
+			"modcache",
+			"modcache.com@v1.0.0",
+			modcacheChecker,
+		},
+		{
+			"modcache latest",
+			"modcache.com",
+			modcacheChecker,
+		},
+		{
+			"proxy",
+			"example.com/single/pkg",
+			hasText("G is new in v1.1.0"),
+		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			w := httptest.NewRecorder()
@@ -50,12 +95,26 @@ func Test(t *testing.T) {
 			if w.Code != http.StatusOK {
 				t.Fatalf("got status code = %d, want %d", w.Code, http.StatusOK)
 			}
-			body := w.Body.String()
-			if !strings.Contains(body, test.wantInBody) {
-				t.Fatalf("body is missing %q\n%s", test.wantInBody, body)
+			doc, err := html.Parse(w.Body)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if err := test.want(doc); err != nil {
+				if testing.Verbose() {
+					html.Render(os.Stdout, doc)
+				}
+				t.Error(err)
 			}
 		})
 	}
+}
+
+func sourceLinks(dir, filename string) htmlcheck.Checker {
+	filesPath := path.Join("/files", dir) + "/"
+	return in("",
+		in(".UnitMeta-repo a", href(filesPath)),
+		in(".UnitFiles-titleLink a", href(filesPath)),
+		in(".UnitFiles-fileList a", href(filesPath+filename)))
 }
 
 func TestCollectPaths(t *testing.T) {

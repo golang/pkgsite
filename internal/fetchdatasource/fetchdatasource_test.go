@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path"
 	"testing"
 	"time"
 
@@ -339,8 +340,7 @@ func TestLocalGetUnitMeta(t *testing.T) {
 	ctx, ds, teardown := setup(t, defaultTestModules, true)
 	defer teardown()
 
-	// TODO(golang/go#47982): use the correct sourceInfo here.
-	var sourceInfo *source.Info
+	sourceInfo := source.FilesInfo("XXX")
 
 	for _, test := range []struct {
 		path, modulePath string
@@ -441,9 +441,21 @@ func TestLocalGetUnitMeta(t *testing.T) {
 				if err != nil {
 					t.Fatal(err)
 				}
-				if diff := cmp.Diff(test.want, got, cmp.AllowUnexported(source.Info{})); diff != "" {
+				var gotURL string
+				if got.SourceInfo != nil {
+					gotURL = got.SourceInfo.RepoURL()
+				}
+				wantURL := "/files/*/*/github.com/my/module/"
+				m, err := path.Match(wantURL, gotURL)
+				if err != nil {
+					t.Fatal(err)
+				}
+				if !m {
+					t.Errorf("RepoURL: got %q, want match of %q", gotURL, wantURL)
+				}
+				diff := cmp.Diff(test.want, got, cmp.AllowUnexported(source.Info{}), cmpopts.IgnoreFields(source.Info{}, "repoURL"))
+				if diff != "" {
 					t.Errorf("mismatch (-want +got):\n%s", diff)
-
 				}
 			}
 		})

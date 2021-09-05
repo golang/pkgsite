@@ -16,6 +16,7 @@ import (
 	"io/fs"
 	"io/ioutil"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 	"time"
@@ -46,6 +47,12 @@ type ModuleGetter interface {
 	// SourceInfo returns information about where to find a module's repo and
 	// source files.
 	SourceInfo(ctx context.Context, path, version string) (*source.Info, error)
+
+	// SourceFS returns the path to serve the files of the modules loaded by
+	// this ModuleGetter, and an FS that can be used to read the files. The
+	// returned values are intended to be passed to
+	// internal/frontend.Server.InstallFiles.
+	SourceFS() (string, fs.FS)
 }
 
 type proxyModuleGetter struct {
@@ -82,6 +89,12 @@ func (g *proxyModuleGetter) SourceInfo(ctx context.Context, path, version string
 	return source.ModuleInfo(ctx, g.src, path, version)
 }
 
+// SourceFS is unimplemented for modules served from the proxy, because we
+// link directly to the module's repo.
+func (g *proxyModuleGetter) SourceFS() (string, fs.FS) {
+	return "", nil
+}
+
 // Version and commit time are pre specified when fetching a local module, as these
 // fields are normally obtained from a proxy.
 var (
@@ -93,11 +106,12 @@ var (
 // a module's files.
 type directoryModuleGetter struct {
 	modulePath string
-	dir        string
+	dir        string // absolute path to direction
 }
 
 // NewDirectoryModuleGetter returns a ModuleGetter for reading a module from a directory.
 func NewDirectoryModuleGetter(modulePath, dir string) (*directoryModuleGetter, error) {
+
 	if modulePath == "" {
 		goModBytes, err := ioutil.ReadFile(filepath.Join(dir, "go.mod"))
 		if err != nil {
@@ -108,8 +122,12 @@ func NewDirectoryModuleGetter(modulePath, dir string) (*directoryModuleGetter, e
 			return nil, fmt.Errorf("go.mod in %q has no module path: %w", dir, derrors.BadModule)
 		}
 	}
+	abs, err := filepath.Abs(dir)
+	if err != nil {
+		return nil, err
+	}
 	return &directoryModuleGetter{
-		dir:        dir,
+		dir:        abs,
 		modulePath: modulePath,
 	}, nil
 }
@@ -154,23 +172,41 @@ func (g *directoryModuleGetter) ContentDir(ctx context.Context, path, version st
 	return os.DirFS(g.dir), nil
 }
 
-// TODO(golang/go#47982): implement.
-func (g *directoryModuleGetter) SourceInfo(ctx context.Context, path, version string) (*source.Info, error) {
-	return nil, nil
+// SourceInfo returns a source.Info that will link to the files in the
+// directory. The files will be under /files/directory/modulePath, with no
+// version.
+func (g *directoryModuleGetter) SourceInfo(ctx context.Context, _, _ string) (*source.Info, error) {
+	return source.FilesInfo(g.fileServingPath()), nil
+}
+
+// SourceFS returns the absolute path to the directory along with a
+// filesystem FS for serving the directory.
+func (g *directoryModuleGetter) SourceFS() (string, fs.FS) {
+	return g.fileServingPath(), os.DirFS(g.dir)
+}
+
+func (g *directoryModuleGetter) fileServingPath() string {
+	return path.Join(filepath.ToSlash(g.dir), g.modulePath)
 }
 
 // An fsProxyModuleGetter gets modules from a directory in the filesystem that
 // is organized like the module cache, with a cache/download directory that has
-// paths that correspond to proxy URLs. An example of such a directory is $(go
-// env GOMODCACHE).
+// paths that correspond to proxy URLs. An example of such a directory is
+// $(go env GOMODCACHE).
 type fsProxyModuleGetter struct {
 	dir string
 }
 
 // NewFSModuleGetter return a ModuleGetter that reads modules from a filesystem
 // directory organized like the proxy.
-func NewFSProxyModuleGetter(dir string) ModuleGetter {
-	return &fsProxyModuleGetter{dir: dir}
+func NewFSProxyModuleGetter(dir string) (_ *fsProxyModuleGetter, err error) {
+	derrors.Wrap(&err, "NewFSProxyModuleGetter(%q)", dir)
+
+	abs, err := filepath.Abs(dir)
+	if err != nil {
+		return nil, err
+	}
+	return &fsProxyModuleGetter{dir: abs}, nil
 }
 
 // Info returns basic information about the module.
@@ -182,6 +218,7 @@ func (g *fsProxyModuleGetter) Info(ctx context.Context, path, vers string) (_ *p
 		if err != nil {
 			return nil, err
 		}
+		fmt.Printf("#### resolved latest to %q\n", vers)
 	}
 
 	// Check for a .zip file. Some directories in the download cache have .info and .mod files but no .zip.
@@ -242,9 +279,16 @@ func (g *fsProxyModuleGetter) ContentDir(ctx context.Context, path, vers string)
 	return fs.Sub(zr, path+"@"+vers)
 }
 
-// TODO(golang/go#47982): implement.
-func (g *fsProxyModuleGetter) SourceInfo(ctx context.Context, path, version string) (*source.Info, error) {
-	return nil, nil
+// SourceInfo returns a source.Info that will create /files links to modules in
+// the cache.
+func (g *fsProxyModuleGetter) SourceInfo(ctx context.Context, mpath, version string) (*source.Info, error) {
+	return source.FilesInfo(path.Join(g.dir, mpath+"@"+version)), nil
+}
+
+// SourceFS returns the absolute path to the cache, and an FS that retrieves
+// files from it.
+func (g *fsProxyModuleGetter) SourceFS() (string, fs.FS) {
+	return filepath.ToSlash(g.dir), os.DirFS(g.dir)
 }
 
 // latestVersion gets the latest version that is in the directory.
