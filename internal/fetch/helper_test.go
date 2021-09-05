@@ -119,7 +119,10 @@ func updateFetchResultVersions(t *testing.T, fr *FetchResult, local bool) *Fetch
 		}
 	} else {
 		for _, u := range fr.Module.Units {
-			u.UnitMeta.Version = fr.Module.Version
+			// Copy all of ModuleInfo except HasGoMod.
+			h := u.UnitMeta.ModuleInfo.HasGoMod
+			u.UnitMeta.ModuleInfo = fr.Module.ModuleInfo
+			u.UnitMeta.HasGoMod = h
 		}
 		for _, pvs := range fr.PackageVersionStates {
 			pvs.Version = fr.Module.Version

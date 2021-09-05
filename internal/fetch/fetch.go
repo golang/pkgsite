@@ -213,17 +213,18 @@ func processModuleContents(ctx context.Context, modulePath, resolvedVersion, req
 	if err != nil {
 		return nil, nil, err
 	}
+	minfo := internal.ModuleInfo{
+		ModulePath:        modulePath,
+		Version:           resolvedVersion,
+		CommitTime:        commitTime,
+		IsRedistributable: d.ModuleIsRedistributable(),
+		SourceInfo:        sourceInfo,
+		// HasGoMod is populated by the caller.
+	}
 	return &internal.Module{
-		ModuleInfo: internal.ModuleInfo{
-			ModulePath:        modulePath,
-			Version:           resolvedVersion,
-			CommitTime:        commitTime,
-			IsRedistributable: d.ModuleIsRedistributable(),
-			SourceInfo:        sourceInfo,
-			// HasGoMod is populated by the caller.
-		},
-		Licenses: allLicenses,
-		Units:    moduleUnits(modulePath, resolvedVersion, packages, readmes, d),
+		ModuleInfo: minfo,
+		Licenses:   allLicenses,
+		Units:      moduleUnits(modulePath, minfo, packages, readmes, d),
 	}, packageVersionStates, nil
 }
 

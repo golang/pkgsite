@@ -135,11 +135,10 @@ func TestFetchModule(t *testing.T) {
 						opts = append(opts,
 							[]cmp.Option{
 								// Pre specified for all modules
-								cmpopts.IgnoreFields(internal.Module{}, "SourceInfo"),
+								cmpopts.IgnoreFields(internal.ModuleInfo{}, "SourceInfo", "CommitTime"),
 								cmpopts.IgnoreFields(internal.Module{}, "Version"),
 								cmpopts.IgnoreFields(FetchResult{}, "RequestedVersion"),
 								cmpopts.IgnoreFields(FetchResult{}, "ResolvedVersion"),
-								cmpopts.IgnoreFields(internal.Module{}, "CommitTime"),
 							}...)
 					}
 					opts = append(opts, sample.LicenseCmpOpts...)

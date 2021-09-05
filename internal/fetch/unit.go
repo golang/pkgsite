@@ -15,7 +15,7 @@ import (
 
 // moduleUnits returns all of the units in a given module, along
 // with the contents for those units.
-func moduleUnits(modulePath, version string,
+func moduleUnits(modulePath string, minfo internal.ModuleInfo,
 	pkgs []*goPackage,
 	readmes []*internal.Readme,
 	d *licenses.Detector) []*internal.Unit {
@@ -49,11 +49,7 @@ func moduleUnits(modulePath, version string,
 		}
 		dir := &internal.Unit{
 			UnitMeta: internal.UnitMeta{
-				ModuleInfo: internal.ModuleInfo{
-					ModulePath:        modulePath,
-					Version:           version,
-					IsRedistributable: d.ModuleIsRedistributable(),
-				},
+				ModuleInfo:        minfo,
 				Path:              dirPath,
 				IsRedistributable: isRedist,
 				Licenses:          meta,
