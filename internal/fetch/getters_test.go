@@ -68,7 +68,7 @@ func TestFSProxyGetter(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	g := NewFSProxyModuleGetter("testdata/modcache")
+	g := NewFSProxyModuleGetter("testdata/modcache/cache/download")
 	t.Run("info", func(t *testing.T) {
 		got, err := g.Info(ctx, modulePath, vers)
 		if err != nil {

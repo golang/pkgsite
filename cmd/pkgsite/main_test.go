@@ -21,7 +21,7 @@ func Test(t *testing.T) {
 	repoPath := func(fn string) string { return filepath.Join("..", "..", fn) }
 
 	localModule := repoPath("internal/fetch/testdata/has_go_mod")
-	cacheDir := repoPath("internal/fetch/testdata/modcache")
+	cacheDir := repoPath("internal/fetch/testdata/modcache/cache/download")
 	flag.Set("static", repoPath("static"))
 	testModules := proxytest.LoadTestModules(repoPath("internal/proxy/testdata"))
 	prox, teardown := proxytest.SetupTestClient(t, testModules)
