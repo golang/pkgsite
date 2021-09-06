@@ -40,12 +40,10 @@ func Read(ctx context.Context, location string) (_ *DynamicConfig, err error) {
 	log.Debugf(ctx, "reading dynamic config from %s", location)
 	var r io.ReadCloser
 	if strings.HasPrefix(location, "gs://") {
-		parts := strings.SplitN(location[5:], "/", 2)
-		if len(parts) != 2 {
+		bucket, object, found := internal.Cut(location[5:], "/")
+		if !found {
 			return nil, errors.New("bad GCS URL")
 		}
-		bucket := parts[0]
-		object := parts[1]
 		if err != nil {
 			return nil, err
 		}

@@ -27,6 +27,7 @@ import (
 	"cloud.google.com/go/storage"
 	"github.com/ghodss/yaml"
 	"golang.org/x/net/context/ctxhttp"
+	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/secrets"
@@ -277,14 +278,14 @@ func (c *Config) DeploymentEnvironment() string {
 	if c.ServiceID == "" {
 		return "local"
 	}
-	parts := strings.SplitN(c.ServiceID, "-", 2)
-	if len(parts) == 1 {
+	before, _, found := internal.Cut(c.ServiceID, "-")
+	if !found {
 		return "prod"
 	}
-	if parts[0] == "" {
+	if before == "" {
 		return "unknownEnv"
 	}
-	return parts[0]
+	return before
 }
 
 // Application returns the name of the running application: "worker",
@@ -293,12 +294,12 @@ func (c *Config) Application() string {
 	if c.ServiceID == "" {
 		return "unknownApp"
 	}
-	parts := strings.SplitN(c.ServiceID, "-", 2)
+	before, after, found := internal.Cut(c.ServiceID, "-")
 	var svc string
-	if len(parts) == 1 {
-		svc = parts[0]
+	if !found {
+		svc = before
 	} else {
-		svc = parts[1]
+		svc = after
 	}
 	switch svc {
 	case "default":

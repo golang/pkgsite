@@ -52,8 +52,7 @@ func (e *userError) Unwrap() error {
 func extractURLPathInfo(urlPath string) (_ *urlPathInfo, err error) {
 	defer derrors.Wrap(&err, "extractURLPathInfo(%q)", urlPath)
 
-	parts := strings.SplitN(strings.TrimPrefix(urlPath, "/"), "@", 2)
-	if stdlib.Contains(parts[0]) {
+	if m, _, _ := internal.Cut(strings.TrimPrefix(urlPath, "/"), "@"); stdlib.Contains(m) {
 		return parseStdLibURLPath(urlPath)
 	}
 	return parseDetailsURLPath(urlPath)
@@ -92,16 +91,16 @@ func parseDetailsURLPath(urlPath string) (_ *urlPathInfo, err error) {
 	//   /<module-path>, @<version>/<suffix>
 	// or
 	//  /<module-path>/<suffix>, @<version>
-	parts := strings.SplitN(urlPath, "@", 2)
+	modulePath, rest, found := internal.Cut(urlPath, "@")
 	info := &urlPathInfo{
-		fullPath:         strings.TrimSuffix(strings.TrimPrefix(parts[0], "/"), "/"),
+		fullPath:         strings.TrimSuffix(strings.TrimPrefix(modulePath, "/"), "/"),
 		modulePath:       internal.UnknownModulePath,
 		requestedVersion: version.Latest,
 	}
-	if len(parts) != 1 {
+	if found {
 		// The urlPath contains a "@". Parse the version and suffix from
 		// parts[1], the string after the '@'.
-		endParts := strings.Split(parts[1], "/")
+		endParts := strings.Split(rest, "/")
 
 		// Parse the requestedVersion from the urlPath.
 		// The first path component after the '@' is the version.
@@ -137,8 +136,8 @@ func parseStdLibURLPath(urlPath string) (_ *urlPathInfo, err error) {
 
 	// This splits urlPath into either:
 	//   /<path>@<tag> or /<path>
-	parts := strings.SplitN(urlPath, "@", 2)
-	fullPath := strings.TrimSuffix(strings.TrimPrefix(parts[0], "/"), "/")
+	fullPath, tag, found := internal.Cut(urlPath, "@")
+	fullPath = strings.TrimSuffix(strings.TrimPrefix(fullPath, "/"), "/")
 	if !isValidPath(fullPath) {
 		return nil, &userError{
 			err:         fmt.Errorf("isValidPath(%q) is false", fullPath),
@@ -150,11 +149,11 @@ func parseStdLibURLPath(urlPath string) (_ *urlPathInfo, err error) {
 		fullPath:   fullPath,
 		modulePath: stdlib.ModulePath,
 	}
-	if len(parts) == 1 {
+	if !found {
 		info.requestedVersion = version.Latest
 		return info, nil
 	}
-	tag := strings.TrimSuffix(parts[1], "/")
+	tag = strings.TrimSuffix(tag, "/")
 	info.requestedVersion = stdlib.VersionForTag(tag)
 	if info.requestedVersion == "" {
 		return nil, &userError{

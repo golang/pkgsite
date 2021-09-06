@@ -398,17 +398,17 @@ func searchQuery(r *http.Request) (q string, searchSymbols bool) {
 	if strings.HasPrefix(q, "#") {
 		return strings.TrimPrefix(q, "#"), true
 	}
-	if strings.Contains(q, ":") {
-		parts := strings.SplitN(q, ":", 2)
-		if searchModeSymbolKeyboardShortcuts[parts[0]] {
-			return parts[1], true
+	mode, query, found := internal.Cut(q, ":")
+	if found {
+		if searchModeSymbolKeyboardShortcuts[mode] {
+			return query, true
 		}
-		if searchModePackageKeyboardShortcuts[parts[0]] {
-			return parts[1], false
+		if searchModePackageKeyboardShortcuts[mode] {
+			return query, false
 		}
 		return q, false
 	}
-	mode := strings.TrimSpace(r.FormValue("m"))
+	mode = strings.TrimSpace(r.FormValue("m"))
 	if mode == searchModePackage {
 		return q, false
 	}

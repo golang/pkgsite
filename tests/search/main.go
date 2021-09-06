@@ -10,6 +10,7 @@ package main
 import (
 	"bufio"
 	"context"
+	"errors"
 	"flag"
 	"fmt"
 	"os"
@@ -257,12 +258,15 @@ func readImportedByCounts(filename string) (map[string]int, error) {
 		if line == "" || line[0] == '#' {
 			continue
 		}
-		parts := strings.SplitN(line, ", ", 2)
-		c, err := strconv.Atoi(parts[1])
+		path, count, found := internal.Cut(line, ", ")
+		if !found {
+			return nil, errors.New("missing comma")
+		}
+		c, err := strconv.Atoi(count)
 		if err != nil {
 			return nil, err
 		}
-		counts[parts[0]] = c
+		counts[path] = c
 	}
 	if err := scan.Err(); err != nil {
 		return nil, err
