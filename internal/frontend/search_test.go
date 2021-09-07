@@ -220,7 +220,6 @@ func TestFetchSearchPage(t *testing.T) {
 				cmp.AllowUnexported(SearchPage{}, pagination{}),
 				cmpopts.IgnoreFields(SearchResult{}, "NumImportedBy"),
 				cmpopts.IgnoreFields(licenses.Metadata{}, "FilePath"),
-				cmpopts.IgnoreFields(pagination{}, "Approximate"),
 				cmpopts.IgnoreFields(basePage{}, "MetaDescription"),
 			}
 			if diff := cmp.Diff(test.wantSearchPage, got, opts...); diff != "" {
@@ -319,29 +318,6 @@ func TestNewSearchResult(t *testing.T) {
 				t.Errorf("mimatch (-want, +got):\n%s", diff)
 			}
 		})
-	}
-}
-
-func TestApproximateNumber(t *testing.T) {
-	tests := []struct {
-		estimate int
-		sigma    float64
-		want     int
-	}{
-		{55872, 0.1, 60000},
-		{55872, 1.0, 100000},
-		{45872, 1.0, 0},
-		{85872, 0.1, 90000},
-		{85872, 0.4, 100000},
-		{15711, 0.1, 16000},
-		{136368, 0.05, 140000},
-		{136368, 0.005, 136000},
-		{3, 0.1, 3},
-	}
-	for _, test := range tests {
-		if got := approximateNumber(test.estimate, test.sigma); got != test.want {
-			t.Errorf("approximateNumber(%d, %f) = %d, want %d", test.estimate, test.sigma, got, test.want)
-		}
 	}
 }
 

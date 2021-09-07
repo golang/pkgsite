@@ -140,11 +140,6 @@ type SearchResult struct {
 	// search.
 	NumResults uint64
 
-	// Approximate reports whether NumResults is an approximate count. NumResults
-	// can be approximate if search scanned only a subset of documents, and
-	// result count is estimated using the hyperloglog algorithm.
-	Approximate bool
-
 	// Symbol information returned by a search request.
 	// Only populated for symbol search mode.
 	SymbolName     string

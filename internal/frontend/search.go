@@ -8,7 +8,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"math"
 	"net/http"
 	"path"
 	"sort"
@@ -154,7 +153,6 @@ type SearchResult struct {
 	Licenses       []string
 	CommitTime     string
 	NumImportedBy  string
-	Approximate    bool
 	Symbols        *subResult
 	SameModule     *subResult // package paths in the same module
 	OtherMajor     *subResult // package paths in lower major versions
@@ -198,18 +196,9 @@ func fetchSearchPage(ctx context.Context, db *postgres.DB, query string,
 		results = append(results, sr)
 	}
 
-	var (
-		numResults  int
-		approximate bool
-	)
+	var numResults int
 	if len(dbresults) > 0 {
 		numResults = int(dbresults[0].NumResults)
-		if dbresults[0].Approximate {
-			// 128 buckets corresponds to a standard error of 10%.
-			// http://algo.inria.fr/flajolet/Publications/FlFuGaMe07.pdf
-			numResults = approximateNumber(numResults, 0.1)
-			approximate = true
-		}
 	}
 
 	numPageResults := 0
@@ -223,7 +212,6 @@ func fetchSearchPage(ctx context.Context, db *postgres.DB, query string,
 	}
 
 	pgs := newPagination(pageParams, numPageResults, numResults)
-	pgs.Approximate = approximate
 	sp := &SearchPage{
 		Results:    results,
 		Pagination: pgs,
@@ -371,19 +359,6 @@ type %s interface {
 		}
 	}
 	return r.SymbolSynopsis
-}
-
-// approximateNumber returns an approximation of the estimate, calibrated by
-// the statistical estimate of standard error.
-// i.e., a number that isn't misleading when we say '1-10 of approximately N
-// results', but that is still close to our estimate.
-func approximateNumber(estimate int, sigma float64) int {
-	expectedErr := sigma * float64(estimate)
-	// Compute the unit by rounding the error the logarithmically closest power
-	// of 10, so that 300->100, but 400->1000.
-	unit := math.Pow(10, math.Round(math.Log10(expectedErr)))
-	// Now round the estimate to the nearest unit.
-	return int(unit * math.Round(float64(estimate)/unit))
 }
 
 func packagePaths(heading string, rs []*postgres.SearchResult) *subResult {

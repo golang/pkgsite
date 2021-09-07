@@ -739,7 +739,7 @@ func TestInsertSearchDocumentAndSearch(t *testing.T) {
 				}
 
 				// The searchers differ in these two fields.
-				opt := cmpopts.IgnoreFields(SearchResult{}, "Approximate", "NumResults")
+				opt := cmpopts.IgnoreFields(SearchResult{}, "NumResults")
 				if diff := cmp.Diff(test.want, got.results, opt); diff != "" {
 					t.Errorf("testDB.Search(%v, %d, %d) mismatch (-want +got):\n%s", test.searchQuery, test.limit, test.offset, diff)
 				}

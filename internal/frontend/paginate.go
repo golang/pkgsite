@@ -25,7 +25,6 @@ type pagination struct {
 	MaxLimit     int      // the maximum number of results allowed for any request
 	ResultCount  int      // number of results on this page
 	TotalCount   int      // total number of results
-	Approximate  bool     // whether or not the total count is approximate
 	Page         int      // number of the current page
 	PrevPage     int      //   "    "   "  previous page, usually Page-1 but zero if Page == 1
 	NextPage     int      //   "    "   "  next page, usually Page+1, but zero on the last page
