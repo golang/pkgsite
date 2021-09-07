@@ -37,13 +37,17 @@
   </div>
   {{template "search_tabs" .}}
   {{if eq (len .Results) 0}}
-    {{template "gopher-airplane" "No results found."}}
-    <p class="SearchResults-emptyContentMessage">
-      Try searching for a package by visiting <a href="https://pkg.go.dev/search?q={{.Query}}">pkg.go.dev/search?q={{.Query}}</a>.
-    </p>
+    {{template "search_no_results" .}}
   {{else}}
     {{template "search_symbol_results" .}}
   {{end}}
+{{end}}
+
+{{define "search_no_results"}}
+ {{template "gopher-airplane" "It looks like there are no matches for your search."}}
+ <p class="SearchResults-emptyContentMessage">
+   Need help? Check out <a href="/search-help" data-gtmc="search help"> tips for searching</a> on pkg.go.dev.
+ </p>
 {{end}}
 
 {{define "search_symbol_results"}}
@@ -82,11 +86,7 @@
   </div>
   {{template "search_tabs" .}}
   {{if eq (len .Results) 0}}
-    {{template "gopher-airplane" "No results found."}}
-    <p class="SearchResults-emptyContentMessage">
-      If you think “{{.Query}}” is a valid package or module, you could try downloading
-      it by visiting <a href="https://pkg.go.dev/{{.Query}}">pkg.go.dev/{{.Query}}</a>.
-    </p>
+    {{template "search_no_results" .}}
   {{else}}
     {{template "search_package_results" .}}
   {{end}}
