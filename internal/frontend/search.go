@@ -355,6 +355,8 @@ func shouldDefaultToSymbolSearch(q string) bool {
 	return isCapitalized(q)
 }
 
+// symbolSynopsis returns the string to be displayed in the code snippet
+// section for a symbol search result.
 func symbolSynopsis(r *postgres.SearchResult) string {
 	switch r.SymbolKind {
 	case internal.SymbolKindField:
@@ -425,6 +427,7 @@ func modulePaths(heading string, mpaths map[string]bool) *subResult {
 	}
 }
 
+// isCapitalized reports whether the first letter of s is capitalized.
 func isCapitalized(s string) bool {
 	if len(s) == 0 {
 		return false
