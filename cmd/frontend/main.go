@@ -105,7 +105,9 @@ func main() {
 	}
 
 	rc := cmdconfig.ReportingClient(ctx, cfg)
-	vc, err := vulndbc.NewClient([]string{cfg.VulnDB}, vulndbc.Options{})
+	vc, err := vulndbc.NewClient([]string{cfg.VulnDB}, vulndbc.Options{
+		HTTPCache: newVulndbCache(),
+	})
 	if err != nil {
 		log.Fatalf(ctx, "vulndbc.NewClient: %v", err)
 	}
