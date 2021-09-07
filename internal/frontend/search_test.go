@@ -24,46 +24,45 @@ import (
 
 func TestSearchQueryAndMode(t *testing.T) {
 	for _, test := range []struct {
-		name, m, q, wantQuery string
-		wantSearchSymbols     bool
+		name, m, q, wantQuery, wantSearchMode string
 	}{
 		{
-			name:              "symbol: prefix in symbol mode",
-			m:                 searchModeSymbol,
-			q:                 "#foo",
-			wantQuery:         "foo",
-			wantSearchSymbols: true,
+			name:           "symbol: prefix in symbol mode",
+			m:              searchModeSymbol,
+			q:              "#foo",
+			wantQuery:      "foo",
+			wantSearchMode: searchModeSymbol,
 		},
 		{
-			name:              "symbol: prefix in package mode",
-			m:                 searchModeSymbol,
-			q:                 "#foo",
-			wantQuery:         "foo",
-			wantSearchSymbols: true,
+			name:           "symbol: prefix in package mode",
+			m:              searchModeSymbol,
+			q:              "#foo",
+			wantQuery:      "foo",
+			wantSearchMode: searchModeSymbol,
 		},
 		{
-			name:              "search in package mode",
-			m:                 searchModePackage,
-			q:                 "foo",
-			wantQuery:         "foo",
-			wantSearchSymbols: false,
+			name:           "search in package mode",
+			m:              searchModePackage,
+			q:              "foo",
+			wantQuery:      "foo",
+			wantSearchMode: searchModePackage,
 		},
 		{
-			name:              "search in symbol mode",
-			m:                 searchModeSymbol,
-			q:                 "foo",
-			wantQuery:         "foo",
-			wantSearchSymbols: true,
+			name:           "search in symbol mode",
+			m:              searchModeSymbol,
+			q:              "foo",
+			wantQuery:      "foo",
+			wantSearchMode: searchModeSymbol,
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			u := fmt.Sprintf("/search?q=%s&m=%s", test.q, test.m)
 			r := httptest.NewRequest("GET", u, nil)
 			r = r.WithContext(experiment.NewContext(r.Context(), internal.ExperimentSymbolSearch))
-			gotQuery, gotSearchSymbols := searchQueryAndMode(r)
-			if gotQuery != test.wantQuery || gotSearchSymbols != test.wantSearchSymbols {
-				t.Errorf("searchQueryAndMode(%q) = %q, %t; want = %q, %t", u, gotQuery, gotSearchSymbols,
-					test.wantQuery, test.wantSearchSymbols)
+			gotQuery, gotSearchMode := searchQueryAndMode(r)
+			if gotQuery != test.wantQuery || gotSearchMode != test.wantSearchMode {
+				t.Errorf("searchQueryAndMode(%q) = %q, %q; want = %q, %q", u, gotQuery, gotSearchMode,
+					test.wantQuery, test.wantSearchMode)
 			}
 		})
 	}

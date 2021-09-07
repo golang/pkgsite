@@ -44,7 +44,7 @@ func (s *Server) serveSearch(w http.ResponseWriter, r *http.Request, ds internal
 	}
 
 	ctx := r.Context()
-	query, searchSymbols := searchQueryAndMode(r)
+	query, searchMode := searchQueryAndMode(r)
 	if !utf8.ValidString(query) {
 		return &serverError{status: http.StatusBadRequest}
 	}
@@ -86,16 +86,12 @@ func (s *Server) serveSearch(w http.ResponseWriter, r *http.Request, ds internal
 		return nil
 	}
 
-	page, err := fetchSearchPage(ctx, db, query, pageParams, searchSymbols)
+	page, err := fetchSearchPage(ctx, db, query, pageParams, searchMode == searchModeSymbol)
 	if err != nil {
 		return fmt.Errorf("fetchSearchPage(ctx, db, %q): %v", query, err)
 	}
 	page.basePage = s.newBasePage(r, fmt.Sprintf("%s - Search Results", query))
-	if searchSymbols {
-		page.SearchMode = searchModeSymbol
-	} else {
-		page.SearchMode = searchModePackage
-	}
+	page.SearchMode = searchMode
 	if s.shouldServeJSON(r) {
 		return s.serveJSONPage(w, r, page)
 	}
@@ -311,25 +307,25 @@ func searchRequestRedirectPath(ctx context.Context, ds internal.DataSource, quer
 // searchQueryAndMode extracts a search query from the request. It also reports
 // whether the search performed should be in symbolSearch mode.
 // See TestSearchQuery for examples.
-func searchQueryAndMode(r *http.Request) (q string, searchSymbols bool) {
+func searchQueryAndMode(r *http.Request) (q, searchMode string) {
 	q = strings.TrimSpace(r.FormValue("q"))
 	if !experiment.IsActive(r.Context(), internal.ExperimentSymbolSearch) {
-		return q, false
+		return q, searchModePackage
 	}
 	if strings.HasPrefix(q, symbolSearchFilter) {
-		return strings.TrimPrefix(q, symbolSearchFilter), true
+		return strings.TrimPrefix(q, symbolSearchFilter), searchModeSymbol
 	}
 	mode := strings.TrimSpace(r.FormValue("m"))
 	if mode == searchModePackage {
-		return q, false
+		return q, searchModePackage
 	}
 	if mode == searchModeSymbol {
-		return q, true
+		return q, searchModeSymbol
 	}
 	if shouldDefaultToSymbolSearch(q) {
-		return q, true
+		return q, searchModeSymbol
 	}
-	return q, mode == searchModeSymbol
+	return q, searchModePackage
 }
 
 // shouldDefaultToSymbolSearch reports whether the symbol search mode should

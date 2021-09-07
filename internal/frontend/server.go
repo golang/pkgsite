@@ -325,6 +325,10 @@ func (s *Server) newBasePage(r *http.Request, title string) basePage {
 		GoogleTagManagerID: s.googleTagManagerID,
 		SearchModePackage:  searchModePackage,
 		SearchModeSymbol:   searchModeSymbol,
+		// By default, the SearchMode is set to the empty string, which
+		// indicates that we should use heuristics to determine whether the
+		// user wants to search for symbols or packages.
+		SearchMode: "",
 	}
 }
 
