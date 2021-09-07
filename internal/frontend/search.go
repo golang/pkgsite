@@ -30,7 +30,114 @@ import (
 	"golang.org/x/text/message"
 )
 
-const defaultSearchLimit = 25
+// serveSearch applies database data to the search template. Handles endpoint
+// /search?q=<query>. If <query> is an exact match for a package path, the user
+// will be redirected to the details page.
+func (s *Server) serveSearch(w http.ResponseWriter, r *http.Request, ds internal.DataSource) error {
+	if r.Method != http.MethodGet && r.Method != http.MethodHead {
+		return &serverError{status: http.StatusMethodNotAllowed}
+	}
+	db, ok := ds.(*postgres.DB)
+	if !ok {
+		// The proxydatasource does not support the imported by page.
+		return proxydatasourceNotSupportedErr()
+	}
+
+	ctx := r.Context()
+	query, searchSymbols := searchQueryAndMode(r)
+	if !utf8.ValidString(query) {
+		return &serverError{status: http.StatusBadRequest}
+	}
+	if len(query) > maxSearchQueryLength {
+		return &serverError{
+			status: http.StatusBadRequest,
+			epage: &errorPage{
+				messageTemplate: template.MakeTrustedTemplate(
+					`<h3 class="Error-message">Search query too long.</h3>`),
+			},
+		}
+	}
+	if query == "" {
+		http.Redirect(w, r, "/", http.StatusFound)
+		return nil
+	}
+	pageParams := newPaginationParams(r, defaultSearchLimit)
+	if pageParams.offset() > maxSearchOffset {
+		return &serverError{
+			status: http.StatusBadRequest,
+			epage: &errorPage{
+				messageTemplate: template.MakeTrustedTemplate(
+					`<h3 class="Error-message">Search page number too large.</h3>`),
+			},
+		}
+	}
+	if pageParams.limit > maxSearchPageSize {
+		return &serverError{
+			status: http.StatusBadRequest,
+			epage: &errorPage{
+				messageTemplate: template.MakeTrustedTemplate(
+					`<h3 class="Error-message">Search page size too large.</h3>`),
+			},
+		}
+	}
+
+	if path := searchRequestRedirectPath(ctx, ds, query); path != "" {
+		http.Redirect(w, r, path, http.StatusFound)
+		return nil
+	}
+
+	page, err := fetchSearchPage(ctx, db, query, pageParams, searchSymbols)
+	if err != nil {
+		return fmt.Errorf("fetchSearchPage(ctx, db, %q): %v", query, err)
+	}
+	page.basePage = s.newBasePage(r, fmt.Sprintf("%s - Search Results", query))
+	if searchSymbols {
+		page.SearchMode = searchModeSymbol
+	} else {
+		page.SearchMode = searchModePackage
+	}
+	if s.shouldServeJSON(r) {
+		return s.serveJSONPage(w, r, page)
+	}
+	tmpl := "legacy_search"
+	if experiment.IsActive(ctx, internal.ExperimentSearchGrouping) {
+		tmpl = "search"
+	}
+	s.servePage(ctx, w, tmpl, page)
+	return nil
+}
+
+const (
+	// defaultSearchLimit is the default number of items that appears on the
+	// search results page if limit is not specified.
+	defaultSearchLimit = 25
+
+	// maxSearchQueryLength represents the max number of characters that a search
+	// query can be. For PostgreSQL 11, there is a max length of 2K bytes:
+	// https://www.postgresql.org/docs/11/textsearch-limitations.html. No valid
+	// searches on pkg.go.dev will need more than the maxSearchQueryLength.
+	maxSearchQueryLength = 500
+
+	// maxSearchOffset is the maximum allowed offset into the search results.
+	// This prevents some very CPU-intensive queries from running.
+	maxSearchOffset = 90
+
+	// maxSearchPageSize is the maximum allowed limit for search results.
+	maxSearchPageSize = 100
+
+	// searchModePackage is the keyword prefix and query param for searching
+	// by packages.
+	searchModePackage = "package"
+
+	// searchModeSymbol is the keyword prefix and query param for searching
+	// by symbols.
+	searchModeSymbol = "symbol"
+
+	// symbolSearchFilter is a filter that can be used to indicate that the query
+	// contains a symbol. For example, searching for "#unmarshal json" indicates
+	// that unmarshal is a symbol.
+	symbolSearchFilter = "#"
+)
 
 // SearchPage contains all of the data that the search template needs to
 // populate.
@@ -70,7 +177,8 @@ type subResult struct {
 
 // fetchSearchPage fetches data matching the search query from the database and
 // returns a SearchPage.
-func fetchSearchPage(ctx context.Context, db *postgres.DB, query string, pageParams paginationParams, searchSymbols bool) (*SearchPage, error) {
+func fetchSearchPage(ctx context.Context, db *postgres.DB, query string,
+	pageParams paginationParams, searchSymbols bool) (*SearchPage, error) {
 	maxResultCount := maxSearchOffset + pageParams.limit
 
 	offset := pageParams.offset()
@@ -175,182 +283,6 @@ func newSearchResult(r *postgres.SearchResult, searchSymbols bool, pr *message.P
 	return sr
 }
 
-func symbolSynopsis(r *postgres.SearchResult) string {
-	switch r.SymbolKind {
-	case internal.SymbolKindField:
-		return fmt.Sprintf(`
-type %s struct {
-	%s
-}
-`, strings.Split(r.SymbolName, ".")[0], r.SymbolSynopsis)
-	case internal.SymbolKindMethod:
-		if !strings.HasPrefix(r.SymbolSynopsis, "func (") {
-			return fmt.Sprintf(`
-type %s interface {
-	%s
-}
-`, strings.Split(r.SymbolName, ".")[0], r.SymbolSynopsis)
-		}
-	}
-	return r.SymbolSynopsis
-}
-
-// approximateNumber returns an approximation of the estimate, calibrated by
-// the statistical estimate of standard error.
-// i.e., a number that isn't misleading when we say '1-10 of approximately N
-// results', but that is still close to our estimate.
-func approximateNumber(estimate int, sigma float64) int {
-	expectedErr := sigma * float64(estimate)
-	// Compute the unit by rounding the error the logarithmically closest power
-	// of 10, so that 300->100, but 400->1000.
-	unit := math.Pow(10, math.Round(math.Log10(expectedErr)))
-	// Now round the estimate to the nearest unit.
-	return int(unit * math.Round(float64(estimate)/unit))
-}
-
-func packagePaths(heading string, rs []*postgres.SearchResult) *subResult {
-	if len(rs) == 0 {
-		return nil
-	}
-	var links []link
-	for _, r := range rs {
-		links = append(links, link{Href: r.PackagePath, Body: internal.Suffix(r.PackagePath, r.ModulePath)})
-	}
-	return &subResult{
-		Heading: heading,
-		Links:   links,
-	}
-}
-
-func modulePaths(heading string, mpaths map[string]bool) *subResult {
-	if len(mpaths) == 0 {
-		return nil
-	}
-	var mps []string
-	for m := range mpaths {
-		mps = append(mps, m)
-	}
-	sort.Slice(mps, func(i, j int) bool {
-		_, v1 := internal.SeriesPathAndMajorVersion(mps[i])
-		_, v2 := internal.SeriesPathAndMajorVersion(mps[j])
-		return v1 > v2
-	})
-	links := make([]link, len(mps))
-	for i, m := range mps {
-		links[i] = link{Href: m, Body: m}
-	}
-	return &subResult{
-		Heading: heading,
-		Links:   links,
-	}
-}
-
-// Search constraints.
-const (
-	// maxSearchQueryLength represents the max number of characters that a search
-	// query can be. For PostgreSQL 11, there is a max length of 2K bytes:
-	// https://www.postgresql.org/docs/11/textsearch-limitations.html. No valid
-	// searches on pkg.go.dev will need more than the maxSearchQueryLength.
-	maxSearchQueryLength = 500
-
-	// maxSearchOffset is the maximum allowed offset into the search results.
-	// This prevents some very CPU-intensive queries from running.
-	maxSearchOffset = 90
-
-	// maxSearchPageSize is the maximum allowed limit for search results.
-	maxSearchPageSize = 100
-
-	// searchModePackage is the keyword prefix and query param for searching
-	// by packages.
-	searchModePackage = "package"
-
-	// searchModeSymbol is the keyword prefix and query param for searching
-	// by symbols.
-	searchModeSymbol = "symbol"
-)
-
-// symbolSearchFilter is a filter that can be used to indicate that the query
-// contains a symbol. For example, searching for "#unmarshal json" indicates
-// that unmarshal is a symbol.
-const symbolSearchFilter = "#"
-
-// serveSearch applies database data to the search template. Handles endpoint
-// /search?q=<query>. If <query> is an exact match for a package path, the user
-// will be redirected to the details page.
-func (s *Server) serveSearch(w http.ResponseWriter, r *http.Request, ds internal.DataSource) error {
-	if r.Method != http.MethodGet && r.Method != http.MethodHead {
-		return &serverError{status: http.StatusMethodNotAllowed}
-	}
-	db, ok := ds.(*postgres.DB)
-	if !ok {
-		// The proxydatasource does not support the imported by page.
-		return proxydatasourceNotSupportedErr()
-	}
-
-	ctx := r.Context()
-	query, searchSymbols := searchQueryAndMode(r)
-	if !utf8.ValidString(query) {
-		return &serverError{status: http.StatusBadRequest}
-	}
-	if len(query) > maxSearchQueryLength {
-		return &serverError{
-			status: http.StatusBadRequest,
-			epage: &errorPage{
-				messageTemplate: template.MakeTrustedTemplate(
-					`<h3 class="Error-message">Search query too long.</h3>`),
-			},
-		}
-	}
-	if query == "" {
-		http.Redirect(w, r, "/", http.StatusFound)
-		return nil
-	}
-	pageParams := newPaginationParams(r, defaultSearchLimit)
-	if pageParams.offset() > maxSearchOffset {
-		return &serverError{
-			status: http.StatusBadRequest,
-			epage: &errorPage{
-				messageTemplate: template.MakeTrustedTemplate(
-					`<h3 class="Error-message">Search page number too large.</h3>`),
-			},
-		}
-	}
-	if pageParams.limit > maxSearchPageSize {
-		return &serverError{
-			status: http.StatusBadRequest,
-			epage: &errorPage{
-				messageTemplate: template.MakeTrustedTemplate(
-					`<h3 class="Error-message">Search page size too large.</h3>`),
-			},
-		}
-	}
-
-	if path := searchRequestRedirectPath(ctx, ds, query); path != "" {
-		http.Redirect(w, r, path, http.StatusFound)
-		return nil
-	}
-
-	page, err := fetchSearchPage(ctx, db, query, pageParams, searchSymbols)
-	if err != nil {
-		return fmt.Errorf("fetchSearchPage(ctx, db, %q): %v", query, err)
-	}
-	page.basePage = s.newBasePage(r, fmt.Sprintf("%s - Search Results", query))
-	if searchSymbols {
-		page.SearchMode = searchModeSymbol
-	} else {
-		page.SearchMode = searchModePackage
-	}
-	if s.shouldServeJSON(r) {
-		return s.serveJSONPage(w, r, page)
-	}
-	tmpl := "legacy_search"
-	if experiment.IsActive(ctx, internal.ExperimentSearchGrouping) {
-		tmpl = "search"
-	}
-	s.servePage(ctx, w, tmpl, page)
-	return nil
-}
-
 // searchRequestRedirectPath returns the path that a search request should be
 // redirected to, or the empty string if there is no such path. If the user
 // types an existing package path into the search bar, we will redirect the
@@ -421,6 +353,76 @@ func shouldDefaultToSymbolSearch(q string) bool {
 	// If a user searches for "Unmarshal", assume that they are searching for
 	// the symbol name "Unmarshal", not the package unmarshal.
 	return isCapitalized(q)
+}
+
+func symbolSynopsis(r *postgres.SearchResult) string {
+	switch r.SymbolKind {
+	case internal.SymbolKindField:
+		return fmt.Sprintf(`
+type %s struct {
+	%s
+}
+`, strings.Split(r.SymbolName, ".")[0], r.SymbolSynopsis)
+	case internal.SymbolKindMethod:
+		if !strings.HasPrefix(r.SymbolSynopsis, "func (") {
+			return fmt.Sprintf(`
+type %s interface {
+	%s
+}
+`, strings.Split(r.SymbolName, ".")[0], r.SymbolSynopsis)
+		}
+	}
+	return r.SymbolSynopsis
+}
+
+// approximateNumber returns an approximation of the estimate, calibrated by
+// the statistical estimate of standard error.
+// i.e., a number that isn't misleading when we say '1-10 of approximately N
+// results', but that is still close to our estimate.
+func approximateNumber(estimate int, sigma float64) int {
+	expectedErr := sigma * float64(estimate)
+	// Compute the unit by rounding the error the logarithmically closest power
+	// of 10, so that 300->100, but 400->1000.
+	unit := math.Pow(10, math.Round(math.Log10(expectedErr)))
+	// Now round the estimate to the nearest unit.
+	return int(unit * math.Round(float64(estimate)/unit))
+}
+
+func packagePaths(heading string, rs []*postgres.SearchResult) *subResult {
+	if len(rs) == 0 {
+		return nil
+	}
+	var links []link
+	for _, r := range rs {
+		links = append(links, link{Href: r.PackagePath, Body: internal.Suffix(r.PackagePath, r.ModulePath)})
+	}
+	return &subResult{
+		Heading: heading,
+		Links:   links,
+	}
+}
+
+func modulePaths(heading string, mpaths map[string]bool) *subResult {
+	if len(mpaths) == 0 {
+		return nil
+	}
+	var mps []string
+	for m := range mpaths {
+		mps = append(mps, m)
+	}
+	sort.Slice(mps, func(i, j int) bool {
+		_, v1 := internal.SeriesPathAndMajorVersion(mps[i])
+		_, v2 := internal.SeriesPathAndMajorVersion(mps[j])
+		return v1 > v2
+	})
+	links := make([]link, len(mps))
+	for i, m := range mps {
+		links[i] = link{Href: m, Body: m}
+	}
+	return &subResult{
+		Heading: heading,
+		Links:   links,
+	}
 }
 
 func isCapitalized(s string) bool {
