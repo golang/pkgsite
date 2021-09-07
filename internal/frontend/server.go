@@ -32,6 +32,7 @@ import (
 	"golang.org/x/pkgsite/internal/queue"
 	"golang.org/x/pkgsite/internal/static"
 	"golang.org/x/pkgsite/internal/version"
+	vulndbc "golang.org/x/vulndb/client"
 )
 
 // Server can be installed to serve the go discovery frontend.
@@ -50,6 +51,7 @@ type Server struct {
 	serveStats           bool
 	reportingClient      *errorreporting.Client
 	fileMux              *http.ServeMux
+	vulndbClient         *vulndbc.Client
 
 	mu        sync.Mutex // Protects all fields below
 	templates map[string]*template.Template
@@ -69,6 +71,7 @@ type ServerConfig struct {
 	GoogleTagManagerID   string
 	ServeStats           bool
 	ReportingClient      *errorreporting.Client
+	VulndbClient         *vulndbc.Client
 }
 
 // NewServer creates a new Server for the given database and template directory.
@@ -95,6 +98,7 @@ func NewServer(scfg ServerConfig) (_ *Server, err error) {
 		serveStats:           scfg.ServeStats,
 		reportingClient:      scfg.ReportingClient,
 		fileMux:              http.NewServeMux(),
+		vulndbClient:         scfg.VulndbClient,
 	}
 	errorPageBytes, err := s.renderErrorPage(context.Background(), http.StatusInternalServerError, "error", nil)
 	if err != nil {

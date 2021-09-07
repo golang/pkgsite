@@ -28,6 +28,7 @@ import (
 	"golang.org/x/pkgsite/internal/proxy"
 	"golang.org/x/pkgsite/internal/queue"
 	"golang.org/x/pkgsite/internal/source"
+	vulndbc "golang.org/x/vulndb/client"
 )
 
 var (
@@ -104,6 +105,10 @@ func main() {
 	}
 
 	rc := cmdconfig.ReportingClient(ctx, cfg)
+	vc, err := vulndbc.NewClient([]string{cfg.VulnDB}, vulndbc.Options{})
+	if err != nil {
+		log.Fatalf(ctx, "vulndbc.NewClient: %v", err)
+	}
 	server, err := frontend.NewServer(frontend.ServerConfig{
 		DataSourceGetter:     dsg,
 		Queue:                fetchQueue,
@@ -115,6 +120,7 @@ func main() {
 		GoogleTagManagerID:   cfg.GoogleTagManagerID,
 		ServeStats:           cfg.ServeStats,
 		ReportingClient:      rc,
+		VulndbClient:         vc,
 	})
 	if err != nil {
 		log.Fatalf(ctx, "frontend.NewServer: %v", err)

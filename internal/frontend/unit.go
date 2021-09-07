@@ -17,10 +17,12 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/cookie"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/middleware"
 	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/version"
+	"golang.org/x/vulndb/osv"
 )
 
 // UnitPage contains data needed to render the unit template.
@@ -85,6 +87,9 @@ type UnitPage struct {
 
 	// Details contains data specific to the type of page being rendered.
 	Details interface{}
+
+	// Vulns holds vulnerability information.
+	Vulns []Vuln
 }
 
 // serveUnitPage serves a unit page for a path.
@@ -203,6 +208,17 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 	main, ok := d.(*MainDetails)
 	if ok {
 		page.MetaDescription = metaDescription(main.DocSynopsis)
+	}
+
+	// Get vulnerability information.
+	var vulns []Vuln
+	if s.vulndbClient != nil && experiment.IsActive(ctx, internal.ExperimentVulns) {
+		getEntries := func(m string) ([]*osv.Entry, error) { return s.vulndbClient.Get([]string{m}) }
+		vulns, err = Vulns(um.ModulePath, um.Version, um.Path, getEntries)
+		if err != nil {
+			vulns = []Vuln{{Details: fmt.Sprintf("could not get vulnerability data: %v", err)}}
+		}
+		page.Vulns = vulns
 	}
 	s.servePage(ctx, w, tabSettings.TemplateName, page)
 	return nil

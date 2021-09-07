@@ -220,6 +220,17 @@
       />&nbsp; Redirected from <span data-test-id="redirected-banner-text">{{.}}</span>.
     </div>
   {{end}}
+  {{if .Experiments.IsActive "vulns"}}
+    {{with .Vulns}}
+      <div class="go-Message go-Message--alert">
+	This package has vulnerabilities.<br/>
+	{{range .}}
+	  <p>{{.Details}}</p>
+	  {{with .FixedVersion}}Fixed in {{.}}.{{end}}
+	{{end}}
+      </div>
+    {{end}}
+  {{end}}
   {{if .Unit.Deprecated}}
     <div class="go-Message go-Message--warning">
       <img

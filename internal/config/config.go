@@ -181,6 +181,9 @@ type Config struct {
 
 	// DisableErrorReporting disables sending errors to the GCP ErrorReporting system.
 	DisableErrorReporting bool
+
+	// VulnDB is the URL of the Go vulnerability DB.
+	VulnDB string
 }
 
 // AppVersionLabel returns the version label for the current instance.  This is
@@ -379,6 +382,7 @@ func Init(ctx context.Context) (_ *Config, err error) {
 		LogLevel:              os.Getenv("GO_DISCOVERY_LOG_LEVEL"),
 		ServeStats:            os.Getenv("GO_DISCOVERY_SERVE_STATS") == "true",
 		DisableErrorReporting: os.Getenv("GO_DISCOVERY_DISABLE_ERROR_REPORTING") == "true",
+		VulnDB:                GetEnv("GO_DISCOVERY_VULN_DB", "https://storage.googleapis.com/go-vulndb"),
 	}
 	log.SetLevel(cfg.LogLevel)
 

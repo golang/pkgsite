@@ -14,6 +14,7 @@ const (
 	ExperimentSkipInsertSymbols      = "skip-insert-symbols"
 	ExperimentStyleGuide             = "styleguide"
 	ExperimentSymbolSearch           = "symbol-search"
+	ExperimentVulns                  = "vulns"
 )
 
 // Experiments represents all of the active experiments in the codebase and
@@ -27,6 +28,7 @@ var Experiments = map[string]string{
 	ExperimentSkipInsertSymbols:      "Don't insert data into symbols tables.",
 	ExperimentStyleGuide:             "Enable the styleguide.",
 	ExperimentSymbolSearch:           "Enable searching for symbols.",
+	ExperimentVulns:                  "Enable vulnerability reporting.",
 }
 
 // Experiment holds data associated with an experimental feature for frontend
