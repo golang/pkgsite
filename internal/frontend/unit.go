@@ -22,7 +22,6 @@ import (
 	"golang.org/x/pkgsite/internal/middleware"
 	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/version"
-	"golang.org/x/vulndb/osv"
 )
 
 // UnitPage contains data needed to render the unit template.
@@ -123,7 +122,7 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 	// It's also okay to provide just one (e.g. GOOS=windows), which will select
 	// the first doc with that value, ignoring the other one.
 	bc := internal.BuildContext{GOOS: r.FormValue("GOOS"), GOARCH: r.FormValue("GOARCH")}
-	d, err := fetchDetailsForUnit(ctx, r, tab, ds, um, info.requestedVersion, bc)
+	d, err := fetchDetailsForUnit(ctx, r, tab, ds, um, info.requestedVersion, bc, s.getVulnEntries)
 	if err != nil {
 		return err
 	}
@@ -212,9 +211,8 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 
 	// Get vulnerability information.
 	var vulns []Vuln
-	if s.vulndbClient != nil && experiment.IsActive(ctx, internal.ExperimentVulns) {
-		getEntries := func(m string) ([]*osv.Entry, error) { return s.vulndbClient.Get([]string{m}) }
-		vulns, err = Vulns(um.ModulePath, um.Version, um.Path, getEntries)
+	if s.getVulnEntries != nil && experiment.IsActive(ctx, internal.ExperimentVulns) {
+		vulns, err = Vulns(um.ModulePath, um.Version, um.Path, s.getVulnEntries)
 		if err != nil {
 			vulns = []Vuln{{Details: fmt.Sprintf("could not get vulnerability data: %v", err)}}
 		}

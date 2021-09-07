@@ -18,11 +18,13 @@ type Vuln struct {
 	FixedVersion string
 }
 
+type vulnEntriesFunc func(string) ([]*osv.Entry, error)
+
 // Vulns obtains vulnerability information for the given package.
-// the getVulnEntries function should have the same signature and
-// behavior as golang.org/x/vulndb/client.Client.Get.
+// If packagePath is empty, it returns all entries for the module at version.
+// The getVulnEntries function should retrieve all entries for the given module path.
 // It is passed to facilitate testing.
-func Vulns(modulePath, version, packagePath string, getVulnEntries func(string) ([]*osv.Entry, error)) (_ []Vuln, err error) {
+func Vulns(modulePath, version, packagePath string, getVulnEntries vulnEntriesFunc) (_ []Vuln, err error) {
 	defer derrors.Wrap(&err, "Vulns(%q, %q)", modulePath, version)
 
 	// Get all the vulns for this module.
@@ -34,7 +36,7 @@ func Vulns(modulePath, version, packagePath string, getVulnEntries func(string) 
 	// package at this version.
 	var vulns []Vuln
 	for _, e := range entries {
-		if e.Package.Name == packagePath && e.Affects.AffectsSemver(version) {
+		if (packagePath == "" || e.Package.Name == packagePath) && e.Affects.AffectsSemver(version) {
 			// Choose the latest fixed version, if any.
 			var fixed string
 			for _, r := range e.Affects.Ranges {

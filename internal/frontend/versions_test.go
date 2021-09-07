@@ -10,10 +10,12 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/testing/sample"
 	"golang.org/x/pkgsite/internal/version"
+	"golang.org/x/vulndb/osv"
 )
 
 var (
@@ -87,6 +89,23 @@ func TestFetchPackageVersionsDetails(t *testing.T) {
 		}
 	}
 
+	vulnEntry := &osv.Entry{
+		Details: "vuln",
+		Affects: osv.Affects{
+			Ranges: []osv.AffectsRange{{
+				Type:       osv.TypeSemver,
+				Introduced: "1.2.0",
+				Fixed:      "1.2.3",
+			}},
+		},
+	}
+	getVulnEntries := func(m string) ([]*osv.Entry, error) {
+		if m == modulePath1 {
+			return []*osv.Entry{vulnEntry}, nil
+		}
+		return nil, nil
+	}
+
 	for _, tc := range []struct {
 		name        string
 		pkg         *internal.Unit
@@ -121,7 +140,14 @@ func TestFetchPackageVersionsDetails(t *testing.T) {
 			},
 			wantDetails: &VersionsDetails{
 				ThisModule: []*VersionList{
-					makeList(v1Path, modulePath1, "v1", []string{"v1.3.0", "v1.2.3", "v1.2.1"}, false),
+					func() *VersionList {
+						vl := makeList(v1Path, modulePath1, "v1", []string{"v1.3.0", "v1.2.3", "v1.2.1"}, false)
+						vl.Versions[2].Vulns = []Vuln{{
+							Details:      vulnEntry.Details,
+							FixedVersion: "v" + vulnEntry.Affects.Ranges[0].Fixed,
+						}}
+						return vl
+					}(),
 				},
 				IncompatibleModules: []*VersionList{
 					makeList(v1Path, modulePath1, "v2", []string{"v2.1.0+incompatible"}, true),
@@ -162,13 +188,14 @@ func TestFetchPackageVersionsDetails(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), testTimeout*2)
 			defer cancel()
+			ctx = experiment.NewContext(ctx, internal.ExperimentVulns)
 			defer postgres.ResetTestDB(testDB, t)
 
 			for _, v := range tc.modules {
 				postgres.MustInsertModule(ctx, t, testDB, v)
 			}
 
-			got, err := fetchVersionsDetails(ctx, testDB, &tc.pkg.UnitMeta)
+			got, err := fetchVersionsDetails(ctx, testDB, &tc.pkg.UnitMeta, getVulnEntries)
 			if err != nil {
 				t.Fatalf("fetchVersionsDetails(ctx, db, %q, %q): %v", tc.pkg.Path, tc.pkg.ModulePath, err)
 			}

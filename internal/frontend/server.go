@@ -33,6 +33,7 @@ import (
 	"golang.org/x/pkgsite/internal/static"
 	"golang.org/x/pkgsite/internal/version"
 	vulndbc "golang.org/x/vulndb/client"
+	"golang.org/x/vulndb/osv"
 )
 
 // Server can be installed to serve the go discovery frontend.
@@ -51,7 +52,7 @@ type Server struct {
 	serveStats           bool
 	reportingClient      *errorreporting.Client
 	fileMux              *http.ServeMux
-	vulndbClient         *vulndbc.Client
+	getVulnEntries       vulnEntriesFunc
 
 	mu        sync.Mutex // Protects all fields below
 	templates map[string]*template.Template
@@ -98,7 +99,7 @@ func NewServer(scfg ServerConfig) (_ *Server, err error) {
 		serveStats:           scfg.ServeStats,
 		reportingClient:      scfg.ReportingClient,
 		fileMux:              http.NewServeMux(),
-		vulndbClient:         scfg.VulndbClient,
+		getVulnEntries:       func(m string) ([]*osv.Entry, error) { return scfg.VulndbClient.Get([]string{m}) },
 	}
 	errorPageBytes, err := s.renderErrorPage(context.Background(), http.StatusInternalServerError, "error", nil)
 	if err != nil {
