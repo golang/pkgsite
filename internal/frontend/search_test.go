@@ -22,36 +22,22 @@ import (
 	"golang.org/x/text/message"
 )
 
-func TestSearchQuery(t *testing.T) {
+func TestSearchQueryAndMode(t *testing.T) {
 	for _, test := range []struct {
 		name, m, q, wantQuery string
 		wantSearchSymbols     bool
 	}{
 		{
-			name:              "package: prefix in symbol mode",
+			name:              "symbol: prefix in symbol mode",
 			m:                 searchModeSymbol,
-			q:                 fmt.Sprintf("%s:foo", searchModePackage),
-			wantQuery:         "foo",
-			wantSearchSymbols: false,
-		},
-		{
-			name:              "package: prefix in package mode",
-			m:                 searchModePackage,
-			q:                 fmt.Sprintf("%s:foo", searchModePackage),
-			wantQuery:         "foo",
-			wantSearchSymbols: false,
-		},
-		{
-			name:              "identifier: prefix in symbol mode",
-			m:                 searchModeSymbol,
-			q:                 fmt.Sprintf("%s:foo", searchModeSymbol),
+			q:                 "#foo",
 			wantQuery:         "foo",
 			wantSearchSymbols: true,
 		},
 		{
-			name:              "identifier: prefix in package mode",
+			name:              "symbol: prefix in package mode",
 			m:                 searchModeSymbol,
-			q:                 fmt.Sprintf("%s:foo", searchModeSymbol),
+			q:                 "#foo",
 			wantQuery:         "foo",
 			wantSearchSymbols: true,
 		},
@@ -74,9 +60,9 @@ func TestSearchQuery(t *testing.T) {
 			u := fmt.Sprintf("/search?q=%s&m=%s", test.q, test.m)
 			r := httptest.NewRequest("GET", u, nil)
 			r = r.WithContext(experiment.NewContext(r.Context(), internal.ExperimentSymbolSearch))
-			gotQuery, gotSearchSymbols := searchQuery(r)
+			gotQuery, gotSearchSymbols := searchQueryAndMode(r)
 			if gotQuery != test.wantQuery || gotSearchSymbols != test.wantSearchSymbols {
-				t.Errorf("searchQuery(%q) = %q, %t; want = %q, %t", u, gotQuery, gotSearchSymbols,
+				t.Errorf("searchQueryAndMode(%q) = %q, %t; want = %q, %t", u, gotQuery, gotSearchSymbols,
 					test.wantQuery, test.wantSearchSymbols)
 			}
 		})

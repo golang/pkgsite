@@ -269,21 +269,10 @@ const (
 	searchModeSymbol = "symbol"
 )
 
-var (
-	// searchModeSymbolKeyboardShortcuts is the set of allow keyboard shortcuts
-	// for symbol search.
-	searchModeSymbolKeyboardShortcuts = map[string]bool{
-		"s":              true,
-		searchModeSymbol: true,
-	}
-
-	// searchModePackageKeyboardShortcuts is the set of allow keyboard shortcuts
-	// for package search.
-	searchModePackageKeyboardShortcuts = map[string]bool{
-		"p":               true,
-		searchModePackage: true,
-	}
-)
+// symbolSearchFilter is a filter that can be used to indicate that the query
+// contains a symbol. For example, searching for "#unmarshal json" indicates
+// that unmarshal is a symbol.
+const symbolSearchFilter = "#"
 
 // serveSearch applies database data to the search template. Handles endpoint
 // /search?q=<query>. If <query> is an exact match for a package path, the user
@@ -299,7 +288,7 @@ func (s *Server) serveSearch(w http.ResponseWriter, r *http.Request, ds internal
 	}
 
 	ctx := r.Context()
-	query, searchSymbols := searchQuery(r)
+	query, searchSymbols := searchQueryAndMode(r)
 	if !utf8.ValidString(query) {
 		return &serverError{status: http.StatusBadRequest}
 	}
@@ -387,28 +376,18 @@ func searchRequestRedirectPath(ctx context.Context, ds internal.DataSource, quer
 	return fmt.Sprintf("/%s", requestedPath)
 }
 
-// searchQuery extracts a search query from the request. It also reports
+// searchQueryAndMode extracts a search query from the request. It also reports
 // whether the search performed should be in symbolSearch mode.
 // See TestSearchQuery for examples.
-func searchQuery(r *http.Request) (q string, searchSymbols bool) {
+func searchQueryAndMode(r *http.Request) (q string, searchSymbols bool) {
 	q = strings.TrimSpace(r.FormValue("q"))
 	if !experiment.IsActive(r.Context(), internal.ExperimentSymbolSearch) {
 		return q, false
 	}
-	if strings.HasPrefix(q, "#") {
-		return strings.TrimPrefix(q, "#"), true
+	if strings.HasPrefix(q, symbolSearchFilter) {
+		return strings.TrimPrefix(q, symbolSearchFilter), true
 	}
-	mode, query, found := internal.Cut(q, ":")
-	if found {
-		if searchModeSymbolKeyboardShortcuts[mode] {
-			return query, true
-		}
-		if searchModePackageKeyboardShortcuts[mode] {
-			return query, false
-		}
-		return q, false
-	}
-	mode = strings.TrimSpace(r.FormValue("m"))
+	mode := strings.TrimSpace(r.FormValue("m"))
 	if mode == searchModePackage {
 		return q, false
 	}

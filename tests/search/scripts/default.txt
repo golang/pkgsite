@@ -22,27 +22,12 @@ keyboard shorcut "#"
 [symbol] #big.Float
 Float math/big
 
-keyboard shorcut "s:"
-[symbol] s:foo
+keyboard shorcut "#"
+[symbol] #foo
 Foo gopkg.in/foo.v1
 FOO github.com/julieqiu/api-demo
 FoO github.com/julieqiu/api-demo
 Foo github.com/julieqiu/api-demo
-
-keyboard shorcut "symbol:"
-[symbol] s:foo
-Foo gopkg.in/foo.v1
-FOO github.com/julieqiu/api-demo
-FoO github.com/julieqiu/api-demo
-Foo github.com/julieqiu/api-demo
-
-keyboard shorcut "p:"
-[package] p:Foo
-gopkg.in/foo.v1
-
-keyboard shorcut "package:"
-[package] package:Foo
-gopkg.in/foo.v1
 
 capital letter one word defaults to symbol mode
 [symbol] Float
