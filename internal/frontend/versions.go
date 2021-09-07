@@ -39,9 +39,13 @@ type VersionsDetails struct {
 }
 
 // VersionListKey identifies a version list on the versions tab. We have a
-// separate VersionList for each major version of a module series. Notably we
-// have more version lists than module paths: v0 and v1 module versions are in
-// separate version lists, despite having the same module path.
+// separate VersionList for each major version of a module series.
+// Notably we have more version lists than module paths: v0 and v1 module
+// versions are in separate version lists, despite having the same module path.
+// Also note that major version isn't sufficient as a key: there are packages
+// contained in the same major version of different modules, for example
+// github.com/hashicorp/vault/api, which exists in v1 of both of
+// github.com/hashicorp/vault and github.com/hashicorp/vault/api.
 type VersionListKey struct {
 	// ModulePath is the module path of this major version.
 	ModulePath string
@@ -52,17 +56,16 @@ type VersionListKey struct {
 	// Incompatible indicates whether the VersionListKey represents an
 	// incompatible module version.
 	Incompatible bool
-
-	// Deprecated indicates whether the major version is deprecated.
-	Deprecated bool
-	// DeprecationComment holds the reason for deprecation, if any.
-	DeprecationComment string
 }
 
 // VersionList holds all versions corresponding to a unique (module path,
 // major version) tuple in the version hierarchy.
 type VersionList struct {
 	VersionListKey
+	// Deprecated indicates whether the major version is deprecated.
+	Deprecated bool
+	// DeprecationComment holds the reason for deprecation, if any.
+	DeprecationComment string
 	// Versions holds the nested version summaries, organized in descending
 	// semver order.
 	Versions []*VersionSummary
@@ -144,12 +147,8 @@ func buildVersionDetails(ctx context.Context, currentModulePath string,
 	linkify func(v *internal.ModuleInfo) string,
 	getVulnEntries vulnEntriesFunc,
 ) *VersionsDetails {
-	// lists organizes versions by VersionListKey. Note that major version isn't
-	// sufficient as a key: there are packages contained in the same major
-	// version of different modules, for example github.com/hashicorp/vault/api,
-	// which exists in v1 of both of github.com/hashicorp/vault and
-	// github.com/hashicorp/vault/api.
-	lists := make(map[VersionListKey][]*VersionSummary)
+	// lists organizes versions by VersionListKey.
+	lists := make(map[VersionListKey]*VersionList)
 	// seenLists tracks the order in which we encounter entries of each version
 	// list. We want to preserve this order.
 	var seenLists []VersionListKey
@@ -177,11 +176,9 @@ func buildVersionDetails(ctx context.Context, currentModulePath string,
 			major = "v1"
 		}
 		key := VersionListKey{
-			ModulePath:         mi.ModulePath,
-			Major:              major,
-			Incompatible:       version.IsIncompatible(mi.Version),
-			Deprecated:         mi.Deprecated,
-			DeprecationComment: shortRationale(mi.DeprecationComment),
+			ModulePath:   mi.ModulePath,
+			Major:        major,
+			Incompatible: version.IsIncompatible(mi.Version),
 		}
 		vs := &VersionSummary{
 			Link:                linkify(mi),
@@ -201,19 +198,23 @@ func buildVersionDetails(ctx context.Context, currentModulePath string,
 			}
 			vs.Vulns = vulns
 		}
-		if _, ok := lists[key]; !ok {
+		vl := lists[key]
+		if vl == nil {
 			seenLists = append(seenLists, key)
+			vl = &VersionList{
+				VersionListKey:     key,
+				Deprecated:         mi.Deprecated,
+				DeprecationComment: shortRationale(mi.DeprecationComment),
+			}
+			lists[key] = vl
 		}
-		lists[key] = append(lists[key], vs)
+		vl.Versions = append(vl.Versions, vs)
 	}
 
 	var details VersionsDetails
 	other := map[string]bool{}
 	for _, key := range seenLists {
-		vl := &VersionList{
-			VersionListKey: key,
-			Versions:       lists[key],
-		}
+		vl := lists[key]
 		if key.ModulePath == currentModulePath {
 			if key.Incompatible {
 				details.IncompatibleModules = append(details.IncompatibleModules, vl)
