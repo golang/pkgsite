@@ -173,20 +173,20 @@ func buildVersionDetails(currentModulePath string,
 			major = "v1"
 		}
 		key := VersionListKey{
-			ModulePath:   mi.ModulePath,
-			Major:        major,
-			Incompatible: version.IsIncompatible(mi.Version),
+			ModulePath:         mi.ModulePath,
+			Major:              major,
+			Incompatible:       version.IsIncompatible(mi.Version),
+			Deprecated:         mi.Deprecated,
+			DeprecationComment: shortRationale(mi.DeprecationComment),
 		}
 		vs := &VersionSummary{
-			Link:       linkify(mi),
-			CommitTime: absoluteTime(mi.CommitTime),
-			Version:    linkVersion(mi.ModulePath, mi.Version, mi.Version),
-			IsMinor:    isMinor(mi.Version),
+			Link:                linkify(mi),
+			CommitTime:          absoluteTime(mi.CommitTime),
+			Version:             linkVersion(mi.ModulePath, mi.Version, mi.Version),
+			IsMinor:             isMinor(mi.Version),
+			Retracted:           mi.Retracted,
+			RetractionRationale: shortRationale(mi.RetractionRationale),
 		}
-		key.Deprecated = mi.Deprecated
-		key.DeprecationComment = shortRationale(mi.DeprecationComment)
-		vs.Retracted = mi.Retracted
-		vs.RetractionRationale = shortRationale(mi.RetractionRationale)
 		if sv := sh.SymbolsAtVersion(mi.Version); sv != nil {
 			vs.Symbols = symbolsForVersion(linkify(mi), sv)
 		}
