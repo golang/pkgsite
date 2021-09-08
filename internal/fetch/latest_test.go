@@ -80,7 +80,7 @@ func TestLatestModuleVersionsBadGoMod(t *testing.T) {
 			ModulePath: modulePath,
 			Version:    "v1.0.0",
 			Files: map[string]string{
-				"go.mod": "module example.com/bad-go-mod\ngo 1.13.8",
+				"go.mod": "module example.com/bad-go-mod\ngo bad",
 			},
 		},
 	})

@@ -218,7 +218,6 @@ func (g *fsProxyModuleGetter) Info(ctx context.Context, path, vers string) (_ *p
 		if err != nil {
 			return nil, err
 		}
-		fmt.Printf("#### resolved latest to %q\n", vers)
 	}
 
 	// Check for a .zip file. Some directories in the download cache have .info and .mod files but no .zip.
