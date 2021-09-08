@@ -109,6 +109,9 @@ type SearchOptions struct {
 
 	// If true, perform a symbol search.
 	SearchSymbols bool
+
+	// SymbolFilter is the word in a search query with a # prefix.
+	SymbolFilter string
 }
 
 // SearchResult represents a single search result from SearchDocuments.

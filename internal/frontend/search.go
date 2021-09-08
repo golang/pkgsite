@@ -43,10 +43,18 @@ func (s *Server) serveSearch(w http.ResponseWriter, r *http.Request, ds internal
 	}
 
 	ctx := r.Context()
-	query := searchQuery(r)
-	mode := searchMode(r)
+	query, filters := searchQueryAndFilters(r)
 	if !utf8.ValidString(query) {
 		return &serverError{status: http.StatusBadRequest}
+	}
+	if len(filters) > 1 {
+		return &serverError{
+			status: http.StatusBadRequest,
+			epage: &errorPage{
+				messageTemplate: template.MakeTrustedTemplate(
+					`<h3 class="Error-message">Search query contains more than one symbol.</h3>`),
+			},
+		}
 	}
 	if len(query) > maxSearchQueryLength {
 		return &serverError{
@@ -80,13 +88,17 @@ func (s *Server) serveSearch(w http.ResponseWriter, r *http.Request, ds internal
 			},
 		}
 	}
-
 	if path := searchRequestRedirectPath(ctx, ds, query); path != "" {
 		http.Redirect(w, r, path, http.StatusFound)
 		return nil
 	}
 
-	page, err := fetchSearchPage(ctx, db, query, pageParams, mode == searchModeSymbol)
+	var symbol string
+	if len(filters) > 0 {
+		symbol = filters[0]
+	}
+	mode := searchMode(r)
+	page, err := fetchSearchPage(ctx, db, query, symbol, pageParams, mode == searchModeSymbol)
 	if err != nil {
 		return fmt.Errorf("fetchSearchPage(ctx, db, %q): %v", query, err)
 	}
@@ -172,7 +184,7 @@ type subResult struct {
 
 // fetchSearchPage fetches data matching the search query from the database and
 // returns a SearchPage.
-func fetchSearchPage(ctx context.Context, db *postgres.DB, query string,
+func fetchSearchPage(ctx context.Context, db *postgres.DB, query, symbol string,
 	pageParams paginationParams, searchSymbols bool) (*SearchPage, error) {
 	maxResultCount := maxSearchOffset + pageParams.limit
 
@@ -180,13 +192,13 @@ func fetchSearchPage(ctx context.Context, db *postgres.DB, query string,
 	if experiment.IsActive(ctx, internal.ExperimentSearchGrouping) {
 		// When using search grouping, do pageless search: always start from the beginning.
 		offset = 0
-		query = strings.TrimLeft(query, symbolSearchFilter)
 	}
 	dbresults, err := db.Search(ctx, query, postgres.SearchOptions{
 		MaxResults:     pageParams.limit,
 		Offset:         offset,
 		MaxResultCount: maxResultCount,
 		SearchSymbols:  searchSymbols,
+		SymbolFilter:   symbol,
 	})
 	if err != nil {
 		return nil, err
@@ -300,11 +312,11 @@ func searchMode(r *http.Request) string {
 	if !experiment.IsActive(r.Context(), internal.ExperimentSymbolSearch) {
 		return searchModePackage
 	}
-	q := searchQuery(r)
+	q := rawSearchQuery(r)
 	if strings.HasPrefix(q, symbolSearchFilter) {
 		return searchModeSymbol
 	}
-	mode := strings.TrimSpace(r.FormValue("m"))
+	mode := rawSearchMode(r)
 	if mode == searchModePackage {
 		return searchModePackage
 	}
@@ -317,8 +329,28 @@ func searchMode(r *http.Request) string {
 	return searchModePackage
 }
 
-func searchQuery(r *http.Request) string {
+// searchQueryAndFilters returns the search query, trimmed of any filters, and
+// the array of words that had a filter prefix.
+func searchQueryAndFilters(r *http.Request) (string, []string) {
+	words := strings.Fields(rawSearchQuery(r))
+	var filters []string
+	for i := range words {
+		if strings.HasPrefix(words[i], symbolSearchFilter) {
+			words[i] = strings.TrimLeft(words[i], symbolSearchFilter)
+			filters = append(filters, words[i])
+		}
+	}
+	return strings.Join(words, " "), filters
+}
+
+// rawSearchQuery returns the exact search query by the user.
+func rawSearchQuery(r *http.Request) string {
 	return strings.TrimSpace(r.FormValue("q"))
+}
+
+// rawSearchQuery returns the exact search mode from the URL request.
+func rawSearchMode(r *http.Request) string {
+	return strings.TrimSpace(r.FormValue("m"))
 }
 
 // shouldDefaultToSymbolSearch reports whether the symbol search mode should

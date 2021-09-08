@@ -314,7 +314,7 @@ func (s *Server) licensePolicyHandler() http.HandlerFunc {
 
 // newBasePage returns a base page for the given request and title.
 func (s *Server) newBasePage(r *http.Request, title string) basePage {
-	q := searchQuery(r)
+	q := rawSearchQuery(r)
 	return basePage{
 		HTMLTitle:          title,
 		Query:              q,
