@@ -25,7 +25,7 @@ type vulnEntriesFunc func(string) ([]*osv.Entry, error)
 // The getVulnEntries function should retrieve all entries for the given module path.
 // It is passed to facilitate testing.
 func Vulns(modulePath, version, packagePath string, getVulnEntries vulnEntriesFunc) (_ []Vuln, err error) {
-	defer derrors.Wrap(&err, "Vulns(%q, %q)", modulePath, version)
+	defer derrors.Wrap(&err, "Vulns(%q, %q, %q)", modulePath, version, packagePath)
 
 	// Get all the vulns for this module.
 	entries, err := getVulnEntries(modulePath)
@@ -36,20 +36,37 @@ func Vulns(modulePath, version, packagePath string, getVulnEntries vulnEntriesFu
 	// package at this version.
 	var vulns []Vuln
 	for _, e := range entries {
-		if (packagePath == "" || e.Package.Name == packagePath) && e.Affects.AffectsSemver(version) {
-			// Choose the latest fixed version, if any.
-			var fixed string
-			for _, r := range e.Affects.Ranges {
-				if r.Fixed != "" && (fixed == "" || semver.Compare(r.Fixed, fixed) > 0) {
-					fixed = r.Fixed
-				}
-			}
-			vulns = append(vulns, Vuln{
-				Details: e.Details,
-				// TODO(golang/go#48223): handle stdlib versions
-				FixedVersion: "v" + fixed,
-			})
+		if vuln, ok := entryVuln(e, packagePath, version); ok {
+			vulns = append(vulns, vuln)
 		}
 	}
 	return vulns, nil
+}
+
+func entryVuln(e *osv.Entry, packagePath, version string) (Vuln, bool) {
+	for _, a := range e.Affected {
+		if (packagePath == "" || a.Package.Name == packagePath) && a.Ranges.AffectsSemver(version) {
+			// Choose the latest fixed version, if any.
+			var fixed string
+			for _, r := range a.Ranges {
+				if r.Type == osv.TypeGit {
+					continue
+				}
+				for _, re := range r.Events {
+					if re.Fixed != "" && (fixed == "" || semver.Compare(re.Fixed, fixed) > 0) {
+						fixed = re.Fixed
+					}
+				}
+			}
+			if fixed != "" {
+				fixed = "v" + fixed
+			}
+			return Vuln{
+				Details: e.Details,
+				// TODO(golang/go#48223): handle stdlib versions
+				FixedVersion: fixed,
+			}, true
+		}
+	}
+	return Vuln{}, false
 }

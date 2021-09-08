@@ -888,8 +888,8 @@ golang.org/x/tools v0.0.0-20200828161849-5deb26317202/go.mod h1:njjCfa9FT2d7l9Bc
 golang.org/x/tools v0.0.0-20200904185747-39188db58858/go.mod h1:Cj7w3i3Rnn0Xh82ur9kSqwfTHTeVxaDqrfMjpcNT6bE=
 golang.org/x/tools v0.0.0-20200915173823-2db8f0ff891c h1:AQsh/7arPVFDBraQa8x7GoVnwnGg1kM7J2ySI0kF5WU=
 golang.org/x/tools v0.0.0-20200915173823-2db8f0ff891c/go.mod h1:z6u4i615ZeAfBE4XtMziQW1fSVJXACjjbWkB/mvPzlU=
-golang.org/x/vulndb v0.0.0-20210812203154-5d84be3c9e14 h1:fGz1pt31Ygv69LkbU9kkWMChI2ZPUeZ/IzqEce/NA7s=
-golang.org/x/vulndb v0.0.0-20210812203154-5d84be3c9e14/go.mod h1:xh7j0yEDggyETQM2RIfHFmzOcnAwzHg8j8heomkN1Dc=
+golang.org/x/vulndb v0.0.0-20210903204307-a74bfd4ac7eb h1:TfKhb4m4Pq73s62wVmqPze7qSN3JtdRYTzNQJm4c5nk=
+golang.org/x/vulndb v0.0.0-20210903204307-a74bfd4ac7eb/go.mod h1:xh7j0yEDggyETQM2RIfHFmzOcnAwzHg8j8heomkN1Dc=
 golang.org/x/xerrors v0.0.0-20190410155217-1f06c39b4373/go.mod h1:I/5z698sn9Ka8TeJc9MKroUUfqBBauWjQqLJ2OPfmY0=
 golang.org/x/xerrors v0.0.0-20190513163551-3ee3066db522/go.mod h1:I/5z698sn9Ka8TeJc9MKroUUfqBBauWjQqLJ2OPfmY0=
 golang.org/x/xerrors v0.0.0-20190717185122-a985d3407aa7/go.mod h1:I/5z698sn9Ka8TeJc9MKroUUfqBBauWjQqLJ2OPfmY0=

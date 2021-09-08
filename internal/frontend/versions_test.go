@@ -89,15 +89,15 @@ func TestFetchPackageVersionsDetails(t *testing.T) {
 		}
 	}
 
+	vulnFixedVersion := "1.2.3"
 	vulnEntry := &osv.Entry{
 		Details: "vuln",
-		Affects: osv.Affects{
+		Affected: []osv.Affected{{
 			Ranges: []osv.AffectsRange{{
-				Type:       osv.TypeSemver,
-				Introduced: "1.2.0",
-				Fixed:      "1.2.3",
+				Type:   osv.TypeSemver,
+				Events: []osv.RangeEvent{{Introduced: "1.2.0"}, {Fixed: vulnFixedVersion}},
 			}},
-		},
+		}},
 	}
 	getVulnEntries := func(m string) ([]*osv.Entry, error) {
 		if m == modulePath1 {
@@ -144,7 +144,7 @@ func TestFetchPackageVersionsDetails(t *testing.T) {
 						vl := makeList(v1Path, modulePath1, "v1", []string{"v1.3.0", "v1.2.3", "v1.2.1"}, false)
 						vl.Versions[2].Vulns = []Vuln{{
 							Details:      vulnEntry.Details,
-							FixedVersion: "v" + vulnEntry.Affects.Ranges[0].Fixed,
+							FixedVersion: "v" + vulnFixedVersion,
 						}}
 						return vl
 					}(),

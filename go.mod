@@ -45,7 +45,7 @@ require (
 	golang.org/x/sync v0.0.0-20200625203802-6e8e738ad208
 	golang.org/x/text v0.3.6
 	golang.org/x/tools v0.0.0-20200915173823-2db8f0ff891c
-	golang.org/x/vulndb v0.0.0-20210812203154-5d84be3c9e14
+	golang.org/x/vulndb v0.0.0-20210903204307-a74bfd4ac7eb
 	google.golang.org/api v0.32.0
 	google.golang.org/genproto v0.0.0-20200923140941-5646d36feee1
 	google.golang.org/grpc v1.32.0

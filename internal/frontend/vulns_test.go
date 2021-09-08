@@ -14,15 +14,16 @@ import (
 
 func TestVulns(t *testing.T) {
 	e := osv.Entry{
-		Package: osv.Package{Name: "bad.com"},
 		Details: "bad",
-		Affects: osv.Affects{
+		Affected: []osv.Affected{{
+			Package: osv.Package{Name: "bad.com"},
 			Ranges: []osv.AffectsRange{{
-				Type:  osv.TypeSemver,
-				Fixed: "1.2.3",
+				Type:   osv.TypeSemver,
+				Events: []osv.RangeEvent{{Introduced: "0"}, {Fixed: "1.2.3"}},
 			}},
-		},
+		}},
 	}
+
 	get := func(modulePath string) ([]*osv.Entry, error) {
 		switch modulePath {
 		case "good.com":
@@ -51,5 +52,13 @@ func TestVulns(t *testing.T) {
 	}}
 	if diff := cmp.Diff(want, got); diff != "" {
 		t.Errorf("mismatch (-want, +got):\n%s", diff)
+	}
+
+	got, err = Vulns("bad.com", "v1.3.0", "bad.com", get)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got != nil {
+		t.Errorf("got %v, want nil", got)
 	}
 }
