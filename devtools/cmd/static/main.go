@@ -22,9 +22,4 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	_, err = static.Build(static.Config{EntryPoint: "static/shared"})
-	if err != nil {
-		log.Fatal(err)
-	}
 }

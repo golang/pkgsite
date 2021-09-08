@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["tooltip.ts"],
-  "sourcesContent": ["/**\n * @license\n * Copyright 2021 The Go Authors. All rights reserved.\n * Use of this source code is governed by a BSD-style\n * license that can be found in the LICENSE file.\n */\n\n/**\n * ToolTipController handles closing tooltips on external clicks.\n */\nexport class ToolTipController {\n  constructor(private el: HTMLDetailsElement) {\n    document.addEventListener('click', e => {\n      const insideTooltip = this.el.contains(e.target as Element);\n      if (!insideTooltip) {\n        this.el.removeAttribute('open');\n      }\n    });\n  }\n}\n"],
-  "mappings": "AAAA;AAAA;AAAA;AAAA;AAAA;AAAA,GAUO,OAAwB,CAC7B,YAAoB,EAAwB,CAAxB,UAClB,SAAS,iBAAiB,QAAS,GAAK,CAEtC,AAAK,AADiB,KAAK,GAAG,SAAS,EAAE,SAEvC,KAAK,GAAG,gBAAgB",
-  "names": []
-}
