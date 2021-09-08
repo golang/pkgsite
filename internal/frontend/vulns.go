@@ -12,6 +12,8 @@ import (
 
 // A Vuln contains information to display about a vulnerability.
 type Vuln struct {
+	// The vulndb ID.
+	ID string
 	// A description of the vulnerability, or the problem in obtaining it.
 	Details string
 	// The version is which the vulnerability has been fixed.
@@ -62,6 +64,7 @@ func entryVuln(e *osv.Entry, packagePath, version string) (Vuln, bool) {
 				fixed = "v" + fixed
 			}
 			return Vuln{
+				ID:      e.ID,
 				Details: e.Details,
 				// TODO(golang/go#48223): handle stdlib versions
 				FixedVersion: fixed,

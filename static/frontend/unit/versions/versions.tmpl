@@ -78,6 +78,7 @@
         {{else}}
           <div class="Version-commitTime">
             {{$v.CommitTime}}{{if $v.Retracted}}<div><span class="go-Chip go-Chip--inverted">retracted</span></div>{{end}}
+            {{range $v.Vulns}}{{template "vuln" .}}{{end}}
           </div>
         {{end}}
       {{end}}
@@ -89,6 +90,7 @@
   <details class="Version-details js-versionDetails">
     <summary class="Version-summary">
       {{.CommitTime}}{{if .Retracted}}<div><span class="go-Chip go-Chip--inverted">retracted</span></div>{{end}}
+      {{range .Vulns}}{{template "vuln" .}}{{end}}
     </summary>
     <div class="Versions-symbols">
       <div class="Versions-symbolsHeader">Changes in this version</div>
@@ -127,4 +129,16 @@
       </span>
     {{end}}
   </div>
+{{end}}
+
+{{define "vuln"}}
+  <span class="go-Chip go-Chip--vuln">
+    <details class="go-Tooltip js-tooltip" data-gtmc="tooltip">
+      <summary class="go-textSubtle">
+	{{.ID}}
+	<img class="go-Icon" src="/static/shared/icon/help_gm_grey_24dp.svg" alt="" height="24" width="24">
+      </summary>
+      <p>{{.Details}}</p>
+    </details>
+  </span>
 {{end}}
