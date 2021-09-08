@@ -43,7 +43,8 @@ func (s *Server) serveSearch(w http.ResponseWriter, r *http.Request, ds internal
 	}
 
 	ctx := r.Context()
-	query, searchMode := searchQueryAndMode(r)
+	query := searchQuery(r)
+	mode := searchMode(r)
 	if !utf8.ValidString(query) {
 		return &serverError{status: http.StatusBadRequest}
 	}
@@ -85,12 +86,12 @@ func (s *Server) serveSearch(w http.ResponseWriter, r *http.Request, ds internal
 		return nil
 	}
 
-	page, err := fetchSearchPage(ctx, db, query, pageParams, searchMode == searchModeSymbol)
+	page, err := fetchSearchPage(ctx, db, query, pageParams, mode == searchModeSymbol)
 	if err != nil {
 		return fmt.Errorf("fetchSearchPage(ctx, db, %q): %v", query, err)
 	}
 	page.basePage = s.newBasePage(r, fmt.Sprintf("%s - Search Results", query))
-	page.SearchMode = searchMode
+	page.SearchMode = mode
 	if s.shouldServeJSON(r) {
 		return s.serveJSONPage(w, r, page)
 	}
@@ -179,6 +180,7 @@ func fetchSearchPage(ctx context.Context, db *postgres.DB, query string,
 	if experiment.IsActive(ctx, internal.ExperimentSearchGrouping) {
 		// When using search grouping, do pageless search: always start from the beginning.
 		offset = 0
+		query = strings.TrimLeft(query, symbolSearchFilter)
 	}
 	dbresults, err := db.Search(ctx, query, postgres.SearchOptions{
 		MaxResults:     pageParams.limit,
@@ -292,28 +294,31 @@ func searchRequestRedirectPath(ctx context.Context, ds internal.DataSource, quer
 	return fmt.Sprintf("/%s", requestedPath)
 }
 
-// searchQueryAndMode extracts a search query from the request. It also reports
-// whether the search performed should be in symbolSearch mode.
-// See TestSearchQuery for examples.
-func searchQueryAndMode(r *http.Request) (q, searchMode string) {
-	q = strings.TrimSpace(r.FormValue("q"))
+// searchMode reports whether the search performed should be in package or
+// symbol search mode.
+func searchMode(r *http.Request) string {
 	if !experiment.IsActive(r.Context(), internal.ExperimentSymbolSearch) {
-		return q, searchModePackage
+		return searchModePackage
 	}
+	q := searchQuery(r)
 	if strings.HasPrefix(q, symbolSearchFilter) {
-		return strings.TrimPrefix(q, symbolSearchFilter), searchModeSymbol
+		return searchModeSymbol
 	}
 	mode := strings.TrimSpace(r.FormValue("m"))
 	if mode == searchModePackage {
-		return q, searchModePackage
+		return searchModePackage
 	}
 	if mode == searchModeSymbol {
-		return q, searchModeSymbol
+		return searchModeSymbol
 	}
 	if shouldDefaultToSymbolSearch(q) {
-		return q, searchModeSymbol
+		return searchModeSymbol
 	}
-	return q, searchModePackage
+	return searchModePackage
+}
+
+func searchQuery(r *http.Request) string {
+	return strings.TrimSpace(r.FormValue("q"))
 }
 
 // shouldDefaultToSymbolSearch reports whether the symbol search mode should

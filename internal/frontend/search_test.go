@@ -24,34 +24,30 @@ import (
 
 func TestSearchQueryAndMode(t *testing.T) {
 	for _, test := range []struct {
-		name, m, q, wantQuery, wantSearchMode string
+		name, m, q, wantSearchMode string
 	}{
 		{
 			name:           "symbol: prefix in symbol mode",
 			m:              searchModeSymbol,
 			q:              "#foo",
-			wantQuery:      "foo",
 			wantSearchMode: searchModeSymbol,
 		},
 		{
 			name:           "symbol: prefix in package mode",
 			m:              searchModeSymbol,
 			q:              "#foo",
-			wantQuery:      "foo",
 			wantSearchMode: searchModeSymbol,
 		},
 		{
 			name:           "search in package mode",
 			m:              searchModePackage,
 			q:              "foo",
-			wantQuery:      "foo",
 			wantSearchMode: searchModePackage,
 		},
 		{
 			name:           "search in symbol mode",
 			m:              searchModeSymbol,
 			q:              "foo",
-			wantQuery:      "foo",
 			wantSearchMode: searchModeSymbol,
 		},
 	} {
@@ -59,10 +55,10 @@ func TestSearchQueryAndMode(t *testing.T) {
 			u := fmt.Sprintf("/search?q=%s&m=%s", test.q, test.m)
 			r := httptest.NewRequest("GET", u, nil)
 			r = r.WithContext(experiment.NewContext(r.Context(), internal.ExperimentSymbolSearch))
-			gotQuery, gotSearchMode := searchQueryAndMode(r)
-			if gotQuery != test.wantQuery || gotSearchMode != test.wantSearchMode {
-				t.Errorf("searchQueryAndMode(%q) = %q, %q; want = %q, %q", u, gotQuery, gotSearchMode,
-					test.wantQuery, test.wantSearchMode)
+			gotSearchMode := searchMode(r)
+			if gotSearchMode != test.wantSearchMode {
+				t.Errorf("searchQueryAndMode(%q) = %q; want = %q",
+					u, gotSearchMode, test.wantSearchMode)
 			}
 		})
 	}
