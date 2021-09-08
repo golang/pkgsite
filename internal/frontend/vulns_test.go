@@ -35,17 +35,11 @@ func TestVulns(t *testing.T) {
 		}
 	}
 
-	got, err := Vulns("good.com", "v1.0.0", "good.com", get)
-	if err != nil {
-		t.Fatal(err)
-	}
+	got := Vulns("good.com", "v1.0.0", "good.com", get)
 	if got != nil {
 		t.Errorf("got %v, want nil", got)
 	}
-	got, err = Vulns("bad.com", "v1.0.0", "bad.com", get)
-	if err != nil {
-		t.Fatal(err)
-	}
+	got = Vulns("bad.com", "v1.0.0", "bad.com", get)
 	want := []Vuln{{
 		Details:      "bad",
 		FixedVersion: "v1.2.3",
@@ -54,10 +48,7 @@ func TestVulns(t *testing.T) {
 		t.Errorf("mismatch (-want, +got):\n%s", diff)
 	}
 
-	got, err = Vulns("bad.com", "v1.3.0", "bad.com", get)
-	if err != nil {
-		t.Fatal(err)
-	}
+	got = Vulns("bad.com", "v1.3.0", "bad.com", get)
 	if got != nil {
 		t.Errorf("got %v, want nil", got)
 	}

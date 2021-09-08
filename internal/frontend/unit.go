@@ -210,13 +210,8 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 	}
 
 	// Get vulnerability information.
-	var vulns []Vuln
 	if s.getVulnEntries != nil && experiment.IsActive(ctx, internal.ExperimentVulns) {
-		vulns, err = Vulns(um.ModulePath, um.Version, um.Path, s.getVulnEntries)
-		if err != nil {
-			vulns = []Vuln{{Details: fmt.Sprintf("could not get vulnerability data: %v", err)}}
-		}
-		page.Vulns = vulns
+		page.Vulns = Vulns(um.ModulePath, um.Version, um.Path, s.getVulnEntries)
 	}
 	s.servePage(ctx, w, tabSettings.TemplateName, page)
 	return nil

@@ -5,6 +5,8 @@
 package frontend
 
 import (
+	"fmt"
+
 	"golang.org/x/mod/semver"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/vulndb/osv"
@@ -26,8 +28,17 @@ type vulnEntriesFunc func(string) ([]*osv.Entry, error)
 // If packagePath is empty, it returns all entries for the module at version.
 // The getVulnEntries function should retrieve all entries for the given module path.
 // It is passed to facilitate testing.
-func Vulns(modulePath, version, packagePath string, getVulnEntries vulnEntriesFunc) (_ []Vuln, err error) {
-	defer derrors.Wrap(&err, "Vulns(%q, %q, %q)", modulePath, version, packagePath)
+// If there is an error, Vulns returns a single Vuln that describes the error.
+func Vulns(modulePath, version, packagePath string, getVulnEntries vulnEntriesFunc) []Vuln {
+	vs, err := vulns(modulePath, version, packagePath, getVulnEntries)
+	if err != nil {
+		return []Vuln{{Details: fmt.Sprintf("could not get vulnerability data: %v", err)}}
+	}
+	return vs
+}
+
+func vulns(modulePath, version, packagePath string, getVulnEntries vulnEntriesFunc) (_ []Vuln, err error) {
+	defer derrors.Wrap(&err, "vulns(%q, %q, %q)", modulePath, version, packagePath)
 
 	// Get all the vulns for this module.
 	entries, err := getVulnEntries(modulePath)
