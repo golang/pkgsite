@@ -52,7 +52,9 @@
           <a class="Homepage-exampleSearch" href="/search?q=http">“http”</a>
           <a class="Homepage-exampleSearch" href="/search?q=command">“command”</a>
           {{if .Experiments.IsActive "symbol-search"}}
-            <a class="Homepage-exampleSearch" href="/search?q=sql.DB&m={{.SearchModeSymbol}}">“{{.SearchModeSymbol}}:sql.DB”</a>
+            <a class="Homepage-exampleSearch" href="/search?q=Unmarshal">“Unmarshal”</a>
+            <a class="Homepage-exampleSearch" href="/search?q=sql.DB">“sql.DB”</a>
+            <a class="Homepage-exampleSearch" href="/search?q=%23error+golang.org%2Fx">“#error golang.org/x”</a>
           {{else}}
             <a class="Homepage-exampleSearch" href="/search?q=yaml+OR+json+OR+xml">“yaml OR json OR xml”</a>
           {{end}}
