@@ -98,7 +98,7 @@ func fetchImportedByDetails(ctx context.Context, ds internal.DataSource, pkgPath
 	db, ok := ds.(*postgres.DB)
 	if !ok {
 		// The proxydatasource does not support the imported by page.
-		return nil, proxydatasourceNotSupportedErr()
+		return nil, datasourceNotSupportedErr()
 	}
 
 	importedBy, err := db.GetImportedBy(ctx, pkgPath, modulePath, importedByLimit)

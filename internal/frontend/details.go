@@ -99,12 +99,12 @@ func invalidVersionError(fullPath, requestedVersion string) error {
 	}
 }
 
-func proxydatasourceNotSupportedErr() error {
+func datasourceNotSupportedErr() error {
 	return &serverError{
 		status: http.StatusFailedDependency,
 		epage: &errorPage{
 			messageTemplate: template.MakeTrustedTemplate(
-				`<h3 class="Error-message">This page is not supported by the proxydatasource.</h3>`),
+				`<h3 class="Error-message">This page is not supported by this datasource.</h3>`),
 		},
 	}
 }

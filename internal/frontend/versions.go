@@ -89,7 +89,7 @@ func fetchVersionsDetails(ctx context.Context, ds internal.DataSource, um *inter
 	db, ok := ds.(*postgres.DB)
 	if !ok {
 		// The proxydatasource does not support the imported by page.
-		return nil, proxydatasourceNotSupportedErr()
+		return nil, datasourceNotSupportedErr()
 	}
 	versions, err := db.GetVersionsForPath(ctx, um.Path)
 	if err != nil {

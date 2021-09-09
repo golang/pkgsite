@@ -49,7 +49,7 @@ func (s *Server) servePathNotFoundPage(w http.ResponseWriter, r *http.Request,
 
 	db, ok := ds.(*postgres.DB)
 	if !ok {
-		return proxydatasourceNotSupportedErr()
+		return datasourceNotSupportedErr()
 	}
 	ctx := r.Context()
 

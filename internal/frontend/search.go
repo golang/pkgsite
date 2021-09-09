@@ -40,7 +40,7 @@ func (s *Server) serveSearch(w http.ResponseWriter, r *http.Request, ds internal
 	db, ok := ds.(*postgres.DB)
 	if !ok {
 		// The proxydatasource does not support the imported by page.
-		return proxydatasourceNotSupportedErr()
+		return datasourceNotSupportedErr()
 	}
 
 	ctx := r.Context()

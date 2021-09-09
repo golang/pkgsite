@@ -94,7 +94,7 @@ func (s *Server) serveFetch(w http.ResponseWriter, r *http.Request, ds internal.
 	defer derrors.Wrap(&err, "serveFetch(%q)", r.URL.Path)
 	if _, ok := ds.(*postgres.DB); !ok {
 		// There's no reason for the proxydatasource to need this codepath.
-		return proxydatasourceNotSupportedErr()
+		return datasourceNotSupportedErr()
 	}
 	if r.Method != http.MethodPost {
 		// If a user makes a GET request, treat this as a request for the
