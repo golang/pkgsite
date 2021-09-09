@@ -402,7 +402,7 @@ func TestFetchAndUpdateStateCacheZip(t *testing.T) {
 	defer teardownProxy()
 
 	// With a plain proxy, we download the zip twice.
-	f := &Fetcher{proxyClient, source.NewClient(sourceTimeout), testDB, nil, nil}
+	f := &Fetcher{proxyClient, source.NewClient(sourceTimeout), testDB, nil, nil, ""}
 	if _, _, err := f.FetchAndUpdateState(ctx, "m.com", "v1.0.0", testAppVersion); err != nil {
 		t.Fatal(err)
 	}

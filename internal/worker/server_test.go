@@ -179,7 +179,7 @@ func TestWorker(t *testing.T) {
 			proxyClient, teardownProxy := proxytest.SetupTestClient(t, test.proxy)
 			defer teardownProxy()
 			defer postgres.ResetTestDB(testDB, t)
-			f := &Fetcher{proxyClient, source.NewClient(sourceTimeout), testDB, nil, nil}
+			f := &Fetcher{proxyClient, source.NewClient(sourceTimeout), testDB, nil, nil, ""}
 
 			// Use 10 workers to have parallelism consistent with the worker binary.
 			q := queue.NewInMemory(ctx, 10, nil, func(ctx context.Context, mpath, version string) (int, error) {

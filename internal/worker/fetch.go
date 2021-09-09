@@ -99,6 +99,7 @@ type Fetcher struct {
 	DB           *postgres.DB
 	Cache        *cache.Cache
 	loadShedder  *loadShedder
+	Source       string
 }
 
 // FetchAndUpdateState fetches and processes a module version, and then updates

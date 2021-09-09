@@ -152,6 +152,10 @@ type Options struct {
 	// Suffix is used to force reprocessing of tasks that would normally be
 	// de-duplicated. It is appended to the task name.
 	Suffix string
+
+	// Source is the source that requested the task to be queued. It is
+	// either "frontend" or the empty string if it is the worker.
+	Source string
 }
 
 // Maximum timeout for HTTP tasks.
@@ -161,14 +165,24 @@ const maxCloudTasksTimeout = 30 * time.Minute
 const (
 	DisableProxyFetchParam = "proxyfetch"
 	DisableProxyFetchValue = "off"
+	SourceParam            = "source"
+	SourceFrontendValue    = "frontend"
 )
 
 func (q *GCP) newTaskRequest(modulePath, version string, opts *Options) *taskspb.CreateTaskRequest {
 	taskID := newTaskID(modulePath, version)
 	relativeURI := fmt.Sprintf("/fetch/%s/@v/%s", modulePath, version)
-	if opts.DisableProxyFetch {
-		relativeURI += fmt.Sprintf("?%s=%s", DisableProxyFetchParam, DisableProxyFetchValue)
+	var params []string
+	if opts.Source != "" {
+		params = append(params, fmt.Sprintf("%s=%s", SourceParam, opts.Source))
 	}
+	if opts.DisableProxyFetch {
+		params = append(params, fmt.Sprintf("%s=%s", DisableProxyFetchParam, DisableProxyFetchValue))
+	}
+	if len(params) > 0 {
+		relativeURI += fmt.Sprintf("?%s", strings.Join(params, "&"))
+	}
+
 	task := &taskspb.Task{
 		Name:             fmt.Sprintf("%s/tasks/%s", q.queueName, taskID),
 		DispatchDeadline: ptypes.DurationProto(maxCloudTasksTimeout),

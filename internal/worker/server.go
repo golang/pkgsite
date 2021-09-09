@@ -322,6 +322,9 @@ func (s *Server) doFetch(w http.ResponseWriter, r *http.Request) (string, int) {
 	if r.FormValue(queue.DisableProxyFetchParam) == queue.DisableProxyFetchValue {
 		f.ProxyClient = f.ProxyClient.WithFetchDisabled()
 	}
+	if r.FormValue(queue.SourceParam) == queue.SourceFrontendValue {
+		f.Source = queue.SourceFrontendValue
+	}
 	code, resolvedVersion, err := f.FetchAndUpdateState(ctx, modulePath, requestedVersion, s.cfg.AppVersionLabel())
 	if code == http.StatusInternalServerError {
 		s.reportError(ctx, err, w, r)

@@ -27,6 +27,7 @@ import (
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/proxy"
+	"golang.org/x/pkgsite/internal/queue"
 	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/version"
@@ -196,7 +197,8 @@ func (s *Server) checkPossibleModulePaths(ctx context.Context, db *postgres.DB,
 
 			// A row for this modulePath and requestedVersion combination does not
 			// exist in version_map. Enqueue the module version to be fetched.
-			if _, err := s.queue.ScheduleFetch(ctx, modulePath, requestedVersion, nil); err != nil {
+			opts := &queue.Options{Source: queue.SourceFrontendValue}
+			if _, err := s.queue.ScheduleFetch(ctx, modulePath, requestedVersion, opts); err != nil {
 				fr.err = err
 				fr.status = http.StatusInternalServerError
 			}
