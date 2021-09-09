@@ -95,6 +95,7 @@
 {{define "search_package_results"}}
   <div>
     {{$query := .Query}}
+    {{$vulnsActive := (.Experiments.IsActive "vulns")}}
     {{range $i, $v := .Results}}
       {{$moreLink := eq $i (subtract $.Pagination.DefaultLimit 1)}}
       <div class="SearchSnippet" {{if $moreLink}}id="more-results"{{end}}>
@@ -107,6 +108,9 @@
             </a>
           </h2>
           {{with $v.ChipText}}<span class="go-Chip go-Chip--inverted">{{.}}</span>{{end}}
+          {{if $vulnsActive}}
+            {{range $v.Vulns}}{{template "vuln" .}}{{end}}
+          {{end}}
         </div>
         {{with $v.Synopsis}}
           <p class="SearchSnippet-synopsis" data-test-id="snippet-synopsis">

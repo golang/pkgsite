@@ -130,15 +130,3 @@
     {{end}}
   </div>
 {{end}}
-
-{{define "vuln"}}
-  <span class="go-Chip go-Chip--vuln">
-    <details class="go-Tooltip js-tooltip" data-gtmc="tooltip">
-      <summary class="go-textSubtle">
-	{{.ID}}
-	<img class="go-Icon" src="/static/shared/icon/help_gm_grey_24dp.svg" alt="" height="24" width="24">
-      </summary>
-      <p>{{.Details}}</p>
-    </details>
-  </span>
-{{end}}
