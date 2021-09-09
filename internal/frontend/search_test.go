@@ -20,6 +20,7 @@ import (
 	"golang.org/x/pkgsite/internal/testing/sample"
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
+	"golang.org/x/vulndb/osv"
 )
 
 func TestSearchQueryAndMode(t *testing.T) {
@@ -68,6 +69,8 @@ func TestFetchSearchPage(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 	defer postgres.ResetTestDB(testDB, t)
+
+	ctx = experiment.NewContext(ctx, internal.ExperimentVulns)
 
 	var (
 		now       = sample.NowTruncated()
@@ -139,7 +142,27 @@ func TestFetchSearchPage(t *testing.T) {
 				},
 			},
 		}
+
+		vulnEntries = []*osv.Entry{{
+			ID:      "test",
+			Details: "vuln",
+			Affected: []osv.Affected{{
+				Package: osv.Package{Name: "github.com/mod/foo"},
+				Ranges: []osv.AffectsRange{{
+					Type:   osv.TypeSemver,
+					Events: []osv.RangeEvent{{Introduced: "1.0.0"}, {Fixed: "1.9.0"}},
+				}},
+			}},
+		}}
+
+		getVulnEntries = func(modulePath string) ([]*osv.Entry, error) {
+			if modulePath == moduleFoo.ModulePath {
+				return vulnEntries, nil
+			}
+			return nil, nil
+		}
 	)
+
 	for _, m := range []*internal.Module{moduleFoo, moduleBar} {
 		postgres.MustInsertModule(ctx, t, testDB, m)
 	}
@@ -169,6 +192,7 @@ func TestFetchSearchPage(t *testing.T) {
 						Name:           moduleBar.Packages()[0].Name,
 						PackagePath:    moduleBar.Packages()[0].Path,
 						ModulePath:     moduleBar.ModulePath,
+						Version:        "v1.0.0",
 						Synopsis:       moduleBar.Packages()[0].Documentation[0].Synopsis,
 						DisplayVersion: moduleBar.Version,
 						Licenses:       []string{"MIT"},
@@ -197,17 +221,19 @@ func TestFetchSearchPage(t *testing.T) {
 						Name:           moduleFoo.Packages()[0].Name,
 						PackagePath:    moduleFoo.Packages()[0].Path,
 						ModulePath:     moduleFoo.ModulePath,
+						Version:        "v1.0.0",
 						Synopsis:       moduleFoo.Packages()[0].Documentation[0].Synopsis,
 						DisplayVersion: moduleFoo.Version,
 						Licenses:       []string{"MIT"},
 						CommitTime:     elapsedTime(moduleFoo.CommitTime),
+						Vulns:          []Vuln{{ID: "test", Details: "vuln", FixedVersion: "v1.9.0"}},
 					},
 				},
 			},
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			got, err := fetchSearchPage(ctx, testDB, test.query, "", paginationParams{limit: 20, page: 1}, false)
+			got, err := fetchSearchPage(ctx, testDB, test.query, "", paginationParams{limit: 20, page: 1}, false, getVulnEntries)
 			if err != nil {
 				t.Fatalf("fetchSearchPage(db, %q): %v", test.query, err)
 			}
@@ -246,6 +272,7 @@ func TestNewSearchResult(t *testing.T) {
 				Name:           "pkg",
 				PackagePath:    "m.com/pkg",
 				ModulePath:     "m.com",
+				Version:        "v1.0.0",
 				DisplayVersion: "v1.0.0",
 				NumImportedBy:  "3",
 			},
@@ -264,6 +291,7 @@ func TestNewSearchResult(t *testing.T) {
 				Name:           "cmd",
 				PackagePath:    "m.com/cmd",
 				ModulePath:     "m.com",
+				Version:        "v1.0.0",
 				DisplayVersion: "v1.0.0",
 				ChipText:       "command",
 				NumImportedBy:  "1,234",
@@ -282,6 +310,7 @@ func TestNewSearchResult(t *testing.T) {
 				Name:           "math",
 				PackagePath:    "math",
 				ModulePath:     "std",
+				Version:        "v1.14.0",
 				DisplayVersion: "go1.14",
 				ChipText:       "standard library",
 				NumImportedBy:  "0",
@@ -301,6 +330,7 @@ func TestNewSearchResult(t *testing.T) {
 				Name:           "pkg",
 				PackagePath:    "m.com/pkg",
 				ModulePath:     "m.com",
+				Version:        "v1.0.0",
 				DisplayVersion: "v1.0.0",
 				NumImportedBy:  "3.456",
 			},

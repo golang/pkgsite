@@ -12,6 +12,7 @@ import (
 	"path"
 	"sort"
 	"strings"
+	"sync"
 	"time"
 	"unicode"
 	"unicode/utf8"
@@ -98,7 +99,7 @@ func (s *Server) serveSearch(w http.ResponseWriter, r *http.Request, ds internal
 		symbol = filters[0]
 	}
 	mode := searchMode(r)
-	page, err := fetchSearchPage(ctx, db, query, symbol, pageParams, mode == searchModeSymbol)
+	page, err := fetchSearchPage(ctx, db, query, symbol, pageParams, mode == searchModeSymbol, s.getVulnEntries)
 	if err != nil {
 		return fmt.Errorf("fetchSearchPage(ctx, db, %q): %v", query, err)
 	}
@@ -160,6 +161,7 @@ type SearchResult struct {
 	Name           string
 	PackagePath    string
 	ModulePath     string
+	Version        string
 	ChipText       string
 	Synopsis       string
 	DisplayVersion string
@@ -175,6 +177,7 @@ type SearchResult struct {
 	SymbolGOOS     string
 	SymbolGOARCH   string
 	SymbolLink     string
+	Vulns          []Vuln
 }
 
 type subResult struct {
@@ -185,7 +188,7 @@ type subResult struct {
 // fetchSearchPage fetches data matching the search query from the database and
 // returns a SearchPage.
 func fetchSearchPage(ctx context.Context, db *postgres.DB, query, symbol string,
-	pageParams paginationParams, searchSymbols bool) (*SearchPage, error) {
+	pageParams paginationParams, searchSymbols bool, getVulnEntries vulnEntriesFunc) (*SearchPage, error) {
 	maxResultCount := maxSearchOffset + pageParams.limit
 
 	offset := pageParams.offset()
@@ -208,6 +211,10 @@ func fetchSearchPage(ctx context.Context, db *postgres.DB, query, symbol string,
 	for _, r := range dbresults {
 		sr := newSearchResult(r, searchSymbols, message.NewPrinter(middleware.LanguageTag(ctx)))
 		results = append(results, sr)
+	}
+
+	if getVulnEntries != nil && experiment.IsActive(ctx, internal.ExperimentVulns) {
+		addVulns(results, getVulnEntries)
 	}
 
 	var numResults int
@@ -250,6 +257,7 @@ func newSearchResult(r *postgres.SearchResult, searchSymbols bool, pr *message.P
 		Name:           name,
 		PackagePath:    r.PackagePath,
 		ModulePath:     r.ModulePath,
+		Version:        r.Version,
 		ChipText:       chipText,
 		Synopsis:       r.Synopsis,
 		DisplayVersion: displayVersion(r.ModulePath, r.Version, r.Version),
@@ -467,4 +475,22 @@ func elapsedTime(date time.Time) string {
 	}
 
 	return absoluteTime(date)
+}
+
+// addVulns adds vulnerability information to search results by consulting the
+// vulnerability database.
+func addVulns(rs []*SearchResult, getVulnEntries vulnEntriesFunc) {
+	// Get all vulns concurrently.
+	var wg sync.WaitGroup
+	// TODO(golang/go#48223): throttle concurrency?
+	for _, r := range rs {
+		r := r
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			r.Vulns = Vulns(r.ModulePath, r.Version, r.PackagePath, getVulnEntries)
+		}()
+	}
+	wg.Wait()
+
 }
