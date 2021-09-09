@@ -497,10 +497,7 @@ func insertUnits(ctx context.Context, db *database.DB, unitValues []interface{})
 			pathIDToUnitID[pathID] = unitID
 			return nil
 		}); err != nil {
-		log.Errorf(ctx, "got error doing bulk upsert to units (see below); logging path_id, module_id for golang.org/issue/43899")
-		for i := 0; i < len(unitValues); i += len(unitCols) {
-			log.Errorf(ctx, "%v, %v", unitValues[i], unitValues[i+1])
-		}
+		log.Errorf(ctx, "got error doing bulk upsert to units (see below); logging one path_id, module_id for golang.org/issue/43899: %v, %v", unitValues[0], unitValues[1])
 		return nil, err
 	}
 	return pathIDToUnitID, nil
