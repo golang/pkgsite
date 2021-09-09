@@ -143,8 +143,8 @@ func TestUpsertSymbolSearch_UniqueConstraints(t *testing.T) {
 
 func TestMultiwordSearchCombinations(t *testing.T) {
 	for _, test := range []struct {
-		q    string
-		want map[string]string
+		q, filter string
+		want      map[string]string
 	}{
 		{
 			q: "github.com foo",
@@ -187,9 +187,16 @@ func TestMultiwordSearchCombinations(t *testing.T) {
 			q:    "bee beego cmd command",
 			want: nil,
 		},
+		{
+			q:      "bee beego cmd command",
+			filter: "command",
+			want: map[string]string{
+				"command": "bee & beego & cmd",
+			},
+		},
 	} {
 		t.Run(test.q, func(t *testing.T) {
-			got := multiwordSearchCombinations(test.q)
+			got := multiwordSearchCombinations(test.q, test.filter)
 			if diff := cmp.Diff(test.want, got); diff != "" {
 				t.Errorf("mismatch (-want +got):\n%s", diff)
 			}

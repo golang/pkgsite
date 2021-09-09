@@ -109,7 +109,7 @@ func (db *DB) symbolSearch(ctx context.Context, q string, limit int, opts Search
 	case symbolsearch.InputTypeOneDot:
 		results, err = runSymbolSearchOneDot(ctx, db.db, q, limit)
 	case symbolsearch.InputTypeMultiWord:
-		results, err = runSymbolSearchMultiWord(ctx, db.db, q, limit)
+		results, err = runSymbolSearchMultiWord(ctx, db.db, q, limit, opts.SymbolFilter)
 	case symbolsearch.InputTypeNoDot:
 		results, err = runSymbolSearch(ctx, db.db, symbolsearch.SearchTypeSymbol, q, limit)
 	case symbolsearch.InputTypeTwoDots:
@@ -152,11 +152,13 @@ func (db *DB) symbolSearch(ctx context.Context, q string, limit int, opts Search
 }
 
 // runSymbolSearchMultiWord executes a symbol search for SearchTypeMultiWord.
-func runSymbolSearchMultiWord(ctx context.Context, ddb *database.DB, q string, limit int) (_ []*SearchResult, err error) {
-	defer derrors.Wrap(&err, "runSymbolSearchMultiWord(ctx, ddb, query, %q, %d)", q, limit)
+func runSymbolSearchMultiWord(ctx context.Context, ddb *database.DB, q string, limit int,
+	symbolFilter string) (_ []*SearchResult, err error) {
+	defer derrors.Wrap(&err, "runSymbolSearchMultiWord(ctx, ddb, query, %q, %d, %q)",
+		q, limit, symbolFilter)
 	defer middleware.ElapsedStat(ctx, "runSymbolSearchMultiWord")()
 
-	symbolToPathTokens := multiwordSearchCombinations(q)
+	symbolToPathTokens := multiwordSearchCombinations(q, symbolFilter)
 	if len(symbolToPathTokens) == 0 {
 		// There are no words in the query that could be a symbol name.
 		return nil, derrors.NotFound
@@ -219,12 +221,17 @@ func mergedResults(resultsArray [][]*SearchResult, limit int) []*SearchResult {
 // It is assumed that the symbol name is always 1 word. For example, if the
 // user wants sql.DB.Begin, "sql DB.Begin", "sql Begin", or "sql DB" will all
 // be return the relevant result, but "sql DB Begin" will not.
-func multiwordSearchCombinations(q string) map[string]string {
+func multiwordSearchCombinations(q, symbolFilter string) map[string]string {
 	words := strings.Fields(q)
 	symbolToPathTokens := map[string]string{}
 	for i, w := range words {
 		// Is this word a possible symbol name? If not, continue.
 		if strings.Contains(w, "/") || strings.Contains(w, "-") || commonHostnames[w] {
+			continue
+		}
+		// A symbolFilter was used, and this word does not match match it, so
+		// it can't be the symbol name.
+		if symbolFilter != "" && w != symbolFilter {
 			continue
 		}
 		// If it is, try search for this word assuming it is the symbol name
