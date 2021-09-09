@@ -10,7 +10,7 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"path"
+	"regexp"
 	"testing"
 	"time"
 
@@ -445,13 +445,13 @@ func TestLocalGetUnitMeta(t *testing.T) {
 				if got.SourceInfo != nil {
 					gotURL = got.SourceInfo.RepoURL()
 				}
-				wantURL := "/files/*/*/github.com/my/module/"
-				m, err := path.Match(wantURL, gotURL)
+				const wantRegexp = "^/files/.*/github.com/my/module/$"
+				matched, err := regexp.MatchString(wantRegexp, gotURL)
 				if err != nil {
 					t.Fatal(err)
 				}
-				if !m {
-					t.Errorf("RepoURL: got %q, want match of %q", gotURL, wantURL)
+				if !matched {
+					t.Errorf("RepoURL: got %q, want match of %q", gotURL, wantRegexp)
 				}
 				diff := cmp.Diff(test.want, got, cmp.AllowUnexported(source.Info{}), cmpopts.IgnoreFields(source.Info{}, "repoURL"))
 				if diff != "" {
