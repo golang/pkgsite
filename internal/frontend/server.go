@@ -156,6 +156,7 @@ func (s *Server) Install(handle func(string, http.Handler), redisClient *redis.C
 	}))
 	handle("/golang.org/x", s.staticPageHandler("subrepo", "Sub-repositories"))
 	handle("/files/", http.StripPrefix("/files", s.fileMux))
+	handle("/vuln/", http.StripPrefix("/vuln", s.errorHandler(s.serveVuln)))
 	handle("/", detailHandler)
 	if s.serveStats {
 		handle("/detail-stats/",

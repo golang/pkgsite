@@ -6,8 +6,11 @@ package frontend
 
 import (
 	"fmt"
+	"net/http"
+	"path"
 
 	"golang.org/x/mod/semver"
+	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/vulndb/osv"
 )
@@ -83,4 +86,20 @@ func entryVuln(e *osv.Entry, packagePath, version string) (Vuln, bool) {
 		}
 	}
 	return Vuln{}, false
+}
+
+const vulndbURL = "https://go.googlesource.com/vulndb/+/refs/heads/master/reports/"
+
+func (s *Server) serveVuln(w http.ResponseWriter, r *http.Request, _ internal.DataSource) error {
+	if r.URL.Path == "/" {
+		http.Redirect(w, r, "/golang.org/x/vulndb", http.StatusFound)
+		return nil
+	}
+	if r.URL.Path == "/list" {
+		http.Redirect(w, r, vulndbURL, http.StatusFound)
+		return nil
+	}
+	// Otherwise, the path should be "/ID".
+	http.Redirect(w, r, path.Join(vulndbURL, r.URL.Path+".yaml"), http.StatusFound)
+	return nil
 }
