@@ -78,7 +78,7 @@
         {{else}}
           <div class="Version-commitTime">
             {{$v.CommitTime}}{{if $v.Retracted}}<div><span class="go-Chip go-Chip--inverted">retracted</span></div>{{end}}
-            {{range $v.Vulns}}{{template "vuln" .}}{{end}}
+            {{range $v.Vulns}}<div>{{template "vuln" .}}</div>{{end}}
           </div>
         {{end}}
       {{end}}
