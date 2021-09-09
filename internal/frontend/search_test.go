@@ -176,6 +176,7 @@ func TestFetchSearchPage(t *testing.T) {
 			name:  "want expected search page",
 			query: "foo bar",
 			wantSearchPage: &SearchPage{
+				PackageTabQuery: "foo bar",
 				Pagination: pagination{
 					TotalCount:   1,
 					ResultCount:  1,
@@ -205,6 +206,7 @@ func TestFetchSearchPage(t *testing.T) {
 			name:  "want only foo search page",
 			query: "package",
 			wantSearchPage: &SearchPage{
+				PackageTabQuery: "package",
 				Pagination: pagination{
 					TotalCount:   1,
 					ResultCount:  1,

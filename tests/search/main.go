@@ -117,6 +117,9 @@ func runTest(client *frontend.Client, st *searchTest) (output []string, err erro
 		return nil, err
 	}
 	gotResults := searchPage.Results
+	if strings.ContainsAny(searchPage.PackageTabQuery, "#") {
+		output = append(output, "invalid package tab query, should not contain #: %q", searchPage.PackageTabQuery)
+	}
 	for i, want := range st.results {
 		got := &frontend.SearchResult{}
 		if len(gotResults) > i {

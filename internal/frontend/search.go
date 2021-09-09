@@ -44,8 +44,8 @@ func (s *Server) serveSearch(w http.ResponseWriter, r *http.Request, ds internal
 	}
 
 	ctx := r.Context()
-	query, filters := searchQueryAndFilters(r)
-	if !utf8.ValidString(query) {
+	cq, filters := searchQueryAndFilters(r)
+	if !utf8.ValidString(cq) {
 		return &serverError{status: http.StatusBadRequest}
 	}
 	if len(filters) > 1 {
@@ -57,7 +57,7 @@ func (s *Server) serveSearch(w http.ResponseWriter, r *http.Request, ds internal
 			},
 		}
 	}
-	if len(query) > maxSearchQueryLength {
+	if len(cq) > maxSearchQueryLength {
 		return &serverError{
 			status: http.StatusBadRequest,
 			epage: &errorPage{
@@ -66,7 +66,7 @@ func (s *Server) serveSearch(w http.ResponseWriter, r *http.Request, ds internal
 			},
 		}
 	}
-	if query == "" {
+	if cq == "" {
 		http.Redirect(w, r, "/", http.StatusFound)
 		return nil
 	}
@@ -89,7 +89,7 @@ func (s *Server) serveSearch(w http.ResponseWriter, r *http.Request, ds internal
 			},
 		}
 	}
-	if path := searchRequestRedirectPath(ctx, ds, query); path != "" {
+	if path := searchRequestRedirectPath(ctx, ds, cq); path != "" {
 		http.Redirect(w, r, path, http.StatusFound)
 		return nil
 	}
@@ -99,11 +99,11 @@ func (s *Server) serveSearch(w http.ResponseWriter, r *http.Request, ds internal
 		symbol = filters[0]
 	}
 	mode := searchMode(r)
-	page, err := fetchSearchPage(ctx, db, query, symbol, pageParams, mode == searchModeSymbol, s.getVulnEntries)
+	page, err := fetchSearchPage(ctx, db, cq, symbol, pageParams, mode == searchModeSymbol, s.getVulnEntries)
 	if err != nil {
-		return fmt.Errorf("fetchSearchPage(ctx, db, %q): %v", query, err)
+		return fmt.Errorf("fetchSearchPage(ctx, db, %q): %v", cq, err)
 	}
-	page.basePage = s.newBasePage(r, fmt.Sprintf("%s - Search Results", query))
+	page.basePage = s.newBasePage(r, fmt.Sprintf("%s - Search Results", cq))
 	page.SearchMode = mode
 	if s.shouldServeJSON(r) {
 		return s.serveJSONPage(w, r, page)
@@ -152,6 +152,11 @@ const (
 // populate.
 type SearchPage struct {
 	basePage
+
+	// PackageTabQuery is the search query, stripped of any filters.
+	// This is used if the user clicks on the package tab.
+	PackageTabQuery string
+
 	Pagination pagination
 	Results    []*SearchResult
 }
@@ -187,7 +192,7 @@ type subResult struct {
 
 // fetchSearchPage fetches data matching the search query from the database and
 // returns a SearchPage.
-func fetchSearchPage(ctx context.Context, db *postgres.DB, query, symbol string,
+func fetchSearchPage(ctx context.Context, db *postgres.DB, cq, symbol string,
 	pageParams paginationParams, searchSymbols bool, getVulnEntries vulnEntriesFunc) (*SearchPage, error) {
 	maxResultCount := maxSearchOffset + pageParams.limit
 
@@ -196,7 +201,7 @@ func fetchSearchPage(ctx context.Context, db *postgres.DB, query, symbol string,
 		// When using search grouping, do pageless search: always start from the beginning.
 		offset = 0
 	}
-	dbresults, err := db.Search(ctx, query, postgres.SearchOptions{
+	dbresults, err := db.Search(ctx, cq, postgres.SearchOptions{
 		MaxResults:     pageParams.limit,
 		Offset:         offset,
 		MaxResultCount: maxResultCount,
@@ -234,8 +239,9 @@ func fetchSearchPage(ctx context.Context, db *postgres.DB, query, symbol string,
 
 	pgs := newPagination(pageParams, numPageResults, numResults)
 	sp := &SearchPage{
-		Results:    results,
-		Pagination: pgs,
+		PackageTabQuery: cq,
+		Results:         results,
+		Pagination:      pgs,
 	}
 	return sp, nil
 }

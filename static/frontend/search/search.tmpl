@@ -193,8 +193,12 @@
   <div>
     <nav class="go-TabNav">
       <ul>
-        <li {{if not (eq .SearchMode .SearchModeSymbol)}}aria-current="page"{{end}}><a href="{{.Pagination.URL .Pagination.Limit .SearchModePackage .Query}}">Packages</a></li>
-        <li {{if eq .SearchMode .SearchModeSymbol}}aria-current="page"{{end}}><a href="{{.Pagination.URL .Pagination.Limit .SearchModeSymbol .Query}}">Symbols</a></li>
+        <li {{if not (eq .SearchMode .SearchModeSymbol)}}aria-current="page"{{end}}>
+          <a href="{{.Pagination.URL .Pagination.Limit .SearchModePackage .PackageTabQuery}}">Packages</a>
+        </li>
+        <li {{if eq .SearchMode .SearchModeSymbol}}aria-current="page"{{end}}>
+          <a href="{{.Pagination.URL .Pagination.Limit .SearchModeSymbol .Query}}">Symbols</a>
+        </li>
       </ul>
       <hr />
     </nav>
