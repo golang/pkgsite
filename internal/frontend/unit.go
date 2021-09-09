@@ -143,7 +143,7 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 			ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
 			defer cancel()
 			log.Infof(ctx, "serveUnitPage: Scheduling %q@%q to be fetched", um.ModulePath, info.requestedVersion)
-			if _, err := s.queue.ScheduleFetch(ctx, um.ModulePath, info.requestedVersion, "", false); err != nil {
+			if _, err := s.queue.ScheduleFetch(ctx, um.ModulePath, info.requestedVersion, nil); err != nil {
 				log.Errorf(ctx, "serveUnitPage(%q): scheduling fetch for %q@%q: %v",
 					r.URL.Path, um.ModulePath, info.requestedVersion, err)
 			}

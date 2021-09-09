@@ -440,11 +440,14 @@ func (s *Server) handleEnqueue(w http.ResponseWriter, r *http.Request) (err erro
 	sem := make(chan struct{}, concurrentEnqueues)
 	for _, m := range modules {
 		m := m
+		opts := queue.Options{
+			Suffix:            suffixParam,
+			DisableProxyFetch: shouldDisableProxyFetch(m),
+		}
 		sem <- struct{}{}
 		go func() {
 			defer func() { <-sem }()
-			enqueued, err := s.queue.ScheduleFetch(ctx, m.ModulePath, m.Version, suffixParam,
-				shouldDisableProxyFetch(m))
+			enqueued, err := s.queue.ScheduleFetch(ctx, m.ModulePath, m.Version, &opts)
 			mu.Lock()
 			if err != nil {
 				log.Errorf(ctx, "enqueuing: %v", err)
@@ -492,7 +495,7 @@ func (s *Server) handleFetchStdSupportedBranches(w http.ResponseWriter, r *http.
 			return err
 		}
 		if vm.ResolvedVersion != resolvedVersion {
-			if _, err := s.queue.ScheduleFetch(r.Context(), stdlib.ModulePath, requestedVersion, "", false); err != nil {
+			if _, err := s.queue.ScheduleFetch(r.Context(), stdlib.ModulePath, requestedVersion, nil); err != nil {
 				return fmt.Errorf("error scheduling fetch for %s: %w", requestedVersion, err)
 			}
 		}
@@ -517,7 +520,10 @@ func (s *Server) doPopulateStdLib(ctx context.Context, suffix string) (string, e
 		return "", err
 	}
 	for _, v := range versions {
-		if _, err := s.queue.ScheduleFetch(ctx, stdlib.ModulePath, v, suffix, false); err != nil {
+		opts := &queue.Options{
+			Suffix: suffix,
+		}
+		if _, err := s.queue.ScheduleFetch(ctx, stdlib.ModulePath, v, opts); err != nil {
 			return "", fmt.Errorf("error scheduling fetch for %s: %w", v, err)
 		}
 	}
