@@ -112,7 +112,7 @@ func run(frontendHost string) error {
 
 func runTest(client *frontend.Client, st *searchTest) (output []string, err error) {
 	defer derrors.Wrap(&err, "runTest(ctx, db, st.title: %q)", st.title)
-	searchPage, err := client.Search(st.query, "")
+	searchPage, err := client.Search(st.query, st.mode)
 	if err != nil {
 		return nil, err
 	}
@@ -122,11 +122,17 @@ func runTest(client *frontend.Client, st *searchTest) (output []string, err erro
 		if len(gotResults) > i {
 			got = gotResults[i]
 		}
-		if want.symbol != got.SymbolName || want.pkg != got.PackagePath || st.mode != searchPage.SearchMode {
+		// The mode we expect is determined by whether the expected result
+		// indicates a symbol is present.
+		wantMode := "package"
+		if want.symbol != "" {
+			wantMode = "symbol"
+		}
+		if want.symbol != got.SymbolName || want.pkg != got.PackagePath || wantMode != searchPage.SearchMode {
 			output = append(output,
 				fmt.Sprintf("query: %q, mismatch result %d:\n\twant: %q %q [m=%q]\n\t got: %q %q [m=%q]\n",
 					st.query, i+1,
-					want.pkg, want.symbol, st.mode,
+					want.pkg, want.symbol, wantMode,
 					got.PackagePath, got.SymbolName, searchPage.SearchMode))
 		}
 	}
