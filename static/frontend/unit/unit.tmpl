@@ -5,9 +5,7 @@
 -->
 
 {{define "title"}}
-  <title>
-    {{.Title}} {{if ne .PageType "std"}}{{.PageType}}{{end}} {{.SelectedTab.Name}} {{if ne .PageType "std"}} - {{.Unit.Path}}{{end}} - pkg.go.dev
-  </title>
+  <title>{{.Title}}{{if ne .PageType "std"}} {{.PageType}}{{end}}{{with .SelectedTab.Name}} {{.}}{{end}}{{if ne .PageType "std"}} - {{.Unit.Path}}{{end}} - pkg.go.dev</title>
 {{end}}
 
 {{define "description"}}{{.MetaDescription}}{{end}}
