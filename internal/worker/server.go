@@ -31,6 +31,7 @@ import (
 	"golang.org/x/pkgsite/internal/index"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/middleware"
+	"golang.org/x/pkgsite/internal/poller"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/proxy"
 	"golang.org/x/pkgsite/internal/queue"
@@ -52,6 +53,7 @@ type Server struct {
 	templates       map[string]*template.Template
 	staticPath      template.TrustedSource
 	getExperiments  func() []*internal.Experiment
+	workerDBInfo    func() *postgres.UserInfo
 }
 
 // ServerConfig contains everything needed by a Server.
@@ -92,6 +94,13 @@ func NewServer(cfg *config.Config, scfg ServerConfig) (_ *Server, err error) {
 	if scfg.RedisCacheClient != nil {
 		c = cache.New(scfg.RedisCacheClient)
 	}
+
+	// Update information about DB locks, etc. every few seconds.
+	p := poller.New(nil, func(ctx context.Context) (interface{}, error) {
+		return scfg.DB.GetUserInfo(ctx, "worker")
+	}, func(err error) { log.Error(context.Background(), err) })
+	p.Start(context.Background(), 10*time.Second)
+
 	return &Server{
 		cfg:             cfg,
 		db:              scfg.DB,
@@ -104,6 +113,7 @@ func NewServer(cfg *config.Config, scfg ServerConfig) (_ *Server, err error) {
 		templates:       templates,
 		staticPath:      scfg.StaticPath,
 		getExperiments:  scfg.GetExperiments,
+		workerDBInfo:    func() *postgres.UserInfo { return p.Current().(*postgres.UserInfo) },
 	}, nil
 }
 

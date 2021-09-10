@@ -140,7 +140,7 @@ type UserInfo struct {
 
 // GetUserInfo returns information about a database user.
 func (db *DB) GetUserInfo(ctx context.Context, user string) (_ *UserInfo, err error) {
-	derrors.Wrap(&err, "GetLockInfo(%q)", user)
+	derrors.Wrap(&err, "GetUserInfo(%q)", user)
 
 	ui := UserInfo{User: user}
 	// Count the total number of processes running as user.

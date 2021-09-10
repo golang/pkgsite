@@ -141,6 +141,12 @@
           {{.LoadShedStats.MaxSizeInFlight | bytesToMi}} Mi
           ({{pct .LoadShedStats.SizeInFlight .LoadShedStats.MaxSizeInFlight}}%) </td>
       </tr>
+      {{with .DBInfo}}
+        <tr>
+          <td>DB Processes (waiting/total)</td>
+          <td>{{.NumWaiting}} / {{.NumTotal}}</td>
+        </tr>
+      {{end}}
       <tr>
         <td>Shedded Requests</td>
         <td>{{.LoadShedStats.RequestsShed}} / {{.LoadShedStats.RequestsTotal}}

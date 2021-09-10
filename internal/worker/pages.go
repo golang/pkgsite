@@ -83,6 +83,7 @@ func (s *Server) doIndexPage(w http.ResponseWriter, r *http.Request) (err error)
 		logsURL = `https://cloud.google.com/console/logs/viewer?resource=gae_app%2Fmodule_id%2F` + s.cfg.ServiceID + `&project=` +
 			s.cfg.ProjectID
 	}
+
 	page := struct {
 		Config          *config.Config
 		Env             string
@@ -100,6 +101,7 @@ func (s *Server) doIndexPage(w http.ResponseWriter, r *http.Request) (err error)
 		CgroupStats     map[string]uint64
 		Fetches         []*FetchInfo
 		LogsURL         string
+		DBInfo          *postgres.UserInfo
 	}{
 		Config:         s.cfg,
 		Env:            env(s.cfg),
@@ -116,6 +118,7 @@ func (s *Server) doIndexPage(w http.ResponseWriter, r *http.Request) (err error)
 		CgroupStats:    getCgroupMemStats(),
 		Fetches:        FetchInfos(),
 		LogsURL:        logsURL,
+		DBInfo:         s.workerDBInfo(),
 	}
 	return renderPage(ctx, w, page, s.templates[indexTemplate])
 }
