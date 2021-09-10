@@ -130,3 +130,37 @@ func (db *DB) NumUnprocessedModules(ctx context.Context) (total, new int, err er
 	}
 	return total, new, nil
 }
+
+// UserInfo holds information about a DB user.
+type UserInfo struct {
+	User       string
+	NumTotal   int // number of processes running as that user
+	NumWaiting int // number of that user's processes waiting for locks
+}
+
+// GetUserInfo returns information about a database user.
+func (db *DB) GetUserInfo(ctx context.Context, user string) (_ *UserInfo, err error) {
+	derrors.Wrap(&err, "GetLockInfo(%q)", user)
+
+	ui := UserInfo{User: user}
+	// Count the total number of processes running as user.
+	err = db.db.QueryRow(ctx, `
+		SELECT COUNT(DISTINCT pid) FROM pg_stat_activity WHERE usename = $1
+	`, user).Scan(&ui.NumTotal)
+	if err != nil {
+		return nil, err
+	}
+	// Count the number of processes waiting for locks. Note that we can't add
+	// the number of processes where granted = true to the number where granted
+	// = false to get the total, because a process can hold one lock while
+	// waiting for another.
+	err = db.db.QueryRow(ctx, `
+		Select COUNT(DISTINCT l.pid)
+		FROM pg_locks l INNER JOIN pg_stat_activity a USING (pid)
+		WHERE a.usename = $1 AND NOT l.granted
+	`, user).Scan(&ui.NumWaiting)
+	if err != nil {
+		return nil, err
+	}
+	return &ui, nil
+}

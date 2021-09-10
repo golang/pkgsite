@@ -111,3 +111,20 @@ func TestGetOldestUnprocessedIndexTime(t *testing.T) {
 		})
 	}
 }
+
+func TestGetUserInfo(t *testing.T) {
+	// We can't know what we'll get from this query, so just perform some basic
+	// sanity checks.
+	t.Parallel()
+	ctx := context.Background()
+	testDB, release := acquire(t)
+	defer release()
+
+	got, err := testDB.GetUserInfo(ctx, "postgres")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.NumTotal < 1 {
+		t.Errorf("total = %d, wanted >= 1", got.NumTotal)
+	}
+}
