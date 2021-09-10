@@ -24,5 +24,5 @@ export async function prepare(page: Page): Promise<void> {
     pg.$eval(page, '.go-Header', el => ((el as HTMLElement).style.visibility = 'hidden')),
     pg.$eval(page, '.go-Footer', el => ((el as HTMLElement).style.visibility = 'hidden')),
   ]);
-  await page.evaluate(() => new Promise(r => setTimeout(r, 250)));
+  await page.evaluate(() => new Promise(r => setTimeout(r, 500)));
 }
