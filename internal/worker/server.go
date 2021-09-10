@@ -490,11 +490,17 @@ func (s *Server) handleFetchStdSupportedBranches(w http.ResponseWriter, r *http.
 		if err != nil {
 			return err
 		}
+		var resolvedVersionDB string
 		vm, err := s.db.GetVersionMap(r.Context(), stdlib.ModulePath, requestedVersion)
-		if err != nil {
+		switch {
+		case err == nil:
+			resolvedVersionDB = vm.ResolvedVersion
+		case errors.Is(err, derrors.NotFound):
+			resolvedVersionDB = ""
+		default:
 			return err
 		}
-		if vm.ResolvedVersion != resolvedVersion {
+		if resolvedVersionDB != resolvedVersion {
 			if _, err := s.queue.ScheduleFetch(r.Context(), stdlib.ModulePath, requestedVersion, nil); err != nil {
 				return fmt.Errorf("error scheduling fetch for %s: %w", requestedVersion, err)
 			}
