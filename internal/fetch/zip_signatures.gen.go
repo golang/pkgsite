@@ -634,6 +634,54 @@ var ZipSignatures = map[string][]internal.Modver{
 	"d7dbffa0c5e2a5d93658bcc047556ddb6e504a9e8a26eddabaffb291d9880fb1": []internal.Modver{
 		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v54.3.0+incompatible"},
 	},
+	"58eac54238d4a22692195b873bf595fbc76d7cf1fc64cb034b3c14a0e707af62": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v55.0.0+incompatible"},
+	},
+	"25608388c73955f63fc5fdc55c2f4ec4812d66e8b511676e66ff949df40b82fd": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v55.1.0+incompatible"},
+	},
+	"839c3f9cb0efe1ea58ab5823feb6d6b1bf2f9bceae68c6896fc176c241a419d0": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v55.2.0+incompatible"},
+	},
+	"f19b9825741fba63e346deda8a1f4b10ee2e48103a44bb201a4cd1ce7395b290": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v55.3.0+incompatible"},
+	},
+	"08807eb326497063e3c79690622857d8159b13dc5ddb5c195be6f8cc56c4f831": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v55.4.0+incompatible"},
+	},
+	"14286d0af864d3a81f830f67f870cd282d807587efb904d6c90ae5016b43505d": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v55.5.0+incompatible"},
+	},
+	"6082ed888059c8f7a9a3ea84b1513b162952d274b3aa656f128ae9dd061382d6": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v55.6.0+incompatible"},
+	},
+	"b49bf061cb443fb04f24afb73867ff59adb8f9a41e37a864ea5b6d7d9f988cae": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v55.7.0+incompatible"},
+	},
+	"f17f215fda030ce5783948ea3a5f43d4b0ca57deaa7158d16feb06681c2c96ec": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v55.8.0+incompatible"},
+	},
+	"1cf3964d282eba10ddc84bbb767bb55c0e08ce440632bb9b048e81b52939fc51": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v56.0.0+incompatible"},
+	},
+	"c32f3d4e07b92b05bb5493f9f254a17dc7cb2ce497af31c06449e67cfdc67c1a": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v56.1.0+incompatible"},
+	},
+	"af4ca8fa617d605aa5546f0eecd5053def84d48a7457294336ccda17b1564b63": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v56.2.0+incompatible"},
+	},
+	"0a52764f8e4eed665a1a3b9094acee90952f07de8105a954eaaee2dc2146bfd5": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v56.3.0+incompatible"},
+	},
+	"e3c732c516bdbc2d517aa05e08d521485f4b68b44fb2059124f58f6fc3a4bf0c": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v57.0.0+incompatible"},
+	},
+	"a8a99334b87d2ed7e156b568f47ab2376e369a30b83e704ddef63b9ef6b7e719": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v57.1.0+incompatible"},
+	},
+	"fe946b90f26363425e9bd90e2ea485b1e6444a1c5e2531a7b9961e484ead29b9": []internal.Modver{
+		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v57.2.0+incompatible"},
+	},
 	"88d8d8128e0dd0ab9c4c31268e488e63e368b2002e6a3ccf832c7ee036451157": []internal.Modver{
 		{Path: "github.com/Azure/azure-sdk-for-go", Version: "v6.0.0-beta+incompatible"},
 	},
@@ -3472,6 +3520,9 @@ var ZipSignatures = map[string][]internal.Modver{
 	"ebb10a8838b15173fb15c09b47a88a0f618f8d95ef082439c9a11357150c9cfe": []internal.Modver{
 		{Path: "github.com/influxdata/influxdb", Version: "v1.7.8"},
 	},
+	"ae61b8236a4965f640f2ea0449286bf042d2833b8c3b5af1b3c90046fa9eff16": []internal.Modver{
+		{Path: "github.com/influxdata/influxdb", Version: "v1.7.9"},
+	},
 	"32e41ef7f06a99730ba87d22a8632cc18ed79ee79ea5f7bf48c0547f6052990d": []internal.Modver{
 		{Path: "github.com/influxdata/influxdb", Version: "v1.7.9-dev1"},
 	},
@@ -5637,5 +5688,11 @@ var ZipSignatures = map[string][]internal.Modver{
 	},
 	"1e77a88d21ce401c70da764ace1be21d905b9e3b2316bfc6e0378f3a6e811702": []internal.Modver{
 		{Path: "github.com/moby/moby", Version: "v20.10.6+incompatible"},
+	},
+	"d12c1890b790ad77d393a12a747214850bf439c3c729b79fd622524f11b88c3e": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v20.10.7+incompatible"},
+	},
+	"6ba97106d8de93dcdfdee400a00cedbc3433a20a74b2d132beca92e22ee9a16e": []internal.Modver{
+		{Path: "github.com/moby/moby", Version: "v20.10.8+incompatible"},
 	},
 }
