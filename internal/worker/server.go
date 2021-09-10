@@ -96,7 +96,7 @@ func NewServer(cfg *config.Config, scfg ServerConfig) (_ *Server, err error) {
 	}
 
 	// Update information about DB locks, etc. every few seconds.
-	p := poller.New(nil, func(ctx context.Context) (interface{}, error) {
+	p := poller.New(&postgres.UserInfo{}, func(ctx context.Context) (interface{}, error) {
 		return scfg.DB.GetUserInfo(ctx, "worker")
 	}, func(err error) { log.Error(context.Background(), err) })
 	p.Start(context.Background(), 10*time.Second)
@@ -394,6 +394,7 @@ func (s *Server) handlePollIndex(w http.ResponseWriter, r *http.Request) (err er
 	log.Infof(ctx, "Inserted %d modules from the index", len(modules))
 	s.computeProcessingLag(ctx)
 	s.computeUnprocessedModules(ctx)
+	recordWorkerDBInfo(ctx, s.workerDBInfo())
 	return nil
 }
 

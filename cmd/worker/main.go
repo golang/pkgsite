@@ -115,6 +115,8 @@ func main() {
 		worker.ProcessingLag,
 		worker.UnprocessedModules,
 		worker.UnprocessedNewModules,
+		worker.DBProcesses,
+		worker.DBWaitingProcesses,
 		worker.SheddedFetchCount,
 		worker.FetchLatencyDistribution,
 		worker.FetchResponseCount,

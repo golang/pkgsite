@@ -12,6 +12,7 @@ import (
 	"go.opencensus.io/stats"
 	"go.opencensus.io/stats/view"
 	"go.opencensus.io/tag"
+	"golang.org/x/pkgsite/internal/postgres"
 )
 
 var (
@@ -69,6 +70,32 @@ var (
 		Aggregation: view.LastValue(),
 		Description: "number of unprocessed new modules",
 	}
+
+	dbProcesses = stats.Int64(
+		"go-discovery/db_processes_count",
+		"Number of active DB worker processes",
+		stats.UnitDimensionless,
+	)
+
+	DBProcesses = &view.View{
+		Name:        "go-discovery/db_processes/count",
+		Measure:     dbProcesses,
+		Aggregation: view.LastValue(),
+		Description: "number of active DB worker processes",
+	}
+
+	dbWaitingProcesses = stats.Int64(
+		"go-discovery/db_waiting_processes_count",
+		"Number of active DB worker processes waiting for locks",
+		stats.UnitDimensionless,
+	)
+
+	DBWaitingProcesses = &view.View{
+		Name:        "go-discovery/db_waiting_processes/count",
+		Measure:     dbWaitingProcesses,
+		Aggregation: view.LastValue(),
+		Description: "number of waiting DB worker processes",
+	}
 )
 
 func recordEnqueue(ctx context.Context, status int) {
@@ -84,4 +111,11 @@ func recordProcessingLag(ctx context.Context, d time.Duration) {
 func recordUnprocessedModules(ctx context.Context, total, new int) {
 	stats.Record(ctx, unprocessedModules.M(int64(total)))
 	stats.Record(ctx, unprocessedNewModules.M(int64(new)))
+}
+
+func recordWorkerDBInfo(ctx context.Context, dbi *postgres.UserInfo) {
+	if dbi != nil {
+		stats.Record(ctx, dbProcesses.M(int64(dbi.NumTotal)))
+		stats.Record(ctx, dbWaitingProcesses.M(int64(dbi.NumWaiting)))
+	}
 }
