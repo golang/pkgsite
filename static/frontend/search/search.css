@@ -4,8 +4,69 @@
  * license that can be found in the LICENSE file.
  */
 
+/* Hide the search form in the header. */
+.go-SearchForm {
+  display: none;
+}
+
 .SearchResults {
   font-size: 0.875rem;
+  padding-top: 0.75rem;
+}
+.SearchResults-header {
+  margin: 0.5rem 0 0;
+}
+.SearchResults-header[data-fixed] {
+  background-color: var(--color-background);
+  border-bottom: var(--border);
+  box-shadow: var(--box-shadow);
+  height: 3.5rem;
+  position: sticky;
+  top: 0;
+}
+.SearchResults-headerContent {
+  align-items: center;
+  display: flex;
+  gap: 0.5rem;
+  height: 100%;
+  margin: auto;
+  max-width: 63rem;
+  padding: 0.5rem var(--gutter);
+}
+.SearchResults-headerLogo {
+  --logo-height: 1.75rem;
+  --logo-width: calc(var(--logo-height) / 0.3768);
+
+  align-items: center;
+  display: flex;
+  margin-right: -0.5rem;
+  opacity: 0;
+  transition: opacity 0.25s ease-in-out, width 0.25s ease-out;
+  visibility: hidden;
+  width: 0;
+}
+.SearchResults-headerLogo[data-fixed] {
+  margin-right: 0.5rem;
+  opacity: 1;
+  visibility: visible;
+  width: var(--logo-width);
+}
+.SearchResults-headerLogo img {
+  height: var(--logo-height);
+  margin: -1rem 0;
+  width: var(--logo-width);
+}
+.SearchResults-search {
+  flex-grow: 1;
+  max-width: 31.5rem;
+}
+.SearchResults-tabs {
+  border-bottom: var(--border);
+}
+.SearchResults-tabs nav {
+  margin: auto;
+  max-width: 63rem;
+  padding: 0 var(--gutter);
 }
 .SearchResults-summary {
   color: var(--color-text-subtle);
@@ -21,6 +82,10 @@
     align-items: baseline;
     flex-direction: row;
   }
+}
+.SearchResults-summary h1 {
+  font-size: inherit;
+  font-weight: inherit;
 }
 .SearchResults-emptyContentMessage {
   text-align: center;

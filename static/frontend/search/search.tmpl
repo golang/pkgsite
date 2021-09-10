@@ -12,8 +12,16 @@
   <link href="/static/frontend/search/search.min.css?version={{.AppVersionLabel}}" rel="stylesheet">
 {{end}}
 
+{{define "post-content"}}
+  <script>
+    loadScript('/static/frontend/search/search.js')
+  </script>
+{{end}}
+
 {{define "main"}}
   <main class="go-Container">
+    {{template "search_header" .}}
+    {{template "search_tabs" .}}
     <div class="go-Content SearchResults">
       {{if eq .SearchMode .SearchModeSymbol }}
         {{template "search_symbol" .}}
@@ -28,14 +36,12 @@
 {{end}}
 
 {{define "search_symbol"}}
-  <h1>{{capitalize .SearchModeSymbol}}s matching “{{.Query}}”</h1>
   <div class="SearchResults-summary">
-    <div>
+    <h1>
       Showing <strong>{{len $.Results}}</strong> matching {{.SearchModeSymbol}}s.
       <a href="/search-help">Search help</a>
-    </div>
+    </h1>
   </div>
-  {{template "search_tabs" .}}
   {{if eq (len .Results) 0}}
     {{template "search_no_results" .}}
   {{else}}
@@ -78,13 +84,11 @@
 {{end}}
 
 {{define "search_package"}}
-  <h1>{{capitalize .SearchModePackage}}s matching “{{.Query}}”</h1>
   <div class="SearchResults-summary">
-    <div>
+    <h1>
       Showing <strong>{{len .Results}}</strong> modules with matching packages. <a href="/search-help">Search help</a>
-    </div>
+    </h1>
   </div>
-  {{template "search_tabs" .}}
   {{if eq (len .Results) 0}}
     {{template "search_no_results" .}}
   {{else}}
@@ -190,7 +194,7 @@
 {{end}}
 
 {{define "search_tabs"}}
-  <div>
+  <div class="SearchResults-tabs">
     <nav class="go-TabNav">
       <ul>
         <li {{if not (eq .SearchMode .SearchModeSymbol)}}aria-current="page"{{end}}>
@@ -200,7 +204,38 @@
           <a href="{{.Pagination.URL .Pagination.Limit .SearchModeSymbol .Query}}">Symbols</a>
         </li>
       </ul>
-      <hr />
     </nav>
   </div>
+{{end}}
+
+{{define "search_header"}}
+  <header class="SearchResults-header js-searchHeader">
+    <div class="SearchResults-headerContent">
+      <a class="SearchResults-headerLogo" href="https://go.dev/" aria-hidden="true" tabindex="-1" data-gtmc="header link"
+          aria-label="Link to Go Homepage">
+        <img height="78" width="207" src="/static/shared/logo/go-blue.svg" alt="Go">
+      </a>
+      <form
+        class="go-InputGroup SearchResults-search"
+        action="/search"
+        data-gtmc="search form"
+        aria-label="Search for a package"
+        role="search"
+      >
+        <input name="q" class="go-Input js-searchFocus" aria-label="Search for a package" type="search"
+            autocapitalize="off" autocomplete="off" autocorrect="off" spellcheck="false"
+            placeholder="Search packages or symbols" value="{{.Query}}" />
+        <input name="m" value="{{.SearchMode}}" hidden>
+        <button class="go-Button go-Button--inverted" aria-label="Submit search">
+          <img
+            class="go-Icon"
+            height="24"
+            width="24"
+            src="/static/shared/icon/search_gm_grey_24dp.svg"
+            alt=""
+          />
+        </button>
+      </form>
+    </div>
+  </header>
 {{end}}
