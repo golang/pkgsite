@@ -29,6 +29,10 @@ type loadShedder struct {
 	requestsShed     int    // number of requests that were shedded
 }
 
+// Don't load-shed based on DB lock contention unless there are at least this
+// many DB worker processes.
+const minDBProcessesToShed = 5
+
 // shouldShed reports whether a request of size should be shed (not processed).
 // Its second return value is a function that should be deferred by the caller.
 func (ls *loadShedder) shouldShed(size uint64) (_ bool, deferFunc func()) {
@@ -42,6 +46,19 @@ func (ls *loadShedder) shouldShed(size uint64) (_ bool, deferFunc func()) {
 		ls.requestsShed++
 		return true, func() {}
 	}
+
+	if ls.getDBInfo != nil {
+		// Shed if the DB is too busy.
+		// That is, if there are more than a handful of worker processes, and
+		// a large fraction of them is waiting for locks.
+		ui := ls.getDBInfo()
+		if ui.NumTotal >= minDBProcessesToShed && ui.NumWaiting > ui.NumTotal/2 {
+			ls.requestsShed++
+			return true, func() {}
+		}
+	}
+
+	// Don't shed.
 	ls.sizeInFlight += size
 	ls.requestsInFlight++
 	return false, func() {
