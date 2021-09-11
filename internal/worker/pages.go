@@ -111,7 +111,7 @@ func (s *Server) doIndexPage(w http.ResponseWriter, r *http.Request) (err error)
 		StartTime:      startTime,
 		Experiments:    experiments,
 		Excluded:       excluded,
-		LoadShedStats:  ZipLoadShedStats(),
+		LoadShedStats:  s.ZipLoadShedStats(),
 		GoMemStats:     gms,
 		ProcessStats:   pms,
 		SystemStats:    sms,

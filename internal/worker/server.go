@@ -12,6 +12,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math"
 	"net/http"
 	"reflect"
 	"strconv"
@@ -54,6 +55,7 @@ type Server struct {
 	staticPath      template.TrustedSource
 	getExperiments  func() []*internal.Experiment
 	workerDBInfo    func() *postgres.UserInfo
+	loadShedder     *loadShedder
 }
 
 // ServerConfig contains everything needed by a Server.
@@ -101,7 +103,7 @@ func NewServer(cfg *config.Config, scfg ServerConfig) (_ *Server, err error) {
 	}, func(err error) { log.Error(context.Background(), err) })
 	p.Start(context.Background(), 10*time.Second)
 
-	return &Server{
+	s := &Server{
 		cfg:             cfg,
 		db:              scfg.DB,
 		indexClient:     scfg.IndexClient,
@@ -114,7 +116,9 @@ func NewServer(cfg *config.Config, scfg ServerConfig) (_ *Server, err error) {
 		staticPath:      scfg.StaticPath,
 		getExperiments:  scfg.GetExperiments,
 		workerDBInfo:    func() *postgres.UserInfo { return p.Current().(*postgres.UserInfo) },
-	}, nil
+	}
+	s.setLoadShedder(context.Background())
+	return s, nil
 }
 
 // Install registers server routes using the given handler registration func.
@@ -313,7 +317,7 @@ func (s *Server) doFetch(w http.ResponseWriter, r *http.Request) (string, int) {
 		SourceClient: s.sourceClient,
 		DB:           s.db,
 		Cache:        s.cache,
-		loadShedder:  zipLoadShedder,
+		loadShedder:  s.loadShedder,
 	}
 	if r.FormValue(queue.DisableProxyFetchParam) == queue.DisableProxyFetchValue {
 		f.ProxyClient = f.ProxyClient.WithFetchDisabled()
@@ -809,4 +813,37 @@ func (s *Server) serveError(w http.ResponseWriter, r *http.Request, err error) {
 		log.Infof(ctx, "returning %d (%s) for error %v", serr.status, http.StatusText(serr.status), err)
 	}
 	http.Error(w, serr.err.Error(), serr.status)
+}
+
+// mib is the number of bytes in a mebibyte (Mi).
+const mib = 1024 * 1024
+
+// The largest module zip size we can comfortably process.
+// We probably will OOM if we process a module whose zip is larger.
+var maxModuleZipSize int64 = math.MaxInt64
+
+func init() {
+	v := config.GetEnvInt(context.Background(), "GO_DISCOVERY_MAX_MODULE_ZIP_MI", -1)
+	if v > 0 {
+		maxModuleZipSize = int64(v) * mib
+	}
+}
+
+func (s *Server) setLoadShedder(ctx context.Context) {
+	mebis := config.GetEnvInt(ctx, "GO_DISCOVERY_MAX_IN_FLIGHT_ZIP_MI", -1)
+	if mebis > 0 {
+		log.Infof(ctx, "shedding load over %dMi", mebis)
+		s.loadShedder = &loadShedder{
+			maxSizeInFlight: uint64(mebis) * mib,
+			getDBInfo:       s.workerDBInfo,
+		}
+	}
+}
+
+// ZipLoadShedStats returns a snapshot of the current LoadShedStats for zip files.
+func (s *Server) ZipLoadShedStats() LoadShedStats {
+	if s.loadShedder != nil {
+		return s.loadShedder.stats()
+	}
+	return LoadShedStats{}
 }

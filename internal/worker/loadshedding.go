@@ -6,6 +6,8 @@ package worker
 
 import (
 	"sync"
+
+	"golang.org/x/pkgsite/internal/postgres"
 )
 
 type loadShedder struct {
@@ -13,6 +15,9 @@ type loadShedder struct {
 	// incoming request would cause sizeInFlight to exceed this value, it won't
 	// be processed.
 	maxSizeInFlight uint64
+
+	// Function to get information about DB status.
+	getDBInfo func() *postgres.UserInfo
 
 	// Protects the variables below, and also serializes shedding decisions so
 	// multiple simultaneous requests are handled properly.
