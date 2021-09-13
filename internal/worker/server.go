@@ -461,6 +461,7 @@ func (s *Server) handleEnqueue(w http.ResponseWriter, r *http.Request) (err erro
 		opts := queue.Options{
 			Suffix:            suffixParam,
 			DisableProxyFetch: shouldDisableProxyFetch(m),
+			Source:            queue.SourceWorkerValue,
 		}
 		sem <- struct{}{}
 		go func() {

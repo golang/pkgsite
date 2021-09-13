@@ -167,6 +167,7 @@ const (
 	DisableProxyFetchValue = "off"
 	SourceParam            = "source"
 	SourceFrontendValue    = "frontend"
+	SourceWorkerValue      = "worker"
 )
 
 func (q *GCP) newTaskRequest(modulePath, version string, opts *Options) *taskspb.CreateTaskRequest {
