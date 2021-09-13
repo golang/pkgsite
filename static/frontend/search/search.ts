@@ -5,6 +5,8 @@
  * license that can be found in the LICENSE file.
  */
 
+const headerHeight = 3.5;
+
 // Append a div above the site header to use for the sticky header transition.
 const siteHeader = document.querySelector('.js-siteHeader');
 const headerSentinel = document.createElement('div');
@@ -26,7 +28,7 @@ const headerObserver = new IntersectionObserver(
       }
     }
   },
-  { threshold: 1, rootMargin: '245px' }
+  { threshold: 1, rootMargin: `${headerHeight * 16 * 3}px` }
 );
 headerObserver.observe(headerSentinel);
 

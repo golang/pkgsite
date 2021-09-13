@@ -17,9 +17,8 @@
   margin: 0.5rem 0 0;
 }
 .SearchResults-header[data-fixed] {
-  background-color: var(--color-background);
+  background-color: var(--color-background-accented);
   border-bottom: var(--border);
-  box-shadow: var(--box-shadow);
   height: 3.5rem;
   position: sticky;
   top: 0;
