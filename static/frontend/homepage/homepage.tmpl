@@ -46,23 +46,24 @@
           autofocus="true">
         <button type="submit" class="go-Button">Search</button>
       </form>
-      <span class="Homepage-searchHelp">
-        <div class="Homepage-exampleSearches">
-          <span class="Homepage-exampleSearchesLabel">Example searches:</span>
-          <a class="Homepage-exampleSearch" href="/search?q=http">“http”</a>
-          <a class="Homepage-exampleSearch" href="/search?q=command">“command”</a>
+      <div class="Homepage-examples">
+        <span class="Homepage-examplesTitle">Example Searches:</span>
+        <ul class="Homepage-examplesList">
+          <li><a href="/search?q=http">“http”</a></li>
+          <li><a href="/search?q=command">“command”</a></li>
           {{if .Experiments.IsActive "symbol-search"}}
-            <a class="Homepage-exampleSearch" href="/search?q=Unmarshal">“Unmarshal”</a>
-            <a class="Homepage-exampleSearch" href="/search?q=sql.DB">“sql.DB”</a>
-            <a class="Homepage-exampleSearch" href="/search?q=%23error+golang.org%2Fx">“#error golang.org/x”</a>
+            <li><a href="/search?q=sql.DB">“sql.DB”</a></li>
+            <li><a href="/search?q=%23error+golang.org%2Fx">“#error golang.org/x”</a></li>
           {{else}}
-            <a class="Homepage-exampleSearch" href="/search?q=yaml+OR+json+OR+xml">“yaml OR json OR xml”</a>
+            <li><a href="/search?q=yaml+OR+json+OR+xml">“yaml OR json OR xml”</a></li>
           {{end}}
+        </ul>
+        <div>
+          <a href="/search-help" target="_blank" rel="noopener" class="Homepage-helpLink">
+            Search help <span><img width="24" height="24" src="/static/shared/icon/launch_gm_grey_24dp.svg" alt=""></span>
+          </a>
         </div>
-        <a href="/search-help" target="_blank" rel="noopener" class="Homepage-helpLink">
-          Search help <span><img width="24" height="24" src="/static/shared/icon/launch_gm_grey_24dp.svg" alt=""></span>
-        </a>
-      <span>
+      </div>
     </div>
   </main>
 {{end}}

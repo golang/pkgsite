@@ -77,19 +77,33 @@
     display: inline-flex;
   }
 }
-.Homepage-searchHelp {
+.Homepage-examples {
   align-items: center;
-  display: block;
+  display: flex;
+  flex-direction: column;
+  font-size: 0.875rem;
+  gap: 0.5rem 1rem;
   justify-content: space-between;
   margin: 0 auto;
   max-width: 45.0625rem;
-  text-align: center;
-  width: 100%;
+  white-space: nowrap;
+  width: inherit;
 }
-@media only screen and (min-width: 30rem) {
-  .Homepage-searchHelp {
-    display: flex;
+@media only screen and (min-width: 52rem) {
+  .Homepage-examples {
+    flex-direction: row;
   }
+}
+.Homepage-examplesTitle {
+  color: var(--color-text-subtle);
+  font-weight: 500;
+  text-transform: uppercase;
+}
+.Homepage-examplesList {
+  display: flex;
+  flex-grow: 1;
+  flex-wrap: wrap;
+  gap: 0.5rem 2rem;
 }
 a.Homepage-helpLink {
   align-items: center;
@@ -105,37 +119,6 @@ a.Homepage-helpLink {
   position: relative;
   top: 0.1875rem;
   width: 1rem;
-}
-.Homepage-exampleSearches {
-  align-items: center;
-  color: var(--color-text-subtle);
-  display: block;
-  font-size: 0.875rem;
-  font-weight: 500;
-  text-align: center;
-  width: 100%;
-}
-@media only screen and (min-width: 30rem) {
-  .Homepage-exampleSearches {
-    display: flex;
-  }
-}
-.Homepage-exampleSearchesLabel {
-  display: block;
-  margin-bottom: 1rem;
-  text-transform: uppercase;
-}
-@media only screen and (min-width: 30rem) {
-  .Homepage-exampleSearchesLabel {
-    display: inline;
-    margin-bottom: -0.1rem;
-  }
-}
-.Homepage-exampleSearch {
-  color: var(--color-brand-primary);
-  font-size: 1rem;
-  font-weight: initial;
-  padding: 0 0.625rem;
 }
 .Questions {
   background: var(--color-background-accented);
