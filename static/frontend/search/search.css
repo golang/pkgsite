@@ -8,6 +8,9 @@
 .go-SearchForm {
   display: none;
 }
+.SearchSnippet .go-Chip:hover {
+  background-color: var(--color-background-highlighted);
+}
 
 .SearchResults {
   font-size: 0.875rem;
