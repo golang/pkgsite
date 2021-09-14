@@ -10,10 +10,12 @@ import (
 	"fmt"
 	"sort"
 
+	"github.com/Masterminds/squirrel"
 	"github.com/lib/pq"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/version"
 )
 
@@ -32,7 +34,10 @@ func insertSymbols(ctx context.Context, tx *database.DB, modulePath, v string,
 	if versionType != version.TypeRelease && !isLatest {
 		return nil
 	}
-
+	modulePathID := pathToID[modulePath]
+	if modulePathID == 0 {
+		return fmt.Errorf("modulePathID cannot be 0: %q", modulePath)
+	}
 	pathToDocIDToDoc, err := getDocIDsForPath(ctx, tx, pathToUnitID, pathToDocs)
 	if err != nil {
 		return err
@@ -41,7 +46,7 @@ func insertSymbols(ctx context.Context, tx *database.DB, modulePath, v string,
 	if err != nil {
 		return err
 	}
-	pathToPkgsymToID, err := upsertPackageSymbolsReturningIDs(ctx, tx, modulePath, pathToID, nameToID, pathToDocIDToDoc)
+	pathToPkgsymToID, err := upsertPackageSymbolsReturningIDs(ctx, tx, modulePathID, pathToID, nameToID, pathToDocIDToDoc)
 	if err != nil {
 		return err
 	}
@@ -49,8 +54,13 @@ func insertSymbols(ctx context.Context, tx *database.DB, modulePath, v string,
 		return err
 	}
 	if versionType == version.TypeRelease {
-		return upsertSymbolHistory(ctx, tx, modulePath, v, nameToID,
-			pathToID, pathToPkgsymToID, pathToDocIDToDoc)
+		if err := upsertSymbolHistory(ctx, tx, modulePath, v, nameToID,
+			pathToID, pathToPkgsymToID, pathToDocIDToDoc); err != nil {
+			return err
+		}
+	}
+	if isLatest {
+		return deleteOldSymbolSearchDocuments(ctx, tx, modulePathID, pathToID, pathToDocIDToDoc, pathToPkgsymToID)
 	}
 	return nil
 }
@@ -183,11 +193,11 @@ func upsertDocumentationSymbols(ctx context.Context, db *database.DB,
 }
 
 func upsertPackageSymbolsReturningIDs(ctx context.Context, db *database.DB,
-	modulePath string,
+	modulePathID int,
 	pathToID map[string]int,
 	nameToID map[string]int,
 	pathToDocIDToDoc map[string]map[int]*internal.Documentation) (_ map[string]map[packageSymbol]int, err error) {
-	defer derrors.WrapStack(&err, "upsertPackageSymbolsReturningIDs(ctx, db, %q, pathToID, pathToDocIDToDoc)", modulePath)
+	defer derrors.WrapStack(&err, "upsertPackageSymbolsReturningIDs(ctx, db, %d, pathToID, pathToDocIDToDoc)", modulePathID)
 
 	idToPath := map[int]string{}
 	for path, id := range pathToID {
@@ -200,10 +210,6 @@ func upsertPackageSymbolsReturningIDs(ctx context.Context, db *database.DB,
 		names = append(names, name)
 	}
 
-	modulePathID := pathToID[modulePath]
-	if modulePathID == 0 {
-		return nil, fmt.Errorf("modulePathID cannot be 0: %q", modulePath)
-	}
 	pathTopkgsymToID := map[string]map[packageSymbol]int{}
 	collect := func(rows *sql.Rows) error {
 		var (
@@ -381,5 +387,77 @@ func updateSymbols(symbols []*internal.Symbol, updateFunc func(sm *internal.Symb
 			}
 		}
 	}
+	return nil
+}
+
+func deleteOldSymbolSearchDocuments(ctx context.Context, db *database.DB,
+	modulePathID int,
+	pathToID map[string]int,
+	pathToDocIDToDoc map[string]map[int]*internal.Documentation,
+	latestPathToPkgsymToID map[string]map[packageSymbol]int) (err error) {
+	defer derrors.WrapStack(&err, "deleteOldSymbolSearchDocuments(ctx, db, %q, pathToID, pathToDocIDToDoc)", modulePathID)
+
+	// Get all package_symbol_ids for the latest module (the current one we are
+	// trying to insert).
+	latestPkgsymIDs := map[int]bool{}
+	for path := range pathToID {
+		docs := pathToDocIDToDoc[path]
+		pathID := pathToID[path]
+		if pathID == 0 {
+			return fmt.Errorf("pathID cannot be 0: %q", path)
+		}
+		for _, doc := range docs {
+			err := updateSymbols(doc.API, func(sm *internal.SymbolMeta) error {
+				pkgsymToID, ok := latestPathToPkgsymToID[path]
+				if !ok {
+					return fmt.Errorf("path could not be found: %q", path)
+				}
+				ps := packageSymbol{synopsis: sm.Synopsis, name: sm.Name, parentName: sm.ParentName}
+				pkgsymID, ok := pkgsymToID[ps]
+				if !ok {
+					return fmt.Errorf("package symbol could not be found: %v", ps)
+				}
+				latestPkgsymIDs[pkgsymID] = true
+				return nil
+			})
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	var pathIDs []int
+	for _, id := range pathToID {
+		pathIDs = append(pathIDs, id)
+	}
+	// Fetch package_symbol_id currently in symbol_search_documents.
+	dbPkgSymIDs, err := db.CollectInts(ctx, `
+		SELECT package_symbol_id
+		FROM symbol_search_documents
+		WHERE package_path_id = ANY($1);`,
+		pq.Array(pathIDs))
+	if err != nil {
+		return err
+	}
+
+	var toDelete []int
+	for _, id := range dbPkgSymIDs {
+		if _, ok := latestPkgsymIDs[id]; !ok {
+			toDelete = append(toDelete, id)
+		}
+	}
+
+	// Delete stale rows.
+	q, args, err := squirrel.Delete("symbol_search_documents").
+		Where("package_symbol_id = ANY(?)", pq.Array(toDelete)).
+		PlaceholderFormat(squirrel.Dollar).ToSql()
+	if err != nil {
+		return err
+	}
+	n, err := db.Exec(ctx, q, args...)
+	if err != nil {
+		return err
+	}
+	log.Infof(ctx, "deleted %d rows from symbol_search_documents", n)
 	return nil
 }

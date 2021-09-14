@@ -562,3 +562,55 @@ func TestSplitSymbolName(t *testing.T) {
 		})
 	}
 }
+
+func TestDeleteOldSymbolSearchDocuments(t *testing.T) {
+	ctx := context.Background()
+	testDB, release := acquire(t)
+	defer release()
+
+	q := `SELECT symbol_name FROM symbol_search_documents;`
+	checkRows := func(t *testing.T, v string, api []*internal.Symbol) {
+		t.Helper()
+		m := sample.DefaultModule()
+		m.Version = v
+		m.Packages()[0].Documentation[0].API = api
+		MustInsertModule(ctx, t, testDB, m)
+		got, err := testDB.db.CollectStrings(ctx, q)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		var want []string
+		if err := updateSymbols(api, func(sm *internal.SymbolMeta) error {
+			want = append(want, sm.Name)
+			return nil
+		}); err != nil {
+			t.Fatal(err)
+		}
+
+		sort.Strings(got)
+		sort.Strings(want)
+		if diff := cmp.Diff(want, got); diff != "" {
+			t.Errorf("mismatch for %q (-want +got):\n%s", v, diff)
+		}
+	}
+
+	api := []*internal.Symbol{
+		sample.Constant,
+		sample.Variable,
+		sample.Function,
+		sample.Type,
+	}
+	checkRows(t, "v1.1.0", api)
+
+	// Symbol deleted in newer version.
+	api2 := []*internal.Symbol{
+		sample.Constant,
+		sample.Variable,
+		sample.Function,
+	}
+	checkRows(t, "v1.2.0", api2)
+
+	// Older version inserted, no effect.
+	checkRows(t, "v1.0.0", api2)
+}
