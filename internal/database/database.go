@@ -538,6 +538,24 @@ func buildBulkUpdateQuery(table string, columns, types []string) string {
 	)
 }
 
+// CollectInts runs the query, which must select for a single INTEGER or BIGINT
+// column, and returns a slice of the resulting ints.
+func (db *DB) CollectInts(ctx context.Context, query string, args ...interface{}) (ints []int, err error) {
+	defer derrors.WrapStack(&err, "DB.CollectInts(%q)", query)
+	err = db.RunQuery(ctx, query, func(rows *sql.Rows) error {
+		var i int
+		if err := rows.Scan(&i); err != nil {
+			return err
+		}
+		ints = append(ints, i)
+		return nil
+	}, args...)
+	if err != nil {
+		return nil, err
+	}
+	return ints, nil
+}
+
 // CollectStrings runs the query, which must select for a single string column, and returns
 // a slice of the resulting strings.
 func (db *DB) CollectStrings(ctx context.Context, query string, args ...interface{}) (ss []string, err error) {
