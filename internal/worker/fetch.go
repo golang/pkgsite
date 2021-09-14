@@ -362,10 +362,13 @@ func (f *Fetcher) fetchAndInsertModule(ctx context.Context, modulePath, requeste
 	isLatest, err := f.DB.InsertModule(ctx, ft.Module, lmv)
 	ft.timings["db.InsertModule"] = time.Since(start)
 	if err != nil {
-		log.Error(ctx, err)
-
 		ft.Status = derrors.ToStatus(err)
 		ft.Error = err
+		if ft.Status >= 500 {
+			log.Error(ctx, err)
+		} else {
+			log.Info(ctx, err)
+		}
 		return ft
 	}
 	log.Debugf(ctx, "db.InsertModule succeeded for %s@%s", ft.ModulePath, ft.RequestedVersion)
