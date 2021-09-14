@@ -504,22 +504,25 @@ func (s *Server) handleHTMLPage(f func(w http.ResponseWriter, r *http.Request) e
 
 func (s *Server) handleFetchStdSupportedBranches(w http.ResponseWriter, r *http.Request) (err error) {
 	defer derrors.Wrap(&err, "handleFetchStdSupportedBranches")
+	resolvedHashes, err := stdlib.ResolveSupportedBranches()
+	if err != nil {
+		return err
+	}
 	for requestedVersion := range stdlib.SupportedBranches {
-		_, resolvedVersion, _, err := stdlib.ContentDir(requestedVersion)
-		if err != nil {
-			return err
-		}
-		var resolvedVersionDB string
+		var schedule bool
+		resolvedHash := resolvedHashes[requestedVersion]
 		vm, err := s.db.GetVersionMap(r.Context(), stdlib.ModulePath, requestedVersion)
 		switch {
 		case err == nil:
-			resolvedVersionDB = vm.ResolvedVersion
+			schedule = !stdlib.VersionMatchesHash(vm.ResolvedVersion, resolvedHash)
+			log.Debugf(r.Context(), "stdlib branch %s: have %s, remote is %q; scheduling = %t",
+				requestedVersion, vm.ResolvedVersion, resolvedHash, schedule)
 		case errors.Is(err, derrors.NotFound):
-			resolvedVersionDB = ""
+			schedule = true
 		default:
 			return err
 		}
-		if resolvedVersionDB != resolvedVersion {
+		if schedule {
 			if _, err := s.queue.ScheduleFetch(r.Context(), stdlib.ModulePath, requestedVersion, nil); err != nil {
 				return fmt.Errorf("error scheduling fetch for %s: %w", requestedVersion, err)
 			}

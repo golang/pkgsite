@@ -335,3 +335,31 @@ func TestDirectory(t *testing.T) {
 		}
 	}
 }
+
+func TestVersionMatchesHash(t *testing.T) {
+	v := "v0.0.0-20210910212848-c8dfa306babb"
+	h := "c8dfa306babb91e88f8ba25329b3ef8aa11944e1"
+	if !VersionMatchesHash(v, h) {
+		t.Error("got false, want true")
+	}
+	h = "c8dfa306babXb91e88f8ba25329b3ef8aa11944e1"
+	if VersionMatchesHash(v, h) {
+		t.Error("got true, want false")
+	}
+}
+
+func TestResolveSupportedBranches(t *testing.T) {
+	got, err := ResolveSupportedBranches()
+	if err != nil {
+		t.Fatal(err)
+	}
+	// We can't check the hashes because they change, but we can check the keys.
+	for key := range got {
+		if !SupportedBranches[key] {
+			t.Errorf("got key %q not in SupportedBranches", key)
+		}
+	}
+	if g, w := len(got), len(SupportedBranches); g != w {
+		t.Errorf("got %d hashes, want %d", g, w)
+	}
+}

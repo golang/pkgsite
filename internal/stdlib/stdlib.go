@@ -325,12 +325,9 @@ func Versions() (_ []string, err error) {
 	if UseTestData {
 		refNames = testRefs
 	} else {
-		re := git.NewRemote(memory.NewStorage(), &config.RemoteConfig{
-			URLs: []string{GoRepoURL},
-		})
-		refs, err := re.List(&git.ListOptions{})
+		refs, err := remoteRefs()
 		if err != nil {
-			return nil, fmt.Errorf("re.List: %v", err)
+			return nil, err
 		}
 		for _, r := range refs {
 			refNames = append(refNames, r.Name())
@@ -345,6 +342,34 @@ func Versions() (_ []string, err error) {
 		}
 	}
 	return versions, nil
+}
+
+// ResolveSupportedBranches returns the current hashes for each ref in
+// SupportedBranches.
+func ResolveSupportedBranches() (_ map[string]string, err error) {
+	defer derrors.Wrap(&err, "ResolveSupportedBranches")
+
+	refs, err := remoteRefs()
+	if err != nil {
+		return nil, err
+	}
+	m := map[string]string{}
+	for _, r := range refs {
+		name := r.Name().Short()
+		if SupportedBranches[name] {
+			m[name] = r.Hash().String()
+		}
+	}
+	return m, nil
+}
+
+func remoteRefs() (_ []*plumbing.Reference, err error) {
+	defer derrors.Wrap(&err, "remoteRefs")
+
+	re := git.NewRemote(memory.NewStorage(), &config.RemoteConfig{
+		URLs: []string{GoRepoURL},
+	})
+	return re.List(&git.ListOptions{})
 }
 
 // Directory returns the directory of the standard library relative to the repo root.
@@ -456,8 +481,19 @@ func ContentDir(requestedVersion string) (_ fs.FS, resolvedVersion string, commi
 	return cdir, resolvedVersion, commitTime, nil
 }
 
+const pseudoHashLen = 12
+
 func newPseudoVersion(version string, commitTime time.Time, hash plumbing.Hash) string {
-	return fmt.Sprintf("%s-%s-%s", version, commitTime.Format("20060102150405"), hash.String()[:12])
+	return fmt.Sprintf("%s-%s-%s", version, commitTime.Format("20060102150405"), hash.String()[:pseudoHashLen])
+}
+
+// VersionMatchesHash reports whether v is a pseudo-version whose hash
+// part matches the prefix of the given hash.
+func VersionMatchesHash(v, hash string) bool {
+	if !version.IsPseudo(v) {
+		return false
+	}
+	return v[len(v)-pseudoHashLen:] == hash[:pseudoHashLen]
 }
 
 // semanticVersion returns the semantic version corresponding to the
