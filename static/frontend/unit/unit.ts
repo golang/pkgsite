@@ -67,9 +67,10 @@ export class MainLayoutController {
     this.handleResize();
     window.addEventListener('resize', this.handleResize);
     this.mainHeader?.addEventListener('dblclick', this.handleDoubleClick);
-    if (this.mainHeader?.hasChildNodes()) {
+    const siteHeader = document.querySelector('.js-siteHeader');
+    if (this.mainHeader?.hasChildNodes() && siteHeader) {
       const headerSentinel = document.createElement('div');
-      this.mainHeader.prepend(headerSentinel);
+      siteHeader.append(headerSentinel);
       this.headerObserver.observe(headerSentinel);
     }
     if (this.mainNav?.hasChildNodes()) {
