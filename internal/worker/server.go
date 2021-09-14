@@ -167,7 +167,7 @@ func (s *Server) Install(handle func(string, http.Handler)) {
 	// scheduled: fetch-std-master checks if the std@master version in the
 	// database is up to date with the version at HEAD. If not, a fetch request
 	// is queued to refresh the std@master version.
-	handle("/fetch-std-master/", rmw(s.errorHandler(s.handleFetchStdSupportedBranches)))
+	handle("/fetch-std-master", rmw(s.errorHandler(s.handleFetchStdSupportedBranches)))
 
 	// scheduled: enqueue queries the module_version_states table for the next
 	// batch of module versions to process, and enqueues them for processing.
