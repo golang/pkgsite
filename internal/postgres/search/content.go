@@ -27,9 +27,9 @@ package search
 // querySearchMultiWordExact is used when the search query is multiple elements.
 %s
 `,
-	formatQuery("querySearchSymbol", Query(SearchTypeSymbol)),
-	formatQuery("querySearchPackageDotSymbol", Query(SearchTypePackageDotSymbol)),
-	formatQuery("querySearchMultiWordExact", Query(SearchTypeMultiWordExact)))
+	formatQuery("querySearchSymbol", SymbolQuery(SearchTypeSymbol)),
+	formatQuery("querySearchPackageDotSymbol", SymbolQuery(SearchTypePackageDotSymbol)),
+	formatQuery("querySearchMultiWordExact", SymbolQuery(SearchTypeMultiWordExact)))
 
 func formatQuery(name, query string) string {
 	return fmt.Sprintf("const %s = `%s`", name, query)

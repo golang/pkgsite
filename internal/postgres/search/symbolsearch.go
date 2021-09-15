@@ -15,12 +15,12 @@ import (
 // used for symbol search.
 const SymbolTextSearchConfiguration = "symbols"
 
-// Query returns a symbol search query to be used in internal/postgres.
+// SymbolQuery returns a symbol search query to be used in internal/postgres.
 // Each query that is returned accepts the following args:
 // $1 = query
 // $2 = limit
 // $3 = only used by multi-word-exact for path tokens
-func Query(st SearchType) string {
+func SymbolQuery(st SearchType) string {
 	switch st {
 	case SearchTypeMultiWordExact:
 		return fmt.Sprintf(baseQuery, multiwordCTE)

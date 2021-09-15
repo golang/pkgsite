@@ -341,7 +341,7 @@ func runSymbolSearch(ctx context.Context, ddb *database.DB,
 		results = append(results, &r)
 		return nil
 	}
-	query := search.Query(st)
+	query := search.SymbolQuery(st)
 	args = append([]interface{}{q, limit}, args...)
 	if err := ddb.RunQuery(ctx, query, collect, args...); err != nil {
 		return nil, err
