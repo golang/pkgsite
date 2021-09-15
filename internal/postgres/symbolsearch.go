@@ -16,7 +16,7 @@ import (
 	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/middleware"
-	"golang.org/x/pkgsite/internal/postgres/symbolsearch"
+	"golang.org/x/pkgsite/internal/postgres/search"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -104,15 +104,15 @@ func (db *DB) symbolSearch(ctx context.Context, q string, limit int, opts Search
 		err     error
 	)
 	sr := searchResponse{source: "symbol"}
-	it := symbolsearch.ParseInputType(q)
+	it := search.ParseInputType(q)
 	switch it {
-	case symbolsearch.InputTypeOneDot:
+	case search.InputTypeOneDot:
 		results, err = runSymbolSearchOneDot(ctx, db.db, q, limit)
-	case symbolsearch.InputTypeMultiWord:
+	case search.InputTypeMultiWord:
 		results, err = runSymbolSearchMultiWord(ctx, db.db, q, limit, opts.SymbolFilter)
-	case symbolsearch.InputTypeNoDot:
-		results, err = runSymbolSearch(ctx, db.db, symbolsearch.SearchTypeSymbol, q, limit)
-	case symbolsearch.InputTypeTwoDots:
+	case search.InputTypeNoDot:
+		results, err = runSymbolSearch(ctx, db.db, search.SearchTypeSymbol, q, limit)
+	case search.InputTypeTwoDots:
 		results, err = runSymbolSearchPackageDotSymbol(ctx, db.db, q, limit)
 	default:
 		// There is no supported situation where we will get results for one
@@ -164,7 +164,7 @@ func runSymbolSearchMultiWord(ctx context.Context, ddb *database.DB, q string, l
 		return nil, derrors.NotFound
 	}
 	if strings.Contains(q, "|") {
-		// TODO(golang/go#44142): The symbolsearch.SearchTypeMultiWordOr case
+		// TODO(golang/go#44142): The search.SearchTypeMultiWordOr case
 		// is currently not supported.
 		return nil, derrors.NotFound
 	}
@@ -177,7 +177,7 @@ func runSymbolSearchMultiWord(ctx context.Context, ddb *database.DB, q string, l
 		i := count
 		count += 1
 		group.Go(func() error {
-			st := symbolsearch.SearchTypeMultiWordExact
+			st := search.SearchTypeMultiWordExact
 			r, err := runSymbolSearch(searchCtx, ddb, st, symbol, limit, pathTokens)
 			if err != nil {
 				return err
@@ -263,9 +263,9 @@ func runSymbolSearchOneDot(ctx context.Context, ddb *database.DB, q string, limi
 
 	group, searchCtx := errgroup.WithContext(ctx)
 	resultsArray := make([][]*SearchResult, 2)
-	for i, st := range []symbolsearch.SearchType{
-		symbolsearch.SearchTypeSymbol,
-		symbolsearch.SearchTypePackageDotSymbol,
+	for i, st := range []search.SearchType{
+		search.SearchTypeSymbol,
+		search.SearchTypePackageDotSymbol,
 	} {
 		i := i
 		st := st
@@ -274,7 +274,7 @@ func runSymbolSearchOneDot(ctx context.Context, ddb *database.DB, q string, limi
 				results []*SearchResult
 				err     error
 			)
-			if st == symbolsearch.SearchTypePackageDotSymbol {
+			if st == search.SearchTypePackageDotSymbol {
 				results, err = runSymbolSearchPackageDotSymbol(searchCtx, ddb, q, limit)
 			} else {
 				results, err = runSymbolSearch(searchCtx, ddb, st, q, limit)
@@ -297,7 +297,7 @@ func runSymbolSearchPackageDotSymbol(ctx context.Context, ddb *database.DB, q st
 	if err != nil {
 		return nil, err
 	}
-	return runSymbolSearch(ctx, ddb, symbolsearch.SearchTypePackageDotSymbol, symbol, limit, pkg)
+	return runSymbolSearch(ctx, ddb, search.SearchTypePackageDotSymbol, symbol, limit, pkg)
 }
 
 func splitPackageAndSymbolNames(q string) (pkgName string, symbolName string, err error) {
@@ -316,7 +316,7 @@ func splitPackageAndSymbolNames(q string) (pkgName string, symbolName string, er
 }
 
 func runSymbolSearch(ctx context.Context, ddb *database.DB,
-	st symbolsearch.SearchType, q string, limit int, args ...interface{}) (results []*SearchResult, err error) {
+	st search.SearchType, q string, limit int, args ...interface{}) (results []*SearchResult, err error) {
 	defer derrors.Wrap(&err, "runSymbolSearch(ctx, ddb, %q, %q, %d, %v)", st, q, limit, args)
 	defer middleware.ElapsedStat(ctx, fmt.Sprintf("%s-runSymbolSearch", st))()
 
@@ -341,7 +341,7 @@ func runSymbolSearch(ctx context.Context, ddb *database.DB,
 		results = append(results, &r)
 		return nil
 	}
-	query := symbolsearch.Query(st)
+	query := search.Query(st)
 	args = append([]interface{}{q, limit}, args...)
 	if err := ddb.RunQuery(ctx, query, collect, args...); err != nil {
 		return nil, err

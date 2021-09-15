@@ -14,7 +14,7 @@ import (
 	"io/ioutil"
 
 	"golang.org/x/pkgsite/internal/log"
-	"golang.org/x/pkgsite/internal/postgres/symbolsearch"
+	"golang.org/x/pkgsite/internal/postgres/search"
 )
 
 const filename = "query.gen.go"
@@ -29,7 +29,7 @@ func main() {
 
 // generateFile writes symbol search queries to filename.
 func generateFile(ctx context.Context, filename string) error {
-	content, err := format.Source([]byte(symbolsearch.Content))
+	content, err := format.Source([]byte(search.Content))
 	if err != nil {
 		return err
 	}

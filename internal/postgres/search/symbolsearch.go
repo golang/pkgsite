@@ -4,7 +4,7 @@
 
 //go:generate go run gen_query.go
 
-package symbolsearch
+package search
 
 import (
 	"fmt"
