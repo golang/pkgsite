@@ -39,6 +39,11 @@ func TestCandidateModulePaths(t *testing.T) {
 			"bitbucket.org/ok/sure/no$dollars/allowed",
 			[]string{"bitbucket.org/ok/sure"},
 		},
+		{
+			// A module path cannot end in "v1".
+			"k8s.io/klog/v1",
+			[]string{"k8s.io/klog", "k8s.io"},
+		},
 	} {
 		got := CandidateModulePaths(test.in)
 		if !cmp.Equal(got, test.want) {

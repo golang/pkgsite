@@ -31,7 +31,7 @@ func CandidateModulePaths(fullPath string) []string {
 	}
 	var r []string
 	for p := fullPath; p != "." && p != "/"; p = path.Dir(p) {
-		if err := module.CheckImportPath(p); err != nil {
+		if err := module.CheckPath(p); err != nil {
 			continue
 		}
 		r = append(r, p)

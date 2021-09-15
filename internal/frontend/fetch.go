@@ -86,7 +86,7 @@ var (
 )
 
 // serveFetch checks if a requested path and version exists in the database.
-// If not, it will enqueuing potential module versions that could contain
+// If not, it will enqueue potential module versions that could contain
 // the requested path and version to a task queue, to be fetched by the worker.
 // Meanwhile, the request will poll the database until a row is found, or a
 // timeout occurs. A status and responseText will be returned based on the
@@ -94,7 +94,7 @@ var (
 func (s *Server) serveFetch(w http.ResponseWriter, r *http.Request, ds internal.DataSource) (err error) {
 	defer derrors.Wrap(&err, "serveFetch(%q)", r.URL.Path)
 	if _, ok := ds.(*postgres.DB); !ok {
-		// There's no reason for the proxydatasource to need this codepath.
+		// There's no reason for other DataSources to need this codepath.
 		return datasourceNotSupportedErr()
 	}
 	if r.Method != http.MethodPost {
