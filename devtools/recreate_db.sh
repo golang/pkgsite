@@ -6,10 +6,8 @@
 
 # Script for dropping and creating a new database locally using docker.
 
-source devtools/docker.sh || { echo "Are you at repo root?"; exit 1; }
-
-dockercompose stop
-dockercompose down --remove-orphans
-dockercompose up -d db
-go run devtools/cmd/db/main.go drop
+docker rm -f local-postgres
+./devtools/docker_postgres.sh
+sleep 3 # wait for DB to be ready
+go run ./devtools/cmd/db drop
 ./devtools/create_local_db.sh

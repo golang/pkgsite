@@ -98,8 +98,6 @@ services:
       <<: *go-variables
       PORT: 8080
       WAITFORIT_TIMEOUT: 300
-    ports:
-      - 8080:8080
     volumes:
       - ../../:/pkgsite
       - gomodcache:/gomodcache
@@ -136,8 +134,6 @@ services:
       POSTGRES_DB: ${GO_DISCOVERY_DATABASE_NAME:-discovery-db}
       POSTGRES_PASSWORD: ${GO_DISCOVERY_DATABASE_PASSWORD:-postgres}
       POSTGRES_USER: ${GO_DISCOVERY_DATABASE_USER:-postgres}
-    ports:
-        - ${GO_DISCOVERY_DATABASE_PORT:-5432}:5432
   nodejs:
     image: node:14.17.0
     environment:
@@ -155,8 +151,6 @@ services:
     working_dir: /pkgsite
   chrome:
     image: browserless/chrome:1.46.0-puppeteer-10.1.0
-    ports:
-      - 3000:3000
     environment:
       - CONNECTION_TIMEOUT=240000
   go:
