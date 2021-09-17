@@ -86,7 +86,7 @@ func (s *Server) servePathNotFoundPage(w http.ResponseWriter, r *http.Request,
 		//
 		// If the latter, log the error.
 		// In either case, give the user the option to fetch that path.
-		if !errors.Is(err, derrors.NotFound) {
+		if !errors.Is(err, derrors.NotFound) && !errors.Is(err, derrors.InvalidArgument) {
 			log.Error(ctx, err)
 		}
 		return pathNotFoundError(ctx, fullPath, requestedVersion)
