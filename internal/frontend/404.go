@@ -223,6 +223,12 @@ func previousFetchStatusAndResponse(ctx context.Context, db *postgres.DB,
 	// Get all candidate module paths for this path.
 	paths, err := modulePathsToFetch(ctx, db, fullPath, modulePath)
 	if err != nil {
+		var serr *serverError
+		if errors.As(err, &serr) && serr.status == http.StatusBadRequest {
+			// Return this as an invalid argument so that we don't log it in
+			// servePathNotFoundPage above.
+			return nil, derrors.InvalidArgument
+		}
 		return nil, err
 	}
 	// Check if a row exists in the version_map table for the longest candidate
