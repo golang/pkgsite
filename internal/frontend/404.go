@@ -110,7 +110,8 @@ func (s *Server) servePathNotFoundPage(w http.ResponseWriter, r *http.Request,
 		//
 		// Return the fetch page so the user can try requesting again, and log
 		// an error.
-		log.Errorf(ctx, "version_map reports that %s@%s has status=%d, but this was not found before reaching servePathNotFoundPage", fullPath, requestedVersion)
+		log.Errorf(ctx, "version_map reports that %s@%s has status=%d, but this was not found before reaching servePathNotFoundPage",
+			fullPath, requestedVersion, fr.status)
 		return pathNotFoundError(ctx, fullPath, requestedVersion)
 	case http.StatusFound, derrors.ToStatus(derrors.AlternativeModule):
 		if fr.goModPath == fullPath {
