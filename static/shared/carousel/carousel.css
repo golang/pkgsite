@@ -1,0 +1,72 @@
+/*!
+ * Copyright 2021 The Go Authors. All rights reserved.
+ * Use of this source code is governed by a BSD-style
+ * license that can be found in the LICENSE file.
+ */
+
+.go-Carousel {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  text-align: center;
+}
+.go-Carousel-slide {
+  margin: 0.5rem 0;
+}
+.go-Carousel-slide[aria-hidden] {
+  display: none;
+}
+.go-Carousel-prevSlide {
+  left: 0;
+}
+.go-Carousel-nextSlide {
+  right: 0;
+}
+.go-Carousel-prevSlide,
+.go-Carousel-nextSlide {
+  background-color: transparent;
+  border-radius: var(--border-radius);
+  font-size: 1.5rem;
+  height: 2.75rem;
+  margin-top: -1.375rem;
+  opacity: 0;
+  position: absolute;
+  top: 50%;
+  width: 2.75rem;
+}
+.go-Carousel-prevSlide:hover,
+.go-Carousel-nextSlide:hover {
+  background-color: var(--color-background-accented);
+  cursor: pointer;
+}
+.go-Carousel:hover .go-Carousel-prevSlide,
+.go-Carousel:hover .go-Carousel-nextSlide,
+.go-Carousel:focus-within .go-Carousel-prevSlide,
+.go-Carousel:focus-within .go-Carousel-nextSlide {
+  opacity: 1;
+}
+.go-Carousel-dots {
+  display: flex;
+  gap: 0.5rem;
+}
+.go-Carousel-dot {
+  background-color: var(--color-border);
+  border-radius: 2rem;
+  height: 0.5rem;
+  width: 0.5rem;
+}
+.go-Carousel-dot--active,
+.go-Carousel-dot:hover {
+  background-color: var(--color-text-subtle);
+}
+.go-Carousel-obscured {
+  border: 0;
+  clip: rect(0 0 0 0);
+  height: 0.0625rem;
+  margin: -0.0625rem;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  width: 0.0625rem;
+}

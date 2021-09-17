@@ -5,6 +5,7 @@
  * license that can be found in the LICENSE file.
  */
 
+import { CarouselController } from '../../shared/carousel/carousel';
 import { SelectNavController, makeSelectNav } from '../../shared/outline/select';
 import { TreeNavController } from '../../shared/outline/tree';
 
@@ -38,6 +39,10 @@ window.addEventListener('load', () => {
 
   for (const el of document.querySelectorAll<HTMLSelectElement>('.js-selectNav')) {
     new SelectNavController(el);
+  }
+
+  for (const el of document.querySelectorAll<HTMLSelectElement>('.js-carousel')) {
+    new CarouselController(el);
   }
 });
 
