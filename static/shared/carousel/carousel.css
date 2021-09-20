@@ -48,13 +48,14 @@
 }
 .go-Carousel-dots {
   display: flex;
+  font-size: 0.4375rem;
   gap: 0.5rem;
 }
 .go-Carousel-dot {
   background-color: var(--color-border);
   border-radius: 2rem;
-  height: 0.5rem;
-  width: 0.5rem;
+  height: 0.4375rem;
+  width: 0.4375rem;
 }
 .go-Carousel-dot--active,
 .go-Carousel-dot:hover {

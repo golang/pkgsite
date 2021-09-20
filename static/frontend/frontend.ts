@@ -6,6 +6,7 @@
  */
 
 import { registerHeaderListeners, registerSearchFormListeners } from 'static/shared/header/header';
+import { CarouselController } from 'static/shared/carousel/carousel';
 import { ClipboardController } from 'static/shared/clipboard/clipboard';
 import { ToolTipController } from 'static/shared/tooltip/tooltip';
 import { SelectNavController } from 'static/shared/outline/select';
@@ -31,6 +32,10 @@ for (const t of document.querySelectorAll<HTMLDetailsElement>('.js-tooltip')) {
 
 for (const el of document.querySelectorAll<HTMLSelectElement>('.js-selectNav')) {
   new SelectNavController(el);
+}
+
+for (const el of document.querySelectorAll<HTMLSelectElement>('.js-carousel')) {
+  new CarouselController(el);
 }
 
 // Temporary shortcut for testing out the dark theme.

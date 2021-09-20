@@ -77,6 +77,11 @@
     display: inline-flex;
   }
 }
+.Homepage-tips {
+  margin: auto;
+  max-width: 45.0625rem;
+  width: 100%;
+}
 .Homepage-examples {
   align-items: center;
   display: flex;
@@ -110,7 +115,7 @@ a.Homepage-helpLink {
   display: inline-flex;
   font-size: 1em;
   font-weight: initial;
-  margin-right: 0.5rem;
+  margin-left: 0.5rem;
   white-space: nowrap;
 }
 .Homepage-helpLink img {

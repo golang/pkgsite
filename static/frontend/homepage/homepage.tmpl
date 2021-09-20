@@ -46,17 +46,46 @@
           autofocus="true">
         <button type="submit" class="go-Button">Search</button>
       </form>
+      {{if .Experiments.IsActive "symbol-search"}}
+        <section class="go-Carousel Homepage-tips js-carousel" aria-label="Search Tips Carousel">
+          <ul>
+            <li class="go-Carousel-slide">
+              <p>
+                <strong>Tip:</strong> Search for a package, for example
+                <a href="/search?q=http">“http”</a> or <a href="/search?q=command">“command”</a>.
+                <a href="/search-help" target="_blank" rel="noopener" class="Homepage-helpLink">
+                  Search help <span><img width="24" height="24" src="/static/shared/icon/launch_gm_grey_24dp.svg" alt=""></span>
+                </a>
+              </p>
+            </li>
+            <li class="go-Carousel-slide" aria-hidden>
+              <p>
+                <strong>Tip:</strong> Search for a symbol, for example
+                <a href="/search?q=Unmarshal">“Unmarshal”</a> or <a href="/search?q=io.Reader">“io.Reader”</a>.
+                <a href="/search-help" target="_blank" rel="noopener" class="Homepage-helpLink">
+                  Search help <span><img width="24" height="24" src="/static/shared/icon/launch_gm_grey_24dp.svg" alt=""></span>
+                </a>
+              </p>
+            </li>
+            <li class="go-Carousel-slide" aria-hidden>
+              <p>
+                <strong>Tip:</strong> Search for symbols within a package using the # filter. For example
+                <a href="/search?q=golang.org%2Fx+%23error">“golang.org/x #error”</a> or
+                <a href="/search?q=%23reader+io&m=symbol">“#reader io”</a>.
+                <a href="/search-help" target="_blank" rel="noopener" class="Homepage-helpLink">
+                  Search help <span><img width="24" height="24" src="/static/shared/icon/launch_gm_grey_24dp.svg" alt=""></span>
+                </a>
+              </p>
+            </li>
+          </ul>
+        </section>
+      {{else}}
       <div class="Homepage-examples">
         <span class="Homepage-examplesTitle">Example Searches:</span>
         <ul class="Homepage-examplesList">
           <li><a href="/search?q=http">“http”</a></li>
           <li><a href="/search?q=command">“command”</a></li>
-          {{if .Experiments.IsActive "symbol-search"}}
-            <li><a href="/search?q=sql.DB">“sql.DB”</a></li>
-            <li><a href="/search?q=%23error+golang.org%2Fx">“#error golang.org/x”</a></li>
-          {{else}}
-            <li><a href="/search?q=yaml+OR+json+OR+xml">“yaml OR json OR xml”</a></li>
-          {{end}}
+          <li><a href="/search?q=yaml+OR+json+OR+xml">“yaml OR json OR xml”</a></li>
         </ul>
         <div>
           <a href="/search-help" target="_blank" rel="noopener" class="Homepage-helpLink">
@@ -64,6 +93,7 @@
           </a>
         </div>
       </div>
+      {{end}}
     </div>
   </main>
 {{end}}
