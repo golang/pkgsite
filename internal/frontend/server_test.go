@@ -1582,7 +1582,7 @@ func TestCheckTemplates(t *testing.T) {
 		// error.tmpl omitted because relies on an associated "message" template
 		// that's parsed on demand; see renderErrorPage above.
 		{"fetch", nil, errorPage{}},
-		{"homepage", nil, basePage{}},
+		{"homepage", nil, homepage{}},
 		{"license-policy", nil, licensePolicyPage{}},
 		{"search", nil, SearchPage{}},
 		{"legacy_search", nil, SearchPage{}},

@@ -27,11 +27,12 @@ import (
 func (s *Server) serveDetails(w http.ResponseWriter, r *http.Request, ds internal.DataSource) (err error) {
 	defer middleware.ElapsedStat(r.Context(), "serveDetails")()
 
+	ctx := r.Context()
 	if r.Method != http.MethodGet && r.Method != http.MethodHead {
 		return &serverError{status: http.StatusMethodNotAllowed}
 	}
 	if r.URL.Path == "/" {
-		s.staticPageHandler("homepage", "Home")(w, r)
+		s.serveHomepage(ctx, w, r)
 		return nil
 	}
 	if strings.HasSuffix(r.URL.Path, "/") {
@@ -39,7 +40,6 @@ func (s *Server) serveDetails(w http.ResponseWriter, r *http.Request, ds interna
 		return
 	}
 
-	ctx := r.Context()
 	// If page statistics are enabled, use the "exp" query param to adjust
 	// the active experiments.
 	if s.serveStats {

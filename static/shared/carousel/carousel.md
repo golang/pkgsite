@@ -5,7 +5,7 @@
 ### With Heading
 
 ```html
-<section class="go-Carousel js-carousel">
+<section class="go-Carousel js-carousel" data-slide-index="0">
   <h5>Search Tips</h2>
   <ul>
     <li class="go-Carousel-slide">
@@ -26,7 +26,7 @@
 Use aria-label to create an accessible label that is visually hidden.
 
 ```html
-<section class="go-Carousel js-carousel" aria-label="Search Tips Carousel">
+<section class="go-Carousel js-carousel" aria-label="Search Tips Carousel" data-slide-index="0">
   <ul>
     <li class="go-Carousel-slide">
       <p>Search for a package by name, for example “logrus”</p>

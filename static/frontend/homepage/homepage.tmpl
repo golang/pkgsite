@@ -47,36 +47,20 @@
         <button type="submit" class="go-Button">Search</button>
       </form>
       {{if .Experiments.IsActive "symbol-search"}}
-        <section class="go-Carousel Homepage-tips js-carousel" aria-label="Search Tips Carousel">
+        <section class="go-Carousel Homepage-tips js-carousel" aria-label="Search Tips Carousel" data-slide-index="{{.TipIndex}}">
           <ul>
-            <li class="go-Carousel-slide">
-              <p>
-                <strong>Tip:</strong> Search for a package, for example
-                <a href="/search?q=http">“http”</a> or <a href="/search?q=command">“command”</a>.
-                <a href="/search-help" target="_blank" rel="noopener" class="Homepage-helpLink">
-                  Search help <span><img width="24" height="24" src="/static/shared/icon/launch_gm_grey_24dp.svg" alt=""></span>
-                </a>
-              </p>
-            </li>
-            <li class="go-Carousel-slide" aria-hidden>
-              <p>
-                <strong>Tip:</strong> Search for a symbol, for example
-                <a href="/search?q=Unmarshal">“Unmarshal”</a> or <a href="/search?q=io.Reader">“io.Reader”</a>.
-                <a href="/search-help" target="_blank" rel="noopener" class="Homepage-helpLink">
-                  Search help <span><img width="24" height="24" src="/static/shared/icon/launch_gm_grey_24dp.svg" alt=""></span>
-                </a>
-              </p>
-            </li>
-            <li class="go-Carousel-slide" aria-hidden>
-              <p>
-                <strong>Tip:</strong> Search for symbols within a package using the # filter. For example
-                <a href="/search?q=golang.org%2Fx+%23error">“golang.org/x #error”</a> or
-                <a href="/search?q=%23reader+io&m=symbol">“#reader io”</a>.
-                <a href="/search-help" target="_blank" rel="noopener" class="Homepage-helpLink">
-                  Search help <span><img width="24" height="24" src="/static/shared/icon/launch_gm_grey_24dp.svg" alt=""></span>
-                </a>
-              </p>
-            </li>
+            {{range $i, $v := .SearchTips}}
+              <li class="go-Carousel-slide" {{if not (eq $.TipIndex $i)}}aria-hidden{{end}}>
+                <p>
+                  <strong>Tip:</strong> {{.Text}}
+                  <a href="/search?q={{queryescape $v.Example1}}">“{{$v.Example1}}”</a> or
+                  <a href="/search?q={{queryescape $v.Example2}}">“{{$v.Example2}}”</a>.
+                  <a href="/search-help" target="_blank" rel="noopener" class="Homepage-helpLink">
+                    Search help <span><img width="24" height="24" src="/static/shared/icon/launch_gm_grey_24dp.svg" alt=""></span>
+                  </a>
+                </p>
+              </li>
+            {{end}}
           </ul>
         </section>
       {{else}}

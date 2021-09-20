@@ -13,6 +13,7 @@ import (
 	"io"
 	"io/fs"
 	"net/http"
+	"net/url"
 	"strings"
 	"sync"
 	"time"
@@ -556,6 +557,7 @@ var templateFuncs = template.FuncMap{
 	},
 	"stripscheme": stripScheme,
 	"capitalize":  strings.Title,
+	"queryescape": url.QueryEscape,
 }
 
 func stripScheme(url string) string {

@@ -34,7 +34,7 @@ export class CarouselController {
     this.slides = Array.from(el.querySelectorAll('.go-Carousel-slide'));
     this.dots = [];
     this.liveRegion = document.createElement('div');
-    this.activeIndex = 0;
+    this.activeIndex = Number(el.getAttribute('data-slide-index') ?? 0);
 
     this.initSlides();
     this.initArrows();
@@ -44,7 +44,7 @@ export class CarouselController {
 
   private initSlides() {
     for (const [i, v] of this.slides.entries()) {
-      if (i === 0) continue;
+      if (i === this.activeIndex) continue;
       v.setAttribute('aria-hidden', 'true');
     }
   }
@@ -80,7 +80,7 @@ export class CarouselController {
       const li = document.createElement('li');
       const button = document.createElement('button');
       button.classList.add('go-Carousel-dot');
-      if (i === 0) {
+      if (i === this.activeIndex) {
         button.classList.add('go-Carousel-dot--active');
       }
       button.innerHTML = `<span class="go-Carousel-obscured">Slide ${i + 1}</span>`;
@@ -102,6 +102,7 @@ export class CarouselController {
 
   private setActive = (index: number) => {
     this.activeIndex = (index + this.slides.length) % this.slides.length;
+    this.el.setAttribute('data-slide-index', String(this.activeIndex));
     for (const d of this.dots) {
       d.classList.remove('go-Carousel-dot--active');
     }
