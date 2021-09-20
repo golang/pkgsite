@@ -6,18 +6,29 @@
 
 {{define "title"}}<title>Search Help - pkg.go.dev</title>{{end}}
 
+
+{{define "pre-content"}}
+  <link href="/static/frontend/search-help/search-help.min.css?version={{.AppVersionLabel}}" rel="stylesheet">
+{{end}}
+
 {{define "main"}}
   <main class="go-Container">
     <div class="go-Content">
       <h1>Search help</h1>
-        <p>You can use symbols or words in your search to make your search results more precise.</p>
-        <h2>Search for an exact match</h2>
-        <p>Put a word or phrase inside quotes. For example, <a href="/search?q=&quot;go+cloud&quot;">"go cloud"</a>.</p>
-        <h2>Combine searches</h2>
-        <p>Put OR between each search query. For example, <a href="/search?q=yaml+OR+json">yaml OR json</a>.</p>
-        <h2>Search by package path</h2>
-        <p>You can search for a package by its full or partial import path. For example, <a href="/search?q=go%2Fpackages">go/packages</a>.</p>
-        <p>If the query matches a package import path, you will be redirected to the package details page for the latest version of that package. For example, <a href="/search?q=golang.org/x/tools/go/packages">golang.org/x/tools/go/packages</a>.</p>
+        <p>You can use pkg.go.dev to search for packages and for symbols in packages. Follow the suggestions below to discover what you're looking for.</p>
+        <h2>Searching by package</h2>
+        <p>You can search for packages in which the search text occurs in the package name, package path, synopsis, or README.</p>
+        <p>Results are grouped by module, displaying the most relevant package in each module.</p>
+        <p>You can also search for a package by its full or partial import path.</p>
+        <p>If the package path you specified is complete enough, matching a full package import path, you will be brought directly to the details page for the latest version of that package.</p>
+        <h2>Searching by symbol</h2>
+        <p>You can also search for a symbol by name across all packages. A symbol is a constant, variable, function, type, field, or method.</p>
+        <p>Searching by symbol will return a list of packages containing the symbol you specify. You can search by the following:</p>
+        <ul class="SearchHelp-list">
+          <li>Full symbol name, such as <a href="/search?m=symbol&q=DB">"DB"</a></li>
+          <li>Package and symbol name, separated by a dot, such as <a href="/search?m=symbol&q=sql.DB">"sql.DB"</a></li>
+          <li>Package path and symbol name (indicated by the # prefix), such as <a href="/search?m=symbol&q=x%2Ftools+package">x/tools #package</a></li>
+        </ul>
     </div>
   </main>
 {{end}}

@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["search-help.css"],
+  "sourcesContent": ["/*\n * Copyright 2021 The Go Authors. All rights reserved.\n * Use of this source code is governed by a BSD-style\n * license that can be found in the LICENSE file.\n */\n\n.SearchHelp-list {\n  line-height: 1.5rem;\n  list-style: disc;\n  padding-left: 1.5rem;\n}\n"],
+  "mappings": ";;;;;AAMA,iBACE,mBACA,gBACA",
+  "names": []
+}

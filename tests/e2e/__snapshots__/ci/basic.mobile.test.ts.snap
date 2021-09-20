@@ -1488,71 +1488,78 @@ Object {
       "role": "heading",
     },
     Object {
-      "name": "You can use symbols or words in your search to make your search results more precise.",
+      "name": "You can use pkg.go.dev to search for packages and for symbols in packages. Follow the suggestions below to discover what you're looking for.",
       "role": "StaticText",
     },
     Object {
       "level": 2,
-      "name": "Search for an exact match",
+      "name": "Searching by package",
       "role": "heading",
     },
     Object {
-      "name": "Put a word or phrase inside quotes. For example,",
+      "name": "You can search for packages in which the search text occurs in the package name, package path, synopsis, or README.",
       "role": "StaticText",
     },
     Object {
-      "name": "\\"go cloud\\"",
-      "role": "link",
+      "name": "Results are grouped by module, displaying the most relevant package in each module.",
+      "role": "StaticText",
     },
     Object {
-      "name": ".",
+      "name": "You can also search for a package by its full or partial import path.",
+      "role": "StaticText",
+    },
+    Object {
+      "name": "If the package path you specified is complete enough, matching a full package import path, you will be brought directly to the details page for the latest version of that package.",
       "role": "StaticText",
     },
     Object {
       "level": 2,
-      "name": "Combine searches",
+      "name": "Searching by symbol",
       "role": "heading",
     },
     Object {
-      "name": "Put OR between each search query. For example,",
+      "name": "You can also search for a symbol by name across all packages. A symbol is a constant, variable, function, type, field, or method.",
       "role": "StaticText",
     },
     Object {
-      "name": "yaml OR json",
+      "name": "Searching by symbol will return a list of packages containing the symbol you specify. You can search by the following:",
+      "role": "StaticText",
+    },
+    Object {
+      "name": "•",
+      "role": "StaticText",
+    },
+    Object {
+      "name": "Full symbol name, such as",
+      "role": "StaticText",
+    },
+    Object {
+      "name": "\\"DB\\"",
       "role": "link",
     },
     Object {
-      "name": ".",
+      "name": "•",
       "role": "StaticText",
     },
     Object {
-      "level": 2,
-      "name": "Search by package path",
-      "role": "heading",
-    },
-    Object {
-      "name": "You can search for a package by its full or partial import path. For example,",
+      "name": "Package and symbol name, separated by a dot, such as",
       "role": "StaticText",
     },
     Object {
-      "name": "go/packages",
+      "name": "\\"sql.DB\\"",
       "role": "link",
     },
     Object {
-      "name": ".",
+      "name": "•",
       "role": "StaticText",
     },
     Object {
-      "name": "If the query matches a package import path, you will be redirected to the package details page for the latest version of that package. For example,",
+      "name": "Package path and symbol name (indicated by the # prefix), such as",
       "role": "StaticText",
     },
     Object {
-      "name": "golang.org/x/tools/go/packages",
+      "name": "x/tools #package",
       "role": "link",
-    },
-    Object {
-      "name": ".",
-      "role": "StaticText",
     },
     Object {
       "name": "Why Go",
