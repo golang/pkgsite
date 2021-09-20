@@ -42,5 +42,8 @@ export async function prepare(page: Page): Promise<void> {
     pg.$$eval(page, '[data-test-id="snippet-license"]', els =>
       els.map(el => (el.innerHTML = 'BSD-3-Clause'))
     ),
+    pg.$$eval(page, '[data-test-id="results-total"]', els =>
+      els.map(el => (el.innerHTML = '1 – 25 of 125 results'))
+    ),
   ]);
 }

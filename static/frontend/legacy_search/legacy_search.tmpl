@@ -18,7 +18,7 @@
       <h1 class="SearchResults-header">Results for “{{.Query}}”</h1>
       <div class="SearchResults-help"><a href="/search-help">Search help</a></div>
       <div class="SearchResults-resultCount go-textSubtle">
-        {{template "pagination_summary" .Pagination}} {{pluralize .Pagination.TotalCount "result"}}
+        <span data-test-id="results-total">{{template "pagination_summary" .Pagination}} {{pluralize .Pagination.TotalCount "result"}}</span>
         {{template "pagination_nav" .Pagination}}
       </div>
         {{if eq (len .Results) 0}}
