@@ -129,7 +129,7 @@ const (
 
 	// maxSearchOffset is the maximum allowed offset into the search results.
 	// This prevents some very CPU-intensive queries from running.
-	maxSearchOffset = 90
+	maxSearchOffset = 100
 
 	// maxSearchPageSize is the maximum allowed limit for search results.
 	maxSearchPageSize = 100
