@@ -27,6 +27,7 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/godoc"
+	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/stdlib"
 )
@@ -84,6 +85,7 @@ func loadPackage(ctx context.Context, contentDir fs.FS, goFilePaths []string, in
 		if err != nil {
 			return nil, err
 		}
+		log.Debugf(ctx, "got %d matching files for build context %s", len(mfiles), bc)
 		filesKey := mapKeyForFiles(mfiles)
 		if doc := docsByFiles[filesKey]; doc != nil {
 			// We have seen this set of files before.
@@ -179,6 +181,9 @@ func loadPackage(ctx context.Context, contentDir fs.FS, goFilePaths []string, in
 			s.GOOS = internal.All
 			s.GOARCH = internal.All
 		}
+	}
+	if pkg == nil {
+		log.Debugf(ctx, "loadPackage returning nil")
 	}
 	return pkg, nil
 }

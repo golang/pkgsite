@@ -178,6 +178,7 @@ func extractPackages(ctx context.Context, modulePath, resolvedVersion string, co
 	// If we got this far, the file metadata was okay.
 	// Start reading the file contents now to extract information
 	// about Go packages.
+	log.Debugf(ctx, "got %d directories of go files", len(dirs))
 	var pkgs []*goPackage
 	for innerPath, goFiles := range dirs {
 		if incompleteDirs[innerPath] {
