@@ -61,6 +61,7 @@
     {{$query := .Query}}
     {{range $i, $r := .Results}}
       {{$moreLink := eq $i (subtract $.Pagination.DefaultLimit 1)}}
+      {{if eq $i $.Pagination.DefaultLimit}}<hr class="SearchResults-divider">{{end}}
       <div class="SearchSnippet" {{if $moreLink}}id="more-results"{{end}}>
         <div class="SearchSnippet-headerContainer">
           <h2>
@@ -102,6 +103,7 @@
     {{$vulnsActive := (.Experiments.IsActive "vulns")}}
     {{range $i, $v := .Results}}
       {{$moreLink := eq $i (subtract $.Pagination.DefaultLimit 1)}}
+      {{if eq $i $.Pagination.DefaultLimit}}<hr class="SearchResults-divider">{{end}}
       <div class="SearchSnippet" {{if $moreLink}}id="more-results"{{end}}>
         <div class="SearchSnippet-headerContainer">
           <h2>

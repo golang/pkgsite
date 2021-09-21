@@ -92,6 +92,9 @@
 .SearchResults-emptyContentMessage {
   text-align: center;
 }
+.SearchResults-divider {
+  margin-bottom: 2.5rem;
+}
 
 .SearchSnippet {
   display: flex;
