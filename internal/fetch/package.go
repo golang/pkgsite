@@ -178,7 +178,6 @@ func extractPackages(ctx context.Context, modulePath, resolvedVersion string, co
 	// If we got this far, the file metadata was okay.
 	// Start reading the file contents now to extract information
 	// about Go packages.
-	log.Debugf(ctx, "got %d directories of go files", len(dirs))
 	var pkgs []*goPackage
 	for innerPath, goFiles := range dirs {
 		if incompleteDirs[innerPath] {
@@ -193,6 +192,7 @@ func extractPackages(ctx context.Context, modulePath, resolvedVersion string, co
 		)
 		pkg, err := loadPackage(ctx, contentDir, goFiles, innerPath, sourceInfo, modInfo)
 		if bpe := (*BadPackageError)(nil); errors.As(err, &bpe) {
+			log.Infof(ctx, "Error loading %s: %v", innerPath, err)
 			incompleteDirs[innerPath] = true
 			status = derrors.PackageInvalidContents
 			errMsg = err.Error()
