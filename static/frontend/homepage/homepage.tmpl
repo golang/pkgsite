@@ -53,8 +53,8 @@
               <li class="go-Carousel-slide" {{if not (eq $.TipIndex $i)}}aria-hidden{{end}}>
                 <p>
                   <strong>Tip:</strong> {{.Text}}
-                  <a href="/search?q={{queryescape $v.Example1}}">“{{$v.Example1}}”</a> or
-                  <a href="/search?q={{queryescape $v.Example2}}">“{{$v.Example2}}”</a>.
+                  <a href="/search?q={{$v.Example1}}">“{{$v.Example1}}”</a> or
+                  <a href="/search?q={{$v.Example2}}">“{{$v.Example2}}”</a>.
                   <a href="/search-help" target="_blank" rel="noopener" class="Homepage-helpLink">
                     Search help <span><img width="24" height="24" src="/static/shared/icon/launch_gm_grey_24dp.svg" alt=""></span>
                   </a>
