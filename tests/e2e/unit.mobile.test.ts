@@ -30,7 +30,9 @@ for (const tc of testcases) {
     await page.goto(`${tc.path}`);
     await unit.prepare(page);
     const image = await page.screenshot();
-    expect(image).toMatchImageSnapshot({ customSnapshotIdentifier: snapshotId(tc.path) });
+    expect(image).toMatchImageSnapshot({
+      customSnapshotIdentifier: unit.snapshotId('mobile', tc.path),
+    });
   });
 
   // Snapshot additional unit page sections.
@@ -40,7 +42,9 @@ for (const tc of testcases) {
       await page.goto(path);
       await unit.prepare(page);
       const image = await page.screenshot();
-      expect(image).toMatchImageSnapshot({ customSnapshotIdentifier: snapshotId(path) });
+      expect(image).toMatchImageSnapshot({
+        customSnapshotIdentifier: unit.snapshotId('mobile', path),
+      });
     });
   }
 
@@ -53,7 +57,9 @@ for (const tc of testcases) {
       await page.goto(path);
       await unit.prepare(page);
       const image = await page.screenshot();
-      expect(image).toMatchImageSnapshot({ customSnapshotIdentifier: snapshotId(path) });
+      expect(image).toMatchImageSnapshot({
+        customSnapshotIdentifier: unit.snapshotId('mobile', path),
+      });
     });
   }
 }
@@ -61,7 +67,3 @@ for (const tc of testcases) {
 test('no page errors', () => {
   expect(pageErrors).toHaveLength(0);
 });
-
-function snapshotId(path: string): string {
-  return 'unit-mobile-' + path.replace(/\//g, '-');
-}

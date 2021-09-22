@@ -26,3 +26,14 @@ export async function prepare(page: Page): Promise<void> {
   ]);
   await page.evaluate(() => new Promise(r => setTimeout(r, 500)));
 }
+
+/**
+ * snapshotId generates a snapshot identifier replacing characters that are not
+ * allowed in filenames within go modules.
+ * @param env 'desktop' or 'mobile'
+ * @param path a pkg.go.dev url path
+ * @returns a snapshot idenifier
+ */
+export function snapshotId(env: 'desktop' | 'mobile', path: string): string {
+  return `unit-${env}-${path.replace(/[*<>?`'|/\\:]/g, '-')}`;
+}
