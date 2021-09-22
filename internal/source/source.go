@@ -639,6 +639,11 @@ var patterns = []struct {
 		templates: githubURLTemplates,
 	},
 	{
+		// Assume that any site beginning with "github." works like github.com.
+		pattern:   `^(?P<repo>github\.[a-z0-9A-Z.-]+/[a-z0-9A-Z_.\-]+/[a-z0-9A-Z_.\-]+)(\.git|$)`,
+		templates: githubURLTemplates,
+	},
+	{
 		pattern:   `^(?P<repo>bitbucket\.org/[a-z0-9A-Z_.\-]+/[a-z0-9A-Z_.\-]+)`,
 		templates: bitbucketURLTemplates,
 	},
