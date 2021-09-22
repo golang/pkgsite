@@ -3,26 +3,5 @@
 # license that can be found in the LICENSE file.
 
 steps:
-
-# Run postgres in a docker container to host the test database.
-- name: 'gcr.io/cloud-builders/docker'
-  args: ['run', '--rm', '-d', '--name', 'pg',
-        # All Cloud Build containers are part of the cloudbuild docker
-        # network. This allows the container in the next step to refer
-        # to this container by its name.
-        '--network', 'cloudbuild',
-        # Create the test database with the same collation as prod (which has
-        # the settings LC_COLLATE=C and LC_CTYPE=C).
-        '-e', 'LANG=C',
-        'postgres:11.4']
-
-# Run the all.bash script in CI mode, using the standard golang docker
-# container. That container is built on a standard Debian image, so it
-# has bash and other common binaries in addition to the go toolchain.
-- name: 'golang:1.13'
-  env:
-  - GO111MODULE=on
-  - GOPROXY=https://proxy.golang.org
-  # Refer to the container started in the above step.
-  - GO_DISCOVERY_DATABASE_TEST_HOST=pg
-  args: ['./all.bash', 'ci']
+- name: 'docker/compose:1.27.4'
+  args: ['-f', 'devtools/docker/compose.yaml', 'run', 'allbash', 'ci']
