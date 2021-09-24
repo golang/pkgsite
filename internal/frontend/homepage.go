@@ -32,7 +32,7 @@ var searchTips = []searchTip{
 	{
 		"Search for symbols within a package using the # filter. For example",
 		"golang.org/x #error",
-		"reader io",
+		"#reader io",
 	},
 }
 
