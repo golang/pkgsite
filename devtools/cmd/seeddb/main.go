@@ -34,8 +34,9 @@ import (
 )
 
 var (
-	seedfile = flag.String("seed", "devtools/cmd/seeddb/seed.txt", "filename containing modules for seeding the database")
-	refetch  = flag.Bool("refetch", false, "refetch modules in the seedfile even if they already exist")
+	seedfile  = flag.String("seed", "devtools/cmd/seeddb/seed.txt", "filename containing modules for seeding the database")
+	refetch   = flag.Bool("refetch", false, "refetch modules in the seedfile even if they already exist")
+	keepGoing = flag.Bool("keep_going", false, "continue on errors")
 )
 
 func main() {
@@ -95,6 +96,10 @@ func run(ctx context.Context, db *database.DB, proxyURL string) error {
 		SourceClient: sourceClient,
 		DB:           postgres.New(db),
 	}
+	var (
+		mu     sync.Mutex
+		errors database.MultiErr
+	)
 	for path, vers := range versionsByPath {
 		path := path
 		vers := vers
@@ -102,7 +107,13 @@ func run(ctx context.Context, db *database.DB, proxyURL string) error {
 		g.Go(func() error {
 			for _, v := range vers {
 				if err := fetch(ctx, db, f, path, v, &r); err != nil {
-					return err
+					if *keepGoing {
+						mu.Lock()
+						errors = append(errors, err)
+						mu.Unlock()
+					} else {
+						return err
+					}
 				}
 			}
 			return nil
@@ -110,6 +121,9 @@ func run(ctx context.Context, db *database.DB, proxyURL string) error {
 	}
 	if err := g.Wait(); err != nil {
 		return err
+	}
+	if len(errors) > 0 {
+		return errors
 	}
 	log.Infof(ctx, "Successfully fetched all modules: %v", time.Since(start))
 
