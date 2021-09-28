@@ -2,6 +2,9 @@
 # Use of this source code is governed by a BSD-style
 # license that can be found in the LICENSE file.
 
+options:
+  machineType: 'N1_HIGHCPU_8'
+
 steps:
-- name: 'docker/compose:1.27.4'
-  args: ['-f', 'devtools/docker/compose.yaml', 'run', 'allbash', 'ci']
+- name: 'gcr.io/go-discovery/docker-compose'
+  entrypoint: 'devtools/ci/ci.sh'
