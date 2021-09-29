@@ -34,9 +34,11 @@ import (
 )
 
 var (
-	seedfile  = flag.String("seed", "devtools/cmd/seeddb/seed.txt", "filename containing modules for seeding the database")
-	refetch   = flag.Bool("refetch", false, "refetch modules in the seedfile even if they already exist")
-	keepGoing = flag.Bool("keep_going", false, "continue on errors")
+	seedfile           = flag.String("seed", "devtools/cmd/seeddb/seed.txt", "filename containing modules for seeding the database")
+	refetch            = flag.Bool("refetch", false, "refetch modules in the seedfile even if they already exist")
+	keepGoing          = flag.Bool("keep_going", false, "continue on errors")
+	bypassLicenseCheck = flag.Bool("bypass_license_check", false,
+		"insert all data into the DB, even for non-redistributable paths")
 )
 
 func main() {
@@ -94,8 +96,13 @@ func run(ctx context.Context, db *database.DB, proxyURL string) error {
 	f := &worker.Fetcher{
 		ProxyClient:  proxyClient,
 		SourceClient: sourceClient,
-		DB:           postgres.New(db),
 	}
+	if *bypassLicenseCheck {
+		f.DB = postgres.NewBypassingLicenseCheck(db)
+	} else {
+		f.DB = postgres.New(db)
+	}
+
 	var (
 		mu     sync.Mutex
 		errors database.MultiErr
