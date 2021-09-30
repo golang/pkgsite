@@ -143,7 +143,7 @@ type Config struct {
 	GoogleTagManagerID string
 
 	// MonitoredResource represents the resource that is running the current binary.
-	// It might be a Google AppEngine app or a Kubernetes pod.
+	// It might be a Google AppEngine app, a Cloud Run service, or a Kubernetes pod.
 	// See https://cloud.google.com/monitoring/api/resources for more
 	// details:
 	// "An object representing a resource that can be used for monitoring, logging,
@@ -208,10 +208,22 @@ func (c *Config) OnGKE() bool {
 	return os.Getenv("GO_DISCOVERY_ON_GKE") == "true"
 }
 
+// OnCloudRun reports whether the current process is running on Cloud Run.
+func (c *Config) OnCloudRun() bool {
+	// Use the presence of the environment variables provided by Cloud Run.
+	// See https://cloud.google.com/run/docs/reference/container-contract.
+	for _, ev := range []string{"K_SERVICE", "K_REVISION", "K_CONFIGURATION"} {
+		if os.Getenv(ev) == "" {
+			return false
+		}
+	}
+	return true
+}
+
 // OnGCP reports whether the current process is running on Google Cloud
 // Platform.
 func (c *Config) OnGCP() bool {
-	return c.OnAppEngine() || c.OnGKE()
+	return c.OnAppEngine() || c.OnGKE() || c.OnCloudRun()
 }
 
 // StatementTimeout is the value of the Postgres statement_timeout parameter.
@@ -345,9 +357,12 @@ func Init(ctx context.Context) (_ *Config, err error) {
 		Port:       os.Getenv("PORT"),
 		DebugPort:  os.Getenv("DEBUG_PORT"),
 		// Resolve AppEngine identifiers
-		ProjectID:          os.Getenv("GOOGLE_CLOUD_PROJECT"),
-		ServiceID:          GetEnv("GAE_SERVICE", os.Getenv("GO_DISCOVERY_SERVICE")),
-		VersionID:          GetEnv("GAE_VERSION", os.Getenv("DOCKER_IMAGE")),
+		ProjectID: os.Getenv("GOOGLE_CLOUD_PROJECT"),
+		ServiceID: GetEnv("GAE_SERVICE", os.Getenv("GO_DISCOVERY_SERVICE")),
+		// Version ID from either AppEngine, Cloud Run (see
+		// https://cloud.google.com/run/docs/reference/container-contract) or
+		// GKE (set by our own config).
+		VersionID:          GetEnv("GAE_VERSION", GetEnv("K_REVISION", os.Getenv("DOCKER_IMAGE"))),
 		InstanceID:         GetEnv("GAE_INSTANCE", os.Getenv("GO_DISCOVERY_INSTANCE")),
 		GoogleTagManagerID: os.Getenv("GO_DISCOVERY_GOOGLE_TAG_MANAGER_ID"),
 		QueueURL:           os.Getenv("GO_DISCOVERY_QUEUE_URL"),
@@ -421,6 +436,16 @@ func Init(ctx context.Context) (_ *Config, err error) {
 					"module_id":  cfg.ServiceID,
 					"version_id": cfg.VersionID,
 					"zone":       cfg.ZoneID,
+				},
+			}
+		case cfg.OnCloudRun():
+			cfg.MonitoredResource = &mrpb.MonitoredResource{
+				Type: "cloud_run_revision",
+				Labels: map[string]string{
+					"project_id":         cfg.ProjectID,
+					"service_name":       cfg.ServiceID,
+					"revision_name":      cfg.VersionID,
+					"configuration_name": os.Getenv("K_CONFIGURATION"),
 				},
 			}
 		case cfg.OnGKE():
