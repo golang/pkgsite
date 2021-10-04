@@ -138,6 +138,7 @@ func (s *Server) Install(handle func(string, http.Handler), redisClient *redis.C
 	handle("/favicon.ico", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, fmt.Sprintf("%s/shared/icon/favicon.ico", http.Dir(s.staticPath.String())))
 	}))
+	handle("/sitemap/", http.StripPrefix("/sitemap/", http.FileServer(http.Dir("private/sitemap"))))
 	handle("/mod/", http.HandlerFunc(s.handleModuleDetailsRedirect))
 	handle("/pkg/", http.HandlerFunc(s.handlePackageDetailsRedirect))
 	handle("/fetch/", fetchHandler)
