@@ -131,9 +131,13 @@ func main() {
 	router := dcensus.NewRouter(frontend.TagRoute)
 	var cacheClient *redis.Client
 	if cfg.RedisCacheHost != "" {
-		cacheClient = redis.NewClient(&redis.Options{
-			Addr: cfg.RedisCacheHost + ":" + cfg.RedisCachePort,
-		})
+		addr := cfg.RedisCacheHost + ":" + cfg.RedisCachePort
+		cacheClient = redis.NewClient(&redis.Options{Addr: addr})
+		if err := cacheClient.Ping(ctx).Err(); err != nil {
+			log.Errorf(ctx, "redis at %s: %v", addr, err)
+		} else {
+			log.Infof(ctx, "connected to redis at %s", addr)
+		}
 	}
 	server.Install(router.Handle, cacheClient, cfg.AuthValues)
 	views := append(dcensus.ServerViews,
