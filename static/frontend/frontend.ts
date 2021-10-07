@@ -11,12 +11,10 @@ import { ClipboardController } from 'static/shared/clipboard/clipboard';
 import { ToolTipController } from 'static/shared/tooltip/tooltip';
 import { SelectNavController } from 'static/shared/outline/select';
 import { ModalController } from 'static/shared/modal/modal';
+import { initModals } from 'static/shared/jump/jump';
 
 import { keyboard } from 'static/shared/keyboard/keyboard';
 import * as analytics from 'static/shared/analytics/analytics';
-
-registerHeaderListeners();
-registerSearchFormListeners();
 
 for (const el of document.querySelectorAll<HTMLButtonElement>('.js-clipboard')) {
   new ClipboardController(el);
@@ -37,6 +35,10 @@ for (const el of document.querySelectorAll<HTMLSelectElement>('.js-selectNav')) 
 for (const el of document.querySelectorAll<HTMLSelectElement>('.js-carousel')) {
   new CarouselController(el);
 }
+
+registerHeaderListeners();
+registerSearchFormListeners();
+initModals();
 
 // Temporary shortcut for testing out the dark theme.
 keyboard.on('t', 'toggle theme', () => {

@@ -600,7 +600,7 @@ func parsePageTemplates(base template.TrustedSource) (map[string]*template.Templ
 	}
 
 	for _, set := range htmlSets {
-		t, err := template.New("frontend.tmpl").Funcs(templateFuncs).ParseFilesFromTrustedSources(join(base, tsc("frontend/frontend.tmpl")))
+		t, err := template.New("frontend.tmpl").Funcs(templateFuncs).ParseGlobFromTrustedSource(join(base, tsc("frontend/*.tmpl")))
 		if err != nil {
 			return nil, fmt.Errorf("ParseFilesFromTrustedSources: %v", err)
 		}

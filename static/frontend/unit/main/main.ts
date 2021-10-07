@@ -1,10 +1,8 @@
 import { initPlaygrounds } from 'static/shared/playground/playground';
-import { initModals } from 'static/shared/jump/jump';
 import { SelectNavController, makeSelectNav } from 'static/shared/outline/select';
 import { TreeNavController } from 'static/shared/outline/tree';
 import { ExpandableRowsTableController } from 'static/shared/table/table';
 
-initModals();
 initPlaygrounds();
 
 const directories = document.querySelector<HTMLTableElement>('.js-expandableTable');

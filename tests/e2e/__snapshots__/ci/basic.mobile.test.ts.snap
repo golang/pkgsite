@@ -184,6 +184,10 @@ Object {
       "name": "Google logo",
       "role": "link",
     },
+    Object {
+      "name": "Jump to Identifier",
+      "role": "form",
+    },
   ],
   "name": "github.com/package/does/not/exist - pkg.go.dev",
   "role": "RootWebArea",
@@ -386,6 +390,10 @@ Object {
       "name": "Google logo",
       "role": "link",
     },
+    Object {
+      "name": "Jump to Identifier",
+      "role": "form",
+    },
   ],
   "name": "Badge - pkg.go.dev",
   "role": "RootWebArea",
@@ -571,6 +579,10 @@ Object {
     Object {
       "name": "Google logo",
       "role": "link",
+    },
+    Object {
+      "name": "Jump to Identifier",
+      "role": "form",
     },
   ],
   "name": "400 Bad Request - pkg.go.dev",
@@ -782,6 +794,10 @@ Object {
     Object {
       "name": "Google logo",
       "role": "link",
+    },
+    Object {
+      "name": "Jump to Identifier",
+      "role": "form",
     },
   ],
   "name": "pkg.go.dev",
@@ -1421,6 +1437,10 @@ Object {
       "name": "Google logo",
       "role": "link",
     },
+    Object {
+      "name": "Jump to Identifier",
+      "role": "form",
+    },
   ],
   "name": "License Policy - pkg.go.dev",
   "role": "RootWebArea",
@@ -1657,6 +1677,10 @@ Object {
     Object {
       "name": "Google logo",
       "role": "link",
+    },
+    Object {
+      "name": "Jump to Identifier",
+      "role": "form",
     },
   ],
   "name": "Search Help - pkg.go.dev",
@@ -1999,6 +2023,10 @@ Object {
     Object {
       "name": "Google logo",
       "role": "link",
+    },
+    Object {
+      "name": "Jump to Identifier",
+      "role": "form",
     },
   ],
   "name": "Sub-repositories - pkg.go.dev",

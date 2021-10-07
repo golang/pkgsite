@@ -1545,6 +1545,10 @@ Object {
       "name": "Google logo",
       "role": "link",
     },
+    Object {
+      "name": "Jump to Identifier",
+      "role": "form",
+    },
   ],
   "name": "http - Search Results - pkg.go.dev",
   "role": "RootWebArea",
