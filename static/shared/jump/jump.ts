@@ -286,4 +286,8 @@ export function initModals(): void {
       updateJumpList('');
     });
   }
+
+  document.querySelector('.js-openShortcuts')?.addEventListener('click', () => {
+    shortcutsDialog?.showModal();
+  });
 }

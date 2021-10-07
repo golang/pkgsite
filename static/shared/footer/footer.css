@@ -67,6 +67,28 @@
 .go-Footer-listItem a:visited {
   color: var(--color-text-inverted);
 }
+.go-Footer-listItem .go-Button--text {
+  background-color: transparent;
+  font-size: 1rem;
+}
+.go-Footer-listItem [data-value] {
+  display: none;
+}
+
+[data-theme='auto'] .go-Footer-listItem [data-value='auto'],
+:root:not([data-theme]) .go-Footer-listItem [data-value='auto'] {
+  display: initial;
+}
+[data-theme='dark'] .go-Footer-listItem [data-value='dark'] {
+  display: initial;
+}
+[data-theme='light'] .go-Footer-listItem [data-value='light'] {
+  display: initial;
+}
+.go-Footer-toggleTheme,
+.go-Footer-keyboard {
+  margin: 0 0 0.5rem 0;
+}
 
 .go-Footer-googleLogo {
   align-self: flex-end;
@@ -85,5 +107,11 @@
   }
   .go-Footer-listItem + .go-Footer-listItem {
     border-left: var(--border);
+  }
+  .go-Footer-toggleTheme {
+    margin: 0 0 0 -0.5rem;
+  }
+  .go-Footer-keyboard {
+    margin: 0;
   }
 }

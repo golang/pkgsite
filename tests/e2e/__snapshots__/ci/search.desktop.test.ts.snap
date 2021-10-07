@@ -1534,6 +1534,14 @@ Object {
       "role": "link",
     },
     Object {
+      "name": "Toggle theme",
+      "role": "button",
+    },
+    Object {
+      "name": "Open shorcuts modal",
+      "role": "button",
+    },
+    Object {
       "name": "Google logo",
       "role": "link",
     },

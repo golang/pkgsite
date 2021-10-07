@@ -40,15 +40,7 @@ for (const el of document.querySelectorAll<HTMLSelectElement>('.js-carousel')) {
 
 // Temporary shortcut for testing out the dark theme.
 keyboard.on('t', 'toggle theme', () => {
-  let nextTheme = 'dark';
-  const theme = document.documentElement.getAttribute('data-theme');
-  if (theme === 'dark') {
-    nextTheme = 'light';
-  } else if (theme === 'light') {
-    nextTheme = 'auto';
-  }
-  document.documentElement.setAttribute('data-theme', nextTheme);
-  document.cookie = `prefers-color-scheme=${nextTheme};path=/;max-age=31536000;`;
+  toggleTheme();
 });
 
 // Pressing '/' focuses the search box
@@ -110,4 +102,25 @@ if (document.querySelector<HTMLElement>('.js-gtmID')?.dataset.gtmid && window.da
   });
 } else {
   removeUTMSource();
+}
+
+for (const el of document.querySelectorAll('.js-toggleTheme')) {
+  el.addEventListener('click', () => {
+    toggleTheme();
+  });
+}
+
+/**
+ * toggleTheme switches the preferred color scheme between auto, light, and dark.
+ */
+function toggleTheme() {
+  let nextTheme = 'dark';
+  const theme = document.documentElement.getAttribute('data-theme');
+  if (theme === 'dark') {
+    nextTheme = 'light';
+  } else if (theme === 'light') {
+    nextTheme = 'auto';
+  }
+  document.documentElement.setAttribute('data-theme', nextTheme);
+  document.cookie = `prefers-color-scheme=${nextTheme};path=/;max-age=31536000;`;
 }

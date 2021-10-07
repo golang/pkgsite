@@ -87,6 +87,10 @@
 </span>
 
 <span style="display:contents;">
+  <go-icon name="keyboard"></go-icon>
+</span>
+
+<span style="display:contents;">
   <go-icon name="launch"></go-icon>
 </span>
 

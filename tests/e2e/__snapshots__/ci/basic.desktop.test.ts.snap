@@ -189,6 +189,14 @@ Object {
       "role": "link",
     },
     Object {
+      "name": "Toggle theme",
+      "role": "button",
+    },
+    Object {
+      "name": "Open shorcuts modal",
+      "role": "button",
+    },
+    Object {
       "name": "Google logo",
       "role": "link",
     },
@@ -399,6 +407,14 @@ Object {
       "role": "link",
     },
     Object {
+      "name": "Toggle theme",
+      "role": "button",
+    },
+    Object {
+      "name": "Open shorcuts modal",
+      "role": "button",
+    },
+    Object {
       "name": "Google logo",
       "role": "link",
     },
@@ -591,6 +607,14 @@ Object {
     Object {
       "name": "golang.org",
       "role": "link",
+    },
+    Object {
+      "name": "Toggle theme",
+      "role": "button",
+    },
+    Object {
+      "name": "Open shorcuts modal",
+      "role": "button",
     },
     Object {
       "name": "Google logo",
@@ -802,6 +826,14 @@ Object {
     Object {
       "name": "golang.org",
       "role": "link",
+    },
+    Object {
+      "name": "Toggle theme",
+      "role": "button",
+    },
+    Object {
+      "name": "Open shorcuts modal",
+      "role": "button",
     },
     Object {
       "name": "Google logo",
@@ -1450,6 +1482,14 @@ Object {
       "role": "link",
     },
     Object {
+      "name": "Toggle theme",
+      "role": "button",
+    },
+    Object {
+      "name": "Open shorcuts modal",
+      "role": "button",
+    },
+    Object {
       "name": "Google logo",
       "role": "link",
     },
@@ -1693,6 +1733,14 @@ Object {
     Object {
       "name": "golang.org",
       "role": "link",
+    },
+    Object {
+      "name": "Toggle theme",
+      "role": "button",
+    },
+    Object {
+      "name": "Open shorcuts modal",
+      "role": "button",
     },
     Object {
       "name": "Google logo",
@@ -2043,6 +2091,14 @@ Object {
     Object {
       "name": "golang.org",
       "role": "link",
+    },
+    Object {
+      "name": "Toggle theme",
+      "role": "button",
+    },
+    Object {
+      "name": "Open shorcuts modal",
+      "role": "button",
     },
     Object {
       "name": "Google logo",
