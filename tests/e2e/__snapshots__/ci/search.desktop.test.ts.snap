@@ -25,6 +25,10 @@ Object {
       "role": "button",
     },
     Object {
+      "name": "/",
+      "role": "StaticText",
+    },
+    Object {
       "name": "Why Go",
       "role": "link",
     },

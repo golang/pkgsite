@@ -78,8 +78,10 @@
 {{define "symbol_search_bar"}}
 <div class="go-SearchForm js-searchForm">
   <form
-    class="go-InputGroup go-SearchForm-form"
+    class="go-InputGroup go-ShortcutKey go-SearchForm-form"
     action="/search"
+    data-shortcut="/"
+    data-shortcut-alt="search"
     data-gtmc="search form"
     aria-label="Search for a package"
     role="search"

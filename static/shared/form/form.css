@@ -85,3 +85,32 @@ input::placeholder {
 .go-InputGroup > *:focus {
   z-index: 1;
 }
+
+.go-ShortcutKey {
+  display: flex;
+  position: relative;
+}
+.go-ShortcutKey .go-Input {
+  flex-grow: 1;
+}
+.go-ShortcutKey::after {
+  align-self: center;
+  background-color: var(--color-background-accented);
+  border-radius: 0.5rem;
+  color: var(--gray-6);
+  content: attr(data-shortcut);
+  content: attr(data-shortcut) / attr(data-shortcut-alt);
+  display: none;
+  font-size: 0.75rem;
+  padding: 0.0625rem 0;
+  position: absolute;
+  right: 0.75rem;
+  text-align: center;
+  width: 1.5rem;
+  z-index: 1;
+}
+@media only screen and (min-width: 52rem) {
+  .go-ShortcutKey::after {
+    display: initial;
+  }
+}

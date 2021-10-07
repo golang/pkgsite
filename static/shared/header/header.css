@@ -171,6 +171,9 @@
 .go-SearchForm-form {
   display: none;
 }
+.go-SearchForm-form::after {
+  right: 2.75rem;
+}
 .go-SearchForm--expanded .go-SearchForm-form {
   display: flex;
 }

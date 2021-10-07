@@ -24,6 +24,10 @@ Object {
       "role": "button",
     },
     Object {
+      "name": "/",
+      "role": "StaticText",
+    },
+    Object {
       "name": "Why Go",
       "role": "link",
     },
@@ -216,6 +220,10 @@ Object {
     Object {
       "name": "Submit search",
       "role": "button",
+    },
+    Object {
+      "name": "/",
+      "role": "StaticText",
     },
     Object {
       "name": "Why Go",
@@ -422,6 +430,10 @@ Object {
     Object {
       "name": "Submit search",
       "role": "button",
+    },
+    Object {
+      "name": "/",
+      "role": "StaticText",
     },
     Object {
       "name": "Why Go",
@@ -823,6 +835,10 @@ Object {
     Object {
       "name": "Submit search",
       "role": "button",
+    },
+    Object {
+      "name": "/",
+      "role": "StaticText",
     },
     Object {
       "name": "Why Go",
@@ -1467,6 +1483,10 @@ Object {
       "role": "button",
     },
     Object {
+      "name": "/",
+      "role": "StaticText",
+    },
+    Object {
       "name": "Why Go",
       "role": "link",
     },
@@ -1706,6 +1726,10 @@ Object {
     Object {
       "name": "Submit search",
       "role": "button",
+    },
+    Object {
+      "name": "/",
+      "role": "StaticText",
     },
     Object {
       "name": "Why Go",
