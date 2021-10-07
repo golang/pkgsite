@@ -62,6 +62,9 @@
   flex-grow: 1;
   max-width: 31.5rem;
 }
+.SearchResults-search::after {
+  right: 2.75rem;
+}
 .SearchResults-tabs {
   border-bottom: var(--border);
 }

@@ -22,20 +22,6 @@
 .UnitOutline-jumpTo button:hover:not([disabled]) {
   border-color: var(--color-border);
 }
-.UnitOutline-jumpTo::after {
-  align-self: center;
-  background-color: var(--color-background-accented);
-  border-radius: 0.5rem;
-  color: var(--gray-6);
-  content: 'f';
-  content: 'f' / 'find';
-  font-size: 0.75rem;
-  padding: 0.0625rem 0;
-  position: absolute;
-  right: 0.75rem;
-  text-align: center;
-  width: 1.5rem;
-}
 .UnitOutline-jumpToInput:disabled {
   background-color: var(--gray-9);
 }
