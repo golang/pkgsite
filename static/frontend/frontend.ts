@@ -40,11 +40,6 @@ registerHeaderListeners();
 registerSearchFormListeners();
 initModals();
 
-// Temporary shortcut for testing out the dark theme.
-keyboard.on('t', 'toggle theme', () => {
-  toggleTheme();
-});
-
 // Pressing '/' focuses the search box
 keyboard.on('/', 'focus search', e => {
   const searchInput = Array.from(
