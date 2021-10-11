@@ -326,8 +326,8 @@ func searchMode(r *http.Request) string {
 	if !experiment.IsActive(r.Context(), internal.ExperimentSymbolSearch) {
 		return searchModePackage
 	}
-	q := rawSearchQuery(r)
-	if strings.HasPrefix(q, symbolSearchFilter) {
+	q, filters := searchQueryAndFilters(r)
+	if len(filters) > 0 {
 		return searchModeSymbol
 	}
 	mode := rawSearchMode(r)

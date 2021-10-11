@@ -22,6 +22,10 @@ keyboard shorcut "#"
 [symbol] #big.Float
 Float math/big
 
+keyboard shorcut "#" in second word
+[symbol] big #Float
+Float math/big
+
 keyboard shorcut "#"
 [symbol] #foo
 Foo gopkg.in/foo.v1
