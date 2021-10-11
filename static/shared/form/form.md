@@ -5,7 +5,7 @@
 ### Input {#form-input}
 
 ```html
-<input class="go-Input" placeholder="Placeholder text">
+<input class="go-Input" placeholder="Placeholder text" />
 ```
 
 ### Input w/ Label {#form-input-label}
@@ -13,7 +13,7 @@
 ```html
 <label class="go-Label">
   URL
-  <input class="go-Input" placeholder="e.g., https://pkg.go.dev/net/http">
+  <input class="go-Input" placeholder="e.g., https://pkg.go.dev/net/http" />
 </label>
 ```
 
@@ -21,7 +21,7 @@
 
 ```html
 <div class="go-ShortcutKey" data-shortcut="/" data-shortcut-alt="search">
-  <input class="go-Input" placeholder="e.g., https://pkg.go.dev/net/http">
+  <input class="go-Input" placeholder="e.g., https://pkg.go.dev/net/http" />
 </div>
 ```
 
