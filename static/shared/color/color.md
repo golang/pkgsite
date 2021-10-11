@@ -68,11 +68,19 @@ adjust for dark mode.
 </span>
 
 <span style="display:contents;">
+  <go-color id="--blue-light"></go-color>
+</span>
+
+<span style="display:contents;">
   <go-color id="--black"></go-color>
 </span>
 
 <span style="display:contents;">
   <go-color id="--green"></go-color>
+</span>
+
+<span style="display:contents;">
+  <go-color id="--green-light"></go-color>
 </span>
 
 <span style="display:contents;">
@@ -85,6 +93,10 @@ adjust for dark mode.
 
 <span style="display:contents;">
   <go-color id="--purple"></go-color>
+</span>
+
+<span style="display:contents;">
+  <go-color id="--purple-light"></go-color>
 </span>
 
 <span style="display:contents;">
