@@ -82,10 +82,6 @@ func <a class="Documentation-source" href="src">BadF</a>
 </h4>
 </summary>
 <div class="go-Message go-Message--warning Documentation-deprecatedItemBody">
-<div class="Documentation-deprecatedMessage">
-<img class="go-Icon" height="24" width="24" src="/static/shared/icon/alert_gm_grey_24dp.svg" alt="">
-This function has been deprecated.
-</div>
 <div class="Documentation-declaration">
 <pre>func BadF()</pre>
 </div>
@@ -119,10 +115,6 @@ type <a class="Documentation-source" href="src">BadT</a>
 </h4>
 </summary>
 <div class="go-Message go-Message--warning Documentation-deprecatedItemBody">
-<div class="Documentation-deprecatedMessage">
-<img class="go-Icon" height="24" width="24" src="/static/shared/icon/alert_gm_grey_24dp.svg" alt="">
-This type has been deprecated.
-</div>
 <div class="Documentation-declaration">
 <pre>type BadT <a href="/builtin#int">int</a></pre>
 </div>
@@ -144,10 +136,6 @@ func <a class="Documentation-source" href="src">NewBadTBad</a>
 </h4>
 </summary>
 <div class="go-Message go-Message--warning Documentation-deprecatedItemBody">
-<div class="Documentation-deprecatedMessage">
-<img class="go-Icon" height="24" width="24" src="/static/shared/icon/alert_gm_grey_24dp.svg" alt="">
-This function has been deprecated.
-</div>
 <div class="Documentation-declaration">
 <pre>func NewBadTBad() <a href="#BadT">BadT</a></pre>
 </div>
@@ -178,10 +166,6 @@ func (BadT) <a class="Documentation-source" href="src">BadM</a>
 </h4>
 </summary>
 <div class="go-Message go-Message--warning Documentation-deprecatedItemBody">
-<div class="Documentation-deprecatedMessage">
-<img class="go-Icon" height="24" width="24" src="/static/shared/icon/alert_gm_grey_24dp.svg" alt="">
-This method has been deprecated.
-</div>
 <div class="Documentation-declaration">
 <pre>func (<a href="#BadT">BadT</a>) BadM()</pre>
 </div>
@@ -224,10 +208,6 @@ func <a class="Documentation-source" href="src">NewGoodTBad</a>
 </h4>
 </summary>
 <div class="go-Message go-Message--warning Documentation-deprecatedItemBody">
-<div class="Documentation-deprecatedMessage">
-<img class="go-Icon" height="24" width="24" src="/static/shared/icon/alert_gm_grey_24dp.svg" alt="">
-This function has been deprecated.
-</div>
 <div class="Documentation-declaration">
 <pre>func NewGoodTBad() <a href="#GoodT">GoodT</a></pre>
 </div>
@@ -259,10 +239,6 @@ func (GoodT) <a class="Documentation-source" href="src">BadM</a>
 </h4>
 </summary>
 <div class="go-Message go-Message--warning Documentation-deprecatedItemBody">
-<div class="Documentation-deprecatedMessage">
-<img class="go-Icon" height="24" width="24" src="/static/shared/icon/alert_gm_grey_24dp.svg" alt="">
-This method has been deprecated.
-</div>
 <div class="Documentation-declaration">
 <pre>func (<a href="#GoodT">GoodT</a>) BadM()</pre>
 </div>
