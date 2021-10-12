@@ -101,6 +101,17 @@ func (s *Server) serveSearch(w http.ResponseWriter, r *http.Request, ds internal
 	mode := searchMode(r)
 	page, err := fetchSearchPage(ctx, db, cq, symbol, pageParams, mode == searchModeSymbol, s.getVulnEntries)
 	if err != nil {
+		// Instead of returning a 500, return a 408, since symbol searches may
+		// timeout for very popular symbols.
+		if mode == searchModeSymbol && strings.Contains(err.Error(), "i/o timeout") {
+			return &serverError{
+				status: http.StatusRequestTimeout,
+				epage: &errorPage{
+					messageTemplate: template.MakeTrustedTemplate(
+						`<h3 class="Error-message">Request timed out. Please try again!</h3>`),
+				},
+			}
+		}
 		return fmt.Errorf("fetchSearchPage(ctx, db, %q): %v", cq, err)
 	}
 	page.basePage = s.newBasePage(r, fmt.Sprintf("%s - Search Results", cq))
