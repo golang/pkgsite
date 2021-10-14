@@ -180,9 +180,13 @@ func buildVersionDetails(ctx context.Context, currentModulePath string,
 			Major:        major,
 			Incompatible: version.IsIncompatible(mi.Version),
 		}
+		commitTime := "date unknown"
+		if !mi.CommitTime.IsZero() {
+			commitTime = absoluteTime(mi.CommitTime)
+		}
 		vs := &VersionSummary{
 			Link:                linkify(mi),
-			CommitTime:          absoluteTime(mi.CommitTime),
+			CommitTime:          commitTime,
 			Version:             linkVersion(mi.ModulePath, mi.Version, mi.Version),
 			IsMinor:             isMinor(mi.Version),
 			Retracted:           mi.Retracted,

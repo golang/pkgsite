@@ -77,6 +77,14 @@ func TestInsertModule(t *testing.T) {
 			}(),
 			goMod: "module " + sample.ModulePath + " // Deprecated: use v2",
 		},
+		{
+			name: "zero commit time",
+			module: func() *internal.Module {
+				v := sample.DefaultModule()
+				v.CommitTime = time.Time{}
+				return v
+			}(),
+		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			testDB, release := acquire(t)
@@ -258,17 +266,6 @@ func TestInsertModuleErrors(t *testing.T) {
 			wantVersion:    sample.VersionString,
 			wantModulePath: sample.ModulePath,
 			wantWriteErr:   derrors.DBModuleInsertInvalid,
-		},
-		{
-			name: "empty commit time",
-			module: func() *internal.Module {
-				v := sample.DefaultModule()
-				v.CommitTime = time.Time{}
-				return v
-			}(),
-			wantVersion:    sample.VersionString,
-			wantModulePath: sample.ModulePath,
-			wantWriteErr:   derrors.BadModule,
 		},
 	}
 

@@ -44,10 +44,6 @@ func (db *DB) InsertModule(ctx context.Context, m *internal.Module, lmv *interna
 	if err := validateModule(m); err != nil {
 		return false, err
 	}
-	// The proxy accepts modules with zero commit times, but they are bad.
-	if m.CommitTime.IsZero() {
-		return false, fmt.Errorf("empty commit time: %w", derrors.BadModule)
-	}
 	// Compare existing data from the database, and the module to be
 	// inserted. Rows that currently exist should not be missing from the
 	// new module. We want to be sure that we will overwrite every row that

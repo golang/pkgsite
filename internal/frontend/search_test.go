@@ -341,7 +341,7 @@ func TestNewSearchResult(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			pr := message.NewPrinter(test.tag)
 			got := newSearchResult(&test.in, false, pr)
-			test.want.CommitTime = "Jan  1, 0001"
+			test.want.CommitTime = "unknown"
 			if diff := cmp.Diff(&test.want, got); diff != "" {
 				t.Errorf("mimatch (-want, +got):\n%s", diff)
 			}
@@ -424,6 +424,11 @@ func TestElapsedTime(t *testing.T) {
 			name:        "more_than_6_days_ago",
 			date:        now.Add(time.Hour * 24 * -14),
 			elapsedTime: now.Add(time.Hour * 24 * -14).Format("Jan _2, 2006"),
+		},
+		{
+			name:        "zero",
+			date:        time.Time{},
+			elapsedTime: "unknown",
 		},
 	}
 

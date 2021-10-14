@@ -103,6 +103,11 @@ func TestAbsoluteTime(t *testing.T) {
 			date:         now.Add(time.Hour * 24 * -5),
 			absoluteTime: now.Add(time.Hour * 24 * -5).Format("Jan _2, 2006"),
 		},
+		{
+			name:         "zero time",
+			date:         time.Time{},
+			absoluteTime: "unknown",
+		},
 	}
 
 	for _, test := range testCases {
