@@ -120,7 +120,7 @@ func (s *Server) Install(handle func(string, http.Handler), redisClient *redis.C
 	)
 	if redisClient != nil {
 		detailHandler = middleware.Cache("details", redisClient, detailsTTL, authValues)(detailHandler)
-		searchHandler = middleware.Cache("search", redisClient, middleware.TTL(defaultTTL), authValues)(searchHandler)
+		searchHandler = middleware.Cache("search", redisClient, searchTTL, authValues)(searchHandler)
 	}
 	// Each AppEngine instance is created in response to a start request, which
 	// is an empty HTTP GET request to /_ah/start when scaling is set to manual
@@ -227,6 +227,22 @@ func detailsTTLForPath(ctx context.Context, urlPath, tab string) time.Duration {
 		return defaultTTL
 	}
 	return longTTL
+}
+
+var slowSymbolSearches = map[string]bool{
+	"new": true,
+}
+
+// searchTTL assigns the cache TTL for search requests.
+func searchTTL(r *http.Request) time.Duration {
+	if searchMode(r) == searchModeSymbol {
+		q, _ := searchQueryAndFilters(r)
+		if slowSymbolSearches[strings.ToLower(q)] {
+			// Slow searches should be computed on deploy. Cache them for a long time.
+			return 14 * 24 * time.Hour
+		}
+	}
+	return defaultTTL
 }
 
 // TagRoute categorizes incoming requests to the frontend for use in
