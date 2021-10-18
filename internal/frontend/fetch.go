@@ -201,6 +201,9 @@ func (s *Server) checkPossibleModulePaths(ctx context.Context, db *postgres.DB,
 			if _, err := s.queue.ScheduleFetch(ctx, modulePath, requestedVersion, opts); err != nil {
 				fr.err = err
 				fr.status = http.StatusInternalServerError
+				log.Errorf(ctx, "enqueuing %s@%s to frontend-fetch task queue: %v", modulePath, requestedVersion, err)
+				results[i] = fr
+				return
 			}
 			log.Debugf(ctx, "queued %s@%s to frontend-fetch task queue", modulePath, requestedVersion)
 
