@@ -9,6 +9,7 @@
   margin-bottom: 1rem;
 }
 .UnitOutline-jumpTo button {
+  align-items: center;
   background-color: var(--color-background);
   border: var(--border);
   border-radius: 0.25rem;
