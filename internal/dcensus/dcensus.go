@@ -173,6 +173,8 @@ func NewViewExporter(cfg *config.Config) (_ *stackdriver.Exporter, err error) {
 	if cfg.OnGKE() {
 		mr = (*monitoredResource)(cfg.MonitoredResource)
 	}
+	log.Debugf(context.Background(), "monitored resource for monitoring: Type %q, Labels %v",
+		mr.Type, mr.Labels)
 	return stackdriver.NewExporter(stackdriver.Options{
 		ProjectID:               cfg.ProjectID,
 		MonitoredResource:       mr,

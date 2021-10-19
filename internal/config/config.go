@@ -463,6 +463,13 @@ func Init(ctx context.Context) (_ *Config, err error) {
 		default:
 			return nil, errors.New("on GCP but using an unknown product")
 		}
+		if cfg.InstanceID == "" {
+			id, err := gceMetadata(ctx, "instance/id")
+			if err != nil {
+				return nil, fmt.Errorf("getting instance ID: %v", err)
+			}
+			cfg.InstanceID = id
+		}
 	} else { // running locally, perhaps
 		cfg.MonitoredResource = &mrpb.MonitoredResource{
 			Type:   "global",
