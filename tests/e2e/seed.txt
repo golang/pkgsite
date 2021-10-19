@@ -28,6 +28,7 @@ rsc.io/quote@all
 rsc.io/quote/v2@all
 rsc.io/quote/v3@all
 std@v1.0.0
+std@v1.8.0
 std@v1.13.0
 std@v1.16.3
 std@v1.16.4
