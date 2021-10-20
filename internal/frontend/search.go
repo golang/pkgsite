@@ -454,7 +454,7 @@ func modulePaths(heading string, modulePathToMajor map[string]int) *subResult {
 	sort.Slice(mms, func(i, j int) bool { return mms[i].Major > mms[j].Major })
 	links := make([]link, len(mms))
 	for i, m := range mms {
-		links[i] = link{Href: m.Path, Body: m.Path}
+		links[i] = link{Href: m.Path, Body: fmt.Sprintf("v%d", m.Major)}
 	}
 	return &subResult{
 		Heading: heading,
