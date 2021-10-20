@@ -1379,14 +1379,6 @@ func TestHllZeros(t *testing.T) {
 }
 
 func TestGroupSearchResults(t *testing.T) {
-	set := func(els ...string) map[string]bool {
-		s := map[string]bool{}
-		for _, e := range els {
-			s[e] = true
-		}
-		return s
-	}
-
 	for _, test := range []struct {
 		name     string
 		in, want []*SearchResult
@@ -1407,38 +1399,50 @@ func TestGroupSearchResults(t *testing.T) {
 			in: []*SearchResult{
 				{Name: "m1", ModulePath: "m1/v2", Score: 10},
 				{Name: "m2", ModulePath: "m2", Score: 9},
-				{Name: "m", ModulePath: "m1", Score: 8},
+				{Name: "m", ModulePath: "m1", Version: "v1.2.3", Score: 8},
 			},
 			want: []*SearchResult{
-				{Name: "m1", ModulePath: "m1/v2", Score: 10, OtherMajor: set("m1")},
+				{Name: "m1", ModulePath: "m1/v2", Score: 10, OtherMajor: map[string]int{"m1": 1}},
+				{Name: "m2", ModulePath: "m2", Score: 9},
+			},
+		},
+		{
+			name: "higher major first, v0",
+			in: []*SearchResult{
+				{Name: "m1", ModulePath: "m1/v2", Score: 10},
+				{Name: "m2", ModulePath: "m2", Score: 9},
+				{Name: "m", ModulePath: "m1", Version: "v0.2.3", Score: 8},
+			},
+			want: []*SearchResult{
+				{Name: "m1", ModulePath: "m1/v2", Score: 10, OtherMajor: map[string]int{"m1": 0}},
 				{Name: "m2", ModulePath: "m2", Score: 9},
 			},
 		},
 		{
 			name: "lower major first",
 			in: []*SearchResult{
-				{Name: "m1", ModulePath: "m1", Score: 10},
+				{Name: "m1", ModulePath: "m1", Version: "v0.1.2", Score: 10},
 				{Name: "m2", ModulePath: "m2", Score: 9},
 				{Name: "m12", ModulePath: "m1/v2", Score: 8},
 			},
 			want: []*SearchResult{
-				{Name: "m12", ModulePath: "m1/v2", Score: 10, OtherMajor: set("m1")},
+				{Name: "m12", ModulePath: "m1/v2", Score: 10, OtherMajor: map[string]int{"m1": 0}},
 				{Name: "m2", ModulePath: "m2", Score: 9},
 			},
 		},
 		{
 			name: "multiple majors",
 			in: []*SearchResult{
-				{Name: "m1", ModulePath: "m1", Score: 10},
+				{Name: "m1", ModulePath: "m1", Version: "v1.2.3", Score: 10},
 				{Name: "m23", ModulePath: "m2/v3", Score: 9},
 				{Name: "m12", ModulePath: "m1/v2", Score: 8},
 				{Name: "m22", ModulePath: "m2/v2", Score: 7},
 				{Name: "m13", ModulePath: "m1/v3", Score: 6},
-				{Name: "m2", ModulePath: "m2", Score: 5},
+				{Name: "m2", ModulePath: "m2", Version: "v0.1.2", Score: 5},
 			},
 			want: []*SearchResult{
-				{Name: "m13", ModulePath: "m1/v3", Score: 10, OtherMajor: set("m1", "m1/v2")},
-				{Name: "m23", ModulePath: "m2/v3", Score: 9, OtherMajor: set("m2", "m2/v2")},
+				{Name: "m13", ModulePath: "m1/v3", Score: 10, OtherMajor: map[string]int{"m1": 1, "m1/v2": 2}},
+				{Name: "m23", ModulePath: "m2/v3", Score: 9, OtherMajor: map[string]int{"m2": 0, "m2/v2": 2}},
 			},
 		},
 		{
@@ -1449,7 +1453,7 @@ func TestGroupSearchResults(t *testing.T) {
 				{Name: "m12", ModulePath: "m1/v2", Version: "v0.0.0-12345678901234-A", Score: 8},
 			},
 			want: []*SearchResult{
-				{Name: "m1", ModulePath: "m1", Score: 10, OtherMajor: set("m1/v2")},
+				{Name: "m1", ModulePath: "m1", Score: 10, OtherMajor: map[string]int{"m1/v2": 2}},
 				{Name: "m2", ModulePath: "m2", Score: 9},
 			},
 		},
@@ -1461,7 +1465,7 @@ func TestGroupSearchResults(t *testing.T) {
 				{Name: "m1", ModulePath: "m1", Version: "v0.0.0", Score: 8},
 			},
 			want: []*SearchResult{
-				{Name: "m1", ModulePath: "m1", Version: "v0.0.0", Score: 10, OtherMajor: set("m1/v2", "m1/v3")},
+				{Name: "m1", ModulePath: "m1", Version: "v0.0.0", Score: 10, OtherMajor: map[string]int{"m1/v2": 2, "m1/v3": 3}},
 			},
 		},
 		{
@@ -1509,5 +1513,39 @@ func TestGroupSearchResults(t *testing.T) {
 				t.Errorf("mismatch (-want, +got)\n%s", diff)
 			}
 		})
+	}
+}
+
+func TestGroupAndMajorVersion(t *testing.T) {
+	for _, test := range []struct {
+		in         SearchResult
+		wantSeries string
+		wantMajor  int
+	}{
+		{
+			in:         SearchResult{ModulePath: "a.com", PackagePath: "a.com/p", Version: "v1.0.0"},
+			wantSeries: "a.com",
+			wantMajor:  1,
+		},
+		{
+			in:         SearchResult{ModulePath: "a.com", PackagePath: "a.com/p", Version: "v0.8.9"},
+			wantSeries: "a.com",
+			wantMajor:  0,
+		},
+		{
+			in:         SearchResult{ModulePath: "a.com/v2", PackagePath: "a.com/v2/p", Version: "v2.3.4"},
+			wantSeries: "a.com",
+			wantMajor:  2,
+		},
+		{
+			in:         SearchResult{ModulePath: "std", PackagePath: "net/http", Version: "v2.3.4"},
+			wantSeries: "net",
+			wantMajor:  1,
+		},
+	} {
+		gotSeries, gotMajor := groupAndMajorVersion(&test.in)
+		if gotSeries != test.wantSeries || gotMajor != test.wantMajor {
+			t.Errorf("%+v:\ngot (%q, %d), want (%q, %d)", test.in, gotSeries, gotMajor, test.wantSeries, test.wantMajor)
+		}
 	}
 }

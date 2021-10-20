@@ -437,22 +437,24 @@ func packagePaths(heading string, rs []*postgres.SearchResult) *subResult {
 	}
 }
 
-func modulePaths(heading string, mpaths map[string]bool) *subResult {
-	if len(mpaths) == 0 {
+func modulePaths(heading string, modulePathToMajor map[string]int) *subResult {
+	if len(modulePathToMajor) == 0 {
 		return nil
 	}
-	var mps []string
-	for m := range mpaths {
-		mps = append(mps, m)
+
+	type mm struct {
+		Path  string
+		Major int
 	}
-	sort.Slice(mps, func(i, j int) bool {
-		_, v1 := internal.SeriesPathAndMajorVersion(mps[i])
-		_, v2 := internal.SeriesPathAndMajorVersion(mps[j])
-		return v1 > v2
-	})
-	links := make([]link, len(mps))
-	for i, m := range mps {
-		links[i] = link{Href: m, Body: m}
+
+	var mms []mm
+	for m, v := range modulePathToMajor {
+		mms = append(mms, mm{m, v})
+	}
+	sort.Slice(mms, func(i, j int) bool { return mms[i].Major > mms[j].Major })
+	links := make([]link, len(mms))
+	for i, m := range mms {
+		links[i] = link{Href: m.Path, Body: m.Path}
 	}
 	return &subResult{
 		Heading: heading,

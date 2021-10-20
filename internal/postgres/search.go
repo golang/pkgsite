@@ -135,9 +135,11 @@ type SearchResult struct {
 	// with lower scores.
 	SameModule []*SearchResult
 
-	// OtherMajor is a set of module paths with the same series path but at
-	// different major versions of this module.
-	OtherMajor map[string]bool
+	// OtherMajor is a map from module paths with the same series path but at
+	// different major versions of this module, to major version.
+	// The major version for a non-vN module path (either 0 or 1) is computed
+	// based on the version in search documents.
+	OtherMajor map[string]int
 
 	// NumResults is the total number of packages that were returned for this
 	// search.
@@ -552,7 +554,7 @@ func groupSearchResults(rs []*SearchResult) []*SearchResult {
 		if b == nil {
 			// First result (package) with this key; remember it.
 			bestInGroup[group] = r
-			r.OtherMajor = map[string]bool{}
+			r.OtherMajor = map[string]int{}
 		} else {
 			_, bMajor := groupAndMajorVersion(b)
 			switch {
@@ -561,7 +563,7 @@ func groupSearchResults(rs []*SearchResult) []*SearchResult {
 				// is not tagged. Either way, prefer r to b.
 				bestInGroup[group] = r
 				r.OtherMajor = b.OtherMajor
-				r.OtherMajor[b.ModulePath] = true
+				r.OtherMajor[b.ModulePath] = bMajor
 				r.Score = b.Score // inherit the lower major version's higher score
 			case rMajor == bMajor:
 				// r is another package in b's group; remember it there.
@@ -570,7 +572,7 @@ func groupSearchResults(rs []*SearchResult) []*SearchResult {
 			default:
 				// A package from a different major version (either lower, or
 				// higher untagged). Remember the major version.
-				b.OtherMajor[r.ModulePath] = true
+				b.OtherMajor[r.ModulePath] = rMajor
 			}
 		}
 	}
@@ -595,7 +597,11 @@ func groupAndMajorVersion(r *SearchResult) (string, int) {
 		before, _, _ := internal.Cut(r.PackagePath, "/")
 		return before, 1
 	}
-	return internal.SeriesPathAndMajorVersion(r.ModulePath)
+	series, major := internal.SeriesPathAndMajorVersion(r.ModulePath)
+	if major == 1 && strings.HasPrefix(r.Version, "v0.") {
+		major = 0
+	}
+	return series, major
 }
 
 // numRows counts the number of rows in a slice of SearchResults.
