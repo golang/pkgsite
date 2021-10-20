@@ -109,8 +109,8 @@
           <h2>
             <a href="/{{$v.PackagePath}}" data-gtmc="search result" data-gtmv="{{$i}}"
                 data-test-id="snippet-title">
-              <span class="SearchSnippet-header-name">{{$v.Name}}</span>
-              {{$v.PackagePath}}
+              {{$v.Name}}
+              <span class="SearchSnippet-header-path">({{$v.PackagePath}})</span>
             </a>
           </h2>
           {{with $v.ChipText}}<span class="go-Chip go-Chip--inverted">{{.}}</span>{{end}}
@@ -135,7 +135,7 @@
         {{with .SameModule}}
           {{$m := .}}
           <div class="SearchSnippet-sub go-textSubtle">
-            <a href="{{$v.ModulePath}}#section-directories"><strong>{{.Heading}}</strong></a>
+            <strong>{{.Heading}}</strong>
             {{range $i, $v := .Links}}
               {{if lt $i 5}}
                 <a class="go-Chip go-Chip--subtle"

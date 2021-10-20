@@ -8,7 +8,7 @@
 .go-SearchForm {
   display: none;
 }
-.SearchSnippet .go-Chip:hover {
+.SearchSnippet-sub .go-Chip:hover {
   background-color: var(--color-background-highlighted);
 }
 
@@ -150,10 +150,7 @@
   flex-wrap: wrap;
   gap: 0.5rem;
 }
-.SearchSnippet-header-name {
-  color: var(--color-text);
-}
-.SearchSnippet-header-dash {
+.SearchSnippet-header-path {
   color: var(--color-text-subtle);
 }
 .SearchSnippet-symbolKind {
