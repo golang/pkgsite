@@ -7,11 +7,11 @@ package frontend
 import (
 	"fmt"
 	"net/http"
-	"path"
 
 	"golang.org/x/mod/semver"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
+	vulnc "golang.org/x/vuln/client"
 	"golang.org/x/vuln/osv"
 )
 
@@ -27,20 +27,20 @@ type Vuln struct {
 
 type vulnEntriesFunc func(string) ([]*osv.Entry, error)
 
-// Vulns obtains vulnerability information for the given package.
+// VulnsForPackage obtains vulnerability information for the given package.
 // If packagePath is empty, it returns all entries for the module at version.
 // The getVulnEntries function should retrieve all entries for the given module path.
 // It is passed to facilitate testing.
-// If there is an error, Vulns returns a single Vuln that describes the error.
-func Vulns(modulePath, version, packagePath string, getVulnEntries vulnEntriesFunc) []Vuln {
-	vs, err := vulns(modulePath, version, packagePath, getVulnEntries)
+// If there is an error, VulnsForPackage returns a single Vuln that describes the error.
+func VulnsForPackage(modulePath, version, packagePath string, getVulnEntries vulnEntriesFunc) []Vuln {
+	vs, err := vulnsForPackage(modulePath, version, packagePath, getVulnEntries)
 	if err != nil {
 		return []Vuln{{Details: fmt.Sprintf("could not get vulnerability data: %v", err)}}
 	}
 	return vs
 }
 
-func vulns(modulePath, version, packagePath string, getVulnEntries vulnEntriesFunc) (_ []Vuln, err error) {
+func vulnsForPackage(modulePath, version, packagePath string, getVulnEntries vulnEntriesFunc) (_ []Vuln, err error) {
 	defer derrors.Wrap(&err, "vulns(%q, %q, %q)", modulePath, version, packagePath)
 
 	// Get all the vulns for this module.
@@ -57,6 +57,18 @@ func vulns(modulePath, version, packagePath string, getVulnEntries vulnEntriesFu
 		}
 	}
 	return vulns, nil
+}
+
+// VulnListPage holds the information for a page that lists all vuln entries.
+type VulnListPage struct {
+	basePage
+	Entries []*osv.Entry
+}
+
+// VulnPage holds the information for a page that displays a single vuln entry.
+type VulnPage struct {
+	basePage
+	Entry *osv.Entry
 }
 
 func entryVuln(e *osv.Entry, packagePath, version string) (Vuln, bool) {
@@ -88,18 +100,54 @@ func entryVuln(e *osv.Entry, packagePath, version string) (Vuln, bool) {
 	return Vuln{}, false
 }
 
-const vulndbURL = "https://go.googlesource.com/vulndb/+/refs/heads/master/reports/"
-
 func (s *Server) serveVuln(w http.ResponseWriter, r *http.Request, _ internal.DataSource) error {
-	if r.URL.Path == "/" {
-		http.Redirect(w, r, "/golang.org/x/vulndb", http.StatusFound)
-		return nil
+	switch r.URL.Path {
+	case "/":
+		s.servePage(r.Context(), w, "vuln", s.newBasePage(r, "Go Vulnerabilities"))
+	case "/list":
+		// Serve a list of all entries.
+		vulnListPage, err := newVulnListPage(s.vulnClient)
+		if err != nil {
+			return err
+		}
+		vulnListPage.basePage = s.newBasePage(r, "Go Vulnerabilities List")
+		s.servePage(r.Context(), w, "vuln/list", vulnListPage)
+	default: // the path should be "/<ID>", e.g. "/GO-2021-0001".
+		id := r.URL.Path[1:]
+		vulnPage, err := newVulnPage(s.vulnClient, id)
+		if err != nil {
+			return err
+		}
+		vulnPage.basePage = s.newBasePage(r, id)
+		s.servePage(r.Context(), w, "vuln/entry", vulnPage)
 	}
-	if r.URL.Path == "/list" {
-		http.Redirect(w, r, vulndbURL, http.StatusFound)
-		return nil
-	}
-	// Otherwise, the path should be "/ID".
-	http.Redirect(w, r, path.Join(vulndbURL, r.URL.Path+".yaml"), http.StatusFound)
 	return nil
+}
+
+func newVulnPage(client vulnc.Client, id string) (*VulnPage, error) {
+	entry, err := client.GetByID(id)
+	if err != nil {
+		return nil, err
+	}
+	if entry == nil {
+		return nil, derrors.NotFound
+	}
+	return &VulnPage{Entry: entry}, nil
+}
+
+func newVulnListPage(client vulnc.Client) (*VulnListPage, error) {
+	ids, err := client.ListIDs()
+	if err != nil {
+		return nil, err
+	}
+	// TODO(golang/go#49451): maybe optimize by reading concurrently.
+	var entries []*osv.Entry
+	for _, id := range ids {
+		e, err := client.GetByID(id)
+		if err != nil {
+			return nil, err
+		}
+		entries = append(entries, e)
+	}
+	return &VulnListPage{Entries: entries}, nil
 }

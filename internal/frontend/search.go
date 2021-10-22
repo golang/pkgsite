@@ -99,7 +99,11 @@ func (s *Server) serveSearch(w http.ResponseWriter, r *http.Request, ds internal
 		symbol = filters[0]
 	}
 	mode := searchMode(r)
-	page, err := fetchSearchPage(ctx, db, cq, symbol, pageParams, mode == searchModeSymbol, s.getVulnEntries)
+	var getVulnEntries vulnEntriesFunc
+	if s.vulnClient != nil {
+		getVulnEntries = s.vulnClient.GetByModule
+	}
+	page, err := fetchSearchPage(ctx, db, cq, symbol, pageParams, mode == searchModeSymbol, getVulnEntries)
 	if err != nil {
 		// Instead of returning a 500, return a 408, since symbol searches may
 		// timeout for very popular symbols.
@@ -507,7 +511,7 @@ func addVulns(rs []*SearchResult, getVulnEntries vulnEntriesFunc) {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			r.Vulns = Vulns(r.ModulePath, r.Version, r.PackagePath, getVulnEntries)
+			r.Vulns = VulnsForPackage(r.ModulePath, r.Version, r.PackagePath, getVulnEntries)
 		}()
 	}
 	wg.Wait()

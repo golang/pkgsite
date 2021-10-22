@@ -196,7 +196,7 @@ func buildVersionDetails(ctx context.Context, currentModulePath string,
 			vs.Symbols = symbolsForVersion(linkify(mi), sv)
 		}
 		if experiment.IsActive(ctx, internal.ExperimentVulns) {
-			vs.Vulns = Vulns(mi.ModulePath, mi.Version, "", getVulnEntries)
+			vs.Vulns = VulnsForPackage(mi.ModulePath, mi.Version, "", getVulnEntries)
 		}
 		vl := lists[key]
 		if vl == nil {

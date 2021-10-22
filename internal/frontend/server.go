@@ -54,7 +54,7 @@ type Server struct {
 	serveStats           bool
 	reportingClient      *errorreporting.Client
 	fileMux              *http.ServeMux
-	getVulnEntries       vulnEntriesFunc
+	vulnClient           vulnc.Client
 
 	mu        sync.Mutex // Protects all fields below
 	templates map[string]*template.Template
@@ -87,10 +87,6 @@ func NewServer(scfg ServerConfig) (_ *Server, err error) {
 		return nil, fmt.Errorf("error parsing templates: %v", err)
 	}
 	dochtml.LoadTemplates(scfg.TemplateFS)
-	var getVulnEntries vulnEntriesFunc
-	if scfg.VulndbClient != nil {
-		getVulnEntries = scfg.VulndbClient.GetByModule
-	}
 	s := &Server{
 		getDataSource:        scfg.DataSourceGetter,
 		queue:                scfg.Queue,
@@ -106,7 +102,7 @@ func NewServer(scfg ServerConfig) (_ *Server, err error) {
 		serveStats:           scfg.ServeStats,
 		reportingClient:      scfg.ReportingClient,
 		fileMux:              http.NewServeMux(),
-		getVulnEntries:       getVulnEntries,
+		vulnClient:           scfg.VulndbClient,
 	}
 	errorPageBytes, err := s.renderErrorPage(context.Background(), http.StatusInternalServerError, "error", nil)
 	if err != nil {
@@ -641,6 +637,9 @@ func parsePageTemplates(fsys template.TrustedFS) (map[string]*template.Template,
 		{"unit/licenses", "unit"},
 		{"unit/main", "unit"},
 		{"unit/versions", "unit"},
+		{"vuln"},
+		{"vuln/list", "vuln"},
+		{"vuln/entry", "vuln"},
 	}
 
 	for _, set := range htmlSets {

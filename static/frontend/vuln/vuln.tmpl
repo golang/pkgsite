@@ -1,0 +1,28 @@
+<!--
+  Copyright 2021 The Go Authors. All rights reserved.
+  Use of this source code is governed by a BSD-style
+  license that can be found in the LICENSE file.
+-->
+
+{{define "title"}}
+  <title>{{.HTMLTitle}} - pkg.go.dev</title>
+{{end}}
+
+{{define "main"}}
+  <main class="go-Container">
+    <article class="go-Main-article js-mainContent">
+      {{- block "main-content" .}}{{end -}}
+    </article>
+  </main>
+{{end}}
+
+{{define "entry"}}
+  <div>
+    <h2>{{.ID}}</h2>
+    <ul>
+      <li>Published {{.Published}}</li>
+      <li>Modified {{.Modified}}</li>
+    </ul>
+    <p>{{.Details}}</p>
+  </div>
+{{end}}

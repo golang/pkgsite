@@ -5,14 +5,17 @@
 package frontend
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
+	vulnc "golang.org/x/vuln/client"
 	"golang.org/x/vuln/osv"
 )
 
-func TestVulns(t *testing.T) {
+func TestVulnsForPackage(t *testing.T) {
 	e := osv.Entry{
 		Details: "bad",
 		Affected: []osv.Affected{{
@@ -35,11 +38,11 @@ func TestVulns(t *testing.T) {
 		}
 	}
 
-	got := Vulns("good.com", "v1.0.0", "good.com", get)
+	got := VulnsForPackage("good.com", "v1.0.0", "good.com", get)
 	if got != nil {
 		t.Errorf("got %v, want nil", got)
 	}
-	got = Vulns("bad.com", "v1.0.0", "bad.com", get)
+	got = VulnsForPackage("bad.com", "v1.0.0", "bad.com", get)
 	want := []Vuln{{
 		Details:      "bad",
 		FixedVersion: "v1.2.3",
@@ -48,8 +51,64 @@ func TestVulns(t *testing.T) {
 		t.Errorf("mismatch (-want, +got):\n%s", diff)
 	}
 
-	got = Vulns("bad.com", "v1.3.0", "bad.com", get)
+	got = VulnsForPackage("bad.com", "v1.3.0", "bad.com", get)
 	if got != nil {
 		t.Errorf("got %v, want nil", got)
 	}
+}
+
+var testEntries = []*osv.Entry{
+	{ID: "one", Details: "bad"},
+	{ID: "two", Details: "worse"},
+}
+
+func TestNewVulnListPage(t *testing.T) {
+	c := &vulndbTestClient{entries: testEntries}
+	got, err := newVulnListPage(c)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// testEntries is already sorted by ID.
+	want := &VulnListPage{Entries: testEntries}
+	if diff := cmp.Diff(want, got, cmpopts.IgnoreUnexported(VulnListPage{})); diff != "" {
+		t.Errorf("mismatch (-want, +got):\n%s", diff)
+	}
+}
+
+func TestNewVulnPage(t *testing.T) {
+	c := &vulndbTestClient{entries: testEntries}
+	got, err := newVulnPage(c, "two")
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := &VulnPage{Entry: testEntries[1]}
+	if diff := cmp.Diff(want, got, cmpopts.IgnoreUnexported(VulnPage{})); diff != "" {
+		t.Errorf("mismatch (-want, +got):\n%s", diff)
+	}
+}
+
+type vulndbTestClient struct {
+	vulnc.Client
+	entries []*osv.Entry
+}
+
+func (c *vulndbTestClient) GetByModule(string) ([]*osv.Entry, error) {
+	return nil, errors.New("unimplemented")
+}
+
+func (c *vulndbTestClient) GetByID(id string) (*osv.Entry, error) {
+	for _, e := range c.entries {
+		if e.ID == id {
+			return e, nil
+		}
+	}
+	return nil, nil
+}
+
+func (c *vulndbTestClient) ListIDs() ([]string, error) {
+	var ids []string
+	for _, e := range c.entries {
+		ids = append(ids, e.ID)
+	}
+	return ids, nil
 }
