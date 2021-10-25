@@ -125,10 +125,13 @@
         {{end}}
         {{template "search_metadata" $v}}
         {{with .OtherMajor}}
-          <div>
+          <div class="go-textSubtle">
             <span class="go-textSubtle">{{.Heading}}</span>
+            {{$numLinks := (len .Links)}}
             {{range $i, $v := .Links}}
-              <a href="/{{$v.Href}}" data-gtmc="search result other major"><strong>{{$v.Body}}</strong></a>
+              <a href="/{{$v.Href}}" data-gtmc="search result other major">
+                <strong>{{$v.Body}}</strong><span class="go-textSubtle">{{if lt $i (subtract $numLinks 1)}},{{end}}</span>
+              </a>
             {{end}}
           </div>
         {{end}}
