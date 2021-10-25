@@ -6,6 +6,7 @@
  */
 
 let config = {
+  testEnvironment: 'jsdom',
   preset: 'ts-jest',
   globals: {
     'ts-jest': {

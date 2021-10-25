@@ -8,7 +8,7 @@
 import { PlaygroundExampleController } from './playground';
 import { mocked } from 'ts-jest/utils';
 
-const flushPromises = () => new Promise(setImmediate);
+const flushPromises = () => new Promise(fn => setTimeout(fn, 0));
 const el = <T extends HTMLElement>(selector: string) => document.querySelector<T>(selector);
 const codeSnippet = `package main
 
