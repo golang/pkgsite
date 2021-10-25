@@ -200,6 +200,10 @@ const (
 	longTTL = 10 * time.Minute
 	// tinyTTL is used to cache crawled pages.
 	tinyTTL = 1 * time.Minute
+	// symbolSearchTTL is used for most symbol searches.
+	symbolSearchTTL = 24 * time.Hour
+	// slowSymbolSearchTTL is for symbol searches that are known to be slow.
+	slowSymbolSearchTTL = 14 * 24 * time.Hour
 )
 
 var crawlers = []string{
@@ -238,7 +242,26 @@ func detailsTTLForPath(ctx context.Context, urlPath, tab string) time.Duration {
 }
 
 var slowSymbolSearches = map[string]bool{
-	"new": true,
+	"new":                            true,
+	"version":                        true,
+	"config":                         true,
+	"client":                         true,
+	"useragent":                      true,
+	"baseclient":                     true,
+	"error":                          true,
+	"defaultbaseuri":                 true,
+	"newwithbaseuri":                 true,
+	"resource":                       true,
+	"newclient":                      true,
+	"get":                            true,
+	"operationsclient":               true,
+	"newoperationsclient":            true,
+	"newoperationsclientwithbaseuri": true,
+	"operation":                      true,
+	"operationsclientapi":            true,
+	"baseclient.baseuri":             true,
+	"failed":                         true,
+	"baseclient.subscriptionid":      true,
 }
 
 // searchTTL assigns the cache TTL for search requests.
@@ -247,10 +270,10 @@ func searchTTL(r *http.Request) time.Duration {
 		q, _ := searchQueryAndFilters(r)
 		if slowSymbolSearches[strings.ToLower(q)] {
 			// Slow searches should be computed on deploy. Cache them for a long time.
-			return 14 * 24 * time.Hour
+			return slowSymbolSearchTTL
 		}
 	}
-	return defaultTTL
+	return symbolSearchTTL
 }
 
 // TagRoute categorizes incoming requests to the frontend for use in
