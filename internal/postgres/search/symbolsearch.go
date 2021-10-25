@@ -84,7 +84,7 @@ var multiwordCTE = fmt.Sprintf(`
 				'{0.1, 0.2, 1.0, 1.0}',
 				sd.tsv_path_tokens,
 				%[1]s
-			) * ssd.ln_imported_by_count
+			) * sd.ln_imported_by_count
 		) AS score
 	FROM symbol_search_documents ssd
 	INNER JOIN search_documents sd ON sd.package_path_id = ssd.package_path_id
