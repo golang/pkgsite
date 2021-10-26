@@ -27,7 +27,7 @@ require (
 	github.com/google/go-cmp v0.5.4
 	github.com/google/go-replayers/httpreplay v0.1.0
 	github.com/google/licensecheck v0.3.1
-	github.com/google/safehtml v0.0.2
+	github.com/google/safehtml v0.0.3-0.20211026203422-d6f0e11a5516
 	github.com/hashicorp/golang-lru v0.5.1
 	github.com/jackc/pgconn v1.9.0
 	github.com/jackc/pgx/v4 v4.12.0
