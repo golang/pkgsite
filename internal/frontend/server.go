@@ -620,7 +620,7 @@ func parsePageTemplates(base template.TrustedSource) (map[string]*template.Templ
 		if err != nil {
 			return nil, fmt.Errorf("ParseFilesFromTrustedSources: %v", err)
 		}
-		helperGlob := join(base, tsc("shared/**/*.tmpl"))
+		helperGlob := join(base, tsc("shared/*/*.tmpl"))
 		if _, err := t.ParseGlobFromTrustedSource(helperGlob); err != nil {
 			return nil, fmt.Errorf("ParseGlobFromTrustedSource(%q): %v", helperGlob, err)
 		}
