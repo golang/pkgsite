@@ -34,14 +34,14 @@ import (
 var testTimeout = 30 * time.Second
 
 var (
-	templateSource = template.TrustedSourceFromConstant("../../static/doc")
-	testModules    []*proxytest.Module
+	templateFS  = template.TrustedFSFromTrustedSource(template.TrustedSourceFromConstant("../../static"))
+	testModules []*proxytest.Module
 )
 
 type fetchFunc func(t *testing.T, withLicenseDetector bool, ctx context.Context, mod *proxytest.Module, fetchVersion string) (*FetchResult, *licenses.Detector)
 
 func TestMain(m *testing.M) {
-	dochtml.LoadTemplates(templateSource)
+	dochtml.LoadTemplates(templateFS)
 	testModules = proxytest.LoadTestModules("../proxy/testdata")
 	licenses.OmitExceptions = true
 	os.Exit(m.Run())

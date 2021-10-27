@@ -6,6 +6,7 @@ package dochtml
 
 import (
 	"context"
+	"path"
 	"reflect"
 	"sync"
 
@@ -26,29 +27,27 @@ var (
 )
 
 // LoadTemplates reads and parses the templates used to generate documentation.
-func LoadTemplates(dir template.TrustedSource) {
+func LoadTemplates(fsys template.TrustedFS) {
+	const dir = "doc"
 	loadOnce.Do(func() {
-		join := template.TrustedSourceJoin
-		tc := template.TrustedSourceFromConstant
-
 		bodyTemplate = template.Must(template.New("body.tmpl").
 			Funcs(tmpl).
-			ParseFilesFromTrustedSources(
-				join(dir, tc("body.tmpl")),
-				join(dir, tc("declaration.tmpl")),
-				join(dir, tc("example.tmpl"))))
+			ParseFS(fsys,
+				path.Join(dir, "body.tmpl"),
+				path.Join(dir, "declaration.tmpl"),
+				path.Join(dir, "example.tmpl")))
 		if experiment.IsActive(context.Background(), internal.ExperimentNewUnitLayout) {
 			outlineTemplate = template.Must(template.New("outline.tmpl").
 				Funcs(tmpl).
-				ParseFilesFromTrustedSources(join(dir, tc("outline.tmpl"))))
+				ParseFS(fsys, path.Join(dir, "outline.tmpl")))
 		} else {
 			outlineTemplate = template.Must(template.New("legacy-outline.tmpl").
 				Funcs(tmpl).
-				ParseFilesFromTrustedSources(join(dir, tc("legacy-outline.tmpl"))))
+				ParseFS(fsys, path.Join(dir, "legacy-outline.tmpl")))
 		}
 		sidenavTemplate = template.Must(template.New("sidenav-mobile.tmpl").
 			Funcs(tmpl).
-			ParseFilesFromTrustedSources(join(dir, tc("sidenav-mobile.tmpl"))))
+			ParseFS(fsys, path.Join(dir, "sidenav-mobile.tmpl")))
 	})
 }
 

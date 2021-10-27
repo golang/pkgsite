@@ -40,7 +40,7 @@ var (
 
 func TestMain(m *testing.M) {
 	httpClient = &http.Client{Transport: fakeTransport{}}
-	dochtml.LoadTemplates(template.TrustedSourceFromConstant("../../static/doc"))
+	dochtml.LoadTemplates(template.TrustedFSFromTrustedSource(template.TrustedSourceFromConstant("../../static")))
 	testModules = proxytest.LoadTestModules("../proxy/testdata")
 	postgres.RunDBTests("discovery_worker_test", m, &testDB)
 }

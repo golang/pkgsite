@@ -6,29 +6,28 @@
 // It runs as a web server and presents the documentation as a
 // web page.
 //
-// After running `go install ./cmd/pkgsite` from the pkgsite repo root, you can
-// run `pkgsite` from anywhere, but if you don't run it from the pkgsite repo
-// root you must specify the location of the static assets with -static.
+// To install, run `go install ./cmd/pkgsite` from the pkgsite repo root.
 //
-// With just -static, pkgsite will serve docs for the module in the current
+// With no arguments, pkgsite will serve docs for the module in the current
 // directory, which must have a go.mod file:
 //
-//   cd ~/repos/cue && pkgsite -static ~/repos/pkgsite/static
+//   cd ~/repos/cue && pkgsite
 //
 // You can also serve docs from your module cache, directly from the proxy
 // (it uses the GOPROXY environment variable), or both:
 //
-//   pkgsite -static ~/repos/pkgsite/static -cache -proxy
+//   pkgsite -cache -proxy
 //
-// With either -cache or -proxy, it won't look for a module in the current directory.
-// You can still provide modules on the local filesystem by listing their paths:
+// With either -cache or -proxy, pkgsite won't look for a module in the current
+// directory. You can still provide modules on the local filesystem by listing
+// their paths:
 //
-//   pkgsite -static ~/repos/pkgsite/static -cache -proxy ~/repos/cue some/other/module
+//   pkgsite -cache -proxy ~/repos/cue some/other/module
 //
 // Although standard library packages will work by default, the docs can take a
 // while to appear the first time because the Go repo must be cloned and
 // processed. If you clone the repo yourself (https://go.googlesource.com/go),
-// provide its location with the -gorepo flag to save a little time.
+// you can provide its location with the -gorepo flag to save a little time.
 package main
 
 import (
@@ -51,12 +50,14 @@ import (
 	"golang.org/x/pkgsite/internal/proxy"
 	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/stdlib"
+	"golang.org/x/pkgsite/static"
+	thirdparty "golang.org/x/pkgsite/third_party"
 )
 
 const defaultAddr = "localhost:8080" // default webserver address
 
 var (
-	_          = flag.String("static", "static", "path to folder containing static files served")
+	staticFlag = flag.String("static", "", "OBSOLETE - DO NOT USE")
 	gopathMode = flag.Bool("gopath_mode", false, "assume that local modules' paths are relative to GOPATH/src")
 	httpAddr   = flag.String("http", defaultAddr, "HTTP service address to listen for incoming requests on")
 	useCache   = flag.Bool("cache", false, "fetch from the module cache")
@@ -75,6 +76,10 @@ func main() {
 	}
 	flag.Parse()
 	ctx := context.Background()
+
+	if *staticFlag != "" {
+		fmt.Fprintf(os.Stderr, "-static is ignored. It is obsolete and may be removed in a future version.\n")
+	}
 
 	paths := collectPaths(flag.Args())
 	if len(paths) == 0 && !*useCache && !*useProxy {
@@ -118,7 +123,7 @@ func main() {
 
 	server, err := newServer(ctx, paths, *gopathMode, modCacheDir, prox)
 	if err != nil {
-		die("%s\nMaybe you need to provide the location of static assets with -static.", err)
+		die("%s", err)
 	}
 	router := http.NewServeMux()
 	server.Install(router.Handle, nil, nil)
@@ -160,7 +165,9 @@ func newServer(ctx context.Context, paths []string, gopathMode bool, downloadDir
 	}.New()
 	server, err := frontend.NewServer(frontend.ServerConfig{
 		DataSourceGetter: func(context.Context) internal.DataSource { return lds },
-		StaticPath:       template.TrustedSourceFromFlag(flag.Lookup("static").Value),
+		TemplateFS:       template.TrustedFSFromEmbed(static.FS),
+		StaticFS:         static.FS,
+		ThirdPartyFS:     thirdparty.FS,
 	})
 	if err != nil {
 		return nil, err

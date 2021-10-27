@@ -18,7 +18,7 @@ import (
 	"golang.org/x/pkgsite/internal/testing/htmlcheck"
 )
 
-var templateSource = template.TrustedSourceFromConstant("../../static/doc")
+var templateFS = template.TrustedFSFromTrustedSource(template.TrustedSourceFromConstant("../../static"))
 
 var (
 	in      = htmlcheck.In
@@ -26,7 +26,7 @@ var (
 )
 
 func TestDocInfo(t *testing.T) {
-	dochtml.LoadTemplates(templateSource)
+	dochtml.LoadTemplates(templateFS)
 	ctx := context.Background()
 	si := source.NewGitHubInfo("a.com/M", "", "abcde")
 	mi := &ModuleInfo{
@@ -85,7 +85,7 @@ func TestDocInfo(t *testing.T) {
 }
 
 func TestRenderParts_SinceVersion(t *testing.T) {
-	dochtml.LoadTemplates(templateSource)
+	dochtml.LoadTemplates(templateFS)
 	ctx := context.Background()
 	si := source.NewGitHubInfo("a.com/M", "", "abcde")
 	mi := &ModuleInfo{

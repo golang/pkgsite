@@ -31,7 +31,7 @@ import (
 	"golang.org/x/pkgsite/internal/testing/testhelper"
 )
 
-var templateSource = template.TrustedSourceFromConstant("../../../static/doc")
+var templateFS = template.TrustedFSFromTrustedSource(template.TrustedSourceFromConstant("../../../static"))
 
 var update = flag.Bool("update", false, "update goldens instead of checking against them")
 
@@ -42,7 +42,7 @@ var testRenderOptions = RenderOptions{
 }
 
 func TestCheckTemplates(t *testing.T) {
-	LoadTemplates(templateSource)
+	LoadTemplates(templateFS)
 	for _, tm := range []*template.Template{bodyTemplate, outlineTemplate, sidenavTemplate} {
 		if err := templatecheck.CheckSafe(tm, templateData{}); err != nil {
 			t.Fatal(err)
@@ -52,7 +52,7 @@ func TestCheckTemplates(t *testing.T) {
 
 func TestRender(t *testing.T) {
 	ctx := context.Background()
-	LoadTemplates(templateSource)
+	LoadTemplates(templateFS)
 	fset, d := mustLoadPackage("everydecl")
 	parts, err := Render(ctx, fset, d, testRenderOptions)
 	if err != nil {
@@ -114,7 +114,7 @@ func compareWithGolden(t *testing.T, parts *Parts, name string, update bool) {
 }
 
 func TestExampleRender(t *testing.T) {
-	LoadTemplates(templateSource)
+	LoadTemplates(templateFS)
 	ctx := context.Background()
 	fset, d := mustLoadPackage("example_test")
 

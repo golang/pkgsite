@@ -12,7 +12,7 @@ import (
 )
 
 func TestGetSymbols(t *testing.T) {
-	LoadTemplates(templateSource)
+	LoadTemplates(templateFS)
 	fset,
 		d := mustLoadPackage("symbols")
 	got,

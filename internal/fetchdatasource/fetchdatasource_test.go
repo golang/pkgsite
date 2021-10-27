@@ -36,7 +36,7 @@ var (
 )
 
 func TestMain(m *testing.M) {
-	dochtml.LoadTemplates(template.TrustedSourceFromConstant("../../static/doc"))
+	dochtml.LoadTemplates(template.TrustedFSFromTrustedSource(template.TrustedSourceFromConstant("../../static")))
 	defaultTestModules = proxytest.LoadTestModules("../proxy/testdata")
 	var cleanup func()
 	localGetters, cleanup = buildLocalGetters()

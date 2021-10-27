@@ -8,9 +8,9 @@ import (
 	"bytes"
 	"context"
 	"html"
-	"io/ioutil"
+	"io/fs"
 	"net/http"
-	"os"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -35,7 +35,7 @@ func (s *Server) serveStyleGuide(w http.ResponseWriter, r *http.Request, ds inte
 	if !experiment.IsActive(ctx, internal.ExperimentStyleGuide) {
 		return &serverError{status: http.StatusNotFound}
 	}
-	page, err := styleGuide(ctx, s.staticPath.String())
+	page, err := styleGuide(ctx, s.staticFS)
 	page.basePage = s.newBasePage(r, "")
 	page.AllowWideContent = true
 	page.UseResponsiveLayout = true
@@ -54,18 +54,18 @@ type styleGuidePage struct {
 	Outline  []*Heading
 }
 
-// styleGuide collects the paths to the markdown files in static/shared,
+// styleGuide collects the paths to the markdown files in staticFS,
 // renders them into sections for the styleguide, and merges the document
 // outlines into a single page outline.
-func styleGuide(ctx context.Context, staticPath string) (_ *styleGuidePage, err error) {
-	defer derrors.WrapStack(&err, "styleGuide(%q)", staticPath)
-	files, err := markdownFiles(staticPath)
+func styleGuide(ctx context.Context, staticFS fs.FS) (_ *styleGuidePage, err error) {
+	defer derrors.WrapStack(&err, "styleGuide)")
+	files, err := markdownFiles(staticFS)
 	if err != nil {
 		return nil, err
 	}
 	var sections []*StyleSection
 	for _, f := range files {
-		doc, err := styleSection(ctx, f)
+		doc, err := styleSection(ctx, staticFS, f)
 		if err != nil {
 			return nil, err
 		}
@@ -99,10 +99,10 @@ type StyleSection struct {
 
 // styleSection uses goldmark to parse a markdown file and render
 // a section of the styleguide.
-func styleSection(ctx context.Context, filename string) (_ *StyleSection, err error) {
+func styleSection(ctx context.Context, fsys fs.FS, filename string) (_ *StyleSection, err error) {
 	defer derrors.WrapStack(&err, "styleSection(%q)", filename)
 	var buf bytes.Buffer
-	source, err := ioutil.ReadFile(filename)
+	source, err := fs.ReadFile(fsys, filename)
 	if err != nil {
 		return nil, err
 	}
@@ -189,21 +189,16 @@ func (r *guideRenderer) RegisterFuncs(reg renderer.NodeRendererFuncRegisterer) {
 	reg.Register(ast.KindFencedCodeBlock, r.renderFencedCodeBlock)
 }
 
-// markdownFiles walks the static/shared directory and collects
+// markdownFiles walks the shared directory of fsys and collects
 // the paths to markdown files.
-func markdownFiles(dir string) ([]string, error) {
+func markdownFiles(fsys fs.FS) ([]string, error) {
 	var matches []string
-	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+	err := fs.WalkDir(fsys, "shared", func(filepath string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
-		if info.IsDir() {
-			return nil
-		}
-		if matched, err := filepath.Match("*.md", filepath.Base(path)); err != nil {
-			return err
-		} else if matched {
-			matches = append(matches, path)
+		if path.Ext(filepath) == ".md" {
+			matches = append(matches, filepath)
 		}
 		return nil
 	})

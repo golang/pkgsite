@@ -35,6 +35,8 @@ import (
 	"golang.org/x/pkgsite/internal/testing/pagecheck"
 	"golang.org/x/pkgsite/internal/testing/sample"
 	"golang.org/x/pkgsite/internal/version"
+	"golang.org/x/pkgsite/static"
+	thirdparty "golang.org/x/pkgsite/third_party"
 )
 
 const testTimeout = 5 * time.Second
@@ -677,7 +679,7 @@ func serverTestCases() []serverTestCase {
 			name:           "static",
 			urlPath:        "/static/",
 			wantStatusCode: http.StatusOK,
-			want:           in("", hasText("doc"), hasText("frontend"), hasText("markdown.ts"), hasText("shared"), hasText("worker")),
+			want:           in("", hasText("doc"), hasText("frontend"), hasText("shared"), hasText("worker")),
 		},
 		{
 			name:           "license policy",
@@ -1541,9 +1543,13 @@ func newTestServer(t *testing.T, proxyModules []*proxytest.Module, redisClient *
 		DataSourceGetter:     func(context.Context) internal.DataSource { return testDB },
 		Queue:                q,
 		TaskIDChangeInterval: 10 * time.Minute,
-		StaticPath:           template.TrustedSourceFromConstant("../../static"),
-		ThirdPartyPath:       "../../third_party",
-		AppVersionLabel:      "",
+		TemplateFS:           template.TrustedFSFromEmbed(static.FS),
+		// Use the embedded FSs here to make sure they're tested.
+		// Integration tests will use the actual directories.
+		StaticFS:        static.FS,
+		ThirdPartyFS:    thirdparty.FS,
+		StaticPath:      "../../static",
+		AppVersionLabel: "",
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -1568,8 +1574,8 @@ func newTestServer(t *testing.T, proxyModules []*proxytest.Module, redisClient *
 
 func TestCheckTemplates(t *testing.T) {
 	// Perform additional checks on parsed templates.
-	staticPath := template.TrustedSourceFromConstant("../../static")
-	templates, err := parsePageTemplates(staticPath)
+	staticFS := template.TrustedFSFromEmbed(static.FS)
+	templates, err := parsePageTemplates(staticFS)
 	if err != nil {
 		t.Fatal(err)
 	}

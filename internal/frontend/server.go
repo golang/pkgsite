@@ -14,6 +14,7 @@ import (
 	"io/fs"
 	"net/http"
 	"net/url"
+	"path"
 	"strings"
 	"sync"
 	"time"
@@ -42,10 +43,11 @@ type Server struct {
 	getDataSource        func(context.Context) internal.DataSource
 	queue                queue.Queue
 	taskIDChangeInterval time.Duration
-	staticPath           template.TrustedSource
-	thirdPartyPath       string
-	templateDir          template.TrustedSource
+	templateFS           template.TrustedFS
+	staticFS             fs.FS
+	thirdPartyFS         fs.FS
 	devMode              bool
+	staticPath           string // used only for dynamic loading in dev mode
 	errorPage            []byte
 	appVersionLabel      string
 	googleTagManagerID   string
@@ -65,9 +67,11 @@ type ServerConfig struct {
 	DataSourceGetter     func(context.Context) internal.DataSource
 	Queue                queue.Queue
 	TaskIDChangeInterval time.Duration
-	StaticPath           template.TrustedSource
-	ThirdPartyPath       string
+	TemplateFS           template.TrustedFS // for loading templates safely
+	StaticFS             fs.FS              // for static/ directory
+	ThirdPartyFS         fs.FS              // for third_party/ directory
 	DevMode              bool
+	StaticPath           string // used only for dynamic loading in dev mode
 	AppVersionLabel      string
 	GoogleTagManagerID   string
 	ServeStats           bool
@@ -78,20 +82,19 @@ type ServerConfig struct {
 // NewServer creates a new Server for the given database and template directory.
 func NewServer(scfg ServerConfig) (_ *Server, err error) {
 	defer derrors.Wrap(&err, "NewServer(...)")
-	templateDir := template.TrustedSourceJoin(scfg.StaticPath)
-	ts, err := parsePageTemplates(templateDir)
+	ts, err := parsePageTemplates(scfg.TemplateFS)
 	if err != nil {
 		return nil, fmt.Errorf("error parsing templates: %v", err)
 	}
-	docTemplateDir := template.TrustedSourceJoin(templateDir, template.TrustedSourceFromConstant("doc"))
-	dochtml.LoadTemplates(docTemplateDir)
+	dochtml.LoadTemplates(scfg.TemplateFS)
 	s := &Server{
 		getDataSource:        scfg.DataSourceGetter,
 		queue:                scfg.Queue,
-		staticPath:           scfg.StaticPath,
-		thirdPartyPath:       scfg.ThirdPartyPath,
-		templateDir:          templateDir,
+		templateFS:           scfg.TemplateFS,
+		staticFS:             scfg.StaticFS,
+		thirdPartyFS:         scfg.ThirdPartyFS,
 		devMode:              scfg.DevMode,
+		staticPath:           scfg.StaticPath,
 		templates:            ts,
 		taskIDChangeInterval: scfg.TaskIDChangeInterval,
 		appVersionLabel:      scfg.AppVersionLabel,
@@ -134,10 +137,11 @@ func (s *Server) Install(handle func(string, http.Handler), redisClient *redis.C
 		log.Infof(r.Context(), "Request made to %q", r.URL.Path)
 	}))
 	handle("/static/", s.staticHandler())
-	handle("/third_party/", http.StripPrefix("/third_party", http.FileServer(http.Dir(s.thirdPartyPath))))
+	handle("/third_party/", http.StripPrefix("/third_party", http.FileServer(http.FS(s.thirdPartyFS))))
 	handle("/favicon.ico", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, fmt.Sprintf("%s/shared/icon/favicon.ico", http.Dir(s.staticPath.String())))
+		serveFileFS(w, r, s.staticFS, "shared/icon/favicon.ico")
 	}))
+
 	handle("/sitemap/", http.StripPrefix("/sitemap/", http.FileServer(http.Dir("private/sitemap"))))
 	handle("/mod/", http.HandlerFunc(s.handleModuleDetailsRedirect))
 	handle("/pkg/", http.HandlerFunc(s.handlePackageDetailsRedirect))
@@ -539,7 +543,7 @@ func (s *Server) findTemplate(templateName string) (*template.Template, error) {
 		s.mu.Lock()
 		defer s.mu.Unlock()
 		var err error
-		s.templates, err = parsePageTemplates(s.templateDir)
+		s.templates, err = parsePageTemplates(s.templateFS)
 		if err != nil {
 			return nil, fmt.Errorf("error parsing templates: %v", err)
 		}
@@ -584,69 +588,73 @@ func stripScheme(url string) string {
 	return url
 }
 
-// parsePageTemplates parses html templates contained in the given base
-// directory in order to generate a map of Name->*template.Template.
+// parsePageTemplates parses html templates contained in the given filesystem in
+// order to generate a map of Name->*template.Template.
 //
 // Separate templates are used so that certain contextual functions (e.g.
 // templateName) can be bound independently for each page.
 //
 // Templates in directories prefixed with an underscore are considered helper
 // templates and parsed together with the files in each base directory.
-func parsePageTemplates(base template.TrustedSource) (map[string]*template.Template, error) {
-	tsc := template.TrustedSourceFromConstant
-	join := template.TrustedSourceJoin
-
+func parsePageTemplates(fsys template.TrustedFS) (map[string]*template.Template, error) {
 	templates := make(map[string]*template.Template)
-	htmlSets := [][]template.TrustedSource{
-		{tsc("badge")},
-		{tsc("error")},
-		{tsc("fetch")},
-		{tsc("homepage")},
-		{tsc("legacy_search")},
-		{tsc("license-policy")},
-		{tsc("search")},
-		{tsc("search-help")},
-		{tsc("styleguide")},
-		{tsc("subrepo")},
-		{tsc("unit/importedby"), tsc("unit")},
-		{tsc("unit/imports"), tsc("unit")},
-		{tsc("unit/licenses"), tsc("unit")},
-		{tsc("unit/main"), tsc("unit")},
-		{tsc("unit/versions"), tsc("unit")},
+	htmlSets := [][]string{
+		{"badge"},
+		{"error"},
+		{"fetch"},
+		{"homepage"},
+		{"legacy_search"},
+		{"license-policy"},
+		{"search"},
+		{"search-help"},
+		{"styleguide"},
+		{"subrepo"},
+		{"unit/importedby", "unit"},
+		{"unit/imports", "unit"},
+		{"unit/licenses", "unit"},
+		{"unit/main", "unit"},
+		{"unit/versions", "unit"},
 	}
 
 	for _, set := range htmlSets {
-		t, err := template.New("frontend.tmpl").Funcs(templateFuncs).ParseGlobFromTrustedSource(join(base, tsc("frontend/*.tmpl")))
+		t, err := template.New("frontend.tmpl").Funcs(templateFuncs).ParseFS(fsys, "frontend/*.tmpl")
 		if err != nil {
-			return nil, fmt.Errorf("ParseFilesFromTrustedSources: %v", err)
+			return nil, fmt.Errorf("ParseFS: %v", err)
 		}
-		helperGlob := join(base, tsc("shared/*/*.tmpl"))
-		if _, err := t.ParseGlobFromTrustedSource(helperGlob); err != nil {
-			return nil, fmt.Errorf("ParseGlobFromTrustedSource(%q): %v", helperGlob, err)
+		helperGlob := "shared/*/*.tmpl"
+		if _, err := t.ParseFS(fsys, helperGlob); err != nil {
+			return nil, fmt.Errorf("ParseFS(%q): %v", helperGlob, err)
 		}
-		var files []template.TrustedSource
 		for _, f := range set {
-			if _, err := t.ParseGlobFromTrustedSource(join(base, tsc("frontend"), f, tsc("*.tmpl"))); err != nil {
-				return nil, fmt.Errorf("ParseGlobFromTrustedSource(%v): %v", files, err)
+			if _, err := t.ParseFS(fsys, path.Join("frontend", f, "*.tmpl")); err != nil {
+				return nil, fmt.Errorf("ParseFS(%v): %v", f, err)
 			}
 		}
-		templates[set[0].String()] = t
+		templates[set[0]] = t
 	}
 
 	return templates, nil
 }
 
 func (s *Server) staticHandler() http.Handler {
-	staticPath := s.staticPath.String()
-
 	// In dev mode compile TypeScript files into minified JavaScript files
 	// and rebuild them on file changes.
 	if s.devMode {
+		if s.staticPath == "" {
+			panic("staticPath is empty in dev mode; cannot rebuild static files")
+		}
 		ctx := context.Background()
-		_, err := static.Build(static.Config{EntryPoint: staticPath + "/frontend", Watch: true, Bundle: true})
+		_, err := static.Build(static.Config{EntryPoint: s.staticPath + "/frontend", Watch: true, Bundle: true})
 		if err != nil {
 			log.Error(ctx, err)
 		}
 	}
-	return http.StripPrefix("/static/", http.FileServer(http.Dir(staticPath)))
+	return http.StripPrefix("/static/", http.FileServer(http.FS(s.staticFS)))
+}
+
+// serveFileFS serves a file from the given filesystem.
+func serveFileFS(w http.ResponseWriter, r *http.Request, fsys fs.FS, name string) {
+	fs := http.FileServer(http.FS(fsys))
+	r.URL.Path = name
+	fs.ServeHTTP(w, r)
 }

@@ -6,7 +6,6 @@ package main
 
 import (
 	"context"
-	"flag"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -45,7 +44,6 @@ func Test(t *testing.T) {
 
 	localModule := repoPath("internal/fetch/testdata/has_go_mod")
 	cacheDir := repoPath("internal/fetch/testdata/modcache")
-	flag.Set("static", repoPath("static"))
 	testModules := proxytest.LoadTestModules(repoPath("internal/proxy/testdata"))
 	prox, teardown := proxytest.SetupTestClient(t, testModules)
 	defer teardown()

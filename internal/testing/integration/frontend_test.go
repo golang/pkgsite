@@ -8,6 +8,7 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 	"time"
 
@@ -30,11 +31,13 @@ import (
 // duplication
 func setupFrontend(ctx context.Context, t *testing.T, q queue.Queue, rc *redis.Client) *httptest.Server {
 	t.Helper()
+	const staticDir = "../../../static"
 	s, err := frontend.NewServer(frontend.ServerConfig{
 		DataSourceGetter:     func(context.Context) internal.DataSource { return testDB },
 		TaskIDChangeInterval: 10 * time.Minute,
-		StaticPath:           template.TrustedSourceFromConstant("../../../static"),
-		ThirdPartyPath:       "../../../third_party",
+		TemplateFS:           template.TrustedFSFromTrustedSource(template.TrustedSourceFromConstant(staticDir)),
+		StaticFS:             os.DirFS(staticDir),
+		ThirdPartyFS:         os.DirFS("../../../third_party"),
 		AppVersionLabel:      "",
 		Queue:                q,
 		ServeStats:           true,

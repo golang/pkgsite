@@ -5,7 +5,6 @@
 package frontend
 
 import (
-	"fmt"
 	"net/http"
 	"strings"
 )
@@ -23,7 +22,7 @@ type badgePage struct {
 func (s *Server) badgeHandler(w http.ResponseWriter, r *http.Request) {
 	path := strings.TrimPrefix(r.URL.Path, "/badge/")
 	if path != "" {
-		http.ServeFile(w, r, fmt.Sprintf("%s/frontend/badge/badge.svg", s.staticPath))
+		serveFileFS(w, r, s.staticFS, "frontend/badge/badge.svg")
 		return
 	}
 
