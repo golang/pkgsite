@@ -76,7 +76,7 @@ type ServerConfig struct {
 	GoogleTagManagerID   string
 	ServeStats           bool
 	ReportingClient      *errorreporting.Client
-	VulndbClient         *vulndbc.Client
+	VulndbClient         vulndbc.Client
 }
 
 // NewServer creates a new Server for the given database and template directory.
@@ -87,6 +87,10 @@ func NewServer(scfg ServerConfig) (_ *Server, err error) {
 		return nil, fmt.Errorf("error parsing templates: %v", err)
 	}
 	dochtml.LoadTemplates(scfg.TemplateFS)
+	var getVulnEntries vulnEntriesFunc
+	if scfg.VulndbClient != nil {
+		getVulnEntries = scfg.VulndbClient.GetByModule
+	}
 	s := &Server{
 		getDataSource:        scfg.DataSourceGetter,
 		queue:                scfg.Queue,
@@ -102,7 +106,7 @@ func NewServer(scfg ServerConfig) (_ *Server, err error) {
 		serveStats:           scfg.ServeStats,
 		reportingClient:      scfg.ReportingClient,
 		fileMux:              http.NewServeMux(),
-		getVulnEntries:       scfg.VulndbClient.Get,
+		getVulnEntries:       getVulnEntries,
 	}
 	errorPageBytes, err := s.renderErrorPage(context.Background(), http.StatusInternalServerError, "error", nil)
 	if err != nil {
