@@ -128,7 +128,7 @@ func main() {
 	router := http.NewServeMux()
 	server.Install(router.Handle, nil, nil)
 	mw := middleware.Timeout(54 * time.Second)
-	log.Infof(ctx, "Listening on addr %s", *httpAddr)
+	log.Infof(ctx, "Listening on addr http://%s", *httpAddr)
 	die("%v", http.ListenAndServe(*httpAddr, mw(router)))
 }
 
