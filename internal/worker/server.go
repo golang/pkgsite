@@ -87,7 +87,7 @@ func NewServer(cfg *config.Config, scfg ServerConfig) (_ *Server, err error) {
 	if err != nil {
 		return nil, err
 	}
-	ts := template.TrustedSourceJoin(scfg.StaticPath, template.TrustedSourceFromConstant("doc"))
+	ts := template.TrustedSourceJoin(scfg.StaticPath)
 	tfs := template.TrustedFSFromTrustedSource(ts)
 	dochtml.LoadTemplates(tfs)
 	templates := map[string]*template.Template{
