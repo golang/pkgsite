@@ -141,7 +141,9 @@ export const testcases: TestCase[] = [
   {
     name: 'package with higher major version',
     path: '/rsc.io/quote',
-    tabs: [tab.VERSIONS],
+    tabs: [],
+    // TODO: Re-enable versions page test https://golang.org/issue/49304.
+    // tabs: [tab.VERSIONS],
     ids: [
       id.DOCUMENTATION,
       id.OVERVIEW,
