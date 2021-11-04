@@ -110,8 +110,10 @@ a:visited {
   color: var(--color-brand-primary);
   text-decoration: none;
 }
-a:hover,
-a:hover > * {
+a:hover {
   color: var(--color-brand-primary);
+  text-decoration: underline;
+}
+a:hover > * {
   text-decoration: underline;
 }

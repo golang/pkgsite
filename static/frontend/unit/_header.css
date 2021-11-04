@@ -125,6 +125,9 @@ a.UnitHeader-backLink {
 .DetailsHeader-badge--latest a {
   display: none;
 }
+.DetailsHeader-badge--goToLatest a:hover {
+  text-decoration: none;
+}
 .DetailsHeader-badge--latest span.DetailsHeader-span--notAtLatest {
   display: none;
 }
