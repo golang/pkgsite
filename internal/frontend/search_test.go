@@ -20,7 +20,7 @@ import (
 	"golang.org/x/pkgsite/internal/testing/sample"
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
-	"golang.org/x/vulndb/osv"
+	"golang.org/x/vuln/osv"
 )
 
 func TestSearchQueryAndMode(t *testing.T) {

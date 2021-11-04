@@ -10,7 +10,7 @@ import (
 	"time"
 
 	lru "github.com/hashicorp/golang-lru"
-	"golang.org/x/vulndb/osv"
+	"golang.org/x/vuln/osv"
 )
 
 // vulndbCache implements the golang.org/x/vulndb/client.Cache interface. It

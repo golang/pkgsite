@@ -34,7 +34,7 @@ import (
 	"golang.org/x/pkgsite/internal/queue"
 	"golang.org/x/pkgsite/internal/static"
 	"golang.org/x/pkgsite/internal/version"
-	vulndbc "golang.org/x/vulndb/client"
+	vulnc "golang.org/x/vuln/client"
 )
 
 // Server can be installed to serve the go discovery frontend.
@@ -76,7 +76,7 @@ type ServerConfig struct {
 	GoogleTagManagerID   string
 	ServeStats           bool
 	ReportingClient      *errorreporting.Client
-	VulndbClient         vulndbc.Client
+	VulndbClient         vulnc.Client
 }
 
 // NewServer creates a new Server for the given database and template directory.

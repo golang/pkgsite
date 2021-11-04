@@ -28,7 +28,7 @@ import (
 	"golang.org/x/pkgsite/internal/proxy"
 	"golang.org/x/pkgsite/internal/queue"
 	"golang.org/x/pkgsite/internal/source"
-	vulndbc "golang.org/x/vulndb/client"
+	vulnc "golang.org/x/vuln/client"
 )
 
 var (
@@ -105,7 +105,7 @@ func main() {
 	}
 
 	rc := cmdconfig.ReportingClient(ctx, cfg)
-	vc, err := vulndbc.NewClient([]string{cfg.VulnDB}, vulndbc.Options{
+	vc, err := vulnc.NewClient([]string{cfg.VulnDB}, vulnc.Options{
 		HTTPCache: newVulndbCache(),
 	})
 	if err != nil {
