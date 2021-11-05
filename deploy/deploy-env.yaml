@@ -9,6 +9,8 @@ steps:
   - id: Prepare
     name: gcr.io/cloud-builders/gcloud
     entrypoint: deploy/prepare.sh
+    args:
+      - $PROJECT_ID
   - id: Build
     name: gcr.io/cloud-builders/docker
     entrypoint: sh

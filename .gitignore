@@ -47,4 +47,4 @@ __diff_output__
 
 #### Cloud Build Artifacts ####
 _BUILD_TAG
-_E2E_AUTH_TOKEN
+_ID_TOKEN

@@ -1,0 +1,61 @@
+# Copyright 2020 The Go Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style
+# license that can be found in the LICENSE file.
+
+options:
+  machineType: N1_HIGHCPU_8
+
+steps:
+  - id: Prepare
+    name: gcr.io/cloud-builders/gcloud
+    entrypoint: deploy/prepare.sh
+    args:
+      - $PROJECT_ID
+  - id: Build
+    name: gcr.io/cloud-builders/docker
+    entrypoint: sh
+    args:
+      - -c
+      - deploy/build.sh $PROJECT_ID $(cat _BUILD_TAG)
+  - id: Config - staging
+    name: gcr.io/cloud-builders/gsutil
+    entrypoint: deploy/config.sh
+    args:
+      - staging
+  - id: Worker - staging
+    name: gcr.io/cloud-builders/gke-deploy
+    entrypoint: sh
+    args:
+      - -c
+      - deploy/worker.sh staging gcr.io/$PROJECT_ID/worker:$(cat _BUILD_TAG)
+  - id: Frontend - staging
+    name: gcr.io/cloud-builders/gcloud
+    entrypoint: sh
+    args:
+      - -c
+      - deploy/frontend.sh staging gcr.io/$PROJECT_ID/frontend:$(cat _BUILD_TAG)
+  - id: e2e - staging
+    name: gcr.io/$PROJECT_ID/docker-compose
+    entrypoint: sh
+    args:
+      - c
+      - private/devtools/e2e.sh staging $(cat _ID_TOKEN)
+    env:
+      - QUOTA_BYPASS=$_QUOTA_BYPASS
+  - id: Config - prod
+    name: gcr.io/cloud-builders/gsutil
+    entrypoint: deploy/config.sh
+    args:
+      - prod
+  - id: Worker - prod
+    name: gcr.io/cloud-builders/gke-deploy
+    entrypoint: sh
+    args:
+      - -c
+      - deploy/worker.sh prod gcr.io/$PROJECT_ID/worker:$(cat _BUILD_TAG)
+  - id: Frontend - prod
+    name: gcr.io/cloud-builders/gcloud
+    entrypoint: sh
+    args:
+      - -c
+      - deploy/frontend.sh prod gcr.io/$PROJECT_ID/frontend:$(cat _BUILD_TAG)
