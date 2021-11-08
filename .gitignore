@@ -44,3 +44,7 @@ node_modules
 
 #### E2E Test Output ####
 __diff_output__
+
+#### Cloud Build Artifacts ####
+_BUILD_TAG
+_E2E_AUTH_TOKEN
