@@ -2,15 +2,26 @@
 # Use of this source code is governed by a BSD-style
 # license that can be found in the LICENSE file.
 
+timeout: 30m
 options:
   machineType: N1_HIGHCPU_8
 
 steps:
+  - id: all.bash
+    name: gcr.io/$PROJECT_ID/docker-compose
+    entrypoint: devtools/docker/compose.sh
+    args:
+      - run
+      - allbash
+      - ci
   - id: Prepare
     name: gcr.io/cloud-builders/gcloud
     entrypoint: deploy/prepare.sh
     args:
       - $PROJECT_ID
+  - id: Check redistributable
+    name: golang:1.16.7
+    entrypoint: private/devtools/check_redist.sh
   - id: Build
     name: gcr.io/cloud-builders/docker
     entrypoint: sh
@@ -34,3 +45,9 @@ steps:
     args:
       - -c
       - deploy/frontend.sh $_ENV gcr.io/$PROJECT_ID/frontend:$(cat _BUILD_TAG)
+  - id: Pagecheck
+    name: golang:1.16.7
+    entrypoint: sh
+    args:
+      - -c
+      - private/devtools/pagecheck.sh -idtok $(cat _ID_TOKEN) $_ENV
