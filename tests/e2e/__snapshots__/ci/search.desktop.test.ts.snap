@@ -16,19 +16,6 @@ Object {
       "role": "link",
     },
     Object {
-      "name": "Search for a package",
-      "role": "searchbox",
-      "value": "http",
-    },
-    Object {
-      "name": "Submit search",
-      "role": "button",
-    },
-    Object {
-      "name": "/",
-      "role": "StaticText",
-    },
-    Object {
       "name": "Why Go",
       "role": "link",
     },
@@ -53,68 +40,68 @@ Object {
       "role": "link",
     },
     Object {
-      "level": 1,
-      "name": "Results for “http”",
-      "role": "heading",
+      "name": "Search for a package",
+      "role": "searchbox",
+      "value": "http",
+    },
+    Object {
+      "name": "Submit search",
+      "role": "button",
+    },
+    Object {
+      "name": "/",
+      "role": "StaticText",
+    },
+    Object {
+      "name": "Packages",
+      "role": "link",
+    },
+    Object {
+      "name": "Symbols",
+      "role": "link",
+    },
+    Object {
+      "name": "Showing",
+      "role": "StaticText",
+    },
+    Object {
+      "name": "25",
+      "role": "StaticText",
+    },
+    Object {
+      "name": "modules with matching packages.",
+      "role": "StaticText",
     },
     Object {
       "name": "Search help",
       "role": "link",
     },
     Object {
-      "name": "1 – 25 of 125 results",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "Previous",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "1",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "2",
-      "role": "link",
-    },
-    Object {
-      "name": "3",
-      "role": "link",
-    },
-    Object {
-      "name": "4",
-      "role": "link",
-    },
-    Object {
-      "name": "5",
-      "role": "link",
-    },
-    Object {
-      "name": "Next",
-      "role": "link",
-    },
-    Object {
       "name": "net/http/pprof",
       "role": "link",
+    },
+    Object {
+      "name": "standard library",
+      "role": "StaticText",
     },
     Object {
       "name": "Package pprof serves via its HTTP server runtime profiling data in the format expected by the pprof visualization tool.",
       "role": "StaticText",
     },
     Object {
-      "name": "Version:",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "go1.16.3",
-      "role": "StaticText",
+      "name": "Go to Imported By",
+      "role": "link",
     },
     Object {
       "name": "|",
       "role": "StaticText",
     },
     Object {
-      "name": "Published:",
+      "name": "go1.17",
+      "role": "StaticText",
+    },
+    Object {
+      "name": "published on",
       "role": "StaticText",
     },
     Object {
@@ -126,19 +113,67 @@ Object {
       "role": "StaticText",
     },
     Object {
-      "name": "Imported by:",
+      "name": "BSD-3-Clause",
       "role": "StaticText",
     },
     Object {
-      "name": "11632",
+      "name": "Related packages in the standard library:",
       "role": "StaticText",
+    },
+    Object {
+      "name": "net/http/httputil",
+      "role": "link",
+    },
+    Object {
+      "name": "net/http/pprof",
+      "role": "link",
+    },
+    Object {
+      "name": "net/http/httptest",
+      "role": "link",
+    },
+    Object {
+      "name": "net/textproto",
+      "role": "link",
+    },
+    Object {
+      "name": "net/http/httptrace",
+      "role": "link",
+    },
+    Object {
+      "name": "+3 more",
+      "role": "link",
+    },
+    Object {
+      "name": "net/http/pprof",
+      "role": "link",
+    },
+    Object {
+      "name": "Package pprof serves via its HTTP server runtime profiling data in the format expected by the pprof visualization tool.",
+      "role": "StaticText",
+    },
+    Object {
+      "name": "Go to Imported By",
+      "role": "link",
     },
     Object {
       "name": "|",
       "role": "StaticText",
     },
     Object {
-      "name": "License:",
+      "name": "v0.11.22",
+      "role": "StaticText",
+    },
+    Object {
+      "name": "published on",
+      "role": "StaticText",
+    },
+    Object {
+      "name": "Apr 1, 2021",
+      "role": "StaticText",
+    },
+    Object {
+      "name": "|",
       "role": "StaticText",
     },
     Object {
@@ -154,19 +189,19 @@ Object {
       "role": "StaticText",
     },
     Object {
-      "name": "Version:",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "go1.16.3",
-      "role": "StaticText",
+      "name": "Go to Imported By",
+      "role": "link",
     },
     Object {
       "name": "|",
       "role": "StaticText",
     },
     Object {
-      "name": "Published:",
+      "name": "v1.7.4",
+      "role": "StaticText",
+    },
+    Object {
+      "name": "published on",
       "role": "StaticText",
     },
     Object {
@@ -175,22 +210,6 @@ Object {
     },
     Object {
       "name": "|",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "Imported by:",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "11632",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "|",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "License:",
       "role": "StaticText",
     },
     Object {
@@ -206,19 +225,19 @@ Object {
       "role": "StaticText",
     },
     Object {
-      "name": "Version:",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "go1.16.3",
-      "role": "StaticText",
+      "name": "Go to Imported By",
+      "role": "link",
     },
     Object {
       "name": "|",
       "role": "StaticText",
     },
     Object {
-      "name": "Published:",
+      "name": "v0.12.0",
+      "role": "StaticText",
+    },
+    Object {
+      "name": "published on",
       "role": "StaticText",
     },
     Object {
@@ -227,22 +246,6 @@ Object {
     },
     Object {
       "name": "|",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "Imported by:",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "11632",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "|",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "License:",
       "role": "StaticText",
     },
     Object {
@@ -258,19 +261,19 @@ Object {
       "role": "StaticText",
     },
     Object {
-      "name": "Version:",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "go1.16.3",
-      "role": "StaticText",
+      "name": "Go to Imported By",
+      "role": "link",
     },
     Object {
       "name": "|",
       "role": "StaticText",
     },
     Object {
-      "name": "Published:",
+      "name": "v0.0.0-...-ba495a6",
+      "role": "StaticText",
+    },
+    Object {
+      "name": "published on",
       "role": "StaticText",
     },
     Object {
@@ -282,19 +285,47 @@ Object {
       "role": "StaticText",
     },
     Object {
-      "name": "Imported by:",
+      "name": "BSD-3-Clause",
       "role": "StaticText",
     },
     Object {
-      "name": "11632",
+      "name": "Other packages in module golang.org/x/oauth2:",
       "role": "StaticText",
+    },
+    Object {
+      "name": "google",
+      "role": "link",
+    },
+    Object {
+      "name": "net/http/pprof",
+      "role": "link",
+    },
+    Object {
+      "name": "Package pprof serves via its HTTP server runtime profiling data in the format expected by the pprof visualization tool.",
+      "role": "StaticText",
+    },
+    Object {
+      "name": "Go to Imported By",
+      "role": "link",
     },
     Object {
       "name": "|",
       "role": "StaticText",
     },
     Object {
-      "name": "License:",
+      "name": "v1.3.0",
+      "role": "StaticText",
+    },
+    Object {
+      "name": "published on",
+      "role": "StaticText",
+    },
+    Object {
+      "name": "Apr 1, 2021",
+      "role": "StaticText",
+    },
+    Object {
+      "name": "|",
       "role": "StaticText",
     },
     Object {
@@ -310,19 +341,19 @@ Object {
       "role": "StaticText",
     },
     Object {
-      "name": "Version:",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "go1.16.3",
-      "role": "StaticText",
+      "name": "Go to Imported By",
+      "role": "link",
     },
     Object {
       "name": "|",
       "role": "StaticText",
     },
     Object {
-      "name": "Published:",
+      "name": "v0.0.0-...-7594919",
+      "role": "StaticText",
+    },
+    Object {
+      "name": "published on",
       "role": "StaticText",
     },
     Object {
@@ -334,11 +365,51 @@ Object {
       "role": "StaticText",
     },
     Object {
-      "name": "Imported by:",
+      "name": "BSD-3-Clause",
       "role": "StaticText",
     },
     Object {
-      "name": "11632",
+      "name": "Other packages in module golang.org/x/net:",
+      "role": "StaticText",
+    },
+    Object {
+      "name": "http/httpguts",
+      "role": "link",
+    },
+    Object {
+      "name": "http2/hpack",
+      "role": "link",
+    },
+    Object {
+      "name": "http/httpproxy",
+      "role": "link",
+    },
+    Object {
+      "name": "net/http/pprof",
+      "role": "link",
+    },
+    Object {
+      "name": "Package pprof serves via its HTTP server runtime profiling data in the format expected by the pprof visualization tool.",
+      "role": "StaticText",
+    },
+    Object {
+      "name": "Go to Imported By",
+      "role": "link",
+    },
+    Object {
+      "name": "|",
+      "role": "StaticText",
+    },
+    Object {
+      "name": "v1.11.0",
+      "role": "StaticText",
+    },
+    Object {
+      "name": "published on",
+      "role": "StaticText",
+    },
+    Object {
+      "name": "Apr 1, 2021",
       "role": "StaticText",
     },
     Object {
@@ -346,7 +417,95 @@ Object {
       "role": "StaticText",
     },
     Object {
-      "name": "License:",
+      "name": "BSD-3-Clause",
+      "role": "StaticText",
+    },
+    Object {
+      "name": "Other packages in module github.com/prometheus/client_golang:",
+      "role": "StaticText",
+    },
+    Object {
+      "name": "api/prometheus/v1",
+      "role": "link",
+    },
+    Object {
+      "name": "api",
+      "role": "link",
+    },
+    Object {
+      "name": "net/http/pprof",
+      "role": "link",
+    },
+    Object {
+      "name": "Package pprof serves via its HTTP server runtime profiling data in the format expected by the pprof visualization tool.",
+      "role": "StaticText",
+    },
+    Object {
+      "name": "Go to Imported By",
+      "role": "link",
+    },
+    Object {
+      "name": "|",
+      "role": "StaticText",
+    },
+    Object {
+      "name": "v0.60.0",
+      "role": "StaticText",
+    },
+    Object {
+      "name": "published on",
+      "role": "StaticText",
+    },
+    Object {
+      "name": "Apr 1, 2021",
+      "role": "StaticText",
+    },
+    Object {
+      "name": "|",
+      "role": "StaticText",
+    },
+    Object {
+      "name": "BSD-3-Clause",
+      "role": "StaticText",
+    },
+    Object {
+      "name": "Other packages in module google.golang.org/api:",
+      "role": "StaticText",
+    },
+    Object {
+      "name": "transport",
+      "role": "link",
+    },
+    Object {
+      "name": "net/http/pprof",
+      "role": "link",
+    },
+    Object {
+      "name": "Package pprof serves via its HTTP server runtime profiling data in the format expected by the pprof visualization tool.",
+      "role": "StaticText",
+    },
+    Object {
+      "name": "Go to Imported By",
+      "role": "link",
+    },
+    Object {
+      "name": "|",
+      "role": "StaticText",
+    },
+    Object {
+      "name": "v1.5.1",
+      "role": "StaticText",
+    },
+    Object {
+      "name": "published on",
+      "role": "StaticText",
+    },
+    Object {
+      "name": "Apr 1, 2021",
+      "role": "StaticText",
+    },
+    Object {
+      "name": "|",
       "role": "StaticText",
     },
     Object {
@@ -362,19 +521,19 @@ Object {
       "role": "StaticText",
     },
     Object {
-      "name": "Version:",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "go1.16.3",
-      "role": "StaticText",
+      "name": "Go to Imported By",
+      "role": "link",
     },
     Object {
       "name": "|",
       "role": "StaticText",
     },
     Object {
-      "name": "Published:",
+      "name": "v5.0.5",
+      "role": "StaticText",
+    },
+    Object {
+      "name": "published on",
       "role": "StaticText",
     },
     Object {
@@ -386,19 +545,47 @@ Object {
       "role": "StaticText",
     },
     Object {
-      "name": "Imported by:",
+      "name": "BSD-3-Clause",
       "role": "StaticText",
     },
     Object {
-      "name": "11632",
+      "name": "Other major versions:",
       "role": "StaticText",
+    },
+    Object {
+      "name": "v1",
+      "role": "link",
+    },
+    Object {
+      "name": "net/http/pprof",
+      "role": "link",
+    },
+    Object {
+      "name": "Package pprof serves via its HTTP server runtime profiling data in the format expected by the pprof visualization tool.",
+      "role": "StaticText",
+    },
+    Object {
+      "name": "Go to Imported By",
+      "role": "link",
     },
     Object {
       "name": "|",
       "role": "StaticText",
     },
     Object {
-      "name": "License:",
+      "name": "v1.31.0",
+      "role": "StaticText",
+    },
+    Object {
+      "name": "published on",
+      "role": "StaticText",
+    },
+    Object {
+      "name": "Apr 1, 2021",
+      "role": "StaticText",
+    },
+    Object {
+      "name": "|",
       "role": "StaticText",
     },
     Object {
@@ -414,19 +601,19 @@ Object {
       "role": "StaticText",
     },
     Object {
-      "name": "Version:",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "go1.16.3",
-      "role": "StaticText",
+      "name": "Go to Imported By",
+      "role": "link",
     },
     Object {
       "name": "|",
       "role": "StaticText",
     },
     Object {
-      "name": "Published:",
+      "name": "v0.3.0",
+      "role": "StaticText",
+    },
+    Object {
+      "name": "published on",
       "role": "StaticText",
     },
     Object {
@@ -435,22 +622,6 @@ Object {
     },
     Object {
       "name": "|",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "Imported by:",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "11632",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "|",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "License:",
       "role": "StaticText",
     },
     Object {
@@ -466,19 +637,19 @@ Object {
       "role": "StaticText",
     },
     Object {
-      "name": "Version:",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "go1.16.3",
-      "role": "StaticText",
+      "name": "Go to Imported By",
+      "role": "link",
     },
     Object {
       "name": "|",
       "role": "StaticText",
     },
     Object {
-      "name": "Published:",
+      "name": "v1.9.0",
+      "role": "StaticText",
+    },
+    Object {
+      "name": "published on",
       "role": "StaticText",
     },
     Object {
@@ -487,22 +658,6 @@ Object {
     },
     Object {
       "name": "|",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "Imported by:",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "11632",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "|",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "License:",
       "role": "StaticText",
     },
     Object {
@@ -518,19 +673,19 @@ Object {
       "role": "StaticText",
     },
     Object {
-      "name": "Version:",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "go1.16.3",
-      "role": "StaticText",
+      "name": "Go to Imported By",
+      "role": "link",
     },
     Object {
       "name": "|",
       "role": "StaticText",
     },
     Object {
-      "name": "Published:",
+      "name": "v4.13.1",
+      "role": "StaticText",
+    },
+    Object {
+      "name": "published on",
       "role": "StaticText",
     },
     Object {
@@ -542,11 +697,43 @@ Object {
       "role": "StaticText",
     },
     Object {
-      "name": "Imported by:",
+      "name": "BSD-3-Clause",
       "role": "StaticText",
     },
     Object {
-      "name": "11632",
+      "name": "Other major versions:",
+      "role": "StaticText",
+    },
+    Object {
+      "name": "v3",
+      "role": "link",
+    },
+    Object {
+      "name": "net/http/pprof",
+      "role": "link",
+    },
+    Object {
+      "name": "Package pprof serves via its HTTP server runtime profiling data in the format expected by the pprof visualization tool.",
+      "role": "StaticText",
+    },
+    Object {
+      "name": "Go to Imported By",
+      "role": "link",
+    },
+    Object {
+      "name": "|",
+      "role": "StaticText",
+    },
+    Object {
+      "name": "v0.22.3",
+      "role": "StaticText",
+    },
+    Object {
+      "name": "published on",
+      "role": "StaticText",
+    },
+    Object {
+      "name": "Apr 1, 2021",
       "role": "StaticText",
     },
     Object {
@@ -554,7 +741,119 @@ Object {
       "role": "StaticText",
     },
     Object {
-      "name": "License:",
+      "name": "BSD-3-Clause",
+      "role": "StaticText",
+    },
+    Object {
+      "name": "Other packages in module k8s.io/apiserver:",
+      "role": "StaticText",
+    },
+    Object {
+      "name": "pkg/server/healthz",
+      "role": "link",
+    },
+    Object {
+      "name": "net/http/pprof",
+      "role": "link",
+    },
+    Object {
+      "name": "Package pprof serves via its HTTP server runtime profiling data in the format expected by the pprof visualization tool.",
+      "role": "StaticText",
+    },
+    Object {
+      "name": "Go to Imported By",
+      "role": "link",
+    },
+    Object {
+      "name": "|",
+      "role": "StaticText",
+    },
+    Object {
+      "name": "v3.5.2",
+      "role": "StaticText",
+    },
+    Object {
+      "name": "published on",
+      "role": "StaticText",
+    },
+    Object {
+      "name": "Apr 1, 2021",
+      "role": "StaticText",
+    },
+    Object {
+      "name": "|",
+      "role": "StaticText",
+    },
+    Object {
+      "name": "BSD-3-Clause",
+      "role": "StaticText",
+    },
+    Object {
+      "name": "Other major versions:",
+      "role": "StaticText",
+    },
+    Object {
+      "name": "v1",
+      "role": "link",
+    },
+    Object {
+      "name": "net/http/pprof",
+      "role": "link",
+    },
+    Object {
+      "name": "Go to Imported By",
+      "role": "link",
+    },
+    Object {
+      "name": "|",
+      "role": "StaticText",
+    },
+    Object {
+      "name": "v0.3.1",
+      "role": "StaticText",
+    },
+    Object {
+      "name": "published on",
+      "role": "StaticText",
+    },
+    Object {
+      "name": "Apr 1, 2021",
+      "role": "StaticText",
+    },
+    Object {
+      "name": "|",
+      "role": "StaticText",
+    },
+    Object {
+      "name": "BSD-3-Clause",
+      "role": "StaticText",
+    },
+    Object {
+      "name": "net/http/pprof",
+      "role": "link",
+    },
+    Object {
+      "name": "Go to Imported By",
+      "role": "link",
+    },
+    Object {
+      "name": "|",
+      "role": "StaticText",
+    },
+    Object {
+      "name": "v1.0.287",
+      "role": "StaticText",
+    },
+    Object {
+      "name": "published on",
+      "role": "StaticText",
+    },
+    Object {
+      "name": "Apr 1, 2021",
+      "role": "StaticText",
+    },
+    Object {
+      "name": "|",
       "role": "StaticText",
     },
     Object {
@@ -570,19 +869,19 @@ Object {
       "role": "StaticText",
     },
     Object {
-      "name": "Version:",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "go1.16.3",
-      "role": "StaticText",
+      "name": "Go to Imported By",
+      "role": "link",
     },
     Object {
       "name": "|",
       "role": "StaticText",
     },
     Object {
-      "name": "Published:",
+      "name": "v0.4.0",
+      "role": "StaticText",
+    },
+    Object {
+      "name": "published on",
       "role": "StaticText",
     },
     Object {
@@ -591,22 +890,6 @@ Object {
     },
     Object {
       "name": "|",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "Imported by:",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "11632",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "|",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "License:",
       "role": "StaticText",
     },
     Object {
@@ -622,19 +905,19 @@ Object {
       "role": "StaticText",
     },
     Object {
-      "name": "Version:",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "go1.16.3",
-      "role": "StaticText",
+      "name": "Go to Imported By",
+      "role": "link",
     },
     Object {
       "name": "|",
       "role": "StaticText",
     },
     Object {
-      "name": "Published:",
+      "name": "v2.7.0",
+      "role": "StaticText",
+    },
+    Object {
+      "name": "published on",
       "role": "StaticText",
     },
     Object {
@@ -643,22 +926,6 @@ Object {
     },
     Object {
       "name": "|",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "Imported by:",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "11632",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "|",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "License:",
       "role": "StaticText",
     },
     Object {
@@ -674,19 +941,19 @@ Object {
       "role": "StaticText",
     },
     Object {
-      "name": "Version:",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "go1.16.3",
-      "role": "StaticText",
+      "name": "Go to Imported By",
+      "role": "link",
     },
     Object {
       "name": "|",
       "role": "StaticText",
     },
     Object {
-      "name": "Published:",
+      "name": "v0.1.7",
+      "role": "StaticText",
+    },
+    Object {
+      "name": "published on",
       "role": "StaticText",
     },
     Object {
@@ -695,22 +962,6 @@ Object {
     },
     Object {
       "name": "|",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "Imported by:",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "11632",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "|",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "License:",
       "role": "StaticText",
     },
     Object {
@@ -726,19 +977,19 @@ Object {
       "role": "StaticText",
     },
     Object {
-      "name": "Version:",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "go1.16.3",
-      "role": "StaticText",
+      "name": "Go to Imported By",
+      "role": "link",
     },
     Object {
       "name": "|",
       "role": "StaticText",
     },
     Object {
-      "name": "Published:",
+      "name": "v5.4.2",
+      "role": "StaticText",
+    },
+    Object {
+      "name": "published on",
       "role": "StaticText",
     },
     Object {
@@ -747,22 +998,6 @@ Object {
     },
     Object {
       "name": "|",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "Imported by:",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "11632",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "|",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "License:",
       "role": "StaticText",
     },
     Object {
@@ -778,19 +1013,19 @@ Object {
       "role": "StaticText",
     },
     Object {
-      "name": "Version:",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "go1.16.3",
-      "role": "StaticText",
+      "name": "Go to Imported By",
+      "role": "link",
     },
     Object {
       "name": "|",
       "role": "StaticText",
     },
     Object {
-      "name": "Published:",
+      "name": "v2.7.1+incompatible",
+      "role": "StaticText",
+    },
+    Object {
+      "name": "published on",
       "role": "StaticText",
     },
     Object {
@@ -802,24 +1037,16 @@ Object {
       "role": "StaticText",
     },
     Object {
-      "name": "Imported by:",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "11632",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "|",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "License:",
-      "role": "StaticText",
-    },
-    Object {
       "name": "BSD-3-Clause",
       "role": "StaticText",
+    },
+    Object {
+      "name": "Other packages in module github.com/docker/distribution:",
+      "role": "StaticText",
+    },
+    Object {
+      "name": "registry/api/v2",
+      "role": "link",
     },
     Object {
       "name": "net/http/pprof",
@@ -830,19 +1057,19 @@ Object {
       "role": "StaticText",
     },
     Object {
-      "name": "Version:",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "go1.16.3",
-      "role": "StaticText",
+      "name": "Go to Imported By",
+      "role": "link",
     },
     Object {
       "name": "|",
       "role": "StaticText",
     },
     Object {
-      "name": "Published:",
+      "name": "v1.2.0",
+      "role": "StaticText",
+    },
+    Object {
+      "name": "published on",
       "role": "StaticText",
     },
     Object {
@@ -854,571 +1081,15 @@ Object {
       "role": "StaticText",
     },
     Object {
-      "name": "Imported by:",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "11632",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "|",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "License:",
-      "role": "StaticText",
-    },
-    Object {
       "name": "BSD-3-Clause",
       "role": "StaticText",
     },
     Object {
-      "name": "net/http/pprof",
-      "role": "link",
-    },
-    Object {
-      "name": "Package pprof serves via its HTTP server runtime profiling data in the format expected by the pprof visualization tool.",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "Version:",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "go1.16.3",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "|",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "Published:",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "Apr 1, 2021",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "|",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "Imported by:",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "11632",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "|",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "License:",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "BSD-3-Clause",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "net/http/pprof",
-      "role": "link",
-    },
-    Object {
-      "name": "Package pprof serves via its HTTP server runtime profiling data in the format expected by the pprof visualization tool.",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "Version:",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "go1.16.3",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "|",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "Published:",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "Apr 1, 2021",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "|",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "Imported by:",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "11632",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "|",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "License:",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "BSD-3-Clause",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "net/http/pprof",
-      "role": "link",
-    },
-    Object {
-      "name": "Package pprof serves via its HTTP server runtime profiling data in the format expected by the pprof visualization tool.",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "Version:",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "go1.16.3",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "|",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "Published:",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "Apr 1, 2021",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "|",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "Imported by:",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "11632",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "|",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "License:",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "BSD-3-Clause",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "net/http/pprof",
-      "role": "link",
-    },
-    Object {
-      "name": "Package pprof serves via its HTTP server runtime profiling data in the format expected by the pprof visualization tool.",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "Version:",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "go1.16.3",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "|",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "Published:",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "Apr 1, 2021",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "|",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "Imported by:",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "11632",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "|",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "License:",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "BSD-3-Clause",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "net/http/pprof",
-      "role": "link",
-    },
-    Object {
-      "name": "Package pprof serves via its HTTP server runtime profiling data in the format expected by the pprof visualization tool.",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "Version:",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "go1.16.3",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "|",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "Published:",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "Apr 1, 2021",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "|",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "Imported by:",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "11632",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "|",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "License:",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "BSD-3-Clause",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "net/http/pprof",
-      "role": "link",
-    },
-    Object {
-      "name": "Package pprof serves via its HTTP server runtime profiling data in the format expected by the pprof visualization tool.",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "Version:",
+      "name": "Didn't find what you were looking for?",
       "role": "StaticText",
-    },
-    Object {
-      "name": "go1.16.3",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "|",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "Published:",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "Apr 1, 2021",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "|",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "Imported by:",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "11632",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "|",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "License:",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "BSD-3-Clause",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "net/http/pprof",
-      "role": "link",
-    },
-    Object {
-      "name": "Package pprof serves via its HTTP server runtime profiling data in the format expected by the pprof visualization tool.",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "Version:",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "go1.16.3",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "|",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "Published:",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "Apr 1, 2021",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "|",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "Imported by:",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "11632",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "|",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "License:",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "BSD-3-Clause",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "net/http/pprof",
-      "role": "link",
-    },
-    Object {
-      "name": "Package pprof serves via its HTTP server runtime profiling data in the format expected by the pprof visualization tool.",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "Version:",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "go1.16.3",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "|",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "Published:",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "Apr 1, 2021",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "|",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "Imported by:",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "11632",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "|",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "License:",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "BSD-3-Clause",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "net/http/pprof",
-      "role": "link",
-    },
-    Object {
-      "name": "Package pprof serves via its HTTP server runtime profiling data in the format expected by the pprof visualization tool.",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "Version:",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "go1.16.3",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "|",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "Published:",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "Apr 1, 2021",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "|",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "Imported by:",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "11632",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "|",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "License:",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "BSD-3-Clause",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "net/http/pprof",
-      "role": "link",
-    },
-    Object {
-      "name": "Package pprof serves via its HTTP server runtime profiling data in the format expected by the pprof visualization tool.",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "Version:",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "go1.16.3",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "|",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "Published:",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "Apr 1, 2021",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "|",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "Imported by:",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "11632",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "|",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "License:",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "BSD-3-Clause",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "Previous",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "1",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "2",
-      "role": "link",
-    },
-    Object {
-      "name": "3",
-      "role": "link",
-    },
-    Object {
-      "name": "4",
-      "role": "link",
-    },
-    Object {
-      "name": "5",
-      "role": "link",
     },
     Object {
-      "name": "Next",
+      "name": "Show more results.",
       "role": "link",
     },
     Object {

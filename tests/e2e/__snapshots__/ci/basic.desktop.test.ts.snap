@@ -682,9 +682,9 @@ Object {
       "role": "img",
     },
     Object {
-      "description": "Search for Go packages",
+      "description": "Search packages or symbols",
       "focused": true,
-      "name": "Search for Go packages",
+      "name": "Search packages or symbols",
       "role": "textbox",
     },
     Object {
@@ -692,7 +692,11 @@ Object {
       "role": "button",
     },
     Object {
-      "name": "EXAMPLE SEARCHES:",
+      "name": "Tip:",
+      "role": "StaticText",
+    },
+    Object {
+      "name": "Search for a package, for example",
       "role": "StaticText",
     },
     Object {
@@ -700,16 +704,44 @@ Object {
       "role": "link",
     },
     Object {
+      "name": "or",
+      "role": "StaticText",
+    },
+    Object {
       "name": "“command”",
       "role": "link",
     },
     Object {
-      "name": "“yaml OR json OR xml”",
-      "role": "link",
+      "name": ".",
+      "role": "StaticText",
     },
     Object {
       "name": "Search help",
       "role": "link",
+    },
+    Object {
+      "name": "Go to previous slide",
+      "role": "button",
+    },
+    Object {
+      "name": "Go to next slide",
+      "role": "button",
+    },
+    Object {
+      "name": "Slide 1",
+      "role": "button",
+    },
+    Object {
+      "name": "Slide 2",
+      "role": "button",
+    },
+    Object {
+      "name": "Slide 3",
+      "role": "button",
+    },
+    Object {
+      "name": "Slide 1 of 3",
+      "role": "StaticText",
     },
     Object {
       "name": "Frequently asked questions:",
