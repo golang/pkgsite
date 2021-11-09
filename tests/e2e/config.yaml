@@ -3,3 +3,11 @@ experiments:
     rollout: 100
   - name: new-unit-layout
     rollout: 100
+  - name: search-grouping
+    rollout: 100
+  - name: skip-insert-symbols
+    rollout: 100
+  - name: styleguide
+    rollout: 0
+  - name: symbol-search
+    rollout: 100

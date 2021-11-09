@@ -627,7 +627,6 @@ Object {
     },
     Object {
       "description": "Search packages or symbols",
-      "focused": true,
       "name": "Search packages or symbols",
       "role": "textbox",
     },
@@ -668,6 +667,7 @@ Object {
       "role": "button",
     },
     Object {
+      "focused": true,
       "name": "Slide 1",
       "role": "button",
     },
