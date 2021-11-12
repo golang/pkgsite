@@ -4,6 +4,68 @@
   license that can be found in the LICENSE file.
 -->
 
+{{define "title"}}
+  <title>Vulnerability Report: {{.ID}} - pkg.go.dev</title>
+{{end}}
+
+{{define "main-styles"}}
+  <link href="/static/frontend/vuln/entry/entry.min.css?version={{.AppVersionLabel}}" rel="stylesheet">
+{{end}}
+
 {{define "main-content"}}
+  <nav class="go-Breadcrumb" aria-label="Breadcrumb">
+    <ol>
+      <li>
+        <a href="/vuln/list" data-gtmc="breadcrumb link">Vulnerability Report</a>
+      </li>
+      <li>
+        <a href="#" data-gtmc="breadcrumb link" aria-current="location">{{.Entry.ID}}</a>
+      </li>
+    </ol>
+  </nav>
+  <h1 class="Vuln-title">Vulnerability Report: {{.Entry.ID}}</h1>
   {{template "entry" .Entry}}
+{{end}}
+
+{{define "entry"}}
+  <div class="VulnEntry">
+    <p>{{.Details}}</p>
+    <h2>Affected Packages</h2>
+    <table class="VulnEntry-table">
+      <thead>
+        <tr>
+          <th>Package</th>
+          <th>Introduced</th>
+          <th>Fixed</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{range .Affected}}
+          <tr>
+            <td><a href="/{{.Package.Name}}">{{.Package.Name}}</a></td>
+            <td>{{range .Ranges}}{{range .Events}}<div>{{.Introduced}}</div>{{end}}{{end}}</td>
+            <td>{{range .Ranges}}{{range .Events}}<div>{{.Fixed}}</div>{{end}}{{end}}</td>
+          </tr>
+        {{end}}
+      </tbody>
+    </table>
+    <h2>Published</h2>
+    <p>{{.Published.Format "Jan 02, 2006"}}</p>
+    {{if ne .Published .Modified}}
+      <h2>Modified</h2>
+      <p>{{.Modified.Format "Jan 02, 2006"}}</p>
+    {{end}}
+    {{if .Aliases}}
+      <h2>Aliases</h2>
+      <ul>
+        {{range .Aliases}}<li>{{.}}</li>{{end}}
+      </ul>
+    {{end}}
+    {{if .References}}
+      <h2>References</h2>
+      <ul class="VulnEntry-referenceList">
+        {{range .References}}<li><a href="{{.URL}}">{{.URL}}</a></li>{{end}}
+      </ul>
+    {{end}}
+  </div>
 {{end}}

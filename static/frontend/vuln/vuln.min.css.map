@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["vuln.css"],
+  "sourcesContent": ["/*\n * Copyright 2021 The Go Authors. All rights reserved.\n * Use of this source code is governed by a BSD-style\n * license that can be found in the LICENSE file.\n */\n\n.Vuln {\n  gap: 0.5rem;\n}\n.Vuln-title {\n  font-size: 2.25rem;\n  font-weight: 400;\n  margin-bottom: 1rem;\n}\n"],
+  "mappings": ";;;;;AAMA,MACE,UAEF,YACE,kBACA,gBACA",
+  "names": []
+}

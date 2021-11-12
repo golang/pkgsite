@@ -209,7 +209,7 @@
 {{end}}
 
 {{define "unit-header-banners"}}
-  {{with .RedirectedFromPath}}
+  {{- with .RedirectedFromPath -}}
     <div class="go-Message go-Message--notice">
       <img
         class="go-Icon"
@@ -219,19 +219,10 @@
         alt="Notice"
       />&nbsp; Redirected from <span data-test-id="redirected-banner-text">{{.}}</span>.
     </div>
-  {{end}}
-  {{if .Experiments.IsActive "vulns"}}
-    {{with .Vulns}}
-      <div class="go-Message go-Message--alert">
-	This package has vulnerabilities.<br/>
-	{{range .}}
-	  <p>{{.Details}}</p>
-	  {{with .FixedVersion}}Fixed in {{.}}.{{end}}
-	{{end}}
-      </div>
-    {{end}}
-  {{end}}
-  {{if .Unit.Deprecated}}
+  {{- end -}}
+  {{- if .Experiments.IsActive "vulns" -}}
+    {{range .Vulns}}{{template "vuln-message" .}}{{end}}{{end}}
+  {{- if .Unit.Deprecated -}}
     <div class="go-Message go-Message--warning">
       <img
         class="go-Icon"
@@ -244,8 +235,8 @@
         <strong>:</strong>&nbsp;{{.}}
       {{- end -}}
     </div>
-  {{end}}
-  {{if .Unit.Retracted}}
+  {{- end -}}
+  {{- if .Unit.Retracted -}}
     <div class="go-Message go-Message--warning">
       <img
         class="go-Icon"
@@ -258,8 +249,8 @@
         <strong>:</strong>&nbsp;{{.}}
       {{- end -}}
     </div>
-  {{end}}
-  {{if .LatestMajorVersion}}
+  {{- end -}}
+  {{- if .LatestMajorVersion -}}
     <div class="go-Message go-Message--notice" data-test-id="UnitHeader-majorVersionBanner">
       <img
         class="go-Icon"
@@ -272,7 +263,7 @@
         {{- .LatestMajorVersion -}}
       </a>.
     </div>
-  {{end}}
+  {{- end -}}
 {{end}}
 
 {{define "severity-toggletip"}}

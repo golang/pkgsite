@@ -25,6 +25,7 @@
 
 .go-Main-banner {
   grid-area: banner;
+  padding: 1rem var(--gutter) 0 var(--gutter);
 }
 .go-Main-header {
   background-color: var(--color-background);

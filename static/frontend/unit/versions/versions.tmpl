@@ -73,12 +73,12 @@
           <a class="js-versionLink" href="{{$v.Link}}">{{$v.Version}}</a>
         </div>
         <div class="Version-dot{{if and $v.IsMinor (not $major.Incompatible)}} Version-dot--minor{{end}}"></div>
-        {{if and $v.Symbols (not $major.Incompatible)}}
+        {{if and (or $v.Symbols $v.Vulns) (not $major.Incompatible)}}
           {{template "symbol-history" $v}}
         {{else}}
           <div class="Version-commitTime">
             {{$v.CommitTime}}{{if $v.Retracted}}<div><span class="go-Chip go-Chip--inverted">retracted</span></div>{{end}}
-            {{range $v.Vulns}}<div>{{template "vuln" .}}</div>{{end}}
+            {{range $v.Vulns}}<div><span class="go-Chip go-Chip--alert">{{.ID}}</span></div>{{end}}
           </div>
         {{end}}
       {{end}}
@@ -90,10 +90,13 @@
   <details class="Version-details js-versionDetails">
     <summary class="Version-summary">
       {{.CommitTime}}{{if .Retracted}}<div><span class="go-Chip go-Chip--inverted">retracted</span></div>{{end}}
-      {{range .Vulns}}{{template "vuln" .}}{{end}}
+      {{range .Vulns}}<span class="go-Chip go-Chip--alert">{{.ID}}</span>{{end}}
     </summary>
+    <div class="Versions-vulns">
+      {{range .Vulns}}{{template "vuln-message" .}}{{end}}
+    </div>
     <div class="Versions-symbols">
-      <div class="Versions-symbolsHeader">Changes in this version</div>
+      {{with .Symbols}}<div class="Versions-symbolsHeader">Changes in this version</div>{{end}}
       {{range .Symbols}}
         <div class="Versions-symbolSection">
           {{range .}}

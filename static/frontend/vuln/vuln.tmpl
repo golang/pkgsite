@@ -8,21 +8,15 @@
   <title>{{.HTMLTitle}} - pkg.go.dev</title>
 {{end}}
 
-{{define "main"}}
-  <main class="go-Container">
-    <article class="go-Main-article js-mainContent">
-      {{- block "main-content" .}}{{end -}}
-    </article>
-  </main>
+{{define "pre-content"}}
+  <link href="/static/frontend/vuln/vuln.min.css?version={{.AppVersionLabel}}" rel="stylesheet">
+  {{block "main-styles" .}}{{end}}
 {{end}}
 
-{{define "entry"}}
-  <div>
-    <h2>{{.ID}}</h2>
-    <ul>
-      <li>Published {{.Published}}</li>
-      <li>Modified {{.Modified}}</li>
-    </ul>
-    <p>{{.Details}}</p>
-  </div>
+{{define "main"}}
+  <main class="go-Container">
+    <div class="go-Content Vuln">
+      {{block "main-content" .}}{{end}}
+    </div>
+  </main>
 {{end}}

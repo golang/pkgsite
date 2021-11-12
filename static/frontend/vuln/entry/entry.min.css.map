@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["entry.css"],
+  "sourcesContent": ["/*\n * Copyright 2021 The Go Authors. All rights reserved.\n * Use of this source code is governed by a BSD-style\n * license that can be found in the LICENSE file.\n */\n\n.VulnEntry {\n  display: flex;\n  flex-direction: column;\n  gap: 1rem;\n}\n.VulnEntry h2 {\n  font-size: 1.25rem;\n}\n.VulnEntry-table {\n  margin-bottom: 0.5rem;\n  text-align: left;\n  width: 100%;\n}\n.VulnEntry-table thead {\n  background-color: var(--color-background-accented);\n}\n.VulnEntry-table tbody {\n  word-break: break-all;\n}\n.VulnEntry-table td,\n.VulnEntry-table th {\n  padding: 0.75rem 1rem;\n}\n.VulnEntry-table tbody > tr {\n  border-bottom: var(--border);\n}\n.VulnEntry-referenceList {\n  line-height: 1.75rem;\n  word-break: break-all;\n}\n"],
+  "mappings": ";;;;;AAMA,WACE,aACA,sBACA,SAEF,cACE,kBAEF,iBACE,oBACA,gBACA,WAEF,uBACE,kDAEF,uBACE,qBAEF,wCAzBA,oBA6BA,0BACE,4BAEF,yBACE,oBACA",
+  "names": []
+}

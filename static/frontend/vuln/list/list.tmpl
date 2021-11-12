@@ -4,8 +4,35 @@
   license that can be found in the LICENSE file.
 -->
 
+{{define "title"}}
+  <title>Vulnerability Reports - pkg.go.dev</title>
+{{end}}
+
+{{define "main-styles"}}
+  <link href="/static/frontend/vuln/list/list.min.css?version={{.AppVersionLabel}}" rel="stylesheet">
+{{end}}
+
 {{define "main-content"}}
-  {{range .Entries}}
-    {{template "entry" .}}
-  {{end}}
+  <h1 class="Vuln-title">Vulnerability Reports</h1>
+  {{range .Entries}}{{template "entry" .}}{{end}}
+{{end}}
+
+{{define "entry"}}
+  <div class="VulnList-entry">
+    <h2 class="VulnList-entryTitle">
+      <a href="/vuln/{{.ID}}">{{.ID}}</a>
+    </h2>
+    <ul class="VulnList-entryMetadata">
+      {{if .Aliases}}
+        <li class="go-textSubtle">
+          {{range $i, $v := .Aliases}}{{if ne $i 0}},{{end}}{{$v}}{{end}}
+        </li>
+      {{end}}
+      <li class="go-textSubtle">Published: {{.Published.Format "Jan 02, 2006"}}</li>
+      {{if ne .Published .Modified}}
+        <li class="go-textSubtle">Modified: {{.Modified.Format "Jan 02, 2006"}}</li>
+      {{end}}
+    </ul>
+    <p>{{.Details}}</p>
+  </div>
 {{end}}

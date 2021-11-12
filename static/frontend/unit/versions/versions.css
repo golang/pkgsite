@@ -37,6 +37,10 @@
 .Versions-symbols {
   margin-left: 2rem;
 }
+.Versions-vulns {
+  margin: 0.25rem 2rem;
+  max-width: 60rem;
+}
 .Versions-symbolBulletNew {
   color: var(--color-text-subtle);
   padding-right: 0.5rem;
