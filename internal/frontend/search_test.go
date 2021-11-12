@@ -55,7 +55,6 @@ func TestSearchQueryAndMode(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			u := fmt.Sprintf("/search?q=%s&m=%s", test.q, test.m)
 			r := httptest.NewRequest("GET", u, nil)
-			r = r.WithContext(experiment.NewContext(r.Context(), internal.ExperimentSymbolSearch))
 			gotSearchMode := searchMode(r)
 			if gotSearchMode != test.wantSearchMode {
 				t.Errorf("searchQueryAndMode(%q) = %q; want = %q",

@@ -10,7 +10,6 @@ const (
 	ExperimentEnableStdFrontendFetch = "enable-std-frontend-fetch"
 	ExperimentNewUnitLayout          = "new-unit-layout"
 	ExperimentStyleGuide             = "styleguide"
-	ExperimentSymbolSearch           = "symbol-search"
 	ExperimentVulns                  = "vulns"
 )
 
@@ -21,7 +20,6 @@ var Experiments = map[string]string{
 	ExperimentEnableStdFrontendFetch: "Enable frontend fetching for module std.",
 	ExperimentNewUnitLayout:          "Enable the new layout on the unit page.",
 	ExperimentStyleGuide:             "Enable the styleguide.",
-	ExperimentSymbolSearch:           "Enable searching for symbols.",
 	ExperimentVulns:                  "Enable vulnerability reporting.",
 }
 

@@ -22,7 +22,6 @@ import (
 	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/dcensus"
 	"golang.org/x/pkgsite/internal/derrors"
-	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/postgres/search"
 	"golang.org/x/pkgsite/internal/stdlib"
@@ -209,8 +208,7 @@ func (db *DB) search(ctx context.Context, q string, opts SearchOptions, limit in
 	defer derrors.WrapStack(&err, "search(limit=%d)", limit)
 
 	var searchers map[string]searcher
-	if opts.SearchSymbols &&
-		experiment.IsActive(ctx, internal.ExperimentSymbolSearch) {
+	if opts.SearchSymbols {
 		searchers = symbolSearchers
 	} else {
 		searchers = pkgSearchers

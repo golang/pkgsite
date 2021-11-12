@@ -13,8 +13,7 @@
     <div class="go-Content go-Content--center">
       <img class="Homepage-logo" width="700" height="300"
           src="/static/shared/gopher/package-search-700x300.jpeg" alt="Cartoon gopher typing">
-      <form class="go-InputGroup Homepage-search
-          {{if .Experiments.IsActive "symbol-search"}}Homepage-search--symbol{{end}}"
+      <form class="go-InputGroup Homepage-search Homepage-search--symbol"
           action="/search" role="search" data-gtmc="homepage search form"
           aria-label="Search for a Package">
         <input
@@ -22,62 +21,34 @@
           data-test-id="homepage-search"
           id="AutoComplete"
           role="textbox"
-          {{- if .Experiments.IsActive "symbol-search" -}}
-            aria-label="Search packages or symbols"
-          {{else}}
-            aria-label="Search for Go packages"
-          {{- end -}}
+          aria-label="Search packages or symbols"
           type="search"
           name="q"
-          {{- if .Experiments.IsActive "symbol-search" -}}
-            placeholder="Search packages or symbols"
-          {{else}}
-            placeholder="Search for Go packages"
-          {{- end -}}
+          placeholder="Search packages or symbols"
           autocapitalize="off"
           autocomplete="off"
           autocorrect="off"
           spellcheck="false"
-          {{- if .Experiments.IsActive "symbol-search" -}}
-            title="Search packages or symbols"
-          {{else}}
-            title="Search for Go packages"
-          {{- end -}}
+          title="Search packages or symbols"
           autofocus="true">
         <button type="submit" class="go-Button">Search</button>
       </form>
-      {{if .Experiments.IsActive "symbol-search"}}
-        <section class="go-Carousel Homepage-tips js-carousel" aria-label="Search Tips Carousel" data-slide-index="{{.TipIndex}}">
-          <ul>
-            {{range $i, $v := .SearchTips}}
-              <li class="go-Carousel-slide" {{if not (eq $.TipIndex $i)}}aria-hidden{{end}}>
-                <p>
-                  <strong>Tip:</strong> {{.Text}}
-                  <a href="/search?q={{$v.Example1}}">“{{$v.Example1}}”</a> or
-                  <a href="/search?q={{$v.Example2}}">“{{$v.Example2}}”</a>.
-                  <a href="/search-help" target="_blank" rel="noopener" class="Homepage-helpLink">
-                    Search help <span><img width="24" height="24" src="/static/shared/icon/launch_gm_grey_24dp.svg" alt=""></span>
-                  </a>
-                </p>
-              </li>
-            {{end}}
-          </ul>
-        </section>
-      {{else}}
-      <div class="Homepage-examples">
-        <span class="Homepage-examplesTitle">Example Searches:</span>
-        <ul class="Homepage-examplesList">
-          <li><a href="/search?q=http">“http”</a></li>
-          <li><a href="/search?q=command">“command”</a></li>
-          <li><a href="/search?q=yaml+OR+json+OR+xml">“yaml OR json OR xml”</a></li>
-        </ul>
-        <div>
-          <a href="/search-help" target="_blank" rel="noopener" class="Homepage-helpLink">
-            Search help <span><img width="24" height="24" src="/static/shared/icon/launch_gm_grey_24dp.svg" alt=""></span>
-          </a>
-        </div>
-      </div>
-      {{end}}
+      <section class="go-Carousel Homepage-tips js-carousel" aria-label="Search Tips Carousel" data-slide-index="{{.TipIndex}}">
+	<ul>
+	  {{range $i, $v := .SearchTips}}
+	    <li class="go-Carousel-slide" {{if not (eq $.TipIndex $i)}}aria-hidden{{end}}>
+	      <p>
+		<strong>Tip:</strong> {{.Text}}
+		<a href="/search?q={{$v.Example1}}">“{{$v.Example1}}”</a> or
+		<a href="/search?q={{$v.Example2}}">“{{$v.Example2}}”</a>.
+		<a href="/search-help" target="_blank" rel="noopener" class="Homepage-helpLink">
+		  Search help <span><img width="24" height="24" src="/static/shared/icon/launch_gm_grey_24dp.svg" alt=""></span>
+		</a>
+	      </p>
+	    </li>
+	  {{end}}
+	</ul>
+      </section>
     </div>
   </main>
 {{end}}

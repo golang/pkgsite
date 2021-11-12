@@ -22,7 +22,6 @@ import (
 	"golang.org/x/pkgsite/internal/config"
 	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/derrors"
-	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/frontend"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/postgres"
@@ -34,7 +33,7 @@ var frontendHost = flag.String("frontend", "http://localhost:8080",
 func main() {
 	flag.Parse()
 
-	ctx := experiment.NewContext(context.Background(), symbolSearchExperiments...)
+	ctx := context.Background()
 	cfg, err := config.Init(ctx)
 	if err != nil {
 		log.Fatal(ctx, err)
@@ -56,10 +55,6 @@ const (
 var testFiles = []string{
 	"tests/search/scripts/default.txt",
 	"tests/search/scripts/symbolsearch.txt",
-}
-
-var symbolSearchExperiments = []string{
-	internal.ExperimentSymbolSearch,
 }
 
 func runImportedByUpdates(ctx context.Context, dbConnInfo, dbHost string) error {

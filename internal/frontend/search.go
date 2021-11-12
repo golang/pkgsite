@@ -331,9 +331,6 @@ func searchRequestRedirectPath(ctx context.Context, ds internal.DataSource, quer
 // searchMode reports whether the search performed should be in package or
 // symbol search mode.
 func searchMode(r *http.Request) string {
-	if !experiment.IsActive(r.Context(), internal.ExperimentSymbolSearch) {
-		return searchModePackage
-	}
 	q, filters := searchQueryAndFilters(r)
 	if len(filters) > 0 {
 		return searchModeSymbol
