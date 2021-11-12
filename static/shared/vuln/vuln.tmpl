@@ -4,14 +4,17 @@
   license that can be found in the LICENSE file.
 -->
 
-{{define "vuln"}}
-  <span class="go-Chip go-Chip--vuln">
-    <details class="go-Tooltip js-tooltip" data-gtmc="tooltip">
-      <summary class="go-textSubtle">
-	{{.ID}}
-	<img class="go-Icon" src="/static/shared/icon/help_gm_grey_24dp.svg" alt="" height="24" width="24">
-      </summary>
-      <p>{{.Details}}</p>
-    </details>
-  </span>
+{{define "vuln"}}{{end}}
+
+{{define "vuln-message"}}
+  <div class="go-Message go-Message--alert">
+    <img
+        class="go-Icon"
+        height="24"
+        width="24"
+        src="/static/shared/icon/alert_gm_grey_24dp.svg"
+        alt="Alert"
+    />&nbsp;
+    <a href="/vuln/{{.ID}}">{{.ID}}</a>: {{.Details}}
+  </div>
 {{end}}
