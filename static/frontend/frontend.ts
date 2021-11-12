@@ -38,7 +38,9 @@ for (const el of document.querySelectorAll<HTMLSelectElement>('.js-carousel')) {
 
 registerHeaderListeners();
 registerSearchFormListeners();
-initModals();
+window.addEventListener('load', () => {
+  initModals();
+});
 
 // Pressing '/' focuses the search box
 keyboard.on('/', 'focus search', e => {
