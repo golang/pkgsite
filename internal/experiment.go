@@ -11,7 +11,6 @@ const (
 	ExperimentNewUnitLayout          = "new-unit-layout"
 	ExperimentSearchGrouping         = "search-grouping"
 	ExperimentSearchIncrementally    = "search-incrementally"
-	ExperimentSkipInsertSymbols      = "skip-insert-symbols"
 	ExperimentStyleGuide             = "styleguide"
 	ExperimentSymbolSearch           = "symbol-search"
 	ExperimentVulns                  = "vulns"
@@ -25,7 +24,6 @@ var Experiments = map[string]string{
 	ExperimentNewUnitLayout:          "Enable the new layout on the unit page.",
 	ExperimentSearchGrouping:         "Group search results.",
 	ExperimentSearchIncrementally:    "Use incremental query for search results.",
-	ExperimentSkipInsertSymbols:      "Don't insert data into symbols tables.",
 	ExperimentStyleGuide:             "Enable the styleguide.",
 	ExperimentSymbolSearch:           "Enable searching for symbols.",
 	ExperimentVulns:                  "Enable vulnerability reporting.",
