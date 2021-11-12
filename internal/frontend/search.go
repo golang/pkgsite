@@ -123,11 +123,7 @@ func (s *Server) serveSearch(w http.ResponseWriter, r *http.Request, ds internal
 	if s.shouldServeJSON(r) {
 		return s.serveJSONPage(w, r, page)
 	}
-	tmpl := "legacy_search"
-	if experiment.IsActive(ctx, internal.ExperimentSearchGrouping) {
-		tmpl = "search"
-	}
-	s.servePage(ctx, w, tmpl, page)
+	s.servePage(ctx, w, "search", page)
 	return nil
 }
 
@@ -211,11 +207,8 @@ func fetchSearchPage(ctx context.Context, db *postgres.DB, cq, symbol string,
 	pageParams paginationParams, searchSymbols bool, getVulnEntries vulnEntriesFunc) (*SearchPage, error) {
 	maxResultCount := maxSearchOffset + pageParams.limit
 
-	offset := pageParams.offset()
-	if experiment.IsActive(ctx, internal.ExperimentSearchGrouping) {
-		// When using search grouping, do pageless search: always start from the beginning.
-		offset = 0
-	}
+	// Pageless search: always start from the beginning.
+	offset := 0
 	dbresults, err := db.Search(ctx, cq, postgres.SearchOptions{
 		MaxResults:     pageParams.limit,
 		Offset:         offset,

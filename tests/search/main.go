@@ -59,7 +59,6 @@ var testFiles = []string{
 }
 
 var symbolSearchExperiments = []string{
-	internal.ExperimentSearchGrouping,
 	internal.ExperimentSymbolSearch,
 }
 

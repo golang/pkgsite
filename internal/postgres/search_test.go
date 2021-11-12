@@ -23,7 +23,6 @@ import (
 	"go.opencensus.io/stats/view"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
-	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/testing/sample"
@@ -351,15 +350,6 @@ func TestSearch(t *testing.T) {
 	// Cannot be run in parallel with other search tests, because it reads
 	// metrics before and after (see responseDelta below).
 	ctx := context.Background()
-	t.Run("no grouping", func(t *testing.T) {
-		testSearch(t, ctx)
-	})
-	t.Run("grouping", func(t *testing.T) {
-		testSearch(t, experiment.NewContext(ctx, internal.ExperimentSearchGrouping))
-	})
-}
-
-func testSearch(t *testing.T, ctx context.Context) {
 	tests := []struct {
 		label       string
 		modules     []*internal.Module

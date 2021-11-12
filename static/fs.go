@@ -10,5 +10,5 @@ import "embed"
 // containing files beginning with an underscore must be specified explicitly.
 
 //go:embed doc/* frontend/* shared/* worker/*
-//go:embed frontend/unit/* frontend/unit/main/* frontend/legacy_search/*
+//go:embed frontend/unit/* frontend/unit/main/*
 var FS embed.FS

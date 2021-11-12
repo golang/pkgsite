@@ -1120,18 +1120,6 @@ var linksTestCases = []serverTestCase{
 	},
 }
 
-var searchTestCase = serverTestCase{
-	name:           "search",
-	urlPath:        fmt.Sprintf("/search?q=%s", sample.PackageName),
-	wantStatusCode: http.StatusOK,
-	want: in("",
-		in(".SearchResults-resultCount", hasText("2 results")),
-		in(".LegacySearchSnippet-header",
-			in("a",
-				href("/"+sample.ModulePath+"/foo"),
-				hasText(sample.ModulePath+"/foo")))),
-}
-
 var searchGroupingTestCases = []serverTestCase{
 	{
 		name:           "search",
@@ -1185,15 +1173,10 @@ func TestServer(t *testing.T) {
 		{
 			name: "no experiments",
 			testCasesFunc: func() []serverTestCase {
-				return append(append(serverTestCases(), linksTestCases...), searchTestCase)
+				cases := serverTestCases()
+				cases = append(cases, linksTestCases...)
+				return append(cases, searchGroupingTestCases...)
 			},
-		},
-		{
-			name: "search grouping",
-			testCasesFunc: func() []serverTestCase {
-				return append(serverTestCases(), searchGroupingTestCases...)
-			},
-			experiments: []string{internal.ExperimentSearchGrouping},
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
@@ -1591,7 +1574,6 @@ func TestCheckTemplates(t *testing.T) {
 		{"homepage", nil, homepage{}},
 		{"license-policy", nil, licensePolicyPage{}},
 		{"search", nil, SearchPage{}},
-		{"legacy_search", nil, SearchPage{}},
 		{"search-help", nil, basePage{}},
 		{"unit/main", nil, UnitPage{}},
 		{

@@ -183,7 +183,7 @@ type SearchResult struct {
 // the penalty of a deep search that scans nearly every package.
 func (db *DB) Search(ctx context.Context, q string, opts SearchOptions) (_ []*SearchResult, err error) {
 	defer derrors.WrapStack(&err, "DB.Search(ctx, %q, %+v)", q, opts)
-	if experiment.IsActive(ctx, internal.ExperimentSearchGrouping) && !opts.SearchSymbols {
+	if !opts.SearchSymbols {
 		const (
 			limitMultiplier1 = 3
 			limitMultiplier2 = 5
@@ -210,7 +210,6 @@ func (db *DB) search(ctx context.Context, q string, opts SearchOptions, limit in
 
 	var searchers map[string]searcher
 	if opts.SearchSymbols &&
-		experiment.IsActive(ctx, internal.ExperimentSearchGrouping) &&
 		experiment.IsActive(ctx, internal.ExperimentSymbolSearch) {
 		searchers = symbolSearchers
 	} else {
@@ -231,7 +230,7 @@ func (db *DB) search(ctx context.Context, q string, opts SearchOptions, limit in
 			results = append(results, r)
 		}
 	}
-	if experiment.IsActive(ctx, internal.ExperimentSearchGrouping) && !opts.SearchSymbols {
+	if !opts.SearchSymbols {
 		results = groupSearchResults(results)
 	}
 	if len(results) > opts.MaxResults {
