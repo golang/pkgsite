@@ -8,7 +8,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"io"
 	"sort"
 	"strings"
 	"time"
@@ -356,45 +355,17 @@ func (db *DB) deepSearch(ctx context.Context, q string, limit int, opts SearchOp
 		LIMIT $2
 		OFFSET $3`, scoreExpr)
 
-	var (
-		results []*SearchResult
-		err     error
-	)
-	if experiment.IsActive(ctx, internal.ExperimentSearchIncrementally) {
-		modulePaths := map[string]bool{}
-		const pageSize = 10  // TODO(jba): get from elsewhere
-		additionalRows := 10 // after reaching pageSize module paths
-		collect := func(rows *sql.Rows) error {
-			var r SearchResult
-			if err := rows.Scan(&r.PackagePath, &r.Version, &r.ModulePath, &r.CommitTime,
-				&r.NumImportedBy, &r.Score, &r.NumResults); err != nil {
-				return fmt.Errorf("rows.Scan(): %v", err)
-			}
-			results = append(results, &r)
-			// Stop a few rows after we've seen pageSize module paths.
-			modulePaths[r.ModulePath] = true
-			if len(modulePaths) >= pageSize {
-				additionalRows--
-				if additionalRows <= 0 {
-					return io.EOF
-				}
-			}
-			return nil
+	var results []*SearchResult
+	collect := func(rows *sql.Rows) error {
+		var r SearchResult
+		if err := rows.Scan(&r.PackagePath, &r.Version, &r.ModulePath, &r.CommitTime,
+			&r.NumImportedBy, &r.Score, &r.NumResults); err != nil {
+			return fmt.Errorf("rows.Scan(): %v", err)
 		}
-		const fetchSize = 20 // number of rows to fetch at a time
-		err = db.db.RunQueryIncrementally(ctx, query, fetchSize, collect, q, limit, opts.Offset)
-	} else {
-		collect := func(rows *sql.Rows) error {
-			var r SearchResult
-			if err := rows.Scan(&r.PackagePath, &r.Version, &r.ModulePath, &r.CommitTime,
-				&r.NumImportedBy, &r.Score, &r.NumResults); err != nil {
-				return fmt.Errorf("rows.Scan(): %v", err)
-			}
-			results = append(results, &r)
-			return nil
-		}
-		err = db.db.RunQuery(ctx, query, collect, q, limit, opts.Offset)
+		results = append(results, &r)
+		return nil
 	}
+	err := db.db.RunQuery(ctx, query, collect, q, limit, opts.Offset)
 	if err != nil {
 		results = nil
 	}
