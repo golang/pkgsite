@@ -14,7 +14,6 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/google/licensecheck"
 	"github.com/lib/pq"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/licenses"
@@ -122,12 +121,6 @@ func collectLicenses(rows *sql.Rows, bypassLicenseCheck bool) ([]*licenses.Licen
 		// field, try the old.
 		if err := json.Unmarshal(covBytes, &lic.Coverage); err != nil {
 			return nil, err
-		}
-		if len(lic.Coverage.Match) == 0 || lic.Coverage.Match[0].ID == "" {
-			lic.Coverage = licensecheck.Coverage{}
-			if err := json.Unmarshal(covBytes, &lic.OldCoverage); err != nil {
-				return nil, err
-			}
 		}
 		lic.Types = licenseTypes
 		if !bypassLicenseCheck {

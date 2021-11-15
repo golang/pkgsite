@@ -125,7 +125,7 @@ func TestReFetch(t *testing.T) {
 	}
 	if diff := cmp.Diff(want.UnitMeta, *got,
 		cmp.AllowUnexported(source.Info{}),
-		cmpopts.IgnoreFields(licenses.Metadata{}, "Coverage", "OldCoverage"),
+		cmpopts.IgnoreFields(licenses.Metadata{}, "Coverage"),
 		cmpopts.IgnoreFields(internal.UnitMeta{}, "HasGoMod")); diff != "" {
 		t.Fatalf("testDB.GetUnitMeta(ctx, %q, %q) mismatch (-want +got):\n%s", want.ModulePath, want.Version, diff)
 	}
@@ -137,7 +137,7 @@ func TestReFetch(t *testing.T) {
 	if diff := cmp.Diff(want, gotPkg,
 		cmp.AllowUnexported(source.Info{}),
 		cmpopts.IgnoreFields(internal.Unit{}, "Documentation", "BuildContexts"),
-		cmpopts.IgnoreFields(licenses.Metadata{}, "Coverage", "OldCoverage"),
+		cmpopts.IgnoreFields(licenses.Metadata{}, "Coverage"),
 		cmpopts.IgnoreFields(internal.UnitMeta{}, "HasGoMod")); diff != "" {
 		t.Errorf("mismatch on readme (-want +got):\n%s", diff)
 	}

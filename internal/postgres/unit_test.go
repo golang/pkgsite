@@ -78,7 +78,7 @@ func testGetUnitMeta(t *testing.T, ctx context.Context) {
 		}
 		opts := []cmp.Option{
 			cmpopts.EquateEmpty(),
-			cmpopts.IgnoreFields(licenses.Metadata{}, "Coverage", "OldCoverage"),
+			cmpopts.IgnoreFields(licenses.Metadata{}, "Coverage"),
 			cmpopts.IgnoreFields(internal.UnitMeta{}, "HasGoMod"),
 			cmp.AllowUnexported(source.Info{}, safehtml.HTML{}),
 		}
@@ -355,7 +355,7 @@ func TestGetUnitMetaBypass(t *testing.T) {
 				}
 				opts := []cmp.Option{
 					cmpopts.EquateEmpty(),
-					cmpopts.IgnoreFields(licenses.Metadata{}, "Coverage", "OldCoverage"),
+					cmpopts.IgnoreFields(licenses.Metadata{}, "Coverage"),
 					cmpopts.IgnoreFields(internal.UnitMeta{}, "HasGoMod"),
 					cmp.AllowUnexported(source.Info{}, safehtml.HTML{}),
 				}
@@ -756,7 +756,7 @@ func checkUnit(ctx context.Context, t *testing.T, db *DB, um *internal.UnitMeta,
 	opts := []cmp.Option{
 		cmp.AllowUnexported(source.Info{}, safehtml.HTML{}),
 		// The packages table only includes partial license information; it omits the Coverage field.
-		cmpopts.IgnoreFields(licenses.Metadata{}, "Coverage", "OldCoverage"),
+		cmpopts.IgnoreFields(licenses.Metadata{}, "Coverage"),
 	}
 	want.SourceInfo = um.SourceInfo
 	want.NumImports = len(want.Imports)
@@ -862,7 +862,7 @@ func TestGetUnitFieldSet(t *testing.T) {
 				cmp.AllowUnexported(source.Info{}, safehtml.HTML{}),
 				cmpopts.EquateEmpty(),
 				// The packages table only includes partial license information; it omits the Coverage field.
-				cmpopts.IgnoreFields(licenses.Metadata{}, "Coverage", "OldCoverage"),
+				cmpopts.IgnoreFields(licenses.Metadata{}, "Coverage"),
 			}
 			test.want.CommitTime = um.CommitTime
 			test.want.SourceInfo = um.SourceInfo

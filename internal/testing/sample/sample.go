@@ -20,7 +20,6 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/google/licensecheck"
-	oldlicensecheck "github.com/google/licensecheck/old"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/godoc"
 	"golang.org/x/pkgsite/internal/licenses"
@@ -391,9 +390,9 @@ func LicenseMetadata() []*licenses.Metadata {
 		{
 			Types:    []string{LicenseType},
 			FilePath: LicenseFilePath,
-			OldCoverage: oldlicensecheck.Coverage{
+			Coverage: licensecheck.Coverage{
 				Percent: 100,
-				Match:   []oldlicensecheck.Match{{Name: LicenseType, Type: oldlicensecheck.MIT, Percent: 100}},
+				Match:   []licensecheck.Match{{ID: "MIT", Type: 0}},
 			},
 		},
 	}

@@ -32,7 +32,6 @@ import (
 	"sync"
 
 	"github.com/google/licensecheck"
-	oldlicensecheck "github.com/google/licensecheck/old"
 	"golang.org/x/mod/module"
 	modzip "golang.org/x/mod/zip"
 	"golang.org/x/pkgsite/internal/log"
@@ -63,9 +62,7 @@ type Metadata struct {
 	// FilePath is the '/'-separated path to the license file in the module zip,
 	// relative to the contents directory.
 	FilePath string
-	// The output of oldlicensecheck.Cover.
-	OldCoverage oldlicensecheck.Coverage
-	Coverage    licensecheck.Coverage
+	Coverage licensecheck.Coverage
 }
 
 // A License is a classified license file path and its contents.

@@ -277,17 +277,9 @@ func insertLicenses(ctx context.Context, db *database.DB, m *internal.Module, mo
 	defer derrors.WrapStack(&err, "insertLicenses(ctx, %q, %q)", m.ModulePath, m.Version)
 	var licenseValues []interface{}
 	for _, l := range m.Licenses {
-		var covJSON []byte
-		if l.Coverage.Percent == 0 && l.Coverage.Match == nil {
-			covJSON, err = json.Marshal(l.OldCoverage)
-			if err != nil {
-				return fmt.Errorf("marshalling %+v: %v", l.OldCoverage, err)
-			}
-		} else {
-			covJSON, err = json.Marshal(l.Coverage)
-			if err != nil {
-				return fmt.Errorf("marshalling %+v: %v", l.Coverage, err)
-			}
+		covJSON, err := json.Marshal(l.Coverage)
+		if err != nil {
+			return fmt.Errorf("marshalling %+v: %v", l.Coverage, err)
 		}
 		licenseValues = append(licenseValues, l.FilePath,
 			makeValidUnicode(string(l.Contents)), pq.Array(l.Types), covJSON,
