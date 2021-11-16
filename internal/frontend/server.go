@@ -13,7 +13,9 @@ import (
 	"io"
 	"io/fs"
 	"net/http"
+	hpprof "net/http/pprof"
 	"net/url"
+	"os"
 	"path"
 	"strings"
 	"sync"
@@ -55,6 +57,8 @@ type Server struct {
 	reportingClient      *errorreporting.Client
 	fileMux              *http.ServeMux
 	vulnClient           vulnc.Client
+	versionID            string
+	instanceID           string
 
 	mu        sync.Mutex // Protects all fields below
 	templates map[string]*template.Template
@@ -62,6 +66,7 @@ type Server struct {
 
 // ServerConfig contains everything needed by a Server.
 type ServerConfig struct {
+	Config *config.Config
 	// DataSourceGetter should return a DataSource on each call.
 	// It should be goroutine-safe.
 	DataSourceGetter     func(context.Context) internal.DataSource
@@ -72,9 +77,6 @@ type ServerConfig struct {
 	ThirdPartyFS         fs.FS              // for third_party/ directory
 	DevMode              bool
 	StaticPath           string // used only for dynamic loading in dev mode
-	AppVersionLabel      string
-	GoogleTagManagerID   string
-	ServeStats           bool
 	ReportingClient      *errorreporting.Client
 	VulndbClient         vulnc.Client
 }
@@ -97,12 +99,16 @@ func NewServer(scfg ServerConfig) (_ *Server, err error) {
 		staticPath:           scfg.StaticPath,
 		templates:            ts,
 		taskIDChangeInterval: scfg.TaskIDChangeInterval,
-		appVersionLabel:      scfg.AppVersionLabel,
-		googleTagManagerID:   scfg.GoogleTagManagerID,
-		serveStats:           scfg.ServeStats,
 		reportingClient:      scfg.ReportingClient,
 		fileMux:              http.NewServeMux(),
 		vulnClient:           scfg.VulndbClient,
+	}
+	if scfg.Config != nil {
+		s.appVersionLabel = scfg.Config.AppVersionLabel()
+		s.googleTagManagerID = scfg.Config.GoogleTagManagerID
+		s.serveStats = scfg.Config.ServeStats
+		s.versionID = scfg.Config.VersionID
+		s.instanceID = scfg.Config.InstanceID
 	}
 	errorPageBytes, err := s.renderErrorPage(context.Background(), http.StatusInternalServerError, "error", nil)
 	if err != nil {
@@ -177,6 +183,37 @@ Disallow: /search?*
 Disallow: /fetch/*
 Sitemap: https://pkg.go.dev/sitemap/index.xml
 `))
+	}))
+	s.installDebugHandlers(handle)
+}
+
+// installDebugHandlers installs handlers for debugging. Most of the handlers
+// are provided by the net/http/pprof package. Although that package installs
+// them on the default ServeMux in its init function, we must install them on
+// our own ServeMux.
+func (s *Server) installDebugHandlers(handle func(string, http.Handler)) {
+	ifDebug := func(h func(http.ResponseWriter, *http.Request)) http.HandlerFunc {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if !experiment.IsActive(r.Context(), internal.ExperimentDebug) {
+				http.Error(w, "not found", http.StatusNotFound)
+				return
+			}
+			h(w, r)
+		})
+	}
+
+	handle("/debug/pprof/", ifDebug(hpprof.Index))
+	handle("/debug/pprof/cmdline", ifDebug(hpprof.Cmdline))
+	handle("/debug/pprof/profile", ifDebug(hpprof.Profile))
+	handle("/debug/pprof/symbol", ifDebug(hpprof.Symbol))
+	handle("/debug/pprof/trace", ifDebug(hpprof.Trace))
+
+	handle("/debug/info", ifDebug(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		fmt.Fprintf(w, "Service: %s\n", os.Getenv("K_SERVICE"))
+		fmt.Fprintf(w, "Config: %s\n", os.Getenv("K_CONFIGURATION"))
+		fmt.Fprintf(w, "Revision: %s\n", s.versionID)
+		fmt.Fprintf(w, "Instance: %s\n", s.instanceID)
 	}))
 }
 

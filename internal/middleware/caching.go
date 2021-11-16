@@ -144,6 +144,7 @@ func (c *cache) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	reader, hit := c.get(ctx, key)
 	recordCacheResult(ctx, c.name, hit, time.Since(start))
 	if hit {
+		log.Debugf(ctx, "serving %q from cache", key)
 		if _, err := io.Copy(w, reader); err != nil {
 			log.Errorf(ctx, "error copying zip bytes: %v", err)
 		}

@@ -113,6 +113,7 @@ func main() {
 	}
 	staticSource := template.TrustedSourceFromFlag(flag.Lookup("static").Value)
 	server, err := frontend.NewServer(frontend.ServerConfig{
+		Config:               cfg,
 		DataSourceGetter:     dsg,
 		Queue:                fetchQueue,
 		TaskIDChangeInterval: config.TaskIDChangeIntervalFrontend,
@@ -121,9 +122,6 @@ func main() {
 		StaticPath:           *staticFlag,
 		ThirdPartyFS:         os.DirFS(*thirdPartyPath),
 		DevMode:              *devMode,
-		AppVersionLabel:      cfg.AppVersionLabel(),
-		GoogleTagManagerID:   cfg.GoogleTagManagerID,
-		ServeStats:           cfg.ServeStats,
 		ReportingClient:      rc,
 		VulndbClient:         vc,
 	})

@@ -6,6 +6,7 @@
 package internal
 
 const (
+	ExperimentDebug                  = "debug"
 	ExperimentDeprecatedDoc          = "deprecated-doc"
 	ExperimentEnableStdFrontendFetch = "enable-std-frontend-fetch"
 	ExperimentNewUnitLayout          = "new-unit-layout"
@@ -16,6 +17,7 @@ const (
 // Experiments represents all of the active experiments in the codebase and
 // a description of each experiment.
 var Experiments = map[string]string{
+	ExperimentDebug:                  "Enable debugging handlers",
 	ExperimentDeprecatedDoc:          "Treat deprecated symbols specially in documentation.",
 	ExperimentEnableStdFrontendFetch: "Enable frontend fetching for module std.",
 	ExperimentNewUnitLayout:          "Enable the new layout on the unit page.",

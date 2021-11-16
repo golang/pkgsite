@@ -15,6 +15,7 @@ import (
 	"github.com/go-redis/redis/v8"
 	"github.com/google/safehtml/template"
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/config"
 	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/fetch"
 	"golang.org/x/pkgsite/internal/frontend"
@@ -38,9 +39,8 @@ func setupFrontend(ctx context.Context, t *testing.T, q queue.Queue, rc *redis.C
 		TemplateFS:           template.TrustedFSFromTrustedSource(template.TrustedSourceFromConstant(staticDir)),
 		StaticFS:             os.DirFS(staticDir),
 		ThirdPartyFS:         os.DirFS("../../../third_party"),
-		AppVersionLabel:      "",
 		Queue:                q,
-		ServeStats:           true,
+		Config:               &config.Config{ServeStats: true},
 	})
 	if err != nil {
 		t.Fatal(err)

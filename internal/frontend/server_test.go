@@ -1529,10 +1529,9 @@ func newTestServer(t *testing.T, proxyModules []*proxytest.Module, redisClient *
 		TemplateFS:           template.TrustedFSFromEmbed(static.FS),
 		// Use the embedded FSs here to make sure they're tested.
 		// Integration tests will use the actual directories.
-		StaticFS:        static.FS,
-		ThirdPartyFS:    thirdparty.FS,
-		StaticPath:      "../../static",
-		AppVersionLabel: "",
+		StaticFS:     static.FS,
+		ThirdPartyFS: thirdparty.FS,
+		StaticPath:   "../../static",
 	})
 	if err != nil {
 		t.Fatal(err)
