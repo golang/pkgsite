@@ -1,7 +1,7 @@
 {
   "version": 3,
   "sources": ["list.css"],
-  "sourcesContent": ["/*\n * Copyright 2021 The Go Authors. All rights reserved.\n * Use of this source code is governed by a BSD-style\n * license that can be found in the LICENSE file.\n */\n\n.VulnList-title {\n  font-size: 2.25rem;\n}\n.VulnList-entry {\n  display: flex;\n  flex-direction: column;\n  font-size: 0.875rem;\n  gap: 0.35rem;\n  margin-bottom: 1.75rem;\n  word-break: break-word;\n}\n.VulnList-entryTitle {\n  font-size: 1.25rem;\n  font-weight: 400;\n}\n.VulnList-entryMetadata {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 0.5rem 0;\n}\n.VulnList-entryMetadata li:not(:last-child)::after {\n  content: '|';\n  padding: 0 0.5rem;\n}\n"],
-  "mappings": ";;;;;AAMA,gBACE,kBAEF,gBACE,aACA,sBACA,kBACA,WACA,sBACA,sBAEF,qBACE,kBACA,gBAEF,wBACE,aACA,eACA,YAEF,kDACE,YA3BF",
+  "sourcesContent": ["/*\n * Copyright 2021 The Go Authors. All rights reserved.\n * Use of this source code is governed by a BSD-style\n * license that can be found in the LICENSE file.\n */\n\n.VulnList-title {\n  font-size: 1.25rem;\n  font-weight: 400;\n}\n.VulnList-details {\n  margin-bottom: 1.75rem;\n}\n"],
+  "mappings": ";;;;;AAMA,gBACE,kBACA,gBAEF,kBACE",
   "names": []
 }

@@ -20,3 +20,20 @@
     </div>
   </main>
 {{end}}
+
+{{define "vuln-details"}}
+  <div class="Vuln-details">
+    <ul class="Vuln-detailsMetadata">
+      {{if .Aliases}}
+        <li class="go-textSubtle Vuln-alias">
+          {{range $i, $v := .Aliases}}{{if ne $i 0}},{{end}}{{$v}}{{end}}
+        </li>
+      {{end}}
+      <li class="go-textSubtle">Published: {{.Published.Format "Jan 02, 2006"}}</li>
+      {{if ne .Published .Modified}}
+        <li class="go-textSubtle">Modified: {{.Modified.Format "Jan 02, 2006"}}</li>
+      {{end}}
+    </ul>
+    <p>{{.Details}}</p>
+  </div>
+{{end}}

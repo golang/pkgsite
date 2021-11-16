@@ -3,5 +3,5 @@
  * Use of this source code is governed by a BSD-style
  * license that can be found in the LICENSE file.
  */
-.Vuln{gap:.5rem}.Vuln-title{font-size:2.25rem;font-weight:400;margin-bottom:1rem}
+.Vuln{gap:.5rem}.Vuln-title{font-size:2.25rem;font-weight:400;margin-bottom:1rem}.Vuln-details{display:flex;flex-direction:column;gap:.75rem}.Vuln-detailsMetadata{display:flex;flex-wrap:wrap;font-size:.875rem;gap:.5rem 0}.Vuln-detailsMetadata li:not(:last-child):after{content:"|";padding:0 .5rem}
 /*# sourceMappingURL=vuln.min.css.map */

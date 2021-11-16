@@ -24,12 +24,12 @@
     </ol>
   </nav>
   <h1 class="Vuln-title">Vulnerability Report: {{.Entry.ID}}</h1>
+  {{template "vuln-details" .Entry}}
   {{template "entry" .Entry}}
 {{end}}
 
 {{define "entry"}}
   <div class="VulnEntry">
-    <p>{{.Details}}</p>
     <h2>Affected Packages</h2>
     <table class="VulnEntry-table">
       <thead>
@@ -49,12 +49,6 @@
         {{end}}
       </tbody>
     </table>
-    <h2>Published</h2>
-    <p>{{.Published.Format "Jan 02, 2006"}}</p>
-    {{if ne .Published .Modified}}
-      <h2>Modified</h2>
-      <p>{{.Modified.Format "Jan 02, 2006"}}</p>
-    {{end}}
     {{if .Aliases}}
       <h2>Aliases</h2>
       <ul>

@@ -5,26 +5,9 @@
  */
 
 .VulnList-title {
-  font-size: 2.25rem;
-}
-.VulnList-entry {
-  display: flex;
-  flex-direction: column;
-  font-size: 0.875rem;
-  gap: 0.35rem;
-  margin-bottom: 1.75rem;
-  word-break: break-word;
-}
-.VulnList-entryTitle {
   font-size: 1.25rem;
   font-weight: 400;
 }
-.VulnList-entryMetadata {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem 0;
-}
-.VulnList-entryMetadata li:not(:last-child)::after {
-  content: '|';
-  padding: 0 0.5rem;
+.VulnList-details {
+  margin-bottom: 1.75rem;
 }

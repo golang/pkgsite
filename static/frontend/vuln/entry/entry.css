@@ -4,10 +4,15 @@
  * license that can be found in the LICENSE file.
  */
 
+.Vuln-alias {
+  display: none;
+}
+
 .VulnEntry {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  margin-top: 0.5rem;
 }
 .VulnEntry h2 {
   font-size: 1.25rem;

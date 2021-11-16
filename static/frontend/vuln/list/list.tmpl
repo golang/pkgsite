@@ -14,25 +14,12 @@
 
 {{define "main-content"}}
   <h1 class="Vuln-title">Vulnerability Reports</h1>
-  {{range .Entries}}{{template "entry" .}}{{end}}
-{{end}}
-
-{{define "entry"}}
-  <div class="VulnList-entry">
-    <h2 class="VulnList-entryTitle">
+  {{range .Entries}}
+    <h2 class="VulnList-title">
       <a href="/vuln/{{.ID}}">{{.ID}}</a>
     </h2>
-    <ul class="VulnList-entryMetadata">
-      {{if .Aliases}}
-        <li class="go-textSubtle">
-          {{range $i, $v := .Aliases}}{{if ne $i 0}},{{end}}{{$v}}{{end}}
-        </li>
-      {{end}}
-      <li class="go-textSubtle">Published: {{.Published.Format "Jan 02, 2006"}}</li>
-      {{if ne .Published .Modified}}
-        <li class="go-textSubtle">Modified: {{.Modified.Format "Jan 02, 2006"}}</li>
-      {{end}}
-    </ul>
-    <p>{{.Details}}</p>
-  </div>
+    <div class="VulnList-details">
+      {{template "vuln-details" .}}
+    </div>
+  {{end}}
 {{end}}
