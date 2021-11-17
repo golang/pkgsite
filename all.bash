@@ -335,7 +335,10 @@ main() {
     migrations) check_migrations ;;
     misspell) check_misspell ;;
     staticcheck) check_staticcheck ;;
-    prettier) run_prettier ;;
+    prettier)
+      shift
+      run_prettier $*
+      ;;
     templates) check_templates ;;
     unparam) check_unparam ;;
     script_hashes) check_script_hashes ;;
