@@ -58,8 +58,13 @@ func TestVulnsForPackage(t *testing.T) {
 }
 
 var testEntries = []*osv.Entry{
-	{ID: "one", Details: "bad"},
-	{ID: "two", Details: "worse"},
+	{ID: "one", Details: "a"},
+	{ID: "two", Details: "b"},
+	{ID: "three", Details: "c"},
+	{ID: "four", Details: "d"},
+	{ID: "five", Details: "e"},
+	{ID: "six", Details: "f"},
+	{ID: "seven", Details: "g"},
 }
 
 func TestNewVulnListPage(t *testing.T) {

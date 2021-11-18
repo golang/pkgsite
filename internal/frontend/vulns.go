@@ -11,6 +11,7 @@ import (
 	"golang.org/x/mod/semver"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/sync/errgroup"
 	vulnc "golang.org/x/vuln/client"
 	"golang.org/x/vuln/osv"
 )
@@ -136,18 +137,31 @@ func newVulnPage(client vulnc.Client, id string) (*VulnPage, error) {
 }
 
 func newVulnListPage(client vulnc.Client) (*VulnListPage, error) {
+	const concurrency = 4
+
 	ids, err := client.ListIDs()
 	if err != nil {
 		return nil, err
 	}
-	// TODO(golang/go#49451): maybe optimize by reading concurrently.
-	var entries []*osv.Entry
-	for _, id := range ids {
-		e, err := client.GetByID(id)
-		if err != nil {
-			return nil, err
-		}
-		entries = append(entries, e)
+	entries := make([]*osv.Entry, len(ids))
+	sem := make(chan struct{}, concurrency)
+	var g errgroup.Group
+	for i, id := range ids {
+		i := i
+		id := id
+		sem <- struct{}{}
+		g.Go(func() error {
+			defer func() { <-sem }()
+			e, err := client.GetByID(id)
+			if err != nil {
+				return err
+			}
+			entries[i] = e
+			return nil
+		})
+	}
+	if err := g.Wait(); err != nil {
+		return nil, err
 	}
 	return &VulnListPage{Entries: entries}, nil
 }
