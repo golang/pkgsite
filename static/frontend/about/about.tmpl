@@ -1,0 +1,264 @@
+<!--
+  Copyright 2021 The Go Authors. All rights reserved.
+  Use of this source code is governed by a BSD-style
+  license that can be found in the LICENSE file.
+-->
+
+{{define "title"}}<title>About - pkg.go.dev</title>{{end}}
+
+{{define "main"}}
+  <style>
+  ul {
+    list-style-type: disc;
+    padding-left: 2em;
+  }
+  li {
+    margin: 0.5em 0;
+  }
+  b {
+    font-weight: bold;
+  }
+  </style>
+  <main class="go-Container">
+    <div class="go-Content">
+      <h1 data-test-id="about-heading">About</h1>
+      <p>
+        Welcome to pkg.go.dev, your source for information about Go packages and modules.
+      </p>
+
+      <h2 id="adding-a-package">Adding a package</h2>
+      <p>
+        Data for the site is downloaded from
+        <a href="https://proxy.golang.org/">proxy.golang.org</a>.
+        We monitor the <a href="https://index.golang.org/index">Go Module Index</a>
+        regularly for new packages to add to pkg.go.dev.
+        If you don’t see a package on pkg.go.dev, you can add it by doing one of the following:
+      </p>
+      <ul>
+        <li>
+          <p>
+            Visiting that page on pkg.go.dev, and clicking the “Request” button.
+            For example:
+            <br />
+            <code>https://pkg.go.dev/example.com/my/module</code>
+          </p>
+        </li>
+        <li>
+          <p>
+            Making a request to proxy.golang.org for the module version,
+            to any endpoint specified by the
+            <a href="/cmd/go/#hdr-Module_proxy_protocol">Module proxy protocol</a>.
+            For example:
+            <br />
+            <code>https://proxy.golang.org/example.com/my/module/@v/v1.0.0.info</code>
+          </p>
+        </li>
+        <li>
+          <p>
+            Downloading the package via the
+            <a href="/cmd/go/#hdr-Add_dependencies_to_current_module_and_install_them">go command</a>.
+            For example:
+            <br />
+            <code>GOPROXY=https://proxy.golang.org GO111MODULE=on go get example.com/my/module@v1.0.0</code>
+          </p>
+        </li>
+      </ul>
+
+      <h2 id="removing-a-package">Removing a package</h2>
+      <p>
+        If you would like to hide versions of a module on pkg.go.dev, as well as from
+        the <code>go</code> command, you should retract them.
+        Retracting a module version involves adding a <code>retract</code> directive
+        to your <code>go.mod</code> file and publishing a new version.
+        See the Go blog post
+        <a href="https://go.dev/blog/go116-module-changes#TOC_5.">New module changes in Go 1.16</a>
+        and the <a href="https://go.dev/ref/mod#go-mod-file-retract">modules reference</a> for details.
+      </p>
+      <p>
+        If you cannot retract your module, you can
+        <a href="/s/pkgsite-package-removal">file a request</a> for the pkgsite
+        team to remove your package.
+      </p>
+
+      <h2 id="documentation">Documentation</h2>
+      <p>
+        Documentation is generated based on Go source code downloaded from the Go Module Mirror at
+        <code>proxy.golang.org/&lt;module&gt;/@v/&lt;version&gt;.zip</code>.
+        New module versions are fetched from index.golang.org and added to pkg.go.dev site every few minutes.
+      </p>
+      <p>
+        The <a href="https://go.dev/blog/godoc">guidelines for writing documentation</a>
+        for the godoc tool apply to pkg.go.dev.
+      </p>
+      <p>
+        It’s important to write a good summary of the package in the first sentence of the package comment.
+        The go.dev site indexes the first sentence and displays it in search results.
+      </p>
+
+      <h3 id="build-context">Build Context</h3>
+      <p>
+        Most Go packages look and behave the same regardless of the machine architecture
+        or operating system. But some have different documentation, even different
+        exported symbols, for different architectures or OSes. Some packages may not even
+        exist for some architectures.
+      </p>
+      <p>
+        Go calls an OS/architecture pair a “build context” and writes it with a slash,
+        like <code>linux/amd64</code>.
+        You may also see the terms <code>GOOS</code> and <code>GOARCH</code> for the OS
+        and architecture respectively, because those are the names of the environment
+        variables that the go command uses.
+        (See the <a href="/cmd/go">go command documentation</a> for more information.)
+      </p>
+      <p>
+        If a package exists at only one build context, pkg.go.dev displays that build
+        context at the upper right corner of the documentation.
+        For example,
+        <a href="https://pkg.go.dev/syscall/js">https://pkg.go.dev/syscall/js</a>
+        displays “js/wasm”.
+      </p>
+      <p>
+        If a package is different in different build contexts, then pkg.go.dev will
+        display one by default and provide a dropdown control at the upper right so you
+        can select a different one.
+      </p>
+      <p>
+        For packages that are the same across all build contexts, pkg.go.dev does not
+        display any build context information.
+      </p>
+      <p>
+        Although there are many possible OS/architecture pairs, pkg.go.dev considers only a
+        <a href="https://go.googlesource.com/pkgsite/+/master/internal/build_context.go#29">handful</a>
+        of them. So if a package only exists for unsupported build contexts, pkg.go.dev
+        will not display documentation for it.
+      </p>
+
+      <h3 id="source-links">Source Links</h3>
+      <p>
+        Most of the time, pkg.go.dev can determine the location of a package’s source
+        files, and provide links from symbols in the documentation to their definitions
+        in the source. If your package’s source is not linked, try one of the following
+        two approaches.
+      </p>
+      <p>
+        If pkg.go.dev finds a <code>go-source</code> meta tag on your site that follows the
+        <a href="https://github.com/golang/gddo/wiki/Source-Code-Links">specified format</a>,
+        it can often determine the right links, even though the format doesn’t take
+        versioning into account.
+      </p>
+      <p>
+        If that doesn’t work, you will need to add your repo or code-hosting site to
+        pkg.go.dev’s list of patterns
+        (see <a href="/issues/40477">Go Issue 40477</a> for context).
+        Read about how to
+        <a href="https://go.googlesource.com/pkgsite#contributing">contribute to pkg.go.dev</a>,
+        then produce a CL that adds a pattern to the
+        <a href="https://go.googlesource.com/pkgsite/+/refs/heads/master/internal/source/source.go"><code>internal/source</code></a>
+        package.
+      </p>
+
+      <h2 id="best-practices">Best practices</h2>
+      <p>
+        Pkg.go.dev surfaces details about Go packages and modules
+        in order to help provide guidelines for best practices with Go.
+      </p>
+      <p>
+        Here are the details we surface:
+      </p>
+      <ul>
+        <li>
+          <p>
+            <b>Has <code>go.mod</code> file</b>.
+            The Go module system was introduced in Go 1.11
+            and is the official dependency management solution for Go.
+            A module version is defined by a tree of source files,
+            with a go.mod file in its root.
+            <a href="/cmd/go/#hdr-The_go_mod_file">More information about the go.mod file</a>.
+          </p>
+        </li>
+        <li>
+          <p>
+            <b>Redistributable license</b>.
+            Redistributable licenses place minimal restrictions on how software
+            can be used, modified, and redistributed.
+            For more information on how pkg.go.dev determines if a license is redistributable,
+            see our <a href="http://pkg.go.dev/license-policy">license policy</a>.
+          </p>
+        </li>
+        <li>
+          <p>
+            <b>Tagged version</b>.
+            When the go get command resolves modules by default it prioritizes tagged versions.
+            When no tagged versions exist, go get looks up the latest known commit.
+            Modules with tagged versions give importers more predictable builds.
+            See <a href="https://semver.org">semver.org</a> and
+            <a href="https://go.dev/blog/module-compatibility">Keeping Your Modules Compatible</a>
+            for more information.
+          </p>
+        </li>
+        <li>
+          <p>
+            <b>Stable version</b>.
+            Projects at v0 are assumed to be experimental.
+            When a project reaches a stable version – major version v1 or higher –
+            breaking changes must be done in a new major version.
+            Stable versions give developers the confidence that
+            breaking changes won’t occur when they upgrade a package to the latest minor version.
+            See <a href="https://go.dev/blog/v2-go-modules">Go Modules: v2 and Beyond</a>
+            for more information.
+          </p>
+        </li>
+      </ul>
+
+      <h2 id="creating-a-badge">Creating a badge</h2>
+      <p>
+        The pkg.go.dev badge provides a way for Go users to learn about the pkg.go.dev page
+        associated with a given Go package or module.
+        You can create a badge using the <a href="https://pkg.go.dev/badge">badge generation tool</a>.
+        The tool will generate html and markdown snippets
+        that you can use on your project website or in a README file.
+      </p>
+      <p>
+        <a href="https://pkg.go.dev/golang.org/x/pkgsite"><img src="https://pkg.go.dev/badge/golang.org/x/pkgsite" alt="PkgGoDev"></a>
+      </p>
+
+      <h2 id="adding-links">Adding links</h2>
+      <p>
+        You can add links to your README files and package documentation that will be
+        shown on the right side of the pkg.go.dev page.
+        For details, see <a href="/issue/42968">this issue</a>.
+      </p>
+
+      <h2 id="keyboard-shortcuts">Keyboard Shortcuts</h2>
+      <p>
+        There are keyboard shortcuts for navigating package documentation pages.
+        Type ‘?’ on a package page for help.
+      </p>
+
+      <h2 id="bookmarklet">Bookmarklet</h2>
+      <p>
+        The pkg.go.dev bookmarklet navigates from pages on source code hosts,
+        such as GitHub, Bitbucket, Launchpad, etc., to the package documentation.
+        To install the bookmarklet, click and drag the following link to your bookmark bar:
+        <a href="javascript:(function(){ const pathRegex = window.location.pathname.match(/([^\/]+)(?:\/([^\/]+))?/); const host = window.location.hostname; if (pathRegex) { window.location='https://pkg.go.dev/'+host+'/'+pathRegex[0]; } else { alert('There was an error navigating to pkg.go.dev!'); } })()">Pkg.go.dev Doc</a>
+      </p>
+
+      <h2 id="license-policy">License policy</h2>
+      <p>
+        Information for a given package or module may be limited
+        if we are not able to detect a suitable license.
+        See our <a href="https://pkg.go.dev/license-policy">license policy</a> for more information.
+      </p>
+
+      <h2 id="feedback">Feedback</h2>
+      <p>
+        Share your ideas, feature requests, and bugs on the
+        <a href="/s/discovery-feedback">Go Issue Tracker</a>.
+        For questions, please post on the #tools slack channel on the
+        <a href="https://invite.slack.golangbridge.org/">Gophers Slack</a>,
+        or email the <a href="https://groups.google.com/group/golang-dev">golang-dev mailing list</a>.
+      </p>
+
+    </div>
+  </main>
+{{end}}

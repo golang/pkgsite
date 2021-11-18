@@ -15,7 +15,7 @@ the [known issues](https://github.com/golang/go/labels/pkgsite) to see if your
 issue is already being discussed. If an issue does not already exist, feel free
 to [file an issue](https://golang.org/s/pkgsite-feedback).
 
-For answers to frequently asked questions, see [go.dev/about](https://go.dev/about).
+For answers to frequently asked questions, see [pkg.go.dev/about](https://pkg.go.dev/about).
 
 You can also chat with us on the
 [#pkgsite Slack channel](https://gophers.slack.com/archives/C0166L4QGJV) on the

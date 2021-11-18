@@ -159,7 +159,7 @@ func (s *Server) Install(handle func(string, http.Handler), redisClient *redis.C
 	handle("/search", searchHandler)
 	handle("/search-help", s.staticPageHandler("search-help", "Search Help"))
 	handle("/license-policy", s.licensePolicyHandler())
-	handle("/about", http.RedirectHandler("https://go.dev/about", http.StatusFound))
+	handle("/about", s.aboutHandler())
 	handle("/badge/", http.HandlerFunc(s.badgeHandler))
 	handle("/styleguide", http.HandlerFunc(s.errorHandler(s.serveStyleGuide)))
 	handle("/C", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -431,6 +431,12 @@ func (s *Server) licensePolicyHandler() http.HandlerFunc {
 	})
 }
 
+func (s *Server) aboutHandler() http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		s.servePage(r.Context(), w, "about", basePage{})
+	})
+}
+
 // newBasePage returns a base page for the given request and title.
 func (s *Server) newBasePage(r *http.Request, title string) basePage {
 	q := rawSearchQuery(r)
@@ -695,6 +701,7 @@ func stripScheme(url string) string {
 func parsePageTemplates(fsys template.TrustedFS) (map[string]*template.Template, error) {
 	templates := make(map[string]*template.Template)
 	htmlSets := [][]string{
+		{"about"},
 		{"badge"},
 		{"error"},
 		{"fetch"},
