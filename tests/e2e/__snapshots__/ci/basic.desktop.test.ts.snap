@@ -4,14 +4,6 @@ exports[`404 with fetch button accessibility tree 1`] = `
 Object {
   "children": Array [
     Object {
-      "name": "Black Lives Matter",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "Support the Equal Justice Initiative",
-      "role": "link",
-    },
-    Object {
       "name": "Go",
       "role": "link",
     },
@@ -213,14 +205,6 @@ Object {
 exports[`badge accessibility tree 1`] = `
 Object {
   "children": Array [
-    Object {
-      "name": "Black Lives Matter",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "Support the Equal Justice Initiative",
-      "role": "link",
-    },
     Object {
       "name": "Go",
       "role": "link",
@@ -436,14 +420,6 @@ exports[`error accessibility tree 1`] = `
 Object {
   "children": Array [
     Object {
-      "name": "Black Lives Matter",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "Support the Equal Justice Initiative",
-      "role": "link",
-    },
-    Object {
       "name": "Go",
       "role": "link",
     },
@@ -641,14 +617,6 @@ Object {
 exports[`home accessibility tree 1`] = `
 Object {
   "children": Array [
-    Object {
-      "name": "Black Lives Matter",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "Support the Equal Justice Initiative",
-      "role": "link",
-    },
     Object {
       "name": "Go",
       "role": "link",
@@ -896,14 +864,6 @@ Object {
 exports[`license policy accessibility tree 1`] = `
 Object {
   "children": Array [
-    Object {
-      "name": "Black Lives Matter",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "Support the Equal Justice Initiative",
-      "role": "link",
-    },
     Object {
       "name": "Go",
       "role": "link",
@@ -1555,14 +1515,6 @@ exports[`search help accessibility tree 1`] = `
 Object {
   "children": Array [
     Object {
-      "name": "Black Lives Matter",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "Support the Equal Justice Initiative",
-      "role": "link",
-    },
-    Object {
       "name": "Go",
       "role": "link",
     },
@@ -1818,14 +1770,6 @@ Object {
 exports[`sub-repositories accessibility tree 1`] = `
 Object {
   "children": Array [
-    Object {
-      "name": "Black Lives Matter",
-      "role": "StaticText",
-    },
-    Object {
-      "name": "Support the Equal Justice Initiative",
-      "role": "link",
-    },
     Object {
       "name": "Go",
       "role": "link",
