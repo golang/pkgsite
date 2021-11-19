@@ -192,9 +192,11 @@ Sitemap: https://pkg.go.dev/sitemap/index.xml
 // them on the default ServeMux in its init function, we must install them on
 // our own ServeMux.
 func (s *Server) installDebugHandlers(handle func(string, http.Handler)) {
+
 	ifDebug := func(h func(http.ResponseWriter, *http.Request)) http.HandlerFunc {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if !experiment.IsActive(r.Context(), internal.ExperimentDebug) {
+			dbg := r.Header.Get(config.AllowDebugHeader)
+			if dbg == "" || dbg != os.Getenv("GO_DISCOVERY_DEBUG_HEADER_VALUE") {
 				http.Error(w, "not found", http.StatusNotFound)
 				return
 			}

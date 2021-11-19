@@ -107,6 +107,10 @@ const (
 	// BypassErrorReportingHeader is the header key used by the ErrorReporting middleware
 	// to avoid calling the errorreporting service.
 	BypassErrorReportingHeader = "X-Go-Discovery-Bypass-Error-Reporting"
+
+	// AllowDebugHeader is the header key used by the frontend server that allows
+	// serving debug pages.
+	AllowDebugHeader = "X-Go-Discovery-Debug"
 )
 
 // Config holds shared configuration values used in instantiating our server
