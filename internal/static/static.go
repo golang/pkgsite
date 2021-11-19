@@ -57,14 +57,12 @@ func Build(config Config) (*api.BuildResult, error) {
 			" */"},
 	}
 	if config.Watch {
-		options.Sourcemap = api.SourceMapInline
 		options.Watch = &api.WatchMode{}
-	} else {
-		options.MinifyIdentifiers = true
-		options.MinifySyntax = true
-		options.MinifyWhitespace = true
-		options.Sourcemap = api.SourceMapLinked
 	}
+	options.MinifyIdentifiers = true
+	options.MinifySyntax = true
+	options.MinifyWhitespace = true
+	options.Sourcemap = api.SourceMapLinked
 	result := api.Build(options)
 	if len(result.Errors) > 0 {
 		return nil, fmt.Errorf("error building static files: %v", result.Errors)
