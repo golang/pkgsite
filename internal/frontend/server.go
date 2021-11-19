@@ -32,6 +32,7 @@ import (
 	"golang.org/x/pkgsite/internal/godoc/dochtml"
 	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/log"
+	"golang.org/x/pkgsite/internal/memory"
 	"golang.org/x/pkgsite/internal/middleware"
 	"golang.org/x/pkgsite/internal/queue"
 	"golang.org/x/pkgsite/internal/static"
@@ -204,18 +205,51 @@ func (s *Server) installDebugHandlers(handle func(string, http.Handler)) {
 		})
 	}
 
-	handle("/debug/pprof/", ifDebug(hpprof.Index))
-	handle("/debug/pprof/cmdline", ifDebug(hpprof.Cmdline))
-	handle("/debug/pprof/profile", ifDebug(hpprof.Profile))
-	handle("/debug/pprof/symbol", ifDebug(hpprof.Symbol))
-	handle("/debug/pprof/trace", ifDebug(hpprof.Trace))
+	handle("/_debug/pprof/", ifDebug(hpprof.Index))
+	handle("/_debug/pprof/cmdline", ifDebug(hpprof.Cmdline))
+	handle("/_debug/pprof/profile", ifDebug(hpprof.Profile))
+	handle("/_debug/pprof/symbol", ifDebug(hpprof.Symbol))
+	handle("/_debug/pprof/trace", ifDebug(hpprof.Trace))
 
-	handle("/debug/info", ifDebug(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-		fmt.Fprintf(w, "Service: %s\n", os.Getenv("K_SERVICE"))
-		fmt.Fprintf(w, "Config: %s\n", os.Getenv("K_CONFIGURATION"))
-		fmt.Fprintf(w, "Revision: %s\n", s.versionID)
-		fmt.Fprintf(w, "Instance: %s\n", s.instanceID)
+	handle("/_debug/info", ifDebug(func(w http.ResponseWriter, r *http.Request) {
+		row := func(a, b string) {
+			fmt.Fprintf(w, "<tr><td>%s</td> <td>%s</td></tr>\n", a, b)
+		}
+		memrow := func(s string, m uint64) {
+			fmt.Fprintf(w, "<tr><td>%s</td> <td align='right'>%s</td></tr>\n", s, memory.Format(m))
+		}
+
+		fmt.Fprintf(w, "<html><body style='font-family: sans-serif'>\n")
+
+		fmt.Fprintf(w, "<table>\n")
+		row("Service", os.Getenv("K_SERVICE"))
+		row("Config", os.Getenv("K_CONFIGURATION"))
+		row("Revision", s.versionID)
+		row("Instance", s.instanceID)
+		fmt.Fprintf(w, "</table>\n")
+
+		gm := memory.ReadRuntimeStats()
+		pm, err := memory.ReadProcessStats()
+		if err != nil {
+			http.Error(w, fmt.Sprintf("reading process stats: %v", err), http.StatusInternalServerError)
+			return
+		}
+		sm, err := memory.ReadSystemStats()
+		if err != nil {
+			http.Error(w, fmt.Sprintf("reading system stats: %v", err), http.StatusInternalServerError)
+			return
+		}
+		fmt.Fprintf(w, "<table>\n")
+		memrow("Go Alloc", gm.Alloc)
+		memrow("Go Sys", gm.Sys)
+		memrow("Process VSize", pm.VSize)
+		memrow("Process RSS", pm.RSS)
+		memrow("System Total", sm.Total)
+		memrow("System Used", sm.Used)
+		fmt.Fprintf(w, "</table>\n")
+
+		fmt.Fprintf(w, "</body></html>\n")
+
 	}))
 }
 

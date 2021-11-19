@@ -188,3 +188,20 @@ func getCgroupStats() (map[string]uint64, error) {
 	}
 	return m, nil
 }
+
+// Format formats a memory value for humans. It uses a B, K, M or G suffix and
+// rounds to two decimal places.
+func Format(m uint64) string {
+	const Ki = 1024
+
+	if m < Ki {
+		return fmt.Sprintf("%d B", m)
+	}
+	if m < Ki*Ki {
+		return fmt.Sprintf("%.2f K", float64(m)/Ki)
+	}
+	if m < Ki*Ki*Ki {
+		return fmt.Sprintf("%.2f M", float64(m)/(Ki*Ki))
+	}
+	return fmt.Sprintf("%.2f G", float64(m)/(Ki*Ki*Ki))
+}
