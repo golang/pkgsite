@@ -508,14 +508,6 @@ func modulePathsToFetch(ctx context.Context, ds internal.DataSource, fullPath, m
 	return candidateModulePaths(fullPath)
 }
 
-var vcsHostsWithThreeElementRepoName = map[string]bool{
-	"bitbucket.org": true,
-	"gitea.com":     true,
-	"gitee.com":     true,
-	"github.com":    true,
-	"gitlab.com":    true,
-}
-
 // maxPathsToFetch is the number of modulePaths that are fetched from a single
 // fetch request. The longest module path we've seen in our database had 7 path
 // elements. maxPathsToFetch is set to 10 as a buffer.

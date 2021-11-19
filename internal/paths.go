@@ -11,12 +11,25 @@ import (
 	"golang.org/x/pkgsite/internal/stdlib"
 )
 
-var vcsHostsWithThreeElementRepoName = map[string]bool{
-	"bitbucket.org": true,
-	"gitea.com":     true,
-	"gitee.com":     true,
-	"github.com":    true,
-	"gitlab.com":    true,
+// VCSHostWithThreeElementRepoName returns true when the hostname
+// has three elements like hostname/account/project.
+func VCSHostWithThreeElementRepoName(hostname string) bool {
+	switch hostname {
+	case
+		"git.sr.ht",
+		"gitea.com",
+		"gitee.com",
+		"gitlab.com",
+		"gopkg.in",
+		"hg.sr.ht",
+		"bitbucket.org",
+		"github.com",
+		"golang.org",
+		"launchpad.net":
+		return true
+	default:
+		return false
+	}
 }
 
 // CandidateModulePaths returns the potential module paths that could contain
@@ -39,7 +52,7 @@ func CandidateModulePaths(fullPath string) []string {
 	if len(r) == 0 {
 		return nil
 	}
-	if !vcsHostsWithThreeElementRepoName[r[len(r)-1]] {
+	if !VCSHostWithThreeElementRepoName(r[len(r)-1]) {
 		return r
 	}
 	if len(r) < 3 {

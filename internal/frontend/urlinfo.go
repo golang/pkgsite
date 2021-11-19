@@ -183,7 +183,7 @@ func isValidPath(fullPath string) bool {
 			return false
 		}
 	}
-	if vcsHostsWithThreeElementRepoName[parts[0]] && len(parts) < 3 {
+	if internal.VCSHostWithThreeElementRepoName(parts[0]) && len(parts) < 3 {
 		return false
 	}
 	return true
