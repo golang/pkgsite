@@ -21,6 +21,7 @@ import (
 	"golang.org/x/pkgsite/internal/config"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/log"
+	"golang.org/x/pkgsite/internal/memory"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/sync/errgroup"
 )
@@ -60,17 +61,19 @@ func (s *Server) doIndexPage(w http.ResponseWriter, r *http.Request) (err error)
 		return err
 	}
 
-	var gms runtime.MemStats
-	runtime.ReadMemStats(&gms)
-	sms, err := getSystemMemStats()
+	gms := memory.ReadRuntimeStats()
+	sms, err := memory.ReadSystemStats()
 	if err != nil {
 		log.Errorf(ctx, "could not get system stats: %v", err)
 	}
-	pms, err := getProcessMemStats()
+	pms, err := memory.ReadProcessStats()
 	if err != nil {
 		log.Errorf(ctx, "could not get process stats: %v", err)
 	}
-
+	cms, err := memory.ReadCgroupStats()
+	if err != nil {
+		log.Warningf(ctx, "could not get cgroup stats: %v", err)
+	}
 	var logsURL string
 	if s.cfg.OnGKE() {
 		env := s.cfg.DeploymentEnvironment()
@@ -96,8 +99,8 @@ func (s *Server) doIndexPage(w http.ResponseWriter, r *http.Request) (err error)
 		Excluded        []string
 		LoadShedStats   LoadShedStats
 		GoMemStats      runtime.MemStats
-		ProcessStats    processMemStats
-		SystemStats     systemMemStats
+		ProcessStats    memory.ProcessStats
+		SystemStats     memory.SystemStats
 		CgroupStats     map[string]uint64
 		Fetches         []*FetchInfo
 		LogsURL         string
@@ -115,7 +118,7 @@ func (s *Server) doIndexPage(w http.ResponseWriter, r *http.Request) (err error)
 		GoMemStats:     gms,
 		ProcessStats:   pms,
 		SystemStats:    sms,
-		CgroupStats:    getCgroupMemStats(),
+		CgroupStats:    cms,
 		Fetches:        FetchInfos(),
 		LogsURL:        logsURL,
 		DBInfo:         s.workerDBInfo(),

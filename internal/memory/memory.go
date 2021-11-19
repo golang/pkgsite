@@ -2,27 +2,32 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// Functions to collect memory information from a variety of places.
-
-package worker
+// Package memory provides functions to collect memory information from a
+// variety of places.
+package memory
 
 import (
 	"bufio"
-	"context"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
-
-	"golang.org/x/pkgsite/internal/log"
 )
 
-// systemMemStats holds values from the /proc/meminfo
+// ReadRuntimeStats is a convenience for runtime.ReadMemStats.
+func ReadRuntimeStats() runtime.MemStats {
+	var ms runtime.MemStats
+	runtime.ReadMemStats(&ms)
+	return ms
+}
+
+// SystemStats holds values from the /proc/meminfo
 // file, which describes the total system memory.
 // All values are in bytes.
-type systemMemStats struct {
+type SystemStats struct {
 	Total     uint64
 	Free      uint64
 	Available uint64
@@ -31,12 +36,12 @@ type systemMemStats struct {
 	Cached    uint64
 }
 
-// getSystemMemStats reads the /proc/meminfo file to get information about the
+// ReadSystemStats reads the /proc/meminfo file to get information about the
 // machine.
-func getSystemMemStats() (systemMemStats, error) {
+func ReadSystemStats() (SystemStats, error) {
 	f, err := os.Open("/proc/meminfo")
 	if err != nil {
-		return systemMemStats{}, err
+		return SystemStats{}, err
 	}
 	defer f.Close()
 
@@ -54,7 +59,7 @@ func getSystemMemStats() (systemMemStats, error) {
 	}
 
 	scan := bufio.NewScanner(f)
-	var sms systemMemStats
+	var sms SystemStats
 	for scan.Scan() {
 		words := strings.Fields(scan.Text())
 		switch words[0] {
@@ -74,23 +79,24 @@ func getSystemMemStats() (systemMemStats, error) {
 		err = scan.Err()
 	}
 	if err != nil {
-		return systemMemStats{}, err
+		return SystemStats{}, err
 	}
 	sms.Used = sms.Total - sms.Free - sms.Buffers - sms.Cached // see `man free`
 	return sms, nil
 }
 
-// processMemStats holds values that describe the current process's memory.
+// ProcessStats holds values that describe the current process's memory.
 // All values are in bytes.
-type processMemStats struct {
+type ProcessStats struct {
 	VSize uint64 // virtual memory size
 	RSS   uint64 // resident set size (physical memory in use)
 }
 
-func getProcessMemStats() (processMemStats, error) {
+// ReadProcessStats reads memory stats for the process.
+func ReadProcessStats() (ProcessStats, error) {
 	f, err := os.Open("/proc/self/stat")
 	if err != nil {
-		return processMemStats{}, err
+		return ProcessStats{}, err
 	}
 	defer f.Close()
 	// Values from `man proc`.
@@ -103,24 +109,22 @@ func getProcessMemStats() (processMemStats, error) {
 	_, err = fmt.Fscanf(f, "%d %s %c %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d",
 		&d, &s, &c, &d, &d, &d, &d, &d, &d, &d, &d, &d, &d, &d, &d, &d, &d, &d, &d, &d, &d, &d, &vsize, &rss)
 	if err != nil {
-		return processMemStats{}, err
+		return ProcessStats{}, err
 	}
 	const pageSize = 4 * 1024 // Linux page size, from `getconf PAGESIZE`
-	return processMemStats{
+	return ProcessStats{
 		VSize: vsize,
 		RSS:   rss * pageSize,
 	}, nil
 }
 
-// Read memory information for the current cgroup.
+// ReadCgroupStats reads memory information for the current cgroup.
 // (A cgroup is the sandbox in which a docker container runs.)
 // All values are in bytes.
-// Returns nil on any error.
-func getCgroupMemStats() map[string]uint64 {
-	m, err := getCgroupMemStatsErr()
+func ReadCgroupStats() (map[string]uint64, error) {
+	m, err := getCgroupStats()
 	if err != nil {
-		log.Warningf(context.Background(), "getCgroupMemStats: %v", err)
-		return nil
+		return nil, err
 	}
 	// k8s's definition of container memory, as shown by `kubectl top pods`.
 	// See https://www.magalix.com/blog/memory_working_set-vs-memory_rss.
@@ -134,10 +138,10 @@ func getCgroupMemStats() map[string]uint64 {
 	m["workingSet"] = workingSet
 	// True RSS. See note on https://lwn.net/Articles/432224.
 	m["trueRSS"] = m["rss"] + m["mapped_file"]
-	return m
+	return m, nil
 }
 
-func getCgroupMemStatsErr() (map[string]uint64, error) {
+func getCgroupStats() (map[string]uint64, error) {
 	const cgroupMemDir = "/sys/fs/cgroup/memory"
 
 	readUintFile := func(filename string) (uint64, error) {
