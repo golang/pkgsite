@@ -246,6 +246,14 @@ func (s *Server) installDebugHandlers(handle func(string, http.Handler)) {
 		memrow("Process RSS", pm.RSS)
 		memrow("System Total", sm.Total)
 		memrow("System Used", sm.Used)
+		cm, err := memory.ReadCgroupStats()
+		if err != nil {
+			row("CGroup Stats", "unavailable")
+		} else {
+			for k, v := range cm {
+				memrow("CGroup "+k, v)
+			}
+		}
 		fmt.Fprintf(w, "</table>\n")
 
 		fmt.Fprintf(w, "</body></html>\n")
