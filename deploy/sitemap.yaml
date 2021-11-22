@@ -1,0 +1,38 @@
+# Copyright 2021 The Go Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style
+# license that can be found in the LICENSE file.
+
+steps:
+  - id: Prepare
+    name: gcr.io/cloud-builders/gcloud
+    entrypoint: deploy/prepare.sh
+    args:
+      - $PROJECT_ID
+  - id: Build
+    name: golang:1.17.3
+    entrypoint: bash
+    dir: private
+    args:
+      - -c
+      - |
+        source devtools/lib.sh
+        wget https://dl.google.com/cloudsql/cloud_sql_proxy.linux.amd64 \
+          -O cloud_sql_proxy
+        chmod +x cloud_sql_proxy
+        ./cloud_sql_proxy \
+          -instances=$PROJECT_ID:us-central1:$(database_name $_ENV)=tcp:$(database_port $_ENV) & \
+          sleep 1
+        go run ./devtools/cmd/sitemap -user=cloudbuild -password="$$PASSWORD" $_ENV
+    secretEnv: ['PASSWORD']
+  - id: Publish
+    name: gcr.io/cloud-builders/gsutil
+    dir: private
+    args:
+      - cp
+      - -r
+      - sitemap
+      - gs://$_ENV-pkg-go.dev
+availableSecrets:
+  secretManager:
+  - versionName: projects/$PROJECT_ID/secrets/cloudbuild-database-password/versions/latest
+    env: 'PASSWORD'
