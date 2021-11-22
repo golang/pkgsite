@@ -11,6 +11,7 @@ import (
 	"golang.org/x/mod/semver"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/sync/errgroup"
 	vulnc "golang.org/x/vuln/client"
 	"golang.org/x/vuln/osv"
@@ -102,6 +103,9 @@ func entryVuln(e *osv.Entry, packagePath, version string) (Vuln, bool) {
 }
 
 func (s *Server) serveVuln(w http.ResponseWriter, r *http.Request, _ internal.DataSource) error {
+	if !experiment.IsActive(r.Context(), internal.ExperimentVulns) {
+		return &serverError{status: http.StatusNotFound}
+	}
 	switch r.URL.Path {
 	case "/":
 		s.servePage(r.Context(), w, "vuln", s.newBasePage(r, "Go Vulnerabilities"))
@@ -109,7 +113,7 @@ func (s *Server) serveVuln(w http.ResponseWriter, r *http.Request, _ internal.Da
 		// Serve a list of all entries.
 		vulnListPage, err := newVulnListPage(s.vulnClient)
 		if err != nil {
-			return err
+			return &serverError{status: derrors.ToStatus(err)}
 		}
 		vulnListPage.basePage = s.newBasePage(r, "Go Vulnerabilities List")
 		s.servePage(r.Context(), w, "vuln/list", vulnListPage)
@@ -117,7 +121,7 @@ func (s *Server) serveVuln(w http.ResponseWriter, r *http.Request, _ internal.Da
 		id := r.URL.Path[1:]
 		vulnPage, err := newVulnPage(s.vulnClient, id)
 		if err != nil {
-			return err
+			return &serverError{status: derrors.ToStatus(err)}
 		}
 		vulnPage.basePage = s.newBasePage(r, id)
 		s.servePage(r.Context(), w, "vuln/entry", vulnPage)
