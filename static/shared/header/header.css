@@ -18,7 +18,6 @@
   display: flex;
   justify-content: space-between;
   margin: 0 auto;
-  max-width: 75.75rem;
   min-height: 2.5rem;
   padding: 0.5rem var(--gutter);
 }
@@ -54,7 +53,6 @@
 }
 .go-Header-inner {
   margin: 0 auto;
-  max-width: 75.75rem;
   padding: 0 var(--gutter);
 }
 .Site--wide .go-Header-inner {

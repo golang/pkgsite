@@ -30,7 +30,7 @@
 
 :root {
   /* Padding at the left and right of the viewport. */
-  --gutter: 1rem;
+  --gutter: 1.5rem;
 
   /* Margin between containers in the grid layout. */
   --gap: 1rem;
@@ -57,21 +57,10 @@
 }
 @media (min-width: 50rem) {
   :root {
-    --gutter: 1.5rem;
     --gap: 2rem;
     --scroll-margin: calc(
       var(--js-sticky-header-height, 3.5rem) + var(--js-sticky-nav-height, 0) + 1rem
     );
-  }
-}
-@media (min-width: 80rem) {
-  :root {
-    --gutter: 2rem;
-  }
-}
-@media (min-width: 112rem) {
-  :root {
-    --gutter: 2.5rem;
   }
 }
 
