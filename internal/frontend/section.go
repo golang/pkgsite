@@ -124,6 +124,8 @@ func accountPrefix(parts []string) (string, []string) {
 	switch {
 	case internal.VCSHostWithThreeElementRepoName(parts[0]):
 		n = 1
+	case parts[0] == "gopkg.in":
+		n = 1
 	case parts[0] == "hub.jazz.net":
 		n = 2
 	default:

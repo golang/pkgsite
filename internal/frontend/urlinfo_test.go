@@ -197,6 +197,7 @@ func TestIsValidPath(t *testing.T) {
 		{"golang.org/x", false},
 		{"golang.org/x/tools", true},
 		{"golang.org/x/tools/go/packages", true},
+		{"gopkg.in/yaml.v2", true},
 	}
 	for _, test := range tests {
 		got := isValidPath(test.path)

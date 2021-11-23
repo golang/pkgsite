@@ -20,7 +20,6 @@ func VCSHostWithThreeElementRepoName(hostname string) bool {
 		"gitea.com",
 		"gitee.com",
 		"gitlab.com",
-		"gopkg.in",
 		"hg.sr.ht",
 		"bitbucket.org",
 		"github.com",
