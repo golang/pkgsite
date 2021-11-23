@@ -13,7 +13,7 @@ usage() {
 
   Usage: $0 [exp|dev|staging|prod|beta] NAME:TAG
 
-  Deploy a frontend image to docker run for the given environment.
+  Deploy a frontend image to Cloud Run for the given environment.
 
 EOUSAGE
   exit 1
@@ -25,11 +25,10 @@ main() {
   check_env $env
   check_image $image
   gcloud run deploy --quiet --region us-central1 $env-frontend --image $image
-  local hdr=$(private/devtools/idtoken.sh -h $env)
+  local tok=$(private/devtools/idtoken.sh $env)
+  local hdr="Authorization: Bearer $tok"
   # Clear the redis cache
   curl -H "$hdr" $(worker_url $env)/clear-cache
-  # Start the prober checks
-  curl -H "$hdr" $(prober_url $env)/check
 }
 
 main $@
