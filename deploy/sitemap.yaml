@@ -22,6 +22,7 @@ steps:
         ./cloud_sql_proxy \
           -instances=$PROJECT_ID:us-central1:$(database_name $_ENV)=tcp:$(database_port $_ENV) & \
           sleep 1
+        mkdir sitemap
         go run ./devtools/cmd/sitemap -user=cloudbuild -password="$$PASSWORD" $_ENV
     secretEnv: ['PASSWORD']
   - id: Publish
@@ -31,7 +32,7 @@ steps:
       - cp
       - -r
       - sitemap
-      - gs://$_ENV-pkg-go.dev
+      - gs://$_ENV-pkg.go.dev
 availableSecrets:
   secretManager:
   - versionName: projects/$PROJECT_ID/secrets/cloudbuild-database-password/versions/latest
