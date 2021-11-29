@@ -28,11 +28,12 @@ main() {
   # If there was a rollback, `gcloud run deploy` will create a revision but
   # not point traffic to it. The following command ensures that the new revision
   # will get traffic.
-  gcloud run services update-traffic $env-frontend --to-latest
+  gcloud run services update-traffic $env-frontend --to-latest --region us-central1
   local tok=$(private/devtools/idtoken.sh $env)
   local hdr="Authorization: Bearer $tok"
   # Clear the redis cache
   curl -H "$hdr" $(worker_url $env)/clear-cache
+  private/devtools/warmups.sh $env $tok
 }
 
 main $@
