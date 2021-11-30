@@ -107,9 +107,7 @@ func (s *Server) serveVuln(w http.ResponseWriter, r *http.Request, _ internal.Da
 		return &serverError{status: http.StatusNotFound}
 	}
 	switch r.URL.Path {
-	case "/":
-		s.servePage(r.Context(), w, "vuln", s.newBasePage(r, "Go Vulnerabilities"))
-	case "/list":
+	case "/", "/list":
 		// Serve a list of all entries.
 		vulnListPage, err := newVulnListPage(s.vulnClient)
 		if err != nil {
