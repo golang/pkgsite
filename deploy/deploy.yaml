@@ -74,6 +74,9 @@ steps:
   - id: Pagecheck
     name: golang:1.16.7
     entrypoint: sh
+    env:
+      # The pagecheck script will throw an error without setting a TERM value.
+      - TERM=dumb
     args:
       - -c
       - private/devtools/pagecheck.sh -idtok $(cat _ID_TOKEN) prod
