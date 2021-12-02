@@ -5,7 +5,7 @@ set -e
 # Use of this source code is governed by a BSD-style
 # license that can be found in the LICENSE file.
 
-source deploy/lib.sh || { echo "Are you at repo root?"; exit 1; }
+source private/devtools/lib.sh || { echo "Are you at repo root?"; exit 1; }
 
 usage() {
   >&2 cat <<EOUSAGE
@@ -23,7 +23,7 @@ main() {
   local image=$2
   check_env $env
   check_image $image
-  docker run -v $(pwd)/private:/private cuelang/cue:0.4.0 cmd \
+  runcmd docker run -v $(pwd)/private:/private cuelang/cue:0.4.0 cmd \
     -t env=$env \
     -t app=worker \
     -t workerImage=$image \

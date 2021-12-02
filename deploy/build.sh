@@ -23,9 +23,9 @@ main() {
   local build_tag=$2
   for service in worker frontend
   do
-    docker build -t gcr.io/$project_id/$service:$build_tag \
+    runcmd docker build -t gcr.io/$project_id/$service:$build_tag \
       -f private/config/Dockerfile.$service .
-    docker push gcr.io/$project_id/$service:$build_tag
+    runcmd docker push gcr.io/$project_id/$service:$build_tag
   done
 }
 

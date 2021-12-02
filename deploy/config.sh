@@ -6,7 +6,6 @@ set -e
 # license that can be found in the LICENSE file.
 
 source private/devtools/lib.sh || { echo "Are you at repo root?"; exit 1; }
-source deploy/lib.sh
 
 usage() {
   >&2 cat <<EOUSAGE
@@ -25,7 +24,7 @@ main() {
   dyn_config_bucket=$(config_bucket $env)
   dyn_config_object=${env}-config.yaml
   dyn_config_gcs=gs://$dyn_config_bucket/$dyn_config_object
-  gsutil cp private/config/$env-config.yaml $dyn_config_gcs
+  runcmd gsutil cp private/config/$env-config.yaml $dyn_config_gcs
 }
 
 main $@
