@@ -2,13 +2,18 @@
 # Use of this source code is governed by a BSD-style
 # license that can be found in the LICENSE file.
 
+timeout: 45m
 options:
   machineType: N1_HIGHCPU_8
 
 steps:
-  - id: CI Checks
+  - id: all.bash
     name: gcr.io/$PROJECT_ID/docker-compose
-    entrypoint: devtools/ci/ci.sh
+    entrypoint: devtools/docker/compose.sh
+    args:
+      - run
+      - allbash
+      - ci
   - id: Prepare
     name: gcr.io/cloud-builders/gcloud
     entrypoint: deploy/prepare.sh
@@ -40,18 +45,21 @@ steps:
     args:
       - -c
       - deploy/frontend.sh staging gcr.io/$PROJECT_ID/frontend:$(cat _BUILD_TAG)
-  - id: Pagecheck
+  - id: Pagecheck - staging
     name: golang:1.16.7
     entrypoint: sh
     args:
       - -c
       - private/devtools/pagecheck.sh -idtok $(cat _ID_TOKEN) staging
+    env:
+      # The pagecheck script will throw an error without setting a TERM value.
+      - TERM=dumb
   - id: e2e - staging
     name: gcr.io/$PROJECT_ID/docker-compose
     entrypoint: sh
     args:
-      - c
-      - private/devtools/e2e.sh staging $(cat _ID_TOKEN)
+      - -c
+      - deploy/e2e.sh staging $(cat _ID_TOKEN)
     env:
       - QUOTA_BYPASS=$_QUOTA_BYPASS
   - id: Config - prod
@@ -71,7 +79,7 @@ steps:
     args:
       - -c
       - deploy/frontend.sh prod gcr.io/$PROJECT_ID/frontend:$(cat _BUILD_TAG)
-  - id: Pagecheck
+  - id: Pagecheck - prod
     name: golang:1.16.7
     entrypoint: sh
     env:

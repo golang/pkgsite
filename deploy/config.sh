@@ -22,8 +22,8 @@ EOUSAGE
 main() {
   local env=$1
   check_env $env
-  dyn_config_bucket=$(yaml_env_var GO_DISCOVERY_CONFIG_BUCKET private/config/${env}.yaml)
-  dyn_config_object=$(yaml_env_var GO_DISCOVERY_CONFIG_DYNAMIC private/config/${env}.yaml)
+  dyn_config_bucket=$(config_bucket $env)
+  dyn_config_object=${env}-config.yaml
   dyn_config_gcs=gs://$dyn_config_bucket/$dyn_config_object
   gsutil cp private/config/$env-config.yaml $dyn_config_gcs
 }
