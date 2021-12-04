@@ -159,9 +159,9 @@ type Config struct {
 	// AppEngine.
 	FallbackVersionLabel string
 
-	DBSecret, DBUser, DBHost, DBPort, DBName string
-	DBSecondaryHost                          string // DB host to use if first one is down
-	DBPassword                               string `json:"-"`
+	DBSecret, DBUser, DBHost, DBPort, DBName, DBSSL string
+	DBSecondaryHost                                 string // DB host to use if first one is down
+	DBPassword                                      string `json:"-"`
 
 	// Configuration for redis page cache.
 	RedisCacheHost, RedisBetaCacheHost, RedisCachePort string
@@ -267,8 +267,10 @@ func (c *Config) dbConnInfo(host string) string {
 	// Set the statement_timeout config parameter for this session.
 	// See https://www.postgresql.org/docs/current/runtime-config-client.html.
 	timeoutOption := fmt.Sprintf("-c statement_timeout=%d", StatementTimeout/time.Millisecond)
-	return fmt.Sprintf("user='%s' password='%s' host='%s' port=%s dbname='%s' sslmode=disable options='%s'",
-		c.DBUser, c.DBPassword, host, c.DBPort, c.DBName, timeoutOption)
+	return fmt.Sprintf(
+		"user='%s' password='%s' host='%s' port=%s dbname='%s' sslmode='%s' options='%s'",
+		c.DBUser, c.DBPassword, host, c.DBPort, c.DBName, c.DBSSL, timeoutOption,
+	)
 }
 
 // HostAddr returns the network on which to serve the primary HTTP service.
@@ -385,6 +387,7 @@ func Init(ctx context.Context) (_ *Config, err error) {
 		DBPort:               GetEnv("GO_DISCOVERY_DATABASE_PORT", "5432"),
 		DBName:               GetEnv("GO_DISCOVERY_DATABASE_NAME", "discovery-db"),
 		DBSecret:             os.Getenv("GO_DISCOVERY_DATABASE_SECRET"),
+		DBSSL:                GetEnv("GO_DISCOVERY_DATABASE_SSL", "disable"),
 		RedisCacheHost:       os.Getenv("GO_DISCOVERY_REDIS_HOST"),
 		RedisBetaCacheHost:   os.Getenv("GO_DISCOVERY_REDIS_BETA_HOST"),
 		RedisCachePort:       GetEnv("GO_DISCOVERY_REDIS_PORT", "6379"),

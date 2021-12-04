@@ -28,6 +28,10 @@ database_name='discovery-db'
 if [[ $GO_DISCOVERY_DATABASE_NAME != "" ]]; then
   database_name=$GO_DISCOVERY_DATABASE_NAME
 fi
+ssl_mode='disable'
+if [[ $GO_DISCOVERY_DATABASE_SSL != "" ]]; then
+  ssl_mode=$GO_DISCOVERY_DATABASE_SSL
+fi
 
 # Redirect stderr to stdout because migrate outputs to stderr, and we want
 # to be able to use ordinary output redirection.
@@ -35,7 +39,7 @@ case "$1" in
   up|down|force|version)
     migrate \
       -source file:migrations \
-      -database "postgresql://$database_user:$database_password@$database_host:5432/$database_name?sslmode=disable" \
+      -database "postgresql://$database_user:$database_password@$database_host:5432/$database_name?sslmode=$ssl_mode" \
       "$@" 2>&1
     ;;
   *)
