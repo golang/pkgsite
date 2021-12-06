@@ -84,3 +84,15 @@ steps:
     args:
       - -c
       - private/devtools/pagecheck.sh -idtok $(cat _ID_TOKEN) prod
+  - id: Frontend - beta
+    name: gcr.io/cloud-builders/gcloud
+    entrypoint: sh
+    args:
+      - -c
+      - deploy/frontend.sh beta gcr.io/$PROJECT_ID/frontend:$(cat _BUILD_TAG)
+  - id: Pagecheck - beta
+    name: golang:1.16.7
+    entrypoint: sh
+    args:
+      - -c
+      - private/devtools/pagecheck.sh -idtok $(cat _ID_TOKEN) beta
