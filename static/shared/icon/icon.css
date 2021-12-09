@@ -4,6 +4,12 @@
  * license that can be found in the LICENSE file.
  */
 
+.depsdev-Icon {
+  height: 1.125em;
+  vertical-align: text-bottom;
+  width: auto;
+}
+
 .go-Icon {
   filter: none;
   height: 1.125em;

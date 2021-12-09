@@ -11,6 +11,7 @@ const (
 	ExperimentNewUnitLayout          = "new-unit-layout"
 	ExperimentStyleGuide             = "styleguide"
 	ExperimentVulns                  = "vulns"
+	ExperimentDepsDevLink            = "deps-dev-link"
 )
 
 // Experiments represents all of the active experiments in the codebase and
@@ -21,6 +22,7 @@ var Experiments = map[string]string{
 	ExperimentNewUnitLayout:          "Enable the new layout on the unit page.",
 	ExperimentStyleGuide:             "Enable the styleguide.",
 	ExperimentVulns:                  "Enable vulnerability reporting.",
+	ExperimentDepsDevLink:            "Enable link to Open Source Insights (deps.dev).",
 }
 
 // Experiment holds data associated with an experimental feature for frontend

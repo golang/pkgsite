@@ -18,9 +18,19 @@
         Repository URL not available.
       {{end}}
     </div>
-    {{if or .Details.ReadmeLinks .Details.DocLinks .Details.ModuleReadmeLinks}}
+    {{if or .DepsDevURL .Details.ReadmeLinks .Details.DocLinks .Details.ModuleReadmeLinks}}
       <h2 class="go-textLabel">Links</h2>
       <ul class="UnitMeta-links">
+        {{with .DepsDevURL}}
+          <li>
+            <a href="{{.}}" title="View this module on Open Source Insights"
+              target="_blank" rel="noopener" data-test-id="meta-link-depsdev">
+              <img class="depsdev-Icon" src="/static/shared/icon/depsdev-logo.svg" 
+                alt="Open Source Insights Logo" />
+              Open Source Insights
+            </a>
+          </li>
+        {{end}}
         {{template "unit-meta-links" .Details.ReadmeLinks}}
         {{template "unit-meta-links" .Details.DocLinks}}
         {{template "unit-meta-links" .Details.ModuleReadmeLinks}}

@@ -89,6 +89,9 @@ type UnitPage struct {
 
 	// Vulns holds vulnerability information.
 	Vulns []Vuln
+
+	// DepsDevURL holds the full URL to this module version on deps.dev.
+	DepsDevURL string
 }
 
 // serveUnitPage serves a unit page for a path.
@@ -114,6 +117,11 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 			return err
 		}
 		return s.servePathNotFoundPage(w, r, ds, info.fullPath, info.modulePath, info.requestedVersion)
+	}
+
+	makeDepsDevURL := func() string { return "" }
+	if experiment.IsActive(ctx, internal.ExperimentDepsDevLink) {
+		makeDepsDevURL = depsDevURLGenerator(ctx, um)
 	}
 
 	// Use GOOS and GOARCH query parameters to create a build context, which
@@ -198,6 +206,7 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 		PageLabels:            pageLabels(um),
 		PageType:              pageType(um),
 		RedirectedFromPath:    redirectPath,
+		DepsDevURL:            makeDepsDevURL(),
 	}
 
 	// Show the banner if there was no error getting the latest major version,
