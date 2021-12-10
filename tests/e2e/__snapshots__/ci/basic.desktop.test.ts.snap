@@ -97,7 +97,15 @@ Object {
       "role": "link",
     },
     Object {
+      "name": "Help",
+      "role": "link",
+    },
+    Object {
       "name": "Packages",
+      "role": "link",
+    },
+    Object {
+      "name": "Standard Library",
       "role": "link",
     },
     Object {
@@ -174,10 +182,6 @@ Object {
     },
     Object {
       "name": "Report an Issue",
-      "role": "link",
-    },
-    Object {
-      "name": "golang.org",
       "role": "link",
     },
     Object {
@@ -311,7 +315,15 @@ Object {
       "role": "link",
     },
     Object {
+      "name": "Help",
+      "role": "link",
+    },
+    Object {
       "name": "Packages",
+      "role": "link",
+    },
+    Object {
+      "name": "Standard Library",
       "role": "link",
     },
     Object {
@@ -388,10 +400,6 @@ Object {
     },
     Object {
       "name": "Report an Issue",
-      "role": "link",
-    },
-    Object {
-      "name": "golang.org",
       "role": "link",
     },
     Object {
@@ -509,7 +517,15 @@ Object {
       "role": "link",
     },
     Object {
+      "name": "Help",
+      "role": "link",
+    },
+    Object {
       "name": "Packages",
+      "role": "link",
+    },
+    Object {
+      "name": "Standard Library",
       "role": "link",
     },
     Object {
@@ -586,10 +602,6 @@ Object {
     },
     Object {
       "name": "Report an Issue",
-      "role": "link",
-    },
-    Object {
-      "name": "golang.org",
       "role": "link",
     },
     Object {
@@ -756,7 +768,15 @@ Object {
       "role": "link",
     },
     Object {
+      "name": "Help",
+      "role": "link",
+    },
+    Object {
       "name": "Packages",
+      "role": "link",
+    },
+    Object {
+      "name": "Standard Library",
       "role": "link",
     },
     Object {
@@ -833,10 +853,6 @@ Object {
     },
     Object {
       "name": "Report an Issue",
-      "role": "link",
-    },
-    Object {
-      "name": "golang.org",
       "role": "link",
     },
     Object {
@@ -1406,7 +1422,15 @@ Object {
       "role": "link",
     },
     Object {
+      "name": "Help",
+      "role": "link",
+    },
+    Object {
       "name": "Packages",
+      "role": "link",
+    },
+    Object {
+      "name": "Standard Library",
       "role": "link",
     },
     Object {
@@ -1483,10 +1507,6 @@ Object {
     },
     Object {
       "name": "Report an Issue",
-      "role": "link",
-    },
-    Object {
-      "name": "golang.org",
       "role": "link",
     },
     Object {
@@ -1662,7 +1682,15 @@ Object {
       "role": "link",
     },
     Object {
+      "name": "Help",
+      "role": "link",
+    },
+    Object {
       "name": "Packages",
+      "role": "link",
+    },
+    Object {
+      "name": "Standard Library",
       "role": "link",
     },
     Object {
@@ -1739,10 +1767,6 @@ Object {
     },
     Object {
       "name": "Report an Issue",
-      "role": "link",
-    },
-    Object {
-      "name": "golang.org",
       "role": "link",
     },
     Object {
@@ -2016,7 +2040,15 @@ Object {
       "role": "link",
     },
     Object {
+      "name": "Help",
+      "role": "link",
+    },
+    Object {
       "name": "Packages",
+      "role": "link",
+    },
+    Object {
+      "name": "Standard Library",
       "role": "link",
     },
     Object {
@@ -2093,10 +2125,6 @@ Object {
     },
     Object {
       "name": "Report an Issue",
-      "role": "link",
-    },
-    Object {
-      "name": "golang.org",
       "role": "link",
     },
     Object {
