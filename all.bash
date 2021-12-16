@@ -5,6 +5,7 @@
 
 source devtools/lib.sh || { echo "Are you at repo root?"; exit 1; }
 
+GO=go
 
 # Support ** in globs, for check_script_hashes.
 shopt -s globstar
@@ -90,14 +91,14 @@ findcode() {
 }
 
 # ensure_go_binary verifies that a binary exists in $PATH corresponding to the
-# given go-gettable URI. If no such binary exists, it is fetched via `go get`.
+# given go-gettable URI. If no such binary exists, it is fetched via `go install`.
 ensure_go_binary() {
   local binary=$(basename $1)
   if ! [ -x "$(command -v $binary)" ]; then
     info "Installing: $1"
     # Run in a subshell for convenience, so that we don't have to worry about
     # our PWD.
-    (set -x; cd && go install $1@latest)
+    (set -x; cd && $GO install $1@latest)
   fi
 }
 
@@ -140,7 +141,7 @@ check_unparam() {
 
 # check_vet runs go vet on source files.
 check_vet() {
-  runcmd go vet -all ./...
+  runcmd $GO vet -all ./...
 }
 
 # check_staticcheck runs staticcheck on source files.
@@ -174,12 +175,12 @@ script_hash_glob='static/**/*.tmpl'
 # check_script_hashes checks that our CSP hashes match the ones
 # for our HTML scripts.
 check_script_hashes() {
-  runcmd go run ./devtools/cmd/csphash $script_hash_glob
+  runcmd $GO run ./devtools/cmd/csphash $script_hash_glob
 }
 
 # run_build_static builds JavaScript output from TypeScript source files.
 run_build_static() {
-  runcmd go run ./devtools/cmd/static
+  runcmd $GO run ./devtools/cmd/static
 }
 
 run_npm() {
@@ -272,9 +273,9 @@ main() {
       run_prettier
       run_npm run lint -- --fix
       run_npm run test
-      runcmd go mod tidy
+      runcmd $GO mod tidy
       runcmd env GO_DISCOVERY_TESTDB=true go test ./...
-      runcmd go test ./internal/secrets
+      runcmd $GO test ./internal/secrets
       run_npm audit
       ;;
     cl)
@@ -306,9 +307,9 @@ main() {
         run_npm run lint -- --fix
         run_npm run test
       fi
-      runcmd go mod tidy
+      runcmd $GO mod tidy
       runcmd env GO_DISCOVERY_TESTDB=true go test ./...
-      runcmd go test ./internal/secrets
+      runcmd $GO test ./internal/secrets
       ;;
 
     ci)
@@ -325,13 +326,13 @@ main() {
       echo "DONE: $((end-start)) seconds"
       echo "--------------------"
 
-      for pkg in $(go list ./...); do
+      for pkg in $($GO list ./...); do
         if [[ ${no_race[$pkg]} = '' ]]; then
           race="$race $pkg"
         fi
       done
-      runcmd env GO_DISCOVERY_TESTDB=true go test -race -count=1 $race
-      runcmd env GO_DISCOVERY_TESTDB=true go test -count=1 ${!no_race[*]}
+      runcmd env GO_DISCOVERY_TESTDB=true $GO test -race -count=1 $race
+      runcmd env GO_DISCOVERY_TESTDB=true $GO test -count=1 ${!no_race[*]}
       ;;
     lint) standard_linters ;;
     headers) check_headers ;;
