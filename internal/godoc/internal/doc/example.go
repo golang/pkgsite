@@ -10,12 +10,13 @@ import (
 	"go/ast"
 	"go/token"
 	"path"
-	"regexp"
 	"sort"
 	"strconv"
 	"strings"
 	"unicode"
 	"unicode/utf8"
+
+	"golang.org/x/pkgsite/internal/godoc/internal/lazyregexp"
 )
 
 // An Example represents an example function found in a test source file.
@@ -110,7 +111,7 @@ func Examples(fset *token.FileSet, testFiles ...*ast.File) []*Example {
 	return list
 }
 
-var outputPrefix = regexp.MustCompile(`(?i)^[[:space:]]*(unordered )?output:`)
+var outputPrefix = lazyregexp.New(`(?i)^[[:space:]]*(unordered )?output:`)
 
 // Extracts the expected output and whether there was a valid output comment
 func exampleOutput(b *ast.BlockStmt, comments []*ast.CommentGroup) (output string, unordered, ok bool) {

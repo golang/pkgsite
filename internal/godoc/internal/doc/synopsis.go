@@ -72,15 +72,9 @@ func Synopsis(s string) string {
 			return ""
 		}
 	}
-	return unicodeQuoteReplacer.Replace(s)
+	s = convertQuotes(s)
+	return s
 }
-
-const (
-	ulquo = "“"
-	urquo = "”"
-)
-
-var unicodeQuoteReplacer = strings.NewReplacer("``", ulquo, "''", urquo)
 
 var IllegalPrefixes = []string{
 	"copyright",

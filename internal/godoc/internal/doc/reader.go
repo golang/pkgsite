@@ -7,9 +7,10 @@ package doc
 import (
 	"go/ast"
 	"go/token"
-	"regexp"
 	"sort"
 	"strconv"
+
+	"golang.org/x/pkgsite/internal/godoc/internal/lazyregexp"
 )
 
 // ----------------------------------------------------------------------------
@@ -60,9 +61,8 @@ func (mset methodSet) set(f *ast.FuncDecl, preserveAST bool) {
 		}
 		recv = recvString(typ)
 	}
-	text := f.Doc.Text()
 	mset[name] = &Func{
-		Doc:  text,
+		Doc:  f.Doc.Text(),
 		Name: name,
 		Decl: f,
 		Recv: recv,
@@ -298,9 +298,8 @@ func (r *reader) readValue(decl *ast.GenDecl) {
 		}
 	}
 
-	text := decl.Doc.Text()
 	*values = append(*values, &Value{
-		Doc:   text,
+		Doc:   decl.Doc.Text(),
 		Names: specNames(decl.Specs),
 		Decl:  decl,
 		order: r.order,
@@ -442,9 +441,9 @@ func (r *reader) readFunc(fun *ast.FuncDecl) {
 }
 
 var (
-	noteMarker    = `([A-Z][A-Z]+)\(([^)]+)\):?`                    // MARKER(uid), MARKER at least 2 chars, uid at least 1 char
-	noteMarkerRx  = regexp.MustCompile(`^[ \t]*` + noteMarker)      // MARKER(uid) at text start
-	noteCommentRx = regexp.MustCompile(`^/[/*][ \t]*` + noteMarker) // MARKER(uid) at comment start
+	noteMarker    = `([A-Z][A-Z]+)\(([^)]+)\):?`                // MARKER(uid), MARKER at least 2 chars, uid at least 1 char
+	noteMarkerRx  = lazyregexp.New(`^[ \t]*` + noteMarker)      // MARKER(uid) at text start
+	noteCommentRx = lazyregexp.New(`^/[/*][ \t]*` + noteMarker) // MARKER(uid) at comment start
 )
 
 // readNote collects a single note from a sequence of comments.

@@ -4,13 +4,9 @@
 
 // Package doc extracts source code documentation from a Go AST.
 //
-// This is a temporary copy of go/doc from Go 1.14 standard library
-// for testing of and validation of CL 204830 (golang.org/cl/204830).
-// Go 1.14 has been released, so go/doc can be used in its place as
-// soon as Go 1.14 is used for deployment.
-//
-// This package shouldn't be modified unless it's a part of a plan to
-// make an upstream change in go/doc package in the standard library.
+// This code was originally forked from Go 1.14.
+// It was modified as needed for pkgsite.
+// It was then reconciled with Go 1.17.3.
 package doc
 
 import (
