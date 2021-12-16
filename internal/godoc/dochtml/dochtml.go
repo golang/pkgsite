@@ -25,9 +25,7 @@ import (
 	"github.com/google/safehtml/legacyconversions"
 	"github.com/google/safehtml/template"
 	"github.com/google/safehtml/uncheckedconversions"
-	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
-	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/godoc/dochtml/internal/render"
 	"golang.org/x/pkgsite/internal/godoc/internal/doc"
 )
@@ -92,28 +90,6 @@ func Render(ctx context.Context, fset *token.FileSet, p *doc.Package, opt Render
 	if opt.Limit == 0 {
 		const megabyte = 1000 * 1000
 		opt.Limit = 10 * megabyte
-	}
-
-	if !experiment.IsActive(ctx, internal.ExperimentDeprecatedDoc) {
-		//Simpler to clear the fields here than to add experiment checks in the templates.
-		for _, c := range p.Consts {
-			c.IsDeprecated = false
-		}
-		for _, v := range p.Vars {
-			v.IsDeprecated = false
-		}
-		for _, f := range p.Funcs {
-			f.IsDeprecated = false
-		}
-		for _, t := range p.Types {
-			t.IsDeprecated = false
-			for _, f := range t.Funcs {
-				f.IsDeprecated = false
-			}
-			for _, m := range t.Methods {
-				m.IsDeprecated = false
-			}
-		}
 	}
 
 	funcs, data, links := renderInfo(ctx, fset, p, opt)
@@ -185,7 +161,7 @@ func valueToItem(v *doc.Value) *item {
 	return &item{
 		Doc:          v.Doc,
 		Decl:         v.Decl,
-		IsDeprecated: v.IsDeprecated,
+		IsDeprecated: valueIsDeprecated(v),
 	}
 }
 
@@ -208,7 +184,7 @@ func funcsToItems(fs []*doc.Func, hclass, typeName string, exmap map[string][]*e
 			Name:         f.Name,
 			FullName:     fullName,
 			HeaderStart:  headerStart,
-			IsDeprecated: f.IsDeprecated,
+			IsDeprecated: funcIsDeprecated(f),
 			Examples:     exmap[fullName],
 			Kind:         kind,
 			HeaderClass:  hclass,
@@ -225,7 +201,7 @@ func typeToItem(t *doc.Type, exmap map[string][]*example) *item {
 		Doc:          t.Doc,
 		Decl:         t.Decl,
 		HeaderStart:  "type",
-		IsDeprecated: t.IsDeprecated,
+		IsDeprecated: typeIsDeprecated(t),
 		Kind:         "type",
 		HeaderClass:  "Documentation-typeHeader",
 		Examples:     exmap[t.Name],

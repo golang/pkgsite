@@ -24,8 +24,6 @@ import (
 	"github.com/google/safehtml/template"
 	"github.com/jba/templatecheck"
 	"golang.org/x/net/html"
-	"golang.org/x/pkgsite/internal"
-	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/godoc/dochtml/internal/render"
 	"golang.org/x/pkgsite/internal/godoc/internal/doc"
 	"golang.org/x/pkgsite/internal/testing/testhelper"
@@ -84,18 +82,13 @@ func TestRender(t *testing.T) {
 }
 
 func TestRenderDeprecated(t *testing.T) {
-	compare := func(ctx context.Context, name string) {
-		t.Helper()
-		fset, d := mustLoadPackage("deprecated")
-		parts, err := Render(ctx, fset, d, testRenderOptions)
-		if err != nil {
-			t.Fatal(err)
-		}
-		compareWithGolden(t, parts, name, *update)
+	t.Helper()
+	fset, d := mustLoadPackage("deprecated")
+	parts, err := Render(context.Background(), fset, d, testRenderOptions)
+	if err != nil {
+		t.Fatal(err)
 	}
-
-	compare(context.Background(), "deprecated-off")
-	compare(experiment.NewContext(context.Background(), internal.ExperimentDeprecatedDoc), "deprecated-on")
+	compareWithGolden(t, parts, "deprecated-on", *update)
 }
 
 func compareWithGolden(t *testing.T, parts *Parts, name string, update bool) {
