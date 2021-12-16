@@ -3,10 +3,6 @@
 // license that can be found in the LICENSE file.
 
 // Package doc extracts source code documentation from a Go AST.
-//
-// This code was originally forked from Go 1.14.
-// It was modified as needed for pkgsite.
-// It was then reconciled with Go 1.17.3.
 package doc
 
 import (
@@ -144,10 +140,12 @@ func New(pkg *ast.Package, importPath string, mode Mode) *Package {
 // NewFromFiles computes documentation for a package.
 //
 // The package is specified by a list of *ast.Files and corresponding
-// file set, which must not be nil. NewFromFiles does not skip files
-// based on build constraints, so it is the caller's responsibility to
-// provide only the files that are matched by the build context.
-// The import path of the package is specified by importPath.
+// file set, which must not be nil.
+// NewFromFiles uses all provided files when computing documentation,
+// so it is the caller's responsibility to provide only the files that
+// match the desired build context. "go/build".Context.MatchFile can
+// be used for determining whether a file matches a build context with
+// the desired GOOS and GOARCH values, and other build constraints.
 //
 // Examples found in _test.go files are associated with the corresponding
 // type, function, method, or the package, based on their name.
@@ -160,7 +158,7 @@ func New(pkg *ast.Package, importPath string, mode Mode) *Package {
 // NewFromFiles takes ownership of the AST files and may edit them,
 // unless the PreserveAST Mode bit is on.
 //
-func NewFromFiles(fset *token.FileSet, files []*ast.File, importPath string, opts ...interface{}) (*Package, error) {
+func NewFromFiles(fset *token.FileSet, files []*ast.File, importPath string, opts ...any) (*Package, error) {
 	// Check for invalid API usage.
 	if fset == nil {
 		panic(fmt.Errorf("doc.NewFromFiles: no token.FileSet provided (fset == nil)"))
