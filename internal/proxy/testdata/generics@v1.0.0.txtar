@@ -1,0 +1,29 @@
+A module that uses generics.
+
+-- go.mod --
+module example.com/generics
+
+go 1.18
+
+-- LICENSE --
+$MITLicense
+
+-- file.go --
+
+// Package generics uses generics.
+package generics
+
+import "constraints"
+
+func Min[T constraints.Ordered](a, b T) T {
+	if a < b {
+		return a
+	}
+	return b
+}
+
+type List[T any] struct {
+	Val T
+	Next *List[T]
+}
+

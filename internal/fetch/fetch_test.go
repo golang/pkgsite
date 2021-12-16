@@ -83,6 +83,7 @@ func TestFetchModule(t *testing.T) {
 		{name: "type example", mod: moduleTypeExample},
 		{name: "method example", mod: moduleMethodExample},
 		{name: "nonredistributable packages", mod: moduleNonRedist},
+		{name: "generics", mod: moduleGenerics},
 		// Proxy only as stdlib is not accounted for in local mode
 		{name: "stdlib module", mod: moduleStd, proxyOnly: true},
 		// Proxy only as version is pre specified in local mode

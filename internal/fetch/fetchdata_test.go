@@ -2810,6 +2810,72 @@ var moduleLatest = &testModule{
 	},
 }
 
+var moduleGenerics = &testModule{
+	modfunc: func() *proxytest.Module { return proxytest.FindModule(testModules, "example.com/generics", "") },
+	fr: &FetchResult{
+		HasGoMod: true,
+		Module: &internal.Module{
+			ModuleInfo: internal.ModuleInfo{
+				ModulePath:        "example.com/generics",
+				HasGoMod:          true,
+				SourceInfo:        source.NewGitHubInfo("https://example.com/generics", "", "v1.0.0"),
+				IsRedistributable: true,
+			},
+			Units: []*internal.Unit{
+				{
+					UnitMeta: internal.UnitMeta{
+						Name: "generics",
+						Path: "example.com/generics",
+					},
+					Documentation: []*internal.Documentation{
+						{
+							GOOS:     internal.All,
+							GOARCH:   internal.All,
+							Synopsis: "Package generics uses generics.",
+							API: []*internal.Symbol{
+								{
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "Min",
+										Synopsis: "func Min(a, b T) T",
+										Section:  "Functions",
+										Kind:     "Function",
+									},
+								},
+								{
+									SymbolMeta: internal.SymbolMeta{
+										Name:     "List",
+										Synopsis: "type List struct{ ... }",
+										Section:  "Types",
+										Kind:     "Type",
+									},
+									Children: []*internal.SymbolMeta{
+										{
+											Name:       "List.Val",
+											Synopsis:   "Val T",
+											Section:    "Types",
+											Kind:       "Field",
+											ParentName: "List",
+										},
+										{
+											Name:       "List.Next",
+											Synopsis:   "Next *List[T]",
+											Section:    "Types",
+											Kind:       "Field",
+											ParentName: "List",
+										},
+									},
+								},
+							},
+						},
+					},
+					BuildContexts: []internal.BuildContext{internal.BuildContextAll},
+					Imports:       []string{"constraints"},
+				},
+			},
+		},
+	},
+}
+
 // moduleWithExamples returns a testModule that contains an example.
 // It provides the common bits for the tests for package, function,
 // type, and method examples below.
