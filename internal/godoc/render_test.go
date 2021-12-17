@@ -36,53 +36,58 @@ func TestDocInfo(t *testing.T) {
 		ModulePackages:  nil,
 	}
 
-	// Use a Package created locally and without nodes removed as the desired doc.
-	p, err := packageForDir(filepath.Join("testdata", "p"), false)
-	if err != nil {
-		t.Fatal(err)
+	for _, name := range []string{"p", "generics"} {
+		t.Run(name, func(t *testing.T) {
+			// Use a Package created locally and without nodes removed as the desired doc.
+			p, err := packageForDir(filepath.Join("testdata", name), false)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			wantSyn, wantImports, _, err := p.DocInfo(ctx, name, si, mi)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			check := func(p *Package) {
+				t.Helper()
+				gotSyn, gotImports, _, err := p.DocInfo(ctx, name, si, mi)
+				if err != nil {
+					t.Fatal(err)
+				}
+				if gotSyn != wantSyn {
+					t.Errorf("synopsis: got %q, want %q", gotSyn, wantSyn)
+				}
+				if !cmp.Equal(gotImports, wantImports) {
+					t.Errorf("imports: got %v, want %v", gotImports, wantImports)
+				}
+			}
+
+			// Verify that removing AST nodes doesn't change the doc.
+			p, err = packageForDir(filepath.Join("testdata", name), true)
+			if err != nil {
+				t.Fatal(err)
+			}
+			check(p)
+
+			// Verify that encoding then decoding generates the same doc.
+			// We can't re-use p to encode because it's been rendered.
+			p, err = packageForDir(filepath.Join("testdata", name), true)
+			if err != nil {
+				t.Fatal(err)
+			}
+			bytes, err := p.Encode(ctx)
+			if err != nil {
+				t.Fatal(err)
+			}
+			p2, err := DecodePackage(bytes)
+			if err != nil {
+				t.Fatal(err)
+			}
+			check(p2)
+		})
 	}
 
-	wantSyn, wantImports, _, err := p.DocInfo(ctx, "p", si, mi)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	check := func(p *Package) {
-		t.Helper()
-		gotSyn, gotImports, _, err := p.DocInfo(ctx, "p", si, mi)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if gotSyn != wantSyn {
-			t.Errorf("synopsis: got %q, want %q", gotSyn, wantSyn)
-		}
-		if !cmp.Equal(gotImports, wantImports) {
-			t.Errorf("imports: got %v, want %v", gotImports, wantImports)
-		}
-	}
-
-	// Verify that removing AST nodes doesn't change the doc.
-	p, err = packageForDir(filepath.Join("testdata", "p"), true)
-	if err != nil {
-		t.Fatal(err)
-	}
-	check(p)
-
-	// Verify that encoding then decoding generates the same doc.
-	// We can't re-use p to encode because it's been rendered.
-	p, err = packageForDir(filepath.Join("testdata", "p"), true)
-	if err != nil {
-		t.Fatal(err)
-	}
-	bytes, err := p.Encode(ctx)
-	if err != nil {
-		t.Fatal(err)
-	}
-	p2, err := DecodePackage(bytes)
-	if err != nil {
-		t.Fatal(err)
-	}
-	check(p2)
 }
 
 func TestRenderParts_SinceVersion(t *testing.T) {

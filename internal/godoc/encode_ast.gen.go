@@ -1604,7 +1604,7 @@ func init() {
 		})
 }
 
-// Fields of ast_FuncType: Func Params Results
+// Fields of ast_FuncType: Func Params Results TypeParams
 
 func encode_ast_FuncType(e *codec.Encoder, x *ast.FuncType) {
 	if !e.StartStruct(x == nil, x) {
@@ -1621,6 +1621,10 @@ func encode_ast_FuncType(e *codec.Encoder, x *ast.FuncType) {
 	if x.Results != nil {
 		e.EncodeUint(2)
 		encode_ast_FieldList(e, x.Results)
+	}
+	if x.TypeParams != nil {
+		e.EncodeUint(3)
+		encode_ast_FieldList(e, x.TypeParams)
 	}
 	e.EndStruct()
 }
@@ -1648,6 +1652,8 @@ func decode_ast_FuncType(d *codec.Decoder, p **ast.FuncType) {
 			decode_ast_FieldList(d, &x.Params)
 		case 2:
 			decode_ast_FieldList(d, &x.Results)
+		case 3:
+			decode_ast_FieldList(d, &x.TypeParams)
 		default:
 			d.UnknownField("ast.FuncType", n)
 		}
@@ -2130,6 +2136,73 @@ func init() {
 		func(d *codec.Decoder) interface{} {
 			var x *ast.IndexExpr
 			decode_ast_IndexExpr(d, &x)
+			return x
+		})
+}
+
+// Fields of ast_IndexListExpr: X Lbrack Indices Rbrack
+
+func encode_ast_IndexListExpr(e *codec.Encoder, x *ast.IndexListExpr) {
+	if !e.StartStruct(x == nil, x) {
+		return
+	}
+	if x.X != nil {
+		e.EncodeUint(0)
+		e.EncodeAny(x.X)
+	}
+	if x.Lbrack != 0 {
+		e.EncodeUint(1)
+		e.EncodeInt(int64(x.Lbrack))
+	}
+	if x.Indices != nil {
+		e.EncodeUint(2)
+		encode_slice_ast_Expr(e, x.Indices)
+	}
+	if x.Rbrack != 0 {
+		e.EncodeUint(3)
+		e.EncodeInt(int64(x.Rbrack))
+	}
+	e.EndStruct()
+}
+
+func decode_ast_IndexListExpr(d *codec.Decoder, p **ast.IndexListExpr) {
+	proceed, ref := d.StartStruct()
+	if !proceed {
+		return
+	}
+	if ref != nil {
+		*p = ref.(*ast.IndexListExpr)
+		return
+	}
+	var x ast.IndexListExpr
+	d.StoreRef(&x)
+	for {
+		n := d.NextStructField()
+		if n < 0 {
+			break
+		}
+		switch n {
+		case 0:
+			x.X = d.DecodeAny().(ast.Expr)
+		case 1:
+			x.Lbrack = token.Pos(d.DecodeInt())
+		case 2:
+			decode_slice_ast_Expr(d, &x.Indices)
+		case 3:
+			x.Rbrack = token.Pos(d.DecodeInt())
+		default:
+			d.UnknownField("ast.IndexListExpr", n)
+		}
+		*p = &x
+	}
+}
+
+func init() {
+	codec.Register(&ast.IndexListExpr{},
+		func(e *codec.Encoder, x interface{}) { encode_ast_IndexListExpr(e, x.(*ast.IndexListExpr)) },
+		func(d *codec.Decoder) interface{} {
+			var x *ast.IndexListExpr
+			decode_ast_IndexListExpr(d, &x)
 			return x
 		})
 }
@@ -3140,7 +3213,7 @@ func init() {
 		})
 }
 
-// Fields of ast_TypeSpec: Doc Name Assign Type Comment
+// Fields of ast_TypeSpec: Doc Name Assign Type Comment TypeParams
 
 func encode_ast_TypeSpec(e *codec.Encoder, x *ast.TypeSpec) {
 	if !e.StartStruct(x == nil, x) {
@@ -3165,6 +3238,10 @@ func encode_ast_TypeSpec(e *codec.Encoder, x *ast.TypeSpec) {
 	if x.Comment != nil {
 		e.EncodeUint(4)
 		encode_ast_CommentGroup(e, x.Comment)
+	}
+	if x.TypeParams != nil {
+		e.EncodeUint(5)
+		encode_ast_FieldList(e, x.TypeParams)
 	}
 	e.EndStruct()
 }
@@ -3196,6 +3273,8 @@ func decode_ast_TypeSpec(d *codec.Decoder, p **ast.TypeSpec) {
 			x.Type = d.DecodeAny().(ast.Expr)
 		case 4:
 			decode_ast_CommentGroup(d, &x.Comment)
+		case 5:
+			decode_ast_FieldList(d, &x.TypeParams)
 		default:
 			d.UnknownField("ast.TypeSpec", n)
 		}

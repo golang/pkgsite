@@ -52,6 +52,7 @@ func main() {
 		ast.ImportSpec{},
 		ast.IncDecStmt{},
 		ast.IndexExpr{},
+		ast.IndexListExpr{},
 		ast.InterfaceType{},
 		ast.KeyValueExpr{},
 		ast.LabeledStmt{},
