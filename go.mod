@@ -34,12 +34,14 @@ require (
 	github.com/google/licensecheck v0.3.1
 	github.com/google/safehtml v0.0.3-0.20211026203422-d6f0e11a5516
 	github.com/hashicorp/golang-lru v0.5.1
-	github.com/jackc/pgconn v1.9.0
-	github.com/jackc/pgx/v4 v4.12.0
+	github.com/jackc/pgconn v1.10.1
+	github.com/jackc/pgx/v4 v4.14.1
 	github.com/jba/templatecheck v0.6.0
 	github.com/lib/pq v1.10.2
 	github.com/microcosm-cc/bluemonday v1.0.5
+	github.com/prometheus/client_golang v1.3.0 // indirect
 	github.com/russross/blackfriday/v2 v2.0.1
+	github.com/shurcooL/sanitized_anchor_name v1.0.0 // indirect
 	github.com/yuin/goldmark v1.4.0
 	github.com/yuin/goldmark-emoji v1.0.1
 	github.com/yuin/gopher-lua v0.0.0-20200816102855-ee81675732da // indirect
