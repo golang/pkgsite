@@ -3,14 +3,13 @@ module golang.org/x/pkgsite
 go 1.16
 
 require (
-	cloud.google.com/go v0.97.0
-	cloud.google.com/go/cloudtasks v1.0.0 // indirect
+	cloud.google.com/go/cloudtasks v1.0.0
 	cloud.google.com/go/container v1.0.0 // indirect
-	cloud.google.com/go/errorreporting v0.1.0 // indirect
+	cloud.google.com/go/errorreporting v0.1.0
 	cloud.google.com/go/logging v1.4.2
 	cloud.google.com/go/monitoring v1.1.0 // indirect
-	cloud.google.com/go/profiler v0.1.1 // indirect
-	cloud.google.com/go/secretmanager v1.0.0 // indirect
+	cloud.google.com/go/profiler v0.1.1
+	cloud.google.com/go/secretmanager v1.0.0
 	cloud.google.com/go/storage v1.18.2
 	cloud.google.com/go/trace v1.0.0 // indirect
 	contrib.go.opencensus.io/exporter/prometheus v0.1.0
@@ -29,7 +28,6 @@ require (
 	github.com/go-redis/redis_rate/v9 v9.0.2
 	github.com/gogo/protobuf v1.3.0 // indirect
 	github.com/golang-migrate/migrate/v4 v4.6.2
-	github.com/golang/protobuf v1.5.2
 	github.com/gomodule/redigo v2.0.0+incompatible // indirect
 	github.com/google/go-cmp v0.5.6
 	github.com/google/go-replayers/httpreplay v0.1.0
