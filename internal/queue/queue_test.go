@@ -7,11 +7,11 @@ package queue
 import (
 	"testing"
 
-	"github.com/golang/protobuf/ptypes"
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/pkgsite/internal/config"
 	taskspb "google.golang.org/genproto/googleapis/cloud/tasks/v2"
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/durationpb"
 )
 
 func TestNewTaskID(t *testing.T) {
@@ -41,7 +41,7 @@ func TestNewTaskRequest(t *testing.T) {
 	want := &taskspb.CreateTaskRequest{
 		Parent: "projects/Project/locations/us-central1/queues/queueID",
 		Task: &taskspb.Task{
-			DispatchDeadline: ptypes.DurationProto(maxCloudTasksTimeout),
+			DispatchDeadline: durationpb.New(maxCloudTasksTimeout),
 			MessageType: &taskspb.Task_HttpRequest{
 				HttpRequest: &taskspb.HttpRequest{
 					HttpMethod: taskspb.HttpMethod_POST,

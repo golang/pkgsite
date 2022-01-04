@@ -3,9 +3,16 @@ module golang.org/x/pkgsite
 go 1.16
 
 require (
-	cloud.google.com/go v0.66.0
-	cloud.google.com/go/logging v1.0.0
-	cloud.google.com/go/storage v1.10.0
+	cloud.google.com/go v0.97.0
+	cloud.google.com/go/cloudtasks v1.0.0 // indirect
+	cloud.google.com/go/container v1.0.0 // indirect
+	cloud.google.com/go/errorreporting v0.1.0 // indirect
+	cloud.google.com/go/logging v1.4.2
+	cloud.google.com/go/monitoring v1.1.0 // indirect
+	cloud.google.com/go/profiler v0.1.1 // indirect
+	cloud.google.com/go/secretmanager v1.0.0 // indirect
+	cloud.google.com/go/storage v1.18.2
+	cloud.google.com/go/trace v1.0.0 // indirect
 	contrib.go.opencensus.io/exporter/prometheus v0.1.0
 	contrib.go.opencensus.io/exporter/stackdriver v0.13.4
 	contrib.go.opencensus.io/integrations/ocsql v0.1.4
@@ -22,7 +29,7 @@ require (
 	github.com/go-redis/redis_rate/v9 v9.0.2
 	github.com/gogo/protobuf v1.3.0 // indirect
 	github.com/golang-migrate/migrate/v4 v4.6.2
-	github.com/golang/protobuf v1.4.2
+	github.com/golang/protobuf v1.5.2
 	github.com/gomodule/redigo v2.0.0+incompatible // indirect
 	github.com/google/go-cmp v0.5.6
 	github.com/google/go-replayers/httpreplay v0.1.0
@@ -38,15 +45,15 @@ require (
 	github.com/yuin/goldmark v1.4.0
 	github.com/yuin/goldmark-emoji v1.0.1
 	github.com/yuin/gopher-lua v0.0.0-20200816102855-ee81675732da // indirect
-	go.opencensus.io v0.22.4
+	go.opencensus.io v0.23.0
 	golang.org/x/mod v0.5.0
-	golang.org/x/net v0.0.0-20210326060303-6b1517762897
-	golang.org/x/sync v0.0.0-20200625203802-6e8e738ad208
+	golang.org/x/net v0.0.0-20210503060351-7fd8e65b6420
+	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 	golang.org/x/text v0.3.6
-	golang.org/x/tools v0.0.0-20200915173823-2db8f0ff891c
+	golang.org/x/tools v0.1.5
 	golang.org/x/vuln v0.0.0-20211104165457-3710d685f6c2
-	google.golang.org/api v0.32.0
-	google.golang.org/genproto v0.0.0-20200923140941-5646d36feee1
-	google.golang.org/grpc v1.32.0
-	google.golang.org/protobuf v1.25.0
+	google.golang.org/api v0.58.0
+	google.golang.org/genproto v0.0.0-20211018162055-cf77aa76bad2
+	google.golang.org/grpc v1.40.0
+	google.golang.org/protobuf v1.27.1
 )

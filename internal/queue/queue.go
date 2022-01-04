@@ -17,7 +17,6 @@ import (
 	"time"
 
 	cloudtasks "cloud.google.com/go/cloudtasks/apiv2"
-	"github.com/golang/protobuf/ptypes"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/config"
 	"golang.org/x/pkgsite/internal/derrors"
@@ -27,6 +26,7 @@ import (
 	taskspb "google.golang.org/genproto/googleapis/cloud/tasks/v2"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/durationpb"
 )
 
 // A Queue provides an interface for asynchronous scheduling of fetch actions.
@@ -186,7 +186,7 @@ func (q *GCP) newTaskRequest(modulePath, version string, opts *Options) *taskspb
 
 	task := &taskspb.Task{
 		Name:             fmt.Sprintf("%s/tasks/%s", q.queueName, taskID),
-		DispatchDeadline: ptypes.DurationProto(maxCloudTasksTimeout),
+		DispatchDeadline: durationpb.New(maxCloudTasksTimeout),
 	}
 	task.MessageType = &taskspb.Task_HttpRequest{
 		HttpRequest: &taskspb.HttpRequest{
