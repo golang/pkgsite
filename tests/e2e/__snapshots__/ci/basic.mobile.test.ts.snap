@@ -1270,6 +1270,14 @@ Object {
       "role": "StaticText",
     },
     Object {
+      "name": "MulanPSL-2.0",
+      "role": "link",
+    },
+    Object {
+      "name": "•",
+      "role": "StaticText",
+    },
+    Object {
       "name": "NCSA",
       "role": "link",
     },

@@ -172,6 +172,7 @@ var (
 		"MIT-0",
 		"MPL-2.0",
 		"MPL-2.0-no-copyleft-exception",
+		"MulanPSL-2.0",
 		"NIST-PD",
 		"NIST-PD-fallback",
 		"NCSA",
