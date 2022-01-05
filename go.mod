@@ -25,10 +25,10 @@ require (
 	github.com/go-git/go-billy/v5 v5.3.1
 	github.com/go-git/go-git/v5 v5.4.2
 	github.com/go-redis/redis/v8 v8.11.4
-	github.com/go-redis/redis_rate/v9 v9.0.2
+	github.com/go-redis/redis_rate/v9 v9.1.2
 	github.com/golang-migrate/migrate/v4 v4.15.1
 	github.com/google/go-cmp v0.5.6
-	github.com/google/go-replayers/httpreplay v0.1.0
+	github.com/google/go-replayers/httpreplay v1.0.0
 	github.com/google/licensecheck v0.3.1
 	github.com/google/safehtml v0.0.3-0.20211026203422-d6f0e11a5516
 	github.com/hashicorp/golang-lru v0.5.1
@@ -41,14 +41,14 @@ require (
 	github.com/yuin/goldmark v1.4.0
 	github.com/yuin/goldmark-emoji v1.0.1
 	go.opencensus.io v0.23.0
-	golang.org/x/mod v0.5.0
+	golang.org/x/mod v0.5.1
 	golang.org/x/net v0.0.0-20211013171255-e13a2654a71e
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 	golang.org/x/text v0.3.7
 	golang.org/x/tools v0.1.5
 	golang.org/x/vuln v0.0.0-20211104165457-3710d685f6c2
-	google.golang.org/api v0.58.0
-	google.golang.org/genproto v0.0.0-20211018162055-cf77aa76bad2
-	google.golang.org/grpc v1.41.0
+	google.golang.org/api v0.63.0
+	google.golang.org/genproto v0.0.0-20211208223120-3a66f561d7aa
+	google.golang.org/grpc v1.43.0
 	google.golang.org/protobuf v1.27.1
 )
