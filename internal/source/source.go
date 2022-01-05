@@ -144,7 +144,7 @@ func (i *Info) RawURL(pathname string) string {
 // map of common urlTemplates
 var urlTemplatesByKind = map[string]urlTemplates{
 	"github":    githubURLTemplates,
-	"gitlab":    githubURLTemplates, // preserved for backwards compatibility (DB still has source_info->Kind = "gitlab")
+	"gitlab":    gitlabURLTemplates,
 	"bitbucket": bitbucketURLTemplates,
 }
 
@@ -174,12 +174,6 @@ func (i *Info) MarshalJSON() (_ []byte, err error) {
 			ji.Kind = kind
 			break
 		}
-	}
-	// We used to use different templates for GitHub and GitLab. Now that
-	// they're the same, prefer "github" for consistency (map random iteration
-	// order means we could get either here).
-	if ji.Kind == "gitlab" {
-		ji.Kind = "github"
 	}
 	if ji.Kind == "" && i.templates != (urlTemplates{}) {
 		ji.Templates = &i.templates
@@ -533,7 +527,7 @@ var legacyTemplateMatches = []struct {
 	},
 	{
 		regexp.MustCompile(`/-/blob/\w+\{/dir\}/\{file\}#L\{line\}$`),
-		gitlab2URLTemplates, nil,
+		gitlabURLTemplates, nil,
 	},
 	{
 		regexp.MustCompile(`/tree\{/dir\}/\{file\}#n\{line\}$`),
@@ -648,13 +642,14 @@ var patterns = []struct {
 		templates: bitbucketURLTemplates,
 	},
 	{
-		pattern:   `^(?P<repo>gitlab\.com/[a-z0-9A-Z_.\-]+/[a-z0-9A-Z_.\-]+)`,
-		templates: githubURLTemplates,
+		// Gitlab repos can have multiple path components.
+		pattern:   `^(?P<repo>gitlab\.com/[^.]+)(\.git|$)`,
+		templates: gitlabURLTemplates,
 	},
 	{
 		// Assume that any site beginning with "gitlab." works like gitlab.com.
 		pattern:   `^(?P<repo>gitlab\.[a-z0-9A-Z.-]+/[a-z0-9A-Z_.\-]+/[a-z0-9A-Z_.\-]+)(\.git|$)`,
-		templates: githubURLTemplates,
+		templates: gitlabURLTemplates,
 	},
 	{
 		pattern:   `^(?P<repo>gitee\.com/[a-z0-9A-Z_.\-]+/[a-z0-9A-Z_.\-]+)(\.git|$)`,
@@ -676,7 +671,7 @@ var patterns = []struct {
 	},
 	{
 		pattern:   `^(?P<repo>git\.pirl\.io/[a-z0-9A-Z_.\-]+/[a-z0-9A-Z_.\-]+)`,
-		templates: gitlab2URLTemplates,
+		templates: gitlabURLTemplates,
 	},
 	{
 		pattern:         `^(?P<repo>gitea\.com/[a-z0-9A-Z_.\-]+/[a-z0-9A-Z_.\-]+)(\.git|$)`,
@@ -830,7 +825,7 @@ var (
 		Line:      "{repo}/+/{commit}/{file}#{line}",
 		// Gitiles has no support for serving raw content at this time.
 	}
-	gitlab2URLTemplates = urlTemplates{
+	gitlabURLTemplates = urlTemplates{
 		Directory: "{repo}/-/tree/{commit}/{dir}",
 		File:      "{repo}/-/blob/{commit}/{file}",
 		Line:      "{repo}/-/blob/{commit}/{file}#L{line}",
