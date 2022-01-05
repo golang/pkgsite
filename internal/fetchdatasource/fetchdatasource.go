@@ -108,6 +108,13 @@ func (ds *FetchDataSource) getModule(ctx context.Context, modulePath, vers strin
 			lmv.PopulateModuleInfo(&m.ModuleInfo)
 		}
 	}
+	// Populate unit subdirectories. When we use a database, this only happens when we read
+	// a unit from the DB.
+	if m != nil {
+		for _, u := range m.Units {
+			ds.populateUnitSubdirectories(u, m)
+		}
+	}
 
 	// Cache both successes and failures, but not cancellations.
 	if !errors.Is(err, context.Canceled) {
@@ -148,6 +155,25 @@ func (ds *FetchDataSource) fetch(ctx context.Context, modulePath, version string
 		}
 	}
 	return nil, fmt.Errorf("%s@%s: %w", modulePath, version, derrors.NotFound)
+}
+
+func (ds *FetchDataSource) populateUnitSubdirectories(u *internal.Unit, m *internal.Module) {
+	p := u.Path + "/"
+	for _, u2 := range m.Units {
+		if strings.HasPrefix(u2.Path, p) {
+			var syn string
+			if len(u2.Documentation) > 0 {
+				syn = u2.Documentation[0].Synopsis
+			}
+			u.Subdirectories = append(u.Subdirectories, &internal.PackageMeta{
+				Path:              u2.Path,
+				Name:              u2.Name,
+				Synopsis:          syn,
+				IsRedistributable: u2.IsRedistributable,
+				Licenses:          u2.Licenses,
+			})
+		}
+	}
 }
 
 // findModule finds the module with longest module path containing the given
