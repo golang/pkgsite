@@ -92,17 +92,19 @@ func main() {
 
 	reportingClient := cmdconfig.ReportingClient(ctx, cfg)
 	redisCacheClient := getCacheRedis(ctx, cfg)
+	redisBetaCacheClient := getBetaCacheRedis(ctx, cfg)
 	experimenter := cmdconfig.Experimenter(ctx, cfg, expg, reportingClient)
 	server, err := worker.NewServer(cfg, worker.ServerConfig{
-		DB:               db,
-		IndexClient:      indexClient,
-		ProxyClient:      proxyClient,
-		SourceClient:     sourceClient,
-		RedisCacheClient: redisCacheClient,
-		Queue:            fetchQueue,
-		ReportingClient:  reportingClient,
-		StaticPath:       template.TrustedSourceFromFlag(flag.Lookup("static").Value),
-		GetExperiments:   experimenter.Experiments,
+		DB:                   db,
+		IndexClient:          indexClient,
+		ProxyClient:          proxyClient,
+		SourceClient:         sourceClient,
+		RedisCacheClient:     redisCacheClient,
+		RedisBetaCacheClient: redisBetaCacheClient,
+		Queue:                fetchQueue,
+		ReportingClient:      reportingClient,
+		StaticPath:           template.TrustedSourceFromFlag(flag.Lookup("static").Value),
+		GetExperiments:       experimenter.Experiments,
 	})
 	if err != nil {
 		log.Fatal(ctx, err)
@@ -155,6 +157,10 @@ func main() {
 
 func getCacheRedis(ctx context.Context, cfg *config.Config) *redis.Client {
 	return getRedis(ctx, cfg.RedisCacheHost, cfg.RedisCachePort, 0, 6*time.Second)
+}
+
+func getBetaCacheRedis(ctx context.Context, cfg *config.Config) *redis.Client {
+	return getRedis(ctx, cfg.RedisBetaCacheHost, cfg.RedisCachePort, 0, 6*time.Second)
 }
 
 func getRedis(ctx context.Context, host, port string, writeTimeout, readTimeout time.Duration) *redis.Client {

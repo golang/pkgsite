@@ -48,6 +48,7 @@ type Server struct {
 	proxyClient     *proxy.Client
 	sourceClient    *source.Client
 	cache           *cache.Cache
+	betaCache       *cache.Cache
 	db              *postgres.DB
 	queue           queue.Queue
 	reportingClient *errorreporting.Client
@@ -60,15 +61,16 @@ type Server struct {
 
 // ServerConfig contains everything needed by a Server.
 type ServerConfig struct {
-	DB               *postgres.DB
-	IndexClient      *index.Client
-	ProxyClient      *proxy.Client
-	SourceClient     *source.Client
-	RedisCacheClient *redis.Client
-	Queue            queue.Queue
-	ReportingClient  *errorreporting.Client
-	StaticPath       template.TrustedSource
-	GetExperiments   func() []*internal.Experiment
+	DB                   *postgres.DB
+	IndexClient          *index.Client
+	ProxyClient          *proxy.Client
+	SourceClient         *source.Client
+	RedisCacheClient     *redis.Client
+	RedisBetaCacheClient *redis.Client
+	Queue                queue.Queue
+	ReportingClient      *errorreporting.Client
+	StaticPath           template.TrustedSource
+	GetExperiments       func() []*internal.Experiment
 }
 
 const (
@@ -98,6 +100,10 @@ func NewServer(cfg *config.Config, scfg ServerConfig) (_ *Server, err error) {
 	if scfg.RedisCacheClient != nil {
 		c = cache.New(scfg.RedisCacheClient)
 	}
+	var bc *cache.Cache
+	if scfg.RedisBetaCacheClient != nil {
+		bc = cache.New(scfg.RedisBetaCacheClient)
+	}
 
 	// Update information about DB locks, etc. every few seconds.
 	p := poller.New(&postgres.UserInfo{}, func(ctx context.Context) (interface{}, error) {
@@ -112,6 +118,7 @@ func NewServer(cfg *config.Config, scfg ServerConfig) (_ *Server, err error) {
 		proxyClient:     scfg.ProxyClient,
 		sourceClient:    scfg.SourceClient,
 		cache:           c,
+		betaCache:       bc,
 		queue:           scfg.Queue,
 		reportingClient: scfg.ReportingClient,
 		templates:       templates,
@@ -213,7 +220,10 @@ func (s *Server) Install(handle func(string, http.Handler)) {
 	handle("/repopulate-search-documents", rmw(s.errorHandler(s.handleRepopulateSearchDocuments)))
 
 	// manual: clear-cache clears the redis cache.
-	handle("/clear-cache", rmw(s.errorHandler(s.clearCache)))
+	handle("/clear-cache", rmw(s.clearCache(s.cache)))
+
+	// manual: clear-beta-cache clears the redis beta cache.
+	handle("/clear-beta-cache", rmw(s.clearCache(s.betaCache)))
 
 	// manual: delete the specified module version.
 	handle("/delete/", http.StripPrefix("/delete", rmw(s.errorHandler(s.handleDelete))))
@@ -620,15 +630,17 @@ func (s *Server) handleReprocess(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-func (s *Server) clearCache(w http.ResponseWriter, r *http.Request) error {
-	if s.cache == nil {
-		return errors.New("redis cache client is not configured")
-	}
-	if err := s.cache.Clear(r.Context()); err != nil {
-		return err
-	}
-	fmt.Fprint(w, "Cache cleared.")
-	return nil
+func (s *Server) clearCache(cache *cache.Cache) http.HandlerFunc {
+	return s.errorHandler(func(w http.ResponseWriter, r *http.Request) error {
+		if cache == nil {
+			return errors.New("redis cache client is not configured")
+		}
+		if err := cache.Clear(r.Context()); err != nil {
+			return err
+		}
+		fmt.Fprint(w, "Cache cleared.")
+		return nil
+	})
 }
 
 // handleDelete deletes the specified module version.

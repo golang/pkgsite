@@ -164,7 +164,7 @@ type Config struct {
 	DBPassword                               string `json:"-"`
 
 	// Configuration for redis page cache.
-	RedisCacheHost, RedisCachePort string
+	RedisCacheHost, RedisBetaCacheHost, RedisCachePort string
 
 	// UseProfiler specifies whether to enable Stackdriver Profiler.
 	UseProfiler bool
@@ -386,6 +386,7 @@ func Init(ctx context.Context) (_ *Config, err error) {
 		DBName:               GetEnv("GO_DISCOVERY_DATABASE_NAME", "discovery-db"),
 		DBSecret:             os.Getenv("GO_DISCOVERY_DATABASE_SECRET"),
 		RedisCacheHost:       os.Getenv("GO_DISCOVERY_REDIS_HOST"),
+		RedisBetaCacheHost:   os.Getenv("GO_DISCOVERY_REDIS_BETA_HOST"),
 		RedisCachePort:       GetEnv("GO_DISCOVERY_REDIS_PORT", "6379"),
 		Quota: QuotaSettings{
 			Enable:     os.Getenv("GO_DISCOVERY_ENABLE_QUOTA") == "true",
