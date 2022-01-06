@@ -31,6 +31,11 @@ main() {
   local tok=$(private/devtools/idtoken.sh $env)
   local hdr="Authorization: Bearer $tok"
   # Clear the redis cache
+  if [[ $env != "beta" ]]; then
+    runcmd curl -H "$hdr" $(worker_url $env)/clear-cache
+  else
+    # TODO: Clear the beta cache.
+  fi
   runcmd curl -H "$hdr" $(worker_url $env)/clear-cache
   runcmd private/devtools/warmups.sh $env $tok
 }
