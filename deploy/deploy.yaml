@@ -49,16 +49,14 @@ steps:
       - deploy/frontend.sh staging gcr.io/$PROJECT_ID/frontend:$(cat _BUILD_TAG)
   - id: Pagecheck - staging
     name: golang:1.17.3
-    entrypoint: sh
+    entrypoint:  deploy/pagecheck.sh
     args:
-      - -c
-      - private/devtools/pagecheck.sh -idtok $(cat _ID_TOKEN) staging
+      - staging
   - id: e2e - staging
     name: gcr.io/$PROJECT_ID/docker-compose
-    entrypoint: sh
+    entrypoint: deploy/e2e.sh
     args:
-      - -c
-      - deploy/e2e.sh staging $(cat _ID_TOKEN)
+      - staging
     env:
       - QUOTA_BYPASS=$_QUOTA_BYPASS
   - id: Config - prod
@@ -80,10 +78,9 @@ steps:
       - deploy/frontend.sh prod gcr.io/$PROJECT_ID/frontend:$(cat _BUILD_TAG)
   - id: Pagecheck - prod
     name: golang:1.17.3
-    entrypoint: sh
+    entrypoint:  deploy/pagecheck.sh
     args:
-      - -c
-      - private/devtools/pagecheck.sh -idtok $(cat _ID_TOKEN) prod
+      - prod
   - id: Frontend - beta
     name: gcr.io/cloud-builders/gcloud
     entrypoint: sh
@@ -92,7 +89,6 @@ steps:
       - deploy/frontend.sh beta gcr.io/$PROJECT_ID/frontend:$(cat _BUILD_TAG)
   - id: Pagecheck - beta
     name: golang:1.17.3
-    entrypoint: sh
+    entrypoint:  deploy/pagecheck.sh
     args:
-      - -c
-      - private/devtools/pagecheck.sh -idtok $(cat _ID_TOKEN) beta
+      - beta

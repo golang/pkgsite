@@ -49,7 +49,6 @@ steps:
       - deploy/frontend.sh $_ENV gcr.io/$PROJECT_ID/frontend:$(cat _BUILD_TAG)
   - id: Pagecheck
     name: golang:1.17.3
-    entrypoint: sh
+    entrypoint: deploy/pagecheck.sh
     args:
-      - -c
-      - private/devtools/pagecheck.sh -idtok $(cat _ID_TOKEN) $_ENV
+      - $_ENV

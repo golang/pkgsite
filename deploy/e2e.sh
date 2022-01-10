@@ -23,6 +23,9 @@ main() {
   local env=$1
   local auth_token=$2
   check_env $env
+  if [ -z $auth_token ]; then
+    auth_token=$(cat _ID_TOKEN)
+  fi
   export CI=true
   export PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
   export GO_DISCOVERY_E2E_BASE_URL=$(frontend_url $env)
