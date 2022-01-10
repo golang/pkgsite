@@ -58,10 +58,14 @@ keyboard.on('/', 'focus search', e => {
 // Pressing 'y' changes the browser URL to the canonical URL
 // without triggering a reload.
 keyboard.on('y', 'set canonical url', () => {
-  const canonicalURLPath = document.querySelector<HTMLDivElement>('.js-canonicalURLPath')?.dataset[
+  let canonicalURLPath = document.querySelector<HTMLDivElement>('.js-canonicalURLPath')?.dataset[
     'canonicalUrlPath'
   ];
   if (canonicalURLPath && canonicalURLPath !== '') {
+    const fragment = window.location.hash;
+    if (fragment) {
+      canonicalURLPath += fragment;
+    }
     window.history.replaceState(null, '', canonicalURLPath);
   }
 });
