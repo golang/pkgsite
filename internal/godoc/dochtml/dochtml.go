@@ -25,6 +25,7 @@ import (
 	"github.com/google/safehtml/legacyconversions"
 	"github.com/google/safehtml/template"
 	"github.com/google/safehtml/uncheckedconversions"
+	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/godoc/dochtml/internal/render"
 	"golang.org/x/pkgsite/internal/godoc/internal/doc"
@@ -58,8 +59,9 @@ type RenderOptions struct {
 	SinceVersionFunc func(name string) string
 	// ModInfo optionally specifies information about the module the package
 	// belongs to in order to render module-related documentation.
-	ModInfo *ModuleInfo
-	Limit   int64 // If zero, a default limit of 10 megabytes is used.
+	ModInfo      *ModuleInfo
+	Limit        int64 // If zero, a default limit of 10 megabytes is used.
+	BuildContext internal.BuildContext
 }
 
 // templateData holds the data passed to the HTML templates in this package.
@@ -255,7 +257,11 @@ func renderInfo(ctx context.Context, fset *token.FileSet, p *doc.Package, opt Re
 			if opt.ModInfo != nil {
 				versionedPath = versionedPkgPath(path, opt.ModInfo)
 			}
-			return "/" + versionedPath
+			var search string
+			if opt.BuildContext.GOOS != "" && opt.BuildContext.GOOS != "all" {
+				search = "?GOOS=" + opt.BuildContext.GOOS
+			}
+			return "/" + versionedPath + search
 		},
 		DisableHotlinking: true,
 		EnableCommandTOC:  true,

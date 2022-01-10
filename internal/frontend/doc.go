@@ -21,7 +21,7 @@ import (
 )
 
 func renderDocParts(ctx context.Context, u *internal.Unit, docPkg *godoc.Package,
-	nameToVersion map[string]string) (_ *dochtml.Parts, err error) {
+	nameToVersion map[string]string, bc internal.BuildContext) (_ *dochtml.Parts, err error) {
 	defer derrors.Wrap(&err, "renderDocParts")
 	defer middleware.ElapsedStat(ctx, "renderDocParts")()
 
@@ -36,7 +36,7 @@ func renderDocParts(ctx context.Context, u *internal.Unit, docPkg *godoc.Package
 	} else if u.Path != u.ModulePath {
 		innerPath = u.Path[len(u.ModulePath)+1:]
 	}
-	return docPkg.Render(ctx, innerPath, u.SourceInfo, modInfo, nameToVersion)
+	return docPkg.Render(ctx, innerPath, u.SourceInfo, modInfo, nameToVersion, bc)
 }
 
 // sourceFiles returns the .go files for a package.

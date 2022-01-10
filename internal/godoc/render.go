@@ -142,7 +142,7 @@ func (p *Package) docPackage(innerPath string, modInfo *ModuleInfo) (_ *doc.Pack
 
 // renderOptions returns a RenderOptions for p.
 func (p *Package) renderOptions(innerPath string, sourceInfo *source.Info, modInfo *ModuleInfo,
-	nameToVersion map[string]string) dochtml.RenderOptions {
+	nameToVersion map[string]string, bc internal.BuildContext) dochtml.RenderOptions {
 	sourceLinkFunc := func(n ast.Node) string {
 		if sourceInfo == nil {
 			return ""
@@ -166,6 +166,7 @@ func (p *Package) renderOptions(innerPath string, sourceInfo *source.Info, modIn
 		ModInfo:          modInfo,
 		SinceVersionFunc: sinceVersionFunc(modInfo.ModulePath, nameToVersion),
 		Limit:            int64(MaxDocumentationHTML),
+		BuildContext:     bc,
 	}
 }
 
@@ -214,7 +215,8 @@ func sinceVersionFunc(modulePath string, nameToVersion map[string]string) func(n
 // Render renders the documentation for the package.
 // Rendering destroys p's AST; do not call any methods of p after it returns.
 func (p *Package) Render(ctx context.Context, innerPath string,
-	sourceInfo *source.Info, modInfo *ModuleInfo, nameToVersion map[string]string) (_ *dochtml.Parts, err error) {
+	sourceInfo *source.Info, modInfo *ModuleInfo, nameToVersion map[string]string,
+	bc internal.BuildContext) (_ *dochtml.Parts, err error) {
 	p.renderCalled = true
 
 	d, err := p.docPackage(innerPath, modInfo)
@@ -222,7 +224,7 @@ func (p *Package) Render(ctx context.Context, innerPath string,
 		return nil, err
 	}
 
-	opts := p.renderOptions(innerPath, sourceInfo, modInfo, nameToVersion)
+	opts := p.renderOptions(innerPath, sourceInfo, modInfo, nameToVersion, bc)
 	parts, err := dochtml.Render(ctx, p.Fset, d, opts)
 	if errors.Is(err, ErrTooLarge) {
 		return &dochtml.Parts{Body: template.MustParseAndExecuteToHTML(DocTooLargeReplacement)}, nil
@@ -235,7 +237,8 @@ func (p *Package) Render(ctx context.Context, innerPath string,
 
 // RenderFromUnit is a convenience function that first decodes the source
 // in the unit, which must exist, and then calls Render.
-func RenderFromUnit(ctx context.Context, u *internal.Unit) (_ *dochtml.Parts, err error) {
+func RenderFromUnit(ctx context.Context, u *internal.Unit,
+	bc internal.BuildContext) (_ *dochtml.Parts, err error) {
 	docPkg, err := DecodePackage(u.Documentation[0].Source)
 	if err != nil {
 		return nil, err
@@ -251,5 +254,5 @@ func RenderFromUnit(ctx context.Context, u *internal.Unit) (_ *dochtml.Parts, er
 	} else if u.Path != u.ModulePath {
 		innerPath = u.Path[len(u.ModulePath)+1:]
 	}
-	return docPkg.Render(ctx, innerPath, u.SourceInfo, modInfo, nil)
+	return docPkg.Render(ctx, innerPath, u.SourceInfo, modInfo, nil, bc)
 }

@@ -13,6 +13,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/safehtml/template"
 	"golang.org/x/net/html"
+	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/godoc/dochtml"
 	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/testing/htmlcheck"
@@ -113,7 +114,7 @@ func TestRenderParts_SinceVersion(t *testing.T) {
 		// TF is a method.
 		"T.M": "v1.4.0",
 	}
-	parts, err := p.Render(ctx, "p", si, mi, nameToVersion)
+	parts, err := p.Render(ctx, "p", si, mi, nameToVersion, internal.BuildContext{})
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -159,7 +159,7 @@ func fetchMainDetails(ctx context.Context, ds internal.DataSource, um *internal.
 			return nil, err
 		}
 
-		docParts, err = getHTML(ctx, unit, docPkg, unit.SymbolHistory)
+		docParts, err = getHTML(ctx, unit, docPkg, unit.SymbolHistory, bc)
 		// If err  is ErrTooLarge, then docBody will have an appropriate message.
 		if err != nil && !errors.Is(err, dochtml.ErrTooLarge) {
 			return nil, err
@@ -263,11 +263,11 @@ func readmeContent(ctx context.Context, u *internal.Unit) (_ *Readme, err error)
 const missingDocReplacement = `<p>Documentation is missing.</p>`
 
 func getHTML(ctx context.Context, u *internal.Unit, docPkg *godoc.Package,
-	nameToVersion map[string]string) (_ *dochtml.Parts, err error) {
+	nameToVersion map[string]string, bc internal.BuildContext) (_ *dochtml.Parts, err error) {
 	defer derrors.Wrap(&err, "getHTML(%s)", u.Path)
 
 	if len(u.Documentation[0].Source) > 0 {
-		return renderDocParts(ctx, u, docPkg, nameToVersion)
+		return renderDocParts(ctx, u, docPkg, nameToVersion, bc)
 	}
 	log.Errorf(ctx, "unit %s (%s@%s) missing documentation source", u.Path, u.ModulePath, u.Version)
 	return &dochtml.Parts{Body: template.MustParseAndExecuteToHTML(missingDocReplacement)}, nil
