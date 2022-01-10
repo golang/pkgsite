@@ -28,7 +28,15 @@ Object {
       "role": "link",
     },
     Object {
+      "name": "Docs",
+      "role": "link",
+    },
+    Object {
       "name": "Packages",
+      "role": "link",
+    },
+    Object {
+      "name": "Play",
       "role": "link",
     },
     Object {
@@ -226,7 +234,15 @@ Object {
       "role": "link",
     },
     Object {
+      "name": "Docs",
+      "role": "link",
+    },
+    Object {
       "name": "Packages",
+      "role": "link",
+    },
+    Object {
+      "name": "Play",
       "role": "link",
     },
     Object {
@@ -436,7 +452,15 @@ Object {
       "role": "link",
     },
     Object {
+      "name": "Docs",
+      "role": "link",
+    },
+    Object {
       "name": "Packages",
+      "role": "link",
+    },
+    Object {
+      "name": "Play",
       "role": "link",
     },
     Object {
@@ -626,7 +650,15 @@ Object {
       "role": "link",
     },
     Object {
+      "name": "Docs",
+      "role": "link",
+    },
+    Object {
       "name": "Packages",
+      "role": "link",
+    },
+    Object {
+      "name": "Play",
       "role": "link",
     },
     Object {
@@ -877,7 +909,15 @@ Object {
       "role": "link",
     },
     Object {
+      "name": "Docs",
+      "role": "link",
+    },
+    Object {
       "name": "Packages",
+      "role": "link",
+    },
+    Object {
+      "name": "Play",
       "role": "link",
     },
     Object {
@@ -1531,7 +1571,15 @@ Object {
       "role": "link",
     },
     Object {
+      "name": "Docs",
+      "role": "link",
+    },
+    Object {
       "name": "Packages",
+      "role": "link",
+    },
+    Object {
+      "name": "Play",
       "role": "link",
     },
     Object {
@@ -1783,7 +1831,15 @@ Object {
       "role": "link",
     },
     Object {
+      "name": "Docs",
+      "role": "link",
+    },
+    Object {
       "name": "Packages",
+      "role": "link",
+    },
+    Object {
+      "name": "Play",
       "role": "link",
     },
     Object {
