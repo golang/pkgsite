@@ -5,6 +5,14 @@
  * license that can be found in the LICENSE file.
  */
 
+interface Window {
+  dialogPolyfill?: {
+    registerDialog: (el: HTMLDialogElement) => void;
+  };
+}
+
+declare const window: Window;
+
 /**
  * ModalController registers a dialog element with the polyfill if
  * necessary for the current browser, add adds event listeners to
@@ -12,32 +20,30 @@
  */
 export class ModalController {
   constructor(private el: HTMLDialogElement) {
-    // Only load the dialog polyfill if necessary for the environment.
-    if (!window.HTMLDialogElement && !el.showModal) {
-      import('../../../third_party/dialog-polyfill/dialog-polyfill.esm.js').then(
-        ({ default: polyfill }) => {
-          polyfill.registerDialog(el);
-        }
-      );
+    if (window.dialogPolyfill) {
+      window.dialogPolyfill.registerDialog(el);
     }
-    const id = el.id;
-    const button = document.querySelector<HTMLButtonElement>(`[aria-controls="${id}"]`);
+    this.init();
+  }
+
+  init() {
+    const button = document.querySelector<HTMLButtonElement>(`[aria-controls="${this.el.id}"]`);
     if (button) {
       button.addEventListener('click', () => {
         if (this.el.showModal) {
           this.el.showModal();
         } else {
-          this.el.open = true;
+          this.el.setAttribute('opened', 'true');
         }
-        el.querySelector('input')?.focus();
+        this.el.querySelector('input')?.focus();
       });
     }
-    for (const close of this.el.querySelectorAll<HTMLButtonElement>('[data-modal-close]')) {
-      close.addEventListener('click', () => {
+    for (const btn of this.el.querySelectorAll<HTMLButtonElement>('[data-modal-close]')) {
+      btn.addEventListener('click', () => {
         if (this.el.close) {
           this.el.close();
         } else {
-          this.el.open = false;
+          this.el.removeAttribute('opened');
         }
       });
     }

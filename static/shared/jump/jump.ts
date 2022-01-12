@@ -266,7 +266,7 @@ export function initModals(): void {
       if (jumpFilter) {
         jumpFilter.value = '';
       }
-      jumpDialog?.showModal();
+      jumpDialog?.showModal?.();
       jumpFilter?.focus();
       updateJumpList('');
     })
@@ -274,7 +274,7 @@ export function initModals(): void {
       if (jumpDialog?.open || shortcutsDialog?.open) {
         return;
       }
-      shortcutsDialog?.showModal();
+      shortcutsDialog?.showModal?.();
     });
 
   const jumpOutlineInput = document.querySelector('.js-jumpToInput');
@@ -287,12 +287,12 @@ export function initModals(): void {
       if (jumpDialog?.open || shortcutsDialog?.open) {
         return;
       }
-      jumpDialog?.showModal();
+      jumpDialog?.showModal?.();
       jumpFilter?.focus();
     });
   }
 
   document.querySelector('.js-openShortcuts')?.addEventListener('click', () => {
-    shortcutsDialog?.showModal();
+    shortcutsDialog?.showModal?.();
   });
 }

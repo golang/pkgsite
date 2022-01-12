@@ -47,6 +47,7 @@
         s.defer = true
         document.head.appendChild(s);
       }
+      loadScript("/third_party/dialog-polyfill/dialog-polyfill.js")
       loadScript("/static/frontend/frontend.js");
     </script>
     {{template "header" .}}

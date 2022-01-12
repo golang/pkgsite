@@ -27,11 +27,11 @@ describe('Modal', () => {
   });
 
   it('opens', () => {
-    expect(modal.open).toBeTruthy();
+    expect(modal.getAttribute('opened')).toBeTruthy();
   });
 
   it('closes on cancel', async () => {
     closeButton.click();
-    expect(modal.open).toBeFalsy();
+    expect(modal.getAttribute('opened')).toBeFalsy();
   });
 });
