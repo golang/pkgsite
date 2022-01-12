@@ -324,6 +324,23 @@ func Versions() (_ []string, err error) {
 	var refNames []plumbing.ReferenceName
 	if UseTestData {
 		refNames = testRefs
+	} else if path := getGoRepoPath(); path != "" {
+		repo, err := git.PlainOpen(path)
+		if err != nil {
+			return nil, err
+		}
+		iter, err := repo.References()
+		if err != nil {
+			return nil, err
+		}
+		defer iter.Close()
+		err = iter.ForEach(func(r *plumbing.Reference) error {
+			refNames = append(refNames, r.Name())
+			return nil
+		})
+		if err != nil {
+			return nil, err
+		}
 	} else {
 		refs, err := remoteRefs()
 		if err != nil {
