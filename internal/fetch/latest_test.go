@@ -20,8 +20,7 @@ func TestLatestModuleVersions(t *testing.T) {
 	prox, teardown := proxytest.SetupTestClient(t, testModules)
 	defer teardown()
 
-	stdlib.UseTestData = true
-	defer func() { stdlib.UseTestData = false }()
+	defer stdlib.WithTestData()()
 
 	// These tests (except for std) depend on the test modules, which are taken from the contents
 	// of internal/proxy/testdata/*.txtar.

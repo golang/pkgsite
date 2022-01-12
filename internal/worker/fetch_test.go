@@ -43,8 +43,7 @@ func TestFetchAndUpdateState(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
-	stdlib.UseTestData = true
-	defer func() { stdlib.UseTestData = false }()
+	defer stdlib.WithTestData()()
 
 	proxyClient, teardownProxy := proxytest.SetupTestClient(t, testModules)
 	defer teardownProxy()

@@ -16,7 +16,6 @@ import (
 	"io/fs"
 	"os"
 	"path"
-	"path/filepath"
 	"regexp"
 	"strings"
 	"sync"
@@ -24,16 +23,12 @@ import (
 
 	"golang.org/x/mod/semver"
 	"golang.org/x/pkgsite/internal/derrors"
-	"golang.org/x/pkgsite/internal/testing/testhelper"
 	"golang.org/x/pkgsite/internal/version"
 
-	"github.com/go-git/go-billy/v5/osfs"
 	"github.com/go-git/go-git/v5"
-	"github.com/go-git/go-git/v5/config"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/filemode"
 	"github.com/go-git/go-git/v5/plumbing/object"
-	"github.com/go-git/go-git/v5/storage/memory"
 )
 
 const (
@@ -189,10 +184,6 @@ const (
 	GitHubRepo = "github.com/golang/go"
 )
 
-// UseTestData determines whether to really clone the Go repo, or use
-// stripped-down versions of the repo from the testdata directory.
-var UseTestData = false
-
 // TestCommitTime is the time used for all commits when UseTestData is true.
 var (
 	TestCommitTime     = time.Date(2019, 9, 4, 1, 2, 3, 0, time.UTC)
@@ -201,70 +192,47 @@ var (
 )
 
 var (
-	goRepoPathMu sync.Mutex
-	goRepoPath   string
+	goRepoMu  sync.Mutex
+	theGoRepo goRepo = &remoteGoRepo{}
 )
+
+func getGoRepo() goRepo {
+	goRepoMu.Lock()
+	defer goRepoMu.Unlock()
+	return theGoRepo
+}
+
+func swapGoRepo(gr goRepo) goRepo {
+	goRepoMu.Lock()
+	defer goRepoMu.Unlock()
+	old := theGoRepo
+	theGoRepo = gr
+	return old
+}
+
+// WithTestData arranges for this package to use a testing version of the Go repo.
+// The returned function restores the previous state. Use with defer:
+//   defer WithTestData()()
+func WithTestData() func() {
+	return withGoRepo(&testGoRepo{})
+}
+
+func withGoRepo(gr goRepo) func() {
+	old := swapGoRepo(gr)
+	return func() {
+		swapGoRepo(old)
+	}
+}
 
 // SetGoRepoPath tells this package to obtain the Go repo from the
 // local filesystem at path, instead of cloning it.
-func SetGoRepoPath(path string) {
-	goRepoPathMu.Lock()
-	defer goRepoPathMu.Unlock()
-	goRepoPath = path
-
-}
-
-func getGoRepoPath() string {
-	goRepoPathMu.Lock()
-	defer goRepoPathMu.Unlock()
-	return goRepoPath
-}
-
-// getGoRepo returns a repo object for the Go repo at version.
-func getGoRepo(version string) (_ *git.Repository, _ plumbing.ReferenceName, err error) {
-	defer derrors.Wrap(&err, "getGoRepo(%q)", version)
-	if UseTestData {
-		return getTestGoRepo(version)
-	}
-	if path := getGoRepoPath(); path != "" {
-		return openGoRepo(path, version)
-	}
-	return cloneGoRepo(version)
-}
-
-// cloneGoRepo returns a repo object for the Go repo at version by cloning the
-// Go repo.
-func cloneGoRepo(v string) (_ *git.Repository, ref plumbing.ReferenceName, err error) {
-	defer derrors.Wrap(&err, "cloneGoRepo(%q)", v)
-
-	ref, err = refNameForVersion(v)
+func SetGoRepoPath(path string) error {
+	gr, err := newLocalGoRepo(path)
 	if err != nil {
-		return nil, "", err
+		return err
 	}
-	repo, err := git.Clone(memory.NewStorage(), nil, &git.CloneOptions{
-		URL:           GoRepoURL,
-		ReferenceName: ref,
-		SingleBranch:  true,
-		Depth:         1,
-		Tags:          git.NoTags,
-	})
-	if err != nil {
-		return nil, "", err
-	}
-	return repo, ref, nil
-}
-
-func openGoRepo(path, v string) (_ *git.Repository, _ plumbing.ReferenceName, err error) {
-	defer derrors.Wrap(&err, "openGoRepo(%q)", v)
-	repo, err := git.PlainOpen(path)
-	if err != nil {
-		return nil, "", err
-	}
-	ref, err := refNameForVersion(v)
-	if err != nil {
-		return nil, "", err
-	}
-	return repo, ref, nil
+	swapGoRepo(gr)
+	return nil
 }
 
 func refNameForVersion(v string) (plumbing.ReferenceName, error) {
@@ -281,39 +249,6 @@ func refNameForVersion(v string) (plumbing.ReferenceName, error) {
 	return plumbing.NewTagReferenceName(tag), nil
 }
 
-// getTestGoRepo gets a Go repo for testing.
-func getTestGoRepo(v string) (_ *git.Repository, _ plumbing.ReferenceName, err error) {
-	defer derrors.Wrap(&err, "getTestGoRepo(%q)", v)
-	if v == TestMasterVersion {
-		v = version.Master
-	}
-	if v == TestDevFuzzVersion {
-		v = DevFuzz
-	}
-	fs := osfs.New(filepath.Join(testhelper.TestDataPath("testdata"), v))
-	repo, err := git.Init(memory.NewStorage(), fs)
-	if err != nil {
-		return nil, "", fmt.Errorf("git.Initi: %v", err)
-	}
-	wt, err := repo.Worktree()
-	if err != nil {
-		return nil, "", fmt.Errorf("repo.Worktree: %v", err)
-	}
-	// Add all files in the directory.
-	if _, err := wt.Add(""); err != nil {
-		return nil, "", fmt.Errorf("wt.Add(): %v", err)
-	}
-	_, err = wt.Commit("", &git.CommitOptions{All: true, Author: &object.Signature{
-		Name:  "Joe Random",
-		Email: "joe@example.com",
-		When:  TestCommitTime,
-	}})
-	if err != nil {
-		return nil, "", fmt.Errorf("wt.Commit: %v", err)
-	}
-	return repo, plumbing.HEAD, nil
-}
-
 // Versions returns all the versions of Go that are relevant to the discovery
 // site. These are all release versions (tags of the forms "goN.N" and
 // "goN.N.N", where N is a number) and beta or rc versions (tags of the forms
@@ -321,39 +256,13 @@ func getTestGoRepo(v string) (_ *git.Repository, _ plumbing.ReferenceName, err e
 func Versions() (_ []string, err error) {
 	defer derrors.Wrap(&err, "stdlib.Versions()")
 
-	var refNames []plumbing.ReferenceName
-	if UseTestData {
-		refNames = testRefs
-	} else if path := getGoRepoPath(); path != "" {
-		repo, err := git.PlainOpen(path)
-		if err != nil {
-			return nil, err
-		}
-		iter, err := repo.References()
-		if err != nil {
-			return nil, err
-		}
-		defer iter.Close()
-		err = iter.ForEach(func(r *plumbing.Reference) error {
-			refNames = append(refNames, r.Name())
-			return nil
-		})
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		refs, err := remoteRefs()
-		if err != nil {
-			return nil, err
-		}
-		for _, r := range refs {
-			refNames = append(refNames, r.Name())
-		}
+	refs, err := getGoRepo().refs()
+	if err != nil {
+		return nil, err
 	}
-
 	var versions []string
-	for _, name := range refNames {
-		v := VersionForTag(name.Short())
+	for _, r := range refs {
+		v := VersionForTag(r.Name().Short())
 		if v != "" {
 			versions = append(versions, v)
 		}
@@ -366,7 +275,7 @@ func Versions() (_ []string, err error) {
 func ResolveSupportedBranches() (_ map[string]string, err error) {
 	defer derrors.Wrap(&err, "ResolveSupportedBranches")
 
-	refs, err := remoteRefs()
+	refs, err := getGoRepo().refs()
 	if err != nil {
 		return nil, err
 	}
@@ -378,15 +287,6 @@ func ResolveSupportedBranches() (_ map[string]string, err error) {
 		}
 	}
 	return m, nil
-}
-
-func remoteRefs() (_ []*plumbing.Reference, err error) {
-	defer derrors.Wrap(&err, "remoteRefs")
-
-	re := git.NewRemote(memory.NewStorage(), &config.RemoteConfig{
-		URLs: []string{GoRepoURL},
-	})
-	return re.List(&git.ListOptions{})
 }
 
 // Directory returns the directory of the standard library relative to the repo root.
@@ -415,13 +315,13 @@ func ZipInfo(requestedVersion string) (resolvedVersion string, err error) {
 }
 
 func zipInternal(requestedVersion string) (_ *zip.Reader, resolvedVersion string, commitTime time.Time, prefix string, err error) {
-	if !UseTestData && requestedVersion == version.Latest {
+	if requestedVersion == version.Latest {
 		requestedVersion, err = semanticVersion(requestedVersion)
 		if err != nil {
 			return nil, "", time.Time{}, "", err
 		}
 	}
-	repo, refName, err := getGoRepo(requestedVersion)
+	repo, refName, err := getGoRepo().repoAtVersion(requestedVersion)
 	if err != nil {
 		return nil, "", time.Time{}, "", err
 	}
@@ -651,33 +551,4 @@ func Contains(path string) bool {
 		path = path[:i]
 	}
 	return !strings.Contains(path, ".")
-}
-
-// References used for Versions during testing.
-var testRefs = []plumbing.ReferenceName{
-	// stdlib versions
-	"refs/tags/go1.2.1",
-	"refs/tags/go1.3.2",
-	"refs/tags/go1.4.2",
-	"refs/tags/go1.4.3",
-	"refs/tags/go1.6",
-	"refs/tags/go1.6.3",
-	"refs/tags/go1.6beta1",
-	"refs/tags/go1.8",
-	"refs/tags/go1.8rc2",
-	"refs/tags/go1.9rc1",
-	"refs/tags/go1.11",
-	"refs/tags/go1.12",
-	"refs/tags/go1.12.1",
-	"refs/tags/go1.12.5",
-	"refs/tags/go1.12.9",
-	"refs/tags/go1.13",
-	"refs/tags/go1.13beta1",
-	"refs/tags/go1.14.6",
-	"refs/heads/dev.fuzz",
-	"refs/heads/master",
-	// other tags
-	"refs/changes/56/93156/13",
-	"refs/tags/release.r59",
-	"refs/tags/weekly.2011-04-13",
 }

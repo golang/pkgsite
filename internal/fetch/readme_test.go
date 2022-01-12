@@ -17,7 +17,7 @@ import (
 )
 
 func TestExtractReadmes(t *testing.T) {
-	stdlib.UseTestData = true
+	defer stdlib.WithTestData()()
 
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()

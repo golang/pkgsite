@@ -48,7 +48,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestFetchModule(t *testing.T) {
-	stdlib.UseTestData = true
+	defer stdlib.WithTestData()()
 
 	// Stub out the function used to share playground snippets
 	origPost := httpPost

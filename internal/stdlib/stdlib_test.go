@@ -124,8 +124,7 @@ func TestMajorVersionForVersion(t *testing.T) {
 }
 
 func TestContentDir(t *testing.T) {
-	UseTestData = true
-	defer func() { UseTestData = false }()
+	defer WithTestData()()
 	for _, resolvedVersion := range []string{
 		"v1.3.2",
 		"v1.12.5",
@@ -154,10 +153,6 @@ func TestContentDir(t *testing.T) {
 }
 
 func TestContentDirCloneAndOpen(t *testing.T) {
-	if !*clone && *repoPath == "" {
-		t.Skip("-clone and -path not supplied")
-	}
-
 	run := func(t *testing.T) {
 		for _, resolvedVersion := range []string{
 			"v1.3.2",
@@ -175,13 +170,24 @@ func TestContentDirCloneAndOpen(t *testing.T) {
 		}
 	}
 
-	if *clone {
-		t.Run("clone", run)
-	}
-	if *repoPath != "" {
-		SetGoRepoPath(*repoPath)
-		t.Run("open", run)
-	}
+	t.Run("clone", func(t *testing.T) {
+		if !*clone {
+			t.Skip("-clone not supplied")
+		}
+		defer withGoRepo(&remoteGoRepo{})()
+		run(t)
+	})
+	t.Run("local", func(t *testing.T) {
+		if *repoPath == "" {
+			t.Skip("-path not supplied")
+		}
+		lgr, err := newLocalGoRepo(*repoPath)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer withGoRepo(lgr)()
+		run(t)
+	})
 }
 
 func checkContentDirFiles(t *testing.T, cdir fs.FS, resolvedVersion string) {
@@ -219,8 +225,7 @@ func checkContentDirFiles(t *testing.T, cdir fs.FS, resolvedVersion string) {
 }
 
 func TestZipInfo(t *testing.T) {
-	UseTestData = true
-	defer func() { UseTestData = false }()
+	defer WithTestData()()
 
 	for _, tc := range []struct {
 		requestedVersion string
@@ -246,28 +251,51 @@ func TestZipInfo(t *testing.T) {
 }
 
 func TestVersions(t *testing.T) {
-	UseTestData = true
-	defer func() { UseTestData = false }()
+	testVersions := func(wants []string) {
+		got, err := Versions()
+		if err != nil {
+			t.Fatal(err)
+		}
+		gotmap := map[string]bool{}
+		for _, g := range got {
+			gotmap[g] = true
+		}
+		for _, w := range wants {
+			if !gotmap[w] {
+				t.Errorf("missing %s", w)
+			}
+		}
+	}
 
-	got, err := Versions()
-	if err != nil {
-		t.Fatal(err)
-	}
-	gotmap := map[string]bool{}
-	for _, g := range got {
-		gotmap[g] = true
-	}
-	wants := []string{
+	commonWants := []string{
 		"v1.4.2",
 		"v1.9.0-rc.1",
 		"v1.11.0",
 		"v1.13.0-beta.1",
 	}
-	for _, w := range wants {
-		if !gotmap[w] {
-			t.Errorf("missing %s", w)
+	otherWants := append([]string{"v1.17.6"}, commonWants...)
+	t.Run("test", func(t *testing.T) {
+		defer WithTestData()()
+		testVersions(commonWants)
+	})
+	t.Run("local", func(t *testing.T) {
+		if *repoPath == "" {
+			t.Skip("-path not supplied")
 		}
-	}
+		lgr, err := newLocalGoRepo(*repoPath)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer withGoRepo(lgr)()
+		testVersions(otherWants)
+	})
+	t.Run("remote", func(t *testing.T) {
+		if !*clone {
+			t.Skip("-clone not supplied")
+		}
+		defer withGoRepo(&remoteGoRepo{})()
+		testVersions(otherWants)
+	})
 }
 
 func TestVersionForTag(t *testing.T) {
