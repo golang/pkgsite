@@ -40,6 +40,10 @@ const readmeExpand = document.querySelectorAll('.js-readmeExpand');
 const readmeCollapse = document.querySelector('.js-readmeCollapse');
 const mobileNavSelect = document.querySelector<HTMLSelectElement>('.DocNavMobile-select');
 if (readme && readmeContent && readmeOutline && readmeExpand.length && readmeCollapse) {
+  if (readme.clientHeight > 320) {
+    readme?.classList.remove('UnitReadme--expanded');
+    readme?.classList.add('UnitReadme--toggle');
+  }
   if (window.location.hash.includes('readme')) {
     expandReadme();
   }

@@ -58,10 +58,13 @@
   max-height: initial;
   overflow: initial;
 }
+.UnitReadme--toggle .UnitReadme-expandLink {
+  display: block;
+}
 .UnitReadme--expanded .UnitReadme-expandLink {
   display: none;
 }
-.UnitReadme--expanded .UnitReadme-collapseLink {
+.UnitReadme--expanded.UnitReadme--toggle .UnitReadme-collapseLink {
   display: block;
 }
 
