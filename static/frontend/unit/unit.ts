@@ -6,7 +6,6 @@
  */
 
 const headerHeight = 3.5;
-const breadcumbHeight = 2.5;
 
 /**
  * MainLayoutController calculates dynamic height values for header elements
@@ -36,7 +35,7 @@ export class MainLayoutController {
           this.handleResize();
         }
       },
-      { threshold: 1, rootMargin: `${breadcumbHeight * 16}px` }
+      { threshold: 1, rootMargin: `${headerHeight * 16}px` }
     );
     this.navObserver = new IntersectionObserver(
       ([e]) => {
@@ -70,7 +69,7 @@ export class MainLayoutController {
     const siteHeader = document.querySelector('.js-siteHeader');
     if (this.mainHeader?.hasChildNodes() && siteHeader) {
       const headerSentinel = document.createElement('div');
-      siteHeader.append(headerSentinel);
+      siteHeader.prepend(headerSentinel);
       this.headerObserver.observe(headerSentinel);
     }
     if (this.mainNav?.hasChildNodes()) {

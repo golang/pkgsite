@@ -181,7 +181,6 @@
 }
 .go-Main-nav--fixed {
   border-top: initial;
-  box-shadow: var(--box-shadow);
 }
 
 .go-Main-navDesktop {
@@ -242,9 +241,6 @@
     border-bottom: none;
     border-top: none;
     padding: 0 0 0 var(--gutter);
-  }
-  :root:not([data-layout='stacked']) .go-Main-header[data-raised] {
-    box-shadow: var(--box-shadow);
   }
   :root[data-layout='responsive'] .go-Main-article {
     border-bottom: none;
