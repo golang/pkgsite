@@ -30,13 +30,14 @@ main() {
   runcmd gcloud run services update-traffic $env-frontend --to-latest --region us-central1
   local tok=$(private/devtools/idtoken.sh $env)
   local hdr="Authorization: Bearer $tok"
-  # Clear the redis cache
+  info "Clearing the redis cache."
   if [[ $env == "beta" ]]; then
-    runcmd curl -H "$hdr" $(worker_url prod)/clear-beta-cache
+    curl -H "$hdr" $(worker_url prod)/clear-beta-cache
   else
-    runcmd curl -H "$hdr" $(worker_url $env)/clear-cache
+    curl -H "$hdr" $(worker_url $env)/clear-cache
   fi
-  runcmd private/devtools/warmups.sh $env $tok
+  info "Running warmups."
+  private/devtools/warmups.sh $env $tok
 }
 
 main $@
