@@ -12,3 +12,5 @@ rules:
   order/properties-alphabetical-order: true
   unit-disallowed-list:
     - 'px'
+  selector-class-pattern: null
+  # rule-empty-line-before: null

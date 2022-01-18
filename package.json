@@ -35,12 +35,12 @@
     "postcss": "^8.3.2",
     "prettier": "2.1.2",
     "puppeteer": "10.1.0",
-    "stylelint": "13.8.0",
-    "stylelint-config-prettier": "8.0.2",
-    "stylelint-config-recommended": "3.0.0",
-    "stylelint-config-standard": "20.0.0",
-    "stylelint-order": "4.1.0",
-    "stylelint-prettier": "1.1.2",
+    "stylelint": "^14.2.0",
+    "stylelint-config-prettier": "9.0.3",
+    "stylelint-config-recommended": "6.0.0",
+    "stylelint-config-standard": "24.0.0",
+    "stylelint-order": "5.0.0",
+    "stylelint-prettier": "2.0.0",
     "ts-jest": "^27.0.7",
     "typescript": "4.0.3"
   }

@@ -8,17 +8,21 @@
   height: 12rem;
   overflow-y: auto;
 }
+
 .JumpDialog-list {
   display: flex;
   flex-direction: column;
 }
+
 .JumpDialog-input {
   width: 100%;
 }
+
 .JumpDialog a {
   padding: 0.25rem;
   text-decoration: none;
 }
+
 .JumpDialog .JumpDialog-active {
   background-color: var(--color-brand-primary);
   color: var(--white);
@@ -27,6 +31,7 @@
 .ShortcutsDialog-key {
   text-align: right;
 }
+
 .ShortcutsDialog table {
   padding: 0 1rem;
 }
@@ -39,12 +44,15 @@
 .ShortcutsDialog-theme span {
   display: none;
 }
+
 [data-theme='light'] .ShortcutsDialog-themeLight {
   display: initial;
 }
+
 [data-theme='dark'] .ShortcutsDialog-themeDark {
   display: initial;
 }
+
 [data-theme=''] .ShortcutsDialog-themeAuto,
 [data-theme='auto'] .ShortcutsDialog-themeAuto {
   display: initial;
