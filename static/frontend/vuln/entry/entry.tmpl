@@ -43,7 +43,11 @@
         {{range .Affected}}
           <tr>
             <td><a href="/{{.Package.Name}}">{{.Package.Name}}</a></td>
-            <td>{{range .Ranges}}{{range .Events}}<div>{{.Introduced}}</div>{{end}}{{end}}</td>
+            <td>
+              {{range .Ranges}}{{range .Events}}
+                <div>{{if not (eq .Introduced "0")}}{{.Introduced}}{{end}}</div>
+              {{end}}{{end}}
+            </td>
             <td>{{range .Ranges}}{{range .Events}}<div>{{.Fixed}}</div>{{end}}{{end}}</td>
           </tr>
         {{end}}
