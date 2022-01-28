@@ -134,6 +134,8 @@ services:
       POSTGRES_DB: ${GO_DISCOVERY_DATABASE_NAME:-discovery-db}
       POSTGRES_PASSWORD: ${GO_DISCOVERY_DATABASE_PASSWORD:-postgres}
       POSTGRES_USER: ${GO_DISCOVERY_DATABASE_USER:-postgres}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
   nodejs:
     image: node:14.17.0
     environment:
@@ -153,6 +155,10 @@ services:
     image: browserless/chrome:1.46.0-puppeteer-10.1.0
     environment:
       - CONNECTION_TIMEOUT=240000
+  chromedp:
+    # This should match the version we are using in tests/screentest/run.sh.
+    image: chromedp/headless-shell:97.0.4692.71
+    shm_size: 8G
   go:
      # This should match the version we are using on AppEngine.
     image: golang:1.16.7
@@ -166,3 +172,4 @@ services:
     working_dir: /pkgsite
 volumes:
   gomodcache:
+  pgdata:
