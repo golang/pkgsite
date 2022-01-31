@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"net/http"
 	"path"
+	"regexp"
 	"sort"
 	"strings"
 	"sync"
@@ -303,16 +304,26 @@ func newSearchResult(r *postgres.SearchResult, searchSymbols bool, pr *message.P
 	return sr
 }
 
+// A regexp that matches Go vuln IDs.
+var goVulnIDRegexp = regexp.MustCompile("^GO-[0-9]{4}-[0-9]{4}$")
+
 // searchRequestRedirectPath returns the path that a search request should be
-// redirected to, or the empty string if there is no such path. If the user
-// types an existing package path into the search bar, we will redirect the
-// user to the details page. Standard library packages that only contain one
-// element (such as fmt, errors, etc.) will not redirect, to allow users to
-// search by those terms.
+// redirected to, or the empty string if there is no such path.
+//
+// If the user types an existing package path into the search bar, we will
+// redirect the user to the details page. Standard library packages that only
+// contain one element (such as fmt, errors, etc.) will not redirect, to allow
+// users to search by those terms.
+//
+// If the user types a name that is in the form of a Go vulnerability ID, we will
+// redirect to the page for that ID (whether or not it exists).
 func searchRequestRedirectPath(ctx context.Context, ds internal.DataSource, query string) string {
 	urlSchemeIdx := strings.Index(query, "://")
 	if urlSchemeIdx > -1 {
 		query = query[urlSchemeIdx+3:]
+	}
+	if goVulnIDRegexp.MatchString(query) {
+		return fmt.Sprintf("/vuln/%s", query)
 	}
 	requestedPath := path.Clean(query)
 	if !strings.Contains(requestedPath, "/") {

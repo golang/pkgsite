@@ -378,6 +378,8 @@ func TestSearchRequestRedirectPath(t *testing.T) {
 		{"std does not redirect", "std", ""},
 		{"non-existent path does not redirect", "github.com/non-existent", ""},
 		{"trim URL scheme from query", "https://golang.org/x/tools", "/golang.org/x/tools"},
+		{"Go vuln redirects", "GO-1969-0720", "/vuln/GO-1969-0720"},
+		{"not a Go vuln", "somepkg/GO-1969-0720", ""},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			if got := searchRequestRedirectPath(ctx, testDB, test.query); got != test.want {
