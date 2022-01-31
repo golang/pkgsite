@@ -67,22 +67,6 @@ services:
     volumes:
       - ../../:/pkgsite
     working_dir: /pkgsite
-  e2e:
-    image: node:14.17.0
-    depends_on:
-      - chrome
-      - frontend
-    environment:
-      # CI is used for cleaner log output from jest and npm install
-      - CI=true
-      - GO_DISCOVERY_E2E_BASE_URL=http://frontend:8080
-      - GO_DISCOVERY_E2E_CHROME_URL=ws://chrome:${GO_DISCOVERY_E2E_TEST_PORT:-3000}
-      - WAITFORIT_TIMEOUT=300
-    entrypoint: ./third_party/wait-for-it/wait-for-it.sh frontend:8080 -- npx jest
-    command: e2e
-    volumes:
-      - ../../:/pkgsite
-    working_dir: /pkgsite
   frontend:
      # This should match the version we are using on AppEngine.
     image: golang:1.16.7
@@ -151,10 +135,6 @@ services:
     volumes:
       - ../../:/pkgsite
     working_dir: /pkgsite
-  chrome:
-    image: browserless/chrome:1.46.0-puppeteer-10.1.0
-    environment:
-      - CONNECTION_TIMEOUT=240000
   chromedp:
     # This should match the version we are using in tests/screentest/run.sh.
     image: chromedp/headless-shell:97.0.4692.71

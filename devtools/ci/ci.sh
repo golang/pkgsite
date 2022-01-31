@@ -102,13 +102,7 @@ print_duration_and_reset
 echo "----------------------------------------"
 echo "Running screentest"
 echo "----------------------------------------"
-./tests/screentest/run.sh --seeddb ci
-print_duration_and_reset
-
-echo "----------------------------------------"
-echo "Running e2e tests"
-echo "----------------------------------------"
-./tests/e2e/run.sh
+./tests/screentest/run.sh --rm --seeddb ci
 print_duration_and_reset
 
 echo "----------------------------------------"

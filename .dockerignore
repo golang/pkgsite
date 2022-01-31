@@ -7,7 +7,5 @@ private
 # ...except for the config and sitemap directories.
 !private/config
 !private/sitemap
-# Exclude e2e tests.
-e2e
 # Exclude devtools config.
 devtools/config
