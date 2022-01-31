@@ -58,13 +58,13 @@ func TestVulnsForPackage(t *testing.T) {
 }
 
 var testEntries = []*osv.Entry{
-	{ID: "one", Details: "a"},
-	{ID: "two", Details: "b"},
-	{ID: "three", Details: "c"},
-	{ID: "four", Details: "d"},
-	{ID: "five", Details: "e"},
-	{ID: "six", Details: "f"},
-	{ID: "seven", Details: "g"},
+	{ID: "GO-1990-01", Details: "a"},
+	{ID: "GO-1990-02", Details: "b"},
+	{ID: "GO-1990-10", Details: "c"},
+	{ID: "GO-1991-01", Details: "d"},
+	{ID: "GO-1991-05", Details: "e"},
+	{ID: "GO-1991-23", Details: "f"},
+	{ID: "GO-1991-30", Details: "g"},
 }
 
 func TestNewVulnListPage(t *testing.T) {
@@ -73,8 +73,12 @@ func TestNewVulnListPage(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	// testEntries is already sorted by ID.
-	want := &VulnListPage{Entries: testEntries}
+	// testEntries is already sorted by ID, but it should be reversed.
+	var wantEntries []*osv.Entry
+	for i := len(testEntries) - 1; i >= 0; i-- {
+		wantEntries = append(wantEntries, testEntries[i])
+	}
+	want := &VulnListPage{Entries: wantEntries}
 	if diff := cmp.Diff(want, got, cmpopts.IgnoreUnexported(VulnListPage{})); diff != "" {
 		t.Errorf("mismatch (-want, +got):\n%s", diff)
 	}
@@ -82,7 +86,7 @@ func TestNewVulnListPage(t *testing.T) {
 
 func TestNewVulnPage(t *testing.T) {
 	c := &vulndbTestClient{entries: testEntries}
-	got, err := newVulnPage(c, "two")
+	got, err := newVulnPage(c, "GO-1990-02")
 	if err != nil {
 		t.Fatal(err)
 	}

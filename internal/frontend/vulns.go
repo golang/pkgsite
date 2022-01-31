@@ -7,6 +7,7 @@ package frontend
 import (
 	"fmt"
 	"net/http"
+	"sort"
 
 	"golang.org/x/mod/semver"
 	"golang.org/x/pkgsite/internal"
@@ -145,6 +146,9 @@ func newVulnListPage(client vulnc.Client) (*VulnListPage, error) {
 	if err != nil {
 		return nil, err
 	}
+	// Sort from most to least recent.
+	sort.Slice(ids, func(i, j int) bool { return ids[i] > ids[j] })
+
 	entries := make([]*osv.Entry, len(ids))
 	sem := make(chan struct{}, concurrency)
 	var g errgroup.Group
