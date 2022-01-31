@@ -52,9 +52,9 @@ steps:
     entrypoint:  deploy/pagecheck.sh
     args:
       - staging
-  - id: e2e - staging
+  - id: screentest - staging
     name: gcr.io/$PROJECT_ID/docker-compose
-    entrypoint: deploy/e2e.sh
+    entrypoint: deploy/screentest.sh
     args:
       - staging
     env:
