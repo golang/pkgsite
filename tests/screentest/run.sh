@@ -19,9 +19,8 @@ Usage: $0 [OPTIONS] [ci|local|exp|dev|staging|prod]
     CI/kokoro and should always pass on master.
 
   [local]
-    Run tests against a local server started with ./devtools/run_local.sh staging
-    frontend. Use to update the staging snapshots to match changes on master
-    before a deploy.
+    Run tests against a local server started with ./devtools/run_local.sh <env>
+    frontend.
 
   [exp|dev|staging|prod]
     Run the tests against live instance of the given env. Use to verify that there
@@ -122,9 +121,6 @@ main() {
       usage
       ;;
   esac
-  if [[ "$update" = -u && "$env" != local ]]; then
-    die "The --update flag should only be used on localhost."
-  fi
 
   local testfile="tests/screentest/testcases.txt"
   local cmd="screentest $concurrency $debugger_url $vars $update $testfile"

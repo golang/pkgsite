@@ -1,5 +1,5 @@
 windowsize 1536x960
-compare http://localhost:8080::cache {{.Origin}}
+compare {{.Origin}}::cache {{.Origin}}
 {{with .Token}}header Authorization: Bearer {{.}}{{end}}
 {{with .QuotaBypass}}header X-Go-Discovery-Auth-Bypass-Quota: {{.}}{{end}}
 output tests/screentest/testdata
