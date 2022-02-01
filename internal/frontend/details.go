@@ -36,7 +36,9 @@ func (s *Server) serveDetails(w http.ResponseWriter, r *http.Request, ds interna
 		return nil
 	}
 	if strings.HasSuffix(r.URL.Path, "/") {
-		http.Redirect(w, r, strings.TrimSuffix(r.URL.Path, "/"), http.StatusMovedPermanently)
+		url := *r.URL
+		url.Path = strings.TrimSuffix(r.URL.Path, "/")
+		http.Redirect(w, r, url.String(), http.StatusMovedPermanently)
 		return
 	}
 
