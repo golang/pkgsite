@@ -26,6 +26,11 @@ func (s *Server) handleModuleDetailsRedirect(w http.ResponseWriter, r *http.Requ
 	http.Redirect(w, r, urlPath, http.StatusMovedPermanently)
 }
 
+// handleVulnRedirect redirects /vuln to /vuln/list.
+func (s *Server) handleVulnRedirect(w http.ResponseWriter, r *http.Request) {
+	http.Redirect(w, r, "/vuln/list", http.StatusFound)
+}
+
 // stdlibPathForShortcut returns a path in the stdlib that shortcut should redirect to,
 // or the empty string if there is no such path.
 func stdlibPathForShortcut(ctx context.Context, db *postgres.DB, shortcut string) (path string, err error) {
