@@ -55,18 +55,14 @@ documentation of local modules without requiring a proxy. The command accepts a
 list of comma-separated strings each representing a path of a module to load
 into memory.
 
-### End-to-End (E2E) Tests
+### Screentest
 
 In addition to tests written in Go inside internal/frontend and
-internal/testing/integration, pages on pkg.go.dev may have accessibility tree
-and image snapshot tests. These tests will create diffs for inspection on
-failure. Timeouts and diff thresholds are configurable for image snapshots if
-adjustments are needed to prevent test flakiness. See the
-[API](https://github.com/americanexpress/jest-image-snapshot#%EF%B8%8F-api) for
-jest image snapshots for more information.
+internal/testing/integration, pages on pkg.go.dev may have image snapshot tests.
+These tests will create diffs for inspection on failure.
 
-These tests are in the [tests/e2e/ directory](../tests/e2e). For details, see
-[tests/README.md](../tests/README.md).
+These tests are in the [tests/screentest/ directory](../tests/screentest). For
+details, see [tests/README.md](../tests/README.md).
 
 ## Static Assets
 

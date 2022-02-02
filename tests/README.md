@@ -69,58 +69,27 @@ This data can now be used to check the API history on a frontend by running:
 go run tests/api/main.go compare [module path]:[package path suffix]
 ```
 
-## End-to-End (E2E) Tests
+## Screentest
 
-Th e2e/ directory contains end-to-end tests for pages on pkg.go.dev, which can
-be run using `./tests/e2e/run.sh`.
-
-### Running E2E Tests
-
+The screentest/ directory contains visual diff tests for pages on pkg.go.dev
 In order to run the tests, run this command from the root of the repository:
 
 ```
-./tests/e2e/run.sh
+./tests/screentest/run.sh <env>
 ```
 
-To run a set of tests with a custom experiment set active create a directory
-with a config.yaml file and a seed.txt file if a custom set of seed modules
-is desired. Then run `./tests/e2e/run.sh <directory>`.
-
-`./tests/e2e/run.sh` sets up a series of docker containers that run a postgres
-database, frontend, and headless chrome, and runs the e2e tests using headless
-chrome.
-
-Alternatively, you can run the tests against a website that is already running.
-
-First run headless chrome:
-
-    docker run --rm -e "CONNECTION_TIMEOUT=-1" -p 3000:3000 browserless/chrome:1.46-chrome-stable
-
-Then run the tests from the root of pkgsite:
-
-    ./all.bash npx jest [files]
-
-`PKGSITE_URL` can https://pkg.go.dev, or http://localhost:8080 if you have a
-local instance for the frontend running.
+`./tests/screentest/run.sh ci` sets up a series of docker containers that run a
+postgres database, frontend, and headless chrome, and runs the screentest using
+headless chrome.
 
 ### Understanding Test Failures
 
-If the tests failure, diffs will be created that show the cause of the failure.
-Timeouts and diff thresholds are configurable for image snapshots if
-adjustments are needed to prevent test flakiness. See the
-[API](https://github.com/americanexpress/jest-image-snapshot#%EF%B8%8F-api) for
-jest image snapshots for more information.
+If the tests failure, diffs will be created in the testdata directory that show
+the cause of the failure.
 
-### Writing E2E Tests
+### Adding Testcases
 
-Tests are written in the Jest framework using Puppeteer to drive a headless
-instance of Chrome.
-
-Familiarize yourself with the
-[Page](https://pptr.dev/#?product=Puppeteer&version=v5.5.0&show=api-class-page)
-class from the Puppeteer documenation. You'll find methods on this class that
-let you to interact with the page.
-
-Most tests will follow a similar structure but for details on the Jest
-framework and the various hooks and assertions see the
-[API](https://jestjs.io/docs/en/api).
+Tests are written for the screentest tool from golang.org/x/website.
+See the [command](https://pkg.go.dev/golang.org/x/website/cmd/screentest) and
+[package](https://pkg.go.dev/golang.org/x/website/internal/screentest) docs for
+more information.
