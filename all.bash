@@ -5,6 +5,7 @@
 
 source devtools/lib.sh || { echo "Are you at repo root?"; exit 1; }
 
+
 # Support ** in globs, for check_script_hashes.
 shopt -s globstar
 
@@ -96,7 +97,7 @@ ensure_go_binary() {
     info "Installing: $1"
     # Run in a subshell for convenience, so that we don't have to worry about
     # our PWD.
-    (set -x; cd && env GO111MODULE=on go get -u $1)
+    (set -x; cd && go install $1@latest)
   fi
 }
 
@@ -143,11 +144,12 @@ check_vet() {
 }
 
 # check_staticcheck runs staticcheck on source files.
+check_staticcheck() {
+  echo "staticcheck disabled until go 1.18"
 # TODO: uncomment when updated to go 1.18
-# check_staticcheck() {
-#   ensure_go_binary honnef.co/go/tools/cmd/staticcheck
-#   runcmd staticcheck $(go list ./... | grep -v third_party | grep -v internal/doc | grep -v internal/render)
-# }
+#  ensure_go_binary honnef.co/go/tools/cmd/staticcheck
+#  runcmd staticcheck $(go list ./... | grep -v third_party | grep -v internal/doc | grep -v internal/render)
+}
 
 # check_misspell runs misspell on source files.
 check_misspell() {
