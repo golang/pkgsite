@@ -200,7 +200,7 @@ type fsProxyModuleGetter struct {
 // NewFSModuleGetter return a ModuleGetter that reads modules from a filesystem
 // directory organized like the proxy.
 func NewFSProxyModuleGetter(dir string) (_ *fsProxyModuleGetter, err error) {
-	derrors.Wrap(&err, "NewFSProxyModuleGetter(%q)", dir)
+	defer derrors.Wrap(&err, "NewFSProxyModuleGetter(%q)", dir)
 
 	abs, err := filepath.Abs(dir)
 	if err != nil {
