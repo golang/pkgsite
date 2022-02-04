@@ -8,6 +8,11 @@ Pkg.go.dev is a website for discovering and evaluating Go packages and modules.
 
 You can check it out at [https://pkg.go.dev](https://pkg.go.dev).
 
+## Requirements
+
+Pkgsite requires Go 1.18 to run. The last commit that works with older versions
+of Go is 4d836c6a652cde92f433967680dfd6171a91ec12.
+
 ## Issues
 
 If you want to report a bug or have a feature suggestion, please first check

@@ -37,6 +37,8 @@ We accept contributions through
 
 2. Download the source code for x/pkgsite:
    `git clone https://go.googlesource.com/pkgsite`
+   NOTE: You will need Go 1.18 (as of this writing, the beta2 release) to
+   develop pkgsite.
 
 3. Review the [design document](doc/design.md).
 
