@@ -42,12 +42,13 @@ eval {{$hideImportedby}}
 capture fullscreen
 capture fullscreen 540x1080
 
-test empty jump to modal
-pathname /golang.org/x/tools@v0.1.1
-wait {{$ready}}
-click [data-test-id="jump-to-button"]
-eval {{$hideImportedby}}
-capture viewport
+# TODO: https://go.dev/issue/51020
+# test empty jump to modal
+# pathname /golang.org/x/tools@v0.1.1
+# wait {{$ready}}
+# click [data-test-id="jump-to-button"]
+# eval {{$hideImportedby}}
+# capture viewport
 
 test standard library package
 pathname /errors@go1.16.3
