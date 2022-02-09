@@ -17,6 +17,8 @@ Usage: $0 [OPTIONS] [ci|local|exp|dev|staging|prod]
   [ci]
     Run tests against a local server with a seeded database. This is what runs in
     CI/kokoro and should always pass on master.
+    Note: on first run, create a seeded database with --seeddb. It will persist
+    for subsequent runs unless --rm is also provided.
 
   [local]
     Run tests against a local server started with ./devtools/run_local.sh <env>
@@ -82,7 +84,7 @@ main() {
      "--idtoken")
         shift
         idtoken=$1
-        ;; 
+        ;;
       "--seeddb")
         seeddb=true
         ;;
