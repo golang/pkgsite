@@ -10,8 +10,6 @@ import (
 	"go/ast"
 	"go/token"
 	"strings"
-
-	"golang.org/x/mod/module"
 )
 
 // Package is the documentation for an entire package.
@@ -146,6 +144,7 @@ func New(pkg *ast.Package, importPath string, mode Mode) *Package {
 // match the desired build context. "go/build".Context.MatchFile can
 // be used for determining whether a file matches a build context with
 // the desired GOOS and GOARCH values, and other build constraints.
+// The import path of the package is specified by importPath.
 //
 // Examples found in _test.go files are associated with the corresponding
 // type, function, method, or the package, based on their name.
@@ -203,7 +202,7 @@ func NewFromFiles(fset *token.FileSet, files []*ast.File, importPath string, opt
 	// Compute package documentation.
 	pkg, _ := ast.NewPackage(fset, goFiles, simpleImporter, nil) // Ignore errors that can happen due to unresolved identifiers.
 	p := New(pkg, importPath, mode)
-	classifyExamples(p, Examples(fset, testGoFiles...))
+	classifyExamples(p, Examples2(fset, testGoFiles...))
 	return p, nil
 }
 
@@ -214,17 +213,10 @@ func NewFromFiles(fset *token.FileSet, files []*ast.File, importPath string, opt
 func simpleImporter(imports map[string]*ast.Object, path string) (*ast.Object, error) {
 	pkg := imports[path]
 	if pkg == nil {
-		pkg = ast.NewObj(ast.Pkg, packageName(path))
+		// note that strings.LastIndex returns -1 if there is no "/"
+		pkg = ast.NewObj(ast.Pkg, path[strings.LastIndex(path, "/")+1:])
 		pkg.Data = ast.NewScope(nil) // required by ast.NewPackage for dot-import
 		imports[path] = pkg
 	}
 	return pkg, nil
-}
-
-// packageName returns the last path component of the provided package,
-// stripping the major version component, if any.
-func packageName(path string) string {
-	pathPrefix, _, _ := module.SplitPathVersion(path)
-	// Note that strings.LastIndex returns -1 if there is no "/".
-	return pathPrefix[strings.LastIndex(pathPrefix, "/")+1:]
 }

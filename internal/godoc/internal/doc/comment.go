@@ -38,10 +38,9 @@ func commentEscape(w io.Writer, text string, nice bool) {
 		text = convertQuotes(text)
 		var buf bytes.Buffer
 		template.HTMLEscape(&buf, []byte(text))
-		// Now we convert the unicode quotes to their HTML escaped entities to
-		// maintain old behavior. We need to use a temp buffer to read the
-		// string back and do the conversion, otherwise HTMLEscape will escape &
-		// to &amp;
+		// Now we convert the unicode quotes to their HTML escaped entities to maintain old behavior.
+		// We need to use a temp buffer to read the string back and do the conversion,
+		// otherwise HTMLEscape will escape & to &amp;
 		htmlQuoteReplacer.WriteString(w, buf.String())
 		return
 	}
@@ -300,9 +299,8 @@ func anchorID(line string) string {
 // in the words map, the link is taken from the map (if the corresponding map
 // value is the empty string, the URL is not converted into a link).
 //
-// A pair of (consecutive) backticks (`) is converted to a unicode left quote
-// (“), and a pair of (consecutive) single quotes (') is converted to a unicode
-// right quote (”).
+// A pair of (consecutive) backticks (`) is converted to a unicode left quote (“), and a pair of (consecutive)
+// single quotes (') is converted to a unicode right quote (”).
 //
 // Go identifiers that appear in the words map are italicized; if the corresponding
 // map value is not the empty string, it is considered a URL and the word is converted
@@ -422,9 +420,8 @@ func blocks(text string) []block {
 // and then prefixes each line with the indent. In preformatted sections
 // (such as program text), it prefixes each non-blank line with preIndent.
 //
-// A pair of (consecutive) backticks (`) is converted to a unicode left quote
-// (“), and a pair of (consecutive) single quotes (') is converted to a unicode
-// right quote (”).
+// A pair of (consecutive) backticks (`) is converted to a unicode left quote (“), and a pair of (consecutive)
+// single quotes (') is converted to a unicode right quote (”).
 func ToText(w io.Writer, text string, indent, preIndent string, width int) {
 	l := lineWrapper{
 		out:    w,
