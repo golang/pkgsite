@@ -149,11 +149,13 @@ capture fullscreen
 capture fullscreen 540x1080
 
 test error
+status 400
 pathname /bad.package@v1.0-badversion
 capture fullscreen
 capture fullscreen 540x1080
 
 test 404 with fetch button
+status 404
 pathname /github.com/package/does/not/exist
 capture fullscreen
 capture fullscreen 540x1080
