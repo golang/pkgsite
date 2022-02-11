@@ -29,7 +29,6 @@ type Renderer struct {
 	fset              *token.FileSet
 	pids              *packageIDs
 	packageURL        func(string) string
-	disableHotlinking bool
 	disablePermalinks bool
 	enableCommandTOC  bool
 	ctx               context.Context
@@ -51,11 +50,6 @@ type Options struct {
 	//
 	// Only relevant for HTML formatting.
 	PackageURL func(pkgPath string) (url string)
-
-	// DisableHotlinking turns off hotlinking behavior.
-	//
-	// Only relevant for HTML formatting.
-	DisableHotlinking bool
 
 	// DisablePermalinks turns off inserting of '¶' permalinks in headings.
 	//
@@ -106,7 +100,6 @@ var exampleTmpl = template.Must(template.New("").Parse(`
 func New(ctx context.Context, fset *token.FileSet, pkg *doc.Package, opts *Options) *Renderer {
 	var others []*doc.Package
 	var packageURL func(string) string
-	var disableHotlinking bool
 	var disablePermalinks bool
 	var enableCommandTOC bool
 	if opts != nil {
@@ -116,7 +109,6 @@ func New(ctx context.Context, fset *token.FileSet, pkg *doc.Package, opts *Optio
 		if opts.PackageURL != nil {
 			packageURL = opts.PackageURL
 		}
-		disableHotlinking = opts.DisableHotlinking
 		disablePermalinks = opts.DisablePermalinks
 		enableCommandTOC = opts.EnableCommandTOC
 	}
@@ -126,7 +118,6 @@ func New(ctx context.Context, fset *token.FileSet, pkg *doc.Package, opts *Optio
 		fset:              fset,
 		pids:              pids,
 		packageURL:        packageURL,
-		disableHotlinking: disableHotlinking,
 		disablePermalinks: disablePermalinks,
 		enableCommandTOC:  enableCommandTOC,
 		docTmpl:           docDataTmpl,

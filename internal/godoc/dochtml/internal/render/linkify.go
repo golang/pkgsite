@@ -48,16 +48,12 @@ const (
 	// Optional path, query, fragment (e.g. "/path/index.html?q=foo#bar").
 	pathPart = `([.,:;?!]*[a-zA-Z0-9$'()*+&#=@~_/\-\[\]%])*`
 
-	// Regexp for Go identifiers.
-	identRx     = `[\pL_][\pL_0-9]*`
-	qualIdentRx = identRx + `(\.` + identRx + `)*`
-
 	// Regexp for RFCs.
 	rfcRx = `RFC\s+(\d{3,5})(,?\s+[Ss]ection\s+(\d+(\.\d+)*))?`
 )
 
 var (
-	matchRx     = regexp.MustCompile(urlRx + `|` + rfcRx + `|` + qualIdentRx)
+	matchRx     = regexp.MustCompile(urlRx + `|` + rfcRx)
 	badAnchorRx = regexp.MustCompile(`[^a-zA-Z0-9]`)
 )
 
@@ -91,7 +87,7 @@ func (r *Renderer) declHTML(doc string, decl ast.Decl, extractLinks bool) (out s
 				if inLinks {
 					r.links = append(r.links, parseLinks(blk.lines)...)
 				} else {
-					el.Body = r.linesToHTML(blk.lines, idr)
+					el.Body = r.linesToHTML(blk.lines)
 					els = append(els, el)
 				}
 			case *preformat:
@@ -99,7 +95,7 @@ func (r *Renderer) declHTML(doc string, decl ast.Decl, extractLinks bool) (out s
 					r.links = append(r.links, parseLinks(blk.lines)...)
 				} else {
 					el.IsPreformat = true
-					el.Body = r.linesToHTML(blk.lines, nil)
+					el.Body = r.linesToHTML(blk.lines)
 					els = append(els, el)
 				}
 			case *heading:
@@ -163,11 +159,11 @@ func parseLink(line string) *Link {
 	}
 }
 
-func (r *Renderer) linesToHTML(lines []string, idr *identifierResolver) safehtml.HTML {
+func (r *Renderer) linesToHTML(lines []string) safehtml.HTML {
 	newline := safehtml.HTMLEscaped("\n")
 	htmls := make([]safehtml.HTML, 0, 2*len(lines))
 	for _, l := range lines {
-		htmls = append(htmls, r.formatLineHTML(l, idr))
+		htmls = append(htmls, r.formatLineHTML(l))
 		htmls = append(htmls, newline)
 	}
 	return safehtml.HTMLConcat(htmls...)
@@ -175,7 +171,7 @@ func (r *Renderer) linesToHTML(lines []string, idr *identifierResolver) safehtml
 
 func (r *Renderer) codeString(ex *doc.Example) (string, error) {
 	if ex == nil || ex.Code == nil {
-		return "", errors.New("Please include an example with code")
+		return "", errors.New("please include an example with code")
 	}
 	var buf bytes.Buffer
 
@@ -268,9 +264,8 @@ scan:
 
 // formatLineHTML formats the line as HTML-annotated text.
 // URLs and Go identifiers are linked to corresponding declarations.
-func (r *Renderer) formatLineHTML(line string, idr *identifierResolver) safehtml.HTML {
+func (r *Renderer) formatLineHTML(line string) safehtml.HTML {
 	var htmls []safehtml.HTML
-	var lastChar, nextChar byte
 	var numQuotes int
 
 	addLink := func(href, text string) {
@@ -286,25 +281,10 @@ func (r *Renderer) formatLineHTML(line string, idr *identifierResolver) safehtml
 		if m0 > 0 {
 			nonWord := line[:m0]
 			htmls = append(htmls, safehtml.HTMLEscaped(nonWord))
-			lastChar = nonWord[len(nonWord)-1]
 			numQuotes += countQuotes(nonWord)
 		}
 		if m1 > m0 {
 			word := line[m0:m1]
-			nextChar = 0
-			if m1 < len(line) {
-				nextChar = line[m1]
-			}
-
-			// Reduce false-positives by having a list of allowed
-			// characters preceding and succeeding an identifier.
-			// Also, forbid ID linking within unbalanced quotes on same line.
-			validPrefix := strings.IndexByte("\x00 \t()[]*\n", lastChar) >= 0
-			validSuffix := strings.IndexByte("\x00 \t()[]:;,.'\n", nextChar) >= 0
-			forbidLinking := !validPrefix || !validSuffix || numQuotes%2 != 0
-
-			// TODO: Should we provide hotlinks for related packages?
-
 			switch {
 			case strings.Contains(word, "://"):
 				// Forbid closing brackets without prior opening brackets.
@@ -344,8 +324,6 @@ func (r *Renderer) formatLineHTML(line string, idr *identifierResolver) safehtml
 					// RFC x
 					addLink(fmt.Sprintf("https://rfc-editor.org/rfc/rfc%s.html", rfcFields[1]), word)
 				}
-			case !forbidLinking && !r.disableHotlinking && idr != nil: // && numQuotes%2 == 0:
-				htmls = append(htmls, idr.toHTML(word))
 			default:
 				htmls = append(htmls, safehtml.HTMLEscaped(word))
 			}
@@ -447,7 +425,7 @@ scan:
 			tokType = commentType
 			htmlLines[line] = append(htmlLines[line],
 				template.MustParseAndExecuteToHTML(`<span class="comment">`),
-				r.formatLineHTML(lit, idr),
+				r.formatLineHTML(lit),
 				template.MustParseAndExecuteToHTML(`</span>`))
 			lastOffset += len(lit)
 		case token.IDENT:
