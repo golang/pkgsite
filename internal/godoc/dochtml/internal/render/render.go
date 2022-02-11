@@ -26,15 +26,14 @@ var (
 )
 
 type Renderer struct {
-	fset              *token.FileSet
-	pids              *packageIDs
-	packageURL        func(string) string
-	disablePermalinks bool
-	enableCommandTOC  bool
-	ctx               context.Context
-	docTmpl           *template.Template
-	exampleTmpl       *template.Template
-	links             []Link // Links removed from package overview to be displayed elsewhere.
+	fset             *token.FileSet
+	pids             *packageIDs
+	packageURL       func(string) string
+	enableCommandTOC bool
+	ctx              context.Context
+	docTmpl          *template.Template
+	exampleTmpl      *template.Template
+	links            []Link // Links removed from package overview to be displayed elsewhere.
 }
 
 type Options struct {
@@ -50,11 +49,6 @@ type Options struct {
 	//
 	// Only relevant for HTML formatting.
 	PackageURL func(pkgPath string) (url string)
-
-	// DisablePermalinks turns off inserting of '¶' permalinks in headings.
-	//
-	// Only relevant for HTML formatting.
-	DisablePermalinks bool
 
 	// EnableCommandTOC turns on the table of contents for the overview section
 	// of command pages.
@@ -78,9 +72,7 @@ var docDataTmpl = template.Must(template.New("").Parse(`
 {{- end -}}
 {{- range .Elements -}}
   {{- if .IsHeading -}}
-    <h4 id="{{.ID}}">{{.Title}}
-    {{- if not $.DisablePermalinks}} <a class="Documentation-idLink" href="#{{.ID}}">¶</a>{{end -}}
-    </h4>
+    <h4 id="{{.ID}}">{{.Title}} <a class="Documentation-idLink" href="#{{.ID}}">¶</a></h4>
   {{- else if .IsPreformat -}}
     <pre>{{.Body}}</pre>
   {{- else -}}
@@ -100,7 +92,6 @@ var exampleTmpl = template.Must(template.New("").Parse(`
 func New(ctx context.Context, fset *token.FileSet, pkg *doc.Package, opts *Options) *Renderer {
 	var others []*doc.Package
 	var packageURL func(string) string
-	var disablePermalinks bool
 	var enableCommandTOC bool
 	if opts != nil {
 		if len(opts.RelatedPackages) > 0 {
@@ -109,20 +100,18 @@ func New(ctx context.Context, fset *token.FileSet, pkg *doc.Package, opts *Optio
 		if opts.PackageURL != nil {
 			packageURL = opts.PackageURL
 		}
-		disablePermalinks = opts.DisablePermalinks
 		enableCommandTOC = opts.EnableCommandTOC
 	}
 	pids := newPackageIDs(pkg, others...)
 
 	return &Renderer{
-		fset:              fset,
-		pids:              pids,
-		packageURL:        packageURL,
-		disablePermalinks: disablePermalinks,
-		enableCommandTOC:  enableCommandTOC,
-		docTmpl:           docDataTmpl,
-		exampleTmpl:       exampleTmpl,
-		ctx:               ctx,
+		fset:             fset,
+		pids:             pids,
+		packageURL:       packageURL,
+		enableCommandTOC: enableCommandTOC,
+		docTmpl:          docDataTmpl,
+		exampleTmpl:      exampleTmpl,
+		ctx:              ctx,
 	}
 }
 
