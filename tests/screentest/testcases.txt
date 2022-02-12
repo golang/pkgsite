@@ -144,7 +144,7 @@ capture fullscreen
 capture fullscreen 540x1080
 
 test badge
-pathname /badge
+pathname /badge/
 capture fullscreen
 capture fullscreen 540x1080
 
