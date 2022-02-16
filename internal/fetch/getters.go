@@ -18,6 +18,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"sort"
 	"strings"
 	"time"
 
@@ -54,6 +55,9 @@ type ModuleGetter interface {
 	// returned values are intended to be passed to
 	// internal/frontend.Server.InstallFiles.
 	SourceFS() (string, fs.FS)
+
+	// String returns a representation of the getter for testing and debugging.
+	String() string
 }
 
 type proxyModuleGetter struct {
@@ -94,6 +98,10 @@ func (g *proxyModuleGetter) SourceInfo(ctx context.Context, path, version string
 // link directly to the module's repo.
 func (g *proxyModuleGetter) SourceFS() (string, fs.FS) {
 	return "", nil
+}
+
+func (g *proxyModuleGetter) String() string {
+	return "Proxy"
 }
 
 // Version and commit time are pre specified when fetching a local module, as these
@@ -188,6 +196,11 @@ func (g *directoryModuleGetter) SourceFS() (string, fs.FS) {
 
 func (g *directoryModuleGetter) fileServingPath() string {
 	return path.Join(filepath.ToSlash(g.dir), g.modulePath)
+}
+
+// For testing.
+func (g *directoryModuleGetter) String() string {
+	return fmt.Sprintf("Dir(%s, %s)", g.modulePath, g.dir)
 }
 
 // An fsProxyModuleGetter gets modules from a directory in the filesystem that
@@ -383,4 +396,17 @@ func (g *fsProxyModuleGetter) moduleDir(modulePath string) (string, error) {
 		return "", fmt.Errorf("path: %v: %w", err, derrors.InvalidArgument)
 	}
 	return filepath.Join(g.dir, "cache", "download", filepath.FromSlash(ep), "@v"), nil
+}
+
+// For testing.
+func (g *fsProxyModuleGetter) String() string {
+	if g.allowed == nil {
+		return fmt.Sprintf("FSProxy(%s)", g.dir)
+	}
+	var as []string
+	for a := range g.allowed {
+		as = append(as, a.String())
+	}
+	sort.Strings(as)
+	return fmt.Sprintf("FSProxy(%s, %s)", g.dir, strings.Join(as, ","))
 }

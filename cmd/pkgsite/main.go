@@ -134,7 +134,11 @@ func main() {
 		}
 	}
 
-	server, err := newServer(ctx, paths, *gopathMode, modCacheDir, cacheMods, prox)
+	getters, err := buildGetters(ctx, paths, *gopathMode, modCacheDir, cacheMods, prox)
+	if err != nil {
+		die("%s", err)
+	}
+	server, err := newServer(getters, prox)
 	if err != nil {
 		die("%s", err)
 	}
@@ -145,12 +149,6 @@ func main() {
 	die("%v", http.ListenAndServe(*httpAddr, mw(router)))
 }
 
-func die(format string, args ...interface{}) {
-	fmt.Fprintf(os.Stderr, format, args...)
-	fmt.Fprintln(os.Stderr)
-	os.Exit(1)
-}
-
 func collectPaths(args []string) []string {
 	var paths []string
 	for _, arg := range args {
@@ -159,8 +157,8 @@ func collectPaths(args []string) []string {
 	return paths
 }
 
-func newServer(ctx context.Context, paths []string, gopathMode bool, downloadDir string, cacheMods []internal.Modver, prox *proxy.Client) (*frontend.Server, error) {
-	getters := buildGetters(ctx, paths, gopathMode)
+func buildGetters(ctx context.Context, paths []string, gopathMode bool, downloadDir string, cacheMods []internal.Modver, prox *proxy.Client) ([]fetch.ModuleGetter, error) {
+	getters := buildPathGetters(ctx, paths, gopathMode)
 	if downloadDir != "" {
 		g, err := fetch.NewFSProxyModuleGetter(downloadDir, cacheMods)
 		if err != nil {
@@ -171,30 +169,10 @@ func newServer(ctx context.Context, paths []string, gopathMode bool, downloadDir
 	if prox != nil {
 		getters = append(getters, fetch.NewProxyModuleGetter(prox, source.NewClient(time.Second)))
 	}
-	lds := fetchdatasource.Options{
-		Getters:              getters,
-		ProxyClientForLatest: prox,
-		BypassLicenseCheck:   true,
-	}.New()
-	server, err := frontend.NewServer(frontend.ServerConfig{
-		DataSourceGetter: func(context.Context) internal.DataSource { return lds },
-		TemplateFS:       template.TrustedFSFromEmbed(static.FS),
-		StaticFS:         static.FS,
-		ThirdPartyFS:     thirdparty.FS,
-	})
-	if err != nil {
-		return nil, err
-	}
-	for _, g := range getters {
-		p, fsys := g.SourceFS()
-		if p != "" {
-			server.InstallFS(p, fsys)
-		}
-	}
-	return server, nil
+	return getters, nil
 }
 
-func buildGetters(ctx context.Context, paths []string, gopathMode bool) []fetch.ModuleGetter {
+func buildPathGetters(ctx context.Context, paths []string, gopathMode bool) []fetch.ModuleGetter {
 	var getters []fetch.ModuleGetter
 	loaded := len(paths)
 	for _, path := range paths {
@@ -219,6 +197,30 @@ func buildGetters(ctx context.Context, paths []string, gopathMode bool) []fetch.
 		die("failed to load module(s) at %v", paths)
 	}
 	return getters
+}
+
+func newServer(getters []fetch.ModuleGetter, prox *proxy.Client) (*frontend.Server, error) {
+	lds := fetchdatasource.Options{
+		Getters:              getters,
+		ProxyClientForLatest: prox,
+		BypassLicenseCheck:   true,
+	}.New()
+	server, err := frontend.NewServer(frontend.ServerConfig{
+		DataSourceGetter: func(context.Context) internal.DataSource { return lds },
+		TemplateFS:       template.TrustedFSFromEmbed(static.FS),
+		StaticFS:         static.FS,
+		ThirdPartyFS:     thirdparty.FS,
+	})
+	if err != nil {
+		return nil, err
+	}
+	for _, g := range getters {
+		p, fsys := g.SourceFS()
+		if p != "" {
+			server.InstallFS(p, fsys)
+		}
+	}
+	return server, nil
 }
 
 func defaultCacheDir() (string, error) {
@@ -281,4 +283,10 @@ func listModsForPaths(paths []string, cacheDir string) ([]string, []internal.Mod
 		}
 	}
 	return outPaths, cacheMods, nil
+}
+
+func die(format string, args ...interface{}) {
+	fmt.Fprintf(os.Stderr, format, args...)
+	fmt.Fprintln(os.Stderr)
+	os.Exit(1)
 }

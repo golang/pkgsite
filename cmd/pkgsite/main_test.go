@@ -17,6 +17,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/net/html"
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/proxy"
 	"golang.org/x/pkgsite/internal/proxy/proxytest"
 	"golang.org/x/pkgsite/internal/testing/htmlcheck"
 )
@@ -32,7 +33,82 @@ var (
 	}
 )
 
-func Test(t *testing.T) {
+func TestBuildGetters(t *testing.T) {
+	repoPath := func(fn string) string { return filepath.Join("..", "..", fn) }
+
+	abs := func(dir string) string {
+		a, err := filepath.Abs(dir)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return a
+	}
+
+	ctx := context.Background()
+	localModule := repoPath("internal/fetch/testdata/has_go_mod")
+	cacheDir := repoPath("internal/fetch/testdata/modcache")
+	testModules := proxytest.LoadTestModules(repoPath("internal/proxy/testdata"))
+	prox, teardown := proxytest.SetupTestClient(t, testModules)
+	defer teardown()
+
+	localGetter := "Dir(example.com/testmod, " + abs(localModule) + ")"
+	cacheGetter := "FSProxy(" + abs(cacheDir) + ")"
+	for _, test := range []struct {
+		name     string
+		paths    []string
+		cmods    []internal.Modver
+		cacheDir string
+		prox     *proxy.Client
+		want     []string
+	}{
+		{
+			name:  "local only",
+			paths: []string{localModule},
+			want:  []string{localGetter},
+		},
+		{
+			name:     "cache",
+			cacheDir: cacheDir,
+			want:     []string{cacheGetter},
+		},
+		{
+			name: "proxy",
+			prox: prox,
+			want: []string{"Proxy"},
+		},
+		{
+			name:     "all three",
+			paths:    []string{localModule},
+			cacheDir: cacheDir,
+			prox:     prox,
+			want:     []string{localGetter, cacheGetter, "Proxy"},
+		},
+		{
+			name:     "list",
+			paths:    []string{localModule},
+			cacheDir: cacheDir,
+			cmods:    []internal.Modver{{Path: "foo", Version: "v1.2.3"}},
+			want:     []string{localGetter, "FSProxy(" + abs(cacheDir) + ", foo@v1.2.3)"},
+		},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			getters, err := buildGetters(ctx, test.paths, false, test.cacheDir, test.cmods, test.prox)
+			if err != nil {
+				t.Fatal(err)
+			}
+			var got []string
+			for _, g := range getters {
+				got = append(got, g.String())
+			}
+
+			if diff := cmp.Diff(test.want, got); diff != "" {
+				t.Errorf("mismatch (-want, +got):\n%s", diff)
+			}
+		})
+	}
+}
+
+func TestServer(t *testing.T) {
 	repoPath := func(fn string) string { return filepath.Join("..", "..", fn) }
 
 	abs := func(dir string) string {
@@ -49,7 +125,8 @@ func Test(t *testing.T) {
 	prox, teardown := proxytest.SetupTestClient(t, testModules)
 	defer teardown()
 
-	server, err := newServer(context.Background(), []string{localModule}, false, cacheDir, nil, prox)
+	getters, err := buildGetters(context.Background(), []string{localModule}, false, cacheDir, nil, prox)
+	server, err := newServer(getters, prox)
 	if err != nil {
 		t.Fatal(err)
 	}
