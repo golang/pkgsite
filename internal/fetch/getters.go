@@ -23,6 +23,7 @@ import (
 
 	"golang.org/x/mod/modfile"
 	"golang.org/x/mod/module"
+	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/proxy"
 	"golang.org/x/pkgsite/internal/source"
@@ -194,19 +195,29 @@ func (g *directoryModuleGetter) fileServingPath() string {
 // paths that correspond to proxy URLs. An example of such a directory is
 // $(go env GOMODCACHE).
 type fsProxyModuleGetter struct {
-	dir string
+	dir     string
+	allowed map[internal.Modver]bool
 }
 
 // NewFSModuleGetter return a ModuleGetter that reads modules from a filesystem
 // directory organized like the proxy.
-func NewFSProxyModuleGetter(dir string) (_ *fsProxyModuleGetter, err error) {
+// If allowed is non-empty, only module@versions in allowed are served; others
+// result in NotFound errors.
+func NewFSProxyModuleGetter(dir string, allowed []internal.Modver) (_ *fsProxyModuleGetter, err error) {
 	defer derrors.Wrap(&err, "NewFSProxyModuleGetter(%q)", dir)
 
 	abs, err := filepath.Abs(dir)
 	if err != nil {
 		return nil, err
 	}
-	return &fsProxyModuleGetter{dir: abs}, nil
+	g := &fsProxyModuleGetter{dir: abs}
+	if len(allowed) > 0 {
+		g.allowed = map[internal.Modver]bool{}
+		for _, a := range allowed {
+			g.allowed[a] = true
+		}
+	}
+	return g, nil
 }
 
 // Info returns basic information about the module.
@@ -248,7 +259,7 @@ func (g *fsProxyModuleGetter) Mod(ctx context.Context, path, vers string) (_ []b
 		}
 	}
 
-	// Check that .zip is readable first.
+	// Check that .zip is readable.
 	f, err := g.openFile(path, vers, "zip")
 	if err != nil {
 		return nil, err
@@ -267,6 +278,7 @@ func (g *fsProxyModuleGetter) ContentDir(ctx context.Context, path, vers string)
 			return nil, err
 		}
 	}
+
 	data, err := g.readFile(path, vers, "zip")
 	if err != nil {
 		return nil, err
@@ -307,13 +319,28 @@ func (g *fsProxyModuleGetter) latestVersion(modulePath string) (_ string, err er
 	}
 	var versions []string
 	for _, z := range zips {
-		versions = append(versions, strings.TrimSuffix(filepath.Base(z), ".zip"))
+		vers := strings.TrimSuffix(filepath.Base(z), ".zip")
+		if g.allow(modulePath, vers) {
+			versions = append(versions, vers)
+		}
+	}
+	if len(versions) == 0 {
+		return "", fmt.Errorf("no allowed versions form module %q: %w", modulePath, derrors.NotFound)
 	}
 	return version.LatestOf(versions), nil
 }
 
+// allow reports whether the module path and version may be served.
+func (g *fsProxyModuleGetter) allow(path, vers string) bool {
+	return g.allowed == nil || g.allowed[internal.Modver{Path: path, Version: vers}]
+}
+
 func (g *fsProxyModuleGetter) readFile(path, version, suffix string) (_ []byte, err error) {
 	defer derrors.Wrap(&err, "fsProxyModuleGetter.readFile(%q, %q, %q)", path, version, suffix)
+
+	if !g.allow(path, version) {
+		return nil, fmt.Errorf("%s@%s not allowed: %w", path, version, derrors.NotFound)
+	}
 
 	f, err := g.openFile(path, version, suffix)
 	if err != nil {

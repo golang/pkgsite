@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
+	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/proxy"
 	"golang.org/x/pkgsite/internal/version"
@@ -47,7 +48,7 @@ func TestEscapedPath(t *testing.T) {
 			"dir/cache/download/github.com/a!bc/@v/v2.3.4.zip",
 		},
 	} {
-		g, err := NewFSProxyModuleGetter("dir")
+		g, err := NewFSProxyModuleGetter("dir", nil)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -76,7 +77,7 @@ func TestFSProxyGetter(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	g, err := NewFSProxyModuleGetter("testdata/modcache")
+	g, err := NewFSProxyModuleGetter("testdata/modcache", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -141,4 +142,38 @@ func TestFSProxyGetter(t *testing.T) {
 			t.Errorf("got %v, want NotFound", err)
 		}
 	})
+}
+
+func TestFSProxyGetterAllowed(t *testing.T) {
+	ctx := context.Background()
+	// The cache contains:
+	//   github.com/jackc/pgio@v1.0.0
+	//   modcache.com@v1.0.0
+	// Allow only the latter.
+	allow := []internal.Modver{{Path: "modcache.com", Version: "v1.0.0"}}
+	g, err := NewFSProxyModuleGetter("testdata/modcache", allow)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	check := func(path, vers string, wantOK bool) {
+		t.Helper()
+		_, err := g.Info(ctx, path, vers)
+		if (err == nil) != wantOK {
+			s := "a"
+			if wantOK {
+				s = "no"
+			}
+			t.Errorf("got %v; wanted %s error", err, s)
+		} else if err != nil && !errors.Is(err, derrors.NotFound) {
+			t.Errorf("got %v, wanted NotFound", err)
+		}
+	}
+
+	// We can get modcache.com.
+	check("modcache.com", "v1.0.0", true)
+	check("modcache.com", "latest", true)
+	// We get NotFound for jackc.
+	check("github.com/jackc/pgio", "v1.0.0", false)
+	check("github.com/jackc/pgio", "latest", false)
 }

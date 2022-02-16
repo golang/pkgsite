@@ -13,6 +13,10 @@
 //
 //   cd ~/repos/cue && pkgsite
 //
+// This form will also serve all of the module's required modules at their
+// required versions. You can disable serving the required modules by passing
+// -list=false.
+//
 // You can also serve docs from your module cache, directly from the proxy
 // (it uses the GOPROXY environment variable), or both:
 //
@@ -31,12 +35,15 @@
 package main
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"net/http"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -57,12 +64,13 @@ import (
 const defaultAddr = "localhost:8080" // default webserver address
 
 var (
-	gopathMode = flag.Bool("gopath_mode", false, "assume that local modules' paths are relative to GOPATH/src")
-	httpAddr   = flag.String("http", defaultAddr, "HTTP service address to listen for incoming requests on")
-	useCache   = flag.Bool("cache", false, "fetch from the module cache")
-	cacheDir   = flag.String("cachedir", "", "module cache directory (defaults to `go env GOMODCACHE`)")
-	useProxy   = flag.Bool("proxy", false, "fetch from GOPROXY if not found locally")
-	goRepoPath = flag.String("gorepo", "", "path to Go repo on local filesystem")
+	gopathMode    = flag.Bool("gopath_mode", false, "assume that local modules' paths are relative to GOPATH/src")
+	httpAddr      = flag.String("http", defaultAddr, "HTTP service address to listen for incoming requests on")
+	useCache      = flag.Bool("cache", false, "fetch from the module cache")
+	cacheDir      = flag.String("cachedir", "", "module cache directory (defaults to `go env GOMODCACHE`)")
+	useProxy      = flag.Bool("proxy", false, "fetch from GOPROXY if not found locally")
+	goRepoPath    = flag.String("gorepo", "", "path to Go repo on local filesystem")
+	useListedMods = flag.Bool("list", true, "for each path, serve all modules in build list")
 )
 
 func main() {
@@ -82,7 +90,7 @@ func main() {
 	}
 
 	var modCacheDir string
-	if *useCache {
+	if *useCache || *useListedMods {
 		modCacheDir = *cacheDir
 		if modCacheDir == "" {
 			var err error
@@ -99,6 +107,7 @@ func main() {
 	if *useCache || *useProxy {
 		fmt.Fprintf(os.Stderr, "BYPASSING LICENSE CHECKING: MAY DISPLAY NON-REDISTRIBUTABLE INFORMATION\n")
 	}
+
 	var prox *proxy.Client
 	if *useProxy {
 		url := os.Getenv("GOPROXY")
@@ -116,7 +125,16 @@ func main() {
 		stdlib.SetGoRepoPath(*goRepoPath)
 	}
 
-	server, err := newServer(ctx, paths, *gopathMode, modCacheDir, prox)
+	var cacheMods []internal.Modver
+	if *useListedMods && !*useCache {
+		var err error
+		paths, cacheMods, err = listModsForPaths(paths, modCacheDir)
+		if err != nil {
+			die("listing mods (consider passing -list=false): %v", err)
+		}
+	}
+
+	server, err := newServer(ctx, paths, *gopathMode, modCacheDir, cacheMods, prox)
 	if err != nil {
 		die("%s", err)
 	}
@@ -141,10 +159,10 @@ func collectPaths(args []string) []string {
 	return paths
 }
 
-func newServer(ctx context.Context, paths []string, gopathMode bool, downloadDir string, prox *proxy.Client) (*frontend.Server, error) {
+func newServer(ctx context.Context, paths []string, gopathMode bool, downloadDir string, cacheMods []internal.Modver, prox *proxy.Client) (*frontend.Server, error) {
 	getters := buildGetters(ctx, paths, gopathMode)
 	if downloadDir != "" {
-		g, err := fetch.NewFSProxyModuleGetter(downloadDir)
+		g, err := fetch.NewFSProxyModuleGetter(downloadDir, cacheMods)
 		if err != nil {
 			return nil, err
 		}
@@ -204,9 +222,63 @@ func buildGetters(ctx context.Context, paths []string, gopathMode bool) []fetch.
 }
 
 func defaultCacheDir() (string, error) {
-	out, err := exec.Command("go", "env", "GOMODCACHE").CombinedOutput()
+	out, err := runGo("", "env", "GOMODCACHE")
 	if err != nil {
-		return "", fmt.Errorf("running 'go env GOMODCACHE': %v: %s", err, out)
+		return "", err
 	}
 	return strings.TrimSpace(string(out)), nil
+}
+
+// listedMod has a subset of the fields written by `go list -m`.
+type listedMod struct {
+	internal.Modver
+	GoMod string // absolute path to go.mod file; in download cache or replaced
+}
+
+var listModules = _listModules
+
+func _listModules(dir string) ([]listedMod, error) {
+	out, err := runGo(dir, "list", "-json", "-m", "all")
+	if err != nil {
+		return nil, err
+	}
+	d := json.NewDecoder(bytes.NewReader(out))
+	var ms []listedMod
+	for d.More() {
+		var m listedMod
+		if err := d.Decode(&m); err != nil {
+			return nil, err
+		}
+		ms = append(ms, m)
+	}
+	return ms, nil
+}
+
+func runGo(dir string, args ...string) ([]byte, error) {
+	cmd := exec.Command("go", args...)
+	cmd.Dir = dir
+	out, err := cmd.Output()
+	if err != nil {
+		return nil, fmt.Errorf("running go with %q: %v: %s", args, err, out)
+	}
+	return out, nil
+}
+
+func listModsForPaths(paths []string, cacheDir string) ([]string, []internal.Modver, error) {
+	var outPaths []string
+	var cacheMods []internal.Modver
+	for _, p := range paths {
+		lms, err := listModules(p)
+		if err != nil {
+			return nil, nil, err
+		}
+		for _, lm := range lms {
+			if strings.HasPrefix(lm.GoMod, cacheDir) {
+				cacheMods = append(cacheMods, lm.Modver)
+			} else { // probably the result of a replace directive
+				outPaths = append(outPaths, filepath.Dir(lm.GoMod))
+			}
+		}
+	}
+	return outPaths, cacheMods, nil
 }

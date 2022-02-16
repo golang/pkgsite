@@ -16,6 +16,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/net/html"
+	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/proxy/proxytest"
 	"golang.org/x/pkgsite/internal/testing/htmlcheck"
 )
@@ -48,7 +49,7 @@ func Test(t *testing.T) {
 	prox, teardown := proxytest.SetupTestClient(t, testModules)
 	defer teardown()
 
-	server, err := newServer(context.Background(), []string{localModule}, false, cacheDir, prox)
+	server, err := newServer(context.Background(), []string{localModule}, false, cacheDir, nil, prox)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -120,5 +121,31 @@ func TestCollectPaths(t *testing.T) {
 	want := []string{"a", "b", "c2", "d3", "e4", "f", "g"}
 	if !cmp.Equal(got, want) {
 		t.Errorf("got %v, want %v", got, want)
+	}
+}
+
+func TestListModsForPaths(t *testing.T) {
+	listModules = func(string) ([]listedMod, error) {
+		return []listedMod{
+			{
+				internal.Modver{Path: "m1", Version: "v1.2.3"},
+				"/dir/cache/download/m1/@v/v1.2.3.mod",
+			},
+			{
+				internal.Modver{Path: "m2", Version: "v1.0.0"},
+				"/repos/m2/go.mod",
+			},
+		}, nil
+	}
+	defer func() { listModules = _listModules }()
+
+	gotPaths, gotCacheMods, err := listModsForPaths([]string{"m1"}, "/dir")
+	if err != nil {
+		t.Fatal(err)
+	}
+	wantPaths := []string{"/repos/m2"}
+	wantCacheMods := []internal.Modver{{Path: "m1", Version: "v1.2.3"}}
+	if !cmp.Equal(gotPaths, wantPaths) || !cmp.Equal(gotCacheMods, wantCacheMods) {
+		t.Errorf("got\n%v, %v\nwant\n%v, %v", gotPaths, gotCacheMods, wantPaths, wantCacheMods)
 	}
 }
