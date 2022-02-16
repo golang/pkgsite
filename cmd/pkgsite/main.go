@@ -57,7 +57,6 @@ import (
 const defaultAddr = "localhost:8080" // default webserver address
 
 var (
-	staticFlag = flag.String("static", "", "OBSOLETE - DO NOT USE")
 	gopathMode = flag.Bool("gopath_mode", false, "assume that local modules' paths are relative to GOPATH/src")
 	httpAddr   = flag.String("http", defaultAddr, "HTTP service address to listen for incoming requests on")
 	useCache   = flag.Bool("cache", false, "fetch from the module cache")
@@ -76,10 +75,6 @@ func main() {
 	}
 	flag.Parse()
 	ctx := context.Background()
-
-	if *staticFlag != "" {
-		fmt.Fprintf(os.Stderr, "-static is ignored. It is obsolete and may be removed in a future version.\n")
-	}
 
 	paths := collectPaths(flag.Args())
 	if len(paths) == 0 && !*useCache && !*useProxy {
