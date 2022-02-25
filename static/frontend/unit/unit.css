@@ -167,6 +167,8 @@
   font-size: 0.875rem;
   height: 1.75rem;
   line-height: 1.75rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .go-Main-headerDetailItem:not(:last-of-type)::after {
   content: '|';
