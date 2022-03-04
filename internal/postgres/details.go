@@ -13,6 +13,7 @@ import (
 	"reflect"
 
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/middleware"
 )
@@ -95,7 +96,7 @@ func (db *DB) GetImportedBy(ctx context.Context, pkgPath, modulePath string, lim
 			from_path
 		LIMIT $3`
 
-	return db.db.CollectStrings(ctx, query, pkgPath, modulePath, limit)
+	return database.Collect1[string](ctx, db.db, query, pkgPath, modulePath, limit)
 }
 
 // GetImportedByCount returns the number of packages that import pkgPath.

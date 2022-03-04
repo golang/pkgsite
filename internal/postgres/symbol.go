@@ -431,7 +431,7 @@ func deleteOldSymbolSearchDocuments(ctx context.Context, db *database.DB,
 		pathIDs = append(pathIDs, id)
 	}
 	// Fetch package_symbol_id currently in symbol_search_documents.
-	dbPkgSymIDs, err := db.CollectInts(ctx, `
+	dbPkgSymIDs, err := database.Collect1[int](ctx, db, `
 		SELECT package_symbol_id
 		FROM symbol_search_documents
 		WHERE package_path_id = ANY($1);`,

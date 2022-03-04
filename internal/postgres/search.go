@@ -677,7 +677,7 @@ func upsertSearchDocuments(ctx context.Context, ddb *database.DB, mod *internal.
 	// import path, and we, like the go tool, prefer the package with the longer
 	// module path. For example, if two packages have import path "a/b/c", one
 	// in module "a" and the other in "a/b", we keep only the latter.
-	lps, err := ddb.CollectStrings(ctx, `
+	lps, err := database.Collect1[string](ctx, ddb, `
 		SELECT package_path
 		FROM search_documents
 		WHERE module_path LIKE $1 || '/%'

@@ -693,7 +693,7 @@ func TestReconcileSearch(t *testing.T) {
 			t.Fatalf("got version %q, synopsis %q, want %q for both", gotVersion, gotSynopsis, wantVersion)
 		}
 
-		gotImports, err := testDB.db.CollectStrings(ctx, `
+		gotImports, err := database.Collect1[string](ctx, testDB.db, `
 			SELECT to_path
 			FROM imports_unique
 			WHERE from_path = $1

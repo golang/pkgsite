@@ -13,6 +13,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/testing/sample"
 	"golang.org/x/pkgsite/internal/version"
@@ -130,8 +131,7 @@ type searchDocumentRow struct {
 }
 
 func readSearchDocuments(ctx context.Context, db *DB) ([]searchDocumentRow, error) {
-	var rows []searchDocumentRow
-	err := db.db.CollectStructs(ctx, &rows, `SELECT package_path, module_path, version, imported_by_count FROM search_documents`)
+	rows, err := database.CollectStructs[searchDocumentRow](ctx, db.db, `SELECT package_path, module_path, version, imported_by_count FROM search_documents`)
 	if err != nil {
 		return nil, err
 	}

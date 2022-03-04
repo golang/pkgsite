@@ -57,5 +57,5 @@ func (db *DB) GetExcludedPrefixes(ctx context.Context) ([]string, error) {
 }
 
 func getExcludedPrefixes(ctx context.Context, db *database.DB) ([]string, error) {
-	return db.CollectStrings(ctx, `SELECT prefix FROM excluded_prefixes`)
+	return database.Collect1[string](ctx, db, `SELECT prefix FROM excluded_prefixes`)
 }

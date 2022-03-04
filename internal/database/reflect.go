@@ -8,7 +8,6 @@ import (
 	"context"
 	"database/sql"
 	"database/sql/driver"
-	"errors"
 	"fmt"
 	"reflect"
 	"unicode"
@@ -17,8 +16,8 @@ import (
 	"github.com/lib/pq"
 )
 
-// StructScanner takes a struct and returns a function that, when called on a
-// struct pointer of that type, returns a slice of arguments suitable for
+// StructScanner returns a function that, when called on a
+// struct pointer of its argument type, returns a slice of arguments suitable for
 // Row.Scan or Rows.Scan. The call to either Scan will populate the exported
 // fields of the struct in the order they appear in the type definition.
 //
@@ -37,12 +36,8 @@ import (
 //       // use p
 //       return nil
 //   })
-func StructScanner(s interface{}) func(p interface{}) []interface{} {
-	v := reflect.ValueOf(s)
-	if v.Kind() == reflect.Ptr {
-		v = v.Elem()
-	}
-	return structScannerForType(v.Type())
+func StructScanner[T any]() func(p *T) []interface{} {
+	return structScannerForType[T]()
 }
 
 type fieldInfo struct {
@@ -50,7 +45,9 @@ type fieldInfo struct {
 	kind reflect.Kind
 }
 
-func structScannerForType(t reflect.Type) func(p interface{}) []interface{} {
+func structScannerForType[T any]() func(p *T) []interface{} {
+	var x T
+	t := reflect.TypeOf(x)
 	if t.Kind() != reflect.Struct {
 		panic(fmt.Sprintf("%s is not a struct", t))
 	}
@@ -64,7 +61,7 @@ func structScannerForType(t reflect.Type) func(p interface{}) []interface{} {
 		}
 	}
 	// Return a function that gets pointers to the exported fields.
-	return func(p interface{}) []interface{} {
+	return func(p *T) []interface{} {
 		v := reflect.ValueOf(p).Elem()
 		var ps []interface{}
 		for _, info := range fieldInfos {
@@ -122,46 +119,41 @@ func (n nullPtr) Value() (driver.Value, error) {
 	return n.ptr.Elem().Elem().Interface(), nil
 }
 
-// CollectStructs scans the the rows from the query into structs and appends
-// them to pslice, which must be a pointer to a slice of structs.
+// CollectStructs scans the the rows from the query into structs and returns a slice of them.
 // Example:
 //   type Player struct { Name string; Score int }
 //   var players []Player
 //   err := db.CollectStructs(ctx, &players, "SELECT name, score FROM players")
-func (db *DB) CollectStructs(ctx context.Context, pslice interface{}, query string, args ...interface{}) error {
-	v := reflect.ValueOf(pslice)
-	if v.Kind() != reflect.Ptr {
-		return errors.New("collectStructs: arg is not a pointer")
-	}
-	ve := v.Elem()
-	if ve.Kind() != reflect.Slice {
-		return errors.New("collectStructs: arg is not a pointer to a slice")
-	}
-	isPointer := false
-	et := ve.Type().Elem() // slice element type
-	if et.Kind() == reflect.Ptr {
-		isPointer = true
-		et = et.Elem()
-	}
-	if et.Kind() != reflect.Struct {
-		return fmt.Errorf("slice element type is neither struct nor struct pointer: %s", ve.Type().Elem())
-	}
-
-	scanner := structScannerForType(et)
+func CollectStructs[T any](ctx context.Context, db *DB, query string, args ...interface{}) ([]T, error) {
+	scanner := structScannerForType[T]()
+	var ts []T
 	err := db.RunQuery(ctx, query, func(rows *sql.Rows) error {
-		e := reflect.New(et)
-		if err := rows.Scan(scanner(e.Interface())...); err != nil {
+		var s T
+		if err := rows.Scan(scanner(&s)...); err != nil {
 			return err
 		}
-		if !isPointer {
-			e = e.Elem()
-		}
-		ve = reflect.Append(ve, e)
+		ts = append(ts, s)
 		return nil
 	}, args...)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	v.Elem().Set(ve)
-	return nil
+	return ts, nil
+}
+
+func CollectStructPtrs[T any](ctx context.Context, db *DB, query string, args ...interface{}) ([]*T, error) {
+	scanner := structScannerForType[T]()
+	var ts []*T
+	err := db.RunQuery(ctx, query, func(rows *sql.Rows) error {
+		var s T
+		if err := rows.Scan(scanner(&s)...); err != nil {
+			return err
+		}
+		ts = append(ts, &s)
+		return nil
+	}, args...)
+	if err != nil {
+		return nil, err
+	}
+	return ts, nil
 }

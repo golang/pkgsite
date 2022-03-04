@@ -449,8 +449,8 @@ func testTransactSerializable(ctx context.Context, t *testing.T) string {
 	type row struct {
 		Class, Value int
 	}
-	var rows []row
-	if err := testDB.CollectStructs(ctx, &rows, `SELECT class, value FROM ser ORDER BY id`); err != nil {
+	rows, err := CollectStructs[row](ctx, testDB, `SELECT class, value FROM ser ORDER BY id`)
+	if err != nil {
 		return err.Error()
 	}
 	const initialRows = 4
@@ -568,7 +568,7 @@ func TestCollectStrings(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	got, err := testDB.CollectStrings(ctx, `SELECT s FROM test_cs`)
+	got, err := Collect1[string](ctx, testDB, `SELECT s FROM test_cs`)
 	if err != nil {
 		t.Fatal(err)
 	}

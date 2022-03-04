@@ -16,6 +16,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/testing/sample"
 )
@@ -67,9 +68,12 @@ func TestInsertIndexVersions(t *testing.T) {
 	want := rows
 	want[2].Status = 0 // c.com was 404, should be 0
 	var got []row
-	must(t, testDB.db.CollectStructs(ctx, &got, `
+	got, err := database.CollectStructs[row](ctx, testDB.db, `
 		SELECT module_path, status FROM module_version_states ORDER BY module_path
-	`))
+	`)
+	if err != nil {
+		t.Fatal(err)
+	}
 	if diff := cmp.Diff(want, got); diff != "" {
 		t.Fatalf("mismatch (-want, +got):\n%s", diff)
 	}

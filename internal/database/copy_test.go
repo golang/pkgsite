@@ -82,9 +82,9 @@ func TestCopyUpsert(t *testing.T) {
 
 func compareRows(ctx context.Context, t *testing.T, table string, wantRows []copyRow) {
 	t.Helper()
-	var gotRows []copyRow
 	q := fmt.Sprintf(`SELECT * FROM %s ORDER BY key`, table)
-	if err := testDB.CollectStructs(ctx, &gotRows, q); err != nil {
+	gotRows, err := CollectStructs[copyRow](ctx, testDB, q)
+	if err != nil {
 		t.Fatal(err)
 	}
 	if !cmp.Equal(gotRows, wantRows) {
@@ -124,8 +124,8 @@ func TestCopyUpsertGeneratedColumn(t *testing.T) {
 		{2, 12, "bar"},
 		{3, 13, "baz"},
 	}
-	var gotRows []row
-	if err := testDB.CollectStructs(ctx, &gotRows, `SELECT * FROM test_copy_gen ORDER BY ID`); err != nil {
+	gotRows, err := CollectStructs[row](ctx, testDB, `SELECT * FROM test_copy_gen ORDER BY ID`)
+	if err != nil {
 		t.Fatal(err)
 	}
 	if !cmp.Equal(gotRows, wantRows) {

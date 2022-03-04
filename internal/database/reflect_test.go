@@ -48,8 +48,8 @@ func TestNullPtr(t *testing.T) {
 }
 
 func TestStructScanner(t *testing.T) {
+	f := StructScanner[testStruct]()
 	var s testStruct
-	f := StructScanner(s)
 	args := f(&s)
 	*args[0].(*string) = "foo"
 	*args[1].(*int) = 3
@@ -62,9 +62,6 @@ func TestStructScanner(t *testing.T) {
 	if !cmp.Equal(s, want) {
 		t.Errorf("got %+v, want %+v", s, want)
 	}
-
-	// StructScanner should also work on pointers to structs.
-	_ = StructScanner(&s)
 }
 
 func TestCollectStructs(t *testing.T) {
@@ -92,8 +89,8 @@ func TestCollectStructs(t *testing.T) {
 	}
 
 	query := `SELECT name, score, slice, nullable, bytes FROM structs`
-	var got []testStruct
-	if err := testDB.CollectStructs(ctx, &got, query); err != nil {
+	got, err := CollectStructs[testStruct](ctx, testDB, query)
+	if err != nil {
 		t.Fatal(err)
 	}
 	sort.Slice(got, func(i, j int) bool { return got[i].Name < got[j].Name })
@@ -107,8 +104,8 @@ func TestCollectStructs(t *testing.T) {
 	}
 
 	// Same, but with a slice of struct pointers.
-	var gotp []*testStruct
-	if err := testDB.CollectStructs(ctx, &gotp, query); err != nil {
+	gotp, err := CollectStructPtrs[testStruct](ctx, testDB, query)
+	if err != nil {
 		t.Fatal(err)
 	}
 	sort.Slice(gotp, func(i, j int) bool { return got[i].Name < got[j].Name })
@@ -120,7 +117,6 @@ func TestCollectStructs(t *testing.T) {
 	if !cmp.Equal(gotp, wantp) {
 		t.Errorf("got %+v, want %+v", gotp, wantp)
 	}
-
 }
 
 func intptr(i int64) *int64 {

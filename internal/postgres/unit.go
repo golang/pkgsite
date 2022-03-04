@@ -168,7 +168,7 @@ func (db *DB) getLatestUnitVersion(ctx context.Context, fullPath, requestedModul
 		if err != nil {
 			return "", "", nil, err
 		}
-		allVersions, err := db.db.CollectStrings(ctx, q, args...)
+		allVersions, err := database.Collect1[string](ctx, db.db, q, args...)
 		if err != nil {
 			return "", "", nil, err
 		}
@@ -319,7 +319,7 @@ func (db *DB) getImports(ctx context.Context, unitID int) (_ []string, err error
 		SELECT p.path
 		FROM paths p INNER JOIN imports i ON p.id = i.to_path_id
 		WHERE i.unit_id = $1`
-	return db.db.CollectStrings(ctx, query, unitID)
+	return database.Collect1[string](ctx, db.db, query, unitID)
 }
 
 // getPackagesInUnit returns all of the packages in a unit from a

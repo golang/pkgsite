@@ -43,7 +43,7 @@ func TestInsertSymbolNamesAndHistory(t *testing.T) {
 	mod.Packages()[0].Documentation[0].API = api
 	MustInsertModule(ctx, t, testDB, mod)
 
-	got, err := testDB.db.CollectStrings(ctx, `SELECT name FROM symbol_names;`)
+	got, err := database.Collect1[string](ctx, testDB.db, `SELECT name FROM symbol_names;`)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -575,7 +575,7 @@ func TestDeleteOldSymbolSearchDocuments(t *testing.T) {
 		m.Version = v
 		m.Packages()[0].Documentation[0].API = api
 		MustInsertModule(ctx, t, testDB, m)
-		got, err := testDB.db.CollectStrings(ctx, q)
+		got, err := database.Collect1[string](ctx, testDB.db, q)
 		if err != nil {
 			t.Fatal(err)
 		}

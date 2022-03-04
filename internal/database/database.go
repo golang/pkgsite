@@ -538,41 +538,22 @@ func buildBulkUpdateQuery(table string, columns, types []string) string {
 	)
 }
 
-// CollectInts runs the query, which must select for a single INTEGER or BIGINT
-// column, and returns a slice of the resulting ints.
-func (db *DB) CollectInts(ctx context.Context, query string, args ...interface{}) (ints []int, err error) {
-	defer derrors.WrapStack(&err, "DB.CollectInts(%q)", query)
+// Collect1 runs the query, which must select for a single column that can be
+// scanned into a value of type T, and returns a slice of the resulting values.
+func Collect1[T any](ctx context.Context, db *DB, query string, args ...interface{}) (ts []T, err error) {
+	defer derrors.WrapStack(&err, "Collect1(%q)", query)
 	err = db.RunQuery(ctx, query, func(rows *sql.Rows) error {
-		var i int
-		if err := rows.Scan(&i); err != nil {
+		var t T
+		if err := rows.Scan(&t); err != nil {
 			return err
 		}
-		ints = append(ints, i)
+		ts = append(ts, t)
 		return nil
 	}, args...)
 	if err != nil {
 		return nil, err
 	}
-	return ints, nil
-}
-
-// CollectStrings runs the query, which must select for a single string column, and returns
-// a slice of the resulting strings.
-func (db *DB) CollectStrings(ctx context.Context, query string, args ...interface{}) (ss []string, err error) {
-	defer derrors.WrapStack(&err, "DB.CollectStrings(%q)", query)
-
-	err = db.RunQuery(ctx, query, func(rows *sql.Rows) error {
-		var s string
-		if err := rows.Scan(&s); err != nil {
-			return err
-		}
-		ss = append(ss, s)
-		return nil
-	}, args...)
-	if err != nil {
-		return nil, err
-	}
-	return ss, nil
+	return ts, nil
 }
 
 // emptyStringScanner wraps the functionality of sql.NullString to just write

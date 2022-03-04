@@ -51,7 +51,7 @@ func (db *DB) DeleteModule(ctx context.Context, modulePath, resolvedVersion stri
 // deleteOtherModulePackagesFromSearchDocuments deletes all packages from search
 // documents with the given module that are not in m.
 func deleteOtherModulePackagesFromSearchDocuments(ctx context.Context, tx *database.DB, modulePath string, pkgPaths []string) error {
-	dbPkgs, err := tx.CollectStrings(ctx, `
+	dbPkgs, err := database.Collect1[string](ctx, tx, `
 		SELECT package_path FROM search_documents WHERE module_path = $1
 	`, modulePath)
 	if err != nil {
@@ -125,7 +125,7 @@ func (db *DB) DeletePseudoversionsExcept(ctx context.Context, modulePath, resolv
 			DELETE FROM modules
 			WHERE version_type = 'pseudo' AND module_path=$1 AND version != $2
 			RETURNING version`
-		versions, err := tx.CollectStrings(ctx, stmt, modulePath, resolvedVersion)
+		versions, err := database.Collect1[string](ctx, tx, stmt, modulePath, resolvedVersion)
 		if err != nil {
 			return err
 		}
