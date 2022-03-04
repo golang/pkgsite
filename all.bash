@@ -135,8 +135,10 @@ check_bad_migrations() {
 
 # check_unparam runs unparam on source files.
 check_unparam() {
-  ensure_go_binary mvdan.cc/unparam
-  runcmd unparam ./...
+  echo "unparam disabled until go 1.18"
+# TODO: uncomment when updated to go 1.18
+  # ensure_go_binary mvdan.cc/unparam
+  # runcmd unparam ./...
 }
 
 # check_vet runs go vet on source files.

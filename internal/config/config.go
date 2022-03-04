@@ -549,33 +549,20 @@ func processOverrides(ctx context.Context, cfg *Config, bytes []byte) {
 		log.Errorf(ctx, "processOverrides: yaml.Unmarshal: %v", err)
 		return
 	}
-	overrideString(ctx, "DBHost", &cfg.DBHost, ov.DBHost)
-	overrideString(ctx, "DBSecondaryHost", &cfg.DBSecondaryHost, ov.DBSecondaryHost)
-	overrideString(ctx, "DBName", &cfg.DBName, ov.DBName)
-	overrideInt(ctx, "Quota.QPS", &cfg.Quota.QPS, ov.Quota.QPS)
-	overrideInt(ctx, "Quota.Burst", &cfg.Quota.Burst, ov.Quota.Burst)
-	overrideInt(ctx, "Quota.MaxEntries", &cfg.Quota.MaxEntries, ov.Quota.MaxEntries)
-	overrideBool(ctx, "Quota.RecordOnly", &cfg.Quota.RecordOnly, ov.Quota.RecordOnly)
+	override(ctx, "DBHost", &cfg.DBHost, ov.DBHost)
+	override(ctx, "DBSecondaryHost", &cfg.DBSecondaryHost, ov.DBSecondaryHost)
+	override(ctx, "DBName", &cfg.DBName, ov.DBName)
+	override(ctx, "Quota.QPS", &cfg.Quota.QPS, ov.Quota.QPS)
+	override(ctx, "Quota.Burst", &cfg.Quota.Burst, ov.Quota.Burst)
+	override(ctx, "Quota.MaxEntries", &cfg.Quota.MaxEntries, ov.Quota.MaxEntries)
+	override(ctx, "Quota.RecordOnly", &cfg.Quota.RecordOnly, ov.Quota.RecordOnly)
 }
 
-func overrideString(ctx context.Context, name string, field *string, val string) {
-	if val != "" {
+func override[T comparable](ctx context.Context, name string, field *T, val T) {
+	var zero T
+	if val != zero {
 		*field = val
-		log.Infof(ctx, "overriding %s with %q", name, val)
-	}
-}
-
-func overrideInt(ctx context.Context, name string, field *int, val int) {
-	if val != 0 {
-		*field = val
-		log.Debugf(ctx, "overriding %s with %d", name, val)
-	}
-}
-
-func overrideBool(ctx context.Context, name string, field **bool, val *bool) {
-	if val != nil {
-		*field = val
-		log.Debugf(ctx, "overriding %s with %t", name, *val)
+		log.Infof(ctx, "overriding %s with %v", name, val)
 	}
 }
 
