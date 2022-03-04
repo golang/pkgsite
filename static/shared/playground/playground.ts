@@ -126,7 +126,7 @@ export class PlaygroundExampleController {
   }
 
   /**
-   * Resizes the input element to accomodate the amount of text present.
+   * Resizes the input element to accommodate the amount of text present.
    */
   private resize(): void {
     if (this.inputEl?.value) {
