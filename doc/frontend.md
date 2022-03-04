@@ -67,14 +67,14 @@ details, see [tests/README.md](../tests/README.md).
 ## Static Assets
 
 JavaScript assets for pkg.go.dev are compiled from TypeScript files in the
-content/static/js directory. The compiled assets are commited to the repo so the
+content/static/js directory. The compiled assets are committed to the repo so the
 frontend or worker service can be run without any additional steps from a new
 clone of the project.
 
 ### Building
 
 When modifying any TypeScript code, you must run
-`go run ./devtools/cmd/static` before commiting your changes.
+`go run ./devtools/cmd/static` before committing your changes.
 
 ### Testing
 

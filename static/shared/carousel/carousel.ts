@@ -6,7 +6,7 @@
  */
 
 /**
- * Carousel Controller adds event listeners, accessibilty enhancements, and
+ * Carousel Controller adds event listeners, accessibility enhancements, and
  * control elements to a carousel component.
  */
 export class CarouselController {
