@@ -326,7 +326,7 @@ func addSymbol(s *Symbol, v string, sh *internal.SymbolHistory, builds []string)
 		return
 	}
 	for _, b := range builds {
-		goos, _, _ := internal.Cut(b, "/")
+		goos, _, _ := strings.Cut(b, "/")
 		var build internal.BuildContext
 		switch goos {
 		case "linux":

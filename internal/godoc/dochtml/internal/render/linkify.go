@@ -21,7 +21,6 @@ import (
 	"github.com/google/safehtml"
 	"github.com/google/safehtml/legacyconversions"
 	"github.com/google/safehtml/template"
-	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/godoc/internal/doc"
 	"golang.org/x/pkgsite/internal/log"
 )
@@ -150,7 +149,7 @@ func parseLink(line string) *Link {
 	if !strings.HasPrefix(line, "- ") && !strings.HasPrefix(line, "-\t") {
 		return nil
 	}
-	text, href, found := internal.Cut(line[2:], ",")
+	text, href, found := strings.Cut(line[2:], ",")
 	if !found {
 		return nil
 	}

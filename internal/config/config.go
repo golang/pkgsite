@@ -27,7 +27,6 @@ import (
 	"cloud.google.com/go/storage"
 	"github.com/ghodss/yaml"
 	"golang.org/x/net/context/ctxhttp"
-	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/secrets"
@@ -296,7 +295,7 @@ func (c *Config) DeploymentEnvironment() string {
 	if c.ServiceID == "" {
 		return "local"
 	}
-	before, _, found := internal.Cut(c.ServiceID, "-")
+	before, _, found := strings.Cut(c.ServiceID, "-")
 	if !found {
 		return "prod"
 	}
@@ -312,7 +311,7 @@ func (c *Config) Application() string {
 	if c.ServiceID == "" {
 		return "unknownApp"
 	}
-	before, after, found := internal.Cut(c.ServiceID, "-")
+	before, after, found := strings.Cut(c.ServiceID, "-")
 	var svc string
 	if !found {
 		svc = before

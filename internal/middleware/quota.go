@@ -20,7 +20,6 @@ import (
 	"go.opencensus.io/stats"
 	"go.opencensus.io/stats/view"
 	"go.opencensus.io/tag"
-	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/config"
 	"golang.org/x/pkgsite/internal/log"
 )
@@ -49,7 +48,7 @@ func recordQuotaMetric(ctx context.Context, blocked string) {
 }
 
 func ipKey(s string) string {
-	addr, _, _ := internal.Cut(s, ",")
+	addr, _, _ := strings.Cut(s, ",")
 	// First field is the originating IP address.
 	origin := strings.TrimSpace(addr)
 	ip := net.ParseIP(origin)

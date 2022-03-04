@@ -52,7 +52,7 @@ func (e *userError) Unwrap() error {
 func extractURLPathInfo(urlPath string) (_ *urlPathInfo, err error) {
 	defer derrors.Wrap(&err, "extractURLPathInfo(%q)", urlPath)
 
-	if m, _, _ := internal.Cut(strings.TrimPrefix(urlPath, "/"), "@"); stdlib.Contains(m) {
+	if m, _, _ := strings.Cut(strings.TrimPrefix(urlPath, "/"), "@"); stdlib.Contains(m) {
 		return parseStdLibURLPath(urlPath)
 	}
 	return parseDetailsURLPath(urlPath)
@@ -91,7 +91,7 @@ func parseDetailsURLPath(urlPath string) (_ *urlPathInfo, err error) {
 	//   /<module-path>, @<version>/<suffix>
 	// or
 	//  /<module-path>/<suffix>, @<version>
-	modulePath, rest, found := internal.Cut(urlPath, "@")
+	modulePath, rest, found := strings.Cut(urlPath, "@")
 	info := &urlPathInfo{
 		fullPath:         strings.TrimSuffix(strings.TrimPrefix(modulePath, "/"), "/"),
 		modulePath:       internal.UnknownModulePath,
@@ -136,7 +136,7 @@ func parseStdLibURLPath(urlPath string) (_ *urlPathInfo, err error) {
 
 	// This splits urlPath into either:
 	//   /<path>@<tag> or /<path>
-	fullPath, tag, found := internal.Cut(urlPath, "@")
+	fullPath, tag, found := strings.Cut(urlPath, "@")
 	fullPath = strings.TrimSuffix(strings.TrimPrefix(fullPath, "/"), "/")
 	if !isValidPath(fullPath) {
 		return nil, &userError{

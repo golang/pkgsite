@@ -562,7 +562,7 @@ func groupAndMajorVersion(r *SearchResult) (string, int) {
 	// Packages in the standard library are grouped by their top-level
 	// directory, and we can consider them all part of the same major version.
 	if r.ModulePath == stdlib.ModulePath {
-		before, _, _ := internal.Cut(r.PackagePath, "/")
+		before, _, _ := strings.Cut(r.PackagePath, "/")
 		return before, 1
 	}
 	series, major := internal.SeriesPathAndMajorVersion(r.ModulePath)

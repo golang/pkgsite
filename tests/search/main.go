@@ -18,7 +18,6 @@ import (
 	"strings"
 
 	_ "github.com/jackc/pgx/v4/stdlib" // for pgx driver
-	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/config"
 	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/derrors"
@@ -261,7 +260,7 @@ func readImportedByCounts(filename string) (map[string]int, error) {
 		if line == "" || line[0] == '#' {
 			continue
 		}
-		path, count, found := internal.Cut(line, ", ")
+		path, count, found := strings.Cut(line, ", ")
 		if !found {
 			return nil, errors.New("missing comma")
 		}
