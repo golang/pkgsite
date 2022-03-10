@@ -124,6 +124,10 @@ function toggleTheme() {
   } else if (theme === 'light') {
     nextTheme = 'auto';
   }
+  let domain = 'domain=.go.dev;';
+  if (location.hostname === 'localhost') {
+    domain = '';
+  }
   document.documentElement.setAttribute('data-theme', nextTheme);
-  document.cookie = `prefers-color-scheme=${nextTheme};path=/;max-age=31536000;`;
+  document.cookie = `prefers-color-scheme=${nextTheme};${domain}path=/;max-age=31536000;`;
 }
