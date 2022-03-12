@@ -420,7 +420,7 @@ func exampleID(id, suffix string) safehtml.Identifier {
 	}
 }
 
-// noteHeader contains informations the template needs to render
+// noteHeader contains information the template needs to render
 // the note related HTML tags in documentation page.
 type noteHeader struct {
 	SafeIdentifier safehtml.Identifier

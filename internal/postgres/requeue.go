@@ -147,7 +147,7 @@ func (db *DB) UpdateModuleVersionStatesWithStatus(ctx context.Context, status in
 	return nil
 }
 
-// largeModulePackageThresold represents the package threshold at which it
+// largeModulePackageThreshold represents the package threshold at which it
 // becomes difficult to process packages. Modules with more than this number
 // of packages are generally different versions or forks of kubernetes,
 // aws-sdk-go, azure-sdk-go, and bilibili.

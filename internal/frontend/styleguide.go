@@ -208,7 +208,7 @@ func markdownFiles(fsys fs.FS) ([]string, error) {
 	return matches, nil
 }
 
-// camelCase turns a snake cased strink into a camel case string.
+// camelCase turns a snake cased string into a camel case string.
 // For example, hello-world becomes HelloWorld. This function is
 // used to ensure proper casing in the classnames of the style
 // sections.

@@ -136,7 +136,7 @@ func (f *Fetcher) FetchAndUpdateState(ctx context.Context, modulePath, requested
 		trace.StringAttribute("version", requestedVersion))
 	defer span.End()
 
-	// Begin by htting the proxy's info endpoint. We need the resolved version
+	// Begin by hitting the proxy's info endpoint. We need the resolved version
 	// to do load-shedding, but it's also important to make the proxy aware
 	// of the version if it isn't already, as can happen when we arrive here via
 	// frontend fetch.

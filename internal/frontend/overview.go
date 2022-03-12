@@ -66,7 +66,7 @@ func blackfridayReadmeHTML(readme *internal.Readme, mi *internal.ModuleInfo) (sa
 	return legacySanitizeHTML(b), nil
 }
 
-// LegacyReadmeHTML sanitizes readmeContents based on bluemondy.UGCPolicy and returns
+// LegacyReadmeHTML sanitizes readmeContents based on bluemonday.UGCPolicy and returns
 // a safehtml.HTML. If readmeFilePath indicates that this is a markdown file,
 // it will also render the markdown contents using blackfriday.
 //

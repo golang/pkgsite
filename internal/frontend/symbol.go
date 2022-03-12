@@ -293,7 +293,7 @@ func compareStringSlices(ss1, ss2 []string) int {
 }
 
 // ParseVersionsDetails returns a map of versionToNameToUnitSymbol based on
-// data from the proovided VersionDetails.
+// data from the provided VersionDetails.
 func ParseVersionsDetails(vd *VersionsDetails) (_ *internal.SymbolHistory, err error) {
 	sh := internal.NewSymbolHistory()
 	for _, vl := range vd.ThisModule {

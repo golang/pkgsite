@@ -569,7 +569,7 @@ func ValidateGoDottedExpr(s string) {
 
 // generateAnchorPoints returns a mapping of *ast.Ident objects to the
 // qualified ID that should be set as an anchor point, as well as the kind
-// of identifer, used in the data-kind attribute.
+// of identifier, used in the data-kind attribute.
 func generateAnchorPoints(decl ast.Decl) map[*ast.Ident]idKind {
 	m := map[*ast.Ident]idKind{}
 	switch decl := decl.(type) {
