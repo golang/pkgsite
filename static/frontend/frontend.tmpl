@@ -37,17 +37,19 @@
   </head>
   <body>
     <!-- loadScript appends JS sources to the document head. It loads scripts as asynchronous
-        modules eliminating parser-blocking JavaScript. -->
+        modules by default, eliminating parser-blocking JavaScript. -->
     <script>
-      function loadScript(src) {
+      function loadScript(src, mod = true) {
         let s = document.createElement('script');
         s.src = src;
-        s.type = 'module';
-        s.async = true;
-        s.defer = true
+        if (mod) {
+          s.type = 'module';
+          s.async = true;
+          s.defer = true
+        }
         document.head.appendChild(s);
       }
-      loadScript("/third_party/dialog-polyfill/dialog-polyfill.js")
+      loadScript("/third_party/dialog-polyfill/dialog-polyfill.js", false)
       loadScript("/static/frontend/frontend.js");
     </script>
     {{template "header" .}}
