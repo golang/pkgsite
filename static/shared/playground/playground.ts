@@ -169,6 +169,12 @@ export class PlaygroundExampleController {
     }
   }
 
+  private setOutputHTML(output: string) {
+    if (this.outputEl) {
+      this.outputEl.innerHTML = output;
+    }
+  }
+
   /**
    * Sets the error message text and overwrites
    * output box to indicate a failed response.
@@ -196,7 +202,7 @@ export class PlaygroundExampleController {
       .then(res => res.text())
       .then(shareId => {
         const href = PLAYGROUND_BASE_URL + shareId;
-        this.setOutputText(`<a href="${href}">${href}</a>`);
+        this.setOutputHTML(`<a href="${href}">${href}</a>`);
         window.open(href);
       })
       .catch(err => {
