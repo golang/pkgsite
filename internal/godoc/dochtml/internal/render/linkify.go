@@ -93,7 +93,7 @@ func (r *Renderer) formatDocHTML(doc string, extractLinks bool) safehtml.HTML {
 			if inLinks {
 				r.links = append(r.links, parseLinks(blk.lines)...)
 			} else {
-				el.Body = r.linesToHTML(blk.lines)
+				el.Body = r.linesToHTML(blk.lines, false)
 				els = append(els, el)
 			}
 		case *preformat:
@@ -101,7 +101,7 @@ func (r *Renderer) formatDocHTML(doc string, extractLinks bool) safehtml.HTML {
 				r.links = append(r.links, parseLinks(blk.lines)...)
 			} else {
 				el.IsPreformat = true
-				el.Body = r.linesToHTML(blk.lines)
+				el.Body = r.linesToHTML(blk.lines, true)
 				els = append(els, el)
 			}
 		case *heading:
@@ -159,11 +159,11 @@ func parseLink(line string) *Link {
 	}
 }
 
-func (r *Renderer) linesToHTML(lines []string) safehtml.HTML {
+func (r *Renderer) linesToHTML(lines []string, pre bool) safehtml.HTML {
 	newline := safehtml.HTMLEscaped("\n")
 	htmls := make([]safehtml.HTML, 0, 2*len(lines))
 	for _, l := range lines {
-		htmls = append(htmls, r.formatLineHTML(l))
+		htmls = append(htmls, r.formatLineHTML(l, pre))
 		htmls = append(htmls, newline)
 	}
 	return safehtml.HTMLConcat(htmls...)
@@ -264,7 +264,8 @@ scan:
 
 // formatLineHTML formats the line as HTML-annotated text.
 // URLs and Go identifiers are linked to corresponding declarations.
-func (r *Renderer) formatLineHTML(line string) safehtml.HTML {
+// If pre is true no conversion of `` or '' to “ and ” is performed.
+func (r *Renderer) formatLineHTML(line string, pre bool) safehtml.HTML {
 	var htmls []safehtml.HTML
 	var numQuotes int
 
@@ -272,7 +273,9 @@ func (r *Renderer) formatLineHTML(line string) safehtml.HTML {
 		htmls = append(htmls, ExecuteToHTML(LinkTemplate, Link{Href: href, Text: text}))
 	}
 
-	line = convertQuotes(line)
+	if !pre {
+		line = convertQuotes(line)
+	}
 	for len(line) > 0 {
 		m0, m1 := len(line), len(line)
 		if m := matchRx.FindStringIndex(line); m != nil {
@@ -425,7 +428,7 @@ scan:
 			tokType = commentType
 			htmlLines[line] = append(htmlLines[line],
 				template.MustParseAndExecuteToHTML(`<span class="comment">`),
-				r.formatLineHTML(lit),
+				r.formatLineHTML(lit, false),
 				template.MustParseAndExecuteToHTML(`</span>`))
 			lastOffset += len(lit)
 		case token.IDENT:
