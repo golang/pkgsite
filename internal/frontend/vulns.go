@@ -118,6 +118,12 @@ func (s *Server) serveVuln(w http.ResponseWriter, r *http.Request, _ internal.Da
 		s.servePage(r.Context(), w, "vuln/list", vulnListPage)
 	default: // the path should be "/<ID>", e.g. "/GO-2021-0001".
 		id := r.URL.Path[1:]
+		if !goVulnIDRegexp.MatchString(id) {
+			return &serverError{
+				status:       http.StatusBadRequest,
+				responseText: "invalid Go vuln ID; should be GO-YYYY-NNNN",
+			}
+		}
 		vulnPage, err := newVulnPage(s.vulnClient, id)
 		if err != nil {
 			return &serverError{status: derrors.ToStatus(err)}
