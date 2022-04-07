@@ -267,8 +267,6 @@ scan:
 // If pre is true no conversion of doubled ` and ' to “ and ” is performed.
 func (r *Renderer) formatLineHTML(line string, pre bool) safehtml.HTML {
 	var htmls []safehtml.HTML
-	var numQuotes int
-
 	addLink := func(href, text string) {
 		htmls = append(htmls, ExecuteToHTML(LinkTemplate, Link{Href: href, Text: text}))
 	}
@@ -284,7 +282,6 @@ func (r *Renderer) formatLineHTML(line string, pre bool) safehtml.HTML {
 		if m0 > 0 {
 			nonWord := line[:m0]
 			htmls = append(htmls, safehtml.HTMLEscaped(nonWord))
-			numQuotes += countQuotes(nonWord)
 		}
 		if m1 > m0 {
 			word := line[m0:m1]
@@ -330,7 +327,6 @@ func (r *Renderer) formatLineHTML(line string, pre bool) safehtml.HTML {
 			default:
 				htmls = append(htmls, safehtml.HTMLEscaped(word))
 			}
-			numQuotes += countQuotes(word)
 		}
 		line = line[m1:]
 	}
@@ -343,14 +339,6 @@ func ExecuteToHTML(tmpl *template.Template, data interface{}) safehtml.HTML {
 		return safehtml.HTMLEscaped("[" + err.Error() + "]")
 	}
 	return h
-}
-
-func countQuotes(s string) int {
-	n := -1 // loop always iterates at least once
-	for i := len(s); i >= 0; i = strings.LastIndexAny(s[:i], `"“”`) {
-		n++
-	}
-	return n
 }
 
 // formatDeclHTML formats the decl as HTML-annotated source code for the
