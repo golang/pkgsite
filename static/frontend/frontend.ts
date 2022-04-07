@@ -124,9 +124,9 @@ function toggleTheme() {
   } else if (theme === 'light') {
     nextTheme = 'auto';
   }
-  let domain = 'domain=.go.dev;';
-  if (location.hostname === 'localhost') {
-    domain = '';
+  let domain = '';
+  if (location.hostname.endsWith('go.dev')) {
+    domain = 'domain=.go.dev;';
   }
   document.documentElement.setAttribute('data-theme', nextTheme);
   document.cookie = `prefers-color-scheme=${nextTheme};${domain}path=/;max-age=31536000;`;
