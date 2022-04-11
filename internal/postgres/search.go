@@ -249,13 +249,14 @@ const (
 
 // scoreExpr is the expression that computes the search score.
 // It is the product of:
-// - The Postgres ts_rank score, based the relevance of the document to the query.
-// - The log of the module's popularity, estimated by the number of importing packages.
-//   The log factor contains exp(1) so that it is always >= 1. Taking the log
-//   of imported_by_count instead of using it directly makes the effect less
-//   dramatic: being 2x as popular only has an additive effect.
-// - A penalty factor for non-redistributable modules, since a lot of
-//   details cannot be displayed.
+//   - The Postgres ts_rank score, based the relevance of the document to the query.
+//   - The log of the module's popularity, estimated by the number of importing packages.
+//     The log factor contains exp(1) so that it is always >= 1. Taking the log
+//     of imported_by_count instead of using it directly makes the effect less
+//     dramatic: being 2x as popular only has an additive effect.
+//   - A penalty factor for non-redistributable modules, since a lot of
+//     details cannot be displayed.
+//
 // The first argument to ts_rank is an array of weights for the four tsvector sections,
 // in the order D, C, B, A.
 // The weights below match the defaults except for B.

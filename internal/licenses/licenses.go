@@ -8,14 +8,16 @@
 // redistributable.
 //
 // Example (modproxy):
-//   d := licenses.NewDetector(modulePath, version, zipReader, log.Infof)
-//   modRedist := d.ModuleIsRedistributable()
+//
+//	d := licenses.NewDetector(modulePath, version, zipReader, log.Infof)
+//	modRedist := d.ModuleIsRedistributable()
 //
 // Example (discovery):
-//   d := licenses.NewDetector(modulePath, version, zipReader, log.Infof)
-//   modRedist := d.ModuleIsRedistributable()
-//   lics := d.AllLicenses()
-//   pkgRedist, pkgMetas := d.PackageInfo(pkgSubdir)
+//
+//	d := licenses.NewDetector(modulePath, version, zipReader, log.Infof)
+//	modRedist := d.ModuleIsRedistributable()
+//	lics := d.AllLicenses()
+//	pkgRedist, pkgMetas := d.PackageInfo(pkgSubdir)
 package licenses
 
 import (
@@ -468,9 +470,9 @@ func (d *Detector) paths(which WhichFiles) []string {
 
 // isVendoredFile reports if the given file is in a proper subdirectory nested
 // under a 'vendor' directory, to allow for Go packages named 'vendor'.
-//
-// e.g. isVendoredFile("vendor/LICENSE") == false, and
-//      isVendoredFile("vendor/foo/LICENSE") == true
+// For example:
+//   - isVendoredFile("vendor/LICENSE") == false, and
+//   - isVendoredFile("vendor/foo/LICENSE") == true.
 func isVendoredFile(name string) bool {
 	var vendorOffset int
 	if strings.HasPrefix(name, "vendor/") {

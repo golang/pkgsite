@@ -143,7 +143,9 @@ loop:
 // appendNumericPrefix appends a string representing n to dst.
 // n is the length of a digit string; the value we append is a prefix for the
 // digit string s such that
-//   prefix1 + s1 < prefix2 + s2
+//
+//	prefix1 + s1 < prefix2 + s2
+//
 // if and only if the integer denoted by s1 is less than the one denoted by s2.
 // In other words, prefix + s is a string that can be compared with other such
 // strings while preserving the ordering of the numbers.
@@ -151,13 +153,15 @@ loop:
 // If n==1, there is no prefix. (Single-digit numbers are unchanged.)
 // Otherwise, the prefix is a sequence of lower-case letters encoding n.
 // Examples:
-//   n    prefix
-//   1    <none>
-//   2    a
-//   27   z
-//   28   za
-//   53   zz
-//   54   zza
+//
+//	n    prefix
+//	1    <none>
+//	2    a
+//	27   z
+//	28   za
+//	53   zz
+//	54   zza
+//
 // This encoding depends on the ASCII properties that:
 // - digits are ordered numerically
 // - letters are ordered alphabetically

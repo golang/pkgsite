@@ -162,7 +162,6 @@ type listImports struct {
 // except we accept pkgPath as an argument to check that pkg.ImportPath ==
 // pkgPath and retry on various go list errors.
 //
-//
 // loadImports populates w with information about the packages in the standard
 // library and the packages they themselves import in w's build context.
 //

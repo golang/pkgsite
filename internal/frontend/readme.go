@@ -61,7 +61,7 @@ type Readme struct {
 // readme's original styling is preserved in the html by giving headings a css
 // class styled identical to their original heading level.
 //
-//  The extracted links are for display outside of the readme contents.
+// The extracted links are for display outside of the readme contents.
 //
 // This function is exported for use by external tools.
 func ProcessReadme(ctx context.Context, u *internal.Unit) (_ *Readme, err error) {

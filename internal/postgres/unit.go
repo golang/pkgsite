@@ -26,14 +26,17 @@ import (
 // If the module is unknown, pass internal.UnknownModulePath; if the version is unknown, pass
 // internal.LatestVersion.
 //
-// The rules for picking the best are:
+// The rules for picking the best are as follows.
+//
 // 1. If the version is known but the module path is not, choose the longest module path
-//    at that version that contains fullPath.
+// at that version that contains fullPath.
+//
 // 2. Otherwise, find the latest "good" version (in the modules table) that contains fullPath.
-//    a. First, follow the algorithm of the go command: prefer longer module paths, and
-//       find the latest unretracted version, using semver but preferring release to pre-release.
-//    b. If no modules have latest-version information, find the latest by sorting the versions
-//       we do have: again first by module path length, then by version.
+//
+//	a. First, follow the algorithm of the go command: prefer longer module paths, and
+//	   find the latest unretracted version, using semver but preferring release to pre-release.
+//	b. If no modules have latest-version information, find the latest by sorting the versions
+//	   we do have: again first by module path length, then by version.
 func (db *DB) GetUnitMeta(ctx context.Context, fullPath, requestedModulePath, requestedVersion string) (_ *internal.UnitMeta, err error) {
 	defer derrors.WrapStack(&err, "DB.GetUnitMeta(ctx, %q, %q, %q)", fullPath, requestedModulePath, requestedVersion)
 	defer middleware.ElapsedStat(ctx, "DB.GetUnitMeta")()

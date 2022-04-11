@@ -14,9 +14,10 @@ import (
 
 // GetLatestInfo returns various pieces of information about the latest
 // versions of a unit and module:
-// -  The linkable form of the minor version of the unit.
-// -  The latest module path and the full unit path of any major version found given the
-//    fullPath and the modulePath.
+//   - The linkable form of the minor version of the unit.
+//   - The latest module path and the full unit path of any major version found given the
+//     fullPath and the modulePath.
+//
 // It returns empty strings on error.
 // It is intended to be used as an argument to middleware.LatestVersions.
 func (s *Server) GetLatestInfo(ctx context.Context, unitPath, modulePath string, latestUnitMeta *internal.UnitMeta) internal.LatestInfo {

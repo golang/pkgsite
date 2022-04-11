@@ -230,7 +230,8 @@ func (r *results) add(modPath, version string, start time.Time, exists bool) {
 
 // readSeedFile reads a file of module versions that we want to fetch for
 // seeding the database. Each line of the file should be of the form:
-//     module@version
+//
+//	module@version
 func readSeedFile(ctx context.Context, seedfile string) (_ []internal.Modver, err error) {
 	defer derrors.Wrap(&err, "readSeedFile %q", seedfile)
 	lines, err := internal.ReadFileLines(seedfile)

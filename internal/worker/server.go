@@ -370,6 +370,7 @@ func (s *Server) reportError(ctx context.Context, err error, w http.ResponseWrit
 // is assumed to have either of the following two structures:
 //   - <module>/@v/<version>
 //   - <module>/@latest
+//
 // (this is symmetric with the proxy url scheme)
 func parseModulePathAndVersion(requestPath string) (string, string, error) {
 	p := strings.TrimPrefix(requestPath, "/")

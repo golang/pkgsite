@@ -265,7 +265,9 @@ func TestSharing(t *testing.T) {
 }
 
 // The following three functions were generated with
-//   Generate(os.Stdout, "p", node{})
+//
+//	Generate(os.Stdout, "p", node{})
+//
 // and pasted here. They should be kept in sync
 // with the output of Generate.
 func encode_node(e *Encoder, x *node) {

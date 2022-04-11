@@ -158,7 +158,8 @@ func coveragePercentEqual(a, b float64) bool {
 //
 // This makes it easier to work with timestamps in PostgreSQL, which have
 // Microsecond precision:
-//   https://www.postgresql.org/docs/9.1/datatype-datetime.html
+//
+//	https://www.postgresql.org/docs/9.1/datatype-datetime.html
 func NowTruncated() time.Time {
 	return time.Now().In(time.UTC).Truncate(time.Microsecond)
 }

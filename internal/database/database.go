@@ -321,7 +321,9 @@ const OnConflictDoNothing = "ON CONFLICT DO NOTHING"
 
 // BulkInsert constructs and executes a multi-value insert statement. The
 // query is constructed using the format:
-//   INSERT INTO <table> (<columns>) VALUES (<placeholders-for-each-item-in-values>)
+//
+//	INSERT INTO <table> (<columns>) VALUES (<placeholders-for-each-item-in-values>)
+//
 // If conflictAction is not empty, it is appended to the statement.
 //
 // The query is executed using a PREPARE statement with the provided values.
@@ -478,7 +480,8 @@ var maxBulkUpdateArrayLen = 10000
 // the values of the first column.
 //
 // Types holds the database type of each column. For example,
-//    []string{"INT", "TEXT"}
+//
+//	[]string{"INT", "TEXT"}
 //
 // Values contains one slice of values per column. (Note that this is unlike BulkInsert, which
 // takes a single slice of interleaved values.)

@@ -65,19 +65,19 @@ func extractURLPathInfo(urlPath string) (_ *urlPathInfo, err error) {
 // of three forms, and we divide it into three parts: a full path, a module
 // path, and a version.
 //
-// 1. The path has no '@', like github.com/hashicorp/vault/api.
-//    This is the full path. The module path is unknown. So is the version, so we
-//    treat it as the latest version for whatever the path denotes.
+//  1. The path has no '@', like github.com/hashicorp/vault/api.
+//     This is the full path. The module path is unknown. So is the version, so we
+//     treat it as the latest version for whatever the path denotes.
 //
-// 2. The path has "@version" at the end, like github.com/hashicorp/vault/api@v1.2.3.
-//    We split this at the '@' into a full path (github.com/hashicorp/vault/api)
-//    and version (v1.2.3); the module path is still unknown.
+//  2. The path has "@version" at the end, like github.com/hashicorp/vault/api@v1.2.3.
+//     We split this at the '@' into a full path (github.com/hashicorp/vault/api)
+//     and version (v1.2.3); the module path is still unknown.
 //
-// 3. The path has "@version" in the middle, like github.com/hashicorp/vault@v1.2.3/api.
-//    (We call this the "canonical" form of a path.)
-//    We remove the version to get the full path, which is again
-//    github.com/hashicorp/vault/api. The version is v1.2.3, and the module path is
-//    the part before the '@', github.com/hashicorp/vault.
+//  3. The path has "@version" in the middle, like github.com/hashicorp/vault@v1.2.3/api.
+//     (We call this the "canonical" form of a path.)
+//     We remove the version to get the full path, which is again
+//     github.com/hashicorp/vault/api. The version is v1.2.3, and the module path is
+//     the part before the '@', github.com/hashicorp/vault.
 //
 // In one case, we do a little more than parse the urlPath into parts: if the full path
 // could be a part of the standard library (because it has no '.'), we assume it

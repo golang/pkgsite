@@ -100,9 +100,10 @@ func SeriesPathForModule(modulePath string) string {
 // MajorVersionForModule returns the final "vN" from the module path, if any.
 // It returns the empty string if the module path is malformed.
 // Examples:
-//   "m.com" => ""
-//   "m.com/v2" => "v2"
-//   "gpkg.in/m.v1 = "v1"
+//
+//	"m.com" => ""
+//	"m.com/v2" => "v2"
+//	"gpkg.in/m.v1 = "v1"
 func MajorVersionForModule(modulePath string) string {
 	_, v, _ := module.SplitPathVersion(modulePath)
 	return strings.TrimLeft(v, "/.")

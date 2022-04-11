@@ -246,8 +246,8 @@ func extractPackages(ctx context.Context, modulePath, resolvedVersion string, co
 // The logic of the go tool for ignoring directories is documented at
 // https://golang.org/cmd/go/#hdr-Package_lists_and_patterns:
 //
-// 	Directory and file names that begin with "." or "_" are ignored
-// 	by the go tool, as are directories named "testdata".
+//	Directory and file names that begin with "." or "_" are ignored
+//	by the go tool, as are directories named "testdata".
 //
 // However, even though `go list` and other commands that take package
 // wildcards will ignore these, they can still be imported and used in

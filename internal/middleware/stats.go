@@ -49,7 +49,9 @@ func SetStat(ctx context.Context, key string, value interface{}) {
 
 // ElapsedStat records as a stat the elapsed time for a
 // function execution. Invoke like so:
-//   defer ElapsedStat(ctx, "FunctionName")()
+//
+//	defer ElapsedStat(ctx, "FunctionName")()
+//
 // The resulting stat will be called "FunctionName ms" and will
 // be the wall-clock execution time of the function in milliseconds.
 func ElapsedStat(ctx context.Context, name string) func() {

@@ -264,7 +264,7 @@ scan:
 
 // formatLineHTML formats the line as HTML-annotated text.
 // URLs and Go identifiers are linked to corresponding declarations.
-// If pre is true no conversion of `` or '' to “ and ” is performed.
+// If pre is true no conversion of doubled ` and ' to “ and ” is performed.
 func (r *Renderer) formatLineHTML(line string, pre bool) safehtml.HTML {
 	var htmls []safehtml.HTML
 	var numQuotes int
@@ -694,7 +694,7 @@ const (
 
 var unicodeQuoteReplacer = strings.NewReplacer("``", ulquo, "''", urquo)
 
-// convertQuotes turns `` into “ and '' into ”.
+// convertQuotes turns doubled ` and ' into “ and ”.
 func convertQuotes(text string) string {
 	return unicodeQuoteReplacer.Replace(text)
 }

@@ -144,6 +144,7 @@ func (r *Renderer) Synopsis(n ast.Node) string {
 // into a hyperlink to the declaration of that identifier.
 //
 // This returns formatted HTML with:
+//
 //	<p>                elements for plain documentation text
 //	<pre>              elements for preformatted text
 //	<h3 id="hdr-XXX">  elements for headings with the "id" attribute
@@ -171,6 +172,7 @@ func (r *Renderer) Links() []Link {
 // This formats documentation HTML according to the same rules as DocHTML.
 //
 // This formats declaration HTML with:
+//
 //	<pre>                       element wrapping the entire declaration
 //	<span id="X" data-kind="K"> elements for many top-level declarations
 //	<span class="comment">      elements for every Go comment
@@ -191,6 +193,7 @@ func (r *Renderer) DeclHTML(doc string, decl ast.Decl) (out struct{ Doc, Decl sa
 // or assignment-compatible to ast.Expr, ast.Decl, ast.Spec, or ast.Stmt.
 //
 // This returns formatted HTML with:
+//
 //	<pre>                   element wrapping entire block
 //	<span class="comment">  elements for every Go comment
 //

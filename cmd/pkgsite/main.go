@@ -11,7 +11,7 @@
 // With no arguments, pkgsite will serve docs for the module in the current
 // directory, which must have a go.mod file:
 //
-//   cd ~/repos/cue && pkgsite
+//	cd ~/repos/cue && pkgsite
 //
 // This form will also serve all of the module's required modules at their
 // required versions. You can disable serving the required modules by passing
@@ -20,13 +20,13 @@
 // You can also serve docs from your module cache, directly from the proxy
 // (it uses the GOPROXY environment variable), or both:
 //
-//   pkgsite -cache -proxy
+//	pkgsite -cache -proxy
 //
 // With either -cache or -proxy, pkgsite won't look for a module in the current
 // directory. You can still provide modules on the local filesystem by listing
 // their paths:
 //
-//   pkgsite -cache -proxy ~/repos/cue some/other/module
+//	pkgsite -cache -proxy ~/repos/cue some/other/module
 //
 // Although standard library packages will work by default, the docs can take a
 // while to appear the first time because the Go repo must be cloned and

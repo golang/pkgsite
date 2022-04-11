@@ -124,10 +124,11 @@ func fetchVersionsDetails(ctx context.Context, ds internal.DataSource, um *inter
 //
 // For example: if we're considering package foo.com/v3/bar/baz, and encounter
 // module version foo.com/bar/v2, we do the following:
-//   1) Start with the v1Path foo.com/bar/baz.
-//   2) Trim off the version series path foo.com/bar to get 'baz'.
-//   3) Join with the versioned module path foo.com/bar/v2 to get
-//      foo.com/bar/v2/baz.
+//  1. Start with the v1Path foo.com/bar/baz.
+//  2. Trim off the version series path foo.com/bar to get 'baz'.
+//  3. Join with the versioned module path foo.com/bar/v2 to get
+//     foo.com/bar/v2/baz.
+//
 // ...being careful about slashes along the way.
 func pathInVersion(v1Path string, mi *internal.ModuleInfo) string {
 	suffix := internal.Suffix(v1Path, mi.SeriesPath())

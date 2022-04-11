@@ -124,9 +124,13 @@ func isMarkdown(filename string) bool {
 //
 // In addition, GitHub will translate absolute non-raw links to image files to raw links.
 // For example, when GitHub renders a README with
-//    <img src="https://github.com/gobuffalo/buffalo/blob/master/logo.svg">
+//
+//	<img src="https://github.com/gobuffalo/buffalo/blob/master/logo.svg">
+//
 // it rewrites it to
-//    <img src="https://github.com/gobuffalo/buffalo/raw/master/logo.svg">
+//
+//	<img src="https://github.com/gobuffalo/buffalo/raw/master/logo.svg">
+//
 // (replacing "blob" with "raw").
 // We do that too.
 func translateLink(dest string, info *source.Info, useRaw bool, readme *internal.Readme) string {

@@ -209,11 +209,11 @@ func MDur(m *stats.Float64Measure, d time.Duration) stats.Measurement {
 }
 
 // Customizations of ochttp views. Views are updated as follows:
-//  + ClientHost and ServerRoute are added to resp. client and server metrics.
-//    Since these are bounded cardinality in our metrics, they are useful to
-//    add additional context.
-//  + Method tags are removed. We don't have any routes that accept more than
-//    one HTTP method.
+//   - ClientHost and ServerRoute are added to resp. client and server metrics.
+//     Since these are bounded cardinality in our metrics, they are useful to
+//     add additional context.
+//   - Method tags are removed. We don't have any routes that accept more than
+//     one HTTP method.
 var (
 	ServerRequestCount = &view.View{
 		Name:        "go-discovery/http/server/request_count",

@@ -26,16 +26,17 @@ import (
 // to a struct.
 //
 // Example:
-//   type Player struct { Name string; Score int }
-//   playerScanArgs := database.StructScanner(Player{})
-//   err := db.RunQuery(ctx, "SELECT name, score FROM players", func(rows *sql.Rows) error {
-//       var p Player
-//       if err := rows.Scan(playerScanArgs(&p)...); err != nil {
-//           return err
-//       }
-//       // use p
-//       return nil
-//   })
+//
+//	type Player struct { Name string; Score int }
+//	playerScanArgs := database.StructScanner(Player{})
+//	err := db.RunQuery(ctx, "SELECT name, score FROM players", func(rows *sql.Rows) error {
+//	    var p Player
+//	    if err := rows.Scan(playerScanArgs(&p)...); err != nil {
+//	        return err
+//	    }
+//	    // use p
+//	    return nil
+//	})
 func StructScanner[T any]() func(p *T) []interface{} {
 	return structScannerForType[T]()
 }
@@ -121,9 +122,10 @@ func (n nullPtr) Value() (driver.Value, error) {
 
 // CollectStructs scans the the rows from the query into structs and returns a slice of them.
 // Example:
-//   type Player struct { Name string; Score int }
-//   var players []Player
-//   err := db.CollectStructs(ctx, &players, "SELECT name, score FROM players")
+//
+//	type Player struct { Name string; Score int }
+//	var players []Player
+//	err := db.CollectStructs(ctx, &players, "SELECT name, score FROM players")
 func CollectStructs[T any](ctx context.Context, db *DB, query string, args ...interface{}) ([]T, error) {
 	scanner := structScannerForType[T]()
 	var ts []T

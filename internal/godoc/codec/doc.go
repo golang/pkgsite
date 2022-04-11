@@ -10,7 +10,7 @@ preserves sharing among struct pointers (but not other forms of sharing, like
 other pointer types or sub-slices). These features are sufficient for
 encoding the structures of the go/ast package, which is its sole purpose.
 
-Encoding Scheme
+# Encoding Scheme
 
 Every encoded value begins with a single byte that describes what (if
 anything) follows. There is enough information to skip over the value, since
@@ -32,7 +32,8 @@ The nBytes code indicates that an unsigned integer N is encoded next,
 followed by N bytes of data. This is used to represent strings and byte
 slices, as well numbers bigger than can fit into the initial byte. For
 example, the string "hi" is represented as:
-  nBytes 2 'h' 'i'
+
+	nBytes 2 'h' 'i'
 
 Unsigned integers that can't fit into the initial byte are encoded as byte
 sequences of length 4 or 8, holding little-endian uint32 or uint64 values. We
@@ -43,7 +44,8 @@ complexity.
 
 The nValues code is for sequences of values whose size is known beforehand,
 like a Go slice or array. The slice []string{"hi", "bye"} is encoded as
-  nValues 2 nBytes 2 'h' 'i' nBytes 3 'b' 'y' 'e'
+
+	nValues 2 nBytes 2 'h' 'i' nBytes 3 'b' 'y' 'e'
 
 The ref code is used to refer to an earlier encoded value. It is followed by
 a uint denoting the index data of the value to use.

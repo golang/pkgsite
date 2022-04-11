@@ -101,9 +101,10 @@ func RunDBTests(dbName string, m *testing.M, testDB **DB) {
 // return value of the function should be called in a defer statement to release the database.
 // For example:
 //
-//    func Test(t *testing.T) {
-//        db, release := acquire(t)
-//        defer release()
+//	func Test(t *testing.T) {
+//	    db, release := acquire(t)
+//	    defer release()
+//	}
 func RunDBTestsInParallel(dbBaseName string, numDBs int, m *testing.M, acquirep *func(*testing.T) (*DB, func())) {
 	start := time.Now()
 	database.QueryLoggingDisabled = true

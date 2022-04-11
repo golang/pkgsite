@@ -120,9 +120,10 @@ func processWords(s string) []string {
 // summaryReplacements is used to replace words with other words.
 // It is used by processWord, below.
 // Example key-value pairs:
-//   "deleteMe": nil					 // removes "deleteMe"
-//   "rand": []string{"random"}			 // replace "rand" with "random"
-//   "utf-8": []string{"utf-8", "utf8"}  // add "utf8" whenever "utf-8" is seen
+//
+//	"deleteMe": nil					 // removes "deleteMe"
+//	"rand": []string{"random"}			 // replace "rand" with "random"
+//	"utf-8": []string{"utf-8", "utf8"}  // add "utf8" whenever "utf-8" is seen
 var summaryReplacements = map[string][]string{
 	"postgres":   {"postgres", "postgresql"},
 	"postgresql": {"postgres", "postgresql"},
