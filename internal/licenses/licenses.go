@@ -151,6 +151,7 @@ var (
 		"CC-BY-4.0",
 		"CC-BY-SA-3.0",
 		"CC-BY-SA-4.0",
+		"CECILL-2.1",
 		"CC0-1.0",
 		"EPL-1.0",
 		"EPL-2.0",
