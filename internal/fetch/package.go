@@ -159,7 +159,8 @@ func extractPackages(ctx context.Context, modulePath, resolvedVersion string, co
 		}
 		dirs[innerPath] = append(dirs[innerPath], pathname)
 		if len(dirs) > maxPackagesPerModule {
-			return fmt.Errorf("%d packages found in %q; exceeds limit %d for maxPackagePerModule", len(dirs), modulePath, maxPackagesPerModule)
+			return fmt.Errorf("%d packages found in %q; exceeds limit %d for maxPackagePerModule: %w",
+				len(dirs), modulePath, maxPackagesPerModule, derrors.ModuleTooLarge)
 		}
 		return nil
 	})
