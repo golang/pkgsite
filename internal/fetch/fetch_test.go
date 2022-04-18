@@ -191,6 +191,13 @@ func TestFetchModule_Errors(t *testing.T) {
 			wantHasGoMod:  true,
 		},
 		{
+			name:          "known alternative",
+			mod:           moduleKnownAlternative,
+			wantErr:       derrors.AlternativeModule,
+			wantGoModPath: "github.com/msopentech/azure-sdk-for-go",
+			wantHasGoMod:  false,
+		},
+		{
 			name:          "empty module",
 			mod:           moduleEmpty,
 			wantErr:       derrors.BadModule,

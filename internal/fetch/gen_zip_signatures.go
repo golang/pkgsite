@@ -45,7 +45,7 @@ var largeNoMods = []struct {
 }{
 	{"github.com/aws/aws-sdk-go", "v1.14.30"},
 	{"github.com/kubernetes/kubernetes", "v1.15.0-alpha.0"},
-	{"github.com/Azure/azure-sdk-for-go", "v57.2.0"},
+	{"github.com/Azure/azure-sdk-for-go", "v63.2.0"},
 	{"github.com/ethereum/go-ethereum", "v1.9.7"},
 	{"github.com/moby/moby", "v20.10.8"},
 	{"github.com/influxdata/influxdb", "v1.7.9"},

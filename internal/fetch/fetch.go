@@ -108,11 +108,16 @@ func fetchModule(ctx context.Context, fr *FetchResult, mg ModuleGetter) error {
 		return err
 	}
 
-	// If there is no go.mod file in the zip, try another way to detect
-	// alternative modules: compare the zip signature to a list of known ones to
-	// see if this is a fork. The intent is to avoid processing certain known
-	// large modules, not to find every fork.
+	// If there is no go.mod file in the zip, try other ways to detect
+	// alternative modules:
+	// 1. Compare the module path to a list of known alternative module paths.
+	// 2. Compare the zip signature to a list of known ones to see if this is a
+	//    fork. The intent is to avoid processing certain known large modules, not
+	//    to find every fork.
 	if !fr.HasGoMod {
+		if modPath := knownAlternativeFor(fr.ModulePath); modPath != "" {
+			return fmt.Errorf("known alternative to %s: %w", modPath, derrors.AlternativeModule)
+		}
 		forkedModule, err := forkedFrom(contentDir, fr.ModulePath, fr.ResolvedVersion)
 		if err != nil {
 			return err

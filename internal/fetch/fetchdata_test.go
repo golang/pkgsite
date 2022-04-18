@@ -825,6 +825,16 @@ var moduleAlternative = &testModule{
 	},
 }
 
+// See known_alternatives.go
+var moduleKnownAlternative = &testModule{
+	mod: &proxytest.Module{
+		ModulePath: "github.com/msopentech/azure-sdk-for-go",
+	},
+	fr: &FetchResult{
+		Status: derrors.ToStatus(derrors.AlternativeModule),
+	},
+}
+
 var moduleStdMaster = &testModule{
 	mod: &proxytest.Module{
 		ModulePath: stdlib.ModulePath,
