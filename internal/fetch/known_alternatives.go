@@ -19,6 +19,7 @@ var knownAlternatives = map[string]string{
 	"github.com/msopentech/azure-sdk-for-go":       "github.com/Azure/azure-sdk-for-go",
 	"github.com/MSOpenTech/azure-sdk-for-go":       "github.com/Azure/azure-sdk-for-go",
 	"gopkg.in/Azure/azure-sdk-for-go":              "github.com/Azure/azure-sdk-for-go",
+	"gopkg.in/azure/azure-sdk-for-go":              "github.com/Azure/azure-sdk-for-go",
 	"github.com/masslessparticle/azure-sdk-for-go": "github.com/Azure/azure-sdk-for-go",
 	"github.com/aliyun/alibaba-cloud-sdk-go":       "github.com/Azure/azure-sdk-for-go",
 	"github.com/johnstairs/azure-sdk-for-go	": "github.com/Azure/azure-sdk-for-go",
