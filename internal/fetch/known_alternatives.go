@@ -16,12 +16,16 @@ import "golang.org/x/mod/module"
 // module path with the path in the go.mod file. This list is for modules
 // without go.mod files.
 var knownAlternatives = map[string]string{
-	"github.com/msopentech/azure-sdk-for-go":       "github.com/Azure/azure-sdk-for-go",
-	"github.com/MSOpenTech/azure-sdk-for-go":       "github.com/Azure/azure-sdk-for-go",
-	"gopkg.in/Azure/azure-sdk-for-go":              "github.com/Azure/azure-sdk-for-go",
-	"gopkg.in/azure/azure-sdk-for-go":              "github.com/Azure/azure-sdk-for-go",
-	"github.com/masslessparticle/azure-sdk-for-go": "github.com/Azure/azure-sdk-for-go",
-	"github.com/aliyun/alibaba-cloud-sdk-go":       "github.com/Azure/azure-sdk-for-go",
+	"github.com/Azure/Azure-sdk-for-go":                "github.com/Azure/azure-sdk-for-go",
+	"github.com/azure/azure-sdk-for-go":                "github.com/Azure/azure-sdk-for-go",
+	"github.com/evenh/azure-sdk-for-go":                "github.com/Azure/azure-sdk-for-go",
+	"github.com/msopentech/azure-sdk-for-go":           "github.com/Azure/azure-sdk-for-go",
+	"github.com/MSOpenTech/azure-sdk-for-go":           "github.com/Azure/azure-sdk-for-go",
+	"github.com/scott-the-programmer/azure-sdk-for-go": "github.com/Azure/azure-sdk-for-go",
+	"gopkg.in/Azure/azure-sdk-for-go":                  "github.com/Azure/azure-sdk-for-go",
+	"gopkg.in/azure/azure-sdk-for-go":                  "github.com/Azure/azure-sdk-for-go",
+	"github.com/masslessparticle/azure-sdk-for-go":     "github.com/Azure/azure-sdk-for-go",
+	"github.com/aliyun/alibaba-cloud-sdk-go":           "github.com/Azure/azure-sdk-for-go",
 	"github.com/johnstairs/azure-sdk-for-go	": "github.com/Azure/azure-sdk-for-go",
 	"github.com/shopify/sarama": "github.com/Shopify/sarama",
 }
