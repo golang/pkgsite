@@ -11,6 +11,8 @@
 <a class="js-deprecatedTagLink" href="#BadF">func BadF()</a><span class="Documentation-indexDeprecated Documentation-deprecatedTag">deprecated</span></li>
 <li class="Documentation-indexFunction">
 <a href="#GoodF">func GoodF()</a></li>
+<li class="Documentation-indexFunction">
+<a href="#WrongF">func WrongF()</a></li>
 <li class="Documentation-indexType">
 <a class="js-deprecatedTagLink" href="#BadT">type BadT</a><span class="Documentation-indexDeprecated Documentation-deprecatedTag">deprecated</span></li>
 <li><ul class="Documentation-indexTypeFunctions">
@@ -24,6 +26,8 @@
 <a class="js-deprecatedTagLink" href="#BadT.BadM">func (BadT) BadM()</a><span class="Documentation-indexDeprecated Documentation-deprecatedTag">deprecated</span></li>
 <li>
 <a href="#BadT.GoodM">func (BadT) GoodM()</a></li>
+<li>
+<a href="#BadT.WrongM">func (BadT) WrongM()</a></li>
 </ul></li>
 <li class="Documentation-indexType">
 <a href="#GoodT">type GoodT</a></li>
@@ -47,12 +51,19 @@
 <pre><span id="BadC" data-kind="constant">const BadC = 2</span></pre>
 </div>
 <p>BadC is bad.
-Deprecated: use GoodC.
+</p><p>Deprecated: use GoodC.
 </p>
 <div class="Documentation-declaration">
 <span class="Documentation-declarationLink"><a class="Documentation-source" href="src">View Source</a></span>
 <pre><span id="GoodC" data-kind="constant">const GoodC = 1</span></pre>
 </div>
+<div class="Documentation-declaration">
+<span class="Documentation-declarationLink"><a class="Documentation-source" href="src">View Source</a></span>
+<pre><span id="WrongC" data-kind="constant">const WrongC = 2</span></pre>
+</div>
+<p>WrongC is wrong.
+Deprecated: use GoodC.
+</p>
 </section>
 <h3 tabindex="-1" id="pkg-variables" class="Documentation-variablesHeader">Variables <a href="#pkg-variables">¶</a></h3>
 <section class="Documentation-variables">
@@ -86,7 +97,7 @@ func <a class="Documentation-source" href="src">BadF</a>
 <pre>func BadF()</pre>
 </div>
 <p>BadF is bad.
-Deprecated: use GoodF.
+</p><p>Deprecated: use GoodF.
 </p>
 </div>
 </details>
@@ -99,6 +110,18 @@ Deprecated: use GoodF.
 <div class="Documentation-declaration">
 <pre>func GoodF()</pre>
 </div>
+</div><div class="Documentation-function">
+<h4 tabindex="-1" id="WrongF" data-kind="function" class="Documentation-functionHeader">
+<span>func <a class="Documentation-source" href="src">WrongF</a> <a class="Documentation-idLink" href="#WrongF">¶</a></span>
+<span class="Documentation-sinceVersion">
+</span>
+</h4>
+<div class="Documentation-declaration">
+<pre>func WrongF()</pre>
+</div>
+<p>WrongF is wrong.
+Deprecated: use GoodF.
+</p>
 </div></section>
 <h3 tabindex="-1" id="pkg-types" class="Documentation-typesHeader">Types <a href="#pkg-types">¶</a></h3>
 <section class="Documentation-types"><div class="Documentation-type">
@@ -119,7 +142,7 @@ type <a class="Documentation-source" href="src">BadT</a>
 <pre>type BadT <a href="/builtin#int">int</a></pre>
 </div>
 <p>BadT is bad.
-Deprecated: use GoodT.
+</p><p>Deprecated: use GoodT.
 Don&#39;t use this.
 </p>
 <div class="Documentation-typeFunc">
@@ -170,6 +193,8 @@ func (BadT) <a class="Documentation-source" href="src">BadM</a>
 <pre>func (<a href="#BadT">BadT</a>) BadM()</pre>
 </div>
 <p>Deprecated: use GoodM.
+You really should.
+For sure.
 </p>
 </div>
 </details>
@@ -182,6 +207,18 @@ func (BadT) <a class="Documentation-source" href="src">BadM</a>
 <div class="Documentation-declaration">
 <pre>func (<a href="#BadT">BadT</a>) GoodM()</pre>
 </div>
+</div><div class="Documentation-typeMethod">
+<h4 tabindex="-1" id="BadT.WrongM" data-kind="method" class="Documentation-typeMethodHeader">
+<span>func (BadT) <a class="Documentation-source" href="src">WrongM</a> <a class="Documentation-idLink" href="#BadT.WrongM">¶</a></span>
+<span class="Documentation-sinceVersion">
+</span>
+</h4>
+<div class="Documentation-declaration">
+<pre>func (<a href="#BadT">BadT</a>) WrongM()</pre>
+</div>
+<p>This function is not deprecated.
+Deprecated: not.
+</p>
 </div>
 </div>
 </details>
@@ -212,7 +249,7 @@ func <a class="Documentation-source" href="src">NewGoodTBad</a>
 <pre>func NewGoodTBad() <a href="#GoodT">GoodT</a></pre>
 </div>
 <p>NewGoodTBad is bad.
-Deprecated: use NewGoodTGood.
+</p><p>Deprecated: use NewGoodTGood.
 </p>
 </div>
 </details>
@@ -243,7 +280,7 @@ func (GoodT) <a class="Documentation-source" href="src">BadM</a>
 <pre>func (<a href="#GoodT">GoodT</a>) BadM()</pre>
 </div>
 <p>BadM is bad.
-Deprecated: use GoodM.
+</p><p>Deprecated: use GoodM.
 </p>
 </div>
 </details>
@@ -300,6 +337,12 @@ title="GoodF()" data-gtmc="doc outline link">
 GoodF()
 </a>
 </li>
+<li role="none">
+<a href="#WrongF" role="treeitem" aria-level="3" tabindex="-1"
+title="WrongF()" data-gtmc="doc outline link">
+WrongF()
+</a>
+</li>
 </ul>
 </li>
 <li class="DocNav-types" role="none">
@@ -337,6 +380,12 @@ BadM()
 <a href="#BadT.GoodM" role="treeitem" aria-level="4" tabindex="-1"
 title="GoodM()" data-gtmc="doc outline link">
 GoodM()
+</a>
+</li>
+<li role="none">
+<a href="#BadT.WrongM" role="treeitem" aria-level="4" tabindex="-1"
+title="WrongM()" data-gtmc="doc outline link">
+WrongM()
 </a>
 </li>
 </ul>
@@ -387,6 +436,7 @@ GoodM()
 <optgroup label="Functions">
 <option value="BadF">BadF()</option>
 <option value="GoodF">GoodF()</option>
+<option value="WrongF">WrongF()</option>
 </optgroup>
 <optgroup label="Types">
 <option value="BadT">type BadT</option>
@@ -394,6 +444,7 @@ GoodM()
 <option value="NewBadTGood">NewBadTGood()</option>
 <option value="BadT.BadM">BadM()</option>
 <option value="BadT.GoodM">GoodM()</option>
+<option value="BadT.WrongM">WrongM()</option>
 <option value="GoodT">type GoodT</option>
 <option value="NewGoodTBad">NewGoodTBad()</option>
 <option value="NewGoodTGood">NewGoodTGood()</option>

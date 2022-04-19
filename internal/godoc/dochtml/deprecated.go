@@ -10,7 +10,8 @@ import (
 	"golang.org/x/pkgsite/internal/godoc/internal/doc"
 )
 
-var deprecatedRx = regexp.MustCompile(`(^|\n)\s*Deprecated:`) // "Deprecated:" at the start of a line.
+// "Deprecated:" at the start of a paragraph.
+var deprecatedRx = regexp.MustCompile(`(^|\n\s*\n)\s*Deprecated:`)
 
 // isDeprecated reports whether the string has a "Deprecated" line.
 func isDeprecated(s string) bool {

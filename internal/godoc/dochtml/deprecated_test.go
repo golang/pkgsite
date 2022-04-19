@@ -13,9 +13,11 @@ func TestIsDeprecated(t *testing.T) {
 	}{
 		{"A comment", false},
 		{"Deprecated: foo", true},
-		{" A comment\n   Deprecated: foo", true},
+		{" A comment\n   Deprecated: foo", false},
+		{" A comment\n\n   Deprecated: foo", true},
 		{"This is\n Deprecated.", false},
-		{"line 1\nDeprecated:\nline 2\n", true},
+		{"line 1\nDeprecated:\nline 2\n", false},
+		{"line 1\n\nDeprecated:\nline 2\n", true},
 	} {
 		got := isDeprecated(test.text)
 		if got != test.want {
