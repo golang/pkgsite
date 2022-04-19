@@ -92,3 +92,7 @@ steps:
     entrypoint:  deploy/pagecheck.sh
     args:
       - beta
+artifacts:
+  objects:
+    location: 'gs://$PROJECT_ID/screentest-artifacts'
+    paths: ['tests/screentest/testdata/*.png']
