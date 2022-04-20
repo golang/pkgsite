@@ -6,23 +6,19 @@
 package internal
 
 const (
-	ExperimentDeprecatedDoc          = "deprecated-doc"
 	ExperimentEnableStdFrontendFetch = "enable-std-frontend-fetch"
 	ExperimentNewUnitLayout          = "new-unit-layout"
 	ExperimentStyleGuide             = "styleguide"
 	ExperimentVulns                  = "vulns"
-	ExperimentDepsDevLink            = "deps-dev-link"
 )
 
 // Experiments represents all of the active experiments in the codebase and
 // a description of each experiment.
 var Experiments = map[string]string{
-	ExperimentDeprecatedDoc:          "Treat deprecated symbols specially in documentation.",
 	ExperimentEnableStdFrontendFetch: "Enable frontend fetching for module std.",
 	ExperimentNewUnitLayout:          "Enable the new layout on the unit page.",
 	ExperimentStyleGuide:             "Enable the styleguide.",
 	ExperimentVulns:                  "Enable vulnerability reporting.",
-	ExperimentDepsDevLink:            "Enable link to Open Source Insights (deps.dev).",
 }
 
 // Experiment holds data associated with an experimental feature for frontend

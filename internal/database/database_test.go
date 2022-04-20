@@ -372,12 +372,12 @@ func TestTransactSerializable(t *testing.T) {
 	// Test that serializable transactions retry until success.
 	// This test was taken from the example at https://www.postgresql.org/docs/11/transaction-iso.html,
 	// section 13.2.3.
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout*2)
 	defer cancel()
 
 	// Once in while, the test doesn't work. Repeat to de-flake.
 	var msg string
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 20; i++ {
 		msg = testTransactSerializable(ctx, t)
 		if msg == "" {
 			return
