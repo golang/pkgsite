@@ -12,7 +12,6 @@ import (
 	"golang.org/x/mod/semver"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
-	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/sync/errgroup"
 	vulnc "golang.org/x/vuln/client"
 	"golang.org/x/vuln/osv"
@@ -46,6 +45,9 @@ func VulnsForPackage(modulePath, version, packagePath string, getVulnEntries vul
 func vulnsForPackage(modulePath, version, packagePath string, getVulnEntries vulnEntriesFunc) (_ []Vuln, err error) {
 	defer derrors.Wrap(&err, "vulns(%q, %q, %q)", modulePath, version, packagePath)
 
+	if getVulnEntries == nil {
+		return nil, nil
+	}
 	// Get all the vulns for this module.
 	entries, err := getVulnEntries(modulePath)
 	if err != nil {
@@ -104,9 +106,6 @@ func entryVuln(e *osv.Entry, packagePath, version string) (Vuln, bool) {
 }
 
 func (s *Server) serveVuln(w http.ResponseWriter, r *http.Request, _ internal.DataSource) error {
-	if !experiment.IsActive(r.Context(), internal.ExperimentVulns) {
-		return &serverError{status: http.StatusNotFound}
-	}
 	switch r.URL.Path {
 	case "/", "/list":
 		// Serve a list of all entries.

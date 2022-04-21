@@ -17,7 +17,6 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/cookie"
 	"golang.org/x/pkgsite/internal/derrors"
-	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/middleware"
 	"golang.org/x/pkgsite/internal/stdlib"
@@ -220,7 +219,7 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 	}
 
 	// Get vulnerability information.
-	if s.vulnClient != nil && experiment.IsActive(ctx, internal.ExperimentVulns) {
+	if s.vulnClient != nil {
 		page.Vulns = VulnsForPackage(um.ModulePath, um.Version, um.Path, s.vulnClient.GetByModule)
 	}
 	s.servePage(ctx, w, tabSettings.TemplateName, page)

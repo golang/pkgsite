@@ -14,7 +14,6 @@ import (
 
 	"golang.org/x/mod/semver"
 	"golang.org/x/pkgsite/internal"
-	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/stdlib"
@@ -196,9 +195,7 @@ func buildVersionDetails(ctx context.Context, currentModulePath string,
 		if sv := sh.SymbolsAtVersion(mi.Version); sv != nil {
 			vs.Symbols = symbolsForVersion(linkify(mi), sv)
 		}
-		if experiment.IsActive(ctx, internal.ExperimentVulns) {
-			vs.Vulns = VulnsForPackage(mi.ModulePath, mi.Version, "", getVulnEntries)
-		}
+		vs.Vulns = VulnsForPackage(mi.ModulePath, mi.Version, "", getVulnEntries)
 		vl := lists[key]
 		if vl == nil {
 			seenLists = append(seenLists, key)

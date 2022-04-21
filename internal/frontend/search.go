@@ -22,7 +22,6 @@ import (
 	"golang.org/x/mod/semver"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
-	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/middleware"
 	"golang.org/x/pkgsite/internal/postgres"
@@ -227,7 +226,7 @@ func fetchSearchPage(ctx context.Context, db *postgres.DB, cq, symbol string,
 		results = append(results, sr)
 	}
 
-	if getVulnEntries != nil && experiment.IsActive(ctx, internal.ExperimentVulns) {
+	if getVulnEntries != nil {
 		addVulns(results, getVulnEntries)
 	}
 
