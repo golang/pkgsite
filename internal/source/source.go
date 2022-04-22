@@ -699,6 +699,11 @@ var patterns = []struct {
 		transformCommit: giteaTransformCommit,
 	},
 	{
+		pattern:         `^(?P<repo>codeberg\.org/[a-z0-9A-Z_.\-]+/[a-z0-9A-Z_.\-]+)(\.git|$)`,
+		templates:       giteaURLTemplates,
+		transformCommit: giteaTransformCommit,
+	},
+	{
 		pattern: `^(?P<repo>gogs\.[a-z0-9A-Z.-]+/[a-z0-9A-Z_.\-]+/[a-z0-9A-Z_.\-]+)(\.git|$)`,
 		// Gogs uses the same basic structure as Gitea, but omits the type of
 		// commit ("tag" or "commit"), so we don't need a transformCommit
