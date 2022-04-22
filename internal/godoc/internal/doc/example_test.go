@@ -8,13 +8,14 @@ import (
 	"bytes"
 	"fmt"
 	"go/ast"
-	"go/doc"
 	"go/format"
 	"go/parser"
 	"go/token"
 	"reflect"
 	"strings"
 	"testing"
+
+	"golang.org/x/pkgsite/internal/godoc/internal/doc"
 )
 
 const exampleTestFile = `
@@ -616,6 +617,10 @@ type (
 )
 
 func (Conflict) Conflict() {}
+
+type G[T any] int
+
+func (G[T]) M() {}
 `
 	const test = `
 package p_test
@@ -675,6 +680,9 @@ func ExampleConflict_Conflict()        {} // ambiguous with either Conflict or C
 func ExampleConflict_conflict()        {} // ambiguous with either Conflict or Conflict_conflict type
 func ExampleConflict_Conflict_suffix() {} // ambiguous with either Conflict or Conflict_Conflict type
 func ExampleConflict_conflict_suffix() {} // ambiguous with either Conflict or Conflict_conflict type
+
+func ExampleG_M() {}
+func ExampleG_M_suffix() {}
 `
 
 	// Parse literal source code as a *doc.Package.
@@ -724,12 +732,18 @@ func ExampleConflict_conflict_suffix() {} // ambiguous with either Conflict or C
 		// These are implementation dependent due to the ambiguous parsing.
 		"Conflict_Conflict": {"", "suffix"},
 		"Conflict_conflict": {"", "suffix"},
+
+		"G.M": {"", "suffix"},
 	}
 
 	for id := range got {
 		if !reflect.DeepEqual(got[id], want[id]) {
 			t.Errorf("classification mismatch for %q:\ngot  %q\nwant %q", id, got[id], want[id])
 		}
+		delete(want, id)
+	}
+	if len(want) > 0 {
+		t.Errorf("did not find:\n%q", want)
 	}
 }
 

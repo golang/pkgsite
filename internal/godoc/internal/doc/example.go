@@ -492,7 +492,7 @@ func classifyExamples(p *Package, examples []*Example) {
 			if !token.IsExported(m.Name) {
 				continue
 			}
-			ids[strings.TrimPrefix(m.Recv, "*")+"_"+m.Name] = &m.Examples
+			ids[strings.TrimPrefix(nameWithoutInst(m.Recv), "*")+"_"+m.Name] = &m.Examples
 		}
 	}
 
@@ -525,6 +525,24 @@ func classifyExamples(p *Package, examples []*Example) {
 			return (*exs)[i].Suffix < (*exs)[j].Suffix
 		})
 	}
+}
+
+// nameWithoutInst returns name if name has no brackets. If name contains
+// brackets, then it returns name with all the contents between (and including)
+// the outermost left and right bracket removed.
+//
+// Adapted from debug/gosym/symtab.go:Sym.nameWithoutInst.
+func nameWithoutInst(name string) string {
+	start := strings.Index(name, "[")
+	if start < 0 {
+		return name
+	}
+	end := strings.LastIndex(name, "]")
+	if end < 0 {
+		// Malformed name, should contain closing bracket too.
+		return name
+	}
+	return name[0:start] + name[end+1:]
 }
 
 // splitExampleName attempts to split example name s at index i,
