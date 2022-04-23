@@ -16,29 +16,43 @@ import { initModals } from 'static/shared/jump/jump';
 import { keyboard } from 'static/shared/keyboard/keyboard';
 import * as analytics from 'static/shared/analytics/analytics';
 
-for (const el of document.querySelectorAll<HTMLButtonElement>('.js-clipboard')) {
-  new ClipboardController(el);
-}
-
-for (const el of document.querySelectorAll<HTMLDialogElement>('.js-modal')) {
-  new ModalController(el);
-}
-
-for (const t of document.querySelectorAll<HTMLDetailsElement>('.js-tooltip')) {
-  new ToolTipController(t);
-}
-
-for (const el of document.querySelectorAll<HTMLSelectElement>('.js-selectNav')) {
-  new SelectNavController(el);
-}
-
-for (const el of document.querySelectorAll<HTMLSelectElement>('.js-carousel')) {
-  new CarouselController(el);
-}
-
-registerHeaderListeners();
-registerSearchFormListeners();
 window.addEventListener('load', () => {
+  for (const el of document.querySelectorAll<HTMLButtonElement>('.js-clipboard')) {
+    new ClipboardController(el);
+  }
+
+  for (const el of document.querySelectorAll<HTMLDialogElement>('.js-modal')) {
+    new ModalController(el);
+  }
+
+  for (const t of document.querySelectorAll<HTMLDetailsElement>('.js-tooltip')) {
+    new ToolTipController(t);
+  }
+
+  for (const el of document.querySelectorAll<HTMLSelectElement>('.js-selectNav')) {
+    new SelectNavController(el);
+  }
+
+  for (const el of document.querySelectorAll<HTMLSelectElement>('.js-carousel')) {
+    new CarouselController(el);
+  }
+
+  for (const el of document.querySelectorAll('.js-toggleTheme')) {
+    el.addEventListener('click', () => {
+      toggleTheme();
+    });
+  }
+
+  if (document.querySelector<HTMLElement>('.js-gtmID')?.dataset.gtmid && window.dataLayer) {
+    analytics.func(function () {
+      removeUTMSource();
+    });
+  } else {
+    removeUTMSource();
+  }
+
+  registerHeaderListeners();
+  registerSearchFormListeners();
   initModals();
 });
 
@@ -71,7 +85,7 @@ keyboard.on('y', 'set canonical url', () => {
 });
 
 /**
- * setupGoogleTagManager intializes Google Tag Manager.
+ * setupGoogleTagManager initializes Google Tag Manager.
  */
 (function setupGoogleTagManager() {
   analytics.track({
@@ -97,20 +111,6 @@ function removeUTMSource() {
   urlParams.delete('utm_source');
   newURL.search = urlParams.toString();
   window.history.replaceState(null, '', newURL.toString());
-}
-
-if (document.querySelector<HTMLElement>('.js-gtmID')?.dataset.gtmid && window.dataLayer) {
-  analytics.func(function () {
-    removeUTMSource();
-  });
-} else {
-  removeUTMSource();
-}
-
-for (const el of document.querySelectorAll('.js-toggleTheme')) {
-  el.addEventListener('click', () => {
-    toggleTheme();
-  });
 }
 
 /**
