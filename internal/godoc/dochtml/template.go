@@ -5,15 +5,12 @@
 package dochtml
 
 import (
-	"context"
 	"path"
 	"reflect"
 	"sync"
 
 	"github.com/google/safehtml"
 	"github.com/google/safehtml/template"
-	"golang.org/x/pkgsite/internal"
-	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/godoc/dochtml/internal/render"
 	"golang.org/x/pkgsite/internal/godoc/internal/doc"
 )
@@ -36,15 +33,9 @@ func LoadTemplates(fsys template.TrustedFS) {
 				path.Join(dir, "body.tmpl"),
 				path.Join(dir, "declaration.tmpl"),
 				path.Join(dir, "example.tmpl")))
-		if experiment.IsActive(context.Background(), internal.ExperimentNewUnitLayout) {
-			outlineTemplate = template.Must(template.New("outline.tmpl").
-				Funcs(tmpl).
-				ParseFS(fsys, path.Join(dir, "outline.tmpl")))
-		} else {
-			outlineTemplate = template.Must(template.New("legacy-outline.tmpl").
-				Funcs(tmpl).
-				ParseFS(fsys, path.Join(dir, "legacy-outline.tmpl")))
-		}
+		outlineTemplate = template.Must(template.New("outline.tmpl").
+			Funcs(tmpl).
+			ParseFS(fsys, path.Join(dir, "outline.tmpl")))
 		sidenavTemplate = template.Must(template.New("sidenav-mobile.tmpl").
 			Funcs(tmpl).
 			ParseFS(fsys, path.Join(dir, "sidenav-mobile.tmpl")))

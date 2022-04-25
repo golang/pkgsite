@@ -185,101 +185,86 @@ BUG(uid): this verifies that notes are rendered
 </p></li></ul>
 </div></section></div>
 ----
-<ul role="group" id="doc-outline">
-<li role="none">
-<a href="#pkg-overview" role="treeitem" aria-level="2" tabindex="-1"
-data-gtmc="doc outline link">Overview</a>
+<ul>
+<li>
+<a href="#pkg-overview" data-gtmc="doc outline link">Overview</a>
 </li>
-<li class="DocNav-overview" role="none">
-<a href="#pkg-index" role="treeitem" aria-level="2" tabindex="-1" aria-owns="nav-group-index"
-data-gtmc="doc outline link">
+<li class="DocNav-overview">
+<a href="#pkg-index" data-gtmc="doc outline link">
 Index
 </a>
 </li>
-<li class="DocNav-constants" role="none">
-<a href="#pkg-constants" role="treeitem" aria-level="2" tabindex="-1"
-data-gtmc="doc outline link">
+<li class="DocNav-constants">
+<a href="#pkg-constants" data-gtmc="doc outline link">
 Constants
 </a>
 </li>
-<li class="DocNav-variables" role="none">
-<a href="#pkg-variables" role="treeitem" aria-level="2" tabindex="-1"
-data-gtmc="doc outline link">
+<li class="DocNav-variables">
+<a href="#pkg-variables" data-gtmc="doc outline link">
 Variables
 </a>
 </li>
-<li class="DocNav-functions" role="none">
-<a href="#pkg-functions" role="treeitem" aria-level="2" tabindex="-1" aria-owns="nav-group-functions"
-aria-expanded="false" data-gtmc="doc outline link">
+<li class="DocNav-functions">
+<a href="#pkg-functions" data-gtmc="doc outline link">
 Functions
 </a>
-<ul role="group" id="nav-group-functions">
-<li role="none">
-<a href="#F" role="treeitem" aria-level="3" tabindex="-1"
-title="F()" data-gtmc="doc outline link">
+<ul>
+<li>
+<a href="#F" title="F()" data-gtmc="doc outline link">
 F()
 </a>
 </li>
 </ul>
 </li>
-<li class="DocNav-types" role="none">
-<a href="#pkg-types" role="treeitem" aria-level="2" tabindex="-1" aria-owns="nav-group-types"
-aria-expanded="false" data-gtmc="doc outline link">
+<li class="DocNav-types">
+<a href="#pkg-types" data-gtmc="doc outline link">
 Types
 </a>
-<ul role="group" id="nav-group-types">
-<li role="none">
-<a href="#A" role="treeitem" aria-level="3" tabindex="-1" title="type A"
-data-gtmc="doc outline link">
+<ul>
+<li>
+<a href="#A" title="type A" data-gtmc="doc outline link">
 type A
 </a>
 </li>
-<li role="none">
-<a href="#B" role="treeitem" aria-level="3" tabindex="-1" title="type B"
-data-gtmc="doc outline link">
+<li>
+<a href="#B" title="type B" data-gtmc="doc outline link">
 type B
 </a>
 </li>
-<li role="none">
-<a href="#I1" role="treeitem" aria-level="3" tabindex="-1" title="type I1"
-data-gtmc="doc outline link">
+<li>
+<a href="#I1" title="type I1" data-gtmc="doc outline link">
 type I1
 </a>
 </li>
-<li role="none">
-<a href="#I2" role="treeitem" aria-level="3" tabindex="-1" title="type I2"
-data-gtmc="doc outline link">
+<li>
+<a href="#I2" title="type I2" data-gtmc="doc outline link">
 type I2
 </a>
 </li>
-<li role="none">
-<a href="#S1" role="treeitem" aria-level="3" tabindex="-1" title="type S1"
-data-gtmc="doc outline link">
+<li>
+<a href="#S1" title="type S1" data-gtmc="doc outline link">
 type S1
 </a>
 </li>
-<li role="none">
-<a href="#S2" role="treeitem" aria-level="3" tabindex="-1" title="type S2"
-data-gtmc="doc outline link">
+<li>
+<a href="#S2" title="type S2" data-gtmc="doc outline link">
 type S2
 </a>
 </li>
-<li role="none">
-<a href="#T" role="treeitem" aria-expanded="false" aria-level="3" tabindex="-1"
-data-aria-owns="nav.group.T" title="type T"
-data-gtmc="doc outline link">
+<li>
+<a href="#T" title="type T" data-gtmc="doc outline link">
 type T
 </a>
-<ul role="group" id="nav.group.T">
-<li role="none">
-<a href="#TF" role="treeitem" aria-level="4" tabindex="-1"
-title="TF()" data-gtmc="doc outline link">
+<ul>
+<li>
+<a href="#TF" title="TF()"
+data-gtmc="doc outline link">
 TF()
 </a>
 </li>
-<li role="none">
-<a href="#T.M" role="treeitem" aria-level="4" tabindex="-1"
-title="M()" data-gtmc="doc outline link">
+<li>
+<a href="#T.M" title="M()"
+data-gtmc="doc outline link">
 M()
 </a>
 </li>
@@ -287,15 +272,13 @@ M()
 </li>
 </ul>
 </li>
-<li class="DocNav-notes" role="none">
-<a href="#pkg-notes" role="treeitem" aria-expanded="false" aria-level="2" tabindex="-1"
-aria-owns="nav-group-notes" data-gtmc="doc outline link">
+<li class="DocNav-notes">
+<a href="#pkg-notes" data-gtmc="doc outline link">
 Notes
 </a>
-<ul role="group" id="nav-group-notes">
-<li role="none">
-<a href="#pkg-note-BUG" role="treeitem" aria-level="3" tabindex="-1"
-data-gtmc="doc outline link">
+<ul>
+<li>
+<a href="#pkg-note-BUG" data-gtmc="doc outline link">
 Bugs
 </a>
 </li>

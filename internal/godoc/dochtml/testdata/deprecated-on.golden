@@ -296,128 +296,115 @@ func (GoodT) <a class="Documentation-source" href="src">BadM</a>
 </div>
 </div></section></div>
 ----
-<ul role="group" id="doc-outline">
-<li role="none">
-<a href="#pkg-overview" role="treeitem" aria-level="2" tabindex="-1"
-data-gtmc="doc outline link">Overview</a>
+<ul>
+<li>
+<a href="#pkg-overview" data-gtmc="doc outline link">Overview</a>
 </li>
-<li class="DocNav-overview" role="none">
-<a href="#pkg-index" role="treeitem" aria-level="2" tabindex="-1" aria-owns="nav-group-index"
-data-gtmc="doc outline link">
+<li class="DocNav-overview">
+<a href="#pkg-index" data-gtmc="doc outline link">
 Index
 </a>
 </li>
-<li class="DocNav-constants" role="none">
-<a href="#pkg-constants" role="treeitem" aria-level="2" tabindex="-1"
-data-gtmc="doc outline link">
+<li class="DocNav-constants">
+<a href="#pkg-constants" data-gtmc="doc outline link">
 Constants
 </a>
 </li>
-<li class="DocNav-variables" role="none">
-<a href="#pkg-variables" role="treeitem" aria-level="2" tabindex="-1"
-data-gtmc="doc outline link">
+<li class="DocNav-variables">
+<a href="#pkg-variables" data-gtmc="doc outline link">
 Variables
 </a>
 </li>
-<li class="DocNav-functions" role="none">
-<a href="#pkg-functions" role="treeitem" aria-level="2" tabindex="-1" aria-owns="nav-group-functions"
-aria-expanded="false" data-gtmc="doc outline link">
+<li class="DocNav-functions">
+<a href="#pkg-functions" data-gtmc="doc outline link">
 Functions
 </a>
-<ul role="group" id="nav-group-functions">
-<li role="none">
-<a href="#BadF" role="treeitem" aria-level="3" tabindex="-1"
-title="BadF()" data-gtmc="doc outline link">
+<ul>
+<li>
+<a href="#BadF" title="BadF()" data-gtmc="doc outline link">
 BadF()
 </a>
 </li>
-<li role="none">
-<a href="#GoodF" role="treeitem" aria-level="3" tabindex="-1"
-title="GoodF()" data-gtmc="doc outline link">
+<li>
+<a href="#GoodF" title="GoodF()" data-gtmc="doc outline link">
 GoodF()
 </a>
 </li>
-<li role="none">
-<a href="#WrongF" role="treeitem" aria-level="3" tabindex="-1"
-title="WrongF()" data-gtmc="doc outline link">
+<li>
+<a href="#WrongF" title="WrongF()" data-gtmc="doc outline link">
 WrongF()
 </a>
 </li>
 </ul>
 </li>
-<li class="DocNav-types" role="none">
-<a href="#pkg-types" role="treeitem" aria-level="2" tabindex="-1" aria-owns="nav-group-types"
-aria-expanded="false" data-gtmc="doc outline link">
+<li class="DocNav-types">
+<a href="#pkg-types" data-gtmc="doc outline link">
 Types
 </a>
-<ul role="group" id="nav-group-types">
-<li role="none">
-<a href="#BadT" role="treeitem" aria-expanded="false" aria-level="3" tabindex="-1"
-data-aria-owns="nav.group.BadT" title="type BadT"
-data-gtmc="doc outline link">
+<ul>
+<li>
+<a href="#BadT" title="type BadT" data-gtmc="doc outline link">
 type BadT
 </a>
-<ul role="group" id="nav.group.BadT">
-<li role="none">
-<a href="#NewBadTBad" role="treeitem" aria-level="4" tabindex="-1"
-title="NewBadTBad()" data-gtmc="doc outline link">
+<ul>
+<li>
+<a href="#NewBadTBad" title="NewBadTBad()"
+data-gtmc="doc outline link">
 NewBadTBad()
 </a>
 </li>
-<li role="none">
-<a href="#NewBadTGood" role="treeitem" aria-level="4" tabindex="-1"
-title="NewBadTGood()" data-gtmc="doc outline link">
+<li>
+<a href="#NewBadTGood" title="NewBadTGood()"
+data-gtmc="doc outline link">
 NewBadTGood()
 </a>
 </li>
-<li role="none">
-<a href="#BadT.BadM" role="treeitem" aria-level="4" tabindex="-1"
-title="BadM()" data-gtmc="doc outline link">
+<li>
+<a href="#BadT.BadM" title="BadM()"
+data-gtmc="doc outline link">
 BadM()
 </a>
 </li>
-<li role="none">
-<a href="#BadT.GoodM" role="treeitem" aria-level="4" tabindex="-1"
-title="GoodM()" data-gtmc="doc outline link">
+<li>
+<a href="#BadT.GoodM" title="GoodM()"
+data-gtmc="doc outline link">
 GoodM()
 </a>
 </li>
-<li role="none">
-<a href="#BadT.WrongM" role="treeitem" aria-level="4" tabindex="-1"
-title="WrongM()" data-gtmc="doc outline link">
+<li>
+<a href="#BadT.WrongM" title="WrongM()"
+data-gtmc="doc outline link">
 WrongM()
 </a>
 </li>
 </ul>
 </li>
-<li role="none">
-<a href="#GoodT" role="treeitem" aria-expanded="false" aria-level="3" tabindex="-1"
-data-aria-owns="nav.group.GoodT" title="type GoodT"
-data-gtmc="doc outline link">
+<li>
+<a href="#GoodT" title="type GoodT" data-gtmc="doc outline link">
 type GoodT
 </a>
-<ul role="group" id="nav.group.GoodT">
-<li role="none">
-<a href="#NewGoodTBad" role="treeitem" aria-level="4" tabindex="-1"
-title="NewGoodTBad()" data-gtmc="doc outline link">
+<ul>
+<li>
+<a href="#NewGoodTBad" title="NewGoodTBad()"
+data-gtmc="doc outline link">
 NewGoodTBad()
 </a>
 </li>
-<li role="none">
-<a href="#NewGoodTGood" role="treeitem" aria-level="4" tabindex="-1"
-title="NewGoodTGood()" data-gtmc="doc outline link">
+<li>
+<a href="#NewGoodTGood" title="NewGoodTGood()"
+data-gtmc="doc outline link">
 NewGoodTGood()
 </a>
 </li>
-<li role="none">
-<a href="#GoodT.BadM" role="treeitem" aria-level="4" tabindex="-1"
-title="BadM()" data-gtmc="doc outline link">
+<li>
+<a href="#GoodT.BadM" title="BadM()"
+data-gtmc="doc outline link">
 BadM()
 </a>
 </li>
-<li role="none">
-<a href="#GoodT.GoodM" role="treeitem" aria-level="4" tabindex="-1"
-title="GoodM()" data-gtmc="doc outline link">
+<li>
+<a href="#GoodT.GoodM" title="GoodM()"
+data-gtmc="doc outline link">
 GoodM()
 </a>
 </li>
