@@ -100,7 +100,6 @@
 {{define "search_package_results"}}
   <div>
     {{$query := .Query}}
-    {{$vulnsActive := (.Experiments.IsActive "vulns")}}
     {{range $i, $v := .Results}}
       {{$moreLink := eq $i (subtract $.Pagination.DefaultLimit 1)}}
       {{if eq $i $.Pagination.DefaultLimit}}<hr class="SearchResults-divider">{{end}}
@@ -114,12 +113,10 @@
             </a>
           </h2>
           {{with $v.ChipText}}<span class="go-Chip go-Chip--inverted">{{.}}</span>{{end}}
-          {{if $vulnsActive}}
-            {{range $v.Vulns}}
-              <span class="go-Chip go-Chip--alert">
-                {{.ID}}
-              </span>
-            {{end}}
+          {{range $v.Vulns}}
+            <span class="go-Chip go-Chip--alert">
+              {{.ID}}
+            </span>
           {{end}}
         </div>
         {{with $v.Synopsis}}

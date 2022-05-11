@@ -220,8 +220,7 @@
       />&nbsp; Redirected from <span data-test-id="redirected-banner-text">{{.}}</span>.
     </div>
   {{- end -}}
-  {{- if .Experiments.IsActive "vulns" -}}
-    {{range .Vulns}}{{template "vuln-message" .}}{{end}}{{end}}
+  {{range .Vulns}}{{template "vuln-message" .}}{{end}}
   {{- if .Unit.Deprecated -}}
     <div class="go-Message go-Message--warning">
       <img
