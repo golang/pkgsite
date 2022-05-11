@@ -151,6 +151,7 @@ func main() {
 		middleware.CacheErrorCount,
 		middleware.CacheLatency,
 		middleware.QuotaResultCount,
+		frontend.DepsDevResultCount,
 	)
 	if err := dcensus.Init(cfg, views...); err != nil {
 		log.Fatal(ctx, err)
