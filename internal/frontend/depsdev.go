@@ -37,7 +37,9 @@ func depsDevURLGenerator(ctx context.Context, um *internal.UnitMeta) func() stri
 	url := make(chan string, 1)
 	go func() {
 		u, err := fetchDepsDevURL(ctx, um.ModulePath, um.Version)
-		if err != nil {
+		if err == context.Canceled {
+			log.Warningf(ctx, "fetching url from deps.dev: %v", err)
+		} else if err != nil {
 			log.Errorf(ctx, "fetching url from deps.dev: %v", err)
 		}
 		url <- u
