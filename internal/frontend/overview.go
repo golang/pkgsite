@@ -142,6 +142,9 @@ func translateLink(dest string, info *source.Info, useRaw bool, readme *internal
 		if destURL.Host != "github.com" {
 			return ""
 		}
+		if strings.HasSuffix(destURL.Path, ".md") {
+			return ""
+		}
 		parts := strings.Split(destURL.Path, "/")
 		if len(parts) < 4 || parts[3] != "blob" {
 			return ""
