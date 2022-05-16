@@ -832,7 +832,7 @@ func (db *DB) UpdateSearchDocumentsImportedByCount(ctx context.Context) (nUpdate
 
 // How many imported-by counts to update at a time.
 // A variable for testing.
-var countBatchSize = 20_000
+var countBatchSize = 5_000
 
 func (db *DB) UpdateSearchDocumentsImportedByCountWithCounts(ctx context.Context, counts map[string]int) (nUpdated int64, err error) {
 	defer derrors.WrapStack(&err, "UpdateSearchDocumentsImportedByCountWithCounts")
