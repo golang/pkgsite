@@ -84,8 +84,13 @@ headless chrome.
 
 ### Understanding Test Failures
 
-If the tests failure, diffs will be created in the testdata directory that show
-the cause of the failure.
+If the tests fail with diffs, a file with the diffs will be created in the
+testdata directory that show the cause of the failure.
+
+If the tests fail with "context deadline exceeded", you may have forgotten to
+seed your local DB. Run with with `-seeddb` flag.
+
+Use `./devtools/docker/compose.sh logs` to get detailed logs of the docker containers.
 
 ### Adding Testcases
 
