@@ -12,6 +12,7 @@ import (
 	"golang.org/x/mod/semver"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/sync/errgroup"
 	vulnc "golang.org/x/vuln/client"
 	"golang.org/x/vuln/osv"
@@ -91,9 +92,7 @@ func entryVuln(e *osv.Entry, packagePath, version string) (Vuln, bool) {
 					}
 				}
 			}
-			if fixed != "" {
-				fixed = "v" + fixed
-			}
+			fixed = addVersionPrefix(fixed, packagePath)
 			return Vuln{
 				ID:      e.ID,
 				Details: e.Details,
@@ -141,6 +140,7 @@ func newVulnPage(client vulnc.Client, id string) (*VulnPage, error) {
 	if entry == nil {
 		return nil, derrors.NotFound
 	}
+	addVersionPrefixes(entry)
 	return &VulnPage{Entry: entry}, nil
 }
 
@@ -175,4 +175,27 @@ func newVulnListPage(client vulnc.Client) (*VulnListPage, error) {
 		return nil, err
 	}
 	return &VulnListPage{Entries: entries}, nil
+}
+
+func addVersionPrefix(semver, packagePath string) (res string) {
+	if semver == "" {
+		return ""
+	}
+	if packagePath != "" && stdlib.Contains(packagePath) {
+		return "go" + semver
+	}
+	return "v" + semver
+}
+
+func addVersionPrefixes(e *osv.Entry) {
+	for i, a := range e.Affected {
+		for j, r := range a.Ranges {
+			if r.Type == osv.TypeSemver {
+				for k, v := range r.Events {
+					e.Affected[i].Ranges[j].Events[k].Introduced = addVersionPrefix(v.Introduced, a.Package.Name)
+					e.Affected[i].Ranges[j].Events[k].Fixed = addVersionPrefix(v.Fixed, a.Package.Name)
+				}
+			}
+		}
+	}
 }

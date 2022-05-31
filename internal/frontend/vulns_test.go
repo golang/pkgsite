@@ -96,6 +96,63 @@ func TestNewVulnPage(t *testing.T) {
 	}
 }
 
+func TestAddVersionPrefixes(t *testing.T) {
+	in := &osv.Entry{
+		ID: "id",
+		Affected: []osv.Affected{
+			{
+				Package: osv.Package{Name: "a.com/b"},
+				Ranges: osv.Affects{{
+					Type: osv.TypeSemver, Events: []osv.RangeEvent{
+						{Introduced: "1.2.3"},
+						{Fixed: "1.4.0"},
+						{Introduced: "2.1.0", Fixed: "2.2.1"},
+					}},
+				},
+			},
+			{
+				Package: osv.Package{Name: "crypto/math"},
+				Ranges: osv.Affects{{
+					Type: osv.TypeSemver, Events: []osv.RangeEvent{
+						{Introduced: "1.2.3"},
+						{Fixed: "1.4.0"},
+						{Introduced: "2.1.0", Fixed: "2.2.1"},
+					}},
+				},
+			},
+		},
+	}
+	want := &osv.Entry{
+		ID: "id",
+		Affected: []osv.Affected{
+			{
+				Package: osv.Package{Name: "a.com/b"},
+				Ranges: osv.Affects{{
+					Type: osv.TypeSemver, Events: []osv.RangeEvent{
+						{Introduced: "v1.2.3"},
+						{Fixed: "v1.4.0"},
+						{Introduced: "v2.1.0", Fixed: "v2.2.1"},
+					}},
+				},
+			},
+			{
+				Package: osv.Package{Name: "crypto/math"},
+				Ranges: osv.Affects{{
+					Type: osv.TypeSemver, Events: []osv.RangeEvent{
+						{Introduced: "go1.2.3"},
+						{Fixed: "go1.4.0"},
+						{Introduced: "go2.1.0", Fixed: "go2.2.1"},
+					}},
+				},
+			},
+		},
+	}
+	addVersionPrefixes(in)
+	if diff := cmp.Diff(want, in); diff != "" {
+		t.Errorf("mismatch (-want, +got)\n%s", diff)
+	}
+}
+
 type vulndbTestClient struct {
 	vulnc.Client
 	entries []*osv.Entry
