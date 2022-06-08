@@ -49,7 +49,7 @@ type homepage struct {
 
 func (s *Server) serveHomepage(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 	s.servePage(ctx, w, "homepage", homepage{
-		basePage:   s.newBasePage(r, "pkg.go.dev"),
+		basePage:   s.newBasePage(r, "Go Packages"),
 		SearchTips: searchTips,
 		TipIndex:   rand.Intn(len(searchTips)),
 	})
