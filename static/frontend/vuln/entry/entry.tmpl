@@ -13,6 +13,7 @@
 {{end}}
 
 {{define "main-content"}}
+  {{/* . is internal/frontend.VulnPage */}}
   <nav class="go-Breadcrumb" aria-label="Breadcrumb">
     <ol>
       <li>
@@ -25,45 +26,43 @@
   </nav>
   <h1 class="Vuln-title">Vulnerability Report: {{.Entry.ID}}</h1>
   {{template "vuln-details" .Entry}}
-  {{template "entry" .Entry}}
+  <div class="VulnEntry">
+    {{template "affected" .AffectedPackages}}
+    {{template "entry" .Entry}}
+  </div>
+{{end}}
+
+{{define "affected"}}
+  <h2>Affected Packages</h2>
+  <table class="VulnEntry-table">
+    <thead>
+      <tr>
+	<th>Package</th>
+	<th>Affected Versions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{range .}}
+	<tr>
+	  <td><a href="/{{.Path}}">{{.Path}}</a></td>
+	  <td>{{.Versions}}</td>
+	</tr>
+      {{end}}
+    </tbody>
+  </table>
 {{end}}
 
 {{define "entry"}}
-  <div class="VulnEntry">
-    <h2>Affected Packages</h2>
-    <table class="VulnEntry-table">
-      <thead>
-        <tr>
-          <th>Package</th>
-          <th>Introduced</th>
-          <th>Fixed</th>
-        </tr>
-      </thead>
-      <tbody>
-        {{range .Affected}}
-          <tr>
-            <td><a href="/{{.Package.Name}}">{{.Package.Name}}</a></td>
-            <td>
-              {{range .Ranges}}{{range .Events}}
-                <div>{{if not (eq .Introduced "0")}}{{.Introduced}}{{end}}</div>
-              {{end}}{{end}}
-            </td>
-            <td>{{range .Ranges}}{{range .Events}}<div>{{.Fixed}}</div>{{end}}{{end}}</td>
-          </tr>
-        {{end}}
-      </tbody>
-    </table>
-    {{if .Aliases}}
-      <h2>Aliases</h2>
-      <ul>
-        {{range .Aliases}}<li>{{.}}</li>{{end}}
-      </ul>
-    {{end}}
-    {{if .References}}
-      <h2>References</h2>
-      <ul class="VulnEntry-referenceList">
-        {{range .References}}<li><a href="{{.URL}}">{{.URL}}</a></li>{{end}}
-      </ul>
-    {{end}}
-  </div>
+  {{if .Aliases}}
+    <h2>Aliases</h2>
+    <ul>
+      {{range .Aliases}}<li>{{.}}</li>{{end}}
+    </ul>
+  {{end}}
+  {{if .References}}
+    <h2>References</h2>
+    <ul class="VulnEntry-referenceList">
+      {{range .References}}<li><a href="{{.URL}}">{{.URL}}</a></li>{{end}}
+    </ul>
+  {{end}}
 {{end}}

@@ -7,6 +7,7 @@ package frontend
 import (
 	"errors"
 	"fmt"
+	"reflect"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -96,63 +97,6 @@ func TestNewVulnPage(t *testing.T) {
 	}
 }
 
-func TestAddVersionPrefixes(t *testing.T) {
-	in := &osv.Entry{
-		ID: "id",
-		Affected: []osv.Affected{
-			{
-				Package: osv.Package{Name: "a.com/b"},
-				Ranges: osv.Affects{{
-					Type: osv.TypeSemver, Events: []osv.RangeEvent{
-						{Introduced: "1.2.3"},
-						{Fixed: "1.4.0"},
-						{Introduced: "2.1.0", Fixed: "2.2.1"},
-					}},
-				},
-			},
-			{
-				Package: osv.Package{Name: "crypto/math"},
-				Ranges: osv.Affects{{
-					Type: osv.TypeSemver, Events: []osv.RangeEvent{
-						{Introduced: "1.2.3"},
-						{Fixed: "1.4.0"},
-						{Introduced: "2.1.0", Fixed: "2.2.1"},
-					}},
-				},
-			},
-		},
-	}
-	want := &osv.Entry{
-		ID: "id",
-		Affected: []osv.Affected{
-			{
-				Package: osv.Package{Name: "a.com/b"},
-				Ranges: osv.Affects{{
-					Type: osv.TypeSemver, Events: []osv.RangeEvent{
-						{Introduced: "v1.2.3"},
-						{Fixed: "v1.4.0"},
-						{Introduced: "v2.1.0", Fixed: "v2.2.1"},
-					}},
-				},
-			},
-			{
-				Package: osv.Package{Name: "crypto/math"},
-				Ranges: osv.Affects{{
-					Type: osv.TypeSemver, Events: []osv.RangeEvent{
-						{Introduced: "go1.2.3"},
-						{Fixed: "go1.4.0"},
-						{Introduced: "go2.1.0", Fixed: "go2.2.1"},
-					}},
-				},
-			},
-		},
-	}
-	addVersionPrefixes(in)
-	if diff := cmp.Diff(want, in); diff != "" {
-		t.Errorf("mismatch (-want, +got)\n%s", diff)
-	}
-}
-
 type vulndbTestClient struct {
 	vulnc.Client
 	entries []*osv.Entry
@@ -177,4 +121,29 @@ func (c *vulndbTestClient) ListIDs() ([]string, error) {
 		ids = append(ids, e.ID)
 	}
 	return ids, nil
+}
+
+func TestCollectRangePairs(t *testing.T) {
+	in := osv.Affected{
+		Package: osv.Package{Name: "github.com/a/b"},
+		Ranges: osv.Affects{
+			{Type: osv.TypeSemver, Events: []osv.RangeEvent{{Introduced: "", Fixed: "0.5"}}},
+			{Type: osv.TypeSemver, Events: []osv.RangeEvent{
+				{Introduced: "1.2"}, {Fixed: "1.5"},
+				{Introduced: "2.1", Fixed: "2.3"},
+			}},
+			{Type: osv.TypeGit, Events: []osv.RangeEvent{{Introduced: "a", Fixed: "b"}}},
+		},
+	}
+	got := collectRangePairs(in)
+	want := []pair{
+		{"", "v0.5"},
+		{"v1.2", "v1.5"},
+		{"v2.1", "v2.3"},
+		{"a", "b"},
+	}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("\ngot  %+v\nwant %+v", got, want)
+	}
+
 }

@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net/http"
 	"sort"
+	"strings"
 
 	"golang.org/x/mod/semver"
 	"golang.org/x/pkgsite/internal"
@@ -74,7 +75,13 @@ type VulnListPage struct {
 // VulnPage holds the information for a page that displays a single vuln entry.
 type VulnPage struct {
 	basePage
-	Entry *osv.Entry
+	Entry            *osv.Entry
+	AffectedPackages []*AffectedPackage
+}
+
+type AffectedPackage struct {
+	Path     string // Package.Name in the osv.Entry
+	Versions string
 }
 
 func entryVuln(e *osv.Entry, packagePath, version string) (Vuln, bool) {
@@ -140,8 +147,8 @@ func newVulnPage(client vulnc.Client, id string) (*VulnPage, error) {
 	if entry == nil {
 		return nil, derrors.NotFound
 	}
-	addVersionPrefixes(entry)
-	return &VulnPage{Entry: entry}, nil
+	affs := affectedPackages(entry)
+	return &VulnPage{Entry: entry, AffectedPackages: affs}, nil
 }
 
 func newVulnListPage(client vulnc.Client) (*VulnListPage, error) {
@@ -177,6 +184,78 @@ func newVulnListPage(client vulnc.Client) (*VulnListPage, error) {
 	return &VulnListPage{Entries: entries}, nil
 }
 
+// A pair is like an osv.Range, but each pair is a self-contained 2-tuple
+// (introduced version, fixed version).
+type pair struct {
+	intro, fixed string
+}
+
+// collectRangePairs turns a slice of osv Ranges into a more manageable slice of
+// formatted version pairs.
+func collectRangePairs(a osv.Affected) []pair {
+	var (
+		ps     []pair
+		p      pair
+		prefix string
+	)
+	if stdlib.Contains(a.Package.Name) {
+		prefix = "go"
+	} else {
+		prefix = "v"
+	}
+	for _, r := range a.Ranges {
+		isSemver := r.Type == osv.TypeSemver
+		for _, v := range r.Events {
+			if v.Introduced != "" {
+				if p.intro != "" {
+					// We expected Introduced and Fixed to alternate, but they don't.
+					// Keep going, ignoring the first Introduced.
+				}
+				p.intro = v.Introduced
+				if p.intro == "0" {
+					p.intro = ""
+				}
+				if isSemver && p.intro != "" {
+					p.intro = prefix + p.intro
+				}
+			}
+			if v.Fixed != "" {
+				p.fixed = v.Fixed
+				if isSemver && p.fixed != "" {
+					p.fixed = prefix + p.fixed
+				}
+				ps = append(ps, p)
+				p = pair{}
+			}
+		}
+	}
+	return ps
+}
+
+func affectedPackages(e *osv.Entry) []*AffectedPackage {
+	var affs []*AffectedPackage
+	for _, a := range e.Affected {
+		pairs := collectRangePairs(a)
+		var vs []string
+		for _, p := range pairs {
+			var s string
+			if p.intro == "" {
+				s = p.fixed + " and earlier"
+			} else if p.fixed == "" {
+				s = p.intro + " and later"
+			} else {
+				s = p.intro + " - " + p.fixed
+			}
+			vs = append(vs, s)
+		}
+		affs = append(affs, &AffectedPackage{
+			Path:     a.Package.Name,
+			Versions: strings.Join(vs, ", "),
+		})
+	}
+	return affs
+}
+
 func addVersionPrefix(semver, packagePath string) (res string) {
 	if semver == "" {
 		return ""
@@ -185,17 +264,4 @@ func addVersionPrefix(semver, packagePath string) (res string) {
 		return "go" + semver
 	}
 	return "v" + semver
-}
-
-func addVersionPrefixes(e *osv.Entry) {
-	for i, a := range e.Affected {
-		for j, r := range a.Ranges {
-			if r.Type == osv.TypeSemver {
-				for k, v := range r.Events {
-					e.Affected[i].Ranges[j].Events[k].Introduced = addVersionPrefix(v.Introduced, a.Package.Name)
-					e.Affected[i].Ranges[j].Events[k].Fixed = addVersionPrefix(v.Fixed, a.Package.Name)
-				}
-			}
-		}
-	}
 }
