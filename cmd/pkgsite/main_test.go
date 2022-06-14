@@ -207,10 +207,17 @@ func TestListModsForPaths(t *testing.T) {
 			{
 				internal.Modver{Path: "m1", Version: "v1.2.3"},
 				"/dir/cache/download/m1/@v/v1.2.3.mod",
+				false,
 			},
 			{
 				internal.Modver{Path: "m2", Version: "v1.0.0"},
 				"/repos/m2/go.mod",
+				false,
+			},
+			{
+				internal.Modver{Path: "indir", Version: "v2.3.4"},
+				"",
+				true,
 			},
 		}, nil
 	}

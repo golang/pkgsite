@@ -38,6 +38,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"net/http"
@@ -234,7 +235,8 @@ func defaultCacheDir() (string, error) {
 // listedMod has a subset of the fields written by `go list -m`.
 type listedMod struct {
 	internal.Modver
-	GoMod string // absolute path to go.mod file; in download cache or replaced
+	GoMod    string // absolute path to go.mod file; in download cache or replaced
+	Indirect bool
 }
 
 var listModules = _listModules
@@ -275,6 +277,13 @@ func listModsForPaths(paths []string, cacheDir string) ([]string, []internal.Mod
 			return nil, nil, err
 		}
 		for _, lm := range lms {
+			// Ignore indirect modules.
+			if lm.Indirect {
+				continue
+			}
+			if lm.GoMod == "" {
+				return nil, nil, errors.New("empty GoMod: please file a pkgsite bug at https://go.dev/issues/new")
+			}
 			if strings.HasPrefix(lm.GoMod, cacheDir) {
 				cacheMods = append(cacheMods, lm.Modver)
 			} else { // probably the result of a replace directive
