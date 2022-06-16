@@ -56,22 +56,6 @@ var (
 	badAnchorRx = regexp.MustCompile(`[^a-zA-Z0-9]`)
 )
 
-type docData struct {
-	Elements         []docElement
-	Headings         []docElement
-	EnableCommandTOC bool
-}
-
-type docElement struct {
-	IsHeading   bool
-	IsPreformat bool
-	// for paragraph and preformat
-	Body safehtml.HTML
-	// for heading
-	Title string
-	ID    safehtml.Identifier
-}
-
 func (r *Renderer) declHTML(doc string, decl ast.Decl, extractLinks bool) (out struct{ Doc, Decl safehtml.HTML }) {
 	if doc != "" {
 		out.Doc = r.formatDocHTML(doc, extractLinks)
@@ -81,54 +65,6 @@ func (r *Renderer) declHTML(doc string, decl ast.Decl, extractLinks bool) (out s
 		out.Decl = r.formatDeclHTML(decl, idr)
 	}
 	return out
-}
-
-func (r *Renderer) formatDocHTML(doc string, extractLinks bool) safehtml.HTML {
-	var els []docElement
-	inLinks := false
-	for _, blk := range docToBlocks(doc) {
-		var el docElement
-		switch blk := blk.(type) {
-		case *paragraph:
-			if inLinks {
-				r.links = append(r.links, parseLinks(blk.lines)...)
-			} else {
-				el.Body = r.linesToHTML(blk.lines, false)
-				els = append(els, el)
-			}
-		case *preformat:
-			if inLinks {
-				r.links = append(r.links, parseLinks(blk.lines)...)
-			} else {
-				el.IsPreformat = true
-				el.Body = r.linesToHTML(blk.lines, true)
-				els = append(els, el)
-			}
-		case *heading:
-			if extractLinks && blk.title == "Links" {
-				inLinks = true
-			} else {
-				inLinks = false
-				el.IsHeading = true
-				el.Title = blk.title
-				id := badAnchorRx.ReplaceAllString(blk.title, "_")
-				el.ID = safehtml.IdentifierFromConstantPrefix("hdr", id)
-				els = append(els, el)
-			}
-		}
-	}
-
-	var headings []docElement
-	for _, e := range els {
-		if e.IsHeading {
-			headings = append(headings, e)
-		}
-	}
-	return ExecuteToHTML(r.docTmpl, docData{
-		Elements:         els,
-		Headings:         headings,
-		EnableCommandTOC: r.enableCommandTOC,
-	})
 }
 
 // parseLinks extracts links from lines.
@@ -157,16 +93,6 @@ func parseLink(line string) *Link {
 		Text: strings.TrimSpace(text),
 		Href: strings.TrimSpace(href),
 	}
-}
-
-func (r *Renderer) linesToHTML(lines []string, pre bool) safehtml.HTML {
-	newline := safehtml.HTMLEscaped("\n")
-	htmls := make([]safehtml.HTML, 0, 2*len(lines))
-	for _, l := range lines {
-		htmls = append(htmls, r.formatLineHTML(l, pre))
-		htmls = append(htmls, newline)
-	}
-	return safehtml.HTMLConcat(htmls...)
 }
 
 func (r *Renderer) codeString(ex *doc.Example) (string, error) {

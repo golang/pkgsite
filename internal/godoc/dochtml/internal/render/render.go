@@ -12,8 +12,6 @@ import (
 	"go/token"
 	"regexp"
 	"strings"
-	"unicode"
-	"unicode/utf8"
 
 	"github.com/google/safehtml"
 	"github.com/google/safehtml/template"
@@ -202,157 +200,10 @@ func (r *Renderer) CodeHTML(ex *doc.Example) safehtml.HTML {
 	return r.codeHTML(ex)
 }
 
-// block is (*heading | *paragraph | *preformat).
-type block interface{}
-
-type (
-	lines   []string
-	heading struct {
-		title string
-	}
-	paragraph struct {
-		lines lines
-	}
-	preformat struct {
-		lines lines
-	}
-)
-
-// docToBlocks converts doc string into list of blocks.
-//
-// Heading block is a non-blank line, surrounded by blank lines
-// and the next non-blank line is not indented.
-//
-// Preformat block contains single line or consecutive lines which have indent greater than 0.
-//
-// Paragraph block is a default block type if a block does not fall into heading and preformat.
-func docToBlocks(doc string) []block {
-	docLines := unindent(strings.Split(strings.Trim(doc, "\n"), "\n"))
-
-	// Group the lines based on indentation and blank lines.
-	var groups [][]string
-	var lastGroup []string
-	var wasInCode bool
-	for _, line := range docLines {
-		hasIndent := indentLength(line) > 0
-		nowInCode := hasIndent || (wasInCode && line == "")
-		newGroup := wasInCode != nowInCode || (!nowInCode && line == "")
-		wasInCode = nowInCode
-		if newGroup && len(lastGroup) > 0 {
-			groups = append(groups, lastGroup)
-			lastGroup = nil
-		}
-		if line != "" || nowInCode {
-			lastGroup = append(lastGroup, line)
-		}
-	}
-	if len(lastGroup) > 0 {
-		groups = append(groups, lastGroup)
-	}
-
-	// Classify groups of lines as individual blocks.
-	var blks []block
-	var lastBlk block
-	for i, group := range groups {
-		willParagraph := i+1 < len(groups) && indentLength(groups[i+1][0]) == 0
-		for len(group) > 0 && group[len(group)-1] == "" {
-			group = group[:len(group)-1] // remove trailing empty lines
-		}
-		_, wasHeading := lastBlk.(*heading)
-		switch {
-		case indentLength(group[0]) > 0:
-			blks = append(blks, &preformat{unindent(group)})
-		case i != 0 && !wasHeading && len(group) == 1 && isHeading(group[0]) && willParagraph:
-			blks = append(blks, &heading{group[0]})
-		default:
-			blks = append(blks, &paragraph{group})
-		}
-		lastBlk = blks[len(blks)-1]
-	}
-	return blks
-}
-
 func indentLength(s string) int {
 	return len(s) - len(trimIndent(s))
 }
 
 func trimIndent(s string) string {
 	return strings.TrimLeft(s, " \t")
-}
-
-func commonPrefixLength(a, b string) (n int) {
-	for n < len(a) && n < len(b) && a[n] == b[n] {
-		n++
-	}
-	return n
-}
-
-func unindent(lines []string) []string {
-	if len(lines) > 0 {
-		npre := indentLength(lines[0])
-		for _, line := range lines {
-			if line != "" {
-				npre = commonPrefixLength(lines[0][:npre], line)
-			}
-		}
-		for i, line := range lines {
-			if line != "" {
-				lines[i] = line[npre:]
-			}
-		}
-	}
-	return lines
-}
-
-// isHeading returns bool of if it passes as a section heading or not.
-// This is the copy of the heading function from the standard library.
-// https://go.googlesource.com/go/+/refs/tags/go1.16/src/go/doc/comment.go#212
-func isHeading(line string) bool {
-	line = strings.TrimSpace(line)
-	if len(line) == 0 {
-		return false
-	}
-
-	// a heading must start with an uppercase letter
-	r, _ := utf8.DecodeRuneInString(line)
-	if !unicode.IsLetter(r) || !unicode.IsUpper(r) {
-		return false
-	}
-
-	// it must end in a letter or digit:
-	r, _ = utf8.DecodeLastRuneInString(line)
-	if !unicode.IsLetter(r) && !unicode.IsDigit(r) {
-		return false
-	}
-
-	// exclude lines with illegal characters. we allow "(),"
-	if strings.ContainsAny(line, ";:!?+*/=[]{}_^°&§~%#@<\">\\") {
-		return false
-	}
-
-	// allow "'" for possessive "'s" only
-	for b := line; ; {
-		i := strings.IndexRune(b, '\'')
-		if i < 0 {
-			break
-		}
-		if i+1 >= len(b) || b[i+1] != 's' || (i+2 < len(b) && b[i+2] != ' ') {
-			return false // not followed by "s "
-		}
-		b = b[i+2:]
-	}
-
-	// allow "." when followed by non-space
-	for b := line; ; {
-		i := strings.IndexRune(b, '.')
-		if i < 0 {
-			break
-		}
-		if i+1 >= len(b) || b[i+1] == ' ' {
-			return false // not followed by non-space
-		}
-		b = b[i+1:]
-	}
-
-	return true
 }

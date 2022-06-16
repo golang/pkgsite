@@ -19,7 +19,7 @@ import (
 	"golang.org/x/pkgsite/internal/godoc/internal/doc"
 )
 
-func TestDocHTML(t *testing.T) {
+func TestFormatDocHTML(t *testing.T) {
 	linksDoc := `Documentation.
 
 The Go Project
@@ -106,8 +106,8 @@ TLSUnique contains the tls-unique channel binding value (see RFC
 `,
 			want: `<p>Package tls partially implements TLS 1.2, as specified in <a href="https://rfc-editor.org/rfc/rfc5246.html">RFC 5246</a>, and TLS 1.3, as specified in <a href="https://rfc-editor.org/rfc/rfc8446.html">RFC 8446</a>.
 </p><p>In TLS 1.3, this type is called NamedGroup, but at this time this library only supports Elliptic Curve based groups. See <a href="https://rfc-editor.org/rfc/rfc8446.html#section-4.2.7">RFC 8446, Section 4.2.7</a>.
-</p><p>TLSUnique contains the tls-unique channel binding value (see RFC
-5929, section 3). The newline-separated RFC should be linked, but the words RFC and RFCs should not be.
+</p><p>TLSUnique contains the tls-unique channel binding value (see <a href="https://rfc-editor.org/rfc/rfc5929.html#section-3">RFC
+5929, section 3</a>). The newline-separated RFC should be linked, but the words RFC and RFCs should not be.
 </p>`,
 		},
 		{
@@ -123,14 +123,27 @@ TLSUnique contains the tls-unique channel binding value (see RFC
 </p>`,
 		},
 		{
+			name: "list",
+			doc: `
+			Here is a list:
+				- a
+				- b`,
+			want: `<p>Here is a list:
+</p><ul>
+  <li>a</li>
+  <li>b</li>
+</ul>`,
+		},
+		{
 			name:         "Links section is not extracted",
 			extractLinks: []bool{false},
 			doc:          linksDoc,
 			want: `<p>Documentation.
 </p><h4 id="hdr-The_Go_Project">The Go Project <a class="Documentation-idLink" href="#hdr-The_Go_Project">¶</a></h4><p>Go is an open source project.
 </p><h4 id="hdr-Links">Links <a class="Documentation-idLink" href="#hdr-Links">¶</a></h4><p>- title1, url1
-</p><pre>-		title2 , url2
-</pre><h4 id="hdr-Header">Header <a class="Documentation-idLink" href="#hdr-Header">¶</a></h4><p>More doc.
+</p><ul>
+  <li>title2 , url2</li>
+</ul><h4 id="hdr-Header">Header <a class="Documentation-idLink" href="#hdr-Header">¶</a></h4><p>More doc.
 </p>`,
 		},
 		{
@@ -151,12 +164,6 @@ TLSUnique contains the tls-unique channel binding value (see RFC
 			doc:  "For more detail, run ``go help test'' and ``go help testflag''",
 			want: `<p>For more detail, run “go help test” and “go help testflag”` + "\n" + "</p>",
 		},
-		{
-			name: "single quotes in pre block",
-			doc: `Join
-			    [].join() // returns ''`,
-			want: `<p>Join` + "\n" + `</p><pre>[].join() // returns &#39;&#39;` + "\n" + `</pre>`,
-		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			extractLinks := test.extractLinks
@@ -166,10 +173,10 @@ TLSUnique contains the tls-unique channel binding value (see RFC
 			for _, el := range extractLinks {
 				t.Run(fmt.Sprintf("extractLinks=%t", el), func(t *testing.T) {
 					r := New(context.Background(), nil, pkgTime, nil)
-					got := r.declHTML(test.doc, nil, el).Doc
+					got := r.formatDocHTML(test.doc, el)
 					want := testconversions.MakeHTMLForTest(test.want)
 					if diff := cmp.Diff(want, got, cmp.AllowUnexported(safehtml.HTML{})); diff != "" {
-						t.Errorf("r.declHTML() mismatch (-want +got)\n%s", diff)
+						t.Errorf("doc mismatch (-want +got)\n%s", diff)
 					}
 					if diff := cmp.Diff(test.wantLinks, r.Links()); diff != "" {
 						t.Errorf("r.Links() mismatch (-want +got)\n%s", diff)
@@ -554,15 +561,15 @@ Heading 2
 More text.`
 
 	want := testconversions.MakeHTMLForTest(`<div role="navigation" aria-label="Table of Contents">
-    <ul class="Documentation-toc">
-      <li class="Documentation-tocItem">
-          <a href="#hdr-The_Go_Project">The Go Project</a>
-        </li>
-      <li class="Documentation-tocItem">
-          <a href="#hdr-Heading_2">Heading 2</a>
-        </li>
-      </ul>
-  </div>
+  <ul class="Documentation-toc">
+    <li class="Documentation-tocItem">
+        <a href="#hdr-The_Go_Project">The Go Project</a>
+      </li>
+    <li class="Documentation-tocItem">
+        <a href="#hdr-Heading_2">Heading 2</a>
+      </li>
+    </ul>
+</div>
 <p>Documentation.
 </p><h4 id="hdr-The_Go_Project">The Go Project <a class="Documentation-idLink" href="#hdr-The_Go_Project">¶</a></h4><p>Go is an open source project.
 </p><h4 id="hdr-Heading_2">Heading 2 <a class="Documentation-idLink" href="#hdr-Heading_2">¶</a></h4><p>More text.
