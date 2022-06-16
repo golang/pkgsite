@@ -10,8 +10,11 @@ You can check it out at [https://pkg.go.dev](https://pkg.go.dev).
 
 ## Requirements
 
-Pkgsite requires Go 1.18 to run. The last commit that works with older versions
-of Go is 4d836c6a652cde92f433967680dfd6171a91ec12.
+Pkgsite requires Go 1.19 to run.
+The last commit that works with Go 1.18 is
+9ffe8b928e4fbd3ff7dcf984254629a47f8b6e63.
+The last commit that works with Go 1.17 is
+4d836c6a652cde92f433967680dfd6171a91ec12.
 
 ## Issues
 
