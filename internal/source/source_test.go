@@ -9,7 +9,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -837,7 +837,7 @@ func (t testTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	}
 	resp := &http.Response{
 		StatusCode: statusCode,
-		Body:       ioutil.NopCloser(strings.NewReader(body)),
+		Body:       io.NopCloser(strings.NewReader(body)),
 	}
 	return resp, nil
 }

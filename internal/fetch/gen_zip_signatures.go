@@ -19,8 +19,8 @@ import (
 	"fmt"
 	"go/format"
 	"io/fs"
-	"io/ioutil"
 	"log"
+	"os"
 	"sort"
 	"text/template"
 	"time"
@@ -185,7 +185,7 @@ func writeGoFile(filename string) error {
 	if err != nil {
 		return err
 	}
-	return ioutil.WriteFile(filename, src, 0644)
+	return os.WriteFile(filename, src, 0644)
 }
 
 // Template for the generated source file.

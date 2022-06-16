@@ -7,7 +7,7 @@ package frontend
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"os"
@@ -79,7 +79,7 @@ func (c *Client) fetchJSONPage(url string) (_ []byte, err error) {
 	if r.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf(r.Status)
 	}
-	body, err := ioutil.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		return nil, err
 	}

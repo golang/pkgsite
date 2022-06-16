@@ -9,7 +9,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strings"
 	"testing"
@@ -54,7 +54,7 @@ func getFrontendPage(t *testing.T, urlPath string, exps ...string) string {
 	if resp.StatusCode != http.StatusOK {
 		t.Fatalf("%s: status code %d", url, resp.StatusCode)
 	}
-	content, err := ioutil.ReadAll(resp.Body)
+	content, err := io.ReadAll(resp.Body)
 	if err != nil {
 		t.Fatalf("%s: %v", url, err)
 	}

@@ -14,7 +14,6 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -87,8 +86,8 @@ func main() {
 		log.Fatal(err)
 	}
 
-	if err := ioutil.WriteFile(cssFile, []byte(copyright), 0644); err != nil {
-		log.Fatalf("ioutil.WriteFile(f, '', 0644): %v", err)
+	if err := os.WriteFile(cssFile, []byte(copyright), 0644); err != nil {
+		log.Fatalf("os.WriteFile(f, '', 0644): %v", err)
 	}
 
 	file, err := os.OpenFile(cssFile, os.O_WRONLY|os.O_APPEND, 0644)

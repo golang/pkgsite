@@ -10,11 +10,11 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"os"
 
 	"go/ast"
 	"go/parser"
 	"go/token"
-	"io/ioutil"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -433,7 +433,7 @@ func attr(n *html.Node, key string) string {
 // Copied from internal/render/render_test.go, with the slight modification of returning the fset.
 func mustLoadPackage(path string) (*token.FileSet, *doc.Package) {
 	srcName := filepath.Base(path) + ".go"
-	code, err := ioutil.ReadFile(filepath.Join("testdata", srcName))
+	code, err := os.ReadFile(filepath.Join("testdata", srcName))
 	if err != nil {
 		panic(err)
 	}

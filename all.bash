@@ -135,8 +135,8 @@ check_bad_migrations() {
 
 # check_unparam runs unparam on source files.
 check_unparam() {
-  echo "unparam disabled until go 1.18"
-# TODO: uncomment when updated to go 1.18
+  echo "unparam disabled until ssa supports generics"
+  # TODO: uncomment when working
   # ensure_go_binary mvdan.cc/unparam
   # runcmd unparam ./...
 }
@@ -148,10 +148,8 @@ check_vet() {
 
 # check_staticcheck runs staticcheck on source files.
 check_staticcheck() {
-  echo "staticcheck disabled until go 1.18"
-# TODO: uncomment when updated to go 1.18
-#  ensure_go_binary honnef.co/go/tools/cmd/staticcheck
-#  runcmd staticcheck $(go list ./... | grep -v third_party | grep -v internal/doc | grep -v internal/render)
+ ensure_go_binary honnef.co/go/tools/cmd/staticcheck
+ runcmd staticcheck $(go list ./... | grep -v third_party | grep -v internal/doc | grep -v internal/render)
 }
 
 # check_misspell runs misspell on source files.

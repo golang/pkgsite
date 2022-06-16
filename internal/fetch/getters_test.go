@@ -7,7 +7,7 @@ package fetch
 import (
 	"context"
 	"errors"
-	"io/ioutil"
+	"io"
 	"path/filepath"
 	"testing"
 	"time"
@@ -129,7 +129,7 @@ func TestFSProxyGetter(t *testing.T) {
 			t.Fatal(err)
 		}
 		defer f.Close()
-		got, err := ioutil.ReadAll(f)
+		got, err := io.ReadAll(f)
 		if err != nil {
 			t.Fatal(err)
 		}

@@ -6,7 +6,7 @@ package middleware
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
@@ -150,7 +150,7 @@ func TestCache(t *testing.T) {
 		if resp.StatusCode != test.wantStatus {
 			t.Errorf("[%s] GET returned status %d, want %d", test.label, resp.StatusCode, test.wantStatus)
 		}
-		body, err := ioutil.ReadAll(resp.Body)
+		body, err := io.ReadAll(resp.Body)
 		if err != nil {
 			t.Fatal(err)
 		}

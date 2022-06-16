@@ -7,7 +7,7 @@ package middleware
 import (
 	"encoding/json"
 	"hash/fnv"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -39,7 +39,7 @@ func TestStats(t *testing.T) {
 	if res.StatusCode != http.StatusOK {
 		t.Fatalf("failed with status %d", res.StatusCode)
 	}
-	gotData, err := ioutil.ReadAll(res.Body)
+	gotData, err := io.ReadAll(res.Body)
 	if err != nil {
 		t.Fatal(err)
 	}

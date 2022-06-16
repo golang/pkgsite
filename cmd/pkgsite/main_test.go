@@ -126,6 +126,9 @@ func TestServer(t *testing.T) {
 	defer teardown()
 
 	getters, err := buildGetters(context.Background(), []string{localModule}, false, cacheDir, nil, prox)
+	if err != nil {
+		t.Fatal(err)
+	}
 	server, err := newServer(getters, prox)
 	if err != nil {
 		t.Fatal(err)

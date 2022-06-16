@@ -14,7 +14,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"strings"
 	"time"
@@ -208,7 +207,7 @@ func (c *Client) readBody(ctx context.Context, modulePath, requestedVersion, suf
 	var data []byte
 	err = c.executeRequest(ctx, u, func(body io.Reader) error {
 		var err error
-		data, err = ioutil.ReadAll(body)
+		data, err = io.ReadAll(body)
 		return err
 	})
 	if err != nil {
@@ -285,9 +284,9 @@ func responseError(r *http.Response, fetchDisabled bool) error {
 		//
 		// If the Disable-Module-Fetch header was set, use a different
 		// error code so we can tell the difference.
-		data, err := ioutil.ReadAll(r.Body)
+		data, err := io.ReadAll(r.Body)
 		if err != nil {
-			return fmt.Errorf("ioutil.readall: %v", err)
+			return fmt.Errorf("io.ReadAll: %v", err)
 		}
 		d := string(data)
 		switch {

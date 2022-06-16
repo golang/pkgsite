@@ -16,7 +16,6 @@ import (
 	"go/token"
 	"io"
 	"io/fs"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"path"
@@ -314,7 +313,7 @@ func matchingFiles(goos, goarch string, allFiles map[string][]byte) (matchedFile
 
 		JoinPath: path.Join,
 		OpenFile: func(name string) (io.ReadCloser, error) {
-			return ioutil.NopCloser(bytes.NewReader(allFiles[name])), nil
+			return io.NopCloser(bytes.NewReader(allFiles[name])), nil
 		},
 
 		// If left nil, the default implementations of these read from disk,
@@ -353,5 +352,5 @@ func readFSFile(fsys fs.FS, path string, limit int64) (_ []byte, err error) {
 		return nil, err
 	}
 	defer f.Close()
-	return ioutil.ReadAll(io.LimitReader(f, limit))
+	return io.ReadAll(io.LimitReader(f, limit))
 }

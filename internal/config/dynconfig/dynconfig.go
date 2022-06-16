@@ -11,7 +11,6 @@ import (
 	"context"
 	"errors"
 	"io"
-	"io/ioutil"
 	"os"
 	"strings"
 
@@ -63,7 +62,7 @@ func Read(ctx context.Context, location string) (_ *DynamicConfig, err error) {
 		}
 	}
 	defer r.Close()
-	data, err := ioutil.ReadAll(r)
+	data, err := io.ReadAll(r)
 	if err != nil {
 		return nil, err
 	}

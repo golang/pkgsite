@@ -1366,7 +1366,6 @@ var moduleStd = &testModule{
 						"github.com/google/pprof/profile",
 						"golang.org/x/crypto/ssh/terminal",
 						"io",
-						"io/ioutil",
 						"net/http",
 						"net/url",
 						"os",

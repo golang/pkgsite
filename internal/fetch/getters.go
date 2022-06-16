@@ -13,8 +13,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"io/fs"
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -122,7 +122,7 @@ type directoryModuleGetter struct {
 func NewDirectoryModuleGetter(modulePath, dir string) (*directoryModuleGetter, error) {
 
 	if modulePath == "" {
-		goModBytes, err := ioutil.ReadFile(filepath.Join(dir, "go.mod"))
+		goModBytes, err := os.ReadFile(filepath.Join(dir, "go.mod"))
 		if err != nil {
 			return nil, fmt.Errorf("cannot obtain module path for %q (%v): %w", dir, err, derrors.BadModule)
 		}
@@ -166,7 +166,7 @@ func (g *directoryModuleGetter) Mod(ctx context.Context, path, version string) (
 	if err := g.checkPath(path); err != nil {
 		return nil, err
 	}
-	data, err := ioutil.ReadFile(filepath.Join(g.dir, "go.mod"))
+	data, err := os.ReadFile(filepath.Join(g.dir, "go.mod"))
 	if errors.Is(err, os.ErrNotExist) {
 		return []byte(fmt.Sprintf("module %s\n", g.modulePath)), nil
 	}
@@ -360,7 +360,7 @@ func (g *fsProxyModuleGetter) readFile(path, version, suffix string) (_ []byte, 
 		return nil, err
 	}
 	defer f.Close()
-	return ioutil.ReadAll(f)
+	return io.ReadAll(f)
 }
 
 func (g *fsProxyModuleGetter) openFile(path, version, suffix string) (_ *os.File, err error) {

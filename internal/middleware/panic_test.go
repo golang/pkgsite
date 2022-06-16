@@ -6,7 +6,7 @@ package middleware
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -47,7 +47,7 @@ func TestPanic(t *testing.T) {
 			if resp.StatusCode != test.wantCode {
 				t.Errorf("code=%d, want %d", resp.StatusCode, test.wantCode)
 			}
-			body, err := ioutil.ReadAll(resp.Body)
+			body, err := io.ReadAll(resp.Body)
 			if err != nil {
 				t.Fatal(err)
 			}

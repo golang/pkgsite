@@ -19,8 +19,8 @@ import (
 	"flag"
 	"fmt"
 	"go/format"
-	"io/ioutil"
 	"log"
+	"os"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -73,7 +73,7 @@ func main() {
 
 	src, err := format.Source([]byte(code))
 	if err != nil {
-		fd, err1 := ioutil.TempFile("", "license-data")
+		fd, err1 := io.TempFile("", "license-data")
 		if err1 == nil {
 			_, err1 = fd.Write([]byte(code))
 			if err1 == nil {
@@ -83,7 +83,7 @@ func main() {
 		}
 		log.Fatal("parsing output:", err)
 	}
-	err = ioutil.WriteFile("exceptions.gen.go", src, 0644)
+	err = os.WriteFile("exceptions.gen.go", src, 0644)
 	if err != nil {
 		log.Fatal(err)
 	}

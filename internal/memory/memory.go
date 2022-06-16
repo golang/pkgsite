@@ -9,7 +9,6 @@ package memory
 import (
 	"bufio"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -145,7 +144,7 @@ func getCgroupStats() (map[string]uint64, error) {
 	const cgroupMemDir = "/sys/fs/cgroup/memory"
 
 	readUintFile := func(filename string) (uint64, error) {
-		data, err := ioutil.ReadFile(filepath.Join(cgroupMemDir, filename))
+		data, err := os.ReadFile(filepath.Join(cgroupMemDir, filename))
 		if err != nil {
 			return 0, err
 		}

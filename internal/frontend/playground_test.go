@@ -7,7 +7,6 @@ package frontend
 import (
 	"flag"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -100,7 +99,7 @@ func main() {
 			}
 
 			if res.StatusCode >= 200 && res.StatusCode < 300 {
-				body, err := ioutil.ReadAll(res.Body)
+				body, err := io.ReadAll(res.Body)
 				if err != nil {
 					t.Fatal(err)
 				}

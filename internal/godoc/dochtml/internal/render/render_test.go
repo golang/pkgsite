@@ -8,7 +8,7 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"reflect"
 	"strings"
@@ -38,7 +38,7 @@ func mustLoadPackage(path string) (*doc.Package, *token.FileSet) {
 	}
 
 	srcName := filepath.Base(path) + ".go"
-	code, err := ioutil.ReadFile(filepath.Join("testdata", srcName))
+	code, err := os.ReadFile(filepath.Join("testdata", srcName))
 	if err != nil {
 		panic(err)
 	}

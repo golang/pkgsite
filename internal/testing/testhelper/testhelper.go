@@ -13,7 +13,6 @@ import (
 	"crypto/tls"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"net/http/httptest"
@@ -117,7 +116,7 @@ func TestDataPath(rel string) string {
 // local fetching, and returns the directory.
 func CreateTestDirectory(files map[string]string) (_ string, err error) {
 	defer derrors.Wrap(&err, "CreateTestDirectory(files)")
-	tempDir, err := ioutil.TempDir("", "")
+	tempDir, err := os.MkdirTemp("", "")
 	if err != nil {
 		return "", err
 	}
@@ -159,14 +158,14 @@ func CompareWithGolden(t *testing.T, got, filename string, update bool) {
 
 func writeGolden(t *testing.T, name string, data string) {
 	filename := filepath.Join("testdata", name)
-	if err := ioutil.WriteFile(filename, []byte(data), 0644); err != nil {
+	if err := os.WriteFile(filename, []byte(data), 0644); err != nil {
 		t.Fatal(err)
 	}
 	t.Logf("wrote %s", filename)
 }
 
 func readGolden(t *testing.T, name string) string {
-	data, err := ioutil.ReadFile(filepath.Join("testdata", name))
+	data, err := os.ReadFile(filepath.Join("testdata", name))
 	if err != nil {
 		t.Fatal(err)
 	}

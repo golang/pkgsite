@@ -207,10 +207,9 @@ func collectRangePairs(a osv.Affected) []pair {
 		isSemver := r.Type == osv.TypeSemver
 		for _, v := range r.Events {
 			if v.Introduced != "" {
-				if p.intro != "" {
-					// We expected Introduced and Fixed to alternate, but they don't.
-					// Keep going, ignoring the first Introduced.
-				}
+				// We expected Introduced and Fixed to alternate, but if
+				// p.intro != "", then they they don't.
+				// Keep going in that case, ignoring the first Introduced.
 				p.intro = v.Introduced
 				if p.intro == "0" {
 					p.intro = ""

@@ -26,7 +26,6 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
-	"io/ioutil"
 	"path"
 	"path/filepath"
 	"sort"
@@ -530,7 +529,7 @@ func (d *Detector) readFile(pathname string) ([]byte, error) {
 	if info.Size() > maxLicenseSize {
 		return nil, fmt.Errorf("file size %d exceeds max license size %d", info.Size(), maxLicenseSize)
 	}
-	return ioutil.ReadAll(io.LimitReader(f, int64(maxLicenseSize)))
+	return io.ReadAll(io.LimitReader(f, int64(maxLicenseSize)))
 }
 
 // DetectFile return the set of license types for the given file contents. It

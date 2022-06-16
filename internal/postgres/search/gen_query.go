@@ -11,7 +11,7 @@ import (
 	"context"
 	"fmt"
 	"go/format"
-	"io/ioutil"
+	"os"
 
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/postgres/search"
@@ -33,8 +33,8 @@ func generateFile(ctx context.Context, filename string) error {
 	if err != nil {
 		return err
 	}
-	if err := ioutil.WriteFile(filename, []byte(content), 0644); err != nil {
-		return fmt.Errorf("ioutil.WriteFile(f, '', 0644): %v", err)
+	if err := os.WriteFile(filename, []byte(content), 0644); err != nil {
+		return fmt.Errorf("os.WriteFile(f, '', 0644): %v", err)
 	}
 	return nil
 }

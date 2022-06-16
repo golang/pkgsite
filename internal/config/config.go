@@ -15,7 +15,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"math/rand"
 	"net/http"
 	"os"
@@ -540,7 +539,7 @@ func readOverrideFile(ctx context.Context, bucketName, objName string) (_ []byte
 		return nil, err
 	}
 	defer r.Close()
-	return ioutil.ReadAll(r)
+	return io.ReadAll(r)
 }
 
 func processOverrides(ctx context.Context, cfg *Config, bytes []byte) {
@@ -608,9 +607,9 @@ func gceMetadata(ctx context.Context, name string) (_ string, err error) {
 	if resp.StatusCode != http.StatusOK {
 		return "", fmt.Errorf("bad status: %s", resp.Status)
 	}
-	bytes, err := ioutil.ReadAll(resp.Body)
+	bytes, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return "", fmt.Errorf("ioutil.ReadAll: %v", err)
+		return "", fmt.Errorf("io.ReadAll: %v", err)
 	}
 	return string(bytes), nil
 }

@@ -7,7 +7,7 @@ package middleware
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -45,10 +45,10 @@ func TestChain(t *testing.T) {
 	if err != nil {
 		t.Fatalf("GET got error %v, want nil", err)
 	}
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	resp.Body.Close()
 	if err != nil {
-		t.Fatalf("ioutil.ReadAll(resp.Body): %v", err)
+		t.Fatalf("io.ReadAll(resp.Body): %v", err)
 	}
 
 	// Test that both middleware executed, in the correct order.

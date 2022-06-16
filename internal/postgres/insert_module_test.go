@@ -9,7 +9,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -504,7 +504,7 @@ func TestMakeValidUnicode(t *testing.T) {
 	}
 
 	check := func(filename string, okRaw bool) {
-		data, err := ioutil.ReadFile(filepath.Join("testdata", filename))
+		data, err := os.ReadFile(filepath.Join("testdata", filename))
 		if err != nil {
 			t.Fatal(err)
 		}

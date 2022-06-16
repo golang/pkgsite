@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
-	"io/ioutil"
 	"log"
 	"math"
 	"os"
@@ -413,7 +412,7 @@ func TestDetectFile(t *testing.T) {
 		{"rocketlaunchr", []string{"MIT"}},
 	} {
 		t.Run(test.file, func(t *testing.T) {
-			data, err := ioutil.ReadFile(filepath.Join("testdata", test.file+".df"))
+			data, err := os.ReadFile(filepath.Join("testdata", test.file+".df"))
 			if err != nil {
 				t.Fatal(err)
 			}

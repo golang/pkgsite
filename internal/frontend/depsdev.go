@@ -78,10 +78,10 @@ func fetchDepsDevURL(ctx context.Context, modulePath, version string) (string, e
 	switch resp.StatusCode {
 	case http.StatusNotFound:
 		return "", nil // No link to return.
-	default:
-		return "", errors.New(resp.Status)
 	case http.StatusOK:
 		// Handled below.
+	default:
+		return "", errors.New(resp.Status)
 	}
 	var r struct {
 		stem, Name, Version string

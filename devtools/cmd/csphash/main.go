@@ -13,7 +13,6 @@ import (
 	"encoding/base64"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"regexp"
@@ -87,7 +86,7 @@ var hashRegexp = regexp.MustCompile(`'sha256-([^']+)'`)
 
 // extractHashes scans the given file for CSP-style hashes and returns them.
 func extractHashes(filename string) ([]string, error) {
-	contents, err := ioutil.ReadFile(filename)
+	contents, err := os.ReadFile(filename)
 	if err != nil {
 		return nil, err
 	}
@@ -112,7 +111,7 @@ type script struct {
 
 // scripts returns all the script elements in the given file.
 func scripts(filename string) ([]*script, error) {
-	contents, err := ioutil.ReadFile(filename)
+	contents, err := os.ReadFile(filename)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %v", filename, err)
 	}
