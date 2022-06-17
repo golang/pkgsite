@@ -61,15 +61,15 @@ type Options struct {
 var docDataTmpl = template.Must(template.New("").Parse(`
 {{- if and .EnableCommandTOC .Headings -}}
   <div role="navigation" aria-label="Table of Contents">
-    <ul class="Documentation-toc {{if gt (len .Headings) 5}}Documentation-toc-columns{{end}}">
-      {{- range .Headings -}}
-		<li class="Documentation-tocItem">
-		  <a href="#{{.ID}}">{{.Title}}</a>
-		</li>
-      {{- end -}}
+    <ul class="Documentation-toc{{if gt (len .Headings) 5}} Documentation-toc-columns{{end}}">
+      {{range .Headings -}}
+        <li class="Documentation-tocItem">
+          <a href="#{{.ID}}">{{.Title}}</a>
+        </li>
+      {{end -}}
     </ul>
   </div>
-{{- end -}}
+{{end -}}
 {{- range .Elements -}}
   {{- if .IsHeading -}}
     <h4 id="{{.ID}}">{{.Title}} <a class="Documentation-idLink" href="#{{.ID}}">¶</a></h4>

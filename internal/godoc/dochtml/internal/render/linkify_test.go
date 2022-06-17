@@ -540,3 +540,37 @@ func TestCommentEscape(t *testing.T) {
 		}
 	}
 }
+
+func TestTOC(t *testing.T) {
+	doc := `
+Documentation.
+
+The Go Project
+
+Go is an open source project.
+
+Heading 2
+
+More text.`
+
+	want := testconversions.MakeHTMLForTest(`<div role="navigation" aria-label="Table of Contents">
+    <ul class="Documentation-toc">
+      <li class="Documentation-tocItem">
+          <a href="#hdr-The_Go_Project">The Go Project</a>
+        </li>
+      <li class="Documentation-tocItem">
+          <a href="#hdr-Heading_2">Heading 2</a>
+        </li>
+      </ul>
+  </div>
+<p>Documentation.
+</p><h4 id="hdr-The_Go_Project">The Go Project <a class="Documentation-idLink" href="#hdr-The_Go_Project">¶</a></h4><p>Go is an open source project.
+</p><h4 id="hdr-Heading_2">Heading 2 <a class="Documentation-idLink" href="#hdr-Heading_2">¶</a></h4><p>More text.
+</p>`)
+
+	r := New(context.Background(), nil, pkgTime, &Options{EnableCommandTOC: true})
+	got := r.declHTML(doc, nil, false).Doc
+	if diff := cmp.Diff(want, got, cmp.AllowUnexported(safehtml.HTML{})); diff != "" {
+		t.Errorf("r.declHTML() mismatch (-want +got)\n%s", diff)
+	}
+}
