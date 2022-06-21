@@ -123,7 +123,7 @@ TLSUnique contains the tls-unique channel binding value (see RFC
 </p>`,
 		},
 		{
-			name: "list",
+			name: "ulist",
 			doc: `
 			Here is a list:
 				- a
@@ -133,6 +133,18 @@ TLSUnique contains the tls-unique channel binding value (see RFC
   <li>a</li>
   <li>b</li>
 </ul>`,
+		},
+		{
+			name: "olist",
+			doc: `
+			Here is a list:
+				1. a
+				2. b`,
+			want: `<p>Here is a list:
+</p><ol>
+  <li value="1">a</li>
+  <li value="2">b</li>
+</ol>`,
 		},
 		{
 			name:         "Links section is not extracted",

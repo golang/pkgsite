@@ -102,13 +102,13 @@ var (
 
 	oListTemplate = template.Must(template.New("olist").Parse(
 		`<ol>
-		   {{range .}}
-		     {{.}}
-           {{end}}
-         </ol>`))
+{{- range .}}
+  {{.}}
+{{- end}}
+</ol>`))
 
 	listItemTemplate = template.Must(template.New("li").Parse(
-		`<li{{with .Number}}value="{{.}}" {{end}}>{{.Content}}</li>`))
+		`<li{{with .Number}} value="{{.}}"{{end}}>{{.Content}}</li>`))
 )
 
 func (r *Renderer) formatDocHTML(text string, extractLinks bool) safe.HTML {
@@ -145,7 +145,6 @@ func (r *Renderer) removeLinks(doc *comment.Doc) {
 		case *comment.List:
 			if inLinks {
 				for _, item := range b.Items {
-					fmt.Println("    ", item)
 					if link, ok := itemLink(item); ok {
 						r.links = append(r.links, link)
 					}
