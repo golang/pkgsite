@@ -6,10 +6,10 @@ package render
 
 import (
 	"go/ast"
+	"go/doc"
 	"go/token"
 
 	"github.com/google/safehtml/template"
-	"golang.org/x/pkgsite/internal/godoc/internal/doc"
 )
 
 /*

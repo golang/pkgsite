@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"go/ast"
+	"go/doc"
 	"go/parser"
 	"go/token"
 	"strings"
@@ -16,7 +17,6 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/safehtml"
 	"github.com/google/safehtml/testconversions"
-	"golang.org/x/pkgsite/internal/godoc/internal/doc"
 )
 
 func TestFormatDocHTML(t *testing.T) {

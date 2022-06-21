@@ -1,5 +1,0 @@
-This code was originally forked from Go 1.14.
-It was modified as needed for pkgsite.
-It was then reconciled with Go 1.17.3.
-Then it was reconciled with GO 1.18beta1.
-

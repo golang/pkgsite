@@ -13,6 +13,7 @@ import (
 	"os"
 
 	"go/ast"
+	"go/doc"
 	"go/parser"
 	"go/token"
 	"path/filepath"
@@ -25,7 +26,6 @@ import (
 	"github.com/jba/templatecheck"
 	"golang.org/x/net/html"
 	"golang.org/x/pkgsite/internal/godoc/dochtml/internal/render"
-	"golang.org/x/pkgsite/internal/godoc/internal/doc"
 	"golang.org/x/pkgsite/internal/testing/testhelper"
 )
 

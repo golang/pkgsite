@@ -16,6 +16,7 @@ import (
 	"errors"
 	"fmt"
 	"go/ast"
+	"go/doc"
 	"go/printer"
 	"go/token"
 	"sort"
@@ -28,7 +29,6 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/godoc/dochtml/internal/render"
-	"golang.org/x/pkgsite/internal/godoc/internal/doc"
 )
 
 var (

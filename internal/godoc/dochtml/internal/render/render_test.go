@@ -6,13 +6,12 @@ package render
 
 import (
 	"go/ast"
+	"go/doc"
 	"go/parser"
 	"go/token"
 	"os"
 	"path/filepath"
 	"strings"
-
-	"golang.org/x/pkgsite/internal/godoc/internal/doc"
 )
 
 var pkgTime, fsetTime = mustLoadPackage("time")

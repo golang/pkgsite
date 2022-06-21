@@ -9,13 +9,13 @@ package render
 import (
 	"context"
 	"go/ast"
+	"go/doc"
 	"go/token"
 	"regexp"
 	"strings"
 
 	"github.com/google/safehtml"
 	"github.com/google/safehtml/template"
-	"golang.org/x/pkgsite/internal/godoc/internal/doc"
 )
 
 var (

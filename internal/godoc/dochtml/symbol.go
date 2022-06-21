@@ -7,12 +7,12 @@ package dochtml
 import (
 	"fmt"
 	"go/ast"
+	"go/doc"
 	"go/token"
 
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/godoc/dochtml/internal/render"
-	"golang.org/x/pkgsite/internal/godoc/internal/doc"
 )
 
 // GetSymbols renders package documentation HTML for the

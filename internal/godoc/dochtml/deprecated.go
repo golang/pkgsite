@@ -5,9 +5,8 @@
 package dochtml
 
 import (
+	"go/doc"
 	"regexp"
-
-	"golang.org/x/pkgsite/internal/godoc/internal/doc"
 )
 
 // "Deprecated:" at the start of a paragraph.
