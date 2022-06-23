@@ -112,8 +112,7 @@ var (
 )
 
 func (r *Renderer) formatDocHTML(text string, extractLinks bool) safe.HTML {
-	p := comment.Parser{}
-	doc := p.Parse(text)
+	doc := r.commentParser.Parse(text)
 	if extractLinks {
 		r.removeLinks(doc)
 	}

@@ -10,6 +10,7 @@ import (
 	"context"
 	"go/ast"
 	"go/doc"
+	"go/doc/comment"
 	"go/token"
 	"regexp"
 	"strings"
@@ -32,6 +33,7 @@ type Renderer struct {
 	docTmpl          *template.Template
 	exampleTmpl      *template.Template
 	links            []Link // Links removed from package overview to be displayed elsewhere.
+	commentParser    *comment.Parser
 }
 
 type Options struct {
@@ -110,6 +112,7 @@ func New(ctx context.Context, fset *token.FileSet, pkg *doc.Package, opts *Optio
 		docTmpl:          docDataTmpl,
 		exampleTmpl:      exampleTmpl,
 		ctx:              ctx,
+		commentParser:    pkg.Parser(),
 	}
 }
 

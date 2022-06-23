@@ -176,6 +176,18 @@ TLSUnique contains the tls-unique channel binding value (see RFC
 			doc:  "For more detail, run ``go help test'' and ``go help testflag''",
 			want: `<p>For more detail, run “go help test” and “go help testflag”` + "\n" + "</p>",
 		},
+		{
+			name: "symbol links",
+			doc:  "Links to [Month] and [Time.After].",
+			want: `<p>Links to <a href="#Month">Month</a> and <a href="#Time.After">Time.After</a>.
+</p>`,
+		},
+		{
+			name: "package links",
+			doc:  "Links to [time] and [github.com/a/b].",
+			want: `<p>Links to <a href="">time</a> and <a href="/github.com/a/b">github.com/a/b</a>.
+</p>`,
+		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			extractLinks := test.extractLinks
