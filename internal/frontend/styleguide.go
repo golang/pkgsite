@@ -26,6 +26,8 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/experiment"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 // serveStyleGuide serves the styleguide page, the content of which is
@@ -216,7 +218,7 @@ func camelCase(s string) string {
 	p := strings.Split(s, "-")
 	var o []string
 	for _, v := range p {
-		o = append(o, strings.Title(v))
+		o = append(o, cases.Title(language.Und).String(v))
 	}
 	return strings.Join(o, "")
 }

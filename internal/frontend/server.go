@@ -37,6 +37,8 @@ import (
 	"golang.org/x/pkgsite/internal/queue"
 	"golang.org/x/pkgsite/internal/static"
 	"golang.org/x/pkgsite/internal/version"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 	vulnc "golang.org/x/vuln/client"
 )
 
@@ -688,7 +690,7 @@ var templateFuncs = template.FuncMap{
 		return strings.Join(s, ", ")
 	},
 	"stripscheme": stripScheme,
-	"capitalize":  strings.Title,
+	"capitalize":  cases.Title(language.Und).String,
 	"queryescape": url.QueryEscape,
 }
 

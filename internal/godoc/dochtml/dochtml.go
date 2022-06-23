@@ -29,6 +29,8 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/godoc/dochtml/internal/render"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 var (
@@ -382,7 +384,7 @@ func collectExamples(p *doc.Package) *examples {
 		Map:  make(map[string][]*example),
 	}
 	WalkExamples(p, func(id string, ex *doc.Example) {
-		suffix := strings.Title(ex.Suffix)
+		suffix := cases.Title(language.English, cases.NoLower).String(ex.Suffix)
 		ex0 := &example{
 			Example:  ex,
 			ID:       exampleID(id, suffix),
@@ -433,7 +435,7 @@ func buildNoteHeaders(notes map[string][]*doc.Note) map[string]noteHeader {
 	for marker := range notes {
 		headers[marker] = noteHeader{
 			SafeIdentifier: safehtml.IdentifierFromConstantPrefix("pkg-note", marker),
-			Label:          strings.Title(strings.ToLower(marker)),
+			Label:          cases.Title(language.Und).String(strings.ToLower(marker)),
 		}
 	}
 	return headers
