@@ -129,7 +129,7 @@ TLSUnique contains the tls-unique channel binding value (see RFC
 				- a
 				- b`,
 			want: `<p>Here is a list:
-</p><ul>
+</p><ul class="Documentation-bulletList">
   <li>a</li>
   <li>b</li>
 </ul>`,
@@ -141,7 +141,7 @@ TLSUnique contains the tls-unique channel binding value (see RFC
 				1. a
 				2. b`,
 			want: `<p>Here is a list:
-</p><ol>
+</p><ol class="Documentation-numberList">
   <li value="1">a</li>
   <li value="2">b</li>
 </ol>`,
@@ -153,7 +153,7 @@ TLSUnique contains the tls-unique channel binding value (see RFC
 			want: `<p>Documentation.
 </p><h4 id="hdr-The_Go_Project">The Go Project <a class="Documentation-idLink" href="#hdr-The_Go_Project">¶</a></h4><p>Go is an open source project.
 </p><h4 id="hdr-Links">Links <a class="Documentation-idLink" href="#hdr-Links">¶</a></h4><p>- title1, url1
-</p><ul>
+</p><ul class="Documentation-bulletList">
   <li>title2 , url2</li>
 </ul><h4 id="hdr-Header">Header <a class="Documentation-idLink" href="#hdr-Header">¶</a></h4><p>More doc.
 </p>`,

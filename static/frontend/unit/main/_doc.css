@@ -85,6 +85,17 @@
   padding-left: 2em;
 }
 
+.Documentation .Documentation-bulletList {
+  list-style: disc;
+  padding-left: 2rem;
+  margin-bottom: 1rem;
+}
+
+.Documentation .Documentation-numberList {
+  list-style: decimal;
+  padding-left: 2rem;
+  margin-bottom: 1rem;
+}
 .Documentation pre + pre {
   margin-top: 0.625rem;
 }

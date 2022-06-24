@@ -94,14 +94,14 @@ var (
 		`<a{{with .Class}}class="{{.}}" {{end}} href="{{.Href}}">{{.Text}}</a>`))
 
 	uListTemplate = template.Must(template.New("ulist").Parse(
-		`<ul>
+		`<ul class="Documentation-bulletList">
 {{- range .}}
   {{.}}
 {{- end}}
 </ul>`))
 
 	oListTemplate = template.Must(template.New("olist").Parse(
-		`<ol>
+		`<ol class="Documentation-numberList">
 {{- range .}}
   {{.}}
 {{- end}}

@@ -51,10 +51,12 @@ var tmpl = map[string]interface{}{
 		}
 		return a
 	},
+	// These are just placeholders, for parsing. The actual functions
+	// are in dochtml.go.
 	"render_short_synopsis":    (*render.Renderer)(nil).ShortSynopsis,
 	"render_synopsis":          (*render.Renderer)(nil).Synopsis,
 	"render_doc":               (*render.Renderer)(nil).DocHTML,
-	"render_doc_extract_links": (*render.Renderer)(nil).DocHTML,
+	"render_doc_extract_links": (*render.Renderer)(nil).DocHTMLExtractLinks,
 	"render_decl":              (*render.Renderer)(nil).DeclHTML,
 	"render_code":              (*render.Renderer)(nil).CodeHTML,
 	"file_link":                func() string { return "" },
