@@ -1,0 +1,166 @@
+<div class="Documentation-content js-docContent"> <section class="Documentation-overview">
+<h3 tabindex="-1" id="pkg-overview" class="Documentation-overviewHeader">Overview <a href="#pkg-overview">¶</a></h3>
+<p>Package comments exercises the Go 1.19 doc comment features.
+This refers to the standard library <a href="/encoding/json">encoding/json</a> package.
+</p>
+</section><section class="Documentation-index">
+<h3 id="pkg-index" class="Documentation-indexHeader">Index <a href="#pkg-index">¶</a></h3>
+<ul class="Documentation-indexList">
+<li class="Documentation-indexFunction">
+<a href="#F">func F()</a></li>
+<li class="Documentation-indexFunction">
+<a href="#G">func G()</a></li>
+<li class="Documentation-indexType">
+<a href="#T">type T</a></li>
+<li><ul class="Documentation-indexTypeMethods">
+<li>
+<a href="#T.M">func (T) M() safe.HTML</a></li>
+</ul></li>
+</ul>
+</section><h3 tabindex="-1" id="pkg-constants" class="Documentation-constantsHeader">Constants <a href="#pkg-constants">¶</a></h3>
+<section class="Documentation-constants"><p class="Documentation-empty">This section is empty.</p></section>
+<h3 tabindex="-1" id="pkg-variables" class="Documentation-variablesHeader">Variables <a href="#pkg-variables">¶</a></h3>
+<section class="Documentation-variables"><p class="Documentation-empty">This section is empty.</p></section>
+<h3 tabindex="-1" id="pkg-functions" class="Documentation-functionsHeader">Functions <a href="#pkg-functions">¶</a></h3>
+<section class="Documentation-functions"><div class="Documentation-function">
+<h4 tabindex="-1" id="F" data-kind="function" class="Documentation-functionHeader">
+<span>func <a class="Documentation-source" href="src">F</a> <a class="Documentation-idLink" href="#F">¶</a></span>
+<span class="Documentation-sinceVersion">
+</span>
+</h4>
+<div class="Documentation-declaration">
+<pre>func F()</pre>
+</div>
+<div role="navigation" aria-label="Table of Contents">
+<ul class="Documentation-toc">
+<li class="Documentation-tocItem">
+<a href="#hdr-Example">Example</a>
+</li>
+</ul>
+</div>
+<p>F refers to function <a href="#G">G</a> and method <a href="#T.M">T.M</a>.
+It also has three bullet points:
+</p><ul class="Documentation-bulletList">
+<li>one</li>
+<li>two</li>
+<li>three</li>
+</ul><h4 id="hdr-Example">Example <a class="Documentation-idLink" href="#hdr-Example">¶</a></h4><p>Here is an example:
+</p><pre>F()
+</pre>
+</div><div class="Documentation-function">
+<h4 tabindex="-1" id="G" data-kind="function" class="Documentation-functionHeader">
+<span>func <a class="Documentation-source" href="src">G</a> <a class="Documentation-idLink" href="#G">¶</a></span>
+<span class="Documentation-sinceVersion">
+</span>
+</h4>
+<div class="Documentation-declaration">
+<pre>func G()</pre>
+</div>
+<p>G implements something according to <a href="https://pkg.go.dev">this link</a>.
+</p>
+</div></section>
+<h3 tabindex="-1" id="pkg-types" class="Documentation-typesHeader">Types <a href="#pkg-types">¶</a></h3>
+<section class="Documentation-types"><div class="Documentation-type">
+<h4 tabindex="-1" id="T" data-kind="type" class="Documentation-typeHeader">
+<span>type <a class="Documentation-source" href="src">T</a> <a class="Documentation-idLink" href="#T">¶</a></span>
+<span class="Documentation-sinceVersion">
+</span>
+</h4>
+<div class="Documentation-declaration">
+<pre>type T struct{}</pre>
+</div>
+<p>A numbered list looks like
+</p><ol class="Documentation-numberList">
+<li value="1">a</li>
+<li value="2">b</li>
+</ol>
+<div class="Documentation-typeMethod">
+<h4 tabindex="-1" id="T.M" data-kind="method" class="Documentation-typeMethodHeader">
+<span>func (T) <a class="Documentation-source" href="src">M</a> <a class="Documentation-idLink" href="#T.M">¶</a></span>
+<span class="Documentation-sinceVersion">
+</span>
+</h4>
+<div class="Documentation-declaration">
+<pre>func (<a href="#T">T</a>) M() <a href="/github.com/google/safehtml">safe</a>.<a href="/github.com/google/safehtml#HTML">HTML</a></pre>
+</div>
+<p>M refers to <a href="#F">F</a>.
+It also refers to packages <a href="/github.com/google/safehtml">safe</a>
+and <a href="/github.com/google/go-cmp/cmp">cmp</a>
+and <a href="/golang/org/x/sync/errgroup">golang/org/x/sync/errgroup</a>
+and to the symbols <a href="/github.com/google/safehtml#HTML">safe.HTML</a>
+and <a href="/github.com/google/go-cmp/cmp#Diff">cmp.Diff</a>
+and <a href="/golang.org/x/sync/errgroup#Group">golang.org/x/sync/errgroup.Group</a>.
+</p>
+</div>
+</div></section></div>
+----
+<ul>
+<li>
+<a href="#pkg-overview" data-gtmc="doc outline link">Overview</a>
+</li>
+<li class="DocNav-overview">
+<a href="#pkg-index" data-gtmc="doc outline link">
+Index
+</a>
+</li>
+<li class="DocNav-constants">
+<a href="#pkg-constants" data-gtmc="doc outline link">
+Constants
+</a>
+</li>
+<li class="DocNav-variables">
+<a href="#pkg-variables" data-gtmc="doc outline link">
+Variables
+</a>
+</li>
+<li class="DocNav-functions">
+<a href="#pkg-functions" data-gtmc="doc outline link">
+Functions
+</a>
+<ul>
+<li>
+<a href="#F" title="F()" data-gtmc="doc outline link">
+F()
+</a>
+</li>
+<li>
+<a href="#G" title="G()" data-gtmc="doc outline link">
+G()
+</a>
+</li>
+</ul>
+</li>
+<li class="DocNav-types">
+<a href="#pkg-types" data-gtmc="doc outline link">
+Types
+</a>
+<ul>
+<li>
+<a href="#T" title="type T" data-gtmc="doc outline link">
+type T
+</a>
+<ul>
+<li>
+<a href="#T.M" title="M()"
+data-gtmc="doc outline link">
+M()
+</a>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+----
+<optgroup label="Documentation">
+<option value="pkg-overview">Overview</option>
+<option value="pkg-index">Index</option>
+</optgroup>
+<optgroup label="Functions">
+<option value="F">F()</option>
+<option value="G">G()</option>
+</optgroup>
+<optgroup label="Types">
+<option value="T">type T</option>
+<option value="T.M">M()</option>
+</optgroup>

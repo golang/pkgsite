@@ -51,33 +51,37 @@ func TestCheckTemplates(t *testing.T) {
 func TestRender(t *testing.T) {
 	ctx := context.Background()
 	LoadTemplates(templateFS)
-	fset, d := mustLoadPackage("everydecl")
-	parts, err := Render(ctx, fset, d, testRenderOptions)
-	if err != nil {
-		t.Fatal(err)
-	}
-	compareWithGolden(t, parts, "everydecl", *update)
+	for _, pkg := range []string{"everydecl", "comments"} {
+		t.Run(pkg, func(t *testing.T) {
+			fset, d := mustLoadPackage(pkg)
+			parts, err := Render(ctx, fset, d, testRenderOptions)
+			if err != nil {
+				t.Fatal(err)
+			}
+			compareWithGolden(t, parts, pkg, *update)
+			bodyDoc, err := html.Parse(strings.NewReader(parts.Body.String()))
+			if err != nil {
+				t.Fatal(err)
+			}
 
-	bodyDoc, err := html.Parse(strings.NewReader(parts.Body.String()))
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	// Check that there are no duplicate id attributes.
-	t.Run("duplicate ids", func(t *testing.T) {
-		testDuplicateIDs(t, bodyDoc)
-	})
-	t.Run("ids-and-kinds", func(t *testing.T) {
-		// Check that the id and data-kind labels are right.
-		testIDsAndKinds(t, bodyDoc)
-	})
-
-	wantLinks := []render.Link{
-		{Href: "https://go.googlesource.com/pkgsite", Text: "pkgsite repo"},
-		{Href: "https://play-with-go.dev", Text: "Play with Go"},
-	}
-	if diff := cmp.Diff(wantLinks, parts.Links); diff != "" {
-		t.Errorf("links mismatch (-want, +got):\n%s", diff)
+			// Check that there are no duplicate id attributes.
+			t.Run("duplicate ids", func(t *testing.T) {
+				testDuplicateIDs(t, bodyDoc)
+			})
+			if pkg == "everydecl" {
+				t.Run("ids-and-kinds", func(t *testing.T) {
+					// Check that the id and data-kind labels are right.
+					testIDsAndKinds(t, bodyDoc)
+				})
+				wantLinks := []render.Link{
+					{Href: "https://go.googlesource.com/pkgsite", Text: "pkgsite repo"},
+					{Href: "https://play-with-go.dev", Text: "Play with Go"},
+				}
+				if diff := cmp.Diff(wantLinks, parts.Links); diff != "" {
+					t.Errorf("links mismatch (-want, +got):\n%s", diff)
+				}
+			}
+		})
 	}
 }
 
