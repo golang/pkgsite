@@ -263,7 +263,6 @@ func renderInfo(ctx context.Context, fset *token.FileSet, p *doc.Package, opt Re
 			}
 			return "/" + versionedPath + search
 		},
-		EnableCommandTOC: true,
 	})
 
 	fileLink := func(name string) safehtml.HTML {

@@ -123,7 +123,7 @@ func (r *Renderer) formatDocHTML(text string, extractLinks bool) safe.HTML {
 		}
 	}
 	h := r.blocksToHTML(doc.Content, true, extractLinks)
-	if r.enableCommandTOC && len(headings) > 0 {
+	if len(headings) > 0 {
 		h = safe.HTMLConcat(ExecuteToHTML(tocTemplate, headings), h)
 	}
 	return h

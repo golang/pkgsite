@@ -25,15 +25,14 @@ var (
 )
 
 type Renderer struct {
-	fset             *token.FileSet
-	pids             *packageIDs
-	packageURL       func(string) string
-	enableCommandTOC bool
-	ctx              context.Context
-	docTmpl          *template.Template
-	exampleTmpl      *template.Template
-	links            []Link // Links removed from package overview to be displayed elsewhere.
-	commentParser    *comment.Parser
+	fset          *token.FileSet
+	pids          *packageIDs
+	packageURL    func(string) string
+	ctx           context.Context
+	docTmpl       *template.Template
+	exampleTmpl   *template.Template
+	links         []Link // Links removed from package overview to be displayed elsewhere.
+	commentParser *comment.Parser
 }
 
 type Options struct {
@@ -49,12 +48,6 @@ type Options struct {
 	//
 	// Only relevant for HTML formatting.
 	PackageURL func(pkgPath string) (url string)
-
-	// EnableCommandTOC turns on the table of contents for the overview section
-	// of command pages.
-	//
-	// Only relevant for HTML formatting.
-	EnableCommandTOC bool
 }
 
 // docDataTmpl renders documentation. It expects a docData.
@@ -92,7 +85,6 @@ var exampleTmpl = template.Must(template.New("").Parse(`
 func New(ctx context.Context, fset *token.FileSet, pkg *doc.Package, opts *Options) *Renderer {
 	var others []*doc.Package
 	var packageURL func(string) string
-	var enableCommandTOC bool
 	if opts != nil {
 		if len(opts.RelatedPackages) > 0 {
 			others = opts.RelatedPackages
@@ -100,19 +92,17 @@ func New(ctx context.Context, fset *token.FileSet, pkg *doc.Package, opts *Optio
 		if opts.PackageURL != nil {
 			packageURL = opts.PackageURL
 		}
-		enableCommandTOC = opts.EnableCommandTOC
 	}
 	pids := newPackageIDs(pkg, others...)
 
 	return &Renderer{
-		fset:             fset,
-		pids:             pids,
-		packageURL:       packageURL,
-		enableCommandTOC: enableCommandTOC,
-		docTmpl:          docDataTmpl,
-		exampleTmpl:      exampleTmpl,
-		ctx:              ctx,
-		commentParser:    pkg.Parser(),
+		fset:          fset,
+		pids:          pids,
+		packageURL:    packageURL,
+		docTmpl:       docDataTmpl,
+		exampleTmpl:   exampleTmpl,
+		ctx:           ctx,
+		commentParser: pkg.Parser(),
 	}
 }
 

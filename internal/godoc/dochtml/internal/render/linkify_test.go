@@ -74,13 +74,20 @@ Go is an open source project.`,
 </p>`,
 		},
 		{
-			name: "header gets linked",
+			name: "header gets linked 2",
 			doc: `Documentation.
 
 The Go Project
 
 Go is an open source project.`,
-			want: `<p>Documentation.
+			want: `<div role="navigation" aria-label="Table of Contents">
+  <ul class="Documentation-toc">
+    <li class="Documentation-tocItem">
+        <a href="#hdr-The_Go_Project">The Go Project</a>
+      </li>
+    </ul>
+</div>
+<p>Documentation.
 </p><h4 id="hdr-The_Go_Project">The Go Project <a class="Documentation-idLink" href="#hdr-The_Go_Project">¶</a></h4><p>Go is an open source project.
 </p>`,
 		},
@@ -150,7 +157,20 @@ TLSUnique contains the tls-unique channel binding value (see RFC
 			name:         "Links section is not extracted",
 			extractLinks: []bool{false},
 			doc:          linksDoc,
-			want: `<p>Documentation.
+			want: `<div role="navigation" aria-label="Table of Contents">
+  <ul class="Documentation-toc">
+    <li class="Documentation-tocItem">
+        <a href="#hdr-The_Go_Project">The Go Project</a>
+      </li>
+    <li class="Documentation-tocItem">
+        <a href="#hdr-Links">Links</a>
+      </li>
+    <li class="Documentation-tocItem">
+        <a href="#hdr-Header">Header</a>
+      </li>
+    </ul>
+</div>
+<p>Documentation.
 </p><h4 id="hdr-The_Go_Project">The Go Project <a class="Documentation-idLink" href="#hdr-The_Go_Project">¶</a></h4><p>Go is an open source project.
 </p><h4 id="hdr-Links">Links <a class="Documentation-idLink" href="#hdr-Links">¶</a></h4><p>- title1, url1
 </p><ul class="Documentation-bulletList">
@@ -162,7 +182,17 @@ TLSUnique contains the tls-unique channel binding value (see RFC
 			name:         "Links section is extracted",
 			extractLinks: []bool{true},
 			doc:          linksDoc,
-			want: `<p>Documentation.
+			want: `<div role="navigation" aria-label="Table of Contents">
+  <ul class="Documentation-toc">
+    <li class="Documentation-tocItem">
+        <a href="#hdr-The_Go_Project">The Go Project</a>
+      </li>
+    <li class="Documentation-tocItem">
+        <a href="#hdr-Header">Header</a>
+      </li>
+    </ul>
+</div>
+<p>Documentation.
 </p><h4 id="hdr-The_Go_Project">The Go Project <a class="Documentation-idLink" href="#hdr-The_Go_Project">¶</a></h4><p>Go is an open source project.
 </p><h4 id="hdr-Header">Header <a class="Documentation-idLink" href="#hdr-Header">¶</a></h4><p>More doc.
 </p>`,
@@ -599,7 +629,7 @@ More text.`
 </p><h4 id="hdr-Heading_2">Heading 2 <a class="Documentation-idLink" href="#hdr-Heading_2">¶</a></h4><p>More text.
 </p>`)
 
-	r := New(context.Background(), nil, pkgTime, &Options{EnableCommandTOC: true})
+	r := New(context.Background(), nil, pkgTime, nil)
 	got := r.declHTML(doc, nil, false).Doc
 	if diff := cmp.Diff(want, got, cmp.AllowUnexported(safehtml.HTML{})); diff != "" {
 		t.Errorf("r.declHTML() mismatch (-want +got)\n%s", diff)
