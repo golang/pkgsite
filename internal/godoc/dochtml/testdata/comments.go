@@ -35,6 +35,9 @@ func G() {
 // A numbered list looks like
 //  1. a
 //  2. b
+//
+// This link refers to a package in the same
+// module: [example.com/module/pkg].
 type T struct{}
 
 // M refers to [F].

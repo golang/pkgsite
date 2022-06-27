@@ -37,6 +37,11 @@ var testRenderOptions = RenderOptions{
 	FileLinkFunc:     func(string) string { return "file" },
 	SourceLinkFunc:   func(ast.Node) string { return "src" },
 	SinceVersionFunc: func(string) string { return "" },
+	ModInfo: &ModuleInfo{
+		ModulePath:      "example.com/module",
+		ResolvedVersion: "v1.2.3",
+		ModulePackages:  map[string]bool{"example.com/module/pkg": true},
+	},
 }
 
 func TestCheckTemplates(t *testing.T) {

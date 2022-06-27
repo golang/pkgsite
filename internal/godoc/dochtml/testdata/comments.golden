@@ -73,7 +73,9 @@ It also has three bullet points:
 </p><ol class="Documentation-numberList">
 <li value="1">a</li>
 <li value="2">b</li>
-</ol>
+</ol><p>This link refers to a package in the same
+module: <a href="/example.com/module@v1.2.3/pkg">example.com/module/pkg</a>.
+</p>
 <div class="Documentation-typeMethod">
 <h4 tabindex="-1" id="T.M" data-kind="method" class="Documentation-typeMethodHeader">
 <span>func (T) <a class="Documentation-source" href="src">M</a> <a class="Documentation-idLink" href="#T.M">¶</a></span>
