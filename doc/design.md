@@ -11,7 +11,7 @@ Pkg.go.dev consists of the following high-level pieces:
 
 - A _database_ that stores all information served on the site.
 
-Both services are hosted on App Engine Standard and run Go 1.13. We use a
+Both services are hosted on App Engine Standard and run Go 1.19. We use a
 Postgres database managed by [Google Cloud SQL](https://cloud.google.com/sql).
 
 ![Architecture](architecture.png 'Pkg.go.dev Architecture')
