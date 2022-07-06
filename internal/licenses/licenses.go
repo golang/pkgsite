@@ -144,6 +144,7 @@ var (
 		"BSD-2-Clause-Views",
 		"BSD-3-Clause",
 		"BSD-3-Clause-Clear",
+		"BSD-3-Clause-LBNL",
 		"BSD-3-Clause-Open-MPI",
 		"BSD-4-Clause",
 		"BSD-4-Clause-UC",
