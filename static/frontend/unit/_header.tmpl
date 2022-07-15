@@ -131,7 +131,8 @@
         <a href="{{$.URLPath}}?tab=licenses" data-test-id="UnitHeader-license"
             aria-label="Go to Licenses" data-gtmc="header link">
           {{- range $i, $e := .Details.Licenses -}}
-            {{if $i}}, {{end}}{{$e.Type}}
+            {{- if lt $i 3}}{{if $i}}, {{end}}{{$e.Type}}{{end -}}
+            {{- if eq $i 3}}, + {{subtract (len $.Details.Licenses) 3}} more{{end -}}
           {{- end -}}
         </a>
       {{else}}
