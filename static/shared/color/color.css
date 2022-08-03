@@ -45,6 +45,7 @@
   --color-border: var(--gray-7);
   --color-text: var(--gray-1);
   --color-text-subtle: var(--gray-4);
+  --color-text-link: var(--turq-dark);
   --color-text-inverted: var(--white);
   --color-code-comment: var(--green);
 
@@ -76,6 +77,7 @@
   --color-background-alert: var(--pink);
   --color-border: var(--gray-4);
   --color-text: var(--gray-9);
+  --color-text-link: var(--turq-med);
   --color-text-subtle: var(--gray-7);
   --color-code-comment: var(--green-light);
 }
@@ -91,6 +93,7 @@
     --color-background-alert: var(--pink);
     --color-border: var(--gray-4);
     --color-text: var(--gray-9);
+    --color-text-link: var(--turq-med);
     --color-text-subtle: var(--gray-7);
     --color-code-comment: var(--green-light);
   }

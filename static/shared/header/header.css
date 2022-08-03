@@ -81,6 +81,7 @@
   border-bottom: none;
   color: var(--white);
 }
+
 .go-Header-logo {
   display: block;
   height: 2rem;
@@ -92,6 +93,7 @@
 }
 .go-Header-menuItem {
   display: none;
+  position: relative;
 }
 .go-Header-menu {
   align-items: stretch;
@@ -100,6 +102,84 @@
   list-style: none;
   margin: 0;
   padding: 0;
+}
+
+.go-Header-submenu {
+  padding: 1.5rem 1.5rem 0;
+  list-style-type: none;
+  background: transparent;
+  visibility: hidden;
+  opacity: 0;
+  display: none;
+  transition: all 0.2s ease;
+  margin-top: 3.5rem;
+  position: absolute;
+  flex-direction: column;
+  flex-wrap: wrap;
+  color: var(--color-text);
+  background-color: var(--color-background);
+  border: 0.0625rem solid #007d9d;
+  border-width: 0 0.0625rem 0.0625rem;
+}
+
+.go-Header-menuItem:hover > .js-desktop-menu-hover:not(.forced-closed) ~ .go-Header-submenu,
+.go-Header-menuItem:focus-within > .js-desktop-menu-hover:not(.forced-closed) ~ .go-Header-submenu {
+  visibility: visible;
+  opacity: 1;
+  display: flex;
+}
+.go-Header-menuItem .go-Header-submenuItem a:link,
+.go-Header-menuItem .go-Header-submenuItem a:visited {
+  margin: 0;
+  margin-bottom: -0.125rem;
+  padding: 0;
+  border-bottom: none;
+  font-weight: 400;
+  color: var(--color-text-link);
+  display: inline-flex;
+  align-items: baseline;
+}
+.go-Header-menuItem .go-Icon {
+  font-size: 1.25rem;
+  filter: brightness(0%) saturate(100%) invert(100%);
+}
+.go-Header-menuItem .go-Header-submenuItem .go-Icon,
+.go-NavigationDrawer-listItem .go-Icon {
+  filter: brightness(0) saturate(100%) invert(60%) sepia(97%) saturate(125%) hue-rotate(162deg)
+    brightness(71%) contrast(177%);
+}
+
+.go-Header-submenu .go-Header-submenuItem i {
+  margin-left: 0.25rem;
+  transform: translateY(0.1rem); /* to get bottom alignment w/ text  */
+  font-size: 0.75rem;
+}
+
+.go-Header-menu .go-Header-submenu--why {
+  width: 18.5rem;
+  left: -1px;
+}
+.go-Header-menu .go-Header-submenu--docs {
+  left: -12rem;
+  height: 20.78rem;
+  width: 37.25rem;
+}
+.go-Header-menu .go-Header-submenu--community {
+  right: -1px;
+  height: 18.4rem;
+  width: 37.25rem;
+}
+.go-Header-socialIcons {
+  display: flex;
+  flex-wrap: wrap;
+}
+.go-Header-submenu .go-Header-submenuItem a.go-Header-socialIcon {
+  flex: 0 1 auto;
+  display: inline-flex;
+  width: auto;
+}
+.go-Header-submenu .go-Header-submenuItem a.go-Header-socialIcon:not(:last-child) {
+  margin-right: 0.75rem;
 }
 @media only screen and (min-width: 65rem) {
   .go-Header-menuItem {
@@ -114,15 +194,18 @@
     display: none;
   }
 }
+
+.go-Header-menuItem .js-desktop-menu-hover img {
+  pointer-events: none;
+}
 .go-Header-menuItem a:link,
 .go-Header-menuItem a:visited {
   align-items: center;
   border-bottom: 0.1875rem solid transparent;
   border-top: 0.1875rem solid transparent; /* To ensure the text remains centered. */
-  color: var(--gray-2);
+  color: var(--color-text);
   display: inline-flex;
-  margin: 0 0.3125rem;
-  padding: 0 0.9375rem;
+  padding: 0 1.5rem;
   text-align: center;
   text-decoration: none;
   width: 100%;
@@ -134,17 +217,101 @@
 }
 .go-Header-menuItem a:hover {
   border-bottom-color: var(--white);
-  color: var(--gray-2);
 }
+.go-Header-menuItem:hover > a:not(.forced-closed).js-desktop-menu-hover,
+.go-Header-menuItem:focus-within > a:not(.forced-closed).js-desktop-menu-hover {
+  background: var(--white);
+  color: var(--color-text-link);
+  border-color: var(--white);
+}
+
+/* Need to get around icon.css color management */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light'])
+    .go-Header-menuItem:hover
+    > a:not(.forced-closed).js-desktop-menu-hover
+    .go-Icon,
+  :root:not([data-theme='light'])
+    .go-Header-menuItem:focus-within
+    > a:not(.forced-closed).js-desktop-menu-hover
+    .go-Icon {
+    filter: brightness(0) saturate(100%) invert(60%) sepia(97%) saturate(125%) hue-rotate(158deg)
+      brightness(83%) contrast(157%);
+  }
+  :root:not([data-theme='light']) .go-Header-submenuItem .go-Icon:not(.go-Icon--accented) {
+    filter: brightness(0) saturate(100%) invert(60%) sepia(97%) saturate(125%) hue-rotate(163deg)
+      brightness(80%) contrast(157%);
+  }
+}
+.go-NavigationDrawer-listItem > div:not(.go-NavigationDrawer),
 .go-NavigationDrawer-listItem a:link,
 .go-NavigationDrawer-listItem a:visited {
-  display: block;
   margin: 0 1rem;
   padding: 0.5rem;
+  display: block;
+}
+
+.go-NavigationDrawer-listItem > span {
+  color: var(--gray-2);
 }
 .go-Header-inner--dark .go-Header-menuItem a:link,
 .go-Header-inner--dark .go-Header-menuItem a:visited {
   color: var(--white);
+}
+.go-NavigationDrawer-listItem.go-NavigationDrawer-hasSubnav > a i {
+  float: right;
+}
+.go-Header-inner--dark .go-Header-menuItem .go-Header-submenuItem {
+  color: var(--color-text-link);
+}
+.go-Header-inner--dark .go-Header-menuItem .js-desktop-menu-hover.is-expanded {
+  color: var(--color-text-link);
+  background-color: var(--white);
+}
+.go-Header-inner--dark .go-Header-menuItem .go-Header-submenu a:link,
+.go-Header-inner--dark .go-Header-menuItem .go-Header-submenu a:visited {
+  color: var(--color-text-link);
+  display: inline-flex;
+  align-items: baseline;
+  margin-bottom: -2px;
+  width: auto;
+}
+.go-Header-submenu .go-Header-submenuItem a:link,
+.go-Header-submenu .go-Header-submenuItem a:visited {
+  margin: 0;
+  padding: 0;
+  border-bottom: none;
+  font-weight: 400;
+}
+.go-Header-inner--dark .go-Header-menuItem:hover > a:not(.forced-closed).js-desktop-menu-hover,
+.go-Header-inner--dark
+  .go-Header-menuItem:focus-within
+  > a:not(.forced-closed).js-desktop-menu-hover {
+  background: var(--color-background);
+  border-color: var(--color-background);
+}
+.go-Header-submenu p {
+  max-width: 15.5rem;
+}
+.go-Header-submenu a:link:hover,
+.go-Header-submenu a:visited:hover {
+  border-bottom: 2px solid var(--turq-dark);
+  text-decoration: none;
+}
+.go-Header-submenu a:link:hover > *,
+.go-Header-submenu a:visited:hover > * {
+  text-decoration: none;
+}
+.go-Header-submenu .go-Header-submenuItem {
+  padding-bottom: 1.5rem;
+}
+.go-Header-submenu .go-Header-submenuItem p {
+  font-size: 0.875rem;
+  color: var(--color-text-subtle);
+  margin-top: 0.55rem;
+}
+.go-Header-inner--dark .go-Header-submenu .go-Header-submenuItem p {
+  color: var(--color-text-subtle);
 }
 
 .go-Header-navOpen {
@@ -203,7 +370,7 @@
 }
 
 .go-NavigationDrawer {
-  background: var(--white);
+  background: var(--color-background);
   height: 100%;
   left: auto;
   max-width: 27rem;
@@ -220,13 +387,30 @@
     display: none;
   }
 }
+
 .go-NavigationDrawer.is-active {
   transform: translateX(0);
 }
 .go-NavigationDrawer-header {
-  align-items: center;
+  border-bottom: 1px solid #eeeeee;
+  margin-bottom: 0.5rem;
+}
+.go-NavigationDrawer-submenuItem {
+  width: 100%;
+}
+.go-NavigationDrawer-submenuItem .go-NavigationDrawer-header {
+  min-height: 4.0625rem;
+  font-size: 1.375rem;
   display: flex;
-  justify-content: space-between;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0.5rem;
+  padding-left: 1.5rem;
+  color: var(--color-text-link);
+}
+.go-NavigationDrawer-submenuItem .go-NavigationDrawer-header > a {
+  display: flex;
+  margin-left: 0;
 }
 .go-NavigationDrawer-logo {
   display: block;
@@ -242,10 +426,36 @@
 .go-NavigationDrawer-listItem {
   font-size: 1.125rem;
   margin: 0 0.5rem;
+  color: var(--color-text-subtle);
 }
 .go-NavigationDrawer-listItem--active {
   background-color: var(--blue);
   border-radius: 0.4rem;
+}
+.go-NavigationDrawer-listItem .material-icons {
+  color: var(--color-brand-primary);
+  margin-right: 0.5rem;
+  display: inline-block;
+  vertical-align: sub;
+  text-decoration: none;
+}
+@media only screen and (max-width: 57.7rem) {
+  .go-NavigationDrawer-listItem .go-Header-socialIcons {
+    padding: 0.5rem 0;
+  }
+
+  .go-NavigationDrawer-listItem a.go-Header-socialIcon {
+    padding: 0 0.5rem;
+    margin: 0;
+    display: inline-block;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme='light']) .go-NavigationDrawer-listItem .go-Icon:not(.go-Icon--accented) {
+      filter: brightness(0) saturate(100%) invert(60%) sepia(97%) saturate(125%) hue-rotate(163deg)
+        brightness(80%) contrast(157%);
+    }
+  }
 }
 .go-NavigationDrawer-scrim {
   display: none;
