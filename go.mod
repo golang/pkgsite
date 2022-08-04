@@ -31,7 +31,7 @@ require (
 	github.com/jackc/pgx/v4 v4.14.1
 	github.com/jba/templatecheck v0.6.0
 	github.com/lib/pq v1.10.2
-	github.com/microcosm-cc/bluemonday v1.0.5
+	github.com/microcosm-cc/bluemonday v1.0.19
 	github.com/russross/blackfriday/v2 v2.1.0
 	github.com/yuin/goldmark v1.4.0
 	github.com/yuin/goldmark-emoji v1.0.1
@@ -62,7 +62,6 @@ require (
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/census-instrumentation/opencensus-proto v0.3.0 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
-	github.com/chris-ramon/douceur v0.2.0 // indirect
 	github.com/cncf/udpa/go v0.0.0-20210930031921-04548b0d99d4 // indirect
 	github.com/cncf/xds/go v0.0.0-20211011173535-cb28da3451f1 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
