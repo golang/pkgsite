@@ -18,24 +18,37 @@
         Repository URL not available.
       {{end}}
     </div>
-    {{if or .DepsDevURL .Details.ReadmeLinks .Details.DocLinks .Details.ModuleReadmeLinks}}
-      <h2 class="go-textLabel">Links</h2>
-      <ul class="UnitMeta-links">
-        {{with .DepsDevURL}}
-          <li>
-            <a href="{{.}}" title="View this module on Open Source Insights"
-              target="_blank" rel="noopener" data-test-id="meta-link-depsdev">
-              <img class="depsdev-Icon" src="/static/shared/icon/depsdev-logo.svg" 
-                alt="Open Source Insights Logo" />
-              Open Source Insights
-            </a>
-          </li>
-        {{end}}
-        {{template "unit-meta-links" .Details.ReadmeLinks}}
-        {{template "unit-meta-links" .Details.DocLinks}}
-        {{template "unit-meta-links" .Details.ModuleReadmeLinks}}
-      </ul>
-    {{end}}
+    <h2 class="go-textLabel">Links</h2>
+    <ul class="UnitMeta-links">
+      <li>
+      {{if .IsGoProject}}
+        <a href="https://go.dev/security/policy"
+            title="Report security issues in the Go standard library and sub-repositories">
+          <img class="go-Icon" height="24" width="24" src="/static/shared/icon/security_grey_24dp.svg" alt="">
+          Report a Vulnerability
+        </a>
+      {{else}}
+        <a href="https://github.com/golang/vulndb/issues/new?assignees=&labels=Needs+Triage%2CDirect+External+Report&template=new_third_party_vuln.yml&title=x%2Fvulndb%3A+potential+Go+vuln+in+{{.Unit.Path}}"
+            title="Report a vulnerability in this package" target="_blank" rel="noopener">
+          <img class="go-Icon" height="24" width="24" src="/static/shared/icon/security_grey_24dp.svg" alt="">
+          Report a Vulnerability
+        </a>
+      {{end}}
+      </li>
+      {{with .DepsDevURL}}
+        <li>
+          <a href="{{.}}" title="View this module on Open Source Insights"
+            target="_blank" rel="noopener" data-test-id="meta-link-depsdev">
+            <img class="depsdev-Icon" src="/static/shared/icon/depsdev-logo.svg"
+              alt="Open Source Insights Logo" />
+            Open Source Insights
+          </a>
+        </li>
+      {{end}}
+      {{template "unit-meta-links" .Details.ReadmeLinks}}
+      {{template "unit-meta-links" .Details.DocLinks}}
+      {{template "unit-meta-links" .Details.ModuleReadmeLinks}}
+    </ul>
   </div>
 {{end}}
 

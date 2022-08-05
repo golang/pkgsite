@@ -91,6 +91,10 @@ type UnitPage struct {
 
 	// DepsDevURL holds the full URL to this module version on deps.dev.
 	DepsDevURL string
+
+	// IsGoProject is true if the package is from the standard library or a
+	// golang.org sub-repository.
+	IsGoProject bool
 }
 
 // serveUnitPage serves a unit page for a path.
@@ -203,6 +207,7 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 		PageType:              pageType(um),
 		RedirectedFromPath:    redirectPath,
 		DepsDevURL:            makeDepsDevURL(),
+		IsGoProject:           isGoProject(um.ModulePath),
 	}
 
 	// Show the banner if there was no error getting the latest major version,
@@ -286,4 +291,8 @@ func constructUnitURL(fullPath, modulePath, requestedVersion string) string {
 func canonicalURLPath(fullPath, modulePath, requestedVersion, resolvedVersion string) string {
 	return constructUnitURL(fullPath, modulePath,
 		linkVersion(modulePath, requestedVersion, resolvedVersion))
+}
+
+func isGoProject(modulePath string) bool {
+	return modulePath == stdlib.ModulePath || strings.HasPrefix(modulePath, "golang.org")
 }
