@@ -65,4 +65,11 @@
       {{range .References}}<li><a href="{{.URL}}">{{.URL}}</a></li>{{end}}
     </ul>
   {{end}}
+  <h2>Feedback</h2>
+  <div>
+    See anything missing or incorrect?
+    <a target="_blank" href="https://github.com/golang/vulndb/issues/new?assignees=&labels=Needs+Triage%2CSuggested+Edit&template=suggest_edit.yaml&title=x%2Fvulndb%3A+suggestion+regarding+{{.ID}}&report={{.ID}}">
+      Suggest an edit to this report.
+    </a>
+  </div>
 {{end}}
