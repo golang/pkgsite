@@ -24,10 +24,20 @@ func extractReadmes(modulePath, resolvedVersion string, contentDir fs.FS) (_ []*
 	// The key is the README directory. Since we only store one README file per
 	// directory, we use this below to prioritize READMEs in markdown.
 	readmes := map[string]*internal.Readme{}
+	var skipPaths = []string{"_"}
 	err = fs.WalkDir(contentDir, ".", func(pathname string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
+		for _, sp := range skipPaths {
+			// if the name of the folder has a prefix listed in skipPaths
+			// then we should skip the directory.
+			// e.g.  _foo
+			if strings.HasPrefix(pathname, sp) {
+				return fs.SkipDir
+			}
+		}
+
 		if !d.IsDir() && isReadme(pathname) {
 			info, err := d.Info()
 			if err != nil {
