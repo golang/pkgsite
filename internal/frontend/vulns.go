@@ -135,6 +135,9 @@ func (s *Server) serveVuln(w http.ResponseWriter, r *http.Request, _ internal.Da
 	default: // the path should be "/<ID>", e.g. "/GO-2021-0001".
 		id := r.URL.Path[1:]
 		if !goVulnIDRegexp.MatchString(id) {
+			if r.URL.Query().Has("q") {
+				return &serverError{status: derrors.ToStatus(derrors.NotFound)}
+			}
 			return &serverError{
 				status:       http.StatusBadRequest,
 				responseText: "invalid Go vuln ID; should be GO-YYYY-NNNN",

@@ -50,6 +50,12 @@ func TestSearchQueryAndMode(t *testing.T) {
 			q:              "foo",
 			wantSearchMode: searchModeSymbol,
 		},
+		{
+			name:           "search in vuln mode",
+			m:              searchModeVuln,
+			q:              "foo",
+			wantSearchMode: searchModeVuln,
+		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			u := fmt.Sprintf("/search?q=%s&m=%s", test.q, test.m)
@@ -365,21 +371,23 @@ func TestSearchRequestRedirectPath(t *testing.T) {
 		name  string
 		query string
 		want  string
+		mode  string
 	}{
-		{"module", "golang.org/x/tools", "/golang.org/x/tools"},
-		{"directory", "golang.org/x/tools/internal", "/golang.org/x/tools/internal"},
-		{"package", "golang.org/x/tools/internal/lsp", "/golang.org/x/tools/internal/lsp"},
-		{"stdlib package does not redirect", "errors", ""},
-		{"stdlib package does redirect", "cmd/go", "/cmd/go"},
-		{"stdlib directory does redirect", "cmd/go/internal", "/cmd/go/internal"},
-		{"std does not redirect", "std", ""},
-		{"non-existent path does not redirect", "github.com/non-existent", ""},
-		{"trim URL scheme from query", "https://golang.org/x/tools", "/golang.org/x/tools"},
-		{"Go vuln redirects", "GO-1969-0720", "/vuln/GO-1969-0720"},
-		{"not a Go vuln", "somepkg/GO-1969-0720", ""},
+		{"module", "golang.org/x/tools", "/golang.org/x/tools", ""},
+		{"directory", "golang.org/x/tools/internal", "/golang.org/x/tools/internal", ""},
+		{"package", "golang.org/x/tools/internal/lsp", "/golang.org/x/tools/internal/lsp", ""},
+		{"stdlib package does not redirect", "errors", "", ""},
+		{"stdlib package does redirect", "cmd/go", "/cmd/go", ""},
+		{"stdlib directory does redirect", "cmd/go/internal", "/cmd/go/internal", ""},
+		{"std does not redirect", "std", "", ""},
+		{"non-existent path does not redirect", "github.com/non-existent", "", ""},
+		{"trim URL scheme from query", "https://golang.org/x/tools", "/golang.org/x/tools", ""},
+		{"Go vuln redirects", "GO-1969-0720", "/vuln/GO-1969-0720?q", ""},
+		{"not a Go vuln", "somepkg/GO-1969-0720", "", ""},
+		{"search mode is vuln", "searchmodevuln", "/vuln/searchmodevuln?q", searchModeVuln},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			if got := searchRequestRedirectPath(ctx, testDB, test.query); got != test.want {
+			if got := searchRequestRedirectPath(ctx, testDB, test.query, test.mode); got != test.want {
 				t.Errorf("searchRequestRedirectPath(ctx, %q) = %q; want = %q", test.query, got, test.want)
 			}
 		})

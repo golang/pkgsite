@@ -89,7 +89,8 @@ func (s *Server) serveSearch(w http.ResponseWriter, r *http.Request, ds internal
 			},
 		}
 	}
-	if path := searchRequestRedirectPath(ctx, ds, cq); path != "" {
+	mode := searchMode(r)
+	if path := searchRequestRedirectPath(ctx, ds, cq, mode); path != "" {
 		http.Redirect(w, r, path, http.StatusFound)
 		return nil
 	}
@@ -98,7 +99,6 @@ func (s *Server) serveSearch(w http.ResponseWriter, r *http.Request, ds internal
 	if len(filters) > 0 {
 		symbol = filters[0]
 	}
-	mode := searchMode(r)
 	var getVulnEntries vulnEntriesFunc
 	if s.vulnClient != nil {
 		getVulnEntries = s.vulnClient.GetByModule
@@ -152,6 +152,9 @@ const (
 	// searchModeSymbol is the keyword prefix and query param for searching
 	// by symbols.
 	searchModeSymbol = "symbol"
+
+	// searchModeVuln is the query param for searching by vuln id.
+	searchModeVuln = "vuln"
 
 	// symbolSearchFilter is a filter that can be used to indicate that the query
 	// contains a symbol. For example, searching for "#unmarshal json" indicates
@@ -316,13 +319,14 @@ var goVulnIDRegexp = regexp.MustCompile("^GO-[0-9]{4}-[0-9]{4}$")
 //
 // If the user types a name that is in the form of a Go vulnerability ID, we will
 // redirect to the page for that ID (whether or not it exists).
-func searchRequestRedirectPath(ctx context.Context, ds internal.DataSource, query string) string {
+func searchRequestRedirectPath(ctx context.Context, ds internal.DataSource, query, mode string) string {
 	urlSchemeIdx := strings.Index(query, "://")
 	if urlSchemeIdx > -1 {
 		query = query[urlSchemeIdx+3:]
 	}
-	if goVulnIDRegexp.MatchString(query) {
-		return fmt.Sprintf("/vuln/%s", query)
+	// TODO(go.dev/issue/54465): add support for searching by alias.
+	if goVulnIDRegexp.MatchString(query) || mode == searchModeVuln {
+		return fmt.Sprintf("/vuln/%s?q", query)
 	}
 	requestedPath := path.Clean(query)
 	if !strings.Contains(requestedPath, "/") {
@@ -345,17 +349,19 @@ func searchMode(r *http.Request) string {
 	if len(filters) > 0 {
 		return searchModeSymbol
 	}
-	mode := rawSearchMode(r)
-	if mode == searchModePackage {
+	switch rawSearchMode(r) {
+	case searchModePackage:
+		return searchModePackage
+	case searchModeSymbol:
+		return searchModeSymbol
+	case searchModeVuln:
+		return searchModeVuln
+	default:
+		if shouldDefaultToSymbolSearch(q) {
+			return searchModeSymbol
+		}
 		return searchModePackage
 	}
-	if mode == searchModeSymbol {
-		return searchModeSymbol
-	}
-	if shouldDefaultToSymbolSearch(q) {
-		return searchModeSymbol
-	}
-	return searchModePackage
 }
 
 // searchQueryAndFilters returns the search query, trimmed of any filters, and
