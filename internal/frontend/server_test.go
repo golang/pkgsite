@@ -1064,12 +1064,6 @@ func serverTestCases() []serverTestCase {
 				notIn(".Documentation-variables"),
 				notIn(".UnitBuildContext-titleContext")),
 		},
-		{
-			name:           "vuln redirect",
-			urlPath:        "/vuln",
-			wantStatusCode: http.StatusFound,
-			wantLocation:   "/vuln/list",
-		},
 	}
 }
 

@@ -1,0 +1,53 @@
+<!--
+  Copyright 2022 The Go Authors. All rights reserved.
+  Use of this source code is governed by a BSD-style
+  license that can be found in the LICENSE file.
+-->
+
+{{define "title"}}
+  <title>Go Vulnerability Database - Go Packages</title>
+{{end}}
+
+{{define "main-styles"}}
+  <link href="/static/frontend/vuln/main/main.min.css?version={{.AppVersionLabel}}" rel="stylesheet">
+{{end}}
+
+{{define "main-content"}}
+  <div class="VulnMain">
+    <h1 class="Vuln-title">Go Vulnerability Database</h1>
+    <p>
+      Data about new vulnerabilities come directly from Go package maintainers or sources such as MITRE
+      and GitHub. Reports are curated by the Go Security team. Learn more at <a href="https://go.dev/security/vulndb">go.dev/security/vulndb</a>.
+    </p>
+
+    <h2>Search</h2>
+    <form
+      class="go-InputGroup VulnMain-search"
+      action="/search"
+      data-gtmc="search vuln"
+      aria-label="Search GO IDs"
+      role="search"
+    >
+      <input name="q" class="go-Input" placeholder="Search GO IDs" />
+      <button class="go-Button">Submit</button>
+    </form>
+
+    <h2>Recent Reports</h2>
+    <div class="VulnMain-recent">
+      {{range .Entries}}
+        <h3 class="VulnMain-title">
+          <a href="/vuln/{{.ID}}">{{.ID}}</a>
+        </h3>
+        <div class="VulnMain-details">
+          {{template "vuln-details" .}}
+        </div>
+      {{end}}
+      <a href="/vuln/list">View all reports</a>
+      <div><br>If you don't see an existing, public Go vulnerability in a publicly importable package in our database,
+        <a href="https://github.com/golang/vulndb/issues/new?assignees=&labels=Needs+Triage%2CDirect+External+Report&template=new_third_party_vuln.yml&title=x%2Fvulndb%3A+potential+Go+vuln+in+%3Cpackage%3E">
+          please let us know.
+        </a>
+      </div>
+    </div>
+  </div>
+{{end}}

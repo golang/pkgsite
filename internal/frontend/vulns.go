@@ -113,7 +113,18 @@ func entryVuln(e *osv.Entry, packagePath, version string) (Vuln, bool) {
 
 func (s *Server) serveVuln(w http.ResponseWriter, r *http.Request, _ internal.DataSource) error {
 	switch r.URL.Path {
-	case "/", "/list":
+	case "/":
+		// Serve a list of most recent entries.
+		vulnListPage, err := newVulnListPage(s.vulnClient)
+		if err != nil {
+			return &serverError{status: derrors.ToStatus(err)}
+		}
+		if len(vulnListPage.Entries) > 5 {
+			vulnListPage.Entries = vulnListPage.Entries[:5]
+		}
+		vulnListPage.basePage = s.newBasePage(r, "Go Vulnerability Database")
+		s.servePage(r.Context(), w, "vuln/main", vulnListPage)
+	case "/list":
 		// Serve a list of all entries.
 		vulnListPage, err := newVulnListPage(s.vulnClient)
 		if err != nil {

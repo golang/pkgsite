@@ -13,6 +13,16 @@
 {{end}}
 
 {{define "main-content"}}
+  <nav class="go-Breadcrumb" aria-label="Breadcrumb">
+    <ol>
+      <li>
+        <a href="/vuln" data-gtmc="breadcrumb link">Vulnerability Database</a>
+      </li>
+      <li>
+        <a href="/vuln/list" data-gtmc="breadcrumb link" aria-current="location">All Reports</a>
+      </li>
+    </ol>
+  </nav>
   <h1 class="Vuln-title">Vulnerability Reports</h1>
   {{range .Entries}}
     <h2 class="VulnList-title">
@@ -22,4 +32,9 @@
       {{template "vuln-details" .}}
     </div>
   {{end}}
+  <div><br>If you don't see an existing, public Go vulnerability in a publicly importable package in our database,
+    <a href="https://github.com/golang/vulndb/issues/new?assignees=&labels=Needs+Triage%2CDirect+External+Report&template=new_third_party_vuln.yml&title=x%2Fvulndb%3A+potential+Go+vuln+in+%3Cpackage%3E">
+      please let us know.
+    </a>
+  </div>
 {{end}}

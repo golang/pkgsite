@@ -171,7 +171,6 @@ func (s *Server) Install(handle func(string, http.Handler), redisClient *redis.C
 	}))
 	handle("/golang.org/x", s.staticPageHandler("subrepo", "Sub-repositories"))
 	handle("/files/", http.StripPrefix("/files", s.fileMux))
-	handle("/vuln", http.HandlerFunc(s.handleVulnRedirect))
 	handle("/vuln/", http.StripPrefix("/vuln", s.errorHandler(s.serveVuln)))
 	handle("/", detailHandler)
 	if s.serveStats {
@@ -728,6 +727,7 @@ func parsePageTemplates(fsys template.TrustedFS) (map[string]*template.Template,
 		{"unit/main", "unit"},
 		{"unit/versions", "unit"},
 		{"vuln"},
+		{"vuln/main", "vuln"},
 		{"vuln/list", "vuln"},
 		{"vuln/entry", "vuln"},
 	}
