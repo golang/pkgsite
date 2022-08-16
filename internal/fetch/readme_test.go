@@ -45,6 +45,17 @@ func TestExtractReadmes(t *testing.T) {
 			},
 		},
 		{
+			name:       "directory start with _",
+			modulePath: stdlib.ModulePath,
+			version:    "v1.12.5",
+			want: []*internal.Readme{
+				{
+					Filepath: "cmd/pprof/README",
+					Contents: "This directory is the copy of Google's pprof shipped as part of the Go distribution.\n",
+				},
+			},
+		},
+		{
 			name:       "prefer README.md",
 			modulePath: "github.com/my/module",
 			version:    "v1.0.0",
