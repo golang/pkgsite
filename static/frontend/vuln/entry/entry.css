@@ -35,7 +35,8 @@
 .VulnEntry-table tbody > tr {
   border-bottom: var(--border);
 }
-.VulnEntry-referenceList {
+.VulnEntry-referenceList,
+.VulnEntry-aliases {
   line-height: 1.75rem;
   word-break: break-all;
 }

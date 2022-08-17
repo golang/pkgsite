@@ -147,3 +147,43 @@ func TestCollectRangePairs(t *testing.T) {
 	}
 
 }
+
+func Test_aliasLinks(t *testing.T) {
+	type args struct {
+		e *osv.Entry
+	}
+	tests := []struct {
+		name string
+		args args
+		want []link
+	}{
+		{
+			"reserved cve",
+			args{&osv.Entry{Aliases: []string{"CVE-0000-00000"}}},
+			[]link{{Body: "CVE-0000-00000"}},
+		},
+		{
+			"nist",
+			args{&osv.Entry{Aliases: []string{"CVE-0000-00000"}, References: []osv.Reference{{Type: "ADVISORY", URL: nistAdvisoryUrlPrefix + "CVE-0000-00000"}}}},
+			[]link{{Body: "CVE-0000-00000", Href: nistAdvisoryUrlPrefix + "CVE-0000-00000"}},
+		},
+		{
+			"github",
+			args{&osv.Entry{Aliases: []string{"GHSA-zz00-zzz0-0zz0"}}},
+			[]link{{Body: "GHSA-zz00-zzz0-0zz0", Href: githubAdvisoryUrlPrefix + "GHSA-zz00-zzz0-0zz0"}},
+		},
+		{
+			"empty link",
+			args{&osv.Entry{Aliases: []string{"NA-0000"}}},
+			[]link{{Body: "NA-0000"}},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := aliasLinks(tt.args.e)
+			if diff := cmp.Diff(tt.want, got); diff != "" {
+				t.Errorf("mismatch(-want, +got): %s", diff)
+			}
+		})
+	}
+}

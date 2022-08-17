@@ -19,6 +19,12 @@ import (
 	"golang.org/x/vuln/osv"
 )
 
+const (
+	githubAdvisoryUrlPrefix = "https://github.com/advisories/"
+	mitreAdvisoryUrlPrefix  = "https://cve.mitre.org/cgi-bin/cvename.cgi?name="
+	nistAdvisoryUrlPrefix   = "https://nvd.nist.gov/vuln/detail/"
+)
+
 // A Vuln contains information to display about a vulnerability.
 type Vuln struct {
 	// The vulndb ID.
@@ -77,6 +83,7 @@ type VulnPage struct {
 	basePage
 	Entry            *osv.Entry
 	AffectedPackages []*AffectedPackage
+	AliasLinks       []link
 }
 
 type AffectedPackage struct {
@@ -162,7 +169,8 @@ func newVulnPage(client vulnc.Client, id string) (*VulnPage, error) {
 		return nil, derrors.NotFound
 	}
 	affs := affectedPackages(entry)
-	return &VulnPage{Entry: entry, AffectedPackages: affs}, nil
+	links := aliasLinks(entry)
+	return &VulnPage{Entry: entry, AffectedPackages: affs, AliasLinks: links}, nil
 }
 
 func newVulnListPage(client vulnc.Client) (*VulnListPage, error) {
@@ -267,6 +275,30 @@ func affectedPackages(e *osv.Entry) []*AffectedPackage {
 		})
 	}
 	return affs
+}
+
+// aliasLinks generates links to reference pages for vuln aliases.
+func aliasLinks(e *osv.Entry) []link {
+	var cveRef string
+	for _, ref := range e.References {
+		if strings.HasPrefix(ref.URL, nistAdvisoryUrlPrefix) || strings.HasPrefix(ref.URL, mitreAdvisoryUrlPrefix) {
+			cveRef = ref.URL
+			break
+		}
+	}
+	var links []link
+	for _, a := range e.Aliases {
+		prefix, _, _ := strings.Cut(a, "-")
+		switch prefix {
+		case "CVE":
+			links = append(links, link{Body: a, Href: cveRef})
+		case "GHSA":
+			links = append(links, link{Body: a, Href: githubAdvisoryUrlPrefix + a})
+		default:
+			links = append(links, link{Body: a})
+		}
+	}
+	return links
 }
 
 func addVersionPrefix(semver, packagePath string) (res string) {
