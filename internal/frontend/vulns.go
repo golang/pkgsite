@@ -84,6 +84,7 @@ type VulnPage struct {
 	Entry            *osv.Entry
 	AffectedPackages []*AffectedPackage
 	AliasLinks       []link
+	AdvisoryLinks    []link
 }
 
 type AffectedPackage struct {
@@ -168,9 +169,12 @@ func newVulnPage(client vulnc.Client, id string) (*VulnPage, error) {
 	if entry == nil {
 		return nil, derrors.NotFound
 	}
-	affs := affectedPackages(entry)
-	links := aliasLinks(entry)
-	return &VulnPage{Entry: entry, AffectedPackages: affs, AliasLinks: links}, nil
+	return &VulnPage{
+		Entry:            entry,
+		AffectedPackages: affectedPackages(entry),
+		AliasLinks:       aliasLinks(entry),
+		AdvisoryLinks:    advisoryLinks(entry),
+	}, nil
 }
 
 func newVulnListPage(client vulnc.Client) (*VulnListPage, error) {
@@ -296,6 +300,16 @@ func aliasLinks(e *osv.Entry) []link {
 			links = append(links, link{Body: a, Href: githubAdvisoryUrlPrefix + a})
 		default:
 			links = append(links, link{Body: a})
+		}
+	}
+	return links
+}
+
+func advisoryLinks(e *osv.Entry) []link {
+	var links []link
+	for _, r := range e.References {
+		if r.Type == "ADVISORY" {
+			links = append(links, link{Body: r.URL, Href: r.URL})
 		}
 	}
 	return links

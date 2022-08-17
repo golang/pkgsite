@@ -187,3 +187,33 @@ func Test_aliasLinks(t *testing.T) {
 		})
 	}
 }
+
+func Test_advisoryLinks(t *testing.T) {
+	type args struct {
+		e *osv.Entry
+	}
+	tests := []struct {
+		name string
+		args args
+		want []link
+	}{
+		{
+			"nist",
+			args{&osv.Entry{Aliases: []string{"CVE-0000-00000"}, References: []osv.Reference{{Type: "ADVISORY", URL: nistAdvisoryUrlPrefix + "CVE-0000-00000"}}}},
+			[]link{{Body: nistAdvisoryUrlPrefix + "CVE-0000-00000", Href: nistAdvisoryUrlPrefix + "CVE-0000-00000"}},
+		},
+		{
+			"empty link",
+			args{&osv.Entry{Aliases: []string{"NA-0000"}}},
+			nil,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := advisoryLinks(tt.args.e)
+			if diff := cmp.Diff(tt.want, got); diff != "" {
+				t.Errorf("mismatch(-want, +got): %s", diff)
+			}
+		})
+	}
+}

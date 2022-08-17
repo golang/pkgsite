@@ -29,6 +29,18 @@
   </nav>
   <h1 class="Vuln-title">Vulnerability Report: {{.Entry.ID}}</h1>
   {{template "vuln-details" .Entry}}
+  {{$numAdvs := subtract (len .AdvisoryLinks) 1}}
+  {{with .AdvisoryLinks}}
+    <p>
+      For detailed information about this vulnerability, visit
+      {{range $i, $v := . -}}
+        {{- if gt $i 0}}
+          {{- if not (eq $i $numAdvs)}},{{else}}{{if gt $i 1}},{{end}} or {{end -}}
+        {{end}}
+        <a href="{{$v.Href}}" target="_blank" rel="noopener">{{$v.Href}}</a>
+      {{- end -}}.
+    </p>
+  {{end}}
   <div class="VulnEntry">
     {{template "affected" .AffectedPackages}}
     {{template "entry" .}}
