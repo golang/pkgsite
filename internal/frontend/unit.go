@@ -151,6 +151,16 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 		//
 		// Use a separate context here to prevent the context from being canceled
 		// elsewhere before a task is enqueued.
+		if s.queue == nil {
+			return &serverError{
+				status: http.StatusBadRequest,
+				err:    err,
+				epage: &errorPage{
+					MessageData: fmt.Sprintf(`Default branches like "@%s" are not supported. Omit to get the current version.`,
+						info.requestedVersion),
+				},
+			}
+		}
 		go func() {
 			ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
 			defer cancel()
