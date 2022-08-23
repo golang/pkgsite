@@ -33,7 +33,7 @@ require (
 	github.com/lib/pq v1.10.2
 	github.com/microcosm-cc/bluemonday v1.0.5
 	github.com/russross/blackfriday/v2 v2.1.0
-	github.com/yuin/goldmark v1.4.0
+	github.com/yuin/goldmark v1.4.13
 	github.com/yuin/goldmark-emoji v1.0.1
 	go.opencensus.io v0.23.0
 	golang.org/x/mod v0.5.1

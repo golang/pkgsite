@@ -290,7 +290,7 @@ func TestReadme(t *testing.T) {
 				Filepath: "README.md",
 				Contents: "<img src=\"resources/logoSmall.png\" />\n\n# Heading\n",
 			},
-			wantHTML: `<p><img src="https://github.com/valid/module_name/raw/v1.0.0/resources/logoSmall.png"/></p>` + "\n" +
+			wantHTML: `<img src="https://github.com/valid/module_name/raw/v1.0.0/resources/logoSmall.png"/>` + "\n" +
 				`<h3 class="h1" id="readme-heading">Heading</h3>`,
 			wantOutline: []*Heading{
 				{Level: 1, Text: "Heading", ID: "readme-heading"},
