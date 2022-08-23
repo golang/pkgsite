@@ -5,10 +5,14 @@
 package memory
 
 import (
+	"runtime"
 	"testing"
 )
 
 func TestRead(t *testing.T) {
+	if runtime.GOOS == "darwin" {
+		t.Skip("darwin has no /proc/meminfo")
+	}
 	_, err := ReadSystemStats()
 	if err != nil {
 		t.Fatal(err)
