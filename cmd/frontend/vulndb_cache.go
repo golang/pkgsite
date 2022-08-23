@@ -10,6 +10,7 @@ import (
 	"time"
 
 	lru "github.com/hashicorp/golang-lru"
+	vulnc "golang.org/x/vuln/client"
 	"golang.org/x/vuln/osv"
 )
 
@@ -18,7 +19,7 @@ import (
 type vulndbCache struct {
 	mu         sync.Mutex
 	dbName     string // support only one DB
-	index      osv.DBIndex
+	index      vulnc.DBIndex
 	retrieved  time.Time
 	entryCache *lru.Cache
 }
@@ -35,7 +36,7 @@ func newVulndbCache() *vulndbCache {
 
 // ReadIndex returns the index for dbName from the cache, or returns zero values
 // if it is not present.
-func (c *vulndbCache) ReadIndex(dbName string) (osv.DBIndex, time.Time, error) {
+func (c *vulndbCache) ReadIndex(dbName string) (vulnc.DBIndex, time.Time, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	if err := c.checkDB(dbName); err != nil {
@@ -45,7 +46,7 @@ func (c *vulndbCache) ReadIndex(dbName string) (osv.DBIndex, time.Time, error) {
 }
 
 // WriteIndex puts the index and retrieved time into the cache.
-func (c *vulndbCache) WriteIndex(dbName string, index osv.DBIndex, retrieved time.Time) error {
+func (c *vulndbCache) WriteIndex(dbName string, index vulnc.DBIndex, retrieved time.Time) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	if err := c.checkDB(dbName); err != nil {

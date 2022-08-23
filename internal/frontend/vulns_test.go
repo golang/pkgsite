@@ -5,6 +5,7 @@
 package frontend
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"reflect"
@@ -17,6 +18,7 @@ import (
 )
 
 func TestVulnsForPackage(t *testing.T) {
+	ctx := context.Background()
 	e := osv.Entry{
 		Details: "bad",
 		Affected: []osv.Affected{{
@@ -25,10 +27,15 @@ func TestVulnsForPackage(t *testing.T) {
 				Type:   osv.TypeSemver,
 				Events: []osv.RangeEvent{{Introduced: "0"}, {Fixed: "1.2.3"}},
 			}},
+			EcosystemSpecific: osv.EcosystemSpecific{
+				Imports: []osv.EcosystemSpecificImport{{
+					Path: "bad.com",
+				}},
+			},
 		}},
 	}
 
-	get := func(modulePath string) ([]*osv.Entry, error) {
+	get := func(_ context.Context, modulePath string) ([]*osv.Entry, error) {
 		switch modulePath {
 		case "good.com":
 			return nil, nil
@@ -39,20 +46,19 @@ func TestVulnsForPackage(t *testing.T) {
 		}
 	}
 
-	got := VulnsForPackage("good.com", "v1.0.0", "good.com", get)
+	got := VulnsForPackage(ctx, "good.com", "v1.0.0", "good.com", get)
 	if got != nil {
 		t.Errorf("got %v, want nil", got)
 	}
-	got = VulnsForPackage("bad.com", "v1.0.0", "bad.com", get)
+	got = VulnsForPackage(ctx, "bad.com", "v1.0.0", "bad.com", get)
 	want := []Vuln{{
-		Details:      "bad",
-		FixedVersion: "v1.2.3",
+		Details: "bad",
 	}}
 	if diff := cmp.Diff(want, got); diff != "" {
 		t.Errorf("mismatch (-want, +got):\n%s", diff)
 	}
 
-	got = VulnsForPackage("bad.com", "v1.3.0", "bad.com", get)
+	got = VulnsForPackage(ctx, "bad.com", "v1.3.0", "bad.com", get)
 	if got != nil {
 		t.Errorf("got %v, want nil", got)
 	}
@@ -69,15 +75,16 @@ var testEntries = []*osv.Entry{
 }
 
 func TestNewVulnListPage(t *testing.T) {
+	ctx := context.Background()
 	c := &vulndbTestClient{entries: testEntries}
-	got, err := newVulnListPage(c)
+	got, err := newVulnListPage(ctx, c)
 	if err != nil {
 		t.Fatal(err)
 	}
 	// testEntries is already sorted by ID, but it should be reversed.
-	var wantEntries []*osv.Entry
+	var wantEntries []OSVEntry
 	for i := len(testEntries) - 1; i >= 0; i-- {
-		wantEntries = append(wantEntries, testEntries[i])
+		wantEntries = append(wantEntries, OSVEntry{testEntries[i]})
 	}
 	want := &VulnListPage{Entries: wantEntries}
 	if diff := cmp.Diff(want, got, cmpopts.IgnoreUnexported(VulnListPage{})); diff != "" {
@@ -86,12 +93,13 @@ func TestNewVulnListPage(t *testing.T) {
 }
 
 func TestNewVulnPage(t *testing.T) {
+	ctx := context.Background()
 	c := &vulndbTestClient{entries: testEntries}
-	got, err := newVulnPage(c, "GO-1990-02")
+	got, err := newVulnPage(ctx, c, "GO-1990-02")
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := &VulnPage{Entry: testEntries[1]}
+	want := &VulnPage{Entry: OSVEntry{testEntries[1]}}
 	if diff := cmp.Diff(want, got, cmpopts.IgnoreUnexported(VulnPage{})); diff != "" {
 		t.Errorf("mismatch (-want, +got):\n%s", diff)
 	}
@@ -102,11 +110,11 @@ type vulndbTestClient struct {
 	entries []*osv.Entry
 }
 
-func (c *vulndbTestClient) GetByModule(string) ([]*osv.Entry, error) {
+func (c *vulndbTestClient) GetByModule(context.Context, string) ([]*osv.Entry, error) {
 	return nil, errors.New("unimplemented")
 }
 
-func (c *vulndbTestClient) GetByID(id string) (*osv.Entry, error) {
+func (c *vulndbTestClient) GetByID(_ context.Context, id string) (*osv.Entry, error) {
 	for _, e := range c.entries {
 		if e.ID == id {
 			return e, nil
@@ -115,7 +123,7 @@ func (c *vulndbTestClient) GetByID(id string) (*osv.Entry, error) {
 	return nil, nil
 }
 
-func (c *vulndbTestClient) ListIDs() ([]string, error) {
+func (c *vulndbTestClient) ListIDs(context.Context) ([]string, error) {
 	var ids []string
 	for _, e := range c.entries {
 		ids = append(ids, e.ID)

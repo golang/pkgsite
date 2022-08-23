@@ -22,7 +22,7 @@
 {{end}}
 
 {{define "vuln-details"}}
-  {{/* . is osv.Entry */}}
+  {{/* . is OSVEntry */}}
   <div class="Vuln-details">
     <ul class="Vuln-detailsMetadata">
       {{if .Aliases}}
@@ -31,9 +31,11 @@
         </li>
       {{end}}
       <li class="go-textSubtle">Affects:
-        {{range $i, $v := .Affected}}
-          {{- if lt $i 2}}{{- if ne $i 0}}, {{end -}}{{$v.Package.Name}}{{end -}}
-          {{- if eq $i 2}}, and {{subtract (len $.Affected) 2}} more{{end -}}
+       {{with $packages := .AffectedModulesAndPackages}}
+          {{range $i, $name := $packages}}
+            {{- if lt $i 2}}{{- if ne $i 0}}, {{end -}}{{$name}}{{end -}}
+            {{- if eq $i 2}}, and {{subtract (len $packages) 2}} more{{end -}}
+          {{end}}
         {{end}}
       </li>
       <li class="go-textSubtle">Published: {{.Published.Format "Jan 02, 2006"}}</li>

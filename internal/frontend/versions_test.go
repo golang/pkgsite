@@ -98,7 +98,7 @@ func TestFetchPackageVersionsDetails(t *testing.T) {
 			}},
 		}},
 	}
-	getVulnEntries := func(m string) ([]*osv.Entry, error) {
+	getVulnEntries := func(_ context.Context, m string) ([]*osv.Entry, error) {
 		if m == modulePath1 {
 			return []*osv.Entry{vulnEntry}, nil
 		}
@@ -142,8 +142,7 @@ func TestFetchPackageVersionsDetails(t *testing.T) {
 					func() *VersionList {
 						vl := makeList(v1Path, modulePath1, "v1", []string{"v1.3.0", "v1.2.3", "v1.2.1"}, false)
 						vl.Versions[2].Vulns = []Vuln{{
-							Details:      vulnEntry.Details,
-							FixedVersion: "v" + vulnFixedVersion,
+							Details: vulnEntry.Details,
 						}}
 						return vl
 					}(),

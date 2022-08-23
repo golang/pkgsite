@@ -230,7 +230,7 @@ func fetchSearchPage(ctx context.Context, db *postgres.DB, cq, symbol string,
 	}
 
 	if getVulnEntries != nil {
-		addVulns(results, getVulnEntries)
+		addVulns(ctx, results, getVulnEntries)
 	}
 
 	var numResults int
@@ -508,7 +508,7 @@ func elapsedTime(date time.Time) string {
 
 // addVulns adds vulnerability information to search results by consulting the
 // vulnerability database.
-func addVulns(rs []*SearchResult, getVulnEntries vulnEntriesFunc) {
+func addVulns(ctx context.Context, rs []*SearchResult, getVulnEntries vulnEntriesFunc) {
 	// Get all vulns concurrently.
 	var wg sync.WaitGroup
 	// TODO(golang/go#48223): throttle concurrency?
@@ -517,7 +517,7 @@ func addVulns(rs []*SearchResult, getVulnEntries vulnEntriesFunc) {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			r.Vulns = VulnsForPackage(r.ModulePath, r.Version, r.PackagePath, getVulnEntries)
+			r.Vulns = VulnsForPackage(ctx, r.ModulePath, r.Version, r.PackagePath, getVulnEntries)
 		}()
 	}
 	wg.Wait()

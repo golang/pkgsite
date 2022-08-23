@@ -195,7 +195,7 @@ func buildVersionDetails(ctx context.Context, currentModulePath string,
 		if sv := sh.SymbolsAtVersion(mi.Version); sv != nil {
 			vs.Symbols = symbolsForVersion(linkify(mi), sv)
 		}
-		vs.Vulns = VulnsForPackage(mi.ModulePath, mi.Version, "", getVulnEntries)
+		vs.Vulns = VulnsForPackage(ctx, mi.ModulePath, mi.Version, "", getVulnEntries)
 		vl := lists[key]
 		if vl == nil {
 			seenLists = append(seenLists, key)

@@ -157,7 +157,7 @@ func TestFetchSearchPage(t *testing.T) {
 			}},
 		}}
 
-		getVulnEntries = func(modulePath string) ([]*osv.Entry, error) {
+		getVulnEntries = func(_ context.Context, modulePath string) ([]*osv.Entry, error) {
 			if modulePath == moduleFoo.ModulePath {
 				return vulnEntries, nil
 			}
@@ -230,7 +230,7 @@ func TestFetchSearchPage(t *testing.T) {
 						DisplayVersion: moduleFoo.Version,
 						Licenses:       []string{"MIT"},
 						CommitTime:     elapsedTime(moduleFoo.CommitTime),
-						Vulns:          []Vuln{{ID: "test", Details: "vuln", FixedVersion: "v1.9.0"}},
+						Vulns:          []Vuln{{ID: "test", Details: "vuln"}},
 					},
 				},
 			},
