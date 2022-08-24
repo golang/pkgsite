@@ -225,16 +225,32 @@ func init() {
 
 // nonOSILicenses lists licenses that are not approved by OSI.
 var nonOSILicenses = map[string]bool{
-	"BlueOak-1.0.0":      true,
-	"BSD-2-Clause-Views": true,
-	"CC-BY-3.0":          true,
-	"CC-BY-4.0":          true,
-	"CC-BY-SA-3.0":       true,
-	"CC-BY-SA-4.0":       true,
-	"CC0-1.0":            true,
-	"JSON":               true,
-	"NIST":               true,
-	"OpenSSL":            true,
+	"AGPL-3.0-only":                 true,
+	"AGPL-3.0-or-later":             true,
+	"BlueOak-1.0.0":                 true,
+	"BSD-2-Clause-Views":            true,
+	"BSD-3-Clause-Clear":            true,
+	"BSD-3-Clause-LBNL":             true,
+	"BSD-3-Clause-Open-MPI":         true,
+	"BSD-4-Clause":                  true,
+	"BSD-4-Clause-UC":               true,
+	"CC-BY-3.0":                     true,
+	"CC-BY-4.0":                     true,
+	"CC-BY-SA-3.0":                  true,
+	"CC-BY-SA-4.0":                  true,
+	"CC0-1.0":                       true,
+	"GPL-2.0-only":                  true,
+	"GPL-2.0-or-later":              true,
+	"GPL-3.0-only":                  true, // it is referred in https://opensource.org/licenses/GPL-3.0
+	"GPL-3.0-or-later":              true,
+	"LGPL-2.1-or-later":             true,
+	"LGPL-3.0-or-later":             true,
+	"MPL-2.0-no-copyleft-exception": true,
+	"NIST-PD":                       true,
+	"NIST-PD-fallback":              true,
+	"JSON":                          true,
+	"OpenSSL":                       true,
+	"UPL-1.0":                       true,
 }
 
 // fileNamesLowercase has all the entries of FileNames, downcased and made a set
