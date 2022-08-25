@@ -242,7 +242,7 @@ type listedMod struct {
 var listModules = _listModules
 
 func _listModules(dir string) ([]listedMod, error) {
-	out, err := runGo(dir, "list", "-json", "-m", "all")
+	out, err := runGo(dir, "list", "-json", "-m", "-mod", "readonly", "all")
 	if err != nil {
 		return nil, err
 	}
