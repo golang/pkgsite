@@ -64,8 +64,8 @@ func TestVulnsForPackage(t *testing.T) {
 }
 
 var testEntries = []*osv.Entry{
-	{ID: "GO-1990-01", Details: "a"},
-	{ID: "GO-1990-02", Details: "b"},
+	{ID: "GO-1990-01", Details: "a", Aliases: []string{"CVE-2000-1", "GHSA-aaaa-bbbb-cccc"}},
+	{ID: "GO-1990-02", Details: "b", Aliases: []string{"CVE-2000-1", "GHSA-1111-2222-3333"}},
 	{ID: "GO-1990-10", Details: "c"},
 	{ID: "GO-1991-01", Details: "d"},
 	{ID: "GO-1991-05", Details: "e"},
@@ -75,7 +75,7 @@ var testEntries = []*osv.Entry{
 
 func TestNewVulnListPage(t *testing.T) {
 	ctx := context.Background()
-	c := &vulndbTestClient{entries: testEntries}
+	c := newVulndbTestClient(testEntries)
 	got, err := newVulnListPage(ctx, c)
 	if err != nil {
 		t.Fatal(err)
@@ -98,7 +98,10 @@ func TestNewVulnPage(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := &VulnPage{Entry: OSVEntry{testEntries[1]}}
+	want := &VulnPage{
+		Entry:      OSVEntry{testEntries[1]},
+		AliasLinks: aliasLinks(testEntries[1]),
+	}
 	if diff := cmp.Diff(want, got, cmpopts.IgnoreUnexported(VulnPage{})); diff != "" {
 		t.Errorf("mismatch (-want, +got):\n%s", diff)
 	}
@@ -106,7 +109,21 @@ func TestNewVulnPage(t *testing.T) {
 
 type vulndbTestClient struct {
 	vulnc.Client
-	entries []*osv.Entry
+	entries    []*osv.Entry
+	aliasToIDs map[string][]string
+}
+
+func newVulndbTestClient(entries []*osv.Entry) *vulndbTestClient {
+	c := &vulndbTestClient{
+		entries:    entries,
+		aliasToIDs: map[string][]string{},
+	}
+	for _, e := range entries {
+		for _, a := range e.Aliases {
+			c.aliasToIDs[a] = append(c.aliasToIDs[a], e.ID)
+		}
+	}
+	return c
 }
 
 func (c *vulndbTestClient) GetByModule(context.Context, string) ([]*osv.Entry, error) {
@@ -128,6 +145,19 @@ func (c *vulndbTestClient) ListIDs(context.Context) ([]string, error) {
 		ids = append(ids, e.ID)
 	}
 	return ids, nil
+}
+
+func (c *vulndbTestClient) GetByAlias(ctx context.Context, alias string) ([]*osv.Entry, error) {
+	ids := c.aliasToIDs[alias]
+	if len(ids) == 0 {
+		return nil, nil
+	}
+	var es []*osv.Entry
+	for _, id := range ids {
+		e, _ := c.GetByID(ctx, id)
+		es = append(es, e)
+	}
+	return es, nil
 }
 
 func Test_aliasLinks(t *testing.T) {

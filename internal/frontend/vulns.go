@@ -71,7 +71,7 @@ func vulnsForPackage(ctx context.Context, modulePath, version, packagePath strin
 	return vulns, nil
 }
 
-// VulnListPage holds the information for a page that lists all vuln entries.
+// VulnListPage holds the information for a page that lists vuln entries.
 type VulnListPage struct {
 	basePage
 	Entries []OSVEntry

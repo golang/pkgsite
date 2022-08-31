@@ -28,6 +28,7 @@ import (
 	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/version"
 	"golang.org/x/text/message"
+	vulnc "golang.org/x/vuln/client"
 )
 
 // serveSearch applies database data to the search template. Handles endpoint
@@ -92,6 +93,23 @@ func (s *Server) serveSearch(w http.ResponseWriter, r *http.Request, ds internal
 	mode := searchMode(r)
 	if path := searchRequestRedirectPath(ctx, ds, cq, mode); path != "" {
 		http.Redirect(w, r, path, http.StatusFound)
+		return nil
+	}
+
+	vulnListPage, redirectURL, err := searchVulnAlias(ctx, mode, cq, s.vulnClient)
+	if err != nil {
+		return err
+	}
+	if redirectURL != "" {
+		http.Redirect(w, r, redirectURL, http.StatusFound)
+		return nil
+	}
+	if vulnListPage != nil {
+		vulnListPage.basePage = s.newBasePage(r, fmt.Sprintf("%s - Vulnerability Reports", cq))
+		if s.shouldServeJSON(r) {
+			return s.serveJSONPage(w, r, vulnListPage)
+		}
+		s.servePage(ctx, w, "vuln/list", vulnListPage)
 		return nil
 	}
 
@@ -324,8 +342,7 @@ func searchRequestRedirectPath(ctx context.Context, ds internal.DataSource, quer
 	if urlSchemeIdx > -1 {
 		query = query[urlSchemeIdx+3:]
 	}
-	// TODO(go.dev/issue/54465): add support for searching by alias.
-	if goVulnIDRegexp.MatchString(query) || mode == searchModeVuln {
+	if goVulnIDRegexp.MatchString(query) {
 		return fmt.Sprintf("/vuln/%s?q", query)
 	}
 	requestedPath := path.Clean(query)
@@ -340,6 +357,40 @@ func searchRequestRedirectPath(ctx context.Context, ds internal.DataSource, quer
 		return ""
 	}
 	return fmt.Sprintf("/%s", requestedPath)
+}
+
+func searchVulnAlias(ctx context.Context, mode, cq string, vulnClient vulnc.Client) (_ *VulnListPage, redirectURL string, err error) {
+	defer derrors.Wrap(&err, "searchVulnAlias(%q, %q)", mode, cq)
+
+	if mode != searchModeVuln || !isVulnAlias(cq) {
+		return nil, "", nil
+	}
+	aliasEntries, err := vulnClient.GetByAlias(ctx, cq)
+	if err != nil {
+		return nil, "", err
+	}
+	switch len(aliasEntries) {
+	case 0:
+		return nil, "", &serverError{status: http.StatusNotFound}
+	case 1: // redirect
+		return nil, "/vuln/" + aliasEntries[0].ID, nil
+	default:
+		var entries []OSVEntry
+		for _, e := range aliasEntries {
+			entries = append(entries, OSVEntry{e})
+		}
+		return &VulnListPage{Entries: entries}, "", nil
+	}
+}
+
+// Regexps that match aliases for Go vulns.
+var (
+	cveRegexp  = regexp.MustCompile("^CVE-[0-9]{4}-[0-9]+$")
+	ghsaRegexp = regexp.MustCompile("^GHSA-.{4}-.{4}-.{4}$")
+)
+
+func isVulnAlias(s string) bool {
+	return cveRegexp.MatchString(s) || ghsaRegexp.MatchString(s)
 }
 
 // searchMode reports whether the search performed should be in package or
@@ -357,6 +408,9 @@ func searchMode(r *http.Request) string {
 	case searchModeVuln:
 		return searchModeVuln
 	default:
+		if isVulnAlias(q) {
+			return searchModeVuln
+		}
 		if shouldDefaultToSymbolSearch(q) {
 			return searchModeSymbol
 		}
@@ -383,13 +437,13 @@ func rawSearchQuery(r *http.Request) string {
 	return strings.TrimSpace(r.FormValue("q"))
 }
 
-// rawSearchQuery returns the exact search mode from the URL request.
+// rawSearchMode returns the exact search mode from the URL request.
 func rawSearchMode(r *http.Request) string {
 	return strings.TrimSpace(r.FormValue("m"))
 }
 
-// shouldDefaultToSymbolSearch reports whether the symbol search mode should
-// default to symbol search mode based on the input.
+// shouldDefaultToSymbolSearch reports whether the search mode should
+// default to symbol based on the input.
 func shouldDefaultToSymbolSearch(q string) bool {
 	if len(strings.Fields(q)) != 1 {
 		return false

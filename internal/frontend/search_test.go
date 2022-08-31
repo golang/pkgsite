@@ -384,11 +384,78 @@ func TestSearchRequestRedirectPath(t *testing.T) {
 		{"trim URL scheme from query", "https://golang.org/x/tools", "/golang.org/x/tools", ""},
 		{"Go vuln redirects", "GO-1969-0720", "/vuln/GO-1969-0720?q", ""},
 		{"not a Go vuln", "somepkg/GO-1969-0720", "", ""},
-		{"search mode is vuln", "searchmodevuln", "/vuln/searchmodevuln?q", searchModeVuln},
+		// Just setting the search mode to vuln does not cause a redirect.
+		{"search mode is vuln", "searchmodevuln", "", searchModeVuln},
+		{"CVE alias", "CVE-2022-32190", "", searchModePackage},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			if got := searchRequestRedirectPath(ctx, testDB, test.query, test.mode); got != test.want {
 				t.Errorf("searchRequestRedirectPath(ctx, %q) = %q; want = %q", test.query, got, test.want)
+			}
+		})
+	}
+}
+
+func TestSearchVulnAlias(t *testing.T) {
+	vc := newVulndbTestClient(testEntries)
+	for _, test := range []struct {
+		name     string
+		mode     string
+		query    string
+		wantPage *VulnListPage
+		wantURL  string
+		wantErr  bool
+	}{
+		{
+			name:     "not vuln mode",
+			mode:     searchModePackage,
+			query:    "doesn't matter",
+			wantPage: nil,
+			wantURL:  "",
+			wantErr:  false,
+		},
+		{
+			name:     "not alias",
+			mode:     searchModeVuln,
+			query:    "CVE-not-really",
+			wantPage: nil,
+			wantURL:  "",
+			wantErr:  false,
+		},
+		{
+			name:     "no match",
+			mode:     searchModeVuln,
+			query:    "CVE-1999-1",
+			wantPage: nil,
+			wantURL:  "",
+			wantErr:  true,
+		},
+		{
+			name:    "one match",
+			mode:    searchModeVuln,
+			query:   "GHSA-aaaa-bbbb-cccc",
+			wantURL: "/vuln/GO-1990-01",
+		},
+		{
+			name:  "multiple matches",
+			mode:  searchModeVuln,
+			query: "CVE-2000-1",
+			wantPage: &VulnListPage{Entries: []OSVEntry{
+				OSVEntry{testEntries[0]},
+				OSVEntry{testEntries[1]},
+			}},
+		},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			gotPage, gotURL, err := searchVulnAlias(context.Background(), test.mode, test.query, vc)
+			if (err != nil) != test.wantErr {
+				t.Fatalf("got %v, want error %t", err, test.wantErr)
+			}
+			if !cmp.Equal(gotPage, test.wantPage, cmpopts.IgnoreUnexported(VulnListPage{})) {
+				t.Errorf("page:\ngot  %+v\nwant %+v", gotPage, test.wantPage)
+			}
+			if gotURL != test.wantURL {
+				t.Errorf("redirect: got %q, want %q", gotURL, test.wantURL)
 			}
 		})
 	}
