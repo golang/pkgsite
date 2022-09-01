@@ -25,9 +25,12 @@
   {{/* . is OSVEntry */}}
   <div class="Vuln-details">
     <ul class="Vuln-detailsMetadata">
-      {{if .Aliases}}
+      {{with $aliases := .Aliases}}
         <li class="go-textSubtle Vuln-alias">
-          {{range $i, $v := .Aliases}}{{if ne $i 0}}, {{end}}{{$v}}{{end}}
+          {{range $i, $v := $aliases}}
+            {{- if lt $i 2}}{{- if ne $i 0}}, {{end -}}{{$v}}{{end -}}
+            {{- if eq $i 2}}, and {{subtract (len $aliases) 2}} more{{end -}}
+          {{end}}
         </li>
       {{end}}
       <li class="go-textSubtle">Affects:
