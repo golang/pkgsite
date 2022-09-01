@@ -60,7 +60,7 @@
       {{range .}}
 	<tr>
 	  <td><a href="/{{.PackagePath}}">{{.PackagePath}}</a></td>
-	  <td>{{.Versions}}</td>
+	  <td>{{if .Versions}}{{.Versions}}{{else}}all versions, no known fixed{{end}}</td>
 	</tr>
       {{end}}
     </tbody>
