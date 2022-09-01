@@ -321,19 +321,12 @@ func affectedPackages(e *osv.Entry) []*AffectedPackage {
 
 // aliasLinks generates links to reference pages for vuln aliases.
 func aliasLinks(e *osv.Entry) []link {
-	var cveRef string
-	for _, ref := range e.References {
-		if strings.HasPrefix(ref.URL, nistAdvisoryUrlPrefix) || strings.HasPrefix(ref.URL, mitreAdvisoryUrlPrefix) {
-			cveRef = ref.URL
-			break
-		}
-	}
 	var links []link
 	for _, a := range e.Aliases {
 		prefix, _, _ := strings.Cut(a, "-")
 		switch prefix {
 		case "CVE":
-			links = append(links, link{Body: a, Href: cveRef})
+			links = append(links, link{Body: a, Href: mitreAdvisoryUrlPrefix + a})
 		case "GHSA":
 			links = append(links, link{Body: a, Href: githubAdvisoryUrlPrefix + a})
 		default:

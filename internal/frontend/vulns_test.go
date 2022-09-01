@@ -166,14 +166,9 @@ func Test_aliasLinks(t *testing.T) {
 		want []link
 	}{
 		{
-			"reserved cve",
-			args{&osv.Entry{Aliases: []string{"CVE-0000-00000"}}},
-			[]link{{Body: "CVE-0000-00000"}},
-		},
-		{
-			"nist",
-			args{&osv.Entry{Aliases: []string{"CVE-0000-00000"}, References: []osv.Reference{{Type: "ADVISORY", URL: nistAdvisoryUrlPrefix + "CVE-0000-00000"}}}},
-			[]link{{Body: "CVE-0000-00000", Href: nistAdvisoryUrlPrefix + "CVE-0000-00000"}},
+			"mitre",
+			args{&osv.Entry{Aliases: []string{"CVE-0000-00000"}, References: []osv.Reference{{Type: "ADVISORY", URL: mitreAdvisoryUrlPrefix + "CVE-0000-00000"}}}},
+			[]link{{Body: "CVE-0000-00000", Href: mitreAdvisoryUrlPrefix + "CVE-0000-00000"}},
 		},
 		{
 			"github",
