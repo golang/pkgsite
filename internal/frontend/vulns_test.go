@@ -220,3 +220,57 @@ func Test_advisoryLinks(t *testing.T) {
 		})
 	}
 }
+
+func TestAffectedPackages(t *testing.T) {
+	for _, test := range []struct {
+		name string
+		in   []osv.RangeEvent
+		want string
+	}{
+		{
+			"no intro or fixed",
+			nil,
+			"",
+		},
+		{
+			"no intro",
+			[]osv.RangeEvent{{Fixed: "1.5"}},
+			"before v1.5",
+		},
+		{
+			"both",
+			[]osv.RangeEvent{{Introduced: "1.5"}, {Fixed: "1.10"}},
+			"from v1.5 before v1.10",
+		},
+		{
+			"multiple",
+			[]osv.RangeEvent{
+				{Introduced: "1.5", Fixed: "1.10"},
+				{Fixed: "2.3"},
+			},
+			"from v1.5 before v1.10, before v2.3",
+		},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			entry := &osv.Entry{
+				Affected: []osv.Affected{{
+					Package: osv.Package{Name: "example.com/p"},
+					EcosystemSpecific: osv.EcosystemSpecific{
+						Imports: []osv.EcosystemSpecificImport{{
+							Path: "example.com/p",
+						}},
+					},
+					Ranges: osv.Affects{{
+						Type:   osv.TypeSemver,
+						Events: test.in,
+					}},
+				}},
+			}
+			out := affectedPackages(entry)
+			got := out[0].Versions
+			if got != test.want {
+				t.Errorf("got %q, want %q\n", got, test.want)
+			}
+		})
+	}
+}

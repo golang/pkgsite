@@ -300,12 +300,16 @@ func affectedPackages(e *osv.Entry) []*AffectedPackage {
 		var vs []string
 		for _, p := range pairs {
 			var s string
-			if p.intro == "" {
-				s = p.fixed + " and earlier"
+			if p.intro == "" && p.fixed == "" {
+				// If neither field is set, the vuln applies to all versions.
+				// Leave it blank, the template will render it properly.
+				s = ""
+			} else if p.intro == "" {
+				s = "before " + p.fixed
 			} else if p.fixed == "" {
 				s = p.intro + " and later"
 			} else {
-				s = p.intro + " - " + p.fixed
+				s = "from " + p.intro + " before " + p.fixed
 			}
 			vs = append(vs, s)
 		}
