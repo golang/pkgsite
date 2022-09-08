@@ -5,7 +5,11 @@
 -->
 
 {{define "canonical"}}
-  <link rel="canonical" href="https://pkg.go.dev/{{.Unit.Path}}">
+  {{if .IsLatestMinor}}
+    <link rel="canonical" href="https://pkg.go.dev/{{.Unit.Path}}">
+  {{else}}
+    <meta name="robots" content="noindex">
+  {{end}}
 {{end}}
 
 {{define "main-styles"}}

@@ -56,6 +56,10 @@ type UnitPage struct {
 	// LatestURL is a url pointing to the latest version of a unit.
 	LatestURL string
 
+	// IsLatestMinor is true if the version displayed is the latest minor of the unit.
+	// Used to determine the canonical URL for search engines and robots meta directives.
+	IsLatestMinor bool
+
 	// LatestMinorClass is the CSS class that describes the current unit's minor
 	// version in relationship to the latest version of the unit.
 	LatestMinorClass string
@@ -218,6 +222,7 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 		RedirectedFromPath:    redirectPath,
 		DepsDevURL:            makeDepsDevURL(),
 		IsGoProject:           isGoProject(um.ModulePath),
+		IsLatestMinor:         lv == latestInfo.MinorVersion,
 	}
 
 	// Show the banner if there was no error getting the latest major version,
