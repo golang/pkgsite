@@ -26,7 +26,7 @@
 }
 .UnitDoc-emptySection {
   background-color: var(--color-background-accented);
-  color: var(--gray-2);
+  color: var(--color-text-subtle);
   height: 12.25rem;
   margin-top: 1.5rem;
   text-align: center;
@@ -35,7 +35,7 @@
   height: 7.8125rem;
   width: auto;
 }
-.UnitDoc-emptySection p {
+.Documentation .UnitDoc-emptySection p {
   margin: 1rem auto;
 }
 .UnitDoc .Documentation h4 {
