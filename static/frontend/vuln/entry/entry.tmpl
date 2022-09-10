@@ -45,22 +45,26 @@
 
 {{define "affected"}}
   <h2>Affected Packages</h2>
-  <table class="VulnEntry-table">
-    <thead>
-      <tr>
-	<th>Package</th>
-	<th>Affected Versions</th>
-      </tr>
-    </thead>
-    <tbody>
-      {{range .}}
-	<tr>
-	  <td><a href="/{{.PackagePath}}">{{.PackagePath}}</a></td>
-	  <td>{{if .Versions}}{{.Versions}}{{else}}all versions, no known fixed{{end}}</td>
-	</tr>
-      {{end}}
-    </tbody>
-  </table>
+  <ul class="VulnEntryPackages VulnEntryPackages-container">
+    <li class="VulnEntryPackages-item VulnEntryPackages-item-container">
+      <div class="VulnEntryPackages-attr">Path</div>
+      <div class="VulnEntryPackages-attr">Versions</div>
+      <div class="VulnEntryPackages-attr">Symbols</div>
+    </li>
+    {{range .}}
+    <li class="VulnEntryPackages-item VulnEntryPackages-item-container">
+      <div class="VulnEntryPackages-attr" data-name="Path"><a href="/{{.PackagePath}}">{{.PackagePath}}</a></div>
+      <div class="VulnEntryPackages-attr" data-name="Versions">{{if .Versions}}{{.Versions}}{{else}}all versions, no known fixed{{end}}</div>
+      <div class="VulnEntryPackages-attr VulnEntryPackages-symbols" data-name="Symbols">
+      {{if .Symbols}}{{ $length := len .Symbols}}
+         {{if lt $length 5}}<ul>{{range .Symbols}}<li>{{.}}</li>{{end}}</ul>
+         {{else}}<details><summary>{{len .Symbols}} affected symbols</summary><ul>{{range .Symbols}}<li>{{.}}</li>{{end}}</ul></details>
+         {{end}}
+      {{else}}all symbols{{end}}
+      </div>
+    </li>
+    {{end}}
+  </ul>
 {{end}}
 
 {{define "entry"}}

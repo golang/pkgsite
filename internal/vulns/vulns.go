@@ -8,6 +8,7 @@ package vulns
 import (
 	"context"
 	"fmt"
+	"go/token"
 	"strings"
 
 	"golang.org/x/mod/semver"
@@ -65,6 +66,9 @@ func vulnsForPackage(ctx context.Context, modulePath, version, packagePath strin
 type AffectedPackage struct {
 	PackagePath string
 	Versions    string
+	// List of exported affected symbols. Empty list
+	// implies all symbols in the package are affected.
+	Symbols []string
 }
 
 // OSVEntry holds an OSV entry and provides additional methods.
@@ -203,8 +207,26 @@ func AffectedPackages(e *osv.Entry) []*AffectedPackage {
 			affs = append(affs, &AffectedPackage{
 				PackagePath: p.Path,
 				Versions:    strings.Join(vs, ", "),
+				Symbols:     exportedSymbols(p.Symbols),
+				// TODO(hyangah): where to place GOOS/GOARCH info
 			})
 		}
 	}
 	return affs
+}
+
+func exportedSymbols(in []string) []string {
+	var out []string
+	for _, s := range in {
+		exported := true
+		for _, part := range strings.Split(s, ".") {
+			if !token.IsExported(part) {
+				exported = false // exported only all parts in the symbol name are exported.
+			}
+		}
+		if exported {
+			out = append(out, s)
+		}
+	}
+	return out
 }

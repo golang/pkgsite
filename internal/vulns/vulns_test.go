@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"golang.org/x/vuln/osv"
 )
 
@@ -86,7 +87,7 @@ func TestCollectRangePairs(t *testing.T) {
 
 }
 
-func TestAffectedPackages(t *testing.T) {
+func TestAffectedPackages_Versions(t *testing.T) {
 	for _, test := range []struct {
 		name string
 		in   []osv.RangeEvent
@@ -135,6 +136,112 @@ func TestAffectedPackages(t *testing.T) {
 			got := out[0].Versions
 			if got != test.want {
 				t.Errorf("got %q, want %q\n", got, test.want)
+			}
+		})
+	}
+}
+
+func TestAffectedPackagesPackagesSymbols(t *testing.T) {
+	tests := []struct {
+		name string
+		in   *osv.Entry
+		want []*AffectedPackage
+	}{
+		{
+			name: "one symbol",
+			in: &osv.Entry{
+				ID: "GO-2022-01",
+				Affected: []osv.Affected{{
+					Package: osv.Package{Name: "example.com/mod"},
+					EcosystemSpecific: osv.EcosystemSpecific{
+						Imports: []osv.EcosystemSpecificImport{{
+							Path:    "example.com/mod/pkg",
+							Symbols: []string{"F"},
+						}},
+					},
+				}},
+			},
+			want: []*AffectedPackage{{
+				PackagePath: "example.com/mod/pkg",
+				Symbols:     []string{"F"},
+			}},
+		},
+		{
+			name: "multiple symbols",
+			in: &osv.Entry{
+				ID: "GO-2022-02",
+				Affected: []osv.Affected{{
+					Package: osv.Package{Name: "example.com/mod"},
+					EcosystemSpecific: osv.EcosystemSpecific{
+						Imports: []osv.EcosystemSpecificImport{{
+							Path:    "example.com/mod/pkg",
+							Symbols: []string{"F", "g", "S.f", "S.F", "s.F", "s.f"},
+						}},
+					},
+				}},
+			},
+			want: []*AffectedPackage{{
+				PackagePath: "example.com/mod/pkg",
+				Symbols:     []string{"F", "S.F"}, // unexported symbols are excluded.
+			}},
+		},
+		{
+			name: "no symbol",
+			in: &osv.Entry{
+				ID: "GO-2022-03",
+				Affected: []osv.Affected{{
+					Package: osv.Package{Name: "example.com/mod"},
+					EcosystemSpecific: osv.EcosystemSpecific{
+						Imports: []osv.EcosystemSpecificImport{{
+							Path: "example.com/mod/pkg",
+						}},
+					},
+				}},
+			},
+			want: []*AffectedPackage{{
+				PackagePath: "example.com/mod/pkg",
+			}},
+		},
+		{
+			name: "multiple pkgs and modules",
+			in: &osv.Entry{
+				ID: "GO-2022-04",
+				Affected: []osv.Affected{{
+					Package: osv.Package{Name: "example.com/mod1"},
+					EcosystemSpecific: osv.EcosystemSpecific{
+						Imports: []osv.EcosystemSpecificImport{{
+							Path: "example.com/mod1/pkg1",
+						}, {
+							Path:    "example.com/mod1/pkg2",
+							Symbols: []string{"F"},
+						}},
+					},
+				}, {
+					Package: osv.Package{Name: "example.com/mod2"},
+					EcosystemSpecific: osv.EcosystemSpecific{
+						Imports: []osv.EcosystemSpecificImport{{
+							Path:    "example.com/mod2/pkg3",
+							Symbols: []string{"g", "H"},
+						}},
+					},
+				}},
+			},
+			want: []*AffectedPackage{{
+				PackagePath: "example.com/mod1/pkg1",
+			}, {
+				PackagePath: "example.com/mod1/pkg2",
+				Symbols:     []string{"F"},
+			}, {
+				PackagePath: "example.com/mod2/pkg3",
+				Symbols:     []string{"H"},
+			}},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := AffectedPackages(tt.in)
+			if diff := cmp.Diff(tt.want, got, cmpopts.IgnoreUnexported(AffectedPackage{})); diff != "" {
+				t.Errorf("mismatch (-want, +got):\n%s", diff)
 			}
 		})
 	}
