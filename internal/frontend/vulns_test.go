@@ -8,7 +8,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"reflect"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -131,31 +130,6 @@ func (c *vulndbTestClient) ListIDs(context.Context) ([]string, error) {
 	return ids, nil
 }
 
-func TestCollectRangePairs(t *testing.T) {
-	in := osv.Affected{
-		Package: osv.Package{Name: "github.com/a/b"},
-		Ranges: osv.Affects{
-			{Type: osv.TypeSemver, Events: []osv.RangeEvent{{Introduced: "", Fixed: "0.5"}}},
-			{Type: osv.TypeSemver, Events: []osv.RangeEvent{
-				{Introduced: "1.2"}, {Fixed: "1.5"},
-				{Introduced: "2.1", Fixed: "2.3"},
-			}},
-			{Type: osv.TypeGit, Events: []osv.RangeEvent{{Introduced: "a", Fixed: "b"}}},
-		},
-	}
-	got := collectRangePairs(in)
-	want := []pair{
-		{"", "v0.5"},
-		{"v1.2", "v1.5"},
-		{"v2.1", "v2.3"},
-		{"a", "b"},
-	}
-	if !reflect.DeepEqual(got, want) {
-		t.Errorf("\ngot  %+v\nwant %+v", got, want)
-	}
-
-}
-
 func Test_aliasLinks(t *testing.T) {
 	type args struct {
 		e *osv.Entry
@@ -216,60 +190,6 @@ func Test_advisoryLinks(t *testing.T) {
 			got := advisoryLinks(tt.args.e)
 			if diff := cmp.Diff(tt.want, got); diff != "" {
 				t.Errorf("mismatch(-want, +got): %s", diff)
-			}
-		})
-	}
-}
-
-func TestAffectedPackages(t *testing.T) {
-	for _, test := range []struct {
-		name string
-		in   []osv.RangeEvent
-		want string
-	}{
-		{
-			"no intro or fixed",
-			nil,
-			"",
-		},
-		{
-			"no intro",
-			[]osv.RangeEvent{{Fixed: "1.5"}},
-			"before v1.5",
-		},
-		{
-			"both",
-			[]osv.RangeEvent{{Introduced: "1.5"}, {Fixed: "1.10"}},
-			"from v1.5 before v1.10",
-		},
-		{
-			"multiple",
-			[]osv.RangeEvent{
-				{Introduced: "1.5", Fixed: "1.10"},
-				{Fixed: "2.3"},
-			},
-			"from v1.5 before v1.10, before v2.3",
-		},
-	} {
-		t.Run(test.name, func(t *testing.T) {
-			entry := &osv.Entry{
-				Affected: []osv.Affected{{
-					Package: osv.Package{Name: "example.com/p"},
-					EcosystemSpecific: osv.EcosystemSpecific{
-						Imports: []osv.EcosystemSpecificImport{{
-							Path: "example.com/p",
-						}},
-					},
-					Ranges: osv.Affects{{
-						Type:   osv.TypeSemver,
-						Events: test.in,
-					}},
-				}},
-			}
-			out := affectedPackages(entry)
-			got := out[0].Versions
-			if got != test.want {
-				t.Errorf("got %q, want %q\n", got, test.want)
 			}
 		})
 	}

@@ -14,7 +14,7 @@ import (
 	"golang.org/x/mod/semver"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
-	"golang.org/x/pkgsite/internal/stdlib"
+	"golang.org/x/pkgsite/internal/vulns"
 	"golang.org/x/sync/errgroup"
 	vulnc "golang.org/x/vuln/client"
 	"golang.org/x/vuln/osv"
@@ -81,14 +81,9 @@ type VulnListPage struct {
 type VulnPage struct {
 	basePage
 	Entry            OSVEntry
-	AffectedPackages []*AffectedPackage
+	AffectedPackages []*vulns.AffectedPackage
 	AliasLinks       []link
 	AdvisoryLinks    []link
-}
-
-type AffectedPackage struct {
-	PackagePath string
-	Versions    string
 }
 
 // OSVEntry holds an OSV entry and provides additional methods.
@@ -207,7 +202,7 @@ func newVulnPage(ctx context.Context, client vulnc.Client, id string) (*VulnPage
 	}
 	return &VulnPage{
 		Entry:            OSVEntry{entry},
-		AffectedPackages: affectedPackages(entry),
+		AffectedPackages: vulns.AffectedPackages(entry),
 		AliasLinks:       aliasLinks(entry),
 		AdvisoryLinks:    advisoryLinks(entry),
 	}, nil
@@ -244,83 +239,6 @@ func newVulnListPage(ctx context.Context, client vulnc.Client) (*VulnListPage, e
 		return nil, err
 	}
 	return &VulnListPage{Entries: entries}, nil
-}
-
-// A pair is like an osv.Range, but each pair is a self-contained 2-tuple
-// (introduced version, fixed version).
-type pair struct {
-	intro, fixed string
-}
-
-// collectRangePairs turns a slice of osv Ranges into a more manageable slice of
-// formatted version pairs.
-func collectRangePairs(a osv.Affected) []pair {
-	var (
-		ps     []pair
-		p      pair
-		prefix string
-	)
-	if stdlib.Contains(a.Package.Name) {
-		prefix = "go"
-	} else {
-		prefix = "v"
-	}
-	for _, r := range a.Ranges {
-		isSemver := r.Type == osv.TypeSemver
-		for _, v := range r.Events {
-			if v.Introduced != "" {
-				// We expected Introduced and Fixed to alternate, but if
-				// p.intro != "", then they they don't.
-				// Keep going in that case, ignoring the first Introduced.
-				p.intro = v.Introduced
-				if p.intro == "0" {
-					p.intro = ""
-				}
-				if isSemver && p.intro != "" {
-					p.intro = prefix + p.intro
-				}
-			}
-			if v.Fixed != "" {
-				p.fixed = v.Fixed
-				if isSemver && p.fixed != "" {
-					p.fixed = prefix + p.fixed
-				}
-				ps = append(ps, p)
-				p = pair{}
-			}
-		}
-	}
-	return ps
-}
-
-func affectedPackages(e *osv.Entry) []*AffectedPackage {
-	var affs []*AffectedPackage
-	for _, a := range e.Affected {
-		pairs := collectRangePairs(a)
-		var vs []string
-		for _, p := range pairs {
-			var s string
-			if p.intro == "" && p.fixed == "" {
-				// If neither field is set, the vuln applies to all versions.
-				// Leave it blank, the template will render it properly.
-				s = ""
-			} else if p.intro == "" {
-				s = "before " + p.fixed
-			} else if p.fixed == "" {
-				s = p.intro + " and later"
-			} else {
-				s = "from " + p.intro + " before " + p.fixed
-			}
-			vs = append(vs, s)
-		}
-		for _, p := range a.EcosystemSpecific.Imports {
-			affs = append(affs, &AffectedPackage{
-				PackagePath: p.Path,
-				Versions:    strings.Join(vs, ", "),
-			})
-		}
-	}
-	return affs
 }
 
 // aliasLinks generates links to reference pages for vuln aliases.
