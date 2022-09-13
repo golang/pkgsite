@@ -8,6 +8,10 @@
   <title>{{.Query}} - Search Results - Go Packages</title>
 {{end}}
 
+{{define "robots"}}
+  <meta name="robots" content="noindex">
+{{end}}
+
 {{define "pre-content"}}
   <link href="/static/frontend/search/search.min.css?version={{.AppVersionLabel}}" rel="stylesheet">
 {{end}}
