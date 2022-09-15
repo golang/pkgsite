@@ -1,0 +1,268 @@
+[
+    {"id": "GO-2021-0054",
+        "published": "2021-04-14T20:04:52Z",
+        "modified": "2022-08-19T22:21:47Z",
+        "aliases": [
+            "CVE-2020-36067"
+        ],
+        "details": "Due to improper bounds checking, maliciously crafted JSON objects can cause an out-of-bounds panic. If parsing user input, this may be used as a denial of service vector.",
+        "affected": [
+            {
+                "package": {
+                    "name": "github.com/tidwall/gjson",
+                    "ecosystem": "Go"
+                },
+                "ranges": [
+                    {
+                        "type": "SEMVER",
+                        "events": [
+                            {
+                                "introduced": "0"
+                            },
+                            {
+                                "fixed": "1.6.6"
+                            }
+                        ]
+                    }
+                ],
+                "database_specific": {
+                    "url": "https://pkg.go.dev/vuln/GO-2021-0054"
+                },
+                "ecosystem_specific": {
+                    "imports": [
+                        {
+                            "path": "github.com/tidwall/gjson",
+                            "symbols": [
+                                "Result.ForEach",
+                                "unwrap"
+                            ]
+                        }
+                    ]
+                }
+            }
+        ],
+        "references": [
+            {
+                "type": "FIX",
+                "url": "https://github.com/tidwall/gjson/commit/bf4efcb3c18d1825b2988603dea5909140a5302b"
+            },
+            {
+                "type": "WEB",
+                "url": "https://github.com/tidwall/gjson/issues/196"
+            },
+            {
+                "type": "WEB",
+                "url": "https://nvd.nist.gov/vuln/detail/CVE-2020-36067"
+            }
+        ]
+    },
+    {
+        "id": "GO-2021-0059",
+        "published": "2021-04-14T20:04:52Z",
+        "modified": "2022-08-19T22:21:47Z",
+        "aliases": [
+            "CVE-2020-35380",
+            "GHSA-w942-gw6m-p62c"
+        ],
+        "details": "Due to improper bounds checking, maliciously crafted JSON objects can cause an out-of-bounds panic. If parsing user input, this may be used as a denial of service vector.",
+        "affected": [
+            {
+                "package": {
+                    "name": "github.com/tidwall/gjson",
+                    "ecosystem": "Go"
+                },
+                "ranges": [
+                    {
+                        "type": "SEMVER",
+                        "events": [
+                            {
+                                "introduced": "0"
+                            },
+                            {
+                                "fixed": "1.6.4"
+                            }
+                        ]
+                    }
+                ],
+                "database_specific": {
+                    "url": "https://pkg.go.dev/vuln/GO-2021-0059"
+                },
+                "ecosystem_specific": {
+                    "imports": [
+                        {
+                            "path": "github.com/tidwall/gjson",
+                            "symbols": [
+                                "sqaush"
+                            ]
+                        }
+                    ]
+                }
+            }
+        ],
+        "references": [
+            {
+                "type": "FIX",
+                "url": "https://github.com/tidwall/gjson/commit/f0ee9ebde4b619767ae4ac03e8e42addb530f6bc"
+            },
+            {
+                "type": "WEB",
+                "url": "https://github.com/tidwall/gjson/issues/192"
+            },
+            {
+                "type": "WEB",
+                "url": "https://nvd.nist.gov/vuln/detail/CVE-2020-35380"
+            },
+            {
+                "type": "WEB",
+                "url": "https://github.com/advisories/GHSA-w942-gw6m-p62c"
+            }
+        ]
+    },
+    {
+        "id": "GO-2021-0265",
+        "published": "2022-01-14T17:30:24Z",
+        "modified": "2022-08-19T22:21:47Z",
+        "aliases": [
+            "CVE-2020-36066",
+            "CVE-2021-42836",
+            "GHSA-ppj4-34rq-v8j9",
+            "GHSA-wjm3-fq3r-5x46"
+        ],
+        "details": "GJSON allowed a ReDoS (regular expression denial of service) attack.",
+        "affected": [
+            {
+                "package": {
+                    "name": "github.com/tidwall/gjson",
+                    "ecosystem": "Go"
+                },
+                "ranges": [
+                    {
+                        "type": "SEMVER",
+                        "events": [
+                            {
+                                "introduced": "0"
+                            },
+                            {
+                                "fixed": "1.9.3"
+                            }
+                        ]
+                    }
+                ],
+                "database_specific": {
+                    "url": "https://pkg.go.dev/vuln/GO-2021-0265"
+                },
+                "ecosystem_specific": {
+                    "imports": [
+                        {
+                            "path": "github.com/tidwall/gjson",
+                            "symbols": [
+                                "match.Match"
+                            ]
+                        }
+                    ]
+                }
+            }
+        ],
+        "references": [
+            {
+                "type": "FIX",
+                "url": "https://github.com/tidwall/gjson/commit/590010fdac311cc8990ef5c97448d4fec8f29944"
+            },
+            {
+                "type": "WEB",
+                "url": "https://github.com/tidwall/gjson/compare/v1.9.2...v1.9.3"
+            },
+            {
+                "type": "WEB",
+                "url": "https://github.com/tidwall/gjson/issues/236"
+            },
+            {
+                "type": "WEB",
+                "url": "https://github.com/tidwall/gjson/issues/237"
+            },
+            {
+                "type": "WEB",
+                "url": "https://nvd.nist.gov/vuln/detail/CVE-2020-36066"
+            },
+            {
+                "type": "WEB",
+                "url": "https://nvd.nist.gov/vuln/detail/CVE-2021-42836"
+            },
+            {
+                "type": "WEB",
+                "url": "https://github.com/advisories/GHSA-ppj4-34rq-v8j9"
+            },
+            {
+                "type": "WEB",
+                "url": "https://github.com/advisories/GHSA-wjm3-fq3r-5x46"
+            }
+        ]
+    },
+    {
+        "id": "GO-2022-0592",
+        "published": "2022-08-15T18:06:07Z",
+        "modified": "2022-08-19T22:21:47Z",
+        "aliases": [
+            "CVE-2021-42248",
+            "GHSA-c9gm-7rfj-8w5h"
+        ],
+        "details": "A maliciously crafted path can cause Get and other query functions to consume excessive amounts of CPU and time.",
+        "affected": [
+            {
+                "package": {
+                    "name": "github.com/tidwall/gjson",
+                    "ecosystem": "Go"
+                },
+                "ranges": [
+                    {
+                        "type": "SEMVER",
+                        "events": [
+                            {
+                                "introduced": "0"
+                            },
+                            {
+                                "fixed": "1.9.3"
+                            }
+                        ]
+                    }
+                ],
+                "database_specific": {
+                    "url": "https://pkg.go.dev/vuln/GO-2022-0592"
+                },
+                "ecosystem_specific": {
+                    "imports": [
+                        {
+                            "path": "github.com/tidwall/gjson",
+                            "symbols": [
+                                "Get",
+                                "GetBytes",
+                                "GetMany",
+                                "GetManyBytes",
+                                "Result.Get",
+                                "queryMatches"
+                            ]
+                        }
+                    ]
+                }
+            }
+        ],
+        "references": [
+            {
+                "type": "FIX",
+                "url": "https://github.com/tidwall/gjson/commit/77a57fda87dca6d0d7d4627d512a630f89a91c96"
+            },
+            {
+                "type": "WEB",
+                "url": "https://github.com/tidwall/gjson/issues/237"
+            },
+            {
+                "type": "WEB",
+                "url": "https://nvd.nist.gov/vuln/detail/CVE-2021-42248"
+            },
+            {
+                "type": "WEB",
+                "url": "https://github.com/advisories/GHSA-c9gm-7rfj-8w5h"
+            }
+        ]
+    }
+]

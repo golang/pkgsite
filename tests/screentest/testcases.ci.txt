@@ -1,0 +1,30 @@
+windowsize 1536x960
+compare {{.Origin}}::cache {{.Origin}}
+output tests/screentest/testdata/ci
+# Prevent dynamic readme bages from rendering
+block https://codecov.io/* https://travis-ci.com/*
+
+test vuln
+pathname /vuln/
+capture fullscreen
+capture fullscreen 540x1080
+
+test vuln list
+pathname /vuln/list
+capture fullscreen
+capture fullscreen 540x1080
+
+test vuln entry
+pathname /vuln/GO-2022-0463
+capture fullscreen
+capture fullscreen 540x1080
+
+test vuln stdlib module
+pathname /archive/zip@go1.16.4
+capture viewport
+capture viewport 540x1080
+
+test vuln toolchain module
+pathname /cmd/go@go1.15.0
+capture viewport
+capture viewport 540x1080

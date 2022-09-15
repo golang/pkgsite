@@ -82,6 +82,12 @@ In order to run the tests, run this command from the root of the repository:
 postgres database, frontend, and headless chrome, and runs the screentest using
 headless chrome.
 
+Tests in `./tests/screentest/testcases.ci.txt` run only for CI runs of the
+screentest. These tests may rely on mocked data, like the vuln page tests.
+Tests in `./tests/screentest/testcases.txt` run for all environments and
+are suitable for tests with data that is consistent between environments or
+static pages.
+
 ### Understanding Test Failures
 
 If the tests fail with diffs, a file with the diffs will be created in the

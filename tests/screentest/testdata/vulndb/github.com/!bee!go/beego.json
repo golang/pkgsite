@@ -1,0 +1,480 @@
+[
+  {
+    "id": "GO-2022-0463",
+    "published": "2022-07-01T20:06:59Z",
+    "modified": "2022-08-19T22:21:47Z",
+    "aliases": [
+      "CVE-2022-31259",
+      "GHSA-qx32-f6g6-fcfr"
+    ],
+    "details": "Routes in the beego HTTP router can match unintended patterns.\nThis overly-broad matching may permit an attacker to bypass access\ncontrols.\n\nFor example, the pattern \"/a/b/:name\" can match the URL \"/a.xml/b/\".\nThis may bypass access control applied to the prefix \"/a/\".\n",
+    "affected": [
+      {
+        "package": {
+          "name": "github.com/beego/beego",
+          "ecosystem": "Go"
+        },
+        "ranges": [
+          {
+            "type": "SEMVER",
+            "events": [
+              {
+                "introduced": "0"
+              },
+              {
+                "fixed": "1.12.9"
+              }
+            ]
+          }
+        ],
+        "database_specific": {
+          "url": "https://pkg.go.dev/vuln/GO-2022-0463"
+        },
+        "ecosystem_specific": {
+          "imports": [
+            {
+              "path": "github.com/beego/beego",
+              "symbols": [
+                "App.Run",
+                "ControllerRegister.FindPolicy",
+                "ControllerRegister.FindRouter",
+                "ControllerRegister.ServeHTTP",
+                "FilterRouter.ValidRouter",
+                "InitBeegoBeforeTest",
+                "Run",
+                "RunWithMiddleWares",
+                "TestBeegoInit",
+                "Tree.Match",
+                "Tree.match",
+                "adminApp.Run"
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "package": {
+          "name": "github.com/beego/beego/v2",
+          "ecosystem": "Go"
+        },
+        "ranges": [
+          {
+            "type": "SEMVER",
+            "events": [
+              {
+                "introduced": "0"
+              },
+              {
+                "fixed": "2.0.3"
+              }
+            ]
+          }
+        ],
+        "database_specific": {
+          "url": "https://pkg.go.dev/vuln/GO-2022-0463"
+        },
+        "ecosystem_specific": {
+          "imports": [
+            {
+              "path": "github.com/beego/beego/v2/server/web",
+              "symbols": [
+                "AddNamespace",
+                "Any",
+                "AutoPrefix",
+                "AutoRouter",
+                "Compare",
+                "CompareNot",
+                "Controller.Bind",
+                "Controller.BindForm",
+                "Controller.BindXML",
+                "Controller.BindYAML",
+                "Controller.GetSecureCookie",
+                "Controller.ParseForm",
+                "Controller.Render",
+                "Controller.RenderBytes",
+                "Controller.RenderString",
+                "Controller.Resp",
+                "Controller.SaveToFile",
+                "Controller.ServeFormatted",
+                "Controller.ServeXML",
+                "Controller.ServeYAML",
+                "Controller.SetSecureCookie",
+                "Controller.Trace",
+                "Controller.URLFor",
+                "Controller.XMLResp",
+                "Controller.XSRFFormHTML",
+                "Controller.XSRFToken",
+                "Controller.YamlResp",
+                "ControllerRegister.Add",
+                "ControllerRegister.AddAuto",
+                "ControllerRegister.AddAutoPrefix",
+                "ControllerRegister.AddMethod",
+                "ControllerRegister.AddRouterMethod",
+                "ControllerRegister.Any",
+                "ControllerRegister.CtrlAny",
+                "ControllerRegister.CtrlDelete",
+                "ControllerRegister.CtrlGet",
+                "ControllerRegister.CtrlHead",
+                "ControllerRegister.CtrlOptions",
+                "ControllerRegister.CtrlPatch",
+                "ControllerRegister.CtrlPost",
+                "ControllerRegister.CtrlPut",
+                "ControllerRegister.Delete",
+                "ControllerRegister.FindPolicy",
+                "ControllerRegister.FindRouter",
+                "ControllerRegister.Get",
+                "ControllerRegister.Handler",
+                "ControllerRegister.Head",
+                "ControllerRegister.Include",
+                "ControllerRegister.Init",
+                "ControllerRegister.InsertFilter",
+                "ControllerRegister.Options",
+                "ControllerRegister.Patch",
+                "ControllerRegister.Post",
+                "ControllerRegister.Put",
+                "ControllerRegister.ServeHTTP",
+                "ControllerRegister.URLFor",
+                "CtrlAny",
+                "CtrlDelete",
+                "CtrlGet",
+                "CtrlHead",
+                "CtrlOptions",
+                "CtrlPatch",
+                "CtrlPost",
+                "CtrlPut",
+                "Date",
+                "DateParse",
+                "Delete",
+                "Exception",
+                "ExecuteTemplate",
+                "ExecuteViewPathTemplate",
+                "FilterRouter.ValidRouter",
+                "FlashData.Error",
+                "FlashData.Notice",
+                "FlashData.Set",
+                "FlashData.Store",
+                "FlashData.Success",
+                "FlashData.Warning",
+                "Get",
+                "GetConfig",
+                "HTML2str",
+                "Handler",
+                "Head",
+                "Htmlquote",
+                "Htmlunquote",
+                "HttpServer.Any",
+                "HttpServer.AutoPrefix",
+                "HttpServer.AutoRouter",
+                "HttpServer.CtrlAny",
+                "HttpServer.CtrlDelete",
+                "HttpServer.CtrlGet",
+                "HttpServer.CtrlHead",
+                "HttpServer.CtrlOptions",
+                "HttpServer.CtrlPatch",
+                "HttpServer.CtrlPost",
+                "HttpServer.CtrlPut",
+                "HttpServer.Delete",
+                "HttpServer.Get",
+                "HttpServer.Handler",
+                "HttpServer.Head",
+                "HttpServer.Include",
+                "HttpServer.InsertFilter",
+                "HttpServer.Options",
+                "HttpServer.Patch",
+                "HttpServer.Post",
+                "HttpServer.PrintTree",
+                "HttpServer.Put",
+                "HttpServer.RESTRouter",
+                "HttpServer.Router",
+                "HttpServer.RouterWithOpts",
+                "HttpServer.Run",
+                "Include",
+                "InitBeegoBeforeTest",
+                "InsertFilter",
+                "LoadAppConfig",
+                "MapGet",
+                "Namespace.Any",
+                "Namespace.AutoPrefix",
+                "Namespace.AutoRouter",
+                "Namespace.Cond",
+                "Namespace.CtrlAny",
+                "Namespace.CtrlDelete",
+                "Namespace.CtrlGet",
+                "Namespace.CtrlHead",
+                "Namespace.CtrlOptions",
+                "Namespace.CtrlPatch",
+                "Namespace.CtrlPost",
+                "Namespace.CtrlPut",
+                "Namespace.Delete",
+                "Namespace.Filter",
+                "Namespace.Get",
+                "Namespace.Handler",
+                "Namespace.Head",
+                "Namespace.Include",
+                "Namespace.Namespace",
+                "Namespace.Options",
+                "Namespace.Patch",
+                "Namespace.Post",
+                "Namespace.Put",
+                "Namespace.Router",
+                "NewControllerRegister",
+                "NewControllerRegisterWithCfg",
+                "NewHttpServerWithCfg",
+                "NewHttpSever",
+                "NewNamespace",
+                "NotNil",
+                "Options",
+                "ParseForm",
+                "Patch",
+                "Policy",
+                "Post",
+                "PrintTree",
+                "Put",
+                "RESTRouter",
+                "ReadFromRequest",
+                "RenderForm",
+                "Router",
+                "RouterWithOpts",
+                "Run",
+                "RunWithMiddleWares",
+                "TestBeegoInit",
+                "Tree.AddRouter",
+                "Tree.AddTree",
+                "Tree.Match",
+                "Tree.match",
+                "URLFor",
+                "URLMap.GetMap",
+                "URLMap.GetMapData",
+                "adminApp.Run",
+                "adminController.AdminIndex",
+                "adminController.Healthcheck",
+                "adminController.ListConf",
+                "adminController.ProfIndex",
+                "adminController.PrometheusMetrics",
+                "adminController.QpsIndex",
+                "adminController.TaskStatus",
+                "beegoAppConfig.Bool",
+                "beegoAppConfig.DefaultBool"
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    "references": [
+      {
+        "type": "FIX",
+        "url": "https://github.com/beego/beego/pull/4958"
+      },
+      {
+        "type": "FIX",
+        "url": "https://github.com/beego/beego/commit/64cf44d725c8cc35d782327d333df9cbeb1bf2dd"
+      },
+      {
+        "type": "WEB",
+        "url": "https://beego.vip"
+      },
+      {
+        "type": "WEB",
+        "url": "https://github.com/beego/beego/issues/4946"
+      },
+      {
+        "type": "WEB",
+        "url": "https://github.com/beego/beego/pull/4954"
+      },
+      {
+        "type": "WEB",
+        "url": "https://nvd.nist.gov/vuln/detail/CVE-2022-31259"
+      },
+      {
+        "type": "WEB",
+        "url": "https://github.com/advisories/GHSA-qx32-f6g6-fcfr"
+      }
+    ]
+  },
+  {
+    "id": "GO-2022-0569",
+    "published": "2022-08-23T13:24:17Z",
+    "modified": "2022-08-23T13:24:17Z",
+    "aliases": [
+      "CVE-2022-31836",
+      "GHSA-95f9-94vc-665h"
+    ],
+    "details": "The leafInfo.match() function uses path.join()\nto deal with wildcard values which can lead to cross directory risk.\n",
+    "affected": [
+      {
+        "package": {
+          "name": "github.com/beego/beego",
+          "ecosystem": "Go"
+        },
+        "ranges": [
+          {
+            "type": "SEMVER",
+            "events": [
+              {
+                "introduced": "0"
+              },
+              {
+                "fixed": "1.12.11"
+              }
+            ]
+          }
+        ],
+        "database_specific": {
+          "url": "https://pkg.go.dev/vuln/GO-2022-0569"
+        },
+        "ecosystem_specific": {
+          "imports": [
+            {
+              "path": "github.com/beego/beego",
+              "symbols": [
+                "Tree.Match"
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "package": {
+          "name": "github.com/beego/beego/v2",
+          "ecosystem": "Go"
+        },
+        "ranges": [
+          {
+            "type": "SEMVER",
+            "events": [
+              {
+                "introduced": "2.0.0"
+              },
+              {
+                "fixed": "2.0.4"
+              }
+            ]
+          }
+        ],
+        "database_specific": {
+          "url": "https://pkg.go.dev/vuln/GO-2022-0569"
+        },
+        "ecosystem_specific": {
+          "imports": [
+            {
+              "path": "github.com/beego/beego/v2/server/web",
+              "symbols": [
+                "Tree.Match"
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    "references": [
+      {
+        "type": "FIX",
+        "url": "https://github.com/beego/beego/pull/5025"
+      },
+      {
+        "type": "FIX",
+        "url": "https://github.com/beego/beego/pull/5025/commits/ea5ae58d40589d249cf577a053e490509de2bf57"
+      },
+      {
+        "type": "WEB",
+        "url": "https://nvd.nist.gov/vuln/detail/CVE-2022-31836"
+      },
+      {
+        "type": "WEB",
+        "url": "https://github.com/advisories/GHSA-95f9-94vc-665h"
+      }
+    ]
+  },
+  {
+    "id": "GO-2022-0572",
+    "published": "2022-08-22T17:56:17Z",
+    "modified": "2022-08-23T19:54:38Z",
+    "aliases": [
+      "CVE-2021-30080",
+      "GHSA-28r6-jm5h-mrgg"
+    ],
+    "details": "An issue was discovered in the route lookup process in\nbeego which attackers to bypass access control.\n",
+    "affected": [
+      {
+        "package": {
+          "name": "github.com/beego/beego",
+          "ecosystem": "Go"
+        },
+        "ranges": [
+          {
+            "type": "SEMVER",
+            "events": [
+              {
+                "introduced": "0"
+              }
+            ]
+          }
+        ],
+        "database_specific": {
+          "url": "https://pkg.go.dev/vuln/GO-2022-0572"
+        },
+        "ecosystem_specific": {
+          "imports": [
+            {
+              "path": "github.com/beego/beego",
+              "symbols": [
+                "Tree.Match"
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "package": {
+          "name": "github.com/beego/beego/v2",
+          "ecosystem": "Go"
+        },
+        "ranges": [
+          {
+            "type": "SEMVER",
+            "events": [
+              {
+                "introduced": "2.0.0"
+              },
+              {
+                "fixed": "2.0.3"
+              }
+            ]
+          }
+        ],
+        "database_specific": {
+          "url": "https://pkg.go.dev/vuln/GO-2022-0572"
+        },
+        "ecosystem_specific": {
+          "imports": [
+            {
+              "path": "github.com/beego/beego/v2/server/web",
+              "symbols": [
+                "Tree.Match"
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    "references": [
+      {
+        "type": "FIX",
+        "url": "https://github.com/beego/beego/pull/4459"
+      },
+      {
+        "type": "FIX",
+        "url": "https://github.com/beego/beego/commit/d5df5e470d0a8ed291930ae802fd7e6b95226519"
+      },
+      {
+        "type": "WEB",
+        "url": "https://nvd.nist.gov/vuln/detail/CVE-2021-30080"
+      },
+      {
+        "type": "WEB",
+        "url": "https://github.com/advisories/GHSA-28r6-jm5h-mrgg"
+      }
+    ]
+  }
+]

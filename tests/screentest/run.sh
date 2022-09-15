@@ -128,9 +128,12 @@ main() {
   local cmd="screentest $concurrency $debugger_url $vars $update $testfile"
 
   if [[ "$env" = ci ]]; then
+    testfile="'tests/screentest/testcases.*'"
+    cmd="screentest $concurrency $debugger_url $vars $update $testfile"
     export GO_DISCOVERY_CONFIG_DYNAMIC="tests/screentest/config.yaml"
     export GO_DISCOVERY_DATABASE_NAME="discovery_e2e_test"
     export GO_DISCOVERY_SEED_DB_FILE="tests/screentest/seed.txt"
+    export GO_DISCOVERY_VULN_DB="file://tests/screentest/testdata/vulndb"
     if [ "$seeddb" = true ]; then
       dcompose run --rm seeddb
     fi

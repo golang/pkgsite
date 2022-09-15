@@ -1,0 +1,36 @@
+[
+  {
+    "id": "GO-2021-0240",
+    "published": "2022-02-17T17:33:25Z",
+    "modified": "2022-08-29T16:50:59Z",
+    "aliases": ["CVE-2021-33196"],
+    "details": "NewReader and OpenReader can cause a panic or an unrecoverable\nfatal error when reading an archive that claims to contain a large\nnumber of files, regardless of its actual size.\n",
+    "affected": [
+      {
+        "package": { "name": "stdlib", "ecosystem": "Go" },
+        "ranges": [
+          {
+            "type": "SEMVER",
+            "events": [
+              { "introduced": "0" },
+              { "fixed": "1.15.13" },
+              { "introduced": "1.16.0" },
+              { "fixed": "1.16.5" }
+            ]
+          }
+        ],
+        "database_specific": { "url": "https://pkg.go.dev/vuln/GO-2021-0240" },
+        "ecosystem_specific": { "imports": [{ "path": "archive/zip", "symbols": ["Reader.init"] }] }
+      }
+    ],
+    "references": [
+      { "type": "FIX", "url": "https://go.dev/cl/318909" },
+      {
+        "type": "FIX",
+        "url": "https://go.googlesource.com/go/+/74242baa4136c7a9132a8ccd9881354442788c8c"
+      },
+      { "type": "WEB", "url": "https://groups.google.com/g/golang-announce/c/RgCMkAEQjSI" },
+      { "type": "REPORT", "url": "https://go.dev/issue/46242" }
+    ]
+  }
+]

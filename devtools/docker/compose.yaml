@@ -14,6 +14,7 @@ x-go-variables: &go-variables
   GO_DISCOVERY_CONFIG_DYNAMIC:
   GO_DISCOVERY_LOG_LEVEL: ${GO_DISCOVERY_LOG_LEVEL:-info}
   GO_DISCOVERY_SERVE_STATS: "true"
+  GO_DISCOVERY_VULN_DB:
 
 services:
   allbash:
