@@ -35,22 +35,46 @@ import (
 // /search?q=<query>. If <query> is an exact match for a package path, the user
 // will be redirected to the details page.
 func (s *Server) serveSearch(w http.ResponseWriter, r *http.Request, ds internal.DataSource) error {
+	action, err := determineSearchAction(r, ds, s.vulnClient)
+	if err != nil {
+		return err
+	}
+	if action.redirectURL != "" {
+		http.Redirect(w, r, action.redirectURL, http.StatusFound)
+		return nil
+	}
+	action.page.setBasePage(s.newBasePage(r, action.title))
+	if s.shouldServeJSON(r) {
+		return s.serveJSONPage(w, r, action.page)
+	}
+	s.servePage(r.Context(), w, action.template, action.page)
+	return nil
+}
+
+type searchAction struct {
+	redirectURL string
+	title       string
+	template    string
+	page        interface{ setBasePage(basePage) }
+}
+
+func determineSearchAction(r *http.Request, ds internal.DataSource, vulnClient vulnc.Client) (*searchAction, error) {
 	if r.Method != http.MethodGet && r.Method != http.MethodHead {
-		return &serverError{status: http.StatusMethodNotAllowed}
+		return nil, &serverError{status: http.StatusMethodNotAllowed}
 	}
 	db, ok := ds.(*postgres.DB)
 	if !ok {
 		// The proxydatasource does not support the imported by page.
-		return datasourceNotSupportedErr()
+		return nil, datasourceNotSupportedErr()
 	}
 
 	ctx := r.Context()
 	cq, filters := searchQueryAndFilters(r)
 	if !utf8.ValidString(cq) {
-		return &serverError{status: http.StatusBadRequest}
+		return nil, &serverError{status: http.StatusBadRequest}
 	}
 	if len(filters) > 1 {
-		return &serverError{
+		return nil, &serverError{
 			status: http.StatusBadRequest,
 			epage: &errorPage{
 				messageTemplate: template.MakeTrustedTemplate(
@@ -59,7 +83,7 @@ func (s *Server) serveSearch(w http.ResponseWriter, r *http.Request, ds internal
 		}
 	}
 	if len(cq) > maxSearchQueryLength {
-		return &serverError{
+		return nil, &serverError{
 			status: http.StatusBadRequest,
 			epage: &errorPage{
 				messageTemplate: template.MakeTrustedTemplate(
@@ -68,12 +92,11 @@ func (s *Server) serveSearch(w http.ResponseWriter, r *http.Request, ds internal
 		}
 	}
 	if cq == "" {
-		http.Redirect(w, r, "/", http.StatusFound)
-		return nil
+		return &searchAction{redirectURL: "/"}, nil
 	}
 	pageParams := newPaginationParams(r, defaultSearchLimit)
 	if pageParams.offset() > maxSearchOffset {
-		return &serverError{
+		return nil, &serverError{
 			status: http.StatusBadRequest,
 			epage: &errorPage{
 				messageTemplate: template.MakeTrustedTemplate(
@@ -82,7 +105,7 @@ func (s *Server) serveSearch(w http.ResponseWriter, r *http.Request, ds internal
 		}
 	}
 	if pageParams.limit > maxSearchPageSize {
-		return &serverError{
+		return nil, &serverError{
 			status: http.StatusBadRequest,
 			epage: &errorPage{
 				messageTemplate: template.MakeTrustedTemplate(
@@ -92,41 +115,26 @@ func (s *Server) serveSearch(w http.ResponseWriter, r *http.Request, ds internal
 	}
 	mode := searchMode(r)
 	if path := searchRequestRedirectPath(ctx, ds, cq, mode); path != "" {
-		http.Redirect(w, r, path, http.StatusFound)
-		return nil
+		return &searchAction{redirectURL: path}, nil
 	}
-
-	vulnListPage, redirectURL, err := searchVulnAlias(ctx, mode, cq, s.vulnClient)
-	if err != nil {
-		return err
+	action, err := searchVulnAlias(ctx, mode, cq, vulnClient)
+	if action != nil || err != nil {
+		return action, err
 	}
-	if redirectURL != "" {
-		http.Redirect(w, r, redirectURL, http.StatusFound)
-		return nil
-	}
-	if vulnListPage != nil {
-		vulnListPage.basePage = s.newBasePage(r, fmt.Sprintf("%s - Vulnerability Reports", cq))
-		if s.shouldServeJSON(r) {
-			return s.serveJSONPage(w, r, vulnListPage)
-		}
-		s.servePage(ctx, w, "vuln/list", vulnListPage)
-		return nil
-	}
-
 	var symbol string
 	if len(filters) > 0 {
 		symbol = filters[0]
 	}
 	var getVulnEntries vulnEntriesFunc
-	if s.vulnClient != nil {
-		getVulnEntries = s.vulnClient.GetByModule
+	if vulnClient != nil {
+		getVulnEntries = vulnClient.GetByModule
 	}
 	page, err := fetchSearchPage(ctx, db, cq, symbol, pageParams, mode == searchModeSymbol, getVulnEntries)
 	if err != nil {
 		// Instead of returning a 500, return a 408, since symbol searches may
 		// timeout for very popular symbols.
 		if mode == searchModeSymbol && strings.Contains(err.Error(), "i/o timeout") {
-			return &serverError{
+			return nil, &serverError{
 				status: http.StatusRequestTimeout,
 				epage: &errorPage{
 					messageTemplate: template.MakeTrustedTemplate(
@@ -134,15 +142,14 @@ func (s *Server) serveSearch(w http.ResponseWriter, r *http.Request, ds internal
 				},
 			}
 		}
-		return fmt.Errorf("fetchSearchPage(ctx, db, %q): %v", cq, err)
+		return nil, fmt.Errorf("fetchSearchPage(ctx, db, %q): %v", cq, err)
 	}
-	page.basePage = s.newBasePage(r, fmt.Sprintf("%s - Search Results", cq))
 	page.SearchMode = mode
-	if s.shouldServeJSON(r) {
-		return s.serveJSONPage(w, r, page)
-	}
-	s.servePage(ctx, w, "search", page)
-	return nil
+	return &searchAction{
+		title:    fmt.Sprintf("%s - Search Results", cq),
+		template: "search",
+		page:     page,
+	}, nil
 }
 
 const (
@@ -359,27 +366,31 @@ func searchRequestRedirectPath(ctx context.Context, ds internal.DataSource, quer
 	return fmt.Sprintf("/%s", requestedPath)
 }
 
-func searchVulnAlias(ctx context.Context, mode, cq string, vulnClient vulnc.Client) (_ *VulnListPage, redirectURL string, err error) {
+func searchVulnAlias(ctx context.Context, mode, cq string, vulnClient vulnc.Client) (_ *searchAction, err error) {
 	defer derrors.Wrap(&err, "searchVulnAlias(%q, %q)", mode, cq)
 
 	if mode != searchModeVuln || !isVulnAlias(cq) {
-		return nil, "", nil
+		return nil, nil
 	}
 	aliasEntries, err := vulnClient.GetByAlias(ctx, cq)
 	if err != nil {
-		return nil, "", err
+		return nil, err
 	}
 	switch len(aliasEntries) {
 	case 0:
-		return nil, "", &serverError{status: http.StatusNotFound}
-	case 1: // redirect
-		return nil, "/vuln/" + aliasEntries[0].ID, nil
+		return nil, &serverError{status: http.StatusNotFound}
+	case 1:
+		return &searchAction{redirectURL: "/vuln/" + aliasEntries[0].ID}, nil
 	default:
 		var entries []OSVEntry
 		for _, e := range aliasEntries {
 			entries = append(entries, OSVEntry{e})
 		}
-		return &VulnListPage{Entries: entries}, "", nil
+		return &searchAction{
+			title:    fmt.Sprintf("%s - Vulnerability Reports", cq),
+			template: "vuln/list",
+			page:     &VulnListPage{Entries: entries},
+		}, nil
 	}
 }
 

@@ -7,13 +7,18 @@ package frontend
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
+
+	"net/url"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/fetchdatasource"
 	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/testing/sample"
@@ -21,6 +26,150 @@ import (
 	"golang.org/x/text/message"
 	"golang.org/x/vuln/osv"
 )
+
+func TestDetermineSearchAction(t *testing.T) {
+	ctx := context.Background()
+	defer postgres.ResetTestDB(testDB, t)
+	golangTools := sample.Module("golang.org/x/tools", sample.VersionString, "internal/lsp")
+	std := sample.Module("std", sample.VersionString,
+		"cmd/go", "cmd/go/internal/auth", "fmt")
+	modules := []*internal.Module{golangTools, std}
+
+	for _, v := range modules {
+		postgres.MustInsertModule(ctx, t, testDB, v)
+	}
+	vc := newVulndbTestClient(testEntries)
+	for _, test := range []struct {
+		name         string
+		method       string
+		ds           internal.DataSource
+		query        string // query param part of URL
+		wantRedirect string
+		wantTemplate string
+		wantStatus   int // 0 means no error
+	}{
+		{
+			name:       "wrong method",
+			method:     "POST",
+			wantStatus: http.StatusMethodNotAllowed,
+		},
+		{
+			name:       "bad data source",
+			ds:         &fetchdatasource.FetchDataSource{},
+			wantStatus: http.StatusFailedDependency,
+		},
+		{
+			name:       "invalid query string",
+			query:      "q=\xF4\x90\x80\x80",
+			wantStatus: http.StatusBadRequest,
+		},
+		{
+			name:       "too many filters",
+			query:      "q=" + url.QueryEscape("a #b #c"),
+			wantStatus: http.StatusBadRequest,
+		},
+		{
+			name:       "query too long",
+			query:      "q=" + strings.Repeat("x", maxSearchQueryLength+1),
+			wantStatus: http.StatusBadRequest,
+		},
+		{
+			name:         "empty query",
+			wantRedirect: "/",
+		},
+		{
+			name:       "offset too large",
+			query:      "q=foo&page=100",
+			wantStatus: http.StatusBadRequest,
+		},
+		{
+			name:       "limit too large",
+			query:      "q=foo&limit=" + fmt.Sprint(maxSearchPageSize+1),
+			wantStatus: http.StatusBadRequest,
+		},
+		// Some redirections; see more at TestSearchRequestRedirectPath.
+		{
+			name:         "Go vuln report",
+			query:        "q=GO-2020-1234",
+			wantRedirect: "/vuln/GO-2020-1234?q", // ??? DO WE WANT THE "?q" ???
+		},
+		{
+			name:         "known unit",
+			query:        "q=golang.org/x/tools",
+			wantRedirect: "/golang.org/x/tools",
+		},
+		// Vuln aliases.
+		// See testEntries in vulns_test.go to understand results.
+		// See TestSearchVulnAlias in this file for more tests.
+		{
+			name:         "vuln alias single",
+			query:        "q=GHSA-aaaa-bbbb-cccc&m=vuln",
+			wantRedirect: "/vuln/GO-1990-01",
+		},
+		{
+			name:         "vuln alias multi",
+			query:        "q=CVE-2000-1&m=vuln",
+			wantTemplate: "vuln/list",
+		},
+		{
+			// We turn on vuln mode if the query matches a vuln alias.
+			name:         "vuln alias not vuln mode",
+			query:        "q=GHSA-aaaa-bbbb-cccc",
+			wantRedirect: "/vuln/GO-1990-01",
+		},
+		{
+			// An explicit mode overrides that.
+			name:         "vuln alias symbol mode",
+			query:        "q=GHSA-aaaa-bbbb-cccc?m=symbol",
+			wantTemplate: "search",
+		},
+		{
+			name:         "normal search",
+			query:        "q=foo",
+			wantTemplate: "search",
+		},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			req := buildSearchRequest(t, test.method, test.query)
+			var ds internal.DataSource = testDB
+			if test.ds != nil {
+				ds = test.ds
+			}
+			gotAction, err := determineSearchAction(req, ds, vc)
+			if err != nil {
+				serr, ok := err.(*serverError)
+				if !ok {
+					t.Fatal(err)
+				}
+				if g, w := serr.status, test.wantStatus; g != w {
+					t.Errorf("got status %d, want %d", g, w)
+				}
+				return
+			}
+			if g, w := gotAction.redirectURL, test.wantRedirect; g != w {
+				t.Errorf("redirect:\ngot  %q\nwant %q", g, w)
+			}
+			if g, w := gotAction.template, test.wantTemplate; g != w {
+				t.Errorf("template:\ngot  %q\nwant %q", g, w)
+			}
+		})
+	}
+}
+
+func buildSearchRequest(t *testing.T, method, query string) *http.Request {
+	if method == "" {
+		method = "GET"
+	}
+	u := "/search"
+	if query != "" {
+		u += "?" + query
+	}
+	req, err := http.NewRequest(method, u, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return req
+}
 
 func TestSearchQueryAndMode(t *testing.T) {
 	for _, test := range []struct {
@@ -447,15 +596,22 @@ func TestSearchVulnAlias(t *testing.T) {
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			gotPage, gotURL, err := searchVulnAlias(context.Background(), test.mode, test.query, vc)
+			gotAction, err := searchVulnAlias(context.Background(), test.mode, test.query, vc)
 			if (err != nil) != test.wantErr {
 				t.Fatalf("got %v, want error %t", err, test.wantErr)
 			}
-			if !cmp.Equal(gotPage, test.wantPage, cmpopts.IgnoreUnexported(VulnListPage{})) {
-				t.Errorf("page:\ngot  %+v\nwant %+v", gotPage, test.wantPage)
+			var wantAction *searchAction
+			if test.wantURL != "" {
+				wantAction = &searchAction{redirectURL: test.wantURL}
+			} else if test.wantPage != nil {
+				wantAction = &searchAction{
+					title:    test.query + " - Vulnerability Reports",
+					template: "vuln/list",
+					page:     test.wantPage,
+				}
 			}
-			if gotURL != test.wantURL {
-				t.Errorf("redirect: got %q, want %q", gotURL, test.wantURL)
+			if !cmp.Equal(gotAction, wantAction, cmp.AllowUnexported(searchAction{}), cmpopts.IgnoreUnexported(VulnListPage{})) {
+				t.Errorf("\ngot  %+v\nwant %+v", gotAction, wantAction)
 			}
 		})
 	}
