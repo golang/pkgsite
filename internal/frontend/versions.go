@@ -113,7 +113,7 @@ func fetchVersionsDetails(ctx context.Context, ds internal.DataSource, um *inter
 		}
 		return constructUnitURL(versionPath, mi.ModulePath, linkVersion(mi.ModulePath, mi.Version, mi.Version))
 	}
-	return buildVersionDetails(ctx, um.ModulePath, versions, sh, linkify, getVulnEntries), nil
+	return buildVersionDetails(ctx, um.ModulePath, um.Path, versions, sh, linkify, getVulnEntries), nil
 }
 
 // pathInVersion constructs the full import path of the package corresponding
@@ -141,7 +141,7 @@ func pathInVersion(v1Path string, mi *internal.ModuleInfo) string {
 // versions tab, organizing major versions into those that have the same module
 // path as the package version under consideration, and those that don't.  The
 // given versions MUST be sorted first by module path and then by semver.
-func buildVersionDetails(ctx context.Context, currentModulePath string,
+func buildVersionDetails(ctx context.Context, currentModulePath, packagePath string,
 	modInfos []*internal.ModuleInfo,
 	sh *internal.SymbolHistory,
 	linkify func(v *internal.ModuleInfo) string,
@@ -195,7 +195,12 @@ func buildVersionDetails(ctx context.Context, currentModulePath string,
 		if sv := sh.SymbolsAtVersion(mi.Version); sv != nil {
 			vs.Symbols = symbolsForVersion(linkify(mi), sv)
 		}
-		vs.Vulns = VulnsForPackage(ctx, mi.ModulePath, mi.Version, "", getVulnEntries)
+		// Show only package level vulnerability warnings on stdlib version pages.
+		pkg := ""
+		if mi.ModulePath == stdlib.ModulePath {
+			pkg = packagePath
+		}
+		vs.Vulns = VulnsForPackage(ctx, mi.ModulePath, mi.Version, pkg, getVulnEntries)
 		vl := lists[key]
 		if vl == nil {
 			seenLists = append(seenLists, key)

@@ -14,6 +14,7 @@ import (
 	"golang.org/x/mod/semver"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/vulns"
 	"golang.org/x/sync/errgroup"
 	vulnc "golang.org/x/vuln/client"
@@ -24,6 +25,12 @@ const (
 	githubAdvisoryUrlPrefix = "https://github.com/advisories/"
 	mitreAdvisoryUrlPrefix  = "https://cve.mitre.org/cgi-bin/cvename.cgi?name="
 	nistAdvisoryUrlPrefix   = "https://nvd.nist.gov/vuln/detail/"
+
+	// The vulndb stores vulns in cmd/go under the modulepath toolchain.
+	vulnCmdGoModulePath = "toolchain"
+	// The vulndb stores vulns under the modulepath stdlib for all other packages
+	// in the standard library.
+	vulnStdlibModulePath = "stdlib"
 )
 
 // A Vuln contains information to display about a vulnerability.
@@ -54,6 +61,11 @@ func vulnsForPackage(ctx context.Context, modulePath, version, packagePath strin
 
 	if getVulnEntries == nil {
 		return nil, nil
+	}
+	if modulePath == stdlib.ModulePath && strings.HasPrefix(packagePath, "cmd/go") {
+		modulePath = vulnCmdGoModulePath
+	} else if modulePath == stdlib.ModulePath {
+		modulePath = vulnStdlibModulePath
 	}
 	// Get all the vulns for this module.
 	entries, err := getVulnEntries(ctx, modulePath)
