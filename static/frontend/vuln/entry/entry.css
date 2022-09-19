@@ -18,8 +18,13 @@
   font-size: 1.25rem;
 }
 .VulnEntryPackages-attr {
+  list-style: disc;
+  list-style-position: inside;
   /* package and symbol names can be pretty long */
   overflow-wrap: anywhere;
+}
+.VulnEntryPackages-detailsContent {
+  margin-left: 0.2rem;
 }
 /* One column by default */
 .VulnEntryPackages-container {

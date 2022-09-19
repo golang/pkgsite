@@ -58,7 +58,8 @@
       <div class="VulnEntryPackages-attr VulnEntryPackages-symbols" data-name="Symbols">
       {{if .Symbols}}{{ $length := len .Symbols}}
          {{if lt $length 5}}<ul>{{range .Symbols}}<li>{{.}}</li>{{end}}</ul>
-         {{else}}<details><summary>{{len .Symbols}} affected symbols</summary><ul>{{range .Symbols}}<li>{{.}}</li>{{end}}</ul></details>
+         {{else}}<details><summary>{{len .Symbols}} affected symbols</summary>
+         <ul class="VulnEntryPackages-detailsContent">{{range .Symbols}}<li>{{.}}</li>{{end}}</ul></details>
          {{end}}
       {{else}}all symbols{{end}}
       </div>
