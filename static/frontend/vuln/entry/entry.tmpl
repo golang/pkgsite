@@ -57,9 +57,10 @@
       <div class="VulnEntryPackages-attr" data-name="Versions">{{if .Versions}}{{.Versions}}{{else}}all versions, no known fixed{{end}}</div>
       <div class="VulnEntryPackages-attr VulnEntryPackages-symbols" data-name="Symbols">
       {{if .Symbols}}{{ $length := len .Symbols}}
-         {{if lt $length 5}}<ul>{{range .Symbols}}<li>{{.}}</li>{{end}}</ul>
+         {{ $vuln := . }}
+         {{if lt $length 5}}<ul>{{range .Symbols}}<li><a href="/{{$vuln.PackagePath}}#{{.}}">{{.}}</a></li>{{end}}</ul>
          {{else}}<details><summary>{{len .Symbols}} affected symbols</summary>
-         <ul class="VulnEntryPackages-detailsContent">{{range .Symbols}}<li>{{.}}</li>{{end}}</ul></details>
+         <ul class="VulnEntryPackages-detailsContent">{{range .Symbols}}<li><a href="/{{$vuln.PackagePath}}#{{.}}">{{.}}</a></li>{{end}}</ul></details>
          {{end}}
       {{else}}all symbols{{end}}
       </div>
