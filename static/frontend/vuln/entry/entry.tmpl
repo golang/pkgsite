@@ -87,6 +87,11 @@
     <h2>References</h2>
     <ul class="VulnEntry-referenceList">
       {{range $e.References}}<li><a href="{{.URL}}" target="_blank" rel="noopener">{{.URL}}</a></li>{{end}}
+      <li>
+        <a target="_blank" rel="noopener" href="https://vuln.go.dev/ID/{{.Entry.ID}}.json">
+          https://vuln.go.dev/ID/{{.Entry.ID}}.json
+        </a>
+      </li>
     </ul>
   {{end}}
   <h2>Feedback</h2>
