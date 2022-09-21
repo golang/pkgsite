@@ -422,7 +422,10 @@ type basePage struct {
 	SearchModeSymbol string
 }
 
-func (p *basePage) setBasePage(bp basePage) { *p = bp }
+func (p *basePage) setBasePage(bp basePage) {
+	bp.SearchMode = p.SearchMode
+	*p = bp
+}
 
 // licensePolicyPage is used to generate the static license policy page.
 type licensePolicyPage struct {
