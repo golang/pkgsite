@@ -15,22 +15,47 @@
         <a href="/vuln" data-gtmc="breadcrumb link">Vulnerability Database</a>
       </li>
       <li>
-        <a href="/vuln/list" data-gtmc="breadcrumb link" aria-current="location">All Reports</a>
+        <a href="/vuln/list" data-gtmc="breadcrumb link" {{if not .Query}}aria-current="location"{{end}}>All Reports</a>
       </li>
+      {{with .Query}}
+        <li>
+          <a href="/search?q={{.}}&m=vuln" data-gtmc="breadcrumb link" aria-current="location">{{.}}</a>
+        </li>
+      {{end}}
     </ol>
   </nav>
-  <h1 class="Vuln-title">Vulnerability Reports</h1>
-  {{range .Entries}}
-    <h2 class="VulnList-title">
-      <a href="/vuln/{{.ID}}">{{.ID}}</a>
-    </h2>
-    <div class="VulnList-details">
-      {{template "vuln-details" .}}
-    </div>
+  <h1 class="Vuln-title">Vulnerability Reports{{with .Query}} – {{.}}{{end}}</h1>
+  <form
+    class="go-InputGroup VulnList-search"
+    action="/search"
+    data-gtmc="search vuln"
+    aria-label="Search by GO ID, alias, or import path"
+    role="search"
+  >
+    <input name="q" class="go-Input" placeholder="Search by GO ID, alias, or import path" value="{{.Query}}" />
+    <input name="m" value="vuln" hidden />
+    <button class="go-Button">Submit</button>
+  </form>
+  {{if not .Entries}}
+    <p>No reports found. <a href="/vuln/list">View all reports.</a></p>
+  {{else}}
+    {{range .Entries}}
+      <h2 class="VulnList-title">
+        <a href="/vuln/{{.ID}}">{{.ID}}</a>
+      </h2>
+      <div class="VulnList-details">
+        {{template "vuln-details" .}}
+      </div>
+    {{end}}
   {{end}}
-  <div><br>If you don't see an existing, public Go vulnerability in a publicly importable package in our database,
-    <a href="https://github.com/golang/vulndb/issues/new?assignees=&labels=Needs+Triage%2CDirect+External+Report&template=new_third_party_vuln.yml&title=x%2Fvulndb%3A+potential+Go+vuln+in+%3Cpackage%3E">
-      please let us know.
-    </a>
-  </div>
+  <p>
+    {{if and .Query .Entries}}
+      Didn't find what you were looking for? <a href="/vuln/list">View all reports.</a>
+    {{else}}
+      If you don't see an existing, public Go vulnerability in a publicly importable package in our database,
+      <a href="https://github.com/golang/vulndb/issues/new?assignees=&labels=Needs+Triage%2CDirect+External+Report&template=new_third_party_vuln.yml&title=x%2Fvulndb%3A+potential+Go+vuln+in+%3Cpackage%3E">
+        please let us know.
+      </a>
+    {{end}}
+  </p>
 {{end}}

@@ -112,6 +112,11 @@ func TestDetermineSearchAction(t *testing.T) {
 			wantTemplate: "vuln/list",
 		},
 		{
+			name:         "vuln module path",
+			query:        "q=golang.org/x/net&m=vuln",
+			wantTemplate: "vuln/list",
+		},
+		{
 			// We turn on vuln mode if the query matches a vuln alias.
 			name:         "vuln alias not vuln mode",
 			query:        "q=GHSA-aaaa-bbbb-cccc",
@@ -597,6 +602,69 @@ func TestSearchVulnAlias(t *testing.T) {
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			gotAction, err := searchVulnAlias(context.Background(), test.mode, test.query, vc)
+			if (err != nil) != test.wantErr {
+				t.Fatalf("got %v, want error %t", err, test.wantErr)
+			}
+			var wantAction *searchAction
+			if test.wantURL != "" {
+				wantAction = &searchAction{redirectURL: test.wantURL}
+			} else if test.wantPage != nil {
+				wantAction = &searchAction{
+					title:    test.query + " - Vulnerability Reports",
+					template: "vuln/list",
+					page:     test.wantPage,
+				}
+			}
+			if !cmp.Equal(gotAction, wantAction, cmp.AllowUnexported(searchAction{}), cmpopts.IgnoreUnexported(VulnListPage{})) {
+				t.Errorf("\ngot  %+v\nwant %+v", gotAction, wantAction)
+			}
+		})
+	}
+}
+
+func TestSearchVulnModulePath(t *testing.T) {
+	vc := newVulndbTestClient(testEntries)
+	for _, test := range []struct {
+		name     string
+		mode     string
+		query    string
+		wantPage *VulnListPage
+		wantURL  string
+		wantErr  bool
+	}{
+		{
+			name:     "not vuln mode",
+			mode:     searchModePackage,
+			query:    "doesn't matter",
+			wantPage: nil,
+			wantURL:  "",
+			wantErr:  false,
+		},
+		{
+			name:     "no match",
+			mode:     searchModeVuln,
+			query:    "example",
+			wantPage: &VulnListPage{Entries: nil},
+		},
+		{
+			name:  "prefix match",
+			mode:  searchModeVuln,
+			query: "example.com/org",
+			wantPage: &VulnListPage{Entries: []OSVEntry{
+				{testEntries[7]},
+			}},
+		},
+		{
+			name:  "path match",
+			mode:  searchModeVuln,
+			query: "example.com/org/path",
+			wantPage: &VulnListPage{Entries: []OSVEntry{
+				{testEntries[7]},
+			}},
+		},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			gotAction, err := searchVulnModule(context.Background(), test.mode, test.query, vc)
 			if (err != nil) != test.wantErr {
 				t.Fatalf("got %v, want error %t", err, test.wantErr)
 			}

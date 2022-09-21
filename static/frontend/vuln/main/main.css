@@ -4,7 +4,11 @@
  * license that can be found in the LICENSE file.
  */
 
- .VulnMain-title {
+/* Hide the search form in the header. */
+.go-SearchForm {
+  display: none;
+}
+.VulnMain-title {
   font-size: 1.25rem;
   font-weight: 400;
   margin: 0 0 0.5rem;
@@ -14,6 +18,9 @@
 }
 .VulnMain-details {
   margin-bottom: 1.75rem;
+}
+.VulnMain-details p {
+  word-break: break-word;
 }
 .VulnMain-search {
   max-width: 32rem;

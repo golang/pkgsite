@@ -1,7 +1,7 @@
 {
   "version": 3,
   "sources": ["main.css"],
-  "sourcesContent": ["/*\n * Copyright 2021 The Go Authors. All rights reserved.\n * Use of this source code is governed by a BSD-style\n * license that can be found in the LICENSE file.\n */\n\n .VulnMain-title {\n  font-size: 1.25rem;\n  font-weight: 400;\n  margin: 0 0 0.5rem;\n}\n.VulnMain-recent {\n  margin-top: 0.5rem;\n}\n.VulnMain-details {\n  margin-bottom: 1.75rem;\n}\n.VulnMain-search {\n  max-width: 32rem;\n}\n.VulnMain h2 {\n  margin: 1.75rem 0 0.5rem;\n}\n"],
-  "mappings": ";;;;;AAMC,gBACC,kBACA,gBARF,iBAWA,iBACE,iBAEF,kBACE,sBAEF,iBACE,gBAEF,aApBA",
+  "sourcesContent": ["/*\n * Copyright 2021 The Go Authors. All rights reserved.\n * Use of this source code is governed by a BSD-style\n * license that can be found in the LICENSE file.\n */\n\n/* Hide the search form in the header. */\n.go-SearchForm {\n  display: none;\n}\n.VulnMain-title {\n  font-size: 1.25rem;\n  font-weight: 400;\n  margin: 0 0 0.5rem;\n}\n.VulnMain-recent {\n  margin-top: 0.5rem;\n}\n.VulnMain-details {\n  margin-bottom: 1.75rem;\n}\n.VulnMain-details p {\n  word-break: break-word;\n}\n.VulnMain-search {\n  max-width: 32rem;\n}\n.VulnMain h2 {\n  margin: 1.75rem 0 0.5rem;\n}\n"],
+  "mappings": ";;;;;AAOA,eACE,aAEF,gBACE,kBACA,gBAZF,iBAeA,iBACE,iBAEF,kBACE,sBAEF,oBACE,sBAEF,iBACE,gBAEF,aA3BA",
   "names": []
 }

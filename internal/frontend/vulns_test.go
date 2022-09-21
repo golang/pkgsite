@@ -71,6 +71,19 @@ var testEntries = []*osv.Entry{
 	{ID: "GO-1991-05", Details: "e"},
 	{ID: "GO-1991-23", Details: "f"},
 	{ID: "GO-1991-30", Details: "g"},
+	{
+		ID:      "GO-1991-31",
+		Details: "h",
+		Affected: []osv.Affected{{
+			EcosystemSpecific: osv.EcosystemSpecific{
+				Imports: []osv.EcosystemSpecificImport{
+					{
+						Path: "example.com/org/path",
+					},
+				},
+			},
+		}},
+	},
 }
 
 func TestNewVulnListPage(t *testing.T) {

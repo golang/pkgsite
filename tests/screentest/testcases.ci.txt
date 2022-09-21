@@ -28,3 +28,13 @@ test vuln toolchain module
 pathname /cmd/go@go1.15.0
 capture viewport
 capture viewport 540x1080
+
+test vuln search
+pathname /search?q=github.com%2Fbeego&m=vuln
+capture viewport
+capture viewport 540x1080
+
+test vuln no results
+pathname /search?q=github.com%2Fnoresults&m=vuln
+capture viewport
+capture viewport 540x1080

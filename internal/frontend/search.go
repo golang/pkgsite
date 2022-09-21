@@ -121,6 +121,10 @@ func determineSearchAction(r *http.Request, ds internal.DataSource, vulnClient v
 	if action != nil || err != nil {
 		return action, err
 	}
+	action, err = searchVulnModule(ctx, mode, cq, vulnClient)
+	if action != nil || err != nil {
+		return action, err
+	}
 	var symbol string
 	if len(filters) > 0 {
 		symbol = filters[0]
@@ -353,7 +357,7 @@ func searchRequestRedirectPath(ctx context.Context, ds internal.DataSource, quer
 		return fmt.Sprintf("/vuln/%s?q", query)
 	}
 	requestedPath := path.Clean(query)
-	if !strings.Contains(requestedPath, "/") {
+	if !strings.Contains(requestedPath, "/") || mode == searchModeVuln {
 		return ""
 	}
 	_, err := ds.GetUnitMeta(ctx, requestedPath, internal.UnknownModulePath, version.Latest)
@@ -364,6 +368,36 @@ func searchRequestRedirectPath(ctx context.Context, ds internal.DataSource, quer
 		return ""
 	}
 	return fmt.Sprintf("/%s", requestedPath)
+}
+
+func searchVulnModule(ctx context.Context, mode, cq string, client vulnc.Client) (_ *searchAction, err error) {
+	if mode != searchModeVuln {
+		return nil, nil
+	}
+	allEntries, err := vulnList(ctx, client)
+	if err != nil {
+		return nil, err
+	}
+	prefix := cq + "/"
+	var entries []OSVEntry
+EntryLoop:
+	for _, entry := range allEntries {
+		for _, aff := range entry.Affected {
+			for _, imp := range aff.EcosystemSpecific.Imports {
+				if imp.Path == cq || strings.HasPrefix(imp.Path, prefix) {
+					entries = append(entries, entry)
+					continue EntryLoop
+				}
+			}
+		}
+	}
+	// Sort from most to least recent.
+	sort.Slice(entries, func(i, j int) bool { return entries[i].ID > entries[j].ID })
+	return &searchAction{
+		title:    fmt.Sprintf("%s - Vulnerability Reports", cq),
+		template: "vuln/list",
+		page:     &VulnListPage{Entries: entries},
+	}, nil
 }
 
 func searchVulnAlias(ctx context.Context, mode, cq string, vulnClient vulnc.Client) (_ *searchAction, err error) {

@@ -221,14 +221,22 @@ func newVulnPage(ctx context.Context, client vulnc.Client, id string) (*VulnPage
 }
 
 func newVulnListPage(ctx context.Context, client vulnc.Client) (*VulnListPage, error) {
+	entries, err := vulnList(ctx, client)
+	if err != nil {
+		return nil, err
+	}
+	// Sort from most to least recent.
+	sort.Slice(entries, func(i, j int) bool { return entries[i].ID > entries[j].ID })
+	return &VulnListPage{Entries: entries}, nil
+}
+
+func vulnList(ctx context.Context, client vulnc.Client) ([]OSVEntry, error) {
 	const concurrency = 4
 
 	ids, err := client.ListIDs(ctx)
 	if err != nil {
 		return nil, err
 	}
-	// Sort from most to least recent.
-	sort.Slice(ids, func(i, j int) bool { return ids[i] > ids[j] })
 
 	entries := make([]OSVEntry, len(ids))
 	sem := make(chan struct{}, concurrency)
@@ -250,7 +258,7 @@ func newVulnListPage(ctx context.Context, client vulnc.Client) (*VulnListPage, e
 	if err := g.Wait(); err != nil {
 		return nil, err
 	}
-	return &VulnListPage{Entries: entries}, nil
+	return entries, nil
 }
 
 // aliasLinks generates links to reference pages for vuln aliases.
