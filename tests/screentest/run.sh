@@ -17,8 +17,6 @@ Usage: $0 [OPTIONS] [ci|local|exp|dev|staging|prod]
   [ci]
     Run tests against a local server with a seeded database. This is what runs in
     CI/kokoro and should always pass on master.
-    Note: on first run, create a seeded database with --seeddb. It will persist
-    for subsequent runs unless --rm is also provided.
 
   [local]
     Run tests against a local server started with ./devtools/run_local.sh <env>
@@ -33,10 +31,6 @@ Options:
   --concurrency <N>
     Set the number of testcases to run concurrently. Defaults to 1. Setting this too
     high in lower memory environments may cause instability in tests.
-
-  --seeddb
-    Populates the database used when in CI mode during a
-    localhost test run.
 
   --update
     Recapture every snapshot during this test run.
@@ -71,9 +65,8 @@ cleanup() {
 
 main() {
   trap cleanup EXIT
-  local concurrency="-c 1"
+  local concurrency
   local idtoken
-  local seeddb
   local update
   while [[ $1 = -* ]]; do
     case "$1" in
@@ -86,7 +79,7 @@ main() {
         idtoken=$1
         ;;
       "--seeddb")
-        seeddb=true
+        echo "the seeddb flag is deprecated."
         ;;
       "--update"|"-u")
         update="-u"
@@ -134,9 +127,7 @@ main() {
     export GO_DISCOVERY_DATABASE_NAME="discovery_e2e_test"
     export GO_DISCOVERY_SEED_DB_FILE="tests/screentest/seed.txt"
     export GO_DISCOVERY_VULN_DB="file://tests/screentest/testdata/vulndb"
-    if [ "$seeddb" = true ]; then
-      dcompose run --rm seeddb
-    fi
+    dcompose run --rm seeddb
     dcompose up --detach chromedp
     dcompose up --detach --force-recreate frontend
     dcompose run --rm --entrypoint bash go -c "
