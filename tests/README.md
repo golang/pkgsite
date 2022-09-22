@@ -71,7 +71,13 @@ go run tests/api/main.go compare [module path]:[package path suffix]
 
 ## Screentest
 
-The screentest/ directory contains visual diff tests for pages on pkg.go.dev
+The screentest/ directory contains visual diff tests for pages on pkg.go.dev.
+Tests are written for the screentest tool from golang.org/x/website.
+See the [command](https://pkg.go.dev/golang.org/x/website/cmd/screentest) and
+[package](https://pkg.go.dev/golang.org/x/website/internal/screentest) docs for
+more information.
+
+### Running the tests
 In order to run the tests, run this command from the root of the repository:
 
 ```
@@ -94,10 +100,3 @@ If the tests fail with diffs, a file with the diffs will be created in the
 testdata directory that show the cause of the failure.
 
 Use `./devtools/docker/compose.sh logs` to get detailed logs of the docker containers.
-
-### Adding Testcases
-
-Tests are written for the screentest tool from golang.org/x/website.
-See the [command](https://pkg.go.dev/golang.org/x/website/cmd/screentest) and
-[package](https://pkg.go.dev/golang.org/x/website/internal/screentest) docs for
-more information.

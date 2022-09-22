@@ -7,13 +7,13 @@ output tests/screentest/testdata
 block https://codecov.io/* https://travis-ci.com/*
 
 {{$ready := "[role='treeitem'][aria-selected='true']"}}
-{{$hideImportedby := "document.querySelector(\"[data-test-id='UnitHeader-importedby']\")?.remove();"}}
+{{$hideElements := "document.querySelector(\"[data-test-id='UnitHeader-importedby']\")?.remove();document.querySelector(\"[data-test-id='meta-link-depsdev']\")?.remove();"}}
 {{$scrollTop := "window.scrollTo({top:0});"}}
 
 test short readme has no toggle
 pathname /rsc.io/quote
 wait {{$ready}}
-eval {{$hideImportedby}}
+eval {{$hideElements}}
 capture viewport
 capture viewport 540x1080
 
@@ -21,7 +21,7 @@ test x/tools
 pathname /golang.org/x/tools@v0.1.1
 wait {{$ready}}
 eval {{$scrollTop}}
-eval {{$hideImportedby}}
+eval {{$hideElements}}
 capture viewport
 capture viewport 540x1080
 
@@ -29,7 +29,7 @@ test x/tools readme expanded
 pathname /golang.org/x/tools@v0.1.1#section-readme
 wait {{$ready}}
 eval {{$scrollTop}}
-eval {{$hideImportedby}}
+eval {{$hideElements}}
 capture viewport
 capture viewport 540x1080
 
@@ -38,7 +38,7 @@ capture viewport 540x1080
 # wait {{$ready}}
 # click [data-test-id="directories-toggle"]
 # eval {{$scrollTop}}
-# eval {{$hideImportedby}}
+# eval {{$hideElements}}
 # capture fullscreen
 # capture fullscreen 540x1080
 
@@ -47,34 +47,34 @@ capture viewport 540x1080
 # pathname /golang.org/x/tools@v0.1.1
 # wait {{$ready}}
 # click [data-test-id="jump-to-button"]
-# eval {{$hideImportedby}}
+# eval {{$hideElements}}
 # capture viewport
 
 test standard library package
 pathname /errors@go1.16.3
 wait {{$ready}}
-eval {{$hideImportedby}}
+eval {{$hideElements}}
 capture fullscreen
 capture fullscreen 540x1080
 
 test really long import path
 pathname /github.com/envoyproxy/go-control-plane@v0.9.8/envoy/config/filter/network/http_connection_manager/v2
 wait {{$ready}}
-eval {{$hideImportedby}}
+eval {{$hideElements}}
 capture viewport
 capture viewport 540x1080
 
 test package that exists in multiple modules at the same versions
 pathname /github.com/hashicorp/vault/api@v1.0.3
 wait {{$ready}}
-eval {{$hideImportedby}}
+eval {{$hideElements}}
 capture viewport
 capture viewport 540x1080
 
 test no documentation
 pathname /github.com/tendermint/tendermint@v0.34.10/cmd/contract_tests
 wait {{$ready}}
-eval {{$hideImportedby}}
+eval {{$hideElements}}
 capture viewport
 capture viewport 540x1080
 
@@ -82,21 +82,21 @@ test module that is also a package
 pathname /gocloud.dev@v0.22.0
 block https://github.com/google/go-cloud/raw/v0.22.0/internal/website/static/go-cdk-logo-gopherblue.png
 wait {{$ready}}
-eval {{$hideImportedby}}
+eval {{$hideElements}}
 capture viewport
 capture viewport 540x1080
 
 test package not at latest version of a module
 pathname /github.com/julieqiu/api-demo/oldpkg
 wait {{$ready}}
-eval {{$hideImportedby}}
+eval {{$hideElements}}
 capture viewport
 capture viewport 540x1080
 
 test standard library
 pathname /std@go1.16.3
 wait {{$ready}}
-eval {{$hideImportedby}}
+eval {{$hideElements}}
 capture fullscreen
 capture fullscreen 540x1080
 
@@ -104,42 +104,42 @@ test package with multiple licenses
 pathname /github.com/apache/thrift@v0.14.1
 block https://github.com/apache/thrift/raw/v0.14.1/doc/images/thrift-layers.png
 wait {{$ready}}
-eval {{$hideImportedby}}
+eval {{$hideElements}}
 capture viewport
 capture viewport 540x1080
 
 test package with higher major version
 pathname /rsc.io/quote
 wait {{$ready}}
-eval {{$hideImportedby}}
+eval {{$hideElements}}
 capture viewport
 capture viewport 540x1080
 
 test package with multi-GOOS
 pathname /github.com/creack/pty@v1.1.11
 wait {{$ready}}
-eval {{$hideImportedby}}
+eval {{$hideElements}}
 capture viewport
 capture viewport 540x1080
 
 test retracted package
 pathname /k8s.io/client-go@v1.5.2
 wait {{$ready}}
-eval {{$hideImportedby}}
+eval {{$hideElements}}
 capture viewport
 capture viewport 540x1080
 
 test deprecated package
 pathname /github.com/jba/bit
 wait {{$ready}}
-eval {{$hideImportedby}}
+eval {{$hideElements}}
 capture viewport
 capture viewport 540x1080
 
 test package with deprecated symbols
 pathname /database/sql/driver@go1.16.3
 wait {{$ready}}
-eval {{$hideImportedby}}
+eval {{$hideElements}}
 capture fullscreen
 capture fullscreen 540x1080
 
