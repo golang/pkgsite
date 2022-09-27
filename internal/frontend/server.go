@@ -129,10 +129,12 @@ func (s *Server) Install(handle func(string, http.Handler), redisClient *redis.C
 		detailHandler http.Handler = s.errorHandler(s.serveDetails)
 		fetchHandler  http.Handler = s.errorHandler(s.serveFetch)
 		searchHandler http.Handler = s.errorHandler(s.serveSearch)
+		vulnHandler   http.Handler = s.errorHandler(s.serveVuln)
 	)
 	if redisClient != nil {
 		detailHandler = middleware.Cache("details", redisClient, detailsTTL, authValues)(detailHandler)
 		searchHandler = middleware.Cache("search", redisClient, searchTTL, authValues)(searchHandler)
+		vulnHandler = middleware.Cache("vuln", redisClient, vulnTTL, authValues)(vulnHandler)
 	}
 	// Each AppEngine instance is created in response to a start request, which
 	// is an empty HTTP GET request to /_ah/start when scaling is set to manual
@@ -171,7 +173,7 @@ func (s *Server) Install(handle func(string, http.Handler), redisClient *redis.C
 	}))
 	handle("/golang.org/x", s.staticPageHandler("subrepo", "Sub-repositories"))
 	handle("/files/", http.StripPrefix("/files", s.fileMux))
-	handle("/vuln/", http.StripPrefix("/vuln", s.errorHandler(s.serveVuln)))
+	handle("/vuln/", http.StripPrefix("/vuln", vulnHandler))
 	handle("/", detailHandler)
 	if s.serveStats {
 		handle("/detail-stats/",
@@ -353,6 +355,11 @@ func searchTTL(r *http.Request) time.Duration {
 		}
 	}
 	return symbolSearchTTL
+}
+
+// vulnTTL assigns the cache TTL for vuln requests.
+func vulnTTL(r *http.Request) time.Duration {
+	return defaultTTL
 }
 
 // TagRoute categorizes incoming requests to the frontend for use in
