@@ -132,6 +132,10 @@ func (s *Server) Install(handle func(string, http.Handler), redisClient *redis.C
 		vulnHandler   http.Handler = s.errorHandler(s.serveVuln)
 	)
 	if redisClient != nil {
+		// The cache middleware uses the URL string as the key for content served
+		// by the handlers it wraps. Be careful not to wrap the handler it returns
+		// with a handler that rewrites the URL in a way that could cause key
+		// collisions, like http.StripPrefix.
 		detailHandler = middleware.Cache("details", redisClient, detailsTTL, authValues)(detailHandler)
 		searchHandler = middleware.Cache("search", redisClient, searchTTL, authValues)(searchHandler)
 		vulnHandler = middleware.Cache("vuln", redisClient, vulnTTL, authValues)(vulnHandler)
@@ -173,7 +177,7 @@ func (s *Server) Install(handle func(string, http.Handler), redisClient *redis.C
 	}))
 	handle("/golang.org/x", s.staticPageHandler("subrepo", "Sub-repositories"))
 	handle("/files/", http.StripPrefix("/files", s.fileMux))
-	handle("/vuln/", http.StripPrefix("/vuln", vulnHandler))
+	handle("/vuln/", vulnHandler)
 	handle("/", detailHandler)
 	if s.serveStats {
 		handle("/detail-stats/",

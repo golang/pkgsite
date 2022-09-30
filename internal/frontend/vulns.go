@@ -163,7 +163,8 @@ func entryVuln(e *osv.Entry, packagePath, version string) (Vuln, bool) {
 }
 
 func (s *Server) serveVuln(w http.ResponseWriter, r *http.Request, _ internal.DataSource) error {
-	switch r.URL.Path {
+	path := strings.TrimPrefix(r.URL.Path, "/vuln")
+	switch path {
 	case "/":
 		// Serve a list of most recent entries.
 		vulnListPage, err := newVulnListPage(r.Context(), s.vulnClient)
@@ -184,7 +185,7 @@ func (s *Server) serveVuln(w http.ResponseWriter, r *http.Request, _ internal.Da
 		vulnListPage.basePage = s.newBasePage(r, "Vulnerability Reports")
 		s.servePage(r.Context(), w, "vuln/list", vulnListPage)
 	default: // the path should be "/<ID>", e.g. "/GO-2021-0001".
-		id := r.URL.Path[1:]
+		id := path[1:]
 		if !goVulnIDRegexp.MatchString(id) {
 			if r.URL.Query().Has("q") {
 				return &serverError{status: derrors.ToStatus(derrors.NotFound)}
