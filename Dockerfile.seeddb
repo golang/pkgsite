@@ -1,0 +1,14 @@
+FROM golang:1.19 AS builder
+
+WORKDIR /pkgsite-src
+COPY . .
+RUN CGO_ENABLED=0 GOARCH=amd64 GOOS=linux go build -o /pkgsite-seeddb ./devtools/cmd/seeddb/
+
+FROM amd64/alpine
+
+COPY --from=builder /usr/local/go/lib/time/zoneinfo.zip /zoneinfo.zip
+COPY --from=builder /pkgsite-seeddb /
+COPY --from=builder /pkgsite-src/devtools/cmd/seeddb/seed.txt /devtools/cmd/seeddb/seed.txt
+
+ENV ZONEINFO=/zoneinfo.zip
+ENTRYPOINT ["/pkgsite-seeddb"]
