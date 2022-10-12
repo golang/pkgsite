@@ -1,0 +1,10 @@
+FROM golang:1.19 AS builder
+
+WORKDIR /pkgsite-src
+COPY . .
+RUN CGO_ENABLED=0 GOARCH=amd64 GOOS=linux go build -o /pkgsite-db-tools ./devtools/cmd/db/
+
+FROM amd64/alpine
+COPY --from=builder /pkgsite-db-tools /
+COPY --from=builder /pkgsite-src/migrations /pkgsite-src/migrations/
+ENTRYPOINT ["/pkgsite-db-tools"]
