@@ -7,6 +7,7 @@ COPY . .
 RUN mv torq-overrides/footer.tmpl static/shared/footer/footer.tmpl
 RUN mv torq-overrides/header.tmpl static/shared/header/header.tmpl
 RUN mv torq-overrides/torq.svg static/shared/logo/torq.svg
+RUN mv torq-overrides/favicon.ico static/shared/icon/favicon.ico
 
 RUN sed -i 's/pkg.go.dev/docs.torqio.dev/g' internal/frontend/fetch.go
 RUN sed -i 's/pkg.go.dev/docs.torqio.dev/g' static/frontend/search/search.tmpl
