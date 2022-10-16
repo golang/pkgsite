@@ -380,6 +380,13 @@ func TagRoute(route string, r *http.Request) string {
 			tag += tab
 		}
 	}
+	if tag == "search" {
+		switch m := r.URL.Query().Get("m"); m {
+		case "symbol", "package", "vuln":
+			fmt.Println(tag, m)
+			tag += "-" + m
+		}
+	}
 	return tag
 }
 

@@ -1501,6 +1501,10 @@ func TestTagRoute(t *testing.T) {
 	}{
 		{"/pkg", mustRequest("http://localhost/pkg/foo?tab=versions"), "pkg-versions"},
 		{"/", mustRequest("http://localhost/foo?tab=imports"), "imports"},
+		{"/search", mustRequest("http://localhost/search?q=net&m=vuln"), "search-vuln"},
+		{"/search", mustRequest("http://localhost/search?q=net&m=package"), "search-package"},
+		{"/search", mustRequest("http://localhost/search?q=net&m=symbol"), "search-symbol"},
+		{"/search", mustRequest("http://localhost/search?q=net"), "search"},
 	}
 	for _, test := range tests {
 		t.Run(test.want, func(t *testing.T) {
