@@ -241,9 +241,19 @@ export class PlaygroundExampleController {
   private handleRunButtonClick() {
     this.setOutputText('Waiting for remote server…');
 
+    let codeWithModFile = this.inputEl?.value ?? '';
+    const moduleVars = document.querySelector<HTMLDivElement>('.js-playgroundVars')?.dataset ?? {};
+    if (moduleVars.modulepath !== 'std') {
+      codeWithModFile = codeWithModFile.concat(`
+-- go.mod --
+module play.ground
+
+require ${moduleVars.modulepath} ${moduleVars.version}
+`);
+    }
     fetch('/play/compile', {
       method: 'POST',
-      body: JSON.stringify({ body: this.inputEl?.value, version: 2 }),
+      body: JSON.stringify({ body: codeWithModFile, version: 2 }),
     })
       .then(res => res.json())
       .then(async ({ Events, Errors }) => {
