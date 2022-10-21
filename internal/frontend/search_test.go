@@ -596,8 +596,8 @@ func TestSearchVulnAlias(t *testing.T) {
 			mode:  searchModeVuln,
 			query: "CVE-2000-1",
 			wantPage: &VulnListPage{Entries: []OSVEntry{
-				OSVEntry{testEntries[0]},
-				OSVEntry{testEntries[1]},
+				{testEntries[0]},
+				{testEntries[1]},
 			}},
 		},
 	} {
