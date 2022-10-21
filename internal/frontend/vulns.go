@@ -24,13 +24,6 @@ const (
 	nistAdvisoryUrlPrefix   = "https://nvd.nist.gov/vuln/detail/"
 )
 
-// A Vuln contains information to display about a vulnerability.
-type Vuln = vulns.Vuln
-
-type vulnEntriesFunc = vulns.VulnEntriesFunc
-
-var VulnsForPackage = vulns.VulnsForPackage
-
 // VulnListPage holds the information for a page that lists vuln entries.
 type VulnListPage struct {
 	basePage
