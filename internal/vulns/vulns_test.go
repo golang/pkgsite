@@ -18,16 +18,28 @@ import (
 func TestVulnsForPackage(t *testing.T) {
 	ctx := context.Background()
 	e := osv.Entry{
-		Details: "bad",
+		ID: "GO-1",
 		Affected: []osv.Affected{{
 			Package: osv.Package{Name: "bad.com"},
 			Ranges: []osv.AffectsRange{{
 				Type:   osv.TypeSemver,
-				Events: []osv.RangeEvent{{Introduced: "0"}, {Fixed: "1.2.3"}},
+				Events: []osv.RangeEvent{{Introduced: "0"}, {Fixed: "1.2.3"}}, // fixed at v1.2.3
 			}},
 			EcosystemSpecific: osv.EcosystemSpecific{
 				Imports: []osv.EcosystemSpecificImport{{
 					Path: "bad.com",
+				}},
+			},
+		}, {
+			Package: osv.Package{Name: "unfixable.com"},
+			Ranges: []osv.AffectsRange{{
+				Type:   osv.TypeSemver,
+				Events: []osv.RangeEvent{{Introduced: "0"}}, // no fix
+			}},
+			DatabaseSpecific: osv.DatabaseSpecific{},
+			EcosystemSpecific: osv.EcosystemSpecific{
+				Imports: []osv.EcosystemSpecificImport{{
+					Path: "unfixable.com",
 				}},
 			},
 		}},
@@ -37,28 +49,52 @@ func TestVulnsForPackage(t *testing.T) {
 		switch modulePath {
 		case "good.com":
 			return nil, nil
-		case "bad.com":
+		case "bad.com", "unfixable.com":
 			return []*osv.Entry{&e}, nil
 		default:
 			return nil, fmt.Errorf("unknown module %q", modulePath)
 		}
 	}
 
-	got := VulnsForPackage(ctx, "good.com", "v1.0.0", "good.com", get)
-	if got != nil {
-		t.Errorf("got %v, want nil", got)
+	testCases := []struct {
+		mod, pkg, version string
+		want              []Vuln
+	}{
+		// Vulnerabilities for a package
+		{
+			"good.com", "good.com", "v1.0.0", nil,
+		},
+		{
+			"bad.com", "bad.com", "v1.0.0", []Vuln{{ID: "GO-1"}},
+		},
+		{
+			"bad.com", "bad.com/ok", "v1.0.0", nil, // bad.com/ok isn't affected.
+		},
+		{
+			"bad.com", "bad.com", "v1.3.0", nil,
+		},
+		{
+			"unfixable.com", "unfixable.com", "v1.999.999", []Vuln{{ID: "GO-1"}},
+		},
+		// Vulnerabilities for a module (package == "")
+		{
+			"good.com", "", "v1.0.0", nil,
+		},
+		{
+			"bad.com", "", "v1.0.0", []Vuln{{ID: "GO-1"}},
+		},
+		{
+			"bad.com", "", "v1.3.0", nil,
+		},
+		{
+			"unfixable.com", "", "v1.999.999", []Vuln{{ID: "GO-1"}},
+		},
 	}
-	got = VulnsForPackage(ctx, "bad.com", "v1.0.0", "bad.com", get)
-	want := []Vuln{{
-		Details: "bad",
-	}}
-	if diff := cmp.Diff(want, got); diff != "" {
-		t.Errorf("mismatch (-want, +got):\n%s", diff)
-	}
-
-	got = VulnsForPackage(ctx, "bad.com", "v1.3.0", "bad.com", get)
-	if got != nil {
-		t.Errorf("got %v, want nil", got)
+	for _, tc := range testCases {
+		got := VulnsForPackage(ctx, tc.mod, tc.version, tc.pkg, get)
+		if diff := cmp.Diff(tc.want, got); diff != "" {
+			t.Errorf("VulnsForPackage(%q, %q, %q) = %+v, mismatch (-want, +got):\n%s", tc.mod, tc.version, tc.pkg, tc.want, diff)
+		}
 	}
 }
 

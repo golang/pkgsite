@@ -68,7 +68,7 @@ func vulnsForPackage(ctx context.Context, modulePath, version, packagePath strin
 	// package at this version.
 	var vulns []Vuln
 	for _, e := range entries {
-		if vuln, ok := entryVuln(e, packagePath, version); ok {
+		if vuln, ok := entryVuln(e, modulePath, packagePath, version); ok {
 			vulns = append(vulns, vuln)
 		}
 	}
@@ -107,9 +107,10 @@ func (e OSVEntry) AffectedModulesAndPackages() []string {
 	return affected
 }
 
-func entryVuln(e *osv.Entry, packagePath, version string) (Vuln, bool) {
+func entryVuln(e *osv.Entry, modulePath, packagePath, version string) (Vuln, bool) {
 	for _, a := range e.Affected {
-		if !a.Ranges.AffectsSemver(version) {
+		// a.Package.Name is Go "module" name. Go package path is a.EcosystemSpecific.Imports.Path.
+		if a.Package.Name != modulePath || !a.Ranges.AffectsSemver(version) {
 			continue
 		}
 		if packageMatches := func() bool {

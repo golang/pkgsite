@@ -92,10 +92,18 @@ func TestFetchPackageVersionsDetails(t *testing.T) {
 	vulnEntry := &osv.Entry{
 		Details: "vuln",
 		Affected: []osv.Affected{{
+			Package: osv.Package{
+				Name: modulePath1,
+			},
 			Ranges: []osv.AffectsRange{{
 				Type:   osv.TypeSemver,
 				Events: []osv.RangeEvent{{Introduced: "1.2.0"}, {Fixed: vulnFixedVersion}},
 			}},
+			EcosystemSpecific: osv.EcosystemSpecific{
+				Imports: []osv.EcosystemSpecificImport{{
+					Path: v1Path,
+				}},
+			},
 		}},
 	}
 	getVulnEntries := func(_ context.Context, m string) ([]*osv.Entry, error) {
