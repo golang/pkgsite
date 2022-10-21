@@ -17,6 +17,14 @@ import (
 	"golang.org/x/vuln/osv"
 )
 
+const (
+	// The vulndb stores vulns in cmd/go under the modulepath toolchain.
+	vulnCmdGoModulePath = "toolchain"
+	// The vulndb stores vulns under the modulepath stdlib for all other packages
+	// in the standard library.
+	vulnStdlibModulePath = "stdlib"
+)
+
 // A Vuln contains information to display about a vulnerability.
 type Vuln struct {
 	// The vulndb ID.
@@ -45,6 +53,11 @@ func vulnsForPackage(ctx context.Context, modulePath, version, packagePath strin
 
 	if getVulnEntries == nil {
 		return nil, nil
+	}
+	if modulePath == stdlib.ModulePath && strings.HasPrefix(packagePath, "cmd/go") {
+		modulePath = vulnCmdGoModulePath
+	} else if modulePath == stdlib.ModulePath {
+		modulePath = vulnStdlibModulePath
 	}
 	// Get all the vulns for this module.
 	entries, err := getVulnEntries(ctx, modulePath)
