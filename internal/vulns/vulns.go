@@ -33,14 +33,14 @@ type Vuln struct {
 	Details string
 }
 
-type vulnEntriesFunc func(context.Context, string) ([]*osv.Entry, error)
+type VulnEntriesFunc func(context.Context, string) ([]*osv.Entry, error)
 
 // VulnsForPackage obtains vulnerability information for the given package.
 // If packagePath is empty, it returns all entries for the module at version.
 // The getVulnEntries function should retrieve all entries for the given module path.
 // It is passed to facilitate testing.
 // If there is an error, VulnsForPackage returns a single Vuln that describes the error.
-func VulnsForPackage(ctx context.Context, modulePath, version, packagePath string, getVulnEntries vulnEntriesFunc) []Vuln {
+func VulnsForPackage(ctx context.Context, modulePath, version, packagePath string, getVulnEntries VulnEntriesFunc) []Vuln {
 	vs, err := vulnsForPackage(ctx, modulePath, version, packagePath, getVulnEntries)
 	if err != nil {
 		return []Vuln{{Details: fmt.Sprintf("could not get vulnerability data: %v", err)}}
@@ -48,7 +48,7 @@ func VulnsForPackage(ctx context.Context, modulePath, version, packagePath strin
 	return vs
 }
 
-func vulnsForPackage(ctx context.Context, modulePath, version, packagePath string, getVulnEntries vulnEntriesFunc) (_ []Vuln, err error) {
+func vulnsForPackage(ctx context.Context, modulePath, version, packagePath string, getVulnEntries VulnEntriesFunc) (_ []Vuln, err error) {
 	defer derrors.Wrap(&err, "vulns(%q, %q, %q)", modulePath, version, packagePath)
 
 	if getVulnEntries == nil {
