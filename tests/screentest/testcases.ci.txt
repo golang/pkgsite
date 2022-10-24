@@ -15,7 +15,7 @@ capture fullscreen
 capture fullscreen 540x1080
 
 test vuln entry
-pathname /vuln/GO-2022-0463
+pathname /vuln/GO-2022-0229
 capture fullscreen
 capture fullscreen 540x1080
 
