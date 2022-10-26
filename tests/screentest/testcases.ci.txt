@@ -29,6 +29,11 @@ pathname /cmd/go@go1.15.0
 capture viewport
 capture viewport 540x1080
 
+test vuln nonstdlib module
+pathname /golang.org/x/crypto?tab=versions
+capture viewport
+capture viewport 540x1080
+
 test vuln search
 pathname /search?q=github.com%2Fbeego&m=vuln
 capture viewport

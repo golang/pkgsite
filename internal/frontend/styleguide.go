@@ -195,7 +195,7 @@ func (r *guideRenderer) RegisterFuncs(reg renderer.NodeRendererFuncRegisterer) {
 // the paths to markdown files.
 func markdownFiles(fsys fs.FS) ([]string, error) {
 	var matches []string
-	err := fs.WalkDir(fsys, "shared", func(filepath string, d fs.DirEntry, err error) error {
+	err := fs.WalkDir(fsys, "shared", func(filepath string, _ fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}

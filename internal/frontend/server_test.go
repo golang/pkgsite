@@ -1504,7 +1504,7 @@ func TestTagRoute(t *testing.T) {
 		{"/search", mustRequest("http://localhost/search?q=net&m=vuln"), "search-vuln"},
 		{"/search", mustRequest("http://localhost/search?q=net&m=package"), "search-package"},
 		{"/search", mustRequest("http://localhost/search?q=net&m=symbol"), "search-symbol"},
-		{"/search", mustRequest("http://localhost/search?q=net"), "search"},
+		{"/search", mustRequest("http://localhost/search?q=net"), "search-package"},
 	}
 	for _, test := range tests {
 		t.Run(test.want, func(t *testing.T) {

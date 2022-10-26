@@ -143,6 +143,11 @@ eval {{$hideElements}}
 capture fullscreen
 capture fullscreen 540x1080
 
+test about
+pathname /about
+capture fullscreen
+capture fullscreen 540x1080
+
 test badge
 pathname /badge/
 capture fullscreen

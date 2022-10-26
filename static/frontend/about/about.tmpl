@@ -66,18 +66,23 @@
 
       <h2 id="removing-a-package">Removing a package</h2>
       <p>
-        If you would like to hide versions of a module on pkg.go.dev, as well as from
-        the <code>go</code> command, you should retract them.
-        Retracting a module version involves adding a <code>retract</code> directive
-        to your <code>go.mod</code> file and publishing a new version.
-        See the Go blog post
-        <a href="https://go.dev/blog/go116-module-changes#TOC_5.">New module changes in Go 1.16</a>
+        If you would like to hide versions of a module on pkg.go.dev, as well as from the <code>go</code> command,
+        you should retract them. Retracting a module version involves adding a <code>retract</code> directive to
+        your go.mod file and publishing a new version. See the Go blog post
+        <a href="https://go.dev/blog/go116-module-changes#module-retraction">New module changes in Go 1.16</a>
         and the <a href="https://go.dev/ref/mod#go-mod-file-retract">modules reference</a> for details.
       </p>
       <p>
-        If you cannot retract your module, you can
-        <a href="https://go.dev/s/pkgsite-package-removal">file a request</a> for the pkgsite
-        team to remove your package.
+        Note that it is possible to retract the latest version of a module; the modules reference link above
+        includes an example. Also note that published versions cannot be reused or modified, and this includes
+        retracted versions.
+      </p>
+      <p>
+        If you cannot publish a new version with retractions because the source code repository or domain
+        name is no longer accessible, or if you want to hide documentation for all current and future versions,
+        you can <a href="https://go.dev/s/pkgsite-package-removal">file a request</a> for the pkgsite team to hide
+        your package documentation from pkg.go.dev. Note that the package will continue to be available via
+        <code>go get</code> or <code>go install</code> unless its module is retracted.
       </p>
 
       <h2 id="documentation">Documentation</h2>

@@ -72,7 +72,7 @@ func blackfridayReadmeHTML(readme *internal.Readme, mi *internal.ModuleInfo) (sa
 //
 // This function is exported for use in an external tool that uses this package to
 // compare readme files to see how changes in processing will affect them.
-func LegacyReadmeHTML(ctx context.Context, mi *internal.ModuleInfo, readme *internal.Readme) (_ safehtml.HTML, err error) {
+func LegacyReadmeHTML(_ context.Context, mi *internal.ModuleInfo, readme *internal.Readme) (_ safehtml.HTML, err error) {
 	defer derrors.Wrap(&err, "LegacyReadmeHTML(%s@%s)", mi.ModulePath, mi.Version)
 	if readme == nil || readme.Contents == "" {
 		return safehtml.HTML{}, nil

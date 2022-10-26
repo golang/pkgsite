@@ -22,6 +22,7 @@ import (
 	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/testing/sample"
+	"golang.org/x/pkgsite/internal/vulns"
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
 	"golang.org/x/vuln/osv"
@@ -384,7 +385,7 @@ func TestFetchSearchPage(t *testing.T) {
 						DisplayVersion: moduleFoo.Version,
 						Licenses:       []string{"MIT"},
 						CommitTime:     elapsedTime(moduleFoo.CommitTime),
-						Vulns:          []Vuln{{ID: "test", Details: "vuln"}},
+						Vulns:          []vulns.Vuln{{ID: "test", Details: "vuln"}},
 					},
 				},
 			},
@@ -595,8 +596,8 @@ func TestSearchVulnAlias(t *testing.T) {
 			mode:  searchModeVuln,
 			query: "CVE-2000-1",
 			wantPage: &VulnListPage{Entries: []OSVEntry{
-				OSVEntry{testEntries[0]},
-				OSVEntry{testEntries[1]},
+				{testEntries[0]},
+				{testEntries[1]},
 			}},
 		},
 	} {

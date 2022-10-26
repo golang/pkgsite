@@ -21,7 +21,7 @@ You can run the frontend locally like so:
 - The `-dev` flag reloads templates on each page load and rebuilds JavaScript
   assets when TypeScript source files change.
 
-The frontend can use one of three datasources:
+The frontend can use one of two datasources:
 
 - Postgres database
 - Proxy service

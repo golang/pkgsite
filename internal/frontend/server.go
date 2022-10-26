@@ -148,7 +148,7 @@ func (s *Server) Install(handle func(string, http.Handler), redisClient *redis.C
 	// https://cloud.google.com/appengine/docs/standard/go/how-instances-are-managed#startup
 	// and for /_ah/warmup at
 	// https://cloud.google.com/appengine/docs/standard/go/configuring-warmup-requests.
-	handle("/_ah/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	handle("/_ah/", http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {
 		log.Infof(r.Context(), "Request made to %q", r.URL.Path)
 	}))
 	handle("/static/", s.staticHandler())
@@ -219,7 +219,7 @@ func (s *Server) installDebugHandlers(handle func(string, http.Handler)) {
 	handle("/_debug/pprof/symbol", ifDebug(hpprof.Symbol))
 	handle("/_debug/pprof/trace", ifDebug(hpprof.Trace))
 
-	handle("/_debug/info", ifDebug(func(w http.ResponseWriter, r *http.Request) {
+	handle("/_debug/info", ifDebug(func(w http.ResponseWriter, _ *http.Request) {
 		row := func(a, b string) {
 			fmt.Fprintf(w, "<tr><td>%s</td> <td>%s</td></tr>\n", a, b)
 		}
@@ -381,11 +381,7 @@ func TagRoute(route string, r *http.Request) string {
 		}
 	}
 	if tag == "search" {
-		switch m := r.URL.Query().Get("m"); m {
-		case "symbol", "package", "vuln":
-			fmt.Println(tag, m)
-			tag += "-" + m
-		}
+		tag += "-" + searchMode(r)
 	}
 	return tag
 }

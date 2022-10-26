@@ -7,7 +7,6 @@ package frontend
 import (
 	"context"
 	"errors"
-	"fmt"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -15,53 +14,6 @@ import (
 	vulnc "golang.org/x/vuln/client"
 	"golang.org/x/vuln/osv"
 )
-
-func TestVulnsForPackage(t *testing.T) {
-	ctx := context.Background()
-	e := osv.Entry{
-		Details: "bad",
-		Affected: []osv.Affected{{
-			Package: osv.Package{Name: "bad.com"},
-			Ranges: []osv.AffectsRange{{
-				Type:   osv.TypeSemver,
-				Events: []osv.RangeEvent{{Introduced: "0"}, {Fixed: "1.2.3"}},
-			}},
-			EcosystemSpecific: osv.EcosystemSpecific{
-				Imports: []osv.EcosystemSpecificImport{{
-					Path: "bad.com",
-				}},
-			},
-		}},
-	}
-
-	get := func(_ context.Context, modulePath string) ([]*osv.Entry, error) {
-		switch modulePath {
-		case "good.com":
-			return nil, nil
-		case "bad.com":
-			return []*osv.Entry{&e}, nil
-		default:
-			return nil, fmt.Errorf("unknown module %q", modulePath)
-		}
-	}
-
-	got := VulnsForPackage(ctx, "good.com", "v1.0.0", "good.com", get)
-	if got != nil {
-		t.Errorf("got %v, want nil", got)
-	}
-	got = VulnsForPackage(ctx, "bad.com", "v1.0.0", "bad.com", get)
-	want := []Vuln{{
-		Details: "bad",
-	}}
-	if diff := cmp.Diff(want, got); diff != "" {
-		t.Errorf("mismatch (-want, +got):\n%s", diff)
-	}
-
-	got = VulnsForPackage(ctx, "bad.com", "v1.3.0", "bad.com", get)
-	if got != nil {
-		t.Errorf("got %v, want nil", got)
-	}
-}
 
 var testEntries = []*osv.Entry{
 	{ID: "GO-1990-01", Details: "a", Aliases: []string{"CVE-2000-1", "GHSA-aaaa-bbbb-cccc"}},

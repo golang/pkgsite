@@ -14,6 +14,7 @@ import (
 	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/testing/sample"
 	"golang.org/x/pkgsite/internal/version"
+	"golang.org/x/pkgsite/internal/vulns"
 	"golang.org/x/vuln/osv"
 )
 
@@ -92,10 +93,18 @@ func TestFetchPackageVersionsDetails(t *testing.T) {
 	vulnEntry := &osv.Entry{
 		Details: "vuln",
 		Affected: []osv.Affected{{
+			Package: osv.Package{
+				Name: modulePath1,
+			},
 			Ranges: []osv.AffectsRange{{
 				Type:   osv.TypeSemver,
 				Events: []osv.RangeEvent{{Introduced: "1.2.0"}, {Fixed: vulnFixedVersion}},
 			}},
+			EcosystemSpecific: osv.EcosystemSpecific{
+				Imports: []osv.EcosystemSpecificImport{{
+					Path: v1Path,
+				}},
+			},
 		}},
 	}
 	getVulnEntries := func(_ context.Context, m string) ([]*osv.Entry, error) {
@@ -141,7 +150,7 @@ func TestFetchPackageVersionsDetails(t *testing.T) {
 				ThisModule: []*VersionList{
 					func() *VersionList {
 						vl := makeList(v1Path, modulePath1, "v1", []string{"v1.3.0", "v1.2.3", "v1.2.1"}, false)
-						vl.Versions[2].Vulns = []Vuln{{
+						vl.Versions[2].Vulns = []vulns.Vuln{{
 							Details: vulnEntry.Details,
 						}}
 						return vl

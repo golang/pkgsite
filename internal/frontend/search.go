@@ -27,6 +27,7 @@ import (
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/version"
+	"golang.org/x/pkgsite/internal/vulns"
 	"golang.org/x/text/message"
 	vulnc "golang.org/x/vuln/client"
 )
@@ -129,7 +130,7 @@ func determineSearchAction(r *http.Request, ds internal.DataSource, vulnClient v
 	if len(filters) > 0 {
 		symbol = filters[0]
 	}
-	var getVulnEntries vulnEntriesFunc
+	var getVulnEntries vulns.VulnEntriesFunc
 	if vulnClient != nil {
 		getVulnEntries = vulnClient.GetByModule
 	}
@@ -225,7 +226,7 @@ type SearchResult struct {
 	SymbolGOOS     string
 	SymbolGOARCH   string
 	SymbolLink     string
-	Vulns          []Vuln
+	Vulns          []vulns.Vuln
 }
 
 type subResult struct {
@@ -236,7 +237,7 @@ type subResult struct {
 // fetchSearchPage fetches data matching the search query from the database and
 // returns a SearchPage.
 func fetchSearchPage(ctx context.Context, db *postgres.DB, cq, symbol string,
-	pageParams paginationParams, searchSymbols bool, getVulnEntries vulnEntriesFunc) (*SearchPage, error) {
+	pageParams paginationParams, searchSymbols bool, getVulnEntries vulns.VulnEntriesFunc) (*SearchPage, error) {
 	maxResultCount := maxSearchOffset + pageParams.limit
 
 	// Pageless search: always start from the beginning.
@@ -607,7 +608,7 @@ func elapsedTime(date time.Time) string {
 
 // addVulns adds vulnerability information to search results by consulting the
 // vulnerability database.
-func addVulns(ctx context.Context, rs []*SearchResult, getVulnEntries vulnEntriesFunc) {
+func addVulns(ctx context.Context, rs []*SearchResult, getVulnEntries vulns.VulnEntriesFunc) {
 	// Get all vulns concurrently.
 	var wg sync.WaitGroup
 	// TODO(golang/go#48223): throttle concurrency?
@@ -616,7 +617,7 @@ func addVulns(ctx context.Context, rs []*SearchResult, getVulnEntries vulnEntrie
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			r.Vulns = VulnsForPackage(ctx, r.ModulePath, r.Version, r.PackagePath, getVulnEntries)
+			r.Vulns = vulns.VulnsForPackage(ctx, r.ModulePath, r.Version, r.PackagePath, getVulnEntries)
 		}()
 	}
 	wg.Wait()
