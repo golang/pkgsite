@@ -303,6 +303,7 @@
   text-decoration: none;
 }
 .go-Header-submenu .go-Header-submenuItem {
+  line-height: 1;
   padding-bottom: 1.5rem;
 }
 .go-Header-submenu .go-Header-submenuItem p {

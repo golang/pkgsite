@@ -107,7 +107,6 @@ export function registerHeaderListeners(): void {
         ':scope > .go-NavigationDrawer-nav > .go-NavigationDrawer-list > .go-NavigationDrawer-listItem > a, :scope > .go-NavigationDrawer-nav > .go-NavigationDrawer-list > .go-NavigationDrawer-listItem > .go-Header-socialIcons > a'
       ) || []
     );
-    console.log(menuItems);
 
     const anchorEl = navigationDrawer.querySelector('.go-NavigationDrawer-header > a');
     if (anchorEl) {
