@@ -190,3 +190,8 @@ test sub-repositories
 pathname /golang.org/x
 capture fullscreen
 capture fullscreen 540x1080
+
+test nav submenu
+pathname /net/http
+click .js-desktop-menu-hover
+capture viewport
