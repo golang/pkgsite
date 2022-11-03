@@ -192,6 +192,6 @@ capture fullscreen
 capture fullscreen 540x1080
 
 test nav submenu
-pathname /net/http
+pathname /github.com/jba/bit
 click .js-desktop-menu-hover
 capture viewport
