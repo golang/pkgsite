@@ -2,7 +2,7 @@
 
 ---
 
-The size modifer class is optional. The base modal will grow to fit the inner content.
+The size modifier class is optional. The base modal will grow to fit the inner content.
 
 ### Small {#modal-small}
 

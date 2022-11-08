@@ -3,7 +3,7 @@
 // license that can be found in the LICENSE file.
 
 // Package context defines the Context type, which carries deadlines,
-// cancelation signals, and other request-scoped values across API boundaries
+// cancellation signals, and other request-scoped values across API boundaries
 // and between processes.
 //
 // Incoming requests to a server should create a Context, and outgoing
@@ -30,9 +30,9 @@
 // explicitly to each function that needs it. The Context should be the first
 // parameter, typically named ctx:
 //
-// 	func DoSomething(ctx context.Context, arg Arg) error {
-// 		// ... use ctx ...
-// 	}
+//	func DoSomething(ctx context.Context, arg Arg) error {
+//		// ... use ctx ...
+//	}
 //
 // Do not pass a nil Context, even if a function permits it. Pass context.TODO
 // if you are unsure about which Context to use.
@@ -55,7 +55,7 @@ import (
 	"time"
 )
 
-// A Context carries a deadline, a cancelation signal, and other values across
+// A Context carries a deadline, a cancellation signal, and other values across
 // API boundaries.
 //
 // Context's methods may be called by multiple goroutines simultaneously.
@@ -93,7 +93,7 @@ type Context interface {
 	//  }
 	//
 	// See https://blog.golang.org/pipelines for more examples of how to use
-	// a Done channel for cancelation.
+	// a Done channel for cancellation.
 	Done() <-chan struct{}
 
 	// If Done is not yet closed, Err returns nil.
@@ -442,11 +442,11 @@ func (c *timerCtx) cancel(removeFromParent bool, err error) {
 // Canceling this context releases resources associated with it, so code should
 // call cancel as soon as the operations running in this Context complete:
 //
-// 	func slowOperationWithTimeout(ctx context.Context) (Result, error) {
-// 		ctx, cancel := context.WithTimeout(ctx, 100*time.Millisecond)
-// 		defer cancel()  // releases resources if slowOperation completes before timeout elapses
-// 		return slowOperation(ctx)
-// 	}
+//	func slowOperationWithTimeout(ctx context.Context) (Result, error) {
+//		ctx, cancel := context.WithTimeout(ctx, 100*time.Millisecond)
+//		defer cancel()  // releases resources if slowOperation completes before timeout elapses
+//		return slowOperation(ctx)
+//	}
 func WithTimeout(parent Context, timeout time.Duration) (Context, CancelFunc) {
 	return WithDeadline(parent, time.Now().Add(timeout))
 }

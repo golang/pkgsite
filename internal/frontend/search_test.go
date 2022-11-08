@@ -500,7 +500,7 @@ func TestNewSearchResult(t *testing.T) {
 			got := newSearchResult(&test.in, false, pr)
 			test.want.CommitTime = "unknown"
 			if diff := cmp.Diff(&test.want, got); diff != "" {
-				t.Errorf("mimatch (-want, +got):\n%s", diff)
+				t.Errorf("mismatch (-want, +got):\n%s", diff)
 			}
 		})
 	}

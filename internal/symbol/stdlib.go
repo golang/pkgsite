@@ -107,7 +107,7 @@ var pathToEmbeddedMethods = map[string]map[string]string{
 		// Embedded https://pkg.go.dev/debug/macho#File.Segment
 		"FatArch.Segment": "v1.3.0",
 		// https://pkg.go.dev/debug/macho@go1.10#Rpath
-		// Embeddded https://pkg.go.dev/debug/macho#LoadBytes.Raw
+		// Embedded https://pkg.go.dev/debug/macho#LoadBytes.Raw
 		"Rpath.Raw": "v1.10.0",
 	},
 	"debug/plan9obj": {
