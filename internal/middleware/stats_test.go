@@ -54,9 +54,9 @@ func TestStats(t *testing.T) {
 		StatusCode: code,
 		Size:       len(data),
 		Hash:       h.Sum64(),
-		Other: map[string]interface{}{
+		Other: map[string]any{
 			// JSON unmarshals all numbers into float64s.
-			"a": []interface{}{float64(1), float64(3)},
+			"a": []any{float64(1), float64(3)},
 			"b": float64(2),
 		},
 	}

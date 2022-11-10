@@ -48,7 +48,7 @@ func NewExperimenter(ctx context.Context, pollEvery time.Duration, getter Experi
 	e := &Experimenter{
 		p: poller.New(
 			initial,
-			func(ctx context.Context) (interface{}, error) {
+			func(ctx context.Context) (any, error) {
 				return getter(ctx)
 			},
 			func(err error) {

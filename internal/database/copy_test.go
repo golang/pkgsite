@@ -32,7 +32,7 @@ func TestCopyInsert(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	rows := [][]interface{}{
+	rows := [][]any{
 		{3, "baz"},
 		{4, "moo"},
 	}
@@ -63,7 +63,7 @@ func TestCopyUpsert(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	rows := [][]interface{}{
+	rows := [][]any{
 		{3, "baz"}, // new row
 		{1, "moo"}, // replace "foo" with "moo"
 	}
@@ -103,7 +103,7 @@ func TestCopyUpsertGeneratedColumn(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	rows := [][]interface{}{
+	rows := [][]any{
 		{13, "baz"}, // new row
 		{11, "moo"}, // replace "foo" with "moo"
 	}
@@ -138,7 +138,7 @@ func pgxOnly(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	conn.Raw(func(c interface{}) error {
+	conn.Raw(func(c any) error {
 		if _, ok := c.(*stdlib.Conn); !ok {
 			t.Skip("skipping; DB driver not pgx")
 		}

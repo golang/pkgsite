@@ -78,7 +78,7 @@ func init() {
 // handler.
 func fetchDetailsForUnit(ctx context.Context, r *http.Request, tab string, ds internal.DataSource, um *internal.UnitMeta,
 	requestedVersion string, bc internal.BuildContext,
-	getVulnEntries vulns.VulnEntriesFunc) (_ interface{}, err error) {
+	getVulnEntries vulns.VulnEntriesFunc) (_ any, err error) {
 	defer derrors.Wrap(&err, "fetchDetailsForUnit(r, %q, ds, um=%q,%q,%q)", tab, um.Path, um.ModulePath, um.Version)
 	switch tab {
 	case tabMain:

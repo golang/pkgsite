@@ -42,7 +42,7 @@ var startPoller = true
 func newdb(db *database.DB, bypass bool) *DB {
 	p := poller.New(
 		[]string(nil),
-		func(ctx context.Context) (interface{}, error) {
+		func(ctx context.Context) (any, error) {
 			return getExcludedPrefixes(ctx, db)
 		},
 		func(err error) {

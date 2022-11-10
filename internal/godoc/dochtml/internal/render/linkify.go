@@ -306,7 +306,7 @@ func concatHTML[T any](xs []T, toHTML func(T) safe.HTML) safe.HTML {
 	return safe.HTMLConcat(hs...)
 }
 
-func badType(x interface{}) safe.HTML {
+func badType(x any) safe.HTML {
 	return safe.HTMLEscaped(fmt.Sprintf("bad type %T", x))
 }
 
@@ -548,7 +548,7 @@ func (r *Renderer) formatLineHTML(line string, pre bool) safe.HTML {
 	return safe.HTMLConcat(htmls...)
 }
 
-func ExecuteToHTML(tmpl *template.Template, data interface{}) safe.HTML {
+func ExecuteToHTML(tmpl *template.Template, data any) safe.HTML {
 	h, err := tmpl.ExecuteToHTML(data)
 	if err != nil {
 		return safe.HTMLEscaped("[" + err.Error() + "]")

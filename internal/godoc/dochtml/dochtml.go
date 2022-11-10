@@ -226,7 +226,7 @@ func docIsEmpty(p *doc.Package) bool {
 }
 
 // renderInfo returns the functions and data needed to render the doc.
-func renderInfo(ctx context.Context, fset *token.FileSet, p *doc.Package, opt RenderOptions) (map[string]interface{}, templateData, func() []render.Link) {
+func renderInfo(ctx context.Context, fset *token.FileSet, p *doc.Package, opt RenderOptions) (map[string]any, templateData, func() []render.Link) {
 	// Make a copy to avoid modifying caller's *doc.Package.
 	p2 := *p
 	p = &p2
@@ -276,7 +276,7 @@ func renderInfo(ctx context.Context, fset *token.FileSet, p *doc.Package, opt Re
 	sinceVersion := func(name string) safehtml.HTML {
 		return safehtml.HTMLEscaped(opt.SinceVersionFunc(name))
 	}
-	funcs := map[string]interface{}{
+	funcs := map[string]any{
 		"render_short_synopsis":    r.ShortSynopsis,
 		"render_synopsis":          r.Synopsis,
 		"render_doc":               r.DocHTML,
@@ -300,7 +300,7 @@ func renderInfo(ctx context.Context, fset *token.FileSet, p *doc.Package, opt Re
 
 // executeToHTMLWithLimit executes tmpl on data and returns the result as a safehtml.HTML.
 // It returns an error if the size of the result exceeds limit.
-func executeToHTMLWithLimit(tmpl *template.Template, data interface{}, limit int64) (safehtml.HTML, error) {
+func executeToHTMLWithLimit(tmpl *template.Template, data any, limit int64) (safehtml.HTML, error) {
 	buf := &limitBuffer{B: new(bytes.Buffer), Remain: limit}
 	err := tmpl.Execute(buf, data)
 	if buf.Remain < 0 {
@@ -341,7 +341,7 @@ type example struct {
 
 // Code returns an printer.CommentedNode if ex.Comments is non-nil,
 // otherwise it returns ex.Code as is.
-func (ex *example) Code() interface{} {
+func (ex *example) Code() any {
 	if len(ex.Comments) > 0 {
 		return &printer.CommentedNode{Node: ex.Example.Code, Comments: ex.Comments}
 	}

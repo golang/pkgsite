@@ -174,7 +174,7 @@ func (db *DB) GetNextModulesToFetch(ctx context.Context, limit int) (_ []*intern
 
 	collect := func(rows *sql.Rows) error {
 		// Scan the last two columns separately; they are in the query only for sorting.
-		scan := func(dests ...interface{}) error {
+		scan := func(dests ...any) error {
 			var npkg int
 			return rows.Scan(append(dests, &npkg)...)
 		}

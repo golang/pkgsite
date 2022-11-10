@@ -503,7 +503,7 @@ func (db *DB) getUnitWithAllFields(ctx context.Context, um *internal.UnitMeta, b
 		u internal.Unit
 	)
 	u.BuildContexts = bcs
-	var goos, goarch interface{}
+	var goos, goarch any
 	if bcMatched.GOOS != "" {
 		goos = bcMatched.GOOS
 		goarch = bcMatched.GOARCH

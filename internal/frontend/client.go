@@ -90,7 +90,7 @@ func (s *Server) shouldServeJSON(r *http.Request) bool {
 	return s.serveStats && r.FormValue("content") == "json"
 }
 
-func (s *Server) serveJSONPage(w http.ResponseWriter, r *http.Request, d interface{}) (err error) {
+func (s *Server) serveJSONPage(w http.ResponseWriter, r *http.Request, d any) (err error) {
 	defer derrors.Wrap(&err, "serveJSONPage(ctx, w, r)")
 	if !s.shouldServeJSON(r) {
 		return derrors.NotFound

@@ -35,8 +35,8 @@ func decode_slice_slice_int(d *codec.Decoder, p *[][]int) {
 
 func init() {
 	codec.Register([][]int(nil),
-		func(e *codec.Encoder, x interface{}) { encode_slice_slice_int(e, x.([][]int)) },
-		func(d *codec.Decoder) interface{} { var x [][]int; decode_slice_slice_int(d, &x); return x })
+		func(e *codec.Encoder, x any) { encode_slice_slice_int(e, x.([][]int)) },
+		func(d *codec.Decoder) any { var x [][]int; decode_slice_slice_int(d, &x); return x })
 }
 
 func encode_slice_int(e *codec.Encoder, s []int) {
@@ -64,6 +64,6 @@ func decode_slice_int(d *codec.Decoder, p *[]int) {
 
 func init() {
 	codec.Register([]int(nil),
-		func(e *codec.Encoder, x interface{}) { encode_slice_int(e, x.([]int)) },
-		func(d *codec.Decoder) interface{} { var x []int; decode_slice_int(d, &x); return x })
+		func(e *codec.Encoder, x any) { encode_slice_int(e, x.([]int)) },
+		func(d *codec.Decoder) any { var x []int; decode_slice_int(d, &x); return x })
 }

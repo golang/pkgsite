@@ -92,13 +92,13 @@ func TestBasicTypes(t *testing.T) {
 
 	d := NewDecoder(e.Bytes())
 	d.decodeInitial()
-	gots := []interface{}{
+	gots := []any{
 		d.DecodeBytes(),
 		d.DecodeString(),
 		d.DecodeBool(),
 		d.DecodeFloat(),
 	}
-	wants := []interface{}{by, s, b, f}
+	wants := []any{by, s, b, f}
 	if !cmp.Equal(gots, wants) {
 		t.Errorf("got %v, want %v", gots, wants)
 	}
@@ -128,7 +128,7 @@ func TestList(t *testing.T) {
 }
 
 func TestAny(t *testing.T) {
-	want := []interface{}{"bar", nil, 1, -5, 98.6, uint64(1 << 63), "Luke Luck likes lakes", true}
+	want := []any{"bar", nil, 1, -5, 98.6, uint64(1 << 63), "Luke Luck likes lakes", true}
 	e := NewEncoder()
 	for _, w := range want {
 		e.EncodeAny(w)
@@ -145,7 +145,7 @@ func TestAny(t *testing.T) {
 }
 
 func TestEncodeDecode(t *testing.T) {
-	want := []interface{}{"bar", nil, 1, -5, 98.6, uint64(1 << 63), "Luke Luck likes lakes", true}
+	want := []any{"bar", nil, 1, -5, 98.6, uint64(1 << 63), "Luke Luck likes lakes", true}
 	e := NewEncoder()
 	for _, w := range want {
 		if err := e.Encode(w); err != nil {
@@ -194,7 +194,7 @@ func TestDecodeErrors(t *testing.T) {
 	}
 }
 
-func mustEncode(t *testing.T, x interface{}) []byte {
+func mustEncode(t *testing.T, x any) []byte {
 	t.Helper()
 	e := NewEncoder()
 	if err := e.Encode(x); err != nil {
@@ -215,7 +215,7 @@ func checkMessage(t *testing.T, err error, target string) {
 
 func TestSkip(t *testing.T) {
 	e := NewEncoder()
-	values := []interface{}{
+	values := []any{
 		1,
 		false,
 		"yes",
@@ -316,8 +316,8 @@ func decode_node(d *Decoder, p **node) {
 
 func init() {
 	Register(&node{},
-		func(e *Encoder, x interface{}) { encode_node(e, x.(*node)) },
-		func(d *Decoder) interface{} {
+		func(e *Encoder, x any) { encode_node(e, x.(*node)) },
+		func(d *Decoder) any {
 			var x *node
 			decode_node(d, &x)
 			return x

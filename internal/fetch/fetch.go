@@ -206,7 +206,7 @@ func processModuleContents(ctx context.Context, modulePath, resolvedVersion, req
 	if err != nil {
 		return nil, nil, err
 	}
-	logf := func(format string, args ...interface{}) {
+	logf := func(format string, args ...any) {
 		log.Infof(ctx, format, args...)
 	}
 	d := licenses.NewDetectorFS(modulePath, v, contentDir, logf)

@@ -294,7 +294,7 @@ func listModsForPaths(paths []string, cacheDir string) ([]string, []internal.Mod
 	return outPaths, cacheMods, nil
 }
 
-func die(format string, args ...interface{}) {
+func die(format string, args ...any) {
 	fmt.Fprintf(os.Stderr, format, args...)
 	fmt.Fprintln(os.Stderr)
 	os.Exit(1)

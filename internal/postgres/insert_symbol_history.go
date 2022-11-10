@@ -39,7 +39,7 @@ func upsertSymbolHistory(ctx context.Context, ddb *database.DB,
 			return err
 		}
 		for _, doc := range docIDToDoc {
-			var values []interface{}
+			var values []any
 			builds := []internal.BuildContext{{GOOS: doc.GOOS, GOARCH: doc.GOARCH}}
 			if doc.GOOS == internal.All {
 				builds = internal.BuildContexts
@@ -126,10 +126,10 @@ func tableExists(ctx context.Context, ddb *database.DB, table string) (bool, err
 	return x != nil, nil
 }
 
-func appendSymbolHistoryRow(sm *internal.SymbolMeta, values []interface{},
+func appendSymbolHistoryRow(sm *internal.SymbolMeta, values []any,
 	packagePath, modulePath, ver string, build internal.BuildContext,
 	pathToID, symToID map[string]int,
-	pathToPkgsymID map[string]map[packageSymbol]int) (_ []interface{}, err error) {
+	pathToPkgsymID map[string]map[packageSymbol]int) (_ []any, err error) {
 	defer derrors.WrapStack(&err, "appendSymbolHistoryRow(%q, %q, %q, %q)", sm.Name, packagePath, modulePath, ver)
 	symbolID := symToID[sm.Name]
 	if symbolID == 0 {

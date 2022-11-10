@@ -22,7 +22,7 @@ import (
 var (
 	mu     sync.Mutex
 	logger interface {
-		log(context.Context, logging.Severity, interface{})
+		log(context.Context, logging.Severity, any)
 	} = stdlibLogger{}
 
 	// currentLevel holds current log level.
@@ -74,7 +74,7 @@ type stackdriverLogger struct {
 	sdlogger *logging.Logger
 }
 
-func (l *stackdriverLogger) log(ctx context.Context, s logging.Severity, payload interface{}) {
+func (l *stackdriverLogger) log(ctx context.Context, s logging.Severity, payload any) {
 	// Convert errors to strings, or they may serialize as the empty JSON object.
 	if err, ok := payload.(error); ok {
 		payload = err.Error()
@@ -109,7 +109,7 @@ func init() {
 	}
 }
 
-func (stdlibLogger) log(ctx context.Context, s logging.Severity, payload interface{}) {
+func (stdlibLogger) log(ctx context.Context, s logging.Severity, payload any) {
 	var extras []string
 	traceID, _ := ctx.Value(traceIDKey{}).(string) // if not present, traceID is ""
 	if traceID != "" {
@@ -161,54 +161,54 @@ func UseStackdriver(ctx context.Context, logName, projectID string, opts []loggi
 }
 
 // Infof logs a formatted string at the Info level.
-func Infof(ctx context.Context, format string, args ...interface{}) {
+func Infof(ctx context.Context, format string, args ...any) {
 	logf(ctx, logging.Info, format, args)
 }
 
 // Warningf logs a formatted string at the Warning level.
-func Warningf(ctx context.Context, format string, args ...interface{}) {
+func Warningf(ctx context.Context, format string, args ...any) {
 	logf(ctx, logging.Warning, format, args)
 }
 
 // Errorf logs a formatted string at the Error level.
-func Errorf(ctx context.Context, format string, args ...interface{}) {
+func Errorf(ctx context.Context, format string, args ...any) {
 	logf(ctx, logging.Error, format, args)
 }
 
 // Debugf logs a formatted string at the Debug level.
-func Debugf(ctx context.Context, format string, args ...interface{}) {
+func Debugf(ctx context.Context, format string, args ...any) {
 	logf(ctx, logging.Debug, format, args)
 }
 
 // Fatalf logs formatted string at the Critical level followed by exiting the program.
-func Fatalf(ctx context.Context, format string, args ...interface{}) {
+func Fatalf(ctx context.Context, format string, args ...any) {
 	logf(ctx, logging.Critical, format, args)
 	die()
 }
 
-func logf(ctx context.Context, s logging.Severity, format string, args []interface{}) {
+func logf(ctx context.Context, s logging.Severity, format string, args []any) {
 	doLog(ctx, s, fmt.Sprintf(format, args...))
 }
 
 // Info logs arg, which can be a string or a struct, at the Info level.
-func Info(ctx context.Context, arg interface{}) { doLog(ctx, logging.Info, arg) }
+func Info(ctx context.Context, arg any) { doLog(ctx, logging.Info, arg) }
 
 // Warning logs arg, which can be a string or a struct, at the Warning level.
-func Warning(ctx context.Context, arg interface{}) { doLog(ctx, logging.Warning, arg) }
+func Warning(ctx context.Context, arg any) { doLog(ctx, logging.Warning, arg) }
 
 // Error logs arg, which can be a string or a struct, at the Error level.
-func Error(ctx context.Context, arg interface{}) { doLog(ctx, logging.Error, arg) }
+func Error(ctx context.Context, arg any) { doLog(ctx, logging.Error, arg) }
 
 // Debug logs arg, which can be a string or a struct, at the Debug level.
-func Debug(ctx context.Context, arg interface{}) { doLog(ctx, logging.Debug, arg) }
+func Debug(ctx context.Context, arg any) { doLog(ctx, logging.Debug, arg) }
 
 // Fatal logs arg, which can be a string or a struct, at the Critical level followed by exiting the program.
-func Fatal(ctx context.Context, arg interface{}) {
+func Fatal(ctx context.Context, arg any) {
 	doLog(ctx, logging.Critical, arg)
 	die()
 }
 
-func doLog(ctx context.Context, s logging.Severity, payload interface{}) {
+func doLog(ctx context.Context, s logging.Severity, payload any) {
 	if getLevel() > s {
 		return
 	}

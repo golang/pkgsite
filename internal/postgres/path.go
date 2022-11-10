@@ -135,7 +135,7 @@ func upsertPaths(ctx context.Context, db *database.DB, paths []string) (pathToID
 	}
 
 	// Insert any unit paths that we don't already have.
-	var values []interface{}
+	var values []any
 	for _, v := range paths {
 		if _, ok := pathToID[v]; !ok {
 			values = append(values, v)

@@ -31,19 +31,19 @@ func Stats() Middleware {
 
 // SetStat sets a stat named key in the current context. If key already has a
 // value, the old and new value are both stored in a slice.
-func SetStat(ctx context.Context, key string, value interface{}) {
+func SetStat(ctx context.Context, key string, value any) {
 	x := ctx.Value(statsKey{})
 	if x == nil {
 		return
 	}
-	m := x.(map[string]interface{})
+	m := x.(map[string]any)
 	v, ok := m[key]
 	if !ok {
 		m[key] = value
-	} else if s, ok := v.([]interface{}); ok {
+	} else if s, ok := v.([]any); ok {
 		m[key] = append(s, value)
 	} else {
-		m[key] = []interface{}{v, value}
+		m[key] = []any{v, value}
 	}
 }
 
@@ -76,7 +76,7 @@ type PageStats struct {
 	Hash              uint64 // hash of page contents
 	Size              int    // total size of data written
 	StatusCode        int    // HTTP status
-	Other             map[string]interface{}
+	Other             map[string]any
 }
 
 func newStatsResponseWriter() *statsResponseWriter {
@@ -84,7 +84,7 @@ func newStatsResponseWriter() *statsResponseWriter {
 		header: http.Header{},
 		start:  time.Now(),
 		hasher: fnv.New64a(),
-		stats:  PageStats{Other: map[string]interface{}{}},
+		stats:  PageStats{Other: map[string]any{}},
 	}
 }
 

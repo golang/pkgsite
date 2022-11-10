@@ -121,7 +121,7 @@ func upsertDocumentationSymbols(ctx context.Context, db *database.DB,
 	// documentation IDs.
 	// Keep track of which rows already exist in documentation_symbols using
 	// gotDocIDToPkgsymIDs.
-	var documentationIDs []interface{}
+	var documentationIDs []any
 	for docID := range docIDToPkgsymIDs {
 		documentationIDs = append(documentationIDs, docID)
 	}
@@ -168,7 +168,7 @@ func upsertDocumentationSymbols(ctx context.Context, db *database.DB,
 		docIDs = append(docIDs, docID)
 	}
 	sort.Ints(docIDs)
-	var values []interface{}
+	var values []any
 	for _, docID := range docIDs {
 		gotSet := gotDocIDToPkgsymIDs[docID]
 		for pkgsymID := range docIDToPkgsymIDs[docID] {
@@ -269,7 +269,7 @@ func upsertPackageSymbolsReturningIDs(ctx context.Context, db *database.DB,
 	}
 	sort.Strings(paths)
 
-	var packageSymbols []interface{}
+	var packageSymbols []any
 	for _, path := range paths {
 		docs := pathToDocIDToDoc[path]
 		pathID := pathToID[path]
@@ -363,7 +363,7 @@ func upsertSymbolNamesReturningIDs(ctx context.Context, db *database.DB,
 		return nil, err
 	}
 
-	var values []interface{}
+	var values []any
 	for _, name := range names {
 		if _, ok := nameToID[name]; !ok {
 			values = append(values, name)

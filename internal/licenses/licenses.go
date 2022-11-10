@@ -315,7 +315,7 @@ type Detector struct {
 	modulePath     string
 	version        string
 	fsys           fs.FS
-	logf           func(string, ...interface{})
+	logf           func(string, ...any)
 	moduleRedist   bool
 	moduleLicenses []*License // licenses at module root directory, or list from exceptions
 	allLicenses    []*License
@@ -326,7 +326,7 @@ type Detector struct {
 // zr should be the zip file for that module and version.
 // logf is for logging; if nil, no logging is done.
 // Deprecated: use NewDetectorFS.
-func NewDetector(modulePath, version string, zr *zip.Reader, logf func(string, ...interface{})) *Detector {
+func NewDetector(modulePath, version string, zr *zip.Reader, logf func(string, ...any)) *Detector {
 	sub, err := fs.Sub(zr, modulePath+"@"+version)
 	// This should only fail if the prefix is not a valid path, which shouldn't be possible.
 	if err != nil && logf != nil {
@@ -338,9 +338,9 @@ func NewDetector(modulePath, version string, zr *zip.Reader, logf func(string, .
 // NewDetectorFS returns a Detector for the given module and version.
 // fsys should represent the content directory of the module (not the zip root).
 // logf is for logging; if nil, no logging is done.
-func NewDetectorFS(modulePath, version string, fsys fs.FS, logf func(string, ...interface{})) *Detector {
+func NewDetectorFS(modulePath, version string, fsys fs.FS, logf func(string, ...any)) *Detector {
 	if logf == nil {
-		logf = func(string, ...interface{}) {}
+		logf = func(string, ...any) {}
 	}
 	d := &Detector{
 		modulePath: modulePath,
@@ -552,9 +552,9 @@ func (d *Detector) readFile(pathname string) ([]byte, error) {
 // DetectFile return the set of license types for the given file contents. It
 // also returns the licensecheck coverage information. The filename is used
 // solely for logging.
-func DetectFile(contents []byte, filename string, logf func(string, ...interface{})) ([]string, licensecheck.Coverage) {
+func DetectFile(contents []byte, filename string, logf func(string, ...any)) ([]string, licensecheck.Coverage) {
 	if logf == nil {
-		logf = func(string, ...interface{}) {}
+		logf = func(string, ...any) {}
 	}
 	cov := scanner().Scan(contents)
 	if cov.Percent < float64(coverageThreshold) {

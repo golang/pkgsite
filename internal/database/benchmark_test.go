@@ -27,7 +27,7 @@ func BenchmarkBulkInsert(b *testing.B) {
 		b.Fatal(err)
 	}
 	const size = 15000
-	vals := make([]interface{}, size)
+	vals := make([]any, size)
 	for i := 0; i < size; i++ {
 		vals[i] = i + 1
 	}
@@ -54,13 +54,13 @@ func BenchmarkBulkInsert(b *testing.B) {
 		if err != nil {
 			b.Fatal(err)
 		}
-		rows := make([][]interface{}, len(vals))
+		rows := make([][]any, len(vals))
 		for i, v := range vals {
-			rows[i] = []interface{}{v}
+			rows[i] = []any{v}
 		}
 		src := pgx.CopyFromRows(rows)
 		for i := 0; i < b.N; i++ {
-			err = conn.Raw(func(driverConn interface{}) error {
+			err = conn.Raw(func(driverConn any) error {
 				pgxConn := driverConn.(*stdlib.Conn).Conn()
 				_, err := pgxConn.CopyFrom(ctx, []string{"test_large_bulk"}, []string{"i"}, src)
 				return err

@@ -12,7 +12,7 @@ import (
 )
 
 // A Getter returns a value.
-type Getter func(context.Context) (interface{}, error)
+type Getter func(context.Context) (any, error)
 
 // A Poller maintains a current value, and refreshes it by periodically
 // polling for a new value.
@@ -20,13 +20,13 @@ type Poller struct {
 	getter  Getter
 	onError func(error)
 	mu      sync.Mutex
-	current interface{}
+	current any
 }
 
 // New creates a new poller with an initial value. The getter is invoked
 // to obtain updated values. Errors returned from the getter are passed
 // to onError.
-func New(initial interface{}, getter Getter, onError func(error)) *Poller {
+func New(initial any, getter Getter, onError func(error)) *Poller {
 	return &Poller{
 		getter:  getter,
 		onError: onError,
@@ -69,7 +69,7 @@ func (p *Poller) Poll(ctx context.Context) {
 // Current returns the current value. Initially, this is the value passed to New.
 // After each successful poll, the value is updated.
 // If a poll fails, the value remains unchanged.
-func (p *Poller) Current() interface{} {
+func (p *Poller) Current() any {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 	return p.current

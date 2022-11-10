@@ -80,7 +80,7 @@ func TestCollectStructs(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := testDB.BulkInsert(ctx, "structs", []string{"name", "score", "slice", "nullable", "bytes"}, []interface{}{
+	if err := testDB.BulkInsert(ctx, "structs", []string{"name", "score", "slice", "nullable", "bytes"}, []any{
 		"A", 1, pq.Array([]int64(nil)), 7, nil,
 		"B", 2, pq.Array([]int64{1, 2}), -8, []byte("abc"),
 		"C", 3, pq.Array([]int64{}), nil, []byte("def"),

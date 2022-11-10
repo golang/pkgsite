@@ -25,7 +25,7 @@ func Test(t *testing.T) {
 	)
 
 	cur := -1
-	getter := func(context.Context) (interface{}, error) {
+	getter := func(context.Context) (any, error) {
 		// Even: success; odd: failure.
 		cur++
 		if cur%2 == 0 {

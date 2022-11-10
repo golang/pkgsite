@@ -106,7 +106,7 @@ func NewServer(cfg *config.Config, scfg ServerConfig) (_ *Server, err error) {
 	}
 
 	// Update information about DB locks, etc. every few seconds.
-	p := poller.New(&postgres.UserInfo{}, func(ctx context.Context) (interface{}, error) {
+	p := poller.New(&postgres.UserInfo{}, func(ctx context.Context) (any, error) {
 		return scfg.DB.GetUserInfo(ctx, "worker")
 	}, func(err error) { log.Error(context.Background(), err) })
 	p.Start(context.Background(), 10*time.Second)
@@ -769,7 +769,7 @@ func bytesToMi(b uint64) uint64 {
 // percentage computes the truncated percentage of x/y.
 // It returns 0 if y is 0.
 // x and y can be any int or uint type.
-func percentage(x, y interface{}) int {
+func percentage(x, y any) int {
 	denom := toUint64(y)
 	if denom == 0 {
 		return 0
@@ -777,7 +777,7 @@ func percentage(x, y interface{}) int {
 	return int(toUint64(x) * 100 / denom)
 }
 
-func toUint64(n interface{}) uint64 {
+func toUint64(n any) uint64 {
 	v := reflect.ValueOf(n)
 	switch v.Kind() {
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:

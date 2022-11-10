@@ -56,7 +56,7 @@ func dumpSpanData(s *trace.SpanData) string {
 	return buf.String()
 }
 
-func dumpAttributes(w io.Writer, m map[string]interface{}) {
+func dumpAttributes(w io.Writer, m map[string]any) {
 	for k, v := range m {
 		fmt.Fprintf(w, "  %q: %#v\n", k, v)
 	}

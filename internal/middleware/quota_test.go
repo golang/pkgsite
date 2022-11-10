@@ -17,7 +17,7 @@ import (
 func TestIPKey(t *testing.T) {
 	for _, test := range []struct {
 		in   string
-		want interface{}
+		want any
 	}{
 		{"", ""},
 		{"1.2.3", ""},

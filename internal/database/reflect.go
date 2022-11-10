@@ -37,7 +37,7 @@ import (
 //	    // use p
 //	    return nil
 //	})
-func StructScanner[T any]() func(p *T) []interface{} {
+func StructScanner[T any]() func(p *T) []any {
 	return structScannerForType[T]()
 }
 
@@ -46,7 +46,7 @@ type fieldInfo struct {
 	kind reflect.Kind
 }
 
-func structScannerForType[T any]() func(p *T) []interface{} {
+func structScannerForType[T any]() func(p *T) []any {
 	var x T
 	t := reflect.TypeOf(x)
 	if t.Kind() != reflect.Struct {
@@ -62,9 +62,9 @@ func structScannerForType[T any]() func(p *T) []interface{} {
 		}
 	}
 	// Return a function that gets pointers to the exported fields.
-	return func(p *T) []interface{} {
+	return func(p *T) []any {
 		v := reflect.ValueOf(p).Elem()
-		var ps []interface{}
+		var ps []any
 		for _, info := range fieldInfos {
 			p := v.Field(info.num).Addr().Interface()
 			switch info.kind {
@@ -87,7 +87,7 @@ func structScannerForType[T any]() func(p *T) []interface{} {
 // value that can be passed to a Scan function. If the corresponding column is
 // nil, the variable will be set to nil. Otherwise, it will be set to a newly
 // allocated pointer to the column value.
-func NullPtr(p interface{}) nullPtr {
+func NullPtr(p any) nullPtr {
 	v := reflect.ValueOf(p)
 	if v.Kind() != reflect.Ptr || v.Elem().Kind() != reflect.Ptr {
 		panic("NullPtr arg must be pointer to pointer")
@@ -100,7 +100,7 @@ type nullPtr struct {
 	ptr reflect.Value
 }
 
-func (n nullPtr) Scan(value interface{}) error {
+func (n nullPtr) Scan(value any) error {
 	// n.ptr is like a variable v of type **T
 	ntype := n.ptr.Elem().Type() // T
 	if value == nil {
@@ -126,7 +126,7 @@ func (n nullPtr) Value() (driver.Value, error) {
 //	type Player struct { Name string; Score int }
 //	var players []Player
 //	err := db.CollectStructs(ctx, &players, "SELECT name, score FROM players")
-func CollectStructs[T any](ctx context.Context, db *DB, query string, args ...interface{}) ([]T, error) {
+func CollectStructs[T any](ctx context.Context, db *DB, query string, args ...any) ([]T, error) {
 	scanner := structScannerForType[T]()
 	var ts []T
 	err := db.RunQuery(ctx, query, func(rows *sql.Rows) error {
@@ -143,7 +143,7 @@ func CollectStructs[T any](ctx context.Context, db *DB, query string, args ...in
 	return ts, nil
 }
 
-func CollectStructPtrs[T any](ctx context.Context, db *DB, query string, args ...interface{}) ([]*T, error) {
+func CollectStructPtrs[T any](ctx context.Context, db *DB, query string, args ...any) ([]*T, error) {
 	scanner := structScannerForType[T]()
 	var ts []*T
 	err := db.RunQuery(ctx, query, func(rows *sql.Rows) error {

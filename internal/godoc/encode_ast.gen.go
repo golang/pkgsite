@@ -65,8 +65,8 @@ func decode_ast_ArrayType(d *codec.Decoder, p **ast.ArrayType) {
 
 func init() {
 	codec.Register(&ast.ArrayType{},
-		func(e *codec.Encoder, x interface{}) { encode_ast_ArrayType(e, x.(*ast.ArrayType)) },
-		func(d *codec.Decoder) interface{} {
+		func(e *codec.Encoder, x any) { encode_ast_ArrayType(e, x.(*ast.ArrayType)) },
+		func(d *codec.Decoder) any {
 			var x *ast.ArrayType
 			decode_ast_ArrayType(d, &x)
 			return x
@@ -132,8 +132,8 @@ func decode_ast_AssignStmt(d *codec.Decoder, p **ast.AssignStmt) {
 
 func init() {
 	codec.Register(&ast.AssignStmt{},
-		func(e *codec.Encoder, x interface{}) { encode_ast_AssignStmt(e, x.(*ast.AssignStmt)) },
-		func(d *codec.Decoder) interface{} {
+		func(e *codec.Encoder, x any) { encode_ast_AssignStmt(e, x.(*ast.AssignStmt)) },
+		func(d *codec.Decoder) any {
 			var x *ast.AssignStmt
 			decode_ast_AssignStmt(d, &x)
 			return x
@@ -187,8 +187,8 @@ func decode_ast_BadDecl(d *codec.Decoder, p **ast.BadDecl) {
 
 func init() {
 	codec.Register(&ast.BadDecl{},
-		func(e *codec.Encoder, x interface{}) { encode_ast_BadDecl(e, x.(*ast.BadDecl)) },
-		func(d *codec.Decoder) interface{} {
+		func(e *codec.Encoder, x any) { encode_ast_BadDecl(e, x.(*ast.BadDecl)) },
+		func(d *codec.Decoder) any {
 			var x *ast.BadDecl
 			decode_ast_BadDecl(d, &x)
 			return x
@@ -242,8 +242,8 @@ func decode_ast_BadExpr(d *codec.Decoder, p **ast.BadExpr) {
 
 func init() {
 	codec.Register(&ast.BadExpr{},
-		func(e *codec.Encoder, x interface{}) { encode_ast_BadExpr(e, x.(*ast.BadExpr)) },
-		func(d *codec.Decoder) interface{} {
+		func(e *codec.Encoder, x any) { encode_ast_BadExpr(e, x.(*ast.BadExpr)) },
+		func(d *codec.Decoder) any {
 			var x *ast.BadExpr
 			decode_ast_BadExpr(d, &x)
 			return x
@@ -297,8 +297,8 @@ func decode_ast_BadStmt(d *codec.Decoder, p **ast.BadStmt) {
 
 func init() {
 	codec.Register(&ast.BadStmt{},
-		func(e *codec.Encoder, x interface{}) { encode_ast_BadStmt(e, x.(*ast.BadStmt)) },
-		func(d *codec.Decoder) interface{} {
+		func(e *codec.Encoder, x any) { encode_ast_BadStmt(e, x.(*ast.BadStmt)) },
+		func(d *codec.Decoder) any {
 			var x *ast.BadStmt
 			decode_ast_BadStmt(d, &x)
 			return x
@@ -358,8 +358,8 @@ func decode_ast_BasicLit(d *codec.Decoder, p **ast.BasicLit) {
 
 func init() {
 	codec.Register(&ast.BasicLit{},
-		func(e *codec.Encoder, x interface{}) { encode_ast_BasicLit(e, x.(*ast.BasicLit)) },
-		func(d *codec.Decoder) interface{} {
+		func(e *codec.Encoder, x any) { encode_ast_BasicLit(e, x.(*ast.BasicLit)) },
+		func(d *codec.Decoder) any {
 			var x *ast.BasicLit
 			decode_ast_BasicLit(d, &x)
 			return x
@@ -425,8 +425,8 @@ func decode_ast_BinaryExpr(d *codec.Decoder, p **ast.BinaryExpr) {
 
 func init() {
 	codec.Register(&ast.BinaryExpr{},
-		func(e *codec.Encoder, x interface{}) { encode_ast_BinaryExpr(e, x.(*ast.BinaryExpr)) },
-		func(d *codec.Decoder) interface{} {
+		func(e *codec.Encoder, x any) { encode_ast_BinaryExpr(e, x.(*ast.BinaryExpr)) },
+		func(d *codec.Decoder) any {
 			var x *ast.BinaryExpr
 			decode_ast_BinaryExpr(d, &x)
 			return x
@@ -486,8 +486,8 @@ func decode_ast_BlockStmt(d *codec.Decoder, p **ast.BlockStmt) {
 
 func init() {
 	codec.Register(&ast.BlockStmt{},
-		func(e *codec.Encoder, x interface{}) { encode_ast_BlockStmt(e, x.(*ast.BlockStmt)) },
-		func(d *codec.Decoder) interface{} {
+		func(e *codec.Encoder, x any) { encode_ast_BlockStmt(e, x.(*ast.BlockStmt)) },
+		func(d *codec.Decoder) any {
 			var x *ast.BlockStmt
 			decode_ast_BlockStmt(d, &x)
 			return x
@@ -547,8 +547,8 @@ func decode_ast_BranchStmt(d *codec.Decoder, p **ast.BranchStmt) {
 
 func init() {
 	codec.Register(&ast.BranchStmt{},
-		func(e *codec.Encoder, x interface{}) { encode_ast_BranchStmt(e, x.(*ast.BranchStmt)) },
-		func(d *codec.Decoder) interface{} {
+		func(e *codec.Encoder, x any) { encode_ast_BranchStmt(e, x.(*ast.BranchStmt)) },
+		func(d *codec.Decoder) any {
 			var x *ast.BranchStmt
 			decode_ast_BranchStmt(d, &x)
 			return x
@@ -620,8 +620,8 @@ func decode_ast_CallExpr(d *codec.Decoder, p **ast.CallExpr) {
 
 func init() {
 	codec.Register(&ast.CallExpr{},
-		func(e *codec.Encoder, x interface{}) { encode_ast_CallExpr(e, x.(*ast.CallExpr)) },
-		func(d *codec.Decoder) interface{} {
+		func(e *codec.Encoder, x any) { encode_ast_CallExpr(e, x.(*ast.CallExpr)) },
+		func(d *codec.Decoder) any {
 			var x *ast.CallExpr
 			decode_ast_CallExpr(d, &x)
 			return x
@@ -687,8 +687,8 @@ func decode_ast_CaseClause(d *codec.Decoder, p **ast.CaseClause) {
 
 func init() {
 	codec.Register(&ast.CaseClause{},
-		func(e *codec.Encoder, x interface{}) { encode_ast_CaseClause(e, x.(*ast.CaseClause)) },
-		func(d *codec.Decoder) interface{} {
+		func(e *codec.Encoder, x any) { encode_ast_CaseClause(e, x.(*ast.CaseClause)) },
+		func(d *codec.Decoder) any {
 			var x *ast.CaseClause
 			decode_ast_CaseClause(d, &x)
 			return x
@@ -754,8 +754,8 @@ func decode_ast_ChanType(d *codec.Decoder, p **ast.ChanType) {
 
 func init() {
 	codec.Register(&ast.ChanType{},
-		func(e *codec.Encoder, x interface{}) { encode_ast_ChanType(e, x.(*ast.ChanType)) },
-		func(d *codec.Decoder) interface{} {
+		func(e *codec.Encoder, x any) { encode_ast_ChanType(e, x.(*ast.ChanType)) },
+		func(d *codec.Decoder) any {
 			var x *ast.ChanType
 			decode_ast_ChanType(d, &x)
 			return x
@@ -821,8 +821,8 @@ func decode_ast_CommClause(d *codec.Decoder, p **ast.CommClause) {
 
 func init() {
 	codec.Register(&ast.CommClause{},
-		func(e *codec.Encoder, x interface{}) { encode_ast_CommClause(e, x.(*ast.CommClause)) },
-		func(d *codec.Decoder) interface{} {
+		func(e *codec.Encoder, x any) { encode_ast_CommClause(e, x.(*ast.CommClause)) },
+		func(d *codec.Decoder) any {
 			var x *ast.CommClause
 			decode_ast_CommClause(d, &x)
 			return x
@@ -870,8 +870,8 @@ func decode_ast_CommentGroup(d *codec.Decoder, p **ast.CommentGroup) {
 
 func init() {
 	codec.Register(&ast.CommentGroup{},
-		func(e *codec.Encoder, x interface{}) { encode_ast_CommentGroup(e, x.(*ast.CommentGroup)) },
-		func(d *codec.Decoder) interface{} {
+		func(e *codec.Encoder, x any) { encode_ast_CommentGroup(e, x.(*ast.CommentGroup)) },
+		func(d *codec.Decoder) any {
 			var x *ast.CommentGroup
 			decode_ast_CommentGroup(d, &x)
 			return x
@@ -925,8 +925,8 @@ func decode_ast_Comment(d *codec.Decoder, p **ast.Comment) {
 
 func init() {
 	codec.Register(&ast.Comment{},
-		func(e *codec.Encoder, x interface{}) { encode_ast_Comment(e, x.(*ast.Comment)) },
-		func(d *codec.Decoder) interface{} {
+		func(e *codec.Encoder, x any) { encode_ast_Comment(e, x.(*ast.Comment)) },
+		func(d *codec.Decoder) any {
 			var x *ast.Comment
 			decode_ast_Comment(d, &x)
 			return x
@@ -998,8 +998,8 @@ func decode_ast_CompositeLit(d *codec.Decoder, p **ast.CompositeLit) {
 
 func init() {
 	codec.Register(&ast.CompositeLit{},
-		func(e *codec.Encoder, x interface{}) { encode_ast_CompositeLit(e, x.(*ast.CompositeLit)) },
-		func(d *codec.Decoder) interface{} {
+		func(e *codec.Encoder, x any) { encode_ast_CompositeLit(e, x.(*ast.CompositeLit)) },
+		func(d *codec.Decoder) any {
 			var x *ast.CompositeLit
 			decode_ast_CompositeLit(d, &x)
 			return x
@@ -1047,8 +1047,8 @@ func decode_ast_DeclStmt(d *codec.Decoder, p **ast.DeclStmt) {
 
 func init() {
 	codec.Register(&ast.DeclStmt{},
-		func(e *codec.Encoder, x interface{}) { encode_ast_DeclStmt(e, x.(*ast.DeclStmt)) },
-		func(d *codec.Decoder) interface{} {
+		func(e *codec.Encoder, x any) { encode_ast_DeclStmt(e, x.(*ast.DeclStmt)) },
+		func(d *codec.Decoder) any {
 			var x *ast.DeclStmt
 			decode_ast_DeclStmt(d, &x)
 			return x
@@ -1102,8 +1102,8 @@ func decode_ast_DeferStmt(d *codec.Decoder, p **ast.DeferStmt) {
 
 func init() {
 	codec.Register(&ast.DeferStmt{},
-		func(e *codec.Encoder, x interface{}) { encode_ast_DeferStmt(e, x.(*ast.DeferStmt)) },
-		func(d *codec.Decoder) interface{} {
+		func(e *codec.Encoder, x any) { encode_ast_DeferStmt(e, x.(*ast.DeferStmt)) },
+		func(d *codec.Decoder) any {
 			var x *ast.DeferStmt
 			decode_ast_DeferStmt(d, &x)
 			return x
@@ -1157,8 +1157,8 @@ func decode_ast_Ellipsis(d *codec.Decoder, p **ast.Ellipsis) {
 
 func init() {
 	codec.Register(&ast.Ellipsis{},
-		func(e *codec.Encoder, x interface{}) { encode_ast_Ellipsis(e, x.(*ast.Ellipsis)) },
-		func(d *codec.Decoder) interface{} {
+		func(e *codec.Encoder, x any) { encode_ast_Ellipsis(e, x.(*ast.Ellipsis)) },
+		func(d *codec.Decoder) any {
 			var x *ast.Ellipsis
 			decode_ast_Ellipsis(d, &x)
 			return x
@@ -1212,8 +1212,8 @@ func decode_ast_EmptyStmt(d *codec.Decoder, p **ast.EmptyStmt) {
 
 func init() {
 	codec.Register(&ast.EmptyStmt{},
-		func(e *codec.Encoder, x interface{}) { encode_ast_EmptyStmt(e, x.(*ast.EmptyStmt)) },
-		func(d *codec.Decoder) interface{} {
+		func(e *codec.Encoder, x any) { encode_ast_EmptyStmt(e, x.(*ast.EmptyStmt)) },
+		func(d *codec.Decoder) any {
 			var x *ast.EmptyStmt
 			decode_ast_EmptyStmt(d, &x)
 			return x
@@ -1261,8 +1261,8 @@ func decode_ast_ExprStmt(d *codec.Decoder, p **ast.ExprStmt) {
 
 func init() {
 	codec.Register(&ast.ExprStmt{},
-		func(e *codec.Encoder, x interface{}) { encode_ast_ExprStmt(e, x.(*ast.ExprStmt)) },
-		func(d *codec.Decoder) interface{} {
+		func(e *codec.Encoder, x any) { encode_ast_ExprStmt(e, x.(*ast.ExprStmt)) },
+		func(d *codec.Decoder) any {
 			var x *ast.ExprStmt
 			decode_ast_ExprStmt(d, &x)
 			return x
@@ -1322,8 +1322,8 @@ func decode_ast_FieldList(d *codec.Decoder, p **ast.FieldList) {
 
 func init() {
 	codec.Register(&ast.FieldList{},
-		func(e *codec.Encoder, x interface{}) { encode_ast_FieldList(e, x.(*ast.FieldList)) },
-		func(d *codec.Decoder) interface{} {
+		func(e *codec.Encoder, x any) { encode_ast_FieldList(e, x.(*ast.FieldList)) },
+		func(d *codec.Decoder) any {
 			var x *ast.FieldList
 			decode_ast_FieldList(d, &x)
 			return x
@@ -1395,8 +1395,8 @@ func decode_ast_Field(d *codec.Decoder, p **ast.Field) {
 
 func init() {
 	codec.Register(&ast.Field{},
-		func(e *codec.Encoder, x interface{}) { encode_ast_Field(e, x.(*ast.Field)) },
-		func(d *codec.Decoder) interface{} {
+		func(e *codec.Encoder, x any) { encode_ast_Field(e, x.(*ast.Field)) },
+		func(d *codec.Decoder) any {
 			var x *ast.Field
 			decode_ast_Field(d, &x)
 			return x
@@ -1468,8 +1468,8 @@ func decode_ast_ForStmt(d *codec.Decoder, p **ast.ForStmt) {
 
 func init() {
 	codec.Register(&ast.ForStmt{},
-		func(e *codec.Encoder, x interface{}) { encode_ast_ForStmt(e, x.(*ast.ForStmt)) },
-		func(d *codec.Decoder) interface{} {
+		func(e *codec.Encoder, x any) { encode_ast_ForStmt(e, x.(*ast.ForStmt)) },
+		func(d *codec.Decoder) any {
 			var x *ast.ForStmt
 			decode_ast_ForStmt(d, &x)
 			return x
@@ -1541,8 +1541,8 @@ func decode_ast_FuncDecl(d *codec.Decoder, p **ast.FuncDecl) {
 
 func init() {
 	codec.Register(&ast.FuncDecl{},
-		func(e *codec.Encoder, x interface{}) { encode_ast_FuncDecl(e, x.(*ast.FuncDecl)) },
-		func(d *codec.Decoder) interface{} {
+		func(e *codec.Encoder, x any) { encode_ast_FuncDecl(e, x.(*ast.FuncDecl)) },
+		func(d *codec.Decoder) any {
 			var x *ast.FuncDecl
 			decode_ast_FuncDecl(d, &x)
 			return x
@@ -1596,8 +1596,8 @@ func decode_ast_FuncLit(d *codec.Decoder, p **ast.FuncLit) {
 
 func init() {
 	codec.Register(&ast.FuncLit{},
-		func(e *codec.Encoder, x interface{}) { encode_ast_FuncLit(e, x.(*ast.FuncLit)) },
-		func(d *codec.Decoder) interface{} {
+		func(e *codec.Encoder, x any) { encode_ast_FuncLit(e, x.(*ast.FuncLit)) },
+		func(d *codec.Decoder) any {
 			var x *ast.FuncLit
 			decode_ast_FuncLit(d, &x)
 			return x
@@ -1663,8 +1663,8 @@ func decode_ast_FuncType(d *codec.Decoder, p **ast.FuncType) {
 
 func init() {
 	codec.Register(&ast.FuncType{},
-		func(e *codec.Encoder, x interface{}) { encode_ast_FuncType(e, x.(*ast.FuncType)) },
-		func(d *codec.Decoder) interface{} {
+		func(e *codec.Encoder, x any) { encode_ast_FuncType(e, x.(*ast.FuncType)) },
+		func(d *codec.Decoder) any {
 			var x *ast.FuncType
 			decode_ast_FuncType(d, &x)
 			return x
@@ -1742,8 +1742,8 @@ func decode_ast_GenDecl(d *codec.Decoder, p **ast.GenDecl) {
 
 func init() {
 	codec.Register(&ast.GenDecl{},
-		func(e *codec.Encoder, x interface{}) { encode_ast_GenDecl(e, x.(*ast.GenDecl)) },
-		func(d *codec.Decoder) interface{} {
+		func(e *codec.Encoder, x any) { encode_ast_GenDecl(e, x.(*ast.GenDecl)) },
+		func(d *codec.Decoder) any {
 			var x *ast.GenDecl
 			decode_ast_GenDecl(d, &x)
 			return x
@@ -1797,8 +1797,8 @@ func decode_ast_GoStmt(d *codec.Decoder, p **ast.GoStmt) {
 
 func init() {
 	codec.Register(&ast.GoStmt{},
-		func(e *codec.Encoder, x interface{}) { encode_ast_GoStmt(e, x.(*ast.GoStmt)) },
-		func(d *codec.Decoder) interface{} {
+		func(e *codec.Encoder, x any) { encode_ast_GoStmt(e, x.(*ast.GoStmt)) },
+		func(d *codec.Decoder) any {
 			var x *ast.GoStmt
 			decode_ast_GoStmt(d, &x)
 			return x
@@ -1858,8 +1858,8 @@ func decode_ast_Ident(d *codec.Decoder, p **ast.Ident) {
 
 func init() {
 	codec.Register(&ast.Ident{},
-		func(e *codec.Encoder, x interface{}) { encode_ast_Ident(e, x.(*ast.Ident)) },
-		func(d *codec.Decoder) interface{} {
+		func(e *codec.Encoder, x any) { encode_ast_Ident(e, x.(*ast.Ident)) },
+		func(d *codec.Decoder) any {
 			var x *ast.Ident
 			decode_ast_Ident(d, &x)
 			return x
@@ -1931,8 +1931,8 @@ func decode_ast_IfStmt(d *codec.Decoder, p **ast.IfStmt) {
 
 func init() {
 	codec.Register(&ast.IfStmt{},
-		func(e *codec.Encoder, x interface{}) { encode_ast_IfStmt(e, x.(*ast.IfStmt)) },
-		func(d *codec.Decoder) interface{} {
+		func(e *codec.Encoder, x any) { encode_ast_IfStmt(e, x.(*ast.IfStmt)) },
+		func(d *codec.Decoder) any {
 			var x *ast.IfStmt
 			decode_ast_IfStmt(d, &x)
 			return x
@@ -2004,8 +2004,8 @@ func decode_ast_ImportSpec(d *codec.Decoder, p **ast.ImportSpec) {
 
 func init() {
 	codec.Register(&ast.ImportSpec{},
-		func(e *codec.Encoder, x interface{}) { encode_ast_ImportSpec(e, x.(*ast.ImportSpec)) },
-		func(d *codec.Decoder) interface{} {
+		func(e *codec.Encoder, x any) { encode_ast_ImportSpec(e, x.(*ast.ImportSpec)) },
+		func(d *codec.Decoder) any {
 			var x *ast.ImportSpec
 			decode_ast_ImportSpec(d, &x)
 			return x
@@ -2065,8 +2065,8 @@ func decode_ast_IncDecStmt(d *codec.Decoder, p **ast.IncDecStmt) {
 
 func init() {
 	codec.Register(&ast.IncDecStmt{},
-		func(e *codec.Encoder, x interface{}) { encode_ast_IncDecStmt(e, x.(*ast.IncDecStmt)) },
-		func(d *codec.Decoder) interface{} {
+		func(e *codec.Encoder, x any) { encode_ast_IncDecStmt(e, x.(*ast.IncDecStmt)) },
+		func(d *codec.Decoder) any {
 			var x *ast.IncDecStmt
 			decode_ast_IncDecStmt(d, &x)
 			return x
@@ -2132,8 +2132,8 @@ func decode_ast_IndexExpr(d *codec.Decoder, p **ast.IndexExpr) {
 
 func init() {
 	codec.Register(&ast.IndexExpr{},
-		func(e *codec.Encoder, x interface{}) { encode_ast_IndexExpr(e, x.(*ast.IndexExpr)) },
-		func(d *codec.Decoder) interface{} {
+		func(e *codec.Encoder, x any) { encode_ast_IndexExpr(e, x.(*ast.IndexExpr)) },
+		func(d *codec.Decoder) any {
 			var x *ast.IndexExpr
 			decode_ast_IndexExpr(d, &x)
 			return x
@@ -2199,8 +2199,8 @@ func decode_ast_IndexListExpr(d *codec.Decoder, p **ast.IndexListExpr) {
 
 func init() {
 	codec.Register(&ast.IndexListExpr{},
-		func(e *codec.Encoder, x interface{}) { encode_ast_IndexListExpr(e, x.(*ast.IndexListExpr)) },
-		func(d *codec.Decoder) interface{} {
+		func(e *codec.Encoder, x any) { encode_ast_IndexListExpr(e, x.(*ast.IndexListExpr)) },
+		func(d *codec.Decoder) any {
 			var x *ast.IndexListExpr
 			decode_ast_IndexListExpr(d, &x)
 			return x
@@ -2260,8 +2260,8 @@ func decode_ast_InterfaceType(d *codec.Decoder, p **ast.InterfaceType) {
 
 func init() {
 	codec.Register(&ast.InterfaceType{},
-		func(e *codec.Encoder, x interface{}) { encode_ast_InterfaceType(e, x.(*ast.InterfaceType)) },
-		func(d *codec.Decoder) interface{} {
+		func(e *codec.Encoder, x any) { encode_ast_InterfaceType(e, x.(*ast.InterfaceType)) },
+		func(d *codec.Decoder) any {
 			var x *ast.InterfaceType
 			decode_ast_InterfaceType(d, &x)
 			return x
@@ -2321,8 +2321,8 @@ func decode_ast_KeyValueExpr(d *codec.Decoder, p **ast.KeyValueExpr) {
 
 func init() {
 	codec.Register(&ast.KeyValueExpr{},
-		func(e *codec.Encoder, x interface{}) { encode_ast_KeyValueExpr(e, x.(*ast.KeyValueExpr)) },
-		func(d *codec.Decoder) interface{} {
+		func(e *codec.Encoder, x any) { encode_ast_KeyValueExpr(e, x.(*ast.KeyValueExpr)) },
+		func(d *codec.Decoder) any {
 			var x *ast.KeyValueExpr
 			decode_ast_KeyValueExpr(d, &x)
 			return x
@@ -2382,8 +2382,8 @@ func decode_ast_LabeledStmt(d *codec.Decoder, p **ast.LabeledStmt) {
 
 func init() {
 	codec.Register(&ast.LabeledStmt{},
-		func(e *codec.Encoder, x interface{}) { encode_ast_LabeledStmt(e, x.(*ast.LabeledStmt)) },
-		func(d *codec.Decoder) interface{} {
+		func(e *codec.Encoder, x any) { encode_ast_LabeledStmt(e, x.(*ast.LabeledStmt)) },
+		func(d *codec.Decoder) any {
 			var x *ast.LabeledStmt
 			decode_ast_LabeledStmt(d, &x)
 			return x
@@ -2443,8 +2443,8 @@ func decode_ast_MapType(d *codec.Decoder, p **ast.MapType) {
 
 func init() {
 	codec.Register(&ast.MapType{},
-		func(e *codec.Encoder, x interface{}) { encode_ast_MapType(e, x.(*ast.MapType)) },
-		func(d *codec.Decoder) interface{} {
+		func(e *codec.Encoder, x any) { encode_ast_MapType(e, x.(*ast.MapType)) },
+		func(d *codec.Decoder) any {
 			var x *ast.MapType
 			decode_ast_MapType(d, &x)
 			return x
@@ -2504,8 +2504,8 @@ func decode_ast_ParenExpr(d *codec.Decoder, p **ast.ParenExpr) {
 
 func init() {
 	codec.Register(&ast.ParenExpr{},
-		func(e *codec.Encoder, x interface{}) { encode_ast_ParenExpr(e, x.(*ast.ParenExpr)) },
-		func(d *codec.Decoder) interface{} {
+		func(e *codec.Encoder, x any) { encode_ast_ParenExpr(e, x.(*ast.ParenExpr)) },
+		func(d *codec.Decoder) any {
 			var x *ast.ParenExpr
 			decode_ast_ParenExpr(d, &x)
 			return x
@@ -2589,8 +2589,8 @@ func decode_ast_RangeStmt(d *codec.Decoder, p **ast.RangeStmt) {
 
 func init() {
 	codec.Register(&ast.RangeStmt{},
-		func(e *codec.Encoder, x interface{}) { encode_ast_RangeStmt(e, x.(*ast.RangeStmt)) },
-		func(d *codec.Decoder) interface{} {
+		func(e *codec.Encoder, x any) { encode_ast_RangeStmt(e, x.(*ast.RangeStmt)) },
+		func(d *codec.Decoder) any {
 			var x *ast.RangeStmt
 			decode_ast_RangeStmt(d, &x)
 			return x
@@ -2644,8 +2644,8 @@ func decode_ast_ReturnStmt(d *codec.Decoder, p **ast.ReturnStmt) {
 
 func init() {
 	codec.Register(&ast.ReturnStmt{},
-		func(e *codec.Encoder, x interface{}) { encode_ast_ReturnStmt(e, x.(*ast.ReturnStmt)) },
-		func(d *codec.Decoder) interface{} {
+		func(e *codec.Encoder, x any) { encode_ast_ReturnStmt(e, x.(*ast.ReturnStmt)) },
+		func(d *codec.Decoder) any {
 			var x *ast.ReturnStmt
 			decode_ast_ReturnStmt(d, &x)
 			return x
@@ -2699,8 +2699,8 @@ func decode_ast_Scope(d *codec.Decoder, p **ast.Scope) {
 
 func init() {
 	codec.Register(&ast.Scope{},
-		func(e *codec.Encoder, x interface{}) { encode_ast_Scope(e, x.(*ast.Scope)) },
-		func(d *codec.Decoder) interface{} {
+		func(e *codec.Encoder, x any) { encode_ast_Scope(e, x.(*ast.Scope)) },
+		func(d *codec.Decoder) any {
 			var x *ast.Scope
 			decode_ast_Scope(d, &x)
 			return x
@@ -2754,8 +2754,8 @@ func decode_ast_SelectStmt(d *codec.Decoder, p **ast.SelectStmt) {
 
 func init() {
 	codec.Register(&ast.SelectStmt{},
-		func(e *codec.Encoder, x interface{}) { encode_ast_SelectStmt(e, x.(*ast.SelectStmt)) },
-		func(d *codec.Decoder) interface{} {
+		func(e *codec.Encoder, x any) { encode_ast_SelectStmt(e, x.(*ast.SelectStmt)) },
+		func(d *codec.Decoder) any {
 			var x *ast.SelectStmt
 			decode_ast_SelectStmt(d, &x)
 			return x
@@ -2809,8 +2809,8 @@ func decode_ast_SelectorExpr(d *codec.Decoder, p **ast.SelectorExpr) {
 
 func init() {
 	codec.Register(&ast.SelectorExpr{},
-		func(e *codec.Encoder, x interface{}) { encode_ast_SelectorExpr(e, x.(*ast.SelectorExpr)) },
-		func(d *codec.Decoder) interface{} {
+		func(e *codec.Encoder, x any) { encode_ast_SelectorExpr(e, x.(*ast.SelectorExpr)) },
+		func(d *codec.Decoder) any {
 			var x *ast.SelectorExpr
 			decode_ast_SelectorExpr(d, &x)
 			return x
@@ -2870,8 +2870,8 @@ func decode_ast_SendStmt(d *codec.Decoder, p **ast.SendStmt) {
 
 func init() {
 	codec.Register(&ast.SendStmt{},
-		func(e *codec.Encoder, x interface{}) { encode_ast_SendStmt(e, x.(*ast.SendStmt)) },
-		func(d *codec.Decoder) interface{} {
+		func(e *codec.Encoder, x any) { encode_ast_SendStmt(e, x.(*ast.SendStmt)) },
+		func(d *codec.Decoder) any {
 			var x *ast.SendStmt
 			decode_ast_SendStmt(d, &x)
 			return x
@@ -2955,8 +2955,8 @@ func decode_ast_SliceExpr(d *codec.Decoder, p **ast.SliceExpr) {
 
 func init() {
 	codec.Register(&ast.SliceExpr{},
-		func(e *codec.Encoder, x interface{}) { encode_ast_SliceExpr(e, x.(*ast.SliceExpr)) },
-		func(d *codec.Decoder) interface{} {
+		func(e *codec.Encoder, x any) { encode_ast_SliceExpr(e, x.(*ast.SliceExpr)) },
+		func(d *codec.Decoder) any {
 			var x *ast.SliceExpr
 			decode_ast_SliceExpr(d, &x)
 			return x
@@ -3010,8 +3010,8 @@ func decode_ast_StarExpr(d *codec.Decoder, p **ast.StarExpr) {
 
 func init() {
 	codec.Register(&ast.StarExpr{},
-		func(e *codec.Encoder, x interface{}) { encode_ast_StarExpr(e, x.(*ast.StarExpr)) },
-		func(d *codec.Decoder) interface{} {
+		func(e *codec.Encoder, x any) { encode_ast_StarExpr(e, x.(*ast.StarExpr)) },
+		func(d *codec.Decoder) any {
 			var x *ast.StarExpr
 			decode_ast_StarExpr(d, &x)
 			return x
@@ -3071,8 +3071,8 @@ func decode_ast_StructType(d *codec.Decoder, p **ast.StructType) {
 
 func init() {
 	codec.Register(&ast.StructType{},
-		func(e *codec.Encoder, x interface{}) { encode_ast_StructType(e, x.(*ast.StructType)) },
-		func(d *codec.Decoder) interface{} {
+		func(e *codec.Encoder, x any) { encode_ast_StructType(e, x.(*ast.StructType)) },
+		func(d *codec.Decoder) any {
 			var x *ast.StructType
 			decode_ast_StructType(d, &x)
 			return x
@@ -3138,8 +3138,8 @@ func decode_ast_SwitchStmt(d *codec.Decoder, p **ast.SwitchStmt) {
 
 func init() {
 	codec.Register(&ast.SwitchStmt{},
-		func(e *codec.Encoder, x interface{}) { encode_ast_SwitchStmt(e, x.(*ast.SwitchStmt)) },
-		func(d *codec.Decoder) interface{} {
+		func(e *codec.Encoder, x any) { encode_ast_SwitchStmt(e, x.(*ast.SwitchStmt)) },
+		func(d *codec.Decoder) any {
 			var x *ast.SwitchStmt
 			decode_ast_SwitchStmt(d, &x)
 			return x
@@ -3205,8 +3205,8 @@ func decode_ast_TypeAssertExpr(d *codec.Decoder, p **ast.TypeAssertExpr) {
 
 func init() {
 	codec.Register(&ast.TypeAssertExpr{},
-		func(e *codec.Encoder, x interface{}) { encode_ast_TypeAssertExpr(e, x.(*ast.TypeAssertExpr)) },
-		func(d *codec.Decoder) interface{} {
+		func(e *codec.Encoder, x any) { encode_ast_TypeAssertExpr(e, x.(*ast.TypeAssertExpr)) },
+		func(d *codec.Decoder) any {
 			var x *ast.TypeAssertExpr
 			decode_ast_TypeAssertExpr(d, &x)
 			return x
@@ -3284,8 +3284,8 @@ func decode_ast_TypeSpec(d *codec.Decoder, p **ast.TypeSpec) {
 
 func init() {
 	codec.Register(&ast.TypeSpec{},
-		func(e *codec.Encoder, x interface{}) { encode_ast_TypeSpec(e, x.(*ast.TypeSpec)) },
-		func(d *codec.Decoder) interface{} {
+		func(e *codec.Encoder, x any) { encode_ast_TypeSpec(e, x.(*ast.TypeSpec)) },
+		func(d *codec.Decoder) any {
 			var x *ast.TypeSpec
 			decode_ast_TypeSpec(d, &x)
 			return x
@@ -3351,8 +3351,8 @@ func decode_ast_TypeSwitchStmt(d *codec.Decoder, p **ast.TypeSwitchStmt) {
 
 func init() {
 	codec.Register(&ast.TypeSwitchStmt{},
-		func(e *codec.Encoder, x interface{}) { encode_ast_TypeSwitchStmt(e, x.(*ast.TypeSwitchStmt)) },
-		func(d *codec.Decoder) interface{} {
+		func(e *codec.Encoder, x any) { encode_ast_TypeSwitchStmt(e, x.(*ast.TypeSwitchStmt)) },
+		func(d *codec.Decoder) any {
 			var x *ast.TypeSwitchStmt
 			decode_ast_TypeSwitchStmt(d, &x)
 			return x
@@ -3412,8 +3412,8 @@ func decode_ast_UnaryExpr(d *codec.Decoder, p **ast.UnaryExpr) {
 
 func init() {
 	codec.Register(&ast.UnaryExpr{},
-		func(e *codec.Encoder, x interface{}) { encode_ast_UnaryExpr(e, x.(*ast.UnaryExpr)) },
-		func(d *codec.Decoder) interface{} {
+		func(e *codec.Encoder, x any) { encode_ast_UnaryExpr(e, x.(*ast.UnaryExpr)) },
+		func(d *codec.Decoder) any {
 			var x *ast.UnaryExpr
 			decode_ast_UnaryExpr(d, &x)
 			return x
@@ -3485,8 +3485,8 @@ func decode_ast_ValueSpec(d *codec.Decoder, p **ast.ValueSpec) {
 
 func init() {
 	codec.Register(&ast.ValueSpec{},
-		func(e *codec.Encoder, x interface{}) { encode_ast_ValueSpec(e, x.(*ast.ValueSpec)) },
-		func(d *codec.Decoder) interface{} {
+		func(e *codec.Encoder, x any) { encode_ast_ValueSpec(e, x.(*ast.ValueSpec)) },
+		func(d *codec.Decoder) any {
 			var x *ast.ValueSpec
 			decode_ast_ValueSpec(d, &x)
 			return x
@@ -3541,8 +3541,8 @@ func decode_encPackage(d *codec.Decoder, p **encPackage) {
 
 func init() {
 	codec.Register(&encPackage{},
-		func(e *codec.Encoder, x interface{}) { encode_encPackage(e, x.(*encPackage)) },
-		func(d *codec.Decoder) interface{} {
+		func(e *codec.Encoder, x any) { encode_encPackage(e, x.(*encPackage)) },
+		func(d *codec.Decoder) any {
 			var x *encPackage
 			decode_encPackage(d, &x)
 			return x
@@ -3574,8 +3574,8 @@ func decode_slice_ast_Expr(d *codec.Decoder, p *[]ast.Expr) {
 
 func init() {
 	codec.Register([]ast.Expr(nil),
-		func(e *codec.Encoder, x interface{}) { encode_slice_ast_Expr(e, x.([]ast.Expr)) },
-		func(d *codec.Decoder) interface{} { var x []ast.Expr; decode_slice_ast_Expr(d, &x); return x })
+		func(e *codec.Encoder, x any) { encode_slice_ast_Expr(e, x.([]ast.Expr)) },
+		func(d *codec.Decoder) any { var x []ast.Expr; decode_slice_ast_Expr(d, &x); return x })
 }
 
 func encode_slice_ast_Stmt(e *codec.Encoder, s []ast.Stmt) {
@@ -3603,8 +3603,8 @@ func decode_slice_ast_Stmt(d *codec.Decoder, p *[]ast.Stmt) {
 
 func init() {
 	codec.Register([]ast.Stmt(nil),
-		func(e *codec.Encoder, x interface{}) { encode_slice_ast_Stmt(e, x.([]ast.Stmt)) },
-		func(d *codec.Decoder) interface{} { var x []ast.Stmt; decode_slice_ast_Stmt(d, &x); return x })
+		func(e *codec.Encoder, x any) { encode_slice_ast_Stmt(e, x.([]ast.Stmt)) },
+		func(d *codec.Decoder) any { var x []ast.Stmt; decode_slice_ast_Stmt(d, &x); return x })
 }
 
 func encode_slice_ast_Comment(e *codec.Encoder, s []*ast.Comment) {
@@ -3632,8 +3632,8 @@ func decode_slice_ast_Comment(d *codec.Decoder, p *[]*ast.Comment) {
 
 func init() {
 	codec.Register([]*ast.Comment(nil),
-		func(e *codec.Encoder, x interface{}) { encode_slice_ast_Comment(e, x.([]*ast.Comment)) },
-		func(d *codec.Decoder) interface{} { var x []*ast.Comment; decode_slice_ast_Comment(d, &x); return x })
+		func(e *codec.Encoder, x any) { encode_slice_ast_Comment(e, x.([]*ast.Comment)) },
+		func(d *codec.Decoder) any { var x []*ast.Comment; decode_slice_ast_Comment(d, &x); return x })
 }
 
 func encode_slice_ast_Field(e *codec.Encoder, s []*ast.Field) {
@@ -3661,8 +3661,8 @@ func decode_slice_ast_Field(d *codec.Decoder, p *[]*ast.Field) {
 
 func init() {
 	codec.Register([]*ast.Field(nil),
-		func(e *codec.Encoder, x interface{}) { encode_slice_ast_Field(e, x.([]*ast.Field)) },
-		func(d *codec.Decoder) interface{} { var x []*ast.Field; decode_slice_ast_Field(d, &x); return x })
+		func(e *codec.Encoder, x any) { encode_slice_ast_Field(e, x.([]*ast.Field)) },
+		func(d *codec.Decoder) any { var x []*ast.Field; decode_slice_ast_Field(d, &x); return x })
 }
 
 func encode_slice_ast_Ident(e *codec.Encoder, s []*ast.Ident) {
@@ -3690,8 +3690,8 @@ func decode_slice_ast_Ident(d *codec.Decoder, p *[]*ast.Ident) {
 
 func init() {
 	codec.Register([]*ast.Ident(nil),
-		func(e *codec.Encoder, x interface{}) { encode_slice_ast_Ident(e, x.([]*ast.Ident)) },
-		func(d *codec.Decoder) interface{} { var x []*ast.Ident; decode_slice_ast_Ident(d, &x); return x })
+		func(e *codec.Encoder, x any) { encode_slice_ast_Ident(e, x.([]*ast.Ident)) },
+		func(d *codec.Decoder) any { var x []*ast.Ident; decode_slice_ast_Ident(d, &x); return x })
 }
 
 func encode_slice_ast_Spec(e *codec.Encoder, s []ast.Spec) {
@@ -3719,8 +3719,8 @@ func decode_slice_ast_Spec(d *codec.Decoder, p *[]ast.Spec) {
 
 func init() {
 	codec.Register([]ast.Spec(nil),
-		func(e *codec.Encoder, x interface{}) { encode_slice_ast_Spec(e, x.([]ast.Spec)) },
-		func(d *codec.Decoder) interface{} { var x []ast.Spec; decode_slice_ast_Spec(d, &x); return x })
+		func(e *codec.Encoder, x any) { encode_slice_ast_Spec(e, x.([]ast.Spec)) },
+		func(d *codec.Decoder) any { var x []ast.Spec; decode_slice_ast_Spec(d, &x); return x })
 }
 
 // Fields of ast_Object: Kind Name Decl Data Type
@@ -3788,8 +3788,8 @@ func decode_ast_Object(d *codec.Decoder, p **ast.Object) {
 
 func init() {
 	codec.Register(&ast.Object{},
-		func(e *codec.Encoder, x interface{}) { encode_ast_Object(e, x.(*ast.Object)) },
-		func(d *codec.Decoder) interface{} {
+		func(e *codec.Encoder, x any) { encode_ast_Object(e, x.(*ast.Object)) },
+		func(d *codec.Decoder) any {
 			var x *ast.Object
 			decode_ast_Object(d, &x)
 			return x
@@ -3827,8 +3827,8 @@ func decode_map_string_ast_Object(d *codec.Decoder, p *map[string]*ast.Object) {
 
 func init() {
 	codec.Register(map[string]*ast.Object(nil),
-		func(e *codec.Encoder, x interface{}) { encode_map_string_ast_Object(e, x.(map[string]*ast.Object)) },
-		func(d *codec.Decoder) interface{} {
+		func(e *codec.Encoder, x any) { encode_map_string_ast_Object(e, x.(map[string]*ast.Object)) },
+		func(d *codec.Decoder) any {
 			var x map[string]*ast.Object
 			decode_map_string_ast_Object(d, &x)
 			return x
@@ -3860,8 +3860,8 @@ func decode_slice_File(d *codec.Decoder, p *[]*File) {
 
 func init() {
 	codec.Register([]*File(nil),
-		func(e *codec.Encoder, x interface{}) { encode_slice_File(e, x.([]*File)) },
-		func(d *codec.Decoder) interface{} { var x []*File; decode_slice_File(d, &x); return x })
+		func(e *codec.Encoder, x any) { encode_slice_File(e, x.([]*File)) },
+		func(d *codec.Decoder) any { var x []*File; decode_slice_File(d, &x); return x })
 }
 
 func encode_map_string_bool(e *codec.Encoder, m map[string]bool) {
@@ -3895,8 +3895,8 @@ func decode_map_string_bool(d *codec.Decoder, p *map[string]bool) {
 
 func init() {
 	codec.Register(map[string]bool(nil),
-		func(e *codec.Encoder, x interface{}) { encode_map_string_bool(e, x.(map[string]bool)) },
-		func(d *codec.Decoder) interface{} { var x map[string]bool; decode_map_string_bool(d, &x); return x })
+		func(e *codec.Encoder, x any) { encode_map_string_bool(e, x.(map[string]bool)) },
+		func(d *codec.Decoder) any { var x map[string]bool; decode_map_string_bool(d, &x); return x })
 }
 
 // Fields of File: Name AST
@@ -3946,8 +3946,8 @@ func decode_File(d *codec.Decoder, p **File) {
 
 func init() {
 	codec.Register(&File{},
-		func(e *codec.Encoder, x interface{}) { encode_File(e, x.(*File)) },
-		func(d *codec.Decoder) interface{} {
+		func(e *codec.Encoder, x any) { encode_File(e, x.(*File)) },
+		func(d *codec.Decoder) any {
 			var x *File
 			decode_File(d, &x)
 			return x
@@ -4037,8 +4037,8 @@ func decode_ast_File(d *codec.Decoder, p **ast.File) {
 
 func init() {
 	codec.Register(&ast.File{},
-		func(e *codec.Encoder, x interface{}) { encode_ast_File(e, x.(*ast.File)) },
-		func(d *codec.Decoder) interface{} {
+		func(e *codec.Encoder, x any) { encode_ast_File(e, x.(*ast.File)) },
+		func(d *codec.Decoder) any {
 			var x *ast.File
 			decode_ast_File(d, &x)
 			return x
@@ -4070,8 +4070,8 @@ func decode_slice_ast_Decl(d *codec.Decoder, p *[]ast.Decl) {
 
 func init() {
 	codec.Register([]ast.Decl(nil),
-		func(e *codec.Encoder, x interface{}) { encode_slice_ast_Decl(e, x.([]ast.Decl)) },
-		func(d *codec.Decoder) interface{} { var x []ast.Decl; decode_slice_ast_Decl(d, &x); return x })
+		func(e *codec.Encoder, x any) { encode_slice_ast_Decl(e, x.([]ast.Decl)) },
+		func(d *codec.Decoder) any { var x []ast.Decl; decode_slice_ast_Decl(d, &x); return x })
 }
 
 func encode_slice_ast_ImportSpec(e *codec.Encoder, s []*ast.ImportSpec) {
@@ -4099,12 +4099,8 @@ func decode_slice_ast_ImportSpec(d *codec.Decoder, p *[]*ast.ImportSpec) {
 
 func init() {
 	codec.Register([]*ast.ImportSpec(nil),
-		func(e *codec.Encoder, x interface{}) { encode_slice_ast_ImportSpec(e, x.([]*ast.ImportSpec)) },
-		func(d *codec.Decoder) interface{} {
-			var x []*ast.ImportSpec
-			decode_slice_ast_ImportSpec(d, &x)
-			return x
-		})
+		func(e *codec.Encoder, x any) { encode_slice_ast_ImportSpec(e, x.([]*ast.ImportSpec)) },
+		func(d *codec.Decoder) any { var x []*ast.ImportSpec; decode_slice_ast_ImportSpec(d, &x); return x })
 }
 
 func encode_slice_ast_CommentGroup(e *codec.Encoder, s []*ast.CommentGroup) {
@@ -4132,10 +4128,6 @@ func decode_slice_ast_CommentGroup(d *codec.Decoder, p *[]*ast.CommentGroup) {
 
 func init() {
 	codec.Register([]*ast.CommentGroup(nil),
-		func(e *codec.Encoder, x interface{}) { encode_slice_ast_CommentGroup(e, x.([]*ast.CommentGroup)) },
-		func(d *codec.Decoder) interface{} {
-			var x []*ast.CommentGroup
-			decode_slice_ast_CommentGroup(d, &x)
-			return x
-		})
+		func(e *codec.Encoder, x any) { encode_slice_ast_CommentGroup(e, x.([]*ast.CommentGroup)) },
+		func(d *codec.Decoder) any { var x []*ast.CommentGroup; decode_slice_ast_CommentGroup(d, &x); return x })
 }

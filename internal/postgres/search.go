@@ -927,7 +927,7 @@ func insertImportedByCounts(ctx context.Context, db *database.DB, counts map[str
 	if _, err := db.Exec(ctx, createTableQuery); err != nil {
 		return fmt.Errorf("CREATE TABLE: %v", err)
 	}
-	var values []interface{}
+	var values []any
 	i := 0
 	for p, c := range counts {
 		if i >= limit {

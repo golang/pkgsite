@@ -490,7 +490,7 @@ type errorPage struct {
 	basePage
 	templateName    string
 	messageTemplate template.TrustedTemplate
-	MessageData     interface{}
+	MessageData     any
 }
 
 // PanicHandler returns an http.HandlerFunc that can be used in HTTP
@@ -643,7 +643,7 @@ func (s *Server) renderErrorPage(ctx context.Context, status int, templateName s
 }
 
 // servePage is used to execute all templates for a *Server.
-func (s *Server) servePage(ctx context.Context, w http.ResponseWriter, templateName string, page interface{}) {
+func (s *Server) servePage(ctx context.Context, w http.ResponseWriter, templateName string, page any) {
 	defer middleware.ElapsedStat(ctx, "servePage")()
 
 	buf, err := s.renderPage(ctx, templateName, page)
@@ -659,7 +659,7 @@ func (s *Server) servePage(ctx context.Context, w http.ResponseWriter, templateN
 }
 
 // renderPage executes the given templateName with page.
-func (s *Server) renderPage(ctx context.Context, templateName string, page interface{}) ([]byte, error) {
+func (s *Server) renderPage(ctx context.Context, templateName string, page any) ([]byte, error) {
 	defer middleware.ElapsedStat(ctx, "renderPage")()
 
 	tmpl, err := s.findTemplate(templateName)
@@ -686,7 +686,7 @@ func (s *Server) findTemplate(templateName string) (*template.Template, error) {
 	return tmpl, nil
 }
 
-func executeTemplate(ctx context.Context, templateName string, tmpl *template.Template, data interface{}) ([]byte, error) {
+func executeTemplate(ctx context.Context, templateName string, tmpl *template.Template, data any) ([]byte, error) {
 	var buf bytes.Buffer
 	if err := tmpl.Execute(&buf, data); err != nil {
 		log.Errorf(ctx, "Error executing page template %q: %v", templateName, err)

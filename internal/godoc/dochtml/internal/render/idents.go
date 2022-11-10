@@ -78,7 +78,7 @@ type packageIDs struct {
 	pkgIDs map[string]map[string]bool // map[name]map[topLevelID]bool
 
 	// topLevelDecls is the set of all AST declarations for the this package.
-	topLevelDecls map[interface{}]bool // map[T]bool where T is *ast.FuncDecl | *ast.GenDecl | *ast.TypeSpec | *ast.ValueSpec
+	topLevelDecls map[any]bool // map[T]bool where T is *ast.FuncDecl | *ast.GenDecl | *ast.TypeSpec | *ast.ValueSpec
 }
 
 // newPackageIDs returns a packageIDs that collects all top-level identifiers
@@ -88,7 +88,7 @@ func newPackageIDs(pkg *doc.Package, related ...*doc.Package) *packageIDs {
 		name:          pkg.Name,
 		impPaths:      make(map[string]string),
 		pkgIDs:        make(map[string]map[string]bool),
-		topLevelDecls: make(map[interface{}]bool),
+		topLevelDecls: make(map[any]bool),
 	}
 
 	// Collect top-level declaration IDs for pkg and related packages.

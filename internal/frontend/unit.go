@@ -89,7 +89,7 @@ type UnitPage struct {
 	RedirectedFromPath string
 
 	// Details contains data specific to the type of page being rendered.
-	Details interface{}
+	Details any
 
 	// Vulns holds vulnerability information.
 	Vulns []vulns.Vuln

@@ -182,7 +182,7 @@ func localFetcher(t *testing.T, withLicenseDetector bool, ctx context.Context, m
 		return got, nil
 	}
 
-	d := licenses.NewDetectorFS(modulePath, LocalVersion, os.DirFS(directory), func(format string, args ...interface{}) {
+	d := licenses.NewDetectorFS(modulePath, LocalVersion, os.DirFS(directory), func(format string, args ...any) {
 		log.Infof(ctx, format, args...)
 	})
 	return got, d
@@ -209,7 +209,7 @@ func licenseDetector(ctx context.Context, t *testing.T, modulePath, version stri
 			t.Fatal(err)
 		}
 	}
-	logf := func(format string, args ...interface{}) {
+	logf := func(format string, args ...any) {
 		log.Infof(ctx, format, args...)
 	}
 	return licenses.NewDetectorFS(modulePath, version, contentDir, logf)
