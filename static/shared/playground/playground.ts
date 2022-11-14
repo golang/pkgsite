@@ -186,6 +186,21 @@ export class PlaygroundExampleController {
     this.setOutputText('An error has occurred…');
   }
 
+  private getCodeWithModFile(): string {
+    let codeWithModFile = this.inputEl?.value ?? '';
+    const moduleVars = document.querySelector<HTMLDivElement>('.js-playgroundVars')?.dataset ?? {};
+    if (moduleVars.modulepath !== 'std') {
+      codeWithModFile = codeWithModFile.concat(`
+-- go.mod --
+module play.ground
+
+require ${moduleVars.modulepath} ${moduleVars.version}
+`);
+    }
+
+    return codeWithModFile;
+  }
+
   /**
    * Opens a new window to play.golang.org using the
    * example snippet's code in the playground.
@@ -197,7 +212,7 @@ export class PlaygroundExampleController {
 
     fetch('/play/share', {
       method: 'POST',
-      body: this.inputEl?.value,
+      body: this.getCodeWithModFile(),
     })
       .then(res => res.text())
       .then(shareId => {
@@ -241,19 +256,9 @@ export class PlaygroundExampleController {
   private handleRunButtonClick() {
     this.setOutputText('Waiting for remote server…');
 
-    let codeWithModFile = this.inputEl?.value ?? '';
-    const moduleVars = document.querySelector<HTMLDivElement>('.js-playgroundVars')?.dataset ?? {};
-    if (moduleVars.modulepath !== 'std') {
-      codeWithModFile = codeWithModFile.concat(`
--- go.mod --
-module play.ground
-
-require ${moduleVars.modulepath} ${moduleVars.version}
-`);
-    }
     fetch('/play/compile', {
       method: 'POST',
-      body: JSON.stringify({ body: codeWithModFile, version: 2 }),
+      body: JSON.stringify({ body: this.getCodeWithModFile(), version: 2 }),
     })
       .then(res => res.json())
       .then(async ({ Events, Errors }) => {
