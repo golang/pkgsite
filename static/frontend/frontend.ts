@@ -15,6 +15,7 @@ import { initModals } from 'static/shared/jump/jump';
 
 import { keyboard } from 'static/shared/keyboard/keyboard';
 import * as analytics from 'static/shared/analytics/analytics';
+import { initJumpLinks } from './about/index';
 
 window.addEventListener('load', () => {
   for (const el of document.querySelectorAll<HTMLButtonElement>('.js-clipboard')) {
@@ -54,6 +55,7 @@ window.addEventListener('load', () => {
   registerHeaderListeners();
   registerSearchFormListeners();
   initModals();
+  initJumpLinks();
 });
 
 // Pressing '/' focuses the search box
