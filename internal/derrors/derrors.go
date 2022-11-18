@@ -64,6 +64,9 @@ var (
 	// ProxyError is used to capture non-actionable server errors returned from the proxy.
 	ProxyError = errors.New("proxy error")
 
+	// VulnDBError is used to capture non-actionable server errors returned from vulndb.
+	VulnDBError = errors.New("vulndb error")
+
 	// PackageBuildContextNotSupported indicates that the build context for the
 	// package is not supported.
 	PackageBuildContextNotSupported = errors.New("package build context not supported")
@@ -131,6 +134,7 @@ var codes = []struct {
 
 	{ProxyTimedOut, 550}, // not a real code
 	{ProxyError, 551},    // not a real code
+	{VulnDBError, 552},   // not a real code
 	// 52x and 54x errors represents modules that need to be reprocessed, and the
 	// previous status code the module had. Note that the status code
 	// matters for determining reprocessing order.
