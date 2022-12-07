@@ -31,8 +31,7 @@ a.btn {
 }
 
 .about-Content {
-    padding: 3rem 0;
-    padding: 2rem var(--gutter);
+    padding: 0;
 }
 .about-Content ul {
     overflow-wrap: break-word;
@@ -58,8 +57,13 @@ a.btn {
     line-height: 1.5rem;
 }
 .about-Wrapper {
+    display: grid;
+    gap: var(--gap);
     grid-template-areas:
         "content";
+    margin: 2rem auto 0;
+    max-width: 110rem;
+    padding: 0 var(--gutter);
 }
 .about-Content {
     grid-area: content;
@@ -67,8 +71,7 @@ a.btn {
 .Sidebar {
     display: none;
     grid-area: Sidebar;
-    padding: 3rem;
-    padding-top: 9rem;
+    margin-top: 6rem;
 }
 .Sidebar a {
     width: 7.5rem;
@@ -110,18 +113,11 @@ a.btn {
 .LeftNav-sidebar {
     display: none;
     grid-area: LeftNav-sidebar;
-    padding: 3rem;
+    padding: 0;
     height: 100vh;
     position: sticky;
     top: 0;
     overflow: auto;
-    margin-bottom: 1rem;
-}
-
-.LeftNav-sidebar + article.Article {
-    margin: unset;
-    margin-top: 3rem;
-    margin-bottom: 1.875rem;
 }
 
 .LeftNav {
@@ -135,7 +131,6 @@ a.btn {
     padding-bottom: 0.675rem;
     padding-top: 0.675rem;
     text-decoration: none;
-    border-bottom: var(--border);
 }
 
 .LeftNav a span {
@@ -186,10 +181,6 @@ a.btn {
     padding-left: 1rem;
 }
 
-.LeftSubnav + a {
-    border-top: var(--border);
-}
-
 .LeftSubnav img {
     visibility: hidden;
     flex: 1;
@@ -215,40 +206,28 @@ ul.LeftSubnav {
 .LeftNav .LeftSubnav a {
     border-bottom: unset;
 }
-@media screen and (min-width: 78rem) {
-    .Sidebar {
-        display: block;
-    }
+
+@media (min-width: 50rem) {
     .about-Wrapper {
-        display: grid;
+        margin-top: 3rem;
+        grid-template-columns: 1fr  3fr;
+        grid-template-areas:
+        "LeftNav-sidebar content";
     }
     .about-Content {
-        padding: 3rem 0;
+        padding: 0
+    }
+    .LeftNav-sidebar {
+        display: block;
     }
 }
-@media (min-width: 31.25rem) {
-    .about-Wrapper {
-        grid-template-columns: 1fr 3fr;
-        grid-template-areas:
-        "content content";
-    }
-    nav.LeftNav ul {
-        display: flex;
-        justify-content: space-between;
-    }
-}
-@media (min-width: 43.75rem) {
+@media only screen and (min-width: 90rem) {
     .about-Wrapper {
         grid-template-columns: 1.5fr 4fr 1.5fr;
         grid-template-areas:
         "LeftNav-sidebar content Sidebar";
     }
-    nav.LeftNav ul {
-        flex-direction: column;
-    }
-}
-@media only screen and (min-width: 90rem) {
-    .LeftNav-sidebar {
+    .Sidebar {
         display: block;
     }
 }
