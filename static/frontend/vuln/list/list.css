@@ -8,17 +8,21 @@
 .go-SearchForm {
   display: none;
 }
+
 .VulnList-title {
   font-size: 1.25rem;
   font-weight: 400;
 }
+
 .VulnList-details {
   margin-bottom: 1.75rem;
 }
+
 .VulnList-details p {
   word-break: break-word;
 }
+
 .VulnList-search {
-  max-width: 32rem;
   margin-bottom: 1rem;
+  max-width: 32rem;
 }

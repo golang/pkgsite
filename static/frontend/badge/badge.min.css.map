@@ -1,7 +1,7 @@
 {
   "version": 3,
   "sources": ["badge.css"],
-  "sourcesContent": ["/*\n * Copyright 2021 The Go Authors. All rights reserved.\n * Use of this source code is governed by a BSD-style\n * license that can be found in the LICENSE file.\n */\n\n.Badge label,\n.Badge input {\n  width: 100%;\n}\n.Badge-badgeIcon {\n  height: 1.25rem;\n  width: 5.625rem;\n}\n.Badge-snippetContainer {\n  background-color: var(--color-background-accented);\n  display: flex;\n  flex-direction: column;\n  gap: 1rem;\n  margin-top: 1rem;\n  padding: 1rem;\n}\n.Badge-gopherLanding {\n  height: 12.25rem;\n  text-align: center;\n}\n.Badge-gopherLanding img {\n  height: 7.8125rem;\n  width: auto;\n}\n"],
-  "mappings": ";;;;;AAMA,0BAEE,WAEF,iBACE,eACA,eAEF,wBACE,kDACA,aACA,sBACA,SACA,gBAnBF,aAsBA,qBACE,gBACA,kBAEF,yBACE,iBACA",
+  "sourcesContent": ["/*\n * Copyright 2021 The Go Authors. All rights reserved.\n * Use of this source code is governed by a BSD-style\n * license that can be found in the LICENSE file.\n */\n\n.Badge label,\n.Badge input {\n  width: 100%;\n}\n\n.Badge-badgeIcon {\n  height: 1.25rem;\n  width: 5.625rem;\n}\n\n.Badge-snippetContainer {\n  background-color: var(--color-background-accented);\n  display: flex;\n  flex-direction: column;\n  gap: 1rem;\n  margin-top: 1rem;\n  padding: 1rem;\n}\n\n.Badge-gopherLanding {\n  height: 12.25rem;\n  text-align: center;\n}\n\n.Badge-gopherLanding img {\n  height: 7.8125rem;\n  width: auto;\n}\n"],
+  "mappings": ";;;;;AAMA,0BAEE,WAGF,iBACE,eACA,eAGF,wBACE,kDACA,aACA,sBACA,SACA,gBArBF,aAyBA,qBACE,gBACA,kBAGF,yBACE,iBACA",
   "names": []
 }

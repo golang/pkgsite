@@ -7,6 +7,7 @@
 .go-Clipboard {
   position: relative;
 }
+
 .go-Clipboard::before {
   background-color: var(--color-background-inverted);
   border-radius: var(--border-radius);
@@ -22,6 +23,7 @@
   white-space: nowrap;
   z-index: 1000;
 }
+
 .go-Clipboard::after {
   border-bottom: 0.25rem solid transparent;
   border-left: 0;
@@ -34,6 +36,7 @@
   top: 0.5625rem;
   z-index: 1000;
 }
+
 .go-Clipboard:not([data-tooltip])::before,
 .go-Clipboard:not([data-tooltip])::after,
 .go-Clipboard[data-tooltip='']::before,

@@ -8,10 +8,12 @@
 .Badge input {
   width: 100%;
 }
+
 .Badge-badgeIcon {
   height: 1.25rem;
   width: 5.625rem;
 }
+
 .Badge-snippetContainer {
   background-color: var(--color-background-accented);
   display: flex;
@@ -20,10 +22,12 @@
   margin-top: 1rem;
   padding: 1rem;
 }
+
 .Badge-gopherLanding {
   height: 12.25rem;
   text-align: center;
 }
+
 .Badge-gopherLanding img {
   height: 7.8125rem;
   width: auto;

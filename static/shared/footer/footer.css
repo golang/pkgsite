@@ -10,17 +10,20 @@
   font-size: 0.875rem;
   width: 100%;
 }
+
 .go-Footer-links {
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
   margin: auto;
   max-width: 75.75rem;
-  padding: 2rem 1.5rem 2.625rem 1.5rem;
+  padding: 2rem 1.5rem 2.625rem;
 }
+
 .go-Footer-linkColumn {
   flex: 0 0 9.5rem;
 }
+
 .go-Footer .go-Footer-link {
   color: var(--color-text-inverted);
   display: flex;
@@ -28,12 +31,14 @@
   font-size: 0.875rem;
   line-height: 2rem;
 }
+
 .go-Footer .go-Footer-link--primary {
   font-size: 1.125rem;
   line-height: 1.75rem;
   margin-bottom: 0.5rem;
   margin-top: 0.75rem;
 }
+
 .go-Footer-bottom {
   align-items: center;
   border-top: var(--border);
@@ -41,11 +46,13 @@
   margin: 0 1.5rem;
   min-height: 4.125rem;
 }
+
 .go-Footer-gopher {
   align-self: flex-end;
   height: 3.147rem;
   width: 5rem;
 }
+
 .go-Footer-listRow {
   display: flex;
   flex: 1;
@@ -55,6 +62,7 @@
   padding: 0;
   text-align: center;
 }
+
 .go-Footer-listItem {
   align-items: center;
   display: flex;
@@ -63,15 +71,18 @@
   margin: 0.4rem 0;
   padding: 0 1rem;
 }
+
 .go-Footer-listItem a:link,
 .go-Footer-listItem a:visited {
   color: var(--color-text-inverted);
 }
+
 .go-Footer-listItem .go-Button--text {
   background-color: transparent;
   font-size: 1rem;
   margin: -0.5rem 0;
 }
+
 .go-Footer-listItem [data-value] {
   display: none;
 }
@@ -80,15 +91,18 @@
 :root:not([data-theme]) .go-Footer-listItem [data-value='auto'] {
   display: initial;
 }
+
 [data-theme='dark'] .go-Footer-listItem [data-value='dark'] {
   display: initial;
 }
+
 [data-theme='light'] .go-Footer-listItem [data-value='light'] {
   display: initial;
 }
+
 .go-Footer-toggleTheme,
 .go-Footer-keyboard {
-  margin: 0 0 0.5rem 0;
+  margin: 0 0 0.5rem;
 }
 
 .go-Footer-googleLogo {
@@ -97,6 +111,7 @@
   margin-bottom: 1.3rem;
   text-align: right;
 }
+
 .go-Footer-googleLogoImg {
   height: 1.5rem;
   width: 4.529rem;
@@ -106,12 +121,15 @@
   .go-Footer-listItem {
     flex: initial;
   }
+
   .go-Footer-listItem + .go-Footer-listItem {
     border-left: var(--border);
   }
+
   .go-Footer-toggleTheme {
     margin: 0 0 0 -0.5rem;
   }
+
   .go-Footer-keyboard {
     margin: 0;
   }

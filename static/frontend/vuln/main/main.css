@@ -8,23 +8,29 @@
 .go-SearchForm {
   display: none;
 }
+
 .VulnMain-title {
   font-size: 1.25rem;
   font-weight: 400;
   margin: 0 0 0.5rem;
 }
+
 .VulnMain-recent {
   margin-top: 0.5rem;
 }
+
 .VulnMain-details {
   margin-bottom: 1.75rem;
 }
+
 .VulnMain-details p {
   word-break: break-word;
 }
+
 .VulnMain-search {
   max-width: 32rem;
 }
+
 .VulnMain h2 {
   margin: 1.75rem 0 0.5rem;
 }

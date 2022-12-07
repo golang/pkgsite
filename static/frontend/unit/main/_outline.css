@@ -8,6 +8,7 @@
   display: flex;
   margin-bottom: 1rem;
 }
+
 .UnitOutline-jumpTo button {
   align-items: center;
   background-color: var(--color-background);
@@ -20,9 +21,11 @@
   text-align: left;
   width: 100%;
 }
+
 .UnitOutline-jumpTo button:hover:not([disabled]) {
   border-color: var(--color-border);
 }
+
 .UnitOutline-jumpToInput:disabled {
   background-color: var(--gray-9);
 }

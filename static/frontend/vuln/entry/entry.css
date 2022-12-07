@@ -14,74 +14,88 @@
   gap: 1rem;
   margin-top: 0.5rem;
 }
+
 .VulnEntry h2 {
   font-size: 1.25rem;
 }
-.VulnEntryPackages-attr {
-  list-style: disc;
-  list-style-position: inside;
-  /* package and symbol names can be pretty long */
-  overflow-wrap: anywhere;
-}
+
 .VulnEntryPackages-detailsContent {
   margin-left: 0.2rem;
 }
+
 /* One column by default */
 .VulnEntryPackages-container {
   display: grid;
-  grid-template-columns: 1fr;
   grid-gap: 0.5rem;
+  grid-template-columns: 1fr;
 }
+
 /* Don't display the first item - the headers for multi-col layout */
-.VulnEntryPackages-container>li:first-child {
+.VulnEntryPackages-container > li:first-child {
   display: none;
 }
+
 .VulnEntryPackages-attr::before {
-  content: attr(data-name);
   color: var(--color-text-subtle);
+  content: attr(data-name);
 }
+
 /* Attribute name for first column, and attribute value for second column. */
 .VulnEntryPackages-attr {
   display: grid;
   grid-template-columns: minmax(5em, 10%) 1fr;
+  list-style: disc;
+  list-style-position: inside;
+
+  /* package and symbol names can be pretty long */
+  overflow-wrap: anywhere;
   padding: 0.2rem;
 }
+
 /* Three columns for wider screen */
 @media screen and (min-width: 46rem) {
   /* Undo what's done by default */
   .VulnEntryPackages-container {
     grid-gap: 0;
   }
+
   .VulnEntryPackages-item {
     padding: inherit;
   }
-  .VulnEntryPackages-container>li:first-child {
-    display: grid;  /* undo display: none setfor default */
+
+  .VulnEntryPackages-container > li:first-child {
+    display: grid; /* undo display: none setfor default */
   }
+
   .VulnEntryPackages-attr::before {
     content: none;
   }
+
   .VulnEntryPackages-attr {
     grid-template-columns: 1fr;
   }
+
   .VulnEntryPackages-item-container {
     display: grid;
     grid-template-columns: minmax(10em, 50%) minmax(5em, 20%) 1fr;
     padding: 0.5rem;
   }
+
   /* Header */
   .VulnEntryPackages-item-container:first-child {
     background-color: var(--color-background-accented);
   }
+
   /* Header text */
   .VulnEntryPackages-item-container:first-child .VulnEntryPackages-attr {
     display: flex;
-    text-overflow: initial;
-    overflow: auto;
-    white-space: normal;
     font-weight: bold;
+    overflow: auto;
+    text-overflow: initial;
+    white-space: normal;
   }
 }
+
 .VulnEntry-referenceList,
 .VulnEntry-aliases {
   line-height: 1.75rem;

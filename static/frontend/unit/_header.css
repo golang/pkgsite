@@ -9,6 +9,7 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
 .UnitHeader-overflowContainer {
   display: none;
   height: 1.5rem;
@@ -16,6 +17,7 @@
   right: 0;
   width: 1.5rem;
 }
+
 .go-Main-header[data-fixed] .UnitHeader-overflowContainer {
   display: block;
 }
@@ -24,6 +26,7 @@
     display: none;
   }
 }
+
 .UnitHeader-overflowImage {
   fill: var(--gray-3);
   height: 100%;
@@ -32,9 +35,8 @@
   top: 0;
   width: 100%;
 }
+
 .UnitHeader-overflowSelect {
-  -webkit-appearance: none;
-  -moz-appearance: none;
   appearance: none;
   background: transparent;
   border: 0;
@@ -47,6 +49,7 @@
   top: 0;
   width: 100%;
 }
+
 .UnitHeader-overflowSelect option {
   color: var(--color-text);
 }
@@ -62,6 +65,7 @@
   text-transform: uppercase;
   top: -0.0625rem;
 }
+
 .UnitHeader-versionBadge--unknown,
 .DetailsHeader-badge--unknown {
   display: none;
@@ -72,6 +76,7 @@ a.UnitHeader-backLink {
   display: block;
   font-size: 1rem;
 }
+
 .UnitHeader-backLink img {
   vertical-align: middle;
 }
@@ -79,23 +84,29 @@ a.UnitHeader-backLink {
 .DetailsHeader-badge--notAtLatest a {
   display: none;
 }
+
 .DetailsHeader-badge--notAtLatest span.DetailsHeader-span--latest {
   display: none;
 }
+
 .DetailsHeader-badge--notAtLatest .UnitMetaDetails-icon {
   z-index: 1;
 }
+
 .DetailsHeader-badge--notAtLatest .UnitMetaDetails-toggletipBubble {
   color: var(--black);
   text-transform: none;
 }
+
 .DetailsHeader-span--notAtLatest .UnitMetaDetails-toggletip {
   height: 0;
 }
+
 .DetailsHeader-span--notAtLatest .UnitMetaDetails-toggletip button {
   height: 0.8125rem;
   line-height: 0;
 }
+
 .DetailsHeader-span--notAtLatest .UnitMetaDetails-toggletip img {
   vertical-align: middle;
 }
@@ -103,12 +114,15 @@ a.UnitHeader-backLink {
 .DetailsHeader-badge--goToLatest span {
   display: none;
 }
+
 .DetailsHeader-badge--goToLatest span.DetailsHeader-span--goToLatest {
   display: initial;
 }
+
 .DetailsHeader-badge--unknown a {
   display: none;
 }
+
 .DetailsHeader-badge--unknown span {
   display: none;
 }
@@ -125,9 +139,11 @@ a.UnitHeader-backLink {
 .DetailsHeader-badge--latest a {
   display: none;
 }
+
 .DetailsHeader-badge--goToLatest a:hover {
   text-decoration: none;
 }
+
 .DetailsHeader-badge--latest span.DetailsHeader-span--notAtLatest {
   display: none;
 }

@@ -11,21 +11,27 @@ body {
   font-size: 1rem;
   line-height: normal;
 }
+
 h1 {
   font-size: 1.5rem;
 }
+
 h2 {
   font-size: 1.375rem;
 }
+
 h3 {
   font-size: 1.25rem;
 }
+
 h4 {
   font-size: 1.125rem;
 }
+
 h5 {
   font-size: 1rem;
 }
+
 h6 {
   font-size: 0.875rem;
 }
@@ -38,6 +44,7 @@ h4 {
   line-height: 1.25em;
   word-break: break-word;
 }
+
 h5,
 h6 {
   font-weight: 500;
@@ -57,6 +64,7 @@ p {
   line-height: 1.5rem;
   max-width: 60rem;
 }
+
 strong {
   font-weight: 600;
 }
@@ -64,27 +72,32 @@ strong {
 .go-textSubtle {
   color: var(--color-text-subtle);
 }
+
 .go-textTitle {
   font-size: 1.125rem;
   font-weight: 600;
   line-height: 1.25rem;
 }
+
 .go-textLabel {
   font-size: 0.875rem;
   font-weight: 600;
   line-height: 1rem;
 }
+
 .go-textPagination {
   font-size: 0.875rem;
   line-height: 1rem;
 }
+
 code,
 pre,
 textarea.code {
-  font-family: SFMono-Regular, Consolas, Liberation Mono, Menlo, monospace;
+  font-family: SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
   font-size: 0.875rem;
   line-height: 1.5em;
 }
+
 pre,
 textarea.code {
   background-color: var(--color-background-accented);
@@ -110,10 +123,12 @@ a:visited {
   color: var(--color-brand-primary);
   text-decoration: none;
 }
+
 a:hover {
   color: var(--color-brand-primary);
   text-decoration: underline;
 }
+
 a:hover > * {
   text-decoration: underline;
 }

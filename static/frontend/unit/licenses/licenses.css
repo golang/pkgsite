@@ -11,9 +11,11 @@
 .License > h2 {
   margin-bottom: 1rem;
 }
+
 .License > p {
   margin-bottom: 0.5rem;
 }
+
 .License-contents {
   border: var(--border);
   border-radius: 0.1875rem;
@@ -24,10 +26,12 @@
   padding: 1.5rem;
   tab-size: 4;
 }
+
 .License-source {
   font-size: 0.875rem;
   padding-top: 0.5rem;
 }
+
 .Disclaimer-link {
   font-style: italic;
 }

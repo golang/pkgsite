@@ -11,18 +11,23 @@
   position: relative;
   text-align: center;
 }
+
 .go-Carousel-slide {
   margin: 0.5rem 3rem;
 }
+
 .go-Carousel-slide[aria-hidden] {
   display: none;
 }
+
 .go-Carousel-prevSlide {
   left: 0;
 }
+
 .go-Carousel-nextSlide {
   right: 0;
 }
+
 .go-Carousel-prevSlide,
 .go-Carousel-nextSlide {
   background-color: transparent;
@@ -35,32 +40,38 @@
   top: 50%;
   width: 2.75rem;
 }
+
 .go-Carousel-prevSlide:hover,
 .go-Carousel-nextSlide:hover {
   background-color: var(--color-background-accented);
   cursor: pointer;
 }
+
 .go-Carousel:hover .go-Carousel-prevSlide,
 .go-Carousel:hover .go-Carousel-nextSlide,
 .go-Carousel:focus-within .go-Carousel-prevSlide,
 .go-Carousel:focus-within .go-Carousel-nextSlide {
   opacity: 1;
 }
+
 .go-Carousel-dots {
   display: flex;
   font-size: 0.4375rem;
   gap: 0.5rem;
 }
+
 .go-Carousel-dot {
   background-color: var(--color-border);
   border-radius: 2rem;
   height: 0.4375rem;
   width: 0.4375rem;
 }
+
 .go-Carousel-dot--active,
 .go-Carousel-dot:hover {
   background-color: var(--color-text-subtle);
 }
+
 .go-Carousel-obscured {
   border: 0;
   clip: rect(0 0 0 0);

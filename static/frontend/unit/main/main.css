@@ -31,6 +31,7 @@
     justify-content: center;
   }
 }
+
 .UnitDetails :target {
   scroll-margin-top: calc(var(--js-sticky-header-height, 3.5rem) * 2.15);
 }
@@ -44,6 +45,7 @@
   background-color: var(--color-background-highlighted);
   padding: 0.25rem;
 }
+
 .UnitDetails-meta {
   order: -1;
 }
@@ -54,6 +56,7 @@
     order: initial;
   }
 }
+
 .UnitDetails-contentEmpty {
   align-items: center;
   background-color: var(--color-background-accented);
@@ -64,6 +67,7 @@
   padding-top: 1rem;
   text-align: center;
 }
+
 .UnitDetails-contentEmpty img {
   height: 7.8125rem;
   width: auto;

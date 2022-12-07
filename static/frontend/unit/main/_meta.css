@@ -10,6 +10,7 @@
   grid-template-columns: max-content auto;
   white-space: nowrap;
 }
+
 .UnitMeta-details,
 .UnitMeta-links {
   display: flex;
@@ -17,11 +18,13 @@
   flex-direction: row;
   gap: 1rem 2rem;
 }
+
 .UnitMeta-repo {
   align-items: center;
   display: flex;
   overflow: hidden;
 }
+
 .UnitMeta-repo a {
   overflow: hidden;
   text-overflow: ellipsis;
@@ -30,6 +33,7 @@
   .UnitMeta {
     grid-template-columns: max-content auto;
   }
+
   .UnitMeta-details,
   .UnitMeta-links {
     flex-direction: row;
@@ -39,12 +43,14 @@
   :root[data-layout='responsive'] .UnitMeta {
     grid-template-columns: 100%;
   }
+
   :root[data-layout='responsive'] .UnitMeta-details,
   :root[data-layout='responsive'] .UnitMeta-links {
     flex-direction: column;
     white-space: nowrap;
   }
 }
+
 .UnitMeta-detailsLearn {
   width: 100%;
 }

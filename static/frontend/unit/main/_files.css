@@ -7,17 +7,20 @@
 .UnitFiles {
   margin-bottom: 2rem;
 }
+
 .UnitFiles-titleLink {
   position: relative;
 }
+
 .UnitFiles-titleLink a {
   bottom: 1rem;
   font-size: 0.875rem;
   position: absolute;
   right: 0;
 }
+
 .UnitFiles-titleLink a::after {
-  background-image: url(/static/shared/icon/launch_gm_grey_24dp.svg);
+  background-image: url('/static/shared/icon/launch_gm_grey_24dp.svg');
   background-repeat: no-repeat;
   background-size: 0.875rem 1.25rem;
   content: '';
@@ -28,26 +31,30 @@
   top: 0.125rem;
   width: 1rem;
 }
+
 .UnitFiles h2 a.UnitFiles-idLink,
 .UnitFiles summary a {
   opacity: 0;
 }
+
 .UnitFiles h2:hover a,
 .UnitFiles summary:focus a {
   opacity: 1;
 }
+
 .UnitFiles-title {
   border-bottom: var(--border);
   font-size: 1.375rem;
-  margin: 0.5rem 0 0 0;
+  margin: 0.5rem 0 0;
   padding-bottom: 1rem;
 }
+
 .UnitFiles-title img {
   margin: auto 1rem auto 0;
 }
+
 .UnitFiles-fileList {
-  column-count: 5;
-  column-width: 12.5rem;
+  columns: 12.5rem 5;
   line-height: 1.5rem;
   list-style: none;
   margin-top: 1rem;

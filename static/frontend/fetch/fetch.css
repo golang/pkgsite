@@ -11,13 +11,16 @@
   0% {
     opacity: 0.2;
   }
+
   20% {
     opacity: 1;
   }
+
   100% {
     opacity: 0.2;
   }
 }
+
 .Fetch-dot {
   animation-duration: 1.4s;
   animation-fill-mode: both;
@@ -29,16 +32,20 @@
   height: 0.5rem;
   width: 0.5rem;
 }
+
 .Fetch-loading {
   display: none;
   text-align: center;
 }
+
 .Fetch-loading:nth-child(2) {
   animation-delay: 0.2s;
 }
+
 .Fetch-loading:nth-child(3) {
   animation-delay: 0.4s;
 }
+
 .Fetch-message,
 .Fetch-messageSecondary {
   text-align: center;

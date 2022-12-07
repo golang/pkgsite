@@ -1,7 +1,7 @@
 {
   "version": 3,
   "sources": ["licenses.css"],
-  "sourcesContent": ["/*!\n * Copyright 2021 The Go Authors. All rights reserved.\n * Use of this source code is governed by a BSD-style\n * license that can be found in the LICENSE file.\n */\n\n.License {\n  margin-bottom: 1rem;\n}\n\n.License > h2 {\n  margin-bottom: 1rem;\n}\n.License > p {\n  margin-bottom: 0.5rem;\n}\n.License-contents {\n  border: var(--border);\n  border-radius: 0.1875rem;\n  font-size: 0.875rem;\n  line-height: 1.375rem;\n  margin: 0;\n  overflow-x: auto;\n  padding: 1.5rem;\n  tab-size: 4;\n}\n.License-source {\n  font-size: 0.875rem;\n  padding-top: 0.5rem;\n}\n.Disclaimer-link {\n  font-style: italic;\n}\n"],
-  "mappings": ";;;;;AAMA,SACE,mBAGF,YACE,mBAEF,WACE,oBAEF,kBACE,qBAjBF,uBAmBE,kBACA,qBApBF,SAsBE,gBAtBF,eAwBE,WAEF,gBACE,kBACA,kBAEF,iBACE",
+  "sourcesContent": ["/*!\n * Copyright 2021 The Go Authors. All rights reserved.\n * Use of this source code is governed by a BSD-style\n * license that can be found in the LICENSE file.\n */\n\n.License {\n  margin-bottom: 1rem;\n}\n\n.License > h2 {\n  margin-bottom: 1rem;\n}\n\n.License > p {\n  margin-bottom: 0.5rem;\n}\n\n.License-contents {\n  border: var(--border);\n  border-radius: 0.1875rem;\n  font-size: 0.875rem;\n  line-height: 1.375rem;\n  margin: 0;\n  overflow-x: auto;\n  padding: 1.5rem;\n  tab-size: 4;\n}\n\n.License-source {\n  font-size: 0.875rem;\n  padding-top: 0.5rem;\n}\n\n.Disclaimer-link {\n  font-style: italic;\n}\n"],
+  "mappings": ";;;;;AAMA,SACE,mBAGF,YACE,mBAGF,WACE,oBAGF,kBACE,qBAnBF,uBAqBE,kBACA,qBAtBF,SAwBE,gBAxBF,eA0BE,WAGF,gBACE,kBACA,kBAGF,iBACE",
   "names": []
 }

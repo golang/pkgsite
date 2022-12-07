@@ -7,7 +7,6 @@
 select:focus:not([disabled]),
 input:focus:not([disabled]) {
   border-color: var(--color-brand-primary);
-  -webkit-box-shadow: var(--focus-box-shadow);
   box-shadow: var(--focus-box-shadow);
   outline: transparent;
   z-index: 2;
@@ -29,17 +28,21 @@ input::placeholder {
   flex-direction: column;
   gap: 0.5rem;
 }
+
 .go-Label--inline {
   align-items: center;
   flex-direction: row;
 }
+
 .go-Label legend {
   margin-bottom: 0.5rem;
 }
+
 .go-Label--inline legend {
   float: left;
   margin-bottom: 0;
 }
+
 .go-Input,
 .go-Select {
   background: var(--color-input);
@@ -47,40 +50,45 @@ input::placeholder {
   border-radius: var(--border-radius);
   color: var(--color-input-text);
 }
+
 .go-Input {
-  padding: 0.40625rem 0.5rem;
+  padding: 0.4063rem 0.5rem;
 }
+
 .go-Select {
-  -webkit-appearance: none;
-  -moz-appearance: none;
   appearance: none;
   background: url('/static/shared/icon/arrow_drop_down_gm_grey_24dp.svg') right no-repeat;
   background-color: var(--color-background);
   background-position: right center;
   border-radius: var(--border-radius);
   margin: 0;
-  padding: 0.34375rem 1.25rem 0.34375rem 0.5rem;
+  padding: 0.3438rem 1.25rem 0.3438rem 0.5rem;
 }
 
 .go-InputGroup {
   display: flex;
 }
+
 .go-InputGroup .go-Input {
   flex: 1;
 }
+
 .go-InputGroup > :not(:first-child, :last-child) {
   border-radius: 0;
   margin-left: -0.0625rem;
 }
+
 .go-InputGroup > :first-child {
   border-bottom-right-radius: 0;
   border-top-right-radius: 0;
 }
+
 .go-InputGroup > :last-child {
   border-bottom-left-radius: 0;
   border-top-left-radius: 0;
   margin-left: -0.0625rem;
 }
+
 .go-InputGroup > *:hover,
 .go-InputGroup > *:focus {
   z-index: 1;
@@ -90,9 +98,11 @@ input::placeholder {
   display: flex;
   position: relative;
 }
+
 .go-ShortcutKey .go-Input {
   flex-grow: 1;
 }
+
 .go-ShortcutKey::after {
   align-self: center;
   background-color: var(--color-background-accented);

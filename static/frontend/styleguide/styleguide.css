@@ -9,6 +9,7 @@
 .StyleGuide {
   background-color: var(--color-background);
 }
+
 .StyleGuide > section {
   align-items: center;
   display: grid;
@@ -16,33 +17,41 @@
   grid-template-columns: 100%;
   margin-bottom: 1rem;
 }
+
 .StyleGuide > section > header {
   border-bottom: var(--border);
   grid-column: 1/-1;
   margin-bottom: 1rem;
   padding-bottom: 1rem;
 }
+
 .StyleGuide > section > h2 {
   grid-column: 1/-1;
   width: max-content;
 }
+
 .StyleGuide > section > hr {
   grid-column: 1/-1;
 }
+
 .StyleGuide > section > h3 {
   grid-column: 1/-1;
   margin: 1rem 0;
 }
+
 .StyleGuide > section > p {
   grid-column: 1/-1;
 }
+
 .StyleGuide .Color,
 .StyleGuide .ColorIntent {
   grid-template-columns: repeat(auto-fit, 5rem [col-start] minmax(12rem, auto) [col-end]);
 }
+
 .StyleGuide .Outline {
   align-items: flex-start;
 }
+
 .StyleGuide .Outline > span {
   margin-top: 0.5rem;
 }
@@ -50,6 +59,7 @@
   .StyleGuide .Icon {
     grid-template-columns: 10rem 8rem auto;
   }
+
   .StyleGuide .Typography,
   .StyleGuide .Button,
   .StyleGuide .Carousel,
@@ -68,6 +78,7 @@
   .StyleGuide .Icon {
     grid-template-columns: 10rem auto 50%;
   }
+
   .StyleGuide .Typography,
   .StyleGuide .Button,
   .StyleGuide .Carousel,
@@ -90,6 +101,7 @@
   gap: 1rem;
   padding: 0.25rem;
 }
+
 .ElementMarkup > pre,
 .StringifyElement-markup {
   color: var(--color-text-subtle);
@@ -99,9 +111,10 @@
   padding-left: 2rem;
   position: relative;
 }
+
 .ElementMarkup > pre::before,
 .StringifyElement-markup::before {
-  background: url(/static/shared/icon/content_copy_gm_grey_24dp.svg);
+  background: url('/static/shared/icon/content_copy_gm_grey_24dp.svg');
   background-repeat: no-repeat;
   background-size: contain;
   content: ' ';
@@ -110,14 +123,17 @@
   position: absolute;
   width: 1rem;
 }
+
 .StringifyElement-markup:active {
   filter: contrast(0.9);
 }
+
 .StringifyElement-details {
   color: var(--color-text-subtle);
   font-size: 0.8125rem;
   overflow-x: auto;
 }
+
 .GoColor-circle {
   background-color: var(--color);
   border: var(--border);
@@ -127,6 +143,7 @@
   margin-bottom: 0.5rem;
   width: 3rem;
 }
+
 .GoIcon-title,
 .GoColor-title {
   text-transform: capitalize;

@@ -11,13 +11,16 @@
   padding: 0.25rem 0.5rem;
   width: 100%;
 }
+
 .go-Message--notice {
   background-color: var(--color-background-info);
 }
+
 .go-Message--warning {
   background-color: var(--color-background-warning);
   color: var(--gray-1);
 }
+
 .go-Message--alert {
   background-color: var(--color-background-alert);
 }
@@ -25,10 +28,12 @@
 .go-Message > .go-Icon {
   vertical-align: text-top;
 }
+
 [data-theme='dark'] .go-Message a:not(:hover) {
   color: var(--color-text);
   text-decoration: underline;
 }
+
 [data-theme='dark'] .go-Message--warning .go-Icon {
   filter: none;
 }

@@ -21,31 +21,39 @@
   position: fixed;
   top: 0;
 }
+
 .go-Modal > form {
   display: contents;
 }
+
 .go-Modal--small {
   width: 20rem;
 }
+
 .go-Modal--md {
   width: 30rem;
 }
+
 .go-Modal--lg {
   width: 40rem;
 }
+
 .go-Modal-header {
   display: flex;
   justify-content: space-between;
 }
+
 .go-Modal-header h2 {
   font-size: 1.15rem;
   line-height: 1.25rem;
 }
+
 .go-Modal-body {
   flex-grow: 1;
   min-height: 2rem;
   min-width: 18rem;
 }
+
 .go-Modal-actions {
   text-align: right;
 }

@@ -9,21 +9,26 @@
   margin-bottom: 2rem;
   word-break: break-word;
 }
+
 .UnitDoc h2 a.UnitDoc-idLink,
 .UnitDoc summary a {
   opacity: 0;
 }
+
 .UnitDoc h2:hover a,
 .UnitDoc summary:focus a {
   opacity: 1;
 }
+
 .UnitDoc-title {
   border-bottom: var(--border);
   padding-bottom: 1rem;
 }
+
 .UnitDoc-title img {
   margin: auto 1rem auto 0;
 }
+
 .UnitDoc-emptySection {
   background-color: var(--color-background-accented);
   color: var(--color-text-subtle);
@@ -31,44 +36,56 @@
   margin-top: 1.5rem;
   text-align: center;
 }
+
 .UnitDoc-emptySection img {
   height: 7.8125rem;
   width: auto;
 }
+
 .Documentation .UnitDoc-emptySection p {
   margin: 1rem auto;
 }
+
 .UnitDoc .Documentation h4 {
   margin-top: 1.5rem;
 }
+
 .Documentation {
   display: block;
 }
+
 .Documentation p {
   margin: 1rem 0;
 }
+
 .Documentation h2,
 .Documentation h3 {
   margin-top: 1.5rem;
 }
+
 .Documentation a {
   text-decoration: none;
 }
+
 .Documentation a:hover {
   text-decoration: underline;
 }
+
 .Documentation h2 a,
 .Documentation h3 a,
 .Documentation h4 a.Documentation-idLink,
 .Documentation summary a {
   opacity: 0;
 }
+
 .Documentation a:focus {
   opacity: 1;
 }
+
 .Documentation h3 a.Documentation-source {
   opacity: 1;
 }
+
 .Documentation h2:hover a,
 .Documentation h3:hover a,
 .Documentation h4:hover a,
@@ -76,26 +93,29 @@
 .Documentation summary:focus a {
   opacity: 1;
 }
+
 .Documentation ul {
   line-height: 1.5rem;
   list-style: none;
   padding-left: 0;
 }
+
 .Documentation ul ul {
   padding-left: 2em;
 }
 
 .Documentation .Documentation-bulletList {
   list-style: disc;
-  padding-left: 2rem;
   margin-bottom: 1rem;
+  padding-left: 2rem;
 }
 
 .Documentation .Documentation-numberList {
   list-style: decimal;
-  padding-left: 2rem;
   margin-bottom: 1rem;
+  padding-left: 2rem;
 }
+
 .Documentation pre + pre {
   margin-top: 0.625rem;
 }
@@ -105,6 +125,7 @@
   border-top: var(--border);
   margin-top: 0;
 }
+
 .Documentation pre .comment {
   color: var(--color-code-comment);
 }
@@ -115,6 +136,7 @@
 .Documentation-examples {
   padding-bottom: 0;
 }
+
 .Documentation-empty {
   color: var(--color-text-subtle);
   margin-top: -0.5rem;
@@ -124,13 +146,16 @@
     margin-left: 2rem;
     white-space: nowrap;
   }
+
   .Documentation-toc-columns {
     columns: 2;
   }
 }
+
 .Documentation-toc:empty {
   display: none;
 }
+
 .Documentation-tocItem {
   overflow: hidden;
   text-overflow: ellipsis;
@@ -166,6 +191,7 @@
   display: flex;
   justify-content: space-between;
 }
+
 .Documentation-sinceVersion {
   color: var(--color-text-subtle);
   font-size: 0.9375rem;
@@ -182,6 +208,7 @@
   padding-top: 1.5rem;
   text-align: right;
 }
+
 .Documentation-declaration pre {
   scroll-padding-top: calc(var(--js-sticky-header-height, 3.5rem) + 3.75rem);
 }
@@ -190,9 +217,11 @@
     scroll-padding-top: calc(var(--js-sticky-header-height, 3.5rem) + 0.75rem);
   }
 }
+
 .Documentation-declaration + .Documentation-declaration {
   margin-top: 0.625rem;
 }
+
 .Documentation-declarationLink {
   background-color: var(--color-background-accented);
   border: var(--border);
@@ -204,12 +233,14 @@
   padding: 0.375rem;
   text-align: right;
 }
+
 .Documentation-exampleButtonsContainer {
   align-items: center;
   display: flex;
   justify-content: flex-end;
   margin-top: 0.5rem;
 }
+
 .Documentation-examplePlayButton {
   background-color: var(--white);
   border: 0.15rem solid var(--turq-med);
@@ -219,6 +250,7 @@
   height: 2.5rem;
   width: 4.125rem;
 }
+
 .Documentation-exampleRunButton,
 .Documentation-exampleShareButton,
 .Documentation-exampleFormatButton {
@@ -229,23 +261,28 @@
   margin-left: 0.5rem;
   padding: 0 1rem;
 }
+
 .Documentation-exampleRunButton {
   background-color: var(--turq-dark);
   color: var(--white);
 }
+
 .Documentation-exampleShareButton,
 .Documentation-exampleFormatButton {
   background-color: var(--white);
   color: var(--turq-dark);
 }
+
 .Documentation-exampleDetails {
   margin-top: 1rem;
 }
+
 .Documentation-exampleDetailsBody pre {
   border-radius: 0 0 0.3rem 0.3rem;
   margin-bottom: 1rem;
   margin-top: -0.25rem;
 }
+
 .Documentation-exampleDetailsBody textarea {
   height: 100%;
   outline: none;
@@ -265,11 +302,13 @@
   border-bottom-right-radius: 0;
   margin: 0;
 }
+
 .Documentation-exampleDetailsBody .Documentation-exampleOutput {
   border-top-left-radius: 0;
   border-top-right-radius: 0;
   margin: 0 0 0.5rem;
 }
+
 .Documentation-exampleDetailsHeader {
   color: var(--color-brand-primary);
   cursor: pointer;
@@ -277,9 +316,11 @@
   outline: none;
   text-decoration: none;
 }
+
 .Documentation-exampleOutputLabel {
   color: var(--color-text-subtle);
 }
+
 .Documentation-exampleError {
   color: var(--pink);
   margin-right: 0.4rem;
@@ -298,6 +339,7 @@
 .Documentation-indexDeprecated {
   margin-left: 0.5rem;
 }
+
 .Documentation-deprecatedBody {
   color: var(--color-text-subtle);
   font-size: 0.87rem;
@@ -305,6 +347,7 @@
   margin-left: 0.25rem;
   margin-right: 0.5rem;
 }
+
 .Documentation-deprecatedTag {
   background-color: var(--color-border);
   border-radius: 0.125rem;
@@ -316,41 +359,52 @@
   text-transform: uppercase;
   vertical-align: middle;
 }
+
 .Documentation-deprecatedTitle {
   align-items: center;
   display: flex;
   gap: 0.5rem;
 }
+
 .Documentation-deprecatedDetails {
   color: var(--color-text-subtle);
 }
+
 .Documentation-deprecatedDetails a {
   color: var(--color-text-subtle);
 }
+
 .Documentation-deprecatedDetails[open] {
   color: var(--color-text);
 }
+
 .Documentation-deprecatedDetails[open] a {
   color: var(--color-brand-primary);
 }
+
 .Documentation-deprecatedDetails .Documentation-deprecatedBody::after {
   color: var(--color-brand-primary);
   content: 'Show';
 }
+
 .Documentation-deprecatedDetails[open] .Documentation-deprecatedBody::after {
   color: var(--color-brand-primary);
   content: 'Hide';
 }
+
 .Documentation-deprecatedDetails > summary {
   list-style: none;
   opacity: 1;
 }
+
 .Documentation-deprecatedDetails .Documentation-source {
   opacity: 1;
 }
+
 .Documentation-deprecatedItemBody {
-  padding: 1rem 1rem 0.5rem 1rem;
+  padding: 1rem 1rem 0.5rem;
 }
+
 .Documentation-deprecatedMessage {
   align-items: center;
   display: flex;

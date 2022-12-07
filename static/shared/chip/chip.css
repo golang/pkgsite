@@ -12,31 +12,37 @@
   font-size: 0.75rem;
   padding: 0.125rem 0.625rem;
 }
+
 .go-Chip--accented {
   background: var(--color-button-accented);
   border: 0.0625rem solid var(--color-button-accented);
   color: var(--color-button-accented-text);
 }
+
 .go-Chip--inverted {
   background: var(--color-button-inverted);
   border: var(--border);
   color: var(--color-text);
 }
+
 .go-Chip--highlighted {
   background: var(--color-background-highlighted-link);
   border-color: var(--color-background-highlighted-link);
   color: var(--color-brand-primary);
 }
+
 .go-Chip--alert {
   background: var(--pink);
   border: 0.0625rem solid var(--pink);
   color: var(--color-text-inverted);
 }
+
 .go-Chip--vuln {
   background: var(--pink-light);
   border: 0.0625rem solid var(--pink-light);
   color: var(--color-text-inverted);
 }
+
 .go-Chip--subtle {
   background-color: var(--color-background-accented);
   border-color: transparent;

@@ -7,20 +7,25 @@
 .ImportedBy-heading {
   margin-bottom: 1rem;
 }
+
 .ImportedBy-list {
   list-style: none;
   padding: 0;
 }
+
 .ImportedBy .Pagination-nav,
 .ImportedBy .Pagination-navInner {
   justify-content: flex-start;
 }
+
 .ImportedBy-details {
   margin: 0.5rem 0;
 }
+
 .ImportedBy-detailsContent {
   margin-left: 2.5rem;
 }
+
 .ImportedBy-detailsIndent {
   margin-bottom: 0.5rem;
   margin-left: 1.1rem;

@@ -7,16 +7,20 @@
 .Versions table {
   border-spacing: 0;
 }
+
 .Versions th {
   text-align: left;
 }
+
 .Versions td {
   padding-bottom: 1rem;
 }
+
 .Versions td:nth-child(1) {
   padding-right: 3rem;
   vertical-align: top;
 }
+
 .Versions td:nth-child(2) {
   border-right: var(--border);
   padding-right: 1rem;
@@ -24,39 +28,49 @@
   vertical-align: top;
   white-space: nowrap;
 }
+
 .Versions td:nth-child(3) {
   padding-left: 1rem;
 }
+
 .Versions-commitTime {
   font-size: 1rem;
   font-weight: 400;
 }
+
 .Versions-major {
   font-weight: 600;
 }
+
 .Versions-symbols {
   margin-left: 2rem;
 }
+
 .Versions-vulns {
   margin: 0.25rem 2rem;
   max-width: 60rem;
 }
+
 .Versions-symbolBulletNew {
   color: var(--color-text-subtle);
   padding-right: 0.5rem;
 }
+
 .Versions-symbolBuilds,
 .Versions-symbolBuildsDash,
 .Versions-symbolOld {
   color: var(--color-text-subtle);
 }
+
 .Versions-symbolChild {
   padding-left: 2rem;
 }
+
 .Versions-symbolSection,
 .Versions-symbolType {
   margin-bottom: 0.625rem;
 }
+
 .Versions-symbolsHeader {
   margin: 0.625rem 0;
 }
@@ -68,16 +82,20 @@
   gap: 1rem 2.5rem;
   margin-bottom: 1rem;
 }
+
 .Versions-titleButtonGroup {
   display: none;
 }
+
 .Versions-titleButtonGroup button {
   font-size: 0.875rem;
 }
+
 .Versions-modulesTitle {
   font-size: 1rem;
   margin: 1rem 0;
 }
+
 .Versions-list {
   gap: 0 1rem;
   line-height: 2.25rem;
@@ -88,6 +106,7 @@
     grid-template-columns: fit-content(8rem) fit-content(20rem) min-content auto;
   }
 }
+
 .Version-major {
   align-items: baseline;
   display: flex;
@@ -100,6 +119,7 @@
     margin-bottom: 0;
   }
 }
+
 .Version-tag {
   text-align: left;
 }
@@ -108,6 +128,7 @@
     text-align: right;
   }
 }
+
 .Version-dot {
   border: var(--border);
   color: var(--gray-7);
@@ -118,6 +139,7 @@
   -webkit-text-stroke: 0.125rem var(--color-background);
   width: 0;
 }
+
 .Version-dot::before {
   content: '•';
 }
@@ -126,9 +148,11 @@
     display: flex;
   }
 }
+
 .Version-dot--minor {
   color: var(--color-brand-primary);
 }
+
 .Version-commitTime {
   align-items: center;
   display: flex;
@@ -136,9 +160,11 @@
   margin-left: 1rem;
   white-space: nowrap;
 }
+
 .Version-details {
   line-height: 1.25rem;
 }
+
 .Version-summary {
   align-items: center;
   cursor: pointer;
@@ -147,6 +173,7 @@
   white-space: nowrap;
   width: min-content;
 }
+
 .Version-summary .go-Chip {
   margin-left: 0.5rem;
 }

@@ -5,12 +5,14 @@
  */
 
 .go-TabNav {
-  margin: 0 0 0.5rem 0;
+  margin: 0 0 0.5rem;
 }
+
 .go-TabNav ul {
   display: flex;
   gap: 2rem;
 }
+
 .go-TabNav li {
   border-bottom: 0.25rem transparent solid;
   display: flex;
@@ -18,20 +20,25 @@
   height: 2.375rem;
   padding: 0 0.25rem;
 }
+
 .go-TabNav li[aria-current] {
   border-color: var(--color-brand-primary);
 }
+
 .go-TabNav li:hover {
   border-color: var(--color-brand-primary);
 }
+
 .go-TabNav a {
   align-items: center;
   color: var(--color-text-subtle);
   display: inline-flex;
 }
+
 .go-TabNav li:hover a {
   text-decoration: none;
 }
+
 .go-TabNav li[aria-current] a {
   color: var(--color-text);
 }
