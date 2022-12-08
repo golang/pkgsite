@@ -19,19 +19,19 @@ import (
 type Encoder struct {
 	buf      []byte
 	typeNums map[reflect.Type]int
-	seen     map[interface{}]uint64 // for references; see StartStruct
+	seen     map[any]uint64 // for references; see StartStruct
 }
 
 // NewEncoder returns an Encoder.
 func NewEncoder() *Encoder {
 	return &Encoder{
 		typeNums: map[reflect.Type]int{},
-		seen:     map[interface{}]uint64{},
+		seen:     map[any]uint64{},
 	}
 }
 
 // Encode encodes x.
-func (e *Encoder) Encode(x interface{}) (err error) {
+func (e *Encoder) Encode(x any) (err error) {
 	defer handlePanic(&err)
 	e.EncodeAny(x)
 	return nil
@@ -62,7 +62,7 @@ func fail(err error) {
 	panic(codecError{err})
 }
 
-func failf(format string, args ...interface{}) {
+func failf(format string, args ...any) {
 	fail(fmt.Errorf(format, args...))
 }
 
@@ -82,7 +82,7 @@ type Decoder struct {
 	buf       []byte
 	i         int
 	typeInfos []*typeInfo
-	refs      []interface{} // list of struct pointers, in the order seen
+	refs      []any // list of struct pointers, in the order seen
 }
 
 // NewDecoder returns a Decoder for the given bytes.
@@ -91,7 +91,7 @@ func NewDecoder(data []byte) *Decoder {
 }
 
 // Decode decodes a value encoded with Encoder.Encode.
-func (d *Decoder) Decode() (_ interface{}, err error) {
+func (d *Decoder) Decode() (_ any, err error) {
 	defer handlePanic(&err)
 	if d.typeInfos == nil {
 		d.decodeInitial()
@@ -347,7 +347,7 @@ func (d *Decoder) StartList() int {
 // StartStruct should be called before encoding a struct pointer. The isNil
 // argument says whether the pointer is nil. The p argument is the struct
 // pointer. If StartStruct returns false, encoding should not proceed.
-func (e *Encoder) StartStruct(isNil bool, p interface{}) bool {
+func (e *Encoder) StartStruct(isNil bool, p any) bool {
 	if isNil {
 		e.EncodeNil()
 		return false
@@ -370,7 +370,7 @@ func (e *Encoder) StartStruct(isNil bool, p interface{}) bool {
 // false, decoding should not proceed. If it returns true and the second return
 // value is non-nil, it is a reference to a previous value and should be used
 // instead of proceeding with decoding.
-func (d *Decoder) StartStruct() (bool, interface{}) {
+func (d *Decoder) StartStruct() (bool, any) {
 	b := d.readByte()
 	switch b {
 	case nilCode: // do not set the pointer
@@ -388,7 +388,7 @@ func (d *Decoder) StartStruct() (bool, interface{}) {
 
 // StoreRef should be called by a struct decoder immediately after it allocates
 // a struct pointer.
-func (d *Decoder) StoreRef(p interface{}) {
+func (d *Decoder) StoreRef(p any) {
 	d.refs = append(d.refs, p)
 }
 
@@ -452,7 +452,7 @@ func (d *Decoder) skip() {
 
 // EncodeAny encodes a Go type. The type must have
 // been registered with Register.
-func (e *Encoder) EncodeAny(x interface{}) {
+func (e *Encoder) EncodeAny(x any) {
 	// Encode a nil interface value with a zero.
 	if x == nil {
 		e.writeByte(0)
@@ -477,7 +477,7 @@ func (e *Encoder) EncodeAny(x interface{}) {
 }
 
 // DecodeAny decodes a value encoded by EncodeAny.
-func (d *Decoder) DecodeAny() interface{} {
+func (d *Decoder) DecodeAny() any {
 	// If we're looking at a zero, this is a nil interface.
 	if d.curByte() == 0 {
 		d.readByte() // consume the byte
@@ -541,8 +541,8 @@ type typeInfo struct {
 }
 
 type (
-	encodeFunc func(*Encoder, interface{})
-	decodeFunc func(*Decoder) interface{}
+	encodeFunc func(*Encoder, any)
+	decodeFunc func(*Decoder) any
 )
 
 var (
@@ -551,7 +551,7 @@ var (
 )
 
 // Register records the type of x for use by Encoders and Decoders.
-func Register(x interface{}, enc encodeFunc, dec decodeFunc) {
+func Register(x any, enc encodeFunc, dec decodeFunc) {
 	t := reflect.TypeOf(x)
 	tn := typeName(t)
 	if _, ok := typeInfosByName[tn]; ok {
@@ -578,26 +578,26 @@ var builtinTypes []reflect.Type
 
 func init() {
 	Register(int64(0),
-		func(e *Encoder, x interface{}) { e.EncodeInt(x.(int64)) },
-		func(d *Decoder) interface{} { return d.DecodeInt() })
+		func(e *Encoder, x any) { e.EncodeInt(x.(int64)) },
+		func(d *Decoder) any { return d.DecodeInt() })
 	Register(uint64(0),
-		func(e *Encoder, x interface{}) { e.EncodeUint(x.(uint64)) },
-		func(d *Decoder) interface{} { return d.DecodeUint() })
+		func(e *Encoder, x any) { e.EncodeUint(x.(uint64)) },
+		func(d *Decoder) any { return d.DecodeUint() })
 	Register(int(0),
-		func(e *Encoder, x interface{}) { e.EncodeInt(int64(x.(int))) },
-		func(d *Decoder) interface{} { return int(d.DecodeInt()) })
+		func(e *Encoder, x any) { e.EncodeInt(int64(x.(int))) },
+		func(d *Decoder) any { return int(d.DecodeInt()) })
 	Register(float64(0),
-		func(e *Encoder, x interface{}) { e.EncodeFloat(x.(float64)) },
-		func(d *Decoder) interface{} { return d.DecodeFloat() })
+		func(e *Encoder, x any) { e.EncodeFloat(x.(float64)) },
+		func(d *Decoder) any { return d.DecodeFloat() })
 	Register(false,
-		func(e *Encoder, x interface{}) { e.EncodeBool(x.(bool)) },
-		func(d *Decoder) interface{} { return d.DecodeBool() })
+		func(e *Encoder, x any) { e.EncodeBool(x.(bool)) },
+		func(d *Decoder) any { return d.DecodeBool() })
 	Register("",
-		func(e *Encoder, x interface{}) { e.EncodeString(x.(string)) },
-		func(d *Decoder) interface{} { return d.DecodeString() })
+		func(e *Encoder, x any) { e.EncodeString(x.(string)) },
+		func(d *Decoder) any { return d.DecodeString() })
 	Register([]byte(nil),
-		func(e *Encoder, x interface{}) { e.EncodeBytes(x.([]byte)) },
-		func(d *Decoder) interface{} { return d.DecodeBytes() })
+		func(e *Encoder, x any) { e.EncodeBytes(x.([]byte)) },
+		func(d *Decoder) any { return d.DecodeBytes() })
 
 	for t := range typeInfosByType {
 		builtinTypes = append(builtinTypes, t)

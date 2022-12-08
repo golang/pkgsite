@@ -103,7 +103,7 @@ require example v1
     await flushPromises();
 
     expect(window.fetch).toHaveBeenCalledWith('/play/share', {
-      body: codeSnippet,
+      body: snippetWithModeFile,
       method: 'POST',
     });
     expect(window.open).toHaveBeenCalledWith('https://play.golang.org/p/abcdefg');

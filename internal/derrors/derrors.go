@@ -64,6 +64,9 @@ var (
 	// ProxyError is used to capture non-actionable server errors returned from the proxy.
 	ProxyError = errors.New("proxy error")
 
+	// VulnDBError is used to capture non-actionable server errors returned from vulndb.
+	VulnDBError = errors.New("vulndb error")
+
 	// PackageBuildContextNotSupported indicates that the build context for the
 	// package is not supported.
 	PackageBuildContextNotSupported = errors.New("package build context not supported")
@@ -131,6 +134,7 @@ var codes = []struct {
 
 	{ProxyTimedOut, 550}, // not a real code
 	{ProxyError, 551},    // not a real code
+	{VulnDBError, 552},   // not a real code
 	// 52x and 54x errors represents modules that need to be reprocessed, and the
 	// previous status code the module had. Note that the status code
 	// matters for determining reprocessing order.
@@ -156,7 +160,7 @@ var codes = []struct {
 // corresponding to the code is returned unwrapped.
 //
 // If code is http.StatusOK, it returns nil.
-func FromStatus(code int, format string, args ...interface{}) error {
+func FromStatus(code int, format string, args ...any) error {
 	if code == http.StatusOK {
 		return nil
 	}
@@ -215,7 +219,7 @@ func ToReprocessStatus(status int) int {
 //
 // See Wrap for an equivalent function that allows
 // the result to be unwrapped.
-func Add(errp *error, format string, args ...interface{}) {
+func Add(errp *error, format string, args ...any) {
 	if *errp != nil {
 		*errp = fmt.Errorf("%s: %v", fmt.Sprintf(format, args...), *errp)
 	}
@@ -230,14 +234,14 @@ func Add(errp *error, format string, args ...interface{}) {
 //
 // See Add for an equivalent function that does not allow
 // the result to be unwrapped.
-func Wrap(errp *error, format string, args ...interface{}) {
+func Wrap(errp *error, format string, args ...any) {
 	if *errp != nil {
 		*errp = fmt.Errorf("%s: %w", fmt.Sprintf(format, args...), *errp)
 	}
 }
 
 // WrapStack is like Wrap, but adds a stack trace if there isn't one already.
-func WrapStack(errp *error, format string, args ...interface{}) {
+func WrapStack(errp *error, format string, args ...any) {
 	if *errp != nil {
 		if se := (*StackError)(nil); !errors.As(*errp, &se) {
 			*errp = NewStackError(*errp)
@@ -273,7 +277,7 @@ func (e *StackError) Unwrap() error {
 }
 
 // WrapAndReport calls Wrap followed by Report.
-func WrapAndReport(errp *error, format string, args ...interface{}) {
+func WrapAndReport(errp *error, format string, args ...any) {
 	Wrap(errp, format, args...)
 	if *errp != nil {
 		Report(*errp)

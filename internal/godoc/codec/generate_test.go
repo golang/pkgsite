@@ -23,7 +23,7 @@ func TestGoName(t *testing.T) {
 	var r io.Reader
 	g := &generator{pkg: "codec"}
 	for _, test := range []struct {
-		v    interface{}
+		v    any
 		want string
 	}{
 		{0, "int"},
@@ -49,7 +49,7 @@ func TestGenerate(t *testing.T) {
 	testGenerate(t, "struct", ast.BasicLit{})
 }
 
-func testGenerate(t *testing.T, name string, x interface{}) {
+func testGenerate(t *testing.T, name string, x any) {
 	t.Helper()
 	var buf bytes.Buffer
 	if err := generate(&buf, "somepkg", nil, x); err != nil {

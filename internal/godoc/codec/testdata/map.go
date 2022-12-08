@@ -41,6 +41,6 @@ func decode_map_string_bool(d *codec.Decoder, p *map[string]bool) {
 
 func init() {
 	codec.Register(map[string]bool(nil),
-		func(e *codec.Encoder, x interface{}) { encode_map_string_bool(e, x.(map[string]bool)) },
-		func(d *codec.Decoder) interface{} { var x map[string]bool; decode_map_string_bool(d, &x); return x })
+		func(e *codec.Encoder, x any) { encode_map_string_bool(e, x.(map[string]bool)) },
+		func(d *codec.Decoder) any { var x map[string]bool; decode_map_string_bool(d, &x); return x })
 }

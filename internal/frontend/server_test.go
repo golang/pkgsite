@@ -1568,7 +1568,7 @@ func TestCheckTemplates(t *testing.T) {
 	for _, c := range []struct {
 		name    string
 		subs    []string
-		typeval interface{}
+		typeval any
 	}{
 		{"badge", nil, badgePage{}},
 		// error.tmpl omitted because relies on an associated "message" template

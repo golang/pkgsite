@@ -62,7 +62,7 @@ func TestBulkInsert(t *testing.T) {
 	for _, test := range []struct {
 		name           string
 		columns        []string
-		values         []interface{}
+		values         []any
 		conflictAction string
 		wantErr        bool
 		wantCount      int
@@ -72,35 +72,35 @@ func TestBulkInsert(t *testing.T) {
 
 			name:      "test-one-row",
 			columns:   []string{"colA"},
-			values:    []interface{}{"valueA"},
+			values:    []any{"valueA"},
 			wantCount: 1,
 		},
 		{
 
 			name:      "test-multiple-rows",
 			columns:   []string{"colA"},
-			values:    []interface{}{"valueA1", "valueA2", "valueA3"},
+			values:    []any{"valueA1", "valueA2", "valueA3"},
 			wantCount: 3,
 		},
 		{
 
 			name:    "test-invalid-column-name",
 			columns: []string{"invalid_col"},
-			values:  []interface{}{"valueA"},
+			values:  []any{"valueA"},
 			wantErr: true,
 		},
 		{
 
 			name:    "test-mismatch-num-cols-and-vals",
 			columns: []string{"colA", "colB"},
-			values:  []interface{}{"valueA1", "valueB1", "valueA2"},
+			values:  []any{"valueA1", "valueB1", "valueA2"},
 			wantErr: true,
 		},
 		{
 
 			name:         "insert-returning",
 			columns:      []string{"colA", "colB"},
-			values:       []interface{}{"valueA1", "valueB1", "valueA2", "valueB2"},
+			values:       []any{"valueA1", "valueB1", "valueA2", "valueB2"},
 			wantCount:    2,
 			wantReturned: []string{"valueA1", "valueA2"},
 		},
@@ -108,14 +108,14 @@ func TestBulkInsert(t *testing.T) {
 
 			name:    "test-conflict",
 			columns: []string{"colA"},
-			values:  []interface{}{"valueA", "valueA"},
+			values:  []any{"valueA", "valueA"},
 			wantErr: true,
 		},
 		{
 
 			name:           "test-conflict-do-nothing",
 			columns:        []string{"colA"},
-			values:         []interface{}{"valueA", "valueA"},
+			values:         []any{"valueA", "valueA"},
 			conflictAction: OnConflictDoNothing,
 			wantCount:      1,
 		},
@@ -130,7 +130,7 @@ func TestBulkInsert(t *testing.T) {
 			// which would truncate most tables in the database.
 			name:           "test-sql-injection",
 			columns:        []string{"colA"},
-			values:         []interface{}{fmt.Sprintf("''); TRUNCATE %s CASCADE;))", table)},
+			values:         []any{fmt.Sprintf("''); TRUNCATE %s CASCADE;))", table)},
 			conflictAction: OnConflictDoNothing,
 			wantCount:      1,
 		},
@@ -204,7 +204,7 @@ func TestLargeBulkInsert(t *testing.T) {
 		t.Fatal(err)
 	}
 	const size = 150001
-	vals := make([]interface{}, size)
+	vals := make([]any, size)
 	for i := 0; i < size; i++ {
 		vals[i] = i + 1
 	}
@@ -240,7 +240,7 @@ func TestBulkUpsert(t *testing.T) {
 	if _, err := testDB.Exec(ctx, `CREATE TEMPORARY TABLE test_replace (C1 int PRIMARY KEY, C2 int);`); err != nil {
 		t.Fatal(err)
 	}
-	for _, values := range [][]interface{}{
+	for _, values := range [][]any{
 		{2, 4, 4, 8},                 // First, insert some rows.
 		{1, -1, 2, -2, 3, -3, 4, -4}, // Then replace those rows while inserting others.
 	} {
@@ -250,7 +250,7 @@ func TestBulkUpsert(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		var got []interface{}
+		var got []any
 		err = testDB.RunQuery(ctx, `SELECT C1, C2 FROM test_replace ORDER BY C1`, func(rows *sql.Rows) error {
 			var a, b int
 			if err := rows.Scan(&a, &b); err != nil {
@@ -324,7 +324,7 @@ func TestBulkUpdate(t *testing.T) {
 	}()
 
 	cols := []string{"a", "b"}
-	var values []interface{}
+	var values []any
 	for i := 0; i < 50; i++ {
 		values = append(values, i, i)
 	}
@@ -336,7 +336,7 @@ func TestBulkUpdate(t *testing.T) {
 	}
 
 	// Update all even values of column a.
-	updateVals := make([][]interface{}, 2)
+	updateVals := make([][]any, 2)
 	for i := 0; i < len(values)/2; i += 2 {
 		updateVals[0] = append(updateVals[0], i)
 		updateVals[1] = append(updateVals[1], -i)
@@ -486,12 +486,12 @@ func TestCopyDoesNotUpsert(t *testing.T) {
 		}
 	}
 
-	err = conn.Raw(func(c interface{}) error {
+	err = conn.Raw(func(c any) error {
 		stdConn, ok := c.(*stdlib.Conn)
 		if !ok {
 			t.Skip("DB driver is not pgx")
 		}
-		rows := [][]interface{}{{1}, {2}}
+		rows := [][]any{{1}, {2}}
 		_, err = stdConn.Conn().CopyFrom(ctx, []string{"test_copy"}, []string{"i"}, pgx.CopyFromRows(rows))
 		return err
 	})

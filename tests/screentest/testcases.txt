@@ -3,7 +3,7 @@ compare {{.Origin}}::cache {{.Origin}}
 {{with .Token}}header Authorization: Bearer {{.}}{{end}}
 {{with .QuotaBypass}}header X-Go-Discovery-Auth-Bypass-Quota: {{.}}{{end}}
 output tests/screentest/testdata
-# Prevent dynamic readme bages from rendering
+# Prevent dynamic readme badges from rendering
 block https://codecov.io/* https://travis-ci.com/*
 
 {{$ready := "[role='treeitem'][aria-selected='true']"}}

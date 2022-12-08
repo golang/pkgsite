@@ -162,10 +162,10 @@ func (db *DB) GetModuleInfo(ctx context.Context, modulePath, resolvedVersion str
 
 // jsonbScanner scans a jsonb value into a Go value.
 type jsonbScanner struct {
-	ptr interface{} // a pointer to a Go struct or other JSON-serializable value
+	ptr any // a pointer to a Go struct or other JSON-serializable value
 }
 
-func (s jsonbScanner) Scan(value interface{}) (err error) {
+func (s jsonbScanner) Scan(value any) (err error) {
 	defer derrors.Wrap(&err, "jsonbScanner(%+v)", value)
 
 	vptr := reflect.ValueOf(s.ptr)
@@ -190,7 +190,7 @@ func (s jsonbScanner) Scan(value interface{}) (err error) {
 }
 
 // scanModuleInfo constructs an *internal.ModuleInfo from the given scanner.
-func scanModuleInfo(scan func(dest ...interface{}) error) (*internal.ModuleInfo, error) {
+func scanModuleInfo(scan func(dest ...any) error) (*internal.ModuleInfo, error) {
 	var mi internal.ModuleInfo
 	if err := scan(&mi.ModulePath, &mi.Version, &mi.CommitTime,
 		&mi.IsRedistributable, &mi.HasGoMod, jsonbScanner{&mi.SourceInfo}); err != nil {

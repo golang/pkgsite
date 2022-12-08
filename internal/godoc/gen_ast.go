@@ -17,7 +17,7 @@ import (
 )
 
 func main() {
-	types := []interface{}{
+	types := []any{
 		ast.ArrayType{},
 		ast.AssignStmt{},
 		ast.BadDecl{},

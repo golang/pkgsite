@@ -87,7 +87,7 @@ func (db *DB) Close() error {
 }
 
 // Exec executes a SQL statement and returns the number of rows it affected.
-func (db *DB) Exec(ctx context.Context, query string, args ...interface{}) (_ int64, err error) {
+func (db *DB) Exec(ctx context.Context, query string, args ...any) (_ int64, err error) {
 	defer logQuery(ctx, query, args, db.instanceID, db.IsRetryable())(&err)
 	res, err := db.execResult(ctx, query, args...)
 	if err != nil {
@@ -101,7 +101,7 @@ func (db *DB) Exec(ctx context.Context, query string, args ...interface{}) (_ in
 }
 
 // execResult executes a SQL statement and returns a sql.Result.
-func (db *DB) execResult(ctx context.Context, query string, args ...interface{}) (res sql.Result, err error) {
+func (db *DB) execResult(ctx context.Context, query string, args ...any) (res sql.Result, err error) {
 	if db.tx != nil {
 		return db.tx.ExecContext(ctx, query, args...)
 	}
@@ -109,7 +109,7 @@ func (db *DB) execResult(ctx context.Context, query string, args ...interface{})
 }
 
 // Query runs the DB query.
-func (db *DB) Query(ctx context.Context, query string, args ...interface{}) (_ *sql.Rows, err error) {
+func (db *DB) Query(ctx context.Context, query string, args ...any) (_ *sql.Rows, err error) {
 	defer logQuery(ctx, query, args, db.instanceID, db.IsRetryable())(&err)
 	if db.tx != nil {
 		return db.tx.QueryContext(ctx, query, args...)
@@ -118,7 +118,7 @@ func (db *DB) Query(ctx context.Context, query string, args ...interface{}) (_ *
 }
 
 // QueryRow runs the query and returns a single row.
-func (db *DB) QueryRow(ctx context.Context, query string, args ...interface{}) *sql.Row {
+func (db *DB) QueryRow(ctx context.Context, query string, args ...any) *sql.Row {
 	defer logQuery(ctx, query, args, db.instanceID, db.IsRetryable())(nil)
 	start := time.Now()
 	defer func() {
@@ -144,7 +144,7 @@ func (db *DB) Prepare(ctx context.Context, query string) (*sql.Stmt, error) {
 
 // RunQuery executes query, then calls f on each row. It stops when there are no
 // more rows or f returns a non-nil error.
-func (db *DB) RunQuery(ctx context.Context, query string, f func(*sql.Rows) error, params ...interface{}) error {
+func (db *DB) RunQuery(ctx context.Context, query string, f func(*sql.Rows) error, params ...any) error {
 	rows, err := db.Query(ctx, query, params...)
 	if err != nil {
 		return err
@@ -168,7 +168,7 @@ func processRows(rows *sql.Rows, f func(*sql.Rows) error) (int, error) {
 // RunQueryIncrementally executes query, then calls f on each row. It fetches
 // rows in groups of size batchSize. It stops when there are no more rows, or
 // when f returns io.EOF.
-func (db *DB) RunQueryIncrementally(ctx context.Context, query string, batchSize int, f func(*sql.Rows) error, params ...interface{}) (err error) {
+func (db *DB) RunQueryIncrementally(ctx context.Context, query string, batchSize int, f func(*sql.Rows) error, params ...any) (err error) {
 	// Run in a transaction, because cursors require one.
 	return db.Transact(ctx, sql.LevelDefault, func(tx *DB) error {
 		// Declare a cursor and associate it with the query.
@@ -327,7 +327,7 @@ const OnConflictDoNothing = "ON CONFLICT DO NOTHING"
 // If conflictAction is not empty, it is appended to the statement.
 //
 // The query is executed using a PREPARE statement with the provided values.
-func (db *DB) BulkInsert(ctx context.Context, table string, columns []string, values []interface{}, conflictAction string) (err error) {
+func (db *DB) BulkInsert(ctx context.Context, table string, columns []string, values []any, conflictAction string) (err error) {
 	defer derrors.Wrap(&err, "DB.BulkInsert(ctx, %q, %v, [%d values], %q)",
 		table, columns, len(values), conflictAction)
 
@@ -338,7 +338,7 @@ func (db *DB) BulkInsert(ctx context.Context, table string, columns []string, va
 // In addition to the arguments of BulkInsert, it takes a list of columns to return and a function
 // to scan those columns. To get the returned values, provide a function that scans them as if
 // they were the selected columns of a query. See TestBulkInsert for an example.
-func (db *DB) BulkInsertReturning(ctx context.Context, table string, columns []string, values []interface{}, conflictAction string, returningColumns []string, scanFunc func(*sql.Rows) error) (err error) {
+func (db *DB) BulkInsertReturning(ctx context.Context, table string, columns []string, values []any, conflictAction string, returningColumns []string, scanFunc func(*sql.Rows) error) (err error) {
 	defer derrors.Wrap(&err, "DB.BulkInsertReturning(ctx, %q, %v, [%d values], %q, %v, scanFunc)",
 		table, columns, len(values), conflictAction, returningColumns)
 
@@ -352,18 +352,18 @@ func (db *DB) BulkInsertReturning(ctx context.Context, table string, columns []s
 // conflicting columns is provided. An "ON CONFLICT (conflict_columns) DO
 // UPDATE" clause is added to the statement, with assignments "c=excluded.c" for
 // every column c.
-func (db *DB) BulkUpsert(ctx context.Context, table string, columns []string, values []interface{}, conflictColumns []string) error {
+func (db *DB) BulkUpsert(ctx context.Context, table string, columns []string, values []any, conflictColumns []string) error {
 	conflictAction := buildUpsertConflictAction(columns, conflictColumns)
 	return db.BulkInsert(ctx, table, columns, values, conflictAction)
 }
 
 // BulkUpsertReturning is like BulkInsertReturning, but performs an upsert like BulkUpsert.
-func (db *DB) BulkUpsertReturning(ctx context.Context, table string, columns []string, values []interface{}, conflictColumns, returningColumns []string, scanFunc func(*sql.Rows) error) error {
+func (db *DB) BulkUpsertReturning(ctx context.Context, table string, columns []string, values []any, conflictColumns, returningColumns []string, scanFunc func(*sql.Rows) error) error {
 	conflictAction := buildUpsertConflictAction(columns, conflictColumns)
 	return db.BulkInsertReturning(ctx, table, columns, values, conflictAction, returningColumns, scanFunc)
 }
 
-func (db *DB) bulkInsert(ctx context.Context, table string, columns, returningColumns []string, values []interface{}, conflictAction string, scanFunc func(*sql.Rows) error) (err error) {
+func (db *DB) bulkInsert(ctx context.Context, table string, columns, returningColumns []string, values []any, conflictAction string, scanFunc func(*sql.Rows) error) (err error) {
 	if remainder := len(values) % len(columns); remainder != 0 {
 		return fmt.Errorf("modulus of len(values) and len(columns) must be 0: got %d", remainder)
 	}
@@ -485,7 +485,7 @@ var maxBulkUpdateArrayLen = 10000
 //
 // Values contains one slice of values per column. (Note that this is unlike BulkInsert, which
 // takes a single slice of interleaved values.)
-func (db *DB) BulkUpdate(ctx context.Context, table string, columns, types []string, values [][]interface{}) (err error) {
+func (db *DB) BulkUpdate(ctx context.Context, table string, columns, types []string, values [][]any) (err error) {
 	defer derrors.Wrap(&err, "DB.BulkUpdate(ctx, tx, %q, %v, [%d values])",
 		table, columns, len(values))
 
@@ -507,7 +507,7 @@ func (db *DB) BulkUpdate(ctx context.Context, table string, columns, types []str
 		if right > nRows {
 			right = nRows
 		}
-		var args []interface{}
+		var args []any
 		for _, vs := range values {
 			args = append(args, pq.Array(vs[left:right]))
 		}
@@ -543,7 +543,7 @@ func buildBulkUpdateQuery(table string, columns, types []string) string {
 
 // Collect1 runs the query, which must select for a single column that can be
 // scanned into a value of type T, and returns a slice of the resulting values.
-func Collect1[T any](ctx context.Context, db *DB, query string, args ...interface{}) (ts []T, err error) {
+func Collect1[T any](ctx context.Context, db *DB, query string, args ...any) (ts []T, err error) {
 	defer derrors.WrapStack(&err, "Collect1(%q)", query)
 	err = db.RunQuery(ctx, query, func(rows *sql.Rows) error {
 		var t T
@@ -565,7 +565,7 @@ type emptyStringScanner struct {
 	ptr *string
 }
 
-func (e emptyStringScanner) Scan(value interface{}) error {
+func (e emptyStringScanner) Scan(value any) error {
 	var ns sql.NullString
 	if err := ns.Scan(value); err != nil {
 		return err

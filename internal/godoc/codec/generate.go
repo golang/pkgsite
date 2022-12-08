@@ -21,7 +21,7 @@ import (
 // It generates code for the type of each given value, as well
 // as any types they depend on.
 // packageName is the name following the file's package declaration.
-func GenerateFile(filename, packageName string, values ...interface{}) error {
+func GenerateFile(filename, packageName string, values ...any) error {
 	if !strings.HasSuffix(filename, ".go") {
 		filename += ".go"
 	}
@@ -69,7 +69,7 @@ func readFieldNames(filename string) (map[string][]string, error) {
 	return m, nil
 }
 
-func generate(w io.Writer, packageName string, fieldNames map[string][]string, vs ...interface{}) error {
+func generate(w io.Writer, packageName string, fieldNames map[string][]string, vs ...any) error {
 	g := &generator{
 		pkg:        packageName,
 		done:       map[reflect.Type]bool{},
@@ -107,7 +107,7 @@ func generate(w io.Writer, packageName string, fieldNames map[string][]string, v
 	}
 	// The empty interface doesn't need any additional code. It's tricky to get
 	// its reflect.Type: we need to dereference the pointer type.
-	var iface interface{}
+	var iface any
 	g.done[reflect.TypeOf(&iface).Elem()] = true
 
 	src, err := g.generate()
@@ -330,7 +330,7 @@ func zeroValue(t reflect.Type) string {
 	}
 }
 
-func execute(tmpl *template.Template, data interface{}) ([]byte, error) {
+func execute(tmpl *template.Template, data any) ([]byte, error) {
 	var buf bytes.Buffer
 	if err := tmpl.Execute(&buf, data); err != nil {
 		return nil, err
@@ -474,8 +474,8 @@ func decode_«$funcName»(d *codec.Decoder, p *«$goName») {
 
 func init() {
   codec.Register(«$goName»(nil),
-    func(e *codec.Encoder, x interface{}) { encode_«$funcName»(e, x.(«$goName»)) },
-    func(d *codec.Decoder) interface{} { var x «$goName»; decode_«$funcName»(d, &x); return x })
+    func(e *codec.Encoder, x any) { encode_«$funcName»(e, x.(«$goName»)) },
+    func(d *codec.Decoder) any { var x «$goName»; decode_«$funcName»(d, &x); return x })
 }
 `
 
@@ -519,8 +519,8 @@ func decode_«$funcName»(d *codec.Decoder, p *«$goName») {
 
 func init() {
 	codec.Register(«$goName»(nil),
-	func(e *codec.Encoder, x interface{}) { encode_«$funcName»(e, x.(«$goName»)) },
-	func(d *codec.Decoder) interface{} { var x «$goName»; decode_«$funcName»(d, &x); return x })
+	func(e *codec.Encoder, x any) { encode_«$funcName»(e, x.(«$goName»)) },
+	func(d *codec.Decoder) any { var x «$goName»; decode_«$funcName»(d, &x); return x })
 }
 `
 
@@ -583,8 +583,8 @@ func decode_«$funcName»(d *codec.Decoder, p **«$goName») {
 
 func init() {
 	codec.Register(&«$goName»{},
-		func(e *codec.Encoder, x interface{}) { encode_«$funcName»(e, x.(*«$goName»)) },
-		func(d *codec.Decoder) interface{} {
+		func(e *codec.Encoder, x any) { encode_«$funcName»(e, x.(*«$goName»)) },
+		func(d *codec.Decoder) any {
 			var x *«$goName»
 			decode_«$funcName»(d, &x)
 			return x

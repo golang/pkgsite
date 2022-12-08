@@ -213,7 +213,7 @@ func env(cfg *config.Config) string {
 	return strings.ToUpper(e[:1]) + e[1:]
 }
 
-func renderPage(ctx context.Context, w http.ResponseWriter, page interface{}, tmpl *template.Template) (err error) {
+func renderPage(ctx context.Context, w http.ResponseWriter, page any, tmpl *template.Template) (err error) {
 	defer derrors.Wrap(&err, "renderPage")
 	var buf bytes.Buffer
 	if err := tmpl.Execute(&buf, page); err != nil {

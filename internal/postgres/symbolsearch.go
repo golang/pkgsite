@@ -316,7 +316,7 @@ func splitPackageAndSymbolNames(q string) (pkgName string, symbolName string, er
 }
 
 func runSymbolSearch(ctx context.Context, ddb *database.DB,
-	st search.SearchType, q string, limit int, args ...interface{}) (results []*SearchResult, err error) {
+	st search.SearchType, q string, limit int, args ...any) (results []*SearchResult, err error) {
 	defer derrors.Wrap(&err, "runSymbolSearch(ctx, ddb, %q, %q, %d, %v)", st, q, limit, args)
 	defer middleware.ElapsedStat(ctx, fmt.Sprintf("%s-runSymbolSearch", st))()
 
@@ -342,7 +342,7 @@ func runSymbolSearch(ctx context.Context, ddb *database.DB,
 		return nil
 	}
 	query := search.SymbolQuery(st)
-	args = append([]interface{}{q, limit}, args...)
+	args = append([]any{q, limit}, args...)
 	if err := ddb.RunQuery(ctx, query, collect, args...); err != nil {
 		return nil, err
 	}

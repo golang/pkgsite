@@ -43,7 +43,7 @@ func (db *DB) InsertNewModuleVersionFromFrontendFetch(ctx context.Context, modul
 }
 
 func insertIndexVersions(ctx context.Context, ddb *database.DB, versions []*internal.IndexVersion, conflictAction string) (err error) {
-	var vals []interface{}
+	var vals []any
 	for _, v := range versions {
 		vals = append(vals,
 			v.Path,
@@ -237,7 +237,7 @@ func upsertPackageVersionStates(ctx context.Context, db *database.DB, packageVer
 	sort.Slice(packageVersionStates, func(i, j int) bool {
 		return packageVersionStates[i].PackagePath < packageVersionStates[j].PackagePath
 	})
-	var vals []interface{}
+	var vals []any
 	for _, pvs := range packageVersionStates {
 		vals = append(vals, pvs.PackagePath, pvs.ModulePath, pvs.Version, pvs.Status, pvs.Error)
 	}
@@ -299,7 +299,7 @@ const moduleVersionStateColumns = `
 
 // scanModuleVersionState constructs an *internal.ModuleModuleVersionState from the given
 // scanner. It expects columns to be in the order of moduleVersionStateColumns.
-func scanModuleVersionState(scan func(dest ...interface{}) error) (*internal.ModuleVersionState, error) {
+func scanModuleVersionState(scan func(dest ...any) error) (*internal.ModuleVersionState, error) {
 	var (
 		v               internal.ModuleVersionState
 		indexTimestamp  pq.NullTime
@@ -333,7 +333,7 @@ func scanModuleVersionState(scan func(dest ...interface{}) error) (*internal.Mod
 // queryModuleVersionStates executes a query for ModuleModuleVersionState rows. It expects the
 // given queryFormat be a format specifier with exactly one argument: a %s verb
 // for the query columns.
-func (db *DB) queryModuleVersionStates(ctx context.Context, queryFormat string, args ...interface{}) ([]*internal.ModuleVersionState, error) {
+func (db *DB) queryModuleVersionStates(ctx context.Context, queryFormat string, args ...any) ([]*internal.ModuleVersionState, error) {
 	query := fmt.Sprintf(queryFormat, moduleVersionStateColumns)
 	rows, err := db.db.Query(ctx, query, args...)
 	if err != nil {

@@ -203,13 +203,13 @@ func buildLRE(filesLRE []string) []fileData {
 	return out
 }
 
-// templateList returns xs, but it flattens any nested []interface{} into the main list.
+// templateList returns xs, but it flattens any nested []any into the main list.
 // Called from templates as "list", to pass multiple arguments to templates.
-func templateList(xs ...interface{}) []interface{} {
-	var list []interface{}
+func templateList(xs ...any) []any {
+	var list []any
 	for _, x := range xs {
 		switch x := x.(type) {
-		case []interface{}:
+		case []any:
 			list = append(list, x...)
 		default:
 			list = append(list, x)

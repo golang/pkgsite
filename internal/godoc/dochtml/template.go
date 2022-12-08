@@ -42,8 +42,8 @@ func LoadTemplates(fsys template.TrustedFS) {
 	})
 }
 
-var tmpl = map[string]interface{}{
-	"ternary": func(q, a, b interface{}) interface{} {
+var tmpl = map[string]any{
+	"ternary": func(q, a, b any) any {
 		v := reflect.ValueOf(q)
 		vz := reflect.New(v.Type()).Elem()
 		if reflect.DeepEqual(v.Interface(), vz.Interface()) {
@@ -60,7 +60,7 @@ var tmpl = map[string]interface{}{
 	"render_decl":              (*render.Renderer)(nil).DeclHTML,
 	"render_code":              (*render.Renderer)(nil).CodeHTML,
 	"file_link":                func() string { return "" },
-	"source_link":              func(string, interface{}) string { return "" },
+	"source_link":              func(string, any) string { return "" },
 	"since_version":            func(string) safehtml.HTML { return safehtml.HTML{} },
 	"play_url":                 func(*doc.Example) string { return "" },
 	"safe_id":                  render.SafeGoID,

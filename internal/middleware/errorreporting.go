@@ -40,6 +40,10 @@ func ErrorReporting(report func(errorreporting.Entry)) Middleware {
 			if w2.status == derrors.ToStatus(derrors.ProxyError) {
 				return
 			}
+			// Don't report on vulndb errors.
+			if w2.status == derrors.ToStatus(derrors.VulnDBError) {
+				return
+			}
 			report(errorreporting.Entry{
 				Error: fmt.Errorf("handler for %q returned status code %d", r.URL.Path, w2.status),
 				Req:   r,

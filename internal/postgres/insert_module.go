@@ -275,7 +275,7 @@ func insertLicenses(ctx context.Context, db *database.DB, m *internal.Module, mo
 	ctx, span := trace.StartSpan(ctx, "insertLicenses")
 	defer span.End()
 	defer derrors.WrapStack(&err, "insertLicenses(ctx, %q, %q)", m.ModulePath, m.Version)
-	var licenseValues []interface{}
+	var licenseValues []any
 	for _, l := range m.Licenses {
 		covJSON, err := json.Marshal(l.Coverage)
 		if err != nil {
@@ -312,7 +312,7 @@ func insertImportsUnique(ctx context.Context, tx *database.DB, m *internal.Modul
 		return err
 	}
 
-	var values []interface{}
+	var values []any
 	for _, u := range m.Units {
 		for _, i := range u.Imports {
 			values = append(values, u.Path, m.ModulePath, i)
@@ -348,7 +348,7 @@ func (pdb *DB) insertUnits(ctx context.Context, tx *database.DB,
 	}
 	var (
 		paths         []string
-		unitValues    []interface{}
+		unitValues    []any
 		pathToReadme  = map[string]*internal.Readme{}
 		pathToImports = map[string][]string{}
 		pathIDToPath  = map[int]string{}
@@ -447,7 +447,7 @@ func stringSetToSlice(m map[string]bool) []string {
 	return s
 }
 
-func insertUnits(ctx context.Context, db *database.DB, unitValues []interface{}) (pathIDToUnitID map[int]int, err error) {
+func insertUnits(ctx context.Context, db *database.DB, unitValues []any) (pathIDToUnitID map[int]int, err error) {
 	defer derrors.WrapAndReport(&err, "insertUnits")
 
 	// Insert data into the units table.
@@ -465,9 +465,9 @@ func insertUnits(ctx context.Context, db *database.DB, unitValues []interface{})
 
 	// Check to see if any rows have the same path_id and module_id.
 	// For golang/go#43899.
-	conflictingValues := map[[2]interface{}]bool{}
+	conflictingValues := map[[2]any]bool{}
 	for i := 0; i < len(unitValues); i += len(unitCols) {
-		key := [2]interface{}{unitValues[i], unitValues[i+1]}
+		key := [2]any{unitValues[i], unitValues[i+1]}
 		if conflictingValues[key] {
 			log.Errorf(ctx, "insertUnits: %v occurs twice", key)
 		} else {
@@ -506,7 +506,7 @@ func insertDocs(ctx context.Context, db *database.DB,
 					if doc.GOOS == "" || doc.GOARCH == "" {
 						ch <- database.RowItem{Err: errors.New("empty GOOS or GOARCH")}
 					}
-					ch <- database.RowItem{Values: []interface{}{unitID, doc.GOOS, doc.GOARCH, doc.Synopsis, doc.Source}}
+					ch <- database.RowItem{Values: []any{unitID, doc.GOOS, doc.GOARCH, doc.Synopsis, doc.Source}}
 				}
 			}
 			close(ch)
@@ -580,7 +580,7 @@ func insertImports(ctx context.Context, tx *database.DB,
 		return err
 	}
 
-	var importValues []interface{}
+	var importValues []any
 	for _, pkgPath := range paths {
 		imports, ok := pathToImports[pkgPath]
 		if !ok {
@@ -605,7 +605,7 @@ func insertReadmes(ctx context.Context, db *database.DB,
 	pathToReadme map[string]*internal.Readme) (err error) {
 	defer derrors.WrapStack(&err, "insertReadmes")
 
-	var readmeValues []interface{}
+	var readmeValues []any
 	for _, path := range paths {
 		readme, ok := pathToReadme[path]
 		if !ok {

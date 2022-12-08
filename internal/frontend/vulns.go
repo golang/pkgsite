@@ -108,7 +108,7 @@ func (s *Server) serveVuln(w http.ResponseWriter, r *http.Request, _ internal.Da
 func newVulnPage(ctx context.Context, client vulnc.Client, id string) (*VulnPage, error) {
 	entry, err := client.GetByID(ctx, id)
 	if err != nil {
-		return nil, err
+		return nil, derrors.VulnDBError
 	}
 	if entry == nil {
 		return nil, derrors.NotFound
@@ -136,7 +136,7 @@ func vulnList(ctx context.Context, client vulnc.Client) ([]OSVEntry, error) {
 
 	ids, err := client.ListIDs(ctx)
 	if err != nil {
-		return nil, err
+		return nil, derrors.VulnDBError
 	}
 
 	entries := make([]OSVEntry, len(ids))
@@ -157,7 +157,7 @@ func vulnList(ctx context.Context, client vulnc.Client) ([]OSVEntry, error) {
 		})
 	}
 	if err := g.Wait(); err != nil {
-		return nil, err
+		return nil, derrors.VulnDBError
 	}
 	return entries, nil
 }

@@ -159,9 +159,9 @@ func printPackage(w io.Writer, p *Package) error {
 
 func printNode(w io.Writer, root ast.Node) error {
 	var err error
-	seen := map[interface{}]int{}
+	seen := map[any]int{}
 
-	pr := func(format string, args ...interface{}) {
+	pr := func(format string, args ...any) {
 		if err == nil {
 			_, err = fmt.Fprintf(w, format, args...)
 		}
@@ -173,8 +173,8 @@ func printNode(w io.Writer, root ast.Node) error {
 		}
 	}
 
-	var prValue func(interface{}, int)
-	prValue = func(x interface{}, depth int) {
+	var prValue func(any, int)
+	prValue = func(x any, depth int) {
 		indent(depth)
 		if x == nil || reflect.ValueOf(x).IsNil() {
 			pr("nil\n")

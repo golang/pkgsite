@@ -94,7 +94,7 @@ func (db *DB) WithPGXConn(f func(conn *pgx.Conn) error) error {
 	if !db.InTransaction() {
 		return errors.New("not in a transaction")
 	}
-	return db.conn.Raw(func(c interface{}) error {
+	return db.conn.Raw(func(c any) error {
 		if w, ok := c.(*wrapConn); ok {
 			c = w.underlying
 		}
@@ -108,7 +108,7 @@ func (db *DB) WithPGXConn(f func(conn *pgx.Conn) error) error {
 
 // A RowItem is a row of values or an error.
 type RowItem struct {
-	Values []interface{}
+	Values []any
 	Err    error
 }
 
@@ -133,7 +133,7 @@ func (cs *chanCopySource) Next() bool {
 }
 
 // Values implements CopyFromSource.Values.
-func (cs *chanCopySource) Values() ([]interface{}, error) {
+func (cs *chanCopySource) Values() ([]any, error) {
 	return cs.next.Values, cs.next.Err
 }
 

@@ -86,7 +86,7 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			Status:  translateStatus(w2.status),
 			Latency: time.Since(start),
 		},
-		Payload: map[string]interface{}{
+		Payload: map[string]any{
 			"requestType": "request end",
 			"isRobot":     isRobot(r.Header.Get("User-Agent")),
 		},

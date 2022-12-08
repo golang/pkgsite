@@ -31,7 +31,7 @@ type queryEndLogEntry struct {
 	Error           string `json:",omitempty"`
 }
 
-func logQuery(ctx context.Context, query string, args []interface{}, instanceID string, retryable bool) func(*error) {
+func logQuery(ctx context.Context, query string, args []any, instanceID string, retryable bool) func(*error) {
 	if QueryLoggingDisabled {
 		return func(*error) {}
 	}

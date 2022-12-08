@@ -59,7 +59,7 @@ func TestLogLevel(t *testing.T) {
 
 	tests := []struct {
 		name     string
-		logFunc  func(context.Context, interface{})
+		logFunc  func(context.Context, any)
 		logMsg   string
 		expected bool
 	}{
@@ -93,7 +93,7 @@ func TestDefaultLogLevel(t *testing.T) {
 
 	tests := []struct {
 		name    string
-		logFunc func(context.Context, interface{})
+		logFunc func(context.Context, any)
 		logMsg  string
 	}{
 		{name: "debug", logFunc: Debug, logMsg: debugMsg},
@@ -118,6 +118,6 @@ type mockLogger struct {
 	logs string
 }
 
-func (l *mockLogger) log(ctx context.Context, s logging.Severity, payload interface{}) {
+func (l *mockLogger) log(ctx context.Context, s logging.Severity, payload any) {
 	l.logs += fmt.Sprintf("%s: %+v", s, payload)
 }

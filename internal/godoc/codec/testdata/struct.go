@@ -65,8 +65,8 @@ func decode_ast_BasicLit(d *codec.Decoder, p **ast.BasicLit) {
 
 func init() {
 	codec.Register(&ast.BasicLit{},
-		func(e *codec.Encoder, x interface{}) { encode_ast_BasicLit(e, x.(*ast.BasicLit)) },
-		func(d *codec.Decoder) interface{} {
+		func(e *codec.Encoder, x any) { encode_ast_BasicLit(e, x.(*ast.BasicLit)) },
+		func(d *codec.Decoder) any {
 			var x *ast.BasicLit
 			decode_ast_BasicLit(d, &x)
 			return x

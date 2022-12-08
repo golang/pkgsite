@@ -332,7 +332,7 @@ func (w *Walker) emitIfaceType(name string, typ *types.Interface) {
 // emitf is the same as
 // https://go.googlesource.com/go/+/refs/tags/go1.16.6/src/cmd/api/goapi.go#997,
 // except verbose mode is removed.
-func (w *Walker) emitf(format string, args ...interface{}) {
+func (w *Walker) emitf(format string, args ...any) {
 	f := strings.Join(w.scope, ", ") + ", " + fmt.Sprintf(format, args...)
 	if strings.Contains(f, "\n") {
 		panic("feature contains newlines: " + f)
