@@ -20,7 +20,7 @@ import (
 
 const (
 	githubAdvisoryUrlPrefix = "https://github.com/advisories/"
-	mitreAdvisoryUrlPrefix  = "https://cve.mitre.org/cgi-bin/cvename.cgi?name="
+	mitreAdvisoryUrlPrefix  = "https://www.cve.org/CVERecord?id="
 	nistAdvisoryUrlPrefix   = "https://nvd.nist.gov/vuln/detail/"
 )
 
