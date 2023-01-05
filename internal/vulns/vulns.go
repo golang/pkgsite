@@ -14,6 +14,7 @@ import (
 	"golang.org/x/mod/semver"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/stdlib"
+	"golang.org/x/pkgsite/internal/version"
 	"golang.org/x/vuln/osv"
 )
 
@@ -48,10 +49,17 @@ func VulnsForPackage(ctx context.Context, modulePath, version, packagePath strin
 	return vs
 }
 
-func vulnsForPackage(ctx context.Context, modulePath, version, packagePath string, getVulnEntries VulnEntriesFunc) (_ []Vuln, err error) {
-	defer derrors.Wrap(&err, "vulns(%q, %q, %q)", modulePath, version, packagePath)
+func vulnsForPackage(ctx context.Context, modulePath, vers, packagePath string, getVulnEntries VulnEntriesFunc) (_ []Vuln, err error) {
+	defer derrors.Wrap(&err, "vulns(%q, %q, %q)", modulePath, vers, packagePath)
 
 	if getVulnEntries == nil {
+		return nil, nil
+	}
+	// Stdlib pages requested at master will map to a pseudo version that puts
+	// all vulns in range. We can't really tell you're at master so version.IsPseudo
+	// is the best we can do. The result is vulns won't be reported for a pseudoversion
+	// that refers to a commit that is in a vulnerable range.
+	if modulePath == stdlib.ModulePath && version.IsPseudo(vers) {
 		return nil, nil
 	}
 	if modulePath == stdlib.ModulePath && strings.HasPrefix(packagePath, "cmd/go") {
@@ -68,7 +76,7 @@ func vulnsForPackage(ctx context.Context, modulePath, version, packagePath strin
 	// package at this version.
 	var vulns []Vuln
 	for _, e := range entries {
-		if vuln, ok := entryVuln(e, modulePath, packagePath, version); ok {
+		if vuln, ok := entryVuln(e, modulePath, packagePath, vers); ok {
 			vulns = append(vulns, vuln)
 		}
 	}
@@ -107,10 +115,10 @@ func (e OSVEntry) AffectedModulesAndPackages() []string {
 	return affected
 }
 
-func entryVuln(e *osv.Entry, modulePath, packagePath, version string) (Vuln, bool) {
+func entryVuln(e *osv.Entry, modulePath, packagePath, ver string) (Vuln, bool) {
 	for _, a := range e.Affected {
 		// a.Package.Name is Go "module" name. Go package path is a.EcosystemSpecific.Imports.Path.
-		if a.Package.Name != modulePath || !a.Ranges.AffectsSemver(version) {
+		if a.Package.Name != modulePath || !a.Ranges.AffectsSemver(ver) {
 			continue
 		}
 		if packageMatches := func() bool {

@@ -44,6 +44,21 @@ func TestVulnsForPackage(t *testing.T) {
 			},
 		}},
 	}
+	stdlib := osv.Entry{
+		ID: "GO-2",
+		Affected: []osv.Affected{{
+			Package: osv.Package{Name: "stdlib"},
+			Ranges: []osv.AffectsRange{{
+				Type:   osv.TypeSemver,
+				Events: []osv.RangeEvent{{Introduced: "0"}, {Fixed: "1.19.4"}},
+			}},
+			EcosystemSpecific: osv.EcosystemSpecific{
+				Imports: []osv.EcosystemSpecificImport{{
+					Path: "net/http",
+				}},
+			},
+		}},
+	}
 
 	get := func(_ context.Context, modulePath string) ([]*osv.Entry, error) {
 		switch modulePath {
@@ -51,6 +66,8 @@ func TestVulnsForPackage(t *testing.T) {
 			return nil, nil
 		case "bad.com", "unfixable.com":
 			return []*osv.Entry{&e}, nil
+		case "stdlib":
+			return []*osv.Entry{&stdlib}, nil
 		default:
 			return nil, fmt.Errorf("unknown module %q", modulePath)
 		}
@@ -88,6 +105,16 @@ func TestVulnsForPackage(t *testing.T) {
 		},
 		{
 			"unfixable.com", "", "v1.999.999", []Vuln{{ID: "GO-1"}},
+		},
+		// Vulns for stdlib
+		{
+			"std", "net/http", "go1.19.3", []Vuln{{ID: "GO-2"}},
+		},
+		{
+			"std", "net/http", "v0.0.0-20230104211531-bae7d772e800", nil,
+		},
+		{
+			"std", "net/http", "go1.20", nil,
 		},
 	}
 	for _, tc := range testCases {
