@@ -30,6 +30,7 @@
     <link rel="shortcut icon" href="/static/shared/icon/favicon.ico">
     {{block "canonical" .}}{{end}}
     <link href="/static/frontend/frontend.min.css?version={{.AppVersionLabel}}" rel="stylesheet">
+    <link type="application/opensearchdescription+xml" rel="search" href="/opensearch.xml?version={{.AppVersionLabel}}" title="Go Packages" />
     {{block "title" .}}
       <title>Go Packages</title>
     {{end}}

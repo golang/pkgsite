@@ -193,6 +193,7 @@ Disallow: /fetch/*
 Sitemap: https://pkg.go.dev/sitemap/index.xml
 `))
 	}))
+	handle("/opensearch.xml", s.opensearchHandler())
 	s.installDebugHandlers(handle)
 }
 
@@ -463,6 +464,21 @@ func (s *Server) licensePolicyHandler() http.HandlerFunc {
 func (s *Server) aboutHandler() http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		s.servePage(r.Context(), w, "about", basePage{})
+	})
+}
+
+func (s *Server) opensearchHandler() http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/opensearchdescription+xml")
+		http.ServeContent(w, r, "", time.Time{}, strings.NewReader(`<?xml version="1.0"?>
+<OpenSearchDescription xmlns="http://a9.com/-/spec/opensearch/1.1/">
+    <InputEncoding>UTF-8</InputEncoding>
+    <ShortName>Go Packages</ShortName>
+    <Description>Go Packages: Go Package Documentation</Description>
+    <Url type="text/html" method="get" template="https://` + r.Host + `/search?q={searchTerms}"/>
+    <Url type="application/opensearchdescription+xml" rel="self" template="https://` + r.Host + `/opensearch.xml"/>
+</OpenSearchDescription>
+`))
 	})
 }
 
