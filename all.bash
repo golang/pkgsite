@@ -149,7 +149,8 @@ check_vet() {
 # check_staticcheck runs staticcheck on source files.
 check_staticcheck() {
  ensure_go_binary honnef.co/go/tools/cmd/staticcheck
- runcmd staticcheck $(go list ./... | grep -v third_party | grep -v internal/doc | grep -v internal/render)
+#  runcmd staticcheck $(go list ./... | grep -v third_party | grep -v internal/doc | grep -v internal/render)
+  echo "disabling staticcheck until go1.20 is supported"
 }
 
 # check_misspell runs misspell on source files.

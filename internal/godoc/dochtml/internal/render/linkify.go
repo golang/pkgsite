@@ -612,7 +612,9 @@ scan:
 		line := file.Line(p) - 1 // current 0-indexed line number
 		offset := file.Offset(p) // current offset into source file
 		tokType := codeType      // current token type (assume source code)
-
+		if lastOffset > offset {
+			continue
+		}
 		// Add traversed bytes from src to the appropriate line.
 		prevLines := strings.SplitAfter(string(src[lastOffset:offset]), "\n")
 		for i, ln := range prevLines {

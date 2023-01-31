@@ -77,6 +77,8 @@ func TestSetAndLoadExperiments(t *testing.T) {
 }
 
 func TestShouldSetExperiment(t *testing.T) {
+	// Force the pre-go1.20 behavior of rand.Seed
+	rand.Seed(1)
 	ipv4Addr := func() string {
 		a := make([]string, 4)
 		for i := 0; i < 4; i++ {
