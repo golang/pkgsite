@@ -26,7 +26,7 @@ import (
 	"golang.org/x/pkgsite/internal/stdlib"
 )
 
-// ParseAPIInfo parses apiVersions using contents of the specified directory.
+// ParsePackageAPIInfo parses apiVersions using contents of the specified directory.
 func ParsePackageAPIInfo(files []string) (_ apiVersions, err error) {
 	defer derrors.Wrap(&err, "ParsePackageAPIInfo")
 

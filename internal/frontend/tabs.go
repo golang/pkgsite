@@ -74,7 +74,7 @@ func init() {
 	}
 }
 
-// fetchDetailsForPackage returns tab details by delegating to the correct detail
+// fetchDetailsForUnit returns tab details by delegating to the correct detail
 // handler.
 func fetchDetailsForUnit(ctx context.Context, r *http.Request, tab string, ds internal.DataSource, um *internal.UnitMeta,
 	requestedVersion string, bc internal.BuildContext,

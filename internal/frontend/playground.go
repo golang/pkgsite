@@ -51,7 +51,7 @@ type fmtResponse struct {
 	Error string
 }
 
-// fmtHandler takes a Go program in its "body" form value, formats it with
+// handleFmt takes a Go program in its "body" form value, formats it with
 // standard gofmt formatting, and writes a fmtResponse as a JSON object.
 func (s *Server) handleFmt(w http.ResponseWriter, r *http.Request) {
 	resp := new(fmtResponse)

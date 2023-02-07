@@ -212,7 +212,7 @@ type fsProxyModuleGetter struct {
 	allowed map[internal.Modver]bool
 }
 
-// NewFSModuleGetter return a ModuleGetter that reads modules from a filesystem
+// NewFSProxyModuleGetter returns a ModuleGetter that reads modules from a filesystem
 // directory organized like the proxy.
 // If allowed is non-empty, only module@versions in allowed are served; others
 // result in NotFound errors.

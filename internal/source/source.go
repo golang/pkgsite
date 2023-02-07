@@ -159,7 +159,7 @@ type jsonInfo struct {
 	Templates *urlTemplates `json:",omitempty"`
 }
 
-// ToJSONForDB returns the Info encoded for storage in the database.
+// MarshalJSON returns the Info encoded for storage in the database.
 func (i *Info) MarshalJSON() (_ []byte, err error) {
 	defer derrors.Wrap(&err, "MarshalJSON")
 

@@ -64,7 +64,7 @@ func (s *Symbol) addBuilds(builds ...internal.BuildContext) {
 	}
 }
 
-// symbolsForVersions returns an array of symbols for use in the VersionSummary
+// symbolsForVersion returns an array of symbols for use in the VersionSummary
 // of the specified version.
 func symbolsForVersion(pkgURLPath string, symbolsAtVersion map[string]map[internal.SymbolMeta]*internal.SymbolBuildContexts) [][]*Symbol {
 	nameToMetaToSymbol := map[string]map[internal.SymbolMeta]*Symbol{}

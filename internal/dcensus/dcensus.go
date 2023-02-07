@@ -115,7 +115,7 @@ func (r *monitoredResource) MonitoredResource() (resType string, labels map[stri
 	return r.Type, r.Labels
 }
 
-// ExportToStackdriver checks to see if the process is running in a GCP
+// exportToStackdriver checks to see if the process is running in a GCP
 // environment, and if so configures exporting to stackdriver.
 func exportToStackdriver(ctx context.Context, cfg *config.Config) {
 	if cfg.ProjectID == "" {

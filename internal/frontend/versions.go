@@ -325,7 +325,7 @@ func shortRationale(rationale string) string {
 	return rationale
 }
 
-// pseudoVersionRev extracts the pseudo version base, excluding the timestamp.
+// pseudoVersionBase extracts the pseudo version base, excluding the timestamp.
 // It assumes the pseudo version is correctly formatted.
 //
 // See TestPseudoVersionBase for examples.

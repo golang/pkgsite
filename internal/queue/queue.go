@@ -76,7 +76,7 @@ type GCP struct {
 	token *taskspb.HttpRequest_OidcToken
 }
 
-// NewGCP returns a new Queue that can be used to enqueue tasks using the
+// newGCP returns a new Queue that can be used to enqueue tasks using the
 // cloud tasks API.  The given queueID should be the name of the queue in the
 // cloud tasks console.
 func newGCP(cfg *config.Config, client *cloudtasks.Client, queueID string) (_ *GCP, err error) {

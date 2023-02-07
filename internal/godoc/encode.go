@@ -36,7 +36,7 @@ func (p *Package) Encode(ctx context.Context) (_ []byte, err error) {
 	return p.fastEncode()
 }
 
-// DecodPackage decodes a byte slice encoded with Package.Encode into a Package.
+// DecodePackage decodes a byte slice encoded with Package.Encode into a Package.
 func DecodePackage(data []byte) (_ *Package, err error) {
 	defer derrors.Wrap(&err, "DecodePackage()")
 

@@ -66,7 +66,7 @@ func idtokenArgs(jsonCreds []byte, useExp bool) (string, []idtoken.ClientOption)
 	return audience, opts
 }
 
-// NewClient creates an http.Client that adds an Authorization header
+// NewClientBearer creates an http.Client that adds an Authorization header
 // containing its argument as a bearer token.
 func NewClientBearer(token string) *http.Client {
 	return &http.Client{

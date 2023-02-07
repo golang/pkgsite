@@ -28,7 +28,7 @@ func (s *Set) Active() []string {
 	return es
 }
 
-// FromContent returns the set of experiments enabled for the content.
+// FromContext returns the set of experiments enabled for the context.
 func FromContext(ctx context.Context) *Set {
 	s, _ := ctx.Value(contextKey{}).(*Set)
 	return s

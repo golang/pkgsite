@@ -12,7 +12,7 @@ import (
 	"golang.org/x/pkgsite/internal/version"
 )
 
-// displayBreadcrumbs appends additional breadcrumb links for display
+// displayBreadcrumb appends additional breadcrumb links for display
 // to those for the given unit.
 func displayBreadcrumb(um *internal.UnitMeta, requestedVersion string) breadcrumb {
 	bc := breadcrumbPath(um.Path, um.ModulePath, requestedVersion)
