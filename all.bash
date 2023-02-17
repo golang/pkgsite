@@ -148,9 +148,8 @@ check_vet() {
 
 # check_staticcheck runs staticcheck on source files.
 check_staticcheck() {
- ensure_go_binary honnef.co/go/tools/cmd/staticcheck
-#  runcmd staticcheck $(go list ./... | grep -v third_party | grep -v internal/doc | grep -v internal/render)
-  echo "disabling staticcheck until go1.20 is supported"
+  ensure_go_binary honnef.co/go/tools/cmd/staticcheck
+  runcmd staticcheck $(go list ./... | grep -v third_party | grep -v internal/doc | grep -v internal/render)
 }
 
 # check_misspell runs misspell on source files.
@@ -318,6 +317,12 @@ main() {
       # permissions or that don't test the code.
       # Also, run the race detector on most tests.
       local start=`date +%s`
+
+      # Explicitly mark the working directory as safe in CI.
+      # https://github.com/docker-library/golang/issues/452
+      local wd=$(pwd)
+      runcmd git config --system --add safe.directory ${wd}
+
       standard_linters
       # Print how long it takes to download dependencies and run the standard
       # linters in CI.
