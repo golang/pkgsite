@@ -15,7 +15,7 @@ require (
 	github.com/Masterminds/squirrel v1.5.2
 	github.com/alicebob/miniredis/v2 v2.17.0
 	github.com/andybalholm/cascadia v1.3.1
-	github.com/evanw/esbuild v0.14.10
+	github.com/evanw/esbuild v0.17.8
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-git/go-billy/v5 v5.3.1
 	github.com/go-git/go-git/v5 v5.4.2

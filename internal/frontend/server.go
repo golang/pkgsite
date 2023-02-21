@@ -779,8 +779,11 @@ func (s *Server) staticHandler() http.Handler {
 			panic("staticPath is empty in dev mode; cannot rebuild static files")
 		}
 		ctx := context.Background()
-		_, err := static.Build(static.Config{EntryPoint: s.staticPath + "/frontend", Watch: true, Bundle: true})
-		if err != nil {
+		if err := static.Build(static.Config{
+			EntryPoint: s.staticPath + "/frontend",
+			Watch:      true,
+			Bundle:     true,
+		}); err != nil {
 			log.Error(ctx, err)
 		}
 	}

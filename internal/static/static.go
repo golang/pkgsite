@@ -36,41 +36,45 @@ type Config struct {
 // when cmd/frontend is run in dev mode and in
 // devtools/cmd/static/main.go with Watch=false for building
 // productionized assets.
-func Build(config Config) (*api.BuildResult, error) {
+func Build(config Config) error {
 	files, err := getEntry(config.EntryPoint, config.Bundle)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	options := api.BuildOptions{
-		EntryPoints:   files,
-		Bundle:        config.Bundle,
-		Outdir:        config.EntryPoint,
-		Write:         true,
-		Platform:      api.PlatformBrowser,
-		Format:        api.FormatESModule,
-		OutExtensions: map[string]string{".css": ".min.css"},
-		External:      []string{"*.svg"},
+		EntryPoints:  files,
+		Bundle:       config.Bundle,
+		Outdir:       config.EntryPoint,
+		Write:        true,
+		Platform:     api.PlatformBrowser,
+		Format:       api.FormatESModule,
+		OutExtension: map[string]string{".css": ".min.css"},
+		External:     []string{"*.svg"},
 		Banner: map[string]string{"css": "/*!\n" +
 			" * Copyright 2021 The Go Authors. All rights reserved.\n" +
 			" * Use of this source code is governed by a BSD-style\n" +
 			" * license that can be found in the LICENSE file.\n" +
 			" */"},
 	}
-	if config.Watch {
-		options.Watch = &api.WatchMode{}
-	}
 	options.MinifyIdentifiers = true
 	options.MinifySyntax = true
 	options.MinifyWhitespace = true
 	options.Sourcemap = api.SourceMapLinked
+	if config.Watch {
+		ctx, err := api.Context(options)
+		if err != nil {
+			return err
+		}
+		return ctx.Watch(api.WatchOptions{})
+	}
 	result := api.Build(options)
 	if len(result.Errors) > 0 {
-		return nil, fmt.Errorf("error building static files: %v", result.Errors)
+		return fmt.Errorf("error building static files: %v", result.Errors)
 	}
 	if len(result.Warnings) > 0 {
-		return nil, fmt.Errorf("error building static files: %v", result.Warnings)
+		return fmt.Errorf("error building static files: %v", result.Warnings)
 	}
-	return &result, nil
+	return nil
 }
 
 // getEntry walks the the given directory and collects entry file paths
