@@ -78,6 +78,7 @@ See the [command](https://pkg.go.dev/golang.org/x/website/cmd/screentest) and
 more information.
 
 ### Running the tests
+
 In order to run the tests, run this command from the root of the repository:
 
 ```

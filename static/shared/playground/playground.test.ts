@@ -8,7 +8,7 @@
 import { PlaygroundExampleController } from './playground';
 import { mocked } from 'ts-jest/utils';
 
-const flushPromises = () => new Promise(fn => setTimeout(fn, 0));
+const flushPromises = (ms = 0) => new Promise(fn => setTimeout(fn, ms));
 const el = <T extends HTMLElement>(selector: string) => document.querySelector<T>(selector);
 const codeSnippet = `package main
 
@@ -154,18 +154,23 @@ require example v1
     mocked(window.fetch).mockResolvedValue({
       json: () =>
         Promise.resolve({
-          Events: [{ Message: '// mocked response', Kind: 'stdout', Delay: 0 }],
+          Events: [
+            { Message: '// mocked message 1 ', Kind: 'stdout', Delay: 0 },
+            { Message: '// mocked message 2', Kind: 'stdout', Delay: 1 },
+          ],
           Errors: null,
         }),
     } as Response);
     el('[aria-label="Run Code"]').click();
-    await flushPromises();
+    await flushPromises(10);
 
     expect(window.fetch).toHaveBeenCalledWith('/play/compile', {
       body: JSON.stringify({ body: snippetWithModeFile, version: 2 }),
       method: 'POST',
     });
-    expect(el('.Documentation-exampleOutput').textContent).toContain('// mocked response');
+    expect(el('.Documentation-exampleOutput').textContent).toContain(
+      '// mocked message 1 // mocked message 2'
+    );
   });
 
   it('displays error message after pressing run with invalid code', async () => {
