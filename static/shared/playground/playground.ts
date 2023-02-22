@@ -169,6 +169,15 @@ export class PlaygroundExampleController {
     }
   }
 
+  /**
+   * Appends to the text of the example's output box.
+   */
+  private appendToOutputText(output: string) {
+    if (this.outputEl) {
+      this.outputEl.textContent += output;
+    }
+  }
+
   private setOutputHTML(output: string) {
     if (this.outputEl) {
       this.outputEl.innerHTML = output;
@@ -264,7 +273,7 @@ require ${moduleVars.modulepath} ${moduleVars.version}
       .then(async ({ Events, Errors }) => {
         this.setOutputText(Errors || '');
         for (const e of Events || []) {
-          this.setOutputText(e.Message);
+          this.appendToOutputText(e.Message);
           await new Promise(resolve => setTimeout(resolve, e.Delay / 1000000));
         }
       })
