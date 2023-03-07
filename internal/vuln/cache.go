@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-package main
+package vuln
 
 import (
 	"fmt"
@@ -14,9 +14,9 @@ import (
 	"golang.org/x/vuln/osv"
 )
 
-// vulndbCache implements the golang.org/x/vulndb/client.Cache interface. It
+// cache implements the golang.org/x/vulndb/client.Cache interface. It
 // stores in memory the index and a limited number of path entries for one DB.
-type vulndbCache struct {
+type cache struct {
 	mu         sync.Mutex
 	dbName     string // support only one DB
 	index      vulnc.DBIndex
@@ -24,19 +24,19 @@ type vulndbCache struct {
 	entryCache *lru.Cache
 }
 
-func newVulndbCache() *vulndbCache {
+func newCache() *cache {
 	const size = 100
 	ec, err := lru.New(size)
 	if err != nil {
 		// Can only happen if size is bad, and we control it.
 		panic(err)
 	}
-	return &vulndbCache{entryCache: ec}
+	return &cache{entryCache: ec}
 }
 
 // ReadIndex returns the index for dbName from the cache, or returns zero values
 // if it is not present.
-func (c *vulndbCache) ReadIndex(dbName string) (vulnc.DBIndex, time.Time, error) {
+func (c *cache) ReadIndex(dbName string) (vulnc.DBIndex, time.Time, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	if err := c.checkDB(dbName); err != nil {
@@ -46,7 +46,7 @@ func (c *vulndbCache) ReadIndex(dbName string) (vulnc.DBIndex, time.Time, error)
 }
 
 // WriteIndex puts the index and retrieved time into the cache.
-func (c *vulndbCache) WriteIndex(dbName string, index vulnc.DBIndex, retrieved time.Time) error {
+func (c *cache) WriteIndex(dbName string, index vulnc.DBIndex, retrieved time.Time) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	if err := c.checkDB(dbName); err != nil {
@@ -59,7 +59,7 @@ func (c *vulndbCache) WriteIndex(dbName string, index vulnc.DBIndex, retrieved t
 
 // ReadEntries returns the vulndb entries for path from the cache, or
 // nil if not prsent.
-func (c *vulndbCache) ReadEntries(dbName, path string) ([]*osv.Entry, error) {
+func (c *cache) ReadEntries(dbName, path string) ([]*osv.Entry, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	if err := c.checkDB(dbName); err != nil {
@@ -72,7 +72,7 @@ func (c *vulndbCache) ReadEntries(dbName, path string) ([]*osv.Entry, error) {
 }
 
 // WriteEntries puts the entries for path into the cache.
-func (c *vulndbCache) WriteEntries(dbName, path string, entries []*osv.Entry) error {
+func (c *cache) WriteEntries(dbName, path string, entries []*osv.Entry) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	if err := c.checkDB(dbName); err != nil {
@@ -82,7 +82,7 @@ func (c *vulndbCache) WriteEntries(dbName, path string, entries []*osv.Entry) er
 	return nil
 }
 
-func (c *vulndbCache) checkDB(name string) error {
+func (c *cache) checkDB(name string) error {
 	if c.dbName == "" {
 		c.dbName = name
 		return nil

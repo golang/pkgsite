@@ -12,9 +12,8 @@ import (
 
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
-	"golang.org/x/pkgsite/internal/vulns"
+	"golang.org/x/pkgsite/internal/vuln"
 	"golang.org/x/sync/errgroup"
-	vulnc "golang.org/x/vuln/client"
 	"golang.org/x/vuln/osv"
 )
 
@@ -34,7 +33,7 @@ type VulnListPage struct {
 type VulnPage struct {
 	basePage
 	Entry            OSVEntry
-	AffectedPackages []*vulns.AffectedPackage
+	AffectedPackages []*vuln.AffectedPackage
 	AliasLinks       []link
 	AdvisoryLinks    []link
 }
@@ -105,8 +104,8 @@ func (s *Server) serveVuln(w http.ResponseWriter, r *http.Request, _ internal.Da
 	return nil
 }
 
-func newVulnPage(ctx context.Context, client vulnc.Client, id string) (*VulnPage, error) {
-	entry, err := client.GetByID(ctx, id)
+func newVulnPage(ctx context.Context, client *vuln.Client, id string) (*VulnPage, error) {
+	entry, err := client.ByID(ctx, id)
 	if err != nil {
 		return nil, derrors.VulnDBError
 	}
@@ -115,13 +114,13 @@ func newVulnPage(ctx context.Context, client vulnc.Client, id string) (*VulnPage
 	}
 	return &VulnPage{
 		Entry:            OSVEntry{entry},
-		AffectedPackages: vulns.AffectedPackages(entry),
+		AffectedPackages: vuln.AffectedPackages(entry),
 		AliasLinks:       aliasLinks(entry),
 		AdvisoryLinks:    advisoryLinks(entry),
 	}, nil
 }
 
-func newVulnListPage(ctx context.Context, client vulnc.Client) (*VulnListPage, error) {
+func newVulnListPage(ctx context.Context, client *vuln.Client) (*VulnListPage, error) {
 	entries, err := vulnList(ctx, client)
 	if err != nil {
 		return nil, err
@@ -131,10 +130,10 @@ func newVulnListPage(ctx context.Context, client vulnc.Client) (*VulnListPage, e
 	return &VulnListPage{Entries: entries}, nil
 }
 
-func vulnList(ctx context.Context, client vulnc.Client) ([]OSVEntry, error) {
+func vulnList(ctx context.Context, client *vuln.Client) ([]OSVEntry, error) {
 	const concurrency = 4
 
-	ids, err := client.ListIDs(ctx)
+	ids, err := client.IDs(ctx)
 	if err != nil {
 		return nil, derrors.VulnDBError
 	}
@@ -148,7 +147,7 @@ func vulnList(ctx context.Context, client vulnc.Client) ([]OSVEntry, error) {
 		sem <- struct{}{}
 		g.Go(func() error {
 			defer func() { <-sem }()
-			e, err := client.GetByID(ctx, id)
+			e, err := client.ByID(ctx, id)
 			if err != nil {
 				return err
 			}

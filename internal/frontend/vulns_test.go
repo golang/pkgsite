@@ -6,12 +6,11 @@ package frontend
 
 import (
 	"context"
-	"errors"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	vulnc "golang.org/x/vuln/client"
+	"golang.org/x/pkgsite/internal/vuln"
 	"golang.org/x/vuln/osv"
 )
 
@@ -40,7 +39,7 @@ var testEntries = []*osv.Entry{
 
 func TestNewVulnListPage(t *testing.T) {
 	ctx := context.Background()
-	c := newVulndbTestClient(testEntries)
+	c := vuln.NewTestClient(testEntries)
 	got, err := newVulnListPage(ctx, c)
 	if err != nil {
 		t.Fatal(err)
@@ -58,7 +57,7 @@ func TestNewVulnListPage(t *testing.T) {
 
 func TestNewVulnPage(t *testing.T) {
 	ctx := context.Background()
-	c := &vulndbTestClient{entries: testEntries}
+	c := vuln.NewTestClient(testEntries)
 	got, err := newVulnPage(ctx, c, "GO-1990-02")
 	if err != nil {
 		t.Fatal(err)
@@ -70,59 +69,6 @@ func TestNewVulnPage(t *testing.T) {
 	if diff := cmp.Diff(want, got, cmpopts.IgnoreUnexported(VulnPage{})); diff != "" {
 		t.Errorf("mismatch (-want, +got):\n%s", diff)
 	}
-}
-
-type vulndbTestClient struct {
-	vulnc.Client
-	entries    []*osv.Entry
-	aliasToIDs map[string][]string
-}
-
-func newVulndbTestClient(entries []*osv.Entry) *vulndbTestClient {
-	c := &vulndbTestClient{
-		entries:    entries,
-		aliasToIDs: map[string][]string{},
-	}
-	for _, e := range entries {
-		for _, a := range e.Aliases {
-			c.aliasToIDs[a] = append(c.aliasToIDs[a], e.ID)
-		}
-	}
-	return c
-}
-
-func (c *vulndbTestClient) GetByModule(context.Context, string) ([]*osv.Entry, error) {
-	return nil, errors.New("unimplemented")
-}
-
-func (c *vulndbTestClient) GetByID(_ context.Context, id string) (*osv.Entry, error) {
-	for _, e := range c.entries {
-		if e.ID == id {
-			return e, nil
-		}
-	}
-	return nil, nil
-}
-
-func (c *vulndbTestClient) ListIDs(context.Context) ([]string, error) {
-	var ids []string
-	for _, e := range c.entries {
-		ids = append(ids, e.ID)
-	}
-	return ids, nil
-}
-
-func (c *vulndbTestClient) GetByAlias(ctx context.Context, alias string) ([]*osv.Entry, error) {
-	ids := c.aliasToIDs[alias]
-	if len(ids) == 0 {
-		return nil, nil
-	}
-	var es []*osv.Entry
-	for _, id := range ids {
-		e, _ := c.GetByID(ctx, id)
-		es = append(es, e)
-	}
-	return es, nil
 }
 
 func Test_aliasLinks(t *testing.T) {

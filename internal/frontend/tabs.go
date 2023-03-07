@@ -11,7 +11,7 @@ import (
 
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
-	"golang.org/x/pkgsite/internal/vulns"
+	"golang.org/x/pkgsite/internal/vuln"
 )
 
 // TabSettings defines tab-specific metadata.
@@ -78,7 +78,7 @@ func init() {
 // handler.
 func fetchDetailsForUnit(ctx context.Context, r *http.Request, tab string, ds internal.DataSource, um *internal.UnitMeta,
 	requestedVersion string, bc internal.BuildContext,
-	getVulnEntries vulns.VulnEntriesFunc) (_ any, err error) {
+	getVulnEntries vuln.VulnEntriesFunc) (_ any, err error) {
 	defer derrors.Wrap(&err, "fetchDetailsForUnit(r, %q, ds, um=%q,%q,%q)", tab, um.Path, um.ModulePath, um.Version)
 	switch tab {
 	case tabMain:

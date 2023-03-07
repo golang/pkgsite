@@ -18,7 +18,7 @@ import (
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/version"
-	"golang.org/x/pkgsite/internal/vulns"
+	"golang.org/x/pkgsite/internal/vuln"
 )
 
 // VersionsDetails contains the hierarchy of version summary information used
@@ -82,10 +82,10 @@ type VersionSummary struct {
 	RetractionRationale string
 	IsMinor             bool
 	Symbols             [][]*Symbol
-	Vulns               []vulns.Vuln
+	Vulns               []vuln.Vuln
 }
 
-func fetchVersionsDetails(ctx context.Context, ds internal.DataSource, um *internal.UnitMeta, getVulnEntries vulns.VulnEntriesFunc) (*VersionsDetails, error) {
+func fetchVersionsDetails(ctx context.Context, ds internal.DataSource, um *internal.UnitMeta, getVulnEntries vuln.VulnEntriesFunc) (*VersionsDetails, error) {
 	db, ok := ds.(*postgres.DB)
 	if !ok {
 		// The proxydatasource does not support the imported by page.
@@ -146,7 +146,7 @@ func buildVersionDetails(ctx context.Context, currentModulePath, packagePath str
 	modInfos []*internal.ModuleInfo,
 	sh *internal.SymbolHistory,
 	linkify func(v *internal.ModuleInfo) string,
-	getVulnEntries vulns.VulnEntriesFunc,
+	getVulnEntries vuln.VulnEntriesFunc,
 ) *VersionsDetails {
 	// lists organizes versions by VersionListKey.
 	lists := make(map[VersionListKey]*VersionList)
@@ -201,7 +201,7 @@ func buildVersionDetails(ctx context.Context, currentModulePath, packagePath str
 		if mi.ModulePath == stdlib.ModulePath {
 			pkg = packagePath
 		}
-		vs.Vulns = vulns.VulnsForPackage(ctx, mi.ModulePath, mi.Version, pkg, getVulnEntries)
+		vs.Vulns = vuln.VulnsForPackage(ctx, mi.ModulePath, mi.Version, pkg, getVulnEntries)
 		vl := lists[key]
 		if vl == nil {
 			seenLists = append(seenLists, key)

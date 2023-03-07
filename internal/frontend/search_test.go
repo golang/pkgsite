@@ -22,7 +22,7 @@ import (
 	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/testing/sample"
-	"golang.org/x/pkgsite/internal/vulns"
+	"golang.org/x/pkgsite/internal/vuln"
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
 	"golang.org/x/vuln/osv"
@@ -39,7 +39,7 @@ func TestDetermineSearchAction(t *testing.T) {
 	for _, v := range modules {
 		postgres.MustInsertModule(ctx, t, testDB, v)
 	}
-	vc := newVulndbTestClient(testEntries)
+	vc := vuln.NewTestClient(testEntries)
 	for _, test := range []struct {
 		name         string
 		method       string
@@ -385,7 +385,7 @@ func TestFetchSearchPage(t *testing.T) {
 						DisplayVersion: moduleFoo.Version,
 						Licenses:       []string{"MIT"},
 						CommitTime:     elapsedTime(moduleFoo.CommitTime),
-						Vulns:          []vulns.Vuln{{ID: "test", Details: "vuln"}},
+						Vulns:          []vuln.Vuln{{ID: "test", Details: "vuln"}},
 					},
 				},
 			},
@@ -552,7 +552,7 @@ func TestSearchRequestRedirectPath(t *testing.T) {
 }
 
 func TestSearchVulnAlias(t *testing.T) {
-	vc := newVulndbTestClient(testEntries)
+	vc := vuln.NewTestClient(testEntries)
 	for _, test := range []struct {
 		name     string
 		mode     string
@@ -624,7 +624,7 @@ func TestSearchVulnAlias(t *testing.T) {
 }
 
 func TestSearchVulnModulePath(t *testing.T) {
-	vc := newVulndbTestClient(testEntries)
+	vc := vuln.NewTestClient(testEntries)
 	for _, test := range []struct {
 		name     string
 		mode     string

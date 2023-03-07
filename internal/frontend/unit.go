@@ -21,7 +21,7 @@ import (
 	"golang.org/x/pkgsite/internal/middleware"
 	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/version"
-	"golang.org/x/pkgsite/internal/vulns"
+	"golang.org/x/pkgsite/internal/vuln"
 )
 
 // UnitPage contains data needed to render the unit template.
@@ -92,7 +92,7 @@ type UnitPage struct {
 	Details any
 
 	// Vulns holds vulnerability information.
-	Vulns []vulns.Vuln
+	Vulns []vuln.Vuln
 
 	// DepsDevURL holds the full URL to this module version on deps.dev.
 	DepsDevURL string
@@ -135,9 +135,9 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 	// It's also okay to provide just one (e.g. GOOS=windows), which will select
 	// the first doc with that value, ignoring the other one.
 	bc := internal.BuildContext{GOOS: r.FormValue("GOOS"), GOARCH: r.FormValue("GOARCH")}
-	var getVulnEntries vulns.VulnEntriesFunc
+	var getVulnEntries vuln.VulnEntriesFunc
 	if s.vulnClient != nil {
-		getVulnEntries = s.vulnClient.GetByModule
+		getVulnEntries = s.vulnClient.ByModule
 	}
 	d, err := fetchDetailsForUnit(ctx, r, tab, ds, um, info.requestedVersion, bc, getVulnEntries)
 	if err != nil {
@@ -241,7 +241,7 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 
 	// Get vulnerability information.
 	if s.vulnClient != nil {
-		page.Vulns = vulns.VulnsForPackage(ctx, um.ModulePath, um.Version, um.Path, s.vulnClient.GetByModule)
+		page.Vulns = vuln.VulnsForPackage(ctx, um.ModulePath, um.Version, um.Path, s.vulnClient.ByModule)
 	}
 	s.servePage(ctx, w, tabSettings.TemplateName, page)
 	return nil

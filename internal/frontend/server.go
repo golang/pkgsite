@@ -37,9 +37,9 @@ import (
 	"golang.org/x/pkgsite/internal/queue"
 	"golang.org/x/pkgsite/internal/static"
 	"golang.org/x/pkgsite/internal/version"
+	"golang.org/x/pkgsite/internal/vuln"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
-	vulnc "golang.org/x/vuln/client"
 )
 
 // Server can be installed to serve the go discovery frontend.
@@ -59,7 +59,7 @@ type Server struct {
 	serveStats           bool
 	reportingClient      *errorreporting.Client
 	fileMux              *http.ServeMux
-	vulnClient           vulnc.Client
+	vulnClient           *vuln.Client
 	versionID            string
 	instanceID           string
 
@@ -81,7 +81,7 @@ type ServerConfig struct {
 	DevMode              bool
 	StaticPath           string // used only for dynamic loading in dev mode
 	ReportingClient      *errorreporting.Client
-	VulndbClient         vulnc.Client
+	VulndbClient         *vuln.Client
 }
 
 // NewServer creates a new Server for the given database and template directory.

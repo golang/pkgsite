@@ -28,7 +28,7 @@ import (
 	"golang.org/x/pkgsite/internal/proxy"
 	"golang.org/x/pkgsite/internal/queue"
 	"golang.org/x/pkgsite/internal/source"
-	vulnc "golang.org/x/vuln/client"
+	"golang.org/x/pkgsite/internal/vuln"
 )
 
 var (
@@ -105,11 +105,9 @@ func main() {
 	}
 
 	rc := cmdconfig.ReportingClient(ctx, cfg)
-	vc, err := vulnc.NewClient([]string{cfg.VulnDB}, vulnc.Options{
-		HTTPCache: newVulndbCache(),
-	})
+	vc, err := vuln.NewClient(cfg.VulnDB)
 	if err != nil {
-		log.Fatalf(ctx, "vulndbc.NewClient: %v", err)
+		log.Fatalf(ctx, "vuln.NewClient: %v", err)
 	}
 	staticSource := template.TrustedSourceFromFlag(flag.Lookup("static").Value)
 	server, err := frontend.NewServer(frontend.ServerConfig{

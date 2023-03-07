@@ -14,7 +14,7 @@ import (
 	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/testing/sample"
 	"golang.org/x/pkgsite/internal/version"
-	"golang.org/x/pkgsite/internal/vulns"
+	"golang.org/x/pkgsite/internal/vuln"
 	"golang.org/x/vuln/osv"
 )
 
@@ -150,7 +150,7 @@ func TestFetchPackageVersionsDetails(t *testing.T) {
 				ThisModule: []*VersionList{
 					func() *VersionList {
 						vl := makeList(v1Path, modulePath1, "v1", []string{"v1.3.0", "v1.2.3", "v1.2.1"}, false)
-						vl.Versions[2].Vulns = []vulns.Vuln{{
+						vl.Versions[2].Vulns = []vuln.Vuln{{
 							Details: vulnEntry.Details,
 						}}
 						return vl
