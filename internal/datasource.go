@@ -4,7 +4,73 @@
 
 package internal
 
-import "context"
+import (
+	"context"
+	"time"
+)
+
+// SearchOptions provide information used by db.Search.
+type SearchOptions struct {
+	// Maximum number of results to return (page size).
+	MaxResults int
+
+	// Offset for DB query.
+	Offset int
+
+	// Maximum number to use for total result count.
+	MaxResultCount int
+
+	// If true, perform a symbol search.
+	SearchSymbols bool
+
+	// SymbolFilter is the word in a search query with a # prefix.
+	SymbolFilter string
+}
+
+// SearchResult represents a single search result from SearchDocuments.
+type SearchResult struct {
+	Name        string
+	PackagePath string
+	ModulePath  string
+	Version     string
+	Synopsis    string
+	Licenses    []string
+
+	CommitTime time.Time
+
+	// Score is used to sort items in an array of SearchResult.
+	Score float64
+
+	// NumImportedBy is the number of packages that import PackagePath.
+	NumImportedBy uint64
+
+	// SameModule is a list of SearchResults from the same module as this one,
+	// with lower scores.
+	SameModule []*SearchResult
+
+	// OtherMajor is a map from module paths with the same series path but at
+	// different major versions of this module, to major version.
+	// The major version for a non-vN module path (either 0 or 1) is computed
+	// based on the version in search documents.
+	OtherMajor map[string]int
+
+	// NumResults is the total number of packages that were returned for this
+	// search.
+	NumResults uint64
+
+	// Symbol information returned by a search request.
+	// Only populated for symbol search mode.
+	SymbolName     string
+	SymbolKind     SymbolKind
+	SymbolSynopsis string
+	SymbolGOOS     string
+	SymbolGOARCH   string
+
+	// Offset is the 0-based number of this row in the DB query results, which
+	// is the value to use in a SQL OFFSET clause to have this row be the first
+	// one returned.
+	Offset int
+}
 
 // DataSource is the interface used by the frontend to interact with module data.
 type DataSource interface {
@@ -22,10 +88,14 @@ type DataSource interface {
 	GetUnitMeta(ctx context.Context, path, requestedModulePath, requestedVersion string) (_ *UnitMeta, err error)
 	// GetModuleReadme gets the readme for the module.
 	GetModuleReadme(ctx context.Context, modulePath, resolvedVersion string) (*Readme, error)
-
 	// GetLatestInfo gets information about the latest versions of a unit and module.
 	// See LatestInfo for documentation.
 	GetLatestInfo(ctx context.Context, unitPath, modulePath string, latestUnitMeta *UnitMeta) (LatestInfo, error)
+
+	// SupportsSearch reports whether this data source supports search.
+	SupportsSearch() bool
+	// Search searches for packages matching the given query.
+	Search(ctx context.Context, q string, opts SearchOptions) (_ []*SearchResult, err error)
 }
 
 // LatestInfo holds information about the latest versions and paths.

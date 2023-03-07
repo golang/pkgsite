@@ -62,8 +62,8 @@ func determineSearchAction(r *http.Request, ds internal.DataSource, vulnClient *
 	if r.Method != http.MethodGet && r.Method != http.MethodHead {
 		return nil, &serverError{status: http.StatusMethodNotAllowed}
 	}
-	db, ok := ds.(*postgres.DB)
-	if !ok {
+
+	if !ds.SupportsSearch() {
 		// The proxydatasource does not support the imported by page.
 		return nil, datasourceNotSupportedErr()
 	}
@@ -129,7 +129,7 @@ func determineSearchAction(r *http.Request, ds internal.DataSource, vulnClient *
 	if len(filters) > 0 {
 		symbol = filters[0]
 	}
-	page, err := fetchSearchPage(ctx, db, cq, symbol, pageParams, mode == searchModeSymbol, vulnClient)
+	page, err := fetchSearchPage(ctx, ds, cq, symbol, pageParams, mode == searchModeSymbol, vulnClient)
 	if err != nil {
 		// Instead of returning a 500, return a 408, since symbol searches may
 		// timeout for very popular symbols.
@@ -231,13 +231,13 @@ type subResult struct {
 
 // fetchSearchPage fetches data matching the search query from the database and
 // returns a SearchPage.
-func fetchSearchPage(ctx context.Context, db *postgres.DB, cq, symbol string,
+func fetchSearchPage(ctx context.Context, ds internal.DataSource, cq, symbol string,
 	pageParams paginationParams, searchSymbols bool, vulnClient *vuln.Client) (*SearchPage, error) {
 	maxResultCount := maxSearchOffset + pageParams.limit
 
 	// Pageless search: always start from the beginning.
 	offset := 0
-	dbresults, err := db.Search(ctx, cq, postgres.SearchOptions{
+	dbresults, err := ds.Search(ctx, cq, postgres.SearchOptions{
 		MaxResults:     pageParams.limit,
 		Offset:         offset,
 		MaxResultCount: maxResultCount,

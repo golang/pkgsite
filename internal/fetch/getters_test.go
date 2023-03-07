@@ -8,14 +8,16 @@ import (
 	"context"
 	"errors"
 	"io"
+	"io/fs"
+	"os"
 	"path/filepath"
 	"testing"
 	"time"
 
 	"github.com/google/go-cmp/cmp"
-	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/proxy"
+	"golang.org/x/pkgsite/internal/testing/testhelper"
 	"golang.org/x/pkgsite/internal/version"
 )
 
@@ -34,6 +36,186 @@ func TestDirectoryModuleGetterEmpty(t *testing.T) {
 	}
 }
 
+const multiModule = `
+-- go.work --
+go 1.21
+
+use (
+	./foo
+	./bar
+)
+
+-- foo/go.mod --
+module foo.com/foo
+
+go 1.21
+-- foo/foolog/f.go --
+package foolog
+
+const Log = 1
+-- bar/go.mod --
+module bar.com/bar
+
+go 1.20
+-- bar/barlog/b.go --
+package barlog
+
+const Log = 1
+`
+
+func TestGoPackagesModuleGetter(t *testing.T) {
+	modulePaths := map[string]string{ // dir -> module path
+		"foo": "foo.com/foo",
+		"bar": "bar.com/bar",
+	}
+
+	tests := []struct {
+		name string
+		dir  string
+	}{
+		{"work dir", "."},
+		{"module dir", "foo"},
+		{"nested package dir", "foo/foolog"},
+	}
+
+	ctx := context.Background()
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			tempDir, files := testhelper.WriteTxtarToTempDir(t, multiModule)
+			dir := filepath.Join(tempDir, test.dir)
+
+			g, err := NewGoPackagesModuleGetter(ctx, dir, "all")
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for moduleDir, modulePath := range modulePaths {
+				t.Run("info", func(t *testing.T) {
+					got, err := g.Info(ctx, modulePath, "")
+					if err != nil {
+						t.Fatal(err)
+					}
+					if got, want := got.Version, LocalVersion; got != want {
+						t.Errorf("Info(%s): got version %s, want %s", modulePath, got, want)
+					}
+				})
+
+				mod := files[moduleDir+"/go.mod"]
+				t.Run("mod", func(t *testing.T) {
+					got, err := g.Mod(ctx, modulePath, "")
+					if err != nil {
+						t.Fatal(err)
+					}
+					if diff := cmp.Diff(mod, string(got)); diff != "" {
+						t.Errorf("Mod(%q) mismatch [-want +got]:\n%s", modulePath, diff)
+					}
+				})
+
+				t.Run("contentdir", func(t *testing.T) {
+					fsys, err := g.ContentDir(ctx, modulePath, "")
+					if err != nil {
+						t.Fatal(err)
+					}
+					// Just check that the go.mod file is there and has the right contents.
+					got, err := fs.ReadFile(fsys, "go.mod")
+					if err != nil {
+						t.Fatal(err)
+					}
+					if diff := cmp.Diff(mod, string(got)); diff != "" {
+						t.Errorf("fs.ReadFile(ContentDir(%q), %q) mismatch [-want +got]:\n%s", modulePath, "go.mod", diff)
+					}
+				})
+
+				t.Run("search", func(t *testing.T) {
+					tests := []struct {
+						query string
+						want  []string
+					}{
+						{"log", []string{"barlog", "foolog"}},
+						{"barlog", []string{"barlog"}},
+						{"xxxxxx", nil},
+					}
+
+					for _, test := range tests {
+						results, err := g.Search(ctx, test.query, 10)
+						if err != nil {
+							t.Fatal(err)
+						}
+						var got []string
+						for _, r := range results {
+							got = append(got, r.Name)
+						}
+						if diff := cmp.Diff(test.want, got); diff != "" {
+							t.Errorf("Search(%s) mismatch [-want +got]:\n%s", test.query, diff)
+						}
+					}
+				})
+			}
+		})
+	}
+}
+
+func TestGoPackagesModuleGetter_Invalidation(t *testing.T) {
+	ctx := context.Background()
+
+	tempDir, _ := testhelper.WriteTxtarToTempDir(t, multiModule)
+
+	// Sleep before fetching the initial info, so that the written mtime will be
+	// considered reliable enough for caching by the getter.
+	time.Sleep(3 * time.Second)
+
+	g, err := NewGoPackagesModuleGetter(ctx, tempDir, "all")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	const fooPath = "foo.com/foo"
+	foo1, err := g.Info(ctx, fooPath, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	foo2, err := g.Info(ctx, fooPath, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !cmp.Equal(foo1, foo2) {
+		t.Errorf("Info(%q) returned inconsistent results: %v != %v", fooPath, foo1, foo2)
+	}
+
+	const barPath = "bar.com/bar"
+	bar1, err := g.Info(ctx, barPath, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	bar2, err := g.Info(ctx, barPath, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !cmp.Equal(bar1, bar2) {
+		t.Errorf("Info(%q) returned inconsistent results: %v != %v", barPath, bar1, bar2)
+	}
+
+	fpath := filepath.Join(tempDir, "foo", "foolog", "f.go")
+	newContent := []byte("package foolog; const Log = 3")
+	if err := os.WriteFile(fpath, newContent, 0600); err != nil {
+		t.Fatal(err)
+	}
+	foo3, err := g.Info(ctx, fooPath, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if cmp.Equal(foo1, foo3) {
+		t.Errorf("Info(%q) results unexpectedly match: %v == %v", fooPath, foo1, foo3)
+	}
+	bar3, err := g.Info(ctx, barPath, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !cmp.Equal(bar1, bar2) {
+		t.Errorf("Info(%q) returned inconsistent results: %v != %v", barPath, bar1, bar3)
+	}
+}
+
 func TestEscapedPath(t *testing.T) {
 	for _, test := range []struct {
 		path, version, suffix string
@@ -48,7 +230,7 @@ func TestEscapedPath(t *testing.T) {
 			"dir/cache/download/github.com/a!bc/@v/v2.3.4.zip",
 		},
 	} {
-		g, err := NewFSProxyModuleGetter("dir", nil)
+		g, err := NewModCacheGetter("dir")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -77,7 +259,7 @@ func TestFSProxyGetter(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	g, err := NewFSProxyModuleGetter("testdata/modcache", nil)
+	g, err := NewModCacheGetter("testdata/modcache")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -142,38 +324,4 @@ func TestFSProxyGetter(t *testing.T) {
 			t.Errorf("got %v, want NotFound", err)
 		}
 	})
-}
-
-func TestFSProxyGetterAllowed(t *testing.T) {
-	ctx := context.Background()
-	// The cache contains:
-	//   github.com/jackc/pgio@v1.0.0
-	//   modcache.com@v1.0.0
-	// Allow only the latter.
-	allow := []internal.Modver{{Path: "modcache.com", Version: "v1.0.0"}}
-	g, err := NewFSProxyModuleGetter("testdata/modcache", allow)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	check := func(path, vers string, wantOK bool) {
-		t.Helper()
-		_, err := g.Info(ctx, path, vers)
-		if (err == nil) != wantOK {
-			s := "a"
-			if wantOK {
-				s = "no"
-			}
-			t.Errorf("got %v; wanted %s error", err, s)
-		} else if err != nil && !errors.Is(err, derrors.NotFound) {
-			t.Errorf("got %v, wanted NotFound", err)
-		}
-	}
-
-	// We can get modcache.com.
-	check("modcache.com", "v1.0.0", true)
-	check("modcache.com", "latest", true)
-	// We get NotFound for jackc.
-	check("github.com/jackc/pgio", "v1.0.0", false)
-	check("github.com/jackc/pgio", "latest", false)
 }

@@ -23,6 +23,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/tools/txtar"
 )
 
 const (
@@ -120,28 +121,56 @@ func CreateTestDirectory(files map[string]string) (_ string, err error) {
 	if err != nil {
 		return "", err
 	}
+	if err := writeTestDirectory(tempDir, files); err != nil {
+		return "", err
+	}
 
+	return tempDir, nil
+}
+
+func writeTestDirectory(tempDir string, files map[string]string) error {
 	for path, contents := range files {
 		path = filepath.Join(tempDir, path)
 
 		parent, _ := filepath.Split(path)
 		if err := os.MkdirAll(parent, 0755); err != nil {
-			return "", err
+			return err
 		}
 
 		file, err := os.Create(path)
 		if err != nil {
-			return "", err
+			return err
 		}
 		if _, err := file.WriteString(contents); err != nil {
-			return "", err
+			return err
 		}
 		if err := file.Close(); err != nil {
-			return "", err
+			return err
 		}
 	}
+	return nil
+}
 
-	return tempDir, nil
+// WriteTxtarToTempDir parses data as a txtar archive, and writes the resulting
+// files to a new tempdir created with t.TempDir(). It returns the temp
+// directory and files that were unpacked.
+func WriteTxtarToTempDir(t *testing.T, data string) (string, map[string]string) {
+	t.Helper()
+
+	archive := txtar.Parse([]byte(data))
+	files := make(map[string]string)
+	for _, file := range archive.Files {
+		if _, ok := files[file.Name]; ok {
+			t.Fatalf("file %q occurs twice in the provided archive", file.Name)
+		}
+		files[file.Name] = string(file.Data)
+	}
+
+	tempDir := t.TempDir()
+	if err := writeTestDirectory(tempDir, files); err != nil {
+		t.Fatalf("writing test dir: %v", err)
+	}
+	return tempDir, files
 }
 
 func CompareWithGolden(t *testing.T, got, filename string, update bool) {

@@ -95,13 +95,14 @@ func buildLocalGetters() ([]fetch.ModuleGetter, func()) {
 		dirs    []string
 		getters []fetch.ModuleGetter
 	)
+	ctx := context.Background()
 	for _, module := range modules {
 		directory, err := testhelper.CreateTestDirectory(module)
 		if err != nil {
 			log.Fatal(err)
 		}
 		dirs = append(dirs, directory)
-		mg, err := fetch.NewDirectoryModuleGetter("", directory)
+		mg, err := fetch.NewGoPackagesModuleGetter(ctx, directory, "./...")
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -355,7 +356,6 @@ func TestLocalGetUnitMeta(t *testing.T) {
 				ModuleInfo: internal.ModuleInfo{
 					ModulePath:        "github.com/my/module",
 					Version:           fetch.LocalVersion,
-					CommitTime:        fetch.LocalCommitTime,
 					IsRedistributable: true,
 					HasGoMod:          true,
 					SourceInfo:        sourceInfo,
@@ -372,7 +372,6 @@ func TestLocalGetUnitMeta(t *testing.T) {
 				ModuleInfo: internal.ModuleInfo{
 					ModulePath:        "github.com/my/module",
 					Version:           fetch.LocalVersion,
-					CommitTime:        fetch.LocalCommitTime,
 					IsRedistributable: true,
 					HasGoMod:          true,
 					SourceInfo:        sourceInfo,
@@ -390,7 +389,6 @@ func TestLocalGetUnitMeta(t *testing.T) {
 					ModulePath:        "github.com/my/module",
 					IsRedistributable: true,
 					Version:           fetch.LocalVersion,
-					CommitTime:        fetch.LocalCommitTime,
 					HasGoMod:          true,
 					SourceInfo:        sourceInfo,
 				},
@@ -407,7 +405,6 @@ func TestLocalGetUnitMeta(t *testing.T) {
 				ModuleInfo: internal.ModuleInfo{
 					ModulePath:        "github.com/my/module",
 					Version:           fetch.LocalVersion,
-					CommitTime:        fetch.LocalCommitTime,
 					IsRedistributable: true,
 					HasGoMod:          true,
 					SourceInfo:        sourceInfo,
@@ -453,7 +450,12 @@ func TestLocalGetUnitMeta(t *testing.T) {
 				if !matched {
 					t.Errorf("RepoURL: got %q, want match of %q", gotURL, wantRegexp)
 				}
-				diff := cmp.Diff(test.want, got, cmp.AllowUnexported(source.Info{}), cmpopts.IgnoreFields(source.Info{}, "repoURL"))
+				opts := []cmp.Option{
+					cmp.AllowUnexported(source.Info{}),
+					cmpopts.IgnoreFields(source.Info{}, "repoURL"),
+					cmpopts.IgnoreFields(internal.ModuleInfo{}, "CommitTime"), // commit time is volatile, based on file mtimes
+				}
+				diff := cmp.Diff(test.want, got, opts...)
 				if diff != "" {
 					t.Errorf("mismatch (-want +got):\n%s", diff)
 				}
@@ -564,8 +566,8 @@ func TestBuildConstraints(t *testing.T) {
 func TestCache(t *testing.T) {
 	ds := Options{}.New()
 	m1 := &internal.Module{}
-	ds.cachePut("m1", fetch.LocalVersion, m1, nil)
-	ds.cachePut("m2", "v1.0.0", nil, derrors.NotFound)
+	ds.cachePut(nil, "m1", fetch.LocalVersion, m1, nil)
+	ds.cachePut(nil, "m2", "v1.0.0", nil, derrors.NotFound)
 
 	for _, test := range []struct {
 		path, version string
@@ -577,7 +579,7 @@ func TestCache(t *testing.T) {
 		{"m2", "v1.0.0", nil, derrors.NotFound},
 		{"m3", "v1.0.0", nil, nil},
 	} {
-		gotm, gote := ds.cacheGet(test.path, test.version)
+		_, gotm, gote := ds.cacheGet(test.path, test.version)
 		if gotm != test.wantm || gote != test.wante {
 			t.Errorf("%s@%s: got (%v, %v), want (%v, %v)", test.path, test.version, gotm, gote, test.wantm, test.wante)
 		}

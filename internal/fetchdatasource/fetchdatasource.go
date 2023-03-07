@@ -11,6 +11,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -22,6 +23,7 @@ import (
 	"golang.org/x/pkgsite/internal/fetch"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/proxy"
+	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/version"
 )
 
@@ -61,6 +63,7 @@ func (o Options) New() *FetchDataSource {
 
 // cacheEntry holds a fetched module or an error, if the fetch failed.
 type cacheEntry struct {
+	g      fetch.ModuleGetter
 	module *internal.Module
 	err    error
 }
@@ -68,21 +71,21 @@ type cacheEntry struct {
 const maxCachedModules = 100
 
 // cacheGet returns information from the cache if it is present, and (nil, nil) otherwise.
-func (ds *FetchDataSource) cacheGet(path, version string) (*internal.Module, error) {
+func (ds *FetchDataSource) cacheGet(path, version string) (fetch.ModuleGetter, *internal.Module, error) {
 	// Look for an exact match first, then use LocalVersion, as for a
 	// directory-based or GOPATH-mode module.
 	for _, v := range []string{version, fetch.LocalVersion} {
 		if e, ok := ds.cache.Get(internal.Modver{Path: path, Version: v}); ok {
 			e := e.(cacheEntry)
-			return e.module, e.err
+			return e.g, e.module, e.err
 		}
 	}
-	return nil, nil
+	return nil, nil, nil
 }
 
 // cachePut puts information into the cache.
-func (ds *FetchDataSource) cachePut(path, version string, m *internal.Module, err error) {
-	ds.cache.Add(internal.Modver{Path: path, Version: version}, cacheEntry{m, err})
+func (ds *FetchDataSource) cachePut(g fetch.ModuleGetter, path, version string, m *internal.Module, err error) {
+	ds.cache.Add(internal.Modver{Path: path, Version: version}, cacheEntry{g, m, err})
 }
 
 // getModule gets the module at the given path and version. It first checks the
@@ -90,15 +93,30 @@ func (ds *FetchDataSource) cachePut(path, version string, m *internal.Module, er
 func (ds *FetchDataSource) getModule(ctx context.Context, modulePath, vers string) (_ *internal.Module, err error) {
 	defer derrors.Wrap(&err, "FetchDataSource.getModule(%q, %q)", modulePath, vers)
 
-	mod, err := ds.cacheGet(modulePath, vers)
-	if mod != nil || err != nil {
-		return mod, err
+	g, mod, err := ds.cacheGet(modulePath, vers)
+	if err != nil {
+		return nil, err
+	}
+	if mod != nil {
+		// For getters supporting invalidation, check whether cached contents have
+		// changed.
+		v, ok := g.(fetch.VolatileModuleGetter)
+		if !ok {
+			return mod, nil
+		}
+		hasChanged, err := v.HasChanged(ctx, mod.ModuleInfo)
+		if err != nil {
+			return nil, err
+		}
+		if !hasChanged {
+			return mod, nil
+		}
 	}
 
 	// There can be a benign race here, where two goroutines both fetch the same
 	// module. At worst some work will be duplicated, but if that turns out to
 	// be a problem we could use golang.org/x/sync/singleflight.
-	m, err := ds.fetch(ctx, modulePath, vers)
+	m, g, err := ds.fetch(ctx, modulePath, vers)
 	if m != nil && ds.opts.ProxyClientForLatest != nil {
 		// Use the go.mod file at the raw latest version to fill in deprecation
 		// and retraction information. Ignore any problems getting the
@@ -118,11 +136,11 @@ func (ds *FetchDataSource) getModule(ctx context.Context, modulePath, vers strin
 
 	// Cache both successes and failures, but not cancellations.
 	if !errors.Is(err, context.Canceled) {
-		ds.cachePut(modulePath, vers, m, err)
+		ds.cachePut(g, modulePath, vers, m, err)
 		// Cache the resolved version of "latest" too. A useful optimization
 		// because the frontend redirects "latest", resulting in another fetch.
 		if m != nil && vers == version.Latest {
-			ds.cachePut(modulePath, m.Version, m, err)
+			ds.cachePut(g, modulePath, m.Version, m, err)
 		}
 	}
 	return m, err
@@ -130,11 +148,11 @@ func (ds *FetchDataSource) getModule(ctx context.Context, modulePath, vers strin
 
 // fetch fetches a module using the configured ModuleGetters.
 // It tries each getter in turn until it finds one that has the module.
-func (ds *FetchDataSource) fetch(ctx context.Context, modulePath, version string) (_ *internal.Module, err error) {
+func (ds *FetchDataSource) fetch(ctx context.Context, modulePath, version string) (_ *internal.Module, g fetch.ModuleGetter, err error) {
 	log.Infof(ctx, "FetchDataSource: fetching %s@%s", modulePath, version)
 	start := time.Now()
 	defer func() {
-		log.Infof(ctx, "FetchDataSource: fetched %s@%s in %s with error %v", modulePath, version, time.Since(start), err)
+		log.Infof(ctx, "FetchDataSource: fetched %s@%s using %T in %s with error %v", modulePath, version, g, time.Since(start), err)
 	}()
 	for _, g := range ds.opts.Getters {
 		fr := fetch.FetchModule(ctx, modulePath, version, g)
@@ -148,13 +166,22 @@ func (ds *FetchDataSource) fetch(ctx context.Context, modulePath, version string
 			} else {
 				m.RemoveNonRedistributableData()
 			}
-			return m, nil
+			// There is special handling in FetchModule for the standard library,
+			// that bypasses the getter g. Don't record g as having fetch std.
+			//
+			// TODO(rfindley): it would be cleaner if the standard library could be
+			// its own module getter. This could also allow the go/packages getter to
+			// serve existing on-disk content for std. See also golang/go#58923.
+			if modulePath == stdlib.ModulePath {
+				g = nil
+			}
+			return m, g, nil
 		}
 		if !errors.Is(fr.Error, derrors.NotFound) {
-			return nil, fr.Error
+			return nil, g, fr.Error
 		}
 	}
-	return nil, fmt.Errorf("%s@%s: %w", modulePath, version, derrors.NotFound)
+	return nil, nil, fmt.Errorf("%s@%s: %w", modulePath, version, derrors.NotFound)
 }
 
 func (ds *FetchDataSource) populateUnitSubdirectories(u *internal.Unit, m *internal.Module) {
@@ -349,4 +376,48 @@ func (ds *FetchDataSource) GetNestedModules(ctx context.Context, modulePath stri
 // GetModuleReadme is not implemented.
 func (*FetchDataSource) GetModuleReadme(ctx context.Context, modulePath, resolvedVersion string) (*internal.Readme, error) {
 	return nil, nil
+}
+
+// SupportsSearch reports whether any of the configured Getters are searchable.
+func (ds *FetchDataSource) SupportsSearch() bool {
+	for _, g := range ds.opts.Getters {
+		if _, ok := g.(fetch.SearchableModuleGetter); ok {
+			return true
+		}
+	}
+	return false
+}
+
+// Search delegates search to any configured getters that support the
+// SearchableModuleGetter interface, merging their results.
+func (ds *FetchDataSource) Search(ctx context.Context, q string, opts internal.SearchOptions) (_ []*internal.SearchResult, err error) {
+	var results []*internal.SearchResult
+	// Since results are potentially merged from multiple sources, we can't know
+	// a priori how many results will be used from any particular getter.
+	//
+	// Offset+MaxResults is an upper bound.
+	limit := opts.Offset + opts.MaxResults
+	for _, g := range ds.opts.Getters {
+		if s, ok := g.(fetch.SearchableModuleGetter); ok {
+			rs, err := s.Search(ctx, q, limit)
+			if err != nil {
+				return nil, err
+			}
+			results = append(results, rs...)
+		}
+	}
+	sort.Slice(results, func(i, j int) bool {
+		return results[i].Score > results[j].Score
+	})
+	if opts.Offset > 0 {
+		if len(results) < opts.Offset {
+			return nil, nil
+		}
+		results = results[opts.Offset:]
+	}
+	if opts.MaxResults > 0 && len(results) > opts.MaxResults {
+		results = results[:opts.MaxResults]
+	}
+
+	return results, nil
 }

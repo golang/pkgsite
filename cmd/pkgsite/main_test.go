@@ -16,10 +16,10 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/net/html"
-	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/proxy"
 	"golang.org/x/pkgsite/internal/proxy/proxytest"
 	"golang.org/x/pkgsite/internal/testing/htmlcheck"
+	"golang.org/x/pkgsite/internal/testing/testhelper"
 )
 
 var (
@@ -51,20 +51,19 @@ func TestBuildGetters(t *testing.T) {
 	prox, teardown := proxytest.SetupTestClient(t, testModules)
 	defer teardown()
 
-	localGetter := "Dir(example.com/testmod, " + abs(localModule) + ")"
+	localGetter := "Dir(" + abs(localModule) + ")"
 	cacheGetter := "FSProxy(" + abs(cacheDir) + ")"
 	for _, test := range []struct {
 		name     string
-		paths    []string
-		cmods    []internal.Modver
+		dirs     []string
 		cacheDir string
-		prox     *proxy.Client
+		proxy    *proxy.Client
 		want     []string
 	}{
 		{
-			name:  "local only",
-			paths: []string{localModule},
-			want:  []string{localGetter},
+			name: "local only",
+			dirs: []string{localModule},
+			want: []string{localGetter},
 		},
 		{
 			name:     "cache",
@@ -72,27 +71,25 @@ func TestBuildGetters(t *testing.T) {
 			want:     []string{cacheGetter},
 		},
 		{
-			name: "proxy",
-			prox: prox,
-			want: []string{"Proxy"},
+			name:  "proxy",
+			proxy: prox,
+			want:  []string{"Proxy"},
 		},
 		{
 			name:     "all three",
-			paths:    []string{localModule},
+			dirs:     []string{localModule},
 			cacheDir: cacheDir,
-			prox:     prox,
+			proxy:    prox,
 			want:     []string{localGetter, cacheGetter, "Proxy"},
-		},
-		{
-			name:     "list",
-			paths:    []string{localModule},
-			cacheDir: cacheDir,
-			cmods:    []internal.Modver{{Path: "foo", Version: "v1.2.3"}},
-			want:     []string{localGetter, "FSProxy(" + abs(cacheDir) + ", foo@v1.2.3)"},
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			getters, err := buildGetters(ctx, test.paths, false, test.cacheDir, test.cmods, test.prox)
+			getters, err := buildGetters(ctx, getterConfig{
+				dirs:        test.dirs,
+				pattern:     "./...",
+				modCacheDir: test.cacheDir,
+				proxy:       test.proxy,
+			})
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -119,34 +116,40 @@ func TestServer(t *testing.T) {
 		return a
 	}
 
-	localModule := repoPath("internal/fetch/testdata/has_go_mod")
+	localModule, _ := testhelper.WriteTxtarToTempDir(t, `
+-- go.mod --
+module example.com/testmod
+-- a.go --
+package a
+`)
 	cacheDir := repoPath("internal/fetch/testdata/modcache")
 	testModules := proxytest.LoadTestModules(repoPath("internal/proxy/testdata"))
 	prox, teardown := proxytest.SetupTestClient(t, testModules)
 	defer teardown()
 
-	getters, err := buildGetters(context.Background(), []string{localModule}, false, cacheDir, nil, prox)
-	if err != nil {
-		t.Fatal(err)
+	defaultConfig := serverConfig{
+		paths:         []string{localModule},
+		gopathMode:    false,
+		useListedMods: true,
+		useCache:      true,
+		cacheDir:      cacheDir,
+		proxy:         prox,
 	}
-	server, err := newServer(getters, prox)
-	if err != nil {
-		t.Fatal(err)
-	}
-	mux := http.NewServeMux()
-	server.Install(mux.Handle, nil, nil)
 
 	modcacheChecker := in("",
 		in(".Documentation", hasText("var V = 1")),
 		sourceLinks(path.Join(abs(cacheDir), "modcache.com@v1.0.0"), "a.go"))
 
+	ctx := context.Background()
 	for _, test := range []struct {
 		name string
+		cfg  serverConfig
 		url  string
 		want htmlcheck.Checker
 	}{
 		{
 			"local",
+			defaultConfig,
 			"example.com/testmod",
 			in("",
 				in(".Documentation", hasText("There is no documentation for this package.")),
@@ -154,21 +157,50 @@ func TestServer(t *testing.T) {
 		},
 		{
 			"modcache",
+			defaultConfig,
 			"modcache.com@v1.0.0",
 			modcacheChecker,
 		},
 		{
 			"modcache latest",
+			defaultConfig,
 			"modcache.com",
 			modcacheChecker,
 		},
 		{
 			"proxy",
+			defaultConfig,
 			"example.com/single/pkg",
 			hasText("G is new in v1.1.0"),
 		},
+		{
+			"search",
+			defaultConfig,
+			"search?q=a",
+			in(".SearchResults",
+				hasText("example.com/testmod"),
+			),
+		},
+		{
+			"search",
+			defaultConfig,
+			"search?q=zzz",
+			in(".SearchResults",
+				hasText("no matches"),
+			),
+		},
+		// TODO(rfindley): add more tests, including a test for the standard
+		// library once it doesn't go through the stdlib package.
+		// See also golang/go#58923.
 	} {
 		t.Run(test.name, func(t *testing.T) {
+			server, err := buildServer(ctx, test.cfg)
+			if err != nil {
+				t.Fatal(err)
+			}
+			mux := http.NewServeMux()
+			server.Install(mux.Handle, nil, nil)
+
 			w := httptest.NewRecorder()
 			mux.ServeHTTP(w, httptest.NewRequest("GET", "/"+test.url, nil))
 			if w.Code != http.StatusOK {
@@ -201,38 +233,5 @@ func TestCollectPaths(t *testing.T) {
 	want := []string{"a", "b", "c2", "d3", "e4", "f", "g"}
 	if !cmp.Equal(got, want) {
 		t.Errorf("got %v, want %v", got, want)
-	}
-}
-
-func TestListModsForPaths(t *testing.T) {
-	listModules = func(string) ([]listedMod, error) {
-		return []listedMod{
-			{
-				internal.Modver{Path: "m1", Version: "v1.2.3"},
-				"/dir/cache/download/m1/@v/v1.2.3.mod",
-				false,
-			},
-			{
-				internal.Modver{Path: "m2", Version: "v1.0.0"},
-				"/repos/m2/go.mod",
-				false,
-			},
-			{
-				internal.Modver{Path: "indir", Version: "v2.3.4"},
-				"",
-				true,
-			},
-		}, nil
-	}
-	defer func() { listModules = _listModules }()
-
-	gotPaths, gotCacheMods, err := listModsForPaths([]string{"m1"}, "/dir")
-	if err != nil {
-		t.Fatal(err)
-	}
-	wantPaths := []string{"/repos/m2"}
-	wantCacheMods := []internal.Modver{{Path: "m1", Version: "v1.2.3"}}
-	if !cmp.Equal(gotPaths, wantPaths) || !cmp.Equal(gotCacheMods, wantCacheMods) {
-		t.Errorf("got\n%v, %v\nwant\n%v, %v", gotPaths, gotCacheMods, wantPaths, wantCacheMods)
 	}
 }
