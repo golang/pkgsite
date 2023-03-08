@@ -34,27 +34,24 @@ type Vuln struct {
 	Details string
 }
 
-type VulnEntriesFunc func(context.Context, string) ([]*osv.Entry, error)
-
 // VulnsForPackage obtains vulnerability information for the given package.
 // If packagePath is empty, it returns all entries for the module at version.
-// The getVulnEntries function should retrieve all entries for the given module path.
-// It is passed to facilitate testing.
 // If there is an error, VulnsForPackage returns a single Vuln that describes the error.
-func VulnsForPackage(ctx context.Context, modulePath, version, packagePath string, getVulnEntries VulnEntriesFunc) []Vuln {
-	vs, err := vulnsForPackage(ctx, modulePath, version, packagePath, getVulnEntries)
+func VulnsForPackage(ctx context.Context, modulePath, version, packagePath string, vc *Client) []Vuln {
+	if vc == nil {
+		return nil
+	}
+
+	vs, err := vulnsForPackage(ctx, modulePath, version, packagePath, vc)
 	if err != nil {
 		return []Vuln{{Details: fmt.Sprintf("could not get vulnerability data: %v", err)}}
 	}
 	return vs
 }
 
-func vulnsForPackage(ctx context.Context, modulePath, vers, packagePath string, getVulnEntries VulnEntriesFunc) (_ []Vuln, err error) {
-	defer derrors.Wrap(&err, "vulns(%q, %q, %q)", modulePath, vers, packagePath)
+func vulnsForPackage(ctx context.Context, modulePath, vers, packagePath string, vc *Client) (_ []Vuln, err error) {
+	defer derrors.Wrap(&err, "vulnsForPackage(%q, %q, %q)", modulePath, vers, packagePath)
 
-	if getVulnEntries == nil {
-		return nil, nil
-	}
 	// Stdlib pages requested at master will map to a pseudo version that puts
 	// all vulns in range. We can't really tell you're at master so version.IsPseudo
 	// is the best we can do. The result is vulns won't be reported for a pseudoversion
@@ -68,7 +65,7 @@ func vulnsForPackage(ctx context.Context, modulePath, vers, packagePath string, 
 		modulePath = vulnStdlibModulePath
 	}
 	// Get all the vulns for this module.
-	entries, err := getVulnEntries(ctx, modulePath)
+	entries, err := vc.ByModule(ctx, modulePath)
 	if err != nil {
 		return nil, err
 	}

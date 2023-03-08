@@ -129,11 +129,7 @@ func determineSearchAction(r *http.Request, ds internal.DataSource, vulnClient *
 	if len(filters) > 0 {
 		symbol = filters[0]
 	}
-	var getVulnEntries vuln.VulnEntriesFunc
-	if vulnClient != nil {
-		getVulnEntries = vulnClient.ByModule
-	}
-	page, err := fetchSearchPage(ctx, db, cq, symbol, pageParams, mode == searchModeSymbol, getVulnEntries)
+	page, err := fetchSearchPage(ctx, db, cq, symbol, pageParams, mode == searchModeSymbol, vulnClient)
 	if err != nil {
 		// Instead of returning a 500, return a 408, since symbol searches may
 		// timeout for very popular symbols.
@@ -236,7 +232,7 @@ type subResult struct {
 // fetchSearchPage fetches data matching the search query from the database and
 // returns a SearchPage.
 func fetchSearchPage(ctx context.Context, db *postgres.DB, cq, symbol string,
-	pageParams paginationParams, searchSymbols bool, getVulnEntries vuln.VulnEntriesFunc) (*SearchPage, error) {
+	pageParams paginationParams, searchSymbols bool, vulnClient *vuln.Client) (*SearchPage, error) {
 	maxResultCount := maxSearchOffset + pageParams.limit
 
 	// Pageless search: always start from the beginning.
@@ -258,8 +254,8 @@ func fetchSearchPage(ctx context.Context, db *postgres.DB, cq, symbol string,
 		results = append(results, sr)
 	}
 
-	if getVulnEntries != nil {
-		addVulns(ctx, results, getVulnEntries)
+	if vulnClient != nil {
+		addVulns(ctx, results, vulnClient)
 	}
 
 	var numResults int
@@ -400,13 +396,13 @@ EntryLoop:
 	}, nil
 }
 
-func searchVulnAlias(ctx context.Context, mode, cq string, vulnClient *vuln.Client) (_ *searchAction, err error) {
+func searchVulnAlias(ctx context.Context, mode, cq string, vc *vuln.Client) (_ *searchAction, err error) {
 	defer derrors.Wrap(&err, "searchVulnAlias(%q, %q)", mode, cq)
 
 	if mode != searchModeVuln || !isVulnAlias(cq) {
 		return nil, nil
 	}
-	aliasEntries, err := vulnClient.ByAlias(ctx, cq)
+	aliasEntries, err := vc.ByAlias(ctx, cq)
 	if err != nil {
 		return nil, err
 	}
@@ -607,7 +603,7 @@ func elapsedTime(date time.Time) string {
 
 // addVulns adds vulnerability information to search results by consulting the
 // vulnerability database.
-func addVulns(ctx context.Context, rs []*SearchResult, getVulnEntries vuln.VulnEntriesFunc) {
+func addVulns(ctx context.Context, rs []*SearchResult, vc *vuln.Client) {
 	// Get all vulns concurrently.
 	var wg sync.WaitGroup
 	// TODO(golang/go#48223): throttle concurrency?
@@ -616,7 +612,7 @@ func addVulns(ctx context.Context, rs []*SearchResult, getVulnEntries vuln.VulnE
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			r.Vulns = vuln.VulnsForPackage(ctx, r.ModulePath, r.Version, r.PackagePath, getVulnEntries)
+			r.Vulns = vuln.VulnsForPackage(ctx, r.ModulePath, r.Version, r.PackagePath, vc)
 		}()
 	}
 	wg.Wait()

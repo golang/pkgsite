@@ -6,7 +6,6 @@ package vuln
 
 import (
 	"context"
-	"fmt"
 	"reflect"
 	"testing"
 
@@ -60,18 +59,7 @@ func TestVulnsForPackage(t *testing.T) {
 		}},
 	}
 
-	get := func(_ context.Context, modulePath string) ([]*osv.Entry, error) {
-		switch modulePath {
-		case "good.com":
-			return nil, nil
-		case "bad.com", "unfixable.com":
-			return []*osv.Entry{&e}, nil
-		case "stdlib":
-			return []*osv.Entry{&stdlib}, nil
-		default:
-			return nil, fmt.Errorf("unknown module %q", modulePath)
-		}
-	}
+	vc := NewTestClient([]*osv.Entry{&e, &stdlib})
 
 	testCases := []struct {
 		mod, pkg, version string
@@ -118,7 +106,7 @@ func TestVulnsForPackage(t *testing.T) {
 		},
 	}
 	for _, tc := range testCases {
-		got := VulnsForPackage(ctx, tc.mod, tc.version, tc.pkg, get)
+		got := VulnsForPackage(ctx, tc.mod, tc.version, tc.pkg, vc)
 		if diff := cmp.Diff(tc.want, got); diff != "" {
 			t.Errorf("VulnsForPackage(%q, %q, %q) = %+v, mismatch (-want, +got):\n%s", tc.mod, tc.version, tc.pkg, tc.want, diff)
 		}

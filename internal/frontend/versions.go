@@ -85,7 +85,7 @@ type VersionSummary struct {
 	Vulns               []vuln.Vuln
 }
 
-func fetchVersionsDetails(ctx context.Context, ds internal.DataSource, um *internal.UnitMeta, getVulnEntries vuln.VulnEntriesFunc) (*VersionsDetails, error) {
+func fetchVersionsDetails(ctx context.Context, ds internal.DataSource, um *internal.UnitMeta, vc *vuln.Client) (*VersionsDetails, error) {
 	db, ok := ds.(*postgres.DB)
 	if !ok {
 		// The proxydatasource does not support the imported by page.
@@ -114,7 +114,7 @@ func fetchVersionsDetails(ctx context.Context, ds internal.DataSource, um *inter
 		}
 		return constructUnitURL(versionPath, mi.ModulePath, linkVersion(mi.ModulePath, mi.Version, mi.Version))
 	}
-	return buildVersionDetails(ctx, um.ModulePath, um.Path, versions, sh, linkify, getVulnEntries), nil
+	return buildVersionDetails(ctx, um.ModulePath, um.Path, versions, sh, linkify, vc), nil
 }
 
 // pathInVersion constructs the full import path of the package corresponding
@@ -146,7 +146,7 @@ func buildVersionDetails(ctx context.Context, currentModulePath, packagePath str
 	modInfos []*internal.ModuleInfo,
 	sh *internal.SymbolHistory,
 	linkify func(v *internal.ModuleInfo) string,
-	getVulnEntries vuln.VulnEntriesFunc,
+	vc *vuln.Client,
 ) *VersionsDetails {
 	// lists organizes versions by VersionListKey.
 	lists := make(map[VersionListKey]*VersionList)
@@ -201,7 +201,7 @@ func buildVersionDetails(ctx context.Context, currentModulePath, packagePath str
 		if mi.ModulePath == stdlib.ModulePath {
 			pkg = packagePath
 		}
-		vs.Vulns = vuln.VulnsForPackage(ctx, mi.ModulePath, mi.Version, pkg, getVulnEntries)
+		vs.Vulns = vuln.VulnsForPackage(ctx, mi.ModulePath, mi.Version, pkg, vc)
 		vl := lists[key]
 		if vl == nil {
 			seenLists = append(seenLists, key)

@@ -107,12 +107,7 @@ func TestFetchPackageVersionsDetails(t *testing.T) {
 			},
 		}},
 	}
-	getVulnEntries := func(_ context.Context, m string) ([]*osv.Entry, error) {
-		if m == modulePath1 {
-			return []*osv.Entry{vulnEntry}, nil
-		}
-		return nil, nil
-	}
+	vc := vuln.NewTestClient([]*osv.Entry{vulnEntry})
 
 	for _, tc := range []struct {
 		name        string
@@ -201,7 +196,7 @@ func TestFetchPackageVersionsDetails(t *testing.T) {
 				postgres.MustInsertModule(ctx, t, testDB, v)
 			}
 
-			got, err := fetchVersionsDetails(ctx, testDB, &tc.pkg.UnitMeta, getVulnEntries)
+			got, err := fetchVersionsDetails(ctx, testDB, &tc.pkg.UnitMeta, vc)
 			if err != nil {
 				t.Fatalf("fetchVersionsDetails(ctx, db, %q, %q): %v", tc.pkg.Path, tc.pkg.ModulePath, err)
 			}

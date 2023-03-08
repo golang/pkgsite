@@ -6,20 +6,24 @@ package vuln
 
 import (
 	"context"
-	"errors"
 
 	vulnc "golang.org/x/vuln/client"
 	"golang.org/x/vuln/osv"
 )
 
+// NewTestClient creates an in-memory client for use in tests.
 func NewTestClient(entries []*osv.Entry) *Client {
 	c := &vulndbTestClient{
-		entries:    entries,
-		aliasToIDs: map[string][]string{},
+		entries:          entries,
+		aliasToIDs:       map[string][]string{},
+		modulesToEntries: map[string][]*osv.Entry{},
 	}
 	for _, e := range entries {
 		for _, a := range e.Aliases {
 			c.aliasToIDs[a] = append(c.aliasToIDs[a], e.ID)
+		}
+		for _, affected := range e.Affected {
+			c.modulesToEntries[affected.Package.Name] = append(c.modulesToEntries[affected.Package.Name], e)
 		}
 	}
 	return &Client{c: c}
@@ -27,12 +31,13 @@ func NewTestClient(entries []*osv.Entry) *Client {
 
 type vulndbTestClient struct {
 	vulnc.Client
-	entries    []*osv.Entry
-	aliasToIDs map[string][]string
+	entries          []*osv.Entry
+	aliasToIDs       map[string][]string
+	modulesToEntries map[string][]*osv.Entry
 }
 
-func (c *vulndbTestClient) GetByModule(context.Context, string) ([]*osv.Entry, error) {
-	return nil, errors.New("unimplemented")
+func (c *vulndbTestClient) GetByModule(_ context.Context, module string) ([]*osv.Entry, error) {
+	return c.modulesToEntries[module], nil
 }
 
 func (c *vulndbTestClient) GetByID(_ context.Context, id string) (*osv.Entry, error) {

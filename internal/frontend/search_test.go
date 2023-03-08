@@ -312,12 +312,7 @@ func TestFetchSearchPage(t *testing.T) {
 			}},
 		}}
 
-		getVulnEntries = func(_ context.Context, modulePath string) ([]*osv.Entry, error) {
-			if modulePath == moduleFoo.ModulePath {
-				return vulnEntries, nil
-			}
-			return nil, nil
-		}
+		vc = vuln.NewTestClient(vulnEntries)
 	)
 
 	for _, m := range []*internal.Module{moduleFoo, moduleBar} {
@@ -392,7 +387,7 @@ func TestFetchSearchPage(t *testing.T) {
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			got, err := fetchSearchPage(ctx, testDB, test.query, "", paginationParams{limit: 20, page: 1}, false, getVulnEntries)
+			got, err := fetchSearchPage(ctx, testDB, test.query, "", paginationParams{limit: 20, page: 1}, false, vc)
 			if err != nil {
 				t.Fatalf("fetchSearchPage(db, %q): %v", test.query, err)
 			}

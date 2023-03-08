@@ -78,14 +78,14 @@ func init() {
 // handler.
 func fetchDetailsForUnit(ctx context.Context, r *http.Request, tab string, ds internal.DataSource, um *internal.UnitMeta,
 	requestedVersion string, bc internal.BuildContext,
-	getVulnEntries vuln.VulnEntriesFunc) (_ any, err error) {
+	vc *vuln.Client) (_ any, err error) {
 	defer derrors.Wrap(&err, "fetchDetailsForUnit(r, %q, ds, um=%q,%q,%q)", tab, um.Path, um.ModulePath, um.Version)
 	switch tab {
 	case tabMain:
 		_, expandReadme := r.URL.Query()["readme"]
 		return fetchMainDetails(ctx, ds, um, requestedVersion, expandReadme, bc)
 	case tabVersions:
-		return fetchVersionsDetails(ctx, ds, um, getVulnEntries)
+		return fetchVersionsDetails(ctx, ds, um, vc)
 	case tabImports:
 		return fetchImportsDetails(ctx, ds, um.Path, um.ModulePath, um.Version)
 	case tabImportedBy:

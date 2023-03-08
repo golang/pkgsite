@@ -135,11 +135,7 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 	// It's also okay to provide just one (e.g. GOOS=windows), which will select
 	// the first doc with that value, ignoring the other one.
 	bc := internal.BuildContext{GOOS: r.FormValue("GOOS"), GOARCH: r.FormValue("GOARCH")}
-	var getVulnEntries vuln.VulnEntriesFunc
-	if s.vulnClient != nil {
-		getVulnEntries = s.vulnClient.ByModule
-	}
-	d, err := fetchDetailsForUnit(ctx, r, tab, ds, um, info.requestedVersion, bc, getVulnEntries)
+	d, err := fetchDetailsForUnit(ctx, r, tab, ds, um, info.requestedVersion, bc, s.vulnClient)
 	if err != nil {
 		return err
 	}
@@ -240,9 +236,8 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 	}
 
 	// Get vulnerability information.
-	if s.vulnClient != nil {
-		page.Vulns = vuln.VulnsForPackage(ctx, um.ModulePath, um.Version, um.Path, s.vulnClient.ByModule)
-	}
+	page.Vulns = vuln.VulnsForPackage(ctx, um.ModulePath, um.Version, um.Path, s.vulnClient)
+
 	s.servePage(ctx, w, tabSettings.TemplateName, page)
 	return nil
 }
