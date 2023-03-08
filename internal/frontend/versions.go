@@ -114,7 +114,7 @@ func fetchVersionsDetails(ctx context.Context, ds internal.DataSource, um *inter
 		}
 		return constructUnitURL(versionPath, mi.ModulePath, linkVersion(mi.ModulePath, mi.Version, mi.Version))
 	}
-	return buildVersionDetails(ctx, um.ModulePath, um.Path, versions, sh, linkify, vc), nil
+	return buildVersionDetails(ctx, um.ModulePath, um.Path, versions, sh, linkify, vc)
 }
 
 // pathInVersion constructs the full import path of the package corresponding
@@ -147,7 +147,7 @@ func buildVersionDetails(ctx context.Context, currentModulePath, packagePath str
 	sh *internal.SymbolHistory,
 	linkify func(v *internal.ModuleInfo) string,
 	vc *vuln.Client,
-) *VersionsDetails {
+) (*VersionsDetails, error) {
 	// lists organizes versions by VersionListKey.
 	lists := make(map[VersionListKey]*VersionList)
 	// seenLists tracks the order in which we encounter entries of each version
@@ -162,7 +162,7 @@ func buildVersionDetails(ctx context.Context, currentModulePath, packagePath str
 			var err error
 			major, err = stdlib.MajorVersionForVersion(mi.Version)
 			if err != nil {
-				panic(err)
+				return nil, err
 			}
 		}
 		// We prefer the path major version except for v1 import paths where the
@@ -234,7 +234,18 @@ func buildVersionDetails(ctx context.Context, currentModulePath, packagePath str
 	}
 	// Sort for testing.
 	sort.Strings(details.OtherModules)
-	return &details
+
+	// Pkgsite will not display psuedoversions for the standard library. If the
+	// version details contain master then this package exists only at master.
+	// Show only the first entry. The additional entries will all be duplicate
+	// links to package@master.
+	if len(details.ThisModule) > 0 &&
+		len(details.ThisModule[0].Versions) > 0 &&
+		currentModulePath == stdlib.ModulePath &&
+		details.ThisModule[0].Versions[0].Version == "master" {
+		details.ThisModule[0].Versions = details.ThisModule[0].Versions[:1]
+	}
+	return &details, nil
 }
 
 // isMinor reports whether v is a release version where the patch version is 0.

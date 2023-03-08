@@ -152,8 +152,8 @@ func MajorVersionForVersion(version string) (_ string, err error) {
 	if err != nil {
 		return "", err
 	}
-	if tag == "go1" {
-		return tag, nil
+	if tag == "go1" || tag == "master" {
+		return "go1", nil
 	}
 	i := strings.IndexRune(tag, '.')
 	if i < 0 {

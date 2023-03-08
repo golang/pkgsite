@@ -112,6 +112,8 @@ func TestMajorVersionForVersion(t *testing.T) {
 		{"v1.13.3", "go1"},
 		{"v1.9.0-rc.2", "go1"},
 		{"v2.1.3", "go2"},
+		{"v2.1.3", "go2"},
+		{"v0.0.0-20230307225218-457fd1d52d17", "go1"},
 	} {
 		got, err := MajorVersionForVersion(test.in)
 		if (err != nil) != (test.want == "") {
