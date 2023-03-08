@@ -13,7 +13,11 @@ import (
 
 // NewTestClient creates an in-memory client for use in tests.
 func NewTestClient(entries []*osv.Entry) *Client {
-	c := &vulndbTestClient{
+	return &Client{legacy: newTestLegacyClient(entries)}
+}
+
+func newTestLegacyClient(entries []*osv.Entry) *legacyClient {
+	c := &testVulnClient{
 		entries:          entries,
 		aliasToIDs:       map[string][]string{},
 		modulesToEntries: map[string][]*osv.Entry{},
@@ -26,21 +30,22 @@ func NewTestClient(entries []*osv.Entry) *Client {
 			c.modulesToEntries[affected.Package.Name] = append(c.modulesToEntries[affected.Package.Name], e)
 		}
 	}
-	return &Client{c: c}
+	return &legacyClient{c}
 }
 
-type vulndbTestClient struct {
+// Implements x/vuln.Client.
+type testVulnClient struct {
 	vulnc.Client
 	entries          []*osv.Entry
 	aliasToIDs       map[string][]string
 	modulesToEntries map[string][]*osv.Entry
 }
 
-func (c *vulndbTestClient) GetByModule(_ context.Context, module string) ([]*osv.Entry, error) {
+func (c *testVulnClient) GetByModule(_ context.Context, module string) ([]*osv.Entry, error) {
 	return c.modulesToEntries[module], nil
 }
 
-func (c *vulndbTestClient) GetByID(_ context.Context, id string) (*osv.Entry, error) {
+func (c *testVulnClient) GetByID(_ context.Context, id string) (*osv.Entry, error) {
 	for _, e := range c.entries {
 		if e.ID == id {
 			return e, nil
@@ -49,7 +54,7 @@ func (c *vulndbTestClient) GetByID(_ context.Context, id string) (*osv.Entry, er
 	return nil, nil
 }
 
-func (c *vulndbTestClient) ListIDs(context.Context) ([]string, error) {
+func (c *testVulnClient) ListIDs(context.Context) ([]string, error) {
 	var ids []string
 	for _, e := range c.entries {
 		ids = append(ids, e.ID)
@@ -57,7 +62,7 @@ func (c *vulndbTestClient) ListIDs(context.Context) ([]string, error) {
 	return ids, nil
 }
 
-func (c *vulndbTestClient) GetByAlias(ctx context.Context, alias string) ([]*osv.Entry, error) {
+func (c *testVulnClient) GetByAlias(ctx context.Context, alias string) ([]*osv.Entry, error) {
 	ids := c.aliasToIDs[alias]
 	if len(ids) == 0 {
 		return nil, nil

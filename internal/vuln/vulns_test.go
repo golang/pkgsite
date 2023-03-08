@@ -27,6 +27,8 @@ func TestVulnsForPackage(t *testing.T) {
 			EcosystemSpecific: osv.EcosystemSpecific{
 				Imports: []osv.EcosystemSpecificImport{{
 					Path: "bad.com",
+				}, {
+					Path: "bad.com/bad",
 				}},
 			},
 		}, {
@@ -43,8 +45,24 @@ func TestVulnsForPackage(t *testing.T) {
 			},
 		}},
 	}
-	stdlib := osv.Entry{
+	e2 := osv.Entry{
 		ID: "GO-2",
+		Affected: []osv.Affected{{
+			Package: osv.Package{Name: "bad.com"},
+			Ranges: []osv.AffectsRange{{
+				Type:   osv.TypeSemver,
+				Events: []osv.RangeEvent{{Introduced: "0"}, {Fixed: "1.2.0"}},
+			}},
+			EcosystemSpecific: osv.EcosystemSpecific{
+				Imports: []osv.EcosystemSpecificImport{{
+					Path: "bad.com/pkg",
+				},
+				},
+			},
+		}},
+	}
+	stdlib := osv.Entry{
+		ID: "GO-3",
 		Affected: []osv.Affected{{
 			Package: osv.Package{Name: "stdlib"},
 			Ranges: []osv.AffectsRange{{
@@ -59,7 +77,7 @@ func TestVulnsForPackage(t *testing.T) {
 		}},
 	}
 
-	vc := NewTestClient([]*osv.Entry{&e, &stdlib})
+	vc := NewTestClient([]*osv.Entry{&e, &e2, &stdlib})
 
 	testCases := []struct {
 		mod, pkg, version string
@@ -71,6 +89,9 @@ func TestVulnsForPackage(t *testing.T) {
 		},
 		{
 			"bad.com", "bad.com", "v1.0.0", []Vuln{{ID: "GO-1"}},
+		},
+		{
+			"bad.com", "bad.com/bad", "v1.0.0", []Vuln{{ID: "GO-1"}},
 		},
 		{
 			"bad.com", "bad.com/ok", "v1.0.0", nil, // bad.com/ok isn't affected.
@@ -86,7 +107,7 @@ func TestVulnsForPackage(t *testing.T) {
 			"good.com", "", "v1.0.0", nil,
 		},
 		{
-			"bad.com", "", "v1.0.0", []Vuln{{ID: "GO-1"}},
+			"bad.com", "", "v1.0.0", []Vuln{{ID: "GO-1"}, {ID: "GO-2"}},
 		},
 		{
 			"bad.com", "", "v1.3.0", nil,
@@ -96,7 +117,7 @@ func TestVulnsForPackage(t *testing.T) {
 		},
 		// Vulns for stdlib
 		{
-			"std", "net/http", "go1.19.3", []Vuln{{ID: "GO-2"}},
+			"std", "net/http", "go1.19.3", []Vuln{{ID: "GO-3"}},
 		},
 		{
 			"std", "net/http", "v0.0.0-20230104211531-bae7d772e800", nil,
@@ -108,7 +129,7 @@ func TestVulnsForPackage(t *testing.T) {
 	for _, tc := range testCases {
 		got := VulnsForPackage(ctx, tc.mod, tc.version, tc.pkg, vc)
 		if diff := cmp.Diff(tc.want, got); diff != "" {
-			t.Errorf("VulnsForPackage(%q, %q, %q) = %+v, mismatch (-want, +got):\n%s", tc.mod, tc.version, tc.pkg, tc.want, diff)
+			t.Errorf("VulnsForPackage(mod=%q, v=%q, pkg=%q) = %+v, want %+v, diff (-want, +got):\n%s", tc.mod, tc.version, tc.pkg, got, tc.want, diff)
 		}
 	}
 }

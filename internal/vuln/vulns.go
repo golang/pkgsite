@@ -11,7 +11,6 @@ import (
 	"go/token"
 	"strings"
 
-	"golang.org/x/mod/semver"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/version"
@@ -64,20 +63,30 @@ func vulnsForPackage(ctx context.Context, modulePath, vers, packagePath string, 
 	} else if modulePath == stdlib.ModulePath {
 		modulePath = vulnStdlibModulePath
 	}
-	// Get all the vulns for this module.
-	entries, err := vc.ByModule(ctx, modulePath)
+
+	// Get all the vulns for this package/version.
+	entries, err := vc.ByPackage(ctx, &PackageRequest{Module: modulePath, Package: packagePath, Version: vers})
 	if err != nil {
 		return nil, err
 	}
-	// Each entry describes a single vuln. Select the ones that apply to this
-	// package at this version.
-	var vulns []Vuln
-	for _, e := range entries {
-		if vuln, ok := entryVuln(e, modulePath, packagePath, vers); ok {
-			vulns = append(vulns, vuln)
+
+	return toVulns(entries), nil
+}
+
+func toVulns(entries []*osv.Entry) []Vuln {
+	if len(entries) == 0 {
+		return nil
+	}
+
+	vulns := make([]Vuln, len(entries))
+	for i, e := range entries {
+		vulns[i] = Vuln{
+			ID:      e.ID,
+			Details: e.Details,
 		}
 	}
-	return vulns, nil
+
+	return vulns
 }
 
 // AffectedPackage holds information about a package affected by a certain vulnerability.
@@ -110,48 +119,6 @@ func (e OSVEntry) AffectedModulesAndPackages() []string {
 		}
 	}
 	return affected
-}
-
-func entryVuln(e *osv.Entry, modulePath, packagePath, ver string) (Vuln, bool) {
-	for _, a := range e.Affected {
-		// a.Package.Name is Go "module" name. Go package path is a.EcosystemSpecific.Imports.Path.
-		if a.Package.Name != modulePath || !a.Ranges.AffectsSemver(ver) {
-			continue
-		}
-		if packageMatches := func() bool {
-			if packagePath == "" {
-				return true //  match module only
-			}
-			if len(a.EcosystemSpecific.Imports) == 0 {
-				return true // no package info available, so match on module
-			}
-			for _, p := range a.EcosystemSpecific.Imports {
-				if packagePath == p.Path {
-					return true // package matches
-				}
-			}
-			return false
-		}(); !packageMatches {
-			continue
-		}
-		// Choose the latest fixed version, if any.
-		var fixed string
-		for _, r := range a.Ranges {
-			if r.Type == osv.TypeGit {
-				continue
-			}
-			for _, re := range r.Events {
-				if re.Fixed != "" && (fixed == "" || semver.Compare(re.Fixed, fixed) > 0) {
-					fixed = re.Fixed
-				}
-			}
-		}
-		return Vuln{
-			ID:      e.ID,
-			Details: e.Details,
-		}, true
-	}
-	return Vuln{}, false
 }
 
 // A pair is like an osv.Range, but each pair is a self-contained 2-tuple
