@@ -505,6 +505,7 @@ func Init(ctx context.Context) (_ *Config, err error) {
 			return nil, errors.New("HMAC secret must be at least 16 bytes")
 		}
 		cfg.Quota.HMACKey = hmacKey
+		log.Debugf(ctx, "quota enforcement enabled: qps=%d burst=%d maxentry=%d", cfg.Quota.QPS, cfg.Quota.Burst, cfg.Quota.MaxEntries)
 	} else {
 		log.Debugf(ctx, "quota enforcement disabled")
 	}
