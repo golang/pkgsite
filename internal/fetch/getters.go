@@ -233,7 +233,7 @@ type goPackagesModuleGetter struct {
 
 // NewGoPackagesModuleGetter returns a ModuleGetter that loads packages using
 // go/packages.Load(pattern), from the requested directory.
-func NewGoPackagesModuleGetter(ctx context.Context, dir string, pattern string) (*goPackagesModuleGetter, error) {
+func NewGoPackagesModuleGetter(ctx context.Context, dir string, patterns ...string) (*goPackagesModuleGetter, error) {
 	abs, err := filepath.Abs(dir)
 	if err != nil {
 		return nil, err
@@ -247,8 +247,8 @@ func NewGoPackagesModuleGetter(ctx context.Context, dir string, pattern string) 
 			packages.NeedCompiledGoFiles |
 			packages.NeedFiles,
 	}
-	pkgs, err := packages.Load(cfg, pattern)
-	log.Infof(ctx, "go/packages.Load(%q) loaded %d packages from %s in %v", pattern, len(pkgs), dir, time.Since(start))
+	pkgs, err := packages.Load(cfg, patterns...)
+	log.Infof(ctx, "go/packages.Load(%q) loaded %d packages from %s in %v", patterns, len(pkgs), dir, time.Since(start))
 	if err != nil {
 		return nil, err
 	}

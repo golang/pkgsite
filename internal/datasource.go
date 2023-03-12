@@ -92,11 +92,19 @@ type DataSource interface {
 	// See LatestInfo for documentation.
 	GetLatestInfo(ctx context.Context, unitPath, modulePath string, latestUnitMeta *UnitMeta) (LatestInfo, error)
 
-	// SupportsSearch reports whether this data source supports search.
-	SupportsSearch() bool
+	// SearchSupport reports the search types supported by this datasource.
+	SearchSupport() SearchSupport
 	// Search searches for packages matching the given query.
 	Search(ctx context.Context, q string, opts SearchOptions) (_ []*SearchResult, err error)
 }
+
+type SearchSupport int
+
+const (
+	NoSearch    SearchSupport = iota
+	BasicSearch               // package search only
+	FullSearch                // all search modes supported
+)
 
 // LatestInfo holds information about the latest versions and paths.
 // The information is relative to a unit in a module.

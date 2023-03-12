@@ -52,7 +52,9 @@ type Server struct {
 	staticFS             fs.FS
 	thirdPartyFS         fs.FS
 	devMode              bool
-	staticPath           string // used only for dynamic loading in dev mode
+	localMode            bool          // running locally (i.e. ./cmd/pkgsite)
+	localModules         []LocalModule // locally hosted modules; empty in production
+	staticPath           string        // used only for dynamic loading in dev mode
 	errorPage            []byte
 	appVersionLabel      string
 	googleTagManagerID   string
@@ -79,6 +81,8 @@ type ServerConfig struct {
 	StaticFS             fs.FS              // for static/ directory
 	ThirdPartyFS         fs.FS              // for third_party/ directory
 	DevMode              bool
+	LocalMode            bool
+	LocalModules         []LocalModule
 	StaticPath           string // used only for dynamic loading in dev mode
 	ReportingClient      *errorreporting.Client
 	VulndbClient         *vuln.Client
@@ -99,6 +103,8 @@ func NewServer(scfg ServerConfig) (_ *Server, err error) {
 		staticFS:             scfg.StaticFS,
 		thirdPartyFS:         scfg.ThirdPartyFS,
 		devMode:              scfg.DevMode,
+		localMode:            scfg.LocalMode,
+		localModules:         scfg.LocalModules,
 		staticPath:           scfg.StaticPath,
 		templates:            ts,
 		taskIDChangeInterval: scfg.TaskIDChangeInterval,
@@ -167,7 +173,7 @@ func (s *Server) Install(handle func(string, http.Handler), redisClient *redis.C
 	handle("/search", searchHandler)
 	handle("/search-help", s.staticPageHandler("search-help", "Search Help"))
 	handle("/license-policy", s.licensePolicyHandler())
-	handle("/about", s.aboutHandler())
+	handle("/about", s.staticPageHandler("about", "About"))
 	handle("/badge/", http.HandlerFunc(s.badgeHandler))
 	handle("/styleguide", http.HandlerFunc(s.errorHandler(s.serveStyleGuide)))
 	handle("/C", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -411,6 +417,9 @@ type basePage struct {
 	// DevMode indicates whether the server is running in development mode.
 	DevMode bool
 
+	// LocalMode indicates whether the server is running in local mode (i.e. ./cmd/pkgsite).
+	LocalMode bool
+
 	// AppVersionLabel contains the current version of the app.
 	AppVersionLabel string
 
@@ -423,6 +432,9 @@ type basePage struct {
 
 	// Enables the two and three column layouts on the unit page.
 	UseResponsiveLayout bool
+
+	// SearchPrompt is the prompt/placeholder for search input.
+	SearchPrompt string
 
 	// SearchMode is the search mode for the current search request.
 	SearchMode string
@@ -460,22 +472,27 @@ func (s *Server) licensePolicyHandler() http.HandlerFunc {
 	})
 }
 
-func (s *Server) aboutHandler() http.HandlerFunc {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		s.servePage(r.Context(), w, "about", basePage{})
-	})
-}
-
 // newBasePage returns a base page for the given request and title.
 func (s *Server) newBasePage(r *http.Request, title string) basePage {
 	q := rawSearchQuery(r)
+
+	var searchPrompt string
+	if s.localMode {
+		// Symbol search is not supported in local mode.
+		searchPrompt = "Search packages"
+	} else {
+		searchPrompt = "Search packages or symbols"
+	}
+
 	return basePage{
 		HTMLTitle:          title,
 		Query:              q,
 		Experiments:        experiment.FromContext(r.Context()),
 		DevMode:            s.devMode,
+		LocalMode:          s.localMode,
 		AppVersionLabel:    s.appVersionLabel,
 		GoogleTagManagerID: s.googleTagManagerID,
+		SearchPrompt:       searchPrompt,
 		SearchModePackage:  searchModePackage,
 		SearchModeSymbol:   searchModeSymbol,
 		// By default, the SearchMode is set to the empty string, which

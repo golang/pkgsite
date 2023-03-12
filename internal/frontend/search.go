@@ -63,7 +63,8 @@ func determineSearchAction(r *http.Request, ds internal.DataSource, vulnClient *
 		return nil, &serverError{status: http.StatusMethodNotAllowed}
 	}
 
-	if !ds.SupportsSearch() {
+	searchSupport := ds.SearchSupport()
+	if searchSupport == internal.NoSearch {
 		// The proxydatasource does not support the imported by page.
 		return nil, datasourceNotSupportedErr()
 	}
@@ -113,8 +114,13 @@ func determineSearchAction(r *http.Request, ds internal.DataSource, vulnClient *
 			},
 		}
 	}
-	mode := searchMode(r)
-	if path := searchRequestRedirectPath(ctx, ds, cq, mode); path != "" {
+	var mode string
+	if searchSupport == internal.BasicSearch {
+		mode = searchModePackage
+	} else {
+		mode = searchMode(r)
+	}
+	if path := searchRequestRedirectPath(ctx, ds, cq, mode, vulnClient != nil); path != "" {
 		return &searchAction{redirectURL: path}, nil
 	}
 	action, err := searchVulnAlias(ctx, mode, cq, vulnClient)
@@ -344,12 +350,12 @@ var goVulnIDRegexp = regexp.MustCompile("^GO-[0-9]{4}-[0-9]{4}$")
 //
 // If the user types a name that is in the form of a Go vulnerability ID, we will
 // redirect to the page for that ID (whether or not it exists).
-func searchRequestRedirectPath(ctx context.Context, ds internal.DataSource, query, mode string) string {
+func searchRequestRedirectPath(ctx context.Context, ds internal.DataSource, query, mode string, vulnSupport bool) string {
 	urlSchemeIdx := strings.Index(query, "://")
 	if urlSchemeIdx > -1 {
 		query = query[urlSchemeIdx+3:]
 	}
-	if goVulnIDRegexp.MatchString(query) {
+	if vulnSupport && goVulnIDRegexp.MatchString(query) {
 		return fmt.Sprintf("/vuln/%s?q", query)
 	}
 	requestedPath := path.Clean(query)
@@ -367,7 +373,7 @@ func searchRequestRedirectPath(ctx context.Context, ds internal.DataSource, quer
 }
 
 func searchVulnModule(ctx context.Context, mode, cq string, client *vuln.Client) (_ *searchAction, err error) {
-	if mode != searchModeVuln {
+	if mode != searchModeVuln || client == nil {
 		return nil, nil
 	}
 	allEntries, err := vulnList(ctx, client)
@@ -399,7 +405,7 @@ EntryLoop:
 func searchVulnAlias(ctx context.Context, mode, cq string, vc *vuln.Client) (_ *searchAction, err error) {
 	defer derrors.Wrap(&err, "searchVulnAlias(%q, %q)", mode, cq)
 
-	if mode != searchModeVuln || !isVulnAlias(cq) {
+	if mode != searchModeVuln || !isVulnAlias(cq) || vc == nil {
 		return nil, nil
 	}
 	aliasEntries, err := vc.ByAlias(ctx, cq)

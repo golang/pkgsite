@@ -121,6 +121,10 @@
   padding: 0;
 }
 
+[data-local='true'] .go-Header-menu {
+  display: none;
+}
+
 .go-Header-submenu {
   background: transparent;
   background-color: var(--color-background);

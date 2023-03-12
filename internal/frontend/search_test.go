@@ -539,7 +539,7 @@ func TestSearchRequestRedirectPath(t *testing.T) {
 		{"CVE alias", "CVE-2022-32190", "", searchModePackage},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			if got := searchRequestRedirectPath(ctx, testDB, test.query, test.mode); got != test.want {
+			if got := searchRequestRedirectPath(ctx, testDB, test.query, test.mode, true); got != test.want {
 				t.Errorf("searchRequestRedirectPath(ctx, %q) = %q; want = %q", test.query, got, test.want)
 			}
 		})

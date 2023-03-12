@@ -379,13 +379,14 @@ func (*FetchDataSource) GetModuleReadme(ctx context.Context, modulePath, resolve
 }
 
 // SupportsSearch reports whether any of the configured Getters are searchable.
-func (ds *FetchDataSource) SupportsSearch() bool {
+func (ds *FetchDataSource) SearchSupport() internal.SearchSupport {
 	for _, g := range ds.opts.Getters {
 		if _, ok := g.(fetch.SearchableModuleGetter); ok {
-			return true
+			// Getters only support basic search.
+			return internal.BasicSearch
 		}
 	}
-	return false
+	return internal.NoSearch
 }
 
 // Search delegates search to any configured getters that support the

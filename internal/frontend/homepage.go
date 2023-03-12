@@ -45,12 +45,25 @@ type homepage struct {
 
 	// SearchTips is a collection of search tips to show on the homepage.
 	SearchTips []searchTip
+
+	// LocalModules holds locally-hosted modules, for quick navigation.
+	// Empty in production.
+	LocalModules []LocalModule
+}
+
+// LocalModule holds information about a locally-hosted module.
+//
+// JSON-compatible with `go list` output.
+type LocalModule struct {
+	ModulePath string `json:"Path"`
+	Dir        string `json:"Dir"`
 }
 
 func (s *Server) serveHomepage(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 	s.servePage(ctx, w, "homepage", homepage{
-		basePage:   s.newBasePage(r, "Go Packages"),
-		SearchTips: searchTips,
-		TipIndex:   rand.Intn(len(searchTips)),
+		basePage:     s.newBasePage(r, "Go Packages"),
+		SearchTips:   searchTips,
+		TipIndex:     rand.Intn(len(searchTips)),
+		LocalModules: s.localModules,
 	})
 }

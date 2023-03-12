@@ -94,6 +94,10 @@
   width: 100%;
 }
 
+[data-local='true'] .Homepage-tips {
+  display: none;
+}
+
 .Homepage-examples {
   align-items: center;
   display: flex;
@@ -140,6 +144,27 @@ a.Homepage-helpLink {
   position: relative;
   top: 0.1875rem;
   width: 1rem;
+}
+
+.Homepage-modules {
+  margin: auto;
+  max-width: 45.0625rem;
+  width: 100%;
+}
+
+.Homepage-modules-header {
+  color: var(--color-text);
+  font-weight: bold;
+}
+
+.Homepage-modules ul {
+  list-style: circle;
+  padding: 0 1.5rem;
+}
+
+.Homepage-modules ul > li {
+  font-size: 1rem;
+  line-height: 1.75rem;
 }
 
 .Questions {

@@ -62,6 +62,9 @@ func (e OSVEntry) AffectedModulesAndPackages() []string {
 }
 
 func (s *Server) serveVuln(w http.ResponseWriter, r *http.Request, _ internal.DataSource) error {
+	if s.vulnClient == nil {
+		return datasourceNotSupportedErr()
+	}
 	path := strings.TrimPrefix(r.URL.Path, "/vuln")
 	switch path {
 	case "/":

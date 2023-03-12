@@ -79,6 +79,10 @@
   border-bottom: var(--border);
 }
 
+[data-local='true'] .SearchResults-tabs {
+  display: none;
+}
+
 .SearchResults-tabs nav {
   margin: auto;
   max-width: 63rem;

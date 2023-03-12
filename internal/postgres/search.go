@@ -97,8 +97,9 @@ var symbolSearchers = map[string]searcher{
 type SearchOptions = internal.SearchOptions
 type SearchResult = internal.SearchResult
 
-// SupportsSearch implements the DataSource interface, returning true.
-func (db *DB) SupportsSearch() bool { return true }
+// SearchSupport implements the DataSource interface, supporting all search
+// types.
+func (db *DB) SearchSupport() internal.SearchSupport { return internal.FullSearch }
 
 // Search executes two search requests concurrently:
 //   - a sequential scan of packages in descending order of popularity.

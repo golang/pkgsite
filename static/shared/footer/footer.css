@@ -11,6 +11,10 @@
   width: 100%;
 }
 
+[data-local='true'] .go-Footer {
+  display: none;
+}
+
 .go-Footer-links {
   display: flex;
   flex-wrap: wrap;

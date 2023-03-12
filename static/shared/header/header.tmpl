@@ -8,7 +8,7 @@
   <header class="go-Header{{if .AllowWideContent}} go-Header--full{{end}} js-siteHeader">
     <div class="go-Header-inner go-Header-inner--dark">
       <nav class="go-Header-nav">
-        <a href="https://go.dev/" class="js-headerLogo" data-gtmc="nav link"
+        <a href="{{if .LocalMode}}/{{else}}https://go.dev/{{end}}" class="js-headerLogo" data-gtmc="nav link"
             data-test-id="go-header-logo-link">
           <img class="go-Header-logo" src="/static/shared/logo/go-white.svg" alt="Go">
         </a>
@@ -354,7 +354,7 @@
   >
     <input name="q" class="go-Input js-searchFocus" aria-label="Search for a package" type="search"
         autocapitalize="off" autocomplete="off" autocorrect="off" spellcheck="false"
-        placeholder="Search packages or symbols"
+        placeholder="{{.SearchPrompt}}"
         value="{{.Query}}" />
     <input name="m" value="{{.SearchMode}}" hidden>
     <button class="go-Button go-Button--inverted" aria-label="Submit search">

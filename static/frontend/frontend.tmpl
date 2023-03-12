@@ -5,7 +5,7 @@
 -->
 
 <!DOCTYPE html>
-<html lang="en" data-layout="{{if .UseResponsiveLayout}}responsive{{end}}">
+<html lang="en" data-layout="{{if .UseResponsiveLayout}}responsive{{end}}" data-local="{{if .LocalMode}}true{{end}}">
   <head>
     <!-- This will capture unhandled errors during page load for reporting later. -->
     <script>
@@ -31,7 +31,7 @@
     {{block "canonical" .}}{{end}}
     <link href="/static/frontend/frontend.min.css?version={{.AppVersionLabel}}" rel="stylesheet">
     {{block "title" .}}
-      <title>Go Packages</title>
+      <title>{{if .HTMLTitle}}{{.HTMLTitle}} - {{end}}Go Packages</title>
     {{end}}
     {{block "pre-content" .}}{{end}}
   </head>

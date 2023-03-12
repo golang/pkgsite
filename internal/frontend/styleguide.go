@@ -38,7 +38,7 @@ func (s *Server) serveStyleGuide(w http.ResponseWriter, r *http.Request, ds inte
 		return &serverError{status: http.StatusNotFound}
 	}
 	page, err := styleGuide(ctx, s.staticFS)
-	page.basePage = s.newBasePage(r, "")
+	page.basePage = s.newBasePage(r, "Style Guide")
 	page.AllowWideContent = true
 	page.UseResponsiveLayout = true
 	page.Title = "Style Guide"

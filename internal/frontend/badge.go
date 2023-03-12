@@ -35,7 +35,7 @@ func (s *Server) badgeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	page := badgePage{
-		basePage:  s.newBasePage(r, "Badge generation tool"),
+		basePage:  s.newBasePage(r, "Badge"),
 		LinkPath:  path,
 		BadgePath: "badge/" + path + ".svg",
 	}

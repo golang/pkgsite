@@ -49,13 +49,17 @@
 package main
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"flag"
 	"fmt"
+	"io/fs"
 	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"sort"
 	"strings"
 	"time"
 
@@ -79,6 +83,8 @@ var (
 	httpAddr   = flag.String("http", defaultAddr, "HTTP service address to listen for incoming requests on")
 	goRepoPath = flag.String("gorepo", "", "path to Go repo on local filesystem")
 	useProxy   = flag.Bool("proxy", false, "fetch from GOPROXY if not found locally")
+	devMode    = flag.Bool("dev", false, "enable developer mode (reload templates on each page load, serve non-minified JS/CSS, etc.)")
+	staticFlag = flag.String("static", "static", "path to folder containing static files served")
 	// other flags are bound to serverConfig below
 )
 
@@ -155,7 +161,7 @@ func buildServer(ctx context.Context, serverCfg serverConfig) (*frontend.Server,
 	}
 
 	cfg := getterConfig{
-		dirs:  serverCfg.paths,
+		all:   serverCfg.useListedMods,
 		proxy: serverCfg.proxy,
 	}
 
@@ -168,11 +174,12 @@ func buildServer(ctx context.Context, serverCfg serverConfig) (*frontend.Server,
 		if err != nil {
 			return nil, fmt.Errorf("searching GOPATH: %v", err)
 		}
-	}
-
-	cfg.pattern = "./..."
-	if serverCfg.useListedMods {
-		cfg.pattern = "all"
+	} else {
+		var err error
+		cfg.dirs, err = getModuleDirs(ctx, serverCfg.paths)
+		if err != nil {
+			return nil, fmt.Errorf("searching GOPATH: %v", err)
+		}
 	}
 
 	if serverCfg.useCache {
@@ -193,7 +200,24 @@ func buildServer(ctx context.Context, serverCfg serverConfig) (*frontend.Server,
 	if err != nil {
 		return nil, err
 	}
-	return newServer(getters, cfg.proxy)
+
+	// Collect unique module paths served by this server.
+	seenModules := make(map[frontend.LocalModule]bool)
+	var allModules []frontend.LocalModule
+	for _, modules := range cfg.dirs {
+		for _, m := range modules {
+			if seenModules[m] {
+				continue
+			}
+			seenModules[m] = true
+			allModules = append(allModules, m)
+		}
+	}
+	sort.Slice(allModules, func(i, j int) bool {
+		return allModules[i].ModulePath < allModules[j].ModulePath
+	})
+
+	return newServer(getters, allModules, cfg.proxy)
 }
 
 func collectPaths(args []string) []string {
@@ -204,20 +228,53 @@ func collectPaths(args []string) []string {
 	return paths
 }
 
-// getGOPATHModuleDirs returns the absolute paths to directories in GOPATH
-// corresponding to the requested module paths.
+// getGOPATHModuleDirs returns the set of workspace modules for each directory,
+// determined by running go list -m.
 //
-// An error is returned if any operations failed unexpectedly. If individual
-// module paths are not found, an error is logged and the path skipped. An
-// error is returned only if no module paths resolved to a GOPATH directory.
-func getGOPATHModuleDirs(ctx context.Context, modulePaths []string) ([]string, error) {
+// An error is returned if any operations failed unexpectedly, or if no
+// requested directories contain any valid modules.
+func getModuleDirs(ctx context.Context, dirs []string) (map[string][]frontend.LocalModule, error) {
+	dirModules := make(map[string][]frontend.LocalModule)
+	for _, dir := range dirs {
+		output, err := runGo(dir, "list", "-m", "-json")
+		if err != nil {
+			return nil, fmt.Errorf("listing modules in %s: %v", dir, err)
+		}
+		var modules []frontend.LocalModule
+		decoder := json.NewDecoder(bytes.NewBuffer(output))
+		for decoder.More() {
+			var m frontend.LocalModule
+			if err := decoder.Decode(&m); err != nil {
+				return nil, err
+			}
+			if m.ModulePath != "command-line-arguments" {
+				modules = append(modules, m)
+			}
+		}
+		if len(modules) > 0 {
+			dirModules[dir] = modules
+		}
+	}
+	if len(dirs) > 0 && len(dirModules) == 0 {
+		return nil, fmt.Errorf("no modules in any of the requested directories")
+	}
+	return dirModules, nil
+}
+
+// getGOPATHModuleDirs returns local module information for directories in
+// GOPATH corresponding to the requested module paths.
+//
+// An error is returned if any operations failed unexpectedly, or if no modules
+// were resolved. If individual module paths are not found, an error is logged
+// and the path skipped.
+func getGOPATHModuleDirs(ctx context.Context, modulePaths []string) (map[string][]frontend.LocalModule, error) {
 	gopath, err := runGo("", "env", "GOPATH")
 	if err != nil {
 		return nil, err
 	}
-	gopaths := filepath.SplitList(string(gopath))
+	gopaths := filepath.SplitList(strings.TrimSpace(string(gopath)))
 
-	var dirs []string
+	dirs := make(map[string][]frontend.LocalModule)
 	for _, path := range modulePaths {
 		dir := ""
 		for _, gopath := range gopaths {
@@ -234,7 +291,7 @@ func getGOPATHModuleDirs(ctx context.Context, modulePaths []string) ([]string, e
 		if dir == "" {
 			log.Errorf(ctx, "ERROR: no GOPATH directory contains %q", path)
 		} else {
-			dirs = append(dirs, dir)
+			dirs[dir] = []frontend.LocalModule{{ModulePath: path, Dir: dir}}
 		}
 	}
 
@@ -247,10 +304,10 @@ func getGOPATHModuleDirs(ctx context.Context, modulePaths []string) ([]string, e
 // getterConfig defines the set of getters for the server to use.
 // See buildGetters.
 type getterConfig struct {
-	dirs        []string      // local directories to serve
-	pattern     string        // go/packages query to load in each directory
-	modCacheDir string        // path to module cache, or ""
-	proxy       *proxy.Client // proxy client, or nil
+	all         bool                              // if set, request "all" instead of ["<modulePath>/..."]
+	dirs        map[string][]frontend.LocalModule // local modules to serve
+	modCacheDir string                            // path to module cache, or ""
+	proxy       *proxy.Client                     // proxy client, or nil
 }
 
 // buildGetters constructs module getters based on the given configuration.
@@ -263,8 +320,16 @@ func buildGetters(ctx context.Context, cfg getterConfig) ([]fetch.ModuleGetter, 
 	var getters []fetch.ModuleGetter
 
 	// Load local getters for each directory.
-	for _, dir := range cfg.dirs {
-		mg, err := fetch.NewGoPackagesModuleGetter(ctx, dir, cfg.pattern)
+	for dir, modules := range cfg.dirs {
+		var patterns []string
+		if cfg.all {
+			patterns = append(patterns, "all")
+		} else {
+			for _, m := range modules {
+				patterns = append(patterns, fmt.Sprintf("%s/...", m))
+			}
+		}
+		mg, err := fetch.NewGoPackagesModuleGetter(ctx, dir, patterns...)
 		if err != nil {
 			log.Errorf(ctx, "Loading packages from %s: %v", dir, err)
 		} else {
@@ -291,16 +356,30 @@ func buildGetters(ctx context.Context, cfg getterConfig) ([]fetch.ModuleGetter, 
 	return getters, nil
 }
 
-func newServer(getters []fetch.ModuleGetter, prox *proxy.Client) (*frontend.Server, error) {
+func newServer(getters []fetch.ModuleGetter, localModules []frontend.LocalModule, prox *proxy.Client) (*frontend.Server, error) {
 	lds := fetchdatasource.Options{
 		Getters:              getters,
 		ProxyClientForLatest: prox,
 		BypassLicenseCheck:   true,
 	}.New()
+
+	// In dev mode, use a dirFS to pick up template/JS/CSS changes without
+	// restarting the server.
+	var staticFS fs.FS
+	if *devMode {
+		staticFS = os.DirFS(*staticFlag)
+	} else {
+		staticFS = static.FS
+	}
+
 	server, err := frontend.NewServer(frontend.ServerConfig{
 		DataSourceGetter: func(context.Context) internal.DataSource { return lds },
 		TemplateFS:       template.TrustedFSFromEmbed(static.FS),
-		StaticFS:         static.FS,
+		StaticFS:         staticFS,
+		DevMode:          *devMode,
+		LocalMode:        true,
+		LocalModules:     localModules,
+		StaticPath:       *staticFlag,
 		ThirdPartyFS:     thirdparty.FS,
 	})
 	if err != nil {

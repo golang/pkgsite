@@ -16,7 +16,6 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/net/html"
-	"golang.org/x/pkgsite/internal/proxy"
 	"golang.org/x/pkgsite/internal/proxy/proxytest"
 	"golang.org/x/pkgsite/internal/testing/htmlcheck"
 	"golang.org/x/pkgsite/internal/testing/testhelper"
@@ -32,78 +31,6 @@ var (
 		return attr("href", "^"+regexp.QuoteMeta(val)+"$")
 	}
 )
-
-func TestBuildGetters(t *testing.T) {
-	repoPath := func(fn string) string { return filepath.Join("..", "..", fn) }
-
-	abs := func(dir string) string {
-		a, err := filepath.Abs(dir)
-		if err != nil {
-			t.Fatal(err)
-		}
-		return a
-	}
-
-	ctx := context.Background()
-	localModule := repoPath("internal/fetch/testdata/has_go_mod")
-	cacheDir := repoPath("internal/fetch/testdata/modcache")
-	testModules := proxytest.LoadTestModules(repoPath("internal/proxy/testdata"))
-	prox, teardown := proxytest.SetupTestClient(t, testModules)
-	defer teardown()
-
-	localGetter := "Dir(" + abs(localModule) + ")"
-	cacheGetter := "FSProxy(" + abs(cacheDir) + ")"
-	for _, test := range []struct {
-		name     string
-		dirs     []string
-		cacheDir string
-		proxy    *proxy.Client
-		want     []string
-	}{
-		{
-			name: "local only",
-			dirs: []string{localModule},
-			want: []string{localGetter},
-		},
-		{
-			name:     "cache",
-			cacheDir: cacheDir,
-			want:     []string{cacheGetter},
-		},
-		{
-			name:  "proxy",
-			proxy: prox,
-			want:  []string{"Proxy"},
-		},
-		{
-			name:     "all three",
-			dirs:     []string{localModule},
-			cacheDir: cacheDir,
-			proxy:    prox,
-			want:     []string{localGetter, cacheGetter, "Proxy"},
-		},
-	} {
-		t.Run(test.name, func(t *testing.T) {
-			getters, err := buildGetters(ctx, getterConfig{
-				dirs:        test.dirs,
-				pattern:     "./...",
-				modCacheDir: test.cacheDir,
-				proxy:       test.proxy,
-			})
-			if err != nil {
-				t.Fatal(err)
-			}
-			var got []string
-			for _, g := range getters {
-				got = append(got, g.String())
-			}
-
-			if diff := cmp.Diff(test.want, got); diff != "" {
-				t.Errorf("mismatch (-want, +got):\n%s", diff)
-			}
-		})
-	}
-}
 
 func TestServer(t *testing.T) {
 	repoPath := func(fn string) string { return filepath.Join("..", "..", fn) }
@@ -127,13 +54,19 @@ package a
 	prox, teardown := proxytest.SetupTestClient(t, testModules)
 	defer teardown()
 
-	defaultConfig := serverConfig{
-		paths:         []string{localModule},
-		gopathMode:    false,
-		useListedMods: true,
-		useCache:      true,
-		cacheDir:      cacheDir,
-		proxy:         prox,
+	cfg := func(modifyDefault func(*serverConfig)) serverConfig {
+		c := serverConfig{
+			paths:         []string{localModule},
+			gopathMode:    false,
+			useListedMods: true,
+			useCache:      true,
+			cacheDir:      cacheDir,
+			proxy:         prox,
+		}
+		if modifyDefault != nil {
+			modifyDefault(&c)
+		}
+		return c
 	}
 
 	modcacheChecker := in("",
@@ -142,55 +75,114 @@ package a
 
 	ctx := context.Background()
 	for _, test := range []struct {
-		name string
-		cfg  serverConfig
-		url  string
-		want htmlcheck.Checker
+		name     string
+		cfg      serverConfig
+		url      string
+		wantCode int
+		want     htmlcheck.Checker
 	}{
 		{
 			"local",
-			defaultConfig,
+			cfg(nil),
 			"example.com/testmod",
+			http.StatusOK,
 			in("",
 				in(".Documentation", hasText("There is no documentation for this package.")),
 				sourceLinks(path.Join(abs(localModule), "example.com/testmod"), "a.go")),
 		},
 		{
 			"modcache",
-			defaultConfig,
+			cfg(nil),
 			"modcache.com@v1.0.0",
+			http.StatusOK,
 			modcacheChecker,
 		},
 		{
 			"modcache latest",
-			defaultConfig,
+			cfg(nil),
 			"modcache.com",
+			http.StatusOK,
 			modcacheChecker,
 		},
 		{
+			"modcache unsupported",
+			cfg(func(c *serverConfig) {
+				c.useCache = false
+			}),
+			"modcache.com",
+			http.StatusFailedDependency, // TODO(rfindley): should this be 404?
+			hasText("page is not supported"),
+		},
+		{
 			"proxy",
-			defaultConfig,
+			cfg(nil),
 			"example.com/single/pkg",
+			http.StatusOK,
 			hasText("G is new in v1.1.0"),
 		},
 		{
+			"proxy unsupported",
+			cfg(func(c *serverConfig) {
+				c.proxy = nil
+			}),
+			"example.com/single/pkg",
+			http.StatusFailedDependency, // TODO(rfindley): should this be 404?
+			hasText("page is not supported"),
+		},
+		{
 			"search",
-			defaultConfig,
+			cfg(nil),
 			"search?q=a",
+			http.StatusOK,
 			in(".SearchResults",
 				hasText("example.com/testmod"),
 			),
 		},
 		{
-			"search",
-			defaultConfig,
+			"no symbol search",
+			cfg(nil),
+			"search?q=A", // using a capital letter should not cause symbol search
+			http.StatusOK,
+			in(".SearchResults",
+				hasText("example.com/testmod"),
+			),
+		},
+		{
+			"search not found",
+			cfg(nil),
 			"search?q=zzz",
+			http.StatusOK,
 			in(".SearchResults",
 				hasText("no matches"),
 			),
 		},
-		// TODO(rfindley): add more tests, including a test for the standard
-		// library once it doesn't go through the stdlib package.
+		{
+			"search vulns not found",
+			cfg(nil),
+			"search?q=GO-1234-1234",
+			http.StatusOK,
+			in(".SearchResults",
+				hasText("no matches"),
+			),
+		},
+		{
+			"search unsupported",
+			cfg(func(c *serverConfig) {
+				c.paths = nil
+			}),
+			"search?q=zzz",
+			http.StatusFailedDependency,
+			hasText("page is not supported"),
+		},
+		{
+			"vulns unsupported",
+			cfg(nil),
+			"vuln/",
+			http.StatusFailedDependency,
+			hasText("page is not supported"),
+		},
+		// TODO(rfindley): add a test for the standard library once it doesn't go
+		// through the stdlib package.
 		// See also golang/go#58923.
 	} {
 		t.Run(test.name, func(t *testing.T) {
@@ -203,8 +195,8 @@ package a
 
 			w := httptest.NewRecorder()
 			mux.ServeHTTP(w, httptest.NewRequest("GET", "/"+test.url, nil))
-			if w.Code != http.StatusOK {
-				t.Fatalf("got status code = %d, want %d", w.Code, http.StatusOK)
+			if w.Code != test.wantCode {
+				t.Fatalf("got status code = %d, want %d", w.Code, test.wantCode)
 			}
 			doc, err := html.Parse(w.Body)
 			if err != nil {
