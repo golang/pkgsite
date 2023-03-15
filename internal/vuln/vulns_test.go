@@ -11,11 +11,12 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/vuln/osv"
 )
 
 func TestVulnsForPackage(t *testing.T) {
-	ctx := context.Background()
 	e := osv.Entry{
 		ID: "GO-1",
 		Affected: []osv.Affected{{
@@ -151,7 +152,7 @@ func TestVulnsForPackage(t *testing.T) {
 			mod:  "std", pkg: "net/http", version: "go1.20", want: nil,
 		},
 	}
-	test := func(t *testing.T, c *Client) {
+	test := func(t *testing.T, ctx context.Context, c *Client) {
 		for _, tc := range testCases {
 			{
 				t.Run(tc.name, func(t *testing.T) {
@@ -164,11 +165,12 @@ func TestVulnsForPackage(t *testing.T) {
 		}
 	}
 	t.Run("legacy", func(t *testing.T) {
-		test(t, &Client{legacy: legacyClient})
+		test(t, context.Background(), &Client{legacy: legacyClient})
 	})
 
 	t.Run("v1", func(t *testing.T) {
-		test(t, &Client{v1: v1Client})
+		ctx := experiment.NewContext(context.Background(), internal.ExperimentVulndbV1)
+		test(t, ctx, &Client{v1: v1Client})
 	})
 }
 

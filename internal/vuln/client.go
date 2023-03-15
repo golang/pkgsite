@@ -8,21 +8,40 @@ import (
 	"context"
 	"fmt"
 
+	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/experiment"
 	vulnc "golang.org/x/vuln/client"
 	"golang.org/x/vuln/osv"
 )
 
-// Client reads Go vulnerability databases.
+// Client reads Go vulnerability databases from both the legacy and v1
+// schemas.
+//
+// If the v1 experiment is active, the client will read from the v1
+// database, and will otherwise read from the legacy database.
 type Client struct {
 	legacy *legacyClient
-	// v1 client, currently for testing only.
-	// Always nil if created via NewClient.
-	v1 *client
+	v1     *client
 }
 
 // NewClient returns a client that can read from the vulnerability
 // database in src (a URL representing either a http or file source).
 func NewClient(src string) (*Client, error) {
+	// Create the v1 client.
+	var v1 *client
+	s, err := NewSource(src)
+	if err != nil {
+		// While the v1 client is in experimental mode, ignore the error
+		// and always fall back to the legacy client.
+		// (An error will occur when using the client if the experiment
+		// is enabled and the v1 client is nil).
+		v1 = nil
+	} else {
+		v1 = &client{src: s}
+	}
+
+	// Create the legacy client.
 	legacy, err := vulnc.NewClient([]string{src}, vulnc.Options{
 		HTTPCache: newCache(),
 	})
@@ -30,7 +49,7 @@ func NewClient(src string) (*Client, error) {
 		return nil, err
 	}
 
-	return &Client{legacy: &legacyClient{legacy}}, nil
+	return &Client{legacy: &legacyClient{legacy}, v1: v1}, nil
 }
 
 type PackageRequest struct {
@@ -81,16 +100,25 @@ func (c *Client) IDs(ctx context.Context) ([]string, error) {
 	return cli.IDs(ctx)
 }
 
-// cli returns the underlying client, favoring the legacy client
-// if both are present.
-func (c *Client) cli(ctx context.Context) (cli, error) {
-	if c.legacy != nil {
-		return c.legacy, nil
-	}
-	if c.v1 != nil {
+// cli returns the underlying client.
+// If the v1 experiment is active, it attempts to reurn the v1 client,
+// falling back on the legacy client if not set.
+// Otherwise, it always returns the legacy client.
+func (c *Client) cli(ctx context.Context) (_ cli, err error) {
+	derrors.Wrap(&err, "Client.cli()")
+
+	if experiment.IsActive(ctx, internal.ExperimentVulndbV1) {
+		if c.v1 == nil {
+			return nil, fmt.Errorf("v1 experiment is set, but v1 client is nil")
+		}
 		return c.v1, nil
 	}
-	return nil, fmt.Errorf("vuln.Client: no underlying client defined")
+
+	if c.legacy == nil {
+		return nil, fmt.Errorf("legacy vulndb client is nil")
+	}
+
+	return c.legacy, nil
 }
 
 // cli is an interface used temporarily to allow us to support

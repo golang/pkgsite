@@ -11,6 +11,8 @@ import (
 	"testing"
 	"time"
 
+	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/vuln/osv"
 )
 
@@ -336,10 +338,9 @@ func TestIDs(t *testing.T) {
 	})
 }
 
-// Test that Client can pick the right underlying client.
+// Test that Client can pick the right underlying client, based
+// on whether the v1 experiment is active.
 func TestCli(t *testing.T) {
-	ctx := context.Background()
-
 	v1, err := newTestV1Client(dbTxtar)
 	if err != nil {
 		t.Fatal(err)
@@ -347,8 +348,10 @@ func TestCli(t *testing.T) {
 
 	legacy := newTestLegacyClient([]*osv.Entry{&testOSV1, &testOSV2, &testOSV3})
 
-	t.Run("legacy preferred", func(t *testing.T) {
+	t.Run("legacy preferred if experiment inactive", func(t *testing.T) {
+		ctx := context.Background()
 		c := Client{legacy: legacy, v1: v1}
+
 		cli, err := c.cli(ctx)
 		if err != nil {
 			t.Fatal(err)
@@ -358,19 +361,32 @@ func TestCli(t *testing.T) {
 		}
 	})
 
-	t.Run("v1 if no legacy", func(t *testing.T) {
-		c := Client{v1: v1}
+	t.Run("v1 preferred if experiment active", func(t *testing.T) {
+		ctx := experiment.NewContext(context.Background(), internal.ExperimentVulndbV1)
+
+		c := Client{legacy: legacy, v1: v1}
 		cli, err := c.cli(ctx)
 		if err != nil {
 			t.Fatal(err)
 		}
 		if _, ok := cli.(*client); !ok {
-			t.Errorf("Client.cli() = %s, want type *clientV1", cli)
+			t.Errorf("Client.cli() = %s, want type *client", cli)
 		}
 	})
 
-	t.Run("error if both nil", func(t *testing.T) {
-		c := Client{}
+	t.Run("error if legacy nil and experiment inactive", func(t *testing.T) {
+		ctx := context.Background()
+		c := Client{v1: v1}
+		cli, err := c.cli(ctx)
+		if err == nil {
+			t.Errorf("Client.cli() = %s, want error", cli)
+		}
+	})
+
+	t.Run("error if v1 nil and experiment active", func(t *testing.T) {
+		ctx := experiment.NewContext(context.Background(), internal.ExperimentVulndbV1)
+
+		c := Client{legacy: legacy}
 		cli, err := c.cli(ctx)
 		if err == nil {
 			t.Errorf("Client.cli() = %s, want error", cli)
