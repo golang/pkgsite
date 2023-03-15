@@ -1,0 +1,229 @@
+// Copyright 2023 The Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+//
+// Test database for the Go vulnerability database v1 schema with
+// three entries.
+
+-- index/db --
+{
+    "modified": "2003-01-01T00:00:00Z"
+}
+
+-- index/vulns --
+[
+    {
+        "id": "GO-1999-0001",
+        "modified": "2000-01-01T00:00:00Z",
+        "aliases": [
+            "CVE-1999-1111"
+        ]
+    },
+    {
+        "id": "GO-2000-0002",
+        "modified": "2002-01-01T00:00:00Z",
+        "aliases": [
+            "CVE-1999-2222"
+        ]
+    },
+    {
+        "id": "GO-2000-0003",
+        "modified": "2003-01-01T00:00:00Z",
+        "aliases": [
+            "CVE-1999-3333",
+            "GHSA-xxxx-yyyy-zzzz"
+        ]
+    }
+]
+
+-- index/modules --
+[
+    {
+        "path": "example.com/module",
+        "vulns": [
+            {
+                "id": "GO-2000-0002",
+                "modified": "2002-01-01T00:00:00Z",
+                "fixed": "1.2.0"
+            },
+            {
+                "id": "GO-2000-0003",
+                "modified": "2003-01-01T00:00:00Z",
+                "fixed": "1.1.0"
+            }
+        ]
+    },
+    {
+        "path": "stdlib",
+        "vulns": [
+            {
+                "id": "GO-1999-0001",
+                "modified": "2000-01-01T00:00:00Z",
+                "fixed": "1.2.2"
+            }
+        ]
+    }
+]
+
+-- ID/GO-1999-0001 --
+{
+  "id": "GO-1999-0001",
+  "published": "1999-01-01T00:00:00Z",
+  "modified": "2000-01-01T00:00:00Z",
+  "aliases": [
+    "CVE-1999-1111"
+  ],
+  "details": "Some details",
+  "affected": [
+    {
+      "package": {
+        "name": "stdlib",
+        "ecosystem": "Go"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "1.1.0"
+            },
+            {
+              "introduced": "1.2.0"
+            },
+            {
+              "fixed": "1.2.2"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "url": "https://pkg.go.dev/vuln/GO-1999-0001"
+      },
+      "ecosystem_specific": {
+        "imports": [
+          {
+            "path": "package",
+            "symbols": [
+              "Symbol"
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "FIX",
+      "url": "https://example.com/cl/123"
+    }
+  ]
+}
+
+-- ID/GO-2000-0002 --
+{
+  "id": "GO-2000-0002",
+  "published": "2000-01-01T00:00:00Z",
+  "modified": "2002-01-01T00:00:00Z",
+  "aliases": [
+    "CVE-1999-2222"
+  ],
+  "details": "Some details",
+  "affected": [
+    {
+      "package": {
+        "name": "example.com/module",
+        "ecosystem": "Go"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "1.2.0"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "url": "https://pkg.go.dev/vuln/GO-2000-0002"
+      },
+      "ecosystem_specific": {
+        "imports": [
+          {
+            "path": "example.com/module/package",
+            "symbols": [
+              "Symbol"
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "FIX",
+      "url": "https://example.com/cl/543"
+    }
+  ]
+}
+
+-- ID/GO-2000-0003 --
+{
+  "id": "GO-2000-0003",
+  "published": "2000-01-01T00:00:00Z",
+  "modified": "2003-01-01T00:00:00Z",
+  "aliases": [
+    "CVE-1999-3333",
+    "GHSA-xxxx-yyyy-zzzz"
+  ],
+  "details": "Some details",
+  "affected": [
+    {
+      "package": {
+        "name": "example.com/module",
+        "ecosystem": "Go"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "1.1.0"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "url": "https://pkg.go.dev/vuln/GO-2000-0003"
+      },
+      "ecosystem_specific": {
+        "imports": [
+          {
+            "path": "example.com/module/package",
+            "symbols": [
+              "Symbol"
+            ]
+          },
+          {
+            "path": "example.com/module/package2"
+          }
+        ]
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "FIX",
+      "url": "https://example.com/cl/000"
+    }
+  ]
+}

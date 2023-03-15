@@ -14,6 +14,10 @@ import (
 	"golang.org/x/vuln/osv"
 )
 
+const (
+	dbTxtar = "testdata/db.txtar"
+)
+
 var (
 	jan1999  = time.Date(1999, 1, 1, 0, 0, 0, 0, time.UTC)
 	jan2000  = time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC)
@@ -107,7 +111,7 @@ var (
 )
 
 func TestByPackage(t *testing.T) {
-	runClientTest(t, func(t *testing.T, c client) {
+	runClientTest(t, func(t *testing.T, c cli) {
 		tests := []struct {
 			name string
 			req  *PackageRequest
@@ -201,6 +205,22 @@ func TestByPackage(t *testing.T) {
 				},
 				want: nil,
 			},
+			{
+				name: "go prefix, no patch version - in range",
+				req: &PackageRequest{
+					Module:  "stdlib",
+					Version: "go1.2",
+				},
+				want: []*osv.Entry{&testOSV1},
+			},
+			{
+				name: "go prefix, no patch version - out of range",
+				req: &PackageRequest{
+					Module:  "stdlib",
+					Version: "go1.3",
+				},
+				want: nil,
+			},
 		}
 
 		for _, test := range tests {
@@ -227,7 +247,7 @@ func ids(entries []*osv.Entry) string {
 }
 
 func TestByAlias(t *testing.T) {
-	runClientTest(t, func(t *testing.T, c client) {
+	runClientTest(t, func(t *testing.T, c cli) {
 		tests := []struct {
 			name  string
 			alias string
@@ -266,7 +286,7 @@ func TestByAlias(t *testing.T) {
 }
 
 func TestByID(t *testing.T) {
-	runClientTest(t, func(t *testing.T, c client) {
+	runClientTest(t, func(t *testing.T, c cli) {
 		tests := []struct {
 			id   string
 			want *osv.Entry
@@ -301,7 +321,7 @@ func TestByID(t *testing.T) {
 }
 
 func TestIDs(t *testing.T) {
-	runClientTest(t, func(t *testing.T, c client) {
+	runClientTest(t, func(t *testing.T, c cli) {
 		ctx := context.Background()
 
 		got, err := c.IDs(ctx)
@@ -316,12 +336,62 @@ func TestIDs(t *testing.T) {
 	})
 }
 
-// Run the test legacy client.
-// TODO(tatianabradley): Run test for v1 client once implemented.
-func runClientTest(t *testing.T, test func(*testing.T, client)) {
+// Test that Client can pick the right underlying client.
+func TestCli(t *testing.T) {
+	ctx := context.Background()
+
+	v1, err := newTestV1Client(dbTxtar)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	legacy := newTestLegacyClient([]*osv.Entry{&testOSV1, &testOSV2, &testOSV3})
+
+	t.Run("legacy preferred", func(t *testing.T) {
+		c := Client{legacy: legacy, v1: v1}
+		cli, err := c.cli(ctx)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if _, ok := cli.(*legacyClient); !ok {
+			t.Errorf("Client.cli() = %s, want type *legacyClient", cli)
+		}
+	})
+
+	t.Run("v1 if no legacy", func(t *testing.T) {
+		c := Client{v1: v1}
+		cli, err := c.cli(ctx)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if _, ok := cli.(*client); !ok {
+			t.Errorf("Client.cli() = %s, want type *clientV1", cli)
+		}
+	})
+
+	t.Run("error if both nil", func(t *testing.T) {
+		c := Client{}
+		cli, err := c.cli(ctx)
+		if err == nil {
+			t.Errorf("Client.cli() = %s, want error", cli)
+		}
+	})
+}
+
+// Run the test for both the v1 and legacy clients.
+func runClientTest(t *testing.T, test func(*testing.T, cli)) {
+	v1, err := newTestV1Client(dbTxtar)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	legacy := newTestLegacyClient([]*osv.Entry{&testOSV1, &testOSV2, &testOSV3})
 
 	t.Run("legacy", func(t *testing.T) {
 		test(t, legacy)
+	})
+
+	t.Run("v1", func(t *testing.T) {
+		test(t, v1)
 	})
 }

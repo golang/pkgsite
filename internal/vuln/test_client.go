@@ -7,13 +7,37 @@ package vuln
 import (
 	"context"
 
+	"golang.org/x/tools/txtar"
 	vulnc "golang.org/x/vuln/client"
 	"golang.org/x/vuln/osv"
 )
 
-// NewTestClient creates an in-memory client for use in tests.
+// NewTestClient creates an in-memory client for use in tests,
+// It's logic is different from the real client, so it should not be used to
+// test the client itself, but can be used to test code that depends on the
+// client.
 func NewTestClient(entries []*osv.Entry) *Client {
 	return &Client{legacy: newTestLegacyClient(entries)}
+}
+
+// newTestV1Client creates an in-memory client for use in tests.
+// It uses all the logic of the real v1 client, except that it reads
+// raw database data from the given txtar file instead of making HTTP
+// requests.
+// It can be used to test core functionality of the v1 client.
+func newTestV1Client(txtarFile string) (*client, error) {
+	data := make(map[string][]byte)
+
+	ar, err := txtar.ParseFile(txtarFile)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, f := range ar.Files {
+		data[f.Name] = f.Data
+	}
+
+	return &client{&inMemorySource{data: data}}, nil
 }
 
 func newTestLegacyClient(entries []*osv.Entry) *legacyClient {

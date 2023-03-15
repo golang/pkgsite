@@ -1,0 +1,25 @@
+// Copyright 2023 The Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+//
+// Test database for the Go vulnerability database v1 schema with
+// three entries.
+// This is meant for testing the VulnsForPackage function.
+
+-- index/db --
+{"modified":"0001-01-01T00:00:00Z"}
+
+-- index/vulns --
+[{"id":"GO-1","modified":"0001-01-01T00:00:00Z"},{"id":"GO-2","modified":"0001-01-01T00:00:00Z"},{"id":"GO-3","modified":"0001-01-01T00:00:00Z"}]
+
+-- index/modules --
+[{"path":"bad.com","vulns":[{"id":"GO-1","modified":"0001-01-01T00:00:00Z","fixed":"1.2.3"},{"id":"GO-2","modified":"0001-01-01T00:00:00Z","fixed":"1.2.0"}]},{"path":"stdlib","vulns":[{"id":"GO-3","modified":"0001-01-01T00:00:00Z","fixed":"1.19.4"}]},{"path":"unfixable.com","vulns":[{"id":"GO-1","modified":"0001-01-01T00:00:00Z"}]}]
+
+-- ID/GO-1 --
+{"id":"GO-1","published":"0001-01-01T00:00:00Z","modified":"0001-01-01T00:00:00Z","details":"","affected":[{"package":{"name":"bad.com","ecosystem":""},"ranges":[{"type":"SEMVER","events":[{"introduced":"0"},{"fixed":"1.2.3"}]}],"database_specific":{"url":""},"ecosystem_specific":{"imports":[{"path":"bad.com"},{"path":"bad.com/bad"}]}},{"package":{"name":"unfixable.com","ecosystem":""},"ranges":[{"type":"SEMVER","events":[{"introduced":"0"}]}],"database_specific":{"url":""},"ecosystem_specific":{"imports":[{"path":"unfixable.com"}]}}]}
+
+-- ID/GO-2 --
+{"id":"GO-2","published":"0001-01-01T00:00:00Z","modified":"0001-01-01T00:00:00Z","details":"","affected":[{"package":{"name":"bad.com","ecosystem":""},"ranges":[{"type":"SEMVER","events":[{"introduced":"0"},{"fixed":"1.2.0"}]}],"database_specific":{"url":""},"ecosystem_specific":{"imports":[{"path":"bad.com/pkg"}]}}]}
+
+-- ID/GO-3 --
+{"id":"GO-3","published":"0001-01-01T00:00:00Z","modified":"0001-01-01T00:00:00Z","details":"","affected":[{"package":{"name":"stdlib","ecosystem":""},"ranges":[{"type":"SEMVER","events":[{"introduced":"0"},{"fixed":"1.19.4"}]}],"database_specific":{"url":""},"ecosystem_specific":{"imports":[{"path":"net/http"}]}}]}

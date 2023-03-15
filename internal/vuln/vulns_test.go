@@ -77,61 +77,99 @@ func TestVulnsForPackage(t *testing.T) {
 		}},
 	}
 
-	vc := NewTestClient([]*osv.Entry{&e, &e2, &stdlib})
+	legacyClient := newTestLegacyClient([]*osv.Entry{&e, &e2, &stdlib})
+	v1Client, err := newTestV1Client("testdata/db2.txtar")
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	testCases := []struct {
+		name              string
 		mod, pkg, version string
 		want              []Vuln
 	}{
 		// Vulnerabilities for a package
 		{
-			"good.com", "good.com", "v1.0.0", nil,
+			name: "no match - all",
+			mod:  "good.com", pkg: "good.com", version: "v1.0.0",
+			want: nil,
 		},
 		{
-			"bad.com", "bad.com", "v1.0.0", []Vuln{{ID: "GO-1"}},
+			name: "match - same mod/pkg",
+			mod:  "bad.com", pkg: "bad.com", version: "v1.0.0",
+			want: []Vuln{{ID: "GO-1"}},
 		},
 		{
-			"bad.com", "bad.com/bad", "v1.0.0", []Vuln{{ID: "GO-1"}},
+			name: "match - different mod/pkg",
+			mod:  "bad.com", pkg: "bad.com/bad", version: "v1.0.0",
+			want: []Vuln{{ID: "GO-1"}},
 		},
 		{
-			"bad.com", "bad.com/ok", "v1.0.0", nil, // bad.com/ok isn't affected.
+			name: "no match - pkg",
+			mod:  "bad.com", pkg: "bad.com/ok", version: "v1.0.0",
+			want: nil, // bad.com/ok isn't affected.
 		},
 		{
-			"bad.com", "bad.com", "v1.3.0", nil,
+			name: "no match - version",
+			mod:  "bad.com", pkg: "bad.com", version: "v1.3.0",
+			want: nil, // version 1.3.0 isn't affected
 		},
 		{
-			"unfixable.com", "unfixable.com", "v1.999.999", []Vuln{{ID: "GO-1"}},
+			name: "match - pkg with no fix",
+			mod:  "unfixable.com", pkg: "unfixable.com", version: "v1.999.999", want: []Vuln{{ID: "GO-1"}},
 		},
 		// Vulnerabilities for a module (package == "")
 		{
-			"good.com", "", "v1.0.0", nil,
+			name: "no match - module only",
+			mod:  "good.com", pkg: "", version: "v1.0.0", want: nil,
 		},
 		{
-			"bad.com", "", "v1.0.0", []Vuln{{ID: "GO-1"}, {ID: "GO-2"}},
+			name: "match - module only",
+			mod:  "bad.com", pkg: "", version: "v1.0.0", want: []Vuln{{ID: "GO-1"}, {ID: "GO-2"}},
 		},
 		{
-			"bad.com", "", "v1.3.0", nil,
+			name: "no match - module but not version",
+			mod:  "bad.com", pkg: "", version: "v1.3.0",
+			want: nil,
 		},
 		{
-			"unfixable.com", "", "v1.999.999", []Vuln{{ID: "GO-1"}},
+			name: "match - module only, no fix",
+			mod:  "unfixable.com", pkg: "", version: "v1.999.999", want: []Vuln{{ID: "GO-1"}},
 		},
 		// Vulns for stdlib
 		{
-			"std", "net/http", "go1.19.3", []Vuln{{ID: "GO-3"}},
+			name: "match - stdlib",
+			mod:  "std", pkg: "net/http", version: "go1.19.3",
+			want: []Vuln{{ID: "GO-3"}},
 		},
 		{
-			"std", "net/http", "v0.0.0-20230104211531-bae7d772e800", nil,
+			name: "no match - stdlib pseudoversion",
+			mod:  "std", pkg: "net/http", version: "v0.0.0-20230104211531-bae7d772e800", want: nil,
 		},
 		{
-			"std", "net/http", "go1.20", nil,
+			name: "no match - stdlib version past fix",
+			mod:  "std", pkg: "net/http", version: "go1.20", want: nil,
 		},
 	}
-	for _, tc := range testCases {
-		got := VulnsForPackage(ctx, tc.mod, tc.version, tc.pkg, vc)
-		if diff := cmp.Diff(tc.want, got); diff != "" {
-			t.Errorf("VulnsForPackage(mod=%q, v=%q, pkg=%q) = %+v, want %+v, diff (-want, +got):\n%s", tc.mod, tc.version, tc.pkg, got, tc.want, diff)
+	test := func(t *testing.T, c *Client) {
+		for _, tc := range testCases {
+			{
+				t.Run(tc.name, func(t *testing.T) {
+					got := VulnsForPackage(ctx, tc.mod, tc.version, tc.pkg, c)
+					if diff := cmp.Diff(tc.want, got); diff != "" {
+						t.Errorf("VulnsForPackage(mod=%q, v=%q, pkg=%q) = %+v, want %+v, diff (-want, +got):\n%s", tc.mod, tc.version, tc.pkg, got, tc.want, diff)
+					}
+				})
+			}
 		}
 	}
+	t.Run("legacy", func(t *testing.T) {
+		test(t, &Client{legacy: legacyClient})
+	})
+
+	t.Run("v1", func(t *testing.T) {
+		test(t, &Client{v1: v1Client})
+	})
 }
 
 func TestCollectRangePairs(t *testing.T) {
