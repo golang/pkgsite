@@ -130,6 +130,14 @@ th.UnitDirectories-toggleCell {
   padding: 0.5rem 1rem;
 }
 
+.UnitDirectories-internal {
+  display: none;
+}
+
+.UnitDirectories-showInternal .UnitDirectories-internal {
+  display: table-row;
+}
+
 .UnitDirectories-mobileSynopsis {
   display: none;
   line-height: 1.25rem;
@@ -147,20 +155,25 @@ th.UnitDirectories-toggleCell {
   }
 }
 
-.UnitDirectories-expandButton {
+.UnitDirectories-toggles {
   position: relative;
 }
 
-.UnitDirectories-expandButton button {
+.UnitDirectories-toggleButtons {
+  bottom: 1rem;
+  display: flex;
+  gap: 1rem;
+  position: absolute;
+  right: 0;
+}
+
+.UnitDirectories-toggleButtons button {
   background-color: transparent;
   border: none;
-  bottom: 1rem;
   color: var(--color-brand-primary);
   cursor: pointer;
   display: none;
   font-size: 0.875rem;
-  position: absolute;
-  right: 0;
   text-decoration: none;
 }
 

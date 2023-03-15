@@ -11,11 +11,17 @@
       Directories
       <a class="UnitDirectories-idLink" href="#section-directories">¶</a>
     </h2>
-    <div class="UnitDirectories-expandButton">
-      <button class="js-expandAllDirectories" data-test-id="directories-toggle"
-          data-gtmc="directories button" aria-label="Expand All Directories">
-        Expand all
-      </button>
+    <div class="UnitDirectories-toggles">
+      <div class="UnitDirectories-toggleButtons">
+        <button class="js-showInternalDirectories" data-test-id="internal-directories-toggle"
+            data-gtmc="directories button" aria-label="Show Internal Directories">
+          Show internal
+        </button>
+        <button class="js-expandAllDirectories" data-test-id="directories-toggle"
+            data-gtmc="directories button" aria-label="Expand All Directories">
+          Expand all
+        </button>
+      </div>
     </div>
     <table class="UnitDirectories-table UnitDirectories-table--tree js-expandableTable"
           data-test-id="UnitDirectories-table">
@@ -23,11 +29,8 @@
         <th>Path</th>
         <th class="UnitDirectories-desktopSynopsis">Synopsis</th>
       </tr>
-      {{range $dir := .Directories.External}}
+      {{range $dir := .Directories}}
           {{template "directory" .}}
-      {{end}}
-      {{if .Directories.Internal}}
-          {{template "directory" .Directories.Internal}}
       {{end}}
     </table>
   </div>
@@ -35,7 +38,8 @@
 
 {{define "directory"}}
   {{$prefix := .Prefix}}
-  <tr{{if .Subdirectories}} data-aria-controls="{{range .Subdirectories}}{{$prefix}}-{{.Suffix}} {{end}}"{{end}}>
+  <tr{{if .Subdirectories}} data-aria-controls="{{range .Subdirectories}}{{$prefix}}-{{.Suffix}} {{end}}"{{end}}
+      class="{{if eq $prefix "internal"}}UnitDirectories-internal{{end}}">
     <td data-id="{{$prefix}}" data-aria-owns="{{range .Subdirectories}}{{$prefix}}-{{.Suffix}} {{end}}">
       <div class="UnitDirectories-pathCell">
         <div>
@@ -65,7 +69,7 @@
     {{- end -}}
   </tr>
   {{- range .Subdirectories -}}
-    <tr data-id="{{$prefix}}-{{.Suffix}}">
+    <tr data-id="{{$prefix}}-{{.Suffix}}" class="{{if .IsInternal}}UnitDirectories-internal{{end}}">
       <td>
         <div class="UnitDirectories-subdirectory">
           <span>

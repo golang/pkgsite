@@ -25,7 +25,7 @@ import (
 type MainDetails struct {
 	// Directories are packages and nested modules relative to the path for the
 	// unit.
-	Directories *Directories
+	Directories []*Directory
 
 	// Licenses contains license metadata used in the header.
 	Licenses []LicenseMetadata

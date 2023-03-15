@@ -15,6 +15,25 @@ if (directories) {
   if (window.location.search.includes('expand-directories')) {
     table.expandAllItems();
   }
+
+  const internalToggle = document.querySelector<HTMLButtonElement>('.js-showInternalDirectories');
+  if (internalToggle) {
+    if (document.querySelector('.UnitDirectories-internal')) {
+      internalToggle.style.display = 'block';
+    }
+    internalToggle.addEventListener('click', () => {
+      if (directories.classList.contains('UnitDirectories-showInternal')) {
+        directories.classList.remove('UnitDirectories-showInternal');
+        internalToggle.innerText = 'Show internal';
+      } else {
+        directories.classList.add('UnitDirectories-showInternal');
+        internalToggle.innerText = 'Hide internal';
+      }
+    });
+  }
+  if (document.querySelector('html[data-local="true"]')) {
+    internalToggle?.click();
+  }
 }
 
 const treeEl = document.querySelector<HTMLElement>('.js-tree');

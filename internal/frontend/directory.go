@@ -14,16 +14,6 @@ import (
 	"golang.org/x/pkgsite/internal/version"
 )
 
-// Directories is the directory listing for all directories in the unit,
-// which is listed in the directories section of the main page.
-type Directories struct {
-	// External contains all of the non-internal directories for the unit.
-	External []*Directory
-
-	// Internal contains the top level internal directory for the unit, if any.
-	Internal *Directory
-}
-
 // Directory is either a nested module or subdirectory of a unit, organized in
 // a two level tree structure. This content is used in the
 // directories section of the unit page.
@@ -42,15 +32,16 @@ type Directory struct {
 // relative to the path of a given unit. This content is used in the
 // Directories section of the unit page.
 type DirectoryInfo struct {
-	Suffix   string
-	URL      string
-	Synopsis string
-	IsModule bool
+	Suffix     string
+	URL        string
+	Synopsis   string
+	IsModule   bool
+	IsInternal bool
 }
 
 // unitDirectories zips the subdirectories and nested modules together in a two
 // level tree hierarchy.
-func unitDirectories(directories []*DirectoryInfo) *Directories {
+func unitDirectories(directories []*DirectoryInfo) []*Directory {
 	if len(directories) == 0 {
 		return nil
 	}
@@ -64,9 +55,8 @@ func unitDirectories(directories []*DirectoryInfo) *Directories {
 		// Skip internal directories that are not in the top level internal
 		// directory. For example, foo/internal and foo/internal/bar should
 		// be skipped, but internal/foo should be included.
-		if prefix != "internal" && (strings.HasSuffix(d.Suffix, "/internal") ||
-			strings.Contains(d.Suffix, "/internal/")) {
-			continue
+		if strings.HasSuffix(d.Suffix, "/internal") || strings.Contains(d.Suffix, "/internal/") {
+			d.IsInternal = true
 		}
 		if _, ok := mappedDirs[prefix]; !ok {
 			mappedDirs[prefix] = &Directory{Prefix: prefix}
@@ -79,18 +69,14 @@ func unitDirectories(directories []*DirectoryInfo) *Directories {
 		}
 	}
 
-	section := &Directories{}
-	for prefix, dir := range mappedDirs {
-		if prefix == "internal" {
-			section.Internal = dir
-		} else {
-			section.External = append(section.External, dir)
-		}
+	var dirs []*Directory
+	for _, dir := range mappedDirs {
+		dirs = append(dirs, dir)
 	}
-	sort.Slice(section.External, func(i, j int) bool {
-		return section.External[i].Prefix < section.External[j].Prefix
+	sort.Slice(dirs, func(i, j int) bool {
+		return dirs[i].Prefix < dirs[j].Prefix
 	})
-	return section
+	return dirs
 }
 
 func getNestedModules(ctx context.Context, ds internal.DataSource, um *internal.UnitMeta, sds []*DirectoryInfo) ([]*DirectoryInfo, error) {

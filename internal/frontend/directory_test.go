@@ -138,39 +138,40 @@ func TestUnitDirectories(t *testing.T) {
 		{Suffix: "pubsub/internal", IsModule: true},
 	}
 	got := unitDirectories(append(subdirectories, nestedModules...))
-	want := &Directories{
-		External: []*Directory{
-			{
-				Prefix: "accessapproval",
-				Root:   &DirectoryInfo{Suffix: "accessapproval"},
-				Subdirectories: []*DirectoryInfo{
-					{Suffix: "cgi"},
-					{Suffix: "cookiejar"},
-				},
-			},
-			{
-				Prefix: "fgci",
-				Root:   &DirectoryInfo{Suffix: "fgci"},
-			},
-			{
-				Prefix: "httptest",
-				Root:   &DirectoryInfo{Suffix: "httptest", IsModule: true},
-			},
-			{
-				Prefix: "httptrace",
-				Root:   &DirectoryInfo{Suffix: "httptrace"},
-			},
-			{
-				Prefix: "zoltan",
-				Root:   &DirectoryInfo{Suffix: "zoltan"},
+	want := []*Directory{
+		{
+			Prefix: "accessapproval",
+			Root:   &DirectoryInfo{Suffix: "accessapproval"},
+			Subdirectories: []*DirectoryInfo{
+				{Suffix: "internal", IsInternal: true},
+				{Suffix: "cgi"},
+				{Suffix: "cookiejar"},
+				{Suffix: "cookiejar/internal", IsInternal: true},
 			},
 		},
-		Internal: &Directory{
-			Prefix: "internal",
-			Subdirectories: []*DirectoryInfo{
-				{Suffix: "bytesconv"},
-				{Suffix: "json"},
-			},
+		{
+			Prefix: "fgci",
+			Root:   &DirectoryInfo{Suffix: "fgci"},
+		},
+		{
+			Prefix: "httptest",
+			Root:   &DirectoryInfo{Suffix: "httptest", IsModule: true},
+		},
+		{
+			Prefix: "httptrace",
+			Root:   &DirectoryInfo{Suffix: "httptrace"},
+		},
+		{
+			Prefix:         "internal",
+			Subdirectories: []*DirectoryInfo{{Suffix: "bytesconv"}, {Suffix: "json"}},
+		},
+		{
+			Prefix:         "pubsub",
+			Subdirectories: []*DirectoryInfo{{Suffix: "internal", IsModule: true, IsInternal: true}},
+		},
+		{
+			Prefix: "zoltan",
+			Root:   &DirectoryInfo{Suffix: "zoltan"},
 		},
 	}
 
