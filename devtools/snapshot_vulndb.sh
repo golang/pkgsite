@@ -6,8 +6,8 @@
 
 source devtools/lib.sh || { echo "Are you at repo root?"; exit 1; }
 
-# Script for copying the latest data from vuln.go.dev for the tests in
-# tests/screentest/testcases.ci.txt.
+# Script for copying the latest data from vuln.go.dev (in the legacy format)
+# for the tests in tests/screentest/testcases.ci.txt.
 
 origin="https://vuln.go.dev"
 
