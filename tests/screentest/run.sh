@@ -126,7 +126,7 @@ main() {
     export GO_DISCOVERY_CONFIG_DYNAMIC="tests/screentest/config.yaml"
     export GO_DISCOVERY_DATABASE_NAME="discovery_e2e_test"
     export GO_DISCOVERY_SEED_DB_FILE="tests/screentest/seed.txt"
-    export GO_DISCOVERY_VULN_DB="file:///pkgsite/tests/screentest/testdata/vulndb"
+    export GO_DISCOVERY_VULN_DB="file:///pkgsite/tests/screentest/testdata/vulndb-v1"
     dcompose run --rm seeddb
     dcompose up --detach chromedp
     dcompose up --detach --force-recreate frontend
