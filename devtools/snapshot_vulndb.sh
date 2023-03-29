@@ -20,6 +20,12 @@ copyFiles=(
   "ID/GO-2022-0463.json"
   "ID/GO-2022-0569.json"
   "ID/GO-2022-0572.json"
+  "ID/GO-2021-0068.json"
+  "ID/GO-2022-0475.json"
+  "ID/GO-2022-0476.json"
+  "ID/GO-2021-0240.json"
+  "ID/GO-2021-0264.json"
+  "ID/GO-2022-0273.json"
   "aliases.json"
   "index.json"
   "stdlib.json"
@@ -34,4 +40,4 @@ done
 
 index="$OUT_DIR/ID/index.json"
 mkdir -p "$(dirname $index)"
-echo '["GO-2021-0159","GO-2022-0229","GO-2022-0463","GO-2022-0569","GO-2022-0572"]' > $index
+echo '["GO-2021-0159","GO-2022-0229","GO-2022-0463","GO-2022-0569","GO-2022-0572","GO-2021-0068","GO-2022-0475","GO-2022-0476","GO-2021-0240","GO-2021-0264","GO-2022-0273"]' > $index
