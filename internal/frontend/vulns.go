@@ -88,7 +88,7 @@ func (s *Server) serveVuln(w http.ResponseWriter, r *http.Request, _ internal.Da
 		s.servePage(r.Context(), w, "vuln/list", vulnListPage)
 	default: // the path should be "/<ID>", e.g. "/GO-2021-0001".
 		id := path[1:]
-		if !goVulnIDRegexp.MatchString(id) {
+		if !vuln.IsGoID(id) {
 			if r.URL.Query().Has("q") {
 				return &serverError{status: derrors.ToStatus(derrors.NotFound)}
 			}

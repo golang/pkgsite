@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"net/http"
 	"path"
-	"regexp"
 	"sort"
 	"strings"
 	"sync"
@@ -337,9 +336,6 @@ func newSearchResult(r *postgres.SearchResult, searchSymbols bool, pr *message.P
 	return sr
 }
 
-// A regexp that matches Go vuln IDs.
-var goVulnIDRegexp = regexp.MustCompile("^GO-[0-9]{4}-[0-9]{4}$")
-
 // searchRequestRedirectPath returns the path that a search request should be
 // redirected to, or the empty string if there is no such path.
 //
@@ -355,7 +351,7 @@ func searchRequestRedirectPath(ctx context.Context, ds internal.DataSource, quer
 	if urlSchemeIdx > -1 {
 		query = query[urlSchemeIdx+3:]
 	}
-	if vulnSupport && goVulnIDRegexp.MatchString(query) {
+	if vulnSupport && vuln.IsGoID(query) {
 		return fmt.Sprintf("/vuln/%s?q", query)
 	}
 	requestedPath := path.Clean(query)
@@ -405,7 +401,7 @@ EntryLoop:
 func searchVulnAlias(ctx context.Context, mode, cq string, vc *vuln.Client) (_ *searchAction, err error) {
 	defer derrors.Wrap(&err, "searchVulnAlias(%q, %q)", mode, cq)
 
-	if mode != searchModeVuln || !isVulnAlias(cq) || vc == nil {
+	if mode != searchModeVuln || !vuln.IsAlias(cq) || vc == nil {
 		return nil, nil
 	}
 	aliasEntries, err := vc.ByAlias(ctx, cq)
@@ -430,16 +426,6 @@ func searchVulnAlias(ctx context.Context, mode, cq string, vc *vuln.Client) (_ *
 	}
 }
 
-// Regexps that match aliases for Go vuln.
-var (
-	cveRegexp  = regexp.MustCompile("^CVE-[0-9]{4}-[0-9]+$")
-	ghsaRegexp = regexp.MustCompile("^GHSA-.{4}-.{4}-.{4}$")
-)
-
-func isVulnAlias(s string) bool {
-	return cveRegexp.MatchString(s) || ghsaRegexp.MatchString(s)
-}
-
 // searchMode reports whether the search performed should be in package or
 // symbol search mode.
 func searchMode(r *http.Request) string {
@@ -455,7 +441,7 @@ func searchMode(r *http.Request) string {
 	case searchModeVuln:
 		return searchModeVuln
 	default:
-		if isVulnAlias(q) {
+		if vuln.IsAlias(q) {
 			return searchModeVuln
 		}
 		if shouldDefaultToSymbolSearch(q) {
