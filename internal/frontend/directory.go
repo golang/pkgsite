@@ -52,10 +52,11 @@ func unitDirectories(directories []*DirectoryInfo) []*Directory {
 	for _, d := range directories {
 		prefix, _, _ := strings.Cut(d.Suffix, "/")
 
-		// Skip internal directories that are not in the top level internal
-		// directory. For example, foo/internal and foo/internal/bar should
-		// be skipped, but internal/foo should be included.
-		if strings.HasSuffix(d.Suffix, "/internal") || strings.Contains(d.Suffix, "/internal/") {
+		// Mark internal directories as internal. They are hidden by default and made visible
+		// by clicking a toggle button.
+		if strings.HasPrefix(d.Suffix, "internal/") ||
+			strings.HasSuffix(d.Suffix, "/internal") ||
+			strings.Contains(d.Suffix, "/internal/") {
 			d.IsInternal = true
 		}
 		if _, ok := mappedDirs[prefix]; !ok {

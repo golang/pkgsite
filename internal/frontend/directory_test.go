@@ -163,7 +163,7 @@ func TestUnitDirectories(t *testing.T) {
 		},
 		{
 			Prefix:         "internal",
-			Subdirectories: []*DirectoryInfo{{Suffix: "bytesconv"}, {Suffix: "json"}},
+			Subdirectories: []*DirectoryInfo{{Suffix: "bytesconv", IsInternal: true}, {Suffix: "json", IsInternal: true}},
 		},
 		{
 			Prefix:         "pubsub",
