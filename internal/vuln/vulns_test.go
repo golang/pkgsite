@@ -79,7 +79,7 @@ func TestVulnsForPackage(t *testing.T) {
 	}
 
 	legacyClient := newTestLegacyClient([]*osv.Entry{&e, &e2, &stdlib})
-	v1Client, err := newTestV1Client("testdata/db2.txtar")
+	v1Client, err := newTestClientFromTxtar("testdata/db2.txtar")
 	if err != nil {
 		t.Fatal(err)
 	}

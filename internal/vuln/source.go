@@ -7,12 +7,16 @@ package vuln
 import (
 	"compress/gzip"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
 	"os"
 	"path/filepath"
+	"sort"
+
+	"golang.org/x/vuln/osv"
 )
 
 type source interface {
@@ -94,6 +98,92 @@ func (db *localSource) get(ctx context.Context, endpoint string) ([]byte, error)
 	return os.ReadFile(filepath.Join(db.dir, endpoint+".json"))
 }
 
+// Create a new in-memory source for testing.
+// Adapted from x/vulndb/internal/database.go.
+func newInMemorySource(entries []*osv.Entry) (*inMemorySource, error) {
+	data := make(map[string][]byte)
+	db := DBMeta{}
+	modulesMap := make(map[string]*ModuleMeta)
+	vulnsMap := make(map[string]*VulnMeta)
+	for _, entry := range entries {
+		if entry.ID == "" {
+			return nil, fmt.Errorf("entry %v has no ID", entry)
+		}
+		if _, ok := vulnsMap[entry.ID]; ok {
+			return nil, fmt.Errorf("id %q appears twice", entry.ID)
+		}
+		if entry.Modified.After(db.Modified) {
+			db.Modified = entry.Modified
+		}
+		for _, affected := range entry.Affected {
+			modulePath := affected.Package.Name
+			if _, ok := modulesMap[modulePath]; !ok {
+				modulesMap[modulePath] = &ModuleMeta{
+					Path:  modulePath,
+					Vulns: []ModuleVuln{},
+				}
+			}
+			module := modulesMap[modulePath]
+			module.Vulns = append(module.Vulns, ModuleVuln{
+				ID:       entry.ID,
+				Modified: entry.Modified,
+				Fixed:    latestFixedVersion(affected.Ranges),
+			})
+		}
+		vulnsMap[entry.ID] = &VulnMeta{
+			ID:       entry.ID,
+			Modified: entry.Modified,
+			Aliases:  entry.Aliases,
+		}
+		b, err := json.Marshal(entry)
+		if err != nil {
+			return nil, err
+		}
+		data[idDir+"/"+entry.ID] = b
+	}
+
+	b, err := json.Marshal(db)
+	if err != nil {
+		return nil, err
+	}
+	data[dbEndpoint] = b
+
+	// Add the modules endpoint.
+	modules := make([]*ModuleMeta, 0, len(modulesMap))
+	for _, module := range modulesMap {
+		modules = append(modules, module)
+	}
+	sort.SliceStable(modules, func(i, j int) bool {
+		return modules[i].Path < modules[j].Path
+	})
+	for _, module := range modules {
+		sort.SliceStable(module.Vulns, func(i, j int) bool {
+			return module.Vulns[i].ID < module.Vulns[j].ID
+		})
+	}
+	b, err = json.Marshal(modules)
+	if err != nil {
+		return nil, err
+	}
+	data[modulesEndpoint] = b
+
+	// Add the vulns endpoint.
+	vulns := make([]*VulnMeta, 0, len(vulnsMap))
+	for _, vuln := range vulnsMap {
+		vulns = append(vulns, vuln)
+	}
+	sort.SliceStable(vulns, func(i, j int) bool {
+		return vulns[i].ID < vulns[j].ID
+	})
+	b, err = json.Marshal(vulns)
+	if err != nil {
+		return nil, err
+	}
+	data[vulnsEndpoint] = b
+
+	return &inMemorySource{data: data}, nil
+}
+
 // inMemorySource reads databases from an in-memory map.
 // Intended for use in unit tests.
 type inMemorySource struct {
@@ -106,4 +196,19 @@ func (db *inMemorySource) get(ctx context.Context, endpoint string) ([]byte, err
 		return nil, fmt.Errorf("no data found at endpoint %q", endpoint)
 	}
 	return b, nil
+}
+
+func latestFixedVersion(ranges []osv.AffectsRange) string {
+	var latestFixed string
+	for _, r := range ranges {
+		if r.Type == "SEMVER" {
+			for _, e := range r.Events {
+				fixed := e.Fixed
+				if fixed != "" && less(latestFixed, fixed) {
+					latestFixed = fixed
+				}
+			}
+		}
+	}
+	return latestFixed
 }

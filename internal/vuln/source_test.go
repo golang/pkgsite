@@ -13,6 +13,8 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"golang.org/x/vuln/osv"
 )
 
 func TestNewSource(t *testing.T) {
@@ -107,6 +109,34 @@ func TestInMemorySource(t *testing.T) {
 	}
 	if string(got) != string(want) {
 		t.Errorf("inMemorySource.get = %s, want %s", got, want)
+	}
+}
+
+func TestNewInMemorySource(t *testing.T) {
+	fromTxtar, err := newTestClientFromTxtar(dbTxtar)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	fromEntries, err := newInMemorySource([]*osv.Entry{&testOSV1, &testOSV2, &testOSV3})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	ctx := context.Background()
+	endpoints := []string{dbEndpoint, modulesEndpoint, vulnsEndpoint, idDir + "/" + testOSV1.ID, idDir + "/" + testOSV2.ID, idDir + "/" + testOSV3.ID}
+	for _, endpoint := range endpoints {
+		got, err := fromEntries.get(ctx, endpoint)
+		if err != nil {
+			t.Fatal(err)
+		}
+		want, err := fromTxtar.src.get(ctx, endpoint)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if string(got) != string(want) {
+			t.Errorf("newInMemorySource().get(%q) = %s, want %s", endpoint, got, want)
+		}
 	}
 }
 

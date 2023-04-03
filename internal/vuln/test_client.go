@@ -5,27 +5,28 @@
 package vuln
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 
 	"golang.org/x/tools/txtar"
 	vulnc "golang.org/x/vuln/client"
 	"golang.org/x/vuln/osv"
 )
 
-// NewTestClient creates an in-memory client for use in tests,
-// It's logic is different from the real client, so it should not be used to
-// test the client itself, but can be used to test code that depends on the
-// client.
-func NewTestClient(entries []*osv.Entry) *Client {
-	return &Client{legacy: newTestLegacyClient(entries)}
+// NewTestClient creates an in-memory client for use in tests.
+func NewTestClient(entries []*osv.Entry) (*Client, error) {
+	inMemory, err := newInMemorySource(entries)
+	if err != nil {
+		return nil, err
+	}
+	return &Client{legacy: newTestLegacyClient(entries), v1: &client{inMemory}}, nil
 }
 
-// newTestV1Client creates an in-memory client for use in tests.
-// It uses all the logic of the real v1 client, except that it reads
-// raw database data from the given txtar file instead of making HTTP
-// requests.
-// It can be used to test core functionality of the v1 client.
-func newTestV1Client(txtarFile string) (*client, error) {
+// newTestClientFromTxtar creates an in-memory client for use in tests.
+// It reads test data from a txtar file which must follow the
+// v1 database schema.
+func newTestClientFromTxtar(txtarFile string) (*client, error) {
 	data := make(map[string][]byte)
 
 	ar, err := txtar.ParseFile(txtarFile)
@@ -34,10 +35,22 @@ func newTestV1Client(txtarFile string) (*client, error) {
 	}
 
 	for _, f := range ar.Files {
-		data[f.Name] = f.Data
+		fdata, err := removeWhitespace(f.Data)
+		if err != nil {
+			return nil, err
+		}
+		data[f.Name] = fdata
 	}
 
 	return &client{&inMemorySource{data: data}}, nil
+}
+
+func removeWhitespace(data []byte) ([]byte, error) {
+	var b bytes.Buffer
+	if err := json.Compact(&b, data); err != nil {
+		return nil, err
+	}
+	return b.Bytes(), nil
 }
 
 func newTestLegacyClient(entries []*osv.Entry) *legacyClient {

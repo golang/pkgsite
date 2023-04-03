@@ -18,6 +18,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/fetchdatasource"
 	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/postgres"
@@ -39,7 +40,10 @@ func TestDetermineSearchAction(t *testing.T) {
 	for _, v := range modules {
 		postgres.MustInsertModule(ctx, t, testDB, v)
 	}
-	vc := vuln.NewTestClient(testEntries)
+	vc, err := vuln.NewTestClient(testEntries)
+	if err != nil {
+		t.Fatal(err)
+	}
 	for _, test := range []struct {
 		name         string
 		method       string
@@ -225,7 +229,8 @@ func TestSearchQueryAndMode(t *testing.T) {
 }
 
 func TestFetchSearchPage(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	ctx := experiment.NewContext(context.Background(), internal.ExperimentVulndbV1)
+	ctx, cancel := context.WithTimeout(ctx, testTimeout)
 	defer cancel()
 	defer postgres.ResetTestDB(testDB, t)
 
@@ -311,9 +316,12 @@ func TestFetchSearchPage(t *testing.T) {
 				}},
 			}},
 		}}
-
-		vc = vuln.NewTestClient(vulnEntries)
 	)
+
+	vc, err := vuln.NewTestClient(vulnEntries)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	for _, m := range []*internal.Module{moduleFoo, moduleBar} {
 		postgres.MustInsertModule(ctx, t, testDB, m)
@@ -547,7 +555,10 @@ func TestSearchRequestRedirectPath(t *testing.T) {
 }
 
 func TestSearchVulnAlias(t *testing.T) {
-	vc := vuln.NewTestClient(testEntries)
+	vc, err := vuln.NewTestClient(testEntries)
+	if err != nil {
+		t.Fatal(err)
+	}
 	for _, test := range []struct {
 		name     string
 		mode     string
@@ -619,7 +630,10 @@ func TestSearchVulnAlias(t *testing.T) {
 }
 
 func TestSearchVulnModulePath(t *testing.T) {
-	vc := vuln.NewTestClient(testEntries)
+	vc, err := vuln.NewTestClient(testEntries)
+	if err != nil {
+		t.Fatal(err)
+	}
 	for _, test := range []struct {
 		name     string
 		mode     string

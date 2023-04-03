@@ -6,6 +6,20 @@ package vuln
 
 import "time"
 
+var (
+	idDir           = "ID"
+	dbEndpoint      = "index/db"
+	modulesEndpoint = "index/modules"
+	vulnsEndpoint   = "index/vulns"
+)
+
+// DBMeta contains metadata about the database itself.
+type DBMeta struct {
+	// Modified is the time the database was last modified, calculated
+	// as the most recent time any single OSV entry was modified.
+	Modified time.Time `json:"modified"`
+}
+
 // ModuleMeta contains metadata about a Go module that has one
 // or more vulnerabilities in the database.
 //

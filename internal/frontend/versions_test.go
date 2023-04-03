@@ -10,6 +10,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/testing/sample"
@@ -91,6 +92,7 @@ func TestFetchPackageVersionsDetails(t *testing.T) {
 
 	vulnFixedVersion := "1.2.3"
 	vulnEntry := &osv.Entry{
+		ID:      "GO-1999-0001",
 		Details: "vuln",
 		Affected: []osv.Affected{{
 			Package: osv.Package{
@@ -107,7 +109,10 @@ func TestFetchPackageVersionsDetails(t *testing.T) {
 			},
 		}},
 	}
-	vc := vuln.NewTestClient([]*osv.Entry{vulnEntry})
+	vc, err := vuln.NewTestClient([]*osv.Entry{vulnEntry})
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	for _, tc := range []struct {
 		name        string
@@ -146,6 +151,7 @@ func TestFetchPackageVersionsDetails(t *testing.T) {
 					func() *VersionList {
 						vl := makeList(v1Path, modulePath1, "v1", []string{"v1.3.0", "v1.2.3", "v1.2.1"}, false)
 						vl.Versions[2].Vulns = []vuln.Vuln{{
+							ID:      vulnEntry.ID,
 							Details: vulnEntry.Details,
 						}}
 						return vl
@@ -188,7 +194,8 @@ func TestFetchPackageVersionsDetails(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			ctx, cancel := context.WithTimeout(context.Background(), testTimeout*2)
+			ctx := experiment.NewContext(context.Background(), internal.ExperimentVulndbV1)
+			ctx, cancel := context.WithTimeout(ctx, testTimeout*2)
 			defer cancel()
 			defer postgres.ResetTestDB(testDB, t)
 

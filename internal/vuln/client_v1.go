@@ -234,12 +234,6 @@ func newStreamDecoder(b []byte) (*json.Decoder, error) {
 	return dec, nil
 }
 
-var (
-	idDir           = "ID"
-	modulesEndpoint = "index/modules"
-	vulnsEndpoint   = "index/vulns"
-)
-
 func (c *client) modules(ctx context.Context) ([]byte, error) {
 	return c.src.get(ctx, modulesEndpoint)
 }

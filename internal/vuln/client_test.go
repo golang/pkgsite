@@ -341,7 +341,7 @@ func TestIDs(t *testing.T) {
 // Test that Client can pick the right underlying client, based
 // on whether the v1 experiment is active.
 func TestCli(t *testing.T) {
-	v1, err := newTestV1Client(dbTxtar)
+	v1, err := newTestClientFromTxtar(dbTxtar)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -396,7 +396,7 @@ func TestCli(t *testing.T) {
 
 // Run the test for both the v1 and legacy clients.
 func runClientTest(t *testing.T, test func(*testing.T, cli)) {
-	v1, err := newTestV1Client(dbTxtar)
+	v1, err := newTestClientFromTxtar(dbTxtar)
 	if err != nil {
 		t.Fatal(err)
 	}
