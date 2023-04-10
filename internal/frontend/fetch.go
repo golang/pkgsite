@@ -453,6 +453,7 @@ func checkForPath(ctx context.Context, db *postgres.DB,
 		// that is complete.
 		if fr.status >= derrors.ToStatus(derrors.ReprocessStatusOK) {
 			fr.status = statusNotFoundInVersionMap
+			return fr
 		}
 		// All remaining non-200 statuses will be in the 40x range.
 		// In that case, just return a not found error.
