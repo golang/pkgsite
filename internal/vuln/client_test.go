@@ -5,14 +5,15 @@
 package vuln
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"reflect"
 	"strings"
 	"testing"
 	"time"
 
-	"golang.org/x/pkgsite/internal"
-	"golang.org/x/pkgsite/internal/experiment"
+	"golang.org/x/tools/txtar"
 	"golang.org/x/vuln/osv"
 )
 
@@ -113,131 +114,134 @@ var (
 )
 
 func TestByPackage(t *testing.T) {
-	runClientTest(t, func(t *testing.T, c cli) {
-		tests := []struct {
-			name string
-			req  *PackageRequest
-			want []*osv.Entry
-		}{
-			{
-				name: "match on package",
-				req: &PackageRequest{
-					Module:  "example.com/module",
-					Package: "example.com/module/package2",
-				},
-				want: []*osv.Entry{&testOSV3},
-			},
-			{
-				// package affects OSV2 and OSV3, but version
-				// only applies to OSV2
-				name: "match on package version",
-				req: &PackageRequest{
-					Module:  "example.com/module",
-					Package: "example.com/module/package",
-					Version: "1.1.0",
-				},
-				want: []*osv.Entry{&testOSV2},
-			},
-			{
-				// when the package is not specified, only the
-				// module is used.
-				name: "match on module",
-				req: &PackageRequest{
-					Module:  "example.com/module",
-					Package: "",
-					Version: "1.0.0",
-				},
-				want: []*osv.Entry{&testOSV2, &testOSV3},
-			},
-			{
-				name: "stdlib",
-				req: &PackageRequest{
-					Module:  "stdlib",
-					Package: "package",
-					Version: "1.0.0",
-				},
-				want: []*osv.Entry{&testOSV1},
-			},
-			{
-				// when no version is specified, all entries for the module
-				// should show up
-				name: "no version",
-				req: &PackageRequest{
-					Module: "stdlib",
-				},
-				want: []*osv.Entry{&testOSV1},
-			},
-			{
-				name: "unaffected version",
-				req: &PackageRequest{
-					Module:  "stdlib",
-					Version: "3.0.0",
-				},
-				want: nil,
-			},
-			{
-				name: "v prefix ok - in range",
-				req: &PackageRequest{
-					Module:  "stdlib",
-					Version: "v1.0.0",
-				},
-				want: []*osv.Entry{&testOSV1},
-			},
-			{
-				name: "v prefix ok - out of range",
-				req: &PackageRequest{
-					Module:  "stdlib",
-					Version: "v3.0.0",
-				},
-				want: nil,
-			},
-			{
-				name: "go prefix ok - in range",
-				req: &PackageRequest{
-					Module:  "stdlib",
-					Version: "go1.0.0",
-				},
-				want: []*osv.Entry{&testOSV1},
-			},
-			{
-				name: "go prefix ok - out of range",
-				req: &PackageRequest{
-					Module:  "stdlib",
-					Version: "go3.0.0",
-				},
-				want: nil,
-			},
-			{
-				name: "go prefix, no patch version - in range",
-				req: &PackageRequest{
-					Module:  "stdlib",
-					Version: "go1.2",
-				},
-				want: []*osv.Entry{&testOSV1},
-			},
-			{
-				name: "go prefix, no patch version - out of range",
-				req: &PackageRequest{
-					Module:  "stdlib",
-					Version: "go1.3",
-				},
-				want: nil,
-			},
-		}
+	c, err := newTestClientFromTxtar(dbTxtar)
+	if err != nil {
+		t.Fatal(err)
+	}
 
-		for _, test := range tests {
-			t.Run(test.name, func(t *testing.T) {
-				ctx := context.Background()
-				got, err := c.ByPackage(ctx, test.req)
-				if err != nil {
-					t.Fatal(err)
-				}
-				if !reflect.DeepEqual(got, test.want) {
-					t.Errorf("ByPackage(%s) = %s, want %s", test.req, ids(got), ids(test.want))
-				}
-			})
-		}
-	})
+	tests := []struct {
+		name string
+		req  *PackageRequest
+		want []*osv.Entry
+	}{
+		{
+			name: "match on package",
+			req: &PackageRequest{
+				Module:  "example.com/module",
+				Package: "example.com/module/package2",
+			},
+			want: []*osv.Entry{&testOSV3},
+		},
+		{
+			// package affects OSV2 and OSV3, but version
+			// only applies to OSV2
+			name: "match on package version",
+			req: &PackageRequest{
+				Module:  "example.com/module",
+				Package: "example.com/module/package",
+				Version: "1.1.0",
+			},
+			want: []*osv.Entry{&testOSV2},
+		},
+		{
+			// when the package is not specified, only the
+			// module is used.
+			name: "match on module",
+			req: &PackageRequest{
+				Module:  "example.com/module",
+				Package: "",
+				Version: "1.0.0",
+			},
+			want: []*osv.Entry{&testOSV2, &testOSV3},
+		},
+		{
+			name: "stdlib",
+			req: &PackageRequest{
+				Module:  "stdlib",
+				Package: "package",
+				Version: "1.0.0",
+			},
+			want: []*osv.Entry{&testOSV1},
+		},
+		{
+			// when no version is specified, all entries for the module
+			// should show up
+			name: "no version",
+			req: &PackageRequest{
+				Module: "stdlib",
+			},
+			want: []*osv.Entry{&testOSV1},
+		},
+		{
+			name: "unaffected version",
+			req: &PackageRequest{
+				Module:  "stdlib",
+				Version: "3.0.0",
+			},
+			want: nil,
+		},
+		{
+			name: "v prefix ok - in range",
+			req: &PackageRequest{
+				Module:  "stdlib",
+				Version: "v1.0.0",
+			},
+			want: []*osv.Entry{&testOSV1},
+		},
+		{
+			name: "v prefix ok - out of range",
+			req: &PackageRequest{
+				Module:  "stdlib",
+				Version: "v3.0.0",
+			},
+			want: nil,
+		},
+		{
+			name: "go prefix ok - in range",
+			req: &PackageRequest{
+				Module:  "stdlib",
+				Version: "go1.0.0",
+			},
+			want: []*osv.Entry{&testOSV1},
+		},
+		{
+			name: "go prefix ok - out of range",
+			req: &PackageRequest{
+				Module:  "stdlib",
+				Version: "go3.0.0",
+			},
+			want: nil,
+		},
+		{
+			name: "go prefix, no patch version - in range",
+			req: &PackageRequest{
+				Module:  "stdlib",
+				Version: "go1.2",
+			},
+			want: []*osv.Entry{&testOSV1},
+		},
+		{
+			name: "go prefix, no patch version - out of range",
+			req: &PackageRequest{
+				Module:  "stdlib",
+				Version: "go1.3",
+			},
+			want: nil,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			ctx := context.Background()
+			got, err := c.ByPackage(ctx, test.req)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if !reflect.DeepEqual(got, test.want) {
+				t.Errorf("ByPackage(%s) = %s, want %s", test.req, ids(got), ids(test.want))
+			}
+		})
+	}
 }
 
 func ids(entries []*osv.Entry) string {
@@ -249,165 +253,128 @@ func ids(entries []*osv.Entry) string {
 }
 
 func TestByAlias(t *testing.T) {
-	runClientTest(t, func(t *testing.T, c cli) {
-		tests := []struct {
-			name  string
-			alias string
-			want  []*osv.Entry
-		}{
-			{
-				name:  "CVE",
-				alias: "CVE-1999-1111",
-				want:  []*osv.Entry{&testOSV1},
-			},
-			{
-				name:  "GHSA",
-				alias: "GHSA-xxxx-yyyy-zzzz",
-				want:  []*osv.Entry{&testOSV3},
-			},
-			{
-				name:  "Not found",
-				alias: "CVE-0000-0000",
-				want:  nil,
-			},
-		}
+	c, err := newTestClientFromTxtar(dbTxtar)
+	if err != nil {
+		t.Fatal(err)
+	}
 
-		for _, test := range tests {
-			t.Run(test.name, func(t *testing.T) {
-				ctx := context.Background()
-				got, err := c.ByAlias(ctx, test.alias)
-				if err != nil {
-					t.Fatal(err)
-				}
-				if !reflect.DeepEqual(got, test.want) {
-					t.Errorf("ByAlias(%s) = %v, want %v", test.alias, got, test.want)
-				}
-			})
-		}
-	})
+	tests := []struct {
+		name  string
+		alias string
+		want  []*osv.Entry
+	}{
+		{
+			name:  "CVE",
+			alias: "CVE-1999-1111",
+			want:  []*osv.Entry{&testOSV1},
+		},
+		{
+			name:  "GHSA",
+			alias: "GHSA-xxxx-yyyy-zzzz",
+			want:  []*osv.Entry{&testOSV3},
+		},
+		{
+			name:  "Not found",
+			alias: "CVE-0000-0000",
+			want:  nil,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			ctx := context.Background()
+			got, err := c.ByAlias(ctx, test.alias)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if !reflect.DeepEqual(got, test.want) {
+				t.Errorf("ByAlias(%s) = %v, want %v", test.alias, got, test.want)
+			}
+		})
+	}
 }
 
 func TestByID(t *testing.T) {
-	runClientTest(t, func(t *testing.T, c cli) {
-		tests := []struct {
-			id   string
-			want *osv.Entry
-		}{
-			{
-				id:   testOSV1.ID,
-				want: &testOSV1,
-			},
-			{
-				id:   testOSV2.ID,
-				want: &testOSV2,
-			},
-			{
-				id:   "invalid",
-				want: nil,
-			},
-		}
+	c, err := newTestClientFromTxtar(dbTxtar)
+	if err != nil {
+		t.Fatal(err)
+	}
+	tests := []struct {
+		id   string
+		want *osv.Entry
+	}{
+		{
+			id:   testOSV1.ID,
+			want: &testOSV1,
+		},
+		{
+			id:   testOSV2.ID,
+			want: &testOSV2,
+		},
+		{
+			id:   "invalid",
+			want: nil,
+		},
+	}
 
-		for _, test := range tests {
-			t.Run(test.id, func(t *testing.T) {
-				ctx := context.Background()
-				got, err := c.ByID(ctx, test.id)
-				if err != nil {
-					t.Fatal(err)
-				}
-				if !reflect.DeepEqual(got, test.want) {
-					t.Errorf("ByID(%s) = %v, want %v", test.id, got, test.want)
-				}
-			})
-		}
-	})
+	for _, test := range tests {
+		t.Run(test.id, func(t *testing.T) {
+			ctx := context.Background()
+			got, err := c.ByID(ctx, test.id)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if !reflect.DeepEqual(got, test.want) {
+				t.Errorf("ByID(%s) = %v, want %v", test.id, got, test.want)
+			}
+		})
+	}
 }
 
 func TestIDs(t *testing.T) {
-	runClientTest(t, func(t *testing.T, c cli) {
-		ctx := context.Background()
-
-		got, err := c.IDs(ctx)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		want := []string{testOSV1.ID, testOSV2.ID, testOSV3.ID}
-		if !reflect.DeepEqual(got, want) {
-			t.Errorf("IDs = %v, want %v", got, want)
-		}
-	})
-}
-
-// Test that Client can pick the right underlying client, based
-// on whether the v1 experiment is active.
-func TestCli(t *testing.T) {
-	v1, err := newTestClientFromTxtar(dbTxtar)
+	ctx := context.Background()
+	c, err := newTestClientFromTxtar(dbTxtar)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	legacy := newTestLegacyClient([]*osv.Entry{&testOSV1, &testOSV2, &testOSV3})
-
-	t.Run("legacy preferred if experiment inactive", func(t *testing.T) {
-		ctx := context.Background()
-		c := Client{legacy: legacy, v1: v1}
-
-		cli, err := c.cli(ctx)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if _, ok := cli.(*legacyClient); !ok {
-			t.Errorf("Client.cli() = %s, want type *legacyClient", cli)
-		}
-	})
-
-	t.Run("v1 preferred if experiment active", func(t *testing.T) {
-		ctx := experiment.NewContext(context.Background(), internal.ExperimentVulndbV1)
-
-		c := Client{legacy: legacy, v1: v1}
-		cli, err := c.cli(ctx)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if _, ok := cli.(*client); !ok {
-			t.Errorf("Client.cli() = %s, want type *client", cli)
-		}
-	})
-
-	t.Run("error if legacy nil and experiment inactive", func(t *testing.T) {
-		ctx := context.Background()
-		c := Client{v1: v1}
-		cli, err := c.cli(ctx)
-		if err == nil {
-			t.Errorf("Client.cli() = %s, want error", cli)
-		}
-	})
-
-	t.Run("error if v1 nil and experiment active", func(t *testing.T) {
-		ctx := experiment.NewContext(context.Background(), internal.ExperimentVulndbV1)
-
-		c := Client{legacy: legacy}
-		cli, err := c.cli(ctx)
-		if err == nil {
-			t.Errorf("Client.cli() = %s, want error", cli)
-		}
-	})
-}
-
-// Run the test for both the v1 and legacy clients.
-func runClientTest(t *testing.T, test func(*testing.T, cli)) {
-	v1, err := newTestClientFromTxtar(dbTxtar)
+	got, err := c.IDs(ctx)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	legacy := newTestLegacyClient([]*osv.Entry{&testOSV1, &testOSV2, &testOSV3})
+	want := []string{testOSV1.ID, testOSV2.ID, testOSV3.ID}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("IDs = %v, want %v", got, want)
+	}
+}
 
-	t.Run("legacy", func(t *testing.T) {
-		test(t, legacy)
-	})
+// newTestClientFromTxtar creates an in-memory client for use in tests.
+// It reads test data from a txtar file which must follow the
+// v1 database schema.
+func newTestClientFromTxtar(txtarFile string) (*Client, error) {
+	data := make(map[string][]byte)
 
-	t.Run("v1", func(t *testing.T) {
-		test(t, v1)
-	})
+	ar, err := txtar.ParseFile(txtarFile)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, f := range ar.Files {
+		fdata, err := removeWhitespace(f.Data)
+		if err != nil {
+			return nil, err
+		}
+		data[f.Name] = fdata
+	}
+
+	return &Client{&inMemorySource{data: data}}, nil
+}
+
+func removeWhitespace(data []byte) ([]byte, error) {
+	var b bytes.Buffer
+	if err := json.Compact(&b, data); err != nil {
+		return nil, err
+	}
+	return b.Bytes(), nil
 }

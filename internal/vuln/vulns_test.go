@@ -11,8 +11,6 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	"golang.org/x/pkgsite/internal"
-	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/vuln/osv"
 )
 
@@ -78,8 +76,7 @@ func TestVulnsForPackage(t *testing.T) {
 		}},
 	}
 
-	legacyClient := newTestLegacyClient([]*osv.Entry{&e, &e2, &stdlib})
-	v1Client, err := newTestClientFromTxtar("testdata/db2.txtar")
+	client, err := NewInMemoryClient([]*osv.Entry{&e, &e2, &stdlib})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -152,26 +149,17 @@ func TestVulnsForPackage(t *testing.T) {
 			mod:  "std", pkg: "net/http", version: "go1.20", want: nil,
 		},
 	}
-	test := func(t *testing.T, ctx context.Context, c *Client) {
-		for _, tc := range testCases {
-			{
-				t.Run(tc.name, func(t *testing.T) {
-					got := VulnsForPackage(ctx, tc.mod, tc.version, tc.pkg, c)
-					if diff := cmp.Diff(tc.want, got); diff != "" {
-						t.Errorf("VulnsForPackage(mod=%q, v=%q, pkg=%q) = %+v, want %+v, diff (-want, +got):\n%s", tc.mod, tc.version, tc.pkg, got, tc.want, diff)
-					}
-				})
-			}
+	for _, tc := range testCases {
+		{
+			t.Run(tc.name, func(t *testing.T) {
+				ctx := context.Background()
+				got := VulnsForPackage(ctx, tc.mod, tc.version, tc.pkg, client)
+				if diff := cmp.Diff(tc.want, got); diff != "" {
+					t.Errorf("VulnsForPackage(mod=%q, v=%q, pkg=%q) = %+v, want %+v, diff (-want, +got):\n%s", tc.mod, tc.version, tc.pkg, got, tc.want, diff)
+				}
+			})
 		}
 	}
-	t.Run("legacy", func(t *testing.T) {
-		test(t, context.Background(), &Client{legacy: legacyClient})
-	})
-
-	t.Run("v1", func(t *testing.T) {
-		ctx := experiment.NewContext(context.Background(), internal.ExperimentVulndbV1)
-		test(t, ctx, &Client{v1: v1Client})
-	})
 }
 
 func TestCollectRangePairs(t *testing.T) {

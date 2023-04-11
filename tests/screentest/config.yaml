@@ -1,5 +1,3 @@
 experiments:
   - name: styleguide
     rollout: 0
-  - name: vulndb-v1
-    rollout: 100

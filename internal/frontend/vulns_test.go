@@ -10,8 +10,6 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	"golang.org/x/pkgsite/internal"
-	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/vuln"
 	"golang.org/x/vuln/osv"
 )
@@ -40,7 +38,7 @@ var testEntries = []*osv.Entry{
 }
 
 func TestNewVulnListPage(t *testing.T) {
-	ctx := experiment.NewContext(context.Background(), internal.ExperimentVulndbV1)
+	ctx := context.Background()
 	c, err := vuln.NewInMemoryClient(testEntries)
 	if err != nil {
 		t.Fatal(err)
@@ -61,7 +59,7 @@ func TestNewVulnListPage(t *testing.T) {
 }
 
 func TestNewVulnPage(t *testing.T) {
-	ctx := experiment.NewContext(context.Background(), internal.ExperimentVulndbV1)
+	ctx := context.Background()
 	c, err := vuln.NewInMemoryClient(testEntries)
 	if err != nil {
 		t.Fatal(err)
