@@ -107,14 +107,9 @@ func TestDetermineSearchAction(t *testing.T) {
 		// See testEntries in vulns_test.go to understand results.
 		// See TestSearchVulnAlias in this file for more tests.
 		{
-			name:         "vuln alias single",
+			name:         "vuln alias",
 			query:        "q=GHSA-aaaa-bbbb-cccc&m=vuln",
 			wantRedirect: "/vuln/GO-1990-01",
-		},
-		{
-			name:         "vuln alias multi",
-			query:        "q=CVE-2000-1&m=vuln",
-			wantTemplate: "vuln/list",
 		},
 		{
 			name:         "vuln module path",
@@ -596,15 +591,6 @@ func TestSearchVulnAlias(t *testing.T) {
 			mode:    searchModeVuln,
 			query:   "GHSA-aaaa-bbbb-cccc",
 			wantURL: "/vuln/GO-1990-01",
-		},
-		{
-			name:  "multiple matches",
-			mode:  searchModeVuln,
-			query: "CVE-2000-1",
-			wantPage: &VulnListPage{Entries: []OSVEntry{
-				{testEntries[0]},
-				{testEntries[1]},
-			}},
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
