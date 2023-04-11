@@ -109,7 +109,7 @@ func TestFetchPackageVersionsDetails(t *testing.T) {
 			},
 		}},
 	}
-	vc, err := vuln.NewTestClient([]*osv.Entry{vulnEntry})
+	vc, err := vuln.NewInMemoryClient([]*osv.Entry{vulnEntry})
 	if err != nil {
 		t.Fatal(err)
 	}

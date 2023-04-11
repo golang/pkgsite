@@ -14,8 +14,8 @@ import (
 	"golang.org/x/vuln/osv"
 )
 
-// NewTestClient creates an in-memory client for use in tests.
-func NewTestClient(entries []*osv.Entry) (*Client, error) {
+// NewInMemoryClient creates an in-memory client for use in tests.
+func NewInMemoryClient(entries []*osv.Entry) (*Client, error) {
 	inMemory, err := newInMemorySource(entries)
 	if err != nil {
 		return nil, err

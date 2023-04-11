@@ -41,7 +41,7 @@ var testEntries = []*osv.Entry{
 
 func TestNewVulnListPage(t *testing.T) {
 	ctx := experiment.NewContext(context.Background(), internal.ExperimentVulndbV1)
-	c, err := vuln.NewTestClient(testEntries)
+	c, err := vuln.NewInMemoryClient(testEntries)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -62,7 +62,7 @@ func TestNewVulnListPage(t *testing.T) {
 
 func TestNewVulnPage(t *testing.T) {
 	ctx := experiment.NewContext(context.Background(), internal.ExperimentVulndbV1)
-	c, err := vuln.NewTestClient(testEntries)
+	c, err := vuln.NewInMemoryClient(testEntries)
 	if err != nil {
 		t.Fatal(err)
 	}

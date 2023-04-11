@@ -40,7 +40,7 @@ func TestDetermineSearchAction(t *testing.T) {
 	for _, v := range modules {
 		postgres.MustInsertModule(ctx, t, testDB, v)
 	}
-	vc, err := vuln.NewTestClient(testEntries)
+	vc, err := vuln.NewInMemoryClient(testEntries)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -318,7 +318,7 @@ func TestFetchSearchPage(t *testing.T) {
 		}}
 	)
 
-	vc, err := vuln.NewTestClient(vulnEntries)
+	vc, err := vuln.NewInMemoryClient(vulnEntries)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -555,7 +555,7 @@ func TestSearchRequestRedirectPath(t *testing.T) {
 }
 
 func TestSearchVulnAlias(t *testing.T) {
-	vc, err := vuln.NewTestClient(testEntries)
+	vc, err := vuln.NewInMemoryClient(testEntries)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -630,7 +630,7 @@ func TestSearchVulnAlias(t *testing.T) {
 }
 
 func TestSearchVulnModulePath(t *testing.T) {
-	vc, err := vuln.NewTestClient(testEntries)
+	vc, err := vuln.NewInMemoryClient(testEntries)
 	if err != nil {
 		t.Fatal(err)
 	}
