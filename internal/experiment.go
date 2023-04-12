@@ -8,7 +8,6 @@ package internal
 const (
 	ExperimentEnableStdFrontendFetch = "enable-std-frontend-fetch"
 	ExperimentStyleGuide             = "styleguide"
-	ExperimentVulndbV1               = "vulndb-v1"
 )
 
 // Experiments represents all of the active experiments in the codebase and
@@ -16,7 +15,6 @@ const (
 var Experiments = map[string]string{
 	ExperimentEnableStdFrontendFetch: "Enable frontend fetching for module std.",
 	ExperimentStyleGuide:             "Enable the styleguide.",
-	ExperimentVulndbV1:               "Use the v1 vulnerability database instead of the legacy database.",
 }
 
 // Experiment holds data associated with an experimental feature for frontend
