@@ -26,39 +26,16 @@ const (
 // VulnListPage holds the information for a page that lists vuln entries.
 type VulnListPage struct {
 	basePage
-	Entries []OSVEntry
+	Entries []*osv.Entry
 }
 
 // VulnPage holds the information for a page that displays a single vuln entry.
 type VulnPage struct {
 	basePage
-	Entry            OSVEntry
+	Entry            *osv.Entry
 	AffectedPackages []*vuln.AffectedPackage
 	AliasLinks       []link
 	AdvisoryLinks    []link
-}
-
-// OSVEntry holds an OSV entry and provides additional methods.
-type OSVEntry struct {
-	*osv.Entry
-}
-
-// AffectedModulesAndPackages returns a list of names affected by a vuln.
-func (e OSVEntry) AffectedModulesAndPackages() []string {
-	var affected []string
-	for _, a := range e.Affected {
-		switch a.Module.Path {
-		case "stdlib", "toolchain":
-			// Name specific standard library packages and tools.
-			for _, p := range a.EcosystemSpecific.Packages {
-				affected = append(affected, p.Path)
-			}
-		default:
-			// Outside the standard library, name the module.
-			affected = append(affected, a.Module.Path)
-		}
-	}
-	return affected
 }
 
 func (s *Server) serveVuln(w http.ResponseWriter, r *http.Request, _ internal.DataSource) error {
@@ -116,7 +93,7 @@ func newVulnPage(ctx context.Context, client *vuln.Client, id string) (*VulnPage
 		return nil, derrors.NotFound
 	}
 	return &VulnPage{
-		Entry:            OSVEntry{entry},
+		Entry:            entry,
 		AffectedPackages: vuln.AffectedPackages(entry),
 		AliasLinks:       aliasLinks(entry),
 		AdvisoryLinks:    advisoryLinks(entry),
@@ -133,7 +110,7 @@ func newVulnListPage(ctx context.Context, client *vuln.Client) (*VulnListPage, e
 	return &VulnListPage{Entries: entries}, nil
 }
 
-func vulnList(ctx context.Context, client *vuln.Client) ([]OSVEntry, error) {
+func vulnList(ctx context.Context, client *vuln.Client) ([]*osv.Entry, error) {
 	const concurrency = 4
 
 	ids, err := client.IDs(ctx)
@@ -141,7 +118,7 @@ func vulnList(ctx context.Context, client *vuln.Client) ([]OSVEntry, error) {
 		return nil, derrors.VulnDBError
 	}
 
-	entries := make([]OSVEntry, len(ids))
+	entries := make([]*osv.Entry, len(ids))
 	sem := make(chan struct{}, concurrency)
 	var g errgroup.Group
 	for i, id := range ids {
@@ -154,7 +131,7 @@ func vulnList(ctx context.Context, client *vuln.Client) ([]OSVEntry, error) {
 			if err != nil {
 				return err
 			}
-			entries[i] = OSVEntry{e}
+			entries[i] = e
 			return nil
 		})
 	}

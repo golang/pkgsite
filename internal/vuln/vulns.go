@@ -98,29 +98,6 @@ type AffectedPackage struct {
 	Symbols []string
 }
 
-// OSVEntry holds an OSV entry and provides additional methods.
-type OSVEntry struct {
-	*osv.Entry
-}
-
-// AffectedModulesAndPackages returns a list of names affected by a vuln.
-func (e OSVEntry) AffectedModulesAndPackages() []string {
-	var affected []string
-	for _, a := range e.Affected {
-		switch a.Module.Path {
-		case "stdlib", "toolchain":
-			// Name specific standard library packages and tools.
-			for _, p := range a.EcosystemSpecific.Packages {
-				affected = append(affected, p.Path)
-			}
-		default:
-			// Outside the standard library, name the module.
-			affected = append(affected, a.Module.Path)
-		}
-	}
-	return affected
-}
-
 // A pair is like an osv.Range, but each pair is a self-contained 2-tuple
 // (introduced version, fixed version).
 type pair struct {

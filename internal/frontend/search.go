@@ -23,6 +23,7 @@ import (
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/middleware"
+	"golang.org/x/pkgsite/internal/osv"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/version"
@@ -377,7 +378,7 @@ func searchVulnModule(ctx context.Context, mode, cq string, client *vuln.Client)
 		return nil, err
 	}
 	prefix := cq + "/"
-	var entries []OSVEntry
+	var entries []*osv.Entry
 EntryLoop:
 	for _, entry := range allEntries {
 		for _, aff := range entry.Affected {

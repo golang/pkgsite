@@ -650,16 +650,16 @@ func TestSearchVulnModulePath(t *testing.T) {
 			name:  "prefix match",
 			mode:  searchModeVuln,
 			query: "example.com/org",
-			wantPage: &VulnListPage{Entries: []OSVEntry{
-				{testEntries[7]},
+			wantPage: &VulnListPage{Entries: []*osv.Entry{
+				testEntries[7],
 			}},
 		},
 		{
 			name:  "path match",
 			mode:  searchModeVuln,
 			query: "example.com/org/path",
-			wantPage: &VulnListPage{Entries: []OSVEntry{
-				{testEntries[7]},
+			wantPage: &VulnListPage{Entries: []*osv.Entry{
+				testEntries[7],
 			}},
 		},
 	} {

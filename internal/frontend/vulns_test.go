@@ -48,9 +48,9 @@ func TestNewVulnListPage(t *testing.T) {
 		t.Fatal(err)
 	}
 	// testEntries is already sorted by ID, but it should be reversed.
-	var wantEntries []OSVEntry
+	var wantEntries []*osv.Entry
 	for i := len(testEntries) - 1; i >= 0; i-- {
-		wantEntries = append(wantEntries, OSVEntry{testEntries[i]})
+		wantEntries = append(wantEntries, testEntries[i])
 	}
 	want := &VulnListPage{Entries: wantEntries}
 	if diff := cmp.Diff(want, got, cmpopts.IgnoreUnexported(VulnListPage{})); diff != "" {
@@ -69,7 +69,7 @@ func TestNewVulnPage(t *testing.T) {
 		t.Fatal(err)
 	}
 	want := &VulnPage{
-		Entry:      OSVEntry{testEntries[1]},
+		Entry:      testEntries[1],
 		AliasLinks: aliasLinks(testEntries[1]),
 	}
 	if diff := cmp.Diff(want, got, cmpopts.IgnoreUnexported(VulnPage{})); diff != "" {
