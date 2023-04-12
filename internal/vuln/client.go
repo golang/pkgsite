@@ -183,55 +183,35 @@ func (c *Client) ByID(ctx context.Context, id string) (_ *osv.Entry, err error) 
 	return &entry, nil
 }
 
-// ByAlias returns the OSV entries that have the given alias, or (nil, nil)
-// if there are none.
-// It returns a list for compatibility with the legacy implementation,
-// but the list always contains at most one element.
-func (c *Client) ByAlias(ctx context.Context, alias string) (_ []*osv.Entry, err error) {
+// ByAlias returns the Go ID of the OSV entry that has the given alias,
+// or a NotFound error if there isn't one.
+func (c *Client) ByAlias(ctx context.Context, alias string) (_ string, err error) {
 	derrors.Wrap(&err, "ByAlias(%s)", alias)
 
 	b, err := c.vulns(ctx)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	dec, err := newStreamDecoder(b)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
-	var id string
 	for dec.More() {
 		var v VulnMeta
 		err := dec.Decode(&v)
 		if err != nil {
-			return nil, err
+			return "", err
 		}
 		for _, vAlias := range v.Aliases {
 			if alias == vAlias {
-				id = v.ID
-				break
+				return v.ID, nil
 			}
 		}
-		if id != "" {
-			break
-		}
 	}
 
-	if id == "" {
-		return nil, nil
-	}
-
-	entry, err := c.ByID(ctx, id)
-	if err != nil {
-		return nil, err
-	}
-
-	if entry == nil {
-		return nil, fmt.Errorf("vulnerability %s was found in %s but could not be retrieved", id, vulnsEndpoint)
-	}
-
-	return []*osv.Entry{entry}, nil
+	return "", derrors.NotFound
 }
 
 // IDs returns a list of the IDs of all the entries in the database.

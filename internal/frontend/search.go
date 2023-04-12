@@ -404,26 +404,11 @@ func searchVulnAlias(ctx context.Context, mode, cq string, vc *vuln.Client) (_ *
 	if mode != searchModeVuln || !vuln.IsAlias(cq) || vc == nil {
 		return nil, nil
 	}
-	aliasEntries, err := vc.ByAlias(ctx, cq)
+	id, err := vc.ByAlias(ctx, cq)
 	if err != nil {
-		return nil, err
+		return nil, &serverError{status: derrors.ToStatus(err)}
 	}
-	switch len(aliasEntries) {
-	case 0:
-		return nil, &serverError{status: http.StatusNotFound}
-	case 1:
-		return &searchAction{redirectURL: "/vuln/" + aliasEntries[0].ID}, nil
-	default:
-		var entries []OSVEntry
-		for _, e := range aliasEntries {
-			entries = append(entries, OSVEntry{e})
-		}
-		return &searchAction{
-			title:    fmt.Sprintf("%s - Vulnerability Reports", cq),
-			template: "vuln/list",
-			page:     &VulnListPage{Entries: entries},
-		}, nil
-	}
+	return &searchAction{redirectURL: "/vuln/" + id}, nil
 }
 
 // searchMode reports whether the search performed should be in package or

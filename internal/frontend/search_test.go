@@ -6,6 +6,7 @@ package frontend
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -122,6 +123,11 @@ func TestDetermineSearchAction(t *testing.T) {
 			wantRedirect: "/vuln/GO-1990-01",
 		},
 		{
+			name:       "vuln alias with no match",
+			query:      "q=GHSA-aaaa-bbbb-dddd",
+			wantStatus: http.StatusNotFound,
+		},
+		{
 			// An explicit mode overrides that.
 			name:         "vuln alias symbol mode",
 			query:        "q=GHSA-aaaa-bbbb-cccc?m=symbol",
@@ -141,9 +147,9 @@ func TestDetermineSearchAction(t *testing.T) {
 			}
 			gotAction, err := determineSearchAction(req, ds, vc)
 			if err != nil {
-				serr, ok := err.(*serverError)
-				if !ok {
-					t.Fatal(err)
+				var serr *serverError
+				if !errors.As(err, &serr) {
+					t.Fatalf("got err %#v, want type *serverError", err)
 				}
 				if g, w := serr.status, test.wantStatus; g != w {
 					t.Errorf("got status %d, want %d", g, w)

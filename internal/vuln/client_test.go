@@ -262,24 +262,25 @@ func TestByAlias(t *testing.T) {
 	}
 
 	tests := []struct {
-		name  string
-		alias string
-		want  []*osv.Entry
+		name    string
+		alias   string
+		want    string
+		wantErr bool
 	}{
 		{
 			name:  "CVE",
 			alias: "CVE-1999-1111",
-			want:  []*osv.Entry{&testOSV1},
+			want:  testOSV1.ID,
 		},
 		{
 			name:  "GHSA",
 			alias: "GHSA-xxxx-yyyy-zzzz",
-			want:  []*osv.Entry{&testOSV3},
+			want:  testOSV3.ID,
 		},
 		{
-			name:  "Not found",
-			alias: "CVE-0000-0000",
-			want:  nil,
+			name:    "Not found",
+			alias:   "CVE-0000-0000",
+			wantErr: true,
 		},
 	}
 
@@ -287,11 +288,15 @@ func TestByAlias(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			ctx := context.Background()
 			got, err := c.ByAlias(ctx, test.alias)
-			if err != nil {
-				t.Fatal(err)
-			}
-			if !reflect.DeepEqual(got, test.want) {
-				t.Errorf("ByAlias(%s) = %v, want %v", test.alias, got, test.want)
+			if !test.wantErr {
+				if err != nil {
+					t.Fatal(err)
+				}
+				if !reflect.DeepEqual(got, test.want) {
+					t.Errorf("ByAlias(%s) = %v, want %v", test.alias, got, test.want)
+				}
+			} else if err == nil {
+				t.Errorf("ByAlias(%s) = %v, want error", test.alias, got)
 			}
 		})
 	}
