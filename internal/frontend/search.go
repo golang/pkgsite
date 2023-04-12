@@ -381,7 +381,7 @@ func searchVulnModule(ctx context.Context, mode, cq string, client *vuln.Client)
 EntryLoop:
 	for _, entry := range allEntries {
 		for _, aff := range entry.Affected {
-			for _, imp := range aff.EcosystemSpecific.Imports {
+			for _, imp := range aff.EcosystemSpecific.Packages {
 				if imp.Path == cq || strings.HasPrefix(imp.Path, prefix) {
 					entries = append(entries, entry)
 					continue EntryLoop

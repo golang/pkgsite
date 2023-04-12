@@ -10,8 +10,8 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"golang.org/x/pkgsite/internal/osv"
 	"golang.org/x/pkgsite/internal/vuln"
-	"golang.org/x/vuln/osv"
 )
 
 var testEntries = []*osv.Entry{
@@ -27,7 +27,7 @@ var testEntries = []*osv.Entry{
 		Details: "h",
 		Affected: []osv.Affected{{
 			EcosystemSpecific: osv.EcosystemSpecific{
-				Imports: []osv.EcosystemSpecificImport{
+				Packages: []osv.Package{
 					{
 						Path: "example.com/org/path",
 					},

@@ -68,8 +68,8 @@
 -- ID/GO-1999-0001 --
 {
   "id": "GO-1999-0001",
-  "published": "1999-01-01T00:00:00Z",
   "modified": "2000-01-01T00:00:00Z",
+  "published": "1999-01-01T00:00:00Z",
   "aliases": [
     "CVE-1999-1111"
   ],
@@ -99,9 +99,6 @@
           ]
         }
       ],
-      "database_specific": {
-        "url": "https://pkg.go.dev/vuln/GO-1999-0001"
-      },
       "ecosystem_specific": {
         "imports": [
           {
@@ -119,14 +116,17 @@
       "type": "FIX",
       "url": "https://example.com/cl/123"
     }
-  ]
+  ],
+  "database_specific": {
+    "url": "https://pkg.go.dev/vuln/GO-1999-0001"
+  }
 }
 
 -- ID/GO-2000-0002 --
 {
   "id": "GO-2000-0002",
-  "published": "2000-01-01T00:00:00Z",
   "modified": "2002-01-01T00:00:00Z",
+  "published": "2000-01-01T00:00:00Z",
   "aliases": [
     "CVE-1999-2222"
   ],
@@ -150,9 +150,6 @@
           ]
         }
       ],
-      "database_specific": {
-        "url": "https://pkg.go.dev/vuln/GO-2000-0002"
-      },
       "ecosystem_specific": {
         "imports": [
           {
@@ -170,14 +167,17 @@
       "type": "FIX",
       "url": "https://example.com/cl/543"
     }
-  ]
+  ],
+  "database_specific": {
+    "url": "https://pkg.go.dev/vuln/GO-2000-0002"
+  }
 }
 
 -- ID/GO-2000-0003 --
 {
   "id": "GO-2000-0003",
-  "published": "2000-01-01T00:00:00Z",
   "modified": "2003-01-01T00:00:00Z",
+  "published": "2000-01-01T00:00:00Z",
   "aliases": [
     "CVE-1999-3333",
     "GHSA-xxxx-yyyy-zzzz"
@@ -202,9 +202,6 @@
           ]
         }
       ],
-      "database_specific": {
-        "url": "https://pkg.go.dev/vuln/GO-2000-0003"
-      },
       "ecosystem_specific": {
         "imports": [
           {
@@ -225,5 +222,8 @@
       "type": "FIX",
       "url": "https://example.com/cl/000"
     }
-  ]
+  ],
+  "database_specific": {
+    "url": "https://pkg.go.dev/vuln/GO-2000-0003"
+  }
 }

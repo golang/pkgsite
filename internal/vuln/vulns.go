@@ -12,9 +12,9 @@ import (
 	"strings"
 
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/osv"
 	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/version"
-	"golang.org/x/vuln/osv"
 )
 
 const (
@@ -107,15 +107,15 @@ type OSVEntry struct {
 func (e OSVEntry) AffectedModulesAndPackages() []string {
 	var affected []string
 	for _, a := range e.Affected {
-		switch a.Package.Name {
+		switch a.Module.Path {
 		case "stdlib", "toolchain":
 			// Name specific standard library packages and tools.
-			for _, p := range a.EcosystemSpecific.Imports {
+			for _, p := range a.EcosystemSpecific.Packages {
 				affected = append(affected, p.Path)
 			}
 		default:
 			// Outside the standard library, name the module.
-			affected = append(affected, a.Package.Name)
+			affected = append(affected, a.Module.Path)
 		}
 	}
 	return affected
@@ -135,13 +135,13 @@ func collectRangePairs(a osv.Affected) []pair {
 		p      pair
 		prefix string
 	)
-	if stdlib.Contains(a.Package.Name) {
+	if stdlib.Contains(a.Module.Path) {
 		prefix = "go"
 	} else {
 		prefix = "v"
 	}
 	for _, r := range a.Ranges {
-		isSemver := r.Type == osv.TypeSemver
+		isSemver := r.Type == osv.RangeTypeSemver
 		for _, v := range r.Events {
 			if v.Introduced != "" {
 				// We expected Introduced and Fixed to alternate, but if
@@ -189,7 +189,7 @@ func AffectedPackages(e *osv.Entry) []*AffectedPackage {
 			}
 			vs = append(vs, s)
 		}
-		for _, p := range a.EcosystemSpecific.Imports {
+		for _, p := range a.EcosystemSpecific.Packages {
 			affs = append(affs, &AffectedPackage{
 				PackagePath: p.Path,
 				Versions:    strings.Join(vs, ", "),

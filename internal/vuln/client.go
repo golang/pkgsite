@@ -11,13 +11,11 @@ import (
 	"fmt"
 	"path/filepath"
 	"sort"
-	"strings"
 	"sync"
 
-	"golang.org/x/mod/semver"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/osv"
 	"golang.org/x/sync/errgroup"
-	"golang.org/x/vuln/osv"
 )
 
 // Client reads Go vulnerability databases.
@@ -88,7 +86,7 @@ func (c *Client) ByPackage(ctx context.Context, req *PackageRequest) (_ []*osv.E
 				// We need to download the full entry if there is no fix,
 				// or the requested version is less than the vuln's
 				// highest fixed version.
-				if v.Fixed == "" || less(req.Version, v.Fixed) {
+				if v.Fixed == "" || osv.LessSemver(req.Version, v.Fixed) {
 					ids = append(ids, v.ID)
 				}
 			}
@@ -141,18 +139,17 @@ func (c *Client) ByPackage(ctx context.Context, req *PackageRequest) (_ []*osv.E
 
 func isAffected(e *osv.Entry, req *PackageRequest) bool {
 	for _, a := range e.Affected {
-		// a.Package.Name is Go "module" name. Go package path is a.EcosystemSpecific.Imports.Path.
-		if a.Package.Name != req.Module || !a.Ranges.AffectsSemver(req.Version) {
+		if a.Module.Path != req.Module || !osv.AffectsSemver(a.Ranges, req.Version) {
 			continue
 		}
 		if packageMatches := func() bool {
 			if req.Package == "" {
 				return true //  match module only
 			}
-			if len(a.EcosystemSpecific.Imports) == 0 {
+			if len(a.EcosystemSpecific.Packages) == 0 {
 				return true // no package info available, so match on module
 			}
-			for _, p := range a.EcosystemSpecific.Imports {
+			for _, p := range a.EcosystemSpecific.Packages {
 				if req.Package == p.Path {
 					return true // package matches
 				}
@@ -164,26 +161,6 @@ func isAffected(e *osv.Entry, req *PackageRequest) bool {
 		return true
 	}
 	return false
-}
-
-// less returns whether v1 < v2, where v1 and v2 are
-// semver versions with either a "v", "go" or no prefix.
-func less(v1, v2 string) bool {
-	return semver.Compare(canonicalizeSemver(v1), canonicalizeSemver(v2)) < 0
-}
-
-// canonicalizeSemver turns a SEMVER string into the canonical
-// representation using the 'v' prefix as used by the "semver" package.
-// Input may be a bare SEMVER ("1.2.3"), Go prefixed SEMVER ("go1.2.3"),
-// or already canonical SEMVER ("v1.2.3").
-func canonicalizeSemver(s string) string {
-	// Remove "go" prefix if needed.
-	s = strings.TrimPrefix(s, "go")
-	// Add "v" prefix if needed.
-	if !strings.HasPrefix(s, "v") {
-		s = "v" + s
-	}
-	return s
 }
 
 // ByID returns the OSV entry with the given ID or (nil, nil)

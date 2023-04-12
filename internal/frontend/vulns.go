@@ -12,9 +12,9 @@ import (
 
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/osv"
 	"golang.org/x/pkgsite/internal/vuln"
 	"golang.org/x/sync/errgroup"
-	"golang.org/x/vuln/osv"
 )
 
 const (
@@ -47,15 +47,15 @@ type OSVEntry struct {
 func (e OSVEntry) AffectedModulesAndPackages() []string {
 	var affected []string
 	for _, a := range e.Affected {
-		switch a.Package.Name {
+		switch a.Module.Path {
 		case "stdlib", "toolchain":
 			// Name specific standard library packages and tools.
-			for _, p := range a.EcosystemSpecific.Imports {
+			for _, p := range a.EcosystemSpecific.Packages {
 				affected = append(affected, p.Path)
 			}
 		default:
 			// Outside the standard library, name the module.
-			affected = append(affected, a.Package.Name)
+			affected = append(affected, a.Module.Path)
 		}
 	}
 	return affected

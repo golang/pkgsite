@@ -10,12 +10,12 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/osv"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/testing/sample"
 	"golang.org/x/pkgsite/internal/version"
 	"golang.org/x/pkgsite/internal/vuln"
-	"golang.org/x/vuln/osv"
 )
 
 var (
@@ -94,15 +94,15 @@ func TestFetchPackageVersionsDetails(t *testing.T) {
 		ID:      "GO-1999-0001",
 		Details: "vuln",
 		Affected: []osv.Affected{{
-			Package: osv.Package{
-				Name: modulePath1,
+			Module: osv.Module{
+				Path: modulePath1,
 			},
-			Ranges: []osv.AffectsRange{{
-				Type:   osv.TypeSemver,
+			Ranges: []osv.Range{{
+				Type:   osv.RangeTypeSemver,
 				Events: []osv.RangeEvent{{Introduced: "1.2.0"}, {Fixed: vulnFixedVersion}},
 			}},
 			EcosystemSpecific: osv.EcosystemSpecific{
-				Imports: []osv.EcosystemSpecificImport{{
+				Packages: []osv.Package{{
 					Path: v1Path,
 				}},
 			},

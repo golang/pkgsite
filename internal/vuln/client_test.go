@@ -13,8 +13,8 @@ import (
 	"testing"
 	"time"
 
+	"golang.org/x/pkgsite/internal/osv"
 	"golang.org/x/tools/txtar"
-	"golang.org/x/vuln/osv"
 )
 
 const (
@@ -34,26 +34,27 @@ var (
 		Details:   "Some details",
 		Affected: []osv.Affected{
 			{
-				Package: osv.Package{
-					Name:      "stdlib",
+				Module: osv.Module{
+					Path:      "stdlib",
 					Ecosystem: "Go",
 				},
-				Ranges: osv.Affects{
-					osv.AffectsRange{
+				Ranges: []osv.Range{
+					osv.Range{
 						Type: "SEMVER",
 						Events: []osv.RangeEvent{
 							{Introduced: "0"}, {Fixed: "1.1.0"},
 							{Introduced: "1.2.0"},
 							{Fixed: "1.2.2"},
 						}}},
-				DatabaseSpecific: osv.DatabaseSpecific{
-					URL: "https://pkg.go.dev/vuln/GO-1999-0001"},
 				EcosystemSpecific: osv.EcosystemSpecific{
-					Imports: []osv.EcosystemSpecificImport{{Path: "package", Symbols: []string{"Symbol"}}}}},
+					Packages: []osv.Package{{Path: "package", Symbols: []string{"Symbol"}}}}},
 		},
 		References: []osv.Reference{
 			{Type: "FIX", URL: "https://example.com/cl/123"},
-		}}
+		},
+		DatabaseSpecific: &osv.DatabaseSpecific{
+			URL: "https://pkg.go.dev/vuln/GO-1999-0001"},
+	}
 	testOSV2 = osv.Entry{
 		ID:        "GO-2000-0002",
 		Published: jan2000,
@@ -62,22 +63,24 @@ var (
 		Details:   "Some details",
 		Affected: []osv.Affected{
 			{
-				Package: osv.Package{
-					Name:      "example.com/module",
+				Module: osv.Module{
+					Path:      "example.com/module",
 					Ecosystem: "Go",
 				},
-				Ranges: osv.Affects{
-					osv.AffectsRange{
+				Ranges: []osv.Range{
+					osv.Range{
 						Type: "SEMVER", Events: []osv.RangeEvent{{Introduced: "0"},
 							{Fixed: "1.2.0"},
 						}}},
-				DatabaseSpecific: osv.DatabaseSpecific{URL: "https://pkg.go.dev/vuln/GO-2000-0002"}, EcosystemSpecific: osv.EcosystemSpecific{
-					Imports: []osv.EcosystemSpecificImport{{Path: "example.com/module/package",
+				EcosystemSpecific: osv.EcosystemSpecific{
+					Packages: []osv.Package{{Path: "example.com/module/package",
 						Symbols: []string{"Symbol"},
 					}}}}},
 		References: []osv.Reference{
 			{Type: "FIX", URL: "https://example.com/cl/543"},
-		}}
+		},
+		DatabaseSpecific: &osv.DatabaseSpecific{URL: "https://pkg.go.dev/vuln/GO-2000-0002"},
+	}
 	testOSV3 = osv.Entry{
 		ID:        "GO-2000-0003",
 		Published: jan2000,
@@ -86,20 +89,17 @@ var (
 		Details:   "Some details",
 		Affected: []osv.Affected{
 			{
-				Package: osv.Package{
-					Name:      "example.com/module",
+				Module: osv.Module{
+					Path:      "example.com/module",
 					Ecosystem: "Go",
 				},
-				Ranges: osv.Affects{
-					osv.AffectsRange{
+				Ranges: []osv.Range{
+					{
 						Type: "SEMVER",
 						Events: []osv.RangeEvent{
 							{Introduced: "0"}, {Fixed: "1.1.0"},
 						}}},
-				DatabaseSpecific: osv.DatabaseSpecific{
-					URL: "https://pkg.go.dev/vuln/GO-2000-0003",
-				},
-				EcosystemSpecific: osv.EcosystemSpecific{Imports: []osv.EcosystemSpecificImport{
+				EcosystemSpecific: osv.EcosystemSpecific{Packages: []osv.Package{
 					{
 						Path:    "example.com/module/package",
 						Symbols: []string{"Symbol"},
@@ -110,6 +110,9 @@ var (
 				}}}},
 		References: []osv.Reference{
 			{Type: "FIX", URL: "https://example.com/cl/000"},
+		},
+		DatabaseSpecific: &osv.DatabaseSpecific{
+			URL: "https://pkg.go.dev/vuln/GO-2000-0003",
 		}}
 )
 

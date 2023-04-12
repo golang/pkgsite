@@ -14,7 +14,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"golang.org/x/vuln/osv"
+	"golang.org/x/pkgsite/internal/osv"
 )
 
 func TestNewSource(t *testing.T) {

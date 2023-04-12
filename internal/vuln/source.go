@@ -16,7 +16,7 @@ import (
 	"path/filepath"
 	"sort"
 
-	"golang.org/x/vuln/osv"
+	"golang.org/x/pkgsite/internal/osv"
 )
 
 type source interface {
@@ -116,7 +116,7 @@ func newInMemorySource(entries []*osv.Entry) (*inMemorySource, error) {
 			db.Modified = entry.Modified
 		}
 		for _, affected := range entry.Affected {
-			modulePath := affected.Package.Name
+			modulePath := affected.Module.Path
 			if _, ok := modulesMap[modulePath]; !ok {
 				modulesMap[modulePath] = &ModuleMeta{
 					Path:  modulePath,
@@ -127,7 +127,7 @@ func newInMemorySource(entries []*osv.Entry) (*inMemorySource, error) {
 			module.Vulns = append(module.Vulns, ModuleVuln{
 				ID:       entry.ID,
 				Modified: entry.Modified,
-				Fixed:    latestFixedVersion(affected.Ranges),
+				Fixed:    osv.LatestFixedVersion(affected.Ranges),
 			})
 		}
 		vulnsMap[entry.ID] = &VulnMeta{
@@ -196,19 +196,4 @@ func (db *inMemorySource) get(ctx context.Context, endpoint string) ([]byte, err
 		return nil, fmt.Errorf("no data found at endpoint %q", endpoint)
 	}
 	return b, nil
-}
-
-func latestFixedVersion(ranges []osv.AffectsRange) string {
-	var latestFixed string
-	for _, r := range ranges {
-		if r.Type == "SEMVER" {
-			for _, e := range r.Events {
-				fixed := e.Fixed
-				if fixed != "" && less(latestFixed, fixed) {
-					latestFixed = fixed
-				}
-			}
-		}
-	}
-	return latestFixed
 }

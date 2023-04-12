@@ -11,34 +11,33 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	"golang.org/x/vuln/osv"
+	"golang.org/x/pkgsite/internal/osv"
 )
 
 func TestVulnsForPackage(t *testing.T) {
 	e := osv.Entry{
 		ID: "GO-1",
 		Affected: []osv.Affected{{
-			Package: osv.Package{Name: "bad.com"},
-			Ranges: []osv.AffectsRange{{
-				Type:   osv.TypeSemver,
+			Module: osv.Module{Path: "bad.com"},
+			Ranges: []osv.Range{{
+				Type:   osv.RangeTypeSemver,
 				Events: []osv.RangeEvent{{Introduced: "0"}, {Fixed: "1.2.3"}}, // fixed at v1.2.3
 			}},
 			EcosystemSpecific: osv.EcosystemSpecific{
-				Imports: []osv.EcosystemSpecificImport{{
+				Packages: []osv.Package{{
 					Path: "bad.com",
 				}, {
 					Path: "bad.com/bad",
 				}},
 			},
 		}, {
-			Package: osv.Package{Name: "unfixable.com"},
-			Ranges: []osv.AffectsRange{{
-				Type:   osv.TypeSemver,
+			Module: osv.Module{Path: "unfixable.com"},
+			Ranges: []osv.Range{{
+				Type:   osv.RangeTypeSemver,
 				Events: []osv.RangeEvent{{Introduced: "0"}}, // no fix
 			}},
-			DatabaseSpecific: osv.DatabaseSpecific{},
 			EcosystemSpecific: osv.EcosystemSpecific{
-				Imports: []osv.EcosystemSpecificImport{{
+				Packages: []osv.Package{{
 					Path: "unfixable.com",
 				}},
 			},
@@ -47,13 +46,13 @@ func TestVulnsForPackage(t *testing.T) {
 	e2 := osv.Entry{
 		ID: "GO-2",
 		Affected: []osv.Affected{{
-			Package: osv.Package{Name: "bad.com"},
-			Ranges: []osv.AffectsRange{{
-				Type:   osv.TypeSemver,
+			Module: osv.Module{Path: "bad.com"},
+			Ranges: []osv.Range{{
+				Type:   osv.RangeTypeSemver,
 				Events: []osv.RangeEvent{{Introduced: "0"}, {Fixed: "1.2.0"}},
 			}},
 			EcosystemSpecific: osv.EcosystemSpecific{
-				Imports: []osv.EcosystemSpecificImport{{
+				Packages: []osv.Package{{
 					Path: "bad.com/pkg",
 				},
 				},
@@ -63,13 +62,13 @@ func TestVulnsForPackage(t *testing.T) {
 	stdlib := osv.Entry{
 		ID: "GO-3",
 		Affected: []osv.Affected{{
-			Package: osv.Package{Name: "stdlib"},
-			Ranges: []osv.AffectsRange{{
-				Type:   osv.TypeSemver,
+			Module: osv.Module{Path: "stdlib"},
+			Ranges: []osv.Range{{
+				Type:   osv.RangeTypeSemver,
 				Events: []osv.RangeEvent{{Introduced: "0"}, {Fixed: "1.19.4"}},
 			}},
 			EcosystemSpecific: osv.EcosystemSpecific{
-				Imports: []osv.EcosystemSpecificImport{{
+				Packages: []osv.Package{{
 					Path: "net/http",
 				}},
 			},
@@ -164,14 +163,14 @@ func TestVulnsForPackage(t *testing.T) {
 
 func TestCollectRangePairs(t *testing.T) {
 	in := osv.Affected{
-		Package: osv.Package{Name: "github.com/a/b"},
-		Ranges: osv.Affects{
-			{Type: osv.TypeSemver, Events: []osv.RangeEvent{{Introduced: "", Fixed: "0.5"}}},
-			{Type: osv.TypeSemver, Events: []osv.RangeEvent{
+		Module: osv.Module{Path: "github.com/a/b"},
+		Ranges: []osv.Range{
+			{Type: osv.RangeTypeSemver, Events: []osv.RangeEvent{{Introduced: "", Fixed: "0.5"}}},
+			{Type: osv.RangeTypeSemver, Events: []osv.RangeEvent{
 				{Introduced: "1.2"}, {Fixed: "1.5"},
 				{Introduced: "2.1", Fixed: "2.3"},
 			}},
-			{Type: osv.TypeGit, Events: []osv.RangeEvent{{Introduced: "a", Fixed: "b"}}},
+			{Type: "unspecified", Events: []osv.RangeEvent{{Introduced: "a", Fixed: "b"}}},
 		},
 	}
 	got := collectRangePairs(in)
@@ -220,14 +219,14 @@ func TestAffectedPackages_Versions(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			entry := &osv.Entry{
 				Affected: []osv.Affected{{
-					Package: osv.Package{Name: "example.com/p"},
+					Module: osv.Module{Path: "example.com/p"},
 					EcosystemSpecific: osv.EcosystemSpecific{
-						Imports: []osv.EcosystemSpecificImport{{
+						Packages: []osv.Package{{
 							Path: "example.com/p",
 						}},
 					},
-					Ranges: osv.Affects{{
-						Type:   osv.TypeSemver,
+					Ranges: []osv.Range{{
+						Type:   osv.RangeTypeSemver,
 						Events: test.in,
 					}},
 				}},
@@ -252,9 +251,9 @@ func TestAffectedPackagesPackagesSymbols(t *testing.T) {
 			in: &osv.Entry{
 				ID: "GO-2022-01",
 				Affected: []osv.Affected{{
-					Package: osv.Package{Name: "example.com/mod"},
+					Module: osv.Module{Path: "example.com/mod"},
 					EcosystemSpecific: osv.EcosystemSpecific{
-						Imports: []osv.EcosystemSpecificImport{{
+						Packages: []osv.Package{{
 							Path:    "example.com/mod/pkg",
 							Symbols: []string{"F"},
 						}},
@@ -271,9 +270,9 @@ func TestAffectedPackagesPackagesSymbols(t *testing.T) {
 			in: &osv.Entry{
 				ID: "GO-2022-02",
 				Affected: []osv.Affected{{
-					Package: osv.Package{Name: "example.com/mod"},
+					Module: osv.Module{Path: "example.com/mod"},
 					EcosystemSpecific: osv.EcosystemSpecific{
-						Imports: []osv.EcosystemSpecificImport{{
+						Packages: []osv.Package{{
 							Path:    "example.com/mod/pkg",
 							Symbols: []string{"F", "g", "S.f", "S.F", "s.F", "s.f"},
 						}},
@@ -290,9 +289,9 @@ func TestAffectedPackagesPackagesSymbols(t *testing.T) {
 			in: &osv.Entry{
 				ID: "GO-2022-03",
 				Affected: []osv.Affected{{
-					Package: osv.Package{Name: "example.com/mod"},
+					Module: osv.Module{Path: "example.com/mod"},
 					EcosystemSpecific: osv.EcosystemSpecific{
-						Imports: []osv.EcosystemSpecificImport{{
+						Packages: []osv.Package{{
 							Path: "example.com/mod/pkg",
 						}},
 					},
@@ -307,9 +306,9 @@ func TestAffectedPackagesPackagesSymbols(t *testing.T) {
 			in: &osv.Entry{
 				ID: "GO-2022-04",
 				Affected: []osv.Affected{{
-					Package: osv.Package{Name: "example.com/mod1"},
+					Module: osv.Module{Path: "example.com/mod1"},
 					EcosystemSpecific: osv.EcosystemSpecific{
-						Imports: []osv.EcosystemSpecificImport{{
+						Packages: []osv.Package{{
 							Path: "example.com/mod1/pkg1",
 						}, {
 							Path:    "example.com/mod1/pkg2",
@@ -317,9 +316,9 @@ func TestAffectedPackagesPackagesSymbols(t *testing.T) {
 						}},
 					},
 				}, {
-					Package: osv.Package{Name: "example.com/mod2"},
+					Module: osv.Module{Path: "example.com/mod2"},
 					EcosystemSpecific: osv.EcosystemSpecific{
-						Imports: []osv.EcosystemSpecificImport{{
+						Packages: []osv.Package{{
 							Path:    "example.com/mod2/pkg3",
 							Symbols: []string{"g", "H"},
 						}},

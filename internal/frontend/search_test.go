@@ -20,12 +20,12 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/fetchdatasource"
 	"golang.org/x/pkgsite/internal/licenses"
+	"golang.org/x/pkgsite/internal/osv"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/testing/sample"
 	"golang.org/x/pkgsite/internal/vuln"
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
-	"golang.org/x/vuln/osv"
 )
 
 func TestDetermineSearchAction(t *testing.T) {
@@ -302,9 +302,9 @@ func TestFetchSearchPage(t *testing.T) {
 			ID:      "test",
 			Details: "vuln",
 			Affected: []osv.Affected{{
-				Package: osv.Package{Name: "github.com/mod/foo"},
-				Ranges: []osv.AffectsRange{{
-					Type:   osv.TypeSemver,
+				Module: osv.Module{Path: "github.com/mod/foo"},
+				Ranges: []osv.Range{{
+					Type:   osv.RangeTypeSemver,
 					Events: []osv.RangeEvent{{Introduced: "1.0.0"}, {Fixed: "1.9.0"}},
 				}},
 			}},
