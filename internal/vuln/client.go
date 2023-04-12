@@ -214,10 +214,38 @@ func (c *Client) ByAlias(ctx context.Context, alias string) (_ string, err error
 	return "", derrors.NotFound
 }
 
-// IDs returns a list of the IDs of all the entries in the database.
-func (c *Client) IDs(ctx context.Context) (_ []string, err error) {
-	derrors.Wrap(&err, "IDs()")
+// Entries returns all entries in the database.
+func (c *Client) Entries(ctx context.Context) (_ []*osv.Entry, err error) {
+	derrors.Wrap(&err, "Entries()")
 
+	ids, err := c.ids(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	entries := make([]*osv.Entry, len(ids))
+	g, gctx := errgroup.WithContext(ctx)
+	g.SetLimit(4)
+	for i, id := range ids {
+		i, id := i, id
+		g.Go(func() error {
+			e, err := c.ByID(gctx, id)
+			if err != nil {
+				return err
+			}
+			entries[i] = e
+			return nil
+		})
+	}
+	if err := g.Wait(); err != nil {
+		return nil, err
+	}
+
+	return entries, nil
+}
+
+// ids returns a list of the ids of all the entries in the database.
+func (c *Client) ids(ctx context.Context) (_ []string, err error) {
 	b, err := c.vulns(ctx)
 	if err != nil {
 		return nil, err

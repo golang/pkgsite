@@ -14,7 +14,6 @@ import (
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/osv"
 	"golang.org/x/pkgsite/internal/vuln"
-	"golang.org/x/sync/errgroup"
 )
 
 const (
@@ -101,44 +100,17 @@ func newVulnPage(ctx context.Context, client *vuln.Client, id string) (*VulnPage
 }
 
 func newVulnListPage(ctx context.Context, client *vuln.Client) (*VulnListPage, error) {
-	entries, err := vulnList(ctx, client)
+	entries, err := client.Entries(ctx)
 	if err != nil {
-		return nil, err
+		return nil, derrors.VulnDBError
 	}
-	// Sort from most to least recent.
-	sort.Slice(entries, func(i, j int) bool { return entries[i].ID > entries[j].ID })
+	sortVulnEntries(entries)
 	return &VulnListPage{Entries: entries}, nil
 }
 
-func vulnList(ctx context.Context, client *vuln.Client) ([]*osv.Entry, error) {
-	const concurrency = 4
-
-	ids, err := client.IDs(ctx)
-	if err != nil {
-		return nil, derrors.VulnDBError
-	}
-
-	entries := make([]*osv.Entry, len(ids))
-	sem := make(chan struct{}, concurrency)
-	var g errgroup.Group
-	for i, id := range ids {
-		i := i
-		id := id
-		sem <- struct{}{}
-		g.Go(func() error {
-			defer func() { <-sem }()
-			e, err := client.ByID(ctx, id)
-			if err != nil {
-				return err
-			}
-			entries[i] = e
-			return nil
-		})
-	}
-	if err := g.Wait(); err != nil {
-		return nil, derrors.VulnDBError
-	}
-	return entries, nil
+// Sort vuln entries in descending order by Go ID.
+func sortVulnEntries(entries []*osv.Entry) {
+	sort.Slice(entries, func(i, j int) bool { return entries[i].ID > entries[j].ID })
 }
 
 // aliasLinks generates links to reference pages for vuln aliases.

@@ -373,7 +373,7 @@ func searchVulnModule(ctx context.Context, mode, cq string, client *vuln.Client)
 	if mode != searchModeVuln || client == nil {
 		return nil, nil
 	}
-	allEntries, err := vulnList(ctx, client)
+	allEntries, err := client.Entries(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -390,8 +390,7 @@ EntryLoop:
 			}
 		}
 	}
-	// Sort from most to least recent.
-	sort.Slice(entries, func(i, j int) bool { return entries[i].ID > entries[j].ID })
+	sortVulnEntries(entries)
 	return &searchAction{
 		title:    fmt.Sprintf("%s - Vulnerability Reports", cq),
 		template: "vuln/list",

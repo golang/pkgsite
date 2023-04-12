@@ -339,21 +339,21 @@ func TestByID(t *testing.T) {
 	}
 }
 
-func TestIDs(t *testing.T) {
+func TestEntries(t *testing.T) {
 	ctx := context.Background()
 	c, err := newTestClientFromTxtar(dbTxtar)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	got, err := c.IDs(ctx)
+	got, err := c.Entries(ctx)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	want := []string{testOSV1.ID, testOSV2.ID, testOSV3.ID}
+	want := []*osv.Entry{&testOSV1, &testOSV2, &testOSV3}
 	if !reflect.DeepEqual(got, want) {
-		t.Errorf("IDs = %v, want %v", got, want)
+		t.Errorf("Entries = %#v, want %#v", got, want)
 	}
 }
 
