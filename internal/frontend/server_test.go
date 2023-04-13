@@ -1594,7 +1594,7 @@ func TestCheckTemplates(t *testing.T) {
 		{"unit/versions", []string{"versions"}, VersionsDetails{}},
 		{"vuln", nil, basePage{}},
 		{"vuln/list", nil, VulnListPage{}},
-		{"vuln/entry", nil, VulnPage{}},
+		{"vuln/entry", nil, VulnEntryPage{}},
 	} {
 		t.Run(c.name, func(t *testing.T) {
 			tm := templates[c.name]

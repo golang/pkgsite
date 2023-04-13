@@ -6,6 +6,7 @@ package frontend
 
 import (
 	"context"
+	"net/url"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -55,43 +56,70 @@ var testEntries = []*osv.Entry{
 	},
 }
 
-func TestNewVulnListPage(t *testing.T) {
-	ctx := context.Background()
-	c, err := vuln.NewInMemoryClient(testEntries)
-	if err != nil {
-		t.Fatal(err)
-	}
-	got, err := newVulnListPage(ctx, c, -1)
-	if err != nil {
-		t.Fatal(err)
-	}
-	// testEntries is already sorted by ID, but it should be reversed.
-	var wantEntries []*osv.Entry
-	for i := len(testEntries) - 1; i >= 0; i-- {
-		wantEntries = append(wantEntries, testEntries[i])
-	}
-	want := &VulnListPage{Entries: wantEntries}
-	if diff := cmp.Diff(want, got, cmpopts.IgnoreUnexported(VulnListPage{})); diff != "" {
-		t.Errorf("mismatch (-want, +got):\n%s", diff)
-	}
-}
-
 func TestNewVulnPage(t *testing.T) {
 	ctx := context.Background()
 	c, err := vuln.NewInMemoryClient(testEntries)
 	if err != nil {
 		t.Fatal(err)
 	}
-	got, err := newVulnPage(ctx, c, "GO-1990-0002")
-	if err != nil {
-		t.Fatal(err)
+
+	// testEntries is already sorted by ID, but it should be reversed.
+	var wantEntries []*osv.Entry
+	for i := len(testEntries) - 1; i >= 0; i-- {
+		wantEntries = append(wantEntries, testEntries[i])
 	}
-	want := &VulnPage{
-		Entry:      testEntries[1],
-		AliasLinks: aliasLinks(testEntries[1]),
+
+	tcs := []struct {
+		name string
+		url  string
+		want *vulnPage
+	}{
+		{
+			name: "main vuln page",
+			url:  "https://pkg.go.dev/vuln/",
+			want: &vulnPage{
+				page:     &VulnListPage{Entries: wantEntries[:5]},
+				template: "vuln/main",
+				title:    "Go Vulnerability Database",
+			},
+		},
+		{
+			name: "all vulns page",
+			url:  "https://pkg.go.dev/vuln/list",
+			want: &vulnPage{
+				page:     &VulnListPage{Entries: wantEntries},
+				template: "vuln/list",
+				title:    "Vulnerability Reports",
+			},
+		},
+		{
+			name: "vuln entry page",
+			url:  "https://pkg.go.dev/vuln/GO-1990-0002",
+			want: &vulnPage{
+				page: &VulnEntryPage{
+					Entry:      testEntries[1],
+					AliasLinks: aliasLinks(testEntries[1]),
+				},
+				template: "vuln/entry",
+				title:    "GO-1990-0002",
+			},
+		},
 	}
-	if diff := cmp.Diff(want, got, cmpopts.IgnoreUnexported(VulnPage{})); diff != "" {
-		t.Errorf("mismatch (-want, +got):\n%s", diff)
+
+	for _, tc := range tcs {
+		t.Run(tc.name, func(t *testing.T) {
+			url, err := url.Parse(tc.url)
+			if err != nil {
+				t.Fatal(err)
+			}
+			got, err := newVulnPage(ctx, url, c)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if diff := cmp.Diff(tc.want, got, cmp.AllowUnexported(vulnPage{}), cmpopts.IgnoreUnexported(VulnListPage{}), cmpopts.IgnoreUnexported(VulnEntryPage{})); diff != "" {
+				t.Errorf("mismatch (-want, +got):\n%s", diff)
+			}
+		})
 	}
 }
 

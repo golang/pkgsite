@@ -6,7 +6,9 @@ package frontend
 
 import (
 	"context"
+	"errors"
 	"net/http"
+	"net/url"
 	"strings"
 
 	"golang.org/x/pkgsite/internal"
@@ -27,8 +29,9 @@ type VulnListPage struct {
 	Entries []*osv.Entry
 }
 
-// VulnPage holds the information for a page that displays a single vuln entry.
-type VulnPage struct {
+// VulnEntryPage holds the information for a page that displays a single
+// vuln entry.
+type VulnEntryPage struct {
 	basePage
 	Entry            *osv.Entry
 	AffectedPackages []*vuln.AffectedPackage
@@ -40,46 +43,74 @@ func (s *Server) serveVuln(w http.ResponseWriter, r *http.Request, _ internal.Da
 	if s.vulnClient == nil {
 		return datasourceNotSupportedErr()
 	}
-	path := strings.TrimPrefix(r.URL.Path, "/vuln")
+
+	vp, err := newVulnPage(r.Context(), r.URL, s.vulnClient)
+	if err != nil {
+		var serr *serverError
+		if !errors.As(err, &serr) {
+			serr = &serverError{status: derrors.ToStatus(err), err: err}
+		}
+		return serr
+	}
+
+	page := vp.page
+	page.setBasePage(s.newBasePage(r, vp.title))
+	s.servePage(r.Context(), w, vp.template, page)
+	return nil
+}
+
+type vulnPage struct {
+	page     interface{ setBasePage(basePage) }
+	template string
+	title    string
+}
+
+func newVulnPage(ctx context.Context, url *url.URL, vc *vuln.Client) (*vulnPage, error) {
+	path := strings.TrimPrefix(url.Path, "/vuln")
 	switch path {
 	case "/":
 		// Serve a list of the 5 most recent entries.
-		vulnListPage, err := newVulnListPage(r.Context(), s.vulnClient, 5)
+		page, err := newVulnListPage(ctx, vc, 5)
 		if err != nil {
-			return &serverError{status: derrors.ToStatus(err)}
+			return nil, err
 		}
-		vulnListPage.basePage = s.newBasePage(r, "Go Vulnerability Database")
-		s.servePage(r.Context(), w, "vuln/main", vulnListPage)
+		return &vulnPage{
+			page:     page,
+			template: "vuln/main",
+			title:    "Go Vulnerability Database"}, nil
 	case "/list":
 		// Serve a list of all entries.
-		vulnListPage, err := newVulnListPage(r.Context(), s.vulnClient, -1)
+		page, err := newVulnListPage(ctx, vc, -1)
 		if err != nil {
-			return &serverError{status: derrors.ToStatus(err)}
+			return nil, err
 		}
-		vulnListPage.basePage = s.newBasePage(r, "Vulnerability Reports")
-		s.servePage(r.Context(), w, "vuln/list", vulnListPage)
+		return &vulnPage{
+			page:     page,
+			template: "vuln/list",
+			title:    "Vulnerability Reports"}, nil
 	default: // the path should be "/<ID>", e.g. "/GO-2021-0001".
-		id := path[1:]
+		id := strings.TrimPrefix(path, "/")
 		if !vuln.IsGoID(id) {
-			if r.URL.Query().Has("q") {
-				return &serverError{status: derrors.ToStatus(derrors.NotFound)}
+			if url.Query().Has("q") {
+				return nil, derrors.NotFound
 			}
-			return &serverError{
+			return nil, &serverError{
 				status:       http.StatusBadRequest,
 				responseText: "invalid Go vuln ID; should be GO-YYYY-NNNN",
 			}
 		}
-		vulnPage, err := newVulnPage(r.Context(), s.vulnClient, id)
+		page, err := newVulnEntryPage(ctx, vc, id)
 		if err != nil {
-			return &serverError{status: derrors.ToStatus(err)}
+			return nil, err
 		}
-		vulnPage.basePage = s.newBasePage(r, id)
-		s.servePage(r.Context(), w, "vuln/entry", vulnPage)
+		return &vulnPage{
+			page:     page,
+			template: "vuln/entry",
+			title:    id}, nil
 	}
-	return nil
 }
 
-func newVulnPage(ctx context.Context, client *vuln.Client, id string) (*VulnPage, error) {
+func newVulnEntryPage(ctx context.Context, client *vuln.Client, id string) (*VulnEntryPage, error) {
 	entry, err := client.ByID(ctx, id)
 	if err != nil {
 		return nil, derrors.VulnDBError
@@ -87,7 +118,7 @@ func newVulnPage(ctx context.Context, client *vuln.Client, id string) (*VulnPage
 	if entry == nil {
 		return nil, derrors.NotFound
 	}
-	return &VulnPage{
+	return &VulnEntryPage{
 		Entry:            entry,
 		AffectedPackages: vuln.AffectedPackages(entry),
 		AliasLinks:       aliasLinks(entry),
