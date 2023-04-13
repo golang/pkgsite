@@ -61,7 +61,7 @@ func TestNewVulnListPage(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	got, err := newVulnListPage(ctx, c)
+	got, err := newVulnListPage(ctx, c, -1)
 	if err != nil {
 		t.Fatal(err)
 	}

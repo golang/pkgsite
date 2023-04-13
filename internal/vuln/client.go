@@ -214,15 +214,31 @@ func (c *Client) ByAlias(ctx context.Context, alias string) (_ string, err error
 	return "", derrors.NotFound
 }
 
-// Entries returns all entries in the database.
-func (c *Client) Entries(ctx context.Context) (_ []*osv.Entry, err error) {
-	derrors.Wrap(&err, "Entries()")
+// Entries returns all entries in the database, sorted in descending
+// order by Go ID (most recent to least recent).
+// If n >= 0, only the n most recent entries are returned.
+func (c *Client) Entries(ctx context.Context, n int) (_ []*osv.Entry, err error) {
+	derrors.Wrap(&err, "Entries(n=%d)", n)
+
+	if n == 0 {
+		return nil, nil
+	}
 
 	ids, err := c.ids(ctx)
 	if err != nil {
 		return nil, err
 	}
 
+	sort.Slice(ids, func(i, j int) bool { return ids[i] > ids[j] })
+
+	if n >= 0 && len(ids) > n {
+		ids = ids[:n]
+	}
+
+	return c.byIDs(ctx, ids)
+}
+
+func (c *Client) byIDs(ctx context.Context, ids []string) (_ []*osv.Entry, err error) {
 	entries := make([]*osv.Entry, len(ids))
 	g, gctx := errgroup.WithContext(ctx)
 	g.SetLimit(4)

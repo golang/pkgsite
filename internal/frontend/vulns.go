@@ -7,7 +7,6 @@ package frontend
 import (
 	"context"
 	"net/http"
-	"sort"
 	"strings"
 
 	"golang.org/x/pkgsite/internal"
@@ -44,19 +43,16 @@ func (s *Server) serveVuln(w http.ResponseWriter, r *http.Request, _ internal.Da
 	path := strings.TrimPrefix(r.URL.Path, "/vuln")
 	switch path {
 	case "/":
-		// Serve a list of most recent entries.
-		vulnListPage, err := newVulnListPage(r.Context(), s.vulnClient)
+		// Serve a list of the 5 most recent entries.
+		vulnListPage, err := newVulnListPage(r.Context(), s.vulnClient, 5)
 		if err != nil {
 			return &serverError{status: derrors.ToStatus(err)}
-		}
-		if len(vulnListPage.Entries) > 5 {
-			vulnListPage.Entries = vulnListPage.Entries[:5]
 		}
 		vulnListPage.basePage = s.newBasePage(r, "Go Vulnerability Database")
 		s.servePage(r.Context(), w, "vuln/main", vulnListPage)
 	case "/list":
 		// Serve a list of all entries.
-		vulnListPage, err := newVulnListPage(r.Context(), s.vulnClient)
+		vulnListPage, err := newVulnListPage(r.Context(), s.vulnClient, -1)
 		if err != nil {
 			return &serverError{status: derrors.ToStatus(err)}
 		}
@@ -99,18 +95,12 @@ func newVulnPage(ctx context.Context, client *vuln.Client, id string) (*VulnPage
 	}, nil
 }
 
-func newVulnListPage(ctx context.Context, client *vuln.Client) (*VulnListPage, error) {
-	entries, err := client.Entries(ctx)
+func newVulnListPage(ctx context.Context, client *vuln.Client, n int) (*VulnListPage, error) {
+	entries, err := client.Entries(ctx, n)
 	if err != nil {
 		return nil, derrors.VulnDBError
 	}
-	sortVulnEntries(entries)
 	return &VulnListPage{Entries: entries}, nil
-}
-
-// Sort vuln entries in descending order by Go ID.
-func sortVulnEntries(entries []*osv.Entry) {
-	sort.Slice(entries, func(i, j int) bool { return entries[i].ID > entries[j].ID })
 }
 
 // aliasLinks generates links to reference pages for vuln aliases.

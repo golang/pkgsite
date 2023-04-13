@@ -373,7 +373,7 @@ func searchVulnModule(ctx context.Context, mode, query string, client *vuln.Clie
 	if mode != searchModeVuln || client == nil {
 		return nil, nil
 	}
-	allEntries, err := client.Entries(ctx)
+	allEntries, err := client.Entries(ctx, -1)
 	if err != nil {
 		return nil, err
 	}
@@ -402,8 +402,6 @@ func searchVulnModule(ctx context.Context, mode, query string, client *vuln.Clie
 			entries = append(entries, entry)
 		}
 	}
-
-	sortVulnEntries(entries)
 
 	return &searchAction{
 		title:    fmt.Sprintf("%s - Vulnerability Reports", query),

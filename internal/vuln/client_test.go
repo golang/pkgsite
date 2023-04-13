@@ -8,6 +8,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"reflect"
 	"strings"
 	"testing"
@@ -346,14 +347,42 @@ func TestEntries(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	got, err := c.Entries(ctx)
-	if err != nil {
-		t.Fatal(err)
+	tests := []struct {
+		n    int
+		want []*osv.Entry
+	}{
+		{
+			n:    -1,
+			want: []*osv.Entry{&testOSV3, &testOSV2, &testOSV1},
+		},
+		{
+			n:    0,
+			want: nil,
+		},
+		{
+			n:    2,
+			want: []*osv.Entry{&testOSV3, &testOSV2},
+		},
+		{
+			n:    3,
+			want: []*osv.Entry{&testOSV3, &testOSV2, &testOSV1},
+		},
+		{
+			n:    4,
+			want: []*osv.Entry{&testOSV3, &testOSV2, &testOSV1},
+		},
 	}
+	for _, tc := range tests {
+		t.Run(fmt.Sprintf("n=%d", tc.n), func(t *testing.T) {
+			got, err := c.Entries(ctx, tc.n)
+			if err != nil {
+				t.Fatal(err)
+			}
 
-	want := []*osv.Entry{&testOSV1, &testOSV2, &testOSV3}
-	if !reflect.DeepEqual(got, want) {
-		t.Errorf("Entries = %#v, want %#v", got, want)
+			if !reflect.DeepEqual(got, tc.want) {
+				t.Errorf("Entries = %#v, want %#v", got, tc.want)
+			}
+		})
 	}
 }
 
