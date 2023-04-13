@@ -369,7 +369,7 @@ func searchRequestRedirectPath(ctx context.Context, ds internal.DataSource, quer
 	return fmt.Sprintf("/%s", requestedPath)
 }
 
-func searchVulnModule(ctx context.Context, mode, cq string, client *vuln.Client) (_ *searchAction, err error) {
+func searchVulnModule(ctx context.Context, mode, query string, client *vuln.Client) (_ *searchAction, err error) {
 	if mode != searchModeVuln || client == nil {
 		return nil, nil
 	}
@@ -377,22 +377,36 @@ func searchVulnModule(ctx context.Context, mode, cq string, client *vuln.Client)
 	if err != nil {
 		return nil, err
 	}
-	prefix := cq + "/"
-	var entries []*osv.Entry
-EntryLoop:
-	for _, entry := range allEntries {
-		for _, aff := range entry.Affected {
-			for _, imp := range aff.EcosystemSpecific.Packages {
-				if imp.Path == cq || strings.HasPrefix(imp.Path, prefix) {
-					entries = append(entries, entry)
-					continue EntryLoop
+
+	prefix := query + "/"
+	// Returns whether any of the affected modules or packages of the
+	// entry start with the search query.
+	matchesQuery := func(e *osv.Entry) bool {
+		for _, aff := range e.Affected {
+			if aff.Module.Path == query ||
+				strings.HasPrefix(aff.Module.Path, prefix) {
+				return true
+			}
+			for _, pkg := range aff.EcosystemSpecific.Packages {
+				if pkg.Path == query || strings.HasPrefix(pkg.Path, prefix) {
+					return true
 				}
 			}
 		}
+		return false
 	}
+
+	var entries []*osv.Entry
+	for _, entry := range allEntries {
+		if matchesQuery(entry) {
+			entries = append(entries, entry)
+		}
+	}
+
 	sortVulnEntries(entries)
+
 	return &searchAction{
-		title:    fmt.Sprintf("%s - Vulnerability Reports", cq),
+		title:    fmt.Sprintf("%s - Vulnerability Reports", query),
 		template: "vuln/list",
 		page:     &VulnListPage{Entries: entries},
 	}, nil

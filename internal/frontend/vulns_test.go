@@ -20,16 +20,34 @@ var testEntries = []*osv.Entry{
 	{ID: "GO-1990-10", Details: "c"},
 	{ID: "GO-1991-01", Details: "d"},
 	{ID: "GO-1991-05", Details: "e"},
-	{ID: "GO-1991-23", Details: "f"},
-	{ID: "GO-1991-30", Details: "g"},
+	{ID: "GO-1991-23", Details: "f",
+		Affected: []osv.Affected{{
+			Module: osv.Module{
+				Path: "stdlib",
+			},
+			EcosystemSpecific: osv.EcosystemSpecific{
+				Packages: []osv.Package{
+					{
+						Path: "net/http",
+					}}}}},
+	},
+	{ID: "GO-1991-30", Details: "g",
+		Affected: []osv.Affected{{
+			Module: osv.Module{
+				Path: "example.com/org/repo",
+			},
+		}}},
 	{
 		ID:      "GO-1991-31",
 		Details: "h",
 		Affected: []osv.Affected{{
+			Module: osv.Module{
+				Path: "example.com/org/module",
+			},
 			EcosystemSpecific: osv.EcosystemSpecific{
 				Packages: []osv.Package{
 					{
-						Path: "example.com/org/path",
+						Path: "example.com/org/module/a/package",
 					},
 				},
 			},

@@ -647,17 +647,50 @@ func TestSearchVulnModulePath(t *testing.T) {
 			wantPage: &VulnListPage{Entries: nil},
 		},
 		{
-			name:  "prefix match",
+			name:  "stdlib module match",
+			mode:  searchModeVuln,
+			query: "stdlib",
+			wantPage: &VulnListPage{Entries: []*osv.Entry{
+				testEntries[5],
+			}},
+		},
+		{
+			name:  "stdlib package match",
+			mode:  searchModeVuln,
+			query: "net/http",
+			wantPage: &VulnListPage{Entries: []*osv.Entry{
+				testEntries[5],
+			}},
+		},
+		{
+			name:  "module prefix match",
 			mode:  searchModeVuln,
 			query: "example.com/org",
+			wantPage: &VulnListPage{Entries: []*osv.Entry{
+				// reverse sorted order
+				testEntries[7], testEntries[6],
+			}},
+		},
+		{
+			name:  "module path match",
+			mode:  searchModeVuln,
+			query: "example.com/org/module",
 			wantPage: &VulnListPage{Entries: []*osv.Entry{
 				testEntries[7],
 			}},
 		},
 		{
-			name:  "path match",
+			name:  "package path match",
 			mode:  searchModeVuln,
-			query: "example.com/org/path",
+			query: "example.com/org/module/a/package",
+			wantPage: &VulnListPage{Entries: []*osv.Entry{
+				testEntries[7],
+			}},
+		},
+		{
+			name:  "package prefix match",
+			mode:  searchModeVuln,
+			query: "example.com/org/module/a",
 			wantPage: &VulnListPage{Entries: []*osv.Entry{
 				testEntries[7],
 			}},
