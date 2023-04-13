@@ -109,7 +109,7 @@ func TestDetermineSearchAction(t *testing.T) {
 		{
 			name:         "vuln alias",
 			query:        "q=GHSA-aaaa-bbbb-cccc&m=vuln",
-			wantRedirect: "/vuln/GO-1990-01",
+			wantRedirect: "/vuln/GO-1990-0001",
 		},
 		{
 			name:         "vuln module path",
@@ -120,7 +120,7 @@ func TestDetermineSearchAction(t *testing.T) {
 			// We turn on vuln mode if the query matches a vuln alias.
 			name:         "vuln alias not vuln mode",
 			query:        "q=GHSA-aaaa-bbbb-cccc",
-			wantRedirect: "/vuln/GO-1990-01",
+			wantRedirect: "/vuln/GO-1990-0001",
 		},
 		{
 			name:       "vuln alias with no match",
@@ -594,7 +594,7 @@ func TestSearchVulnAlias(t *testing.T) {
 			name:    "one match",
 			mode:    searchModeVuln,
 			query:   "GHSA-aaaa-bbbb-cccc",
-			wantURL: "/vuln/GO-1990-01",
+			wantURL: "/vuln/GO-1990-0001",
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {

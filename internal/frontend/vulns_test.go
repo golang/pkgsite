@@ -15,12 +15,12 @@ import (
 )
 
 var testEntries = []*osv.Entry{
-	{ID: "GO-1990-01", Details: "a", Aliases: []string{"CVE-2000-1", "GHSA-aaaa-bbbb-cccc"}},
-	{ID: "GO-1990-02", Details: "b", Aliases: []string{"CVE-2000-1", "GHSA-1111-2222-3333"}},
-	{ID: "GO-1990-10", Details: "c"},
-	{ID: "GO-1991-01", Details: "d"},
-	{ID: "GO-1991-05", Details: "e"},
-	{ID: "GO-1991-23", Details: "f",
+	{ID: "GO-1990-0001", Details: "a", Aliases: []string{"CVE-2000-1", "GHSA-aaaa-bbbb-cccc"}},
+	{ID: "GO-1990-0002", Details: "b", Aliases: []string{"CVE-2000-1", "GHSA-1111-2222-3333"}},
+	{ID: "GO-1990-0010", Details: "c"},
+	{ID: "GO-1991-0001", Details: "d"},
+	{ID: "GO-1991-0005", Details: "e"},
+	{ID: "GO-1991-0023", Details: "f",
 		Affected: []osv.Affected{{
 			Module: osv.Module{
 				Path: "stdlib",
@@ -31,14 +31,14 @@ var testEntries = []*osv.Entry{
 						Path: "net/http",
 					}}}}},
 	},
-	{ID: "GO-1991-30", Details: "g",
+	{ID: "GO-1991-0030", Details: "g",
 		Affected: []osv.Affected{{
 			Module: osv.Module{
 				Path: "example.com/org/repo",
 			},
 		}}},
 	{
-		ID:      "GO-1991-31",
+		ID:      "GO-1991-0031",
 		Details: "h",
 		Affected: []osv.Affected{{
 			Module: osv.Module{
@@ -82,7 +82,7 @@ func TestNewVulnPage(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	got, err := newVulnPage(ctx, c, "GO-1990-02")
+	got, err := newVulnPage(ctx, c, "GO-1990-0002")
 	if err != nil {
 		t.Fatal(err)
 	}

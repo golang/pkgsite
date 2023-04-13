@@ -16,7 +16,7 @@ import (
 
 func TestVulnsForPackage(t *testing.T) {
 	e := osv.Entry{
-		ID: "GO-1",
+		ID: "GO-1999-0001",
 		Affected: []osv.Affected{{
 			Module: osv.Module{Path: "bad.com"},
 			Ranges: []osv.Range{{
@@ -44,7 +44,7 @@ func TestVulnsForPackage(t *testing.T) {
 		}},
 	}
 	e2 := osv.Entry{
-		ID: "GO-2",
+		ID: "GO-1999-0002",
 		Affected: []osv.Affected{{
 			Module: osv.Module{Path: "bad.com"},
 			Ranges: []osv.Range{{
@@ -60,7 +60,7 @@ func TestVulnsForPackage(t *testing.T) {
 		}},
 	}
 	stdlib := osv.Entry{
-		ID: "GO-3",
+		ID: "GO-2000-0003",
 		Affected: []osv.Affected{{
 			Module: osv.Module{Path: "stdlib"},
 			Ranges: []osv.Range{{
@@ -94,12 +94,12 @@ func TestVulnsForPackage(t *testing.T) {
 		{
 			name: "match - same mod/pkg",
 			mod:  "bad.com", pkg: "bad.com", version: "v1.0.0",
-			want: []Vuln{{ID: "GO-1"}},
+			want: []Vuln{{ID: "GO-1999-0001"}},
 		},
 		{
 			name: "match - different mod/pkg",
 			mod:  "bad.com", pkg: "bad.com/bad", version: "v1.0.0",
-			want: []Vuln{{ID: "GO-1"}},
+			want: []Vuln{{ID: "GO-1999-0001"}},
 		},
 		{
 			name: "no match - pkg",
@@ -113,7 +113,7 @@ func TestVulnsForPackage(t *testing.T) {
 		},
 		{
 			name: "match - pkg with no fix",
-			mod:  "unfixable.com", pkg: "unfixable.com", version: "v1.999.999", want: []Vuln{{ID: "GO-1"}},
+			mod:  "unfixable.com", pkg: "unfixable.com", version: "v1.999.999", want: []Vuln{{ID: "GO-1999-0001"}},
 		},
 		// Vulnerabilities for a module (package == "")
 		{
@@ -122,7 +122,7 @@ func TestVulnsForPackage(t *testing.T) {
 		},
 		{
 			name: "match - module only",
-			mod:  "bad.com", pkg: "", version: "v1.0.0", want: []Vuln{{ID: "GO-1"}, {ID: "GO-2"}},
+			mod:  "bad.com", pkg: "", version: "v1.0.0", want: []Vuln{{ID: "GO-1999-0001"}, {ID: "GO-1999-0002"}},
 		},
 		{
 			name: "no match - module but not version",
@@ -131,13 +131,13 @@ func TestVulnsForPackage(t *testing.T) {
 		},
 		{
 			name: "match - module only, no fix",
-			mod:  "unfixable.com", pkg: "", version: "v1.999.999", want: []Vuln{{ID: "GO-1"}},
+			mod:  "unfixable.com", pkg: "", version: "v1.999.999", want: []Vuln{{ID: "GO-1999-0001"}},
 		},
 		// Vulns for stdlib
 		{
 			name: "match - stdlib",
 			mod:  "std", pkg: "net/http", version: "go1.19.3",
-			want: []Vuln{{ID: "GO-3"}},
+			want: []Vuln{{ID: "GO-2000-0003"}},
 		},
 		{
 			name: "no match - stdlib pseudoversion",
@@ -249,7 +249,7 @@ func TestAffectedPackagesPackagesSymbols(t *testing.T) {
 		{
 			name: "one symbol",
 			in: &osv.Entry{
-				ID: "GO-2022-01",
+				ID: "GO-2022-0001",
 				Affected: []osv.Affected{{
 					Module: osv.Module{Path: "example.com/mod"},
 					EcosystemSpecific: osv.EcosystemSpecific{
@@ -268,7 +268,7 @@ func TestAffectedPackagesPackagesSymbols(t *testing.T) {
 		{
 			name: "multiple symbols",
 			in: &osv.Entry{
-				ID: "GO-2022-02",
+				ID: "GO-2022-0002",
 				Affected: []osv.Affected{{
 					Module: osv.Module{Path: "example.com/mod"},
 					EcosystemSpecific: osv.EcosystemSpecific{
@@ -287,7 +287,7 @@ func TestAffectedPackagesPackagesSymbols(t *testing.T) {
 		{
 			name: "no symbol",
 			in: &osv.Entry{
-				ID: "GO-2022-03",
+				ID: "GO-2022-0003",
 				Affected: []osv.Affected{{
 					Module: osv.Module{Path: "example.com/mod"},
 					EcosystemSpecific: osv.EcosystemSpecific{
@@ -304,7 +304,7 @@ func TestAffectedPackagesPackagesSymbols(t *testing.T) {
 		{
 			name: "multiple pkgs and modules",
 			in: &osv.Entry{
-				ID: "GO-2022-04",
+				ID: "GO-2022-0004",
 				Affected: []osv.Affected{{
 					Module: osv.Module{Path: "example.com/mod1"},
 					EcosystemSpecific: osv.EcosystemSpecific{
