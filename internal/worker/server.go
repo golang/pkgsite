@@ -305,6 +305,16 @@ func (s *Server) handleFetch(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, http.StatusText(code), code)
 		return
 	}
+
+	// Proxy timeouts are retryable, since they occur when e.g. a branch pointer
+	// such as master needs to be re-fetched.
+	if code == derrors.ToStatus(derrors.ProxyTimedOut) {
+		log.Infof(r.Context(), "doFetch of %s returned %d (proxy timeout); returning 500 retry task", r.URL.Path, code)
+		code := http.StatusInternalServerError
+		http.Error(w, http.StatusText(code), code)
+		return
+	}
+
 	if code/100 != 2 {
 		log.Infof(r.Context(), "doFetch of %s returned code %d; returning OK to avoid retry", r.URL.Path, code)
 	}
