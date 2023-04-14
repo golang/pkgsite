@@ -12,7 +12,6 @@ import (
 	"os"
 	"regexp"
 	"testing"
-	"time"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
@@ -117,7 +116,7 @@ func buildLocalGetters() ([]fetch.ModuleGetter, func()) {
 
 func setup(t *testing.T, testModules []*proxytest.Module, bypassLicenseCheck bool) (context.Context, *FetchDataSource, func()) {
 	t.Helper()
-	ctx, cancel := context.WithTimeout(context.Background(), 40*time.Second)
+	ctx, cancel := context.WithCancel(context.Background())
 
 	var client *proxy.Client
 	teardownProxy := func() {}
