@@ -17,14 +17,6 @@ import (
 	"golang.org/x/pkgsite/internal/version"
 )
 
-const (
-	// The vulndb stores vulns in cmd/go under the modulepath toolchain.
-	vulnCmdGoModulePath = "toolchain"
-	// The vulndb stores vulns under the modulepath stdlib for all other packages
-	// in the standard library.
-	vulnStdlibModulePath = "stdlib"
-)
-
 // A Vuln contains information to display about a vulnerability.
 type Vuln struct {
 	// The vulndb ID.
@@ -51,17 +43,21 @@ func VulnsForPackage(ctx context.Context, modulePath, version, packagePath strin
 func vulnsForPackage(ctx context.Context, modulePath, vers, packagePath string, vc *Client) (_ []Vuln, err error) {
 	defer derrors.Wrap(&err, "vulnsForPackage(%q, %q, %q)", modulePath, vers, packagePath)
 
-	// Stdlib pages requested at master will map to a pseudo version that puts
-	// all vulns in range. We can't really tell you're at master so version.IsPseudo
-	// is the best we can do. The result is vulns won't be reported for a pseudoversion
-	// that refers to a commit that is in a vulnerable range.
-	if modulePath == stdlib.ModulePath && version.IsPseudo(vers) {
-		return nil, nil
-	}
-	if modulePath == stdlib.ModulePath && strings.HasPrefix(packagePath, "cmd/go") {
-		modulePath = vulnCmdGoModulePath
-	} else if modulePath == stdlib.ModulePath {
-		modulePath = vulnStdlibModulePath
+	// Handle special module paths.
+	if modulePath == stdlib.ModulePath {
+		// Stdlib pages requested at master will map to a pseudo version
+		// that puts all vulns in range.
+		// We can't really tell you're at master so version.IsPseudo
+		// is the best we can do. The result is vulns won't be reported for a
+		// pseudoversion that refers to a commit that is in a vulnerable range.
+		switch {
+		case version.IsPseudo(vers):
+			return nil, nil
+		case strings.HasPrefix(packagePath, "cmd/"):
+			modulePath = osv.GoCmdModulePath
+		default:
+			modulePath = osv.GoStdModulePath
+		}
 	}
 
 	// Get all the vulns for this package/version.
