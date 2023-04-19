@@ -14,6 +14,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/go-cmp/cmp"
 	"golang.org/x/pkgsite/internal/osv"
 	"golang.org/x/tools/txtar"
 )
@@ -381,6 +382,150 @@ func TestEntries(t *testing.T) {
 
 			if !reflect.DeepEqual(got, tc.want) {
 				t.Errorf("Entries = %#v, want %#v", got, tc.want)
+			}
+		})
+	}
+}
+
+func TestByPackagePrefix(t *testing.T) {
+	stdlibNet := &osv.Entry{
+		ID: "1-STDLIB-NET",
+		Affected: []osv.Affected{
+			{
+				Module: osv.Module{
+					Path: "golang.org/x/example",
+				},
+			},
+			{
+				Module: osv.Module{
+					Path: "stdlib",
+				},
+				EcosystemSpecific: osv.EcosystemSpecific{
+					Packages: []osv.Package{
+						{
+							Path: "net/http/httputil",
+						},
+					},
+				},
+			},
+		},
+	}
+	stdlibCrypto := &osv.Entry{
+		ID: "2-STDLIB-CRYPTO",
+		Affected: []osv.Affected{
+			{
+				Module: osv.Module{
+					Path: "golang.org/x/example",
+				},
+			},
+			{
+				Module: osv.Module{
+					Path: "stdlib",
+				},
+				EcosystemSpecific: osv.EcosystemSpecific{
+					Packages: []osv.Package{
+						{
+							Path: "crypto/tls",
+						},
+					},
+				},
+			},
+		},
+	}
+	thirdParty := &osv.Entry{
+		ID: "3-EXAMPLE-COM",
+		Affected: []osv.Affected{
+			{
+				Module: osv.Module{
+					Path: "golang.org/x/example",
+				},
+			},
+			{
+
+				Module: osv.Module{
+					Path: "example.com/org/module",
+				},
+				EcosystemSpecific: osv.EcosystemSpecific{
+					Packages: []osv.Package{
+						{
+							Path: "example.com/org/module/somepkg",
+						},
+						{
+							Path: "example.com/org/module/package/inner",
+						},
+					},
+				},
+			},
+		},
+	}
+	vc, err := NewInMemoryClient([]*osv.Entry{stdlibCrypto, stdlibNet, thirdParty})
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, tc := range []struct {
+		name  string
+		query string
+		want  []*osv.Entry
+	}{
+		{
+			name:  "no match",
+			query: "net/htt",
+			want:  nil,
+		},
+		{
+			name:  "stdlib module exact match",
+			query: "stdlib",
+			want:  []*osv.Entry{stdlibCrypto, stdlibNet},
+		},
+		{
+			name:  "stdlib package exact match",
+			query: "net/http/httputil",
+			want:  []*osv.Entry{stdlibNet},
+		},
+		{
+			name:  "stdlib package prefix match",
+			query: "net/http",
+			want:  []*osv.Entry{stdlibNet},
+		},
+		{
+			name:  "3p module exact match",
+			query: "example.com/org/module",
+			want:  []*osv.Entry{thirdParty},
+		},
+		{
+			name:  "3p module prefix match",
+			query: "example.com/org",
+			want:  []*osv.Entry{thirdParty},
+		},
+		{
+			name:  "3p package exact match",
+			query: "example.com/org/module/package/inner",
+			want:  []*osv.Entry{thirdParty},
+		},
+		{
+			name:  "3p package prefix match",
+			query: "example.com/org/module/package",
+			want:  []*osv.Entry{thirdParty},
+		},
+		{
+			name:  "prefix with trailing slash",
+			query: "example.com/org/module/package/",
+			want:  []*osv.Entry{thirdParty},
+		},
+		{
+			name:  "descending order by ID",
+			query: "golang.org/x",
+			want:  []*osv.Entry{thirdParty, stdlibCrypto, stdlibNet},
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			got, err := vc.ByPackagePrefix(context.Background(), tc.query)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if !cmp.Equal(got, tc.want) {
+				t.Errorf("ByPackagePrefix(%s) = %v, want %v", tc.query, got, tc.want)
 			}
 		})
 	}

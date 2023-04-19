@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"sort"
+	"strings"
 	"sync"
 
 	"golang.org/x/pkgsite/internal/derrors"
@@ -236,6 +237,52 @@ func (c *Client) Entries(ctx context.Context, n int) (_ []*osv.Entry, err error)
 	}
 
 	return c.byIDs(ctx, ids)
+}
+
+// ByPackagePrefix returns all the OSV entries that match the given
+// package prefix, in descending order by ID, or (nil, nil) if there
+// are none.
+//
+// An entry matches a prefix if:
+//   - Any affected module or package equals the given prefix, OR
+//   - Any affected module or package's path begins with the given prefix
+//     interpreted as a full path. (E.g. "example.com/module/package" matches
+//     the prefix "example.com/module" but not "example.com/mod")
+func (c *Client) ByPackagePrefix(ctx context.Context, prefix string) (_ []*osv.Entry, err error) {
+	allEntries, err := c.Entries(ctx, -1)
+	if err != nil {
+		return nil, err
+	}
+
+	prefix = strings.TrimSuffix(prefix, "/")
+	match := func(s string) bool {
+		return s == prefix || strings.HasPrefix(s, prefix+"/")
+	}
+
+	// Returns whether any of the affected modules or packages of the
+	// entry start with the prefix.
+	matchesQuery := func(e *osv.Entry) bool {
+		for _, aff := range e.Affected {
+			if match(aff.Module.Path) {
+				return true
+			}
+			for _, pkg := range aff.EcosystemSpecific.Packages {
+				if match(pkg.Path) {
+					return true
+				}
+			}
+		}
+		return false
+	}
+
+	var entries []*osv.Entry
+	for _, entry := range allEntries {
+		if matchesQuery(entry) {
+			entries = append(entries, entry)
+		}
+	}
+
+	return entries, nil
 }
 
 func (c *Client) byIDs(ctx context.Context, ids []string) (_ []*osv.Entry, err error) {

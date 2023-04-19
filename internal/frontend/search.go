@@ -23,7 +23,6 @@ import (
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/middleware"
-	"golang.org/x/pkgsite/internal/osv"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/version"
@@ -373,34 +372,10 @@ func searchVulnModule(ctx context.Context, mode, query string, client *vuln.Clie
 	if mode != searchModeVuln || client == nil {
 		return nil, nil
 	}
-	allEntries, err := client.Entries(ctx, -1)
+
+	entries, err := client.ByPackagePrefix(ctx, query)
 	if err != nil {
 		return nil, err
-	}
-
-	prefix := query + "/"
-	// Returns whether any of the affected modules or packages of the
-	// entry start with the search query.
-	matchesQuery := func(e *osv.Entry) bool {
-		for _, aff := range e.Affected {
-			if aff.Module.Path == query ||
-				strings.HasPrefix(aff.Module.Path, prefix) {
-				return true
-			}
-			for _, pkg := range aff.EcosystemSpecific.Packages {
-				if pkg.Path == query || strings.HasPrefix(pkg.Path, prefix) {
-					return true
-				}
-			}
-		}
-		return false
-	}
-
-	var entries []*osv.Entry
-	for _, entry := range allEntries {
-		if matchesQuery(entry) {
-			entries = append(entries, entry)
-		}
 	}
 
 	return &searchAction{
