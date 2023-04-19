@@ -11,10 +11,9 @@ import (
 	"go/token"
 	"strings"
 
-	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/osv"
 	"golang.org/x/pkgsite/internal/stdlib"
-	"golang.org/x/pkgsite/internal/version"
+	vers "golang.org/x/pkgsite/internal/version"
 )
 
 // A Vuln contains information to display about a vulnerability.
@@ -33,16 +32,6 @@ func VulnsForPackage(ctx context.Context, modulePath, version, packagePath strin
 		return nil
 	}
 
-	vs, err := vulnsForPackage(ctx, modulePath, version, packagePath, vc)
-	if err != nil {
-		return []Vuln{{Details: fmt.Sprintf("could not get vulnerability data: %v", err)}}
-	}
-	return vs
-}
-
-func vulnsForPackage(ctx context.Context, modulePath, vers, packagePath string, vc *Client) (_ []Vuln, err error) {
-	defer derrors.Wrap(&err, "vulnsForPackage(%q, %q, %q)", modulePath, vers, packagePath)
-
 	// Handle special module paths.
 	if modulePath == stdlib.ModulePath {
 		// Stdlib pages requested at master will map to a pseudo version
@@ -51,8 +40,8 @@ func vulnsForPackage(ctx context.Context, modulePath, vers, packagePath string, 
 		// is the best we can do. The result is vulns won't be reported for a
 		// pseudoversion that refers to a commit that is in a vulnerable range.
 		switch {
-		case version.IsPseudo(vers):
-			return nil, nil
+		case vers.IsPseudo(version):
+			return nil
 		case strings.HasPrefix(packagePath, "cmd/"):
 			modulePath = osv.GoCmdModulePath
 		default:
@@ -61,12 +50,12 @@ func vulnsForPackage(ctx context.Context, modulePath, vers, packagePath string, 
 	}
 
 	// Get all the vulns for this package/version.
-	entries, err := vc.ByPackage(ctx, &PackageRequest{Module: modulePath, Package: packagePath, Version: vers})
+	entries, err := vc.ByPackage(ctx, &PackageRequest{Module: modulePath, Package: packagePath, Version: version})
 	if err != nil {
-		return nil, err
+		return []Vuln{{Details: fmt.Sprintf("could not get vulnerability data: %v", err)}}
 	}
 
-	return toVulns(entries), nil
+	return toVulns(entries)
 }
 
 func toVulns(entries []*osv.Entry) []Vuln {

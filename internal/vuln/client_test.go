@@ -458,7 +458,23 @@ func TestByPackagePrefix(t *testing.T) {
 			},
 		},
 	}
-	vc, err := NewInMemoryClient([]*osv.Entry{stdlibCrypto, stdlibNet, thirdParty})
+	// Entry containing two modules with a common prefix.
+	commonPrefix := &osv.Entry{
+		ID: "4-COMMON-PREFIX",
+		Affected: []osv.Affected{
+			{
+				Module: osv.Module{
+					Path: "example.com/module",
+				},
+			},
+			{
+				Module: osv.Module{
+					Path: "example.com/module/inner",
+				},
+			},
+		},
+	}
+	vc, err := NewInMemoryClient([]*osv.Entry{stdlibCrypto, stdlibNet, thirdParty, commonPrefix})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -516,6 +532,13 @@ func TestByPackagePrefix(t *testing.T) {
 			name:  "descending order by ID",
 			query: "golang.org/x",
 			want:  []*osv.Entry{thirdParty, stdlibCrypto, stdlibNet},
+		},
+		{
+			name: "entries not duplicated",
+			// Query is both an exact match and a prefix for another
+			// module, but entry should only show up once.
+			query: "example.com/module",
+			want:  []*osv.Entry{commonPrefix},
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
