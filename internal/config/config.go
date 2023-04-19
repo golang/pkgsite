@@ -178,6 +178,10 @@ type Config struct {
 	// dynamic configuration.
 	DynamicConfigLocation string
 
+	// DynamicExcludeLocation is the location (either a file or gs://bucket/object) for
+	// dynamic exclusion file.
+	DynamicExcludeLocation string
+
 	// ServeStats determines whether the server has an endpoint that serves statistics for
 	// benchmarking or other purposes.
 	ServeStats bool
@@ -409,14 +413,19 @@ func Init(ctx context.Context) (_ *Config, err error) {
 	log.SetLevel(cfg.LogLevel)
 
 	bucket := os.Getenv("GO_DISCOVERY_CONFIG_BUCKET")
-	object := os.Getenv("GO_DISCOVERY_CONFIG_DYNAMIC")
+	config := os.Getenv("GO_DISCOVERY_CONFIG_DYNAMIC")
+	exclude := os.Getenv("GO_DISCOVERY_EXCLUDED_FILENAME")
 	if bucket != "" {
-		if object == "" {
+		if config == "" {
 			return nil, errors.New("GO_DISCOVERY_CONFIG_DYNAMIC must be set if GO_DISCOVERY_CONFIG_BUCKET is")
 		}
-		cfg.DynamicConfigLocation = fmt.Sprintf("gs://%s/%s", bucket, object)
+		cfg.DynamicConfigLocation = fmt.Sprintf("gs://%s/%s", bucket, config)
+		if exclude != "" {
+			cfg.DynamicExcludeLocation = fmt.Sprintf("gs://%s/%s", bucket, exclude)
+		}
 	} else {
-		cfg.DynamicConfigLocation = object
+		cfg.DynamicConfigLocation = config
+		cfg.DynamicExcludeLocation = exclude
 	}
 	if cfg.OnGCP() {
 		// Zone is not available in the environment but can be queried via the metadata API.

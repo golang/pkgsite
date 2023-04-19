@@ -219,6 +219,10 @@ func (s *Server) Install(handle func(string, http.Handler)) {
 	// "before" query parameter.
 	handle("/repopulate-search-documents", rmw(s.errorHandler(s.handleRepopulateSearchDocuments)))
 
+	// manual: populate-excluded-prefixes inserts all excluded prefixes from
+	// the file private/config/excluded.txt into the databse.
+	handle("/populate-excluded-prefixes", rmw(s.errorHandler(s.handlePopulateExcludedPrefixes)))
+
 	// manual: clear-cache clears the redis cache.
 	handle("/clear-cache", rmw(s.clearCache(s.cache)))
 
@@ -286,6 +290,16 @@ func (s *Server) handleRepopulateSearchDocuments(w http.ResponseWriter, r *http.
 			return err
 		}
 	}
+	return nil
+}
+
+// populateExcluded adds each element of excludedPrefixes to the excluded_prefixes
+// table if it isn't already present.
+func (s *Server) handlePopulateExcludedPrefixes(w http.ResponseWriter, r *http.Request) error {
+	if err := PopulateExcluded(r.Context(), s.cfg, s.db); err != nil {
+		return err
+	}
+	fmt.Fprint(w, "done")
 	return nil
 }
 

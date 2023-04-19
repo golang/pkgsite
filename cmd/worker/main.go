@@ -11,7 +11,6 @@ import (
 	"flag"
 	"net/http"
 	"os"
-	"strings"
 	"time"
 
 	"cloud.google.com/go/profiler"
@@ -19,13 +18,11 @@ import (
 	"github.com/google/safehtml/template"
 	_ "github.com/jackc/pgx/v4/stdlib" // for pgx driver
 	"golang.org/x/pkgsite/cmd/internal/cmdconfig"
-	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/config"
 	"golang.org/x/pkgsite/internal/dcensus"
 	"golang.org/x/pkgsite/internal/index"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/middleware"
-	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/proxy"
 	"golang.org/x/pkgsite/internal/queue"
 	"golang.org/x/pkgsite/internal/source"
@@ -64,7 +61,9 @@ func main() {
 	}
 	defer db.Close()
 
-	populateExcluded(ctx, db)
+	if err := worker.PopulateExcluded(ctx, cfg, db); err != nil {
+		log.Fatal(ctx, err)
+	}
 
 	indexClient, err := index.New(cfg.IndexURL)
 	if err != nil {
@@ -177,41 +176,4 @@ func getRedis(ctx context.Context, host, port string, writeTimeout, readTimeout 
 		WriteTimeout: writeTimeout,
 		ReadTimeout:  readTimeout,
 	})
-}
-
-// populateExcluded adds each element of excludedPrefixes to the excluded_prefixes
-// table if it isn't already present.
-func populateExcluded(ctx context.Context, db *postgres.DB) {
-	filename := config.GetEnv("GO_DISCOVERY_EXCLUDED_FILENAME", "")
-	if filename == "" {
-		return
-	}
-	lines, err := internal.ReadFileLines(filename)
-	if err != nil {
-		log.Fatal(ctx, err)
-	}
-	user := os.Getenv("USER")
-	if user == "" {
-		user = "worker"
-	}
-	for _, line := range lines {
-		var prefix, reason string
-		i := strings.IndexAny(line, " \t")
-		if i >= 0 {
-			prefix = line[:i]
-			reason = strings.TrimSpace(line[i+1:])
-		}
-		if reason == "" {
-			log.Fatalf(ctx, "missing reason in %s, line %q", filename, line)
-		}
-		present, err := db.IsExcluded(ctx, prefix)
-		if err != nil {
-			log.Fatalf(ctx, "db.IsExcluded(%q): %v", prefix, err)
-		}
-		if !present {
-			if err := db.InsertExcludedPrefix(ctx, prefix, user, reason); err != nil {
-				log.Fatalf(ctx, "db.InsertExcludedPrefix(%q, %q, %q): %v", prefix, user, reason, err)
-			}
-		}
-	}
 }

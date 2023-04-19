@@ -1,0 +1,1 @@
+github.com/golang/go    We want users to view pkg.go.dev/<stdlib> instead
