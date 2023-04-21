@@ -148,3 +148,132 @@ func TestCanonicalize(t *testing.T) {
 		}
 	}
 }
+
+func TestLatestFixedVersion(t *testing.T) {
+	tests := []struct {
+		name   string
+		ranges []Range
+		want   string
+	}{
+		{
+			name:   "empty",
+			ranges: []Range{},
+			want:   "",
+		},
+		{
+			name: "no fix",
+			ranges: []Range{{
+				Type: RangeTypeSemver,
+				Events: []RangeEvent{
+					{
+						Introduced: "0",
+					},
+				},
+			}},
+			want: "",
+		},
+		{
+			name: "no latest fix",
+			ranges: []Range{{
+				Type: RangeTypeSemver,
+				Events: []RangeEvent{
+					{Introduced: "0"},
+					{Fixed: "1.0.4"},
+					{Introduced: "1.1.2"},
+				},
+			}},
+			want: "",
+		},
+		{
+			name: "unsorted no latest fix",
+			ranges: []Range{{
+				Type: RangeTypeSemver,
+				Events: []RangeEvent{
+					{Fixed: "1.0.4"},
+					{Introduced: "0"},
+					{Introduced: "1.1.2"},
+					{Introduced: "1.5.0"},
+					{Fixed: "1.1.4"},
+				},
+			}},
+			want: "",
+		},
+		{
+			name: "unsorted with fix",
+			ranges: []Range{{
+				Type: RangeTypeSemver,
+				Events: []RangeEvent{
+					{
+						Fixed: "1.0.0",
+					},
+					{
+						Introduced: "0",
+					},
+					{
+						Fixed: "0.1.0",
+					},
+					{
+						Introduced: "0.5.0",
+					},
+				},
+			}},
+			want: "1.0.0",
+		},
+		{
+			name: "multiple ranges",
+			ranges: []Range{{
+				Type: RangeTypeSemver,
+				Events: []RangeEvent{
+					{
+						Introduced: "0",
+					},
+					{
+						Fixed: "0.1.0",
+					},
+				},
+			},
+				{
+					Type: RangeTypeSemver,
+					Events: []RangeEvent{
+						{
+							Introduced: "0",
+						},
+						{
+							Fixed: "0.2.0",
+						},
+					},
+				}},
+			want: "0.2.0",
+		},
+		{
+			name: "pseudoversion",
+			ranges: []Range{{
+				Type: RangeTypeSemver,
+				Events: []RangeEvent{
+					{
+						Introduced: "0",
+					},
+					{
+						Fixed: "0.0.0-20220824120805-abc",
+					},
+					{
+						Introduced: "0.0.0-20230824120805-efg",
+					},
+					{
+						Fixed: "0.0.0-20240824120805-hij",
+					},
+				},
+			}},
+			want: "0.0.0-20240824120805-hij",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			got := LatestFixedVersion(test.ranges)
+			if got != test.want {
+				t.Errorf("LatestFixedVersion = %q, want %q", got, test.want)
+			}
+		})
+	}
+}
