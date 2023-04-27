@@ -77,7 +77,7 @@ func Build(config Config) error {
 	return nil
 }
 
-// getEntry walks the the given directory and collects entry file paths
+// getEntry walks the given directory and collects entry file paths
 // for esbuild. It ignores test files and files prefixed with an underscore.
 // Underscore prefixed files are assumed to be imported by and bundled together
 // with the output of an entry file.

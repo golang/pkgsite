@@ -89,7 +89,7 @@ running `npm run lint -- --fix`.
 
 ### Running npm commands with docker
 
-To run the the unit tests or linters without installing npm prefix the
+To run the unit tests or linters without installing npm prefix the
 command with `./all.bash`. This will run the npm through a docker
 container that has the pkgsite code mounted in an internal directory.
 

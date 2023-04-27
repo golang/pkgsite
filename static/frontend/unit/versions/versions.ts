@@ -7,7 +7,7 @@
 
 /**
  * VersionsController encapsulates event listeners and UI updates
- * for the versions page. As the the expandable sections containing
+ * for the versions page. As the expandable sections containing
  * the symbol history for a package are opened and closed it toggles
  * visiblity of the buttons to expand or collapse them. On page load
  * it adds an indicator to the version that matches the version request

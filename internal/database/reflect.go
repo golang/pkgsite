@@ -120,7 +120,7 @@ func (n nullPtr) Value() (driver.Value, error) {
 	return n.ptr.Elem().Elem().Interface(), nil
 }
 
-// CollectStructs scans the the rows from the query into structs and returns a slice of them.
+// CollectStructs scans the rows from the query into structs and returns a slice of them.
 // Example:
 //
 //	type Player struct { Name string; Score int }
