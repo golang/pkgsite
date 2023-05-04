@@ -225,7 +225,7 @@ func (c *Client) Entries(ctx context.Context, n int) (_ []*osv.Entry, err error)
 		return nil, nil
 	}
 
-	ids, err := c.ids(ctx)
+	ids, err := c.IDs(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -307,8 +307,8 @@ func (c *Client) byIDs(ctx context.Context, ids []string) (_ []*osv.Entry, err e
 	return entries, nil
 }
 
-// ids returns a list of the ids of all the entries in the database.
-func (c *Client) ids(ctx context.Context) (_ []string, err error) {
+// IDs returns a list of the IDs of all the entries in the database.
+func (c *Client) IDs(ctx context.Context) (_ []string, err error) {
 	b, err := c.vulns(ctx)
 	if err != nil {
 		return nil, err
