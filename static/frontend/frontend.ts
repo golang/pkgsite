@@ -56,6 +56,7 @@ window.addEventListener('load', () => {
   registerSearchFormListeners();
   initModals();
   initJumpLinks();
+  registerCookieNotice();
 });
 
 // Pressing '/' focuses the search box
@@ -132,4 +133,26 @@ function toggleTheme() {
   }
   document.documentElement.setAttribute('data-theme', nextTheme);
   document.cookie = `prefers-color-scheme=${nextTheme};${domain}path=/;max-age=31536000;`;
+}
+
+/**
+ * registerCookieNotice makes the cookie notice visible and adds listeners to dismiss it
+ * if it has not yet been acknowledge by the user.
+ */
+function registerCookieNotice() {
+  const themeCookie = document.cookie.match(/cookie-consent=true/);
+  if (!themeCookie) {
+    const notice = document.querySelector('.js-cookieNotice');
+    const button = notice?.querySelector('button');
+    notice?.classList.add('Cookie-notice--visible');
+    button?.addEventListener('click', () => {
+      let domain = '';
+      if (location.hostname.endsWith('go.dev')) {
+        // Apply the cookie to *.go.dev.
+        domain = 'domain=.go.dev;';
+      }
+      document.cookie = `cookie-consent=true;${domain}path=/;max-age=31536000`;
+      notice?.remove();
+    });
+  }
 }

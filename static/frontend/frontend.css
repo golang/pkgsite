@@ -6,3 +6,23 @@
 
 @import url('../shared/shared.css');
 @import url('_modals.css');
+
+.Cookie-notice {
+  align-items: center;
+  background-color: var(--color-background);
+  border-top: var(--border);
+  bottom: 0;
+  color: var(--color-text);
+  display: none;
+  gap: 1rem;
+  justify-content: center;
+  left: 0;
+  padding: 1rem;
+  position: fixed;
+  right: 0;
+  z-index: 100;
+}
+
+.Cookie-notice--visible {
+  display: flex;
+}
