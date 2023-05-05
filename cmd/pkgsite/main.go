@@ -65,6 +65,7 @@ import (
 
 	"github.com/google/safehtml/template"
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/browser"
 	"golang.org/x/pkgsite/internal/fetch"
 	"golang.org/x/pkgsite/internal/fetchdatasource"
 	"golang.org/x/pkgsite/internal/frontend"
@@ -85,6 +86,7 @@ var (
 	useProxy   = flag.Bool("proxy", false, "fetch from GOPROXY if not found locally")
 	devMode    = flag.Bool("dev", false, "enable developer mode (reload templates on each page load, serve non-minified JS/CSS, etc.)")
 	staticFlag = flag.String("static", "static", "path to folder containing static files served")
+	openFlag   = flag.Bool("open", false, "open a browser window to the server's address")
 	// other flags are bound to serverConfig below
 )
 
@@ -146,6 +148,14 @@ func main() {
 	server.Install(router.Handle, nil, nil)
 	mw := middleware.Timeout(54 * time.Second)
 	log.Infof(ctx, "Listening on addr http://%s", *httpAddr)
+	if *openFlag {
+		go func() {
+			time.Sleep(100 * time.Millisecond)
+			if !browser.Open("http://" + *httpAddr) {
+				log.Infof(ctx, "Failed to open browser window. Please visit http://%s in your browser.", *httpAddr)
+			}
+		}()
+	}
 	die("%v", http.ListenAndServe(*httpAddr, mw(router)))
 }
 
