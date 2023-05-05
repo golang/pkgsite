@@ -121,6 +121,8 @@ services:
       POSTGRES_USER: ${GO_DISCOVERY_DATABASE_USER:-postgres}
     volumes:
       - pgdata:/var/lib/postgresql/data
+    ports:
+      - 127.0.0.1:5432:5432
   nodejs:
     image: node:14.17.0
     environment:
