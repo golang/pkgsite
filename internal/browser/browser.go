@@ -3,6 +3,7 @@
 // license that can be found in the LICENSE file.
 
 // Package browser provides utilities for interacting with users' browsers.
+// Copied from: https://go.googlesource.com/go/src/cmd/internal/browser/browser.go
 package browser
 
 import (

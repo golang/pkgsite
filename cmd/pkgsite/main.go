@@ -150,6 +150,9 @@ func main() {
 	log.Infof(ctx, "Listening on addr http://%s", *httpAddr)
 	if *openFlag {
 		go func() {
+			// Small delay to give the server chance to start with
+			// http.ListenAndServe call below, otherwise the browser
+			// could send the request before we're ready to serve.
 			time.Sleep(100 * time.Millisecond)
 			if !browser.Open("http://" + *httpAddr) {
 				log.Infof(ctx, "Failed to open browser window. Please visit http://%s in your browser.", *httpAddr)
