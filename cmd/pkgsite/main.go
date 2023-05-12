@@ -55,6 +55,7 @@ import (
 	"flag"
 	"fmt"
 	"io/fs"
+	"net"
 	"net/http"
 	"os"
 	"os/exec"
@@ -65,6 +66,7 @@ import (
 
 	"github.com/google/safehtml/template"
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/browser"
 	"golang.org/x/pkgsite/internal/fetch"
 	"golang.org/x/pkgsite/internal/fetchdatasource"
 	"golang.org/x/pkgsite/internal/frontend"
@@ -85,6 +87,7 @@ var (
 	useProxy   = flag.Bool("proxy", false, "fetch from GOPROXY if not found locally")
 	devMode    = flag.Bool("dev", false, "enable developer mode (reload templates on each page load, serve non-minified JS/CSS, etc.)")
 	staticFlag = flag.String("static", "static", "path to folder containing static files served")
+	openFlag   = flag.Bool("open", false, "open a browser window to the server's address")
 	// other flags are bound to serverConfig below
 )
 
@@ -142,11 +145,32 @@ func main() {
 		die(err.Error())
 	}
 
+	addr := *httpAddr
+	if addr == "" {
+		addr = ":http"
+	}
+
+	ln, err := net.Listen("tcp", addr)
+	if err != nil {
+		die(err.Error())
+	}
+
+	url := "http://" + addr
+	log.Infof(ctx, "Listening on addr %s", url)
+
+	if *openFlag {
+		go func() {
+			if !browser.Open(url) {
+				log.Infof(ctx, "Failed to open browser window. Please visit %s in your browser.", url)
+			}
+		}()
+	}
+
 	router := http.NewServeMux()
 	server.Install(router.Handle, nil, nil)
 	mw := middleware.Timeout(54 * time.Second)
-	log.Infof(ctx, "Listening on addr http://%s", *httpAddr)
-	die("%v", http.ListenAndServe(*httpAddr, mw(router)))
+	srv := &http.Server{Addr: addr, Handler: mw(router)}
+	die("%v", srv.Serve(ln))
 }
 
 func die(format string, args ...any) {
