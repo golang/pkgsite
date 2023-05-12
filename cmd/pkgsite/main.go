@@ -55,6 +55,7 @@ import (
 	"flag"
 	"fmt"
 	"io/fs"
+	"net"
 	"net/http"
 	"os"
 	"os/exec"
@@ -144,22 +145,32 @@ func main() {
 		die(err.Error())
 	}
 
-	router := http.NewServeMux()
-	server.Install(router.Handle, nil, nil)
-	mw := middleware.Timeout(54 * time.Second)
-	log.Infof(ctx, "Listening on addr http://%s", *httpAddr)
+	addr := *httpAddr
+	if addr == "" {
+		addr = ":http"
+	}
+
+	ln, err := net.Listen("tcp", addr)
+	if err != nil {
+		die(err.Error())
+	}
+
+	url := "http://" + addr
+	log.Infof(ctx, "Listening on addr %s", url)
+
 	if *openFlag {
 		go func() {
-			// Small delay to give the server chance to start with
-			// http.ListenAndServe call below, otherwise the browser
-			// could send the request before we're ready to serve.
-			time.Sleep(100 * time.Millisecond)
-			if !browser.Open("http://" + *httpAddr) {
-				log.Infof(ctx, "Failed to open browser window. Please visit http://%s in your browser.", *httpAddr)
+			if !browser.Open(url) {
+				log.Infof(ctx, "Failed to open browser window. Please visit %s in your browser.", url)
 			}
 		}()
 	}
-	die("%v", http.ListenAndServe(*httpAddr, mw(router)))
+
+	router := http.NewServeMux()
+	server.Install(router.Handle, nil, nil)
+	mw := middleware.Timeout(54 * time.Second)
+	srv := &http.Server{Addr: addr, Handler: mw(router)}
+	die("%v", srv.Serve(ln))
 }
 
 func die(format string, args ...any) {
