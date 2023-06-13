@@ -88,6 +88,10 @@
   }
 }
 
+input[type='search']::-webkit-search-decoration {
+  display: none;
+}
+
 .Homepage-tips {
   margin: auto;
   max-width: 45.0625rem;
