@@ -42,7 +42,7 @@
   </nav>
   <div class="go-Main-headerContent">
     <div class="go-Main-headerTitle">
-      <a class="go-Main-headerLogo" href="https://go.dev/" aria-hidden="true" tabindex="-1" data-gtmc="header link"
+      <a class="go-Main-headerLogo" href="{{if .LocalMode}}/{{else}}https://go.dev/{{end}}" aria-hidden="true" tabindex="-1" data-gtmc="header link"
           aria-label="Link to Go Homepage">
         <img height="78" width="207" src="/static/shared/logo/go-blue.svg" alt="Go">
       </a>
