@@ -53,7 +53,7 @@
 
 {{define "unit-header-title"}}
   <div class="go-Main-headerTitle js-stickyHeader">
-    <a class="go-Main-headerLogo" href="https://go.dev/" aria-hidden="true" tabindex="-1" data-gtmc="header link" aria-label="Link to Go Homepage">
+    <a class="go-Main-headerLogo" href="{{if .LocalMode}}/{{else}}https://go.dev/{{end}}" aria-hidden="true" tabindex="-1" data-gtmc="header link" aria-label="Link to Go Homepage">
       <img height="78" width="207" src="/static/shared/logo/go-blue.svg" alt="Go">
     </a>
     <h1 class="UnitHeader-titleHeading" data-test-id="UnitHeader-title">{{.Title}}</h1>
