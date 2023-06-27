@@ -108,7 +108,7 @@ func TestDetermineSearchAction(t *testing.T) {
 		// See TestSearchVulnAlias in this file for more tests.
 		{
 			name:         "vuln alias",
-			query:        "q=GHSA-aaaa-bbbb-cccc&m=vuln",
+			query:        "q=GHSA-cccc-ffff-gggg&m=vuln",
 			wantRedirect: "/vuln/GO-1990-0001",
 		},
 		{
@@ -119,18 +119,18 @@ func TestDetermineSearchAction(t *testing.T) {
 		{
 			// We turn on vuln mode if the query matches a vuln alias.
 			name:         "vuln alias not vuln mode",
-			query:        "q=GHSA-aaaa-bbbb-cccc",
+			query:        "q=GHSA-cccc-ffff-gggg",
 			wantRedirect: "/vuln/GO-1990-0001",
 		},
 		{
 			name:       "vuln alias with no match",
-			query:      "q=GHSA-aaaa-bbbb-dddd",
+			query:      "q=GHSA-cccc-ffff-xxxx",
 			wantStatus: http.StatusNotFound,
 		},
 		{
 			// An explicit mode overrides that.
 			name:         "vuln alias symbol mode",
-			query:        "q=GHSA-aaaa-bbbb-cccc?m=symbol",
+			query:        "q=GHSA-cccc-ffff-gggg?m=symbol",
 			wantTemplate: "search",
 		},
 		{
@@ -502,7 +502,7 @@ func TestNewSearchResult(t *testing.T) {
 			got := newSearchResult(&test.in, false, pr)
 			test.want.CommitTime = "unknown"
 			if diff := cmp.Diff(&test.want, got); diff != "" {
-				t.Errorf("mimatch (-want, +got):\n%s", diff)
+				t.Errorf("mismatch (-want, +got):\n%s", diff)
 			}
 		})
 	}
@@ -540,6 +540,7 @@ func TestSearchRequestRedirectPath(t *testing.T) {
 		{"non-existent path does not redirect", "github.com/non-existent", "", ""},
 		{"trim URL scheme from query", "https://golang.org/x/tools", "/golang.org/x/tools", ""},
 		{"Go vuln redirects", "GO-1969-0720", "/vuln/GO-1969-0720?q", ""},
+		{"Lower-case Go vuln redirects", "go-1969-0720", "/vuln/GO-1969-0720?q", ""},
 		{"not a Go vuln", "somepkg/GO-1969-0720", "", ""},
 		// Just setting the search mode to vuln does not cause a redirect.
 		{"search mode is vuln", "searchmodevuln", "", searchModeVuln},
@@ -593,7 +594,13 @@ func TestSearchVulnAlias(t *testing.T) {
 		{
 			name:    "one match",
 			mode:    searchModeVuln,
-			query:   "GHSA-aaaa-bbbb-cccc",
+			query:   "GHSA-cccc-ffff-gggg",
+			wantURL: "/vuln/GO-1990-0001",
+		},
+		{
+			name:    "one match - case insensitive",
+			mode:    searchModeVuln,
+			query:   "gHSa-ccCc-fFFF-gGgG",
 			wantURL: "/vuln/GO-1990-0001",
 		},
 	} {

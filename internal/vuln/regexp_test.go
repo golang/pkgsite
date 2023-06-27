@@ -6,65 +6,115 @@ package vuln
 
 import "testing"
 
-func TestIsGoID(t *testing.T) {
+func TestCanonicalGoID(t *testing.T) {
 	tests := []struct {
-		id   string
-		want bool
+		id     string
+		wantID string
+		wantOK bool
 	}{
 		{
-			id:   "GO-1999-0001",
-			want: true,
+			id:     "GO-1999-0001",
+			wantID: "GO-1999-0001",
+			wantOK: true,
 		},
 		{
-			id:   "GO-2023-12345678",
-			want: true,
+			id:     "GO-1999-000111",
+			wantID: "GO-1999-000111",
+			wantOK: true,
 		},
 		{
-			id:   "GO-2023-123",
-			want: false,
+			id:     "go-1999-0001",
+			wantID: "GO-1999-0001",
+			wantOK: true,
 		},
 		{
-			id:   "GO-abcd-0001",
-			want: false,
+			id:     "GO-1999",
+			wantID: "",
+			wantOK: false,
 		},
 		{
-			id:   "CVE-1999-0001",
-			want: false,
+			id:     "GHSA-cfgh-2345-rwxq",
+			wantID: "",
+			wantOK: false,
+		},
+		{
+			id:     "CVE-1999-000123",
+			wantID: "",
+			wantOK: false,
+		},
+		{
+			id:     "ghsa-Cfgh-2345-Rwxq",
+			wantID: "",
+			wantOK: false,
+		},
+		{
+			id:     "cve-1999-000123",
+			wantID: "",
+			wantOK: false,
+		},
+		{
+			id:     "cve-ghsa-go",
+			wantID: "",
+			wantOK: false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.id, func(t *testing.T) {
-			got := IsGoID(tt.id)
-			if got != tt.want {
-				t.Errorf("IsGoID(%s) = %t, want %t", tt.id, got, tt.want)
+			gotID, gotOK := CanonicalGoID(tt.id)
+			if gotID != tt.wantID || gotOK != tt.wantOK {
+				t.Errorf("CanonicalGoID(%s) = (%s, %t), want (%s, %t)", tt.id, gotID, gotOK, tt.wantID, tt.wantOK)
 			}
 		})
 	}
 }
 
-func TestIsAlias(t *testing.T) {
+func TestCanonicalAlias(t *testing.T) {
 	tests := []struct {
-		id   string
-		want bool
+		id     string
+		wantID string
+		wantOK bool
 	}{
 		{
-			id:   "GO-1999-0001",
-			want: false,
+			id:     "GO-1999-0001",
+			wantID: "",
+			wantOK: false,
 		},
 		{
-			id:   "GHSA-abcd-1234-efgh",
-			want: true,
+			id:     "GHSA-cfgh-2345-rwxq",
+			wantID: "GHSA-cfgh-2345-rwxq",
+			wantOK: true,
 		},
 		{
-			id:   "CVE-1999-000123",
-			want: true,
+			id:     "CVE-1999-000123",
+			wantID: "CVE-1999-000123",
+			wantOK: true,
+		},
+		{
+			id:     "go-1999-0001",
+			wantID: "",
+			wantOK: false,
+		},
+		{
+			id:     "ghsa-Cfgh-2345-Rwxq",
+			wantID: "GHSA-cfgh-2345-rwxq",
+			wantOK: true,
+		},
+		{
+			id:     "cve-1999-000123",
+			wantID: "CVE-1999-000123",
+			wantOK: true,
+		},
+		{
+			id:     "abc-CVE-1999-0001",
+			wantID: "",
+			wantOK: false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.id, func(t *testing.T) {
-			got := IsAlias(tt.id)
-			if got != tt.want {
-				t.Errorf("IsAlias(%s) = %t, want %t", tt.id, got, tt.want)
+			gotID, gotOK := CanonicalAlias(tt.id)
+			if gotID != tt.wantID || gotOK != tt.wantOK {
+				t.Errorf("CanonicalAlias(%s) = (%s, %t), want (%s, %t)", tt.id, gotID, gotOK, tt.wantID, tt.wantOK)
 			}
 		})
 	}

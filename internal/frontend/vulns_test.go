@@ -16,7 +16,7 @@ import (
 )
 
 var testEntries = []*osv.Entry{
-	{ID: "GO-1990-0001", Details: "a", Aliases: []string{"CVE-2000-1", "GHSA-aaaa-bbbb-cccc"}},
+	{ID: "GO-1990-0001", Details: "a", Aliases: []string{"CVE-2000-1", "GHSA-cccc-ffff-gggg"}},
 	{ID: "GO-1990-0002", Details: "b", Aliases: []string{"CVE-2000-1", "GHSA-1111-2222-3333"}},
 	{ID: "GO-1990-0010", Details: "c"},
 	{ID: "GO-1991-0001", Details: "d"},
@@ -95,6 +95,18 @@ func TestNewVulnPage(t *testing.T) {
 		{
 			name: "vuln entry page",
 			url:  "https://pkg.go.dev/vuln/GO-1990-0002",
+			want: &vulnPage{
+				page: &VulnEntryPage{
+					Entry:      testEntries[1],
+					AliasLinks: aliasLinks(testEntries[1]),
+				},
+				template: "vuln/entry",
+				title:    "GO-1990-0002",
+			},
+		},
+		{
+			name: "vuln entry page - case insensitive",
+			url:  "https://pkg.go.dev/vuln/go-1990-0002",
 			want: &vulnPage{
 				page: &VulnEntryPage{
 					Entry:      testEntries[1],

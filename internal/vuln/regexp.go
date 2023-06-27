@@ -4,21 +4,48 @@
 
 package vuln
 
-import "regexp"
-
-var (
-	goRegexp   = regexp.MustCompile("^GO-[0-9]{4}-[0-9]{4,}$")
-	cveRegexp  = regexp.MustCompile("^CVE-[0-9]{4}-[0-9]+$")
-	ghsaRegexp = regexp.MustCompile("^GHSA-.{4}-.{4}-.{4}$")
+import (
+	"regexp"
+	"strings"
 )
 
-// IsGoID returns whether s is a valid Go vulnerability ID.
-func IsGoID(s string) bool {
-	return goRegexp.MatchString(s)
+const (
+	ci    = "(?i)" // case-insensitive
+	goRE  = "^GO-[0-9]{4}-[0-9]{4,}$"
+	cveRE = "^CVE-[0-9]{4}-[0-9]+$"
+	// Regexp adapted from https://github.com/github/advisory-database.
+	ghsaRE = "^(GHSA)((-[23456789cfghjmpqrvwx]{4}){3})$"
+)
+
+// Case-insensitive regexps for vuln IDs/aliases.
+var (
+	goID   = regexp.MustCompile(ci + goRE)
+	cveID  = regexp.MustCompile(ci + cveRE)
+	ghsaID = regexp.MustCompile(ci + ghsaRE)
+)
+
+// Canonical returns the canonical form of the given Go ID string
+// by correcting the case.
+//
+// If no canonical form can be found, returns false.
+func CanonicalGoID(id string) (_ string, ok bool) {
+	if goID.MatchString(id) {
+		return strings.ToUpper(id), true
+	}
+	return "", false
 }
 
-// IsAlias returns whether s is a valid vulnerability alias
-// (CVE or GHSA).
-func IsAlias(s string) bool {
-	return cveRegexp.MatchString(s) || ghsaRegexp.MatchString(s)
+// Canonical returns the canonical form of the given alias ID string
+// (a CVE or GHSA id) by correcting the case.
+//
+// If no canonical form can be found, returns false.
+func CanonicalAlias(id string) (_ string, ok bool) {
+	if cveID.MatchString(id) {
+		return strings.ToUpper(id), true
+	}
+	parts := ghsaID.FindStringSubmatch(id)
+	if len(parts) != 4 {
+		return "", false
+	}
+	return strings.ToUpper(parts[1]) + strings.ToLower(parts[2]), true
 }

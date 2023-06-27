@@ -351,8 +351,8 @@ func searchRequestRedirectPath(ctx context.Context, ds internal.DataSource, quer
 	if urlSchemeIdx > -1 {
 		query = query[urlSchemeIdx+3:]
 	}
-	if vulnSupport && vuln.IsGoID(query) {
-		return fmt.Sprintf("/vuln/%s?q", query)
+	if id, ok := vuln.CanonicalGoID(query); vulnSupport && ok {
+		return fmt.Sprintf("/vuln/%s?q", id)
 	}
 	requestedPath := path.Clean(query)
 	if !strings.Contains(requestedPath, "/") || mode == searchModeVuln {
@@ -388,14 +388,15 @@ func searchVulnModule(ctx context.Context, mode, query string, client *vuln.Clie
 func searchVulnAlias(ctx context.Context, mode, cq string, vc *vuln.Client) (_ *searchAction, err error) {
 	defer derrors.Wrap(&err, "searchVulnAlias(%q, %q)", mode, cq)
 
-	if mode != searchModeVuln || !vuln.IsAlias(cq) || vc == nil {
+	alias, ok := vuln.CanonicalAlias(cq)
+	if mode != searchModeVuln || !ok || vc == nil {
 		return nil, nil
 	}
-	id, err := vc.ByAlias(ctx, cq)
+	goID, err := vc.ByAlias(ctx, alias)
 	if err != nil {
 		return nil, &serverError{status: derrors.ToStatus(err)}
 	}
-	return &searchAction{redirectURL: "/vuln/" + id}, nil
+	return &searchAction{redirectURL: "/vuln/" + goID}, nil
 }
 
 // searchMode reports whether the search performed should be in package or
@@ -413,7 +414,7 @@ func searchMode(r *http.Request) string {
 	case searchModeVuln:
 		return searchModeVuln
 	default:
-		if vuln.IsAlias(q) {
+		if _, ok := vuln.CanonicalAlias(q); ok {
 			return searchModeVuln
 		}
 		if shouldDefaultToSymbolSearch(q) {

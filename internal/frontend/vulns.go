@@ -89,8 +89,8 @@ func newVulnPage(ctx context.Context, url *url.URL, vc *vuln.Client) (*vulnPage,
 			template: "vuln/list",
 			title:    "Vulnerability Reports"}, nil
 	default: // the path should be "/<ID>", e.g. "/GO-2021-0001".
-		id := strings.TrimPrefix(path, "/")
-		if !vuln.IsGoID(id) {
+		id, ok := vuln.CanonicalGoID(strings.TrimPrefix(path, "/"))
+		if !ok {
 			if url.Query().Has("q") {
 				return nil, derrors.NotFound
 			}
