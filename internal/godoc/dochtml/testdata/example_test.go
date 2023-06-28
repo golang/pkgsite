@@ -46,3 +46,7 @@ func Example_stringsCompare() {
 	// 0
 	// 1
 }
+
+func Example_noOutput() {
+	fmt.Println("hello")
+}

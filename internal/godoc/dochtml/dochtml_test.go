@@ -177,6 +177,32 @@ func main() {
         <button class="Documentation-exampleRunButton" aria-label="Run Code">Run</button>
       </div></details>`,
 		},
+		{
+			name:   "Example without output",
+			htmlID: "example-package-NoOutput",
+			want: `<details tabindex="-1" id="example-package-NoOutput" class="Documentation-exampleDetails js-exampleContainer">
+<summary class="Documentation-exampleDetailsHeader">Example (NoOutput) <a href="#example-package-NoOutput" title="Go to Example (NoOutput)" aria-label="Go to Example (NoOutput)">¶</a></summary>
+<div class="Documentation-exampleDetailsBody">
+
+<pre class="Documentation-exampleCode">package main
+
+import (
+	&#34;fmt&#34;
+)
+
+func main() {
+	fmt.Println(&#34;hello&#34;)
+}
+</pre>
+
+</div>
+<div class="Documentation-exampleButtonsContainer">
+        <p class="Documentation-exampleError" role="alert" aria-atomic="true"></p>
+        <button class="Documentation-exampleShareButton" aria-label="Share Code">Share</button>
+        <button class="Documentation-exampleFormatButton" aria-label="Format Code">Format</button>
+        <button class="Documentation-exampleRunButton" aria-label="Run Code">Run</button>
+      </div></details>`,
+		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			diff := cmp.Diff(test.want, got[test.htmlID])
