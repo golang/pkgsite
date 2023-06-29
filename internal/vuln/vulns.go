@@ -67,7 +67,7 @@ func toVulns(entries []*osv.Entry) []Vuln {
 	for i, e := range entries {
 		vulns[i] = Vuln{
 			ID:      e.ID,
-			Details: e.Details,
+			Details: e.Summary,
 		}
 	}
 

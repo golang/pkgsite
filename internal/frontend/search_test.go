@@ -306,7 +306,8 @@ func TestFetchSearchPage(t *testing.T) {
 
 		vulnEntries = []*osv.Entry{{
 			ID:      "test",
-			Details: "vuln",
+			Summary: "summary",
+			Details: "description",
 			Affected: []osv.Affected{{
 				Module: osv.Module{Path: "github.com/mod/foo"},
 				Ranges: []osv.Range{{
@@ -387,7 +388,7 @@ func TestFetchSearchPage(t *testing.T) {
 						DisplayVersion: moduleFoo.Version,
 						Licenses:       []string{"MIT"},
 						CommitTime:     elapsedTime(moduleFoo.CommitTime),
-						Vulns:          []vuln.Vuln{{ID: "test", Details: "vuln"}},
+						Vulns:          []vuln.Vuln{{ID: "test", Details: "summary"}},
 					},
 				},
 			},

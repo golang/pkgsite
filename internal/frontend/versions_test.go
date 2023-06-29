@@ -92,7 +92,8 @@ func TestFetchPackageVersionsDetails(t *testing.T) {
 	vulnFixedVersion := "1.2.3"
 	vulnEntry := &osv.Entry{
 		ID:      "GO-1999-0001",
-		Details: "vuln",
+		Summary: "summary",
+		Details: "description",
 		Affected: []osv.Affected{{
 			Module: osv.Module{
 				Path: modulePath1,
@@ -151,7 +152,7 @@ func TestFetchPackageVersionsDetails(t *testing.T) {
 						vl := makeList(v1Path, modulePath1, "v1", []string{"v1.3.0", "v1.2.3", "v1.2.1"}, false)
 						vl.Versions[2].Vulns = []vuln.Vuln{{
 							ID:      vulnEntry.ID,
-							Details: vulnEntry.Details,
+							Details: vulnEntry.Summary,
 						}}
 						return vl
 					}(),
