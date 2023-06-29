@@ -311,7 +311,7 @@ func (c *Client) byIDsFilter(ctx context.Context, ids []string, filter func(*osv
 	}
 	var filtered []*osv.Entry
 	for _, entry := range entries {
-		if filter(entry) {
+		if entry != nil && filter(entry) {
 			filtered = append(filtered, entry)
 		}
 	}
@@ -321,6 +321,9 @@ func (c *Client) byIDsFilter(ctx context.Context, ids []string, filter func(*osv
 	return filtered, nil
 }
 
+// byIDs returns OSV entries for given ids.
+// The i-th entry in the returned value corresponds to the i-th ID
+// and can be nil if there is no entry with the given ID.
 func (c *Client) byIDs(ctx context.Context, ids []string) (_ []*osv.Entry, err error) {
 	entries := make([]*osv.Entry, len(ids))
 	g, gctx := errgroup.WithContext(ctx)

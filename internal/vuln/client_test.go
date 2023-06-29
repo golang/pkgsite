@@ -9,6 +9,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
@@ -19,8 +20,8 @@ import (
 	"golang.org/x/tools/txtar"
 )
 
-const (
-	dbTxtar = "testdata/db.txtar"
+var (
+	dbTxtar = filepath.Join("testdata", "db.txtar")
 )
 
 var (
@@ -41,7 +42,7 @@ var (
 					Ecosystem: "Go",
 				},
 				Ranges: []osv.Range{
-					osv.Range{
+					{
 						Type: "SEMVER",
 						Events: []osv.RangeEvent{
 							{Introduced: "0"}, {Fixed: "1.1.0"},
@@ -70,7 +71,7 @@ var (
 					Ecosystem: "Go",
 				},
 				Ranges: []osv.Range{
-					osv.Range{
+					{
 						Type: "SEMVER", Events: []osv.RangeEvent{{Introduced: "0"},
 							{Fixed: "1.2.0"},
 						}}},
