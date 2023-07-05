@@ -1,0 +1,690 @@
+{
+  "Initial": null,
+  "Version": "0.2",
+  "Converter": {
+    "ClearHeaders": [
+      "^X-Goog-.*Encryption-Key$"
+    ],
+    "RemoveRequestHeaders": [
+      "^Authorization$",
+      "^Proxy-Authorization$",
+      "^Connection$",
+      "^Content-Type$",
+      "^Date$",
+      "^Host$",
+      "^Transfer-Encoding$",
+      "^Via$",
+      "^X-Forwarded-.*$",
+      "^X-Cloud-Trace-Context$",
+      "^X-Goog-Api-Client$",
+      "^X-Google-.*$",
+      "^X-Gfe-.*$"
+    ],
+    "RemoveResponseHeaders": [
+      "^X-Google-.*$",
+      "^X-Gfe-.*$"
+    ],
+    "ClearParams": null,
+    "RemoveParams": null
+  },
+  "Entries": [
+    {
+      "ID": "17e30335d7075e54",
+      "Request": {
+        "Method": "HEAD",
+        "URL": "https://cs.opensource.google/go/go",
+        "Header": {
+          "User-Agent": [
+            "Go-http-client/1.1"
+          ]
+        },
+        "MediaType": "",
+        "BodyParts": [
+          ""
+        ]
+      },
+      "Response": {
+        "StatusCode": 200,
+        "Proto": "HTTP/1.1",
+        "ProtoMajor": 1,
+        "ProtoMinor": 1,
+        "Header": {
+          "Cache-Control": [
+            "no-cache, no-store, max-age=0, must-revalidate"
+          ],
+          "Content-Length": [
+            "5272"
+          ],
+          "Content-Security-Policy": [
+            "script-src 'report-sample' 'nonce-230AAkO7onDVUG6/2lAHkQ' 'unsafe-inline' 'strict-dynamic' https: http:;object-src 'none';base-uri 'self';report-uri /_/cspreport"
+          ],
+          "Content-Type": [
+            "text/html; charset=utf-8"
+          ],
+          "Cross-Origin-Opener-Policy": [
+            "same-origin"
+          ],
+          "Date": [
+            "Wed, 05 Jan 2022 16:54:46 GMT"
+          ],
+          "Expires": [
+            "Mon, 01 Jan 1990 00:00:00 GMT"
+          ],
+          "Pragma": [
+            "no-cache"
+          ],
+          "Server": [
+            "ESF"
+          ],
+          "X-Content-Type-Options": [
+            "nosniff"
+          ],
+          "X-Frame-Options": [
+            "SAMEORIGIN"
+          ],
+          "X-Xss-Protection": [
+            "0"
+          ]
+        },
+        "Body": ""
+      }
+    },
+    {
+      "ID": "f138053b5aa0e373",
+      "Request": {
+        "Method": "HEAD",
+        "URL": "https://cs.opensource.google/go/go/+/go1.12:src",
+        "Header": {
+          "User-Agent": [
+            "Go-http-client/1.1"
+          ]
+        },
+        "MediaType": "",
+        "BodyParts": [
+          ""
+        ]
+      },
+      "Response": {
+        "StatusCode": 200,
+        "Proto": "HTTP/1.1",
+        "ProtoMajor": 1,
+        "ProtoMinor": 1,
+        "Header": {
+          "Cache-Control": [
+            "no-cache, no-store, max-age=0, must-revalidate"
+          ],
+          "Content-Length": [
+            "5272"
+          ],
+          "Content-Security-Policy": [
+            "script-src 'report-sample' 'nonce-CSh+z6jxkQva3ya0uDwKLg' 'unsafe-inline' 'strict-dynamic' https: http:;object-src 'none';base-uri 'self';report-uri /_/cspreport"
+          ],
+          "Content-Type": [
+            "text/html; charset=utf-8"
+          ],
+          "Cross-Origin-Opener-Policy": [
+            "same-origin"
+          ],
+          "Date": [
+            "Wed, 05 Jan 2022 16:54:46 GMT"
+          ],
+          "Expires": [
+            "Mon, 01 Jan 1990 00:00:00 GMT"
+          ],
+          "Pragma": [
+            "no-cache"
+          ],
+          "Server": [
+            "ESF"
+          ],
+          "X-Content-Type-Options": [
+            "nosniff"
+          ],
+          "X-Frame-Options": [
+            "SAMEORIGIN"
+          ],
+          "X-Xss-Protection": [
+            "0"
+          ]
+        },
+        "Body": ""
+      }
+    },
+    {
+      "ID": "9a9205ce8d8ab383",
+      "Request": {
+        "Method": "HEAD",
+        "URL": "https://cs.opensource.google/go/go/+/go1.12:src/bytes/buffer.go",
+        "Header": {
+          "User-Agent": [
+            "Go-http-client/1.1"
+          ]
+        },
+        "MediaType": "",
+        "BodyParts": [
+          ""
+        ]
+      },
+      "Response": {
+        "StatusCode": 200,
+        "Proto": "HTTP/1.1",
+        "ProtoMajor": 1,
+        "ProtoMinor": 1,
+        "Header": {
+          "Cache-Control": [
+            "no-cache, no-store, max-age=0, must-revalidate"
+          ],
+          "Content-Length": [
+            "5272"
+          ],
+          "Content-Security-Policy": [
+            "script-src 'report-sample' 'nonce-id7I5Yos1M+gCRrooBljOQ' 'unsafe-inline' 'strict-dynamic' https: http:;object-src 'none';base-uri 'self';report-uri /_/cspreport"
+          ],
+          "Content-Type": [
+            "text/html; charset=utf-8"
+          ],
+          "Cross-Origin-Opener-Policy": [
+            "same-origin"
+          ],
+          "Date": [
+            "Wed, 05 Jan 2022 16:54:47 GMT"
+          ],
+          "Expires": [
+            "Mon, 01 Jan 1990 00:00:00 GMT"
+          ],
+          "Pragma": [
+            "no-cache"
+          ],
+          "Server": [
+            "ESF"
+          ],
+          "X-Content-Type-Options": [
+            "nosniff"
+          ],
+          "X-Frame-Options": [
+            "SAMEORIGIN"
+          ],
+          "X-Xss-Protection": [
+            "0"
+          ]
+        },
+        "Body": ""
+      }
+    },
+    {
+      "ID": "a0483162a38ec4f5",
+      "Request": {
+        "Method": "HEAD",
+        "URL": "https://cs.opensource.google/go/go/+/go1.12:src/bytes/buffer.go;l=1",
+        "Header": {
+          "User-Agent": [
+            "Go-http-client/1.1"
+          ]
+        },
+        "MediaType": "",
+        "BodyParts": [
+          ""
+        ]
+      },
+      "Response": {
+        "StatusCode": 200,
+        "Proto": "HTTP/1.1",
+        "ProtoMajor": 1,
+        "ProtoMinor": 1,
+        "Header": {
+          "Cache-Control": [
+            "no-cache, no-store, max-age=0, must-revalidate"
+          ],
+          "Content-Length": [
+            "5272"
+          ],
+          "Content-Security-Policy": [
+            "script-src 'report-sample' 'nonce-vinfR4fJI/wQeDNTZ+oHwQ' 'unsafe-inline' 'strict-dynamic' https: http:;object-src 'none';base-uri 'self';report-uri /_/cspreport"
+          ],
+          "Content-Type": [
+            "text/html; charset=utf-8"
+          ],
+          "Cross-Origin-Opener-Policy": [
+            "same-origin"
+          ],
+          "Date": [
+            "Wed, 05 Jan 2022 16:54:47 GMT"
+          ],
+          "Expires": [
+            "Mon, 01 Jan 1990 00:00:00 GMT"
+          ],
+          "Pragma": [
+            "no-cache"
+          ],
+          "Server": [
+            "ESF"
+          ],
+          "X-Content-Type-Options": [
+            "nosniff"
+          ],
+          "X-Frame-Options": [
+            "SAMEORIGIN"
+          ],
+          "X-Xss-Protection": [
+            "0"
+          ]
+        },
+        "Body": ""
+      }
+    },
+    {
+      "ID": "8a145fd3ec4ef7f5",
+      "Request": {
+        "Method": "HEAD",
+        "URL": "https://cs.opensource.google/go/go",
+        "Header": {
+          "User-Agent": [
+            "Go-http-client/1.1"
+          ]
+        },
+        "MediaType": "",
+        "BodyParts": [
+          ""
+        ]
+      },
+      "Response": {
+        "StatusCode": 200,
+        "Proto": "HTTP/1.1",
+        "ProtoMajor": 1,
+        "ProtoMinor": 1,
+        "Header": {
+          "Cache-Control": [
+            "no-cache, no-store, max-age=0, must-revalidate"
+          ],
+          "Content-Length": [
+            "5272"
+          ],
+          "Content-Security-Policy": [
+            "script-src 'report-sample' 'nonce-88uL+deYaHQqDedPXcOXew' 'unsafe-inline' 'strict-dynamic' https: http:;object-src 'none';base-uri 'self';report-uri /_/cspreport"
+          ],
+          "Content-Type": [
+            "text/html; charset=utf-8"
+          ],
+          "Cross-Origin-Opener-Policy": [
+            "same-origin"
+          ],
+          "Date": [
+            "Wed, 05 Jan 2022 16:54:47 GMT"
+          ],
+          "Expires": [
+            "Mon, 01 Jan 1990 00:00:00 GMT"
+          ],
+          "Pragma": [
+            "no-cache"
+          ],
+          "Server": [
+            "ESF"
+          ],
+          "X-Content-Type-Options": [
+            "nosniff"
+          ],
+          "X-Frame-Options": [
+            "SAMEORIGIN"
+          ],
+          "X-Xss-Protection": [
+            "0"
+          ]
+        },
+        "Body": ""
+      }
+    },
+    {
+      "ID": "85c7c2d9cef2c22f",
+      "Request": {
+        "Method": "HEAD",
+        "URL": "https://cs.opensource.google/go/go/+/go1.3:src/pkg",
+        "Header": {
+          "User-Agent": [
+            "Go-http-client/1.1"
+          ]
+        },
+        "MediaType": "",
+        "BodyParts": [
+          ""
+        ]
+      },
+      "Response": {
+        "StatusCode": 200,
+        "Proto": "HTTP/1.1",
+        "ProtoMajor": 1,
+        "ProtoMinor": 1,
+        "Header": {
+          "Cache-Control": [
+            "no-cache, no-store, max-age=0, must-revalidate"
+          ],
+          "Content-Length": [
+            "5272"
+          ],
+          "Content-Security-Policy": [
+            "script-src 'report-sample' 'nonce-qOPMBNw0Yns2OPu5Mkow5A' 'unsafe-inline' 'strict-dynamic' https: http:;object-src 'none';base-uri 'self';report-uri /_/cspreport"
+          ],
+          "Content-Type": [
+            "text/html; charset=utf-8"
+          ],
+          "Cross-Origin-Opener-Policy": [
+            "same-origin"
+          ],
+          "Date": [
+            "Wed, 05 Jan 2022 16:54:47 GMT"
+          ],
+          "Expires": [
+            "Mon, 01 Jan 1990 00:00:00 GMT"
+          ],
+          "Pragma": [
+            "no-cache"
+          ],
+          "Server": [
+            "ESF"
+          ],
+          "X-Content-Type-Options": [
+            "nosniff"
+          ],
+          "X-Frame-Options": [
+            "SAMEORIGIN"
+          ],
+          "X-Xss-Protection": [
+            "0"
+          ]
+        },
+        "Body": ""
+      }
+    },
+    {
+      "ID": "ad0defbba0531d9c",
+      "Request": {
+        "Method": "HEAD",
+        "URL": "https://cs.opensource.google/go/go/+/go1.3:src/pkg/bytes/buffer.go",
+        "Header": {
+          "User-Agent": [
+            "Go-http-client/1.1"
+          ]
+        },
+        "MediaType": "",
+        "BodyParts": [
+          ""
+        ]
+      },
+      "Response": {
+        "StatusCode": 200,
+        "Proto": "HTTP/1.1",
+        "ProtoMajor": 1,
+        "ProtoMinor": 1,
+        "Header": {
+          "Cache-Control": [
+            "no-cache, no-store, max-age=0, must-revalidate"
+          ],
+          "Content-Length": [
+            "5272"
+          ],
+          "Content-Security-Policy": [
+            "script-src 'report-sample' 'nonce-x1dHojjJg5P5qcOYrPuc+w' 'unsafe-inline' 'strict-dynamic' https: http:;object-src 'none';base-uri 'self';report-uri /_/cspreport"
+          ],
+          "Content-Type": [
+            "text/html; charset=utf-8"
+          ],
+          "Cross-Origin-Opener-Policy": [
+            "same-origin"
+          ],
+          "Date": [
+            "Wed, 05 Jan 2022 16:54:47 GMT"
+          ],
+          "Expires": [
+            "Mon, 01 Jan 1990 00:00:00 GMT"
+          ],
+          "Pragma": [
+            "no-cache"
+          ],
+          "Server": [
+            "ESF"
+          ],
+          "X-Content-Type-Options": [
+            "nosniff"
+          ],
+          "X-Frame-Options": [
+            "SAMEORIGIN"
+          ],
+          "X-Xss-Protection": [
+            "0"
+          ]
+        },
+        "Body": ""
+      }
+    },
+    {
+      "ID": "4c82e4fb35c16652",
+      "Request": {
+        "Method": "HEAD",
+        "URL": "https://cs.opensource.google/go/go/+/go1.3:src/pkg/bytes/buffer.go;l=1",
+        "Header": {
+          "User-Agent": [
+            "Go-http-client/1.1"
+          ]
+        },
+        "MediaType": "",
+        "BodyParts": [
+          ""
+        ]
+      },
+      "Response": {
+        "StatusCode": 200,
+        "Proto": "HTTP/1.1",
+        "ProtoMajor": 1,
+        "ProtoMinor": 1,
+        "Header": {
+          "Cache-Control": [
+            "no-cache, no-store, max-age=0, must-revalidate"
+          ],
+          "Content-Length": [
+            "5272"
+          ],
+          "Content-Security-Policy": [
+            "script-src 'report-sample' 'nonce-okdh4sZpugrHKuLfDii2Yw' 'unsafe-inline' 'strict-dynamic' https: http:;object-src 'none';base-uri 'self';report-uri /_/cspreport"
+          ],
+          "Content-Type": [
+            "text/html; charset=utf-8"
+          ],
+          "Cross-Origin-Opener-Policy": [
+            "same-origin"
+          ],
+          "Date": [
+            "Wed, 05 Jan 2022 16:54:47 GMT"
+          ],
+          "Expires": [
+            "Mon, 01 Jan 1990 00:00:00 GMT"
+          ],
+          "Pragma": [
+            "no-cache"
+          ],
+          "Server": [
+            "ESF"
+          ],
+          "X-Content-Type-Options": [
+            "nosniff"
+          ],
+          "X-Frame-Options": [
+            "SAMEORIGIN"
+          ],
+          "X-Xss-Protection": [
+            "0"
+          ]
+        },
+        "Body": ""
+      }
+    },
+    {
+      "ID": "27b7c57c1cb0da3e",
+      "Request": {
+        "Method": "HEAD",
+        "URL": "https://github.com/golang/go/raw/go1.13.3/doc/gopher/fiveyears.jpg",
+        "Header": {
+          "User-Agent": [
+            "Go-http-client/1.1"
+          ]
+        },
+        "MediaType": "",
+        "BodyParts": [
+          ""
+        ]
+      },
+      "Response": {
+        "StatusCode": 302,
+        "Proto": "HTTP/1.1",
+        "ProtoMajor": 1,
+        "ProtoMinor": 1,
+        "Header": {
+          "Access-Control-Allow-Origin": [
+            "https://render.githubusercontent.com"
+          ],
+          "Cache-Control": [
+            "no-cache"
+          ],
+          "Content-Length": [
+            "143"
+          ],
+          "Content-Security-Policy": [
+            "default-src 'none'; base-uri 'self'; block-all-mixed-content; child-src github.com/assets-cdn/worker/ gist.github.com/assets-cdn/worker/; connect-src 'self' uploads.github.com objects-origin.githubusercontent.com www.githubstatus.com collector.githubapp.com api.github.com github-cloud.s3.amazonaws.com github-production-repository-file-5c1aeb.s3.amazonaws.com github-production-upload-manifest-file-7fdce7.s3.amazonaws.com github-production-user-asset-6210df.s3.amazonaws.com cdn.optimizely.com logx.optimizely.com/v1/events translator.github.com wss://alive.github.com *.actions.githubusercontent.com wss://*.actions.githubusercontent.com online.visualstudio.com/api/v1/locations raw.githubusercontent.com github-production-repository-image-32fea6.s3.amazonaws.com github-production-release-asset-2e65be.s3.amazonaws.com insights.github.com; font-src github.githubassets.com; form-action 'self' github.com gist.github.com objects-origin.githubusercontent.com; frame-ancestors 'none'; frame-src render.githubusercontent.com viewscreen.githubusercontent.com notebooks.githubusercontent.com; img-src 'self' data: github.githubassets.com identicons.github.com collector.githubapp.com github-cloud.s3.amazonaws.com secured-user-images.githubusercontent.com/ *.githubusercontent.com; manifest-src 'self'; media-src github.com user-images.githubusercontent.com/; script-src github.githubassets.com; style-src 'unsafe-inline' github.githubassets.com; worker-src github.com/assets-cdn/worker/ gist.github.com/assets-cdn/worker/"
+          ],
+          "Content-Type": [
+            "text/html; charset=utf-8"
+          ],
+          "Date": [
+            "Wed, 05 Jan 2022 16:55:30 GMT"
+          ],
+          "Expect-Ct": [
+            "max-age=2592000, report-uri=\"https://api.github.com/_private/browser/errors\""
+          ],
+          "Location": [
+            "https://raw.githubusercontent.com/golang/go/go1.13.3/doc/gopher/fiveyears.jpg"
+          ],
+          "Permissions-Policy": [
+            "interest-cohort=()"
+          ],
+          "Referrer-Policy": [
+            "no-referrer-when-downgrade"
+          ],
+          "Server": [
+            "GitHub.com"
+          ],
+          "Strict-Transport-Security": [
+            "max-age=31536000; includeSubdomains; preload"
+          ],
+          "Vary": [
+            "X-PJAX, X-PJAX-Container, Accept-Encoding, Accept, X-Requested-With"
+          ],
+          "X-Content-Type-Options": [
+            "nosniff"
+          ],
+          "X-Frame-Options": [
+            "deny"
+          ],
+          "X-Github-Request-Id": [
+            "08B7:2C8B:5F5D750:966DF8E:61D5CD82"
+          ],
+          "X-Xss-Protection": [
+            "0"
+          ]
+        },
+        "Body": ""
+      }
+    },
+    {
+      "ID": "4116f3575843bcb2",
+      "Request": {
+        "Method": "HEAD",
+        "URL": "https://raw.githubusercontent.com/golang/go/go1.13.3/doc/gopher/fiveyears.jpg",
+        "Header": {
+          "Referer": [
+            "https://github.com/golang/go/raw/go1.13.3/doc/gopher/fiveyears.jpg"
+          ],
+          "User-Agent": [
+            "Go-http-client/1.1"
+          ]
+        },
+        "MediaType": "",
+        "BodyParts": [
+          ""
+        ]
+      },
+      "Response": {
+        "StatusCode": 200,
+        "Proto": "HTTP/1.1",
+        "ProtoMajor": 1,
+        "ProtoMinor": 1,
+        "Header": {
+          "Accept-Ranges": [
+            "bytes"
+          ],
+          "Access-Control-Allow-Origin": [
+            "*"
+          ],
+          "Cache-Control": [
+            "max-age=300"
+          ],
+          "Content-Length": [
+            "220526"
+          ],
+          "Content-Security-Policy": [
+            "default-src 'none'; style-src 'unsafe-inline'; sandbox"
+          ],
+          "Content-Type": [
+            "image/jpeg"
+          ],
+          "Date": [
+            "Wed, 05 Jan 2022 16:55:30 GMT"
+          ],
+          "Etag": [
+            "\"cac89b2441450a73be2a3f8818f8d260651f6065a06b7a6af53fc2898ffba0c2\""
+          ],
+          "Expires": [
+            "Wed, 05 Jan 2022 17:00:30 GMT"
+          ],
+          "Source-Age": [
+            "0"
+          ],
+          "Strict-Transport-Security": [
+            "max-age=31536000"
+          ],
+          "Vary": [
+            "Authorization,Accept-Encoding,Origin"
+          ],
+          "Via": [
+            "1.1 varnish"
+          ],
+          "X-Cache": [
+            "MISS"
+          ],
+          "X-Cache-Hits": [
+            "0"
+          ],
+          "X-Content-Type-Options": [
+            "nosniff"
+          ],
+          "X-Fastly-Request-Id": [
+            "2b14823bdd98a502f466cb469219ae3b0d07ce7b"
+          ],
+          "X-Frame-Options": [
+            "deny"
+          ],
+          "X-Github-Request-Id": [
+            "7AB0:6731:2A1CCDB:3560F6A:61D5CD82"
+          ],
+          "X-Served-By": [
+            "cache-fty21375-FTY"
+          ],
+          "X-Timer": [
+            "S1641401731.542627,VS0,VE108"
+          ],
+          "X-Xss-Protection": [
+            "1; mode=block"
+          ]
+        },
+        "Body": ""
+      }
+    }
+  ]
+}

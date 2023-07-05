@@ -60,28 +60,6 @@ func TestModuleInfo(t *testing.T) {
 		wantRepo, wantModule, wantFile, wantLine, wantRaw string
 	}{
 		{
-			"standard library",
-			"std", "v1.12.0", "bytes/buffer.go",
-			"https://cs.opensource.google/go/go",
-			"https://cs.opensource.google/go/go/+/go1.12:src",
-			"https://cs.opensource.google/go/go/+/go1.12:src/bytes/buffer.go",
-			"https://cs.opensource.google/go/go/+/go1.12:src/bytes/buffer.go;l=1",
-			// The raw URLs for the standard library are relative to the repo root, not
-			// the module directory.
-			"",
-		},
-		{
-			"old standard library",
-			"std", "v1.3.0", "bytes/buffer.go",
-			"https://cs.opensource.google/go/go",
-			"https://cs.opensource.google/go/go/+/go1.3:src/pkg",
-			"https://cs.opensource.google/go/go/+/go1.3:src/pkg/bytes/buffer.go",
-			"https://cs.opensource.google/go/go/+/go1.3:src/pkg/bytes/buffer.go;l=1",
-			// The raw URLs for the standard library are relative to the repo root, not
-			// the module directory.
-			"",
-		},
-		{
 			"github module at repo root",
 			"github.com/pkg/errors", "v0.8.1", "errors.go",
 
@@ -433,10 +411,74 @@ func TestModuleInfo(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestNewStdlibInfo(t *testing.T) {
+	client, done := newReplayClient(t, *record)
+	defer done()
+
+	check := func(t *testing.T, msg, got, want string) {
+		t.Helper()
+		if got != want {
+			t.Fatalf("%s:\ngot  %s\nwant %s", msg, got, want)
+		}
+		res, err := client.Head(got)
+		if err != nil {
+			t.Fatalf("%s: %v", got, err)
+		}
+		defer res.Body.Close()
+		if res.StatusCode != 200 {
+			t.Fatalf("%s: %v", got, res.Status)
+		}
+	}
+
+	for _, test := range []struct {
+		desc                                              string
+		modulePath, version, file                         string
+		wantRepo, wantModule, wantFile, wantLine, wantRaw string
+	}{
+		{
+			"standard library",
+			"std", "v1.12.0", "bytes/buffer.go",
+			"https://cs.opensource.google/go/go",
+			"https://cs.opensource.google/go/go/+/go1.12:src",
+			"https://cs.opensource.google/go/go/+/go1.12:src/bytes/buffer.go",
+			"https://cs.opensource.google/go/go/+/go1.12:src/bytes/buffer.go;l=1",
+			// The raw URLs for the standard library are relative to the repo root, not
+			// the module directory.
+			"",
+		},
+		{
+			"old standard library",
+			"std", "v1.3.0", "bytes/buffer.go",
+			"https://cs.opensource.google/go/go",
+			"https://cs.opensource.google/go/go/+/go1.3:src/pkg",
+			"https://cs.opensource.google/go/go/+/go1.3:src/pkg/bytes/buffer.go",
+			"https://cs.opensource.google/go/go/+/go1.3:src/pkg/bytes/buffer.go;l=1",
+			// The raw URLs for the standard library are relative to the repo root, not
+			// the module directory.
+			"",
+		},
+	} {
+		t.Run(test.desc, func(t *testing.T) {
+			info, err := NewStdlibInfo(test.version)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			check(t, "repo", info.RepoURL(), test.wantRepo)
+			check(t, "module", info.ModuleURL(), test.wantModule)
+			check(t, "file", info.FileURL(test.file), test.wantFile)
+			check(t, "line", info.LineURL(test.file, 1), test.wantLine)
+			if test.wantRaw != "" {
+				check(t, "raw", info.RawURL(test.file), test.wantRaw)
+			}
+		})
+	}
 
 	t.Run("stdlib-raw", func(t *testing.T) {
 		// Test raw URLs from the standard library, which are a special case.
-		info, err := ModuleInfo(context.Background(), &Client{client}, "std", "v1.13.3")
+		info, err := NewStdlibInfo("v1.13.3")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -444,7 +486,7 @@ func TestModuleInfo(t *testing.T) {
 			file = "doc/gopher/fiveyears.jpg"
 			want = "https://github.com/golang/go/raw/go1.13.3/doc/gopher/fiveyears.jpg"
 		)
-		check(t, "raw", info.RawURL(file), want, false)
+		check(t, "raw", info.RawURL(file), want)
 	})
 }
 

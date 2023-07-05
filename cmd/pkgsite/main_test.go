@@ -56,12 +56,13 @@ package a
 
 	cfg := func(modifyDefault func(*serverConfig)) serverConfig {
 		c := serverConfig{
-			paths:         []string{localModule},
-			gopathMode:    false,
-			useListedMods: true,
-			useCache:      true,
-			cacheDir:      cacheDir,
-			proxy:         prox,
+			paths:          []string{localModule},
+			gopathMode:     false,
+			useListedMods:  true,
+			useLocalStdlib: true,
+			useCache:       true,
+			cacheDir:       cacheDir,
+			proxy:          prox,
 		}
 		if modifyDefault != nil {
 			modifyDefault(&c)
@@ -131,7 +132,9 @@ package a
 		},
 		{
 			"search",
-			cfg(nil),
+			cfg(func(c *serverConfig) {
+				c.useLocalStdlib = false
+			}),
 			"search?q=a",
 			http.StatusOK,
 			in(".SearchResults",
@@ -140,7 +143,9 @@ package a
 		},
 		{
 			"no symbol search",
-			cfg(nil),
+			cfg(func(c *serverConfig) {
+				c.useLocalStdlib = false
+			}),
 			"search?q=A", // using a capital letter should not cause symbol search
 			http.StatusOK,
 			in(".SearchResults",
@@ -149,7 +154,9 @@ package a
 		},
 		{
 			"search not found",
-			cfg(nil),
+			cfg(func(c *serverConfig) {
+				c.useLocalStdlib = false
+			}),
 			"search?q=zzz",
 			http.StatusOK,
 			in(".SearchResults",
@@ -169,6 +176,7 @@ package a
 			"search unsupported",
 			cfg(func(c *serverConfig) {
 				c.paths = nil
+				c.useLocalStdlib = false
 			}),
 			"search?q=zzz",
 			http.StatusFailedDependency,

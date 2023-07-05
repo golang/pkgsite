@@ -372,7 +372,8 @@ func pseudoVersionRev(v string) string {
 // displayVersion returns the version string, formatted for display.
 func displayVersion(modulePath, requestedVersion, resolvedVersion string) string {
 	if modulePath == stdlib.ModulePath {
-		if stdlib.SupportedBranches[requestedVersion] || strings.HasPrefix(resolvedVersion, "v0.0.0") {
+		if stdlib.SupportedBranches[requestedVersion] ||
+			(strings.HasPrefix(resolvedVersion, "v0.0.0") && resolvedVersion != "v0.0.0") { // Plain v0.0.0 is from the go packages module getter
 			commit := strings.Split(resolvedVersion, "-")[2]
 			// If the resolvedVersion is a pseudoversion and the
 			// requestedVersion is not dev.fuzz, display "master (<commit>)".

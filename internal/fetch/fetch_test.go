@@ -67,6 +67,7 @@ func TestFetchModule(t *testing.T) {
 		mod          *testModule
 		fetchVersion string
 		proxyOnly    bool
+		stdzip       bool
 	}{
 		{name: "single", mod: moduleOnePackage},
 		{name: "wasm", mod: moduleWasm},
@@ -85,9 +86,9 @@ func TestFetchModule(t *testing.T) {
 		{name: "nonredistributable packages", mod: moduleNonRedist},
 		{name: "generics", mod: moduleGenerics},
 		// Proxy only as stdlib is not accounted for in local mode
-		{name: "stdlib module", mod: moduleStd, proxyOnly: true},
+		{name: "stdlib module", mod: moduleStd, stdzip: true},
 		// Proxy only as version is pre specified in local mode
-		{name: "master version of stdlib module", mod: moduleStdMaster, fetchVersion: "master", proxyOnly: true},
+		{name: "master version of stdlib module", mod: moduleStdMaster, fetchVersion: "master", stdzip: true},
 		// Proxy only as version is pre specified in local mode
 		{name: "master version of module", mod: moduleMaster, fetchVersion: "master", proxyOnly: true},
 		// Proxy only as version is pre specified in local mode
@@ -109,7 +110,12 @@ func TestFetchModule(t *testing.T) {
 			}{
 				{name: "proxy", fetch: proxyFetcher},
 				{name: "local", fetch: localFetcher},
+				{name: "stdlibzip", fetch: stdlibZipFetcher},
 			} {
+				if (!test.stdzip && fetcher.name == "stdlibzip") ||
+					(test.stdzip && fetcher.name != "stdlibzip") {
+					continue
+				}
 				if test.proxyOnly && fetcher.name == "local" {
 					continue
 				}

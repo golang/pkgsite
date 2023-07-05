@@ -188,6 +188,36 @@ func localFetcher(t *testing.T, withLicenseDetector bool, ctx context.Context, m
 	return got, d
 }
 
+// stdlibZipFetcher is a test helper function that sets up a test proxy, fetches
+// a module using FetchModule, and returns a fetch result and a license detector.
+func stdlibZipFetcher(t *testing.T, withLicenseDetector bool, ctx context.Context, mod *proxytest.Module, fetchVersion string) (*FetchResult, *licenses.Detector) {
+	t.Helper()
+
+	modulePath := mod.ModulePath
+	version := mod.Version
+	if version == "" {
+		version = sample.VersionString
+	}
+	if fetchVersion == "" {
+		fetchVersion = version
+	}
+
+	got := FetchModule(ctx, modulePath, fetchVersion, NewStdlibZipModuleGetter())
+	if !withLicenseDetector {
+		return got, nil
+	}
+
+	fs, _, _, err := stdlib.ContentDir(fetchVersion)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	d := licenses.NewDetectorFS(modulePath, fetchVersion, fs, func(format string, args ...any) {
+		log.Infof(ctx, format, args...)
+	})
+	return got, d
+}
+
 func licenseDetector(ctx context.Context, t *testing.T, modulePath, version string, proxyClient *proxy.Client) *licenses.Detector {
 	t.Helper()
 	var (

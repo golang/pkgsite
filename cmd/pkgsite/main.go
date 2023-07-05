@@ -60,6 +60,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"sort"
 	"strings"
 	"time"
@@ -92,11 +93,12 @@ var (
 )
 
 type serverConfig struct {
-	paths         []string
-	gopathMode    bool
-	useCache      bool
-	cacheDir      string
-	useListedMods bool
+	paths          []string
+	gopathMode     bool
+	useCache       bool
+	cacheDir       string
+	useListedMods  bool
+	useLocalStdlib bool
 
 	proxy *proxy.Client // client, or nil; controlled by the -proxy flag
 }
@@ -220,6 +222,10 @@ func buildServer(ctx context.Context, serverCfg serverConfig) (*frontend.Server,
 		}
 	}
 
+	if serverCfg.useLocalStdlib {
+		cfg.useLocalStdlib = true
+	}
+
 	getters, err := buildGetters(ctx, cfg)
 	if err != nil {
 		return nil, err
@@ -328,10 +334,11 @@ func getGOPATHModuleDirs(ctx context.Context, modulePaths []string) (map[string]
 // getterConfig defines the set of getters for the server to use.
 // See buildGetters.
 type getterConfig struct {
-	all         bool                              // if set, request "all" instead of ["<modulePath>/..."]
-	dirs        map[string][]frontend.LocalModule // local modules to serve
-	modCacheDir string                            // path to module cache, or ""
-	proxy       *proxy.Client                     // proxy client, or nil
+	all            bool                              // if set, request "all" instead of ["<modulePath>/..."]
+	dirs           map[string][]frontend.LocalModule // local modules to serve
+	modCacheDir    string                            // path to module cache, or ""
+	proxy          *proxy.Client                     // proxy client, or nil
+	useLocalStdlib bool                              // use go/packages for the local stdlib
 }
 
 // buildGetters constructs module getters based on the given configuration.
@@ -377,6 +384,22 @@ func buildGetters(ctx context.Context, cfg getterConfig) ([]fetch.ModuleGetter, 
 	if cfg.proxy != nil {
 		getters = append(getters, fetch.NewProxyModuleGetter(cfg.proxy, source.NewClient(time.Second)))
 	}
+
+	if cfg.useLocalStdlib {
+		goRepo := *goRepoPath
+		if goRepo == "" {
+			goRepo = runtime.GOROOT()
+		}
+		mg, err := fetch.NewGoPackagesStdlibModuleGetter(ctx, goRepo)
+		if err != nil {
+			log.Errorf(ctx, "loading packages from stdlib: %v", err)
+		} else {
+			getters = append(getters, mg)
+		}
+	}
+
+	getters = append(getters, fetch.NewStdlibZipModuleGetter())
+
 	return getters, nil
 }
 

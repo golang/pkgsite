@@ -75,7 +75,10 @@ func fetchModule(ctx context.Context, fr *FetchResult, mg ModuleGetter) error {
 	commitTime := info.Time
 
 	var contentDir fs.FS
-	if fr.ModulePath == stdlib.ModulePath {
+	switch mg.(type) {
+	case *stdlibZipModuleGetter:
+		// Special behavior for stdlibZipModuleGetter because its info doesn't actually
+		// give us the true resolved version.
 		var resolvedVersion string
 		contentDir, resolvedVersion, commitTime, err = stdlib.ContentDir(fr.RequestedVersion)
 		if err != nil {
@@ -84,7 +87,7 @@ func fetchModule(ctx context.Context, fr *FetchResult, mg ModuleGetter) error {
 		// If the requested version is a branch name like "master" or "main", we cannot
 		// determine the right resolved version until we start working with the repo.
 		fr.ResolvedVersion = resolvedVersion
-	} else {
+	default:
 		contentDir, err = mg.ContentDir(ctx, fr.ModulePath, fr.ResolvedVersion)
 		if err != nil {
 			return err
@@ -151,14 +154,6 @@ func fetchModule(ctx context.Context, fr *FetchResult, mg ModuleGetter) error {
 // the modulePath is "std", a request to @master will return an empty
 // commit time.
 func GetInfo(ctx context.Context, modulePath, requestedVersion string, mg ModuleGetter) (_ *proxy.VersionInfo, err error) {
-	if modulePath == stdlib.ModulePath {
-		var resolvedVersion string
-		resolvedVersion, err = stdlib.ZipInfo(requestedVersion)
-		if err != nil {
-			return nil, err
-		}
-		return &proxy.VersionInfo{Version: resolvedVersion}, nil
-	}
 	return mg.Info(ctx, modulePath, requestedVersion)
 }
 
@@ -166,9 +161,6 @@ func GetInfo(ctx context.Context, modulePath, requestedVersion string, mg Module
 // contents of the file obtained from the module getter. If modulePath is the
 // standard library, then the contents will be nil.
 func getGoModPath(ctx context.Context, modulePath, resolvedVersion string, mg ModuleGetter) (string, []byte, error) {
-	if modulePath == stdlib.ModulePath {
-		return stdlib.ModulePath, nil, nil
-	}
 	goModBytes, err := mg.Mod(ctx, modulePath, resolvedVersion)
 	if err != nil {
 		return "", nil, err

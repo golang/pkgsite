@@ -852,7 +852,7 @@ var moduleStdMaster = &testModule{
 				Version:           stdlib.TestMasterVersion,
 				CommitTime:        stdlib.TestCommitTime,
 				HasGoMod:          true,
-				SourceInfo:        source.NewStdlibInfo("master"),
+				SourceInfo:        source.NewStdlibInfoForTest("master"),
 				IsRedistributable: true,
 			},
 			Units: []*internal.Unit{
@@ -927,7 +927,7 @@ var moduleStd = &testModule{
 				Version:           "v1.12.5",
 				CommitTime:        stdlib.TestCommitTime,
 				HasGoMod:          true,
-				SourceInfo:        source.NewStdlibInfo("v1.12.5"),
+				SourceInfo:        source.NewStdlibInfoForTest("v1.12.5"),
 				IsRedistributable: true,
 			},
 			Units: []*internal.Unit{

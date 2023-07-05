@@ -33,6 +33,7 @@ import (
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/proxy"
 	"golang.org/x/pkgsite/internal/source"
+	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/version"
 	"golang.org/x/tools/go/packages"
 )
@@ -229,6 +230,7 @@ type goPackagesModuleGetter struct {
 	dir      string              // directory from which go/packages was run
 	packages []*packages.Package // all packages
 	modules  []*packages.Module  // modules references by packagages; sorted by path
+	isStd    bool
 }
 
 // NewGoPackagesModuleGetter returns a ModuleGetter that loads packages using
@@ -269,6 +271,49 @@ func NewGoPackagesModuleGetter(ctx context.Context, dir string, patterns ...stri
 	})
 
 	return &goPackagesModuleGetter{
+		dir:      abs,
+		packages: pkgs,
+		modules:  modules,
+	}, nil
+}
+
+// NewGoPackagesStdlibModuleGetter returns a ModuleGetter that loads stdlib packages using
+// go/packages.Load, from the requested GOROOT.
+func NewGoPackagesStdlibModuleGetter(ctx context.Context, dir string) (*goPackagesModuleGetter, error) {
+	abs, err := filepath.Abs(dir)
+	if err != nil {
+		return nil, err
+	}
+	start := time.Now()
+	env := []string(nil)
+	if dir != "" {
+		env = append(os.Environ(), "GOROOT=", abs)
+	}
+	cfg := &packages.Config{
+		Context: ctx,
+		Dir:     abs,
+		Mode: packages.NeedName |
+			packages.NeedModule |
+			packages.NeedCompiledGoFiles |
+			packages.NeedFiles,
+		Env: env,
+	}
+	pkgs, err := packages.Load(cfg, "std")
+	log.Infof(ctx, "go/packages.Load(std) loaded %d packages from %s in %v", len(pkgs), dir, time.Since(start))
+	if err != nil {
+		return nil, err
+	}
+
+	stdmod := &packages.Module{Path: "std",
+		Dir: filepath.Join(abs, "src"),
+	}
+	modules := []*packages.Module{stdmod}
+	for _, p := range pkgs {
+		p.Module = stdmod
+	}
+
+	return &goPackagesModuleGetter{
+		isStd:    true,
 		dir:      abs,
 		packages: pkgs,
 		modules:  modules,
@@ -499,6 +544,71 @@ func (g *goPackagesModuleGetter) HasChanged(ctx context.Context, info internal.M
 		return false, err
 	}
 	return mtime == nil || mtime.After(info.CommitTime), nil
+}
+
+// A stdlibZipModuleGetter gets the modules for the stdlib by downloading a zip file.
+type stdlibZipModuleGetter struct {
+}
+
+// NewStdlibZipModuleGetter returns a ModuleGetter that loads stdlib packages using stdlib
+// zip files.
+func NewStdlibZipModuleGetter() *stdlibZipModuleGetter {
+	return &stdlibZipModuleGetter{}
+}
+
+// Info returns basic information about the module.
+func (g *stdlibZipModuleGetter) Info(ctx context.Context, path, vers string) (_ *proxy.VersionInfo, err error) {
+	// TODO(matloob) Do we need to call stdlib.ContentDir here and get the resolved version?
+	if path != "std" {
+		return nil, fmt.Errorf("%w: not module std", derrors.NotFound)
+	}
+	var resolvedVersion string
+	resolvedVersion, err = stdlib.ZipInfo(vers)
+	if err != nil {
+		return nil, err
+	}
+	return &proxy.VersionInfo{Version: resolvedVersion}, nil
+}
+
+// Mod returns the contents of the module's go.mod file.
+// We return dummy contents to that include the name expected by the fetcher.
+func (g *stdlibZipModuleGetter) Mod(ctx context.Context, path, version string) ([]byte, error) {
+	if path != "std" {
+		return nil, fmt.Errorf("%w: not module std", derrors.NotFound)
+	}
+	return []byte("module std\n"), nil
+}
+
+// ContentDir uses stdlib.ContentDir to return a fs.FS representing the standard library's
+// contents.
+func (g *stdlibZipModuleGetter) ContentDir(ctx context.Context, path, version string) (fs.FS, error) {
+	// Currently we don't actually use ContentDir and do special behavior for the stdlibZipModuleGetter.
+	// TODO(matloob): stdlib.ContentDir returns information that should be returned by Info.
+	// One alternative is to have Info call stdlib.ContentDir and save the results (like with a
+	// singleflight) But my guess is that Info is expected to be fast, so doing that would
+	// cause an unexpected slowdown.
+	if path != "std" {
+		return nil, fmt.Errorf("%w: not module std", derrors.NotFound)
+	}
+	fs, _, _, err := stdlib.ContentDir(version)
+	return fs, err
+}
+
+// SourceInfo returns a source.Info that will create /files links to modules in
+// the cache.
+func (g *stdlibZipModuleGetter) SourceInfo(ctx context.Context, path, version string) (*source.Info, error) {
+	if path != "std" {
+		return nil, fmt.Errorf("%w: not module std", derrors.NotFound)
+	}
+	return source.NewStdlibInfo(version)
+}
+
+func (g *stdlibZipModuleGetter) SourceFS() (string, fs.FS) {
+	return "", nil
+}
+
+func (g *stdlibZipModuleGetter) String() string {
+	return "stdlib"
 }
 
 // A modCacheModuleGetter gets modules from a directory in the filesystem that
