@@ -10,8 +10,8 @@ import (
 )
 
 func TestRead(t *testing.T) {
-	if runtime.GOOS == "darwin" {
-		t.Skip("darwin has no /proc/meminfo")
+	if runtime.GOOS != "linux" {
+		t.Skip("don't assume /proc/meminfo exists on non-linux platforms")
 	}
 	_, err := ReadSystemStats()
 	if err != nil {
