@@ -12,6 +12,7 @@ import (
 	"testing"
 
 	"golang.org/x/mod/semver"
+	"golang.org/x/pkgsite/internal/testenv"
 	"golang.org/x/pkgsite/internal/version"
 )
 
@@ -379,6 +380,8 @@ func TestVersionMatchesHash(t *testing.T) {
 }
 
 func TestResolveSupportedBranches(t *testing.T) {
+	testenv.MustHaveExternalNetwork(t) // ResolveSupportedBranches accesses the go repo at go.googlesource.com
+
 	got, err := ResolveSupportedBranches()
 	if err != nil {
 		t.Fatal(err)

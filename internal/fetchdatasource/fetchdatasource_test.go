@@ -25,6 +25,7 @@ import (
 	"golang.org/x/pkgsite/internal/proxy/proxytest"
 	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/stdlib"
+	"golang.org/x/pkgsite/internal/testenv"
 	"golang.org/x/pkgsite/internal/testing/testhelper"
 	"golang.org/x/pkgsite/internal/version"
 )
@@ -428,6 +429,11 @@ func TestLocalGetUnitMeta(t *testing.T) {
 		},
 	} {
 		t.Run(test.path, func(t *testing.T) {
+			if test.modulePath == stdlib.ModulePath {
+				// FetchModule for the stdlib calls stdlib.Versions which makes a network
+				// call to go.googlesource.com for the Go git repo.
+				testenv.MustHaveExternalNetwork(t)
+			}
 			got, err := ds.GetUnitMeta(ctx, test.path, test.modulePath, fetch.LocalVersion)
 			if test.wantErr != nil {
 				if !errors.Is(err, test.wantErr) {
