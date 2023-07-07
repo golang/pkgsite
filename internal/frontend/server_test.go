@@ -2,6 +2,11 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+// github.com/alicebob/miniredis/v2 pulls in
+// github.com/yuin/gopher-lua which uses a non
+// build-tag-guarded use of the syscall package.
+//go:build !plan9
+
 package frontend
 
 import (
@@ -26,26 +31,13 @@ import (
 	"golang.org/x/pkgsite/internal/cookie"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/experiment"
-	"golang.org/x/pkgsite/internal/middleware"
 	"golang.org/x/pkgsite/internal/postgres"
-	"golang.org/x/pkgsite/internal/proxy/proxytest"
-	"golang.org/x/pkgsite/internal/queue"
-	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/testing/htmlcheck"
 	"golang.org/x/pkgsite/internal/testing/pagecheck"
 	"golang.org/x/pkgsite/internal/testing/sample"
 	"golang.org/x/pkgsite/internal/version"
 	"golang.org/x/pkgsite/static"
-	thirdparty "golang.org/x/pkgsite/third_party"
 )
-
-const testTimeout = 5 * time.Second
-
-var testDB *postgres.DB
-
-func TestMain(m *testing.M) {
-	postgres.RunDBTests("discovery_frontend_test", m, &testDB)
-}
 
 func TestHTMLInjection(t *testing.T) {
 	_, handler, _ := newTestServer(t, nil, nil)
@@ -57,21 +49,6 @@ func TestHTMLInjection(t *testing.T) {
 }
 
 const pseudoVersion = "v0.0.0-20140414041502-123456789012"
-
-type testModule struct {
-	path            string
-	redistributable bool
-	versions        []string
-	packages        []testPackage
-}
-
-type testPackage struct {
-	name           string
-	suffix         string
-	readmeContents string
-	readmeFilePath string
-	docs           []*internal.Documentation
-}
 
 type serverTestCase struct {
 	// name of the test
@@ -306,50 +283,6 @@ var testModules = []testModule{
 			},
 		},
 	},
-}
-
-func insertTestModules(ctx context.Context, t *testing.T, mods []testModule) {
-	for _, mod := range mods {
-		var (
-			suffixes []string
-			pkgs     = make(map[string]testPackage)
-		)
-		for _, pkg := range mod.packages {
-			suffixes = append(suffixes, pkg.suffix)
-			pkgs[pkg.suffix] = pkg
-		}
-		for _, ver := range mod.versions {
-			m := sample.Module(mod.path, ver, suffixes...)
-			m.SourceInfo = source.NewGitHubInfo(sample.RepositoryURL, "", ver)
-			m.IsRedistributable = mod.redistributable
-			if !m.IsRedistributable {
-				m.Licenses = nil
-			}
-			for _, u := range m.Units {
-				if pkg, ok := pkgs[internal.Suffix(u.Path, m.ModulePath)]; ok {
-					if pkg.name != "" {
-						u.Name = pkg.name
-					}
-					if pkg.readmeContents != "" {
-						u.Readme = &internal.Readme{
-							Contents: pkg.readmeContents,
-							Filepath: pkg.readmeFilePath,
-						}
-					}
-					if pkg.docs != nil {
-						u.Documentation = pkg.docs
-					}
-				}
-				if !mod.redistributable {
-					u.IsRedistributable = false
-					u.Licenses = nil
-					u.Documentation = nil
-					u.Readme = nil
-				}
-			}
-			postgres.MustInsertModule(ctx, t, testDB, m)
-		}
-	}
 }
 
 var (
@@ -1512,49 +1445,6 @@ func TestTagRoute(t *testing.T) {
 				t.Errorf("TagRoute(%q, %v) = %q, want %q", test.route, test.req, got, test.want)
 			}
 		})
-	}
-}
-
-func newTestServer(t *testing.T, proxyModules []*proxytest.Module, redisClient *redis.Client, experimentNames ...string) (*Server, http.Handler, func()) {
-	t.Helper()
-	proxyClient, teardown := proxytest.SetupTestClient(t, proxyModules)
-	sourceClient := source.NewClient(sourceTimeout)
-	ctx := context.Background()
-
-	q := queue.NewInMemory(ctx, 1, experimentNames,
-		func(ctx context.Context, mpath, version string) (int, error) {
-			return FetchAndUpdateState(ctx, mpath, version, proxyClient, sourceClient, testDB)
-		})
-
-	s, err := NewServer(ServerConfig{
-		DataSourceGetter:     func(context.Context) internal.DataSource { return testDB },
-		Queue:                q,
-		TaskIDChangeInterval: 10 * time.Minute,
-		TemplateFS:           template.TrustedFSFromEmbed(static.FS),
-		// Use the embedded FSs here to make sure they're tested.
-		// Integration tests will use the actual directories.
-		StaticFS:     static.FS,
-		ThirdPartyFS: thirdparty.FS,
-		StaticPath:   "../../static",
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-	mux := http.NewServeMux()
-	s.Install(mux.Handle, redisClient, nil)
-
-	var exps []*internal.Experiment
-	for _, n := range experimentNames {
-		exps = append(exps, &internal.Experiment{Name: n, Rollout: 100})
-	}
-	exp, err := middleware.NewExperimenter(ctx, time.Hour, func(context.Context) ([]*internal.Experiment, error) { return exps, nil }, nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-	mw := middleware.Experiment(exp)
-	return s, mw(mux), func() {
-		teardown()
-		postgres.ResetTestDB(testDB, t)
 	}
 }
 

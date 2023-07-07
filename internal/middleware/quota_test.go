@@ -2,6 +2,11 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+// github.com/alicebob/miniredis/v2 pulls in
+// github.com/yuin/gopher-lua which uses a non
+// build-tag-guarded use of the syscall package.
+//go:build !plan9
+
 package middleware
 
 import (

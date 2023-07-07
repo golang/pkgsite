@@ -2,6 +2,9 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+// github.com/evanw/esbuild doesn't compile on plan9
+//go:build !plan9
+
 // Package static builds static assets for the frontend and the worker.
 package static
 
@@ -13,21 +16,6 @@ import (
 
 	"github.com/evanw/esbuild/pkg/api"
 )
-
-type Config struct {
-	// Entrypoint is a directory in which to to build TypeScript
-	// sources.
-	EntryPoint string
-
-	// Bundle is true if files imported by an entry file
-	// should be joined together in a single output file.
-	Bundle bool
-
-	// Watch is true in development. Sourcemaps are placed inline,
-	// the output is unminified, and changes to any TypeScript
-	// files will force a rebuild of the JavaScript output.
-	Watch bool
-}
 
 // Build compiles TypeScript files into minified JavaScript
 // files using github.com/evanw/esbuild.
