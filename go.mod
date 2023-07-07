@@ -30,7 +30,7 @@ require (
 	github.com/jackc/pgconn v1.10.1
 	github.com/jackc/pgx/v4 v4.14.1
 	github.com/jba/templatecheck v0.6.0
-	github.com/lib/pq v1.10.2
+	github.com/lib/pq v1.10.9
 	github.com/microcosm-cc/bluemonday v1.0.16
 	github.com/russross/blackfriday/v2 v2.1.0
 	github.com/yuin/goldmark v1.4.13
