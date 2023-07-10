@@ -26,6 +26,7 @@ import (
 	"fmt"
 	"net/http"
 	"path"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -937,7 +938,7 @@ func FilesInfo(dir string) *Info {
 	// http.FileServer redirects instead of serving the directory contents, with
 	// confusing results.
 	return &Info{
-		repoURL: path.Join("/files", dir),
+		repoURL: path.Join("/files", filepath.ToSlash(dir)),
 		templates: urlTemplates{
 			Repo:      "{repo}/",
 			Directory: "{repo}/{dir}/",

@@ -8,7 +8,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"path/filepath"
+	"path"
 	"sort"
 	"strings"
 
@@ -394,5 +394,5 @@ func (c *Client) vulns(ctx context.Context) ([]byte, error) {
 }
 
 func (c *Client) entry(ctx context.Context, id string) ([]byte, error) {
-	return c.src.get(ctx, filepath.Join(idDir, id))
+	return c.src.get(ctx, path.Join(idDir, id))
 }

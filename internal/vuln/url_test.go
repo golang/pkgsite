@@ -6,10 +6,14 @@ package vuln
 
 import (
 	"net/url"
+	"runtime"
 	"testing"
 )
 
 func TestURLToFilePath(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("windows is not supported (see convertFileURLPath")
+	}
 	for _, tc := range urlTests {
 		if tc.url == "" {
 			continue

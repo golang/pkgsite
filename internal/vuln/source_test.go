@@ -12,12 +12,16 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 
 	"golang.org/x/pkgsite/internal/osv"
 )
 
 func TestNewSource(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("windows is not supported (see convertFileURLPath")
+	}
 	t.Run("https", func(t *testing.T) {
 		url := "https://vuln.go.dev"
 		s, err := NewSource(url)

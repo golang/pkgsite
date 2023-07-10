@@ -71,7 +71,7 @@ package a
 
 	modcacheChecker := in("",
 		in(".Documentation", hasText("var V = 1")),
-		sourceLinks(path.Join(abs(cacheDir), "modcache.com@v1.0.0"), "a.go"))
+		sourceLinks(path.Join(filepath.ToSlash(abs(cacheDir)), "modcache.com@v1.0.0"), "a.go"))
 
 	ctx := context.Background()
 	for _, test := range []struct {
@@ -88,7 +88,7 @@ package a
 			http.StatusOK,
 			in("",
 				in(".Documentation", hasText("There is no documentation for this package.")),
-				sourceLinks(path.Join(abs(localModule), "example.com/testmod"), "a.go")),
+				sourceLinks(path.Join(filepath.ToSlash(abs(localModule)), "example.com/testmod"), "a.go")),
 		},
 		{
 			"modcache",
