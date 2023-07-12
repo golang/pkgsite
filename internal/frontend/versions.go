@@ -396,10 +396,10 @@ func displayVersion(modulePath, requestedVersion, resolvedVersion string) string
 func linkVersion(modulePath, requestedVersion, resolvedVersion string) string {
 	if modulePath == stdlib.ModulePath {
 		if strings.HasPrefix(resolvedVersion, "go") {
-			return resolvedVersion
+			return resolvedVersion // already a go version
 		}
 		if stdlib.SupportedBranches[requestedVersion] {
-			return requestedVersion
+			return requestedVersion // branch, not version
 		}
 		return goTagForVersion(resolvedVersion)
 	}

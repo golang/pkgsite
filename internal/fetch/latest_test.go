@@ -30,7 +30,7 @@ func TestLatestModuleVersions(t *testing.T) {
 	}{
 		{"example.com/basic", "v1.1.0", "v1.1.0"},
 		{"example.com/retractions", "v1.2.0", "v1.0.0"},
-		{"std", "v1.14.6", "v1.14.6"},
+		{"std", "v1.21.0", "v1.21.0"},
 	} {
 		got, err := LatestModuleVersions(context.Background(), test.modulePath, prox, nil)
 		if err != nil {

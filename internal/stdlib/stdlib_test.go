@@ -64,6 +64,26 @@ func TestTagForVersion(t *testing.T) {
 			want:    "go1.13",
 		},
 		{
+			name:    "version v1.20.0-rc.2",
+			version: "v1.20.0-rc.2",
+			want:    "go1.20rc2",
+		},
+		{
+			name:    "version v1.20.0",
+			version: "v1.20.0",
+			want:    "go1.20",
+		},
+		{
+			name:    "version v1.21.0-rc.2",
+			version: "v1.21.0-rc.2",
+			want:    "go1.21rc2",
+		},
+		{
+			name:    "version v1.21.0",
+			version: "v1.21.0",
+			want:    "go1.21.0",
+		},
+		{
 			name:    "master branch",
 			version: "master",
 			want:    "master",
@@ -96,7 +116,7 @@ func TestTagForVersion(t *testing.T) {
 				return
 			}
 			if got != test.want {
-				t.Errorf("TagForVersion(%q) = %q, %v, wanted %q, %v", test.version, got, err, test.want, nil)
+				t.Fatalf("TagForVersion(%q) = %q, %v, wanted %q, %v", test.version, got, err, test.want, nil)
 			}
 		})
 	}
@@ -236,7 +256,7 @@ func TestZipInfo(t *testing.T) {
 	}{
 		{
 			requestedVersion: "latest",
-			want:             "v1.14.6",
+			want:             "v1.21.0",
 		},
 		{
 			requestedVersion: "master",
@@ -279,7 +299,8 @@ func TestVersions(t *testing.T) {
 	otherWants := append([]string{"v1.17.6"}, commonWants...)
 	t.Run("test", func(t *testing.T) {
 		defer WithTestData()()
-		testVersions(commonWants)
+		testWants := append([]string{"v1.21.0"}, commonWants...)
+		testVersions(testWants)
 	})
 	t.Run("local", func(t *testing.T) {
 		if *repoPath == "" {
@@ -316,6 +337,8 @@ func TestVersionForTag(t *testing.T) {
 		{"go1.0", ""},
 		{"weekly.2012-02-14", ""},
 		{"latest", "latest"},
+		{"go1.21.0", "v1.21.0"},
+		{"go1.21", "v1.21.0"},
 	} {
 		got := VersionForTag(test.in)
 		if got != test.want {

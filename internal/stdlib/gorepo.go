@@ -161,6 +161,7 @@ var testRefs = []plumbing.ReferenceName{
 	"refs/tags/go1.13",
 	"refs/tags/go1.13beta1",
 	"refs/tags/go1.14.6",
+	"refs/tags/go1.21.0",
 	"refs/heads/dev.fuzz",
 	"refs/heads/master",
 	// other tags

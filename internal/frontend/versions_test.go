@@ -34,14 +34,18 @@ func sampleModule(modulePath, version string, versionType version.Type, packages
 	return m
 }
 
-func versionSummaries(path string, versions []string, linkify func(path, version string) string) []*VersionSummary {
+func versionSummaries(path string, versions []string, isStdlib bool, linkify func(path, version string) string) []*VersionSummary {
 	vs := make([]*VersionSummary, len(versions))
 	for i, version := range versions {
+		semver := version
+		if isStdlib {
+			semver = stdlib.VersionForTag(version)
+		}
 		vs[i] = &VersionSummary{
 			Version:    version,
 			Link:       linkify(path, version),
 			CommitTime: absoluteTime(sample.CommitTime),
-			IsMinor:    isMinor(version),
+			IsMinor:    isMinor(semver),
 		}
 	}
 	return vs
@@ -80,10 +84,10 @@ func TestFetchPackageVersionsDetails(t *testing.T) {
 			true),
 		Documentation: []*internal.Documentation{sample.Doc},
 	}
-	makeList := func(pkgPath, modulePath, major string, versions []string, incompatible bool) *VersionList {
+	makeList := func(pkgPath, modulePath, major string, versions []string, isStdlib, incompatible bool) *VersionList {
 		return &VersionList{
 			VersionListKey: VersionListKey{ModulePath: modulePath, Major: major, Incompatible: incompatible},
-			Versions: versionSummaries(pkgPath, versions, func(path, version string) string {
+			Versions: versionSummaries(pkgPath, versions, isStdlib, func(path, version string) string {
 				return constructUnitURL(pkgPath, modulePath, version)
 			}),
 		}
@@ -114,6 +118,12 @@ func TestFetchPackageVersionsDetails(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	// Named bool values, for readability of call sites below.
+	const (
+		stdlib, notStdlib        = true, false
+		compatible, incompatible = false, true
+	)
+
 	for _, tc := range []struct {
 		name        string
 		pkg         *internal.Unit
@@ -124,12 +134,25 @@ func TestFetchPackageVersionsDetails(t *testing.T) {
 			name: "want stdlib versions",
 			pkg:  nethttpPkg,
 			modules: []*internal.Module{
+				sampleModule("std", "v1.22.0-rc.1", version.TypePseudo, nethttpPkg),
+				sampleModule("std", "v1.21.0", version.TypeRelease, nethttpPkg),
+				sampleModule("std", "v1.20.0", version.TypeRelease, nethttpPkg),
 				sampleModule("std", "v1.12.5", version.TypeRelease, nethttpPkg),
 				sampleModule("std", "v1.11.6", version.TypeRelease, nethttpPkg),
 			},
 			wantDetails: &VersionsDetails{
 				ThisModule: []*VersionList{
-					makeList("net/http", "std", "go1", []string{"go1.12.5", "go1.11.6"}, false),
+					makeList(
+						"net/http", "std", "go1",
+						[]string{
+							"go1.22rc1",
+							"go1.21.0",
+							"go1.20",
+							"go1.12.5",
+							"go1.11.6",
+						},
+						stdlib, compatible,
+					),
 				},
 			},
 		},
@@ -149,7 +172,7 @@ func TestFetchPackageVersionsDetails(t *testing.T) {
 			wantDetails: &VersionsDetails{
 				ThisModule: []*VersionList{
 					func() *VersionList {
-						vl := makeList(v1Path, modulePath1, "v1", []string{"v1.3.0", "v1.2.3", "v1.2.1"}, false)
+						vl := makeList(v1Path, modulePath1, "v1", []string{"v1.3.0", "v1.2.3", "v1.2.1"}, notStdlib, compatible)
 						vl.Versions[2].Vulns = []vuln.Vuln{{
 							ID:      vulnEntry.ID,
 							Details: vulnEntry.Summary,
@@ -158,7 +181,7 @@ func TestFetchPackageVersionsDetails(t *testing.T) {
 					}(),
 				},
 				IncompatibleModules: []*VersionList{
-					makeList(v1Path, modulePath1, "v2", []string{"v2.1.0+incompatible"}, true),
+					makeList(v1Path, modulePath1, "v2", []string{"v2.1.0+incompatible"}, notStdlib, incompatible),
 				},
 				OtherModules: []string{"test.com", modulePath2},
 			},
@@ -176,7 +199,7 @@ func TestFetchPackageVersionsDetails(t *testing.T) {
 			},
 			wantDetails: &VersionsDetails{
 				ThisModule: []*VersionList{
-					makeList(v2Path, modulePath2, "v2", []string{"v2.2.1-alpha.1", "v2.0.0"}, false),
+					makeList(v2Path, modulePath2, "v2", []string{"v2.2.1-alpha.1", "v2.0.0"}, notStdlib, compatible),
 				},
 				OtherModules: []string{modulePath1},
 			},

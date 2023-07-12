@@ -101,6 +101,9 @@ func VersionForTag(tag string) string {
 // TagForVersion returns the Go standard library repository tag corresponding
 // to semver. The Go tags differ from standard semantic versions in a few ways,
 // such as beginning with "go" instead of "v".
+//
+// Starting with go1.21.0, the first patch release of major go versions include
+// the .0 suffix. Previously, the .0 suffix was elided (golang/go#57631).
 func TagForVersion(v string) (_ string, err error) {
 	defer derrors.Wrap(&err, "TagForVersion(%q)", v)
 
@@ -122,7 +125,9 @@ func TagForVersion(v string) (_ string, err error) {
 	prerelease := semver.Prerelease(goVersion)
 	versionWithoutPrerelease := strings.TrimSuffix(goVersion, prerelease)
 	patch := strings.TrimPrefix(versionWithoutPrerelease, semver.MajorMinor(goVersion)+".")
-	if patch == "0" {
+	if patch == "0" && (semver.Compare(v, "v1.21.0") < 0 || prerelease != "") {
+		// Starting with go1.21.0, the first patch version includes .0.
+		// Prereleases do not include .0 (we don't do prereleases for other patch releases).
 		versionWithoutPrerelease = strings.TrimSuffix(versionWithoutPrerelease, ".0")
 	}
 	goVersion = fmt.Sprintf("go%s", strings.TrimPrefix(versionWithoutPrerelease, "v"))
@@ -251,10 +256,11 @@ func refNameForVersion(v string) (plumbing.ReferenceName, error) {
 	return plumbing.NewTagReferenceName(tag), nil
 }
 
-// Versions returns all the versions of Go that are relevant to the discovery
-// site. These are all release versions (tags of the forms "goN.N" and
-// "goN.N.N", where N is a number) and beta or rc versions (tags of the forms
-// "goN.NbetaN" and "goN.N.NbetaN", and similarly for "rc" replacing "beta").
+// Versions returns all the semantic versions of Go that are relevant to the
+// discovery site. These are all release versions (derived from tags of the
+// forms "goN.N" and "goN.N.N", where N is a number) and beta or rc versions
+// (derived from tags of the forms "goN.NbetaN" and "goN.N.NbetaN", and
+// similarly for "rc" replacing "beta").
 func Versions() (_ []string, err error) {
 	defer derrors.Wrap(&err, "stdlib.Versions()")
 
