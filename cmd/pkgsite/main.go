@@ -6,7 +6,7 @@
 // It runs as a web server and presents the documentation as a
 // web page.
 //
-// To install, run `go install ./cmd/pkgsite` from the pkgsite repo root.
+// To install, run `go install golang.org/x/pkgsite/cmd/pkgsite@latest`.
 //
 // With no arguments, pkgsite will serve docs for main modules relative to the
 // current directory, i.e. the modules listed by `go list -m`. This is
@@ -14,7 +14,7 @@
 // directory. However, this may include multiple main modules when using a
 // go.work file to define a [workspace].
 //
-// For example, both of the following the following forms could be used to work
+// For example, both of the following forms could be used to work
 // on the module defined in repos/cue/go.mod:
 //
 // The single module form:

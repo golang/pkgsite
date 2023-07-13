@@ -1,12 +1,29 @@
-# Pkg.go.dev
+# golang.org/x/pkgsite
+
+This repository hosts the source code of the [pkg.go.dev](https://pkg.go.dev) website,
+and [`pkgsite`](https://pkg.go.dev/golang.org/x/pkgsite/cmd/pkgsite), a documentation
+server program.
 
 [![Go Reference](https://pkg.go.dev/badge/golang.org/x/pkgsite.svg)](https://pkg.go.dev/golang.org/x/pkgsite)
 
-## A site for discovering Go packages
+## pkg.go.dev: a site for discovering Go packages
 
 Pkg.go.dev is a website for discovering and evaluating Go packages and modules.
 
 You can check it out at [https://pkg.go.dev](https://pkg.go.dev).
+
+## pkgsite: a documentation server
+
+`pkgsite` program extracts and generates documentation for Go projects.
+
+Example usage:
+```
+$ go install golang.org/x/pkgsite/cmd/pkgsite@latest
+$ cd myproject
+$ pkgsite -open .
+```
+
+For more information, see the [pkgsite documentation](https://pkg.go.dev/golang.org/x/pkgsite/cmd/pkgsite).
 
 ## Requirements
 
