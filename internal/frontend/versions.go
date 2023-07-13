@@ -156,7 +156,7 @@ func buildVersionDetails(ctx context.Context, currentModulePath, packagePath str
 	for _, mi := range modInfos {
 		// Try to resolve the most appropriate major version for this version. If
 		// we detect a +incompatible version (when the path version does not match
-		// the sematic version), we prefer the path version.
+		// the semantic version), we prefer the path version.
 		major := semver.Major(mi.Version)
 		if mi.ModulePath == stdlib.ModulePath {
 			var err error

@@ -180,7 +180,7 @@ func TestFetchAndUpdateState(t *testing.T) {
 				},
 				NumImports: 5,
 				Documentation: []*internal.Documentation{{
-					Synopsis: "Package context defines the Context type, which carries deadlines, cancelation signals, and other request-scoped values across API boundaries and between processes.",
+					Synopsis: "Package context defines the Context type, which carries deadlines, cancellation signals, and other request-scoped values across API boundaries and between processes.",
 					GOOS:     "linux",
 					GOARCH:   "amd64",
 				}},

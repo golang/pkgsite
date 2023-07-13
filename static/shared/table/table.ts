@@ -7,7 +7,7 @@
 
 /**
  * Controller for a table element with expandable rows. Adds event listeners to
- * a toggle within a table row that controls visiblity of additional related
+ * a toggle within a table row that controls visibility of additional related
  * rows in the table.
  *
  * @example

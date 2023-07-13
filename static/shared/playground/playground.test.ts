@@ -109,7 +109,7 @@ require example v1
     expect(window.open).toHaveBeenCalledWith('https://play.golang.org/p/abcdefg');
   });
 
-  it('replaces textarea with formated code after pressing format', async () => {
+  it('replaces textarea with formatted code after pressing format', async () => {
     mocked(window.fetch).mockResolvedValue({
       json: () =>
         Promise.resolve({

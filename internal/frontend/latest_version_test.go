@@ -53,7 +53,7 @@ func TestLatestMinorVersion(t *testing.T) {
 			name:       "module does not exist",
 			fullPath:   "github.com/mymodule/doesnotexist",
 			modulePath: internal.UnknownModulePath,
-			wantErr:    fmt.Errorf("error while retriving minor version"),
+			wantErr:    fmt.Errorf("error while retrieving minor version"),
 		},
 	}
 	ctx := context.Background()
