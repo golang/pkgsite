@@ -96,7 +96,7 @@ func effectiveName(pkgPath, pkgName string) string {
 	return base
 }
 
-// absoluteTime takes a date and returns returns a human-readable,
+// absoluteTime takes a date and returns a human-readable,
 // date with the format mmm d, yyyy.
 func absoluteTime(date time.Time) string {
 	if date.IsZero() {

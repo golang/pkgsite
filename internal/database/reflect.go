@@ -83,7 +83,7 @@ func structScannerForType[T any]() func(p *T) []any {
 }
 
 // NullPtr is for scanning nullable database columns into pointer variables or
-// fields. When given a pointer to to a pointer to some type T, it returns a
+// fields. When given a pointer to a pointer to some type T, it returns a
 // value that can be passed to a Scan function. If the corresponding column is
 // nil, the variable will be set to nil. Otherwise, it will be set to a newly
 // allocated pointer to the column value.

@@ -540,7 +540,7 @@ func isCapitalized(s string) bool {
 	return unicode.IsUpper(rune(s[0]))
 }
 
-// elapsedTime takes a date and returns returns human-readable,
+// elapsedTime takes a date and returns human-readable,
 // relative timestamps based on the following rules:
 // (1) 'X hours ago' when X < 6
 // (2) 'today' between 6 hours and 1 day ago

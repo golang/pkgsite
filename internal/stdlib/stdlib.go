@@ -388,7 +388,7 @@ func zipInternal(requestedVersion string) (_ *zip.Reader, resolvedVersion string
 // semantic version for the branch.
 //
 // ContentDir reads the standard library at the Go repository tag corresponding
-// to to the given semantic version.
+// to the given semantic version.
 //
 // ContentDir ignores go.mod files in the standard library, treating it as if it
 // were a single module named "std" at the given version.

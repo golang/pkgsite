@@ -37,7 +37,7 @@ var (
 	)
 	cacheLatency = stats.Float64(
 		"go-discovery/cache/result_latency",
-		"Cache serving latency latency",
+		"Cache serving latency",
 		stats.UnitMilliseconds,
 	)
 	cacheErrors = stats.Int64(

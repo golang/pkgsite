@@ -75,7 +75,7 @@ type searchResponse struct {
 type searchEvent struct {
 	// Type is either the searcher name or 'estimate' (the count estimate).
 	Type string
-	// Latency is the duration that that the operation took.
+	// Latency is the duration that the operation took.
 	Latency time.Duration
 	// Err is the error returned by the operation, if any.
 	Err error

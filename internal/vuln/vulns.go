@@ -107,7 +107,7 @@ func collectRangePairs(a osv.Affected) []pair {
 		for _, v := range r.Events {
 			if v.Introduced != "" {
 				// We expected Introduced and Fixed to alternate, but if
-				// p.intro != "", then they they don't.
+				// p.intro != "", then they don't.
 				// Keep going in that case, ignoring the first Introduced.
 				p.intro = v.Introduced
 				if p.intro == "0" {

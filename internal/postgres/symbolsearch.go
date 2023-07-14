@@ -229,7 +229,7 @@ func multiwordSearchCombinations(q, symbolFilter string) map[string]string {
 		if strings.Contains(w, "/") || strings.Contains(w, "-") || commonHostnames[w] {
 			continue
 		}
-		// A symbolFilter was used, and this word does not match match it, so
+		// A symbolFilter was used, and this word does not match it, so
 		// it can't be the symbol name.
 		if symbolFilter != "" && w != symbolFilter {
 			continue

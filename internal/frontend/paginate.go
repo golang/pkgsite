@@ -159,7 +159,7 @@ func prev(page int) int {
 	return page - 1
 }
 
-// next returns the number of the page after the given page, or zero if page is is the last page or larger.
+// next returns the number of the page after the given page, or zero if page is the last page or larger.
 // limit and totalCount are used to calculate the last page (see numPages).
 func next(page, limit, totalCount int) int {
 	if page >= numPages(limit, totalCount) {
