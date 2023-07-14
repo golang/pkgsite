@@ -31,7 +31,7 @@ services:
     depends_on:
       - db
      # This should match the version we are using on Cloud Run.
-    image: golang:1.20
+    image: golang:1.21rc3
     environment:
       <<: [*database-variables, *go-variables]
       GO_DISCOVERY_TESTDB: ${GO_DISCOVERY_TESTDB:-"true"}
@@ -43,7 +43,7 @@ services:
       - ../../:/pkgsite
     working_dir: /pkgsite
   searchtest:
-    image: golang:1.20
+    image: golang:1.21rc3
     depends_on:
       - frontend
     environment:
@@ -55,7 +55,7 @@ services:
       - ../../:/pkgsite
     working_dir: /pkgsite
   api:
-    image: golang:1.20
+    image: golang:1.21rc3
     depends_on:
       - frontend
     environment:
@@ -68,7 +68,7 @@ services:
     working_dir: /pkgsite
   frontend:
      # This should match the version we are using on AppEngine.
-    image: golang:1.20
+    image: golang:1.21rc3
     depends_on:
       - db
     command: bash -c "
@@ -86,7 +86,7 @@ services:
     working_dir: /pkgsite
   seeddb:
      # This should match the version we are using on Cloud Run.
-    image: golang:1.20
+    image: golang:1.21rc3
     depends_on:
       - db
     # Note: technically we should check that migrations have completed before
@@ -140,7 +140,7 @@ services:
     shm_size: 8G
   go:
      # This should match the version we are using on Cloud Run.
-    image: golang:1.20
+    image: golang:1.21rc3
     entrypoint: go
     environment:
       <<: [*database-variables, *go-variables]

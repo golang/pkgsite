@@ -16,7 +16,7 @@ steps:
     args:
       - $PROJECT_ID
   - id: Migrate
-    name: golang:1.20
+    name: golang:1.21rc3
     entrypoint: bash
     dir: private
     args:
