@@ -80,7 +80,7 @@ func fetchModule(ctx context.Context, fr *FetchResult, mg ModuleGetter) error {
 		// Special behavior for stdlibZipModuleGetter because its info doesn't actually
 		// give us the true resolved version.
 		var resolvedVersion string
-		contentDir, resolvedVersion, commitTime, err = stdlib.ContentDir(fr.RequestedVersion)
+		contentDir, resolvedVersion, commitTime, err = stdlib.ContentDir(ctx, fr.RequestedVersion)
 		if err != nil {
 			return err
 		}

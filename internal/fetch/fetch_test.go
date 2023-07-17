@@ -28,6 +28,7 @@ import (
 	"golang.org/x/pkgsite/internal/proxy/proxytest"
 	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/stdlib"
+	"golang.org/x/pkgsite/internal/testenv"
 	"golang.org/x/pkgsite/internal/testing/sample"
 )
 
@@ -48,6 +49,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestFetchModule(t *testing.T) {
+	testenv.MustHaveExecPath(t, "git")
 	defer stdlib.WithTestData()()
 
 	// Stub out the function used to share playground snippets

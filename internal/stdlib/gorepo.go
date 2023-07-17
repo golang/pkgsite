@@ -5,15 +5,14 @@
 package stdlib
 
 import (
+	"bytes"
+	"context"
 	"fmt"
+	"io/fs"
+	"os"
+	"os/exec"
 	"path/filepath"
 
-	"github.com/go-git/go-billy/v5/osfs"
-	"github.com/go-git/go-git/v5"
-	"github.com/go-git/go-git/v5/config"
-	"github.com/go-git/go-git/v5/plumbing"
-	"github.com/go-git/go-git/v5/plumbing/object"
-	"github.com/go-git/go-git/v5/storage/memory"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/testing/testhelper"
 	"golang.org/x/pkgsite/internal/version"
@@ -21,127 +20,165 @@ import (
 
 // A goRepo represents a git repo holding the Go standard library.
 type goRepo interface {
-	// Return the repo at the given version.
-	repoAtVersion(version string) (*git.Repository, plumbing.ReferenceName, error)
+	// Clone the repo at the given version to the directory.
+	clone(ctx context.Context, version string, toDirectory string) (refName string, err error)
 
 	// Return all the refs of the repo.
-	refs() ([]*plumbing.Reference, error)
+	refs(ctx context.Context) ([]ref, error)
 }
 
 type remoteGoRepo struct{}
 
-// repoAtVersion returns a repo object for the Go repo at version by cloning the
-// Go repo.
-func (remoteGoRepo) repoAtVersion(v string) (_ *git.Repository, ref plumbing.ReferenceName, err error) {
-	defer derrors.Wrap(&err, "remoteGoRepo.repoAtVersion(%q)", v)
+func (remoteGoRepo) clone(ctx context.Context, v, directory string) (refName string, err error) {
+	defer derrors.Wrap(&err, "remoteGoRepo.clone(%q)", v)
 
-	ref, err = refNameForVersion(v)
+	refName, err = refNameForVersion(v)
 	if err != nil {
-		return nil, "", err
+		return "", err
 	}
-	repo, err := git.Clone(memory.NewStorage(), nil, &git.CloneOptions{
-		URL:           GoRepoURL,
-		ReferenceName: ref,
-		SingleBranch:  true,
-		Depth:         1,
-		Tags:          git.NoTags,
-	})
-	if err != nil {
-		return nil, "", err
+	if err := os.MkdirAll(directory, 0777); err != nil {
+		return "", err
 	}
-	return repo, ref, nil
+	cmd := exec.CommandContext(ctx, "git", "init")
+	cmd.Dir = directory
+	if err := cmd.Run(); err != nil {
+		return "", err
+	}
+	cmd = exec.CommandContext(ctx, "git", "fetch", "--depth=1", "--", GoRepoURL, refName+":main")
+	cmd.Dir = directory
+	if b, err := cmd.CombinedOutput(); err != nil {
+		return "", fmt.Errorf("running git fetch: %v: %s", err, b)
+	}
+	cmd = exec.CommandContext(ctx, "git", "checkout", "main")
+	cmd.Dir = directory
+	if b, err := cmd.CombinedOutput(); err != nil {
+		return "", fmt.Errorf("running git checkout: %v: %s", err, b)
+	}
+	return refName, nil
 }
 
-func (remoteGoRepo) refs() (_ []*plumbing.Reference, err error) {
-	defer derrors.Wrap(&err, "remoteGoRepo.refs")
+type ref struct {
+	hash string
+	name string
+}
 
-	re := git.NewRemote(memory.NewStorage(), &config.RemoteConfig{
-		URLs: []string{GoRepoURL},
-	})
-	return re.List(&git.ListOptions{})
+func (remoteGoRepo) refs(ctx context.Context) ([]ref, error) {
+	cmd := exec.CommandContext(ctx, "git", "ls-remote", "--", GoRepoURL)
+	b, err := cmd.Output()
+	if err != nil {
+		if ee, ok := err.(*exec.ExitError); ok {
+			return nil, fmt.Errorf("running git ls-remote: %v: %s", err, ee.Stderr)
+		}
+		return nil, fmt.Errorf("running git ls-remote: %v", err)
+	}
+	return gitOutputToRefs(b)
+}
+
+func gitOutputToRefs(b []byte) ([]ref, error) {
+	var refs []ref
+	b = bytes.TrimSpace(b)
+	for _, line := range bytes.Split(b, []byte("\n")) {
+		fields := bytes.Fields(line)
+		if len(fields) != 2 {
+			return nil, fmt.Errorf("invalid line in output from git ls-remote: %q: should have two fields", line)
+		}
+		refs = append(refs, ref{hash: string(fields[0]), name: string(fields[1])})
+	}
+	return refs, nil
 }
 
 type localGoRepo struct {
 	path string
-	repo *git.Repository
 }
 
-func newLocalGoRepo(path string) (*localGoRepo, error) {
-	repo, err := git.PlainOpen(path)
-	if err != nil {
-		return nil, err
-	}
+func newLocalGoRepo(path string) *localGoRepo {
 	return &localGoRepo{
 		path: path,
-		repo: repo,
-	}, nil
-}
-
-func (g *localGoRepo) repoAtVersion(v string) (_ *git.Repository, ref plumbing.ReferenceName, err error) {
-	defer derrors.Wrap(&err, "localGoRepo(%s).repoAtVersion(%q)", g.path, v)
-	ref, err = refNameForVersion(v)
-	if err != nil {
-		return nil, "", err
 	}
-	return g.repo, ref, nil
 }
 
-func (g *localGoRepo) refs() (rs []*plumbing.Reference, err error) {
+func (g *localGoRepo) refs(ctx context.Context) (refs []ref, err error) {
 	defer derrors.Wrap(&err, "localGoRepo(%s).refs", g.path)
 
-	iter, err := g.repo.References()
+	cmd := exec.CommandContext(ctx, "git", "show-ref")
+	cmd.Dir = g.path
+	b, err := cmd.Output()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("running git show-ref: %v", err)
 	}
-	defer iter.Close()
-	err = iter.ForEach(func(r *plumbing.Reference) error {
-		rs = append(rs, r)
-		return nil
-	})
-	if err != nil {
-		return nil, err
-	}
-	return rs, nil
+	return gitOutputToRefs(b)
+}
+
+func (g *localGoRepo) clone(ctx context.Context, v, directory string) (refName string, err error) {
+	return "", nil
 }
 
 type testGoRepo struct {
 }
 
-// repoAtVersion gets a Go repo for testing.
-func (t *testGoRepo) repoAtVersion(v string) (_ *git.Repository, ref plumbing.ReferenceName, err error) {
-	defer derrors.Wrap(&err, "testGoRepo.repoAtVersion(%q)", v)
+func (t *testGoRepo) clone(ctx context.Context, v, directory string) (refName string, err error) {
+	defer derrors.Wrap(&err, "testGoRepo.clone(%q)", v)
 	if v == TestMasterVersion {
 		v = version.Master
 	}
 	if v == TestDevFuzzVersion {
 		v = DevFuzz
 	}
-	fs := osfs.New(filepath.Join(testhelper.TestDataPath("testdata"), v))
-	repo, err := git.Init(memory.NewStorage(), fs)
+	cmd := exec.CommandContext(ctx, "git", "init")
+	cmd.Dir = directory
+	if err := cmd.Run(); err != nil {
+		return "", err
+	}
+	testdatadir := filepath.Join(testhelper.TestDataPath("testdata"), v)
+	err = filepath.Walk(testdatadir, func(path string, info fs.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		rel, err := filepath.Rel(testdatadir, path)
+		if err != nil {
+			return err
+		}
+		dstpath := filepath.Join(directory, rel)
+		if info.Mode().IsDir() {
+			os.MkdirAll(dstpath, 0777)
+			return nil
+		}
+		b, err := os.ReadFile(path)
+		if err != nil {
+			return fmt.Errorf("reading %q: %v", path, err)
+		}
+		os.WriteFile(dstpath, b, 0666)
+		cmd := exec.CommandContext(ctx, "git", "add", "--", dstpath)
+		cmd.Dir = directory
+		if err := cmd.Run(); err != nil {
+			return fmt.Errorf("running git add: %v", err)
+		}
+		return nil
+	})
 	if err != nil {
-		return nil, "", fmt.Errorf("git.Init: %v", err)
+		return "", err
 	}
-	wt, err := repo.Worktree()
-	if err != nil {
-		return nil, "", fmt.Errorf("repo.Worktree: %v", err)
+	cmd = exec.CommandContext(ctx, "git", "commit", "--allow-empty-message", "--author=Joe Random <joe@example.com>",
+		"--message=")
+	cmd.Dir = directory
+	commitTime := fmt.Sprintf("%v +0000", TestCommitTime.Unix())
+	name := "Joe Random"
+	email := "joe@example.com"
+	cmd.Env = append(cmd.Environ(), []string{
+		"GIT_COMMITTER_NAME=" + name, "GIT_AUTHOR_NAME=" + name,
+		"GIT_COMMITTER_EMAIL=" + email, "GIT_AUTHOR_EMAIL=" + email,
+		"GIT_COMMITTER_DATE=" + commitTime, "GIT_AUTHOR_DATE=" + commitTime}...)
+	if err := cmd.Run(); err != nil {
+		if ee, ok := err.(*exec.ExitError); ok {
+			return "", fmt.Errorf("running git commit: %v: %s", err, ee.Stderr)
+		}
+		return "", fmt.Errorf("running git commit: %v", err)
 	}
-	// Add all files in the directory.
-	if _, err := wt.Add(""); err != nil {
-		return nil, "", fmt.Errorf("wt.Add(): %v", err)
-	}
-	_, err = wt.Commit("", &git.CommitOptions{All: true, Author: &object.Signature{
-		Name:  "Joe Random",
-		Email: "joe@example.com",
-		When:  TestCommitTime,
-	}})
-	if err != nil {
-		return nil, "", fmt.Errorf("wt.Commit: %v", err)
-	}
-	return repo, plumbing.HEAD, nil
+	return "HEAD", nil
 }
 
 // References used for Versions during testing.
-var testRefs = []plumbing.ReferenceName{
+var testRefs = []string{
 	// stdlib versions
 	"refs/tags/go1.2.1",
 	"refs/tags/go1.3.2",
@@ -170,11 +207,11 @@ var testRefs = []plumbing.ReferenceName{
 	"refs/tags/weekly.2011-04-13",
 }
 
-func (t *testGoRepo) refs() ([]*plumbing.Reference, error) {
-	var rs []*plumbing.Reference
+func (t *testGoRepo) refs(ctx context.Context) ([]ref, error) {
+	var rs []ref
 	for _, r := range testRefs {
 		// Only the name is ever used, so the referent can be empty.
-		rs = append(rs, plumbing.NewSymbolicReference(r, ""))
+		rs = append(rs, ref{name: r})
 	}
 	return rs, nil
 }

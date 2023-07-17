@@ -590,7 +590,7 @@ func (g *stdlibZipModuleGetter) ContentDir(ctx context.Context, path, version st
 	if path != "std" {
 		return nil, fmt.Errorf("%w: not module std", derrors.NotFound)
 	}
-	fs, _, _, err := stdlib.ContentDir(version)
+	fs, _, _, err := stdlib.ContentDir(ctx, version)
 	return fs, err
 }
 

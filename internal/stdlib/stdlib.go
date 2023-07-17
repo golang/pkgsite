@@ -11,11 +11,14 @@ package stdlib
 import (
 	"archive/zip"
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"io/fs"
 	"os"
+	"os/exec"
 	"path"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"sync"
@@ -24,11 +27,6 @@ import (
 	"golang.org/x/mod/semver"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/version"
-
-	"github.com/go-git/go-git/v5"
-	"github.com/go-git/go-git/v5/plumbing"
-	"github.com/go-git/go-git/v5/plumbing/filemode"
-	"github.com/go-git/go-git/v5/plumbing/object"
 )
 
 const (
@@ -234,26 +232,23 @@ func withGoRepo(gr goRepo) func() {
 // SetGoRepoPath tells this package to obtain the Go repo from the
 // local filesystem at path, instead of cloning it.
 func SetGoRepoPath(path string) error {
-	gr, err := newLocalGoRepo(path)
-	if err != nil {
-		return err
-	}
+	gr := newLocalGoRepo(path)
 	swapGoRepo(gr)
 	return nil
 }
 
-func refNameForVersion(v string) (plumbing.ReferenceName, error) {
+func refNameForVersion(v string) (string, error) {
 	if v == version.Master {
-		return plumbing.HEAD, nil
+		return "HEAD", nil
 	}
 	if SupportedBranches[v] {
-		return plumbing.NewBranchReferenceName(v), nil
+		return "refs/heads/" + v, nil
 	}
 	tag, err := TagForVersion(v)
 	if err != nil {
 		return "", err
 	}
-	return plumbing.NewTagReferenceName(tag), nil
+	return "refs/tags/" + tag, nil
 }
 
 // Versions returns all the semantic versions of Go that are relevant to the
@@ -264,13 +259,17 @@ func refNameForVersion(v string) (plumbing.ReferenceName, error) {
 func Versions() (_ []string, err error) {
 	defer derrors.Wrap(&err, "stdlib.Versions()")
 
-	refs, err := getGoRepo().refs()
+	refs, err := getGoRepo().refs(context.TODO())
 	if err != nil {
 		return nil, err
 	}
 	var versions []string
 	for _, r := range refs {
-		v := VersionForTag(r.Name().Short())
+		if !strings.HasPrefix(r.name, "refs/tags/") {
+			continue
+		}
+		tagName := strings.TrimPrefix(r.name, "refs/tags/")
+		v := VersionForTag(tagName)
 		if v != "" {
 			versions = append(versions, v)
 		}
@@ -283,15 +282,18 @@ func Versions() (_ []string, err error) {
 func ResolveSupportedBranches() (_ map[string]string, err error) {
 	defer derrors.Wrap(&err, "ResolveSupportedBranches")
 
-	refs, err := getGoRepo().refs()
+	refs, err := getGoRepo().refs(context.TODO())
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("getting refs: %v", err)
 	}
 	m := map[string]string{}
 	for _, r := range refs {
-		name := r.Name().Short()
+		if !strings.HasPrefix(r.name, "refs/heads/") {
+			continue
+		}
+		name := strings.TrimPrefix(r.name, "refs/heads/")
 		if SupportedBranches[name] {
-			m[name] = r.Hash().String()
+			m[name] = r.hash
 		}
 	}
 	return m, nil
@@ -322,50 +324,79 @@ func ZipInfo(requestedVersion string) (resolvedVersion string, err error) {
 	return resolvedVersion, nil
 }
 
-func zipInternal(requestedVersion string) (_ *zip.Reader, resolvedVersion string, commitTime time.Time, prefix string, err error) {
+func hashForRef(ctx context.Context, dir, tag string) (string, error) {
+	cmd := exec.CommandContext(ctx, "git", "show-ref", "--verify", "--", tag)
+	cmd.Dir = dir
+	b, err := cmd.Output()
+	if err != nil {
+		return "", fmt.Errorf("running git show-ref: %v", err)
+	}
+	b = bytes.TrimSpace(b)
+	f := bytes.Fields(b)
+	if len(f) != 2 {
+		return "", fmt.Errorf("invalid output from git show-ref: %q: expect two fields", b)
+	}
+	return string(f[0]), nil
+}
+
+func commiterTime(ctx context.Context, dir, object string) (time.Time, error) {
+	cmd := exec.CommandContext(ctx, "git", "show", "--no-patch", "--no-notes", "--format=%aI", object)
+	cmd.Dir = dir
+	b, err := cmd.Output()
+	if err != nil {
+		return time.Time{}, fmt.Errorf("running git show: %v, %s", err, b)
+	}
+	t, err := time.Parse(time.RFC3339, string(bytes.TrimSpace(b)))
+	if err != nil {
+		return time.Time{}, fmt.Errorf("parsing time output %q from command %v: %s", b, cmd, err)
+	}
+	return t, nil
+}
+
+func zipInternal(ctx context.Context, requestedVersion string) (_ *zip.Reader, resolvedVersion string, commitTime time.Time, prefix string, err error) {
 	if requestedVersion == version.Latest {
 		requestedVersion, err = semanticVersion(requestedVersion)
 		if err != nil {
 			return nil, "", time.Time{}, "", err
 		}
 	}
-	repo, refName, err := getGoRepo().repoAtVersion(requestedVersion)
+	dir, err := os.MkdirTemp("", "")
+	if err != nil {
+		return nil, "", time.Time{}, "", err
+	}
+	defer func() {
+		rmallerr := os.RemoveAll(dir)
+		if err == nil {
+			err = rmallerr
+		}
+	}()
+	refName, err := getGoRepo().clone(ctx, requestedVersion, dir)
 	if err != nil {
 		return nil, "", time.Time{}, "", err
 	}
 	var buf bytes.Buffer
 	z := zip.NewWriter(&buf)
 
-	ref, err := repo.Reference(refName, true)
+	hash, err := hashForRef(ctx, dir, refName)
 	if err != nil {
 		return nil, "", time.Time{}, "", err
 	}
-	commit, err := repo.CommitObject(ref.Hash())
+	commitTime, err = commiterTime(ctx, dir, hash)
 	if err != nil {
 		return nil, "", time.Time{}, "", err
 	}
 	resolvedVersion = requestedVersion
 	if SupportedBranches[requestedVersion] {
-		resolvedVersion = newPseudoVersion("v0.0.0", commit.Committer.When, commit.Hash)
-	}
-	root, err := repo.TreeObject(commit.TreeHash)
-	if err != nil {
-		return nil, "", time.Time{}, "", err
+		resolvedVersion = newPseudoVersion("v0.0.0", commitTime, hash)
 	}
 	prefixPath := ModulePath + "@" + requestedVersion
 	// Add top-level files.
-	if err := addFiles(z, repo, root, prefixPath, false); err != nil {
+	if err := addFiles(z, dir, prefixPath, false); err != nil {
 		return nil, "", time.Time{}, "", err
 	}
 	// Add files from the stdlib directory.
-	libdir := root
-	for _, d := range strings.Split(Directory(resolvedVersion), "/") {
-		libdir, err = subTree(repo, libdir, d)
-		if err != nil {
-			return nil, "", time.Time{}, "", err
-		}
-	}
-	if err := addFiles(z, repo, libdir, prefixPath, true); err != nil {
+	libDir := filepath.Join(dir, Directory(resolvedVersion))
+	if err := addFiles(z, libDir, prefixPath, true); err != nil {
 		return nil, "", time.Time{}, "", err
 	}
 	if err := z.Close(); err != nil {
@@ -376,7 +407,7 @@ func zipInternal(requestedVersion string) (_ *zip.Reader, resolvedVersion string
 	if err != nil {
 		return nil, "", time.Time{}, "", err
 	}
-	return zr, resolvedVersion, commit.Committer.When, prefixPath, nil
+	return zr, resolvedVersion, commitTime, prefixPath, nil
 }
 
 // ContentDir creates an fs.FS representing the entire Go standard library at the
@@ -392,10 +423,10 @@ func zipInternal(requestedVersion string) (_ *zip.Reader, resolvedVersion string
 //
 // ContentDir ignores go.mod files in the standard library, treating it as if it
 // were a single module named "std" at the given version.
-func ContentDir(requestedVersion string) (_ fs.FS, resolvedVersion string, commitTime time.Time, err error) {
+func ContentDir(ctx context.Context, requestedVersion string) (_ fs.FS, resolvedVersion string, commitTime time.Time, err error) {
 	defer derrors.Wrap(&err, "stdlib.ContentDir(%q)", requestedVersion)
 
-	zr, resolvedVersion, commitTime, prefix, err := zipInternal(requestedVersion)
+	zr, resolvedVersion, commitTime, prefix, err := zipInternal(ctx, requestedVersion)
 	if err != nil {
 		return nil, "", time.Time{}, err
 	}
@@ -408,8 +439,8 @@ func ContentDir(requestedVersion string) (_ fs.FS, resolvedVersion string, commi
 
 const pseudoHashLen = 12
 
-func newPseudoVersion(version string, commitTime time.Time, hash plumbing.Hash) string {
-	return fmt.Sprintf("%s-%s-%s", version, commitTime.Format("20060102150405"), hash.String()[:pseudoHashLen])
+func newPseudoVersion(version string, commitTime time.Time, hash string) string {
+	return fmt.Sprintf("%s-%s-%s", version, commitTime.Format("20060102150405"), hash[:pseudoHashLen])
 }
 
 // VersionMatchesHash reports whether v is a pseudo-version whose hash
@@ -470,18 +501,22 @@ func semanticVersion(requestedVersion string) (_ string, err error) {
 
 // addFiles adds the files in t to z, using dirpath as the path prefix.
 // If recursive is true, it also adds the files in all subdirectories.
-func addFiles(z *zip.Writer, r *git.Repository, t *object.Tree, dirpath string, recursive bool) (err error) {
+func addFiles(z *zip.Writer, directory string, dirpath string, recursive bool) (err error) {
 	defer derrors.Wrap(&err, "addFiles(zip, repository, tree, %q, %t)", dirpath, recursive)
 
-	for _, e := range t.Entries {
-		if strings.HasPrefix(e.Name, ".") || strings.HasPrefix(e.Name, "_") {
+	dirents, err := os.ReadDir(directory)
+	if err != nil {
+		return err
+	}
+	for _, e := range dirents {
+		if strings.HasPrefix(e.Name(), ".") || strings.HasPrefix(e.Name(), "_") {
 			continue
 		}
-		if e.Name == "go.mod" {
+		if e.Name() == "go.mod" {
 			// Ignore; we don't need it.
 			continue
 		}
-		if strings.HasPrefix(e.Name, "README") && !strings.Contains(dirpath, "/") {
+		if strings.HasPrefix(e.Name(), "README") && !strings.Contains(dirpath, "/") {
 			// For versions newer than v1.4.0-beta.1, the stdlib is in src/pkg.
 			// This means that our construction of the zip files will return
 			// two READMEs at the root:
@@ -494,32 +529,27 @@ func addFiles(z *zip.Writer, r *git.Repository, t *object.Tree, dirpath string, 
 			// other directories.
 			continue
 		}
-		switch e.Mode {
-		case filemode.Regular, filemode.Executable:
-			blob, err := r.BlobObject(e.Hash)
+		switch {
+		case e.Type().IsRegular():
+			f, err := os.Open(filepath.Join(directory, e.Name()))
 			if err != nil {
 				return err
 			}
-			src, err := blob.Reader()
-			if err != nil {
+			if err := writeZipFile(z, path.Join(dirpath, e.Name()), f); err != nil {
+				_ = f.Close()
 				return err
 			}
-			if err := writeZipFile(z, path.Join(dirpath, e.Name), src); err != nil {
-				_ = src.Close()
+			if err := f.Close(); err != nil {
 				return err
 			}
-			if err := src.Close(); err != nil {
-				return err
-			}
-		case filemode.Dir:
-			if !recursive || e.Name == "testdata" {
+		case e.Type().IsDir():
+			if !recursive || e.Name() == "testdata" {
 				continue
 			}
-			t2, err := r.TreeObject(e.Hash)
 			if err != nil {
 				return err
 			}
-			if err := addFiles(z, r, t2, path.Join(dirpath, e.Name), recursive); err != nil {
+			if err := addFiles(z, filepath.Join(directory, e.Name()), path.Join(dirpath, e.Name()), recursive); err != nil {
 				return err
 			}
 		}
@@ -536,20 +566,6 @@ func writeZipFile(z *zip.Writer, pathname string, src io.Reader) (err error) {
 	}
 	_, err = io.Copy(dst, src)
 	return err
-}
-
-// subTree looks non-recursively for a directory with the given name in t,
-// and returns the corresponding tree.
-// If a directory with such name doesn't exist in t, it returns os.ErrNotExist.
-func subTree(r *git.Repository, t *object.Tree, name string) (_ *object.Tree, err error) {
-	defer derrors.Wrap(&err, "subTree(repository, tree, %q)", name)
-
-	for _, e := range t.Entries {
-		if e.Name == name {
-			return r.TreeObject(e.Hash)
-		}
-	}
-	return nil, os.ErrNotExist
 }
 
 // Contains reports whether the given import path could be part of the Go standard library,

@@ -207,7 +207,7 @@ func stdlibZipFetcher(t *testing.T, withLicenseDetector bool, ctx context.Contex
 		return got, nil
 	}
 
-	fs, _, _, err := stdlib.ContentDir(fetchVersion)
+	fs, _, _, err := stdlib.ContentDir(ctx, fetchVersion)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -225,7 +225,7 @@ func licenseDetector(ctx context.Context, t *testing.T, modulePath, version stri
 		err        error
 	)
 	if modulePath == stdlib.ModulePath {
-		contentDir, _, _, err = stdlib.ContentDir(version)
+		contentDir, _, _, err = stdlib.ContentDir(ctx, version)
 		if err != nil {
 			t.Fatal(err)
 		}

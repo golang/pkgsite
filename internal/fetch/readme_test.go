@@ -14,9 +14,11 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/proxy/proxytest"
 	"golang.org/x/pkgsite/internal/stdlib"
+	"golang.org/x/pkgsite/internal/testenv"
 )
 
 func TestExtractReadmes(t *testing.T) {
+	testenv.MustHaveExecPath(t, "git")
 	defer stdlib.WithTestData()()
 
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
@@ -106,7 +108,7 @@ func TestExtractReadmes(t *testing.T) {
 				err        error
 			)
 			if test.modulePath == stdlib.ModulePath {
-				contentDir, _, _, err = stdlib.ContentDir(test.version)
+				contentDir, _, _, err = stdlib.ContentDir(ctx, test.version)
 				if err != nil {
 					t.Fatal(err)
 				}

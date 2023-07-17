@@ -5,6 +5,7 @@
 package stdlib
 
 import (
+	"context"
 	"errors"
 	"flag"
 	"io/fs"
@@ -147,6 +148,8 @@ func TestMajorVersionForVersion(t *testing.T) {
 }
 
 func TestContentDir(t *testing.T) {
+	ctx := context.Background()
+	testenv.MustHaveExecPath(t, "git")
 	defer WithTestData()()
 	for _, resolvedVersion := range []string{
 		"v1.3.2",
@@ -156,7 +159,7 @@ func TestContentDir(t *testing.T) {
 		version.Master,
 	} {
 		t.Run(resolvedVersion, func(t *testing.T) {
-			cdir, gotResolvedVersion, gotTime, err := ContentDir(resolvedVersion)
+			cdir, gotResolvedVersion, gotTime, err := ContentDir(ctx, resolvedVersion)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -176,6 +179,7 @@ func TestContentDir(t *testing.T) {
 }
 
 func TestContentDirCloneAndOpen(t *testing.T) {
+	ctx := context.Background()
 	run := func(t *testing.T) {
 		for _, resolvedVersion := range []string{
 			"v1.3.2",
@@ -184,7 +188,7 @@ func TestContentDirCloneAndOpen(t *testing.T) {
 			version.Latest,
 		} {
 			t.Run(resolvedVersion, func(t *testing.T) {
-				cdir, _, _, err := ContentDir(resolvedVersion)
+				cdir, _, _, err := ContentDir(ctx, resolvedVersion)
 				if err != nil {
 					t.Fatal(err)
 				}
@@ -204,10 +208,8 @@ func TestContentDirCloneAndOpen(t *testing.T) {
 		if *repoPath == "" {
 			t.Skip("-path not supplied")
 		}
-		lgr, err := newLocalGoRepo(*repoPath)
-		if err != nil {
-			t.Fatal(err)
-		}
+		lgr := newLocalGoRepo(*repoPath)
+
 		defer withGoRepo(lgr)()
 		run(t)
 	})
@@ -306,10 +308,8 @@ func TestVersions(t *testing.T) {
 		if *repoPath == "" {
 			t.Skip("-path not supplied")
 		}
-		lgr, err := newLocalGoRepo(*repoPath)
-		if err != nil {
-			t.Fatal(err)
-		}
+		lgr := newLocalGoRepo(*repoPath)
+
 		defer withGoRepo(lgr)()
 		testVersions(otherWants)
 	})
