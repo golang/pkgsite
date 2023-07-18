@@ -9,8 +9,8 @@ import (
 	"net/http"
 	"strings"
 
+	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
-	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/stdlib"
 )
 
@@ -28,7 +28,7 @@ func (s *Server) handleModuleDetailsRedirect(w http.ResponseWriter, r *http.Requ
 
 // stdlibPathForShortcut returns a path in the stdlib that shortcut should redirect to,
 // or the empty string if there is no such path.
-func stdlibPathForShortcut(ctx context.Context, db *postgres.DB, shortcut string) (path string, err error) {
+func stdlibPathForShortcut(ctx context.Context, db internal.PostgresDB, shortcut string) (path string, err error) {
 	defer derrors.Wrap(&err, "stdlibPathForShortcut(ctx, %q)", shortcut)
 	if !stdlib.Contains(shortcut) {
 		return "", nil

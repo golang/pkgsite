@@ -25,7 +25,6 @@ import (
 	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/fetch"
 	"golang.org/x/pkgsite/internal/log"
-	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/proxy"
 	"golang.org/x/pkgsite/internal/queue"
 	"golang.org/x/pkgsite/internal/source"
@@ -93,7 +92,7 @@ var (
 // result of the request.
 func (s *Server) serveFetch(w http.ResponseWriter, r *http.Request, ds internal.DataSource) (err error) {
 	defer derrors.Wrap(&err, "serveFetch(%q)", r.URL.Path)
-	if _, ok := ds.(*postgres.DB); !ok {
+	if _, ok := ds.(internal.PostgresDB); !ok {
 		// There's no reason for other DataSources to need this codepath.
 		return datasourceNotSupportedErr()
 	}
@@ -142,7 +141,7 @@ func (s *Server) fetchAndPoll(ctx context.Context, ds internal.DataSource, modul
 	}
 
 	// Generate all possible module paths for the fullPath.
-	db := ds.(*postgres.DB)
+	db := ds.(internal.PostgresDB)
 	modulePaths, err := modulePathsToFetch(ctx, db, fullPath, modulePath)
 	if err != nil {
 		var serr *serverError
@@ -171,7 +170,7 @@ func (s *Server) fetchAndPoll(ctx context.Context, ds internal.DataSource, modul
 // checkPossibleModulePaths will then poll the database for each module path,
 // until a result is returned or the request times out. If shouldQueue is false,
 // it will return the fetchResult, regardless of what the status is.
-func (s *Server) checkPossibleModulePaths(ctx context.Context, db *postgres.DB,
+func (s *Server) checkPossibleModulePaths(ctx context.Context, db internal.PostgresDB,
 	fullPath, requestedVersion string, modulePaths []string, shouldQueue bool) []*fetchResult {
 	var wg sync.WaitGroup
 	ctx, cancel := context.WithTimeout(ctx, fetchTimeout)
@@ -336,7 +335,7 @@ func displayPath(path, v string) string {
 }
 
 // pollForPath polls the database until a row for fullPath is found.
-func pollForPath(ctx context.Context, db *postgres.DB, pollEvery time.Duration,
+func pollForPath(ctx context.Context, db internal.PostgresDB, pollEvery time.Duration,
 	fullPath, modulePath, requestedVersion string, taskIDChangeInterval time.Duration) *fetchResult {
 	fr := &fetchResult{modulePath: modulePath}
 	defer derrors.Wrap(&fr.err, "pollForRedirectURL(%q, %q, %q)", modulePath, fullPath, requestedVersion)
@@ -370,7 +369,7 @@ func pollForPath(ctx context.Context, db *postgres.DB, pollEvery time.Duration,
 // Note that if an error occurs while writing to the version_map table,
 // checkForPath will not know. Instead, it will keep running until the request
 // times out.
-func checkForPath(ctx context.Context, db *postgres.DB,
+func checkForPath(ctx context.Context, db internal.PostgresDB,
 	fullPath, modulePath, requestedVersion string, taskIDChangeInterval time.Duration) (fr *fetchResult) {
 	defer func() {
 		// Based on
@@ -544,7 +543,7 @@ func candidateModulePaths(fullPath string) (_ []string, err error) {
 // worker.FetchAndUpdateState that does not update module_version_states, so that
 // we don't have to import internal/worker here. It is not meant to be used
 // when running on AppEngine.
-func FetchAndUpdateState(ctx context.Context, modulePath, requestedVersion string, proxyClient *proxy.Client, sourceClient *source.Client, db *postgres.DB) (_ int, err error) {
+func FetchAndUpdateState(ctx context.Context, modulePath, requestedVersion string, proxyClient *proxy.Client, sourceClient *source.Client, db internal.PostgresDB) (_ int, err error) {
 	defer func() {
 		if err != nil {
 			log.Infof(ctx, "FetchAndUpdateState(%q, %q) completed with err: %v. ", modulePath, requestedVersion, err)

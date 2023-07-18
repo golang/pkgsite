@@ -22,7 +22,6 @@ import (
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/log"
-	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/version"
 )
@@ -47,7 +46,7 @@ func (s *Server) servePathNotFoundPage(w http.ResponseWriter, r *http.Request,
 	ds internal.DataSource, fullPath, modulePath, requestedVersion string) (err error) {
 	defer derrors.Wrap(&err, "servePathNotFoundPage(w, r, %q, %q)", fullPath, requestedVersion)
 
-	db, ok := ds.(*postgres.DB)
+	db, ok := ds.(internal.PostgresDB)
 	if !ok {
 		return datasourceNotSupportedErr()
 	}
@@ -216,7 +215,7 @@ func pathNotFoundError(ctx context.Context, fullPath, requestedVersion string) e
 
 // previousFetchStatusAndResponse returns the fetch result from a
 // previous fetch of the fullPath and requestedVersion.
-func previousFetchStatusAndResponse(ctx context.Context, db *postgres.DB,
+func previousFetchStatusAndResponse(ctx context.Context, db internal.PostgresDB,
 	fullPath, modulePath, requestedVersion string) (_ *fetchResult, err error) {
 	defer derrors.Wrap(&err, "previousFetchStatusAndResponse(w, r, %q, %q)", fullPath, requestedVersion)
 

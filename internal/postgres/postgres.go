@@ -29,6 +29,11 @@ func New(db *database.DB) *DB {
 	return newdb(db, false)
 }
 
+// Used to check that a DataSource is a PostgresDB without doing a
+// direct type assertion on *DB.
+func (*DB) IsPostgresDB() {
+}
+
 // NewBypassingLicenseCheck returns a new postgres DB that bypasses license
 // checks. That means all data will be inserted and returned for
 // non-redistributable modules, packages and directories.

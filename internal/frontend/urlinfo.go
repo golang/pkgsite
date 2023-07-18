@@ -16,7 +16,6 @@ import (
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/log"
-	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/version"
 )
@@ -190,7 +189,7 @@ func isValidPath(fullPath string) bool {
 }
 
 func checkExcluded(ctx context.Context, ds internal.DataSource, fullPath string) error {
-	db, ok := ds.(*postgres.DB)
+	db, ok := ds.(internal.PostgresDB)
 	if !ok {
 		return nil
 	}

@@ -11,7 +11,6 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/middleware"
-	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/text/message"
 )
@@ -95,7 +94,7 @@ var (
 // fetchImportedByDetails fetches importers for the package version specified by
 // path and version from the database and returns a ImportedByDetails.
 func fetchImportedByDetails(ctx context.Context, ds internal.DataSource, pkgPath, modulePath string) (*ImportedByDetails, error) {
-	db, ok := ds.(*postgres.DB)
+	db, ok := ds.(internal.PostgresDB)
 	if !ok {
 		// The proxydatasource does not support the imported by page.
 		return nil, datasourceNotSupportedErr()

@@ -23,7 +23,6 @@ import (
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/middleware"
-	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/version"
 	"golang.org/x/pkgsite/internal/vuln"
@@ -242,7 +241,7 @@ func fetchSearchPage(ctx context.Context, ds internal.DataSource, cq, symbol str
 
 	// Pageless search: always start from the beginning.
 	offset := 0
-	dbresults, err := ds.Search(ctx, cq, postgres.SearchOptions{
+	dbresults, err := ds.Search(ctx, cq, internal.SearchOptions{
 		MaxResults:     pageParams.limit,
 		Offset:         offset,
 		MaxResultCount: maxResultCount,
@@ -287,7 +286,7 @@ func fetchSearchPage(ctx context.Context, ds internal.DataSource, cq, symbol str
 	return sp, nil
 }
 
-func newSearchResult(r *postgres.SearchResult, searchSymbols bool, pr *message.Printer) *SearchResult {
+func newSearchResult(r *internal.SearchResult, searchSymbols bool, pr *message.Printer) *SearchResult {
 	// For commands, change the name from "main" to the last component of the import path.
 	chipText := ""
 	name := r.Name
@@ -473,7 +472,7 @@ func shouldDefaultToSymbolSearch(q string) bool {
 
 // symbolSynopsis returns the string to be displayed in the code snippet
 // section for a symbol search result.
-func symbolSynopsis(r *postgres.SearchResult) string {
+func symbolSynopsis(r *internal.SearchResult) string {
 	switch r.SymbolKind {
 	case internal.SymbolKindField:
 		return fmt.Sprintf(`
@@ -493,7 +492,7 @@ type %s interface {
 	return r.SymbolSynopsis
 }
 
-func packagePaths(heading string, rs []*postgres.SearchResult) *subResult {
+func packagePaths(heading string, rs []*internal.SearchResult) *subResult {
 	if len(rs) == 0 {
 		return nil
 	}

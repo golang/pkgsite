@@ -15,7 +15,6 @@ import (
 	"golang.org/x/mod/semver"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/log"
-	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/version"
 	"golang.org/x/pkgsite/internal/vuln"
@@ -86,7 +85,7 @@ type VersionSummary struct {
 }
 
 func fetchVersionsDetails(ctx context.Context, ds internal.DataSource, um *internal.UnitMeta, vc *vuln.Client) (*VersionsDetails, error) {
-	db, ok := ds.(*postgres.DB)
+	db, ok := ds.(internal.PostgresDB)
 	if !ok {
 		// The proxydatasource does not support the imported by page.
 		return nil, datasourceNotSupportedErr()
