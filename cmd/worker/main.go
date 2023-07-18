@@ -24,7 +24,7 @@ import (
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/middleware"
 	"golang.org/x/pkgsite/internal/proxy"
-	"golang.org/x/pkgsite/internal/queue"
+	"golang.org/x/pkgsite/internal/queue/gcpqueue"
 	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/worker"
 )
@@ -75,7 +75,7 @@ func main() {
 	}
 	sourceClient := source.NewClient(config.SourceTimeout)
 	expg := cmdconfig.ExperimentGetter(ctx, cfg)
-	fetchQueue, err := queue.New(ctx, cfg, queueName, *workers, expg,
+	fetchQueue, err := gcpqueue.New(ctx, cfg, queueName, *workers, expg,
 		func(ctx context.Context, modulePath, version string) (int, error) {
 			f := &worker.Fetcher{
 				ProxyClient:  proxyClient,
@@ -86,7 +86,7 @@ func main() {
 			return code, err
 		})
 	if err != nil {
-		log.Fatalf(ctx, "queue.New: %v", err)
+		log.Fatalf(ctx, "gcpqueue.New: %v", err)
 	}
 
 	reportingClient := cmdconfig.ReportingClient(ctx, cfg)

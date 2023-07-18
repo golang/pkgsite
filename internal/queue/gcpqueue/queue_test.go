@@ -2,9 +2,10 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-package queue
+package gcpqueue
 
 import (
+	"golang.org/x/pkgsite/internal/queue"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -60,7 +61,7 @@ func TestNewTaskRequest(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	opts := &Options{
+	opts := &queue.Options{
 		Suffix: "suf",
 	}
 	got := gcp.newTaskRequest("mod", "v1.2.3", opts)
