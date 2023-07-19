@@ -23,6 +23,7 @@ import (
 	"golang.org/x/pkgsite/internal/index"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/middleware"
+	mtimeout "golang.org/x/pkgsite/internal/middleware/timeout"
 	"golang.org/x/pkgsite/internal/proxy"
 	"golang.org/x/pkgsite/internal/queue/gcpqueue"
 	"golang.org/x/pkgsite/internal/source"
@@ -142,7 +143,7 @@ func main() {
 
 	mw := middleware.Chain(
 		middleware.RequestLog(cmdconfig.Logger(ctx, cfg, "worker-log")),
-		middleware.Timeout(time.Duration(timeout)*time.Minute),
+		mtimeout.Timeout(time.Duration(timeout)*time.Minute),
 		iap,
 		middleware.Experiment(experimenter),
 	)

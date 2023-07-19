@@ -24,6 +24,7 @@ import (
 	"golang.org/x/pkgsite/internal/frontend"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/middleware"
+	"golang.org/x/pkgsite/internal/middleware/timeout"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/proxy"
 	"golang.org/x/pkgsite/internal/queue"
@@ -188,7 +189,7 @@ func main() {
 		middleware.Experiment(experimenter),
 		middleware.Panic(panicHandler),
 		ermw,
-		middleware.Timeout(54*time.Second),
+		timeout.Timeout(54*time.Second),
 	)
 	addr := cfg.HostAddr(*hostAddr)
 	log.Infof(ctx, "Listening on addr %s", addr)

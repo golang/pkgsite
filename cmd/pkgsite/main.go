@@ -72,7 +72,7 @@ import (
 	"golang.org/x/pkgsite/internal/fetchdatasource"
 	"golang.org/x/pkgsite/internal/frontend"
 	"golang.org/x/pkgsite/internal/log"
-	"golang.org/x/pkgsite/internal/middleware"
+	"golang.org/x/pkgsite/internal/middleware/timeout"
 	"golang.org/x/pkgsite/internal/proxy"
 	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/stdlib"
@@ -170,7 +170,7 @@ func main() {
 
 	router := http.NewServeMux()
 	server.Install(router.Handle, nil, nil)
-	mw := middleware.Timeout(54 * time.Second)
+	mw := timeout.Timeout(54 * time.Second)
 	srv := &http.Server{Addr: addr, Handler: mw(router)}
 	die("%v", srv.Serve(ln))
 }
