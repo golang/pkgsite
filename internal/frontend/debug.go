@@ -11,26 +11,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/russross/blackfriday/v2"
 	"golang.org/x/net/html"
 )
-
-func dumpBlackfridayNode(n *blackfriday.Node, level int) string {
-	var sb strings.Builder
-	tab := strings.Repeat("\t", level)
-	fmt.Fprintf(&sb, "%sType: %+v\n", tab, n.Type.String())
-	fmt.Fprintf(&sb, "%sType: %+v\n", tab, n.Type.String())
-	fmt.Fprintf(&sb, "%sLiteral: %+v", tab, string(n.Literal))
-	fmt.Fprintf(&sb, "\n%sHeading Data: %+v", tab, n.HeadingData)
-	fmt.Fprintf(&sb, "\n%sList Data: %+v", tab, n.ListData)
-	fmt.Fprintf(&sb, "\n%sCodeBlock Data: %+v", tab, n.CodeBlockData)
-	fmt.Fprintf(&sb, "\n%sLink Data: %+v", tab, n.LinkData)
-	fmt.Fprintf(&sb, "\n%sTableCell Data: %+v\n", tab, n.TableCellData)
-	for c := n.FirstChild; c != nil; c = c.Next {
-		sb.WriteString(dumpBlackfridayNode(c, level+1))
-	}
-	return sb.String()
-}
 
 func dumpHTML(n *html.Node, level int) string {
 	nodes := []string{
