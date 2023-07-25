@@ -70,6 +70,15 @@
 .go-Carousel-dot--active,
 .go-Carousel-dot:hover {
   background-color: var(--color-text-subtle);
+  outline: 0.125rem solid var(--color-text);
+}
+
+.go-Carousel-dot:focus {
+  outline: 0.063rem solid var(--color-text) !important;
+}
+
+.go-Carousel-dot--active:focus {
+  outline: 0.188rem solid var(--color-text) !important;
 }
 
 .go-Carousel-obscured {
