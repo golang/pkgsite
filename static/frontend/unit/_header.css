@@ -75,6 +75,9 @@ a.UnitHeader-backLink {
   color: var(--color-text);
   display: block;
   font-size: 1rem;
+  position: absolute;
+  right: 0.625rem;
+  top: 1.25rem;
 }
 
 .UnitHeader-backLink img {
