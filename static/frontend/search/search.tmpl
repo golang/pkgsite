@@ -145,7 +145,7 @@
           <div class="SearchSnippet-sub go-textSubtle">
             <strong>{{.Heading}}</strong>
             {{range $i, $v := .Links}}
-              {{if lt $i 5}}
+              {{if and (lt $i 5) (ne $v.Body "")}}
                 <a class="go-Chip go-Chip--subtle"
                     href="/{{$v.Href}}"
                     {{if gt $i 4 }}data-hidden="true"{{end}}
