@@ -4,7 +4,7 @@
 
 BEGIN;
 
-CREATE TABLE public.new_symbol_history (
+CREATE TABLE new_symbol_history (
     id bigint NOT NULL PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
