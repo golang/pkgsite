@@ -19,6 +19,7 @@
   --turq-light: #5dc9e2;
   --turq-med: #50b7e0;
   --turq-dark: #007d9c;
+  --turq-bright: #00769c;
   --blue: #bfeaf4;
   --blue-light: #f2fafd;
   --black: #000;
@@ -48,6 +49,7 @@
   --color-text-link: var(--turq-dark);
   --color-text-inverted: var(--white);
   --color-code-comment: var(--green);
+  --color-bright-text-link: var(--turq-bright);
 
   /* Interactive Colors */
   --color-input: var(--color-background);
@@ -80,6 +82,7 @@
   --color-text-link: var(--turq-med);
   --color-text-subtle: var(--gray-7);
   --color-code-comment: var(--green-light);
+  --color-bright-text-link: var(--turq-med);
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) {

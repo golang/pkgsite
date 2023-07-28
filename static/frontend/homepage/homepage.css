@@ -192,6 +192,10 @@ a.Homepage-helpLink {
   padding: 0 1.5rem;
 }
 
+.Questions-content a {
+  color: var(--color-bright-text-link);
+}
+
 .Questions-content ul {
   list-style: none;
   padding-inline-start: 0;
