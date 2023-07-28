@@ -24,6 +24,10 @@ database_host="localhost"
 if [[ $GO_DISCOVERY_DATABASE_HOST != "" ]]; then
   database_host=$GO_DISCOVERY_DATABASE_HOST
 fi
+database_port="5432"
+if [[ $GO_DISCOVERY_DATABASE_PORT != "" ]]; then
+  database_port=$GO_DISCOVERY_DATABASE_PORT
+fi
 database_name='discovery-db'
 if [[ $GO_DISCOVERY_DATABASE_NAME != "" ]]; then
   database_name=$GO_DISCOVERY_DATABASE_NAME
