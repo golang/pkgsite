@@ -43,7 +43,7 @@ case "$1" in
   up|down|force|version)
     migrate \
       -source file:migrations \
-      -database "postgresql://$database_user:$database_password@$database_host:5432/$database_name?sslmode=$ssl_mode" \
+      -database "postgresql://$database_user:$database_password@$database_host:$database_port/$database_name?sslmode=$ssl_mode" \
       "$@" 2>&1
     ;;
   *)
