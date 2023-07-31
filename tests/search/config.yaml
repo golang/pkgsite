@@ -1,5 +1,5 @@
 experiments:
-- Name: search-grouping
-  Rollout: 100
-- Name: symbol-search
-  Rollout: 100
+- name: search-grouping
+  rollout: 100
+- name: symbol-search
+  rollout: 100

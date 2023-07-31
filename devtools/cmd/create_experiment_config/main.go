@@ -13,8 +13,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/ghodss/yaml"
 	"golang.org/x/pkgsite/internal"
+	"gopkg.in/yaml.v3"
 )
 
 type Experiment struct {

@@ -15,10 +15,10 @@ import (
 	"strings"
 
 	"cloud.google.com/go/storage"
-	"github.com/ghodss/yaml"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/log"
+	"gopkg.in/yaml.v3"
 )
 
 // DynamicConfig holds configuration that can change over the lifetime of the

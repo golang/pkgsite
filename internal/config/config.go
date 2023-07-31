@@ -24,12 +24,12 @@ import (
 	"time"
 
 	"cloud.google.com/go/storage"
-	"github.com/ghodss/yaml"
 	"golang.org/x/net/context/ctxhttp"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/secrets"
 	mrpb "google.golang.org/genproto/googleapis/api/monitoredres"
+	"gopkg.in/yaml.v3"
 )
 
 // GetEnv looks up the given key from the environment, returning its value if
@@ -159,7 +159,7 @@ type Config struct {
 
 	DBSecret, DBUser, DBHost, DBPort, DBName, DBSSL string
 	DBSecondaryHost                                 string // DB host to use if first one is down
-	DBPassword                                      string `json:"-"`
+	DBPassword                                      string `json:"-" yaml:"-"`
 
 	// Configuration for redis page cache.
 	RedisCacheHost, RedisBetaCacheHost, RedisCachePort string
@@ -331,25 +331,25 @@ func (c *Config) Application() string {
 
 // configOverride holds selected config settings that can be dynamically overridden.
 type configOverride struct {
-	DBHost          string
-	DBSecondaryHost string
-	DBName          string
-	Quota           QuotaSettings
+	DBHost          string        `yaml:"DBHost"`
+	DBSecondaryHost string        `yaml:"DBSecondaryHost"`
+	DBName          string        `yaml:"DBName"`
+	Quota           QuotaSettings `yaml:"Quota"`
 }
 
 // QuotaSettings is config for internal/middleware/quota.go
 type QuotaSettings struct {
-	Enable     bool
-	QPS        int // allowed queries per second, per IP block
-	Burst      int // maximum requests per second, per block; the size of the token bucket
-	MaxEntries int // maximum number of entries to keep track of
+	Enable     bool `yaml:"Enable"`
+	QPS        int  `yaml:"QPS"`        // allowed queries per second, per IP block
+	Burst      int  `yaml:"Burst"`      // maximum requests per second, per block; the size of the token bucket
+	MaxEntries int  `yaml:"MaxEntries"` // maximum number of entries to keep track of
 	// Record data about blocking, but do not actually block.
 	// This is a *bool, so we can distinguish "not present" from "false" in an override
-	RecordOnly *bool
+	RecordOnly *bool `yaml:"RecordOnly"`
 	// AuthValues is the set of values that could be set on the AuthHeader, in
 	// order to bypass checks by the quota server.
-	AuthValues []string
-	HMACKey    []byte `json:"-"` // key for obfuscating IPs
+	AuthValues []string `yaml:"AuthValues"`
+	HMACKey    []byte   `json:"-" yaml:"-"` // key for obfuscating IPs
 }
 
 // Init resolves all configuration values provided by the config package. It

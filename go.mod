@@ -16,7 +16,6 @@ require (
 	github.com/alicebob/miniredis/v2 v2.17.0
 	github.com/andybalholm/cascadia v1.3.1
 	github.com/evanw/esbuild v0.17.8
-	github.com/ghodss/yaml v1.0.0
 	github.com/go-redis/redis/v8 v8.11.4
 	github.com/go-redis/redis_rate/v9 v9.1.2
 	github.com/golang-migrate/migrate/v4 v4.15.1
@@ -43,6 +42,7 @@ require (
 	google.golang.org/genproto v0.0.0-20211208223120-3a66f561d7aa
 	google.golang.org/grpc v1.43.0
 	google.golang.org/protobuf v1.27.1
+	gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c
 )
 
 require (
@@ -91,5 +91,4 @@ require (
 	golang.org/x/sys v0.10.0 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
-	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
