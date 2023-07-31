@@ -16,9 +16,9 @@ import (
 	"golang.org/x/pkgsite/internal/godoc"
 	"golang.org/x/pkgsite/internal/godoc/dochtml"
 	"golang.org/x/pkgsite/internal/log"
-	"golang.org/x/pkgsite/internal/middleware"
 	"golang.org/x/pkgsite/internal/middleware/stats"
 	"golang.org/x/pkgsite/internal/version"
+	"golang.org/x/text/language"
 	"golang.org/x/text/message"
 )
 
@@ -196,7 +196,7 @@ func fetchMainDetails(ctx context.Context, ds internal.DataSource, um *internal.
 	}
 	isTaggedVersion := versionType != version.TypePseudo
 	isStableVersion := semver.Major(um.Version) != "v0" && versionType == version.TypeRelease
-	pr := message.NewPrinter(middleware.LanguageTag(ctx))
+	pr := message.NewPrinter(language.English)
 	return &MainDetails{
 		ExpandReadme:      expandReadme,
 		Directories:       unitDirectories(append(subdirectories, nestedModules...)),

@@ -10,8 +10,8 @@ import (
 
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/log"
-	"golang.org/x/pkgsite/internal/middleware"
 	"golang.org/x/pkgsite/internal/stdlib"
+	"golang.org/x/text/language"
 	"golang.org/x/text/message"
 )
 
@@ -125,7 +125,7 @@ func fetchImportedByDetails(ctx context.Context, ds internal.DataSource, pkgPath
 	// Display the number of importers, taking into account the number we
 	// actually retrieved, the limit on that number, and the imported-by count
 	// in the search_documents table.
-	pr := message.NewPrinter(middleware.LanguageTag(ctx))
+	pr := message.NewPrinter(language.English)
 	var (
 		display string
 		pkgword = "package"

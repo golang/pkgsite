@@ -22,10 +22,10 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/log"
-	"golang.org/x/pkgsite/internal/middleware"
 	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/version"
 	"golang.org/x/pkgsite/internal/vuln"
+	"golang.org/x/text/language"
 	"golang.org/x/text/message"
 )
 
@@ -254,7 +254,7 @@ func fetchSearchPage(ctx context.Context, ds internal.DataSource, cq, symbol str
 
 	var results []*SearchResult
 	for _, r := range dbresults {
-		sr := newSearchResult(r, searchSymbols, message.NewPrinter(middleware.LanguageTag(ctx)))
+		sr := newSearchResult(r, searchSymbols, message.NewPrinter(language.English))
 		results = append(results, sr)
 	}
 
