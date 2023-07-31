@@ -13,14 +13,14 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/derrors"
-	"golang.org/x/pkgsite/internal/middleware"
+	"golang.org/x/pkgsite/internal/middleware/stats"
 )
 
 // getPackageSymbols returns all of the symbols for a given package path and module path.
 func getPackageSymbols(ctx context.Context, ddb *database.DB, packagePath, modulePath string,
 ) (_ *internal.SymbolHistory, err error) {
 	defer derrors.Wrap(&err, "getPackageSymbols(ctx, ddb, %q, %q)", packagePath, modulePath)
-	defer middleware.ElapsedStat(ctx, "getPackageSymbols")()
+	defer stats.Elapsed(ctx, "getPackageSymbols")()
 
 	query := packageSymbolQueryJoin(
 		squirrel.Select(

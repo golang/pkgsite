@@ -17,13 +17,13 @@ import (
 	"github.com/lib/pq"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/licenses"
-	"golang.org/x/pkgsite/internal/middleware"
+	"golang.org/x/pkgsite/internal/middleware/stats"
 	"golang.org/x/pkgsite/internal/stdlib"
 )
 
 func (db *DB) getLicenses(ctx context.Context, fullPath, modulePath string, unitID int) (_ []*licenses.License, err error) {
 	defer derrors.WrapStack(&err, "getLicenses(ctx, %d)", unitID)
-	defer middleware.ElapsedStat(ctx, "getLicenses")()
+	defer stats.Elapsed(ctx, "getLicenses")()
 
 	query := `
 		SELECT

@@ -15,14 +15,14 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/derrors"
-	"golang.org/x/pkgsite/internal/middleware"
+	"golang.org/x/pkgsite/internal/middleware/stats"
 )
 
 // GetNestedModules returns the latest major version of all nested modules
 // given a modulePath path prefix with or without major version.
 func (db *DB) GetNestedModules(ctx context.Context, modulePath string) (_ []*internal.ModuleInfo, err error) {
 	defer derrors.WrapStack(&err, "GetNestedModules(ctx, %v)", modulePath)
-	defer middleware.ElapsedStat(ctx, "GetNestedModules")()
+	defer stats.Elapsed(ctx, "GetNestedModules")()
 
 	query := `
 		SELECT DISTINCT ON (series_path)
@@ -78,7 +78,7 @@ func (db *DB) GetNestedModules(ctx context.Context, modulePath string) (_ []*int
 // Instead of supporting pagination, this query runs with a limit.
 func (db *DB) GetImportedBy(ctx context.Context, pkgPath, modulePath string, limit int) (paths []string, err error) {
 	defer derrors.WrapStack(&err, "GetImportedBy(ctx, %q, %q)", pkgPath, modulePath)
-	defer middleware.ElapsedStat(ctx, "GetImportedBy")()
+	defer stats.Elapsed(ctx, "GetImportedBy")()
 
 	if pkgPath == "" {
 		return nil, fmt.Errorf("pkgPath cannot be empty: %w", derrors.InvalidArgument)
@@ -102,7 +102,7 @@ func (db *DB) GetImportedBy(ctx context.Context, pkgPath, modulePath string, lim
 // GetImportedByCount returns the number of packages that import pkgPath.
 func (db *DB) GetImportedByCount(ctx context.Context, pkgPath, modulePath string) (_ int, err error) {
 	defer derrors.WrapStack(&err, "GetImportedByCount(ctx, %q, %q)", pkgPath, modulePath)
-	defer middleware.ElapsedStat(ctx, "GetImportedByCount")()
+	defer stats.Elapsed(ctx, "GetImportedByCount")()
 
 	if pkgPath == "" {
 		return 0, fmt.Errorf("pkgPath cannot be empty: %w", derrors.InvalidArgument)

@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-package middleware
+package stats
 
 import (
 	"context"
@@ -18,7 +18,7 @@ type statsKey struct{}
 
 // Stats returns a Middleware that, instead of serving the page,
 // serves statistics about the page.
-func Stats() Middleware {
+func Stats() func(http.Handler) http.Handler {
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			sw := newStatsResponseWriter()
@@ -29,9 +29,9 @@ func Stats() Middleware {
 	}
 }
 
-// SetStat sets a stat named key in the current context. If key already has a
+// set sets a stat named key in the current context. If key already has a
 // value, the old and new value are both stored in a slice.
-func SetStat(ctx context.Context, key string, value any) {
+func set(ctx context.Context, key string, value any) {
 	x := ctx.Value(statsKey{})
 	if x == nil {
 		return
@@ -47,17 +47,17 @@ func SetStat(ctx context.Context, key string, value any) {
 	}
 }
 
-// ElapsedStat records as a stat the elapsed time for a
+// Elapsed records as a stat the elapsed time for a
 // function execution. Invoke like so:
 //
-//	defer ElapsedStat(ctx, "FunctionName")()
+//	defer Elapsed(ctx, "FunctionName")()
 //
 // The resulting stat will be called "FunctionName ms" and will
 // be the wall-clock execution time of the function in milliseconds.
-func ElapsedStat(ctx context.Context, name string) func() {
+func Elapsed(ctx context.Context, name string) func() {
 	start := time.Now()
 	return func() {
-		SetStat(ctx, name+" ms", time.Since(start).Milliseconds())
+		set(ctx, name+" ms", time.Since(start).Milliseconds())
 	}
 }
 

@@ -17,6 +17,7 @@ import (
 	"golang.org/x/pkgsite/internal/godoc/dochtml"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/middleware"
+	"golang.org/x/pkgsite/internal/middleware/stats"
 	"golang.org/x/pkgsite/internal/version"
 	"golang.org/x/text/message"
 )
@@ -107,7 +108,7 @@ type File struct {
 
 func fetchMainDetails(ctx context.Context, ds internal.DataSource, um *internal.UnitMeta,
 	requestedVersion string, expandReadme bool, bc internal.BuildContext) (_ *MainDetails, err error) {
-	defer middleware.ElapsedStat(ctx, "fetchMainDetails")()
+	defer stats.Elapsed(ctx, "fetchMainDetails")()
 
 	unit, err := ds.GetUnit(ctx, um, internal.WithMain, bc)
 	if err != nil {
@@ -146,7 +147,7 @@ func fetchMainDetails(ctx context.Context, ds internal.DataSource, um *internal.
 		goos = doc.GOOS
 		goarch = doc.GOARCH
 		buildContexts = unit.BuildContexts
-		end := middleware.ElapsedStat(ctx, "DecodePackage")
+		end := stats.Elapsed(ctx, "DecodePackage")
 		docPkg, err := godoc.DecodePackage(doc.Source)
 		end()
 		if err != nil {
@@ -167,7 +168,7 @@ func fetchMainDetails(ctx context.Context, ds internal.DataSource, um *internal.
 		for _, l := range docParts.Links {
 			docLinks = append(docLinks, link{Href: l.Href, Body: l.Text})
 		}
-		end = middleware.ElapsedStat(ctx, "sourceFiles")
+		end = stats.Elapsed(ctx, "sourceFiles")
 		files = sourceFiles(unit, docPkg)
 		end()
 	}
@@ -253,7 +254,7 @@ func cleanDocumentation(docs []*internal.Documentation) []*internal.Documentatio
 // into an outline.
 func readmeContent(ctx context.Context, u *internal.Unit) (_ *Readme, err error) {
 	defer derrors.Wrap(&err, "readmeContent(%q, %q, %q)", u.Path, u.ModulePath, u.Version)
-	defer middleware.ElapsedStat(ctx, "readmeContent")()
+	defer stats.Elapsed(ctx, "readmeContent")()
 	if !u.IsRedistributable {
 		return &Readme{}, nil
 	}

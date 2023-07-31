@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-package middleware
+package stats
 
 import (
 	"encoding/json"
@@ -23,11 +23,11 @@ func TestStats(t *testing.T) {
 	ts := httptest.NewServer(Stats()(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		w.WriteHeader(code)
-		SetStat(ctx, "a", 1)
+		set(ctx, "a", 1)
 		w.Write(data[:10])
-		SetStat(ctx, "b", 2)
+		set(ctx, "b", 2)
 		time.Sleep(500 * time.Millisecond)
-		SetStat(ctx, "a", 3)
+		set(ctx, "a", 3)
 		w.Write(data[10:])
 	})))
 	defer ts.Close()

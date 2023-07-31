@@ -16,14 +16,14 @@ import (
 	"golang.org/x/pkgsite/internal/godoc"
 	"golang.org/x/pkgsite/internal/godoc/dochtml"
 	"golang.org/x/pkgsite/internal/log"
-	"golang.org/x/pkgsite/internal/middleware"
+	"golang.org/x/pkgsite/internal/middleware/stats"
 	"golang.org/x/pkgsite/internal/stdlib"
 )
 
 func renderDocParts(ctx context.Context, u *internal.Unit, docPkg *godoc.Package,
 	nameToVersion map[string]string, bc internal.BuildContext) (_ *dochtml.Parts, err error) {
 	defer derrors.Wrap(&err, "renderDocParts")
-	defer middleware.ElapsedStat(ctx, "renderDocParts")()
+	defer stats.Elapsed(ctx, "renderDocParts")()
 
 	modInfo := &godoc.ModuleInfo{
 		ModulePath:      u.ModulePath,

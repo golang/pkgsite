@@ -18,7 +18,7 @@ import (
 	"golang.org/x/pkgsite/internal/cookie"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/log"
-	"golang.org/x/pkgsite/internal/middleware"
+	"golang.org/x/pkgsite/internal/middleware/stats"
 	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/version"
 	"golang.org/x/pkgsite/internal/vuln"
@@ -106,7 +106,7 @@ type UnitPage struct {
 func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *http.Request,
 	ds internal.DataSource, info *urlPathInfo) (err error) {
 	defer derrors.Wrap(&err, "serveUnitPage(ctx, w, r, ds, %v)", info)
-	defer middleware.ElapsedStat(ctx, "serveUnitPage")()
+	defer stats.Elapsed(ctx, "serveUnitPage")()
 
 	tab := r.FormValue("tab")
 	if tab == "" {

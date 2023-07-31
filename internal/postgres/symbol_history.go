@@ -13,7 +13,7 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/derrors"
-	"golang.org/x/pkgsite/internal/middleware"
+	"golang.org/x/pkgsite/internal/middleware/stats"
 	"golang.org/x/pkgsite/internal/symbol"
 )
 
@@ -22,7 +22,7 @@ import (
 func (db *DB) GetSymbolHistory(ctx context.Context, packagePath, modulePath string,
 ) (_ *internal.SymbolHistory, err error) {
 	defer derrors.Wrap(&err, "GetSymbolHistory(ctx, %q, %q)", packagePath, modulePath)
-	defer middleware.ElapsedStat(ctx, "GetSymbolHistory")()
+	defer stats.Elapsed(ctx, "GetSymbolHistory")()
 
 	return GetSymbolHistoryFromTable(ctx, db.db, packagePath, modulePath)
 }
@@ -71,7 +71,7 @@ func GetSymbolHistoryFromTable(ctx context.Context, ddb *database.DB,
 func GetSymbolHistoryWithPackageSymbols(ctx context.Context, ddb *database.DB,
 	packagePath, modulePath string) (_ *internal.SymbolHistory, err error) {
 	defer derrors.WrapStack(&err, "GetSymbolHistoryWithPackageSymbols(ctx, ddb, %q, %q)", packagePath, modulePath)
-	defer middleware.ElapsedStat(ctx, "GetSymbolHistoryWithPackageSymbols")()
+	defer stats.Elapsed(ctx, "GetSymbolHistoryWithPackageSymbols")()
 	sh, err := getPackageSymbols(ctx, ddb, packagePath, modulePath)
 	if err != nil {
 		return nil, err
@@ -86,7 +86,7 @@ func GetSymbolHistoryWithPackageSymbols(ctx context.Context, ddb *database.DB,
 func GetSymbolHistoryForBuildContext(ctx context.Context, ddb *database.DB, pathID int, modulePath string,
 	bc internal.BuildContext) (_ map[string]string, err error) {
 	defer derrors.WrapStack(&err, "GetSymbolHistoryForBuildContext(ctx, ddb, %d, %q)", pathID, modulePath)
-	defer middleware.ElapsedStat(ctx, "GetSymbolHistoryForBuildContext")()
+	defer stats.Elapsed(ctx, "GetSymbolHistoryForBuildContext")()
 
 	if bc == internal.BuildContextAll {
 		bc = internal.BuildContextLinux

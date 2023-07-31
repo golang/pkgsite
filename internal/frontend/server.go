@@ -32,7 +32,7 @@ import (
 	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/memory"
-	"golang.org/x/pkgsite/internal/middleware"
+	"golang.org/x/pkgsite/internal/middleware/stats"
 	"golang.org/x/pkgsite/internal/queue"
 	"golang.org/x/pkgsite/internal/static"
 	"golang.org/x/pkgsite/internal/version"
@@ -198,9 +198,9 @@ func (s *Server) Install(handle func(string, http.Handler), cacher Cacher, authV
 	handle("/", detailHandler)
 	if s.serveStats {
 		handle("/detail-stats/",
-			middleware.Stats()(http.StripPrefix("/detail-stats", s.errorHandler(s.serveDetails))))
+			stats.Stats()(http.StripPrefix("/detail-stats", s.errorHandler(s.serveDetails))))
 		handle("/search-stats/",
-			middleware.Stats()(http.StripPrefix("/search-stats", s.errorHandler(s.serveSearch))))
+			stats.Stats()(http.StripPrefix("/search-stats", s.errorHandler(s.serveSearch))))
 	}
 	handle("/robots.txt", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
@@ -672,7 +672,7 @@ func (s *Server) renderErrorPage(ctx context.Context, status int, templateName s
 
 // servePage is used to execute all templates for a *Server.
 func (s *Server) servePage(ctx context.Context, w http.ResponseWriter, templateName string, page any) {
-	defer middleware.ElapsedStat(ctx, "servePage")()
+	defer stats.Elapsed(ctx, "servePage")()
 
 	buf, err := s.renderPage(ctx, templateName, page)
 	if err != nil {
@@ -688,7 +688,7 @@ func (s *Server) servePage(ctx context.Context, w http.ResponseWriter, templateN
 
 // renderPage executes the given templateName with page.
 func (s *Server) renderPage(ctx context.Context, templateName string, page any) ([]byte, error) {
-	defer middleware.ElapsedStat(ctx, "renderPage")()
+	defer stats.Elapsed(ctx, "renderPage")()
 
 	tmpl, err := s.findTemplate(templateName)
 	if err != nil {

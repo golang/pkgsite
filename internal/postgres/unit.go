@@ -16,7 +16,7 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/derrors"
-	"golang.org/x/pkgsite/internal/middleware"
+	"golang.org/x/pkgsite/internal/middleware/stats"
 	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/version"
 )
@@ -39,7 +39,7 @@ import (
 //	   we do have: again first by module path length, then by version.
 func (db *DB) GetUnitMeta(ctx context.Context, fullPath, requestedModulePath, requestedVersion string) (_ *internal.UnitMeta, err error) {
 	defer derrors.WrapStack(&err, "DB.GetUnitMeta(ctx, %q, %q, %q)", fullPath, requestedModulePath, requestedVersion)
-	defer middleware.ElapsedStat(ctx, "DB.GetUnitMeta")()
+	defer stats.Elapsed(ctx, "DB.GetUnitMeta")()
 
 	modulePath := requestedModulePath
 	v := requestedVersion
@@ -55,7 +55,7 @@ func (db *DB) GetUnitMeta(ctx context.Context, fullPath, requestedModulePath, re
 
 func (db *DB) getUnitMetaWithKnownVersion(ctx context.Context, fullPath, modulePath, version string, lmv *internal.LatestModuleVersions) (_ *internal.UnitMeta, err error) {
 	defer derrors.WrapStack(&err, "getUnitMetaWithKnownVersion")
-	defer middleware.ElapsedStat(ctx, "getUnitMetaWithKnownVersion")()
+	defer stats.Elapsed(ctx, "getUnitMetaWithKnownVersion")()
 
 	query := squirrel.Select(
 		"m.module_path",
@@ -146,7 +146,7 @@ func (db *DB) getLatestUnitVersion(ctx context.Context, fullPath, requestedModul
 	modulePath, latestVersion string, lmv *internal.LatestModuleVersions, err error) {
 
 	defer derrors.WrapStack(&err, "getLatestUnitVersion(%q, %q)", fullPath, requestedModulePath)
-	defer middleware.ElapsedStat(ctx, "getLatestUnitVersion")()
+	defer stats.Elapsed(ctx, "getLatestUnitVersion")()
 
 	modPaths := []string{requestedModulePath}
 	// If we don't know the module path, try each possible module path from longest to shortest.
@@ -259,7 +259,7 @@ func (db *DB) GetUnit(ctx context.Context, um *internal.UnitMeta, fields interna
 		return u, nil
 	}
 
-	defer middleware.ElapsedStat(ctx, "GetUnit")()
+	defer stats.Elapsed(ctx, "GetUnit")()
 	unitID, err := db.getUnitID(ctx, um.Path, um.ModulePath, um.Version)
 	if err != nil {
 		return nil, err
@@ -292,7 +292,7 @@ func (db *DB) GetUnit(ctx context.Context, um *internal.UnitMeta, fields interna
 
 func (db *DB) getUnitID(ctx context.Context, fullPath, modulePath, resolvedVersion string) (_ int, err error) {
 	defer derrors.WrapStack(&err, "getUnitID(ctx, %q, %q, %q)", fullPath, modulePath, resolvedVersion)
-	defer middleware.ElapsedStat(ctx, "getUnitID")()
+	defer stats.Elapsed(ctx, "getUnitID")()
 	var unitID int
 	query := `
 		SELECT u.id
@@ -317,7 +317,7 @@ func (db *DB) getUnitID(ctx context.Context, fullPath, modulePath, resolvedVersi
 // getImports returns the imports corresponding to unitID.
 func (db *DB) getImports(ctx context.Context, unitID int) (_ []string, err error) {
 	defer derrors.WrapStack(&err, "getImports(ctx, %d)", unitID)
-	defer middleware.ElapsedStat(ctx, "getImports")()
+	defer stats.Elapsed(ctx, "getImports")()
 	query := `
 		SELECT p.path
 		FROM paths p INNER JOIN imports i ON p.id = i.to_path_id
@@ -333,7 +333,7 @@ func (db *DB) getPackagesInUnit(ctx context.Context, fullPath string, moduleID i
 
 func getPackagesInUnit(ctx context.Context, db *database.DB, fullPath, modulePath, resolvedVersion string, moduleID int, bypassLicenseCheck bool) (_ []*internal.PackageMeta, err error) {
 	defer derrors.WrapStack(&err, "getPackagesInUnit(ctx, %q, %q, %q, %d)", fullPath, modulePath, resolvedVersion, moduleID)
-	defer middleware.ElapsedStat(ctx, "getPackagesInUnit")()
+	defer stats.Elapsed(ctx, "getPackagesInUnit")()
 
 	queryBuilder := squirrel.Select(
 		"p.path",
@@ -427,7 +427,7 @@ func getPackagesInUnit(ctx context.Context, db *database.DB, fullPath, modulePat
 
 func (db *DB) getUnitWithAllFields(ctx context.Context, um *internal.UnitMeta, bc internal.BuildContext) (_ *internal.Unit, err error) {
 	defer derrors.WrapStack(&err, "getUnitWithAllFields(ctx, %q, %q, %q)", um.Path, um.ModulePath, um.Version)
-	defer middleware.ElapsedStat(ctx, "getUnitWithAllFields")()
+	defer stats.Elapsed(ctx, "getUnitWithAllFields")()
 
 	// Get build contexts and unit ID.
 	var pathID, unitID, moduleID int
@@ -509,7 +509,7 @@ func (db *DB) getUnitWithAllFields(ctx context.Context, um *internal.UnitMeta, b
 		goarch = bcMatched.GOARCH
 	}
 	doc := &internal.Documentation{GOOS: bcMatched.GOOS, GOARCH: bcMatched.GOARCH}
-	end := middleware.ElapsedStat(ctx, "getUnitWithAllFields-readme-and-imports")
+	end := stats.Elapsed(ctx, "getUnitWithAllFields-readme-and-imports")
 	err = db.db.QueryRow(ctx, query, pathID, unitID, goos, goarch).Scan(
 		database.NullIsEmpty(&r.Filepath),
 		database.NullIsEmpty(&r.Contents),

@@ -7,6 +7,7 @@ package frontend
 import (
 	"context"
 	"errors"
+	mstats "golang.org/x/pkgsite/internal/middleware/stats"
 	"net/http"
 	"strings"
 
@@ -16,7 +17,6 @@ import (
 	"go.opencensus.io/tag"
 	"golang.org/x/mod/semver"
 	"golang.org/x/pkgsite/internal"
-	"golang.org/x/pkgsite/internal/middleware"
 	"golang.org/x/pkgsite/internal/stdlib"
 )
 
@@ -25,7 +25,7 @@ import (
 // stdlib module pages are handled at "/std", and requests to "/mod/std" will
 // be redirected to that path.
 func (s *Server) serveDetails(w http.ResponseWriter, r *http.Request, ds internal.DataSource) (err error) {
-	defer middleware.ElapsedStat(r.Context(), "serveDetails")()
+	defer mstats.Elapsed(r.Context(), "serveDetails")()
 
 	ctx := r.Context()
 	if r.Method != http.MethodGet && r.Method != http.MethodHead {
