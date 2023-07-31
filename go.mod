@@ -34,7 +34,6 @@ require (
 	github.com/yuin/goldmark v1.4.13
 	github.com/yuin/goldmark-emoji v1.0.1
 	go.opencensus.io v0.23.0
-	golang.org/x/exp v0.0.0-20230425010034-47ecfdc1ba53
 	golang.org/x/mod v0.8.0
 	golang.org/x/net v0.13.0
 	golang.org/x/sync v0.1.0
