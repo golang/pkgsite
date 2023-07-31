@@ -12,7 +12,6 @@ import (
 
 	"github.com/google/safehtml/template"
 	"golang.org/x/pkgsite/internal"
-	"golang.org/x/pkgsite/internal/middleware"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/proxy/proxytest"
 	"golang.org/x/pkgsite/internal/queue"
@@ -45,13 +44,13 @@ type testPackage struct {
 	docs           []*internal.Documentation
 }
 
-func newTestServer(t *testing.T, proxyModules []*proxytest.Module, cacher Cacher, experimentNames ...string) (*Server, http.Handler, func()) {
+func newTestServer(t *testing.T, proxyModules []*proxytest.Module, cacher Cacher) (*Server, http.Handler, func()) {
 	t.Helper()
 	proxyClient, teardown := proxytest.SetupTestClient(t, proxyModules)
 	sourceClient := source.NewClient(sourceTimeout)
 	ctx := context.Background()
 
-	q := queue.NewInMemory(ctx, 1, experimentNames,
+	q := queue.NewInMemory(ctx, 1, nil,
 		func(ctx context.Context, mpath, version string) (int, error) {
 			return FetchAndUpdateState(ctx, mpath, version, proxyClient, sourceClient, testDB)
 		})
@@ -73,16 +72,7 @@ func newTestServer(t *testing.T, proxyModules []*proxytest.Module, cacher Cacher
 	mux := http.NewServeMux()
 	s.Install(mux.Handle, cacher, nil)
 
-	var exps []*internal.Experiment
-	for _, n := range experimentNames {
-		exps = append(exps, &internal.Experiment{Name: n, Rollout: 100})
-	}
-	exp, err := middleware.NewExperimenter(ctx, time.Hour, func(context.Context) ([]*internal.Experiment, error) { return exps, nil }, nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-	mw := middleware.Experiment(exp)
-	return s, mw(mux), func() {
+	return s, mux, func() {
 		teardown()
 		postgres.ResetTestDB(testDB, t)
 	}

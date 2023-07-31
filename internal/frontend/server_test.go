@@ -30,7 +30,6 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/cookie"
 	"golang.org/x/pkgsite/internal/derrors"
-	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/middleware"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/testing/htmlcheck"
@@ -62,8 +61,6 @@ type serverTestCase struct {
 	wantLocation string
 	// if non-nil, call the checker on the HTML root node
 	want htmlcheck.Checker
-	// list of experiments that must be enabled for this test to run
-	requiredExperiments *experiment.Set
 }
 
 // Units with this prefix will be marked as excluded.
@@ -1102,7 +1099,6 @@ func TestServer(t *testing.T) {
 	for _, test := range []struct {
 		name          string
 		testCasesFunc func() []serverTestCase
-		experiments   []string
 	}{
 		{
 			name: "no experiments",
@@ -1114,32 +1110,23 @@ func TestServer(t *testing.T) {
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			testServer(t, test.testCasesFunc(), test.experiments...)
+			testServer(t, test.testCasesFunc())
 		})
 	}
 }
 
-func testServer(t *testing.T, testCases []serverTestCase, experimentNames ...string) {
+func testServer(t *testing.T, testCases []serverTestCase) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 	defer postgres.ResetTestDB(testDB, t)
 
-	// Experiments need to be set in the context, for DB work, and as a
-	// middleware, for request handling.
-	ctx = experiment.NewContext(ctx, experimentNames...)
 	insertTestModules(ctx, t, testModules)
 	if err := testDB.InsertExcludedPrefix(ctx, excludedModulePath, "testuser", "testreason"); err != nil {
 		t.Fatal(err)
 	}
-	_, handler, _ := newTestServer(t, nil, nil, experimentNames...)
-
-	experimentsSet := experiment.NewSet(experimentNames...)
+	_, handler, _ := newTestServer(t, nil, nil)
 
 	for _, test := range testCases {
-		if !isSubset(test.requiredExperiments, experimentsSet) {
-			continue
-		}
-
 		t.Run(test.name, func(t *testing.T) { // remove initial '/' for name
 			w := httptest.NewRecorder()
 			handler.ServeHTTP(w, httptest.NewRequest("GET", test.urlPath, nil))
@@ -1168,16 +1155,6 @@ func testServer(t *testing.T, testCases []serverTestCase, experimentNames ...str
 			}
 		})
 	}
-}
-
-func isSubset(subset, set *experiment.Set) bool {
-	for _, e := range subset.Active() {
-		if !set.IsActive(e) {
-			return false
-		}
-	}
-
-	return true
 }
 
 func TestServerErrors(t *testing.T) {
