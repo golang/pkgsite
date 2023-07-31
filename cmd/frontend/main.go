@@ -132,17 +132,19 @@ func main() {
 	}
 
 	router := dcensus.NewRouter(frontend.TagRoute)
-	var cacheClient *redis.Client
+	var redisClient *redis.Client
+	var cacher frontend.Cacher
 	if cfg.RedisCacheHost != "" {
 		addr := cfg.RedisCacheHost + ":" + cfg.RedisCachePort
-		cacheClient = redis.NewClient(&redis.Options{Addr: addr})
-		if err := cacheClient.Ping(ctx).Err(); err != nil {
+		redisClient := redis.NewClient(&redis.Options{Addr: addr})
+		if err := redisClient.Ping(ctx).Err(); err != nil {
 			log.Errorf(ctx, "redis at %s: %v", addr, err)
 		} else {
 			log.Infof(ctx, "connected to redis at %s", addr)
 		}
+		cacher = middleware.NewCacher(redisClient)
 	}
-	server.Install(router.Handle, cacheClient, cfg.AuthValues)
+	server.Install(router.Handle, cacher, cfg.AuthValues)
 	views := append(dcensus.ServerViews,
 		postgres.SearchLatencyDistribution,
 		postgres.SearchResponseCount,
@@ -184,7 +186,7 @@ func main() {
 		middleware.AcceptRequests(http.MethodGet, http.MethodPost, http.MethodHead), // accept only GETs, POSTs and HEADs
 		middleware.BetaPkgGoDevRedirect(),
 		middleware.GodocOrgRedirect(),
-		middleware.Quota(cfg.Quota, cacheClient),
+		middleware.Quota(cfg.Quota, redisClient),
 		middleware.SecureHeaders(!*disableCSP), // must come before any caching for nonces to work
 		middleware.Experiment(experimenter),
 		middleware.Panic(panicHandler),

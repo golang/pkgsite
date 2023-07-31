@@ -98,11 +98,21 @@ type cache struct {
 // An Expirer computes the TTL that should be used when caching a page.
 type Expirer func(r *http.Request) time.Duration
 
-// TTL returns an Expirer that expires all pages after the given TTL.
-func TTL(ttl time.Duration) Expirer {
+// ttl returns an Expirer that expires all pages after the given TTL.
+func ttl(ttl time.Duration) Expirer {
 	return func(r *http.Request) time.Duration {
 		return ttl
 	}
+}
+
+// NewCacher returns a new Cacher, used for creating a middleware
+// that caches each request.
+func NewCacher(client *redis.Client) *cacher {
+	return &cacher{client: client}
+}
+
+type cacher struct {
+	client *redis.Client
 }
 
 // Cache returns a new Middleware that caches every request.
@@ -112,12 +122,12 @@ func TTL(ttl time.Duration) Expirer {
 // request should bypass the cache.
 // authValues is the set of values that could be set on the authHeader in
 // order to bypass the cache.
-func Cache(name string, client *redis.Client, expirer Expirer, authValues []string) Middleware {
+func (c *cacher) Cache(name string, expirer func(r *http.Request) time.Duration, authValues []string) func(http.Handler) http.Handler {
 	return func(h http.Handler) http.Handler {
 		return &cache{
 			name:       name,
 			authValues: authValues,
-			cache:      icache.New(client),
+			cache:      icache.New(c.client),
 			delegate:   h,
 			expirer:    expirer,
 		}

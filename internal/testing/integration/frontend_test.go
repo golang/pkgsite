@@ -46,7 +46,11 @@ func setupFrontend(ctx context.Context, t *testing.T, q queue.Queue, rc *redis.C
 		t.Fatal(err)
 	}
 	mux := http.NewServeMux()
-	s.Install(mux.Handle, rc, nil)
+	var cacher frontend.Cacher
+	if rc != nil {
+		cacher = middleware.NewCacher(rc)
+	}
+	s.Install(mux.Handle, cacher, nil)
 
 	// Get experiments from the context. Fully roll them out.
 	expNames := experiment.FromContext(ctx).Active()

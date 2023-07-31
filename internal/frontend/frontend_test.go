@@ -10,7 +10,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/go-redis/redis/v8"
 	"github.com/google/safehtml/template"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/middleware"
@@ -46,7 +45,7 @@ type testPackage struct {
 	docs           []*internal.Documentation
 }
 
-func newTestServer(t *testing.T, proxyModules []*proxytest.Module, redisClient *redis.Client, experimentNames ...string) (*Server, http.Handler, func()) {
+func newTestServer(t *testing.T, proxyModules []*proxytest.Module, cacher Cacher, experimentNames ...string) (*Server, http.Handler, func()) {
 	t.Helper()
 	proxyClient, teardown := proxytest.SetupTestClient(t, proxyModules)
 	sourceClient := source.NewClient(sourceTimeout)
@@ -72,7 +71,7 @@ func newTestServer(t *testing.T, proxyModules []*proxytest.Module, redisClient *
 		t.Fatal(err)
 	}
 	mux := http.NewServeMux()
-	s.Install(mux.Handle, redisClient, nil)
+	s.Install(mux.Handle, cacher, nil)
 
 	var exps []*internal.Experiment
 	for _, n := range experimentNames {

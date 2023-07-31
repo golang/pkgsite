@@ -49,7 +49,7 @@ func TestCache(t *testing.T) {
 
 	c := redis.NewClient(&redis.Options{Addr: s.Addr()})
 	mux := http.NewServeMux()
-	mux.Handle("/A", Cache("A", c, TTL(1*time.Minute), []string{"yes"})(handler))
+	mux.Handle("/A", NewCacher(c).Cache("A", ttl(1*time.Minute), []string{"yes"})(handler))
 	mux.Handle("/B", handler)
 	ts := httptest.NewServer(mux)
 	view.Register(CacheResultCount)

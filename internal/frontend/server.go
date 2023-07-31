@@ -22,7 +22,6 @@ import (
 	"time"
 
 	"cloud.google.com/go/errorreporting"
-	"github.com/go-redis/redis/v8"
 	"github.com/google/safehtml"
 	"github.com/google/safehtml/template"
 	"golang.org/x/pkgsite/internal"
@@ -127,24 +126,36 @@ func NewServer(scfg ServerConfig) (_ *Server, err error) {
 	return s, nil
 }
 
+// A Cacher is used to create request caches for http handlers.
+type Cacher interface {
+	// Cache returns a new middleware that caches every request.
+	// The name of the cache is used only for metrics.
+	// The expirer is a func that is used to map a new request to its TTL.
+	// authHeader is the header key used by the cache to know that a
+	// request should bypass the cache.
+	// authValues is the set of values that could be set on the authHeader in
+	// order to bypass the cache.
+	Cache(name string, expirer func(r *http.Request) time.Duration, authValues []string) func(http.Handler) http.Handler
+}
+
 // Install registers server routes using the given handler registration func.
 // authValues is the set of values that can be set on authHeader to bypass the
 // cache.
-func (s *Server) Install(handle func(string, http.Handler), redisClient *redis.Client, authValues []string) {
+func (s *Server) Install(handle func(string, http.Handler), cacher Cacher, authValues []string) {
 	var (
 		detailHandler http.Handler = s.errorHandler(s.serveDetails)
 		fetchHandler  http.Handler = s.errorHandler(s.serveFetch)
 		searchHandler http.Handler = s.errorHandler(s.serveSearch)
 		vulnHandler   http.Handler = s.errorHandler(s.serveVuln)
 	)
-	if redisClient != nil {
+	if cacher != nil {
 		// The cache middleware uses the URL string as the key for content served
 		// by the handlers it wraps. Be careful not to wrap the handler it returns
 		// with a handler that rewrites the URL in a way that could cause key
 		// collisions, like http.StripPrefix.
-		detailHandler = middleware.Cache("details", redisClient, detailsTTL, authValues)(detailHandler)
-		searchHandler = middleware.Cache("search", redisClient, searchTTL, authValues)(searchHandler)
-		vulnHandler = middleware.Cache("vuln", redisClient, vulnTTL, authValues)(vulnHandler)
+		detailHandler = cacher.Cache("details", detailsTTL, authValues)(detailHandler)
+		searchHandler = cacher.Cache("search", searchTTL, authValues)(searchHandler)
+		vulnHandler = cacher.Cache("vuln", vulnTTL, authValues)(vulnHandler)
 	}
 	// Each AppEngine instance is created in response to a start request, which
 	// is an empty HTTP GET request to /_ah/start when scaling is set to manual

@@ -31,6 +31,7 @@ import (
 	"golang.org/x/pkgsite/internal/cookie"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/experiment"
+	"golang.org/x/pkgsite/internal/middleware"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/testing/htmlcheck"
 	"golang.org/x/pkgsite/internal/testing/pagecheck"
@@ -1234,7 +1235,7 @@ func TestServer404Redirect_NoLoop(t *testing.T) {
 	}
 	defer rs.Close()
 
-	_, handler, _ := newTestServer(t, nil, redis.NewClient(&redis.Options{Addr: rs.Addr()}))
+	_, handler, _ := newTestServer(t, nil, middleware.NewCacher(redis.NewClient(&redis.Options{Addr: rs.Addr()})))
 
 	for _, test := range []struct {
 		name, path string
@@ -1311,7 +1312,7 @@ func TestServer404Redirect(t *testing.T) {
 	}
 	defer rs.Close()
 
-	_, handler, _ := newTestServer(t, nil, redis.NewClient(&redis.Options{Addr: rs.Addr()}))
+	_, handler, _ := newTestServer(t, nil, middleware.NewCacher(redis.NewClient(&redis.Options{Addr: rs.Addr()})))
 
 	for _, test := range []struct {
 		name, path, flash string
