@@ -11,7 +11,6 @@ import (
 	"net/http"
 	"time"
 
-	"cloud.google.com/go/errorreporting"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/experiment"
@@ -20,11 +19,6 @@ import (
 )
 
 const experimentQueryParamKey = "experiment"
-
-// A Reporter sends errors to the Error-Reporting service.
-type Reporter interface {
-	Report(errorreporting.Entry)
-}
 
 // ExperimentGetter is the signature of a function that gets experiments.
 type ExperimentGetter func(context.Context) ([]*internal.Experiment, error)
@@ -37,7 +31,7 @@ type Experimenter struct {
 
 // NewExperimenter returns an Experimenter for use in the middleware. The
 // experimenter regularly polls for updates to the snapshot in the background.
-func NewExperimenter(ctx context.Context, pollEvery time.Duration, getter ExperimentGetter, rep Reporter) (_ *Experimenter, err error) {
+func NewExperimenter(ctx context.Context, pollEvery time.Duration, getter ExperimentGetter, rep derrors.Reporter) (_ *Experimenter, err error) {
 	defer derrors.Wrap(&err, "middleware.NewExperimenter")
 
 	initial, err := getter(ctx)
@@ -55,9 +49,7 @@ func NewExperimenter(ctx context.Context, pollEvery time.Duration, getter Experi
 				// Log and report // the error.
 				log.Error(ctx, err)
 				if rep != nil {
-					rep.Report(errorreporting.Entry{
-						Error: fmt.Errorf("loading experiments: %v", err),
-					})
+					rep.Report(fmt.Errorf("loading experiments: %v", err), nil, nil)
 				}
 			}),
 	}

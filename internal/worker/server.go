@@ -20,7 +20,6 @@ import (
 	"sync"
 	"time"
 
-	"cloud.google.com/go/errorreporting"
 	"github.com/go-redis/redis/v8"
 	"github.com/google/safehtml/template"
 	"go.opencensus.io/trace"
@@ -43,20 +42,20 @@ import (
 
 // Server can be installed to serve the go discovery worker.
 type Server struct {
-	cfg             *config.Config
-	indexClient     *index.Client
-	proxyClient     *proxy.Client
-	sourceClient    *source.Client
-	cache           *cache.Cache
-	betaCache       *cache.Cache
-	db              *postgres.DB
-	queue           queue.Queue
-	reportingClient *errorreporting.Client
-	templates       map[string]*template.Template
-	staticPath      template.TrustedSource
-	getExperiments  func() []*internal.Experiment
-	workerDBInfo    func() *postgres.UserInfo
-	loadShedder     *loadShedder
+	cfg            *config.Config
+	indexClient    *index.Client
+	proxyClient    *proxy.Client
+	sourceClient   *source.Client
+	cache          *cache.Cache
+	betaCache      *cache.Cache
+	db             *postgres.DB
+	queue          queue.Queue
+	reporter       derrors.Reporter
+	templates      map[string]*template.Template
+	staticPath     template.TrustedSource
+	getExperiments func() []*internal.Experiment
+	workerDBInfo   func() *postgres.UserInfo
+	loadShedder    *loadShedder
 }
 
 // ServerConfig contains everything needed by a Server.
@@ -68,7 +67,7 @@ type ServerConfig struct {
 	RedisCacheClient     *redis.Client
 	RedisBetaCacheClient *redis.Client
 	Queue                queue.Queue
-	ReportingClient      *errorreporting.Client
+	Reporter             derrors.Reporter
 	StaticPath           template.TrustedSource
 	GetExperiments       func() []*internal.Experiment
 }
@@ -112,19 +111,19 @@ func NewServer(cfg *config.Config, scfg ServerConfig) (_ *Server, err error) {
 	p.Start(context.Background(), 10*time.Second)
 
 	s := &Server{
-		cfg:             cfg,
-		db:              scfg.DB,
-		indexClient:     scfg.IndexClient,
-		proxyClient:     scfg.ProxyClient,
-		sourceClient:    scfg.SourceClient,
-		cache:           c,
-		betaCache:       bc,
-		queue:           scfg.Queue,
-		reportingClient: scfg.ReportingClient,
-		templates:       templates,
-		staticPath:      scfg.StaticPath,
-		getExperiments:  scfg.GetExperiments,
-		workerDBInfo:    func() *postgres.UserInfo { return p.Current().(*postgres.UserInfo) },
+		cfg:            cfg,
+		db:             scfg.DB,
+		indexClient:    scfg.IndexClient,
+		proxyClient:    scfg.ProxyClient,
+		sourceClient:   scfg.SourceClient,
+		cache:          c,
+		betaCache:      bc,
+		queue:          scfg.Queue,
+		reporter:       scfg.Reporter,
+		templates:      templates,
+		staticPath:     scfg.StaticPath,
+		getExperiments: scfg.GetExperiments,
+		workerDBInfo:   func() *postgres.UserInfo { return p.Current().(*postgres.UserInfo) },
 	}
 	s.setLoadShedder(context.Background())
 	return s, nil
@@ -135,8 +134,8 @@ func (s *Server) Install(handle func(string, http.Handler)) {
 	// rmw wires in error reporting to the handler. It is configured here, in
 	// Install, because not every handler should have error reporting.
 	rmw := middleware.Identity()
-	if s.reportingClient != nil {
-		rmw = middleware.ErrorReporting(s.reportingClient.Report)
+	if s.reporter != nil {
+		rmw = middleware.ErrorReporting(s.reporter)
 	}
 
 	// Each AppEngine instance is created in response to a start request, which
@@ -372,7 +371,7 @@ func (s *Server) doFetch(w http.ResponseWriter, r *http.Request) (string, int) {
 // reportError sends the error to the GCP Error Reporting service.
 // TODO(jba): factor out from here and frontend/server.go.
 func (s *Server) reportError(ctx context.Context, err error, w http.ResponseWriter, r *http.Request) {
-	if s.reportingClient == nil {
+	if s.reporter == nil {
 		return
 	}
 	// Extract the stack trace from the error if there is one.
@@ -380,11 +379,7 @@ func (s *Server) reportError(ctx context.Context, err error, w http.ResponseWrit
 	if serr := (*derrors.StackError)(nil); errors.As(err, &serr) {
 		stack = serr.Stack
 	}
-	s.reportingClient.Report(errorreporting.Entry{
-		Error: err,
-		Req:   r,
-		Stack: stack,
-	})
+	s.reporter.Report(err, r, stack)
 	log.Debugf(ctx, "reported error %v with stack size %d", err, len(stack))
 	// Bypass the error-reporting middleware.
 	w.Header().Set(config.BypassErrorReportingHeader, "true")

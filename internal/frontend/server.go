@@ -21,7 +21,6 @@ import (
 	"sync"
 	"time"
 
-	"cloud.google.com/go/errorreporting"
 	"github.com/google/safehtml"
 	"github.com/google/safehtml/template"
 	"golang.org/x/pkgsite/internal"
@@ -58,7 +57,7 @@ type Server struct {
 	appVersionLabel      string
 	googleTagManagerID   string
 	serveStats           bool
-	reportingClient      *errorreporting.Client
+	reporter             derrors.Reporter
 	fileMux              *http.ServeMux
 	vulnClient           *vuln.Client
 	versionID            string
@@ -83,7 +82,7 @@ type ServerConfig struct {
 	LocalMode            bool
 	LocalModules         []LocalModule
 	StaticPath           string // used only for dynamic loading in dev mode
-	ReportingClient      *errorreporting.Client
+	Reporter             derrors.Reporter
 	VulndbClient         *vuln.Client
 }
 
@@ -107,7 +106,7 @@ func NewServer(scfg ServerConfig) (_ *Server, err error) {
 		staticPath:           scfg.StaticPath,
 		templates:            ts,
 		taskIDChangeInterval: scfg.TaskIDChangeInterval,
-		reportingClient:      scfg.ReportingClient,
+		reporter:             scfg.Reporter,
 		fileMux:              http.NewServeMux(),
 		vulnClient:           scfg.VulndbClient,
 	}
@@ -588,7 +587,7 @@ func (s *Server) serveError(w http.ResponseWriter, r *http.Request, err error) {
 
 // reportError sends the error to the GCP Error Reporting service.
 func (s *Server) reportError(ctx context.Context, err error, w http.ResponseWriter, r *http.Request) {
-	if s.reportingClient == nil {
+	if s.reporter == nil {
 		return
 	}
 	// Extract the stack trace from the error if there is one.
@@ -596,11 +595,7 @@ func (s *Server) reportError(ctx context.Context, err error, w http.ResponseWrit
 	if serr := (*derrors.StackError)(nil); errors.As(err, &serr) {
 		stack = serr.Stack
 	}
-	s.reportingClient.Report(errorreporting.Entry{
-		Error: err,
-		Req:   r,
-		Stack: stack,
-	})
+	s.reporter.Report(err, r, stack)
 	log.Debugf(ctx, "reported error %v with stack size %d", err, len(stack))
 	// Bypass the error-reporting middleware.
 	w.Header().Set(config.BypassErrorReportingHeader, "true")

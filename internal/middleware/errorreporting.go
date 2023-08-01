@@ -8,14 +8,13 @@ import (
 	"fmt"
 	"net/http"
 
-	"cloud.google.com/go/errorreporting"
 	"golang.org/x/pkgsite/internal/config"
 	"golang.org/x/pkgsite/internal/derrors"
 )
 
 // ErrorReporting returns a middleware that reports any server errors using the
 // report func.
-func ErrorReporting(report func(errorreporting.Entry)) Middleware {
+func ErrorReporting(reporter derrors.Reporter) Middleware {
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w2 := &erResponseWriter{ResponseWriter: w}
@@ -44,10 +43,8 @@ func ErrorReporting(report func(errorreporting.Entry)) Middleware {
 			if w2.status == derrors.ToStatus(derrors.VulnDBError) {
 				return
 			}
-			report(errorreporting.Entry{
-				Error: fmt.Errorf("handler for %q returned status code %d", r.URL.Path, w2.status),
-				Req:   r,
-			})
+			reporter.Report(
+				fmt.Errorf("handler for %q returned status code %d", r.URL.Path, w2.status), r, nil)
 		})
 	}
 }

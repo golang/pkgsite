@@ -8,6 +8,7 @@ package cmdconfig
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"strings"
 	"time"
 
@@ -44,12 +45,12 @@ func Logger(ctx context.Context, cfg *config.Config, logName string) middleware.
 	return middleware.LocalLogger{}
 }
 
-// ReportingClient configures an Error Reporting client.
-func ReportingClient(ctx context.Context, cfg *config.Config) *errorreporting.Client {
+// Reporter configures an Error Reporting client.
+func Reporter(ctx context.Context, cfg *config.Config) derrors.Reporter {
 	if !cfg.OnGCP() || cfg.DisableErrorReporting {
 		return nil
 	}
-	reporter, err := errorreporting.NewClient(ctx, cfg.ProjectID, errorreporting.Config{
+	reportingClient, err := errorreporting.NewClient(ctx, cfg.ProjectID, errorreporting.Config{
 		ServiceName: cfg.ServiceID,
 		OnError: func(err error) {
 			log.Errorf(ctx, "Error reporting failed: %v", err)
@@ -58,13 +59,22 @@ func ReportingClient(ctx context.Context, cfg *config.Config) *errorreporting.Cl
 	if err != nil {
 		log.Fatal(ctx, err)
 	}
-	derrors.SetReportingClient(reporter)
+	reporter := &reporter{reportingClient}
+	derrors.SetReporter(reporter)
 	return reporter
 }
 
+type reporter struct {
+	c *errorreporting.Client
+}
+
+func (r *reporter) Report(err error, req *http.Request, stack []byte) {
+	r.c.Report(errorreporting.Entry{Error: err, Req: req, Stack: stack})
+}
+
 // Experimenter configures a middleware.Experimenter.
-func Experimenter(ctx context.Context, cfg *config.Config, getter middleware.ExperimentGetter, reportingClient *errorreporting.Client) *middleware.Experimenter {
-	e, err := middleware.NewExperimenter(ctx, 1*time.Minute, getter, reportingClient)
+func Experimenter(ctx context.Context, cfg *config.Config, getter middleware.ExperimentGetter, reporter derrors.Reporter) *middleware.Experimenter {
+	e, err := middleware.NewExperimenter(ctx, 1*time.Minute, getter, reporter)
 	if err != nil {
 		log.Fatal(ctx, err)
 	}

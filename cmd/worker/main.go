@@ -90,10 +90,10 @@ func main() {
 		log.Fatalf(ctx, "gcpqueue.New: %v", err)
 	}
 
-	reportingClient := cmdconfig.ReportingClient(ctx, cfg)
+	reporter := cmdconfig.Reporter(ctx, cfg)
 	redisCacheClient := getCacheRedis(ctx, cfg)
 	redisBetaCacheClient := getBetaCacheRedis(ctx, cfg)
-	experimenter := cmdconfig.Experimenter(ctx, cfg, expg, reportingClient)
+	experimenter := cmdconfig.Experimenter(ctx, cfg, expg, reporter)
 	server, err := worker.NewServer(cfg, worker.ServerConfig{
 		DB:                   db,
 		IndexClient:          indexClient,
@@ -102,7 +102,7 @@ func main() {
 		RedisCacheClient:     redisCacheClient,
 		RedisBetaCacheClient: redisBetaCacheClient,
 		Queue:                fetchQueue,
-		ReportingClient:      reportingClient,
+		Reporter:             reporter,
 		StaticPath:           template.TrustedSourceFromFlag(flag.Lookup("static").Value),
 		GetExperiments:       experimenter.Experiments,
 	})

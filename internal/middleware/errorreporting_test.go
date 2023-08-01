@@ -10,7 +10,6 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"cloud.google.com/go/errorreporting"
 	"golang.org/x/pkgsite/internal/config"
 )
 
@@ -37,19 +36,25 @@ func TestErrorReporting(t *testing.T) {
 				}
 				w.WriteHeader(test.code)
 			})
-			reports := 0
-			mw := ErrorReporting(func(errorreporting.Entry) {
-				reports++
-			})
+			fr := &fakeReporter{}
+			mw := ErrorReporting(fr)
 			ts := httptest.NewServer(mw(handler))
 			resp, err := http.Get(ts.URL)
 			if err != nil {
 				t.Fatal(err)
 			}
 			resp.Body.Close()
-			if got := reports; got != test.wantReports {
+			if got := fr.reports; got != test.wantReports {
 				t.Errorf("Got %d reports, want %d", got, test.wantReports)
 			}
 		})
 	}
+}
+
+type fakeReporter struct {
+	reports int
+}
+
+func (f *fakeReporter) Report(error, *http.Request, []byte) {
+	f.reports++
 }

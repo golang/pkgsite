@@ -107,7 +107,7 @@ func main() {
 		}
 	}
 
-	rc := cmdconfig.ReportingClient(ctx, cfg)
+	reporter := cmdconfig.Reporter(ctx, cfg)
 	vc, err := vuln.NewClient(cfg.VulnDB)
 	if err != nil {
 		log.Fatalf(ctx, "vuln.NewClient: %v", err)
@@ -124,7 +124,7 @@ func main() {
 		ThirdPartyFS:         os.DirFS(*thirdPartyPath),
 		DevMode:              *devMode,
 		LocalMode:            *localMode,
-		ReportingClient:      rc,
+		Reporter:             reporter,
 		VulndbClient:         vc,
 	})
 	if err != nil {
@@ -174,12 +174,12 @@ func main() {
 		log.Fatal(ctx, err)
 	}
 	log.Infof(ctx, "cmd/frontend: initializing cmdconfig.Experimenter")
-	experimenter := cmdconfig.Experimenter(ctx, cfg, expg, rc)
+	experimenter := cmdconfig.Experimenter(ctx, cfg, expg, reporter)
 	log.Infof(ctx, "cmd/frontend: initialized cmdconfig.Experimenter")
 
 	ermw := middleware.Identity()
-	if rc != nil {
-		ermw = middleware.ErrorReporting(rc.Report)
+	if reporter != nil {
+		ermw = middleware.ErrorReporting(reporter)
 	}
 	mw := middleware.Chain(
 		middleware.RequestLog(cmdconfig.Logger(ctx, cfg, "frontend-log")),
