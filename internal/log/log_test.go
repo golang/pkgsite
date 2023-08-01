@@ -9,8 +9,6 @@ import (
 	"fmt"
 	"strings"
 	"testing"
-
-	"cloud.google.com/go/logging"
 )
 
 const (
@@ -27,15 +25,15 @@ func TestSetLogLevel(t *testing.T) {
 	tests := []struct {
 		name      string
 		newLevel  string
-		wantLevel logging.Severity
+		wantLevel Severity
 	}{
-		{name: "default level", newLevel: "", wantLevel: logging.Default},
-		{name: "invalid level", newLevel: "xyz", wantLevel: logging.Default},
-		{name: "debug level", newLevel: "debug", wantLevel: logging.Debug},
-		{name: "info level", newLevel: "info", wantLevel: logging.Info},
-		{name: "warning level", newLevel: "warning", wantLevel: logging.Warning},
-		{name: "error level", newLevel: "error", wantLevel: logging.Error},
-		{name: "fatal level", newLevel: "fatal", wantLevel: logging.Critical},
+		{name: "default level", newLevel: "", wantLevel: SeverityDefault},
+		{name: "invalid level", newLevel: "xyz", wantLevel: SeverityDefault},
+		{name: "debug level", newLevel: "debug", wantLevel: SeverityDebug},
+		{name: "info level", newLevel: "info", wantLevel: SeverityInfo},
+		{name: "warning level", newLevel: "warning", wantLevel: SeverityWarning},
+		{name: "error level", newLevel: "error", wantLevel: SeverityError},
+		{name: "fatal level", newLevel: "fatal", wantLevel: SeverityCritical},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
@@ -118,6 +116,8 @@ type mockLogger struct {
 	logs string
 }
 
-func (l *mockLogger) log(ctx context.Context, s logging.Severity, payload any) {
+func (l *mockLogger) Log(ctx context.Context, s Severity, payload any) {
 	l.logs += fmt.Sprintf("%s: %+v", s, payload)
 }
+
+func (l *mockLogger) Flush() {}

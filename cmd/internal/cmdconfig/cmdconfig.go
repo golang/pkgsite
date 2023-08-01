@@ -22,6 +22,7 @@ import (
 	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/log"
+	"golang.org/x/pkgsite/internal/log/stackdriverlogger"
 	"golang.org/x/pkgsite/internal/middleware"
 	"golang.org/x/pkgsite/internal/postgres"
 )
@@ -36,11 +37,12 @@ func Logger(ctx context.Context, cfg *config.Config, logName string) middleware.
 				"k8s-pod/app": cfg.Application(),
 			}))
 		}
-		logger, err := log.UseStackdriver(ctx, logName, cfg.ProjectID, opts)
+		logger, parent, err := stackdriverlogger.New(ctx, logName, cfg.ProjectID, opts)
+		log.Use(logger)
 		if err != nil {
 			log.Fatal(ctx, err)
 		}
-		return logger
+		return parent
 	}
 	return middleware.LocalLogger{}
 }

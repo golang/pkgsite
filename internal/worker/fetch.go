@@ -29,6 +29,7 @@ import (
 	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/fetch"
 	"golang.org/x/pkgsite/internal/log"
+	"golang.org/x/pkgsite/internal/log/stackdriverlogger"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/proxy"
 	"golang.org/x/pkgsite/internal/source"
@@ -110,7 +111,7 @@ func (f *Fetcher) FetchAndUpdateState(ctx context.Context, modulePath, requested
 	defer derrors.Wrap(&err, "FetchAndUpdateState(%q, %q, %q)", modulePath, requestedVersion, appVersionLabel)
 	tctx, span := trace.StartSpan(ctx, "FetchAndUpdateState")
 	ctx = experiment.NewContext(tctx, experiment.FromContext(ctx).Active()...)
-	ctx = log.NewContextWithLabel(ctx, "fetch", modulePath+"@"+requestedVersion)
+	ctx = stackdriverlogger.NewContextWithLabel(ctx, "fetch", modulePath+"@"+requestedVersion)
 
 	start := time.Now()
 	var nPackages int64

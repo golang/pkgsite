@@ -14,6 +14,7 @@ import (
 
 	"cloud.google.com/go/logging"
 	"golang.org/x/pkgsite/internal/log"
+	"golang.org/x/pkgsite/internal/log/stackdriverlogger"
 )
 
 // Logger is the interface used to write request logs to GCP.
@@ -72,7 +73,7 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		Trace:    traceID,
 	})
 	w2 := &responseWriter{ResponseWriter: w}
-	h.delegate.ServeHTTP(w2, r.WithContext(log.NewContextWithTraceID(r.Context(), traceID)))
+	h.delegate.ServeHTTP(w2, r.WithContext(stackdriverlogger.NewContextWithTraceID(r.Context(), traceID)))
 	s := severity
 	if w2.status == http.StatusServiceUnavailable {
 		// load shedding is a warning, not an error
