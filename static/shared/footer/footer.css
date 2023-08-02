@@ -43,6 +43,11 @@
   margin-top: 0.75rem;
 }
 
+.go-Footer-listItem p {
+  color: var(--color-text-inverted);
+  font-size: 0.875rem;
+}
+
 .go-Footer-bottom {
   align-items: center;
   border-top: var(--border);
