@@ -124,7 +124,8 @@ a:visited {
   text-decoration: none;
 }
 
-a:hover {
+a:hover,
+a:focus {
   color: var(--color-brand-primary);
   text-decoration: underline;
 }

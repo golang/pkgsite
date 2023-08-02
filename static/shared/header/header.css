@@ -326,6 +326,10 @@
   padding: 0;
 }
 
+.go-Header-submenu .go-Header-submenuItem a:focus {
+  text-decoration: underline !important;
+}
+
 .go-Header-inner--dark .go-Header-menuItem:hover > a:not(.forced-closed).js-desktop-menu-hover,
 .go-Header-inner--dark
   .go-Header-menuItem:focus-within

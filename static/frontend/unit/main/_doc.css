@@ -63,10 +63,6 @@
   margin-top: 1.5rem;
 }
 
-.Documentation a {
-  text-decoration: none;
-}
-
 .Documentation a:hover {
   text-decoration: underline;
 }
