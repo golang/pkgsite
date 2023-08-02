@@ -23,7 +23,6 @@ import (
 	"golang.org/x/pkgsite/internal/config"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/log"
-	mrpb "google.golang.org/genproto/googleapis/api/monitoredres"
 )
 
 // KeyStatus is a tag key named "status".
@@ -109,7 +108,7 @@ func NewServer() (http.Handler, error) {
 
 // monitoredResource wraps a *mrpb.MonitoredResource to implement the
 // monitoredresource.MonitoredResource interface.
-type monitoredResource mrpb.MonitoredResource
+type monitoredResource config.MonitoredResource
 
 func (r *monitoredResource) MonitoredResource() (resType string, labels map[string]string) {
 	return r.Type, r.Labels

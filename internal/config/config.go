@@ -28,7 +28,6 @@ import (
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/secrets"
-	mrpb "google.golang.org/genproto/googleapis/api/monitoredres"
 	"gopkg.in/yaml.v3"
 )
 
@@ -151,7 +150,7 @@ type Config struct {
 	// "An object representing a resource that can be used for monitoring, logging,
 	// billing, or other purposes. Examples include virtual machine instances,
 	// databases, and storage devices such as disks.""
-	MonitoredResource *mrpb.MonitoredResource
+	MonitoredResource *MonitoredResource
 
 	// FallbackVersionLabel is used as the VersionLabel when not hosting on
 	// AppEngine.
@@ -191,6 +190,19 @@ type Config struct {
 
 	// VulnDB is the URL of the Go vulnerability DB.
 	VulnDB string
+}
+
+// MonitoredResource represents the resource that is running the current binary.
+// It might be a Google AppEngine app, a Cloud Run service, or a Kubernetes pod.
+// See https://cloud.google.com/monitoring/api/resources for more
+// details:
+// "An object representing a resource that can be used for monitoring, logging,
+// billing, or other purposes. Examples include virtual machine instances,
+// databases, and storage devices such as disks."
+type MonitoredResource struct {
+	Type string `yaml:"type,omitempty"`
+
+	Labels map[string]string `yaml:"labels,omitempty"`
 }
 
 // AppVersionLabel returns the version label for the current instance.  This is
@@ -444,7 +456,7 @@ func Init(ctx context.Context) (_ *Config, err error) {
 			// Use the gae_app monitored resource. It would be better to use the
 			// gae_instance monitored resource, but that's not currently supported:
 			// https://cloud.google.com/logging/docs/api/v2/resource-list#resource-types
-			cfg.MonitoredResource = &mrpb.MonitoredResource{
+			cfg.MonitoredResource = &MonitoredResource{
 				Type: "gae_app",
 				Labels: map[string]string{
 					"project_id": cfg.ProjectID,
@@ -454,7 +466,7 @@ func Init(ctx context.Context) (_ *Config, err error) {
 				},
 			}
 		case cfg.OnCloudRun():
-			cfg.MonitoredResource = &mrpb.MonitoredResource{
+			cfg.MonitoredResource = &MonitoredResource{
 				Type: "cloud_run_revision",
 				Labels: map[string]string{
 					"project_id":         cfg.ProjectID,
@@ -464,7 +476,7 @@ func Init(ctx context.Context) (_ *Config, err error) {
 				},
 			}
 		case cfg.OnGKE():
-			cfg.MonitoredResource = &mrpb.MonitoredResource{
+			cfg.MonitoredResource = &MonitoredResource{
 				Type: "k8s_container",
 				Labels: map[string]string{
 					"project_id":     cfg.ProjectID,
@@ -486,7 +498,7 @@ func Init(ctx context.Context) (_ *Config, err error) {
 			cfg.InstanceID = id
 		}
 	} else { // running locally, perhaps
-		cfg.MonitoredResource = &mrpb.MonitoredResource{
+		cfg.MonitoredResource = &MonitoredResource{
 			Type:   "global",
 			Labels: map[string]string{"project_id": cfg.ProjectID},
 		}

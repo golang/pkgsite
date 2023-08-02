@@ -25,12 +25,16 @@ import (
 	"golang.org/x/pkgsite/internal/log/stackdriverlogger"
 	"golang.org/x/pkgsite/internal/middleware"
 	"golang.org/x/pkgsite/internal/postgres"
+	mrpb "google.golang.org/genproto/googleapis/api/monitoredres"
 )
 
 // Logger configures a middleware.Logger.
 func Logger(ctx context.Context, cfg *config.Config, logName string) middleware.Logger {
 	if cfg.OnGCP() {
-		opts := []logging.LoggerOption{logging.CommonResource(cfg.MonitoredResource)}
+		opts := []logging.LoggerOption{logging.CommonResource(&mrpb.MonitoredResource{
+			Type:   cfg.MonitoredResource.Type,
+			Labels: cfg.MonitoredResource.Labels,
+		})}
 		if cfg.OnGKE() {
 			opts = append(opts, logging.CommonLabels(map[string]string{
 				"k8s-pod/env": cfg.DeploymentEnvironment(),
