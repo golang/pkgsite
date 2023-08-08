@@ -15,8 +15,9 @@ type ctxKey string
 var key = ctxKey("key")
 
 func TestDetach(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), 200*time.Millisecond)
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Millisecond)
 	defer cancel()
+
 	ctx = context.WithValue(ctx, key, "value")
 	dctx := Detach(ctx)
 	// Detached context has the same values.
@@ -24,8 +25,12 @@ func TestDetach(t *testing.T) {
 	if !ok || got != "value" {
 		t.Errorf("Value: got (%v, %t), want 'value', true", got, ok)
 	}
-	// Detached context doesn't time out.
-	time.Sleep(500 * time.Millisecond)
+
+	// Wait for the parent context to time out, and then give it an arbitrary
+	// amount of extra time for the cancellation to propagate if it's going to.
+	<-ctx.Done()
+	time.Sleep(5 * time.Millisecond)
+
 	if err := ctx.Err(); err != context.DeadlineExceeded {
 		t.Fatalf("original context Err: got %v, want DeadlineExceeded", err)
 	}
