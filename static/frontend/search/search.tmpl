@@ -40,11 +40,9 @@
 {{end}}
 
 {{define "search_symbol"}}
-  <div class="SearchResults-summary">
-    <h1>
+  <div class="SearchResults-summary" role="heading" aria-level="1">
       Showing <strong>{{len $.Results}}</strong> matching {{.SearchModeSymbol}}s.
       <a href="/search-help">Search help</a>
-    </h1>
   </div>
   {{if eq (len .Results) 0}}
     {{template "search_no_results" .}}
@@ -89,10 +87,8 @@
 {{end}}
 
 {{define "search_package"}}
-  <div class="SearchResults-summary">
-    <h1>
-      Showing <strong>{{len .Results}}</strong> modules with matching packages. <a href="/search-help">Search help</a>
-    </h1>
+  <div class="SearchResults-summary" role="heading" aria-level="1">
+    Showing <strong>{{len .Results}}</strong> modules with matching packages. <a href="/search-help">Search help</a>
   </div>
   {{if eq (len .Results) 0}}
     {{template "search_no_results" .}}

@@ -22,8 +22,8 @@ export function registerHeaderListeners(): void {
       }
       // prevents menus that have been tabbed into from staying open
       // when you hover over another menu
-      target.focus();
-      target.blur();
+      target.classList.remove('forced-closed');
+      target.classList.add('forced-open');
     });
 
     const toggleForcedOpen = (e: Event) => {
@@ -49,19 +49,30 @@ export function registerHeaderListeners(): void {
           currentTarget.classList.remove('forced-closed');
         });
       }
+      currentTarget.focus();
     };
     menuItemHover.addEventListener('click', toggleForcedOpen);
-  });
-
-  // ensure desktop submenus are closed when esc is pressed
-  const headerItems = document.querySelectorAll('.Header-menuItem');
-  headerItems.forEach(header => {
-    header.addEventListener('keyup', e => {
-      const event = e as KeyboardEvent;
-      if (event.key === 'Escape') {
-        (event.target as HTMLElement)?.blur();
-      }
+    menuItemHover.addEventListener('focus', e => {
+      const target = e.target as HTMLElement;
+      target.classList.add('forced-closed');
+      target.classList.remove('forced-open');
     });
+
+    // ensure desktop submenus are closed when esc is pressed
+    const closeSubmenuOnEsc = (e: Event) => {
+      const event = e as KeyboardEvent;
+      const target = e.target as HTMLElement;
+      if (event.key === 'Escape') {
+        const forcedOpenItem = document.querySelector('.forced-open') as HTMLElement;
+        if (forcedOpenItem) {
+          forcedOpenItem.classList.remove('forced-open');
+          forcedOpenItem.blur();
+          forcedOpenItem.classList.add('forced-closed');
+          target?.focus();
+        }
+      }
+    };
+    document.addEventListener('keydown', closeSubmenuOnEsc);
   });
 
   // Mobile menu subnav menus

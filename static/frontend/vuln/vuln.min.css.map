@@ -2,6 +2,6 @@
   "version": 3,
   "sources": ["vuln.css"],
   "sourcesContent": ["/*\n * Copyright 2021 The Go Authors. All rights reserved.\n * Use of this source code is governed by a BSD-style\n * license that can be found in the LICENSE file.\n */\n\n.Vuln {\n  gap: 0.5rem;\n}\n\n.Vuln-title {\n  font-size: 2.25rem;\n  font-weight: 400;\n  margin-bottom: 1rem;\n}\n\n.Vuln-details {\n  display: flex;\n  flex-direction: column;\n  gap: 0.75rem;\n}\n\n.Vuln-detailsMetadata {\n  display: flex;\n  flex-wrap: wrap;\n  font-size: 0.875rem;\n  gap: 0.5rem 0;\n}\n\n.Vuln-detailsMetadata li:not(:last-child)::after {\n  content: '|';\n  padding: 0 0.5rem;\n}\n"],
-  "mappings": ";;;;;AAMA,CAAC,KACC,IAAK,KACP,CAEA,CAAC,WACC,UAAW,QACX,YAAa,IACb,cAAe,IACjB,CAEA,CAAC,aACC,QAAS,KACT,eAAgB,OAChB,IAAK,MACP,CAEA,CAAC,qBACC,QAAS,KACT,UAAW,KACX,UAAW,QACX,IAAK,MAAO,CACd,CAEA,CAPC,qBAOqB,EAAE,KAAK,YAAY,OACvC,QAAS,IA9BX,QA+BW,EAAE,KACb",
+  "mappings": ";;;;;AAMA,MACE,UAGF,YACE,kBACA,gBACA,mBAGF,cACE,aACA,sBACA,WAGF,sBACE,aACA,eACA,kBACA,YAGF,gDACE,YA9BF",
   "names": []
 }

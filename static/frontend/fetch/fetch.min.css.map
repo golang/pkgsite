@@ -2,6 +2,6 @@
   "version": 3,
   "sources": ["fetch.css"],
   "sourcesContent": ["/*\n * Copyright 2021 The Go Authors. All rights reserved.\n * Use of this source code is governed by a BSD-style\n * license that can be found in the LICENSE file.\n */\n\n.Fetch-button {\n  align-self: center;\n}\n@keyframes blink {\n  0% {\n    opacity: 0.2;\n  }\n\n  20% {\n    opacity: 1;\n  }\n\n  100% {\n    opacity: 0.2;\n  }\n}\n\n.Fetch-dot {\n  animation-duration: 1.4s;\n  animation-fill-mode: both;\n  animation-iteration-count: infinite;\n  animation-name: blink;\n  background-color: var(--color-brand-primary);\n  border-radius: 50%;\n  display: inline-block;\n  height: 0.5rem;\n  width: 0.5rem;\n}\n\n.Fetch-loading {\n  display: none;\n  text-align: center;\n}\n\n.Fetch-loading:nth-child(2) {\n  animation-delay: 0.2s;\n}\n\n.Fetch-loading:nth-child(3) {\n  animation-delay: 0.4s;\n}\n\n.Fetch-message,\n.Fetch-messageSecondary {\n  text-align: center;\n}\n"],
-  "mappings": ";;;;;AAMA,CAAC,aACC,WAAY,MACd,CACA,WAAW,MACT,GACE,QAAS,EACX,CAEA,IACE,QAAS,CACX,CAEA,GACE,QAAS,EACX,CACF,CAEA,CAAC,UACC,mBAAoB,KACpB,oBAAqB,KACrB,0BAA2B,SAC3B,eAAgB,MAChB,iBAAkB,IAAI,uBA5BxB,cA6BiB,IACf,QAAS,aACT,OAAQ,MACR,MAAO,KACT,CAEA,CAAC,cACC,QAAS,KACT,WAAY,MACd,CAEA,CALC,aAKa,cACZ,gBAAiB,GACnB,CAEA,CATC,aASa,cACZ,gBAAiB,GACnB,CAEA,CAAC,cACD,CAAC,uBACC,WAAY,MACd",
+  "mappings": ";;;;;AAMA,cACE,kBAEF,oBAEI,eAIA,aAIA,YAIJ,WACE,wBACA,yBACA,mCACA,qBACA,4CA5BF,kBA8BE,qBACA,aACA,YAGF,eACE,aACA,kBAGF,4BACE,oBAGF,4BACE,oBAGF,uCAEE",
   "names": []
 }

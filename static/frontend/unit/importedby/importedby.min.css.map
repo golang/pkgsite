@@ -2,6 +2,6 @@
   "version": 3,
   "sources": ["importedby.css"],
   "sourcesContent": ["/*\n * Copyright 2021 The Go Authors. All rights reserved.\n * Use of this source code is governed by a BSD-style\n * license that can be found in the LICENSE file.\n */\n\n.ImportedBy-heading {\n  margin-bottom: 1rem;\n}\n\n.ImportedBy-list {\n  list-style: none;\n  padding: 0;\n}\n\n.ImportedBy .Pagination-nav,\n.ImportedBy .Pagination-navInner {\n  justify-content: flex-start;\n}\n\n.ImportedBy-details {\n  margin: 0.5rem 0;\n}\n\n.ImportedBy-detailsContent {\n  margin-left: 2.5rem;\n}\n\n.ImportedBy-detailsIndent {\n  margin-bottom: 0.5rem;\n  margin-left: 1.1rem;\n  margin-top: 0.5rem;\n}\n"],
-  "mappings": ";;;;;AAMA,CAAC,mBACC,cAAe,IACjB,CAEA,CAAC,gBACC,WAAY,KAXd,QAYW,CACX,CAEA,CAAC,WAAW,CAAC,eACb,CADC,WACW,CAAC,oBACX,gBAAiB,UACnB,CAEA,CAAC,mBApBD,OAqBU,MAAO,CACjB,CAEA,CAAC,0BACC,YAAa,MACf,CAEA,CAAC,yBACC,cAAe,MACf,YAAa,OACb,WAAY,KACd",
+  "mappings": ";;;;;AAMA,oBACE,mBAGF,iBACE,gBAXF,UAeA,6DAEE,2BAGF,oBApBA,eAwBA,2BACE,mBAGF,0BACE,oBACA,mBACA",
   "names": []
 }
