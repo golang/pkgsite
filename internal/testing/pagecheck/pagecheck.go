@@ -126,7 +126,7 @@ func UnitHeader(p *Page, versionedURL bool, isPackage bool) htmlcheck.Checker {
 		in(`[data-test-id="UnitHeader-version"]`,
 			in("a",
 				href("?tab=versions"),
-				exactText("Version: "+p.FormattedVersion))),
+				text(`Version:\s+`+regexp.QuoteMeta(p.FormattedVersion)))),
 		in(`[data-test-id="UnitHeader-commitTime"]`,
 			text(p.CommitTime)),
 		in(`[data-test-id="UnitHeader-licenses"]`,

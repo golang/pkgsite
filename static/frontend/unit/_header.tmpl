@@ -102,7 +102,14 @@
 
 {{define "detail-item-version"}}
   <span class="go-Main-headerDetailItem" data-test-id="UnitHeader-version">
-    <a href="?tab=versions" aria-label="Go to Versions" data-gtmc="header link"><span class="go-textSubtle">Version: </span>{{.DisplayVersion}}</a>
+    <a href="?tab=versions" aria-label="Version: {{.DisplayVersion}}" 
+    data-gtmc="header link" aria-describedby="version-description">
+      <span class="go-textSubtle" aria-hidden="true">Version: </span>
+        {{.DisplayVersion}}
+    </a>
+    <div class="screen-reader-only" id="version-description" hidden>
+      Opens a new window with list of versions in this module.
+    </div>
     <!-- Do not reformat the data attributes of the following div: the server uses a regexp to extract them. -->
     <span class="{{.LatestMinorClass}}" data-test-id="UnitHeader-minorVersionBanner">
       <span class="go-Chip DetailsHeader-span--latest">Latest</span>
@@ -128,8 +135,8 @@
     License:{{" "}}
     {{- if .Details.Licenses -}}
       {{- if .Unit.IsRedistributable -}}
-        <a href="{{$.URLPath}}?tab=licenses" data-test-id="UnitHeader-license"
-            aria-label="Go to Licenses" data-gtmc="header link">
+        <a href="{{$.URLPath}}?tab=licenses" data-test-id="UnitHeader-license" 
+        data-gtmc="header link" aria-describedby="license-description">
           {{- range $i, $e := .Details.Licenses -}}
             {{- if lt $i 3}}{{if $i}}, {{end}}{{$e.Type}}{{end -}}
             {{- if eq $i 3}}, + {{subtract (len $.Details.Licenses) 3}} more{{end -}}
@@ -141,37 +148,46 @@
             {{if $i}}, {{end}} {{$e.Type}}
           {{- end -}}
         </span>
-        <a href="/license-policy" class="Disclaimer-link"
-            aria-label="Go to License Policy" data-gtmc="info link">
+        <a href="/license-policy" class="Disclaimer-link" data-gtmc="info link"
+        aria-describedby="license-description">
           <em>not legal advice</em>
         </a>
       {{end}}
     {{else}}
       <span>None detected</span>
-      <a href="/license-policy" class="Disclaimer-link"
-          aria-label="Go to License Policy" data-gtmc="info link">
+      <a href="/license-policy" class="Disclaimer-link" data-gtmc="info link" 
+      aria-describedby="license-description">
         <em>not legal advice</em>
       </a>
     {{end}}
   </span>
+  <div class="screen-reader-only" id="license-description" hidden>
+    Opens a new window with license information.
+  </div>
 {{end}}
 
 {{define "detail-item-imports"}}
   <span class="go-Main-headerDetailItem" data-test-id="UnitHeader-imports">
-    <a href="{{$.URLPath}}?tab=imports" aria-label="Go to Imports"
-        data-gtmc="header link">
+    <a href="{{$.URLPath}}?tab=imports" aria-label="Imports: {{.Details.NumImports}}"
+        data-gtmc="header link" aria-describedby="imports-description">
       <span class="go-textSubtle">Imports: </span>{{.Details.NumImports}}
     </a>
   </span>
+  <div class="screen-reader-only" id="imports-description" hidden>
+    Opens a new window with list of imports.
+  </div>
 {{end}}
 
 {{define "detail-item-importedby"}}
   <span class="go-Main-headerDetailItem" data-test-id="UnitHeader-importedby">
-    <a href="{{$.URLPath}}?tab=importedby" aria-label="Go to Imported By"
-        data-gtmc="header link">
+    <a href="{{$.URLPath}}?tab=importedby" aria-label="Imported By: {{.Details.ImportedByCount}}"
+        data-gtmc="header link" aria-describedby="importedby-description">
        <span class="go-textSubtle">Imported by: </span>{{.Details.ImportedByCount}}
     </a>
   </span>
+  <div class="screen-reader-only" id="importedby-description" hidden>
+    Opens a new window with list of known importers.
+  </div>
 {{end}}
 
 {{define "detail-items-overflow"}}
