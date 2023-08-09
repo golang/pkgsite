@@ -20,17 +20,22 @@ import (
 func TestStats(t *testing.T) {
 	data := []byte("this is the data we are going to serve")
 	const code = 218
+	var afterFirstWrite, afterSleep, handlerStart time.Time
 	ts := httptest.NewServer(Stats()(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		handlerStart = time.Now()
 		ctx := r.Context()
 		w.WriteHeader(code)
 		set(ctx, "a", 1)
 		w.Write(data[:10])
+		afterFirstWrite = time.Now()
 		set(ctx, "b", 2)
-		time.Sleep(500 * time.Millisecond)
+		time.Sleep(10 * time.Millisecond)
+		afterSleep = time.Now()
 		set(ctx, "a", 3)
 		w.Write(data[10:])
 	})))
 	defer ts.Close()
+	start := time.Now()
 	res, err := ts.Client().Get(ts.URL)
 	if err != nil {
 		t.Fatal(err)
@@ -40,6 +45,7 @@ func TestStats(t *testing.T) {
 		t.Fatalf("failed with status %d", res.StatusCode)
 	}
 	gotData, err := io.ReadAll(res.Body)
+	end := time.Now()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -64,19 +70,14 @@ func TestStats(t *testing.T) {
 	if diff != "" {
 		t.Errorf("mismatch (-want, +got):\n%s", diff)
 	}
-	const tolerance = 50 // 50 ms of tolerance for time measurements
-	if g := got.MillisToFirstByte; !within(g, 0, tolerance) {
-		t.Errorf("MillisToFirstByte is %d, wanted 0 - %d", g, tolerance)
+	timeToFirstByteUpperBound := afterFirstWrite.Sub(start)
+	if g := got.MillisToFirstByte; g > timeToFirstByteUpperBound.Milliseconds() {
+		t.Errorf("MillisToFirstByte is %d, wanted <= %d", g, timeToFirstByteUpperBound)
 	}
-	if g := got.MillisToLastByte; !within(g, 500, tolerance) {
-		t.Errorf("MillisToLastByte is %d, wanted 500 +/- %d", g, tolerance)
+	timeToLastByteLowerBound := afterSleep.Sub(handlerStart)
+	timeToLastByteUpperBound := end.Sub(start)
+	if g := got.MillisToLastByte; g < timeToLastByteLowerBound.Milliseconds() || g > timeToLastByteUpperBound.Milliseconds() {
+		t.Errorf("MillisToLastByte is %d, wanted >= %d and <= %d",
+			g, timeToLastByteLowerBound.Milliseconds(), timeToLastByteUpperBound.Milliseconds())
 	}
-}
-
-func within(got, want, tolerance int64) bool {
-	d := got - want
-	if d < 0 {
-		d = -d
-	}
-	return d <= tolerance
 }
