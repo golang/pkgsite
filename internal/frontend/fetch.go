@@ -25,6 +25,7 @@ import (
 	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/fetch"
 	"golang.org/x/pkgsite/internal/frontend/serrors"
+	"golang.org/x/pkgsite/internal/frontend/urlinfo"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/proxy"
 	"golang.org/x/pkgsite/internal/queue"
@@ -39,7 +40,7 @@ var (
 	// this module version in version_map.
 	errModuleDoesNotExist = errors.New("module does not exist")
 	// errPathDoesNotExistInModule indicates that a module for the path prefix
-	// exists, but within that module version, this fullPath could not be found.
+	// exists, but within that module version, this FullPath could not be found.
 	errPathDoesNotExistInModule = errors.New("path does not exist in module")
 	fetchTimeout                = 30 * time.Second
 	pollEvery                   = 1 * time.Second
@@ -103,11 +104,11 @@ func (s *Server) serveFetch(w http.ResponseWriter, r *http.Request, ds internal.
 		return &serrors.ServerError{Status: http.StatusNotFound}
 	}
 
-	urlInfo, err := extractURLPathInfo(strings.TrimPrefix(r.URL.Path, "/fetch"))
+	urlInfo, err := urlinfo.ExtractURLPathInfo(strings.TrimPrefix(r.URL.Path, "/fetch"))
 	if err != nil {
 		return &serrors.ServerError{Status: http.StatusBadRequest}
 	}
-	status, responseText := s.fetchAndPoll(r.Context(), ds, urlInfo.modulePath, urlInfo.fullPath, urlInfo.requestedVersion)
+	status, responseText := s.fetchAndPoll(r.Context(), ds, urlInfo.ModulePath, urlInfo.FullPath, urlInfo.RequestedVersion)
 	if status != http.StatusOK {
 		return &serrors.ServerError{Status: status, ResponseText: responseText}
 	}
@@ -134,14 +135,14 @@ func (s *Server) fetchAndPoll(ctx context.Context, ds internal.DataSource, modul
 		recordFrontendFetchMetric(ctx, status, time.Since(start))
 	}()
 
-	if !isSupportedVersion(fullPath, requestedVersion) {
+	if !urlinfo.IsSupportedVersion(fullPath, requestedVersion) {
 		return http.StatusBadRequest, http.StatusText(http.StatusBadRequest)
 	}
 	if !experiment.IsActive(ctx, internal.ExperimentEnableStdFrontendFetch) && stdlib.Contains(fullPath) {
 		return http.StatusBadRequest, http.StatusText(http.StatusBadRequest)
 	}
 
-	// Generate all possible module paths for the fullPath.
+	// Generate all possible module paths for the FullPath.
 	db := ds.(internal.PostgresDB)
 	modulePaths, err := modulePathsToFetch(ctx, db, fullPath, modulePath)
 	if err != nil {
@@ -165,7 +166,7 @@ func (s *Server) fetchAndPoll(ctx context.Context, ds internal.DataSource, modul
 }
 
 // checkPossibleModulePaths checks all modulePaths at the requestedVersion, to see
-// if the fullPath exists. For each module path, it first checks version_map to
+// if the FullPath exists. For each module path, it first checks version_map to
 // see if we already attempted to fetch the module. If not, and shouldQueue is
 // true, it will enqueue the module to the frontend task queue to be fetched.
 // checkPossibleModulePaths will then poll the database for each module path,
@@ -391,7 +392,7 @@ func checkForPath(ctx context.Context, db internal.PostgresDB,
 	vm, err := db.GetVersionMap(ctx, modulePath, requestedVersion)
 	if err != nil {
 		// If an error is returned, there are two possibilities:
-		// (1) A row for this modulePath and version does not exist.
+		// (1) A row for this ModulePath and version does not exist.
 		// This means that the fetch request is not done yet, so return
 		// statusNotFoundInVersionMap so the fetchHandler will call checkForPath
 		// again in a few seconds.
@@ -520,10 +521,10 @@ func candidateModulePaths(fullPath string) (_ []string, err error) {
 	if fullPath == stdlib.ModulePath {
 		return []string{stdlib.ModulePath}, nil
 	}
-	if !isValidPath(fullPath) {
+	if !urlinfo.IsValidPath(fullPath) {
 		return nil, &serrors.ServerError{
 			Status: http.StatusBadRequest,
-			Err:    fmt.Errorf("isValidPath(%q): false", fullPath),
+			Err:    fmt.Errorf("urlinfo.IsValidPath(%q): false", fullPath),
 		}
 	}
 	paths := internal.CandidateModulePaths(fullPath)

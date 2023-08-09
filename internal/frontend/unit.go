@@ -19,6 +19,7 @@ import (
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/frontend/page"
 	"golang.org/x/pkgsite/internal/frontend/serrors"
+	"golang.org/x/pkgsite/internal/frontend/urlinfo"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/middleware/stats"
 	"golang.org/x/pkgsite/internal/stdlib"
@@ -106,7 +107,7 @@ type UnitPage struct {
 
 // serveUnitPage serves a unit page for a path.
 func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *http.Request,
-	ds internal.DataSource, info *urlPathInfo) (err error) {
+	ds internal.DataSource, info *urlinfo.URLPathInfo) (err error) {
 	defer derrors.Wrap(&err, "serveUnitPage(ctx, w, r, ds, %v)", info)
 	defer stats.Elapsed(ctx, "serveUnitPage")()
 
@@ -121,12 +122,12 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 		return nil
 	}
 
-	um, err := ds.GetUnitMeta(ctx, info.fullPath, info.modulePath, info.requestedVersion)
+	um, err := ds.GetUnitMeta(ctx, info.FullPath, info.ModulePath, info.RequestedVersion)
 	if err != nil {
 		if !errors.Is(err, derrors.NotFound) {
 			return err
 		}
-		return s.servePathNotFoundPage(w, r, ds, info.fullPath, info.modulePath, info.requestedVersion)
+		return s.servePathNotFoundPage(w, r, ds, info.FullPath, info.ModulePath, info.RequestedVersion)
 	}
 
 	makeDepsDevURL := depsDevURLGenerator(ctx, um)
@@ -137,7 +138,7 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 	// It's also okay to provide just one (e.g. GOOS=windows), which will select
 	// the first doc with that value, ignoring the other one.
 	bc := internal.BuildContext{GOOS: r.FormValue("GOOS"), GOARCH: r.FormValue("GOARCH")}
-	d, err := fetchDetailsForUnit(ctx, r, tab, ds, um, info.requestedVersion, bc, s.vulnClient)
+	d, err := fetchDetailsForUnit(ctx, r, tab, ds, um, info.RequestedVersion, bc, s.vulnClient)
 	if err != nil {
 		return err
 	}
@@ -145,8 +146,8 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 		return s.serveJSONPage(w, r, d)
 	}
 
-	recordVersionTypeMetric(ctx, info.requestedVersion)
-	if _, ok := internal.DefaultBranches[info.requestedVersion]; ok {
+	recordVersionTypeMetric(ctx, info.RequestedVersion)
+	if _, ok := internal.DefaultBranches[info.RequestedVersion]; ok {
 		// Since path@master is a moving target, we don't want it to be stale.
 		// As a result, we enqueue every request of path@master to the frontend
 		// task queue, which will initiate a fetch request depending on the
@@ -160,17 +161,17 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 				Err:    err,
 				Epage: &page.ErrorPage{
 					MessageData: fmt.Sprintf(`Default branches like "@%s" are not supported. Omit to get the current version.`,
-						info.requestedVersion),
+						info.RequestedVersion),
 				},
 			}
 		}
 		go func() {
 			ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
 			defer cancel()
-			log.Infof(ctx, "serveUnitPage: Scheduling %q@%q to be fetched", um.ModulePath, info.requestedVersion)
-			if _, err := s.queue.ScheduleFetch(ctx, um.ModulePath, info.requestedVersion, nil); err != nil {
+			log.Infof(ctx, "serveUnitPage: Scheduling %q@%q to be fetched", um.ModulePath, info.RequestedVersion)
+			if _, err := s.queue.ScheduleFetch(ctx, um.ModulePath, info.RequestedVersion, nil); err != nil {
 				log.Errorf(ctx, "serveUnitPage(%q): scheduling fetch for %q@%q: %v",
-					r.URL.Path, um.ModulePath, info.requestedVersion, err)
+					r.URL.Path, um.ModulePath, info.RequestedVersion, err)
 			}
 		}()
 	}
@@ -185,7 +186,7 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 	// If we've already called GetUnitMeta for an unknown module path and the latest version, pass
 	// it to GetLatestInfo to avoid a redundant call.
 	var latestUnitMeta *internal.UnitMeta
-	if info.modulePath == internal.UnknownModulePath && info.requestedVersion == version.Latest {
+	if info.ModulePath == internal.UnknownModulePath && info.RequestedVersion == version.Latest {
 		latestUnitMeta = um
 	}
 	latestInfo := s.GetLatestInfo(ctx, um.Path, um.ModulePath, latestUnitMeta)
@@ -202,16 +203,16 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 	if tabSettings.Name == "" {
 		basePage.UseResponsiveLayout = true
 	}
-	lv := linkVersion(um.ModulePath, info.requestedVersion, um.Version)
+	lv := linkVersion(um.ModulePath, info.RequestedVersion, um.Version)
 	page := UnitPage{
 		BasePage:              basePage,
 		Unit:                  um,
-		Breadcrumb:            displayBreadcrumb(um, info.requestedVersion),
+		Breadcrumb:            displayBreadcrumb(um, info.RequestedVersion),
 		Title:                 title,
 		SelectedTab:           tabSettings,
-		URLPath:               constructUnitURL(um.Path, um.ModulePath, info.requestedVersion),
-		CanonicalURLPath:      canonicalURLPath(um.Path, um.ModulePath, info.requestedVersion, um.Version),
-		DisplayVersion:        displayVersion(um.ModulePath, info.requestedVersion, um.Version),
+		URLPath:               constructUnitURL(um.Path, um.ModulePath, info.RequestedVersion),
+		CanonicalURLPath:      canonicalURLPath(um.Path, um.ModulePath, info.RequestedVersion, um.Version),
+		DisplayVersion:        displayVersion(um.ModulePath, info.RequestedVersion, um.Version),
 		LinkVersion:           lv,
 		LatestURL:             constructUnitURL(um.Path, um.ModulePath, version.Latest),
 		LatestMinorClass:      latestMinorClass(lv, latestInfo),

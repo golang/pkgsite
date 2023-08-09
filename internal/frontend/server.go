@@ -28,6 +28,7 @@ import (
 	"golang.org/x/pkgsite/internal/experiment"
 	pagepkg "golang.org/x/pkgsite/internal/frontend/page"
 	"golang.org/x/pkgsite/internal/frontend/serrors"
+	"golang.org/x/pkgsite/internal/frontend/urlinfo"
 	"golang.org/x/pkgsite/internal/godoc/dochtml"
 	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/log"
@@ -329,12 +330,12 @@ func detailsTTLForPath(ctx context.Context, urlPath, tab string) time.Duration {
 	if urlPath == "/" {
 		return defaultTTL
 	}
-	info, err := parseDetailsURLPath(urlPath)
+	info, err := urlinfo.ParseDetailsURLPath(urlPath)
 	if err != nil {
 		log.Errorf(ctx, "falling back to default TTL: %v", err)
 		return defaultTTL
 	}
-	if info.requestedVersion == version.Latest {
+	if info.RequestedVersion == version.Latest {
 		return shortTTL
 	}
 	if tab == "importedby" || tab == "versions" {

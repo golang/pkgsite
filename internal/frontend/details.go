@@ -12,6 +12,7 @@ import (
 
 	"golang.org/x/pkgsite/internal/frontend/page"
 	"golang.org/x/pkgsite/internal/frontend/serrors"
+	"golang.org/x/pkgsite/internal/frontend/urlinfo"
 	mstats "golang.org/x/pkgsite/internal/middleware/stats"
 
 	"github.com/google/safehtml/template"
@@ -51,11 +52,11 @@ func (s *Server) serveDetails(w http.ResponseWriter, r *http.Request, ds interna
 		ctx = setExperimentsFromQueryParam(ctx, r)
 	}
 
-	urlInfo, err := extractURLPathInfo(r.URL.Path)
+	urlInfo, err := urlinfo.ExtractURLPathInfo(r.URL.Path)
 	if err != nil {
 		var epage *page.ErrorPage
-		if uerr := new(userError); errors.As(err, &uerr) {
-			epage = &page.ErrorPage{MessageData: uerr.userMessage}
+		if uerr := new(urlinfo.UserError); errors.As(err, &uerr) {
+			epage = &page.ErrorPage{MessageData: uerr.UserMessage}
 		}
 		return &serrors.ServerError{
 			Status: http.StatusBadRequest,
@@ -63,14 +64,14 @@ func (s *Server) serveDetails(w http.ResponseWriter, r *http.Request, ds interna
 			Epage:  epage,
 		}
 	}
-	if !isSupportedVersion(urlInfo.fullPath, urlInfo.requestedVersion) {
-		return invalidVersionError(urlInfo.fullPath, urlInfo.requestedVersion)
+	if !urlinfo.IsSupportedVersion(urlInfo.FullPath, urlInfo.RequestedVersion) {
+		return invalidVersionError(urlInfo.FullPath, urlInfo.RequestedVersion)
 	}
-	if urlPath := stdlibRedirectURL(urlInfo.fullPath); urlPath != "" {
+	if urlPath := stdlibRedirectURL(urlInfo.FullPath); urlPath != "" {
 		http.Redirect(w, r, urlPath, http.StatusMovedPermanently)
 		return
 	}
-	if err := checkExcluded(ctx, ds, urlInfo.fullPath); err != nil {
+	if err := checkExcluded(ctx, ds, urlInfo.FullPath); err != nil {
 		return err
 	}
 	return s.serveUnitPage(ctx, w, r, ds, urlInfo)
@@ -139,4 +140,20 @@ func recordVersionTypeMetric(ctx context.Context, requestedVersion string) {
 	stats.RecordWithTags(ctx, []tag.Mutator{
 		tag.Upsert(keyVersionType, v),
 	}, versionTypeResults.M(1))
+}
+
+func checkExcluded(ctx context.Context, ds internal.DataSource, fullPath string) error {
+	db, ok := ds.(internal.PostgresDB)
+	if !ok {
+		return nil
+	}
+	excluded, err := db.IsExcluded(ctx, fullPath)
+	if err != nil {
+		return err
+	}
+	if excluded {
+		// Return NotFound; don't let the user know that the package was excluded.
+		return &serrors.ServerError{Status: http.StatusNotFound}
+	}
+	return nil
 }

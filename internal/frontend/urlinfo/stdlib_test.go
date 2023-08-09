@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-package frontend
+package urlinfo
 
 import (
 	"testing"
@@ -42,13 +42,13 @@ func TestParseStdLibURLPath(t *testing.T) {
 
 	for _, test := range testCases {
 		t.Run(test.name, func(t *testing.T) {
-			got, err := parseStdLibURLPath(test.url)
+			got, err := parseStdlibURLPath(test.url)
 			if err != nil {
-				t.Fatalf("parseStdLibURLPath(%q): %v)", test.url, err)
+				t.Fatalf("parseStdlibURLPath(%q): %v)", test.url, err)
 			}
-			if test.wantVersion != got.requestedVersion || test.wantPath != got.fullPath {
-				t.Fatalf("parseStdLibURLPath(%q): %q, %q, %v; want = %q, %q",
-					test.url, got.fullPath, got.requestedVersion, err, test.wantPath, test.wantVersion)
+			if test.wantVersion != got.RequestedVersion || test.wantPath != got.FullPath {
+				t.Fatalf("parseStdlibURLPath(%q): %q, %q, %v; want = %q, %q",
+					test.url, got.FullPath, got.RequestedVersion, err, test.wantPath, test.wantVersion)
 			}
 		})
 	}

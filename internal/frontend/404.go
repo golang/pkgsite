@@ -23,6 +23,7 @@ import (
 	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/frontend/page"
 	"golang.org/x/pkgsite/internal/frontend/serrors"
+	"golang.org/x/pkgsite/internal/frontend/urlinfo"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/version"
@@ -187,7 +188,7 @@ func githubPathRedirect(fullPath string) string {
 // pathNotFoundError returns a page with an option on how to
 // add a package or module to the site.
 func pathNotFoundError(ctx context.Context, fullPath, requestedVersion string) error {
-	if !isSupportedVersion(fullPath, requestedVersion) {
+	if !urlinfo.IsSupportedVersion(fullPath, requestedVersion) {
 		return invalidVersionError(fullPath, requestedVersion)
 	}
 	if stdlib.Contains(fullPath) {
