@@ -21,6 +21,8 @@ import (
 	"golang.org/x/pkgsite/internal/cookie"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/experiment"
+	"golang.org/x/pkgsite/internal/frontend/page"
+	"golang.org/x/pkgsite/internal/frontend/serrors"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/version"
@@ -29,10 +31,10 @@ import (
 // errUnitNotFoundWithoutFetch returns a 404 with instructions to the user on
 // how to manually fetch the package. No fetch button is provided. This is used
 // for very large modules or modules that previously 500ed.
-var errUnitNotFoundWithoutFetch = &serverError{
-	status: http.StatusNotFound,
-	epage: &errorPage{
-		messageTemplate: template.MakeTrustedTemplate(`
+var errUnitNotFoundWithoutFetch = &serrors.ServerError{
+	Status: http.StatusNotFound,
+	Epage: &page.ErrorPage{
+		MessageTemplate: template.MakeTrustedTemplate(`
 					    <h3 class="Error-message">{{.StatusText}}</h3>
 					    <p class="Error-message">Check that you entered the URL correctly or try fetching it following the
                         <a href="/about#adding-a-package">instructions here</a>.</p>`),
@@ -66,15 +68,15 @@ func (s *Server) servePathNotFoundPage(w http.ResponseWriter, r *http.Request,
 		}
 
 		if experiment.IsActive(ctx, internal.ExperimentEnableStdFrontendFetch) {
-			return &serverError{
-				status: http.StatusNotFound,
-				epage: &errorPage{
-					templateName: "fetch",
+			return &serrors.ServerError{
+				Status: http.StatusNotFound,
+				Epage: &page.ErrorPage{
+					TemplateName: "fetch",
 					MessageData:  stdlib.ModulePath,
 				},
 			}
 		}
-		return &serverError{status: http.StatusNotFound}
+		return &serrors.ServerError{Status: http.StatusNotFound}
 	}
 
 	fr, err := previousFetchStatusAndResponse(ctx, db, fullPath, modulePath, requestedVersion)
@@ -150,10 +152,10 @@ func (s *Server) servePathNotFoundPage(w http.ResponseWriter, r *http.Request,
 			http.Redirect(w, r, "/search?q="+url.QueryEscape(fullPath), http.StatusFound)
 			return nil
 		}
-		return &serverError{
-			status: fr.status,
-			epage: &errorPage{
-				messageTemplate: uncheckedconversions.TrustedTemplateFromStringKnownToSatisfyTypeContract(`
+		return &serrors.ServerError{
+			Status: fr.status,
+			Epage: &page.ErrorPage{
+				MessageTemplate: uncheckedconversions.TrustedTemplateFromStringKnownToSatisfyTypeContract(`
 					    <h3 class="Error-message">{{.StatusText}}</h3>
 					    <p class="Error-message">` + html.UnescapeString(fr.responseText) + `</p>`),
 				MessageData: struct{ StatusText string }{http.StatusText(fr.status)},
@@ -190,24 +192,24 @@ func pathNotFoundError(ctx context.Context, fullPath, requestedVersion string) e
 	}
 	if stdlib.Contains(fullPath) {
 		if experiment.IsActive(ctx, internal.ExperimentEnableStdFrontendFetch) {
-			return &serverError{
-				status: http.StatusNotFound,
-				epage: &errorPage{
-					templateName: "fetch",
+			return &serrors.ServerError{
+				Status: http.StatusNotFound,
+				Epage: &page.ErrorPage{
+					TemplateName: "fetch",
 					MessageData:  stdlib.ModulePath,
 				},
 			}
 		}
-		return &serverError{status: http.StatusNotFound}
+		return &serrors.ServerError{Status: http.StatusNotFound}
 	}
 	path := fullPath
 	if requestedVersion != version.Latest {
 		path = fmt.Sprintf("%s@%s", fullPath, requestedVersion)
 	}
-	return &serverError{
-		status: http.StatusNotFound,
-		epage: &errorPage{
-			templateName: "fetch",
+	return &serrors.ServerError{
+		Status: http.StatusNotFound,
+		Epage: &page.ErrorPage{
+			TemplateName: "fetch",
 			MessageData:  path,
 		},
 	}
@@ -222,8 +224,8 @@ func previousFetchStatusAndResponse(ctx context.Context, db internal.PostgresDB,
 	// Get all candidate module paths for this path.
 	paths, err := modulePathsToFetch(ctx, db, fullPath, modulePath)
 	if err != nil {
-		var serr *serverError
-		if errors.As(err, &serr) && serr.status == http.StatusBadRequest {
+		var serr *serrors.ServerError
+		if errors.As(err, &serr) && serr.Status == http.StatusBadRequest {
 			// Return this as an invalid argument so that we don't log it in
 			// servePathNotFoundPage above.
 			return nil, derrors.InvalidArgument

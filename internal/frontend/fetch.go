@@ -24,6 +24,7 @@ import (
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/fetch"
+	"golang.org/x/pkgsite/internal/frontend/serrors"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/proxy"
 	"golang.org/x/pkgsite/internal/queue"
@@ -99,16 +100,16 @@ func (s *Server) serveFetch(w http.ResponseWriter, r *http.Request, ds internal.
 	if r.Method != http.MethodPost {
 		// If a user makes a GET request, treat this as a request for the
 		// "fetch" package, which does not exist.
-		return &serverError{status: http.StatusNotFound}
+		return &serrors.ServerError{Status: http.StatusNotFound}
 	}
 
 	urlInfo, err := extractURLPathInfo(strings.TrimPrefix(r.URL.Path, "/fetch"))
 	if err != nil {
-		return &serverError{status: http.StatusBadRequest}
+		return &serrors.ServerError{Status: http.StatusBadRequest}
 	}
 	status, responseText := s.fetchAndPoll(r.Context(), ds, urlInfo.modulePath, urlInfo.fullPath, urlInfo.requestedVersion)
 	if status != http.StatusOK {
-		return &serverError{status: status, responseText: responseText}
+		return &serrors.ServerError{Status: status, ResponseText: responseText}
 	}
 	return nil
 }
@@ -144,9 +145,9 @@ func (s *Server) fetchAndPoll(ctx context.Context, ds internal.DataSource, modul
 	db := ds.(internal.PostgresDB)
 	modulePaths, err := modulePathsToFetch(ctx, db, fullPath, modulePath)
 	if err != nil {
-		var serr *serverError
+		var serr *serrors.ServerError
 		if errors.As(err, &serr) {
-			return serr.status, http.StatusText(serr.status)
+			return serr.Status, http.StatusText(serr.Status)
 		}
 		log.Errorf(ctx, "fetchAndPoll(ctx, ds, q, %q, %q, %q): %v", modulePath, fullPath, requestedVersion, err)
 		return http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError)
@@ -497,9 +498,9 @@ func modulePathsToFetch(ctx context.Context, ds internal.DataSource, fullPath, m
 	}
 	um, err := ds.GetUnitMeta(ctx, fullPath, modulePath, version.Latest)
 	if err != nil && !errors.Is(err, derrors.NotFound) {
-		return nil, &serverError{
-			status: http.StatusInternalServerError,
-			err:    err,
+		return nil, &serrors.ServerError{
+			Status: http.StatusInternalServerError,
+			Err:    err,
 		}
 	}
 	if err == nil {
@@ -520,16 +521,16 @@ func candidateModulePaths(fullPath string) (_ []string, err error) {
 		return []string{stdlib.ModulePath}, nil
 	}
 	if !isValidPath(fullPath) {
-		return nil, &serverError{
-			status: http.StatusBadRequest,
-			err:    fmt.Errorf("isValidPath(%q): false", fullPath),
+		return nil, &serrors.ServerError{
+			Status: http.StatusBadRequest,
+			Err:    fmt.Errorf("isValidPath(%q): false", fullPath),
 		}
 	}
 	paths := internal.CandidateModulePaths(fullPath)
 	if paths == nil {
-		return nil, &serverError{
-			status: http.StatusBadRequest,
-			err:    fmt.Errorf("invalid path: %q", fullPath),
+		return nil, &serrors.ServerError{
+			Status: http.StatusBadRequest,
+			Err:    fmt.Errorf("invalid path: %q", fullPath),
 		}
 	}
 	if len(paths) > maxPathsToFetch {

@@ -11,6 +11,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/google/safehtml"
 	"golang.org/x/pkgsite/internal/osv"
 	"golang.org/x/pkgsite/internal/vuln"
 )
@@ -128,7 +129,7 @@ func TestNewVulnPage(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			if diff := cmp.Diff(tc.want, got, cmp.AllowUnexported(vulnPage{}), cmpopts.IgnoreUnexported(VulnListPage{}), cmpopts.IgnoreUnexported(VulnEntryPage{})); diff != "" {
+			if diff := cmp.Diff(tc.want, got, cmp.AllowUnexported(vulnPage{}), cmpopts.IgnoreUnexported(safehtml.HTML{})); diff != "" {
 				t.Errorf("mismatch (-want, +got):\n%s", diff)
 			}
 		})

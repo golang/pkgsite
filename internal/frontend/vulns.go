@@ -13,6 +13,8 @@ import (
 
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/frontend/page"
+	"golang.org/x/pkgsite/internal/frontend/serrors"
 	"golang.org/x/pkgsite/internal/osv"
 	"golang.org/x/pkgsite/internal/vuln"
 )
@@ -25,14 +27,14 @@ const (
 
 // VulnListPage holds the information for a page that lists vuln entries.
 type VulnListPage struct {
-	basePage
+	page.BasePage
 	Entries []*osv.Entry
 }
 
 // VulnEntryPage holds the information for a page that displays a single
 // vuln entry.
 type VulnEntryPage struct {
-	basePage
+	page.BasePage
 	Entry            *osv.Entry
 	AffectedPackages []*vuln.AffectedPackage
 	AliasLinks       []link
@@ -46,21 +48,21 @@ func (s *Server) serveVuln(w http.ResponseWriter, r *http.Request, _ internal.Da
 
 	vp, err := newVulnPage(r.Context(), r.URL, s.vulnClient)
 	if err != nil {
-		var serr *serverError
+		var serr *serrors.ServerError
 		if !errors.As(err, &serr) {
-			serr = &serverError{status: derrors.ToStatus(err), err: err}
+			serr = &serrors.ServerError{Status: derrors.ToStatus(err), Err: err}
 		}
 		return serr
 	}
 
 	page := vp.page
-	page.setBasePage(s.newBasePage(r, vp.title))
+	page.SetBasePage(s.newBasePage(r, vp.title))
 	s.servePage(r.Context(), w, vp.template, page)
 	return nil
 }
 
 type vulnPage struct {
-	page     interface{ setBasePage(basePage) }
+	page     interface{ SetBasePage(page.BasePage) }
 	template string
 	title    string
 }
@@ -94,9 +96,9 @@ func newVulnPage(ctx context.Context, url *url.URL, vc *vuln.Client) (*vulnPage,
 			if url.Query().Has("q") {
 				return nil, derrors.NotFound
 			}
-			return nil, &serverError{
-				status:       http.StatusBadRequest,
-				responseText: "invalid Go vuln ID; should be GO-YYYY-NNNN",
+			return nil, &serrors.ServerError{
+				Status:       http.StatusBadRequest,
+				ResponseText: "invalid Go vuln ID; should be GO-YYYY-NNNN",
 			}
 		}
 		page, err := newVulnEntryPage(ctx, vc, id)

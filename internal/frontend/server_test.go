@@ -30,6 +30,7 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/cookie"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/frontend/page"
 	"golang.org/x/pkgsite/internal/middleware"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/testing/htmlcheck"
@@ -1441,11 +1442,11 @@ func TestCheckTemplates(t *testing.T) {
 		{"badge", nil, badgePage{}},
 		// error.tmpl omitted because relies on an associated "message" template
 		// that's parsed on demand; see renderErrorPage above.
-		{"fetch", nil, errorPage{}},
+		{"fetch", nil, page.ErrorPage{}},
 		{"homepage", nil, homepage{}},
 		{"license-policy", nil, licensePolicyPage{}},
 		{"search", nil, SearchPage{}},
-		{"search-help", nil, basePage{}},
+		{"search-help", nil, page.BasePage{}},
 		{"unit/main", nil, UnitPage{}},
 		{
 			"unit/main",
@@ -1460,7 +1461,7 @@ func TestCheckTemplates(t *testing.T) {
 		{"unit/licenses", []string{"licenses"}, LicensesDetails{}},
 		{"unit/versions", nil, UnitPage{}},
 		{"unit/versions", []string{"versions"}, VersionsDetails{}},
-		{"vuln", nil, basePage{}},
+		{"vuln", nil, page.BasePage{}},
 		{"vuln/list", nil, VulnListPage{}},
 		{"vuln/entry", nil, VulnEntryPage{}},
 	} {

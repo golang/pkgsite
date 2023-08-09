@@ -7,9 +7,12 @@ package frontend
 import (
 	"context"
 	"errors"
-	mstats "golang.org/x/pkgsite/internal/middleware/stats"
 	"net/http"
 	"strings"
+
+	"golang.org/x/pkgsite/internal/frontend/page"
+	"golang.org/x/pkgsite/internal/frontend/serrors"
+	mstats "golang.org/x/pkgsite/internal/middleware/stats"
 
 	"github.com/google/safehtml/template"
 	"go.opencensus.io/stats"
@@ -29,7 +32,7 @@ func (s *Server) serveDetails(w http.ResponseWriter, r *http.Request, ds interna
 
 	ctx := r.Context()
 	if r.Method != http.MethodGet && r.Method != http.MethodHead {
-		return &serverError{status: http.StatusMethodNotAllowed}
+		return &serrors.ServerError{Status: http.StatusMethodNotAllowed}
 	}
 	if r.URL.Path == "/" {
 		s.serveHomepage(ctx, w, r)
@@ -50,14 +53,14 @@ func (s *Server) serveDetails(w http.ResponseWriter, r *http.Request, ds interna
 
 	urlInfo, err := extractURLPathInfo(r.URL.Path)
 	if err != nil {
-		var epage *errorPage
+		var epage *page.ErrorPage
 		if uerr := new(userError); errors.As(err, &uerr) {
-			epage = &errorPage{MessageData: uerr.userMessage}
+			epage = &page.ErrorPage{MessageData: uerr.userMessage}
 		}
-		return &serverError{
-			status: http.StatusBadRequest,
-			err:    err,
-			epage:  epage,
+		return &serrors.ServerError{
+			Status: http.StatusBadRequest,
+			Err:    err,
+			Epage:  epage,
 		}
 	}
 	if !isSupportedVersion(urlInfo.fullPath, urlInfo.requestedVersion) {
@@ -88,10 +91,10 @@ func stdlibRedirectURL(fullPath string) string {
 }
 
 func invalidVersionError(fullPath, requestedVersion string) error {
-	return &serverError{
-		status: http.StatusBadRequest,
-		epage: &errorPage{
-			messageTemplate: template.MakeTrustedTemplate(`
+	return &serrors.ServerError{
+		Status: http.StatusBadRequest,
+		Epage: &page.ErrorPage{
+			MessageTemplate: template.MakeTrustedTemplate(`
 					<h3 class="Error-message">{{.Version}} is not a valid semantic version.</h3>
 					<p class="Error-message">
 					  To search for packages like {{.Path}}, <a href="/search?q={{.Path}}">click here</a>.
@@ -102,10 +105,10 @@ func invalidVersionError(fullPath, requestedVersion string) error {
 }
 
 func datasourceNotSupportedErr() error {
-	return &serverError{
-		status: http.StatusFailedDependency,
-		epage: &errorPage{
-			messageTemplate: template.MakeTrustedTemplate(
+	return &serrors.ServerError{
+		Status: http.StatusFailedDependency,
+		Epage: &page.ErrorPage{
+			MessageTemplate: template.MakeTrustedTemplate(
 				`<h3 class="Error-message">This page is not supported by this datasource.</h3>`),
 		},
 	}

@@ -26,6 +26,8 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/experiment"
+	"golang.org/x/pkgsite/internal/frontend/page"
+	"golang.org/x/pkgsite/internal/frontend/serrors"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )
@@ -35,10 +37,10 @@ import (
 func (s *Server) serveStyleGuide(w http.ResponseWriter, r *http.Request, ds internal.DataSource) error {
 	ctx := r.Context()
 	if !experiment.IsActive(ctx, internal.ExperimentStyleGuide) {
-		return &serverError{status: http.StatusNotFound}
+		return &serrors.ServerError{Status: http.StatusNotFound}
 	}
 	page, err := styleGuide(ctx, s.staticFS)
-	page.basePage = s.newBasePage(r, "Style Guide")
+	page.BasePage = s.newBasePage(r, "Style Guide")
 	page.AllowWideContent = true
 	page.UseResponsiveLayout = true
 	page.Title = "Style Guide"
@@ -50,7 +52,7 @@ func (s *Server) serveStyleGuide(w http.ResponseWriter, r *http.Request, ds inte
 }
 
 type styleGuidePage struct {
-	basePage
+	page.BasePage
 	Title    string
 	Sections []*StyleSection
 	Outline  []*Heading

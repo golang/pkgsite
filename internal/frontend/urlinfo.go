@@ -16,6 +16,7 @@ import (
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/fetch"
+	"golang.org/x/pkgsite/internal/frontend/serrors"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/version"
@@ -205,7 +206,7 @@ func checkExcluded(ctx context.Context, ds internal.DataSource, fullPath string)
 	}
 	if excluded {
 		// Return NotFound; don't let the user know that the package was excluded.
-		return &serverError{status: http.StatusNotFound}
+		return &serrors.ServerError{Status: http.StatusNotFound}
 	}
 	return nil
 }

@@ -21,6 +21,8 @@ import (
 	"golang.org/x/mod/semver"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
+	pagepkg "golang.org/x/pkgsite/internal/frontend/page"
+	"golang.org/x/pkgsite/internal/frontend/serrors"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/version"
@@ -41,7 +43,7 @@ func (s *Server) serveSearch(w http.ResponseWriter, r *http.Request, ds internal
 		http.Redirect(w, r, action.redirectURL, http.StatusFound)
 		return nil
 	}
-	action.page.setBasePage(s.newBasePage(r, action.title))
+	action.page.SetBasePage(s.newBasePage(r, action.title))
 	if s.shouldServeJSON(r) {
 		return s.serveJSONPage(w, r, action.page)
 	}
@@ -53,12 +55,12 @@ type searchAction struct {
 	redirectURL string
 	title       string
 	template    string
-	page        interface{ setBasePage(basePage) }
+	page        interface{ SetBasePage(pagepkg.BasePage) }
 }
 
 func determineSearchAction(r *http.Request, ds internal.DataSource, vulnClient *vuln.Client) (*searchAction, error) {
 	if r.Method != http.MethodGet && r.Method != http.MethodHead {
-		return nil, &serverError{status: http.StatusMethodNotAllowed}
+		return nil, &serrors.ServerError{Status: http.StatusMethodNotAllowed}
 	}
 
 	searchSupport := ds.SearchSupport()
@@ -70,22 +72,22 @@ func determineSearchAction(r *http.Request, ds internal.DataSource, vulnClient *
 	ctx := r.Context()
 	cq, filters := searchQueryAndFilters(r)
 	if !utf8.ValidString(cq) {
-		return nil, &serverError{status: http.StatusBadRequest}
+		return nil, &serrors.ServerError{Status: http.StatusBadRequest}
 	}
 	if len(filters) > 1 {
-		return nil, &serverError{
-			status: http.StatusBadRequest,
-			epage: &errorPage{
-				messageTemplate: template.MakeTrustedTemplate(
+		return nil, &serrors.ServerError{
+			Status: http.StatusBadRequest,
+			Epage: &pagepkg.ErrorPage{
+				MessageTemplate: template.MakeTrustedTemplate(
 					`<h3 class="Error-message">Search query contains more than one symbol.</h3>`),
 			},
 		}
 	}
 	if len(cq) > maxSearchQueryLength {
-		return nil, &serverError{
-			status: http.StatusBadRequest,
-			epage: &errorPage{
-				messageTemplate: template.MakeTrustedTemplate(
+		return nil, &serrors.ServerError{
+			Status: http.StatusBadRequest,
+			Epage: &pagepkg.ErrorPage{
+				MessageTemplate: template.MakeTrustedTemplate(
 					`<h3 class="Error-message">Search query too long.</h3>`),
 			},
 		}
@@ -95,19 +97,19 @@ func determineSearchAction(r *http.Request, ds internal.DataSource, vulnClient *
 	}
 	pageParams := newPaginationParams(r, defaultSearchLimit)
 	if pageParams.offset() > maxSearchOffset {
-		return nil, &serverError{
-			status: http.StatusBadRequest,
-			epage: &errorPage{
-				messageTemplate: template.MakeTrustedTemplate(
+		return nil, &serrors.ServerError{
+			Status: http.StatusBadRequest,
+			Epage: &pagepkg.ErrorPage{
+				MessageTemplate: template.MakeTrustedTemplate(
 					`<h3 class="Error-message">Search page number too large.</h3>`),
 			},
 		}
 	}
 	if pageParams.limit > maxSearchPageSize {
-		return nil, &serverError{
-			status: http.StatusBadRequest,
-			epage: &errorPage{
-				messageTemplate: template.MakeTrustedTemplate(
+		return nil, &serrors.ServerError{
+			Status: http.StatusBadRequest,
+			Epage: &pagepkg.ErrorPage{
+				MessageTemplate: template.MakeTrustedTemplate(
 					`<h3 class="Error-message">Search page size too large.</h3>`),
 			},
 		}
@@ -138,10 +140,10 @@ func determineSearchAction(r *http.Request, ds internal.DataSource, vulnClient *
 		// Instead of returning a 500, return a 408, since symbol searches may
 		// timeout for very popular symbols.
 		if mode == searchModeSymbol && strings.Contains(err.Error(), "i/o timeout") {
-			return nil, &serverError{
-				status: http.StatusRequestTimeout,
-				epage: &errorPage{
-					messageTemplate: template.MakeTrustedTemplate(
+			return nil, &serrors.ServerError{
+				Status: http.StatusRequestTimeout,
+				Epage: &pagepkg.ErrorPage{
+					MessageTemplate: template.MakeTrustedTemplate(
 						`<h3 class="Error-message">Request timed out. Please try again!</h3>`),
 				},
 			}
@@ -194,7 +196,7 @@ const (
 // SearchPage contains all of the data that the search template needs to
 // populate.
 type SearchPage struct {
-	basePage
+	pagepkg.BasePage
 
 	// PackageTabQuery is the search query, stripped of any filters.
 	// This is used if the user clicks on the package tab.
@@ -393,7 +395,7 @@ func searchVulnAlias(ctx context.Context, mode, cq string, vc *vuln.Client) (_ *
 	}
 	goID, err := vc.ByAlias(ctx, alias)
 	if err != nil {
-		return nil, &serverError{status: derrors.ToStatus(err)}
+		return nil, &serrors.ServerError{Status: derrors.ToStatus(err)}
 	}
 	return &searchAction{redirectURL: "/vuln/" + goID}, nil
 }

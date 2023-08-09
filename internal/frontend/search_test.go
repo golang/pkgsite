@@ -18,8 +18,11 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/google/safehtml"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/fetchdatasource"
+	"golang.org/x/pkgsite/internal/frontend/page"
+	"golang.org/x/pkgsite/internal/frontend/serrors"
 	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/osv"
 	"golang.org/x/pkgsite/internal/postgres"
@@ -147,11 +150,11 @@ func TestDetermineSearchAction(t *testing.T) {
 			}
 			gotAction, err := determineSearchAction(req, ds, vc)
 			if err != nil {
-				var serr *serverError
+				var serr *serrors.ServerError
 				if !errors.As(err, &serr) {
-					t.Fatalf("got err %#v, want type *serverError", err)
+					t.Fatalf("got err %#v, want type *ServerError", err)
 				}
-				if g, w := serr.status, test.wantStatus; g != w {
+				if g, w := serr.Status, test.wantStatus; g != w {
 					t.Errorf("got status %d, want %d", g, w)
 				}
 				return
@@ -404,7 +407,7 @@ func TestFetchSearchPage(t *testing.T) {
 				cmp.AllowUnexported(SearchPage{}, pagination{}),
 				cmpopts.IgnoreFields(SearchResult{}, "NumImportedBy"),
 				cmpopts.IgnoreFields(licenses.Metadata{}, "FilePath"),
-				cmpopts.IgnoreFields(basePage{}, "MetaDescription"),
+				cmpopts.IgnoreFields(page.BasePage{}, "MetaDescription"),
 			}
 			if diff := cmp.Diff(test.wantSearchPage, got, opts...); diff != "" {
 				t.Errorf("fetchSearchPage(db, %q) mismatch (-want +got):\n%s", test.query, diff)
@@ -719,7 +722,7 @@ func TestSearchVulnModulePath(t *testing.T) {
 					page:     test.wantPage,
 				}
 			}
-			if !cmp.Equal(gotAction, wantAction, cmp.AllowUnexported(searchAction{}), cmpopts.IgnoreUnexported(VulnListPage{})) {
+			if !cmp.Equal(gotAction, wantAction, cmp.AllowUnexported(searchAction{}), cmpopts.IgnoreUnexported(safehtml.HTML{})) {
 				t.Errorf("\ngot  %+v\nwant %+v", gotAction, wantAction)
 			}
 		})

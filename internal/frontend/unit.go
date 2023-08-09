@@ -17,6 +17,8 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/cookie"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/frontend/page"
+	"golang.org/x/pkgsite/internal/frontend/serrors"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/middleware/stats"
 	"golang.org/x/pkgsite/internal/stdlib"
@@ -26,7 +28,7 @@ import (
 
 // UnitPage contains data needed to render the unit template.
 type UnitPage struct {
-	basePage
+	page.BasePage
 	// Unit is the unit for this page.
 	Unit *internal.UnitMeta
 
@@ -153,10 +155,10 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 		// Use a separate context here to prevent the context from being canceled
 		// elsewhere before a task is enqueued.
 		if s.queue == nil {
-			return &serverError{
-				status: http.StatusBadRequest,
-				err:    err,
-				epage: &errorPage{
+			return &serrors.ServerError{
+				Status: http.StatusBadRequest,
+				Err:    err,
+				Epage: &page.ErrorPage{
 					MessageData: fmt.Sprintf(`Default branches like "@%s" are not supported. Omit to get the current version.`,
 						info.requestedVersion),
 				},
@@ -202,7 +204,7 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 	}
 	lv := linkVersion(um.ModulePath, info.requestedVersion, um.Version)
 	page := UnitPage{
-		basePage:              basePage,
+		BasePage:              basePage,
 		Unit:                  um,
 		Breadcrumb:            displayBreadcrumb(um, info.requestedVersion),
 		Title:                 title,

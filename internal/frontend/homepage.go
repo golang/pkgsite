@@ -8,6 +8,8 @@ import (
 	"context"
 	"math/rand"
 	"net/http"
+
+	"golang.org/x/pkgsite/internal/frontend/page"
 )
 
 // searchTip represents a snippet of text on the homepage demonstrating
@@ -38,7 +40,7 @@ var searchTips = []searchTip{
 
 // Homepage contains fields used in rendering the homepage template.
 type homepage struct {
-	basePage
+	page.BasePage
 
 	// TipIndex is the index of the initial search tip to render.
 	TipIndex int
@@ -61,7 +63,7 @@ type LocalModule struct {
 
 func (s *Server) serveHomepage(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 	s.servePage(ctx, w, "homepage", homepage{
-		basePage:     s.newBasePage(r, "Go Packages"),
+		BasePage:     s.newBasePage(r, "Go Packages"),
 		SearchTips:   searchTips,
 		TipIndex:     rand.Intn(len(searchTips)),
 		LocalModules: s.localModules,

@@ -21,12 +21,13 @@ import (
 	"sync"
 	"time"
 
-	"github.com/google/safehtml"
 	"github.com/google/safehtml/template"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/config"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/experiment"
+	pagepkg "golang.org/x/pkgsite/internal/frontend/page"
+	"golang.org/x/pkgsite/internal/frontend/serrors"
 	"golang.org/x/pkgsite/internal/godoc/dochtml"
 	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/log"
@@ -410,62 +411,9 @@ func (s *Server) staticPageHandler(templateName, title string) http.HandlerFunc 
 	}
 }
 
-// basePage contains fields shared by all pages when rendering templates.
-type basePage struct {
-	// HTMLTitle is the value to use in the page’s <title> tag.
-	HTMLTitle string
-
-	// MetaDescription is the html used for rendering the <meta name="Description"> tag.
-	MetaDescription safehtml.HTML
-
-	// Query is the current search query (if applicable).
-	Query string
-
-	// Experiments contains the experiments currently active.
-	Experiments *experiment.Set
-
-	// DevMode indicates whether the server is running in development mode.
-	DevMode bool
-
-	// LocalMode indicates whether the server is running in local mode (i.e. ./cmd/pkgsite).
-	LocalMode bool
-
-	// AppVersionLabel contains the current version of the app.
-	AppVersionLabel string
-
-	// GoogleTagManagerID is the ID used to load Google Tag Manager.
-	GoogleTagManagerID string
-
-	// AllowWideContent indicates whether the content should be displayed in a
-	// way that’s amenable to wider viewports.
-	AllowWideContent bool
-
-	// Enables the two and three column layouts on the unit page.
-	UseResponsiveLayout bool
-
-	// SearchPrompt is the prompt/placeholder for search input.
-	SearchPrompt string
-
-	// SearchMode is the search mode for the current search request.
-	SearchMode string
-
-	// SearchModePackage is the value of const searchModePackage. It is used in
-	// the search bar dropdown.
-	SearchModePackage string
-
-	// SearchModeSymbol is the value of const searchModeSymbol. It is used in
-	// the search bar dropdown.
-	SearchModeSymbol string
-}
-
-func (p *basePage) setBasePage(bp basePage) {
-	bp.SearchMode = p.SearchMode
-	*p = bp
-}
-
 // licensePolicyPage is used to generate the static license policy page.
 type licensePolicyPage struct {
-	basePage
+	pagepkg.BasePage
 	LicenseFileNames []string
 	LicenseTypes     []licenses.AcceptedLicenseInfo
 }
@@ -474,7 +422,7 @@ func (s *Server) licensePolicyHandler() http.HandlerFunc {
 	lics := licenses.AcceptedLicenses()
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		page := licensePolicyPage{
-			basePage:         s.newBasePage(r, "License Policy"),
+			BasePage:         s.newBasePage(r, "License Policy"),
 			LicenseFileNames: licenses.FileNames,
 			LicenseTypes:     lics,
 		}
@@ -483,7 +431,7 @@ func (s *Server) licensePolicyHandler() http.HandlerFunc {
 }
 
 // newBasePage returns a base page for the given request and title.
-func (s *Server) newBasePage(r *http.Request, title string) basePage {
+func (s *Server) newBasePage(r *http.Request, title string) pagepkg.BasePage {
 	q := rawSearchQuery(r)
 
 	var searchPrompt string
@@ -494,7 +442,7 @@ func (s *Server) newBasePage(r *http.Request, title string) basePage {
 		searchPrompt = "Search packages or symbols"
 	}
 
-	return basePage{
+	return pagepkg.BasePage{
 		HTMLTitle:          title,
 		Query:              q,
 		Experiments:        experiment.FromContext(r.Context()),
@@ -510,14 +458,6 @@ func (s *Server) newBasePage(r *http.Request, title string) basePage {
 		// user wants to search for symbols or packages.
 		SearchMode: "",
 	}
-}
-
-// errorPage contains fields for rendering a HTTP error page.
-type errorPage struct {
-	basePage
-	templateName    string
-	messageTemplate template.TrustedTemplate
-	MessageData     any
 }
 
 // PanicHandler returns an http.HandlerFunc that can be used in HTTP
@@ -538,21 +478,6 @@ func (s *Server) PanicHandler() (_ http.HandlerFunc, err error) {
 	}, nil
 }
 
-type serverError struct {
-	status       int    // HTTP status code
-	responseText string // Response text to the user
-	epage        *errorPage
-	err          error // wrapped error
-}
-
-func (s *serverError) Error() string {
-	return fmt.Sprintf("%d (%s): %v (epage=%v)", s.status, http.StatusText(s.status), s.err, s.epage)
-}
-
-func (s *serverError) Unwrap() error {
-	return s.err
-}
-
 func (s *Server) errorHandler(f func(w http.ResponseWriter, r *http.Request, ds internal.DataSource) error) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Obtain a DataSource to use for this request.
@@ -565,24 +490,24 @@ func (s *Server) errorHandler(f func(w http.ResponseWriter, r *http.Request, ds 
 
 func (s *Server) serveError(w http.ResponseWriter, r *http.Request, err error) {
 	ctx := r.Context()
-	var serr *serverError
+	var serr *serrors.ServerError
 	if !errors.As(err, &serr) {
-		serr = &serverError{status: http.StatusInternalServerError, err: err}
+		serr = &serrors.ServerError{Status: http.StatusInternalServerError, Err: err}
 	}
-	if serr.status == http.StatusInternalServerError {
+	if serr.Status == http.StatusInternalServerError {
 		log.Error(ctx, err)
 		s.reportError(ctx, err, w, r)
 	} else {
-		log.Infof(ctx, "returning %d (%s) for error %v", serr.status, http.StatusText(serr.status), err)
+		log.Infof(ctx, "returning %d (%s) for error %v", serr.Status, http.StatusText(serr.Status), err)
 	}
-	if serr.responseText == "" {
-		serr.responseText = http.StatusText(serr.status)
+	if serr.ResponseText == "" {
+		serr.ResponseText = http.StatusText(serr.Status)
 	}
 	if r.Method == http.MethodPost {
-		http.Error(w, serr.responseText, serr.status)
+		http.Error(w, serr.ResponseText, serr.Status)
 		return
 	}
-	s.serveErrorPage(w, r, serr.status, serr.epage)
+	s.serveErrorPage(w, r, serr.Status, serr.Epage)
 }
 
 // reportError sends the error to the GCP Error Reporting service.
@@ -601,20 +526,20 @@ func (s *Server) reportError(ctx context.Context, err error, w http.ResponseWrit
 	w.Header().Set(config.BypassErrorReportingHeader, "true")
 }
 
-func (s *Server) serveErrorPage(w http.ResponseWriter, r *http.Request, status int, page *errorPage) {
+func (s *Server) serveErrorPage(w http.ResponseWriter, r *http.Request, status int, page *pagepkg.ErrorPage) {
 	template := "error"
 	if page != nil {
 		if page.AppVersionLabel == "" || page.GoogleTagManagerID == "" {
-			// If the basePage was properly created using newBasePage, both
+			// If the BasePage was properly created using newBasePage, both
 			// AppVersionLabel and GoogleTagManagerID should always be set.
-			page.basePage = s.newBasePage(r, "")
+			page.BasePage = s.newBasePage(r, "")
 		}
-		if page.templateName != "" {
-			template = page.templateName
+		if page.TemplateName != "" {
+			template = page.TemplateName
 		}
 	} else {
-		page = &errorPage{
-			basePage: s.newBasePage(r, ""),
+		page = &pagepkg.ErrorPage{
+			BasePage: s.newBasePage(r, ""),
 		}
 	}
 	buf, err := s.renderErrorPage(r.Context(), status, template, page)
@@ -630,14 +555,14 @@ func (s *Server) serveErrorPage(w http.ResponseWriter, r *http.Request, status i
 	}
 }
 
-// renderErrorPage executes error.tmpl with the given errorPage
-func (s *Server) renderErrorPage(ctx context.Context, status int, templateName string, page *errorPage) ([]byte, error) {
+// renderErrorPage executes error.tmpl with the given ErrorPage
+func (s *Server) renderErrorPage(ctx context.Context, status int, templateName string, page *pagepkg.ErrorPage) ([]byte, error) {
 	statusInfo := fmt.Sprintf("%d %s", status, http.StatusText(status))
 	if page == nil {
-		page = &errorPage{}
+		page = &pagepkg.ErrorPage{}
 	}
-	if page.messageTemplate.String() == "" {
-		page.messageTemplate = template.MakeTrustedTemplate(`<h3 class="Error-message">{{.}}</h3>`)
+	if page.MessageTemplate.String() == "" {
+		page.MessageTemplate = template.MakeTrustedTemplate(`<h3 class="Error-message">{{.}}</h3>`)
 	}
 	if page.MessageData == nil {
 		page.MessageData = statusInfo
@@ -657,7 +582,7 @@ func (s *Server) renderErrorPage(ctx context.Context, status int, templateName s
 	if err != nil {
 		return nil, err
 	}
-	_, err = tmpl.New("message").ParseFromTrustedTemplate(page.messageTemplate)
+	_, err = tmpl.New("message").ParseFromTrustedTemplate(page.MessageTemplate)
 	if err != nil {
 		return nil, err
 	}
