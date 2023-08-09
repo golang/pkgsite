@@ -15,6 +15,7 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/experiment"
+	"golang.org/x/pkgsite/internal/fetch"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/version"
@@ -155,6 +156,11 @@ func parseStdLibURLPath(urlPath string) (_ *urlPathInfo, err error) {
 	tag = strings.TrimSuffix(tag, "/")
 	info.requestedVersion = stdlib.VersionForTag(tag)
 	if info.requestedVersion == "" {
+		if tag == fetch.LocalVersion {
+			// Special case: 0.0.0 is the version for a local stdlib
+			info.requestedVersion = fetch.LocalVersion
+			return info, nil
+		}
 		return nil, &userError{
 			err:         fmt.Errorf("invalid Go tag for url: %q", urlPath),
 			userMessage: fmt.Sprintf("%q is not a valid tag for the standard library", tag),

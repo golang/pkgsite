@@ -110,6 +110,7 @@ func main() {
 	flag.BoolVar(&serverCfg.useCache, "cache", false, "fetch from the module cache")
 	flag.StringVar(&serverCfg.cacheDir, "cachedir", "", "module cache directory (defaults to `go env GOMODCACHE`)")
 	flag.BoolVar(&serverCfg.useListedMods, "list", true, "for each path, serve all modules in build list")
+	serverCfg.useLocalStdlib = true
 
 	flag.Usage = func() {
 		out := flag.CommandLine.Output()
@@ -380,11 +381,6 @@ func buildGetters(ctx context.Context, cfg getterConfig) ([]fetch.ModuleGetter, 
 		getters = append(getters, g)
 	}
 
-	// Add a proxy
-	if cfg.proxy != nil {
-		getters = append(getters, fetch.NewProxyModuleGetter(cfg.proxy, source.NewClient(time.Second)))
-	}
-
 	if cfg.useLocalStdlib {
 		goRepo := *goRepoPath
 		if goRepo == "" {
@@ -396,6 +392,11 @@ func buildGetters(ctx context.Context, cfg getterConfig) ([]fetch.ModuleGetter, 
 		} else {
 			getters = append(getters, mg)
 		}
+	}
+
+	// Add a proxy
+	if cfg.proxy != nil {
+		getters = append(getters, fetch.NewProxyModuleGetter(cfg.proxy, source.NewClient(time.Second)))
 	}
 
 	getters = append(getters, fetch.NewStdlibZipModuleGetter())

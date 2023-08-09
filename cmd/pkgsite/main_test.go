@@ -56,13 +56,12 @@ package a
 
 	cfg := func(modifyDefault func(*serverConfig)) serverConfig {
 		c := serverConfig{
-			paths:          []string{localModule},
-			gopathMode:     false,
-			useListedMods:  true,
-			useLocalStdlib: true,
-			useCache:       true,
-			cacheDir:       cacheDir,
-			proxy:          prox,
+			paths:         []string{localModule},
+			gopathMode:    false,
+			useListedMods: true,
+			useCache:      true,
+			cacheDir:      cacheDir,
+			proxy:         prox,
 		}
 		if modifyDefault != nil {
 			modifyDefault(&c)

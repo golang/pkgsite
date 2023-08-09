@@ -187,8 +187,10 @@ func processModuleContents(ctx context.Context, modulePath, resolvedVersion, req
 	defer span.End()
 
 	v := resolvedVersion
-	if modulePath == stdlib.ModulePath && stdlib.SupportedBranches[requestedVersion] {
-		v = requestedVersion
+	if _, ok := mg.(*stdlibZipModuleGetter); ok {
+		if modulePath == stdlib.ModulePath && stdlib.SupportedBranches[requestedVersion] {
+			v = requestedVersion
+		}
 	}
 	sourceInfo, err := mg.SourceInfo(ctx, modulePath, v)
 	if err != nil {

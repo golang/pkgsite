@@ -23,7 +23,6 @@ import (
 	"golang.org/x/pkgsite/internal/fetch"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/proxy"
-	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/version"
 )
 
@@ -166,15 +165,6 @@ func (ds *FetchDataSource) fetch(ctx context.Context, modulePath, version string
 			} else {
 				m.RemoveNonRedistributableData()
 			}
-			// There is special handling in FetchModule for the standard library,
-			// that bypasses the getter g. Don't record g as having fetch std.
-			//
-			// TODO(rfindley): it would be cleaner if the standard library could be
-			// its own module getter. This could also allow the go/packages getter to
-			// serve existing on-disk content for std. See also golang/go#58923.
-			if modulePath == stdlib.ModulePath {
-				g = nil
-			}
 			return m, g, nil
 		}
 		if !errors.Is(fr.Error, derrors.NotFound) {
@@ -187,7 +177,7 @@ func (ds *FetchDataSource) fetch(ctx context.Context, modulePath, version string
 func (ds *FetchDataSource) populateUnitSubdirectories(u *internal.Unit, m *internal.Module) {
 	p := u.Path + "/"
 	for _, u2 := range m.Units {
-		if strings.HasPrefix(u2.Path, p) {
+		if strings.HasPrefix(u2.Path, p) || u.Path == "std" {
 			var syn string
 			if len(u2.Documentation) > 0 {
 				syn = u2.Documentation[0].Synopsis
