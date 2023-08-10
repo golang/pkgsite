@@ -35,15 +35,15 @@ type URLPathInfo struct {
 
 type UserError struct {
 	UserMessage string
-	Err         error
+	err         error
 }
 
 func (e *UserError) Error() string {
-	return e.Err.Error()
+	return e.err.Error()
 }
 
 func (e *UserError) Unwrap() error {
-	return e.Err
+	return e.err
 }
 
 // ExtractURLPathInfo extracts information from a request to pkg.go.dev.
@@ -106,7 +106,7 @@ func ParseDetailsURLPath(urlPath string) (_ *URLPathInfo, err error) {
 		// You cannot explicitly write "latest" for the version.
 		if endParts[0] == version.Latest {
 			return nil, &UserError{
-				Err:         fmt.Errorf("invalid version: %q", info.RequestedVersion),
+				err:         fmt.Errorf("invalid version: %q", info.RequestedVersion),
 				UserMessage: fmt.Sprintf("%q is not a valid version", endParts[0]),
 			}
 		}
@@ -123,7 +123,7 @@ func ParseDetailsURLPath(urlPath string) (_ *URLPathInfo, err error) {
 	}
 	if !IsValidPath(info.FullPath) {
 		return nil, &UserError{
-			Err:         fmt.Errorf("IsValidPath(%q) is false", info.FullPath),
+			err:         fmt.Errorf("IsValidPath(%q) is false", info.FullPath),
 			UserMessage: fmt.Sprintf("%q is not a valid import path", info.FullPath),
 		}
 	}
@@ -139,7 +139,7 @@ func parseStdlibURLPath(urlPath string) (_ *URLPathInfo, err error) {
 	fullPath = strings.TrimSuffix(strings.TrimPrefix(fullPath, "/"), "/")
 	if !IsValidPath(fullPath) {
 		return nil, &UserError{
-			Err:         fmt.Errorf("IsValidPath(%q) is false", fullPath),
+			err:         fmt.Errorf("IsValidPath(%q) is false", fullPath),
 			UserMessage: fmt.Sprintf("%q is not a valid import path", fullPath),
 		}
 	}
@@ -161,7 +161,7 @@ func parseStdlibURLPath(urlPath string) (_ *URLPathInfo, err error) {
 			return info, nil
 		}
 		return nil, &UserError{
-			Err:         fmt.Errorf("invalid Go tag for url: %q", urlPath),
+			err:         fmt.Errorf("invalid Go tag for url: %q", urlPath),
 			UserMessage: fmt.Sprintf("%q is not a valid tag for the standard library", tag),
 		}
 	}

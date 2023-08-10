@@ -45,14 +45,10 @@ var errUnitNotFoundWithoutFetch = &serrors.ServerError{
 
 // servePathNotFoundPage serves a 404 page for the requested path, or redirects
 // the user to an appropriate location.
-func (s *Server) servePathNotFoundPage(w http.ResponseWriter, r *http.Request,
-	ds internal.DataSource, fullPath, modulePath, requestedVersion string) (err error) {
+func (s *FetchServer) ServePathNotFoundPage(w http.ResponseWriter, r *http.Request,
+	db internal.PostgresDB, fullPath, modulePath, requestedVersion string) (err error) {
 	defer derrors.Wrap(&err, "servePathNotFoundPage(w, r, %q, %q)", fullPath, requestedVersion)
 
-	db, ok := ds.(internal.PostgresDB)
-	if !ok {
-		return datasourceNotSupportedErr()
-	}
 	ctx := r.Context()
 
 	if stdlib.Contains(fullPath) {
@@ -142,13 +138,13 @@ func (s *Server) servePathNotFoundPage(w http.ResponseWriter, r *http.Request,
 
 		// If a module has a status of 404, but s.taskIDChangeInterval has
 		// passed, allow the module to be refetched.
-		if fr.status == http.StatusNotFound && time.Since(fr.updatedAt) > s.taskIDChangeInterval {
+		if fr.status == http.StatusNotFound && time.Since(fr.updatedAt) > s.TaskIDChangeInterval {
 			return pathNotFoundError(ctx, fullPath, requestedVersion)
 		}
 
 		// Redirect to the search result page for an empty directory that is above nested modules.
 		// See https://golang.org/issue/43725 for context.
-		nm, err := ds.GetNestedModules(ctx, fullPath)
+		nm, err := db.GetNestedModules(ctx, fullPath)
 		if err == nil && len(nm) > 0 {
 			http.Redirect(w, r, "/search?q="+url.QueryEscape(fullPath), http.StatusFound)
 			return nil
@@ -316,4 +312,22 @@ func fetchResultFromVersionMap(vm *internal.VersionMap) *fetchResult {
 		updatedAt:  vm.UpdatedAt,
 		err:        err,
 	}
+}
+
+// stdlibPathForShortcut returns a path in the stdlib that shortcut should redirect to,
+// or the empty string if there is no such path.
+func stdlibPathForShortcut(ctx context.Context, db internal.PostgresDB, shortcut string) (path string, err error) {
+	defer derrors.Wrap(&err, "stdlibPathForShortcut(ctx, %q)", shortcut)
+	if !stdlib.Contains(shortcut) {
+		return "", nil
+	}
+	matches, err := db.GetStdlibPathsWithSuffix(ctx, shortcut)
+	if err != nil {
+		return "", err
+	}
+	if len(matches) == 1 {
+		return matches[0], nil
+	}
+	// No matches, or ambiguous.
+	return "", nil
 }

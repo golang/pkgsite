@@ -86,13 +86,18 @@ var (
 	statusNotFoundInVersionMap = 470
 )
 
+type FetchServer struct {
+	Queue                queue.Queue
+	TaskIDChangeInterval time.Duration
+}
+
 // serveFetch checks if a requested path and version exists in the database.
 // If not, it will enqueue potential module versions that could contain
 // the requested path and version to a task queue, to be fetched by the worker.
 // Meanwhile, the request will poll the database until a row is found, or a
 // timeout occurs. A status and responseText will be returned based on the
 // result of the request.
-func (s *Server) serveFetch(w http.ResponseWriter, r *http.Request, ds internal.DataSource) (err error) {
+func (s *FetchServer) ServeFetch(w http.ResponseWriter, r *http.Request, ds internal.DataSource) (err error) {
 	defer derrors.Wrap(&err, "serveFetch(%q)", r.URL.Path)
 	if _, ok := ds.(internal.PostgresDB); !ok {
 		// There's no reason for other DataSources to need this codepath.
@@ -127,7 +132,7 @@ type fetchResult struct {
 	resolvedVersion string
 }
 
-func (s *Server) fetchAndPoll(ctx context.Context, ds internal.DataSource, modulePath, fullPath, requestedVersion string) (status int, responseText string) {
+func (s *FetchServer) fetchAndPoll(ctx context.Context, ds internal.DataSource, modulePath, fullPath, requestedVersion string) (status int, responseText string) {
 	start := time.Now()
 	defer func() {
 		log.Infof(ctx, "fetchAndPoll(ctx, ds, q, %q, %q, %q): status=%d, responseText=%q",
@@ -172,7 +177,7 @@ func (s *Server) fetchAndPoll(ctx context.Context, ds internal.DataSource, modul
 // checkPossibleModulePaths will then poll the database for each module path,
 // until a result is returned or the request times out. If shouldQueue is false,
 // it will return the fetchResult, regardless of what the status is.
-func (s *Server) checkPossibleModulePaths(ctx context.Context, db internal.PostgresDB,
+func (s *FetchServer) checkPossibleModulePaths(ctx context.Context, db internal.PostgresDB,
 	fullPath, requestedVersion string, modulePaths []string, shouldQueue bool) []*fetchResult {
 	var wg sync.WaitGroup
 	ctx, cancel := context.WithTimeout(ctx, fetchTimeout)
@@ -189,8 +194,8 @@ func (s *Server) checkPossibleModulePaths(ctx context.Context, db internal.Postg
 			// Before enqueuing the module version to be fetched, check if we
 			// have already attempted to fetch it in the past. If so, just
 			// return the result from that fetch process.
-			fr := checkForPath(ctx, db, fullPath, modulePath, requestedVersion, s.taskIDChangeInterval)
-			log.Debugf(ctx, "initial checkForPath(ctx, db, %q, %q, %q, %d): status=%d, err=%v", fullPath, modulePath, requestedVersion, s.taskIDChangeInterval, fr.status, fr.err)
+			fr := checkForPath(ctx, db, fullPath, modulePath, requestedVersion, s.TaskIDChangeInterval)
+			log.Debugf(ctx, "initial checkForPath(ctx, db, %q, %q, %q, %d): status=%d, err=%v", fullPath, modulePath, requestedVersion, s.TaskIDChangeInterval, fr.status, fr.err)
 			if !shouldQueue || fr.status != statusNotFoundInVersionMap {
 				results[i] = fr
 				return
@@ -199,7 +204,7 @@ func (s *Server) checkPossibleModulePaths(ctx context.Context, db internal.Postg
 			// A row for this modulePath and requestedVersion combination does not
 			// exist in version_map. Enqueue the module version to be fetched.
 			opts := &queue.Options{Source: queue.SourceFrontendValue}
-			if _, err := s.queue.ScheduleFetch(ctx, modulePath, requestedVersion, opts); err != nil {
+			if _, err := s.Queue.ScheduleFetch(ctx, modulePath, requestedVersion, opts); err != nil {
 				fr.err = err
 				fr.status = http.StatusInternalServerError
 				log.Errorf(ctx, "enqueuing %s@%s to frontend-fetch task queue: %v", modulePath, requestedVersion, err)
@@ -210,7 +215,7 @@ func (s *Server) checkPossibleModulePaths(ctx context.Context, db internal.Postg
 
 			// After the fetch request is enqueued, poll the database until it has been
 			// inserted or the request times out.
-			fr = pollForPath(ctx, db, pollEvery, fullPath, modulePath, requestedVersion, s.taskIDChangeInterval)
+			fr = pollForPath(ctx, db, pollEvery, fullPath, modulePath, requestedVersion, s.TaskIDChangeInterval)
 			logf := log.Infof
 			if fr.status == http.StatusInternalServerError {
 				logf = log.Errorf

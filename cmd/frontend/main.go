@@ -113,19 +113,25 @@ func main() {
 		log.Fatalf(ctx, "vuln.NewClient: %v", err)
 	}
 	staticSource := template.TrustedSourceFromFlag(flag.Lookup("static").Value)
-	server, err := frontend.NewServer(frontend.ServerConfig{
-		Config:               cfg,
-		DataSourceGetter:     dsg,
+	// TODO: Can we use a separate queue for the fetchServer and for the Server?
+	// It would help differentiate ownership.
+	fetchServer := &frontend.FetchServer{
 		Queue:                fetchQueue,
 		TaskIDChangeInterval: config.TaskIDChangeIntervalFrontend,
-		TemplateFS:           template.TrustedFSFromTrustedSource(staticSource),
-		StaticFS:             os.DirFS(*staticFlag),
-		StaticPath:           *staticFlag,
-		ThirdPartyFS:         os.DirFS(*thirdPartyPath),
-		DevMode:              *devMode,
-		LocalMode:            *localMode,
-		Reporter:             reporter,
-		VulndbClient:         vc,
+	}
+	server, err := frontend.NewServer(frontend.ServerConfig{
+		Config:           cfg,
+		FetchServer:      fetchServer,
+		DataSourceGetter: dsg,
+		Queue:            fetchQueue,
+		TemplateFS:       template.TrustedFSFromTrustedSource(staticSource),
+		StaticFS:         os.DirFS(*staticFlag),
+		StaticPath:       *staticFlag,
+		ThirdPartyFS:     os.DirFS(*thirdPartyPath),
+		DevMode:          *devMode,
+		LocalMode:        *localMode,
+		Reporter:         reporter,
+		VulndbClient:     vc,
 	})
 	if err != nil {
 		log.Fatalf(ctx, "frontend.NewServer: %v", err)

@@ -127,7 +127,11 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 		if !errors.Is(err, derrors.NotFound) {
 			return err
 		}
-		return s.servePathNotFoundPage(w, r, ds, info.FullPath, info.ModulePath, info.RequestedVersion)
+		db, ok := ds.(internal.PostgresDB)
+		if !ok || s.fetchServer == nil {
+			return datasourceNotSupportedErr()
+		}
+		return s.fetchServer.ServePathNotFoundPage(w, r, db, info.FullPath, info.ModulePath, info.RequestedVersion)
 	}
 
 	makeDepsDevURL := depsDevURLGenerator(ctx, um)

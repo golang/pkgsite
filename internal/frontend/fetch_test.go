@@ -80,13 +80,13 @@ func TestFetch(t *testing.T) {
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			s, _, teardown := newTestServer(t, testModulesForProxy, nil)
+			s, f, _, teardown := newTestServerWithFetch(t, testModulesForProxy, nil)
 			defer teardown()
 
 			ctx, cancel := context.WithTimeout(context.Background(), testFetchTimeout)
 			defer cancel()
 
-			status, responseText := s.fetchAndPoll(ctx, s.getDataSource(ctx), testModulePath, test.fullPath, test.version)
+			status, responseText := f.fetchAndPoll(ctx, s.getDataSource(ctx), testModulePath, test.fullPath, test.version)
 			if status != http.StatusOK {
 				t.Fatalf("fetchAndPoll(%q, %q, %q) = %d, %s; want status = %d",
 					testModulePath, test.fullPath, test.version, status, responseText, http.StatusOK)
@@ -144,9 +144,9 @@ func TestFetchErrors(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), test.fetchTimeout)
 			defer cancel()
 
-			s, _, teardown := newTestServer(t, testModulesForProxy, nil)
+			s, f, _, teardown := newTestServerWithFetch(t, testModulesForProxy, nil)
 			defer teardown()
-			got, err := s.fetchAndPoll(ctx, s.getDataSource(ctx), test.modulePath, test.fullPath, test.version)
+			got, err := f.fetchAndPoll(ctx, s.getDataSource(ctx), test.modulePath, test.fullPath, test.version)
 
 			if got != test.want {
 				t.Fatalf("fetchAndPoll(ctx, testDB, q, %q, %q, %q): %d; want = %d",
@@ -181,9 +181,9 @@ func TestFetchPathAlreadyExists(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			s, _, teardown := newTestServer(t, testModulesForProxy, nil)
+			s, f, _, teardown := newTestServerWithFetch(t, testModulesForProxy, nil)
 			defer teardown()
-			got, _ := s.fetchAndPoll(ctx, s.getDataSource(ctx), sample.ModulePath, sample.PackagePath, sample.VersionString)
+			got, _ := f.fetchAndPoll(ctx, s.getDataSource(ctx), sample.ModulePath, sample.PackagePath, sample.VersionString)
 			if got != test.want {
 				t.Fatalf("fetchAndPoll for status %d: %d; want = %d)", test.status, got, test.want)
 			}

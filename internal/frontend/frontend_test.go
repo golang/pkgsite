@@ -46,20 +46,10 @@ type testPackage struct {
 
 func newTestServer(t *testing.T, proxyModules []*proxytest.Module, cacher Cacher) (*Server, http.Handler, func()) {
 	t.Helper()
-	proxyClient, teardown := proxytest.SetupTestClient(t, proxyModules)
-	sourceClient := source.NewClient(sourceTimeout)
-	ctx := context.Background()
-
-	q := queue.NewInMemory(ctx, 1, nil,
-		func(ctx context.Context, mpath, version string) (int, error) {
-			return FetchAndUpdateState(ctx, mpath, version, proxyClient, sourceClient, testDB)
-		})
 
 	s, err := NewServer(ServerConfig{
-		DataSourceGetter:     func(context.Context) internal.DataSource { return testDB },
-		Queue:                q,
-		TaskIDChangeInterval: 10 * time.Minute,
-		TemplateFS:           template.TrustedFSFromEmbed(static.FS),
+		DataSourceGetter: func(context.Context) internal.DataSource { return testDB },
+		TemplateFS:       template.TrustedFSFromEmbed(static.FS),
 		// Use the embedded FSs here to make sure they're tested.
 		// Integration tests will use the actual directories.
 		StaticFS:     static.FS,
@@ -73,6 +63,44 @@ func newTestServer(t *testing.T, proxyModules []*proxytest.Module, cacher Cacher
 	s.Install(mux.Handle, cacher, nil)
 
 	return s, mux, func() {
+		postgres.ResetTestDB(testDB, t)
+	}
+}
+
+func newTestServerWithFetch(t *testing.T, proxyModules []*proxytest.Module, cacher Cacher) (*Server, *FetchServer, http.Handler, func()) {
+	t.Helper()
+	proxyClient, teardown := proxytest.SetupTestClient(t, proxyModules)
+	sourceClient := source.NewClient(sourceTimeout)
+	ctx := context.Background()
+
+	q := queue.NewInMemory(ctx, 1, nil,
+		func(ctx context.Context, mpath, version string) (int, error) {
+			return FetchAndUpdateState(ctx, mpath, version, proxyClient, sourceClient, testDB)
+		})
+
+	f := &FetchServer{
+		Queue:                q,
+		TaskIDChangeInterval: 10 * time.Minute,
+	}
+
+	s, err := NewServer(ServerConfig{
+		FetchServer:      f,
+		DataSourceGetter: func(context.Context) internal.DataSource { return testDB },
+		Queue:            q,
+		TemplateFS:       template.TrustedFSFromEmbed(static.FS),
+		// Use the embedded FSs here to make sure they're tested.
+		// Integration tests will use the actual directories.
+		StaticFS:     static.FS,
+		ThirdPartyFS: thirdparty.FS,
+		StaticPath:   "../../static",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	mux := http.NewServeMux()
+	s.Install(mux.Handle, cacher, nil)
+
+	return s, f, mux, func() {
 		teardown()
 		postgres.ResetTestDB(testDB, t)
 	}

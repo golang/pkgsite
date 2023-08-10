@@ -33,14 +33,18 @@ import (
 func setupFrontend(ctx context.Context, t *testing.T, q queue.Queue, rc *redis.Client) *httptest.Server {
 	t.Helper()
 	const staticDir = "../../../static"
-	s, err := frontend.NewServer(frontend.ServerConfig{
-		DataSourceGetter:     func(context.Context) internal.DataSource { return testDB },
-		TaskIDChangeInterval: 10 * time.Minute,
-		TemplateFS:           template.TrustedFSFromTrustedSource(template.TrustedSourceFromConstant(staticDir)),
-		StaticFS:             os.DirFS(staticDir),
-		ThirdPartyFS:         os.DirFS("../../../third_party"),
+	fs := &frontend.FetchServer{
 		Queue:                q,
-		Config:               &config.Config{ServeStats: true},
+		TaskIDChangeInterval: 10 * time.Minute,
+	}
+	s, err := frontend.NewServer(frontend.ServerConfig{
+		FetchServer:      fs,
+		DataSourceGetter: func(context.Context) internal.DataSource { return testDB },
+		TemplateFS:       template.TrustedFSFromTrustedSource(template.TrustedSourceFromConstant(staticDir)),
+		StaticFS:         os.DirFS(staticDir),
+		ThirdPartyFS:     os.DirFS("../../../third_party"),
+		Queue:            q,
+		Config:           &config.Config{ServeStats: true},
 	})
 	if err != nil {
 		t.Fatal(err)

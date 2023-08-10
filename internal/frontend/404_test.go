@@ -8,13 +8,20 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"net/http/httptest"
+	"net/url"
 	"testing"
 
+	"github.com/alicebob/miniredis/v2"
+	"github.com/go-redis/redis/v8"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/cookie"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/middleware"
 	"golang.org/x/pkgsite/internal/postgres"
+	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/testing/sample"
 	"golang.org/x/pkgsite/internal/version"
 )
@@ -243,6 +250,261 @@ func TestGithubPathRedirect(t *testing.T) {
 		t.Run(test.path, func(t *testing.T) {
 			if got := githubPathRedirect(test.path); got != test.want {
 				t.Fatalf("githubPathRedirect(%q): %q; want = %q", test.path, got, "/"+test.want)
+			}
+		})
+	}
+}
+
+func TestStdlibPathForShortcut(t *testing.T) {
+	defer postgres.ResetTestDB(testDB, t)
+
+	m := sample.Module(stdlib.ModulePath, "v1.2.3",
+		"encoding/json",                  // one match for "json"
+		"text/template", "html/template", // two matches for "template"
+	)
+	ctx := context.Background()
+	postgres.MustInsertModule(ctx, t, testDB, m)
+
+	for _, test := range []struct {
+		path string
+		want string
+	}{
+		{"foo", ""},
+		{"json", "encoding/json"},
+		{"template", ""},
+	} {
+		got, err := stdlibPathForShortcut(ctx, testDB, test.path)
+		if err != nil {
+			t.Fatalf("%q: %v", test.path, err)
+		}
+		if got != test.want {
+			t.Errorf("%q: got %q, want %q", test.path, got, test.want)
+		}
+	}
+}
+
+// Verify that some paths that aren't found will redirect to valid pages.
+// Sometimes redirection sets the AlternativeModuleFlash cookie and puts
+// up a banner.
+func TestServer404Redirect(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
+
+	defer postgres.ResetTestDB(testDB, t)
+	sampleModule := sample.DefaultModule()
+	postgres.MustInsertModule(ctx, t, testDB, sampleModule)
+	alternativeModule := &internal.VersionMap{
+		ModulePath:       "module.path/alternative",
+		GoModPath:        sample.ModulePath,
+		RequestedVersion: version.Latest,
+		ResolvedVersion:  sample.VersionString,
+		Status:           derrors.ToStatus(derrors.AlternativeModule),
+	}
+	if err := testDB.UpsertVersionMap(ctx, alternativeModule); err != nil {
+		t.Fatal(err)
+	}
+
+	v1modpath := "notinv1.mod"
+	v1path := "notinv1.mod/foo"
+	postgres.MustInsertModule(ctx, t, testDB, sample.Module(v1modpath+"/v4", "v4.0.0", "foo"))
+	for _, mod := range []struct {
+		path, version string
+		status        int
+	}{
+		{v1modpath, "v1.0.0", http.StatusNotFound},
+		{v1path, "v4.0.0", http.StatusNotFound},
+		{v1modpath + "/v4", "v4.0.0", http.StatusOK},
+	} {
+		if err := testDB.UpsertVersionMap(ctx, &internal.VersionMap{
+			ModulePath:       mod.path,
+			RequestedVersion: version.Latest,
+			ResolvedVersion:  mod.version,
+			Status:           mod.status,
+			GoModPath:        mod.path,
+		}); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := testDB.UpsertVersionMap(ctx, &internal.VersionMap{
+		ModulePath:       sample.ModulePath + "/blob/master",
+		RequestedVersion: version.Latest,
+		ResolvedVersion:  sample.VersionString,
+		Status:           http.StatusNotFound,
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	rs, err := miniredis.Run()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer rs.Close()
+
+	_, _, handler, _ := newTestServerWithFetch(t, nil, middleware.NewCacher(redis.NewClient(&redis.Options{Addr: rs.Addr()})))
+
+	for _, test := range []struct {
+		name, path, flash string
+	}{
+		{"github url", "/" + sample.ModulePath + "/blob/master", ""},
+		{"alternative module", "/" + alternativeModule.ModulePath, "module.path/alternative"},
+		{"module not in v1", "/" + v1modpath, "notinv1.mod"},
+		{"import path not in v1", "/" + v1path, "notinv1.mod/foo"},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			w := httptest.NewRecorder()
+			handler.ServeHTTP(w, httptest.NewRequest("GET", test.path, nil))
+			// Check for http.StatusFound, which indicates a redirect.
+			if w.Code != http.StatusFound {
+				t.Errorf("%q: got status code = %d, want %d", test.path, w.Code, http.StatusFound)
+			}
+			res := w.Result()
+			c := findCookie(cookie.AlternativeModuleFlash, res.Cookies())
+			if c == nil && test.flash != "" {
+				t.Error("got no flash cookie, expected one")
+			} else if c != nil {
+				val, err := cookie.Base64Value(c)
+				if err != nil {
+					t.Fatal(err)
+				}
+				if val != test.flash {
+					t.Fatalf("got cookie value %q, want %q", val, test.flash)
+				}
+				// If we have a cookie, then following the redirect URL with the cookie
+				// should serve a "redirected from" banner.
+				loc := res.Header.Get("Location")
+				r := httptest.NewRequest("GET", loc, nil)
+				r.AddCookie(c)
+				w = httptest.NewRecorder()
+				handler.ServeHTTP(w, r)
+				err = checkBody(w.Result().Body, in(`[data-test-id="redirected-banner-text"]`, hasText(val)))
+				if err != nil {
+					t.Fatal(err)
+				}
+				// Visiting the same page again without the cookie should not
+				// display the banner.
+				r = httptest.NewRequest("GET", loc, nil)
+				w = httptest.NewRecorder()
+				handler.ServeHTTP(w, r)
+				err = checkBody(w.Result().Body, notIn(`[data-test-id="redirected-banner-text"]`))
+				if err != nil {
+					t.Fatal(err)
+				}
+			}
+		})
+	}
+}
+
+func TestServer404Redirect_NoLoop(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
+
+	altPath := "module.path/alternative"
+	goModPath := "module.path/alternative/pkg"
+	defer postgres.ResetTestDB(testDB, t)
+	sampleModule := sample.DefaultModule()
+	postgres.MustInsertModule(ctx, t, testDB, sampleModule)
+	alternativeModule := &internal.VersionMap{
+		ModulePath:       altPath,
+		GoModPath:        goModPath,
+		RequestedVersion: version.Latest,
+		ResolvedVersion:  sample.VersionString,
+		Status:           derrors.ToStatus(derrors.AlternativeModule),
+	}
+	alternativeModulePkg := &internal.VersionMap{
+		ModulePath:       goModPath,
+		GoModPath:        goModPath,
+		RequestedVersion: version.Latest,
+		ResolvedVersion:  sample.VersionString,
+		Status:           http.StatusNotFound,
+	}
+	if err := testDB.UpsertVersionMap(ctx, alternativeModule); err != nil {
+		t.Fatal(err)
+	}
+	if err := testDB.UpsertVersionMap(ctx, alternativeModulePkg); err != nil {
+		t.Fatal(err)
+	}
+
+	rs, err := miniredis.Run()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer rs.Close()
+
+	_, _, handler, _ := newTestServerWithFetch(t, nil, middleware.NewCacher(redis.NewClient(&redis.Options{Addr: rs.Addr()})))
+
+	for _, test := range []struct {
+		name, path string
+		status     int
+	}{
+		{"do not redirect if alternative module does not successfully return", "/" + altPath, http.StatusNotFound},
+		{"do not redirect go mod path endlessly", "/" + goModPath, http.StatusNotFound},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			w := httptest.NewRecorder()
+			handler.ServeHTTP(w, httptest.NewRequest("GET", test.path, nil))
+			// Check for http.StatusFound, which indicates a redirect.
+			if w.Code != test.status {
+				t.Errorf("%q: got status code = %d, want %d", test.path, w.Code, test.status)
+			}
+		})
+	}
+}
+
+func TestEmptyDirectoryBetweenNestedModulesRedirect(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
+	defer cancel()
+	defer postgres.ResetTestDB(testDB, t)
+
+	postgres.MustInsertModule(ctx, t, testDB, sample.Module(sample.ModulePath, sample.VersionString, ""))
+	postgres.MustInsertModule(ctx, t, testDB, sample.Module(sample.ModulePath+"/missing/dir/c", sample.VersionString, ""))
+
+	missingPath := sample.ModulePath + "/missing"
+	notInsertedPath := sample.ModulePath + "/missing/dir"
+	if err := testDB.UpsertVersionMap(ctx, &internal.VersionMap{
+		ModulePath:       missingPath,
+		RequestedVersion: version.Latest,
+		ResolvedVersion:  sample.VersionString,
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	_, _, handler, _ := newTestServerWithFetch(t, nil, nil)
+	for _, test := range []struct {
+		name, path   string
+		wantStatus   int
+		wantLocation string
+	}{
+		{"want 404 for unknown version of module", sample.ModulePath + "@v0.5.0", http.StatusNotFound, ""},
+		{"want 404 for never fetched directory", notInsertedPath, http.StatusNotFound, ""},
+		{"want 302 for previously fetched directory", missingPath, http.StatusFound, "/search?q=" + url.PathEscape(missingPath)},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			w := httptest.NewRecorder()
+			handler.ServeHTTP(w, httptest.NewRequest("GET", "/"+test.path, nil))
+			if w.Code != test.wantStatus {
+				t.Errorf("%q: got status code = %d, want %d", "/"+test.path, w.Code, test.wantStatus)
+			}
+			if got := w.Header().Get("Location"); got != test.wantLocation {
+				t.Errorf("got location = %q, want %q", got, test.wantLocation)
+			}
+		})
+	}
+}
+
+func TestServerErrors(t *testing.T) {
+	_, _, handler, _ := newTestServerWithFetch(t, nil, nil)
+	for _, test := range []struct {
+		name, path string
+		wantCode   int
+	}{
+		{"not found", "/invalid-page", http.StatusNotFound},
+		{"bad request", "/gocloud.dev/@latest/blob", http.StatusBadRequest},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			w := httptest.NewRecorder()
+			handler.ServeHTTP(w, httptest.NewRequest("GET", test.path, nil))
+			if w.Code != test.wantCode {
+				t.Errorf("%q: got status code = %d, want %d", test.path, w.Code, test.wantCode)
 			}
 		})
 	}

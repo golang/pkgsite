@@ -44,48 +44,60 @@ import (
 
 // Server can be installed to serve the go discovery frontend.
 type Server struct {
+	fetchServer FetchServerInterface
 	// getDataSource should never be called from a handler. It is called only in Server.errorHandler.
-	getDataSource        func(context.Context) internal.DataSource
-	queue                queue.Queue
-	taskIDChangeInterval time.Duration
-	templateFS           template.TrustedFS
-	staticFS             fs.FS
-	thirdPartyFS         fs.FS
-	devMode              bool
-	localMode            bool          // running locally (i.e. ./cmd/pkgsite)
-	localModules         []LocalModule // locally hosted modules; empty in production
-	staticPath           string        // used only for dynamic loading in dev mode
-	errorPage            []byte
-	appVersionLabel      string
-	googleTagManagerID   string
-	serveStats           bool
-	reporter             derrors.Reporter
-	fileMux              *http.ServeMux
-	vulnClient           *vuln.Client
-	versionID            string
-	instanceID           string
+	getDataSource      func(context.Context) internal.DataSource
+	queue              queue.Queue
+	templateFS         template.TrustedFS
+	staticFS           fs.FS
+	thirdPartyFS       fs.FS
+	devMode            bool
+	localMode          bool          // running locally (i.e. ./cmd/pkgsite)
+	localModules       []LocalModule // locally hosted modules; empty in production
+	staticPath         string        // used only for dynamic loading in dev mode
+	errorPage          []byte
+	appVersionLabel    string
+	googleTagManagerID string
+	serveStats         bool
+	reporter           derrors.Reporter
+	fileMux            *http.ServeMux
+	vulnClient         *vuln.Client
+	versionID          string
+	instanceID         string
 
 	mu        sync.Mutex // Protects all fields below
 	templates map[string]*template.Template
 }
 
+// FetchServerInterface is an interface for the parts of the server
+// that support adding packages to a queue for fetching by a worker
+// server.
+// TODO(matloob): rename to FetchServer once the FetchServer type moves
+// to its own package
+type FetchServerInterface interface {
+	ServeFetch(w http.ResponseWriter, r *http.Request, ds internal.DataSource) (err error)
+	ServePathNotFoundPage(w http.ResponseWriter, r *http.Request,
+		ds internal.PostgresDB, fullPath, modulePath, requestedVersion string) (err error)
+}
+
 // ServerConfig contains everything needed by a Server.
 type ServerConfig struct {
 	Config *config.Config
+	// Note that FetchServer may be nil.
+	FetchServer FetchServerInterface
 	// DataSourceGetter should return a DataSource on each call.
 	// It should be goroutine-safe.
-	DataSourceGetter     func(context.Context) internal.DataSource
-	Queue                queue.Queue
-	TaskIDChangeInterval time.Duration
-	TemplateFS           template.TrustedFS // for loading templates safely
-	StaticFS             fs.FS              // for static/ directory
-	ThirdPartyFS         fs.FS              // for third_party/ directory
-	DevMode              bool
-	LocalMode            bool
-	LocalModules         []LocalModule
-	StaticPath           string // used only for dynamic loading in dev mode
-	Reporter             derrors.Reporter
-	VulndbClient         *vuln.Client
+	DataSourceGetter func(context.Context) internal.DataSource
+	Queue            queue.Queue
+	TemplateFS       template.TrustedFS // for loading templates safely
+	StaticFS         fs.FS              // for static/ directory
+	ThirdPartyFS     fs.FS              // for third_party/ directory
+	DevMode          bool
+	LocalMode        bool
+	LocalModules     []LocalModule
+	StaticPath       string // used only for dynamic loading in dev mode
+	Reporter         derrors.Reporter
+	VulndbClient     *vuln.Client
 }
 
 // NewServer creates a new Server for the given database and template directory.
@@ -97,20 +109,20 @@ func NewServer(scfg ServerConfig) (_ *Server, err error) {
 	}
 	dochtml.LoadTemplates(scfg.TemplateFS)
 	s := &Server{
-		getDataSource:        scfg.DataSourceGetter,
-		queue:                scfg.Queue,
-		templateFS:           scfg.TemplateFS,
-		staticFS:             scfg.StaticFS,
-		thirdPartyFS:         scfg.ThirdPartyFS,
-		devMode:              scfg.DevMode,
-		localMode:            scfg.LocalMode,
-		localModules:         scfg.LocalModules,
-		staticPath:           scfg.StaticPath,
-		templates:            ts,
-		taskIDChangeInterval: scfg.TaskIDChangeInterval,
-		reporter:             scfg.Reporter,
-		fileMux:              http.NewServeMux(),
-		vulnClient:           scfg.VulndbClient,
+		fetchServer:   scfg.FetchServer,
+		getDataSource: scfg.DataSourceGetter,
+		queue:         scfg.Queue,
+		templateFS:    scfg.TemplateFS,
+		staticFS:      scfg.StaticFS,
+		thirdPartyFS:  scfg.ThirdPartyFS,
+		devMode:       scfg.DevMode,
+		localMode:     scfg.LocalMode,
+		localModules:  scfg.LocalModules,
+		staticPath:    scfg.StaticPath,
+		templates:     ts,
+		reporter:      scfg.Reporter,
+		fileMux:       http.NewServeMux(),
+		vulnClient:    scfg.VulndbClient,
 	}
 	if scfg.Config != nil {
 		s.appVersionLabel = scfg.Config.AppVersionLabel()
@@ -145,10 +157,13 @@ type Cacher interface {
 func (s *Server) Install(handle func(string, http.Handler), cacher Cacher, authValues []string) {
 	var (
 		detailHandler http.Handler = s.errorHandler(s.serveDetails)
-		fetchHandler  http.Handler = s.errorHandler(s.serveFetch)
+		fetchHandler  http.Handler
 		searchHandler http.Handler = s.errorHandler(s.serveSearch)
 		vulnHandler   http.Handler = s.errorHandler(s.serveVuln)
 	)
+	if s.fetchServer != nil {
+		fetchHandler = s.errorHandler(s.fetchServer.ServeFetch)
+	}
 	if cacher != nil {
 		// The cache middleware uses the URL string as the key for content served
 		// by the handlers it wraps. Be careful not to wrap the handler it returns
@@ -178,7 +193,9 @@ func (s *Server) Install(handle func(string, http.Handler), cacher Cacher, authV
 	handle("/sitemap/", http.StripPrefix("/sitemap/", http.FileServer(http.Dir("private/sitemap"))))
 	handle("/mod/", http.HandlerFunc(s.handleModuleDetailsRedirect))
 	handle("/pkg/", http.HandlerFunc(s.handlePackageDetailsRedirect))
-	handle("/fetch/", fetchHandler)
+	if fetchHandler != nil {
+		handle("/fetch/", fetchHandler)
+	}
 	handle("/play/compile", http.HandlerFunc(s.proxyPlayground))
 	handle("/play/fmt", http.HandlerFunc(s.handleFmt))
 	handle("/play/share", http.HandlerFunc(s.proxyPlayground))
