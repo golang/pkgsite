@@ -34,7 +34,7 @@
   border-radius: var(--border-radius);
   font-size: 1.5rem;
   height: 2.75rem;
-  margin-top: -1.375rem;
+  margin-top: -0.7rem;
   opacity: 0;
   position: absolute;
   top: 50%;
@@ -64,6 +64,7 @@
   background-color: var(--color-border);
   border-radius: 2rem;
   height: 0.4375rem;
+  margin-top: 1rem;
   width: 0.4375rem;
 }
 
