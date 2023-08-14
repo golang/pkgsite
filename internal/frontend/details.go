@@ -15,7 +15,6 @@ import (
 	"golang.org/x/pkgsite/internal/frontend/urlinfo"
 	mstats "golang.org/x/pkgsite/internal/middleware/stats"
 
-	"github.com/google/safehtml/template"
 	"go.opencensus.io/stats"
 	"go.opencensus.io/stats/view"
 	"go.opencensus.io/tag"
@@ -65,7 +64,7 @@ func (s *Server) serveDetails(w http.ResponseWriter, r *http.Request, ds interna
 		}
 	}
 	if !urlinfo.IsSupportedVersion(urlInfo.FullPath, urlInfo.RequestedVersion) {
-		return invalidVersionError(urlInfo.FullPath, urlInfo.RequestedVersion)
+		return serrors.InvalidVersionError(urlInfo.FullPath, urlInfo.RequestedVersion)
 	}
 	if urlPath := stdlibRedirectURL(urlInfo.FullPath); urlPath != "" {
 		http.Redirect(w, r, urlPath, http.StatusMovedPermanently)
@@ -89,30 +88,6 @@ func stdlibRedirectURL(fullPath string) string {
 		return ""
 	}
 	return "/" + urlPath2
-}
-
-func invalidVersionError(fullPath, requestedVersion string) error {
-	return &serrors.ServerError{
-		Status: http.StatusBadRequest,
-		Epage: &page.ErrorPage{
-			MessageTemplate: template.MakeTrustedTemplate(`
-					<h3 class="Error-message">{{.Version}} is not a valid semantic version.</h3>
-					<p class="Error-message">
-					  To search for packages like {{.Path}}, <a href="/search?q={{.Path}}">click here</a>.
-					</p>`),
-			MessageData: struct{ Path, Version string }{fullPath, requestedVersion},
-		},
-	}
-}
-
-func datasourceNotSupportedErr() error {
-	return &serrors.ServerError{
-		Status: http.StatusFailedDependency,
-		Epage: &page.ErrorPage{
-			MessageTemplate: template.MakeTrustedTemplate(
-				`<h3 class="Error-message">This page is not supported by this datasource.</h3>`),
-		},
-	}
 }
 
 var (

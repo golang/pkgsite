@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/frontend/versions"
 	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/version"
 )
@@ -104,7 +105,7 @@ func getNestedModules(ctx context.Context, ds internal.DataSource, um *internal.
 			continue
 		}
 		mods = append(mods, &DirectoryInfo{
-			URL:      constructUnitURL(m.ModulePath, m.ModulePath, version.Latest),
+			URL:      versions.ConstructUnitURL(m.ModulePath, m.ModulePath, version.Latest),
 			Suffix:   suffix,
 			IsModule: true,
 		})
@@ -125,8 +126,8 @@ func getSubdirectories(um *internal.UnitMeta, pkgs []*internal.PackageMeta, requ
 			continue
 		}
 		sdirs = append(sdirs, &DirectoryInfo{
-			URL: constructUnitURL(pm.Path, um.ModulePath,
-				linkVersion(um.ModulePath, requestedVersion, um.Version)),
+			URL: versions.ConstructUnitURL(pm.Path, um.ModulePath,
+				versions.LinkVersion(um.ModulePath, requestedVersion, um.Version)),
 			Suffix:   internal.Suffix(pm.Path, um.Path),
 			Synopsis: pm.Synopsis,
 		})

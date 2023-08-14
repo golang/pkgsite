@@ -2,11 +2,12 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-package frontend
+package versions
 
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/pkgsite/internal"
@@ -17,6 +18,14 @@ import (
 	"golang.org/x/pkgsite/internal/version"
 	"golang.org/x/pkgsite/internal/vuln"
 )
+
+const testTimeout = 5 * time.Second
+
+var testDB *postgres.DB
+
+func TestMain(m *testing.M) {
+	postgres.RunDBTests("discovery_frontend_test", m, &testDB)
+}
 
 var (
 	modulePath1 = "test.com/module"
@@ -88,7 +97,7 @@ func TestFetchPackageVersionsDetails(t *testing.T) {
 		return &VersionList{
 			VersionListKey: VersionListKey{ModulePath: modulePath, Major: major, Incompatible: incompatible},
 			Versions: versionSummaries(pkgPath, versions, isStdlib, func(path, version string) string {
-				return constructUnitURL(pkgPath, modulePath, version)
+				return ConstructUnitURL(pkgPath, modulePath, version)
 			}),
 		}
 	}
@@ -225,9 +234,9 @@ func TestFetchPackageVersionsDetails(t *testing.T) {
 				postgres.MustInsertModule(ctx, t, testDB, v)
 			}
 
-			got, err := fetchVersionsDetails(ctx, testDB, &tc.pkg.UnitMeta, vc)
+			got, err := FetchVersionsDetails(ctx, testDB, &tc.pkg.UnitMeta, vc)
 			if err != nil {
-				t.Fatalf("fetchVersionsDetails(ctx, db, %q, %q): %v", tc.pkg.Path, tc.pkg.ModulePath, err)
+				t.Fatalf("FetchVersionsDetails(ctx, db, %q, %q): %v", tc.pkg.Path, tc.pkg.ModulePath, err)
 			}
 			for _, vl := range tc.wantDetails.ThisModule {
 				for _, v := range vl.Versions {
@@ -391,8 +400,8 @@ func TestDisplayVersion(t *testing.T) {
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			if got := displayVersion(test.fullPath, test.requestedVersion, test.resolvedVersion); got != test.want {
-				t.Errorf("displayVersion(%q, %q, %q) = %q, want %q",
+			if got := DisplayVersion(test.fullPath, test.requestedVersion, test.resolvedVersion); got != test.want {
+				t.Errorf("DisplayVersion(%q, %q, %q) = %q, want %q",
 					test.fullPath, test.requestedVersion, test.resolvedVersion, got, test.want)
 			}
 		})
@@ -465,8 +474,8 @@ func TestLinkVersion(t *testing.T) {
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			if got := linkVersion(test.fullPath, test.requestedVersion, test.resolvedVersion); got != test.want {
-				t.Errorf("linkVersion(%q, %q, %q) = %q, want %q",
+			if got := LinkVersion(test.fullPath, test.requestedVersion, test.resolvedVersion); got != test.want {
+				t.Errorf("LinkVersion(%q, %q, %q) = %q, want %q",
 					test.fullPath, test.requestedVersion, test.resolvedVersion, got, test.want)
 			}
 		})

@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-package frontend
+package fetchserver
 
 import (
 	"context"
@@ -101,7 +101,7 @@ func (s *FetchServer) ServeFetch(w http.ResponseWriter, r *http.Request, ds inte
 	defer derrors.Wrap(&err, "serveFetch(%q)", r.URL.Path)
 	if _, ok := ds.(internal.PostgresDB); !ok {
 		// There's no reason for other DataSources to need this codepath.
-		return datasourceNotSupportedErr()
+		return serrors.DatasourceNotSupportedError()
 	}
 	if r.Method != http.MethodPost {
 		// If a user makes a GET request, treat this as a request for the

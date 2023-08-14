@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/frontend/serrors"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/text/language"
@@ -97,7 +98,7 @@ func fetchImportedByDetails(ctx context.Context, ds internal.DataSource, pkgPath
 	db, ok := ds.(internal.PostgresDB)
 	if !ok {
 		// The proxydatasource does not support the imported by page.
-		return nil, datasourceNotSupportedErr()
+		return nil, serrors.DatasourceNotSupportedError()
 	}
 
 	importedBy, err := db.GetImportedBy(ctx, pkgPath, modulePath, importedByLimit)

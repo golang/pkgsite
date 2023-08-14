@@ -23,6 +23,7 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/frontend"
+	"golang.org/x/pkgsite/internal/frontend/versions"
 	"golang.org/x/pkgsite/internal/proxy"
 	"golang.org/x/pkgsite/internal/symbol"
 	"golang.org/x/pkgsite/internal/version"
@@ -196,7 +197,7 @@ func compare(frontendHost, pkgPath string) (err error) {
 		return err
 	}
 
-	sh, err := frontend.ParseVersionsDetails(vd)
+	sh, err := versions.ParseVersionsDetails(vd)
 	if err != nil {
 		return err
 	}

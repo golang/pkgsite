@@ -4,15 +4,17 @@
 
 package integration
 
-import "golang.org/x/pkgsite/internal/frontend"
+import (
+	"golang.org/x/pkgsite/internal/frontend/versions"
+)
 
-var versionsPageMultiGoosDuplicates = []*frontend.VersionList{
+var versionsPageMultiGoosDuplicates = []*versions.VersionList{
 	{
-		VersionListKey: frontend.VersionListKey{
+		VersionListKey: versions.VersionListKey{
 			ModulePath: "example.com/symbols",
 			Major:      "v1",
 		},
-		Versions: []*frontend.VersionSummary{
+		Versions: []*versions.VersionSummary{
 			{
 				CommitTime:          "Jan 30, 2019",
 				Link:                "/example.com/symbols@v1.2.0/duplicate",
@@ -20,7 +22,7 @@ var versionsPageMultiGoosDuplicates = []*frontend.VersionList{
 				RetractionRationale: "",
 				Version:             "v1.2.0",
 				IsMinor:             true,
-				Symbols: [][]*frontend.Symbol{
+				Symbols: [][]*versions.Symbol{
 					{
 						{
 							Name:     "TokenType",
@@ -53,7 +55,7 @@ var versionsPageMultiGoosDuplicates = []*frontend.VersionList{
 							New:      true,
 							Section:  "Types",
 							Kind:     "Type",
-							Children: []*frontend.Symbol{
+							Children: []*versions.Symbol{
 								{
 									Name:     "TokenShort",
 									Synopsis: "func TokenShort() TokenType",
@@ -75,7 +77,7 @@ var versionsPageMultiGoosDuplicates = []*frontend.VersionList{
 				RetractionRationale: "",
 				Version:             "v1.1.0",
 				IsMinor:             true,
-				Symbols: [][]*frontend.Symbol{
+				Symbols: [][]*versions.Symbol{
 					{
 						{
 							Name:     "TokenShort",
@@ -93,13 +95,13 @@ var versionsPageMultiGoosDuplicates = []*frontend.VersionList{
 	},
 }
 
-var versionsPageMultiGoos = []*frontend.VersionList{
+var versionsPageMultiGoos = []*versions.VersionList{
 	{
-		VersionListKey: frontend.VersionListKey{
+		VersionListKey: versions.VersionListKey{
 			ModulePath: "example.com/symbols",
 			Major:      "v1",
 		},
-		Versions: []*frontend.VersionSummary{
+		Versions: []*versions.VersionSummary{
 			{
 				CommitTime:          "Jan 30, 2019",
 				Link:                "/example.com/symbols@v1.2.0/multigoos",
@@ -107,7 +109,7 @@ var versionsPageMultiGoos = []*frontend.VersionList{
 				RetractionRationale: "",
 				Version:             "v1.2.0",
 				IsMinor:             true,
-				Symbols: [][]*frontend.Symbol{
+				Symbols: [][]*versions.Symbol{
 					{
 						{
 							Name:     "CloseOnExec",
@@ -126,7 +128,7 @@ var versionsPageMultiGoos = []*frontend.VersionList{
 							Section:  "Types",
 							Kind:     "Type",
 							Link:     "/example.com/symbols@v1.2.0/multigoos?GOOS=darwin#FD",
-							Children: []*frontend.Symbol{
+							Children: []*versions.Symbol{
 								{
 									Name:     "FD.MyMethod",
 									Synopsis: "func (*FD) MyMethod()",
@@ -144,7 +146,7 @@ var versionsPageMultiGoos = []*frontend.VersionList{
 							Section:  "Types",
 							Kind:     "Type",
 							Link:     "/example.com/symbols@v1.2.0/multigoos?GOOS=windows#FD",
-							Children: []*frontend.Symbol{
+							Children: []*versions.Symbol{
 								{
 									Name:     "FD.MyWindowsMethod",
 									Synopsis: "func (*FD) MyWindowsMethod()",
@@ -166,7 +168,7 @@ var versionsPageMultiGoos = []*frontend.VersionList{
 				RetractionRationale: "",
 				Version:             "v1.1.0",
 				IsMinor:             true,
-				Symbols: [][]*frontend.Symbol{
+				Symbols: [][]*versions.Symbol{
 					{
 						{
 							Name:     "CloseOnExec",
@@ -204,13 +206,13 @@ var versionsPageMultiGoos = []*frontend.VersionList{
 	},
 }
 
-var versionsPageHello = []*frontend.VersionList{
+var versionsPageHello = []*versions.VersionList{
 	{
-		VersionListKey: frontend.VersionListKey{
+		VersionListKey: versions.VersionListKey{
 			ModulePath: "example.com/symbols",
 			Major:      "v1",
 		},
-		Versions: []*frontend.VersionSummary{
+		Versions: []*versions.VersionSummary{
 			{
 				CommitTime:          "Jan 30, 2019",
 				Link:                "/example.com/symbols@v1.2.0/hello",
@@ -218,7 +220,7 @@ var versionsPageHello = []*frontend.VersionList{
 				RetractionRationale: "",
 				Version:             "v1.2.0",
 				IsMinor:             true,
-				Symbols: [][]*frontend.Symbol{
+				Symbols: [][]*versions.Symbol{
 					{
 						{
 							Name:     "Hello",
@@ -239,7 +241,7 @@ var versionsPageHello = []*frontend.VersionList{
 				RetractionRationale: "",
 				Version:             "v1.1.0",
 				IsMinor:             true,
-				Symbols: [][]*frontend.Symbol{
+				Symbols: [][]*versions.Symbol{
 					{
 						{
 							Name:     "Hello",
@@ -266,13 +268,13 @@ var versionsPageHello = []*frontend.VersionList{
 	},
 }
 
-var versionsPageSymbols = []*frontend.VersionList{
+var versionsPageSymbols = []*versions.VersionList{
 	{
-		VersionListKey: frontend.VersionListKey{
+		VersionListKey: versions.VersionListKey{
 			ModulePath: "example.com/symbols",
 			Major:      "v1",
 		},
-		Versions: []*frontend.VersionSummary{
+		Versions: []*versions.VersionSummary{
 			{
 				CommitTime: "Jan 30, 2019",
 				Link:       "/example.com/symbols@v1.2.0",
@@ -284,7 +286,7 @@ var versionsPageSymbols = []*frontend.VersionList{
 				Link:       "/example.com/symbols@v1.1.0",
 				Version:    "v1.1.0",
 				IsMinor:    true,
-				Symbols: [][]*frontend.Symbol{
+				Symbols: [][]*versions.Symbol{
 					{
 						{
 							Name:     "I2",
@@ -292,7 +294,7 @@ var versionsPageSymbols = []*frontend.VersionList{
 							Link:     "/example.com/symbols@v1.1.0#I2",
 							Section:  "Types",
 							Kind:     "Type",
-							Children: []*frontend.Symbol{
+							Children: []*versions.Symbol{
 								{
 									Name:     "I2.M2",
 									Synopsis: "M2 func()",
@@ -309,7 +311,7 @@ var versionsPageSymbols = []*frontend.VersionList{
 							Link:     "/example.com/symbols@v1.1.0#S2",
 							Section:  "Types",
 							Kind:     "Type",
-							Children: []*frontend.Symbol{
+							Children: []*versions.Symbol{
 								{
 									Name:     "S2.G",
 									Synopsis: "G int",
@@ -338,7 +340,7 @@ var versionsPageSymbols = []*frontend.VersionList{
 				RetractionRationale: "",
 				Version:             "v1.0.0",
 				IsMinor:             true,
-				Symbols: [][]*frontend.Symbol{
+				Symbols: [][]*versions.Symbol{
 					{
 						{
 							Name:     "AA",
@@ -435,7 +437,7 @@ var versionsPageSymbols = []*frontend.VersionList{
 							New:      true,
 							Section:  "Types",
 							Kind:     "Type",
-							Children: []*frontend.Symbol{
+							Children: []*versions.Symbol{
 								{
 									Name:     "I1.M1",
 									Synopsis: "M1 func()",
@@ -469,7 +471,7 @@ var versionsPageSymbols = []*frontend.VersionList{
 							New:      true,
 							Section:  "Types",
 							Kind:     "Type",
-							Children: []*frontend.Symbol{
+							Children: []*versions.Symbol{
 								{
 									Name:     "DD",
 									Synopsis: "const DD",
@@ -503,7 +505,7 @@ var versionsPageSymbols = []*frontend.VersionList{
 							New:      true,
 							Section:  "Types",
 							Kind:     "Type",
-							Children: []*frontend.Symbol{
+							Children: []*versions.Symbol{
 								{
 									Name:     "S1.F",
 									Synopsis: "F int",
@@ -529,7 +531,7 @@ var versionsPageSymbols = []*frontend.VersionList{
 							New:      true,
 							Section:  "Types",
 							Kind:     "Type",
-							Children: []*frontend.Symbol{
+							Children: []*versions.Symbol{
 								{
 									Name:     "CT",
 									Synopsis: "const CT",

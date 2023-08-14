@@ -19,6 +19,7 @@ import (
 	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/fetch"
 	"golang.org/x/pkgsite/internal/frontend"
+	"golang.org/x/pkgsite/internal/frontend/fetchserver"
 	"golang.org/x/pkgsite/internal/middleware"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/proxy"
@@ -33,7 +34,7 @@ import (
 func setupFrontend(ctx context.Context, t *testing.T, q queue.Queue, rc *redis.Client) *httptest.Server {
 	t.Helper()
 	const staticDir = "../../../static"
-	fs := &frontend.FetchServer{
+	fs := &fetchserver.FetchServer{
 		Queue:                q,
 		TaskIDChangeInterval: 10 * time.Minute,
 	}
@@ -90,7 +91,7 @@ func setupQueue(ctx context.Context, t *testing.T, proxyModules []*proxytest.Mod
 	sourceClient := source.NewClient(1 * time.Second)
 	q := queue.NewInMemory(cctx, 1, experimentNames,
 		func(ctx context.Context, mpath, version string) (_ int, err error) {
-			return frontend.FetchAndUpdateState(ctx, mpath, version, proxyClient, sourceClient, testDB)
+			return fetchserver.FetchAndUpdateState(ctx, mpath, version, proxyClient, sourceClient, testDB)
 		})
 	return q, func() {
 		cancel()

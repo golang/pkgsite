@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-package frontend
+package versions
 
 import (
 	"context"
@@ -10,11 +10,13 @@ import (
 	"path"
 	"sort"
 	"strings"
+	"time"
 	"unicode"
 
 	"golang.org/x/mod/semver"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/fetch"
+	"golang.org/x/pkgsite/internal/frontend/serrors"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/version"
@@ -85,11 +87,11 @@ type VersionSummary struct {
 	Vulns               []vuln.Vuln
 }
 
-func fetchVersionsDetails(ctx context.Context, ds internal.DataSource, um *internal.UnitMeta, vc *vuln.Client) (*VersionsDetails, error) {
+func FetchVersionsDetails(ctx context.Context, ds internal.DataSource, um *internal.UnitMeta, vc *vuln.Client) (*VersionsDetails, error) {
 	db, ok := ds.(internal.PostgresDB)
 	if !ok {
 		// The proxydatasource does not support the imported by page.
-		return nil, datasourceNotSupportedErr()
+		return nil, serrors.DatasourceNotSupportedError()
 	}
 	versions, err := db.GetVersionsForPath(ctx, um.Path)
 	if err != nil {
@@ -112,7 +114,7 @@ func fetchVersionsDetails(ctx context.Context, ds internal.DataSource, um *inter
 		} else {
 			versionPath = pathInVersion(internal.V1Path(um.Path, um.ModulePath), mi)
 		}
-		return constructUnitURL(versionPath, mi.ModulePath, linkVersion(mi.ModulePath, mi.Version, mi.Version))
+		return ConstructUnitURL(versionPath, mi.ModulePath, LinkVersion(mi.ModulePath, mi.Version, mi.Version))
 	}
 	return buildVersionDetails(ctx, um.ModulePath, um.Path, versions, sh, linkify, vc)
 }
@@ -188,7 +190,7 @@ func buildVersionDetails(ctx context.Context, currentModulePath, packagePath str
 		vs := &VersionSummary{
 			Link:                linkify(mi),
 			CommitTime:          commitTime,
-			Version:             linkVersion(mi.ModulePath, mi.Version, mi.Version),
+			Version:             LinkVersion(mi.ModulePath, mi.Version, mi.Version),
 			IsMinor:             isMinor(mi.Version),
 			Retracted:           mi.Retracted,
 			RetractionRationale: shortRationale(mi.RetractionRationale),
@@ -369,8 +371,8 @@ func pseudoVersionRev(v string) string {
 	return v[j+1:]
 }
 
-// displayVersion returns the version string, formatted for display.
-func displayVersion(modulePath, requestedVersion, resolvedVersion string) string {
+// DisplayVersion returns the version string, formatted for display.
+func DisplayVersion(modulePath, requestedVersion, resolvedVersion string) string {
 	if modulePath == stdlib.ModulePath && resolvedVersion != fetch.LocalVersion {
 		if stdlib.SupportedBranches[requestedVersion] ||
 			(strings.HasPrefix(resolvedVersion, "v0.0.0") && resolvedVersion != "v0.0.0") { // Plain v0.0.0 is from the go packages module getter
@@ -391,10 +393,10 @@ func displayVersion(modulePath, requestedVersion, resolvedVersion string) string
 	return formatVersion(resolvedVersion)
 }
 
-// linkVersion returns the version string, suitable for use in
+// LinkVersion returns the version string, suitable for use in
 // a link to this site.
 // See TestLinkVersion for examples.
-func linkVersion(modulePath, requestedVersion, resolvedVersion string) string {
+func LinkVersion(modulePath, requestedVersion, resolvedVersion string) string {
 	if modulePath == stdlib.ModulePath && resolvedVersion != fetch.LocalVersion {
 		if strings.HasPrefix(resolvedVersion, "go") {
 			return resolvedVersion // already a go version
@@ -418,4 +420,33 @@ func goTagForVersion(v string) string {
 		return "unknown"
 	}
 	return tag
+}
+
+// absoluteTime takes a date and returns a human-readable,
+// date with the format mmm d, yyyy.
+// TODO(matloob): This is a copy of internal/frontend.absoluteTime.
+// Unify it with that function again.
+func absoluteTime(date time.Time) string {
+	if date.IsZero() {
+		return "unknown"
+	}
+	// Convert to UTC because that is how the date is represented in the DB.
+	// (The pgx driver returns local times.) Example: if a date is stored
+	// as Jan 30 at midnight, then the local NYC time is on Jan 29, and this
+	// function would return "Jan 29" instead of the correct "Jan 30".
+	return date.In(time.UTC).Format("Jan _2, 2006")
+}
+
+// ConstructUnitURL returns a URL path that refers to the given unit at the requested
+// version. If requestedVersion is "latest", then the resulting path has no
+// version; otherwise, it has requestedVersion.
+func ConstructUnitURL(fullPath, modulePath, requestedVersion string) string {
+	if requestedVersion == version.Latest {
+		return "/" + fullPath
+	}
+	v := LinkVersion(modulePath, requestedVersion, requestedVersion)
+	if fullPath == modulePath || modulePath == stdlib.ModulePath {
+		return fmt.Sprintf("/%s@%s", fullPath, v)
+	}
+	return fmt.Sprintf("/%s@%s/%s", modulePath, v, strings.TrimPrefix(fullPath, modulePath+"/"))
 }

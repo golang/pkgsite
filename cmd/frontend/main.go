@@ -22,6 +22,7 @@ import (
 	"golang.org/x/pkgsite/internal/fetch"
 	"golang.org/x/pkgsite/internal/fetchdatasource"
 	"golang.org/x/pkgsite/internal/frontend"
+	"golang.org/x/pkgsite/internal/frontend/fetchserver"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/middleware"
 	"golang.org/x/pkgsite/internal/middleware/timeout"
@@ -100,7 +101,7 @@ func main() {
 		// per-request connection.
 		fetchQueue, err = gcpqueue.New(ctx, cfg, queueName, *workers, expg,
 			func(ctx context.Context, modulePath, version string) (int, error) {
-				return frontend.FetchAndUpdateState(ctx, modulePath, version, proxyClient, sourceClient, db)
+				return fetchserver.FetchAndUpdateState(ctx, modulePath, version, proxyClient, sourceClient, db)
 			})
 		if err != nil {
 			log.Fatalf(ctx, "gcpqueue.New: %v", err)
@@ -115,7 +116,7 @@ func main() {
 	staticSource := template.TrustedSourceFromFlag(flag.Lookup("static").Value)
 	// TODO: Can we use a separate queue for the fetchServer and for the Server?
 	// It would help differentiate ownership.
-	fetchServer := &frontend.FetchServer{
+	fetchServer := &fetchserver.FetchServer{
 		Queue:                fetchQueue,
 		TaskIDChangeInterval: config.TaskIDChangeIntervalFrontend,
 	}
@@ -154,8 +155,8 @@ func main() {
 	views := append(dcensus.ServerViews,
 		postgres.SearchLatencyDistribution,
 		postgres.SearchResponseCount,
-		frontend.FetchLatencyDistribution,
-		frontend.FetchResponseCount,
+		fetchserver.FetchLatencyDistribution,
+		fetchserver.FetchResponseCount,
 		frontend.VersionTypeCount,
 		middleware.CacheResultCount,
 		middleware.CacheErrorCount,

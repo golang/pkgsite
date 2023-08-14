@@ -20,6 +20,7 @@ import (
 	"golang.org/x/pkgsite/internal/frontend/page"
 	"golang.org/x/pkgsite/internal/frontend/serrors"
 	"golang.org/x/pkgsite/internal/frontend/urlinfo"
+	"golang.org/x/pkgsite/internal/frontend/versions"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/middleware/stats"
 	"golang.org/x/pkgsite/internal/stdlib"
@@ -129,7 +130,7 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 		}
 		db, ok := ds.(internal.PostgresDB)
 		if !ok || s.fetchServer == nil {
-			return datasourceNotSupportedErr()
+			return serrors.DatasourceNotSupportedError()
 		}
 		return s.fetchServer.ServePathNotFoundPage(w, r, db, info.FullPath, info.ModulePath, info.RequestedVersion)
 	}
@@ -207,18 +208,18 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 	if tabSettings.Name == "" {
 		basePage.UseResponsiveLayout = true
 	}
-	lv := linkVersion(um.ModulePath, info.RequestedVersion, um.Version)
+	lv := versions.LinkVersion(um.ModulePath, info.RequestedVersion, um.Version)
 	page := UnitPage{
 		BasePage:              basePage,
 		Unit:                  um,
 		Breadcrumb:            displayBreadcrumb(um, info.RequestedVersion),
 		Title:                 title,
 		SelectedTab:           tabSettings,
-		URLPath:               constructUnitURL(um.Path, um.ModulePath, info.RequestedVersion),
+		URLPath:               versions.ConstructUnitURL(um.Path, um.ModulePath, info.RequestedVersion),
 		CanonicalURLPath:      canonicalURLPath(um.Path, um.ModulePath, info.RequestedVersion, um.Version),
-		DisplayVersion:        displayVersion(um.ModulePath, info.RequestedVersion, um.Version),
+		DisplayVersion:        versions.DisplayVersion(um.ModulePath, info.RequestedVersion, um.Version),
 		LinkVersion:           lv,
-		LatestURL:             constructUnitURL(um.Path, um.ModulePath, version.Latest),
+		LatestURL:             versions.ConstructUnitURL(um.Path, um.ModulePath, version.Latest),
 		LatestMinorClass:      latestMinorClass(lv, latestInfo),
 		LatestMajorVersionURL: latestInfo.MajorUnitPath,
 		PageLabels:            pageLabels(um),
@@ -290,25 +291,11 @@ func isValidTabForUnit(tab string, um *internal.UnitMeta) bool {
 	return true
 }
 
-// constructUnitURL returns a URL path that refers to the given unit at the requested
-// version. If requestedVersion is "latest", then the resulting path has no
-// version; otherwise, it has requestedVersion.
-func constructUnitURL(fullPath, modulePath, requestedVersion string) string {
-	if requestedVersion == version.Latest {
-		return "/" + fullPath
-	}
-	v := linkVersion(modulePath, requestedVersion, requestedVersion)
-	if fullPath == modulePath || modulePath == stdlib.ModulePath {
-		return fmt.Sprintf("/%s@%s", fullPath, v)
-	}
-	return fmt.Sprintf("/%s@%s/%s", modulePath, v, strings.TrimPrefix(fullPath, modulePath+"/"))
-}
-
 // canonicalURLPath constructs a URL path to the unit that always includes the
 // resolved version.
 func canonicalURLPath(fullPath, modulePath, requestedVersion, resolvedVersion string) string {
-	return constructUnitURL(fullPath, modulePath,
-		linkVersion(modulePath, requestedVersion, resolvedVersion))
+	return versions.ConstructUnitURL(fullPath, modulePath,
+		versions.LinkVersion(modulePath, requestedVersion, resolvedVersion))
 }
 
 func isGoProject(modulePath string) bool {

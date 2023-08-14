@@ -11,6 +11,7 @@ import (
 
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/frontend/versions"
 	"golang.org/x/pkgsite/internal/vuln"
 )
 
@@ -85,7 +86,7 @@ func fetchDetailsForUnit(ctx context.Context, r *http.Request, tab string, ds in
 		_, expandReadme := r.URL.Query()["readme"]
 		return fetchMainDetails(ctx, ds, um, requestedVersion, expandReadme, bc)
 	case tabVersions:
-		return fetchVersionsDetails(ctx, ds, um, vc)
+		return versions.FetchVersionsDetails(ctx, ds, um, vc)
 	case tabImports:
 		return fetchImportsDetails(ctx, ds, um.Path, um.ModulePath, um.Version)
 	case tabImportedBy:

@@ -14,6 +14,7 @@ import (
 
 	"golang.org/x/pkgsite/internal/auth"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/frontend/versions"
 )
 
 // A Client for interacting with the frontend. This is only used for tests.
@@ -40,14 +41,14 @@ func NewClient(url string) *Client {
 
 // GetVersions returns a VersionsDetails for the specified pkgPath.
 // This is only used for tests.
-func (c *Client) GetVersions(pkgPath string) (_ *VersionsDetails, err error) {
+func (c *Client) GetVersions(pkgPath string) (_ *versions.VersionsDetails, err error) {
 	defer derrors.Wrap(&err, "GetVersions(%q)", pkgPath)
 	u := fmt.Sprintf("%s/%s?tab=versions&content=json", c.url, pkgPath)
 	body, err := c.fetchJSONPage(u)
 	if err != nil {
 		return nil, err
 	}
-	var vd VersionsDetails
+	var vd versions.VersionsDetails
 	if err := json.Unmarshal(body, &vd); err != nil {
 		return nil, fmt.Errorf("json.Unmarshal: %v:\nDoes GO_DISCOVERY_SERVE_STATS=true on the frontend?", err)
 	}

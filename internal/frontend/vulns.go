@@ -43,7 +43,7 @@ type VulnEntryPage struct {
 
 func (s *Server) serveVuln(w http.ResponseWriter, r *http.Request, _ internal.DataSource) error {
 	if s.vulnClient == nil {
-		return datasourceNotSupportedErr()
+		return serrors.DatasourceNotSupportedError()
 	}
 
 	vp, err := newVulnPage(r.Context(), r.URL, s.vulnClient)

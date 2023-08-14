@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/frontend/versions"
 	"golang.org/x/pkgsite/internal/testing/sample"
 )
 
@@ -36,7 +37,7 @@ func TestUnitURLPath(t *testing.T) {
 			"/math@go1.2.3",
 		},
 	} {
-		got := constructUnitURL(test.path, test.modpath, test.version)
+		got := versions.ConstructUnitURL(test.path, test.modpath, test.version)
 		if got != test.want {
 			t.Errorf("unitURLPath(%q, %q, %q) = %q, want %q", test.path, test.modpath, test.version, got, test.want)
 		}

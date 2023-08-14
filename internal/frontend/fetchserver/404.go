@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-package frontend
+package fetchserver
 
 import (
 	"context"
@@ -15,7 +15,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/google/safehtml/template"
 	"github.com/google/safehtml/template/uncheckedconversions"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/cookie"
@@ -24,24 +23,11 @@ import (
 	"golang.org/x/pkgsite/internal/frontend/page"
 	"golang.org/x/pkgsite/internal/frontend/serrors"
 	"golang.org/x/pkgsite/internal/frontend/urlinfo"
+	"golang.org/x/pkgsite/internal/frontend/versions"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/version"
 )
-
-// errUnitNotFoundWithoutFetch returns a 404 with instructions to the user on
-// how to manually fetch the package. No fetch button is provided. This is used
-// for very large modules or modules that previously 500ed.
-var errUnitNotFoundWithoutFetch = &serrors.ServerError{
-	Status: http.StatusNotFound,
-	Epage: &page.ErrorPage{
-		MessageTemplate: template.MakeTrustedTemplate(`
-					    <h3 class="Error-message">{{.StatusText}}</h3>
-					    <p class="Error-message">Check that you entered the URL correctly or try fetching it following the
-                        <a href="/about#adding-a-package">instructions here</a>.</p>`),
-		MessageData: struct{ StatusText string }{http.StatusText(http.StatusNotFound)},
-	},
-}
 
 // servePathNotFoundPage serves a 404 page for the requested path, or redirects
 // the user to an appropriate location.
@@ -98,7 +84,7 @@ func (s *FetchServer) ServePathNotFoundPage(w http.ResponseWriter, r *http.Reque
 		// We will only reach a 2xx status if we found a row in version_map
 		// matching exactly the requested path.
 		if fr.resolvedVersion != requestedVersion {
-			u := constructUnitURL(fullPath, fr.goModPath, fr.resolvedVersion)
+			u := versions.ConstructUnitURL(fullPath, fr.goModPath, fr.resolvedVersion)
 			http.Redirect(w, r, u, http.StatusFound)
 			return
 		}
@@ -115,16 +101,16 @@ func (s *FetchServer) ServePathNotFoundPage(w http.ResponseWriter, r *http.Reque
 		if fr.goModPath == fullPath {
 			// The redirectPath and the fullpath are the same. Do not redirect
 			// to avoid ending up in a loop.
-			return errUnitNotFoundWithoutFetch
+			return serrors.ErrUnitNotFoundWithoutFetch
 		}
 		vm, err := db.GetVersionMap(ctx, fr.goModPath, version.Latest)
 		if (err != nil && !errors.Is(err, derrors.NotFound)) ||
 			(vm != nil && vm.Status != http.StatusOK) {
 			// We attempted to fetch the canonical module path before and were
 			// not successful. Do not redirect this request.
-			return errUnitNotFoundWithoutFetch
+			return serrors.ErrUnitNotFoundWithoutFetch
 		}
-		u := constructUnitURL(fr.goModPath, fr.goModPath, version.Latest)
+		u := versions.ConstructUnitURL(fr.goModPath, fr.goModPath, version.Latest)
 		cookie.Set(w, cookie.AlternativeModuleFlash, fullPath, u)
 		http.Redirect(w, r, u, http.StatusFound)
 		return nil
@@ -178,14 +164,14 @@ func githubPathRedirect(fullPath string) string {
 	if m[1] != "" {
 		p = m[0] + m[1]
 	}
-	return constructUnitURL(p, p, version.Latest)
+	return versions.ConstructUnitURL(p, p, version.Latest)
 }
 
 // pathNotFoundError returns a page with an option on how to
 // add a package or module to the site.
 func pathNotFoundError(ctx context.Context, fullPath, requestedVersion string) error {
 	if !urlinfo.IsSupportedVersion(fullPath, requestedVersion) {
-		return invalidVersionError(fullPath, requestedVersion)
+		return serrors.InvalidVersionError(fullPath, requestedVersion)
 	}
 	if stdlib.Contains(fullPath) {
 		if experiment.IsActive(ctx, internal.ExperimentEnableStdFrontendFetch) {

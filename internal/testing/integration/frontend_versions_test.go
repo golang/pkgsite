@@ -12,7 +12,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	"golang.org/x/pkgsite/internal/frontend"
+	"golang.org/x/pkgsite/internal/frontend/versions"
 	"golang.org/x/pkgsite/internal/postgres"
 )
 
@@ -24,7 +24,7 @@ func TestFrontendVersionsPage(t *testing.T) {
 	const modulePath = "example.com/symbols"
 	for _, test := range []struct {
 		name, pkgPath string
-		want          []*frontend.VersionList
+		want          []*versions.VersionList
 	}{
 		{"versions page symbols - one version all symbols", modulePath, versionsPageSymbols},
 		{"versions page hello - multi GOOS", modulePath + "/hello", versionsPageHello},
@@ -35,11 +35,11 @@ func TestFrontendVersionsPage(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			urlPath := fmt.Sprintf("/%s?tab=versions&content=json", test.pkgPath)
 			body := getFrontendPage(t, urlPath)
-			var got frontend.VersionsDetails
+			var got versions.VersionsDetails
 			if err := json.Unmarshal([]byte(body), &got); err != nil {
 				t.Fatalf("json.Unmarshal: %v", err)
 			}
-			if diff := cmp.Diff(test.want, got.ThisModule, cmpopts.IgnoreUnexported(frontend.Symbol{})); diff != "" {
+			if diff := cmp.Diff(test.want, got.ThisModule, cmpopts.IgnoreUnexported(versions.Symbol{})); diff != "" {
 				t.Errorf("mismatch (-want, got):\n%s", diff)
 			}
 		})

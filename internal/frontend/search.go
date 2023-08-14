@@ -23,6 +23,7 @@ import (
 	"golang.org/x/pkgsite/internal/derrors"
 	pagepkg "golang.org/x/pkgsite/internal/frontend/page"
 	"golang.org/x/pkgsite/internal/frontend/serrors"
+	"golang.org/x/pkgsite/internal/frontend/versions"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/version"
@@ -66,7 +67,7 @@ func determineSearchAction(r *http.Request, ds internal.DataSource, vulnClient *
 	searchSupport := ds.SearchSupport()
 	if searchSupport == internal.NoSearch {
 		// The proxydatasource does not support the imported by page.
-		return nil, datasourceNotSupportedErr()
+		return nil, serrors.DatasourceNotSupportedError()
 	}
 
 	ctx := r.Context()
@@ -308,7 +309,7 @@ func newSearchResult(r *internal.SearchResult, searchSymbols bool, pr *message.P
 		Version:        r.Version,
 		ChipText:       chipText,
 		Synopsis:       r.Synopsis,
-		DisplayVersion: displayVersion(r.ModulePath, r.Version, r.Version),
+		DisplayVersion: versions.DisplayVersion(r.ModulePath, r.Version, r.Version),
 		Licenses:       r.Licenses,
 		CommitTime:     elapsedTime(r.CommitTime),
 		NumImportedBy:  pr.Sprint(r.NumImportedBy),

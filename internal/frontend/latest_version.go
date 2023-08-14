@@ -8,6 +8,7 @@ import (
 	"context"
 
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/frontend/versions"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/middleware/stats"
 )
@@ -31,7 +32,7 @@ func (s *Server) GetLatestInfo(ctx context.Context, unitPath, modulePath string,
 	if err != nil {
 		log.Errorf(ctx, "Server.GetLatestInfo: %v", err)
 	} else {
-		latest.MinorVersion = linkVersion(latest.MinorModulePath, latest.MinorVersion, latest.MinorVersion)
+		latest.MinorVersion = versions.LinkVersion(latest.MinorModulePath, latest.MinorVersion, latest.MinorVersion)
 	}
 	return latest
 }

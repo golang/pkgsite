@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-package frontend
+package fetchserver
 
 import (
 	"context"
@@ -12,13 +12,19 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/safehtml/template"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/frontend"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/proxy/proxytest"
+	"golang.org/x/pkgsite/internal/queue"
+	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/testing/sample"
 	"golang.org/x/pkgsite/internal/testing/testhelper"
 	"golang.org/x/pkgsite/internal/version"
+	"golang.org/x/pkgsite/static"
+	thirdparty "golang.org/x/pkgsite/third_party"
 )
 
 var (
@@ -38,6 +44,45 @@ var (
 		},
 	}
 )
+
+func newTestServerWithFetch(t *testing.T, proxyModules []*proxytest.Module, cacher frontend.Cacher) (*frontend.Server, *FetchServer, http.Handler, func()) {
+	t.Helper()
+	proxyClient, teardown := proxytest.SetupTestClient(t, proxyModules)
+	sourceClient := source.NewClient(sourceTimeout)
+	ctx := context.Background()
+
+	q := queue.NewInMemory(ctx, 1, nil,
+		func(ctx context.Context, mpath, version string) (int, error) {
+			return FetchAndUpdateState(ctx, mpath, version, proxyClient, sourceClient, testDB)
+		})
+
+	f := &FetchServer{
+		Queue:                q,
+		TaskIDChangeInterval: 10 * time.Minute,
+	}
+
+	s, err := frontend.NewServer(frontend.ServerConfig{
+		FetchServer:      f,
+		DataSourceGetter: func(context.Context) internal.DataSource { return testDB },
+		Queue:            q,
+		TemplateFS:       template.TrustedFSFromEmbed(static.FS),
+		// Use the embedded FSs here to make sure they're tested.
+		// Integration tests will use the actual directories.
+		StaticFS:     static.FS,
+		ThirdPartyFS: thirdparty.FS,
+		StaticPath:   "../../static",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	mux := http.NewServeMux()
+	s.Install(mux.Handle, cacher, nil)
+
+	return s, f, mux, func() {
+		teardown()
+		postgres.ResetTestDB(testDB, t)
+	}
+}
 
 func TestFetch(t *testing.T) {
 	for _, test := range []struct {
@@ -80,13 +125,13 @@ func TestFetch(t *testing.T) {
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			s, f, _, teardown := newTestServerWithFetch(t, testModulesForProxy, nil)
+			_, f, _, teardown := newTestServerWithFetch(t, testModulesForProxy, nil)
 			defer teardown()
 
 			ctx, cancel := context.WithTimeout(context.Background(), testFetchTimeout)
 			defer cancel()
 
-			status, responseText := f.fetchAndPoll(ctx, s.getDataSource(ctx), testModulePath, test.fullPath, test.version)
+			status, responseText := f.fetchAndPoll(ctx, testDB, testModulePath, test.fullPath, test.version)
 			if status != http.StatusOK {
 				t.Fatalf("fetchAndPoll(%q, %q, %q) = %d, %s; want status = %d",
 					testModulePath, test.fullPath, test.version, status, responseText, http.StatusOK)
@@ -144,9 +189,9 @@ func TestFetchErrors(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), test.fetchTimeout)
 			defer cancel()
 
-			s, f, _, teardown := newTestServerWithFetch(t, testModulesForProxy, nil)
+			_, f, _, teardown := newTestServerWithFetch(t, testModulesForProxy, nil)
 			defer teardown()
-			got, err := f.fetchAndPoll(ctx, s.getDataSource(ctx), test.modulePath, test.fullPath, test.version)
+			got, err := f.fetchAndPoll(ctx, testDB, test.modulePath, test.fullPath, test.version)
 
 			if got != test.want {
 				t.Fatalf("fetchAndPoll(ctx, testDB, q, %q, %q, %q): %d; want = %d",
@@ -181,9 +226,9 @@ func TestFetchPathAlreadyExists(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			s, f, _, teardown := newTestServerWithFetch(t, testModulesForProxy, nil)
+			_, f, _, teardown := newTestServerWithFetch(t, testModulesForProxy, nil)
 			defer teardown()
-			got, _ := f.fetchAndPoll(ctx, s.getDataSource(ctx), sample.ModulePath, sample.PackagePath, sample.VersionString)
+			got, _ := f.fetchAndPoll(ctx, testDB, sample.ModulePath, sample.PackagePath, sample.VersionString)
 			if got != test.want {
 				t.Fatalf("fetchAndPoll for status %d: %d; want = %d)", test.status, got, test.want)
 			}

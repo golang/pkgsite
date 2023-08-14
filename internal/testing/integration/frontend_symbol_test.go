@@ -10,7 +10,7 @@ import (
 	"fmt"
 	"testing"
 
-	"golang.org/x/pkgsite/internal/frontend"
+	"golang.org/x/pkgsite/internal/frontend/versions"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/symbol"
 )
@@ -49,11 +49,11 @@ func TestSymbols(t *testing.T) {
 			// Get frontend data.
 			urlPath := fmt.Sprintf("/%s?tab=versions&content=json", test.pkgPath)
 			body := getFrontendPage(t, urlPath)
-			var vd frontend.VersionsDetails
+			var vd versions.VersionsDetails
 			if err := json.Unmarshal([]byte(body), &vd); err != nil {
 				t.Fatalf("json.Unmarshal: %v\n %s", err, body)
 			}
-			sh, err := frontend.ParseVersionsDetails(&vd)
+			sh, err := versions.ParseVersionsDetails(&vd)
 			if err != nil {
 				t.Fatal(err)
 			}
