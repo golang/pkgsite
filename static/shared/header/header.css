@@ -547,3 +547,21 @@
   display: block;
   opacity: 0.32;
 }
+
+.skip-to-content-link {
+  background: var(--color-background);
+  border-radius: 0.375rem;
+  clip: rect(0 0 0 0);
+  color: var(--color-text);
+  font-weight: 500;
+  left: 8%;
+  margin: 0.313rem;
+  overflow: hidden;
+  position: absolute;
+  top: 0.75rem;
+}
+
+.skip-to-content-link:focus {
+  clip: unset;
+  z-index: 1;
+}
