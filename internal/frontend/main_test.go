@@ -5,20 +5,16 @@
 package frontend
 
 import (
-	"context"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/pkgsite/internal"
-	"golang.org/x/pkgsite/internal/postgres"
+	"golang.org/x/pkgsite/internal/testing/fakedatasource"
 	"golang.org/x/pkgsite/internal/testing/sample"
 )
 
 func TestGetImportedByCount(t *testing.T) {
-	defer postgres.ResetTestDB(testDB, t)
-
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	defer cancel()
+	fds := fakedatasource.New()
 
 	newModule := func(modPath string, imports []string, numImportedBy int) *internal.Module {
 		m := sample.Module(modPath, sample.VersionString, "")
@@ -34,7 +30,7 @@ func TestGetImportedByCount(t *testing.T) {
 	mod2 := newModule(p2, []string{p1}, 1)
 	mod3 := newModule(p3, []string{p1, p2}, 0)
 	for _, m := range []*internal.Module{mod1, mod2, mod3} {
-		postgres.MustInsertModule(ctx, t, testDB, m)
+		fds.MustInsertModule(m)
 	}
 
 	for _, test := range []struct {

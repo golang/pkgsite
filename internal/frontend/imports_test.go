@@ -12,6 +12,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/postgres"
+	"golang.org/x/pkgsite/internal/testing/fakedatasource"
 	"golang.org/x/pkgsite/internal/testing/sample"
 )
 
@@ -44,7 +45,7 @@ func TestFetchImportsDetails(t *testing.T) {
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			defer postgres.ResetTestDB(testDB, t)
+			fds := fakedatasource.New()
 
 			ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 			defer cancel()
@@ -54,9 +55,9 @@ func TestFetchImportsDetails(t *testing.T) {
 			pkg := module.Units[1]
 			pkg.Imports = test.imports
 
-			postgres.MustInsertModule(ctx, t, testDB, module)
+			fds.MustInsertModule(module)
 
-			got, err := fetchImportsDetails(ctx, testDB, pkg.Path, pkg.ModulePath, pkg.Version)
+			got, err := fetchImportsDetails(ctx, fds, pkg.Path, pkg.ModulePath, pkg.Version)
 			if err != nil {
 				t.Fatalf("fetchImportsDetails(ctx, db, %q, %q) = %v err = %v, want %v",
 					module.Units[1].Path, module.Version, got, err, test.wantDetails)

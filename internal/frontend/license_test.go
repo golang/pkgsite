@@ -15,8 +15,8 @@ import (
 	"github.com/google/safehtml"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/licenses"
-	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/stdlib"
+	"golang.org/x/pkgsite/internal/testing/fakedatasource"
 	"golang.org/x/pkgsite/internal/testing/sample"
 	"golang.org/x/pkgsite/internal/testing/testhelper"
 )
@@ -78,11 +78,11 @@ func TestFetchLicensesDetails(t *testing.T) {
 	// github.com/valid/module_name/A/B
 	testModule.Units[2].Licenses = []*licenses.Metadata{mit, bsd}
 
-	defer postgres.ResetTestDB(testDB, t)
+	fds := fakedatasource.New()
 	ctx := context.Background()
-	postgres.MustInsertModule(ctx, t, testDB, testModule)
-	postgres.MustInsertModule(ctx, t, testDB, stdlibModule)
-	postgres.MustInsertModule(ctx, t, testDB, crlfModule)
+	fds.MustInsertModule(testModule)
+	fds.MustInsertModule(stdlibModule)
+	fds.MustInsertModule(crlfModule)
 	for _, test := range []struct {
 		err                                 error
 		name, fullPath, modulePath, version string
@@ -141,7 +141,7 @@ func TestFetchLicensesDetails(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			wantDetails := &LicensesDetails{Licenses: transformLicenses(
 				test.modulePath, test.version, test.want)}
-			got, err := fetchLicensesDetails(ctx, testDB, &internal.UnitMeta{
+			got, err := fetchLicensesDetails(ctx, fds, &internal.UnitMeta{
 				Path: test.fullPath,
 				ModuleInfo: internal.ModuleInfo{
 					ModulePath: test.modulePath,

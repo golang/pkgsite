@@ -26,6 +26,7 @@ import (
 	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/osv"
 	"golang.org/x/pkgsite/internal/postgres"
+	"golang.org/x/pkgsite/internal/testing/fakedatasource"
 	"golang.org/x/pkgsite/internal/testing/sample"
 	"golang.org/x/pkgsite/internal/vuln"
 	"golang.org/x/text/language"
@@ -33,15 +34,14 @@ import (
 )
 
 func TestDetermineSearchAction(t *testing.T) {
-	ctx := context.Background()
-	defer postgres.ResetTestDB(testDB, t)
 	golangTools := sample.Module("golang.org/x/tools", sample.VersionString, "internal/lsp")
 	std := sample.Module("std", sample.VersionString,
 		"cmd/go", "cmd/go/internal/auth", "fmt")
 	modules := []*internal.Module{golangTools, std}
 
+	fds := fakedatasource.New()
 	for _, v := range modules {
-		postgres.MustInsertModule(ctx, t, testDB, v)
+		fds.MustInsertModule(v)
 	}
 	vc, err := vuln.NewInMemoryClient(testEntries)
 	if err != nil {
@@ -144,7 +144,7 @@ func TestDetermineSearchAction(t *testing.T) {
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			req := buildSearchRequest(t, test.method, test.query)
-			var ds internal.DataSource = testDB
+			var ds internal.DataSource = fds
 			if test.ds != nil {
 				ds = test.ds
 			}
@@ -234,7 +234,7 @@ func TestSearchQueryAndMode(t *testing.T) {
 func TestFetchSearchPage(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
-	defer postgres.ResetTestDB(testDB, t)
+	fds := fakedatasource.New()
 
 	var (
 		now       = sample.NowTruncated()
@@ -327,7 +327,7 @@ func TestFetchSearchPage(t *testing.T) {
 	}
 
 	for _, m := range []*internal.Module{moduleFoo, moduleBar} {
-		postgres.MustInsertModule(ctx, t, testDB, m)
+		fds.MustInsertModule(m)
 	}
 
 	for _, test := range []struct {
@@ -398,7 +398,7 @@ func TestFetchSearchPage(t *testing.T) {
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			got, err := fetchSearchPage(ctx, testDB, test.query, "", paginationParams{limit: 20, page: 1}, false, vc)
+			got, err := fetchSearchPage(ctx, fds, test.query, "", paginationParams{limit: 20, page: 1}, false, vc)
 			if err != nil {
 				t.Fatalf("fetchSearchPage(db, %q): %v", test.query, err)
 			}
@@ -420,13 +420,13 @@ func TestNewSearchResult(t *testing.T) {
 	for _, test := range []struct {
 		name string
 		tag  language.Tag
-		in   postgres.SearchResult
+		in   internal.SearchResult
 		want SearchResult
 	}{
 		{
 			name: "basic",
 			tag:  language.English,
-			in: postgres.SearchResult{
+			in: internal.SearchResult{
 				Name:          "pkg",
 				PackagePath:   "m.com/pkg",
 				ModulePath:    "m.com",
@@ -445,7 +445,7 @@ func TestNewSearchResult(t *testing.T) {
 		{
 			name: "command",
 			tag:  language.English,
-			in: postgres.SearchResult{
+			in: internal.SearchResult{
 				Name:          "main",
 				PackagePath:   "m.com/cmd",
 				ModulePath:    "m.com",
@@ -465,7 +465,7 @@ func TestNewSearchResult(t *testing.T) {
 		{
 			name: "stdlib",
 			tag:  language.English,
-			in: postgres.SearchResult{
+			in: internal.SearchResult{
 				Name:        "math",
 				PackagePath: "math",
 				ModulePath:  "std",
@@ -484,7 +484,7 @@ func TestNewSearchResult(t *testing.T) {
 		{
 			name: "German",
 			tag:  language.German,
-			in: postgres.SearchResult{
+			in: internal.SearchResult{
 				Name:          "pkg",
 				PackagePath:   "m.com/pkg",
 				ModulePath:    "m.com",
@@ -525,8 +525,9 @@ func TestSearchRequestRedirectPath(t *testing.T) {
 		"cmd/go", "cmd/go/internal/auth", "fmt")
 	modules := []*internal.Module{golangTools, std}
 
+	fds := fakedatasource.New()
 	for _, v := range modules {
-		postgres.MustInsertModule(ctx, t, testDB, v)
+		fds.MustInsertModule(v)
 	}
 	for _, test := range []struct {
 		name  string
@@ -551,7 +552,7 @@ func TestSearchRequestRedirectPath(t *testing.T) {
 		{"CVE alias", "CVE-2022-32190", "", searchModePackage},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			if got := searchRequestRedirectPath(ctx, testDB, test.query, test.mode, true); got != test.want {
+			if got := searchRequestRedirectPath(ctx, fds, test.query, test.mode, true); got != test.want {
 				t.Errorf("searchRequestRedirectPath(ctx, %q) = %q; want = %q", test.query, got, test.want)
 			}
 		})

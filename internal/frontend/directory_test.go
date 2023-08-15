@@ -10,14 +10,14 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/pkgsite/internal"
-	"golang.org/x/pkgsite/internal/postgres"
+	"golang.org/x/pkgsite/internal/testing/fakedatasource"
 	"golang.org/x/pkgsite/internal/testing/sample"
 )
 
 func TestGetNestedModules(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
-	defer postgres.ResetTestDB(testDB, t)
+	fds := fakedatasource.New()
 
 	for _, m := range []*internal.Module{
 		sample.Module("cloud.google.com/go", "v0.46.2", "storage", "spanner", "pubsub"),
@@ -30,7 +30,7 @@ func TestGetNestedModules(t *testing.T) {
 		sample.Module("cloud.google.com/go/storage/v9/module", "v9.0.0", sample.Suffix),
 		sample.Module("cloud.google.com/go/v2", "v2.0.0", "storage", "spanner", "pubsub"),
 	} {
-		postgres.MustInsertModule(ctx, t, testDB, m)
+		fds.MustInsertModule(m)
 	}
 
 	for _, test := range []struct {
@@ -103,7 +103,7 @@ func TestGetNestedModules(t *testing.T) {
 		},
 	} {
 		t.Run(test.modulePath, func(t *testing.T) {
-			got, err := getNestedModules(ctx, testDB, &internal.UnitMeta{
+			got, err := getNestedModules(ctx, fds, &internal.UnitMeta{
 				Path:       test.modulePath,
 				ModuleInfo: internal.ModuleInfo{ModulePath: test.modulePath},
 			}, test.subdirectories)
