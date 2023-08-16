@@ -20,14 +20,22 @@ if (directories) {
   if (internalToggle) {
     if (document.querySelector('.UnitDirectories-internal')) {
       internalToggle.style.display = 'block';
+      internalToggle.setAttribute('aria-label', 'Show Internal Directories');
+      internalToggle.setAttribute('aria-describedby', 'showInternal-description');
     }
     internalToggle.addEventListener('click', () => {
       if (directories.classList.contains('UnitDirectories-showInternal')) {
         directories.classList.remove('UnitDirectories-showInternal');
         internalToggle.innerText = 'Show internal';
+        internalToggle.setAttribute('aria-label', 'Show Internal Directories');
+        internalToggle.setAttribute('aria-live', 'polite');
+        internalToggle.setAttribute('aria-describedby', 'showInternal-description');
       } else {
         directories.classList.add('UnitDirectories-showInternal');
         internalToggle.innerText = 'Hide internal';
+        internalToggle.setAttribute('aria-label', 'Hide Internal Directories');
+        internalToggle.setAttribute('aria-live', 'polite');
+        internalToggle.setAttribute('aria-describedby', 'hideInternal-description');
       }
     });
   }

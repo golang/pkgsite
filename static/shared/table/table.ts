@@ -118,9 +118,13 @@ export class ExpandableRowsTableController {
     if (someCollapsed) {
       this.toggleAll.innerText = 'Expand all';
       this.toggleAll.onclick = this.expandAllItems;
+      this.toggleAll.setAttribute('aria-label', 'Expand all directories');
+      this.toggleAll.setAttribute('aria-live', 'polite');
     } else {
       this.toggleAll.innerText = 'Collapse all';
       this.toggleAll.onclick = this.collapseAllItems;
+      this.toggleAll.setAttribute('aria-label', 'Collapse all directories');
+      this.toggleAll.setAttribute('aria-live', 'polite');
     }
   }
 }
