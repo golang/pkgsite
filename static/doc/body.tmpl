@@ -7,7 +7,7 @@
 <div class="Documentation-content js-docContent"> {{/* Documentation content container */}}
 {{- if or .Package.Doc (index .Examples.Map "") -}}
   <section class="Documentation-overview">
-    <h3 tabindex="-1" id="pkg-overview" class="Documentation-overviewHeader">Overview <a href="#pkg-overview">¶</a></h3>{{"\n\n" -}}
+    <h3 tabindex="-1" id="pkg-overview" class="Documentation-overviewHeader">Overview <a href="#pkg-overview" aria-label="Go to Overview">¶</a></h3>{{"\n\n" -}}
     {{render_doc_extract_links .Package.Doc}}{{"\n" -}}
     {{- template "example" (index .Examples.Map "") -}}
   </section>
@@ -15,7 +15,7 @@
 
 {{- if or .Consts .Vars .Funcs .Types -}}
   <section class="Documentation-index">
-    <h3 id="pkg-index" class="Documentation-indexHeader">Index <a href="#pkg-index">¶</a></h3>{{"\n\n" -}}
+    <h3 id="pkg-index" class="Documentation-indexHeader">Index <a href="#pkg-index" aria-label="Go to Index">¶</a></h3>{{"\n\n" -}}
     <ul class="Documentation-indexList">{{"\n" -}}
       {{- if .Consts -}}<li class="Documentation-indexConstants"><a href="#pkg-constants">Constants</a></li>{{"\n"}}{{- end -}}
       {{- if .Vars -}}<li class="Documentation-indexVariables"><a href="#pkg-variables">Variables</a></li>{{"\n"}}{{- end -}}
@@ -63,7 +63,7 @@
 
   {{- if .Examples.List -}}
   <section class="Documentation-examples">
-    <h4 tabindex="-1" id="pkg-examples" class="Documentation-examplesHeader">Examples <a class="Documentation-idLink" href="#pkg-examples">¶</a></h4>{{"\n" -}}
+    <h4 tabindex="-1" id="pkg-examples" class="Documentation-examplesHeader">Examples <a class="Documentation-idLink" href="#pkg-examples" aria-label="Go to Examples">¶</a></h4>{{"\n" -}}
     <ul class="Documentation-examplesList">{{"\n" -}}
       {{- range .Examples.List -}}
         <li><a href="#{{.ID}}" class="js-exampleHref">{{or .ParentID "Package"}}{{with .Suffix}} ({{.}}){{end}}</a></li>{{"\n" -}}
@@ -72,7 +72,7 @@
   </section>
   {{- end -}}
 
-  <h3 tabindex="-1" id="pkg-constants" class="Documentation-constantsHeader">Constants <a href="#pkg-constants">¶</a></h3>{{"\n"}}
+  <h3 tabindex="-1" id="pkg-constants" class="Documentation-constantsHeader">Constants <a href="#pkg-constants" aria-label="Go to Constants">¶</a></h3>{{"\n"}}
   <section class="Documentation-constants">
   {{- if .Consts -}}
     {{- range .Consts -}}
@@ -83,7 +83,7 @@
   {{- end -}}
   </section>
 
-  <h3 tabindex="-1" id="pkg-variables" class="Documentation-variablesHeader">Variables <a href="#pkg-variables">¶</a></h3>{{"\n"}}
+  <h3 tabindex="-1" id="pkg-variables" class="Documentation-variablesHeader">Variables <a href="#pkg-variables" aria-label="Go to Variables">¶</a></h3>{{"\n"}}
   <section class="Documentation-variables">
   {{- if .Vars -}}
     {{- range .Vars -}}
@@ -94,7 +94,7 @@
   {{- end -}}
   </section>
 
-  <h3 tabindex="-1" id="pkg-functions" class="Documentation-functionsHeader">Functions <a href="#pkg-functions">¶</a></h3>{{"\n"}}
+  <h3 tabindex="-1" id="pkg-functions" class="Documentation-functionsHeader">Functions <a href="#pkg-functions" aria-label="Go to Functions">¶</a></h3>{{"\n"}}
   <section class="Documentation-functions">
   {{- if .Funcs -}}
         {{- range .Funcs -}}
@@ -107,7 +107,7 @@
   {{- end -}}
   </section>
 
-  <h3 tabindex="-1" id="pkg-types" class="Documentation-typesHeader">Types <a href="#pkg-types">¶</a></h3>{{"\n"}}
+  <h3 tabindex="-1" id="pkg-types" class="Documentation-typesHeader">Types <a href="#pkg-types" aria-label="Go to Types">¶</a></h3>{{"\n"}}
   <section class="Documentation-types">
   {{- if .Types -}}
     {{- range .Types -}}
@@ -122,11 +122,11 @@
 {{- end -}}
 
 {{- if .Package.Notes -}}
-  <h3 tabindex="-1" id="pkg-notes" class="Documentation-notesHeader">Notes <a href="#pkg-notes">¶</a></h3>{{"\n"}}
+  <h3 tabindex="-1" id="pkg-notes" class="Documentation-notesHeader">Notes <a href="#pkg-notes" aria-label="Go to Notes">¶</a></h3>{{"\n"}}
   <section class="Documentation-notes">
     {{- range $marker, $content := .Package.Notes -}}
     <div class="Documentation-note">
-      <h3 tabindex="-1" id="{{(index $.NoteHeaders $marker).SafeIdentifier}}" class="Documentation-noteHeader">{{(index $.NoteHeaders $marker).Label}}s <a href="#pkg-note-{{$marker}}">¶</a></h3>
+      <h3 tabindex="-1" id="{{(index $.NoteHeaders $marker).SafeIdentifier}}" class="Documentation-noteHeader">{{(index $.NoteHeaders $marker).Label}}s <a href="#pkg-note-{{$marker}}" aria-label="Go to {{(index $.NoteHeaders $marker).Label}}s">¶</a></h3>
       <ul class="Documentation-noteList" style="padding-left: 20px; list-style: initial;">{{"\n" -}}
       {{- range $v := $content -}}
         <li style="margin: 6px 0 6px 0;">{{render_doc $v.Body}}</li>
@@ -159,7 +159,7 @@
     </details>
   {{else}}
     <h4 tabindex="-1" id="{{$id}}" data-kind="{{.Kind}}" class="{{.HeaderClass}}">
-      <span>{{.HeaderStart}} {{source_link .Name .Decl}} <a class="Documentation-idLink" href="#{{$id}}">¶</a></span>
+      <span>{{.HeaderStart}} {{source_link .Name .Decl}} <a class="Documentation-idLink" href="#{{$id}}" aria-label="Go to {{$id}}">¶</a></span>
         {{- template "since_version" .FullName -}}
     </h4>{{"\n"}}
     {{template "item_body" .}}

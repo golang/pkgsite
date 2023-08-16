@@ -14,7 +14,8 @@
 }
 
 .UnitDirectories h2:hover a,
-.UnitDirectories summary:focus a {
+.UnitDirectories summary:focus a,
+.UnitDirectories h2 a.UnitDirectories-idLink:focus {
   opacity: 1;
 }
 

@@ -1,10 +1,10 @@
 <div class="Documentation-content js-docContent"> <section class="Documentation-overview">
-<h3 tabindex="-1" id="pkg-overview" class="Documentation-overviewHeader">Overview <a href="#pkg-overview">¶</a></h3>
+<h3 tabindex="-1" id="pkg-overview" class="Documentation-overviewHeader">Overview <a href="#pkg-overview" aria-label="Go to Overview">¶</a></h3>
 <p>Package comments exercises the Go 1.19 doc comment features.
 This refers to the standard library <a href="/encoding/json">encoding/json</a> package.
 </p>
 </section><section class="Documentation-index">
-<h3 id="pkg-index" class="Documentation-indexHeader">Index <a href="#pkg-index">¶</a></h3>
+<h3 id="pkg-index" class="Documentation-indexHeader">Index <a href="#pkg-index" aria-label="Go to Index">¶</a></h3>
 <ul class="Documentation-indexList">
 <li class="Documentation-indexFunction">
 <a href="#F">func F()</a></li>
@@ -17,14 +17,14 @@ This refers to the standard library <a href="/encoding/json">encoding/json</a> p
 <a href="#T.M">func (T) M() safe.HTML</a></li>
 </ul></li>
 </ul>
-</section><h3 tabindex="-1" id="pkg-constants" class="Documentation-constantsHeader">Constants <a href="#pkg-constants">¶</a></h3>
+</section><h3 tabindex="-1" id="pkg-constants" class="Documentation-constantsHeader">Constants <a href="#pkg-constants" aria-label="Go to Constants">¶</a></h3>
 <section class="Documentation-constants"><p class="Documentation-empty">This section is empty.</p></section>
-<h3 tabindex="-1" id="pkg-variables" class="Documentation-variablesHeader">Variables <a href="#pkg-variables">¶</a></h3>
+<h3 tabindex="-1" id="pkg-variables" class="Documentation-variablesHeader">Variables <a href="#pkg-variables" aria-label="Go to Variables">¶</a></h3>
 <section class="Documentation-variables"><p class="Documentation-empty">This section is empty.</p></section>
-<h3 tabindex="-1" id="pkg-functions" class="Documentation-functionsHeader">Functions <a href="#pkg-functions">¶</a></h3>
+<h3 tabindex="-1" id="pkg-functions" class="Documentation-functionsHeader">Functions <a href="#pkg-functions" aria-label="Go to Functions">¶</a></h3>
 <section class="Documentation-functions"><div class="Documentation-function">
 <h4 tabindex="-1" id="F" data-kind="function" class="Documentation-functionHeader">
-<span>func <a class="Documentation-source" href="src">F</a> <a class="Documentation-idLink" href="#F">¶</a></span>
+<span>func <a class="Documentation-source" href="src">F</a> <a class="Documentation-idLink" href="#F" aria-label="Go to F">¶</a></span>
 <span class="Documentation-sinceVersion">
 </span>
 </h4>
@@ -44,12 +44,12 @@ It also has three bullet points:
 <li>one</li>
 <li>two</li>
 <li>three</li>
-</ul><h4 id="hdr-Example">Example <a class="Documentation-idLink" href="#hdr-Example">¶</a></h4><p>Here is an example:
+</ul><h4 id="hdr-Example">Example <a class="Documentation-idLink" href="#hdr-Example" aria-label="Go to Example">¶</a></h4><p>Here is an example:
 </p><pre>F()
 </pre>
 </div><div class="Documentation-function">
 <h4 tabindex="-1" id="G" data-kind="function" class="Documentation-functionHeader">
-<span>func <a class="Documentation-source" href="src">G</a> <a class="Documentation-idLink" href="#G">¶</a></span>
+<span>func <a class="Documentation-source" href="src">G</a> <a class="Documentation-idLink" href="#G" aria-label="Go to G">¶</a></span>
 <span class="Documentation-sinceVersion">
 </span>
 </h4>
@@ -59,10 +59,10 @@ It also has three bullet points:
 <p>G implements something according to <a href="https://pkg.go.dev">this link</a>.
 </p>
 </div></section>
-<h3 tabindex="-1" id="pkg-types" class="Documentation-typesHeader">Types <a href="#pkg-types">¶</a></h3>
+<h3 tabindex="-1" id="pkg-types" class="Documentation-typesHeader">Types <a href="#pkg-types" aria-label="Go to Types">¶</a></h3>
 <section class="Documentation-types"><div class="Documentation-type">
 <h4 tabindex="-1" id="T" data-kind="type" class="Documentation-typeHeader">
-<span>type <a class="Documentation-source" href="src">T</a> <a class="Documentation-idLink" href="#T">¶</a></span>
+<span>type <a class="Documentation-source" href="src">T</a> <a class="Documentation-idLink" href="#T" aria-label="Go to T">¶</a></span>
 <span class="Documentation-sinceVersion">
 </span>
 </h4>
@@ -78,7 +78,7 @@ module: <a href="/example.com/module@v1.2.3/pkg">example.com/module/pkg</a>.
 </p>
 <div class="Documentation-typeMethod">
 <h4 tabindex="-1" id="T.M" data-kind="method" class="Documentation-typeMethodHeader">
-<span>func (T) <a class="Documentation-source" href="src">M</a> <a class="Documentation-idLink" href="#T.M">¶</a></span>
+<span>func (T) <a class="Documentation-source" href="src">M</a> <a class="Documentation-idLink" href="#T.M" aria-label="Go to T.M">¶</a></span>
 <span class="Documentation-sinceVersion">
 </span>
 </h4>

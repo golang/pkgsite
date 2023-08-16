@@ -88,7 +88,7 @@ var (
 	paraTemplate = template.Must(template.New("para").Parse("<p>{{.}}\n</p>"))
 
 	headingTemplate = template.Must(template.New("heading").Parse(
-		`<h4 id="{{.ID}}">{{.Title}} <a class="Documentation-idLink" href="#{{.ID}}">¶</a></h4>`))
+		`<h4 id="{{.ID}}">{{.Title}} <a class="Documentation-idLink" href="#{{.ID}}" aria-label="Go to {{.Title}}">¶</a></h4>`))
 
 	linkTemplate = template.Must(template.New("link").Parse(
 		`<a{{with .Class}}class="{{.}}" {{end}} href="{{.Href}}">{{.Text}}</a>`))

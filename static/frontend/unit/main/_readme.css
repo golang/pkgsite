@@ -19,7 +19,8 @@
 }
 
 .UnitReadme h2:hover a,
-.UnitReadme summary:focus a {
+.UnitReadme summary:focus a,
+.UnitReadme h2 a.UnitReadme-idLink {
   opacity: 1;
 }
 

@@ -88,7 +88,7 @@ Go is an open source project.`,
     </ul>
 </div>
 <p>Documentation.
-</p><h4 id="hdr-The_Go_Project">The Go Project <a class="Documentation-idLink" href="#hdr-The_Go_Project">¶</a></h4><p>Go is an open source project.
+</p><h4 id="hdr-The_Go_Project">The Go Project <a class="Documentation-idLink" href="#hdr-The_Go_Project" aria-label="Go to The Go Project">¶</a></h4><p>Go is an open source project.
 </p>`,
 		},
 		{
@@ -171,11 +171,11 @@ TLSUnique contains the tls-unique channel binding value (see RFC
     </ul>
 </div>
 <p>Documentation.
-</p><h4 id="hdr-The_Go_Project">The Go Project <a class="Documentation-idLink" href="#hdr-The_Go_Project">¶</a></h4><p>Go is an open source project.
-</p><h4 id="hdr-Links">Links <a class="Documentation-idLink" href="#hdr-Links">¶</a></h4><p>- title1, url1
+</p><h4 id="hdr-The_Go_Project">The Go Project <a class="Documentation-idLink" href="#hdr-The_Go_Project" aria-label="Go to The Go Project">¶</a></h4><p>Go is an open source project.
+</p><h4 id="hdr-Links">Links <a class="Documentation-idLink" href="#hdr-Links" aria-label="Go to Links">¶</a></h4><p>- title1, url1
 </p><ul class="Documentation-bulletList">
   <li>title2 , url2</li>
-</ul><h4 id="hdr-Header">Header <a class="Documentation-idLink" href="#hdr-Header">¶</a></h4><p>More doc.
+</ul><h4 id="hdr-Header">Header <a class="Documentation-idLink" href="#hdr-Header" aria-label="Go to Header">¶</a></h4><p>More doc.
 </p>`,
 		},
 		{
@@ -193,8 +193,8 @@ TLSUnique contains the tls-unique channel binding value (see RFC
     </ul>
 </div>
 <p>Documentation.
-</p><h4 id="hdr-The_Go_Project">The Go Project <a class="Documentation-idLink" href="#hdr-The_Go_Project">¶</a></h4><p>Go is an open source project.
-</p><h4 id="hdr-Header">Header <a class="Documentation-idLink" href="#hdr-Header">¶</a></h4><p>More doc.
+</p><h4 id="hdr-The_Go_Project">The Go Project <a class="Documentation-idLink" href="#hdr-The_Go_Project" aria-label="Go to The Go Project">¶</a></h4><p>Go is an open source project.
+</p><h4 id="hdr-Header">Header <a class="Documentation-idLink" href="#hdr-Header" aria-label="Go to Header">¶</a></h4><p>More doc.
 </p>`,
 			wantLinks: []Link{
 				{Text: "title1", Href: "url1"},
@@ -625,8 +625,8 @@ More text.`
     </ul>
 </div>
 <p>Documentation.
-</p><h4 id="hdr-The_Go_Project">The Go Project <a class="Documentation-idLink" href="#hdr-The_Go_Project">¶</a></h4><p>Go is an open source project.
-</p><h4 id="hdr-Heading_2">Heading 2 <a class="Documentation-idLink" href="#hdr-Heading_2">¶</a></h4><p>More text.
+</p><h4 id="hdr-The_Go_Project">The Go Project <a class="Documentation-idLink" href="#hdr-The_Go_Project" aria-label="Go to The Go Project">¶</a></h4><p>Go is an open source project.
+</p><h4 id="hdr-Heading_2">Heading 2 <a class="Documentation-idLink" href="#hdr-Heading_2" aria-label="Go to Heading 2">¶</a></h4><p>More text.
 </p>`)
 
 	r := New(context.Background(), nil, pkgTime, nil)

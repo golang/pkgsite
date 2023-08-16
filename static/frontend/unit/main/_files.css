@@ -38,7 +38,8 @@
 }
 
 .UnitFiles h2:hover a,
-.UnitFiles summary:focus a {
+.UnitFiles summary:focus a,
+.UnitFiles h2 a.UnitFiles-idLink:focus {
   opacity: 1;
 }
 

@@ -16,7 +16,8 @@
 }
 
 .UnitDoc h2:hover a,
-.UnitDoc summary:focus a {
+.UnitDoc summary:focus a,
+.UnitDoc h2 a.UnitDoc-idLink:focus {
   opacity: 1;
 }
 
@@ -86,7 +87,8 @@
 .Documentation h3:hover a,
 .Documentation h4:hover a,
 .Documentation summary:hover a,
-.Documentation summary:focus a {
+.Documentation summary:focus a,
+.Documentation h4 a.Documentation-idLink:focus {
   opacity: 1;
 }
 
