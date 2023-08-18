@@ -11,7 +11,7 @@ import (
 )
 
 func TestBadgeHandler_ServeSVG(t *testing.T) {
-	_, handler, _ := newTestServer(t, nil, nil)
+	_, handler := newTestServer(t, nil)
 	w := httptest.NewRecorder()
 	handler.ServeHTTP(w, httptest.NewRequest("GET", "/badge/net/http", nil))
 	if got, want := w.Result().Header.Get("Content-Type"), "image/svg+xml"; got != want {
@@ -20,7 +20,7 @@ func TestBadgeHandler_ServeSVG(t *testing.T) {
 }
 
 func TestBadgeHandler_ServeBadgeTool(t *testing.T) {
-	_, handler, _ := newTestServer(t, nil, nil)
+	_, handler := newTestServer(t, nil)
 
 	tests := []struct {
 		url  string

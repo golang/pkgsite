@@ -16,6 +16,11 @@ import (
 //lint:file-ignore ST1012 prefixing error values with Err would stutter
 
 var (
+	// Unsupported operation indicates that a requested operation cannot be performed, because it
+	// is unsupported. It is used here instead of errors.ErrUnsupported until we are able to depend
+	// on Go 1.21 in the pkgsite repo.
+	Unsupported = errors.New("unsupported operation")
+
 	// HasIncompletePackages indicates a module containing packages that
 	// were processed with a 60x error code.
 	HasIncompletePackages = errors.New("has incomplete packages")

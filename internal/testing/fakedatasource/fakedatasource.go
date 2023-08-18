@@ -19,42 +19,28 @@ import (
 	"golang.org/x/pkgsite/internal/version"
 )
 
+var errNotImplemented = fmt.Errorf("not implemented: %w", derrors.Unsupported)
+
 // FakeDataSource provides a fake implementation of the internal.DataSource interface.
 type FakeDataSource struct {
-	modules map[module.Version]*internal.Module
+	modules    map[module.Version]*internal.Module
+	importedBy map[string][]string
 }
 
 // New returns an initialized FakeDataSource.
 func New() *FakeDataSource {
-	return &FakeDataSource{modules: make(map[module.Version]*internal.Module)}
+	return &FakeDataSource{
+		modules:    make(map[module.Version]*internal.Module),
+		importedBy: make(map[string][]string),
+	}
 }
 
 // InsertModule adds the module to the FakeDataSource.
-func (ds *FakeDataSource) MustInsertModule(m *internal.Module) {
-	if m != nil {
-		for _, u := range m.Units {
-			ds.populateUnitSubdirectories(u, m)
-
-			// Make license info consistent.
-			if u.Licenses != nil {
-				// Sort licenses as postgres database does.
-				sort.Slice(u.Licenses, func(i, j int) bool {
-					return compareLicenses(u.Licenses[i], u.Licenses[j])
-				})
-				// Make sure LicenseContents match up with Licenses
-				u.LicenseContents = nil
-				for _, ul := range u.Licenses {
-					for _, ml := range m.Licenses {
-						if sameLicense(*ul, *ml.Metadata) {
-							u.LicenseContents = append(u.LicenseContents, ml)
-						}
-					}
-				}
-			}
-		}
+func (ds *FakeDataSource) MustInsertModule(ctx context.Context, m *internal.Module) {
+	_, err := ds.InsertModule(ctx, m, nil)
+	if err != nil {
+		panic(fmt.Errorf("error returned by InsertModule: %w", err))
 	}
-
-	ds.modules[module.Version{Path: m.ModulePath, Version: m.Version}] = m
 }
 
 // compareLicenses reports whether i < j according to our license sorting
@@ -257,7 +243,53 @@ func (ds *FakeDataSource) GetModuleReadme(ctx context.Context, modulePath, resol
 // GetLatestInfo gets information about the latest versions of a unit and module.
 // See LatestInfo for documentation.
 func (ds *FakeDataSource) GetLatestInfo(ctx context.Context, unitPath, modulePath string, latestUnitMeta *internal.UnitMeta) (latest internal.LatestInfo, err error) {
-	return internal.LatestInfo{}, nil
+	latestModule := ds.getLatestModule(modulePath)
+	if latestModule == nil {
+		return internal.LatestInfo{}, fmt.Errorf("could not find module %s: %w", modulePath, derrors.NotFound)
+	}
+	var unitFound bool
+	for _, unit := range latestModule.Units {
+		if unit.Path == unitPath {
+			unitFound = true
+		}
+	}
+
+	// Determine MajorModulePath and MajorUnitPath
+	if !strings.HasPrefix(unitPath, modulePath) {
+		panic(fmt.Errorf("module path %q is not a prefix of unit path %q", modulePath, unitPath))
+	}
+	rel := strings.TrimPrefix(unitPath, modulePath)
+	prefix, _, _ := module.SplitPathVersion(modulePath)
+	var latestMajorModule *internal.Module
+	for _, m := range ds.modules {
+		curPrefix, _, _ := module.SplitPathVersion(m.ModulePath)
+		if curPrefix != prefix {
+			continue
+		}
+		if latestMajorModule == nil || compareVersion(&m.ModuleInfo, &latestMajorModule.ModuleInfo) > 0 {
+			latestMajorModule = m
+		}
+	}
+	if latestMajorModule == nil {
+		panic(fmt.Errorf("a module exists with the module path %q at the same major version,"+
+			"but we couldn't find the latest version of the module", modulePath))
+	}
+	majorModulePath := latestMajorModule.ModulePath
+	majorUnitPath := majorModulePath // We don't set it to the unit path unless one is found
+	expectedMajorUnitPath := majorModulePath + rel
+	for _, unit := range latestMajorModule.Units {
+		if unit.Path == expectedMajorUnitPath {
+			majorUnitPath = unit.Path
+		}
+	}
+
+	return internal.LatestInfo{
+		MinorVersion:      latestModule.Version,
+		MinorModulePath:   latestModule.ModulePath,
+		UnitExistsAtMinor: unitFound,
+		MajorModulePath:   majorModulePath,
+		MajorUnitPath:     majorUnitPath,
+	}, nil
 }
 
 // SearchSupport reports the search types supported by this datasource.
@@ -304,4 +336,92 @@ func (ds *FakeDataSource) Search(ctx context.Context, q string, opts internal.Se
 		}
 	}
 	return results, nil
+}
+
+func (ds *FakeDataSource) IsExcluded(ctx context.Context, path string) (_ bool, err error) {
+	return false, errNotImplemented
+}
+
+// GetImportedBy returns the set of packages importing the given pkgPath.
+func (ds *FakeDataSource) GetImportedBy(ctx context.Context, pkgPath, modulePath string, limit int) (paths []string, err error) {
+	importedBy := append([]string{}, ds.importedBy[pkgPath]...)
+	sort.Strings(importedBy)
+	if len(importedBy) > limit {
+		importedBy = importedBy[:limit]
+	}
+	return importedBy, nil
+}
+
+func (ds *FakeDataSource) GetImportedByCount(ctx context.Context, pkgPath, modulePath string) (int, error) {
+	return 0, nil
+}
+
+func (ds *FakeDataSource) GetLatestMajorPathForV1Path(ctx context.Context, v1path string) (string, int, error) {
+	return "", 0, errNotImplemented
+}
+
+func (ds *FakeDataSource) GetStdlibPathsWithSuffix(ctx context.Context, suffix string) ([]string, error) {
+	return nil, errNotImplemented
+}
+
+func (ds *FakeDataSource) GetSymbolHistory(ctx context.Context, packagePath, modulePath string) (*internal.SymbolHistory, error) {
+	return nil, errNotImplemented
+}
+
+func (ds *FakeDataSource) GetVersionMap(ctx context.Context, modulePath, requestedVersion string) (*internal.VersionMap, error) {
+	return nil, errNotImplemented
+}
+
+func (ds *FakeDataSource) GetVersionMaps(ctx context.Context, paths []string, requestedVersion string) ([]*internal.VersionMap, error) {
+	return nil, errNotImplemented
+}
+
+func (ds *FakeDataSource) GetVersionsForPath(ctx context.Context, path string) ([]*internal.ModuleInfo, error) {
+	return nil, errNotImplemented
+}
+
+// InsertModule inserts m into the FakeDataSource. It is only implemented for
+// lmv == nil.
+func (ds *FakeDataSource) InsertModule(ctx context.Context, m *internal.Module, lmv *internal.LatestModuleVersions) (isLatest bool, err error) {
+	if lmv != nil {
+		return false, errNotImplemented
+	}
+
+	if m != nil {
+		for _, u := range m.Units {
+			ds.populateUnitSubdirectories(u, m)
+
+			// Make license info consistent.
+			if u.Licenses != nil {
+				// Sort licenses as postgres database does.
+				sort.Slice(u.Licenses, func(i, j int) bool {
+					return compareLicenses(u.Licenses[i], u.Licenses[j])
+				})
+				// Make sure LicenseContents match up with Licenses
+				u.LicenseContents = nil
+				for _, ul := range u.Licenses {
+					for _, ml := range m.Licenses {
+						if sameLicense(*ul, *ml.Metadata) {
+							u.LicenseContents = append(u.LicenseContents, ml)
+						}
+					}
+				}
+			}
+
+			for _, pkg := range u.Imports {
+				ds.importedBy[pkg] = append(ds.importedBy[pkg], u.Path)
+			}
+		}
+	}
+
+	ds.modules[module.Version{Path: m.ModulePath, Version: m.Version}] = m
+	latest := ds.getLatestModule(m.ModulePath)
+	if latest == nil {
+		panic(fmt.Errorf("getLatestModule returned no modules for %v, even though we just inserted a module with that path", m.ModulePath))
+	}
+	return m == latest, nil
+}
+
+func (ds *FakeDataSource) UpsertVersionMap(ctx context.Context, vm *internal.VersionMap) error {
+	return errNotImplemented
 }

@@ -25,7 +25,6 @@ import (
 	"golang.org/x/pkgsite/internal/frontend/serrors"
 	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/osv"
-	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/testing/fakedatasource"
 	"golang.org/x/pkgsite/internal/testing/sample"
 	"golang.org/x/pkgsite/internal/vuln"
@@ -38,10 +37,10 @@ func TestDetermineSearchAction(t *testing.T) {
 	std := sample.Module("std", sample.VersionString,
 		"cmd/go", "cmd/go/internal/auth", "fmt")
 	modules := []*internal.Module{golangTools, std}
-
+	ctx := context.Background()
 	fds := fakedatasource.New()
 	for _, v := range modules {
-		fds.MustInsertModule(v)
+		fds.MustInsertModule(ctx, v)
 	}
 	vc, err := vuln.NewInMemoryClient(testEntries)
 	if err != nil {
@@ -327,7 +326,7 @@ func TestFetchSearchPage(t *testing.T) {
 	}
 
 	for _, m := range []*internal.Module{moduleFoo, moduleBar} {
-		fds.MustInsertModule(m)
+		fds.MustInsertModule(ctx, m)
 	}
 
 	for _, test := range []struct {
@@ -518,7 +517,6 @@ func TestSearchRequestRedirectPath(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 
 	defer cancel()
-	defer postgres.ResetTestDB(testDB, t)
 
 	golangTools := sample.Module("golang.org/x/tools", sample.VersionString, "internal/lsp")
 	std := sample.Module("std", sample.VersionString,
@@ -527,7 +525,7 @@ func TestSearchRequestRedirectPath(t *testing.T) {
 
 	fds := fakedatasource.New()
 	for _, v := range modules {
-		fds.MustInsertModule(v)
+		fds.MustInsertModule(ctx, v)
 	}
 	for _, test := range []struct {
 		name  string
@@ -788,12 +786,12 @@ func TestElapsedTime(t *testing.T) {
 func TestSymbolSynopsis(t *testing.T) {
 	for _, test := range []struct {
 		name string
-		r    *postgres.SearchResult
+		r    *internal.SearchResult
 		want string
 	}{
 		{
 			"struct field",
-			&postgres.SearchResult{
+			&internal.SearchResult{
 				SymbolName:     "Foo.Bar",
 				SymbolSynopsis: "Bar string",
 				SymbolKind:     internal.SymbolKindField,
@@ -806,7 +804,7 @@ type Foo struct {
 		},
 		{
 			"interface method",
-			&postgres.SearchResult{
+			&internal.SearchResult{
 				SymbolName:     "Foo.Bar",
 				SymbolSynopsis: "Bar func() string",
 				SymbolKind:     internal.SymbolKindMethod,

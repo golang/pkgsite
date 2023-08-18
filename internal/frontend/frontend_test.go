@@ -18,19 +18,12 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/frontend/page"
 	"golang.org/x/pkgsite/internal/frontend/versions"
-	"golang.org/x/pkgsite/internal/postgres"
-	"golang.org/x/pkgsite/internal/proxy/proxytest"
+	"golang.org/x/pkgsite/internal/testing/fakedatasource"
 	"golang.org/x/pkgsite/static"
 	thirdparty "golang.org/x/pkgsite/third_party"
 )
 
 const testTimeout = 5 * time.Second
-
-var testDB *postgres.DB
-
-func TestMain(m *testing.M) {
-	postgres.RunDBTests("discovery_frontend_test", m, &testDB)
-}
 
 type testModule struct {
 	path            string
@@ -47,11 +40,11 @@ type testPackage struct {
 	docs           []*internal.Documentation
 }
 
-func newTestServer(t *testing.T, proxyModules []*proxytest.Module, cacher Cacher) (*Server, http.Handler, func()) {
+func newTestServer(t *testing.T, cacher Cacher) (*Server, http.Handler) {
 	t.Helper()
 
 	s, err := NewServer(ServerConfig{
-		DataSourceGetter: func(context.Context) internal.DataSource { return testDB },
+		DataSourceGetter: func(context.Context) internal.DataSource { return fakedatasource.New() },
 		TemplateFS:       template.TrustedFSFromEmbed(static.FS),
 		// Use the embedded FSs here to make sure they're tested.
 		// Integration tests will use the actual directories.
@@ -65,13 +58,11 @@ func newTestServer(t *testing.T, proxyModules []*proxytest.Module, cacher Cacher
 	mux := http.NewServeMux()
 	s.Install(mux.Handle, cacher, nil)
 
-	return s, mux, func() {
-		postgres.ResetTestDB(testDB, t)
-	}
+	return s, mux
 }
 
 func TestHTMLInjection(t *testing.T) {
-	_, handler, _ := newTestServer(t, nil, nil)
+	_, handler := newTestServer(t, nil)
 	w := httptest.NewRecorder()
 	handler.ServeHTTP(w, httptest.NewRequest("GET", "/<em>UHOH</em>", nil))
 	if strings.Contains(w.Body.String(), "<em>") {
@@ -223,8 +214,7 @@ func TestStripScheme(t *testing.T) {
 }
 
 func TestInstallFS(t *testing.T) {
-	s, handler, teardown := newTestServer(t, nil, nil)
-	defer teardown()
+	s, handler := newTestServer(t, nil)
 	s.InstallFS("/dir", os.DirFS("."))
 	// Request this file.
 	w := httptest.NewRecorder()

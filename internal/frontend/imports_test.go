@@ -11,7 +11,6 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/pkgsite/internal"
-	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/testing/fakedatasource"
 	"golang.org/x/pkgsite/internal/testing/sample"
 )
@@ -55,7 +54,7 @@ func TestFetchImportsDetails(t *testing.T) {
 			pkg := module.Units[1]
 			pkg.Imports = test.imports
 
-			fds.MustInsertModule(module)
+			fds.MustInsertModule(ctx, module)
 
 			got, err := fetchImportsDetails(ctx, fds, pkg.Path, pkg.ModulePath, pkg.Version)
 			if err != nil {
@@ -72,8 +71,7 @@ func TestFetchImportsDetails(t *testing.T) {
 }
 
 func TestFetchImportedByDetails(t *testing.T) {
-	defer postgres.ResetTestDB(testDB, t)
-
+	fds := fakedatasource.New()
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
@@ -99,7 +97,7 @@ func TestFetchImportedByDetails(t *testing.T) {
 	}
 
 	for _, m := range testModules {
-		postgres.MustInsertModule(ctx, t, testDB, m)
+		fds.MustInsertModule(ctx, m)
 	}
 
 	tests := []struct {
@@ -138,13 +136,13 @@ func TestFetchImportedByDetails(t *testing.T) {
 			otherVersion := newModule(path.Dir(test.pkg.Path), test.pkg)
 			otherVersion.Version = "v1.0.5"
 			pkg := otherVersion.Units[1]
-			checkFetchImportedByDetails(ctx, t, pkg, test.wantDetails)
+			checkFetchImportedByDetails(ctx, fds, t, pkg, test.wantDetails)
 		})
 	}
 }
 
 func TestFetchImportedByDetails_ExceedsLimit(t *testing.T) {
-	defer postgres.ResetTestDB(testDB, t)
+	fds := fakedatasource.New()
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
 	defer cancel()
 
@@ -153,11 +151,11 @@ func TestFetchImportedByDetails_ExceedsLimit(t *testing.T) {
 	defer func() { importedByLimit = old }()
 
 	m := sample.Module("m.com/a", sample.VersionString, "foo")
-	postgres.MustInsertModule(ctx, t, testDB, m)
+	fds.MustInsertModule(ctx, m)
 	for _, mod := range []string{"m1.com/a", "m2.com/a", "m3.com/a"} {
 		m2 := sample.Module(mod, sample.VersionString, "p")
 		m2.Packages()[0].Imports = []string{"m.com/a/foo"}
-		postgres.MustInsertModule(ctx, t, testDB, m2)
+		fds.MustInsertModule(ctx, m2)
 	}
 	wantDetails := &ImportedByDetails{
 		ModulePath: "m.com/a",
@@ -169,11 +167,11 @@ func TestFetchImportedByDetails_ExceedsLimit(t *testing.T) {
 		NumImportedByDisplay: "0 (displaying more than 2 packages, including internal and invalid packages)",
 		Total:                3,
 	}
-	checkFetchImportedByDetails(ctx, t, m.Packages()[0], wantDetails)
+	checkFetchImportedByDetails(ctx, fds, t, m.Packages()[0], wantDetails)
 }
 
-func checkFetchImportedByDetails(ctx context.Context, t *testing.T, pkg *internal.Unit, wantDetails *ImportedByDetails) {
-	got, err := fetchImportedByDetails(ctx, testDB, pkg.Path, pkg.ModulePath)
+func checkFetchImportedByDetails(ctx context.Context, ds internal.DataSource, t *testing.T, pkg *internal.Unit, wantDetails *ImportedByDetails) {
+	got, err := fetchImportedByDetails(ctx, ds, pkg.Path, pkg.ModulePath)
 	if err != nil {
 		t.Fatalf("fetchImportedByDetails(ctx, db, %q) = %v err = %v, want %v",
 			pkg.Path, got, err, wantDetails)

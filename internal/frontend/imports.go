@@ -113,7 +113,7 @@ func fetchImportedByDetails(ctx context.Context, ds internal.DataSource, pkgPath
 	if numImportedBy < importedByLimit && numImportedBySearch > numImportedBy {
 		// Unless we hit the limit, numImportedBySearch should never be greater
 		// than numImportedBy. If that happens, log an error so that we can
-		// debug, but continue with generating the page fo the user.
+		// debug, but continue with generating the page for the user.
 		log.Errorf(ctx, "pkg %q, module %q: search_documents.num_imported_by %d > numImportedBy %d from imports unique, which shouldn't happen",
 			pkgPath, modulePath, numImportedBySearch, numImportedBy)
 	}

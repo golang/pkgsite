@@ -30,7 +30,7 @@ func TestGetNestedModules(t *testing.T) {
 		sample.Module("cloud.google.com/go/storage/v9/module", "v9.0.0", sample.Suffix),
 		sample.Module("cloud.google.com/go/v2", "v2.0.0", "storage", "spanner", "pubsub"),
 	} {
-		fds.MustInsertModule(m)
+		fds.MustInsertModule(ctx, m)
 	}
 
 	for _, test := range []struct {

@@ -80,9 +80,9 @@ func TestFetchLicensesDetails(t *testing.T) {
 
 	fds := fakedatasource.New()
 	ctx := context.Background()
-	fds.MustInsertModule(testModule)
-	fds.MustInsertModule(stdlibModule)
-	fds.MustInsertModule(crlfModule)
+	fds.MustInsertModule(ctx, testModule)
+	fds.MustInsertModule(ctx, stdlibModule)
+	fds.MustInsertModule(ctx, crlfModule)
 	for _, test := range []struct {
 		err                                 error
 		name, fullPath, modulePath, version string

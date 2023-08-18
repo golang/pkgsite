@@ -11,7 +11,6 @@ import "context"
 // dependency on the database driver packages.
 type PostgresDB interface {
 	DataSource
-	IsPostgresDB()
 
 	IsExcluded(ctx context.Context, path string) (_ bool, err error)
 	GetImportedBy(ctx context.Context, pkgPath, modulePath string, limit int) (paths []string, err error)

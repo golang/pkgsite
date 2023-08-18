@@ -10,13 +10,13 @@ import (
 	"testing"
 
 	"golang.org/x/pkgsite/internal"
-	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/source"
+	"golang.org/x/pkgsite/internal/testing/fakedatasource"
 	"golang.org/x/pkgsite/internal/testing/sample"
 )
 
 func TestLatestMinorVersion(t *testing.T) {
-	defer postgres.ResetTestDB(testDB, t)
+	fds := fakedatasource.New()
 	var persistedModules = []testModule{
 		{
 			path:            "github.com/mymodule/av1module",
@@ -58,8 +58,8 @@ func TestLatestMinorVersion(t *testing.T) {
 		},
 	}
 	ctx := context.Background()
-	insertTestModules(ctx, t, persistedModules)
-	svr := &Server{getDataSource: func(context.Context) internal.DataSource { return testDB }}
+	insertTestModules(ctx, t, fds, persistedModules)
+	svr := &Server{getDataSource: func(context.Context) internal.DataSource { return fds }}
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
 			got := svr.GetLatestInfo(ctx, tc.fullPath, tc.modulePath, nil)
@@ -70,7 +70,7 @@ func TestLatestMinorVersion(t *testing.T) {
 	}
 }
 
-func insertTestModules(ctx context.Context, t *testing.T, mods []testModule) {
+func insertTestModules(ctx context.Context, t *testing.T, fds *fakedatasource.FakeDataSource, mods []testModule) {
 	for _, mod := range mods {
 		var (
 			suffixes []string
@@ -109,7 +109,7 @@ func insertTestModules(ctx context.Context, t *testing.T, mods []testModule) {
 					u.Readme = nil
 				}
 			}
-			postgres.MustInsertModule(ctx, t, testDB, m)
+			fds.MustInsertModule(ctx, m)
 		}
 	}
 }
