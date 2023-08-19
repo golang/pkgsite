@@ -26,7 +26,7 @@ var knownAlternatives = map[string]string{
 	"gopkg.in/azure/azure-sdk-for-go":                  "github.com/Azure/azure-sdk-for-go",
 	"github.com/masslessparticle/azure-sdk-for-go":     "github.com/Azure/azure-sdk-for-go",
 	"github.com/aliyun/alibaba-cloud-sdk-go":           "github.com/Azure/azure-sdk-for-go",
-	"github.com/johnstairs/azure-sdk-for-go	":          "github.com/Azure/azure-sdk-for-go",
+	"github.com/johnstairs/azure-sdk-for-go":           "github.com/Azure/azure-sdk-for-go",
 	"github.com/shopify/sarama":                        "github.com/Shopify/sarama",
 }
 
