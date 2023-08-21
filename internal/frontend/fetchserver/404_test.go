@@ -287,8 +287,7 @@ func TestStdlibPathForShortcut(t *testing.T) {
 // Sometimes redirection sets the AlternativeModuleFlash cookie and puts
 // up a banner.
 func TestServer404Redirect(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	defer cancel()
+	ctx := context.Background()
 
 	defer postgres.ResetTestDB(testDB, t)
 	sampleModule := sample.DefaultModule()
@@ -395,8 +394,7 @@ func TestServer404Redirect(t *testing.T) {
 }
 
 func TestServer404Redirect_NoLoop(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	defer cancel()
+	ctx := context.Background()
 
 	altPath := "module.path/alternative"
 	goModPath := "module.path/alternative/pkg"
@@ -451,8 +449,7 @@ func TestServer404Redirect_NoLoop(t *testing.T) {
 }
 
 func TestEmptyDirectoryBetweenNestedModulesRedirect(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	defer cancel()
+	ctx := context.Background()
 	defer postgres.ResetTestDB(testDB, t)
 
 	postgres.MustInsertModule(ctx, t, testDB, sample.Module(sample.ModulePath, sample.VersionString, ""))

@@ -7,15 +7,12 @@ package fetchserver
 import (
 	"context"
 	"testing"
-	"time"
 
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/testing/sample"
 )
-
-const testTimeout = 5 * time.Second
 
 var testDB *postgres.DB
 

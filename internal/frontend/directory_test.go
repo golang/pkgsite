@@ -15,8 +15,7 @@ import (
 )
 
 func TestGetNestedModules(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	defer cancel()
+	ctx := context.Background()
 	fds := fakedatasource.New()
 
 	for _, m := range []*internal.Module{

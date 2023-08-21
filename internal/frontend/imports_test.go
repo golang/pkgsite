@@ -46,8 +46,7 @@ func TestFetchImportsDetails(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			fds := fakedatasource.New()
 
-			ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-			defer cancel()
+			ctx := context.Background()
 
 			module := sample.Module(sample.ModulePath, sample.VersionString, sample.Suffix)
 			// The first unit is the module and the second one is the package.
@@ -72,8 +71,7 @@ func TestFetchImportsDetails(t *testing.T) {
 
 func TestFetchImportedByDetails(t *testing.T) {
 	fds := fakedatasource.New()
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	defer cancel()
+	ctx := context.Background()
 
 	newModule := func(modPath string, pkgs ...*internal.Unit) *internal.Module {
 		m := sample.Module(modPath, sample.VersionString)
@@ -143,8 +141,7 @@ func TestFetchImportedByDetails(t *testing.T) {
 
 func TestFetchImportedByDetails_ExceedsLimit(t *testing.T) {
 	fds := fakedatasource.New()
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	defer cancel()
+	ctx := context.Background()
 
 	old := importedByLimit
 	importedByLimit = 3

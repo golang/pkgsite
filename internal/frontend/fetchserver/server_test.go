@@ -1091,8 +1091,7 @@ func TestServer(t *testing.T) {
 }
 
 func testServer(t *testing.T, testCases []serverTestCase) {
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	defer cancel()
+	ctx := context.Background()
 	defer postgres.ResetTestDB(testDB, t)
 
 	insertTestModules(ctx, t, testModules)

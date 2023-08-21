@@ -23,8 +23,6 @@ import (
 	thirdparty "golang.org/x/pkgsite/third_party"
 )
 
-const testTimeout = 5 * time.Second
-
 type testModule struct {
 	path            string
 	redistributable bool

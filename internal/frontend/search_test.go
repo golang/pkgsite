@@ -231,8 +231,7 @@ func TestSearchQueryAndMode(t *testing.T) {
 }
 
 func TestFetchSearchPage(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	defer cancel()
+	ctx := context.Background()
 	fds := fakedatasource.New()
 
 	var (
@@ -514,9 +513,7 @@ func TestNewSearchResult(t *testing.T) {
 func TestSearchRequestRedirectPath(t *testing.T) {
 	// Experiments need to be set in the context, for DB work, and as
 	// a middleware, for request handling.
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-
-	defer cancel()
+	ctx := context.Background()
 
 	golangTools := sample.Module("golang.org/x/tools", sample.VersionString, "internal/lsp")
 	std := sample.Module("std", sample.VersionString,
