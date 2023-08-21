@@ -365,7 +365,7 @@ func (ds *FakeDataSource) GetStdlibPathsWithSuffix(ctx context.Context, suffix s
 }
 
 func (ds *FakeDataSource) GetSymbolHistory(ctx context.Context, packagePath, modulePath string) (*internal.SymbolHistory, error) {
-	return nil, errNotImplemented
+	return &internal.SymbolHistory{}, nil
 }
 
 func (ds *FakeDataSource) GetVersionMap(ctx context.Context, modulePath, requestedVersion string) (*internal.VersionMap, error) {
@@ -376,8 +376,73 @@ func (ds *FakeDataSource) GetVersionMaps(ctx context.Context, paths []string, re
 	return nil, errNotImplemented
 }
 
+// GetVersionsForPath returns a list of tagged versions sorted in
+// descending semver order if any exist. If none, it returns the 10 most
+// recent from a list of pseudo-versions sorted in descending semver order.
 func (ds *FakeDataSource) GetVersionsForPath(ctx context.Context, path string) ([]*internal.ModuleInfo, error) {
-	return nil, errNotImplemented
+	var infos []*internal.ModuleInfo
+
+	for _, m := range ds.modules {
+		if m.ModulePath == "std" {
+			for _, u := range m.Units {
+				if u.Path == path {
+					infos = append(infos, &m.ModuleInfo)
+					continue
+				}
+			}
+		}
+		prefix, _, _ := module.SplitPathVersion(m.ModulePath)
+		if !strings.HasPrefix(path, prefix) {
+			continue // different module
+		}
+		pathSuffix := trimSlashVersionPrefix(strings.TrimPrefix(path, prefix))
+		for _, u := range m.Units {
+			unitSuffix := trimSlashVersionPrefix(strings.TrimPrefix(u.Path, prefix))
+			if unitSuffix == pathSuffix {
+				infos = append(infos, &m.ModuleInfo)
+			}
+		}
+	}
+
+	// Only keep pseudoversions if we only have pseudoversions.
+	var nonPseudo []*internal.ModuleInfo
+	for _, info := range infos {
+		if !version.IsPseudo(info.Version) {
+			nonPseudo = append(nonPseudo, info)
+		}
+	}
+	if len(nonPseudo) > 0 {
+		infos = nonPseudo
+	}
+
+	sort.Slice(infos, func(i, j int) bool {
+		return version.ForSorting(infos[i].Version) > version.ForSorting(infos[j].Version)
+	})
+
+	if len(nonPseudo) == 0 && len(infos) > 10 {
+		infos = infos[:10]
+	}
+
+	return infos, nil
+}
+
+// TrimSlashVersionPrefix trims a /vN path component prefix if one is present in path,
+// and returns path unchanged otherwise.
+func trimSlashVersionPrefix(path string) string {
+	if !strings.HasPrefix(path, "/v") {
+		return path
+	}
+	trimSlash := path[len("/"):]
+	endOfPathComponent := strings.Index(trimSlash, "/")
+	if endOfPathComponent == -1 {
+		endOfPathComponent = len(trimSlash)
+	}
+	vComponent := trimSlash[:endOfPathComponent] // first component of the path
+	if m := semver.Major(vComponent); m == "" || m != vComponent {
+		return path
+	}
+	return trimSlash[endOfPathComponent:]
+
 }
 
 // InsertModule inserts m into the FakeDataSource. It is only implemented for

@@ -11,18 +11,12 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/osv"
-	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/stdlib"
+	"golang.org/x/pkgsite/internal/testing/fakedatasource"
 	"golang.org/x/pkgsite/internal/testing/sample"
 	"golang.org/x/pkgsite/internal/version"
 	"golang.org/x/pkgsite/internal/vuln"
 )
-
-var testDB *postgres.DB
-
-func TestMain(m *testing.M) {
-	postgres.RunDBTests("discovery_frontend_test", m, &testDB)
-}
 
 var (
 	modulePath1 = "test.com/module"
@@ -224,13 +218,13 @@ func TestFetchPackageVersionsDetails(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			ctx := context.Background()
-			defer postgres.ResetTestDB(testDB, t)
+			fds := fakedatasource.New()
 
 			for _, v := range tc.modules {
-				postgres.MustInsertModule(ctx, t, testDB, v)
+				fds.MustInsertModule(ctx, v)
 			}
 
-			got, err := FetchVersionsDetails(ctx, testDB, &tc.pkg.UnitMeta, vc)
+			got, err := FetchVersionsDetails(ctx, fds, &tc.pkg.UnitMeta, vc)
 			if err != nil {
 				t.Fatalf("FetchVersionsDetails(ctx, db, %q, %q): %v", tc.pkg.Path, tc.pkg.ModulePath, err)
 			}
