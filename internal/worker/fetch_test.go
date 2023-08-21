@@ -6,6 +6,7 @@ package worker
 
 import (
 	"context"
+	"fmt"
 	"sort"
 	"strings"
 	"testing"
@@ -21,6 +22,7 @@ import (
 	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/testing/sample"
+	"golang.org/x/pkgsite/internal/testing/testhelper"
 	"golang.org/x/pkgsite/internal/version"
 )
 
@@ -337,5 +339,39 @@ func TestFetchAndUpdateLatest(t *testing.T) {
 		t.Errorf("got (%q, %q, %q), want (%q, %q, %q)",
 			got.ModulePath, got.RawVersion, got.CookedVersion,
 			modulePath, wantRaw, wantCooked)
+	}
+}
+
+func TestFetchGo121(t *testing.T) {
+	// This test verifies that we can fetch modules using the more relaxed go
+	// directive syntax added with Go 1.21 (e.g. `go 1.21.0`).
+	var (
+		modulePath = sample.ModulePath
+		version    = sample.VersionString
+		foo        = map[string]string{
+			"go.mod":     fmt.Sprintf("module %s\n\ngo 1.21.0\n", modulePath),
+			"foo/foo.go": "// Package foo\npackage foo\n\nconst Foo = 42",
+			"README.md":  "This is a readme",
+			"LICENSE":    testhelper.MITLicense,
+		}
+	)
+	proxyClient, teardownProxy := proxytest.SetupTestClient(t, []*proxytest.Module{
+		{
+			ModulePath: modulePath,
+			Version:    version,
+			Files:      foo,
+		},
+	})
+	defer teardownProxy()
+
+	sourceClient := source.NewClient(sourceTimeout)
+	f := &Fetcher{proxyClient, sourceClient, testDB, nil, nil, ""}
+	got, _, err := f.FetchAndUpdateState(context.Background(), modulePath, version, testAppVersion)
+	if err != nil {
+		t.Fatalf("FetchAndUpdateState(%q, %q): %v", sample.ModulePath, version, err)
+	}
+	want := 200
+	if got != want {
+		t.Fatalf("FetchAndUpdateState(%q, %q): status = %d, want %d", sample.ModulePath, version, got, want)
 	}
 }
