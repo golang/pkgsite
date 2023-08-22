@@ -143,7 +143,7 @@ func main() {
 	var cacher frontend.Cacher
 	if cfg.RedisCacheHost != "" {
 		addr := cfg.RedisCacheHost + ":" + cfg.RedisCachePort
-		redisClient := redis.NewClient(&redis.Options{Addr: addr})
+		redisClient = redis.NewClient(&redis.Options{Addr: addr})
 		if err := redisClient.Ping(ctx).Err(); err != nil {
 			log.Errorf(ctx, "redis at %s: %v", addr, err)
 		} else {
