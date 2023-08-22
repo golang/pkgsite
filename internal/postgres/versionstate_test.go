@@ -83,8 +83,7 @@ func TestModuleVersionState(t *testing.T) {
 	t.Parallel()
 	testDB, release := acquire(t)
 	defer release()
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	defer cancel()
+	ctx := context.Background()
 
 	// verify that latest index timestamp works
 	initialTime, err := testDB.LatestIndexTimestamp(ctx)

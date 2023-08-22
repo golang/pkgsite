@@ -17,8 +17,7 @@ func TestGetStdlibPaths(t *testing.T) {
 	t.Parallel()
 	testDB, release := acquire(t)
 	defer release()
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	defer cancel()
+	ctx := context.Background()
 
 	// Insert two versions of some stdlib packages.
 	for _, data := range []struct {

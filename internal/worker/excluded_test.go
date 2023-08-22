@@ -13,8 +13,7 @@ import (
 )
 
 func TestExcluded(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	defer cancel()
+	ctx := context.Background()
 	defer postgres.ResetTestDB(testDB, t)
 
 	// This test is intending to test PopulateExcluded not just IsExcluded.

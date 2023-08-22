@@ -24,8 +24,7 @@ import (
 
 func TestGetUnitMeta(t *testing.T) {
 	t.Parallel()
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout*2)
-	defer cancel()
+	ctx := context.Background()
 	testGetUnitMeta(t, ctx)
 }
 
@@ -207,8 +206,7 @@ func TestGetUnitMetaBypass(t *testing.T) {
 	t.Parallel()
 	testDB, release := acquire(t)
 	defer release()
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	defer cancel()
+	ctx := context.Background()
 
 	bypassDB := NewBypassingLicenseCheck(testDB.db)
 
@@ -580,8 +578,7 @@ func TestGetUnit(t *testing.T) {
 	t.Parallel()
 	testDB, release := acquire(t)
 	defer release()
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	defer cancel()
+	ctx := context.Background()
 	InsertSampleDirectoryTree(ctx, t, testDB)
 
 	// Add a module that has READMEs in a directory and a package.
@@ -773,8 +770,7 @@ func TestGetUnit_SubdirectoriesShowNonRedistPackages(t *testing.T) {
 	t.Parallel()
 	testDB, release := acquire(t)
 	defer release()
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	defer cancel()
+	ctx := context.Background()
 
 	m := sample.DefaultModule()
 	m.IsRedistributable = false
@@ -786,8 +782,7 @@ func TestGetUnitFieldSet(t *testing.T) {
 	t.Parallel()
 	testDB, release := acquire(t)
 	defer release()
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	defer cancel()
+	ctx := context.Background()
 
 	readme := &internal.Readme{
 		Filepath: "a.com/m/dir/p/README.md",
@@ -878,8 +873,7 @@ func TestGetUnitBuildContext(t *testing.T) {
 	t.Parallel()
 	testDB, release := acquire(t)
 	defer release()
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	defer cancel()
+	ctx := context.Background()
 
 	// Add a module that has documentation for two Go build contexts.
 	m := sample.Module("a.com/twodoc", "v1.2.3", "p")
@@ -971,8 +965,7 @@ func TestGetUnitBypass(t *testing.T) {
 	t.Parallel()
 	testDB, release := acquire(t)
 	defer release()
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	defer cancel()
+	ctx := context.Background()
 	bypassDB := NewBypassingLicenseCheck(testDB.db)
 
 	m := nonRedistributableModule()

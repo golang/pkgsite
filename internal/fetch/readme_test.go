@@ -21,8 +21,7 @@ func TestExtractReadmes(t *testing.T) {
 	testenv.MustHaveExecPath(t, "git")
 	defer stdlib.WithTestData()()
 
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	defer cancel()
+	ctx := context.Background()
 
 	sortReadmes := func(readmes []*internal.Readme) {
 		sort.Slice(readmes, func(i, j int) bool {

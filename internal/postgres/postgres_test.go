@@ -14,8 +14,6 @@ import (
 	"golang.org/x/pkgsite/internal/derrors"
 )
 
-const testTimeout = 5 * time.Second
-
 var acquire func(*testing.T) (*DB, func())
 
 func TestMain(m *testing.M) {

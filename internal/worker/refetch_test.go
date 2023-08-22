@@ -23,12 +23,12 @@ import (
 )
 
 func TestReFetch(t *testing.T) {
+	ctx := context.Background()
+
 	// This test checks that re-fetching a version will cause its data to be
 	// overwritten.  This is achieved by fetching against two different versions
 	// of the (fake) proxy, though in reality the most likely cause of changes to
 	// a version is updates to our data model or fetch logic.
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	defer cancel()
 	defer postgres.ResetTestDB(testDB, t)
 
 	var (

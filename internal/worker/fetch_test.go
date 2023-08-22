@@ -42,8 +42,7 @@ var (
 )
 
 func TestFetchAndUpdateState(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	defer cancel()
+	ctx := context.Background()
 
 	defer stdlib.WithTestData()()
 

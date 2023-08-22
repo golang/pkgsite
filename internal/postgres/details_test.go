@@ -96,8 +96,7 @@ func TestGetNestedModules_Excluded(t *testing.T) {
 	t.Parallel()
 	testDB, release := acquire(t)
 	defer release()
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	defer cancel()
+	ctx := context.Background()
 
 	test := struct {
 		name            string
@@ -143,8 +142,7 @@ func TestPostgres_GetModuleInfo(t *testing.T) {
 	t.Parallel()
 	testDB, release := acquire(t)
 	defer release()
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	defer cancel()
+	ctx := context.Background()
 
 	testCases := []struct {
 		name, path, version string

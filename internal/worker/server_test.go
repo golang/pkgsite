@@ -30,8 +30,6 @@ import (
 	"golang.org/x/pkgsite/internal/testing/sample"
 )
 
-const testTimeout = 120 * time.Second
-
 var (
 	testDB      *postgres.DB
 	httpClient  *http.Client
@@ -59,8 +57,7 @@ func setupTraceDebugging(t *testing.T) {
 }
 
 func TestWorker(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	defer cancel()
+	ctx := context.Background()
 
 	setupTraceDebugging(t)
 

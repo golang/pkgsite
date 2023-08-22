@@ -195,8 +195,7 @@ func TestUpsertModule(t *testing.T) {
 	t.Parallel()
 	testDB, release := acquire(t)
 	defer release()
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	defer cancel()
+	ctx := context.Background()
 
 	m := sample.Module("upsert.org", "v1.2.3", "dir/p")
 
@@ -285,8 +284,7 @@ func TestInsertModuleNewCoverage(t *testing.T) {
 	t.Parallel()
 	testDB, release := acquire(t)
 	defer release()
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	defer cancel()
+	ctx := context.Background()
 
 	m := sample.DefaultModule()
 	newCoverage := licensecheck.Coverage{
@@ -447,8 +445,7 @@ func TestPostgres_NewerAlternative(t *testing.T) {
 	// alternative version.
 	testDB, release := acquire(t)
 	defer release()
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	defer cancel()
+	ctx := context.Background()
 
 	const (
 		altVersion = "v1.2.0"
@@ -488,8 +485,7 @@ func TestMakeValidUnicode(t *testing.T) {
 	t.Parallel()
 	testDB, release := acquire(t)
 	defer release()
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	defer cancel()
+	ctx := context.Background()
 
 	db := testDB.Underlying()
 
@@ -529,8 +525,7 @@ func TestLock(t *testing.T) {
 	// that wants the lock eventually gets it.
 	testDB, release := acquire(t)
 	defer release()
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	defer cancel()
+	ctx := context.Background()
 
 	db := testDB.Underlying()
 

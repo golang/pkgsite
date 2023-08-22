@@ -32,8 +32,6 @@ import (
 	"golang.org/x/pkgsite/internal/testing/sample"
 )
 
-var testTimeout = 30 * time.Second
-
 var (
 	templateFS  = template.TrustedFSFromTrustedSource(template.TrustedSourceFromConstant("../../static"))
 	testModules []*proxytest.Module
@@ -182,8 +180,7 @@ func validateDocumentationHTML(t *testing.T, got *internal.Module, want map[stri
 }
 
 func TestFetchModule_Errors(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	defer cancel()
+	ctx := context.Background()
 	for _, test := range []struct {
 		name          string
 		mod           *testModule

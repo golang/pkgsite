@@ -24,8 +24,7 @@ func TestInsertSymbolNamesAndHistory(t *testing.T) {
 	t.Parallel()
 	testDB, release := acquire(t)
 	defer release()
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	defer cancel()
+	ctx := context.Background()
 
 	mod := sample.DefaultModule()
 	if len(mod.Packages()) != 1 {
@@ -87,8 +86,7 @@ func TestInsertSymbolNamesAndHistory(t *testing.T) {
 func TestInsertSymbolHistory_Basic(t *testing.T) {
 	testDB, release := acquire(t)
 	defer release()
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	defer cancel()
+	ctx := context.Background()
 
 	mod := sample.DefaultModule()
 	if len(mod.Packages()) != 1 {
@@ -115,8 +113,7 @@ func TestInsertSymbolHistory_Basic(t *testing.T) {
 func TestInsertSymbolHistory_MultiVersions(t *testing.T) {
 	testDB, release := acquire(t)
 	defer release()
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	defer cancel()
+	ctx := context.Background()
 
 	typ := internal.Symbol{
 		SymbolMeta: internal.SymbolMeta{
@@ -215,8 +212,7 @@ func TestInsertSymbolHistory_MultiVersions(t *testing.T) {
 func TestInsertSymbolHistory_MultiGOOS(t *testing.T) {
 	testDB, release := acquire(t)
 	defer release()
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	defer cancel()
+	ctx := context.Background()
 
 	typ := internal.Symbol{
 		SymbolMeta: internal.SymbolMeta{

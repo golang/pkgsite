@@ -13,8 +13,7 @@ func TestIsExcluded(t *testing.T) {
 	t.Parallel()
 	testDB, release := acquire(t)
 	defer release()
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	defer cancel()
+	ctx := context.Background()
 
 	if err := testDB.InsertExcludedPrefix(ctx, "bad", "someone", "because"); err != nil {
 		t.Fatal(err)

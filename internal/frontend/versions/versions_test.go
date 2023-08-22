@@ -7,7 +7,6 @@ package versions
 import (
 	"context"
 	"testing"
-	"time"
 
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/pkgsite/internal"
@@ -18,8 +17,6 @@ import (
 	"golang.org/x/pkgsite/internal/version"
 	"golang.org/x/pkgsite/internal/vuln"
 )
-
-const testTimeout = 5 * time.Second
 
 var testDB *postgres.DB
 
@@ -226,8 +223,7 @@ func TestFetchPackageVersionsDetails(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			ctx, cancel := context.WithTimeout(context.Background(), testTimeout*2)
-			defer cancel()
+			ctx := context.Background()
 			defer postgres.ResetTestDB(testDB, t)
 
 			for _, v := range tc.modules {

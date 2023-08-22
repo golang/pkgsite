@@ -28,8 +28,7 @@ func TestGetNextModulesToFetchAndUpdateModuleVersionStatesForReprocessing(t *tes
 	t.Parallel()
 	testDB, release := acquire(t)
 	defer release()
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	defer cancel()
+	ctx := context.Background()
 
 	type testData struct {
 		modulePath, version string
@@ -213,8 +212,7 @@ func TestGetNextModulesToFetchOnlyPicksUpStatus0AndStatusGreaterThan500(t *testi
 	t.Parallel()
 	testDB, release := acquire(t)
 	defer release()
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	defer cancel()
+	ctx := context.Background()
 
 	statuses := []int{
 		http.StatusOK,

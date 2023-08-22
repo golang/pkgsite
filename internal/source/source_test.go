@@ -22,8 +22,7 @@ import (
 )
 
 var (
-	testTimeout = 2 * time.Second
-	record      = flag.Bool("record", false, "record interactions with other systems, for replay")
+	record = flag.Bool("record", false, "record interactions with other systems, for replay")
 )
 
 func TestModuleInfo(t *testing.T) {
@@ -551,7 +550,6 @@ func TestModuleInfoDynamic(t *testing.T) {
 	client := &Client{
 		httpClient: &http.Client{
 			Transport: testTransport(testWeb),
-			Timeout:   testTimeout,
 		},
 	}
 	// The version doesn't figure into the interesting work and we test versions to commits
@@ -731,6 +729,12 @@ func TestRemoveVersionSuffix(t *testing.T) {
 
 func TestAdjustVersionedModuleDirectory(t *testing.T) {
 	ctx := context.Background()
+
+	testTimeout := 72 * time.Hour // arbitrary
+	if deadline, ok := t.Deadline(); ok {
+		testTimeout = time.Until(deadline) * 9 / 10 // Allow 10% for error reporting and cleanup.
+	}
+
 	client := NewClient(testTimeout)
 	client.httpClient.Transport = testTransport(map[string]string{
 		// Repo "branch" follows the "major branch" convention: versions 2 and higher

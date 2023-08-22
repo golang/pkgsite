@@ -744,8 +744,7 @@ func TestSearchPenalties(t *testing.T) {
 	t.Parallel()
 	testDB, release := acquire(t)
 	defer release()
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	defer cancel()
+	ctx := context.Background()
 
 	// All these modules will have the same text ranking for the search term "foo",
 	// but different scores due to penalties.
@@ -797,8 +796,7 @@ func TestExcludedFromSearch(t *testing.T) {
 	t.Parallel()
 	testDB, release := acquire(t)
 	defer release()
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	defer cancel()
+	ctx := context.Background()
 
 	// Insert a module with two packages.
 	const domain = "exclude.com"
@@ -827,8 +825,7 @@ func TestSearchBypass(t *testing.T) {
 	t.Parallel()
 	testDB, release := acquire(t)
 	defer release()
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	defer cancel()
+	ctx := context.Background()
 	bypassDB := NewBypassingLicenseCheck(testDB.db)
 
 	m := nonRedistributableModule()
@@ -936,8 +933,7 @@ func TestUpsertSearchDocument(t *testing.T) {
 	t.Parallel()
 	testDB, release := acquire(t)
 	defer release()
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	defer cancel()
+	ctx := context.Background()
 
 	var packagePath = sample.ModulePath + "/A"
 
@@ -1005,8 +1001,7 @@ func TestUpsertSearchDocumentVersionHasGoMod(t *testing.T) {
 	t.Parallel()
 	testDB, release := acquire(t)
 	defer release()
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	defer cancel()
+	ctx := context.Background()
 
 	for _, hasGoMod := range []bool{true, false} {
 		m := sample.Module(fmt.Sprintf("foo.com/%t", hasGoMod), "v1.2.3", "bar")
@@ -1229,8 +1224,7 @@ func TestGetPackagesForSearchDocumentUpsert(t *testing.T) {
 	t.Parallel()
 	testDB, release := acquire(t)
 	defer release()
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	defer cancel()
+	ctx := context.Background()
 
 	moduleA := sample.Module("mod.com", "v1.2.3",
 		"A", "A/notinternal", "A/internal", "A/internal/B")

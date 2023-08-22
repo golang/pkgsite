@@ -42,8 +42,7 @@ func TestGetLicenses(t *testing.T) {
 	testDB, release := acquire(t)
 	defer release()
 
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout*5)
-	defer cancel()
+	ctx := context.Background()
 	MustInsertModule(ctx, t, testDB, testModule)
 	MustInsertModule(ctx, t, testDB, stdlibModule)
 	for _, test := range []struct {
@@ -131,8 +130,7 @@ func TestGetModuleLicenses(t *testing.T) {
 	testDB, release := acquire(t)
 	defer release()
 
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	defer cancel()
+	ctx := context.Background()
 
 	testModule.Licenses = nil
 	for _, p := range testModule.Packages() {
@@ -169,8 +167,7 @@ func TestGetLicensesBypass(t *testing.T) {
 	t.Parallel()
 	testDB, release := acquire(t)
 	defer release()
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	defer cancel()
+	ctx := context.Background()
 
 	bypassDB := NewBypassingLicenseCheck(testDB.db)
 

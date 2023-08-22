@@ -24,8 +24,6 @@ import (
 	"golang.org/x/pkgsite/internal/derrors"
 )
 
-const testTimeout = 5 * time.Second
-
 const testDBName = "discovery_postgres_test"
 
 var testDB *DB
@@ -136,8 +134,7 @@ func TestBulkInsert(t *testing.T) {
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-			defer cancel()
+			ctx := context.Background()
 
 			createQuery := fmt.Sprintf(`CREATE TABLE %s (
 					colA TEXT NOT NULL,
@@ -198,8 +195,7 @@ func TestBulkInsert(t *testing.T) {
 }
 
 func TestLargeBulkInsert(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout*3)
-	defer cancel()
+	ctx := context.Background()
 	if _, err := testDB.Exec(ctx, `CREATE TEMPORARY TABLE test_large_bulk (i BIGINT);`); err != nil {
 		t.Fatal(err)
 	}
@@ -235,8 +231,7 @@ func TestLargeBulkInsert(t *testing.T) {
 }
 
 func TestBulkUpsert(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout*3)
-	defer cancel()
+	ctx := context.Background()
 	if _, err := testDB.Exec(ctx, `CREATE TEMPORARY TABLE test_replace (C1 int PRIMARY KEY, C2 int);`); err != nil {
 		t.Fatal(err)
 	}
@@ -308,8 +303,7 @@ func TestBuildBulkUpdateQuery(t *testing.T) {
 }
 
 func TestBulkUpdate(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	defer cancel()
+	ctx := context.Background()
 
 	defer func(old int) { maxBulkUpdateArrayLen = old }(maxBulkUpdateArrayLen)
 	maxBulkUpdateArrayLen = 5
@@ -372,8 +366,7 @@ func TestTransactSerializable(t *testing.T) {
 	// Test that serializable transactions retry until success.
 	// This test was taken from the example at https://www.postgresql.org/docs/11/transaction-iso.html,
 	// section 13.2.3.
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout*2)
-	defer cancel()
+	ctx := context.Background()
 
 	// Once in while, the test doesn't work. Repeat to de-flake.
 	var msg string
@@ -469,8 +462,7 @@ func testTransactSerializable(ctx context.Context, t *testing.T) string {
 
 func TestCopyDoesNotUpsert(t *testing.T) {
 	// This test verifies that copying rows into a table will not overwrite existing rows.
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	defer cancel()
+	ctx := context.Background()
 	conn, err := testDB.db.Conn(ctx)
 	if err != nil {
 		t.Fatal(err)

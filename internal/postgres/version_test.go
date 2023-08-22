@@ -58,8 +58,7 @@ func TestGetVersions(t *testing.T) {
 
 	testDB, release := acquire(t)
 	defer release()
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	defer cancel()
+	ctx := context.Background()
 
 	for _, m := range testModules {
 		goMod := "module " + m.ModulePath
@@ -255,8 +254,7 @@ func TestGetLatestInfo(t *testing.T) {
 	t.Parallel()
 	testDB, release := acquire(t)
 	defer release()
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	defer cancel()
+	ctx := context.Background()
 
 	for _, m := range []*internal.Module{
 		sample.Module("a.com/M", "v99.0.0+incompatible", "all", "most"),

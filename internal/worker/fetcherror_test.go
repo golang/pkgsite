@@ -31,8 +31,7 @@ import (
 // Check that when the proxy says it does not have module@version,
 // we delete it from the database.
 func TestFetchAndUpdateState_NotFound(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	defer cancel()
+	ctx := context.Background()
 	defer postgres.ResetTestDB(testDB, t)
 
 	proxyClient, teardown := proxytest.SetupTestClient(t, []*proxytest.Module{
@@ -92,8 +91,7 @@ func TestFetchAndUpdateState_NotFound(t *testing.T) {
 
 func TestFetchAndUpdateState_Excluded(t *testing.T) {
 	// Check that an excluded module is not processed, and is marked excluded in module_version_states.
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	defer cancel()
+	ctx := context.Background()
 
 	defer postgres.ResetTestDB(testDB, t)
 
@@ -108,8 +106,7 @@ func TestFetchAndUpdateState_Excluded(t *testing.T) {
 }
 
 func TestFetchAndUpdateState_BadRequestedVersion(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	defer cancel()
+	ctx := context.Background()
 
 	defer postgres.ResetTestDB(testDB, t)
 	var (
@@ -123,8 +120,7 @@ func TestFetchAndUpdateState_BadRequestedVersion(t *testing.T) {
 
 func TestFetchAndUpdateState_Incomplete(t *testing.T) {
 	// Check that we store the special "incomplete" status in module_version_states.
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	defer cancel()
+	ctx := context.Background()
 
 	defer postgres.ResetTestDB(testDB, t)
 
@@ -150,8 +146,7 @@ func TestFetchAndUpdateState_Incomplete(t *testing.T) {
 
 func TestFetchAndUpdateState_Mismatch(t *testing.T) {
 	// Check that an excluded module is not processed, and is marked excluded in module_version_states.
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	defer cancel()
+	ctx := context.Background()
 
 	defer postgres.ResetTestDB(testDB, t)
 
@@ -175,8 +170,7 @@ func TestFetchAndUpdateState_Mismatch(t *testing.T) {
 func TestFetchAndUpdateState_DeleteOlder(t *testing.T) {
 	// Check that fetching an alternative module deletes all older versions of that
 	// module from search_documents (but not versions).
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	defer cancel()
+	ctx := context.Background()
 
 	defer postgres.ResetTestDB(testDB, t)
 
@@ -219,8 +213,7 @@ func TestFetchAndUpdateState_DeleteOlder(t *testing.T) {
 }
 
 func TestFetchAndUpdateState_SkipIncompletePackage(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	defer cancel()
+	ctx := context.Background()
 	defer postgres.ResetTestDB(testDB, t)
 	badModule := map[string]string{
 		"foo/foo.go": "// Package foo\npackage foo\n\nconst Foo = 42",
@@ -263,8 +256,7 @@ func TestFetchAndUpdateState_Timeout(t *testing.T) {
 // Check that when the proxy says fetch timed out, we return a 5xx error so
 // that we automatically try to fetch it again later.
 func TestFetchAndUpdateState_ProxyTimedOut(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	defer cancel()
+	ctx := context.Background()
 	defer postgres.ResetTestDB(testDB, t)
 
 	proxyServer := proxytest.NewServer(nil)
@@ -288,8 +280,7 @@ func TestFetchAndUpdateState_ProxyTimedOut(t *testing.T) {
 // This makes it viable for us to show documentation for packages that
 // would otherwise exceed HTML size limit and not get shown at all.
 func TestTrimLargeCode(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout*3)
-	defer cancel()
+	ctx := context.Background()
 	defer postgres.ResetTestDB(testDB, t)
 	trimmedModule := map[string]string{
 		"foo/foo.go": "// Package foo\npackage foo\n\nconst Foo = 42",

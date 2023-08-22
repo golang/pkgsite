@@ -21,8 +21,6 @@ import (
 	"golang.org/x/pkgsite/internal/version"
 )
 
-const testTimeout = 5 * time.Second
-
 var testModule = &proxytest.Module{
 	ModulePath: sample.ModulePath,
 	Version:    sample.VersionString,
@@ -66,8 +64,7 @@ var uncachedModule = &proxytest.Module{
 }
 
 func TestGetLatestInfo(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	defer cancel()
+	ctx := context.Background()
 
 	testModules := []*proxytest.Module{
 		{
@@ -95,8 +92,7 @@ func TestGetLatestInfo(t *testing.T) {
 }
 
 func TestListVersions(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	defer cancel()
+	ctx := context.Background()
 
 	testModules := []*proxytest.Module{
 		{
@@ -129,8 +125,7 @@ func TestListVersions(t *testing.T) {
 }
 
 func TestInfo(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	defer cancel()
+	ctx := context.Background()
 
 	client, teardownProxy := proxytest.SetupTestClient(t, []*proxytest.Module{testModule, uncachedModule})
 	defer teardownProxy()
@@ -163,8 +158,7 @@ func TestInfo(t *testing.T) {
 }
 
 func TestInfo_Errors(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	defer cancel()
+	ctx := context.Background()
 
 	proxyServer := proxytest.NewServer(nil)
 	proxyServer.AddRoute(
@@ -196,8 +190,7 @@ func TestInfo_Errors(t *testing.T) {
 }
 
 func TestMod(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	defer cancel()
+	ctx := context.Background()
 
 	client, teardownProxy := proxytest.SetupTestClient(t, []*proxytest.Module{testModule})
 	defer teardownProxy()
@@ -214,8 +207,7 @@ func TestMod(t *testing.T) {
 }
 
 func TestGetZip(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	defer cancel()
+	ctx := context.Background()
 
 	client, teardownProxy := proxytest.SetupTestClient(t, []*proxytest.Module{testModule})
 	defer teardownProxy()
@@ -253,8 +245,7 @@ func TestGetZip(t *testing.T) {
 }
 
 func TestZipNonExist(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
-	defer cancel()
+	ctx := context.Background()
 
 	client, teardownProxy := proxytest.SetupTestClient(t, nil)
 	defer teardownProxy()
