@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-package config
+package serverconfig
 
 import (
 	"context"
@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"golang.org/x/pkgsite/internal/config"
 )
 
 func TestValidateAppVersion(t *testing.T) {
@@ -56,10 +57,10 @@ func TestChooseOne(t *testing.T) {
 func TestProcessOverrides(t *testing.T) {
 	tr := true
 	f := false
-	cfg := Config{
+	cfg := config.Config{
 		DBHost: "origHost",
 		DBName: "origName",
-		Quota:  QuotaSettings{QPS: 1, Burst: 2, MaxEntries: 3, RecordOnly: &tr},
+		Quota:  config.QuotaSettings{QPS: 1, Burst: 2, MaxEntries: 3, RecordOnly: &tr},
 	}
 	ov := `
         DBHost: newHost
@@ -69,12 +70,12 @@ func TestProcessOverrides(t *testing.T) {
     `
 	processOverrides(context.Background(), &cfg, []byte(ov))
 	got := cfg
-	want := Config{
+	want := config.Config{
 		DBHost: "newHost",
 		DBName: "origName",
-		Quota:  QuotaSettings{QPS: 1, Burst: 2, MaxEntries: 17, RecordOnly: &f},
+		Quota:  config.QuotaSettings{QPS: 1, Burst: 2, MaxEntries: 17, RecordOnly: &f},
 	}
-	if diff := cmp.Diff(want, got, cmp.AllowUnexported(Config{})); diff != "" {
+	if diff := cmp.Diff(want, got, cmp.AllowUnexported(config.Config{})); diff != "" {
 		t.Errorf("mismatch (-want, +got):\n%s", diff)
 	}
 }
@@ -108,7 +109,7 @@ func TestEnvAndApp(t *testing.T) {
 		{"-foo-bar", "unknownEnv", "foo-bar"},
 		{"", "local", "unknownApp"},
 	} {
-		cfg := &Config{ServiceID: test.serviceID}
+		cfg := &config.Config{ServiceID: test.serviceID}
 		gotEnv := cfg.DeploymentEnvironment()
 		if gotEnv != test.wantEnv {
 			t.Errorf("%q: got %q, want %q", test.serviceID, gotEnv, test.wantEnv)

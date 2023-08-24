@@ -21,6 +21,7 @@ import (
 	"go.opencensus.io/trace"
 	"go.opencensus.io/zpages"
 	"golang.org/x/pkgsite/internal/config"
+	"golang.org/x/pkgsite/internal/config/serverconfig"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/log"
 )
@@ -169,7 +170,7 @@ func NewViewExporter(cfg *config.Config) (_ *stackdriver.Exporter, err error) {
 			"task_id":    cfg.InstanceID,
 		},
 	}
-	if cfg.OnGKE() {
+	if serverconfig.OnGKE() {
 		mr = (*monitoredResource)(cfg.MonitoredResource)
 	}
 	log.Debugf(context.Background(), "monitored resource for monitoring: Type %q, Labels %v",

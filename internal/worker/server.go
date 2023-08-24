@@ -27,6 +27,7 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/cache"
 	"golang.org/x/pkgsite/internal/config"
+	"golang.org/x/pkgsite/internal/config/serverconfig"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/godoc/dochtml"
 	"golang.org/x/pkgsite/internal/index"
@@ -605,7 +606,7 @@ func (s *Server) handleReprocess(w http.ResponseWriter, r *http.Request) error {
 	if appVersion == "" {
 		return &serverError{http.StatusBadRequest, errors.New("app_version was not specified")}
 	}
-	if err := config.ValidateAppVersion(appVersion); err != nil {
+	if err := serverconfig.ValidateAppVersion(appVersion); err != nil {
 		return &serverError{http.StatusBadRequest, fmt.Errorf("config.ValidateAppVersion(%q): %v", appVersion, err)}
 	}
 
@@ -874,14 +875,14 @@ const mib = 1024 * 1024
 var maxModuleZipSize int64 = math.MaxInt64
 
 func init() {
-	v := config.GetEnvInt(context.Background(), "GO_DISCOVERY_MAX_MODULE_ZIP_MI", -1)
+	v := serverconfig.GetEnvInt(context.Background(), "GO_DISCOVERY_MAX_MODULE_ZIP_MI", -1)
 	if v > 0 {
 		maxModuleZipSize = int64(v) * mib
 	}
 }
 
 func (s *Server) setLoadShedder(ctx context.Context) {
-	mebis := config.GetEnvInt(ctx, "GO_DISCOVERY_MAX_IN_FLIGHT_ZIP_MI", -1)
+	mebis := serverconfig.GetEnvInt(ctx, "GO_DISCOVERY_MAX_IN_FLIGHT_ZIP_MI", -1)
 	if mebis > 0 {
 		log.Infof(ctx, "shedding load over %dMi", mebis)
 		s.loadShedder = &loadShedder{

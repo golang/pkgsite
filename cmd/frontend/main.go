@@ -18,6 +18,7 @@ import (
 	"golang.org/x/pkgsite/cmd/internal/cmdconfig"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/config"
+	"golang.org/x/pkgsite/internal/config/serverconfig"
 	"golang.org/x/pkgsite/internal/dcensus"
 	"golang.org/x/pkgsite/internal/fetch"
 	"golang.org/x/pkgsite/internal/fetchdatasource"
@@ -35,7 +36,7 @@ import (
 )
 
 var (
-	queueName      = config.GetEnv("GO_DISCOVERY_FRONTEND_TASK_QUEUE", "")
+	queueName      = serverconfig.GetEnv("GO_DISCOVERY_FRONTEND_TASK_QUEUE", "")
 	workers        = flag.Int("workers", 10, "number of concurrent requests to the fetch service, when running locally")
 	staticFlag     = flag.String("static", "static", "path to folder containing static files served")
 	thirdPartyPath = flag.String("third_party", "third_party", "path to folder containing third-party libraries")
@@ -53,7 +54,7 @@ var (
 func main() {
 	flag.Parse()
 	ctx := context.Background()
-	cfg, err := config.Init(ctx)
+	cfg, err := serverconfig.Init(ctx)
 	if err != nil {
 		log.Fatal(ctx, err)
 	}
@@ -169,7 +170,7 @@ func main() {
 	}
 	// We are not currently forwarding any ports on AppEngine, so serving debug
 	// information is broken.
-	if !cfg.OnAppEngine() {
+	if !serverconfig.OnAppEngine() {
 		dcensusServer, err := dcensus.NewServer()
 		if err != nil {
 			log.Fatal(ctx, err)

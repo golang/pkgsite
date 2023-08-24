@@ -8,7 +8,7 @@ import (
 	"context"
 	"testing"
 
-	"golang.org/x/pkgsite/internal/config"
+	"golang.org/x/pkgsite/internal/config/serverconfig"
 	"golang.org/x/pkgsite/internal/database"
 )
 
@@ -33,7 +33,7 @@ var testQueries = []string{
 
 func BenchmarkSearch(b *testing.B) {
 	ctx := context.Background()
-	cfg, err := config.Init(ctx)
+	cfg, err := serverconfig.Init(ctx)
 	if err != nil {
 		b.Fatal(err)
 	}

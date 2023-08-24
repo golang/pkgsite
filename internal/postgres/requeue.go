@@ -12,7 +12,7 @@ import (
 	"strconv"
 
 	"golang.org/x/pkgsite/internal"
-	"golang.org/x/pkgsite/internal/config"
+	"golang.org/x/pkgsite/internal/config/serverconfig"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/log"
 )
@@ -156,7 +156,7 @@ const largeModulePackageThreshold = 1500
 // largeModulesLimit represents the number of large modules that we are
 // willing to enqueue at a given time.
 // var for testing.
-var largeModulesLimit = config.GetEnvInt(context.Background(), "GO_DISCOVERY_LARGE_MODULES_LIMIT", 100)
+var largeModulesLimit = serverconfig.GetEnvInt(context.Background(), "GO_DISCOVERY_LARGE_MODULES_LIMIT", 100)
 
 // GetNextModulesToFetch returns the next batch of modules that need to be
 // processed. We prioritize modules based on (1) whether it has status zero

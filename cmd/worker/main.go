@@ -19,6 +19,7 @@ import (
 	_ "github.com/jackc/pgx/v4/stdlib" // for pgx driver
 	"golang.org/x/pkgsite/cmd/internal/cmdconfig"
 	"golang.org/x/pkgsite/internal/config"
+	"golang.org/x/pkgsite/internal/config/serverconfig"
 	"golang.org/x/pkgsite/internal/dcensus"
 	"golang.org/x/pkgsite/internal/index"
 	"golang.org/x/pkgsite/internal/log"
@@ -31,8 +32,8 @@ import (
 )
 
 var (
-	timeout   = config.GetEnvInt(context.Background(), "GO_DISCOVERY_WORKER_TIMEOUT_MINUTES", 10)
-	queueName = config.GetEnv("GO_DISCOVERY_WORKER_TASK_QUEUE", "")
+	timeout   = serverconfig.GetEnvInt(context.Background(), "GO_DISCOVERY_WORKER_TIMEOUT_MINUTES", 10)
+	queueName = serverconfig.GetEnv("GO_DISCOVERY_WORKER_TASK_QUEUE", "")
 	workers   = flag.Int("workers", 10, "number of concurrent requests to the fetch service, when running locally")
 	// flag used in call to safehtml/template.TrustedSourceFromFlag
 	_                  = flag.String("static", "static", "path to folder containing static files served")
@@ -44,7 +45,7 @@ func main() {
 
 	ctx := context.Background()
 
-	cfg, err := config.Init(ctx)
+	cfg, err := serverconfig.Init(ctx)
 	if err != nil {
 		log.Fatal(ctx, err)
 	}
@@ -128,7 +129,7 @@ func main() {
 	}
 	// We are not currently forwarding any ports on AppEngine, so serving debug
 	// information is broken.
-	if !cfg.OnAppEngine() {
+	if !serverconfig.OnAppEngine() {
 		dcensusServer, err := dcensus.NewServer()
 		if err != nil {
 			log.Fatal(ctx, err)

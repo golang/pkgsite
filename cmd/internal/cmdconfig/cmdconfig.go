@@ -19,6 +19,7 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/config"
 	"golang.org/x/pkgsite/internal/config/dynconfig"
+	"golang.org/x/pkgsite/internal/config/serverconfig"
 	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/log"
@@ -30,12 +31,12 @@ import (
 
 // Logger configures a middleware.Logger.
 func Logger(ctx context.Context, cfg *config.Config, logName string) middleware.Logger {
-	if cfg.OnGCP() {
+	if serverconfig.OnGCP() {
 		opts := []logging.LoggerOption{logging.CommonResource(&mrpb.MonitoredResource{
 			Type:   cfg.MonitoredResource.Type,
 			Labels: cfg.MonitoredResource.Labels,
 		})}
-		if cfg.OnGKE() {
+		if serverconfig.OnGKE() {
 			opts = append(opts, logging.CommonLabels(map[string]string{
 				"k8s-pod/env": cfg.DeploymentEnvironment(),
 				"k8s-pod/app": cfg.Application(),
@@ -53,7 +54,7 @@ func Logger(ctx context.Context, cfg *config.Config, logName string) middleware.
 
 // Reporter configures an Error Reporting client.
 func Reporter(ctx context.Context, cfg *config.Config) derrors.Reporter {
-	if !cfg.OnGCP() || cfg.DisableErrorReporting {
+	if !serverconfig.OnGCP() || cfg.DisableErrorReporting {
 		return nil
 	}
 	reportingClient, err := errorreporting.NewClient(ctx, cfg.ProjectID, errorreporting.Config{

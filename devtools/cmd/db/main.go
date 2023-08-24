@@ -14,7 +14,7 @@ import (
 	"strings"
 
 	_ "github.com/jackc/pgx/v4/stdlib" // for pgx driver
-	"golang.org/x/pkgsite/internal/config"
+	"golang.org/x/pkgsite/internal/config/serverconfig"
 	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/log"
 )
@@ -39,12 +39,12 @@ func main() {
 	}
 
 	ctx := context.Background()
-	cfg, err := config.Init(ctx)
+	cfg, err := serverconfig.Init(ctx)
 	if err != nil {
 		log.Fatal(ctx, err)
 	}
 
-	dbName := config.GetEnv("GO_DISCOVERY_DATABASE_NAME", "discovery-db")
+	dbName := serverconfig.GetEnv("GO_DISCOVERY_DATABASE_NAME", "discovery-db")
 	if err := run(ctx, flag.Args()[0], dbName, cfg.DBConnInfo()); err != nil {
 		log.Fatal(ctx, err)
 	}

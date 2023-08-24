@@ -19,6 +19,7 @@ import (
 	"github.com/google/safehtml/template"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/config"
+	"golang.org/x/pkgsite/internal/config/serverconfig"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/memory"
@@ -75,7 +76,7 @@ func (s *Server) doIndexPage(w http.ResponseWriter, r *http.Request) (err error)
 		log.Warningf(ctx, "could not get cgroup stats: %v", err)
 	}
 	var logsURL string
-	if s.cfg.OnGKE() {
+	if serverconfig.OnGKE() {
 		env := s.cfg.DeploymentEnvironment()
 		cluster := env + "-" + "pkgsite"
 		logsURL = `https://pantheon.corp.google.com/logs/query;query=resource.type%3D%22k8s_container%22%20resource.labels.cluster_name%3D%22` +

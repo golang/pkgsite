@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"cloud.google.com/go/cloudtasks/apiv2"
+	"golang.org/x/pkgsite/internal/config/serverconfig"
 	taskspb "google.golang.org/genproto/googleapis/cloud/tasks/v2"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -33,7 +34,7 @@ import (
 // New creates a new Queue with name queueName based on the configuration
 // in cfg. When running locally, Queue uses numWorkers concurrent workers.
 func New(ctx context.Context, cfg *config.Config, queueName string, numWorkers int, expGetter middleware.ExperimentGetter, processFunc queue.InMemoryProcessFunc) (queue.Queue, error) {
-	if !cfg.OnGCP() {
+	if !serverconfig.OnGCP() {
 		experiments, err := expGetter(ctx)
 		if err != nil {
 			return nil, err

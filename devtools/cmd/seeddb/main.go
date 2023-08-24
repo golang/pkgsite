@@ -21,6 +21,7 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/config"
 	"golang.org/x/pkgsite/internal/config/dynconfig"
+	"golang.org/x/pkgsite/internal/config/serverconfig"
 	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/experiment"
@@ -45,7 +46,7 @@ func main() {
 	flag.Parse()
 
 	ctx := context.Background()
-	cfg, err := config.Init(ctx)
+	cfg, err := serverconfig.Init(ctx)
 	if err != nil {
 		log.Fatal(ctx, err)
 	}

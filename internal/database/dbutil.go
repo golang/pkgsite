@@ -13,7 +13,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"golang.org/x/pkgsite/internal/config"
+	"golang.org/x/pkgsite/internal/config/serverconfig"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/testing/testhelper"
 
@@ -31,10 +31,10 @@ import (
 // necessary as migrate expects a URI.
 func DBConnURI(dbName string) string {
 	var (
-		user     = config.GetEnv("GO_DISCOVERY_DATABASE_USER", "postgres")
-		password = config.GetEnv("GO_DISCOVERY_DATABASE_PASSWORD", "")
-		host     = config.GetEnv("GO_DISCOVERY_DATABASE_HOST", "localhost")
-		port     = config.GetEnv("GO_DISCOVERY_DATABASE_PORT", "5432")
+		user     = serverconfig.GetEnv("GO_DISCOVERY_DATABASE_USER", "postgres")
+		password = serverconfig.GetEnv("GO_DISCOVERY_DATABASE_PASSWORD", "")
+		host     = serverconfig.GetEnv("GO_DISCOVERY_DATABASE_HOST", "localhost")
+		port     = serverconfig.GetEnv("GO_DISCOVERY_DATABASE_PORT", "5432")
 	)
 	cs := fmt.Sprintf("postgres://%s/%s?sslmode=disable&user=%s&password=%s&port=%s&timezone=UTC",
 		host, dbName, url.QueryEscape(user), url.QueryEscape(password), url.QueryEscape(port))
