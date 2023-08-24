@@ -12,9 +12,9 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 
 	"golang.org/x/pkgsite/internal/derrors"
-	"golang.org/x/pkgsite/internal/testing/testhelper"
 	"golang.org/x/pkgsite/internal/version"
 )
 
@@ -129,7 +129,7 @@ func (t *testGoRepo) clone(ctx context.Context, v, directory string) (refName st
 	if err := cmd.Run(); err != nil {
 		return "", err
 	}
-	testdatadir := filepath.Join(testhelper.TestDataPath("testdata"), v)
+	testdatadir := filepath.Join(testDataPath("testdata"), v)
 	err = filepath.Walk(testdatadir, func(path string, info fs.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -175,6 +175,20 @@ func (t *testGoRepo) clone(ctx context.Context, v, directory string) (refName st
 		return "", fmt.Errorf("running git commit: %v", err)
 	}
 	return "HEAD", nil
+}
+
+// testDataPath returns a path corresponding to a path relative to the calling
+// test file. For convenience, rel is assumed to be "/"-delimited.
+// It is a copy of testhelper.TestDataPath, which we can't use in this
+// file because it is supposed to only be depended on by test files.
+//
+// It panics on failure.
+func testDataPath(rel string) string {
+	_, filename, _, ok := runtime.Caller(1)
+	if !ok {
+		panic("unable to determine relative path")
+	}
+	return filepath.Clean(filepath.Join(filepath.Dir(filename), filepath.FromSlash(rel)))
 }
 
 // References used for Versions during testing.
