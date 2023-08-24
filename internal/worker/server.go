@@ -23,6 +23,7 @@ import (
 	"github.com/go-redis/redis/v8"
 	"github.com/google/safehtml/template"
 	"go.opencensus.io/trace"
+	"golang.org/x/mod/semver"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/cache"
 	"golang.org/x/pkgsite/internal/config"
@@ -418,27 +419,25 @@ func parseModulePathAndVersion(requestPath string) (string, string, error) {
 func (s *Server) handlePollIndex(w http.ResponseWriter, r *http.Request) (err error) {
 	defer derrors.Wrap(&err, "handlePollIndex(%q)", r.URL.Path)
 	ctx := r.Context()
-	if deadline, ok := ctx.Deadline(); ok {
-		log.Infof(ctx, "polling at %v with deadline %v", time.Now(), deadline)
-	}
-
-	// log.Infof(ctx, "", limit)
 	limit := parseLimitParam(r, 10)
-	log.Infof(ctx, "got limit %v; getting the latest index timestamp", limit)
 	since, err := s.db.LatestIndexTimestamp(ctx)
 	if err != nil {
-		log.Errorf(ctx, "failed to get timestamp: %v", err)
 		return err
 	}
-	log.Infof(ctx, "last timestamp was %v; querying versions from the index", since)
 	modules, err := s.indexClient.GetVersions(ctx, since, limit)
 	if err != nil {
-		log.Errorf(ctx, "failed to get versions: %v", err)
 		return err
 	}
-	log.Infof(ctx, "found %v modules from the index; inserting them into the database", len(modules))
-	if err := s.db.InsertIndexVersions(ctx, modules); err != nil {
-		log.Errorf(ctx, "failed to insert into the database: %v", err)
+	var versions []*internal.IndexVersion
+	for _, v := range modules {
+		// This is defensive, but the proxy at one point served bad versions due to a bug.
+		if semver.IsValid(v.Version) {
+			versions = append(versions, v)
+		} else {
+			log.Warningf(ctx, "invalid module version for %s %s %s", v.Path, v.Version, v.Timestamp)
+		}
+	}
+	if err := s.db.InsertIndexVersions(ctx, versions); err != nil {
 		return err
 	}
 	log.Infof(ctx, "inserted %d modules from the index", len(modules))
