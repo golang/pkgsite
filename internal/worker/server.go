@@ -418,19 +418,30 @@ func parseModulePathAndVersion(requestPath string) (string, string, error) {
 func (s *Server) handlePollIndex(w http.ResponseWriter, r *http.Request) (err error) {
 	defer derrors.Wrap(&err, "handlePollIndex(%q)", r.URL.Path)
 	ctx := r.Context()
+	if deadline, ok := ctx.Deadline(); ok {
+		log.Infof(ctx, "polling at %v with deadline %v", time.Now(), deadline)
+	}
+
+	// log.Infof(ctx, "", limit)
 	limit := parseLimitParam(r, 10)
+	log.Infof(ctx, "got limit %v; getting the latest index timestamp", limit)
 	since, err := s.db.LatestIndexTimestamp(ctx)
 	if err != nil {
+		log.Errorf(ctx, "failed to get timestamp: %v", err)
 		return err
 	}
+	log.Infof(ctx, "last timestamp was %v; querying versions from the index", since)
 	modules, err := s.indexClient.GetVersions(ctx, since, limit)
 	if err != nil {
+		log.Errorf(ctx, "failed to get versions: %v", err)
 		return err
 	}
+	log.Infof(ctx, "found %v modules from the index; inserting them into the database", len(modules))
 	if err := s.db.InsertIndexVersions(ctx, modules); err != nil {
+		log.Errorf(ctx, "failed to insert into the database: %v", err)
 		return err
 	}
-	log.Infof(ctx, "Inserted %d modules from the index", len(modules))
+	log.Infof(ctx, "inserted %d modules from the index", len(modules))
 	s.computeProcessingLag(ctx)
 	s.computeUnprocessedModules(ctx)
 	recordWorkerDBInfo(ctx, s.workerDBInfo())
