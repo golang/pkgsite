@@ -427,7 +427,6 @@ func newServer(getters []fetch.ModuleGetter, localModules []frontend.LocalModule
 		DevMode:          *devMode,
 		LocalMode:        true,
 		LocalModules:     localModules,
-		StaticPath:       *staticFlag,
 		ThirdPartyFS:     thirdparty.FS,
 	})
 	if err != nil {

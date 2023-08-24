@@ -35,7 +35,6 @@ import (
 	"golang.org/x/pkgsite/internal/memory"
 	"golang.org/x/pkgsite/internal/middleware/stats"
 	"golang.org/x/pkgsite/internal/queue"
-	"golang.org/x/pkgsite/internal/static"
 	"golang.org/x/pkgsite/internal/version"
 	"golang.org/x/pkgsite/internal/vuln"
 	"golang.org/x/text/cases"
@@ -54,7 +53,6 @@ type Server struct {
 	devMode            bool
 	localMode          bool          // running locally (i.e. ./cmd/pkgsite)
 	localModules       []LocalModule // locally hosted modules; empty in production
-	staticPath         string        // used only for dynamic loading in dev mode
 	errorPage          []byte
 	appVersionLabel    string
 	googleTagManagerID string
@@ -95,7 +93,6 @@ type ServerConfig struct {
 	DevMode          bool
 	LocalMode        bool
 	LocalModules     []LocalModule
-	StaticPath       string // used only for dynamic loading in dev mode
 	Reporter         derrors.Reporter
 	VulndbClient     *vuln.Client
 }
@@ -118,7 +115,6 @@ func NewServer(scfg ServerConfig) (_ *Server, err error) {
 		devMode:       scfg.DevMode,
 		localMode:     scfg.LocalMode,
 		localModules:  scfg.LocalModules,
-		staticPath:    scfg.StaticPath,
 		templates:     ts,
 		reporter:      scfg.Reporter,
 		fileMux:       http.NewServeMux(),
@@ -738,21 +734,6 @@ func parsePageTemplates(fsys template.TrustedFS) (map[string]*template.Template,
 }
 
 func (s *Server) staticHandler() http.Handler {
-	// In dev mode compile TypeScript files into minified JavaScript files
-	// and rebuild them on file changes.
-	if s.devMode {
-		if s.staticPath == "" {
-			panic("staticPath is empty in dev mode; cannot rebuild static files")
-		}
-		ctx := context.Background()
-		if err := static.Build(static.Config{
-			EntryPoint: s.staticPath + "/frontend",
-			Watch:      true,
-			Bundle:     true,
-		}); err != nil {
-			log.Error(ctx, err)
-		}
-	}
 	return http.StripPrefix("/static/", http.FileServer(http.FS(s.staticFS)))
 }
 

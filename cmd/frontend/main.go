@@ -32,6 +32,7 @@ import (
 	"golang.org/x/pkgsite/internal/queue"
 	"golang.org/x/pkgsite/internal/queue/gcpqueue"
 	"golang.org/x/pkgsite/internal/source"
+	"golang.org/x/pkgsite/internal/static"
 	"golang.org/x/pkgsite/internal/vuln"
 )
 
@@ -115,6 +116,22 @@ func main() {
 		log.Fatalf(ctx, "vuln.NewClient: %v", err)
 	}
 	staticSource := template.TrustedSourceFromFlag(flag.Lookup("static").Value)
+	if *devMode {
+		// In dev mode compile TypeScript files into minified JavaScript files
+		// and rebuild them on file changes.
+		if *staticFlag == "" {
+			panic("staticPath is empty in dev mode; cannot rebuild static files")
+		}
+		ctx := context.Background()
+		if err := static.Build(static.Config{
+			EntryPoint: *staticFlag + "/frontend",
+			Watch:      true,
+			Bundle:     true,
+		}); err != nil {
+			log.Error(ctx, err)
+		}
+	}
+
 	// TODO: Can we use a separate queue for the fetchServer and for the Server?
 	// It would help differentiate ownership.
 	fetchServer := &fetchserver.FetchServer{
@@ -128,7 +145,6 @@ func main() {
 		Queue:            fetchQueue,
 		TemplateFS:       template.TrustedFSFromTrustedSource(staticSource),
 		StaticFS:         os.DirFS(*staticFlag),
-		StaticPath:       *staticFlag,
 		ThirdPartyFS:     os.DirFS(*thirdPartyPath),
 		DevMode:          *devMode,
 		LocalMode:        *localMode,

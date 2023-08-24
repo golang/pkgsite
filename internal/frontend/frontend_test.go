@@ -48,7 +48,6 @@ func newTestServer(t *testing.T, cacher Cacher) (*Server, http.Handler) {
 		// Integration tests will use the actual directories.
 		StaticFS:     static.FS,
 		ThirdPartyFS: thirdparty.FS,
-		StaticPath:   "../../static",
 	})
 	if err != nil {
 		t.Fatal(err)
