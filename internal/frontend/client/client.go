@@ -1,8 +1,10 @@
-// Copyright 2021 The Go Authors. All rights reserved.
+// Copyright 2023 The Go Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-package frontend
+// Package client provides a client for interacting with the frontend.
+// It is only used for tests.
+package client
 
 import (
 	"encoding/json"
@@ -14,6 +16,7 @@ import (
 
 	"golang.org/x/pkgsite/internal/auth"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/frontend"
 	"golang.org/x/pkgsite/internal/frontend/versions"
 )
 
@@ -26,8 +29,8 @@ type Client struct {
 	httpClient *http.Client
 }
 
-// NewClient creates a new frontend client. This is only used for tests.
-func NewClient(url string) *Client {
+// New creates a new frontend client. This is only used for tests.
+func New(url string) *Client {
 	tok, ok := os.LookupEnv("GO_DISCOVERY_FRONTEND_AUTHORIZATION")
 	c := &Client{
 		url:        url,
@@ -56,14 +59,14 @@ func (c *Client) GetVersions(pkgPath string) (_ *versions.VersionsDetails, err e
 }
 
 // Search returns a SearchPage for a search query and mode.
-func (c *Client) Search(q, mode string) (_ *SearchPage, err error) {
+func (c *Client) Search(q, mode string) (_ *frontend.SearchPage, err error) {
 	defer derrors.Wrap(&err, "Search(%q, %q)", q, mode)
 	u := fmt.Sprintf("%s/search?q=%s&content=json&m=%s", c.url, url.QueryEscape(q), mode)
 	body, err := c.fetchJSONPage(u)
 	if err != nil {
 		return nil, err
 	}
-	var sp SearchPage
+	var sp frontend.SearchPage
 	if err := json.Unmarshal(body, &sp); err != nil {
 		return nil, fmt.Errorf("json.Unmarshal: %v:\nDoes GO_DISCOVERY_SERVE_STATS=true on the frontend?", err)
 	}
@@ -85,23 +88,4 @@ func (c *Client) fetchJSONPage(url string) (_ []byte, err error) {
 		return nil, err
 	}
 	return body, nil
-}
-
-func (s *Server) shouldServeJSON(r *http.Request) bool {
-	return s.serveStats && r.FormValue("content") == "json"
-}
-
-func (s *Server) serveJSONPage(w http.ResponseWriter, r *http.Request, d any) (err error) {
-	defer derrors.Wrap(&err, "serveJSONPage(ctx, w, r)")
-	if !s.shouldServeJSON(r) {
-		return derrors.NotFound
-	}
-	data, err := json.Marshal(d)
-	if err != nil {
-		return fmt.Errorf("json.Marshal: %v", err)
-	}
-	if _, err := w.Write(data); err != nil {
-		return fmt.Errorf("w.Write: %v", err)
-	}
-	return nil
 }

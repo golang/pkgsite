@@ -6,6 +6,7 @@ package frontend
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -247,6 +248,25 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 	page.Vulns = vuln.VulnsForPackage(ctx, um.ModulePath, um.Version, um.Path, s.vulnClient)
 
 	s.servePage(ctx, w, tabSettings.TemplateName, page)
+	return nil
+}
+
+func (s *Server) shouldServeJSON(r *http.Request) bool {
+	return s.serveStats && r.FormValue("content") == "json"
+}
+
+func (s *Server) serveJSONPage(w http.ResponseWriter, r *http.Request, d any) (err error) {
+	defer derrors.Wrap(&err, "serveJSONPage(ctx, w, r)")
+	if !s.shouldServeJSON(r) {
+		return derrors.NotFound
+	}
+	data, err := json.Marshal(d)
+	if err != nil {
+		return fmt.Errorf("json.Marshal: %v", err)
+	}
+	if _, err := w.Write(data); err != nil {
+		return fmt.Errorf("w.Write: %v", err)
+	}
 	return nil
 }
 

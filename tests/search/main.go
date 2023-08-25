@@ -22,6 +22,7 @@ import (
 	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/frontend"
+	"golang.org/x/pkgsite/internal/frontend/client"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/postgres"
 )
@@ -80,7 +81,7 @@ func run(frontendHost string) error {
 		}
 		tests = append(tests, ts...)
 	}
-	client := frontend.NewClient(frontendHost)
+	client := client.New(frontendHost)
 	var failed bool
 	for _, st := range tests {
 		output, err := runTest(client, st)
@@ -103,7 +104,7 @@ func run(frontendHost string) error {
 	return nil
 }
 
-func runTest(client *frontend.Client, st *searchTest) (output []string, err error) {
+func runTest(client *client.Client, st *searchTest) (output []string, err error) {
 	defer derrors.Wrap(&err, "runTest(ctx, db, st.title: %q)", st.title)
 	searchPage, err := client.Search(st.query, st.mode)
 	if err != nil {

@@ -22,7 +22,7 @@ import (
 	"golang.org/x/mod/semver"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
-	"golang.org/x/pkgsite/internal/frontend"
+	"golang.org/x/pkgsite/internal/frontend/client"
 	"golang.org/x/pkgsite/internal/frontend/versions"
 	"golang.org/x/pkgsite/internal/proxy"
 	"golang.org/x/pkgsite/internal/symbol"
@@ -191,7 +191,7 @@ func compare(frontendHost, pkgPath string) (err error) {
 	}
 
 	// Parse API data from the frontend versions page.
-	client := frontend.NewClient(frontendHost)
+	client := client.New(frontendHost)
 	vd, err := client.GetVersions(pkgPath)
 	if err != nil {
 		return err
