@@ -7,6 +7,7 @@ package worker
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"sort"
 	"strings"
 	"testing"
@@ -37,7 +38,6 @@ const (
 )
 
 var (
-	sourceTimeout       = 1 * time.Second
 	testProxyCommitTime = time.Date(2019, 1, 30, 0, 0, 0, 0, time.UTC)
 )
 
@@ -190,7 +190,7 @@ func TestFetchAndUpdateState(t *testing.T) {
 		},
 	}
 
-	sourceClient := source.NewClient(sourceTimeout)
+	sourceClient := source.NewClient(http.DefaultClient)
 	for _, test := range testCases {
 		t.Run(strings.ReplaceAll(test.pkg+"@"+test.version, "/", " "), func(t *testing.T) {
 			defer postgres.ResetTestDB(testDB, t)
@@ -294,7 +294,7 @@ func TestFetchAndUpdateStateCacheZip(t *testing.T) {
 	defer teardownProxy()
 
 	// With a plain proxy, we download the zip twice.
-	f := &Fetcher{proxyClient, source.NewClient(sourceTimeout), testDB, nil, nil, ""}
+	f := &Fetcher{proxyClient, source.NewClient(http.DefaultClient), testDB, nil, nil, ""}
 	if _, _, err := f.FetchAndUpdateState(ctx, "m.com", "v1.0.0", testAppVersion); err != nil {
 		t.Fatal(err)
 	}
@@ -323,7 +323,7 @@ func TestFetchAndUpdateLatest(t *testing.T) {
 	const modulePath = "example.com/retractions"
 	f := &Fetcher{
 		ProxyClient:  prox,
-		SourceClient: source.NewClient(sourceTimeout),
+		SourceClient: source.NewClient(http.DefaultClient),
 		DB:           testDB,
 	}
 	got, err := f.FetchAndUpdateLatest(ctx, modulePath)
@@ -363,7 +363,7 @@ func TestFetchGo121(t *testing.T) {
 	})
 	defer teardownProxy()
 
-	sourceClient := source.NewClient(sourceTimeout)
+	sourceClient := source.NewClient(http.DefaultClient)
 	f := &Fetcher{proxyClient, sourceClient, testDB, nil, nil, ""}
 	got, _, err := f.FetchAndUpdateState(context.Background(), modulePath, version, testAppVersion)
 	if err != nil {

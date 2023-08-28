@@ -396,7 +396,7 @@ func buildGetters(ctx context.Context, cfg getterConfig) ([]fetch.ModuleGetter, 
 
 	// Add a proxy
 	if cfg.proxy != nil {
-		getters = append(getters, fetch.NewProxyModuleGetter(cfg.proxy, source.NewClient(time.Second)))
+		getters = append(getters, fetch.NewProxyModuleGetter(cfg.proxy, source.NewClient(&http.Client{Timeout: time.Second})))
 	}
 
 	getters = append(getters, fetch.NewStdlibZipModuleGetter())

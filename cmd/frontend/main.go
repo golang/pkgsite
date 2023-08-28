@@ -15,6 +15,7 @@ import (
 	"cloud.google.com/go/profiler"
 	"github.com/go-redis/redis/v8"
 	"github.com/google/safehtml/template"
+	"go.opencensus.io/plugin/ochttp"
 	"golang.org/x/pkgsite/cmd/internal/cmdconfig"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/config"
@@ -84,8 +85,12 @@ func main() {
 	}
 
 	if *directProxy {
+		sourceClient := source.NewClient(&http.Client{Transport: &ochttp.Transport{}, Timeout: 1 * time.Minute})
 		ds := fetchdatasource.Options{
-			Getters:              []fetch.ModuleGetter{fetch.NewProxyModuleGetter(proxyClient, source.NewClient(1*time.Minute)), fetch.NewStdlibZipModuleGetter()},
+			Getters: []fetch.ModuleGetter{
+				fetch.NewProxyModuleGetter(proxyClient, sourceClient),
+				fetch.NewStdlibZipModuleGetter(),
+			},
 			ProxyClientForLatest: proxyClient,
 			BypassLicenseCheck:   *bypassLicenseCheck,
 		}.New()
@@ -97,7 +102,10 @@ func main() {
 		}
 		defer db.Close()
 		dsg = func(context.Context) internal.DataSource { return db }
-		sourceClient := source.NewClient(config.SourceTimeout)
+		sourceClient := source.NewClient(&http.Client{
+			Transport: &ochttp.Transport{},
+			Timeout:   config.SourceTimeout,
+		})
 		// The closure passed to queue.New is only used for testing and local
 		// execution, not in production. So it's okay that it doesn't use a
 		// per-request connection.

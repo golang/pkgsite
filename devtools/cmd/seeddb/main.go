@@ -18,6 +18,7 @@ import (
 	"time"
 
 	_ "github.com/jackc/pgx/v4/stdlib" // for pgx driver
+	"go.opencensus.io/plugin/ochttp"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/config"
 	"golang.org/x/pkgsite/internal/config/dynconfig"
@@ -76,7 +77,10 @@ func run(ctx context.Context, db *database.DB, proxyURL string) error {
 		return err
 	}
 
-	sourceClient := source.NewClient(config.SourceTimeout)
+	sourceClient := source.NewClient(&http.Client{
+		Transport: &ochttp.Transport{},
+		Timeout:   config.SourceTimeout,
+	})
 	seedModules, err := readSeedFile(ctx, *seedfile)
 	if err != nil {
 		return err

@@ -17,6 +17,7 @@ import (
 	"github.com/go-redis/redis/v8"
 	"github.com/google/safehtml/template"
 	_ "github.com/jackc/pgx/v4/stdlib" // for pgx driver
+	"go.opencensus.io/plugin/ochttp"
 	"golang.org/x/pkgsite/cmd/internal/cmdconfig"
 	"golang.org/x/pkgsite/internal/config"
 	"golang.org/x/pkgsite/internal/config/serverconfig"
@@ -75,7 +76,10 @@ func main() {
 	if err != nil {
 		log.Fatal(ctx, err)
 	}
-	sourceClient := source.NewClient(config.SourceTimeout)
+	sourceClient := source.NewClient(&http.Client{
+		Transport: &ochttp.Transport{},
+		Timeout:   config.SourceTimeout,
+	})
 	expg := cmdconfig.ExperimentGetter(ctx, cfg)
 	fetchQueue, err := gcpqueue.New(ctx, cfg, queueName, *workers, expg,
 		func(ctx context.Context, modulePath, version string) (int, error) {

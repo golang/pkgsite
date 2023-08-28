@@ -88,7 +88,7 @@ func setupFrontend(ctx context.Context, t *testing.T, q queue.Queue, rc *redis.C
 func setupQueue(ctx context.Context, t *testing.T, proxyModules []*proxytest.Module, experimentNames ...string) (queue.Queue, func()) {
 	cctx, cancel := context.WithCancel(ctx)
 	proxyClient, teardown := proxytest.SetupTestClient(t, proxyModules)
-	sourceClient := source.NewClient(1 * time.Second)
+	sourceClient := source.NewClient(http.DefaultClient)
 	q := queue.NewInMemory(cctx, 1, experimentNames,
 		func(ctx context.Context, mpath, version string) (_ int, err error) {
 			return fetchserver.FetchAndUpdateState(ctx, mpath, version, proxyClient, sourceClient, testDB)
@@ -110,7 +110,7 @@ func processVersions(ctx context.Context, t *testing.T, testModules []*proxytest
 }
 
 func fetchAndInsertModule(ctx context.Context, t *testing.T, tm *proxytest.Module, proxyClient *proxy.Client) {
-	sourceClient := source.NewClient(1 * time.Second)
+	sourceClient := source.NewClient(http.DefaultClient)
 	res := fetch.FetchModule(ctx, tm.ModulePath, tm.Version, fetch.NewProxyModuleGetter(proxyClient, sourceClient))
 	if res.Error != nil {
 		t.Fatal(res.Error)

@@ -28,7 +28,6 @@ import (
 )
 
 var (
-	sourceTimeout       = 1 * time.Second
 	testModulePath      = "github.com/module"
 	testSemver          = "v1.5.2"
 	testFetchTimeout    = 300 * time.Second
@@ -48,7 +47,7 @@ var (
 func newTestServerWithFetch(t *testing.T, proxyModules []*proxytest.Module, cacher frontend.Cacher) (*frontend.Server, *FetchServer, http.Handler, func()) {
 	t.Helper()
 	proxyClient, teardown := proxytest.SetupTestClient(t, proxyModules)
-	sourceClient := source.NewClient(sourceTimeout)
+	sourceClient := source.NewClient(http.DefaultClient)
 	ctx := context.Background()
 
 	q := queue.NewInMemory(ctx, 1, nil,

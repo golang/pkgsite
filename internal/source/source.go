@@ -30,9 +30,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"time"
 
-	"go.opencensus.io/plugin/ochttp"
 	"go.opencensus.io/trace"
 	"golang.org/x/net/context/ctxhttp"
 	"golang.org/x/pkgsite/internal/derrors"
@@ -206,14 +204,9 @@ type Client struct {
 	httpClient *http.Client
 }
 
-// New constructs a *Client using the provided timeout.
-func NewClient(timeout time.Duration) *Client {
-	return &Client{
-		httpClient: &http.Client{
-			Transport: &ochttp.Transport{},
-			Timeout:   timeout,
-		},
-	}
+// New constructs a *Client using the provided *http.Client.
+func NewClient(httpClient *http.Client) *Client {
+	return &Client{httpClient: httpClient}
 }
 
 // NewClientForTesting returns a Client suitable for testing. It returns the

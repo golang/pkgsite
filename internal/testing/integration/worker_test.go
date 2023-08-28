@@ -14,7 +14,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"time"
 
 	"github.com/alicebob/miniredis/v2"
 	"github.com/go-redis/redis/v8"
@@ -34,7 +33,7 @@ func setupWorker(ctx context.Context, t *testing.T, proxyClient *proxy.Client, i
 
 	fetcher := &worker.Fetcher{
 		ProxyClient:  proxyClient,
-		SourceClient: source.NewClient(1 * time.Second),
+		SourceClient: source.NewClient(http.DefaultClient),
 		DB:           testDB,
 		Cache:        cache.New(redisCacheClient),
 	}
@@ -49,7 +48,7 @@ func setupWorker(ctx context.Context, t *testing.T, proxyClient *proxy.Client, i
 		DB:               testDB,
 		IndexClient:      indexClient,
 		ProxyClient:      proxyClient,
-		SourceClient:     source.NewClient(1 * time.Second),
+		SourceClient:     source.NewClient(http.DefaultClient),
 		RedisCacheClient: redisCacheClient,
 		Queue:            queue,
 		StaticPath:       template.TrustedSourceFromConstant("../../../static"),

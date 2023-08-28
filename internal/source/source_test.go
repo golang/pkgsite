@@ -15,7 +15,6 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-replayers/httpreplay"
@@ -730,12 +729,7 @@ func TestRemoveVersionSuffix(t *testing.T) {
 func TestAdjustVersionedModuleDirectory(t *testing.T) {
 	ctx := context.Background()
 
-	testTimeout := 72 * time.Hour // arbitrary
-	if deadline, ok := t.Deadline(); ok {
-		testTimeout = time.Until(deadline) * 9 / 10 // Allow 10% for error reporting and cleanup.
-	}
-
-	client := NewClient(testTimeout)
+	client := NewClient(http.DefaultClient)
 	client.httpClient.Transport = testTransport(map[string]string{
 		// Repo "branch" follows the "major branch" convention: versions 2 and higher
 		// live in the same directory as versions 0 and 1, but on a different branch (or tag).
