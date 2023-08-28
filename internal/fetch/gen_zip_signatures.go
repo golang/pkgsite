@@ -63,7 +63,7 @@ func main() {
 	flag.Parse()
 	ctx := context.Background()
 
-	prox, err := proxy.New("https://proxy.golang.org")
+	prox, err := proxy.New("https://proxy.golang.org", nil)
 	if err != nil {
 		log.Fatal(err)
 	}

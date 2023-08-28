@@ -79,7 +79,7 @@ func main() {
 	expg := cmdconfig.ExperimentGetter(ctx, cfg)
 	log.Infof(ctx, "cmd/frontend: initialized cmdconfig.ExperimentGetter")
 
-	proxyClient, err := proxy.New(*proxyURL)
+	proxyClient, err := proxy.New(*proxyURL, &ochttp.Transport{})
 	if err != nil {
 		log.Fatal(ctx, err)
 	}
@@ -103,7 +103,7 @@ func main() {
 		defer db.Close()
 		dsg = func(context.Context) internal.DataSource { return db }
 		sourceClient := source.NewClient(&http.Client{
-			Transport: &ochttp.Transport{},
+			Transport: new(ochttp.Transport),
 			Timeout:   config.SourceTimeout,
 		})
 		// The closure passed to queue.New is only used for testing and local

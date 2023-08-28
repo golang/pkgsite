@@ -18,7 +18,6 @@ import (
 	"strings"
 	"time"
 
-	"go.opencensus.io/plugin/ochttp"
 	"golang.org/x/mod/module"
 	"golang.org/x/net/context/ctxhttp"
 	"golang.org/x/pkgsite/internal/derrors"
@@ -52,11 +51,12 @@ const DisableFetchHeader = "Disable-Module-Fetch"
 
 // New constructs a *Client using the provided url, which is expected to
 // be an absolute URI that can be directly passed to http.Get.
-func New(u string) (_ *Client, err error) {
+// The optional transport parameter is used by the underlying http client.
+func New(u string, transport http.RoundTripper) (_ *Client, err error) {
 	defer derrors.WrapStack(&err, "proxy.New(%q)", u)
 	return &Client{
 		url:          strings.TrimRight(u, "/"),
-		HTTPClient:   &http.Client{Transport: &ochttp.Transport{}},
+		HTTPClient:   &http.Client{Transport: transport},
 		disableFetch: false,
 	}, nil
 }

@@ -278,7 +278,7 @@ func TestZipSize(t *testing.T) {
 }
 
 func TestEncodedURL(t *testing.T) {
-	c, err := proxy.New("u")
+	c, err := proxy.New("u", nil)
 	if err != nil {
 		t.Fatal(err)
 	}

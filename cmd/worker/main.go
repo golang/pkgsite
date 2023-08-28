@@ -72,7 +72,7 @@ func main() {
 	if err != nil {
 		log.Fatal(ctx, err)
 	}
-	proxyClient, err := proxy.New(cfg.ProxyURL)
+	proxyClient, err := proxy.New(cfg.ProxyURL, new(ochttp.Transport))
 	if err != nil {
 		log.Fatal(ctx, err)
 	}

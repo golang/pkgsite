@@ -72,13 +72,13 @@ func main() {
 func run(ctx context.Context, db *database.DB, proxyURL string) error {
 	start := time.Now()
 
-	proxyClient, err := proxy.New(proxyURL)
+	proxyClient, err := proxy.New(proxyURL, new(ochttp.Transport))
 	if err != nil {
 		return err
 	}
 
 	sourceClient := source.NewClient(&http.Client{
-		Transport: &ochttp.Transport{},
+		Transport: new(ochttp.Transport),
 		Timeout:   config.SourceTimeout,
 	})
 	seedModules, err := readSeedFile(ctx, *seedfile)

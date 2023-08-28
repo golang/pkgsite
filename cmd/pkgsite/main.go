@@ -132,7 +132,7 @@ func main() {
 			die("GOPROXY environment variable is not set")
 		}
 		var err error
-		serverCfg.proxy, err = proxy.New(url)
+		serverCfg.proxy, err = proxy.New(url, nil)
 		if err != nil {
 			die("connecting to proxy: %s", err)
 		}

@@ -19,6 +19,7 @@ import (
 	"sort"
 	"strings"
 
+	"go.opencensus.io/plugin/ochttp"
 	"golang.org/x/mod/semver"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
@@ -107,7 +108,7 @@ func run(ctx context.Context, cmd, pkgPath, modulePath, frontendHost, proxyURL s
 
 func generate(ctx context.Context, pkgPath, modulePath, tmpPath, proxyURL string) (err error) {
 	defer derrors.Wrap(&err, "generate(ctx, %q, %q, %q, %q)", pkgPath, modulePath, tmpPath, proxyURL)
-	proxyClient, err := proxy.New(proxyURL)
+	proxyClient, err := proxy.New(proxyURL, new(ochttp.Transport))
 	if err != nil {
 		return err
 	}
