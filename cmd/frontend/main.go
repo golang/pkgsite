@@ -182,7 +182,6 @@ func main() {
 		postgres.SearchResponseCount,
 		fetchserver.FetchLatencyDistribution,
 		fetchserver.FetchResponseCount,
-		frontend.VersionTypeCount,
 		middleware.CacheResultCount,
 		middleware.CacheErrorCount,
 		middleware.CacheLatency,

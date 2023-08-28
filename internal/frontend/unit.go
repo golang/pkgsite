@@ -152,7 +152,6 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 		return s.serveJSONPage(w, r, d)
 	}
 
-	recordVersionTypeMetric(ctx, info.RequestedVersion)
 	if _, ok := internal.DefaultBranches[info.RequestedVersion]; ok {
 		// Since path@master is a moving target, we don't want it to be stale.
 		// As a result, we enqueue every request of path@master to the frontend
