@@ -22,12 +22,12 @@ import (
 	"sort"
 	"strings"
 
-	"go.opencensus.io/trace"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/godoc"
 	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/stdlib"
+	"golang.org/x/pkgsite/internal/trace"
 )
 
 // BadPackageError represents an error loading a package

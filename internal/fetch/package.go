@@ -14,7 +14,6 @@ import (
 	"runtime/debug"
 	"strings"
 
-	"go.opencensus.io/trace"
 	"golang.org/x/mod/module"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
@@ -22,6 +21,7 @@ import (
 	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/source"
+	"golang.org/x/pkgsite/internal/trace"
 )
 
 // A goPackage is a group of one or more Go source files with the same

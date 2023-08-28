@@ -31,11 +31,11 @@ import (
 	"strconv"
 	"strings"
 
-	"go.opencensus.io/trace"
 	"golang.org/x/net/context/ctxhttp"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/stdlib"
+	"golang.org/x/pkgsite/internal/trace"
 	"golang.org/x/pkgsite/internal/version"
 )
 

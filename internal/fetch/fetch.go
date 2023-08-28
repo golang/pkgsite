@@ -14,7 +14,6 @@ import (
 	"strings"
 	"time"
 
-	"go.opencensus.io/trace"
 	"golang.org/x/mod/modfile"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
@@ -22,6 +21,7 @@ import (
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/proxy"
 	"golang.org/x/pkgsite/internal/stdlib"
+	"golang.org/x/pkgsite/internal/trace"
 )
 
 var ErrModuleContainsNoPackages = errors.New("module contains 0 packages")

@@ -16,6 +16,7 @@ import (
 	"github.com/go-redis/redis/v8"
 	"github.com/google/safehtml/template"
 	"go.opencensus.io/plugin/ochttp"
+	octrace "go.opencensus.io/trace"
 	"golang.org/x/pkgsite/cmd/internal/cmdconfig"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/config"
@@ -34,6 +35,7 @@ import (
 	"golang.org/x/pkgsite/internal/queue/gcpqueue"
 	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/static"
+	"golang.org/x/pkgsite/internal/trace"
 	"golang.org/x/pkgsite/internal/vuln"
 )
 
@@ -118,6 +120,9 @@ func main() {
 		}
 	}
 
+	trace.SetTraceFunction(func(ctx context.Context, name string) (context.Context, trace.Span) {
+		return octrace.StartSpan(ctx, name)
+	})
 	reporter := cmdconfig.Reporter(ctx, cfg)
 	vc, err := vuln.NewClient(cfg.VulnDB)
 	if err != nil {

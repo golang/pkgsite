@@ -18,6 +18,7 @@ import (
 	"github.com/google/safehtml/template"
 	_ "github.com/jackc/pgx/v4/stdlib" // for pgx driver
 	"go.opencensus.io/plugin/ochttp"
+	octrace "go.opencensus.io/trace"
 	"golang.org/x/pkgsite/cmd/internal/cmdconfig"
 	"golang.org/x/pkgsite/internal/config"
 	"golang.org/x/pkgsite/internal/config/serverconfig"
@@ -29,6 +30,7 @@ import (
 	"golang.org/x/pkgsite/internal/proxy"
 	"golang.org/x/pkgsite/internal/queue/gcpqueue"
 	"golang.org/x/pkgsite/internal/source"
+	"golang.org/x/pkgsite/internal/trace"
 	"golang.org/x/pkgsite/internal/worker"
 )
 
@@ -96,6 +98,9 @@ func main() {
 	}
 
 	reporter := cmdconfig.Reporter(ctx, cfg)
+	trace.SetTraceFunction(func(ctx context.Context, name string) (context.Context, trace.Span) {
+		return octrace.StartSpan(ctx, name)
+	})
 	redisCacheClient := getCacheRedis(ctx, cfg)
 	redisBetaCacheClient := getBetaCacheRedis(ctx, cfg)
 	experimenter := cmdconfig.Experimenter(ctx, cfg, expg, reporter)
