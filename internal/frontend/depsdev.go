@@ -12,7 +12,6 @@ import (
 	"net/url"
 	"time"
 
-	"go.opencensus.io/plugin/ochttp"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/log"
 )
@@ -25,17 +24,14 @@ const (
 	depsDevTimeout = 250 * time.Millisecond
 )
 
-// despDevClient is the HTTP client used to make requests to deps.dev.
-var depsDevClient = &http.Client{Transport: &ochttp.Transport{}}
-
 // depsDevURLGenerator returns a function that will return a URL for the given
 // module version on deps.dev. If the URL can't be generated within
 // depsDevTimeout then the empty string is returned instead.
-func depsDevURLGenerator(ctx context.Context, um *internal.UnitMeta) func() string {
+func depsDevURLGenerator(ctx context.Context, client *http.Client, um *internal.UnitMeta) func() string {
 	ctx, cancel := context.WithTimeout(ctx, depsDevTimeout)
 	url := make(chan string, 1)
 	go func() {
-		u, err := fetchDepsDevURL(ctx, um.ModulePath, um.Version)
+		u, err := fetchDepsDevURL(ctx, client, um.ModulePath, um.Version)
 		switch {
 		case errors.Is(err, context.Canceled):
 			log.Warningf(ctx, "fetching url from deps.dev: %v", err)
@@ -55,7 +51,7 @@ func depsDevURLGenerator(ctx context.Context, um *internal.UnitMeta) func() stri
 // fetchDepsDevURL makes a request to deps.dev to check whether the given
 // module version is known there, and if so it returns the link to that module
 // version page on deps.dev.
-func fetchDepsDevURL(ctx context.Context, modulePath, version string) (string, error) {
+func fetchDepsDevURL(ctx context.Context, client *http.Client, modulePath, version string) (string, error) {
 	u := depsDevBase + "/_/s/go" +
 		"/p/" + url.PathEscape(modulePath) +
 		"/v/" + url.PathEscape(version) +
@@ -64,7 +60,7 @@ func fetchDepsDevURL(ctx context.Context, modulePath, version string) (string, e
 	if err != nil {
 		return "", err
 	}
-	resp, err := depsDevClient.Do(req)
+	resp, err := client.Do(req)
 	if err != nil {
 		return "", err
 	}

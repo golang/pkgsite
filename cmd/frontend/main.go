@@ -147,17 +147,18 @@ func main() {
 		TaskIDChangeInterval: config.TaskIDChangeIntervalFrontend,
 	}
 	server, err := frontend.NewServer(frontend.ServerConfig{
-		Config:           cfg,
-		FetchServer:      fetchServer,
-		DataSourceGetter: dsg,
-		Queue:            fetchQueue,
-		TemplateFS:       template.TrustedFSFromTrustedSource(staticSource),
-		StaticFS:         os.DirFS(*staticFlag),
-		ThirdPartyFS:     os.DirFS(*thirdPartyPath),
-		DevMode:          *devMode,
-		LocalMode:        *localMode,
-		Reporter:         reporter,
-		VulndbClient:     vc,
+		Config:            cfg,
+		FetchServer:       fetchServer,
+		DataSourceGetter:  dsg,
+		Queue:             fetchQueue,
+		TemplateFS:        template.TrustedFSFromTrustedSource(staticSource),
+		StaticFS:          os.DirFS(*staticFlag),
+		ThirdPartyFS:      os.DirFS(*thirdPartyPath),
+		DevMode:           *devMode,
+		LocalMode:         *localMode,
+		Reporter:          reporter,
+		VulndbClient:      vc,
+		DepsDevHTTPClient: &http.Client{Transport: new(ochttp.Transport)},
 	})
 	if err != nil {
 		log.Fatalf(ctx, "frontend.NewServer: %v", err)

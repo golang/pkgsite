@@ -62,6 +62,7 @@ type Server struct {
 	vulnClient         *vuln.Client
 	versionID          string
 	instanceID         string
+	depsDevHTTPClient  *http.Client
 
 	mu        sync.Mutex // Protects all fields below
 	templates map[string]*template.Template
@@ -85,16 +86,17 @@ type ServerConfig struct {
 	FetchServer FetchServerInterface
 	// DataSourceGetter should return a DataSource on each call.
 	// It should be goroutine-safe.
-	DataSourceGetter func(context.Context) internal.DataSource
-	Queue            queue.Queue
-	TemplateFS       template.TrustedFS // for loading templates safely
-	StaticFS         fs.FS              // for static/ directory
-	ThirdPartyFS     fs.FS              // for third_party/ directory
-	DevMode          bool
-	LocalMode        bool
-	LocalModules     []LocalModule
-	Reporter         derrors.Reporter
-	VulndbClient     *vuln.Client
+	DataSourceGetter  func(context.Context) internal.DataSource
+	Queue             queue.Queue
+	TemplateFS        template.TrustedFS // for loading templates safely
+	StaticFS          fs.FS              // for static/ directory
+	ThirdPartyFS      fs.FS              // for third_party/ directory
+	DevMode           bool
+	LocalMode         bool
+	LocalModules      []LocalModule
+	Reporter          derrors.Reporter
+	VulndbClient      *vuln.Client
+	DepsDevHTTPClient *http.Client
 }
 
 // NewServer creates a new Server for the given database and template directory.
@@ -106,19 +108,23 @@ func NewServer(scfg ServerConfig) (_ *Server, err error) {
 	}
 	dochtml.LoadTemplates(scfg.TemplateFS)
 	s := &Server{
-		fetchServer:   scfg.FetchServer,
-		getDataSource: scfg.DataSourceGetter,
-		queue:         scfg.Queue,
-		templateFS:    scfg.TemplateFS,
-		staticFS:      scfg.StaticFS,
-		thirdPartyFS:  scfg.ThirdPartyFS,
-		devMode:       scfg.DevMode,
-		localMode:     scfg.LocalMode,
-		localModules:  scfg.LocalModules,
-		templates:     ts,
-		reporter:      scfg.Reporter,
-		fileMux:       http.NewServeMux(),
-		vulnClient:    scfg.VulndbClient,
+		fetchServer:       scfg.FetchServer,
+		getDataSource:     scfg.DataSourceGetter,
+		queue:             scfg.Queue,
+		templateFS:        scfg.TemplateFS,
+		staticFS:          scfg.StaticFS,
+		thirdPartyFS:      scfg.ThirdPartyFS,
+		devMode:           scfg.DevMode,
+		localMode:         scfg.LocalMode,
+		localModules:      scfg.LocalModules,
+		templates:         ts,
+		reporter:          scfg.Reporter,
+		fileMux:           http.NewServeMux(),
+		vulnClient:        scfg.VulndbClient,
+		depsDevHTTPClient: scfg.DepsDevHTTPClient,
+	}
+	if s.depsDevHTTPClient == nil {
+		s.depsDevHTTPClient = http.DefaultClient
 	}
 	if scfg.Config != nil {
 		s.appVersionLabel = scfg.Config.AppVersionLabel()

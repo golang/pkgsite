@@ -136,7 +136,7 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 		return s.fetchServer.ServePathNotFoundPage(w, r, db, info.FullPath, info.ModulePath, info.RequestedVersion)
 	}
 
-	makeDepsDevURL := depsDevURLGenerator(ctx, um)
+	makeDepsDevURL := depsDevURLGenerator(ctx, s.depsDevHTTPClient, um)
 
 	// Use GOOS and GOARCH query parameters to create a build context, which
 	// affects the documentation and synopsis. Omitting both results in an empty
