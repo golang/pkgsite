@@ -2,6 +2,6 @@
   "version": 3,
   "sources": ["main.css"],
   "sourcesContent": ["/*\n * Copyright 2021 The Go Authors. All rights reserved.\n * Use of this source code is governed by a BSD-style\n * license that can be found in the LICENSE file.\n */\n\n/* Hide the search form in the header. */\n.go-SearchForm {\n  display: none;\n}\n\n.VulnMain-title {\n  font-size: 1.25rem;\n  font-weight: 400;\n  margin: 0 0 0.5rem;\n}\n\n.VulnMain-recent {\n  margin-top: 0.5rem;\n}\n\n.VulnMain-details {\n  margin-bottom: 1.75rem;\n}\n\n.VulnMain-details p {\n  word-break: break-word;\n}\n\n.VulnMain-search {\n  max-width: 32rem;\n}\n\n.VulnMain h2 {\n  margin: 1.75rem 0 0.5rem;\n}\n"],
-  "mappings": ";;;;;AAOA,eACE,aAGF,gBACE,kBACA,gBAbF,iBAiBA,iBACE,iBAGF,kBACE,sBAGF,oBACE,sBAGF,iBACE,gBAGF,aAjCA",
+  "mappings": ";;;;;AAOA,CAAC,cACC,QAAS,IACX,CAEA,CAAC,eACC,UAAW,QACX,YAAa,IAbf,OAcU,EAAE,EAAE,KACd,CAEA,CAAC,gBACC,WAAY,KACd,CAEA,CAAC,iBACC,cAAe,OACjB,CAEA,CAJC,iBAIiB,EAChB,WAAY,UACd,CAEA,CAAC,gBACC,UAAW,KACb,CAEA,CAAC,SAAS,GAjCV,OAkCU,QAAQ,EAAE,KACpB",
   "names": []
 }

@@ -2,6 +2,6 @@
   "version": 3,
   "sources": ["imports.css"],
   "sourcesContent": ["/*\n * Copyright 2021 The Go Authors. All rights reserved.\n * Use of this source code is governed by a BSD-style\n * license that can be found in the LICENSE file.\n */\n\n.Imports-listItem {\n  line-height: 1.125rem;\n}\n\n.Imports-list {\n  margin: 1rem 0;\n}\n"],
-  "mappings": ";;;;;AAMA,kBACE,qBAGF,cAVA",
+  "mappings": ";;;;;AAMA,CAAC,iBACC,YAAa,QACf,CAEA,CAAC,aAVD,OAWU,KAAK,CACf",
   "names": []
 }

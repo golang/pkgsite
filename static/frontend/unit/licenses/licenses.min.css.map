@@ -2,6 +2,6 @@
   "version": 3,
   "sources": ["licenses.css"],
   "sourcesContent": ["/*!\n * Copyright 2021 The Go Authors. All rights reserved.\n * Use of this source code is governed by a BSD-style\n * license that can be found in the LICENSE file.\n */\n\n.License {\n  margin-bottom: 1rem;\n}\n\n.License > h2 {\n  margin-bottom: 1rem;\n}\n\n.License > p {\n  margin-bottom: 0.5rem;\n}\n\n.License-contents {\n  border: var(--border);\n  border-radius: 0.1875rem;\n  font-size: 0.875rem;\n  line-height: 1.375rem;\n  margin: 0;\n  overflow-x: auto;\n  padding: 1.5rem;\n  tab-size: 4;\n}\n\n.License-source {\n  font-size: 0.875rem;\n  padding-top: 0.5rem;\n}\n\n.Disclaimer-link {\n  font-style: italic;\n}\n"],
-  "mappings": ";;;;;AAMA,SACE,mBAGF,YACE,mBAGF,WACE,oBAGF,kBACE,qBAnBF,uBAqBE,kBACA,qBAtBF,SAwBE,gBAxBF,eA0BE,WAGF,gBACE,kBACA,kBAGF,iBACE",
+  "mappings": ";;;;;AAMA,CAAC,QACC,cAAe,IACjB,CAEA,CAJC,OAIQ,CAAE,GACT,cAAe,IACjB,CAEA,CARC,OAQQ,CAAE,EACT,cAAe,KACjB,CAEA,CAAC,iBACC,OAAQ,IAAI,UAnBd,cAoBiB,SACf,UAAW,QACX,YAAa,SAtBf,OAuBU,EACR,WAAY,KAxBd,QAyBW,OACT,SAAU,CACZ,CAEA,CAAC,eACC,UAAW,QACX,YAAa,KACf,CAEA,CAAC,gBACC,WAAY,MACd",
   "names": []
 }
