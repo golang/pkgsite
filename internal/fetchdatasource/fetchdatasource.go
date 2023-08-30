@@ -16,12 +16,12 @@ import (
 	"strings"
 	"time"
 
-	lru "github.com/hashicorp/golang-lru"
 	"golang.org/x/mod/semver"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/fetch"
 	"golang.org/x/pkgsite/internal/log"
+	"golang.org/x/pkgsite/internal/lru"
 	"golang.org/x/pkgsite/internal/proxy"
 	"golang.org/x/pkgsite/internal/version"
 )
@@ -30,7 +30,7 @@ import (
 // fetch.ModuleGetters to fetch modules and caching the results.
 type FetchDataSource struct {
 	opts  Options
-	cache *lru.Cache
+	cache *lru.Cache[internal.Modver, cacheEntry]
 }
 
 // Options are parameters for creating a new FetchDataSource.
@@ -45,11 +45,8 @@ type Options struct {
 
 // New creates a new FetchDataSource from the options.
 func (o Options) New() *FetchDataSource {
-	cache, err := lru.New(maxCachedModules)
-	if err != nil {
-		// Can only happen if size is bad, and we control it.
-		panic(err)
-	}
+	cache := lru.New[internal.Modver, cacheEntry](maxCachedModules)
+
 	opts := o
 	// Copy getters slice so caller doesn't modify us.
 	opts.Getters = make([]fetch.ModuleGetter, len(opts.Getters))
@@ -75,7 +72,6 @@ func (ds *FetchDataSource) cacheGet(path, version string) (fetch.ModuleGetter, *
 	// directory-based or GOPATH-mode module.
 	for _, v := range []string{version, fetch.LocalVersion} {
 		if e, ok := ds.cache.Get(internal.Modver{Path: path, Version: v}); ok {
-			e := e.(cacheEntry)
 			return e.g, e.module, e.err
 		}
 	}
@@ -84,7 +80,7 @@ func (ds *FetchDataSource) cacheGet(path, version string) (fetch.ModuleGetter, *
 
 // cachePut puts information into the cache.
 func (ds *FetchDataSource) cachePut(g fetch.ModuleGetter, path, version string, m *internal.Module, err error) {
-	ds.cache.Add(internal.Modver{Path: path, Version: version}, cacheEntry{g, m, err})
+	ds.cache.Put(internal.Modver{Path: path, Version: version}, cacheEntry{g, m, err})
 }
 
 // getModule gets the module at the given path and version. It first checks the

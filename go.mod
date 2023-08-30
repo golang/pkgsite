@@ -23,7 +23,6 @@ require (
 	github.com/google/go-replayers/httpreplay v1.0.0
 	github.com/google/licensecheck v0.3.1
 	github.com/google/safehtml v0.0.3-0.20211026203422-d6f0e11a5516
-	github.com/hashicorp/golang-lru v0.5.1
 	github.com/jackc/pgconn v1.10.1
 	github.com/jackc/pgx/v4 v4.14.1
 	github.com/jba/templatecheck v0.6.0
