@@ -13,10 +13,6 @@ type Span interface {
 	End()
 }
 
-type trivialEnder struct{}
-
-func (trivialEnder) End() {}
-
 var startSpan func(context.Context, string) (context.Context, Span)
 
 // SetTraceFunction sets StartSpan to call the given function to start
@@ -31,5 +27,9 @@ func StartSpan(ctx context.Context, name string) (context.Context, Span) {
 	if startSpan != nil {
 		return startSpan(ctx, name)
 	}
-	return ctx, trivialEnder{}
+	return ctx, trivialSpan{}
 }
+
+type trivialSpan struct{}
+
+func (trivialSpan) End() {}
