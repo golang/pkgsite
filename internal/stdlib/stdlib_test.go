@@ -404,6 +404,7 @@ func TestVersionMatchesHash(t *testing.T) {
 
 func TestResolveSupportedBranches(t *testing.T) {
 	testenv.MustHaveExternalNetwork(t) // ResolveSupportedBranches accesses the go repo at go.googlesource.com
+	testenv.MustHaveExecPath(t, "git") // ResolveSupportedBranches uses the git command to do so.
 
 	got, err := ResolveSupportedBranches()
 	if err != nil {
