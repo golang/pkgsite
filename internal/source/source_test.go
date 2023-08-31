@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -489,6 +490,9 @@ func TestNewStdlibInfo(t *testing.T) {
 }
 
 func newReplayClient(t *testing.T, record bool) (*http.Client, func()) {
+	if runtime.GOOS == "js" || runtime.GOOS == "wasip1" {
+		t.Skipf("skipping test: see issue #59718: listen on localhost fails on %s", runtime.GOOS)
+	}
 	replayFilePath := filepath.Join("testdata", t.Name()+".replay")
 	if record {
 		httpreplay.DebugHeaders()

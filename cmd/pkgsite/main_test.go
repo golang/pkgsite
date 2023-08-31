@@ -17,6 +17,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/net/html"
 	"golang.org/x/pkgsite/internal/proxy/proxytest"
+	"golang.org/x/pkgsite/internal/testenv"
 	"golang.org/x/pkgsite/internal/testing/htmlcheck"
 	"golang.org/x/pkgsite/internal/testing/testhelper"
 )
@@ -33,6 +34,8 @@ var (
 )
 
 func TestServer(t *testing.T) {
+	testenv.MustHaveExecPath(t, "go") // for local modules
+
 	repoPath := func(fn string) string { return filepath.Join("..", "..", fn) }
 
 	abs := func(dir string) string {

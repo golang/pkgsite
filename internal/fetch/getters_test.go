@@ -17,6 +17,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/proxy"
+	"golang.org/x/pkgsite/internal/testenv"
 	"golang.org/x/pkgsite/internal/testing/testhelper"
 	"golang.org/x/pkgsite/internal/version"
 )
@@ -64,6 +65,8 @@ const Log = 1
 `
 
 func TestGoPackagesModuleGetter(t *testing.T) {
+	testenv.MustHaveExecPath(t, "go")
+
 	modulePaths := map[string]string{ // dir -> module path
 		"foo": "foo.com/foo",
 		"bar": "bar.com/bar",
@@ -156,6 +159,8 @@ func TestGoPackagesModuleGetter(t *testing.T) {
 }
 
 func TestGoPackagesModuleGetter_Invalidation(t *testing.T) {
+	testenv.MustHaveExecPath(t, "go")
+
 	ctx := context.Background()
 
 	tempDir, _ := testhelper.WriteTxtarToTempDir(t, multiModule)

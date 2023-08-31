@@ -32,15 +32,11 @@ import (
 
 var (
 	defaultTestModules []*proxytest.Module
-	localGetters       []fetch.ModuleGetter
 )
 
 func TestMain(m *testing.M) {
 	dochtml.LoadTemplates(template.TrustedFSFromTrustedSource(template.TrustedSourceFromConstant("../../static")))
 	defaultTestModules = proxytest.LoadTestModules("../proxy/testdata")
-	var cleanup func()
-	localGetters, cleanup = buildLocalGetters()
-	defer cleanup()
 	licenses.OmitExceptions = true
 	os.Exit(m.Run())
 }
@@ -117,6 +113,7 @@ func buildLocalGetters() ([]fetch.ModuleGetter, func()) {
 
 func setup(t *testing.T, testModules []*proxytest.Module, bypassLicenseCheck bool) (context.Context, *FetchDataSource, func()) {
 	t.Helper()
+	testenv.MustHaveExecPath(t, "go") // for the go packages module getter.
 	ctx, cancel := context.WithCancel(context.Background())
 
 	var client *proxy.Client
@@ -125,7 +122,7 @@ func setup(t *testing.T, testModules []*proxytest.Module, bypassLicenseCheck boo
 		client, teardownProxy = proxytest.SetupTestClient(t, testModules)
 	}
 
-	getters := localGetters
+	getters, cleanup := buildLocalGetters()
 	if testModules != nil {
 		getters = append(getters, fetch.NewProxyModuleGetter(client, source.NewClientForTesting()))
 	}
@@ -135,6 +132,7 @@ func setup(t *testing.T, testModules []*proxytest.Module, bypassLicenseCheck boo
 			ProxyClientForLatest: client,
 			BypassLicenseCheck:   bypassLicenseCheck,
 		}.New(), func() {
+			cleanup()
 			teardownProxy()
 			cancel()
 		}
