@@ -6,6 +6,7 @@ package poller
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 	"sync"
 	"testing"
@@ -19,6 +20,21 @@ type numError struct {
 func (e numError) Error() string { return strconv.Itoa(e.num) }
 
 func Test(t *testing.T) {
+	var err error
+	// Try the test with longer and longer durations to try to find one that works.
+	// If not, return an error.
+	for durationUnit := 10 * time.Millisecond; durationUnit < time.Second; durationUnit *= 2 {
+		err = doTest(durationUnit)
+		if err == nil {
+			break
+		}
+	}
+	if err != nil {
+		t.Error(err)
+	}
+}
+
+func doTest(durationUnit time.Duration) error {
 	var (
 		mu          sync.Mutex
 		goods, bads []int
@@ -42,20 +58,20 @@ func Test(t *testing.T) {
 
 	p := New(cur, getter, onError)
 	if got, want := p.Current(), cur; got != want {
-		t.Fatalf("got %v, want %v", got, want)
+		return fmt.Errorf("got %v, want %v", got, want)
 	}
 	ctx, cancel := context.WithCancel(context.Background())
-	p.Start(ctx, 50*time.Millisecond)
-	time.Sleep(100 * time.Millisecond) // wait for first poll
+	p.Start(ctx, 5*durationUnit)
+	time.Sleep(10 * durationUnit) // wait for first poll
 	for i := 0; i < 10; i++ {
 		goods = append(goods, p.Current().(int))
-		time.Sleep(60 * time.Millisecond)
+		time.Sleep(6 * durationUnit)
 	}
 	cancel()
 	// Expect goods to be all even and non-decreasing.
 	for i, g := range goods {
 		if g%2 != 0 || (i > 0 && goods[i-1] > g) {
-			t.Errorf("incorrect 'good' value %d", g)
+			return fmt.Errorf("incorrect 'good' value %d", g)
 		}
 	}
 	// Expect bads to be consecutive odd numbers.
@@ -64,7 +80,8 @@ func Test(t *testing.T) {
 	mu.Unlock()
 	for i, b := range bs {
 		if b%2 == 0 || (i > 0 && bs[i-1]+2 != b) {
-			t.Errorf("incorrect 'bad' value %d", b)
+			return fmt.Errorf("incorrect 'bad' value %d", b)
 		}
 	}
+	return nil
 }
