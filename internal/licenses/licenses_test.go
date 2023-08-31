@@ -15,7 +15,6 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"runtime"
 	"sort"
 	"strings"
 	"testing"
@@ -229,18 +228,6 @@ var mitCoverage = lc.Coverage{
 	Match:   []lc.Match{{ID: "MIT"}},
 }
 
-// testDataPath returns a path corresponding to a path relative to the calling
-// test file. For convenience, rel is assumed to be "/"-delimited.
-//
-// It panics on failure.
-func testDataPath(rel string) string {
-	_, filename, _, ok := runtime.Caller(1)
-	if !ok {
-		panic("unable to determine relative path")
-	}
-	return filepath.Clean(filepath.Join(filepath.Dir(filename), filepath.FromSlash(rel)))
-}
-
 func TestModuleIsRedistributable(t *testing.T) {
 	// More thorough tests of the helper functions are below. This end-to-end test covers
 	// a few key cases using actual zip files.
@@ -288,7 +275,7 @@ func TestModuleIsRedistributable(t *testing.T) {
 		},
 	} {
 		t.Run(test.filename, func(t *testing.T) {
-			f, err := os.Open(filepath.Join(testDataPath("testdata"), test.filename+".zip"))
+			f, err := os.Open(filepath.Join("testdata", test.filename+".zip"))
 			if err != nil {
 				t.Fatal(err)
 			}
