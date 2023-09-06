@@ -149,7 +149,7 @@ check_vet() {
 # check_staticcheck runs staticcheck on source files.
 check_staticcheck() {
   ensure_go_binary honnef.co/go/tools/cmd/staticcheck
-  runcmd staticcheck -fail=-SA1019 $(go list ./... | grep -v third_party | grep -v internal/doc | grep -v internal/render)
+  runcmd staticcheck $(go list ./... | grep -v third_party | grep -v internal/doc | grep -v internal/render)
 }
 
 # check_misspell runs misspell on source files.

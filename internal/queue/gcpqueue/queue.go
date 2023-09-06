@@ -16,9 +16,9 @@ import (
 	"strings"
 	"time"
 
-	"cloud.google.com/go/cloudtasks/apiv2"
+	cloudtasks "cloud.google.com/go/cloudtasks/apiv2"
+	taskspb "cloud.google.com/go/cloudtasks/apiv2/cloudtaskspb"
 	"golang.org/x/pkgsite/internal/config/serverconfig"
-	taskspb "google.golang.org/genproto/googleapis/cloud/tasks/v2"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/durationpb"

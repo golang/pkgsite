@@ -12,8 +12,8 @@ import (
 	"os"
 
 	secretmanager "cloud.google.com/go/secretmanager/apiv1"
+	smpb "cloud.google.com/go/secretmanager/apiv1/secretmanagerpb"
 	"golang.org/x/pkgsite/internal/derrors"
-	smpb "google.golang.org/genproto/googleapis/cloud/secretmanager/v1"
 )
 
 // Get returns the named secret value as plaintext.
