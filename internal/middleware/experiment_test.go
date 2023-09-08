@@ -21,16 +21,26 @@ import (
 )
 
 func TestSetAndLoadExperiments(t *testing.T) {
-	ctx := context.Background()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	const testFeature = "test-feature"
+
 	var mu sync.Mutex
 	testExps := []*internal.Experiment{{Name: testFeature, Rollout: 100}}
-	testGetter := func(context.Context) ([]*internal.Experiment, error) {
+	getterStarted := make(chan bool, 1)
+	testGetter := func(ctx context.Context) ([]*internal.Experiment, error) {
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		case getterStarted <- true:
+		}
+
 		mu.Lock()
 		defer mu.Unlock()
 		return testExps, nil
 	}
-	experimenter, err := NewExperimenter(ctx, 10*time.Millisecond, testGetter, nil)
+	experimenter, err := NewExperimenter(ctx, 1*time.Millisecond, testGetter, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -69,7 +79,20 @@ func TestSetAndLoadExperiments(t *testing.T) {
 	mu.Lock()
 	testExps = []*internal.Experiment{{Name: testFeature, Rollout: 0}}
 	mu.Unlock()
-	time.Sleep(100 * time.Millisecond)
+
+	// Wait for the getter to run for the third time.
+	// The first run happened before NewExperimenter returned,
+	// and filled the channel buffer.
+	// The second run happens at some point after we clear the buffer here.
+	<-getterStarted
+	// When we receive again, we know the second run has started.
+	<-getterStarted
+	// However, we don't know for certain that the poller has posted the result
+	// of that run, *until* it has started the third run.
+	<-getterStarted
+	// Now we know that the second run — which happened after we stored to testExps —
+	// has completed, and its result should be visible.
+
 	makeRequest(t)
 	if featureIsOn {
 		t.Fatalf("experiment %q should not be active", testFeature)
