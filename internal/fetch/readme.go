@@ -44,7 +44,7 @@ func extractReadmes(modulePath, resolvedVersion string, contentDir fs.FS) (_ []*
 				return err
 			}
 			if info.Size() > MaxFileSize {
-				return fmt.Errorf("file size %d exceeds max limit %d", info.Size(), MaxFileSize)
+				return fmt.Errorf("file size %d exceeds max limit %d: %w", info.Size(), MaxFileSize, derrors.ModuleTooLarge)
 			}
 			c, err := readFSFile(contentDir, pathname, MaxFileSize)
 			if err != nil {

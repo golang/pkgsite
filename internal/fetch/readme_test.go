@@ -6,12 +6,14 @@ package fetch
 
 import (
 	"context"
+	"errors"
 	"io/fs"
 	"sort"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/proxy/proxytest"
 	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/testenv"
@@ -132,6 +134,41 @@ func TestExtractReadmes(t *testing.T) {
 				t.Errorf("mismatch (-want +got):\n%s", diff)
 			}
 		})
+	}
+}
+
+func TestExtractReadmesError(t *testing.T) {
+	ctx := context.Background()
+
+	var (
+		modulePath = "github.com/my/module"
+		version    = "v1.0.0"
+		files      = map[string]string{
+			"foo/README.md": string(make([]byte, MaxFileSize+100)),
+		}
+	)
+	var (
+		contentDir fs.FS
+		err        error
+	)
+	proxyClient, teardownProxy := proxytest.SetupTestClient(t, []*proxytest.Module{
+		{ModulePath: modulePath, Files: files}})
+	defer teardownProxy()
+	reader, err := proxyClient.Zip(ctx, modulePath, "v1.0.0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	contentDir, err = fs.Sub(reader, modulePath+"@v1.0.0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	got, err := extractReadmes(modulePath, version, contentDir)
+	if err == nil {
+		t.Fatalf("want error, got %v", cmp.Diff([]*internal.Readme{}, got))
+	}
+
+	if !errors.Is(err, derrors.ModuleTooLarge) {
+		t.Errorf("want ModuleTooLarge, got %v", err)
 	}
 }
 
