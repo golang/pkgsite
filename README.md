@@ -17,6 +17,7 @@ You can check it out at [https://pkg.go.dev](https://pkg.go.dev).
 `pkgsite` program extracts and generates documentation for Go projects.
 
 Example usage:
+
 ```
 $ go install golang.org/x/pkgsite/cmd/pkgsite@latest
 $ cd myproject
