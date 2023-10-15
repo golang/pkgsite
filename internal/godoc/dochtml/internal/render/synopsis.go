@@ -89,15 +89,17 @@ func OneLineNodeDepth(fset *token.FileSet, node ast.Node, depth int) string {
 			}
 		}
 
+		tparam := formatTypeParams(fset, n.TypeParams, depth)
+
 		param := joinStrings(params)
 		if len(results) == 0 {
-			return fmt.Sprintf("func(%s)", param)
+			return fmt.Sprintf("func%s(%s)", tparam, param)
 		}
 		result := joinStrings(results)
 		if !needParens {
-			return fmt.Sprintf("func(%s) %s", param, result)
+			return fmt.Sprintf("func%s(%s) %s", tparam, param, result)
 		}
-		return fmt.Sprintf("func(%s) (%s)", param, result)
+		return fmt.Sprintf("func%s(%s) (%s)", tparam, param, result)
 
 	case *ast.StructType:
 		if n.Fields == nil || len(n.Fields.List) == 0 {
@@ -213,4 +215,15 @@ func joinStrings(ss []string) string {
 		}
 	}
 	return strings.Join(ss, ", ")
+}
+
+func formatTypeParams(fset *token.FileSet, list *ast.FieldList, depth int) string {
+	if list.NumFields() == 0 {
+		return ""
+	}
+	var tparams []string
+	for _, field := range list.List {
+		tparams = append(tparams, OneLineField(fset, field, depth))
+	}
+	return "[" + joinStrings(tparams) + "]"
 }

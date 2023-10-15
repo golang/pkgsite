@@ -2845,7 +2845,7 @@ var moduleGenerics = &testModule{
 								{
 									SymbolMeta: internal.SymbolMeta{
 										Name:     "Min",
-										Synopsis: "func Min(a, b T) T",
+										Synopsis: "func Min[T constraints.Ordered](a, b T) T",
 										Section:  "Functions",
 										Kind:     "Function",
 									},
