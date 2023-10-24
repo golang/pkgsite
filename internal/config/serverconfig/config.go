@@ -152,6 +152,8 @@ func Init(ctx context.Context) (_ *config.Config, err error) {
 		RedisCacheHost:       os.Getenv("GO_DISCOVERY_REDIS_HOST"),
 		RedisBetaCacheHost:   os.Getenv("GO_DISCOVERY_REDIS_BETA_HOST"),
 		RedisCachePort:       GetEnv("GO_DISCOVERY_REDIS_PORT", "6379"),
+		RedisCachePassword:   GetEnv("GO_DISCOVERY_REDIS_PASSWORD", ""),
+		RedisCacheDB:         GetEnvInt(ctx, "GO_DISCOVERY_REDIS_DB", 0),
 		Quota: config.QuotaSettings{
 			Enable:     os.Getenv("GO_DISCOVERY_ENABLE_QUOTA") == "true",
 			QPS:        GetEnvInt(ctx, "GO_DISCOVERY_QUOTA_QPS", 10),

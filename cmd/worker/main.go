@@ -166,14 +166,14 @@ func main() {
 }
 
 func getCacheRedis(ctx context.Context, cfg *config.Config) *redis.Client {
-	return getRedis(ctx, cfg.RedisCacheHost, cfg.RedisCachePort, 0, 6*time.Second)
+	return getRedis(ctx, cfg.RedisCacheHost, cfg.RedisCachePort, cfg.RedisCachePassword, cfg.RedisCacheDB, 0, 6*time.Second)
 }
 
 func getBetaCacheRedis(ctx context.Context, cfg *config.Config) *redis.Client {
-	return getRedis(ctx, cfg.RedisBetaCacheHost, cfg.RedisCachePort, 0, 6*time.Second)
+	return getRedis(ctx, cfg.RedisBetaCacheHost, cfg.RedisCachePort, cfg.RedisCachePassword, cfg.RedisCacheDB, 0, 6*time.Second)
 }
 
-func getRedis(ctx context.Context, host, port string, writeTimeout, readTimeout time.Duration) *redis.Client {
+func getRedis(ctx context.Context, host, port, password string, db int, writeTimeout, readTimeout time.Duration) *redis.Client {
 	if host == "" {
 		return nil
 	}
@@ -186,5 +186,7 @@ func getRedis(ctx context.Context, host, port string, writeTimeout, readTimeout 
 		DialTimeout:  dialTimeout,
 		WriteTimeout: writeTimeout,
 		ReadTimeout:  readTimeout,
+		Password:     password,
+		DB:           db,
 	})
 }
