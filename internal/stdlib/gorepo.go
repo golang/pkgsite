@@ -44,7 +44,7 @@ func (remoteGoRepo) clone(ctx context.Context, v, directory string) (refName str
 	if err := cmd.Run(); err != nil {
 		return "", err
 	}
-	cmd = exec.CommandContext(ctx, "git", "fetch", "--depth=1", "--", GoRepoURL, refName+":main")
+	cmd = exec.CommandContext(ctx, "git", "fetch", "-f", "--depth=1", "--", GoRepoURL, refName+":main")
 	cmd.Dir = directory
 	if b, err := cmd.CombinedOutput(); err != nil {
 		return "", fmt.Errorf("running git fetch: %v: %s", err, b)
