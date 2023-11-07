@@ -215,6 +215,9 @@ func (s *Server) Install(handle func(string, http.Handler), cacher Cacher, authV
 	handle("/golang.org/x", s.staticPageHandler("subrepo", "Sub-repositories"))
 	handle("/files/", http.StripPrefix("/files", s.fileMux))
 	handle("/vuln/", vulnHandler)
+	handle("/opensearch.xml", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		serveFileFS(w, r, s.staticFS, "shared/opensearch.xml")
+	}))
 	handle("/", detailHandler)
 	if s.serveStats {
 		handle("/detail-stats/",
