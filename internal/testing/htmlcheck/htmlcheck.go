@@ -60,28 +60,6 @@ func In(selector string, checkers ...Checker) Checker {
 	}
 }
 
-// InAll runs the checkers against all nodes matching selector.
-func InAll(selector string, checkers ...Checker) Checker {
-	sel := mustParseSelector(selector)
-	return func(n *html.Node) error {
-		els := allMatching(n, sel)
-		for i, el := range els {
-			if err := check(el, checkers); err != nil {
-				return fmt.Errorf("%s, #%d: %v", selector, i, err)
-			}
-		}
-		return nil
-	}
-}
-
-func allMatching(n *html.Node, sel cascadia.Sel) []*html.Node {
-	var els []*html.Node
-	if sel.Match(n) {
-		els = append(els, n)
-	}
-	return append(els, cascadia.QueryAll(n, sel)...)
-}
-
 // NotIn returns a checker that succeeds only if no nodes match selector.
 func NotIn(selector string) Checker {
 	sel := mustParseSelector(selector)
