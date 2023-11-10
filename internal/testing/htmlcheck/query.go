@@ -7,6 +7,7 @@ package htmlcheck
 import (
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"golang.org/x/net/html"
@@ -122,11 +123,60 @@ func parse(s string) (*selector, error) {
 			}
 			sel.next = next
 			return sel, nil
+		case s[0] == ':':
+			atom, rest, err := parsePseudoClass(s)
+			if err != nil {
+				return nil, err
+			}
+			sel.atoms = append(sel.atoms, atom)
+			s = rest
 		default:
-			return nil, fmt.Errorf("unexpected character %q in input", s[0])
+			return nil, fmt.Errorf("unexpected character '%v' in input", string(s[0]))
 		}
 	}
 	return sel, nil
+}
+
+// parsePseudoClass parses a :nth-child(n) or :nth-of-type(n). It only supports those functions and
+// number arguments to those functions, not even, odd, or an+b.
+func parsePseudoClass(s string) (selectorAtom, string, error) {
+	if s[0] != ':' {
+		return nil, "", errors.New("expected ':' at beginning of pseudo class")
+	}
+	ident, rest := consumeIdentifier(s[1:])
+	if len(ident) == 0 {
+		return nil, "", errors.New("expected identifier after : in pseudo class")
+	}
+	if ident != "nth-of-type" && ident != "nth-child" {
+		return nil, "", errors.New("only :nth-of-type() and :nth-child() pseudoclasses are supported")
+	}
+	s = rest
+	if len(s) == 0 || s[0] != '(' {
+		return nil, "", errors.New("expected '(' after :nth-of-type or nth-child")
+	}
+	numstr, rest := consumeNumber(s[1:])
+	if len(numstr) == 0 {
+		return nil, "", errors.New("only number arguments are supported for :nth-of-type() or :nth-child()")
+	}
+	num, err := strconv.Atoi(numstr)
+	if err != nil {
+		// This shouldn't ever happen because consumeNumber should only return valid numbers and we
+		// check that the length is greater than 0.
+		panic(fmt.Errorf("unexpected parse error for number: %v", err))
+	}
+	s = rest
+	if len(s) == 0 || s[0] != ')' {
+		return nil, "", errors.New("expected ')' after number argument to nth-of-type or nth-child")
+	}
+	rest = s[1:]
+	switch ident {
+	case "nth-of-type":
+		return &nthOfType{num}, rest, nil
+	case "nth-child":
+		return &nthChild{num}, rest, nil
+	default:
+		panic("we should only have allowed nth-of-type or nth-child up to this point")
+	}
 }
 
 // parseAttributeSelector parses an attribute selector of the form [attribute-name="attribute=value"]
@@ -188,6 +238,15 @@ func consumeIdentifier(s string) (letters, rest string) {
 		}
 		// CSS doesn't allow identifiers to start with two hyphens or a hyphen
 		// followed by a digit, but we'll allow it.
+	}
+	return s[:i], s[i:]
+}
+
+// consumeNumber consumes and returns a (0-9)+ number at the beginning
+// of the given string, and the rest of the string.
+func consumeNumber(s string) (letters, rest string) {
+	i := 0
+	for ; i < len(s) && isNumber(s[i]); i++ {
 	}
 	return s[:i], s[i:]
 }
@@ -267,4 +326,66 @@ func (s *classSelector) match(n *html.Node) bool {
 		}
 	}
 	return false
+}
+
+// nthOfType implements the :nth-of-type() pseudoclass.
+type nthOfType struct {
+	n int
+}
+
+func (s *nthOfType) match(n *html.Node) bool {
+	if n.Type != html.ElementNode || n.Parent == nil {
+		return false
+	}
+	curChild := n.Parent.FirstChild
+	i := 0
+	for {
+		if curChild.Type == html.ElementNode && curChild.Data == n.Data {
+			i++
+			if i == s.n {
+				break
+			}
+		}
+		if curChild.NextSibling == nil {
+			break
+		}
+		curChild = curChild.NextSibling
+	}
+	if i != s.n {
+		// there were fewer than n children of this element type.
+		return false
+	}
+	return curChild == n
+}
+
+// nthChild implements the :nth-child() pseudoclass
+type nthChild struct {
+	n int
+}
+
+func (s *nthChild) match(n *html.Node) bool {
+	if n.Type != html.ElementNode || n.Parent == nil {
+		return false
+	}
+	curChild := n.Parent.FirstChild
+	// Advance to next element node.
+	for curChild.Type != html.ElementNode && curChild.NextSibling != nil {
+		curChild = curChild.NextSibling
+	}
+	i := 1
+	for ; i < s.n; i++ {
+		if curChild.NextSibling == nil {
+			break
+		}
+		curChild = curChild.NextSibling
+		// Advance to next element node.
+		for curChild.Type != html.ElementNode && curChild.NextSibling != nil {
+			curChild = curChild.NextSibling
+		}
+	}
+	if i != s.n {
+		// there were fewer than n children.
+		return false
+	}
+	return curChild == n
 }

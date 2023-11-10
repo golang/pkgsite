@@ -51,7 +51,7 @@ func TestFrontendMainPage(t *testing.T) {
 				in("#S2",
 					in(".Documentation-sinceVersion", hasText(""))),
 				in("#String",
-					in(".Documentation-sinceVersion > .Documentation-sinceVersionVersion", hasText("v1.1.0"))),
+					in(".Documentation-sinceVersion .Documentation-sinceVersionVersion", hasText("v1.1.0"))),
 				in("#T",
 					in(".Documentation-sinceVersion", hasText(""))),
 				in("#TF",

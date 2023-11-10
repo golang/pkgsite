@@ -12,7 +12,6 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/andybalholm/cascadia"
 	"golang.org/x/net/html"
 )
 
@@ -38,15 +37,9 @@ func Run(reader io.Reader, checker Checker) error {
 //
 // A nil Checker is valid and always succeeds.
 func In(selector string, checkers ...Checker) Checker {
-	sel := mustParseCascadiaSelector(selector)
+	sel := mustParseSelector(selector)
 	return func(n *html.Node) error {
-		var m *html.Node
-		// cascadia.Query does not test against its argument node.
-		if sel.Match(n) {
-			m = n
-		} else {
-			m = cascadia.Query(n, sel)
-		}
+		m := query(n, sel)
 		if m == nil {
 			return fmt.Errorf("no element matches selector %q", selector)
 		}
@@ -82,19 +75,6 @@ func check(n *html.Node, Checkers []Checker) error {
 		}
 	}
 	return nil
-}
-
-// mustParseCascadiaSelector parses the given CSS selector. An empty string
-// is treated as "*" (match everything).
-func mustParseCascadiaSelector(s string) cascadia.Sel {
-	if s == "" {
-		s = "*"
-	}
-	sel, err := cascadia.Parse(s)
-	if err != nil {
-		panic(fmt.Sprintf("parsing %q: %v", s, err))
-	}
-	return sel
 }
 
 // mustParseSelector parses the given CSS selector. An empty string

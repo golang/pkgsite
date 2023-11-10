@@ -120,6 +120,52 @@ func TestParse(t *testing.T) {
 			nil,
 			errors.New("expected ']' at end of attribute selector"),
 		},
+		{
+			`.VulnMain-title:nth-of-type(4)`,
+			&selector{atoms: []selectorAtom{&classSelector{"VulnMain-title"}, &nthOfType{4}}},
+			nil,
+		},
+		{
+			`th:nth-child(2)`,
+			&selector{atoms: []selectorAtom{&elementSelector{"th"}, &nthChild{2}}},
+			nil,
+		},
+		{
+			`th:(2)`,
+			nil,
+			errors.New("expected identifier after : in pseudo class"),
+		},
+		{
+			`th:32(2)`,
+			nil,
+			errors.New("expected identifier after : in pseudo class"),
+		},
+		{
+			`th:active`,
+			nil,
+			errors.New("only :nth-of-type() and :nth-child() pseudoclasses are supported"),
+		},
+		{
+			`th:nth-child`,
+			nil,
+			errors.New("expected '(' after :nth-of-type or nth-child"),
+		},
+		{
+			`th:nth-child(odd)`,
+			nil,
+			errors.New("only number arguments are supported for :nth-of-type() or :nth-child()"),
+		},
+		{
+			`th:nth-child(14`,
+			nil,
+			errors.New("expected ')' after number argument to nth-of-type or nth-child"),
+		},
+		// We don't support the child combinator. Make sure it returns a parse error.
+		{
+			".Documentation-sinceVersion > .Documentation-sinceVersionVersion",
+			nil,
+			errors.New("unexpected character '>' in input"),
+		},
 	}
 	for _, tc := range testCases {
 		sel, err := parse(tc.text)
@@ -156,6 +202,17 @@ func TestQuery(t *testing.T) {
 		{`<div></div><div><div>wrong</div></div><div id="wrong-id"><div class="my-class">also wrong</div></div><div id="my-id"><div class="wrong-class">still wrong</div></div><div id="my-id"><div class="my-class">match</div></div>`, "div#my-id div.my-class", `<div class="my-class">match</div>`},
 		{`<a></a><div class="UnitMeta-repo"><a href="foo" title="">link body</a></div>`, ".UnitMeta-repo a", `<a href="foo" title="">link body</a>`},
 		{`<ul class="UnitFiles-fileList"><li><a href="foo">a.go</a></li></ul>`, ".UnitFiles-fileList a", `<a href="foo">a.go</a>`},
+		{`<ul><li>first child</li><li>second child</li></ul>`, "li:nth-child(2)", `<li>second child</li>`},
+		{`<ul> <li>first child</li> <li>second child</li> </ul>`, "li:nth-child(2)", `<li>second child</li>`},
+		{`<div><div>not counted</div><p class="class">first paragraph</p></div>`, ".class:nth-of-type(1)", `<p class="class">first paragraph</p>`},
+		{`<div><div>not counted</div> <p class="class">first paragraph</p> </div>`, ".class:nth-of-type(1)", `<p class="class">first paragraph</p>`},
+		{`<div><div class="class">not counted</div><p class="class">first paragraph</p>`, ".class:nth-of-type(2)", ``},
+		{`<div><div class="class">not counted</div><p class="class">first paragraph</p><p class="class">second paragraph</p></div>`, ".class:nth-of-type(2)", `<p class="class">second paragraph</p>`},
+		{`<div><div>not counted</div><p>first paragraph</p><p class="class">second paragraph</p></div>`, ".class:nth-of-type(2)", `<p class="class">second paragraph</p>`},
+		{`<div><div>not counted</div><p>first paragraph</p><div>also not counted</div><p class="class">second paragraph</p></div>`, ".class:nth-of-type(2)", `<p class="class">second paragraph</p>`},
+		{`<div><div>not counted</div><p>first paragraph</p><div>also not counted</div><p class="class">second paragraph</p><td>also not counted</td><p>third paragraph</p><p>fourth paragraph</p><p class="class">fifth paragraph</p></div>`, ".class:nth-of-type(5)", `<p class="class">fifth paragraph</p>`},
+		{`<table class="UnitDirectories-table"><tbody><tr class="UnitDirectories-tableHeader"> <th>Path</th> <th class="UnitDirectories-desktopSynopsis">Synopsis</th></tr>`, "th:nth-child(1)", "<th>Path</th>"},
+		{`<table class="UnitDirectories-table"> <tbody> <tr class="UnitDirectories-tableHeader"> <th>Path</th> <th class="UnitDirectories-desktopSynopsis"> Synopsis </th> </tr>`, "th:nth-child(1)", "<th>Path</th>"},
 	}
 	for _, tc := range testCases {
 		n, err := html.Parse(strings.NewReader(tc.queriedText))
