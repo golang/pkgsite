@@ -38,7 +38,7 @@ func Run(reader io.Reader, checker Checker) error {
 //
 // A nil Checker is valid and always succeeds.
 func In(selector string, checkers ...Checker) Checker {
-	sel := mustParseSelector(selector)
+	sel := mustParseCascadiaSelector(selector)
 	return func(n *html.Node) error {
 		var m *html.Node
 		// cascadia.Query does not test against its argument node.
@@ -64,7 +64,7 @@ func In(selector string, checkers ...Checker) Checker {
 func NotIn(selector string) Checker {
 	sel := mustParseSelector(selector)
 	return func(n *html.Node) error {
-		if sel.Match(n) || cascadia.Query(n, sel) != nil {
+		if query(n, sel) != nil {
 			return fmt.Errorf("%q matched one or more elements", selector)
 		}
 		return nil
@@ -84,13 +84,23 @@ func check(n *html.Node, Checkers []Checker) error {
 	return nil
 }
 
-// mustParseSelector parses the given CSS selector. An empty string
+// mustParseCascadiaSelector parses the given CSS selector. An empty string
 // is treated as "*" (match everything).
-func mustParseSelector(s string) cascadia.Sel {
+func mustParseCascadiaSelector(s string) cascadia.Sel {
 	if s == "" {
 		s = "*"
 	}
 	sel, err := cascadia.Parse(s)
+	if err != nil {
+		panic(fmt.Sprintf("parsing %q: %v", s, err))
+	}
+	return sel
+}
+
+// mustParseSelector parses the given CSS selector. An empty string
+// is treated as matching everything.
+func mustParseSelector(s string) *selector {
+	sel, err := parse(s)
 	if err != nil {
 		panic(fmt.Sprintf("parsing %q: %v", s, err))
 	}
