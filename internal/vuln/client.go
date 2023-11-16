@@ -13,6 +13,7 @@ import (
 	"strings"
 
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/osv"
 	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/sync/errgroup"
@@ -228,7 +229,18 @@ func (c *Client) Entries(ctx context.Context, n int) (_ []*osv.Entry, err error)
 		ids = ids[:n]
 	}
 
-	return c.byIDs(ctx, ids)
+	entries, err := c.byIDs(ctx, ids)
+	if err != nil {
+		return nil, err
+	}
+	// We've seen nil entries crash the vuln/list page.
+	// Add logging to understand why.
+	for i, e := range entries {
+		if e == nil {
+			log.Errorf(ctx, "Client.Entries: got nil osv.Entry for ID %q", ids[i])
+		}
+	}
+	return entries, nil
 }
 
 func sortIDs(ids []string) {
