@@ -94,7 +94,10 @@ func (r *htmlRenderer) renderHeading(w util.BufWriter, source []byte, node ast.N
 	}
 	newLevel := n.Level + r.offset
 	if entering {
-		if n.Level > 6 {
+		// TODO(matloob): Do we want the div and h elements to have analagous classes?
+		// Currently we're using newLevel for the div's class but n.Level for the h element's
+		// class.
+		if newLevel > 6 {
 			_, _ = w.WriteString(fmt.Sprintf(`<div class="h%d" role="heading" aria-level="%d"`, newLevel, n.Level))
 		} else {
 			_, _ = w.WriteString(fmt.Sprintf(`<h%d class="h%d"`, newLevel, n.Level))
@@ -104,7 +107,7 @@ func (r *htmlRenderer) renderHeading(w util.BufWriter, source []byte, node ast.N
 		}
 		_ = w.WriteByte('>')
 	} else {
-		if n.Level > 6 {
+		if newLevel > 6 {
 			_, _ = w.WriteString("</div>\n")
 		} else {
 			_, _ = w.WriteString(fmt.Sprintf("</h%d>\n", newLevel))

@@ -127,6 +127,24 @@ func TestReadme(t *testing.T) {
 			},
 		},
 		{
+			name: "Heading level six",
+			unit: unit,
+			readme: &internal.Readme{
+				Filepath: sample.ReadmeFilePath,
+				Contents: "# One\n\n###### Six\n\n# One",
+			},
+			wantHTML: "<h3 class=\"h1\" id=\"readme-one\">One</h3>\n" +
+				"<div role=\"heading\" aria-level=\"6\" id=\"readme-six\">Six</div>\n" +
+				"<h3 class=\"h1\" id=\"readme-one-1\">One</h3>",
+
+			wantOutline: []*Heading{
+				{Level: 1, Text: "One", ID: "readme-one", Children: []*Heading{
+					{Level: 6, Text: "Six", ID: "readme-six"},
+				}},
+				{Level: 1, Text: "One", ID: "readme-one-1"},
+			},
+		},
+		{
 			name: "Github markdown emoji markup is properly rendered",
 			unit: unit,
 			readme: &internal.Readme{
