@@ -12,7 +12,6 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
-	"unicode"
 
 	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/parser"
@@ -180,7 +179,7 @@ func newIDs() parser.IDs {
 }
 
 // Generate turns heading content from a markdown document into a heading id.
-// First HTML markup and markdown images are stripped then unicode letters
+// First HTML markup and markdown images are stripped then ASCII letters
 // and numbers are used to generate the final result. Finally, all heading ids
 // are prefixed with "readme-" to avoid name collisions with other ids on the
 // unit page. Duplicated heading ids are given an incremental suffix. See
@@ -190,7 +189,7 @@ func (s *ids) Generate(value []byte, kind ast.NodeKind) []byte {
 	r := regexp.MustCompile(`(<[^<>]+>|\[\!\[[^\]]+]\([^\)]+\)\]\([^\)]+\))`)
 	str := r.ReplaceAllString(string(value), "")
 	f := func(c rune) bool {
-		return !unicode.IsLetter(c) && !unicode.IsNumber(c)
+		return !('a' <= c && c <= 'z') && !('A' <= c && c <= 'Z') && !('0' <= c && c <= '9')
 	}
 	str = strings.Join(strings.FieldsFunc(str, f), "-")
 	str = strings.ToLower(str)

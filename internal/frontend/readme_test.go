@@ -145,6 +145,16 @@ func TestReadme(t *testing.T) {
 			},
 		},
 		{
+			name: "Non-ASCII Heading",
+			unit: unit,
+			readme: &internal.Readme{
+				Filepath: sample.ReadmeFilePath,
+				Contents: "# 中文¹",
+			},
+			wantHTML:    "<h3 class=\"h1\" id=\"readme-heading\">中文¹</h3>",
+			wantOutline: []*Heading{{Level: 1, Text: "中文¹", ID: "readme-heading"}},
+		},
+		{
 			name: "Github markdown emoji markup is properly rendered",
 			unit: unit,
 			readme: &internal.Readme{
