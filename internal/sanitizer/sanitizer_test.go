@@ -17,12 +17,16 @@ func TestSanitizeBytes(t *testing.T) {
 			"",
 		},
 		{
+			"<script><tag>body</tag></script>",
+			"",
+		},
+		{
 			`<a href="%">body</a>`,
-			`<a>body</a>`,
+			`body`,
 		},
 		{
 			`<a href="unrecognized://foo">body</a>`,
-			`<a>body</a>`,
+			`body`,
 		},
 		{
 			`<p dir="RTL" lang="en" id="foo" title="a title"></p>`,
@@ -52,6 +56,8 @@ func TestSanitizeBytes(t *testing.T) {
 <img src="file.jpeg" alt="alt text" usemap="#map" width="600" height="400"/>
 
 
+
+
 `,
 		},
 		{
@@ -75,8 +81,8 @@ func TestSanitizeBytes(t *testing.T) {
 			`text<p></p>`,
 		},
 		{
-			`<article badattr="bad"> <ol> <script> <li>hello</li> </script> <li>thi<wbr/>ng</li> </ol> <ul> </ul> </article>`,
-			`<article> <ol>  <li>thi<wbr/>ng</li> </ol> <ul> </ul> </article>`,
+			`<article badattr="bad"> <ol> <bad> <li>hello</li> </script> <li>thi<wbr/>ng</li> </ol> <ul> </ul> </article>`,
+			`<article> <ol>  <li>hello</li>  <li>thi<wbr/>ng</li> </ol> <ul> </ul> </article>`,
 		},
 		{
 			`<details open="closed"></details>`,
@@ -96,7 +102,7 @@ func TestSanitizeBytes(t *testing.T) {
 		},
 		{
 			`<p><bad>A</bad><bad>B</bad></p>`,
-			`<p></p>`,
+			`<p>AB</p>`,
 		},
 		{
 			`
@@ -135,6 +141,8 @@ func TestSanitizeBytes(t *testing.T) {
 </table>
 `,
 		},
+		{`<p><bad><bad2><bad3><bad4>hello<bad5><bad6><p> middle</p>goodbye`,
+			`<p>hello</p><p> middle</p>goodbye`},
 	}
 
 	for _, tc := range testCases {
