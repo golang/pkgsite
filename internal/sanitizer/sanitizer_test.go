@@ -5,7 +5,10 @@
 package sanitizer
 
 import (
+	"reflect"
 	"testing"
+
+	"golang.org/x/net/html"
 )
 
 func TestSanitizeBytes(t *testing.T) {
@@ -149,6 +152,74 @@ func TestSanitizeBytes(t *testing.T) {
 		got := string(SanitizeBytes([]byte(tc.input)))
 		if got != tc.want {
 			t.Errorf("SanitizeBytes(%q): got %q, want %q", tc.input, got, tc.want)
+		}
+	}
+}
+
+func TestAddRelNoFollow(t *testing.T) {
+	testCases := []struct {
+		input []html.Attribute
+		want  []html.Attribute
+	}{
+		{
+			[]html.Attribute{},
+			[]html.Attribute{},
+		},
+		{
+			[]html.Attribute{{Key: "id", Val: "foo"}},
+			[]html.Attribute{{Key: "id", Val: "foo"}},
+		},
+		{
+			[]html.Attribute{{Key: "href", Val: "https://golang.org"}},
+			[]html.Attribute{{Key: "href", Val: "https://golang.org"}, {Key: "rel", Val: "nofollow"}},
+		},
+		{
+			[]html.Attribute{{Key: "href", Val: "https://golang.org"}, {Key: "rel", Val: "nofollow"}},
+			[]html.Attribute{{Key: "href", Val: "https://golang.org"}, {Key: "rel", Val: "nofollow"}},
+		},
+		{
+			[]html.Attribute{{Key: "href", Val: "https://golang.org"}, {Key: "rel", Val: "canonical"}},
+			[]html.Attribute{{Key: "href", Val: "https://golang.org"}, {Key: "rel", Val: "nofollow"}},
+		},
+		{
+			[]html.Attribute{{Key: "id", Val: "foo"}, {Key: "rel", Val: "canonical"}},
+			[]html.Attribute{{Key: "id", Val: "foo"}, {Key: "rel", Val: "canonical"}},
+		},
+	}
+
+	for _, tc := range testCases {
+		got := addRelNoFollow(append([]html.Attribute{}, tc.input...))
+		if !reflect.DeepEqual(got, tc.want) {
+			t.Errorf("addRelNoFollow(%v): got %v, want %v", tc.input, got, tc.want)
+		}
+	}
+}
+
+func TestValidURL(t *testing.T) {
+	testCases := []struct {
+		input string
+		want  bool
+	}{
+		{"", true},
+		{"#", true},
+		{"https://golang.org", true},
+		{"http://golang.org", true},
+		{"mailto:golang.org", true},
+		{"unsupported:golang.org", false},
+		{" https://golang.org ", true},
+		{"\thttps://golang.org ", true},
+		{" https://golang.org/my file", false},
+		{" https://golang.org/my\tfile", false},
+		{" https://golang.org/my\nfile", false},
+		{"%", false},
+		{" % ", false},
+		{" %\t% ", false},
+	}
+
+	for _, tc := range testCases {
+		got := validURL(tc.input)
+		if got != tc.want {
+			t.Errorf("validURL(%q): got %v, want %v", tc.input, got, tc.want)
 		}
 	}
 }

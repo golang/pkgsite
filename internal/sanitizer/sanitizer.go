@@ -8,7 +8,6 @@ package sanitizer
 
 import (
 	"bytes"
-	"fmt"
 	"net/url"
 	"regexp"
 	"strings"
@@ -19,14 +18,15 @@ import (
 // SanitizeBytes returns a sanitized version of the input.
 // It throws out any attributes or tags that are not explicitly
 // allowed in allowElems or allowAttributes below, including
-// any child nodes of elements that are not allowed.
+// any child nodes of elements that are not allowed. It returns
+// the empty string if there was an error parsing the input.
 func SanitizeBytes(b []byte) []byte {
 	// TODO(matloob): We want to sanitize a fragment that would
 	// appear in the body. Can we call ParseFragment without
 	// creating the body node here?
 	document, err := html.Parse(strings.NewReader("<html><head></head><body></body></html>"))
 	if err != nil {
-		panic(fmt.Errorf("error parsing document: %v", err))
+		return nil
 	}
 	body := document.FirstChild.LastChild // document.FirstChild is the <html> node
 
@@ -47,10 +47,6 @@ func SanitizeBytes(b []byte) []byte {
 // of parent-less nodes the node should be replaced with.
 func sanitize(n *html.Node) ([]*html.Node, bool) {
 	switch n.Type {
-	case html.CommentNode:
-		return nil, false
-	case html.DoctypeNode:
-		return nil, false
 	case html.TextNode:
 		return nil, true // Assume text nodes are safe
 	case html.ElementNode:
@@ -119,7 +115,7 @@ func sanitize(n *html.Node) ([]*html.Node, bool) {
 		}
 		return nil, true
 	default:
-		return extractSanitizedChildren(n), false
+		return nil, false
 	}
 }
 
@@ -146,6 +142,9 @@ func sanitizeNodes(nodes []*html.Node) []*html.Node {
 	return keepNodes
 }
 
+// addRelNoFollow adds a rel="nofollow" attribute to the attributes
+// if the href attribute is present. If there's already a rel
+// attribute present its value is replaced with "nofollow".
 func addRelNoFollow(attrs []html.Attribute) []html.Attribute {
 	hasHref := false
 	for _, attr := range attrs {
@@ -382,10 +381,14 @@ func re(rx string) func(string) bool {
 	return regexp.MustCompile(rx).MatchString
 }
 
+// validURL returns true if the URL is a valid url according to the
+// following rules: it must be url.Parsable when the spaces are trimmed,
+// it can not contain interior newlines, tabs, or spaces, and its scheme,
+// if present must be mailto, http, or https.
 func validURL(rawurl string) bool {
 	rawurl = strings.TrimSpace(rawurl)
 
-	if strings.ContainsAny(rawurl, " \t\n") {
+	if strings.ContainsAny(rawurl, " \t") {
 		return false
 	}
 
