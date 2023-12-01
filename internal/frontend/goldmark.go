@@ -93,7 +93,7 @@ func (r *htmlRenderer) renderHeading(w util.BufWriter, source []byte, node ast.N
 	}
 	newLevel := n.Level + r.offset
 	if entering {
-		// TODO(matloob): Do we want the div and h elements to have analagous classes?
+		// TODO(matloob): Do we want the div and h elements to have analogous classes?
 		// Currently we're using newLevel for the div's class but n.Level for the h element's
 		// class.
 		if newLevel > 6 {

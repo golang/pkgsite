@@ -1748,6 +1748,8 @@ modernc.org/z v1.0.1-0.20210308123920-1f282aa71362/go.mod h1:8/SRk5C/HgiQWCgXdfp
 modernc.org/z v1.0.1/go.mod h1:8/SRk5C/HgiQWCgXdfpb+1RvhORdkz5sw72d3jjtyqA=
 modernc.org/zappy v1.0.0/go.mod h1:hHe+oGahLVII/aTTyWK/b53VDHMAGCBYYeZ9sn83HC4=
 rsc.io/binaryregexp v0.2.0/go.mod h1:qTv7/COck+e2FymRvadv62gMdZztPaShugOCi3I+8D8=
+rsc.io/markdown v0.0.0-20231114125513-6fc7bf989e0c h1:HaCtoXmNbydct3DDtBACBsvfOdbU5sH7TdtkrBmylco=
+rsc.io/markdown v0.0.0-20231114125513-6fc7bf989e0c/go.mod h1:NAB5d9ChqypB0BfWUzhyn7GTyPwr2Q0KxmrAFJnOT/g=
 rsc.io/pdf v0.1.1/go.mod h1:n8OzWcQ6Sp37PL01nO98y4iUCRdTGarVfzxY20ICaU4=
 rsc.io/quote/v3 v3.1.0/go.mod h1:yEA65RcK8LyAZtP9Kv3t0HmxON59tX3rD+tICJqUlj0=
 rsc.io/sampler v1.3.0/go.mod h1:T1hPZKmBbMNahiBKFy5HrXp6adAjACjK9JXDnKaTXpA=
