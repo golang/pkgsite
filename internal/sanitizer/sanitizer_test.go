@@ -36,7 +36,7 @@ func TestSanitizeBytes(t *testing.T) {
 			`<p dir="RTL" lang="en" id="foo" title="a title"></p>`,
 		},
 		{
-			`<p dir="ABC" lang="e" id="#foo" title="a title%"></p>`,
+			`<p dir="ABC" lang="e" id=" foo" title="a title%"></p>`,
 			`<p></p>`,
 		},
 		{

@@ -264,8 +264,8 @@ type allowAttr struct {
 var allowAttrs = []allowAttr{
 	// bluemonday AllowStandardAttributes
 	{"", "dir", re(`^(?i)(rtl|ltr)$`)},
-	{"", "lang", re(`^[a-zA-Z]{2,20}$`)},
-	{"", "id", re(`^[a-zA-Z0-9\:\-_\.]+$`)},
+	{"", "lang", re(`^[a-zA-Z-]{2,20}$`)},
+	{"", "id", re(`^#?[a-zA-Z0-9\:\-_\.]+$`)},
 	{"", "title", para},
 
 	{"details", "open", re(`(?i)^(|open)$`)},
@@ -276,11 +276,11 @@ var allowAttrs = []allowAttr{
 	{"map", "name", re(`([\p{L}\p{N}_-]+)`)},
 	{"img", "usemap", re(`(?i)^#[\p{L}\p{N}_-]+$`)},
 	{"img", "src", validURL},
-	{"img", "align", re(`(?i)^(left|right|top|texttop|middle|absmiddle|baseline|bottom|absbottom)$`)},
+	{"img", "align", re(`(?i)^(left|right|top|texttop|middle|absmiddle|baseline|bottom|absbottom|center)?;?$`)}, // allow invalid value center and semicolon to reduce diffs
 	{"img", "alt", para},
 	{"img", "height", numOrPercent},
-	{"img", "width", re(`^[0-9]+([%]|[a-z]+)?;?/?$`)}, // a hacky regexp to allow most commonly appearing width errors through
-	{"div", "align", align},
+	{"img", "width", re(`^ *[0-9.,]*([%]|[a-z]+)?;?/? *$`)}, // a hacky regexp to allow most commonly appearing width errors through
+	{"div", "align", flexiblealign},
 	{"div", "width", numOrPercent},
 	{"div", "role", re(`^[a-z]+$`)},
 	{"div", "aria-level", integer},
@@ -288,8 +288,8 @@ var allowAttrs = []allowAttr{
 	{"del", "datetime", iso8601},
 	{"ins", "cite", para},
 	{"ins", "datetime", iso8601},
-	{"p", "align", align},        // pkgsite allows all values
-	{"p", "width", numOrPercent}, // pkgsite allows all values
+	{"p", "align", flexiblealign}, // pkgsite allows all values
+	{"p", "width", flexiblewidth}, // pkgsite allows all values
 	{"q", "cite", validURL},
 	{"time", "datetime", iso8601},
 	{"ol", "type", re(`(?i)^(circle|disc|square|a|A|i|I|1)$`)},
@@ -364,11 +364,19 @@ var roundtripAttrs = map[string]map[string]bool{
 
 var align = re(`(?i)^(center|justify|left|right)$`)
 
+// flexiblealign allows non-valid align values to reduce diffs
+// with the old pkgsite sanitization code.
+var flexiblealign = re(`(?i)^(|middle|center|justify|left|right);? ?$`)
+
 var valign = re(`(?i)^(baseline|bottom|middle|top)$`)
 
 var para = re(`^[\p{L}\p{N}\s\-_',\[\]!\./\\\(\)]*$`)
 
 var spaceSepTokens = re(`^([\s\p{L}\p{N}_-]+)$`)
+
+// flexiblewidth allows non-valid align values to reduce diffs
+// with the old pkgsite sanitization code.
+var flexiblewidth = re(`^[0-9]+[%]?(px)?$`)
 
 var numOrPercent = re(`^[0-9]+[%]?$`)
 
