@@ -414,9 +414,9 @@ func TestReadme(t *testing.T) {
 				Contents: `# [![Image Text](file.svg)](link.html)
 				`,
 			},
-			wantHTML: `<h3 class="h1" id="readme-heading"><a href="https://github.com/valid/module_name/blob/v1.0.0/link.html" rel="nofollow"><img src="https://github.com/valid/module_name/raw/v1.0.0/file.svg" alt="Image Text"/></a></h3>`,
+			wantHTML: `<h3 class="h1" id="readme-image-text"><a href="https://github.com/valid/module_name/blob/v1.0.0/link.html" rel="nofollow"><img src="https://github.com/valid/module_name/raw/v1.0.0/file.svg" alt="Image Text"/></a></h3>`,
 			wantOutline: []*Heading{
-				{Level: 1, Text: "Image Text", ID: "readme-heading"},
+				{Level: 1, Text: "Image Text", ID: "readme-image-text"},
 			},
 		},
 		{
@@ -455,6 +455,18 @@ func TestReadme(t *testing.T) {
 					{Level: 2, Text: "Heading 🚀", ID: "readme-heading-2"},
 				}},
 				{Level: 1, Text: "Heading", ID: "readme-heading-3"},
+			},
+		},
+		{
+			name: "tag in heading",
+			unit: unit,
+			readme: &internal.Readme{
+				Filepath: "README.md",
+				Contents: `# A link <a href="link">link</a>`,
+			},
+			wantHTML: `<h3 class="h1" id="readme-a-link-link">A link <a href="link" rel="nofollow">link</a></h3>`,
+			wantOutline: []*Heading{
+				{Level: 1, Text: "A link link", ID: "readme-a-link-link"},
 			},
 		},
 	} {

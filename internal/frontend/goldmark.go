@@ -10,7 +10,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"regexp"
 	"strings"
 
 	"github.com/yuin/goldmark/ast"
@@ -22,6 +21,7 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/source"
+	"rsc.io/markdown"
 )
 
 // astTransformer is a default transformer of the goldmark tree. We pass in
@@ -185,20 +185,35 @@ func newIDs() parser.IDs {
 // unit page. Duplicated heading ids are given an incremental suffix. See
 // readme_test.go for examples.
 func (s *ids) Generate(value []byte, kind ast.NodeKind) []byte {
-	// Matches strings like `<tag attr="value">Text</tag>` or `[![Text](file.svg)](link.html)`.
-	r := regexp.MustCompile(`(<[^<>]+>|\[\!\[[^\]]+]\([^\)]+\)\]\([^\)]+\))`)
-	str := r.ReplaceAllString(string(value), "")
+	var defaultID string
+	if kind == ast.KindHeading {
+		defaultID = "heading"
+	} else {
+		defaultID = "id"
+	}
+
+	parser := &markdown.Parser{}
+	doc := parser.Parse("# " + string(value))
+	return []byte(s.generateID(doc, defaultID))
+}
+
+func (s *ids) generateID(block markdown.Block, defaultID string) string {
+	var buf bytes.Buffer
+	walkBlocks([]markdown.Block{block}, func(b markdown.Block) error {
+		if t, ok := b.(*markdown.Text); ok {
+			for _, inl := range t.Inline {
+				inl.PrintText(&buf)
+			}
+		}
+		return nil
+	})
 	f := func(c rune) bool {
 		return !('a' <= c && c <= 'z') && !('A' <= c && c <= 'Z') && !('0' <= c && c <= '9')
 	}
-	str = strings.Join(strings.FieldsFunc(str, f), "-")
+	str := strings.Join(strings.FieldsFunc(buf.String(), f), "-")
 	str = strings.ToLower(str)
 	if len(str) == 0 {
-		if kind == ast.KindHeading {
-			str = "heading"
-		} else {
-			str = "id"
-		}
+		str = defaultID
 	}
 	key := str
 	for i := 1; ; i++ {
@@ -208,7 +223,7 @@ func (s *ids) Generate(value []byte, kind ast.NodeKind) []byte {
 		}
 		key = fmt.Sprintf("%s-%d", str, i)
 	}
-	return []byte("readme-" + key)
+	return "readme-" + key
 }
 
 // Put implements Put from the goldmark parser IDs interface.

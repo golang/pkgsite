@@ -12,7 +12,6 @@ import (
 	"strings"
 
 	"github.com/google/safehtml/template"
-	"github.com/yuin/goldmark/ast"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/log"
@@ -118,6 +117,8 @@ func walkBlocks(blocks []markdown.Block, walkFunc func(b markdown.Block) error) 
 
 		err = nil
 		switch x := b.(type) {
+		case *markdown.Document:
+			err = walkBlocks(x.Blocks, walkFunc)
 		case *markdown.Text:
 		case *markdown.Paragraph:
 			err = walkBlocks([]markdown.Block{x.Text}, walkFunc)
@@ -130,7 +131,9 @@ func walkBlocks(blocks []markdown.Block, walkFunc func(b markdown.Block) error) 
 		case *markdown.Quote:
 			err = walkBlocks(x.Blocks, walkFunc)
 		case *markdown.HTMLBlock:
-			continue
+		case *markdown.CodeBlock:
+		case *markdown.Empty:
+		case *markdown.ThematicBreak:
 		default:
 			return fmt.Errorf("unhandled block type %T", x)
 		}
@@ -287,6 +290,12 @@ func transformHeadingsToHTML(doc *markdown.Document) {
 	rewriteHeadingsBlocks = func(blocks []markdown.Block) {
 		for i, b := range blocks {
 			switch x := b.(type) {
+			case *markdown.Paragraph:
+				rewriteHeadingsBlocks([]markdown.Block{x.Text})
+			case *markdown.List:
+				rewriteHeadingsBlocks(x.Items)
+			case *markdown.Item:
+				rewriteHeadingsBlocks(x.Blocks)
 			case *markdown.Quote:
 				rewriteHeadingsBlocks(x.Blocks)
 			case *markdown.Heading:
@@ -338,19 +347,12 @@ var htmlQuoteEscaper = strings.NewReplacer(
 // function, but we don't have the raw markdown anymore, so we use the
 // text instead.
 func rewriteHeadingIDs(doc *markdown.Document) {
-	ids := newIDs()
+	ids := &ids{
+		values: map[string]bool{},
+	}
 	walkBlocks(doc.Blocks, func(b markdown.Block) error {
 		if heading, ok := b.(*markdown.Heading); ok {
-			var buf bytes.Buffer
-			for _, inl := range heading.Text.Inline {
-				// Hack: use HTML because ids strips out html tags.
-				// TODO(matloob): change the goldmark code to not use
-				// raw markdown text and instead depend on the text of the
-				// nodes.
-				inl.PrintHTML(&buf)
-			}
-
-			id := ids.Generate(buf.Bytes(), ast.KindHeading)
+			id := ids.generateID(heading, "heading")
 			heading.ID = string(id)
 		}
 		return nil
