@@ -26,7 +26,6 @@ require (
 	github.com/jackc/pgx/v4 v4.14.1
 	github.com/jba/templatecheck v0.6.0
 	github.com/lib/pq v1.10.9
-	github.com/microcosm-cc/bluemonday v1.0.25
 	github.com/russross/blackfriday/v2 v2.1.0
 	github.com/yuin/goldmark v1.4.13
 	github.com/yuin/goldmark-emoji v1.0.1
@@ -55,7 +54,6 @@ require (
 	cloud.google.com/go/trace v1.9.0 // indirect
 	github.com/alicebob/gopher-json v0.0.0-20200520072559-a9ecdc9d1d3a // indirect
 	github.com/aws/aws-sdk-go v1.34.29 // indirect
-	github.com/aymerick/douceur v0.2.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/census-instrumentation/opencensus-proto v0.4.1 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
@@ -68,7 +66,6 @@ require (
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.2.3 // indirect
 	github.com/googleapis/gax-go/v2 v2.11.0 // indirect
-	github.com/gorilla/css v1.0.0 // indirect
 	github.com/hashicorp/errwrap v1.0.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.0 // indirect
 	github.com/jackc/chunkreader/v2 v2.0.1 // indirect

@@ -11,7 +11,6 @@ import (
 	"github.com/google/safehtml"
 	"github.com/google/safehtml/template"
 	"github.com/google/safehtml/uncheckedconversions"
-	"github.com/microcosm-cc/bluemonday"
 	"github.com/yuin/goldmark"
 	emoji "github.com/yuin/goldmark-emoji"
 	"github.com/yuin/goldmark/extension"
@@ -23,6 +22,7 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/log"
+	"golang.org/x/pkgsite/internal/sanitizer"
 	"golang.org/x/pkgsite/internal/source"
 )
 
@@ -112,7 +112,7 @@ func processReadme(ctx context.Context, readme *internal.Readme, sourceInfo *sou
 			),
 		),
 		// These extensions lets users write HTML code in the README. This is
-		// fine since we process the contents using bluemonday after.
+		// fine since we process the contents using the sanitizer after.
 		goldmark.WithRendererOptions(goldmarkHtml.WithUnsafe(), goldmarkHtml.WithXHTML()),
 		goldmark.WithExtensions(
 			extension.GFM, // Support Github Flavored Markdown.
@@ -159,18 +159,6 @@ func processReadme(ctx context.Context, readme *internal.Readme, sourceInfo *sou
 
 // sanitizeHTML sanitizes HTML from a bytes.Buffer so that it is safe.
 func sanitizeHTML(b *bytes.Buffer) safehtml.HTML {
-	p := bluemonday.UGCPolicy()
-
-	p.AllowAttrs("width", "align").OnElements("img")
-	p.AllowAttrs("width", "align").OnElements("div")
-	p.AllowAttrs("width", "align").OnElements("p")
-	// Allow accessible headings (i.e <div role="heading" aria-level="7">).
-	p.AllowAttrs("width", "align", "role", "aria-level").OnElements("div")
-	for _, h := range []string{"h1", "h2", "h3", "h4", "h5", "h6"} {
-		// Needed to preserve github styles heading font-sizes
-		p.AllowAttrs("class").OnElements(h)
-	}
-
-	s := string(p.SanitizeBytes(b.Bytes()))
+	s := string(sanitizer.SanitizeBytes(b.Bytes()))
 	return uncheckedconversions.HTMLFromStringKnownToSatisfyTypeContract(s)
 }
