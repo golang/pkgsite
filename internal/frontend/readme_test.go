@@ -469,6 +469,16 @@ func TestReadme(t *testing.T) {
 				{Level: 1, Text: "A link link", ID: "readme-a-link-link"},
 			},
 		},
+		{
+			name: "rewritten link in emph",
+			unit: unit,
+			readme: &internal.Readme{
+				Filepath: "README.md",
+				Contents: `**![alt](https://github.com/gobuffalo/buffalo/blob/master/logo.svg)**`,
+			},
+			wantHTML:    `<p><strong><img src="https://github.com/gobuffalo/buffalo/raw/master/logo.svg" alt="alt"/></strong></p>`,
+			wantOutline: nil,
+		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			processReadmes := map[string]func(ctx context.Context, u *internal.Unit) (frontendReadme *Readme, err error){

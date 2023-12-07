@@ -273,10 +273,16 @@ func (g *linkRewriter) rewriteLinksInline(inlines []markdown.Inline) {
 				x.URL = d
 			}
 		case *markdown.Image:
+			g.rewriteLinksInline(x.Inner)
 			if d := translateLink(x.URL, g.info, true, g.readme); d != "" {
 				x.URL = d
 			}
+		case *markdown.Emph:
+			g.rewriteLinksInline(x.Inner)
+		case *markdown.Strong:
+			g.rewriteLinksInline(x.Inner)
 		}
+
 	}
 }
 
