@@ -49,7 +49,15 @@ func processReadmeMarkdown(ctx context.Context, readme *internal.Readme, info *s
 		return &Readme{HTML: h}, nil
 	}
 
-	var p markdown.Parser
+	p := markdown.Parser{
+		HeadingIDs:         true,
+		Strikethrough:      true,
+		TaskListItems:      true,
+		AutoLinkText:       true,
+		AutoLinkAssumeHTTP: true,
+		Table:              true,
+		Emoji:              true,
+	}
 	doc := p.Parse(readme.Contents)
 	(&linkRewriter{info, readme}).rewriteLinks(doc)
 	rewriteImgSrc(doc, info, readme)
@@ -133,6 +141,15 @@ func walkBlocks(blocks []markdown.Block, walkFunc func(b markdown.Block) error) 
 		case *markdown.HTMLBlock:
 		case *markdown.CodeBlock:
 		case *markdown.Empty:
+		case *markdown.Table:
+			for _, t := range x.Header {
+				walkBlocks([]markdown.Block{t}, walkFunc)
+			}
+			for _, r := range x.Rows {
+				for _, t := range r {
+					walkBlocks([]markdown.Block{t}, walkFunc)
+				}
+			}
 		case *markdown.ThematicBreak:
 		default:
 			return fmt.Errorf("unhandled block type %T", x)
@@ -296,6 +313,12 @@ func transformHeadingsToHTML(doc *markdown.Document) {
 	rewriteHeadingsBlocks = func(blocks []markdown.Block) {
 		for i, b := range blocks {
 			switch x := b.(type) {
+			case *markdown.Text:
+			case *markdown.HTMLBlock:
+			case *markdown.Table:
+			case *markdown.Empty:
+			case *markdown.CodeBlock:
+			case *markdown.ThematicBreak:
 			case *markdown.Paragraph:
 				rewriteHeadingsBlocks([]markdown.Block{x.Text})
 			case *markdown.List:

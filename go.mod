@@ -27,7 +27,7 @@ require (
 	github.com/jba/templatecheck v0.6.0
 	github.com/lib/pq v1.10.9
 	github.com/russross/blackfriday/v2 v2.1.0
-	github.com/yuin/goldmark v1.4.13
+	github.com/yuin/goldmark v1.6.0
 	github.com/yuin/goldmark-emoji v1.0.1
 	go.opencensus.io v0.24.0
 	golang.org/x/mod v0.14.0
@@ -40,7 +40,7 @@ require (
 	google.golang.org/grpc v1.57.0
 	google.golang.org/protobuf v1.31.0
 	gopkg.in/yaml.v3 v3.0.1
-	rsc.io/markdown v0.0.0-20231114125513-6fc7bf989e0c
+	rsc.io/markdown v0.0.0-20231214224604-88bb533a6020
 )
 
 require (
