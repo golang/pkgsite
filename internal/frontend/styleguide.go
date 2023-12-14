@@ -16,13 +16,6 @@ import (
 
 	"github.com/google/safehtml"
 	"github.com/google/safehtml/uncheckedconversions"
-	"github.com/yuin/goldmark"
-	"github.com/yuin/goldmark/ast"
-	"github.com/yuin/goldmark/extension"
-	"github.com/yuin/goldmark/parser"
-	"github.com/yuin/goldmark/renderer"
-	ghtml "github.com/yuin/goldmark/renderer/html"
-	"github.com/yuin/goldmark/util"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/experiment"
@@ -30,6 +23,7 @@ import (
 	"golang.org/x/pkgsite/internal/frontend/serrors"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
+	"rsc.io/markdown"
 )
 
 // serveStyleGuide serves the styleguide page, the content of which is
@@ -111,35 +105,21 @@ func styleSection(ctx context.Context, fsys fs.FS, filename string) (_ *StyleSec
 		return nil, err
 	}
 
-	// We set priority values so that we always use our custom transformer
-	// instead of the default ones. The default values are in:
-	// https://github.com/yuin/goldmark/blob/7b90f04af43131db79ec320be0bd4744079b346f/parser/parser.go#L567
-	const (
-		astTransformerPriority = 10000
-		nodeRenderersPriority  = 100
-	)
-	et := &extractTOC{ctx: ctx}
-	md := goldmark.New(
-		goldmark.WithExtensions(extension.GFM),
-		goldmark.WithParserOptions(
-			parser.WithAutoHeadingID(),
-			parser.WithAttribute(),
-			parser.WithASTTransformers(
-				util.Prioritized(et, astTransformerPriority),
-			),
-		),
-		goldmark.WithRendererOptions(
-			renderer.WithNodeRenderers(
-				util.Prioritized(&guideRenderer{}, nodeRenderersPriority),
-			),
-			ghtml.WithUnsafe(),
-			ghtml.WithXHTML(),
-		),
-	)
-
-	if err := md.Convert(source, &buf); err != nil {
-		return nil, err
+	p := markdown.Parser{
+		HeadingIDs:         true,
+		Strikethrough:      true,
+		TaskListItems:      true,
+		AutoLinkText:       true,
+		AutoLinkAssumeHTTP: true,
+		Table:              true,
+		Emoji:              true,
 	}
+	doc := p.Parse(string(source))
+	addMissingHeadingIDs(doc) // extractTOC is going to use these ids, so do this first
+	et := &extractTOC{ctx: ctx}
+	et.extract(doc)
+	renderCodeBlocks(doc)
+	doc.PrintHTML(&buf)
 
 	id := strings.TrimSuffix(filepath.Base(filename), ".md")
 	return &StyleSection{
@@ -150,47 +130,75 @@ func styleSection(ctx context.Context, fsys fs.FS, filename string) (_ *StyleSec
 	}, nil
 }
 
-// guideRenderer is a renderer.NodeRenderer implementation that renders
-// styleguide sections.
-type guideRenderer struct {
-	ghtml.Config
-}
-
-func (r *guideRenderer) writeLines(w util.BufWriter, source []byte, n ast.Node) {
-	l := n.Lines().Len()
-	for i := 0; i < l; i++ {
-		line := n.Lines().At(i)
-		w.Write(line.Value(source))
+func writeLines(w *bytes.Buffer, lines []string) {
+	for _, l := range lines {
+		w.WriteString(l)
+		w.WriteString("\n")
 	}
 }
 
-func (r *guideRenderer) writeEscapedLines(w util.BufWriter, source []byte, n ast.Node) {
-	l := n.Lines().Len()
-	for i := 0; i < l; i++ {
-		line := n.Lines().At(i)
-		w.Write([]byte(html.EscapeString(string(line.Value(source)))))
+func writeEscapedLines(w *bytes.Buffer, lines []string) {
+	for _, l := range lines {
+		w.WriteString(html.EscapeString(l))
+		w.WriteString("\n")
 	}
 }
 
 // renderFencedCodeBlock writes html code snippets twice, once as actual
 // html for the page and again as a code snippet.
-func (r *guideRenderer) renderFencedCodeBlock(w util.BufWriter, source []byte, node ast.Node, entering bool) (ast.WalkStatus, error) {
-	if !entering {
-		return ast.WalkContinue, nil
+func renderCodeBlocks(doc *markdown.Document) {
+	var rewriteBlocks func([]markdown.Block)
+	rewriteBlocks = func(blocks []markdown.Block) {
+		for i, b := range blocks {
+			switch x := b.(type) {
+			case *markdown.Text:
+			case *markdown.HTMLBlock:
+			case *markdown.Table:
+			case *markdown.Empty:
+			case *markdown.ThematicBreak:
+			case *markdown.Paragraph:
+				rewriteBlocks([]markdown.Block{x.Text})
+			case *markdown.List:
+				rewriteBlocks(x.Items)
+			case *markdown.Item:
+				rewriteBlocks(x.Blocks)
+			case *markdown.Quote:
+				rewriteBlocks(x.Blocks)
+			case *markdown.Heading:
+			case *markdown.CodeBlock:
+				htmltag := &markdown.HTMLBlock{}
+				var buf bytes.Buffer
+				buf.WriteString("<span>\n")
+				writeLines(&buf, x.Text)
+				buf.WriteString("</span>\n")
+				buf.WriteString("<pre class=\"StringifyElement-markup js-clipboard\">\n")
+				writeEscapedLines(&buf, x.Text)
+				buf.WriteString("</pre>")
+				htmltag.Text = append(htmltag.Text, buf.String())
+				blocks[i] = htmltag
+			}
+		}
 	}
-	n := node.(*ast.FencedCodeBlock)
-	w.WriteString("<span>\n")
-	r.writeLines(w, source, n)
-	w.WriteString("</span>\n")
-	w.WriteString("<pre class=\"StringifyElement-markup js-clipboard\">\n")
-	r.writeEscapedLines(w, source, n)
-	w.WriteString("</pre>\n")
-	return ast.WalkContinue, nil
+	rewriteBlocks(doc.Blocks)
 }
 
-// RegisterFuncs implements renderer.NodeRenderer.RegisterFuncs.
-func (r *guideRenderer) RegisterFuncs(reg renderer.NodeRendererFuncRegisterer) {
-	reg.Register(ast.KindFencedCodeBlock, r.renderFencedCodeBlock)
+func addMissingHeadingIDs(doc *markdown.Document) {
+	walkBlocks(doc.Blocks, func(b markdown.Block) error {
+		if heading, ok := b.(*markdown.Heading); ok {
+			if heading.ID != "" {
+				return nil
+			}
+			var buf bytes.Buffer
+			for _, inl := range heading.Text.Inline {
+				inl.PrintText(&buf)
+			}
+			f := func(c rune) bool {
+				return !('a' <= c && c <= 'z') && !('A' <= c && c <= 'Z') && !('0' <= c && c <= '9')
+			}
+			heading.ID = strings.ToLower(strings.Join(strings.FieldsFunc(buf.String(), f), "-"))
+		}
+		return nil
+	})
 }
 
 // markdownFiles walks the shared directory of fsys and collects
