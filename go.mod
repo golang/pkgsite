@@ -27,8 +27,6 @@ require (
 	github.com/jba/templatecheck v0.6.0
 	github.com/lib/pq v1.10.9
 	github.com/russross/blackfriday/v2 v2.1.0
-	github.com/yuin/goldmark v1.6.0
-	github.com/yuin/goldmark-emoji v1.0.1
 	go.opencensus.io v0.24.0
 	golang.org/x/mod v0.14.0
 	golang.org/x/net v0.19.0

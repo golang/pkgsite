@@ -161,9 +161,9 @@ func TestReadme(t *testing.T) {
 				Filepath: sample.ReadmeFilePath,
 				Contents: "# :zap: Zap \n\n :joy:",
 			},
-			wantHTML: "<h3 class=\"h1\" id=\"readme-zap-zap\">⚡ Zap</h3>\n<p>😂</p>",
+			wantHTML: "<h3 class=\"h1\" id=\"readme-zap\">⚡ Zap</h3>\n<p>😂</p>",
 			wantOutline: []*Heading{
-				{Level: 1, Text: " Zap", ID: "readme-zap-zap"},
+				{Level: 1, Text: "⚡ Zap", ID: "readme-zap"},
 			},
 		},
 		{
@@ -379,7 +379,7 @@ func TestReadme(t *testing.T) {
 				Contents: `<p><img src="./foo.png"></p><p><img src="../bar.png"</p>` + "\n",
 			},
 			wantHTML: `<p><img src="https://github.com/valid/module_name/raw/v1.0.0/dir/sub/foo.png"/></p>` +
-				`<p><img src="https://github.com/valid/module_name/raw/v1.0.0/dir/bar.png"/>` + "\n</p>",
+				`<p><img src="https://github.com/valid/module_name/raw/v1.0.0/dir/bar.png"/></p>`,
 			wantOutline: nil,
 		},
 		{
@@ -481,41 +481,20 @@ func TestReadme(t *testing.T) {
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			processReadmes := map[string]func(ctx context.Context, u *internal.Unit) (frontendReadme *Readme, err error){
-				"goldmark": ProcessReadme,
-				"markdown": ProcessReadmeMarkdown,
+			test.unit.Readme = test.readme
+			readme, err := ProcessReadme(ctx, test.unit)
+			if err != nil {
+				t.Fatal(err)
 			}
-			for processFuncName, processFunc := range processReadmes {
-				t.Run(processFuncName, func(t *testing.T) {
-					wantHTML := test.wantHTML
-					if processFuncName == "markdown" {
-						if test.name == "Github markdown emoji markup is properly rendered" {
-							t.Skip("github markdown emoji is not yet supported with the markdown package")
-						}
-						if test.name == "body has more than one child" {
-							// The markdown package treats the newline differently when there's an incomplete tag.
-							wantHTML = `<p><img src="https://github.com/valid/module_name/raw/v1.0.0/dir/sub/foo.png"/></p>` +
-								`<p><img src="https://github.com/valid/module_name/raw/v1.0.0/dir/bar.png"/></p>`
-						}
-					}
-
-					test.unit.Readme = test.readme
-					readme, err := processFunc(ctx, test.unit)
-					if err != nil {
-						t.Fatal(err)
-					}
-					gotHTML := strings.TrimSpace(readme.HTML.String())
-					if diff := cmp.Diff(wantHTML, gotHTML); diff != "" {
-						t.Errorf("Readme(%v) html mismatch (-want +got):\n%s", test.unit.UnitMeta, diff)
-					}
-					if diff := cmp.Diff(test.wantOutline, readme.Outline, cmp.Options{
-						cmpopts.IgnoreUnexported(Heading{}),
-					}); diff != "" {
-						t.Errorf("Readme(%v) outline mismatch (-want +got):\n%s", test.unit.UnitMeta, diff)
-					}
-				})
+			gotHTML := strings.TrimSpace(readme.HTML.String())
+			if diff := cmp.Diff(test.wantHTML, gotHTML); diff != "" {
+				t.Errorf("Readme(%v) html mismatch (-want +got):\n%s", test.unit.UnitMeta, diff)
 			}
-
+			if diff := cmp.Diff(test.wantOutline, readme.Outline, cmp.Options{
+				cmpopts.IgnoreUnexported(Heading{}),
+			}); diff != "" {
+				t.Errorf("Readme(%v) outline mismatch (-want +got):\n%s", test.unit.UnitMeta, diff)
+			}
 		})
 	}
 }
@@ -617,24 +596,17 @@ func TestReadmeLinks(t *testing.T) {
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			processReadmes := map[string]func(ctx context.Context, u *internal.Unit) (frontendReadme *Readme, err error){
-				"goldmark": ProcessReadme,
-				"markdown": ProcessReadmeMarkdown,
+
+			unit.Readme = &internal.Readme{
+				Filepath: "README.md",
+				Contents: unindent(test.contents),
 			}
-			for name, processFunc := range processReadmes {
-				t.Run(name, func(t *testing.T) {
-					unit.Readme = &internal.Readme{
-						Filepath: "README.md",
-						Contents: unindent(test.contents),
-					}
-					got, err := processFunc(ctx, unit)
-					if err != nil {
-						t.Fatal(err)
-					}
-					if diff := cmp.Diff(test.want, got.Links); diff != "" {
-						t.Errorf("mismatch (-want +got):\n%s", diff)
-					}
-				})
+			got, err := ProcessReadme(ctx, unit)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if diff := cmp.Diff(test.want, got.Links); diff != "" {
+				t.Errorf("mismatch (-want +got):\n%s", diff)
 			}
 		})
 	}

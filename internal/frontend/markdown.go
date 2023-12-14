@@ -19,7 +19,7 @@ import (
 	"rsc.io/markdown"
 )
 
-// ProcessReadmeMarkdown processes the README of unit u, if it has one.
+// ProcessReadme processes the README of unit u, if it has one.
 // Processing includes rendering and sanitizing the HTML or Markdown,
 // and extracting headings and links.
 //
@@ -31,12 +31,12 @@ import (
 // The extracted links are for display outside of the readme contents.
 //
 // This function is exported for use by external tools.
-func ProcessReadmeMarkdown(ctx context.Context, u *internal.Unit) (_ *Readme, err error) {
-	defer derrors.WrapAndReport(&err, "ProcessReadmeMarkdown(%q, %q, %q)", u.Path, u.ModulePath, u.Version)
-	return processReadmeMarkdown(ctx, u.Readme, u.SourceInfo)
+func ProcessReadme(ctx context.Context, u *internal.Unit) (_ *Readme, err error) {
+	defer derrors.WrapAndReport(&err, "ProcessReadme(%q, %q, %q)", u.Path, u.ModulePath, u.Version)
+	return processReadme(ctx, u.Readme, u.SourceInfo)
 }
 
-func processReadmeMarkdown(ctx context.Context, readme *internal.Readme, info *source.Info) (frontendReadme *Readme, err error) {
+func processReadme(ctx context.Context, readme *internal.Readme, info *source.Info) (frontendReadme *Readme, err error) {
 	if readme == nil || readme.Contents == "" {
 		return &Readme{}, nil
 	}
@@ -160,6 +160,15 @@ func walkBlocks(blocks []markdown.Block, walkFunc func(b markdown.Block) error) 
 	return nil
 }
 
+type extractTOC struct {
+	ctx         context.Context
+	Headings    []*Heading
+	removeTitle bool // omit title from TOC
+}
+
+// extract collects the headings from a readme into an outline
+// of the document. It nests the headings based on the h-level hierarchy.
+// See tests for heading levels in TestReadme for behavior.
 func (e *extractTOC) extract(doc *markdown.Document) {
 	var headings []*Heading
 	err := walkBlocks(doc.Blocks, func(b markdown.Block) error {
@@ -211,6 +220,18 @@ func (e *extractTOC) extract(doc *markdown.Document) {
 	e.Headings = nested
 }
 
+type extractLinks struct {
+	ctx            context.Context
+	inLinksHeading bool
+	links          []link
+}
+
+// The name of the heading from which we extract links.
+const linkHeadingText = "Links"
+
+var linkHeadingBytes = []byte(linkHeadingText) // for faster comparison to node contents
+
+// extract extracts links from the "Links" section of a README.
 func (e *extractLinks) extract(doc *markdown.Document) {
 	var seenLinksHeading bool
 	err := walkBlocks(doc.Blocks, func(b markdown.Block) error {
@@ -371,16 +392,41 @@ var htmlQuoteEscaper = strings.NewReplacer(
 )
 
 // rewriteHeadingIDs generates ids based on the body of the heading.
-// The original code uses the raw markdown as the input to the ids.Generate
-// function, but we don't have the raw markdown anymore, so we use the
-// text instead.
+// The ASCII letters and numbers from the text are used to generate
+// each of the ids. Finally, all heading ids
+// are prefixed with "readme-" to avoid name collisions with other ids on the
+// unit page. Duplicated heading ids are given an incremental suffix. See
+// readme_test.go for examples.
 func rewriteHeadingIDs(doc *markdown.Document) {
-	ids := &ids{
-		values: map[string]bool{},
+	ids := map[string]bool{}
+
+	generateID := func(heading *markdown.Heading) string {
+		var buf bytes.Buffer
+		for _, inl := range heading.Text.Inline {
+			inl.PrintText(&buf)
+		}
+		f := func(c rune) bool {
+			return !('a' <= c && c <= 'z') && !('A' <= c && c <= 'Z') && !('0' <= c && c <= '9')
+		}
+		str := strings.Join(strings.FieldsFunc(buf.String(), f), "-")
+		str = strings.ToLower(str)
+		if len(str) == 0 {
+			str = "heading"
+		}
+		key := str
+		for i := 1; ; i++ {
+			if _, ok := ids[key]; !ok {
+				ids[key] = true
+				break
+			}
+			key = fmt.Sprintf("%s-%d", str, i)
+		}
+		return "readme-" + key
 	}
+
 	walkBlocks(doc.Blocks, func(b markdown.Block) error {
 		if heading, ok := b.(*markdown.Heading); ok {
-			id := ids.generateID(heading, "heading")
+			id := generateID(heading)
 			heading.ID = string(id)
 		}
 		return nil
