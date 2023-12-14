@@ -259,7 +259,7 @@ func readmeContent(ctx context.Context, u *internal.Unit) (_ *Readme, err error)
 	if !u.IsRedistributable {
 		return &Readme{}, nil
 	}
-	return ProcessReadme(ctx, u)
+	return ProcessReadmeMarkdown(ctx, u)
 }
 
 const missingDocReplacement = `<p>Documentation is missing.</p>`
