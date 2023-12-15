@@ -50,13 +50,12 @@ func processReadmeMarkdown(ctx context.Context, readme *internal.Readme, info *s
 	}
 
 	p := markdown.Parser{
-		HeadingIDs:         true,
-		Strikethrough:      true,
-		TaskListItems:      true,
-		AutoLinkText:       true,
-		AutoLinkAssumeHTTP: true,
-		Table:              true,
-		Emoji:              true,
+		HeadingIDs:    true,
+		Strikethrough: true,
+		TaskListItems: true,
+		AutoLinkText:  true,
+		Table:         true,
+		Emoji:         true,
 	}
 	doc := p.Parse(readme.Contents)
 	(&linkRewriter{info, readme}).rewriteLinks(doc)
