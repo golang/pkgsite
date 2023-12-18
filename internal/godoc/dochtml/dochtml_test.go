@@ -23,7 +23,6 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/google/safehtml/template"
-	"github.com/jba/templatecheck"
 	"golang.org/x/net/html"
 	"golang.org/x/pkgsite/internal/godoc/dochtml/internal/render"
 	"golang.org/x/pkgsite/internal/testing/testhelper"
@@ -42,15 +41,6 @@ var testRenderOptions = RenderOptions{
 		ResolvedVersion: "v1.2.3",
 		ModulePackages:  map[string]bool{"example.com/module/pkg": true},
 	},
-}
-
-func TestCheckTemplates(t *testing.T) {
-	LoadTemplates(templateFS)
-	for _, tm := range []*template.Template{bodyTemplate, outlineTemplate, sidenavTemplate} {
-		if err := templatecheck.CheckSafe(tm, templateData{}); err != nil {
-			t.Fatal(err)
-		}
-	}
 }
 
 func TestRender(t *testing.T) {

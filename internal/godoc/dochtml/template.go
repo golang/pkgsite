@@ -23,6 +23,10 @@ var (
 	bodyTemplate, outlineTemplate, sidenavTemplate *template.Template
 )
 
+func Templates() []*template.Template {
+	return []*template.Template{bodyTemplate, outlineTemplate, sidenavTemplate}
+}
+
 // LoadTemplates reads and parses the templates used to generate documentation.
 func LoadTemplates(fsys template.TrustedFS) {
 	const dir = "doc"

@@ -11,7 +11,7 @@ import (
 	"golang.org/x/pkgsite/internal/frontend/page"
 )
 
-type badgePage struct {
+type BadgePage struct {
 	page.BasePage
 	// LinkPath is the URL path of the badge will link to.
 	LinkPath string
@@ -36,7 +36,7 @@ func (s *Server) badgeHandler(w http.ResponseWriter, r *http.Request) {
 		path = path[urlSchemeIdx+3:]
 	}
 
-	page := badgePage{
+	page := BadgePage{
 		BasePage:  s.newBasePage(r, "Badge"),
 		LinkPath:  path,
 		BadgePath: "badge/" + path + ".svg",

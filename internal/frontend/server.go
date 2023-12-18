@@ -14,9 +14,7 @@ import (
 	"io/fs"
 	"net/http"
 	hpprof "net/http/pprof"
-	"net/url"
 	"os"
-	"path"
 	"strings"
 	"sync"
 	"time"
@@ -28,6 +26,7 @@ import (
 	"golang.org/x/pkgsite/internal/experiment"
 	pagepkg "golang.org/x/pkgsite/internal/frontend/page"
 	"golang.org/x/pkgsite/internal/frontend/serrors"
+	"golang.org/x/pkgsite/internal/frontend/templates"
 	"golang.org/x/pkgsite/internal/frontend/urlinfo"
 	"golang.org/x/pkgsite/internal/godoc/dochtml"
 	"golang.org/x/pkgsite/internal/licenses"
@@ -37,8 +36,6 @@ import (
 	"golang.org/x/pkgsite/internal/queue"
 	"golang.org/x/pkgsite/internal/version"
 	"golang.org/x/pkgsite/internal/vuln"
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
 )
 
 // Server can be installed to serve the go discovery frontend.
@@ -102,7 +99,7 @@ type ServerConfig struct {
 // NewServer creates a new Server for the given database and template directory.
 func NewServer(scfg ServerConfig) (_ *Server, err error) {
 	defer derrors.Wrap(&err, "NewServer(...)")
-	ts, err := parsePageTemplates(scfg.TemplateFS)
+	ts, err := templates.ParsePageTemplates(scfg.TemplateFS)
 	if err != nil {
 		return nil, fmt.Errorf("error parsing templates: %v", err)
 	}
@@ -434,8 +431,8 @@ func (s *Server) staticPageHandler(templateName, title string) http.HandlerFunc 
 	}
 }
 
-// licensePolicyPage is used to generate the static license policy page.
-type licensePolicyPage struct {
+// LicensePolicyPage is used to generate the static license policy page.
+type LicensePolicyPage struct {
 	pagepkg.BasePage
 	LicenseFileNames []string
 	LicenseTypes     []licenses.AcceptedLicenseInfo
@@ -444,7 +441,7 @@ type licensePolicyPage struct {
 func (s *Server) licensePolicyHandler() http.HandlerFunc {
 	lics := licenses.AcceptedLicenses()
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		page := licensePolicyPage{
+		page := LicensePolicyPage{
 			BasePage:         s.newBasePage(r, "License Policy"),
 			LicenseFileNames: licenses.FileNames,
 			LicenseTypes:     lics,
@@ -645,7 +642,7 @@ func (s *Server) findTemplate(templateName string) (*template.Template, error) {
 		s.mu.Lock()
 		defer s.mu.Unlock()
 		var err error
-		s.templates, err = parsePageTemplates(s.templateFS)
+		s.templates, err = templates.ParsePageTemplates(s.templateFS)
 		if err != nil {
 			return nil, fmt.Errorf("error parsing templates: %v", err)
 		}
@@ -664,82 +661,6 @@ func executeTemplate(ctx context.Context, templateName string, tmpl *template.Te
 		return nil, err
 	}
 	return buf.Bytes(), nil
-}
-
-var templateFuncs = template.FuncMap{
-	"add":      func(i, j int) int { return i + j },
-	"subtract": func(i, j int) int { return i - j },
-	"pluralize": func(i int, s string) string {
-		if i == 1 {
-			return s
-		}
-		return s + "s"
-	},
-	"commaseparate": func(s []string) string {
-		return strings.Join(s, ", ")
-	},
-	"stripscheme": stripScheme,
-	"capitalize":  cases.Title(language.Und).String,
-	"queryescape": url.QueryEscape,
-}
-
-func stripScheme(url string) string {
-	if i := strings.Index(url, "://"); i > 0 {
-		return url[i+len("://"):]
-	}
-	return url
-}
-
-// parsePageTemplates parses html templates contained in the given filesystem in
-// order to generate a map of Name->*template.Template.
-//
-// Separate templates are used so that certain contextual functions (e.g.
-// templateName) can be bound independently for each page.
-//
-// Templates in directories prefixed with an underscore are considered helper
-// templates and parsed together with the files in each base directory.
-func parsePageTemplates(fsys template.TrustedFS) (map[string]*template.Template, error) {
-	templates := make(map[string]*template.Template)
-	htmlSets := [][]string{
-		{"about"},
-		{"badge"},
-		{"error"},
-		{"fetch"},
-		{"homepage"},
-		{"license-policy"},
-		{"search"},
-		{"search-help"},
-		{"styleguide"},
-		{"subrepo"},
-		{"unit/importedby", "unit"},
-		{"unit/imports", "unit"},
-		{"unit/licenses", "unit"},
-		{"unit/main", "unit"},
-		{"unit/versions", "unit"},
-		{"vuln"},
-		{"vuln/main", "vuln"},
-		{"vuln/list", "vuln"},
-		{"vuln/entry", "vuln"},
-	}
-
-	for _, set := range htmlSets {
-		t, err := template.New("frontend.tmpl").Funcs(templateFuncs).ParseFS(fsys, "frontend/*.tmpl")
-		if err != nil {
-			return nil, fmt.Errorf("ParseFS: %v", err)
-		}
-		helperGlob := "shared/*/*.tmpl"
-		if _, err := t.ParseFS(fsys, helperGlob); err != nil {
-			return nil, fmt.Errorf("ParseFS(%q): %v", helperGlob, err)
-		}
-		for _, f := range set {
-			if _, err := t.ParseFS(fsys, path.Join("frontend", f, "*.tmpl")); err != nil {
-				return nil, fmt.Errorf("ParseFS(%v): %v", f, err)
-			}
-		}
-		templates[set[0]] = t
-	}
-
-	return templates, nil
 }
 
 func (s *Server) staticHandler() http.Handler {

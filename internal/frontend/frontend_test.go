@@ -14,10 +14,7 @@ import (
 	"time"
 
 	"github.com/google/safehtml/template"
-	"github.com/jba/templatecheck"
 	"golang.org/x/pkgsite/internal"
-	"golang.org/x/pkgsite/internal/frontend/page"
-	"golang.org/x/pkgsite/internal/frontend/versions"
 	"golang.org/x/pkgsite/internal/testing/fakedatasource"
 	"golang.org/x/pkgsite/static"
 	thirdparty "golang.org/x/pkgsite/third_party"
@@ -129,84 +126,6 @@ func TestTagRoute(t *testing.T) {
 				t.Errorf("TagRoute(%q, %v) = %q, want %q", test.route, test.req, got, test.want)
 			}
 		})
-	}
-}
-
-func TestCheckTemplates(t *testing.T) {
-	// Perform additional checks on parsed templates.
-	staticFS := template.TrustedFSFromEmbed(static.FS)
-	templates, err := parsePageTemplates(staticFS)
-	if err != nil {
-		t.Fatal(err)
-	}
-	for _, c := range []struct {
-		name    string
-		subs    []string
-		typeval any
-	}{
-		{"badge", nil, badgePage{}},
-		// error.tmpl omitted because relies on an associated "message" template
-		// that's parsed on demand; see renderErrorPage above.
-		{"fetch", nil, page.ErrorPage{}},
-		{"homepage", nil, homepage{}},
-		{"license-policy", nil, licensePolicyPage{}},
-		{"search", nil, SearchPage{}},
-		{"search-help", nil, page.BasePage{}},
-		{"unit/main", nil, UnitPage{}},
-		{
-			"unit/main",
-			[]string{"unit-outline", "unit-readme", "unit-doc", "unit-files", "unit-directories"},
-			MainDetails{},
-		},
-		{"unit/importedby", nil, UnitPage{}},
-		{"unit/importedby", []string{"importedby"}, ImportedByDetails{}},
-		{"unit/imports", nil, UnitPage{}},
-		{"unit/imports", []string{"imports"}, ImportsDetails{}},
-		{"unit/licenses", nil, UnitPage{}},
-		{"unit/licenses", []string{"licenses"}, LicensesDetails{}},
-		{"unit/versions", nil, UnitPage{}},
-		{"unit/versions", []string{"versions"}, versions.VersionsDetails{}},
-		{"vuln", nil, page.BasePage{}},
-		{"vuln/list", nil, VulnListPage{}},
-		{"vuln/entry", nil, VulnEntryPage{}},
-	} {
-		t.Run(c.name, func(t *testing.T) {
-			tm := templates[c.name]
-			if tm == nil {
-				t.Fatalf("no template %q", c.name)
-			}
-			if c.subs == nil {
-				if err := templatecheck.CheckSafe(tm, c.typeval); err != nil {
-					t.Fatal(err)
-				}
-			} else {
-				for _, n := range c.subs {
-					s := tm.Lookup(n)
-					if s == nil {
-						t.Fatalf("no sub-template %q of %q", n, c.name)
-					}
-					if err := templatecheck.CheckSafe(s, c.typeval); err != nil {
-						t.Fatalf("%s: %v", n, err)
-					}
-				}
-			}
-		})
-	}
-}
-
-func TestStripScheme(t *testing.T) {
-	for _, test := range []struct {
-		url, want string
-	}{
-		{"http://github.com", "github.com"},
-		{"https://github.com/path/to/something", "github.com/path/to/something"},
-		{"example.com", "example.com"},
-		{"chrome-extension://abcd", "abcd"},
-		{"nonwellformed.com/path?://query=1", "query=1"},
-	} {
-		if got := stripScheme(test.url); got != test.want {
-			t.Errorf("%q: got %q, want %q", test.url, got, test.want)
-		}
 	}
 }
 

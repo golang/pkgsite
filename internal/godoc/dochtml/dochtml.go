@@ -66,8 +66,8 @@ type RenderOptions struct {
 	BuildContext internal.BuildContext
 }
 
-// templateData holds the data passed to the HTML templates in this package.
-type templateData struct {
+// TemplateData holds the data passed to the HTML templates in this package.
+type TemplateData struct {
 	RootURL                    string
 	Package                    *doc.Package
 	Consts, Vars, Funcs, Types []*item
@@ -226,7 +226,7 @@ func docIsEmpty(p *doc.Package) bool {
 }
 
 // renderInfo returns the functions and data needed to render the doc.
-func renderInfo(ctx context.Context, fset *token.FileSet, p *doc.Package, opt RenderOptions) (map[string]any, templateData, func() []render.Link) {
+func renderInfo(ctx context.Context, fset *token.FileSet, p *doc.Package, opt RenderOptions) (map[string]any, TemplateData, func() []render.Link) {
 	// Make a copy to avoid modifying caller's *doc.Package.
 	p2 := *p
 	p = &p2
@@ -288,7 +288,7 @@ func renderInfo(ctx context.Context, fset *token.FileSet, p *doc.Package, opt Re
 		"since_version":            sinceVersion,
 	}
 	examples := collectExamples(p)
-	data := templateData{
+	data := TemplateData{
 		Package:     p,
 		RootURL:     "/pkg",
 		Examples:    examples,

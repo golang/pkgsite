@@ -39,7 +39,7 @@ var searchTips = []searchTip{
 }
 
 // Homepage contains fields used in rendering the homepage template.
-type homepage struct {
+type Homepage struct {
 	page.BasePage
 
 	// TipIndex is the index of the initial search tip to render.
@@ -62,7 +62,7 @@ type LocalModule struct {
 }
 
 func (s *Server) serveHomepage(ctx context.Context, w http.ResponseWriter, r *http.Request) {
-	s.servePage(ctx, w, "homepage", homepage{
+	s.servePage(ctx, w, "homepage", Homepage{
 		BasePage:     s.newBasePage(r, "Go Packages"),
 		SearchTips:   searchTips,
 		TipIndex:     rand.Intn(len(searchTips)),
