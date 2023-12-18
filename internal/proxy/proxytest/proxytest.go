@@ -10,7 +10,6 @@ import (
 	"strings"
 	"testing"
 
-	"go.opencensus.io/plugin/ochttp"
 	"golang.org/x/mod/modfile"
 	"golang.org/x/pkgsite/internal/proxy"
 	"golang.org/x/pkgsite/internal/testing/testhelper"
@@ -37,7 +36,7 @@ func SetupTestClient(t *testing.T, modules []*Module) (*proxy.Client, func()) {
 func NewClientForServer(s *Server) (*proxy.Client, func(), error) {
 	// override client.httpClient to skip TLS verification
 	httpClient, prox, serverClose := testhelper.SetupTestClientAndServer(s.mux)
-	client, err := proxy.New(prox.URL, new(ochttp.Transport))
+	client, err := proxy.New(prox.URL, nil)
 	if err != nil {
 		return nil, nil, err
 	}
