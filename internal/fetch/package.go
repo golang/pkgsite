@@ -13,6 +13,7 @@ import (
 	"path"
 	"runtime/debug"
 	"strings"
+	"sync"
 
 	"golang.org/x/mod/module"
 	"golang.org/x/pkgsite/internal"
@@ -22,6 +23,7 @@ import (
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/trace"
+	"golang.org/x/sync/errgroup"
 )
 
 // A goPackage is a group of one or more Go source files with the same
@@ -180,61 +182,85 @@ func extractPackages(ctx context.Context, modulePath, resolvedVersion string, co
 	// Start reading the file contents now to extract information
 	// about Go packages.
 	var pkgs []*goPackage
+	var mu sync.Mutex // gards pkgs, incompleteDirs, packageVersionStates
+	var errgroup errgroup.Group
 	for innerPath, goFiles := range dirs {
-		if incompleteDirs[innerPath] {
-			// Something went wrong when processing this directory, so we skip.
-			log.Infof(ctx, "Skipping %q because it is incomplete", innerPath)
-			continue
-		}
+		innerPath, goFiles := innerPath, goFiles
+		errgroup.Go(func() error {
+			mu.Lock()
+			incomplete := incompleteDirs[innerPath]
+			mu.Unlock()
+			if incomplete {
+				// Something went wrong when processing this directory, so we skip.
+				log.Infof(ctx, "Skipping %q because it is incomplete", innerPath)
+				return nil
+			}
 
-		var (
-			status error
-			errMsg string
-		)
-		pkg, err := loadPackage(ctx, contentDir, goFiles, innerPath, sourceInfo, modInfo)
-		if bpe := (*BadPackageError)(nil); errors.As(err, &bpe) {
-			log.Infof(ctx, "Error loading %s: %v", innerPath, err)
-			incompleteDirs[innerPath] = true
-			status = derrors.PackageInvalidContents
-			errMsg = err.Error()
-		} else if err != nil {
-			return nil, nil, fmt.Errorf("unexpected error loading package: %v", err)
-		}
-		var pkgPath string
-		if pkg == nil {
-			// No package.
-			if len(goFiles) > 0 {
-				// There were go files, but no build contexts matched them.
+			var (
+				status error
+				errMsg string
+			)
+			pkg, err := loadPackage(ctx, contentDir, goFiles, innerPath, sourceInfo, modInfo)
+			if bpe := (*BadPackageError)(nil); errors.As(err, &bpe) {
+				log.Infof(ctx, "Error loading %s: %v", innerPath, err)
+				mu.Lock()
 				incompleteDirs[innerPath] = true
-				status = derrors.PackageBuildContextNotSupported
+				mu.Unlock()
+				status = derrors.PackageInvalidContents
+				errMsg = err.Error()
+			} else if err != nil {
+				return fmt.Errorf("unexpected error loading package: %v", err)
 			}
-			pkgPath = path.Join(modulePath, innerPath)
-		} else {
-			if errors.Is(pkg.err, godoc.ErrTooLarge) {
-				status = derrors.PackageDocumentationHTMLTooLarge
-				errMsg = pkg.err.Error()
-			} else if pkg.err != nil {
-				// ErrTooLarge is the only valid value of pkg.err.
-				return nil, nil, fmt.Errorf("bad package error for %s: %v", pkg.path, pkg.err)
-			}
-			if d != nil { //  should only be nil for tests
-				isRedist, lics := d.PackageInfo(innerPath)
-				pkg.isRedistributable = isRedist
-				for _, l := range lics {
-					pkg.licenseMeta = append(pkg.licenseMeta, l.Metadata)
+			var pkgPath string
+			if pkg == nil {
+				// No package.
+				if len(goFiles) > 0 {
+					// There were go files, but no build contexts matched them.
+					mu.Lock()
+					incompleteDirs[innerPath] = true
+					mu.Unlock()
+					status = derrors.PackageBuildContextNotSupported
 				}
+				pkgPath = path.Join(modulePath, innerPath)
+			} else {
+				if errors.Is(pkg.err, godoc.ErrTooLarge) {
+					status = derrors.PackageDocumentationHTMLTooLarge
+					errMsg = pkg.err.Error()
+				} else if pkg.err != nil {
+					// ErrTooLarge is the only valid value of pkg.err.
+					return fmt.Errorf("bad package error for %s: %v", pkg.path, pkg.err)
+				}
+				if d != nil { //  should only be nil for tests
+					isRedist, lics := d.PackageInfo(innerPath)
+					pkg.isRedistributable = isRedist
+					for _, l := range lics {
+						pkg.licenseMeta = append(pkg.licenseMeta, l.Metadata)
+					}
+				}
+
+				mu.Lock()
+				pkgs = append(pkgs, pkg)
+				mu.Unlock()
+				pkgPath = pkg.path
 			}
-			pkgs = append(pkgs, pkg)
-			pkgPath = pkg.path
-		}
-		packageVersionStates = append(packageVersionStates, &internal.PackageVersionState{
-			ModulePath:  modulePath,
-			PackagePath: pkgPath,
-			Version:     resolvedVersion,
-			Status:      derrors.ToStatus(status),
-			Error:       errMsg,
+			mu.Lock()
+			packageVersionStates = append(packageVersionStates, &internal.PackageVersionState{
+				ModulePath:  modulePath,
+				PackagePath: pkgPath,
+				Version:     resolvedVersion,
+				Status:      derrors.ToStatus(status),
+				Error:       errMsg,
+			})
+			mu.Unlock()
+
+			return nil
 		})
 	}
+
+	if err := errgroup.Wait(); err != nil {
+		return nil, nil, err
+	}
+
 	if len(pkgs) == 0 {
 		return nil, packageVersionStates, ErrModuleContainsNoPackages
 	}

@@ -420,6 +420,12 @@ func newServer(getters []fetch.ModuleGetter, localModules []frontend.LocalModule
 		staticFS = static.FS
 	}
 
+	// Preload local modules to warm the cache.
+	for _, lm := range localModules {
+		go lds.GetUnitMeta(context.Background(), "", lm.ModulePath, fetch.LocalVersion)
+	}
+	go lds.GetUnitMeta(context.Background(), "", "std", fetch.LocalVersion)
+
 	server, err := frontend.NewServer(frontend.ServerConfig{
 		DataSourceGetter: func(context.Context) internal.DataSource { return lds },
 		TemplateFS:       template.TrustedFSFromEmbed(static.FS),
