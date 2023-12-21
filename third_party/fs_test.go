@@ -8,7 +8,6 @@ import "testing"
 
 func TestFS(t *testing.T) {
 	for _, f := range []string{
-		"autoComplete.js/autoComplete.min.js",
 		"dialog-polyfill/dialog-polyfill.js",
 	} {
 		if _, err := FS.Open(f); err != nil {

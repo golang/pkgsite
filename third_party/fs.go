@@ -6,5 +6,5 @@ package thirdparty
 
 import "embed"
 
-//go:embed autoComplete.js/* dialog-polyfill/*
+//go:embed dialog-polyfill/*
 var FS embed.FS
