@@ -133,7 +133,7 @@ main() {
     dcompose run --rm --entrypoint bash go -c "
       export WAITFORIT_TIMEOUT=120
       go install golang.org/x/website/cmd/screentest@latest
-      ./third_party/wait-for-it/wait-for-it.sh frontend:8080 --
+      go run ./devtools/cmd/wait_available frontend:8080 --
       $(echo $cmd)"
   elif [ "$env" = local ]; then
     if ! nc -z localhost 9222; then
