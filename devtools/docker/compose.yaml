@@ -37,8 +37,7 @@ services:
       GO_DISCOVERY_TESTDB: ${GO_DISCOVERY_TESTDB:-"true"}
       # TERM is set to xterm-256color for use by devtools/lib.sh.
       TERM: xterm-256color
-      WAITFORIT_TIMEOUT: 300
-    entrypoint: go run ./devtools/cmd/wait_available db:5432 -- ./all.bash
+    entrypoint: go run ./devtools/cmd/wait_available --timeout 300s db:5432 -- ./all.bash
     volumes:
       - ../../:/pkgsite
     working_dir: /pkgsite
@@ -48,8 +47,7 @@ services:
       - frontend
     environment:
       <<: [*database-variables, *go-variables]
-      WAITFORIT_TIMEOUT: 300
-    entrypoint: go run ./devtools/cmd/wait_available frontend:8080 -- go run
+    entrypoint: go run ./devtools/cmd/wait_available --timeout 300s frontend:8080 -- go run
     command: "tests/search/main.go -frontend http://frontend:8080"
     volumes:
       - ../../:/pkgsite
@@ -60,8 +58,7 @@ services:
       - frontend
     environment:
       <<: *go-variables
-      WAITFORIT_TIMEOUT: 300
-    entrypoint: go run ./devtools/cmd/wait_available frontend:8080 -- go run
+    entrypoint: go run ./devtools/cmd/wait_available --timeout 300s frontend:8080 -- go run
     command: "tests/api/main.go -frontend http://frontend:8080 -all compare "
     volumes:
       - ../../:/pkgsite
@@ -72,14 +69,13 @@ services:
     depends_on:
       - db
     command: bash -c "
-        go run ./devtools/cmd/wait_available db:5432 --
+        go run ./devtools/cmd/wait_available --timeout 300s db:5432 --
           go run ./devtools/cmd/db/main.go create &&
           go run ./devtools/cmd/db/main.go migrate &&
           go run ./cmd/frontend -host=0.0.0.0:8080"
     environment:
       <<: [*database-variables, *go-variables]
       PORT: 8080
-      WAITFORIT_TIMEOUT: 300
     volumes:
       - ../../:/pkgsite
       - gomodcache:/gomodcache
@@ -94,13 +90,12 @@ services:
     # time seeddb runs. If this ends up being flaky, we should add a check here.
     command: bash -c "
         echo GO_DISCOVERY_CONFIG_DYNAMIC=$GO_DISCOVERY_CONFIG_DYNAMIC &&
-        go run ./devtools/cmd/wait_available db:5432 --
+        go run ./devtools/cmd/wait_available --timeout 300s db:5432 --
           go run ./devtools/cmd/db/main.go create &&
           go run ./devtools/cmd/db/main.go migrate &&
           go run ./devtools/cmd/seeddb/main.go -seed ${GO_DISCOVERY_SEED_DB_FILE:-seed.txt}"
     environment:
       <<: [*database-variables, *go-variables]
-      WAITFORIT_TIMEOUT: 300
     volumes:
       - ../../:/pkgsite
       - gomodcache:/gomodcache

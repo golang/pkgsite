@@ -8,6 +8,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"net"
 	"os"
 	"os/exec"
@@ -18,27 +19,29 @@ import (
 	"golang.org/x/pkgsite/internal/log"
 )
 
-var timeout = 15 * time.Second
+var timeout = flag.Duration("timeout", 15*time.Second, "timeout duration")
 
 func main() {
+	flag.Parse()
 	ctx := context.Background()
 
-	if len(os.Args) < 2 {
+	args := flag.Args()
+	if len(args) < 1 {
 		log.Fatalf(ctx, "expected at least one argument; got none")
 	}
-	hostport := os.Args[1]
+	hostport := args[0]
 	var command []string
 
-	if len(os.Args) > 2 {
-		if os.Args[2] != "--" {
-			log.Fatalf(ctx, "expected second argument to be \"--\"; got %q", os.Args[2])
+	if len(args) > 1 {
+		if args[1] != "--" {
+			log.Fatalf(ctx, "expected second argument to be \"--\"; got %q", args[1])
 		}
-		command = os.Args[3:]
+		command = args[2:]
 	}
 
 	start := time.Now()
 	for {
-		if time.Since(start) > timeout {
+		if time.Since(start) > *timeout {
 			break
 		}
 		if conn, err := net.DialTimeout("tcp", hostport, 1*time.Second); err != nil {
