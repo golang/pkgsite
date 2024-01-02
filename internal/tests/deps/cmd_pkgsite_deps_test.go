@@ -31,9 +31,13 @@ var additionalAllowedTestModDeps = map[string]bool{
 
 func TestCmdPkgsiteDeps(t *testing.T) {
 	// First, list all dependencies of pkgsite.
-	out, err := exec.Command("go", "list", "-deps", "golang.org/x/pkgsite/cmd/pkgsite").Output()
+	out, err := exec.Command("go", "list", "-e", "-deps", "golang.org/x/pkgsite/cmd/pkgsite").Output()
 	if err != nil {
-		t.Fatal("running go list: ", err)
+		if ee, ok := err.(*exec.ExitError); ok && len(ee.Stderr) > 0 {
+			t.Fatalf("running go list -test -deps on package golang.org/x/pkgsite/cmd/pkgsite:\n%s", ee.Stderr)
+		}
+		t.Fatalf("running go list -test -deps on package golang.org/x/pkgsite/cmd/pkgsite: %v", err)
+
 	}
 	pkgs := strings.Fields(string(out))
 	for _, pkg := range pkgs {
@@ -43,9 +47,12 @@ func TestCmdPkgsiteDeps(t *testing.T) {
 		}
 
 		// Get the test module deps and check them against allowedTestModDeps.
-		out, err := exec.Command("go", "list", "-deps", "-test", "-f", "{{if .Module}}{{.Module.Path}}{{end}}", pkg).Output()
+		out, err := exec.Command("go", "list", "-e", "-deps", "-test", "-f", "{{if .Module}}{{.Module.Path}}{{end}}", pkg).Output()
 		if err != nil {
-			t.Fatal(err)
+			if ee, ok := err.(*exec.ExitError); ok && len(ee.Stderr) > 0 {
+				t.Fatalf("running go list -test -deps on package %s:\n%s", pkg, ee.Stderr)
+			}
+			t.Fatalf("running go list -test -deps on package %s: %v", pkg, err)
 		}
 		testmodules := strings.Fields(string(out))
 		for _, m := range testmodules {
@@ -55,9 +62,12 @@ func TestCmdPkgsiteDeps(t *testing.T) {
 		}
 
 		// Get the module deps and check them against allowedModDeps
-		out, err = exec.Command("go", "list", "-deps", "-f", "{{if .Module}}{{.Module.Path}}{{end}}", pkg).Output()
+		out, err = exec.Command("go", "list", "-e", "-deps", "-f", "{{if .Module}}{{.Module.Path}}{{end}}", pkg).Output()
 		if err != nil {
-			t.Fatal(err)
+			if ee, ok := err.(*exec.ExitError); ok && len(ee.Stderr) > 0 {
+				t.Fatalf("running go list -deps on package %s:\n%s", pkg, ee.Stderr)
+			}
+			t.Fatalf("running go list -deps on package %s: %v", pkg, err)
 		}
 		modules := strings.Fields(string(out))
 		for _, m := range modules {
