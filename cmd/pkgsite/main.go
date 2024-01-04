@@ -384,13 +384,15 @@ func buildGetters(ctx context.Context, cfg getterConfig) ([]fetch.ModuleGetter, 
 	if cfg.useLocalStdlib {
 		goRepo := *goRepoPath
 		if goRepo == "" {
-			goRepo = runtime.GOROOT()
+			goRepo = getGOROOT()
 		}
-		mg, err := fetch.NewGoPackagesStdlibModuleGetter(ctx, goRepo)
-		if err != nil {
-			log.Errorf(ctx, "loading packages from stdlib: %v", err)
-		} else {
-			getters = append(getters, mg)
+		if goRepo != "" { // if goRepo == "" we didn't get a *goRepoPath and couldn't find GOROOT. Fall back to the zip files.
+			mg, err := fetch.NewGoPackagesStdlibModuleGetter(ctx, goRepo)
+			if err != nil {
+				log.Errorf(ctx, "loading packages from stdlib: %v", err)
+			} else {
+				getters = append(getters, mg)
+			}
 		}
 	}
 
@@ -402,6 +404,17 @@ func buildGetters(ctx context.Context, cfg getterConfig) ([]fetch.ModuleGetter, 
 	getters = append(getters, fetch.NewStdlibZipModuleGetter())
 
 	return getters, nil
+}
+
+func getGOROOT() string {
+	if rg := runtime.GOROOT(); rg != "" {
+		return rg
+	}
+	b, err := exec.Command("go", "env", "GOROOT").Output()
+	if err != nil {
+		return ""
+	}
+	return strings.TrimSpace(string(b))
 }
 
 func newServer(getters []fetch.ModuleGetter, localModules []frontend.LocalModule, prox *proxy.Client) (*frontend.Server, error) {
@@ -424,7 +437,7 @@ func newServer(getters []fetch.ModuleGetter, localModules []frontend.LocalModule
 	for _, lm := range localModules {
 		go lds.GetUnitMeta(context.Background(), "", lm.ModulePath, fetch.LocalVersion)
 	}
-	go lds.GetUnitMeta(context.Background(), "", "std", fetch.LocalVersion)
+	go lds.GetUnitMeta(context.Background(), "", "std", "latest")
 
 	server, err := frontend.NewServer(frontend.ServerConfig{
 		DataSourceGetter: func(context.Context) internal.DataSource { return lds },

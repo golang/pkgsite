@@ -13,6 +13,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"strings"
 
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/version"
@@ -21,7 +22,7 @@ import (
 // A goRepo represents a git repo holding the Go standard library.
 type goRepo interface {
 	// Clone the repo at the given version to the directory.
-	clone(ctx context.Context, version string, toDirectory string) (refName string, err error)
+	clone(ctx context.Context, version string, toDirectory string) (hash string, err error)
 
 	// Return all the refs of the repo.
 	refs(ctx context.Context) ([]ref, error)
@@ -29,10 +30,10 @@ type goRepo interface {
 
 type remoteGoRepo struct{}
 
-func (remoteGoRepo) clone(ctx context.Context, v, directory string) (refName string, err error) {
+func (remoteGoRepo) clone(ctx context.Context, v, directory string) (hash string, err error) {
 	defer derrors.Wrap(&err, "remoteGoRepo.clone(%q)", v)
 
-	refName, err = refNameForVersion(v)
+	refName, err := refNameForVersion(v)
 	if err != nil {
 		return "", err
 	}
@@ -44,17 +45,29 @@ func (remoteGoRepo) clone(ctx context.Context, v, directory string) (refName str
 	if err := cmd.Run(); err != nil {
 		return "", err
 	}
-	cmd = exec.CommandContext(ctx, "git", "fetch", "-f", "--depth=1", "--", GoRepoURL, refName+":main")
+	cmd = exec.CommandContext(ctx, "git", "fetch", "-f", "--depth=1", "--", GoRepoURL, refName)
 	cmd.Dir = directory
 	if b, err := cmd.CombinedOutput(); err != nil {
 		return "", fmt.Errorf("running git fetch: %v: %s", err, b)
 	}
-	cmd = exec.CommandContext(ctx, "git", "checkout", "main")
+	cmd = exec.CommandContext(ctx, "git", "rev-parse", "FETCH_HEAD")
 	cmd.Dir = directory
-	if b, err := cmd.CombinedOutput(); err != nil {
-		return "", fmt.Errorf("running git checkout: %v: %s", err, b)
+	b, err := cmd.Output()
+	if err != nil {
+		if ee, ok := err.(*exec.ExitError); ok {
+			return "", fmt.Errorf("running git rev-parse: %v: %s", err, ee.Stderr)
+		}
+		return "", fmt.Errorf("running git rev-parse: %v", err)
 	}
-	return refName, nil
+	cmd = exec.CommandContext(ctx, "git", "checkout", "FETCH_HEAD")
+	cmd.Dir = directory
+	if err := cmd.Run(); err != nil {
+		if ee, ok := err.(*exec.ExitError); ok {
+			return "", fmt.Errorf("running git checkout: %v: %s", err, ee.Stderr)
+		}
+		return "", fmt.Errorf("running git checkout: %v", err)
+	}
+	return strings.TrimSpace(string(b)), nil
 }
 
 type ref struct {
@@ -104,19 +117,22 @@ func (g *localGoRepo) refs(ctx context.Context) (refs []ref, err error) {
 	cmd.Dir = g.path
 	b, err := cmd.Output()
 	if err != nil {
+		if ee, ok := err.(*exec.ExitError); ok {
+			return nil, fmt.Errorf("running git show-ref: %s", ee.Stderr)
+		}
 		return nil, fmt.Errorf("running git show-ref: %v", err)
 	}
 	return gitOutputToRefs(b)
 }
 
-func (g *localGoRepo) clone(ctx context.Context, v, directory string) (refName string, err error) {
+func (g *localGoRepo) clone(ctx context.Context, v, directory string) (hash string, err error) {
 	return "", nil
 }
 
 type testGoRepo struct {
 }
 
-func (t *testGoRepo) clone(ctx context.Context, v, directory string) (refName string, err error) {
+func (t *testGoRepo) clone(ctx context.Context, v, directory string) (hash string, err error) {
 	defer derrors.Wrap(&err, "testGoRepo.clone(%q)", v)
 	if v == TestMasterVersion {
 		v = version.Master
@@ -174,7 +190,16 @@ func (t *testGoRepo) clone(ctx context.Context, v, directory string) (refName st
 		}
 		return "", fmt.Errorf("running git commit: %v", err)
 	}
-	return "HEAD", nil
+	cmd = exec.CommandContext(ctx, "git", "rev-parse", "HEAD")
+	cmd.Dir = directory
+	b, err := cmd.Output()
+	if err != nil {
+		if ee, ok := err.(*exec.ExitError); ok {
+			return "", fmt.Errorf("running git rev-parse: %v: %s", err, ee.Stderr)
+		}
+		return "", fmt.Errorf("running git rev-parse: %v", err)
+	}
+	return strings.TrimSpace(string(b)), nil
 }
 
 // testDataPath returns a path corresponding to a path relative to the calling

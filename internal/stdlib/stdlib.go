@@ -324,21 +324,6 @@ func ZipInfo(requestedVersion string) (resolvedVersion string, err error) {
 	return resolvedVersion, nil
 }
 
-func hashForRef(ctx context.Context, dir, tag string) (string, error) {
-	cmd := exec.CommandContext(ctx, "git", "show-ref", "--verify", "--", tag)
-	cmd.Dir = dir
-	b, err := cmd.Output()
-	if err != nil {
-		return "", fmt.Errorf("running git show-ref: %v", err)
-	}
-	b = bytes.TrimSpace(b)
-	f := bytes.Fields(b)
-	if len(f) != 2 {
-		return "", fmt.Errorf("invalid output from git show-ref: %q: expect two fields", b)
-	}
-	return string(f[0]), nil
-}
-
 func commiterTime(ctx context.Context, dir, object string) (time.Time, error) {
 	cmd := exec.CommandContext(ctx, "git", "show", "--no-patch", "--no-notes", "--format=%aI", object)
 	cmd.Dir = dir
@@ -370,17 +355,13 @@ func zipInternal(ctx context.Context, requestedVersion string) (_ *zip.Reader, r
 			err = rmallerr
 		}
 	}()
-	refName, err := getGoRepo().clone(ctx, requestedVersion, dir)
+	hash, err := getGoRepo().clone(ctx, requestedVersion, dir)
 	if err != nil {
 		return nil, "", time.Time{}, "", err
 	}
 	var buf bytes.Buffer
 	z := zip.NewWriter(&buf)
 
-	hash, err := hashForRef(ctx, dir, refName)
-	if err != nil {
-		return nil, "", time.Time{}, "", err
-	}
 	commitTime, err = commiterTime(ctx, dir, hash)
 	if err != nil {
 		return nil, "", time.Time{}, "", err
