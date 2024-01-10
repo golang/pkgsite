@@ -47,7 +47,7 @@ func (p *Package) DocInfo(ctx context.Context, innerPath string, sourceInfo *sou
 	defer derrors.Wrap(&err, "godoc.Package.DocInfo(%q, %q, %q)", modInfo.ModulePath, modInfo.ResolvedVersion, innerPath)
 
 	p.renderCalled = true
-	d, err := p.docPackage(innerPath, modInfo)
+	d, err := p.DocPackage(innerPath, modInfo)
 	if err != nil {
 		return "", nil, nil, err
 	}
@@ -86,8 +86,8 @@ func cleanImports(imports []string, importPath string) []string {
 	return r
 }
 
-// docPackage computes and returns a doc.Package.
-func (p *Package) docPackage(innerPath string, modInfo *ModuleInfo) (_ *doc.Package, err error) {
+// DocPackage computes and returns a doc.Package.
+func (p *Package) DocPackage(innerPath string, modInfo *ModuleInfo) (_ *doc.Package, err error) {
 	defer derrors.Wrap(&err, "docPackage(%q, %q, %q)", innerPath, modInfo.ModulePath, modInfo.ResolvedVersion)
 	importPath := path.Join(modInfo.ModulePath, innerPath)
 	if modInfo.ModulePath == stdlib.ModulePath {
@@ -219,7 +219,7 @@ func (p *Package) Render(ctx context.Context, innerPath string,
 	bc internal.BuildContext) (_ *dochtml.Parts, err error) {
 	p.renderCalled = true
 
-	d, err := p.docPackage(innerPath, modInfo)
+	d, err := p.DocPackage(innerPath, modInfo)
 	if err != nil {
 		return nil, err
 	}
