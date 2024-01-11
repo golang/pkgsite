@@ -254,9 +254,9 @@ func TestFetchSearchPage(t *testing.T) {
 						},
 						Name:              "foo",
 						Path:              "github.com/mod/foo",
-						Licenses:          sample.LicenseMetadata(),
 						IsRedistributable: true,
 					},
+					Licenses: sample.LicenseMetadata(),
 					Documentation: []*internal.Documentation{{
 						GOOS:     sample.GOOS,
 						GOARCH:   sample.GOARCH,
@@ -288,9 +288,9 @@ func TestFetchSearchPage(t *testing.T) {
 						},
 						Name:              "bar",
 						Path:              "github.com/mod/bar",
-						Licenses:          sample.LicenseMetadata(),
 						IsRedistributable: true,
 					},
+					Licenses: sample.LicenseMetadata(),
 					Documentation: []*internal.Documentation{{
 						GOOS:     sample.GOOS,
 						GOARCH:   sample.GOARCH,

@@ -62,7 +62,6 @@ func cleanFetchResult(t *testing.T, fr *FetchResult) *FetchResult {
 			Path:              u.Path,
 			Name:              u.Name,
 			IsRedistributable: u.IsRedistributable,
-			Licenses:          u.Licenses,
 		}
 		if u.IsPackage() && shouldSetPVS {
 			fr.PackageVersionStates = append(

@@ -52,8 +52,8 @@ func moduleUnits(modulePath string, minfo internal.ModuleInfo,
 				ModuleInfo:        minfo,
 				Path:              dirPath,
 				IsRedistributable: isRedist,
-				Licenses:          meta,
 			},
+			Licenses: meta,
 		}
 		if r, ok := readmeLookup[dirPath]; ok {
 			dir.Readme = r

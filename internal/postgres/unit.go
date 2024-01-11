@@ -16,6 +16,7 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/middleware/stats"
 	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/version"
@@ -65,9 +66,7 @@ func (db *DB) getUnitMetaWithKnownVersion(ctx context.Context, fullPath, moduleP
 		"m.has_go_mod",
 		"m.redistributable",
 		"u.name",
-		"u.redistributable",
-		"u.license_types",
-		"u.license_paths").
+		"u.redistributable").
 		From("modules m").
 		Join("units u on u.module_id = m.id").
 		Join("paths p ON p.id = u.path_id").Where(squirrel.Eq{"p.path": fullPath}).
@@ -92,9 +91,7 @@ func (db *DB) getUnitMetaWithKnownVersion(ctx context.Context, fullPath, moduleP
 		return nil, err
 	}
 	var (
-		licenseTypes []string
-		licensePaths []string
-		um           = internal.UnitMeta{Path: fullPath}
+		um = internal.UnitMeta{Path: fullPath}
 	)
 	err = db.db.QueryRow(ctx, q, args...).Scan(
 		&um.ModulePath,
@@ -104,9 +101,7 @@ func (db *DB) getUnitMetaWithKnownVersion(ctx context.Context, fullPath, moduleP
 		&um.HasGoMod,
 		&um.ModuleInfo.IsRedistributable,
 		&um.Name,
-		&um.IsRedistributable,
-		pq.Array(&licenseTypes),
-		pq.Array(&licensePaths))
+		&um.IsRedistributable)
 	if err == sql.ErrNoRows {
 		return nil, derrors.NotFound
 	}
@@ -114,15 +109,9 @@ func (db *DB) getUnitMetaWithKnownVersion(ctx context.Context, fullPath, moduleP
 		return nil, err
 	}
 
-	lics, err := zipLicenseMetadata(licenseTypes, licensePaths)
-	if err != nil {
-		return nil, err
-	}
-
 	if db.bypassLicenseCheck {
 		um.IsRedistributable = true
 	}
-	um.Licenses = lics
 
 	// If we don't have the latest version information, try to get it.
 	// We can be here if there is really no info (in which case we are repeating
@@ -432,8 +421,9 @@ func (db *DB) getUnitWithAllFields(ctx context.Context, um *internal.UnitMeta, b
 	// Get build contexts and unit ID.
 	var pathID, unitID, moduleID int
 	var bcs []internal.BuildContext
+	var licenseMetas []*licenses.Metadata
 	err = db.db.RunQuery(ctx, `
-		SELECT d.goos, d.goarch, u.id, p.id, u.module_id
+		SELECT d.goos, d.goarch, u.id, p.id, u.module_id, u.license_types, u.license_paths
 		FROM units u
 		INNER JOIN paths p ON p.id = u.path_id
 		INNER JOIN modules m ON m.id = u.module_id
@@ -446,13 +436,22 @@ func (db *DB) getUnitWithAllFields(ctx context.Context, um *internal.UnitMeta, b
 		var bc internal.BuildContext
 		// GOOS and GOARCH will be NULL if there are no documentation rows for
 		// the unit, but we still want the unit ID.
+		var (
+			licenseTypes []string
+			licensePaths []string
+		)
 
-		if err := rows.Scan(database.NullIsEmpty(&bc.GOOS), database.NullIsEmpty(&bc.GOARCH), &unitID, &pathID, &moduleID); err != nil {
+		if err := rows.Scan(database.NullIsEmpty(&bc.GOOS), database.NullIsEmpty(&bc.GOARCH), &unitID, &pathID, &moduleID, pq.Array(&licenseTypes), pq.Array(&licensePaths)); err != nil {
 			return err
 		}
 		if bc.GOOS != "" && bc.GOARCH != "" {
 			bcs = append(bcs, bc)
 		}
+		lics, err := zipLicenseMetadata(licenseTypes, licensePaths)
+		if err != nil {
+			return err
+		}
+		licenseMetas = lics
 		return nil
 	}, um.Path, um.ModulePath, um.Version)
 	if err != nil {
@@ -539,6 +538,7 @@ func (db *DB) getUnitWithAllFields(ctx context.Context, um *internal.UnitMeta, b
 	}
 	u.Subdirectories = pkgs
 	u.UnitMeta = *um
+	u.Licenses = licenseMetas
 
 	if um.IsPackage() && !um.IsCommand() && doc.Source != nil {
 		u.SymbolHistory, err = GetSymbolHistoryForBuildContext(ctx, db.db, pathID, um.ModulePath, bcMatched)

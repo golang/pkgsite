@@ -96,9 +96,9 @@ func TestReFetch(t *testing.T) {
 			IsRedistributable: true,
 			Path:              sample.ModulePath + "/bar",
 			Name:              "bar",
-			Licenses: []*licenses.Metadata{
-				{Types: []string{"MIT"}, FilePath: "LICENSE"},
-			},
+		},
+		Licenses: []*licenses.Metadata{
+			{Types: []string{"MIT"}, FilePath: "LICENSE"},
 		},
 		Readme: &internal.Readme{
 			Filepath: "bar/README.md",

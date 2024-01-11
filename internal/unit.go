@@ -15,7 +15,6 @@ type UnitMeta struct {
 	Path              string
 	Name              string
 	IsRedistributable bool
-	Licenses          []*licenses.Metadata
 
 	// Module level information
 	// Note: IsRedistributable (above) applies to the unit;
@@ -53,6 +52,7 @@ type Unit struct {
 	Symbols         map[BuildContext][]*Symbol
 	NumImports      int
 	NumImportedBy   int
+	Licenses        []*licenses.Metadata
 
 	// SymbolHistory is a map of symbolName to the version when the symbol was
 	// first added to the package.

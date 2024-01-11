@@ -62,10 +62,10 @@ func TestFetchAndUpdateState(t *testing.T) {
 			IsRedistributable: true,
 			Path:              "example.com/multi/bar",
 			Name:              "bar",
-			Licenses: []*licenses.Metadata{
-				{Types: []string{"0BSD"}, FilePath: "LICENSE"},
-				{Types: []string{"MIT"}, FilePath: "bar/LICENSE"},
-			},
+		},
+		Licenses: []*licenses.Metadata{
+			{Types: []string{"0BSD"}, FilePath: "LICENSE"},
+			{Types: []string{"MIT"}, FilePath: "bar/LICENSE"},
 		},
 		Documentation: []*internal.Documentation{{
 			Synopsis: "package bar",
@@ -118,11 +118,11 @@ func TestFetchAndUpdateState(t *testing.T) {
 					IsRedistributable: true,
 					Path:              "example.com/nonredist/bar/baz",
 					Name:              "baz",
-					Licenses: []*licenses.Metadata{
-						{Types: []string{"0BSD"}, FilePath: "LICENSE"},
-						{Types: []string{"MIT"}, FilePath: "bar/LICENSE"},
-						{Types: []string{"MIT"}, FilePath: "bar/baz/COPYING"},
-					},
+				},
+				Licenses: []*licenses.Metadata{
+					{Types: []string{"0BSD"}, FilePath: "LICENSE"},
+					{Types: []string{"MIT"}, FilePath: "bar/LICENSE"},
+					{Types: []string{"MIT"}, FilePath: "bar/baz/COPYING"},
 				},
 				Documentation: []*internal.Documentation{{
 					Synopsis: "package baz",
@@ -148,10 +148,10 @@ func TestFetchAndUpdateState(t *testing.T) {
 					IsRedistributable: false,
 					Path:              "example.com/nonredist/unk",
 					Name:              "unk",
-					Licenses: []*licenses.Metadata{
-						{Types: []string{"0BSD"}, FilePath: "LICENSE"},
-						{Types: []string{"UNKNOWN"}, FilePath: "unk/LICENSE.md"},
-					},
+				},
+				Licenses: []*licenses.Metadata{
+					{Types: []string{"0BSD"}, FilePath: "LICENSE"},
+					{Types: []string{"UNKNOWN"}, FilePath: "unk/LICENSE.md"},
 				},
 				NumImports: 2,
 			},
@@ -172,9 +172,9 @@ func TestFetchAndUpdateState(t *testing.T) {
 					IsRedistributable: true,
 					Path:              buildConstraintsModulePath + "/cpu",
 					Name:              "cpu",
-					Licenses: []*licenses.Metadata{
-						{Types: []string{"0BSD"}, FilePath: "LICENSE"},
-					},
+				},
+				Licenses: []*licenses.Metadata{
+					{Types: []string{"0BSD"}, FilePath: "LICENSE"},
 				},
 				Documentation: []*internal.Documentation{{
 					Synopsis: "Package cpu implements processor feature detection used by the Go standard library.",
@@ -209,9 +209,6 @@ func TestFetchAndUpdateState(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			sort.Slice(got.Licenses, func(i, j int) bool {
-				return got.Licenses[i].FilePath < got.Licenses[j].FilePath
-			})
 			if diff := cmp.Diff(test.want.UnitMeta, *got, cmpopts.EquateEmpty(), cmp.AllowUnexported(source.Info{})); diff != "" {
 				t.Fatalf("testDB.GetUnitMeta(ctx, %q, %q) mismatch (-want +got):\n%s", test.modulePath, test.version, diff)
 			}
@@ -220,7 +217,9 @@ func TestFetchAndUpdateState(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-
+			sort.Slice(gotPkg.Licenses, func(i, j int) bool {
+				return gotPkg.Licenses[i].FilePath < gotPkg.Licenses[j].FilePath
+			})
 			if diff := cmp.Diff(test.want, gotPkg,
 				cmpopts.EquateEmpty(),
 				cmp.AllowUnexported(source.Info{}),

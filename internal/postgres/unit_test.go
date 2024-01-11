@@ -833,12 +833,12 @@ func TestGetUnitFieldSet(t *testing.T) {
 		{
 			name:   "WithImports",
 			fields: internal.WithImports,
-			want:   unit("a.com/m/dir/p", "a.com/m", "v1.2.3", "", nil, []string{}),
+			want:   unitNoLicenses("a.com/m/dir/p", "a.com/m", "v1.2.3", "", nil, []string{}),
 		},
 		{
 			name:   "WithLicenses",
 			fields: internal.WithLicenses,
-			want:   unit("a.com/m/dir/p", "a.com/m", "v1.2.3", "", nil, []string{}),
+			want:   unitNoLicenses("a.com/m/dir/p", "a.com/m", "v1.2.3", "", nil, []string{}),
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
@@ -922,6 +922,12 @@ func TestGetUnitBuildContext(t *testing.T) {
 }
 
 func unit(fullPath, modulePath, version, name string, readme *internal.Readme, suffixes []string) *internal.Unit {
+	u := unitNoLicenses(fullPath, modulePath, version, name, readme, suffixes)
+	u.Licenses = sample.LicenseMetadata()
+	return u
+}
+
+func unitNoLicenses(fullPath, modulePath, version, name string, readme *internal.Readme, suffixes []string) *internal.Unit {
 	u := &internal.Unit{
 		UnitMeta: internal.UnitMeta{
 			ModuleInfo: internal.ModuleInfo{
@@ -931,7 +937,6 @@ func unit(fullPath, modulePath, version, name string, readme *internal.Readme, s
 			},
 			Path:              fullPath,
 			IsRedistributable: true,
-			Licenses:          sample.LicenseMetadata(),
 			Name:              name,
 		},
 		LicenseContents: sample.Licenses(),

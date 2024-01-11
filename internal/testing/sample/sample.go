@@ -202,6 +202,7 @@ func Module(modulePath, version string, suffixes ...string) *internal.Module {
 func UnitForModuleRoot(m *internal.ModuleInfo) *internal.Unit {
 	u := &internal.Unit{
 		UnitMeta:        *UnitMeta(m.ModulePath, m.ModulePath, m.Version, "", m.IsRedistributable),
+		Licenses:        LicenseMetadata(),
 		LicenseContents: Licenses(),
 	}
 	u.Readme = &internal.Readme{
@@ -224,6 +225,7 @@ func UnitForPackage(path, modulePath, version, name string, isRedistributable bo
 	imps := Imports()
 	return &internal.Unit{
 		UnitMeta:        *UnitMeta(path, modulePath, version, name, isRedistributable),
+		Licenses:        LicenseMetadata(),
 		Documentation:   []*internal.Documentation{&doc},
 		BuildContexts:   []internal.BuildContext{{GOOS: doc.GOOS, GOARCH: doc.GOARCH}},
 		LicenseContents: Licenses(),
@@ -337,6 +339,7 @@ func replaceLicense(lic *licenses.License, lics []*licenses.License) {
 func UnitEmpty(path, modulePath, version string) *internal.Unit {
 	return &internal.Unit{
 		UnitMeta: *UnitMeta(path, modulePath, version, "", true),
+		Licenses: LicenseMetadata(),
 	}
 }
 
@@ -345,7 +348,6 @@ func UnitMeta(path, modulePath, version, name string, isRedistributable bool) *i
 		Path:              path,
 		Name:              name,
 		IsRedistributable: isRedistributable,
-		Licenses:          LicenseMetadata(),
 		ModuleInfo: internal.ModuleInfo{
 			ModulePath:        modulePath,
 			Version:           version,
