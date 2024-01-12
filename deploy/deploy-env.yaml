@@ -10,7 +10,7 @@ options:
     - TERM=dumb
 steps:
   - id: all.bash
-    name: gcr.io/$PROJECT_ID/docker-compose
+    name: gcr.io/cloud-builders/docker
     entrypoint: devtools/docker/compose.sh
     args:
       - run
@@ -22,7 +22,7 @@ steps:
     args:
       - $PROJECT_ID
   - id: Check redistributable
-    name: golang:1.21rc3
+    name: golang:1.22rc1
     entrypoint: private/devtools/check_redist.sh
   - id: Build
     name: gcr.io/cloud-builders/docker
@@ -48,7 +48,7 @@ steps:
       - -c
       - deploy/frontend.sh $_ENV gcr.io/$PROJECT_ID/frontend:$(cat _BUILD_TAG)
   - id: Pagecheck
-    name: golang:1.21rc3
+    name: golang:1.22rc1
     entrypoint: deploy/pagecheck.sh
     args:
       - $_ENV

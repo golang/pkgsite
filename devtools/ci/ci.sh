@@ -19,7 +19,7 @@ export CI=true
 # Skip installing chrome with puppeteer. We are using the browserless/chrome
 # docker image instead.
 export PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
-# Set the database name to be used in docker-compose.
+# Set the database name to be used in docker compose.
 export GO_DISCOVERY_DATABASE_NAME=discovery_ci_test
 
 # starttime is the start time for this entire script.

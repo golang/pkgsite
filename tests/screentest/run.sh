@@ -48,7 +48,7 @@ dcompose() {
   if [[ $msg == *",Token:"* ]]; then
     msg="${msg%*,Token* *},Token:<redacted> ${msg#*,Token* *}"
   fi
-  local cmd="docker-compose -f devtools/docker/compose.yaml"
+  local cmd="docker compose -f devtools/docker/compose.yaml"
   info "\$ $cmd $msg"
   $cmd "$@"
 }

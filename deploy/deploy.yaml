@@ -10,7 +10,7 @@ options:
     - TERM=dumb
 steps:
   - id: all.bash
-    name: gcr.io/$PROJECT_ID/docker-compose
+    name: gcr.io/cloud-builders/docker
     entrypoint: devtools/docker/compose.sh
     args:
       - run
@@ -53,7 +53,7 @@ steps:
     args:
       - staging
   - id: screentest - staging
-    name: gcr.io/$PROJECT_ID/docker-compose
+    name: gcr.io/cloud-builders/docker
     entrypoint: deploy/screentest.sh
     args:
       - staging

@@ -35,5 +35,5 @@ docker_error() {
 }
 
 dockercompose() {
-  docker-compose -f devtools/docker/compose.yaml $@
+  docker compose -f devtools/docker/compose.yaml $@
 }
