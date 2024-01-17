@@ -65,8 +65,7 @@ func (db *DB) getUnitMetaWithKnownVersion(ctx context.Context, fullPath, moduleP
 		"m.source_info",
 		"m.has_go_mod",
 		"m.redistributable",
-		"u.name",
-		"u.redistributable").
+		"u.name").
 		From("modules m").
 		Join("units u on u.module_id = m.id").
 		Join("paths p ON p.id = u.path_id").Where(squirrel.Eq{"p.path": fullPath}).
@@ -100,17 +99,12 @@ func (db *DB) getUnitMetaWithKnownVersion(ctx context.Context, fullPath, moduleP
 		jsonbScanner{&um.SourceInfo},
 		&um.HasGoMod,
 		&um.ModuleInfo.IsRedistributable,
-		&um.Name,
-		&um.IsRedistributable)
+		&um.Name)
 	if err == sql.ErrNoRows {
 		return nil, derrors.NotFound
 	}
 	if err != nil {
 		return nil, err
-	}
-
-	if db.bypassLicenseCheck {
-		um.IsRedistributable = true
 	}
 
 	// If we don't have the latest version information, try to get it.
@@ -249,10 +243,11 @@ func (db *DB) GetUnit(ctx context.Context, um *internal.UnitMeta, fields interna
 	}
 
 	defer stats.Elapsed(ctx, "GetUnit")()
-	unitID, err := db.getUnitID(ctx, um.Path, um.ModulePath, um.Version)
+	unitID, isRedistributable, err := db.getUnitID(ctx, um.Path, um.ModulePath, um.Version)
 	if err != nil {
 		return nil, err
 	}
+	u.IsRedistributable = isRedistributable
 
 	if fields&internal.WithImports != 0 {
 		imports, err := db.getImports(ctx, unitID)
@@ -279,12 +274,13 @@ func (db *DB) GetUnit(ctx context.Context, um *internal.UnitMeta, fields interna
 	return u, nil
 }
 
-func (db *DB) getUnitID(ctx context.Context, fullPath, modulePath, resolvedVersion string) (_ int, err error) {
+func (db *DB) getUnitID(ctx context.Context, fullPath, modulePath, resolvedVersion string) (_ int, _ bool, err error) {
 	defer derrors.WrapStack(&err, "getUnitID(ctx, %q, %q, %q)", fullPath, modulePath, resolvedVersion)
 	defer stats.Elapsed(ctx, "getUnitID")()
 	var unitID int
+	var isRedistributable bool
 	query := `
-		SELECT u.id
+		SELECT u.id, u.redistributable
 		FROM units u
 		INNER JOIN paths p ON (p.id = u.path_id)
 		INNER JOIN modules m ON (u.module_id = m.id)
@@ -292,14 +288,14 @@ func (db *DB) getUnitID(ctx context.Context, fullPath, modulePath, resolvedVersi
 			p.path = $1
 			AND m.module_path = $2
 			AND m.version = $3;`
-	err = db.db.QueryRow(ctx, query, fullPath, modulePath, resolvedVersion).Scan(&unitID)
+	err = db.db.QueryRow(ctx, query, fullPath, modulePath, resolvedVersion).Scan(&unitID, &isRedistributable)
 	switch err {
 	case sql.ErrNoRows:
-		return 0, derrors.NotFound
+		return 0, false, derrors.NotFound
 	case nil:
-		return unitID, nil
+		return unitID, isRedistributable, nil
 	default:
-		return 0, err
+		return 0, false, err
 	}
 }
 
@@ -422,8 +418,9 @@ func (db *DB) getUnitWithAllFields(ctx context.Context, um *internal.UnitMeta, b
 	var pathID, unitID, moduleID int
 	var bcs []internal.BuildContext
 	var licenseMetas []*licenses.Metadata
+	var isRedistributable bool
 	err = db.db.RunQuery(ctx, `
-		SELECT d.goos, d.goarch, u.id, p.id, u.module_id, u.license_types, u.license_paths
+		SELECT d.goos, d.goarch, u.id, p.id, u.module_id, u.license_types, u.license_paths, u.redistributable
 		FROM units u
 		INNER JOIN paths p ON p.id = u.path_id
 		INNER JOIN modules m ON m.id = u.module_id
@@ -441,9 +438,14 @@ func (db *DB) getUnitWithAllFields(ctx context.Context, um *internal.UnitMeta, b
 			licensePaths []string
 		)
 
-		if err := rows.Scan(database.NullIsEmpty(&bc.GOOS), database.NullIsEmpty(&bc.GOARCH), &unitID, &pathID, &moduleID, pq.Array(&licenseTypes), pq.Array(&licensePaths)); err != nil {
+		if err := rows.Scan(database.NullIsEmpty(&bc.GOOS), database.NullIsEmpty(&bc.GOARCH), &unitID, &pathID, &moduleID, pq.Array(&licenseTypes), pq.Array(&licensePaths), &isRedistributable); err != nil {
 			return err
 		}
+
+		if db.bypassLicenseCheck {
+			isRedistributable = true
+		}
+
 		if bc.GOOS != "" && bc.GOARCH != "" {
 			bcs = append(bcs, bc)
 		}
@@ -539,6 +541,7 @@ func (db *DB) getUnitWithAllFields(ctx context.Context, um *internal.UnitMeta, b
 	u.Subdirectories = pkgs
 	u.UnitMeta = *um
 	u.Licenses = licenseMetas
+	u.IsRedistributable = isRedistributable
 
 	if um.IsPackage() && !um.IsCommand() && doc.Source != nil {
 		u.SymbolHistory, err = GetSymbolHistoryForBuildContext(ctx, db.db, pathID, um.ModulePath, bcMatched)

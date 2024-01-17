@@ -159,8 +159,7 @@ func TestProxyGetUnitMeta(t *testing.T) {
 			modulePath: "example.com/single",
 			version:    "v1.0.0",
 			want: &internal.UnitMeta{
-				ModuleInfo:        singleModInfo,
-				IsRedistributable: true,
+				ModuleInfo: singleModInfo,
 			},
 		},
 		{
@@ -168,9 +167,8 @@ func TestProxyGetUnitMeta(t *testing.T) {
 			modulePath: "example.com/single",
 			version:    "v1.0.0",
 			want: &internal.UnitMeta{
-				ModuleInfo:        singleModInfo,
-				Name:              "pkg",
-				IsRedistributable: true,
+				ModuleInfo: singleModInfo,
+				Name:       "pkg",
 			},
 		},
 		{
@@ -178,9 +176,8 @@ func TestProxyGetUnitMeta(t *testing.T) {
 			modulePath: internal.UnknownModulePath,
 			version:    "v1.0.0",
 			want: &internal.UnitMeta{
-				ModuleInfo:        singleModInfo,
-				Name:              "pkg",
-				IsRedistributable: true,
+				ModuleInfo: singleModInfo,
+				Name:       "pkg",
 			},
 		},
 		{
@@ -195,8 +192,7 @@ func TestProxyGetUnitMeta(t *testing.T) {
 					CommitTime:        proxytest.CommitTime,
 					HasGoMod:          true,
 				},
-				Name:              "basic",
-				IsRedistributable: true,
+				Name: "basic",
 			},
 		},
 	} {
@@ -358,7 +354,6 @@ func TestLocalGetUnitMeta(t *testing.T) {
 					HasGoMod:          true,
 					SourceInfo:        sourceInfo,
 				},
-				IsRedistributable: true,
 			},
 		},
 		{
@@ -374,7 +369,6 @@ func TestLocalGetUnitMeta(t *testing.T) {
 					HasGoMod:          true,
 					SourceInfo:        sourceInfo,
 				},
-				IsRedistributable: true,
 			},
 		},
 		{
@@ -390,16 +384,14 @@ func TestLocalGetUnitMeta(t *testing.T) {
 					HasGoMod:          true,
 					SourceInfo:        sourceInfo,
 				},
-				IsRedistributable: true,
 			},
 		},
 		{
 			path:       "github.com/my/module/bar",
 			modulePath: internal.UnknownModulePath,
 			want: &internal.UnitMeta{
-				Path:              "github.com/my/module/bar",
-				Name:              "bar",
-				IsRedistributable: true,
+				Path: "github.com/my/module/bar",
+				Name: "bar",
 				ModuleInfo: internal.ModuleInfo{
 					ModulePath:        "github.com/my/module",
 					Version:           fetch.LocalVersion,

@@ -82,31 +82,37 @@ func TestIsValidTab(t *testing.T) {
 		name     string
 		um       *internal.UnitMeta
 		wantTabs []string
+		details  any
 	}{
 		{
 			name:     "module",
 			um:       sample.UnitMeta(sample.ModulePath, sample.ModulePath, sample.VersionString, "", true),
 			wantTabs: []string{tabMain, tabVersions, tabLicenses},
+			details:  &LicensesDetails{IsRedistributable: true},
 		},
 		{
 			name:     "directory",
 			um:       sample.UnitMeta(sample.ModulePath+"/go", sample.ModulePath, sample.VersionString, "", true),
 			wantTabs: []string{tabMain, tabVersions, tabLicenses},
+			details:  &LicensesDetails{IsRedistributable: true},
 		},
 		{
 			name:     "package",
 			um:       sample.UnitMeta(sample.ModulePath+"/go/packages", sample.ModulePath, sample.VersionString, "packages", true),
 			wantTabs: []string{tabMain, tabVersions, tabImports, tabImportedBy, tabLicenses},
+			details:  &LicensesDetails{IsRedistributable: true},
 		},
 		{
 			name:     "command",
 			um:       sample.UnitMeta(sample.ModulePath+"/cmd", sample.ModulePath, sample.VersionString, "main", true),
 			wantTabs: []string{tabMain, tabVersions, tabImports, tabImportedBy, tabLicenses},
+			details:  &LicensesDetails{IsRedistributable: true},
 		},
 		{
 			name:     "non-redist pkg",
 			um:       sample.UnitMeta(sample.ModulePath+"/go/packages", sample.ModulePath, sample.VersionString, "packages", false),
 			wantTabs: []string{tabMain, tabVersions, tabImports, tabImportedBy},
+			details:  &LicensesDetails{IsRedistributable: false},
 		},
 	} {
 		validTabs := map[string]bool{}
@@ -115,7 +121,7 @@ func TestIsValidTab(t *testing.T) {
 		}
 		for _, tab := range testTabs {
 			t.Run(test.name, func(t *testing.T) {
-				got := isValidTabForUnit(tab, test.um)
+				got := isValidTabForUnit(tab, test.um, test.details)
 				_, want := validTabs[tab]
 				if got != want {
 					t.Errorf("mismatch for %q on tab %q: got %t; want %t", test.um.Path, tab, got, want)

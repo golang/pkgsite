@@ -93,10 +93,10 @@ func TestReFetch(t *testing.T) {
 				IsRedistributable: true,
 				SourceInfo:        source.NewGitHubInfo("https://"+sample.ModulePath, "", sample.VersionString),
 			},
-			IsRedistributable: true,
-			Path:              sample.ModulePath + "/bar",
-			Name:              "bar",
+			Path: sample.ModulePath + "/bar",
+			Name: "bar",
 		},
+		IsRedistributable: true,
 		Licenses: []*licenses.Metadata{
 			{Types: []string{"MIT"}, FilePath: "LICENSE"},
 		},

@@ -227,7 +227,6 @@ func (ds *FetchDataSource) GetUnitMeta(ctx context.Context, path, requestedModul
 		return nil, derrors.NotFound
 	}
 	um.Name = u.Name
-	um.IsRedistributable = u.IsRedistributable
 	return um, nil
 }
 

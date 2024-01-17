@@ -201,9 +201,10 @@ func Module(modulePath, version string, suffixes ...string) *internal.Module {
 
 func UnitForModuleRoot(m *internal.ModuleInfo) *internal.Unit {
 	u := &internal.Unit{
-		UnitMeta:        *UnitMeta(m.ModulePath, m.ModulePath, m.Version, "", m.IsRedistributable),
-		Licenses:        LicenseMetadata(),
-		LicenseContents: Licenses(),
+		UnitMeta:          *UnitMeta(m.ModulePath, m.ModulePath, m.Version, "", m.IsRedistributable),
+		IsRedistributable: m.IsRedistributable,
+		Licenses:          LicenseMetadata(),
+		LicenseContents:   Licenses(),
 	}
 	u.Readme = &internal.Readme{
 		Filepath: ReadmeFilePath,
@@ -224,13 +225,14 @@ func UnitForPackage(path, modulePath, version, name string, isRedistributable bo
 	doc := *Doc
 	imps := Imports()
 	return &internal.Unit{
-		UnitMeta:        *UnitMeta(path, modulePath, version, name, isRedistributable),
-		Licenses:        LicenseMetadata(),
-		Documentation:   []*internal.Documentation{&doc},
-		BuildContexts:   []internal.BuildContext{{GOOS: doc.GOOS, GOARCH: doc.GOARCH}},
-		LicenseContents: Licenses(),
-		Imports:         imps,
-		NumImports:      len(imps),
+		UnitMeta:          *UnitMeta(path, modulePath, version, name, isRedistributable),
+		IsRedistributable: isRedistributable,
+		Licenses:          LicenseMetadata(),
+		Documentation:     []*internal.Documentation{&doc},
+		BuildContexts:     []internal.BuildContext{{GOOS: doc.GOOS, GOARCH: doc.GOARCH}},
+		LicenseContents:   Licenses(),
+		Imports:           imps,
+		NumImports:        len(imps),
 	}
 }
 
@@ -338,21 +340,21 @@ func replaceLicense(lic *licenses.License, lics []*licenses.License) {
 
 func UnitEmpty(path, modulePath, version string) *internal.Unit {
 	return &internal.Unit{
-		UnitMeta: *UnitMeta(path, modulePath, version, "", true),
-		Licenses: LicenseMetadata(),
+		UnitMeta:          *UnitMeta(path, modulePath, version, "", true),
+		IsRedistributable: true,
+		Licenses:          LicenseMetadata(),
 	}
 }
 
-func UnitMeta(path, modulePath, version, name string, isRedistributable bool) *internal.UnitMeta {
+func UnitMeta(path, modulePath, version, name string, moduleIsRedistributable bool) *internal.UnitMeta {
 	return &internal.UnitMeta{
-		Path:              path,
-		Name:              name,
-		IsRedistributable: isRedistributable,
+		Path: path,
+		Name: name,
 		ModuleInfo: internal.ModuleInfo{
 			ModulePath:        modulePath,
 			Version:           version,
 			CommitTime:        NowTruncated(),
-			IsRedistributable: isRedistributable,
+			IsRedistributable: moduleIsRedistributable,
 			SourceInfo:        source.NewGitHubInfo("https://"+modulePath, "", version),
 		},
 	}

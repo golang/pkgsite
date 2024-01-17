@@ -139,8 +139,8 @@ func TestFetchLicensesDetails(t *testing.T) {
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			wantDetails := &LicensesDetails{Licenses: transformLicenses(
-				test.modulePath, test.version, test.want)}
+			wantDetails := &LicensesDetails{IsRedistributable: true,
+				Licenses: transformLicenses(test.modulePath, test.version, test.want)}
 			got, err := fetchLicensesDetails(ctx, fds, &internal.UnitMeta{
 				Path: test.fullPath,
 				ModuleInfo: internal.ModuleInfo{

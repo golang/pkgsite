@@ -56,7 +56,7 @@
         {{block "unit-readme" .Details}}{{end}}
       {{end}}
       {{if .Details.IsPackage}}
-        {{if .Unit.IsRedistributable}}
+        {{if .Details.IsRedistributable}}
           {{block "unit-doc" .Details}}{{end}}
         {{else}}
           <div class="UnitDetails-contentEmpty">

@@ -12,13 +12,10 @@ import (
 type UnitMeta struct {
 	// Unit level information
 	//
-	Path              string
-	Name              string
-	IsRedistributable bool
+	Path string
+	Name string
 
 	// Module level information
-	// Note: IsRedistributable (above) applies to the unit;
-	// ModuleInfo.IsRedistributable applies to the module.
 	ModuleInfo
 }
 
@@ -53,6 +50,9 @@ type Unit struct {
 	NumImports      int
 	NumImportedBy   int
 	Licenses        []*licenses.Metadata
+	// Note: IsRedistributable applies to the unit;
+	// UnitMeta.ModuleInfo.IsRedistributable applies to the module.
+	IsRedistributable bool
 
 	// SymbolHistory is a map of symbolName to the version when the symbol was
 	// first added to the package.

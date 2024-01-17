@@ -59,10 +59,10 @@ func cleanFetchResult(t *testing.T, fr *FetchResult) *FetchResult {
 				Version:           fr.Module.Version,
 				IsRedistributable: fr.Module.IsRedistributable,
 			},
-			Path:              u.Path,
-			Name:              u.Name,
-			IsRedistributable: u.IsRedistributable,
+			Path: u.Path,
+			Name: u.Name,
 		}
+
 		if u.IsPackage() && shouldSetPVS {
 			fr.PackageVersionStates = append(
 				fr.PackageVersionStates, &internal.PackageVersionState{

@@ -93,8 +93,7 @@ func testGetUnitMeta(t *testing.T, ctx context.Context) {
 				Version:           version,
 				IsRedistributable: true,
 			},
-			Name:              name,
-			IsRedistributable: true,
+			Name: name,
 		}
 	}
 
@@ -191,177 +190,15 @@ func testGetUnitMeta(t *testing.T, ctx context.Context) {
 				test.want.ModulePath,
 				test.want.Version,
 				test.want.Name,
-				test.want.IsRedistributable,
+				true,
 			)
+			want.IsRedistributable = true
 			want.CommitTime = sample.CommitTime
 			want.Retracted = test.want.Retracted
 			want.RetractionRationale = test.want.RetractionRationale
 			test.want = want
 			checkUnitMeta(t, ctx, test)
 		})
-	}
-}
-
-func TestGetUnitMetaBypass(t *testing.T) {
-	t.Parallel()
-	testDB, release := acquire(t)
-	defer release()
-	ctx := context.Background()
-
-	bypassDB := NewBypassingLicenseCheck(testDB.db)
-
-	for _, testModule := range []struct {
-		module, version, packageSuffix string
-		isMaster                       bool
-	}{
-		{"m.com", "v2.0.0+incompatible", "a", false},
-		{"m.com/b", "v2.0.0+incompatible", "a", true},
-		{"m.com", "v1.0.0", "a", false},
-		{"m.com", "v1.0.1", "dir/a", false},
-		{"m.com", "v1.1.0", "a/b", false},
-		{"m.com", "v1.2.0-pre", "a", true},
-		{"m.com/a", "v1.1.0", "b", false},
-	} {
-		m := sample.Module(testModule.module, testModule.version, testModule.packageSuffix)
-		makeModuleNonRedistributable(m)
-
-		MustInsertModule(ctx, t, bypassDB, m)
-		requested := m.Version
-		if testModule.isMaster {
-			requested = "master"
-		}
-		if err := bypassDB.UpsertVersionMap(ctx, &internal.VersionMap{
-			ModulePath:       m.ModulePath,
-			RequestedVersion: requested,
-			ResolvedVersion:  m.Version,
-		}); err != nil {
-			t.Fatal(err)
-		}
-	}
-
-	wantUnitMeta := func(modPath, version, name string, isRedist bool) *internal.UnitMeta {
-		return &internal.UnitMeta{
-			ModuleInfo: internal.ModuleInfo{
-				ModulePath:        modPath,
-				Version:           version,
-				IsRedistributable: false,
-			},
-			Name:              name,
-			IsRedistributable: isRedist,
-		}
-	}
-
-	for _, bypassLicenseCheck := range []bool{false, true} {
-		for _, test := range []struct {
-			name                  string
-			path, module, version string
-			want                  *internal.UnitMeta
-		}{
-			{
-				name:    "known module and version",
-				path:    "m.com/a",
-				module:  "m.com",
-				version: "v1.2.0-pre",
-				want:    wantUnitMeta("m.com", "v1.2.0-pre", "a", bypassLicenseCheck),
-			},
-			{
-				name:    "unknown module, known version",
-				path:    "m.com/a/b",
-				version: "v1.1.0",
-				// The path is in two modules at v1.1.0. Prefer the longer one.
-				want: wantUnitMeta("m.com/a", "v1.1.0", "b", bypassLicenseCheck),
-			},
-			{
-				name:   "known module, unknown version",
-				path:   "m.com/a",
-				module: "m.com",
-				// Choose the latest release version.
-				want: wantUnitMeta("m.com", "v1.1.0", "", bypassLicenseCheck),
-			},
-			{
-				name: "unknown module and version",
-				path: "m.com/a/b",
-				// Select the latest release version, longest module.
-				want: wantUnitMeta("m.com/a", "v1.1.0", "b", bypassLicenseCheck),
-			},
-			{
-				name: "module",
-				path: "m.com",
-				// Select the latest version of the module.
-				want: wantUnitMeta("m.com", "v1.1.0", "", bypassLicenseCheck),
-			},
-			{
-				name:    "longest module",
-				path:    "m.com/a",
-				version: "v1.1.0",
-				// Prefer module m/a over module m, directory a.
-				want: wantUnitMeta("m.com/a", "v1.1.0", "", bypassLicenseCheck),
-			},
-			{
-				name: "directory",
-				path: "m.com/dir",
-				want: wantUnitMeta("m.com", "v1.0.1", "", bypassLicenseCheck),
-			},
-			{
-				name:    "module at master version",
-				path:    "m.com",
-				version: "master",
-				want:    wantUnitMeta("m.com", "v1.2.0-pre", "", bypassLicenseCheck),
-			},
-			{
-				name:    "package at master version",
-				path:    "m.com/a",
-				version: "master",
-				want:    wantUnitMeta("m.com", "v1.2.0-pre", "a", bypassLicenseCheck),
-			},
-			{
-				name:    "incompatible module",
-				path:    "m.com/b",
-				version: "master",
-				want:    wantUnitMeta("m.com/b", "v2.0.0+incompatible", "", bypassLicenseCheck),
-			},
-		} {
-			name := fmt.Sprintf("bypass %v %s", bypassLicenseCheck, test.name)
-			t.Run(name, func(t *testing.T) {
-				if test.module == "" {
-					test.module = internal.UnknownModulePath
-				}
-				if test.version == "" {
-					test.version = version.Latest
-				}
-				test.want = sample.UnitMeta(
-					test.path,
-					test.want.ModulePath,
-					test.want.Version,
-					test.want.Name,
-					test.want.IsRedistributable,
-				)
-				test.want.ModuleInfo.IsRedistributable = false
-				test.want.CommitTime = sample.CommitTime
-
-				var db *DB
-
-				if bypassLicenseCheck {
-					db = bypassDB
-				} else {
-					db = testDB
-				}
-
-				got, err := db.GetUnitMeta(ctx, test.path, test.module, test.version)
-				if err != nil {
-					t.Fatal(err)
-				}
-				opts := []cmp.Option{
-					cmpopts.EquateEmpty(),
-					cmpopts.IgnoreFields(licenses.Metadata{}, "Coverage"),
-					cmpopts.IgnoreFields(internal.UnitMeta{}, "HasGoMod"),
-					cmp.AllowUnexported(source.Info{}, safehtml.HTML{}),
-				}
-				if diff := cmp.Diff(test.want, got, opts...); diff != "" {
-					t.Errorf("mismatch (-want +got):\n%s", diff)
-				}
-			})
-		}
 	}
 }
 
@@ -935,12 +772,12 @@ func unitNoLicenses(fullPath, modulePath, version, name string, readme *internal
 				Version:           version,
 				IsRedistributable: true,
 			},
-			Path:              fullPath,
-			IsRedistributable: true,
-			Name:              name,
+			Path: fullPath,
+			Name: name,
 		},
-		LicenseContents: sample.Licenses(),
-		Readme:          readme,
+		IsRedistributable: true,
+		LicenseContents:   sample.Licenses(),
+		Readme:            readme,
 	}
 
 	u.Subdirectories = subdirectories(modulePath, suffixes)
@@ -996,6 +833,9 @@ func TestGetUnitBypass(t *testing.T) {
 		}
 		if got := (d.Documentation == nil); got != test.wantEmpty {
 			t.Errorf("doc empty: got %t, want %t", got, test.wantEmpty)
+		}
+		if got := d.IsRedistributable; got != !test.wantEmpty { // wantEmpty iff !IsRedistributable
+			t.Errorf("IsRedistributable is %v: want %v", got, !test.wantEmpty)
 		}
 		pkgs := d.Subdirectories
 		if len(pkgs) != 1 {

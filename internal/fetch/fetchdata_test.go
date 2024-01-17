@@ -858,15 +858,15 @@ var moduleStdMaster = &testModule{
 			Units: []*internal.Unit{
 				{
 					UnitMeta: internal.UnitMeta{
-						Path:              "errors",
-						Name:              "errors",
-						IsRedistributable: true,
+						Path: "errors",
+						Name: "errors",
 						ModuleInfo: internal.ModuleInfo{
 							Version:           stdlib.TestMasterVersion,
 							ModulePath:        stdlib.ModulePath,
 							IsRedistributable: true,
 						},
 					},
+					IsRedistributable: true,
 					Documentation: []*internal.Documentation{
 						{
 							GOOS:     internal.All,
@@ -890,14 +890,14 @@ var moduleStdMaster = &testModule{
 				},
 				{
 					UnitMeta: internal.UnitMeta{
-						Path:              "std",
-						IsRedistributable: true,
+						Path: "std",
 						ModuleInfo: internal.ModuleInfo{
 							Version:           stdlib.TestMasterVersion,
 							ModulePath:        "std",
 							IsRedistributable: true,
 						},
 					},
+					IsRedistributable: true,
 				},
 			},
 		},
@@ -933,9 +933,9 @@ var moduleStd = &testModule{
 			Units: []*internal.Unit{
 				{
 					UnitMeta: internal.UnitMeta{
-						Path:              "std",
-						IsRedistributable: true,
+						Path: "std",
 					},
+					IsRedistributable: true,
 				},
 				{
 					UnitMeta: internal.UnitMeta{

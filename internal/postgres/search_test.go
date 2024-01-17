@@ -310,9 +310,10 @@ func importGraph(popularPath, importerModule string, importerCount int) []*inter
 			name := fmt.Sprintf("importer%d", i)
 			fullPath := importerModule + "/" + name
 			u := &internal.Unit{
-				UnitMeta:      *sample.UnitMeta(fullPath, importerModule, m.Version, name, true),
-				Documentation: []*internal.Documentation{sample.Doc},
-				Imports:       []string{popularPath},
+				UnitMeta:          *sample.UnitMeta(fullPath, importerModule, m.Version, name, true),
+				IsRedistributable: true,
+				Documentation:     []*internal.Documentation{sample.Doc},
+				Imports:           []string{popularPath},
 			}
 			sample.AddUnit(m, u)
 		}
@@ -562,10 +563,10 @@ func TestInsertSearchDocumentAndSearch(t *testing.T) {
 		modGoCDK = "gocloud.dev"
 		pkgGoCDK = &internal.Unit{
 			UnitMeta: internal.UnitMeta{
-				Name:              "cloud",
-				Path:              "gocloud.dev/cloud",
-				IsRedistributable: true, // required because some test cases depend on the README contents
+				Name: "cloud",
+				Path: "gocloud.dev/cloud",
 			},
+			IsRedistributable: true, // required because some test cases depend on the README contents
 			Documentation: []*internal.Documentation{{
 				GOOS:     sample.GOOS,
 				GOARCH:   sample.GOARCH,
@@ -577,10 +578,10 @@ func TestInsertSearchDocumentAndSearch(t *testing.T) {
 		modKube = "k8s.io"
 		pkgKube = &internal.Unit{
 			UnitMeta: internal.UnitMeta{
-				Name:              "client-go",
-				Path:              "k8s.io/client-go",
-				IsRedistributable: true, // required because some test cases depend on the README contents
+				Name: "client-go",
+				Path: "k8s.io/client-go",
 			},
+			IsRedistributable: true, // required because some test cases depend on the README contents
 			Documentation: []*internal.Documentation{{
 				GOOS:     sample.GOOS,
 				GOARCH:   sample.GOARCH,

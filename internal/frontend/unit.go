@@ -181,7 +181,7 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 		}()
 	}
 
-	if !isValidTabForUnit(tab, um) {
+	if !isValidTabForUnit(tab, um, d) {
 		// Redirect to clean URL path when tab param is invalid for the unit
 		// type.
 		http.Redirect(w, r, r.URL.Path, http.StatusFound)
@@ -300,8 +300,8 @@ func metaDescription(synopsis string) safehtml.HTML {
 
 // isValidTabForUnit reports whether the tab is valid for the given unit.
 // It is assumed that tab is a key in unitTabLookup.
-func isValidTabForUnit(tab string, um *internal.UnitMeta) bool {
-	if tab == tabLicenses && !um.IsRedistributable {
+func isValidTabForUnit(tab string, um *internal.UnitMeta, details any) bool {
+	if tab == tabLicenses && !(details.(*LicensesDetails).IsRedistributable) {
 		return false
 	}
 	if !um.IsPackage() && (tab == tabImports || tab == tabImportedBy) {

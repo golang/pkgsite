@@ -179,7 +179,6 @@ func (ds *FakeDataSource) GetUnitMeta(ctx context.Context, path, requestedModule
 		return nil, derrors.NotFound
 	}
 	um.Name = u.Name
-	um.IsRedistributable = u.IsRedistributable
 	return um, nil
 }
 

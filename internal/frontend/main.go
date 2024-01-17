@@ -99,6 +99,9 @@ type MainDetails struct {
 
 	// IsStableVersion is true if the major version is v1 or greater.
 	IsStableVersion bool
+
+	// IsRedistributable is whether the unit is redistributable.
+	IsRedistributable bool
 }
 
 // File is a source file for a package.
@@ -224,6 +227,7 @@ func fetchMainDetails(ctx context.Context, ds internal.DataSource, um *internal.
 		ModFileURL:        um.SourceInfo.ModuleURL() + "/go.mod",
 		IsTaggedVersion:   isTaggedVersion,
 		IsStableVersion:   isStableVersion,
+		IsRedistributable: unit.IsRedistributable,
 	}, nil
 }
 

@@ -49,11 +49,11 @@ func moduleUnits(modulePath string, minfo internal.ModuleInfo,
 		}
 		dir := &internal.Unit{
 			UnitMeta: internal.UnitMeta{
-				ModuleInfo:        minfo,
-				Path:              dirPath,
-				IsRedistributable: isRedist,
+				ModuleInfo: minfo,
+				Path:       dirPath,
 			},
-			Licenses: meta,
+			Licenses:          meta,
+			IsRedistributable: isRedist,
 		}
 		if r, ok := readmeLookup[dirPath]; ok {
 			dir.Readme = r

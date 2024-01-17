@@ -24,7 +24,8 @@ type License struct {
 
 // LicensesDetails contains license information for a package or module.
 type LicensesDetails struct {
-	Licenses []License
+	IsRedistributable bool
+	Licenses          []License
 }
 
 // LicenseMetadata contains license metadata that is used in the package
@@ -37,11 +38,11 @@ type LicenseMetadata struct {
 // fetchLicensesDetails fetches license data for the package version specified by
 // path and version from the database and returns a LicensesDetails.
 func fetchLicensesDetails(ctx context.Context, ds internal.DataSource, um *internal.UnitMeta) (*LicensesDetails, error) {
-	u, err := ds.GetUnit(ctx, um, internal.WithLicenses, internal.BuildContext{})
+	u, err := ds.GetUnit(ctx, um, internal.WithMain|internal.WithLicenses, internal.BuildContext{})
 	if err != nil {
 		return nil, err
 	}
-	return &LicensesDetails{Licenses: transformLicenses(um.ModulePath, um.Version, u.LicenseContents)}, nil
+	return &LicensesDetails{IsRedistributable: u.IsRedistributable, Licenses: transformLicenses(um.ModulePath, um.Version, u.LicenseContents)}, nil
 }
 
 // transformLicenses transforms licenses.License into a License

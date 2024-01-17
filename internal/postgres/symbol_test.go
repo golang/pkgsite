@@ -391,7 +391,7 @@ func moduleWithSymbols(t *testing.T, version string, symbols []*internal.Symbol)
 func compareUnitSymbols(ctx context.Context, t *testing.T, testDB *DB,
 	path, modulePath, version string, wantBuildToSymbols map[internal.BuildContext][]*internal.Symbol) {
 	t.Helper()
-	unitID, err := testDB.getUnitID(ctx, path, modulePath, version)
+	unitID, _, err := testDB.getUnitID(ctx, path, modulePath, version)
 	if err != nil {
 		t.Fatal(err)
 	}
