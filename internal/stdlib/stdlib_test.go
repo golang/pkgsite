@@ -155,7 +155,6 @@ func TestContentDir(t *testing.T) {
 		"v1.3.2",
 		"v1.12.5",
 		"v1.14.6",
-		DevFuzz,
 		version.Master,
 	} {
 		t.Run(resolvedVersion, func(t *testing.T) {

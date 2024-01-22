@@ -29,16 +29,8 @@ import (
 	"golang.org/x/pkgsite/internal/version"
 )
 
-const (
-	// ModulePath is the name of the module for the standard library.
-	ModulePath = "std"
-
-	// DevFuzz is the branch name for fuzzing in beta.
-	DevFuzz = "dev.fuzz"
-
-	// DevBoringCrypto is the branch name for dev.boringcrypto.
-	DevBoringCrypto = "dev.boringcrypto"
-)
+// ModulePath is the name of the module for the standard library.
+const ModulePath = "std"
 
 var (
 	// Regexp for matching go tags. The groups are:
@@ -51,10 +43,10 @@ var (
 )
 
 // SupportedBranches are the branches of the stdlib repo supported by pkgsite.
+// This should always contain version.Master, and may sometimes have other
+// branches if they are experiments that are announced to the community.
 var SupportedBranches = map[string]bool{
-	version.Master:  true,
-	DevBoringCrypto: true,
-	DevFuzz:         true,
+	version.Master: true,
 }
 
 // VersionForTag returns the semantic version for the Go tag, or "" if
@@ -105,7 +97,7 @@ func VersionForTag(tag string) string {
 func TagForVersion(v string) (_ string, err error) {
 	defer derrors.Wrap(&err, "TagForVersion(%q)", v)
 
-	// Special case: master => master or dev.fuzz => dev.fuzz
+	// Special case: a supported branch name acts as its own tag.
 	if SupportedBranches[v] {
 		return v, nil
 	}
@@ -190,9 +182,8 @@ const (
 
 // TestCommitTime is the time used for all commits when UseTestData is true.
 var (
-	TestCommitTime     = time.Date(2019, 9, 4, 1, 2, 3, 0, time.UTC)
-	TestMasterVersion  = "v0.0.0-20190904010203-89fb59e2e920"
-	TestDevFuzzVersion = "v0.0.0-20190904010203-12de34vf56uz"
+	TestCommitTime    = time.Date(2019, 9, 4, 1, 2, 3, 0, time.UTC)
+	TestMasterVersion = "v0.0.0-20190904010203-89fb59e2e920"
 )
 
 var (
@@ -238,9 +229,6 @@ func SetGoRepoPath(path string) error {
 }
 
 func refNameForVersion(v string) (string, error) {
-	if v == version.Master {
-		return "HEAD", nil
-	}
 	if SupportedBranches[v] {
 		return "refs/heads/" + v, nil
 	}

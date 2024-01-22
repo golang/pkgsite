@@ -364,13 +364,6 @@ func TestDisplayVersion(t *testing.T) {
 			"go1.16",
 		},
 		{
-			"std @ dev.fuzz",
-			stdlib.ModulePath,
-			"dev.fuzz",
-			stdlib.TestMasterVersion,
-			"dev.fuzz (89fb59e)",
-		},
-		{
 			"github.com path @ latest is v1.5.2",
 			sample.ModulePath,
 			version.Latest,
@@ -436,13 +429,6 @@ func TestLinkVersion(t *testing.T) {
 			"v1.16.0",
 			"v1.16.0",
 			"go1.16",
-		},
-		{
-			"std @ dev.fuzz",
-			stdlib.ModulePath,
-			"dev.fuzz",
-			stdlib.TestMasterVersion,
-			"dev.fuzz",
 		},
 		{
 			"github.com path @ latest is v1.5.2",

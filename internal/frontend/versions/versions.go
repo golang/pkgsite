@@ -377,16 +377,9 @@ func DisplayVersion(modulePath, requestedVersion, resolvedVersion string) string
 		if stdlib.SupportedBranches[requestedVersion] ||
 			(strings.HasPrefix(resolvedVersion, "v0.0.0") && resolvedVersion != "v0.0.0") { // Plain v0.0.0 is from the go packages module getter
 			commit := strings.Split(resolvedVersion, "-")[2]
-			// If the resolvedVersion is a pseudoversion and the
-			// requestedVersion is not dev.fuzz, display "master (<commit>)".
-			// std doesn't have actual pseudoversions, so the only ones we
-			// support are "master" and "dev.fuzz".
-			v := version.Master
-			if requestedVersion == stdlib.DevFuzz ||
-				requestedVersion == stdlib.DevBoringCrypto {
-				v = requestedVersion
-			}
-			return fmt.Sprintf("%s (%s)", v, commit[0:7])
+			// If the resolvedVersion is a pseudoversion, display "master (<commit>)".
+			// std doesn't have actual pseudoversions, so the only one we support is "master".
+			return fmt.Sprintf("%s (%s)", version.Master, commit[0:7])
 		}
 		return goTagForVersion(resolvedVersion)
 	}

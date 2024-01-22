@@ -137,9 +137,6 @@ func (t *testGoRepo) clone(ctx context.Context, v, directory string) (hash strin
 	if v == TestMasterVersion {
 		v = version.Master
 	}
-	if v == TestDevFuzzVersion {
-		v = DevFuzz
-	}
 	cmd := exec.CommandContext(ctx, "git", "init")
 	cmd.Dir = directory
 	if err := cmd.Run(); err != nil {
