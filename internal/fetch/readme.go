@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
+	"os"
 	"path"
 	"strings"
 
@@ -21,60 +22,101 @@ import (
 func extractReadmes(modulePath, resolvedVersion string, contentDir fs.FS) (_ []*internal.Readme, err error) {
 	defer derrors.Wrap(&err, "extractReadmes(ctx, %q, %q, r)", modulePath, resolvedVersion)
 
-	// The key is the README directory. Since we only store one README file per
-	// directory, we use this below to prioritize READMEs in markdown.
-	readmes := map[string]*internal.Readme{}
-	var skipPaths = []string{"_"}
+	var readmes []*internal.Readme
 	err = fs.WalkDir(contentDir, ".", func(pathname string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
-		for _, sp := range skipPaths {
-			// if the name of the folder has a prefix listed in skipPaths
-			// then we should skip the directory.
-			// e.g.  _foo
-			if strings.HasPrefix(pathname, sp) {
-				return fs.SkipDir
-			}
+
+		if !d.IsDir() {
+			return nil
 		}
 
-		if !d.IsDir() && isReadme(pathname) {
-			info, err := d.Info()
-			if err != nil {
-				return err
-			}
-			if info.Size() > MaxFileSize {
-				return fmt.Errorf("file size %d exceeds max limit %d: %w", info.Size(), MaxFileSize, derrors.ModuleTooLarge)
-			}
-			c, err := readFSFile(contentDir, pathname, MaxFileSize)
-			if err != nil {
-				return err
-			}
-
-			key := path.Dir(pathname)
-			if r, ok := readmes[key]; ok {
-				// Prefer READMEs written in markdown, since we style these on
-				// the frontend.
-				ext := path.Ext(r.Filepath)
-				if ext == ".md" || ext == ".markdown" {
-					return nil
-				}
-			}
-			readmes[key] = &internal.Readme{
-				Filepath: pathname,
-				Contents: string(c),
-			}
+		readme, err := extractReadme(modulePath, path.Join(modulePath, pathname), resolvedVersion, contentDir)
+		if err != nil {
+			return err
 		}
+		if readme == nil {
+			// no readme for the directory
+			return nil
+		}
+		readmes = append(readmes, readme)
 		return nil
 	})
 	if err != nil && !errors.Is(err, fs.ErrNotExist) { // we can get NotExist on an empty FS {
 		return nil, err
 	}
-	var rs []*internal.Readme
-	for _, r := range readmes {
-		rs = append(rs, r)
+	return readmes, nil
+}
+
+// rel returns the relative path from the modulePath to the pkgPath
+// returning "." if they're the same.
+func rel(pkgPath, modulePath string) string {
+	suff := internal.Suffix(pkgPath, modulePath)
+	if suff == "" {
+		return "."
 	}
-	return rs, nil
+	return suff
+}
+
+// extractReadme returns the file path and contents the unit's README,
+// if there is one. dir is the directory path prefixed with the modulePath.
+func extractReadme(modulePath, dir, resolvedVersion string, contentDir fs.FS) (_ *internal.Readme, err error) {
+	defer derrors.Wrap(&err, "extractReadme(ctx, %q, %q %q, r)", modulePath, dir, resolvedVersion)
+
+	innerPath := rel(dir, modulePath)
+	if strings.HasPrefix(innerPath, "_") {
+		// TODO(matloob): do we want to check each element of the path?
+		// The original code didn't.
+		return nil, nil
+	}
+
+	f, err := contentDir.Open(innerPath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	rdf, ok := f.(fs.ReadDirFile)
+	if !ok {
+		return nil, fmt.Errorf("could not open directory for %v", dir)
+	}
+	entries, err := rdf.ReadDir(0)
+	if err != nil {
+		return nil, err
+	}
+	var readme *internal.Readme
+	for _, e := range entries {
+		pathname := path.Join(innerPath, e.Name())
+		if !e.IsDir() && isReadme(pathname) {
+			info, err := e.Info()
+			if err != nil {
+				return nil, err
+			}
+			if info.Size() > MaxFileSize {
+				return nil, fmt.Errorf("file size %d exceeds max limit %d: %w", info.Size(), MaxFileSize, derrors.ModuleTooLarge)
+			}
+			c, err := readFSFile(contentDir, pathname, MaxFileSize)
+			if err != nil {
+				return nil, err
+			}
+
+			if readme != nil {
+				// Prefer READMEs written in markdown, since we style these on
+				// the frontend.
+				ext := path.Ext(readme.Filepath)
+				if ext == ".md" || ext == ".markdown" {
+					continue
+				}
+			}
+			readme = &internal.Readme{
+				Filepath: pathname,
+				Contents: string(c),
+			}
+		}
+	}
+	return readme, nil
 }
 
 var excludedReadmeExts = map[string]bool{".go": true, ".vendor": true}
