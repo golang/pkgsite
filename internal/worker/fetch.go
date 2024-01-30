@@ -90,7 +90,9 @@ var (
 // fetchTask represents the result of a fetch task that was processed.
 type fetchTask struct {
 	fetch.FetchResult
-	timings map[string]time.Duration
+	MainVersion   string
+	MasterVersion string
+	timings       map[string]time.Duration
 }
 
 // A Fetcher holds state for fetching modules.

@@ -13,71 +13,70 @@ import (
 	"golang.org/x/pkgsite/internal/stdlib"
 )
 
-// moduleUnits returns all of the units in a given module, along
-// with the contents for those units.
-func moduleUnits(modulePath string, minfo internal.ModuleInfo,
-	pkgs []*goPackage,
-	readmes []*internal.Readme,
-	d *licenses.Detector) []*internal.Unit {
-	pkgLookup := map[string]*goPackage{}
+// moduleUnit returns the requested unit in a given module, along
+// with the contents for the unit.
+func moduleUnit(modulePath string, unitMeta *internal.UnitMeta,
+	pkg *goPackage,
+	readme *internal.Readme,
+	d *licenses.Detector) *internal.Unit {
+
+	suffix := internal.Suffix(unitMeta.Path, modulePath)
+	if modulePath == stdlib.ModulePath {
+		suffix = unitMeta.Path
+	}
+	isRedist, lics := d.PackageInfo(suffix)
+	var meta []*licenses.Metadata
+	for _, l := range lics {
+		meta = append(meta, l.Metadata)
+	}
+	unit := &internal.Unit{
+		UnitMeta:          *unitMeta,
+		Licenses:          meta,
+		IsRedistributable: isRedist,
+	}
+	if readme != nil {
+		unit.Readme = readme
+	}
+	if pkg != nil {
+		unit.Name = pkg.name
+		unit.Imports = pkg.imports
+		unit.Documentation = pkg.docs
+		var bcs []internal.BuildContext
+		for _, d := range unit.Documentation {
+			bcs = append(bcs, internal.BuildContext{GOOS: d.GOOS, GOARCH: d.GOARCH})
+		}
+		sort.Slice(bcs, func(i, j int) bool {
+			return internal.CompareBuildContexts(bcs[i], bcs[j]) < 0
+		})
+		unit.BuildContexts = bcs
+	}
+	return unit
+}
+
+// moduleUnitMetas returns UnitMetas for all the units in a given module.
+func moduleUnitMetas(minfo internal.ModuleInfo, pkgs []*packageMeta) []*internal.UnitMeta {
+	pkgLookup := map[string]*packageMeta{}
 	for _, pkg := range pkgs {
 		pkgLookup[pkg.path] = pkg
 	}
-	dirPaths := unitPaths(modulePath, pkgs)
+	dirPaths := unitPaths(minfo.ModulePath, pkgs)
 
-	readmeLookup := map[string]*internal.Readme{}
-	for _, readme := range readmes {
-		if path.Dir(readme.Filepath) == "." {
-			readmeLookup[modulePath] = readme
-		} else if modulePath == stdlib.ModulePath {
-			readmeLookup[path.Dir(readme.Filepath)] = readme
-		} else {
-			readmeLookup[path.Join(modulePath, path.Dir(readme.Filepath))] = readme
-		}
-	}
-
-	var units []*internal.Unit
+	var ums []*internal.UnitMeta
 	for _, dirPath := range dirPaths {
-		suffix := internal.Suffix(dirPath, modulePath)
-		if modulePath == stdlib.ModulePath {
-			suffix = dirPath
-		}
-		isRedist, lics := d.PackageInfo(suffix)
-		var meta []*licenses.Metadata
-		for _, l := range lics {
-			meta = append(meta, l.Metadata)
-		}
-		dir := &internal.Unit{
-			UnitMeta: internal.UnitMeta{
-				ModuleInfo: minfo,
-				Path:       dirPath,
-			},
-			Licenses:          meta,
-			IsRedistributable: isRedist,
-		}
-		if r, ok := readmeLookup[dirPath]; ok {
-			dir.Readme = r
+		um := &internal.UnitMeta{
+			ModuleInfo: minfo,
+			Path:       dirPath,
 		}
 		if pkg, ok := pkgLookup[dirPath]; ok {
-			dir.Name = pkg.name
-			dir.Imports = pkg.imports
-			dir.Documentation = pkg.docs
-			var bcs []internal.BuildContext
-			for _, d := range dir.Documentation {
-				bcs = append(bcs, internal.BuildContext{GOOS: d.GOOS, GOARCH: d.GOARCH})
-			}
-			sort.Slice(bcs, func(i, j int) bool {
-				return internal.CompareBuildContexts(bcs[i], bcs[j]) < 0
-			})
-			dir.BuildContexts = bcs
+			um.Name = pkg.name
 		}
-		units = append(units, dir)
+		ums = append(ums, um)
 	}
-	return units
+	return ums
 }
 
 // unitPaths returns the paths for all the units in a module.
-func unitPaths(modulePath string, packages []*goPackage) []string {
+func unitPaths(modulePath string, packageMetas []*packageMeta) []string {
 	shouldContinue := func(p string) bool {
 		if modulePath == stdlib.ModulePath {
 			return p != "."
@@ -86,7 +85,7 @@ func unitPaths(modulePath string, packages []*goPackage) []string {
 	}
 
 	pathSet := map[string]bool{modulePath: true}
-	for _, p := range packages {
+	for _, p := range packageMetas {
 		for p := p.path; shouldContinue(p); p = path.Dir(p) {
 			pathSet[p] = true
 		}

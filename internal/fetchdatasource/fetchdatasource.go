@@ -60,14 +60,14 @@ func (o Options) New() *FetchDataSource {
 // cacheEntry holds a fetched module or an error, if the fetch failed.
 type cacheEntry struct {
 	g      fetch.ModuleGetter
-	module *internal.Module
+	module *fetch.LazyModule
 	err    error
 }
 
 const maxCachedModules = 100
 
 // cacheGet returns information from the cache if it is present, and (nil, nil) otherwise.
-func (ds *FetchDataSource) cacheGet(path, version string) (fetch.ModuleGetter, *internal.Module, error) {
+func (ds *FetchDataSource) cacheGet(path, version string) (fetch.ModuleGetter, *fetch.LazyModule, error) {
 	// Look for an exact match first, then use LocalVersion, as for a
 	// directory-based or GOPATH-mode module.
 	for _, v := range []string{version, fetch.LocalVersion} {
@@ -79,13 +79,13 @@ func (ds *FetchDataSource) cacheGet(path, version string) (fetch.ModuleGetter, *
 }
 
 // cachePut puts information into the cache.
-func (ds *FetchDataSource) cachePut(g fetch.ModuleGetter, path, version string, m *internal.Module, err error) {
+func (ds *FetchDataSource) cachePut(g fetch.ModuleGetter, path, version string, m *fetch.LazyModule, err error) {
 	ds.cache.Put(internal.Modver{Path: path, Version: version}, cacheEntry{g, m, err})
 }
 
 // getModule gets the module at the given path and version. It first checks the
 // cache, and if it isn't there it then tries to fetch it.
-func (ds *FetchDataSource) getModule(ctx context.Context, modulePath, vers string) (_ *internal.Module, err error) {
+func (ds *FetchDataSource) getModule(ctx context.Context, modulePath, vers string) (_ *fetch.LazyModule, err error) {
 	defer derrors.Wrap(&err, "FetchDataSource.getModule(%q, %q)", modulePath, vers)
 
 	g, mod, err := ds.cacheGet(modulePath, vers)
@@ -121,13 +121,6 @@ func (ds *FetchDataSource) getModule(ctx context.Context, modulePath, vers strin
 			lmv.PopulateModuleInfo(&m.ModuleInfo)
 		}
 	}
-	// Populate unit subdirectories. When we use a database, this only happens when we read
-	// a unit from the DB.
-	if m != nil {
-		for _, u := range m.Units {
-			ds.populateUnitSubdirectories(u, m)
-		}
-	}
 
 	// Cache both successes and failures, but not cancellations.
 	if !errors.Is(err, context.Canceled) {
@@ -143,47 +136,35 @@ func (ds *FetchDataSource) getModule(ctx context.Context, modulePath, vers strin
 
 // fetch fetches a module using the configured ModuleGetters.
 // It tries each getter in turn until it finds one that has the module.
-func (ds *FetchDataSource) fetch(ctx context.Context, modulePath, version string) (_ *internal.Module, g fetch.ModuleGetter, err error) {
+func (ds *FetchDataSource) fetch(ctx context.Context, modulePath, version string) (_ *fetch.LazyModule, g fetch.ModuleGetter, err error) {
 	log.Infof(ctx, "FetchDataSource: fetching %s@%s", modulePath, version)
 	start := time.Now()
 	defer func() {
 		log.Infof(ctx, "FetchDataSource: fetched %s@%s using %T in %s with error %v", modulePath, version, g, time.Since(start), err)
 	}()
 	for _, g := range ds.opts.Getters {
-		fr := fetch.FetchModule(ctx, modulePath, version, g)
-		if fr.Error == nil {
-			m := fr.Module
+		m := fetch.FetchLazyModule(ctx, modulePath, version, g)
+		if m.Error == nil {
 			if ds.opts.BypassLicenseCheck {
 				m.IsRedistributable = true
-				for _, unit := range m.Units {
-					unit.IsRedistributable = true
-				}
-			} else {
-				m.RemoveNonRedistributableData()
 			}
 			return m, g, nil
 		}
-		if !errors.Is(fr.Error, derrors.NotFound) {
-			return nil, g, fr.Error
+		if !errors.Is(m.Error, derrors.NotFound) {
+			return nil, g, m.Error
 		}
 	}
 	return nil, nil, fmt.Errorf("%s@%s: %w", modulePath, version, derrors.NotFound)
 }
 
-func (ds *FetchDataSource) populateUnitSubdirectories(u *internal.Unit, m *internal.Module) {
+func (ds *FetchDataSource) populateUnitSubdirectories(u *internal.Unit, m *fetch.LazyModule) {
 	p := u.Path + "/"
-	for _, u2 := range m.Units {
+	for _, u2 := range m.UnitMetas {
 		if strings.HasPrefix(u2.Path, p) || u.Path == "std" {
-			var syn string
-			if len(u2.Documentation) > 0 {
-				syn = u2.Documentation[0].Synopsis
-			}
 			u.Subdirectories = append(u.Subdirectories, &internal.PackageMeta{
-				Path:              u2.Path,
-				Name:              u2.Name,
-				Synopsis:          syn,
-				IsRedistributable: u2.IsRedistributable,
-				Licenses:          u2.Licenses,
+				Path: u2.Path,
+				Name: u2.Name,
+				// Syn, IsRedistributable, and Licences are not populated from FetchDataSource.
 			})
 		}
 	}
@@ -191,7 +172,7 @@ func (ds *FetchDataSource) populateUnitSubdirectories(u *internal.Unit, m *inter
 
 // findModule finds the module with longest module path containing the given
 // package path. It returns an error if no module is found.
-func (ds *FetchDataSource) findModule(ctx context.Context, pkgPath, modulePath, version string) (_ *internal.Module, err error) {
+func (ds *FetchDataSource) findModule(ctx context.Context, pkgPath, modulePath, version string) (_ *fetch.LazyModule, err error) {
 	defer derrors.Wrap(&err, "FetchDataSource.findModule(%q, %q, %q)", pkgPath, modulePath, version)
 
 	if modulePath != internal.UnknownModulePath {
@@ -218,16 +199,7 @@ func (ds *FetchDataSource) GetUnitMeta(ctx context.Context, path, requestedModul
 	if err != nil {
 		return nil, err
 	}
-	um := &internal.UnitMeta{
-		Path:       path,
-		ModuleInfo: module.ModuleInfo,
-	}
-	u := findUnit(module, path)
-	if u == nil {
-		return nil, derrors.NotFound
-	}
-	um.Name = u.Name
-	return um, nil
+	return findUnitMeta(module, path)
 }
 
 // GetUnit returns information about a unit. Both the module path and package
@@ -239,7 +211,7 @@ func (ds *FetchDataSource) GetUnit(ctx context.Context, um *internal.UnitMeta, f
 	if err != nil {
 		return nil, err
 	}
-	u := findUnit(m, um.Path)
+	u, err := ds.findUnit(ctx, m, um.Path)
 	if u == nil {
 		return nil, fmt.Errorf("import path %s not found in module %s: %w", um.Path, um.ModulePath, derrors.NotFound)
 	}
@@ -256,13 +228,27 @@ func (ds *FetchDataSource) GetUnit(ctx context.Context, um *internal.UnitMeta, f
 }
 
 // findUnit returns the unit with the given path in m, or nil if none.
-func findUnit(m *internal.Module, path string) *internal.Unit {
-	for _, u := range m.Units {
-		if u.Path == path {
-			return u
+func (ds *FetchDataSource) findUnit(ctx context.Context, m *fetch.LazyModule, path string) (*internal.Unit, error) {
+	unit, err := m.Unit(ctx, path)
+	ds.populateUnitSubdirectories(unit, m)
+	if err != nil {
+		return nil, err
+	}
+	if ds.opts.BypassLicenseCheck {
+		unit.IsRedistributable = true
+	} else {
+		unit.RemoveNonRedistributableData()
+	}
+	return unit, nil
+}
+
+func findUnitMeta(m *fetch.LazyModule, path string) (*internal.UnitMeta, error) {
+	for _, um := range m.UnitMetas {
+		if um.Path == path {
+			return um, nil
 		}
 	}
-	return nil
+	return nil, derrors.NotFound
 }
 
 // matchingDoc returns the Documentation that matches the given build context

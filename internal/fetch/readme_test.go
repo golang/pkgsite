@@ -8,7 +8,6 @@ import (
 	"context"
 	"errors"
 	"io/fs"
-	"sort"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -19,70 +18,63 @@ import (
 	"golang.org/x/pkgsite/internal/testenv"
 )
 
-func TestExtractReadmes(t *testing.T) {
+func TestExtractReadme(t *testing.T) {
 	testenv.MustHaveExecPath(t, "git")
 	defer stdlib.WithTestData()()
 
 	ctx := context.Background()
 
-	sortReadmes := func(readmes []*internal.Readme) {
-		sort.Slice(readmes, func(i, j int) bool {
-			return readmes[i].Filepath < readmes[j].Filepath
-		})
-	}
-
 	for _, test := range []struct {
-		name, modulePath, version string
-		files                     map[string]string
-		want                      []*internal.Readme
+		name, modulePath, pkgPath, version string
+		files                              map[string]string
+		want                               *internal.Readme
 	}{
 		{
 			name:       "README at root and README in unit and README in _",
 			modulePath: stdlib.ModulePath,
+			pkgPath:    "cmd/pprof",
 			version:    "v1.12.5",
-			want: []*internal.Readme{
-				{
-					Filepath: "cmd/pprof/README",
-					Contents: "This directory is the copy of Google's pprof shipped as part of the Go distribution.\n",
-				},
+			want: &internal.Readme{
+				Filepath: "cmd/pprof/README",
+				Contents: "This directory is the copy of Google's pprof shipped as part of the Go distribution.\n",
 			},
 		},
 		{
 			name:       "directory start with _",
 			modulePath: "github.com/my/module",
+			pkgPath:    "github.com/my/module/_foo",
 			version:    "v1.0.0",
 			files: map[string]string{
 				"_foo/README.md": "README",
 			},
+			want: nil,
 		},
 		{
 			name:       "prefer README.md",
 			modulePath: "github.com/my/module",
+			pkgPath:    "github.com/my/module/foo",
 			version:    "v1.0.0",
 			files: map[string]string{
 				"foo/README":    "README",
 				"foo/README.md": "README",
 			},
-			want: []*internal.Readme{
-				{
-					Filepath: "foo/README.md",
-					Contents: "README",
-				},
+			want: &internal.Readme{
+				Filepath: "foo/README.md",
+				Contents: "README",
 			},
 		},
 		{
 			name:       "prefer readme.markdown",
 			modulePath: "github.com/my/module",
+			pkgPath:    "github.com/my/module/foo",
 			version:    "v1.0.0",
 			files: map[string]string{
 				"foo/README.markdown": "README",
 				"foo/readme.rst":      "README",
 			},
-			want: []*internal.Readme{
-				{
-					Filepath: "foo/README.markdown",
-					Contents: "README",
-				},
+			want: &internal.Readme{
+				Filepath: "foo/README.markdown",
+				Contents: "README",
 			},
 		},
 		{
@@ -98,6 +90,7 @@ func TestExtractReadmes(t *testing.T) {
 			files: map[string]string{
 				"foo/README/bar": "README",
 			},
+			want: nil,
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
@@ -123,13 +116,11 @@ func TestExtractReadmes(t *testing.T) {
 					t.Fatal(err)
 				}
 			}
-			got, err := extractReadmes(test.modulePath, test.version, contentDir)
+			got, err := extractReadme(test.modulePath, test.pkgPath, test.version, contentDir)
 			if err != nil {
 				t.Fatal(err)
 			}
 
-			sortReadmes(test.want)
-			sortReadmes(got)
 			if diff := cmp.Diff(test.want, got); diff != "" {
 				t.Errorf("mismatch (-want +got):\n%s", diff)
 			}
@@ -142,6 +133,7 @@ func TestExtractReadmesError(t *testing.T) {
 
 	var (
 		modulePath = "github.com/my/module"
+		pkgPath    = "github.com/my/module/foo"
 		version    = "v1.0.0"
 		files      = map[string]string{
 			"foo/README.md": string(make([]byte, MaxFileSize+100)),
@@ -162,7 +154,7 @@ func TestExtractReadmesError(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	got, err := extractReadmes(modulePath, version, contentDir)
+	got, err := extractReadme(modulePath, pkgPath, version, contentDir)
 	if err == nil {
 		t.Fatalf("want error, got %v", cmp.Diff([]*internal.Readme{}, got))
 	}

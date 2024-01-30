@@ -41,8 +41,108 @@ type goPackage struct {
 	err    error                     // non-fatal error when loading the package (e.g. documentation is too large)
 }
 
-// extractPackages returns a slice of packages from a filesystem arranged like a
-// module zip.
+// rel returns the relative path from the modulePath to the pkgPath
+// returning "." if they're the same.
+func rel(pkgPath, modulePath string) string {
+	suff := internal.Suffix(pkgPath, modulePath)
+	if suff == "" {
+		return "."
+	}
+	return suff
+}
+
+// extractPackage returns a package from a filesystem arranged like a module zip.
+// It matches against the given licenses to determine the subset of licenses
+// that applies to each package.
+// It returns a packageVersionState representing the status of doing the work
+// of computing the package after the UnitMeta was computed. The packageVersionState
+// of a package that failed to have a UnitMeta produced was produced by extractPackageMetas.
+func extractPackage(ctx context.Context, modulePath, pkgPath string, contentDir fs.FS, d *licenses.Detector, sourceInfo *source.Info, modInfo *godoc.ModuleInfo) (*goPackage, *internal.PackageVersionState, error) {
+	innerPath := rel(pkgPath, modulePath)
+	f, err := contentDir.Open(innerPath)
+	if err != nil {
+		return nil, nil, err
+	}
+	dir, ok := f.(fs.ReadDirFile)
+	if !ok {
+		return nil, nil, fmt.Errorf("file is not a directory")
+	}
+	entries, err := dir.ReadDir(0)
+	if err != nil {
+		panic(err)
+	}
+	var goFiles []string
+	for _, e := range entries {
+		if e.IsDir() {
+			continue
+		}
+		if !strings.HasSuffix(e.Name(), ".go") {
+			// We care about .go files only.
+			continue
+		}
+		goFiles = append(goFiles, path.Join(innerPath, e.Name()))
+	}
+	if len(goFiles) == 0 {
+		// This is a unit but not a package, so return a nil package
+		// for it.
+		return nil, nil, nil
+	}
+
+	var (
+		status error
+		errMsg string
+	)
+	pkg, err := loadPackage(ctx, contentDir, goFiles, innerPath, sourceInfo, modInfo)
+	if bpe := (*BadPackageError)(nil); errors.As(err, &bpe) {
+		log.Infof(ctx, "Error loading %s: %v", innerPath, err)
+		status = derrors.PackageInvalidContents
+		errMsg = err.Error()
+	} else if err != nil {
+		return nil, nil, fmt.Errorf("unexpected error loading package: %v", err)
+	}
+
+	if pkg == nil {
+		// No package.
+		if len(goFiles) > 0 {
+			// There were go files, but no build contexts matched them.
+			status = derrors.PackageBuildContextNotSupported
+		}
+	} else {
+		if errors.Is(pkg.err, godoc.ErrTooLarge) {
+			status = derrors.PackageDocumentationHTMLTooLarge
+			errMsg = pkg.err.Error()
+		} else if pkg.err != nil {
+			// ErrTooLarge is the only valid value of pkg.err.
+			return nil, nil, fmt.Errorf("bad package error for %s: %v", pkg.path, pkg.err)
+		}
+		if d != nil { //  should only be nil for tests
+			isRedist, lics := d.PackageInfo(innerPath)
+			pkg.isRedistributable = isRedist
+			for _, l := range lics {
+				pkg.licenseMeta = append(pkg.licenseMeta, l.Metadata)
+			}
+		}
+	}
+
+	pvs := &internal.PackageVersionState{
+		ModulePath:  modulePath,
+		PackagePath: pkgPath,
+		Version:     modInfo.ResolvedVersion,
+		Status:      derrors.ToStatus(status),
+		Error:       errMsg,
+	}
+
+	return pkg, pvs, nil
+}
+
+type packageMeta struct {
+	path string
+	name string
+}
+
+// extractPackageMetas returns a slice of packageMetas containing only the information
+// needed to produce a UnitMeta from filesystem arranged like a module zip. extractPackage
+// does the work to complete the package with all the information needed for a Unit.
 // It matches against the given licenses to determine the subset of licenses
 // that applies to each package.
 // The second return value says whether any packages are "incomplete," meaning
@@ -51,7 +151,7 @@ type goPackage struct {
 // * a maximum file size (MaxFileSize)
 // * the particular set of build contexts we consider (goEnvs)
 // * whether the import path is valid.
-func extractPackages(ctx context.Context, modulePath, resolvedVersion string, contentDir fs.FS, d *licenses.Detector, sourceInfo *source.Info) (_ []*goPackage, _ []*internal.PackageVersionState, err error) {
+func extractPackageMetas(ctx context.Context, modulePath, resolvedVersion string, contentDir fs.FS) (_ []*packageMeta, _ *godoc.ModuleInfo, _ []*internal.PackageVersionState, err error) {
 	defer derrors.Wrap(&err, "extractPackages(ctx, %q, %q, r, d)", modulePath, resolvedVersion)
 	ctx, span := trace.StartSpan(ctx, "fetch.extractPackages")
 	defer span.End()
@@ -167,10 +267,10 @@ func extractPackages(ctx context.Context, modulePath, resolvedVersion string, co
 		return nil
 	})
 	if errors.Is(err, fs.ErrNotExist) {
-		return nil, nil, fmt.Errorf("no files: %w", ErrModuleContainsNoPackages)
+		return nil, nil, nil, fmt.Errorf("no files: %w", ErrModuleContainsNoPackages)
 	}
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 
 	for pkgName := range dirs {
@@ -181,12 +281,13 @@ func extractPackages(ctx context.Context, modulePath, resolvedVersion string, co
 	// If we got this far, the file metadata was okay.
 	// Start reading the file contents now to extract information
 	// about Go packages.
-	var pkgs []*goPackage
-	var mu sync.Mutex // gards pkgs, incompleteDirs, packageVersionStates
+	var pkgs []*packageMeta
+	var mu sync.Mutex // guards pkgs, incompleteDirs, packageVersionStates
 	var errgroup errgroup.Group
 	for innerPath, goFiles := range dirs {
 		innerPath, goFiles := innerPath, goFiles
 		errgroup.Go(func() error {
+			var addedPackage bool
 			mu.Lock()
 			incomplete := incompleteDirs[innerPath]
 			mu.Unlock()
@@ -200,7 +301,7 @@ func extractPackages(ctx context.Context, modulePath, resolvedVersion string, co
 				status error
 				errMsg string
 			)
-			pkg, err := loadPackage(ctx, contentDir, goFiles, innerPath, sourceInfo, modInfo)
+			pkg, err := loadPackageMeta(ctx, contentDir, goFiles, innerPath, modInfo)
 			if bpe := (*BadPackageError)(nil); errors.As(err, &bpe) {
 				log.Infof(ctx, "Error loading %s: %v", innerPath, err)
 				mu.Lock()
@@ -223,48 +324,36 @@ func extractPackages(ctx context.Context, modulePath, resolvedVersion string, co
 				}
 				pkgPath = path.Join(modulePath, innerPath)
 			} else {
-				if errors.Is(pkg.err, godoc.ErrTooLarge) {
-					status = derrors.PackageDocumentationHTMLTooLarge
-					errMsg = pkg.err.Error()
-				} else if pkg.err != nil {
-					// ErrTooLarge is the only valid value of pkg.err.
-					return fmt.Errorf("bad package error for %s: %v", pkg.path, pkg.err)
-				}
-				if d != nil { //  should only be nil for tests
-					isRedist, lics := d.PackageInfo(innerPath)
-					pkg.isRedistributable = isRedist
-					for _, l := range lics {
-						pkg.licenseMeta = append(pkg.licenseMeta, l.Metadata)
-					}
-				}
-
 				mu.Lock()
 				pkgs = append(pkgs, pkg)
 				mu.Unlock()
+				addedPackage = true
 				pkgPath = pkg.path
 			}
-			mu.Lock()
-			packageVersionStates = append(packageVersionStates, &internal.PackageVersionState{
-				ModulePath:  modulePath,
-				PackagePath: pkgPath,
-				Version:     resolvedVersion,
-				Status:      derrors.ToStatus(status),
-				Error:       errMsg,
-			})
-			mu.Unlock()
+			if !addedPackage {
+				mu.Lock()
+				packageVersionStates = append(packageVersionStates, &internal.PackageVersionState{
+					ModulePath:  modulePath,
+					PackagePath: pkgPath,
+					Version:     resolvedVersion,
+					Status:      derrors.ToStatus(status),
+					Error:       errMsg,
+				})
+				mu.Unlock()
+			}
 
 			return nil
 		})
 	}
 
 	if err := errgroup.Wait(); err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 
 	if len(pkgs) == 0 {
-		return nil, packageVersionStates, ErrModuleContainsNoPackages
+		return nil, nil, packageVersionStates, ErrModuleContainsNoPackages
 	}
-	return pkgs, packageVersionStates, nil
+	return pkgs, modInfo, packageVersionStates, nil
 }
 
 // ignoredByGoTool reports whether the given import path corresponds

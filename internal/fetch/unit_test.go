@@ -10,9 +10,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/stdlib"
-	"golang.org/x/pkgsite/internal/testing/sample"
 )
 
 func TestDirectoryPaths(t *testing.T) {
@@ -58,9 +56,9 @@ func TestDirectoryPaths(t *testing.T) {
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			var packages []*goPackage
+			var packages []*packageMeta
 			for _, suffix := range test.packageSuffixes {
-				packages = append(packages, samplePackage(test.modulePath, suffix))
+				packages = append(packages, samplePackageMeta(test.modulePath, suffix))
 			}
 			got := unitPaths(test.modulePath, packages)
 			sort.Strings(got)
@@ -79,20 +77,11 @@ func TestDirectoryPaths(t *testing.T) {
 // is the concatenation of modulePath and suffix.
 //
 // The package name is last component of the package path.
-func samplePackage(modulePath, suffix string) *goPackage {
+func samplePackageMeta(modulePath, suffix string) *packageMeta {
 	p := constructFullPath(modulePath, suffix)
-	return &goPackage{
-		name:              path.Base(p),
-		path:              p,
-		v1path:            internal.V1Path(p, modulePath),
-		isRedistributable: true,
-		licenseMeta:       sample.LicenseMetadata(),
-		imports:           sample.Imports(),
-		docs: []*internal.Documentation{{
-			GOOS:     sample.GOOS,
-			GOARCH:   sample.GOARCH,
-			Synopsis: sample.Doc.Synopsis,
-		}},
+	return &packageMeta{
+		name: path.Base(p),
+		path: p,
 	}
 }
 

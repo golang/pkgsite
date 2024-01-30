@@ -6,7 +6,6 @@
 package fetch
 
 import (
-	"errors"
 	"fmt"
 	"io/fs"
 	"os"
@@ -16,48 +15,6 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 )
-
-// extractReadmes returns the file path and contents of all files from r
-// that are README files.
-func extractReadmes(modulePath, resolvedVersion string, contentDir fs.FS) (_ []*internal.Readme, err error) {
-	defer derrors.Wrap(&err, "extractReadmes(ctx, %q, %q, r)", modulePath, resolvedVersion)
-
-	var readmes []*internal.Readme
-	err = fs.WalkDir(contentDir, ".", func(pathname string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-
-		if !d.IsDir() {
-			return nil
-		}
-
-		readme, err := extractReadme(modulePath, path.Join(modulePath, pathname), resolvedVersion, contentDir)
-		if err != nil {
-			return err
-		}
-		if readme == nil {
-			// no readme for the directory
-			return nil
-		}
-		readmes = append(readmes, readme)
-		return nil
-	})
-	if err != nil && !errors.Is(err, fs.ErrNotExist) { // we can get NotExist on an empty FS {
-		return nil, err
-	}
-	return readmes, nil
-}
-
-// rel returns the relative path from the modulePath to the pkgPath
-// returning "." if they're the same.
-func rel(pkgPath, modulePath string) string {
-	suff := internal.Suffix(pkgPath, modulePath)
-	if suff == "" {
-		return "."
-	}
-	return suff
-}
 
 // extractReadme returns the file path and contents the unit's README,
 // if there is one. dir is the directory path prefixed with the modulePath.

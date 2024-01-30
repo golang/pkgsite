@@ -58,6 +58,7 @@ func cleanFetchResult(t *testing.T, fr *FetchResult) *FetchResult {
 				ModulePath:        fr.Module.ModulePath,
 				Version:           fr.Module.Version,
 				IsRedistributable: fr.Module.IsRedistributable,
+				HasGoMod:          fr.Module.HasGoMod,
 			},
 			Path: u.Path,
 			Name: u.Name,

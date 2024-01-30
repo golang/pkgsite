@@ -560,13 +560,13 @@ func TestBuildConstraints(t *testing.T) {
 
 func TestCache(t *testing.T) {
 	ds := Options{}.New()
-	m1 := &internal.Module{}
+	m1 := &fetch.LazyModule{}
 	ds.cachePut(nil, "m1", fetch.LocalVersion, m1, nil)
 	ds.cachePut(nil, "m2", "v1.0.0", nil, derrors.NotFound)
 
 	for _, test := range []struct {
 		path, version string
-		wantm         *internal.Module
+		wantm         *fetch.LazyModule
 		wante         error
 	}{
 		{"m1", fetch.LocalVersion, m1, nil},
