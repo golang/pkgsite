@@ -113,9 +113,6 @@ func fetchLazyModule(ctx context.Context, modulePath, requestedVersion string, m
 	lm.ModuleInfo.CommitTime = commitTime
 	lm.contentDir = contentDir
 
-	// Set HasGoMod as early as possible, because the go command uses it to
-	// decide the latest version in some cases (see fetchRawLatestVersion in
-	// this package) and all it requires is a valid zip.
 	if modulePath == stdlib.ModulePath {
 		lm.ModuleInfo.HasGoMod = true
 	} else {
