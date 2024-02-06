@@ -35,6 +35,12 @@ func extractReadme(modulePath, dir, resolvedVersion string, contentDir fs.FS) (_
 		}
 		return nil, err
 	}
+	defer func() {
+		cerr := f.Close()
+		if err == nil {
+			err = cerr
+		}
+	}()
 	rdf, ok := f.(fs.ReadDirFile)
 	if !ok {
 		return nil, fmt.Errorf("could not open directory for %v", dir)
