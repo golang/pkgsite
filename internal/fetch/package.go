@@ -83,9 +83,8 @@ func extractPackage(ctx context.Context, modulePath, pkgPath string, contentDir 
 		goFiles = append(goFiles, path.Join(innerPath, e.Name()))
 	}
 	if len(goFiles) == 0 {
-		// This is a unit but not a package, so return a nil package
-		// for it.
-		return nil, nil, nil
+		// We shouldn't be here, because we only call extratPackage for package units.
+		return nil, nil, fmt.Errorf("extractPackage called but no go files: modulePath=%s, pkgPath=%q", modulePath, pkgPath)
 	}
 
 	var (

@@ -262,9 +262,11 @@ func (f *Fetcher) FetchAndUpdateState(ctx context.Context, modulePath, requested
 	ft.timings["db.UpdateModuleVersionState"] = time.Since(startUpdate)
 	if err != nil {
 		log.Error(ctx, err)
+		ft.Status = http.StatusInternalServerError
 		if ft.Error != nil {
-			ft.Status = http.StatusInternalServerError
 			ft.Error = fmt.Errorf("db.UpdateModuleVersionState: %v, original error: %v", err, ft.Error)
+		} else {
+			ft.Error = err
 		}
 		logTaskResult(ctx, ft, "Failed to update module version state")
 		return http.StatusInternalServerError, ft.ResolvedVersion, ft.Error

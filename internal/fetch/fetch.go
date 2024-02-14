@@ -197,6 +197,10 @@ func (lm *LazyModule) unit(ctx context.Context, unitMeta *internal.UnitMeta) (*i
 	if err != nil {
 		return nil, nil, err
 	}
+	// This unit represents the module itself, not a package.
+	if !unitMeta.IsPackage() {
+		return moduleUnit(lm.ModulePath, unitMeta, nil, readme, lm.licenseDetector), nil, nil
+	}
 	pkg, pvs, err := extractPackage(ctx, lm.ModulePath, unitMeta.Path, lm.contentDir, lm.licenseDetector, lm.SourceInfo, lm.godocModInfo)
 	if err != nil || (pvs != nil && pvs.Status != 200) {
 		// pvs can be non-nil even if err is non-nil.
@@ -236,7 +240,7 @@ func (lm *LazyModule) fetchResult(ctx context.Context) *FetchResult {
 		if err != nil {
 			fr.Error = err
 		}
-		if pvs != nil {
+		if pvs != nil && um.IsPackage() {
 			packageVersionStates = append(packageVersionStates, pvs)
 		}
 		if unit == nil {
@@ -304,7 +308,6 @@ func extractUnitMetas(ctx context.Context, minfo internal.ModuleInfo,
 	if err != nil {
 		return nil, nil, nil, err
 	}
-
 	return moduleUnitMetas(minfo, packageMetas), godocModInfo, failedMetaPackages, nil
 }
 

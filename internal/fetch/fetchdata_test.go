@@ -275,6 +275,12 @@ var moduleBadPackages = &testModule{
 			`,
 			"multiplepkgs/a.go": "package a",
 			"multiplepkgs/b.go": "package b",
+			// For the package at the root, all files are excluded by build constraints.
+			"root.go": `
+					//go:build tools
+
+					package main
+				`,
 		},
 	},
 	fr: &FetchResult{
@@ -286,6 +292,7 @@ var moduleBadPackages = &testModule{
 			},
 			Units: []*internal.Unit{
 				{
+					// The module itself.
 					UnitMeta: internal.UnitMeta{
 						Path: "bad.mod/module",
 					},
@@ -314,6 +321,12 @@ var moduleBadPackages = &testModule{
 		},
 		PackageVersionStates: []*internal.PackageVersionState{
 			{
+				PackagePath: "bad.mod/module",
+				ModulePath:  "bad.mod/module",
+				Version:     "v1.0.0",
+				Status:      600,
+			},
+			{
 				PackagePath: "bad.mod/module/good",
 				ModulePath:  "bad.mod/module",
 				Version:     "v1.0.0",
@@ -323,7 +336,7 @@ var moduleBadPackages = &testModule{
 				PackagePath: "bad.mod/module/illegalchar",
 				ModulePath:  "bad.mod/module",
 				Version:     "v1.0.0",
-				Status:      600,
+				Status:      600, //TODO(jba): this should be InvalidContents (604), not a build context error
 			},
 			{
 				PackagePath: "bad.mod/module/multiplepkgs",

@@ -24,7 +24,7 @@ func (um *UnitMeta) IsPackage() bool {
 	return um.Name != ""
 }
 
-// IsCommand reports whether the path represents a package path.
+// IsCommand reports whether the path represents a main package path.
 func (um *UnitMeta) IsCommand() bool {
 	return um.IsPackage() && um.Name == "main"
 }
