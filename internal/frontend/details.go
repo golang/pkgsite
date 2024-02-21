@@ -66,7 +66,7 @@ func (s *Server) serveDetails(w http.ResponseWriter, r *http.Request, ds interna
 		http.Redirect(w, r, urlPath, http.StatusMovedPermanently)
 		return
 	}
-	if err := checkExcluded(ctx, ds, urlInfo.FullPath); err != nil {
+	if err := checkExcluded(ctx, ds, urlInfo.FullPath, urlInfo.RequestedVersion); err != nil {
 		return err
 	}
 	return s.serveUnitPage(ctx, w, r, ds, urlInfo)
@@ -86,16 +86,12 @@ func stdlibRedirectURL(fullPath string) string {
 	return "/" + urlPath2
 }
 
-func checkExcluded(ctx context.Context, ds internal.DataSource, fullPath string) error {
+func checkExcluded(ctx context.Context, ds internal.DataSource, fullPath, version string) error {
 	db, ok := ds.(internal.PostgresDB)
 	if !ok {
 		return nil
 	}
-	excluded, err := db.IsExcluded(ctx, fullPath)
-	if err != nil {
-		return err
-	}
-	if excluded {
+	if db.IsExcluded(ctx, fullPath, version) {
 		// Return NotFound; don't let the user know that the package was excluded.
 		return &serrors.ServerError{Status: http.StatusNotFound}
 	}

@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"slices"
 	"strings"
 
 	"cloud.google.com/go/storage"
@@ -20,7 +21,7 @@ import (
 )
 
 type exclusion struct {
-	prefix, reason string
+	pattern, reason string
 }
 
 // PopulateExcluded adds each element of excludedPrefixes to the excluded_prefixes
@@ -62,14 +63,14 @@ func PopulateExcluded(ctx context.Context, cfg *config.Config, db *postgres.DB) 
 	if user == "" {
 		user = "worker"
 	}
+	pats, err := db.GetExcludedPatterns(ctx)
+	if err != nil {
+		return err
+	}
 	for _, line := range lines {
-		present, err := db.IsExcluded(ctx, line.prefix)
-		if err != nil {
-			return fmt.Errorf("db.IsExcluded(%q): %v", line.prefix, err)
-		}
-		if !present {
-			if err := db.InsertExcludedPrefix(ctx, line.prefix, user, line.reason); err != nil {
-				return fmt.Errorf("db.InsertExcludedPrefix(%q, %q, %q): %v", line.prefix, user, line.reason, err)
+		if !slices.Contains(pats, line.pattern) {
+			if err := db.InsertExcludedPattern(ctx, line.pattern, user, line.reason); err != nil {
+				return fmt.Errorf("db.InsertExcludedPrefix(%q, %q, %q): %v", line.pattern, user, line.reason, err)
 			}
 		}
 	}

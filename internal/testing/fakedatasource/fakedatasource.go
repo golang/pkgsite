@@ -337,8 +337,8 @@ func (ds *FakeDataSource) Search(ctx context.Context, q string, opts internal.Se
 	return results, nil
 }
 
-func (ds *FakeDataSource) IsExcluded(ctx context.Context, path string) (_ bool, err error) {
-	return false, errNotImplemented
+func (ds *FakeDataSource) IsExcluded(ctx context.Context, path, version string) bool {
+	return false
 }
 
 // GetImportedBy returns the set of packages importing the given pkgPath.

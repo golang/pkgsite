@@ -22,18 +22,17 @@ func TestExcluded(t *testing.T) {
 	}
 
 	for _, test := range []struct {
-		path string
-		want bool
+		path, version string
+		want          bool
 	}{
-		{"github.com/golang/go", true},
-		{"github.com/golang/pkgsite", false},
+		{"github.com/golang/go", "", true},
+		{"github.com/golang/pkgsite", "", false},
+		{"bad.com/m", "v1.2.3", true},
+		{"bad.com/m", "v1.2.4", false},
 	} {
-		got, err := testDB.IsExcluded(ctx, test.path)
-		if err != nil {
-			t.Fatal(err)
-		}
+		got := testDB.IsExcluded(ctx, test.path, test.version)
 		if got != test.want {
-			t.Errorf("%q: got %t, want %t", test.path, got, test.want)
+			t.Errorf("%q, %q: got %t, want %t", test.path, test.version, got, test.want)
 		}
 	}
 }

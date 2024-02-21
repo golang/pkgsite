@@ -49,11 +49,7 @@ func (db *DB) GetNestedModules(ctx context.Context, modulePath string) (_ []*int
 		if err != nil {
 			return fmt.Errorf("rows.Scan(): %v", err)
 		}
-		isExcluded, err := db.IsExcluded(ctx, mi.ModulePath)
-		if err != nil {
-			return err
-		}
-		if !isExcluded {
+		if !db.IsExcluded(ctx, mi.ModulePath, mi.Version) {
 			modules = append(modules, mi)
 		}
 		return nil

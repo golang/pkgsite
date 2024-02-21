@@ -306,12 +306,7 @@ func (f *Fetcher) fetchAndInsertModule(ctx context.Context, modulePath, requeste
 		}
 	}()
 
-	exc, err := f.DB.IsExcluded(ctx, modulePath)
-	if err != nil {
-		ft.Error = err
-		return ft
-	}
-	if exc {
+	if f.DB.IsExcluded(ctx, modulePath, requestedVersion) {
 		ft.Error = derrors.Excluded
 		return ft
 	}

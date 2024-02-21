@@ -1,1 +1,2 @@
 github.com/golang/go    We want users to view pkg.go.dev/<stdlib> instead
+bad.com/m@v1.2.3        Too big to process, maybe

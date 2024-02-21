@@ -48,7 +48,7 @@ func (s *Server) doIndexPage(w http.ResponseWriter, r *http.Request) (err error)
 	g, ctx := errgroup.WithContext(r.Context())
 	g.Go(func() error {
 		var err error
-		excluded, err = s.db.GetExcludedPrefixes(ctx)
+		excluded, err = s.db.GetExcludedPatterns(ctx)
 		if err != nil {
 			return annotation{err, "error fetching excluded"}
 		}

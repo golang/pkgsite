@@ -121,7 +121,7 @@ func TestGetNestedModules_Excluded(t *testing.T) {
 	for _, m := range test.modules {
 		MustInsertModule(ctx, t, testDB, m)
 	}
-	if err := testDB.InsertExcludedPrefix(ctx, "cloud.google.com/go/storage", "postgres", "test"); err != nil {
+	if err := testDB.InsertExcludedPattern(ctx, "cloud.google.com/go/storage", "postgres", "test"); err != nil {
 		t.Fatal(err)
 	}
 

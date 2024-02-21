@@ -164,11 +164,7 @@ func (db *DB) search(ctx context.Context, q string, opts SearchOptions, limit in
 	// Filter out excluded paths.
 	var results []*SearchResult
 	for _, r := range resp.results {
-		ex, err := db.IsExcluded(ctx, r.PackagePath)
-		if err != nil {
-			return nil, err
-		}
-		if !ex {
+		if !db.IsExcluded(ctx, r.PackagePath, "") {
 			results = append(results, r)
 		}
 	}

@@ -98,7 +98,7 @@ func TestFetchAndUpdateState_Excluded(t *testing.T) {
 	proxyClient, teardownProxy := proxytest.SetupTestClient(t, nil)
 	defer teardownProxy()
 
-	if err := testDB.InsertExcludedPrefix(ctx, sample.ModulePath, "user", "for testing"); err != nil {
+	if err := testDB.InsertExcludedPattern(ctx, sample.ModulePath, "user", "for testing"); err != nil {
 		t.Fatal(err)
 	}
 

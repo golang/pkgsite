@@ -1095,7 +1095,7 @@ func testServer(t *testing.T, testCases []serverTestCase) {
 	defer postgres.ResetTestDB(testDB, t)
 
 	insertTestModules(ctx, t, testModules)
-	if err := testDB.InsertExcludedPrefix(ctx, excludedModulePath, "testuser", "testreason"); err != nil {
+	if err := testDB.InsertExcludedPattern(ctx, excludedModulePath, "testuser", "testreason"); err != nil {
 		t.Fatal(err)
 	}
 	_, _, handler, _ := newTestServerWithFetch(t, nil, nil)

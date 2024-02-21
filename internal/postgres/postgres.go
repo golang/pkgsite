@@ -43,7 +43,7 @@ func newdb(db *database.DB, bypass bool) *DB {
 	p := poller.New(
 		[]string(nil),
 		func(ctx context.Context) (any, error) {
-			return getExcludedPrefixes(ctx, db)
+			return getExcludedPatterns(ctx, db)
 		},
 		func(err error) {
 			log.Errorf(context.Background(), "getting excluded prefixes: %v", err)

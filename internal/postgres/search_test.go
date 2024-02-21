@@ -804,7 +804,7 @@ func TestExcludedFromSearch(t *testing.T) {
 	sm := sample.Module(domain, "v1.2.3", "pkg", "ex/clude")
 	MustInsertModule(ctx, t, testDB, sm)
 	// Exclude a prefix that matches one of the packages.
-	if err := testDB.InsertExcludedPrefix(ctx, domain+"/ex", "no user", "no reason"); err != nil {
+	if err := testDB.InsertExcludedPattern(ctx, domain+"/ex", "no user", "no reason"); err != nil {
 		t.Fatal(err)
 	}
 	// Search for both packages.
