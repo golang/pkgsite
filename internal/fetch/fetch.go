@@ -168,7 +168,7 @@ func fetchLazyModule(ctx context.Context, modulePath, requestedVersion string, m
 	}
 	if goModBytes != nil {
 		if err := processGoModFile(goModBytes, &lm.ModuleInfo); err != nil {
-			return lm, err
+			return lm, fmt.Errorf("%v: %w", err, derrors.BadModule)
 		}
 	}
 
