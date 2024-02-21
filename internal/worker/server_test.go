@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"net/url"
 	"testing"
 	"time"
 
@@ -266,60 +265,52 @@ func TestParseIntParam(t *testing.T) {
 
 func TestParseModulePathAndVersion(t *testing.T) {
 	testCases := []struct {
-		name    string
-		url     string
-		module  string
-		version string
-		err     error
+		path      string
+		module    string
+		version   string
+		wantError bool
 	}{
 		{
-			name:    "ValidFetchURL",
-			url:     "https://proxy.com/module/@v/v1.0.0",
+			path:    "module/@v/v1.0.0",
 			module:  "module",
 			version: "v1.0.0",
-			err:     nil,
 		},
 		{
-			name: "InvalidFetchURL",
-			url:  "https://proxy.com/",
-			err:  errors.New(`invalid path: "/"`),
+			path:    "m.com/a/b/c/@v/v2.0.0+incompatible",
+			module:  "m.com/a/b/c",
+			version: "v2.0.0+incompatible",
 		},
 		{
-			name: "InvalidFetchURLNoModule",
-			url:  "https://proxy.com/@v/version",
-			err:  errors.New(`invalid path: "/@v/version"`),
+			path:    "module/@latest",
+			module:  "module",
+			version: "latest",
 		},
 		{
-			name: "InvalidFetchURLNoVersion",
-			url:  "https://proxy.com/module/@v/",
-			err:  errors.New(`invalid path: "/module/@v/"`),
+			path:      "",
+			wantError: true,
+		},
+		{
+			path:      "@v/version",
+			wantError: true,
+		},
+		{
+			path:      "module/@v/",
+			wantError: true,
+		},
+		{
+			path:      "module@version",
+			wantError: true,
 		},
 	}
 
 	for _, test := range testCases {
-		t.Run(test.name, func(t *testing.T) {
-			u, err := url.Parse(test.url)
-			if err != nil {
-				t.Errorf("url.Parse(%q): %v", test.url, err)
+		t.Run(fmt.Sprintf("path=%q", test.path), func(t *testing.T) {
+			m, v, err := parseModulePathAndVersion("/" + test.path)
+			if (err != nil) != test.wantError {
+				t.Fatalf("got an error (%v), want an error: %t", err, test.wantError)
 			}
-
-			m, v, err := parseModulePathAndVersion(u.Path)
-			if test.err != nil {
-				if err == nil {
-					t.Fatalf("parseModulePathAndVersion(%q): error = nil; want = (%v)", u.Path, test.err)
-				}
-				if test.err.Error() != err.Error() {
-					t.Fatalf("error = (%v); want = (%v)", err, test.err)
-				} else {
-					return
-				}
-			} else if err != nil {
-				t.Fatalf("error = (%v); want = (%v)", err, test.err)
-			}
-
 			if test.module != m || test.version != v {
-				t.Fatalf("parseModulePathAndVersion(%v): %q, %q, %v; want = %q, %q, %v",
-					u, m, v, err, test.module, test.version, test.err)
+				t.Fatalf("got %q, %q; want = %q, %q", m, v, test.module, test.version)
 			}
 		})
 	}

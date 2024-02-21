@@ -402,19 +402,11 @@ func parseModulePathAndVersion(requestPath string) (string, string, error) {
 		}
 		return modulePath, version.Latest, nil
 	}
-	var parts []string
-	if strings.Contains(requestPath, "/@v") {
-		parts = strings.Split(p, "/@v/")
-	} else {
-		parts = strings.Split(p, "@v")
-	}
-	if len(parts) != 2 {
+	mod, ver, _ := strings.Cut(p, "/@v/")
+	if mod == "" || ver == "" {
 		return "", "", fmt.Errorf("invalid path: %q", requestPath)
 	}
-	if parts[0] == "" || parts[1] == "" {
-		return "", "", fmt.Errorf("invalid path: %q", requestPath)
-	}
-	return parts[0], parts[1], nil
+	return mod, ver, nil
 }
 
 func (s *Server) handlePollIndex(w http.ResponseWriter, r *http.Request) (err error) {
