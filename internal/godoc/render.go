@@ -25,7 +25,7 @@ import (
 
 const (
 	megabyte             = 1000 * 1000
-	maxImportsPerPackage = 2000
+	maxImportsPerPackage = 5000
 
 	// Exported for tests.
 	DocTooLargeReplacement = `<p>Documentation is too large to display.</p>`

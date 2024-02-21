@@ -7,7 +7,6 @@ package fetch
 // Limits for discovery worker.
 const (
 	maxPackagesPerModule = 10000
-	maxImportsPerPackage = 1000
 
 	// MaxFileSize is the maximum filesize that is allowed for reading.
 	// The fetch process should fail if it encounters a file exceeding
