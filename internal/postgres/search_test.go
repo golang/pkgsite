@@ -442,7 +442,7 @@ func TestSearch(t *testing.T) {
 			for _, m := range test.modules {
 				MustInsertModule(ctx, t, testDB, m)
 			}
-			if _, err := testDB.UpdateSearchDocumentsImportedByCount(ctx); err != nil {
+			if _, err := testDB.UpdateSearchDocumentsImportedByCount(ctx, 100); err != nil {
 				t.Fatal(err)
 			}
 			guardTestResult := resultGuard(t, test.resultOrder)
@@ -534,7 +534,7 @@ func TestSearchErrors(t *testing.T) {
 			for _, v := range modules {
 				MustInsertModule(ctx, t, testDB, v)
 			}
-			if _, err := testDB.UpdateSearchDocumentsImportedByCount(ctx); err != nil {
+			if _, err := testDB.UpdateSearchDocumentsImportedByCount(ctx, 100); err != nil {
 				t.Fatal(err)
 			}
 			guardTestResult := resultGuard(t, test.resultOrder)
@@ -1083,9 +1083,9 @@ func TestUpdateSearchDocumentsImportedByCount(t *testing.T) {
 		return m
 	}
 
-	updateImportedByCount := func(db *DB) {
+	updateImportedByCount := func(db *DB, batchSize int) {
 		t.Helper()
-		if _, err := db.UpdateSearchDocumentsImportedByCount(ctx); err != nil {
+		if _, err := db.UpdateSearchDocumentsImportedByCount(ctx, batchSize); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -1111,19 +1111,19 @@ func TestUpdateSearchDocumentsImportedByCount(t *testing.T) {
 
 		// Test imported_by_count = 0 when only pkgA is added.
 		mA := insertPackageVersion(t, testDB, "A", "v1.0.0", nil)
-		updateImportedByCount(testDB)
+		updateImportedByCount(testDB, 100)
 		_ = validateImportedByCountAndGetSearchDocument(t, testDB, pkgPath(mA), 0)
 
 		// Test imported_by_count = 1 for pkgA when pkgB is added.
 		mB := insertPackageVersion(t, testDB, "B", "v1.0.0", []string{"A"})
-		updateImportedByCount(testDB)
+		updateImportedByCount(testDB, 100)
 		_ = validateImportedByCountAndGetSearchDocument(t, testDB, pkgPath(mA), 1)
 		sdB := validateImportedByCountAndGetSearchDocument(t, testDB, pkgPath(mB), 0)
 		wantSearchDocBUpdatedAt := sdB.importedByCountUpdatedAt
 
 		// Test imported_by_count = 2 for pkgA, when C is added.
 		mC := insertPackageVersion(t, testDB, "C", "v1.0.0", []string{"A"})
-		updateImportedByCount(testDB)
+		updateImportedByCount(testDB, 100)
 		sdA := validateImportedByCountAndGetSearchDocument(t, testDB, pkgPath(mA), 2)
 		sdC := validateImportedByCountAndGetSearchDocument(t, testDB, pkgPath(mC), 0)
 
@@ -1146,13 +1146,13 @@ func TestUpdateSearchDocumentsImportedByCount(t *testing.T) {
 		// because imports_unique only records the latest version of each package.
 		mD := insertPackageVersion(t, testDB, "D", "v1.0.0", nil)
 		insertPackageVersion(t, testDB, "A", "v0.9.0", []string{"D"})
-		updateImportedByCount(testDB)
+		updateImportedByCount(testDB, 100)
 		_ = validateImportedByCountAndGetSearchDocument(t, testDB, pkgPath(mA), 2)
 		_ = validateImportedByCountAndGetSearchDocument(t, testDB, pkgPath(mD), 0)
 
 		// When a newer version of A imports D, however, the counts do change.
 		insertPackageVersion(t, testDB, "A", "v1.1.0", []string{"D"})
-		updateImportedByCount(testDB)
+		updateImportedByCount(testDB, 100)
 		_ = validateImportedByCountAndGetSearchDocument(t, testDB, pkgPath(mA), 2)
 		_ = validateImportedByCountAndGetSearchDocument(t, testDB, pkgPath(mD), 1)
 	})
@@ -1198,13 +1198,10 @@ func TestUpdateSearchDocumentsImportedByCount(t *testing.T) {
 		MustInsertModule(ctx, t, testDB, mAlt)
 		// Although B is imported by two packages, only one is in search_documents, so its
 		// imported-by count is 1.
-		updateImportedByCount(testDB)
+		updateImportedByCount(testDB, 100)
 		validateImportedByCountAndGetSearchDocument(t, testDB, "mod.com/B/B", 1)
 	})
 	t.Run("multiple", func(t *testing.T) {
-		defer func(old int) { countBatchSize = old }(countBatchSize)
-		countBatchSize = 1
-
 		testDB, release := acquire(t)
 		defer release()
 
@@ -1215,7 +1212,7 @@ func TestUpdateSearchDocumentsImportedByCount(t *testing.T) {
 		insertPackageVersion(t, testDB, "D", "v1.0.0", []string{"A"})
 		insertPackageVersion(t, testDB, "E", "v1.0.0", []string{"B"})
 
-		updateImportedByCount(testDB)
+		updateImportedByCount(testDB, 1)
 		_ = validateImportedByCountAndGetSearchDocument(t, testDB, pkgPath(mA), 2)
 		_ = validateImportedByCountAndGetSearchDocument(t, testDB, pkgPath(mB), 1)
 	})
@@ -1364,6 +1361,7 @@ func TestHllZeros(t *testing.T) {
 }
 
 func TestGroupSearchResults(t *testing.T) {
+	t.Parallel()
 	for _, test := range []struct {
 		name     string
 		in, want []*SearchResult
@@ -1502,6 +1500,7 @@ func TestGroupSearchResults(t *testing.T) {
 }
 
 func TestGroupAndMajorVersion(t *testing.T) {
+	t.Parallel()
 	for _, test := range []struct {
 		in         SearchResult
 		wantSeries string

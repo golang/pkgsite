@@ -743,8 +743,10 @@ func (db *DB) GetPackagesForSearchDocumentUpsert(ctx context.Context, before tim
 // from the imports_unique table.
 //
 // UpdateSearchDocumentsImportedByCount returns the number of rows updated.
-func (db *DB) UpdateSearchDocumentsImportedByCount(ctx context.Context) (nUpdated int64, err error) {
+func (db *DB) UpdateSearchDocumentsImportedByCount(ctx context.Context, batchSize int) (nUpdated int64, err error) {
 	defer derrors.WrapStack(&err, "UpdateSearchDocumentsImportedByCount(ctx)")
+
+	log.Infof(ctx, "updating imported-by counts, batch size = %d", batchSize)
 
 	curCounts, err := db.getSearchPackages(ctx)
 	if err != nil {
@@ -754,6 +756,7 @@ func (db *DB) UpdateSearchDocumentsImportedByCount(ctx context.Context) (nUpdate
 	if err != nil {
 		return 0, err
 	}
+
 	// Include only changed counts for packages that are in search_documents.
 	changedCounts := map[string]int{}
 	for p, nc := range newCounts {
@@ -767,19 +770,15 @@ func (db *DB) UpdateSearchDocumentsImportedByCount(ctx context.Context) (nUpdate
 		pct = len(changedCounts) * 100 / len(curCounts)
 	}
 	log.Debugf(ctx, "update-imported-by-counts: %d changed (%d%%)", len(changedCounts), pct)
-	return db.UpdateSearchDocumentsImportedByCountWithCounts(ctx, changedCounts)
+	return db.UpdateSearchDocumentsImportedByCountWithCounts(ctx, changedCounts, batchSize)
 }
 
-// How many imported-by counts to update at a time.
-// A variable for testing.
-var countBatchSize = 5_000
-
-func (db *DB) UpdateSearchDocumentsImportedByCountWithCounts(ctx context.Context, counts map[string]int) (nUpdated int64, err error) {
+func (db *DB) UpdateSearchDocumentsImportedByCountWithCounts(ctx context.Context, counts map[string]int, batchSize int) (nUpdated int64, err error) {
 	defer derrors.WrapStack(&err, "UpdateSearchDocumentsImportedByCountWithCounts")
 	for len(counts) > 0 {
 		var nu int64
 		err := db.db.Transact(ctx, sql.LevelDefault, func(tx *database.DB) error {
-			if err := insertImportedByCounts(ctx, tx, counts, countBatchSize); err != nil {
+			if err := insertImportedByCounts(ctx, tx, counts, batchSize); err != nil {
 				return err
 			}
 			nu, err = updateImportedByCounts(ctx, tx)

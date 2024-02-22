@@ -256,7 +256,7 @@ func TestParseIntParam(t *testing.T) {
 		{"312", 312},
 		{"bad", -1},
 	} {
-		got := parseLimitParam(httptest.NewRequest("GET", fmt.Sprintf("/foo?limit=%s", test.in), nil), -1)
+		got := parseIntParam(httptest.NewRequest("GET", fmt.Sprintf("/foo?limit=%s", test.in), nil), "limit", -1)
 		if got != test.want {
 			t.Errorf("%q: got %d, want %d", test.in, got, test.want)
 		}

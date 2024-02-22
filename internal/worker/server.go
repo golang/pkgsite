@@ -255,7 +255,8 @@ func (s *Server) Install(handle func(string, http.Handler)) {
 
 // handleUpdateImportedByCount updates imported_by_count for all packages.
 func (s *Server) handleUpdateImportedByCount(w http.ResponseWriter, r *http.Request) error {
-	n, err := s.db.UpdateSearchDocumentsImportedByCount(r.Context())
+	batchSize := parseIntParam(r, "batch", 1000)
+	n, err := s.db.UpdateSearchDocumentsImportedByCount(r.Context(), batchSize)
 	if err != nil {
 		return err
 	}
@@ -266,7 +267,7 @@ func (s *Server) handleUpdateImportedByCount(w http.ResponseWriter, r *http.Requ
 // handleRepopulateSearchDocuments repopulates every row in the search_documents table
 // that was last updated before the given time.
 func (s *Server) handleRepopulateSearchDocuments(w http.ResponseWriter, r *http.Request) error {
-	limit := parseLimitParam(r, 100)
+	limit := parseIntParam(r, "limit", 100)
 	beforeParam := r.FormValue("before")
 	if beforeParam == "" {
 		return &serverError{
@@ -412,7 +413,7 @@ func parseModulePathAndVersion(requestPath string) (string, string, error) {
 func (s *Server) handlePollIndex(w http.ResponseWriter, r *http.Request) (err error) {
 	defer derrors.Wrap(&err, "handlePollIndex(%q)", r.URL.Path)
 	ctx := r.Context()
-	limit := parseLimitParam(r, 10)
+	limit := parseIntParam(r, "limit", 10)
 	since, err := s.db.LatestIndexTimestamp(ctx)
 	if err != nil {
 		return err
@@ -471,7 +472,7 @@ func (s *Server) computeUnprocessedModules(ctx context.Context) {
 func (s *Server) handleEnqueue(w http.ResponseWriter, r *http.Request) (err error) {
 	defer derrors.Wrap(&err, "handleEnqueue(%q)", r.URL.Path)
 	ctx := r.Context()
-	limit := parseLimitParam(r, 10)
+	limit := parseIntParam(r, "limit", 10)
 	suffixParam := r.FormValue("suffix") // append to task name to avoid deduplication
 	span := trace.FromContext(r.Context())
 	span.Annotate([]trace.Attribute{trace.Int64Attribute("limit", int64(limit))}, "processed limit")
@@ -705,7 +706,7 @@ func (s *Server) handleClean(w http.ResponseWriter, r *http.Request) (err error)
 		return errors.New("need exactly one of 'limit' or 'module' query param")
 
 	case limit != "":
-		mvs, err := s.db.GetModuleVersionsToClean(ctx, cleanDays, parseLimitParam(r, 1000))
+		mvs, err := s.db.GetModuleVersionsToClean(ctx, cleanDays, parseIntParam(r, "limit", 1000))
 		if err != nil {
 			return err
 		}
@@ -809,11 +810,10 @@ func toUint64(n any) uint64 {
 	}
 }
 
-// parseLimitParam parses the query parameter "limit" as an integer. If the
+// parseIntParam parses the named query parameter as an integer. If the
 // parameter is missing or there is a parse error, it is logged and the default
 // value is returned.
-func parseLimitParam(r *http.Request, defaultValue int) int {
-	const name = "limit"
+func parseIntParam(r *http.Request, name string, defaultValue int) int {
 	param := r.FormValue(name)
 	if param == "" {
 		return defaultValue
