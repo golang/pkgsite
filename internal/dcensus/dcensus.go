@@ -71,12 +71,6 @@ func (r *Router) HandleFunc(route string, handler http.HandlerFunc) {
 	r.Handle(route, handler)
 }
 
-const debugPage = `
-<html>
-<p><a href="/tracez">/tracez</a> - trace spans</p>
-<p><a href="/statsz">/statz</a> - prometheus metrics page</p>
-`
-
 // Init configures tracing and aggregation according to the given Views. If
 // running on GCP, Init also configures exporting to StackDriver.
 func Init(cfg *config.Config, views ...*view.View) error {
@@ -91,19 +85,15 @@ func Init(cfg *config.Config, views ...*view.View) error {
 	return nil
 }
 
-// NewServer creates a new http.Handler for serving debug information.
-func NewServer() (http.Handler, error) {
+// DebugHandler creates a new http.Handler for serving debug information.
+func DebugHandler() (http.Handler, error) {
 	pe, err := prometheus.NewExporter(prometheus.Options{})
 	if err != nil {
 		return nil, fmt.Errorf("dcensus.NewServer: prometheus.NewExporter: %v", err)
 	}
 	mux := http.NewServeMux()
 	zpages.Handle(mux, "/")
-	mux.Handle("/statsz", pe)
-	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprint(w, debugPage)
-	})
-
+	mux.Handle("/statz", pe)
 	return mux, nil
 }
 

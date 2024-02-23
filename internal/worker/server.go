@@ -28,6 +28,7 @@ import (
 	"golang.org/x/pkgsite/internal/cache"
 	"golang.org/x/pkgsite/internal/config"
 	"golang.org/x/pkgsite/internal/config/serverconfig"
+	"golang.org/x/pkgsite/internal/dcensus"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/godoc/dochtml"
 	"golang.org/x/pkgsite/internal/index"
@@ -77,6 +78,7 @@ type ServerConfig struct {
 const (
 	indexTemplate    = "index.tmpl"
 	versionsTemplate = "versions.tmpl"
+	excludedTemplate = "excluded.tmpl"
 )
 
 // NewServer creates a new Server with the given dependencies.
@@ -90,12 +92,17 @@ func NewServer(cfg *config.Config, scfg ServerConfig) (_ *Server, err error) {
 	if err != nil {
 		return nil, err
 	}
+	t3, err := parseTemplate(scfg.StaticPath, template.TrustedSourceFromConstant(excludedTemplate))
+	if err != nil {
+		return nil, err
+	}
 	ts := template.TrustedSourceJoin(scfg.StaticPath)
 	tfs := template.TrustedFSFromTrustedSource(ts)
 	dochtml.LoadTemplates(tfs)
 	templates := map[string]*template.Template{
 		indexTemplate:    t1,
 		versionsTemplate: t2,
+		excludedTemplate: t3,
 	}
 	var c *cache.Cache
 	if scfg.RedisCacheClient != nil {
@@ -149,7 +156,7 @@ func (s *Server) Install(handle func(string, http.Handler)) {
 	// and for /_ah/warmup at
 	// https://cloud.google.com/appengine/docs/standard/go/configuring-warmup-requests.
 	handle("/_ah/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Infof(r.Context(), "Request made to %q", r.URL.Path)
+		log.Errorf(r.Context(), "Request made to %q", r.URL.Path)
 	}))
 
 	// scheduled: poll polls the Module Index for new modules
@@ -239,9 +246,6 @@ func (s *Server) Install(handle func(string, http.Handler)) {
 
 	handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir(s.staticPath.String()))))
 
-	// returns an HTML page displaying information about recent versions that were processed.
-	handle("/versions", http.HandlerFunc(s.handleHTMLPage(s.doVersionsPage)))
-
 	// Health check.
 	handle("/healthz", http.HandlerFunc(s.handleHealthCheck))
 
@@ -251,6 +255,25 @@ func (s *Server) Install(handle func(string, http.Handler)) {
 
 	// returns an HTML page displaying the homepage.
 	handle("/", http.HandlerFunc(s.handleHTMLPage(s.doIndexPage)))
+}
+
+func (s *Server) DebugHandler() (http.Handler, error) {
+
+	// Serve census debug handlers.
+	h, err := dcensus.DebugHandler()
+	if err != nil {
+		return nil, err
+	}
+	mux := http.NewServeMux()
+	mux.Handle("/", h)
+
+	// Serve an HTML page displaying information about recent versions that were processed.
+	mux.Handle("/versions", http.HandlerFunc(s.handleHTMLPage(s.doVersionsPage)))
+
+	// Serve a list of excluded prefixes and module versions.
+	mux.Handle("/excluded", http.HandlerFunc(s.handleHTMLPage(s.doExcludedPage)))
+
+	return mux, nil
 }
 
 // handleUpdateImportedByCount updates imported_by_count for all packages.
@@ -532,7 +555,7 @@ func shouldDisableProxyFetch(m *internal.ModuleVersionState) bool {
 func (s *Server) handleHTMLPage(f func(w http.ResponseWriter, r *http.Request) error) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if err := f(w, r); err != nil {
-			log.Errorf(r.Context(), "handleHTMLPage", err)
+			log.Errorf(r.Context(), "handleHTMLPage: %v", err)
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		}
 	}

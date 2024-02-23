@@ -199,7 +199,7 @@ func main() {
 	// We are not currently forwarding any ports on AppEngine, so serving debug
 	// information is broken.
 	if !serverconfig.OnAppEngine() {
-		dcensusServer, err := dcensus.NewServer()
+		dcensusServer, err := dcensus.DebugHandler()
 		if err != nil {
 			log.Fatal(ctx, err)
 		}

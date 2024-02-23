@@ -15,12 +15,6 @@
   <p>All times in America/New_York.</p>
 
   <p>
-    <a href="/">
-      Home
-    </a> |
-    <a href="/versions">
-      Recent Versions
-    </a> |
     <a href="https://cloud.google.com/console/cloudtasks/queue/{{.LocationID}}/{{.ResourcePrefix}}fetch-tasks?project={{.Config.ProjectID}}"
     target="_blank" rel="noreferrer">
      Task Queue
@@ -33,6 +27,14 @@
     target="_blank" rel="noreferrer">
      Logs
     </a>
+  </p>
+
+  <p>
+    <a href="/debug/versions">Modules</a> |
+    <a href="/debug/tracez">Traces</a> |
+    <a href="/debug/rpcz">RPCs</a> |
+    <a href="/debug/statz">Metrics</a> |
+    <a href="/debug/excluded">Excluded</a>
   </p>
 
   <div>
@@ -181,23 +183,6 @@
     </table>
   </div>
 
-  <div>
-    <h3>Excluded Prefixes</h3>
-    {{if .Excluded}}
-      <table>
-        <thead>
-          <tr><th>Prefix</th></tr>
-        </thead>
-        <tbody>
-        {{range .Excluded}}
-          <tr><td>{{.}}</td></tr>
-        {{end}}
-        </tbody>
-      </table>
-    {{else}}
-      <p>No excluded prefixes.</p>
-    {{end}}
-  </div>
 </body>
 
 <script>

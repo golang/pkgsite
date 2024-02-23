@@ -37,31 +37,16 @@ var startTime = time.Now()
 // doIndexPage writes the status page. On error it returns the error and a short
 // string to be written back to the client.
 func (s *Server) doIndexPage(w http.ResponseWriter, r *http.Request) (err error) {
+	if r.URL.Path != "/" {
+		http.NotFound(w, r)
+		return nil
+	}
 	defer derrors.Wrap(&err, "doIndexPage")
-	var (
-		experiments []*internal.Experiment
-		excluded    []string
-	)
+	var experiments []*internal.Experiment
 	if s.getExperiments != nil {
 		experiments = s.getExperiments()
 	}
-	g, ctx := errgroup.WithContext(r.Context())
-	g.Go(func() error {
-		var err error
-		excluded, err = s.db.GetExcludedPatterns(ctx)
-		if err != nil {
-			return annotation{err, "error fetching excluded"}
-		}
-		return nil
-	})
-	if err := g.Wait(); err != nil {
-		var e annotation
-		if errors.As(err, &e) {
-			log.Errorf(ctx, e.msg, err)
-		}
-		return err
-	}
-
+	ctx := r.Context()
 	gms := memory.ReadRuntimeStats()
 	sms, err := memory.ReadSystemStats()
 	if err != nil {
@@ -97,7 +82,6 @@ func (s *Server) doIndexPage(w http.ResponseWriter, r *http.Request) (err error)
 		Hostname        string
 		StartTime       time.Time
 		Experiments     []*internal.Experiment
-		Excluded        []string
 		LoadShedStats   LoadShedStats
 		GoMemStats      runtime.MemStats
 		ProcessStats    memory.ProcessStats
@@ -114,7 +98,6 @@ func (s *Server) doIndexPage(w http.ResponseWriter, r *http.Request) (err error)
 		Hostname:       os.Getenv("HOSTNAME"),
 		StartTime:      startTime,
 		Experiments:    experiments,
-		Excluded:       excluded,
 		LoadShedStats:  s.ZipLoadShedStats(),
 		GoMemStats:     gms,
 		ProcessStats:   pms,
@@ -207,6 +190,20 @@ func (s *Server) doVersionsPage(w http.ResponseWriter, r *http.Request) (err err
 		Counts:          counts,
 	}
 	return renderPage(ctx, w, page, s.templates[versionsTemplate])
+}
+func (s *Server) doExcludedPage(w http.ResponseWriter, r *http.Request) (err error) {
+	excluded, err := s.db.GetExcludedPatterns(r.Context())
+	if err != nil {
+		return annotation{err, "error fetching excluded"}
+	}
+	page := struct {
+		Env      string
+		Excluded []string
+	}{
+		Env:      env(s.cfg),
+		Excluded: excluded,
+	}
+	return renderPage(r.Context(), w, page, s.templates[excludedTemplate])
 }
 
 func env(cfg *config.Config) string {

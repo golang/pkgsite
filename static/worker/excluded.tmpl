@@ -1,0 +1,28 @@
+<!--
+  Copyright 2024 The Go Authors. All rights reserved.
+  Use of this source code is governed by a BSD-style
+  license that can be found in the LICENSE file.
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+<meta charset="utf-8">
+<link href="/static/worker/worker.min.css" rel="stylesheet">
+<title>{{.Env}} Worker Excluded</title>
+
+<body>
+  <div>
+    <h3>Excluded Prefixes and Versions</h3>
+    {{if .Excluded}}
+      <table>
+        <tbody>
+        {{range .Excluded}}
+          <tr><td>{{.}}</td></tr>
+        {{end}}
+        </tbody>
+      </table>
+    {{else}}
+      <p>No excluded prefixes.</p>
+    {{end}}
+  </div>
+</body>

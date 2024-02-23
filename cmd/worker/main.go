@@ -136,15 +136,6 @@ func main() {
 	if err := dcensus.Init(cfg, views...); err != nil {
 		log.Fatal(ctx, err)
 	}
-	// We are not currently forwarding any ports on AppEngine, so serving debug
-	// information is broken.
-	if !serverconfig.OnAppEngine() {
-		dcensusServer, err := dcensus.NewServer()
-		if err != nil {
-			log.Fatal(ctx, err)
-		}
-		go http.ListenAndServe(cfg.DebugAddr("localhost:8001"), dcensusServer)
-	}
 
 	iap := middleware.Identity()
 	if aud := os.Getenv("GO_DISCOVERY_IAP_AUDIENCE"); aud != "" {
@@ -158,6 +149,12 @@ func main() {
 		middleware.Experiment(experimenter),
 	)
 	http.Handle("/", mw(router))
+
+	dh, err := server.DebugHandler()
+	if err != nil {
+		log.Fatal(ctx, err)
+	}
+	http.Handle("/debug/", mw(http.StripPrefix("/debug", dh)))
 
 	addr := cfg.HostAddr("localhost:8000")
 	log.Infof(ctx, "Timeout is %d minutes", timeout)
