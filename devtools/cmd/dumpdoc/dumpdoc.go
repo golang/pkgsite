@@ -1,4 +1,4 @@
-// Copyright 2021 The Go Authors. All rights reserved.
+// Copyright 2024 The Go Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
@@ -7,11 +7,16 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"database/sql"
 	"encoding/gob"
 	"flag"
 	"fmt"
+	"go/ast"
+	"go/doc"
+	"go/printer"
+	"go/token"
 	"io"
 	"os"
 	"strings"
@@ -69,16 +74,6 @@ func run(ctx context.Context, cmd, filename string) error {
 	}
 }
 
-type PackageDoc struct {
-	ImportPath     string
-	ModulePath     string
-	Version        string
-	NumImporters   int
-	PackageDoc     string
-	ReadmeFilename *string
-	ReadmeContents *string
-}
-
 func write(ctx context.Context, db *database.DB, filename string) error {
 	query := fmt.Sprintf(`
 		SELECT s.package_path, s.module_path, s.version, s.imported_by_count,
@@ -134,11 +129,69 @@ func populateDoc(pd *PackageDoc, source []byte) error {
 	if err != nil {
 		return err
 	}
-	if strings.TrimSpace(dpkg.Doc) == "" {
-		return nil
-	}
 	pd.PackageDoc = dpkg.Doc
+	var sds []SymbolDoc
+	for _, v := range dpkg.Consts {
+		sds = append(sds, valueSymbolDoc(gpkg.Fset, v))
+	}
+	for _, v := range dpkg.Vars {
+		sds = append(sds, valueSymbolDoc(gpkg.Fset, v))
+	}
+	for _, t := range dpkg.Types {
+		sd := SymbolDoc{
+			Names: []string{t.Name},
+			Decl:  formatDecl(gpkg.Fset, t.Decl),
+			Doc:   t.Doc,
+		}
+		sds = append(sds, sd)
+		for _, v := range t.Consts {
+			sds = append(sds, valueSymbolDoc(gpkg.Fset, v))
+		}
+		for _, v := range t.Vars {
+			sds = append(sds, valueSymbolDoc(gpkg.Fset, v))
+		}
+		for _, f := range t.Funcs {
+			// No prefix: these are top-level functions that return the type.
+			sds = append(sds, functionSymbolDoc("", gpkg.Fset, f))
+		}
+		for _, f := range t.Methods {
+			sds = append(sds, functionSymbolDoc(t.Name, gpkg.Fset, f))
+		}
+		// TODO: Examples
+	}
+	for _, f := range dpkg.Funcs {
+		sds = append(sds, functionSymbolDoc("", gpkg.Fset, f))
+		// TODO:Examples
+	}
+	pd.SymbolDocs = sds
 	return nil
+}
+
+func valueSymbolDoc(fset *token.FileSet, v *doc.Value) SymbolDoc {
+	return SymbolDoc{
+		Names: v.Names,
+		Decl:  formatDecl(fset, v.Decl),
+		Doc:   v.Doc,
+	}
+}
+
+func functionSymbolDoc(prefix string, fset *token.FileSet, f *doc.Func) SymbolDoc {
+	if prefix != "" {
+		prefix += "."
+	}
+	return SymbolDoc{
+		Names: []string{prefix + f.Name},
+		Decl:  formatDecl(fset, f.Decl),
+		Doc:   f.Doc,
+	}
+
+}
+
+func formatDecl(fset *token.FileSet, decl ast.Decl) string {
+	p := printer.Config{Mode: printer.UseSpaces | printer.TabIndent, Tabwidth: 4}
+	var b bytes.Buffer
+	p.Fprint(&b, fset, decl)
+	return b.String()
 }
 
 func read(filename string) error {
@@ -157,16 +210,26 @@ func read(filename string) error {
 		if err != nil {
 			return err
 		}
-		pd.PackageDoc = trunc(pd.PackageDoc)
-		fmt.Printf("%s (%s@%s):\n", pd.ImportPath, pd.ModulePath, pd.Version)
-		fmt.Printf("    %d importers\n", pd.NumImporters)
-		fmt.Printf("     pkg doc: %q\n", pd.PackageDoc)
-		if pd.ReadmeFilename != nil && pd.ReadmeContents != nil {
-			*pd.ReadmeContents = trunc(*pd.ReadmeContents)
-			fmt.Printf("     readme (from %s): %q\n", *pd.ReadmeFilename, *pd.ReadmeContents)
-		}
+		pd.Show()
 	}
+}
 
+func (pd PackageDoc) Show() {
+	pd.PackageDoc = trunc(pd.PackageDoc)
+	fmt.Printf("%s (%s@%s):\n", pd.ImportPath, pd.ModulePath, pd.Version)
+	fmt.Printf("    %d importers\n", pd.NumImporters)
+	fmt.Printf("     pkg doc: %q\n", pd.PackageDoc)
+	if pd.ReadmeFilename != nil && pd.ReadmeContents != nil {
+		*pd.ReadmeContents = trunc(*pd.ReadmeContents)
+		fmt.Printf("     readme (from %s): %q\n", *pd.ReadmeFilename, *pd.ReadmeContents)
+	}
+	fmt.Printf("    symbols\n:")
+	for _, sd := range pd.SymbolDocs {
+		fmt.Printf("\tNames: %v\n", sd.Names)
+		fmt.Printf("\tDecl: %s\n", sd.Decl)
+		fmt.Printf("\tDoc: %q\n", trunc(sd.Doc))
+		fmt.Println()
+	}
 }
 
 func trunc(s string) string {
