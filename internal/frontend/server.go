@@ -203,7 +203,6 @@ func (s *Server) Install(handle func(string, http.Handler), cacher Cacher, authV
 	handle("/license-policy", s.licensePolicyHandler())
 	handle("/about", s.staticPageHandler("about", "About"))
 	handle("/badge/", http.HandlerFunc(s.badgeHandler))
-	handle("/styleguide", http.HandlerFunc(s.errorHandler(s.serveStyleGuide)))
 	handle("/C", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Package "C" is a special case: redirect to /cmd/cgo.
 		// (This is what golang.org/C does.)

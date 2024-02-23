@@ -20,8 +20,6 @@ var scriptHashes = []string{
 	"'sha256-mxm3e8M0u3nPPBmLIBgGuMvGUIL5LGv+HzV3bLAIBgw='",
 	// From static/frontend/search/search.tmpl
 	"'sha256-+iS8jRq15Ez/Kzz0/G+SNc0geLNvTyf2NZC7MyJgpRE='",
-	// From static/frontend/styleguide/styleguide.tmpl
-	"'sha256-bL+cN9GtUg5dqjPwDiPJq4yfiEvOyEJ3rfw/YkNIAWc='",
 	// From static/frontend/unit/main/main.tmpl
 	"'sha256-UiVwSVJIK9udADqG5GZe+nRUXWK9wEot2vrxL4D2pQs='",
 	// From static/frontend/unit/unit.tmpl
