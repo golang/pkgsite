@@ -902,7 +902,8 @@ func updateImportedByCounts(ctx context.Context, db *database.DB) (int64, error)
 			imported_by_count = c.imported_by_count,
 			imported_by_count_updated_at = CURRENT_TIMESTAMP
 		FROM computed_imported_by_counts c
-		WHERE s.package_path = c.package_path;`
+		INNER JOIN paths p ON p.path = c.package_path
+		WHERE s.package_path_id = p.id;`
 
 	n, err := db.Exec(ctx, updateStmt)
 	if err != nil {
