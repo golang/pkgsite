@@ -28,6 +28,7 @@ require (
 	github.com/lib/pq v1.10.9
 	github.com/russross/blackfriday/v2 v2.1.0
 	go.opencensus.io v0.24.0
+	golang.org/x/exp v0.0.0-20240222234643-814bf88cf225
 	golang.org/x/mod v0.15.0
 	golang.org/x/net v0.21.0
 	golang.org/x/sync v0.6.0

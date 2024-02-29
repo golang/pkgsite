@@ -8,18 +8,21 @@ import (
 	"sort"
 	"sync"
 	"time"
+
+	"golang.org/x/pkgsite/internal"
 )
 
 // FetchInfo describes a fetch in progress, or completed.
 // It is used to display information on the worker home page.
 type FetchInfo struct {
-	ModulePath string
-	Version    string
-	ZipSize    uint64
-	Start      time.Time
-	Finish     time.Time
-	Status     int
-	Error      error
+	RequestInfo *internal.RequestInfo
+	ModulePath  string
+	Version     string
+	ZipSize     uint64
+	Start       time.Time
+	Finish      time.Time
+	Status      int
+	Error       error
 }
 
 var (

@@ -3,7 +3,7 @@
 // license that can be found in the LICENSE file.
 
 // package trace provides a wrapper around third party tracing
-// libraries
+// libraries.
 package trace
 
 import "context"

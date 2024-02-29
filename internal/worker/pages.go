@@ -19,10 +19,10 @@ import (
 	"github.com/google/safehtml/template"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/config"
-	"golang.org/x/pkgsite/internal/config/serverconfig"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/memory"
+	"golang.org/x/pkgsite/internal/middleware"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/sync/errgroup"
 )
@@ -60,17 +60,14 @@ func (s *Server) doIndexPage(w http.ResponseWriter, r *http.Request) (err error)
 	if err != nil {
 		log.Warningf(ctx, "could not get cgroup stats: %v", err)
 	}
-	var logsURL string
-	if serverconfig.OnGKE() {
-		env := s.cfg.DeploymentEnvironment()
-		cluster := env + "-" + "pkgsite"
-		logsURL = `https://pantheon.corp.google.com/logs/query;query=resource.type%3D%22k8s_container%22%20resource.labels.cluster_name%3D%22` +
-			cluster +
-			`%22%20resource.labels.container_name%3D%22worker%22?project=` +
-			s.cfg.ProjectID
-	} else {
-		logsURL = `https://cloud.google.com/console/logs/viewer?resource=gae_app%2Fmodule_id%2F` + s.cfg.ServiceID + `&project=` +
-			s.cfg.ProjectID
+
+	// Display requests that aren't fetches separately.
+	// Don't include the request for this page itself.
+	var nonFetchRequests []*internal.RequestInfo
+	for _, ri := range middleware.ActiveRequests() {
+		if ri.TrimmedURL != "/" && !strings.HasPrefix(ri.TrimmedURL, "/fetch/") {
+			nonFetchRequests = append(nonFetchRequests, ri)
+		}
 	}
 
 	page := struct {
@@ -88,7 +85,7 @@ func (s *Server) doIndexPage(w http.ResponseWriter, r *http.Request) (err error)
 		SystemStats     memory.SystemStats
 		CgroupStats     map[string]uint64
 		Fetches         []*FetchInfo
-		LogsURL         string
+		OtherRequests   []*internal.RequestInfo
 		DBInfo          *postgres.UserInfo
 	}{
 		Config:         s.cfg,
@@ -104,7 +101,7 @@ func (s *Server) doIndexPage(w http.ResponseWriter, r *http.Request) (err error)
 		SystemStats:    sms,
 		CgroupStats:    cms,
 		Fetches:        FetchInfos(),
-		LogsURL:        logsURL,
+		OtherRequests:  nonFetchRequests,
 		DBInfo:         s.workerDBInfo(),
 	}
 	return renderPage(ctx, w, page, s.templates[indexTemplate])

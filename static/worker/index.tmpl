@@ -23,7 +23,7 @@
     target="_blank" rel="noreferrer">
      Scheduler
     </a> |
-    <a href="{{.LogsURL}}"
+    <a href="{{logURL ""}}"
     target="_blank" rel="noreferrer">
      Logs
     </a>
@@ -176,12 +176,41 @@
               <td>{{.Version}}</td>
               <td>{{.ZipSize | bytesToMi}}</td>
               <td>{{timeSince .Start}}</td>
+              {{with .RequestInfo.TraceID}}
+                <td><a href="{{logURL .}}" target="_blank" rel="noreferrer">Logs</a></td>
+                <td><a href="/cancel?trace={{.}}" target="_blank" rel="noreferrer">Cancel</a></td>
+              {{end}}
             </tr>
           {{end}}
         {{end}}
       </tbody>
     </table>
   </div>
+
+  <div>
+    <h3>Other Requests</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>URL</th>
+          <th>Age</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{range .OtherRequests}}
+          <tr>
+            <td>{{.TrimmedURL}}</td>
+            <td>{{timeSince .Start}}</td>
+            {{with .TraceID}}
+              <td><a href="{{logURL .}}" target="_blank" rel="noreferrer">Logs</a></td>
+              <td><a href="/cancel?trace={{.}}" target="_blank" rel="noreferrer">Cancel</a></td>
+            {{end}}
+          </tr>
+      {{end}}
+      </tbody>
+    </table>
+  </div>
+
 
 </body>
 

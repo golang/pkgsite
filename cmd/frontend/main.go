@@ -218,6 +218,7 @@ func main() {
 		ermw = middleware.ErrorReporting(reporter)
 	}
 	mw := middleware.Chain(
+		middleware.RequestInfo(),
 		middleware.RequestLog(cmdconfig.Logger(ctx, cfg, "frontend-log")),
 		middleware.AcceptRequests(http.MethodGet, http.MethodPost, http.MethodHead), // accept only GETs, POSTs and HEADs
 		middleware.BetaPkgGoDevRedirect(),

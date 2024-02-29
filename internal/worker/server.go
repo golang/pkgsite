@@ -14,6 +14,7 @@ import (
 	"io"
 	"math"
 	"net/http"
+	"net/url"
 	"reflect"
 	"strconv"
 	"strings"
@@ -86,7 +87,7 @@ func NewServer(cfg *config.Config, scfg ServerConfig) (_ *Server, err error) {
 	defer derrors.Wrap(&err, "NewServer(db, %+v)", scfg)
 	templates := map[string]*template.Template{}
 	for _, templateName := range []string{indexTemplate, versionsTemplate, excludedTemplate} {
-		t, err := parseTemplate(scfg.StaticPath, templateName)
+		t, err := parseTemplate(cfg, scfg.StaticPath, templateName)
 		if err != nil {
 			return nil, err
 		}
@@ -234,6 +235,9 @@ func (s *Server) Install(handle func(string, http.Handler)) {
 	// scheduled ("limit" query param): clean some eligible module versions selected from the DB
 	// manual ("module" query param): clean all versions of a given module.
 	handle("/clean", rmw(s.errorHandler(s.handleClean)))
+
+	// manual: cancel an active request
+	handle("/cancel", rmw(s.errorHandler(s.handleCancel)))
 
 	handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir(s.staticPath.String()))))
 
@@ -741,6 +745,27 @@ func (s *Server) handleClean(w http.ResponseWriter, r *http.Request) (err error)
 	}
 }
 
+func (s *Server) handleCancel(w http.ResponseWriter, r *http.Request) (err error) {
+	defer derrors.Wrap(&err, "handleCancel")
+	traceID := r.FormValue("trace")
+	if traceID == "" {
+		return &serverError{
+			http.StatusBadRequest,
+			errors.New("must provide 'traceID' query param"),
+		}
+	}
+	ri := middleware.RequestForTraceID(traceID)
+	if ri == nil {
+		return &serverError{http.StatusNotFound, errors.New("no request with that trace ID")}
+	}
+	if ri.Cancel == nil {
+		return errors.New("RequestInfo.Cancel is nil")
+	}
+	ri.Cancel(errors.New("/cancel handler"))
+	fmt.Fprintf(w, "request with trace ID %s canceled\n", traceID)
+	return nil
+}
+
 func (s *Server) handleHealthCheck(w http.ResponseWriter, r *http.Request) {
 	if err := s.db.Underlying().Ping(); err != nil {
 		http.Error(w, fmt.Sprintf("DB ping failed: %v", err), http.StatusInternalServerError)
@@ -750,7 +775,7 @@ func (s *Server) handleHealthCheck(w http.ResponseWriter, r *http.Request) {
 }
 
 // Parse the template for the status page.
-func parseTemplate(staticPath template.TrustedSource, filename string) (*template.Template, error) {
+func parseTemplate(cfg *config.Config, staticPath template.TrustedSource, filename string) (*template.Template, error) {
 	if staticPath.String() == "" {
 		return nil, nil
 	}
@@ -759,6 +784,27 @@ func parseTemplate(staticPath template.TrustedSource, filename string) (*templat
 	if err != nil {
 		return nil, err
 	}
+
+	var logURLBase, projectParam string
+	if serverconfig.OnGKE() {
+		cluster := cfg.DeploymentEnvironment() + "-" + "pkgsite"
+		logURLBase = `https://pantheon.corp.google.com/logs/query;query=resource.type%3D%22k8s_container%22%20resource.labels.cluster_name%3D%22` +
+			cluster +
+			`%22%20resource.labels.container_name%3D%22worker%22`
+		projectParam = "?project=" + cfg.ProjectID
+	}
+
+	logURL := func(traceID string) string {
+		if logURLBase == "" {
+			return ""
+		}
+		var tracePart string
+		if traceID != "" {
+			tracePart = url.PathEscape(fmt.Sprintf(` trace="%s"`, traceID))
+		}
+		return logURLBase + tracePart + projectParam
+	}
+
 	return template.New(filename).Funcs(template.FuncMap{
 		"truncate":  truncate,
 		"timefmt":   formatTime,
@@ -770,6 +816,7 @@ func parseTemplate(staticPath template.TrustedSource, filename string) (*templat
 		"timeSub": func(t1, t2 time.Time) time.Duration {
 			return t1.Sub(t2).Round(time.Second)
 		},
+		"logURL": logURL,
 	}).ParseFilesFromTrustedSources(templatePath)
 }
 

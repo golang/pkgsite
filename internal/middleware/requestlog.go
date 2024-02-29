@@ -13,8 +13,8 @@ import (
 	"time"
 
 	"cloud.google.com/go/logging"
+	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/log"
-	"golang.org/x/pkgsite/internal/log/stackdriverlogger"
 )
 
 // Logger is the interface used to write request logs to GCP.
@@ -40,12 +40,12 @@ func (l LocalLogger) Log(entry logging.Entry) {
 }
 
 // RequestLog returns a middleware that logs each incoming requests using the
-// given logger. This logger replaces the built-in appengine request logger,
-// which logged PII when behind IAP, in such a way that was impossible to turn
-// off.
+// given logger.
 //
 // Logs may be viewed in Pantheon by selecting the log source corresponding to
-// the AppEngine service name (e.g. 'dev-worker').
+// the service name (e.g. 'dev-worker').
+//
+// Install this middleware after RequestInfo to ensure that trace IDs appear in the log.
 func RequestLog(lg Logger) Middleware {
 	return func(h http.Handler) http.Handler {
 		return &handler{delegate: h, logger: lg}
@@ -59,21 +59,21 @@ type handler struct {
 
 func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
-	traceID := r.Header.Get("X-Cloud-Trace-Context")
 	severity := logging.Info
 	if r.Method == http.MethodGet && r.URL.Path == "/healthz" {
 		severity = logging.Debug
 	}
+	requestInfo := internal.RequestInfoFromContext(r.Context())
 	h.logger.Log(logging.Entry{
 		HTTPRequest: &logging.HTTPRequest{Request: r},
 		Payload: map[string]string{
 			"requestType": "request start",
 		},
 		Severity: severity,
-		Trace:    traceID,
+		Trace:    requestInfo.TraceID,
 	})
 	w2 := &responseWriter{ResponseWriter: w}
-	h.delegate.ServeHTTP(w2, r.WithContext(stackdriverlogger.NewContextWithTraceID(r.Context(), traceID)))
+	h.delegate.ServeHTTP(w2, r)
 	s := severity
 	if w2.status == http.StatusServiceUnavailable {
 		// load shedding is a warning, not an error
@@ -92,7 +92,7 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			"isRobot":     isRobot(r.Header.Get("User-Agent")),
 		},
 		Severity: s,
-		Trace:    traceID,
+		Trace:    requestInfo.TraceID,
 	})
 }
 

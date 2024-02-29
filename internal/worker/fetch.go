@@ -157,10 +157,11 @@ func (f *Fetcher) FetchAndUpdateState(ctx context.Context, modulePath, requested
 		}
 
 		fi := &FetchInfo{
-			ModulePath: modulePath,
-			Version:    requestedVersion,
-			ZipSize:    uint64(zipSize),
-			Start:      time.Now(),
+			RequestInfo: internal.RequestInfoFromContext(ctx),
+			ModulePath:  modulePath,
+			Version:     requestedVersion,
+			ZipSize:     uint64(zipSize),
+			Start:       time.Now(),
 		}
 		startFetchInfo(fi)
 		defer func() { finishFetchInfo(fi, status, err) }()

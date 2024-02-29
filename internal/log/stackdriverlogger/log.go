@@ -16,6 +16,7 @@ import (
 	"sync"
 
 	"cloud.google.com/go/logging"
+	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/log"
@@ -31,18 +32,8 @@ func init() {
 	}
 }
 
-type (
-	// traceIDKey is the type of the context key for trace IDs.
-	traceIDKey struct{}
-
-	// labelsKey is the type of the context key for labels.
-	labelsKey struct{}
-)
-
-// NewContextWithTraceID creates a new context from ctx that adds the trace ID.
-func NewContextWithTraceID(ctx context.Context, traceID string) context.Context {
-	return context.WithValue(ctx, traceIDKey{}, traceID)
-}
+// labelsKey is the type of the context key for labels.
+type labelsKey struct{}
 
 // NewContextWithLabel creates a new context from ctx that adds a label that will
 // appear in the log entry.
@@ -90,7 +81,7 @@ func (l *logger) Log(ctx context.Context, s log.Severity, payload any) {
 	if err, ok := payload.(error); ok {
 		payload = err.Error()
 	}
-	traceID, _ := ctx.Value(traceIDKey{}).(string) // if not present, traceID is "", which is fine
+
 	labels, _ := ctx.Value(labelsKey{}).(map[string]string)
 	es := experimentString(ctx)
 	if len(es) > 0 {
@@ -105,7 +96,7 @@ func (l *logger) Log(ctx context.Context, s log.Severity, payload any) {
 		Severity: stackdriverSeverity(s),
 		Labels:   labels,
 		Payload:  payload,
-		Trace:    traceID,
+		Trace:    internal.RequestInfoFromContext(ctx).TraceID,
 	})
 }
 

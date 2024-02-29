@@ -143,6 +143,7 @@ func main() {
 	}
 
 	mw := middleware.Chain(
+		middleware.RequestInfo(), // must be first
 		middleware.RequestLog(cmdconfig.Logger(ctx, cfg, "worker-log")),
 		mtimeout.Timeout(time.Duration(timeout)*time.Minute),
 		iap,
