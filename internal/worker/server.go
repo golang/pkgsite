@@ -84,26 +84,17 @@ const (
 // NewServer creates a new Server with the given dependencies.
 func NewServer(cfg *config.Config, scfg ServerConfig) (_ *Server, err error) {
 	defer derrors.Wrap(&err, "NewServer(db, %+v)", scfg)
-	t1, err := parseTemplate(scfg.StaticPath, template.TrustedSourceFromConstant(indexTemplate))
-	if err != nil {
-		return nil, err
+	templates := map[string]*template.Template{}
+	for _, templateName := range []string{indexTemplate, versionsTemplate, excludedTemplate} {
+		t, err := parseTemplate(scfg.StaticPath, templateName)
+		if err != nil {
+			return nil, err
+		}
+		templates[templateName] = t
 	}
-	t2, err := parseTemplate(scfg.StaticPath, template.TrustedSourceFromConstant(versionsTemplate))
-	if err != nil {
-		return nil, err
-	}
-	t3, err := parseTemplate(scfg.StaticPath, template.TrustedSourceFromConstant(excludedTemplate))
-	if err != nil {
-		return nil, err
-	}
-	ts := template.TrustedSourceJoin(scfg.StaticPath)
-	tfs := template.TrustedFSFromTrustedSource(ts)
+
+	tfs := template.TrustedFSFromTrustedSource(scfg.StaticPath)
 	dochtml.LoadTemplates(tfs)
-	templates := map[string]*template.Template{
-		indexTemplate:    t1,
-		versionsTemplate: t2,
-		excludedTemplate: t3,
-	}
 	var c *cache.Cache
 	if scfg.RedisCacheClient != nil {
 		c = cache.New(scfg.RedisCacheClient)
@@ -759,12 +750,16 @@ func (s *Server) handleHealthCheck(w http.ResponseWriter, r *http.Request) {
 }
 
 // Parse the template for the status page.
-func parseTemplate(staticPath, filename template.TrustedSource) (*template.Template, error) {
+func parseTemplate(staticPath template.TrustedSource, filename string) (*template.Template, error) {
 	if staticPath.String() == "" {
 		return nil, nil
 	}
-	templatePath := template.TrustedSourceJoin(staticPath, template.TrustedSourceFromConstant("/worker"), filename)
-	return template.New(filename.String()).Funcs(template.FuncMap{
+	ts := template.TrustedSourceJoin(staticPath, template.TrustedSourceFromConstant("/worker"))
+	templatePath, err := template.TrustedSourceFromConstantDir("", ts, filename)
+	if err != nil {
+		return nil, err
+	}
+	return template.New(filename).Funcs(template.FuncMap{
 		"truncate":  truncate,
 		"timefmt":   formatTime,
 		"bytesToMi": bytesToMi,
