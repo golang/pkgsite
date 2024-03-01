@@ -319,6 +319,7 @@ func (f *Fetcher) fetchAndInsertModule(ctx context.Context, modulePath, requeste
 	// Fetch the module, and the current @main and @master version of this module.
 	// The @main and @master version will be used to update the version_map
 	// target if applicable.
+	done := internal.RequestState(ctx, "fetching")
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() {
@@ -349,6 +350,7 @@ func (f *Fetcher) fetchAndInsertModule(ctx context.Context, modulePath, requeste
 		}
 	}()
 	wg.Wait()
+	done()
 	ft.MainVersion = main
 	ft.MasterVersion = master
 
@@ -485,6 +487,7 @@ func updateVersionMap(ctx context.Context, db *postgres.DB, ft *fetchTask) (err 
 }
 
 func deleteModule(ctx context.Context, db *postgres.DB, ft *fetchTask) (err error) {
+	defer internal.RequestState(ctx, "deleting module")()
 	start := time.Now()
 	defer func() {
 		ft.timings["worker.deleteModule"] = time.Since(start)
@@ -527,6 +530,7 @@ func logTaskResult(ctx context.Context, ft *fetchTask, prefix string) {
 // it must be protected by the module-path advisory lock.
 func (f *Fetcher) FetchAndUpdateLatest(ctx context.Context, modulePath string) (_ *internal.LatestModuleVersions, err error) {
 	defer derrors.Wrap(&err, "FetchAndUpdateLatest(%q)", modulePath)
+	defer internal.RequestState(ctx, "dealing with latest versions")()
 
 	lmv, err := fetch.LatestModuleVersions(ctx, modulePath, f.ProxyClient, func(v string) (bool, error) {
 		return f.DB.HasGoMod(ctx, modulePath, v)

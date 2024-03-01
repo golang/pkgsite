@@ -25,6 +25,7 @@ func insertSymbols(ctx context.Context, tx *database.DB, modulePath, v string,
 	pathToUnitID map[string]int,
 	pathToDocs map[string][]*internal.Documentation) (err error) {
 	defer derrors.WrapStack(&err, "insertSymbols(ctx, db, %q, %q, pathToID, pathToDocs)", modulePath, v)
+	defer internal.RequestState(ctx, "inserting symbols")()
 
 	// Only update symbol history if the version type is release.
 	versionType, err := version.ParseType(v)

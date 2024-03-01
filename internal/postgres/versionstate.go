@@ -120,8 +120,9 @@ type ModuleVersionStateForUpdate struct {
 // UpdateModuleVersionState inserts or updates the module_version_state table with
 // the results of a fetch operation for a given module version.
 func (db *DB) UpdateModuleVersionState(ctx context.Context, mvs *ModuleVersionStateForUpdate) (err error) {
-	defer derrors.WrapStack(&err, "UpsertModuleVersionState(ctx, %s@%s)", mvs.ModulePath, mvs.Version)
-	ctx, span := trace.StartSpan(ctx, "UpsertModuleVersionState")
+	defer derrors.WrapStack(&err, "UpdateModuleVersionState(ctx, %s@%s)", mvs.ModulePath, mvs.Version)
+	defer internal.RequestState(ctx, "updating module_version_states table")()
+	ctx, span := trace.StartSpan(ctx, "UpdateModuleVersionState")
 	defer span.End()
 
 	var numPackages *int

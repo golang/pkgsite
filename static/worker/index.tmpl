@@ -166,6 +166,7 @@
           <th>Version</th>
           <th>Zip Size (Mi)</th>
           <th>Age</th>
+          <th>State</th>
         </tr>
       </thead>
       <tbody>
@@ -176,6 +177,7 @@
               <td>{{.Version}}</td>
               <td>{{.ZipSize | bytesToMi}}</td>
               <td>{{timeSince .Start}}</td>
+              <td>{{.RequestInfo.State.Load}}</td>
               {{with .RequestInfo.TraceID}}
                 <td><a href="{{logURL .}}" target="_blank" rel="noreferrer">Logs</a></td>
                 <td><a href="/cancel?trace={{.}}" target="_blank" rel="noreferrer">Cancel</a></td>
@@ -194,6 +196,7 @@
         <tr>
           <th>URL</th>
           <th>Age</th>
+          <th>State</th>
         </tr>
       </thead>
       <tbody>
@@ -201,6 +204,7 @@
           <tr>
             <td>{{.TrimmedURL}}</td>
             <td>{{timeSince .Start}}</td>
+            <td>{{.State.Load}}</td>
             {{with .TraceID}}
               <td><a href="{{logURL .}}" target="_blank" rel="noreferrer">Logs</a></td>
               <td><a href="/cancel?trace={{.}}" target="_blank" rel="noreferrer">Cancel</a></td>

@@ -40,6 +40,7 @@ func (db *DB) InsertModule(ctx context.Context, m *internal.Module, lmv *interna
 		}
 		derrors.WrapStack(&err, "DB.InsertModule(ctx, Module(%q, %q))", m.ModulePath, m.Version)
 	}()
+	defer internal.RequestState(ctx, "inserting module into DB")()
 
 	if err := validateModule(m); err != nil {
 		return false, err
@@ -70,6 +71,7 @@ func (db *DB) InsertModule(ctx context.Context, m *internal.Module, lmv *interna
 // licenses are invalid.
 func (db *DB) saveModule(ctx context.Context, m *internal.Module, lmv *internal.LatestModuleVersions) (isLatest bool, err error) {
 	defer derrors.WrapStack(&err, "saveModule(ctx, tx, Module(%q, %q))", m.ModulePath, m.Version)
+	defer internal.RequestState(ctx, "saving module into DB")()
 	ctx, span := trace.StartSpan(ctx, "saveModule")
 	defer span.End()
 
@@ -223,6 +225,7 @@ func isAlternativeModulePath(ctx context.Context, db *database.DB, modulePath st
 }
 
 func insertModule(ctx context.Context, db *database.DB, m *internal.Module) (_ int, err error) {
+	defer internal.RequestState(ctx, "inserting into modules table")()
 	ctx, span := trace.StartSpan(ctx, "insertModule")
 	defer span.End()
 	defer derrors.WrapStack(&err, "insertModule(ctx, %q, %q)", m.ModulePath, m.Version)
@@ -272,6 +275,7 @@ func insertModule(ctx context.Context, db *database.DB, m *internal.Module) (_ i
 }
 
 func insertLicenses(ctx context.Context, db *database.DB, m *internal.Module, moduleID int) (err error) {
+	defer internal.RequestState(ctx, "inserting into licenses table")()
 	ctx, span := trace.StartSpan(ctx, "insertLicenses")
 	defer span.End()
 	defer derrors.WrapStack(&err, "insertLicenses(ctx, %q, %q)", m.ModulePath, m.Version)
@@ -302,6 +306,7 @@ func insertLicenses(ctx context.Context, db *database.DB, m *internal.Module, mo
 // insertImportsUnique inserts and removes rows from the imports_unique table. It should only
 // be called if the given module's version is the latest.
 func insertImportsUnique(ctx context.Context, tx *database.DB, m *internal.Module) (err error) {
+	defer internal.RequestState(ctx, "inserting into imports_unique table")()
 	ctx, span := trace.StartSpan(ctx, "insertImportsUnique")
 	defer span.End()
 	defer derrors.WrapStack(&err, "insertImportsUnique(%q, %q)", m.ModulePath, m.Version)
@@ -334,6 +339,7 @@ func (pdb *DB) insertUnits(ctx context.Context, tx *database.DB,
 	m *internal.Module, moduleID int, pathToID map[string]int) (
 	pathToUnitID map[string]int, pathToPkgDocs map[string][]*internal.Documentation, err error) {
 	defer derrors.WrapStack(&err, "insertUnits(ctx, tx, %q, %q)", m.ModulePath, m.Version)
+	defer internal.RequestState(ctx, "inserting units")()
 	ctx, span := trace.StartSpan(ctx, "insertUnits")
 	defer span.End()
 
@@ -634,7 +640,7 @@ func insertReadmes(ctx context.Context, db *database.DB,
 // fetched. They are used to determine if the module is alternative.
 func (db *DB) ReconcileSearch(ctx context.Context, modulePath, version string, status int) (err error) {
 	defer derrors.WrapStack(&err, "ReconcileSearch(%q)", modulePath)
-
+	defer internal.RequestState(ctx, "reconciling search")()
 	return db.db.Transact(ctx, sql.LevelRepeatableRead, func(tx *database.DB) error {
 		// Hold the lock on the module path throughout.
 		if err := lock(ctx, tx, modulePath); err != nil {

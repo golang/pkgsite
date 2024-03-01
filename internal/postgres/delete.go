@@ -10,6 +10,7 @@ import (
 
 	"github.com/Masterminds/squirrel"
 	"github.com/lib/pq"
+	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/log"
@@ -51,6 +52,7 @@ func (db *DB) DeleteModule(ctx context.Context, modulePath, resolvedVersion stri
 // deleteOtherModulePackagesFromSearchDocuments deletes all packages from search
 // documents with the given module that are not in m.
 func deleteOtherModulePackagesFromSearchDocuments(ctx context.Context, tx *database.DB, modulePath string, pkgPaths []string) error {
+	defer internal.RequestState(ctx, "deleting other packages from search_documents")()
 	dbPkgs, err := database.Collect1[string](ctx, tx, `
 		SELECT package_path FROM search_documents WHERE module_path = $1
 	`, modulePath)

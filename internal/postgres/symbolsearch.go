@@ -13,6 +13,7 @@ import (
 	"strings"
 
 	"github.com/lib/pq"
+	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/middleware/stats"
@@ -24,6 +25,7 @@ func upsertSymbolSearchDocuments(ctx context.Context, tx *database.DB,
 	modulePath, v string) (err error) {
 	defer derrors.Wrap(&err, "upsertSymbolSearchDocuments(ctx, ddb, %q, %q)", modulePath, v)
 	defer stats.Elapsed(ctx, "upsertSymbolSearchDocuments")()
+	defer internal.RequestState(ctx, "updating symbol_search_documents")()
 
 	// If a user is looking for the symbol "DB.Begin", from package
 	// database/sql, we want them to be able to find this by searching for

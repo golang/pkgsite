@@ -610,6 +610,7 @@ var upsertSearchStatement = fmt.Sprintf(`
 // It assumes that all non-redistributable data has been removed from mod.
 func upsertSearchDocuments(ctx context.Context, ddb *database.DB, mod *internal.Module) (err error) {
 	defer derrors.WrapStack(&err, "upsertSearchDocuments(ctx, %q, %q)", mod.ModulePath, mod.Version)
+	defer internal.RequestState(ctx, "updating search_documents table")()
 	ctx, span := trace.StartSpan(ctx, "UpsertSearchDocuments")
 	defer span.End()
 
@@ -775,6 +776,8 @@ func (db *DB) UpdateSearchDocumentsImportedByCount(ctx context.Context, batchSiz
 
 func (db *DB) UpdateSearchDocumentsImportedByCountWithCounts(ctx context.Context, counts map[string]int, batchSize int) (nUpdated int64, err error) {
 	defer derrors.WrapStack(&err, "UpdateSearchDocumentsImportedByCountWithCounts")
+	defer internal.RequestState(ctx, "updating search_documents")()
+	total := len(counts)
 	for len(counts) > 0 {
 		var nu int64
 		err := db.db.Transact(ctx, sql.LevelDefault, func(tx *database.DB) error {
@@ -788,6 +791,7 @@ func (db *DB) UpdateSearchDocumentsImportedByCountWithCounts(ctx context.Context
 			return nUpdated, err
 		}
 		nUpdated += nu
+		internal.RequestState(ctx, fmt.Sprintf("updating search_documents: %d/%d", nUpdated, total))
 	}
 	return nUpdated, nil
 }
@@ -796,7 +800,7 @@ func (db *DB) UpdateSearchDocumentsImportedByCountWithCounts(ctx context.Context
 // along with their current imported-by count.
 func (db *DB) getSearchPackages(ctx context.Context) (counts map[string]int, err error) {
 	defer derrors.WrapStack(&err, "DB.getSearchPackages(ctx)")
-
+	defer internal.RequestState(ctx, "reading search_packages table")()
 	counts = map[string]int{}
 	err = db.db.RunQuery(ctx, `
 		SELECT package_path, imported_by_count
@@ -820,6 +824,7 @@ func (db *DB) getSearchPackages(ctx context.Context) (counts map[string]int, err
 
 func (db *DB) computeImportedByCounts(ctx context.Context, curCounts map[string]int) (newCounts map[string]int, err error) {
 	defer derrors.WrapStack(&err, "db.computeImportedByCounts(ctx)")
+	defer internal.RequestState(ctx, "computing counts")()
 
 	newCounts = map[string]int{}
 	// Get all (from_path, to_path) pairs, deduped.
