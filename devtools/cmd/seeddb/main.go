@@ -197,7 +197,7 @@ func fetchFunc(ctx context.Context, f *worker.Fetcher, m, v string) (err error) 
 	defer derrors.Wrap(&err, "fetchFunc(ctx, f, %q, %q)", m, v)
 
 	log.Infof(ctx, "Fetch requested: %q %q", m, v)
-	fetchCtx, cancel := context.WithTimeout(ctx, 5*time.Minute)
+	fetchCtx, cancel := context.WithTimeout(ctx, 7*time.Minute)
 	defer cancel()
 
 	code, _, err := f.FetchAndUpdateState(fetchCtx, m, v, "")

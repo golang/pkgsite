@@ -132,7 +132,7 @@ main() {
     dcompose up --detach --force-recreate frontend
     dcompose run --rm --entrypoint bash go -c "
       go install golang.org/x/website/cmd/screentest@latest
-      go run ./devtools/cmd/wait_available --timeout 120s frontend:8080 --
+      go run ./devtools/cmd/wait_available --timeout 120s frontend:8080 -- \
       $(echo $cmd)"
   elif [ "$env" = local ]; then
     if ! nc -z localhost 9222; then
