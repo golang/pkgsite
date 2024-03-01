@@ -80,36 +80,7 @@
     </table>
   </div>
 
-  <div class="Experiments">
-    <h3>Experiments</h3>
-    {{if .Experiments}}
-      <table>
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Description</th>
-            <th>Rollout</th>
-          </tr>
-        </thead>
-        <tbody>
-        {{range .Experiments}}
-            <tr>
-              <td>{{.Name}}</td>
-              <td>{{.Description}}</td>
-              <td>{{.Rollout}}</td>
-            </tr>
-        {{end}}
-        </tbody>
-      </table>
-      <p>To update experiments, modify the {{.Env}}-config.yaml file and deploy with
-        the <code>-config-only</code> flag.</p>
-    {{else}}
-      <p>No experiments.</p>
-    {{end}}
-    <iframe class="Experiments-updateResult" name="experimentUpdateResult" id="experimentUpdateResult"></iframe>
-  </div>
-
-  <div>
+ <div>
     <h3>Memory (all values in Mi)</h3>
     <table>
       <tr>
@@ -215,6 +186,34 @@
     </table>
   </div>
 
+  <div class="Experiments">
+    <h3>Experiments</h3>
+    {{if .Experiments}}
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Rollout</th>
+          </tr>
+        </thead>
+        <tbody>
+        {{range .Experiments}}
+            <tr>
+              <td>{{.Name}}</td>
+              <td>{{.Description}}</td>
+              <td>{{.Rollout}}</td>
+            </tr>
+        {{end}}
+        </tbody>
+      </table>
+      <p>To update experiments, modify the {{.Env}}-config.yaml file and deploy with
+        the <code>-config-only</code> flag.</p>
+    {{else}}
+      <p>No experiments.</p>
+    {{end}}
+    <iframe class="Experiments-updateResult" name="experimentUpdateResult" id="experimentUpdateResult"></iframe>
+  </div>
 
 </body>
 

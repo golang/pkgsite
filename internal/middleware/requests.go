@@ -7,6 +7,7 @@ package middleware
 import (
 	"context"
 	"net/http"
+	"sort"
 	"sync"
 
 	"golang.org/x/pkgsite/internal"
@@ -48,7 +49,7 @@ func RequestInfo() Middleware {
 }
 
 // ActiveRequests returns all requests that are currently being handled by the server,
-// in no particular order.
+// sorted by start time.
 func ActiveRequests() []*internal.RequestInfo {
 	requestMapMu.Lock()
 	defer requestMapMu.Unlock()
@@ -56,6 +57,7 @@ func ActiveRequests() []*internal.RequestInfo {
 	for _, ri := range requestMap {
 		ris = append(ris, ri)
 	}
+	sort.Slice(ris, func(i, j int) bool { return ris[i].Start.Before(ris[j].Start) })
 	return ris
 }
 
