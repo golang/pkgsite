@@ -26,6 +26,7 @@ var (
 
 type Renderer struct {
 	fset          *token.FileSet
+	headingIDs    headingIDs
 	pids          *packageIDs
 	packageURL    func(string) string
 	ctx           context.Context
@@ -97,6 +98,7 @@ func New(ctx context.Context, fset *token.FileSet, pkg *doc.Package, opts *Optio
 
 	return &Renderer{
 		fset:          fset,
+		headingIDs:    headingIDs{},
 		pids:          pids,
 		packageURL:    packageURL,
 		docTmpl:       docDataTmpl,

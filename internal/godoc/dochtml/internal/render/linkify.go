@@ -23,6 +23,7 @@ import (
 	safe "github.com/google/safehtml"
 	"github.com/google/safehtml/legacyconversions"
 	"github.com/google/safehtml/template"
+	"golang.org/x/net/html"
 	"golang.org/x/pkgsite/internal/log"
 )
 
@@ -111,22 +112,60 @@ var (
 		`<li{{with .Number}} value="{{.}}"{{end}}>{{.Content}}</li>`))
 )
 
-func (r *Renderer) formatDocHTML(text string, extractLinks bool) safe.HTML {
+func (r *Renderer) formatDocHTML(text string, decl ast.Decl, extractLinks bool) safe.HTML {
 	doc := r.commentParser.Parse(text)
 	if extractLinks {
 		r.removeLinks(doc)
 	}
-	var headings []heading
-	for _, b := range doc.Content {
-		if h, ok := b.(*comment.Heading); ok {
-			headings = append(headings, r.newHeading(h))
-		}
-	}
-	h := r.blocksToHTML(doc.Content, true, extractLinks)
-	if len(headings) > 0 {
+
+	h := r.blocksToHTML(doc.Content, decl, true, extractLinks)
+	if headings := extractHeadings(h); len(headings) > 0 {
 		h = safe.HTMLConcat(ExecuteToHTML(tocTemplate, headings), h)
 	}
+
 	return h
+}
+
+func extractHeadings(h safe.HTML) []heading {
+	var headings []heading
+
+	doc, err := html.Parse(strings.NewReader(h.String()))
+	if err != nil {
+		return nil
+	}
+
+	var f func(*html.Node)
+	f = func(n *html.Node) {
+		for _, a := range n.Attr {
+			if a.Key == "id" && strings.HasPrefix(a.Val, "hdr-") {
+				if tn := firstTextNode(n); tn != nil {
+					title := strings.TrimSpace(tn.Data)
+					hdrName := strings.TrimPrefix(a.Val, "hdr-")
+					id := safe.IdentifierFromConstantPrefix("hdr", hdrName)
+					headings = append(headings, heading{id, safe.HTMLEscaped(title)})
+				}
+				break
+			}
+		}
+		for c := n.FirstChild; c != nil; c = c.NextSibling {
+			f(c)
+		}
+	}
+	f(doc)
+
+	return headings
+}
+
+func firstTextNode(n *html.Node) *html.Node {
+	if n.Type == html.TextNode {
+		return n
+	}
+	for c := n.FirstChild; c != nil; c = c.NextSibling {
+		if r := firstTextNode(c); r != nil {
+			return r
+		}
+	}
+	return nil
 }
 
 func (r *Renderer) removeLinks(doc *comment.Doc) {
@@ -214,13 +253,13 @@ func parseLink(line string) *Link {
 	}
 }
 
-func (r *Renderer) blocksToHTML(bs []comment.Block, useParagraph, extractLinks bool) safe.HTML {
+func (r *Renderer) blocksToHTML(bs []comment.Block, decl ast.Decl, useParagraph, extractLinks bool) safe.HTML {
 	return concatHTML(bs, func(b comment.Block) safe.HTML {
-		return r.blockToHTML(b, useParagraph, extractLinks)
+		return r.blockToHTML(b, decl, useParagraph, extractLinks)
 	})
 }
 
-func (r *Renderer) blockToHTML(b comment.Block, useParagraph, extractLinks bool) safe.HTML {
+func (r *Renderer) blockToHTML(b comment.Block, decl ast.Decl, useParagraph, extractLinks bool) safe.HTML {
 	switch b := b.(type) {
 	case *comment.Paragraph:
 		th := r.textsToHTML(b.Text)
@@ -233,7 +272,7 @@ func (r *Renderer) blockToHTML(b comment.Block, useParagraph, extractLinks bool)
 		return ExecuteToHTML(codeTemplate, b.Text)
 
 	case *comment.Heading:
-		return ExecuteToHTML(headingTemplate, r.newHeading(b))
+		return ExecuteToHTML(headingTemplate, r.newHeading(b, decl))
 
 	case *comment.List:
 		var items []safe.HTML
@@ -242,7 +281,7 @@ func (r *Renderer) blockToHTML(b comment.Block, useParagraph, extractLinks bool)
 			items = append(items, ExecuteToHTML(listItemTemplate, struct {
 				Number  string
 				Content safe.HTML
-			}{item.Number, r.blocksToHTML(item.Content, useParagraph, false)}))
+			}{item.Number, r.blocksToHTML(item.Content, decl, useParagraph, false)}))
 		}
 		t := oListTemplate
 		if b.Items[0].Number == "" {
@@ -254,8 +293,53 @@ func (r *Renderer) blockToHTML(b comment.Block, useParagraph, extractLinks bool)
 	}
 }
 
-func (r *Renderer) newHeading(h *comment.Heading) heading {
-	return heading{headingID(h), r.textsToHTML(h.Text)}
+// headingIDs keeps track of used heading ids to prevent duplicates.
+type headingIDs map[safe.Identifier]bool
+
+// headingID returns a unique identifier for a *comment.Heading & ast.Decl pair.
+func (r *Renderer) headingID(h *comment.Heading, decl ast.Decl) safe.Identifier {
+	s := textsToString(h.Text)
+	hdrTitle := badAnchorRx.ReplaceAllString(s, "_")
+	id := safe.IdentifierFromConstantPrefix("hdr", hdrTitle)
+	if !r.headingIDs[id] {
+		r.headingIDs[id] = true
+		return id
+	}
+
+	// The id is not unique. Attempt to generate an identifier using the decl.
+	for _, v := range generateAnchorPoints(decl) {
+		if v.Kind == "field" {
+			continue
+		}
+		hdrTitle = badAnchorRx.ReplaceAllString(v.ID.String()+"_"+s, "_")
+		if v.Kind == "constant" || v.Kind == "variable" {
+			if specs := decl.(*ast.GenDecl).Specs; len(specs) > 1 {
+				// Grouped consts and vars cannot be deterministically identified,
+				// so treat them as a single section. e.g. "hdr-constant-Title"
+				hdrTitle = badAnchorRx.ReplaceAllString(v.Kind+"_"+s, "_")
+			}
+		}
+		if v.Kind != "method" {
+			// Continue iterating until we find a higher precedence kind.
+			break
+		}
+	}
+
+	for {
+		id = safe.IdentifierFromConstantPrefix("hdr", hdrTitle)
+		if !r.headingIDs[id] {
+			r.headingIDs[id] = true
+			break
+		}
+		// The id is still not unique. Append _ until unique.
+		hdrTitle = hdrTitle + "_"
+	}
+
+	return id
+}
+
+func (r *Renderer) newHeading(h *comment.Heading, decl ast.Decl) heading {
+	return heading{r.headingID(h, decl), r.textsToHTML(h.Text)}
 }
 
 func (r *Renderer) textsToHTML(ts []comment.Text) safe.HTML {
@@ -308,12 +392,6 @@ func concatHTML[T any](xs []T, toHTML func(T) safe.HTML) safe.HTML {
 
 func badType(x any) safe.HTML {
 	return safe.HTMLEscaped(fmt.Sprintf("bad type %T", x))
-}
-
-func headingID(h *comment.Heading) safe.Identifier {
-	s := textsToString(h.Text)
-	id := badAnchorRx.ReplaceAllString(s, "_")
-	return safe.IdentifierFromConstantPrefix("hdr", id)
 }
 
 func textsToString(ts []comment.Text) string {
@@ -375,7 +453,7 @@ func linkRFCs(s string) safe.HTML {
 
 func (r *Renderer) declHTML(doc string, decl ast.Decl, extractLinks bool) (out struct{ Doc, Decl safe.HTML }) {
 	if doc != "" {
-		out.Doc = r.formatDocHTML(doc, extractLinks)
+		out.Doc = r.formatDocHTML(doc, decl, extractLinks)
 	}
 	if decl != nil {
 		idr := &identifierResolver{r.pids, newDeclIDs(decl), r.packageURL}

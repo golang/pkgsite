@@ -20,6 +20,17 @@ import (
 )
 
 func TestFormatDocHTML(t *testing.T) {
+	duplicateHeadersDoc := `Documentation.
+
+Information
+
+This is some information.
+
+Information
+
+This is some other information.
+`
+
 	linksDoc := `Documentation.
 
 The Go Project
@@ -38,10 +49,32 @@ Header
 
 More doc.
 `
+	// typeWithFieldsDecl is declared as:
+	// 	type I2 interface {
+	// 		I1
+	// 		M2()
+	// 	}
+	typeWithFieldsDecl := &ast.GenDecl{
+		Tok: token.TYPE,
+		Specs: []ast.Spec{
+			&ast.TypeSpec{
+				Name: ast.NewIdent("I2"),
+				Type: &ast.InterfaceType{
+					Methods: &ast.FieldList{
+						List: []*ast.Field{
+							{Type: ast.NewIdent("I1")},
+							{Type: &ast.FuncType{}, Names: []*ast.Ident{ast.NewIdent("M2")}},
+						},
+					},
+				},
+			},
+		},
+	}
 
 	for _, test := range []struct {
 		name         string
 		doc          string
+		decl         ast.Decl
 		extractLinks []bool // nil means both
 		want         string
 		wantLinks    []Link
@@ -89,6 +122,194 @@ Go is an open source project.`,
 </div>
 <p>Documentation.
 </p><h4 id="hdr-The_Go_Project">The Go Project <a class="Documentation-idLink" href="#hdr-The_Go_Project" aria-label="Go to The Go Project">¶</a></h4><p>Go is an open source project.
+</p>`,
+		},
+		{
+			name: "unique header ids in overview section",
+			doc:  duplicateHeadersDoc,
+			want: `<div role="navigation" aria-label="Table of Contents">
+  <ul class="Documentation-toc">
+    <li class="Documentation-tocItem">
+        <a href="#hdr-Information">Information</a>
+      </li>
+    <li class="Documentation-tocItem">
+        <a href="#hdr-Information_">Information</a>
+      </li>
+    </ul>
+</div>
+<p>Documentation.
+</p><h4 id="hdr-Information">Information <a class="Documentation-idLink" href="#hdr-Information" aria-label="Go to Information">¶</a></h4><p>This is some information.
+</p><h4 id="hdr-Information_">Information <a class="Documentation-idLink" href="#hdr-Information_" aria-label="Go to Information">¶</a></h4><p>This is some other information.
+</p>`,
+		},
+		{
+			name: "unique header ids in constants section for grouped constants",
+			doc:  duplicateHeadersDoc,
+			decl: &ast.GenDecl{
+				Tok:   token.CONST,
+				Specs: []ast.Spec{&ast.ValueSpec{Names: []*ast.Ident{{}}}, &ast.ValueSpec{Names: []*ast.Ident{{}}}},
+			},
+			want: `<div role="navigation" aria-label="Table of Contents">
+  <ul class="Documentation-toc">
+    <li class="Documentation-tocItem">
+        <a href="#hdr-Information">Information</a>
+      </li>
+    <li class="Documentation-tocItem">
+        <a href="#hdr-constant_Information">Information</a>
+      </li>
+    </ul>
+</div>
+<p>Documentation.
+</p><h4 id="hdr-Information">Information <a class="Documentation-idLink" href="#hdr-Information" aria-label="Go to Information">¶</a></h4><p>This is some information.
+</p><h4 id="hdr-constant_Information">Information <a class="Documentation-idLink" href="#hdr-constant_Information" aria-label="Go to Information">¶</a></h4><p>This is some other information.
+</p>`,
+		},
+		{
+			name: "unique header ids in variables section for grouped variables",
+			doc:  duplicateHeadersDoc,
+			decl: &ast.GenDecl{
+				Tok:   token.VAR,
+				Specs: []ast.Spec{&ast.ValueSpec{Names: []*ast.Ident{{}}}, &ast.ValueSpec{Names: []*ast.Ident{{}}}},
+			},
+			want: `<div role="navigation" aria-label="Table of Contents">
+  <ul class="Documentation-toc">
+    <li class="Documentation-tocItem">
+        <a href="#hdr-Information">Information</a>
+      </li>
+    <li class="Documentation-tocItem">
+        <a href="#hdr-variable_Information">Information</a>
+      </li>
+    </ul>
+</div>
+<p>Documentation.
+</p><h4 id="hdr-Information">Information <a class="Documentation-idLink" href="#hdr-Information" aria-label="Go to Information">¶</a></h4><p>This is some information.
+</p><h4 id="hdr-variable_Information">Information <a class="Documentation-idLink" href="#hdr-variable_Information" aria-label="Go to Information">¶</a></h4><p>This is some other information.
+</p>`,
+		},
+		{
+			name: "unique header ids in functions section",
+			doc:  duplicateHeadersDoc,
+			decl: &ast.FuncDecl{Name: ast.NewIdent("FooFunc")},
+			want: `<div role="navigation" aria-label="Table of Contents">
+  <ul class="Documentation-toc">
+    <li class="Documentation-tocItem">
+        <a href="#hdr-Information">Information</a>
+      </li>
+    <li class="Documentation-tocItem">
+        <a href="#hdr-FooFunc_Information">Information</a>
+      </li>
+    </ul>
+</div>
+<p>Documentation.
+</p><h4 id="hdr-Information">Information <a class="Documentation-idLink" href="#hdr-Information" aria-label="Go to Information">¶</a></h4><p>This is some information.
+</p><h4 id="hdr-FooFunc_Information">Information <a class="Documentation-idLink" href="#hdr-FooFunc_Information" aria-label="Go to Information">¶</a></h4><p>This is some other information.
+</p>`,
+		},
+		{
+			name: "unique header ids in functions section for method",
+			doc:  duplicateHeadersDoc,
+			decl: &ast.FuncDecl{
+				Recv: &ast.FieldList{List: []*ast.Field{{Type: ast.NewIdent("Bar")}}},
+				Name: ast.NewIdent("Func"),
+			},
+			want: `<div role="navigation" aria-label="Table of Contents">
+  <ul class="Documentation-toc">
+    <li class="Documentation-tocItem">
+        <a href="#hdr-Information">Information</a>
+      </li>
+    <li class="Documentation-tocItem">
+        <a href="#hdr-Bar_Func_Information">Information</a>
+      </li>
+    </ul>
+</div>
+<p>Documentation.
+</p><h4 id="hdr-Information">Information <a class="Documentation-idLink" href="#hdr-Information" aria-label="Go to Information">¶</a></h4><p>This is some information.
+</p><h4 id="hdr-Bar_Func_Information">Information <a class="Documentation-idLink" href="#hdr-Bar_Func_Information" aria-label="Go to Information">¶</a></h4><p>This is some other information.
+</p>`,
+		},
+		{
+			name: "unique header ids in types section",
+			doc:  duplicateHeadersDoc,
+			decl: &ast.GenDecl{
+				Tok:   token.TYPE,
+				Specs: []ast.Spec{&ast.TypeSpec{Name: ast.NewIdent("Duration")}},
+			},
+			want: `<div role="navigation" aria-label="Table of Contents">
+  <ul class="Documentation-toc">
+    <li class="Documentation-tocItem">
+        <a href="#hdr-Information">Information</a>
+      </li>
+    <li class="Documentation-tocItem">
+        <a href="#hdr-Duration_Information">Information</a>
+      </li>
+    </ul>
+</div>
+<p>Documentation.
+</p><h4 id="hdr-Information">Information <a class="Documentation-idLink" href="#hdr-Information" aria-label="Go to Information">¶</a></h4><p>This is some information.
+</p><h4 id="hdr-Duration_Information">Information <a class="Documentation-idLink" href="#hdr-Duration_Information" aria-label="Go to Information">¶</a></h4><p>This is some other information.
+</p>`,
+		},
+		{
+			name: "unique header ids in types section for types with fields",
+			doc:  duplicateHeadersDoc,
+			decl: typeWithFieldsDecl,
+			want: `<div role="navigation" aria-label="Table of Contents">
+  <ul class="Documentation-toc">
+    <li class="Documentation-tocItem">
+        <a href="#hdr-Information">Information</a>
+      </li>
+    <li class="Documentation-tocItem">
+        <a href="#hdr-I2_Information">Information</a>
+      </li>
+    </ul>
+</div>
+<p>Documentation.
+</p><h4 id="hdr-Information">Information <a class="Documentation-idLink" href="#hdr-Information" aria-label="Go to Information">¶</a></h4><p>This is some information.
+</p><h4 id="hdr-I2_Information">Information <a class="Documentation-idLink" href="#hdr-I2_Information" aria-label="Go to Information">¶</a></h4><p>This is some other information.
+</p>`,
+		},
+		{
+			name: "unique header ids in types section for typed variable",
+			doc:  duplicateHeadersDoc,
+			decl: &ast.GenDecl{
+				Tok:   token.VAR,
+				Specs: []ast.Spec{&ast.ValueSpec{Type: &ast.StarExpr{X: ast.NewIdent("Location")}, Names: []*ast.Ident{ast.NewIdent("UTC")}}},
+			},
+			want: `<div role="navigation" aria-label="Table of Contents">
+  <ul class="Documentation-toc">
+    <li class="Documentation-tocItem">
+        <a href="#hdr-Information">Information</a>
+      </li>
+    <li class="Documentation-tocItem">
+        <a href="#hdr-UTC_Information">Information</a>
+      </li>
+    </ul>
+</div>
+<p>Documentation.
+</p><h4 id="hdr-Information">Information <a class="Documentation-idLink" href="#hdr-Information" aria-label="Go to Information">¶</a></h4><p>This is some information.
+</p><h4 id="hdr-UTC_Information">Information <a class="Documentation-idLink" href="#hdr-UTC_Information" aria-label="Go to Information">¶</a></h4><p>This is some other information.
+</p>`,
+		},
+		{
+			name: "unique header ids in types section for typed constant",
+			doc:  duplicateHeadersDoc,
+			decl: &ast.GenDecl{
+				Tok:   token.CONST,
+				Specs: []ast.Spec{&ast.ValueSpec{Type: ast.NewIdent("T"), Names: []*ast.Ident{ast.NewIdent("C")}}},
+			},
+			want: `<div role="navigation" aria-label="Table of Contents">
+  <ul class="Documentation-toc">
+    <li class="Documentation-tocItem">
+        <a href="#hdr-Information">Information</a>
+      </li>
+    <li class="Documentation-tocItem">
+        <a href="#hdr-C_Information">Information</a>
+      </li>
+    </ul>
+</div>
+<p>Documentation.
+</p><h4 id="hdr-Information">Information <a class="Documentation-idLink" href="#hdr-Information" aria-label="Go to Information">¶</a></h4><p>This is some information.
+</p><h4 id="hdr-C_Information">Information <a class="Documentation-idLink" href="#hdr-C_Information" aria-label="Go to Information">¶</a></h4><p>This is some other information.
 </p>`,
 		},
 		{
@@ -227,7 +448,7 @@ TLSUnique contains the tls-unique channel binding value (see RFC
 			for _, el := range extractLinks {
 				t.Run(fmt.Sprintf("extractLinks=%t", el), func(t *testing.T) {
 					r := New(context.Background(), nil, pkgTime, nil)
-					got := r.formatDocHTML(test.doc, el)
+					got := r.formatDocHTML(test.doc, test.decl, el)
 					want := testconversions.MakeHTMLForTest(test.want)
 					if diff := cmp.Diff(want, got, cmp.AllowUnexported(safehtml.HTML{})); diff != "" {
 						t.Errorf("doc mismatch (-want +got)\n%s", diff)
