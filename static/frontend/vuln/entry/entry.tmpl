@@ -56,12 +56,20 @@
       <div class="VulnEntryPackages-attr" data-name="Path"><a href="/{{.PackagePath}}">{{.PackagePath}}</a></div>
       <div class="VulnEntryPackages-attr" data-name="Versions">{{if .Versions}}{{.Versions}}{{else}}all versions, no known fixed{{end}}</div>
       <div class="VulnEntryPackages-attr VulnEntryPackages-symbols" data-name="Symbols">
-      {{if .Symbols}}{{ $length := len .Symbols}}
-         {{ $vuln := . }}
-         {{if lt $length 5}}<ul>{{range .Symbols}}<li><a href="/{{$vuln.PackagePath}}#{{.}}">{{.}}</a></li>{{end}}</ul>
-         {{else}}<details><summary>{{len .Symbols}} affected symbols</summary>
-         <ul class="VulnEntryPackages-detailsContent">{{range .Symbols}}<li><a href="/{{$vuln.PackagePath}}#{{.}}">{{.}}</a></li>{{end}}</ul></details>
+      {{ $vuln := . }}
+      {{if .ExportedSymbols}}{{ $length := len .ExportedSymbols}}
+         {{if lt $length 5}}<ul>{{range .ExportedSymbols}}<li><a href="/{{$vuln.PackagePath}}#{{.}}">{{.}}</a></li>{{end}}</ul>
+         {{else}}<details><summary>{{len .ExportedSymbols}} affected symbols</summary>
+         <ul class="VulnEntryPackages-detailsContent">{{range .ExportedSymbols}}<li><a href="/{{$vuln.PackagePath}}#{{.}}">{{.}}</a></li>{{end}}</ul></details>
          {{end}}
+      {{else if .UnexportedSymbols}}
+        <details><summary>{{len .UnexportedSymbols}} unexported affected symbols</summary>
+          <ul class="VulnEntryPackages-detailsContent">
+            {{range .UnexportedSymbols}}
+              <li>{{.}}</li>
+            {{end}}
+          </ul>
+        </details>
       {{else}}all symbols{{end}}
       </div>
     </li>

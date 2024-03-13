@@ -78,9 +78,10 @@ func toVulns(entries []*osv.Entry) []Vuln {
 type AffectedPackage struct {
 	PackagePath string
 	Versions    string
-	// List of exported affected symbols. Empty list
-	// implies all symbols in the package are affected.
-	Symbols []string
+	// Lists of affected symbols.
+	// If both of these lists are empty, all symbols in the package are affected.
+	ExportedSymbols   []string
+	UnexportedSymbols []string
 }
 
 // A pair is like an osv.Range, but each pair is a self-contained 2-tuple
@@ -152,10 +153,12 @@ func AffectedPackages(e *osv.Entry) []*AffectedPackage {
 			vs = append(vs, s)
 		}
 		for _, p := range a.EcosystemSpecific.Packages {
+			exported, unexported := affectedSymbols(p.Symbols)
 			affs = append(affs, &AffectedPackage{
-				PackagePath: p.Path,
-				Versions:    strings.Join(vs, ", "),
-				Symbols:     exportedSymbols(p.Symbols),
+				PackagePath:       p.Path,
+				Versions:          strings.Join(vs, ", "),
+				ExportedSymbols:   exported,
+				UnexportedSymbols: unexported,
 				// TODO(hyangah): where to place GOOS/GOARCH info
 			})
 		}
@@ -163,18 +166,19 @@ func AffectedPackages(e *osv.Entry) []*AffectedPackage {
 	return affs
 }
 
-func exportedSymbols(in []string) []string {
-	var out []string
+func affectedSymbols(in []string) (e, u []string) {
 	for _, s := range in {
 		exported := true
 		for _, part := range strings.Split(s, ".") {
 			if !token.IsExported(part) {
-				exported = false // exported only all parts in the symbol name are exported.
+				exported = false // exported only if all parts of the symbol name are exported.
 			}
 		}
 		if exported {
-			out = append(out, s)
+			e = append(e, s)
+		} else {
+			u = append(u, s)
 		}
 	}
-	return out
+	return e, u
 }

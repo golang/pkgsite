@@ -261,8 +261,8 @@ func TestAffectedPackagesPackagesSymbols(t *testing.T) {
 				}},
 			},
 			want: []*AffectedPackage{{
-				PackagePath: "example.com/mod/pkg",
-				Symbols:     []string{"F"},
+				PackagePath:     "example.com/mod/pkg",
+				ExportedSymbols: []string{"F"},
 			}},
 		},
 		{
@@ -280,8 +280,9 @@ func TestAffectedPackagesPackagesSymbols(t *testing.T) {
 				}},
 			},
 			want: []*AffectedPackage{{
-				PackagePath: "example.com/mod/pkg",
-				Symbols:     []string{"F", "S.F"}, // unexported symbols are excluded.
+				PackagePath:       "example.com/mod/pkg",
+				ExportedSymbols:   []string{"F", "S.F"},
+				UnexportedSymbols: []string{"g", "S.f", "s.F", "s.f"},
 			}},
 		},
 		{
@@ -328,11 +329,12 @@ func TestAffectedPackagesPackagesSymbols(t *testing.T) {
 			want: []*AffectedPackage{{
 				PackagePath: "example.com/mod1/pkg1",
 			}, {
-				PackagePath: "example.com/mod1/pkg2",
-				Symbols:     []string{"F"},
+				PackagePath:     "example.com/mod1/pkg2",
+				ExportedSymbols: []string{"F"},
 			}, {
-				PackagePath: "example.com/mod2/pkg3",
-				Symbols:     []string{"H"},
+				PackagePath:       "example.com/mod2/pkg3",
+				ExportedSymbols:   []string{"H"},
+				UnexportedSymbols: []string{"g"},
 			}},
 		},
 	}
