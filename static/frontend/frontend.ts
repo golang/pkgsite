@@ -128,7 +128,7 @@ function toggleTheme() {
     nextTheme = 'auto';
   }
   let domain = '';
-  if (location.hostname.endsWith('go.dev')) {
+  if (location.hostname === 'go.dev' || location.hostname.endsWith(".go.dev")) {
     domain = 'domain=.go.dev;';
   }
   document.documentElement.setAttribute('data-theme', nextTheme);
@@ -147,7 +147,7 @@ function registerCookieNotice() {
     notice?.classList.add('Cookie-notice--visible');
     button?.addEventListener('click', () => {
       let domain = '';
-      if (location.hostname.endsWith('go.dev')) {
+      if (location.hostname === 'go.dev' || location.hostname.endsWith(".go.dev")) {
         // Apply the cookie to *.go.dev.
         domain = 'domain=.go.dev;';
       }
