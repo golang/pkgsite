@@ -15,7 +15,7 @@ func TestIsExcluded(t *testing.T) {
 	defer release()
 	ctx := context.Background()
 
-	for _, pat := range []string{"bad", "badslash/", "baddy@v1.2.3"} {
+	for _, pat := range []string{"bad", "badslash/", "baddy@v1.2.3", "github.com/bad"} {
 		if err := testDB.InsertExcludedPattern(ctx, pat, "someone", "because"); err != nil {
 			t.Fatal(err)
 		}
@@ -38,6 +38,16 @@ func TestIsExcluded(t *testing.T) {
 		{"baddy", "v1.2.4", false},
 		{"baddy", "", false},
 		{"baddy", "v1.2.3", true},
+
+		// tests for case insensitivity
+		{"Bad", "", true},
+		{"Bad/repo", "", true},
+		{"baDDy", "v1.2.3", true},
+		{"baDDy", "v1.2.4", false},
+		{"github.com/Bad", "", true},
+		{"github.com/bad/repo", "", true},
+		{"github.com/bad/Repo", "", true},
+		{"github.com/Bad/repo", "", true},
 	} {
 		got := testDB.IsExcluded(ctx, test.path, test.version)
 		if got != test.want {

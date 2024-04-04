@@ -30,19 +30,23 @@ func (db *DB) IsExcluded(ctx context.Context, path, version string) bool {
 }
 
 func excludes(pattern, path, version string) bool {
-	// Patterns with "@" must match exactly.
+	// Certain hosts (such as GitHub) are case insensitive.
+	// Therefore, we err on the side of insensitive exclusions.
+
+	// Patterns with "@" must match the full path (case insensitively).
 	mod, ver, found := strings.Cut(pattern, "@")
 	if found {
-		return mod == path && ver == version
+		return strings.EqualFold(mod, path) && ver == version
 	}
-	// Patterns without "@" can match exactly or be a componentwise prefix.
-	if pattern == path {
+	// Patterns without "@" can match the full path or be a componentwise prefix
+	// (case insensitively).
+	if strings.EqualFold(pattern, path) {
 		return true
 	}
 	if !strings.HasSuffix(pattern, "/") {
 		pattern += "/"
 	}
-	return strings.HasPrefix(path, pattern)
+	return strings.HasPrefix(strings.ToLower(path), strings.ToLower(pattern))
 }
 
 // InsertExcludedPattern inserts pattern into the excluded_prefixes table.
