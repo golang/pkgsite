@@ -116,7 +116,7 @@ func (s *Server) AddModule(m *Module) {
 	s.addModule(m, true)
 }
 
-// AddModuleNoLatest adds a module to the server, but the @v/list endpoint will
+// AddModuleNoVersions adds a module to the server, but the @v/list endpoint will
 // return nothing and @latest endpoint will serve a 410.
 // For testing the unusual case where a module exists but there is no version information.
 func (s *Server) AddModuleNoVersions(m *Module) {

@@ -246,7 +246,7 @@ func readSearchTests(filename string) ([]*searchTest, error) {
 	return tests, nil
 }
 
-// readSearchTests reads filename and returns a map of package path to imported
+// readImportedByCounts reads filename and returns a map of package path to imported
 // by count. See tests/README.md for a description of the syntax.
 func readImportedByCounts(filename string) (map[string]int, error) {
 	counts := map[string]int{}

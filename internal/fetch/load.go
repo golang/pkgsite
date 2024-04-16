@@ -182,7 +182,7 @@ func loadPackage(ctx context.Context, contentDir fs.FS, goFilePaths []string, in
 	return pkg, nil
 }
 
-// loadPackagesMeta loads only the parts of a package that are needed to load a
+// loadPackageMeta loads only the parts of a package that are needed to load a
 // packageMeta.
 func loadPackageMeta(ctx context.Context, contentDir fs.FS, goFilePaths []string, innerPath string, modInfo *godoc.ModuleInfo) (_ *packageMeta, err error) {
 	defer derrors.Wrap(&err, "loadPackageMeta(ctx, zipGoFiles, %q, sourceInfo, modInfo)", innerPath)
