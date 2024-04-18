@@ -19,6 +19,11 @@ pathname /vuln/GO-2022-0229
 capture fullscreen
 capture fullscreen 540x1080
 
+test vuln entry withdrawn
+pathname /vuln/GO-2024-2730
+capture fullscreen
+capture fullscreen 540x1080
+
 test vuln stdlib module
 pathname /archive/zip@go1.16.4
 capture viewport
