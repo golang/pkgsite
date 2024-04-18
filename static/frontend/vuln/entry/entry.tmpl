@@ -23,7 +23,10 @@
       </li>
     </ol>
   </nav>
-  <h1 class="Vuln-title">Vulnerability Report: {{.Entry.ID}}</h1>
+  <div class="Vuln-header">
+    <h1 class="Vuln-title">Vulnerability Report: {{.Entry.ID}}</h1>
+    {{template "vuln-chips" .Entry}}
+  </div>
   {{template "vuln-details" .Entry}}
   {{$numAdvs := subtract (len .AdvisoryLinks) 1}}
   {{with .AdvisoryLinks}}

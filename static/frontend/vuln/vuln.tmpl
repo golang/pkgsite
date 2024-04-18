@@ -66,3 +66,9 @@
     <button class="go-Button">Submit</button>
   </form>
 {{end}}
+
+{{define "vuln-chips"}}
+  {{if .Withdrawn}}
+    <span class="go-Chip go-Chip--subtle">withdrawn</span>
+  {{end}}
+{{end}}

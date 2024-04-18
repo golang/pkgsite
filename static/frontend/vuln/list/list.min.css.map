@@ -1,7 +1,7 @@
 {
   "version": 3,
   "sources": ["list.css"],
-  "sourcesContent": ["/*\n * Copyright 2021 The Go Authors. All rights reserved.\n * Use of this source code is governed by a BSD-style\n * license that can be found in the LICENSE file.\n */\n\n/* Hide the search form in the header. */\n.go-SearchForm {\n  display: none;\n}\n\n.VulnList-title {\n  font-size: 1.25rem;\n  font-weight: 400;\n}\n\n.VulnList-details {\n  margin-bottom: 1.75rem;\n}\n\n.VulnList-details p {\n  word-break: break-word;\n}\n\n.VulnList-search {\n  margin-bottom: 1rem;\n  max-width: 32rem;\n}\n"],
-  "mappings": ";;;;;AAOA,eACE,aAGF,gBACE,kBACA,gBAGF,kBACE,sBAGF,oBACE,sBAGF,iBACE,mBACA",
+  "sourcesContent": ["/*\n * Copyright 2021 The Go Authors. All rights reserved.\n * Use of this source code is governed by a BSD-style\n * license that can be found in the LICENSE file.\n */\n\n/* Hide the search form in the header. */\n.go-SearchForm {\n  display: none;\n}\n\n.VulnList-header {\n  align-items: center;\n  display: flex;\n  flex-wrap: wrap;\n  gap: 0.5rem;\n}\n\n.VulnList-title {\n  font-size: 1.25rem;\n  font-weight: 400;\n}\n\n.VulnList-details {\n  margin-bottom: 1.75rem;\n}\n\n.VulnList-details p {\n  word-break: break-word;\n}\n\n.VulnList-search {\n  margin-bottom: 1rem;\n  max-width: 32rem;\n}\n"],
+  "mappings": ";;;;;AAOA,eACE,aAGF,iBACE,mBACA,aACA,eACA,UAGF,gBACE,kBACA,gBAGF,kBACE,sBAGF,oBACE,sBAGF,iBACE,mBACA",
   "names": []
 }

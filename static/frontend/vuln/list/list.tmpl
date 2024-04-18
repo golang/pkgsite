@@ -40,9 +40,12 @@
     <p>No reports found. <a href="/vuln/list">View all reports.</a></p>
   {{else}}
     {{range .Entries}}
-      <h2 class="VulnList-title">
-        <a href="/vuln/{{.ID}}">{{.ID}}</a>
-      </h2>
+      <div class="VulnList-header">
+        <h2 class="VulnList-title{{if .Withdrawn}} Vuln-titleWithdrawn{{end}}" >
+          <a href="/vuln/{{.ID}}">{{.ID}}</a>
+        </h2>
+        {{template "vuln-chips" .}}
+      </div>
       <div class="VulnList-details">
         {{template "vuln-details" .}}
       </div>

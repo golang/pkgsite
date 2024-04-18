@@ -14,6 +14,21 @@
   margin-bottom: 1rem;
 }
 
+.Vuln-titleWithdrawn {
+  text-decoration: line-through;
+}
+
+.Vuln-header {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.Vuln-header span {
+  margin-bottom: 1rem;
+}
+
 .Vuln-details {
   display: flex;
   flex-direction: column;

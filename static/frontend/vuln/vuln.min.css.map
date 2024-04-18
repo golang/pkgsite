@@ -1,7 +1,7 @@
 {
   "version": 3,
   "sources": ["vuln.css"],
-  "sourcesContent": ["/*\n * Copyright 2021 The Go Authors. All rights reserved.\n * Use of this source code is governed by a BSD-style\n * license that can be found in the LICENSE file.\n */\n\n.Vuln {\n  gap: 0.5rem;\n}\n\n.Vuln-title {\n  font-size: 2.25rem;\n  font-weight: 400;\n  margin-bottom: 1rem;\n}\n\n.Vuln-details {\n  display: flex;\n  flex-direction: column;\n  gap: 0.75rem;\n}\n\n.Vuln-detailsMetadata {\n  display: flex;\n  flex-wrap: wrap;\n  font-size: 0.875rem;\n  gap: 0.5rem 0;\n}\n\n.Vuln-detailsMetadata li:not(:last-child)::after {\n  content: '|';\n  padding: 0 0.5rem;\n}\n"],
-  "mappings": ";;;;;AAMA,MACE,UAGF,YACE,kBACA,gBACA,mBAGF,cACE,aACA,sBACA,WAGF,sBACE,aACA,eACA,kBACA,YAGF,gDACE,YA9BF",
+  "sourcesContent": ["/*\n * Copyright 2021 The Go Authors. All rights reserved.\n * Use of this source code is governed by a BSD-style\n * license that can be found in the LICENSE file.\n */\n\n.Vuln {\n  gap: 0.5rem;\n}\n\n.Vuln-title {\n  font-size: 2.25rem;\n  font-weight: 400;\n  margin-bottom: 1rem;\n}\n\n.Vuln-titleWithdrawn {\n  text-decoration: line-through;\n}\n\n.Vuln-header {\n  align-items: center;\n  display: flex;\n  flex-wrap: wrap;\n  gap: 0.5rem;\n}\n\n.Vuln-header span {\n  margin-bottom: 1rem;\n}\n\n.Vuln-details {\n  display: flex;\n  flex-direction: column;\n  gap: 0.75rem;\n}\n\n.Vuln-detailsMetadata {\n  display: flex;\n  flex-wrap: wrap;\n  font-size: 0.875rem;\n  gap: 0.5rem 0;\n}\n\n.Vuln-detailsMetadata li:not(:last-child)::after {\n  content: '|';\n  padding: 0 0.5rem;\n}\n"],
+  "mappings": ";;;;;AAMA,MACE,UAGF,YACE,kBACA,gBACA,mBAGF,qBACE,6BAGF,aACE,mBACA,aACA,eACA,UAGF,kBACE,mBAGF,cACE,aACA,sBACA,WAGF,sBACE,aACA,eACA,kBACA,YAGF,gDACE,YA7CF",
   "names": []
 }

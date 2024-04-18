@@ -32,9 +32,12 @@
     <h2>Recent Reports</h2>
     <div class="VulnMain-recent">
       {{range .Entries}}
-        <h3 class="VulnMain-title">
-          <a href="/vuln/{{.ID}}">{{.ID}}</a>
-        </h3>
+        <div class="VulnMain-header">
+          <h3 class="VulnMain-title{{if .Withdrawn}} Vuln-titleWithdrawn{{end}}">
+            <a href="/vuln/{{.ID}}">{{.ID}}</a>
+          </h3>
+          {{template "vuln-chips" .}}
+        </div>
         <div class="VulnMain-details">
           {{template "vuln-details" .}}
         </div>

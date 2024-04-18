@@ -9,6 +9,13 @@
   display: none;
 }
 
+.VulnList-header {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
 .VulnList-title {
   font-size: 1.25rem;
   font-weight: 400;

@@ -12,6 +12,13 @@
 .VulnMain-title {
   font-size: 1.25rem;
   font-weight: 400;
+}
+
+.VulnMain-header {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
   margin: 0 0 0.5rem;
 }
 
