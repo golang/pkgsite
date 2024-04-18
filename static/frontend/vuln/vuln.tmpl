@@ -41,6 +41,9 @@
       {{if ne .Published .Modified}}
         <li class="go-textSubtle">Modified: {{.Modified.Format "Jan 02, 2006"}}</li>
       {{end}}
+      {{with .Withdrawn}}
+        <li class="go-textSubtle">Withdrawn: {{.Format "Jan 02, 2006"}}</li>
+      {{end}}
     </ul>
     <p>{{.Details}}</p>
   </div>
