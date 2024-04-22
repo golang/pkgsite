@@ -17,9 +17,19 @@
   </main>
 {{end}}
 
-{{define "vuln-details"}}
+{{define "vuln-details-short"}}
   {{/* . is Entry */}}
   <div class="Vuln-details">
+    {{template "vuln-details-metadata" .}}
+    {{if .Withdrawn}}
+      <p>(withdrawn)</p>
+    {{else}}
+      <p>{{.Details}}</p>
+    {{end}}
+  </div>
+{{end}}
+
+{{define "vuln-details-metadata"}}
     <ul class="Vuln-detailsMetadata">
       {{with $aliases := .Aliases}}
         <li class="go-textSubtle Vuln-alias">
@@ -45,8 +55,6 @@
         <li class="go-textSubtle">Withdrawn: {{.Format "Jan 02, 2006"}}</li>
       {{end}}
     </ul>
-    <p>{{.Details}}</p>
-  </div>
 {{end}}
 
 {{define "vuln-search"}}

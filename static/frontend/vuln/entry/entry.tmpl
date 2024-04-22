@@ -46,6 +46,13 @@
   </div>
 {{end}}
 
+{{define "vuln-details"}}
+  <div class="Vuln-details">
+    {{template "vuln-details-metadata" .}}
+    <p>{{.Details}}</p>
+  </div>
+{{end}}
+
 {{define "affected"}}
   <h2>Affected Packages</h2>
   <ul class="VulnEntryPackages VulnEntryPackages-container">
