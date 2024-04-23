@@ -74,11 +74,11 @@ func toVulns(entries []*osv.Entry) []Vuln {
 	return vulns
 }
 
-// AffectedPackage holds information about a package affected by a certain vulnerability.
-type AffectedPackage struct {
-	PackagePath string
-	Versions    string
-	// Lists of affected symbols.
+// AffectedComponent holds information about a module/package affected by a certain vulnerability.
+type AffectedComponent struct {
+	Path     string
+	Versions string
+	// Lists of affected symbols (for packages).
 	// If both of these lists are empty, all symbols in the package are affected.
 	ExportedSymbols   []string
 	UnexportedSymbols []string
@@ -131,9 +131,8 @@ func collectRangePairs(a osv.Affected) []pair {
 	return ps
 }
 
-// AffectedPackages extracts information about affected packages from the given osv.Entry.
-func AffectedPackages(e *osv.Entry) []*AffectedPackage {
-	var affs []*AffectedPackage
+// AffectedComponents extracts information about affected packages (and // modules, if there are any with no package information) from the given osv.Entry.
+func AffectedComponents(e *osv.Entry) (pkgs, modsNoPkgs []*AffectedComponent) {
 	for _, a := range e.Affected {
 		pairs := collectRangePairs(a)
 		var vs []string
@@ -152,10 +151,16 @@ func AffectedPackages(e *osv.Entry) []*AffectedPackage {
 			}
 			vs = append(vs, s)
 		}
+		if len(a.EcosystemSpecific.Packages) == 0 {
+			modsNoPkgs = append(modsNoPkgs, &AffectedComponent{
+				Path:     a.Module.Path,
+				Versions: strings.Join(vs, ", "),
+			})
+		}
 		for _, p := range a.EcosystemSpecific.Packages {
 			exported, unexported := affectedSymbols(p.Symbols)
-			affs = append(affs, &AffectedPackage{
-				PackagePath:       p.Path,
+			pkgs = append(pkgs, &AffectedComponent{
+				Path:              p.Path,
 				Versions:          strings.Join(vs, ", "),
 				ExportedSymbols:   exported,
 				UnexportedSymbols: unexported,
@@ -163,7 +168,7 @@ func AffectedPackages(e *osv.Entry) []*AffectedPackage {
 			})
 		}
 	}
-	return affs
+	return pkgs, modsNoPkgs
 }
 
 func affectedSymbols(in []string) (e, u []string) {

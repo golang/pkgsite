@@ -81,6 +81,10 @@
     padding: 0.5rem;
   }
 
+  .VulnEntryModules {
+    grid-template-columns: minmax(10em, 50%) 1fr;
+  }
+
   /* Header */
   .VulnEntryPackages-item-container:first-child {
     background-color: var(--color-background-accented);

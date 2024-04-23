@@ -41,7 +41,8 @@
     </p>
   {{end}}
   <div class="VulnEntry">
-    {{template "affected" .AffectedPackages}}
+    {{with .ModulesWithNoPackages}}{{template "affected-modules" .}}{{end}}
+    {{with .AffectedPackages}}{{template "affected-packages" .}}{{end}}
     {{template "entry" .}}
   </div>
 {{end}}
@@ -53,7 +54,7 @@
   </div>
 {{end}}
 
-{{define "affected"}}
+{{define "affected-packages"}}
   <h2>Affected Packages</h2>
   <ul class="VulnEntryPackages VulnEntryPackages-container">
     <li class="VulnEntryPackages-item VulnEntryPackages-item-container">
@@ -63,14 +64,14 @@
     </li>
     {{range .}}
     <li class="VulnEntryPackages-item VulnEntryPackages-item-container">
-      <div class="VulnEntryPackages-attr" data-name="Path"><a href="/{{.PackagePath}}">{{.PackagePath}}</a></div>
+      <div class="VulnEntryPackages-attr" data-name="Path"><a href="/{{.Path}}">{{.Path}}</a></div>
       <div class="VulnEntryPackages-attr" data-name="Versions">{{if .Versions}}{{.Versions}}{{else}}all versions, no known fixed{{end}}</div>
       <div class="VulnEntryPackages-attr VulnEntryPackages-symbols" data-name="Symbols">
       {{ $vuln := . }}
       {{if .ExportedSymbols}}{{ $length := len .ExportedSymbols}}
-         {{if lt $length 5}}<ul>{{range .ExportedSymbols}}<li><a href="/{{$vuln.PackagePath}}#{{.}}">{{.}}</a></li>{{end}}</ul>
+         {{if lt $length 5}}<ul>{{range .ExportedSymbols}}<li><a href="/{{$vuln.Path}}#{{.}}">{{.}}</a></li>{{end}}</ul>
          {{else}}<details><summary>{{len .ExportedSymbols}} affected symbols</summary>
-         <ul class="VulnEntryPackages-detailsContent">{{range .ExportedSymbols}}<li><a href="/{{$vuln.PackagePath}}#{{.}}">{{.}}</a></li>{{end}}</ul></details>
+         <ul class="VulnEntryPackages-detailsContent">{{range .ExportedSymbols}}<li><a href="/{{$vuln.Path}}#{{.}}">{{.}}</a></li>{{end}}</ul></details>
          {{end}}
       {{else if .UnexportedSymbols}}
         <details><summary>{{len .UnexportedSymbols}} unexported affected symbols</summary>
@@ -82,6 +83,22 @@
         </details>
       {{else}}all symbols{{end}}
       </div>
+    </li>
+    {{end}}
+  </ul>
+{{end}}
+
+{{define "affected-modules"}}
+  <h2>Affected Modules</h2>
+  <ul class="VulnEntryPackages VulnEntryPackages-container">
+    <li class="VulnEntryPackages-item VulnEntryPackages-item-container VulnEntryModules">
+      <div class="VulnEntryPackages-attr">Path</div>
+      <div class="VulnEntryPackages-attr">Versions</div>
+    </li>
+    {{range .}}
+    <li class="VulnEntryPackages-item VulnEntryPackages-item-container VulnEntryModules">
+      <div class="VulnEntryPackages-attr" data-name="Path"><a href="/{{.Path}}">{{.Path}}</a></div>
+      <div class="VulnEntryPackages-attr" data-name="Versions">{{if .Versions}}{{.Versions}}{{else}}all versions, no known fixed{{end}}</div>
     </li>
     {{end}}
   </ul>

@@ -35,10 +35,11 @@ type VulnListPage struct {
 // vuln entry.
 type VulnEntryPage struct {
 	page.BasePage
-	Entry            *osv.Entry
-	AffectedPackages []*vuln.AffectedPackage
-	AliasLinks       []link
-	AdvisoryLinks    []link
+	Entry                 *osv.Entry
+	AffectedPackages      []*vuln.AffectedComponent
+	ModulesWithNoPackages []*vuln.AffectedComponent
+	AliasLinks            []link
+	AdvisoryLinks         []link
 }
 
 func (s *Server) serveVuln(w http.ResponseWriter, r *http.Request, _ internal.DataSource) error {
@@ -120,11 +121,13 @@ func newVulnEntryPage(ctx context.Context, client *vuln.Client, id string) (*Vul
 	if entry == nil {
 		return nil, derrors.NotFound
 	}
+	pkgs, mods := vuln.AffectedComponents(entry)
 	return &VulnEntryPage{
-		Entry:            entry,
-		AffectedPackages: vuln.AffectedPackages(entry),
-		AliasLinks:       aliasLinks(entry),
-		AdvisoryLinks:    advisoryLinks(entry),
+		Entry:                 entry,
+		AffectedPackages:      pkgs,
+		ModulesWithNoPackages: mods,
+		AliasLinks:            aliasLinks(entry),
+		AdvisoryLinks:         advisoryLinks(entry),
 	}, nil
 }
 

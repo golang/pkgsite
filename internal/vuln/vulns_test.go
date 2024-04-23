@@ -186,7 +186,7 @@ func TestCollectRangePairs(t *testing.T) {
 
 }
 
-func TestAffectedPackages_Versions(t *testing.T) {
+func TestAffectedComponents_Versions(t *testing.T) {
 	for _, test := range []struct {
 		name string
 		in   []osv.RangeEvent
@@ -231,7 +231,7 @@ func TestAffectedPackages_Versions(t *testing.T) {
 					}},
 				}},
 			}
-			out := AffectedPackages(entry)
+			out, _ := AffectedComponents(entry)
 			got := out[0].Versions
 			if got != test.want {
 				t.Errorf("got %q, want %q\n", got, test.want)
@@ -240,11 +240,12 @@ func TestAffectedPackages_Versions(t *testing.T) {
 	}
 }
 
-func TestAffectedPackagesPackagesSymbols(t *testing.T) {
+func TestAffectedComponents(t *testing.T) {
 	tests := []struct {
-		name string
-		in   *osv.Entry
-		want []*AffectedPackage
+		name     string
+		in       *osv.Entry
+		wantPkgs []*AffectedComponent
+		wantMods []*AffectedComponent
 	}{
 		{
 			name: "one symbol",
@@ -260,10 +261,11 @@ func TestAffectedPackagesPackagesSymbols(t *testing.T) {
 					},
 				}},
 			},
-			want: []*AffectedPackage{{
-				PackagePath:     "example.com/mod/pkg",
+			wantPkgs: []*AffectedComponent{{
+				Path:            "example.com/mod/pkg",
 				ExportedSymbols: []string{"F"},
 			}},
+			wantMods: nil,
 		},
 		{
 			name: "multiple symbols",
@@ -279,11 +281,12 @@ func TestAffectedPackagesPackagesSymbols(t *testing.T) {
 					},
 				}},
 			},
-			want: []*AffectedPackage{{
-				PackagePath:       "example.com/mod/pkg",
+			wantPkgs: []*AffectedComponent{{
+				Path:              "example.com/mod/pkg",
 				ExportedSymbols:   []string{"F", "S.F"},
 				UnexportedSymbols: []string{"g", "S.f", "s.F", "s.f"},
 			}},
+			wantMods: nil,
 		},
 		{
 			name: "no symbol",
@@ -298,51 +301,68 @@ func TestAffectedPackagesPackagesSymbols(t *testing.T) {
 					},
 				}},
 			},
-			want: []*AffectedPackage{{
-				PackagePath: "example.com/mod/pkg",
+			wantPkgs: []*AffectedComponent{{
+				Path: "example.com/mod/pkg",
 			}},
+			wantMods: nil,
 		},
 		{
 			name: "multiple pkgs and modules",
 			in: &osv.Entry{
 				ID: "GO-2022-0004",
-				Affected: []osv.Affected{{
-					Module: osv.Module{Path: "example.com/mod1"},
-					EcosystemSpecific: osv.EcosystemSpecific{
-						Packages: []osv.Package{{
-							Path: "example.com/mod1/pkg1",
-						}, {
-							Path:    "example.com/mod1/pkg2",
-							Symbols: []string{"F"},
+				Affected: []osv.Affected{
+					{
+						Module: osv.Module{Path: "example.com/mod"},
+						Ranges: []osv.Range{{
+							Type:   osv.RangeTypeSemver,
+							Events: []osv.RangeEvent{{Fixed: "1.5"}},
 						}},
+						// no packages
 					},
-				}, {
-					Module: osv.Module{Path: "example.com/mod2"},
-					EcosystemSpecific: osv.EcosystemSpecific{
-						Packages: []osv.Package{{
-							Path:    "example.com/mod2/pkg3",
-							Symbols: []string{"g", "H"},
-						}},
-					},
-				}},
+					{
+						Module: osv.Module{Path: "example.com/mod1"},
+						EcosystemSpecific: osv.EcosystemSpecific{
+							Packages: []osv.Package{{
+								Path: "example.com/mod1/pkg1",
+							}, {
+								Path:    "example.com/mod1/pkg2",
+								Symbols: []string{"F"},
+							}},
+						},
+					}, {
+						Module: osv.Module{Path: "example.com/mod2"},
+						EcosystemSpecific: osv.EcosystemSpecific{
+							Packages: []osv.Package{{
+								Path:    "example.com/mod2/pkg3",
+								Symbols: []string{"g", "H"},
+							}},
+						},
+					}},
 			},
-			want: []*AffectedPackage{{
-				PackagePath: "example.com/mod1/pkg1",
+			wantPkgs: []*AffectedComponent{{
+				Path: "example.com/mod1/pkg1",
 			}, {
-				PackagePath:     "example.com/mod1/pkg2",
+				Path:            "example.com/mod1/pkg2",
 				ExportedSymbols: []string{"F"},
 			}, {
-				PackagePath:       "example.com/mod2/pkg3",
+				Path:              "example.com/mod2/pkg3",
 				ExportedSymbols:   []string{"H"},
 				UnexportedSymbols: []string{"g"},
+			}},
+			wantMods: []*AffectedComponent{{
+				Path:     "example.com/mod",
+				Versions: "before v1.5",
 			}},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := AffectedPackages(tt.in)
-			if diff := cmp.Diff(tt.want, got, cmpopts.IgnoreUnexported(AffectedPackage{})); diff != "" {
-				t.Errorf("mismatch (-want, +got):\n%s", diff)
+			gotPkgs, gotMods := AffectedComponents(tt.in)
+			if diff := cmp.Diff(tt.wantPkgs, gotPkgs, cmpopts.IgnoreUnexported(AffectedComponent{})); diff != "" {
+				t.Errorf("pkgs mismatch (-want, +got):\n%s", diff)
+			}
+			if diff := cmp.Diff(tt.wantMods, gotMods, cmpopts.IgnoreUnexported(AffectedComponent{})); diff != "" {
+				t.Errorf("mods mismatch (-want, +got):\n%s", diff)
 			}
 		})
 	}
