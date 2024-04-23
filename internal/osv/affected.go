@@ -23,3 +23,13 @@ func (e Entry) AffectedModulesAndPackages() []string {
 	}
 	return affected
 }
+
+func (e *Entry) AffectsStandardLibrary() bool {
+	for _, a := range e.Affected {
+		m := a.Module.Path
+		if m == GoStdModulePath || m == GoCmdModulePath {
+			return true
+		}
+	}
+	return false
+}

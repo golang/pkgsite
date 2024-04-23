@@ -79,4 +79,7 @@
   {{if .Withdrawn}}
     <span class="go-Chip go-Chip--subtle">withdrawn</span>
   {{end}}
+  {{if .AffectsStandardLibrary}}
+    <span class="go-Chip go-Chip-inverted">standard library</span>
+  {{end}}
 {{end}}
