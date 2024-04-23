@@ -116,7 +116,7 @@
     <h2>Credits</h2>
     <ul>
       <li>
-        {{range $i, $v := .}}{{if gt $i 1}}, {{end}}{{$v.Name}}{{end}}
+        {{range $i, $v := .}}{{if gt $i 0}}, {{end}}{{$v.Name}}{{end}}
       </li>
     </ul>
   {{end}}
