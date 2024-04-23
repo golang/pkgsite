@@ -73,7 +73,7 @@ body {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  min-width: 23.5rem;
+  min-width: 20rem;
 
   /**
    * This is used to programatically detect whether overflow needs to be altered

@@ -7,7 +7,6 @@
 .UnitMeta {
   display: grid;
   gap: 1rem 2rem;
-  grid-template-columns: max-content auto;
   white-space: nowrap;
 }
 
