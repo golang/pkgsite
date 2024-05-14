@@ -181,6 +181,11 @@ check_script_hashes() {
 # run_build_static builds JavaScript output from TypeScript source files.
 run_build_static() {
   runcmd $GO run ./devtools/cmd/static
+  files=$(modified_files)
+  echo "mod: $files"
+  if [[ $(filter "$files" 'static/**/*.min*') != '' ]]; then
+    err "minimized CSS files are not consistent with unminimized ones; run ./devtools/cmd/static to regenerate them"
+  fi
 }
 
 run_npm() {
