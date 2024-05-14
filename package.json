@@ -15,7 +15,7 @@
     "test:unit": "jest static"
   },
   "dependencies": {
-    "@types/jest": "26.0.16",
+    "@babel/core": "^7.24.5",
     "@types/marked": "4.0.1",
     "@typescript-eslint/eslint-plugin": "5.2.0",
     "@typescript-eslint/parser": "5.2.0",
@@ -27,7 +27,7 @@
     "js-green-licenses": "4.0.0",
     "marked": "4.0.10",
     "npm-run-all": "4.1.5",
-    "postcss": "8.4.19",
+    "postcss": "8.4.38",
     "prettier": "2.1.2",
     "stylelint": "14.2.0",
     "stylelint-config-prettier": "9.0.3",
