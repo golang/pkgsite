@@ -181,10 +181,10 @@
   margin-bottom: 0.5rem;
 }
 
-.Documentation-function h4,
-.Documentation-type h4,
-.Documentation-typeFunc h4,
-.Documentation-typeMethod h4 {
+h4.Documentation-functionHeader,
+h4.Documentation-typeHeader,
+h4.Documentation-typeFuncHeader,
+h4.Documentation-typeMethodHeader {
   align-items: baseline;
   display: flex;
   justify-content: space-between;
