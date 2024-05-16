@@ -300,6 +300,7 @@ var allowAttrs = []allowAttr{
 	{"table", "height", numOrPercent},
 	{"table", "width", numOrPercent},
 	{"table", "summary", para},
+	{"code", "class", re(`^language-.+`)},
 	{"col", "align", align},
 	{"col", "height", numOrPercent},
 	{"col", "width", numOrPercent},
