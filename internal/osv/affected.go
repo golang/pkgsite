@@ -33,3 +33,7 @@ func (e *Entry) AffectsStandardLibrary() bool {
 	}
 	return false
 }
+
+func (e *Entry) IsUnreviewed() bool {
+	return e.DatabaseSpecific.ReviewStatus == ReviewStatusUnreviewed
+}

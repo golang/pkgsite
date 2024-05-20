@@ -54,6 +54,9 @@
       {{with .Withdrawn}}
         <li class="go-textSubtle">Withdrawn: {{.Format "Jan 02, 2006"}}</li>
       {{end}}
+      {{if .IsUnreviewed}}
+        <li class="go-textSubtle">Unreviewed</li>
+      {{end}}
     </ul>
 {{end}}
 

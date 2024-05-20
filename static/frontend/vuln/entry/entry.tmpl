@@ -138,6 +138,11 @@
     </ul>
   {{end}}
   <h2>Feedback</h2>
+  {{if $e.IsUnreviewed}}
+    <div>
+    This report is <a href="https://go.dev/doc/security/vuln/database#database-specificreview-status">unreviewed</a>. It was automatically generated from a third-party source and its details have not been verified by the Go team. 
+    </div>
+  {{end}}
   <div>
     See anything missing or incorrect?
     <a target="_blank" rel="noopener" href="https://github.com/golang/vulndb/issues/new?assignees=&labels=Needs+Triage%2CSuggested+Edit&template=suggest_edit.yaml&title=x%2Fvulndb%3A+suggestion+regarding+{{$e.ID}}&report={{$e.ID}}">
