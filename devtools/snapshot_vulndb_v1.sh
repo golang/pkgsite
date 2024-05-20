@@ -25,6 +25,7 @@ copyFiles=(
   "ID/GO-2022-0273.json"
   "ID/GO-2024-2730.json"
   "ID/GO-2024-2659.json"
+  "ID/GO-2024-2864.json"
 )
 
 go install golang.org/x/vulndb/cmd/indexdb@latest
