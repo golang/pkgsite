@@ -454,12 +454,12 @@ scan:
 		case token.EOF:
 			break scan
 		case token.COMMENT:
+			lastOffset += len(lit) // increment lastOffset before replacing indents
 			if exampleOutputRx.MatchString(lit) {
 				outputOffset = len(els)
 			}
 			lit = strings.Replace(lit, indent, "\n", -1)
 			els = append(els, codeElement{lit, true})
-			lastOffset += len(lit)
 		case token.STRING:
 			// Avoid replacing indents in multi-line string literals.
 			els = append(els, codeElement{lit, false})

@@ -428,6 +428,23 @@ b := 1
 </pre>
 `,
 		},
+		{
+			"indented multi-line comment block statement",
+			`{
+	/*
+		This is a multi
+		line comment.
+	*/
+}`,
+			`
+<pre class="Documentation-exampleCode">
+/*
+	This is a multi
+	line comment.
+*/
+</pre>
+`,
+		},
 	} {
 		out := codeHTML(test.in, exampleTmpl)
 		got := strings.TrimSpace(string(out.String()))
