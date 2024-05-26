@@ -28,7 +28,7 @@
     "marked": "4.0.10",
     "npm-run-all": "4.1.5",
     "postcss": "8.4.19",
-    "prettier": "2.1.2",
+    "prettier": "3.2.5",
     "stylelint": "14.2.0",
     "stylelint-config-prettier": "9.0.3",
     "stylelint-config-recommended": "6.0.0",
