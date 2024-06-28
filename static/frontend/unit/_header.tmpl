@@ -237,7 +237,28 @@
       />&nbsp; Redirected from <span data-test-id="redirected-banner-text">{{.}}</span>.
     </div>
   {{- end -}}
-  {{range .Vulns}}{{template "vuln-message" .}}{{end}}
+   {{- with $vs := .Vulns -}}
+      {{if eq (len $vs) 1}}
+        <div>{{template "vuln-message" (index $vs 0)}}</div>
+      {{else}}
+        <details class="js-versionDetails">
+            <summary class="go-Message go-Message--alert">
+            <img
+                class="go-Icon"
+                height="24"
+                width="24"
+                src="/static/shared/icon/alert_gm_grey_24dp.svg"
+                alt="Alert"
+            />&nbsp;
+            Affected by <a href="/vuln/{{(index $vs 0).ID}}">{{(index $vs 0).ID}}</a>
+            {{with $more := subtract (len $vs) 1}} and {{$more}} other vulnerabilities{{end}}
+          </summary>
+          <div>
+            {{range .}}{{template "vuln-message" .}}{{end}}
+          </div>
+        </details>
+    {{end}}
+  {{- end -}}
   {{- if .Unit.Deprecated -}}
     <div class="go-Message go-Message--warning">
       <img

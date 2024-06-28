@@ -4,6 +4,10 @@ output tests/screentest/testdata/ci
 # Prevent dynamic readme bages from rendering
 block https://codecov.io/* https://travis-ci.com/*
 
+{{$ready := "[role='treeitem'][aria-selected='true']"}}
+{{$hideElements := "document.querySelector(\"[data-test-id='UnitHeader-importedby']\")?.remove();document.querySelector(\"[data-test-id='meta-link-depsdev']\")?.remove();"}}
+{{$scrollTop := "window.scrollTo({top:0});"}}
+
 test vuln
 pathname /vuln/
 capture fullscreen
@@ -56,5 +60,13 @@ capture viewport 540x1080
 
 test vuln no results
 pathname /search?q=github.com%2Fnoresults&m=vuln
+capture viewport
+capture viewport 540x1080
+
+test module with one vuln
+pathname /github.com/stacklok/minder@v0.0.47
+wait {{$ready}}
+eval {{$scrollTop}}
+eval {{$hideElements}}
 capture viewport
 capture viewport 540x1080
