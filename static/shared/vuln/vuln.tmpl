@@ -16,3 +16,34 @@
     <a href="/vuln/{{.ID}}">{{.ID}}</a>: {{.Details}}
   </div>
 {{end}}
+
+{{define "vuln-chip"}}
+  <span class="go-Chip go-Chip--alert">{{.}}</span>
+{{end}}
+
+{{define "vuln-chip-first"}}
+  {{template "vuln-chip" (index . 0).ID}}
+{{end}}
+
+{{define "vuln-chip-more"}}
+  {{$more := (subtract (len .) 1)}}
+  {{template "vuln-chip" (printf "+%d more" $more)}}
+{{end}}
+
+{{define "vuln-chip-condensed"}}
+  {{if .}}
+    {{template "vuln-chip-first" .}}
+  {{end}}
+  {{if (gt (len .) 1)}}
+    {{template "vuln-chip-more" .}}
+  {{end}}
+{{end}}
+
+{{define "vuln-chip-condensed-div"}}
+  {{if .}}
+    <div>{{template "vuln-chip-first" .}}</div>
+  {{end}}
+  {{if (gt (len .) 1)}}
+    <div>{{template "vuln-chip-more" .}}</div>
+  {{end}}
+{{end}}

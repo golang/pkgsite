@@ -78,7 +78,7 @@
         {{else}}
           <div class="Version-commitTime">
             {{$v.CommitTime}}{{if $v.Retracted}}<div><span class="go-Chip go-Chip--inverted">retracted</span></div>{{end}}
-            {{range $v.Vulns}}<div><span class="go-Chip go-Chip--alert">{{.ID}}</span></div>{{end}}
+            {{template "vuln-chip-condensed-div" $v.Vulns}}
           </div>
         {{end}}
       {{end}}
@@ -90,7 +90,7 @@
   <details class="Version-details js-versionDetails">
     <summary class="Version-summary">
       {{.CommitTime}}{{if .Retracted}}<div><span class="go-Chip go-Chip--inverted">retracted</span></div>{{end}}
-      {{range .Vulns}}<span class="go-Chip go-Chip--alert">{{.ID}}</span>{{end}}
+      {{template "vuln-chip-condensed" .Vulns}}
     </summary>
     <div class="Versions-vulns">
       {{range .Vulns}}{{template "vuln-message" .}}{{end}}

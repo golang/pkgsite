@@ -113,11 +113,7 @@
             </a>
           </h2>
           {{with $v.ChipText}}<span class="go-Chip go-Chip--inverted">{{.}}</span>{{end}}
-          {{range $v.Vulns}}
-            <span class="go-Chip go-Chip--alert">
-              {{.ID}}
-            </span>
-          {{end}}
+          {{template "vuln-chip-condensed" $v.Vulns}}
         </div>
         {{with $v.Synopsis}}
           <p class="SearchSnippet-synopsis" data-test-id="snippet-synopsis">
