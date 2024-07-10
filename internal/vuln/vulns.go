@@ -76,8 +76,9 @@ func toVulns(entries []*osv.Entry) []Vuln {
 
 // AffectedComponent holds information about a module/package affected by a certain vulnerability.
 type AffectedComponent struct {
-	Path     string
-	Versions string
+	Path           string
+	Versions       string
+	CustomVersions string
 	// Lists of affected symbols (for packages).
 	// If both of these lists are empty, all symbols in the package are affected.
 	ExportedSymbols   []string
@@ -92,18 +93,18 @@ type pair struct {
 
 // collectRangePairs turns a slice of osv Ranges into a more manageable slice of
 // formatted version pairs.
-func collectRangePairs(a osv.Affected) []pair {
+func collectRangePairs(modulePath string, rs []osv.Range) []pair {
 	var (
 		ps     []pair
 		p      pair
 		prefix string
 	)
-	if stdlib.Contains(a.Module.Path) {
+	if stdlib.Contains(modulePath) {
 		prefix = "go"
 	} else {
 		prefix = "v"
 	}
-	for _, r := range a.Ranges {
+	for _, r := range rs {
 		isSemver := r.Type == osv.RangeTypeSemver
 		for _, v := range r.Events {
 			if v.Introduced != "" {
@@ -131,37 +132,45 @@ func collectRangePairs(a osv.Affected) []pair {
 	return ps
 }
 
+func versionString(modulePath string, rs []osv.Range) string {
+	pairs := collectRangePairs(modulePath, rs)
+	var vs []string
+	for _, p := range pairs {
+		var s string
+		if p.intro == "" && p.fixed == "" {
+			// If neither field is set, the vuln applies to all versions.
+			// Leave it blank, the template will render it properly.
+			s = ""
+		} else if p.intro == "" {
+			s = "before " + p.fixed
+		} else if p.fixed == "" {
+			s = p.intro + " and later"
+		} else {
+			s = "from " + p.intro + " before " + p.fixed
+		}
+		vs = append(vs, s)
+	}
+	return strings.Join(vs, ", ")
+}
+
 // AffectedComponents extracts information about affected packages (and // modules, if there are any with no package information) from the given osv.Entry.
 func AffectedComponents(e *osv.Entry) (pkgs, modsNoPkgs []*AffectedComponent) {
 	for _, a := range e.Affected {
-		pairs := collectRangePairs(a)
-		var vs []string
-		for _, p := range pairs {
-			var s string
-			if p.intro == "" && p.fixed == "" {
-				// If neither field is set, the vuln applies to all versions.
-				// Leave it blank, the template will render it properly.
-				s = ""
-			} else if p.intro == "" {
-				s = "before " + p.fixed
-			} else if p.fixed == "" {
-				s = p.intro + " and later"
-			} else {
-				s = "from " + p.intro + " before " + p.fixed
-			}
-			vs = append(vs, s)
-		}
+		vs := versionString(a.Module.Path, a.Ranges)
+		cvs := versionString(a.Module.Path, a.EcosystemSpecific.CustomRanges)
 		if len(a.EcosystemSpecific.Packages) == 0 {
 			modsNoPkgs = append(modsNoPkgs, &AffectedComponent{
-				Path:     a.Module.Path,
-				Versions: strings.Join(vs, ", "),
+				Path:           a.Module.Path,
+				Versions:       vs,
+				CustomVersions: cvs,
 			})
 		}
 		for _, p := range a.EcosystemSpecific.Packages {
 			exported, unexported := affectedSymbols(p.Symbols)
 			pkgs = append(pkgs, &AffectedComponent{
 				Path:              p.Path,
-				Versions:          strings.Join(vs, ", "),
+				Versions:          vs,
+				CustomVersions:    cvs,
 				ExportedSymbols:   exported,
 				UnexportedSymbols: unexported,
 				// TODO(hyangah): where to place GOOS/GOARCH info

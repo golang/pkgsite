@@ -173,7 +173,7 @@ func TestCollectRangePairs(t *testing.T) {
 			{Type: "unspecified", Events: []osv.RangeEvent{{Introduced: "a", Fixed: "b"}}},
 		},
 	}
-	got := collectRangePairs(in)
+	got := collectRangePairs(in.Module.Path, in.Ranges)
 	want := []pair{
 		{"", "v0.5"},
 		{"v1.2", "v1.5"},
@@ -303,6 +303,33 @@ func TestAffectedComponents(t *testing.T) {
 			},
 			wantPkgs: []*AffectedComponent{{
 				Path: "example.com/mod/pkg",
+			}},
+			wantMods: nil,
+		},
+		{
+			name: "custom ranges",
+			in: &osv.Entry{
+				ID: "GO-2022-0003",
+				Affected: []osv.Affected{{
+					Module: osv.Module{Path: "example.com/mod"},
+					EcosystemSpecific: osv.EcosystemSpecific{
+						Packages: []osv.Package{{
+							Path: "example.com/mod/pkg",
+						}},
+						CustomRanges: []osv.Range{
+							{
+								Type: osv.RangeType("ECOSYSTEM"),
+								Events: []osv.RangeEvent{
+									{Introduced: "0"}, {Fixed: "2.0.2"},
+								},
+							},
+						},
+					},
+				}},
+			},
+			wantPkgs: []*AffectedComponent{{
+				Path:           "example.com/mod/pkg",
+				CustomVersions: "before 2.0.2",
 			}},
 			wantMods: nil,
 		},

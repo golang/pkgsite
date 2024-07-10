@@ -37,3 +37,12 @@ func (e *Entry) AffectsStandardLibrary() bool {
 func (e *Entry) IsUnreviewed() bool {
 	return e.DatabaseSpecific.ReviewStatus == ReviewStatusUnreviewed
 }
+
+func (e *Entry) HasCustomVersions() bool {
+	for _, a := range e.Affected {
+		if len(a.EcosystemSpecific.CustomRanges) != 0 {
+			return true
+		}
+	}
+	return false
+}

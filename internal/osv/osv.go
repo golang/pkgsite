@@ -170,6 +170,12 @@ type Package struct {
 type EcosystemSpecific struct {
 	// Packages is the list of affected packages within the module.
 	Packages []Package `json:"imports,omitempty"`
+	// CustomRanges are the version ranges affected by the vulnerability
+	// which are not compatible with Go module version numbering
+	// (https://go.dev/doc/modules/version-numbers).
+	// These ranges may be displayed but are generally not consumable
+	// by tools like govulncheck which expect standard Go module versions.
+	CustomRanges []Range `json:"custom_ranges,omitempty"`
 }
 
 // Entry represents a vulnerability in the Go OSV format, documented

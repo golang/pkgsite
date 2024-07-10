@@ -41,8 +41,9 @@
     </p>
   {{end}}
   <div class="VulnEntry">
-    {{with .ModulesWithNoPackages}}{{template "affected-modules" .}}{{end}}
-    {{with .AffectedPackages}}{{template "affected-packages" .}}{{end}}
+    {{template "affected-packages" .}}
+    {{template "affected-modules" .}}
+    {{template "custom-versions-note" .}}
     {{template "entry" .}}
   </div>
 {{end}}
@@ -55,53 +56,126 @@
 {{end}}
 
 {{define "affected-packages"}}
-  <h2>Affected Packages</h2>
-  <ul class="VulnEntryPackages VulnEntryPackages-container">
-    <li class="VulnEntryPackages-item VulnEntryPackages-item-container">
-      <div class="VulnEntryPackages-attr">Path</div>
-      <div class="VulnEntryPackages-attr">Versions</div>
-      <div class="VulnEntryPackages-attr">Symbols</div>
-    </li>
-    {{range .}}
-    <li class="VulnEntryPackages-item VulnEntryPackages-item-container">
-      <div class="VulnEntryPackages-attr" data-name="Path"><a href="/{{.Path}}">{{.Path}}</a></div>
-      <div class="VulnEntryPackages-attr" data-name="Versions">{{if .Versions}}{{.Versions}}{{else}}all versions, no known fixed{{end}}</div>
-      <div class="VulnEntryPackages-attr VulnEntryPackages-symbols" data-name="Symbols">
-      {{ $vuln := . }}
-      {{if .ExportedSymbols}}{{ $length := len .ExportedSymbols}}
-         {{if lt $length 5}}<ul>{{range .ExportedSymbols}}<li><a href="/{{$vuln.Path}}#{{.}}">{{.}}</a></li>{{end}}</ul>
-         {{else}}<details><summary>{{len .ExportedSymbols}} affected symbols</summary>
-         <ul class="VulnEntryPackages-detailsContent">{{range .ExportedSymbols}}<li><a href="/{{$vuln.Path}}#{{.}}">{{.}}</a></li>{{end}}</ul></details>
-         {{end}}
-      {{else if .UnexportedSymbols}}
-        <details><summary>{{len .UnexportedSymbols}} unexported affected symbols</summary>
-          <ul class="VulnEntryPackages-detailsContent">
-            {{range .UnexportedSymbols}}
-              <li>{{.}}</li>
-            {{end}}
-          </ul>
-        </details>
-      {{else}}all symbols{{end}}
-      </div>
-    </li>
-    {{end}}
-  </ul>
+  {{if .AffectedPackages}}
+    <h2>Affected Packages</h2>
+    <ul class="VulnEntryPackages VulnEntryPackages-container">
+      {{if .Entry.HasCustomVersions}}
+          <li class="VulnEntryPackages-item VulnEntryPackages-item-container VulnTable-item-4col">
+            {{template "path-versions-title"}}
+            {{template "custom-versions-title" .}}
+            {{template "table-title" "Symbols"}}
+          </li>
+          {{range .AffectedPackages}}
+            <li class="VulnEntryPackages-item VulnEntryPackages-item-container VulnTable-item-4col">
+              {{template "path-versions-data" .}}
+              {{template "custom-versions-data" .}}
+              {{template "symbols-data" .}}
+            </li>
+          {{end}}
+        </ul>
+      {{else}}
+        <li class="VulnEntryPackages-item VulnEntryPackages-item-container">
+          {{template "path-versions-title"}}
+          {{template "table-title" "Symbols"}}
+        </li>
+        {{range .AffectedPackages}}
+        <li class="VulnEntryPackages-item VulnEntryPackages-item-container">
+          {{template "path-versions-data" .}}
+          {{template "symbols-data" .}}
+        </li>
+      {{end}}
+      {{end}}
+    </ul>
+  {{end}}
 {{end}}
 
 {{define "affected-modules"}}
-  <h2>Affected Modules</h2>
-  <ul class="VulnEntryPackages VulnEntryPackages-container">
-    <li class="VulnEntryPackages-item VulnEntryPackages-item-container VulnEntryModules">
-      <div class="VulnEntryPackages-attr">Path</div>
-      <div class="VulnEntryPackages-attr">Versions</div>
-    </li>
-    {{range .}}
-    <li class="VulnEntryPackages-item VulnEntryPackages-item-container VulnEntryModules">
-      <div class="VulnEntryPackages-attr" data-name="Path"><a href="/{{.Path}}">{{.Path}}</a></div>
-      <div class="VulnEntryPackages-attr" data-name="Versions">{{if .Versions}}{{.Versions}}{{else}}all versions, no known fixed{{end}}</div>
-    </li>
+  {{if .ModulesWithNoPackages}}
+    <h2>Affected Modules</h2>
+    <ul class="VulnEntryPackages VulnEntryPackages-container">
+    {{if .Entry.HasCustomVersions}}
+        <li class="VulnEntryPackages-item VulnEntryPackages-item-container">
+          {{template "path-versions-title"}}
+          {{template "custom-versions-title" .}}
+        </li>
+        {{range .ModulesWithNoPackages}}
+          <li class="VulnEntryPackages-item VulnEntryPackages-item-container">
+            {{template "path-versions-data" .}}
+            {{template "custom-versions-data" .}}
+          </li>
+        {{end}}
+    {{else}}
+          <li class="VulnEntryPackages-item VulnEntryPackages-item-container VulnTable-2col">
+            {{template "path-versions-title"}}
+          </li>
+        {{range .ModulesWithNoPackages}}
+          <li class="VulnEntryPackages-item VulnEntryPackages-item-container VulnTable-2col">
+            {{template "path-versions-data" .}}
+          </li>
+        {{end}}
     {{end}}
-  </ul>
+    </ul>
+  {{end}}
+{{end}}
+
+{{define "affected-modules-custom-versions-inner"}}
+
+{{end}}
+
+{{define "custom-versions-note"}}
+  {{if .Entry.HasCustomVersions}}
+    <p class="vuln-details">
+      <sup id="versions-note">*Custom versions, which can't be mapped automatically to standard Go module versions, are ignored by <code>govulncheck</code>. (See this <a target="_blank" href="https://go.dev/doc/security/vuln/database#note-on-versions">note on versions</a> for more details.)</sup>
+    </p>
+  {{end}}
+{{end}}
+
+{{define "path-versions-title"}}
+  {{template "table-title" "Path"}}
+  {{template "table-title" "Go Versions"}}
+{{end}}
+
+{{define "table-title"}}
+  <div class="VulnEntryPackages-attr">{{.}}</div>
+{{end}}
+
+{{define "custom-versions-title"}}
+  <div class="VulnEntryPackages-attr">Custom Versions<sup><a href="#versions-note">*</a></sup></div>
+{{end}}
+
+{{define "path-versions-data"}}
+ <div class="VulnEntryPackages-attr" data-name="Path"><a href="/{{.Path}}">{{.Path}}</a></div>
+ <div class="VulnEntryPackages-attr" data-name="Go Versions">{{if .Versions}}{{.Versions}}{{else}}all versions, no known fixed{{end}}</div>
+{{end}}
+
+{{define "custom-versions-data"}}
+  <div class="VulnEntryPackages-attr" data-name="Custom Versions">
+  {{if .CustomVersions}}
+    {{.CustomVersions}}
+  {{else}}
+    -
+  {{end}}
+  </div>
+{{end}}
+
+{{define "symbols-data"}}
+  <div class="VulnEntryPackages-attr VulnEntryPackages-symbols" data-name="Symbols">
+  {{ $vuln := . }}
+  {{if .ExportedSymbols}}{{ $length := len .ExportedSymbols}}
+      {{if lt $length 5}}<ul>{{range .ExportedSymbols}}<li><a href="/{{$vuln.Path}}#{{.}}">{{.}}</a></li>{{end}}</ul>
+      {{else}}<details><summary>{{len .ExportedSymbols}} affected symbols</summary>
+      <ul class="VulnEntryPackages-detailsContent">{{range .ExportedSymbols}}<li><a href="/{{$vuln.Path}}#{{.}}">{{.}}</a></li>{{end}}</ul></details>
+      {{end}}
+  {{else if .UnexportedSymbols}}
+    <details><summary>{{len .UnexportedSymbols}} unexported affected symbols</summary>
+      <ul class="VulnEntryPackages-detailsContent">
+        {{range .UnexportedSymbols}}
+          <li>{{.}}</li>
+        {{end}}
+      </ul>
+    </details>
+  {{else}}all symbols{{end}}
+  </div>
 {{end}}
 
 {{define "entry"}}
@@ -140,7 +214,7 @@
   <h2>Feedback</h2>
   {{if $e.IsUnreviewed}}
     <div>
-    This report is <a href="https://go.dev/doc/security/vuln/database#database-specificreview-status">unreviewed</a>. It was automatically generated from a third-party source and its details have not been verified by the Go team. 
+      This report is <a target="_blank" href="https://go.dev/doc/security/vuln/database#database-specificreview-status">unreviewed</a>. It was automatically generated from a third-party source and its details have not been verified by the Go team.
     </div>
   {{end}}
   <div>

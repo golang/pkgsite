@@ -81,8 +81,12 @@
     padding: 0.5rem;
   }
 
-  .VulnEntryModules {
+  .VulnTable-item-2col {
     grid-template-columns: minmax(10em, 50%) 1fr;
+  }
+
+  .VulnTable-item-4col {
+    grid-template-columns: minmax(10em, 50%) minmax(5em, 20%) minmax(5em, 20%) 1fr;
   }
 
   /* Header */
