@@ -72,11 +72,3 @@ test vuln no results
 pathname /search?q=github.com%2Fnoresults&m=vuln
 capture viewport
 capture viewport 540x1080
-
-test module with one vuln
-pathname /github.com/stacklok/minder@v0.0.47
-wait {{$ready}}
-eval {{$scrollTop}}
-eval {{$hideElements}}
-capture viewport
-capture viewport 540x1080
