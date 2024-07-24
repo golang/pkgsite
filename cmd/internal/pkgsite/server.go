@@ -71,7 +71,7 @@ func BuildServer(ctx context.Context, serverCfg ServerConfig) (*frontend.Server,
 		var err error
 		cfg.dirs, err = getModuleDirs(ctx, serverCfg.Paths)
 		if err != nil {
-			return nil, fmt.Errorf("searching GOPATH: %v", err)
+			return nil, fmt.Errorf("searching modules: %v", err)
 		}
 	}
 
@@ -332,6 +332,9 @@ func runGo(dir string, args ...string) ([]byte, error) {
 	cmd.Dir = dir
 	out, err := cmd.Output()
 	if err != nil {
+		if ee, ok := err.(*exec.ExitError); ok {
+			out = append(out, ee.Stderr...)
+		}
 		return nil, fmt.Errorf("running go with %q: %v: %s", args, err, out)
 	}
 	return out, nil

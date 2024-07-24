@@ -85,8 +85,6 @@ func main() {
 	flag.BoolVar(&serverCfg.UseListedMods, "list", true, "for each path, serve all modules in build list")
 	flag.BoolVar(&serverCfg.DevMode, "dev", false, "enable developer mode (reload templates on each page load, serve non-minified JS/CSS, etc.)")
 	flag.StringVar(&serverCfg.DevModeStaticDir, "static", "static", "path to folder containing static files served")
-	serverCfg.UseLocalStdlib = true
-	serverCfg.GoRepoPath = *goRepoPath
 
 	flag.Usage = func() {
 		out := flag.CommandLine.Output()
@@ -96,6 +94,9 @@ func main() {
 		flag.PrintDefaults()
 	}
 	flag.Parse()
+
+	serverCfg.UseLocalStdlib = true
+	serverCfg.GoRepoPath = *goRepoPath
 	serverCfg.Paths = collectPaths(flag.Args())
 
 	if serverCfg.UseCache || *useProxy {
