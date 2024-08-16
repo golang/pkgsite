@@ -455,7 +455,7 @@ func versionedPkgPath(pkgPath string, modInfo *ModuleInfo) string {
 		return fmt.Sprintf("%s@%s", pkgPath, tag)
 	}
 
-	if modInfo == nil || (!modInfo.ModulePackages[pkgPath]) {
+	if modInfo == nil || !modInfo.ModulePackages[pkgPath] {
 		return pkgPath
 	}
 
