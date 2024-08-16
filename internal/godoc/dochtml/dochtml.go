@@ -446,7 +446,7 @@ func buildNoteHeaders(notes map[string][]*doc.Note) map[string]noteHeader {
 // versionedPkgPath transforms package paths to contain the same version as the
 // current module if the package belongs to the module.
 func versionedPkgPath(pkgPath string, modInfo *ModuleInfo) string {
-	if modInfo != nil && modInfo.ModulePath == "std" {
+	if modInfo != nil && modInfo.ModulePath == stdlib.ModulePath {
 		tag, err := stdlib.TagForVersion(modInfo.ResolvedVersion)
 		if err != nil {
 			log.Errorf(context.TODO(), "goTagForVersion(%q): %v", modInfo.ResolvedVersion, err)
