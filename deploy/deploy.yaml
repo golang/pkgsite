@@ -22,7 +22,7 @@ steps:
     args:
       - $PROJECT_ID
   - id: Check redistributable
-    name: golang:1.22rc1
+    name: golang:1.23
     entrypoint: private/devtools/check_redist.sh
   - id: Build
     name: gcr.io/cloud-builders/docker
@@ -48,7 +48,7 @@ steps:
       - -c
       - deploy/frontend.sh staging gcr.io/$PROJECT_ID/frontend:$(cat _BUILD_TAG)
   - id: Pagecheck - staging
-    name: golang:1.22rc1
+    name: golang:1.23
     entrypoint:  deploy/pagecheck.sh
     args:
       - staging
@@ -77,7 +77,7 @@ steps:
       - -c
       - deploy/frontend.sh prod gcr.io/$PROJECT_ID/frontend:$(cat _BUILD_TAG)
   - id: Pagecheck - prod
-    name: golang:1.22rc1
+    name: golang:1.23
     entrypoint:  deploy/pagecheck.sh
     args:
       - prod
@@ -88,7 +88,7 @@ steps:
       - -c
       - deploy/frontend.sh beta gcr.io/$PROJECT_ID/frontend:$(cat _BUILD_TAG)
   - id: Pagecheck - beta
-    name: golang:1.22rc1
+    name: golang:1.23
     entrypoint:  deploy/pagecheck.sh
     args:
       - beta
