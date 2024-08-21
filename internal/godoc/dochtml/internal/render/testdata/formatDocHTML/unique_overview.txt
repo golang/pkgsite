@@ -1,0 +1,27 @@
+Unique header IDs in overview.
+-- doc --
+Documentation.
+
+Information
+
+This is some information.
+
+Information
+
+This is some other information.
+-- want --
+<div role="navigation" aria-label="Table of Contents">
+  <ul class="Documentation-toc">
+    <li class="Documentation-tocItem">
+        <a href="#hdr-Information">Information</a>
+      </li>
+    <li class="Documentation-tocItem">
+        <a href="#hdr-Information_">Information</a>
+      </li>
+    </ul>
+</div>
+<p>Documentation.
+</p><h4 id="hdr-Information">Information <a class="Documentation-idLink" href="#hdr-Information" aria-label="Go to Information">¶</a></h4><p>This is some information.
+</p><h4 id="hdr-Information_">Information <a class="Documentation-idLink" href="#hdr-Information_" aria-label="Go to Information">¶</a></h4><p>This is some other information.
+</p>
+

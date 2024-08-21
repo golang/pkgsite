@@ -1,0 +1,12 @@
+HTML escaping, including quoted strings, angle brackets and backticks.
+-- doc --
+Bar returns the string "bar".
+			
+link http://foo"><script>evil</script>
+
+For more detail, run ``go help test'' and ``go help testflag''
+-- want --
+<p>Bar returns the string &#34;bar&#34;.
+</p><p>link <a href="http://foo">http://foo</a>&#34;&gt;&lt;script&gt;evil&lt;/script&gt;
+</p><p>For more detail, run “go help test” and “go help testflag”
+</p>

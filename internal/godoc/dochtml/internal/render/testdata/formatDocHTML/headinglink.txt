@@ -1,0 +1,25 @@
+Headings get linked, if they are written properly.
+The first apparent heading does not get linked because
+it does not have a blank line before it.
+-- doc --
+The Go Project1
+
+Go is an open source project.
+
+The Go Project2
+
+Go is an open source project.
+-- want --
+<div role="navigation" aria-label="Table of Contents">
+  <ul class="Documentation-toc">
+    <li class="Documentation-tocItem">
+        <a href="#hdr-The_Go_Project2">The Go Project2</a>
+      </li>
+    </ul>
+</div>
+<p>The Go Project1
+</p><p>Go is an open source project.
+</p><h4 id="hdr-The_Go_Project2">The Go Project2 <a class="Documentation-idLink" href="#hdr-The_Go_Project2" aria-label="Go to The Go Project2">¶</a></h4><p>Go is an open source project.
+</p>
+
+

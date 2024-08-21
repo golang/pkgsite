@@ -1,0 +1,29 @@
+Linking of URLs, RFCs, symbols and packages.
+The symbol and package links work because the function is called on the stdlib time package.
+-- doc --
+Go is an open source project developed by a team at https://google.com and many
+https://www.golang.org/CONTRIBUTORS from the open source community.
+
+Go is distributed under a https://golang.org/LICENSE.
+
+Package tls partially implements TLS 1.2, as specified in RFC 5246, and TLS 1.3, as specified in RFC 8446.
+
+In TLS 1.3, this type is called NamedGroup, but at this time this library only supports Elliptic Curve based groups. See RFC 8446, Section 4.2.7.
+
+TLSUnique contains the tls-unique channel binding value (see RFC
+5929, section 3). The newline-separated RFC should be linked, but the words RFC and RFCs should not be.
+
+Links to [Month] and [Time.After].
+
+Links to [time] and [github.com/a/b].
+-- want --
+<p>Go is an open source project developed by a team at <a href="https://google.com">https://google.com</a> and many
+<a href="https://www.golang.org/CONTRIBUTORS">https://www.golang.org/CONTRIBUTORS</a> from the open source community.
+</p><p>Go is distributed under a <a href="https://golang.org/LICENSE">https://golang.org/LICENSE</a>.
+</p><p>Package tls partially implements TLS 1.2, as specified in <a href="https://rfc-editor.org/rfc/rfc5246.html">RFC 5246</a>, and TLS 1.3, as specified in <a href="https://rfc-editor.org/rfc/rfc8446.html">RFC 8446</a>.
+</p><p>In TLS 1.3, this type is called NamedGroup, but at this time this library only supports Elliptic Curve based groups. See <a href="https://rfc-editor.org/rfc/rfc8446.html#section-4.2.7">RFC 8446, Section 4.2.7</a>.
+</p><p>TLSUnique contains the tls-unique channel binding value (see <a href="https://rfc-editor.org/rfc/rfc5929.html#section-3">RFC
+5929, section 3</a>). The newline-separated RFC should be linked, but the words RFC and RFCs should not be.
+</p><p>Links to <a href="#Month">Month</a> and <a href="#Time.After">Time.After</a>.
+</p><p>Links to <a href="">time</a> and <a href="/github.com/a/b">github.com/a/b</a>.
+</p>

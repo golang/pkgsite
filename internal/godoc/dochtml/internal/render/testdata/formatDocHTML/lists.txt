@@ -1,0 +1,21 @@
+Lists.
+-- doc --
+Here is a bulleted list:
+	- a
+	- b
+
+Here is a numbered list:
+	1. a
+	2. b
+-- want --
+<p>Here is a bulleted list:
+</p><ul class="Documentation-bulletList">
+  <li>a</li>
+  <li>b</li>
+</ul><p>Here is a numbered list:
+</p><ol class="Documentation-numberList">
+  <li value="1">a</li>
+  <li value="2">b</li>
+</ol>
+
+

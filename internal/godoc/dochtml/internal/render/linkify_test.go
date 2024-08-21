@@ -11,15 +11,81 @@ import (
 	"go/doc"
 	"go/parser"
 	"go/token"
+	"path/filepath"
 	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/safehtml"
 	"github.com/google/safehtml/testconversions"
+	"golang.org/x/tools/txtar"
 )
 
 func TestFormatDocHTML(t *testing.T) {
+	files, err := filepath.Glob(filepath.FromSlash("testdata/formatDocHTML/*.txt"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(files) == 0 {
+		t.Fatal("no files")
+	}
+	for _, file := range files {
+		t.Run(strings.TrimSuffix(filepath.Base(file), ".txt"), func(t *testing.T) {
+			// See testdata/formatDocHTML/README.md for how these txtar files represent
+			// test cases.
+			ar, err := txtar.ParseFile(file)
+			if err != nil {
+				t.Fatal(err)
+			}
+			content := map[string][]byte{}
+			for _, f := range ar.Files {
+				content[f.Name] = f.Data
+			}
+
+			getContent := func(name string) string {
+				return strings.TrimSpace(string(content[name]))
+			}
+
+			mustContent := func(t *testing.T, name string) string {
+				if c := getContent(name); c != "" {
+					return c
+				}
+				t.Fatalf("txtar file %s missing section %q", file, name)
+				return ""
+			}
+
+			doc := string(mustContent(t, "doc"))
+			wantNoExtract := mustContent(t, "want")
+			for _, extractLinks := range []bool{false, true} {
+				t.Run(fmt.Sprintf("extractLinks=%t", extractLinks), func(t *testing.T) {
+					r := New(context.Background(), nil, pkgTime, nil)
+					got := r.formatDocHTML(doc, nil, extractLinks).String()
+					want := wantNoExtract
+					wantLinks := ""
+					if extractLinks {
+						// Use "want:links" if present.
+						if w := getContent("want:links"); w != "" {
+							want = w
+						}
+						wantLinks = getContent("links")
+					}
+					if diff := cmp.Diff(want, got); diff != "" {
+						t.Errorf("doc mismatch (-want +got)\n%s", diff)
+					}
+					var b strings.Builder
+					for _, l := range r.Links() {
+						b.WriteString(l.Text + " " + l.Href + "\n")
+					}
+					if diff := cmp.Diff(wantLinks, strings.TrimSpace(b.String())); diff != "" {
+						t.Errorf("links mismatch (-want +got)\n%s", diff)
+					}
+				})
+			}
+		})
+	}
+}
+
+func TestFormatDocHTMLDecl(t *testing.T) {
 	duplicateHeadersDoc := `Documentation.
 
 Information
@@ -29,25 +95,6 @@ This is some information.
 Information
 
 This is some other information.
-`
-
-	linksDoc := `Documentation.
-
-The Go Project
-
-Go is an open source project.
-
-
-Links
-
-- title1, url1
-
-  -		title2 , url2
-
-
-Header
-
-More doc.
 `
 	// typeWithFieldsDecl is declared as:
 	// 	type I2 interface {
@@ -79,69 +126,6 @@ More doc.
 		want         string
 		wantLinks    []Link
 	}{
-		{
-			name: "short documentation is rendered",
-			doc:  "The Go Project",
-			want: "<p>The Go Project\n</p>",
-		},
-		{
-			name: "regular documentation is rendered",
-			doc: `The Go programming language is an open source project to make programmers more productive.
-
-Go is expressive, concise, clean, and efficient. Its concurrency mechanisms make it easy to write programs that
-get the most out of multicore and networked machines, while its novel type system enables flexible and modular
-program construction.`,
-			want: `<p>The Go programming language is an open source project to make programmers more productive.
-</p><p>Go is expressive, concise, clean, and efficient. Its concurrency mechanisms make it easy to write programs that
-get the most out of multicore and networked machines, while its novel type system enables flexible and modular
-program construction.
-</p>`,
-		},
-		{
-			name: "header gets linked",
-			doc: `The Go Project
-
-Go is an open source project.`,
-			want: `<p>The Go Project
-</p><p>Go is an open source project.
-</p>`,
-		},
-		{
-			name: "header gets linked 2",
-			doc: `Documentation.
-
-The Go Project
-
-Go is an open source project.`,
-			want: `<div role="navigation" aria-label="Table of Contents">
-  <ul class="Documentation-toc">
-    <li class="Documentation-tocItem">
-        <a href="#hdr-The_Go_Project">The Go Project</a>
-      </li>
-    </ul>
-</div>
-<p>Documentation.
-</p><h4 id="hdr-The_Go_Project">The Go Project <a class="Documentation-idLink" href="#hdr-The_Go_Project" aria-label="Go to The Go Project">¶</a></h4><p>Go is an open source project.
-</p>`,
-		},
-		{
-			name: "unique header ids in overview section",
-			doc:  duplicateHeadersDoc,
-			want: `<div role="navigation" aria-label="Table of Contents">
-  <ul class="Documentation-toc">
-    <li class="Documentation-tocItem">
-        <a href="#hdr-Information">Information</a>
-      </li>
-    <li class="Documentation-tocItem">
-        <a href="#hdr-Information_">Information</a>
-      </li>
-    </ul>
-</div>
-<p>Documentation.
-</p><h4 id="hdr-Information">Information <a class="Documentation-idLink" href="#hdr-Information" aria-label="Go to Information">¶</a></h4><p>This is some information.
-</p><h4 id="hdr-Information_">Information <a class="Documentation-idLink" href="#hdr-Information_" aria-label="Go to Information">¶</a></h4><p>This is some other information.
-</p>`,
-		},
 		{
 			name: "unique header ids in constants section for grouped constants",
 			doc:  duplicateHeadersDoc,
@@ -310,133 +294,6 @@ Go is an open source project.`,
 <p>Documentation.
 </p><h4 id="hdr-Information">Information <a class="Documentation-idLink" href="#hdr-Information" aria-label="Go to Information">¶</a></h4><p>This is some information.
 </p><h4 id="hdr-C_Information">Information <a class="Documentation-idLink" href="#hdr-C_Information" aria-label="Go to Information">¶</a></h4><p>This is some other information.
-</p>`,
-		},
-		{
-			name: "urls become links",
-			doc: `Go is an open source project developed by a team at https://google.com and many
-https://www.golang.org/CONTRIBUTORS from the open source community.
-
-Go is distributed under a https://golang.org/LICENSE.`,
-			want: `<p>Go is an open source project developed by a team at <a href="https://google.com">https://google.com</a> and many
-<a href="https://www.golang.org/CONTRIBUTORS">https://www.golang.org/CONTRIBUTORS</a> from the open source community.
-</p><p>Go is distributed under a <a href="https://golang.org/LICENSE">https://golang.org/LICENSE</a>.
-</p>`,
-		},
-		{
-			name: "RFCs get linked",
-			doc: `Package tls partially implements TLS 1.2, as specified in RFC 5246, and TLS 1.3, as specified in RFC 8446.
-
-In TLS 1.3, this type is called NamedGroup, but at this time this library only supports Elliptic Curve based groups. See RFC 8446, Section 4.2.7.
-
-TLSUnique contains the tls-unique channel binding value (see RFC
-5929, section 3). The newline-separated RFC should be linked, but the words RFC and RFCs should not be.
-`,
-			want: `<p>Package tls partially implements TLS 1.2, as specified in <a href="https://rfc-editor.org/rfc/rfc5246.html">RFC 5246</a>, and TLS 1.3, as specified in <a href="https://rfc-editor.org/rfc/rfc8446.html">RFC 8446</a>.
-</p><p>In TLS 1.3, this type is called NamedGroup, but at this time this library only supports Elliptic Curve based groups. See <a href="https://rfc-editor.org/rfc/rfc8446.html#section-4.2.7">RFC 8446, Section 4.2.7</a>.
-</p><p>TLSUnique contains the tls-unique channel binding value (see <a href="https://rfc-editor.org/rfc/rfc5929.html#section-3">RFC
-5929, section 3</a>). The newline-separated RFC should be linked, but the words RFC and RFCs should not be.
-</p>`,
-		},
-		{
-			name: "quoted strings",
-			doc:  `Bar returns the string "bar".`,
-			want: `<p>Bar returns the string &#34;bar&#34;.
-</p>`,
-		},
-		{
-			name: "text is escaped",
-			doc:  `link http://foo"><script>evil</script>`,
-			want: `<p>link <a href="http://foo">http://foo</a>&#34;&gt;&lt;script&gt;evil&lt;/script&gt;
-</p>`,
-		},
-		{
-			name: "ulist",
-			doc: `
-			Here is a list:
-				- a
-				- b`,
-			want: `<p>Here is a list:
-</p><ul class="Documentation-bulletList">
-  <li>a</li>
-  <li>b</li>
-</ul>`,
-		},
-		{
-			name: "olist",
-			doc: `
-			Here is a list:
-				1. a
-				2. b`,
-			want: `<p>Here is a list:
-</p><ol class="Documentation-numberList">
-  <li value="1">a</li>
-  <li value="2">b</li>
-</ol>`,
-		},
-		{
-			name:         "Links section is not extracted",
-			extractLinks: []bool{false},
-			doc:          linksDoc,
-			want: `<div role="navigation" aria-label="Table of Contents">
-  <ul class="Documentation-toc">
-    <li class="Documentation-tocItem">
-        <a href="#hdr-The_Go_Project">The Go Project</a>
-      </li>
-    <li class="Documentation-tocItem">
-        <a href="#hdr-Links">Links</a>
-      </li>
-    <li class="Documentation-tocItem">
-        <a href="#hdr-Header">Header</a>
-      </li>
-    </ul>
-</div>
-<p>Documentation.
-</p><h4 id="hdr-The_Go_Project">The Go Project <a class="Documentation-idLink" href="#hdr-The_Go_Project" aria-label="Go to The Go Project">¶</a></h4><p>Go is an open source project.
-</p><h4 id="hdr-Links">Links <a class="Documentation-idLink" href="#hdr-Links" aria-label="Go to Links">¶</a></h4><p>- title1, url1
-</p><ul class="Documentation-bulletList">
-  <li>title2 , url2</li>
-</ul><h4 id="hdr-Header">Header <a class="Documentation-idLink" href="#hdr-Header" aria-label="Go to Header">¶</a></h4><p>More doc.
-</p>`,
-		},
-		{
-			name:         "Links section is extracted",
-			extractLinks: []bool{true},
-			doc:          linksDoc,
-			want: `<div role="navigation" aria-label="Table of Contents">
-  <ul class="Documentation-toc">
-    <li class="Documentation-tocItem">
-        <a href="#hdr-The_Go_Project">The Go Project</a>
-      </li>
-    <li class="Documentation-tocItem">
-        <a href="#hdr-Header">Header</a>
-      </li>
-    </ul>
-</div>
-<p>Documentation.
-</p><h4 id="hdr-The_Go_Project">The Go Project <a class="Documentation-idLink" href="#hdr-The_Go_Project" aria-label="Go to The Go Project">¶</a></h4><p>Go is an open source project.
-</p><h4 id="hdr-Header">Header <a class="Documentation-idLink" href="#hdr-Header" aria-label="Go to Header">¶</a></h4><p>More doc.
-</p>`,
-			wantLinks: []Link{
-				{Text: "title1", Href: "url1"},
-				{Text: "title2", Href: "url2"},
-			},
-		},
-		{
-			name: "escape back ticks in quotes",
-			doc:  "For more detail, run ``go help test'' and ``go help testflag''",
-			want: `<p>For more detail, run “go help test” and “go help testflag”` + "\n" + "</p>",
-		},
-		{
-			name: "symbol links",
-			doc:  "Links to [Month] and [Time.After].",
-			want: `<p>Links to <a href="#Month">Month</a> and <a href="#Time.After">Time.After</a>.
-</p>`,
-		},
-		{
-			name: "package links",
-			doc:  "Links to [time] and [github.com/a/b].",
-			want: `<p>Links to <a href="">time</a> and <a href="/github.com/a/b">github.com/a/b</a>.
 </p>`,
 		},
 	} {

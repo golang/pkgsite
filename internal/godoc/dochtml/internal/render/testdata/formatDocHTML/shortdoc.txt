@@ -1,0 +1,7 @@
+Short documentation is rendered.
+-- doc --
+The Go Project
+-- want --
+<p>The Go Project
+</p>
+
