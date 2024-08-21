@@ -112,6 +112,8 @@ var (
 		`<li{{with .Number}} value="{{.}}"{{end}}>{{.Content}}</li>`))
 )
 
+// formatDocHTML renders text, which should be a doc comment for decl, as HTML.
+// See [Renderer.declHTML] for the meaning of extractLinks.
 func (r *Renderer) formatDocHTML(text string, decl ast.Decl, extractLinks bool) safe.HTML {
 	doc := r.commentParser.Parse(text)
 	if extractLinks {
@@ -168,6 +170,14 @@ func firstTextNode(n *html.Node) *html.Node {
 	return nil
 }
 
+// removeLinks removes the "Links" section from doc.
+// Pkgsite has a convention where a "Links" heading in a doc comment provides links
+// that are rendered in a separate place in the UI.
+// https://go.dev/issue/42968 is the spec for this feature.
+// removeLinks implements the last line of that spec, removing
+// the links section from the doc comment.
+// It also records those links in the Renderer for later rendering (see renderInfo
+// in godoc/dochtml/dochtml.go).
 func (r *Renderer) removeLinks(doc *comment.Doc) {
 	var bs []comment.Block
 	inLinks := false
@@ -394,6 +404,8 @@ func badType(x any) safe.HTML {
 	return safe.HTMLEscaped(fmt.Sprintf("bad type %T", x))
 }
 
+// textsToString concatenates all the text in ts, ignoring
+// formatting and other information.
 func textsToString(ts []comment.Text) string {
 	var b strings.Builder
 	for _, t := range ts {
@@ -451,6 +463,9 @@ func linkRFCs(s string) safe.HTML {
 	return safe.HTMLConcat(hs...)
 }
 
+// declHTML renders both a decl and its doc comment as HTML.
+// If extractLinks is true, the "Links" heading of the comment is removed and its
+// links are added to r.links.
 func (r *Renderer) declHTML(doc string, decl ast.Decl, extractLinks bool) (out struct{ Doc, Decl safe.HTML }) {
 	if doc != "" {
 		out.Doc = r.formatDocHTML(doc, decl, extractLinks)
@@ -626,6 +641,8 @@ func (r *Renderer) formatLineHTML(line string, pre bool) safe.HTML {
 	return safe.HTMLConcat(htmls...)
 }
 
+// ExecuteToHTML executes tmpl on data and returns the resulting safe.HTML.
+// Execution errors are also rendered as HTML.
 func ExecuteToHTML(tmpl *template.Template, data any) safe.HTML {
 	h, err := tmpl.ExecuteToHTML(data)
 	if err != nil {

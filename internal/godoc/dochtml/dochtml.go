@@ -130,7 +130,7 @@ func Render(ctx context.Context, fset *token.FileSet, p *doc.Package, opt Render
 // of the Value, Type and Func types from internal/doc, along with additional
 // information for HTML rendering, like class names.
 type item struct {
-	Doc                          string
+	Doc                          string     // the doc comment for the decl
 	Decl                         ast.Decl   // GenDecl for consts, vars and types; FuncDecl for functions
 	Name                         string     // for types and functions; empty for consts and vars
 	FullName                     string     // for methods, the type name + "." + Name; else same as Name
@@ -225,8 +225,11 @@ func docIsEmpty(p *doc.Package) bool {
 		len(p.Funcs) == 0
 }
 
-// renderInfo returns the functions and data needed to render the doc.
-func renderInfo(ctx context.Context, fset *token.FileSet, p *doc.Package, opt RenderOptions) (map[string]any, TemplateData, func() []render.Link) {
+// renderInfo returns the functions and data needed to render the package documentation p.
+// The first return value is a map of functions for the template that will be used for rendering.
+// The third return value is a function that will return all the links, which must only be called after
+// the doc is rendered.
+func renderInfo(ctx context.Context, fset *token.FileSet, p *doc.Package, opt RenderOptions) (template.FuncMap, TemplateData, func() []render.Link) {
 	// Make a copy to avoid modifying caller's *doc.Package.
 	p2 := *p
 	p = &p2

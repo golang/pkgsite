@@ -124,17 +124,10 @@ func (r *Renderer) Synopsis(n ast.Node) string {
 
 // DocHTML formats documentation text as HTML.
 //
-// Each span of unindented non-blank lines is converted into a single paragraph.
-// There is one exception to the rule: a span that consists of a
-// single line, is followed by another paragraph span, begins with a capital
-// letter, and contains no punctuation is formatted as a heading.
-//
-// A span of indented lines is converted into a <pre> block, with the common
-// indent prefix removed.
-//
-// URLs in the comment text are converted into links. Any word that matches
-// an exported top-level identifier in the package is automatically converted
-// into a hyperlink to the declaration of that identifier.
+// The rules for the conversion follow https://go.dev/doc/comment,
+// including  linkifyng URLs in the text.
+// In addition, any word that matches an exported top-level identifier in the package
+// is automatically converted into a link to the declaration of that identifier.
 //
 // This returns formatted HTML with:
 //
@@ -150,6 +143,7 @@ func (r *Renderer) DocHTML(doc string) safehtml.HTML {
 
 // DocHTMLExtractLinks is like DocHTML, but as a side-effect, the "Links"
 // heading of doc is removed and its links are extracted.
+// The links can be retrieved with [Renderer.Links].
 func (r *Renderer) DocHTMLExtractLinks(doc string) safehtml.HTML {
 	return r.declHTML(doc, nil, true).Doc
 }
