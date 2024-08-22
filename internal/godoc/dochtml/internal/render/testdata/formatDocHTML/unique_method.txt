@@ -1,0 +1,25 @@
+Unique heading IDs in method declaration.
+-- doc --
+Documentation.
+
+Info
+
+This is some information.
+
+Info
+
+This is some other information.
+-- decl --
+func (T) M() {}
+-- want --
+<div role="navigation" aria-label="Table of Contents">
+  <ul class="Documentation-toc">
+      <li class="Documentation-tocItem"><a href="#hdr-Info-T_M">Info</a></li>
+      <li class="Documentation-tocItem"><a href="#hdr-Info-T_M-1">Info</a></li>
+  </ul>
+</div>
+<p>Documentation.
+</p><h4 id="hdr-Info-T_M">Info <a class="Documentation-idLink" href="#hdr-Info-T_M" aria-label="Go to Info">¶</a></h4><p>This is some information.
+</p><h4 id="hdr-Info-T_M-1">Info <a class="Documentation-idLink" href="#hdr-Info-T_M-1" aria-label="Go to Info">¶</a></h4><p>This is some other information.
+</p>
+

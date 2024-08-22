@@ -20,16 +20,10 @@ More doc.
 -- want --
 <div role="navigation" aria-label="Table of Contents">
   <ul class="Documentation-toc">
-    <li class="Documentation-tocItem">
-        <a href="#hdr-The_Go_Project">The Go Project</a>
-      </li>
-    <li class="Documentation-tocItem">
-        <a href="#hdr-Links">Links</a>
-      </li>
-    <li class="Documentation-tocItem">
-        <a href="#hdr-Header">Header</a>
-      </li>
-    </ul>
+      <li class="Documentation-tocItem"><a href="#hdr-The_Go_Project">The Go Project</a></li>
+      <li class="Documentation-tocItem"><a href="#hdr-Links">Links</a></li>
+      <li class="Documentation-tocItem"><a href="#hdr-Header">Header</a></li>
+  </ul>
 </div>
 <p>Documentation.
 </p><h4 id="hdr-The_Go_Project">The Go Project <a class="Documentation-idLink" href="#hdr-The_Go_Project" aria-label="Go to The Go Project">¶</a></h4><p>Go is an open source project.
@@ -41,13 +35,9 @@ More doc.
 -- want:links --
 <div role="navigation" aria-label="Table of Contents">
   <ul class="Documentation-toc">
-    <li class="Documentation-tocItem">
-        <a href="#hdr-The_Go_Project">The Go Project</a>
-      </li>
-    <li class="Documentation-tocItem">
-        <a href="#hdr-Header">Header</a>
-      </li>
-    </ul>
+      <li class="Documentation-tocItem"><a href="#hdr-The_Go_Project">The Go Project</a></li>
+      <li class="Documentation-tocItem"><a href="#hdr-Header">Header</a></li>
+  </ul>
 </div>
 <p>Documentation.
 </p><h4 id="hdr-The_Go_Project">The Go Project <a class="Documentation-idLink" href="#hdr-The_Go_Project" aria-label="Go to The Go Project">¶</a></h4><p>Go is an open source project.

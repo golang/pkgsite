@@ -9,14 +9,17 @@ import (
 	"fmt"
 	"go/ast"
 	"go/doc"
+	"go/doc/comment"
 	"go/parser"
 	"go/token"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/safehtml"
+	safe "github.com/google/safehtml"
 	"github.com/google/safehtml/testconversions"
 	"golang.org/x/tools/txtar"
 )
@@ -56,10 +59,14 @@ func TestFormatDocHTML(t *testing.T) {
 
 			doc := string(mustContent(t, "doc"))
 			wantNoExtract := mustContent(t, "want")
+			var decl ast.Decl
+			if d := getContent("decl"); d != "" {
+				decl = parseDecl(t, d)
+			}
 			for _, extractLinks := range []bool{false, true} {
 				t.Run(fmt.Sprintf("extractLinks=%t", extractLinks), func(t *testing.T) {
 					r := New(context.Background(), nil, pkgTime, nil)
-					got := r.formatDocHTML(doc, nil, extractLinks).String()
+					got := r.formatDocHTML(doc, decl, extractLinks).String()
 					want := wantNoExtract
 					wantLinks := ""
 					if extractLinks {
@@ -71,6 +78,8 @@ func TestFormatDocHTML(t *testing.T) {
 					}
 					if diff := cmp.Diff(want, got); diff != "" {
 						t.Errorf("doc mismatch (-want +got)\n%s", diff)
+						t.Logf("want: %s", want)
+						t.Logf("got: %s", got)
 					}
 					var b strings.Builder
 					for _, l := range r.Links() {
@@ -78,240 +87,6 @@ func TestFormatDocHTML(t *testing.T) {
 					}
 					if diff := cmp.Diff(wantLinks, strings.TrimSpace(b.String())); diff != "" {
 						t.Errorf("links mismatch (-want +got)\n%s", diff)
-					}
-				})
-			}
-		})
-	}
-}
-
-func TestFormatDocHTMLDecl(t *testing.T) {
-	duplicateHeadersDoc := `Documentation.
-
-Information
-
-This is some information.
-
-Information
-
-This is some other information.
-`
-	// typeWithFieldsDecl is declared as:
-	// 	type I2 interface {
-	// 		I1
-	// 		M2()
-	// 	}
-	typeWithFieldsDecl := &ast.GenDecl{
-		Tok: token.TYPE,
-		Specs: []ast.Spec{
-			&ast.TypeSpec{
-				Name: ast.NewIdent("I2"),
-				Type: &ast.InterfaceType{
-					Methods: &ast.FieldList{
-						List: []*ast.Field{
-							{Type: ast.NewIdent("I1")},
-							{Type: &ast.FuncType{}, Names: []*ast.Ident{ast.NewIdent("M2")}},
-						},
-					},
-				},
-			},
-		},
-	}
-
-	for _, test := range []struct {
-		name         string
-		doc          string
-		decl         ast.Decl
-		extractLinks []bool // nil means both
-		want         string
-		wantLinks    []Link
-	}{
-		{
-			name: "unique header ids in constants section for grouped constants",
-			doc:  duplicateHeadersDoc,
-			decl: &ast.GenDecl{
-				Tok:   token.CONST,
-				Specs: []ast.Spec{&ast.ValueSpec{Names: []*ast.Ident{{}}}, &ast.ValueSpec{Names: []*ast.Ident{{}}}},
-			},
-			want: `<div role="navigation" aria-label="Table of Contents">
-  <ul class="Documentation-toc">
-    <li class="Documentation-tocItem">
-        <a href="#hdr-Information">Information</a>
-      </li>
-    <li class="Documentation-tocItem">
-        <a href="#hdr-constant_Information">Information</a>
-      </li>
-    </ul>
-</div>
-<p>Documentation.
-</p><h4 id="hdr-Information">Information <a class="Documentation-idLink" href="#hdr-Information" aria-label="Go to Information">¶</a></h4><p>This is some information.
-</p><h4 id="hdr-constant_Information">Information <a class="Documentation-idLink" href="#hdr-constant_Information" aria-label="Go to Information">¶</a></h4><p>This is some other information.
-</p>`,
-		},
-		{
-			name: "unique header ids in variables section for grouped variables",
-			doc:  duplicateHeadersDoc,
-			decl: &ast.GenDecl{
-				Tok:   token.VAR,
-				Specs: []ast.Spec{&ast.ValueSpec{Names: []*ast.Ident{{}}}, &ast.ValueSpec{Names: []*ast.Ident{{}}}},
-			},
-			want: `<div role="navigation" aria-label="Table of Contents">
-  <ul class="Documentation-toc">
-    <li class="Documentation-tocItem">
-        <a href="#hdr-Information">Information</a>
-      </li>
-    <li class="Documentation-tocItem">
-        <a href="#hdr-variable_Information">Information</a>
-      </li>
-    </ul>
-</div>
-<p>Documentation.
-</p><h4 id="hdr-Information">Information <a class="Documentation-idLink" href="#hdr-Information" aria-label="Go to Information">¶</a></h4><p>This is some information.
-</p><h4 id="hdr-variable_Information">Information <a class="Documentation-idLink" href="#hdr-variable_Information" aria-label="Go to Information">¶</a></h4><p>This is some other information.
-</p>`,
-		},
-		{
-			name: "unique header ids in functions section",
-			doc:  duplicateHeadersDoc,
-			decl: &ast.FuncDecl{Name: ast.NewIdent("FooFunc")},
-			want: `<div role="navigation" aria-label="Table of Contents">
-  <ul class="Documentation-toc">
-    <li class="Documentation-tocItem">
-        <a href="#hdr-Information">Information</a>
-      </li>
-    <li class="Documentation-tocItem">
-        <a href="#hdr-FooFunc_Information">Information</a>
-      </li>
-    </ul>
-</div>
-<p>Documentation.
-</p><h4 id="hdr-Information">Information <a class="Documentation-idLink" href="#hdr-Information" aria-label="Go to Information">¶</a></h4><p>This is some information.
-</p><h4 id="hdr-FooFunc_Information">Information <a class="Documentation-idLink" href="#hdr-FooFunc_Information" aria-label="Go to Information">¶</a></h4><p>This is some other information.
-</p>`,
-		},
-		{
-			name: "unique header ids in functions section for method",
-			doc:  duplicateHeadersDoc,
-			decl: &ast.FuncDecl{
-				Recv: &ast.FieldList{List: []*ast.Field{{Type: ast.NewIdent("Bar")}}},
-				Name: ast.NewIdent("Func"),
-			},
-			want: `<div role="navigation" aria-label="Table of Contents">
-  <ul class="Documentation-toc">
-    <li class="Documentation-tocItem">
-        <a href="#hdr-Information">Information</a>
-      </li>
-    <li class="Documentation-tocItem">
-        <a href="#hdr-Bar_Func_Information">Information</a>
-      </li>
-    </ul>
-</div>
-<p>Documentation.
-</p><h4 id="hdr-Information">Information <a class="Documentation-idLink" href="#hdr-Information" aria-label="Go to Information">¶</a></h4><p>This is some information.
-</p><h4 id="hdr-Bar_Func_Information">Information <a class="Documentation-idLink" href="#hdr-Bar_Func_Information" aria-label="Go to Information">¶</a></h4><p>This is some other information.
-</p>`,
-		},
-		{
-			name: "unique header ids in types section",
-			doc:  duplicateHeadersDoc,
-			decl: &ast.GenDecl{
-				Tok:   token.TYPE,
-				Specs: []ast.Spec{&ast.TypeSpec{Name: ast.NewIdent("Duration")}},
-			},
-			want: `<div role="navigation" aria-label="Table of Contents">
-  <ul class="Documentation-toc">
-    <li class="Documentation-tocItem">
-        <a href="#hdr-Information">Information</a>
-      </li>
-    <li class="Documentation-tocItem">
-        <a href="#hdr-Duration_Information">Information</a>
-      </li>
-    </ul>
-</div>
-<p>Documentation.
-</p><h4 id="hdr-Information">Information <a class="Documentation-idLink" href="#hdr-Information" aria-label="Go to Information">¶</a></h4><p>This is some information.
-</p><h4 id="hdr-Duration_Information">Information <a class="Documentation-idLink" href="#hdr-Duration_Information" aria-label="Go to Information">¶</a></h4><p>This is some other information.
-</p>`,
-		},
-		{
-			name: "unique header ids in types section for types with fields",
-			doc:  duplicateHeadersDoc,
-			decl: typeWithFieldsDecl,
-			want: `<div role="navigation" aria-label="Table of Contents">
-  <ul class="Documentation-toc">
-    <li class="Documentation-tocItem">
-        <a href="#hdr-Information">Information</a>
-      </li>
-    <li class="Documentation-tocItem">
-        <a href="#hdr-I2_Information">Information</a>
-      </li>
-    </ul>
-</div>
-<p>Documentation.
-</p><h4 id="hdr-Information">Information <a class="Documentation-idLink" href="#hdr-Information" aria-label="Go to Information">¶</a></h4><p>This is some information.
-</p><h4 id="hdr-I2_Information">Information <a class="Documentation-idLink" href="#hdr-I2_Information" aria-label="Go to Information">¶</a></h4><p>This is some other information.
-</p>`,
-		},
-		{
-			name: "unique header ids in types section for typed variable",
-			doc:  duplicateHeadersDoc,
-			decl: &ast.GenDecl{
-				Tok:   token.VAR,
-				Specs: []ast.Spec{&ast.ValueSpec{Type: &ast.StarExpr{X: ast.NewIdent("Location")}, Names: []*ast.Ident{ast.NewIdent("UTC")}}},
-			},
-			want: `<div role="navigation" aria-label="Table of Contents">
-  <ul class="Documentation-toc">
-    <li class="Documentation-tocItem">
-        <a href="#hdr-Information">Information</a>
-      </li>
-    <li class="Documentation-tocItem">
-        <a href="#hdr-UTC_Information">Information</a>
-      </li>
-    </ul>
-</div>
-<p>Documentation.
-</p><h4 id="hdr-Information">Information <a class="Documentation-idLink" href="#hdr-Information" aria-label="Go to Information">¶</a></h4><p>This is some information.
-</p><h4 id="hdr-UTC_Information">Information <a class="Documentation-idLink" href="#hdr-UTC_Information" aria-label="Go to Information">¶</a></h4><p>This is some other information.
-</p>`,
-		},
-		{
-			name: "unique header ids in types section for typed constant",
-			doc:  duplicateHeadersDoc,
-			decl: &ast.GenDecl{
-				Tok:   token.CONST,
-				Specs: []ast.Spec{&ast.ValueSpec{Type: ast.NewIdent("T"), Names: []*ast.Ident{ast.NewIdent("C")}}},
-			},
-			want: `<div role="navigation" aria-label="Table of Contents">
-  <ul class="Documentation-toc">
-    <li class="Documentation-tocItem">
-        <a href="#hdr-Information">Information</a>
-      </li>
-    <li class="Documentation-tocItem">
-        <a href="#hdr-C_Information">Information</a>
-      </li>
-    </ul>
-</div>
-<p>Documentation.
-</p><h4 id="hdr-Information">Information <a class="Documentation-idLink" href="#hdr-Information" aria-label="Go to Information">¶</a></h4><p>This is some information.
-</p><h4 id="hdr-C_Information">Information <a class="Documentation-idLink" href="#hdr-C_Information" aria-label="Go to Information">¶</a></h4><p>This is some other information.
-</p>`,
-		},
-	} {
-		t.Run(test.name, func(t *testing.T) {
-			extractLinks := test.extractLinks
-			if extractLinks == nil {
-				extractLinks = []bool{false, true}
-			}
-			for _, el := range extractLinks {
-				t.Run(fmt.Sprintf("extractLinks=%t", el), func(t *testing.T) {
-					r := New(context.Background(), nil, pkgTime, nil)
-					got := r.formatDocHTML(test.doc, test.decl, el)
-					want := testconversions.MakeHTMLForTest(test.want)
-					if diff := cmp.Diff(want, got, cmp.AllowUnexported(safehtml.HTML{})); diff != "" {
-						t.Errorf("doc mismatch (-want +got)\n%s", diff)
-					}
-					if diff := cmp.Diff(test.wantLinks, r.Links()); diff != "" {
-						t.Errorf("r.Links() mismatch (-want +got)\n%s", diff)
 					}
 				})
 			}
@@ -711,13 +486,9 @@ More text.`
 
 	want := testconversions.MakeHTMLForTest(`<div role="navigation" aria-label="Table of Contents">
   <ul class="Documentation-toc">
-    <li class="Documentation-tocItem">
-        <a href="#hdr-The_Go_Project">The Go Project</a>
-      </li>
-    <li class="Documentation-tocItem">
-        <a href="#hdr-Heading_2">Heading 2</a>
-      </li>
-    </ul>
+      <li class="Documentation-tocItem"><a href="#hdr-The_Go_Project">The Go Project</a></li>
+      <li class="Documentation-tocItem"><a href="#hdr-Heading_2">Heading 2</a></li>
+  </ul>
 </div>
 <p>Documentation.
 </p><h4 id="hdr-The_Go_Project">The Go Project <a class="Documentation-idLink" href="#hdr-The_Go_Project" aria-label="Go to The Go Project">¶</a></h4><p>Go is an open source project.
@@ -728,5 +499,100 @@ More text.`
 	got := r.declHTML(doc, nil, false).Doc
 	if diff := cmp.Diff(want, got, cmp.AllowUnexported(safehtml.HTML{})); diff != "" {
 		t.Errorf("r.declHTML() mismatch (-want +got)\n%s", diff)
+	}
+}
+
+func TestHeadingIDSuffix(t *testing.T) {
+	for _, test := range []struct {
+		decl    string
+		want    string
+		wantIDs bool
+	}{
+		{"", "", true},
+		{"func Foo(){}", "Foo", true},
+		{"func (x T) Run(){}", "T_Run", true},
+		{"func (x *T) Run(){}", "T_Run", true},
+		{"func (x T[A]) Run(){}", "T_Run", true},
+		{"func (x *T[A]) Run(){}", "T_Run", true},
+		{"const C = 1", "C", true},
+		{"var V int", "V", true},
+		{"var V, W int", "", false},
+		{"var x, y, V int", "", false},
+		{"type T int", "T", true},
+		{"type T_Run[X any] int", "T_Run", true},
+		{"const (a = 1; b = 2; C = 3)", "", false},
+		{"var (a = 1; b = 2; C = 3)", "", false},
+		{"type (a int; b int; C int)", "", false},
+	} {
+		var decl ast.Decl
+		if test.decl != "" {
+			decl = parseDecl(t, test.decl)
+		}
+		got, gotIDs := headingIDSuffix(decl)
+		if got != test.want {
+			t.Errorf("%q: got %q, want %q", test.decl, got, test.want)
+		}
+		if gotIDs != test.wantIDs {
+			t.Errorf("%q createIDs: got %t, want %t", test.decl, gotIDs, test.wantIDs)
+		}
+	}
+}
+
+func parseDecl(t *testing.T, decl string) ast.Decl {
+	prog := "package p\n" + decl
+	f, err := parser.ParseFile(token.NewFileSet(), "", prog, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return f.Decls[0]
+}
+
+func TestAddHeading(t *testing.T) {
+	// This test checks that the generated IDs are unique and the headings are saved.
+	// It doesn't care about the HTML.
+	var html safe.HTML
+
+	check := func(hs *headingScope, ids ...string) {
+		t.Helper()
+		var want []heading
+		for _, id := range ids {
+			want = append(want, heading{safe.IdentifierFromConstantPrefix("hdr", id), html})
+		}
+		if !slices.Equal(hs.headings, want) {
+			t.Errorf("\ngot  %v\nwant %v", hs.headings, want)
+		}
+	}
+
+	addHeading := func(hs *headingScope, heading string) {
+		hs.addHeading(&comment.Heading{
+			Text: []comment.Text{comment.Plain(heading)},
+		}, html)
+	}
+
+	hs := newHeadingScope("T", true)
+	addHeading(hs, "heading")
+	addHeading(hs, "heading 2")
+	addHeading(hs, "heading")
+	addHeading(hs, "heading")
+	addHeading(hs, "heading.2")
+	check(hs, "heading-T", "heading_2-T", "heading-T-1", "heading-T-2", "heading_2-T-1")
+
+	// Check empty suffix.
+	hs = newHeadingScope("", true)
+	addHeading(hs, "h")
+	addHeading(hs, "h")
+	check(hs, "h", "h-1")
+
+	// Check that invalid ID characters are removed from both suffix and input.
+	hs = newHeadingScope("a.b𝜽", true)
+	addHeading(hs, "h.i𝜽")
+	check(hs, "h_i_-a_b_")
+
+	// Check no link (empty ID).
+	hs = newHeadingScope("", false)
+	addHeading(hs, "h")
+	want := []heading{{Title: html}}
+	if !slices.Equal(hs.headings, want) {
+		t.Errorf("got %v, want %v", hs.headings, want)
 	}
 }

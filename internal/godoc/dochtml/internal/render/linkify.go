@@ -23,7 +23,6 @@ import (
 	safe "github.com/google/safehtml"
 	"github.com/google/safehtml/legacyconversions"
 	"github.com/google/safehtml/template"
-	"golang.org/x/net/html"
 	"golang.org/x/pkgsite/internal/log"
 )
 
@@ -53,10 +52,7 @@ const (
 	rfcRx = `RFC\s+(\d{3,5})(,?\s+[Ss]ection\s+(\d+(\.\d+)*))?`
 )
 
-var (
-	matchRx     = regexp.MustCompile(urlRx + `|` + rfcRx)
-	badAnchorRx = regexp.MustCompile(`[^a-zA-Z0-9]`)
-)
+var matchRx = regexp.MustCompile(urlRx + `|` + rfcRx)
 
 type link struct {
 	Class string
@@ -65,7 +61,7 @@ type link struct {
 }
 
 type heading struct {
-	ID    safe.Identifier
+	ID    safe.Identifier // if empty, the title is not linked
 	Title safe.HTML
 }
 
@@ -73,11 +69,15 @@ var (
 	// tocTemplate expects a []heading.
 	tocTemplate = template.Must(template.New("toc").Parse(`<div role="navigation" aria-label="Table of Contents">
   <ul class="Documentation-toc{{if gt (len .) 5}} Documentation-toc-columns{{end}}">
-    {{range . -}}
+    {{- range .}}
       <li class="Documentation-tocItem">
-        <a href="#{{.ID}}">{{.Title}}</a>
+        {{- if .ID.String -}}
+		  <a href="#{{.ID}}">{{.Title}}</a>
+        {{- else -}}
+          {{.Title}}
+        {{- end -}}
       </li>
-    {{end -}}
+    {{- end}}
   </ul>
 </div>
 `))
@@ -88,8 +88,13 @@ var (
 
 	paraTemplate = template.Must(template.New("para").Parse("<p>{{.}}\n</p>"))
 
-	headingTemplate = template.Must(template.New("heading").Parse(
-		`<h4 id="{{.ID}}">{{.Title}} <a class="Documentation-idLink" href="#{{.ID}}" aria-label="Go to {{.Title}}">¶</a></h4>`))
+	// expects a heading
+	headingTemplate = template.Must(template.New("heading").Parse(`
+	  {{- if .ID.String -}}
+		<h4 id="{{.ID}}">{{.Title}} <a class="Documentation-idLink" href="#{{.ID}}" aria-label="Go to {{.Title}}">¶</a></h4>
+	  {{- else -}}
+	    <h4>{{.Title}}</h4>
+	  {{- end}}`))
 
 	linkTemplate = template.Must(template.New("link").Parse(
 		`<a{{with .Class}}class="{{.}}" {{end}} href="{{.Href}}">{{.Text}}</a>`))
@@ -119,55 +124,12 @@ func (r *Renderer) formatDocHTML(text string, decl ast.Decl, extractLinks bool) 
 	if extractLinks {
 		r.removeLinks(doc)
 	}
-
-	h := r.blocksToHTML(doc.Content, decl, true, extractLinks)
-	if headings := extractHeadings(h); len(headings) > 0 {
-		h = safe.HTMLConcat(ExecuteToHTML(tocTemplate, headings), h)
+	hscope := newHeadingScope(headingIDSuffix(decl))
+	h := r.blocksToHTML(doc.Content, true, hscope)
+	if len(hscope.headings) > 0 {
+		h = safe.HTMLConcat(ExecuteToHTML(tocTemplate, hscope.headings), h)
 	}
-
 	return h
-}
-
-func extractHeadings(h safe.HTML) []heading {
-	var headings []heading
-
-	doc, err := html.Parse(strings.NewReader(h.String()))
-	if err != nil {
-		return nil
-	}
-
-	var f func(*html.Node)
-	f = func(n *html.Node) {
-		for _, a := range n.Attr {
-			if a.Key == "id" && strings.HasPrefix(a.Val, "hdr-") {
-				if tn := firstTextNode(n); tn != nil {
-					title := strings.TrimSpace(tn.Data)
-					hdrName := strings.TrimPrefix(a.Val, "hdr-")
-					id := safe.IdentifierFromConstantPrefix("hdr", hdrName)
-					headings = append(headings, heading{id, safe.HTMLEscaped(title)})
-				}
-				break
-			}
-		}
-		for c := n.FirstChild; c != nil; c = c.NextSibling {
-			f(c)
-		}
-	}
-	f(doc)
-
-	return headings
-}
-
-func firstTextNode(n *html.Node) *html.Node {
-	if n.Type == html.TextNode {
-		return n
-	}
-	for c := n.FirstChild; c != nil; c = c.NextSibling {
-		if r := firstTextNode(c); r != nil {
-			return r
-		}
-	}
-	return nil
 }
 
 // removeLinks removes the "Links" section from doc.
@@ -263,13 +225,13 @@ func parseLink(line string) *Link {
 	}
 }
 
-func (r *Renderer) blocksToHTML(bs []comment.Block, decl ast.Decl, useParagraph, extractLinks bool) safe.HTML {
+func (r *Renderer) blocksToHTML(bs []comment.Block, useParagraph bool, hscope *headingScope) safe.HTML {
 	return concatHTML(bs, func(b comment.Block) safe.HTML {
-		return r.blockToHTML(b, decl, useParagraph, extractLinks)
+		return r.blockToHTML(b, useParagraph, hscope)
 	})
 }
 
-func (r *Renderer) blockToHTML(b comment.Block, decl ast.Decl, useParagraph, extractLinks bool) safe.HTML {
+func (r *Renderer) blockToHTML(b comment.Block, useParagraph bool, hscope *headingScope) safe.HTML {
 	switch b := b.(type) {
 	case *comment.Paragraph:
 		th := r.textsToHTML(b.Text)
@@ -282,7 +244,7 @@ func (r *Renderer) blockToHTML(b comment.Block, decl ast.Decl, useParagraph, ext
 		return ExecuteToHTML(codeTemplate, b.Text)
 
 	case *comment.Heading:
-		return ExecuteToHTML(headingTemplate, r.newHeading(b, decl))
+		return ExecuteToHTML(headingTemplate, r.newHeading(b, hscope))
 
 	case *comment.List:
 		var items []safe.HTML
@@ -291,7 +253,7 @@ func (r *Renderer) blockToHTML(b comment.Block, decl ast.Decl, useParagraph, ext
 			items = append(items, ExecuteToHTML(listItemTemplate, struct {
 				Number  string
 				Content safe.HTML
-			}{item.Number, r.blocksToHTML(item.Content, decl, useParagraph, false)}))
+			}{item.Number, r.blocksToHTML(item.Content, useParagraph, hscope)}))
 		}
 		t := oListTemplate
 		if b.Items[0].Number == "" {
@@ -303,53 +265,143 @@ func (r *Renderer) blockToHTML(b comment.Block, decl ast.Decl, useParagraph, ext
 	}
 }
 
-// headingIDs keeps track of used heading ids to prevent duplicates.
-type headingIDs map[safe.Identifier]bool
+/*
+We want to convert headings in doc comments to unique and stable HTML IDs.
 
-// headingID returns a unique identifier for a *comment.Heading & ast.Decl pair.
-func (r *Renderer) headingID(h *comment.Heading, decl ast.Decl) safe.Identifier {
-	s := textsToString(h.Text)
-	hdrTitle := badAnchorRx.ReplaceAllString(s, "_")
-	id := safe.IdentifierFromConstantPrefix("hdr", hdrTitle)
-	if !r.headingIDs[id] {
-		r.headingIDs[id] = true
-		return id
+The IDs in an HTML page should be unique, so URLs with fragments can link to
+them. The headings in the doc comments of a Go package (which corresponds to an
+HTML page for us) need not be unique. The same heading can be used in the doc
+comment of several symbols, and in the package comment as well.
+
+If uniqueness were the only criterion, we could just append a number. But we
+also want the IDs to be stable. The page for the latest version of a package
+has no version in the URL, so that a saved link will always reference the latest
+version. We do the same for other links on the page, like links to symbols. We
+want to do so for heading links too. That means that a heading link, which uses
+the ID as a fragment, may visit pages with different content at different times.
+We want that saved link to return to the same heading every time, if the heading
+still exists.
+
+If we numbered the IDs from top to bottom, a heading ID would change whenever headings
+were added above it. Instead, we try to construct a unique suffix from the declaration that the
+doc comment refers to. (The suffix is empty for the package comment.) For ungrouped declarations,
+we use the symbol name, which must be unique in the package. For grouped declarations, like
+
+   const (
+   	   A = 1
+   	   B = 2
+   )
+
+or
+
+    var x, Y int
+
+there is no good way to pick a suffix, so we don't link headings at all. Evidence suggests
+that such headings are very rare.
+
+After constructing the unique suffix, we may still have duplicate IDs because the same doc comment
+can repeat headings. So we append a number that is unique for the given suffix.
+
+This approach will always produce unique, stable IDs when it produces IDs at all.
+*/
+
+// A headingScope is a collection of headings that arise from the documentation of
+// a single element, either the package itself or a symbol within it.
+// A headingScope ensures that heading IDs are unique, and keeps a list of headings as they appear in the scope.
+type headingScope struct {
+	suffix    string         // ID suffix; unique for the package; empty for package doc
+	createIDs bool           // create IDs for the headings
+	headings  []heading      // headings for this scope, in order
+	ids       map[string]int // count of seen IDs
+}
+
+func newHeadingScope(suffix string, createIDs bool) *headingScope {
+	return &headingScope{
+		suffix:    badAnchorRx.ReplaceAllString(suffix, "_"),
+		createIDs: createIDs,
+		ids:       map[string]int{},
 	}
+}
 
-	// The id is not unique. Attempt to generate an identifier using the decl.
-	for _, v := range generateAnchorPoints(decl) {
-		if v.Kind == "field" {
-			continue
-		}
-		hdrTitle = badAnchorRx.ReplaceAllString(v.ID.String()+"_"+s, "_")
-		if v.Kind == "constant" || v.Kind == "variable" {
-			if specs := decl.(*ast.GenDecl).Specs; len(specs) > 1 {
-				// Grouped consts and vars cannot be deterministically identified,
-				// so treat them as a single section. e.g. "hdr-constant-Title"
-				hdrTitle = badAnchorRx.ReplaceAllString(v.Kind+"_"+s, "_")
-			}
-		}
-		if v.Kind != "method" {
-			// Continue iterating until we find a higher precedence kind.
-			break
-		}
+// newHeading constructs a heading from the comment.Heading and remembers it.
+func (r *Renderer) newHeading(h *comment.Heading, hs *headingScope) heading {
+	return hs.addHeading(h, r.textsToHTML(h.Text))
+}
+
+// addHeading constructs a heading and adds it to hs.
+func (hs *headingScope) addHeading(ch *comment.Heading, html safe.HTML) heading {
+	h := heading{Title: html}
+	if hs.createIDs {
+		h.ID = safe.IdentifierFromConstantPrefix("hdr", hs.newHeadingID(ch))
 	}
+	hs.headings = append(hs.headings, h)
+	return h
+}
 
-	for {
-		id = safe.IdentifierFromConstantPrefix("hdr", hdrTitle)
-		if !r.headingIDs[id] {
-			r.headingIDs[id] = true
-			break
-		}
-		// The id is still not unique. Append _ until unique.
-		hdrTitle = hdrTitle + "_"
+var badAnchorRx = regexp.MustCompile(`[^a-zA-Z0-9-]`)
+
+// newHeadingID constructs a unique heading ID from the argument, which is the text
+// of a heading.
+func (hs *headingScope) newHeadingID(ch *comment.Heading) string {
+	// Start with the heading's default ID.
+	// We can only construct a [safe.Identifier] by adding a prefix, so remove the
+	// default's prefix.
+	id := strings.TrimPrefix(ch.DefaultID(), "hdr-")
+	if hs.suffix != "" {
+		id += "-" + hs.suffix
 	}
-
+	n := hs.ids[id]
+	hs.ids[id]++
+	if n > 0 {
+		id += "-" + strconv.Itoa(n)
+	}
 	return id
 }
 
-func (r *Renderer) newHeading(h *comment.Heading, decl ast.Decl) heading {
-	return heading{r.headingID(h, decl), r.textsToHTML(h.Text)}
+// headingIDSuffix returns a unique string from the decl, to be
+// used as the suffix in heading IDs.
+// If a unique string can be created, the second return value is true.
+// If not (the declaration is a group), headingIDSuffix returns "", false.
+func headingIDSuffix(decl ast.Decl) (string, bool) {
+	if decl == nil {
+		return "", true
+	}
+	switch decl := decl.(type) {
+	case *ast.FuncDecl:
+		// functionName, or recvTypeName_methodName
+		if decl.Recv == nil || len(decl.Recv.List) == 0 {
+			return decl.Name.Name, true
+		}
+		return recvTypeString(decl.Recv.List[0].Type) + "_" + decl.Name.Name, true
+	case *ast.GenDecl:
+		// We can only pick a stable name when there is a single decl.
+		if len(decl.Specs) == 1 {
+			switch spec := decl.Specs[0].(type) {
+			case *ast.TypeSpec:
+				return spec.Name.Name, true
+			case *ast.ValueSpec:
+				if len(spec.Names) == 1 {
+					return spec.Names[0].Name, true
+				}
+			}
+		}
+	}
+	return "", false
+}
+
+// recvTypeString returns a string for the symbol in a type expression
+// for a method receiver.
+func recvTypeString(t ast.Expr) string {
+	switch t := t.(type) {
+	case *ast.Ident:
+		return t.Name
+	case *ast.IndexExpr:
+		return t.X.(*ast.Ident).Name
+	case *ast.StarExpr:
+		return recvTypeString(t.X)
+	default: // should never happen
+		return "unknown"
+	}
 }
 
 func (r *Renderer) textsToHTML(ts []comment.Text) safe.HTML {

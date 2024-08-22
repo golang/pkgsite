@@ -12,5 +12,6 @@ By default, "want" is tested with extractLinks set to both true and false.
 The following sections are optional:
 
 - want:links: the output when extractLinks = true
-- links: must be present if want:links is present; the extracted
-  links, one per line, each line has text and href separated by a single space.
+- links: the extracted links, one per line
+  Each line has text and href separated by a single space.
+- decl: A Go declaration to be passed to formatDocHTML. Default is nil.

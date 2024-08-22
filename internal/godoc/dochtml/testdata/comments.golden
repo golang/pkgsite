@@ -33,9 +33,7 @@ This refers to the standard library <a href="/encoding/json">encoding/json</a> p
 </div>
 <div role="navigation" aria-label="Table of Contents">
 <ul class="Documentation-toc">
-<li class="Documentation-tocItem">
-<a href="#hdr-Example">Example</a>
-</li>
+<li class="Documentation-tocItem"><a href="#hdr-Example-F">Example</a></li>
 </ul>
 </div>
 <p>F refers to function <a href="#G">G</a> and method <a href="#T.M">T.M</a>.
@@ -44,7 +42,7 @@ It also has three bullet points:
 <li>one</li>
 <li>two</li>
 <li>three</li>
-</ul><h4 id="hdr-Example">Example <a class="Documentation-idLink" href="#hdr-Example" aria-label="Go to Example">¶</a></h4><p>Here is an example:
+</ul><h4 id="hdr-Example-F">Example <a class="Documentation-idLink" href="#hdr-Example-F" aria-label="Go to Example">¶</a></h4><p>Here is an example:
 </p><pre>F()
 </pre>
 </div><div class="Documentation-function">

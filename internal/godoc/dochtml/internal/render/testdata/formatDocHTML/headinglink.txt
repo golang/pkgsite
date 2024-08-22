@@ -12,10 +12,8 @@ Go is an open source project.
 -- want --
 <div role="navigation" aria-label="Table of Contents">
   <ul class="Documentation-toc">
-    <li class="Documentation-tocItem">
-        <a href="#hdr-The_Go_Project2">The Go Project2</a>
-      </li>
-    </ul>
+      <li class="Documentation-tocItem"><a href="#hdr-The_Go_Project2">The Go Project2</a></li>
+  </ul>
 </div>
 <p>The Go Project1
 </p><p>Go is an open source project.
