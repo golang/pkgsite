@@ -79,7 +79,7 @@ main() {
         idtoken=$1
         ;;
       "--seeddb")
-        echo "the seeddb flag is deprecated."
+        die "The seeddb flag is no longer supported. It is safe to remove it."
         ;;
       "--update"|"-u")
         update="-u"

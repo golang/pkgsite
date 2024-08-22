@@ -97,7 +97,8 @@ func run(ctx context.Context, db *database.DB, proxyURL string) error {
 	}
 
 	r := results{}
-	g := new(errgroup.Group)
+	g, gctx := errgroup.WithContext(ctx)
+	g.SetLimit(10)
 	f := &worker.Fetcher{
 		ProxyClient:  proxyClient,
 		SourceClient: sourceClient,
@@ -118,7 +119,7 @@ func run(ctx context.Context, db *database.DB, proxyURL string) error {
 		// Process versions of the same module sequentially, to avoid DB contention.
 		g.Go(func() error {
 			for _, v := range vers {
-				if err := fetch(ctx, db, f, path, v, &r); err != nil {
+				if err := fetch(gctx, db, f, path, v, &r); err != nil {
 					if *keepGoing {
 						mu.Lock()
 						errors = append(errors, err)
