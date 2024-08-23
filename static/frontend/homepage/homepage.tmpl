@@ -16,11 +16,12 @@
       <form class="go-InputGroup Homepage-search Homepage-search--symbol"
           action="/search" role="search" data-gtmc="homepage search form">
         <input
-          class="go-Input js-searchFocus Homepage-search--input"
+          class="go-Input js-searchFocus"
           data-test-id="homepage-search"
           id="AutoComplete"
           role="textbox"
           aria-label="{{.SearchPrompt}}"
+          type="search"
           name="q"
           placeholder="{{.SearchPrompt}}"
           autocapitalize="off"
@@ -29,7 +30,6 @@
           spellcheck="false"
           title="{{.SearchPrompt}}"
           autofocus="true">
-        <button class="Homepage-closeIcon" type="reset" aria-label="Clear Search"> X </button>
         <button type="submit" class="go-Button">Search</button>
       </form>
       <section class="go-Carousel Homepage-tips js-carousel" aria-label="Search Tips Carousel" data-slide-index="{{.TipIndex}}">
