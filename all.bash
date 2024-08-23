@@ -39,7 +39,7 @@ filter() {
 # they are staged for commit, use those.
 # Otherwise, use the files changed since the previous commit.
 modified_files() {
-  local working="$(diff_files '') $(diff_files --cached)"
+  local working=$(working_files)
   if [[ $working != ' ' ]]; then
     echo $working
   elif [[ $(git rev-parse HEAD) = $(git rev-parse master) ]]; then
@@ -47,6 +47,11 @@ modified_files() {
   else
     diff_files HEAD^
   fi
+}
+
+# Return the files in the working directory that have not been added to the commit.
+working_files() {
+  echo "$(diff_files '') $(diff_files --cached)"
 }
 
 
@@ -181,8 +186,7 @@ check_script_hashes() {
 # run_build_static builds JavaScript output from TypeScript source files.
 run_build_static() {
   runcmd $GO run ./devtools/cmd/static
-  files=$(modified_files)
-  echo "mod: $files"
+  files=$(working_files)
   if [[ $(filter "$files" 'static/**/*.min*') != '' ]]; then
     err "minimized CSS files are not consistent with unminimized ones; run ./devtools/cmd/static to regenerate them"
   fi

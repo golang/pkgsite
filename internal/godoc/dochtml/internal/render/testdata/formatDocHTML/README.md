@@ -14,4 +14,3 @@ The following sections are optional:
 - want:links: the output when extractLinks = true
 - links: must be present if want:links is present; the extracted
   links, one per line, each line has text and href separated by a single space.
-
