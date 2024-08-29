@@ -668,6 +668,10 @@ var patterns = []struct {
 		templates: gitlabURLTemplates,
 	},
 	{
+		pattern:   `^(?P<repo>git\.glasklar\.is/[a-z0-9A-Z_.\-]+/[a-z0-9A-Z_.\-]+)`,
+		templates: gitlabURLTemplates,
+	},
+	{
 		pattern:         `^(?P<repo>gitea\.com/[a-z0-9A-Z_.\-]+/[a-z0-9A-Z_.\-]+)(\.git|$)`,
 		templates:       giteaURLTemplates,
 		transformCommit: giteaTransformCommit,
