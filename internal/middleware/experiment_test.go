@@ -100,14 +100,13 @@ func TestSetAndLoadExperiments(t *testing.T) {
 }
 
 func TestShouldSetExperiment(t *testing.T) {
-	// Force the pre-go1.20 behavior of rand.Seed
-	rand.Seed(1)
+	rng := rand.New(rand.NewSource(1))
 	ipv4Addr := func() string {
 		a := make([]string, 4)
 		for i := 0; i < 4; i++ {
 			// The use case is simple enough that a deterministic
 			// seed should provide enough coverage.
-			a[i] = strconv.Itoa(rand.Intn(256))
+			a[i] = strconv.Itoa(rng.Intn(256))
 		}
 		return strings.Join(a, ".")
 	}

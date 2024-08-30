@@ -1,6 +1,6 @@
 module golang.org/x/pkgsite
 
-go 1.19
+go 1.23
 
 require (
 	cloud.google.com/go/cloudtasks v1.10.0

@@ -523,6 +523,7 @@ func (g *goPackagesModuleGetter) Search(ctx context.Context, query string, limit
 				continue
 			}
 			if f.Doc != nil {
+				//lint:ignore SA1019 TODO(jba) create a doc.Package
 				result.Synopsis = doc.Synopsis(f.Doc.Text())
 			}
 		}

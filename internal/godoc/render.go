@@ -56,7 +56,7 @@ func (p *Package) DocInfo(ctx context.Context, innerPath string, sourceInfo *sou
 	if err != nil {
 		return "", nil, nil, err
 	}
-	return doc.Synopsis(d.Doc), cleanImports(d.Imports, d.ImportPath), api, nil
+	return d.Synopsis(d.Doc), cleanImports(d.Imports, d.ImportPath), api, nil
 }
 
 // cleanImports cleans import paths, in the sense of path.Clean.
