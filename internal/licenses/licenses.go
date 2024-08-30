@@ -26,8 +26,10 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
+	"maps"
 	"path"
 	"path/filepath"
+	"slices"
 	"sort"
 	"strings"
 	"sync"
@@ -575,7 +577,7 @@ func DetectFile(contents []byte, filename string, logf func(string, ...any)) ([]
 		logf("%s failed to classify license (%+v), skipping", filename, cov)
 		return []string{unknownLicenseType}, cov
 	}
-	return setToSortedSlice(types), cov
+	return slices.Sorted(maps.Keys(types)), cov
 }
 
 // Redistributable reports whether the set of license types establishes that a
@@ -602,13 +604,4 @@ func types(lics []*License) []string {
 		types = append(types, l.Types...)
 	}
 	return types
-}
-
-func setToSortedSlice(m map[string]bool) []string {
-	var s []string
-	for e := range m {
-		s = append(s, e)
-	}
-	sort.Strings(s)
-	return s
 }

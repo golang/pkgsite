@@ -12,6 +12,8 @@ import (
 	"fmt"
 	"hash/fnv"
 	"io"
+	"maps"
+	"slices"
 	"sort"
 	"strings"
 	"unicode/utf8"
@@ -442,15 +444,7 @@ func insertPaths(ctx context.Context, tx *database.DB, m *internal.Module) (path
 		curPathsSet[internal.V1Path(u.Path, m.ModulePath)] = true
 		curPathsSet[internal.SeriesPathForModule(m.ModulePath)] = true
 	}
-	return upsertPaths(ctx, tx, stringSetToSlice(curPathsSet))
-}
-
-func stringSetToSlice(m map[string]bool) []string {
-	var s []string
-	for e := range m {
-		s = append(s, e)
-	}
-	return s
+	return upsertPaths(ctx, tx, slices.Collect(maps.Keys(curPathsSet)))
 }
 
 func insertUnits(ctx context.Context, db *database.DB, unitValues []any) (pathIDToUnitID map[int]int, err error) {
@@ -581,7 +575,7 @@ func insertImports(ctx context.Context, tx *database.DB,
 			importPathSet[imp] = true
 		}
 	}
-	pathToID, err := upsertPaths(ctx, tx, stringSetToSlice(importPathSet))
+	pathToID, err := upsertPaths(ctx, tx, slices.Collect(maps.Keys(importPathSet)))
 	if err != nil {
 		return err
 	}
