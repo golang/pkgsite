@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 	"sort"
 	"strings"
 	"sync"
@@ -54,6 +55,10 @@ func TestInsertModule(t *testing.T) {
 		{
 			name:   "valid test for pseudoversion version",
 			module: sample.Module(sample.ModulePath, "v0.0.0-20210212193344-7015347762c1", "internal/foo"),
+		},
+		{
+			name:   "v2 version",
+			module: sample.Module(sample.ModulePath+"/v2", "v2.0.0", "foo"),
 		},
 		{
 			name: "valid test with go.mod missing",
@@ -743,4 +748,41 @@ func TestReconcileSearch(t *testing.T) {
 	// Insert a module that is a prefix. It shouldn't change anything.
 	insert("m.com/c", "v1.0.0", "pkg", 200, imports1, "")
 	check(modPath3, "v1.0.0", "", imports1)
+}
+
+func TestPathsToInsert(t *testing.T) {
+	for _, test := range []struct {
+		name string
+		m    *internal.Module
+		want []string
+	}{
+		{
+			name: "v1 module",
+			m: &internal.Module{
+				ModuleInfo: internal.ModuleInfo{ModulePath: "a.com/m"},
+				Units: []*internal.Unit{
+					{UnitMeta: internal.UnitMeta{Path: "a.com/m/u"}},
+				},
+			},
+			want: []string{"a.com/m", "a.com/m/u"},
+		},
+		{
+			name: "v2 module",
+			m: &internal.Module{
+				ModuleInfo: internal.ModuleInfo{ModulePath: "a.com/m/v2"},
+				Units: []*internal.Unit{
+					{UnitMeta: internal.UnitMeta{Path: "a.com/m/v2/u"}},
+				},
+			},
+			want: []string{"a.com/m", "a.com/m/u", "a.com/m/v2", "a.com/m/v2/u"},
+		},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			got := pathsToInsert(test.m)
+			slices.Sort(got)
+			if diff := cmp.Diff(test.want, got); diff != "" {
+				t.Errorf("mismatch (-want +got):\n%s", diff)
+			}
+		})
+	}
 }

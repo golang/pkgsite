@@ -438,13 +438,20 @@ func (pdb *DB) insertUnits(ctx context.Context, tx *database.DB,
 // ID in the paths table.
 // Should be run inside a transaction.
 func insertPaths(ctx context.Context, tx *database.DB, m *internal.Module) (pathToID map[string]int, err error) {
-	curPathsSet := map[string]bool{}
+	return upsertPaths(ctx, tx, pathsToInsert(m))
+}
+
+// pathsToInsert returns the paths of m that should be added to the paths table if they are not
+// already there.
+func pathsToInsert(m *internal.Module) []string {
+	s := map[string]bool{}
+	s[m.ModulePath] = true
+	s[internal.SeriesPathForModule(m.ModulePath)] = true
 	for _, u := range m.Units {
-		curPathsSet[u.Path] = true
-		curPathsSet[internal.V1Path(u.Path, m.ModulePath)] = true
-		curPathsSet[internal.SeriesPathForModule(m.ModulePath)] = true
+		s[u.Path] = true
+		s[internal.V1Path(u.Path, m.ModulePath)] = true
 	}
-	return upsertPaths(ctx, tx, slices.Collect(maps.Keys(curPathsSet)))
+	return slices.Collect(maps.Keys(s))
 }
 
 func insertUnits(ctx context.Context, db *database.DB, unitValues []any) (pathIDToUnitID map[int]int, err error) {
