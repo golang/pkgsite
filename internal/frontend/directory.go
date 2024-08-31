@@ -38,6 +38,7 @@ type DirectoryInfo struct {
 	Synopsis   string
 	IsModule   bool
 	IsInternal bool
+	IsCommand  bool
 }
 
 // unitDirectories zips the subdirectories and nested modules together in a two
@@ -128,8 +129,9 @@ func getSubdirectories(um *internal.UnitMeta, pkgs []*internal.PackageMeta, requ
 		sdirs = append(sdirs, &DirectoryInfo{
 			URL: versions.ConstructUnitURL(pm.Path, um.ModulePath,
 				versions.LinkVersion(um.ModulePath, requestedVersion, um.Version)),
-			Suffix:   internal.Suffix(pm.Path, um.Path),
-			Synopsis: pm.Synopsis,
+			Suffix:    internal.Suffix(pm.Path, um.Path),
+			Synopsis:  pm.Synopsis,
+			IsCommand: pm.Name == "main",
 		})
 	}
 	sort.Slice(sdirs, func(i, j int) bool { return sdirs[i].Suffix < sdirs[j].Suffix })

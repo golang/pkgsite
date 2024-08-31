@@ -81,6 +81,7 @@
           <span>
             <a href="{{.URL}}">{{.Suffix}}</a>
             {{if .IsModule}}<span class="go-Chip go-Chip--inverted">Module</span>{{end}}
+            {{if .IsCommand}}<span class="go-Chip go-Chip--inverted">command</span>{{end}}
           </span>
           <div class="UnitDirectories-mobileSynopsis">{{.Synopsis}}</div>
         </div>

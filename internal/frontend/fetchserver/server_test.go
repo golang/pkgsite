@@ -258,6 +258,17 @@ var testModules = []testModule{
 			},
 		},
 	},
+	// A module with command packages.
+	{
+		path:            "golang.org/x/abc",
+		redistributable: true,
+		versions:        []string{"v4.2.0"},
+		packages: []testPackage{
+			{name: "main", suffix: "cmd/a"},
+			{name: "main", suffix: "cmd/b"},
+			{name: "main", suffix: "cmd/c"},
+		},
+	},
 }
 
 var (
@@ -971,6 +982,14 @@ func serverTestCases() []serverTestCase {
 			want: in("",
 				notIn(".Documentation-variables"),
 				notIn(".UnitBuildContext-titleContext")),
+		},
+		{
+			name:           "command packages",
+			urlPath:        "/golang.org/x/abc",
+			wantStatusCode: http.StatusOK,
+			want: in(".UnitDirectories-subdirectory",
+				in("span a", href("/golang.org/x/abc@v4.2.0/cmd/a"), hasText("a")),
+				in("span span.go-Chip", hasText("command"))),
 		},
 	}
 }
