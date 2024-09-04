@@ -14,6 +14,10 @@ import (
 	"strings"
 )
 
+//lint:file-ignore SA1019 We only need the syntax tree.
+// ast.NewPackage is deprecated in favor of go/types, but we don't want or need full
+// type information here, just the syntax tree. We are only rendering documentation.
+
 var pkgTime, fsetTime = mustLoadPackage("time")
 
 func mustLoadPackage(path string) (*doc.Package, *token.FileSet) {

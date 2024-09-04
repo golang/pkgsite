@@ -523,7 +523,14 @@ func (g *goPackagesModuleGetter) Search(ctx context.Context, query string, limit
 				continue
 			}
 			if f.Doc != nil {
-				//lint:ignore SA1019 TODO(jba) create a doc.Package
+				//lint:ignore SA1019 doc.Synopsis is correct here.
+				// The lint message warns that doc.Synopsis is deprecated in favor
+				// of Package.Synopsis.
+				// Package.Synopsis would display links on separate lines if the
+				// Package were initialized with a package's code and if the synopsis
+				// contained links.
+				// We don't have the code and we wouldn't want the extra lines if we did,
+				// so doc.Synopsis is a better choice.
 				result.Synopsis = doc.Synopsis(f.Doc.Text())
 			}
 		}

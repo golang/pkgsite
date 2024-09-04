@@ -188,7 +188,7 @@ func printNode(w io.Writer, root ast.Node) error {
 		idx := len(seen)
 		seen[x] = idx
 		pr("%s#%d", ts, idx)
-		//lint:ignore SA1019 TODO(jba) remove ast.Object
+		//lint:ignore SA1019 go/doc uses *ast.Object, so we must preserve it.
 		if obj, ok := x.(*ast.Object); ok {
 			pr(" %s %s %v\n", obj.Name, obj.Kind, obj.Data)
 			prValue(obj.Decl, depth+1)
