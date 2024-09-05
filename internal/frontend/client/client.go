@@ -8,6 +8,7 @@ package client
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -81,7 +82,7 @@ func (c *Client) fetchJSONPage(url string) (_ []byte, err error) {
 	}
 	defer r.Body.Close()
 	if r.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf(r.Status)
+		return nil, errors.New(r.Status)
 	}
 	body, err := io.ReadAll(r.Body)
 	if err != nil {

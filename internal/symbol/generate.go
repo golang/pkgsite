@@ -289,7 +289,7 @@ func (w *Walker) loadImports(pkgPath string) {
 // except we also check if a field is Embedded. If so, we ignore that field.
 func (w *Walker) emitStructType(name string, typ *types.Struct) {
 	typeStruct := fmt.Sprintf("type %s struct", name)
-	w.emitf(typeStruct)
+	w.emitf("%s", typeStruct)
 	defer w.pushScope(typeStruct)()
 	for i := 0; i < typ.NumFields(); i++ {
 		f := typ.Field(i)
@@ -312,8 +312,8 @@ func (w *Walker) emitStructType(name string, typ *types.Struct) {
 // https://go.googlesource.com/go/+/refs/tags/go1.16.6/src/cmd/api/goapi.go#931,
 // except we don't check for unexported methods.
 func (w *Walker) emitIfaceType(name string, typ *types.Interface) {
-	typeInterface := fmt.Sprintf("type " + name + " interface")
-	w.emitf(typeInterface)
+	typeInterface := fmt.Sprintf("type %s interface", name)
+	w.emitf("%s", typeInterface)
 	pop := w.pushScope(typeInterface)
 
 	var methodNames []string

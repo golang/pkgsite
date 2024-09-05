@@ -106,12 +106,12 @@ func main() {
 	if *useProxy {
 		url := os.Getenv("GOPROXY")
 		if url == "" {
-			die("GOPROXY environment variable is not set")
+			dief("GOPROXY environment variable is not set")
 		}
 		var err error
 		serverCfg.Proxy, err = proxy.New(url, nil)
 		if err != nil {
-			die("connecting to proxy: %s", err)
+			dief("connecting to proxy: %s", err)
 		}
 	}
 
@@ -122,7 +122,7 @@ func main() {
 	ctx := context.Background()
 	server, err := pkgsite.BuildServer(ctx, serverCfg)
 	if err != nil {
-		die(err.Error())
+		dief("%s", err)
 	}
 
 	addr := *httpAddr
@@ -132,7 +132,7 @@ func main() {
 
 	ln, err := net.Listen("tcp", addr)
 	if err != nil {
-		die(err.Error())
+		dief("%s", err)
 	}
 
 	url := "http://" + addr
@@ -150,10 +150,10 @@ func main() {
 	server.Install(router.Handle, nil, nil)
 	mw := timeout.Timeout(54 * time.Second)
 	srv := &http.Server{Addr: addr, Handler: mw(router)}
-	die("%v", srv.Serve(ln))
+	dief("%v", srv.Serve(ln))
 }
 
-func die(format string, args ...any) {
+func dief(format string, args ...any) {
 	fmt.Fprintf(os.Stderr, format, args...)
 	fmt.Fprintln(os.Stderr)
 	os.Exit(1)
