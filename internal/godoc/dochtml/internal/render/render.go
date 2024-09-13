@@ -21,7 +21,8 @@ import (
 
 var (
 	// Regexp for example outputs.
-	exampleOutputRx = regexp.MustCompile(`(?i)//[[:space:]]*(unordered )?output:`)
+	// Keep consistent with outputPrefix in GOROOT/src/go/doc/example.go.
+	exampleOutputRx = regexp.MustCompile(`(?i)^[[:space:]]*//[[:space:]]*(unordered )?output:`)
 )
 
 type Renderer struct {

@@ -298,6 +298,18 @@ b := 1
 </pre>
 `,
 		},
+		{
+			"An Output comment must appear at the start of the line.",
+			`_ = true
+// This comment containing "// Output:" is not treated specially.
+`,
+			`
+<pre class="Documentation-exampleCode">
+_ = true
+// This comment containing &#34;// Output:&#34; is not treated specially.
+</pre>
+`,
+		},
 	} {
 		out := codeHTML(test.in, exampleTmpl)
 		got := strings.TrimSpace(string(out.String()))
