@@ -180,37 +180,37 @@ func (s *Server) Install(handle func(string, http.Handler), cacher Cacher, authV
 	// https://cloud.google.com/appengine/docs/standard/go/how-instances-are-managed#startup
 	// and for /_ah/warmup at
 	// https://cloud.google.com/appengine/docs/standard/go/configuring-warmup-requests.
-	handle("/_ah/", http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {
+	handle("GET /_ah/", http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {
 		log.Infof(r.Context(), "Request made to %q", r.URL.Path)
 	}))
-	handle("/static/", s.staticHandler())
-	handle("/third_party/", http.StripPrefix("/third_party", http.FileServer(http.FS(s.thirdPartyFS))))
-	handle("/favicon.ico", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	handle("GET /static/", s.staticHandler())
+	handle("GET /third_party/", http.StripPrefix("/third_party", http.FileServer(http.FS(s.thirdPartyFS))))
+	handle("GET /favicon.ico", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		serveFileFS(w, r, s.staticFS, "shared/icon/favicon.ico")
 	}))
 
 	handle("/sitemap/", http.StripPrefix("/sitemap/", http.FileServer(http.Dir("private/sitemap"))))
-	handle("/mod/", http.HandlerFunc(s.handleModuleDetailsRedirect))
-	handle("/pkg/", http.HandlerFunc(s.handlePackageDetailsRedirect))
+	handle("GET /mod/", http.HandlerFunc(s.handleModuleDetailsRedirect))
+	handle("GET /pkg/", http.HandlerFunc(s.handlePackageDetailsRedirect))
 	if fetchHandler != nil {
 		handle("/fetch/", fetchHandler)
 	}
 	handle("/play/compile", http.HandlerFunc(s.proxyPlayground))
-	handle("/play/fmt", http.HandlerFunc(s.handleFmt))
+	handle("GET /play/fmt", http.HandlerFunc(s.handleFmt))
 	handle("/play/share", http.HandlerFunc(s.proxyPlayground))
-	handle("/search", searchHandler)
-	handle("/search-help", s.staticPageHandler("search-help", "Search Help"))
-	handle("/license-policy", s.licensePolicyHandler())
-	handle("/about", s.staticPageHandler("about", "About"))
-	handle("/badge/", http.HandlerFunc(s.badgeHandler))
-	handle("/C", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	handle("GET /search", searchHandler)
+	handle("GET /search-help", s.staticPageHandler("search-help", "Search Help"))
+	handle("GET /license-policy", s.licensePolicyHandler())
+	handle("GET /about", s.staticPageHandler("about", "About"))
+	handle("GET /badge/", http.HandlerFunc(s.badgeHandler))
+	handle("GET /C", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Package "C" is a special case: redirect to /cmd/cgo.
 		// (This is what golang.org/C does.)
 		http.Redirect(w, r, "/cmd/cgo", http.StatusMovedPermanently)
 	}))
-	handle("/golang.org/x", s.staticPageHandler("subrepo", "Sub-repositories"))
-	handle("/files/", http.StripPrefix("/files", s.fileMux))
-	handle("/vuln/", vulnHandler)
+	handle("GET /golang.org/x", s.staticPageHandler("subrepo", "Sub-repositories"))
+	handle("GET /files/", http.StripPrefix("/files", s.fileMux))
+	handle("GET /vuln/", vulnHandler)
 	handle("/opensearch.xml", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		serveFileFS(w, r, s.staticFS, "shared/opensearch.xml")
 	}))
@@ -234,8 +234,8 @@ Sitemap: https://pkg.go.dev/sitemap/index.xml
 
 // installDebugHandlers installs handlers for debugging. Most of the handlers
 // are provided by the net/http/pprof package. Although that package installs
-// them on the default ServeMux in its init function, we must install them on
-// our own ServeMux.
+// them on the default ServeMux in its init function, we must install them
+// on our own ServeMux.
 func (s *Server) installDebugHandlers(handle func(string, http.Handler)) {
 
 	ifDebug := func(h func(http.ResponseWriter, *http.Request)) http.HandlerFunc {
