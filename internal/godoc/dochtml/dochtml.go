@@ -29,6 +29,7 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/godoc/dochtml/internal/render"
+	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )
@@ -307,7 +308,8 @@ func executeToHTMLWithLimit(tmpl *template.Template, data any, limit int64) (saf
 	buf := &limitBuffer{B: new(bytes.Buffer), Remain: limit}
 	err := tmpl.Execute(buf, data)
 	if buf.Remain < 0 {
-		return safehtml.HTML{}, fmt.Errorf("dochtml.Render: %w", ErrTooLarge)
+		log.Warningf(context.Background(), "executeToHTMLWithLimit failed: limit=%d, remain=%d", limit, buf.Remain)
+		return safehtml.HTML{}, fmt.Errorf("dochtml.Render: limit=%d, remain=%d: %w", limit, buf.Remain, ErrTooLarge)
 	} else if err != nil {
 		return safehtml.HTML{}, fmt.Errorf("dochtml.Render: %v", err)
 	}

@@ -36,8 +36,10 @@ const (
 // The current limit of is based on the largest packages that
 // pkg.go.dev has encountered. See https://golang.org/issue/40576.
 //
+// If you increase this, you may also need to increase MaxFileSize in internal/fetch/limit.go.
+//
 // It is a variable for testing.
-var MaxDocumentationHTML = 20 * megabyte
+var MaxDocumentationHTML = 40 * megabyte
 
 // DocInfo returns information extracted from the package's documentation.
 // This destroys p's AST; do not call any methods of p after it returns.

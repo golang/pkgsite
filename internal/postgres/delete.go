@@ -104,7 +104,7 @@ func deletePackagesInModuleFromSearchDocuments(ctx context.Context, tx *database
 	if err != nil {
 		return err
 	}
-	log.Infof(ctx, "deleted %d rows from search_documents: %v", n, pkgPaths)
+	log.Debugf(ctx, "deleted %d rows from search_documents: %v", n, pkgPaths)
 	return nil
 }
 

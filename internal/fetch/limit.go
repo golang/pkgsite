@@ -11,7 +11,7 @@ const (
 	// MaxFileSize is the maximum filesize that is allowed for reading.
 	// The fetch process should fail if it encounters a file exceeding
 	// this limit.
-	MaxFileSize = 30 * megabyte
+	MaxFileSize = 45 * megabyte
 )
 
 const megabyte = 1000 * 1000

@@ -8,6 +8,7 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"errors"
 	"flag"
 	"fmt"
 	"os"
@@ -348,6 +349,15 @@ func TestVersionedPkgPath(t *testing.T) {
 				t.Errorf("versionedPkgPath(%q) = %q, want %q", test.pkgPath, got, test.want)
 			}
 		})
+	}
+}
+
+func TestTooLarge(t *testing.T) {
+	tmpl := template.Must(template.New("").Parse(`{{.}}`))
+	_, err := executeToHTMLWithLimit(tmpl, "a little too large", 10)
+	t.Log(err)
+	if !errors.Is(err, ErrTooLarge) {
+		t.Errorf("got %v, want ErrTooLarge", err)
 	}
 }
 

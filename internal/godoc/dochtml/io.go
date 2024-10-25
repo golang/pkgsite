@@ -25,8 +25,8 @@ type limitBuffer struct {
 
 // Write implements io.Writer.
 func (l *limitBuffer) Write(p []byte) (n int, err error) {
-	if int64(len(p)) > l.Remain {
-		l.Remain = -1
+	if lp := int64(len(p)); lp > l.Remain {
+		l.Remain -= lp
 		return 0, io.ErrShortWrite
 	}
 	n, err = l.B.Write(p)
