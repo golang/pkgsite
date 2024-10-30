@@ -119,10 +119,11 @@ function expandReadme() {
 }
 
 /**
- * Expand details items that are focused. This will expand
+ * Expand/collapse details items that are focused. This will expand
  * deprecated symbols when they are navigated to from the index
  * or a direct link.
  */
+const detailsTooltip = document.querySelector('details.js-tooltip') as HTMLDetailsElement | null;
 function openDeprecatedSymbol() {
   if (!location.hash) return;
   const heading = document.getElementById(location.hash.slice(1));
@@ -134,6 +135,19 @@ function openDeprecatedSymbol() {
 openDeprecatedSymbol();
 window.addEventListener('hashchange', () => openDeprecatedSymbol());
 
+function closeDetailsTooltip() {
+  const openDetails = detailsTooltip?.open === true;
+  if (openDetails) {
+    detailsTooltip.open = false;
+  }
+}
+closeDetailsTooltip();
+window.addEventListener('keydown', (e) => {
+  e.preventDefault();
+  if (e.key === 'Escape') {
+    closeDetailsTooltip();
+  }
+})
 /**
  * Listen for changes in the build context dropdown.
  */
