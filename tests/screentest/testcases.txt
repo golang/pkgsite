@@ -33,14 +33,14 @@ eval {{$hideElements}}
 capture viewport
 capture viewport 540x1080
 
-# test x/tools directories expanded
-# pathname /golang.org/x/tools@v0.1.1
-# wait {{$ready}}
-# click [data-test-id="directories-toggle"]
-# eval {{$scrollTop}}
-# eval {{$hideElements}}
-# capture fullscreen
-# capture fullscreen 540x1080
+test x/tools directories expanded
+pathname /golang.org/x/tools@v0.1.1
+wait {{$ready}}
+click [data-test-id="directories-toggle"]
+eval {{$scrollTop}}
+eval {{$hideElements}}
+capture fullscreen
+capture fullscreen 540x1620
 
 # TODO: https://go.dev/issue/51020
 # test empty jump to modal
