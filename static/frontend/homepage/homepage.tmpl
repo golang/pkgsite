@@ -21,6 +21,7 @@
           id="AutoComplete"
           role="textbox"
           aria-label="{{.SearchPrompt}}"
+          aria-describedby="SearchTipContent"
           type="search"
           name="q"
           placeholder="{{.SearchPrompt}}"
@@ -35,7 +36,7 @@
       <section class="go-Carousel Homepage-tips js-carousel" aria-label="Search Tips Carousel" data-slide-index="{{.TipIndex}}">
         <ul>
           {{range $i, $v := .SearchTips}}
-            <li class="go-Carousel-slide" {{if not (eq $.TipIndex $i)}}aria-hidden{{end}}>
+            <li class="go-Carousel-slide" {{if not (eq $.TipIndex $i)}}aria-hidden{{end}} {{if (eq $.TipIndex $i)}}id="SearchTipContent"{{end}}>
               <p>
                 <strong>Tip:</strong> {{.Text}}
                 <a href="/search?q={{$v.Example1}}">“{{$v.Example1}}”</a> or
