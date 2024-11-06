@@ -62,9 +62,9 @@
     tabindex="0"
     role="button"
     {{- if . -}}
-      src="/static/shared/icon/check_circle_gm_grey_24dp.svg" alt="checked" aria-label="Valid go.mod file, toggle tooltip"
+      src="/static/shared/icon/check_circle_gm_grey_24dp.svg" alt="checked" aria-label="Valid file, toggle tooltip"
     {{- else -}}
-      src="/static/shared/icon/cancel_gm_grey_24dp.svg" alt="unchecked" aria-label="Missing or invalid go.mod file, toggle tooltip"
+      src="/static/shared/icon/cancel_gm_grey_24dp.svg" alt="unchecked" aria-label="Missing or invalid file, toggle tooltip"
     {{- end -}}
   height="24" width="24">
 {{end}}
@@ -89,7 +89,7 @@
         <summary class="go-textSubtle">
           {{template "unit-meta-details-check" .Unit.IsRedistributable}}
           Redistributable license
-          <img class="go-Icon" role="button" tabindex="0" src="/static/shared/icon/help_gm_grey_24dp.svg" alt="" aria-label="Toggle redistributable help tooltip." height="24" width="24">
+          <img class="go-Icon" role="button" tabindex="0" src="/static/shared/icon/help_gm_grey_24dp.svg" alt="" aria-label="Toggle redistributable help tooltip" height="24" width="24">
         </summary>
         <p aria-live="polite" role="tooltip">
           Redistributable licenses place minimal restrictions on how software can be used,
