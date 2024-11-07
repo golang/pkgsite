@@ -10,7 +10,7 @@ block https://codecov.io/* https://travis-ci.com/*
 {{$hideElements := "document.querySelector(\"[data-test-id='UnitHeader-importedby']\")?.remove();document.querySelector(\"[data-test-id='meta-link-depsdev']\")?.remove();"}}
 {{$scrollTop := "window.scrollTo({top:0});"}}
 
-test short readme has no toggle
+test short readme has no toggle and higher major version
 pathname /rsc.io/quote
 wait {{$ready}}
 eval {{$hideElements}}
@@ -103,13 +103,6 @@ capture fullscreen 540x1080
 test package with multiple licenses
 pathname /github.com/apache/thrift@v0.14.1
 block https://github.com/apache/thrift/raw/v0.14.1/doc/images/thrift-layers.png
-wait {{$ready}}
-eval {{$hideElements}}
-capture viewport
-capture viewport 540x1080
-
-test package with higher major version
-pathname /rsc.io/quote
 wait {{$ready}}
 eval {{$hideElements}}
 capture viewport

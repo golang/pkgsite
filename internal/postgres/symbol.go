@@ -459,6 +459,6 @@ func deleteOldSymbolSearchDocuments(ctx context.Context, db *database.DB,
 	if err != nil {
 		return err
 	}
-	log.Infof(ctx, "deleted %d rows from symbol_search_documents", n)
+	log.Debugf(ctx, "deleted %d rows from symbol_search_documents", n)
 	return nil
 }

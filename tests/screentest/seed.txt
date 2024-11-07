@@ -32,9 +32,7 @@ golang.org/x/tools/gopls@v0.6.11
 github.com/jackc/pgx@v3.6.2+incompatible
 rsc.io/quote@v0.9.9-pre1
 rsc.io/quote@all
-rsc.io/quote/v2@all
-rsc.io/quote/v3@all
-rsc.io/quote/v4@all
+rsc.io/quote/v4@v4.0.0
 std@v1.0.0
 std@v1.1.0
 std@v1.8.0
