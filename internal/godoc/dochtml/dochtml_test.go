@@ -242,24 +242,24 @@ func TestVersionedPkgPath(t *testing.T) {
 		want    string
 	}{
 		{
-			name:    "builtin package is not versioned",
+			name:    "builtin package is versioned",
 			pkgPath: "builtin",
 			modInfo: &ModuleInfo{
 				ModulePath:      "std",
-				ResolvedVersion: "v1.14.4",
+				ResolvedVersion: "v1.14",
 				ModulePackages:  map[string]bool{"std/builtin": true, "std/net/http": true},
 			},
-			want: "builtin",
+			want: "builtin@go1.14",
 		},
 		{
-			name:    "std packages are not versioned",
+			name:    "std packages are versioned",
 			pkgPath: "net/http",
 			modInfo: &ModuleInfo{
 				ModulePath:      "std",
-				ResolvedVersion: "v1.14.4",
+				ResolvedVersion: "v1.23.0",
 				ModulePackages:  map[string]bool{"std/builtin": true, "std/net/http": true},
 			},
-			want: "net/http",
+			want: "net/http@go1.23.0",
 		},
 		{
 			name:    "imports from other modules are not versioned",

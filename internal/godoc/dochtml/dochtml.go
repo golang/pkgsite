@@ -29,6 +29,8 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/godoc/dochtml/internal/render"
+	"golang.org/x/pkgsite/internal/log"
+	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )
@@ -445,15 +447,21 @@ func buildNoteHeaders(notes map[string][]*doc.Note) map[string]noteHeader {
 }
 
 // versionedPkgPath transforms package paths to contain the same version as the
-// current module if the package belongs to the module. As a special case,
-// versionedPkgPath will not add versions to standard library packages.
+// current module if the package belongs to the module.
 func versionedPkgPath(pkgPath string, modInfo *ModuleInfo) string {
+	if modInfo != nil && modInfo.ModulePath == stdlib.ModulePath {
+		tag, err := stdlib.TagForVersion(modInfo.ResolvedVersion)
+		if err != nil {
+			log.Errorf(context.TODO(), "goTagForVersion(%q): %v", modInfo.ResolvedVersion, err)
+			return pkgPath
+		}
+		return fmt.Sprintf("%s@%s", pkgPath, tag)
+	}
+
 	if modInfo == nil || !modInfo.ModulePackages[pkgPath] {
 		return pkgPath
 	}
-	// We don't need to do anything special here for standard library packages
-	// since pkgPath will never contain the "std/" module prefix, and
-	// modInfo.ModulePackages contains this prefix for standard library packages.
+
 	innerPkgPath := pkgPath[len(modInfo.ModulePath):]
 	return fmt.Sprintf("%s@%s%s", modInfo.ModulePath, modInfo.ResolvedVersion, innerPkgPath)
 }
