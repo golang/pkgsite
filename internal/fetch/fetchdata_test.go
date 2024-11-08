@@ -716,7 +716,7 @@ var moduleDocTest = &testModule{
 	docStrings: map[string][]string{
 		"doc.test/permalink": {
 			"<h4 id=\"hdr-This_is_a_heading\">This is a heading <a",
-			"href=\"#hdr-This_is_a_heading\" aria-label=\"Go to This is a heading\">¶</a></h4>",
+			"href=\"#hdr-This_is_a_heading\" title=\"Go to This is a heading\" aria-label=\"Go to This is a heading\">¶</a></h4>",
 		},
 	},
 }

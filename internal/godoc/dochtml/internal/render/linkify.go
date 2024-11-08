@@ -91,7 +91,7 @@ var (
 	// expects a heading
 	headingTemplate = template.Must(template.New("heading").Parse(`
 	  {{- if .ID.String -}}
-		<h4 id="{{.ID}}">{{.Title}} <a class="Documentation-idLink" href="#{{.ID}}" aria-label="Go to {{.Title}}">¶</a></h4>
+		<h4 id="{{.ID}}">{{.Title}} <a class="Documentation-idLink" href="#{{.ID}}" title="Go to {{.Title}}" aria-label="Go to {{.Title}}">¶</a></h4>
 	  {{- else -}}
 	    <h4>{{.Title}}</h4>
 	  {{- end}}`))
