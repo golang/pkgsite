@@ -26,7 +26,7 @@ main() {
   if [ -z $idtoken ]; then
     idtoken=$(cat _ID_TOKEN)
   fi
-  ./tests/screentest/run.sh --idtoken $idtoken --concurrency 1 $env
+  ./tests/screentest/run.sh -idtoken $idtoken -concurrency 1 $env
 }
 
 main $@

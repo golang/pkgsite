@@ -102,7 +102,7 @@ print_duration_and_reset
 echo "----------------------------------------"
 echo "Running screentest"
 echo "----------------------------------------"
-./tests/screentest/run.sh --rm ci --concurrency 1
+./tests/screentest/run.sh -rm ci -concurrency 1
 print_duration_and_reset
 
 echo "----------------------------------------"
