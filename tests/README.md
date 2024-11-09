@@ -101,3 +101,10 @@ If the tests fail with diffs, a file with the diffs will be created in the
 testdata directory that show the cause of the failure.
 
 Use `./devtools/docker/compose.sh logs` to get detailed logs of the docker containers.
+
+### Troubleshooting
+
+If docker fails with "connect: cannot assign requested address" during `run.sh`,
+try running it again. It will eventually succeed. Do not pass the '-rm' flag so that
+prior state is preserved.
+You can also try reducing the value of cmdgonetlimit in devtools/docker/compose.yaml.
