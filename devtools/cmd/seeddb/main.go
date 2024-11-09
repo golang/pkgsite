@@ -10,9 +10,9 @@ import (
 	"database/sql"
 	"errors"
 	"flag"
-	"fmt"
+	"log"
 	"net/http"
-	"sort"
+	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -26,7 +26,6 @@ import (
 	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/experiment"
-	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/proxy"
 	"golang.org/x/pkgsite/internal/source"
@@ -44,6 +43,8 @@ var (
 )
 
 func main() {
+	log.SetFlags(0)
+	log.SetPrefix("seeddb: ")
 	flag.Parse()
 
 	ctx := context.Background()
@@ -58,11 +59,13 @@ func main() {
 	}
 	ctx = experiment.NewContext(ctx, exps...)
 
-	db, err := database.Open("pgx", cfg.DBConnInfo(), "seeddb")
+	connInfo := cfg.DBConnInfo()
+	db, err := database.Open("pgx", connInfo, "seeddb")
 	if err != nil {
-		log.Fatalf(ctx, "database.Open for host %s failed with %v", cfg.DBHost, err)
+		log.Fatalf("database.Open for host %s failed with %v", cfg.DBHost, err)
 	}
 	defer db.Close()
+	log.Printf("connected to %s", redactPassword(connInfo))
 
 	if err := run(ctx, db, cfg.ProxyURL); err != nil {
 		log.Fatal(ctx, err)
@@ -81,7 +84,7 @@ func run(ctx context.Context, db *database.DB, proxyURL string) error {
 		Transport: new(ochttp.Transport),
 		Timeout:   config.SourceTimeout,
 	})
-	seedModules, err := readSeedFile(ctx, *seedfile)
+	seedModules, err := readSeedFile(*seedfile)
 	if err != nil {
 		return err
 	}
@@ -96,7 +99,6 @@ func run(ctx context.Context, db *database.DB, proxyURL string) error {
 		versionsByPath[m.Path] = append(versionsByPath[m.Path], vers...)
 	}
 
-	r := results{}
 	g, gctx := errgroup.WithContext(ctx)
 	g.SetLimit(10)
 	f := &worker.Fetcher{
@@ -119,7 +121,7 @@ func run(ctx context.Context, db *database.DB, proxyURL string) error {
 		// Process versions of the same module sequentially, to avoid DB contention.
 		g.Go(func() error {
 			for _, v := range vers {
-				if err := fetch(gctx, db, f, path, v, &r); err != nil {
+				if err := fetch(gctx, db, f, path, v); err != nil {
 					if *keepGoing {
 						mu.Lock()
 						errors = append(errors, err)
@@ -138,17 +140,7 @@ func run(ctx context.Context, db *database.DB, proxyURL string) error {
 	if len(errors) > 0 {
 		return errors
 	}
-	log.Infof(ctx, "Successfully fetched all modules: %v", time.Since(start))
-
-	// Print the time it took to fetch these modules.
-	var keys []string
-	for k := range r.paths {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-	for _, k := range keys {
-		log.Infof(ctx, "%s | %v", k, r.paths[k])
-	}
+	log.Printf("successfully fetched all modules in %s", time.Since(start).Round(time.Millisecond))
 	return nil
 }
 
@@ -174,14 +166,9 @@ func versions(ctx context.Context, proxyClient *proxy.Client, mv internal.Modver
 	return proxyClient.Versions(ctx, mv.Path)
 }
 
-func fetch(ctx context.Context, db *database.DB, f *worker.Fetcher, m, v string, r *results) error {
+func fetch(ctx context.Context, db *database.DB, f *worker.Fetcher, m, v string) error {
 	// Record the duration of this fetch request.
-	start := time.Now()
-
 	var exists bool
-	defer func() {
-		r.add(m, v, start, exists)
-	}()
 	err := db.QueryRow(ctx, `
 		SELECT 1 FROM modules WHERE module_path = $1 AND version = $2;
 	`, m, v).Scan(&exists)
@@ -191,17 +178,19 @@ func fetch(ctx context.Context, db *database.DB, f *worker.Fetcher, m, v string,
 	if errors.Is(err, sql.ErrNoRows) || *refetch {
 		return fetchFunc(ctx, f, m, v)
 	}
+	log.Printf("%s@%s exists", m, v)
 	return nil
 }
 
 func fetchFunc(ctx context.Context, f *worker.Fetcher, m, v string) (err error) {
 	defer derrors.Wrap(&err, "fetchFunc(ctx, f, %q, %q)", m, v)
 
-	log.Infof(ctx, "Fetch requested: %q %q", m, v)
 	fetchCtx, cancel := context.WithTimeout(ctx, 7*time.Minute)
 	defer cancel()
 
+	start := time.Now()
 	code, _, err := f.FetchAndUpdateState(fetchCtx, m, v, "")
+	log.Printf("%s@%s fetched in %s", m, v, time.Since(start).Round(time.Millisecond))
 	if err != nil {
 		if code == http.StatusNotFound {
 			// We expect
@@ -215,36 +204,17 @@ func fetchFunc(ctx context.Context, f *worker.Fetcher, m, v string) (err error) 
 	return nil
 }
 
-type results struct {
-	mu    sync.Mutex
-	paths map[string]time.Duration
-}
-
-func (r *results) add(modPath, version string, start time.Time, exists bool) {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-
-	if r.paths == nil {
-		r.paths = map[string]time.Duration{}
-	}
-	key := fmt.Sprintf("%s@%s", modPath, version)
-	if exists {
-		key = fmt.Sprintf("%s (exists)", key)
-	}
-	r.paths[key] = time.Since(start)
-}
-
 // readSeedFile reads a file of module versions that we want to fetch for
 // seeding the database. Each line of the file should be of the form:
 //
 //	module@version
-func readSeedFile(ctx context.Context, seedfile string) (_ []internal.Modver, err error) {
+func readSeedFile(seedfile string) (_ []internal.Modver, err error) {
 	defer derrors.Wrap(&err, "readSeedFile %q", seedfile)
 	lines, err := internal.ReadFileLines(seedfile)
 	if err != nil {
 		return nil, err
 	}
-	log.Infof(ctx, "read %d module versions from %s", len(lines), seedfile)
+	log.Printf("read %d module versions from %s", len(lines), seedfile)
 
 	var modules []internal.Modver
 	for _, l := range lines {
@@ -272,4 +242,10 @@ func fetchExperiments(ctx context.Context, cfg *config.Config) ([]string, error)
 		}
 	}
 	return exps, nil
+}
+
+var passwordRegexp = regexp.MustCompile(`password=\S+`)
+
+func redactPassword(dbinfo string) string {
+	return passwordRegexp.ReplaceAllLiteralString(dbinfo, "password=REDACTED")
 }
