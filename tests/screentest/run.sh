@@ -7,6 +7,8 @@ set -e
 
 source devtools/lib.sh || { echo "Are you at repo root?"; exit 1; }
 
+screentest_version=v0.0.0-20241108174919-3a761022ad6f
+ 
 # This should match the version we are using in devtools/docker/compose.yaml.
 chromedp_version=97.0.4692.71
 
@@ -131,7 +133,7 @@ main() {
     dcompose up --detach chromedp
     dcompose up --detach --force-recreate frontend
     dcompose run --rm --entrypoint bash go -c "
-      go install golang.org/x/website/cmd/screentest@latest
+      go install golang.org/x/website/cmd/screentest@$screentest_version
       go run ./devtools/cmd/wait_available --timeout 120s frontend:8080 -- \
       $(echo $cmd)"
   elif [ "$env" = local ]; then
@@ -141,13 +143,13 @@ main() {
       timeout 3s bash -c -- 'while ! nc -z localhost 9222; do sleep 1; done'
     fi
     if ! command -v screentest &> /dev/null; then
-      runcmd go install golang.org/x/website/cmd/screentest@latest
+      runcmd go install golang.org/x/website/cmd/screentest@$screentest_version
     fi
     runcmd $cmd
   else
     dcompose up --detach chromedp
     dcompose run --rm --entrypoint bash go -c "
-      go install golang.org/x/website/cmd/screentest@latest
+      go install golang.org/x/website/cmd/screentest@$screentest_version
       $(echo $cmd)"
   fi
 }
