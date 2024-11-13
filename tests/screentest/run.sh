@@ -8,10 +8,13 @@ set -e
 
 source devtools/lib.sh || { echo "Are you at repo root?"; exit 1; }
 
-screentest_version=v0.0.0-20241108174919-3a761022ad6f
+# Do not truncate commands when displaying them (see runcmd in devtools/lib.sh).
+MAXWIDTH=0
+
+screentest_version=latest
  
 # This should match the version we are using in devtools/docker/compose.yaml.
-chromedp_version=97.0.4692.71
+chromedp_version=131.0.6778.33
 
 chromedp_port=9222
 frontend_port=8080
@@ -53,6 +56,9 @@ Options:
     You can provide this with no command-line argument to remove resources from a previous
     command that did not specify -rm.
 
+  -run <REGEXP>
+    Run only tests whose names match REGEXP.
+
   -update
     Recapture every snapshot during this test run.
 
@@ -90,9 +96,7 @@ cleanup() {
 
 main() {
   trap cleanup EXIT
-  local concurrency
-  local idtoken
-  local update
+  local concurrency idtoken update run
   while [[ $1 = -* ]]; do
     case "$1" in
       -concurrency)
@@ -104,10 +108,14 @@ main() {
         idtoken=$1
         ;;
      -update)
-        update="-u"
+        update="-update"
         ;;
      -rm)
         rm=true
+        ;;
+     -run)
+        shift
+        run="-run '$1'"
         ;;
       *)
         usage
@@ -123,31 +131,36 @@ main() {
 
   env=$1
   local debugger_url="-d ws://localhost:$chromedp_port"
-  local vars
+  local test_server headers
   case $env in
     ci)
+      test_server="http://frontend:$frontend_port"
       debugger_url="-d ws://chromedp:$chromedp_port"
-      vars="-v Origin:http://frontend:$frontend_port"
       ;;
     exp|dev|staging)
+      test_server="https://$env-pkg.go.dev"
       debugger_url="-d ws://chromedp:$chromedp_port"
-      vars="-v Origin:https://$env-pkg.go.dev,QuotaBypass:$GO_DISCOVERY_E2E_QUOTA_BYPASS,Token:$idtoken"
+      headers="-headers QuotaBypass:$GO_DISCOVERY_E2E_QUOTA_BYPASS,Token:$idtoken"
       ;;
     prod)
-      vars="-v Origin:https://pkg.go.dev,QuotaBypass:$bypass"
+      test_server="https://pkg.go.dev"
+      headers="-headers QuotaBypass:$GO_DISCOVERY_E2E_QUOTA_BYPASS"
       ;;
-    local) ;;
+    local)
+      test_server="http://localhost:$frontend_port"
+      ;;
     *)
       usage
       ;;
   esac
 
-  local testfile="tests/screentest/testcases.txt"
-  local cmd="screentest $concurrency $debugger_url $vars $update $testfile"
+  local testfiles=tests/screentest/testcases.txt
+  if [[ "$env" == ci || "$env" == local ]]; then
+    testfiles=tests/screentest/testcases.*
+  fi
+  local cmd="screentest $concurrency $debugger_url $headers $update $run $test_server tests/screentest/testdata $testfiles"
 
   if [[ "$env" = ci ]]; then
-    testfile="'tests/screentest/testcases.*'"
-    cmd="screentest $concurrency $debugger_url $vars $update $testfile"
     export GO_DISCOVERY_CONFIG_DYNAMIC="tests/screentest/config.yaml"
     export GO_DISCOVERY_DATABASE_NAME="discovery_e2e_test"
     export GO_DISCOVERY_SEED_DB_FILE="tests/screentest/seed.txt"
@@ -160,7 +173,7 @@ main() {
       go run ./devtools/cmd/wait_available --timeout 120s frontend:$frontend_port -- \
       $(echo $cmd)"
   elif [[ "$env" == local ]]; then
-    run_locally $concurrency $update
+    run_locally "$cmd"
   else
     dcompose up --detach chromedp
     dcompose run --rm --entrypoint bash go -c "
@@ -173,11 +186,12 @@ main() {
 # run_locally: run outside of the docker compose network, but use
 # docker for each component.
 run_locally() {
-  local concurrency=$1
-  local update=$2
+  local cmd="$1"
 
   if ! command -v screentest &> /dev/null; then
-    runcmd go install golang.org/x/website/cmd/screentest@screentest_version
+    runcmd go install golang.org/x/website/cmd/screentest@$screentest_version
+  else
+    info using locally installed screentest
   fi
 
   export GO_DISCOVERY_DATABASE_NAME=discovery-db
@@ -218,15 +232,17 @@ run_locally() {
   if ! listening $chromedp_port; then
     info starting chromedp
     runcmd docker run --detach --rm --network host --shm-size 8G \
-          --name headless-shell chromedp/headless-shell:$chromedp_version
+          --name headless-shell \
+          chromedp/headless-shell:$chromedp_version --remote-debugging-port $chromedp_port
     wait_for $chromedp_port
+    # Give some extra time after listening.
+    runcmd sleep 2
+  elif pgrep -u $USER headless-shell > /dev/null; then
+    err "running headless-shell locally will give different results"
   fi
 
   info "running screentest"
-  screentest $concurrency $update \
-    -v Origin:http://localhost:$frontend_port \
-    -d ws://localhost:$chromedp_port \
-    'tests/screentest/testcases.*'
+  runcmd eval $cmd
 }
 
 listening() {
@@ -237,4 +253,4 @@ wait_for() {
 	timeout 5s bash -c -- "while ! nc -z localhost $1; do sleep 1; done"
 }
 
-main $@
+main "$@"

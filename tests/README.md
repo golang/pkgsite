@@ -73,8 +73,7 @@ go run tests/api/main.go compare [module path]:[package path suffix]
 
 The screentest/ directory contains visual diff tests for pages on pkg.go.dev.
 Tests are written for the screentest tool from golang.org/x/website.
-See the [command](https://pkg.go.dev/golang.org/x/website/cmd/screentest) and
-[package](https://pkg.go.dev/golang.org/x/website/internal/screentest) docs for
+See the [command](https://pkg.go.dev/golang.org/x/website/cmd/screentest) docs for
 more information.
 
 ### Running the tests
@@ -89,7 +88,7 @@ In order to run the tests, run this command from the root of the repository:
 postgres database, frontend, and headless chrome, and runs the screentest using
 headless chrome.
 
-Tests in `./tests/screentest/testcases.ci.txt` run only for CI runs of the
+Tests in `./tests/screentest/testcases.ci.txt` run only for CI and local runs of the
 screentest. These tests may rely on mocked data, like the vuln page tests.
 Tests in `./tests/screentest/testcases.txt` run for all environments and
 are suitable for tests with data that is consistent between environments or

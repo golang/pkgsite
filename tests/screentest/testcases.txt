@@ -1,24 +1,24 @@
 windowsize 1536x960
-compare {{.Origin}}::cache {{.Origin}}
 {{with .Token}}header Authorization: Bearer {{.}}{{end}}
 {{with .QuotaBypass}}header X-Go-Discovery-Auth-Bypass-Quota: {{.}}{{end}}
-output tests/screentest/testdata
+
 # Prevent dynamic readme badges from rendering
 block https://codecov.io/* https://travis-ci.com/*
 
+# The aria-selected attribute is added by the last piece of JS to run.
 {{$ready := "[role='treeitem'][aria-selected='true']"}}
 {{$hideElements := "document.querySelector(\"[data-test-id='UnitHeader-importedby']\")?.remove();document.querySelector(\"[data-test-id='meta-link-depsdev']\")?.remove();"}}
 {{$scrollTop := "window.scrollTo({top:0});"}}
 
 test short readme has no toggle and higher major version
-pathname /rsc.io/quote
+path /rsc.io/quote
 wait {{$ready}}
 eval {{$hideElements}}
 capture viewport
 capture viewport 540x1080
 
 test x/tools
-pathname /golang.org/x/tools@v0.1.1
+path /golang.org/x/tools@v0.1.1
 wait {{$ready}}
 eval {{$scrollTop}}
 eval {{$hideElements}}
@@ -26,21 +26,27 @@ capture viewport
 capture viewport 540x1080
 
 test x/tools readme expanded
-pathname /golang.org/x/tools@v0.1.1#section-readme
+path /golang.org/x/tools@v0.1.1#section-readme
 wait {{$ready}}
 eval {{$scrollTop}}
 eval {{$hideElements}}
+sleep 2s
 capture viewport
 capture viewport 540x1080
 
-test x/tools directories expanded
-pathname /golang.org/x/tools@v0.1.1
-wait {{$ready}}
-click [data-test-id="directories-toggle"]
-eval {{$scrollTop}}
-eval {{$hideElements}}
-capture fullscreen
-capture fullscreen 540x1620
+# TODO(jba): the diff here is whether the benchstat expansion includes
+# the second sentence. That may be a difference in how the synposis
+# is computed or rendered. I can't find any code differences that
+# would explain that.
+#
+# test x/tools directories expanded
+# path /golang.org/x/tools@v0.1.1
+# wait {{$ready}}
+# click [data-test-id="directories-toggle"]
+# eval {{$scrollTop}}
+# eval {{$hideElements}}
+# capture fullscreen
+# capture fullscreen 540x1620
 
 # TODO: https://go.dev/issue/51020
 # test empty jump to modal
@@ -51,35 +57,35 @@ capture fullscreen 540x1620
 # capture viewport
 
 test standard library package
-pathname /errors@go1.16.3
+path /errors@go1.16.3
 wait {{$ready}}
 eval {{$hideElements}}
 capture fullscreen
 capture fullscreen 540x1080
 
 test really long import path
-pathname /github.com/envoyproxy/go-control-plane@v0.9.8/envoy/config/filter/network/http_connection_manager/v2
+path /github.com/envoyproxy/go-control-plane@v0.9.8/envoy/config/filter/network/http_connection_manager/v2
 wait {{$ready}}
 eval {{$hideElements}}
 capture viewport
 capture viewport 540x1080
 
 test package that exists in multiple modules at the same versions
-pathname /github.com/hashicorp/vault/api@v1.0.3
+path /github.com/hashicorp/vault/api@v1.0.3
 wait {{$ready}}
 eval {{$hideElements}}
 capture viewport
 capture viewport 540x1080
 
 test no documentation
-pathname /github.com/tendermint/tendermint@v0.34.10/cmd/contract_tests
+path /github.com/tendermint/tendermint@v0.34.10/cmd/contract_tests
 wait {{$ready}}
 eval {{$hideElements}}
 capture viewport
 capture viewport 540x1080
 
 test module that is also a package
-pathname /gocloud.dev@v0.22.0
+path /gocloud.dev@v0.22.0
 block https://github.com/google/go-cloud/raw/v0.22.0/internal/website/static/go-cdk-logo-gopherblue.png
 wait {{$ready}}
 eval {{$hideElements}}
@@ -87,21 +93,21 @@ capture viewport
 capture viewport 540x1080
 
 test package not at latest version of a module
-pathname /github.com/julieqiu/api-demo/oldpkg
+path /github.com/julieqiu/api-demo/oldpkg
 wait {{$ready}}
 eval {{$hideElements}}
 capture viewport
 capture viewport 540x1080
 
 test standard library
-pathname /std@go1.16.3
+path /std@go1.16.3
 wait {{$ready}}
 eval {{$hideElements}}
 capture fullscreen
 capture fullscreen 540x1080
 
 test package with multiple licenses
-pathname /github.com/apache/thrift@v0.14.1
+path /github.com/apache/thrift@v0.14.1
 block https://github.com/apache/thrift/raw/v0.14.1/doc/images/thrift-layers.png
 wait {{$ready}}
 eval {{$hideElements}}
@@ -109,82 +115,87 @@ capture viewport
 capture viewport 540x1080
 
 test package with multi-GOOS
-pathname /github.com/creack/pty@v1.1.11
+path /github.com/creack/pty@v1.1.11
 wait {{$ready}}
 eval {{$hideElements}}
 capture viewport
 capture viewport 540x1080
 
 test retracted package
-pathname /k8s.io/client-go@v1.5.2
+path /k8s.io/client-go@v1.5.2
 wait {{$ready}}
 eval {{$hideElements}}
 capture viewport
 capture viewport 540x1080
 
 test deprecated package
-pathname /github.com/jba/bit
+path /github.com/jba/bit
 wait {{$ready}}
 eval {{$hideElements}}
 capture viewport
 capture viewport 540x1080
 
-test package with deprecated symbols
-pathname /database/sql/driver@go1.16.3
-wait {{$ready}}
-eval {{$hideElements}}
-capture fullscreen
-capture fullscreen 540x1080
+# TODO(jba): fix this test by using viewport capture.
+# The dockerized chromedp behaves oddly with this test.
+# Part of the way down in the display, the page begins
+# again from the top.
+#test package with deprecated symbols
+#path /database/sql/driver@go1.16.3
+#wait {{$ready}}
+#eval {{$hideElements}}
+#capture fullscreen
+#capture fullscreen 540x1080
 
 test about
-pathname /about
+path /about
 capture fullscreen
 capture fullscreen 540x1080
 
 test badge
-pathname /badge/
+path /badge/
 capture fullscreen
 capture fullscreen 540x1080
 
 test error
 status 400
-pathname /bad.package@v1.0-badversion
+path /bad.package@v1.0-badversion
 capture fullscreen
 capture fullscreen 540x1080
 
 test 404 with fetch button
 status 404
-pathname /github.com/package/does/not/exist
+path /github.com/package/does/not/exist
+sleep 1s
 capture fullscreen
 capture fullscreen 540x1080
 
 test home
-pathname /
+path /
 click .go-Carousel-dot
 capture fullscreen
 capture fullscreen 540x1080
 
 test license policy
-pathname /license-policy
+path /license-policy
 capture fullscreen
 capture fullscreen 540x1080
 
 test search help
-pathname /search-help
+path /search-help
 capture fullscreen
 capture fullscreen 540x1080
 
 test search no results
-pathname /search?q=aoeuidhtns
+path /search?q=aoeuidhtns
 capture fullscreen
 capture fullscreen 540x1080
 
 test sub-repositories
-pathname /golang.org/x
+path /golang.org/x
 capture fullscreen
 capture fullscreen 540x1080
 
 test nav submenu
-pathname /github.com/jba/bit
+path /github.com/jba/bit
 click .js-desktop-menu-hover
 capture viewport

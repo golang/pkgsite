@@ -130,7 +130,7 @@ services:
     working_dir: /pkgsite
   chromedp:
     # This should match the version we are using in tests/screentest/run.sh.
-    image: chromedp/headless-shell:97.0.4692.71
+    image: chromedp/headless-shell:131.0.6778.33
     shm_size: 8G
   go:
      # This should match the version we are using on Cloud Run.
