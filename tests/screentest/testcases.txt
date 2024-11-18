@@ -37,7 +37,7 @@ capture viewport 540x1080
 # TODO(jba): the diff here is whether the benchstat expansion includes
 # the second sentence. That may be a difference in how the synposis
 # is computed or rendered. I can't find any code differences that
-# would explain that.
+# would explain it.
 #
 # test x/tools directories expanded
 # path /golang.org/x/tools@v0.1.1
@@ -135,16 +135,29 @@ eval {{$hideElements}}
 capture viewport
 capture viewport 540x1080
 
-# TODO(jba): fix this test by using viewport capture.
-# The dockerized chromedp behaves oddly with this test.
+# The dockerized chromedp behaves oddly with this test
+# when doing a fullscreen capture.
 # Part of the way down in the display, the page begins
 # again from the top.
-#test package with deprecated symbols
-#path /database/sql/driver@go1.16.3
-#wait {{$ready}}
-#eval {{$hideElements}}
-#capture fullscreen
-#capture fullscreen 540x1080
+# So do a viewport capture instead.
+test package with deprecated symbols index
+path /database/sql/driver@go1.16.3#pkg-index
+wait {{$ready}}
+eval {{$hideElements}}
+capture viewport
+# Screen doesn't scroll to index section in chromedp.
+# It works on a phone, however.
+#capture viewport 540x1080
+
+# Same as the above, but for symbol doc.
+test package with deprecated symbols symbol
+path /database/sql/driver@go1.16.3#ColumnConverter
+wait {{$ready}}
+eval {{$hideElements}}
+capture viewport
+# Screen doesn't scroll to symbol doc in chromedp.
+# It works on a phone, however.
+#capture viewport 540x1080
 
 test about
 path /about
