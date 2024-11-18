@@ -34,19 +34,19 @@ sleep 2s
 capture viewport
 capture viewport 540x1080
 
-# TODO(jba): the diff here is whether the benchstat expansion includes
-# the second sentence. That may be a difference in how the synposis
-# is computed or rendered. I can't find any code differences that
-# would explain it.
-#
-# test x/tools directories expanded
-# path /golang.org/x/tools@v0.1.1
-# wait {{$ready}}
-# click [data-test-id="directories-toggle"]
-# eval {{$scrollTop}}
-# eval {{$hideElements}}
-# capture fullscreen
-# capture fullscreen 540x1620
+# The contents of the seeded DB differs from that of the staging
+# and production DBs: the synopsis golang.org/x/tools/cmd/benchcmp includes
+# the second sentence in production and staging, but not in the seeded one.
+# That will cause this test to fail when comparing with prod or staging,
+# but it will work in CI and locally.
+test x/tools directories expanded
+path /golang.org/x/tools@v0.1.1
+wait {{$ready}}
+click [data-test-id="directories-toggle"]
+eval {{$scrollTop}}
+eval {{$hideElements}}
+capture fullscreen
+capture fullscreen 540x1620
 
 # TODO: https://go.dev/issue/51020
 # test empty jump to modal
