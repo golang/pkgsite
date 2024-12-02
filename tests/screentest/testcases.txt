@@ -1,3 +1,6 @@
+# TODO(jba): add an element to pkgsite pages after all JS has run
+# on the page, and replaces sleeps in this file with a wait for that element.
+
 windowsize 1536x960
 {{with .Token}}header Authorization: Bearer {{.}}{{end}}
 {{with .QuotaBypass}}header X-Go-Discovery-Auth-Bypass-Quota: {{.}}{{end}}
@@ -7,13 +10,22 @@ block https://codecov.io/* https://travis-ci.com/*
 
 # The aria-selected attribute is added by the last piece of JS to run.
 {{$ready := "[role='treeitem'][aria-selected='true']"}}
+
 {{$hideElements := "document.querySelector(\"[data-test-id='UnitHeader-importedby']\")?.remove();document.querySelector(\"[data-test-id='meta-link-depsdev']\")?.remove();"}}
+
+# JS for hiding the "Links" heading. We are already hiding the deps.dev link because
+# its presence depends on a timeout, but for some modules, if the link isn't
+# there then the "Links" heading also isn't there.
+# We don't always want to do this, because we usually want to compare the rendering of the Links section.
+{{$hideLinksHeading := "document.querySelector(\"[data-test-id='links-heading']\")?.remove();"}}
+
 {{$scrollTop := "window.scrollTo({top:0});"}}
 
 test short readme has no toggle and higher major version
 path /rsc.io/quote
 wait {{$ready}}
 eval {{$hideElements}}
+eval {{$hideLinksHeading}}
 capture viewport
 capture viewport 540x1080
 
@@ -22,25 +34,23 @@ path /golang.org/x/tools@v0.1.1
 wait {{$ready}}
 eval {{$scrollTop}}
 eval {{$hideElements}}
+sleep 4s
 capture viewport
 capture viewport 540x1080
 
 test x/tools readme expanded
 path /golang.org/x/tools@v0.1.1#section-readme
 wait {{$ready}}
+# Scroll to bottom to make lazy images load.
+eval window.scrollTo({top: document.body.scrollHeight});
 eval {{$scrollTop}}
 eval {{$hideElements}}
-sleep 2s
+sleep 3s
 capture viewport
 capture viewport 540x1080
 
-# The contents of the seeded DB differs from that of the staging
-# and production DBs: the synopsis golang.org/x/tools/cmd/benchcmp includes
-# the second sentence in production and staging, but not in the seeded one.
-# That will cause this test to fail when comparing with prod or staging,
-# but it will work in CI and locally.
-test x/tools directories expanded
-path /golang.org/x/tools@v0.1.1
+test x/net directories expanded
+path /golang.org/x/net@v0.31.0
 wait {{$ready}}
 click [data-test-id="directories-toggle"]
 eval {{$scrollTop}}
@@ -118,6 +128,7 @@ test package with multi-GOOS
 path /github.com/creack/pty@v1.1.11
 wait {{$ready}}
 eval {{$hideElements}}
+eval {{$hideLinksHeading}}
 capture viewport
 capture viewport 540x1080
 
@@ -144,6 +155,7 @@ test package with deprecated symbols index
 path /database/sql/driver@go1.16.3#pkg-index
 wait {{$ready}}
 eval {{$hideElements}}
+sleep 2s
 capture viewport
 # Screen doesn't scroll to index section in chromedp.
 # It works on a phone, however.

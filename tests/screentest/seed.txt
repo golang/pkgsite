@@ -6,7 +6,11 @@
 github.com/apache/thrift@v0.14.1
 github.com/apache/thrift@v0.14.2
 github.com/creack/pty@v1.1.11
-github.com/creack/pty@v1.1.13
+# This is needed for "Go to latest" badge.
+github.com/creack/pty@v1.1.24
+# These next two are needed to get "added in v1.1.0" on some symbols.
+github.com/creack/pty@v1.0.1
+github.com/creack/pty@v1.1.0
 github.com/creack/pty/v2@v2.0.1
 github.com/envoyproxy/go-control-plane@v0.9.8
 github.com/envoyproxy/go-control-plane@v0.9.9
@@ -23,12 +27,18 @@ github.com/tendermint/tendermint@v0.34.10
 github.com/tendermint/tendermint@v0.34.11
 gocloud.dev@v0.22.0
 gocloud.dev@v0.23.0
+golang.org/x/net@v0.31.0
+# Needed for the expanded directories test.
+golang.org/x/net/http2/h2demo@latest
 golang.org/x/tools@v0.1.1
+# Tests don't directly use v0.1.2, but we need the badge on v0.1.1 to say
+# "Go to latest".
 golang.org/x/tools@v0.1.2
+# Same for gopls: it shows up in the directories section.
+golang.org/x/tools/gopls@v0.6.11
 k8s.io/client-go@v0.21.3
 k8s.io/client-go@v1.5.2
 golang.org/x/crypto@v0.1.0
-golang.org/x/tools/gopls@v0.6.11
 github.com/jackc/pgx@v3.6.2+incompatible
 rsc.io/quote@v0.9.9-pre1
 rsc.io/quote@all

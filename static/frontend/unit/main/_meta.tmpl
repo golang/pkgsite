@@ -19,7 +19,7 @@
       {{end}}
     </div>
     {{if or .IsGoProject .DepsDevURL .Details.ReadmeLinks .Details.DocLinks .Details.ModuleReadmeLinks}}
-      <h2 class="go-textLabel">Links</h2>
+      <h2 class="go-textLabel" data-test-id="links-heading">Links</h2>
       <ul class="UnitMeta-links">
         {{if .IsGoProject}}
           <li>

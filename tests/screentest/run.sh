@@ -140,11 +140,11 @@ main() {
     exp|dev|staging)
       test_server="https://$env-pkg.go.dev"
       debugger_url="-d ws://chromedp:$chromedp_port"
-      headers="-headers QuotaBypass:$GO_DISCOVERY_E2E_QUOTA_BYPASS,Token:$idtoken"
+      headers="-headers 'X-Go-Discovery-Auth-Bypass-Quota:$GO_DISCOVERY_E2E_QUOTA_BYPASS,Authorization: Bearer $idtoken'"
       ;;
     prod)
       test_server="https://pkg.go.dev"
-      headers="-headers QuotaBypass:$GO_DISCOVERY_E2E_QUOTA_BYPASS"
+      headers="-headers 'X-Go-Discovery-Auth-Bypass-Quota:$GO_DISCOVERY_E2E_QUOTA_BYPASS'"
       ;;
     local)
       test_server="http://localhost:$frontend_port"
@@ -158,7 +158,7 @@ main() {
   if [[ "$env" == ci || "$env" == local ]]; then
     testfiles=tests/screentest/testcases.*
   fi
-  local cmd="screentest $concurrency $debugger_url $headers $update $run $test_server tests/screentest/testdata $testfiles"
+  local cmd="screentest -o tests/screentest/output $concurrency $debugger_url $headers $update $run $test_server tests/screentest/testdata $testfiles"
 
   if [[ "$env" = ci ]]; then
     export GO_DISCOVERY_CONFIG_DYNAMIC="tests/screentest/config.yaml"
@@ -169,7 +169,7 @@ main() {
     dcompose up --detach chromedp
     dcompose up --detach --force-recreate frontend
     dcompose run --rm --entrypoint bash go -c "
-      go install golang.org/x/website/cmd/screentest@$screentest_version
+      GODEBUG=cmdgonetlimit=3 go install golang.org/x/website/cmd/screentest@$screentest_version
       go run ./devtools/cmd/wait_available --timeout 120s frontend:$frontend_port -- \
       $(echo $cmd)"
   elif [[ "$env" == local ]]; then
