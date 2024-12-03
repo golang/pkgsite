@@ -158,7 +158,7 @@ main() {
   if [[ "$env" == ci || "$env" == local ]]; then
     testfiles=tests/screentest/testcases.*
   fi
-  local cmd="screentest -o tests/screentest/output $concurrency $debugger_url $headers $update $run $test_server tests/screentest/testdata $testfiles"
+  local cmd="screentest -o tests/screentest/output -retrypixels 20 $concurrency $debugger_url $headers $update $run $test_server tests/screentest/testdata $testfiles"
 
   if [[ "$env" = ci ]]; then
     export GO_DISCOVERY_CONFIG_DYNAMIC="tests/screentest/config.yaml"
