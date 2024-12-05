@@ -1,11 +1,11 @@
 <div class="Documentation-content js-docContent"> <section class="Documentation-overview">
-<h3 tabindex="-1" id="pkg-overview" class="Documentation-overviewHeader">Overview <a href="#pkg-overview" aria-label="Go to Overview">¶</a></h3>
+<h3 tabindex="-1" id="pkg-overview" class="Documentation-overviewHeader">Overview <a href="#pkg-overview" title="Go to Overview" aria-label="Go to Overview">¶</a></h3>
 <p>Package everydecl has every form of declaration known to dochtml.
 It is designed to test that the generated HTML has the right id and data-kind
 attributes.
 </p>
 </section><section class="Documentation-index">
-<h3 id="pkg-index" class="Documentation-indexHeader">Index <a href="#pkg-index" aria-label="Go to Index">¶</a></h3>
+<h3 id="pkg-index" class="Documentation-indexHeader">Index <a href="#pkg-index" title="Go to Index" aria-label="Go to Index">¶</a></h3>
 <ul class="Documentation-indexList">
 <li class="Documentation-indexConstants"><a href="#pkg-constants">Constants</a></li>
 <li class="Documentation-indexVariables"><a href="#pkg-variables">Variables</a></li>
@@ -34,7 +34,7 @@ attributes.
 <a href="#T.M">func (T) M()</a></li>
 </ul></li>
 <li class="Documentation-indexNote"><a href="#pkg-note-BUG">Bugs</a></li></ul>
-</section><h3 tabindex="-1" id="pkg-constants" class="Documentation-constantsHeader">Constants <a href="#pkg-constants" aria-label="Go to Constants">¶</a></h3>
+</section><h3 tabindex="-1" id="pkg-constants" class="Documentation-constantsHeader">Constants <a href="#pkg-constants" title="Go to Constants" aria-label="Go to Constants">¶</a></h3>
 <section class="Documentation-constants">
 <div class="Documentation-declaration">
 <span class="Documentation-declarationLink"><a class="Documentation-source" href="src">View Source</a></span>
@@ -43,7 +43,7 @@ attributes.
 <p>const
 </p>
 </section>
-<h3 tabindex="-1" id="pkg-variables" class="Documentation-variablesHeader">Variables <a href="#pkg-variables" aria-label="Go to Variables">¶</a></h3>
+<h3 tabindex="-1" id="pkg-variables" class="Documentation-variablesHeader">Variables <a href="#pkg-variables" title="Go to Variables" aria-label="Go to Variables">¶</a></h3>
 <section class="Documentation-variables">
 <div class="Documentation-declaration">
 <span class="Documentation-declarationLink"><a class="Documentation-source" href="src">View Source</a></span>
@@ -52,10 +52,10 @@ attributes.
 <p>var
 </p>
 </section>
-<h3 tabindex="-1" id="pkg-functions" class="Documentation-functionsHeader">Functions <a href="#pkg-functions" aria-label="Go to Functions">¶</a></h3>
+<h3 tabindex="-1" id="pkg-functions" class="Documentation-functionsHeader">Functions <a href="#pkg-functions" title="Go to Functions" aria-label="Go to Functions">¶</a></h3>
 <section class="Documentation-functions"><div class="Documentation-function">
 <h4 tabindex="-1" id="F" data-kind="function" class="Documentation-functionHeader">
-<span>func <a class="Documentation-source" href="src">F</a> <a class="Documentation-idLink" href="#F" aria-label="Go to F">¶</a></span>
+<span>func <a class="Documentation-source" href="src">F</a> <a class="Documentation-idLink" href="#F" title="Go to F" aria-label="Go to F">¶</a></span>
 <span class="Documentation-sinceVersion">
 </span>
 </h4>
@@ -65,10 +65,10 @@ attributes.
 <p>func
 </p>
 </div></section>
-<h3 tabindex="-1" id="pkg-types" class="Documentation-typesHeader">Types <a href="#pkg-types" aria-label="Go to Types">¶</a></h3>
+<h3 tabindex="-1" id="pkg-types" class="Documentation-typesHeader">Types <a href="#pkg-types" title="Go to Types" aria-label="Go to Types">¶</a></h3>
 <section class="Documentation-types"><div class="Documentation-type">
 <h4 tabindex="-1" id="A" data-kind="type" class="Documentation-typeHeader">
-<span>type <a class="Documentation-source" href="src">A</a> <a class="Documentation-idLink" href="#A" aria-label="Go to A">¶</a></span>
+<span>type <a class="Documentation-source" href="src">A</a> <a class="Documentation-idLink" href="#A" title="Go to A" aria-label="Go to A">¶</a></span>
 <span class="Documentation-sinceVersion">
 </span>
 </h4>
@@ -77,7 +77,7 @@ attributes.
 </div>
 </div><div class="Documentation-type">
 <h4 tabindex="-1" id="B" data-kind="type" class="Documentation-typeHeader">
-<span>type <a class="Documentation-source" href="src">B</a> <a class="Documentation-idLink" href="#B" aria-label="Go to B">¶</a></span>
+<span>type <a class="Documentation-source" href="src">B</a> <a class="Documentation-idLink" href="#B" title="Go to B" aria-label="Go to B">¶</a></span>
 <span class="Documentation-sinceVersion">
 </span>
 </h4>
@@ -86,7 +86,7 @@ attributes.
 </div>
 </div><div class="Documentation-type">
 <h4 tabindex="-1" id="I1" data-kind="type" class="Documentation-typeHeader">
-<span>type <a class="Documentation-source" href="src">I1</a> <a class="Documentation-idLink" href="#I1" aria-label="Go to I1">¶</a></span>
+<span>type <a class="Documentation-source" href="src">I1</a> <a class="Documentation-idLink" href="#I1" title="Go to I1" aria-label="Go to I1">¶</a></span>
 <span class="Documentation-sinceVersion">
 </span>
 </h4>
@@ -97,7 +97,7 @@ attributes.
 </div>
 </div><div class="Documentation-type">
 <h4 tabindex="-1" id="I2" data-kind="type" class="Documentation-typeHeader">
-<span>type <a class="Documentation-source" href="src">I2</a> <a class="Documentation-idLink" href="#I2" aria-label="Go to I2">¶</a></span>
+<span>type <a class="Documentation-source" href="src">I2</a> <a class="Documentation-idLink" href="#I2" title="Go to I2" aria-label="Go to I2">¶</a></span>
 <span class="Documentation-sinceVersion">
 </span>
 </h4>
@@ -109,7 +109,7 @@ attributes.
 </div>
 </div><div class="Documentation-type">
 <h4 tabindex="-1" id="S1" data-kind="type" class="Documentation-typeHeader">
-<span>type <a class="Documentation-source" href="src">S1</a> <a class="Documentation-idLink" href="#S1" aria-label="Go to S1">¶</a></span>
+<span>type <a class="Documentation-source" href="src">S1</a> <a class="Documentation-idLink" href="#S1" title="Go to S1" aria-label="Go to S1">¶</a></span>
 <span class="Documentation-sinceVersion">
 </span>
 </h4>
@@ -120,7 +120,7 @@ attributes.
 </div>
 </div><div class="Documentation-type">
 <h4 tabindex="-1" id="S2" data-kind="type" class="Documentation-typeHeader">
-<span>type <a class="Documentation-source" href="src">S2</a> <a class="Documentation-idLink" href="#S2" aria-label="Go to S2">¶</a></span>
+<span>type <a class="Documentation-source" href="src">S2</a> <a class="Documentation-idLink" href="#S2" title="Go to S2" aria-label="Go to S2">¶</a></span>
 <span class="Documentation-sinceVersion">
 </span>
 </h4>
@@ -132,7 +132,7 @@ attributes.
 </div>
 </div><div class="Documentation-type">
 <h4 tabindex="-1" id="T" data-kind="type" class="Documentation-typeHeader">
-<span>type <a class="Documentation-source" href="src">T</a> <a class="Documentation-idLink" href="#T" aria-label="Go to T">¶</a></span>
+<span>type <a class="Documentation-source" href="src">T</a> <a class="Documentation-idLink" href="#T" title="Go to T" aria-label="Go to T">¶</a></span>
 <span class="Documentation-sinceVersion">
 </span>
 </h4>
@@ -155,7 +155,7 @@ attributes.
 </p>
 </div><div class="Documentation-typeFunc">
 <h4 tabindex="-1" id="TF" data-kind="function" class="Documentation-typeFuncHeader">
-<span>func <a class="Documentation-source" href="src">TF</a> <a class="Documentation-idLink" href="#TF" aria-label="Go to TF">¶</a></span>
+<span>func <a class="Documentation-source" href="src">TF</a> <a class="Documentation-idLink" href="#TF" title="Go to TF" aria-label="Go to TF">¶</a></span>
 <span class="Documentation-sinceVersion">
 </span>
 </h4>
@@ -166,7 +166,7 @@ attributes.
 </p>
 </div><div class="Documentation-typeMethod">
 <h4 tabindex="-1" id="T.M" data-kind="method" class="Documentation-typeMethodHeader">
-<span>func (T) <a class="Documentation-source" href="src">M</a> <a class="Documentation-idLink" href="#T.M" aria-label="Go to T.M">¶</a></span>
+<span>func (T) <a class="Documentation-source" href="src">M</a> <a class="Documentation-idLink" href="#T.M" title="Go to T.M" aria-label="Go to T.M">¶</a></span>
 <span class="Documentation-sinceVersion">
 </span>
 </h4>
@@ -177,9 +177,9 @@ attributes.
 BUG(uid): this verifies that notes are rendered
 </p>
 </div>
-</div></section><h3 tabindex="-1" id="pkg-notes" class="Documentation-notesHeader">Notes <a href="#pkg-notes" aria-label="Go to Notes">¶</a></h3>
+</div></section><h3 tabindex="-1" id="pkg-notes" class="Documentation-notesHeader">Notes <a href="#pkg-notes" title="Go to Notes" aria-label="Go to Notes">¶</a></h3>
 <section class="Documentation-notes"><div class="Documentation-note">
-<h3 tabindex="-1" id="pkg-note-BUG" class="Documentation-noteHeader">Bugs <a href="#pkg-note-BUG" aria-label="Go to Bugs">¶</a></h3>
+<h3 tabindex="-1" id="pkg-note-BUG" class="Documentation-noteHeader">Bugs <a href="#pkg-note-BUG" title="Go to Bugs" aria-label="Go to Bugs">¶</a></h3>
 <ul class="Documentation-noteList" style="padding-left: 20px; list-style: initial;">
 <li style="margin: 6px 0 6px 0;"><p>this verifies that notes are rendered
 </p></li></ul>

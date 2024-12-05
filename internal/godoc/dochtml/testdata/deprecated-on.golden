@@ -1,9 +1,9 @@
 <div class="Documentation-content js-docContent"> <section class="Documentation-overview">
-<h3 tabindex="-1" id="pkg-overview" class="Documentation-overviewHeader">Overview <a href="#pkg-overview" aria-label="Go to Overview">¶</a></h3>
+<h3 tabindex="-1" id="pkg-overview" class="Documentation-overviewHeader">Overview <a href="#pkg-overview" title="Go to Overview" aria-label="Go to Overview">¶</a></h3>
 <p>Package deprecated has some deprecated symbols.
 </p>
 </section><section class="Documentation-index">
-<h3 id="pkg-index" class="Documentation-indexHeader">Index <a href="#pkg-index" aria-label="Go to Index">¶</a></h3>
+<h3 id="pkg-index" class="Documentation-indexHeader">Index <a href="#pkg-index" title="Go to Index" aria-label="Go to Index">¶</a></h3>
 <ul class="Documentation-indexList">
 <li class="Documentation-indexConstants"><a href="#pkg-constants">Constants</a></li>
 <li class="Documentation-indexVariables"><a href="#pkg-variables">Variables</a></li>
@@ -44,7 +44,7 @@
 <a href="#GoodT.GoodM">func (GoodT) GoodM()</a></li>
 </ul></li>
 </ul>
-</section><h3 tabindex="-1" id="pkg-constants" class="Documentation-constantsHeader">Constants <a href="#pkg-constants" aria-label="Go to Constants">¶</a></h3>
+</section><h3 tabindex="-1" id="pkg-constants" class="Documentation-constantsHeader">Constants <a href="#pkg-constants" title="Go to Constants" aria-label="Go to Constants">¶</a></h3>
 <section class="Documentation-constants">
 <div class="Documentation-declaration">
 <span class="Documentation-declarationLink"><a class="Documentation-source" href="src">View Source</a></span>
@@ -65,7 +65,7 @@
 Deprecated: use GoodC.
 </p>
 </section>
-<h3 tabindex="-1" id="pkg-variables" class="Documentation-variablesHeader">Variables <a href="#pkg-variables" aria-label="Go to Variables">¶</a></h3>
+<h3 tabindex="-1" id="pkg-variables" class="Documentation-variablesHeader">Variables <a href="#pkg-variables" title="Go to Variables" aria-label="Go to Variables">¶</a></h3>
 <section class="Documentation-variables">
 <div class="Documentation-declaration">
 <span class="Documentation-declarationLink"><a class="Documentation-source" href="src">View Source</a></span>
@@ -78,7 +78,7 @@ Deprecated: use GoodC.
 <pre><span id="GoodV" data-kind="variable">var GoodV = 1</span></pre>
 </div>
 </section>
-<h3 tabindex="-1" id="pkg-functions" class="Documentation-functionsHeader">Functions <a href="#pkg-functions" aria-label="Go to Functions">¶</a></h3>
+<h3 tabindex="-1" id="pkg-functions" class="Documentation-functionsHeader">Functions <a href="#pkg-functions" title="Go to Functions" aria-label="Go to Functions">¶</a></h3>
 <section class="Documentation-functions"><div class="Documentation-function">
 <details class="Documentation-deprecatedDetails js-deprecatedDetails">
 <summary>
@@ -103,7 +103,7 @@ func <a class="Documentation-source" href="src">BadF</a>
 </details>
 </div><div class="Documentation-function">
 <h4 tabindex="-1" id="GoodF" data-kind="function" class="Documentation-functionHeader">
-<span>func <a class="Documentation-source" href="src">GoodF</a> <a class="Documentation-idLink" href="#GoodF" aria-label="Go to GoodF">¶</a></span>
+<span>func <a class="Documentation-source" href="src">GoodF</a> <a class="Documentation-idLink" href="#GoodF" title="Go to GoodF" aria-label="Go to GoodF">¶</a></span>
 <span class="Documentation-sinceVersion">
 </span>
 </h4>
@@ -112,7 +112,7 @@ func <a class="Documentation-source" href="src">BadF</a>
 </div>
 </div><div class="Documentation-function">
 <h4 tabindex="-1" id="WrongF" data-kind="function" class="Documentation-functionHeader">
-<span>func <a class="Documentation-source" href="src">WrongF</a> <a class="Documentation-idLink" href="#WrongF" aria-label="Go to WrongF">¶</a></span>
+<span>func <a class="Documentation-source" href="src">WrongF</a> <a class="Documentation-idLink" href="#WrongF" title="Go to WrongF" aria-label="Go to WrongF">¶</a></span>
 <span class="Documentation-sinceVersion">
 </span>
 </h4>
@@ -123,7 +123,7 @@ func <a class="Documentation-source" href="src">BadF</a>
 Deprecated: use GoodF.
 </p>
 </div></section>
-<h3 tabindex="-1" id="pkg-types" class="Documentation-typesHeader">Types <a href="#pkg-types" aria-label="Go to Types">¶</a></h3>
+<h3 tabindex="-1" id="pkg-types" class="Documentation-typesHeader">Types <a href="#pkg-types" title="Go to Types" aria-label="Go to Types">¶</a></h3>
 <section class="Documentation-types"><div class="Documentation-type">
 <details class="Documentation-deprecatedDetails js-deprecatedDetails">
 <summary>
@@ -168,7 +168,7 @@ func <a class="Documentation-source" href="src">NewBadTBad</a>
 </details>
 </div><div class="Documentation-typeFunc">
 <h4 tabindex="-1" id="NewBadTGood" data-kind="function" class="Documentation-typeFuncHeader">
-<span>func <a class="Documentation-source" href="src">NewBadTGood</a> <a class="Documentation-idLink" href="#NewBadTGood" aria-label="Go to NewBadTGood">¶</a></span>
+<span>func <a class="Documentation-source" href="src">NewBadTGood</a> <a class="Documentation-idLink" href="#NewBadTGood" title="Go to NewBadTGood" aria-label="Go to NewBadTGood">¶</a></span>
 <span class="Documentation-sinceVersion">
 </span>
 </h4>
@@ -200,7 +200,7 @@ For sure.
 </details>
 </div><div class="Documentation-typeMethod">
 <h4 tabindex="-1" id="BadT.GoodM" data-kind="method" class="Documentation-typeMethodHeader">
-<span>func (BadT) <a class="Documentation-source" href="src">GoodM</a> <a class="Documentation-idLink" href="#BadT.GoodM" aria-label="Go to BadT.GoodM">¶</a></span>
+<span>func (BadT) <a class="Documentation-source" href="src">GoodM</a> <a class="Documentation-idLink" href="#BadT.GoodM" title="Go to BadT.GoodM" aria-label="Go to BadT.GoodM">¶</a></span>
 <span class="Documentation-sinceVersion">
 </span>
 </h4>
@@ -209,7 +209,7 @@ For sure.
 </div>
 </div><div class="Documentation-typeMethod">
 <h4 tabindex="-1" id="BadT.WrongM" data-kind="method" class="Documentation-typeMethodHeader">
-<span>func (BadT) <a class="Documentation-source" href="src">WrongM</a> <a class="Documentation-idLink" href="#BadT.WrongM" aria-label="Go to BadT.WrongM">¶</a></span>
+<span>func (BadT) <a class="Documentation-source" href="src">WrongM</a> <a class="Documentation-idLink" href="#BadT.WrongM" title="Go to BadT.WrongM" aria-label="Go to BadT.WrongM">¶</a></span>
 <span class="Documentation-sinceVersion">
 </span>
 </h4>
@@ -224,7 +224,7 @@ Deprecated: not.
 </details>
 </div><div class="Documentation-type">
 <h4 tabindex="-1" id="GoodT" data-kind="type" class="Documentation-typeHeader">
-<span>type <a class="Documentation-source" href="src">GoodT</a> <a class="Documentation-idLink" href="#GoodT" aria-label="Go to GoodT">¶</a></span>
+<span>type <a class="Documentation-source" href="src">GoodT</a> <a class="Documentation-idLink" href="#GoodT" title="Go to GoodT" aria-label="Go to GoodT">¶</a></span>
 <span class="Documentation-sinceVersion">
 </span>
 </h4>
@@ -255,7 +255,7 @@ func <a class="Documentation-source" href="src">NewGoodTBad</a>
 </details>
 </div><div class="Documentation-typeFunc">
 <h4 tabindex="-1" id="NewGoodTGood" data-kind="function" class="Documentation-typeFuncHeader">
-<span>func <a class="Documentation-source" href="src">NewGoodTGood</a> <a class="Documentation-idLink" href="#NewGoodTGood" aria-label="Go to NewGoodTGood">¶</a></span>
+<span>func <a class="Documentation-source" href="src">NewGoodTGood</a> <a class="Documentation-idLink" href="#NewGoodTGood" title="Go to NewGoodTGood" aria-label="Go to NewGoodTGood">¶</a></span>
 <span class="Documentation-sinceVersion">
 </span>
 </h4>
@@ -286,7 +286,7 @@ func (GoodT) <a class="Documentation-source" href="src">BadM</a>
 </details>
 </div><div class="Documentation-typeMethod">
 <h4 tabindex="-1" id="GoodT.GoodM" data-kind="method" class="Documentation-typeMethodHeader">
-<span>func (GoodT) <a class="Documentation-source" href="src">GoodM</a> <a class="Documentation-idLink" href="#GoodT.GoodM" aria-label="Go to GoodT.GoodM">¶</a></span>
+<span>func (GoodT) <a class="Documentation-source" href="src">GoodM</a> <a class="Documentation-idLink" href="#GoodT.GoodM" title="Go to GoodT.GoodM" aria-label="Go to GoodT.GoodM">¶</a></span>
 <span class="Documentation-sinceVersion">
 </span>
 </h4>

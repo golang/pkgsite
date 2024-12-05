@@ -17,7 +17,7 @@ Go is an open source project.
 </div>
 <p>The Go Project1
 </p><p>Go is an open source project.
-</p><h4 id="hdr-The_Go_Project2">The Go Project2 <a class="Documentation-idLink" href="#hdr-The_Go_Project2" aria-label="Go to The Go Project2">¶</a></h4><p>Go is an open source project.
+</p><h4 id="hdr-The_Go_Project2">The Go Project2 <a class="Documentation-idLink" href="#hdr-The_Go_Project2" title="Go to The Go Project2" aria-label="Go to The Go Project2">¶</a></h4><p>Go is an open source project.
 </p>
 
 
