@@ -17,7 +17,7 @@ This is some other information.
   </ul>
 </div>
 <p>Documentation.
-</p><h4 id="hdr-Info">Info <a class="Documentation-idLink" href="#hdr-Info" aria-label="Go to Info">¶</a></h4><p>This is some information.
-</p><h4 id="hdr-Info-1">Info <a class="Documentation-idLink" href="#hdr-Info-1" aria-label="Go to Info">¶</a></h4><p>This is some other information.
+</p><h4 id="hdr-Info">Info <a class="Documentation-idLink" href="#hdr-Info" title="Go to Info" aria-label="Go to Info">¶</a></h4><p>This is some information.
+</p><h4 id="hdr-Info-1">Info <a class="Documentation-idLink" href="#hdr-Info-1" title="Go to Info" aria-label="Go to Info">¶</a></h4><p>This is some other information.
 </p>
 

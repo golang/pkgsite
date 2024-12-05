@@ -19,7 +19,7 @@ func (T) M() {}
   </ul>
 </div>
 <p>Documentation.
-</p><h4 id="hdr-Info-T_M">Info <a class="Documentation-idLink" href="#hdr-Info-T_M" aria-label="Go to Info">¶</a></h4><p>This is some information.
-</p><h4 id="hdr-Info-T_M-1">Info <a class="Documentation-idLink" href="#hdr-Info-T_M-1" aria-label="Go to Info">¶</a></h4><p>This is some other information.
+</p><h4 id="hdr-Info-T_M">Info <a class="Documentation-idLink" href="#hdr-Info-T_M" title="Go to Info" aria-label="Go to Info">¶</a></h4><p>This is some information.
+</p><h4 id="hdr-Info-T_M-1">Info <a class="Documentation-idLink" href="#hdr-Info-T_M-1" title="Go to Info" aria-label="Go to Info">¶</a></h4><p>This is some other information.
 </p>
 

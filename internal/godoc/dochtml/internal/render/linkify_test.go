@@ -503,8 +503,8 @@ More text.`
   </ul>
 </div>
 <p>Documentation.
-</p><h4 id="hdr-The_Go_Project">The Go Project <a class="Documentation-idLink" href="#hdr-The_Go_Project" aria-label="Go to The Go Project">¶</a></h4><p>Go is an open source project.
-</p><h4 id="hdr-Heading_2">Heading 2 <a class="Documentation-idLink" href="#hdr-Heading_2" aria-label="Go to Heading 2">¶</a></h4><p>More text.
+</p><h4 id="hdr-The_Go_Project">The Go Project <a class="Documentation-idLink" href="#hdr-The_Go_Project" title="Go to The Go Project" aria-label="Go to The Go Project">¶</a></h4><p>Go is an open source project.
+</p><h4 id="hdr-Heading_2">Heading 2 <a class="Documentation-idLink" href="#hdr-Heading_2" title="Go to Heading 2" aria-label="Go to Heading 2">¶</a></h4><p>More text.
 </p>`)
 
 	r := New(context.Background(), nil, pkgTime, nil)
