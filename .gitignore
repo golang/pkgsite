@@ -35,6 +35,9 @@ go-discovery*.json
 #### Loadtest Related Files ####
 results.bin
 
+#### Screentest Failure Output ####
+tests/screentest/output
+
 #### VS Code Debugger Files ####
 .vscode
 __debug_bin

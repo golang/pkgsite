@@ -129,6 +129,7 @@ path /github.com/creack/pty@v1.1.11
 wait {{$ready}}
 eval {{$hideElements}}
 eval {{$hideLinksHeading}}
+sleep 1s
 capture viewport
 capture viewport 540x1080
 
@@ -166,6 +167,7 @@ test package with deprecated symbols symbol
 path /database/sql/driver@go1.16.3#ColumnConverter
 wait {{$ready}}
 eval {{$hideElements}}
+sleep 1s
 capture viewport
 # Screen doesn't scroll to symbol doc in chromedp.
 # It works on a phone, however.
