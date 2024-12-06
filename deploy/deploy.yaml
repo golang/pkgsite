@@ -2,7 +2,7 @@
 # Use of this source code is governed by a BSD-style
 # license that can be found in the LICENSE file.
 
-timeout: 90m
+timeout: 540s
 options:
   machineType: N1_HIGHCPU_8
   env:
@@ -95,4 +95,4 @@ steps:
 artifacts:
   objects:
     location: 'gs://$PROJECT_ID/screentest-artifacts'
-    paths: ['tests/screentest/testdata/*.png']
+    paths: ['tests/screentest/output/**']
