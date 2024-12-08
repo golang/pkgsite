@@ -95,4 +95,6 @@ steps:
 artifacts:
   objects:
     location: 'gs://$PROJECT_ID/screentest-artifacts'
-    paths: ['tests/screentest/output/**']
+    paths:
+      - 'tests/screentest/output/*'
+      - 'tests/screentest/output/testcases/*'
