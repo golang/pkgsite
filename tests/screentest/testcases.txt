@@ -131,7 +131,12 @@ eval {{$hideElements}}
 eval {{$hideLinksHeading}}
 sleep 1s
 capture viewport
-capture viewport 540x1080
+# This fails around 40% of the time with an 11-pixel difference. That is due to
+# a slightly longer scrollbar. Changing "viewport" to "fullscreen" reveals that
+# the real difference is the page length: there is extra blank space at the
+# bottom of varying size.
+# I have not been able to fix that or understand why it happens.
+# capture viewport 540x1080
 
 test retracted package
 path /k8s.io/client-go@v1.5.2
