@@ -16,5 +16,12 @@ export class ToolTipController {
         this.el.removeAttribute('open');
       }
     });
+
+    // Add event listener for "Escape" keydown to close tooltip
+    this.el.addEventListener('keydown', e => {
+      if (e.key === 'Escape') {
+        this.el.open = false;
+      }
+    });
   }
 }
