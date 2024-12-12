@@ -287,7 +287,7 @@ func NewGoPackagesStdlibModuleGetter(ctx context.Context, dir string) (*goPackag
 	start := time.Now()
 	env := []string(nil)
 	if dir != "" {
-		env = append(os.Environ(), "GOROOT=", abs)
+		env = append(os.Environ(), "GOROOT="+abs)
 	}
 	cfg := &packages.Config{
 		Context: ctx,
