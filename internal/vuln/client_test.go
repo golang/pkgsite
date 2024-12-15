@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"reflect"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -574,7 +575,7 @@ func newTestClientFromTxtar(txtarFile string) (*Client, error) {
 		data[f.Name] = fdata
 	}
 
-	return &Client{&inMemorySource{data: data}}, nil
+	return newClient(&inMemorySource{data: data}), nil
 }
 
 func removeWhitespace(data []byte) ([]byte, error) {
@@ -583,4 +584,59 @@ func removeWhitespace(data []byte) ([]byte, error) {
 		return nil, err
 	}
 	return b.Bytes(), nil
+}
+
+func TestCache(t *testing.T) {
+	// Cannot be run in parallel: changes modifiedStaleDur.
+	// TODO(jba): use the synctest package when pkgsite is on Go 1.24 or higher.
+	ctx := context.Background()
+	endpoint := "test/endpoint"
+	want := "some data"
+	msrc := &inMemorySource{
+		data: map[string][]byte{
+			dbEndpoint:      []byte(`{"modified":"2024-07-10T17:05:50Z"}`),
+			"test/endpoint": []byte(strconv.Quote(want)),
+		},
+	}
+	c := newClient(msrc)
+
+	check := func(wantCached bool) {
+		t.Helper()
+		got, gotCached, err := get[string](ctx, c, endpoint)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got != want || gotCached != wantCached {
+			t.Fatalf("got (%q, %t), want (%q, %t)", got, gotCached, want, wantCached)
+		}
+	}
+
+	// The first get is not cached.
+	check(false)
+	// The next one is.
+	check(true)
+
+	const stale = 100 * time.Millisecond
+	defer func(d time.Duration) { modifiedStaleDur = d }(modifiedStaleDur)
+	modifiedStaleDur = stale
+
+	// The modified time is refetched when stale.
+	mf := c.modifiedFetched
+	time.Sleep(2 * stale)
+	// The value is still cached, because the DB's modified time hasn't changed.
+	check(true)
+	if !c.modifiedFetched.After(mf) {
+		t.Fatal("modifiedFetched did not advance")
+	}
+
+	// The DB is modified.
+	msrc.data[dbEndpoint] = []byte(`{"modified":"2024-08-10T17:05:50Z"}`)
+	// The cache doesn't notice yet.
+	check(true)
+	// The cached modified time becomes stale.
+	time.Sleep(2 * stale)
+	// The cache is cleared.
+	check(false)
+	// The cache continues to work.
+	check(true)
 }

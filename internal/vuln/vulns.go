@@ -37,7 +37,7 @@ func VulnsForPackage(ctx context.Context, modulePath, version, packagePath strin
 		// Stdlib pages requested at master will map to a pseudo version
 		// that puts all vulns in range.
 		// We can't really tell you're at master so version.IsPseudo
-		// is the best we can do. The result is vulns won't be reported for a
+		// is the best we can do. This means that vulns won't be reported for a
 		// pseudoversion that refers to a commit that is in a vulnerable range.
 		switch {
 		case vers.IsPseudo(version):
@@ -153,7 +153,8 @@ func versionString(modulePath string, rs []osv.Range) string {
 	return strings.Join(vs, ", ")
 }
 
-// AffectedComponents extracts information about affected packages (and // modules, if there are any with no package information) from the given osv.Entry.
+// AffectedComponents extracts information about affected packages (and modules,
+// if there are any with no package information) from the given osv.Entry.
 func AffectedComponents(e *osv.Entry) (pkgs, modsNoPkgs []*AffectedComponent) {
 	for _, a := range e.Affected {
 		vs := versionString(a.Module.Path, a.Ranges)

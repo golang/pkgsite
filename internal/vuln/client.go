@@ -5,12 +5,14 @@
 package vuln
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"path"
 	"sort"
 	"strings"
+	"sync"
+	"time"
 
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/log"
@@ -21,18 +23,21 @@ import (
 
 // Client reads Go vulnerability databases.
 type Client struct {
-	src source
+	src             source
+	mu              sync.Mutex
+	cache           map[string]any
+	modified        time.Time // the modified time of the DB
+	modifiedFetched time.Time // when we last read the modified time from the source
 }
 
 // NewClient returns a client that can read from the vulnerability
-// database in src (a URL representing either a http or file source).
+// database in src, a URL representing either an http or file source.
 func NewClient(src string) (*Client, error) {
 	s, err := NewSource(src)
 	if err != nil {
 		return nil, err
 	}
-
-	return &Client{src: s}, nil
+	return newClient(s), nil
 }
 
 // NewInMemoryClient creates an in-memory vulnerability client for use
@@ -42,9 +47,14 @@ func NewInMemoryClient(entries []*osv.Entry) (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Client{src: inMemory}, nil
+	return newClient(inMemory), nil
 }
 
+func newClient(src source) *Client {
+	return &Client{src: src, cache: map[string]any{}}
+}
+
+// A PackageRequest provides arguments to [Client.ByPackage].
 type PackageRequest struct {
 	// Module is the module path to filter on.
 	// ByPackage will only return entries that affect this module.
@@ -95,40 +105,22 @@ func (c *Client) ByPackage(ctx context.Context, req *PackageRequest) (_ []*osv.E
 	})
 }
 
+// modulesFilter returns all the modules in the DB for which filter returns true.
 func (c *Client) modulesFilter(ctx context.Context, filter func(*ModuleMeta) bool, n int) ([]*ModuleMeta, error) {
 	if n == 0 {
 		return nil, nil
 	}
-
-	b, err := c.modules(ctx)
+	all, _, err := get[[]*ModuleMeta](ctx, c, modulesEndpoint)
 	if err != nil {
 		return nil, err
 	}
 
-	dec, err := newStreamDecoder(b)
-	if err != nil {
-		return nil, err
-	}
-
-	ms := make([]*ModuleMeta, 0)
-	for dec.More() {
-		var m ModuleMeta
-		err := dec.Decode(&m)
-		if err != nil {
-			return nil, err
-		}
-		if filter(&m) {
-			ms = append(ms, &m)
-			if len(ms) == n {
-				return ms, nil
-			}
+	var ms []*ModuleMeta
+	for _, m := range all {
+		if filter(m) {
+			ms = append(ms, m)
 		}
 	}
-
-	if len(ms) == 0 {
-		return nil, nil
-	}
-
 	return ms, nil
 }
 
@@ -163,18 +155,12 @@ func isAffected(e *osv.Entry, req *PackageRequest) bool {
 func (c *Client) ByID(ctx context.Context, id string) (_ *osv.Entry, err error) {
 	derrors.Wrap(&err, "ByID(%s)", id)
 
-	b, err := c.entry(ctx, id)
+	entry, _, err := get[osv.Entry](ctx, c, path.Join(idDir, id))
 	if err != nil {
 		// entry only fails if the entry is not found, so do not return
 		// the error.
 		return nil, nil
 	}
-
-	var entry osv.Entry
-	if err := json.Unmarshal(b, &entry); err != nil {
-		return nil, err
-	}
-
 	return &entry, nil
 }
 
@@ -183,29 +169,17 @@ func (c *Client) ByID(ctx context.Context, id string) (_ *osv.Entry, err error) 
 func (c *Client) ByAlias(ctx context.Context, alias string) (_ string, err error) {
 	derrors.Wrap(&err, "ByAlias(%s)", alias)
 
-	b, err := c.vulns(ctx)
+	vs, err := c.vulns(ctx)
 	if err != nil {
 		return "", err
 	}
-
-	dec, err := newStreamDecoder(b)
-	if err != nil {
-		return "", err
-	}
-
-	for dec.More() {
-		var v VulnMeta
-		err := dec.Decode(&v)
-		if err != nil {
-			return "", err
-		}
+	for _, v := range vs {
 		for _, vAlias := range v.Aliases {
 			if alias == vAlias {
 				return v.ID, nil
 			}
 		}
 	}
-
 	return "", derrors.NotFound
 }
 
@@ -379,51 +353,67 @@ func (c *Client) byIDs(ctx context.Context, ids []string) (_ []*osv.Entry, err e
 
 // IDs returns a list of the IDs of all the entries in the database.
 func (c *Client) IDs(ctx context.Context) (_ []string, err error) {
-	b, err := c.vulns(ctx)
+	vs, err := c.vulns(ctx)
 	if err != nil {
 		return nil, err
 	}
-
-	dec, err := newStreamDecoder(b)
-	if err != nil {
-		return nil, err
-	}
-
 	var ids []string
-	for dec.More() {
-		var v VulnMeta
-		err := dec.Decode(&v)
-		if err != nil {
-			return nil, err
-		}
+	for _, v := range vs {
 		ids = append(ids, v.ID)
 	}
-
 	return ids, nil
 }
 
-// newStreamDecoder returns a decoder that can be used
-// to read an array of JSON objects.
-func newStreamDecoder(b []byte) (*json.Decoder, error) {
-	dec := json.NewDecoder(bytes.NewBuffer(b))
+func (c *Client) vulns(ctx context.Context) ([]VulnMeta, error) {
+	vms, _, err := get[[]VulnMeta](ctx, c, vulnsEndpoint)
+	return vms, err
+}
 
-	// skip open bracket
-	_, err := dec.Token()
-	if err != nil {
-		return nil, err
+// After this time, consider our value of modified to be stale.
+// var for testing.
+var modifiedStaleDur = 5 * time.Minute
+
+// get returns the contents of endpoint as a T, checking the cache first.
+// It also reports whether it found the value in the cache.
+func get[T any](ctx context.Context, c *Client, endpoint string) (t T, cached bool, err error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if time.Since(c.modifiedFetched) > modifiedStaleDur {
+		// c.modified is stale; reread the DB's modified time.
+		data, err := c.src.get(ctx, dbEndpoint)
+		if err != nil {
+			return t, false, err
+		}
+		var m DBMeta
+		if err := json.Unmarshal(data, &m); err != nil {
+			return t, false, fmt.Errorf("unmarshaling DBMeta: %w", err)
+		}
+		c.modifiedFetched = time.Now()
+		// If the DB has been modified since the last time we checked,
+		// clear the cache and note the new modified time.
+		// We only compare modified times with each other, as per
+		// https://go.dev/doc/security/vuln/database#api:
+		// "the modified time should not be compared to wall clock time".
+		if !m.Modified.Equal(c.modified) {
+			clear(c.cache)
+			c.modified = m.Modified
+		}
 	}
-
-	return dec, nil
-}
-
-func (c *Client) modules(ctx context.Context) ([]byte, error) {
-	return c.src.get(ctx, modulesEndpoint)
-}
-
-func (c *Client) vulns(ctx context.Context) ([]byte, error) {
-	return c.src.get(ctx, vulnsEndpoint)
-}
-
-func (c *Client) entry(ctx context.Context, id string) ([]byte, error) {
-	return c.src.get(ctx, path.Join(idDir, id))
+	if mms, ok := c.cache[endpoint]; ok {
+		return mms.(T), true, nil
+	}
+	c.mu.Unlock()
+	data, err := c.src.get(ctx, endpoint)
+	c.mu.Lock()
+	// NOTE: Errors aren't cached, so an endpoint that repeatedly fails will be expensive.
+	// On the other hand, we won't turn transient errors into near-permanent ones.
+	// TODO: cache 4xx errors, since we get a lot of spammy traffic.
+	if err != nil {
+		return t, false, err
+	}
+	if err := json.Unmarshal(data, &t); err != nil {
+		return t, false, err
+	}
+	c.cache[endpoint] = t
+	return t, false, nil
 }

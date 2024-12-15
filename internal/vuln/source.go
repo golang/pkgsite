@@ -16,6 +16,7 @@ import (
 	"path/filepath"
 	"sort"
 
+	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/osv"
 )
 
@@ -28,8 +29,9 @@ type source interface {
 	get(ctx context.Context, endpoint string) ([]byte, error)
 }
 
-// NewSource returns a source interface from a http:// or file:// prefixed
-// url src. It errors if the given url is invalid or does not exist.
+// NewSource returns a source interface from src, which must be a URL with one of
+// the schemes "file", http", or "https".
+// It returns an error if the given url is invalid or does not exist.
 func NewSource(src string) (source, error) {
 	uri, err := url.Parse(src)
 	if err != nil {
@@ -63,7 +65,9 @@ type httpSource struct {
 	c   *http.Client
 }
 
-func (hs *httpSource) get(ctx context.Context, endpoint string) ([]byte, error) {
+func (hs *httpSource) get(ctx context.Context, endpoint string) (_ []byte, err error) {
+	defer derrors.Wrap(&err, "vuln.httpSource.get(%q)", endpoint)
+
 	reqURL := fmt.Sprintf("%s/%s", hs.url, endpoint+".json.gz")
 	req, err := http.NewRequestWithContext(ctx, "GET", reqURL, nil)
 	if err != nil {

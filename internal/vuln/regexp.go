@@ -24,10 +24,10 @@ var (
 	ghsaID = regexp.MustCompile(ci + ghsaRE)
 )
 
-// Canonical returns the canonical form of the given Go ID string
+// CanonicalGoID returns the canonical form of the given Go ID string
 // by correcting the case.
 //
-// If no canonical form can be found, returns false.
+// If no canonical form can be found, it returns false.
 func CanonicalGoID(id string) (_ string, ok bool) {
 	if goID.MatchString(id) {
 		return strings.ToUpper(id), true
@@ -35,10 +35,10 @@ func CanonicalGoID(id string) (_ string, ok bool) {
 	return "", false
 }
 
-// Canonical returns the canonical form of the given alias ID string
+// CanonicalAlias returns the canonical form of the given alias ID string
 // (a CVE or GHSA id) by correcting the case.
 //
-// If no canonical form can be found, returns false.
+// If no canonical form can be found, it returns false.
 func CanonicalAlias(id string) (_ string, ok bool) {
 	if cveID.MatchString(id) {
 		return strings.ToUpper(id), true

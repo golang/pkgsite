@@ -6,7 +6,10 @@ package vuln
 
 import "time"
 
-var (
+// This file describes the structure of the Go vulnerability database.
+// See https://go.dev/doc/security/vuln/database.
+
+const (
 	idDir           = "ID"
 	dbEndpoint      = "index/db"
 	modulesEndpoint = "index/modules"
