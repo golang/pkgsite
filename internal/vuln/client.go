@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"path"
+	"slices"
 	"sort"
 	"strings"
 	"sync"
@@ -284,29 +285,9 @@ func (c *Client) ByPackagePrefix(ctx context.Context, prefix string) (_ []*osv.E
 	}
 	sortIDs(ids)
 	// Remove any duplicates.
-	ids = slicesCompact(ids)
+	ids = slices.Compact(ids)
 
 	return c.byIDsFilter(ctx, ids, entryMatch)
-}
-
-// slicesCompact is a copy of slices.Compact.
-// TODO: remove this function and replace its usage with
-// slices.Compact once we can depend on it being present
-// in the standard library of the previous two Go versions.
-func slicesCompact[S ~[]E, E comparable](s S) S {
-	if len(s) < 2 {
-		return s
-	}
-	i := 1
-	for k := 1; k < len(s); k++ {
-		if s[k] != s[k-1] {
-			if i != k {
-				s[i] = s[k]
-			}
-			i++
-		}
-	}
-	return s[:i]
 }
 
 func (c *Client) byIDsFilter(ctx context.Context, ids []string, filter func(*osv.Entry) bool) (_ []*osv.Entry, err error) {
