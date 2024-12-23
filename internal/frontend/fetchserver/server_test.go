@@ -30,6 +30,8 @@ type serverTestCase struct {
 	name string
 	// path to use in an HTTP GET request
 	urlPath string
+	// make the request time out
+	timeOut bool
 	// statusCode we expect to see in the headers.
 	wantStatusCode int
 	// if non-empty, contents of Location header. For testing redirects.
@@ -1056,6 +1058,12 @@ var searchGroupingTestCases = []serverTestCase{
 		wantStatusCode: http.StatusOK,
 		want:           notIn(".Pagination-nav"),
 	},
+	{
+		name:           "search timeout",
+		urlPath:        "/search?q=-http",
+		timeOut:        true,
+		wantStatusCode: http.StatusRequestTimeout,
+	},
 }
 
 // TestServer checks the contents of served pages by looking for
@@ -1103,7 +1111,13 @@ func testServer(t *testing.T, testCases []serverTestCase) {
 	for _, test := range testCases {
 		t.Run(test.name, func(t *testing.T) { // remove initial '/' for name
 			w := httptest.NewRecorder()
-			handler.ServeHTTP(w, httptest.NewRequest("GET", test.urlPath, nil))
+			rctx := ctx
+			if test.timeOut {
+				var cancel func()
+				rctx, cancel = context.WithTimeout(ctx, time.Microsecond)
+				defer cancel()
+			}
+			handler.ServeHTTP(w, httptest.NewRequestWithContext(rctx, "GET", test.urlPath, nil))
 			res := w.Result()
 			if res.StatusCode != test.wantStatusCode {
 				t.Fatalf("GET %q = %d, want %d", test.urlPath, res.StatusCode, test.wantStatusCode)

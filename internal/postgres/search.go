@@ -243,7 +243,7 @@ func (db *DB) hedgedSearch(ctx context.Context, q string, limit int, opts Search
 	// error ratio. That didn't behave well if Postgres was overloaded.
 	resp := <-responses
 	if resp.err != nil {
-		return nil, fmt.Errorf("%q search failed: %v", resp.source, resp.err)
+		return nil, fmt.Errorf("%q search failed: %w", resp.source, resp.err)
 	}
 	// cancel proactively here: we've got the search result we need.
 	cancel()

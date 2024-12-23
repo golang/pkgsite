@@ -138,14 +138,14 @@ func determineSearchAction(r *http.Request, ds internal.DataSource, vulnClient *
 	}
 	page, err := fetchSearchPage(ctx, ds, cq, symbol, pageParams, mode == searchModeSymbol, vulnClient)
 	if err != nil {
-		// Instead of returning a 500, return a 408, since symbol searches may
-		// timeout for very popular symbols.
-		if mode == searchModeSymbol && strings.Contains(err.Error(), "i/o timeout") {
+		// Instead of returning a 500, return a 408, since symbol searches may time
+		// out for very popular symbols, and package searches can also time out.
+		if errors.Is(err, context.DeadlineExceeded) || strings.Contains(err.Error(), "i/o timeout") {
 			return nil, &serrors.ServerError{
 				Status: http.StatusRequestTimeout,
 				Epage: &pagepkg.ErrorPage{
 					MessageTemplate: template.MakeTrustedTemplate(
-						`<h3 class="Error-message">Request timed out. Please try again!</h3>`),
+						`<h3 class="Error-message">Request timed out.</h3>`),
 				},
 			}
 		}
