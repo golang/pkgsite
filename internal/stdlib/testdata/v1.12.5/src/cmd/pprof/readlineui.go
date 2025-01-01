@@ -53,7 +53,7 @@ func newReadlineUI() driver.UI {
 	return &readlineUI{term: terminal.NewTerminal(rw, "")}
 }
 
-// Read returns a line of text (a command) read from the user.
+// ReadLine returns a line of text (a command) read from the user.
 // prompt is printed before reading the command.
 func (r *readlineUI) ReadLine(prompt string) (string, error) {
 	r.term.SetPrompt(prompt)

@@ -188,7 +188,7 @@ func addLatest(ctx context.Context, t *testing.T, db *DB, modulePath, version, m
 	return lmv
 }
 
-// InsertSampleDirectory tree inserts a set of packages for testing
+// InsertSampleDirectoryTree inserts a set of packages for testing
 // GetUnit and frontend.FetchDirectoryDetails.
 func InsertSampleDirectoryTree(ctx context.Context, t *testing.T, testDB *DB) {
 	t.Helper()

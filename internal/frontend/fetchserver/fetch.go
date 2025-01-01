@@ -91,7 +91,7 @@ type FetchServer struct {
 	TaskIDChangeInterval time.Duration
 }
 
-// serveFetch checks if a requested path and version exists in the database.
+// ServeFetch checks if a requested path and version exists in the database.
 // If not, it will enqueue potential module versions that could contain
 // the requested path and version to a task queue, to be fetched by the worker.
 // Meanwhile, the request will poll the database until a row is found, or a

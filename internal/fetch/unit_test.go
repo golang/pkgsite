@@ -70,7 +70,7 @@ func TestDirectoryPaths(t *testing.T) {
 	}
 }
 
-// samplePackage constructs a package with the given module path and suffix.
+// samplePackageMeta constructs a package with the given module path and suffix.
 //
 // If modulePath is the standard library, the package path is the
 // suffix, which must not be empty. Otherwise, the package path

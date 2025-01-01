@@ -5,7 +5,7 @@
 package static
 
 type Config struct {
-	// Entrypoint is a directory in which to build TypeScript
+	// EntryPoint is a directory in which to build TypeScript
 	// sources.
 	EntryPoint string
 

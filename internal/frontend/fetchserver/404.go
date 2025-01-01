@@ -29,7 +29,7 @@ import (
 	"golang.org/x/pkgsite/internal/version"
 )
 
-// servePathNotFoundPage serves a 404 page for the requested path, or redirects
+// ServePathNotFoundPage serves a 404 page for the requested path, or redirects
 // the user to an appropriate location.
 func (s *FetchServer) ServePathNotFoundPage(w http.ResponseWriter, r *http.Request,
 	db internal.PostgresDB, fullPath, modulePath, requestedVersion string) (err error) {

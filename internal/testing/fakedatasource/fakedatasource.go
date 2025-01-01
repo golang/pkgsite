@@ -425,7 +425,7 @@ func (ds *FakeDataSource) GetVersionsForPath(ctx context.Context, path string) (
 	return infos, nil
 }
 
-// TrimSlashVersionPrefix trims a /vN path component prefix if one is present in path,
+// trimSlashVersionPrefix trims a /vN path component prefix if one is present in path,
 // and returns path unchanged otherwise.
 func trimSlashVersionPrefix(path string) string {
 	if !strings.HasPrefix(path, "/v") {
