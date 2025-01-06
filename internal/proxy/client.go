@@ -229,7 +229,7 @@ func (c *Client) Versions(ctx context.Context, modulePath string) (_ []string, e
 	collect := func(body io.Reader) error {
 		scanner := bufio.NewScanner(body)
 		for scanner.Scan() {
-			versions = append(versions, scanner.Text())
+			versions = append(versions, strings.TrimSpace(scanner.Text()))
 		}
 		return scanner.Err()
 	}

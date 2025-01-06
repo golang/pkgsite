@@ -5,7 +5,10 @@
 // Package proxytest supports testing with the proxy.
 package proxytest
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 // Module represents a module version used by the proxy server.
 type Module struct {
@@ -14,6 +17,13 @@ type Module struct {
 	Files      map[string]string
 	NotCached  bool // if true, behaves like it's uncached
 	zip        []byte
+}
+
+// Some module proxies incorrectly return a space after the version. Tests may
+// simulate that that behavior by giving m.Version a space suffix. This function
+// will always, however, return the correct form for the version.
+func (m *Module) TidyVersion() string {
+	return strings.TrimSpace(m.Version)
 }
 
 // ChangePath returns a copy of m with a different module path.

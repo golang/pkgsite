@@ -71,7 +71,7 @@ func (s *Server) handleMod(m *Module) {
 	if goMod == "" {
 		goMod = defaultGoMod(m.ModulePath)
 	}
-	s.mux.HandleFunc(fmt.Sprintf("/%s/@v/%s.mod", m.ModulePath, m.Version),
+	s.mux.HandleFunc(fmt.Sprintf("/%s/@v/%s.mod", m.ModulePath, m.TidyVersion()),
 		func(w http.ResponseWriter, r *http.Request) {
 			http.ServeContent(w, r, m.ModulePath, time.Now(), strings.NewReader(goMod))
 		})
@@ -79,7 +79,7 @@ func (s *Server) handleMod(m *Module) {
 
 // handleZip creates a zip endpoint for the specified module version.
 func (s *Server) handleZip(m *Module) {
-	s.mux.HandleFunc(fmt.Sprintf("/%s/@v/%s.zip", m.ModulePath, m.Version),
+	s.mux.HandleFunc(fmt.Sprintf("/%s/@v/%s.zip", m.ModulePath, m.TidyVersion()),
 		func(w http.ResponseWriter, r *http.Request) {
 			s.mu.Lock()
 			s.zipRequests++
@@ -150,7 +150,7 @@ func (s *Server) addModule(m *Module, hasVersions bool) {
 			})
 		}
 	}
-	s.handleInfo(m.ModulePath, m.Version, m.NotCached)
+	s.handleInfo(m.ModulePath, m.TidyVersion(), m.NotCached)
 	s.handleMod(m)
 	s.handleZip(m)
 

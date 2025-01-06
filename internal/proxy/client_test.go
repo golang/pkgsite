@@ -110,11 +110,16 @@ func TestListVersions(t *testing.T) {
 			Version:    "v1.3.0",
 			Files:      map[string]string{"bar.go": "package bar\nconst Version = 1.3"},
 		},
+		{
+			ModulePath: sample.ModulePath,
+			Version:    "v1.4.0 ",
+			Files:      map[string]string{"bar.go": "package bar\nconst Version = 1.4"},
+		},
 	}
 	client, teardownProxy := proxytest.SetupTestClient(t, testModules)
 	defer teardownProxy()
 
-	want := []string{"v1.1.0", "v1.2.0"}
+	want := []string{"v1.4.0", "v1.1.0", "v1.2.0"}
 	got, err := client.Versions(ctx, sample.ModulePath)
 	if err != nil {
 		t.Fatal(err)
