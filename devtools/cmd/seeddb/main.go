@@ -89,12 +89,24 @@ func run(ctx context.Context, db *database.DB, proxyURL string) error {
 		return err
 	}
 
+	var (
+		mu     sync.Mutex
+		errors database.MultiErr
+	)
+
 	// Expand versions and group by module path.
+	log.Printf("expanding versions")
 	versionsByPath := map[string][]string{}
 	for _, m := range seedModules {
 		vers, err := versions(ctx, proxyClient, m)
 		if err != nil {
-			return err
+			if *keepGoing {
+				mu.Lock()
+				errors = append(errors, err)
+				mu.Unlock()
+			} else {
+				return err
+			}
 		}
 		versionsByPath[m.Path] = append(versionsByPath[m.Path], vers...)
 	}
@@ -111,10 +123,7 @@ func run(ctx context.Context, db *database.DB, proxyURL string) error {
 		f.DB = postgres.New(db)
 	}
 
-	var (
-		mu     sync.Mutex
-		errors database.MultiErr
-	)
+	log.Printf("fetching")
 	for path, vers := range versionsByPath {
 		path := path
 		vers := vers
@@ -135,9 +144,11 @@ func run(ctx context.Context, db *database.DB, proxyURL string) error {
 		})
 	}
 	if err := g.Wait(); err != nil {
+		log.Printf("Wait failed: %v", err)
 		return err
 	}
 	if len(errors) > 0 {
+		log.Printf("there were errors")
 		return errors
 	}
 	log.Printf("successfully fetched all modules in %s", time.Since(start).Round(time.Millisecond))
