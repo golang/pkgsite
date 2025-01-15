@@ -28,6 +28,7 @@ var knownAlternatives = map[string]string{
 	"github.com/aliyun/alibaba-cloud-sdk-go":           "github.com/Azure/azure-sdk-for-go",
 	"github.com/johnstairs/azure-sdk-for-go":           "github.com/Azure/azure-sdk-for-go",
 	"github.com/shopify/sarama":                        "github.com/Shopify/sarama",
+	"github.com/ibm/sarama":                            "github.com/IBM/sarama",
 }
 
 // knownAlternativeFor returns the module that the given module path is an alternative to,
