@@ -449,7 +449,8 @@ func sortAndDedup(s []string) []string {
 // and series path and returns a new list of SearchResults.
 //
 // The second and later packages from a module are grouped under the first package,
-// and removed from the top-level list.
+// and removed from the top-level list. The exception is the standard library: none
+// of its packages are grouped under other packages.
 //
 // Higher tagged major versions of a module replace lower ones.
 func groupSearchResults(rs []*SearchResult) []*SearchResult {
@@ -500,11 +501,10 @@ func groupSearchResults(rs []*SearchResult) []*SearchResult {
 }
 
 func groupAndMajorVersion(r *SearchResult) (string, int) {
-	// Packages in the standard library are grouped by their top-level
-	// directory, and we can consider them all part of the same major version.
+	// Packages in the standard library are not grouped.
+	// We consider them all part of the same major version.
 	if r.ModulePath == stdlib.ModulePath {
-		before, _, _ := strings.Cut(r.PackagePath, "/")
-		return before, 1
+		return r.PackagePath, 1
 	}
 	series, major := internal.SeriesPathAndMajorVersion(r.ModulePath)
 	if major == 1 && strings.HasPrefix(r.Version, "v0.") {

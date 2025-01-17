@@ -1461,13 +1461,11 @@ func TestGroupSearchResults(t *testing.T) {
 				{PackagePath: "encoding/gob", ModulePath: stdlib.ModulePath, Score: 6},
 			},
 			want: []*SearchResult{
-				{PackagePath: "net", ModulePath: stdlib.ModulePath, Score: 10, SameModule: []*SearchResult{
-					{PackagePath: "net/http", ModulePath: stdlib.ModulePath, Score: 8},
-				}},
+				{PackagePath: "net", ModulePath: stdlib.ModulePath, Score: 10},
 				{PackagePath: "m1", ModulePath: "m1", Version: "v0.0.0", Score: 9},
-				{PackagePath: "encoding/json", ModulePath: stdlib.ModulePath, Score: 7, SameModule: []*SearchResult{
-					{PackagePath: "encoding/gob", ModulePath: stdlib.ModulePath, Score: 6},
-				}},
+				{PackagePath: "net/http", ModulePath: stdlib.ModulePath, Score: 8},
+				{PackagePath: "encoding/json", ModulePath: stdlib.ModulePath, Score: 7},
+				{PackagePath: "encoding/gob", ModulePath: stdlib.ModulePath, Score: 6},
 			},
 		},
 		{
@@ -1481,12 +1479,10 @@ func TestGroupSearchResults(t *testing.T) {
 			},
 			want: []*SearchResult{
 				{PackagePath: "m1", ModulePath: "m1", Version: "v0.0.0", Score: 9},
-				{PackagePath: "net/http", ModulePath: stdlib.ModulePath, Score: 8, SameModule: []*SearchResult{
-					{PackagePath: "net/http/prof", ModulePath: stdlib.ModulePath, Score: 5},
-				}},
-				{PackagePath: "encoding/json", ModulePath: stdlib.ModulePath, Score: 7, SameModule: []*SearchResult{
-					{PackagePath: "encoding/gob", ModulePath: stdlib.ModulePath, Score: 6},
-				}},
+				{PackagePath: "net/http", ModulePath: stdlib.ModulePath, Score: 8},
+				{PackagePath: "encoding/json", ModulePath: stdlib.ModulePath, Score: 7},
+				{PackagePath: "encoding/gob", ModulePath: stdlib.ModulePath, Score: 6},
+				{PackagePath: "net/http/prof", ModulePath: stdlib.ModulePath, Score: 5},
 			},
 		},
 	} {
@@ -1523,7 +1519,7 @@ func TestGroupAndMajorVersion(t *testing.T) {
 		},
 		{
 			in:         SearchResult{ModulePath: "std", PackagePath: "net/http", Version: "v2.3.4"},
-			wantSeries: "net",
+			wantSeries: "net/http",
 			wantMajor:  1,
 		},
 	} {
