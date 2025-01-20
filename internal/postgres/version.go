@@ -419,7 +419,7 @@ func (db *DB) GetLatestModuleVersions(ctx context.Context, modulePath string) (_
 }
 
 func getLatestModuleVersions(ctx context.Context, db *database.DB, modulePath string) (_ *internal.LatestModuleVersions, id int, err error) {
-	derrors.WrapStack(&err, "getLatestModuleVersions(%q)", modulePath)
+	defer derrors.WrapStack(&err, "getLatestModuleVersions(%q)", modulePath)
 
 	var (
 		raw, cooked, good string
@@ -475,7 +475,7 @@ func (db *DB) UpdateLatestModuleVersions(ctx context.Context, vNew *internal.Lat
 			return err
 		}
 		// Is vNew the most recent information, or does the DB already have
-		//something more up to date?
+		// something more up to date?
 		update := vCur == nil || rawIsMoreRecent(vNew.RawVersion, vCur.RawVersion) ||
 			// If new versions are added, cooked can change even if raw is the same.
 			(vNew.RawVersion == vCur.RawVersion && vNew.CookedVersion != vCur.CookedVersion)

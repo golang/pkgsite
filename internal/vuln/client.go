@@ -74,7 +74,7 @@ type PackageRequest struct {
 
 // ByPackage returns the OSV entries matching the package request.
 func (c *Client) ByPackage(ctx context.Context, req *PackageRequest) (_ []*osv.Entry, err error) {
-	derrors.Wrap(&err, "ByPackage(%v)", req)
+	defer derrors.Wrap(&err, "ByPackage(%v)", req)
 
 	// Find the metadata for the module with the given module path.
 	ms, err := c.modulesFilter(ctx, func(m *ModuleMeta) bool {
@@ -154,7 +154,7 @@ func isAffected(e *osv.Entry, req *PackageRequest) bool {
 // ByID returns the OSV entry with the given ID or (nil, nil)
 // if there isn't one.
 func (c *Client) ByID(ctx context.Context, id string) (_ *osv.Entry, err error) {
-	derrors.Wrap(&err, "ByID(%s)", id)
+	defer derrors.Wrap(&err, "ByID(%s)", id)
 
 	entry, _, err := get[osv.Entry](ctx, c, path.Join(idDir, id))
 	if err != nil {
@@ -168,7 +168,7 @@ func (c *Client) ByID(ctx context.Context, id string) (_ *osv.Entry, err error) 
 // ByAlias returns the Go ID of the OSV entry that has the given alias,
 // or a NotFound error if there isn't one.
 func (c *Client) ByAlias(ctx context.Context, alias string) (_ string, err error) {
-	derrors.Wrap(&err, "ByAlias(%s)", alias)
+	defer derrors.Wrap(&err, "ByAlias(%s)", alias)
 
 	vs, err := c.vulns(ctx)
 	if err != nil {
@@ -188,7 +188,7 @@ func (c *Client) ByAlias(ctx context.Context, alias string) (_ string, err error
 // order by Go ID (most recent to least recent).
 // If n >= 0, only the n most recent entries are returned.
 func (c *Client) Entries(ctx context.Context, n int) (_ []*osv.Entry, err error) {
-	derrors.Wrap(&err, "Entries(n=%d)", n)
+	defer derrors.Wrap(&err, "Entries(n=%d)", n)
 
 	if n == 0 {
 		return nil, nil
@@ -220,7 +220,6 @@ func (c *Client) Entries(ctx context.Context, n int) (_ []*osv.Entry, err error)
 
 func sortIDs(ids []string) {
 	sort.Slice(ids, func(i, j int) bool { return ids[i] > ids[j] })
-
 }
 
 // ByPackagePrefix returns all the OSV entries that match the given
@@ -233,7 +232,7 @@ func sortIDs(ids []string) {
 //     interpreted as a full path. (E.g. "example.com/module/package" matches
 //     the prefix "example.com/module" but not "example.com/mod")
 func (c *Client) ByPackagePrefix(ctx context.Context, prefix string) (_ []*osv.Entry, err error) {
-	derrors.Wrap(&err, "ByPackagePrefix(%s)", prefix)
+	defer derrors.Wrap(&err, "ByPackagePrefix(%s)", prefix)
 
 	prefix = strings.TrimSuffix(prefix, "/")
 	prefixPath := prefix + "/"
