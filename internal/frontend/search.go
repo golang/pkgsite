@@ -344,7 +344,8 @@ func newSearchResult(r *internal.SearchResult, searchSymbols bool, pr *message.P
 // If the user types an existing package path into the search bar, we will
 // redirect the user to the details page. Standard library packages that only
 // contain one element (such as fmt, errors, etc.) will not redirect, to allow
-// users to search by those terms.
+// users to search by those terms. However, if the query begins with "std/" and
+// then contains a stdlib package, even a one-element one, then it will be redirected.
 //
 // If the user types a name that is in the form of a Go vulnerability ID, we will
 // redirect to the page for that ID (whether or not it exists).
@@ -360,6 +361,10 @@ func searchRequestRedirectPath(ctx context.Context, ds internal.DataSource, quer
 	if !strings.Contains(requestedPath, "/") || mode == searchModeVuln {
 		return ""
 	}
+	if path, ok := strings.CutPrefix(requestedPath, "std/"); ok && stdlib.Contains(path) {
+		requestedPath = path
+	}
+
 	_, err := ds.GetUnitMeta(ctx, requestedPath, internal.UnknownModulePath, version.Latest)
 	if err != nil {
 		if !errors.Is(err, derrors.NotFound) {

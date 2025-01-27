@@ -17,7 +17,12 @@
         <p>You can search for packages in which the search text occurs in the package name, package path, synopsis, or README.</p>
         <p>Results are grouped by module, displaying the most relevant package in each module.</p>
         <p>You can also search for a package by its full or partial import path.</p>
-        <p>If the package path you specified is complete enough, matching a full package import path, you will be brought directly to the details page for the latest version of that package.</p>
+        <p>If the package path you specified contains a slash and matches a full package import path,
+        you will be brought directly to the details page for the latest version of that package.
+        As a special case, a standard library package preceded by "std/" will also redirect to the package.
+        For example, "path" conducts a search for "path", but "std/path" redirects to the "path" package.
+        </p>
+
         <h2>Searching by symbol</h2>
         <p>You can also search for a symbol by name across all packages. A symbol is a constant, variable, function, type, field, or method.</p>
         <p>Searching by symbol will return a list of packages containing the symbol you specify. You can search by the following:</p>
