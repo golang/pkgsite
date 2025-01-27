@@ -148,6 +148,10 @@ func (db *DB) Search(ctx context.Context, q string, opts SearchOptions) (_ []*Se
 	return db.search(ctx, q, opts, opts.MaxResults)
 }
 
+// GroupSearchResults determines whether to group the results of a search.
+// It is exported for testing and experimentation.
+var GroupSearchResults = true
+
 func (db *DB) search(ctx context.Context, q string, opts SearchOptions, limit int) (_ []*SearchResult, err error) {
 	defer derrors.WrapStack(&err, "search(limit=%d)", limit)
 
@@ -168,7 +172,7 @@ func (db *DB) search(ctx context.Context, q string, opts SearchOptions, limit in
 			results = append(results, r)
 		}
 	}
-	if !opts.SearchSymbols {
+	if GroupSearchResults && !opts.SearchSymbols {
 		results = groupSearchResults(results)
 	}
 	if len(results) > opts.MaxResults {
@@ -185,6 +189,14 @@ const (
 	// Start this off gently (close to 1), but consider lowering
 	// it as time goes by and more of the ecosystem converts to modules.
 	noGoModPenalty = 0.8
+
+	// Normalization adjusts the ts_rank score by some function of the document size.
+	// See https://www.postgresql.org/docs/11/textsearch-controls.html#TEXTSEARCH-PARSING-QUERIES,
+	// section 12.3.3.
+	// Zero means no normalization.
+	// If this value is changed, then the popular_search stored procedure must be changed as well.
+	// See migrations/000005_change_b_weight.up.sql.
+	normalization = 0
 )
 
 // scoreExpr is the expression that computes the search score.
@@ -201,11 +213,11 @@ const (
 // in the order D, C, B, A.
 // The weights below match the defaults except for B.
 var scoreExpr = fmt.Sprintf(`
-		ts_rank('{0.1, 0.2, 1.0, 1.0}', tsv_search_tokens, websearch_to_tsquery($1)) *
+		ts_rank('{0.1, 0.2, 1.0, 1.0}', tsv_search_tokens, websearch_to_tsquery($1), %d) *
 		ln(exp(1)+imported_by_count) *
 		CASE WHEN redistributable THEN 1 ELSE %f END *
 		CASE WHEN COALESCE(has_go_mod, true) THEN 1 ELSE %f END
-	`, nonRedistributablePenalty, noGoModPenalty)
+	`, normalization, nonRedistributablePenalty, noGoModPenalty)
 
 // hedgedSearch executes multiple search methods and returns the first
 // available result.
