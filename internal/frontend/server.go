@@ -195,8 +195,8 @@ func (s *Server) Install(handle func(string, http.Handler), cacher Cacher, authV
 	if fetchHandler != nil {
 		handle("/fetch/", fetchHandler)
 	}
-	handle("/play/compile", http.HandlerFunc(s.proxyPlayground))
-	handle("GET /play/fmt", http.HandlerFunc(s.handleFmt))
+	handle("POST /play/compile", http.HandlerFunc(s.proxyPlayground))
+	handle("POST /play/fmt", http.HandlerFunc(s.handleFmt))
 	handle("/play/share", http.HandlerFunc(s.proxyPlayground))
 	handle("GET /search", searchHandler)
 	handle("GET /search-help", s.staticPageHandler("search-help", "Search Help"))
