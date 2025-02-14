@@ -418,6 +418,7 @@ func matchingFiles(goos, goarch string, allFiles map[string][]byte) (matchedFile
 		GOARCH:      goarch,
 		CgoEnabled:  true,
 		Compiler:    build.Default.Compiler,
+		BuildTags:   []string{"goexperiment.synctest"},
 		ReleaseTags: build.Default.ReleaseTags,
 
 		JoinPath: path.Join,
