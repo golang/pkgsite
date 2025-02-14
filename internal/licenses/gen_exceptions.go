@@ -3,7 +3,6 @@
 // license that can be found in the LICENSE file.
 
 //go:build ignore
-// +build ignore
 
 // This file generates exceptions.gen.go.
 // It embeds the text of all the license LREs in the subdirectory "exceptions"
