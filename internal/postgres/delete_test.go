@@ -134,7 +134,7 @@ func readSearchDocuments(ctx context.Context, db *DB) ([]searchDocumentRow, erro
 	if err != nil {
 		return nil, err
 	}
-	return rows, err
+	return rows, nil
 }
 
 func checkSearchDocuments(ctx context.Context, t *testing.T, db *DB, want []searchDocumentRow) {
