@@ -29,6 +29,9 @@ var knownAlternatives = map[string]string{
 	"github.com/johnstairs/azure-sdk-for-go":           "github.com/Azure/azure-sdk-for-go",
 	"github.com/shopify/sarama":                        "github.com/Shopify/sarama",
 	"github.com/ibm/sarama":                            "github.com/IBM/sarama",
+	"github.com/burntsushi/toml":                       "github.com/BurntSushi/toml",
+	"github.com/burntSushi/toml":                       "github.com/BurntSushi/toml",
+	"github.com/Burntsushi/toml":                       "github.com/BurntSushi/toml",
 }
 
 // knownAlternativeFor returns the module that the given module path is an alternative to,
