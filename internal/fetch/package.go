@@ -227,7 +227,7 @@ func extractPackageMetas(ctx context.Context, modulePath, resolvedVersion string
 		// It's possible to have a Go package in a directory that does not result in a valid import path.
 		// That package cannot be imported, but that may be fine if it's a main package, intended to built
 		// and run from that directory.
-		// Example:  https://github.com/postmannen/go-learning/blob/master/concurrency/01-sending%20numbers%20and%20receving%20numbers%20from%20a%20channel/main.go
+		// Example:  https://github.com/postmannen/go-learning/blob/master/concurrency/01-sending-numbers-and-receving-numbers-from-a-channel/main.go
 		// We're not set up to handle invalid import paths, so skip these packages.
 		if err := module.CheckImportPath(importPath); err != nil {
 			incompleteDirs[innerPath] = true
