@@ -7,6 +7,7 @@ package internal
 import (
 	"bufio"
 	"os"
+	"os/exec"
 	"strings"
 
 	"golang.org/x/pkgsite/internal/derrors"
@@ -36,4 +37,15 @@ func ReadFileLines(filename string) (lines []string, err error) {
 		return nil, s.Err()
 	}
 	return lines, nil
+}
+
+// GOROOT returns the value of GOROOT.
+// It is similar to runtime.GOROOT but will work even if the binary is moved to
+// a different machine. (runtime.GOROOT is deprecated since 1.24 for that reason.)
+func GOROOT() string {
+	b, err := exec.Command("go", "env", "GOROOT").Output()
+	if err != nil {
+		return ""
+	}
+	return strings.TrimSpace(string(b))
 }

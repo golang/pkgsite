@@ -14,7 +14,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"runtime"
 	"sort"
 	"strings"
 	"time"
@@ -243,7 +242,7 @@ func buildGetters(ctx context.Context, cfg getterConfig) ([]fetch.ModuleGetter, 
 	if cfg.useLocalStdlib {
 		goRepo := cfg.goRepoPath
 		if goRepo == "" {
-			goRepo = getGOROOT()
+			goRepo = internal.GOROOT()
 		}
 		if goRepo != "" { // if goRepo == "" we didn't get a *goRepoPath and couldn't find GOROOT. Fall back to the zip files.
 			mg, err := fetch.NewGoPackagesStdlibModuleGetter(ctx, goRepo)
@@ -263,17 +262,6 @@ func buildGetters(ctx context.Context, cfg getterConfig) ([]fetch.ModuleGetter, 
 	getters = append(getters, fetch.NewStdlibZipModuleGetter())
 
 	return getters, nil
-}
-
-func getGOROOT() string {
-	if rg := runtime.GOROOT(); rg != "" {
-		return rg
-	}
-	b, err := exec.Command("go", "env", "GOROOT").Output()
-	if err != nil {
-		return ""
-	}
-	return strings.TrimSpace(string(b))
 }
 
 func newServer(getters []fetch.ModuleGetter, localModules []frontend.LocalModule, prox *proxy.Client, devMode bool, staticFlag string) (*frontend.Server, error) {

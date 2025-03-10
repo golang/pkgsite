@@ -16,12 +16,12 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"runtime"
 	"sort"
 	"strings"
 	"unicode"
 
 	"golang.org/x/mod/semver"
+	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/stdlib"
 )
@@ -69,7 +69,7 @@ func ParsePackageAPIInfo(files []string) (_ apiVersions, err error) {
 func LoadAPIFiles(pkgPath, dir string) ([]string, error) {
 	var apiGlob string
 	if stdlib.Contains(pkgPath) {
-		apiGlob = filepath.Join(filepath.Clean(runtime.GOROOT()), "api", "go*.txt")
+		apiGlob = filepath.Join(filepath.Clean(internal.GOROOT()), "api", "go*.txt")
 	} else {
 		apiGlob = filepath.Join(dir, pkgPath, "v*.txt")
 	}

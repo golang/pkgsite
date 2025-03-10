@@ -14,15 +14,15 @@ import (
 	"io"
 	"path/filepath"
 	"reflect"
-	"runtime"
 	"sort"
 	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"golang.org/x/pkgsite/internal"
 )
 
-var packageToTest string = filepath.Join(runtime.GOROOT(), "src", "net", "http")
+var packageToTest string = filepath.Join(internal.GOROOT(), "src", "net", "http")
 
 func TestEncodeDecodePackage(t *testing.T) {
 	p, err := packageForDir(packageToTest, true)

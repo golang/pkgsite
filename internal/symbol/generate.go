@@ -17,7 +17,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"runtime"
 	"sort"
 	"strings"
 	"sync"
@@ -347,7 +346,7 @@ func (w *Walker) emitf(format string, args ...any) {
 // https://go.googlesource.com/go/+/refs/tags/go1.16.6/src/cmd/api/goapi.go#31,
 // except support for Windows is removed.
 func goCmd() string {
-	path := filepath.Join(runtime.GOROOT(), "bin", "go")
+	path := filepath.Join(internal.GOROOT(), "bin", "go")
 	if _, err := os.Stat(path); err == nil {
 		return path
 	}
