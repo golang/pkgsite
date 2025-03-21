@@ -28,7 +28,7 @@ For more information, see the [pkgsite documentation](https://pkg.go.dev/golang.
 
 ## Requirements
 
-Pkgsite requires Go 1.19 to run.
+Pkgsite requires Go 1.23 to run.
 The last commit that works with Go 1.18 is
 9ffe8b928e4fbd3ff7dcf984254629a47f8b6e63.
 The last commit that works with Go 1.17 is
