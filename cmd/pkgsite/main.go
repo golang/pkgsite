@@ -6,7 +6,9 @@
 // It runs as a web server and presents the documentation as a
 // web page.
 //
-// To install, run `go install golang.org/x/pkgsite/cmd/pkgsite@latest`.
+// To install, run:
+//
+//	go install golang.org/x/pkgsite/cmd/pkgsite@latest
 //
 // With no arguments, pkgsite will serve docs for main modules relative to the
 // current directory, i.e. the modules listed by `go list -m`. This is
