@@ -26,14 +26,6 @@ $ pkgsite -open .
 
 For more information, see the [pkgsite documentation](https://pkg.go.dev/golang.org/x/pkgsite/cmd/pkgsite).
 
-## Requirements
-
-Pkgsite requires Go 1.19 to run.
-The last commit that works with Go 1.18 is
-9ffe8b928e4fbd3ff7dcf984254629a47f8b6e63.
-The last commit that works with Go 1.17 is
-4d836c6a652cde92f433967680dfd6171a91ec12.
-
 ## Issues
 
 If you want to report a bug or have a feature suggestion, please first check
