@@ -32,6 +32,7 @@ var knownAlternatives = map[string]string{
 	"github.com/burntsushi/toml":                       "github.com/BurntSushi/toml",
 	"github.com/burntSushi/toml":                       "github.com/BurntSushi/toml",
 	"github.com/Burntsushi/toml":                       "github.com/BurntSushi/toml",
+	"github.com/google/UUID":                           "github.com/google/uuid",
 }
 
 // knownAlternativeFor returns the module that the given module path is an alternative to,
