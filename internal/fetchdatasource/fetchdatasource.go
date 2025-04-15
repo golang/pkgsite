@@ -230,10 +230,10 @@ func (ds *FetchDataSource) GetUnit(ctx context.Context, um *internal.UnitMeta, f
 // findUnit returns the unit with the given path in m, or nil if none.
 func (ds *FetchDataSource) findUnit(ctx context.Context, m *fetch.LazyModule, path string) (*internal.Unit, error) {
 	unit, err := m.Unit(ctx, path)
-	ds.populateUnitSubdirectories(unit, m)
 	if err != nil {
 		return nil, err
 	}
+	ds.populateUnitSubdirectories(unit, m)
 	if ds.opts.BypassLicenseCheck {
 		unit.IsRedistributable = true
 	} else {
