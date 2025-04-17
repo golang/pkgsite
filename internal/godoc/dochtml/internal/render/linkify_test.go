@@ -19,7 +19,6 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/safehtml"
-	safe "github.com/google/safehtml"
 	"github.com/google/safehtml/testconversions"
 	"golang.org/x/tools/txtar"
 )
@@ -562,13 +561,13 @@ func parseDecl(t *testing.T, decl string) ast.Decl {
 func TestAddHeading(t *testing.T) {
 	// This test checks that the generated IDs are unique and the headings are saved.
 	// It doesn't care about the HTML.
-	var html safe.HTML
+	var html safehtml.HTML
 
 	check := func(hs *headingScope, ids ...string) {
 		t.Helper()
 		var want []heading
 		for _, id := range ids {
-			want = append(want, heading{safe.IdentifierFromConstantPrefix("hdr", id), html})
+			want = append(want, heading{safehtml.IdentifierFromConstantPrefix("hdr", id), html})
 		}
 		if !slices.Equal(hs.headings, want) {
 			t.Errorf("\ngot  %v\nwant %v", hs.headings, want)
