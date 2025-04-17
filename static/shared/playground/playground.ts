@@ -180,7 +180,7 @@ export class PlaygroundExampleController {
 
   private setOutputHTML(output: string) {
     if (this.outputEl) {
-      this.outputEl.innerHTML = output;
+      this.outputEl.textContent = output;
     }
   }
 
