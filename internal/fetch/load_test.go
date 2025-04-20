@@ -27,6 +27,12 @@ func TestMatchingFiles(t *testing.T) {
 		package synctest
 		var X int
 	`
+	jsonv2Body := `
+		//go:build goexperiment.jsonv2
+
+		package json
+		var X int
+	`
 
 	plainContents := map[string]string{
 		"README.md":  "THIS IS A README",
@@ -43,6 +49,11 @@ func TestMatchingFiles(t *testing.T) {
 	synctestContents := map[string]string{
 		"plain.go": plainGoBody,
 		"st.go":    synctestBody,
+	}
+
+	jsonv2Contents := map[string]string{
+		"plain.go": plainGoBody,
+		"json.go":  jsonv2Body,
 	}
 
 	for _, test := range []struct {
@@ -93,6 +104,16 @@ func TestMatchingFiles(t *testing.T) {
 			want: map[string][]byte{
 				"plain.go": []byte(plainGoBody),
 				"st.go":    []byte(synctestBody),
+			},
+		},
+		{
+			name:     "jsonv2",
+			goos:     "linux",
+			goarch:   "amd64",
+			contents: jsonv2Contents,
+			want: map[string][]byte{
+				"plain.go": []byte(plainGoBody),
+				"json.go":  []byte(jsonv2Body),
 			},
 		},
 	} {
