@@ -33,11 +33,11 @@ We accept contributions through
 [GitHub PRs](https://golang.org/doc/contribute.html#sending_a_change_github). To get started:
 
 1. Complete the steps in the
-   [Go Contribution Guide](https://golang.org/doc/contribute.html).
+   [Go Contribution Guide](https://go.dev/doc/contribute).
 
 2. Download the source code for x/pkgsite:
    `git clone https://go.googlesource.com/pkgsite`
-   NOTE: You will need Go 1.19 to
+   NOTE: You will need Go 1.24 to
    develop pkgsite.
 
 3. Review the [design document](doc/design.md).
