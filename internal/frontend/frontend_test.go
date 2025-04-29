@@ -131,10 +131,10 @@ func TestTagRoute(t *testing.T) {
 
 func TestInstallFS(t *testing.T) {
 	s, handler := newTestServer(t, nil)
-	s.InstallFS("/dir", os.DirFS("."))
+	s.InstallFS("/a dir", os.DirFS("."))
 	// Request this file.
 	w := httptest.NewRecorder()
-	handler.ServeHTTP(w, httptest.NewRequest("GET", "/files/dir/frontend_test.go", nil))
+	handler.ServeHTTP(w, httptest.NewRequest("GET", "/files/a%20dir/frontend_test.go", nil))
 	if w.Code != http.StatusOK {
 		t.Errorf("got status code = %d, want %d", w.Code, http.StatusOK)
 	}

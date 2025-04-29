@@ -307,7 +307,7 @@ func (s *Server) installDebugHandlers(handle func(string, http.Handler)) {
 
 // InstallFS adds path under the /files handler, serving the files in fsys.
 func (s *Server) InstallFS(path string, fsys fs.FS) {
-	s.fileMux.Handle(path+"/", http.StripPrefix(path, http.FileServer(http.FS(fsys))))
+	s.fileMux.Handle("GET "+path+"/", http.StripPrefix(path, http.FileServer(http.FS(fsys))))
 }
 
 const (
