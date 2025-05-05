@@ -100,7 +100,7 @@ services:
       - gomodcache:/gomodcache
     working_dir: /pkgsite
   db:
-    image: postgres:11.12
+    image: postgres:17
     environment:
       <<: *database-variables
       LANG: C
@@ -114,7 +114,7 @@ services:
     ports:
       - 127.0.0.1:5432:5432
   nodejs:
-    image: node:14.17.0
+    image: node:18-slim
     environment:
       # Use the values set on the host machine environment.
       - CI
