@@ -86,7 +86,8 @@ type Config struct {
 	DBPassword                                      string `json:"-" yaml:"-"`
 
 	// Configuration for redis page cache.
-	RedisCacheHost, RedisBetaCacheHost, RedisCachePort string
+	RedisCacheHost, RedisBetaCacheHost, RedisCachePort, RedisCachePassword string
+	RedisCacheDB                                                           int
 
 	// UseProfiler specifies whether to enable Stackdriver Profiler.
 	UseProfiler bool
