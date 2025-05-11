@@ -11,14 +11,20 @@
       Source Files
       <a class="UnitFiles-idLink" href="#section-sourcefiles" title="Go to Source Files" aria-label="Go to Source Files">¶</a>
     </h2>
+    {{- if .SourceURL -}}
     <div class="UnitFiles-titleLink">
       <a href="{{.SourceURL}}" target="_blank" rel="noopener">View all Source files</a>
     </div>
+    {{- end -}}
     <div>
       <ul class="UnitFiles-fileList">
         {{- range .SourceFiles -}}
           <li>
+            {{- if .URL -}}
             <a href="{{.URL}}" target="_blank" rel="noopener" title="{{.Name}}">{{.Name}}</a>
+            {{- else -}}
+            {{.Name}}
+            {{- end -}}
           </li>
         {{- end -}}
       </ul>
