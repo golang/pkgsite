@@ -14,16 +14,27 @@
       <a href="#pkg-index" data-gtmc="doc outline link">
         Index
       </a>
-      {{if .Examples.List}}
-        <ul>
-          <li>
-            <a href="#pkg-examples" data-gtmc="doc outline link">
-              Examples
-            </a>
-          </li>
-        </ul>
-      {{end}}
     </li>
+    {{- if .Examples.List}}
+      <li>
+        <a href="#pkg-examples" data-gtmc="doc outline link">
+          Examples
+        </a>
+        <ul>
+          {{- range .Examples.List -}}
+            {{- $name := or .ParentID "Package" -}}
+            {{- $suffix := or .Suffix "" -}}
+            {{- with $suffix}}{{$suffix = printf " (%s)" .}}{{end -}}
+            {{- $name = print $name $suffix}}
+            <li>
+              <a href="#{{.ID}}" title="{{$name}}" data-gtmc="doc outline link">
+                {{$name}}
+              </a>
+            </li>
+          {{- end}}
+        </ul>
+      </li>
+    {{- end}}
     <li class="DocNav-constants">
       <a href="#pkg-constants" data-gtmc="doc outline link">
         Constants
