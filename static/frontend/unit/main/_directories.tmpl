@@ -44,7 +44,13 @@
       <div class="UnitDirectories-pathCell">
         <div>
           {{- if .Subdirectories -}}
-            <button type="button" class="go-Button go-Button--inline UnitDirectories-toggleButton"
+            {{- $allInternal := true -}}
+            {{- range .Subdirectories -}}
+              {{- if not .IsInternal -}}
+                {{- $allInternal = false -}}
+              {{- end -}}
+            {{- end -}}
+            <button type="button" class="go-Button go-Button--inline UnitDirectories-toggleButton{{if $allInternal}} UnitDirectories-internal{{end}}"
                 aria-expanded="false"
                 aria-label="{{len .Subdirectories}} more from"
                 data-aria-controls="{{range .Subdirectories}}{{$prefix}}-{{.Suffix}} {{end}}"
