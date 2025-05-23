@@ -10,7 +10,9 @@
   {{template "unit-header-breadcrumbs" .}}
   <div class="go-Main-headerContent">
     {{template "unit-header-title" .}}
-    {{template "unit-header-details" .}}
+    {{if not .GoDocMode}}
+      {{template "unit-header-details" .}}
+    {{end}}
   </div>
 {{end}}
 

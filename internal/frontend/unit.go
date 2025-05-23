@@ -96,6 +96,10 @@ type UnitPage struct {
 	// Details contains data specific to the type of page being rendered.
 	Details any
 
+	// GoDocMode indicates whether to suppress the unit header and right hand unit metadata.
+	// If set to true, the page will also not have Vulns or a DepsDevURL.
+	GoDocMode bool
+
 	// Vulns holds vulnerability information.
 	Vulns []vuln.Vuln
 
@@ -119,7 +123,7 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 		tab = tabMain
 	}
 	// Redirect to clean URL path when tab param is invalid.
-	if _, ok := unitTabLookup[tab]; !ok {
+	if _, ok := unitTabLookup[tab]; !ok || (s.goDocMode && tab != tabMain) {
 		http.Redirect(w, r, r.URL.Path, http.StatusFound)
 		return nil
 	}
@@ -136,7 +140,10 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 		return s.fetchServer.ServePathNotFoundPage(w, r, db, info.FullPath, info.ModulePath, info.RequestedVersion)
 	}
 
-	makeDepsDevURL := depsDevURLGenerator(ctx, s.depsDevHTTPClient, um)
+	makeDepsDevURL := func() string { return "" }
+	if !s.goDocMode {
+		makeDepsDevURL = depsDevURLGenerator(ctx, s.depsDevHTTPClient, um)
+	}
 
 	// Use GOOS and GOARCH query parameters to create a build context, which
 	// affects the documentation and synopsis. Omitting both results in an empty
@@ -148,7 +155,7 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 	if err != nil {
 		return err
 	}
-	if s.shouldServeJSON(r) {
+	if s.shouldServeJSON(r) && !s.goDocMode {
 		return s.serveJSONPage(w, r, d)
 	}
 
@@ -225,9 +232,13 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 		PageLabels:            pageLabels(um),
 		PageType:              pageType(um),
 		RedirectedFromPath:    redirectPath,
-		DepsDevURL:            makeDepsDevURL(),
 		IsGoProject:           isGoProject(um.ModulePath),
 		IsLatestMinor:         lv == latestInfo.MinorVersion,
+		GoDocMode:             s.goDocMode,
+	}
+
+	if !s.goDocMode {
+		page.DepsDevURL = makeDepsDevURL()
 	}
 
 	// Show the banner if there was no error getting the latest major version,
@@ -243,8 +254,10 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 		page.MetaDescription = metaDescription(main.DocSynopsis)
 	}
 
-	// Get vulnerability information.
-	page.Vulns = vuln.VulnsForPackage(ctx, um.ModulePath, um.Version, um.Path, s.vulnClient)
+	if !s.goDocMode {
+		// Get vulnerability information.
+		page.Vulns = vuln.VulnsForPackage(ctx, um.ModulePath, um.Version, um.Path, s.vulnClient)
+	}
 
 	s.servePage(ctx, w, tabSettings.TemplateName, page)
 	return nil
