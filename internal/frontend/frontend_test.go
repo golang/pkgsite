@@ -39,7 +39,7 @@ func newTestServer(t *testing.T, cacher Cacher) (*Server, http.Handler) {
 	t.Helper()
 
 	s, err := NewServer(ServerConfig{
-		DataSourceGetter: func(context.Context) internal.DataSource { return fakedatasource.New() },
+		DataSourceGetter: func(context.Context) (internal.DataSource, func()) { return fakedatasource.New(), func() {} },
 		TemplateFS:       template.TrustedFSFromEmbed(static.FS),
 		// Use the embedded FSs here to make sure they're tested.
 		// Integration tests will use the actual directories.

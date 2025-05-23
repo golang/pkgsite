@@ -59,7 +59,7 @@ func TestLatestMinorVersion(t *testing.T) {
 	}
 	ctx := context.Background()
 	insertTestModules(ctx, t, fds, persistedModules)
-	svr := &Server{getDataSource: func(context.Context) internal.DataSource { return fds }}
+	svr := &Server{getDataSource: func(context.Context) (internal.DataSource, func()) { return fds, func() {} }}
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
 			got := svr.GetLatestInfo(ctx, tc.fullPath, tc.modulePath, nil)

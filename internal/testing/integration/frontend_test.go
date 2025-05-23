@@ -40,7 +40,7 @@ func setupFrontend(ctx context.Context, t *testing.T, q queue.Queue, rc *redis.C
 	}
 	s, err := frontend.NewServer(frontend.ServerConfig{
 		FetchServer:      fs,
-		DataSourceGetter: func(context.Context) internal.DataSource { return testDB },
+		DataSourceGetter: func(context.Context) (internal.DataSource, func()) { return testDB, func() {} },
 		TemplateFS:       template.TrustedFSFromTrustedSource(template.TrustedSourceFromConstant(staticDir)),
 		StaticFS:         os.DirFS(staticDir),
 		ThirdPartyFS:     os.DirFS("../../../third_party"),

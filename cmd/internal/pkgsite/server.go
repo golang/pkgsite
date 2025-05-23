@@ -47,6 +47,8 @@ type ServerConfig struct {
 }
 
 // BuildServer builds a *frontend.Server using the given configuration.
+//
+// TODO(rfindley): move to the cmd/pkgsite package, its only caller.
 func BuildServer(ctx context.Context, serverCfg ServerConfig) (*frontend.Server, error) {
 	if len(serverCfg.Paths) == 0 && !serverCfg.UseCache && serverCfg.Proxy == nil {
 		serverCfg.Paths = []string{"."}
@@ -288,7 +290,7 @@ func newServer(getters []fetch.ModuleGetter, localModules []frontend.LocalModule
 	go lds.GetUnitMeta(context.Background(), "", "std", "latest")
 
 	server, err := frontend.NewServer(frontend.ServerConfig{
-		DataSourceGetter: func(context.Context) internal.DataSource { return lds },
+		DataSourceGetter: func(context.Context) (internal.DataSource, func()) { return lds, func() {} },
 		TemplateFS:       template.TrustedFSFromEmbed(static.FS),
 		StaticFS:         staticFS,
 		DevMode:          devMode,

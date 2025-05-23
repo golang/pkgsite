@@ -33,6 +33,7 @@ import (
 	"golang.org/x/pkgsite/internal/proxy"
 	"golang.org/x/pkgsite/internal/queue"
 	"golang.org/x/pkgsite/internal/queue/gcpqueue"
+	"golang.org/x/pkgsite/internal/resource"
 	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/static"
 	"golang.org/x/pkgsite/internal/trace"
@@ -70,7 +71,7 @@ func main() {
 	}
 
 	var (
-		dsg        func(context.Context) internal.DataSource
+		dsg        func(context.Context) (internal.DataSource, func())
 		fetchQueue queue.Queue
 	)
 	if *bypassLicenseCheck {
@@ -96,14 +97,19 @@ func main() {
 			ProxyClientForLatest: proxyClient,
 			BypassLicenseCheck:   *bypassLicenseCheck,
 		}.New()
-		dsg = func(context.Context) internal.DataSource { return ds }
+		dsg = func(context.Context) (internal.DataSource, func()) { return ds, func() {} }
 	} else {
-		db, err := cmdconfig.OpenDB(ctx, cfg, *bypassLicenseCheck)
-		if err != nil {
-			log.Fatalf(ctx, "%v", err)
+		dbResource := resource.New(func() *postgres.DB {
+			db, err := cmdconfig.OpenDB(ctx, cfg, *bypassLicenseCheck)
+			if err != nil {
+				log.Fatalf(ctx, "%v", err)
+			}
+			return db
+		}, 5*time.Minute)
+
+		dsg = func(ctx context.Context) (internal.DataSource, func()) {
+			return dbResource.Get()
 		}
-		defer db.Close()
-		dsg = func(context.Context) internal.DataSource { return db }
 		sourceClient := source.NewClient(&http.Client{
 			Transport: new(ochttp.Transport),
 			Timeout:   config.SourceTimeout,
@@ -113,6 +119,8 @@ func main() {
 		// per-request connection.
 		fetchQueue, err = gcpqueue.New(ctx, cfg, queueName, *workers, expg,
 			func(ctx context.Context, modulePath, version string) (int, error) {
+				db, release := dbResource.Get()
+				defer release()
 				return fetchserver.FetchAndUpdateState(ctx, modulePath, version, proxyClient, sourceClient, db)
 			})
 		if err != nil {
