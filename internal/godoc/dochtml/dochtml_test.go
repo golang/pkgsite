@@ -477,10 +477,35 @@ func mustLoadPackage(path string) (*token.FileSet, *doc.Package) {
 	astFile, _ := parser.ParseFile(fset, srcName, code, parser.ParseComments)
 	files := []*ast.File{astFile}
 
+	filesMap := map[string]*ast.File{}
+	if !strings.HasSuffix(srcName, "_test.go") {
+		filesMap[srcName] = astFile
+	}
+
+	//lint:ignore SA1019 We had a preexisting dependency on ast.Object.
+	ast.NewPackage(fset, filesMap, simpleImporter, nil)
+
 	astPackage, err := doc.NewFromFiles(fset, files, path, doc.AllDecls)
 	if err != nil {
 		panic(err)
 	}
 
 	return fset, astPackage
+}
+
+// simpleImporter returns a (dummy) package object named by the last path
+// component of the provided package path (as is the convention for packages).
+// This is sufficient to resolve package identifiers without doing an actual
+// import. It never returns an error.
+//
+//lint:ignore SA1019 We had a preexisting dependency on ast.Object.
+func simpleImporter(imports map[string]*ast.Object, path string) (*ast.Object, error) {
+	pkg := imports[path]
+	if pkg == nil {
+		// note that strings.LastIndex returns -1 if there is no "/"
+		pkg = ast.NewObj(ast.Pkg, path[strings.LastIndex(path, "/")+1:])
+		pkg.Data = ast.NewScope(nil) // required by ast.NewPackage for dot-import
+		imports[path] = pkg
+	}
+	return pkg, nil
 }
