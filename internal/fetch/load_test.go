@@ -21,12 +21,6 @@ func TestMatchingFiles(t *testing.T) {
 		// Package js only works with wasm.
 		package js
 		type Value int`
-	synctestBody := `
-		//go:build goexperiment.synctest
-
-		package synctest
-		var X int
-	`
 	jsonv2Body := `
 		//go:build goexperiment.jsonv2
 
@@ -44,11 +38,6 @@ func TestMatchingFiles(t *testing.T) {
 		"README.md":  "THIS IS A README",
 		"LICENSE.md": testhelper.MITLicense,
 		"js.go":      jsGoBody,
-	}
-
-	synctestContents := map[string]string{
-		"plain.go": plainGoBody,
-		"st.go":    synctestBody,
 	}
 
 	jsonv2Contents := map[string]string{
@@ -95,16 +84,6 @@ func TestMatchingFiles(t *testing.T) {
 			contents: jsContents,
 			want: map[string][]byte{
 				"js.go": []byte(jsGoBody),
-			},
-		},
-		{
-			name:     "synctest",
-			goos:     "linux",
-			goarch:   "amd64",
-			contents: synctestContents,
-			want: map[string][]byte{
-				"plain.go": []byte(plainGoBody),
-				"st.go":    []byte(synctestBody),
 			},
 		},
 		{
