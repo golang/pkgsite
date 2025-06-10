@@ -79,7 +79,7 @@ func loadPackage(ctx context.Context, contentDir fs.FS, goFilePaths []string, in
 	// track of those to avoid duplication.
 	docsByFiles := map[string]*internal.Documentation{}
 	for _, bc := range internal.BuildContexts {
-		mfiles, err := matchingFiles(bc.GOOS, bc.GOARCH, files)
+		mfiles, err := matchingFiles(bc.GOOS, bc.GOARCH, importPath, files)
 		if err != nil {
 			return nil, err
 		}
@@ -213,7 +213,7 @@ func loadPackageMeta(ctx context.Context, contentDir fs.FS, goFilePaths []string
 	// in the file and then run the logic in loadPackageName on the collection of
 	// package name values.
 	for _, bc := range internal.BuildContexts {
-		mfiles, err := matchingFiles(bc.GOOS, bc.GOARCH, files)
+		mfiles, err := matchingFiles(bc.GOOS, bc.GOARCH, importPath, files)
 		if err != nil {
 			return nil, err
 		}
@@ -408,7 +408,7 @@ func loadPackageName(innerPath string, files map[string][]byte) (pkgName string,
 
 // matchingFiles returns a map from file names to their contents, read from zipGoFiles.
 // It includes only those files that match the build context determined by goos and goarch.
-func matchingFiles(goos, goarch string, allFiles map[string][]byte) (matchedFiles map[string][]byte, err error) {
+func matchingFiles(goos, goarch string, importPath string, allFiles map[string][]byte) (matchedFiles map[string][]byte, err error) {
 	defer derrors.Wrap(&err, "matchingFiles(%q, %q, zipGoFiles)", goos, goarch)
 
 	// bctx is used to make decisions about which of the .go files are included
@@ -418,7 +418,7 @@ func matchingFiles(goos, goarch string, allFiles map[string][]byte) (matchedFile
 		GOARCH:      goarch,
 		CgoEnabled:  true,
 		Compiler:    build.Default.Compiler,
-		BuildTags:   []string{"goexperiment.jsonv2", "goexperiment.synctest"},
+		BuildTags:   []string{"goexperiment.synctest"},
 		ReleaseTags: build.Default.ReleaseTags,
 
 		JoinPath: path.Join,
@@ -435,6 +435,11 @@ func matchingFiles(goos, goarch string, allFiles map[string][]byte) (matchedFile
 		IsDir:         func(string) bool { panic("internal error: unexpected call to IsDir") },
 		HasSubdir:     func(string, string) (string, bool) { panic("internal error: unexpected call to HasSubdir") },
 		ReadDir:       func(string) ([]os.FileInfo, error) { panic("internal error: unexpected call to ReadDir") },
+	}
+
+	switch importPath {
+	case "encoding/json/v2", "encoding/json/jsontext":
+		bctx.BuildTags = append(bctx.BuildTags, "goexperiment.jsonv2")
 	}
 
 	// Copy the input map so we don't modify it.

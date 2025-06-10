@@ -59,6 +59,7 @@ func TestMatchingFiles(t *testing.T) {
 	for _, test := range []struct {
 		name         string
 		goos, goarch string
+		importPath   string
 		contents     map[string]string
 		want         map[string][]byte
 	}{
@@ -107,10 +108,21 @@ func TestMatchingFiles(t *testing.T) {
 			},
 		},
 		{
-			name:     "jsonv2",
-			goos:     "linux",
-			goarch:   "amd64",
-			contents: jsonv2Contents,
+			name:       "json",
+			goos:       "linux",
+			goarch:     "amd64",
+			importPath: "encoding/json",
+			contents:   jsonv2Contents,
+			want: map[string][]byte{
+				"plain.go": []byte(plainGoBody),
+			},
+		},
+		{
+			name:       "jsonv2",
+			goos:       "linux",
+			goarch:     "amd64",
+			importPath: "encoding/json/v2",
+			contents:   jsonv2Contents,
 			want: map[string][]byte{
 				"plain.go": []byte(plainGoBody),
 				"json.go":  []byte(jsonv2Body),
@@ -122,7 +134,7 @@ func TestMatchingFiles(t *testing.T) {
 			for n, c := range test.contents {
 				files[n] = []byte(c)
 			}
-			got, err := matchingFiles(test.goos, test.goarch, files)
+			got, err := matchingFiles(test.goos, test.goarch, test.importPath, files)
 			if err != nil {
 				t.Fatal(err)
 			}
