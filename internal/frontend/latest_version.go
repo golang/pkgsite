@@ -26,8 +26,7 @@ func (s *Server) GetLatestInfo(ctx context.Context, unitPath, modulePath string,
 
 	// It is okay to use a different DataSource (DB connection) than the rest of the
 	// request, because this makes self-contained calls on the DB.
-	ds, release := s.getDataSource(ctx)
-	defer release()
+	ds := s.getDataSource(ctx)
 
 	latest, err := ds.GetLatestInfo(ctx, unitPath, modulePath, latestUnitMeta)
 	if err != nil {

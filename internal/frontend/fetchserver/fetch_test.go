@@ -62,7 +62,7 @@ func newTestServerWithFetch(t *testing.T, proxyModules []*proxytest.Module, cach
 
 	s, err := frontend.NewServer(frontend.ServerConfig{
 		FetchServer:      f,
-		DataSourceGetter: func(context.Context) (internal.DataSource, func()) { return testDB, func() {} },
+		DataSourceGetter: func(context.Context) internal.DataSource { return testDB },
 		Queue:            q,
 		TemplateFS:       template.TrustedFSFromEmbed(static.FS),
 		// Use the embedded FSs here to make sure they're tested.

@@ -42,7 +42,7 @@ import (
 type Server struct {
 	fetchServer FetchServerInterface
 	// getDataSource should never be called from a handler. It is called only in Server.errorHandler.
-	getDataSource      func(context.Context) (internal.DataSource, func())
+	getDataSource      func(context.Context) internal.DataSource
 	queue              queue.Queue
 	templateFS         template.TrustedFS
 	staticFS           fs.FS
@@ -82,9 +82,9 @@ type ServerConfig struct {
 	Config *config.Config
 	// Note that FetchServer may be nil.
 	FetchServer FetchServerInterface
-	// DataSourceGetter should return a DataSource and a release function on each call.
+	// DataSourceGetter should return a DataSource on each call.
 	// It should be goroutine-safe.
-	DataSourceGetter  func(context.Context) (internal.DataSource, func())
+	DataSourceGetter  func(context.Context) internal.DataSource
 	Queue             queue.Queue
 	TemplateFS        template.TrustedFS // for loading templates safely
 	StaticFS          fs.FS              // for static/ directory
@@ -503,8 +503,7 @@ func (s *Server) PanicHandler() (_ http.HandlerFunc, err error) {
 func (s *Server) errorHandler(f func(w http.ResponseWriter, r *http.Request, ds internal.DataSource) error) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Obtain a DataSource to use for this request.
-		ds, release := s.getDataSource(r.Context())
-		defer release()
+		ds := s.getDataSource(r.Context())
 		if err := f(w, r, ds); err != nil {
 			s.serveError(w, r, err)
 		}
