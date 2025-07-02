@@ -823,29 +823,34 @@ func TestExcludedFromSearch(t *testing.T) {
 }
 
 func TestSearchBypass(t *testing.T) {
-	t.Parallel()
-	testDB, release := acquire(t)
-	defer release()
-	ctx := context.Background()
-	bypassDB := NewBypassingLicenseCheck(testDB.db)
-
-	m := nonRedistributableModule()
-	MustInsertModule(ctx, t, bypassDB, m)
-
 	for _, test := range []struct {
-		db        *DB
+		bypass    bool
 		wantEmpty bool
 	}{
-		{testDB, true},
-		{bypassDB, false},
+		{false, true},
+		{true, false},
 	} {
-		rs, err := test.db.Search(ctx, m.ModulePath, SearchOptions{MaxResults: 10})
-		if err != nil {
-			t.Fatal(err)
-		}
-		if got := (rs[0].Synopsis == ""); got != test.wantEmpty {
-			t.Errorf("bypass %t: got empty %t, want %t", test.db == bypassDB, got, test.wantEmpty)
-		}
+		t.Run(fmt.Sprintf("bypass %t", test.bypass), func(t *testing.T) {
+			t.Parallel()
+			testDB, release := acquire(t)
+			defer release()
+			ctx := context.Background()
+
+			if test.bypass {
+				testDB = NewBypassingLicenseCheck(testDB.db)
+			}
+
+			m := nonRedistributableModule()
+			MustInsertModule(ctx, t, testDB, m)
+
+			rs, err := testDB.Search(ctx, m.ModulePath, SearchOptions{MaxResults: 10})
+			if err != nil {
+				t.Fatal(err)
+			}
+			if got := (rs[0].Synopsis == ""); got != test.wantEmpty {
+				t.Errorf("got empty %t, want %t", got, test.wantEmpty)
+			}
+		})
 	}
 }
 
@@ -1219,90 +1224,99 @@ func TestUpdateSearchDocumentsImportedByCount(t *testing.T) {
 }
 
 func TestGetPackagesForSearchDocumentUpsert(t *testing.T) {
-	t.Parallel()
-	testDB, release := acquire(t)
-	defer release()
-	ctx := context.Background()
+	for _, test := range []struct{ bypass bool }{{false}, {true}} {
+		t.Run(fmt.Sprintf("bypass %t", test.bypass), func(t *testing.T) {
+			ctx := context.Background()
 
-	moduleA := sample.Module("mod.com", "v1.2.3",
-		"A", "A/notinternal", "A/internal", "A/internal/B")
+			moduleA := sample.Module("mod.com", "v1.2.3",
+				"A", "A/notinternal", "A/internal", "A/internal/B")
 
-	// moduleA.Units[1] is mod.com/A.
-	moduleA.Units[1].Readme = &internal.Readme{
-		Filepath: sample.ReadmeFilePath,
-		Contents: sample.ReadmeContents,
-	}
-	// moduleA.Units[2] is mod.com/A/notinternal.
-	moduleA.Units[2].Readme = &internal.Readme{
-		Filepath: sample.ReadmeFilePath,
-		Contents: sample.ReadmeContents,
-	}
-	moduleN := nonRedistributableModule()
-	bypassDB := NewBypassingLicenseCheck(testDB.db)
-	for _, m := range []*internal.Module{moduleA, moduleN} {
-		MustInsertModule(ctx, t, bypassDB, m)
-	}
+			// moduleA.Units[1] is mod.com/A.
+			moduleA.Units[1].Readme = &internal.Readme{
+				Filepath: sample.ReadmeFilePath,
+				Contents: sample.ReadmeContents,
+			}
+			// moduleA.Units[2] is mod.com/A/notinternal.
+			moduleA.Units[2].Readme = &internal.Readme{
+				Filepath: sample.ReadmeFilePath,
+				Contents: sample.ReadmeContents,
+			}
+			moduleN := nonRedistributableModule()
 
-	// We are asking for all packages in search_documents updated before now, which is
-	// all the non-internal packages.
-	got, err := testDB.GetPackagesForSearchDocumentUpsert(ctx, time.Now(), 10)
-	if err != nil {
-		t.Fatal(err)
-	}
-	sort.Slice(got, func(i, j int) bool { return got[i].PackagePath < got[j].PackagePath })
-	want := []UpsertSearchDocumentArgs{
-		{
-			PackagePath:    moduleN.ModulePath,
-			ModulePath:     moduleN.ModulePath,
-			Version:        "v1.2.3",
-			ReadmeFilePath: "",
-			ReadmeContents: "",
-			Synopsis:       "",
-		},
-		{
-			PackagePath:    "mod.com/A",
-			ModulePath:     "mod.com",
-			Version:        "v1.2.3",
-			ReadmeFilePath: "README.md",
-			ReadmeContents: "readme",
-			Synopsis:       sample.Doc.Synopsis,
-		},
-		{
-			PackagePath:    "mod.com/A/notinternal",
-			ModulePath:     "mod.com",
-			Version:        "v1.2.3",
-			ReadmeFilePath: "README.md",
-			ReadmeContents: "readme",
-			Synopsis:       sample.Doc.Synopsis,
-		},
-	}
-	if diff := cmp.Diff(want, got); diff != "" {
-		t.Fatalf("testDB.GetPackagesForSearchDocumentUpsert mismatch(-want +got):\n%s", diff)
-	}
+			testDB, release := acquire(t)
+			defer release()
 
-	// Reading with license bypass should return the non-redistributable fields.
-	got, err = bypassDB.GetPackagesForSearchDocumentUpsert(ctx, time.Now(), 10)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if len(got) == 0 {
-		t.Fatal("len(got)==0")
-	}
-	sort.Slice(got, func(i, j int) bool { return got[i].PackagePath < got[j].PackagePath })
-	gm := got[0]
-	for _, got := range []string{gm.ReadmeFilePath, gm.ReadmeContents, gm.Synopsis} {
-		if got == "" {
-			t.Errorf("got empty field, want non-empty")
-		}
-	}
+			if test.bypass {
+				testDB = NewBypassingLicenseCheck(testDB.db)
+			}
+			MustInsertModule(ctx, t, testDB, moduleA)
+			MustInsertModule(ctx, t, testDB, moduleN)
 
-	// pkgPaths should be an empty slice, all packages were inserted more recently than yesterday.
-	got, err = testDB.GetPackagesForSearchDocumentUpsert(ctx, time.Now().Add(-24*time.Hour), 10)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if len(got) != 0 {
-		t.Fatalf("expected testDB.GetPackagesForSearchDocumentUpsert to return an empty slice; got %v", got)
+			// We are asking for all packages in search_documents updated before now, which is
+			// all the non-internal packages.
+			got, err := testDB.GetPackagesForSearchDocumentUpsert(ctx, time.Now(), 10)
+			if err != nil {
+				t.Fatal(err)
+			}
+			sort.Slice(got, func(i, j int) bool { return got[i].PackagePath < got[j].PackagePath })
+			wantNonRedistributable := UpsertSearchDocumentArgs{
+				PackagePath:    moduleN.ModulePath,
+				ModulePath:     moduleN.ModulePath,
+				Version:        "v1.2.3",
+				ReadmeFilePath: "",
+				ReadmeContents: "",
+				Synopsis:       "",
+			}
+			if test.bypass {
+				// If we inserted with bypass mode, these exist in the database
+				// and will be returned by search.
+				wantNonRedistributable.ReadmeFilePath = "README.md"
+				wantNonRedistributable.ReadmeContents = "readme"
+				wantNonRedistributable.Synopsis = sample.Doc.Synopsis
+			}
+			want := []UpsertSearchDocumentArgs{
+				wantNonRedistributable,
+				{
+					PackagePath:    "mod.com/A",
+					ModulePath:     "mod.com",
+					Version:        "v1.2.3",
+					ReadmeFilePath: "README.md",
+					ReadmeContents: "readme",
+					Synopsis:       sample.Doc.Synopsis,
+				},
+				{
+					PackagePath:    "mod.com/A/notinternal",
+					ModulePath:     "mod.com",
+					Version:        "v1.2.3",
+					ReadmeFilePath: "README.md",
+					ReadmeContents: "readme",
+					Synopsis:       sample.Doc.Synopsis,
+				},
+			}
+			if diff := cmp.Diff(want, got); diff != "" {
+				t.Fatalf("testDB.GetPackagesForSearchDocumentUpsert mismatch(-want +got):\n%s", diff)
+			}
+
+			// Reading with license bypass should return the non-redistributable fields.
+			if test.bypass {
+				sort.Slice(got, func(i, j int) bool { return got[i].PackagePath < got[j].PackagePath })
+				gm := got[0]
+				for _, got := range []string{gm.ReadmeFilePath, gm.ReadmeContents, gm.Synopsis} {
+					if got == "" {
+						t.Errorf("got empty field, want non-empty")
+					}
+				}
+
+				// pkgPaths should be an empty slice, all packages were inserted more recently than yesterday.
+				got, err = testDB.GetPackagesForSearchDocumentUpsert(ctx, time.Now().Add(-24*time.Hour), 10)
+				if err != nil {
+					t.Fatal(err)
+				}
+				if len(got) != 0 {
+					t.Fatalf("expected testDB.GetPackagesForSearchDocumentUpsert to return an empty slice; got %v", got)
+				}
+			}
+		})
 	}
 }
 

@@ -731,7 +731,7 @@ func (db *DB) GetPackagesForSearchDocumentUpsert(ctx context.Context, before tim
 			a      UpsertSearchDocumentArgs
 			redist bool
 		)
-		if err := rows.Scan(&a.PackagePath, &a.ModulePath, &a.Version, &a.Synopsis, &redist,
+		if err := rows.Scan(&a.PackagePath, &a.ModulePath, &a.Version, database.NullIsEmpty(&a.Synopsis), &redist,
 			database.NullIsEmpty(&a.ReadmeFilePath), database.NullIsEmpty(&a.ReadmeContents)); err != nil {
 			return err
 		}

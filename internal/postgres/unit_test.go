@@ -804,46 +804,50 @@ func subdirectories(modulePath string, suffixes []string) []*internal.PackageMet
 }
 
 func TestGetUnitBypass(t *testing.T) {
-	t.Parallel()
-	testDB, release := acquire(t)
-	defer release()
-	ctx := context.Background()
-	bypassDB := NewBypassingLicenseCheck(testDB.db)
-
-	m := nonRedistributableModule()
-	MustInsertModule(ctx, t, bypassDB, m)
-
 	for _, test := range []struct {
-		db        *DB
+		bypass    bool
 		wantEmpty bool
 	}{
-		{testDB, true},
-		{bypassDB, false},
+		{false, true},
+		{true, false},
 	} {
-		pathInfo := newUnitMeta(m.ModulePath, m.ModulePath, m.Version)
-		d, err := test.db.GetUnit(ctx, pathInfo, internal.AllFields, internal.BuildContext{})
-		if err != nil {
-			t.Fatal(err)
-		}
-		if got := (d.Readme == nil); got != test.wantEmpty {
-			t.Errorf("readme empty: got %t, want %t", got, test.wantEmpty)
-		}
-		if got := (d.Documentation == nil); got != test.wantEmpty {
-			t.Errorf("synopsis empty: got %t, want %t", got, test.wantEmpty)
-		}
-		if got := (d.Documentation == nil); got != test.wantEmpty {
-			t.Errorf("doc empty: got %t, want %t", got, test.wantEmpty)
-		}
-		if got := d.IsRedistributable; got != !test.wantEmpty { // wantEmpty iff !IsRedistributable
-			t.Errorf("IsRedistributable is %v: want %v", got, !test.wantEmpty)
-		}
-		pkgs := d.Subdirectories
-		if len(pkgs) != 1 {
-			t.Fatal("len(pkgs) != 1")
-		}
-		if got := (pkgs[0].Synopsis == ""); got != test.wantEmpty {
-			t.Errorf("synopsis empty: got %t, want %t", got, test.wantEmpty)
-		}
+		t.Run(fmt.Sprintf("bypass %t", test.bypass), func(t *testing.T) {
+			t.Parallel()
+			testDB, release := acquire(t)
+			defer release()
+			ctx := context.Background()
+
+			if test.bypass {
+				testDB = NewBypassingLicenseCheck(testDB.db)
+			}
+
+			m := nonRedistributableModule()
+			MustInsertModule(ctx, t, testDB, m)
+			pathInfo := newUnitMeta(m.ModulePath, m.ModulePath, m.Version)
+			d, err := testDB.GetUnit(ctx, pathInfo, internal.AllFields, internal.BuildContext{})
+			if err != nil {
+				t.Fatal(err)
+			}
+			if got := (d.Readme == nil); got != test.wantEmpty {
+				t.Errorf("readme empty: got %t, want %t", got, test.wantEmpty)
+			}
+			if got := (d.Documentation == nil); got != test.wantEmpty {
+				t.Errorf("synopsis empty: got %t, want %t", got, test.wantEmpty)
+			}
+			if got := (d.Documentation == nil); got != test.wantEmpty {
+				t.Errorf("doc empty: got %t, want %t", got, test.wantEmpty)
+			}
+			if got := d.IsRedistributable; got != !test.wantEmpty { // wantEmpty iff !IsRedistributable
+				t.Errorf("IsRedistributable is %v: want %v", got, !test.wantEmpty)
+			}
+			pkgs := d.Subdirectories
+			if len(pkgs) != 1 {
+				t.Fatal("len(pkgs) != 1")
+			}
+			if got := (pkgs[0].Synopsis == ""); got != test.wantEmpty {
+				t.Errorf("synopsis empty: got %t, want %t", got, test.wantEmpty)
+			}
+		})
 	}
 }
 

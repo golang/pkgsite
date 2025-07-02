@@ -196,7 +196,9 @@ func TestGetLicensesBypass(t *testing.T) {
 	}
 
 	// Read with license bypass includes non-redistributable license contents.
-	check(true, sample.NonRedistributableLicense)
+	redist := *sample.NonRedistributableLicense
+	redist.Contents = []uint8{}
+	check(true, &redist)
 
 	// Read without license bypass does not include non-redistributable license contents.
 	nonRedist := *sample.NonRedistributableLicense

@@ -393,7 +393,7 @@ func (pdb *DB) insertUnits(ctx context.Context, tx *database.DB,
 			u.Name,
 			pq.Array(licenseTypes),
 			pq.Array(licensePaths),
-			u.IsRedistributable,
+			pdb.bypassLicenseCheck || u.IsRedistributable,
 		)
 		if u.Readme != nil {
 			pathToReadme[u.Path] = u.Readme
