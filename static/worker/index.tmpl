@@ -42,6 +42,7 @@
       <button title="Poll the module index for up to 2000 new versions."
         onclick="submitForm('pollForm', false); return false">Poll Module Index</button>
       <input type="number" name="limit" value="10"></input>
+      <input type="text" name="since" value="" placeholder="2006-01-02T15:04:05Z07:00">
       <output name="result"></output>
     </form>
     <form action="/enqueue" method="post" name="enqueueForm">

@@ -432,10 +432,14 @@ func (s *Server) handlePollIndex(w http.ResponseWriter, r *http.Request) (err er
 	defer derrors.Wrap(&err, "handlePollIndex(%q)", r.URL.Path)
 	ctx := r.Context()
 	limit := parseIntParam(r, "limit", 10)
-	since, err := s.db.LatestIndexTimestamp(ctx)
-	if err != nil {
-		return err
+	since, ok := parseTimeParam(r, "since")
+	if !ok {
+		since, err = s.db.LatestIndexTimestamp(ctx)
+		if err != nil {
+			return err
+		}
 	}
+	log.Infof(ctx, "fetching %d versions since %v from the index", limit, since)
 	modules, err := s.indexClient.GetVersions(ctx, since, limit)
 	if err != nil {
 		return err
@@ -885,10 +889,26 @@ func parseIntParam(r *http.Request, name string, defaultValue int) int {
 	}
 	val, err := strconv.Atoi(param)
 	if err != nil {
-		log.Errorf(r.Context(), "parsing query parameter %q: %v", name, err)
+		log.Errorf(r.Context(), "parsing query parameter %q as an int: %v", name, err)
 		return defaultValue
 	}
 	return val
+}
+
+// parseTimeParam parses the named query parameter as a Time, using RFC RFC3339
+// layout. If the parameter is missing or there is a parse error, false is
+// returned.
+func parseTimeParam(r *http.Request, name string) (time.Time, bool) {
+	param := r.FormValue(name)
+	if param == "" {
+		return time.Time{}, false
+	}
+	t, err := time.Parse(time.RFC3339, param)
+	if err != nil {
+		log.Errorf(r.Context(), "parsing query parameter %q as a time.Time: %v", name, err)
+		return time.Time{}, false
+	}
+	return t, true
 }
 
 type serverError struct {
