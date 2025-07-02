@@ -31,16 +31,12 @@ type Client struct {
 }
 
 // New constructs a *Client using the provided rawurl, which is expected to
-// be an absolute URI that can be directly passed to http.Get.
+// be able to be passed to http.Get.
 func New(rawurl string) (_ *Client, err error) {
 	defer derrors.Add(&err, "index.New(%q)", rawurl)
 
-	u, err := url.Parse(rawurl)
-	if err != nil {
+	if _, err := url.Parse(rawurl); err != nil {
 		return nil, fmt.Errorf("url.Parse(%q): %v", rawurl, err)
-	}
-	if u.Scheme != "https" {
-		return nil, fmt.Errorf("scheme must be https (got %s)", u.Scheme)
 	}
 	return &Client{url: strings.TrimRight(rawurl, "/"), httpClient: &http.Client{Transport: &ochttp.Transport{}}}, nil
 }
