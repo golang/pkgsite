@@ -36,9 +36,9 @@ func DBConnURI(dbName string) string {
 		host     = serverconfig.GetEnv("GO_DISCOVERY_DATABASE_HOST", "localhost")
 		port     = serverconfig.GetEnv("GO_DISCOVERY_DATABASE_PORT", "5432")
 	)
-	cs := fmt.Sprintf("postgres://%s/%s?sslmode=disable&user=%s&password=%s&port=%s&timezone=UTC",
-		host, dbName, url.QueryEscape(user), url.QueryEscape(password), url.QueryEscape(port))
-	return cs
+	// https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING-URIS
+	return fmt.Sprintf("postgresql://%s:%s@%s:%s/%s?sslmode=disable&timezone=UTC",
+		url.QueryEscape(user), url.QueryEscape(password), url.QueryEscape(host), url.QueryEscape(port), dbName)
 }
 
 // MultiErr can be used to combine one or more errors into a single error.
@@ -79,7 +79,8 @@ func ConnectAndExecute(uri string, dbFunc func(*sql.DB) error) (outerErr error) 
 
 // CreateDB creates a new database dbName.
 func CreateDB(dbName string) error {
-	return ConnectAndExecute(DBConnURI(""), func(pg *sql.DB) error {
+	uri := DBConnURI("postgres")
+	err := ConnectAndExecute(uri, func(pg *sql.DB) error {
 		if _, err := pg.Exec(fmt.Sprintf(`
 			CREATE DATABASE %q
 				TEMPLATE=template0
@@ -87,9 +88,12 @@ func CreateDB(dbName string) error {
 				LC_CTYPE='C';`, dbName)); err != nil {
 			return fmt.Errorf("error creating %q: %v", dbName, err)
 		}
-
 		return nil
 	})
+	if err != nil {
+		return fmt.Errorf("error connecting to %q: %v", uri, err)
+	}
+	return nil
 }
 
 // DropDB drops the database named dbName.
@@ -118,7 +122,8 @@ func CreateDBIfNotExists(dbName string) error {
 func checkIfDBExists(dbName string) (bool, error) {
 	var exists bool
 
-	err := ConnectAndExecute(DBConnURI(""), func(pg *sql.DB) error {
+	uri := DBConnURI("postgres")
+	err := ConnectAndExecute(uri, func(pg *sql.DB) error {
 		rows, err := pg.Query("SELECT 1 from pg_database WHERE datname = $1 LIMIT 1", dbName)
 		if err != nil {
 			return err
@@ -132,8 +137,11 @@ func checkIfDBExists(dbName string) (bool, error) {
 
 		return rows.Err()
 	})
+	if err != nil {
+		return false, fmt.Errorf("error connecting to %q: %w", uri, err)
+	}
 
-	return exists, err
+	return exists, nil
 }
 
 // TryToMigrate attempts to migrate the database named dbName to the latest

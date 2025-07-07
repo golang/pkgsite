@@ -8,6 +8,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"testing"
 	"time"
 
@@ -118,7 +119,11 @@ func TestGetUserInfo(t *testing.T) {
 	testDB, release := acquire(t)
 	defer release()
 
-	got, err := testDB.GetUserInfo(ctx, "postgres")
+	dbUser := "postgres"
+	if u := os.Getenv("GO_DISCOVERY_DATABASE_USER"); u != "" {
+		dbUser = u
+	}
+	got, err := testDB.GetUserInfo(ctx, dbUser)
 	if err != nil {
 		t.Fatal(err)
 	}
