@@ -39,7 +39,7 @@ func New(rawurl string) (_ *Client, err error) {
 	if err != nil {
 		return nil, fmt.Errorf("url.Parse(%q): %v", rawurl, err)
 	}
-	if u.Scheme != "https" {
+	if u.Scheme != "https" && (u.Scheme != "http" || u.Hostname() != "localhost") {
 		return nil, fmt.Errorf("scheme must be https (got %s)", u.Scheme)
 	}
 	return &Client{url: strings.TrimRight(rawurl, "/"), httpClient: &http.Client{Transport: &ochttp.Transport{}}}, nil
