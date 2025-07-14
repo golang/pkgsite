@@ -479,6 +479,42 @@ func TestReadme(t *testing.T) {
 			wantHTML:    `<p><strong><img src="https://github.com/gobuffalo/buffalo/raw/master/logo.svg" alt="alt"/></strong></p>`,
 			wantOutline: nil,
 		},
+		{
+			name: "picture and source elements with escaped image source",
+			unit: unit,
+			readme: &internal.Readme{
+				Filepath: "README.md",
+				Contents: `<picture>` + "\n" +
+					`<source media="(prefers-color-scheme: dark)" srcset=".images/dark.svg">` + "\n" +
+					`<source media="(prefers-color-scheme: light)" srcset=".images/light.svg">` + "\n" +
+					`<img alt="GoVector Logo" src=".images/light.svg">` + "\n" +
+					`</picture>`,
+			},
+			wantHTML: `<picture>` + "\n" +
+				`<source media="(prefers-color-scheme: dark)" srcset="https://github.com/valid/module_name/raw/v1.0.0/.images/dark.svg"/>` + "\n" +
+				`<source media="(prefers-color-scheme: light)" srcset="https://github.com/valid/module_name/raw/v1.0.0/.images/light.svg"/>` + "\n" +
+				`<img alt="GoVector Logo" src="https://github.com/valid/module_name/raw/v1.0.0/.images/light.svg"/>` + "\n" +
+				`</picture>`,
+			wantOutline: nil,
+		},
+		{
+			name: "picture and source elements with invalid media query",
+			unit: unit,
+			readme: &internal.Readme{
+				Filepath: "README.md",
+				Contents: `<picture>` + "\n" +
+					`<source media="<script>malicious code</script>" srcset=".images/dark.svg">` + "\n" +
+					`<source media="(prefers-color-scheme: light)" srcset=".images/light.svg">` + "\n" +
+					`<img alt="GoVector Logo" src=".images/light.svg">` + "\n" +
+					`</picture>`,
+			},
+			wantHTML: `<picture>` + "\n" +
+				`<source srcset="https://github.com/valid/module_name/raw/v1.0.0/.images/dark.svg"/>` + "\n" +
+				`<source media="(prefers-color-scheme: light)" srcset="https://github.com/valid/module_name/raw/v1.0.0/.images/light.svg"/>` + "\n" +
+				`<img alt="GoVector Logo" src="https://github.com/valid/module_name/raw/v1.0.0/.images/light.svg"/>` + "\n" +
+				`</picture>`,
+			wantOutline: nil,
+		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			test.unit.Readme = test.readme

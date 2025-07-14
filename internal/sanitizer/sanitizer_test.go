@@ -146,6 +146,18 @@ func TestSanitizeBytes(t *testing.T) {
 		},
 		{`<p><bad><bad2><bad3><bad4>hello<bad5><bad6><p> middle</p>goodbye`,
 			`<p>hello</p><p> middle</p>goodbye`},
+		{
+			`<picture>
+					<source media="(prefers-color-scheme: dark)" srcset="dark.svg">
+					<source media="(prefers-color-scheme: light)" srcset="light.svg">
+					<img src="light.svg" alt="Logo">
+			</picture>`,
+			`<picture>
+					<source media="(prefers-color-scheme: dark)" srcset="dark.svg"/>
+					<source media="(prefers-color-scheme: light)" srcset="light.svg"/>
+					<img src="light.svg" alt="Logo"/>
+			</picture>`,
+		},
 	}
 
 	for _, tc := range testCases {
