@@ -225,6 +225,7 @@ var allowElems = []string{
 	"mark",
 	"ol",
 	"p",
+	"picture",
 	"pre",
 	"q",
 	"rp",
@@ -234,6 +235,7 @@ var allowElems = []string{
 	"samp",
 	"section",
 	"small",
+	"source",
 	"span",
 	"strike",
 	"strong",
@@ -292,6 +294,8 @@ var allowAttrs = []allowAttr{
 	{"p", "width", flexiblewidth}, // pkgsite allows all values
 	{"q", "cite", validURL},
 	{"time", "datetime", iso8601},
+	{"source", "media", mediaQuery},
+	{"source", "srcset", validURL},
 	{"ol", "type", re(`(?i)^(circle|disc|square|a|A|i|I|1)$`)},
 	{"ul", "type", re(`(?i)^(circle|disc|square|a|A|i|I|1)$`)},
 	{"li", "type", re(`(?i)^(circle|disc|square|a|A|i|I|1)$`)},
@@ -352,8 +356,9 @@ var allowAttrs = []allowAttr{
 // roundtripAttrs is a map from attribute keys which should be checked
 // against roundtripURL to maps of tags which are allowed to have them.
 var roundtripAttrs = map[string]map[string]bool{
-	"src":  {"img": true},
-	"href": {"a": true},
+	"src":    {"img": true},
+	"srcset": {"source": true},
+	"href":   {"a": true},
 	"cite": {
 		"blockquote": true,
 		"del":        true,
@@ -384,6 +389,8 @@ var integer = re(`^[0-9]+$`)
 
 var iso8601 = re(`^[0-9]{4}(-[0-9]{2}(-[0-9]{2}([ T][0-9]{2}(:[0-9]{2}){1,2}(.[0-9]{1,6})` +
 	`?Z?([\+-][0-9]{2}:[0-9]{2})?)?)?)?$`)
+
+var mediaQuery = re(`^[\(\)\s\w\-:./]+$`)
 
 func re(rx string) func(string) bool {
 	return regexp.MustCompile(rx).MatchString

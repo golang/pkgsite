@@ -75,8 +75,8 @@ func processReadme(ctx context.Context, readme *internal.Readme, info *source.In
 	}, nil
 }
 
-// rewriteImgSrc rewrites the HTML in the markdown document to replace img
-// src keys with a value that properly represents the source of the image
+// rewriteImgSrc rewrites the HTML in the markdown document to replace img and source
+// src and srcset keys with a value that properly represents the source of the image
 // from the repo.
 func rewriteImgSrc(doc *markdown.Document, info *source.Info, readme *internal.Readme) {
 	walkBlocks(doc.Blocks, func(b markdown.Block) error {

@@ -129,10 +129,10 @@ func translateHTML(htmlText []byte, info *source.Info, readme *internal.Readme) 
 // It reports whether it made a change.
 func walkHTML(n *html.Node, info *source.Info, readme *internal.Readme) bool {
 	changed := false
-	if n.Type == html.ElementNode && n.DataAtom == atom.Img {
+	if n.Type == html.ElementNode && (n.DataAtom == atom.Img || n.DataAtom == atom.Source) {
 		var attrs []html.Attribute
 		for _, a := range n.Attr {
-			if a.Key == "src" {
+			if a.Key == "src" || a.Key == "srcset" {
 				if v := translateLink(a.Val, info, true, readme); v != "" {
 					a.Val = v
 					changed = true
