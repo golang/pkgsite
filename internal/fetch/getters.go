@@ -16,6 +16,7 @@ import (
 	"go/doc"
 	"go/parser"
 	"go/token"
+	goversion "go/version"
 	"io"
 	"io/fs"
 	"os"
@@ -304,8 +305,10 @@ func NewGoPackagesStdlibModuleGetter(ctx context.Context, dir string) (*goPackag
 		return nil, err
 	}
 
-	stdmod := &packages.Module{Path: "std",
-		Dir: filepath.Join(abs, "src"),
+	stdmod := &packages.Module{
+		Path:    "std",
+		Dir:     filepath.Join(abs, "src"),
+		Version: goVersion(abs),
 	}
 	modules := []*packages.Module{stdmod}
 	for _, p := range pkgs {
@@ -318,6 +321,25 @@ func NewGoPackagesStdlibModuleGetter(ctx context.Context, dir string) (*goPackag
 		packages: pkgs,
 		modules:  modules,
 	}, nil
+}
+
+// goVersion returns the go version of the go distribution at GOROOT, converted
+// into a semantic version that can be parsed by stdlib.TagForVersion; or LocalVersion,
+// if the version could not be determined. goVersion determines the version using
+// the VERSION file. Alternatively, it could run "go version" to get the version
+// in cases the VERSION file doesn't exist, but those versions likely wouldn't
+// be parsable by VersionForTag anyway.
+func goVersion(goroot string) string {
+	b, err := os.ReadFile(filepath.Join(goroot, "VERSION"))
+	if err != nil {
+		return LocalVersion
+	}
+	b, _, _ = bytes.Cut(b, []byte("\n"))
+	gov := strings.TrimSpace(string(b))
+	if !goversion.IsValid(gov) {
+		return LocalVersion
+	}
+	return stdlib.VersionForTag(gov)
 }
 
 // findModule searches known modules for a module matching the provided path.

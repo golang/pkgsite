@@ -69,7 +69,7 @@ func BuildServer(ctx context.Context, serverCfg ServerConfig) (*frontend.Server,
 		}
 	} else {
 		var err error
-		cfg.dirs, err = getModuleDirs(ctx, serverCfg.Paths, serverCfg.GoDocMode)
+		cfg.dirs, err = getModuleDirs(ctx, serverCfg.Paths, serverCfg.GoRepoPath, serverCfg.GoDocMode)
 		if err != nil {
 			return nil, fmt.Errorf("searching modules: %v", err)
 		}
@@ -122,7 +122,7 @@ func BuildServer(ctx context.Context, serverCfg ServerConfig) (*frontend.Server,
 //
 // An error is returned if any operations failed unexpectedly, or if no
 // requested directories contain any valid modules.
-func getModuleDirs(ctx context.Context, dirs []string, allowNoModules bool) (map[string][]frontend.LocalModule, error) {
+func getModuleDirs(ctx context.Context, dirs []string, goRepoPath string, allowNoModules bool) (map[string][]frontend.LocalModule, error) {
 	dirModules := make(map[string][]frontend.LocalModule)
 	for _, dir := range dirs {
 		output, err := runGo(dir, "list", "-m", "-json")
@@ -135,6 +135,12 @@ func getModuleDirs(ctx context.Context, dirs []string, allowNoModules bool) (map
 			var m frontend.LocalModule
 			if err := decoder.Decode(&m); err != nil {
 				return nil, err
+			}
+			if allowNoModules && m.ModulePath == "std" && (m.Dir == filepath.Join(goRepoPath, "src") || m.Dir == filepath.Join(goRepoPath, "src", "cmd")) {
+				// This module is in the stdlib in the GOROOT specified by goRepoPath. We will
+				// already create a GoPackagesStdlibModuleGetter for that GOROOT, so don't
+				// add a redundant module directory here.
+				continue
 			}
 			if m.ModulePath != "command-line-arguments" {
 				modules = append(modules, m)
@@ -240,6 +246,7 @@ func buildGetters(ctx context.Context, cfg getterConfig) ([]fetch.ModuleGetter, 
 		getters = append(getters, g)
 	}
 
+	var usingLocalStdlib bool
 	if cfg.useLocalStdlib {
 		goRepo := cfg.goRepoPath
 		if goRepo == "" {
@@ -250,6 +257,7 @@ func buildGetters(ctx context.Context, cfg getterConfig) ([]fetch.ModuleGetter, 
 			if err != nil {
 				log.Errorf(ctx, "loading packages from stdlib: %v", err)
 			} else {
+				usingLocalStdlib = true
 				getters = append(getters, mg)
 			}
 		}
@@ -260,7 +268,9 @@ func buildGetters(ctx context.Context, cfg getterConfig) ([]fetch.ModuleGetter, 
 		getters = append(getters, fetch.NewProxyModuleGetter(cfg.proxy, source.NewClient(&http.Client{Timeout: time.Second})))
 	}
 
-	getters = append(getters, fetch.NewStdlibZipModuleGetter())
+	if !usingLocalStdlib {
+		getters = append(getters, fetch.NewStdlibZipModuleGetter())
+	}
 
 	return getters, nil
 }
