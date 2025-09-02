@@ -85,8 +85,8 @@ func OnGKE() bool {
 	return os.Getenv("GO_DISCOVERY_ON_GKE") == "true"
 }
 
-// onCloudRun reports whether the current process is running on Cloud Run.
-func onCloudRun() bool {
+// OnCloudRun reports whether the current process is running on Cloud Run.
+func OnCloudRun() bool {
 	// Use the presence of the environment variables provided by Cloud Run.
 	// See https://cloud.google.com/run/docs/reference/container-contract.
 	for _, ev := range []string{"K_SERVICE", "K_REVISION", "K_CONFIGURATION"} {
@@ -100,7 +100,7 @@ func onCloudRun() bool {
 // OnGCP reports whether the current process is running on Google Cloud
 // Platform.
 func OnGCP() bool {
-	return OnAppEngine() || OnGKE() || onCloudRun()
+	return OnAppEngine() || OnGKE() || OnCloudRun()
 }
 
 // configOverride holds selected config settings that can be dynamically overridden.
@@ -212,7 +212,7 @@ func Init(ctx context.Context) (_ *config.Config, err error) {
 					"zone":       cfg.ZoneID,
 				},
 			}
-		case onCloudRun():
+		case OnCloudRun():
 			cfg.MonitoredResource = &config.MonitoredResource{
 				Type: "cloud_run_revision",
 				Labels: map[string]string{

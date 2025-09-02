@@ -36,6 +36,13 @@ func Logger(ctx context.Context, cfg *config.Config, logName string) middleware.
 			Type:   cfg.MonitoredResource.Type,
 			Labels: cfg.MonitoredResource.Labels,
 		})}
+		if serverconfig.OnCloudRun() {
+			opts = append(opts, logging.CommonLabels(map[string]string{
+				// Standard label for Cloud Run instance ID.
+				// See https://cloud.google.com/run/docs/logging#service-fields.
+				"instanceId": cfg.InstanceID,
+			}))
+		}
 		if serverconfig.OnGKE() {
 			opts = append(opts, logging.CommonLabels(map[string]string{
 				"k8s-pod/env": cfg.DeploymentEnvironment(),
