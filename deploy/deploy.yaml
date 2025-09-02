@@ -36,7 +36,9 @@ steps:
     args:
       - staging
   - id: Worker - staging
-    name: gcr.io/cloud-builders/gke-deploy
+    # TODO(go.dev/issue/75234): gke-deploy no longer includes docker. Pin to
+    # the last known working version.
+    name: gcr.io/cloud-builders/gke-deploy:deprecated-public-image-b3fbf767097aefbe6f4ca2dd360338bddbf6f4f60d925c1b31886560579bcd2e
     entrypoint: sh
     args:
       - -c
@@ -65,7 +67,9 @@ steps:
     args:
       - prod
   - id: Worker - prod
-    name: gcr.io/cloud-builders/gke-deploy
+    # TODO(go.dev/issue/75234): gke-deploy no longer includes docker. Pin to
+    # the last known working version.
+    name: gcr.io/cloud-builders/gke-deploy:deprecated-public-image-b3fbf767097aefbe6f4ca2dd360338bddbf6f4f60d925c1b31886560579bcd2e
     entrypoint: sh
     args:
       - -c
