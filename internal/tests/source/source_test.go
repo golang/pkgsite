@@ -389,6 +389,15 @@ func TestModuleInfo(t *testing.T) {
 			"https://blitiri.com.ar/git/r/log/b/master/t/f=go.mod.html#line-1",
 			"",
 		},
+		{
+			"slatedb.io/slatedb-go match github.com/slatedb/slatedb/slatedb-go/go",
+			"slatedb.io/slatedb-go", "slatedb-go/go/v0.8.2", "go.mod",
+			"https://github.com/slatedb/slatedb",
+			"https://github.com/slatedb/slatedb/tree/slatedb-go/go/v0.8.2/slatedb-go/go",
+			"https://github.com/slatedb/slatedb/blob/slatedb-go/go/v0.8.2/slatedb-go/go/go.mod",
+			"https://github.com/slatedb/slatedb/blob/slatedb-go/go/v0.8.2/slatedb-go/go/go.mod#L1",
+			"https://github.com/slatedb/slatedb/raw/slatedb-go/go/v0.8.2/slatedb-go/go/go.mod",
+		},
 	} {
 		t.Run(test.desc, func(t *testing.T) {
 			info, err := source.ModuleInfo(context.Background(), source.NewClient(client), test.modulePath, test.version)

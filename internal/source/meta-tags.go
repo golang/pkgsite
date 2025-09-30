@@ -23,6 +23,7 @@ import (
 type sourceMeta struct {
 	repoRootPrefix string // import path prefix corresponding to repo root
 	repoURL        string // URL of the repo root
+	repoSubdir     string // subdirectory within the repo (since Go 1.25)
 	// The next two are only present in a go-source tag.
 	dirTemplate  string // URL template for a directory
 	fileTemplate string // URL template for a file and line
@@ -98,8 +99,15 @@ metaScan:
 			}
 			switch nameAttr {
 			case "go-import":
-				if len(fields) != 3 {
-					errorMessage = "go-import meta tag content attribute does not have three fields"
+				repoSubdir := ""
+				switch len(fields) {
+				case 3:
+					// go-import meta tag support minium 3 fields (root-path vcs repo-url).
+				case 4:
+					// go-import meta tag support minium 3 fields (root-path vcs repo-url), and additionally "subdirectory" field since Go 1.25.
+					repoSubdir = fields[3]
+				default:
+					errorMessage = "go-import meta tag content attribute does not have three or four fields"
 					continue metaScan
 				}
 				if fields[1] == "mod" {
@@ -114,6 +122,7 @@ metaScan:
 				sm = &sourceMeta{
 					repoRootPrefix: repoRootPrefix,
 					repoURL:        fields[2],
+					repoSubdir:     repoSubdir,
 				}
 				// Keep going in the hope of finding a go-source tag.
 			case "go-source":
@@ -128,16 +137,23 @@ metaScan:
 				}
 				// If go-source repo is "_", then default to the go-import repo.
 				repoURL := fields[1]
+				// reuse subdirectory field from go-import if present
+				repoSubdir := ""
+				if sm != nil {
+					repoSubdir = sm.repoSubdir
+				}
 				if repoURL == "_" {
 					if sm == nil {
 						errorMessage = `go-source repo is "_", but no previous go-import tag`
 						break metaScan
 					}
 					repoURL = sm.repoURL
+					repoSubdir = sm.repoSubdir
 				}
 				sm = &sourceMeta{
 					repoRootPrefix: repoRootPrefix,
 					repoURL:        repoURL,
+					repoSubdir:     repoSubdir,
 					dirTemplate:    fields[2],
 					fileTemplate:   fields[3],
 				}

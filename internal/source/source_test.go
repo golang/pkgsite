@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"path"
 	"strings"
 	"testing"
 
@@ -141,6 +142,17 @@ func TestModuleInfoDynamic(t *testing.T) {
 			},
 		},
 		{
+			"slatedb.io/slatedb-go",
+			// Package with go-import meta tag, where there is subdirectory field (since Go 1.25).
+			&Info{
+				repoURL:    "https://github.com/slatedb/slatedb",
+				repoSubdir: "slatedb-go/go",
+				moduleDir:  "slatedb-go/go",
+				commit:     "slatedb-go/go/v1.2.3",
+				templates:  githubURLTemplates,
+			},
+		},
+		{
 			"azul3d.org/examples/abs",
 			// The go-source tag has a template that is handled incorrectly by godoc; but we
 			// ignore the templates.
@@ -192,7 +204,11 @@ func TestModuleInfoDynamic(t *testing.T) {
 		},
 	} {
 		t.Run(test.modulePath, func(t *testing.T) {
-			got, err := moduleInfoDynamic(context.Background(), client, test.modulePath, version)
+			repoSubdir := ""
+			if test.want != nil {
+				repoSubdir = test.want.repoSubdir
+			}
+			got, err := moduleInfoDynamic(context.Background(), client, test.modulePath, path.Join(repoSubdir, version))
 			if err != nil {
 				if test.want == nil {
 					return
@@ -436,6 +452,8 @@ var testWeb = map[string]string{
 		<head><meta name="go-import" content="bob.com/bad/github git https://github.com/bob/bad/&quot;&gt;$">`,
 	"https://bob.com/bad/apache": `
 		<head><meta name="go-import" content="bob.com/bad/apache git https://git.apache.org/&gt;$">`,
+	// Package with go-import meta tag, where there is subdirectory field (since Go 1.25).
+	"https://slatedb.io/slatedb-go": `<head><meta name="go-import" content="slatedb.io/slatedb-go git https://github.com/slatedb/slatedb slatedb-go/go">`,
 	// Package with go-source meta tag, where {file} appears on the right of '#' in the file field URL template.
 	"https://azul3d.org/examples/abs": `<!DOCTYPE html><html><head>` +
 		`<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>` +
@@ -534,27 +552,27 @@ func TestMatchLegacyTemplates(t *testing.T) {
 		wantTransformCommitNil bool
 	}{
 		{
-			sm:                     sourceMeta{"", "", "", "https://git.blindage.org/21h/hcloud-dns/src/branch/master{/dir}/{file}#L{line}"},
+			sm:                     sourceMeta{"", "", "", "", "https://git.blindage.org/21h/hcloud-dns/src/branch/master{/dir}/{file}#L{line}"},
 			wantTemplates:          giteaURLTemplates,
 			wantTransformCommitNil: false,
 		},
 		{
-			sm:                     sourceMeta{"", "", "", "https://git.lastassault.de/sup/networkoverlap/-/blob/master{/dir}/{file}#L{line}"},
+			sm:                     sourceMeta{"", "", "", "", "https://git.lastassault.de/sup/networkoverlap/-/blob/master{/dir}/{file}#L{line}"},
 			wantTemplates:          gitlabURLTemplates,
 			wantTransformCommitNil: true,
 		},
 		{
-			sm:                     sourceMeta{"", "", "", "https://git.borago.de/Marco/gqltest/src/master{/dir}/{file}#L{line}"},
+			sm:                     sourceMeta{"", "", "", "", "https://git.borago.de/Marco/gqltest/src/master{/dir}/{file}#L{line}"},
 			wantTemplates:          giteaURLTemplates,
 			wantTransformCommitNil: true,
 		},
 		{
-			sm:                     sourceMeta{"", "", "", "https://git.zx2c4.com/wireguard-windows/tree{/dir}/{file}#n{line}"},
+			sm:                     sourceMeta{"", "", "", "", "https://git.zx2c4.com/wireguard-windows/tree{/dir}/{file}#n{line}"},
 			wantTemplates:          fdioURLTemplates,
 			wantTransformCommitNil: false,
 		},
 		{
-			sm: sourceMeta{"", "", "unknown{/dir}", "unknown{/dir}/{file}#L{line}"},
+			sm: sourceMeta{"", "", "", "unknown{/dir}", "unknown{/dir}/{file}#L{line}"},
 			wantTemplates: urlTemplates{
 				Repo:      "",
 				Directory: "unknown/{dir}",

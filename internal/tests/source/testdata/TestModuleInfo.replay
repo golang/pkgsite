@@ -14176,6 +14176,652 @@
         },
         "Body": ""
       }
+    },
+    {
+      "ID": "76e2eb1cf92f9174",
+      "Request": {
+        "Method": "GET",
+        "URL": "https://slatedb.io/slatedb-go?go-get=1",
+        "Header": {
+          "Accept-Encoding": [
+            "gzip"
+          ],
+          "User-Agent": [
+            "Go-http-client/1.1"
+          ]
+        },
+        "MediaType": "",
+        "BodyParts": [
+          ""
+        ]
+      },
+      "Response": {
+        "StatusCode": 301,
+        "Proto": "HTTP/1.1",
+        "ProtoMajor": 1,
+        "ProtoMinor": 1,
+        "Header": {
+          "Accept-Ranges": [
+            "bytes"
+          ],
+          "Access-Control-Allow-Origin": [
+            "*"
+          ],
+          "Age": [
+            "0"
+          ],
+          "Cache-Control": [
+            "max-age=600"
+          ],
+          "Content-Length": [
+            "162"
+          ],
+          "Content-Type": [
+            "text/html"
+          ],
+          "Date": [
+            "Wed, 01 Oct 2025 00:04:13 GMT"
+          ],
+          "Expires": [
+            "Wed, 01 Oct 2025 00:14:13 GMT"
+          ],
+          "Location": [
+            "https://slatedb.io/slatedb-go/?go-get=1"
+          ],
+          "Server": [
+            "GitHub.com"
+          ],
+          "Vary": [
+            "Accept-Encoding"
+          ],
+          "Via": [
+            "1.1 varnish"
+          ],
+          "X-Cache": [
+            "MISS"
+          ],
+          "X-Cache-Hits": [
+            "0"
+          ],
+          "X-Fastly-Request-Id": [
+            "243a9a1403e9f992fa91dc25b1da707c165e10e8"
+          ],
+          "X-Github-Request-Id": [
+            "154D:379C9C:760C:8FFA:68DC6FFD"
+          ],
+          "X-Proxy-Cache": [
+            "MISS"
+          ],
+          "X-Served-By": [
+            "cache-bma-essb1270035-BMA"
+          ],
+          "X-Timer": [
+            "S1759277054.590029,VS0,VE109"
+          ]
+        },
+        "Body": "PGh0bWw+DQo8aGVhZD48dGl0bGU+MzAxIE1vdmVkIFBlcm1hbmVudGx5PC90aXRsZT48L2hlYWQ+DQo8Ym9keT4NCjxjZW50ZXI+PGgxPjMwMSBNb3ZlZCBQZXJtYW5lbnRseTwvaDE+PC9jZW50ZXI+DQo8aHI+PGNlbnRlcj5uZ2lueDwvY2VudGVyPg0KPC9ib2R5Pg0KPC9odG1sPg0K"
+      }
+    },
+    {
+      "ID": "284fec8384bef729",
+      "Request": {
+        "Method": "GET",
+        "URL": "https://slatedb.io/slatedb-go/?go-get=1",
+        "Header": {
+          "Accept-Encoding": [
+            "gzip"
+          ],
+          "Referer": [
+            "https://slatedb.io/slatedb-go?go-get=1"
+          ],
+          "User-Agent": [
+            "Go-http-client/1.1"
+          ]
+        },
+        "MediaType": "",
+        "BodyParts": [
+          ""
+        ]
+      },
+      "Response": {
+        "StatusCode": 200,
+        "Proto": "HTTP/1.1",
+        "ProtoMajor": 1,
+        "ProtoMinor": 1,
+        "Header": {
+          "Accept-Ranges": [
+            "bytes"
+          ],
+          "Access-Control-Allow-Origin": [
+            "*"
+          ],
+          "Age": [
+            "161"
+          ],
+          "Cache-Control": [
+            "max-age=600"
+          ],
+          "Content-Encoding": [
+            "gzip"
+          ],
+          "Content-Length": [
+            "320"
+          ],
+          "Content-Type": [
+            "text/html; charset=utf-8"
+          ],
+          "Date": [
+            "Wed, 01 Oct 2025 00:04:13 GMT"
+          ],
+          "Etag": [
+            "W/\"68c37135-2c1\""
+          ],
+          "Expires": [
+            "Tue, 30 Sep 2025 22:40:36 GMT"
+          ],
+          "Last-Modified": [
+            "Fri, 12 Sep 2025 01:02:45 GMT"
+          ],
+          "Server": [
+            "GitHub.com"
+          ],
+          "Vary": [
+            "Accept-Encoding"
+          ],
+          "Via": [
+            "1.1 varnish"
+          ],
+          "X-Cache": [
+            "HIT"
+          ],
+          "X-Cache-Hits": [
+            "0"
+          ],
+          "X-Fastly-Request-Id": [
+            "83cfb24a14ad1e51eff796364fc9bdaf0e2b58e1"
+          ],
+          "X-Github-Request-Id": [
+            "7876:2ABE93:17BF7:1B871:68DC5A0C"
+          ],
+          "X-Proxy-Cache": [
+            "MISS"
+          ],
+          "X-Served-By": [
+            "cache-bma-essb1270035-BMA"
+          ],
+          "X-Timer": [
+            "S1759277054.700764,VS0,VE1"
+          ]
+        },
+        "Body": "H4sIAAAAAAAAA41STU/DMAy98ytMOK8W1yntAYbggATiS+I0pa3XBqVJlLgS07T/TrpumoYY28Wx7Of3/BF5OXu6fft8voOWO1PIwYJRtskFWVGAbEnVheyIFVjVUS4aN9Gdd4EFVM4yWc5FNIqpLjPtcOtOGgeN5sTKPk4Rk9/2ZVa5bofYvbCvwMaJ31rR9aGik1pn6JyGIAci7JS2eNDUCmsd1ucQlMaVRwlwtdCG1lePK6MtrdOorNlQ8TpAZzdw76BzdW9I4piQsQraM/DSp2WMOQExVLnAuYocHHrVUPbdvz/Mm3mdfcVEimNVcja3Azn0M1zy+i+lFAXpi4sPZTUvYTwteMUtLFwAbmmPzuCFvIuaXVhOL6SCNtAiF2fs5chiRfFPzQFSokp9oh/Mdh7c/NgfvRS268ECAAA="
+      }
+    },
+    {
+      "ID": "789ab474f49caba7",
+      "Request": {
+        "Method": "HEAD",
+        "URL": "https://github.com/slatedb/slatedb",
+        "Header": {
+          "User-Agent": [
+            "Go-http-client/1.1"
+          ]
+        },
+        "MediaType": "",
+        "BodyParts": [
+          ""
+        ]
+      },
+      "Response": {
+        "StatusCode": 200,
+        "Proto": "HTTP/1.1",
+        "ProtoMajor": 1,
+        "ProtoMinor": 1,
+        "Header": {
+          "Accept-Ranges": [
+            "bytes"
+          ],
+          "Cache-Control": [
+            "max-age=0, private, must-revalidate"
+          ],
+          "Content-Security-Policy": [
+            "default-src 'none'; base-uri 'self'; child-src github.githubassets.com github.com/assets-cdn/worker/ github.com/assets/ gist.github.com/assets-cdn/worker/; connect-src 'self' uploads.github.com www.githubstatus.com collector.github.com raw.githubusercontent.com api.github.com github-cloud.s3.amazonaws.com github-production-repository-file-5c1aeb.s3.amazonaws.com github-production-upload-manifest-file-7fdce7.s3.amazonaws.com github-production-user-asset-6210df.s3.amazonaws.com *.rel.tunnels.api.visualstudio.com wss://*.rel.tunnels.api.visualstudio.com github.githubassets.com objects-origin.githubusercontent.com copilot-proxy.githubusercontent.com proxy.individual.githubcopilot.com proxy.business.githubcopilot.com proxy.enterprise.githubcopilot.com *.actions.githubusercontent.com wss://*.actions.githubusercontent.com productionresultssa0.blob.core.windows.net/ productionresultssa1.blob.core.windows.net/ productionresultssa2.blob.core.windows.net/ productionresultssa3.blob.core.windows.net/ productionresultssa4.blob.core.windows.net/ productionresultssa5.blob.core.windows.net/ productionresultssa6.blob.core.windows.net/ productionresultssa7.blob.core.windows.net/ productionresultssa8.blob.core.windows.net/ productionresultssa9.blob.core.windows.net/ productionresultssa10.blob.core.windows.net/ productionresultssa11.blob.core.windows.net/ productionresultssa12.blob.core.windows.net/ productionresultssa13.blob.core.windows.net/ productionresultssa14.blob.core.windows.net/ productionresultssa15.blob.core.windows.net/ productionresultssa16.blob.core.windows.net/ productionresultssa17.blob.core.windows.net/ productionresultssa18.blob.core.windows.net/ productionresultssa19.blob.core.windows.net/ github-production-repository-image-32fea6.s3.amazonaws.com github-production-release-asset-2e65be.s3.amazonaws.com insights.github.com wss://alive.github.com wss://alive-staging.github.com api.githubcopilot.com api.individual.githubcopilot.com api.business.githubcopilot.com api.enterprise.githubcopilot.com; font-src github.githubassets.com; form-action 'self' github.com gist.github.com copilot-workspace.githubnext.com objects-origin.githubusercontent.com; frame-ancestors 'none'; frame-src viewscreen.githubusercontent.com notebooks.githubusercontent.com; img-src 'self' data: blob: github.githubassets.com media.githubusercontent.com camo.githubusercontent.com identicons.github.com avatars.githubusercontent.com private-avatars.githubusercontent.com github-cloud.s3.amazonaws.com objects.githubusercontent.com release-assets.githubusercontent.com secured-user-images.githubusercontent.com/ user-images.githubusercontent.com/ private-user-images.githubusercontent.com opengraph.githubassets.com marketplace-screenshots.githubusercontent.com/ copilotprodattachments.blob.core.windows.net/github-production-copilot-attachments/ github-production-user-asset-6210df.s3.amazonaws.com customer-stories-feed.github.com spotlights-feed.github.com objects-origin.githubusercontent.com *.githubusercontent.com; manifest-src 'self'; media-src github.com user-images.githubusercontent.com/ secured-user-images.githubusercontent.com/ private-user-images.githubusercontent.com github-production-user-asset-6210df.s3.amazonaws.com gist.github.com; script-src github.githubassets.com; style-src 'unsafe-inline' github.githubassets.com; upgrade-insecure-requests; worker-src github.githubassets.com github.com/assets-cdn/worker/ github.com/assets/ gist.github.com/assets-cdn/worker/"
+          ],
+          "Content-Type": [
+            "text/html; charset=utf-8"
+          ],
+          "Date": [
+            "Wed, 01 Oct 2025 00:04:14 GMT"
+          ],
+          "Etag": [
+            "W/\"0a507d1f5c9e310f3c32b0191791b8b6\""
+          ],
+          "Referrer-Policy": [
+            "no-referrer-when-downgrade"
+          ],
+          "Server": [
+            "github.com"
+          ],
+          "Set-Cookie": [
+            "_gh_sess=h5TrIb25%2B8GAH5GcvaUqF4E%2FAYXk8nsTr4y5G9idSmxmdEawHsMjgRSaRvTaEI1v4ln36NrZZr5z7VQYHLjvbsoXYcuskzfsBUw8kSiDmjKDa1mVYQGkkU%2FELptHJx%2BLS5naKyAsEceSwjsFCYH9nhHuZRUh4kEkuIR5D4u1hUkMf2iqWyBfu%2FMsKn6A5ZffFry2j8Rv%2FPWGWV4h8OZY74yoqLKoK1qwqqHKG%2F8WfpnX1Ul4WnfeKcw4vnv6vIBvO68RkQ%2BTGdpQG03llifeEg%3D%3D--tjUzUwOMB425M%2FLG--kQCEtS5zDoAwqt%2FfsLSYQw%3D%3D; Path=/; HttpOnly; Secure; SameSite=Lax",
+            "_octo=GH1.1.301667406.1759277053; Path=/; Domain=github.com; Expires=Thu, 01 Oct 2026 00:04:13 GMT; Secure; SameSite=Lax",
+            "logged_in=no; Path=/; Domain=github.com; Expires=Thu, 01 Oct 2026 00:04:13 GMT; HttpOnly; Secure; SameSite=Lax"
+          ],
+          "Strict-Transport-Security": [
+            "max-age=31536000; includeSubdomains; preload"
+          ],
+          "Vary": [
+            "X-PJAX, X-PJAX-Container, Turbo-Visit, Turbo-Frame, X-Requested-With,Accept-Encoding, Accept, X-Requested-With"
+          ],
+          "X-Content-Type-Options": [
+            "nosniff"
+          ],
+          "X-Frame-Options": [
+            "deny"
+          ],
+          "X-Github-Request-Id": [
+            "9936:1BD4C5:48558:563B0:68DC6FFD"
+          ],
+          "X-Xss-Protection": [
+            "0"
+          ]
+        },
+        "Body": ""
+      }
+    },
+    {
+      "ID": "2a2e8de4e99dfe67",
+      "Request": {
+        "Method": "HEAD",
+        "URL": "https://github.com/slatedb/slatedb/tree/slatedb-go/go/v0.8.2/slatedb-go/go",
+        "Header": {
+          "User-Agent": [
+            "Go-http-client/1.1"
+          ]
+        },
+        "MediaType": "",
+        "BodyParts": [
+          ""
+        ]
+      },
+      "Response": {
+        "StatusCode": 200,
+        "Proto": "HTTP/1.1",
+        "ProtoMajor": 1,
+        "ProtoMinor": 1,
+        "Header": {
+          "Accept-Ranges": [
+            "bytes"
+          ],
+          "Cache-Control": [
+            "max-age=0, private, must-revalidate"
+          ],
+          "Content-Security-Policy": [
+            "default-src 'none'; base-uri 'self'; child-src github.githubassets.com github.com/assets-cdn/worker/ github.com/assets/ gist.github.com/assets-cdn/worker/; connect-src 'self' uploads.github.com www.githubstatus.com collector.github.com raw.githubusercontent.com api.github.com github-cloud.s3.amazonaws.com github-production-repository-file-5c1aeb.s3.amazonaws.com github-production-upload-manifest-file-7fdce7.s3.amazonaws.com github-production-user-asset-6210df.s3.amazonaws.com *.rel.tunnels.api.visualstudio.com wss://*.rel.tunnels.api.visualstudio.com github.githubassets.com objects-origin.githubusercontent.com copilot-proxy.githubusercontent.com proxy.individual.githubcopilot.com proxy.business.githubcopilot.com proxy.enterprise.githubcopilot.com *.actions.githubusercontent.com wss://*.actions.githubusercontent.com productionresultssa0.blob.core.windows.net/ productionresultssa1.blob.core.windows.net/ productionresultssa2.blob.core.windows.net/ productionresultssa3.blob.core.windows.net/ productionresultssa4.blob.core.windows.net/ productionresultssa5.blob.core.windows.net/ productionresultssa6.blob.core.windows.net/ productionresultssa7.blob.core.windows.net/ productionresultssa8.blob.core.windows.net/ productionresultssa9.blob.core.windows.net/ productionresultssa10.blob.core.windows.net/ productionresultssa11.blob.core.windows.net/ productionresultssa12.blob.core.windows.net/ productionresultssa13.blob.core.windows.net/ productionresultssa14.blob.core.windows.net/ productionresultssa15.blob.core.windows.net/ productionresultssa16.blob.core.windows.net/ productionresultssa17.blob.core.windows.net/ productionresultssa18.blob.core.windows.net/ productionresultssa19.blob.core.windows.net/ github-production-repository-image-32fea6.s3.amazonaws.com github-production-release-asset-2e65be.s3.amazonaws.com insights.github.com wss://alive.github.com wss://alive-staging.github.com api.githubcopilot.com api.individual.githubcopilot.com api.business.githubcopilot.com api.enterprise.githubcopilot.com; font-src github.githubassets.com; form-action 'self' github.com gist.github.com copilot-workspace.githubnext.com objects-origin.githubusercontent.com; frame-ancestors 'none'; frame-src viewscreen.githubusercontent.com notebooks.githubusercontent.com; img-src 'self' data: blob: github.githubassets.com media.githubusercontent.com camo.githubusercontent.com identicons.github.com avatars.githubusercontent.com private-avatars.githubusercontent.com github-cloud.s3.amazonaws.com objects.githubusercontent.com release-assets.githubusercontent.com secured-user-images.githubusercontent.com/ user-images.githubusercontent.com/ private-user-images.githubusercontent.com opengraph.githubassets.com marketplace-screenshots.githubusercontent.com/ copilotprodattachments.blob.core.windows.net/github-production-copilot-attachments/ github-production-user-asset-6210df.s3.amazonaws.com customer-stories-feed.github.com spotlights-feed.github.com objects-origin.githubusercontent.com *.githubusercontent.com; manifest-src 'self'; media-src github.com user-images.githubusercontent.com/ secured-user-images.githubusercontent.com/ private-user-images.githubusercontent.com github-production-user-asset-6210df.s3.amazonaws.com gist.github.com; script-src github.githubassets.com; style-src 'unsafe-inline' github.githubassets.com; upgrade-insecure-requests; worker-src github.githubassets.com github.com/assets-cdn/worker/ github.com/assets/ gist.github.com/assets-cdn/worker/"
+          ],
+          "Content-Type": [
+            "text/html; charset=utf-8"
+          ],
+          "Date": [
+            "Wed, 01 Oct 2025 00:04:14 GMT"
+          ],
+          "Etag": [
+            "W/\"c61b7c9c3165bc9d6969a7991793e626\""
+          ],
+          "Referrer-Policy": [
+            "no-referrer-when-downgrade"
+          ],
+          "Server": [
+            "github.com"
+          ],
+          "Set-Cookie": [
+            "_gh_sess=MsD0gb1CO35F5Zfls04Svft%2FZP4cHFGXuZ786aqZ2PY3JOol6NSkm3PAGq%2FRg7zawDUOwEZN2Ot0RkxNSzu%2FU7D%2F93rjYcN3ThPDF0CQ7qFUWNcsebradNCaK3A%2B3GZmlHYEbgWMb1vPXVJ5cDXTbeNztbRQ4yBfSkJZOz2iKW%2BJk0iXOMc2K%2B8I9AnjXHFWLxPKGBZ2Ke3bxGkfqoyubXDzgms37Tm%2Fx%2Bugqamb7cjqZL9SHQH9FEA5z7XK24FaET2LXHG1VJL782bnnX%2FUWQ%3D%3D--AHmsXJW3eX0Sap5S--VPQ9ceHsigOXSbxcONt4Gg%3D%3D; Path=/; HttpOnly; Secure; SameSite=Lax",
+            "_octo=GH1.1.959656689.1759277054; Path=/; Domain=github.com; Expires=Thu, 01 Oct 2026 00:04:14 GMT; Secure; SameSite=Lax",
+            "logged_in=no; Path=/; Domain=github.com; Expires=Thu, 01 Oct 2026 00:04:14 GMT; HttpOnly; Secure; SameSite=Lax"
+          ],
+          "Strict-Transport-Security": [
+            "max-age=31536000; includeSubdomains; preload"
+          ],
+          "Vary": [
+            "X-PJAX, X-PJAX-Container, Turbo-Visit, Turbo-Frame, X-Requested-With,Accept-Encoding, Accept, X-Requested-With"
+          ],
+          "X-Content-Type-Options": [
+            "nosniff"
+          ],
+          "X-Frame-Options": [
+            "deny"
+          ],
+          "X-Github-Request-Id": [
+            "9936:1BD4C5:4858D:5641D:68DC6FFE"
+          ],
+          "X-Xss-Protection": [
+            "0"
+          ]
+        },
+        "Body": ""
+      }
+    },
+    {
+      "ID": "7c4c5d6b2d6bd28b",
+      "Request": {
+        "Method": "HEAD",
+        "URL": "https://github.com/slatedb/slatedb/blob/slatedb-go/go/v0.8.2/slatedb-go/go/go.mod",
+        "Header": {
+          "User-Agent": [
+            "Go-http-client/1.1"
+          ]
+        },
+        "MediaType": "",
+        "BodyParts": [
+          ""
+        ]
+      },
+      "Response": {
+        "StatusCode": 200,
+        "Proto": "HTTP/1.1",
+        "ProtoMajor": 1,
+        "ProtoMinor": 1,
+        "Header": {
+          "Accept-Ranges": [
+            "bytes"
+          ],
+          "Cache-Control": [
+            "max-age=0, private, must-revalidate"
+          ],
+          "Content-Security-Policy": [
+            "default-src 'none'; base-uri 'self'; child-src github.githubassets.com github.com/assets-cdn/worker/ github.com/assets/ gist.github.com/assets-cdn/worker/; connect-src 'self' uploads.github.com www.githubstatus.com collector.github.com raw.githubusercontent.com api.github.com github-cloud.s3.amazonaws.com github-production-repository-file-5c1aeb.s3.amazonaws.com github-production-upload-manifest-file-7fdce7.s3.amazonaws.com github-production-user-asset-6210df.s3.amazonaws.com *.rel.tunnels.api.visualstudio.com wss://*.rel.tunnels.api.visualstudio.com github.githubassets.com objects-origin.githubusercontent.com copilot-proxy.githubusercontent.com proxy.individual.githubcopilot.com proxy.business.githubcopilot.com proxy.enterprise.githubcopilot.com *.actions.githubusercontent.com wss://*.actions.githubusercontent.com productionresultssa0.blob.core.windows.net/ productionresultssa1.blob.core.windows.net/ productionresultssa2.blob.core.windows.net/ productionresultssa3.blob.core.windows.net/ productionresultssa4.blob.core.windows.net/ productionresultssa5.blob.core.windows.net/ productionresultssa6.blob.core.windows.net/ productionresultssa7.blob.core.windows.net/ productionresultssa8.blob.core.windows.net/ productionresultssa9.blob.core.windows.net/ productionresultssa10.blob.core.windows.net/ productionresultssa11.blob.core.windows.net/ productionresultssa12.blob.core.windows.net/ productionresultssa13.blob.core.windows.net/ productionresultssa14.blob.core.windows.net/ productionresultssa15.blob.core.windows.net/ productionresultssa16.blob.core.windows.net/ productionresultssa17.blob.core.windows.net/ productionresultssa18.blob.core.windows.net/ productionresultssa19.blob.core.windows.net/ github-production-repository-image-32fea6.s3.amazonaws.com github-production-release-asset-2e65be.s3.amazonaws.com insights.github.com wss://alive.github.com wss://alive-staging.github.com api.githubcopilot.com api.individual.githubcopilot.com api.business.githubcopilot.com api.enterprise.githubcopilot.com; font-src github.githubassets.com; form-action 'self' github.com gist.github.com copilot-workspace.githubnext.com objects-origin.githubusercontent.com; frame-ancestors 'none'; frame-src viewscreen.githubusercontent.com notebooks.githubusercontent.com; img-src 'self' data: blob: github.githubassets.com media.githubusercontent.com camo.githubusercontent.com identicons.github.com avatars.githubusercontent.com private-avatars.githubusercontent.com github-cloud.s3.amazonaws.com objects.githubusercontent.com release-assets.githubusercontent.com secured-user-images.githubusercontent.com/ user-images.githubusercontent.com/ private-user-images.githubusercontent.com opengraph.githubassets.com marketplace-screenshots.githubusercontent.com/ copilotprodattachments.blob.core.windows.net/github-production-copilot-attachments/ github-production-user-asset-6210df.s3.amazonaws.com customer-stories-feed.github.com spotlights-feed.github.com objects-origin.githubusercontent.com *.githubusercontent.com; manifest-src 'self'; media-src github.com user-images.githubusercontent.com/ secured-user-images.githubusercontent.com/ private-user-images.githubusercontent.com github-production-user-asset-6210df.s3.amazonaws.com gist.github.com; script-src github.githubassets.com; style-src 'unsafe-inline' github.githubassets.com; upgrade-insecure-requests; worker-src github.githubassets.com github.com/assets-cdn/worker/ github.com/assets/ gist.github.com/assets-cdn/worker/"
+          ],
+          "Content-Type": [
+            "text/html; charset=utf-8"
+          ],
+          "Date": [
+            "Wed, 01 Oct 2025 00:04:15 GMT"
+          ],
+          "Etag": [
+            "W/\"f69c93bd9c65ab6fface7f238b1afa39\""
+          ],
+          "Referrer-Policy": [
+            "no-referrer-when-downgrade"
+          ],
+          "Server": [
+            "github.com"
+          ],
+          "Set-Cookie": [
+            "_gh_sess=tJTJEPO0vCYYnIoNjldFpH6ToiBKQP%2Blqp0eUQh3UmJ%2BiBwp76Lmy28gg5WzmpTTsaet8eK45Dzg0dhyRh%2F%2F2zJcF6oXeS%2BIOEkCf0ZBnnFaLucrZFPCb6to0cDQwy2GsPuo1DS%2FHU6Q0lEeyRo8bJJRVqc%2F%2BZPxnY6743vK%2FjLutVmyedTP54A2KrrOpDam4ZOj%2FyqIFclY2IeA%2FuVj1awa4084OaxLWyGsMLnoYaSuOeT7HRaX1dl25c%2Fw5oUhPGfd6AjJQietwPN5hw3IMw%3D%3D--11BTWrM4xVZNXUNr--tnT7tFq8h0XyvpsHKBSKyQ%3D%3D; Path=/; HttpOnly; Secure; SameSite=Lax",
+            "_octo=GH1.1.300508215.1759277054; Path=/; Domain=github.com; Expires=Thu, 01 Oct 2026 00:04:14 GMT; Secure; SameSite=Lax",
+            "logged_in=no; Path=/; Domain=github.com; Expires=Thu, 01 Oct 2026 00:04:14 GMT; HttpOnly; Secure; SameSite=Lax"
+          ],
+          "Strict-Transport-Security": [
+            "max-age=31536000; includeSubdomains; preload"
+          ],
+          "Vary": [
+            "X-PJAX, X-PJAX-Container, Turbo-Visit, Turbo-Frame, X-Requested-With,Accept-Encoding, Accept, X-Requested-With"
+          ],
+          "X-Content-Type-Options": [
+            "nosniff"
+          ],
+          "X-Frame-Options": [
+            "deny"
+          ],
+          "X-Github-Request-Id": [
+            "9936:1BD4C5:485A9:5643D:68DC6FFE"
+          ],
+          "X-Raw-Download": [
+            "https://raw.githubusercontent.com/slatedb/slatedb/slatedb-go/go/v0.8.2/slatedb-go/go/go.mod"
+          ],
+          "X-Repository-Download": [
+            "git clone https://github.com/slatedb/slatedb.git"
+          ],
+          "X-Xss-Protection": [
+            "0"
+          ]
+        },
+        "Body": ""
+      }
+    },
+    {
+      "ID": "e18a2739ea88545b",
+      "Request": {
+        "Method": "HEAD",
+        "URL": "https://github.com/slatedb/slatedb/blob/slatedb-go/go/v0.8.2/slatedb-go/go/go.mod",
+        "Header": {
+          "User-Agent": [
+            "Go-http-client/1.1"
+          ]
+        },
+        "MediaType": "",
+        "BodyParts": [
+          ""
+        ]
+      },
+      "Response": {
+        "StatusCode": 200,
+        "Proto": "HTTP/1.1",
+        "ProtoMajor": 1,
+        "ProtoMinor": 1,
+        "Header": {
+          "Accept-Ranges": [
+            "bytes"
+          ],
+          "Cache-Control": [
+            "max-age=0, private, must-revalidate"
+          ],
+          "Content-Security-Policy": [
+            "default-src 'none'; base-uri 'self'; child-src github.githubassets.com github.com/assets-cdn/worker/ github.com/assets/ gist.github.com/assets-cdn/worker/; connect-src 'self' uploads.github.com www.githubstatus.com collector.github.com raw.githubusercontent.com api.github.com github-cloud.s3.amazonaws.com github-production-repository-file-5c1aeb.s3.amazonaws.com github-production-upload-manifest-file-7fdce7.s3.amazonaws.com github-production-user-asset-6210df.s3.amazonaws.com *.rel.tunnels.api.visualstudio.com wss://*.rel.tunnels.api.visualstudio.com github.githubassets.com objects-origin.githubusercontent.com copilot-proxy.githubusercontent.com proxy.individual.githubcopilot.com proxy.business.githubcopilot.com proxy.enterprise.githubcopilot.com *.actions.githubusercontent.com wss://*.actions.githubusercontent.com productionresultssa0.blob.core.windows.net/ productionresultssa1.blob.core.windows.net/ productionresultssa2.blob.core.windows.net/ productionresultssa3.blob.core.windows.net/ productionresultssa4.blob.core.windows.net/ productionresultssa5.blob.core.windows.net/ productionresultssa6.blob.core.windows.net/ productionresultssa7.blob.core.windows.net/ productionresultssa8.blob.core.windows.net/ productionresultssa9.blob.core.windows.net/ productionresultssa10.blob.core.windows.net/ productionresultssa11.blob.core.windows.net/ productionresultssa12.blob.core.windows.net/ productionresultssa13.blob.core.windows.net/ productionresultssa14.blob.core.windows.net/ productionresultssa15.blob.core.windows.net/ productionresultssa16.blob.core.windows.net/ productionresultssa17.blob.core.windows.net/ productionresultssa18.blob.core.windows.net/ productionresultssa19.blob.core.windows.net/ github-production-repository-image-32fea6.s3.amazonaws.com github-production-release-asset-2e65be.s3.amazonaws.com insights.github.com wss://alive.github.com wss://alive-staging.github.com api.githubcopilot.com api.individual.githubcopilot.com api.business.githubcopilot.com api.enterprise.githubcopilot.com; font-src github.githubassets.com; form-action 'self' github.com gist.github.com copilot-workspace.githubnext.com objects-origin.githubusercontent.com; frame-ancestors 'none'; frame-src viewscreen.githubusercontent.com notebooks.githubusercontent.com; img-src 'self' data: blob: github.githubassets.com media.githubusercontent.com camo.githubusercontent.com identicons.github.com avatars.githubusercontent.com private-avatars.githubusercontent.com github-cloud.s3.amazonaws.com objects.githubusercontent.com release-assets.githubusercontent.com secured-user-images.githubusercontent.com/ user-images.githubusercontent.com/ private-user-images.githubusercontent.com opengraph.githubassets.com marketplace-screenshots.githubusercontent.com/ copilotprodattachments.blob.core.windows.net/github-production-copilot-attachments/ github-production-user-asset-6210df.s3.amazonaws.com customer-stories-feed.github.com spotlights-feed.github.com objects-origin.githubusercontent.com *.githubusercontent.com; manifest-src 'self'; media-src github.com user-images.githubusercontent.com/ secured-user-images.githubusercontent.com/ private-user-images.githubusercontent.com github-production-user-asset-6210df.s3.amazonaws.com gist.github.com; script-src github.githubassets.com; style-src 'unsafe-inline' github.githubassets.com; upgrade-insecure-requests; worker-src github.githubassets.com github.com/assets-cdn/worker/ github.com/assets/ gist.github.com/assets-cdn/worker/"
+          ],
+          "Content-Type": [
+            "text/html; charset=utf-8"
+          ],
+          "Date": [
+            "Wed, 01 Oct 2025 00:04:15 GMT"
+          ],
+          "Etag": [
+            "W/\"f69c93bd9c65ab6fface7f238b1afa39\""
+          ],
+          "Referrer-Policy": [
+            "no-referrer-when-downgrade"
+          ],
+          "Server": [
+            "github.com"
+          ],
+          "Set-Cookie": [
+            "_gh_sess=80JmrcMbvXwHA1w%2Bx1pLdyiWr1nPUHv5gW1H7NoIa86outWWTkEsq%2BoH1oGaneia%2FcqGCEbtXYKXE72a%2BhKB477uiltBLLdusMAK%2B33VmCNiWgEyXftJfK8X3rXqbdRM13YZatG1%2FPyVrVRDry%2FuhF4N4NTw9PJZHjOt3jX28OeYPC%2FmJcQiOq3ibbOHyLiafjxL0PadtRIsXt%2BS8bfR60LRGMcOhISrDpPnYXolmwYLz%2BBZJk3NzVW0wg8aOljWLpA%2BV9yBuPNL78jILeUgMg%3D%3D--ofXUGew0sNxvOHYW--3AsX7Ub4XefQQuEHDSt98g%3D%3D; Path=/; HttpOnly; Secure; SameSite=Lax",
+            "_octo=GH1.1.79634705.1759277055; Path=/; Domain=github.com; Expires=Thu, 01 Oct 2026 00:04:15 GMT; Secure; SameSite=Lax",
+            "logged_in=no; Path=/; Domain=github.com; Expires=Thu, 01 Oct 2026 00:04:15 GMT; HttpOnly; Secure; SameSite=Lax"
+          ],
+          "Strict-Transport-Security": [
+            "max-age=31536000; includeSubdomains; preload"
+          ],
+          "Vary": [
+            "X-PJAX, X-PJAX-Container, Turbo-Visit, Turbo-Frame, X-Requested-With,Accept-Encoding, Accept, X-Requested-With"
+          ],
+          "X-Content-Type-Options": [
+            "nosniff"
+          ],
+          "X-Frame-Options": [
+            "deny"
+          ],
+          "X-Github-Request-Id": [
+            "9936:1BD4C5:485C2:56458:68DC6FFF"
+          ],
+          "X-Raw-Download": [
+            "https://raw.githubusercontent.com/slatedb/slatedb/slatedb-go/go/v0.8.2/slatedb-go/go/go.mod"
+          ],
+          "X-Repository-Download": [
+            "git clone https://github.com/slatedb/slatedb.git"
+          ],
+          "X-Xss-Protection": [
+            "0"
+          ]
+        },
+        "Body": ""
+      }
+    },
+    {
+      "ID": "f216069996b53cda",
+      "Request": {
+        "Method": "HEAD",
+        "URL": "https://github.com/slatedb/slatedb/raw/slatedb-go/go/v0.8.2/slatedb-go/go/go.mod",
+        "Header": {
+          "User-Agent": [
+            "Go-http-client/1.1"
+          ]
+        },
+        "MediaType": "",
+        "BodyParts": [
+          ""
+        ]
+      },
+      "Response": {
+        "StatusCode": 302,
+        "Proto": "HTTP/1.1",
+        "ProtoMajor": 1,
+        "ProtoMinor": 1,
+        "Header": {
+          "Access-Control-Allow-Origin": [
+            ""
+          ],
+          "Cache-Control": [
+            "no-cache"
+          ],
+          "Content-Length": [
+            "0"
+          ],
+          "Content-Security-Policy": [
+            "default-src 'none'; base-uri 'self'; child-src github.githubassets.com github.com/assets-cdn/worker/ github.com/assets/ gist.github.com/assets-cdn/worker/; connect-src 'self' uploads.github.com www.githubstatus.com collector.github.com raw.githubusercontent.com api.github.com github-cloud.s3.amazonaws.com github-production-repository-file-5c1aeb.s3.amazonaws.com github-production-upload-manifest-file-7fdce7.s3.amazonaws.com github-production-user-asset-6210df.s3.amazonaws.com *.rel.tunnels.api.visualstudio.com wss://*.rel.tunnels.api.visualstudio.com github.githubassets.com objects-origin.githubusercontent.com copilot-proxy.githubusercontent.com proxy.individual.githubcopilot.com proxy.business.githubcopilot.com proxy.enterprise.githubcopilot.com *.actions.githubusercontent.com wss://*.actions.githubusercontent.com productionresultssa0.blob.core.windows.net/ productionresultssa1.blob.core.windows.net/ productionresultssa2.blob.core.windows.net/ productionresultssa3.blob.core.windows.net/ productionresultssa4.blob.core.windows.net/ productionresultssa5.blob.core.windows.net/ productionresultssa6.blob.core.windows.net/ productionresultssa7.blob.core.windows.net/ productionresultssa8.blob.core.windows.net/ productionresultssa9.blob.core.windows.net/ productionresultssa10.blob.core.windows.net/ productionresultssa11.blob.core.windows.net/ productionresultssa12.blob.core.windows.net/ productionresultssa13.blob.core.windows.net/ productionresultssa14.blob.core.windows.net/ productionresultssa15.blob.core.windows.net/ productionresultssa16.blob.core.windows.net/ productionresultssa17.blob.core.windows.net/ productionresultssa18.blob.core.windows.net/ productionresultssa19.blob.core.windows.net/ github-production-repository-image-32fea6.s3.amazonaws.com github-production-release-asset-2e65be.s3.amazonaws.com insights.github.com wss://alive.github.com wss://alive-staging.github.com api.githubcopilot.com api.individual.githubcopilot.com api.business.githubcopilot.com api.enterprise.githubcopilot.com; font-src github.githubassets.com; form-action 'self' github.com gist.github.com copilot-workspace.githubnext.com objects-origin.githubusercontent.com; frame-ancestors 'none'; frame-src viewscreen.githubusercontent.com notebooks.githubusercontent.com; img-src 'self' data: blob: github.githubassets.com media.githubusercontent.com camo.githubusercontent.com identicons.github.com avatars.githubusercontent.com private-avatars.githubusercontent.com github-cloud.s3.amazonaws.com objects.githubusercontent.com release-assets.githubusercontent.com secured-user-images.githubusercontent.com/ user-images.githubusercontent.com/ private-user-images.githubusercontent.com opengraph.githubassets.com marketplace-screenshots.githubusercontent.com/ copilotprodattachments.blob.core.windows.net/github-production-copilot-attachments/ github-production-user-asset-6210df.s3.amazonaws.com customer-stories-feed.github.com spotlights-feed.github.com objects-origin.githubusercontent.com *.githubusercontent.com; manifest-src 'self'; media-src github.com user-images.githubusercontent.com/ secured-user-images.githubusercontent.com/ private-user-images.githubusercontent.com github-production-user-asset-6210df.s3.amazonaws.com gist.github.com; script-src github.githubassets.com; style-src 'unsafe-inline' github.githubassets.com; upgrade-insecure-requests; worker-src github.githubassets.com github.com/assets-cdn/worker/ github.com/assets/ gist.github.com/assets-cdn/worker/"
+          ],
+          "Content-Type": [
+            "text/html; charset=utf-8"
+          ],
+          "Date": [
+            "Wed, 01 Oct 2025 00:04:15 GMT"
+          ],
+          "Location": [
+            "https://raw.githubusercontent.com/slatedb/slatedb/slatedb-go/go/v0.8.2/slatedb-go/go/go.mod"
+          ],
+          "Referrer-Policy": [
+            "no-referrer-when-downgrade"
+          ],
+          "Server": [
+            "github.com"
+          ],
+          "Strict-Transport-Security": [
+            "max-age=31536000; includeSubdomains; preload"
+          ],
+          "Vary": [
+            "X-PJAX, X-PJAX-Container, Turbo-Visit, Turbo-Frame, X-Requested-With,Accept-Encoding, Accept, X-Requested-With"
+          ],
+          "X-Content-Type-Options": [
+            "nosniff"
+          ],
+          "X-Frame-Options": [
+            "deny"
+          ],
+          "X-Github-Request-Id": [
+            "9936:1BD4C5:485C4:5645A:68DC6FFF"
+          ],
+          "X-Xss-Protection": [
+            "0"
+          ]
+        },
+        "Body": ""
+      }
+    },
+    {
+      "ID": "01ad1bc507c4c447",
+      "Request": {
+        "Method": "HEAD",
+        "URL": "https://raw.githubusercontent.com/slatedb/slatedb/slatedb-go/go/v0.8.2/slatedb-go/go/go.mod",
+        "Header": {
+          "Referer": [
+            "https://github.com/slatedb/slatedb/raw/slatedb-go/go/v0.8.2/slatedb-go/go/go.mod"
+          ],
+          "User-Agent": [
+            "Go-http-client/1.1"
+          ]
+        },
+        "MediaType": "",
+        "BodyParts": [
+          ""
+        ]
+      },
+      "Response": {
+        "StatusCode": 200,
+        "Proto": "HTTP/1.1",
+        "ProtoMajor": 1,
+        "ProtoMinor": 1,
+        "Header": {
+          "Accept-Ranges": [
+            "bytes"
+          ],
+          "Access-Control-Allow-Origin": [
+            "*"
+          ],
+          "Cache-Control": [
+            "max-age=300"
+          ],
+          "Content-Length": [
+            "639"
+          ],
+          "Content-Security-Policy": [
+            "default-src 'none'; style-src 'unsafe-inline'; sandbox"
+          ],
+          "Content-Type": [
+            "text/plain; charset=utf-8"
+          ],
+          "Cross-Origin-Resource-Policy": [
+            "cross-origin"
+          ],
+          "Date": [
+            "Wed, 01 Oct 2025 00:04:15 GMT"
+          ],
+          "Etag": [
+            "\"4b15753d7bbca7c3ebc8ba709f95bfa3e1088800ded5fd10950e03a2550ef47e\""
+          ],
+          "Expires": [
+            "Wed, 01 Oct 2025 00:09:15 GMT"
+          ],
+          "Source-Age": [
+            "0"
+          ],
+          "Strict-Transport-Security": [
+            "max-age=31536000"
+          ],
+          "Vary": [
+            "Authorization,Accept-Encoding"
+          ],
+          "Via": [
+            "1.1 varnish"
+          ],
+          "X-Cache": [
+            "HIT"
+          ],
+          "X-Cache-Hits": [
+            "0"
+          ],
+          "X-Content-Type-Options": [
+            "nosniff"
+          ],
+          "X-Fastly-Request-Id": [
+            "76f48f4207d39cef174f4c90bdbc329e4b1c2953"
+          ],
+          "X-Frame-Options": [
+            "deny"
+          ],
+          "X-Github-Request-Id": [
+            "2922:379E62:2C34:1319B:68DC6BE3"
+          ],
+          "X-Served-By": [
+            "cache-bma-essb1270055-BMA"
+          ],
+          "X-Timer": [
+            "S1759277055.349653,VS0,VE134"
+          ],
+          "X-Xss-Protection": [
+            "1; mode=block"
+          ]
+        },
+        "Body": ""
+      }
     }
   ]
 }
