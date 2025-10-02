@@ -501,11 +501,11 @@ func moduleInfoDynamic(ctx context.Context, client *Client, modulePath, version 
 		}
 	}
 	dir := strings.TrimPrefix(strings.TrimPrefix(modulePath, sourceMeta.repoRootPrefix), "/")
+	dir = path.Join(sourceMeta.repoSubdir, dir)
 	commit, isHash := commitFromVersion(version, dir)
 	if transformCommit != nil {
 		commit = transformCommit(commit, isHash)
 	}
-	dir = path.Join(sourceMeta.repoSubdir, dir)
 	return &Info{
 		repoURL:    strings.TrimSuffix(repoURL, "/"),
 		repoSubdir: sourceMeta.repoSubdir,

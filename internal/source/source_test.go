@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"path"
 	"strings"
 	"testing"
 
@@ -226,11 +225,7 @@ func TestModuleInfoDynamic(t *testing.T) {
 		},
 	} {
 		t.Run(test.modulePath, func(t *testing.T) {
-			repoSubdir := ""
-			if test.want != nil {
-				repoSubdir = test.want.repoSubdir
-			}
-			got, err := moduleInfoDynamic(context.Background(), client, test.modulePath, path.Join(repoSubdir, version))
+			got, err := moduleInfoDynamic(context.Background(), client, test.modulePath, version)
 			if err != nil {
 				if test.want == nil {
 					return

@@ -14178,7 +14178,7 @@
       }
     },
     {
-      "ID": "76e2eb1cf92f9174",
+      "ID": "8197bbb63fa94455",
       "Request": {
         "Method": "GET",
         "URL": "https://slatedb.io/slatedb-go?go-get=1",
@@ -14220,10 +14220,10 @@
             "text/html"
           ],
           "Date": [
-            "Wed, 01 Oct 2025 00:04:13 GMT"
+            "Thu, 02 Oct 2025 13:06:09 GMT"
           ],
           "Expires": [
-            "Wed, 01 Oct 2025 00:14:13 GMT"
+            "Thu, 02 Oct 2025 13:16:08 GMT"
           ],
           "Location": [
             "https://slatedb.io/slatedb-go/?go-get=1"
@@ -14244,26 +14244,26 @@
             "0"
           ],
           "X-Fastly-Request-Id": [
-            "243a9a1403e9f992fa91dc25b1da707c165e10e8"
+            "d9c30a87dc7efeb93f3d0a16bc85011890892af0"
           ],
           "X-Github-Request-Id": [
-            "154D:379C9C:760C:8FFA:68DC6FFD"
+            "C2A2:2980E8:B9688:D4807:68DE78C0"
           ],
           "X-Proxy-Cache": [
             "MISS"
           ],
           "X-Served-By": [
-            "cache-bma-essb1270035-BMA"
+            "cache-bma-essb1270033-BMA"
           ],
           "X-Timer": [
-            "S1759277054.590029,VS0,VE109"
+            "S1759410369.923072,VS0,VE122"
           ]
         },
         "Body": "PGh0bWw+DQo8aGVhZD48dGl0bGU+MzAxIE1vdmVkIFBlcm1hbmVudGx5PC90aXRsZT48L2hlYWQ+DQo8Ym9keT4NCjxjZW50ZXI+PGgxPjMwMSBNb3ZlZCBQZXJtYW5lbnRseTwvaDE+PC9jZW50ZXI+DQo8aHI+PGNlbnRlcj5uZ2lueDwvY2VudGVyPg0KPC9ib2R5Pg0KPC9odG1sPg0K"
       }
     },
     {
-      "ID": "284fec8384bef729",
+      "ID": "df56a3913b305326",
       "Request": {
         "Method": "GET",
         "URL": "https://slatedb.io/slatedb-go/?go-get=1",
@@ -14296,7 +14296,7 @@
             "*"
           ],
           "Age": [
-            "161"
+            "290"
           ],
           "Cache-Control": [
             "max-age=600"
@@ -14311,13 +14311,13 @@
             "text/html; charset=utf-8"
           ],
           "Date": [
-            "Wed, 01 Oct 2025 00:04:13 GMT"
+            "Thu, 02 Oct 2025 13:06:09 GMT"
           ],
           "Etag": [
             "W/\"68c37135-2c1\""
           ],
           "Expires": [
-            "Tue, 30 Sep 2025 22:40:36 GMT"
+            "Thu, 02 Oct 2025 13:10:48 GMT"
           ],
           "Last-Modified": [
             "Fri, 12 Sep 2025 01:02:45 GMT"
@@ -14338,26 +14338,26 @@
             "0"
           ],
           "X-Fastly-Request-Id": [
-            "83cfb24a14ad1e51eff796364fc9bdaf0e2b58e1"
+            "7fa5c9da38ebf0181b317f4efd39de272248648e"
           ],
           "X-Github-Request-Id": [
-            "7876:2ABE93:17BF7:1B871:68DC5A0C"
+            "198F:11CC1B:B47F5:CF797:68DE7780"
           ],
           "X-Proxy-Cache": [
             "MISS"
           ],
           "X-Served-By": [
-            "cache-bma-essb1270035-BMA"
+            "cache-bma-essb1270033-BMA"
           ],
           "X-Timer": [
-            "S1759277054.700764,VS0,VE1"
+            "S1759410369.047745,VS0,VE2"
           ]
         },
         "Body": "H4sIAAAAAAAAA41STU/DMAy98ytMOK8W1yntAYbggATiS+I0pa3XBqVJlLgS07T/TrpumoYY28Wx7Of3/BF5OXu6fft8voOWO1PIwYJRtskFWVGAbEnVheyIFVjVUS4aN9Gdd4EFVM4yWc5FNIqpLjPtcOtOGgeN5sTKPk4Rk9/2ZVa5bofYvbCvwMaJ31rR9aGik1pn6JyGIAci7JS2eNDUCmsd1ucQlMaVRwlwtdCG1lePK6MtrdOorNlQ8TpAZzdw76BzdW9I4piQsQraM/DSp2WMOQExVLnAuYocHHrVUPbdvz/Mm3mdfcVEimNVcja3Azn0M1zy+i+lFAXpi4sPZTUvYTwteMUtLFwAbmmPzuCFvIuaXVhOL6SCNtAiF2fs5chiRfFPzQFSokp9oh/Mdh7c/NgfvRS268ECAAA="
       }
     },
     {
-      "ID": "789ab474f49caba7",
+      "ID": "612756348ea2eabc",
       "Request": {
         "Method": "HEAD",
         "URL": "https://github.com/slatedb/slatedb",
@@ -14390,10 +14390,10 @@
             "text/html; charset=utf-8"
           ],
           "Date": [
-            "Wed, 01 Oct 2025 00:04:14 GMT"
+            "Thu, 02 Oct 2025 13:06:09 GMT"
           ],
           "Etag": [
-            "W/\"0a507d1f5c9e310f3c32b0191791b8b6\""
+            "W/\"2b74917d39f60af120511a3cc8e684a2\""
           ],
           "Referrer-Policy": [
             "no-referrer-when-downgrade"
@@ -14402,9 +14402,9 @@
             "github.com"
           ],
           "Set-Cookie": [
-            "_gh_sess=h5TrIb25%2B8GAH5GcvaUqF4E%2FAYXk8nsTr4y5G9idSmxmdEawHsMjgRSaRvTaEI1v4ln36NrZZr5z7VQYHLjvbsoXYcuskzfsBUw8kSiDmjKDa1mVYQGkkU%2FELptHJx%2BLS5naKyAsEceSwjsFCYH9nhHuZRUh4kEkuIR5D4u1hUkMf2iqWyBfu%2FMsKn6A5ZffFry2j8Rv%2FPWGWV4h8OZY74yoqLKoK1qwqqHKG%2F8WfpnX1Ul4WnfeKcw4vnv6vIBvO68RkQ%2BTGdpQG03llifeEg%3D%3D--tjUzUwOMB425M%2FLG--kQCEtS5zDoAwqt%2FfsLSYQw%3D%3D; Path=/; HttpOnly; Secure; SameSite=Lax",
-            "_octo=GH1.1.301667406.1759277053; Path=/; Domain=github.com; Expires=Thu, 01 Oct 2026 00:04:13 GMT; Secure; SameSite=Lax",
-            "logged_in=no; Path=/; Domain=github.com; Expires=Thu, 01 Oct 2026 00:04:13 GMT; HttpOnly; Secure; SameSite=Lax"
+            "_gh_sess=gEAb57fztFN%2B0Wy8KjfZLS3XsPbibERKpR0hWUr9nPAeSqVkR355SfpYh7XaKTBSd4%2FdKKaDunDoTGMqHCtcJQlxNIR%2Fcivlp%2FFhBYOVLXONjeKDY0YEF9atTtm6TxHMUazyRbXku1R%2F32DpR4UjJPcXdpx9DtA7cbu8t%2FN9OnfSYGky2Z6msRD8sBlltKXc12xoZ9f1e81KoSk0ui6jnENOcJcKYsd4%2BrQGFH6hFjGTwyeNwbcwuJ%2BPwR1ZZrINlFKcu7ot5%2B8DBRwWd9a7Qw%3D%3D--cWgQjdwJgUVdCpi%2F--8lj2rSTrTLPFtMfyb1C9Aw%3D%3D; Path=/; HttpOnly; Secure; SameSite=Lax",
+            "_octo=GH1.1.1646048454.1759410369; Path=/; Domain=github.com; Expires=Fri, 02 Oct 2026 13:06:09 GMT; Secure; SameSite=Lax",
+            "logged_in=no; Path=/; Domain=github.com; Expires=Fri, 02 Oct 2026 13:06:09 GMT; HttpOnly; Secure; SameSite=Lax"
           ],
           "Strict-Transport-Security": [
             "max-age=31536000; includeSubdomains; preload"
@@ -14419,7 +14419,7 @@
             "deny"
           ],
           "X-Github-Request-Id": [
-            "9936:1BD4C5:48558:563B0:68DC6FFD"
+            "A264:2DC4D:6B9FFE:718E1F:68DE78C1"
           ],
           "X-Xss-Protection": [
             "0"
@@ -14429,7 +14429,7 @@
       }
     },
     {
-      "ID": "2a2e8de4e99dfe67",
+      "ID": "6e9955bf42892cee",
       "Request": {
         "Method": "HEAD",
         "URL": "https://github.com/slatedb/slatedb/tree/slatedb-go/go/v0.8.2/slatedb-go/go",
@@ -14462,10 +14462,10 @@
             "text/html; charset=utf-8"
           ],
           "Date": [
-            "Wed, 01 Oct 2025 00:04:14 GMT"
+            "Thu, 02 Oct 2025 13:06:09 GMT"
           ],
           "Etag": [
-            "W/\"c61b7c9c3165bc9d6969a7991793e626\""
+            "W/\"6c0b2b3981e00931b3618979feb8dbd4\""
           ],
           "Referrer-Policy": [
             "no-referrer-when-downgrade"
@@ -14474,9 +14474,9 @@
             "github.com"
           ],
           "Set-Cookie": [
-            "_gh_sess=MsD0gb1CO35F5Zfls04Svft%2FZP4cHFGXuZ786aqZ2PY3JOol6NSkm3PAGq%2FRg7zawDUOwEZN2Ot0RkxNSzu%2FU7D%2F93rjYcN3ThPDF0CQ7qFUWNcsebradNCaK3A%2B3GZmlHYEbgWMb1vPXVJ5cDXTbeNztbRQ4yBfSkJZOz2iKW%2BJk0iXOMc2K%2B8I9AnjXHFWLxPKGBZ2Ke3bxGkfqoyubXDzgms37Tm%2Fx%2Bugqamb7cjqZL9SHQH9FEA5z7XK24FaET2LXHG1VJL782bnnX%2FUWQ%3D%3D--AHmsXJW3eX0Sap5S--VPQ9ceHsigOXSbxcONt4Gg%3D%3D; Path=/; HttpOnly; Secure; SameSite=Lax",
-            "_octo=GH1.1.959656689.1759277054; Path=/; Domain=github.com; Expires=Thu, 01 Oct 2026 00:04:14 GMT; Secure; SameSite=Lax",
-            "logged_in=no; Path=/; Domain=github.com; Expires=Thu, 01 Oct 2026 00:04:14 GMT; HttpOnly; Secure; SameSite=Lax"
+            "_gh_sess=OCHg7fE4YWY2W7UhMx1bGpsRypS%2BqQFlMZyFlObvMADCKell5eizemIx9jbwelK5UQnMqYiGZpbWkrh50B4mfF%2Fp66jQstI6FsC9SH%2FCl1kGHDY0e6nb0VngSG710Py6rLVn4ryO3%2BGl89CQEi38m3baZgO9soitR2320fPN%2B%2FZfSoFUVDv9dC%2BTfdc%2F0KGC8N9TPFvXqQ8oS0KaH0iVeLpgzwdJHQMJ%2BB5YXc4BX3KdOYHpdJAgR%2F9zBmtd62SXqkR8FMnDGOGdJr%2FFB%2FSv6Q%3D%3D--%2FcWtt8OdPFpQHKH%2F--buTeKfks%2Fb6FMaRb%2FcqDwA%3D%3D; Path=/; HttpOnly; Secure; SameSite=Lax",
+            "_octo=GH1.1.2136488040.1759410369; Path=/; Domain=github.com; Expires=Fri, 02 Oct 2026 13:06:09 GMT; Secure; SameSite=Lax",
+            "logged_in=no; Path=/; Domain=github.com; Expires=Fri, 02 Oct 2026 13:06:09 GMT; HttpOnly; Secure; SameSite=Lax"
           ],
           "Strict-Transport-Security": [
             "max-age=31536000; includeSubdomains; preload"
@@ -14491,7 +14491,7 @@
             "deny"
           ],
           "X-Github-Request-Id": [
-            "9936:1BD4C5:4858D:5641D:68DC6FFE"
+            "A264:2DC4D:6BA05A:718E71:68DE78C1"
           ],
           "X-Xss-Protection": [
             "0"
@@ -14501,7 +14501,7 @@
       }
     },
     {
-      "ID": "7c4c5d6b2d6bd28b",
+      "ID": "63fe9bb6a039cedb",
       "Request": {
         "Method": "HEAD",
         "URL": "https://github.com/slatedb/slatedb/blob/slatedb-go/go/v0.8.2/slatedb-go/go/go.mod",
@@ -14534,10 +14534,10 @@
             "text/html; charset=utf-8"
           ],
           "Date": [
-            "Wed, 01 Oct 2025 00:04:15 GMT"
+            "Thu, 02 Oct 2025 13:06:10 GMT"
           ],
           "Etag": [
-            "W/\"f69c93bd9c65ab6fface7f238b1afa39\""
+            "W/\"f020e215288519d26bd2c68e776a9601\""
           ],
           "Referrer-Policy": [
             "no-referrer-when-downgrade"
@@ -14546,9 +14546,9 @@
             "github.com"
           ],
           "Set-Cookie": [
-            "_gh_sess=tJTJEPO0vCYYnIoNjldFpH6ToiBKQP%2Blqp0eUQh3UmJ%2BiBwp76Lmy28gg5WzmpTTsaet8eK45Dzg0dhyRh%2F%2F2zJcF6oXeS%2BIOEkCf0ZBnnFaLucrZFPCb6to0cDQwy2GsPuo1DS%2FHU6Q0lEeyRo8bJJRVqc%2F%2BZPxnY6743vK%2FjLutVmyedTP54A2KrrOpDam4ZOj%2FyqIFclY2IeA%2FuVj1awa4084OaxLWyGsMLnoYaSuOeT7HRaX1dl25c%2Fw5oUhPGfd6AjJQietwPN5hw3IMw%3D%3D--11BTWrM4xVZNXUNr--tnT7tFq8h0XyvpsHKBSKyQ%3D%3D; Path=/; HttpOnly; Secure; SameSite=Lax",
-            "_octo=GH1.1.300508215.1759277054; Path=/; Domain=github.com; Expires=Thu, 01 Oct 2026 00:04:14 GMT; Secure; SameSite=Lax",
-            "logged_in=no; Path=/; Domain=github.com; Expires=Thu, 01 Oct 2026 00:04:14 GMT; HttpOnly; Secure; SameSite=Lax"
+            "_gh_sess=Fvb65hYausrkubsow0xFrA8HcNTvTuxAjHO7Hm72xX6f4xTcPvU4%2F1X%2FVVtDLvqzz%2F6IfkRUBgq0kGwWRecxLMxXfR46Fg02Y3FY7xzoaiyke3FKOpGdL%2BxPX8DMY1ovFsrrlPZ%2BfH86rraic1AacuSvRLYQ23XHtCCYDg0r7MPe4FX7jTnf16iFVN7QK%2Fe8I%2F6Ump9v3w8z3Ne6FLjhQlPPE%2Fg7jaEWPyvb%2B5Pw2BTUxi0YSx1QrH%2BHa74ZJjumrJdHaAzGrwkOIhQvNN0Qeg%3D%3D--dXQNTKkHGgsnS481--L9bNzV2mgRgneOh0pCGErg%3D%3D; Path=/; HttpOnly; Secure; SameSite=Lax",
+            "_octo=GH1.1.1267588554.1759410369; Path=/; Domain=github.com; Expires=Fri, 02 Oct 2026 13:06:09 GMT; Secure; SameSite=Lax",
+            "logged_in=no; Path=/; Domain=github.com; Expires=Fri, 02 Oct 2026 13:06:09 GMT; HttpOnly; Secure; SameSite=Lax"
           ],
           "Strict-Transport-Security": [
             "max-age=31536000; includeSubdomains; preload"
@@ -14563,7 +14563,7 @@
             "deny"
           ],
           "X-Github-Request-Id": [
-            "9936:1BD4C5:485A9:5643D:68DC6FFE"
+            "A264:2DC4D:6BA09B:718EA1:68DE78C1"
           ],
           "X-Raw-Download": [
             "https://raw.githubusercontent.com/slatedb/slatedb/slatedb-go/go/v0.8.2/slatedb-go/go/go.mod"
@@ -14579,7 +14579,7 @@
       }
     },
     {
-      "ID": "e18a2739ea88545b",
+      "ID": "43906491aa618270",
       "Request": {
         "Method": "HEAD",
         "URL": "https://github.com/slatedb/slatedb/blob/slatedb-go/go/v0.8.2/slatedb-go/go/go.mod",
@@ -14612,10 +14612,10 @@
             "text/html; charset=utf-8"
           ],
           "Date": [
-            "Wed, 01 Oct 2025 00:04:15 GMT"
+            "Thu, 02 Oct 2025 13:06:10 GMT"
           ],
           "Etag": [
-            "W/\"f69c93bd9c65ab6fface7f238b1afa39\""
+            "W/\"f020e215288519d26bd2c68e776a9601\""
           ],
           "Referrer-Policy": [
             "no-referrer-when-downgrade"
@@ -14624,9 +14624,9 @@
             "github.com"
           ],
           "Set-Cookie": [
-            "_gh_sess=80JmrcMbvXwHA1w%2Bx1pLdyiWr1nPUHv5gW1H7NoIa86outWWTkEsq%2BoH1oGaneia%2FcqGCEbtXYKXE72a%2BhKB477uiltBLLdusMAK%2B33VmCNiWgEyXftJfK8X3rXqbdRM13YZatG1%2FPyVrVRDry%2FuhF4N4NTw9PJZHjOt3jX28OeYPC%2FmJcQiOq3ibbOHyLiafjxL0PadtRIsXt%2BS8bfR60LRGMcOhISrDpPnYXolmwYLz%2BBZJk3NzVW0wg8aOljWLpA%2BV9yBuPNL78jILeUgMg%3D%3D--ofXUGew0sNxvOHYW--3AsX7Ub4XefQQuEHDSt98g%3D%3D; Path=/; HttpOnly; Secure; SameSite=Lax",
-            "_octo=GH1.1.79634705.1759277055; Path=/; Domain=github.com; Expires=Thu, 01 Oct 2026 00:04:15 GMT; Secure; SameSite=Lax",
-            "logged_in=no; Path=/; Domain=github.com; Expires=Thu, 01 Oct 2026 00:04:15 GMT; HttpOnly; Secure; SameSite=Lax"
+            "_gh_sess=77dbQITVxN5BvZGmPPFaelOzWUWmPlNO37TzTtGg4BcyfUuoExT7PfdzGBPwv86N%2F4qP5Iq75GV4UYMaXpm46KW9WprM9vBIfMohP7OWZzbHaCRNMWrY7QlBmheksCP8gHmhJol%2F%2FJeu6yeLmsyBmNiqdXNuSgL2%2B0OHf3lu%2FVfQooYdm2dqwaK8RW3RzGFSnsouWNWpPcXT1EdvX06r8fbF%2F3UkqCdyNTju3f15hKqucXv0r6rKYN2eAJNYgr9Jvs4r64cKxP1ft05KsRZxPg%3D%3D--iPZin%2F0O8YXnkm9m--V%2BuG5J5ZbR0P0l0KZaF8sA%3D%3D; Path=/; HttpOnly; Secure; SameSite=Lax",
+            "_octo=GH1.1.1852603273.1759410370; Path=/; Domain=github.com; Expires=Fri, 02 Oct 2026 13:06:10 GMT; Secure; SameSite=Lax",
+            "logged_in=no; Path=/; Domain=github.com; Expires=Fri, 02 Oct 2026 13:06:10 GMT; HttpOnly; Secure; SameSite=Lax"
           ],
           "Strict-Transport-Security": [
             "max-age=31536000; includeSubdomains; preload"
@@ -14641,7 +14641,7 @@
             "deny"
           ],
           "X-Github-Request-Id": [
-            "9936:1BD4C5:485C2:56458:68DC6FFF"
+            "A264:2DC4D:6BA0E9:718EE3:68DE78C2"
           ],
           "X-Raw-Download": [
             "https://raw.githubusercontent.com/slatedb/slatedb/slatedb-go/go/v0.8.2/slatedb-go/go/go.mod"
@@ -14657,7 +14657,7 @@
       }
     },
     {
-      "ID": "f216069996b53cda",
+      "ID": "d4157d6fe4899707",
       "Request": {
         "Method": "HEAD",
         "URL": "https://github.com/slatedb/slatedb/raw/slatedb-go/go/v0.8.2/slatedb-go/go/go.mod",
@@ -14693,7 +14693,7 @@
             "text/html; charset=utf-8"
           ],
           "Date": [
-            "Wed, 01 Oct 2025 00:04:15 GMT"
+            "Thu, 02 Oct 2025 13:06:10 GMT"
           ],
           "Location": [
             "https://raw.githubusercontent.com/slatedb/slatedb/slatedb-go/go/v0.8.2/slatedb-go/go/go.mod"
@@ -14717,7 +14717,7 @@
             "deny"
           ],
           "X-Github-Request-Id": [
-            "9936:1BD4C5:485C4:5645A:68DC6FFF"
+            "A264:2DC4D:6BA0EB:718EE7:68DE78C2"
           ],
           "X-Xss-Protection": [
             "0"
@@ -14727,7 +14727,7 @@
       }
     },
     {
-      "ID": "01ad1bc507c4c447",
+      "ID": "711177fddca38daf",
       "Request": {
         "Method": "HEAD",
         "URL": "https://raw.githubusercontent.com/slatedb/slatedb/slatedb-go/go/v0.8.2/slatedb-go/go/go.mod",
@@ -14772,16 +14772,16 @@
             "cross-origin"
           ],
           "Date": [
-            "Wed, 01 Oct 2025 00:04:15 GMT"
+            "Thu, 02 Oct 2025 13:06:10 GMT"
           ],
           "Etag": [
             "\"4b15753d7bbca7c3ebc8ba709f95bfa3e1088800ded5fd10950e03a2550ef47e\""
           ],
           "Expires": [
-            "Wed, 01 Oct 2025 00:09:15 GMT"
+            "Thu, 02 Oct 2025 13:11:10 GMT"
           ],
           "Source-Age": [
-            "0"
+            "170"
           ],
           "Strict-Transport-Security": [
             "max-age=31536000"
@@ -14802,19 +14802,19 @@
             "nosniff"
           ],
           "X-Fastly-Request-Id": [
-            "76f48f4207d39cef174f4c90bdbc329e4b1c2953"
+            "413c08824c06429fa6384df71dfd183375494072"
           ],
           "X-Frame-Options": [
             "deny"
           ],
           "X-Github-Request-Id": [
-            "2922:379E62:2C34:1319B:68DC6BE3"
+            "742A:219DAB:887F2:1FFDB2:68DE7817"
           ],
           "X-Served-By": [
-            "cache-bma-essb1270055-BMA"
+            "cache-bma-essb1270043-BMA"
           ],
           "X-Timer": [
-            "S1759277055.349653,VS0,VE134"
+            "S1759410371.682849,VS0,VE1"
           ],
           "X-Xss-Protection": [
             "1; mode=block"
@@ -14824,7 +14824,7 @@
       }
     },
     {
-      "ID": "7ae8eb5c9ffbb1a8",
+      "ID": "15274bbb0c5ab15f",
       "Request": {
         "Method": "GET",
         "URL": "https://edv1n.github.io/go-get-subdirectory-test?go-get=1",
@@ -14851,7 +14851,7 @@
             "bytes"
           ],
           "Age": [
-            "139"
+            "3349"
           ],
           "Content-Length": [
             "162"
@@ -14860,7 +14860,7 @@
             "text/html"
           ],
           "Date": [
-            "Thu, 02 Oct 2025 12:12:41 GMT"
+            "Thu, 02 Oct 2025 13:06:10 GMT"
           ],
           "Location": [
             "https://edv1n.github.io/go-get-subdirectory-test/?go-get=1"
@@ -14878,26 +14878,26 @@
             "HIT"
           ],
           "X-Cache-Hits": [
-            "1"
+            "0"
           ],
           "X-Fastly-Request-Id": [
-            "795031f6973d8fcac40fec329eee24fde2e922df"
+            "51520d2b0c8b0375be18d83f8340e31bae55fb0d"
           ],
           "X-Github-Request-Id": [
             "A168:29C660:A7CD0:C1788:68DE6BAD"
           ],
           "X-Served-By": [
-            "cache-bma-essb1270056-BMA"
+            "cache-bma-essb1270044-BMA"
           ],
           "X-Timer": [
-            "S1759407161.396459,VS0,VE2"
+            "S1759410371.727282,VS0,VE2"
           ]
         },
         "Body": "PGh0bWw+DQo8aGVhZD48dGl0bGU+MzAxIE1vdmVkIFBlcm1hbmVudGx5PC90aXRsZT48L2hlYWQ+DQo8Ym9keT4NCjxjZW50ZXI+PGgxPjMwMSBNb3ZlZCBQZXJtYW5lbnRseTwvaDE+PC9jZW50ZXI+DQo8aHI+PGNlbnRlcj5uZ2lueDwvY2VudGVyPg0KPC9ib2R5Pg0KPC9odG1sPg0K"
       }
     },
     {
-      "ID": "b126e6fde65d254c",
+      "ID": "646855aa50d8954a",
       "Request": {
         "Method": "GET",
         "URL": "https://edv1n.github.io/go-get-subdirectory-test/?go-get=1",
@@ -14930,7 +14930,7 @@
             "*"
           ],
           "Age": [
-            "58"
+            "320"
           ],
           "Cache-Control": [
             "max-age=600"
@@ -14942,7 +14942,7 @@
             "text/html; charset=utf-8"
           ],
           "Date": [
-            "Thu, 02 Oct 2025 12:12:41 GMT"
+            "Thu, 02 Oct 2025 13:06:10 GMT"
           ],
           "Etag": [
             "\"68ddc3ca-8d\""
@@ -14969,10 +14969,10 @@
             "HIT"
           ],
           "X-Cache-Hits": [
-            "1"
+            "0"
           ],
           "X-Fastly-Request-Id": [
-            "015c856477f1684a38842ceafb56bc84acf9fa6f"
+            "4dc8bf2bac4dcb3a19fadf7b0ae172672080052e"
           ],
           "X-Github-Request-Id": [
             "591C:219BE4:A8DF1:C28E4:68DE6BAD"
@@ -14981,17 +14981,17 @@
             "MISS"
           ],
           "X-Served-By": [
-            "cache-bma-essb1270056-BMA"
+            "cache-bma-essb1270044-BMA"
           ],
           "X-Timer": [
-            "S1759407161.400957,VS0,VE1"
+            "S1759410371.731928,VS0,VE1"
           ]
         },
         "Body": "PGhlYWQ+PG1ldGEgbmFtZT0iZ28taW1wb3J0IiBjb250ZW50PSJlZHYxbi5naXRodWIuaW8vZ28tZ2V0LXN1YmRpcmVjdG9yeS10ZXN0IGdpdCBodHRwczovL2dpdGh1Yi5jb20vZWR2MW4vZ28tZ2V0LXN1YmRpcmVjdG9yeS10ZXN0IGdvcGtnIj4K"
       }
     },
     {
-      "ID": "9fe49ce0e7115f48",
+      "ID": "92c073a68447dfc4",
       "Request": {
         "Method": "HEAD",
         "URL": "https://github.com/edv1n/go-get-subdirectory-test",
@@ -15024,10 +15024,10 @@
             "text/html; charset=utf-8"
           ],
           "Date": [
-            "Thu, 02 Oct 2025 12:12:41 GMT"
+            "Thu, 02 Oct 2025 13:06:11 GMT"
           ],
           "Etag": [
-            "W/\"92e24f17ee814151d8aac889279099ba\""
+            "W/\"485e055808f39a7cf0d2cf52cdcdf3c2\""
           ],
           "Referrer-Policy": [
             "no-referrer-when-downgrade"
@@ -15036,9 +15036,9 @@
             "github.com"
           ],
           "Set-Cookie": [
-            "_gh_sess=5aR%2F0VPeQwVJNOVas20Lqoc6phiR%2B0DTRYKw8A9Mj11bsk1KfXWBiu6HCX62PwHdGzcGYa8%2FCORlOhDg664kme1KQViVNoZ3Ru89teTdecAmuPpjiALdakm96%2Bv8Em2D6oF1626sZmGGvMqkQcQ%2F5Y49Ly31lVzl%2FiCYZ974Dizi6Zjps9rN0bwmqvwy8f3fA0m4OBm9zKuTGfzA54wtpNgoJCy%2BMKwOqpQ24RRd%2FOOKoADdevsLRbSp7nJeOrgUTfhAlAdZSgTDUe6zd4nr1w%3D%3D--HUurhb0IsvxpxdOY--8xbbgOmigwqSoTez9X9vjA%3D%3D; Path=/; HttpOnly; Secure; SameSite=Lax",
-            "_octo=GH1.1.283929900.1759407161; Path=/; Domain=github.com; Expires=Fri, 02 Oct 2026 12:12:41 GMT; Secure; SameSite=Lax",
-            "logged_in=no; Path=/; Domain=github.com; Expires=Fri, 02 Oct 2026 12:12:41 GMT; HttpOnly; Secure; SameSite=Lax"
+            "_gh_sess=EJI4CynMrxvUaPpyTIqZYoW3E6ARlpbtu9QpToJXsr7bQ2461vH6vML24Rdwn0ZLCmm9L20mBAGkBUKl%2Fd3u4WKcfuh0IY7UYmLCtBaoc877vxUP9ws4nZOllxEJU%2FbfidcwZA%2BNQDdpKF%2FFXFOD8%2BXNXcfMaAxGCJ8z3fklI5xz%2Bpr8zJnIQ9glXM30%2BEj6yG0j8UmxcJptv2QeecUIUTueXGGvabew1EfcY6ckmk05idmSh6jAKjhJYQ8lmlZXxYSpChC1QxA3FF%2FcSQPMcQ%3D%3D--6HKqm7sFFLTCIK75--MmfPC4yWcbXPA%2F4PjoD51g%3D%3D; Path=/; HttpOnly; Secure; SameSite=Lax",
+            "_octo=GH1.1.2010172013.1759410370; Path=/; Domain=github.com; Expires=Fri, 02 Oct 2026 13:06:10 GMT; Secure; SameSite=Lax",
+            "logged_in=no; Path=/; Domain=github.com; Expires=Fri, 02 Oct 2026 13:06:10 GMT; HttpOnly; Secure; SameSite=Lax"
           ],
           "Strict-Transport-Security": [
             "max-age=31536000; includeSubdomains; preload"
@@ -15053,7 +15053,7 @@
             "deny"
           ],
           "X-Github-Request-Id": [
-            "8C22:6DBE8:63750C:69C21B:68DE6C39"
+            "A264:2DC4D:6BA11F:718F0F:68DE78C2"
           ],
           "X-Xss-Protection": [
             "0"
@@ -15063,10 +15063,10 @@
       }
     },
     {
-      "ID": "126ad8e6077bf87d",
+      "ID": "31036cb20f3255e9",
       "Request": {
         "Method": "HEAD",
-        "URL": "https://github.com/edv1n/go-get-subdirectory-test/tree/gopkg/v0.0.3/gopkg",
+        "URL": "https://github.com/edv1n/go-get-subdirectory-test/tree/gopkg/v0.0.4/gopkg",
         "Header": {
           "User-Agent": [
             "Go-http-client/1.1"
@@ -15096,10 +15096,10 @@
             "text/html; charset=utf-8"
           ],
           "Date": [
-            "Thu, 02 Oct 2025 12:12:42 GMT"
+            "Thu, 02 Oct 2025 13:06:11 GMT"
           ],
           "Etag": [
-            "W/\"dc272345b14c22e8cb3870eb5ae62370\""
+            "W/\"86f22d1a0330cf672c2c3cbe099606d6\""
           ],
           "Referrer-Policy": [
             "no-referrer-when-downgrade"
@@ -15108,9 +15108,9 @@
             "github.com"
           ],
           "Set-Cookie": [
-            "_gh_sess=AHSrqi%2FSPNnyju80VhoJo7d632SkYDh1uxKsXGLnf1J74x8s%2BS%2BrV5wTfHp66BbnUysfhLjVOpuDjjDAQqfImACfv9YqydLZDh6RA%2FF%2FlHPH3MJ%2B7J9O2WZO6S37LE1ozj1GxaJDrMZ%2FrsA14DqyyWRUQWSENwUDGqRL53eq03WGAwDP6GvqutPVCOf01cbzkBnLgE7rCHlQ6Imdhlj9TNGWf%2BtALYK4NtTWr5UP7LzGMyQzN5eFeOKrAFe8W9UL4aI%2BzMtb3hyjj%2Fn8mhJh8A%3D%3D--I6HiBJGf%2B5w1iZGw--KSGubxJWVJsrbiPv%2BOR%2BMA%3D%3D; Path=/; HttpOnly; Secure; SameSite=Lax",
-            "_octo=GH1.1.1368365309.1759407161; Path=/; Domain=github.com; Expires=Fri, 02 Oct 2026 12:12:41 GMT; Secure; SameSite=Lax",
-            "logged_in=no; Path=/; Domain=github.com; Expires=Fri, 02 Oct 2026 12:12:41 GMT; HttpOnly; Secure; SameSite=Lax"
+            "_gh_sess=8uKLdBoJJT%2BA9D%2BUGALEf%2B%2FYao5F%2FLcW5RhT1DzSqFYs5X7gqqbdjroBnyCcMDVqKFxnwjJgnzNiqjR6%2FYVWcGaJc1ccOZlCLn4yEqNrOHsxPgDDr85lqAqxOa9K4J0jRurNPIdbBg551ooNVUHYeOwvoeGpp3ZJyE1DKIsRIvirHPu0Ec2TQrv3WnYGuzDk0T7dZRlwl16iqatb1qsbWCc8hfCJJLq2UP1bvNFO0WBirV3wYqausOv4q5RODYb1ybrwRvtE8DffB4mjI6LVGA%3D%3D--rcsYcUQ5pPZUBKsQ--Uh5HZvvb3UDrw3fVvgEdvQ%3D%3D; Path=/; HttpOnly; Secure; SameSite=Lax",
+            "_octo=GH1.1.454699012.1759410371; Path=/; Domain=github.com; Expires=Fri, 02 Oct 2026 13:06:11 GMT; Secure; SameSite=Lax",
+            "logged_in=no; Path=/; Domain=github.com; Expires=Fri, 02 Oct 2026 13:06:11 GMT; HttpOnly; Secure; SameSite=Lax"
           ],
           "Strict-Transport-Security": [
             "max-age=31536000; includeSubdomains; preload"
@@ -15125,7 +15125,7 @@
             "deny"
           ],
           "X-Github-Request-Id": [
-            "8C22:6DBE8:637539:69C246:68DE6C39"
+            "A264:2DC4D:6BA1A1:718F91:68DE78C3"
           ],
           "X-Xss-Protection": [
             "0"
@@ -15135,10 +15135,10 @@
       }
     },
     {
-      "ID": "0da9aa52dadc5943",
+      "ID": "862d6cd509d9b892",
       "Request": {
         "Method": "HEAD",
-        "URL": "https://github.com/edv1n/go-get-subdirectory-test/blob/gopkg/v0.0.3/gopkg/go.mod",
+        "URL": "https://github.com/edv1n/go-get-subdirectory-test/blob/gopkg/v0.0.4/gopkg/go.mod",
         "Header": {
           "User-Agent": [
             "Go-http-client/1.1"
@@ -15168,10 +15168,10 @@
             "text/html; charset=utf-8"
           ],
           "Date": [
-            "Thu, 02 Oct 2025 12:12:42 GMT"
+            "Thu, 02 Oct 2025 13:06:12 GMT"
           ],
           "Etag": [
-            "W/\"1e9d26126b38820a928c6ed68094c1c6\""
+            "W/\"88d5c39ded68acbf88af115428d6db3c\""
           ],
           "Referrer-Policy": [
             "no-referrer-when-downgrade"
@@ -15180,9 +15180,9 @@
             "github.com"
           ],
           "Set-Cookie": [
-            "_gh_sess=fl3jXasA4Bdo0C2n6SBk7ef53ETuwyg2js13inAOSYwIb4YMX1KAweZHVX6oTMqp%2BhZF0X1WSlqEAjISfztzcHHrEUp5S%2BAIUjqAc6fmad7wNMwbr%2B8QrDcOjNE4IHQ4nfj4rH5Y%2FVjLBdXnX9FEanViH%2B12pdbE3vET%2BjfpFYbjueP5aFVWQS1FKzY0kKUz7oBOeTsWA7M%2Bgmqw97CDA3lJqKtusEZBgl3ibPCRp30AfKYDO0D2oU4NExRp2ofptIBGKzu%2BaXZPpi2UG5jYaA%3D%3D--qNqJFXKX%2FuYfSsgu--zT54KsreliOFSy%2FjJLvLTw%3D%3D; Path=/; HttpOnly; Secure; SameSite=Lax",
-            "_octo=GH1.1.893976769.1759407162; Path=/; Domain=github.com; Expires=Fri, 02 Oct 2026 12:12:42 GMT; Secure; SameSite=Lax",
-            "logged_in=no; Path=/; Domain=github.com; Expires=Fri, 02 Oct 2026 12:12:42 GMT; HttpOnly; Secure; SameSite=Lax"
+            "_gh_sess=9qQfWCs7%2B47LY1PpVkm5%2FRwhpnsXnTvy79yiE5V3hsQhUv2GTBIz6uITdqGCl3IhsUN37Ls6WwYTYRsZhzWnwOCZdxLA2bGMKplKZxc%2FpP7svKRsLjzwYvdPntfaF5XySbKRWPC%2FZUfRoMeI4MS8ffkK6nN8WzIHdjIfGzzfHE7tUo2LqBiNtKBmT8qdaHBnVrzw%2B%2BwVAFHQ25krdoQadlz%2FORkn6%2Bv7JLT6nhqPC%2FFkFpC2%2BGAL67oq%2BlGyQDKZxf7tOWUl9cNWGpeNIM9nhA%3D%3D--IeU4y68WtY1Dvqpy--W7AsiKvisB4U4Ux4hk9AfQ%3D%3D; Path=/; HttpOnly; Secure; SameSite=Lax",
+            "_octo=GH1.1.1667567366.1759410371; Path=/; Domain=github.com; Expires=Fri, 02 Oct 2026 13:06:11 GMT; Secure; SameSite=Lax",
+            "logged_in=no; Path=/; Domain=github.com; Expires=Fri, 02 Oct 2026 13:06:11 GMT; HttpOnly; Secure; SameSite=Lax"
           ],
           "Strict-Transport-Security": [
             "max-age=31536000; includeSubdomains; preload"
@@ -15197,10 +15197,10 @@
             "deny"
           ],
           "X-Github-Request-Id": [
-            "8C22:6DBE8:637557:69C269:68DE6C3A"
+            "A264:2DC4D:6BA1E4:718FFB:68DE78C3"
           ],
           "X-Raw-Download": [
-            "https://raw.githubusercontent.com/edv1n/go-get-subdirectory-test/gopkg/v0.0.3/gopkg/go.mod"
+            "https://raw.githubusercontent.com/edv1n/go-get-subdirectory-test/gopkg/v0.0.4/gopkg/go.mod"
           ],
           "X-Repository-Download": [
             "git clone https://github.com/edv1n/go-get-subdirectory-test.git"
@@ -15213,10 +15213,10 @@
       }
     },
     {
-      "ID": "68dd396dc385516a",
+      "ID": "329b624314e4067e",
       "Request": {
         "Method": "HEAD",
-        "URL": "https://github.com/edv1n/go-get-subdirectory-test/blob/gopkg/v0.0.3/gopkg/go.mod",
+        "URL": "https://github.com/edv1n/go-get-subdirectory-test/blob/gopkg/v0.0.4/gopkg/go.mod",
         "Header": {
           "User-Agent": [
             "Go-http-client/1.1"
@@ -15246,10 +15246,10 @@
             "text/html; charset=utf-8"
           ],
           "Date": [
-            "Thu, 02 Oct 2025 12:12:42 GMT"
+            "Thu, 02 Oct 2025 13:06:12 GMT"
           ],
           "Etag": [
-            "W/\"1e9d26126b38820a928c6ed68094c1c6\""
+            "W/\"88d5c39ded68acbf88af115428d6db3c\""
           ],
           "Referrer-Policy": [
             "no-referrer-when-downgrade"
@@ -15258,9 +15258,9 @@
             "github.com"
           ],
           "Set-Cookie": [
-            "_gh_sess=vWukVyBHbOvy16A2he53Gxw0LtBdVY%2Fwf69zyOkL8mdzc7iF14bVTNo6fUvbUV7rqYxdqVyH7yIcHeaNR0bZlvV2Wdc1Fsu7kTy%2FDjndn3mBX%2B5KxD%2Fofe5XjWI0EjUzt%2FaToQNXJxE212iLEnGAZeW2rQYspZnfqUdKYXeE2cxGhMQv2gzGKO2q3M73HtbMmttTogMTf0oihmJRe1%2FG31tlwer%2BuptcaD%2B41Xt9TosxyJzHfaQhVjxWG4mDt07P9g6rvFF5wsU5V5M1EOMxWg%3D%3D--G%2BpeB2gw57RMQhT%2B--jsdkSzHYOe57q0ZQWI4GIg%3D%3D; Path=/; HttpOnly; Secure; SameSite=Lax",
-            "_octo=GH1.1.747937704.1759407162; Path=/; Domain=github.com; Expires=Fri, 02 Oct 2026 12:12:42 GMT; Secure; SameSite=Lax",
-            "logged_in=no; Path=/; Domain=github.com; Expires=Fri, 02 Oct 2026 12:12:42 GMT; HttpOnly; Secure; SameSite=Lax"
+            "_gh_sess=yi%2BQoxldgh9aazgHQpT%2F1ZhiOhp1fTHSUm%2FsBtcC7XB7tTfDXRsUloh%2FLobFmtiUG%2Fz8cHa7IW21%2BP%2FSMQycxRfnMQ1s1A2p9W%2B5wdxxxbR07qpzgGBOGgxRzs9eJWqYAJbjOoVpCe1AVo6MyOCtg2DmCvavTW2uoVFwGLyU8DAcQ5tBmQVBMSewZPg2x0fFQ9N8sfDGR2FpVkpscEoSsI4IIDkwsQc9BwXPJFo4Z%2FViHh1xjIzdvt2VawQAKhCLaskeOmAmXE3dBKyyPC6XFQ%3D%3D--11k0IUZYi3ql1I%2F1--jSXOFzgXOVbLj%2FQsJjlyzQ%3D%3D; Path=/; HttpOnly; Secure; SameSite=Lax",
+            "_octo=GH1.1.1490585104.1759410372; Path=/; Domain=github.com; Expires=Fri, 02 Oct 2026 13:06:12 GMT; Secure; SameSite=Lax",
+            "logged_in=no; Path=/; Domain=github.com; Expires=Fri, 02 Oct 2026 13:06:12 GMT; HttpOnly; Secure; SameSite=Lax"
           ],
           "Strict-Transport-Security": [
             "max-age=31536000; includeSubdomains; preload"
@@ -15275,10 +15275,10 @@
             "deny"
           ],
           "X-Github-Request-Id": [
-            "8C22:6DBE8:637583:69C29A:68DE6C3A"
+            "A264:2DC4D:6BA249:719059:68DE78C4"
           ],
           "X-Raw-Download": [
-            "https://raw.githubusercontent.com/edv1n/go-get-subdirectory-test/gopkg/v0.0.3/gopkg/go.mod"
+            "https://raw.githubusercontent.com/edv1n/go-get-subdirectory-test/gopkg/v0.0.4/gopkg/go.mod"
           ],
           "X-Repository-Download": [
             "git clone https://github.com/edv1n/go-get-subdirectory-test.git"
@@ -15291,10 +15291,10 @@
       }
     },
     {
-      "ID": "a43ea0211d5e4415",
+      "ID": "62084207f478800b",
       "Request": {
         "Method": "HEAD",
-        "URL": "https://github.com/edv1n/go-get-subdirectory-test/raw/gopkg/v0.0.3/gopkg/go.mod",
+        "URL": "https://github.com/edv1n/go-get-subdirectory-test/raw/gopkg/v0.0.4/gopkg/go.mod",
         "Header": {
           "User-Agent": [
             "Go-http-client/1.1"
@@ -15327,10 +15327,10 @@
             "text/html; charset=utf-8"
           ],
           "Date": [
-            "Thu, 02 Oct 2025 12:12:42 GMT"
+            "Thu, 02 Oct 2025 13:06:12 GMT"
           ],
           "Location": [
-            "https://raw.githubusercontent.com/edv1n/go-get-subdirectory-test/gopkg/v0.0.3/gopkg/go.mod"
+            "https://raw.githubusercontent.com/edv1n/go-get-subdirectory-test/gopkg/v0.0.4/gopkg/go.mod"
           ],
           "Referrer-Policy": [
             "no-referrer-when-downgrade"
@@ -15351,7 +15351,7 @@
             "deny"
           ],
           "X-Github-Request-Id": [
-            "8C22:6DBE8:637586:69C29E:68DE6C3A"
+            "A264:2DC4D:6BA24D:71905E:68DE78C4"
           ],
           "X-Xss-Protection": [
             "0"
@@ -15361,13 +15361,13 @@
       }
     },
     {
-      "ID": "f2eb354d636eb199",
+      "ID": "afa5b8ab5064aa68",
       "Request": {
         "Method": "HEAD",
-        "URL": "https://raw.githubusercontent.com/edv1n/go-get-subdirectory-test/gopkg/v0.0.3/gopkg/go.mod",
+        "URL": "https://raw.githubusercontent.com/edv1n/go-get-subdirectory-test/gopkg/v0.0.4/gopkg/go.mod",
         "Header": {
           "Referer": [
-            "https://github.com/edv1n/go-get-subdirectory-test/raw/gopkg/v0.0.3/gopkg/go.mod"
+            "https://github.com/edv1n/go-get-subdirectory-test/raw/gopkg/v0.0.4/gopkg/go.mod"
           ],
           "User-Agent": [
             "Go-http-client/1.1"
@@ -15406,16 +15406,16 @@
             "cross-origin"
           ],
           "Date": [
-            "Thu, 02 Oct 2025 12:12:43 GMT"
+            "Thu, 02 Oct 2025 13:06:12 GMT"
           ],
           "Etag": [
             "\"ccbbe670c0c83ff6e6b9f5950d2d2b0b7068e63c7d8fd792decb78a8c518bc4f\""
           ],
           "Expires": [
-            "Thu, 02 Oct 2025 12:17:43 GMT"
+            "Thu, 02 Oct 2025 13:11:12 GMT"
           ],
           "Source-Age": [
-            "0"
+            "171"
           ],
           "Strict-Transport-Security": [
             "max-age=31536000"
@@ -15427,7 +15427,7 @@
             "1.1 varnish"
           ],
           "X-Cache": [
-            "MISS"
+            "HIT"
           ],
           "X-Cache-Hits": [
             "0"
@@ -15436,19 +15436,19 @@
             "nosniff"
           ],
           "X-Fastly-Request-Id": [
-            "6b1b974403fd795e298754e00c88513b322a1ba6"
+            "832c0e949f946f32000e1d5e14db6920e7e12d22"
           ],
           "X-Frame-Options": [
             "deny"
           ],
           "X-Github-Request-Id": [
-            "9B46:ECB4B:82807:1E80D8:68DE6C3A"
+            "5C71:133AFA:893B4:200B17:68DE780F"
           ],
           "X-Served-By": [
-            "cache-bma-essb1270045-BMA"
+            "cache-bma-essb1270043-BMA"
           ],
           "X-Timer": [
-            "S1759407163.933711,VS0,VE163"
+            "S1759410373.523260,VS0,VE1"
           ],
           "X-Xss-Protection": [
             "1; mode=block"
@@ -15458,7 +15458,7 @@
       }
     },
     {
-      "ID": "833f4bfc38677ed0",
+      "ID": "4d5b7e355afd4227",
       "Request": {
         "Method": "GET",
         "URL": "https://edv1n.github.io/go-get-subdirectory-test/sub?go-get=1",
@@ -15500,10 +15500,10 @@
             "text/html"
           ],
           "Date": [
-            "Thu, 02 Oct 2025 12:12:43 GMT"
+            "Thu, 02 Oct 2025 13:06:12 GMT"
           ],
           "Expires": [
-            "Thu, 02 Oct 2025 12:22:43 GMT"
+            "Thu, 02 Oct 2025 13:16:12 GMT"
           ],
           "Location": [
             "https://edv1n.github.io/go-get-subdirectory-test/sub/?go-get=1"
@@ -15527,26 +15527,26 @@
             "0"
           ],
           "X-Fastly-Request-Id": [
-            "273d8838ab537ca8548d3357952faf97c859de3d"
+            "49a2835510cf345c59b8104ac9cdcad980f1f6f3"
           ],
           "X-Github-Request-Id": [
-            "5CFD:133927:A9CE6:C3918:68DE6C3A"
+            "4066:3CAF55:B3970:CEB0A:68DE78C4"
           ],
           "X-Proxy-Cache": [
             "MISS"
           ],
           "X-Served-By": [
-            "cache-bma-essb1270056-BMA"
+            "cache-bma-essb1270044-BMA"
           ],
           "X-Timer": [
-            "S1759407163.101433,VS0,VE112"
+            "S1759410373.527019,VS0,VE116"
           ]
         },
         "Body": "PGh0bWw+DQo8aGVhZD48dGl0bGU+MzAxIE1vdmVkIFBlcm1hbmVudGx5PC90aXRsZT48L2hlYWQ+DQo8Ym9keT4NCjxjZW50ZXI+PGgxPjMwMSBNb3ZlZCBQZXJtYW5lbnRseTwvaDE+PC9jZW50ZXI+DQo8aHI+PGNlbnRlcj5uZ2lueDwvY2VudGVyPg0KPC9ib2R5Pg0KPC9odG1sPg0K"
       }
     },
     {
-      "ID": "434a0ee4929665dd",
+      "ID": "16cb08600449c74d",
       "Request": {
         "Method": "GET",
         "URL": "https://edv1n.github.io/go-get-subdirectory-test/sub/?go-get=1",
@@ -15579,7 +15579,7 @@
             "*"
           ],
           "Age": [
-            "59"
+            "321"
           ],
           "Cache-Control": [
             "max-age=600"
@@ -15591,7 +15591,7 @@
             "text/html; charset=utf-8"
           ],
           "Date": [
-            "Thu, 02 Oct 2025 12:12:43 GMT"
+            "Thu, 02 Oct 2025 13:06:12 GMT"
           ],
           "Etag": [
             "\"68ddc3ca-95\""
@@ -15618,10 +15618,10 @@
             "HIT"
           ],
           "X-Cache-Hits": [
-            "1"
+            "0"
           ],
           "X-Fastly-Request-Id": [
-            "327a3905f0262d792b0f65c01efdc68038748aab"
+            "1484dd08f3896e9fff18da26eddecc00ea3d1ee0"
           ],
           "X-Github-Request-Id": [
             "8115:133927:A9146:C2C85:68DE6BAE"
@@ -15630,17 +15630,17 @@
             "MISS"
           ],
           "X-Served-By": [
-            "cache-bma-essb1270056-BMA"
+            "cache-bma-essb1270044-BMA"
           ],
           "X-Timer": [
-            "S1759407163.216529,VS0,VE1"
+            "S1759410373.646793,VS0,VE1"
           ]
         },
         "Body": "PGhlYWQ+PG1ldGEgbmFtZT0iZ28taW1wb3J0IiBjb250ZW50PSJlZHYxbi5naXRodWIuaW8vZ28tZ2V0LXN1YmRpcmVjdG9yeS10ZXN0L3N1YiBnaXQgaHR0cHM6Ly9naXRodWIuY29tL2VkdjFuL2dvLWdldC1zdWJkaXJlY3RvcnktdGVzdCBnb3BrZy9zdWIiPgo="
       }
     },
     {
-      "ID": "9e195baae3697451",
+      "ID": "7e21356e824c499c",
       "Request": {
         "Method": "HEAD",
         "URL": "https://github.com/edv1n/go-get-subdirectory-test",
@@ -15673,10 +15673,10 @@
             "text/html; charset=utf-8"
           ],
           "Date": [
-            "Thu, 02 Oct 2025 12:12:41 GMT"
+            "Thu, 02 Oct 2025 13:06:11 GMT"
           ],
           "Etag": [
-            "W/\"92e24f17ee814151d8aac889279099ba\""
+            "W/\"485e055808f39a7cf0d2cf52cdcdf3c2\""
           ],
           "Referrer-Policy": [
             "no-referrer-when-downgrade"
@@ -15685,9 +15685,9 @@
             "github.com"
           ],
           "Set-Cookie": [
-            "_gh_sess=GuJcxtzTaAKnKR%2B%2FvYo%2BzBQb%2B0Tegr1c6fhmb%2FirVvQaBCbtfzKp0bdsRzliSONhhwaqAKmVjWDYjmwKVMN4Ye2Eao83beWhlfLj%2FWuRXgla%2BYNDFwhc7BX6ft4sr1SSvBPNAr8OXzS1C5L%2FWP16UqhRtns5h2kuIG%2BHB4PDqLEP3CXVfiSToHIGKnoko%2Ffvhqm7md0Tucl8AIWdW%2FyeoSL2sVlq328kPmB%2FXTVbzsngcHeeelw1i1uW4e7abBAkZFi%2FSvzT1NsR68MtsyxvwQ%3D%3D--Y3YSoqnL04MK0cs4--ofKrEfkNKKCys3hT15DyRA%3D%3D; Path=/; HttpOnly; Secure; SameSite=Lax",
-            "_octo=GH1.1.987632538.1759407163; Path=/; Domain=github.com; Expires=Fri, 02 Oct 2026 12:12:43 GMT; Secure; SameSite=Lax",
-            "logged_in=no; Path=/; Domain=github.com; Expires=Fri, 02 Oct 2026 12:12:43 GMT; HttpOnly; Secure; SameSite=Lax"
+            "_gh_sess=NzjM9UmsQ8gfZotunSZAi0R7IFU%2B2gV%2FWU6WNrMNjk%2Fv04nGXs%2BKn1nxiKX0ucCjr3Gw9%2FhLz%2BHMfDFJZot4%2FSknIjmaL3Qsx8OhtmTc%2FS%2BAMJM3v8hOEJI5L3648sEWyoIzT3dadm22cj%2FZXKb8yFXjKqYNNdJ9awLNU4v6sr7H5k4KvbGGaRGswF26TBKSpsYg9ahZ6FVjF1ULVLkBeNdb3Xruits66FrP9sULr7Om1g8zqLNYzdGqvARiEQWkU0bCwnwaz2AQdSozUPJj9g%3D%3D--bCvp7gvt6qfn%2Btwe--40A0S1FMDgVsocdjYVFVVg%3D%3D; Path=/; HttpOnly; Secure; SameSite=Lax",
+            "_octo=GH1.1.1298896486.1759410372; Path=/; Domain=github.com; Expires=Fri, 02 Oct 2026 13:06:12 GMT; Secure; SameSite=Lax",
+            "logged_in=no; Path=/; Domain=github.com; Expires=Fri, 02 Oct 2026 13:06:12 GMT; HttpOnly; Secure; SameSite=Lax"
           ],
           "Strict-Transport-Security": [
             "max-age=31536000; includeSubdomains; preload"
@@ -15702,7 +15702,7 @@
             "deny"
           ],
           "X-Github-Request-Id": [
-            "8C22:6DBE8:6375C6:69C303:68DE6C3A"
+            "A264:2DC4D:6BA28A:71908B:68DE78C4"
           ],
           "X-Xss-Protection": [
             "0"
@@ -15712,10 +15712,10 @@
       }
     },
     {
-      "ID": "d6f7d988b6f7fa03",
+      "ID": "4d8476d0e45a6bb8",
       "Request": {
         "Method": "HEAD",
-        "URL": "https://github.com/edv1n/go-get-subdirectory-test/tree/gopkg/sub/v0.0.3/gopkg/sub",
+        "URL": "https://github.com/edv1n/go-get-subdirectory-test/tree/gopkg/sub/v0.0.4/gopkg/sub",
         "Header": {
           "User-Agent": [
             "Go-http-client/1.1"
@@ -15745,10 +15745,10 @@
             "text/html; charset=utf-8"
           ],
           "Date": [
-            "Thu, 02 Oct 2025 12:12:43 GMT"
+            "Thu, 02 Oct 2025 13:06:12 GMT"
           ],
           "Etag": [
-            "W/\"e93945fbfed677773a11895877ea10ac\""
+            "W/\"9ffb7266376cc7d324410f481e758122\""
           ],
           "Referrer-Policy": [
             "no-referrer-when-downgrade"
@@ -15757,9 +15757,9 @@
             "github.com"
           ],
           "Set-Cookie": [
-            "_gh_sess=z51VuVLkejHZn6%2FehdRBopEDYcUKg1AFt3PzuANl%2B993u7MdH3IujOMOnEn4bTmUIoV6i2COCb1KPq1se%2B9dqDjJ5d1w1WzrbDBEYO087CIWwTyw1ISzR16b9usW31O5v1X48LPv58A3axZf40YDeje8fLDHq%2Fq8yWS4sVWZZNUqQvsluXg7C3juy3TdFIkW9uVlWWLcFULNS08yvCPmIKtOUYJdcEnlz4wqzpqWXxHSkDd2p2Lg2KNCXHV0J3zut3A%2B6F6yIyeOvSgvaHe5Rg%3D%3D--r%2F%2B2MfO9azMADJ3r--NBxiHgo7gVK5CvnWRAZXwA%3D%3D; Path=/; HttpOnly; Secure; SameSite=Lax",
-            "_octo=GH1.1.1423276186.1759407163; Path=/; Domain=github.com; Expires=Fri, 02 Oct 2026 12:12:43 GMT; Secure; SameSite=Lax",
-            "logged_in=no; Path=/; Domain=github.com; Expires=Fri, 02 Oct 2026 12:12:43 GMT; HttpOnly; Secure; SameSite=Lax"
+            "_gh_sess=sK01CN%2BVMe3QBpphsiVgcmS9cYRD558HwwO%2BLArF4Bq5qdE%2Be6YanasvpcVULEXd7xaohnpo2753%2FhR6xRuAeYq%2FQG6gnxpBeOznin8fdjMP0%2Bm0ZYZ7e9RFdoxh7dFU%2BJozANaGSuCVXAVZrmLxXLE%2FxWzlm8ZRwx9GA%2BXaP2jzkTgLOn%2BrsJ7zuwd5WBlTL6U%2FRRh6f%2B1x5LBqiwGDqnneGTiMtbnghlizL0Qmr2DkCkZmgMoNj1UQEBhel3RcetGK8Pix4hlqbmtBFaj7AA%3D%3D--ri%2Bv%2BkO2taHRfIfD--LBAf8SVhcB%2Be1UQ6DUkOWQ%3D%3D; Path=/; HttpOnly; Secure; SameSite=Lax",
+            "_octo=GH1.1.1340676675.1759410372; Path=/; Domain=github.com; Expires=Fri, 02 Oct 2026 13:06:12 GMT; Secure; SameSite=Lax",
+            "logged_in=no; Path=/; Domain=github.com; Expires=Fri, 02 Oct 2026 13:06:12 GMT; HttpOnly; Secure; SameSite=Lax"
           ],
           "Strict-Transport-Security": [
             "max-age=31536000; includeSubdomains; preload"
@@ -15774,7 +15774,7 @@
             "deny"
           ],
           "X-Github-Request-Id": [
-            "8C22:6DBE8:6375CA:69C307:68DE6C3B"
+            "A264:2DC4D:6BA28F:71908F:68DE78C4"
           ],
           "X-Xss-Protection": [
             "0"
@@ -15784,10 +15784,10 @@
       }
     },
     {
-      "ID": "abf233503c20946c",
+      "ID": "b9e7ab041d456123",
       "Request": {
         "Method": "HEAD",
-        "URL": "https://github.com/edv1n/go-get-subdirectory-test/blob/gopkg/sub/v0.0.3/gopkg/sub/go.mod",
+        "URL": "https://github.com/edv1n/go-get-subdirectory-test/blob/gopkg/sub/v0.0.4/gopkg/sub/go.mod",
         "Header": {
           "User-Agent": [
             "Go-http-client/1.1"
@@ -15817,10 +15817,10 @@
             "text/html; charset=utf-8"
           ],
           "Date": [
-            "Thu, 02 Oct 2025 12:12:44 GMT"
+            "Thu, 02 Oct 2025 13:06:13 GMT"
           ],
           "Etag": [
-            "W/\"16cb5cefd253983bf9f3d246e0699ea8\""
+            "W/\"e26721e8051a0e4cd06ffd2b46d63828\""
           ],
           "Referrer-Policy": [
             "no-referrer-when-downgrade"
@@ -15829,9 +15829,9 @@
             "github.com"
           ],
           "Set-Cookie": [
-            "_gh_sess=ujDwxTQ9xOXB9f1bXE0HeczeWGq9EHTVxmqUOuKnrRuDEVG2%2BU07ZSxGSMZYo6dlrVZ3jYy1Ban9vN0AW57RsISQ%2F3TvyaApMbRLJ%2FWXwmSS1LgnSbm5iAX8iXaFpTN4AGkY%2BrXDu2tSQ%2FuG6yFEAEyAmuxe%2FCLUXChTU3tDjDqSx2jUD9OzONEaIVQvDHEMeT5LmXiT55hK%2Fe%2Fi0dQ1sADF0Ba62OIPx4XBxjdX22UR5WVjn2ELn9Lxt3CjabnSqs7hqfgVW15yR%2FKkUNY%2F9g%3D%3D--5bfTrPgNZHUdHOUb--2ISFV3H1gBHDApkgaPZVBA%3D%3D; Path=/; HttpOnly; Secure; SameSite=Lax",
-            "_octo=GH1.1.2083958801.1759407164; Path=/; Domain=github.com; Expires=Fri, 02 Oct 2026 12:12:44 GMT; Secure; SameSite=Lax",
-            "logged_in=no; Path=/; Domain=github.com; Expires=Fri, 02 Oct 2026 12:12:44 GMT; HttpOnly; Secure; SameSite=Lax"
+            "_gh_sess=X1kws20MYB9JPp2NSVGe5J5aw6VtFHhpFlr%2FNCQoUWRl6oLzK0Rcn5QhD1%2Bf%2BaBGHOn1nB4cYZ3NJOzj6KPmrgX0dz12YgR%2FlHAeyMvekmiURahCeZStxD4Jb8ot9AFwbxbQPVflA5xj9ce%2Fl4TT9kOSg%2FxJbIOT4jYq7XSht4wcjWV1OYS5J9uhrYUQKKMmSZwbJRSvVTRnYcXbPgTO3%2B3y5YFWUo3HXZlUOD45x28x8EoIUGJNdSpKIUYWHPkout3GDl8Rp1AMYTrLpgU%2BoQ%3D%3D--vW5WJORNhMXfh4MF--14qHi6so0qgfhhx%2Fc%2Ba%2BYg%3D%3D; Path=/; HttpOnly; Secure; SameSite=Lax",
+            "_octo=GH1.1.817865233.1759410373; Path=/; Domain=github.com; Expires=Fri, 02 Oct 2026 13:06:13 GMT; Secure; SameSite=Lax",
+            "logged_in=no; Path=/; Domain=github.com; Expires=Fri, 02 Oct 2026 13:06:13 GMT; HttpOnly; Secure; SameSite=Lax"
           ],
           "Strict-Transport-Security": [
             "max-age=31536000; includeSubdomains; preload"
@@ -15846,10 +15846,10 @@
             "deny"
           ],
           "X-Github-Request-Id": [
-            "8C22:6DBE8:637648:69C385:68DE6C3C"
+            "A264:2DC4D:6BA2D7:7190DC:68DE78C5"
           ],
           "X-Raw-Download": [
-            "https://raw.githubusercontent.com/edv1n/go-get-subdirectory-test/gopkg/sub/v0.0.3/gopkg/sub/go.mod"
+            "https://raw.githubusercontent.com/edv1n/go-get-subdirectory-test/gopkg/sub/v0.0.4/gopkg/sub/go.mod"
           ],
           "X-Repository-Download": [
             "git clone https://github.com/edv1n/go-get-subdirectory-test.git"
@@ -15862,10 +15862,10 @@
       }
     },
     {
-      "ID": "7c74dd15ee0c2a4b",
+      "ID": "9fb1f6aa8a434c98",
       "Request": {
         "Method": "HEAD",
-        "URL": "https://github.com/edv1n/go-get-subdirectory-test/blob/gopkg/sub/v0.0.3/gopkg/sub/go.mod",
+        "URL": "https://github.com/edv1n/go-get-subdirectory-test/blob/gopkg/sub/v0.0.4/gopkg/sub/go.mod",
         "Header": {
           "User-Agent": [
             "Go-http-client/1.1"
@@ -15895,10 +15895,10 @@
             "text/html; charset=utf-8"
           ],
           "Date": [
-            "Thu, 02 Oct 2025 12:12:44 GMT"
+            "Thu, 02 Oct 2025 13:06:13 GMT"
           ],
           "Etag": [
-            "W/\"16cb5cefd253983bf9f3d246e0699ea8\""
+            "W/\"e26721e8051a0e4cd06ffd2b46d63828\""
           ],
           "Referrer-Policy": [
             "no-referrer-when-downgrade"
@@ -15907,9 +15907,9 @@
             "github.com"
           ],
           "Set-Cookie": [
-            "_gh_sess=olAyRKHq%2BryZdu7p33GW73JulPYqbXvbXHMHiiSq1Skqqt9QR%2BeHlerfUwyhyftAr%2FwbQEl3BtS50zYTAfZtxTmanyBDFPw48Hf7bDprgfIpcvYdNItxMMcJZMod9FRLJcMrykPDLdhJxcWzwdD5YCM3bjXqqVk3%2FkomjyNZYZQblg%2FnkzdNDmyXWazadT1QyMj4ZKFZ4%2B0%2BoNskyTbE%2BKVrx6c3y0kvBJxen2KDy09FAN5trIHq0sj0fguXIpnkbsYXRIpftqzdRDK8r%2FsuMg%3D%3D--%2BNk2jn1remldOFCy--s25F6dwEq9vA6u1mtXt1LA%3D%3D; Path=/; HttpOnly; Secure; SameSite=Lax",
-            "_octo=GH1.1.849983390.1759407164; Path=/; Domain=github.com; Expires=Fri, 02 Oct 2026 12:12:44 GMT; Secure; SameSite=Lax",
-            "logged_in=no; Path=/; Domain=github.com; Expires=Fri, 02 Oct 2026 12:12:44 GMT; HttpOnly; Secure; SameSite=Lax"
+            "_gh_sess=rMSk8LPqfMsguRm%2F6gPta3Cu4UuL7Jx9cdDpSiYPnAekKCMIifExrivBCbY6u8kXXFafBfPYWuW8VNPymfFBb5x92YidDd%2BW9swQ4wGSBbizMJx6wLB0hbXQbHJEpxQ1Exb8tKyCJCvDgu0eRwxuTuawZuziM3kDVFQ8wqNKRxJ26icEbXNrEtDSaezT7QDCzZYCUsTwMBMi7uQkHZmOi%2FRQCuBXmmtHPLgd8ABL0XLNng2fP6oLHWu52PFGzCcMAPchRLfhA2xOvdx7xpC1Mw%3D%3D--VC%2Bo7C3i5GAWDByZ--%2BPe21EXfm%2FSCP5Pc5CK%2FQA%3D%3D; Path=/; HttpOnly; Secure; SameSite=Lax",
+            "_octo=GH1.1.492601634.1759410373; Path=/; Domain=github.com; Expires=Fri, 02 Oct 2026 13:06:13 GMT; Secure; SameSite=Lax",
+            "logged_in=no; Path=/; Domain=github.com; Expires=Fri, 02 Oct 2026 13:06:13 GMT; HttpOnly; Secure; SameSite=Lax"
           ],
           "Strict-Transport-Security": [
             "max-age=31536000; includeSubdomains; preload"
@@ -15924,10 +15924,10 @@
             "deny"
           ],
           "X-Github-Request-Id": [
-            "8C22:6DBE8:637684:69C3C7:68DE6C3C"
+            "A264:2DC4D:6BA313:71911A:68DE78C5"
           ],
           "X-Raw-Download": [
-            "https://raw.githubusercontent.com/edv1n/go-get-subdirectory-test/gopkg/sub/v0.0.3/gopkg/sub/go.mod"
+            "https://raw.githubusercontent.com/edv1n/go-get-subdirectory-test/gopkg/sub/v0.0.4/gopkg/sub/go.mod"
           ],
           "X-Repository-Download": [
             "git clone https://github.com/edv1n/go-get-subdirectory-test.git"
@@ -15940,10 +15940,10 @@
       }
     },
     {
-      "ID": "00f63197f62711d2",
+      "ID": "627c079990d47068",
       "Request": {
         "Method": "HEAD",
-        "URL": "https://github.com/edv1n/go-get-subdirectory-test/raw/gopkg/sub/v0.0.3/gopkg/sub/go.mod",
+        "URL": "https://github.com/edv1n/go-get-subdirectory-test/raw/gopkg/sub/v0.0.4/gopkg/sub/go.mod",
         "Header": {
           "User-Agent": [
             "Go-http-client/1.1"
@@ -15976,10 +15976,10 @@
             "text/html; charset=utf-8"
           ],
           "Date": [
-            "Thu, 02 Oct 2025 12:12:44 GMT"
+            "Thu, 02 Oct 2025 13:06:13 GMT"
           ],
           "Location": [
-            "https://raw.githubusercontent.com/edv1n/go-get-subdirectory-test/gopkg/sub/v0.0.3/gopkg/sub/go.mod"
+            "https://raw.githubusercontent.com/edv1n/go-get-subdirectory-test/gopkg/sub/v0.0.4/gopkg/sub/go.mod"
           ],
           "Referrer-Policy": [
             "no-referrer-when-downgrade"
@@ -16000,7 +16000,7 @@
             "deny"
           ],
           "X-Github-Request-Id": [
-            "8C22:6DBE8:637687:69C3C8:68DE6C3C"
+            "A264:2DC4D:6BA318:719121:68DE78C5"
           ],
           "X-Xss-Protection": [
             "0"
@@ -16010,13 +16010,13 @@
       }
     },
     {
-      "ID": "a93f62fce82b4473",
+      "ID": "6b869dfed2195431",
       "Request": {
         "Method": "HEAD",
-        "URL": "https://raw.githubusercontent.com/edv1n/go-get-subdirectory-test/gopkg/sub/v0.0.3/gopkg/sub/go.mod",
+        "URL": "https://raw.githubusercontent.com/edv1n/go-get-subdirectory-test/gopkg/sub/v0.0.4/gopkg/sub/go.mod",
         "Header": {
           "Referer": [
-            "https://github.com/edv1n/go-get-subdirectory-test/raw/gopkg/sub/v0.0.3/gopkg/sub/go.mod"
+            "https://github.com/edv1n/go-get-subdirectory-test/raw/gopkg/sub/v0.0.4/gopkg/sub/go.mod"
           ],
           "User-Agent": [
             "Go-http-client/1.1"
@@ -16055,16 +16055,16 @@
             "cross-origin"
           ],
           "Date": [
-            "Thu, 02 Oct 2025 12:12:44 GMT"
+            "Thu, 02 Oct 2025 13:06:13 GMT"
           ],
           "Etag": [
             "\"fa186675827e8f36f08b669354743684875e5c709f2d3c0420475378b37a8dba\""
           ],
           "Expires": [
-            "Thu, 02 Oct 2025 12:17:44 GMT"
+            "Thu, 02 Oct 2025 13:11:13 GMT"
           ],
           "Source-Age": [
-            "0"
+            "170"
           ],
           "Strict-Transport-Security": [
             "max-age=31536000"
@@ -16076,7 +16076,7 @@
             "1.1 varnish"
           ],
           "X-Cache": [
-            "MISS"
+            "HIT"
           ],
           "X-Cache-Hits": [
             "0"
@@ -16085,19 +16085,19 @@
             "nosniff"
           ],
           "X-Fastly-Request-Id": [
-            "3d719ccfad101fb95d2bf6892d6b2f3fd74daab9"
+            "f5b7263b5df8a7e63a5f8959e2d94a9bad846753"
           ],
           "X-Frame-Options": [
             "deny"
           ],
           "X-Github-Request-Id": [
-            "9B46:ECB4B:82823:1E8120:68DE6C3B"
+            "5C7E:45966:33424:98533:68DE781A"
           ],
           "X-Served-By": [
-            "cache-bma-essb1270045-BMA"
+            "cache-bma-essb1270043-BMA"
           ],
           "X-Timer": [
-            "S1759407165.722648,VS0,VE174"
+            "S1759410374.649174,VS0,VE4"
           ],
           "X-Xss-Protection": [
             "1; mode=block"
