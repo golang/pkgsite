@@ -153,6 +153,28 @@ func TestModuleInfoDynamic(t *testing.T) {
 			},
 		},
 		{
+			"edv1n.github.io/go-get-subdirectory-test",
+			// Package with go-import meta tag, where there is subdirectory field with value `gopkg`.
+			&Info{
+				repoURL:    "https://github.com/edv1n/go-get-subdirectory-test",
+				repoSubdir: "gopkg",
+				moduleDir:  "gopkg",
+				commit:     "gopkg/v1.2.3",
+				templates:  githubURLTemplates,
+			},
+		},
+		{
+			"edv1n.github.io/go-get-subdirectory-test/sub",
+			// Package with go-import meta tag, where there is subdirectory field with value `gopkg/sub`.
+			&Info{
+				repoURL:    "https://github.com/edv1n/go-get-subdirectory-test",
+				repoSubdir: "gopkg/sub",
+				moduleDir:  "gopkg/sub",
+				commit:     "gopkg/sub/v1.2.3",
+				templates:  githubURLTemplates,
+			},
+		},
+		{
 			"azul3d.org/examples/abs",
 			// The go-source tag has a template that is handled incorrectly by godoc; but we
 			// ignore the templates.
@@ -454,6 +476,10 @@ var testWeb = map[string]string{
 		<head><meta name="go-import" content="bob.com/bad/apache git https://git.apache.org/&gt;$">`,
 	// Package with go-import meta tag, where there is subdirectory field (since Go 1.25).
 	"https://slatedb.io/slatedb-go": `<head><meta name="go-import" content="slatedb.io/slatedb-go git https://github.com/slatedb/slatedb slatedb-go/go">`,
+	"https://edv1n.github.io/go-get-subdirectory-test": `<head>` +
+		`<meta name="go-import" content="edv1n.github.io/go-get-subdirectory-test git https://github.com/edv1n/go-get-subdirectory-test gopkg">`,
+	"https://edv1n.github.io/go-get-subdirectory-test/sub": `<head>` +
+		`<meta name="go-import" content="edv1n.github.io/go-get-subdirectory-test/sub git https://github.com/edv1n/go-get-subdirectory-test gopkg/sub">`,
 	// Package with go-source meta tag, where {file} appears on the right of '#' in the file field URL template.
 	"https://azul3d.org/examples/abs": `<!DOCTYPE html><html><head>` +
 		`<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>` +
