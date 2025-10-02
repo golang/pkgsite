@@ -42,11 +42,10 @@ import (
 // Info holds source information about a module, used to generate URLs referring
 // to directories, files and lines.
 type Info struct {
-	repoURL    string       // URL of repo containing module; exported for DB schema compatibility
-	repoSubdir string       // subdirectory within the repo from go-import meta tag
-	moduleDir  string       // directory of module relative to repo root
-	commit     string       // tag or ID of commit corresponding to version
-	templates  urlTemplates // for building URLs
+	repoURL   string       // URL of repo containing module; exported for DB schema compatibility
+	moduleDir string       // directory of module relative to repo root
+	commit    string       // tag or ID of commit corresponding to version
+	templates urlTemplates // for building URLs
 }
 
 // RepoURL returns a URL for the home page of the repository.
@@ -65,15 +64,7 @@ func (i *Info) RepoURL() string {
 
 // ModuleURL returns a URL for the home page of the module.
 func (i *Info) ModuleURL() string {
-	if i == nil {
-		return ""
-	}
-	return strings.TrimSuffix(expand(i.templates.Directory, map[string]string{
-		"repo":       i.repoURL,
-		"importPath": path.Join(strings.TrimPrefix(i.repoURL, "https://")),
-		"commit":     i.commit,
-		"dir":        path.Join(strings.TrimPrefix(i.moduleDir, i.repoSubdir), i.repoSubdir),
-	}), "/")
+	return i.DirectoryURL("")
 }
 
 // DirectoryURL returns a URL for a directory relative to the module's home directory.
@@ -507,11 +498,10 @@ func moduleInfoDynamic(ctx context.Context, client *Client, modulePath, version 
 		commit = transformCommit(commit, isHash)
 	}
 	return &Info{
-		repoURL:    strings.TrimSuffix(repoURL, "/"),
-		repoSubdir: sourceMeta.repoSubdir,
-		moduleDir:  dir,
-		commit:     commit,
-		templates:  templates,
+		repoURL:   strings.TrimSuffix(repoURL, "/"),
+		moduleDir: dir,
+		commit:    commit,
+		templates: templates,
 	}, nil
 }
 

@@ -144,33 +144,30 @@ func TestModuleInfoDynamic(t *testing.T) {
 			"slatedb.io/slatedb-go",
 			// Package with go-import meta tag, where there is subdirectory field (since Go 1.25).
 			&Info{
-				repoURL:    "https://github.com/slatedb/slatedb",
-				repoSubdir: "slatedb-go/go",
-				moduleDir:  "slatedb-go/go",
-				commit:     "slatedb-go/go/v1.2.3",
-				templates:  githubURLTemplates,
+				repoURL:   "https://github.com/slatedb/slatedb",
+				moduleDir: "slatedb-go/go",
+				commit:    "slatedb-go/go/v1.2.3",
+				templates: githubURLTemplates,
 			},
 		},
 		{
 			"edv1n.github.io/go-get-subdirectory-test",
 			// Package with go-import meta tag, where there is subdirectory field with value `gopkg`.
 			&Info{
-				repoURL:    "https://github.com/edv1n/go-get-subdirectory-test",
-				repoSubdir: "gopkg",
-				moduleDir:  "gopkg",
-				commit:     "gopkg/v1.2.3",
-				templates:  githubURLTemplates,
+				repoURL:   "https://github.com/edv1n/go-get-subdirectory-test",
+				moduleDir: "gopkg",
+				commit:    "gopkg/v1.2.3",
+				templates: githubURLTemplates,
 			},
 		},
 		{
 			"edv1n.github.io/go-get-subdirectory-test/sub",
 			// Package with go-import meta tag, where there is subdirectory field with value `gopkg/sub`.
 			&Info{
-				repoURL:    "https://github.com/edv1n/go-get-subdirectory-test",
-				repoSubdir: "gopkg/sub",
-				moduleDir:  "gopkg/sub",
-				commit:     "gopkg/sub/v1.2.3",
-				templates:  githubURLTemplates,
+				repoURL:   "https://github.com/edv1n/go-get-subdirectory-test",
+				moduleDir: "gopkg/sub",
+				commit:    "gopkg/sub/v1.2.3",
+				templates: githubURLTemplates,
 			},
 		},
 		{
