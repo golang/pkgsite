@@ -103,6 +103,7 @@ metaScan:
 				switch len(fields) {
 				case 3:
 					// go-import meta tag support minium 3 fields (root-path vcs repo-url).
+					break // good to proceed
 				case 4:
 					// go-import meta tag support minium 3 fields (root-path vcs repo-url), and additionally "subdirectory" field since Go 1.25.
 					repoSubdir = fields[3]
