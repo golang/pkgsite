@@ -398,6 +398,24 @@ func TestModuleInfo(t *testing.T) {
 			"https://github.com/slatedb/slatedb/blob/slatedb-go/go/v0.8.2/slatedb-go/go/go.mod#L1",
 			"https://github.com/slatedb/slatedb/raw/slatedb-go/go/v0.8.2/slatedb-go/go/go.mod",
 		},
+		{
+			"edv1n.github.io/go-get-subdirectory-test match github.com/edv1n/go-get-subdirectory-test with subdir gopkg",
+			"edv1n.github.io/go-get-subdirectory-test", "gopkg/v0.0.3", "go.mod",
+			"https://github.com/edv1n/go-get-subdirectory-test",
+			"https://github.com/edv1n/go-get-subdirectory-test/tree/gopkg/v0.0.3/gopkg",
+			"https://github.com/edv1n/go-get-subdirectory-test/blob/gopkg/v0.0.3/gopkg/go.mod",
+			"https://github.com/edv1n/go-get-subdirectory-test/blob/gopkg/v0.0.3/gopkg/go.mod#L1",
+			"https://github.com/edv1n/go-get-subdirectory-test/raw/gopkg/v0.0.3/gopkg/go.mod",
+		},
+		{
+			"edv1n.github.io/go-get-subdirectory-test/sub match github.com/edv1n/go-get-subdirectory-test with subdir gopkg/sub",
+			"edv1n.github.io/go-get-subdirectory-test/sub", "gopkg/sub/v0.0.3", "go.mod",
+			"https://github.com/edv1n/go-get-subdirectory-test",
+			"https://github.com/edv1n/go-get-subdirectory-test/tree/gopkg/sub/v0.0.3/gopkg/sub",
+			"https://github.com/edv1n/go-get-subdirectory-test/blob/gopkg/sub/v0.0.3/gopkg/sub/go.mod",
+			"https://github.com/edv1n/go-get-subdirectory-test/blob/gopkg/sub/v0.0.3/gopkg/sub/go.mod#L1",
+			"https://github.com/edv1n/go-get-subdirectory-test/raw/gopkg/sub/v0.0.3/gopkg/sub/go.mod",
+		},
 	} {
 		t.Run(test.desc, func(t *testing.T) {
 			info, err := source.ModuleInfo(context.Background(), source.NewClient(client), test.modulePath, test.version)
