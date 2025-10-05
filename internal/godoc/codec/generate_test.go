@@ -77,32 +77,32 @@ func TestExportedFields(t *testing.T) {
 	}
 
 	// First time we see ef, no previous fields.
-	got := exportedFields(reflect.TypeOf(ef{}), nil)
+	got := exportedFields(reflect.TypeFor[ef](), nil)
 	want := []field{
-		{"A", reflect.TypeOf(0), "0"},
-		{"B", reflect.TypeOf(false), "false"},
-		{"C", reflect.TypeOf(""), `""`},
+		{"A", reflect.TypeFor[int](), "0"},
+		{"B", reflect.TypeFor[bool](), "false"},
+		{"C", reflect.TypeFor[string](), `""`},
 	}
 	check(want, got)
 
 	// Imagine that the previous ef had fields C and A in that order, but not B.
 	// We should preserve the existing ordering and add B at the end.
-	got = exportedFields(reflect.TypeOf(ef{}), []string{"C", "A"})
+	got = exportedFields(reflect.TypeFor[ef](), []string{"C", "A"})
 	want = []field{
-		{"C", reflect.TypeOf(""), `""`},
-		{"A", reflect.TypeOf(0), "0"},
-		{"B", reflect.TypeOf(false), "false"},
+		{"C", reflect.TypeFor[string](), `""`},
+		{"A", reflect.TypeFor[int](), "0"},
+		{"B", reflect.TypeFor[bool](), "false"},
 	}
 	check(want, got)
 
 	// Imagine instead that there had been a field D that was removed.
 	// We still keep the names, but the entry for "D" has a nil type.
-	got = exportedFields(reflect.TypeOf(ef{}), []string{"A", "D", "B", "C"})
+	got = exportedFields(reflect.TypeFor[ef](), []string{"A", "D", "B", "C"})
 	want = []field{
-		{"A", reflect.TypeOf(0), "0"},
+		{"A", reflect.TypeFor[int](), "0"},
 		{"D", nil, ""},
-		{"B", reflect.TypeOf(false), "false"},
-		{"C", reflect.TypeOf(""), `""`},
+		{"B", reflect.TypeFor[bool](), "false"},
+		{"C", reflect.TypeFor[string](), `""`},
 	}
 	check(want, got)
 }

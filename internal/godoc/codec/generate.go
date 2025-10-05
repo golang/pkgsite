@@ -107,8 +107,7 @@ func generate(w io.Writer, packageName string, fieldNames map[string][]string, v
 	}
 	// The empty interface doesn't need any additional code. It's tricky to get
 	// its reflect.Type: we need to dereference the pointer type.
-	var iface any
-	g.done[reflect.TypeOf(&iface).Elem()] = true
+	g.done[reflect.TypeFor[any]()] = true
 
 	src, err := g.generate()
 	if err != nil {
@@ -384,18 +383,18 @@ func (g *generator) decodeStatement(t reflect.Type, arg string) string {
 func builtinName(t reflect.Type) (suffix string, native reflect.Type) {
 	switch t.Kind() {
 	case reflect.String:
-		return "String", reflect.TypeOf("")
+		return "String", reflect.TypeFor[string]()
 	case reflect.Bool:
-		return "Bool", reflect.TypeOf(true)
+		return "Bool", reflect.TypeFor[bool]()
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-		return "Int", reflect.TypeOf(int64(0))
+		return "Int", reflect.TypeFor[int64]()
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
-		return "Uint", reflect.TypeOf(uint64(0))
+		return "Uint", reflect.TypeFor[uint64]()
 	case reflect.Float32, reflect.Float64:
-		return "Float64", reflect.TypeOf(0.0)
+		return "Float64", reflect.TypeFor[float64]()
 	case reflect.Slice:
-		if t.Elem() == reflect.TypeOf(byte(0)) {
-			return "Bytes", reflect.TypeOf([]byte(nil))
+		if t.Elem() == reflect.TypeFor[byte]() {
+			return "Bytes", reflect.TypeFor[[]byte]()
 		}
 	}
 	return "", nil
