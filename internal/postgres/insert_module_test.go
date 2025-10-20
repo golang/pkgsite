@@ -786,3 +786,62 @@ func TestPathsToInsert(t *testing.T) {
 		})
 	}
 }
+
+func TestInsertModuleSkipSymbols(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+
+	checkSymbolsInserted := func(t *testing.T, db *DB, m *internal.Module) bool {
+		t.Helper()
+		var count int
+		err := db.db.QueryRow(ctx, `
+			SELECT count(*) FROM documentation_symbols ds
+			INNER JOIN documentation d ON d.id = ds.documentation_id
+			INNER JOIN units u ON u.id = d.unit_id
+			INNER JOIN modules mod ON mod.id = u.module_id
+			WHERE mod.module_path = $1 AND mod.version = $2`,
+			m.ModulePath, m.Version).Scan(&count)
+		if err != nil && err != sql.ErrNoRows {
+			t.Fatalf("error when checking for symbols: %v", err)
+		}
+		return count > 0
+	}
+
+	for _, test := range []struct {
+		name         string
+		modulePath   string
+		wantInserted bool
+	}{
+		{
+			name:         "skipped",
+			modulePath:   "github.com/gardener/gardener",
+			wantInserted: false,
+		},
+		{
+			name:         "not skipped",
+			modulePath:   "example.com/test-module",
+			wantInserted: true,
+		},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			testDB, release := acquire(t)
+			defer release()
+
+			m := sample.Module(test.modulePath, "v1.2.3", "pkg")
+			m.Units[1].Documentation[0].API = []*internal.Symbol{
+				{
+					SymbolMeta: internal.SymbolMeta{
+						Name:    "Foo",
+						Section: internal.SymbolSectionConstants,
+						Kind:    internal.SymbolKindVariable,
+					},
+				},
+			}
+			MustInsertModule(ctx, t, testDB, m)
+
+			if got := checkSymbolsInserted(t, testDB, m); got != test.wantInserted {
+				t.Errorf("symbols inserted: got %t; want %t", got, test.wantInserted)
+			}
+		})
+	}
+}

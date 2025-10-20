@@ -61,6 +61,18 @@ func (db *DB) InsertModule(ctx context.Context, m *internal.Module, lmv *interna
 	return db.saveModule(ctx, m, lmv)
 }
 
+// TODO: Convert this to a txt file and investigate ahead of line blocking root cause.
+// If a module is removed from this list, consider backfilling the symbols for all
+// existing versions of that module.
+var skipSymbols = map[string]bool{
+	"github.com/citusdata/azure-sdk-for-go":                  true,
+	"github.com/seveas/azure-sdk-for-go":                     true,
+	"github.com/cdktf/cdktf-provider-azurerm-go/azurerm/v14": true,
+	"github.com/gardener/gardener":                           true,
+	"github.com/gyliu513/okd-origin":                         true,
+	"github.com/tombuildsstuff/azure-sdk-for-go":             true,
+}
+
 // saveModule inserts a Module into the database along with its packages,
 // imports, and licenses.  If any of these rows already exist, the module and
 // corresponding will be deleted and reinserted.
@@ -136,8 +148,10 @@ func (db *DB) saveModule(ctx context.Context, m *internal.Module, lmv *internal.
 			return err
 		}
 		isLatest = m.Version == latest
-		if err := insertSymbols(ctx, tx, m.ModulePath, m.Version, isLatest, pathToID, pathToUnitID, pathToDocs); err != nil {
-			return err
+		if !skipSymbols[m.ModulePath] {
+			if err := insertSymbols(ctx, tx, m.ModulePath, m.Version, isLatest, pathToID, pathToUnitID, pathToDocs); err != nil {
+				return err
+			}
 		}
 		if !isLatest {
 			return nil
