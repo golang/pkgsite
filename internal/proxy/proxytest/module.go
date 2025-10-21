@@ -20,7 +20,7 @@ type Module struct {
 }
 
 // Some module proxies incorrectly return a space after the version. Tests may
-// simulate that that behavior by giving m.Version a space suffix. This function
+// simulate that behavior by giving m.Version a space suffix. This function
 // will always, however, return the correct form for the version.
 func (m *Module) TidyVersion() string {
 	return strings.TrimSpace(m.Version)

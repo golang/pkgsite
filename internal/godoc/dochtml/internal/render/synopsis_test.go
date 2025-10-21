@@ -67,7 +67,7 @@ func TestOneLineNode(t *testing.T) {
 		)
 
 		type Struct struct {
-			// Some commment
+			// Some comment
 
 			// Another comment.
 			Field int

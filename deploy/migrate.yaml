@@ -4,7 +4,7 @@
 
 # Run a migrate command on a database
 
-# Required substitions
+# Required substitutions
 # _ENV environment (dev, staging, or prod)
 # _CMD command to migrate
 

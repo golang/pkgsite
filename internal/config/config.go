@@ -170,7 +170,7 @@ func (c *Config) DBSecondaryConnInfo() string {
 	return c.dbConnInfo(c.DBSecondaryHost)
 }
 
-// dbConnInfo returns a PostgresSQL connection string for the given host.
+// dbConnInfo returns a PostgreSQL connection string for the given host.
 func (c *Config) dbConnInfo(host string) string {
 	// For the connection string syntax, see
 	// https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING.

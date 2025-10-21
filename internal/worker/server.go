@@ -220,7 +220,7 @@ func (s *Server) Install(handle func(string, http.Handler)) {
 	handle("/repopulate-search-documents", rmw(s.errorHandler(s.handleRepopulateSearchDocuments)))
 
 	// manual: populate-excluded-prefixes inserts all excluded prefixes from
-	// the file private/config/excluded.txt into the databse.
+	// the file private/config/excluded.txt into the database.
 	handle("/populate-excluded-prefixes", rmw(s.errorHandler(s.handlePopulateExcludedPrefixes)))
 
 	// manual: clear-cache clears the redis cache.

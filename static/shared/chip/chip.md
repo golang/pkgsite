@@ -11,7 +11,7 @@
 ```
 
 ```html #chip-highlighted
-<span class="go-Chip go-Chip--highlighted">Highlighed</span>
+<span class="go-Chip go-Chip--highlighted">Highlighted</span>
 ```
 
 ```html #chip-warning

@@ -474,7 +474,7 @@ func shouldDefaultToSymbolSearch(q string) bool {
 		return !internal.TopLevelDomains[parts[len(parts)-1]]
 	}
 	// If a user searches for "Unmarshal", assume that they are searching for
-	// the symbol name "Unmarshal", not the package unmarshal.
+	// the symbol name "Unmarshal", not a package named "unmarshal".
 	return isCapitalized(q)
 }
 

@@ -211,7 +211,7 @@ func (e *extractTOC) extract(doc *markdown.Document) {
 		}
 	}
 	if e.removeTitle {
-		// If there is only one top tevel heading with 1 or more children we
+		// If there is only one top level heading with 1 or more children we
 		// assume it is the title of the document and remove it from the TOC.
 		if len(nested) == 1 && len(nested[0].Children) > 0 {
 			nested = nested[0].Children
@@ -359,7 +359,7 @@ func transformHeadingsToHTML(doc *markdown.Document) {
 				htmltag := &markdown.HTMLBlock{}
 				var buf bytes.Buffer
 				// TODO(matloob): Do we want the div and h elements to have analogous classes?
-				// Currently we're using newLevel for the div's class but n.Level for the h element's
+				// Currently we're using newLevel for the div's class but heading.Level for the h element's
 				// class.
 				if newLevel > 6 {
 					fmt.Fprintf(&buf, `<div class="h%d" role="heading" aria-level="%d"`, newLevel, heading.Level)
