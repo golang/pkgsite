@@ -10,7 +10,7 @@ source private/devtools/lib.sh || { echo "Are you at repo root?"; exit 1; }
 usage() {
   >&2 cat <<EOUSAGE
 
-  Usage: $0 [OPTIONS] [exp|dev|staging|prod|beta] [IDTOKEN]
+  Usage: $0 [OPTIONS] [exp|dev|staging|prod] [IDTOKEN]
 
   Run the screentest check against a live instance of the given environment.
   These tests will only pass against staging and prod.

@@ -10,7 +10,7 @@ source private/devtools/lib.sh || { echo "Are you at repo root?"; exit 1; }
 usage() {
   >&2 cat <<EOUSAGE
 
-  Usage: $0 [exp|dev|staging|prod|beta] NAME:TAG
+  Usage: $0 [exp|dev|staging|prod] NAME:TAG
 
   Deploy a frontend image to Cloud Run for the given environment.
 
@@ -31,11 +31,7 @@ main() {
   local tok=$(private/devtools/idtoken.sh $env)
   local hdr="Authorization: Bearer $tok"
   info "Clearing the redis cache."
-  if [[ $env == "beta" ]]; then
-    curl -H "$hdr" $(worker_url prod)/clear-beta-cache
-  else
-    curl -H "$hdr" $(worker_url $env)/clear-cache
-  fi
+  curl -H "$hdr" $(worker_url $env)/clear-cache
   info "Running warmups."
   private/devtools/warmups.sh $env $tok
 }

@@ -10,7 +10,7 @@ source private/devtools/lib.sh || { echo "Are you at repo root?"; exit 1; }
 usage() {
   >&2 cat <<EOUSAGE
 
-  Usage: $0 [exp|dev|staging|prod|beta] NAME:TAG
+  Usage: $0 [exp|dev|staging|prod] NAME:TAG
 
   Deploy a worker image to gke for the given environment.
 
@@ -23,10 +23,6 @@ main() {
   local image=$2
   check_env $env
   check_image $image
-  if [[ $env = "beta" ]]; then
-    info "skipping worker deploy for $env"
-    return
-  fi
   runcmd docker run -v $(pwd)/private:/private cuelang/cue:0.4.0 cmd \
     -t env=$env \
     -t app=worker \

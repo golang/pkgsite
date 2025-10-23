@@ -51,7 +51,6 @@ type Server struct {
 	proxyClient    *proxy.Client
 	sourceClient   *source.Client
 	cache          *cache.Cache
-	betaCache      *cache.Cache
 	db             *postgres.DB
 	queue          queue.Queue
 	reporter       derrors.Reporter
@@ -64,16 +63,15 @@ type Server struct {
 
 // ServerConfig contains everything needed by a Server.
 type ServerConfig struct {
-	DB                   *postgres.DB
-	IndexClient          *index.Client
-	ProxyClient          *proxy.Client
-	SourceClient         *source.Client
-	RedisCacheClient     *redis.Client
-	RedisBetaCacheClient *redis.Client
-	Queue                queue.Queue
-	Reporter             derrors.Reporter
-	StaticPath           template.TrustedSource
-	GetExperiments       func() []*internal.Experiment
+	DB               *postgres.DB
+	IndexClient      *index.Client
+	ProxyClient      *proxy.Client
+	SourceClient     *source.Client
+	RedisCacheClient *redis.Client
+	Queue            queue.Queue
+	Reporter         derrors.Reporter
+	StaticPath       template.TrustedSource
+	GetExperiments   func() []*internal.Experiment
 }
 
 const (
@@ -100,10 +98,6 @@ func NewServer(cfg *config.Config, scfg ServerConfig) (_ *Server, err error) {
 	if scfg.RedisCacheClient != nil {
 		c = cache.New(scfg.RedisCacheClient)
 	}
-	var bc *cache.Cache
-	if scfg.RedisBetaCacheClient != nil {
-		bc = cache.New(scfg.RedisBetaCacheClient)
-	}
 
 	// Update information about DB locks, etc. every few seconds.
 	p := poller.New(&postgres.UserInfo{}, func(ctx context.Context) (any, error) {
@@ -118,7 +112,6 @@ func NewServer(cfg *config.Config, scfg ServerConfig) (_ *Server, err error) {
 		proxyClient:    scfg.ProxyClient,
 		sourceClient:   scfg.SourceClient,
 		cache:          c,
-		betaCache:      bc,
 		queue:          scfg.Queue,
 		reporter:       scfg.Reporter,
 		templates:      templates,
@@ -225,9 +218,6 @@ func (s *Server) Install(handle func(string, http.Handler)) {
 
 	// manual: clear-cache clears the redis cache.
 	handle("/clear-cache", rmw(s.clearCache(s.cache)))
-
-	// manual: clear-beta-cache clears the redis beta cache.
-	handle("/clear-beta-cache", rmw(s.clearCache(s.betaCache)))
 
 	// manual: delete the specified module version.
 	handle("/delete/", http.StripPrefix("/delete", rmw(s.errorHandler(s.handleDelete))))

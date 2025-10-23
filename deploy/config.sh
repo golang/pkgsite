@@ -10,7 +10,7 @@ source private/devtools/lib.sh || { echo "Are you at repo root?"; exit 1; }
 usage() {
   >&2 cat <<EOUSAGE
 
-  Usage: $0 [exp|dev|staging|prod|beta]
+  Usage: $0 [exp|dev|staging|prod]
 
   Copy the dynamic config to the cloud storage bucket for the given environment.
 

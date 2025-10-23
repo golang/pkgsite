@@ -221,7 +221,6 @@ func main() {
 		middleware.RequestInfo(),
 		middleware.RequestLog(cmdconfig.Logger(ctx, cfg, "frontend-log")),
 		middleware.AcceptRequests(http.MethodGet, http.MethodPost, http.MethodHead), // accept only GETs, POSTs and HEADs
-		middleware.BetaPkgGoDevRedirect(),
 		middleware.GodocOrgRedirect(),
 		middleware.Quota(cfg.Quota, redisClient),
 		middleware.SecureHeaders(!*disableCSP), // must come before any caching for nonces to work

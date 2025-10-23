@@ -150,7 +150,6 @@ func Init(ctx context.Context) (_ *config.Config, err error) {
 		DBSecret:             os.Getenv("GO_DISCOVERY_DATABASE_SECRET"),
 		DBSSL:                GetEnv("GO_DISCOVERY_DATABASE_SSL", "disable"),
 		RedisCacheHost:       os.Getenv("GO_DISCOVERY_REDIS_HOST"),
-		RedisBetaCacheHost:   os.Getenv("GO_DISCOVERY_REDIS_BETA_HOST"),
 		RedisCachePort:       GetEnv("GO_DISCOVERY_REDIS_PORT", "6379"),
 		Quota: config.QuotaSettings{
 			Enable:     os.Getenv("GO_DISCOVERY_ENABLE_QUOTA") == "true",

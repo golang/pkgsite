@@ -17,7 +17,7 @@ source devtools/lib.sh || { echo "Are you at repo root?"; exit 1; }
 usage() {
   cat >&2 <<END
 
-  Usage: $0 [exp|dev|staging|prod|beta] IDTOKEN
+  Usage: $0 [exp|dev|staging|prod] IDTOKEN
 
   Run the pagecheck tests against the given environment
 
