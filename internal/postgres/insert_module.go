@@ -71,6 +71,7 @@ var skipSymbols = map[string]bool{
 	"github.com/gardener/gardener":                           true,
 	"github.com/gyliu513/okd-origin":                         true,
 	"github.com/tombuildsstuff/azure-sdk-for-go":             true,
+	"github.com/cdktf/cdktf-provider-google-go/google/v16":   true,
 }
 
 // saveModule inserts a Module into the database along with its packages,
