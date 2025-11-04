@@ -115,6 +115,10 @@ type configOverride struct {
 // must be called before any configuration values are used.
 func Init(ctx context.Context) (_ *config.Config, err error) {
 	defer derrors.Add(&err, "config.Init(ctx)")
+
+	dbs := chooseN(GetEnv("GO_DISCOVERY_DATABASE_HOST", "localhost"), 2)
+	primaryDB, secondaryDB := dbs[0], dbs[1]
+
 	// Build a Config from the execution environment, loading some values
 	// from envvars and others from remote services.
 	cfg := &config.Config{
@@ -141,10 +145,10 @@ func Init(ctx context.Context) (_ *config.Config, err error) {
 		LocationID: GetEnv("GO_DISCOVERY_GAE_LOCATION_ID", "us-central1"),
 		// This fallback should only be used when developing locally.
 		FallbackVersionLabel: time.Now().Format(config.AppVersionFormat),
-		DBHost:               chooseOne(GetEnv("GO_DISCOVERY_DATABASE_HOST", "localhost")),
+		DBHost:               primaryDB,
 		DBUser:               GetEnv("GO_DISCOVERY_DATABASE_USER", "postgres"),
 		DBPassword:           os.Getenv("GO_DISCOVERY_DATABASE_PASSWORD"),
-		DBSecondaryHost:      chooseOne(os.Getenv("GO_DISCOVERY_DATABASE_SECONDARY_HOST")),
+		DBSecondaryHost:      secondaryDB,
 		DBPort:               GetEnv("GO_DISCOVERY_DATABASE_PORT", "5432"),
 		DBName:               GetEnv("GO_DISCOVERY_DATABASE_NAME", "discovery-db"),
 		DBSecret:             os.Getenv("GO_DISCOVERY_DATABASE_SECRET"),
@@ -333,16 +337,24 @@ func override[T comparable](ctx context.Context, name string, field *T, val T) {
 	}
 }
 
-// chooseOne selects one entry at random from a whitespace-separated
-// string. It returns the empty string if there are no elements.
-func chooseOne(configVar string) string {
+// chooseN selects N entries at random from a whitespace-separated string, and
+// returns them as a slice of size N.
+//
+// If the input string contains fewer than N entries, the returned slice is
+// padded with empty strings at the end.
+func chooseN(configVar string, n int) []string {
 	fields := strings.Fields(configVar)
-	if len(fields) == 0 {
-		return ""
+
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	r.Shuffle(len(fields), func(i, j int) {
+		fields[i], fields[j] = fields[j], fields[i]
+	})
+
+	if len(fields) <= n {
+		return append(fields, make([]string, n-len(fields))...)
+	} else {
+		return fields[:n]
 	}
-	src := rand.NewSource(time.Now().UnixNano())
-	rng := rand.New(src)
-	return fields[rng.Intn(len(fields))]
 }
 
 // gceMetadata reads a metadata value from GCE.

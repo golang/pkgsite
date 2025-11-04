@@ -32,24 +32,49 @@ func TestValidateAppVersion(t *testing.T) {
 	}
 }
 
-func TestChooseOne(t *testing.T) {
+func TestChooseN(t *testing.T) {
 	tests := []struct {
-		configVar   string
-		wantMatches string
+		configVar string
+		n         int
+		wantMatch []string
 	}{
-		{"foo", "foo"},
-		{"foo1 \n foo2", "^foo[12]$"},
-		{"foo1\nfoo2", "^foo[12]$"},
-		{"foo1 foo2", "^foo[12]$"},
+		{"foo", 2, []string{"foo", ""}},
+		{"foo1 \n foo2", 1, []string{"^foo[12]$"}},
+		{"foo1 \n foo2", 2, []string{"^foo[12]$", "^foo[12]$"}},
+		{"foo1 foo2", 4, []string{"^foo[12]$", "^foo[12]$", "", ""}},
+		{"foo1\nfoo2\nfoo3", 5, []string{"^foo[123]$", "^foo[123]$", "^foo[123]$", "", ""}},
 	}
 	for _, test := range tests {
-		got := chooseOne(test.configVar)
-		matched, err := regexp.MatchString(test.wantMatches, got)
-		if err != nil {
-			t.Fatal(err)
+		gots := chooseN(test.configVar, test.n)
+
+		if len(gots) != test.n {
+			t.Errorf("chooseN must return a slice of n(%v), got %v", test.n, len(gots))
 		}
-		if !matched {
-			t.Errorf("chooseOne(%q) = %q, _, want matches %q", test.configVar, got, test.wantMatches)
+		seen := make(map[string]struct{}, test.n)
+
+		allMatch := true
+		allUnique := true
+		for i, got := range gots {
+			if got != "" {
+				_, ok := seen[got]
+				allUnique = allUnique && !ok
+
+				seen[got] = struct{}{}
+			}
+
+			matched, err := regexp.MatchString(test.wantMatch[i], got)
+			if err != nil {
+				t.Fatal(err)
+			}
+			allMatch = allMatch && matched
+
+			seen[got] = struct{}{}
+		}
+		if !allMatch {
+			t.Errorf("chooseN(%q, %v) = %v, want matches %v", test.configVar, test.n, gots, test.wantMatch)
+		}
+		if !allUnique {
+			t.Errorf("chooseN(%q, %v) = %v, want all unique", test.configVar, test.n, gots)
 		}
 	}
 }
