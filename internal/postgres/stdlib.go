@@ -17,7 +17,8 @@ import (
 // the path must end with "/" + suffix.
 //
 // We are only interested in actual standard library packages: not commands, which we happen to include
-// in the stdlib module, and not directories (paths that do not contain a package).
+// in the stdlib module; not directories (paths that do not contain a package); and not internal
+// packages.
 func (db *DB) GetStdlibPathsWithSuffix(ctx context.Context, suffix string) (paths []string, err error) {
 	defer derrors.WrapStack(&err, "DB.GetStdlibPaths(ctx, %q)", suffix)
 
@@ -37,6 +38,8 @@ func (db *DB) GetStdlibPathsWithSuffix(ctx context.Context, suffix string) (path
 			LIMIT 1)
 			AND u.name != ''
 			AND p.path NOT LIKE 'cmd/%'
+			AND p.path NOT LIKE 'internal/%'
+			AND p.path NOT LIKE '%/internal/%'
 			AND p.path LIKE '%/' || $2
 		ORDER BY p.path
 	`

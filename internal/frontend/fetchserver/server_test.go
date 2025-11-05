@@ -161,6 +161,14 @@ var testModules = []testModule{
 				name:   "http",
 				suffix: "net/http",
 			},
+			{
+				name:   "boring",
+				suffix: "crypto/internal/boring",
+			},
+			{
+				name:   "asan",
+				suffix: "internal/asan",
+			},
 		},
 	},
 	{
@@ -685,6 +693,16 @@ func serverTestCases() []serverTestCase {
 			urlPath:        "/http@go1.13/",
 			wantStatusCode: http.StatusMovedPermanently,
 			wantLocation:   "/http@go1.13",
+		},
+		{
+			name:           "stdlib top-level internal shortcut (internal/asan)",
+			urlPath:        "/asan",
+			wantStatusCode: http.StatusNotFound,
+		},
+		{
+			name:           "stdlib internal shortcut (crypto/internal/boring)",
+			urlPath:        "/boring",
+			wantStatusCode: http.StatusNotFound,
 		},
 		{
 			name:           "package page with trailiing slash",
