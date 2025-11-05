@@ -169,6 +169,14 @@ var testModules = []testModule{
 				name:   "asan",
 				suffix: "internal/asan",
 			},
+			{
+				name:   "synctest",
+				suffix: "internal/synctest",
+			},
+			{
+				name:   "synctest",
+				suffix: "testing/synctest",
+			},
 		},
 	},
 	{
@@ -703,6 +711,12 @@ func serverTestCases() []serverTestCase {
 			name:           "stdlib internal shortcut (crypto/internal/boring)",
 			urlPath:        "/boring",
 			wantStatusCode: http.StatusNotFound,
+		},
+		{
+			name:           "stdlib shortcut (testing/synctest) with internal package (internal/synctest)",
+			urlPath:        "/synctest",
+			wantStatusCode: http.StatusFound,
+			wantLocation:   "/testing/synctest",
 		},
 		{
 			name:           "package page with trailiing slash",
