@@ -26,25 +26,32 @@ func (db *DB) GetModuleVersionsToClean(ctx context.Context, daysOld, limit int) 
 	// - The ones in search_documents (since the latest version of a package might be at an older version),
 	// - The ones that the master or main branch resolves to.
 	query := `
-		SELECT module_path, version
-		FROM modules
-		WHERE version_type = 'pseudo'
-		AND CURRENT_TIMESTAMP - updated_at > make_interval(days => $1)
-		EXCEPT (
-			SELECT p.path, l.good_version
-			FROM latest_module_versions l
-			INNER JOIN paths p ON p.id = l.module_path_id
-			WHERE good_version != ''
-		)
-		EXCEPT (
-			SELECT module_path, version
-			FROM search_documents
-		)
-		EXCEPT (
-			SELECT module_path, resolved_version
-			FROM version_map
-			WHERE requested_version IN ('master', 'main', 'dev.fuzz')
-		)
+		SELECT
+			m.module_path,
+			m.version
+		FROM
+			modules m
+		LEFT JOIN
+			(
+				SELECT p.path, l.good_version
+				FROM latest_module_versions l
+				JOIN paths p ON p.id = l.module_path_id
+				WHERE l.good_version != ''
+			) latest ON m.module_path = latest.path AND m.version = latest.good_version
+		LEFT JOIN
+			search_documents sd ON m.module_path = sd.module_path AND m.version = sd.version
+		LEFT JOIN
+			(
+				SELECT module_path, resolved_version
+				FROM version_map
+				WHERE requested_version IN ('master', 'main', 'dev.fuzz')
+			) vm_filtered ON m.module_path = vm_filtered.module_path AND m.version = vm_filtered.resolved_version
+		WHERE
+			m.version_type = 'pseudo'
+			AND CURRENT_TIMESTAMP - m.updated_at > make_interval(days => $1)
+			AND latest.path IS NULL
+			AND sd.module_path IS NULL
+			AND vm_filtered.module_path IS NULL
 		LIMIT $2
 	`
 
