@@ -196,19 +196,18 @@ func TestGetLicensesBypass(t *testing.T) {
 	}
 
 	// Read with license bypass includes non-redistributable license contents.
-	redist := *sample.NonRedistributableLicense
-	redist.Contents = []uint8{}
-	check(true, &redist)
+	redist := sample.NonRedistributableLicense()
+	check(true, redist)
 
 	// Read without license bypass does not include non-redistributable license contents.
-	nonRedist := *sample.NonRedistributableLicense
+	nonRedist := sample.NonRedistributableLicense()
 	nonRedist.Contents = nil
-	check(false, &nonRedist)
+	check(false, nonRedist)
 }
 
 func nonRedistributableModule() *internal.Module {
 	m := sample.Module(sample.ModulePath, "v1.2.3", "")
-	sample.AddLicense(m, sample.NonRedistributableLicense)
+	sample.AddLicense(m, sample.NonRedistributableLicense())
 	m.IsRedistributable = false
 	m.Packages()[0].IsRedistributable = false
 	m.Units[0].IsRedistributable = false

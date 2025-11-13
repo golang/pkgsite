@@ -29,29 +29,22 @@ import (
 
 // These sample values can be used to construct test cases.
 var (
-	ModulePath                = "github.com/valid/module_name"
-	RepositoryURL             = "https://github.com/valid/module_name"
-	VersionString             = "v1.0.0"
-	CommitTime                = NowTruncated()
-	LicenseType               = "MIT"
-	LicenseFilePath           = "LICENSE"
-	NonRedistributableLicense = &licenses.License{
-		Metadata: &licenses.Metadata{
-			FilePath: "NONREDIST_LICENSE",
-			Types:    []string{"UNKNOWN"},
-		},
-		Contents: []byte(`unknown`),
-	}
-	PackageName    = "foo"
-	Suffix         = "foo"
-	PackagePath    = path.Join(ModulePath, Suffix)
-	V1Path         = PackagePath
-	ReadmeFilePath = "README.md"
-	ReadmeContents = "readme"
-	GOOS           = internal.All
-	GOARCH         = internal.All
-	Doc            = Documentation(GOOS, GOARCH, DocContents)
-	API            = []*internal.Symbol{
+	ModulePath      = "github.com/valid/module_name"
+	RepositoryURL   = "https://github.com/valid/module_name"
+	VersionString   = "v1.0.0"
+	CommitTime      = NowTruncated()
+	LicenseType     = "MIT"
+	LicenseFilePath = "LICENSE"
+	PackageName     = "foo"
+	Suffix          = "foo"
+	PackagePath     = path.Join(ModulePath, Suffix)
+	V1Path          = PackagePath
+	ReadmeFilePath  = "README.md"
+	ReadmeContents  = "readme"
+	GOOS            = internal.All
+	GOARCH          = internal.All
+	Doc             = Documentation(GOOS, GOARCH, DocContents)
+	API             = []*internal.Symbol{
 		Constant,
 		Variable,
 		Function,
@@ -301,6 +294,20 @@ func AddUnit(m *internal.Module, u *internal.Unit) {
 		}
 	}
 	m.Units = append(m.Units, u)
+}
+
+// NonRedistributableLicense returns a license that is not redistributable.
+//
+// It returns a new License instance each time, as non-redistributable licenses
+// may be mutated during insertion.
+func NonRedistributableLicense() *licenses.License {
+	return &licenses.License{
+		Metadata: &licenses.Metadata{
+			FilePath: "NONREDIST_LICENSE",
+			Types:    []string{"UNKNOWN"},
+		},
+		Contents: []byte(`unknown`),
+	}
 }
 
 func AddLicense(m *internal.Module, lic *licenses.License) {
