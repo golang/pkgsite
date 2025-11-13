@@ -409,6 +409,7 @@ func (pdb *DB) insertUnits(ctx context.Context, tx *database.DB,
 			pq.Array(licenseTypes),
 			pq.Array(licensePaths),
 			pdb.bypassLicenseCheck || u.IsRedistributable,
+			len(u.Imports),
 		)
 		if u.Readme != nil {
 			pathToReadme[u.Path] = u.Readme
@@ -481,6 +482,7 @@ func insertUnits(ctx context.Context, db *database.DB, unitValues []any) (pathID
 		"license_types",
 		"license_paths",
 		"redistributable",
+		"num_imports",
 	}
 	uniqueUnitCols := []string{"path_id", "module_id"}
 	returningUnitCols := []string{"id", "path_id"}

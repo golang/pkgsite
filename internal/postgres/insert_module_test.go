@@ -124,6 +124,7 @@ func checkModule(ctx context.Context, t *testing.T, db *DB, want *internal.Modul
 			}
 		}
 		wantu.Subdirectories = subdirectories
+		wantu.NumImports = len(wantu.Imports)
 		opts := cmp.Options{
 			cmpopts.EquateEmpty(),
 			cmpopts.IgnoreFields(licenses.Metadata{}, "Coverage"),
