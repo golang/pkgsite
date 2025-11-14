@@ -6,7 +6,9 @@
 
 # Required substitutions
 # _ENV environment (dev, staging, or prod)
-# _CMD command to migrate
+# _CMD command to migrate (e.g., up, down N, force V). IMPORTANT: Do not enclose the command and its arguments in quotes. Enter it as you would on the command line.
+#      Example for force: force 157
+#      Example for up: up
 
 timeout: 1800s
 steps:
@@ -31,7 +33,7 @@ steps:
         migrate \
           -source file:../migrations \
           -database "postgres://cloudbuild@127.0.0.1:${port}/${name}?sslmode=disable&password=$$PASSWORD" \
-          "$_CMD"
+          $_CMD
     secretEnv: ['PASSWORD']
 availableSecrets:
   secretManager:
