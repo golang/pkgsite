@@ -474,7 +474,12 @@ func (db *DB) getUnitWithAllFields(ctx context.Context, um *internal.UnitMeta, b
 			r.contents,
 			d.synopsis,
 			d.source,
-			u.num_imports,
+			COALESCE((
+				SELECT COUNT(unit_id)
+				FROM imports
+				WHERE unit_id = u.id
+				GROUP BY unit_id
+				), 0) AS num_imports,
 			COALESCE((
 				SELECT imported_by_count
 				FROM search_documents
