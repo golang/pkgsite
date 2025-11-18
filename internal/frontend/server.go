@@ -257,6 +257,10 @@ func (s *Server) installDebugHandlers(handle func(string, http.Handler)) {
 	handle("/_debug/pprof/profile", ifDebug(hpprof.Profile))
 	handle("/_debug/pprof/symbol", ifDebug(hpprof.Symbol))
 	handle("/_debug/pprof/trace", ifDebug(hpprof.Trace))
+	handle("/_debug/pprof/heap", ifDebug(hpprof.Handler("heap").ServeHTTP))
+	handle("/_debug/pprof/allocs", ifDebug(hpprof.Handler("allocs").ServeHTTP))
+	handle("/_debug/pprof/block", ifDebug(hpprof.Handler("block").ServeHTTP))
+	handle("/_debug/pprof/goroutine", ifDebug(hpprof.Handler("goroutine").ServeHTTP))
 
 	handle("/_debug/info", ifDebug(func(w http.ResponseWriter, _ *http.Request) {
 		row := func(a, b string) {
