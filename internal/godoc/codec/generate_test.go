@@ -7,7 +7,6 @@ package codec
 import (
 	"bytes"
 	"flag"
-	"go/ast"
 	"go/token"
 	"io"
 	"reflect"
@@ -46,7 +45,18 @@ func TestGoName(t *testing.T) {
 func TestGenerate(t *testing.T) {
 	testGenerate(t, "slice", [][]int(nil))
 	testGenerate(t, "map", map[string]bool(nil))
-	testGenerate(t, "struct", ast.BasicLit{})
+	testGenerate(t, "struct", BasicLit{})
+}
+
+// Copy of ast.BasicLit before ValueEnd was added in golang/go#76031.
+// This largely preserves the previous test data.
+//
+// See also golang/go#76350: we should figure out what to do with new fields,
+// in general. In this case we can probably just safely skip the field.
+type BasicLit struct {
+	ValuePos token.Pos // literal position
+	Kind     token.Token
+	Value    string
 }
 
 func testGenerate(t *testing.T, name string, x any) {

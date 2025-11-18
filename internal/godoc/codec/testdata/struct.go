@@ -9,14 +9,13 @@
 package somepkg
 
 import (
-	"go/ast"
 	"go/token"
 	"golang.org/x/pkgsite/internal/godoc/codec"
 )
 
-// Fields of ast_BasicLit: ValuePos Kind Value
+// Fields of codec_BasicLit: ValuePos Kind Value
 
-func encode_ast_BasicLit(e *codec.Encoder, x *ast.BasicLit) {
+func encode_codec_BasicLit(e *codec.Encoder, x *codec.BasicLit) {
 	if !e.StartStruct(x == nil, x) {
 		return
 	}
@@ -35,16 +34,16 @@ func encode_ast_BasicLit(e *codec.Encoder, x *ast.BasicLit) {
 	e.EndStruct()
 }
 
-func decode_ast_BasicLit(d *codec.Decoder, p **ast.BasicLit) {
+func decode_codec_BasicLit(d *codec.Decoder, p **codec.BasicLit) {
 	proceed, ref := d.StartStruct()
 	if !proceed {
 		return
 	}
 	if ref != nil {
-		*p = ref.(*ast.BasicLit)
+		*p = ref.(*codec.BasicLit)
 		return
 	}
-	var x ast.BasicLit
+	var x codec.BasicLit
 	d.StoreRef(&x)
 	for {
 		n := d.NextStructField()
@@ -59,18 +58,18 @@ func decode_ast_BasicLit(d *codec.Decoder, p **ast.BasicLit) {
 		case 2:
 			x.Value = d.DecodeString()
 		default:
-			d.UnknownField("ast.BasicLit", n)
+			d.UnknownField("codec.BasicLit", n)
 		}
 		*p = &x
 	}
 }
 
 func init() {
-	codec.Register(&ast.BasicLit{},
-		func(e *codec.Encoder, x any) { encode_ast_BasicLit(e, x.(*ast.BasicLit)) },
+	codec.Register(&codec.BasicLit{},
+		func(e *codec.Encoder, x any) { encode_codec_BasicLit(e, x.(*codec.BasicLit)) },
 		func(d *codec.Decoder) any {
-			var x *ast.BasicLit
-			decode_ast_BasicLit(d, &x)
+			var x *codec.BasicLit
+			decode_codec_BasicLit(d, &x)
 			return x
 		})
 }
