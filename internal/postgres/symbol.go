@@ -396,7 +396,7 @@ func deleteOldSymbolSearchDocuments(ctx context.Context, db *database.DB,
 	pathToID map[string]int,
 	pathToDocIDToDoc map[string]map[int]*internal.Documentation,
 	latestPathToPkgsymToID map[string]map[packageSymbol]int) (err error) {
-	defer derrors.WrapStack(&err, "deleteOldSymbolSearchDocuments(ctx, db, %q, pathToID, pathToDocIDToDoc)", modulePathID)
+	defer derrors.WrapStack(&err, "deleteOldSymbolSearchDocuments(ctx, db, %d, pathToID, pathToDocIDToDoc)", modulePathID)
 
 	// Get all package_symbol_ids for the latest module (the current one we are
 	// trying to insert).

@@ -44,7 +44,7 @@ func TestParseInputType(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			got := ParseInputType(test.q)
 			if got != test.want {
-				t.Errorf("ParseInputType(%q) = %q; want = %q", test.q, got, test.want)
+				t.Errorf("ParseInputType(%q) = %#v; want = %#v", test.q, got, test.want)
 			}
 		})
 	}

@@ -133,22 +133,22 @@ func appendSymbolHistoryRow(sm *internal.SymbolMeta, values []any,
 	defer derrors.WrapStack(&err, "appendSymbolHistoryRow(%q, %q, %q, %q)", sm.Name, packagePath, modulePath, ver)
 	symbolID := symToID[sm.Name]
 	if symbolID == 0 {
-		return nil, fmt.Errorf("symbolID cannot be 0: %q", sm.Name)
+		return nil, fmt.Errorf("symbolID is 0 (for sm.Name = %q), but cannot be 0", sm.Name)
 	}
 	if sm.ParentName == "" {
 		sm.ParentName = sm.Name
 	}
 	parentID := symToID[sm.ParentName]
 	if parentID == 0 {
-		return nil, fmt.Errorf("parentSymbolID cannot be 0: %q", sm.ParentName)
+		return nil, fmt.Errorf("parentID is 0 (for sm.ParentName = %q), but cannot be 0", sm.ParentName)
 	}
 	packagePathID := pathToID[packagePath]
 	if packagePathID == 0 {
-		return nil, fmt.Errorf("packagePathID cannot be 0: %q", packagePathID)
+		return nil, fmt.Errorf("packagePathID is 0 (for packagePath = %q), but cannot be 0", packagePath)
 	}
 	modulePathID := pathToID[modulePath]
 	if modulePathID == 0 {
-		return nil, fmt.Errorf("modulePathID cannot be 0: %q", modulePathID)
+		return nil, fmt.Errorf("modulePathID is 0 (for modulePath = %q), but cannot be 0", modulePath)
 	}
 	pkgsymID := pathToPkgsymID[packagePath][packageSymbol{synopsis: sm.Synopsis, name: sm.Name, parentName: sm.ParentName}]
 	return append(values,
