@@ -191,6 +191,14 @@ var (
 		"Zlib",
 	}
 
+	// licenseURLOverrides provides a mapping from a license identifier to its
+	// correct URL. This is used for licenses where the URL has changed or does
+	// not follow the standard pattern.
+	licenseURLOverrides = map[string]string{
+		// HPND is a retired license, and the URL has changed.
+		"HPND": "https://opensource.org/license/historical-php",
+	}
+
 	// These aren't technically licenses, but they are recognized by
 	// licensecheck and safe to ignore.
 	ignorableLicenseTypes = map[string]bool{
@@ -278,7 +286,9 @@ func AcceptedLicenses() []AcceptedLicenseInfo {
 	var lics []AcceptedLicenseInfo
 	for _, identifier := range standardRedistributableLicenseTypes {
 		var link string
-		if nonOSILicenses[identifier] {
+		if override, ok := licenseURLOverrides[identifier]; ok {
+			link = override
+		} else if nonOSILicenses[identifier] {
 			link = fmt.Sprintf("https://spdx.org/licenses/%s.html", identifier)
 		} else {
 			link = fmt.Sprintf("https://opensource.org/licenses/%s", identifier)
