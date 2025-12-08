@@ -19,6 +19,7 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/godoc/dochtml"
+	"golang.org/x/pkgsite/internal/godoc/importer"
 	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/stdlib"
 )
@@ -125,7 +126,7 @@ func (p *Package) DocPackage(innerPath string, modInfo *ModuleInfo) (_ *doc.Pack
 	// Call ast.NewPackage for side-effects to populate objects. In Go 1.25+
 	// doc.NewFromFiles will not cause the objects to be populated.
 	//lint:ignore SA1019 We had a preexisting dependency on ast.Object.
-	ast.NewPackage(p.Fset, nonTestFiles, simpleImporter, nil)
+	ast.NewPackage(p.Fset, nonTestFiles, importer.SimpleImporter, nil)
 	d, err := doc.NewFromFiles(p.Fset, allGoFiles, importPath, m)
 	if err != nil {
 		return nil, fmt.Errorf("doc.NewFromFiles: %v", err)
@@ -148,23 +149,6 @@ func (p *Package) DocPackage(innerPath string, modInfo *ModuleInfo) (_ *doc.Pack
 		return nil, fmt.Errorf("%d imports found package %q; exceeds limit %d for maxImportsPerPackage", len(d.Imports), importPath, maxImportsPerPackage)
 	}
 	return d, nil
-}
-
-// simpleImporter returns a (dummy) package object named by the last path
-// component of the provided package path (as is the convention for packages).
-// This is sufficient to resolve package identifiers without doing an actual
-// import. It never returns an error.
-//
-//lint:ignore SA1019 We had a preexisting dependency on ast.Object.
-func simpleImporter(imports map[string]*ast.Object, path string) (*ast.Object, error) {
-	pkg := imports[path]
-	if pkg == nil {
-		// note that strings.LastIndex returns -1 if there is no "/"
-		pkg = ast.NewObj(ast.Pkg, path[strings.LastIndex(path, "/")+1:])
-		pkg.Data = ast.NewScope(nil) // required by ast.NewPackage for dot-import
-		imports[path] = pkg
-	}
-	return pkg, nil
 }
 
 // renderOptions returns a RenderOptions for p.

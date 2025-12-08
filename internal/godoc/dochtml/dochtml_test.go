@@ -26,6 +26,7 @@ import (
 	"github.com/google/safehtml/template"
 	"golang.org/x/net/html"
 	"golang.org/x/pkgsite/internal/godoc/dochtml/internal/render"
+	"golang.org/x/pkgsite/internal/godoc/importer"
 	"golang.org/x/pkgsite/internal/testing/testhelper"
 )
 
@@ -104,6 +105,101 @@ func compareWithGolden(t *testing.T, parts *Parts, name string, update bool) {
 	}
 	got = b.String()
 	testhelper.CompareWithGolden(t, got, name+".golden", update)
+}
+
+func TestImportLink(t *testing.T) {
+	LoadTemplates(templateFS)
+
+	cases := []struct {
+		name string
+		path string
+	}{{
+		name: "std",
+		path: "math/rand",
+	}, {
+		name: "std-v2",
+		path: "math/rand/v2",
+	}, {
+		name: "regular",
+		path: "example.com/rand",
+	}, {
+		name: "regular-v2",
+		path: "example.com/rand/v2",
+	}, {
+		name: "go-prefix",
+		path: "example.com/go-rand",
+	}, {
+		name: "go-prefix-v2",
+		path: "example.com/go-rand/v2",
+	}}
+
+	// Create a simple package with the "rand" dependency imported from the given path.
+	createPackage := func(importPath, depPath string) (*token.FileSet, *doc.Package) {
+		const codeTpl = `
+package foo
+
+import %q
+
+func F(rng *rand.Rand) {}
+`
+		code := fmt.Sprintf(codeTpl, depPath)
+
+		fset := token.NewFileSet()
+		astFile, _ := parser.ParseFile(fset, "main.go", code, parser.ParseComments)
+		files := []*ast.File{astFile}
+
+		filesMap := map[string]*ast.File{
+			"main.go": astFile,
+		}
+
+		//lint:ignore SA1019 We had a preexisting dependency on ast.Object.
+		ast.NewPackage(fset, filesMap, importer.SimpleImporter, nil)
+
+		astPackage, err := doc.NewFromFiles(fset, files, importPath, doc.AllDecls)
+		if err != nil {
+			panic(err)
+		}
+
+		return fset, astPackage
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			ctx := t.Context()
+
+			// render out the package
+			fset, d := createPackage("example.com/module/pkg", tc.path)
+			parts, err := Render(ctx, fset, d, testRenderOptions)
+			if err != nil {
+				t.Fatal(err)
+			}
+			htmlDoc, err := html.Parse(strings.NewReader(parts.Body.String()))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			// Walk the rendered output looking for "rand" in the function signature,
+			// and get the location it's linked to.
+			var declarations *html.Node
+			var got string
+			walk(htmlDoc, func(n *html.Node) {
+				if strings.Contains(attr(n, "class"), "Documentation-declaration") {
+					declarations = n
+				}
+				if n.Data == "rand" {
+					got = attr(n.Parent, "href")
+				}
+			})
+
+			want := "/" + tc.path
+			if got != want {
+				var buf bytes.Buffer
+				html.Render(&buf, declarations)
+				t.Errorf("dep link = %q, want = %q\ndeclarations:\n%s",
+					got, want, buf.String())
+			}
+		})
+	}
 }
 
 func TestExampleRender(t *testing.T) {
@@ -483,7 +579,7 @@ func mustLoadPackage(path string) (*token.FileSet, *doc.Package) {
 	}
 
 	//lint:ignore SA1019 We had a preexisting dependency on ast.Object.
-	ast.NewPackage(fset, filesMap, simpleImporter, nil)
+	ast.NewPackage(fset, filesMap, importer.SimpleImporter, nil)
 
 	astPackage, err := doc.NewFromFiles(fset, files, path, doc.AllDecls)
 	if err != nil {
@@ -491,21 +587,4 @@ func mustLoadPackage(path string) (*token.FileSet, *doc.Package) {
 	}
 
 	return fset, astPackage
-}
-
-// simpleImporter returns a (dummy) package object named by the last path
-// component of the provided package path (as is the convention for packages).
-// This is sufficient to resolve package identifiers without doing an actual
-// import. It never returns an error.
-//
-//lint:ignore SA1019 We had a preexisting dependency on ast.Object.
-func simpleImporter(imports map[string]*ast.Object, path string) (*ast.Object, error) {
-	pkg := imports[path]
-	if pkg == nil {
-		// note that strings.LastIndex returns -1 if there is no "/"
-		pkg = ast.NewObj(ast.Pkg, path[strings.LastIndex(path, "/")+1:])
-		pkg.Data = ast.NewScope(nil) // required by ast.NewPackage for dot-import
-		imports[path] = pkg
-	}
-	return pkg, nil
 }
