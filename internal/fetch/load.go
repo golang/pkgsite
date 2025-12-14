@@ -439,6 +439,10 @@ func matchingFiles(goos, goarch string, importPath string, allFiles map[string][
 	switch importPath {
 	case "encoding/json/v2", "encoding/json/jsontext":
 		bctx.BuildTags = append(bctx.BuildTags, "goexperiment.jsonv2")
+	case "runtime/secret":
+		bctx.BuildTags = append(bctx.BuildTags, "goexperiment.runtimesecret")
+	case "simd", "simd/archsimd":
+		bctx.BuildTags = append(bctx.BuildTags, "goexperiment.simd")
 	}
 
 	// Copy the input map so we don't modify it.
