@@ -97,7 +97,7 @@ type UnitPage struct {
 	Details any
 
 	// GoDocMode indicates whether to suppress the unit header and right hand unit metadata.
-	// If set to true, the page will also not have Vulns or a DepsDevURL.
+	// If set to true, the page will also not have Vulns, DepsDevURL or a CodeWikiURL.
 	GoDocMode bool
 
 	// Vulns holds vulnerability information.
@@ -105,6 +105,9 @@ type UnitPage struct {
 
 	// DepsDevURL holds the full URL to this module version on deps.dev.
 	DepsDevURL string
+
+	// CodeWikiURL holds the full URL to this module's repo on codewiki.google.
+	CodeWikiURL string
 
 	// IsGoProject is true if the package is from the standard library or a
 	// golang.org sub-repository.
@@ -141,8 +144,10 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 	}
 
 	makeDepsDevURL := func() string { return "" }
+	makeCodeWikiURL := func() string { return "" }
 	if !s.goDocMode {
-		makeDepsDevURL = depsDevURLGenerator(ctx, s.depsDevHTTPClient, um)
+		makeDepsDevURL = depsDevURLGenerator(ctx, s.HTTPClient, um)
+		makeCodeWikiURL = codeWikiURLGenerator(ctx, s.HTTPClient, um)
 	}
 
 	// Use GOOS and GOARCH query parameters to create a build context, which
@@ -239,6 +244,7 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 
 	if !s.goDocMode {
 		page.DepsDevURL = makeDepsDevURL()
+		page.CodeWikiURL = makeCodeWikiURL()
 	}
 
 	// Show the banner if there was no error getting the latest major version,

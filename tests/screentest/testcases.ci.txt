@@ -3,7 +3,7 @@ windowsize 1536x960
 block https://codecov.io/* https://travis-ci.com/*
 
 {{$ready := "[role='treeitem'][aria-selected='true']"}}
-{{$hideElements := "document.querySelector(\"[data-test-id='UnitHeader-importedby']\")?.remove();document.querySelector(\"[data-test-id='meta-link-depsdev']\")?.remove();"}}
+{{$hideElements := "document.querySelector(\"[data-test-id='UnitHeader-importedby']\")?.remove();document.querySelector(\"[data-test-id='meta-link-depsdev']\")?.remove();document.querySelector(\"[data-test-id='meta-link-codewiki']\")?.remove();"}}
 {{$scrollTop := "window.scrollTo({top:0});"}}
 
 test vuln

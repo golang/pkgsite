@@ -11,7 +11,7 @@ block https://codecov.io/* https://travis-ci.com/*
 # The aria-selected attribute is added by the last piece of JS to run.
 {{$ready := "[role='treeitem'][aria-selected='true']"}}
 
-{{$hideElements := "document.querySelector(\"[data-test-id='UnitHeader-importedby']\")?.remove();document.querySelector(\"[data-test-id='meta-link-depsdev']\")?.remove();"}}
+{{$hideElements := "document.querySelector(\"[data-test-id='UnitHeader-importedby']\")?.remove();document.querySelector(\"[data-test-id='meta-link-depsdev']\")?.remove();document.querySelector(\"[data-test-id='meta-link-codewiki']\")?.remove();"}}
 
 # JS for hiding the "Links" heading. We are already hiding the deps.dev link because
 # its presence depends on a timeout, but for some modules, if the link isn't
@@ -231,5 +231,8 @@ capture fullscreen 540x1080
 
 test nav submenu
 path /github.com/jba/bit
+wait {{$ready}}
+eval {{$hideElements}}
+sleep 3s
 click .js-desktop-menu-hover
 capture viewport
