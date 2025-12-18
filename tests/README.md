@@ -94,6 +94,14 @@ Tests in `./tests/screentest/testcases.txt` run for all environments and
 are suitable for tests with data that is consistent between environments or
 static pages.
 
+### Updating the tests
+
+Update screen shot diffs using the following:
+
+1. Run `./tests/screentest/run.sh -update ci` to collect the updated screenshots.
+2. Optionally use `./tests/screentest/run.sh -update -run <test> ci` to update specific tests.
+3. Copy the new screenshots from `./tests/screentest/output` into `./tests/screentest/testdata/testcases`
+
 ### Understanding Test Failures
 
 If the tests fail with diffs, a file with the diffs will be created in the
