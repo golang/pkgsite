@@ -152,18 +152,19 @@ func main() {
 		TaskIDChangeInterval: config.TaskIDChangeIntervalFrontend,
 	}
 	server, err := frontend.NewServer(frontend.ServerConfig{
-		Config:           cfg,
-		FetchServer:      fetchServer,
-		DataSourceGetter: dsg,
-		Queue:            fetchQueue,
-		TemplateFS:       template.TrustedFSFromTrustedSource(staticSource),
-		StaticFS:         os.DirFS(*staticFlag),
-		ThirdPartyFS:     os.DirFS(*thirdPartyPath),
-		DevMode:          *devMode,
-		LocalMode:        *localMode,
-		Reporter:         reporter,
-		VulndbClient:     vc,
-		HTTPClient:       &http.Client{Transport: new(ochttp.Transport)},
+		Config:                cfg,
+		FetchServer:           fetchServer,
+		DataSourceGetter:      dsg,
+		Queue:                 fetchQueue,
+		TemplateFS:            template.TrustedFSFromTrustedSource(staticSource),
+		StaticFS:              os.DirFS(*staticFlag),
+		ThirdPartyFS:          os.DirFS(*thirdPartyPath),
+		DevMode:               *devMode,
+		LocalMode:             *localMode,
+		Reporter:              reporter,
+		VulndbClient:          vc,
+		HTTPClient:            &http.Client{Transport: new(ochttp.Transport)},
+		RecordCodeWikiMetrics: dcensus.RecordClick,
 	})
 	if err != nil {
 		log.Fatalf(ctx, "frontend.NewServer: %v", err)
@@ -192,6 +193,7 @@ func main() {
 		middleware.CacheErrorCount,
 		middleware.CacheLatency,
 		middleware.QuotaResultCount,
+		dcensus.CodeWikiClickCountView,
 	)
 	if err := dcensus.Init(cfg, views...); err != nil {
 		log.Fatal(ctx, err)

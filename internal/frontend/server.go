@@ -42,25 +42,26 @@ import (
 type Server struct {
 	fetchServer FetchServerInterface
 	// getDataSource should never be called from a handler. It is called only in Server.errorHandler.
-	getDataSource      func(context.Context) internal.DataSource
-	queue              queue.Queue
-	templateFS         template.TrustedFS
-	staticFS           fs.FS
-	thirdPartyFS       fs.FS
-	devMode            bool
-	goDocMode          bool          // running to serve documentation for 'go doc'
-	localMode          bool          // running locally (i.e. ./cmd/pkgsite)
-	localModules       []LocalModule // locally hosted modules; empty in production
-	errorPage          []byte
-	appVersionLabel    string
-	googleTagManagerID string
-	serveStats         bool
-	reporter           derrors.Reporter
-	fileMux            *http.ServeMux
-	vulnClient         *vuln.Client
-	versionID          string
-	instanceID         string
-	HTTPClient         *http.Client
+	getDataSource         func(context.Context) internal.DataSource
+	queue                 queue.Queue
+	templateFS            template.TrustedFS
+	staticFS              fs.FS
+	thirdPartyFS          fs.FS
+	devMode               bool
+	goDocMode             bool          // running to serve documentation for 'go doc'
+	localMode             bool          // running locally (i.e. ./cmd/pkgsite)
+	localModules          []LocalModule // locally hosted modules; empty in production
+	errorPage             []byte
+	appVersionLabel       string
+	googleTagManagerID    string
+	serveStats            bool
+	reporter              derrors.Reporter
+	fileMux               *http.ServeMux
+	vulnClient            *vuln.Client
+	versionID             string
+	instanceID            string
+	HTTPClient            *http.Client
+	recordCodeWikiMetrics RecordClickFunc
 
 	mu        sync.Mutex // Protects all fields below
 	templates map[string]*template.Template
@@ -77,6 +78,8 @@ type FetchServerInterface interface {
 		ds internal.PostgresDB, fullPath, modulePath, requestedVersion string) (err error)
 }
 
+type RecordClickFunc func(ctx context.Context, url string, target string)
+
 // ServerConfig contains everything needed by a Server.
 type ServerConfig struct {
 	Config *config.Config
@@ -84,18 +87,19 @@ type ServerConfig struct {
 	FetchServer FetchServerInterface
 	// DataSourceGetter should return a DataSource on each call.
 	// It should be goroutine-safe.
-	DataSourceGetter func(context.Context) internal.DataSource
-	Queue            queue.Queue
-	TemplateFS       template.TrustedFS // for loading templates safely
-	StaticFS         fs.FS              // for static/ directory
-	ThirdPartyFS     fs.FS              // for third_party/ directory
-	DevMode          bool
-	LocalMode        bool
-	GoDocMode        bool
-	LocalModules     []LocalModule
-	Reporter         derrors.Reporter
-	VulndbClient     *vuln.Client
-	HTTPClient       *http.Client
+	DataSourceGetter      func(context.Context) internal.DataSource
+	Queue                 queue.Queue
+	TemplateFS            template.TrustedFS // for loading templates safely
+	StaticFS              fs.FS              // for static/ directory
+	ThirdPartyFS          fs.FS              // for third_party/ directory
+	DevMode               bool
+	LocalMode             bool
+	GoDocMode             bool
+	LocalModules          []LocalModule
+	Reporter              derrors.Reporter
+	VulndbClient          *vuln.Client
+	HTTPClient            *http.Client
+	RecordCodeWikiMetrics RecordClickFunc
 }
 
 // NewServer creates a new Server for the given database and template directory.
@@ -107,21 +111,22 @@ func NewServer(scfg ServerConfig) (_ *Server, err error) {
 	}
 	dochtml.LoadTemplates(scfg.TemplateFS)
 	s := &Server{
-		fetchServer:   scfg.FetchServer,
-		getDataSource: scfg.DataSourceGetter,
-		queue:         scfg.Queue,
-		templateFS:    scfg.TemplateFS,
-		staticFS:      scfg.StaticFS,
-		thirdPartyFS:  scfg.ThirdPartyFS,
-		devMode:       scfg.DevMode,
-		localMode:     scfg.LocalMode,
-		goDocMode:     scfg.GoDocMode,
-		localModules:  scfg.LocalModules,
-		templates:     ts,
-		reporter:      scfg.Reporter,
-		fileMux:       http.NewServeMux(),
-		vulnClient:    scfg.VulndbClient,
-		HTTPClient:    scfg.HTTPClient,
+		fetchServer:           scfg.FetchServer,
+		getDataSource:         scfg.DataSourceGetter,
+		queue:                 scfg.Queue,
+		templateFS:            scfg.TemplateFS,
+		staticFS:              scfg.StaticFS,
+		thirdPartyFS:          scfg.ThirdPartyFS,
+		devMode:               scfg.DevMode,
+		localMode:             scfg.LocalMode,
+		goDocMode:             scfg.GoDocMode,
+		localModules:          scfg.LocalModules,
+		templates:             ts,
+		reporter:              scfg.Reporter,
+		fileMux:               http.NewServeMux(),
+		vulnClient:            scfg.VulndbClient,
+		HTTPClient:            scfg.HTTPClient,
+		recordCodeWikiMetrics: scfg.RecordCodeWikiMetrics,
 	}
 	if s.HTTPClient == nil {
 		s.HTTPClient = http.DefaultClient
@@ -139,6 +144,19 @@ func NewServer(scfg ServerConfig) (_ *Server, err error) {
 	}
 	s.errorPage = errorPageBytes
 	return s, nil
+}
+
+func (s *Server) handleCodeWikiRedirect(w http.ResponseWriter, r *http.Request) {
+	url := r.FormValue("url")
+	if url == "" {
+		http.Error(w, "missing url", http.StatusBadRequest)
+		return
+	}
+	ctx := r.Context()
+	if s.recordCodeWikiMetrics != nil {
+		s.recordCodeWikiMetrics(ctx, url, r.Header.Get("Referer"))
+	}
+	http.Redirect(w, r, url, http.StatusFound)
 }
 
 // A Cacher is used to create request caches for http handlers.
@@ -211,6 +229,7 @@ func (s *Server) Install(handle func(string, http.Handler), cacher Cacher, authV
 		// (This is what golang.org/C does.)
 		http.Redirect(w, r, "/cmd/cgo", http.StatusMovedPermanently)
 	}))
+	handle("GET /codewiki", http.HandlerFunc(s.handleCodeWikiRedirect))
 	handle("GET /golang.org/x", s.staticPageHandler("subrepo", "Sub-repositories"))
 	handle("GET /files/", http.StripPrefix("/files", s.fileMux))
 	handle("GET /vuln/", vulnHandler)

@@ -100,6 +100,7 @@ func main() {
 	serverCfg.UseLocalStdlib = true
 	serverCfg.GoRepoPath = *goRepoPath
 	serverCfg.Paths = collectPaths(flag.Args())
+	serverCfg.RecordCodeWikiMetrics = nil
 
 	if serverCfg.UseCache || *useProxy {
 		fmt.Fprintf(os.Stderr, "BYPASSING LICENSE CHECKING: MAY DISPLAY NON-REDISTRIBUTABLE INFORMATION\n")

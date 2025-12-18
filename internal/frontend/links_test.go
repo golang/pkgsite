@@ -76,7 +76,7 @@ func TestCodeWikiURLGenerator(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			um := &internal.UnitMeta{ModuleInfo: internal.ModuleInfo{ModulePath: tc.modulePath}}
-			url := codeWikiURLGenerator(context.Background(), server.Client(), um)()
+			url := codeWikiURLGenerator(context.Background(), server.Client(), um, false)()
 			if url != tc.want {
 				t.Errorf("codeWikiURLGenerator(ctx, client, %q) = %q, want %q, got %q", tc.path, url, tc.want, url)
 			}

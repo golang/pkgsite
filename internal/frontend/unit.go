@@ -147,7 +147,7 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 	makeCodeWikiURL := func() string { return "" }
 	if !s.goDocMode {
 		makeDepsDevURL = depsDevURLGenerator(ctx, s.HTTPClient, um)
-		makeCodeWikiURL = codeWikiURLGenerator(ctx, s.HTTPClient, um)
+		makeCodeWikiURL = codeWikiURLGenerator(ctx, s.HTTPClient, um, s.recordCodeWikiMetrics != nil)
 	}
 
 	// Use GOOS and GOARCH query parameters to create a build context, which

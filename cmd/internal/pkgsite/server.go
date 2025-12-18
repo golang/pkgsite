@@ -32,16 +32,17 @@ import (
 
 // ServerConfig provides configuration for BuildServer.
 type ServerConfig struct {
-	Paths            []string
-	GOPATHMode       bool
-	UseCache         bool
-	CacheDir         string
-	UseListedMods    bool
-	UseLocalStdlib   bool
-	DevMode          bool
-	DevModeStaticDir string
-	GoRepoPath       string
-	GoDocMode        bool
+	Paths                 []string
+	GOPATHMode            bool
+	UseCache              bool
+	CacheDir              string
+	UseListedMods         bool
+	UseLocalStdlib        bool
+	DevMode               bool
+	DevModeStaticDir      string
+	GoRepoPath            string
+	GoDocMode             bool
+	RecordCodeWikiMetrics frontend.RecordClickFunc
 
 	Proxy *proxy.Client // client, or nil; controlled by the -proxy flag
 }

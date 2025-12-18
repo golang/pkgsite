@@ -8,7 +8,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 	"net/url"
 	"strings"
@@ -24,6 +23,8 @@ const (
 	depsDevBase = "https://deps.dev"
 	// depsDevTimeout is the time budget for making requests to deps.dev.
 	depsDevTimeout = 250 * time.Millisecond
+
+	codeWikiPrefix = "/codewiki?url="
 )
 
 var (
@@ -107,16 +108,16 @@ func fetchDepsDevURL(ctx context.Context, client *http.Client, modulePath, versi
 // codeWikiURLGenerator returns a function that will return a URL for the given
 // module version on codewiki. If the URL can't be generated within
 // codeWikiTimeout then the empty string is returned instead.
-func codeWikiURLGenerator(ctx context.Context, client *http.Client, um *internal.UnitMeta) func() string {
+func codeWikiURLGenerator(ctx context.Context, client *http.Client, um *internal.UnitMeta, recordClick bool) func() string {
 	fetch := func(ctx context.Context, client *http.Client) (string, error) {
-		return fetchCodeWikiURL(ctx, client, um.ModulePath)
+		return fetchCodeWikiURL(ctx, client, um.ModulePath, recordClick)
 	}
 	return newURLGenerator(ctx, client, "codewiki.google", codeWikiTimeout, fetch)
 }
 
 // fetchCodeWikiURL makes a request to codewiki to check whether the given
 // path is known there, and if so it returns the link to that page.
-func fetchCodeWikiURL(ctx context.Context, client *http.Client, path string) (string, error) {
+func fetchCodeWikiURL(ctx context.Context, client *http.Client, path string, recordClick bool) (string, error) {
 	if strings.HasPrefix(path, "golang.org/x/") {
 		path = strings.Replace(path, "golang.org/x/", "github.com/golang/", 1)
 	}
@@ -133,8 +134,12 @@ func fetchCodeWikiURL(ctx context.Context, client *http.Client, path string) (st
 		return "", err
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode == http.StatusOK {
-		return fmt.Sprintf("%s%s", codeWikiURLBase, path), nil
+	if resp.StatusCode != http.StatusOK {
+		return "", errors.New(resp.Status)
 	}
-	return "", errors.New(resp.Status)
+	res := codeWikiURLBase + path
+	if recordClick {
+		res = codeWikiPrefix + res
+	}
+	return res, nil
 }
