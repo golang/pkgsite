@@ -56,6 +56,7 @@ wait {{$ready}}
 click [data-test-id="directories-toggle"]
 eval {{$scrollTop}}
 eval {{$hideElements}}
+sleep 3s
 capture fullscreen
 capture fullscreen 540x1620
 
