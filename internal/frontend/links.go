@@ -24,7 +24,8 @@ const (
 	// depsDevTimeout is the time budget for making requests to deps.dev.
 	depsDevTimeout = 250 * time.Millisecond
 
-	codeWikiPrefix = "/codewiki?url="
+	codeWikiPrefix    = "/codewiki?url="
+	attributionParams = "?utm_source=first_party_link&utm_medium=go_pkg_web&utm_campaign="
 )
 
 var (
@@ -141,9 +142,9 @@ func fetchCodeWikiURL(ctx context.Context, client *http.Client, path string, rec
 	if resp.StatusCode != http.StatusOK {
 		return "", errors.New(resp.Status)
 	}
-	res := codeWikiURLBase + path
+	res := codeWikiURLBase + path + attributionParams + path
 	if recordClick {
-		res = codeWikiPrefix + res
+		res = codeWikiPrefix + url.QueryEscape(res)
 	}
 	return res, nil
 }

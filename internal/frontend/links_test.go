@@ -6,6 +6,7 @@ package frontend
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -15,6 +16,10 @@ import (
 
 	"golang.org/x/pkgsite/internal"
 )
+
+func expectedCodeWikiURL(baseURL, path string) string {
+	return fmt.Sprintf("%s/%s?utm_source=first_party_link&utm_medium=go_pkg_web&utm_campaign=%s", baseURL, path, path)
+}
 
 func TestCodeWikiURLGenerator(t *testing.T) {
 	// The log package is periodically used to log warnings on a
@@ -50,12 +55,12 @@ func TestCodeWikiURLGenerator(t *testing.T) {
 		{
 			name:       "github repo",
 			modulePath: "github.com/owner/repo",
-			want:       server.URL + "/github.com/owner/repo",
+			want:       expectedCodeWikiURL(server.URL, "github.com/owner/repo"),
 		},
 		{
 			name:       "github repo subpackage",
 			modulePath: "github.com/owner/repo",
-			want:       server.URL + "/github.com/owner/repo",
+			want:       expectedCodeWikiURL(server.URL, "github.com/owner/repo"),
 		},
 		{
 			name:       "github repo not found",
@@ -70,7 +75,7 @@ func TestCodeWikiURLGenerator(t *testing.T) {
 		{
 			name:       "golang.org/x/ repo",
 			modulePath: "golang.org/x/glog",
-			want:       server.URL + "/github.com/golang/glog",
+			want:       expectedCodeWikiURL(server.URL, "github.com/golang/glog"),
 		},
 	}
 	for _, tc := range testCases {
