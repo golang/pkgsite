@@ -2,7 +2,7 @@ module golang.org/x/pkgsite/cmd/internal/doc
 
 go 1.24.3
 
-require golang.org/x/pkgsite v0.0.0-20251208224703-b1518c6a6f10
+require golang.org/x/pkgsite v0.0.0-20251215153041-4eb0af2c34bf
 
 require (
 	github.com/google/licensecheck v0.3.1 // indirect
