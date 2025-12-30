@@ -48,6 +48,8 @@ capture fullscreen 540x1080
 
 test vuln stdlib module
 path /archive/zip@go1.16.4
+eval {{$hideElements}}
+sleep 3s
 capture viewport
 capture viewport 540x1080
 

@@ -134,6 +134,10 @@ func fetchCodeWikiURL(ctx context.Context, client *http.Client, path string, rec
 		return "", err
 	}
 	defer resp.Body.Close()
+	// Handle 404 as a successful "not found" state rather than an error.
+	if resp.StatusCode == http.StatusNotFound {
+		return "", nil
+	}
 	if resp.StatusCode != http.StatusOK {
 		return "", errors.New(resp.Status)
 	}
