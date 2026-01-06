@@ -224,7 +224,7 @@ func buildGetters(ctx context.Context, cfg getterConfig) ([]fetch.ModuleGetter, 
 			patterns = append(patterns, "all")
 		} else {
 			for _, m := range modules {
-				patterns = append(patterns, fmt.Sprintf("%s/...", m))
+				patterns = append(patterns, fmt.Sprintf("%s/...", m.ModulePath))
 			}
 		}
 		mg, err := fetch.NewGoPackagesModuleGetter(ctx, dir, patterns...)
