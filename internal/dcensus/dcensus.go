@@ -57,10 +57,12 @@ func NewRouter(tagger RouteTagger) *Router {
 	}
 }
 
-func RecordClick(ctx context.Context, url string, target string) {
+func RecordClick(ctx context.Context, url, target, module, pkg string) {
 	mutators := []tag.Mutator{
 		tag.Upsert(KeyTargetURL, url),
 		tag.Upsert(KeyReferrer, target),
+		tag.Upsert(KeyModule, module),
+		tag.Upsert(KeyPackage, pkg),
 	}
 	stats.RecordWithTags(ctx, mutators, CodeWikiClickCount.M(1))
 }
@@ -254,12 +256,16 @@ var (
 	KeyReferrer = tag.MustNewKey("referrer")
 	// KeyTargetURL is a tag key for the target URL.
 	KeyTargetURL = tag.MustNewKey("target_url")
+	// KeyModule is a tag key for the module path.
+	KeyModule = tag.MustNewKey("module")
+	// KeyPackage is a tag key for the package path.
+	KeyPackage = tag.MustNewKey("package")
 
 	CodeWikiClickCount     = stats.Int64("go-discovery/frontend_codewiki_clicks", "Codewiki link clicks", stats.UnitDimensionless)
 	CodeWikiClickCountView = &view.View{
 		Name:        "go-discovery/frontend/codewiki_clicks",
 		Description: "Count of Codewiki link clicks",
-		TagKeys:     []tag.Key{KeyReferrer, KeyTargetURL},
+		TagKeys:     []tag.Key{KeyReferrer, KeyTargetURL, KeyModule, KeyPackage},
 		Measure:     CodeWikiClickCount,
 		Aggregation: view.Count(),
 	}

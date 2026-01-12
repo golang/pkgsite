@@ -24,7 +24,7 @@ const (
 	// depsDevTimeout is the time budget for making requests to deps.dev.
 	depsDevTimeout = 250 * time.Millisecond
 
-	codeWikiPrefix    = "/codewiki?url="
+	codeWikiPrefix    = "/codewiki?"
 	attributionParams = "?utm_source=first_party_link&utm_medium=go_pkg_web&utm_campaign="
 )
 
@@ -111,14 +111,15 @@ func fetchDepsDevURL(ctx context.Context, client *http.Client, modulePath, versi
 // codeWikiTimeout then the empty string is returned instead.
 func codeWikiURLGenerator(ctx context.Context, client *http.Client, um *internal.UnitMeta, recordClick bool) func() string {
 	fetch := func(ctx context.Context, client *http.Client) (string, error) {
-		return fetchCodeWikiURL(ctx, client, um.ModulePath, recordClick)
+		return fetchCodeWikiURL(ctx, client, um, recordClick)
 	}
 	return newURLGenerator(ctx, client, "codewiki.google", codeWikiTimeout, fetch)
 }
 
 // fetchCodeWikiURL makes a request to codewiki to check whether the given
 // path is known there, and if so it returns the link to that page.
-func fetchCodeWikiURL(ctx context.Context, client *http.Client, path string, recordClick bool) (string, error) {
+func fetchCodeWikiURL(ctx context.Context, client *http.Client, um *internal.UnitMeta, recordClick bool) (string, error) {
+	path := um.ModulePath
 	if strings.HasPrefix(path, "golang.org/x/") {
 		path = strings.Replace(path, "golang.org/x/", "github.com/golang/", 1)
 	}
@@ -144,7 +145,11 @@ func fetchCodeWikiURL(ctx context.Context, client *http.Client, path string, rec
 	}
 	res := codeWikiURLBase + path + attributionParams + path
 	if recordClick {
-		res = codeWikiPrefix + url.QueryEscape(res)
+		v := url.Values{}
+		v.Set("url", res)
+		v.Set("module", um.ModulePath)
+		v.Set("package", um.Path)
+		res = codeWikiPrefix + v.Encode()
 	}
 	return res, nil
 }

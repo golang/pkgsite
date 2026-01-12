@@ -78,7 +78,7 @@ type FetchServerInterface interface {
 		ds internal.PostgresDB, fullPath, modulePath, requestedVersion string) (err error)
 }
 
-type RecordClickFunc func(ctx context.Context, url string, target string)
+type RecordClickFunc func(ctx context.Context, url, target, module, pkg string)
 
 // ServerConfig contains everything needed by a Server.
 type ServerConfig struct {
@@ -148,13 +148,15 @@ func NewServer(scfg ServerConfig) (_ *Server, err error) {
 
 func (s *Server) handleCodeWikiRedirect(w http.ResponseWriter, r *http.Request) {
 	url := r.FormValue("url")
+	module := r.FormValue("module")
+	pkg := r.FormValue("package")
 	if url == "" {
 		http.Error(w, "missing url", http.StatusBadRequest)
 		return
 	}
 	ctx := r.Context()
 	if s.recordCodeWikiMetrics != nil {
-		s.recordCodeWikiMetrics(ctx, url, r.Header.Get("Referer"))
+		s.recordCodeWikiMetrics(ctx, url, r.Header.Get("Referer"), module, pkg)
 	}
 	http.Redirect(w, r, url, http.StatusFound)
 }
