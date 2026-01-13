@@ -114,7 +114,7 @@ if (readme && readmeContent && readmeOutline && readmeExpand.length && readmeCol
  * URL so it stays expanded when navigating back from an external link.
  */
 function expandReadme() {
-  history.replaceState(null, '', `${location.pathname}#section-readme`);
+  history.replaceState(null, '', `${location.pathname}${location.search}#section-readme`);
   readme?.classList.add('UnitReadme--expanded');
 }
 
