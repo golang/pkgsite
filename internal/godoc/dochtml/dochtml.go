@@ -19,6 +19,7 @@ import (
 	"go/doc"
 	"go/printer"
 	"go/token"
+	"slices"
 	"sort"
 	"strings"
 
@@ -30,6 +31,7 @@ import (
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/godoc/dochtml/internal/render"
 	"golang.org/x/pkgsite/internal/log"
+	"golang.org/x/pkgsite/internal/natural"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )
@@ -151,7 +153,24 @@ func packageToItems(p *doc.Package, exmap map[string][]*example) (consts, vars, 
 	for _, t := range p.Types {
 		types = append(types, typeToItem(t, exmap))
 	}
+
+	slices.SortFunc(consts, compareItems)
+	slices.SortFunc(vars, compareItems)
+	slices.SortFunc(funcs, compareItems)
+	slices.SortFunc(types, compareItems)
+
+	for _, typ := range types {
+		slices.SortFunc(typ.Consts, compareItems)
+		slices.SortFunc(typ.Vars, compareItems)
+		slices.SortFunc(typ.Funcs, compareItems)
+		slices.SortFunc(typ.Methods, compareItems)
+	}
+
 	return consts, vars, funcs, types
+}
+
+func compareItems(a, b *item) int {
+	return natural.Compare(a.Name, b.Name)
 }
 
 func valuesToItems(vs []*doc.Value) []*item {
@@ -402,7 +421,7 @@ func collectExamples(p *doc.Package) *examples {
 	sort.SliceStable(exs.List, func(i, j int) bool {
 		// TODO: Break ties by sorting by suffix, unless
 		// not needed because of upstream slice order.
-		return exs.List[i].ParentID < exs.List[j].ParentID
+		return natural.Less(exs.List[i].ParentID, exs.List[j].ParentID)
 	})
 	return exs
 }

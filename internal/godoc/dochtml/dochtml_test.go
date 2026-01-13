@@ -48,7 +48,7 @@ var testRenderOptions = RenderOptions{
 func TestRender(t *testing.T) {
 	ctx := context.Background()
 	LoadTemplates(templateFS)
-	for _, pkg := range []string{"everydecl", "comments"} {
+	for _, pkg := range []string{"everydecl", "comments", "order"} {
 		t.Run(pkg, func(t *testing.T) {
 			fset, d := mustLoadPackage(pkg)
 			parts, err := Render(ctx, fset, d, testRenderOptions)

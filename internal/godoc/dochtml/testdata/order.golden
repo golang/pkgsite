@@ -1,0 +1,292 @@
+<div class="Documentation-content js-docContent"> <section class="Documentation-overview">
+<h3 tabindex="-1" id="pkg-overview" class="Documentation-overviewHeader">Overview <a href="#pkg-overview" title="Go to Overview" aria-label="Go to Overview">¶</a></h3>
+<p>Package order exercises natural sorting of symbols.
+</p>
+</section><section class="Documentation-index">
+<h3 id="pkg-index" class="Documentation-indexHeader">Index <a href="#pkg-index" title="Go to Index" aria-label="Go to Index">¶</a></h3>
+<ul class="Documentation-indexList">
+<li class="Documentation-indexFunction">
+<a href="#ExampleUint64x8_AsUint8x64">func ExampleUint64x8_AsUint8x64()</a></li>
+<li class="Documentation-indexFunction">
+<a href="#ExampleUint64x8_AsUint32x16">func ExampleUint64x8_AsUint32x16()</a></li>
+<li class="Documentation-indexType">
+<a href="#Uint8x64">type Uint8x64</a></li>
+<li><ul class="Documentation-indexTypeMethods">
+<li>
+<a href="#Uint8x64.AsUint32x16">func (u Uint8x64) AsUint32x16() Uint32x16</a></li>
+<li>
+<a href="#Uint8x64.AsUint64x8">func (u Uint8x64) AsUint64x8() Uint64x8</a></li>
+</ul></li>
+<li class="Documentation-indexType">
+<a href="#Uint32x16">type Uint32x16</a></li>
+<li><ul class="Documentation-indexTypeMethods">
+<li>
+<a href="#Uint32x16.AsUint8x64">func (u Uint32x16) AsUint8x64() Uint8x64</a></li>
+<li>
+<a href="#Uint32x16.AsUint64x8">func (u Uint32x16) AsUint64x8() Uint8x64</a></li>
+</ul></li>
+<li class="Documentation-indexType">
+<a href="#Uint64x8">type Uint64x8</a></li>
+<li><ul class="Documentation-indexTypeMethods">
+<li>
+<a href="#Uint64x8.AsUint8x64">func (u Uint64x8) AsUint8x64() Uint8x64</a></li>
+<li>
+<a href="#Uint64x8.AsUint32x16">func (u Uint64x8) AsUint32x16() Uint32x16</a></li>
+</ul></li>
+</ul>
+</section><h3 tabindex="-1" id="pkg-constants" class="Documentation-constantsHeader">Constants <a href="#pkg-constants" title="Go to Constants" aria-label="Go to Constants">¶</a></h3>
+<section class="Documentation-constants"><p class="Documentation-empty">This section is empty.</p></section>
+<h3 tabindex="-1" id="pkg-variables" class="Documentation-variablesHeader">Variables <a href="#pkg-variables" title="Go to Variables" aria-label="Go to Variables">¶</a></h3>
+<section class="Documentation-variables"><p class="Documentation-empty">This section is empty.</p></section>
+<h3 tabindex="-1" id="pkg-functions" class="Documentation-functionsHeader">Functions <a href="#pkg-functions" title="Go to Functions" aria-label="Go to Functions">¶</a></h3>
+<section class="Documentation-functions"><div class="Documentation-function">
+<h4 tabindex="-1" id="ExampleUint64x8_AsUint8x64" data-kind="function" class="Documentation-functionHeader">
+<span>func <a class="Documentation-source" href="src">ExampleUint64x8_AsUint8x64</a> <a class="Documentation-idLink" href="#ExampleUint64x8_AsUint8x64" title="Go to ExampleUint64x8_AsUint8x64" aria-label="Go to ExampleUint64x8_AsUint8x64">¶</a></span>
+<span class="Documentation-sinceVersion">
+</span>
+</h4>
+<div class="Documentation-declaration">
+<pre>func ExampleUint64x8_AsUint8x64()</pre>
+</div>
+</div><div class="Documentation-function">
+<h4 tabindex="-1" id="ExampleUint64x8_AsUint32x16" data-kind="function" class="Documentation-functionHeader">
+<span>func <a class="Documentation-source" href="src">ExampleUint64x8_AsUint32x16</a> <a class="Documentation-idLink" href="#ExampleUint64x8_AsUint32x16" title="Go to ExampleUint64x8_AsUint32x16" aria-label="Go to ExampleUint64x8_AsUint32x16">¶</a></span>
+<span class="Documentation-sinceVersion">
+</span>
+</h4>
+<div class="Documentation-declaration">
+<pre>func ExampleUint64x8_AsUint32x16()</pre>
+</div>
+</div></section>
+<h3 tabindex="-1" id="pkg-types" class="Documentation-typesHeader">Types <a href="#pkg-types" title="Go to Types" aria-label="Go to Types">¶</a></h3>
+<section class="Documentation-types"><div class="Documentation-type">
+<h4 tabindex="-1" id="Uint8x64" data-kind="type" class="Documentation-typeHeader">
+<span>type <a class="Documentation-source" href="src">Uint8x64</a> <a class="Documentation-idLink" href="#Uint8x64" title="Go to Uint8x64" aria-label="Go to Uint8x64">¶</a></span>
+<span class="Documentation-sinceVersion">
+</span>
+</h4>
+<div class="Documentation-declaration">
+<pre>type Uint8x64 struct {
+<span id="Uint8x64.data" data-kind="field">	data [64]<a href="/builtin#uint8">uint8</a>
+</span>}</pre>
+</div>
+<p>Uint8x64 represents a 128-bit unsigned integer.
+</p>
+<div class="Documentation-typeMethod">
+<h4 tabindex="-1" id="Uint8x64.AsUint32x16" data-kind="method" class="Documentation-typeMethodHeader">
+<span>func (Uint8x64) <a class="Documentation-source" href="src">AsUint32x16</a> <a class="Documentation-idLink" href="#Uint8x64.AsUint32x16" title="Go to Uint8x64.AsUint32x16" aria-label="Go to Uint8x64.AsUint32x16">¶</a></span>
+<span class="Documentation-sinceVersion">
+</span>
+</h4>
+<div class="Documentation-declaration">
+<pre>func (u <a href="#Uint8x64">Uint8x64</a>) AsUint32x16() <a href="#Uint32x16">Uint32x16</a></pre>
+</div>
+<p>AsUint32x16 converts a Uint8x64 to a Uint32x16.
+</p>
+</div><div class="Documentation-typeMethod">
+<h4 tabindex="-1" id="Uint8x64.AsUint64x8" data-kind="method" class="Documentation-typeMethodHeader">
+<span>func (Uint8x64) <a class="Documentation-source" href="src">AsUint64x8</a> <a class="Documentation-idLink" href="#Uint8x64.AsUint64x8" title="Go to Uint8x64.AsUint64x8" aria-label="Go to Uint8x64.AsUint64x8">¶</a></span>
+<span class="Documentation-sinceVersion">
+</span>
+</h4>
+<div class="Documentation-declaration">
+<pre>func (u <a href="#Uint8x64">Uint8x64</a>) AsUint64x8() <a href="#Uint64x8">Uint64x8</a></pre>
+</div>
+<p>AsUint64x8 converts a Uint8x64 to a Uint64x8.
+</p>
+</div>
+</div><div class="Documentation-type">
+<h4 tabindex="-1" id="Uint32x16" data-kind="type" class="Documentation-typeHeader">
+<span>type <a class="Documentation-source" href="src">Uint32x16</a> <a class="Documentation-idLink" href="#Uint32x16" title="Go to Uint32x16" aria-label="Go to Uint32x16">¶</a></span>
+<span class="Documentation-sinceVersion">
+</span>
+</h4>
+<div class="Documentation-declaration">
+<pre>type Uint32x16 struct {
+<span id="Uint32x16.data" data-kind="field">	data [16]<a href="/builtin#uint32">uint32</a>
+</span>}</pre>
+</div>
+<p>Uint32x16 represents a 128-bit unsigned integer.
+</p>
+<div class="Documentation-typeMethod">
+<h4 tabindex="-1" id="Uint32x16.AsUint8x64" data-kind="method" class="Documentation-typeMethodHeader">
+<span>func (Uint32x16) <a class="Documentation-source" href="src">AsUint8x64</a> <a class="Documentation-idLink" href="#Uint32x16.AsUint8x64" title="Go to Uint32x16.AsUint8x64" aria-label="Go to Uint32x16.AsUint8x64">¶</a></span>
+<span class="Documentation-sinceVersion">
+</span>
+</h4>
+<div class="Documentation-declaration">
+<pre>func (u <a href="#Uint32x16">Uint32x16</a>) AsUint8x64() <a href="#Uint8x64">Uint8x64</a></pre>
+</div>
+<p>AsUint8x64 converts a Uint32x16 to a Uint8x64.
+</p>
+</div><div class="Documentation-typeMethod">
+<h4 tabindex="-1" id="Uint32x16.AsUint64x8" data-kind="method" class="Documentation-typeMethodHeader">
+<span>func (Uint32x16) <a class="Documentation-source" href="src">AsUint64x8</a> <a class="Documentation-idLink" href="#Uint32x16.AsUint64x8" title="Go to Uint32x16.AsUint64x8" aria-label="Go to Uint32x16.AsUint64x8">¶</a></span>
+<span class="Documentation-sinceVersion">
+</span>
+</h4>
+<div class="Documentation-declaration">
+<pre>func (u <a href="#Uint32x16">Uint32x16</a>) AsUint64x8() <a href="#Uint8x64">Uint8x64</a></pre>
+</div>
+<p>AsUint64x8 converts a Uint32x16 to a Uint64x8.
+</p>
+</div>
+</div><div class="Documentation-type">
+<h4 tabindex="-1" id="Uint64x8" data-kind="type" class="Documentation-typeHeader">
+<span>type <a class="Documentation-source" href="src">Uint64x8</a> <a class="Documentation-idLink" href="#Uint64x8" title="Go to Uint64x8" aria-label="Go to Uint64x8">¶</a></span>
+<span class="Documentation-sinceVersion">
+</span>
+</h4>
+<div class="Documentation-declaration">
+<pre>type Uint64x8 struct {
+<span id="Uint64x8.data" data-kind="field">	data [8]<a href="/builtin#uint64">uint64</a>
+</span>}</pre>
+</div>
+<p>Uint64x8 represents a 128-bit unsigned integer.
+</p>
+<div class="Documentation-typeMethod">
+<h4 tabindex="-1" id="Uint64x8.AsUint8x64" data-kind="method" class="Documentation-typeMethodHeader">
+<span>func (Uint64x8) <a class="Documentation-source" href="src">AsUint8x64</a> <a class="Documentation-idLink" href="#Uint64x8.AsUint8x64" title="Go to Uint64x8.AsUint8x64" aria-label="Go to Uint64x8.AsUint8x64">¶</a></span>
+<span class="Documentation-sinceVersion">
+</span>
+</h4>
+<div class="Documentation-declaration">
+<pre>func (u <a href="#Uint64x8">Uint64x8</a>) AsUint8x64() <a href="#Uint8x64">Uint8x64</a></pre>
+</div>
+<p>AsUint8x64 converts a Uint64x8 to a Uint8x64.
+</p>
+</div><div class="Documentation-typeMethod">
+<h4 tabindex="-1" id="Uint64x8.AsUint32x16" data-kind="method" class="Documentation-typeMethodHeader">
+<span>func (Uint64x8) <a class="Documentation-source" href="src">AsUint32x16</a> <a class="Documentation-idLink" href="#Uint64x8.AsUint32x16" title="Go to Uint64x8.AsUint32x16" aria-label="Go to Uint64x8.AsUint32x16">¶</a></span>
+<span class="Documentation-sinceVersion">
+</span>
+</h4>
+<div class="Documentation-declaration">
+<pre>func (u <a href="#Uint64x8">Uint64x8</a>) AsUint32x16() <a href="#Uint32x16">Uint32x16</a></pre>
+</div>
+<p>AsUint32x16 converts a Uint64x8 to a Uint32x16.
+</p>
+</div>
+</div></section></div>
+----
+<ul>
+<li>
+<a href="#pkg-overview" data-gtmc="doc outline link">Overview</a>
+</li>
+<li class="DocNav-overview">
+<a href="#pkg-index" data-gtmc="doc outline link">
+Index
+</a>
+</li>
+<li class="DocNav-constants">
+<a href="#pkg-constants" data-gtmc="doc outline link">
+Constants
+</a>
+</li>
+<li class="DocNav-variables">
+<a href="#pkg-variables" data-gtmc="doc outline link">
+Variables
+</a>
+</li>
+<li class="DocNav-functions">
+<a href="#pkg-functions" data-gtmc="doc outline link">
+Functions
+</a>
+<ul>
+<li>
+<a href="#ExampleUint64x8_AsUint8x64" title="ExampleUint64x8_AsUint8x64()" data-gtmc="doc outline link">
+ExampleUint64x8_AsUint8x64()
+</a>
+</li>
+<li>
+<a href="#ExampleUint64x8_AsUint32x16" title="ExampleUint64x8_AsUint32x16()" data-gtmc="doc outline link">
+ExampleUint64x8_AsUint32x16()
+</a>
+</li>
+</ul>
+</li>
+<li class="DocNav-types">
+<a href="#pkg-types" data-gtmc="doc outline link">
+Types
+</a>
+<ul>
+<li>
+<a href="#Uint8x64" title="type Uint8x64" data-gtmc="doc outline link">
+type Uint8x64
+</a>
+<ul>
+<li>
+<a href="#Uint8x64.AsUint32x16" title="(u) AsUint32x16()"
+data-gtmc="doc outline link">
+(u) AsUint32x16()
+</a>
+</li>
+<li>
+<a href="#Uint8x64.AsUint64x8" title="(u) AsUint64x8()"
+data-gtmc="doc outline link">
+(u) AsUint64x8()
+</a>
+</li>
+</ul>
+</li>
+<li>
+<a href="#Uint32x16" title="type Uint32x16" data-gtmc="doc outline link">
+type Uint32x16
+</a>
+<ul>
+<li>
+<a href="#Uint32x16.AsUint8x64" title="(u) AsUint8x64()"
+data-gtmc="doc outline link">
+(u) AsUint8x64()
+</a>
+</li>
+<li>
+<a href="#Uint32x16.AsUint64x8" title="(u) AsUint64x8()"
+data-gtmc="doc outline link">
+(u) AsUint64x8()
+</a>
+</li>
+</ul>
+</li>
+<li>
+<a href="#Uint64x8" title="type Uint64x8" data-gtmc="doc outline link">
+type Uint64x8
+</a>
+<ul>
+<li>
+<a href="#Uint64x8.AsUint8x64" title="(u) AsUint8x64()"
+data-gtmc="doc outline link">
+(u) AsUint8x64()
+</a>
+</li>
+<li>
+<a href="#Uint64x8.AsUint32x16" title="(u) AsUint32x16()"
+data-gtmc="doc outline link">
+(u) AsUint32x16()
+</a>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+----
+<optgroup label="Documentation">
+<option value="pkg-overview">Overview</option>
+<option value="pkg-index">Index</option>
+</optgroup>
+<optgroup label="Functions">
+<option value="ExampleUint64x8_AsUint8x64">ExampleUint64x8_AsUint8x64()</option>
+<option value="ExampleUint64x8_AsUint32x16">ExampleUint64x8_AsUint32x16()</option>
+</optgroup>
+<optgroup label="Types">
+<option value="Uint8x64">type Uint8x64</option>
+<option value="Uint8x64.AsUint32x16">(u) AsUint32x16()</option>
+<option value="Uint8x64.AsUint64x8">(u) AsUint64x8()</option>
+<option value="Uint32x16">type Uint32x16</option>
+<option value="Uint32x16.AsUint8x64">(u) AsUint8x64()</option>
+<option value="Uint32x16.AsUint64x8">(u) AsUint64x8()</option>
+<option value="Uint64x8">type Uint64x8</option>
+<option value="Uint64x8.AsUint8x64">(u) AsUint8x64()</option>
+<option value="Uint64x8.AsUint32x16">(u) AsUint32x16()</option>
+</optgroup>
