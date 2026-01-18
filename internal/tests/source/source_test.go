@@ -389,6 +389,33 @@ func TestModuleInfo(t *testing.T) {
 			"https://blitiri.com.ar/git/r/log/b/master/t/f=go.mod.html#line-1",
 			"",
 		},
+		{
+			"slatedb.io/slatedb-go match github.com/slatedb/slatedb/slatedb-go/go",
+			"slatedb.io/slatedb-go", "v0.8.2", "go.mod",
+			"https://github.com/slatedb/slatedb",
+			"https://github.com/slatedb/slatedb/tree/slatedb-go/go/v0.8.2/slatedb-go/go",
+			"https://github.com/slatedb/slatedb/blob/slatedb-go/go/v0.8.2/slatedb-go/go/go.mod",
+			"https://github.com/slatedb/slatedb/blob/slatedb-go/go/v0.8.2/slatedb-go/go/go.mod#L1",
+			"https://github.com/slatedb/slatedb/raw/slatedb-go/go/v0.8.2/slatedb-go/go/go.mod",
+		},
+		{
+			"edv1n.github.io/go-get-subdirectory-test match github.com/edv1n/go-get-subdirectory-test with subdir gopkg",
+			"edv1n.github.io/go-get-subdirectory-test", "v0.0.4", "go.mod",
+			"https://github.com/edv1n/go-get-subdirectory-test",
+			"https://github.com/edv1n/go-get-subdirectory-test/tree/gopkg/v0.0.4/gopkg",
+			"https://github.com/edv1n/go-get-subdirectory-test/blob/gopkg/v0.0.4/gopkg/go.mod",
+			"https://github.com/edv1n/go-get-subdirectory-test/blob/gopkg/v0.0.4/gopkg/go.mod#L1",
+			"https://github.com/edv1n/go-get-subdirectory-test/raw/gopkg/v0.0.4/gopkg/go.mod",
+		},
+		{
+			"edv1n.github.io/go-get-subdirectory-test/sub match github.com/edv1n/go-get-subdirectory-test with subdir gopkg/sub",
+			"edv1n.github.io/go-get-subdirectory-test/sub", "v0.0.4", "go.mod",
+			"https://github.com/edv1n/go-get-subdirectory-test",
+			"https://github.com/edv1n/go-get-subdirectory-test/tree/gopkg/sub/v0.0.4/gopkg/sub",
+			"https://github.com/edv1n/go-get-subdirectory-test/blob/gopkg/sub/v0.0.4/gopkg/sub/go.mod",
+			"https://github.com/edv1n/go-get-subdirectory-test/blob/gopkg/sub/v0.0.4/gopkg/sub/go.mod#L1",
+			"https://github.com/edv1n/go-get-subdirectory-test/raw/gopkg/sub/v0.0.4/gopkg/sub/go.mod",
+		},
 	} {
 		t.Run(test.desc, func(t *testing.T) {
 			info, err := source.ModuleInfo(context.Background(), source.NewClient(client), test.modulePath, test.version)
