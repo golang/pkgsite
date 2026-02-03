@@ -202,6 +202,45 @@ func testGetUnitMeta(t *testing.T, ctx context.Context) {
 	}
 }
 
+func TestGetUnitMeta_UnknownModulePathMaster(t *testing.T) {
+	t.Parallel()
+	testDB, release := acquire(t)
+	defer release()
+	ctx := context.Background()
+
+	// Both modules contain the path "m.com/a/b" at the "master" version.
+	for _, testModule := range []struct {
+		module, version, suffix string
+	}{
+		{"m.com", "v1.0.0", "a/b"},
+		{"m.com/a", "v1.1.0", "b"},
+	} {
+		m := sample.Module(testModule.module, testModule.version, testModule.suffix)
+		MustInsertModule(ctx, t, testDB, m)
+		// Map the concrete version to the symbolic "master" version.
+		if err := testDB.UpsertVersionMap(ctx, &internal.VersionMap{
+			ModulePath:       m.ModulePath,
+			RequestedVersion: "master",
+			ResolvedVersion:  m.Version,
+		}); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	fullPath := "m.com/a/b"
+	got, err := testDB.GetUnitMeta(ctx, fullPath, internal.UnknownModulePath, "master")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	wantModule := "m.com/a"
+	wantVersion := "v1.1.0"
+	if got.ModulePath != wantModule || got.Version != wantVersion {
+		t.Errorf("GetUnitMeta(%q, unknown, master) = %s@%s; want %s@%s",
+			fullPath, got.ModulePath, got.Version, wantModule, wantVersion)
+	}
+}
+
 func TestGetLatestUnitVersion(t *testing.T) {
 	ctx := context.Background()
 

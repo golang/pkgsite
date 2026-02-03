@@ -79,8 +79,11 @@ func (db *DB) getUnitMetaWithKnownVersion(ctx context.Context, fullPath, moduleP
 		query = query.Where(squirrel.Eq{"version": version})
 	}
 	if modulePath == internal.UnknownModulePath {
+		candidates := internal.CandidateModulePaths(fullPath)
 		// If we don't know the module, look for the one  with the longest series path.
-		query = query.OrderBy("m.series_path DESC").Limit(1)
+		query = query.Where(squirrel.Eq{"m.module_path": candidates}).
+			OrderBy("m.series_path DESC").
+			Limit(1)
 	} else {
 		query = query.Where(squirrel.Eq{"m.module_path": modulePath})
 	}
