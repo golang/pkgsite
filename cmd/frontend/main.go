@@ -88,10 +88,18 @@ func main() {
 
 	if *directProxy {
 		sourceClient := source.NewClient(&http.Client{Transport: &ochttp.Transport{}, Timeout: 1 * time.Minute})
+		var stdlibGetter fetch.ModuleGetter = fetch.NewStdlibZipModuleGetter()
+		if *devMode {
+			if mg, err := fetch.NewGoPackagesStdlibModuleGetter(ctx, internal.GOROOT()); err == nil {
+				stdlibGetter = mg
+			} else {
+				log.Errorf(ctx, "loading packages from stdlib: %v", err)
+			}
+		}
 		ds := fetchdatasource.Options{
 			Getters: []fetch.ModuleGetter{
+				stdlibGetter,
 				fetch.NewProxyModuleGetter(proxyClient, sourceClient),
-				fetch.NewStdlibZipModuleGetter(),
 			},
 			ProxyClientForLatest: proxyClient,
 			BypassLicenseCheck:   *bypassLicenseCheck,

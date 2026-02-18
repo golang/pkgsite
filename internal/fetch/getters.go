@@ -231,7 +231,6 @@ type goPackagesModuleGetter struct {
 	dir      string              // directory from which go/packages was run
 	packages []*packages.Package // all packages
 	modules  []*packages.Module  // modules references by packagages; sorted by path
-	isStd    bool
 }
 
 // NewGoPackagesModuleGetter returns a ModuleGetter that loads packages using
@@ -316,7 +315,6 @@ func NewGoPackagesStdlibModuleGetter(ctx context.Context, dir string) (*goPackag
 	}
 
 	return &goPackagesModuleGetter{
-		isStd:    true,
 		dir:      abs,
 		packages: pkgs,
 		modules:  modules,

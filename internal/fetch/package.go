@@ -22,6 +22,7 @@ import (
 	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/source"
+	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/trace"
 	"golang.org/x/sync/errgroup"
 )
@@ -216,6 +217,9 @@ func extractPackageMetas(ctx context.Context, modulePath, resolvedVersion string
 			return nil
 		}
 		importPath := path.Join(modulePath, innerPath)
+		if modulePath == stdlib.ModulePath {
+			importPath = innerPath
+		}
 		if ignoredByGoTool(importPath) || isVendored(importPath) {
 			// File is in a directory we're not looking to process at this time, so skip it.
 			return nil
@@ -322,6 +326,9 @@ func extractPackageMetas(ctx context.Context, modulePath, resolvedVersion string
 					status = derrors.PackageBuildContextNotSupported
 				}
 				pkgPath = path.Join(modulePath, innerPath)
+				if modulePath == stdlib.ModulePath {
+					pkgPath = innerPath
+				}
 			} else {
 				mu.Lock()
 				pkgs = append(pkgs, pkg)

@@ -23,6 +23,7 @@ import (
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/lru"
 	"golang.org/x/pkgsite/internal/proxy"
+	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/version"
 )
 
@@ -285,9 +286,14 @@ func (ds *FetchDataSource) GetLatestInfo(ctx context.Context, unitPath, modulePa
 	latest.MinorVersion = latestUnitMeta.Version
 	latest.MinorModulePath = latestUnitMeta.ModulePath
 
-	latest.MajorModulePath, latest.MajorUnitPath, err = ds.getLatestMajorVersion(ctx, unitPath, modulePath)
-	if err != nil {
-		return latest, err
+	if modulePath == stdlib.ModulePath {
+		latest.MajorModulePath = latest.MinorModulePath
+		latest.MajorUnitPath = unitPath
+	} else {
+		latest.MajorModulePath, latest.MajorUnitPath, err = ds.getLatestMajorVersion(ctx, unitPath, modulePath)
+		if err != nil {
+			return latest, err
+		}
 	}
 	// Do not try to discover whether the unit is in the latest minor version; assume it is.
 	latest.UnitExistsAtMinor = true
