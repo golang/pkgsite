@@ -22,13 +22,13 @@ import (
 	"golang.org/x/pkgsite/internal/config"
 	"golang.org/x/pkgsite/internal/index"
 	"golang.org/x/pkgsite/internal/proxy"
-	"golang.org/x/pkgsite/internal/queue"
+	"golang.org/x/pkgsite/internal/queue/inmemqueue"
 	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/worker"
 )
 
 func setupWorker(ctx context.Context, t *testing.T, proxyClient *proxy.Client, indexClient *index.Client,
-	redisCacheClient *redis.Client) (*httptest.Server, *worker.Fetcher, *queue.InMemory) {
+	redisCacheClient *redis.Client) (*httptest.Server, *worker.Fetcher, *inmemqueue.InMemory) {
 	t.Helper()
 
 	fetcher := &worker.Fetcher{
@@ -39,7 +39,7 @@ func setupWorker(ctx context.Context, t *testing.T, proxyClient *proxy.Client, i
 	}
 	// TODO: it would be better if InMemory made http requests
 	// back to worker, rather than calling fetch itself.
-	queue := queue.NewInMemory(ctx, 10, nil, func(ctx context.Context, mpath, version string) (int, error) {
+	queue := inmemqueue.New(ctx, 10, nil, func(ctx context.Context, mpath, version string) (int, error) {
 		code, _, err := fetcher.FetchAndUpdateState(ctx, mpath, version, "test")
 		return code, err
 	})

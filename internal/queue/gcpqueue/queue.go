@@ -18,7 +18,6 @@ import (
 
 	cloudtasks "cloud.google.com/go/cloudtasks/apiv2"
 	taskspb "cloud.google.com/go/cloudtasks/apiv2/cloudtaskspb"
-	"golang.org/x/pkgsite/internal/config/serverconfig"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/durationpb"
@@ -27,27 +26,12 @@ import (
 	"golang.org/x/pkgsite/internal/config"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/log"
-	"golang.org/x/pkgsite/internal/middleware"
 	"golang.org/x/pkgsite/internal/queue"
 )
 
 // New creates a new Queue with name queueName based on the configuration
 // in cfg. When running locally, Queue uses numWorkers concurrent workers.
-func New(ctx context.Context, cfg *config.Config, queueName string, numWorkers int, expGetter middleware.ExperimentGetter, processFunc queue.InMemoryProcessFunc) (queue.Queue, error) {
-	if !serverconfig.OnGCP() {
-		experiments, err := expGetter(ctx)
-		if err != nil {
-			return nil, err
-		}
-		var names []string
-		for _, e := range experiments {
-			if e.Rollout > 0 {
-				names = append(names, e.Name)
-			}
-		}
-		return queue.NewInMemory(ctx, numWorkers, names, processFunc), nil
-	}
-
+func New(ctx context.Context, cfg *config.Config, queueName string, numWorkers int) (queue.Queue, error) {
 	client, err := cloudtasks.NewClient(ctx)
 	if err != nil {
 		return nil, err

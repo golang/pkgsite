@@ -25,6 +25,7 @@ import (
 	"golang.org/x/pkgsite/internal/proxy"
 	"golang.org/x/pkgsite/internal/proxy/proxytest"
 	"golang.org/x/pkgsite/internal/queue"
+	"golang.org/x/pkgsite/internal/queue/inmemqueue"
 	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/testing/htmlcheck"
 )
@@ -89,7 +90,7 @@ func setupQueue(ctx context.Context, t *testing.T, proxyModules []*proxytest.Mod
 	cctx, cancel := context.WithCancel(ctx)
 	proxyClient, teardown := proxytest.SetupTestClient(t, proxyModules)
 	sourceClient := source.NewClient(http.DefaultClient)
-	q := queue.NewInMemory(cctx, 1, experimentNames,
+	q := inmemqueue.New(cctx, 1, experimentNames,
 		func(ctx context.Context, mpath, version string) (_ int, err error) {
 			return fetchserver.FetchAndUpdateState(ctx, mpath, version, proxyClient, sourceClient, testDB)
 		})

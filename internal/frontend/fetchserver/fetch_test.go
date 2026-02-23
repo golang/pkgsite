@@ -18,7 +18,7 @@ import (
 	"golang.org/x/pkgsite/internal/frontend"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/proxy/proxytest"
-	"golang.org/x/pkgsite/internal/queue"
+	"golang.org/x/pkgsite/internal/queue/inmemqueue"
 	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/testing/sample"
 	"golang.org/x/pkgsite/internal/testing/testhelper"
@@ -50,7 +50,7 @@ func newTestServerWithFetch(t *testing.T, proxyModules []*proxytest.Module, cach
 	sourceClient := source.NewClient(http.DefaultClient)
 	ctx := context.Background()
 
-	q := queue.NewInMemory(ctx, 1, nil,
+	q := inmemqueue.New(ctx, 1, nil,
 		func(ctx context.Context, mpath, version string) (int, error) {
 			return FetchAndUpdateState(ctx, mpath, version, proxyClient, sourceClient, testDB)
 		})

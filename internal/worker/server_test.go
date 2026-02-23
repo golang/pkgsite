@@ -24,7 +24,7 @@ import (
 	"golang.org/x/pkgsite/internal/index"
 	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/proxy/proxytest"
-	"golang.org/x/pkgsite/internal/queue"
+	"golang.org/x/pkgsite/internal/queue/inmemqueue"
 	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/testing/sample"
 )
@@ -178,7 +178,7 @@ func TestWorker(t *testing.T) {
 			f := &Fetcher{proxyClient, source.NewClient(http.DefaultClient), testDB, nil, nil, ""}
 
 			// Use 10 workers to have parallelism consistent with the worker binary.
-			q := queue.NewInMemory(ctx, 10, nil, func(ctx context.Context, mpath, version string) (int, error) {
+			q := inmemqueue.New(ctx, 10, nil, func(ctx context.Context, mpath, version string) (int, error) {
 				code, _, err := f.FetchAndUpdateState(ctx, mpath, version, "")
 				return code, err
 			})

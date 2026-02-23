@@ -33,6 +33,7 @@ import (
 	"golang.org/x/pkgsite/internal/proxy"
 	"golang.org/x/pkgsite/internal/queue"
 	"golang.org/x/pkgsite/internal/queue/gcpqueue"
+	"golang.org/x/pkgsite/internal/queue/inmemqueue"
 	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/static"
 	"golang.org/x/pkgsite/internal/trace"
@@ -119,12 +120,26 @@ func main() {
 		// The closure passed to queue.New is only used for testing and local
 		// execution, not in production. So it's okay that it doesn't use a
 		// per-request connection.
-		fetchQueue, err = gcpqueue.New(ctx, cfg, queueName, *workers, expg,
-			func(ctx context.Context, modulePath, version string) (int, error) {
+		if serverconfig.OnGCP() {
+			q, err := gcpqueue.New(ctx, cfg, queueName, *workers)
+			if err != nil {
+				log.Fatalf(ctx, "error creating GCP queue: %v", err)
+			}
+			fetchQueue = q
+		} else {
+			experiments, err := expg(ctx)
+			if err != nil {
+				log.Fatalf(ctx, "error getting experiment: %v", err)
+			}
+			var names []string
+			for _, e := range experiments {
+				if e.Rollout > 0 {
+					names = append(names, e.Name)
+				}
+			}
+			fetchQueue = inmemqueue.New(ctx, *workers, names, func(ctx context.Context, modulePath, version string) (int, error) {
 				return fetchserver.FetchAndUpdateState(ctx, modulePath, version, proxyClient, sourceClient, db)
 			})
-		if err != nil {
-			log.Fatalf(ctx, "gcpqueue.New: %v", err)
 		}
 	}
 
