@@ -63,6 +63,23 @@ func New(db *sql.DB, instanceID string) *DB {
 	return &DB{db: db, instanceID: instanceID}
 }
 
+// Underlying returns the underlying *sql.DB.
+func (db *DB) Underlying() *sql.DB {
+	return db.db
+}
+
+// SetPoolSettings sets the connection pool settings for the database.
+func (db *DB) SetPoolSettings(maxOpen, maxIdle int, maxLifetime, maxIdleTime time.Duration) {
+	if maxOpen > 0 && maxIdle > maxOpen {
+		log.Warningf(context.Background(), "SetPoolSettings: maxIdle (%d) > maxOpen (%d); capping maxIdle to maxOpen", maxIdle, maxOpen)
+		maxIdle = maxOpen
+	}
+	db.db.SetMaxOpenConns(maxOpen)
+	db.db.SetMaxIdleConns(maxIdle)
+	db.db.SetConnMaxLifetime(maxLifetime)
+	db.db.SetConnMaxIdleTime(maxIdleTime)
+}
+
 func (db *DB) Ping() error {
 	return db.db.Ping()
 }

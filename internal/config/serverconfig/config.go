@@ -53,6 +53,22 @@ func GetEnvInt(ctx context.Context, key string, fallback int) int {
 	return fallback
 }
 
+// GetEnvDuration looks up the given key from the environment and expects a duration string,
+// returning the duration value if it exists, and otherwise returning the given
+// fallback value.
+// If the environment variable has a value but it can't be parsed as a duration,
+// GetEnvDuration terminates the program.
+func GetEnvDuration(ctx context.Context, key string, fallback time.Duration) time.Duration {
+	if s, ok := os.LookupEnv(key); ok {
+		v, err := time.ParseDuration(s)
+		if err != nil {
+			log.Fatalf(ctx, "bad value %q for %s: %v", s, key, err)
+		}
+		return v
+	}
+	return fallback
+}
+
 // ValidateAppVersion validates that appVersion follows the expected format
 // defined by AppVersionFormat.
 func ValidateAppVersion(appVersion string) error {
@@ -153,6 +169,10 @@ func Init(ctx context.Context) (_ *config.Config, err error) {
 		DBName:               GetEnv("GO_DISCOVERY_DATABASE_NAME", "discovery-db"),
 		DBSecret:             os.Getenv("GO_DISCOVERY_DATABASE_SECRET"),
 		DBSSL:                GetEnv("GO_DISCOVERY_DATABASE_SSL", "disable"),
+		DBMaxOpenConns:       GetEnvInt(ctx, "GO_DISCOVERY_DATABASE_MAX_OPEN_CONNS", config.DefaultDBMaxOpenConns),
+		DBMaxIdleConns:       GetEnvInt(ctx, "GO_DISCOVERY_DATABASE_MAX_IDLE_CONNS", config.DefaultDBMaxIdleConns),
+		DBConnMaxLifetime:    GetEnvDuration(ctx, "GO_DISCOVERY_DATABASE_CONN_MAX_LIFETIME", config.DefaultDBConnMaxLifetime),
+		DBConnMaxIdleTime:    GetEnvDuration(ctx, "GO_DISCOVERY_DATABASE_CONN_MAX_IDLE_TIME", config.DefaultDBConnMaxIdleTime),
 		RedisCacheHost:       os.Getenv("GO_DISCOVERY_REDIS_HOST"),
 		RedisCachePort:       GetEnv("GO_DISCOVERY_REDIS_PORT", "6379"),
 		Quota: config.QuotaSettings{

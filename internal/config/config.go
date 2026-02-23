@@ -84,6 +84,10 @@ type Config struct {
 	DBSecret, DBUser, DBHost, DBPort, DBName, DBSSL string
 	DBSecondaryHost                                 string // DB host to use if first one is down
 	DBPassword                                      string `json:"-" yaml:"-"`
+	DBMaxOpenConns                                  int
+	DBMaxIdleConns                                  int
+	DBConnMaxLifetime                               time.Duration
+	DBConnMaxIdleTime                               time.Duration
 
 	// Configuration for redis page cache.
 	RedisCacheHost, RedisCachePort string
@@ -145,6 +149,22 @@ func (c *Config) AppVersionLabel() string {
 // 10 minutes is the App Engine standard request timeout,
 // but we set this longer for the worker.
 const StatementTimeout = 30 * time.Minute
+
+const (
+	// DefaultDBMaxOpenConns is the default maximum number of open connections to the database.
+	// 80 is a safe value for Cloud Run instances, which have a hard limit of 100.
+	DefaultDBMaxOpenConns = 80
+
+	// DefaultDBMaxIdleConns is the default maximum number of idle connections in the pool.
+	// 10 is a conservative value for horizontal scaling.
+	DefaultDBMaxIdleConns = 10
+
+	// DefaultDBConnMaxLifetime is the default maximum amount of time a connection may be reused.
+	DefaultDBConnMaxLifetime = time.Hour
+
+	// DefaultDBConnMaxIdleTime is the default maximum amount of time a connection may be idle.
+	DefaultDBConnMaxIdleTime = 10 * time.Minute
+)
 
 // SourceTimeout is the value of the timeout for source.Client, which is used
 // to fetch source code from third party URLs.

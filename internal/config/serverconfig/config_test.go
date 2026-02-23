@@ -8,6 +8,7 @@ import (
 	"context"
 	"regexp"
 	"testing"
+	"time"
 
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/pkgsite/internal/config"
@@ -143,5 +144,56 @@ func TestEnvAndApp(t *testing.T) {
 		if gotApp != test.wantApp {
 			t.Errorf("%q: got %q, want %q", test.serviceID, gotApp, test.wantApp)
 		}
+	}
+}
+func TestInitPoolSettings(t *testing.T) {
+	ctx := context.Background()
+	for _, test := range []struct {
+		name     string
+		envs     map[string]string
+		wantOpen int
+		wantIdle int
+		wantLife time.Duration
+	}{
+		{
+			name: "overridden",
+			envs: map[string]string{
+				"GO_DISCOVERY_DATABASE_HOST":              "localhost",
+				"GO_DISCOVERY_DATABASE_MAX_OPEN_CONNS":    "42",
+				"GO_DISCOVERY_DATABASE_MAX_IDLE_CONNS":    "13",
+				"GO_DISCOVERY_DATABASE_CONN_MAX_LIFETIME": "10m",
+			},
+			wantOpen: 42,
+			wantIdle: 13,
+			wantLife: 10 * time.Minute,
+		},
+		{
+			name: "defaults",
+			envs: map[string]string{
+				"GO_DISCOVERY_DATABASE_HOST": "localhost",
+			},
+			wantOpen: config.DefaultDBMaxOpenConns,
+			wantIdle: config.DefaultDBMaxIdleConns,
+			wantLife: config.DefaultDBConnMaxLifetime,
+		},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			for k, v := range test.envs {
+				t.Setenv(k, v)
+			}
+			cfg, err := Init(ctx)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if cfg.DBMaxOpenConns != test.wantOpen {
+				t.Errorf("DBMaxOpenConns: got %d, want %d", cfg.DBMaxOpenConns, test.wantOpen)
+			}
+			if cfg.DBMaxIdleConns != test.wantIdle {
+				t.Errorf("DBMaxIdleConns: got %d, want %d", cfg.DBMaxIdleConns, test.wantIdle)
+			}
+			if cfg.DBConnMaxLifetime != test.wantLife {
+				t.Errorf("DBConnMaxLifetime: got %s, want %s", cfg.DBConnMaxLifetime, test.wantLife)
+			}
+		})
 	}
 }

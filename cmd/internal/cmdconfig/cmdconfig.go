@@ -153,6 +153,7 @@ func OpenDB(ctx context.Context, cfg *config.Config, bypassLicenseCheck bool) (_
 		}
 		log.Infof(ctx, "connected to secondary host %s", cfg.DBSecondaryHost)
 	}
+	ddb.SetPoolSettings(cfg.DBMaxOpenConns, cfg.DBMaxIdleConns, cfg.DBConnMaxLifetime, cfg.DBConnMaxIdleTime)
 	log.Infof(ctx, "database open finished")
 	if bypassLicenseCheck {
 		return postgres.NewBypassingLicenseCheck(ddb), nil
