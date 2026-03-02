@@ -100,7 +100,7 @@ services:
       - gomodcache:/gomodcache
     working_dir: /pkgsite
   db:
-    image: postgres:11.12
+    image: postgres:14
     environment:
       <<: *database-variables
       LANG: C
