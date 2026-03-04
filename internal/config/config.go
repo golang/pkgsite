@@ -156,8 +156,8 @@ const (
 	DefaultDBMaxOpenConns = 80
 
 	// DefaultDBMaxIdleConns is the default maximum number of idle connections in the pool.
-	// 10 is a conservative value for horizontal scaling.
-	DefaultDBMaxIdleConns = 10
+	// 6 is a conservative value for horizontal scaling.
+	DefaultDBMaxIdleConns = 6
 
 	// DefaultDBConnMaxLifetime is the default maximum amount of time a connection may be reused.
 	DefaultDBConnMaxLifetime = time.Hour
