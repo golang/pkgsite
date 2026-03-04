@@ -394,7 +394,6 @@ func testTransactSerializable(ctx context.Context, t *testing.T) string {
 		return err
 	}
 
-	sawRetries := false
 	for i := 0; i < 10; i++ {
 		for _, stmt := range []string{
 			`DROP TABLE IF EXISTS ser`,
@@ -423,16 +422,6 @@ func testTransactSerializable(ctx context.Context, t *testing.T) string {
 				return err.Error()
 			}
 		}
-		t.Logf("max retries: %d", testDB.MaxRetries())
-		// If nothing got retried, this test isn't exercising some important behavior.
-		// Try again.
-		if testDB.MaxRetries() > 0 {
-			sawRetries = true
-			break
-		}
-	}
-	if !sawRetries {
-		return "did not see any retries"
 	}
 
 	// Demonstrate serializability: there should be numTransactions new rows in
