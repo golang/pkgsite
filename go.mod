@@ -22,6 +22,7 @@ require (
 	github.com/google/go-replayers/httpreplay v1.0.0
 	github.com/google/licensecheck v0.3.1
 	github.com/google/safehtml v0.0.3-0.20211026203422-d6f0e11a5516
+	github.com/jackc/pgx/v4 v4.10.1
 	github.com/jackc/pgx/v5 v5.9.1
 	github.com/jba/templatecheck v0.6.0
 	github.com/lib/pq v1.12.0
@@ -64,8 +65,13 @@ require (
 	github.com/googleapis/gax-go/v2 v2.11.0 // indirect
 	github.com/hashicorp/errwrap v1.0.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.0 // indirect
+	github.com/jackc/chunkreader/v2 v2.0.1 // indirect
+	github.com/jackc/pgconn v1.8.0 // indirect
+	github.com/jackc/pgio v1.0.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
+	github.com/jackc/pgproto3/v2 v2.0.7 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
+	github.com/jackc/pgtype v1.6.2 // indirect
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/kr/text v0.2.0 // indirect

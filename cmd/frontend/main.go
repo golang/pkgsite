@@ -34,6 +34,7 @@ import (
 	"golang.org/x/pkgsite/internal/queue"
 	"golang.org/x/pkgsite/internal/queue/gcpqueue"
 	"golang.org/x/pkgsite/internal/queue/inmemqueue"
+	"golang.org/x/pkgsite/internal/queue/pgqueue"
 	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/static"
 	"golang.org/x/pkgsite/internal/trace"
@@ -54,6 +55,7 @@ var (
 		"as a direct backend, bypassing the database")
 	bypassLicenseCheck = flag.Bool("bypass_license_check", false, "display all information, even for non-redistributable paths")
 	hostAddr           = flag.String("host", "localhost:8080", "Host address for the server")
+	queueType          = flag.String("queue", "inmemory", `queue implementation when not on GCP: "inmemory" or "postgres"`)
 )
 
 func main() {
@@ -127,19 +129,30 @@ func main() {
 			}
 			fetchQueue = q
 		} else {
-			experiments, err := expg(ctx)
-			if err != nil {
-				log.Fatalf(ctx, "error getting experiment: %v", err)
-			}
-			var names []string
-			for _, e := range experiments {
-				if e.Rollout > 0 {
-					names = append(names, e.Name)
-				}
-			}
-			fetchQueue = inmemqueue.New(ctx, *workers, names, func(ctx context.Context, modulePath, version string) (int, error) {
+			processFunc := func(ctx context.Context, modulePath, version string) (int, error) {
 				return fetchserver.FetchAndUpdateState(ctx, modulePath, version, proxyClient, sourceClient, db)
-			})
+			}
+			switch *queueType {
+			case "postgres":
+				q, err := pgqueue.New(ctx, db.Underlying())
+				if err != nil {
+					log.Fatalf(ctx, "error creating postgres queue: %v", err)
+				}
+				go q.Poll(ctx, *workers, processFunc)
+				fetchQueue = q
+			default:
+				experiments, err := expg(ctx)
+				if err != nil {
+					log.Fatalf(ctx, "error getting experiment: %v", err)
+				}
+				var names []string
+				for _, e := range experiments {
+					if e.Rollout > 0 {
+						names = append(names, e.Name)
+					}
+				}
+				fetchQueue = inmemqueue.New(ctx, *workers, names, processFunc)
+			}
 		}
 	}
 
