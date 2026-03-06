@@ -232,4 +232,46 @@ require example v1
     });
     expect(el('.Documentation-exampleOutput').innerHTML).toBe('&lt;input required&gt;');
   });
+
+  it('displays code output for runnable example without initial output', async () => {
+    // Simulate DOM from example.tmpl for a runnable example without initial output
+    const htmlNoOutput = `
+      <details tabindex="-1" id="example-NoOutput" class="Documentation-exampleDetails js-exampleContainer">
+        <summary class="Documentation-exampleDetailsHeader">Example <a href="#example-NoOutput">¶</a></summary>
+        <div class="Documentation-exampleDetailsBody">
+          <pre class="Documentation-exampleCode">${escapeHTML(codeSnippet)}</pre>
+          <pre class="Documentation-exampleOutputContainer js-exampleOutputContainer" hidden>
+            <span class="Documentation-exampleOutputLabel">Output:</span>
+            <span class="Documentation-exampleOutput"></span>
+          </pre>
+        </div>
+        <div class="Documentation-exampleButtonsContainer">
+          <p class="Documentation-exampleError" role="alert" aria-atomic="true"></p>
+          <button class="Documentation-exampleRunButton" aria-label="Run Code">Run</button>
+        </div>
+      </details>
+    `;
+    document.body.innerHTML = htmlNoOutput.concat(`
+      <div class="js-playgroundVars" data-modulepath="std" data-version="v1" hidden></div>
+    `);
+    const exampleNoOutput = el('.js-exampleContainer') as HTMLDetailsElement;
+    new PlaygroundExampleController(exampleNoOutput);
+
+    mocked(window.fetch).mockResolvedValue({
+      json: () =>
+        Promise.resolve({
+          Events: [{ Message: 'Dynamic Output', Kind: 'stdout', Delay: 0 }],
+          Errors: null,
+        }),
+    } as Response);
+
+    const outputContainer = el<HTMLElement>('.js-exampleOutputContainer')!;
+    expect(outputContainer.hidden).toBe(true);
+
+    el('[aria-label="Run Code"]').click();
+    await flushPromises();
+
+    expect(outputContainer.hidden).toBe(false);
+    expect(el('.Documentation-exampleOutput').textContent).toContain('Dynamic Output');
+  });
 });

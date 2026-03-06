@@ -19,6 +19,7 @@ const PlayExampleClassName = {
   PLAY_CONTAINER: '.js-exampleContainer',
   EXAMPLE_INPUT: '.Documentation-exampleCode',
   EXAMPLE_OUTPUT: '.Documentation-exampleOutput',
+  EXAMPLE_OUTPUT_CONTAINER: '.js-exampleOutputContainer',
   EXAMPLE_ERROR: '.Documentation-exampleError',
   PLAY_BUTTON: '.Documentation-examplePlayButton',
   SHARE_BUTTON: '.Documentation-exampleShareButton',
@@ -72,6 +73,11 @@ export class PlaygroundExampleController {
   private readonly outputEl: Element | null;
 
   /**
+   * The container for the output.
+   */
+  private readonly outputContainerEl: HTMLElement | null;
+
+  /**
    * @param exampleEl The div that contains playground content for the given example.
    */
   constructor(private readonly exampleEl: HTMLDetailsElement) {
@@ -84,6 +90,7 @@ export class PlaygroundExampleController {
     this.runButtonEl = exampleEl.querySelector(PlayExampleClassName.RUN_BUTTON);
     this.inputEl = this.makeTextArea(exampleEl.querySelector(PlayExampleClassName.EXAMPLE_INPUT));
     this.outputEl = exampleEl.querySelector(PlayExampleClassName.EXAMPLE_OUTPUT);
+    this.outputContainerEl = exampleEl.querySelector(PlayExampleClassName.EXAMPLE_OUTPUT_CONTAINER);
 
     // This is legacy listener to be replaced the listener for shareButtonEl.
     this.playButtonEl?.addEventListener('click', () => this.handleShareButtonClick());
@@ -167,6 +174,9 @@ export class PlaygroundExampleController {
     if (this.outputEl) {
       this.outputEl.textContent = output;
     }
+    if (this.outputContainerEl) {
+      this.outputContainerEl.hidden = false;
+    }
   }
 
   /**
@@ -175,6 +185,9 @@ export class PlaygroundExampleController {
   private appendToOutputText(output: string) {
     if (this.outputEl) {
       this.outputEl.textContent += output;
+    }
+    if (this.outputContainerEl) {
+      this.outputContainerEl.hidden = false;
     }
   }
 

@@ -259,8 +259,7 @@ func main() {
 }
 </pre>
 
-<pre><span class="Documentation-exampleOutputLabel">Output:</span>
-
+<pre class="Documentation-exampleOutputContainer js-exampleOutputContainer"><span class="Documentation-exampleOutputLabel">Output:</span>
 <span class="Documentation-exampleOutput">-1
 0
 1
@@ -291,6 +290,8 @@ func main() {
 }
 </pre>
 
+<pre class="Documentation-exampleOutputContainer js-exampleOutputContainer" hidden=""><span class="Documentation-exampleOutputLabel">Output:</span>
+<span class="Documentation-exampleOutput"></span></pre>
 </div>
 <div class="Documentation-exampleButtonsContainer">
         <p class="Documentation-exampleError" role="alert" aria-atomic="true"></p>
@@ -301,8 +302,7 @@ func main() {
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			diff := cmp.Diff(test.want, got[test.htmlID])
-			if diff != "" {
+			if diff := cmp.Diff(test.want, got[test.htmlID]); diff != "" {
 				t.Errorf("mismatch (-want, +got):\n%s", diff)
 			}
 		})
