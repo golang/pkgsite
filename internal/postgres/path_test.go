@@ -168,10 +168,7 @@ func TestUpsertPathsConcurrently(t *testing.T) {
 		i := i
 		go func() {
 			start := (10 * i) % len(paths)
-			end := start + 50
-			if end > len(paths) {
-				end = len(paths)
-			}
+			end := min(start+50, len(paths))
 			sub := paths[start:end]
 			got, err := upsertPathsInTx(ctx, testDB.db, sub)
 			if err == nil {

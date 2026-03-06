@@ -520,10 +520,7 @@ func (db *DB) BulkUpdate(ctx context.Context, table string, columns, types []str
 	}
 	query := buildBulkUpdateQuery(table, columns, types)
 	for left := 0; left < nRows; left += maxBulkUpdateArrayLen {
-		right := left + maxBulkUpdateArrayLen
-		if right > nRows {
-			right = nRows
-		}
+		right := min(left+maxBulkUpdateArrayLen, nRows)
 		var args []any
 		for _, vs := range values {
 			args = append(args, pq.Array(vs[left:right]))

@@ -765,10 +765,9 @@ scan:
 		// Add traversed bytes from src to the appropriate line.
 		prevLines := strings.SplitAfter(string(src[lastOffset:offset]), "\n")
 		for i, ln := range prevLines {
-			n := line - len(prevLines) + i + 1
-			if n < 0 { // possible at EOF
-				n = 0
-			}
+			n := max(line-len(prevLines)+i+1,
+				// possible at EOF
+				0)
 			htmlLines[n] = append(htmlLines[n], safe.HTMLEscaped(ln))
 		}
 

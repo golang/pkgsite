@@ -53,10 +53,7 @@ func searchDocumentSections(synopsis, readmeFilename, readme string, maxSecWords
 	rwd := append(rwfd, rwr...)
 	// Keep maxSecWords of section D, but not more than maxReadmeFrac.
 	f := int(maxReadmeFrac * float64(len(rwd)))
-	nkeep := maxSecWords
-	if nkeep > f {
-		nkeep = f
-	}
+	nkeep := min(maxSecWords, f)
 	sectionD, _ := split(rwd, nkeep)
 
 	// If there is no synopsis, use first sentence of the README.
