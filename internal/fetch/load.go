@@ -16,6 +16,7 @@ import (
 	"go/token"
 	"io"
 	"io/fs"
+	"maps"
 	"net/http"
 	"os"
 	"path"
@@ -447,9 +448,7 @@ func matchingFiles(goos, goarch string, importPath string, allFiles map[string][
 
 	// Copy the input map so we don't modify it.
 	matchedFiles = map[string][]byte{}
-	for n, c := range allFiles {
-		matchedFiles[n] = c
-	}
+	maps.Copy(matchedFiles, allFiles)
 	for name := range allFiles {
 		match, err := bctx.MatchFile(".", name) // This will access the file we just added to files map above.
 		if err != nil {

@@ -11,6 +11,7 @@ import (
 	"errors"
 	"fmt"
 	stdlog "log"
+	"maps"
 	"os"
 	"strings"
 	"sync"
@@ -41,9 +42,7 @@ func NewContextWithLabel(ctx context.Context, key, value string) context.Context
 	oldLabels, _ := ctx.Value(labelsKey{}).(map[string]string)
 	// Copy the labels, to preserve immutability of contexts.
 	newLabels := map[string]string{}
-	for k, v := range oldLabels {
-		newLabels[k] = v
-	}
+	maps.Copy(newLabels, oldLabels)
 	newLabels[key] = value
 	return context.WithValue(ctx, labelsKey{}, newLabels)
 }
@@ -86,9 +85,7 @@ func (l *logger) Log(ctx context.Context, s log.Severity, payload any) {
 	es := experimentString(ctx)
 	if len(es) > 0 {
 		nl := map[string]string{}
-		for k, v := range labels {
-			nl[k] = v
-		}
+		maps.Copy(nl, labels)
 		nl["experiments"] = es
 		labels = nl
 	}

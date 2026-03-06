@@ -7,6 +7,7 @@ package proxytest
 
 import (
 	"fmt"
+	"maps"
 	"strings"
 )
 
@@ -69,9 +70,7 @@ func (m *Module) setFile(filename string, contents *string, mustExist bool) *Mod
 	m2 := *m
 	if m.Files != nil {
 		m2.Files = map[string]string{}
-		for k, v := range m.Files {
-			m2.Files[k] = v
-		}
+		maps.Copy(m2.Files, m.Files)
 	}
 	if contents == nil {
 		delete(m2.Files, filename)

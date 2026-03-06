@@ -8,6 +8,7 @@ package auth
 import (
 	"context"
 	"fmt"
+	"maps"
 	"net/http"
 
 	"golang.org/x/pkgsite/internal/derrors"
@@ -89,9 +90,7 @@ func (t *HeadersTransport) RoundTrip(req *http.Request) (*http.Response, error) 
 	// Copy req and its headers.
 	newReq := *req
 	newReq.Header = make(http.Header)
-	for k, v := range req.Header {
-		newReq.Header[k] = v
-	}
+	maps.Copy(newReq.Header, req.Header)
 	// Add or overwrite our headers.
 	for h, v := range t.Headers {
 		newReq.Header.Set(h, v)

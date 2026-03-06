@@ -14,6 +14,7 @@ import (
 	"go/types"
 	"io"
 	"log"
+	"maps"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -264,9 +265,7 @@ func (w *Walker) loadImports(pkgPath string) {
 			if len(pkg.ImportMap) > 0 {
 				importMap[pkg.Dir] = make(map[string]string, len(pkg.ImportMap))
 			}
-			for k, v := range pkg.ImportMap {
-				importMap[pkg.Dir][k] = v
-			}
+			maps.Copy(importMap[pkg.Dir], pkg.ImportMap)
 		}
 		sort.Strings(packages)
 		imports = listImports{
