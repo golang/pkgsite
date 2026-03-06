@@ -72,7 +72,7 @@ func structScannerForType[T any]() func(p *T) []any {
 				if _, ok := p.(*[]byte); !ok {
 					p = pq.Array(p)
 				}
-			case reflect.Ptr:
+			case reflect.Pointer:
 				p = NullPtr(p)
 			default:
 			}
@@ -89,7 +89,7 @@ func structScannerForType[T any]() func(p *T) []any {
 // allocated pointer to the column value.
 func NullPtr(p any) nullPtr {
 	v := reflect.ValueOf(p)
-	if v.Kind() != reflect.Ptr || v.Elem().Kind() != reflect.Ptr {
+	if v.Kind() != reflect.Pointer || v.Elem().Kind() != reflect.Pointer {
 		panic("NullPtr arg must be pointer to pointer")
 	}
 	return nullPtr{v}
