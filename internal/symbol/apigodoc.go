@@ -257,11 +257,11 @@ func parseRow(s string) (vr versionedRow, ok bool) {
 		vr.recv = strings.Trim(rest[:sp], "()")    // "*File"
 		vr.recv = strings.TrimPrefix(vr.recv, "*") // "File"
 		rest = rest[sp+1:]                         // SetMode(os.FileMode)
-		paren := strings.IndexByte(rest, '(')
-		if paren == -1 {
-			return
+		before, _, ok := strings.Cut(rest, "(")
+		if !ok {
+			return vr, false
 		}
-		vr.name = rest[:paren]
+		vr.name = before
 		return vr, true
 	}
 	return // TODO: handle more cases
