@@ -12,6 +12,7 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"slices"
 	"strings"
 	"time"
 
@@ -78,13 +79,11 @@ func Quota(settings config.QuotaSettings, client *redis.Client) Middleware {
 				return
 			}
 			authVal := r.Header.Get(config.BypassQuotaAuthHeader)
-			for _, wantVal := range settings.AuthValues {
-				if authVal == wantVal {
-					recordQuotaMetric(ctx, "bypassed")
-					log.Infof(ctx, "Quota: accepting %q", authVal)
-					h.ServeHTTP(w, r)
-					return
-				}
+			if slices.Contains(settings.AuthValues, authVal) {
+				recordQuotaMetric(ctx, "bypassed")
+				log.Infof(ctx, "Quota: accepting %q", authVal)
+				h.ServeHTTP(w, r)
+				return
 			}
 			header := r.Header.Get("X-Godoc-Forwarded-For")
 			if header == "" {

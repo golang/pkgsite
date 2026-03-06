@@ -181,10 +181,8 @@ func declForName(t *testing.T, pkg *doc.Package, symbol string) ast.Decl {
 
 	inVals := func(vals []*doc.Value) ast.Decl {
 		for _, v := range vals {
-			for _, n := range v.Names {
-				if n == symbol {
-					return v.Decl
-				}
+			if slices.Contains(v.Names, symbol) {
+				return v.Decl
 			}
 		}
 		return nil

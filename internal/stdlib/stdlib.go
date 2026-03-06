@@ -20,6 +20,7 @@ import (
 	"path"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -458,10 +459,8 @@ func semanticVersion(requestedVersion string) (_ string, err error) {
 		}
 		return latestVersion, nil
 	default:
-		for _, v := range knownVersions {
-			if v == requestedVersion {
-				return requestedVersion, nil
-			}
+		if slices.Contains(knownVersions, requestedVersion) {
+			return requestedVersion, nil
 		}
 	}
 

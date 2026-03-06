@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"slices"
 	"strconv"
 	"time"
 
@@ -137,11 +138,9 @@ func (c *cacher) Cache(name string, expirer func(r *http.Request) time.Duration,
 func (c *cache) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// Check auth header to see if request should bypass cache.
 	authVal := r.Header.Get(config.BypassCacheAuthHeader)
-	for _, wantVal := range c.authValues {
-		if authVal == wantVal {
-			c.delegate.ServeHTTP(w, r)
-			return
-		}
+	if slices.Contains(c.authValues, authVal) {
+		c.delegate.ServeHTTP(w, r)
+		return
 	}
 	// If the flash cookie is set, bypass the cache.
 	if _, err := r.Cookie(cookie.AlternativeModuleFlash); err == nil {

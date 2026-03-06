@@ -7,6 +7,7 @@ package htmlcheck
 import (
 	"errors"
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -317,10 +318,8 @@ func (s *classSelector) match(n *html.Node) bool {
 	}
 	for _, attr := range n.Attr {
 		if attr.Key == "class" {
-			for _, f := range strings.Fields(attr.Val) {
-				if f == s.class {
-					return true
-				}
+			if slices.Contains(strings.Fields(attr.Val), s.class) {
+				return true
 			}
 			break
 		}

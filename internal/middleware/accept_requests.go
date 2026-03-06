@@ -6,6 +6,7 @@ package middleware
 
 import (
 	"net/http"
+	"slices"
 )
 
 const maxURILength = 1000
@@ -20,11 +21,9 @@ func AcceptRequests(methods ...string) Middleware {
 				http.Error(w, http.StatusText(http.StatusRequestURITooLong), http.StatusRequestURITooLong)
 				return
 			}
-			for _, m := range methods {
-				if r.Method == m {
-					h.ServeHTTP(w, r)
-					return
-				}
+			if slices.Contains(methods, r.Method) {
+				h.ServeHTTP(w, r)
+				return
 			}
 			http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
 		})

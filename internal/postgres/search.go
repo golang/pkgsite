@@ -8,6 +8,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"slices"
 	"sort"
 	"strings"
 	"time"
@@ -1006,12 +1007,7 @@ func GeneratePathTokens(packagePath string) []string {
 
 // isInternalPackage reports whether the path represents an internal directory.
 func isInternalPackage(path string) bool {
-	for _, p := range strings.Split(path, "/") {
-		if p == "internal" {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(strings.Split(path, "/"), "internal")
 }
 
 // UpsertSearchDocumentWithImportedByCount is the same as UpsertSearchDocument,

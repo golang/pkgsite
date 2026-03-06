@@ -175,10 +175,8 @@ func (c *Client) ByAlias(ctx context.Context, alias string) (_ string, err error
 		return "", err
 	}
 	for _, v := range vs {
-		for _, vAlias := range v.Aliases {
-			if alias == vAlias {
-				return v.ID, nil
-			}
+		if slices.Contains(v.Aliases, alias) {
+			return v.ID, nil
 		}
 	}
 	return "", derrors.NotFound

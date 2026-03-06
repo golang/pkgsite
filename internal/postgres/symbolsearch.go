@@ -9,6 +9,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"slices"
 	"sort"
 	"strings"
 
@@ -299,12 +300,10 @@ func splitPackageAndSymbolNames(q string) (pkgName string, symbolName string, er
 	if len(parts) != 2 && len(parts) != 3 {
 		return "", "", derrors.NotFound
 	}
-	for _, p := range parts {
+	if slices.Contains(parts, "") {
 		// Handle cases where we have odd dot placement, such as .Foo or
 		// Foo..
-		if p == "" {
-			return "", "", derrors.NotFound
-		}
+		return "", "", derrors.NotFound
 	}
 	return parts[0], strings.Join(parts[1:], "."), nil
 }
