@@ -174,7 +174,7 @@ func printNode(w io.Writer, root ast.Node) error {
 	}
 
 	indent := func(d int) {
-		for i := 0; i < d; i++ {
+		for range d {
 			pr("  ")
 		}
 	}

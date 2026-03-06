@@ -543,7 +543,7 @@ func (s *Server) Enqueue(ctx context.Context, w http.ResponseWriter, limit int, 
 		}()
 	}
 	// Wait for goroutines to finish.
-	for i := 0; i < concurrentEnqueues; i++ {
+	for range concurrentEnqueues {
 		sem <- struct{}{}
 	}
 	log.Infof(ctx, "Successfully scheduled modules to be fetched: %d modules enqueued, %d errors", nEnqueued, nErrors)

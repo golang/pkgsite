@@ -544,7 +544,7 @@ func TestLock(t *testing.T) {
 		count    int
 	)
 
-	for i := 0; i < n; i++ {
+	for range n {
 		go func() {
 			errc <- db.Transact(ctx, sql.LevelDefault, func(tx *database.DB) error {
 				if err := lock(ctx, tx, sample.ModulePath); err != nil {
@@ -567,7 +567,7 @@ func TestLock(t *testing.T) {
 			})
 		}()
 	}
-	for i := 0; i < n; i++ {
+	for range n {
 		if err := <-errc; err != nil {
 			t.Fatal(err)
 		}

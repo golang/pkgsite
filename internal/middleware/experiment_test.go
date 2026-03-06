@@ -103,7 +103,7 @@ func TestShouldSetExperiment(t *testing.T) {
 	rng := rand.New(rand.NewSource(1))
 	ipv4Addr := func() string {
 		a := make([]string, 4)
-		for i := 0; i < 4; i++ {
+		for i := range 4 {
 			// The use case is simple enough that a deterministic
 			// seed should provide enough coverage.
 			a[i] = strconv.Itoa(rng.Intn(256))
@@ -112,7 +112,7 @@ func TestShouldSetExperiment(t *testing.T) {
 	}
 	var ipAddresses []string
 	const numIPs = 10000.0
-	for i := 0; i < numIPs; i++ {
+	for range int(numIPs) {
 		ip := ipv4Addr()
 		ipAddresses = append(ipAddresses, ip)
 	}

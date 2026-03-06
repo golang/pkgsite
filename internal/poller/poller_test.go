@@ -63,7 +63,7 @@ func doTest(durationUnit time.Duration) error {
 	ctx, cancel := context.WithCancel(context.Background())
 	p.Start(ctx, 5*durationUnit)
 	time.Sleep(10 * durationUnit) // wait for first poll
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		goods = append(goods, p.Current().(int))
 		time.Sleep(6 * durationUnit)
 	}

@@ -171,7 +171,7 @@ func Dump() Checker {
 }
 
 func dump(n *html.Node, depth int) {
-	for i := 0; i < depth; i++ {
+	for range depth {
 		fmt.Print("  ")
 	}
 	fmt.Printf("type %d, data %q, attr %v\n", n.Type, n.Data, n.Attr)

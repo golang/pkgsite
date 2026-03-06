@@ -28,7 +28,7 @@ func BenchmarkBulkInsert(b *testing.B) {
 	}
 	const size = 15000
 	vals := make([]any, size)
-	for i := 0; i < size; i++ {
+	for i := range size {
 		vals[i] = i + 1
 	}
 	b.Run("pq BulkInsert", func(b *testing.B) {

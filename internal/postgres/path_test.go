@@ -94,7 +94,7 @@ func TestUpsertPathConcurrently(t *testing.T) {
 
 	const n = 10
 	errc := make(chan error, n)
-	for i := 0; i < n; i++ {
+	for range n {
 		go func() {
 			errc <- testDB.db.Transact(ctx, sql.LevelRepeatableRead, func(tx *database.DB) error {
 				id, err := upsertPath(ctx, tx, "a/path")
@@ -109,7 +109,7 @@ func TestUpsertPathConcurrently(t *testing.T) {
 		}()
 
 	}
-	for i := 0; i < n; i++ {
+	for range n {
 		if err := <-errc; err != nil {
 			t.Fatal(err)
 		}
@@ -160,11 +160,11 @@ func TestUpsertPathsConcurrently(t *testing.T) {
 
 	const n = 10
 	paths := make([]string, 100)
-	for i := 0; i < len(paths); i++ {
+	for i := range paths {
 		paths[i] = fmt.Sprintf("p%d", i)
 	}
 	errc := make(chan error, n)
-	for i := 0; i < n; i++ {
+	for i := range n {
 		i := i
 		go func() {
 			start := (10 * i) % len(paths)
@@ -179,7 +179,7 @@ func TestUpsertPathsConcurrently(t *testing.T) {
 		}()
 
 	}
-	for i := 0; i < n; i++ {
+	for range n {
 		if err := <-errc; err != nil {
 			t.Fatal(err)
 		}

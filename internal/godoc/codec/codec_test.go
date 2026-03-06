@@ -119,7 +119,7 @@ func TestList(t *testing.T) {
 		t.Fatal("got nil")
 	}
 	got := make([]string, n)
-	for i := 0; i < n; i++ {
+	for i := range n {
 		got[i] = d.DecodeString()
 	}
 	if !cmp.Equal(got, want) {

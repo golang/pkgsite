@@ -109,7 +109,7 @@ func RunDBTestsInParallel(dbBaseName string, numDBs int, m *testing.M, acquirep 
 	start := time.Now()
 	database.QueryLoggingDisabled = true
 	dbs := make(chan *DB, numDBs)
-	for i := 0; i < numDBs; i++ {
+	for i := range numDBs {
 		db, err := SetupTestDB(fmt.Sprintf("%s-%d", dbBaseName, i))
 		if err != nil {
 			if errors.Is(err, derrors.NotFound) && os.Getenv("GO_DISCOVERY_TESTDB") != "true" {
@@ -135,7 +135,7 @@ func RunDBTestsInParallel(dbBaseName string, numDBs int, m *testing.M, acquirep 
 	if len(dbs) != cap(dbs) {
 		log.Fatal("not all DBs were released")
 	}
-	for i := 0; i < numDBs; i++ {
+	for range numDBs {
 		db := <-dbs
 		if err := db.Close(); err != nil {
 			log.Fatal(err)

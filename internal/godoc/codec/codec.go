@@ -431,7 +431,7 @@ func (d *Decoder) skip() {
 	case nValuesCode:
 		// A uint n and n values follow.
 		n := int(d.DecodeUint())
-		for i := 0; i < n; i++ {
+		for range n {
 			d.skip()
 		}
 	case refCode:
@@ -518,7 +518,7 @@ func (d *Decoder) decodeInitial() {
 	// the list.
 	n := d.StartList()
 	d.typeInfos = make([]*typeInfo, n)
-	for num := 0; num < n; num++ {
+	for num := range n {
 		name := d.DecodeString()
 		ti := typeInfosByName[name]
 		if ti == nil {

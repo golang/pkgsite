@@ -201,7 +201,7 @@ func TestLargeBulkInsert(t *testing.T) {
 	}
 	const size = 150001
 	vals := make([]any, size)
-	for i := 0; i < size; i++ {
+	for i := range size {
 		vals[i] = i + 1
 	}
 	start := time.Now()
@@ -319,7 +319,7 @@ func TestBulkUpdate(t *testing.T) {
 
 	cols := []string{"a", "b"}
 	var values []any
-	for i := 0; i < 50; i++ {
+	for i := range 50 {
 		values = append(values, i, i)
 	}
 	err := testDB.Transact(ctx, sql.LevelDefault, func(tx *DB) error {
@@ -370,7 +370,7 @@ func TestTransactSerializable(t *testing.T) {
 
 	// Once in while, the test doesn't work. Repeat to de-flake.
 	var msg string
-	for i := 0; i < 20; i++ {
+	for range 20 {
 		msg = testTransactSerializable(ctx, t)
 		if msg == "" {
 			return
@@ -394,7 +394,7 @@ func testTransactSerializable(ctx context.Context, t *testing.T) string {
 		return err
 	}
 
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		for _, stmt := range []string{
 			`DROP TABLE IF EXISTS ser`,
 			`CREATE TABLE ser (id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY, class INTEGER, value INTEGER)`,
@@ -409,7 +409,7 @@ func testTransactSerializable(ctx context.Context, t *testing.T) string {
 		//   sum rows with class = 1 and insert as a row with class 2
 		//   sum rows with class = 2 and insert as a row with class 1
 		errc := make(chan error, numTransactions)
-		for i := 0; i < numTransactions; i++ {
+		for i := range numTransactions {
 			i := i
 			go func() {
 				errc <- testDB.Transact(ctx, sql.LevelSerializable,
@@ -417,7 +417,7 @@ func testTransactSerializable(ctx context.Context, t *testing.T) string {
 			}()
 		}
 		// None of the transactions should fail.
-		for i := 0; i < numTransactions; i++ {
+		for range numTransactions {
 			if err := <-errc; err != nil {
 				return err.Error()
 			}

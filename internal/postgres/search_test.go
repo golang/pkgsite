@@ -307,7 +307,7 @@ func importGraph(popularPath, importerModule string, importerCount int) []*inter
 
 	if importerCount > 0 {
 		m := sample.Module(importerModule, "v1.2.3")
-		for i := 0; i < importerCount; i++ {
+		for i := range importerCount {
 			name := fmt.Sprintf("importer%d", i)
 			fullPath := importerModule + "/" + name
 			u := &internal.Unit{
@@ -333,7 +333,7 @@ func resultGuard(t *testing.T, resultOrder []string) func(string) func() {
 	done := make(map[string](chan struct{}))
 	// waitFor maps [search type] -> [the search type is should wait for]
 	waitFor := make(map[string]string)
-	for i := 0; i < len(resultOrder); i++ {
+	for i := range resultOrder {
 		done[resultOrder[i]] = make(chan struct{})
 		if i > 0 {
 			waitFor[resultOrder[i]] = resultOrder[i-1]

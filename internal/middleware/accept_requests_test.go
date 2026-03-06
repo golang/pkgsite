@@ -65,7 +65,7 @@ func TestAcceptRequests_URILength(t *testing.T) {
 	var longURL string
 	// Create a URL with 990 characters.
 	numParts := maxURILength/2 - 5
-	for i := 0; i < numParts; i++ {
+	for range numParts {
 		longURL += "/a"
 	}
 	// Without this query param, the length of longURL will be < maxURILength.
