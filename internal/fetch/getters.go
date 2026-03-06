@@ -190,7 +190,7 @@ func (g *directoryModuleGetter) Mod(ctx context.Context, path, version string) (
 	}
 	data, err := os.ReadFile(filepath.Join(g.dir, "go.mod"))
 	if errors.Is(err, os.ErrNotExist) {
-		return []byte(fmt.Sprintf("module %s\n", g.modulePath)), nil
+		return fmt.Appendf(nil, "module %s\n", g.modulePath), nil
 	}
 	return data, err
 }
@@ -433,7 +433,7 @@ func (g *goPackagesModuleGetter) Mod(ctx context.Context, modulePath, version st
 	}
 	data, err := os.ReadFile(filepath.Join(m.Dir, "go.mod"))
 	if errors.Is(err, os.ErrNotExist) {
-		return []byte(fmt.Sprintf("module %s\n", modulePath)), nil
+		return fmt.Appendf(nil, "module %s\n", modulePath), nil
 	}
 	return data, err
 }

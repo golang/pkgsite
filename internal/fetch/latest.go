@@ -125,7 +125,7 @@ func LatestModuleVersions(ctx context.Context, modulePath string, prox *proxy.Cl
 		// Something's wrong with the go.mod file, so assume a minimal one instead of failing.
 		log.Warningf(ctx, "proxy.Mod(%q, %q): %v; using minimal go.mod for latest version info",
 			modulePath, rawLatest)
-		modBytes = []byte(fmt.Sprintf("module %s", modulePath))
+		modBytes = fmt.Appendf(nil, "module %s", modulePath)
 	}
 	lmv, err := internal.NewLatestModuleVersions(modulePath, rawLatest, "", "", modBytes)
 	if err != nil {
