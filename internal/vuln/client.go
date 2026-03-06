@@ -314,7 +314,6 @@ func (c *Client) byIDs(ctx context.Context, ids []string) (_ []*osv.Entry, err e
 	g, gctx := errgroup.WithContext(ctx)
 	g.SetLimit(10)
 	for i, id := range ids {
-		i, id := i, id
 		g.Go(func() error {
 			e, err := c.ByID(gctx, id)
 			if err != nil {

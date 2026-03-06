@@ -288,7 +288,6 @@ func extractPackageMetas(ctx context.Context, modulePath, resolvedVersion string
 	var mu sync.Mutex // guards pkgs, incompleteDirs, packageVersionStates
 	var errgroup errgroup.Group
 	for innerPath, goFiles := range dirs {
-		innerPath, goFiles := innerPath, goFiles
 		errgroup.Go(func() error {
 			var addedPackage bool
 			mu.Lock()

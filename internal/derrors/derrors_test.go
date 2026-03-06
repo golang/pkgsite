@@ -33,7 +33,6 @@ func TestFromHTTPStatus(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		test := test
 		t.Run(test.label, func(t *testing.T) {
 			err := FromStatus(test.status, "error")
 			if !errors.Is(err, test.want) {

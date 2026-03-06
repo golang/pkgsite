@@ -522,7 +522,6 @@ func (s *Server) Enqueue(ctx context.Context, w http.ResponseWriter, limit int, 
 	)
 	sem := make(chan struct{}, concurrentEnqueues)
 	for _, m := range modules {
-		m := m
 		opts := queue.Options{
 			Suffix:            suffix,
 			DisableProxyFetch: shouldDisableProxyFetch(m),

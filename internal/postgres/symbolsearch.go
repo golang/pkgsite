@@ -170,8 +170,6 @@ func runSymbolSearchMultiWord(ctx context.Context, ddb *database.DB, q string, l
 	resultsArray := make([][]*SearchResult, len(symbolToPathTokens))
 	count := 0
 	for symbol, pathTokens := range symbolToPathTokens {
-		symbol := symbol
-		pathTokens := pathTokens
 		i := count
 		count += 1
 		group.Go(func() error {
@@ -265,8 +263,6 @@ func runSymbolSearchOneDot(ctx context.Context, ddb *database.DB, q string, limi
 		search.SearchTypeSymbol,
 		search.SearchTypePackageDotSymbol,
 	} {
-		i := i
-		st := st
 		group.Go(func() error {
 			var (
 				results []*SearchResult

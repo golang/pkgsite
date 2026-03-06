@@ -580,7 +580,6 @@ func addVulns(ctx context.Context, rs []*SearchResult, vc *vuln.Client) {
 	var wg sync.WaitGroup
 	// TODO(golang/go#48223): throttle concurrency?
 	for _, r := range rs {
-		r := r
 		wg.Add(1)
 		go func() {
 			defer wg.Done()

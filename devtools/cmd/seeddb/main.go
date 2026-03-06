@@ -125,8 +125,6 @@ func run(ctx context.Context, db *database.DB, proxyURL string) error {
 
 	log.Printf("fetching")
 	for path, vers := range versionsByPath {
-		path := path
-		vers := vers
 		// Process versions of the same module sequentially, to avoid DB contention.
 		g.Go(func() error {
 			for _, v := range vers {

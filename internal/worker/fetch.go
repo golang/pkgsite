@@ -470,7 +470,6 @@ func updateVersionMap(ctx context.Context, db *postgres.DB, ft *fetchTask) (err 
 		requestedVersions = append(requestedVersions, internal.MasterVersion)
 	}
 	for _, v := range requestedVersions {
-		v := v
 		vm := &internal.VersionMap{
 			ModulePath:       ft.ModulePath,
 			RequestedVersion: v,

@@ -41,7 +41,6 @@ func GenerateFeatureContexts(ctx context.Context, pkgPath, pkgDir string) (map[s
 	var wg sync.WaitGroup
 	walkers := make([]*Walker, len(internal.BuildContexts))
 	for i, context := range contexts {
-		i, context := i, context
 		wg.Add(1)
 		go func() {
 			defer wg.Done()

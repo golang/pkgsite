@@ -235,7 +235,6 @@ func (db *DB) hedgedSearch(ctx context.Context, q string, limit int, opts Search
 
 	// Fan out our search requests.
 	for _, s := range searchers {
-		s := s
 		go func() {
 			start := time.Now()
 			resp := s(db, searchCtx, q, limit, opts)
