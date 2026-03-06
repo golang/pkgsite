@@ -21,8 +21,7 @@ import (
 )
 
 func TestSetAndLoadExperiments(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	ctx := t.Context()
 
 	const testFeature = "test-feature"
 
