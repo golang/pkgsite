@@ -83,7 +83,8 @@ func tagKey(dir string, context *build.Context, tags []string) string {
 		ctags[tag] = true
 	}
 	// TODO: ReleaseTags (need to load default)
-	key := dir
+	var key strings.Builder
+	key.WriteString(dir)
 	// explicit on GOOS and GOARCH as global cache will use "all" cached packages for
 	// an indirect imported package. See https://github.com/golang/go/issues/21181
 	// for more detail.
@@ -91,11 +92,11 @@ func tagKey(dir string, context *build.Context, tags []string) string {
 	sort.Strings(tags)
 	for _, tag := range tags {
 		if ctags[tag] {
-			key += "," + tag
+			key.WriteString("," + tag)
 			ctags[tag] = false
 		}
 	}
-	return key
+	return key.String()
 }
 
 var listCache sync.Map // map[string]listImports, keyed by contextName

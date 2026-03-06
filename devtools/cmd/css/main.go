@@ -179,7 +179,7 @@ func pxToRem(value string) string {
 // replaceValueWithRems replaces the px values in a line of css with rems.
 // e.g: padding: 25px 10px => padding:
 func replaceValueWithRems(line string) string {
-	var cssLine string
+	var cssLine strings.Builder
 	valueRegex := regexp.MustCompile(`([-+]?[0-9]*\.?[0-9]+)px`)
 	matches := valueRegex.FindAllStringSubmatchIndex(line, -1)
 	for idx, m := range matches {
@@ -188,15 +188,15 @@ func replaceValueWithRems(line string) string {
 		// The value here is the full string "25px" and num is just "25".
 		valueStartIdx, valueEndIdx, numStartIdx, numEndIdx := m[0], m[1], m[2], m[3]
 		if idx == 0 {
-			cssLine += line[0:valueStartIdx]
+			cssLine.WriteString(line[0:valueStartIdx])
 		}
-		cssLine += pxToRem(line[numStartIdx:numEndIdx])
+		cssLine.WriteString(pxToRem(line[numStartIdx:numEndIdx]))
 		if idx == len(matches)-1 {
-			cssLine += line[valueEndIdx:]
+			cssLine.WriteString(line[valueEndIdx:])
 		} else {
 			// If there are more matches for "px", add up until the start of the next match.
-			cssLine += line[valueEndIdx:matches[idx+1][0]]
+			cssLine.WriteString(line[valueEndIdx:matches[idx+1][0]])
 		}
 	}
-	return cssLine
+	return cssLine.String()
 }

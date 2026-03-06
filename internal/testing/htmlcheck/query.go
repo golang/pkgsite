@@ -29,15 +29,16 @@ func (s *selector) String() string {
 	if s == nil {
 		return "nil"
 	}
-	str := "["
+	var str strings.Builder
+	str.WriteString("[")
 	for i, atom := range s.atoms {
-		str += fmt.Sprintf("%#v", atom)
+		str.WriteString(fmt.Sprintf("%#v", atom))
 		if i != len(s.atoms)-1 {
-			str += ","
+			str.WriteString(",")
 		}
 	}
-	str += "]->" + s.next.String()
-	return str
+	str.WriteString("]->" + s.next.String())
+	return str.String()
 }
 
 // selectorAtom represents a part of a selector that individually

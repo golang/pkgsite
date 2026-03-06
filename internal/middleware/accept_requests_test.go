@@ -7,6 +7,7 @@ package middleware
 import (
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 )
 
@@ -62,20 +63,20 @@ func TestAcceptRequests_URILength(t *testing.T) {
 	defer ts.Close()
 	c := ts.Client()
 
-	var longURL string
+	var longURL strings.Builder
 	// Create a URL with 990 characters.
 	numParts := maxURILength/2 - 5
 	for range numParts {
-		longURL += "/a"
+		longURL.WriteString("/a")
 	}
 	// Without this query param, the length of longURL will be < maxURILength.
-	longURL += "?q=randomstring"
+	longURL.WriteString("?q=randomstring")
 	for _, test := range []struct {
 		name, urlPath string
 		want          bool
 	}{
 		{"short URL", "/shorturlpath", true},
-		{"long URL", longURL, false},
+		{"long URL", longURL.String(), false},
 	} {
 		called = false
 		req, err := http.NewRequest(http.MethodGet, ts.URL+test.urlPath, nil)
