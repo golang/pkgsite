@@ -273,8 +273,8 @@ func TestPathTokens(t *testing.T) {
 			}
 
 			var got2 []string
-			parts := strings.Split(tsv, "'")
-			for _, p := range parts {
+			parts := strings.SplitSeq(tsv, "'")
+			for p := range parts {
 				p = strings.TrimSpace(p)
 				if p == "" {
 					continue

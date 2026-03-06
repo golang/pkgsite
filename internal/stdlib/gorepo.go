@@ -90,7 +90,7 @@ func (remoteGoRepo) refs(ctx context.Context) ([]ref, error) {
 func gitOutputToRefs(b []byte) ([]ref, error) {
 	var refs []ref
 	b = bytes.TrimSpace(b)
-	for _, line := range bytes.Split(b, []byte("\n")) {
+	for line := range bytes.SplitSeq(b, []byte("\n")) {
 		fields := bytes.Fields(line)
 		if len(fields) != 2 {
 			return nil, fmt.Errorf("invalid line in output from git ls-remote: %q: should have two fields", line)

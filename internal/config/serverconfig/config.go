@@ -408,7 +408,7 @@ func gceMetadata(ctx context.Context, name string) (_ string, err error) {
 
 func parseCommaList(s string) []string {
 	var a []string
-	for _, p := range strings.Split(s, ",") {
+	for p := range strings.SplitSeq(s, ",") {
 		p = strings.TrimSpace(p)
 		if p != "" {
 			a = append(a, p)

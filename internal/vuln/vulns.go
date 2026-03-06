@@ -184,7 +184,7 @@ func AffectedComponents(e *osv.Entry) (pkgs, modsNoPkgs []*AffectedComponent) {
 func affectedSymbols(in []string) (e, u []string) {
 	for _, s := range in {
 		exported := true
-		for _, part := range strings.Split(s, ".") {
+		for part := range strings.SplitSeq(s, ".") {
 			if !token.IsExported(part) {
 				exported = false // exported only if all parts of the symbol name are exported.
 			}

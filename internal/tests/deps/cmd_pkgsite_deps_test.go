@@ -43,8 +43,8 @@ func TestCmdPkgsiteDeps(t *testing.T) {
 		t.Fatalf("running go list -test -deps on package golang.org/x/pkgsite/cmd/pkgsite: %v", err)
 
 	}
-	pkgs := strings.Fields(string(out))
-	for _, pkg := range pkgs {
+	pkgs := strings.FieldsSeq(string(out))
+	for pkg := range pkgs {
 		// Filter to only the dependencies that are in the pkgsite module.
 		if !strings.HasPrefix(pkg, "golang.org/x/pkgsite") {
 			continue
@@ -58,8 +58,8 @@ func TestCmdPkgsiteDeps(t *testing.T) {
 			}
 			t.Fatalf("running go list -test -deps on package %s: %v", pkg, err)
 		}
-		testmodules := strings.Fields(string(out))
-		for _, m := range testmodules {
+		testmodules := strings.FieldsSeq(string(out))
+		for m := range testmodules {
 			if !(allowedModDeps[m] || additionalAllowedTestModDeps[m]) {
 				t.Fatalf("disallowed test module dependency %q found through %q", m, pkg)
 			}
@@ -73,8 +73,8 @@ func TestCmdPkgsiteDeps(t *testing.T) {
 			}
 			t.Fatalf("running go list -deps on package %s: %v", pkg, err)
 		}
-		modules := strings.Fields(string(out))
-		for _, m := range modules {
+		modules := strings.FieldsSeq(string(out))
+		for m := range modules {
 			if !allowedModDeps[m] {
 				t.Fatalf("disallowed module dependency %q found through %q", m, pkg)
 			}

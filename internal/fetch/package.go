@@ -375,7 +375,7 @@ func extractPackageMetas(ctx context.Context, modulePath, resolvedVersion string
 // working Go programs. We continue to ignore the "." and "testdata"
 // cases, but we've seen valid Go packages with "_", so we accept those.
 func ignoredByGoTool(importPath string) bool {
-	for _, el := range strings.Split(importPath, "/") {
+	for el := range strings.SplitSeq(importPath, "/") {
 		if strings.HasPrefix(el, ".") || el == "testdata" {
 			return true
 		}
