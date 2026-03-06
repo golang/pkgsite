@@ -192,10 +192,10 @@ type Entry struct {
 	// GO-<YEAR>-<ENTRYID>.
 	ID string `json:"id"`
 	// Modified is the time the entry was last modified. Required.
-	Modified time.Time `json:"modified,omitempty"`
+	Modified time.Time `json:"modified"`
 	// Published is the time the entry should be considered to have
 	// been published.
-	Published time.Time `json:"published,omitempty"`
+	Published time.Time `json:"published"`
 	// Withdrawn is the time the entry should be considered to have
 	// been withdrawn. If the field is missing, then the entry has
 	// not been withdrawn.
