@@ -404,8 +404,8 @@ func (s *Server) reportError(ctx context.Context, err error, w http.ResponseWrit
 // (this is symmetric with the proxy url scheme)
 func parseModulePathAndVersion(requestPath string) (string, string, error) {
 	p := strings.TrimPrefix(requestPath, "/")
-	if strings.HasSuffix(p, "/@latest") {
-		modulePath := strings.TrimSuffix(p, "/@latest")
+	if before, ok := strings.CutSuffix(p, "/@latest"); ok {
+		modulePath := before
 		if modulePath == "" {
 			return "", "", fmt.Errorf("invalid module path: %q", modulePath)
 		}
