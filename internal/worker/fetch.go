@@ -321,9 +321,7 @@ func (f *Fetcher) fetchAndInsertModule(ctx context.Context, modulePath, requeste
 	// target if applicable.
 	done := internal.RequestState(ctx, "fetching")
 	var wg sync.WaitGroup
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+	wg.Go(func() {
 		start := time.Now()
 		fr := fetch.FetchModule(ctx, modulePath, requestedVersion, moduleGetter)
 		if fr == nil {
@@ -331,24 +329,20 @@ func (f *Fetcher) fetchAndInsertModule(ctx context.Context, modulePath, requeste
 		}
 		ft.FetchResult = *fr
 		ft.timings["fetch.FetchModule"] = time.Since(start)
-	}()
+	})
 	// Do not resolve the @main and @master version if proxy fetch is disabled.
 	var main string
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+	wg.Go(func() {
 		if !f.ProxyClient.FetchDisabled() {
 			main = resolvedVersion(ctx, modulePath, internal.MainVersion, moduleGetter)
 		}
-	}()
+	})
 	var master string
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+	wg.Go(func() {
 		if !f.ProxyClient.FetchDisabled() {
 			master = resolvedVersion(ctx, modulePath, internal.MasterVersion, moduleGetter)
 		}
-	}()
+	})
 	wg.Wait()
 	done()
 	ft.MainVersion = main
