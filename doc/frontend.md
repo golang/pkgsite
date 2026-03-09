@@ -76,6 +76,22 @@ clone of the project.
 When modifying any TypeScript code, you must run
 `go run ./devtools/cmd/static` before committing your changes.
 
+### NPM Dependency Management
+
+This project is architected to be free from a Node.js runtime dependency in
+production. Node.js and `npm` are used exclusively for development tasks such
+as linting, unit testing, and type checking.
+
+*   **Production Bundles**: The Go-based `esbuild` orchestrator (located in
+    `internal/static/static.go`) bundles TypeScript and CSS into minified
+    assets. These bundles are designed to be "dependency-free" and rely solely
+    on standard Web APIs and local modules. The generated bundles are located
+    in the `static/` directory.
+*   **Third-party Libraries**: External libraries listed in `package.json`
+    are used only for testing environments (`markdown` for `static/markdown.ts`,
+    `jest`, `js-green-licenses`, `eslint`, ...) and must not be included in
+    the production JavaScript served by the frontend.
+
 ### Testing
 
 You can test html and static asset changes by running `npm test`.
