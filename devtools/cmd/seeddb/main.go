@@ -112,7 +112,7 @@ func run(ctx context.Context, db *database.DB, proxyURL string) error {
 	}
 
 	g, gctx := errgroup.WithContext(ctx)
-	g.SetLimit(10)
+	g.SetLimit(5)
 	f := &worker.Fetcher{
 		ProxyClient:  proxyClient,
 		SourceClient: sourceClient,
