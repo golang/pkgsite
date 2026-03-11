@@ -21,6 +21,7 @@ import (
 
 	"github.com/google/safehtml/template"
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/api"
 	"golang.org/x/pkgsite/internal/config"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/experiment"
@@ -235,6 +236,7 @@ func (s *Server) Install(handle func(string, http.Handler), cacher Cacher, authV
 	handle("GET /golang.org/x", s.staticPageHandler("subrepo", "Sub-repositories"))
 	handle("GET /files/", http.StripPrefix("/files", s.fileMux))
 	handle("GET /vuln/", vulnHandler)
+	handle("GET /v1/package/", s.errorHandler(api.ServePackage))
 	handle("/opensearch.xml", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		serveFileFS(w, r, s.staticFS, "shared/opensearch.xml")
 	}))

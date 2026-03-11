@@ -45,21 +45,21 @@ func TestParseParams(t *testing.T) {
 	}{
 		{
 			name:   "PackageParams",
-			values: url.Values{"module": {"m"}, "version": {"v1.0.0"}, "goos": {"linux"}, "examples": {"true"}},
+			values: url.Values{"module": {"m"}, "version": {"v1.0.0"}, "goos": {"linux"}, "imports": {"true"}},
 			dst:    &PackageParams{},
 			want: &PackageParams{
-				Module:   "m",
-				Version:  "v1.0.0",
-				GOOS:     "linux",
-				Examples: true,
+				Module:  "m",
+				Version: "v1.0.0",
+				GOOS:    "linux",
+				Imports: true,
 			},
 		},
 		{
 			name:   "Boolean presence",
-			values: url.Values{"examples": {"true"}, "licenses": {"1"}},
+			values: url.Values{"imports": {"true"}, "licenses": {"1"}},
 			dst:    &PackageParams{},
 			want: &PackageParams{
-				Examples: true,
+				Imports:  true,
 				Licenses: true,
 			},
 		},
@@ -74,15 +74,15 @@ func TestParseParams(t *testing.T) {
 		},
 		{
 			name:   "Empty bool",
-			values: url.Values{"examples": {""}},
+			values: url.Values{"imports": {""}},
 			dst:    &PackageParams{},
 			want: &PackageParams{
-				Examples: false,
+				Imports: false,
 			},
 		},
 		{
 			name:    "Invalid bool (on)",
-			values:  url.Values{"examples": {"on"}},
+			values:  url.Values{"imports": {"on"}},
 			dst:     &PackageParams{},
 			wantErr: true,
 		},
@@ -124,7 +124,7 @@ func TestParseParams(t *testing.T) {
 		},
 		{
 			name:    "Malformed bool",
-			values:  url.Values{"examples": {"maybe"}},
+			values:  url.Values{"imports": {"maybe"}},
 			dst:     &PackageParams{},
 			wantErr: true,
 		},

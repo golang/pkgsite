@@ -25,7 +25,7 @@ type PackageParams struct {
 	GOOS     string `form:"goos"`
 	GOARCH   string `form:"goarch"`
 	Doc      string `form:"doc"`
-	Examples bool   `form:"examples"`
+	Imports  bool   `form:"imports"`
 	Licenses bool   `form:"licenses"`
 }
 
@@ -36,7 +36,6 @@ type SymbolsParams struct {
 	GOOS    string `form:"goos"`
 	GOARCH  string `form:"goarch"`
 	ListParams
-	Examples bool `form:"examples"`
 }
 
 // ImportedByParams are query parameters for /v1/imported-by/{path}.
