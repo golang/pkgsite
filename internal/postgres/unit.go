@@ -277,6 +277,11 @@ func (db *DB) GetUnit(ctx context.Context, um *internal.UnitMeta, fields interna
 	return u, nil
 }
 
+// GetModulePackages returns a list of packages in the given module version.
+func (db *DB) GetModulePackages(ctx context.Context, modulePath, version string) ([]*internal.PackageMeta, error) {
+	return getPackagesInUnit(ctx, db.db, modulePath, modulePath, version, -1, db.bypassLicenseCheck)
+}
+
 func (db *DB) getUnitID(ctx context.Context, fullPath, modulePath, resolvedVersion string) (_ int, _ bool, err error) {
 	defer derrors.WrapStack(&err, "getUnitID(ctx, %q, %q, %q)", fullPath, modulePath, resolvedVersion)
 	defer stats.Elapsed(ctx, "getUnitID")()

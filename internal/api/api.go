@@ -283,6 +283,62 @@ func ServeModuleVersions(w http.ResponseWriter, r *http.Request, ds internal.Dat
 	return serveJSON(w, http.StatusOK, resp)
 }
 
+// ServeModulePackages handles requests for the v1 module packages endpoint.
+func ServeModulePackages(w http.ResponseWriter, r *http.Request, ds internal.DataSource) (err error) {
+	defer derrors.Wrap(&err, "ServeModulePackages")
+
+	modulePath := strings.TrimPrefix(r.URL.Path, "/v1/packages/")
+	if modulePath == "" {
+		return serveErrorJSON(w, http.StatusBadRequest, "missing module path", nil)
+	}
+
+	var params PackagesParams
+	if err := ParseParams(r.URL.Query(), &params); err != nil {
+		return serveErrorJSON(w, http.StatusBadRequest, err.Error(), nil)
+	}
+
+	requestedVersion := params.Version
+	if requestedVersion == "" {
+		requestedVersion = version.Latest
+	}
+
+	metas, err := ds.GetModulePackages(r.Context(), modulePath, requestedVersion)
+	if err != nil {
+		if errors.Is(err, derrors.NotFound) {
+			return serveErrorJSON(w, http.StatusNotFound, err.Error(), nil)
+		}
+		return err
+	}
+
+	// TODO: Handle params.Token and params.Filter.
+	// For now, we just use params.Limit to limit the number of packages returned.
+	limit := params.Limit
+	if limit <= 0 {
+		limit = 100
+	}
+	if limit > len(metas) {
+		limit = len(metas)
+	}
+
+	var items []Package
+	for _, m := range metas[:limit] {
+		items = append(items, Package{
+			Path:              m.Path,
+			ModulePath:        modulePath,
+			ModuleVersion:     requestedVersion,
+			Synopsis:          m.Synopsis,
+			IsStandardLibrary: stdlib.Contains(modulePath),
+		})
+	}
+
+	resp := PaginatedResponse[Package]{
+		Items: items,
+		Total: len(metas),
+	}
+
+	return serveJSON(w, http.StatusOK, resp)
+}
+
 // needsResolution reports whether the version string is a sentinel like "latest" or "master".
 func needsResolution(v string) bool {
 	return v == version.Latest || v == version.Master || v == version.Main

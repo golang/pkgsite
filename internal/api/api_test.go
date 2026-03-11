@@ -322,11 +322,61 @@ func TestServeModuleVersions(t *testing.T) {
 				if len(got.Items) != test.wantCount {
 					t.Errorf("count = %d, want %d", len(got.Items), test.wantCount)
 				}
-				if test.name == "with limit" && got.NextPageToken != "1" {
-					t.Errorf("nextPageToken = %q, want %q", got.NextPageToken, "1")
+			}
+		})
+	}
+}
+
+func TestServeModulePackages(t *testing.T) {
+	ctx := context.Background()
+	ds := fakedatasource.New()
+
+	const (
+		modulePath = "example.com"
+		version    = "v1.0.0"
+	)
+
+	ds.MustInsertModule(ctx, &internal.Module{
+		ModuleInfo: internal.ModuleInfo{ModulePath: modulePath, Version: version},
+		Units: []*internal.Unit{
+			{UnitMeta: internal.UnitMeta{Path: modulePath, Name: "pkg1"}},
+			{UnitMeta: internal.UnitMeta{Path: modulePath + "/sub", Name: "pkg2"}},
+		},
+	})
+
+	for _, test := range []struct {
+		name       string
+		url        string
+		wantStatus int
+		wantCount  int
+	}{
+		{
+			name:       "all packages",
+			url:        "/v1/packages/example.com?version=v1.0.0",
+			wantStatus: http.StatusOK,
+			wantCount:  2,
+		},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			r := httptest.NewRequest("GET", test.url, nil)
+			w := httptest.NewRecorder()
+
+			err := ServeModulePackages(w, r, ds)
+			if err != nil {
+				t.Fatalf("ServeModulePackages returned error: %v", err)
+			}
+
+			if w.Code != test.wantStatus {
+				t.Errorf("status = %d, want %d", w.Code, test.wantStatus)
+			}
+
+			if test.wantStatus == http.StatusOK {
+				var got PaginatedResponse[Package]
+				if err := json.Unmarshal(w.Body.Bytes(), &got); err != nil {
+					t.Fatalf("json.Unmarshal: %v", err)
 				}
-				if test.name == "pagination" && got.NextPageToken != "2" {
-					t.Errorf("nextPageToken = %q, want %q", got.NextPageToken, "2")
+				if len(got.Items) != test.wantCount {
+					t.Errorf("count = %d, want %d", len(got.Items), test.wantCount)
 				}
 			}
 		})

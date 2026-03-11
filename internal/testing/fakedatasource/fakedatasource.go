@@ -309,6 +309,34 @@ func (ds *FakeDataSource) GetLatestInfo(ctx context.Context, unitPath, modulePat
 	}, nil
 }
 
+// GetModulePackages returns a list of packages in the given module version.
+func (ds *FakeDataSource) GetModulePackages(ctx context.Context, modulePath, version string) ([]*internal.PackageMeta, error) {
+	m := ds.getModule(modulePath, version)
+	if m == nil {
+		return nil, derrors.NotFound
+	}
+	var pkgs []*internal.PackageMeta
+	for _, u := range m.Units {
+		if u.IsPackage() {
+			var syn string
+			if len(u.Documentation) > 0 {
+				syn = u.Documentation[0].Synopsis
+			}
+			pkgs = append(pkgs, &internal.PackageMeta{
+				Path:              u.Path,
+				Name:              u.Name,
+				Synopsis:          syn,
+				IsRedistributable: u.IsRedistributable,
+				Licenses:          u.Licenses,
+			})
+		}
+	}
+	sort.Slice(pkgs, func(i, j int) bool {
+		return pkgs[i].Path < pkgs[j].Path
+	})
+	return pkgs, nil
+}
+
 // SearchSupport reports the search types supported by this datasource.
 func (ds *FakeDataSource) SearchSupport() internal.SearchSupport {
 	// internal/frontend.TestDetermineSearchAction depends on us returning FullSearch

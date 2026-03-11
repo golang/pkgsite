@@ -917,3 +917,27 @@ func newUnitMeta(path, modulePath, version string) *internal.UnitMeta {
 		},
 	}
 }
+
+func TestGetModulePackages(t *testing.T) {
+	t.Parallel()
+	testDB, release := acquire(t)
+	defer release()
+	ctx := context.Background()
+
+	m := sample.Module("m.com", "v1.2.3", "a", "a/b", "c")
+	MustInsertModule(ctx, t, testDB, m)
+
+	got, err := testDB.GetModulePackages(ctx, "m.com", "v1.2.3")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var gotPaths []string
+	for _, p := range got {
+		gotPaths = append(gotPaths, p.Path)
+	}
+	wantPaths := []string{"m.com/a", "m.com/a/b", "m.com/c"}
+	if diff := cmp.Diff(wantPaths, gotPaths); diff != "" {
+		t.Errorf("GetModulePackages mismatch (-want +got):\n%s", diff)
+	}
+}

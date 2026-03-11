@@ -404,3 +404,32 @@ func (ds *FetchDataSource) Search(ctx context.Context, q string, opts internal.S
 
 	return results, nil
 }
+
+// GetModulePackages returns a list of packages in the given module version.
+func (ds *FetchDataSource) GetModulePackages(ctx context.Context, modulePath, version string) ([]*internal.PackageMeta, error) {
+	m, err := ds.getModule(ctx, modulePath, version)
+	if err != nil {
+		return nil, err
+	}
+	var metas []*internal.PackageMeta
+	for _, um := range m.UnitMetas {
+		if um.IsPackage() {
+			u, err := ds.findUnit(ctx, m, um.Path)
+			if err != nil {
+				return nil, err
+			}
+			var synopsis string
+			if len(u.Documentation) > 0 {
+				synopsis = u.Documentation[0].Synopsis
+			}
+			metas = append(metas, &internal.PackageMeta{
+				Path:              u.Path,
+				Name:              u.Name,
+				Synopsis:          synopsis,
+				IsRedistributable: u.IsRedistributable,
+				Licenses:          u.Licenses,
+			})
+		}
+	}
+	return metas, nil
+}
