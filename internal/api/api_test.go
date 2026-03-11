@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -378,6 +379,162 @@ func TestServeModulePackages(t *testing.T) {
 				if len(got.Items) != test.wantCount {
 					t.Errorf("count = %d, want %d", len(got.Items), test.wantCount)
 				}
+			}
+		})
+	}
+}
+
+func TestServeSearch(t *testing.T) {
+	ctx := context.Background()
+	ds := fakedatasource.New()
+
+	ds.MustInsertModule(ctx, &internal.Module{
+		ModuleInfo: internal.ModuleInfo{ModulePath: "example.com", Version: "v1.0.0"},
+		Units: []*internal.Unit{{
+			UnitMeta: internal.UnitMeta{
+				Path:       "example.com/pkg",
+				ModuleInfo: internal.ModuleInfo{ModulePath: "example.com", Version: "v1.0.0"},
+				Name:       "pkg",
+			},
+			Documentation: []*internal.Documentation{{Synopsis: "A great package."}},
+		}},
+	})
+
+	for _, test := range []struct {
+		name       string
+		url        string
+		wantStatus int
+		wantCount  int
+	}{
+		{
+			name:       "basic search",
+			url:        "/v1/search?q=great",
+			wantStatus: http.StatusOK,
+			wantCount:  1,
+		},
+		{
+			name:       "no results",
+			url:        "/v1/search?q=nonexistent",
+			wantStatus: http.StatusOK,
+			wantCount:  0,
+		},
+		{
+			name:       "missing query",
+			url:        "/v1/search",
+			wantStatus: http.StatusBadRequest,
+		},
+		{
+			name:       "search with filter",
+			url:        "/v1/search?q=great&filter=example.com",
+			wantStatus: http.StatusOK,
+			wantCount:  1,
+		},
+		{
+			name:       "search with non-matching filter",
+			url:        "/v1/search?q=great&filter=nomatch",
+			wantStatus: http.StatusOK,
+			wantCount:  0,
+		},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			r := httptest.NewRequest("GET", test.url, nil)
+			w := httptest.NewRecorder()
+
+			err := ServeSearch(w, r, ds)
+			if err != nil {
+				t.Fatalf("ServeSearch returned error: %v", err)
+			}
+
+			if w.Code != test.wantStatus {
+				t.Errorf("%s: status = %d, want %d", test.name, w.Code, test.wantStatus)
+			}
+
+			if test.wantStatus == http.StatusOK {
+				var got PaginatedResponse[SearchResult]
+				if err := json.Unmarshal(w.Body.Bytes(), &got); err != nil {
+					t.Fatalf("%s: json.Unmarshal: %v", test.name, err)
+				}
+				if len(got.Items) != test.wantCount {
+					t.Errorf("%s: count = %d, want %d", test.name, len(got.Items), test.wantCount)
+				}
+			}
+		})
+	}
+}
+
+func TestServeSearchPagination(t *testing.T) {
+	ctx := context.Background()
+	ds := fakedatasource.New()
+
+	for i := 0; i < 10; i++ {
+		pkgPath := "example.com/pkg" + strconv.Itoa(i)
+		ds.MustInsertModule(ctx, &internal.Module{
+			ModuleInfo: internal.ModuleInfo{ModulePath: pkgPath, Version: "v1.0.0"},
+			Units: []*internal.Unit{{
+				UnitMeta: internal.UnitMeta{
+					Path:       pkgPath,
+					ModuleInfo: internal.ModuleInfo{ModulePath: pkgPath, Version: "v1.0.0"},
+					Name:       "pkg",
+				},
+				Documentation: []*internal.Documentation{{Synopsis: "Synopsis" + strconv.Itoa(i)}},
+			}},
+		})
+	}
+
+	for _, test := range []struct {
+		name          string
+		url           string
+		wantCount     int
+		wantTotal     int
+		wantNextToken string
+	}{
+		{
+			name:          "first page",
+			url:           "/v1/search?q=Synopsis&limit=3",
+			wantCount:     3,
+			wantTotal:     10,
+			wantNextToken: "3",
+		},
+		{
+			name:          "second page",
+			url:           "/v1/search?q=Synopsis&limit=3&token=3",
+			wantCount:     3,
+			wantTotal:     10,
+			wantNextToken: "6",
+		},
+		{
+			name:          "last page",
+			url:           "/v1/search?q=Synopsis&limit=3&token=9",
+			wantCount:     1,
+			wantTotal:     10,
+			wantNextToken: "",
+		},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			r := httptest.NewRequest("GET", test.url, nil)
+			w := httptest.NewRecorder()
+
+			if err := ServeSearch(w, r, ds); err != nil {
+				t.Fatalf("ServeSearch error: %v", err)
+			}
+
+			if w.Code != http.StatusOK {
+				t.Fatalf("status = %d, want 200", w.Code)
+			}
+
+			var got PaginatedResponse[SearchResult]
+			if err := json.Unmarshal(w.Body.Bytes(), &got); err != nil {
+				t.Fatalf("json.Unmarshal: %v", err)
+			}
+
+			if len(got.Items) != test.wantCount {
+				t.Errorf("count = %d, want %d", len(got.Items), test.wantCount)
+			}
+			if got.Total != test.wantTotal {
+				t.Errorf("total = %d, want %d", got.Total, test.wantTotal)
+			}
+			if got.NextPageToken != test.wantNextToken {
+				t.Errorf("nextToken = %q, want %q", got.NextPageToken, test.wantNextToken)
 			}
 		})
 	}

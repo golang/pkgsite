@@ -19,6 +19,13 @@ import (
 	"golang.org/x/pkgsite/internal/version"
 )
 
+const (
+	// maxSearchResults is the maximum number of search results to return for a search query.
+	maxSearchResults = 1000
+	// searchResultsPerPage is the number of search results to return per page for paginated search results.
+	searchResultsPerPage = 100
+)
+
 // ServePackage handles requests for the v1 package metadata endpoint.
 func ServePackage(w http.ResponseWriter, r *http.Request, ds internal.DataSource) (err error) {
 	defer derrors.Wrap(&err, "ServePackage")
@@ -206,6 +213,7 @@ func ServeModule(w http.ResponseWriter, r *http.Request, ds internal.DataSource)
 	defer derrors.Wrap(&err, "ServeModule")
 
 	modulePath := strings.TrimPrefix(r.URL.Path, "/v1/module/")
+	modulePath = strings.Trim(modulePath, "/")
 	if modulePath == "" {
 		return serveErrorJSON(w, http.StatusBadRequest, "missing module path", nil)
 	}
@@ -339,6 +347,51 @@ func ServeModulePackages(w http.ResponseWriter, r *http.Request, ds internal.Dat
 	return serveJSON(w, http.StatusOK, resp)
 }
 
+// ServeSearch handles requests for the v1 search endpoint.
+func ServeSearch(w http.ResponseWriter, r *http.Request, ds internal.DataSource) (err error) {
+	defer derrors.Wrap(&err, "ServeSearch")
+
+	var params SearchParams
+	if err := ParseParams(r.URL.Query(), &params); err != nil {
+		return serveErrorJSON(w, http.StatusBadRequest, err.Error(), nil)
+	}
+
+	if params.Query == "" {
+		return serveErrorJSON(w, http.StatusBadRequest, "missing query", nil)
+	}
+
+	dbresults, err := ds.Search(r.Context(), params.Query, internal.SearchOptions{
+		MaxResults:    maxSearchResults,
+		SearchSymbols: params.Symbol != "",
+		SymbolFilter:  params.Symbol,
+	})
+	if err != nil {
+		return err
+	}
+
+	var results []SearchResult
+	for _, r := range dbresults {
+		if params.Filter != "" {
+			if !strings.Contains(r.Synopsis, params.Filter) && !strings.Contains(r.PackagePath, params.Filter) {
+				continue
+			}
+		}
+		results = append(results, SearchResult{
+			PackagePath: r.PackagePath,
+			ModulePath:  r.ModulePath,
+			Version:     r.Version,
+			Synopsis:    r.Synopsis,
+		})
+	}
+
+	resp, err := paginate(results, params.ListParams, searchResultsPerPage)
+	if err != nil {
+		return serveErrorJSON(w, http.StatusBadRequest, err.Error(), nil)
+	}
+
+	return serveJSON(w, http.StatusOK, resp)
+}
+
 // needsResolution reports whether the version string is a sentinel like "latest" or "master".
 func needsResolution(v string) bool {
 	return v == version.Latest || v == version.Master || v == version.Main
@@ -363,6 +416,9 @@ func serveErrorJSON(w http.ResponseWriter, status int, message string, candidate
 	})
 }
 
+// paginate returns a paginated response for the given list of items and pagination parameters.
+// It uses offset-based pagination with a token that encodes the offset.
+// The default limit is used if the provided limit is non-positive.
 func paginate[T any](all []T, lp ListParams, defaultLimit int) (PaginatedResponse[T], error) {
 	limit := lp.Limit
 	if limit <= 0 {
@@ -381,10 +437,7 @@ func paginate[T any](all []T, lp ListParams, defaultLimit int) (PaginatedRespons
 	if offset > len(all) {
 		offset = len(all)
 	}
-	end := offset + limit
-	if end > len(all) {
-		end = len(all)
-	}
+	end := min(offset+limit, len(all))
 
 	var nextToken string
 	if end < len(all) {
