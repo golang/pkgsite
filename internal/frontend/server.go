@@ -243,6 +243,7 @@ func (s *Server) Install(handle func(string, http.Handler), cacher Cacher, authV
 	handle("GET /v1/versions/", s.errorHandler(api.ServeModuleVersions))
 	handle("GET /v1/packages/", s.errorHandler(api.ServeModulePackages))
 	handle("GET /v1/search", s.errorHandler(api.ServeSearch))
+	handle("GET /v1/vulns/", s.errorHandler(api.ServeVulnerabilities(s.vulnClient)))
 	handle("/opensearch.xml", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		serveFileFS(w, r, s.staticFS, "shared/opensearch.xml")
 	}))

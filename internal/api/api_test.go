@@ -16,8 +16,10 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/osv"
 	"golang.org/x/pkgsite/internal/testing/fakedatasource"
 	"golang.org/x/pkgsite/internal/testing/sample"
+	"golang.org/x/pkgsite/internal/vuln"
 )
 
 func TestServePackage(t *testing.T) {
@@ -762,6 +764,69 @@ func TestServePackageImportedBy(t *testing.T) {
 				}
 				if len(got.ImportedBy.Items) != test.wantCount {
 					t.Errorf("count = %d, want %d", len(got.ImportedBy.Items), test.wantCount)
+				}
+			}
+		})
+	}
+}
+
+func TestServeVulnerabilities(t *testing.T) {
+	ds := fakedatasource.New()
+	vc, err := vuln.NewInMemoryClient([]*osv.Entry{
+		{
+			ID:      "VULN-1",
+			Summary: "Vulnerability 1",
+			Affected: []osv.Affected{
+				{
+					Module: osv.Module{Path: "example.com"},
+					Ranges: []osv.Range{{Type: osv.RangeTypeSemver, Events: []osv.RangeEvent{{Introduced: "0"}, {Fixed: "1.1.0"}}}},
+				},
+			},
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, test := range []struct {
+		name       string
+		url        string
+		wantStatus int
+		wantCount  int
+	}{
+		{
+			name:       "all vulns",
+			url:        "/v1/vulns/example.com?version=v1.0.0",
+			wantStatus: http.StatusOK,
+			wantCount:  1,
+		},
+		{
+			name:       "no vulns",
+			url:        "/v1/vulns/example.com?version=v1.2.0",
+			wantStatus: http.StatusOK,
+			wantCount:  0,
+		},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			r := httptest.NewRequest("GET", test.url, nil)
+			w := httptest.NewRecorder()
+
+			err := ServeVulnerabilities(vc)(w, r, ds)
+			if err != nil && w.Code != test.wantStatus {
+				t.Fatalf("ServeVulnerabilities returned error: %v", err)
+			}
+
+			if w.Code != test.wantStatus {
+				t.Errorf("status = %d, want %d", w.Code, test.wantStatus)
+			}
+
+			if test.wantStatus == http.StatusOK {
+				var got PaginatedResponse[Vulnerability]
+				if err := json.Unmarshal(w.Body.Bytes(), &got); err != nil {
+					t.Fatalf("json.Unmarshal: %v", err)
+				}
+				if len(got.Items) != test.wantCount {
+					t.Errorf("count = %d, want %d", len(got.Items), test.wantCount)
 				}
 			}
 		})

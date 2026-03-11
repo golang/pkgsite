@@ -17,6 +17,7 @@ import (
 	"golang.org/x/pkgsite/internal/godoc"
 	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/version"
+	"golang.org/x/pkgsite/internal/vuln"
 )
 
 const (
@@ -458,6 +459,59 @@ func ServePackageImportedBy(w http.ResponseWriter, r *http.Request, ds internal.
 	}
 
 	return serveJSON(w, http.StatusOK, resp)
+}
+
+// ServeVulnerabilities handles requests for the v1 module vulnerabilities endpoint.
+func ServeVulnerabilities(vc *vuln.Client) func(w http.ResponseWriter, r *http.Request, ds internal.DataSource) error {
+	return func(w http.ResponseWriter, r *http.Request, ds internal.DataSource) (err error) {
+		defer derrors.Wrap(&err, "ServeVulnerabilities")
+
+		modulePath := strings.TrimPrefix(r.URL.Path, "/v1/vulns/")
+		if modulePath == "" {
+			return serveErrorJSON(w, http.StatusBadRequest, "missing module path", nil)
+		}
+
+		var params VulnParams
+		if err := ParseParams(r.URL.Query(), &params); err != nil {
+			return serveErrorJSON(w, http.StatusBadRequest, err.Error(), nil)
+		}
+
+		if vc == nil {
+			return serveErrorJSON(w, http.StatusNotImplemented, "vulnerability data not available", nil)
+		}
+
+		requestedVersion := params.Version
+		if requestedVersion == "" {
+			requestedVersion = version.Latest
+		}
+
+		// Use VulnsForPackage from internal/vuln to get vulnerabilities for the module.
+		// Passing an empty packagePath gets all vulns for the module.
+		vulns := vuln.VulnsForPackage(r.Context(), modulePath, requestedVersion, "", vc)
+
+		limit := params.Limit
+		if limit <= 0 {
+			limit = 100
+		}
+		if limit > len(vulns) {
+			limit = len(vulns)
+		}
+
+		var items []Vulnerability
+		for _, v := range vulns[:limit] {
+			items = append(items, Vulnerability{
+				ID:      v.ID,
+				Details: v.Details,
+			})
+		}
+
+		resp := PaginatedResponse[Vulnerability]{
+			Items: items,
+			Total: len(vulns),
+		}
+
+		return serveJSON(w, http.StatusOK, resp)
+	}
 }
 
 // resolveModulePath determines the correct module path for a given package path and version.
