@@ -84,3 +84,16 @@ type Vulnerability struct {
 	Details      string `json:"details"`
 	FixedVersion string `json:"fixedVersion"`
 }
+
+// Error contains detailed information about an error.
+type Error struct {
+	Code       int         `json:"code"`
+	Message    string      `json:"message"`
+	Candidates []Candidate `json:"candidates,omitempty"`
+}
+
+// Candidate represents a potential resolution for an ambiguous path.
+type Candidate struct {
+	ModulePath  string `json:"modulePath"`
+	PackagePath string `json:"packagePath"`
+}
