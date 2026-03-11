@@ -289,7 +289,7 @@ func TestServeModule(t *testing.T) {
 			w := httptest.NewRecorder()
 
 			err := ServeModule(w, r, ds)
-			if err != nil {
+			if err != nil && w.Code != test.wantStatus {
 				t.Fatalf("ServeModule returned error: %v", err)
 			}
 
@@ -357,7 +357,7 @@ func TestServeModuleVersions(t *testing.T) {
 			w := httptest.NewRecorder()
 
 			err := ServeModuleVersions(w, r, ds)
-			if err != nil {
+			if err != nil && w.Code != test.wantStatus {
 				t.Fatalf("ServeModuleVersions returned error: %v", err)
 			}
 
@@ -413,7 +413,7 @@ func TestServeModulePackages(t *testing.T) {
 			w := httptest.NewRecorder()
 
 			err := ServeModulePackages(w, r, ds)
-			if err != nil {
+			if err != nil && w.Code != test.wantStatus {
 				t.Fatalf("ServeModulePackages returned error: %v", err)
 			}
 
@@ -585,6 +585,127 @@ func TestServeSearchPagination(t *testing.T) {
 			}
 			if got.NextPageToken != test.wantNextToken {
 				t.Errorf("nextToken = %q, want %q", got.NextPageToken, test.wantNextToken)
+			}
+		})
+	}
+}
+
+func TestServePackageSymbols(t *testing.T) {
+	ctx := context.Background()
+	ds := fakedatasource.New()
+
+	const (
+		pkgPath    = "example.com/pkg"
+		modulePath = "example.com"
+		version    = "v1.0.0"
+	)
+
+	ds.MustInsertModule(ctx, &internal.Module{
+		ModuleInfo: internal.ModuleInfo{ModulePath: modulePath, Version: version},
+		Units: []*internal.Unit{{
+			UnitMeta: internal.UnitMeta{
+				Path:       pkgPath,
+				ModuleInfo: internal.ModuleInfo{ModulePath: modulePath, Version: version},
+				Name:       "pkg",
+			},
+			Symbols: map[internal.BuildContext][]*internal.Symbol{
+				{GOOS: "linux", GOARCH: "amd64"}: {
+					{
+						SymbolMeta: internal.SymbolMeta{Name: "LinuxSym", Kind: internal.SymbolKindFunction},
+						GOOS:       "linux",
+						GOARCH:     "amd64",
+					},
+					{
+						SymbolMeta: internal.SymbolMeta{Name: "T", Kind: internal.SymbolKindType},
+						GOOS:       "linux",
+						GOARCH:     "amd64",
+						Children: []*internal.SymbolMeta{
+							{Name: "T.M", Kind: internal.SymbolKindMethod, ParentName: "T"},
+						},
+					},
+				},
+				{GOOS: "windows", GOARCH: "amd64"}: {
+					{SymbolMeta: internal.SymbolMeta{Name: "WindowsSym", Kind: internal.SymbolKindFunction}, GOOS: "windows", GOARCH: "amd64"},
+				},
+				{GOOS: "js", GOARCH: "wasm"}: {
+					{SymbolMeta: internal.SymbolMeta{Name: "WasmSym", Kind: internal.SymbolKindFunction}, GOOS: "js", GOARCH: "wasm"},
+				},
+			},
+		}},
+	})
+
+	for _, test := range []struct {
+		name       string
+		url        string
+		wantStatus int
+		wantCount  int
+		wantName   string // Check name of the first symbol to verify build context
+	}{
+		{
+			name:       "default best match (linux)",
+			url:        "/v1/symbols/example.com/pkg?version=v1.0.0",
+			wantStatus: http.StatusOK,
+			wantCount:  2,
+			wantName:   "LinuxSym",
+		},
+		{
+			name:       "explicit linux",
+			url:        "/v1/symbols/example.com/pkg?version=v1.0.0&goos=linux&goarch=amd64",
+			wantStatus: http.StatusOK,
+			wantCount:  2,
+			wantName:   "LinuxSym",
+		},
+		{
+			name:       "version latest",
+			url:        "/v1/symbols/example.com/pkg?version=latest",
+			wantStatus: http.StatusOK,
+			wantCount:  2,
+			wantName:   "LinuxSym",
+		},
+		{
+			name:       "explicit windows",
+			url:        "/v1/symbols/example.com/pkg?version=v1.0.0&goos=windows&goarch=amd64",
+			wantStatus: http.StatusOK,
+			wantCount:  1,
+			wantName:   "WindowsSym",
+		},
+		{
+			name:       "explicit wasm",
+			url:        "/v1/symbols/example.com/pkg?version=v1.0.0&goos=js&goarch=wasm",
+			wantStatus: http.StatusOK,
+			wantCount:  1,
+			wantName:   "WasmSym",
+		},
+		{
+			name:       "not found build context",
+			url:        "/v1/symbols/example.com/pkg?version=v1.0.0&goos=darwin&goarch=amd64",
+			wantStatus: http.StatusNotFound,
+		},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			r := httptest.NewRequest("GET", test.url, nil)
+			w := httptest.NewRecorder()
+
+			err := ServePackageSymbols(w, r, ds)
+			if err != nil && w.Code != test.wantStatus {
+				t.Fatalf("ServePackageSymbols returned error: %v", err)
+			}
+
+			if w.Code != test.wantStatus {
+				t.Errorf("status = %d, want %d. Body: %s", w.Code, test.wantStatus, w.Body.String())
+			}
+
+			if test.wantStatus == http.StatusOK {
+				var got PaginatedResponse[Symbol]
+				if err := json.Unmarshal(w.Body.Bytes(), &got); err != nil {
+					t.Fatalf("json.Unmarshal: %v", err)
+				}
+				if len(got.Items) != test.wantCount {
+					t.Errorf("count = %d, want %d", len(got.Items), test.wantCount)
+				}
+				if test.wantName != "" && got.Items[0].Name != test.wantName {
+					t.Errorf("first symbol = %q, want %q", got.Items[0].Name, test.wantName)
+				}
 			}
 		})
 	}

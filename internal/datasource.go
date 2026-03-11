@@ -95,6 +95,8 @@ type DataSource interface {
 	GetVersionsForPath(ctx context.Context, path string) ([]*ModuleInfo, error)
 	// GetModulePackages returns a list of packages in the given module version.
 	GetModulePackages(ctx context.Context, modulePath, version string) ([]*PackageMeta, error)
+	// GetSymbols returns symbols for the given unit and build context.
+	GetSymbols(ctx context.Context, pkgPath, modulePath, version string, bc BuildContext) ([]*Symbol, error)
 
 	// SearchSupport reports the search types supported by this datasource.
 	SearchSupport() SearchSupport

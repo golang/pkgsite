@@ -337,6 +337,34 @@ func (ds *FakeDataSource) GetModulePackages(ctx context.Context, modulePath, ver
 	return pkgs, nil
 }
 
+// GetSymbols returns symbols for the given unit and build context.
+func (ds *FakeDataSource) GetSymbols(ctx context.Context, pkgPath, modulePath, version string, bc internal.BuildContext) ([]*internal.Symbol, error) {
+	m := ds.getModule(modulePath, version)
+	if m == nil {
+		return nil, derrors.NotFound
+	}
+	u := findUnit(m, pkgPath)
+	if u == nil {
+		return nil, derrors.NotFound
+	}
+
+	var bcs []internal.BuildContext
+	for b := range u.Symbols {
+		if bc.Match(b) {
+			bcs = append(bcs, b)
+		}
+	}
+	if len(bcs) == 0 {
+		return nil, derrors.NotFound
+	}
+
+	sort.Slice(bcs, func(i, j int) bool {
+		return internal.CompareBuildContexts(bcs[i], bcs[j]) < 0
+	})
+
+	return u.Symbols[bcs[0]], nil
+}
+
 // SearchSupport reports the search types supported by this datasource.
 func (ds *FakeDataSource) SearchSupport() internal.SearchSupport {
 	// internal/frontend.TestDetermineSearchAction depends on us returning FullSearch

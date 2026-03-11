@@ -433,3 +433,23 @@ func (ds *FetchDataSource) GetModulePackages(ctx context.Context, modulePath, ve
 	}
 	return metas, nil
 }
+
+// GetSymbols returns symbols for the given unit and build context.
+func (ds *FetchDataSource) GetSymbols(ctx context.Context, pkgPath, modulePath, version string, bc internal.BuildContext) (_ []*internal.Symbol, err error) {
+	defer derrors.Wrap(&err, "FetchDataSource.GetSymbols(%q, %q, %q, %v)", pkgPath, modulePath, version, bc)
+
+	m, err := ds.getModule(ctx, modulePath, version)
+	if err != nil {
+		return nil, err
+	}
+	unit, err := ds.findUnit(ctx, m, pkgPath)
+	if err != nil {
+		return nil, err
+	}
+
+	doc := matchingDoc(unit.Documentation, bc)
+	if doc == nil || len(doc.API) == 0 {
+		return nil, derrors.NotFound
+	}
+	return doc.API, nil
+}
