@@ -238,6 +238,7 @@ func (s *Server) Install(handle func(string, http.Handler), cacher Cacher, authV
 	handle("GET /vuln/", vulnHandler)
 	handle("GET /v1/package/", s.errorHandler(api.ServePackage))
 	handle("GET /v1/symbols/", s.errorHandler(api.ServePackageSymbols))
+	handle("GET /v1/imported-by/", s.errorHandler(api.ServePackageImportedBy))
 	handle("GET /v1/module/", s.errorHandler(api.ServeModule))
 	handle("GET /v1/versions/", s.errorHandler(api.ServeModuleVersions))
 	handle("GET /v1/packages/", s.errorHandler(api.ServeModulePackages))

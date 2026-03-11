@@ -112,7 +112,7 @@ func TestFetchImportedByDetails(t *testing.T) {
 			pkg: pkg2,
 			wantDetails: &ImportedByDetails{
 				ImportedBy:           []*Section{{Prefix: pkg3.Path, NumLines: 0}},
-				NumImportedByDisplay: "0 (displaying 1 package, including internal and invalid packages)",
+				NumImportedByDisplay: "1",
 				Total:                1,
 			},
 		},
@@ -123,7 +123,7 @@ func TestFetchImportedByDetails(t *testing.T) {
 					{Prefix: pkg2.Path, NumLines: 0},
 					{Prefix: pkg3.Path, NumLines: 0},
 				},
-				NumImportedByDisplay: "0 (displaying 2 packages, including internal and invalid packages)",
+				NumImportedByDisplay: "2",
 				Total:                2,
 			},
 		},
@@ -161,7 +161,7 @@ func TestFetchImportedByDetails_ExceedsLimit(t *testing.T) {
 			{Prefix: "m2.com/a/p"},
 		},
 
-		NumImportedByDisplay: "0 (displaying more than 2 packages, including internal and invalid packages)",
+		NumImportedByDisplay: "3 (displaying more than 2 packages, including internal and invalid packages)",
 		Total:                3,
 	}
 	checkFetchImportedByDetails(ctx, fds, t, m.Packages()[0], wantDetails)

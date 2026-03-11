@@ -708,6 +708,66 @@ func TestServePackageSymbols(t *testing.T) {
 	}
 }
 
+func TestServePackageImportedBy(t *testing.T) {
+	ctx := context.Background()
+	ds := fakedatasource.New()
+
+	const (
+		pkgPath    = "example.com/pkg"
+		modulePath = "example.com"
+		version    = "v1.0.0"
+	)
+
+	ds.MustInsertModule(ctx, &internal.Module{
+		ModuleInfo: internal.ModuleInfo{ModulePath: modulePath, Version: version},
+		Units: []*internal.Unit{
+			{UnitMeta: internal.UnitMeta{Path: pkgPath, ModuleInfo: internal.ModuleInfo{ModulePath: modulePath, Version: version}}},
+			{
+				UnitMeta: internal.UnitMeta{Path: "example.com/other", ModuleInfo: internal.ModuleInfo{ModulePath: modulePath, Version: version}},
+				Imports:  []string{pkgPath},
+			},
+		},
+	})
+
+	for _, test := range []struct {
+		name       string
+		url        string
+		wantStatus int
+		wantCount  int
+	}{
+		{
+			name:       "all imported by",
+			url:        "/v1/imported-by/example.com/pkg?version=v1.0.0",
+			wantStatus: http.StatusOK,
+			wantCount:  1,
+		},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			r := httptest.NewRequest("GET", test.url, nil)
+			w := httptest.NewRecorder()
+
+			err := ServePackageImportedBy(w, r, ds)
+			if err != nil && w.Code != test.wantStatus {
+				t.Fatalf("ServePackageImportedBy returned error: %v", err)
+			}
+
+			if w.Code != test.wantStatus {
+				t.Errorf("status = %d, want %d", w.Code, test.wantStatus)
+			}
+
+			if test.wantStatus == http.StatusOK {
+				var got PackageImportedBy
+				if err := json.Unmarshal(w.Body.Bytes(), &got); err != nil {
+					t.Fatalf("json.Unmarshal: %v", err)
+				}
+				if len(got.ImportedBy.Items) != test.wantCount {
+					t.Errorf("count = %d, want %d", len(got.ImportedBy.Items), test.wantCount)
+				}
+			}
+		})
+	}
+}
+
 // unmarshalResponse unmarshals an API response into either
 // a *T or an *Error.
 func unmarshalResponse[T any](data []byte) (any, error) {

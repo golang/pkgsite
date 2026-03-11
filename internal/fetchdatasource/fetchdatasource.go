@@ -436,3 +436,13 @@ func (ds *FetchDataSource) GetSymbols(ctx context.Context, pkgPath, modulePath, 
 	}
 	return doc.API, nil
 }
+
+// GetImportedBy is not implemented.
+func (ds *FetchDataSource) GetImportedBy(ctx context.Context, pkgPath, modulePath string, limit int) ([]string, error) {
+	return nil, nil
+}
+
+// GetImportedByCount is not implemented.
+func (ds *FetchDataSource) GetImportedByCount(ctx context.Context, pkgPath, modulePath string) (int, error) {
+	return 0, nil
+}

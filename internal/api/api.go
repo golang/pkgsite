@@ -399,6 +399,67 @@ func ServePackageSymbols(w http.ResponseWriter, r *http.Request, ds internal.Dat
 	return serveJSON(w, http.StatusOK, resp)
 }
 
+// ServePackageImportedBy handles requests for the v1 package imported-by endpoint.
+func ServePackageImportedBy(w http.ResponseWriter, r *http.Request, ds internal.DataSource) (err error) {
+	defer derrors.Wrap(&err, "ServePackageImportedBy")
+
+	pkgPath := strings.TrimPrefix(r.URL.Path, "/v1/imported-by/")
+	if pkgPath == "" {
+		return serveErrorJSON(w, http.StatusBadRequest, "missing package path", nil)
+	}
+
+	var params ImportedByParams
+	if err := ParseParams(r.URL.Query(), &params); err != nil {
+		return serveErrorJSON(w, http.StatusBadRequest, err.Error(), nil)
+	}
+
+	requestedVersion := params.Version
+	if requestedVersion == "" {
+		requestedVersion = version.Latest
+	}
+
+	um, candidates, err := resolveModulePath(r, ds, pkgPath, params.Module, requestedVersion)
+	if err != nil {
+		if errors.Is(err, derrors.NotFound) {
+			return serveErrorJSON(w, http.StatusNotFound, err.Error(), nil)
+		}
+		return err
+	}
+	if len(candidates) > 0 {
+		return serveErrorJSON(w, http.StatusBadRequest, "ambiguous package path", candidates)
+	}
+	modulePath := um.ModulePath
+
+	limit := params.Limit
+	if limit <= 0 {
+		limit = 100
+	}
+
+	importedBy, err := ds.GetImportedBy(r.Context(), pkgPath, modulePath, limit)
+	if err != nil {
+		if errors.Is(err, derrors.NotFound) {
+			return serveErrorJSON(w, http.StatusNotFound, err.Error(), nil)
+		}
+		return err
+	}
+
+	count, err := ds.GetImportedByCount(r.Context(), pkgPath, modulePath)
+	if err != nil {
+		return err
+	}
+
+	resp := PackageImportedBy{
+		ModulePath: modulePath,
+		Version:    requestedVersion,
+		ImportedBy: PaginatedResponse[string]{
+			Items: importedBy,
+			Total: count,
+		},
+	}
+
+	return serveJSON(w, http.StatusOK, resp)
+}
+
 // resolveModulePath determines the correct module path for a given package path and version.
 // If the module path is not provided, it searches through potential candidate module paths
 // derived from the package path. If multiple valid modules contain the package, it returns

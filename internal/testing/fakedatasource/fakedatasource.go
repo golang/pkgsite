@@ -393,18 +393,18 @@ func (ds *FakeDataSource) IsExcluded(ctx context.Context, path, version string) 
 	return false
 }
 
-// GetImportedBy returns the set of packages importing the given pkgPath.
-func (ds *FakeDataSource) GetImportedBy(ctx context.Context, pkgPath, modulePath string, limit int) (paths []string, err error) {
-	importedBy := append([]string{}, ds.importedBy[pkgPath]...)
-	sort.Strings(importedBy)
-	if len(importedBy) > limit {
-		importedBy = importedBy[:limit]
+// GetImportedBy returns the paths of packages that import the given package.
+func (ds *FakeDataSource) GetImportedBy(ctx context.Context, pkgPath, modulePath string, limit int) ([]string, error) {
+	paths := ds.importedBy[pkgPath]
+	if len(paths) > limit {
+		return paths[:limit], nil
 	}
-	return importedBy, nil
+	return paths, nil
 }
 
+// GetImportedByCount returns the number of packages that import the given package.
 func (ds *FakeDataSource) GetImportedByCount(ctx context.Context, pkgPath, modulePath string) (int, error) {
-	return 0, nil
+	return len(ds.importedBy[pkgPath]), nil
 }
 
 func (ds *FakeDataSource) GetLatestMajorPathForV1Path(ctx context.Context, v1path string) (string, int, error) {

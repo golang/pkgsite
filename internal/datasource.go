@@ -97,6 +97,10 @@ type DataSource interface {
 	GetModulePackages(ctx context.Context, modulePath, version string) ([]*PackageMeta, error)
 	// GetSymbols returns symbols for the given unit and build context.
 	GetSymbols(ctx context.Context, pkgPath, modulePath, version string, bc BuildContext) ([]*Symbol, error)
+	// GetImportedBy returns the paths of packages that import the given package.
+	GetImportedBy(ctx context.Context, pkgPath, modulePath string, limit int) ([]string, error)
+	// GetImportedByCount returns the number of packages that import the given package.
+	GetImportedByCount(ctx context.Context, pkgPath, modulePath string) (int, error)
 
 	// SearchSupport reports the search types supported by this datasource.
 	SearchSupport() SearchSupport
