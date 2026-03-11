@@ -158,6 +158,60 @@ func ServePackage(w http.ResponseWriter, r *http.Request, ds internal.DataSource
 	return serveJSON(w, http.StatusOK, resp)
 }
 
+// ServeModule handles requests for the v1 module metadata endpoint.
+func ServeModule(w http.ResponseWriter, r *http.Request, ds internal.DataSource) (err error) {
+	defer derrors.Wrap(&err, "ServeModule")
+
+	modulePath := strings.TrimPrefix(r.URL.Path, "/v1/module/")
+	if modulePath == "" {
+		return serveErrorJSON(w, http.StatusBadRequest, "missing module path", nil)
+	}
+
+	var params ModuleParams
+	if err := ParseParams(r.URL.Query(), &params); err != nil {
+		return serveErrorJSON(w, http.StatusBadRequest, err.Error(), nil)
+	}
+
+	requestedVersion := params.Version
+	if requestedVersion == "" {
+		requestedVersion = version.Latest
+	}
+
+	// For modules, we can use GetUnitMeta on the module path.
+	um, err := ds.GetUnitMeta(r.Context(), modulePath, modulePath, requestedVersion)
+	if err != nil {
+		if errors.Is(err, derrors.NotFound) {
+			return serveErrorJSON(w, http.StatusNotFound, err.Error(), nil)
+		}
+		return err
+	}
+
+	resp := Module{
+		Path:              um.ModulePath,
+		Version:           um.Version,
+		IsStandardLibrary: stdlib.Contains(um.ModulePath),
+		IsRedistributable: um.IsRedistributable,
+	}
+	// RepoURL needs to be extracted from source info if available
+	if um.SourceInfo != nil {
+		resp.RepoURL = um.SourceInfo.RepoURL()
+	}
+
+	if params.Readme {
+		readme, err := ds.GetModuleReadme(r.Context(), um.ModulePath, um.Version)
+		if err == nil && readme != nil {
+			resp.Readme = &Readme{
+				Filepath: readme.Filepath,
+				Contents: readme.Contents,
+			}
+		}
+	}
+
+	// Future: handle licenses param.
+
+	return serveJSON(w, http.StatusOK, resp)
+}
+
 // needsResolution reports whether the version string is a sentinel like "latest" or "master".
 func needsResolution(v string) bool {
 	return v == version.Latest || v == version.Master || v == version.Main

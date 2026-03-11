@@ -234,9 +234,17 @@ func findUnit(m *internal.Module, path string) *internal.Unit {
 	return nil
 }
 
-// GetModuleReadme is not implemented.
+// GetModuleReadme gets the readme for the module.
 func (ds *FakeDataSource) GetModuleReadme(ctx context.Context, modulePath, resolvedVersion string) (*internal.Readme, error) {
-	return nil, nil
+	m := ds.getModule(modulePath, resolvedVersion)
+	if m == nil {
+		return nil, derrors.NotFound
+	}
+	u := findUnit(m, modulePath)
+	if u == nil {
+		return nil, nil
+	}
+	return u.Readme, nil
 }
 
 // GetLatestInfo gets information about the latest versions of a unit and module.

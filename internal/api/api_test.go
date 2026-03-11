@@ -166,3 +166,84 @@ func TestServePackage(t *testing.T) {
 		})
 	}
 }
+
+func TestServeModule(t *testing.T) {
+	ctx := context.Background()
+	ds := fakedatasource.New()
+
+	const (
+		modulePath = "example.com"
+		version    = "v1.2.3"
+	)
+
+	ds.MustInsertModule(ctx, &internal.Module{
+		ModuleInfo: internal.ModuleInfo{
+			ModulePath: modulePath,
+			Version:    version,
+		},
+		Units: []*internal.Unit{{
+			UnitMeta: internal.UnitMeta{
+				Path: modulePath,
+				ModuleInfo: internal.ModuleInfo{
+					ModulePath: modulePath,
+					Version:    version,
+				},
+			},
+			Readme: &internal.Readme{Filepath: "README.md", Contents: "Hello world"},
+		}},
+	})
+
+	for _, test := range []struct {
+		name       string
+		url        string
+		wantStatus int
+		want       *Module
+	}{
+		{
+			name:       "basic module metadata",
+			url:        "/v1/module/example.com?version=v1.2.3",
+			wantStatus: http.StatusOK,
+			want: &Module{
+				Path:    modulePath,
+				Version: version,
+			},
+		},
+		{
+			name:       "module with readme",
+			url:        "/v1/module/example.com?version=v1.2.3&readme=true",
+			wantStatus: http.StatusOK,
+			want: &Module{
+				Path:    modulePath,
+				Version: version,
+				Readme: &Readme{
+					Filepath: "README.md",
+					Contents: "Hello world",
+				},
+			},
+		},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			r := httptest.NewRequest("GET", test.url, nil)
+			w := httptest.NewRecorder()
+
+			err := ServeModule(w, r, ds)
+			if err != nil {
+				t.Fatalf("ServeModule returned error: %v", err)
+			}
+
+			if w.Code != test.wantStatus {
+				t.Errorf("status = %d, want %d", w.Code, test.wantStatus)
+			}
+
+			if test.want != nil {
+				var got Module
+				if err := json.Unmarshal(w.Body.Bytes(), &got); err != nil {
+					t.Fatalf("json.Unmarshal: %v", err)
+				}
+				if diff := cmp.Diff(test.want, &got); diff != "" {
+					t.Errorf("mismatch (-want +got):\n%s", diff)
+				}
+			}
+		})
+	}
+}

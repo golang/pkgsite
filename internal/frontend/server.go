@@ -237,6 +237,7 @@ func (s *Server) Install(handle func(string, http.Handler), cacher Cacher, authV
 	handle("GET /files/", http.StripPrefix("/files", s.fileMux))
 	handle("GET /vuln/", vulnHandler)
 	handle("GET /v1/package/", s.errorHandler(api.ServePackage))
+	handle("GET /v1/module/", s.errorHandler(api.ServeModule))
 	handle("/opensearch.xml", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		serveFileFS(w, r, s.staticFS, "shared/opensearch.xml")
 	}))
