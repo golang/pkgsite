@@ -244,7 +244,7 @@ func findUnit(m *internal.Module, path string) *internal.Unit {
 	return nil
 }
 
-// GetModuleReadme gets the readme for the module.
+// GetModuleReadme is not implemented.
 func (ds *FakeDataSource) GetModuleReadme(ctx context.Context, modulePath, resolvedVersion string) (*internal.Readme, error) {
 	m := ds.getModule(modulePath, resolvedVersion)
 	if m == nil {
@@ -397,26 +397,23 @@ func (ds *FakeDataSource) GetVersionMaps(ctx context.Context, paths []string, re
 // descending semver order if any exist. If none, it returns the 10 most
 // recent from a list of pseudo-versions sorted in descending semver order.
 func (ds *FakeDataSource) GetVersionsForPath(ctx context.Context, path string) ([]*internal.ModuleInfo, error) {
-	var infos []*internal.ModuleInfo
-
+	var targetV1Path string
 	for _, m := range ds.modules {
-		if m.ModulePath == "std" {
-			for _, u := range m.Units {
-				if u.Path == path {
-					infos = append(infos, &m.ModuleInfo)
-					continue
-				}
-			}
+		if findUnit(m, path) != nil {
+			targetV1Path = internal.V1Path(path, m.ModulePath)
+			break
 		}
-		prefix, _, _ := module.SplitPathVersion(m.ModulePath)
-		if !strings.HasPrefix(path, prefix) {
-			continue // different module
-		}
-		pathSuffix := trimSlashVersionPrefix(strings.TrimPrefix(path, prefix))
+	}
+	if targetV1Path == "" {
+		return nil, nil
+	}
+
+	var infos []*internal.ModuleInfo
+	for _, m := range ds.modules {
 		for _, u := range m.Units {
-			unitSuffix := trimSlashVersionPrefix(strings.TrimPrefix(u.Path, prefix))
-			if unitSuffix == pathSuffix {
+			if internal.V1Path(u.Path, m.ModulePath) == targetV1Path {
 				infos = append(infos, &m.ModuleInfo)
+				break
 			}
 		}
 	}
@@ -441,25 +438,6 @@ func (ds *FakeDataSource) GetVersionsForPath(ctx context.Context, path string) (
 	}
 
 	return infos, nil
-}
-
-// trimSlashVersionPrefix trims a /vN path component prefix if one is present in path,
-// and returns path unchanged otherwise.
-func trimSlashVersionPrefix(path string) string {
-	if !strings.HasPrefix(path, "/v") {
-		return path
-	}
-	trimSlash := path[len("/"):]
-	endOfPathComponent := strings.Index(trimSlash, "/")
-	if endOfPathComponent == -1 {
-		endOfPathComponent = len(trimSlash)
-	}
-	vComponent := trimSlash[:endOfPathComponent] // first component of the path
-	if m := semver.Major(vComponent); m == "" || m != vComponent {
-		return path
-	}
-	return trimSlash[endOfPathComponent:]
-
 }
 
 // InsertModule inserts m into the FakeDataSource. It is only implemented for

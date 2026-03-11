@@ -91,6 +91,8 @@ type DataSource interface {
 	// GetLatestInfo gets information about the latest versions of a unit and module.
 	// See LatestInfo for documentation.
 	GetLatestInfo(ctx context.Context, unitPath, modulePath string, latestUnitMeta *UnitMeta) (LatestInfo, error)
+	// GetVersionsForPath returns a list of versions for the given path.
+	GetVersionsForPath(ctx context.Context, path string) ([]*ModuleInfo, error)
 
 	// SearchSupport reports the search types supported by this datasource.
 	SearchSupport() SearchSupport

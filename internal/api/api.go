@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"golang.org/x/pkgsite/internal"
@@ -210,7 +211,35 @@ func ServeModule(w http.ResponseWriter, r *http.Request, ds internal.DataSource)
 		}
 	}
 
-	// Future: handle licenses param.
+	return serveJSON(w, http.StatusOK, resp)
+}
+
+// ServeModuleVersions handles requests for the v1 module versions endpoint.
+func ServeModuleVersions(w http.ResponseWriter, r *http.Request, ds internal.DataSource) (err error) {
+	defer derrors.Wrap(&err, "ServeModuleVersions")
+
+	path := strings.TrimPrefix(r.URL.Path, "/v1/versions/")
+	if path == "" {
+		return serveErrorJSON(w, http.StatusBadRequest, "missing path", nil)
+	}
+
+	var params VersionsParams
+	if err := ParseParams(r.URL.Query(), &params); err != nil {
+		return serveErrorJSON(w, http.StatusBadRequest, err.Error(), nil)
+	}
+
+	infos, err := ds.GetVersionsForPath(r.Context(), path)
+	if err != nil {
+		if errors.Is(err, derrors.NotFound) {
+			return serveErrorJSON(w, http.StatusNotFound, err.Error(), nil)
+		}
+		return err
+	}
+
+	resp, err := paginate(infos, params.ListParams, 100)
+	if err != nil {
+		return serveErrorJSON(w, http.StatusBadRequest, err.Error(), nil)
+	}
 
 	return serveJSON(w, http.StatusOK, resp)
 }
@@ -237,4 +266,39 @@ func serveErrorJSON(w http.ResponseWriter, status int, message string, candidate
 		Message:    message,
 		Candidates: candidates,
 	})
+}
+
+func paginate[T any](all []T, lp ListParams, defaultLimit int) (PaginatedResponse[T], error) {
+	limit := lp.Limit
+	if limit <= 0 {
+		limit = defaultLimit
+	}
+
+	offset := 0
+	if lp.Token != "" {
+		var err error
+		offset, err = strconv.Atoi(lp.Token)
+		if err != nil || offset < 0 {
+			return PaginatedResponse[T]{}, errors.New("invalid token")
+		}
+	}
+
+	if offset > len(all) {
+		offset = len(all)
+	}
+	end := offset + limit
+	if end > len(all) {
+		end = len(all)
+	}
+
+	var nextToken string
+	if end < len(all) {
+		nextToken = strconv.Itoa(end)
+	}
+
+	return PaginatedResponse[T]{
+		Items:         all[offset:end],
+		Total:         len(all),
+		NextPageToken: nextToken,
+	}, nil
 }

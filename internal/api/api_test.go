@@ -247,3 +247,77 @@ func TestServeModule(t *testing.T) {
 		})
 	}
 }
+
+func TestServeModuleVersions(t *testing.T) {
+	ctx := context.Background()
+	ds := fakedatasource.New()
+
+	ds.MustInsertModule(ctx, &internal.Module{
+		ModuleInfo: internal.ModuleInfo{ModulePath: "example.com", Version: "v1.0.0"},
+		Units:      []*internal.Unit{{UnitMeta: internal.UnitMeta{Path: "example.com"}}},
+	})
+	ds.MustInsertModule(ctx, &internal.Module{
+		ModuleInfo: internal.ModuleInfo{ModulePath: "example.com", Version: "v1.1.0"},
+		Units:      []*internal.Unit{{UnitMeta: internal.UnitMeta{Path: "example.com"}}},
+	})
+	ds.MustInsertModule(ctx, &internal.Module{
+		ModuleInfo: internal.ModuleInfo{ModulePath: "example.com/v2", Version: "v2.0.0"},
+		Units:      []*internal.Unit{{UnitMeta: internal.UnitMeta{Path: "example.com/v2"}}},
+	})
+
+	for _, test := range []struct {
+		name       string
+		url        string
+		wantStatus int
+		wantCount  int
+	}{
+		{
+			name:       "all versions (cross-major)",
+			url:        "/v1/versions/example.com",
+			wantStatus: http.StatusOK,
+			wantCount:  3,
+		},
+		{
+			name:       "with limit",
+			url:        "/v1/versions/example.com?limit=1",
+			wantStatus: http.StatusOK,
+			wantCount:  1,
+		},
+		{
+			name:       "pagination",
+			url:        "/v1/versions/example.com?limit=1&token=1",
+			wantStatus: http.StatusOK,
+			wantCount:  1,
+		},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			r := httptest.NewRequest("GET", test.url, nil)
+			w := httptest.NewRecorder()
+
+			err := ServeModuleVersions(w, r, ds)
+			if err != nil {
+				t.Fatalf("ServeModuleVersions returned error: %v", err)
+			}
+
+			if w.Code != test.wantStatus {
+				t.Errorf("status = %d, want %d", w.Code, test.wantStatus)
+			}
+
+			if test.wantStatus == http.StatusOK {
+				var got PaginatedResponse[internal.ModuleInfo]
+				if err := json.Unmarshal(w.Body.Bytes(), &got); err != nil {
+					t.Fatalf("json.Unmarshal: %v", err)
+				}
+				if len(got.Items) != test.wantCount {
+					t.Errorf("count = %d, want %d", len(got.Items), test.wantCount)
+				}
+				if test.name == "with limit" && got.NextPageToken != "1" {
+					t.Errorf("nextPageToken = %q, want %q", got.NextPageToken, "1")
+				}
+				if test.name == "pagination" && got.NextPageToken != "2" {
+					t.Errorf("nextPageToken = %q, want %q", got.NextPageToken, "2")
+				}
+			}
+		})
+	}
+}
