@@ -29,10 +29,6 @@ func upsertSymbolSearchDocuments(ctx context.Context, tx *database.DB,
 
 	// If a user is looking for the symbol "DB.Begin", from package
 	// database/sql, we want them to be able to find this by searching for
-	// "DB.Begin" and "sql.DB.Begin". Searching for "sql.DB", "DB", "Begin" or
-	// "sql.DB" will not return "DB.Begin".
-	// If a user is looking for the symbol "DB.Begin", from package
-	// database/sql, we want them to be able to find this by searching for
 	// "DB.Begin", "Begin", and "sql.DB.Begin". Searching for "sql.DB" or
 	// "DB" will not return "DB.Begin".
 	q := `
