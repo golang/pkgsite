@@ -26,11 +26,13 @@ steps:
         go run ./devtools/cmd/sitemap -user=cloudbuild -password="$$PASSWORD" $_ENV
     secretEnv: ['PASSWORD']
   - id: Publish
-    name: gcr.io/cloud-builders/gsutil
+    name: gcr.io/cloud-builders/gcloud
+    entrypoint: gcloud
     dir: private
     args:
+      - storage
       - cp
-      - -r
+      - --recursive
       - sitemap
       - gs://$_ENV-pkg.go.dev
 availableSecrets:
