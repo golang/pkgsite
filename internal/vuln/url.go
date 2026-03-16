@@ -12,7 +12,6 @@ import (
 	"errors"
 	"net/url"
 	"path/filepath"
-	"runtime"
 )
 
 var errNotAbsolute = errors.New("path is not absolute")
@@ -42,16 +41,4 @@ func URLToFilePath(u *url.URL) (string, error) {
 		return path, err
 	}
 	return checkAbs(path)
-}
-
-func convertFileURLPath(host, path string) (string, error) {
-	if runtime.GOOS == "windows" {
-		return "", errors.New("windows not supported")
-	}
-	switch host {
-	case "", "localhost":
-	default:
-		return "", errors.New("file URL specifies non-local host")
-	}
-	return filepath.FromSlash(path), nil
 }

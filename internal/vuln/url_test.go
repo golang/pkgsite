@@ -12,7 +12,7 @@ import (
 
 func TestURLToFilePath(t *testing.T) {
 	if runtime.GOOS == "windows" {
-		t.Skip("windows is not supported (see convertFileURLPath")
+		t.Skip("windows is not supported (see convertFileURLPath)")
 	}
 	for _, tc := range urlTests {
 		if tc.url == "" {
