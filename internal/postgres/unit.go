@@ -235,7 +235,7 @@ func (db *DB) GetUnit(ctx context.Context, um *internal.UnitMeta, fields interna
 
 	u := &internal.Unit{UnitMeta: *um}
 	if fields&internal.WithMain != 0 {
-		u, err = db.getUnitWithAllFields(ctx, um, bc)
+		u, err = db.getUnitWithAllFields(ctx, um, fields, bc)
 		if err != nil {
 			return nil, err
 		}
@@ -413,7 +413,7 @@ func getPackagesInUnit(ctx context.Context, db *database.DB, fullPath, modulePat
 	return packages, nil
 }
 
-func (db *DB) getUnitWithAllFields(ctx context.Context, um *internal.UnitMeta, bc internal.BuildContext) (_ *internal.Unit, err error) {
+func (db *DB) getUnitWithAllFields(ctx context.Context, um *internal.UnitMeta, fields internal.FieldSet, bc internal.BuildContext) (_ *internal.Unit, err error) {
 	defer derrors.WrapStack(&err, "getUnitWithAllFields(ctx, %q, %q, %q)", um.Path, um.ModulePath, um.Version)
 	defer stats.Elapsed(ctx, "getUnitWithAllFields")()
 
@@ -470,13 +470,17 @@ func (db *DB) getUnitWithAllFields(ctx context.Context, um *internal.UnitMeta, b
 			break
 		}
 	}
-	// Get README, documentation and import counts.
-	query := `
+	docSelect := "CAST(NULL AS bytea),"
+	if fields&internal.WithDocsSource != 0 {
+		docSelect = "d.source,"
+	}
+
+	query := fmt.Sprintf(`
         SELECT
 			r.file_path,
 			r.contents,
 			d.synopsis,
-			d.source,
+			%s
 			COALESCE((
 				SELECT COUNT(unit_id)
 				FROM imports
@@ -501,7 +505,7 @@ func (db *DB) getUnitWithAllFields(ctx context.Context, um *internal.UnitMeta, b
         ) d
 		ON d.unit_id = u.id
 		WHERE u.id = $2
-	`
+	`, docSelect)
 	var (
 		r internal.Readme
 		u internal.Unit
@@ -546,7 +550,7 @@ func (db *DB) getUnitWithAllFields(ctx context.Context, um *internal.UnitMeta, b
 	u.Licenses = licenseMetas
 	u.IsRedistributable = isRedistributable
 
-	if um.IsPackage() && !um.IsCommand() && doc.Source != nil {
+	if um.IsPackage() && !um.IsCommand() && bcMatched.GOOS != "" {
 		u.SymbolHistory, err = GetSymbolHistoryForBuildContext(ctx, db.db, pathID, um.ModulePath, bcMatched)
 		if err != nil {
 			return nil, err

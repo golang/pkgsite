@@ -672,7 +672,11 @@ func TestGetUnitFieldSet(t *testing.T) {
 	cleanFields := func(u *internal.Unit, fields internal.FieldSet) {
 		// Add/remove fields based on the FieldSet specified.
 		if fields&internal.WithMain != 0 {
-			u.Documentation = []*internal.Documentation{sample.Doc}
+			if fields&internal.WithDocsSource != 0 {
+				u.Documentation = []*internal.Documentation{sample.Doc}
+			} else {
+				u.Documentation = []*internal.Documentation{{GOOS: "all", GOARCH: "all", Synopsis: sample.Doc.Synopsis}}
+			}
 			u.BuildContexts = []internal.BuildContext{internal.BuildContextAll}
 			u.Readme = readme
 			u.NumImports = len(sample.Imports())
@@ -704,6 +708,11 @@ func TestGetUnitFieldSet(t *testing.T) {
 		{
 			name:   "WithMain",
 			fields: internal.WithMain,
+			want:   unit("a.com/m/dir/p", "a.com/m", "v1.2.3", "", readme, []string{}),
+		},
+		{
+			name:   "WithMain|WithDocsSource",
+			fields: internal.WithMain | internal.WithDocsSource,
 			want:   unit("a.com/m/dir/p", "a.com/m", "v1.2.3", "", readme, []string{}),
 		},
 		{
@@ -777,7 +786,7 @@ func TestGetUnitBuildContext(t *testing.T) {
 	} {
 		t.Run(fmt.Sprintf("%s-%s", test.goos, test.goarch), func(t *testing.T) {
 			bc := internal.BuildContext{GOOS: test.goos, GOARCH: test.goarch}
-			u, err := testDB.GetUnit(ctx, um, internal.WithMain, bc)
+			u, err := testDB.GetUnit(ctx, um, internal.WithMain|internal.WithDocsSource, bc)
 			if err != nil {
 				t.Fatal(err)
 			}

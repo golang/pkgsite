@@ -74,6 +74,9 @@ func ServePackage(w http.ResponseWriter, r *http.Request, ds internal.DataSource
 	if params.Imports {
 		fs |= internal.WithImports
 	}
+	if params.Doc != "" {
+		fs |= internal.WithDocsSource
+	}
 
 	bc := internal.BuildContext{GOOS: params.GOOS, GOARCH: params.GOARCH}
 	var unit *internal.Unit

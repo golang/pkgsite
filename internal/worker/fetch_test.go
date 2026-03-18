@@ -213,7 +213,7 @@ func TestFetchAndUpdateState(t *testing.T) {
 				t.Fatalf("testDB.GetUnitMeta(ctx, %q, %q) mismatch (-want +got):\n%s", test.modulePath, test.version, diff)
 			}
 
-			gotPkg, err := testDB.GetUnit(ctx, got, internal.WithMain, internal.BuildContext{})
+			gotPkg, err := testDB.GetUnit(ctx, got, internal.WithMain|internal.WithDocsSource, internal.BuildContext{})
 			if err != nil {
 				t.Fatal(err)
 			}

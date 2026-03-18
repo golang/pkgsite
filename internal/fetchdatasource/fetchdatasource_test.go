@@ -227,7 +227,7 @@ func TestBypass(t *testing.T) {
 					if err != nil {
 						t.Fatal(err)
 					}
-					got, err := ds.GetUnit(ctx, um, 0, internal.BuildContext{})
+					got, err := ds.GetUnit(ctx, um, internal.WithDocsSource, internal.BuildContext{})
 					if err != nil {
 						t.Fatal(err)
 					}
@@ -495,7 +495,7 @@ func TestGetUnit(t *testing.T) {
 				Path:       test.path,
 				ModuleInfo: internal.ModuleInfo{ModulePath: test.modulePath},
 			}
-			got, err := ds.GetUnit(ctx, um, 0, internal.BuildContext{})
+			got, err := ds.GetUnit(ctx, um, internal.WithDocsSource, internal.BuildContext{})
 			if !test.wantLoaded {
 				if err == nil {
 					t.Fatal("returned not loaded module")

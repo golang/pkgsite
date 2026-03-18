@@ -114,7 +114,7 @@ func fetchMainDetails(ctx context.Context, ds internal.DataSource, um *internal.
 	requestedVersion string, expandReadme bool, bc internal.BuildContext) (_ *MainDetails, err error) {
 	defer stats.Elapsed(ctx, "fetchMainDetails")()
 
-	unit, err := ds.GetUnit(ctx, um, internal.WithMain, bc)
+	unit, err := ds.GetUnit(ctx, um, internal.WithMain|internal.WithDocsSource, bc)
 	if err != nil {
 		return nil, err
 	}

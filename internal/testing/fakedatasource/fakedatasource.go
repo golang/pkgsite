@@ -139,8 +139,18 @@ func (ds *FakeDataSource) GetUnit(ctx context.Context, um *internal.UnitMeta, fi
 	// Since we cache the module and its units, we have to copy this unit before we modify it.
 	// It can be a shallow copy, since we're only modifying the Unit.Documentation field.
 	u2 := *u
-	if d := matchingDoc(u.Documentation, bc); d != nil {
-		u2.Documentation = []*internal.Documentation{d}
+	if fields&internal.WithDocsSource != 0 {
+		if d := matchingDoc(u.Documentation, bc); d != nil {
+			u2.Documentation = []*internal.Documentation{d}
+		} else {
+			u2.Documentation = nil
+		}
+	} else if fields&internal.WithMain != 0 {
+		if d := matchingDoc(u.Documentation, bc); d != nil {
+			u2.Documentation = []*internal.Documentation{{GOOS: d.GOOS, GOARCH: d.GOARCH, Synopsis: d.Synopsis}}
+		} else {
+			u2.Documentation = nil
+		}
 	} else {
 		u2.Documentation = nil
 	}
