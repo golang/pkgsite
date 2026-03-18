@@ -273,6 +273,7 @@ func ModuleInfo(modulePath, versionString string) *internal.ModuleInfo {
 		SourceInfo:        source.NewGitHubInfo("https://"+modulePath, "", versionString),
 		IsRedistributable: true,
 		HasGoMod:          true,
+		LatestVersion:     versionString,
 	}
 }
 
@@ -363,6 +364,7 @@ func UnitMeta(path, modulePath, version, name string, moduleIsRedistributable bo
 			CommitTime:        NowTruncated(),
 			IsRedistributable: moduleIsRedistributable,
 			SourceInfo:        source.NewGitHubInfo("https://"+modulePath, "", version),
+			LatestVersion:     version,
 		},
 	}
 }

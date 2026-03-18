@@ -92,6 +92,7 @@ func TestReFetch(t *testing.T) {
 				CommitTime:        time.Date(2019, 1, 30, 0, 0, 0, 0, time.UTC),
 				IsRedistributable: true,
 				SourceInfo:        source.NewGitHubInfo("https://"+sample.ModulePath, "", sample.VersionString),
+				LatestVersion:     version,
 			},
 			Path: sample.ModulePath + "/bar",
 			Name: "bar",
@@ -127,7 +128,8 @@ func TestReFetch(t *testing.T) {
 	if diff := cmp.Diff(want.UnitMeta, *got,
 		cmp.AllowUnexported(source.Info{}),
 		cmpopts.IgnoreFields(licenses.Metadata{}, "Coverage"),
-		cmpopts.IgnoreFields(internal.UnitMeta{}, "HasGoMod")); diff != "" {
+		cmpopts.IgnoreFields(internal.UnitMeta{}, "HasGoMod"),
+	); diff != "" {
 		t.Fatalf("testDB.GetUnitMeta(ctx, %q, %q) mismatch (-want +got):\n%s", want.ModulePath, want.Version, diff)
 	}
 
@@ -139,7 +141,8 @@ func TestReFetch(t *testing.T) {
 		cmp.AllowUnexported(source.Info{}),
 		cmpopts.IgnoreFields(internal.Unit{}, "Documentation", "BuildContexts"),
 		cmpopts.IgnoreFields(licenses.Metadata{}, "Coverage"),
-		cmpopts.IgnoreFields(internal.UnitMeta{}, "HasGoMod")); diff != "" {
+		cmpopts.IgnoreFields(internal.UnitMeta{}, "HasGoMod"),
+	); diff != "" {
 		t.Errorf("mismatch on readme (-want +got):\n%s", diff)
 	}
 	if got, want := gotPkg.Documentation, want.Documentation; got == nil || want == nil {

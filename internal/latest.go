@@ -64,6 +64,7 @@ func isDeprecated(mf *modfile.File) (bool, string) {
 
 // PopulateModuleInfo uses the LatestModuleVersions to populate fields of the given module.
 func (li *LatestModuleVersions) PopulateModuleInfo(mi *ModuleInfo) {
+	mi.LatestVersion = li.GoodVersion
 	mi.Deprecated = li.Deprecated
 	mi.DeprecationComment = li.deprecationComment
 	mi.Retracted, mi.RetractionRationale = isRetracted(li.GoModFile, mi.Version)

@@ -229,6 +229,18 @@ func TestGetVersions(t *testing.T) {
 		},
 	}
 
+	latestVersions := map[string]string{
+		stdlib.ModulePath:     "v1.14.6", // v1.15.0-beta.1 is pre-release
+		taggedModuleV3:        "v3.1.0",  // v3.2.0-beta is pre-release
+		taggedModuleV2:        "v2.0.1",
+		taggedAndPseudoModule: "v1.5.2", // v1.5.3-pre1 is pre-release
+		pseudoModule:          "v0.0.0-20200101120012-000000000000",
+		otherModule:           "v3.0.0",
+		incompatibleModule:    "v0.0.0", // v2.0.0+incompatible is incompatible
+		rootModule:            "v0.11.6",
+		nestedModule:          "v1.0.4",
+	}
+
 	for _, test := range testCases {
 		t.Run(test.name, func(t *testing.T) {
 			for _, w := range test.want {
@@ -237,13 +249,16 @@ func TestGetVersions(t *testing.T) {
 				w.IsRedistributable = mod.IsRedistributable
 				w.HasGoMod = mod.HasGoMod
 				w.SourceInfo = mod.SourceInfo
+				w.LatestVersion = latestVersions[w.ModulePath]
 			}
 
 			got, err := testDB.GetVersionsForPath(ctx, test.path)
 			if err != nil {
 				t.Fatal(err)
 			}
-			if diff := cmp.Diff(test.want, got, cmp.AllowUnexported(source.Info{})); diff != "" {
+			if diff := cmp.Diff(test.want, got,
+				cmp.AllowUnexported(source.Info{}),
+			); diff != "" {
 				t.Errorf("testDB.GetVersionsForPath(%q) mismatch (-want +got):\n%s", test.path, diff)
 			}
 		})

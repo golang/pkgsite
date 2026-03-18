@@ -92,6 +92,7 @@ func testGetUnitMeta(t *testing.T, ctx context.Context) {
 				ModulePath:        modPath,
 				Version:           version,
 				IsRedistributable: true,
+				LatestVersion:     "v1.1.0",
 			},
 			Name: name,
 		}
@@ -192,6 +193,19 @@ func testGetUnitMeta(t *testing.T, ctx context.Context) {
 				test.want.Name,
 				true,
 			)
+			latestGood := map[string]string{
+				"m.com":                                "v1.1.0",
+				"m.com/a":                              "v1.1.0",
+				"m.com/b":                              "v2.0.0+incompatible",
+				"cloud.google.com/go":                  "v0.74.0",
+				"cloud.google.com/go/pubsublite":       "v0.4.0",
+				"cloud.google.com/go/compute/metadata": "v0.0.0-20181115181204-d50f0e9b2506",
+			}
+			want.LatestVersion = latestGood[want.ModulePath]
+			if want.LatestVersion == "" {
+				// Fallback to version if not in map (e.g. stdlib)
+				want.LatestVersion = want.Version
+			}
 			want.IsRedistributable = true
 			want.CommitTime = sample.CommitTime
 			want.Retracted = test.want.Retracted
@@ -819,6 +833,7 @@ func unitNoLicenses(fullPath, modulePath, version, name string, readme *internal
 				ModulePath:        modulePath,
 				Version:           version,
 				IsRedistributable: true,
+				LatestVersion:     version,
 			},
 			Path: fullPath,
 			Name: name,

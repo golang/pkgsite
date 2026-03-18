@@ -52,6 +52,8 @@ type ModuleInfo struct {
 	HasGoMod   bool
 	SourceInfo *source.Info
 
+	// LatestVersion is the latest good version of the module.
+	LatestVersion string
 	// Deprecated describes whether the module is deprecated.
 	Deprecated bool
 	// DeprecationComment is the comment describing the deprecation, if any.

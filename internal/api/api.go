@@ -198,6 +198,7 @@ func ServePackage(w http.ResponseWriter, r *http.Request, ds internal.DataSource
 		ModuleVersion:     unit.Version,
 		Synopsis:          synopsis,
 		IsStandardLibrary: stdlib.Contains(unit.ModulePath),
+		IsLatest:          unit.Version == unit.LatestVersion,
 		GOOS:              goos,
 		GOARCH:            goarch,
 		Docs:              docs,

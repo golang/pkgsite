@@ -58,6 +58,7 @@ func TestFetchAndUpdateState(t *testing.T) {
 				CommitTime:        testProxyCommitTime,
 				SourceInfo:        source.NewGitHubInfo("https://example.com/multi", "", sample.VersionString),
 				IsRedistributable: true,
+				LatestVersion:     sample.VersionString,
 			},
 			Path: "example.com/multi/bar",
 			Name: "bar",
@@ -114,6 +115,7 @@ func TestFetchAndUpdateState(t *testing.T) {
 						CommitTime:        testProxyCommitTime,
 						SourceInfo:        source.NewGitHubInfo("https://example.com/nonredist", "", sample.VersionString),
 						IsRedistributable: true,
+						LatestVersion:     sample.VersionString,
 					},
 					Path: "example.com/nonredist/bar/baz",
 					Name: "baz",
@@ -144,6 +146,7 @@ func TestFetchAndUpdateState(t *testing.T) {
 						CommitTime:        testProxyCommitTime,
 						SourceInfo:        source.NewGitHubInfo("https://example.com/nonredist", "", sample.VersionString),
 						IsRedistributable: true,
+						LatestVersion:     sample.VersionString,
 					},
 					Path: "example.com/nonredist/unk",
 					Name: "unk",
@@ -168,6 +171,7 @@ func TestFetchAndUpdateState(t *testing.T) {
 						CommitTime:        testProxyCommitTime,
 						SourceInfo:        source.NewGitHubInfo("https://"+buildConstraintsModulePath, "", sample.VersionString),
 						IsRedistributable: true,
+						LatestVersion:     "v1.0.0",
 					},
 					Path: buildConstraintsModulePath + "/cpu",
 					Name: "cpu",
@@ -209,7 +213,10 @@ func TestFetchAndUpdateState(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			if diff := cmp.Diff(test.want.UnitMeta, *got, cmpopts.EquateEmpty(), cmp.AllowUnexported(source.Info{})); diff != "" {
+			if diff := cmp.Diff(test.want.UnitMeta, *got,
+				cmpopts.EquateEmpty(),
+				cmp.AllowUnexported(source.Info{}),
+			); diff != "" {
 				t.Fatalf("testDB.GetUnitMeta(ctx, %q, %q) mismatch (-want +got):\n%s", test.modulePath, test.version, diff)
 			}
 
@@ -223,10 +230,9 @@ func TestFetchAndUpdateState(t *testing.T) {
 			if diff := cmp.Diff(test.want, gotPkg,
 				cmpopts.EquateEmpty(),
 				cmp.AllowUnexported(source.Info{}),
-				cmpopts.IgnoreFields(internal.Unit{}, "Documentation", "BuildContexts"),
-				cmpopts.IgnoreFields(internal.Unit{}, "SymbolHistory"),
-				cmpopts.IgnoreFields(internal.Unit{}, "Subdirectories")); diff != "" {
-				t.Errorf("mismatch on readme (-want +got):\n%s", diff)
+				cmpopts.IgnoreFields(internal.Unit{}, "Documentation", "BuildContexts", "SymbolHistory", "Subdirectories"),
+			); diff != "" {
+				t.Errorf("mismatch on unit (-want +got):\n%s", diff)
 			}
 			if got, want := gotPkg.Documentation, test.want.Documentation; got == nil || want == nil {
 				if !cmp.Equal(got, want) {

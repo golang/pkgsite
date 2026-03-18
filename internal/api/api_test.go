@@ -30,12 +30,20 @@ func TestServePackage(t *testing.T) {
 	)
 
 	ds.MustInsertModule(ctx, &internal.Module{
-		ModuleInfo: internal.ModuleInfo{ModulePath: "example.com", Version: version},
+		ModuleInfo: internal.ModuleInfo{
+			ModulePath:    "example.com",
+			Version:       version,
+			LatestVersion: "v1.2.4",
+		},
 		Units: []*internal.Unit{{
 			UnitMeta: internal.UnitMeta{
-				Path:       "example.com/pkg",
-				ModuleInfo: internal.ModuleInfo{ModulePath: "example.com", Version: version},
-				Name:       "pkg",
+				Path: "example.com/pkg",
+				ModuleInfo: internal.ModuleInfo{
+					ModulePath:    "example.com",
+					Version:       version,
+					LatestVersion: "v1.2.4",
+				},
+				Name: "pkg",
 			},
 			Documentation: []*internal.Documentation{sample.Documentation("linux", "amd64", sample.DocContents)},
 		}},
@@ -46,8 +54,9 @@ func TestServePackage(t *testing.T) {
 			UnitMeta: internal.UnitMeta{
 				Path: pkgPath,
 				ModuleInfo: internal.ModuleInfo{
-					ModulePath: mp,
-					Version:    version,
+					ModulePath:    mp,
+					Version:       version,
+					LatestVersion: version,
 				},
 				Name: "b",
 			},
@@ -61,12 +70,37 @@ func TestServePackage(t *testing.T) {
 		}
 		ds.MustInsertModule(ctx, &internal.Module{
 			ModuleInfo: internal.ModuleInfo{
-				ModulePath: mp,
-				Version:    version,
+				ModulePath:    mp,
+				Version:       version,
+				LatestVersion: version,
 			},
 			Units: []*internal.Unit{u},
 		})
 	}
+
+	ds.MustInsertModule(ctx, &internal.Module{
+		ModuleInfo: internal.ModuleInfo{
+			ModulePath:    "example.com",
+			Version:       "v1.2.4",
+			LatestVersion: "v1.2.4",
+		},
+		Units: []*internal.Unit{{
+			UnitMeta: internal.UnitMeta{
+				Path: "example.com/pkg",
+				ModuleInfo: internal.ModuleInfo{
+					ModulePath:    "example.com",
+					Version:       "v1.2.4",
+					LatestVersion: "v1.2.4",
+				},
+				Name: "pkg",
+			},
+			Documentation: []*internal.Documentation{{
+				GOOS:     "linux",
+				GOARCH:   "amd64",
+				Synopsis: "Basic synopsis",
+			}},
+		}},
+	})
 
 	for _, test := range []struct {
 		name       string
@@ -83,6 +117,7 @@ func TestServePackage(t *testing.T) {
 				ModulePath:    "example.com",
 				ModuleVersion: version,
 				Synopsis:      "This is a package synopsis for GOOS=linux, GOARCH=amd64",
+				IsLatest:      false,
 				GOOS:          "linux",
 				GOARCH:        "amd64",
 			},
@@ -109,6 +144,7 @@ func TestServePackage(t *testing.T) {
 				ModulePath:    modulePath1,
 				ModuleVersion: version,
 				Synopsis:      "Synopsis for " + modulePath1,
+				IsLatest:      true,
 				GOOS:          "linux",
 				GOARCH:        "amd64",
 			},
@@ -122,6 +158,21 @@ func TestServePackage(t *testing.T) {
 				ModulePath:    "example.com",
 				ModuleVersion: version,
 				Synopsis:      "This is a package synopsis for GOOS=linux, GOARCH=amd64",
+				IsLatest:      false,
+				GOOS:          "linux",
+				GOARCH:        "amd64",
+			},
+		},
+		{
+			name:       "latest version",
+			url:        "/v1/package/example.com/pkg?version=v1.2.4",
+			wantStatus: http.StatusOK,
+			want: &Package{
+				Path:          "example.com/pkg",
+				ModulePath:    "example.com",
+				ModuleVersion: "v1.2.4",
+				Synopsis:      "Basic synopsis",
+				IsLatest:      true,
 				GOOS:          "linux",
 				GOARCH:        "amd64",
 			},
@@ -161,7 +212,6 @@ func TestServePackage(t *testing.T) {
 					if err := json.Unmarshal(w.Body.Bytes(), &got); err != nil {
 						t.Fatalf("json.Unmarshal Package: %v", err)
 					}
-					got.IsLatest = false
 					if diff := cmp.Diff(want, &got); diff != "" {
 						t.Errorf("mismatch (-want +got):\n%s", diff)
 					}

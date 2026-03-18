@@ -108,7 +108,9 @@ func checkModule(ctx context.Context, t *testing.T, db *DB, want *internal.Modul
 	if err != nil {
 		t.Fatal(err)
 	}
-	if diff := cmp.Diff(want.ModuleInfo, *got, cmp.AllowUnexported(source.Info{})); diff != "" {
+	if diff := cmp.Diff(want.ModuleInfo, *got,
+		cmp.AllowUnexported(source.Info{}),
+	); diff != "" {
 		t.Fatalf("testDB.GetModuleInfo(%q, %q) mismatch (-want +got):\n%s", want.ModulePath, want.Version, diff)
 	}
 

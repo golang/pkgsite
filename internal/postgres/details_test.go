@@ -180,6 +180,11 @@ func TestPostgres_GetModuleInfo(t *testing.T) {
 		},
 	}
 
+	latestGoodVersions := map[string]string{
+		"mod.1": "v1.1.0",
+		"mod.2": "v1.1.0",
+	}
+
 	for _, test := range testCases {
 		t.Run(test.name, func(t *testing.T) {
 			for _, v := range test.modules {
@@ -200,7 +205,11 @@ func TestPostgres_GetModuleInfo(t *testing.T) {
 				t.Fatal("wantIndex too large")
 			}
 			wantVI := &test.modules[test.wantIndex].ModuleInfo
-			if diff := cmp.Diff(wantVI, gotVI, cmpopts.EquateEmpty(), cmp.AllowUnexported(source.Info{})); diff != "" {
+			wantVI.LatestVersion = latestGoodVersions[wantVI.ModulePath]
+			if diff := cmp.Diff(wantVI, gotVI,
+				cmpopts.EquateEmpty(),
+				cmp.AllowUnexported(source.Info{}),
+			); diff != "" {
 				t.Errorf("mismatch (-want +got):\n%s", diff)
 			}
 		})
