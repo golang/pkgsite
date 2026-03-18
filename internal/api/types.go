@@ -4,7 +4,7 @@
 
 package api
 
-// Package represents the response for /v1/package/{packagePath}.
+// Package is the response for /v1/package/{packagePath}.
 type Package struct {
 	Path              string    `json:"path"`
 	ModulePath        string    `json:"modulePath"`
@@ -19,7 +19,7 @@ type Package struct {
 	Licenses          []License `json:"licenses,omitempty"`
 }
 
-// License represents license information in API responses.
+// License is license information in API responses.
 type License struct {
 	Types    []string `json:"types"`
 	FilePath string   `json:"filePath"`
@@ -33,14 +33,14 @@ type PaginatedResponse[T any] struct {
 	NextPageToken string `json:"nextPageToken,omitempty"`
 }
 
-// PackageImportedBy represents the response for /v1/imported-by/{packagePath}.
+// PackageImportedBy is the response for /v1/imported-by/{packagePath}.
 type PackageImportedBy struct {
 	ModulePath string                    `json:"modulePath"`
 	Version    string                    `json:"version"`
 	ImportedBy PaginatedResponse[string] `json:"importedBy"`
 }
 
-// Module represents the response for /v1/module/{modulePath}.
+// Module is the response for /v1/module/{modulePath}.
 type Module struct {
 	Path              string    `json:"path"`
 	Version           string    `json:"version"`
@@ -53,13 +53,13 @@ type Module struct {
 	Licenses          []License `json:"licenses,omitempty"`
 }
 
-// Readme represents a readme file.
+// Readme is a readme file.
 type Readme struct {
 	Filepath string `json:"filepath"`
 	Contents string `json:"contents"`
 }
 
-// Symbol represents a symbol in /v1/symbols/{packagePath}.
+// Symbol is a symbol in /v1/symbols/{packagePath}.
 type Symbol struct {
 	ModulePath string `json:"modulePath"`
 	Version    string `json:"version"`
@@ -69,7 +69,7 @@ type Symbol struct {
 	Parent     string `json:"parent,omitempty"`
 }
 
-// SearchResults represents the response for /v1/search?q={query}.
+// SearchResults is the response for /v1/search?q={query}.
 type SearchResult struct {
 	PackagePath string `json:"packagePath"`
 	ModulePath  string `json:"modulePath"`
@@ -77,7 +77,7 @@ type SearchResult struct {
 	Synopsis    string `json:"synopsis"`
 }
 
-// Vulnerability represents a vulnerability in /v1/vulnerabilities/{modulePath}.
+// Vulnerability is a vulnerability in /v1/vulnerabilities/{modulePath}.
 type Vulnerability struct {
 	ID           string `json:"id"`
 	Summary      string `json:"summary"`
@@ -92,7 +92,7 @@ type Error struct {
 	Candidates []Candidate `json:"candidates,omitempty"`
 }
 
-// Candidate represents a potential resolution for an ambiguous path.
+// Candidate is a potential resolution for an ambiguous path.
 type Candidate struct {
 	ModulePath  string `json:"modulePath"`
 	PackagePath string `json:"packagePath"`

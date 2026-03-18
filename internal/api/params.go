@@ -18,7 +18,7 @@ type ListParams struct {
 	Filter string `form:"filter"`
 }
 
-// PackageParams represents query parameters for /v1/package/{path}.
+// PackageParams are query parameters for /v1/package/{path}.
 type PackageParams struct {
 	Module   string `form:"module"`
 	Version  string `form:"version"`
@@ -29,7 +29,7 @@ type PackageParams struct {
 	Licenses bool   `form:"licenses"`
 }
 
-// SymbolsParams represents query parameters for /v1/symbols/{path}.
+// SymbolsParams are query parameters for /v1/symbols/{path}.
 type SymbolsParams struct {
 	Module  string `form:"module"`
 	Version string `form:"version"`
@@ -39,39 +39,39 @@ type SymbolsParams struct {
 	Examples bool `form:"examples"`
 }
 
-// ImportedByParams represents query parameters for /v1/imported-by/{path}.
+// ImportedByParams are query parameters for /v1/imported-by/{path}.
 type ImportedByParams struct {
 	Module  string `form:"module"`
 	Version string `form:"version"`
 	ListParams
 }
 
-// ModuleParams represents query parameters for /v1/module/{path}.
+// ModuleParams are query parameters for /v1/module/{path}.
 type ModuleParams struct {
 	Version  string `form:"version"`
 	Licenses bool   `form:"licenses"`
 	Readme   bool   `form:"readme"`
 }
 
-// VersionsParams represents query parameters for /v1/versions/{path}.
+// VersionsParams are query parameters for /v1/versions/{path}.
 type VersionsParams struct {
 	ListParams
 }
 
-// PackagesParams represents query parameters for /v1/packages/{path}.
+// PackagesParams are query parameters for /v1/packages/{path}.
 type PackagesParams struct {
 	Version string `form:"version"`
 	ListParams
 }
 
-// SearchParams represents query parameters for /v1/search.
+// SearchParams are query parameters for /v1/search.
 type SearchParams struct {
 	Query  string `form:"q"`
 	Symbol string `form:"symbol"`
 	ListParams
 }
 
-// VulnParams represents query parameters for /v1/vulns/{module}.
+// VulnParams are query parameters for /v1/vulns/{module}.
 type VulnParams struct {
 	Version string `form:"version"`
 	ListParams
@@ -79,10 +79,10 @@ type VulnParams struct {
 
 // ParseParams populates a struct from url.Values using 'form' tags.
 // dst must be a pointer to a struct. It supports embedded structs recursively,
-// pointers, slices, and basic types (string, int, int64, bool).
+// pointers, slices, and basic types (string, bool, int types).
 func ParseParams(v url.Values, dst any) error {
 	val := reflect.ValueOf(dst)
-	if val.Kind() != reflect.Ptr || val.Elem().Kind() != reflect.Struct {
+	if val.Kind() != reflect.Pointer || val.Elem().Kind() != reflect.Struct {
 		return fmt.Errorf("dst must be a pointer to a struct")
 	}
 	return parseValue(v, val.Elem())
@@ -100,7 +100,7 @@ func parseValue(v url.Values, val reflect.Value) error {
 
 		if structField.Anonymous {
 			f := field
-			if f.Kind() == reflect.Ptr {
+			if f.Kind() == reflect.Pointer {
 				if f.IsNil() {
 					if !f.CanSet() {
 						continue
@@ -153,13 +153,13 @@ func setField(field reflect.Value, tag string, vals []string) error {
 }
 
 func setAny(field reflect.Value, tag, val string) error {
-	if field.Kind() == reflect.Ptr {
-		if field.IsNil() {
-			field.Set(reflect.New(field.Type().Elem()))
-		}
-		return setAny(field.Elem(), tag, val)
+	if field.Kind() != reflect.Pointer {
+		return setSingle(field, tag, val)
 	}
-	return setSingle(field, tag, val)
+	if field.IsNil() {
+		field.Set(reflect.New(field.Type().Elem()))
+	}
+	return setAny(field.Elem(), tag, val)
 }
 
 func setSingle(field reflect.Value, tag, val string) error {
