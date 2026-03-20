@@ -21,6 +21,7 @@ main() {
   local project_id=$1
   gcloud source repos clone private private
   source private/devtools/lib.sh || { echo "Are you at repo root?"; exit 1; }
+  (cd private && go mod tidy)
   (cd private && docker_image_tag > ../_BUILD_TAG)
   private/devtools/idtoken.sh $project_id > _ID_TOKEN
 }
