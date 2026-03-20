@@ -8,7 +8,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"go/doc"
 	"net/http"
 	"strconv"
 	"strings"
@@ -157,21 +156,22 @@ func ServePackage(w http.ResponseWriter, r *http.Request, ds internal.DataSource
 			if err != nil {
 				return err
 			}
-			var formatFunc func(string) []byte
+			var tr renderer
+			var sb strings.Builder
 			switch params.Doc {
 			case "text":
-				formatFunc = dpkg.Text
+				tr = &textRenderer{fset: gpkg.Fset, w: &sb}
 			case "md", "markdown":
-				formatFunc = dpkg.Markdown
+				return errors.New("unimplemented")
 			case "html":
-				formatFunc = dpkg.HTML
+				return errors.New("unimplemented")
 			default:
 				return serveErrorJSON(w, http.StatusBadRequest, "bad doc format: need one of 'text', 'md', 'markdown' or 'html'", nil)
 			}
-			docs, err = renderDoc(dpkg, formatFunc)
-			if err != nil {
+			if err := renderDoc(dpkg, tr); err != nil {
 				return serveErrorJSON(w, http.StatusInternalServerError, err.Error(), nil)
 			}
+			docs = sb.String()
 		}
 	}
 
@@ -199,12 +199,6 @@ func ServePackage(w http.ResponseWriter, r *http.Request, ds internal.DataSource
 	}
 
 	return serveJSON(w, http.StatusOK, resp)
-}
-
-// renderDoc renders the documentation for dpkg according to format.
-// TODO(jba): implement
-func renderDoc(dpkg *doc.Package, formatFunc func(string) []byte) (string, error) {
-	return string(formatFunc("TODO")), nil
 }
 
 // ServeModule handles requests for the v1 module metadata endpoint.

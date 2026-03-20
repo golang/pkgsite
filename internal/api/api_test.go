@@ -136,7 +136,7 @@ func TestServePackage(t *testing.T) {
 				Synopsis:      "This is a package synopsis for GOOS=linux, GOARCH=amd64",
 				GOOS:          "linux",
 				GOARCH:        "amd64",
-				Docs:          "TODO\n",
+				Docs:          "package p\n\nPackage p is a package.\n\n# Links\n\n- pkg.go.dev, https://pkg.go.dev\n\nVARIABLES\n\nvar V int\n\n",
 			},
 		},
 	} {
