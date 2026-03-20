@@ -8,12 +8,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"go/doc"
 	"net/http"
 	"strconv"
 	"strings"
 
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/godoc"
 	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/version"
 )
@@ -120,6 +122,10 @@ func ServePackage(w http.ResponseWriter, r *http.Request, ds internal.DataSource
 		}
 	}
 
+	// Process documentation, including synopsis.
+	// Although unit.Documentation is a slice, it will
+	// have at most one item, the documentation matching
+	// the build context bc.
 	synopsis := ""
 	var docs string
 	goos := params.GOOS
@@ -127,13 +133,46 @@ func ServePackage(w http.ResponseWriter, r *http.Request, ds internal.DataSource
 	if len(unit.Documentation) > 0 {
 		d := unit.Documentation[0]
 		synopsis = d.Synopsis
+		// Return the more precise GOOS/GOARCH.
+		// If the user didn't provide them, use the unit's.
+		// If the user did, assume what they provided is at
+		// least as specific as the unit's, and use it.
 		if goos == "" {
 			goos = d.GOOS
 		}
 		if goarch == "" {
 			goarch = d.GOARCH
 		}
-		// TODO(jba): Add support for docs.
+		if params.Doc != "" {
+			// d.Source is an encoded AST. Decode it, then use
+			// go/doc (not pkgsite's renderer) to generate the
+			// result.
+			gpkg, err := godoc.DecodePackage(d.Source)
+			if err != nil {
+				return serveErrorJSON(w, http.StatusInternalServerError, err.Error(), nil)
+			}
+			innerPath := internal.Suffix(unit.Path, unit.ModulePath)
+			modInfo := &godoc.ModuleInfo{ModulePath: unit.ModulePath, ResolvedVersion: unit.Version}
+			dpkg, err := gpkg.DocPackage(innerPath, modInfo)
+			if err != nil {
+				return err
+			}
+			var formatFunc func(string) []byte
+			switch params.Doc {
+			case "text":
+				formatFunc = dpkg.Text
+			case "md", "markdown":
+				formatFunc = dpkg.Markdown
+			case "html":
+				formatFunc = dpkg.HTML
+			default:
+				return serveErrorJSON(w, http.StatusBadRequest, "bad doc format: need one of 'text', 'md', 'markdown' or 'html'", nil)
+			}
+			docs, err = renderDoc(dpkg, formatFunc)
+			if err != nil {
+				return serveErrorJSON(w, http.StatusInternalServerError, err.Error(), nil)
+			}
+		}
 	}
 
 	imports := unit.Imports
@@ -160,6 +199,12 @@ func ServePackage(w http.ResponseWriter, r *http.Request, ds internal.DataSource
 	}
 
 	return serveJSON(w, http.StatusOK, resp)
+}
+
+// renderDoc renders the documentation for dpkg according to format.
+// TODO(jba): implement
+func renderDoc(dpkg *doc.Package, formatFunc func(string) []byte) (string, error) {
+	return string(formatFunc("TODO")), nil
 }
 
 // ServeModule handles requests for the v1 module metadata endpoint.

@@ -14,6 +14,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/testing/fakedatasource"
+	"golang.org/x/pkgsite/internal/testing/sample"
 )
 
 func TestServePackage(t *testing.T) {
@@ -35,11 +36,7 @@ func TestServePackage(t *testing.T) {
 				ModuleInfo: internal.ModuleInfo{ModulePath: "example.com", Version: version},
 				Name:       "pkg",
 			},
-			Documentation: []*internal.Documentation{{
-				GOOS:     "linux",
-				GOARCH:   "amd64",
-				Synopsis: "Basic synopsis",
-			}},
+			Documentation: []*internal.Documentation{sample.Documentation("linux", "amd64", sample.DocContents)},
 		}},
 	})
 
@@ -84,7 +81,7 @@ func TestServePackage(t *testing.T) {
 				Path:          "example.com/pkg",
 				ModulePath:    "example.com",
 				ModuleVersion: version,
-				Synopsis:      "Basic synopsis",
+				Synopsis:      "This is a package synopsis for GOOS=linux, GOARCH=amd64",
 				GOOS:          "linux",
 				GOARCH:        "amd64",
 			},
@@ -123,9 +120,23 @@ func TestServePackage(t *testing.T) {
 				Path:          "example.com/pkg",
 				ModulePath:    "example.com",
 				ModuleVersion: version,
-				Synopsis:      "Basic synopsis",
+				Synopsis:      "This is a package synopsis for GOOS=linux, GOARCH=amd64",
 				GOOS:          "linux",
 				GOARCH:        "amd64",
+			},
+		},
+		{
+			name:       "doc",
+			url:        "/v1/package/example.com/pkg?version=v1.2.3&doc=text",
+			wantStatus: http.StatusOK,
+			want: &Package{
+				Path:          "example.com/pkg",
+				ModulePath:    "example.com",
+				ModuleVersion: version,
+				Synopsis:      "This is a package synopsis for GOOS=linux, GOARCH=amd64",
+				GOOS:          "linux",
+				GOARCH:        "amd64",
+				Docs:          "TODO\n",
 			},
 		},
 	} {
