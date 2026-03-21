@@ -106,19 +106,19 @@ func ServePackage(w http.ResponseWriter, r *http.Request, ds internal.DataSource
 			if err != nil {
 				return err
 			}
-			var tr renderer
+			var r renderer
 			var sb strings.Builder
 			switch params.Doc {
 			case "text":
-				tr = &textRenderer{fset: gpkg.Fset, w: &sb}
+				r = &textRenderer{fset: gpkg.Fset, w: &sb}
 			case "md", "markdown":
-				return errors.New("unimplemented")
+				r = &markdownRenderer{fset: gpkg.Fset, w: &sb}
 			case "html":
 				return errors.New("unimplemented")
 			default:
 				return serveErrorJSON(w, http.StatusBadRequest, "bad doc format: need one of 'text', 'md', 'markdown' or 'html'", nil)
 			}
-			if err := renderDoc(dpkg, tr); err != nil {
+			if err := renderDoc(dpkg, r); err != nil {
 				return serveErrorJSON(w, http.StatusInternalServerError, err.Error(), nil)
 			}
 			docs = sb.String()

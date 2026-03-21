@@ -14,6 +14,9 @@ import (
 	"io"
 	"slices"
 	"strings"
+
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 // A renderer prints symbol documentation for a package.
@@ -92,6 +95,77 @@ func (r *textRenderer) emit(comment string, node ast.Node) {
 }
 
 func (r *textRenderer) printf(format string, args ...any) {
+	if r.err != nil {
+		return
+	}
+	_, err := fmt.Fprintf(r.w, format, args...)
+	if err != nil {
+		r.err = err
+	}
+}
+
+type markdownRenderer struct {
+	fset    *token.FileSet
+	w       io.Writer
+	pkg     *doc.Package
+	parser  *comment.Parser
+	printer *comment.Printer
+	caser   cases.Caser
+	err     error
+}
+
+func (r *markdownRenderer) start(pkg *doc.Package) {
+	r.pkg = pkg
+	r.parser = pkg.Parser()
+	r.printer = pkg.Printer()
+	r.printer.HeadingLevel = 3
+	r.caser = cases.Title(language.English)
+
+	r.printf("# package %s\n", pkg.Name)
+	if pkg.Doc != "" {
+		r.printf("\n")
+		_, err := r.w.Write(r.printer.Markdown(r.parser.Parse(pkg.Doc)))
+		if err != nil {
+			r.err = err
+		}
+	}
+	r.printf("\n")
+}
+
+func (r *markdownRenderer) end() error { return r.err }
+
+func (r *markdownRenderer) startSection(name string) {
+	if name == "" {
+		return
+	}
+	r.printf("## %s\n\n", r.caser.String(name))
+}
+
+func (r *markdownRenderer) endSection() {}
+
+func (r *markdownRenderer) emit(comment string, node ast.Node) {
+	if r.err != nil {
+		return
+	}
+	r.printf("```\n")
+	err := format.Node(r.w, r.fset, node)
+	if err != nil {
+		r.err = err
+		return
+	}
+	r.printf("\n```\n")
+	formatted := r.printer.Markdown(r.parser.Parse(comment))
+	if len(formatted) > 0 {
+		_, err = r.w.Write(formatted)
+		if err != nil {
+			r.err = err
+			return
+		}
+	}
+	r.printf("\n")
+}
+
+func (r *markdownRenderer) printf(format string, args ...any) {
 	if r.err != nil {
 		return
 	}

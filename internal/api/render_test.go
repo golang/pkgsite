@@ -45,17 +45,24 @@ func TestRenderDoc(t *testing.T) {
 	}
 
 	var sb strings.Builder
-	tr := &textRenderer{fset: decoded.Fset, w: &sb}
-	if err := renderDoc(dpkg, tr); err != nil {
-		t.Fatal(err)
+	check := func(t *testing.T, name string, r renderer) {
+		sb.Reset()
+		t.Run(name, func(t *testing.T) {
+			if err := renderDoc(dpkg, r); err != nil {
+				t.Fatal(err)
+			}
+			got := strings.TrimSpace(sb.String())
+			wantBytes, err := os.ReadFile(filepath.FromSlash("testdata/" + name + ".golden"))
+			if err != nil {
+				t.Fatal(err)
+			}
+			want := strings.TrimSpace(string(wantBytes))
+			if diff := cmp.Diff(want, got); diff != "" {
+				t.Errorf("mismatch (-want +got):\n%s", diff)
+			}
+		})
 	}
-	got := strings.TrimSpace(sb.String())
-	wantBytes, err := os.ReadFile(filepath.FromSlash("testdata/text.golden"))
-	if err != nil {
-		t.Fatal(err)
-	}
-	want := strings.TrimSpace(string(wantBytes))
-	if diff := cmp.Diff(want, got); diff != "" {
-		t.Errorf("mismatch (-want +got):\n%s", diff)
-	}
+
+	check(t, "text", &textRenderer{fset: decoded.Fset, w: &sb})
+	check(t, "markdown", &markdownRenderer{fset: decoded.Fset, w: &sb})
 }

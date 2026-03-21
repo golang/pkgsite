@@ -1,0 +1,105 @@
+# package pkg
+
+Package pkg has every form of declaration.
+
+### Heading {#hdr-Heading}
+
+Search [Google](https://google.com) for details.
+
+### Links {#hdr-Links}
+
+  - pkgsite repo, [https://go.googlesource.com/pkgsite](https://go.googlesource.com/pkgsite)
+  - Play with Go, [https://play-with-go.dev](https://play-with-go.dev)
+
+## Constants
+
+```
+const (
+	X = 1
+	Y = 2
+)
+```
+Several constants.
+
+```
+const C = 1
+```
+C is a shorthand for 1.
+
+## Variables
+
+```
+var V = 2
+```
+V is a variable.
+
+## Functions
+
+```
+func Add(x int) int
+```
+Add adds 1 to x.
+
+```
+func F()
+```
+F is a function.
+
+## Types
+
+```
+type A int
+```
+
+```
+type B bool
+```
+
+```
+type I1 interface {
+	M1()
+}
+```
+I1 is an interface.
+
+```
+type I2 interface {
+	I1
+	M2()
+}
+```
+
+```
+type S1 struct {
+	F int // field
+}
+```
+S1 is a struct.
+
+```
+type S2 struct {
+	S1
+	G int
+}
+```
+S2 is another struct.
+
+```
+type T int
+```
+T is a type.
+
+```
+const CT T = 3
+```
+CT is a typed constant. They appear after their type.
+
+```
+func TF() T
+```
+TF is a constructor for T.
+
+```
+func (T) M()
+```
+M is a method of T. BUG(xxx): this verifies that notes are rendered.

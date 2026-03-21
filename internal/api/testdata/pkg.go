@@ -4,10 +4,16 @@
 
 // Package pkg has every form of declaration.
 //
+// # Heading
+//
+// Search [Google] for details.
+//
 // # Links
 //
 //   - pkgsite repo, https://go.googlesource.com/pkgsite
 //   - Play with Go, https://play-with-go.dev
+//
+// [Google]: https://google.com
 package pkg
 
 // C is a shorthand for 1.
