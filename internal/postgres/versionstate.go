@@ -12,7 +12,6 @@ import (
 	"sort"
 	"time"
 
-	"github.com/lib/pq"
 	"go.opencensus.io/trace"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/database"
@@ -303,8 +302,8 @@ const moduleVersionStateColumns = `
 func scanModuleVersionState(scan func(dest ...any) error) (*internal.ModuleVersionState, error) {
 	var (
 		v               internal.ModuleVersionState
-		indexTimestamp  pq.NullTime
-		lastProcessedAt pq.NullTime
+		indexTimestamp  sql.NullTime
+		lastProcessedAt sql.NullTime
 		numPackages     sql.NullInt64
 		hasGoMod        sql.NullBool
 	)

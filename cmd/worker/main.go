@@ -16,7 +16,7 @@ import (
 	"cloud.google.com/go/profiler"
 	"github.com/go-redis/redis/v8"
 	"github.com/google/safehtml/template"
-	_ "github.com/jackc/pgx/v4/stdlib" // for pgx driver
+	_ "github.com/jackc/pgx/v5/stdlib" // for pgx driver
 	"go.opencensus.io/plugin/ochttp"
 	octrace "go.opencensus.io/trace"
 	"golang.org/x/pkgsite/cmd/internal/cmdconfig"

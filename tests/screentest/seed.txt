@@ -18,7 +18,7 @@ github.com/hashicorp/vault/api@v1.0.3
 github.com/hashicorp/vault/api@v1.1.1
 github.com/hashicorp/vault/api/auth/approle@latest
 github.com/hashicorp/vault/api/auth/kubernetes@latest
-github.com/jackc/pgx/v4@v4.11.0
+github.com/jackc/pgx/v5@v4.11.0
 github.com/jba/bit@v0.2.0
 github.com/julieqiu/api-demo@all
 github.com/stacklok/minder@v0.0.47
@@ -56,5 +56,5 @@ std@v1.16.3
 std@v1.16.4
 
 # This module is expected to return a 404, so that  the path will redirect
-# to github.com/jackc/pgx/v4/pgxpool.
+# to github.com/jackc/pgx/v5/pgxpool.
 github.com/jackc/pgx/pgxpool@v3.6.2+incompatible

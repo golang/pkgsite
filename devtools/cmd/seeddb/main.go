@@ -17,7 +17,7 @@ import (
 	"sync"
 	"time"
 
-	_ "github.com/jackc/pgx/v4/stdlib" // for pgx driver
+	_ "github.com/jackc/pgx/v5/stdlib" // for pgx driver
 	"go.opencensus.io/plugin/ochttp"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/config"
@@ -205,7 +205,7 @@ func fetchFunc(ctx context.Context, f *worker.Fetcher, m, v string) (err error) 
 			// We expect
 			// github.com/jackc/pgx/pgxpool@v3.6.2+incompatible
 			// to fail from seed.txt, so that it will redirect to
-			// github.com/jackc/pgx/v4/pgxpool in tests.
+			// github.com/jackc/pgx/v5/pgxpool in tests.
 			return nil
 		}
 		return err

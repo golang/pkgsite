@@ -15,7 +15,7 @@ import (
 	"cloud.google.com/go/errorreporting"
 	"cloud.google.com/go/logging"
 	"contrib.go.opencensus.io/integrations/ocsql"
-	_ "github.com/jackc/pgx/v4/stdlib" // for pgx driver
+	_ "github.com/jackc/pgx/v5/stdlib" // for pgx driver
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/config"
 	"golang.org/x/pkgsite/internal/config/dynconfig"

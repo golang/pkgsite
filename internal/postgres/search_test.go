@@ -7,6 +7,7 @@ package postgres
 import (
 	"context"
 	"crypto/md5"
+	"database/sql"
 	"encoding/binary"
 	"errors"
 	"fmt"
@@ -920,7 +921,7 @@ func getSearchDocument(ctx context.Context, db *DB, path string) (*searchDocumen
 	row := db.db.QueryRow(ctx, query, path)
 	var (
 		sd searchDocument
-		t  pq.NullTime
+		t  sql.NullTime
 	)
 	if err := row.Scan(&sd.packagePath, &sd.modulePath, &sd.version, &sd.commitTime,
 		&sd.name, &sd.synopsis, pq.Array(&sd.licenseTypes), &sd.importedByCount,

@@ -21,7 +21,7 @@ import (
 	"os"
 	"strings"
 
-	_ "github.com/jackc/pgx/v4/stdlib" // for pgx driver
+	_ "github.com/jackc/pgx/v5/stdlib" // for pgx driver
 	"golang.org/x/pkgsite/internal/config/serverconfig"
 	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/godoc"

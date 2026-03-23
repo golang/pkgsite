@@ -15,7 +15,7 @@ import (
 	"strings"
 	"time"
 
-	_ "github.com/jackc/pgx/v4/stdlib" // for pgx driver
+	_ "github.com/jackc/pgx/v5/stdlib" // for pgx driver
 	"github.com/lib/pq"
 	"golang.org/x/pkgsite/internal/config/serverconfig"
 	"golang.org/x/pkgsite/internal/database"
