@@ -37,7 +37,7 @@ steps:
       - -c
       - deploy/build.sh $PROJECT_ID $(cat _BUILD_TAG)
   - id: Config
-    name: gcr.io/cloud-builders/gsutil
+    name: gcr.io/cloud-builders/gcloud
     entrypoint: deploy/config.sh
     args:
       - $_ENV

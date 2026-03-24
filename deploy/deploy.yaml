@@ -37,7 +37,7 @@ steps:
       - -c
       - deploy/build.sh $PROJECT_ID $(cat _BUILD_TAG)
   - id: Config - staging
-    name: gcr.io/cloud-builders/gsutil
+    name: gcr.io/cloud-builders/gcloud
     entrypoint: deploy/config.sh
     args:
       - staging
@@ -68,7 +68,7 @@ steps:
     env:
       - QUOTA_BYPASS=$_QUOTA_BYPASS
   - id: Config - prod
-    name: gcr.io/cloud-builders/gsutil
+    name: gcr.io/cloud-builders/gcloud
     entrypoint: deploy/config.sh
     args:
       - prod

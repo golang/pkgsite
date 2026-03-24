@@ -24,9 +24,9 @@ main() {
   dyn_config_bucket=$(config_bucket $env)
   dyn_config_object=${env}-config.yaml
   dyn_config_gcs=gs://$dyn_config_bucket/$dyn_config_object
-  runcmd gsutil cp private/config/$env-config.yaml $dyn_config_gcs
+  runcmd gcloud storage cp private/config/$env-config.yaml $dyn_config_gcs
   dyn_exclude_gcs=gs://$dyn_config_bucket/config/excluded.txt
-  runcmd gsutil cp private/config/excluded.txt $dyn_exclude_gcs
+  runcmd gcloud storage cp private/config/excluded.txt $dyn_exclude_gcs
 }
 
 main $@
