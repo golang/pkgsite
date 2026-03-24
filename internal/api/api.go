@@ -31,9 +31,7 @@ const (
 func ServePackage(w http.ResponseWriter, r *http.Request, ds internal.DataSource) (err error) {
 	defer derrors.Wrap(&err, "ServePackage")
 
-	// The path is expected to be /v1/package/{path}
-	pkgPath := strings.TrimPrefix(r.URL.Path, "/v1/package/")
-	pkgPath = strings.Trim(pkgPath, "/")
+	pkgPath := trimPath(r, "/v1/package/")
 	if pkgPath == "" {
 		return serveErrorJSON(w, http.StatusBadRequest, "missing package path", nil)
 	}
@@ -157,8 +155,7 @@ func ServePackage(w http.ResponseWriter, r *http.Request, ds internal.DataSource
 func ServeModule(w http.ResponseWriter, r *http.Request, ds internal.DataSource) (err error) {
 	defer derrors.Wrap(&err, "ServeModule")
 
-	modulePath := strings.TrimPrefix(r.URL.Path, "/v1/module/")
-	modulePath = strings.Trim(modulePath, "/")
+	modulePath := trimPath(r, "/v1/module/")
 	if modulePath == "" {
 		return serveErrorJSON(w, http.StatusBadRequest, "missing module path", nil)
 	}
@@ -210,7 +207,7 @@ func ServeModule(w http.ResponseWriter, r *http.Request, ds internal.DataSource)
 func ServeModuleVersions(w http.ResponseWriter, r *http.Request, ds internal.DataSource) (err error) {
 	defer derrors.Wrap(&err, "ServeModuleVersions")
 
-	path := strings.TrimPrefix(r.URL.Path, "/v1/versions/")
+	path := trimPath(r, "/v1/versions/")
 	if path == "" {
 		return serveErrorJSON(w, http.StatusBadRequest, "missing path", nil)
 	}
@@ -240,7 +237,7 @@ func ServeModuleVersions(w http.ResponseWriter, r *http.Request, ds internal.Dat
 func ServeModulePackages(w http.ResponseWriter, r *http.Request, ds internal.DataSource) (err error) {
 	defer derrors.Wrap(&err, "ServeModulePackages")
 
-	modulePath := strings.TrimPrefix(r.URL.Path, "/v1/packages/")
+	modulePath := trimPath(r, "/v1/packages/")
 	if modulePath == "" {
 		return serveErrorJSON(w, http.StatusBadRequest, "missing module path", nil)
 	}
@@ -265,16 +262,8 @@ func ServeModulePackages(w http.ResponseWriter, r *http.Request, ds internal.Dat
 
 	// TODO: Handle params.Token and params.Filter.
 	// For now, we just use params.Limit to limit the number of packages returned.
-	limit := params.Limit
-	if limit <= 0 {
-		limit = 100
-	}
-	if limit > len(metas) {
-		limit = len(metas)
-	}
-
 	var items []Package
-	for _, m := range metas[:limit] {
+	for _, m := range metas {
 		items = append(items, Package{
 			Path:              m.Path,
 			ModulePath:        modulePath,
@@ -284,9 +273,9 @@ func ServeModulePackages(w http.ResponseWriter, r *http.Request, ds internal.Dat
 		})
 	}
 
-	resp := PaginatedResponse[Package]{
-		Items: items,
-		Total: len(metas),
+	resp, err := paginate(items, params.ListParams, 100)
+	if err != nil {
+		return serveErrorJSON(w, http.StatusBadRequest, err.Error(), nil)
 	}
 
 	return serveJSON(w, http.StatusOK, resp)
@@ -341,8 +330,7 @@ func ServeSearch(w http.ResponseWriter, r *http.Request, ds internal.DataSource)
 func ServePackageSymbols(w http.ResponseWriter, r *http.Request, ds internal.DataSource) (err error) {
 	defer derrors.Wrap(&err, "ServePackageSymbols")
 
-	pkgPath := strings.TrimPrefix(r.URL.Path, "/v1/symbols/")
-	pkgPath = strings.Trim(pkgPath, "/")
+	pkgPath := trimPath(r, "/v1/symbols/")
 	if pkgPath == "" {
 		return serveErrorJSON(w, http.StatusBadRequest, "missing package path", nil)
 	}
@@ -372,16 +360,8 @@ func ServePackageSymbols(w http.ResponseWriter, r *http.Request, ds internal.Dat
 		return err
 	}
 
-	limit := params.Limit
-	if limit <= 0 {
-		limit = 100
-	}
-	if limit > len(syms) {
-		limit = len(syms)
-	}
-
 	var items []Symbol
-	for _, s := range syms[:limit] {
+	for _, s := range syms {
 		items = append(items, Symbol{
 			ModulePath: um.ModulePath,
 			Version:    um.Version,
@@ -392,9 +372,9 @@ func ServePackageSymbols(w http.ResponseWriter, r *http.Request, ds internal.Dat
 		})
 	}
 
-	resp := PaginatedResponse[Symbol]{
-		Items: items,
-		Total: len(syms),
+	resp, err := paginate(items, params.ListParams, 100)
+	if err != nil {
+		return serveErrorJSON(w, http.StatusBadRequest, err.Error(), nil)
 	}
 
 	return serveJSON(w, http.StatusOK, resp)
@@ -404,7 +384,7 @@ func ServePackageSymbols(w http.ResponseWriter, r *http.Request, ds internal.Dat
 func ServePackageImportedBy(w http.ResponseWriter, r *http.Request, ds internal.DataSource) (err error) {
 	defer derrors.Wrap(&err, "ServePackageImportedBy")
 
-	pkgPath := strings.TrimPrefix(r.URL.Path, "/v1/imported-by/")
+	pkgPath := trimPath(r, "/v1/imported-by/")
 	if pkgPath == "" {
 		return serveErrorJSON(w, http.StatusBadRequest, "missing package path", nil)
 	}
@@ -466,7 +446,7 @@ func ServeVulnerabilities(vc *vuln.Client) func(w http.ResponseWriter, r *http.R
 	return func(w http.ResponseWriter, r *http.Request, ds internal.DataSource) (err error) {
 		defer derrors.Wrap(&err, "ServeVulnerabilities")
 
-		modulePath := strings.TrimPrefix(r.URL.Path, "/v1/vulns/")
+		modulePath := trimPath(r, "/v1/vulns/")
 		if modulePath == "" {
 			return serveErrorJSON(w, http.StatusBadRequest, "missing module path", nil)
 		}
@@ -489,29 +469,26 @@ func ServeVulnerabilities(vc *vuln.Client) func(w http.ResponseWriter, r *http.R
 		// Passing an empty packagePath gets all vulns for the module.
 		vulns := vuln.VulnsForPackage(r.Context(), modulePath, requestedVersion, "", vc)
 
-		limit := params.Limit
-		if limit <= 0 {
-			limit = 100
-		}
-		if limit > len(vulns) {
-			limit = len(vulns)
-		}
-
 		var items []Vulnerability
-		for _, v := range vulns[:limit] {
+		for _, v := range vulns {
 			items = append(items, Vulnerability{
 				ID:      v.ID,
 				Details: v.Details,
 			})
 		}
 
-		resp := PaginatedResponse[Vulnerability]{
-			Items: items,
-			Total: len(vulns),
+		resp, err := paginate(items, params.ListParams, 100)
+		if err != nil {
+			return serveErrorJSON(w, http.StatusBadRequest, err.Error(), nil)
 		}
 
 		return serveJSON(w, http.StatusOK, resp)
 	}
+}
+
+func trimPath(r *http.Request, prefix string) string {
+	path := strings.TrimPrefix(r.URL.Path, prefix)
+	return strings.Trim(path, "/")
 }
 
 // resolveModulePath determines the correct module path for a given package path and version.

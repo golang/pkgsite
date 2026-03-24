@@ -399,12 +399,30 @@ func TestServeModulePackages(t *testing.T) {
 		url        string
 		wantStatus int
 		wantCount  int
+		wantTotal  int
+		wantToken  string
 	}{
 		{
 			name:       "all packages",
 			url:        "/v1/packages/example.com?version=v1.0.0",
 			wantStatus: http.StatusOK,
 			wantCount:  2,
+			wantTotal:  2,
+		},
+		{
+			name:       "limit and token",
+			url:        "/v1/packages/example.com?version=v1.0.0&limit=1",
+			wantStatus: http.StatusOK,
+			wantCount:  1,
+			wantTotal:  2,
+			wantToken:  "1",
+		},
+		{
+			name:       "next page",
+			url:        "/v1/packages/example.com?version=v1.0.0&limit=1&token=1",
+			wantStatus: http.StatusOK,
+			wantCount:  1,
+			wantTotal:  2,
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
@@ -427,6 +445,12 @@ func TestServeModulePackages(t *testing.T) {
 				}
 				if len(got.Items) != test.wantCount {
 					t.Errorf("count = %d, want %d", len(got.Items), test.wantCount)
+				}
+				if got.Total != test.wantTotal {
+					t.Errorf("total = %d, want %d", got.Total, test.wantTotal)
+				}
+				if got.NextPageToken != test.wantToken {
+					t.Errorf("token = %q, want %q", got.NextPageToken, test.wantToken)
 				}
 			}
 		})
