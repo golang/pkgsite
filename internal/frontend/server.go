@@ -236,14 +236,13 @@ func (s *Server) Install(handle func(string, http.Handler), cacher Cacher, authV
 	handle("GET /golang.org/x", s.staticPageHandler("subrepo", "Sub-repositories"))
 	handle("GET /files/", http.StripPrefix("/files", s.fileMux))
 	handle("GET /vuln/", vulnHandler)
-	handle("GET /v1/package/", s.errorHandler(api.ServePackage))
-	handle("GET /v1/symbols/", s.errorHandler(api.ServePackageSymbols))
-	handle("GET /v1/imported-by/", s.errorHandler(api.ServePackageImportedBy))
-	handle("GET /v1/module/", s.errorHandler(api.ServeModule))
-	handle("GET /v1/versions/", s.errorHandler(api.ServeModuleVersions))
-	handle("GET /v1/packages/", s.errorHandler(api.ServeModulePackages))
-	handle("GET /v1/search", s.errorHandler(api.ServeSearch))
-	handle("GET /v1/vulns/", s.errorHandler(api.ServeVulnerabilities(s.vulnClient)))
+	handle("GET /v1/package/", s.apiHandler(api.ServePackage))
+	handle("GET /v1/symbols/", s.apiHandler(api.ServePackageSymbols))
+	handle("GET /v1/imported-by/", s.apiHandler(api.ServePackageImportedBy))
+	handle("GET /v1/module/", s.apiHandler(api.ServeModule))
+	handle("GET /v1/versions/", s.apiHandler(api.ServeModuleVersions))
+	handle("GET /v1/packages/", s.apiHandler(api.ServeModulePackages))
+	handle("GET /v1/vulns/", s.apiHandler(api.ServeVulnerabilities(s.vulnClient)))
 	handle("/opensearch.xml", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		serveFileFS(w, r, s.staticFS, "shared/opensearch.xml")
 	}))
@@ -540,6 +539,15 @@ func (s *Server) errorHandler(f func(w http.ResponseWriter, r *http.Request, ds 
 		ds := s.getDataSource(r.Context())
 		if err := f(w, r, ds); err != nil {
 			s.serveError(w, r, err)
+		}
+	}
+}
+
+func (s *Server) apiHandler(f func(w http.ResponseWriter, r *http.Request, ds internal.DataSource) error) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ds := s.getDataSource(r.Context())
+		if err := f(w, r, ds); err != nil {
+			api.ServeError(w, err)
 		}
 	}
 }

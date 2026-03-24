@@ -92,6 +92,10 @@ type Error struct {
 	Candidates []Candidate `json:"candidates,omitempty"`
 }
 
+func (e *Error) Error() string {
+	return e.Message
+}
+
 // Candidate is a potential resolution for an ambiguous path.
 type Candidate struct {
 	ModulePath  string `json:"modulePath"`

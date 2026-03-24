@@ -8,6 +8,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -33,23 +34,17 @@ func ServePackage(w http.ResponseWriter, r *http.Request, ds internal.DataSource
 
 	pkgPath := trimPath(r, "/v1/package/")
 	if pkgPath == "" {
-		return serveErrorJSON(w, http.StatusBadRequest, "missing package path", nil)
+		return fmt.Errorf("%w: missing package path", derrors.InvalidArgument)
 	}
 
 	var params PackageParams
 	if err := ParseParams(r.URL.Query(), &params); err != nil {
-		return serveErrorJSON(w, http.StatusBadRequest, err.Error(), nil)
-	}
-
-	um, candidates, err := resolveModulePath(r, ds, pkgPath, params.Module, params.Version)
-	if err != nil {
-		if errors.Is(err, derrors.NotFound) {
-			return serveErrorJSON(w, http.StatusNotFound, err.Error(), nil)
-		}
 		return err
 	}
-	if len(candidates) > 0 {
-		return serveErrorJSON(w, http.StatusBadRequest, "ambiguous package path", candidates)
+
+	um, err := resolveModulePath(r, ds, pkgPath, params.Module, params.Version)
+	if err != nil {
+		return err
 	}
 
 	// Use GetUnit to get the requested data.
@@ -67,7 +62,7 @@ func ServePackage(w http.ResponseWriter, r *http.Request, ds internal.DataSource
 	bc := internal.BuildContext{GOOS: params.GOOS, GOARCH: params.GOARCH}
 	unit, err := ds.GetUnit(r.Context(), um, fs, bc)
 	if err != nil {
-		return serveErrorJSON(w, http.StatusInternalServerError, err.Error(), nil)
+		return fmt.Errorf("%w: %s", derrors.Unknown, err.Error())
 	}
 
 	// Process documentation, including synopsis.
@@ -97,7 +92,7 @@ func ServePackage(w http.ResponseWriter, r *http.Request, ds internal.DataSource
 			// result.
 			gpkg, err := godoc.DecodePackage(d.Source)
 			if err != nil {
-				return serveErrorJSON(w, http.StatusInternalServerError, err.Error(), nil)
+				return fmt.Errorf("%w: %s", derrors.Unknown, err.Error())
 			}
 			innerPath := internal.Suffix(unit.Path, unit.ModulePath)
 			modInfo := &godoc.ModuleInfo{ModulePath: unit.ModulePath, ResolvedVersion: unit.Version}
@@ -115,10 +110,10 @@ func ServePackage(w http.ResponseWriter, r *http.Request, ds internal.DataSource
 			case "html":
 				return errors.New("unimplemented")
 			default:
-				return serveErrorJSON(w, http.StatusBadRequest, "bad doc format: need one of 'text', 'md', 'markdown' or 'html'", nil)
+				return fmt.Errorf("%w: bad doc format: need one of 'text', 'md', 'markdown' or 'html'", derrors.InvalidArgument)
 			}
 			if err := renderDoc(dpkg, r); err != nil {
-				return serveErrorJSON(w, http.StatusInternalServerError, err.Error(), nil)
+				return fmt.Errorf("%w: %s", derrors.Unknown, err.Error())
 			}
 			docs = sb.String()
 		}
@@ -157,12 +152,12 @@ func ServeModule(w http.ResponseWriter, r *http.Request, ds internal.DataSource)
 
 	modulePath := trimPath(r, "/v1/module/")
 	if modulePath == "" {
-		return serveErrorJSON(w, http.StatusBadRequest, "missing module path", nil)
+		return fmt.Errorf("%w: missing module path", derrors.InvalidArgument)
 	}
 
 	var params ModuleParams
 	if err := ParseParams(r.URL.Query(), &params); err != nil {
-		return serveErrorJSON(w, http.StatusBadRequest, err.Error(), nil)
+		return err
 	}
 
 	requestedVersion := params.Version
@@ -173,9 +168,6 @@ func ServeModule(w http.ResponseWriter, r *http.Request, ds internal.DataSource)
 	// For modules, we can use GetUnitMeta on the module path.
 	um, err := ds.GetUnitMeta(r.Context(), modulePath, modulePath, requestedVersion)
 	if err != nil {
-		if errors.Is(err, derrors.NotFound) {
-			return serveErrorJSON(w, http.StatusNotFound, err.Error(), nil)
-		}
 		return err
 	}
 
@@ -209,25 +201,22 @@ func ServeModuleVersions(w http.ResponseWriter, r *http.Request, ds internal.Dat
 
 	path := trimPath(r, "/v1/versions/")
 	if path == "" {
-		return serveErrorJSON(w, http.StatusBadRequest, "missing path", nil)
+		return fmt.Errorf("%w: missing path", derrors.InvalidArgument)
 	}
 
 	var params VersionsParams
 	if err := ParseParams(r.URL.Query(), &params); err != nil {
-		return serveErrorJSON(w, http.StatusBadRequest, err.Error(), nil)
+		return err
 	}
 
 	infos, err := ds.GetVersionsForPath(r.Context(), path)
 	if err != nil {
-		if errors.Is(err, derrors.NotFound) {
-			return serveErrorJSON(w, http.StatusNotFound, err.Error(), nil)
-		}
 		return err
 	}
 
 	resp, err := paginate(infos, params.ListParams, 100)
 	if err != nil {
-		return serveErrorJSON(w, http.StatusBadRequest, err.Error(), nil)
+		return err
 	}
 
 	return serveJSON(w, http.StatusOK, resp)
@@ -239,12 +228,12 @@ func ServeModulePackages(w http.ResponseWriter, r *http.Request, ds internal.Dat
 
 	modulePath := trimPath(r, "/v1/packages/")
 	if modulePath == "" {
-		return serveErrorJSON(w, http.StatusBadRequest, "missing module path", nil)
+		return fmt.Errorf("%w: missing module path", derrors.InvalidArgument)
 	}
 
 	var params PackagesParams
 	if err := ParseParams(r.URL.Query(), &params); err != nil {
-		return serveErrorJSON(w, http.StatusBadRequest, err.Error(), nil)
+		return err
 	}
 
 	requestedVersion := params.Version
@@ -254,9 +243,6 @@ func ServeModulePackages(w http.ResponseWriter, r *http.Request, ds internal.Dat
 
 	metas, err := ds.GetModulePackages(r.Context(), modulePath, requestedVersion)
 	if err != nil {
-		if errors.Is(err, derrors.NotFound) {
-			return serveErrorJSON(w, http.StatusNotFound, err.Error(), nil)
-		}
 		return err
 	}
 
@@ -275,7 +261,7 @@ func ServeModulePackages(w http.ResponseWriter, r *http.Request, ds internal.Dat
 
 	resp, err := paginate(items, params.ListParams, 100)
 	if err != nil {
-		return serveErrorJSON(w, http.StatusBadRequest, err.Error(), nil)
+		return err
 	}
 
 	return serveJSON(w, http.StatusOK, resp)
@@ -287,11 +273,11 @@ func ServeSearch(w http.ResponseWriter, r *http.Request, ds internal.DataSource)
 
 	var params SearchParams
 	if err := ParseParams(r.URL.Query(), &params); err != nil {
-		return serveErrorJSON(w, http.StatusBadRequest, err.Error(), nil)
+		return fmt.Errorf("%w: %s", derrors.InvalidArgument, err.Error())
 	}
 
 	if params.Query == "" {
-		return serveErrorJSON(w, http.StatusBadRequest, "missing query", nil)
+		return fmt.Errorf("%w: missing query", derrors.InvalidArgument)
 	}
 
 	dbresults, err := ds.Search(r.Context(), params.Query, internal.SearchOptions{
@@ -320,7 +306,7 @@ func ServeSearch(w http.ResponseWriter, r *http.Request, ds internal.DataSource)
 
 	resp, err := paginate(results, params.ListParams, searchResultsPerPage)
 	if err != nil {
-		return serveErrorJSON(w, http.StatusBadRequest, err.Error(), nil)
+		return fmt.Errorf("%w: %s", derrors.InvalidArgument, err.Error())
 	}
 
 	return serveJSON(w, http.StatusOK, resp)
@@ -332,31 +318,22 @@ func ServePackageSymbols(w http.ResponseWriter, r *http.Request, ds internal.Dat
 
 	pkgPath := trimPath(r, "/v1/symbols/")
 	if pkgPath == "" {
-		return serveErrorJSON(w, http.StatusBadRequest, "missing package path", nil)
+		return fmt.Errorf("%w: missing package path", derrors.InvalidArgument)
 	}
 
 	var params SymbolsParams
 	if err := ParseParams(r.URL.Query(), &params); err != nil {
-		return serveErrorJSON(w, http.StatusBadRequest, err.Error(), nil)
-	}
-
-	um, candidates, err := resolveModulePath(r, ds, pkgPath, params.Module, params.Version)
-	if err != nil {
-		if errors.Is(err, derrors.NotFound) {
-			return serveErrorJSON(w, http.StatusNotFound, err.Error(), nil)
-		}
 		return err
 	}
-	if len(candidates) > 0 {
-		return serveErrorJSON(w, http.StatusBadRequest, "ambiguous package path", candidates)
+
+	um, err := resolveModulePath(r, ds, pkgPath, params.Module, params.Version)
+	if err != nil {
+		return err
 	}
 
 	bc := internal.BuildContext{GOOS: params.GOOS, GOARCH: params.GOARCH}
 	syms, err := ds.GetSymbols(r.Context(), pkgPath, um.ModulePath, um.Version, bc)
 	if err != nil {
-		if errors.Is(err, derrors.NotFound) {
-			return serveErrorJSON(w, http.StatusNotFound, err.Error(), nil)
-		}
 		return err
 	}
 
@@ -374,7 +351,7 @@ func ServePackageSymbols(w http.ResponseWriter, r *http.Request, ds internal.Dat
 
 	resp, err := paginate(items, params.ListParams, 100)
 	if err != nil {
-		return serveErrorJSON(w, http.StatusBadRequest, err.Error(), nil)
+		return err
 	}
 
 	return serveJSON(w, http.StatusOK, resp)
@@ -386,12 +363,12 @@ func ServePackageImportedBy(w http.ResponseWriter, r *http.Request, ds internal.
 
 	pkgPath := trimPath(r, "/v1/imported-by/")
 	if pkgPath == "" {
-		return serveErrorJSON(w, http.StatusBadRequest, "missing package path", nil)
+		return fmt.Errorf("%w: missing package path", derrors.InvalidArgument)
 	}
 
 	var params ImportedByParams
 	if err := ParseParams(r.URL.Query(), &params); err != nil {
-		return serveErrorJSON(w, http.StatusBadRequest, err.Error(), nil)
+		return err
 	}
 
 	requestedVersion := params.Version
@@ -399,15 +376,9 @@ func ServePackageImportedBy(w http.ResponseWriter, r *http.Request, ds internal.
 		requestedVersion = version.Latest
 	}
 
-	um, candidates, err := resolveModulePath(r, ds, pkgPath, params.Module, requestedVersion)
+	um, err := resolveModulePath(r, ds, pkgPath, params.Module, requestedVersion)
 	if err != nil {
-		if errors.Is(err, derrors.NotFound) {
-			return serveErrorJSON(w, http.StatusNotFound, err.Error(), nil)
-		}
 		return err
-	}
-	if len(candidates) > 0 {
-		return serveErrorJSON(w, http.StatusBadRequest, "ambiguous package path", candidates)
 	}
 	modulePath := um.ModulePath
 
@@ -418,9 +389,6 @@ func ServePackageImportedBy(w http.ResponseWriter, r *http.Request, ds internal.
 
 	importedBy, err := ds.GetImportedBy(r.Context(), pkgPath, modulePath, limit)
 	if err != nil {
-		if errors.Is(err, derrors.NotFound) {
-			return serveErrorJSON(w, http.StatusNotFound, err.Error(), nil)
-		}
 		return err
 	}
 
@@ -448,16 +416,16 @@ func ServeVulnerabilities(vc *vuln.Client) func(w http.ResponseWriter, r *http.R
 
 		modulePath := trimPath(r, "/v1/vulns/")
 		if modulePath == "" {
-			return serveErrorJSON(w, http.StatusBadRequest, "missing module path", nil)
+			return fmt.Errorf("%w: missing module path", derrors.InvalidArgument)
 		}
 
 		var params VulnParams
 		if err := ParseParams(r.URL.Query(), &params); err != nil {
-			return serveErrorJSON(w, http.StatusBadRequest, err.Error(), nil)
+			return err
 		}
 
 		if vc == nil {
-			return serveErrorJSON(w, http.StatusNotImplemented, "vulnerability data not available", nil)
+			return fmt.Errorf("%w: vulnerability data not available", derrors.Unsupported)
 		}
 
 		requestedVersion := params.Version
@@ -479,7 +447,7 @@ func ServeVulnerabilities(vc *vuln.Client) func(w http.ResponseWriter, r *http.R
 
 		resp, err := paginate(items, params.ListParams, 100)
 		if err != nil {
-			return serveErrorJSON(w, http.StatusBadRequest, err.Error(), nil)
+			return err
 		}
 
 		return serveJSON(w, http.StatusOK, resp)
@@ -495,7 +463,7 @@ func trimPath(r *http.Request, prefix string) string {
 // If the module path is not provided, it searches through potential candidate module paths
 // derived from the package path. If multiple valid modules contain the package, it returns
 // a list of candidates to help the user disambiguate the request.
-func resolveModulePath(r *http.Request, ds internal.DataSource, pkgPath, modulePath, requestedVersion string) (*internal.UnitMeta, []Candidate, error) {
+func resolveModulePath(r *http.Request, ds internal.DataSource, pkgPath, modulePath, requestedVersion string) (*internal.UnitMeta, error) {
 	if requestedVersion == "" {
 		requestedVersion = version.Latest
 	}
@@ -513,24 +481,28 @@ func resolveModulePath(r *http.Request, ds internal.DataSource, pkgPath, moduleP
 					PackagePath: pkgPath,
 				})
 			} else if !errors.Is(err, derrors.NotFound) {
-				return nil, nil, err
+				return nil, err
 			}
 		}
 
 		if len(validCandidates) > 1 {
-			return nil, validCandidates, nil
+			return nil, &Error{
+				Code:       http.StatusBadRequest,
+				Message:    "ambiguous package path",
+				Candidates: validCandidates,
+			}
 		}
 		if len(validCandidates) == 0 {
-			return nil, nil, derrors.NotFound
+			return nil, derrors.NotFound
 		}
-		return foundUM, nil, nil
+		return foundUM, nil
 	}
 
 	um, err := ds.GetUnitMeta(r.Context(), pkgPath, modulePath, requestedVersion)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
-	return um, nil, nil
+	return um, nil
 }
 
 func serveJSON(w http.ResponseWriter, status int, data any) error {
@@ -544,12 +516,16 @@ func serveJSON(w http.ResponseWriter, status int, data any) error {
 	return err
 }
 
-func serveErrorJSON(w http.ResponseWriter, status int, message string, candidates []Candidate) error {
-	return serveJSON(w, status, Error{
-		Code:       status,
-		Message:    message,
-		Candidates: candidates,
-	})
+func ServeError(w http.ResponseWriter, err error) error {
+	var aerr *Error
+	if !errors.As(err, &aerr) {
+		status := derrors.ToStatus(err)
+		aerr = &Error{
+			Code:    status,
+			Message: err.Error(),
+		}
+	}
+	return serveJSON(w, aerr.Code, aerr)
 }
 
 // paginate returns a paginated response for the given list of items and pagination parameters.
@@ -566,7 +542,7 @@ func paginate[T any](all []T, lp ListParams, defaultLimit int) (PaginatedRespons
 		var err error
 		offset, err = strconv.Atoi(lp.Token)
 		if err != nil || offset < 0 {
-			return PaginatedResponse[T]{}, errors.New("invalid token")
+			return PaginatedResponse[T]{}, fmt.Errorf("%w: invalid token", derrors.InvalidArgument)
 		}
 	}
 

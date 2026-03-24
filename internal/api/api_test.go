@@ -200,9 +200,8 @@ func TestServePackage(t *testing.T) {
 			r := httptest.NewRequest("GET", test.url, nil)
 			w := httptest.NewRecorder()
 
-			err := ServePackage(w, r, ds)
-			if err != nil {
-				t.Fatalf("ServePackage returned error: %v", err)
+			if err := ServePackage(w, r, ds); err != nil {
+				ServeError(w, err)
 			}
 
 			if w.Code != test.wantStatus {
@@ -267,7 +266,7 @@ func TestServeModule(t *testing.T) {
 			name:       "bad version",
 			url:        "/v1/module/example.com?version=nope",
 			wantStatus: http.StatusNotFound,
-			want:       &Error{Code: 404, Message: "could not find module for import path example.com: not found"},
+			want:       &Error{Code: 404, Message: "ServeModule: could not find module for import path example.com: not found"},
 		},
 		{
 			name:       "module with readme",
@@ -287,9 +286,8 @@ func TestServeModule(t *testing.T) {
 			r := httptest.NewRequest("GET", test.url, nil)
 			w := httptest.NewRecorder()
 
-			err := ServeModule(w, r, ds)
-			if err != nil && w.Code != test.wantStatus {
-				t.Fatalf("ServeModule returned error: %v", err)
+			if err := ServeModule(w, r, ds); err != nil {
+				ServeError(w, err)
 			}
 
 			if w.Code != test.wantStatus {
@@ -331,6 +329,7 @@ func TestServeModuleVersions(t *testing.T) {
 		url        string
 		wantStatus int
 		wantCount  int
+		want       any
 	}{
 		{
 			name:       "all versions (cross-major)",
@@ -355,9 +354,8 @@ func TestServeModuleVersions(t *testing.T) {
 			r := httptest.NewRequest("GET", test.url, nil)
 			w := httptest.NewRecorder()
 
-			err := ServeModuleVersions(w, r, ds)
-			if err != nil && w.Code != test.wantStatus {
-				t.Fatalf("ServeModuleVersions returned error: %v", err)
+			if err := ServeModuleVersions(w, r, ds); err != nil {
+				ServeError(w, err)
 			}
 
 			if w.Code != test.wantStatus {
@@ -393,7 +391,6 @@ func TestServeModulePackages(t *testing.T) {
 			{UnitMeta: internal.UnitMeta{Path: modulePath + "/sub", Name: "pkg2"}},
 		},
 	})
-
 	for _, test := range []struct {
 		name       string
 		url        string
@@ -401,6 +398,7 @@ func TestServeModulePackages(t *testing.T) {
 		wantCount  int
 		wantTotal  int
 		wantToken  string
+		want       any
 	}{
 		{
 			name:       "all packages",
@@ -429,9 +427,8 @@ func TestServeModulePackages(t *testing.T) {
 			r := httptest.NewRequest("GET", test.url, nil)
 			w := httptest.NewRecorder()
 
-			err := ServeModulePackages(w, r, ds)
-			if err != nil && w.Code != test.wantStatus {
-				t.Fatalf("ServeModulePackages returned error: %v", err)
+			if err := ServeModulePackages(w, r, ds); err != nil {
+				ServeError(w, err)
 			}
 
 			if w.Code != test.wantStatus {
@@ -515,7 +512,7 @@ func TestServeSearch(t *testing.T) {
 
 			err := ServeSearch(w, r, ds)
 			if err != nil {
-				t.Fatalf("ServeSearch returned error: %v", err)
+				ServeError(w, err)
 			}
 
 			if w.Code != test.wantStatus {
@@ -588,7 +585,7 @@ func TestServeSearchPagination(t *testing.T) {
 			w := httptest.NewRecorder()
 
 			if err := ServeSearch(w, r, ds); err != nil {
-				t.Fatalf("ServeSearch error: %v", err)
+				ServeError(w, err)
 			}
 
 			if w.Code != http.StatusOK {
@@ -663,6 +660,7 @@ func TestServePackageSymbols(t *testing.T) {
 		wantStatus int
 		wantCount  int
 		wantName   string // Check name of the first symbol to verify build context
+		want       any
 	}{
 		{
 			name:       "default best match (linux)",
@@ -703,19 +701,34 @@ func TestServePackageSymbols(t *testing.T) {
 			name:       "not found build context",
 			url:        "/v1/symbols/example.com/pkg?version=v1.0.0&goos=darwin&goarch=amd64",
 			wantStatus: http.StatusNotFound,
+			want: &Error{
+				Code:    http.StatusNotFound,
+				Message: "ServePackageSymbols: not found",
+			},
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			r := httptest.NewRequest("GET", test.url, nil)
 			w := httptest.NewRecorder()
 
-			err := ServePackageSymbols(w, r, ds)
-			if err != nil && w.Code != test.wantStatus {
-				t.Fatalf("ServePackageSymbols returned error: %v", err)
+			if err := ServePackageSymbols(w, r, ds); err != nil {
+				ServeError(w, err)
 			}
 
 			if w.Code != test.wantStatus {
 				t.Errorf("status = %d, want %d. Body: %s", w.Code, test.wantStatus, w.Body.String())
+			}
+
+			if test.want != nil {
+				if want, ok := test.want.(*Error); ok {
+					var got Error
+					if err := json.Unmarshal(w.Body.Bytes(), &got); err != nil {
+						t.Fatalf("json.Unmarshal: %v", err)
+					}
+					if diff := cmp.Diff(want, &got); diff != "" {
+						t.Errorf("mismatch (-want +got):\n%s", diff)
+					}
+				}
 			}
 
 			if test.wantStatus == http.StatusOK {
@@ -760,6 +773,7 @@ func TestServePackageImportedBy(t *testing.T) {
 		url        string
 		wantStatus int
 		wantCount  int
+		want       any
 	}{
 		{
 			name:       "all imported by",
@@ -772,9 +786,8 @@ func TestServePackageImportedBy(t *testing.T) {
 			r := httptest.NewRequest("GET", test.url, nil)
 			w := httptest.NewRecorder()
 
-			err := ServePackageImportedBy(w, r, ds)
-			if err != nil && w.Code != test.wantStatus {
-				t.Fatalf("ServePackageImportedBy returned error: %v", err)
+			if err := ServePackageImportedBy(w, r, ds); err != nil {
+				ServeError(w, err)
 			}
 
 			if w.Code != test.wantStatus {
@@ -817,6 +830,7 @@ func TestServeVulnerabilities(t *testing.T) {
 		url        string
 		wantStatus int
 		wantCount  int
+		want       any
 	}{
 		{
 			name:       "all vulns",
@@ -835,9 +849,8 @@ func TestServeVulnerabilities(t *testing.T) {
 			r := httptest.NewRequest("GET", test.url, nil)
 			w := httptest.NewRecorder()
 
-			err := ServeVulnerabilities(vc)(w, r, ds)
-			if err != nil && w.Code != test.wantStatus {
-				t.Fatalf("ServeVulnerabilities returned error: %v", err)
+			if err := ServeVulnerabilities(vc)(w, r, ds); err != nil {
+				ServeError(w, err)
 			}
 
 			if w.Code != test.wantStatus {
