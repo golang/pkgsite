@@ -387,8 +387,18 @@ func TestServeModulePackages(t *testing.T) {
 	ds.MustInsertModule(ctx, &internal.Module{
 		ModuleInfo: internal.ModuleInfo{ModulePath: modulePath, Version: version},
 		Units: []*internal.Unit{
-			{UnitMeta: internal.UnitMeta{Path: modulePath, Name: "pkg1"}},
-			{UnitMeta: internal.UnitMeta{Path: modulePath + "/sub", Name: "pkg2"}},
+			{
+				UnitMeta: internal.UnitMeta{Path: modulePath, Name: "pkg1"},
+				Documentation: []*internal.Documentation{
+					{Synopsis: "synopsis for pkg1"},
+				},
+			},
+			{
+				UnitMeta: internal.UnitMeta{Path: modulePath + "/sub", Name: "pkg2"},
+				Documentation: []*internal.Documentation{
+					{Synopsis: "synopsis for pkg2"},
+				},
+			},
 		},
 	})
 	for _, test := range []struct {
@@ -406,6 +416,20 @@ func TestServeModulePackages(t *testing.T) {
 			wantStatus: http.StatusOK,
 			wantCount:  2,
 			wantTotal:  2,
+		},
+		{
+			name:       "filtering",
+			url:        "/v1/packages/example.com?version=v1.0.0&filter=sub",
+			wantStatus: http.StatusOK,
+			wantCount:  1,
+			wantTotal:  1,
+		},
+		{
+			name:       "filtering synopsis",
+			url:        "/v1/packages/example.com?version=v1.0.0&filter=pkg2",
+			wantStatus: http.StatusOK,
+			wantCount:  1,
+			wantTotal:  1,
 		},
 		{
 			name:       "limit and token",

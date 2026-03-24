@@ -214,6 +214,16 @@ func ServeModuleVersions(w http.ResponseWriter, r *http.Request, ds internal.Dat
 		return err
 	}
 
+	if params.Filter != "" {
+		var filtered []*internal.ModuleInfo
+		for _, info := range infos {
+			if strings.Contains(info.Version, params.Filter) {
+				filtered = append(filtered, info)
+			}
+		}
+		infos = filtered
+	}
+
 	resp, err := paginate(infos, params.ListParams, 100)
 	if err != nil {
 		return err
@@ -250,6 +260,9 @@ func ServeModulePackages(w http.ResponseWriter, r *http.Request, ds internal.Dat
 	// For now, we just use params.Limit to limit the number of packages returned.
 	var items []Package
 	for _, m := range metas {
+		if params.Filter != "" && !strings.Contains(m.Path, params.Filter) && !strings.Contains(m.Synopsis, params.Filter) {
+			continue
+		}
 		items = append(items, Package{
 			Path:              m.Path,
 			ModulePath:        modulePath,
@@ -339,6 +352,9 @@ func ServePackageSymbols(w http.ResponseWriter, r *http.Request, ds internal.Dat
 
 	var items []Symbol
 	for _, s := range syms {
+		if params.Filter != "" && !strings.Contains(s.Name, params.Filter) && !strings.Contains(s.Synopsis, params.Filter) {
+			continue
+		}
 		items = append(items, Symbol{
 			ModulePath: um.ModulePath,
 			Version:    um.Version,
@@ -382,12 +398,7 @@ func ServePackageImportedBy(w http.ResponseWriter, r *http.Request, ds internal.
 	}
 	modulePath := um.ModulePath
 
-	limit := params.Limit
-	if limit <= 0 {
-		limit = 100
-	}
-
-	importedBy, err := ds.GetImportedBy(r.Context(), pkgPath, modulePath, limit)
+	importedBy, err := ds.GetImportedBy(r.Context(), pkgPath, modulePath, 1000)
 	if err != nil {
 		return err
 	}
@@ -397,12 +408,28 @@ func ServePackageImportedBy(w http.ResponseWriter, r *http.Request, ds internal.
 		return err
 	}
 
+	if params.Filter != "" {
+		var filtered []string
+		for _, p := range importedBy {
+			if strings.Contains(p, params.Filter) {
+				filtered = append(filtered, p)
+			}
+		}
+		importedBy = filtered
+	}
+
+	paged, err := paginate(importedBy, params.ListParams, 100)
+	if err != nil {
+		return err
+	}
+
 	resp := PackageImportedBy{
 		ModulePath: modulePath,
 		Version:    requestedVersion,
 		ImportedBy: PaginatedResponse[string]{
-			Items: importedBy,
-			Total: count,
+			Items:         paged.Items,
+			Total:         count,
+			NextPageToken: paged.NextPageToken,
 		},
 	}
 
@@ -439,6 +466,9 @@ func ServeVulnerabilities(vc *vuln.Client) func(w http.ResponseWriter, r *http.R
 
 		var items []Vulnerability
 		for _, v := range vulns {
+			if params.Filter != "" && !strings.Contains(v.ID, params.Filter) && !strings.Contains(v.Details, params.Filter) {
+				continue
+			}
 			items = append(items, Vulnerability{
 				ID:      v.ID,
 				Details: v.Details,
