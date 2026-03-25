@@ -220,7 +220,7 @@ func (ds *FetchDataSource) GetUnit(ctx context.Context, um *internal.UnitMeta, f
 	// Since we cache the module and its units, we have to copy this unit before we modify it.
 	// It can be a shallow copy, since we're only modifying the Unit.Documentation field.
 	u2 := *u
-	if d := matchingDoc(u.Documentation, bc); d != nil {
+	if d := internal.DocumentationForBuildContext(u.Documentation, bc); d != nil {
 		u2.Documentation = []*internal.Documentation{d}
 	} else {
 		u2.Documentation = nil
@@ -250,23 +250,6 @@ func findUnitMeta(m *fetch.LazyModule, path string) (*internal.UnitMeta, error) 
 		}
 	}
 	return nil, derrors.NotFound
-}
-
-// matchingDoc returns the Documentation that matches the given build context
-// and comes earliest in build-context order. It returns nil if there is none.
-func matchingDoc(docs []*internal.Documentation, bc internal.BuildContext) *internal.Documentation {
-	var (
-		dMin  *internal.Documentation
-		bcMin = internal.BuildContext{GOOS: "unk", GOARCH: "unk"} // sorts last
-	)
-	for _, d := range docs {
-		dbc := d.BuildContext()
-		if bc.Match(dbc) && internal.CompareBuildContexts(dbc, bcMin) < 0 {
-			dMin = d
-			bcMin = dbc
-		}
-	}
-	return dMin
 }
 
 // GetLatestInfo returns latest information for unitPath and modulePath.
@@ -447,7 +430,7 @@ func (ds *FetchDataSource) GetSymbols(ctx context.Context, pkgPath, modulePath, 
 		return nil, err
 	}
 
-	doc := matchingDoc(unit.Documentation, bc)
+	doc := internal.DocumentationForBuildContext(unit.Documentation, bc)
 	if doc == nil || len(doc.API) == 0 {
 		return nil, derrors.NotFound
 	}

@@ -140,13 +140,13 @@ func (ds *FakeDataSource) GetUnit(ctx context.Context, um *internal.UnitMeta, fi
 	// It can be a shallow copy, since we're only modifying the Unit.Documentation field.
 	u2 := *u
 	if fields&internal.WithDocsSource != 0 {
-		if d := matchingDoc(u.Documentation, bc); d != nil {
+		if d := internal.DocumentationForBuildContext(u.Documentation, bc); d != nil {
 			u2.Documentation = []*internal.Documentation{d}
 		} else {
 			u2.Documentation = nil
 		}
 	} else if fields&internal.WithMain != 0 {
-		if d := matchingDoc(u.Documentation, bc); d != nil {
+		if d := internal.DocumentationForBuildContext(u.Documentation, bc); d != nil {
 			u2.Documentation = []*internal.Documentation{{GOOS: d.GOOS, GOARCH: d.GOARCH, Synopsis: d.Synopsis}}
 		} else {
 			u2.Documentation = nil
@@ -155,23 +155,6 @@ func (ds *FakeDataSource) GetUnit(ctx context.Context, um *internal.UnitMeta, fi
 		u2.Documentation = nil
 	}
 	return &u2, nil
-}
-
-// matchingDoc returns the Documentation that matches the given build context
-// and comes earliest in build-context order. It returns nil if there is none.
-func matchingDoc(docs []*internal.Documentation, bc internal.BuildContext) *internal.Documentation {
-	var (
-		dMin  *internal.Documentation
-		bcMin *internal.BuildContext // sorts last
-	)
-	for _, d := range docs {
-		dbc := d.BuildContext()
-		if bc.Match(dbc) && (bcMin == nil || internal.CompareBuildContexts(dbc, *bcMin) < 0) {
-			dMin = d
-			bcMin = &dbc
-		}
-	}
-	return dMin
 }
 
 // GetUnitMeta returns information about a path.
@@ -350,19 +333,14 @@ func (ds *FakeDataSource) GetSymbols(ctx context.Context, pkgPath, modulePath, v
 
 	var bcs []internal.BuildContext
 	for b := range u.Symbols {
-		if bc.Match(b) {
-			bcs = append(bcs, b)
-		}
+		bcs = append(bcs, b)
 	}
-	if len(bcs) == 0 {
+	matchedBC, ok := internal.MatchingBuildContext(bcs, bc)
+	if !ok {
 		return nil, derrors.NotFound
 	}
 
-	sort.Slice(bcs, func(i, j int) bool {
-		return internal.CompareBuildContexts(bcs[i], bcs[j]) < 0
-	})
-
-	return u.Symbols[bcs[0]], nil
+	return u.Symbols[matchedBC], nil
 }
 
 // SearchSupport reports the search types supported by this datasource.

@@ -418,17 +418,33 @@ func getPackagesInUnit(ctx context.Context, db *database.DB, fullPath, modulePat
 	return packages, nil
 }
 
-func (db *DB) getUnitWithAllFields(ctx context.Context, um *internal.UnitMeta, fields internal.FieldSet, bc internal.BuildContext) (_ *internal.Unit, err error) {
-	defer derrors.WrapStack(&err, "getUnitWithAllFields(ctx, %q, %q, %q)", um.Path, um.ModulePath, um.Version)
-	defer stats.Elapsed(ctx, "getUnitWithAllFields")()
+// unitContext contains information for a unit that is used to fetch its
+// documentation or symbols.
+type unitContext struct {
+	unitID            int
+	pathID            int
+	moduleID          int
+	isRedistributable bool
+	bcs               []internal.BuildContext
+	bestBC            internal.BuildContext
+	docID             int
+	licenseMetas      []*licenses.Metadata
+}
 
-	// Get build contexts and unit ID.
-	var pathID, unitID, moduleID int
-	var bcs []internal.BuildContext
-	var licenseMetas []*licenses.Metadata
-	var isRedistributable bool
+// getUnitContext returns a unitContext for the given package path, module path,
+// version and build context. It finds all available build contexts for the
+// unit, selects the best matching one, and identifies the corresponding
+// documentation ID.
+func (db *DB) getUnitContext(ctx context.Context, pkgPath, modulePath, version string, bc internal.BuildContext) (_ *unitContext, err error) {
+	defer derrors.WrapStack(&err, "getUnitContext(ctx, %q, %q, %q, %v)", pkgPath, modulePath, version, bc)
+
+	var (
+		uc = &unitContext{}
+		// Map from build context to documentation ID.
+		docIDs = make(map[internal.BuildContext]int)
+	)
 	err = db.db.RunQuery(ctx, `
-		SELECT d.goos, d.goarch, u.id, p.id, u.module_id, u.license_types, u.license_paths, u.redistributable
+		SELECT d.goos, d.goarch, u.id, p.id, u.module_id, u.license_types, u.license_paths, u.redistributable, d.id
 		FROM units u
 		INNER JOIN paths p ON p.id = u.path_id
 		INNER JOIN modules m ON m.id = u.module_id
@@ -438,43 +454,83 @@ func (db *DB) getUnitWithAllFields(ctx context.Context, um *internal.UnitMeta, f
 			AND m.module_path = $2
 			AND m.version = $3
 	`, func(rows *sql.Rows) error {
-		var bc internal.BuildContext
-		// GOOS and GOARCH will be NULL if there are no documentation rows for
-		// the unit, but we still want the unit ID.
 		var (
-			licenseTypes []string
-			licensePaths []string
+			rowBC internal.BuildContext
+			docID sql.NullInt64
 		)
 
-		if err := rows.Scan(database.NullIsEmpty(&bc.GOOS), database.NullIsEmpty(&bc.GOARCH), &unitID, &pathID, &moduleID, pq.Array(&licenseTypes), pq.Array(&licensePaths), &isRedistributable); err != nil {
+		// We need to scan all columns, but some are unit-level (constant across rows)
+		// and some are documentation-level (vary across rows).
+		var (
+			uIDCol, pIDCol, mIDCol   int
+			licTypesCol, licPathsCol []string
+			isRedistCol              bool
+		)
+
+		if err := rows.Scan(
+			database.NullIsEmpty(&rowBC.GOOS),
+			database.NullIsEmpty(&rowBC.GOARCH),
+			&uIDCol,
+			&pIDCol,
+			&mIDCol,
+			pq.Array(&licTypesCol),
+			pq.Array(&licPathsCol),
+			&isRedistCol,
+			&docID,
+		); err != nil {
 			return err
 		}
 
-		if db.bypassLicenseCheck {
-			isRedistributable = true
+		// Assign unit-level metadata only once.
+		if uc.unitID == 0 {
+			uc.unitID = uIDCol
+			uc.pathID = pIDCol
+			uc.moduleID = mIDCol
+			uc.isRedistributable = isRedistCol
+			if db.bypassLicenseCheck {
+				uc.isRedistributable = true
+			}
+			lics, err := zipLicenseMetadata(licTypesCol, licPathsCol)
+			if err != nil {
+				return err
+			}
+			uc.licenseMetas = lics
 		}
 
-		if bc.GOOS != "" && bc.GOARCH != "" {
-			bcs = append(bcs, bc)
+		if rowBC.GOOS != "" && rowBC.GOARCH != "" {
+			uc.bcs = append(uc.bcs, rowBC)
+			if docID.Valid {
+				docIDs[rowBC] = int(docID.Int64)
+			}
 		}
-		lics, err := zipLicenseMetadata(licenseTypes, licensePaths)
-		if err != nil {
-			return err
-		}
-		licenseMetas = lics
 		return nil
-	}, um.Path, um.ModulePath, um.Version)
+	}, pkgPath, modulePath, version)
 	if err != nil {
 		return nil, err
 	}
-	sort.Slice(bcs, func(i, j int) bool { return internal.CompareBuildContexts(bcs[i], bcs[j]) < 0 })
-	var bcMatched internal.BuildContext
-	for _, c := range bcs {
-		if bc.Match(c) {
-			bcMatched = c
-			break
-		}
+	if uc.unitID == 0 {
+		return nil, derrors.NotFound
 	}
+
+	uc.bcs = internal.SortedBuildContexts(uc.bcs)
+
+	var ok bool
+	uc.bestBC, ok = internal.MatchingBuildContext(uc.bcs, bc)
+	if ok {
+		uc.docID = docIDs[uc.bestBC]
+	}
+	return uc, nil
+}
+
+func (db *DB) getUnitWithAllFields(ctx context.Context, um *internal.UnitMeta, fields internal.FieldSet, bc internal.BuildContext) (_ *internal.Unit, err error) {
+	defer derrors.WrapStack(&err, "getUnitWithAllFields(ctx, %q, %q, %q)", um.Path, um.ModulePath, um.Version)
+	defer stats.Elapsed(ctx, "getUnitWithAllFields")()
+
+	uc, err := db.getUnitContext(ctx, um.Path, um.ModulePath, um.Version, bc)
+	if err != nil {
+		return nil, err
+	}
+
 	docSelect := "CAST(NULL AS bytea),"
 	if fields&internal.WithDocsSource != 0 {
 		docSelect = "d.source,"
@@ -503,27 +559,22 @@ func (db *DB) getUnitWithAllFields(ctx context.Context, um *internal.UnitMeta, f
 		LEFT JOIN readmes r
 		ON r.unit_id = u.id
 
-		LEFT JOIN (
-			SELECT synopsis, source, goos, goarch, unit_id
-			FROM documentation d
-			WHERE d.GOOS = $3 AND d.GOARCH = $4
-        ) d
-		ON d.unit_id = u.id
+		LEFT JOIN documentation d
+		ON d.id = $3
 		WHERE u.id = $2
 	`, docSelect)
 	var (
 		r internal.Readme
 		u internal.Unit
 	)
-	u.BuildContexts = bcs
-	var goos, goarch any
-	if bcMatched.GOOS != "" {
-		goos = bcMatched.GOOS
-		goarch = bcMatched.GOARCH
-	}
-	doc := &internal.Documentation{GOOS: bcMatched.GOOS, GOARCH: bcMatched.GOARCH}
+	u.BuildContexts = uc.bcs
+	doc := &internal.Documentation{GOOS: uc.bestBC.GOOS, GOARCH: uc.bestBC.GOARCH}
 	end := stats.Elapsed(ctx, "getUnitWithAllFields-readme-and-imports")
-	err = db.db.QueryRow(ctx, query, pathID, unitID, goos, goarch).Scan(
+	var docID any
+	if uc.docID != 0 {
+		docID = uc.docID
+	}
+	err = db.db.QueryRow(ctx, query, uc.pathID, uc.unitID, docID).Scan(
 		database.NullIsEmpty(&r.Filepath),
 		database.NullIsEmpty(&r.Contents),
 		database.NullIsEmpty(&doc.Synopsis),
@@ -546,17 +597,17 @@ func (db *DB) getUnitWithAllFields(ctx context.Context, um *internal.UnitMeta, f
 	}
 	end()
 	// Get other info.
-	pkgs, err := db.getPackagesInUnit(ctx, um.Path, moduleID)
+	pkgs, err := db.getPackagesInUnit(ctx, um.Path, uc.moduleID)
 	if err != nil {
 		return nil, err
 	}
 	u.Subdirectories = pkgs
 	u.UnitMeta = *um
-	u.Licenses = licenseMetas
-	u.IsRedistributable = isRedistributable
+	u.Licenses = uc.licenseMetas
+	u.IsRedistributable = uc.isRedistributable
 
-	if um.IsPackage() && !um.IsCommand() && bcMatched.GOOS != "" {
-		u.SymbolHistory, err = GetSymbolHistoryForBuildContext(ctx, db.db, pathID, um.ModulePath, bcMatched)
+	if um.IsPackage() && !um.IsCommand() && uc.bestBC.GOOS != "" {
+		u.SymbolHistory, err = GetSymbolHistoryForBuildContext(ctx, db.db, uc.pathID, um.ModulePath, uc.bestBC)
 		if err != nil {
 			return nil, err
 		}

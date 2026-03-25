@@ -8,7 +8,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"sort"
 
 	"github.com/Masterminds/squirrel"
 	"golang.org/x/pkgsite/internal"
@@ -22,16 +21,22 @@ func (db *DB) GetSymbols(ctx context.Context, pkgPath, modulePath, version strin
 	defer derrors.Wrap(&err, "DB.GetSymbols(ctx, %q, %q, %q, %v)", pkgPath, modulePath, version, bc)
 	defer stats.Elapsed(ctx, "DB.GetSymbols")()
 
-	query := packageSymbolQueryJoin(
+	uc, err := db.getUnitContext(ctx, pkgPath, modulePath, version, bc)
+	if err != nil {
+		return nil, err
+	}
+	if uc.docID == 0 {
+		return nil, derrors.NotFound
+	}
+
+	query := packageSymbolQuery(
 		squirrel.Select(
 			"s1.name AS symbol_name",
 			"s2.name AS parent_symbol_name",
 			"ps.section",
 			"ps.type",
-			"ps.synopsis",
-			"d.goos",
-			"d.goarch"), pkgPath, modulePath).
-		Where(squirrel.Eq{"m.version": version}).
+			"ps.synopsis")).
+		Where(squirrel.Eq{"ds.documentation_id": uc.docID}).
 		OrderBy("CASE WHEN ps.type='Type' THEN 0 ELSE 1 END").
 		OrderBy("s1.name")
 
@@ -40,26 +45,38 @@ func (db *DB) GetSymbols(ctx context.Context, pkgPath, modulePath, version strin
 		return nil, err
 	}
 
-	resultsByBC := make(map[internal.BuildContext][]internal.SymbolMeta)
+	var symbols []*internal.Symbol
+	symbolMap := make(map[string]*internal.Symbol)
 	collect := func(rows *sql.Rows) error {
 		var (
-			name, parentName, synopsis, goos, goarch string
-			section                                  internal.SymbolSection
-			kind                                     internal.SymbolKind
+			name, parentName, synopsis string
+			section                    internal.SymbolSection
+			kind                       internal.SymbolKind
 		)
-		if err := rows.Scan(&name, &parentName, &section, &kind, &synopsis, &goos, &goarch); err != nil {
+		if err := rows.Scan(&name, &parentName, &section, &kind, &synopsis); err != nil {
 			return fmt.Errorf("row.Scan(): %v", err)
 		}
-		rowBC := internal.BuildContext{GOOS: goos, GOARCH: goarch}
-		if bc.Match(rowBC) {
-			resultsByBC[rowBC] = append(resultsByBC[rowBC], internal.SymbolMeta{
-				Name:       name,
-				ParentName: parentName,
-				Section:    section,
-				Kind:       kind,
-				Synopsis:   synopsis,
-			})
+		sm := internal.SymbolMeta{
+			Name:       name,
+			ParentName: parentName,
+			Section:    section,
+			Kind:       kind,
+			Synopsis:   synopsis,
 		}
+		if sm.ParentName != "" && sm.ParentName != sm.Name {
+			if parent, ok := symbolMap[sm.ParentName]; ok {
+				parent.Children = append(parent.Children, &sm)
+				return nil
+			}
+		}
+		// Treat as top-level if no parent or parent not found in this build context.
+		s := &internal.Symbol{
+			SymbolMeta: sm,
+			GOOS:       uc.bestBC.GOOS,
+			GOARCH:     uc.bestBC.GOARCH,
+		}
+		symbols = append(symbols, s)
+		symbolMap[sm.Name] = s
 		return nil
 	}
 
@@ -67,39 +84,8 @@ func (db *DB) GetSymbols(ctx context.Context, pkgPath, modulePath, version strin
 		return nil, err
 	}
 
-	if len(resultsByBC) == 0 {
+	if len(symbols) == 0 {
 		return nil, derrors.NotFound
-	}
-
-	// Find the best build context among those that matched.
-	var matchedBCs []internal.BuildContext
-	for b := range resultsByBC {
-		matchedBCs = append(matchedBCs, b)
-	}
-	sort.Slice(matchedBCs, func(i, j int) bool {
-		return internal.CompareBuildContexts(matchedBCs[i], matchedBCs[j]) < 0
-	})
-	bestBC := matchedBCs[0]
-
-	var symbols []*internal.Symbol
-	symbolMap := make(map[string]*internal.Symbol)
-	rows := resultsByBC[bestBC]
-	for i := range rows {
-		sm := rows[i]
-		if sm.ParentName != "" && sm.ParentName != sm.Name {
-			if parent, ok := symbolMap[sm.ParentName]; ok {
-				parent.Children = append(parent.Children, &rows[i])
-				continue
-			}
-		}
-		// Treat as top-level if no parent or parent not found in this build context.
-		s := &internal.Symbol{
-			SymbolMeta: sm,
-			GOOS:       bestBC.GOOS,
-			GOARCH:     bestBC.GOARCH,
-		}
-		symbols = append(symbols, s)
-		symbolMap[sm.Name] = s
 	}
 	return symbols, nil
 }
@@ -144,15 +130,19 @@ func getPackageSymbols(ctx context.Context, ddb *database.DB, packagePath, modul
 	return sh, nil
 }
 
-func packageSymbolQueryJoin(query squirrel.SelectBuilder, pkgPath, modulePath string) squirrel.SelectBuilder {
-	return query.From("modules m").
-		Join("units u on u.module_id = m.id").
-		Join("documentation d ON d.unit_id = u.id").
-		Join("documentation_symbols ds ON ds.documentation_id = d.id").
+func packageSymbolQuery(query squirrel.SelectBuilder) squirrel.SelectBuilder {
+	return query.From("documentation_symbols ds").
 		Join("package_symbols ps ON ps.id = ds.package_symbol_id").
-		Join("paths p1 ON u.path_id = p1.id").
 		Join("symbol_names s1 ON ps.symbol_name_id = s1.id").
-		Join("symbol_names s2 ON ps.parent_symbol_name_id = s2.id").
+		Join("symbol_names s2 ON ps.parent_symbol_name_id = s2.id")
+}
+
+func packageSymbolQueryJoin(query squirrel.SelectBuilder, pkgPath, modulePath string) squirrel.SelectBuilder {
+	return packageSymbolQuery(query).
+		Join("documentation d ON d.id = ds.documentation_id").
+		Join("units u on u.id = d.unit_id").
+		Join("modules m ON m.id = u.module_id").
+		Join("paths p1 ON u.path_id = p1.id").
 		Where(squirrel.Eq{"p1.path": pkgPath}).
 		Where(squirrel.Eq{"m.module_path": modulePath})
 }

@@ -4,7 +4,10 @@
 
 package internal
 
-import "fmt"
+import (
+	"fmt"
+	"slices"
+)
 
 // A BuildContext describes a build context for the Go tool: information needed
 // to build a Go package. For our purposes, we only care about the information
@@ -41,7 +44,11 @@ var (
 // BuildContexts are the build contexts we check when loading a package (see
 // internal/fetch/load.go).
 // We store documentation for all of the listed contexts.
-// The order determines which environment's docs we will show as the default.
+//
+// The order of this slice determines the precedence when multiple build
+// contexts match a request. For example, if a user provides no GOOS or GOARCH,
+// the first context in this list that is available in the database will be
+// chosen as the default (typically linux/amd64).
 var BuildContexts = []BuildContext{
 	BuildContextLinux,
 	BuildContextWindows,
@@ -82,17 +89,46 @@ func (d *Documentation) BuildContext() BuildContext {
 	return BuildContext{GOOS: d.GOOS, GOARCH: d.GOARCH}
 }
 
-// DocumentationForBuildContext returns the first Documentation the list that
-// matches the BuildContext, or nil if none does. A Documentation matches if its
-// GOOS and GOARCH fields are the same as those of the BuildContext, or if the
-// Documentation field is "all", or if the BuildContext field is empty. That is,
-// empty BuildContext fields act as wildcards. So the zero BuildContext will
-// match the first element of docs, if there is one.
+// DocumentationForBuildContext returns the Documentation from the list that
+// matches the BuildContext and has the highest precedence according to
+// CompareBuildContexts. It returns nil if no match is found.
+// Empty BuildContext fields act as wildcards.
 func DocumentationForBuildContext(docs []*Documentation, bc BuildContext) *Documentation {
+	var (
+		bestDoc *Documentation
+		bestBC  BuildContext
+	)
 	for _, d := range docs {
-		if bc.Match(BuildContext{d.GOOS, d.GOARCH}) {
-			return d
+		dbc := d.BuildContext()
+		if bc.Match(dbc) && (bestDoc == nil || CompareBuildContexts(dbc, bestBC) < 0) {
+			bestDoc = d
+			bestBC = dbc
 		}
 	}
-	return nil
+	return bestDoc
+}
+
+// MatchingBuildContext returns the best BuildContext from the given bcs that matches bc,
+// according to CompareBuildContexts. It returns zero BuildContext and false if no match is
+// found.
+func MatchingBuildContext(bcs []BuildContext, bc BuildContext) (BuildContext, bool) {
+	var best BuildContext
+	found := false
+	for _, c := range bcs {
+		if bc.Match(c) {
+			if !found || CompareBuildContexts(c, best) < 0 {
+				best = c
+				found = true
+			}
+		}
+	}
+	return best, found
+}
+
+// SortedBuildContexts returns a copy of the given slice of BuildContexts, sorted by
+// precedence according to CompareBuildContexts.
+func SortedBuildContexts(bcs []BuildContext) []BuildContext {
+	sorted := slices.Clone(bcs)
+	slices.SortFunc(sorted, CompareBuildContexts)
+	return sorted
 }
