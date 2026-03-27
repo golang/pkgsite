@@ -250,7 +250,7 @@ func TestServeModule(t *testing.T) {
 		name       string
 		url        string
 		wantStatus int
-		want       *Module
+		want       any
 	}{
 		{
 			name:       "basic module metadata",
@@ -260,6 +260,12 @@ func TestServeModule(t *testing.T) {
 				Path:    modulePath,
 				Version: version,
 			},
+		},
+		{
+			name:       "bad version",
+			url:        "/v1/module/example.com?version=nope",
+			wantStatus: http.StatusNotFound,
+			want:       &Error{Code: 404, Message: "could not find module for import path example.com: not found"},
 		},
 		{
 			name:       "module with readme",
@@ -289,11 +295,11 @@ func TestServeModule(t *testing.T) {
 			}
 
 			if test.want != nil {
-				var got Module
-				if err := json.Unmarshal(w.Body.Bytes(), &got); err != nil {
-					t.Fatalf("json.Unmarshal: %v", err)
+				got, err := unmarshalResponse[Module](w.Body.Bytes())
+				if err != nil {
+					t.Fatalf("unmarshaling: %v", err)
 				}
-				if diff := cmp.Diff(test.want, &got); diff != "" {
+				if diff := cmp.Diff(test.want, got); diff != "" {
 					t.Errorf("mismatch (-want +got):\n%s", diff)
 				}
 			}
