@@ -102,7 +102,14 @@ print_duration_and_reset
 echo "----------------------------------------"
 echo "Running screentest"
 echo "----------------------------------------"
-./tests/screentest/run.sh -rm ci -concurrency 1
+if ! ./tests/screentest/run.sh -rm ci -concurrency 1; then
+  if [[ -d tests/screentest/output ]] && [[ -n "${KOKORO_ARTIFACTS_DIR:-}" ]]; then
+    echo "Screentest failed. Copying output to KOKORO_ARTIFACTS_DIR."
+    mkdir -p "${KOKORO_ARTIFACTS_DIR}/screentest_output"
+    cp -a tests/screentest/output/* "${KOKORO_ARTIFACTS_DIR}/screentest_output/" || true
+  fi
+  exit 1
+fi
 print_duration_and_reset
 
 echo "----------------------------------------"
