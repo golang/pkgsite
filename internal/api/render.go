@@ -2,6 +2,10 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+// TODO(jba)? Consider rendering notes separately. Now they appear
+// with the doc for each symbol, which is probably better for LLMs,
+// but be open to evidence to the contrary.
+
 package api
 
 import (
@@ -11,6 +15,7 @@ import (
 	"go/doc/comment"
 	"go/format"
 	"go/token"
+	"html"
 	"io"
 	"slices"
 	"strings"
@@ -25,7 +30,7 @@ import (
 type renderer interface {
 	start(*doc.Package)
 	end() error
-	// startSection start a section, like the one for functions.
+	// startSection starts a section, like the one for functions.
 	startSection(name string)
 	endSection()
 
@@ -94,6 +99,7 @@ func (r *textRenderer) emit(comment string, node ast.Node) {
 	r.printf("\n")
 }
 
+// TODO(jba): consolidate this function to avoid duplication.
 func (r *textRenderer) printf(format string, args ...any) {
 	if r.err != nil {
 		return
@@ -166,6 +172,77 @@ func (r *markdownRenderer) emit(comment string, node ast.Node) {
 }
 
 func (r *markdownRenderer) printf(format string, args ...any) {
+	if r.err != nil {
+		return
+	}
+	_, err := fmt.Fprintf(r.w, format, args...)
+	if err != nil {
+		r.err = err
+	}
+}
+
+type htmlRenderer struct {
+	fset    *token.FileSet
+	w       io.Writer
+	pkg     *doc.Package
+	parser  *comment.Parser
+	printer *comment.Printer
+	caser   cases.Caser
+	err     error
+}
+
+func (r *htmlRenderer) start(pkg *doc.Package) {
+	r.pkg = pkg
+	r.parser = pkg.Parser()
+	r.printer = pkg.Printer()
+	r.printer.HeadingLevel = 3
+	r.caser = cases.Title(language.English)
+
+	r.printf("<h1>package %s</h1>\n", pkg.Name)
+	if pkg.Doc != "" {
+		r.printf("\n")
+		_, err := r.w.Write(r.printer.HTML(r.parser.Parse(pkg.Doc)))
+		if err != nil {
+			r.err = err
+		}
+	}
+	r.printf("\n")
+}
+
+func (r *htmlRenderer) end() error { return r.err }
+
+func (r *htmlRenderer) startSection(name string) {
+	if name == "" {
+		return
+	}
+	r.printf("<h2>%s</h2>\n\n", r.caser.String(name))
+}
+
+func (r *htmlRenderer) endSection() {}
+
+func (r *htmlRenderer) emit(comment string, node ast.Node) {
+	if r.err != nil {
+		return
+	}
+	var buf strings.Builder
+	err := format.Node(&buf, r.fset, node)
+	if err != nil {
+		r.err = err
+		return
+	}
+	r.printf("<pre><code>%s</code></pre>\n", html.EscapeString(buf.String()))
+	formatted := r.printer.HTML(r.parser.Parse(comment))
+	if len(formatted) > 0 {
+		_, err = r.w.Write(formatted)
+		if err != nil {
+			r.err = err
+			return
+		}
+	}
+	r.printf("\n")
+}
+
+func (r *htmlRenderer) printf(format string, args ...any) {
 	if r.err != nil {
 		return
 	}

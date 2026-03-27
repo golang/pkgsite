@@ -1,0 +1,75 @@
+<h1>package pkg</h1>
+
+<p>Package pkg has every form of declaration.
+<h3 id="hdr-Heading">Heading</h3>
+<p>Search <a href="https://google.com">Google</a> for details.
+<h3 id="hdr-Links">Links</h3>
+<ul>
+<li>pkgsite repo, <a href="https://go.googlesource.com/pkgsite">https://go.googlesource.com/pkgsite</a>
+<li>Play with Go, <a href="https://play-with-go.dev">https://play-with-go.dev</a>
+</ul>
+
+<h2>Constants</h2>
+
+<pre><code>const (
+	X = 1
+	Y = 2
+)</code></pre>
+<p>Several constants.
+
+<pre><code>const C = 1</code></pre>
+<p>C is a shorthand for 1.
+
+<h2>Variables</h2>
+
+<pre><code>var V = 2</code></pre>
+<p>V is a variable.
+
+<h2>Functions</h2>
+
+<pre><code>func Add(x int) int</code></pre>
+<p>Add adds 1 to x.
+
+<pre><code>func F()</code></pre>
+<p>F is a function.
+
+<h2>Types</h2>
+
+<pre><code>type A int</code></pre>
+
+<pre><code>type B bool</code></pre>
+
+<pre><code>type I1 interface {
+	M1()
+}</code></pre>
+<p>I1 is an interface.
+
+<pre><code>type I2 interface {
+	I1
+	M2()
+}</code></pre>
+
+<pre><code>type S1 struct {
+	F int // field
+}</code></pre>
+<p>S1 is a struct.
+
+<pre><code>type S2 struct {
+	S1
+	G int
+}</code></pre>
+<p>S2 is another struct.
+
+<pre><code>type T int</code></pre>
+<p>T is a type.
+
+<pre><code>const CT T = 3</code></pre>
+<p>CT is a typed constant.
+They appear after their type.
+
+<pre><code>func TF() T</code></pre>
+<p>TF is a constructor for T.
+
+<pre><code>func (T) M()</code></pre>
+<p>M is a method of T.
+BUG(xxx): this verifies that notes are rendered.

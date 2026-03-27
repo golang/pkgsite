@@ -65,4 +65,5 @@ func TestRenderDoc(t *testing.T) {
 
 	check(t, "text", &textRenderer{fset: decoded.Fset, w: &sb})
 	check(t, "markdown", &markdownRenderer{fset: decoded.Fset, w: &sb})
+	check(t, "html", &htmlRenderer{fset: decoded.Fset, w: &sb})
 }
