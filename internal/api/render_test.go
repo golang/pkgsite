@@ -6,6 +6,7 @@ package api
 
 import (
 	"context"
+	"fmt"
 	"go/parser"
 	"go/token"
 	"os"
@@ -18,17 +19,24 @@ import (
 )
 
 func TestRenderDoc(t *testing.T) {
-	src, err := os.ReadFile("testdata/pkg.go")
-	if err != nil {
-		t.Fatal(err)
-	}
+	t.Run("examples", func(t *testing.T) {
+		testRenderDoc(t, true)
+	})
+	t.Run("no examples", func(t *testing.T) {
+		testRenderDoc(t, false)
+	})
+}
+
+func testRenderDoc(t *testing.T, examples bool) {
 	fset := token.NewFileSet()
-	pf, err := parser.ParseFile(fset, "p.go", src, parser.ParseComments)
-	if err != nil {
-		t.Fatal(err)
-	}
 	docPkg := godoc.NewPackage(fset, nil)
-	docPkg.AddFile(pf, true)
+	for _, file := range []string{"pkg.go", "pkg_test.go"} {
+		pf, err := parser.ParseFile(fset, filepath.Join("testdata", file), nil, parser.ParseComments)
+		if err != nil {
+			t.Fatal(err)
+		}
+		docPkg.AddFile(pf, true)
+	}
 	gpkg, err := docPkg.Encode(context.Background())
 	if err != nil {
 		t.Fatal(err)
@@ -48,17 +56,23 @@ func TestRenderDoc(t *testing.T) {
 	check := func(t *testing.T, name string, r renderer) {
 		sb.Reset()
 		t.Run(name, func(t *testing.T) {
-			if err := renderDoc(dpkg, r); err != nil {
+			if err := renderDoc(dpkg, r, examples); err != nil {
 				t.Fatal(err)
 			}
 			got := strings.TrimSpace(sb.String())
-			wantBytes, err := os.ReadFile(filepath.FromSlash("testdata/" + name + ".golden"))
+			goldenName := name
+			if examples {
+				goldenName += "-examples"
+			}
+			goldenFile := filepath.Join("testdata", goldenName+".golden")
+			wantBytes, err := os.ReadFile(goldenFile)
 			if err != nil {
 				t.Fatal(err)
 			}
 			want := strings.TrimSpace(string(wantBytes))
 			if diff := cmp.Diff(want, got); diff != "" {
 				t.Errorf("mismatch (-want +got):\n%s", diff)
+				fmt.Println(got)
 			}
 		})
 	}

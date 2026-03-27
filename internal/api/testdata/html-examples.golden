@@ -9,6 +9,21 @@
 <li>Play with Go, <a href="https://play-with-go.dev">https://play-with-go.dev</a>
 </ul>
 
+<h4>Example</h4>
+
+<pre><code>
+{
+	fmt.Println("Package example")
+
+}
+</code></pre>
+Output:
+
+<pre><code>
+Package example
+
+</code></pre>
+
 <h2>Constants</h2>
 
 <pre><code>const (
@@ -32,6 +47,38 @@
 
 <pre><code>func F()</code></pre>
 <p>F is a function.
+
+<h4>Example</h4>
+
+<pre><code>
+{
+	pkg.F()
+	fmt.Println("F example")
+
+}
+</code></pre>
+Output:
+
+<pre><code>
+F example
+
+</code></pre>
+
+<h4>Example (second)</h4>
+
+<pre><code>
+{
+	pkg.F()
+	fmt.Println("F second example")
+
+}
+</code></pre>
+Output:
+
+<pre><code>
+F second example
+
+</code></pre>
 
 <h2>Types</h2>
 
@@ -63,6 +110,22 @@
 <pre><code>type T int</code></pre>
 <p>T is a type.
 
+<h4>Example</h4>
+
+<pre><code>
+{
+	_ = pkg.T(0)
+	fmt.Println("T example")
+
+}
+</code></pre>
+Output:
+
+<pre><code>
+T example
+
+</code></pre>
+
 <pre><code>const CT T = 3</code></pre>
 <p>CT is a typed constant.
 They appear after their type.
@@ -73,3 +136,20 @@ They appear after their type.
 <pre><code>func (T) M()</code></pre>
 <p>M is a method of T.
 BUG(xxx): this verifies that notes are rendered.
+
+<h4>Example</h4>
+
+<pre><code>
+{
+	var t pkg.T
+	t.M()
+	fmt.Println("M example")
+
+}
+</code></pre>
+Output:
+
+<pre><code>
+M example
+
+</code></pre>

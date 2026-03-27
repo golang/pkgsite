@@ -112,7 +112,9 @@ func ServePackage(w http.ResponseWriter, r *http.Request, ds internal.DataSource
 			default:
 				return fmt.Errorf("%w: bad doc format: need one of 'text', 'md', 'markdown' or 'html'", derrors.InvalidArgument)
 			}
-			if err := renderDoc(dpkg, r); err != nil {
+			// TODO(jba): add a param to omit examples
+			const includeExamples = true
+			if err := renderDoc(dpkg, r, includeExamples); err != nil {
 				return fmt.Errorf("%w: %s", derrors.Unknown, err.Error())
 			}
 			docs = sb.String()

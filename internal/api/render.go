@@ -37,7 +37,9 @@ type renderer interface {
 	// emit prints documentation for particular node, like a const
 	// or function.
 	emit(comment string, node ast.Node)
-	// TODO(jba): support examples
+
+	// emitExample prints an example.
+	emitExample(ex *doc.Example)
 }
 
 type textRenderer struct {
@@ -62,8 +64,7 @@ func (r *textRenderer) start(pkg *doc.Package) {
 	if pkg.Doc != "" {
 		r.printf("\n")
 		// The package doc is not indented, so don't use r.printer.
-		_, err := r.w.Write(pkg.Text(pkg.Doc))
-		if err != nil {
+		if _, err := r.w.Write(pkg.Text(pkg.Doc)); err != nil {
 			r.err = err
 		}
 	}
@@ -90,10 +91,51 @@ func (r *textRenderer) emit(comment string, node ast.Node) {
 	r.printf("\n")
 	formatted := r.printer.Text(r.parser.Parse(comment))
 	if len(formatted) > 0 {
-		_, err = r.w.Write(formatted)
-		if err != nil {
+		if _, err = r.w.Write(formatted); err != nil {
 			r.err = err
 			return
+		}
+	}
+	r.printf("\n")
+}
+
+func (r *textRenderer) emitExample(ex *doc.Example) {
+	if r.err != nil {
+		return
+	}
+	r.printf("Example")
+	if ex.Suffix != "" {
+		r.printf(" (%s)", ex.Suffix)
+	}
+	r.printf(":\n")
+	if ex.Doc != "" {
+		formatted := r.printer.Text(r.parser.Parse(ex.Doc))
+		if len(formatted) > 0 {
+			if _, err := r.w.Write(formatted); err != nil {
+				r.err = err
+				return
+			}
+			r.printf("\n")
+		}
+	}
+	var buf strings.Builder
+	if err := format.Node(&buf, r.fset, ex.Code); err != nil {
+		r.err = err
+		return
+	}
+	// Indent the code and output.
+	lines := strings.Split(strings.TrimSpace(buf.String()), "\n")
+	for i, line := range lines {
+		// Omit blank line before close brace.
+		if i == len(lines)-2 && line == "" {
+			continue
+		}
+		r.printf("\t%s\n", line)
+	}
+	if ex.Output != "" {
+		r.printf("\n\tOutput:\n")
+		for _, line := range strings.Split(strings.TrimSpace(ex.Output), "\n") {
+			r.printf("\t%s\n", line)
 		}
 	}
 	r.printf("\n")
@@ -104,8 +146,7 @@ func (r *textRenderer) printf(format string, args ...any) {
 	if r.err != nil {
 		return
 	}
-	_, err := fmt.Fprintf(r.w, format, args...)
-	if err != nil {
+	if _, err := fmt.Fprintf(r.w, format, args...); err != nil {
 		r.err = err
 	}
 }
@@ -130,8 +171,7 @@ func (r *markdownRenderer) start(pkg *doc.Package) {
 	r.printf("# package %s\n", pkg.Name)
 	if pkg.Doc != "" {
 		r.printf("\n")
-		_, err := r.w.Write(r.printer.Markdown(r.parser.Parse(pkg.Doc)))
-		if err != nil {
+		if _, err := r.w.Write(r.printer.Markdown(r.parser.Parse(pkg.Doc))); err != nil {
 			r.err = err
 		}
 	}
@@ -153,7 +193,7 @@ func (r *markdownRenderer) emit(comment string, node ast.Node) {
 	if r.err != nil {
 		return
 	}
-	r.printf("```\n")
+	r.printf("```go\n")
 	err := format.Node(r.w, r.fset, node)
 	if err != nil {
 		r.err = err
@@ -162,11 +202,39 @@ func (r *markdownRenderer) emit(comment string, node ast.Node) {
 	r.printf("\n```\n")
 	formatted := r.printer.Markdown(r.parser.Parse(comment))
 	if len(formatted) > 0 {
-		_, err = r.w.Write(formatted)
-		if err != nil {
+		if _, err = r.w.Write(formatted); err != nil {
 			r.err = err
 			return
 		}
+	}
+	r.printf("\n")
+}
+
+func (r *markdownRenderer) emitExample(ex *doc.Example) {
+	if r.err != nil {
+		return
+	}
+	r.printf("#### Example")
+	if ex.Suffix != "" {
+		r.printf(" (%s)", ex.Suffix)
+	}
+	r.printf("\n\n")
+	if ex.Doc != "" {
+		if _, err := r.w.Write(r.printer.Markdown(r.parser.Parse(ex.Doc))); err != nil {
+			r.err = err
+			return
+		}
+		r.printf("\n")
+	}
+	r.printf("```go\n")
+	err := format.Node(r.w, r.fset, ex.Code)
+	if err != nil {
+		r.err = err
+		return
+	}
+	r.printf("\n```\n")
+	if ex.Output != "" {
+		r.printf("Output:\n\n```\n%s\n```\n", ex.Output)
 	}
 	r.printf("\n")
 }
@@ -175,8 +243,7 @@ func (r *markdownRenderer) printf(format string, args ...any) {
 	if r.err != nil {
 		return
 	}
-	_, err := fmt.Fprintf(r.w, format, args...)
-	if err != nil {
+	if _, err := fmt.Fprintf(r.w, format, args...); err != nil {
 		r.err = err
 	}
 }
@@ -188,6 +255,7 @@ type htmlRenderer struct {
 	parser  *comment.Parser
 	printer *comment.Printer
 	caser   cases.Caser
+	buf     strings.Builder
 	err     error
 }
 
@@ -201,8 +269,7 @@ func (r *htmlRenderer) start(pkg *doc.Package) {
 	r.printf("<h1>package %s</h1>\n", pkg.Name)
 	if pkg.Doc != "" {
 		r.printf("\n")
-		_, err := r.w.Write(r.printer.HTML(r.parser.Parse(pkg.Doc)))
-		if err != nil {
+		if _, err := r.w.Write(r.printer.HTML(r.parser.Parse(pkg.Doc))); err != nil {
 			r.err = err
 		}
 	}
@@ -224,20 +291,49 @@ func (r *htmlRenderer) emit(comment string, node ast.Node) {
 	if r.err != nil {
 		return
 	}
-	var buf strings.Builder
-	err := format.Node(&buf, r.fset, node)
+	r.buf.Reset()
+	err := format.Node(&r.buf, r.fset, node)
 	if err != nil {
 		r.err = err
 		return
 	}
-	r.printf("<pre><code>%s</code></pre>\n", html.EscapeString(buf.String()))
+	r.printf("<pre><code>%s</code></pre>\n", html.EscapeString(r.buf.String()))
 	formatted := r.printer.HTML(r.parser.Parse(comment))
 	if len(formatted) > 0 {
-		_, err = r.w.Write(formatted)
-		if err != nil {
+		if _, err = r.w.Write(formatted); err != nil {
 			r.err = err
 			return
 		}
+	}
+	r.printf("\n")
+}
+
+func (r *htmlRenderer) emitExample(ex *doc.Example) {
+	if r.err != nil {
+		return
+	}
+	r.printf("<h4>Example")
+	if ex.Suffix != "" {
+		r.printf(" (%s)", ex.Suffix)
+	}
+	r.printf("</h4>\n")
+	r.printf("\n")
+	if ex.Doc != "" {
+		if _, err := r.w.Write(r.printer.Markdown(r.parser.Parse(ex.Doc))); err != nil {
+			r.err = err
+			return
+		}
+		r.printf("\n")
+	}
+	r.printf("<pre><code>\n")
+	err := format.Node(r.w, r.fset, ex.Code)
+	if err != nil {
+		r.err = err
+		return
+	}
+	r.printf("\n</code></pre>\n")
+	if ex.Output != "" {
+		r.printf("Output:\n\n<pre><code>\n%s\n</code></pre>\n", html.EscapeString(ex.Output))
 	}
 	r.printf("\n")
 }
@@ -246,20 +342,23 @@ func (r *htmlRenderer) printf(format string, args ...any) {
 	if r.err != nil {
 		return
 	}
-	_, err := fmt.Fprintf(r.w, format, args...)
-	if err != nil {
+	if _, err := fmt.Fprintf(r.w, format, args...); err != nil {
 		r.err = err
 	}
 }
 
 // renderDoc renders the documentation for dpkg using the given renderer.
-// TODO(jba): support examples.
-func renderDoc(dpkg *doc.Package, r renderer) error {
+func renderDoc(dpkg *doc.Package, r renderer, examples bool) error {
 	r.start(dpkg)
+	if examples {
+		for _, ex := range dpkg.Examples {
+			r.emitExample(ex)
+		}
+	}
 
 	renderValues(dpkg.Consts, r, "constants")
 	renderValues(dpkg.Vars, r, "variables")
-	renderFuncs(dpkg.Funcs, r, "functions")
+	renderFuncs(dpkg.Funcs, r, "functions", examples)
 
 	started := false
 	for _, t := range dpkg.Types {
@@ -271,10 +370,15 @@ func renderDoc(dpkg *doc.Package, r renderer) error {
 			started = true
 		}
 		r.emit(t.Doc, t.Decl)
+		if examples {
+			for _, ex := range t.Examples {
+				r.emitExample(ex)
+			}
+		}
 		renderValues(t.Consts, r, "")
 		renderValues(t.Vars, r, "")
-		renderFuncs(t.Funcs, r, "")
-		renderFuncs(t.Methods, r, "")
+		renderFuncs(t.Funcs, r, "", examples)
+		renderFuncs(t.Methods, r, "", examples)
 	}
 	if started {
 		r.endSection()
@@ -301,7 +405,7 @@ func renderValues(vals []*doc.Value, r renderer, section string) {
 	}
 }
 
-func renderFuncs(funcs []*doc.Func, r renderer, section string) {
+func renderFuncs(funcs []*doc.Func, r renderer, section string, examples bool) {
 	started := false
 	for _, f := range funcs {
 		if !ast.IsExported(f.Name) {
@@ -314,6 +418,11 @@ func renderFuncs(funcs []*doc.Func, r renderer, section string) {
 			started = true
 		}
 		r.emit(f.Doc, f.Decl)
+		if examples {
+			for _, ex := range f.Examples {
+				r.emitExample(ex)
+			}
+		}
 	}
 	if started && section != "" {
 		r.endSection()

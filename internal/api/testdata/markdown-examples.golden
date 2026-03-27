@@ -11,6 +11,21 @@ Search [Google](https://google.com) for details.
   - pkgsite repo, [https://go.googlesource.com/pkgsite](https://go.googlesource.com/pkgsite)
   - Play with Go, [https://play-with-go.dev](https://play-with-go.dev)
 
+#### Example
+
+```go
+{
+	fmt.Println("Package example")
+
+}
+```
+Output:
+
+```
+Package example
+
+```
+
 ## Constants
 
 ```go
@@ -44,6 +59,38 @@ Add adds 1 to x.
 func F()
 ```
 F is a function.
+
+#### Example
+
+```go
+{
+	pkg.F()
+	fmt.Println("F example")
+
+}
+```
+Output:
+
+```
+F example
+
+```
+
+#### Example (second)
+
+```go
+{
+	pkg.F()
+	fmt.Println("F second example")
+
+}
+```
+Output:
+
+```
+F second example
+
+```
 
 ## Types
 
@@ -89,6 +136,22 @@ type T int
 ```
 T is a type.
 
+#### Example
+
+```go
+{
+	_ = pkg.T(0)
+	fmt.Println("T example")
+
+}
+```
+Output:
+
+```
+T example
+
+```
+
 ```go
 const CT T = 3
 ```
@@ -103,3 +166,20 @@ TF is a constructor for T.
 func (T) M()
 ```
 M is a method of T. BUG(xxx): this verifies that notes are rendered.
+
+#### Example
+
+```go
+{
+	var t pkg.T
+	t.M()
+	fmt.Println("M example")
+
+}
+```
+Output:
+
+```
+M example
+
+```
