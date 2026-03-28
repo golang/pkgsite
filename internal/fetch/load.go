@@ -51,7 +51,8 @@ func (bpe *BadPackageError) Error() string { return bpe.Err.Error() }
 // If a package is fine except that its documentation is too large, loadPackage
 // returns a goPackage whose err field is a non-nil error with godoc.ErrTooLarge in its chain.
 func loadPackage(ctx context.Context, contentDir fs.FS, goFilePaths []string, innerPath string,
-	sourceInfo *source.Info, modInfo *godoc.ModuleInfo) (_ *goPackage, err error) {
+	sourceInfo *source.Info, modInfo *godoc.ModuleInfo,
+) (_ *goPackage, err error) {
 	defer derrors.Wrap(&err, "loadPackage(ctx, zipGoFiles, %q, sourceInfo, modInfo)", innerPath)
 	ctx, span := trace.StartSpan(ctx, "fetch.loadPackage")
 	defer span.End()
@@ -185,7 +186,7 @@ func loadPackage(ctx context.Context, contentDir fs.FS, goFilePaths []string, in
 
 // loadPackageMeta loads only the parts of a package that are needed to load a
 // packageMeta.
-func loadPackageMeta(ctx context.Context, contentDir fs.FS, goFilePaths []string, innerPath string, modInfo *godoc.ModuleInfo) (_ *packageMeta, err error) {
+func loadPackageMeta(_ context.Context, contentDir fs.FS, goFilePaths []string, innerPath string, modInfo *godoc.ModuleInfo) (_ *packageMeta, err error) {
 	defer derrors.Wrap(&err, "loadPackageMeta(ctx, zipGoFiles, %q, sourceInfo, modInfo)", innerPath)
 
 	// Make a map with all the zip file contents.
@@ -285,7 +286,8 @@ var httpPost = http.Post
 // If it returns an error with ErrTooLarge in its chain, the other return values
 // are still valid.
 func loadPackageForBuildContext(ctx context.Context, files map[string][]byte, innerPath string, sourceInfo *source.Info, modInfo *godoc.ModuleInfo) (
-	name string, imports []string, synopsis string, source []byte, api []*internal.Symbol, err error) {
+	name string, imports []string, synopsis string, source []byte, api []*internal.Symbol, err error,
+) {
 	modulePath := modInfo.ModulePath
 	defer derrors.Wrap(&err, "loadPackageWithBuildContext(files, %q, %q, %+v)", innerPath, modulePath, sourceInfo)
 

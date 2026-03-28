@@ -140,10 +140,8 @@ check_bad_migrations() {
 
 # check_unparam runs unparam on source files.
 check_unparam() {
-  echo "unparam disabled until ssa supports generics"
-  # TODO: uncomment when working
-  # ensure_go_binary mvdan.cc/unparam
-  # runcmd unparam ./...
+  ensure_go_binary mvdan.cc/unparam
+  runcmd unparam ./...
 }
 
 # check_vet runs go vet on source files.

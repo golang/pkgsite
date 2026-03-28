@@ -123,7 +123,7 @@ func BuildServer(ctx context.Context, serverCfg ServerConfig) (*frontend.Server,
 //
 // An error is returned if any operations failed unexpectedly, or if no
 // requested directories contain any valid modules.
-func getModuleDirs(ctx context.Context, dirs []string, goRepoPath string, allowNoModules bool) (map[string][]frontend.LocalModule, error) {
+func getModuleDirs(_ context.Context, dirs []string, goRepoPath string, allowNoModules bool) (map[string][]frontend.LocalModule, error) {
 	dirModules := make(map[string][]frontend.LocalModule)
 	for _, dir := range dirs {
 		output, err := runGo(dir, "list", "-m", "-json")

@@ -55,7 +55,7 @@ func PopulateExcluded(ctx context.Context, cfg *config.Config, db *postgres.DB) 
 		}
 	}
 	defer r.Close()
-	lines, err := readExcludedLines(ctx, r)
+	lines, err := readExcludedLines(r)
 	if err != nil {
 		return err
 	}
@@ -77,7 +77,7 @@ func PopulateExcluded(ctx context.Context, cfg *config.Config, db *postgres.DB) 
 	return nil
 }
 
-func readExcludedLines(ctx context.Context, r io.Reader) ([]exclusion, error) {
+func readExcludedLines(r io.Reader) ([]exclusion, error) {
 	var lines []exclusion
 	s := bufio.NewScanner(r)
 	for s.Scan() {
