@@ -15,7 +15,7 @@ func TestIsExcluded(t *testing.T) {
 	defer release()
 	ctx := context.Background()
 
-	for _, pat := range []string{"bad", "badslash/", "baddy@v1.2.3", "github.com/bad"} {
+	for _, pat := range []string{"bad", "badslash/", "baddy@v1.2.3", "github.com/bad", "exact:github.com/CASE/go", "exact:github.com/PACKAGE@v1.0.0"} {
 		if err := testDB.InsertExcludedPattern(ctx, pat, "someone", "because"); err != nil {
 			t.Fatal(err)
 		}
@@ -31,7 +31,7 @@ func TestIsExcluded(t *testing.T) {
 		{"badness", "", false},
 		{"bad/ness", "", true},
 		{"bad.com/foo", "", false},
-		{"badslash", "", false},
+		{"badslash", "", true},
 		{"badslash/more", "", true},
 		{"badslash/more", "v1.2.3", true},
 		{"baddys", "v1.2.3", false},
@@ -48,6 +48,15 @@ func TestIsExcluded(t *testing.T) {
 		{"github.com/bad/repo", "", true},
 		{"github.com/bad/Repo", "", true},
 		{"github.com/Bad/repo", "", true},
+
+		// tests for exact: prefix
+		{"github.com/CASE/go", "", true},
+		{"github.com/case/go", "", false},
+		{"github.com/CASE/go/sub", "", true},
+		{"github.com/case/go/sub", "", false},
+		{"github.com/PACKAGE", "v1.0.0", true},
+		{"github.com/package", "v1.0.0", false},
+		{"github.com/PACKAGE", "v1.0.1", false},
 	} {
 		got := testDB.IsExcluded(ctx, test.path, test.version)
 		if got != test.want {
