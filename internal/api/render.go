@@ -2,10 +2,6 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// TODO(jba)? Consider rendering notes separately. Now they appear
-// with the doc for each symbol, which is probably better for LLMs,
-// but be open to evidence to the contrary.
-
 package api
 
 import (
@@ -42,13 +38,34 @@ type renderer interface {
 	emitExample(ex *doc.Example)
 }
 
+type commonRenderer struct {
+	fset *token.FileSet
+	w    io.Writer
+	err  error
+}
+
+func (r *commonRenderer) printf(format string, args ...any) {
+	if r.err != nil {
+		return
+	}
+	if _, err := fmt.Fprintf(r.w, format, args...); err != nil {
+		r.err = err
+	}
+}
+
+func (r *commonRenderer) end() error { return r.err }
+
 type textRenderer struct {
-	fset    *token.FileSet
-	w       io.Writer
+	commonRenderer
 	pkg     *doc.Package
 	parser  *comment.Parser
 	printer *comment.Printer
-	err     error
+}
+
+func newTextRenderer(fset *token.FileSet, w io.Writer) *textRenderer {
+	return &textRenderer{
+		commonRenderer: commonRenderer{fset: fset, w: w},
+	}
 }
 
 func (r *textRenderer) start(pkg *doc.Package) {
@@ -70,8 +87,6 @@ func (r *textRenderer) start(pkg *doc.Package) {
 	}
 	r.printf("\n")
 }
-
-func (r *textRenderer) end() error { return r.err }
 
 func (r *textRenderer) startSection(name string) {
 	r.printf("%s\n\n", strings.ToUpper(name))
@@ -141,24 +156,18 @@ func (r *textRenderer) emitExample(ex *doc.Example) {
 	r.printf("\n")
 }
 
-// TODO(jba): consolidate this function to avoid duplication.
-func (r *textRenderer) printf(format string, args ...any) {
-	if r.err != nil {
-		return
-	}
-	if _, err := fmt.Fprintf(r.w, format, args...); err != nil {
-		r.err = err
-	}
-}
-
 type markdownRenderer struct {
-	fset    *token.FileSet
-	w       io.Writer
+	commonRenderer
 	pkg     *doc.Package
 	parser  *comment.Parser
 	printer *comment.Printer
 	caser   cases.Caser
-	err     error
+}
+
+func newMarkdownRenderer(fset *token.FileSet, w io.Writer) *markdownRenderer {
+	return &markdownRenderer{
+		commonRenderer: commonRenderer{fset: fset, w: w},
+	}
 }
 
 func (r *markdownRenderer) start(pkg *doc.Package) {
@@ -177,8 +186,6 @@ func (r *markdownRenderer) start(pkg *doc.Package) {
 	}
 	r.printf("\n")
 }
-
-func (r *markdownRenderer) end() error { return r.err }
 
 func (r *markdownRenderer) startSection(name string) {
 	if name == "" {
@@ -239,24 +246,19 @@ func (r *markdownRenderer) emitExample(ex *doc.Example) {
 	r.printf("\n")
 }
 
-func (r *markdownRenderer) printf(format string, args ...any) {
-	if r.err != nil {
-		return
-	}
-	if _, err := fmt.Fprintf(r.w, format, args...); err != nil {
-		r.err = err
-	}
-}
-
 type htmlRenderer struct {
-	fset    *token.FileSet
-	w       io.Writer
+	commonRenderer
 	pkg     *doc.Package
 	parser  *comment.Parser
 	printer *comment.Printer
 	caser   cases.Caser
 	buf     strings.Builder
-	err     error
+}
+
+func newHTMLRenderer(fset *token.FileSet, w io.Writer) *htmlRenderer {
+	return &htmlRenderer{
+		commonRenderer: commonRenderer{fset: fset, w: w},
+	}
 }
 
 func (r *htmlRenderer) start(pkg *doc.Package) {
@@ -275,8 +277,6 @@ func (r *htmlRenderer) start(pkg *doc.Package) {
 	}
 	r.printf("\n")
 }
-
-func (r *htmlRenderer) end() error { return r.err }
 
 func (r *htmlRenderer) startSection(name string) {
 	if name == "" {
@@ -336,15 +336,6 @@ func (r *htmlRenderer) emitExample(ex *doc.Example) {
 		r.printf("Output:\n\n<pre><code>\n%s\n</code></pre>\n", html.EscapeString(ex.Output))
 	}
 	r.printf("\n")
-}
-
-func (r *htmlRenderer) printf(format string, args ...any) {
-	if r.err != nil {
-		return
-	}
-	if _, err := fmt.Fprintf(r.w, format, args...); err != nil {
-		r.err = err
-	}
 }
 
 // renderDoc renders the documentation for dpkg using the given renderer.

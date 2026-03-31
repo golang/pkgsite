@@ -104,11 +104,11 @@ func ServePackage(w http.ResponseWriter, r *http.Request, ds internal.DataSource
 			var sb strings.Builder
 			switch params.Doc {
 			case "text":
-				r = &textRenderer{fset: gpkg.Fset, w: &sb}
+				r = newTextRenderer(gpkg.Fset, &sb)
 			case "md", "markdown":
-				r = &markdownRenderer{fset: gpkg.Fset, w: &sb}
+				r = newMarkdownRenderer(gpkg.Fset, &sb)
 			case "html":
-				return errors.New("unimplemented")
+				r = newHTMLRenderer(gpkg.Fset, &sb)
 			default:
 				return fmt.Errorf("%w: bad doc format: need one of 'text', 'md', 'markdown' or 'html'", derrors.InvalidArgument)
 			}

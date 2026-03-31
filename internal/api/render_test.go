@@ -77,7 +77,7 @@ func testRenderDoc(t *testing.T, examples bool) {
 		})
 	}
 
-	check(t, "text", &textRenderer{fset: decoded.Fset, w: &sb})
-	check(t, "markdown", &markdownRenderer{fset: decoded.Fset, w: &sb})
-	check(t, "html", &htmlRenderer{fset: decoded.Fset, w: &sb})
+	check(t, "text", newTextRenderer(decoded.Fset, &sb))
+	check(t, "markdown", newMarkdownRenderer(decoded.Fset, &sb))
+	check(t, "html", newHTMLRenderer(decoded.Fset, &sb))
 }
