@@ -24,8 +24,8 @@ import (
 const (
 	// maxSearchResults is the maximum number of search results to return for a search query.
 	maxSearchResults = 1000
-	// searchResultsPerPage is the number of search results to return per page for paginated search results.
-	searchResultsPerPage = 100
+	// defaultLimit is the default number of results to return per page for paginated results.
+	defaultLimit = 100
 )
 
 // ServePackage handles requests for the v1 package metadata endpoint.
@@ -150,7 +150,7 @@ func ServeModuleVersions(w http.ResponseWriter, r *http.Request, ds internal.Dat
 		infos = filtered
 	}
 
-	resp, err := paginate(infos, params.ListParams, 100)
+	resp, err := paginate(infos, params.ListParams, defaultLimit)
 	if err != nil {
 		return err
 	}
@@ -198,7 +198,7 @@ func ServeModulePackages(w http.ResponseWriter, r *http.Request, ds internal.Dat
 		})
 	}
 
-	resp, err := paginate(items, params.ListParams, 100)
+	resp, err := paginate(items, params.ListParams, defaultLimit)
 	if err != nil {
 		return err
 	}
@@ -243,7 +243,7 @@ func ServeSearch(w http.ResponseWriter, r *http.Request, ds internal.DataSource)
 		})
 	}
 
-	resp, err := paginate(results, params.ListParams, searchResultsPerPage)
+	resp, err := paginate(results, params.ListParams, defaultLimit)
 	if err != nil {
 		return fmt.Errorf("%w: %s", derrors.InvalidArgument, err.Error())
 	}
@@ -291,7 +291,7 @@ func ServePackageSymbols(w http.ResponseWriter, r *http.Request, ds internal.Dat
 		})
 	}
 
-	resp, err := paginate(items, params.ListParams, 100)
+	resp, err := paginate(items, params.ListParams, defaultLimit)
 	if err != nil {
 		return err
 	}
@@ -344,7 +344,7 @@ func ServePackageImportedBy(w http.ResponseWriter, r *http.Request, ds internal.
 		importedBy = filtered
 	}
 
-	paged, err := paginate(importedBy, params.ListParams, 100)
+	paged, err := paginate(importedBy, params.ListParams, defaultLimit)
 	if err != nil {
 		return err
 	}
@@ -401,7 +401,7 @@ func ServeVulnerabilities(vc *vuln.Client) func(w http.ResponseWriter, r *http.R
 			})
 		}
 
-		resp, err := paginate(items, params.ListParams, 100)
+		resp, err := paginate(items, params.ListParams, defaultLimit)
 		if err != nil {
 			return err
 		}
