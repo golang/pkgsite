@@ -47,7 +47,6 @@ func ServePackage(w http.ResponseWriter, r *http.Request, ds internal.DataSource
 		return err
 	}
 
-	// Use GetUnit to get the requested data.
 	fs := internal.WithMain
 	if params.Licenses {
 		fs |= internal.WithLicenses
@@ -65,84 +64,9 @@ func ServePackage(w http.ResponseWriter, r *http.Request, ds internal.DataSource
 		return fmt.Errorf("%w: %s", derrors.Unknown, err.Error())
 	}
 
-	// Process documentation, including synopsis.
-	// Although unit.Documentation is a slice, it will
-	// have at most one item, the documentation matching
-	// the build context bc.
-	synopsis := ""
-	var docs string
-	goos := params.GOOS
-	goarch := params.GOARCH
-	if len(unit.Documentation) > 0 {
-		d := unit.Documentation[0]
-		synopsis = d.Synopsis
-		// Return the more precise GOOS/GOARCH.
-		// If the user didn't provide them, use the unit's.
-		// If the user did, assume what they provided is at
-		// least as specific as the unit's, and use it.
-		if goos == "" {
-			goos = d.GOOS
-		}
-		if goarch == "" {
-			goarch = d.GOARCH
-		}
-		if params.Doc != "" {
-			// d.Source is an encoded AST. Decode it, then use
-			// go/doc (not pkgsite's renderer) to generate the
-			// result.
-			gpkg, err := godoc.DecodePackage(d.Source)
-			if err != nil {
-				return fmt.Errorf("%w: %s", derrors.Unknown, err.Error())
-			}
-			innerPath := internal.Suffix(unit.Path, unit.ModulePath)
-			modInfo := &godoc.ModuleInfo{ModulePath: unit.ModulePath, ResolvedVersion: unit.Version}
-			dpkg, err := gpkg.DocPackage(innerPath, modInfo)
-			if err != nil {
-				return err
-			}
-			var r renderer
-			var sb strings.Builder
-			switch params.Doc {
-			case "text":
-				r = newTextRenderer(gpkg.Fset, &sb)
-			case "md", "markdown":
-				r = newMarkdownRenderer(gpkg.Fset, &sb)
-			case "html":
-				r = newHTMLRenderer(gpkg.Fset, &sb)
-			default:
-				return fmt.Errorf("%w: bad doc format: need one of 'text', 'md', 'markdown' or 'html'", derrors.InvalidArgument)
-			}
-			// TODO(jba): add a param to omit examples
-			const includeExamples = true
-			if err := renderDoc(dpkg, r, includeExamples); err != nil {
-				return fmt.Errorf("%w: %s", derrors.Unknown, err.Error())
-			}
-			docs = sb.String()
-		}
-	}
-
-	imports := unit.Imports
-	var licenses []License
-	for _, l := range unit.LicenseContents {
-		licenses = append(licenses, License{
-			Types:    l.Metadata.Types,
-			FilePath: l.Metadata.FilePath,
-			Contents: string(l.Contents),
-		})
-	}
-
-	resp := Package{
-		Path:              unit.Path,
-		ModulePath:        unit.ModulePath,
-		ModuleVersion:     unit.Version,
-		Synopsis:          synopsis,
-		IsStandardLibrary: stdlib.Contains(unit.ModulePath),
-		IsLatest:          unit.Version == unit.LatestVersion,
-		GOOS:              goos,
-		GOARCH:            goarch,
-		Docs:              docs,
-		Imports:           imports,
-		Licenses:          licenses,
+	resp, err := unitToPackage(unit, params)
+	if err != nil {
+		return err
 	}
 
 	return serveJSON(w, http.StatusOK, resp)
@@ -593,4 +517,93 @@ func paginate[T any](all []T, lp ListParams, defaultLimit int) (PaginatedRespons
 		Total:         len(all),
 		NextPageToken: nextToken,
 	}, nil
+}
+
+// unitToPackage processes unit documentation into a Package struct.
+func unitToPackage(unit *internal.Unit, params PackageParams) (*Package, error) {
+	// Although unit.Documentation is a slice, it will
+	// have at most one item, the documentation matching
+	// the build context.
+	synopsis := ""
+	var docs string
+	goos := params.GOOS
+	goarch := params.GOARCH
+	if len(unit.Documentation) > 0 {
+		d := unit.Documentation[0]
+		synopsis = d.Synopsis
+		// Return the more precise GOOS/GOARCH.
+		// If the user didn't provide them, use the unit's.
+		// If the user did, assume what they provided is at
+		// least as specific as the unit's, and use it.
+		if goos == "" {
+			goos = d.GOOS
+		}
+		if goarch == "" {
+			goarch = d.GOARCH
+		}
+		if params.Doc != "" {
+			var err error
+			const examples = true // TODO(jba): make examples configurable.
+			docs, err = renderDocumentation(unit, d, params.Doc, examples)
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	var licenses []License
+	for _, l := range unit.LicenseContents {
+		licenses = append(licenses, License{
+			Types:    l.Metadata.Types,
+			FilePath: l.Metadata.FilePath,
+			Contents: string(l.Contents),
+		})
+	}
+
+	return &Package{
+		Path:              unit.Path,
+		ModulePath:        unit.ModulePath,
+		ModuleVersion:     unit.Version,
+		Synopsis:          synopsis,
+		IsStandardLibrary: stdlib.Contains(unit.ModulePath),
+		IsLatest:          unit.Version == unit.LatestVersion,
+		GOOS:              goos,
+		GOARCH:            goarch,
+		Docs:              docs,
+		Imports:           unit.Imports,
+		Licenses:          licenses,
+	}, nil
+}
+
+// renderDocumentation renders the provided unit into the specified format.
+func renderDocumentation(unit *internal.Unit, d *internal.Documentation, format string, examples bool) (string, error) {
+	// d.Source is an encoded AST. Decode it, then use
+	// go/doc (not pkgsite's renderer) to generate the
+	// result.
+	gpkg, err := godoc.DecodePackage(d.Source)
+	if err != nil {
+		return "", fmt.Errorf("%w: %s", derrors.Unknown, err.Error())
+	}
+	innerPath := internal.Suffix(unit.Path, unit.ModulePath)
+	modInfo := &godoc.ModuleInfo{ModulePath: unit.ModulePath, ResolvedVersion: unit.Version}
+	dpkg, err := gpkg.DocPackage(innerPath, modInfo)
+	if err != nil {
+		return "", err
+	}
+	var r renderer
+	var sb strings.Builder
+	switch format {
+	case "text":
+		r = newTextRenderer(gpkg.Fset, &sb)
+	case "md", "markdown":
+		r = newMarkdownRenderer(gpkg.Fset, &sb)
+	case "html":
+		r = newHTMLRenderer(gpkg.Fset, &sb)
+	default:
+		return "", fmt.Errorf("%w: bad doc format: need one of 'text', 'md', 'markdown' or 'html'", derrors.InvalidArgument)
+	}
+	if err := renderDoc(dpkg, r, examples); err != nil {
+		return "", fmt.Errorf("%w: %s", derrors.Unknown, err.Error())
+	}
+	return sb.String(), nil
 }
