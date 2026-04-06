@@ -106,6 +106,32 @@ func TestServePackage(t *testing.T) {
 		}},
 	})
 
+	ds.MustInsertModule(ctx, &internal.Module{
+		ModuleInfo: internal.ModuleInfo{
+			ModulePath:    "example.com/ex",
+			Version:       "v1.0.0",
+			LatestVersion: "v1.0.0",
+		},
+		Units: []*internal.Unit{{
+			UnitMeta: internal.UnitMeta{
+				Path: "example.com/ex/pkg",
+				ModuleInfo: internal.ModuleInfo{
+					ModulePath:    "example.com/ex",
+					Version:       "v1.0.0",
+					LatestVersion: "v1.0.0",
+				},
+				Name: "pkg",
+			},
+			Documentation: []*internal.Documentation{sample.DocumentationWithExamples("linux", "amd64", "", `
+			import "fmt"
+			func Example() {
+			fmt.Println("hello")
+			// Output: hello
+			}
+			`)},
+		}},
+	})
+
 	for _, test := range []struct {
 		name       string
 		url        string
@@ -193,6 +219,68 @@ func TestServePackage(t *testing.T) {
 				GOOS:          "linux",
 				GOARCH:        "amd64",
 				Docs:          "package p\n\nPackage p is a package.\n\n# Links\n\n- pkg.go.dev, https://pkg.go.dev\n\nVARIABLES\n\nvar V int\n\n",
+			},
+		},
+		{
+			name:       "doc with examples",
+			url:        "/v1/package/example.com/ex/pkg?version=v1.0.0&doc=text&examples=true",
+			wantStatus: http.StatusOK,
+			want: &Package{
+				Path:          "example.com/ex/pkg",
+				ModulePath:    "example.com/ex",
+				ModuleVersion: "v1.0.0",
+				Synopsis:      "This is a package synopsis for GOOS=linux, GOARCH=amd64",
+				IsLatest:      true,
+				GOOS:          "linux",
+				GOARCH:        "amd64",
+				Docs:          "package pkg\n\nPackage pkg is a package.\n\nExample:\n\t{\n\t\tfmt.Println(\"hello\")\n\t}\n\n\tOutput:\n\thello\n\n",
+			},
+		},
+		{
+			name:       "examples without doc (returns 400)",
+			url:        "/v1/package/example.com/ex/pkg?version=v1.0.0&examples=true",
+			wantStatus: http.StatusBadRequest,
+			want: &Error{
+				Code:    http.StatusBadRequest,
+				Message: "ServePackage: invalid argument: examples require doc format to be specified",
+			},
+		},
+		{
+			name:       "doc without examples",
+			url:        "/v1/package/example.com/ex/pkg?version=v1.0.0&doc=text&examples=false",
+			wantStatus: http.StatusOK,
+			want: &Package{
+				Path:          "example.com/ex/pkg",
+				ModulePath:    "example.com/ex",
+				ModuleVersion: "v1.0.0",
+				Synopsis:      "This is a package synopsis for GOOS=linux, GOARCH=amd64",
+				IsLatest:      true,
+				GOOS:          "linux",
+				GOARCH:        "amd64",
+				Docs:          "package pkg\n\nPackage pkg is a package.\n\n",
+			},
+		},
+		{
+			name:       "invalid doc format",
+			url:        "/v1/package/example.com/pkg?version=v1.2.3&doc=invalid",
+			wantStatus: http.StatusBadRequest,
+			want: &Error{
+				Code:    http.StatusBadRequest,
+				Message: "ServePackage: invalid argument: bad doc format: need one of 'text', 'md', 'markdown' or 'html'",
+			},
+		},
+		{
+			name:       "empty doc format",
+			url:        "/v1/package/example.com/pkg?version=v1.2.3&doc=",
+			wantStatus: http.StatusOK,
+			want: &Package{
+				Path:          "example.com/pkg",
+				ModulePath:    "example.com",
+				ModuleVersion: version,
+				Synopsis:      "This is a package synopsis for GOOS=linux, GOARCH=amd64",
+				GOOS:          "linux",
+				GOARCH:        "amd64",
+				Docs:          "",
 			},
 		},
 	} {

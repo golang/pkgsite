@@ -27,6 +27,7 @@ type PackageParams struct {
 	GOOS     string `form:"goos"`
 	GOARCH   string `form:"goarch"`
 	Doc      string `form:"doc"`
+	Examples bool   `form:"examples"`
 	Imports  bool   `form:"imports"`
 	Licenses bool   `form:"licenses"`
 }

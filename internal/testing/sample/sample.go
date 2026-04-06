@@ -379,13 +379,29 @@ func constructFullPath(modulePath, suffix string) string {
 // Documentation returns a Documentation value for the given Go source.
 // It panics if there are errors parsing or encoding the source.
 func Documentation(goos, goarch, fileContents string) *internal.Documentation {
+	return documentation(goos, goarch, map[string]string{"sample.go": fileContents})
+}
+
+// DocumentationWithExamples returns a Documentation value for the given package
+// documentation and example code.
+// It panics if there are errors parsing or encoding the source.
+func DocumentationWithExamples(goos, goarch, pkgDoc, exampleCode string) *internal.Documentation {
+	return documentation(goos, goarch, map[string]string{
+		"pkg.go":      "// Package pkg is a package.\npackage pkg\n" + pkgDoc,
+		"pkg_test.go": "package pkg\n" + exampleCode,
+	})
+}
+
+func documentation(goos, goarch string, files map[string]string) *internal.Documentation {
 	fset := token.NewFileSet()
-	pf, err := parser.ParseFile(fset, "sample.go", fileContents, parser.ParseComments)
-	if err != nil {
-		panic(err)
-	}
 	docPkg := godoc.NewPackage(fset, nil)
-	docPkg.AddFile(pf, true)
+	for name, contents := range files {
+		pf, err := parser.ParseFile(fset, name, contents, parser.ParseComments)
+		if err != nil {
+			panic(err)
+		}
+		docPkg.AddFile(pf, true)
+	}
 	src, err := docPkg.Encode(context.Background())
 	if err != nil {
 		panic(err)

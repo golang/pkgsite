@@ -54,7 +54,7 @@ func ServePackage(w http.ResponseWriter, r *http.Request, ds internal.DataSource
 	if params.Imports {
 		fs |= internal.WithImports
 	}
-	if params.Doc != "" {
+	if params.Doc != "" || params.Examples {
 		fs |= internal.WithDocsSource
 	}
 
@@ -543,6 +543,10 @@ func paginate[T any](all []T, lp ListParams, defaultLimit int) (PaginatedRespons
 
 // unitToPackage processes unit documentation into a Package struct.
 func unitToPackage(unit *internal.Unit, params PackageParams) (*Package, error) {
+	if params.Examples && params.Doc == "" {
+		return nil, fmt.Errorf("%w: examples require doc format to be specified", derrors.InvalidArgument)
+	}
+
 	// Although unit.Documentation is a slice, it will
 	// have at most one item, the documentation matching
 	// the build context.
@@ -565,8 +569,7 @@ func unitToPackage(unit *internal.Unit, params PackageParams) (*Package, error) 
 		}
 		if params.Doc != "" {
 			var err error
-			const examples = true // TODO(jba): make examples configurable.
-			docs, err = renderDocumentation(unit, d, params.Doc, examples)
+			docs, err = renderDocumentation(unit, d, params.Doc, params.Examples)
 			if err != nil {
 				return nil, err
 			}
