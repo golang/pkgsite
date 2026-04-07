@@ -206,8 +206,6 @@ func ServeModulePackages(w http.ResponseWriter, r *http.Request, ds internal.Dat
 		return err
 	}
 
-	// TODO: Handle params.Token and params.Filter.
-	// For now, we just use params.Limit to limit the number of packages returned.
 	var items []Package
 	for _, m := range metas {
 		if params.Filter != "" && !strings.Contains(m.Path, params.Filter) && !strings.Contains(m.Synopsis, params.Filter) {
