@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
@@ -69,7 +70,7 @@ func ServePackage(w http.ResponseWriter, r *http.Request, ds internal.DataSource
 		return err
 	}
 
-	return serveJSON(w, http.StatusOK, resp)
+	return serveJSON(w, http.StatusOK, resp, versionCacheDur(params.Version))
 }
 
 // ServeModule handles requests for the v1 module metadata endpoint.
@@ -90,6 +91,8 @@ func ServeModule(w http.ResponseWriter, r *http.Request, ds internal.DataSource)
 	if requestedVersion == "" {
 		requestedVersion = version.Latest
 	}
+	// The served response is cacheDur if and only if the version is.
+	cacheDur := versionCacheDur(requestedVersion)
 
 	// For modules, we can use GetUnitMeta on the module path.
 	um, err := ds.GetUnitMeta(r.Context(), modulePath, modulePath, requestedVersion)
@@ -111,7 +114,7 @@ func ServeModule(w http.ResponseWriter, r *http.Request, ds internal.DataSource)
 	}
 
 	if !params.Readme && !params.Licenses {
-		return serveJSON(w, http.StatusOK, resp)
+		return serveJSON(w, http.StatusOK, resp, cacheDur)
 	}
 
 	fs := internal.MinimalFields
@@ -123,7 +126,7 @@ func ServeModule(w http.ResponseWriter, r *http.Request, ds internal.DataSource)
 	}
 	unit, err := ds.GetUnit(r.Context(), um, fs, internal.BuildContext{})
 	if err != nil {
-		return serveJSON(w, http.StatusOK, resp)
+		return serveJSON(w, http.StatusOK, resp, cacheDur)
 	}
 
 	if params.Readme && unit.Readme != nil {
@@ -142,7 +145,7 @@ func ServeModule(w http.ResponseWriter, r *http.Request, ds internal.DataSource)
 		}
 	}
 
-	return serveJSON(w, http.StatusOK, resp)
+	return serveJSON(w, http.StatusOK, resp, cacheDur)
 }
 
 // ServeModuleVersions handles requests for the v1 module versions endpoint.
@@ -179,7 +182,8 @@ func ServeModuleVersions(w http.ResponseWriter, r *http.Request, ds internal.Dat
 		return err
 	}
 
-	return serveJSON(w, http.StatusOK, resp)
+	// The response is never immutable, because a new version can arrive at any time.
+	return serveJSON(w, http.StatusOK, resp, shortCacheDur)
 }
 
 // ServeModulePackages handles requests for the v1 module packages endpoint.
@@ -225,7 +229,7 @@ func ServeModulePackages(w http.ResponseWriter, r *http.Request, ds internal.Dat
 		return err
 	}
 
-	return serveJSON(w, http.StatusOK, resp)
+	return serveJSON(w, http.StatusOK, resp, versionCacheDur(requestedVersion))
 }
 
 // ServeSearch handles requests for the v1 search endpoint.
@@ -270,7 +274,11 @@ func ServeSearch(w http.ResponseWriter, r *http.Request, ds internal.DataSource)
 		return fmt.Errorf("%w: %s", derrors.InvalidArgument, err.Error())
 	}
 
-	return serveJSON(w, http.StatusOK, resp)
+	// Search results are never immutable, because new modules are always being added.
+	// NOTE: the default cache freshness is set to 1 hour (see serveJSON). This seems
+	// like a reasonable time to cache a search, but be aware of complaints
+	// about stale search results.
+	return serveJSON(w, http.StatusOK, resp, shortCacheDur)
 }
 
 // ServePackageSymbols handles requests for the v1 package symbols endpoint.
@@ -318,7 +326,7 @@ func ServePackageSymbols(w http.ResponseWriter, r *http.Request, ds internal.Dat
 		return err
 	}
 
-	return serveJSON(w, http.StatusOK, resp)
+	return serveJSON(w, http.StatusOK, resp, versionCacheDur(params.Version))
 }
 
 // ServePackageImportedBy handles requests for the v1 package imported-by endpoint.
@@ -381,7 +389,8 @@ func ServePackageImportedBy(w http.ResponseWriter, r *http.Request, ds internal.
 		},
 	}
 
-	return serveJSON(w, http.StatusOK, resp)
+	// The imported-by list is not immutable, because new modules are always being added.
+	return serveJSON(w, http.StatusOK, resp, shortCacheDur)
 }
 
 // ServeVulnerabilities handles requests for the v1 module vulnerabilities endpoint.
@@ -428,7 +437,7 @@ func ServeVulnerabilities(vc *vuln.Client) func(w http.ResponseWriter, r *http.R
 			return err
 		}
 
-		return serveJSON(w, http.StatusOK, resp)
+		return serveJSON(w, http.StatusOK, resp, versionCacheDur(requestedVersion))
 	}
 }
 
@@ -483,12 +492,36 @@ func resolveModulePath(r *http.Request, ds internal.DataSource, pkgPath, moduleP
 	return um, nil
 }
 
-func serveJSON(w http.ResponseWriter, status int, data any) error {
+// Values for the Cache-Control header.
+// Compare with the TTLs for pkgsite's own cache, in internal/frontend/server.go
+// (look for symbols ending in "TTL").
+// Those values are shorter to manage our cache's memory, but the job of
+// Cache-Control is to reduce network traffic; downstream caches can manage
+// their own memory.
+const (
+	// Immutable pages can theoretically, be cached indefinitely,
+	// but have them time out so that excluded modules don't
+	// live in caches forever.
+	longCacheDur = 3 * time.Hour
+	// The information on some pages can change relatively quickly.
+	shortCacheDur = 1 * time.Hour
+	// Errors should not be cached.
+	noCache = time.Duration(0)
+)
+
+func serveJSON(w http.ResponseWriter, status int, data any, cacheDur time.Duration) error {
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(data); err != nil {
 		return err
 	}
 	w.Header().Set("Content-Type", "application/json")
+	var ccHeader string
+	if cacheDur == 0 {
+		ccHeader = "no-store"
+	} else {
+		ccHeader = fmt.Sprintf("public, max-age=%d", int(cacheDur.Seconds()))
+	}
+	w.Header().Set("Cache-Control", ccHeader)
 	w.WriteHeader(status)
 	_, err := w.Write(buf.Bytes())
 	return err
@@ -503,7 +536,7 @@ func ServeError(w http.ResponseWriter, err error) error {
 			Message: err.Error(),
 		}
 	}
-	return serveJSON(w, aerr.Code, aerr)
+	return serveJSON(w, aerr.Code, aerr, noCache)
 }
 
 // paginate returns a paginated response for the given list of items and pagination parameters.
@@ -631,4 +664,14 @@ func renderDocumentation(unit *internal.Unit, d *internal.Documentation, format 
 		return "", fmt.Errorf("%w: %s", derrors.Unknown, err.Error())
 	}
 	return sb.String(), nil
+}
+
+// versionCacheDur returns the duration used in the Cache-Control header
+// appropriate for the given module version.
+func versionCacheDur(v string) time.Duration {
+	immutable := !(v == "" || v == version.Latest || internal.DefaultBranches[v] || stdlib.SupportedBranches[v])
+	if immutable {
+		return longCacheDur
+	}
+	return shortCacheDur
 }

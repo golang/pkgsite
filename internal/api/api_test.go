@@ -1053,3 +1053,58 @@ func unmarshalResponse[T any](data []byte) (any, error) {
 	}
 	return nil, errors.Join(err1, err2)
 }
+
+func TestCacheControl(t *testing.T) {
+	ctx := context.Background()
+	ds := fakedatasource.New()
+	const modulePath = "example.com"
+	for _, v := range []string{"v1.0.0", "master"} {
+		ds.MustInsertModule(ctx, &internal.Module{
+			ModuleInfo: internal.ModuleInfo{
+				ModulePath: modulePath,
+				Version:    v,
+			},
+			Units: []*internal.Unit{{
+				UnitMeta: internal.UnitMeta{
+					Path: modulePath,
+					ModuleInfo: internal.ModuleInfo{
+						ModulePath: modulePath,
+						Version:    v,
+					},
+				},
+			}},
+		})
+	}
+
+	for _, test := range []struct {
+		version string
+		want    string
+	}{
+		{"v1.0.0", "public, max-age=10800"},
+		{"latest", "public, max-age=3600"},
+		{"master", "public, max-age=3600"},
+		{"", "public, max-age=3600"},
+	} {
+		t.Run(test.version, func(t *testing.T) {
+			url := "/v1/module/" + modulePath
+			if test.version != "" {
+				url += "?version=" + test.version
+			}
+			r := httptest.NewRequest("GET", url, nil)
+			w := httptest.NewRecorder()
+
+			if err := ServeModule(w, r, ds); err != nil {
+				t.Fatal(err)
+			}
+
+			if w.Code != http.StatusOK {
+				t.Fatalf("status = %d, want %d", w.Code, http.StatusOK)
+			}
+
+			got := w.Header().Get("Cache-Control")
+			if got != test.want {
+				t.Errorf("Cache-Control = %q, want %q", got, test.want)
+			}
+		})
+	}
+}
