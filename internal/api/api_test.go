@@ -230,20 +230,34 @@ func TestServeModule(t *testing.T) {
 		version    = "v1.2.3"
 	)
 
+	mi1 := sample.ModuleInfo(modulePath, version)
+	mi1.LatestVersion = "v1.2.4"
+	mi1.HasGoMod = true
+
 	ds.MustInsertModule(ctx, &internal.Module{
-		ModuleInfo: internal.ModuleInfo{
-			ModulePath: modulePath,
-			Version:    version,
-		},
+		ModuleInfo: *mi1,
+		Licenses:   sample.Licenses(),
 		Units: []*internal.Unit{{
 			UnitMeta: internal.UnitMeta{
-				Path: modulePath,
-				ModuleInfo: internal.ModuleInfo{
-					ModulePath: modulePath,
-					Version:    version,
-				},
+				Path:       modulePath,
+				ModuleInfo: *mi1,
 			},
-			Readme: &internal.Readme{Filepath: "README.md", Contents: "Hello world"},
+			Readme:   &internal.Readme{Filepath: "README.md", Contents: "Hello world"},
+			Licenses: sample.LicenseMetadata(),
+		}},
+	})
+
+	mi2 := sample.ModuleInfo(modulePath, "v1.2.4")
+	mi2.LatestVersion = "v1.2.4"
+	mi2.HasGoMod = true
+
+	ds.MustInsertModule(ctx, &internal.Module{
+		ModuleInfo: *mi2,
+		Units: []*internal.Unit{{
+			UnitMeta: internal.UnitMeta{
+				Path:       modulePath,
+				ModuleInfo: *mi2,
+			},
 		}},
 	})
 
@@ -258,8 +272,24 @@ func TestServeModule(t *testing.T) {
 			url:        "/v1/module/example.com?version=v1.2.3",
 			wantStatus: http.StatusOK,
 			want: &Module{
-				Path:    modulePath,
-				Version: version,
+				Path:              modulePath,
+				Version:           version,
+				IsRedistributable: true,
+				HasGoMod:          true,
+				RepoURL:           "https://example.com",
+			},
+		},
+		{
+			name:       "latest module metadata",
+			url:        "/v1/module/example.com?version=v1.2.4",
+			wantStatus: http.StatusOK,
+			want: &Module{
+				Path:              modulePath,
+				Version:           "v1.2.4",
+				IsLatest:          true,
+				IsRedistributable: true,
+				HasGoMod:          true,
+				RepoURL:           "https://example.com",
 			},
 		},
 		{
@@ -273,11 +303,33 @@ func TestServeModule(t *testing.T) {
 			url:        "/v1/module/example.com?version=v1.2.3&readme=true",
 			wantStatus: http.StatusOK,
 			want: &Module{
-				Path:    modulePath,
-				Version: version,
+				Path:              modulePath,
+				Version:           version,
+				IsRedistributable: true,
+				HasGoMod:          true,
+				RepoURL:           "https://example.com",
 				Readme: &Readme{
 					Filepath: "README.md",
 					Contents: "Hello world",
+				},
+			},
+		},
+		{
+			name:       "module with licenses",
+			url:        "/v1/module/example.com?version=v1.2.3&licenses=true",
+			wantStatus: http.StatusOK,
+			want: &Module{
+				Path:              modulePath,
+				Version:           version,
+				IsRedistributable: true,
+				HasGoMod:          true,
+				RepoURL:           "https://example.com",
+				Licenses: []License{
+					{
+						Types:    []string{"MIT"},
+						FilePath: "LICENSE",
+						Contents: "Lorem Ipsum",
+					},
 				},
 			},
 		},

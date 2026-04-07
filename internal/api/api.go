@@ -100,21 +100,45 @@ func ServeModule(w http.ResponseWriter, r *http.Request, ds internal.DataSource)
 	resp := Module{
 		Path:              um.ModulePath,
 		Version:           um.Version,
+		IsLatest:          um.Version == um.LatestVersion,
 		IsStandardLibrary: stdlib.Contains(um.ModulePath),
 		IsRedistributable: um.IsRedistributable,
+		HasGoMod:          um.HasGoMod,
 	}
 	// RepoURL needs to be extracted from source info if available
 	if um.SourceInfo != nil {
 		resp.RepoURL = um.SourceInfo.RepoURL()
 	}
 
+	if !params.Readme && !params.Licenses {
+		return serveJSON(w, http.StatusOK, resp)
+	}
+
+	fs := internal.MinimalFields
 	if params.Readme {
-		readme, err := ds.GetModuleReadme(r.Context(), um.ModulePath, um.Version)
-		if err == nil && readme != nil {
-			resp.Readme = &Readme{
-				Filepath: readme.Filepath,
-				Contents: readme.Contents,
-			}
+		fs |= internal.WithMain // WithMain includes Readme in GetUnit
+	}
+	if params.Licenses {
+		fs |= internal.WithLicenses
+	}
+	unit, err := ds.GetUnit(r.Context(), um, fs, internal.BuildContext{})
+	if err != nil {
+		return serveJSON(w, http.StatusOK, resp)
+	}
+
+	if params.Readme && unit.Readme != nil {
+		resp.Readme = &Readme{
+			Filepath: unit.Readme.Filepath,
+			Contents: unit.Readme.Contents,
+		}
+	}
+	if params.Licenses {
+		for _, l := range unit.LicenseContents {
+			resp.Licenses = append(resp.Licenses, License{
+				Types:    l.Metadata.Types,
+				FilePath: l.Metadata.FilePath,
+				Contents: string(l.Contents),
+			})
 		}
 	}
 

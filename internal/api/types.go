@@ -47,6 +47,7 @@ type Module struct {
 	IsLatest          bool      `json:"isLatest"`
 	IsRedistributable bool      `json:"isRedistributable"`
 	IsStandardLibrary bool      `json:"isStandardLibrary"`
+	HasGoMod          bool      `json:"hasGoMod"`
 	RepoURL           string    `json:"repoUrl"`
 	GoModContents     string    `json:"goModContents,omitempty"`
 	Readme            *Readme   `json:"readme,omitempty"`
