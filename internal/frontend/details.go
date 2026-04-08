@@ -87,9 +87,6 @@ func stdlibRedirectURL(fullPath string) string {
 }
 
 func checkExcluded(ctx context.Context, ds internal.DataSource, fullPath, version string) error {
-	if caseSensitiveExcludedPaths[fullPath] {
-		return &serrors.ServerError{Status: http.StatusNotFound}
-	}
 	db, ok := ds.(internal.PostgresDB)
 	if !ok {
 		return nil
@@ -99,15 +96,4 @@ func checkExcluded(ctx context.Context, ds internal.DataSource, fullPath, versio
 		return &serrors.ServerError{Status: http.StatusNotFound}
 	}
 	return nil
-}
-
-// Paths to exclude if they match exactly.
-// These are very rare, so it's simpler to hardcode them rather than use the DB.
-// TODO(mkalil): Remove once go.dev/cl/761521, which provides an alternative
-// implementation for case sensitive exclusions, is merged.
-var caseSensitiveExcludedPaths = map[string]bool{
-	"github.com/ibm/sarama":      true, // https://go.dev/issue/71342
-	"github.com/burntsushi/toml": true, // https://go.dev/issue/68357
-	"github.com/burntSushi/toml": true,
-	"github.com/Burntsushi/toml": true,
 }
