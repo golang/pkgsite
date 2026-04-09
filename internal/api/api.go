@@ -168,13 +168,9 @@ func ServeModuleVersions(w http.ResponseWriter, r *http.Request, ds internal.Dat
 	}
 
 	if params.Filter != "" {
-		var filtered []*internal.ModuleInfo
-		for _, info := range infos {
-			if strings.Contains(info.Version, params.Filter) {
-				filtered = append(filtered, info)
-			}
-		}
-		infos = filtered
+		infos = filter(infos, func(info *internal.ModuleInfo) bool {
+			return strings.Contains(info.Version, params.Filter)
+		})
 	}
 
 	resp, err := paginate(infos, params.ListParams, defaultLimit)
@@ -210,12 +206,14 @@ func ServeModulePackages(w http.ResponseWriter, r *http.Request, ds internal.Dat
 		return err
 	}
 
-	var items []Package
+	if params.Filter != "" {
+		metas = filter(metas, func(m *internal.PackageMeta) bool {
+			return strings.Contains(m.Path, params.Filter) || strings.Contains(m.Synopsis, params.Filter)
+		})
+	}
+	var results []Package
 	for _, m := range metas {
-		if params.Filter != "" && !strings.Contains(m.Path, params.Filter) && !strings.Contains(m.Synopsis, params.Filter) {
-			continue
-		}
-		items = append(items, Package{
+		results = append(results, Package{
 			Path:              m.Path,
 			ModulePath:        modulePath,
 			ModuleVersion:     requestedVersion,
@@ -224,7 +222,7 @@ func ServeModulePackages(w http.ResponseWriter, r *http.Request, ds internal.Dat
 		})
 	}
 
-	resp, err := paginate(items, params.ListParams, defaultLimit)
+	resp, err := paginate(results, params.ListParams, defaultLimit)
 	if err != nil {
 		return err
 	}
@@ -254,13 +252,13 @@ func ServeSearch(w http.ResponseWriter, r *http.Request, ds internal.DataSource)
 		return err
 	}
 
+	if params.Filter != "" {
+		dbresults = filter(dbresults, func(r *internal.SearchResult) bool {
+			return strings.Contains(r.Synopsis, params.Filter) || strings.Contains(r.PackagePath, params.Filter)
+		})
+	}
 	var results []SearchResult
 	for _, r := range dbresults {
-		if params.Filter != "" {
-			if !strings.Contains(r.Synopsis, params.Filter) && !strings.Contains(r.PackagePath, params.Filter) {
-				continue
-			}
-		}
 		results = append(results, SearchResult{
 			PackagePath: r.PackagePath,
 			ModulePath:  r.ModulePath,
@@ -306,11 +304,13 @@ func ServePackageSymbols(w http.ResponseWriter, r *http.Request, ds internal.Dat
 		return err
 	}
 
+	if params.Filter != "" {
+		syms = filter(syms, func(s *internal.Symbol) bool {
+			return strings.Contains(s.Name, params.Filter) || strings.Contains(s.Synopsis, params.Filter)
+		})
+	}
 	var items []Symbol
 	for _, s := range syms {
-		if params.Filter != "" && !strings.Contains(s.Name, params.Filter) && !strings.Contains(s.Synopsis, params.Filter) {
-			continue
-		}
 		items = append(items, Symbol{
 			ModulePath: um.ModulePath,
 			Version:    um.Version,
@@ -365,13 +365,9 @@ func ServePackageImportedBy(w http.ResponseWriter, r *http.Request, ds internal.
 	}
 
 	if params.Filter != "" {
-		var filtered []string
-		for _, p := range importedBy {
-			if strings.Contains(p, params.Filter) {
-				filtered = append(filtered, p)
-			}
-		}
-		importedBy = filtered
+		importedBy = filter(importedBy, func(p string) bool {
+			return strings.Contains(p, params.Filter)
+		})
 	}
 
 	paged, err := paginate(importedBy, params.ListParams, defaultLimit)
@@ -421,11 +417,13 @@ func ServeVulnerabilities(vc *vuln.Client) func(w http.ResponseWriter, r *http.R
 		// Passing an empty packagePath gets all vulns for the module.
 		vulns := vuln.VulnsForPackage(r.Context(), modulePath, requestedVersion, "", vc)
 
+		if params.Filter != "" {
+			vulns = filter(vulns, func(v vuln.Vuln) bool {
+				return strings.Contains(v.ID, params.Filter) || strings.Contains(v.Details, params.Filter)
+			})
+		}
 		var items []Vulnerability
 		for _, v := range vulns {
-			if params.Filter != "" && !strings.Contains(v.ID, params.Filter) && !strings.Contains(v.Details, params.Filter) {
-				continue
-			}
 			items = append(items, Vulnerability{
 				ID:      v.ID,
 				Details: v.Details,
@@ -674,4 +672,15 @@ func versionCacheDur(v string) time.Duration {
 		return longCacheDur
 	}
 	return shortCacheDur
+}
+
+// filter returns a new slice containing all elements in list for which pred is true.
+func filter[T any](list []T, pred func(T) bool) []T {
+	var out []T
+	for _, e := range list {
+		if pred(e) {
+			out = append(out, e)
+		}
+	}
+	return out
 }
