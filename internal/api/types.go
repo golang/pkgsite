@@ -4,6 +4,12 @@
 
 package api
 
+import (
+	"fmt"
+	"net/http"
+	"strings"
+)
+
 // Package is the response for /v1/package/{packagePath}.
 type Package struct {
 	Path              string    `json:"path"`
@@ -91,10 +97,36 @@ type Error struct {
 	Code       int         `json:"code"`
 	Message    string      `json:"message"`
 	Candidates []Candidate `json:"candidates,omitempty"`
+
+	err error // Unexported field for internal tracking
 }
 
 func (e *Error) Error() string {
+	if e.err != nil {
+		return e.err.Error()
+	}
 	return e.Message
+}
+
+func (e *Error) Unwrap() error {
+	return e.err
+}
+
+// BadRequest returns an Error with StatusBadRequest.
+func BadRequest(format string, args ...any) *Error {
+	return &Error{
+		Code:    http.StatusBadRequest,
+		Message: fmt.Sprintf(format, args...),
+	}
+}
+
+// InternalServerError returns an Error with StatusInternalServerError.
+func InternalServerError(format string, args ...any) *Error {
+	return &Error{
+		Code:    http.StatusInternalServerError,
+		Message: strings.ToLower(http.StatusText(http.StatusInternalServerError)),
+		err:     fmt.Errorf(format, args...),
+	}
 }
 
 // Candidate is a potential resolution for an ambiguous path.

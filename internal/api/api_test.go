@@ -15,6 +15,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/osv"
 	"golang.org/x/pkgsite/internal/testing/fakedatasource"
@@ -245,8 +246,14 @@ func TestServePackage(t *testing.T) {
 			wantStatus: http.StatusBadRequest,
 			want: &Error{
 				Code:    http.StatusBadRequest,
-				Message: "ServePackage: invalid argument: examples require doc format to be specified",
+				Message: "examples require doc format to be specified",
 			},
+		},
+		{
+			name:       "package not found",
+			url:        "/v1/package/nonexistent.com/pkg",
+			wantStatus: http.StatusNotFound,
+			want:       &Error{Code: 404, Message: "not found"},
 		},
 		{
 			name:       "doc without examples",
@@ -269,7 +276,7 @@ func TestServePackage(t *testing.T) {
 			wantStatus: http.StatusBadRequest,
 			want: &Error{
 				Code:    http.StatusBadRequest,
-				Message: "ServePackage: invalid argument: bad doc format: need one of 'text', 'md', 'markdown' or 'html'",
+				Message: "bad doc format: need one of 'text', 'md', 'markdown' or 'html'",
 			},
 		},
 		{
@@ -328,7 +335,7 @@ func TestServePackage(t *testing.T) {
 			w := httptest.NewRecorder()
 
 			if err := ServePackage(w, r, ds); err != nil {
-				ServeError(w, err)
+				ServeError(w, r, err)
 			}
 
 			if w.Code != test.wantStatus {
@@ -340,7 +347,7 @@ func TestServePackage(t *testing.T) {
 				if err != nil {
 					t.Fatal(err)
 				}
-				if diff := cmp.Diff(test.want, got); diff != "" {
+				if diff := cmp.Diff(test.want, got, cmpopts.IgnoreUnexported(Error{})); diff != "" {
 					t.Errorf("mismatch (-want +got):\n%s", diff)
 				}
 			}
@@ -423,7 +430,19 @@ func TestServeModule(t *testing.T) {
 			name:       "bad version",
 			url:        "/v1/module/example.com?version=nope",
 			wantStatus: http.StatusNotFound,
-			want:       &Error{Code: 404, Message: "ServeModule: could not find module for import path example.com: not found"},
+			want:       &Error{Code: 404, Message: "not found"},
+		},
+		{
+			name:       "module not found",
+			url:        "/v1/module/nonexistent.com",
+			wantStatus: http.StatusNotFound,
+			want:       &Error{Code: 404, Message: "not found"},
+		},
+		{
+			name:       "missing module path",
+			url:        "/v1/module/",
+			wantStatus: http.StatusBadRequest,
+			want:       &Error{Code: 400, Message: "missing module path"},
 		},
 		{
 			name:       "module with readme",
@@ -466,7 +485,7 @@ func TestServeModule(t *testing.T) {
 			w := httptest.NewRecorder()
 
 			if err := ServeModule(w, r, ds); err != nil {
-				ServeError(w, err)
+				ServeError(w, r, err)
 			}
 
 			if w.Code != test.wantStatus {
@@ -478,7 +497,7 @@ func TestServeModule(t *testing.T) {
 				if err != nil {
 					t.Fatalf("unmarshaling: %v", err)
 				}
-				if diff := cmp.Diff(test.want, got); diff != "" {
+				if diff := cmp.Diff(test.want, got, cmpopts.IgnoreUnexported(Error{})); diff != "" {
 					t.Errorf("mismatch (-want +got):\n%s", diff)
 				}
 			}
@@ -517,6 +536,18 @@ func TestServeModuleVersions(t *testing.T) {
 			wantCount:  3,
 		},
 		{
+			name:       "module not found",
+			url:        "/v1/versions/nonexistent.com",
+			wantStatus: http.StatusNotFound,
+			want:       &Error{Code: 404, Message: "not found"},
+		},
+		{
+			name:       "missing module path",
+			url:        "/v1/versions/",
+			wantStatus: http.StatusBadRequest,
+			want:       &Error{Code: 400, Message: "missing module path"},
+		},
+		{
 			name:       "with limit",
 			url:        "/v1/versions/example.com?limit=1",
 			wantStatus: http.StatusOK,
@@ -534,7 +565,7 @@ func TestServeModuleVersions(t *testing.T) {
 			w := httptest.NewRecorder()
 
 			if err := ServeModuleVersions(w, r, ds); err != nil {
-				ServeError(w, err)
+				ServeError(w, r, err)
 			}
 
 			if w.Code != test.wantStatus {
@@ -597,6 +628,18 @@ func TestServeModulePackages(t *testing.T) {
 			wantTotal:  2,
 		},
 		{
+			name:       "module not found",
+			url:        "/v1/packages/nonexistent.com?version=v1.0.0",
+			wantStatus: http.StatusNotFound,
+			want:       &Error{Code: 404, Message: "not found"},
+		},
+		{
+			name:       "missing module path",
+			url:        "/v1/packages/",
+			wantStatus: http.StatusBadRequest,
+			want:       &Error{Code: 400, Message: "missing module path"},
+		},
+		{
 			name:       "filtering",
 			url:        "/v1/packages/example.com?version=v1.0.0&filter=sub",
 			wantStatus: http.StatusOK,
@@ -631,7 +674,7 @@ func TestServeModulePackages(t *testing.T) {
 			w := httptest.NewRecorder()
 
 			if err := ServeModulePackages(w, r, ds); err != nil {
-				ServeError(w, err)
+				ServeError(w, r, err)
 			}
 
 			if w.Code != test.wantStatus {
@@ -715,7 +758,7 @@ func TestServeSearch(t *testing.T) {
 
 			err := ServeSearch(w, r, ds)
 			if err != nil {
-				ServeError(w, err)
+				ServeError(w, r, err)
 			}
 
 			if w.Code != test.wantStatus {
@@ -788,7 +831,7 @@ func TestServeSearchPagination(t *testing.T) {
 			w := httptest.NewRecorder()
 
 			if err := ServeSearch(w, r, ds); err != nil {
-				ServeError(w, err)
+				ServeError(w, r, err)
 			}
 
 			if w.Code != http.StatusOK {
@@ -873,6 +916,18 @@ func TestServePackageSymbols(t *testing.T) {
 			wantName:   "LinuxSym",
 		},
 		{
+			name:       "package not found",
+			url:        "/v1/symbols/nonexistent.com/pkg?version=v1.0.0",
+			wantStatus: http.StatusNotFound,
+			want:       &Error{Code: 404, Message: "not found"},
+		},
+		{
+			name:       "missing package path",
+			url:        "/v1/symbols/",
+			wantStatus: http.StatusBadRequest,
+			want:       &Error{Code: 400, Message: "missing package path"},
+		},
+		{
 			name:       "explicit linux",
 			url:        "/v1/symbols/example.com/pkg?version=v1.0.0&goos=linux&goarch=amd64",
 			wantStatus: http.StatusOK,
@@ -906,7 +961,7 @@ func TestServePackageSymbols(t *testing.T) {
 			wantStatus: http.StatusNotFound,
 			want: &Error{
 				Code:    http.StatusNotFound,
-				Message: "ServePackageSymbols: not found",
+				Message: "not found",
 			},
 		},
 	} {
@@ -915,7 +970,7 @@ func TestServePackageSymbols(t *testing.T) {
 			w := httptest.NewRecorder()
 
 			if err := ServePackageSymbols(w, r, ds); err != nil {
-				ServeError(w, err)
+				ServeError(w, r, err)
 			}
 
 			if w.Code != test.wantStatus {
@@ -928,7 +983,7 @@ func TestServePackageSymbols(t *testing.T) {
 					if err := json.Unmarshal(w.Body.Bytes(), &got); err != nil {
 						t.Fatalf("json.Unmarshal: %v", err)
 					}
-					if diff := cmp.Diff(want, &got); diff != "" {
+					if diff := cmp.Diff(want, &got, cmpopts.IgnoreUnexported(Error{})); diff != "" {
 						t.Errorf("mismatch (-want +got):\n%s", diff)
 					}
 				}
@@ -990,7 +1045,7 @@ func TestServePackageImportedBy(t *testing.T) {
 			w := httptest.NewRecorder()
 
 			if err := ServePackageImportedBy(w, r, ds); err != nil {
-				ServeError(w, err)
+				ServeError(w, r, err)
 			}
 
 			if w.Code != test.wantStatus {
@@ -1053,7 +1108,7 @@ func TestServeVulnerabilities(t *testing.T) {
 			w := httptest.NewRecorder()
 
 			if err := ServeVulnerabilities(vc)(w, r, ds); err != nil {
-				ServeError(w, err)
+				ServeError(w, r, err)
 			}
 
 			if w.Code != test.wantStatus {

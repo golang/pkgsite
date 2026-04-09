@@ -9,8 +9,6 @@ import (
 	"net/url"
 	"reflect"
 	"strconv"
-
-	"golang.org/x/pkgsite/internal/derrors"
 )
 
 // ListParams are common pagination and filtering parameters.
@@ -85,10 +83,10 @@ type VulnParams struct {
 func ParseParams(v url.Values, dst any) error {
 	val := reflect.ValueOf(dst)
 	if val.Kind() != reflect.Pointer || val.Elem().Kind() != reflect.Struct {
-		return fmt.Errorf("%w: dst must be a pointer to a struct", derrors.InvalidArgument)
+		return InternalServerError("dst must be a pointer to a struct")
 	}
 	if err := parseValue(v, val.Elem()); err != nil {
-		return fmt.Errorf("%w: %v", derrors.InvalidArgument, err)
+		return BadRequest("%v", err)
 	}
 	return nil
 }

@@ -547,7 +547,7 @@ func (s *Server) apiHandler(f func(w http.ResponseWriter, r *http.Request, ds in
 	return func(w http.ResponseWriter, r *http.Request) {
 		ds := s.getDataSource(r.Context())
 		if err := f(w, r, ds); err != nil {
-			api.ServeError(w, err)
+			api.ServeError(w, r, err)
 		}
 	}
 }

@@ -17,6 +17,7 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/godoc"
+	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/version"
 	"golang.org/x/pkgsite/internal/vuln"
@@ -35,7 +36,7 @@ func ServePackage(w http.ResponseWriter, r *http.Request, ds internal.DataSource
 
 	pkgPath := trimPath(r, "/v1/package/")
 	if pkgPath == "" {
-		return fmt.Errorf("%w: missing package path", derrors.InvalidArgument)
+		return BadRequest("missing package path")
 	}
 
 	var params PackageParams
@@ -62,7 +63,7 @@ func ServePackage(w http.ResponseWriter, r *http.Request, ds internal.DataSource
 	bc := internal.BuildContext{GOOS: params.GOOS, GOARCH: params.GOARCH}
 	unit, err := ds.GetUnit(r.Context(), um, fs, bc)
 	if err != nil {
-		return fmt.Errorf("%w: %s", derrors.Unknown, err.Error())
+		return err
 	}
 
 	resp, err := unitToPackage(unit, params)
@@ -79,7 +80,7 @@ func ServeModule(w http.ResponseWriter, r *http.Request, ds internal.DataSource)
 
 	modulePath := trimPath(r, "/v1/module/")
 	if modulePath == "" {
-		return fmt.Errorf("%w: missing module path", derrors.InvalidArgument)
+		return BadRequest("missing module path")
 	}
 
 	var params ModuleParams
@@ -154,7 +155,7 @@ func ServeModuleVersions(w http.ResponseWriter, r *http.Request, ds internal.Dat
 
 	path := trimPath(r, "/v1/versions/")
 	if path == "" {
-		return fmt.Errorf("%w: missing path", derrors.InvalidArgument)
+		return BadRequest("missing path")
 	}
 
 	var params VersionsParams
@@ -165,6 +166,10 @@ func ServeModuleVersions(w http.ResponseWriter, r *http.Request, ds internal.Dat
 	infos, err := ds.GetVersionsForPath(r.Context(), path)
 	if err != nil {
 		return err
+	}
+	// If there are no versions for the path, then the module doesn't exist.
+	if len(infos) == 0 {
+		return fmt.Errorf("module %q: %w", path, derrors.NotFound)
 	}
 
 	if params.Filter != "" {
@@ -188,7 +193,7 @@ func ServeModulePackages(w http.ResponseWriter, r *http.Request, ds internal.Dat
 
 	modulePath := trimPath(r, "/v1/packages/")
 	if modulePath == "" {
-		return fmt.Errorf("%w: missing module path", derrors.InvalidArgument)
+		return BadRequest("missing module path")
 	}
 
 	var params PackagesParams
@@ -236,11 +241,11 @@ func ServeSearch(w http.ResponseWriter, r *http.Request, ds internal.DataSource)
 
 	var params SearchParams
 	if err := ParseParams(r.URL.Query(), &params); err != nil {
-		return fmt.Errorf("%w: %s", derrors.InvalidArgument, err.Error())
+		return err
 	}
 
 	if params.Query == "" {
-		return fmt.Errorf("%w: missing query", derrors.InvalidArgument)
+		return BadRequest("missing query")
 	}
 
 	dbresults, err := ds.Search(r.Context(), params.Query, internal.SearchOptions{
@@ -285,7 +290,7 @@ func ServePackageSymbols(w http.ResponseWriter, r *http.Request, ds internal.Dat
 
 	pkgPath := trimPath(r, "/v1/symbols/")
 	if pkgPath == "" {
-		return fmt.Errorf("%w: missing package path", derrors.InvalidArgument)
+		return BadRequest("missing package path")
 	}
 
 	var params SymbolsParams
@@ -335,7 +340,7 @@ func ServePackageImportedBy(w http.ResponseWriter, r *http.Request, ds internal.
 
 	pkgPath := trimPath(r, "/v1/imported-by/")
 	if pkgPath == "" {
-		return fmt.Errorf("%w: missing package path", derrors.InvalidArgument)
+		return BadRequest("missing package path")
 	}
 
 	var params ImportedByParams
@@ -396,7 +401,7 @@ func ServeVulnerabilities(vc *vuln.Client) func(w http.ResponseWriter, r *http.R
 
 		modulePath := trimPath(r, "/v1/vulns/")
 		if modulePath == "" {
-			return fmt.Errorf("%w: missing module path", derrors.InvalidArgument)
+			return BadRequest("missing module path")
 		}
 
 		var params VulnParams
@@ -405,7 +410,7 @@ func ServeVulnerabilities(vc *vuln.Client) func(w http.ResponseWriter, r *http.R
 		}
 
 		if vc == nil {
-			return fmt.Errorf("%w: vulnerability data not available", derrors.Unsupported)
+			return InternalServerError("vulnerability client is nil")
 		}
 
 		requestedVersion := params.Version
@@ -525,15 +530,17 @@ func serveJSON(w http.ResponseWriter, status int, data any, cacheDur time.Durati
 	return err
 }
 
-func ServeError(w http.ResponseWriter, err error) error {
+func ServeError(w http.ResponseWriter, r *http.Request, err error) error {
 	var aerr *Error
 	if !errors.As(err, &aerr) {
 		status := derrors.ToStatus(err)
 		aerr = &Error{
 			Code:    status,
-			Message: err.Error(),
+			Message: strings.ToLower(http.StatusText(status)),
+			err:     err,
 		}
 	}
+	log.Errorf(r.Context(), "API error %d: %v", aerr.Code, aerr)
 	return serveJSON(w, aerr.Code, aerr, noCache)
 }
 
@@ -575,7 +582,7 @@ func paginate[T any](all []T, lp ListParams, defaultLimit int) (PaginatedRespons
 // unitToPackage processes unit documentation into a Package struct.
 func unitToPackage(unit *internal.Unit, params PackageParams) (*Package, error) {
 	if params.Examples && params.Doc == "" {
-		return nil, fmt.Errorf("%w: examples require doc format to be specified", derrors.InvalidArgument)
+		return nil, BadRequest("examples require doc format to be specified")
 	}
 
 	// Although unit.Documentation is a slice, it will
@@ -638,7 +645,7 @@ func renderDocumentation(unit *internal.Unit, d *internal.Documentation, format 
 	// result.
 	gpkg, err := godoc.DecodePackage(d.Source)
 	if err != nil {
-		return "", fmt.Errorf("%w: %s", derrors.Unknown, err.Error())
+		return "", fmt.Errorf("renderDocumentation: %w", err)
 	}
 	innerPath := internal.Suffix(unit.Path, unit.ModulePath)
 	modInfo := &godoc.ModuleInfo{ModulePath: unit.ModulePath, ResolvedVersion: unit.Version}
@@ -656,10 +663,10 @@ func renderDocumentation(unit *internal.Unit, d *internal.Documentation, format 
 	case "html":
 		r = newHTMLRenderer(gpkg.Fset, &sb)
 	default:
-		return "", fmt.Errorf("%w: bad doc format: need one of 'text', 'md', 'markdown' or 'html'", derrors.InvalidArgument)
+		return "", BadRequest("bad doc format: need one of 'text', 'md', 'markdown' or 'html'")
 	}
 	if err := renderDoc(dpkg, r, examples); err != nil {
-		return "", fmt.Errorf("%w: %s", derrors.Unknown, err.Error())
+		return "", fmt.Errorf("renderDoc: %w", err)
 	}
 	return sb.String(), nil
 }
