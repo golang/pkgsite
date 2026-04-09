@@ -2,6 +2,10 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+// Comments beginning with "api:" are read by RouteInfos.
+// They should not be removed.
+// If a new route is added, provide all the "api:" comments for it.
+
 package api
 
 import (
@@ -32,6 +36,8 @@ const (
 )
 
 // ServePackage handles requests for the v1 package metadata endpoint.
+// api:route /v1/package/{path}
+// api:desc Information about the package at {path}.
 func ServePackage(w http.ResponseWriter, r *http.Request, ds internal.DataSource) (err error) {
 	defer derrors.Wrap(&err, "ServePackage")
 
@@ -40,6 +46,7 @@ func ServePackage(w http.ResponseWriter, r *http.Request, ds internal.DataSource
 		return BadRequest("missing package path")
 	}
 
+	// api:params PackageParams
 	var params PackageParams
 	if err := ParseParams(r.URL.Query(), &params); err != nil {
 		return err
@@ -67,6 +74,7 @@ func ServePackage(w http.ResponseWriter, r *http.Request, ds internal.DataSource
 		return err
 	}
 
+	// api:response Package
 	resp, err := unitToPackage(unit, params)
 	if err != nil {
 		return err
@@ -76,6 +84,8 @@ func ServePackage(w http.ResponseWriter, r *http.Request, ds internal.DataSource
 }
 
 // ServeModule handles requests for the v1 module metadata endpoint.
+// api:route /v1/module/{path}
+// api:desc Information about the module at {path}.
 func ServeModule(w http.ResponseWriter, r *http.Request, ds internal.DataSource) (err error) {
 	defer derrors.Wrap(&err, "ServeModule")
 
@@ -84,6 +94,7 @@ func ServeModule(w http.ResponseWriter, r *http.Request, ds internal.DataSource)
 		return BadRequest("missing module path")
 	}
 
+	// api:params ModuleParams
 	var params ModuleParams
 	if err := ParseParams(r.URL.Query(), &params); err != nil {
 		return err
@@ -102,6 +113,7 @@ func ServeModule(w http.ResponseWriter, r *http.Request, ds internal.DataSource)
 		return err
 	}
 
+	// api:response Module
 	resp := Module{
 		Path:              um.ModulePath,
 		Version:           um.Version,
@@ -151,6 +163,8 @@ func ServeModule(w http.ResponseWriter, r *http.Request, ds internal.DataSource)
 }
 
 // ServeModuleVersions handles requests for the v1 module versions endpoint.
+// api:route /v1/versions/{path}
+// api:desc All versions of the module at {path}.
 func ServeModuleVersions(w http.ResponseWriter, r *http.Request, ds internal.DataSource) (err error) {
 	defer derrors.Wrap(&err, "ServeModuleVersions")
 
@@ -159,6 +173,7 @@ func ServeModuleVersions(w http.ResponseWriter, r *http.Request, ds internal.Dat
 		return BadRequest("missing path")
 	}
 
+	// api:params VersionsParams
 	var params VersionsParams
 	if err := ParseParams(r.URL.Query(), &params); err != nil {
 		return err
@@ -179,6 +194,7 @@ func ServeModuleVersions(w http.ResponseWriter, r *http.Request, ds internal.Dat
 		})
 	}
 
+	// api:response PaginatedResponse[*internal.ModuleInfo]
 	resp, err := paginate(infos, params.ListParams, defaultLimit)
 	if err != nil {
 		return err
@@ -189,6 +205,8 @@ func ServeModuleVersions(w http.ResponseWriter, r *http.Request, ds internal.Dat
 }
 
 // ServeModulePackages handles requests for the v1 module packages endpoint.
+// api:route /v1/packages/{path}
+// api:desc Information about packages of the module at {path}.
 func ServeModulePackages(w http.ResponseWriter, r *http.Request, ds internal.DataSource) (err error) {
 	defer derrors.Wrap(&err, "ServeModulePackages")
 
@@ -197,6 +215,7 @@ func ServeModulePackages(w http.ResponseWriter, r *http.Request, ds internal.Dat
 		return BadRequest("missing module path")
 	}
 
+	// api:params PackagesParams
 	var params PackagesParams
 	if err := ParseParams(r.URL.Query(), &params); err != nil {
 		return err
@@ -228,6 +247,7 @@ func ServeModulePackages(w http.ResponseWriter, r *http.Request, ds internal.Dat
 		})
 	}
 
+	// api:response PaginatedResponse[Package]
 	resp, err := paginate(results, params.ListParams, defaultLimit)
 	if err != nil {
 		return err
@@ -237,9 +257,12 @@ func ServeModulePackages(w http.ResponseWriter, r *http.Request, ds internal.Dat
 }
 
 // ServeSearch handles requests for the v1 search endpoint.
+// api:route /v1/search
+// api:desc Search results.
 func ServeSearch(w http.ResponseWriter, r *http.Request, ds internal.DataSource) (err error) {
 	defer derrors.Wrap(&err, "ServeSearch")
 
+	// api:params SearchParams
 	var params SearchParams
 	if err := ParseParams(r.URL.Query(), &params); err != nil {
 		return err
@@ -273,6 +296,7 @@ func ServeSearch(w http.ResponseWriter, r *http.Request, ds internal.DataSource)
 		})
 	}
 
+	// api:response PaginatedResponse[SearchResult]
 	resp, err := paginate(results, params.ListParams, defaultLimit)
 	if err != nil {
 		return fmt.Errorf("%w: %s", derrors.InvalidArgument, err.Error())
@@ -286,6 +310,8 @@ func ServeSearch(w http.ResponseWriter, r *http.Request, ds internal.DataSource)
 }
 
 // ServePackageSymbols handles requests for the v1 package symbols endpoint.
+// api:route /v1/symbols/{path}
+// api:desc List of symbols for the package at {path}.
 func ServePackageSymbols(w http.ResponseWriter, r *http.Request, ds internal.DataSource) (err error) {
 	defer derrors.Wrap(&err, "ServePackageSymbols")
 
@@ -294,6 +320,7 @@ func ServePackageSymbols(w http.ResponseWriter, r *http.Request, ds internal.Dat
 		return BadRequest("missing package path")
 	}
 
+	// api:params SymbolsParams
 	var params SymbolsParams
 	if err := ParseParams(r.URL.Query(), &params); err != nil {
 		return err
@@ -327,6 +354,7 @@ func ServePackageSymbols(w http.ResponseWriter, r *http.Request, ds internal.Dat
 		})
 	}
 
+	// api:response PaginatedResponse[Symbol]
 	resp, err := paginate(items, params.ListParams, defaultLimit)
 	if err != nil {
 		return err
@@ -336,6 +364,8 @@ func ServePackageSymbols(w http.ResponseWriter, r *http.Request, ds internal.Dat
 }
 
 // ServePackageImportedBy handles requests for the v1 package imported-by endpoint.
+// api:route /v1/imported-by/{path}
+// api:desc Names of packages importing the package at {path}.
 func ServePackageImportedBy(w http.ResponseWriter, r *http.Request, ds internal.DataSource) (err error) {
 	defer derrors.Wrap(&err, "ServePackageImportedBy")
 
@@ -344,6 +374,7 @@ func ServePackageImportedBy(w http.ResponseWriter, r *http.Request, ds internal.
 		return BadRequest("missing package path")
 	}
 
+	// api:params ImportedByParams
 	var params ImportedByParams
 	if err := ParseParams(r.URL.Query(), &params); err != nil {
 		return err
@@ -376,6 +407,7 @@ func ServePackageImportedBy(w http.ResponseWriter, r *http.Request, ds internal.
 		})
 	}
 
+	// api:response PaginatedResponse[string]
 	paged, err := paginate(importedBy, params.ListParams, defaultLimit)
 	if err != nil {
 		return err
@@ -396,6 +428,8 @@ func ServePackageImportedBy(w http.ResponseWriter, r *http.Request, ds internal.
 }
 
 // ServeVulnerabilities handles requests for the v1 module vulnerabilities endpoint.
+// api:route /v1/vulns/{path}
+// api:desc Vulnerabilities of the module at {path}.
 func ServeVulnerabilities(vc *vuln.Client) func(w http.ResponseWriter, r *http.Request, ds internal.DataSource) error {
 	return func(w http.ResponseWriter, r *http.Request, ds internal.DataSource) (err error) {
 		defer derrors.Wrap(&err, "ServeVulnerabilities")
@@ -405,6 +439,7 @@ func ServeVulnerabilities(vc *vuln.Client) func(w http.ResponseWriter, r *http.R
 			return BadRequest("missing module path")
 		}
 
+		// api:params VulnParams
 		var params VulnParams
 		if err := ParseParams(r.URL.Query(), &params); err != nil {
 			return err
@@ -436,6 +471,7 @@ func ServeVulnerabilities(vc *vuln.Client) func(w http.ResponseWriter, r *http.R
 			})
 		}
 
+		// api:response PaginatedResponse[Vulnerability]
 		resp, err := paginate(items, params.ListParams, defaultLimit)
 		if err != nil {
 			return err
