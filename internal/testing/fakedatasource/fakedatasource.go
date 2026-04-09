@@ -135,10 +135,22 @@ func (ds *FakeDataSource) GetUnit(ctx context.Context, um *internal.UnitMeta, fi
 	if u == nil {
 		return nil, fmt.Errorf("import path %s not found in module %s: %w", um.Path, um.ModulePath, derrors.NotFound)
 	}
+
+	// Clone the unit, because we might modify it.
+	// A shallow copy suffices.
+	u2 := *u
+	// Return licenses only if requested.
+	if fields&internal.WithLicenses == 0 {
+		u2.Licenses = nil
+		u2.LicenseContents = nil
+	}
+	// Return imports only if requested.
+	if fields&internal.WithImports == 0 {
+		u2.Imports = nil
+	}
 	// Return only the Documentation matching the given BuildContext, if any.
 	// Since we cache the module and its units, we have to copy this unit before we modify it.
 	// It can be a shallow copy, since we're only modifying the Unit.Documentation field.
-	u2 := *u
 	if fields&internal.WithDocsSource != 0 {
 		if d := internal.DocumentationForBuildContext(u.Documentation, bc); d != nil {
 			u2.Documentation = []*internal.Documentation{d}
@@ -186,7 +198,6 @@ func (ds *FakeDataSource) findModule(pkgPath, modulePath, version string) *inter
 		if m := ds.getModule(modulePath, version); m != nil {
 			return m
 		}
-
 	}
 	return nil
 }

@@ -39,6 +39,7 @@ func TestServePackage(t *testing.T) {
 			Version:       version,
 			LatestVersion: "v1.2.4",
 		},
+		Licenses: sample.Licenses(),
 		Units: []*internal.Unit{{
 			UnitMeta: internal.UnitMeta{
 				Path: "example.com/pkg",
@@ -50,6 +51,8 @@ func TestServePackage(t *testing.T) {
 				Name: "pkg",
 			},
 			Documentation: []*internal.Documentation{sample.Documentation("linux", "amd64", sample.DocContents)},
+			Licenses:      sample.LicenseMetadata(),
+			Imports:       []string{pkgPath},
 		}},
 	})
 
@@ -281,6 +284,42 @@ func TestServePackage(t *testing.T) {
 				GOOS:          "linux",
 				GOARCH:        "amd64",
 				Docs:          "",
+			},
+		},
+		{
+			name:       "licenses",
+			url:        "/v1/package/example.com/pkg?version=v1.2.3&licenses=true",
+			wantStatus: http.StatusOK,
+			want: &Package{
+				Path:          "example.com/pkg",
+				ModulePath:    "example.com",
+				ModuleVersion: version,
+				Synopsis:      "This is a package synopsis for GOOS=linux, GOARCH=amd64",
+				IsLatest:      false,
+				GOOS:          "linux",
+				GOARCH:        "amd64",
+				Licenses: []License{
+					{
+						Types:    []string{sample.LicenseType},
+						FilePath: sample.LicenseFilePath,
+						Contents: "Lorem Ipsum",
+					},
+				},
+			},
+		},
+		{
+			name:       "imports",
+			url:        "/v1/package/example.com/pkg?version=v1.2.3&imports=true",
+			wantStatus: http.StatusOK,
+			want: &Package{
+				Path:          "example.com/pkg",
+				ModulePath:    "example.com",
+				ModuleVersion: version,
+				Synopsis:      "This is a package synopsis for GOOS=linux, GOARCH=amd64",
+				IsLatest:      false,
+				GOOS:          "linux",
+				GOARCH:        "amd64",
+				Imports:       []string{pkgPath},
 			},
 		},
 	} {
