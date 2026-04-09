@@ -67,7 +67,7 @@ func SetLevel(v string) {
 	currentLevel = toLevel(v)
 }
 
-func getLevel() Severity {
+func GetLevel() Severity {
 	mu.Lock()
 	defer mu.Unlock()
 	return currentLevel
@@ -87,7 +87,6 @@ func (stdlibLogger) Log(ctx context.Context, s Severity, payload any) {
 		extra = " (" + strings.Join(extras, ", ") + ")"
 	}
 	log.Printf("%s%s: %+v", s, extra, payload)
-
 }
 
 func (stdlibLogger) Flush() {}
@@ -151,7 +150,7 @@ func Fatal(ctx context.Context, arg any) {
 }
 
 func doLog(ctx context.Context, s Severity, payload any) {
-	if getLevel() > s {
+	if GetLevel() > s {
 		return
 	}
 	mu.Lock()

@@ -19,7 +19,7 @@ const (
 
 // Do not run in parallel. It overrides currentLevel.
 func TestSetLogLevel(t *testing.T) {
-	oldLevel := getLevel()
+	oldLevel := GetLevel()
 	defer func() { currentLevel = oldLevel }()
 
 	tests := []struct {
@@ -38,7 +38,7 @@ func TestSetLogLevel(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			SetLevel(test.newLevel)
-			gotLevel := getLevel()
+			gotLevel := GetLevel()
 			if test.wantLevel != gotLevel {
 				t.Errorf("Error: want=%s, got=%s", test.wantLevel, gotLevel)
 			}
@@ -69,7 +69,6 @@ func TestLogLevel(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-
 			test.logFunc(context.Background(), test.logMsg)
 			logs := logger.(*mockLogger).logs
 			got := strings.Contains(logs, test.logMsg)
@@ -101,7 +100,6 @@ func TestDefaultLogLevel(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-
 			test.logFunc(context.Background(), test.logMsg)
 			logs := logger.(*mockLogger).logs
 

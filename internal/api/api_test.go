@@ -11,13 +11,17 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strconv"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/osv"
+	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/testing/fakedatasource"
 	"golang.org/x/pkgsite/internal/testing/sample"
 	"golang.org/x/pkgsite/internal/vuln"
@@ -40,8 +44,46 @@ func (ds fallbackDataSource) GetUnitMeta(ctx context.Context, path, requestedMod
 }
 
 func TestServePackage(t *testing.T) {
+	t.Run("fake", func(t *testing.T) {
+		ds := fakedatasource.New()
+		mustInsert := func(ctx context.Context, m *internal.Module, _ bool) {
+			ds.MustInsertModule(ctx, m)
+		}
+		testServePackage(t, ds, mustInsert)
+	})
+	t.Run("db", func(t *testing.T) {
+		orig := log.GetLevel()
+		t.Cleanup(func() { log.SetLevel(orig.String()) })
+		log.SetLevel("Info")
+		const testDB = "pkgsite_api"
+		db, err := postgres.SetupTestDB(testDB)
+		if err != nil {
+			if errors.Is(err, derrors.NotFound) && os.Getenv("GO_DISCOVERY_TESTDB") != "true" {
+				t.Skipf("could not connect to DB (see doc/postgres.md to set up): %v", err)
+			}
+			t.Fatalf("setting up DB: %v", err)
+		}
+		defer db.Close()
+		mustInsert := func(ctx context.Context, m *internal.Module, latest bool) {
+			for _, u := range m.Units {
+				if !u.IsRedistributable {
+					t.Logf("unit %s is not redistributable; DB will strip documentation", u.Path)
+				}
+			}
+			if latest {
+				postgres.MustInsertModule(ctx, t, db, m)
+			} else {
+				postgres.MustInsertModuleNotLatest(ctx, t, db, m)
+			}
+		}
+		testServePackage(t, db, mustInsert)
+	})
+}
+
+func testServePackage(t *testing.T, ds internal.DataSource, mustInsertModule func(context.Context, *internal.Module, bool)) {
+	// mustInsert must not be called from subtests, because it captures
+	// a parent testing.T.
 	ctx := context.Background()
-	ds := fakedatasource.New()
 
 	const (
 		pkgPath     = "example.com/a/b"
@@ -50,7 +92,7 @@ func TestServePackage(t *testing.T) {
 		version     = "v1.2.3"
 	)
 
-	ds.MustInsertModule(ctx, &internal.Module{
+	mustInsertModule(ctx, &internal.Module{
 		ModuleInfo: internal.ModuleInfo{
 			ModulePath:    "example.com",
 			Version:       version,
@@ -61,48 +103,46 @@ func TestServePackage(t *testing.T) {
 			UnitMeta: internal.UnitMeta{
 				Path: "example.com/pkg",
 				ModuleInfo: internal.ModuleInfo{
-					ModulePath:    "example.com",
-					Version:       version,
-					LatestVersion: "v1.2.4",
+					ModulePath:        "example.com",
+					Version:           version,
+					LatestVersion:     "v1.2.4",
+					IsRedistributable: true,
 				},
 				Name: "pkg",
 			},
-			Documentation: []*internal.Documentation{sample.Documentation("linux", "amd64", sample.DocContents)},
-			Licenses:      sample.LicenseMetadata(),
-			Imports:       []string{pkgPath},
+			Documentation:     []*internal.Documentation{sample.Documentation("linux", "amd64", sample.DocContents)},
+			Licenses:          sample.LicenseMetadata(),
+			Imports:           []string{pkgPath},
+			IsRedistributable: true,
 		}},
-	})
+	}, false)
 
 	for _, mp := range []string{modulePath1, modulePath2} {
 		u := &internal.Unit{
 			UnitMeta: internal.UnitMeta{
 				Path: pkgPath,
 				ModuleInfo: internal.ModuleInfo{
-					ModulePath:    mp,
-					Version:       version,
-					LatestVersion: version,
+					ModulePath:        mp,
+					Version:           version,
+					LatestVersion:     version,
+					IsRedistributable: true,
 				},
 				Name: "b",
 			},
-			Documentation: []*internal.Documentation{
-				{
-					GOOS:     "linux",
-					GOARCH:   "amd64",
-					Synopsis: "Synopsis for " + mp,
-				},
-			},
+			Documentation:     []*internal.Documentation{sample.Documentation("linux", "amd64", sample.DocContents)},
+			IsRedistributable: true,
 		}
-		ds.MustInsertModule(ctx, &internal.Module{
+		mustInsertModule(ctx, &internal.Module{
 			ModuleInfo: internal.ModuleInfo{
 				ModulePath:    mp,
 				Version:       version,
 				LatestVersion: version,
 			},
 			Units: []*internal.Unit{u},
-		})
+		}, true)
 	}
 
-	ds.MustInsertModule(ctx, &internal.Module{
+	mustInsertModule(ctx, &internal.Module{
 		ModuleInfo: internal.ModuleInfo{
 			ModulePath:    "example.com",
 			Version:       "v1.2.4",
@@ -118,15 +158,12 @@ func TestServePackage(t *testing.T) {
 				},
 				Name: "pkg",
 			},
-			Documentation: []*internal.Documentation{{
-				GOOS:     "linux",
-				GOARCH:   "amd64",
-				Synopsis: "Basic synopsis",
-			}},
+			Documentation:     []*internal.Documentation{sample.Documentation("linux", "amd64", sample.DocContents)},
+			IsRedistributable: true,
 		}},
-	})
+	}, true)
 
-	ds.MustInsertModule(ctx, &internal.Module{
+	mustInsertModule(ctx, &internal.Module{
 		ModuleInfo: internal.ModuleInfo{
 			ModulePath:    "example.com/ex",
 			Version:       "v1.0.0",
@@ -142,6 +179,7 @@ func TestServePackage(t *testing.T) {
 				},
 				Name: "pkg",
 			},
+			IsRedistributable: true,
 			Documentation: []*internal.Documentation{sample.DocumentationWithExamples("linux", "amd64", "", `
 			import "fmt"
 			func Example() {
@@ -150,7 +188,7 @@ func TestServePackage(t *testing.T) {
 			}
 			`)},
 		}},
-	})
+	}, true)
 
 	for _, test := range []struct {
 		name       string
@@ -194,7 +232,7 @@ func TestServePackage(t *testing.T) {
 				Path:          pkgPath,
 				ModulePath:    modulePath1,
 				ModuleVersion: version,
-				Synopsis:      "Synopsis for " + modulePath1,
+				Synopsis:      "This is a package synopsis for GOOS=linux, GOARCH=amd64",
 				IsLatest:      true,
 				GOOS:          "linux",
 				GOARCH:        "amd64",
@@ -222,7 +260,7 @@ func TestServePackage(t *testing.T) {
 				Path:          "example.com/pkg",
 				ModulePath:    "example.com",
 				ModuleVersion: "v1.2.4",
-				Synopsis:      "Basic synopsis",
+				Synopsis:      "This is a package synopsis for GOOS=linux, GOARCH=amd64",
 				IsLatest:      true,
 				GOOS:          "linux",
 				GOARCH:        "amd64",
