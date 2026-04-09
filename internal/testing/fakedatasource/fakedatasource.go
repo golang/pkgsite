@@ -135,9 +135,8 @@ func (ds *FakeDataSource) GetUnit(ctx context.Context, um *internal.UnitMeta, fi
 	if u == nil {
 		return nil, fmt.Errorf("import path %s not found in module %s: %w", um.Path, um.ModulePath, derrors.NotFound)
 	}
-
-	// Clone the unit, because we might modify it.
-	// A shallow copy suffices.
+	// Since we cache the module and its units, we have to copy this unit before we modify it.
+	// It can be a shallow copy, since we're only modifying the Unit.Documentation field.
 	u2 := *u
 	// Return licenses only if requested.
 	if fields&internal.WithLicenses == 0 {
@@ -149,8 +148,6 @@ func (ds *FakeDataSource) GetUnit(ctx context.Context, um *internal.UnitMeta, fi
 		u2.Imports = nil
 	}
 	// Return only the Documentation matching the given BuildContext, if any.
-	// Since we cache the module and its units, we have to copy this unit before we modify it.
-	// It can be a shallow copy, since we're only modifying the Unit.Documentation field.
 	if fields&internal.WithDocsSource != 0 {
 		if d := internal.DocumentationForBuildContext(u.Documentation, bc); d != nil {
 			u2.Documentation = []*internal.Documentation{d}
