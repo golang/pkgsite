@@ -72,7 +72,7 @@ func TestGetLatestMajorPathForV1Path(t *testing.T) {
 			for _, mv := range test.modvers {
 				mod, ver, _ := parseModuleVersionPackage(mv)
 				m := sample.Module(mod, ver, suffix)
-				MustInsertModule(ctx, t, testDB, m)
+				testDB.MustInsertModule(t, m)
 			}
 			t.Run("module", func(t *testing.T) {
 				check(test.v1ModulePath, test.wantModulePath)
@@ -107,7 +107,6 @@ func TestUpsertPathConcurrently(t *testing.T) {
 				return nil
 			})
 		}()
-
 	}
 	for range n {
 		if err := <-errc; err != nil {
@@ -173,7 +172,6 @@ func TestUpsertPathsConcurrently(t *testing.T) {
 			got, err := upsertPathsInTx(ctx, testDB.db, sub)
 			if err == nil {
 				checkPathMap(t, got, sub)
-
 			}
 			errc <- err
 		}()

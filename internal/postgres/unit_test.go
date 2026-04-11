@@ -50,7 +50,7 @@ func testGetUnitMeta(t *testing.T, ctx context.Context) {
 		{"cloud.google.com/go/compute/metadata", "v0.0.0-20181115181204-d50f0e9b2506", "", false, "-"},
 	} {
 		m := sample.Module(testModule.module, testModule.version, testModule.packageSuffix)
-		MustInsertModuleGoMod(ctx, t, testDB, m, testModule.goMod)
+		testDB.MustInsertModuleGoMod(ctx, t, m, testModule.goMod)
 		requested := m.Version
 		if testModule.isMaster {
 			requested = "master"
@@ -121,7 +121,6 @@ func testGetUnitMeta(t *testing.T, ctx context.Context) {
 			want: wantUnitMeta("m.com", "v1.1.0", ""),
 		},
 		{
-
 			name: "unknown module and version",
 			path: "m.com/a/b",
 			// Select the latest release version, longest module.
@@ -230,7 +229,7 @@ func TestGetUnitMeta_UnknownModulePathMaster(t *testing.T) {
 		{"m.com/a", "v1.1.0", "b"},
 	} {
 		m := sample.Module(testModule.module, testModule.version, testModule.suffix)
-		MustInsertModule(ctx, t, testDB, m)
+		testDB.MustInsertModule(t, m)
 		// Map the concrete version to the symbolic "master" version.
 		if err := testDB.UpsertVersionMap(ctx, &internal.VersionMap{
 			ModulePath:       m.ModulePath,
@@ -425,7 +424,7 @@ func TestGetLatestUnitVersion(t *testing.T) {
 			for _, p := range test.packages {
 				mod, ver, pkg := parseModuleVersionPackage(p.pkg)
 				m := sample.Module(mod, ver, pkg)
-				MustInsertModuleGoMod(ctx, t, testDB, m, p.goMod)
+				testDB.MustInsertModuleGoMod(ctx, t, m, p.goMod)
 			}
 			for _, b := range test.badModules {
 				mod, ver, _ := parseModuleVersionPackage(b.pkg)
@@ -483,7 +482,7 @@ func TestGetUnit(t *testing.T) {
 		Filepath: "PKG_README.md",
 		Contents: "pkg readme",
 	}
-	MustInsertModule(ctx, t, testDB, m)
+	testDB.MustInsertModule(t, m)
 
 	// Add a module that has documentation for two Go build contexts.
 	m = sample.Module("a.com/twodoc", "v1.2.3", "p")
@@ -493,7 +492,7 @@ func TestGetUnit(t *testing.T) {
 		sample.Documentation("windows", "amd64", `package p; var W int`),
 	}
 	pkg.Documentation = docs2
-	MustInsertModule(ctx, t, testDB, m)
+	testDB.MustInsertModule(t, m)
 
 	for _, test := range []struct {
 		name, path, modulePath, version string
@@ -660,12 +659,11 @@ func TestGetUnit_SubdirectoriesShowNonRedistPackages(t *testing.T) {
 	t.Parallel()
 	testDB, release := acquire(t)
 	defer release()
-	ctx := context.Background()
 
 	m := sample.DefaultModule()
 	m.IsRedistributable = false
 	m.Packages()[0].IsRedistributable = false
-	MustInsertModule(ctx, t, testDB, m)
+	testDB.MustInsertModule(t, m)
 }
 
 func TestGetUnitFieldSet(t *testing.T) {
@@ -681,7 +679,7 @@ func TestGetUnitFieldSet(t *testing.T) {
 	// Add a module that has READMEs in a directory and a package.
 	m := sample.Module("a.com/m", "v1.2.3", "dir/p")
 	m.Packages()[0].Readme = readme
-	MustInsertModule(ctx, t, testDB, m)
+	testDB.MustInsertModule(t, m)
 
 	cleanFields := func(u *internal.Unit, fields internal.FieldSet) {
 		// Add/remove fields based on the FieldSet specified.
@@ -780,7 +778,7 @@ func TestGetUnitBuildContext(t *testing.T) {
 	linuxDoc := sample.Documentation("linux", "amd64", `package p; var L int`)
 	windowsDoc := sample.Documentation("windows", "amd64", `package p; var W int`)
 	pkg.Documentation = []*internal.Documentation{linuxDoc, windowsDoc}
-	MustInsertModule(ctx, t, testDB, m)
+	testDB.MustInsertModule(t, m)
 
 	um := sample.UnitMeta(
 		"a.com/twodoc/p",
@@ -885,7 +883,7 @@ func TestGetUnitBypass(t *testing.T) {
 			}
 
 			m := nonRedistributableModule()
-			MustInsertModule(ctx, t, testDB, m)
+			testDB.MustInsertModule(t, m)
 			pathInfo := newUnitMeta(m.ModulePath, m.ModulePath, m.Version)
 			d, err := testDB.GetUnit(ctx, pathInfo, internal.AllFields, internal.BuildContext{})
 			if err != nil {
@@ -940,7 +938,7 @@ func TestGetModulePackages(t *testing.T) {
 	ctx := context.Background()
 
 	m := sample.Module("m.com", "v1.2.3", "a", "a/b", "c")
-	MustInsertModule(ctx, t, testDB, m)
+	testDB.MustInsertModule(t, m)
 
 	got, err := testDB.GetModulePackages(ctx, "m.com", "v1.2.3")
 	if err != nil {

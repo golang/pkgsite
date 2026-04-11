@@ -35,7 +35,7 @@ func TestCleanBulk(t *testing.T) {
 	) {
 		mod, ver, pkg := parseModuleVersionPackage(mv)
 		m := sample.Module(mod, ver, pkg)
-		MustInsertModule(ctx, t, testDB, m)
+		testDB.MustInsertModule(t, m)
 	}
 
 	if err := testDB.UpsertVersionMap(ctx, &internal.VersionMap{
@@ -82,7 +82,7 @@ func TestCleanModule(t *testing.T) {
 	versions := []string{"v1.0.0", "v1.2.3"}
 	for _, v := range versions {
 		m := sample.Module(modulePath, v, "")
-		MustInsertModule(ctx, t, testDB, m)
+		testDB.MustInsertModule(t, m)
 	}
 	if err := testDB.CleanAllModuleVersions(ctx, modulePath, ""); err != nil {
 		t.Fatal(err)

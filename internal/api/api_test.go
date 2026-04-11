@@ -45,11 +45,7 @@ func (ds fallbackDataSource) GetUnitMeta(ctx context.Context, path, requestedMod
 
 func TestServePackage(t *testing.T) {
 	t.Run("fake", func(t *testing.T) {
-		ds := fakedatasource.New()
-		mustInsert := func(ctx context.Context, m *internal.Module, _ bool) {
-			ds.MustInsertModule(ctx, m)
-		}
-		testServePackage(t, ds, mustInsert)
+		testServePackage(t, fakedatasource.New())
 	})
 	t.Run("db", func(t *testing.T) {
 		orig := log.GetLevel()
@@ -64,27 +60,11 @@ func TestServePackage(t *testing.T) {
 			t.Fatalf("setting up DB: %v", err)
 		}
 		defer db.Close()
-		mustInsert := func(ctx context.Context, m *internal.Module, latest bool) {
-			for _, u := range m.Units {
-				if !u.IsRedistributable {
-					t.Logf("unit %s is not redistributable; DB will strip documentation", u.Path)
-				}
-			}
-			if latest {
-				postgres.MustInsertModule(ctx, t, db, m)
-			} else {
-				postgres.MustInsertModuleNotLatest(ctx, t, db, m)
-			}
-		}
-		testServePackage(t, db, mustInsert)
+		testServePackage(t, db)
 	})
 }
 
-func testServePackage(t *testing.T, ds internal.DataSource, mustInsertModule func(context.Context, *internal.Module, bool)) {
-	// mustInsert must not be called from subtests, because it captures
-	// a parent testing.T.
-	ctx := context.Background()
-
+func testServePackage(t *testing.T, ds internal.TestingDataSource) {
 	const (
 		pkgPath     = "example.com/a/b"
 		modulePath1 = "example.com/a"
@@ -92,7 +72,7 @@ func testServePackage(t *testing.T, ds internal.DataSource, mustInsertModule fun
 		version     = "v1.2.3"
 	)
 
-	mustInsertModule(ctx, &internal.Module{
+	ds.MustInsertModule(t, &internal.Module{
 		ModuleInfo: internal.ModuleInfo{
 			ModulePath:    "example.com",
 			Version:       version,
@@ -115,7 +95,7 @@ func testServePackage(t *testing.T, ds internal.DataSource, mustInsertModule fun
 			Imports:           []string{pkgPath},
 			IsRedistributable: true,
 		}},
-	}, false)
+	})
 
 	for _, mp := range []string{modulePath1, modulePath2} {
 		u := &internal.Unit{
@@ -132,17 +112,17 @@ func testServePackage(t *testing.T, ds internal.DataSource, mustInsertModule fun
 			Documentation:     []*internal.Documentation{sample.Documentation("linux", "amd64", sample.DocContents)},
 			IsRedistributable: true,
 		}
-		mustInsertModule(ctx, &internal.Module{
+		ds.MustInsertModule(t, &internal.Module{
 			ModuleInfo: internal.ModuleInfo{
 				ModulePath:    mp,
 				Version:       version,
 				LatestVersion: version,
 			},
 			Units: []*internal.Unit{u},
-		}, true)
+		})
 	}
 
-	mustInsertModule(ctx, &internal.Module{
+	ds.MustInsertModule(t, &internal.Module{
 		ModuleInfo: internal.ModuleInfo{
 			ModulePath:    "example.com",
 			Version:       "v1.2.4",
@@ -161,9 +141,9 @@ func testServePackage(t *testing.T, ds internal.DataSource, mustInsertModule fun
 			Documentation:     []*internal.Documentation{sample.Documentation("linux", "amd64", sample.DocContents)},
 			IsRedistributable: true,
 		}},
-	}, true)
+	})
 
-	mustInsertModule(ctx, &internal.Module{
+	ds.MustInsertModule(t, &internal.Module{
 		ModuleInfo: internal.ModuleInfo{
 			ModulePath:    "example.com/ex",
 			Version:       "v1.0.0",
@@ -188,7 +168,7 @@ func testServePackage(t *testing.T, ds internal.DataSource, mustInsertModule fun
 			}
 			`)},
 		}},
-	}, true)
+	})
 
 	for _, test := range []struct {
 		name       string
@@ -438,7 +418,7 @@ func testServePackage(t *testing.T, ds internal.DataSource, mustInsertModule fun
 							},
 						},
 					}
-					newDS.MustInsertModule(ctx, &internal.Module{
+					newDS.MustInsertModule(t, &internal.Module{
 						ModuleInfo: internal.ModuleInfo{
 							ModulePath:    mp,
 							Version:       version,
@@ -482,7 +462,6 @@ func testServePackage(t *testing.T, ds internal.DataSource, mustInsertModule fun
 }
 
 func TestServeModule(t *testing.T) {
-	ctx := context.Background()
 	ds := fakedatasource.New()
 
 	const (
@@ -494,7 +473,7 @@ func TestServeModule(t *testing.T) {
 	mi1.LatestVersion = "v1.2.4"
 	mi1.HasGoMod = true
 
-	ds.MustInsertModule(ctx, &internal.Module{
+	ds.MustInsertModule(t, &internal.Module{
 		ModuleInfo: *mi1,
 		Licenses:   sample.Licenses(),
 		Units: []*internal.Unit{{
@@ -511,7 +490,7 @@ func TestServeModule(t *testing.T) {
 	mi2.LatestVersion = "v1.2.4"
 	mi2.HasGoMod = true
 
-	ds.MustInsertModule(ctx, &internal.Module{
+	ds.MustInsertModule(t, &internal.Module{
 		ModuleInfo: *mi2,
 		Units: []*internal.Unit{{
 			UnitMeta: internal.UnitMeta{
@@ -632,18 +611,17 @@ func TestServeModule(t *testing.T) {
 }
 
 func TestServeModuleVersions(t *testing.T) {
-	ctx := context.Background()
 	ds := fakedatasource.New()
 
-	ds.MustInsertModule(ctx, &internal.Module{
+	ds.MustInsertModule(t, &internal.Module{
 		ModuleInfo: internal.ModuleInfo{ModulePath: "example.com", Version: "v1.0.0"},
 		Units:      []*internal.Unit{{UnitMeta: internal.UnitMeta{Path: "example.com"}}},
 	})
-	ds.MustInsertModule(ctx, &internal.Module{
+	ds.MustInsertModule(t, &internal.Module{
 		ModuleInfo: internal.ModuleInfo{ModulePath: "example.com", Version: "v1.1.0"},
 		Units:      []*internal.Unit{{UnitMeta: internal.UnitMeta{Path: "example.com"}}},
 	})
-	ds.MustInsertModule(ctx, &internal.Module{
+	ds.MustInsertModule(t, &internal.Module{
 		ModuleInfo: internal.ModuleInfo{ModulePath: "example.com/v2", Version: "v2.0.0"},
 		Units:      []*internal.Unit{{UnitMeta: internal.UnitMeta{Path: "example.com/v2"}}},
 	})
@@ -712,7 +690,6 @@ func TestServeModuleVersions(t *testing.T) {
 }
 
 func TestServeModulePackages(t *testing.T) {
-	ctx := context.Background()
 	ds := fakedatasource.New()
 
 	const (
@@ -720,7 +697,7 @@ func TestServeModulePackages(t *testing.T) {
 		version    = "v1.0.0"
 	)
 
-	ds.MustInsertModule(ctx, &internal.Module{
+	ds.MustInsertModule(t, &internal.Module{
 		ModuleInfo: internal.ModuleInfo{ModulePath: modulePath, Version: version},
 		Units: []*internal.Unit{
 			{
@@ -827,10 +804,9 @@ func TestServeModulePackages(t *testing.T) {
 }
 
 func TestServeSearch(t *testing.T) {
-	ctx := context.Background()
 	ds := fakedatasource.New()
 
-	ds.MustInsertModule(ctx, &internal.Module{
+	ds.MustInsertModule(t, &internal.Module{
 		ModuleInfo: internal.ModuleInfo{ModulePath: "example.com", Version: "v1.0.0"},
 		Units: []*internal.Unit{{
 			UnitMeta: internal.UnitMeta{
@@ -905,12 +881,11 @@ func TestServeSearch(t *testing.T) {
 }
 
 func TestServeSearchPagination(t *testing.T) {
-	ctx := context.Background()
 	ds := fakedatasource.New()
 
 	for i := 0; i < 10; i++ {
 		pkgPath := "example.com/pkg" + strconv.Itoa(i)
-		ds.MustInsertModule(ctx, &internal.Module{
+		ds.MustInsertModule(t, &internal.Module{
 			ModuleInfo: internal.ModuleInfo{ModulePath: pkgPath, Version: "v1.0.0"},
 			Units: []*internal.Unit{{
 				UnitMeta: internal.UnitMeta{
@@ -983,7 +958,6 @@ func TestServeSearchPagination(t *testing.T) {
 }
 
 func TestServePackageSymbols(t *testing.T) {
-	ctx := context.Background()
 	ds := fakedatasource.New()
 
 	const (
@@ -992,7 +966,7 @@ func TestServePackageSymbols(t *testing.T) {
 		version    = "v1.0.0"
 	)
 
-	ds.MustInsertModule(ctx, &internal.Module{
+	ds.MustInsertModule(t, &internal.Module{
 		ModuleInfo: internal.ModuleInfo{ModulePath: modulePath, Version: version},
 		Units: []*internal.Unit{{
 			UnitMeta: internal.UnitMeta{
@@ -1132,7 +1106,6 @@ func TestServePackageSymbols(t *testing.T) {
 }
 
 func TestServePackageImportedBy(t *testing.T) {
-	ctx := context.Background()
 	ds := fakedatasource.New()
 
 	const (
@@ -1141,7 +1114,7 @@ func TestServePackageImportedBy(t *testing.T) {
 		version    = "v1.0.0"
 	)
 
-	ds.MustInsertModule(ctx, &internal.Module{
+	ds.MustInsertModule(t, &internal.Module{
 		ModuleInfo: internal.ModuleInfo{ModulePath: modulePath, Version: version},
 		Units: []*internal.Unit{
 			{UnitMeta: internal.UnitMeta{Path: pkgPath, ModuleInfo: internal.ModuleInfo{ModulePath: modulePath, Version: version}}},
@@ -1275,11 +1248,10 @@ func unmarshalResponse[T any](data []byte) (any, error) {
 }
 
 func TestCacheControl(t *testing.T) {
-	ctx := context.Background()
 	ds := fakedatasource.New()
 	const modulePath = "example.com"
 	for _, v := range []string{"v1.0.0", "master"} {
-		ds.MustInsertModule(ctx, &internal.Module{
+		ds.MustInsertModule(t, &internal.Module{
 			ModuleInfo: internal.ModuleInfo{
 				ModulePath: modulePath,
 				Version:    v,

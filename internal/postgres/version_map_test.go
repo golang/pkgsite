@@ -23,7 +23,7 @@ func TestReadAndWriteVersionMap(t *testing.T) {
 	ctx := context.Background()
 
 	m := sample.Module("golang.org/x/tools", sample.VersionString, "go/packages")
-	MustInsertModule(ctx, t, testDB, m)
+	testDB.MustInsertModule(t, m)
 
 	vm := &internal.VersionMap{
 		ModulePath:       m.ModulePath,
@@ -43,6 +43,7 @@ func TestReadAndWriteVersionMap(t *testing.T) {
 		t.Fatalf("t.Errorf(ctx, %q, %q) mismatch (-want +got):\n%s", vm.ModulePath, vm.RequestedVersion, diff)
 	}
 }
+
 func TestUpsertVersionMap(t *testing.T) {
 	t.Parallel()
 	testDB, release := acquire(t)

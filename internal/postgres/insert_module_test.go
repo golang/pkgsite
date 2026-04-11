@@ -95,9 +95,9 @@ func TestInsertModule(t *testing.T) {
 			testDB, release := acquire(t)
 			defer release()
 
-			MustInsertModuleGoMod(ctx, t, testDB, test.module, test.goMod)
+			testDB.MustInsertModuleGoMod(ctx, t, test.module, test.goMod)
 			// Test that insertion of duplicate primary key won't fail.
-			MustInsertModuleGoMod(ctx, t, testDB, test.module, test.goMod)
+			testDB.MustInsertModuleGoMod(ctx, t, test.module, test.goMod)
 			checkModule(ctx, t, testDB, test.module)
 		})
 	}
@@ -176,7 +176,7 @@ func TestInsertModuleLicenseCheck(t *testing.T) {
 			mod.IsRedistributable = false
 			mod.Units[0].IsRedistributable = false
 
-			MustInsertModule(ctx, t, db, mod)
+			db.MustInsertModule(t, mod)
 
 			// New model
 			u, err := db.GetUnit(ctx, newUnitMeta(mod.ModulePath, mod.ModulePath, mod.Version), internal.AllFields, internal.BuildContext{})
@@ -207,7 +207,7 @@ func TestUpsertModule(t *testing.T) {
 	m := sample.Module("upsert.org", "v1.2.3", "dir/p")
 
 	// Insert the module.
-	MustInsertModule(ctx, t, testDB, m)
+	testDB.MustInsertModule(t, m)
 	// Change the module, and re-insert.
 	m.IsRedistributable = !m.IsRedistributable
 	lic := *m.Licenses[0]
@@ -215,7 +215,7 @@ func TestUpsertModule(t *testing.T) {
 	sample.ReplaceLicense(m, &lic)
 	m.Units[0].Readme.Contents += " and more"
 
-	MustInsertModule(ctx, t, testDB, m)
+	testDB.MustInsertModule(t, m)
 	// The changes should have been saved.
 	checkModule(ctx, t, testDB, m)
 }
@@ -308,7 +308,7 @@ func TestInsertModuleNewCoverage(t *testing.T) {
 			Contents: []byte(`Lorem Ipsum`),
 		},
 	}
-	MustInsertModule(ctx, t, testDB, m)
+	testDB.MustInsertModule(t, m)
 	u, err := testDB.GetUnit(ctx, newUnitMeta(m.ModulePath, m.ModulePath, m.Version), internal.AllFields, internal.BuildContext{})
 	if err != nil {
 		t.Fatal(err)
@@ -322,7 +322,6 @@ func TestInsertModuleNewCoverage(t *testing.T) {
 	if !cmp.Equal(got, want) {
 		t.Errorf("\ngot  %+v\nwant %+v", got, want)
 	}
-
 }
 
 func TestPostgres_ReadAndWriteModuleOtherColumns(t *testing.T) {
@@ -343,7 +342,7 @@ func TestPostgres_ReadAndWriteModuleOtherColumns(t *testing.T) {
 		seriesPath:  "github.com/user/repo/path",
 	}
 
-	MustInsertModule(ctx, t, testDB, v)
+	testDB.MustInsertModule(t, v)
 	query := `
 	SELECT
 		sort_version, series_path
@@ -482,7 +481,7 @@ func TestPostgres_NewerAlternative(t *testing.T) {
 		t.Fatal(err)
 	}
 	m := sample.Module(mvs.ModulePath, okVersion, "p")
-	MustInsertModule(ctx, t, testDB, m)
+	testDB.MustInsertModule(t, m)
 	if _, _, found := GetFromSearchDocuments(ctx, t, testDB, m.Packages()[0].Path); found {
 		t.Fatal("found package after inserting")
 	}
@@ -643,7 +642,7 @@ func TestReconcileSearch(t *testing.T) {
 		pkg.Documentation[0].Synopsis = version
 		pkg.Imports = imports
 		if status == 200 {
-			MustInsertModuleGoMod(ctx, t, testDB, m, modfile)
+			testDB.MustInsertModuleGoMod(ctx, t, m, modfile)
 		} else {
 			addLatest(ctx, t, testDB, modulePath, version, modfile)
 		}
@@ -839,7 +838,7 @@ func TestInsertModuleSkipSymbols(t *testing.T) {
 					},
 				},
 			}
-			MustInsertModule(ctx, t, testDB, m)
+			testDB.MustInsertModule(t, m)
 
 			if got := checkSymbolsInserted(t, testDB, m); got != test.wantInserted {
 				t.Errorf("symbols inserted: got %t; want %t", got, test.wantInserted)

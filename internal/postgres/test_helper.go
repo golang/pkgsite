@@ -146,26 +146,31 @@ func RunDBTestsInParallel(dbBaseName string, numDBs int, m *testing.M, acquirep 
 
 // MustInsertModule inserts m into db, calling t.Fatal on error.
 // It also updates the latest-version information for m.
-func MustInsertModule(ctx context.Context, t *testing.T, db *DB, m *internal.Module) {
-	mustInsertModule(ctx, t, db, m, "", true)
-}
-
-func MustInsertModuleGoMod(ctx context.Context, t *testing.T, db *DB, m *internal.Module, goMod string) {
-	mustInsertModule(ctx, t, db, m, goMod, true)
-}
-
-func MustInsertModuleNotLatest(ctx context.Context, t *testing.T, db *DB, m *internal.Module) {
-	mustInsertModule(ctx, t, db, m, "", false)
-}
-
-func mustInsertModule(ctx context.Context, t *testing.T, db *DB, m *internal.Module, goMod string, latest bool) {
+func (db *DB) MustInsertModule(t *testing.T, m *internal.Module) {
 	t.Helper()
+	mustInsertModule(t, db, m, "")
+}
+
+func (db *DB) MustInsertModuleGoMod(ctx context.Context, t *testing.T, m *internal.Module, goMod string) {
+	mustInsertModule(t, db, m, goMod)
+}
+
+func mustInsertModule(t *testing.T, db *DB, m *internal.Module, goMod string) {
+	t.Helper()
+	ctx := t.Context()
+	for _, u := range m.Units {
+		if !u.IsRedistributable {
+			t.Logf("unit %s is not redistributable; DB will strip documentation", u.Path)
+		}
+	}
 	var lmv *internal.LatestModuleVersions
 	if goMod == "-" {
 		if err := db.UpdateLatestModuleVersionsStatus(ctx, m.ModulePath, 404); err != nil {
 			t.Fatal(err)
 		}
-	} else if latest {
+	} else if m.LatestVersion == "" {
+		t.Fatalf("module %s missing LatestVersion", m.ModulePath)
+	} else if m.LatestVersion == m.Version {
 		lmv = addLatest(ctx, t, db, m.ModulePath, m.Version, goMod)
 	}
 	if _, err := db.InsertModule(ctx, m, lmv); err != nil {
@@ -259,9 +264,8 @@ func InsertSampleDirectoryTree(ctx context.Context, t *testing.T, testDB *DB) {
 		},
 	} {
 		m := sample.Module(data.modulePath, data.version, data.suffixes...)
-		MustInsertModule(ctx, t, testDB, m)
+		testDB.MustInsertModule(t, m)
 	}
-
 }
 
 // GetFromSearchDocuments retrieves the module path and version for the given

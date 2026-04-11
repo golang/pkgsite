@@ -80,9 +80,9 @@ func TestFetchLicensesDetails(t *testing.T) {
 
 	fds := fakedatasource.New()
 	ctx := context.Background()
-	fds.MustInsertModule(ctx, testModule)
-	fds.MustInsertModule(ctx, stdlibModule)
-	fds.MustInsertModule(ctx, crlfModule)
+	fds.MustInsertModule(t, testModule)
+	fds.MustInsertModule(t, stdlibModule)
+	fds.MustInsertModule(t, crlfModule)
 	for _, test := range []struct {
 		err                                 error
 		name, fullPath, modulePath, version string
@@ -139,8 +139,10 @@ func TestFetchLicensesDetails(t *testing.T) {
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			wantDetails := &LicensesDetails{IsRedistributable: true,
-				Licenses: transformLicenses(test.modulePath, test.version, test.want)}
+			wantDetails := &LicensesDetails{
+				IsRedistributable: true,
+				Licenses:          transformLicenses(test.modulePath, test.version, test.want),
+			}
 			got, err := fetchLicensesDetails(ctx, fds, &internal.UnitMeta{
 				Path: test.fullPath,
 				ModuleInfo: internal.ModuleInfo{

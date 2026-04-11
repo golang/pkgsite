@@ -21,7 +21,7 @@ func TestSymbolSearch(t *testing.T) {
 
 	m := sample.DefaultModule()
 	m.Packages()[0].Documentation[0].API = sample.API
-	MustInsertModule(ctx, t, testDB, m)
+	testDB.MustInsertModule(t, m)
 
 	checkResult := func(metas ...internal.SymbolMeta) []*SearchResult {
 		var results []*SearchResult
@@ -127,18 +127,17 @@ func TestSymbolSearch(t *testing.T) {
 // ERROR: ON CONFLICT DO UPDATE command cannot affect row a second time
 // (SQLSTATE 21000)
 func TestUpsertSymbolSearch_UniqueConstraints(t *testing.T) {
-	ctx := context.Background()
 	testDB, release := acquire(t)
 	defer release()
 
 	m := sample.DefaultModule()
 	m.Packages()[0].Documentation[0].API = sample.API
-	MustInsertModule(ctx, t, testDB, m)
+	testDB.MustInsertModule(t, m)
 
 	m2 := sample.DefaultModule()
 	m2.Version = "v1.1.0"
 	m2.Packages()[0].Documentation[0].API = sample.API
-	MustInsertModule(ctx, t, testDB, m2)
+	testDB.MustInsertModule(t, m2)
 }
 
 func TestMultiwordSearchCombinations(t *testing.T) {

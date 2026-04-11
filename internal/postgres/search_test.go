@@ -441,7 +441,7 @@ func TestSearch(t *testing.T) {
 			testDB, release := acquire(t)
 			defer release()
 			for _, m := range test.modules {
-				MustInsertModule(ctx, t, testDB, m)
+				testDB.MustInsertModule(t, m)
 			}
 			if _, err := testDB.UpdateSearchDocumentsImportedByCount(ctx, 100); err != nil {
 				t.Fatal(err)
@@ -533,7 +533,7 @@ func TestSearchErrors(t *testing.T) {
 			defer release()
 			modules := importGraph("foo.com/A", "", 0)
 			for _, v := range modules {
-				MustInsertModule(ctx, t, testDB, v)
+				testDB.MustInsertModule(t, v)
 			}
 			if _, err := testDB.UpdateSearchDocumentsImportedByCount(ctx, 100); err != nil {
 				t.Fatal(err)
@@ -707,7 +707,7 @@ func TestInsertSearchDocumentAndSearch(t *testing.T) {
 					pkg.Licenses = sample.LicenseMetadata()
 					m := sample.Module(modulePath, sample.VersionString)
 					sample.AddUnit(m, pkg)
-					MustInsertModule(ctx, t, testDB, m)
+					testDB.MustInsertModule(t, m)
 				}
 
 				if test.limit < 1 {
@@ -766,7 +766,7 @@ func TestSearchPenalties(t *testing.T) {
 		v.Packages()[0].IsRedistributable = m.redist
 		v.IsRedistributable = m.redist
 		v.HasGoMod = m.hasGoMod
-		MustInsertModule(ctx, t, testDB, v)
+		testDB.MustInsertModule(t, v)
 	}
 
 	for method, searcher := range pkgSearchers {
@@ -803,7 +803,7 @@ func TestExcludedFromSearch(t *testing.T) {
 	// Insert a module with two packages.
 	const domain = "exclude.com"
 	sm := sample.Module(domain, "v1.2.3", "pkg", "ex/clude")
-	MustInsertModule(ctx, t, testDB, sm)
+	testDB.MustInsertModule(t, sm)
 	// Exclude a prefix that matches one of the packages.
 	if err := testDB.InsertExcludedPattern(ctx, domain+"/ex", "no user", "no reason"); err != nil {
 		t.Fatal(err)
@@ -842,7 +842,7 @@ func TestSearchBypass(t *testing.T) {
 			}
 
 			m := nonRedistributableModule()
-			MustInsertModule(ctx, t, testDB, m)
+			testDB.MustInsertModule(t, m)
 
 			rs, err := testDB.Search(ctx, m.ModulePath, SearchOptions{MaxResults: 10})
 			if err != nil {
@@ -870,7 +870,7 @@ func TestSearchLicenseDedup(t *testing.T) {
 			FilePath: "pkg/LICENSE.md",
 		},
 	})
-	MustInsertModule(ctx, t, testDB, m)
+	testDB.MustInsertModule(t, m)
 	got, err := testDB.Search(ctx, m.ModulePath, SearchOptions{MaxResults: 10})
 	if err != nil {
 		t.Fatal(err)
@@ -942,7 +942,7 @@ func TestUpsertSearchDocument(t *testing.T) {
 	defer release()
 	ctx := context.Background()
 
-	var packagePath = sample.ModulePath + "/A"
+	packagePath := sample.ModulePath + "/A"
 
 	getSearchDocument := func() *searchDocument {
 		t.Helper()
@@ -953,19 +953,16 @@ func TestUpsertSearchDocument(t *testing.T) {
 		return sd
 	}
 
-	insertModule := func(version string, gomod, latest bool) {
+	insertModule := func(version string, gomod bool, latestVersion string) {
 		m := sample.Module(sample.ModulePath, version, "A")
+		m.LatestVersion = latestVersion
 		m.HasGoMod = gomod
 		m.Packages()[0].Documentation[0].Synopsis = "syn-" + version
-		if latest {
-			MustInsertModule(ctx, t, testDB, m)
-		} else {
-			MustInsertModuleNotLatest(ctx, t, testDB, m)
-		}
+		testDB.MustInsertModule(t, m)
 	}
 
 	const v1 = "v1.0.0"
-	insertModule(v1, false, true)
+	insertModule(v1, false, v1)
 	sd1 := getSearchDocument()
 	if sd1.version != v1 {
 		t.Fatalf("got %s, want %s", sd1.version, v1)
@@ -974,14 +971,14 @@ func TestUpsertSearchDocument(t *testing.T) {
 	// Since the latest compatible version has no go.mod file, this incompatible version
 	// is the latest.
 	const vInc = "v2.0.0+incompatible"
-	insertModule(vInc, false, true)
+	insertModule(vInc, false, vInc)
 	sdInc := getSearchDocument()
 	if sdInc.version != vInc {
 		t.Fatalf("got %s, want %s", sdInc.version, vInc)
 	}
 
 	// Inserting an older module doesn't change anything.
-	insertModule("v0.5.0", true, false)
+	insertModule("v0.5.0", true, vInc)
 	sdOlder := getSearchDocument()
 	if diff := cmp.Diff(sdInc, sdOlder, cmp.AllowUnexported(searchDocument{})); diff != "" {
 		t.Fatalf("mismatch (-want, +got):\n%s", diff)
@@ -989,7 +986,7 @@ func TestUpsertSearchDocument(t *testing.T) {
 
 	// A later compatible version with a go.mod file. This becomes the new latest version.
 	const v15 = "v1.5.2"
-	insertModule(v15, true, true)
+	insertModule(v15, true, v15)
 	sdNewer := getSearchDocument()
 	if sdNewer.version != v15 {
 		t.Fatalf("got %s, want %s", sdNewer.version, v15)
@@ -1013,7 +1010,7 @@ func TestUpsertSearchDocumentVersionHasGoMod(t *testing.T) {
 	for _, hasGoMod := range []bool{true, false} {
 		m := sample.Module(fmt.Sprintf("foo.com/%t", hasGoMod), "v1.2.3", "bar")
 		m.HasGoMod = hasGoMod
-		MustInsertModule(ctx, t, testDB, m)
+		testDB.MustInsertModule(t, m)
 	}
 
 	for _, hasGoMod := range []bool{true, false} {
@@ -1048,8 +1045,8 @@ func TestUpsertSearchDocumentLongerModulePath(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			testDB, release := acquire(t)
 			defer release()
-			MustInsertModule(ctx, t, testDB, test.m1)
-			MustInsertModule(ctx, t, testDB, test.m2)
+			testDB.MustInsertModule(t, test.m1)
+			testDB.MustInsertModule(t, test.m2)
 			sd, err := getSearchDocument(ctx, testDB, "a.com/b/c")
 			if err != nil {
 				t.Fatal(err)
@@ -1085,7 +1082,7 @@ func TestUpdateSearchDocumentsImportedByCount(t *testing.T) {
 		for _, imp := range imports {
 			pkg.Imports = append(pkg.Imports, fmt.Sprintf("mod.com/%s/%[1]s", imp))
 		}
-		MustInsertModule(ctx, t, db, m)
+		db.MustInsertModule(t, m)
 		return m
 	}
 
@@ -1201,7 +1198,7 @@ func TestUpdateSearchDocumentsImportedByCount(t *testing.T) {
 		// It should not get inserted into search_documents.
 		mAlt := sample.Module(alternativeModulePath, "v1.0.0", "A")
 		mAlt.Packages()[0].Imports = []string{"B"}
-		MustInsertModule(ctx, t, testDB, mAlt)
+		testDB.MustInsertModule(t, mAlt)
 		// Although B is imported by two packages, only one is in search_documents, so its
 		// imported-by count is 1.
 		updateImportedByCount(testDB, 100)
@@ -1250,8 +1247,8 @@ func TestGetPackagesForSearchDocumentUpsert(t *testing.T) {
 			if test.bypass {
 				testDB = NewBypassingLicenseCheck(testDB.db)
 			}
-			MustInsertModule(ctx, t, testDB, moduleA)
-			MustInsertModule(ctx, t, testDB, moduleN)
+			testDB.MustInsertModule(t, moduleA)
+			testDB.MustInsertModule(t, moduleN)
 
 			// We are asking for all packages in search_documents updated before now, which is
 			// all the non-internal packages.

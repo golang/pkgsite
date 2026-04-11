@@ -74,7 +74,7 @@ func insertTestModules(ctx context.Context, t *testing.T, mods []testModule) {
 					u.Readme = nil
 				}
 			}
-			postgres.MustInsertModule(ctx, t, testDB, m)
+			testDB.MustInsertModule(t, m)
 		}
 	}
 }

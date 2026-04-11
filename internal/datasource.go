@@ -6,6 +6,7 @@ package internal
 
 import (
 	"context"
+	"testing"
 	"time"
 )
 
@@ -106,6 +107,14 @@ type DataSource interface {
 	SearchSupport() SearchSupport
 	// Search searches for packages matching the given query.
 	Search(ctx context.Context, q string, opts SearchOptions) (_ []*SearchResult, err error)
+}
+
+// TestingDataSource is a DataSource for testing.
+type TestingDataSource interface {
+	DataSource
+	// MustInsertModule inserts m into the DataSource.
+	// It calls t.Fatal if there is an error.
+	MustInsertModule(t *testing.T, m *Module)
 }
 
 type SearchSupport int

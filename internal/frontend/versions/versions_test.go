@@ -224,7 +224,7 @@ func TestFetchPackageVersionsDetails(t *testing.T) {
 			fds := fakedatasource.New()
 
 			for _, v := range tc.modules {
-				fds.MustInsertModule(ctx, v)
+				fds.MustInsertModule(t, v)
 			}
 
 			got, err := FetchVersionsDetails(ctx, fds, &tc.pkg.UnitMeta, vc)

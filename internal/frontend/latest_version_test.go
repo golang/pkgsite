@@ -17,7 +17,7 @@ import (
 
 func TestLatestMinorVersion(t *testing.T) {
 	fds := fakedatasource.New()
-	var persistedModules = []testModule{
+	persistedModules := []testModule{
 		{
 			path:            "github.com/mymodule/av1module",
 			redistributable: true,
@@ -109,7 +109,7 @@ func insertTestModules(ctx context.Context, t *testing.T, fds *fakedatasource.Fa
 					u.Readme = nil
 				}
 			}
-			fds.MustInsertModule(ctx, m)
+			fds.MustInsertModule(t, m)
 		}
 	}
 }

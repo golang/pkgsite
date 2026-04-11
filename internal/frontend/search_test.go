@@ -10,11 +10,10 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strings"
 	"testing"
 	"time"
-
-	"net/url"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
@@ -37,10 +36,9 @@ func TestDetermineSearchAction(t *testing.T) {
 	std := sample.Module("std", sample.VersionString,
 		"cmd/go", "cmd/go/internal/auth", "fmt")
 	modules := []*internal.Module{golangTools, std}
-	ctx := context.Background()
 	fds := fakedatasource.New()
 	for _, v := range modules {
-		fds.MustInsertModule(ctx, v)
+		fds.MustInsertModule(t, v)
 	}
 	vc, err := vuln.NewInMemoryClient(testEntries)
 	if err != nil {
@@ -325,7 +323,7 @@ func TestFetchSearchPage(t *testing.T) {
 	}
 
 	for _, m := range []*internal.Module{moduleFoo, moduleBar} {
-		fds.MustInsertModule(ctx, m)
+		fds.MustInsertModule(t, m)
 	}
 
 	for _, test := range []struct {
@@ -522,7 +520,7 @@ func TestSearchRequestRedirectPath(t *testing.T) {
 
 	fds := fakedatasource.New()
 	for _, v := range modules {
-		fds.MustInsertModule(ctx, v)
+		fds.MustInsertModule(t, v)
 	}
 	for _, test := range []struct {
 		name  string

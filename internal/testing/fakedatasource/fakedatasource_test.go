@@ -72,7 +72,7 @@ func TestGetLatestInfo_MajorPath(t *testing.T) {
 	for _, tc := range testCases {
 		fds := New()
 		for _, m := range tc.modules {
-			fds.MustInsertModule(ctx, sample.Module(m.path, m.version, m.suffix))
+			fds.MustInsertModule(t, sample.Module(m.path, m.version, m.suffix))
 		}
 		latest, err := fds.GetLatestInfo(ctx, tc.unitPath, tc.modulePath, nil)
 		if err != nil {

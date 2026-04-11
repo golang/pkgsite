@@ -53,7 +53,7 @@ func TestFetchImportsDetails(t *testing.T) {
 			pkg := module.Units[1]
 			pkg.Imports = test.imports
 
-			fds.MustInsertModule(ctx, module)
+			fds.MustInsertModule(t, module)
 
 			got, err := fetchImportsDetails(ctx, fds, pkg.Path, pkg.ModulePath, pkg.Version)
 			if err != nil {
@@ -95,7 +95,7 @@ func TestFetchImportedByDetails(t *testing.T) {
 	}
 
 	for _, m := range testModules {
-		fds.MustInsertModule(ctx, m)
+		fds.MustInsertModule(t, m)
 	}
 
 	tests := []struct {
@@ -148,11 +148,11 @@ func TestFetchImportedByDetails_ExceedsLimit(t *testing.T) {
 	defer func() { importedByLimit = old }()
 
 	m := sample.Module("m.com/a", sample.VersionString, "foo")
-	fds.MustInsertModule(ctx, m)
+	fds.MustInsertModule(t, m)
 	for _, mod := range []string{"m1.com/a", "m2.com/a", "m3.com/a"} {
 		m2 := sample.Module(mod, sample.VersionString, "p")
 		m2.Packages()[0].Imports = []string{"m.com/a/foo"}
-		fds.MustInsertModule(ctx, m2)
+		fds.MustInsertModule(t, m2)
 	}
 	wantDetails := &ImportedByDetails{
 		ModulePath: "m.com/a",

@@ -168,7 +168,7 @@ func TestPreviousFetchStatusAndResponse_PathExistsAtNonV1(t *testing.T) {
 	ctx := context.Background()
 	defer postgres.ResetTestDB(testDB, t)
 
-	postgres.MustInsertModule(ctx, t, testDB, sample.Module(sample.ModulePath+"/v4", "v4.0.0", "foo"))
+	testDB.MustInsertModule(t, sample.Module(sample.ModulePath+"/v4", "v4.0.0", "foo"))
 
 	for _, mod := range []struct {
 		path, version string
@@ -263,7 +263,7 @@ func TestStdlibPathForShortcut(t *testing.T) {
 		"text/template", "html/template", // two matches for "template"
 	)
 	ctx := context.Background()
-	postgres.MustInsertModule(ctx, t, testDB, m)
+	testDB.MustInsertModule(t, m)
 
 	for _, test := range []struct {
 		path string
@@ -291,7 +291,7 @@ func TestServer404Redirect(t *testing.T) {
 
 	defer postgres.ResetTestDB(testDB, t)
 	sampleModule := sample.DefaultModule()
-	postgres.MustInsertModule(ctx, t, testDB, sampleModule)
+	testDB.MustInsertModule(t, sampleModule)
 	alternativeModule := &internal.VersionMap{
 		ModulePath:       "module.path/alternative",
 		GoModPath:        sample.ModulePath,
@@ -305,7 +305,7 @@ func TestServer404Redirect(t *testing.T) {
 
 	v1modpath := "notinv1.mod"
 	v1path := "notinv1.mod/foo"
-	postgres.MustInsertModule(ctx, t, testDB, sample.Module(v1modpath+"/v4", "v4.0.0", "foo"))
+	testDB.MustInsertModule(t, sample.Module(v1modpath+"/v4", "v4.0.0", "foo"))
 	for _, mod := range []struct {
 		path, version string
 		status        int
@@ -400,7 +400,7 @@ func TestServer404Redirect_NoLoop(t *testing.T) {
 	goModPath := "module.path/alternative/pkg"
 	defer postgres.ResetTestDB(testDB, t)
 	sampleModule := sample.DefaultModule()
-	postgres.MustInsertModule(ctx, t, testDB, sampleModule)
+	testDB.MustInsertModule(t, sampleModule)
 	alternativeModule := &internal.VersionMap{
 		ModulePath:       altPath,
 		GoModPath:        goModPath,
@@ -452,8 +452,8 @@ func TestEmptyDirectoryBetweenNestedModulesRedirect(t *testing.T) {
 	ctx := context.Background()
 	defer postgres.ResetTestDB(testDB, t)
 
-	postgres.MustInsertModule(ctx, t, testDB, sample.Module(sample.ModulePath, sample.VersionString, ""))
-	postgres.MustInsertModule(ctx, t, testDB, sample.Module(sample.ModulePath+"/missing/dir/c", sample.VersionString, ""))
+	testDB.MustInsertModule(t, sample.Module(sample.ModulePath, sample.VersionString, ""))
+	testDB.MustInsertModule(t, sample.Module(sample.ModulePath+"/missing/dir/c", sample.VersionString, ""))
 
 	missingPath := sample.ModulePath + "/missing"
 	notInsertedPath := sample.ModulePath + "/missing/dir"

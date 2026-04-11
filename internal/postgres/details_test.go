@@ -73,7 +73,7 @@ func TestGetNestedModules(t *testing.T) {
 			defer release()
 
 			for _, v := range test.modules {
-				MustInsertModule(ctx, t, testDB, v)
+				testDB.MustInsertModule(t, v)
 			}
 
 			gotModules, err := testDB.GetNestedModules(ctx, test.path)
@@ -119,7 +119,7 @@ func TestGetNestedModules_Excluded(t *testing.T) {
 		},
 	}
 	for _, m := range test.modules {
-		MustInsertModule(ctx, t, testDB, m)
+		testDB.MustInsertModule(t, m)
 	}
 	if err := testDB.InsertExcludedPattern(ctx, "cloud.google.com/go/storage", "postgres", "test"); err != nil {
 		t.Fatal(err)
@@ -188,7 +188,7 @@ func TestPostgres_GetModuleInfo(t *testing.T) {
 	for _, test := range testCases {
 		t.Run(test.name, func(t *testing.T) {
 			for _, v := range test.modules {
-				MustInsertModule(ctx, t, testDB, v)
+				testDB.MustInsertModule(t, v)
 			}
 
 			gotVI, err := testDB.GetModuleInfo(ctx, test.path, test.version)
@@ -277,7 +277,7 @@ func TestGetImportedBy(t *testing.T) {
 			defer release()
 
 			for _, v := range testModules {
-				MustInsertModule(ctx, t, testDB, v)
+				testDB.MustInsertModule(t, v)
 			}
 
 			gotImportedBy, err := testDB.GetImportedBy(ctx, test.path, test.modulePath, 100)

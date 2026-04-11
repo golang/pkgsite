@@ -13,11 +13,12 @@ import (
 
 // Module represents a module version used by the proxy server.
 type Module struct {
-	ModulePath string
-	Version    string
-	Files      map[string]string
-	NotCached  bool // if true, behaves like it's uncached
-	zip        []byte
+	ModulePath    string
+	Version       string
+	Files         map[string]string
+	NotCached     bool   // if true, behaves like it's uncached
+	LatestVersion string // computed in LoadTestModules
+	zip           []byte
 }
 
 // Some module proxies incorrectly return a space after the version. Tests may

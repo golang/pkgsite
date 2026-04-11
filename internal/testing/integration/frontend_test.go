@@ -21,7 +21,6 @@ import (
 	"golang.org/x/pkgsite/internal/frontend"
 	"golang.org/x/pkgsite/internal/frontend/fetchserver"
 	"golang.org/x/pkgsite/internal/middleware"
-	"golang.org/x/pkgsite/internal/postgres"
 	"golang.org/x/pkgsite/internal/proxy"
 	"golang.org/x/pkgsite/internal/proxy/proxytest"
 	"golang.org/x/pkgsite/internal/queue"
@@ -116,7 +115,13 @@ func fetchAndInsertModule(ctx context.Context, t *testing.T, tm *proxytest.Modul
 	if res.Error != nil {
 		t.Fatal(res.Error)
 	}
-	postgres.MustInsertModule(ctx, t, testDB, res.Module)
+	// Populate the LatestVersion fields from the the latest version in the
+	// proxytest.Module, computed in [proxytest.LoadTestModules].
+	res.Module.LatestVersion = tm.LatestVersion
+	for _, u := range res.Module.Units {
+		u.LatestVersion = tm.LatestVersion
+	}
+	testDB.MustInsertModule(t, res.Module)
 }
 
 func validateResponse(t *testing.T, method, testURL string, wantCode int, wantHTML htmlcheck.Checker) {

@@ -27,7 +27,7 @@ func TestDeleteModule(t *testing.T) {
 
 	v := sample.DefaultModule()
 
-	MustInsertModule(ctx, t, testDB, v)
+	testDB.MustInsertModule(t, v)
 	if _, err := testDB.GetModuleInfo(ctx, v.ModulePath, v.Version); err != nil {
 		t.Fatal(err)
 	}
@@ -79,7 +79,7 @@ func TestDeleteFromSearch(t *testing.T) {
 		t.Helper()
 		for _, r := range initial {
 			sm := sample.Module(r.ModulePath, r.Version, strings.TrimPrefix(r.PackagePath, r.ModulePath+"/"))
-			MustInsertModule(ctx, t, db, sm)
+			db.MustInsertModule(t, sm)
 		}
 		// Older versions are deleted by InsertModule, so only the newest versions are here.
 		checkSearchDocuments(ctx, t, db, initial[2:])
@@ -104,7 +104,7 @@ func TestDeleteFromSearch(t *testing.T) {
 
 		// Insert a module with two packages.
 		m0 := sample.Module(modulePath, "v1.0.0", "p1", "p2")
-		MustInsertModule(ctx, t, testDB, m0)
+		testDB.MustInsertModule(t, m0)
 		// Set the imported-by count to a non-zero value so we can tell which
 		// rows were deleted.
 		if _, err := testDB.db.Exec(ctx, `UPDATE search_documents SET imported_by_count = 1`); err != nil {
@@ -112,7 +112,7 @@ func TestDeleteFromSearch(t *testing.T) {
 		}
 		// Later version of module does not have p1.
 		m1 := sample.Module(modulePath, "v1.1.0", "p2", "p3")
-		MustInsertModule(ctx, t, testDB, m1)
+		testDB.MustInsertModule(t, m1)
 
 		// p1 should be gone, p2 should be there with the same
 		// imported_by_count, and p3 should be there with a zero count.
@@ -173,7 +173,7 @@ func TestDeletePseudoversionsExcept(t *testing.T) {
 		"v0.0.0-20190904010203-89fb59e2e920",
 	}
 	for _, v := range versions {
-		MustInsertModule(ctx, t, testDB, sample.Module(sample.ModulePath, v, ""))
+		testDB.MustInsertModule(t, sample.Module(sample.ModulePath, v, ""))
 	}
 	if err := testDB.DeletePseudoversionsExcept(ctx, sample.ModulePath, pseudo1); err != nil {
 		t.Fatal(err)

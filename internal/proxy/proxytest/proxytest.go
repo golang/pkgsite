@@ -13,6 +13,7 @@ import (
 	"golang.org/x/mod/modfile"
 	"golang.org/x/pkgsite/internal/proxy"
 	"golang.org/x/pkgsite/internal/testing/testhelper"
+	"golang.org/x/pkgsite/internal/version"
 	"golang.org/x/tools/txtar"
 )
 
@@ -65,6 +66,17 @@ func LoadTestModules(dir string) []*Module {
 		}
 		ms = append(ms, m)
 	}
+	// Compute the latest version of each module.
+	latest := map[string]string{} // module path to version
+	for _, m := range ms {
+		if v := latest[m.ModulePath]; v == "" || version.Later(m.Version, v) {
+			latest[m.ModulePath] = m.Version
+		}
+	}
+	for _, m := range ms {
+		m.LatestVersion = latest[m.ModulePath]
+	}
+
 	return ms
 }
 

@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+	"testing"
 
 	"golang.org/x/mod/module"
 	"golang.org/x/mod/semver"
@@ -36,10 +37,10 @@ func New() *FakeDataSource {
 }
 
 // InsertModule adds the module to the FakeDataSource.
-func (ds *FakeDataSource) MustInsertModule(ctx context.Context, m *internal.Module) {
-	_, err := ds.InsertModule(ctx, m, nil)
+func (ds *FakeDataSource) MustInsertModule(t *testing.T, m *internal.Module) {
+	_, err := ds.InsertModule(t.Context(), m, nil)
 	if err != nil {
-		panic(fmt.Errorf("error returned by InsertModule: %w", err))
+		t.Fatalf("error returned by InsertModule: %v", err)
 	}
 }
 
