@@ -10,6 +10,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -451,48 +452,82 @@ func trimPath(r *http.Request, prefix string) string {
 
 // resolveModulePath determines the correct module path for a given package path and version.
 // If the module path is not provided, it searches through potential candidate module paths
-// derived from the package path. If multiple valid modules contain the package, it returns
-// a list of candidates to help the user disambiguate the request.
+// derived from the package path.
+//
+// Resolution logic:
+//  1. Use internal.CandidateModulePaths(pkgPath) to get potential candidates (ordered longest first).
+//  2. Fetch UnitMeta for each candidate that exists in the data source.
+//  3. Check if um.ModulePath == mp (where mp is the candidate module path). If not, ignore it
+//     (this handles the case where GetUnitMeta falls back to another module when the requested
+//     module does not exist).
+//  4. Filter candidates by eliminating those that are deprecated or retracted.
+//  5. If exactly one candidate remains after filtering, return it (HTTP 200).
+//  6. If multiple candidates remain, return HTTP 400 with the list of candidates (ambiguity).
+//  7. If all candidates are eliminated (e.g., all are deprecated or retracted), fall back to
+//     the longest matching candidate among those that exist (HTTP 200).
 func resolveModulePath(r *http.Request, ds internal.DataSource, pkgPath, modulePath, requestedVersion string) (*internal.UnitMeta, error) {
 	if requestedVersion == "" {
 		requestedVersion = version.Latest
 	}
-	if modulePath == "" {
-		// Handle potential ambiguity if module is not specified.
-		candidates := internal.CandidateModulePaths(pkgPath)
-		var validCandidates []Candidate
-		var foundUM *internal.UnitMeta
-		for _, mp := range candidates {
-			// Check if this module actually exists and contains the package at the requested version.
-			if m, err := ds.GetUnitMeta(r.Context(), pkgPath, mp, requestedVersion); err == nil {
-				foundUM = m
-				validCandidates = append(validCandidates, Candidate{
-					ModulePath:  mp,
-					PackagePath: pkgPath,
-				})
-			} else if !errors.Is(err, derrors.NotFound) {
-				return nil, err
-			}
+	if modulePath != "" {
+		um, err := ds.GetUnitMeta(r.Context(), pkgPath, modulePath, requestedVersion)
+		if err != nil {
+			return nil, err
 		}
-
-		if len(validCandidates) > 1 {
-			return nil, &Error{
-				Code:       http.StatusBadRequest,
-				Message:    "ambiguous package path",
-				Candidates: validCandidates,
-			}
-		}
-		if len(validCandidates) == 0 {
-			return nil, derrors.NotFound
-		}
-		return foundUM, nil
+		return um, nil
 	}
 
-	um, err := ds.GetUnitMeta(r.Context(), pkgPath, modulePath, requestedVersion)
-	if err != nil {
-		return nil, err
+	candidates := internal.CandidateModulePaths(pkgPath)
+	var validCandidates []*internal.UnitMeta
+	for _, mp := range candidates {
+		if um, err := ds.GetUnitMeta(r.Context(), pkgPath, mp, requestedVersion); err == nil {
+			// Critical check: ensure the DB actually found the candidate module we requested.
+			// GetUnitMeta falls back to the best match if the requested module doesn't exist,
+			// which could lead to false positives (e.g. google.golang.org matching because it
+			// falls back to google.golang.org/adk/agent).
+			if um.ModulePath == mp {
+				validCandidates = append(validCandidates, um)
+			}
+		} else if !errors.Is(err, derrors.NotFound) {
+			return nil, err
+		}
 	}
-	return um, nil
+
+	if len(validCandidates) == 0 {
+		return nil, derrors.NotFound
+	}
+
+	// Filter candidates based on signals (deprecation, retraction).
+	goodCandidates := slices.Clone(validCandidates)
+	goodCandidates = slices.DeleteFunc(goodCandidates, func(um *internal.UnitMeta) bool {
+		return um.Deprecated || um.Retracted
+	})
+
+	switch len(goodCandidates) {
+	case 1:
+		return goodCandidates[0], nil
+	case 0:
+		// If all candidates are deprecated or retracted, fall back to the longest match.
+		// Since candidates are ordered longest first, validCandidates[0] is the longest match.
+		return validCandidates[0], nil
+	default:
+		return nil, &Error{
+			Code:       http.StatusBadRequest,
+			Message:    "ambiguous package path",
+			Candidates: makeCandidates(goodCandidates),
+		}
+	}
+}
+
+func makeCandidates(ums []*internal.UnitMeta) []Candidate {
+	var r []Candidate
+	for _, um := range ums {
+		r = append(r, Candidate{
+			ModulePath:  um.ModulePath,
+			PackagePath: um.Path,
+		})
+	}
+	return r
 }
 
 // Values for the Cache-Control header.

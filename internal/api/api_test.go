@@ -23,6 +23,22 @@ import (
 	"golang.org/x/pkgsite/internal/vuln"
 )
 
+type fallbackDataSource struct {
+	internal.DataSource
+	fallbackMap map[string]string // requested module -> resolved module
+}
+
+func (ds fallbackDataSource) GetUnitMeta(ctx context.Context, path, requestedModulePath, requestedVersion string) (*internal.UnitMeta, error) {
+	if resolved, ok := ds.fallbackMap[requestedModulePath]; ok {
+		um, err := ds.DataSource.GetUnitMeta(ctx, path, resolved, requestedVersion)
+		if err != nil {
+			return nil, err
+		}
+		return um, nil
+	}
+	return ds.DataSource.GetUnitMeta(ctx, path, requestedModulePath, requestedVersion)
+}
+
 func TestServePackage(t *testing.T) {
 	ctx := context.Background()
 	ds := fakedatasource.New()
@@ -141,6 +157,7 @@ func TestServePackage(t *testing.T) {
 		url        string
 		wantStatus int
 		want       any // Can be *Package or *Error
+		overrideDS internal.DataSource
 	}{
 		{
 			name:       "basic metadata",
@@ -329,12 +346,83 @@ func TestServePackage(t *testing.T) {
 				Imports:       []string{pkgPath},
 			},
 		},
+		{
+			name:       "fallback prevention (false positive candidate)",
+			url:        "/v1/package/example.com/a/b?version=v1.2.3",
+			wantStatus: http.StatusBadRequest,
+			want: &Error{
+				Code:    http.StatusBadRequest,
+				Message: "ambiguous package path",
+				Candidates: []Candidate{
+					{ModulePath: "example.com/a/b", PackagePath: "example.com/a/b"},
+					{ModulePath: "example.com/a", PackagePath: "example.com/a/b"},
+				},
+			},
+			overrideDS: &fallbackDataSource{
+				DataSource: ds,
+				fallbackMap: map[string]string{
+					"example.com": "example.com/a/b", // simulate fallback
+				},
+			},
+		},
+		{
+			name:       "deprecation filtering",
+			url:        "/v1/package/example.com/a/b?version=v1.2.3",
+			wantStatus: http.StatusOK,
+			want: &Package{
+				Path:          pkgPath,
+				ModulePath:    modulePath2, // picked because modulePath1 is deprecated
+				ModuleVersion: version,
+				Synopsis:      "Synopsis for " + modulePath2,
+				IsLatest:      true,
+				GOOS:          "linux",
+				GOARCH:        "amd64",
+			},
+			overrideDS: func() internal.DataSource {
+				newDS := fakedatasource.New()
+				for _, mp := range []string{modulePath1, modulePath2} {
+					u := &internal.Unit{
+						UnitMeta: internal.UnitMeta{
+							Path: pkgPath,
+							ModuleInfo: internal.ModuleInfo{
+								ModulePath:    mp,
+								Version:       version,
+								LatestVersion: version,
+								Deprecated:    mp == modulePath1,
+							},
+							Name: "b",
+						},
+						Documentation: []*internal.Documentation{
+							{
+								GOOS:     "linux",
+								GOARCH:   "amd64",
+								Synopsis: "Synopsis for " + mp,
+							},
+						},
+					}
+					newDS.MustInsertModule(ctx, &internal.Module{
+						ModuleInfo: internal.ModuleInfo{
+							ModulePath:    mp,
+							Version:       version,
+							LatestVersion: version,
+							Deprecated:    mp == modulePath1,
+						},
+						Units: []*internal.Unit{u},
+					})
+				}
+				return newDS
+			}(),
+		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			r := httptest.NewRequest("GET", test.url, nil)
 			w := httptest.NewRecorder()
 
-			if err := ServePackage(w, r, ds); err != nil {
+			var currentDS internal.DataSource = ds
+			if test.overrideDS != nil {
+				currentDS = test.overrideDS
+			}
+			if err := ServePackage(w, r, currentDS); err != nil {
 				ServeError(w, r, err)
 			}
 
