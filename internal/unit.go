@@ -46,7 +46,6 @@ type Unit struct {
 	Subdirectories  []*PackageMeta
 	Imports         []string
 	LicenseContents []*licenses.License
-	Symbols         map[BuildContext][]*Symbol
 	NumImports      int
 	NumImportedBy   int
 	Licenses        []*licenses.Metadata

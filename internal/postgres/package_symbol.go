@@ -26,7 +26,7 @@ func (db *DB) GetSymbols(ctx context.Context, pkgPath, modulePath, version strin
 		return nil, err
 	}
 	if uc.docID == 0 {
-		return nil, derrors.NotFound
+		return nil, fmt.Errorf("%w: package has no documentation", derrors.NotFound)
 	}
 
 	query := packageSymbolQuery(

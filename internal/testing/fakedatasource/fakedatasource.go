@@ -340,16 +340,11 @@ func (ds *FakeDataSource) GetSymbols(ctx context.Context, pkgPath, modulePath, v
 		return nil, derrors.NotFound
 	}
 
-	var bcs []internal.BuildContext
-	for b := range u.Symbols {
-		bcs = append(bcs, b)
+	doc := internal.DocumentationForBuildContext(u.Documentation, bc)
+	if doc == nil {
+		return nil, fmt.Errorf("no doc matching %s: %w", bc, derrors.NotFound)
 	}
-	matchedBC, ok := internal.MatchingBuildContext(bcs, bc)
-	if !ok {
-		return nil, derrors.NotFound
-	}
-
-	return u.Symbols[matchedBC], nil
+	return doc.API, nil
 }
 
 // SearchSupport reports the search types supported by this datasource.

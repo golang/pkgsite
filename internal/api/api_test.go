@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"slices"
 	"strconv"
 	"testing"
 
@@ -1062,7 +1063,15 @@ func testServeSearchPagination(t *testing.T, ds internal.TestingDataSource) {
 }
 
 func TestServePackageSymbols(t *testing.T) {
-	ds := fakedatasource.New()
+	t.Run("fake", func(t *testing.T) {
+		testServePackageSymbols(t, fakedatasource.New())
+	})
+	t.Run("db", func(t *testing.T) {
+		testServePackageSymbols(t, setupTestDB(t))
+	})
+}
+
+func testServePackageSymbols(t *testing.T, ds internal.TestingDataSource) {
 
 	const (
 		pkgPath    = "example.com/pkg"
@@ -1070,37 +1079,40 @@ func TestServePackageSymbols(t *testing.T) {
 		version    = "v1.0.0"
 	)
 
+	sym := func(doc *internal.Documentation, name string) *internal.Symbol {
+		return &internal.Symbol{
+			SymbolMeta: internal.SymbolMeta{
+				Name:    name,
+				Kind:    internal.SymbolKindFunction,
+				Section: internal.SymbolSectionFunctions,
+			},
+			GOOS:   doc.GOOS,
+			GOARCH: doc.GOARCH,
+		}
+	}
+
+	linuxDoc := sample.Documentation("linux", "amd64", sample.DocContents)
+	linuxDoc.API = []*internal.Symbol{sym(linuxDoc, "LinuxSym"), sym(linuxDoc, "F")}
+	winDoc := sample.Documentation("windows", "amd64", sample.DocContents)
+	winDoc.API = []*internal.Symbol{sym(winDoc, "WindowsSym")}
+	wasmDoc := sample.Documentation("js", "wasm", sample.DocContents)
+	wasmDoc.API = []*internal.Symbol{sym(wasmDoc, "WasmSym")}
+
 	ds.MustInsertModule(t, &internal.Module{
-		ModuleInfo: internal.ModuleInfo{ModulePath: modulePath, Version: version},
+		ModuleInfo: internal.ModuleInfo{
+			ModulePath:        modulePath,
+			Version:           version,
+			LatestVersion:     version,
+			IsRedistributable: true,
+		},
 		Units: []*internal.Unit{{
 			UnitMeta: internal.UnitMeta{
 				Path:       pkgPath,
 				ModuleInfo: internal.ModuleInfo{ModulePath: modulePath, Version: version},
 				Name:       "pkg",
 			},
-			Symbols: map[internal.BuildContext][]*internal.Symbol{
-				{GOOS: "linux", GOARCH: "amd64"}: {
-					{
-						SymbolMeta: internal.SymbolMeta{Name: "LinuxSym", Kind: internal.SymbolKindFunction},
-						GOOS:       "linux",
-						GOARCH:     "amd64",
-					},
-					{
-						SymbolMeta: internal.SymbolMeta{Name: "T", Kind: internal.SymbolKindType},
-						GOOS:       "linux",
-						GOARCH:     "amd64",
-						Children: []*internal.SymbolMeta{
-							{Name: "T.M", Kind: internal.SymbolKindMethod, ParentName: "T"},
-						},
-					},
-				},
-				{GOOS: "windows", GOARCH: "amd64"}: {
-					{SymbolMeta: internal.SymbolMeta{Name: "WindowsSym", Kind: internal.SymbolKindFunction}, GOOS: "windows", GOARCH: "amd64"},
-				},
-				{GOOS: "js", GOARCH: "wasm"}: {
-					{SymbolMeta: internal.SymbolMeta{Name: "WasmSym", Kind: internal.SymbolKindFunction}, GOOS: "js", GOARCH: "wasm"},
-				},
-			},
+			IsRedistributable: true,
+			Documentation:     []*internal.Documentation{linuxDoc, winDoc, wasmDoc},
 		}},
 	})
 
@@ -1108,16 +1120,14 @@ func TestServePackageSymbols(t *testing.T) {
 		name       string
 		url        string
 		wantStatus int
-		wantCount  int
-		wantName   string // Check name of the first symbol to verify build context
+		wantNames  []string // sorted
 		want       any
 	}{
 		{
 			name:       "default best match (linux)",
 			url:        "/v1/symbols/example.com/pkg?version=v1.0.0",
 			wantStatus: http.StatusOK,
-			wantCount:  2,
-			wantName:   "LinuxSym",
+			wantNames:  []string{"F", "LinuxSym"},
 		},
 		{
 			name:       "package not found",
@@ -1135,29 +1145,25 @@ func TestServePackageSymbols(t *testing.T) {
 			name:       "explicit linux",
 			url:        "/v1/symbols/example.com/pkg?version=v1.0.0&goos=linux&goarch=amd64",
 			wantStatus: http.StatusOK,
-			wantCount:  2,
-			wantName:   "LinuxSym",
+			wantNames:  []string{"F", "LinuxSym"},
 		},
 		{
 			name:       "version latest",
 			url:        "/v1/symbols/example.com/pkg?version=latest",
 			wantStatus: http.StatusOK,
-			wantCount:  2,
-			wantName:   "LinuxSym",
+			wantNames:  []string{"F", "LinuxSym"},
 		},
 		{
 			name:       "explicit windows",
 			url:        "/v1/symbols/example.com/pkg?version=v1.0.0&goos=windows&goarch=amd64",
 			wantStatus: http.StatusOK,
-			wantCount:  1,
-			wantName:   "WindowsSym",
+			wantNames:  []string{"WindowsSym"},
 		},
 		{
 			name:       "explicit wasm",
 			url:        "/v1/symbols/example.com/pkg?version=v1.0.0&goos=js&goarch=wasm",
 			wantStatus: http.StatusOK,
-			wantCount:  1,
-			wantName:   "WasmSym",
+			wantNames:  []string{"WasmSym"},
 		},
 		{
 			name:       "not found build context",
@@ -1198,11 +1204,13 @@ func TestServePackageSymbols(t *testing.T) {
 				if err := json.Unmarshal(w.Body.Bytes(), &got); err != nil {
 					t.Fatalf("json.Unmarshal: %v", err)
 				}
-				if len(got.Items) != test.wantCount {
-					t.Errorf("count = %d, want %d", len(got.Items), test.wantCount)
+				var gotNames []string
+				for _, it := range got.Items {
+					gotNames = append(gotNames, it.Name)
 				}
-				if test.wantName != "" && got.Items[0].Name != test.wantName {
-					t.Errorf("first symbol = %q, want %q", got.Items[0].Name, test.wantName)
+				slices.Sort(gotNames)
+				if !slices.Equal(gotNames, test.wantNames) {
+					t.Errorf("got names %q, want %q", gotNames, test.wantNames)
 				}
 			}
 		})
@@ -1269,7 +1277,6 @@ func TestServePackageImportedBy(t *testing.T) {
 }
 
 func TestServeVulnerabilities(t *testing.T) {
-	ds := fakedatasource.New()
 	vc, err := vuln.NewInMemoryClient([]*osv.Entry{
 		{
 			ID:      "VULN-1",
@@ -1310,7 +1317,7 @@ func TestServeVulnerabilities(t *testing.T) {
 			r := httptest.NewRequest("GET", test.url, nil)
 			w := httptest.NewRecorder()
 
-			if err := ServeVulnerabilities(vc)(w, r, ds); err != nil {
+			if err := ServeVulnerabilities(vc)(w, r, nil); err != nil {
 				ServeError(w, r, err)
 			}
 
