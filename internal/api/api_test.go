@@ -634,19 +634,47 @@ func testServeModule(t *testing.T, ds internal.TestingDataSource) {
 }
 
 func TestServeModuleVersions(t *testing.T) {
-	ds := fakedatasource.New()
+	t.Run("fake", func(t *testing.T) {
+		testServeModuleVersions(t, fakedatasource.New())
+	})
+	t.Run("db", func(t *testing.T) {
+		testServeModuleVersions(t, setupTestDB(t))
+	})
+}
 
+func testServeModuleVersions(t *testing.T, ds internal.TestingDataSource) {
 	ds.MustInsertModule(t, &internal.Module{
-		ModuleInfo: internal.ModuleInfo{ModulePath: "example.com", Version: "v1.0.0"},
-		Units:      []*internal.Unit{{UnitMeta: internal.UnitMeta{Path: "example.com"}}},
+		ModuleInfo: internal.ModuleInfo{
+			ModulePath:    "example.com",
+			Version:       "v1.0.0",
+			LatestVersion: "v1.1.0",
+		},
+		Units: []*internal.Unit{{UnitMeta: internal.UnitMeta{
+			Path: "example.com",
+			Name: "pkg",
+		}}},
 	})
 	ds.MustInsertModule(t, &internal.Module{
-		ModuleInfo: internal.ModuleInfo{ModulePath: "example.com", Version: "v1.1.0"},
-		Units:      []*internal.Unit{{UnitMeta: internal.UnitMeta{Path: "example.com"}}},
+		ModuleInfo: internal.ModuleInfo{
+			ModulePath:    "example.com",
+			Version:       "v1.1.0",
+			LatestVersion: "v1.1.0",
+		},
+		Units: []*internal.Unit{{UnitMeta: internal.UnitMeta{
+			Path: "example.com",
+			Name: "pkg",
+		}}},
 	})
 	ds.MustInsertModule(t, &internal.Module{
-		ModuleInfo: internal.ModuleInfo{ModulePath: "example.com/v2", Version: "v2.0.0"},
-		Units:      []*internal.Unit{{UnitMeta: internal.UnitMeta{Path: "example.com/v2"}}},
+		ModuleInfo: internal.ModuleInfo{
+			ModulePath:    "example.com/v2",
+			Version:       "v2.0.0",
+			LatestVersion: "v2.0.0",
+		},
+		Units: []*internal.Unit{{UnitMeta: internal.UnitMeta{
+			Path: "example.com/v2",
+			Name: "pkg",
+		}}},
 	})
 
 	for _, test := range []struct {
