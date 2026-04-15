@@ -401,7 +401,9 @@ func getPackagesInUnit(ctx context.Context, db *database.DB, fullPath, modulePat
 	if err := db.RunQuery(ctx, query, collect, args...); err != nil {
 		return nil, err
 	}
-
+	if len(packagesByPath) == 0 {
+		return nil, derrors.NotFound
+	}
 	var packages []*internal.PackageMeta
 	for _, ps := range packagesByPath {
 		sort.Slice(ps, func(i, j int) bool { return internal.CompareBuildContexts(ps[i].bc, ps[j].bc) < 0 })

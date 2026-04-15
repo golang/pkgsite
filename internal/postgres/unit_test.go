@@ -6,6 +6,7 @@ package postgres
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"path"
 	"strings"
@@ -15,6 +16,7 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/google/safehtml"
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/stdlib"
@@ -952,5 +954,10 @@ func TestGetModulePackages(t *testing.T) {
 	wantPaths := []string{"m.com/a", "m.com/a/b", "m.com/c"}
 	if diff := cmp.Diff(wantPaths, gotPaths); diff != "" {
 		t.Errorf("GetModulePackages mismatch (-want +got):\n%s", diff)
+	}
+
+	_, err = testDB.GetModulePackages(ctx, "x.com", "v1.2.3")
+	if !errors.Is(err, derrors.NotFound) {
+		t.Errorf("got error %v, wanted NotFound", err)
 	}
 }

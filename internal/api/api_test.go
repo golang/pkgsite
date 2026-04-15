@@ -713,27 +713,45 @@ func TestServeModuleVersions(t *testing.T) {
 }
 
 func TestServeModulePackages(t *testing.T) {
-	ds := fakedatasource.New()
+	t.Run("fake", func(t *testing.T) {
+		testServeModulePackages(t, fakedatasource.New())
+	})
+	t.Run("db", func(t *testing.T) {
+		testServeModulePackages(t, setupTestDB(t))
+	})
+}
 
+func testServeModulePackages(t *testing.T, ds internal.TestingDataSource) {
 	const (
 		modulePath = "example.com"
 		version    = "v1.0.0"
 	)
 
 	ds.MustInsertModule(t, &internal.Module{
-		ModuleInfo: internal.ModuleInfo{ModulePath: modulePath, Version: version},
+		ModuleInfo: internal.ModuleInfo{
+			ModulePath:        modulePath,
+			Version:           version,
+			LatestVersion:     version,
+			IsRedistributable: true,
+		},
 		Units: []*internal.Unit{
 			{
 				UnitMeta: internal.UnitMeta{Path: modulePath, Name: "pkg1"},
 				Documentation: []*internal.Documentation{
-					{Synopsis: "synopsis for pkg1"},
+					sample.Documentation("linux", "amd64", sample.DocContents),
 				},
+				IsRedistributable: true,
 			},
 			{
 				UnitMeta: internal.UnitMeta{Path: modulePath + "/sub", Name: "pkg2"},
 				Documentation: []*internal.Documentation{
-					{Synopsis: "synopsis for pkg2"},
+					func() *internal.Documentation {
+						d := sample.Documentation("linux", "amd64", sample.DocContents)
+						d.Synopsis = "Synopsis for name pkg2, path sub"
+						return d
+					}(),
 				},
+				IsRedistributable: true,
 			},
 		},
 	})
