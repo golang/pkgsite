@@ -29,7 +29,7 @@ func TestUsageLine(t *testing.T) {
 		{
 			name: "with args",
 			c:    &command{name: "package", args: "<package>[@version]"},
-			want: binName + " package <package>[@version] [flags]",
+			want: binName + " package [flags] <package>[@version]",
 		},
 	}
 

@@ -27,7 +27,7 @@ type command struct {
 func (c *command) usageLine() string {
 	parts := []string{filepath.Base(os.Args[0]), c.name}
 	if c.args != "" {
-		parts = append(parts, c.args, "[flags]")
+		parts = append(parts, "[flags]", c.args)
 	}
 	return strings.Join(parts, " ")
 }
@@ -115,7 +115,14 @@ func parseAndRun(c *command, args []string, stdout, stderr io.Writer) int {
 	}
 	c.flags.SetOutput(stderr)
 	c.flags.Usage = func() { printCommandUsage(stderr, c) }
+	// TODO: Consider supporting flags after positional arguments for better UX.
+	// Currently, flags must appear before positional arguments.
+	// Works: pkgsite-cli package -doc=text -examples -imports -json -module golang.org/x/tools golang.org/x/tools/go/packages
+	// Fails: pkgsite-cli package golang.org/x/tools/go/packages -doc=text -examples -imports -json -module golang.org/x/tools
 	if err := c.flags.Parse(args); err != nil {
+		if err == flag.ErrHelp {
+			return 0
+		}
 		return 2
 	}
 	return c.run(c.flags, stdout, stderr)
