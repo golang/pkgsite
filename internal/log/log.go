@@ -173,7 +173,7 @@ func toLevel(v string) Severity {
 	v = strings.ToLower(v)
 
 	switch v {
-	case "":
+	case "", "default":
 		// default log level will print everything.
 		return SeverityDefault
 	case "debug":

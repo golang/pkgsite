@@ -268,9 +268,10 @@ func TestZipSize(t *testing.T) {
 		if err != nil {
 			t.Error(err)
 		}
-		const want = 3235
-		if got != want {
-			t.Errorf("got %d, want %d", got, want)
+		// Changes to Go can change this number.
+		const wantLo, wantHi = 3235, 3251
+		if got != wantLo && got != wantHi {
+			t.Errorf("got %d, want %d or %d", got, wantLo, wantHi)
 		}
 	})
 	t.Run("not found", func(t *testing.T) {

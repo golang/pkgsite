@@ -43,24 +43,36 @@ func (ds fallbackDataSource) GetUnitMeta(ctx context.Context, path, requestedMod
 	return ds.DataSource.GetUnitMeta(ctx, path, requestedModulePath, requestedVersion)
 }
 
+// setupTestDB sets up a DB for testing.
+// It also removes the voluminous DB log output,
+// which makes it hard to see test information.
+// Note: This function modifies global log state and should not
+// be used in tests running with t.Parallel().
+func setupTestDB(t *testing.T) *postgres.DB {
+	orig := log.GetLevel()
+	t.Cleanup(func() { log.SetLevel(orig.String()) })
+	log.SetLevel("Info")
+	const testDB = "pkgsite_api"
+	db, err := postgres.SetupTestDB(testDB)
+	if err != nil {
+		if errors.Is(err, derrors.NotFound) && os.Getenv("GO_DISCOVERY_TESTDB") != "true" {
+			t.Skipf("could not connect to DB (see doc/postgres.md to set up): %v", err)
+		}
+		t.Fatalf("setting up DB: %v", err)
+	}
+	t.Cleanup(func() {
+		postgres.ResetTestDB(db, t)
+		db.Close()
+	})
+	return db
+}
+
 func TestServePackage(t *testing.T) {
 	t.Run("fake", func(t *testing.T) {
 		testServePackage(t, fakedatasource.New())
 	})
 	t.Run("db", func(t *testing.T) {
-		orig := log.GetLevel()
-		t.Cleanup(func() { log.SetLevel(orig.String()) })
-		log.SetLevel("Info")
-		const testDB = "pkgsite_api"
-		db, err := postgres.SetupTestDB(testDB)
-		if err != nil {
-			if errors.Is(err, derrors.NotFound) && os.Getenv("GO_DISCOVERY_TESTDB") != "true" {
-				t.Skipf("could not connect to DB (see doc/postgres.md to set up): %v", err)
-			}
-			t.Fatalf("setting up DB: %v", err)
-		}
-		defer db.Close()
-		testServePackage(t, db)
+		testServePackage(t, setupTestDB(t))
 	})
 }
 
@@ -462,7 +474,15 @@ func testServePackage(t *testing.T, ds internal.TestingDataSource) {
 }
 
 func TestServeModule(t *testing.T) {
-	ds := fakedatasource.New()
+	t.Run("fake", func(t *testing.T) {
+		testServeModule(t, fakedatasource.New())
+	})
+	t.Run("db", func(t *testing.T) {
+		testServeModule(t, setupTestDB(t))
+	})
+}
+
+func testServeModule(t *testing.T, ds internal.TestingDataSource) {
 
 	const (
 		modulePath = "example.com"
@@ -479,10 +499,12 @@ func TestServeModule(t *testing.T) {
 		Units: []*internal.Unit{{
 			UnitMeta: internal.UnitMeta{
 				Path:       modulePath,
+				Name:       "pkg",
 				ModuleInfo: *mi1,
 			},
-			Readme:   &internal.Readme{Filepath: "README.md", Contents: "Hello world"},
-			Licenses: sample.LicenseMetadata(),
+			Readme:            &internal.Readme{Filepath: "README.md", Contents: "Hello world"},
+			Licenses:          sample.LicenseMetadata(),
+			IsRedistributable: true,
 		}},
 	})
 
@@ -495,6 +517,7 @@ func TestServeModule(t *testing.T) {
 		Units: []*internal.Unit{{
 			UnitMeta: internal.UnitMeta{
 				Path:       modulePath,
+				Name:       "pkg",
 				ModuleInfo: *mi2,
 			},
 		}},

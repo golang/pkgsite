@@ -160,7 +160,7 @@ func mustInsertModule(t *testing.T, db *DB, m *internal.Module, goMod string) {
 	ctx := t.Context()
 	for _, u := range m.Units {
 		if !u.IsRedistributable {
-			t.Logf("unit %s is not redistributable; DB will strip documentation", u.Path)
+			t.Logf("unit %s in module %s@%s is not redistributable; DB will strip documentation", u.Path, m.ModulePath, m.Version)
 		}
 	}
 	var lmv *internal.LatestModuleVersions
