@@ -145,3 +145,30 @@ func versionInfo() string {
 	}
 	return filepath.Base(os.Args[0]) + " " + v + " " + bi.GoVersion
 }
+
+const defaultServer = "https://pkg.go.dev"
+
+// commonFlags are shared across all subcommands.
+type commonFlags struct {
+	jsonOut bool
+	limit   int
+	token   string
+	server  string
+}
+
+func (f *commonFlags) register(fs *flag.FlagSet) {
+	fs.BoolVar(&f.jsonOut, "json", false, "output JSON")
+	fs.IntVar(&f.limit, "limit", 0, "max results (default: 20 text, 100 json)")
+	fs.StringVar(&f.token, "token", "", "pagination token (JSON mode)")
+	fs.StringVar(&f.server, "server", defaultServer, "API server URL")
+}
+
+func (f *commonFlags) effectiveLimit() int {
+	if f.limit > 0 {
+		return f.limit
+	}
+	if f.jsonOut {
+		return 100
+	}
+	return 20
+}

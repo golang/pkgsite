@@ -50,8 +50,8 @@ func TestRunHelp(t *testing.T) {
 	if code != 0 {
 		t.Errorf("exit code = %d, want 0", code)
 	}
-	if !strings.Contains(stdout.String(), "pkgsite-cli") {
-		t.Error("help output does not contain 'pkgsite-cli'")
+	if !strings.Contains(stdout.String(), filepath.Base(os.Args[0])) {
+		t.Errorf("help output does not contain %q", filepath.Base(os.Args[0]))
 	}
 }
 
@@ -112,6 +112,54 @@ func TestRunPackageJSON(t *testing.T) {
 	}
 }
 
+func TestRunModule(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		json.NewEncoder(w).Encode(moduleResponse{
+			Path:     "golang.org/x/text",
+			Version:  "v0.14.0",
+			IsLatest: true,
+			HasGoMod: true,
+		})
+	}))
+	defer srv.Close()
+
+	var stdout, stderr bytes.Buffer
+	code := run([]string{"--server=" + srv.URL, "module", "golang.org/x/text"}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("exit code = %d, stderr = %s", code, stderr.String())
+	}
+	out := stdout.String()
+	if !strings.Contains(out, "golang.org/x/text") {
+		t.Errorf("output missing module path:\n%s", out)
+	}
+	if !strings.Contains(out, "v0.14.0 (latest)") {
+		t.Errorf("output missing version:\n%s", out)
+	}
+}
+
+func TestRunSearch(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		json.NewEncoder(w).Encode(paginatedResponse[searchResultResponse]{
+			Items: []searchResultResponse{{
+				PackagePath: "encoding/json",
+				ModulePath:  "std",
+				Version:     "go1.22.0",
+			}},
+			Total: 1,
+		})
+	}))
+	defer srv.Close()
+
+	var stdout, stderr bytes.Buffer
+	code := run([]string{"--server=" + srv.URL, "search", "json"}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("exit code = %d, stderr = %s", code, stderr.String())
+	}
+	if !strings.Contains(stdout.String(), "encoding/json") {
+		t.Errorf("output missing search result:\n%s", stdout.String())
+	}
+}
+
 func TestRunAPIError(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
@@ -141,11 +189,51 @@ func TestRunAPIErrorJSON(t *testing.T) {
 	if code != 1 {
 		t.Errorf("exit code = %d, want 1", code)
 	}
+	// In JSON mode, error should go to stdout.
 	if !strings.Contains(stdout.String(), "not found") {
 		t.Errorf("stdout = %q, want to contain 'not found'", stdout.String())
 	}
 }
 
+func TestRunModuleWithVersions(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch {
+		case strings.HasPrefix(r.URL.Path, "/v1/versions/"):
+			json.NewEncoder(w).Encode(paginatedResponse[versionResponse]{
+				Items: []versionResponse{{Version: "v0.14.0"}, {Version: "v0.13.0"}},
+				Total: 2,
+			})
+		case strings.HasPrefix(r.URL.Path, "/v1/vulns/"):
+			json.NewEncoder(w).Encode(paginatedResponse[vulnResponse]{
+				Items: []vulnResponse{{ID: "GO-2023-0001", Summary: "Bad thing"}},
+				Total: 1,
+			})
+		default:
+			json.NewEncoder(w).Encode(moduleResponse{
+				Path:    "golang.org/x/text",
+				Version: "v0.14.0",
+			})
+		}
+	}))
+	defer srv.Close()
+
+	var stdout, stderr bytes.Buffer
+	code := run([]string{"--server=" + srv.URL, "module", "--versions", "--vulns", "golang.org/x/text"}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("exit code = %d, stderr = %s", code, stderr.String())
+	}
+	out := stdout.String()
+	if !strings.Contains(out, "v0.14.0") {
+		t.Errorf("output missing version:\n%s", out)
+	}
+	if !strings.Contains(out, "GO-2023-0001") {
+		t.Errorf("output missing vulnerability:\n%s", out)
+	}
+}
+
+// TestNoThirdPartyImports verifies that pkginfo only imports the standard
+// library, making it easy to migrate to x/tools or another repository
+// with controlled dependencies.
 func TestNoThirdPartyImports(t *testing.T) {
 	dir, err := os.Getwd()
 	if err != nil {

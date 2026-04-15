@@ -2,6 +2,16 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+// Command pkgsite-cli queries the pkg.go.dev API for information about
+// Go packages and modules.
+//
+// Usage:
+//
+//	pkgsite-cli package <package>[@version] [flags]  package information
+//	pkgsite-cli module <module>[@version] [flags]      module information
+//	pkgsite-cli search <query> [flags]                 search for packages
+//
+// See doc/pkgsite-cli.md for the full design document.
 package main
 
 import (
@@ -27,6 +37,14 @@ func commands() []*command {
 	pkgFS := flag.NewFlagSet(filepath.Base(os.Args[0]), flag.ContinueOnError)
 	pf.register(pkgFS)
 
+	var mf moduleFlags
+	modFS := flag.NewFlagSet(filepath.Base(os.Args[0])+" module", flag.ContinueOnError)
+	mf.register(modFS)
+
+	var sf searchFlags
+	searchFS := flag.NewFlagSet(filepath.Base(os.Args[0])+" search", flag.ContinueOnError)
+	sf.register(searchFS)
+
 	pkgRun := func(fs *flag.FlagSet, stdout, stderr io.Writer) int { return runPackage(fs, &pf, stdout, stderr) }
 
 	var cmds []*command
@@ -39,20 +57,28 @@ func commands() []*command {
 			run:     pkgRun,
 		},
 		{
+			name:    "module",
+			args:    "<module>[@version]",
+			summary: "module information",
+			flags:   modFS,
+			run:     func(fs *flag.FlagSet, stdout, stderr io.Writer) int { return runModule(fs, &mf, stdout, stderr) },
+		},
+		{
+			name:    "search",
+			args:    "<query>",
+			summary: "search for packages",
+			flags:   searchFS,
+			run:     func(fs *flag.FlagSet, stdout, stderr io.Writer) int { return runSearch(fs, &sf, stdout, stderr) },
+		},
+		{
 			name:    "help",
 			summary: "show this help message",
-			run: func(_ *flag.FlagSet, stdout, _ io.Writer) int {
-				printUsage(stdout, cmds)
-				return 0
-			},
+			run:     func(_ *flag.FlagSet, stdout, _ io.Writer) int { printUsage(stdout, cmds); return 0 },
 		},
 		{
 			name:    "version",
 			summary: "print version information",
-			run: func(_ *flag.FlagSet, stdout, _ io.Writer) int {
-				fmt.Fprintln(stdout, versionInfo())
-				return 0
-			},
+			run:     func(_ *flag.FlagSet, stdout, _ io.Writer) int { fmt.Fprintln(stdout, versionInfo()); return 0 },
 		},
 	}
 	return cmds
