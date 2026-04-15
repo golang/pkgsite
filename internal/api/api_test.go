@@ -9,6 +9,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -873,17 +874,32 @@ func testServeModulePackages(t *testing.T, ds internal.TestingDataSource) {
 }
 
 func TestServeSearch(t *testing.T) {
-	ds := fakedatasource.New()
+	t.Run("fake", func(t *testing.T) {
+		testServeSearch(t, fakedatasource.New())
+	})
+	t.Run("db", func(t *testing.T) {
+		testServeSearch(t, setupTestDB(t))
+	})
+}
 
+func testServeSearch(t *testing.T, ds internal.TestingDataSource) {
 	ds.MustInsertModule(t, &internal.Module{
-		ModuleInfo: internal.ModuleInfo{ModulePath: "example.com", Version: "v1.0.0"},
+		ModuleInfo: internal.ModuleInfo{
+			ModulePath:        "example.com",
+			Version:           "v1.0.0",
+			LatestVersion:     "v1.0.0",
+			IsRedistributable: true,
+		},
 		Units: []*internal.Unit{{
 			UnitMeta: internal.UnitMeta{
 				Path:       "example.com/pkg",
 				ModuleInfo: internal.ModuleInfo{ModulePath: "example.com", Version: "v1.0.0"},
 				Name:       "pkg",
 			},
-			Documentation: []*internal.Documentation{{Synopsis: "A great package."}},
+			Documentation: []*internal.Documentation{
+				sample.Documentation("linux", "amd64", sample.DocContents),
+			},
+			IsRedistributable: true,
 		}},
 	})
 
@@ -895,7 +911,7 @@ func TestServeSearch(t *testing.T) {
 	}{
 		{
 			name:       "basic search",
-			url:        "/v1/search?q=great",
+			url:        "/v1/search?q=synopsis",
 			wantStatus: http.StatusOK,
 			wantCount:  1,
 		},
@@ -912,7 +928,7 @@ func TestServeSearch(t *testing.T) {
 		},
 		{
 			name:       "search with filter",
-			url:        "/v1/search?q=great&filter=example.com",
+			url:        "/v1/search?q=synopsis&filter=example.com",
 			wantStatus: http.StatusOK,
 			wantCount:  1,
 		},
@@ -950,20 +966,39 @@ func TestServeSearch(t *testing.T) {
 }
 
 func TestServeSearchPagination(t *testing.T) {
-	ds := fakedatasource.New()
+	t.Run("fake", func(t *testing.T) {
+		testServeSearchPagination(t, fakedatasource.New())
+	})
+	t.Run("db", func(t *testing.T) {
+		testServeSearchPagination(t, setupTestDB(t))
+	})
+}
 
-	for i := 0; i < 10; i++ {
+func testServeSearchPagination(t *testing.T, ds internal.TestingDataSource) {
+	for i := range 10 {
 		pkgPath := "example.com/pkg" + strconv.Itoa(i)
 		ds.MustInsertModule(t, &internal.Module{
-			ModuleInfo: internal.ModuleInfo{ModulePath: pkgPath, Version: "v1.0.0"},
+			ModuleInfo: internal.ModuleInfo{
+				ModulePath:        pkgPath,
+				Version:           "v1.0.0",
+				LatestVersion:     "v1.0.0",
+				IsRedistributable: true,
+			},
 			Units: []*internal.Unit{{
 				UnitMeta: internal.UnitMeta{
 					Path:       pkgPath,
 					ModuleInfo: internal.ModuleInfo{ModulePath: pkgPath, Version: "v1.0.0"},
 					Name:       "pkg",
 				},
-				Documentation: []*internal.Documentation{{Synopsis: "Synopsis" + strconv.Itoa(i)}},
-			}},
+				IsRedistributable: true,
+				Documentation: []*internal.Documentation{
+					func() *internal.Documentation {
+						d := sample.Documentation("linux", "amd64", sample.DocContents)
+						d.Synopsis = fmt.Sprintf("Synopsis %d", i)
+						return d
+					}(),
+				}},
+			},
 		})
 	}
 
