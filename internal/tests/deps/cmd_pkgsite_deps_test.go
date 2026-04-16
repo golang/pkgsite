@@ -32,7 +32,6 @@ var additionalAllowedTestModDeps = map[string]bool{
 }
 
 func TestCmdPkgsiteDeps(t *testing.T) {
-	t.Skip("temporarily skipped until https://go.dev/cl/765502 is merged; then we will move API tests to testing/api")
 	testenv.MustHaveExecPath(t, "go")
 
 	// First, list all dependencies of pkgsite.
