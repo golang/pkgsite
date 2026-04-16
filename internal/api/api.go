@@ -365,7 +365,7 @@ func ServePackageSymbols(w http.ResponseWriter, r *http.Request, ds internal.Dat
 
 // ServePackageImportedBy handles requests for the v1 package imported-by endpoint.
 // api:route /v1/imported-by/{path}
-// api:desc Names of packages importing the package at {path}.
+// api:desc Paths of packages importing the package at {path}, not including packages in the same module.
 func ServePackageImportedBy(w http.ResponseWriter, r *http.Request, ds internal.DataSource) (err error) {
 	defer derrors.Wrap(&err, "ServePackageImportedBy")
 

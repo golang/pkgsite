@@ -1218,7 +1218,15 @@ func testServePackageSymbols(t *testing.T, ds internal.TestingDataSource) {
 }
 
 func TestServePackageImportedBy(t *testing.T) {
-	ds := fakedatasource.New()
+	t.Run("fake", func(t *testing.T) {
+		testServePackageImportedBy(t, fakedatasource.New())
+	})
+	t.Run("db", func(t *testing.T) {
+		testServePackageImportedBy(t, setupTestDB(t))
+	})
+}
+
+func testServePackageImportedBy(t *testing.T, ds internal.TestingDataSource) {
 
 	const (
 		pkgPath    = "example.com/pkg"
@@ -1226,13 +1234,43 @@ func TestServePackageImportedBy(t *testing.T) {
 		version    = "v1.0.0"
 	)
 
+	modInfo := internal.ModuleInfo{
+		ModulePath:        modulePath,
+		Version:           version,
+		LatestVersion:     version,
+		IsRedistributable: true,
+	}
 	ds.MustInsertModule(t, &internal.Module{
-		ModuleInfo: internal.ModuleInfo{ModulePath: modulePath, Version: version},
+		ModuleInfo: modInfo,
 		Units: []*internal.Unit{
-			{UnitMeta: internal.UnitMeta{Path: pkgPath, ModuleInfo: internal.ModuleInfo{ModulePath: modulePath, Version: version}}},
 			{
-				UnitMeta: internal.UnitMeta{Path: "example.com/other", ModuleInfo: internal.ModuleInfo{ModulePath: modulePath, Version: version}},
-				Imports:  []string{pkgPath},
+				UnitMeta: internal.UnitMeta{
+					Path:       pkgPath,
+					ModuleInfo: modInfo,
+					Name:       "pkg",
+				},
+				IsRedistributable: true,
+			},
+		},
+	})
+
+	modInfo2 := internal.ModuleInfo{
+		ModulePath:        "example.com/mod",
+		Version:           version,
+		LatestVersion:     version,
+		IsRedistributable: true,
+	}
+	ds.MustInsertModule(t, &internal.Module{
+		ModuleInfo: modInfo2,
+		Units: []*internal.Unit{
+			{
+				UnitMeta: internal.UnitMeta{
+					Path:       pkgPath,
+					ModuleInfo: modInfo2,
+					Name:       "pkg",
+				},
+				IsRedistributable: true,
+				Imports:           []string{pkgPath},
 			},
 		},
 	})
