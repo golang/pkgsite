@@ -430,7 +430,7 @@ func ServePackageImportedBy(w http.ResponseWriter, r *http.Request, ds internal.
 // ServeVulnerabilities handles requests for the v1 module vulnerabilities endpoint.
 // api:route /v1/vulns/{path}
 // api:desc Vulnerabilities of the module at {path}.
-func ServeVulnerabilities(vc *vuln.Client) func(w http.ResponseWriter, r *http.Request, ds internal.DataSource) error {
+func ServeVulnerabilities(vc *vuln.Client) func(w http.ResponseWriter, r *http.Request, _ internal.DataSource) error {
 	return func(w http.ResponseWriter, r *http.Request, ds internal.DataSource) (err error) {
 		defer derrors.Wrap(&err, "ServeVulnerabilities")
 

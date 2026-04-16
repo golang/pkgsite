@@ -50,7 +50,7 @@ func (ds fallbackDataSource) GetUnitMeta(ctx context.Context, path, requestedMod
 // which makes it hard to see test information.
 // Note: This function modifies global log state and should not
 // be used in tests running with t.Parallel().
-func setupTestDB(t *testing.T) *postgres.DB {
+func setupTestDB(t *testing.T) internal.TestingDataSource {
 	orig := log.GetLevel()
 	t.Cleanup(func() { log.SetLevel(orig.String()) })
 	log.SetLevel("Info")
@@ -69,12 +69,41 @@ func setupTestDB(t *testing.T) *postgres.DB {
 	return db
 }
 
-func TestServePackage(t *testing.T) {
+func TestAPI(t *testing.T) {
 	t.Run("fake", func(t *testing.T) {
-		testServePackage(t, fakedatasource.New())
+		testAPI(t, func(t *testing.T) internal.TestingDataSource {
+			return fakedatasource.New()
+		})
 	})
 	t.Run("db", func(t *testing.T) {
-		testServePackage(t, setupTestDB(t))
+		testAPI(t, setupTestDB)
+	})
+}
+
+func testAPI(t *testing.T, newTestingDataSource func(t *testing.T) internal.TestingDataSource) {
+	t.Run("package", func(t *testing.T) {
+		testServePackage(t, newTestingDataSource(t))
+	})
+	t.Run("module", func(t *testing.T) {
+		testServeModule(t, newTestingDataSource(t))
+	})
+	t.Run("module versions", func(t *testing.T) {
+		testServeModuleVersions(t, newTestingDataSource(t))
+	})
+	t.Run("module packages", func(t *testing.T) {
+		testServeModulePackages(t, newTestingDataSource(t))
+	})
+	t.Run("search", func(t *testing.T) {
+		testServeSearch(t, newTestingDataSource(t))
+	})
+	t.Run("search pagination", func(t *testing.T) {
+		testServeSearchPagination(t, newTestingDataSource(t))
+	})
+	t.Run("package symbols", func(t *testing.T) {
+		testServePackageSymbols(t, newTestingDataSource(t))
+	})
+	t.Run("package imported by", func(t *testing.T) {
+		testServePackageImportedBy(t, newTestingDataSource(t))
 	})
 }
 
@@ -475,15 +504,6 @@ func testServePackage(t *testing.T, ds internal.TestingDataSource) {
 	}
 }
 
-func TestServeModule(t *testing.T) {
-	t.Run("fake", func(t *testing.T) {
-		testServeModule(t, fakedatasource.New())
-	})
-	t.Run("db", func(t *testing.T) {
-		testServeModule(t, setupTestDB(t))
-	})
-}
-
 func testServeModule(t *testing.T, ds internal.TestingDataSource) {
 
 	const (
@@ -635,15 +655,6 @@ func testServeModule(t *testing.T, ds internal.TestingDataSource) {
 	}
 }
 
-func TestServeModuleVersions(t *testing.T) {
-	t.Run("fake", func(t *testing.T) {
-		testServeModuleVersions(t, fakedatasource.New())
-	})
-	t.Run("db", func(t *testing.T) {
-		testServeModuleVersions(t, setupTestDB(t))
-	})
-}
-
 func testServeModuleVersions(t *testing.T, ds internal.TestingDataSource) {
 	ds.MustInsertModule(t, &internal.Module{
 		ModuleInfo: internal.ModuleInfo{
@@ -740,15 +751,6 @@ func testServeModuleVersions(t *testing.T, ds internal.TestingDataSource) {
 			}
 		})
 	}
-}
-
-func TestServeModulePackages(t *testing.T) {
-	t.Run("fake", func(t *testing.T) {
-		testServeModulePackages(t, fakedatasource.New())
-	})
-	t.Run("db", func(t *testing.T) {
-		testServeModulePackages(t, setupTestDB(t))
-	})
 }
 
 func testServeModulePackages(t *testing.T, ds internal.TestingDataSource) {
@@ -874,15 +876,6 @@ func testServeModulePackages(t *testing.T, ds internal.TestingDataSource) {
 	}
 }
 
-func TestServeSearch(t *testing.T) {
-	t.Run("fake", func(t *testing.T) {
-		testServeSearch(t, fakedatasource.New())
-	})
-	t.Run("db", func(t *testing.T) {
-		testServeSearch(t, setupTestDB(t))
-	})
-}
-
 func testServeSearch(t *testing.T, ds internal.TestingDataSource) {
 	ds.MustInsertModule(t, &internal.Module{
 		ModuleInfo: internal.ModuleInfo{
@@ -964,15 +957,6 @@ func testServeSearch(t *testing.T, ds internal.TestingDataSource) {
 			}
 		})
 	}
-}
-
-func TestServeSearchPagination(t *testing.T) {
-	t.Run("fake", func(t *testing.T) {
-		testServeSearchPagination(t, fakedatasource.New())
-	})
-	t.Run("db", func(t *testing.T) {
-		testServeSearchPagination(t, setupTestDB(t))
-	})
 }
 
 func testServeSearchPagination(t *testing.T, ds internal.TestingDataSource) {
@@ -1060,15 +1044,6 @@ func testServeSearchPagination(t *testing.T, ds internal.TestingDataSource) {
 			}
 		})
 	}
-}
-
-func TestServePackageSymbols(t *testing.T) {
-	t.Run("fake", func(t *testing.T) {
-		testServePackageSymbols(t, fakedatasource.New())
-	})
-	t.Run("db", func(t *testing.T) {
-		testServePackageSymbols(t, setupTestDB(t))
-	})
 }
 
 func testServePackageSymbols(t *testing.T, ds internal.TestingDataSource) {
@@ -1217,15 +1192,6 @@ func testServePackageSymbols(t *testing.T, ds internal.TestingDataSource) {
 	}
 }
 
-func TestServePackageImportedBy(t *testing.T) {
-	t.Run("fake", func(t *testing.T) {
-		testServePackageImportedBy(t, fakedatasource.New())
-	})
-	t.Run("db", func(t *testing.T) {
-		testServePackageImportedBy(t, setupTestDB(t))
-	})
-}
-
 func testServePackageImportedBy(t *testing.T, ds internal.TestingDataSource) {
 
 	const (
@@ -1315,6 +1281,8 @@ func testServePackageImportedBy(t *testing.T, ds internal.TestingDataSource) {
 }
 
 func TestServeVulnerabilities(t *testing.T) {
+	// This test doesn't need to run against a Postgres DB, because
+	// vulnerabilities are not read from the database.
 	vc, err := vuln.NewInMemoryClient([]*osv.Entry{
 		{
 			ID:      "VULN-1",
@@ -1397,6 +1365,8 @@ func unmarshalResponse[T any](data []byte) (any, error) {
 }
 
 func TestCacheControl(t *testing.T) {
+	// This test doesn't need to run against a Postgres DB, because
+	// it's concerned only with headers.
 	ds := fakedatasource.New()
 	const modulePath = "example.com"
 	for _, v := range []string{"v1.0.0", "master"} {
