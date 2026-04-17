@@ -1,0 +1,68 @@
+<!--
+  Copyright 2026 The Go Authors. All rights reserved.
+  Use of this source code is governed by a BSD-style
+  license that can be found in the LICENSE file.
+-->
+
+{{define "main"}}
+  <style>
+    .Api-list {
+      list-style: none;
+      padding: 0;
+    }
+    .Api-item {
+      border-bottom: var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      margin-bottom: 2rem;
+      padding-bottom: 1rem;
+    }
+    .Api-item:last-child {
+      border-bottom: none;
+    }
+    .Api-route {
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+    .Api-details {
+      display: grid;
+      gap: 0.5rem;
+      grid-template-columns: 6rem 1fr;
+    }
+    .Api-label {
+      font-weight: 600;
+    }
+  </style>
+  <main class="go-Container" id="main-content">
+    <div class="go-Content">
+      <h1 data-test-id="api-heading">API Documentation</h1>
+      <p>
+        Pkgsite provides a JSON API for accessing information about Go packages and modules.
+        All routes return a JSON response.
+      </p>
+      <ul class="Api-list">
+        {{range .Routes}}
+          <li class="Api-item">
+            <div class="Api-route"><code>{{.Route}}</code></div>
+            <p>{{.Desc}}</p>
+            <div class="Api-details">
+              <span class="Api-label">Parameters:</span>
+              <span><code><a href="https://pkg.go.dev/golang.org/x/pkgsite/internal/api#{{.Params}}">{{.Params}}</a></code></span>
+              <span class="Api-label">Response:</span>
+              <span><code>
+                {{if .ResponsePaginatedType}}
+                  <a href="https://pkg.go.dev/golang.org/x/pkgsite/internal/api#PaginatedResponse">PaginatedResponse</a>[
+                  <a href="https://pkg.go.dev/golang.org/x/pkgsite/internal/api#{{.ResponsePaginatedType}}">{{.ResponsePaginatedType}}</a>
+                  ]
+                {{else}}
+                  <a href="https://pkg.go.dev/golang.org/x/pkgsite/internal/api#{{.Response}}">{{.Response}}</a>
+                {{end}}
+              </code></span>
+            </div>
+          </li>
+        {{end}}
+      </ul>
+    </div>
+  </main>
+{{end}}

@@ -244,6 +244,7 @@ func (s *Server) Install(handle func(string, http.Handler), cacher Cacher, authV
 	handle("GET /v1/packages/", s.apiHandler(api.ServeModulePackages))
 	handle("GET /v1/search/", s.apiHandler(api.ServeSearch))
 	handle("GET /v1/vulns/", s.apiHandler(api.ServeVulnerabilities(s.vulnClient)))
+	handle("GET /v1/api", s.apiDocHandler())
 	handle("/opensearch.xml", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		serveFileFS(w, r, s.staticFS, "shared/opensearch.xml")
 	}))
@@ -483,6 +484,27 @@ func (s *Server) licensePolicyHandler() http.HandlerFunc {
 			LicenseTypes:     lics,
 		}
 		s.servePage(r.Context(), w, "license-policy", page)
+	})
+}
+
+// APIPage is used to generate the API documentation page.
+type APIPage struct {
+	pagepkg.BasePage
+	Routes []*api.RouteInfo
+}
+
+func (s *Server) apiDocHandler() http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		routes, err := api.RouteInfos()
+		if err != nil {
+			s.serveError(w, r, err)
+			return
+		}
+		page := APIPage{
+			BasePage: s.newBasePage(r, "API Documentation"),
+			Routes:   routes,
+		}
+		s.servePage(r.Context(), w, "api", page)
 	})
 }
 

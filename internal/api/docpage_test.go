@@ -45,6 +45,24 @@ func TestReadRouteInfo(t *testing.T) {
 			},
 		},
 		{
+			name: "paginated",
+			data: `
+//api:route /v1/versions/{path}
+//api:desc All versions of the module at {path}.
+//api:params filter, limit, token
+//api:response PaginatedResponse[ModuleInfo]
+`,
+			want: []*RouteInfo{
+				{
+					Route:                 "/v1/versions/{path}",
+					Desc:                  "All versions of the module at {path}.",
+					Params:                "filter, limit, token",
+					Response:              "PaginatedResponse[ModuleInfo]",
+					ResponsePaginatedType: "ModuleInfo",
+				},
+			},
+		},
+		{
 			name: "missing field",
 			data: `
 //api:route /v1/package/{path}

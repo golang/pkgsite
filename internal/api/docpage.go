@@ -17,10 +17,11 @@ import (
 
 // RouteInfo contains documentation information for an API route.
 type RouteInfo struct {
-	Route    string
-	Desc     string
-	Params   string
-	Response string
+	Route                 string
+	Desc                  string
+	Params                string
+	Response              string
+	ResponsePaginatedType string
 }
 
 //go:embed api.go
@@ -51,7 +52,7 @@ func readRouteInfo(data []byte) ([]*RouteInfo, error) {
 			return fmt.Errorf("missing api:params field in route %q", r.Route)
 		}
 		if r.Response == "" {
-			return fmt.Errorf("missing api:params field in route %q", r.Route)
+			return fmt.Errorf("missing api:response field in route %q", r.Route)
 		}
 		routes = append(routes, r)
 		return nil
@@ -99,6 +100,9 @@ func readRouteInfo(data []byte) ([]*RouteInfo, error) {
 				return nil, fmt.Errorf("duplicate api:response in route %q", current.Route)
 			}
 			current.Response = val
+			if before, after, _ := strings.Cut(val, "["); before == "PaginatedResponse" && strings.HasSuffix(after, "]") {
+				current.ResponsePaginatedType = after[:len(after)-1]
+			}
 		default:
 			route := "(unknown route)"
 			if current != nil {

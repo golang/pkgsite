@@ -68,6 +68,7 @@ func ParsePageTemplates(fsys template.TrustedFS) (map[string]*template.Template,
 		{"vuln/main", "vuln"},
 		{"vuln/list", "vuln"},
 		{"vuln/entry", "vuln"},
+		{"api"},
 	}
 
 	for _, set := range htmlSets {
