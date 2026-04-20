@@ -172,6 +172,7 @@ var (
 		"GPL-3.0-only",
 		"GPL-3.0-or-later",
 		"HPND",
+		"ICU",
 		"ISC",
 		"JSON",
 		"LGPL-2.1",
