@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"go/ast"
 	"go/build"
+	"go/doc"
 	"go/parser"
 	"go/token"
 	"io"
@@ -219,7 +220,7 @@ func loadPackageMeta(_ context.Context, contentDir fs.FS, goFilePaths []string, 
 		if err != nil {
 			return nil, err
 		}
-		name, err := loadPackageName(innerPath, mfiles)
+		name, synopsis, err := loadPackageName(innerPath, mfiles)
 		switch {
 		case errors.Is(err, derrors.NotFound):
 			// No package for this build context.
@@ -245,6 +246,10 @@ func loadPackageMeta(_ context.Context, contentDir fs.FS, goFilePaths []string, 
 				return nil, &BadPackageError{
 					Err: fmt.Errorf("more than one package name (%q and %q)", pkg.name, name),
 				}
+			}
+			// First non-empty synopsis wins across build contexts.
+			if pkg.synopsis == "" {
+				pkg.synopsis = synopsis
 			}
 		}
 	}
@@ -368,45 +373,50 @@ func loadFilesWithBuildContext(innerPath string, files map[string][]byte) (pkgNa
 	return packageName, goFiles, fset, nil
 }
 
-// loadPackageName returns the package name from the files as it occurs in the source.
-// If there are no non-test Go files, it returns a NotFound error.
-func loadPackageName(innerPath string, files map[string][]byte) (pkgName string, _ error) {
+// loadPackageName returns the package name and synopsis from the files as they
+// occur in the source. If there are no non-test Go files, it returns a NotFound error.
+func loadPackageName(innerPath string, files map[string][]byte) (pkgName, synopsis string, _ error) {
 	// Parse .go files and add them to the goFiles slice.
 	var (
 		fset            = token.NewFileSet()
 		numNonTestFiles int
 		packageName     string
 		packageNameFile string // Name of file where packageName came from.
+		pkgSynopsis     string
 	)
 	for name, b := range files {
 		if strings.HasSuffix(name, "_test.go") {
 			continue
 		}
-		pf, err := parser.ParseFile(fset, name, b, parser.PackageClauseOnly)
+		pf, err := parser.ParseFile(fset, name, b, parser.PackageClauseOnly|parser.ParseComments)
 		if err != nil {
 			if pf == nil {
-				return "", fmt.Errorf("internal error: the source couldn't be read: %v", err)
+				return "", "", fmt.Errorf("internal error: the source couldn't be read: %v", err)
 			}
-			return "", &BadPackageError{Err: err}
+			return "", "", &BadPackageError{Err: err}
 		}
 		numNonTestFiles++
 		if numNonTestFiles == 1 {
 			packageName = pf.Name.Name
 			packageNameFile = name
 		} else if pf.Name.Name != packageName {
-			return "", &BadPackageError{Err: &build.MultiplePackageError{
+			return "", "", &BadPackageError{Err: &build.MultiplePackageError{
 				Dir:      innerPath,
 				Packages: []string{packageName, pf.Name.Name},
 				Files:    []string{packageNameFile, name},
 			}}
 		}
+		if pkgSynopsis == "" && pf.Doc != nil {
+			//lint:ignore SA1019 We have no *doc.Package here; doc.Synopsis is appropriate for raw AST doc text.
+			pkgSynopsis = doc.Synopsis(pf.Doc.Text())
+		}
 	}
 	if numNonTestFiles == 0 {
 		// This directory doesn't contain a package, or at least not one
 		// that matches this build context.
-		return "", derrors.NotFound
+		return "", "", derrors.NotFound
 	}
-	return packageName, nil
+	return packageName, pkgSynopsis, nil
 }
 
 // matchingFiles returns a map from file names to their contents, read from zipGoFiles.

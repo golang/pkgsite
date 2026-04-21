@@ -169,6 +169,7 @@ func TestProxyGetUnitMeta(t *testing.T) {
 			want: &internal.UnitMeta{
 				ModuleInfo: singleModInfo,
 				Name:       "pkg",
+				Synopsis:   "Package pkg is a sample package.",
 			},
 		},
 		{
@@ -178,6 +179,7 @@ func TestProxyGetUnitMeta(t *testing.T) {
 			want: &internal.UnitMeta{
 				ModuleInfo: singleModInfo,
 				Name:       "pkg",
+				Synopsis:   "Package pkg is a sample package.",
 			},
 		},
 		{
@@ -192,7 +194,8 @@ func TestProxyGetUnitMeta(t *testing.T) {
 					CommitTime:        proxytest.CommitTime,
 					HasGoMod:          true,
 				},
-				Name: "basic",
+				Name:     "basic",
+				Synopsis: "Package basic is a sample package.",
 			},
 		},
 	} {
@@ -360,8 +363,9 @@ func TestLocalGetUnitMeta(t *testing.T) {
 			path:       "github.com/my/module/bar",
 			modulePath: "github.com/my/module",
 			want: &internal.UnitMeta{
-				Path: "github.com/my/module/bar",
-				Name: "bar",
+				Path:     "github.com/my/module/bar",
+				Name:     "bar",
+				Synopsis: "package bar",
 				ModuleInfo: internal.ModuleInfo{
 					ModulePath:        "github.com/my/module",
 					Version:           fetch.LocalVersion,
@@ -375,8 +379,9 @@ func TestLocalGetUnitMeta(t *testing.T) {
 			path:       "github.com/my/module/foo",
 			modulePath: "github.com/my/module",
 			want: &internal.UnitMeta{
-				Path: "github.com/my/module/foo",
-				Name: "foo",
+				Path:     "github.com/my/module/foo",
+				Name:     "foo",
+				Synopsis: "package foo",
 				ModuleInfo: internal.ModuleInfo{
 					ModulePath:        "github.com/my/module",
 					IsRedistributable: true,
@@ -390,8 +395,9 @@ func TestLocalGetUnitMeta(t *testing.T) {
 			path:       "github.com/my/module/bar",
 			modulePath: internal.UnknownModulePath,
 			want: &internal.UnitMeta{
-				Path: "github.com/my/module/bar",
-				Name: "bar",
+				Path:     "github.com/my/module/bar",
+				Name:     "bar",
+				Synopsis: "package bar",
 				ModuleInfo: internal.ModuleInfo{
 					ModulePath:        "github.com/my/module",
 					Version:           fetch.LocalVersion,
@@ -513,6 +519,68 @@ func TestGetUnit(t *testing.T) {
 				want := []internal.BuildContext{internal.BuildContextAll}
 				if !cmp.Equal(got.BuildContexts, want) {
 					t.Errorf("got %v, want %v", got.BuildContexts, want)
+				}
+			}
+		})
+	}
+}
+
+func TestSubdirectorySynopsis(t *testing.T) {
+	// Verify that Subdirectories in a unit returned by GetUnit have Synopsis
+	// populated. This tests the fix for golang/go#76793.
+	for _, test := range []struct {
+		name         string
+		testModules  []*proxytest.Module // nil means local-getter only
+		um           *internal.UnitMeta
+		wantSynopses map[string]string
+	}{
+		{
+			name: "local",
+			um: &internal.UnitMeta{
+				Path:       "github.com/my/module",
+				ModuleInfo: internal.ModuleInfo{ModulePath: "github.com/my/module"},
+			},
+			wantSynopses: map[string]string{
+				"github.com/my/module/bar": "package bar",
+				"github.com/my/module/foo": "package foo",
+			},
+		},
+		{
+			name:        "proxy",
+			testModules: defaultTestModules,
+			um: &internal.UnitMeta{
+				Path: "example.com/single",
+				ModuleInfo: internal.ModuleInfo{
+					ModulePath: "example.com/single",
+					Version:    "v1.0.0",
+				},
+			},
+			wantSynopses: map[string]string{
+				"example.com/single/pkg": "Package pkg is a sample package.",
+			},
+		},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			ctx, ds, teardown := setup(t, test.testModules, true)
+			defer teardown()
+
+			got, err := ds.GetUnit(ctx, test.um, internal.AllFields, internal.BuildContext{})
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			seen := map[string]bool{}
+			for _, sub := range got.Subdirectories {
+				if want, ok := test.wantSynopses[sub.Path]; ok {
+					seen[sub.Path] = true
+					if sub.Synopsis != want {
+						t.Errorf("Subdirectory %q: got Synopsis %q, want %q", sub.Path, sub.Synopsis, want)
+					}
+				}
+			}
+			for path := range test.wantSynopses {
+				if !seen[path] {
+					t.Errorf("Subdirectory %q not found in Subdirectories", path)
 				}
 			}
 		})

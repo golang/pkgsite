@@ -163,9 +163,10 @@ func (ds *FetchDataSource) populateUnitSubdirectories(u *internal.Unit, m *fetch
 	for _, u2 := range m.UnitMetas {
 		if strings.HasPrefix(u2.Path, p) || u.Path == "std" {
 			u.Subdirectories = append(u.Subdirectories, &internal.PackageMeta{
-				Path: u2.Path,
-				Name: u2.Name,
-				// Syn, IsRedistributable, and Licences are not populated from FetchDataSource.
+				Path:     u2.Path,
+				Name:     u2.Name,
+				Synopsis: u2.Synopsis,
+				// IsRedistributable and Licenses are not populated from FetchDataSource.
 			})
 		}
 	}

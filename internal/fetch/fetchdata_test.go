@@ -36,8 +36,9 @@ var singleUnits = []*internal.Unit{
 	},
 	{
 		UnitMeta: internal.UnitMeta{
-			Name: "pkg",
-			Path: "example.com/single/pkg",
+			Name:     "pkg",
+			Path:     "example.com/single/pkg",
+			Synopsis: "Package pkg is a sample package.",
 		},
 		Documentation: []*internal.Documentation{{
 			GOOS:     internal.All,
@@ -128,8 +129,9 @@ var moduleNoGoMod = &testModule{
 			Units: []*internal.Unit{
 				{
 					UnitMeta: internal.UnitMeta{
-						Name: "basic",
-						Path: "example.com/nogo",
+						Name:     "basic",
+						Path:     "example.com/nogo",
+						Synopsis: "Package basic is a sample package.",
 					},
 					Readme: &internal.Readme{
 						Filepath: "README.md",
@@ -177,8 +179,9 @@ var moduleMultiPackage = &testModule{
 				},
 				{
 					UnitMeta: internal.UnitMeta{
-						Name: "bar",
-						Path: "example.com/multi/bar",
+						Name:     "bar",
+						Path:     "example.com/multi/bar",
+						Synopsis: "package bar",
 					},
 					Readme: &internal.Readme{
 						Filepath: "bar/README",
@@ -205,8 +208,9 @@ var moduleMultiPackage = &testModule{
 				},
 				{
 					UnitMeta: internal.UnitMeta{
-						Name: "foo",
-						Path: "example.com/multi/foo",
+						Name:     "foo",
+						Path:     "example.com/multi/foo",
+						Synopsis: "package foo",
 					},
 					Documentation: []*internal.Documentation{{
 						GOOS:     internal.All,
@@ -299,8 +303,9 @@ var moduleBadPackages = &testModule{
 				},
 				{
 					UnitMeta: internal.UnitMeta{
-						Name: "good",
-						Path: "bad.mod/module/good",
+						Name:     "good",
+						Path:     "bad.mod/module/good",
+						Synopsis: "Package good is inside a module that has bad packages.",
 					},
 					Documentation: []*internal.Documentation{{
 						GOOS:     internal.All,
@@ -373,8 +378,9 @@ var moduleBuildConstraints = &testModule{
 				},
 				{
 					UnitMeta: internal.UnitMeta{
-						Name: "cpu",
-						Path: "example.com/build-constraints/cpu",
+						Name:     "cpu",
+						Path:     "example.com/build-constraints/cpu",
+						Synopsis: "Package cpu implements processor feature detection used by the Go standard library.",
 					},
 					Documentation: []*internal.Documentation{
 						{
@@ -522,8 +528,9 @@ var moduleNonRedist = &testModule{
 				},
 				{
 					UnitMeta: internal.UnitMeta{
-						Name: "bar",
-						Path: "example.com/nonredist/bar",
+						Name:     "bar",
+						Path:     "example.com/nonredist/bar",
+						Synopsis: "package bar",
 					},
 					Documentation: []*internal.Documentation{
 						{
@@ -546,8 +553,9 @@ var moduleNonRedist = &testModule{
 				},
 				{
 					UnitMeta: internal.UnitMeta{
-						Name: "baz",
-						Path: "example.com/nonredist/bar/baz",
+						Name:     "baz",
+						Path:     "example.com/nonredist/bar/baz",
+						Synopsis: "package baz",
 					},
 					Documentation: []*internal.Documentation{
 						{
@@ -570,8 +578,9 @@ var moduleNonRedist = &testModule{
 				},
 				{
 					UnitMeta: internal.UnitMeta{
-						Name: "unk",
-						Path: "example.com/nonredist/unk",
+						Name:     "unk",
+						Path:     "example.com/nonredist/unk",
+						Synopsis: "package unk",
 					},
 					Readme: &internal.Readme{
 						Filepath: "unk/README.md",
@@ -700,8 +709,9 @@ var moduleDocTest = &testModule{
 				},
 				{
 					UnitMeta: internal.UnitMeta{
-						Name: "permalink",
-						Path: "doc.test/permalink",
+						Name:     "permalink",
+						Path:     "doc.test/permalink",
+						Synopsis: "Package permalink is for testing the heading permalink documentation rendering feature.",
 					},
 					Documentation: []*internal.Documentation{{
 						GOOS:     internal.All,
@@ -743,8 +753,9 @@ var moduleDocTooLarge = &testModule{
 			Units: []*internal.Unit{
 				{
 					UnitMeta: internal.UnitMeta{
-						Name: "bigdoc",
-						Path: "bigdoc.test",
+						Name:     "bigdoc",
+						Path:     "bigdoc.test",
+						Synopsis: "This documentation is big.",
 					},
 					Documentation: []*internal.Documentation{{
 						GOOS:     internal.All,
@@ -802,8 +813,9 @@ var moduleWasm = &testModule{
 				},
 				{
 					UnitMeta: internal.UnitMeta{
-						Name: "js",
-						Path: "github.com/my/module/js/js",
+						Name:     "js",
+						Path:     "github.com/my/module/js/js",
+						Synopsis: "Package js only works with wasm.",
 					},
 					Documentation: []*internal.Documentation{
 						{
@@ -871,8 +883,9 @@ var moduleStdMaster = &testModule{
 			Units: []*internal.Unit{
 				{
 					UnitMeta: internal.UnitMeta{
-						Path: "errors",
-						Name: "errors",
+						Path:     "errors",
+						Name:     "errors",
+						Synopsis: "Package errors implements functions to manipulate errors.",
 						ModuleInfo: internal.ModuleInfo{
 							Version:           stdlib.TestMasterVersion,
 							ModulePath:        stdlib.ModulePath,
@@ -952,8 +965,9 @@ var moduleStd = &testModule{
 				},
 				{
 					UnitMeta: internal.UnitMeta{
-						Name: "builtin",
-						Path: "builtin",
+						Name:     "builtin",
+						Path:     "builtin",
+						Synopsis: "Package builtin provides documentation for Go's predeclared identifiers.",
 					},
 					Documentation: []*internal.Documentation{
 						{
@@ -1334,8 +1348,9 @@ var moduleStd = &testModule{
 				},
 				{
 					UnitMeta: internal.UnitMeta{
-						Name: "main",
-						Path: "cmd/pprof",
+						Name:     "main",
+						Path:     "cmd/pprof",
+						Synopsis: "Pprof interprets and displays profiles of Go programs.",
 					},
 					Readme: &internal.Readme{
 						Filepath: "cmd/pprof/README",
@@ -1391,8 +1406,9 @@ var moduleStd = &testModule{
 				},
 				{
 					UnitMeta: internal.UnitMeta{
-						Name: "context",
-						Path: "context",
+						Name:     "context",
+						Path:     "context",
+						Synopsis: "Package context defines the Context type, which carries deadlines, cancellation signals, and other request-scoped values across API boundaries and between processes.",
 					},
 					Documentation: []*internal.Documentation{
 						{
@@ -1520,8 +1536,9 @@ var moduleStd = &testModule{
 				},
 				{
 					UnitMeta: internal.UnitMeta{
-						Name: "json",
-						Path: "encoding/json",
+						Name:     "json",
+						Path:     "encoding/json",
+						Synopsis: "Package json implements encoding and decoding of JSON as defined in RFC 7159.",
 					},
 					Documentation: []*internal.Documentation{
 						{
@@ -2068,8 +2085,9 @@ var moduleStd = &testModule{
 				},
 				{
 					UnitMeta: internal.UnitMeta{
-						Name: "errors",
-						Path: "errors",
+						Name:     "errors",
+						Path:     "errors",
+						Synopsis: "Package errors implements functions to manipulate errors.",
 					},
 					Documentation: []*internal.Documentation{
 						{
@@ -2092,8 +2110,9 @@ var moduleStd = &testModule{
 				},
 				{
 					UnitMeta: internal.UnitMeta{
-						Name: "flag",
-						Path: "flag",
+						Name:     "flag",
+						Path:     "flag",
+						Synopsis: "Package flag implements command-line flag parsing.",
 					},
 					Imports: []string{"errors", "fmt", "io", "os", "reflect", "sort", "strconv", "strings", "time"},
 					Documentation: []*internal.Documentation{
@@ -2756,8 +2775,9 @@ var moduleMaster = &testModule{
 				},
 				{
 					UnitMeta: internal.UnitMeta{
-						Name: "foo",
-						Path: "github.com/my/module/foo",
+						Name:     "foo",
+						Path:     "github.com/my/module/foo",
+						Synopsis: "package foo exports a helpful constant.",
 					},
 					Documentation: []*internal.Documentation{
 						{
@@ -2807,8 +2827,9 @@ var moduleLatest = &testModule{
 				},
 				{
 					UnitMeta: internal.UnitMeta{
-						Name: "foo",
-						Path: "github.com/my/module/foo",
+						Name:     "foo",
+						Path:     "github.com/my/module/foo",
+						Synopsis: "package foo exports a helpful constant.",
 					},
 					Documentation: []*internal.Documentation{{
 						GOOS:     internal.All,
@@ -2846,8 +2867,9 @@ var moduleGenerics = &testModule{
 			Units: []*internal.Unit{
 				{
 					UnitMeta: internal.UnitMeta{
-						Name: "generics",
-						Path: "example.com/generics",
+						Name:     "generics",
+						Path:     "example.com/generics",
+						Synopsis: "Package generics uses generics.",
 					},
 					Documentation: []*internal.Documentation{
 						{
@@ -2937,8 +2959,9 @@ package example_test
 					},
 					{
 						UnitMeta: internal.UnitMeta{
-							Name: "example",
-							Path: path + "/example",
+							Name:     "example",
+							Path:     path + "/example",
+							Synopsis: "Package example contains examples.",
 						},
 						Documentation: []*internal.Documentation{{
 							GOOS:     internal.All,

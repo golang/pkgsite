@@ -12,8 +12,9 @@ import (
 type UnitMeta struct {
 	// Unit level information
 	//
-	Path string
-	Name string
+	Path     string
+	Name     string
+	Synopsis string
 
 	// Module level information
 	ModuleInfo

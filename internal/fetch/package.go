@@ -136,8 +136,9 @@ func extractPackage(ctx context.Context, modulePath, pkgPath string, contentDir 
 }
 
 type packageMeta struct {
-	path string
-	name string
+	path     string
+	name     string
+	synopsis string
 }
 
 // extractPackageMetas returns a slice of packageMetas containing only the information

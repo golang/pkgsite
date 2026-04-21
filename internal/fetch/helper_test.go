@@ -60,8 +60,9 @@ func cleanFetchResult(t *testing.T, fr *FetchResult) *FetchResult {
 				IsRedistributable: fr.Module.IsRedistributable,
 				HasGoMod:          fr.Module.HasGoMod,
 			},
-			Path: u.Path,
-			Name: u.Name,
+			Path:     u.Path,
+			Name:     u.Name,
+			Synopsis: u.Synopsis,
 		}
 
 		if u.IsPackage() && shouldSetPVS {

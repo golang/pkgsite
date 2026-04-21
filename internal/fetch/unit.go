@@ -65,6 +65,7 @@ func moduleUnitMetas(minfo internal.ModuleInfo, pkgs []*packageMeta) []*internal
 		}
 		if pkg, ok := pkgLookup[dirPath]; ok {
 			um.Name = pkg.name
+			um.Synopsis = pkg.synopsis
 		}
 		ums = append(ums, um)
 	}
