@@ -23,8 +23,7 @@ func VCSHostWithThreeElementRepoName(hostname string) bool {
 		"hg.sr.ht",
 		"bitbucket.org",
 		"github.com",
-		"golang.org",
-		"launchpad.net":
+		"golang.org":
 		return true
 	default:
 		return false

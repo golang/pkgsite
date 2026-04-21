@@ -44,6 +44,27 @@ func TestCandidateModulePaths(t *testing.T) {
 			"k8s.io/klog/v1",
 			[]string{"k8s.io/klog", "k8s.io"},
 		},
+		{
+			// launchpad.net allows two-element module paths (go-get meta-tag discovery).
+			"launchpad.net/goose",
+			[]string{"launchpad.net/goose", "launchpad.net"},
+		},
+		{
+			"launchpad.net/project/series",
+			[]string{
+				"launchpad.net/project/series",
+				"launchpad.net/project",
+				"launchpad.net",
+			},
+		},
+		{
+			"launchpad.net/~user/project",
+			[]string{
+				"launchpad.net/~user/project",
+				"launchpad.net/~user",
+				"launchpad.net",
+			},
+		},
 	} {
 		got := CandidateModulePaths(test.in)
 		if !cmp.Equal(got, test.want) {
