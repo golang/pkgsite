@@ -59,6 +59,26 @@ func TestReadRouteInfo(t *testing.T) {
 					Params:                "filter, limit, token",
 					Response:              "PaginatedResponse[ModuleInfo]",
 					ResponsePaginatedType: "ModuleInfo",
+					LinkPaginatedType:     true,
+				},
+			},
+		},
+		{
+			name: "paginated lower",
+			data: `
+//api:route /v1/strings
+//api:desc Some strings.
+//api:params filter
+//api:response PaginatedResponse[string]
+`,
+			want: []*RouteInfo{
+				{
+					Route:                 "/v1/strings",
+					Desc:                  "Some strings.",
+					Params:                "filter",
+					Response:              "PaginatedResponse[string]",
+					ResponsePaginatedType: "string",
+					LinkPaginatedType:     false,
 				},
 			},
 		},

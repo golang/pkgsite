@@ -13,6 +13,7 @@ import (
 	"regexp"
 	"strings"
 	"sync"
+	"unicode"
 )
 
 // RouteInfo contains documentation information for an API route.
@@ -22,6 +23,7 @@ type RouteInfo struct {
 	Params                string
 	Response              string
 	ResponsePaginatedType string
+	LinkPaginatedType     bool
 }
 
 //go:embed api.go
@@ -103,6 +105,9 @@ func readRouteInfo(data []byte) ([]*RouteInfo, error) {
 			current.Response = val
 			if before, after, _ := strings.Cut(val, "["); before == "PaginatedResponse" && strings.HasSuffix(after, "]") {
 				current.ResponsePaginatedType = after[:len(after)-1]
+				if len(current.ResponsePaginatedType) > 0 {
+					current.LinkPaginatedType = !unicode.IsLower(rune(current.ResponsePaginatedType[0]))
+				}
 			}
 		default:
 			route := "(unknown route)"

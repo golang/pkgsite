@@ -142,3 +142,15 @@ func TestInstallFS(t *testing.T) {
 		t.Errorf("body does not contain %q", want)
 	}
 }
+
+func TestAPIRedirect(t *testing.T) {
+	_, handler := newTestServer(t, nil)
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, httptest.NewRequest("GET", "/api", nil))
+	if w.Code != http.StatusMovedPermanently {
+		t.Errorf("got status code = %d, want %d", w.Code, http.StatusMovedPermanently)
+	}
+	if got := w.Header().Get("Location"); got != "/v1/api" {
+		t.Errorf("got Location = %q, want %q", got, "/v1/api")
+	}
+}

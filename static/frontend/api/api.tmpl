@@ -52,9 +52,7 @@
               <span class="Api-label">Response:</span>
               <span><code>
                 {{if .ResponsePaginatedType}}
-                  <a href="https://pkg.go.dev/golang.org/x/pkgsite/internal/api#PaginatedResponse">PaginatedResponse</a>[
-                  <a href="https://pkg.go.dev/golang.org/x/pkgsite/internal/api#{{.ResponsePaginatedType}}">{{.ResponsePaginatedType}}</a>
-                  ]
+                  <a href="https://pkg.go.dev/golang.org/x/pkgsite/internal/api#PaginatedResponse">PaginatedResponse</a>[{{if .LinkPaginatedType}}<a href="https://pkg.go.dev/golang.org/x/pkgsite/internal/api#{{.ResponsePaginatedType}}">{{.ResponsePaginatedType}}</a>{{else}}{{.ResponsePaginatedType}}{{end}}]
                 {{else}}
                   <a href="https://pkg.go.dev/golang.org/x/pkgsite/internal/api#{{.Response}}">{{.Response}}</a>
                 {{end}}
