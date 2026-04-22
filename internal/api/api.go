@@ -194,8 +194,24 @@ func ServeModuleVersions(w http.ResponseWriter, r *http.Request, ds internal.Dat
 		})
 	}
 
-	// api:response PaginatedResponse[*internal.ModuleInfo]
-	resp, err := paginate(infos, params.ListParams, defaultLimit)
+	var mvs []ModuleVersion
+	for _, in := range infos {
+		mvs = append(mvs, ModuleVersion{
+			ModulePath:        in.ModulePath,
+			Version:           in.Version,
+			CommitTime:        in.CommitTime,
+			IsRedistributable: in.IsRedistributable,
+			HasGoMod:          in.HasGoMod,
+			LatestVersion:     in.LatestVersion,
+			Deprecated:        in.Deprecated,
+			DeprecationReason: in.DeprecationComment,
+			Retracted:         in.Retracted,
+			RetractionReason:  in.RetractionRationale,
+		})
+	}
+
+	// api:response PaginatedResponse[ModuleVersion]
+	resp, err := paginate(mvs, params.ListParams, defaultLimit)
 	if err != nil {
 		return err
 	}

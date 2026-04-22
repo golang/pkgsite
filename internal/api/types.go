@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 )
 
 // Package is the response for /v1/package/{packagePath}.
@@ -44,6 +45,20 @@ type PackageImportedBy struct {
 	ModulePath string                    `json:"modulePath"`
 	Version    string                    `json:"version"`
 	ImportedBy PaginatedResponse[string] `json:"importedBy"`
+}
+
+// ModuleVersion is the response for /v1/versions/{path}.
+type ModuleVersion struct {
+	ModulePath        string    `json:"modulePath"`
+	Version           string    `json:"version"`
+	CommitTime        time.Time `json:"commitTime"`
+	IsRedistributable bool      `json:"isRedistributable"` // license allows distribution?
+	HasGoMod          bool      `json:"hasGoMod"`          // module has go.mod file?
+	LatestVersion     string    `json:"latestVersion"`     // latest unretracted version
+	Deprecated        bool      `json:"deprecated"`
+	DeprecationReason string    `json:"deprecationReason"`
+	Retracted         bool      `json:"retracted"`
+	RetractionReason  string    `json:"retractionReason"`
 }
 
 // Module is the response for /v1/module/{modulePath}.
