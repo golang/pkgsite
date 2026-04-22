@@ -101,11 +101,11 @@ func TestTypesUpToDate(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to read %s: %v", srcPath, err)
 	}
-	pkgIdx := bytes.Index(srcBytes, []byte("package "))
-	if pkgIdx < 0 {
+	before, _, ok := bytes.Cut(srcBytes, []byte("package "))
+	if !ok {
 		t.Fatalf("Failed to find package declaration in %s", srcPath)
 	}
-	header := srcBytes[:pkgIdx]
+	header := before
 
 	var buf bytes.Buffer
 	buf.Write(header)

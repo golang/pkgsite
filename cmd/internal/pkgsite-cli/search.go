@@ -29,16 +29,29 @@ func runSearch(fs *flag.FlagSet, s *searchFlags, stdout, stderr io.Writer) int {
 		handleErr(stdout, stderr, err, s.jsonOut)
 		return 1
 	}
-	results, err := c.Search(ctx, query, client.SearchOptions{
-		Symbol: s.symbol,
-		PaginationOptions: client.PaginationOptions{
-			Limit: s.effectiveLimit(),
-			Token: s.token,
-		},
-	})
+
+	fetch := func(token string, limit int) (*client.PaginatedResponse[client.SearchResult], error) {
+		return c.Search(ctx, query, client.SearchOptions{
+			Symbol: s.symbol,
+			PaginationOptions: client.PaginationOptions{
+				Limit: limit,
+				Token: token,
+			},
+		})
+	}
+
+	var results *client.PaginatedResponse[client.SearchResult]
+
+	targetLimit := s.effectiveLimit()
+
+	items, total, err := client.AllItems("", targetLimit, fetch)
 	if err != nil {
 		handleErr(stdout, stderr, err, s.jsonOut)
 		return 1
+	}
+	results = &client.PaginatedResponse[client.SearchResult]{
+		Items: items,
+		Total: total,
 	}
 
 	if s.jsonOut {

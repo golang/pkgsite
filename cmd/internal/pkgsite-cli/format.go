@@ -160,14 +160,18 @@ func formatSearch(w io.Writer, r *client.PaginatedResponse[client.SearchResult])
 		return
 	}
 	for _, sr := range r.Items {
-		fmt.Fprintf(w, "%s\n", sr.PackagePath)
-		fmt.Fprintf(w, "  Module:   %s@%s\n", sr.ModulePath, sr.Version)
-		if sr.Synopsis != "" {
-			fmt.Fprintf(w, "  Synopsis: %s\n", sr.Synopsis)
-		}
-		fmt.Fprintln(w)
+		formatSearchResult(w, sr)
 	}
 	formatPaginationHint(w, len(r.Items), r.Total)
+}
+
+func formatSearchResult(w io.Writer, sr client.SearchResult) {
+	fmt.Fprintf(w, "%s\n", sr.PackagePath)
+	fmt.Fprintf(w, "  Module:   %s@%s\n", sr.ModulePath, sr.Version)
+	if sr.Synopsis != "" {
+		fmt.Fprintf(w, "  Synopsis: %s\n", sr.Synopsis)
+	}
+	fmt.Fprintln(w)
 }
 
 func formatLicenses(w io.Writer, licenses []client.License) {
@@ -178,7 +182,6 @@ func formatLicenses(w io.Writer, licenses []client.License) {
 }
 
 func formatPaginationHint(w io.Writer, shown, total int) {
-	// TODO(hyangah): show how to use token.
 	if total > shown {
 		fmt.Fprintf(w, "  Showing %d of %d. Use --limit=N to see more.\n", shown, total)
 	}

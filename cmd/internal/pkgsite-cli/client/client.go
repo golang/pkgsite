@@ -11,6 +11,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"iter"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -34,6 +35,70 @@ func New(server string) (*Client, error) {
 		server:     u,
 		httpClient: &http.Client{Timeout: 30 * time.Second},
 	}, nil
+}
+
+// Items returns an iterator that yields items from a paginated API up to the limit.
+// It handles fetching subsequent pages using the token returned by the fetch function.
+// The fetch function takes the next page token and the remaining limit.
+func Items[T any](startToken string, limit int, fetch func(token string, limit int) (*PaginatedResponse[T], error)) iter.Seq2[T, error] {
+	return func(yield func(T, error) bool) {
+		token := startToken
+		count := 0
+		for {
+			reqLimit := 0
+			if limit > 0 {
+				reqLimit = limit - count
+			}
+			resp, err := fetch(token, reqLimit)
+			if err != nil {
+				var zero T
+				yield(zero, err)
+				return
+			}
+			for _, item := range resp.Items {
+				if !yield(item, nil) {
+					return
+				}
+				count++
+				if limit > 0 && count >= limit {
+					return
+				}
+			}
+			token = resp.NextPageToken
+			if token == "" {
+				return
+			}
+		}
+	}
+}
+
+// AllItems fetches all pages (or up to limit) and returns the aggregated items and total.
+func AllItems[T any](startToken string, limit int, fetch func(token string, limit int) (*PaginatedResponse[T], error)) ([]T, int, error) {
+	resp, err := fetch(startToken, limit)
+	if err != nil {
+		return nil, 0, err
+	}
+	allItems := resp.Items
+	total := resp.Total
+
+	if limit > 0 && len(allItems) >= limit {
+		return allItems[:limit], total, nil
+	}
+
+	if resp.NextPageToken != "" {
+		rem := 0
+		if limit > 0 {
+			rem = limit - len(allItems)
+		}
+		for item, err := range Items(resp.NextPageToken, rem, fetch) {
+			if err != nil {
+				// TODO(hyangah): consider to return allItems accumulated so far instead of throwing away.
+				return nil, 0, err
+			}
+			allItems = append(allItems, item)
+		}
+	}
+	return allItems, total, nil
 }
 
 func (e *Error) Error() string {

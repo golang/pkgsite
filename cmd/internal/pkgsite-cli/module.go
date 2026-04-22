@@ -49,32 +49,65 @@ func runModule(fs *flag.FlagSet, m *moduleFlags, stdout, stderr io.Writer) int {
 
 	if m.versions {
 		g.Go(func() error {
-			var err error
-			vers, err = c.GetVersions(gctx, path, client.PaginationOptions{
-				Limit: m.effectiveLimit(),
-				Token: m.token,
-			})
-			return err
+			fetch := func(token string, limit int) (*client.PaginatedResponse[client.VersionResponse], error) {
+				// Pass limit to API to limit server-side page size.
+				return c.GetVersions(gctx, path, client.PaginationOptions{
+					Limit: limit,
+					Token: token,
+				})
+			}
+			// Pass limit to AllItems to stop fetching when limit is reached.
+			items, total, err := client.AllItems("", m.effectiveLimit(), fetch)
+			if err != nil {
+				return err
+			}
+			vers = &client.PaginatedResponse[client.VersionResponse]{
+				Items: items,
+				Total: total,
+			}
+			return nil
 		})
 	}
 	if m.vulns {
 		g.Go(func() error {
-			var err error
-			vulns, err = c.GetVulns(gctx, path, version, client.PaginationOptions{
-				Limit: m.effectiveLimit(),
-				Token: m.token,
-			})
-			return err
+			fetch := func(token string, limit int) (*client.PaginatedResponse[client.Vulnerability], error) {
+				// Pass limit to API to limit server-side page size.
+				return c.GetVulns(gctx, path, version, client.PaginationOptions{
+					Limit: limit,
+					Token: token,
+				})
+			}
+			// Pass limit to AllItems to stop fetching when limit is reached.
+			items, total, err := client.AllItems("", m.effectiveLimit(), fetch)
+			if err != nil {
+				return err
+			}
+			vulns = &client.PaginatedResponse[client.Vulnerability]{
+				Items: items,
+				Total: total,
+			}
+			return nil
 		})
 	}
 	if m.packages {
 		g.Go(func() error {
-			var err error
-			pkgs, err = c.GetPackages(gctx, path, version, client.PaginationOptions{
-				Limit: m.effectiveLimit(),
-				Token: m.token,
-			})
-			return err
+			fetch := func(token string, limit int) (*client.PaginatedResponse[client.ModulePackageResponse], error) {
+				// Pass limit to API to limit server-side page size.
+				return c.GetPackages(gctx, path, version, client.PaginationOptions{
+					Limit: limit,
+					Token: token,
+				})
+			}
+			// Pass limit to AllItems to stop fetching when limit is reached.
+			items, total, err := client.AllItems("", m.effectiveLimit(), fetch)
+			if err != nil {
+				return err
+			}
+			pkgs = &client.PaginatedResponse[client.ModulePackageResponse]{
+				Items: items,
+				Total: total,
+			}
+			return nil
 		})
 	}
 

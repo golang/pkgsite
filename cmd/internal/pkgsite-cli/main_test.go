@@ -173,24 +173,73 @@ func TestRunModule(t *testing.T) {
 
 func TestRunSearch(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		json.NewEncoder(w).Encode(client.PaginatedResponse[client.SearchResult]{
-			Items: []client.SearchResult{{
-				PackagePath: "encoding/json",
-				ModulePath:  "std",
-				Version:     "go1.22.0",
-			}},
-			Total: 1,
-		})
+		token := r.URL.Query().Get("token")
+		if token == "" {
+			json.NewEncoder(w).Encode(client.PaginatedResponse[client.SearchResult]{
+				Items: []client.SearchResult{{
+					PackagePath: "encoding/json",
+					ModulePath:  "std",
+					Version:     "go1.22.0",
+				}},
+				Total:         2,
+				NextPageToken: "next-token-123",
+			})
+		} else if token == "next-token-123" {
+			json.NewEncoder(w).Encode(client.PaginatedResponse[client.SearchResult]{
+				Items: []client.SearchResult{{
+					PackagePath: "encoding/xml",
+					ModulePath:  "std",
+					Version:     "go1.22.0",
+				}},
+				Total:         2,
+				NextPageToken: "",
+			})
+		} else {
+			http.Error(w, "invalid token", http.StatusBadRequest)
+		}
 	}))
 	defer srv.Close()
 
-	var stdout, stderr bytes.Buffer
-	code := run([]string{"--server=" + srv.URL, "search", "json"}, &stdout, &stderr)
-	if code != 0 {
-		t.Fatalf("exit code = %d, stderr = %s", code, stderr.String())
+	tests := []struct {
+		name        string
+		args        []string
+		wantCode    int
+		wantStdout  []string
+		limitStdout []string // strings that must NOT be in stdout
+	}{
+		{
+			name:       "all pages",
+			args:       []string{"search", "json"},
+			wantStdout: []string{"encoding/json", "encoding/xml"},
+		},
+		{
+			name:        "with limit",
+			args:        []string{"search", "--limit=1", "json"},
+			wantStdout:  []string{"encoding/json"},
+			limitStdout: []string{"encoding/xml"},
+		},
 	}
-	if !strings.Contains(stdout.String(), "encoding/json") {
-		t.Errorf("output missing search result:\n%s", stdout.String())
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var stdout, stderr bytes.Buffer
+			args := append([]string{"--server=" + srv.URL}, tt.args...)
+			code := run(args, &stdout, &stderr)
+			if code != tt.wantCode {
+				t.Errorf("exit code = %d, want %d", code, tt.wantCode)
+			}
+			out := stdout.String()
+			for _, s := range tt.wantStdout {
+				if !strings.Contains(out, s) {
+					t.Errorf("output missing %q:\n%s", s, out)
+				}
+			}
+			for _, s := range tt.limitStdout {
+				if strings.Contains(out, s) {
+					t.Errorf("output contains %q but should not:\n%s", s, out)
+				}
+			}
+		})
 	}
 }
 

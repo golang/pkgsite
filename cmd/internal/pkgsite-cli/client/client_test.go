@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"slices"
 	"strings"
 	"testing"
 )
@@ -308,5 +309,91 @@ func TestAPIError(t *testing.T) {
 	}
 	if aerr.Code != 404 {
 		t.Errorf("Code = %d, want 404", aerr.Code)
+	}
+}
+
+func TestAllItems_SinglePage(t *testing.T) {
+	fetch := func(token string, limit int) (*PaginatedResponse[string], error) {
+		return &PaginatedResponse[string]{
+			Items:         []string{"item1"},
+			Total:         1,
+			NextPageToken: "",
+		}, nil
+	}
+
+	items, total, err := AllItems("", 0, fetch)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(items) != 1 {
+		t.Errorf("len(items) = %d, want 1", len(items))
+	}
+	if total != 1 {
+		t.Errorf("total = %d, want 1", total)
+	}
+}
+
+func TestAllItems_Limit(t *testing.T) {
+	const totalItems = 5
+	pages := map[string]*PaginatedResponse[string]{
+		"": {
+			Items:         []string{"a", "b"},
+			Total:         totalItems,
+			NextPageToken: "p1",
+		},
+		"p1": {
+			Items:         []string{"c", "d"},
+			Total:         totalItems,
+			NextPageToken: "p2",
+		},
+		"p2": {
+			Items:         []string{"e"},
+			Total:         totalItems,
+			NextPageToken: "",
+		},
+	}
+
+	fetch := func(token string, limit int) (*PaginatedResponse[string], error) {
+		return pages[token], nil
+	}
+
+	tests := []struct {
+		name      string
+		limit     int
+		wantItems []string
+		wantTotal int
+	}{
+		{
+			name:      "limit 3",
+			limit:     3,
+			wantItems: []string{"a", "b", "c"},
+			wantTotal: totalItems,
+		},
+		{
+			name:      "no limit",
+			wantItems: []string{"a", "b", "c", "d", "e"},
+			wantTotal: totalItems,
+		},
+		{
+			name:      "limit larger than total",
+			limit:     10,
+			wantItems: []string{"a", "b", "c", "d", "e"},
+			wantTotal: totalItems,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			items, total, err := AllItems("", tt.limit, fetch)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if total != tt.wantTotal {
+				t.Errorf("total = %d, want %d", total, tt.wantTotal)
+			}
+			if !slices.Equal(items, tt.wantItems) {
+				t.Errorf("items = %v, want %v", items, tt.wantItems)
+			}
+		})
 	}
 }

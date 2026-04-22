@@ -56,34 +56,55 @@ func runPackage(fs *flag.FlagSet, p *packageFlags, stdout, stderr io.Writer) int
 	result := packageResult{Package: pkg}
 
 	if p.symbols {
-		syms, err := c.GetSymbols(ctx, path, version, client.SymbolsOptions{
-			Module: p.module,
-			GOOS:   p.goos,
-			GOARCH: p.goarch,
-			PaginationOptions: client.PaginationOptions{
-				Limit: p.effectiveLimit(),
-				Token: p.token,
-			},
-		})
+		fetch := func(token string, limit int) (*client.PaginatedResponse[client.Symbol], error) {
+			return c.GetSymbols(ctx, path, version, client.SymbolsOptions{
+				Module: p.module,
+				GOOS:   p.goos,
+				GOARCH: p.goarch,
+				PaginationOptions: client.PaginationOptions{
+					Limit: limit,
+					Token: token,
+				},
+			})
+		}
+		items, total, err := client.AllItems("", p.effectiveLimit(), fetch)
 		if err != nil {
 			handleErr(stdout, stderr, err, p.jsonOut)
 			return 1
 		}
-		result.Symbols = syms
+		result.Symbols = &client.PaginatedResponse[client.Symbol]{
+			Items: items,
+			Total: total,
+		}
 	}
 	if p.importedBy {
-		ib, err := c.GetImportedBy(ctx, path, version, client.ImportedByOptions{
-			Module: p.module,
-			PaginationOptions: client.PaginationOptions{
-				Limit: p.effectiveLimit(),
-				Token: p.token,
-			},
-		})
+		var initialResp *client.PackageImportedBy
+		fetch := func(token string, limit int) (*client.PaginatedResponse[string], error) {
+			r, err := c.GetImportedBy(ctx, path, version, client.ImportedByOptions{
+				Module: p.module,
+				PaginationOptions: client.PaginationOptions{
+					Limit: limit,
+					Token: token,
+				},
+			})
+			if err != nil {
+				return nil, err
+			}
+			if initialResp == nil {
+				initialResp = r
+			}
+			return &r.ImportedBy, nil
+		}
+
+		items, total, err := client.AllItems("", p.effectiveLimit(), fetch)
 		if err != nil {
 			handleErr(stdout, stderr, err, p.jsonOut)
 			return 1
 		}
-		result.ImportedBy = ib
+
+		result.ImportedBy = initialResp
+		result.ImportedBy.ImportedBy.Items = items
+		result.ImportedBy.ImportedBy.Total = total
 	}
 
 	if p.jsonOut {
