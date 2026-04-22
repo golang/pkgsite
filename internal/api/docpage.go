@@ -80,10 +80,11 @@ func readRouteInfo(data []byte) ([]*RouteInfo, error) {
 			if current == nil {
 				return nil, fmt.Errorf("saw api:desc before api:route")
 			}
-			if current.Desc != "" {
-				return nil, fmt.Errorf("duplicate api:desc in route %q", current.Route)
+			if current.Desc == "" {
+				current.Desc = val
+			} else {
+				current.Desc += "\n" + val
 			}
-			current.Desc = val
 		case "params":
 			if current == nil {
 				return nil, fmt.Errorf("saw api:params before api:route")
