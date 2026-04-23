@@ -23,7 +23,7 @@ require (
 	github.com/google/licensecheck v0.3.1
 	github.com/google/safehtml v0.0.3-0.20211026203422-d6f0e11a5516
 	github.com/jackc/pgx/v4 v4.10.1
-	github.com/jackc/pgx/v5 v5.9.1
+	github.com/jackc/pgx/v5 v5.9.2
 	github.com/jba/templatecheck v0.6.0
 	github.com/lib/pq v1.12.0
 	github.com/russross/blackfriday/v2 v2.1.0
