@@ -382,7 +382,6 @@ func (ds *FakeDataSource) Search(ctx context.Context, q string, opts internal.Se
 					Version:     m.Version,
 					Synopsis:    synopsis,
 					CommitTime:  m.CommitTime,
-					NumResults:  1,
 				}
 				for _, licence := range u.Licenses {
 					result.Licenses = append(result.Licenses, licence.Types...)
@@ -391,6 +390,13 @@ func (ds *FakeDataSource) Search(ctx context.Context, q string, opts internal.Se
 			}
 
 		}
+	}
+	total := len(results)
+	if opts.MaxResultCount > 0 && total > opts.MaxResultCount {
+		total = opts.MaxResultCount
+	}
+	for _, r := range results {
+		r.NumResults = uint64(total)
 	}
 	return results, nil
 }

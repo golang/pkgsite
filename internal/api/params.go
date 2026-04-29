@@ -219,3 +219,19 @@ func setSingle(field reflect.Value, tag, val string) error {
 	}
 	return nil
 }
+
+// pageParams resolves the limit and offset from ListParams.
+// It returns an error if the token is invalid.
+func (lp ListParams) pageParams(defaultLimit int) (limit, offset int, err error) {
+	limit = lp.Limit
+	if limit <= 0 {
+		limit = defaultLimit
+	}
+	if lp.Token != "" {
+		offset, err = strconv.Atoi(lp.Token)
+		if err != nil || offset < 0 {
+			return 0, 0, fmt.Errorf("invalid token")
+		}
+	}
+	return limit, offset, nil
+}

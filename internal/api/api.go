@@ -297,10 +297,23 @@ func ServeSearch(w http.ResponseWriter, r *http.Request, ds internal.DataSource)
 		return BadRequest("missing query")
 	}
 
+	dbLimit := maxSearchResults
+	// We can only optimize the DB limit when no filter is present.
+	// Filtering is done in memory after fetching results, so we need a large
+	// candidate set to avoid returning empty pages when matches exist further down.
+	if params.Filter == "" {
+		limit, offset, err := params.ListParams.pageParams(defaultLimit)
+		if err != nil {
+			return fmt.Errorf("%w: %s", derrors.InvalidArgument, err.Error())
+		}
+		dbLimit = min(offset+limit+1, maxSearchResults)
+	}
+
 	dbresults, err := ds.Search(r.Context(), params.Query, internal.SearchOptions{
-		MaxResults:    maxSearchResults,
-		SearchSymbols: params.Symbol != "",
-		SymbolFilter:  params.Symbol,
+		MaxResults:     dbLimit,
+		MaxResultCount: maxSearchResults,
+		SearchSymbols:  params.Symbol != "",
+		SymbolFilter:   params.Symbol,
 	})
 	if err != nil {
 		return err
@@ -325,6 +338,9 @@ func ServeSearch(w http.ResponseWriter, r *http.Request, ds internal.DataSource)
 	resp, err := paginate(results, params.ListParams, defaultLimit)
 	if err != nil {
 		return fmt.Errorf("%w: %s", derrors.InvalidArgument, err.Error())
+	}
+	if params.Filter == "" && len(dbresults) > 0 {
+		resp.Total = int(dbresults[0].NumResults)
 	}
 
 	// Search results are never immutable, because new modules are always being added.
@@ -655,23 +671,12 @@ func ServeError(w http.ResponseWriter, r *http.Request, err error) error {
 // It uses offset-based pagination with a token that encodes the offset.
 // The default limit is used if the provided limit is non-positive.
 func paginate[T any](all []T, lp ListParams, defaultLimit int) (PaginatedResponse[T], error) {
-	limit := lp.Limit
-	if limit <= 0 {
-		limit = defaultLimit
+	limit, offset, err := lp.pageParams(defaultLimit)
+	if err != nil {
+		return PaginatedResponse[T]{}, fmt.Errorf("%w: %s", derrors.InvalidArgument, err.Error())
 	}
 
-	offset := 0
-	if lp.Token != "" {
-		var err error
-		offset, err = strconv.Atoi(lp.Token)
-		if err != nil || offset < 0 {
-			return PaginatedResponse[T]{}, fmt.Errorf("%w: invalid token", derrors.InvalidArgument)
-		}
-	}
-
-	if offset > len(all) {
-		offset = len(all)
-	}
+	offset = min(offset, len(all))
 	end := min(offset+limit, len(all))
 
 	var nextToken string
