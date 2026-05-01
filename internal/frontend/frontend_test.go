@@ -6,6 +6,7 @@ package frontend
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -15,6 +16,7 @@ import (
 
 	"github.com/google/safehtml/template"
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/api"
 	"golang.org/x/pkgsite/internal/testing/fakedatasource"
 	"golang.org/x/pkgsite/static"
 	thirdparty "golang.org/x/pkgsite/third_party"
@@ -152,5 +154,21 @@ func TestAPIRedirect(t *testing.T) {
 	}
 	if got := w.Header().Get("Location"); got != "/v1/api" {
 		t.Errorf("got Location = %q, want %q", got, "/v1/api")
+	}
+}
+
+func TestAPIUnknownEndpoint(t *testing.T) {
+	_, handler := newTestServer(t, nil)
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, httptest.NewRequest("GET", "/v1/moo", nil))
+	if got, want := w.Code, http.StatusBadRequest; got != want {
+		t.Errorf("got status code = %d, want %d", got, want)
+	}
+	var bodyErr api.Error
+	if err := json.Unmarshal(w.Body.Bytes(), &bodyErr); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(strings.ToLower(bodyErr.Message), "unknown") {
+		t.Errorf("did not see 'unknown' in error message: %s", bodyErr.Message)
 	}
 }
