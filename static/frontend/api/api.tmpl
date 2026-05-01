@@ -6,41 +6,74 @@
 
 {{define "main"}}
   <style>
+    .go-Content {
+      max-width: 95rem;
+    }
     .Api-list {
       list-style: none;
       padding: 0;
     }
     .Api-item {
       border-bottom: var(--border);
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-      margin-bottom: 2rem;
-      padding-bottom: 1rem;
+      margin-bottom: 3rem;
+      padding-bottom: 2rem;
     }
     .Api-item:last-child {
       border-bottom: none;
+    }
+    .Api-itemRow {
+      display: grid;
+      gap: 2rem;
+      grid-template-columns: 1fr 1fr;
+    }
+    @media (max-width: 1000px) {
+      .Api-itemRow {
+        grid-template-columns: 1fr;
+      }
+    }
+    .Api-itemLeft {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      min-width: 0;
+    }
+    .Api-itemRight {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
     }
     .Api-route {
       font-size: 1.25rem;
       font-weight: 600;
     }
     .Api-details {
-      display: grid;
-      gap: 0.5rem;
-      grid-template-columns: 6rem 1fr;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      margin-top: 1rem;
     }
     .Api-label {
       font-weight: 600;
+      color: var(--color-text);
+    }
+    .Api-paramsSection {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .Api-responseRow {
+      display: flex;
+      gap: 0.5rem;
+      align-items: baseline;
+      flex-wrap: wrap;
     }
     .Api-paramsTable {
       border-collapse: collapse;
-      margin-top: 1.5rem;
       width: 100%;
     }
     .Api-paramsTable th {
       text-align: left;
-      padding: 0.25rem 0.5rem;
+      padding: 0.5rem 1.25rem;
       font-weight: 600;
     }
     .Api-paramsTable th:first-child {
@@ -49,9 +82,29 @@
     .Api-paramsTable td {
       border-top: var(--border);
       vertical-align: top;
+      padding: 0.5rem 1.25rem;
     }
     .Api-paramsTable td:first-child {
       padding-left: 0;
+    }
+
+    .Api-exampleContainer {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      overflow-x: auto;
+    }
+    .Api-exampleHeading {
+      font-weight: 600;
+      color: var(--color-text);
+      margin-bottom: 0.5rem;
+    }
+    .Api-codeBlock {
+      margin: 0;
+      font-family: var(--font-family-mono, monospace);
+      font-size: 0.875rem;
+      line-height: 1.4;
+      white-space: pre;
     }
   </style>
   <main class="go-Container" id="main-content">
@@ -132,40 +185,65 @@
       <ul class="Api-list">
         {{range .Routes}}
           <li class="Api-item">
-            <div class="Api-route"><code>{{.Route}}</code></div>
-            <p>{{.Desc}}</p>
-            <div class="Api-details">
-              {{if .QueryParams}}
-                <span class="Api-label">Parameters:</span>
-                <span>
-                    <table class="Api-paramsTable">
-                      <thead>
-                        <tr>
-                          <th>Name</th>
-                          <th>Type</th>
-                          <th>Description</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                          {{range .QueryParams}}
-                            <tr>
-                              <td><code>{{.Name}}</code></td>
-                              <td><code>{{.Type}}</code></td>
-                              <td>{{.Doc}}</td>
-                            </tr>
-                          {{end}}
-                      </tbody>
-                    </table>
-                </span>
-              {{end}} {{/* if .QueryParams */}}
-              <span class="Api-label">Response:</span>
-              <span><code>
-                {{if .ResponsePaginatedType}}
-                  <a href="https://pkg.go.dev/golang.org/x/pkgsite/internal/api#PaginatedResponse">PaginatedResponse</a>[{{if .LinkPaginatedType}}<a href="https://pkg.go.dev/golang.org/x/pkgsite/internal/api#{{.ResponsePaginatedType}}">{{.ResponsePaginatedType}}</a>{{else}}{{.ResponsePaginatedType}}{{end}}]
-                {{else}}
-                  <a href="https://pkg.go.dev/golang.org/x/pkgsite/internal/api#{{.Response}}">{{.Response}}</a>
-                {{end}}
-              </code></span>
+            <div class="Api-itemRow">
+              <div class="Api-itemLeft">
+                <div class="Api-route"><code>{{.Route}}</code></div>
+                <p>{{.Desc}}</p>
+                <div class="Api-details">
+                  {{if .QueryParams}}
+                    <div class="Api-paramsSection">
+                      <span class="Api-label">Parameters:</span>
+                      <table class="Api-paramsTable">
+                        <thead>
+                          <tr>
+                            <th>Name</th>
+                            <th>Type</th>
+                            <th>Description</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                            {{range .QueryParams}}
+                              <tr>
+                                <td><code>{{.Name}}</code></td>
+                                <td><code>{{.Type}}</code></td>
+                                <td>{{.Doc}}</td>
+                              </tr>
+                            {{end}}
+                        </tbody>
+                      </table>
+                    </div>
+                  {{end}} {{/* if .QueryParams */}}
+                  <div class="Api-responseRow">
+                    <span class="Api-label">Response:</span>
+                    <code>
+                      {{if .ResponsePaginatedType}}
+                        <a href="https://pkg.go.dev/golang.org/x/pkgsite/internal/api#PaginatedResponse">PaginatedResponse</a>[{{if .LinkPaginatedType}}<a href="https://pkg.go.dev/golang.org/x/pkgsite/internal/api#{{.ResponsePaginatedType}}">{{.ResponsePaginatedType}}</a>{{else}}{{.ResponsePaginatedType}}{{end}}]
+                      {{else}}
+                        <a href="https://pkg.go.dev/golang.org/x/pkgsite/internal/api#{{.Response}}">{{.Response}}</a>
+                      {{end}}
+                    </code>
+                  </div>
+                </div>
+              </div>
+              <div class="Api-itemRight">
+                <div class="Api-exampleContainer">
+                  {{range .Examples}}
+                    <div class="Api-exampleSection">
+                      <div class="Api-exampleHeading">Example Request</div>
+                      <pre class="Api-codeBlock"><code>curl -L https://pkg.go.dev{{.Request}}</code></pre>
+                    </div>
+                    <div class="Api-exampleSection">
+                      <div class="Api-exampleHeading">Example Response</div>
+                      <pre class="Api-codeBlock"><code>{{.Response}}</code></pre>
+                    </div>
+                  {{else}}
+                    <div class="Api-exampleSection">
+                      <div class="Api-exampleHeading">No Examples</div>
+                      <p>No examples available for this route.</p>
+                    </div>
+                  {{end}}
+                </div>
+              </div>
             </div>
           </li>
         {{end}}

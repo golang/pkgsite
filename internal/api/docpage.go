@@ -7,17 +7,25 @@ package api
 import (
 	"bufio"
 	"bytes"
+	"context"
 	_ "embed"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"go/ast"
 	"go/parser"
 	"go/token"
+	"io"
+	"net/http"
+	"net/url"
 	"reflect"
 	"regexp"
 	"strings"
 	"sync"
+	"time"
 	"unicode"
+
+	"golang.org/x/sync/errgroup"
 )
 
 // QueryParam contains information about a query parameter.
@@ -25,6 +33,12 @@ type QueryParam struct {
 	Name string
 	Type string
 	Doc  string
+}
+
+// Example contains an API request example (URL path) and its expected response.
+type Example struct {
+	Request  string
+	Response string
 }
 
 // RouteInfo contains documentation information for an API route.
@@ -36,6 +50,7 @@ type RouteInfo struct {
 	ResponsePaginatedType string
 	LinkPaginatedType     bool
 	QueryParams           []QueryParam
+	Examples              []*Example
 }
 
 // parseParamsFile parses a Go source file containing parameter structs
@@ -155,13 +170,37 @@ var paramsGo []byte
 //go:embed api.go
 var apiGo []byte
 
-var RouteInfos = sync.OnceValues(func() ([]*RouteInfo, error) {
+var (
+	routesMu sync.Mutex
+	routes   []*RouteInfo
+	routeErr error
+)
+
+// RouteInfos returns the documentation information for all routes,
+// and executes examples against the given baseURL if they haven't been executed yet.
+func RouteInfos(ctx context.Context, baseURL string) ([]*RouteInfo, error) {
+	routesMu.Lock()
+	defer routesMu.Unlock()
+	if routes == nil && routeErr == nil {
+		routes, routeErr = calculateRoutes(ctx, baseURL)
+	}
+	return routes, routeErr
+}
+
+func calculateRoutes(ctx context.Context, baseURL string) ([]*RouteInfo, error) {
 	paramsMap, err := parseParamsFile(paramsGo)
 	if err != nil {
 		return nil, err
 	}
-	return readRouteInfo(apiGo, paramsMap)
-})
+	routes, err := readRouteInfo(apiGo, paramsMap)
+	if err != nil {
+		return nil, err
+	}
+	if err := executeExamples(ctx, baseURL, routes); err != nil {
+		return nil, err
+	}
+	return routes, nil
+}
 
 var apiRE = regexp.MustCompile(`//\s*api:(\S+)\s+(.*)`)
 
@@ -242,6 +281,11 @@ func readRouteInfo(data []byte, paramsMap map[string][]QueryParam) ([]*RouteInfo
 					current.LinkPaginatedType = !unicode.IsLower(rune(current.ResponsePaginatedType[0]))
 				}
 			}
+		case "example":
+			if current == nil {
+				return nil, fmt.Errorf("saw api:example before api:route")
+			}
+			current.Examples = append(current.Examples, &Example{Request: val})
 		default:
 			route := "(unknown route)"
 			if current != nil {
@@ -261,4 +305,52 @@ func readRouteInfo(data []byte, paramsMap map[string][]QueryParam) ([]*RouteInfo
 		return nil, fmt.Errorf("no routes found")
 	}
 	return routes, nil
+}
+
+// executeExamples executes actual HTTP requests against the given baseURL for all examples
+// found in the provided routes, and populates their Response fields with the resulting bodies.
+func executeExamples(ctx context.Context, baseURL string, routes []*RouteInfo) error {
+	client := &http.Client{Timeout: 5 * time.Second}
+	base, err := url.Parse(baseURL)
+	if err != nil {
+		return fmt.Errorf("parsing base URL %q: %w", baseURL, err)
+	}
+
+	// Make requests for example responses concurrently.
+	g, ctx := errgroup.WithContext(ctx)
+	for _, r := range routes {
+		for _, ex := range r.Examples {
+			rel, err := url.Parse(ex.Request)
+			if err != nil {
+				return fmt.Errorf("parsing example request %q: %w", ex.Request, err)
+			}
+			g.Go(func() error {
+				urlStr := base.ResolveReference(rel).String()
+				req, err := http.NewRequestWithContext(ctx, "GET", urlStr, nil)
+				if err != nil {
+					return fmt.Errorf("creating request for %q: %w", urlStr, err)
+				}
+				resp, err := client.Do(req)
+				if err != nil {
+					ex.Response = fmt.Sprintf("getting response: %v", err)
+					return nil
+				}
+
+				body, err := io.ReadAll(resp.Body)
+				resp.Body.Close()
+				if err != nil {
+					ex.Response = fmt.Sprintf("reading response: %v", err)
+					return nil
+				}
+				var formatted bytes.Buffer
+				if err := json.Indent(&formatted, body, "", "  "); err != nil {
+					ex.Response = fmt.Sprintf("indenting response: %v", err)
+				} else {
+					ex.Response = formatted.String()
+				}
+				return nil
+			})
+		}
+	}
+	return g.Wait()
 }

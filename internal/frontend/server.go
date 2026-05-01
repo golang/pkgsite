@@ -505,7 +505,7 @@ type APIPage struct {
 
 func (s *Server) apiDocHandler() http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		routes, err := api.RouteInfos()
+		routes, err := api.RouteInfos(r.Context(), "http://"+r.Host)
 		if err != nil {
 			s.serveError(w, r, err)
 			return

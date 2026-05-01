@@ -5,6 +5,9 @@
 package api
 
 import (
+	"context"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -215,9 +218,45 @@ func TestReadRouteInfo(t *testing.T) {
 }
 
 func TestRouteInfos(t *testing.T) {
-	// Just check that there are no errors.
-	if _, err := RouteInfos(); err != nil {
+	origApiGo := apiGo
+	defer func() { apiGo = origApiGo }()
+
+	apiGo = []byte(`
+//api:route /v1/dummy
+//api:desc Dummy route.
+//api:params DummyParams
+//api:response DummyResponse
+//api:example /v1/dummy
+`)
+
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/v1/dummy" {
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte(`{"result": "dummy"}`))
+		} else {
+			w.WriteHeader(http.StatusNotFound)
+		}
+	}))
+	defer srv.Close()
+
+	routes, err := RouteInfos(context.Background(), srv.URL)
+	if err != nil {
 		t.Fatalf("RouteInfos failed: %v", err)
+	}
+
+	if len(routes) != 1 {
+		t.Fatalf("expected 1 route, got %d", len(routes))
+	}
+
+	if len(routes[0].Examples) != 1 {
+		t.Fatalf("expected 1 example, got %d", len(routes[0].Examples))
+	}
+
+	wantResp := `{
+  "result": "dummy"
+}`
+	if routes[0].Examples[0].Response != wantResp {
+		t.Errorf("expected response %q, got %q", wantResp, routes[0].Examples[0].Response)
 	}
 }
 
@@ -258,5 +297,38 @@ type DummyListParams struct {
 	}
 	if diff := cmp.Diff(want, got); diff != "" {
 		t.Errorf("parseParams mismatch (-want +got):\n%s", diff)
+	}
+}
+
+func TestExecuteExamples(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/v1/search" && r.URL.Query().Get("q") == "Synopsis" {
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte(`{"status": "ok"}`))
+		} else {
+			w.WriteHeader(http.StatusNotFound)
+		}
+	}))
+	defer srv.Close()
+
+	routes := []*RouteInfo{
+		{
+			Route: "/v1/search",
+			Examples: []*Example{
+				{Request: "/v1/search?q=Synopsis"},
+			},
+		},
+	}
+
+	ctx := context.Background()
+	if err := executeExamples(ctx, srv.URL, routes); err != nil {
+		t.Fatalf("executeExamples: %v", err)
+	}
+
+	wantResp := `{
+  "status": "ok"
+}`
+	if routes[0].Examples[0].Response != wantResp {
+		t.Errorf("expected Response to be %q, got %q", wantResp, routes[0].Examples[0].Response)
 	}
 }

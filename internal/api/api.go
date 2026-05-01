@@ -38,6 +38,7 @@ const (
 // ServePackage handles requests for the v1 package metadata endpoint.
 // api:route /v1/package/{path}
 // api:desc Information about the package at {path}.
+// api:example /v1/package/golang.org/x/time/rate
 func ServePackage(w http.ResponseWriter, r *http.Request, ds internal.DataSource) (err error) {
 	defer derrors.Wrap(&err, "ServePackage")
 
@@ -87,6 +88,7 @@ func ServePackage(w http.ResponseWriter, r *http.Request, ds internal.DataSource
 // ServeModule handles requests for the v1 module metadata endpoint.
 // api:route /v1/module/{path}
 // api:desc Information about the module at {path}.
+// api:example /v1/module/golang.org/x/time
 func ServeModule(w http.ResponseWriter, r *http.Request, ds internal.DataSource) (err error) {
 	defer derrors.Wrap(&err, "ServeModule")
 
@@ -172,6 +174,7 @@ func ServeModule(w http.ResponseWriter, r *http.Request, ds internal.DataSource)
 // api:desc The versions are in descending order.
 // api:desc Only results whose version matches the regexp in the
 // api:desc filter query parameter are returned.
+// api:example /v1/versions/golang.org/x/time?limit=3
 func ServeModuleVersions(w http.ResponseWriter, r *http.Request, ds internal.DataSource) (err error) {
 	defer derrors.Wrap(&err, "ServeModuleVersions")
 
@@ -232,6 +235,7 @@ func ServeModuleVersions(w http.ResponseWriter, r *http.Request, ds internal.Dat
 // api:desc Information about packages of the module at {path}.
 // api:desc Only results whose path or synopsis
 // api:desc matches the regexp in the filter query parameter are returned.
+// api:example /v1/packages/golang.org/x/time/rate
 func ServeModulePackages(w http.ResponseWriter, r *http.Request, ds internal.DataSource) (err error) {
 	defer derrors.Wrap(&err, "ServeModulePackages")
 
@@ -298,6 +302,7 @@ func ServeModulePackages(w http.ResponseWriter, r *http.Request, ds internal.Dat
 // api:route /v1/search
 // api:desc Search results. Only results whose package path or synopsis
 // api:desc matches the regexp in the filter query parameter are returned.
+// api:example /v1/search?q=xyzzy
 func ServeSearch(w http.ResponseWriter, r *http.Request, ds internal.DataSource) (err error) {
 	defer derrors.Wrap(&err, "ServeSearch")
 
@@ -371,6 +376,7 @@ func ServeSearch(w http.ResponseWriter, r *http.Request, ds internal.DataSource)
 // api:desc List of symbols for the package at {path}.
 // api:desc Only results whose name or synopsis
 // api:desc matches the regexp in the filter query parameter are returned.
+// api:example /v1/symbols/golang.org/x/time/rate
 func ServePackageSymbols(w http.ResponseWriter, r *http.Request, ds internal.DataSource) (err error) {
 	defer derrors.Wrap(&err, "ServePackageSymbols")
 
@@ -394,7 +400,7 @@ func ServePackageSymbols(w http.ResponseWriter, r *http.Request, ds internal.Dat
 	bc := internal.BuildContext{GOOS: params.GOOS, GOARCH: params.GOARCH}
 	syms, err := ds.GetSymbols(r.Context(), pkgPath, um.ModulePath, um.Version, bc)
 	if err != nil {
-		return err
+		return fmt.Errorf("symbols for package %s: %w", pkgPath, err)
 	}
 
 	syms, err = filter(syms, params.Filter, func(s *internal.Symbol) []string {
@@ -434,6 +440,7 @@ func ServePackageSymbols(w http.ResponseWriter, r *http.Request, ds internal.Dat
 // api:desc not including packages in the same module.
 // api:desc Only results whose path
 // api:desc matches the regexp in the filter query parameter are returned.
+// api:example /v1/imported-by/golang.org/x/time/rate?limit=10&filter=%5E.%2A%5C.io%2F
 func ServePackageImportedBy(w http.ResponseWriter, r *http.Request, ds internal.DataSource) (err error) {
 	defer derrors.Wrap(&err, "ServePackageImportedBy")
 
@@ -501,6 +508,7 @@ func ServePackageImportedBy(w http.ResponseWriter, r *http.Request, ds internal.
 // api:desc the Go vulnerability database (https://vuln.go.dev).
 // api:desc Only results whose ID or details
 // api:desc matches the regexp in the filter query parameter are returned.
+// api:example /v1/vulns/golang.org/x/image
 func ServeVulnerabilities(vc *vuln.Client) func(w http.ResponseWriter, r *http.Request, _ internal.DataSource) error {
 	return func(w http.ResponseWriter, r *http.Request, ds internal.DataSource) (err error) {
 		defer derrors.Wrap(&err, "ServeVulnerabilities")
