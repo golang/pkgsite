@@ -13,8 +13,9 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"path"
 	"slices"
-	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -68,6 +69,55 @@ func setupTestDB(t *testing.T) internal.TestingDataSource {
 	return db
 }
 
+// modinfo creates a ModuleInfo with the given module path
+// and version. It sets LatestVersion to version.
+func modinfo(path, version string) internal.ModuleInfo {
+	return internal.ModuleInfo{
+		ModulePath:        path,
+		Version:           version,
+		LatestVersion:     version,
+		IsRedistributable: true,
+	}
+}
+
+// Module creates a module with the given ModuleInfo and units.
+// The units must not have been previously used.
+func module(t *testing.T, mi internal.ModuleInfo, units ...*internal.Unit) *internal.Module {
+	for _, u := range units {
+		// If Name is already set, then this unit was used to
+		// build another module, and that's bad.
+		if u.Name != "" {
+			t.Fatal("unit used in two modules")
+		}
+		u.ModuleInfo = mi
+		// Change relative to absolute path.
+		u.Path = path.Join(mi.ModulePath, u.Path)
+		// Name is last component of path.
+		u.Name = u.Path[strings.LastIndexByte(u.Path, '/')+1:]
+	}
+	return &internal.Module{
+		ModuleInfo: mi,
+		Licenses:   sample.Licenses(),
+		Units:      units,
+	}
+}
+
+// unit constructs a Unit with the given relative path and documentation.
+// The path is relative to a module path; the full import path
+// will be constructed when the Unit is added to a module in
+// the [module] function.
+func unit(relativePath string, doc ...*internal.Documentation) *internal.Unit {
+	return &internal.Unit{
+		UnitMeta: internal.UnitMeta{
+			Path: relativePath, // expanded in the module function
+			// ModuleInfo and Name set in the module function.
+		},
+		Licenses:          sample.LicenseMetadata(),
+		IsRedistributable: true,
+		Documentation:     doc,
+	}
+}
+
 func TestAPI(t *testing.T) {
 	t.Run("fake", func(t *testing.T) {
 		testAPI(t, func(t *testing.T) internal.TestingDataSource {
@@ -108,70 +158,19 @@ func testAPI(t *testing.T, newTestingDataSource func(t *testing.T) internal.Test
 
 func testServePackage(t *testing.T, ds internal.TestingDataSource) {
 	const (
-		pkgPath        = "example.com/a/b"
-		modulePath1    = "example.com/a"
-		modulePath2    = "example.com/a/b"
-		earlierVersion = "v1.2.3"
-		latestVersion  = "v1.2.4"
+		version       = "v1.2.3"
+		latestVersion = "v1.2.4"
 	)
-	ds.MustInsertModule(t, &internal.Module{
-		ModuleInfo: internal.ModuleInfo{
-			ModulePath:    "example.com",
-			Version:       earlierVersion,
-			LatestVersion: latestVersion,
-		},
-		Licenses: sample.Licenses(),
-		Units: []*internal.Unit{{
-			UnitMeta: internal.UnitMeta{
-				Path: "example.com/pkg",
-				ModuleInfo: internal.ModuleInfo{
-					ModulePath:        "example.com",
-					Version:           earlierVersion,
-					LatestVersion:     latestVersion,
-					IsRedistributable: true,
-				},
-				Name: "pkg",
-			},
-			Documentation:     []*internal.Documentation{sample.Documentation("linux", "amd64", sample.DocContents)},
-			Licenses:          sample.LicenseMetadata(),
-			Imports:           []string{pkgPath},
-			IsRedistributable: true,
-		}},
-	})
-	for _, mp := range []string{modulePath1, modulePath2} {
-		u := &internal.Unit{UnitMeta: internal.UnitMeta{
-			Path: pkgPath,
-			ModuleInfo: internal.ModuleInfo{
-				ModulePath:        mp,
-				Version:           earlierVersion,
-				LatestVersion:     earlierVersion,
-				IsRedistributable: true,
-			},
-			Name: "b",
-		}, Documentation: []*internal.Documentation{sample.Documentation("linux", "amd64", sample.DocContents)}, IsRedistributable: true}
-		ds.MustInsertModule(t, &internal.Module{
-			ModuleInfo: internal.ModuleInfo{ModulePath: mp, Version: earlierVersion, LatestVersion: earlierVersion},
-			Units:      []*internal.Unit{u},
-		})
-	}
-	ds.MustInsertModule(t, &internal.Module{
-		ModuleInfo: internal.ModuleInfo{
-			ModulePath:    "example.com",
-			Version:       latestVersion,
-			LatestVersion: latestVersion,
-		},
-		Units: []*internal.Unit{{
-			UnitMeta: internal.UnitMeta{
-				Path: "example.com/pkg",
-				ModuleInfo: internal.ModuleInfo{
-					ModulePath:    "example.com",
-					Version:       latestVersion,
-					LatestVersion: latestVersion,
-				},
-				Name: "pkg",
-			},
-			IsRedistributable: true,
-			Documentation: []*internal.Documentation{sample.DocumentationWithTest("linux", "amd64", `
+	u := unit("pkg", sample.Documentation("linux", "amd64", sample.DocContents))
+	u.Imports = []string{"example.com/a/b"}
+	mi := modinfo("example.com", version)
+	mi.LatestVersion = latestVersion
+	ds.MustInsertModule(t, module(t, mi, u))
+
+	ds.MustInsertModule(t, module(t, modinfo("example.com/a", version), unit("b", sample.Documentation("linux", "amd64", sample.DocContents))))
+	ds.MustInsertModule(t, module(t, modinfo("example.com/a/b", version), unit("")))
+	ds.MustInsertModule(t, module(t, modinfo("example.com", latestVersion),
+		unit("pkg", sample.DocumentationWithTest("linux", "amd64", `
 		// Package p is a package.
 		package p
 		var V int
@@ -180,46 +179,18 @@ func testServePackage(t *testing.T, ds internal.TestingDataSource) {
 	    func Example() {
 			fmt.Println("hello")
             // Output: hello
-        }`)},
-		}},
-	})
+        }`),
+		)))
 
 	// Deprecation.
 	// The fake data source uses ModuleInfo.Deprecated, but the DB
 	// requires a go.mod file.
-	modInfo := internal.ModuleInfo{
-		ModulePath:    "example.com/d/e",
-		Version:       "v1.2.3",
-		LatestVersion: "v1.2.3",
-		Deprecated:    true,
-	}
-	ds.MustInsertModuleGoMod(context.TODO(), t, &internal.Module{
-		ModuleInfo: modInfo,
-		Units: []*internal.Unit{{
-			UnitMeta: internal.UnitMeta{
-				Path:       "example.com/d/e",
-				ModuleInfo: modInfo,
-				Name:       "pkg",
-			},
-			IsRedistributable: true,
-		}},
-	}, `module example.com/d/e // Deprecated: bad`)
+	modInfo := modinfo("example.com/d/e", version)
+	modInfo.Deprecated = true
+	ds.MustInsertModuleGoMod(context.TODO(), t, module(t, modInfo, unit("e")), `module example.com/d/e // Deprecated: bad`)
 	// The DB needs the above go.mod contents to know that the module
 	// is deprecated. It doesn't look at ModuleInfo.Deprecated.
-	modInfo.ModulePath = "example.com/d"
-	modInfo.ModulePath = "example.com/d"
-	modInfo.Deprecated = false
-	ds.MustInsertModule(t, &internal.Module{
-		ModuleInfo: modInfo,
-		Units: []*internal.Unit{{
-			UnitMeta: internal.UnitMeta{
-				Path:       "example.com/d/e",
-				ModuleInfo: modInfo,
-				Name:       "pkg",
-			},
-			IsRedistributable: true,
-		}},
-	})
+	ds.MustInsertModule(t, module(t, modinfo("example.com/d", version), unit("e")))
 
 	for _, test := range []struct {
 		name       string
@@ -272,8 +243,8 @@ func testServePackage(t *testing.T, ds internal.TestingDataSource) {
 				Path:          "example.com/a/b",
 				ModulePath:    "example.com/a",
 				ModuleVersion: "v1.2.3",
-				Synopsis:      "This is a package synopsis for GOOS=linux, GOARCH=amd64",
 				IsLatest:      true,
+				Synopsis:      "This is a package synopsis for GOOS=linux, GOARCH=amd64",
 				GOOS:          "linux",
 				GOARCH:        "amd64",
 			},
@@ -491,39 +462,18 @@ func testServeModule(t *testing.T, ds internal.TestingDataSource) {
 		version    = "v1.2.3"
 	)
 
-	mi1 := sample.ModuleInfo(modulePath, version)
+	mi1 := modinfo(modulePath, version)
 	mi1.LatestVersion = "v1.2.4"
 	mi1.HasGoMod = true
 
-	ds.MustInsertModule(t, &internal.Module{
-		ModuleInfo: *mi1,
-		Licenses:   sample.Licenses(),
-		Units: []*internal.Unit{{
-			UnitMeta: internal.UnitMeta{
-				Path:       modulePath,
-				Name:       "pkg",
-				ModuleInfo: *mi1,
-			},
-			Readme:            &internal.Readme{Filepath: "README.md", Contents: "Hello world"},
-			Licenses:          sample.LicenseMetadata(),
-			IsRedistributable: true,
-		}},
-	})
+	u := unit("")
+	u.Readme = &internal.Readme{Filepath: "README.md", Contents: "Hello world"}
+	ds.MustInsertModule(t, module(t, mi1, u))
 
-	mi2 := sample.ModuleInfo(modulePath, "v1.2.4")
-	mi2.LatestVersion = "v1.2.4"
+	mi2 := modinfo(modulePath, "v1.2.4")
 	mi2.HasGoMod = true
 
-	ds.MustInsertModule(t, &internal.Module{
-		ModuleInfo: *mi2,
-		Units: []*internal.Unit{{
-			UnitMeta: internal.UnitMeta{
-				Path:       modulePath,
-				Name:       "pkg",
-				ModuleInfo: *mi2,
-			},
-		}},
-	})
+	ds.MustInsertModule(t, module(t, mi2, unit("")))
 
 	for _, test := range []struct {
 		name       string
@@ -549,7 +499,6 @@ func testServeModule(t *testing.T, ds internal.TestingDataSource) {
 				Version:           "v1.2.3",
 				IsRedistributable: true,
 				HasGoMod:          true,
-				RepoURL:           "https://example.com",
 			},
 		},
 		{
@@ -562,7 +511,6 @@ func testServeModule(t *testing.T, ds internal.TestingDataSource) {
 				IsLatest:          true,
 				IsRedistributable: true,
 				HasGoMod:          true,
-				RepoURL:           "https://example.com",
 			},
 		},
 		{
@@ -592,7 +540,6 @@ func testServeModule(t *testing.T, ds internal.TestingDataSource) {
 				Version:           "v1.2.3",
 				IsRedistributable: true,
 				HasGoMod:          true,
-				RepoURL:           "https://example.com",
 				Readme: &api.Readme{
 					Filepath: "README.md",
 					Contents: "Hello world",
@@ -608,7 +555,6 @@ func testServeModule(t *testing.T, ds internal.TestingDataSource) {
 				Version:           "v1.2.3",
 				IsRedistributable: true,
 				HasGoMod:          true,
-				RepoURL:           "https://example.com",
 				Licenses: []api.License{
 					{
 						Types:    []string{"MIT"},
@@ -645,39 +591,14 @@ func testServeModule(t *testing.T, ds internal.TestingDataSource) {
 }
 
 func testServeModuleVersions(t *testing.T, ds internal.TestingDataSource) {
-	ds.MustInsertModule(t, &internal.Module{
-		ModuleInfo: internal.ModuleInfo{
-			ModulePath:    "example.com",
-			Version:       "v1.0.0",
-			LatestVersion: "v1.1.0",
-		},
-		Units: []*internal.Unit{{UnitMeta: internal.UnitMeta{
-			Path: "example.com",
-			Name: "pkg",
-		}}},
-	})
-	ds.MustInsertModule(t, &internal.Module{
-		ModuleInfo: internal.ModuleInfo{
-			ModulePath:    "example.com",
-			Version:       "v1.1.0",
-			LatestVersion: "v1.1.0",
-		},
-		Units: []*internal.Unit{{UnitMeta: internal.UnitMeta{
-			Path: "example.com",
-			Name: "pkg",
-		}}},
-	})
-	ds.MustInsertModule(t, &internal.Module{
-		ModuleInfo: internal.ModuleInfo{
-			ModulePath:    "example.com/v2",
-			Version:       "v2.0.0",
-			LatestVersion: "v2.0.0",
-		},
-		Units: []*internal.Unit{{UnitMeta: internal.UnitMeta{
-			Path: "example.com/v2",
-			Name: "pkg",
-		}}},
-	})
+	newMod := func(path, version, latest string) *internal.Module {
+		mi := modinfo(path, version)
+		mi.LatestVersion = latest
+		return module(t, mi, unit(""))
+	}
+	ds.MustInsertModule(t, newMod("example.com", "v1.0.0", "v1.1.0"))
+	ds.MustInsertModule(t, newMod("example.com", "v1.1.0", "v1.1.0"))
+	ds.MustInsertModule(t, newMod("example.com/v2", "v2.0.0", "v2.0.0"))
 
 	for _, test := range []struct {
 		name       string
@@ -743,38 +664,13 @@ func testServeModuleVersions(t *testing.T, ds internal.TestingDataSource) {
 }
 
 func testServeModulePackages(t *testing.T, ds internal.TestingDataSource) {
-	const (
-		modulePath = "example.com"
-	)
+	d := sample.Documentation("linux", "amd64", sample.DocContents)
+	d.Synopsis = "Synopsis for name pkg2, path sub"
+	ds.MustInsertModule(t,
+		module(t, modinfo("example.com", "v1.2.3"),
+			unit("", sample.Documentation("linux", "amd64", sample.DocContents)),
+			unit("sub", d)))
 
-	ds.MustInsertModule(t, &internal.Module{
-		ModuleInfo: internal.ModuleInfo{
-			ModulePath:        modulePath,
-			Version:           "v1.2.3",
-			LatestVersion:     "v1.2.3",
-			IsRedistributable: true,
-		},
-		Units: []*internal.Unit{
-			{
-				UnitMeta: internal.UnitMeta{Path: modulePath, Name: "pkg1"},
-				Documentation: []*internal.Documentation{
-					sample.Documentation("linux", "amd64", sample.DocContents),
-				},
-				IsRedistributable: true,
-			},
-			{
-				UnitMeta: internal.UnitMeta{Path: modulePath + "/sub", Name: "pkg2"},
-				Documentation: []*internal.Documentation{
-					func() *internal.Documentation {
-						d := sample.Documentation("linux", "amd64", sample.DocContents)
-						d.Synopsis = "Synopsis for name pkg2, path sub"
-						return d
-					}(),
-				},
-				IsRedistributable: true,
-			},
-		},
-	})
 	for _, test := range []struct {
 		name       string
 		url        string
@@ -872,25 +768,8 @@ func testServeModulePackages(t *testing.T, ds internal.TestingDataSource) {
 }
 
 func testServeSearch(t *testing.T, ds internal.TestingDataSource) {
-	ds.MustInsertModule(t, &internal.Module{
-		ModuleInfo: internal.ModuleInfo{
-			ModulePath:        "example.com",
-			Version:           "v1.0.0",
-			LatestVersion:     "v1.0.0",
-			IsRedistributable: true,
-		},
-		Units: []*internal.Unit{{
-			UnitMeta: internal.UnitMeta{
-				Path:       "example.com/pkg",
-				ModuleInfo: internal.ModuleInfo{ModulePath: "example.com", Version: "v1.0.0"},
-				Name:       "pkg",
-			},
-			Documentation: []*internal.Documentation{
-				sample.Documentation("linux", "amd64", sample.DocContents),
-			},
-			IsRedistributable: true,
-		}},
-	})
+	ds.MustInsertModule(t, module(t, modinfo("example.com", "v1.0.0"),
+		unit("pkg", sample.Documentation("linux", "amd64", sample.DocContents))))
 
 	for _, test := range []struct {
 		name       string
@@ -955,31 +834,10 @@ func testServeSearch(t *testing.T, ds internal.TestingDataSource) {
 }
 
 func testServeSearchPagination(t *testing.T, ds internal.TestingDataSource) {
+	doc := sample.Documentation("linux", "amd64", sample.DocContents)
 	for i := range 10 {
-		pkgPath := "example.com/pkg" + strconv.Itoa(i)
-		ds.MustInsertModule(t, &internal.Module{
-			ModuleInfo: internal.ModuleInfo{
-				ModulePath:        pkgPath,
-				Version:           "v1.0.0",
-				LatestVersion:     "v1.0.0",
-				IsRedistributable: true,
-			},
-			Units: []*internal.Unit{{
-				UnitMeta: internal.UnitMeta{
-					Path:       pkgPath,
-					ModuleInfo: internal.ModuleInfo{ModulePath: pkgPath, Version: "v1.0.0"},
-					Name:       "pkg",
-				},
-				IsRedistributable: true,
-				Documentation: []*internal.Documentation{
-					func() *internal.Documentation {
-						d := sample.Documentation("linux", "amd64", sample.DocContents)
-						d.Synopsis = fmt.Sprintf("Synopsis %d", i)
-						return d
-					}(),
-				}},
-			},
-		})
+		modPath := fmt.Sprintf("example.com/m%d", i)
+		ds.MustInsertModule(t, module(t, modinfo(modPath, "v1.0.0"), unit("pkg", doc)))
 	}
 
 	for _, test := range []struct {
@@ -991,21 +849,21 @@ func testServeSearchPagination(t *testing.T, ds internal.TestingDataSource) {
 	}{
 		{
 			name:          "first page",
-			url:           "/v1/search?q=Synopsis&limit=3",
+			url:           "/v1/search?q=synopsis&limit=3",
 			wantCount:     3,
 			wantTotal:     10,
 			wantNextToken: "3",
 		},
 		{
 			name:          "second page",
-			url:           "/v1/search?q=Synopsis&limit=3&token=3",
+			url:           "/v1/search?q=synopsis&limit=3&token=3",
 			wantCount:     3,
 			wantTotal:     10,
 			wantNextToken: "6",
 		},
 		{
 			name:          "last page",
-			url:           "/v1/search?q=Synopsis&limit=3&token=9",
+			url:           "/v1/search?q=synopsis&limit=3&token=9",
 			wantCount:     1,
 			wantTotal:     10,
 			wantNextToken: "",
@@ -1043,12 +901,6 @@ func testServeSearchPagination(t *testing.T, ds internal.TestingDataSource) {
 
 func testServePackageSymbols(t *testing.T, ds internal.TestingDataSource) {
 
-	const (
-		pkgPath    = "example.com/pkg"
-		modulePath = "example.com"
-		version    = "v1.0.0"
-	)
-
 	sym := func(doc *internal.Documentation, name string) *internal.Symbol {
 		return &internal.Symbol{
 			SymbolMeta: internal.SymbolMeta{
@@ -1067,24 +919,9 @@ func testServePackageSymbols(t *testing.T, ds internal.TestingDataSource) {
 	winDoc.API = []*internal.Symbol{sym(winDoc, "WindowsSym")}
 	wasmDoc := sample.Documentation("js", "wasm", sample.DocContents)
 	wasmDoc.API = []*internal.Symbol{sym(wasmDoc, "WasmSym")}
-
-	ds.MustInsertModule(t, &internal.Module{
-		ModuleInfo: internal.ModuleInfo{
-			ModulePath:        modulePath,
-			Version:           version,
-			LatestVersion:     version,
-			IsRedistributable: true,
-		},
-		Units: []*internal.Unit{{
-			UnitMeta: internal.UnitMeta{
-				Path:       pkgPath,
-				ModuleInfo: internal.ModuleInfo{ModulePath: modulePath, Version: version},
-				Name:       "pkg",
-			},
-			IsRedistributable: true,
-			Documentation:     []*internal.Documentation{linuxDoc, winDoc, wasmDoc},
-		}},
-	})
+	ds.MustInsertModule(t,
+		module(t, modinfo("example.com", "v1.0.0"),
+			unit("pkg", linuxDoc, winDoc, wasmDoc)))
 
 	for _, test := range []struct {
 		name       string
@@ -1189,51 +1026,11 @@ func testServePackageSymbols(t *testing.T, ds internal.TestingDataSource) {
 
 func testServePackageImportedBy(t *testing.T, ds internal.TestingDataSource) {
 
-	const (
-		pkgPath    = "example.com/pkg"
-		modulePath = "example.com"
-	)
+	ds.MustInsertModule(t, module(t, modinfo("example.com", "v1.2.3"), unit("pkg")))
 
-	modInfo := internal.ModuleInfo{
-		ModulePath:        modulePath,
-		Version:           "v1.2.3",
-		LatestVersion:     "v1.2.3",
-		IsRedistributable: true,
-	}
-	ds.MustInsertModule(t, &internal.Module{
-		ModuleInfo: modInfo,
-		Units: []*internal.Unit{
-			{
-				UnitMeta: internal.UnitMeta{
-					Path:       pkgPath,
-					ModuleInfo: modInfo,
-					Name:       "pkg",
-				},
-				IsRedistributable: true,
-			},
-		},
-	})
-
-	modInfo = internal.ModuleInfo{
-		ModulePath:        "example.com/mod",
-		Version:           "v1.2.3",
-		LatestVersion:     "v1.2.3",
-		IsRedistributable: true,
-	}
-	ds.MustInsertModule(t, &internal.Module{
-		ModuleInfo: modInfo,
-		Units: []*internal.Unit{
-			{
-				UnitMeta: internal.UnitMeta{
-					Path:       pkgPath,
-					ModuleInfo: modInfo,
-					Name:       "pkg",
-				},
-				IsRedistributable: true,
-				Imports:           []string{pkgPath},
-			},
-		},
-	})
+	u := unit("pkg")
+	u.Imports = []string{"example.com/pkg"}
+	ds.MustInsertModule(t, module(t, modinfo("example.com/mod", "v1.2.3"), u))
 
 	for _, test := range []struct {
 		name       string
