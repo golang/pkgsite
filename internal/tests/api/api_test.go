@@ -792,6 +792,13 @@ func testServeModulePackages(t *testing.T, ds internal.TestingDataSource) {
 			wantTotal:  2,
 		},
 		{
+			name:       "latest",
+			url:        "/v1/packages/example.com",
+			wantStatus: http.StatusOK,
+			wantCount:  2,
+			wantTotal:  2,
+		},
+		{
 			name:       "module not found",
 			url:        "/v1/packages/nonexistent.com?version=v1.2.3",
 			wantStatus: http.StatusNotFound,

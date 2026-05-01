@@ -278,8 +278,19 @@ func (db *DB) GetUnit(ctx context.Context, um *internal.UnitMeta, fields interna
 }
 
 // GetModulePackages returns a list of packages in the given module version.
-func (db *DB) GetModulePackages(ctx context.Context, modulePath, version string) ([]*internal.PackageMeta, error) {
-	return getPackagesInUnit(ctx, db.db, modulePath, modulePath, version, -1, db.bypassLicenseCheck)
+func (db *DB) GetModulePackages(ctx context.Context, modulePath, requestedVersion string) ([]*internal.PackageMeta, error) {
+	resolvedVersion := requestedVersion
+	if requestedVersion == version.Latest {
+		lmv, err := db.GetLatestModuleVersions(ctx, modulePath)
+		if err != nil {
+			return nil, err
+		}
+		if lmv == nil {
+			return nil, fmt.Errorf("%w: module %s not found", derrors.NotFound, modulePath)
+		}
+		resolvedVersion = lmv.GoodVersion
+	}
+	return getPackagesInUnit(ctx, db.db, modulePath, modulePath, resolvedVersion, -1, db.bypassLicenseCheck)
 }
 
 func (db *DB) getUnitID(ctx context.Context, fullPath, modulePath, resolvedVersion string) (_ int, _ bool, err error) {
