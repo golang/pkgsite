@@ -10,6 +10,7 @@ package api
 
 import (
 	"bytes"
+	_ "embed"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -34,6 +35,11 @@ const (
 	// defaultLimit is the default number of results to return per page for paginated results.
 	defaultLimit = 100
 )
+
+// OpenAPISpec contains the raw bytes of the OpenAPI 3.0 specification for the API.
+//
+//go:embed openapi.yaml
+var OpenAPISpec []byte
 
 // ServePackage handles requests for the v1 package metadata endpoint.
 // api:route /v1/package/{path}

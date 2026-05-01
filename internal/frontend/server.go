@@ -255,6 +255,7 @@ func (s *Server) Install(handle func(string, http.Handler), cacher Cacher, authV
 		api.ServeError(w, r, api.BadRequest("unknown API endpoint",
 			"GET /v1/api at this host and port and read the documentation"))
 	}))
+	handle("GET /v1/openapi.yaml", s.openAPISpecHandler())
 	handle("/opensearch.xml", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		serveFileFS(w, r, s.staticFS, "shared/opensearch.xml")
 	}))
@@ -515,6 +516,13 @@ func (s *Server) apiDocHandler() http.HandlerFunc {
 			Routes:   routes,
 		}
 		s.servePage(r.Context(), w, "api", page)
+	})
+}
+
+func (s *Server) openAPISpecHandler() http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/yaml; charset=utf-8")
+		w.Write(api.OpenAPISpec)
 	})
 }
 

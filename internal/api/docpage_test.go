@@ -239,7 +239,7 @@ func TestRouteInfos(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	routes, err := RouteInfos(context.Background(), srv.URL)
+	routes, err := calculateRoutes(context.Background(), srv.URL)
 	if err != nil {
 		t.Fatalf("RouteInfos failed: %v", err)
 	}
