@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -88,6 +89,37 @@ func TestRunPackage(t *testing.T) {
 	}
 	if !strings.Contains(stdout.String(), "standard library") {
 		t.Errorf("output missing 'standard library':\n%s", stdout.String())
+	}
+}
+
+func TestRunPackageGOOSGOARCH(t *testing.T) {
+	if _, err := exec.LookPath("go"); err != nil {
+		t.Skip("skipping test; 'go' command not found")
+	}
+
+	t.Setenv("GOOS", "windows")
+	t.Setenv("GOARCH", "386")
+
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		goos := r.URL.Query().Get("goos")
+		goarch := r.URL.Query().Get("goarch")
+		if goos != "windows" {
+			t.Errorf("query param goos = %q, want %q", goos, "windows")
+		}
+		if goarch != "386" {
+			t.Errorf("query param goarch = %q, want %q", goarch, "386")
+		}
+		json.NewEncoder(w).Encode(client.Package{
+			Path:       "encoding/json",
+			ModulePath: "std",
+		})
+	}))
+	defer srv.Close()
+
+	var stdout, stderr bytes.Buffer
+	code := run([]string{"package", "--server=" + srv.URL, "encoding/json"}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("exit code = %d, stderr = %s", code, stderr.String())
 	}
 }
 
