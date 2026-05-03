@@ -119,6 +119,7 @@ func unit(relativePath string, doc ...*internal.Documentation) *internal.Unit {
 }
 
 func TestAPI(t *testing.T) {
+	t.Setenv("K_SERVICE", "test")
 	t.Run("fake", func(t *testing.T) {
 		testAPI(t, func(t *testing.T) internal.TestingDataSource {
 			return fakedatasource.New()
@@ -625,18 +626,6 @@ func testServeModuleVersions(t *testing.T, ds internal.TestingDataSource) {
 			wantStatus: http.StatusBadRequest,
 			want:       &api.Error{Code: 400, Message: "missing module path"},
 		},
-		{
-			name:       "with limit",
-			url:        "/v1/versions/example.com?limit=1",
-			wantStatus: http.StatusOK,
-			wantCount:  1,
-		},
-		{
-			name:       "pagination",
-			url:        "/v1/versions/example.com?limit=1&token=1",
-			wantStatus: http.StatusOK,
-			wantCount:  1,
-		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			r := httptest.NewRequest("GET", test.url, nil)
@@ -651,7 +640,7 @@ func testServeModuleVersions(t *testing.T, ds internal.TestingDataSource) {
 			}
 
 			if test.wantStatus == http.StatusOK {
-				var got api.PaginatedResponse[internal.ModuleInfo]
+				var got api.PaginatedResponse[api.ModuleVersion]
 				if err := json.Unmarshal(w.Body.Bytes(), &got); err != nil {
 					t.Fatalf("json.Unmarshal: %v", err)
 				}
@@ -661,6 +650,12 @@ func testServeModuleVersions(t *testing.T, ds internal.TestingDataSource) {
 			}
 		})
 	}
+
+	testPagination[api.ModuleVersion](t, ds, "/v1/versions/example.com?limit=1", api.ServeModuleVersions, []wantPage{
+		{wantCount: 1, wantTotal: 3, wantNext: true},
+		{wantCount: 1, wantTotal: 3, wantNext: true},
+		{wantCount: 1, wantTotal: 3, wantNext: false},
+	})
 }
 
 func testServeModulePackages(t *testing.T, ds internal.TestingDataSource) {
@@ -720,21 +715,6 @@ func testServeModulePackages(t *testing.T, ds internal.TestingDataSource) {
 			wantCount:  1,
 			wantTotal:  1,
 		},
-		{
-			name:       "limit and token",
-			url:        "/v1/packages/example.com?version=v1.2.3&limit=1",
-			wantStatus: http.StatusOK,
-			wantCount:  1,
-			wantTotal:  2,
-			wantToken:  "1",
-		},
-		{
-			name:       "next page",
-			url:        "/v1/packages/example.com?version=v1.2.3&limit=1&token=1",
-			wantStatus: http.StatusOK,
-			wantCount:  1,
-			wantTotal:  2,
-		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			r := httptest.NewRequest("GET", test.url, nil)
@@ -765,6 +745,11 @@ func testServeModulePackages(t *testing.T, ds internal.TestingDataSource) {
 			}
 		})
 	}
+
+	testPagination[api.Package](t, ds, "/v1/packages/example.com?version=v1.2.3&limit=1", api.ServeModulePackages, []wantPage{
+		{wantCount: 1, wantTotal: 2, wantNext: true},
+		{wantCount: 1, wantTotal: 2, wantNext: false},
+	})
 }
 
 func testServeSearch(t *testing.T, ds internal.TestingDataSource) {
@@ -833,6 +818,70 @@ func testServeSearch(t *testing.T, ds internal.TestingDataSource) {
 	}
 }
 
+type wantPage struct {
+	wantCount int
+	wantTotal int
+	wantNext  bool
+}
+
+// TODO(jba): Add pagination tests to all testXXX functions in internal/tests/api where the response is paginated.
+//
+// testPagination is a generic helper for testing paginated API endpoints.
+// It performs a sequential crawl of pages starting from baseURL.
+// For each page request, it asserts that the response has the expected number
+// of items and total results. It verifies the presence or absence of NextPageToken,
+// and automatically uses the returned token to fetch the subsequent page.
+func testPagination[T any](t *testing.T, ds internal.TestingDataSource, baseURL string, serve func(http.ResponseWriter, *http.Request, internal.DataSource) error, pages []wantPage) {
+	t.Helper()
+	token := ""
+
+	for i, page := range pages {
+		url := baseURL
+		if token != "" {
+			if strings.Contains(url, "?") {
+				url += "&token=" + token
+			} else {
+				url += "?token=" + token
+			}
+		}
+
+		r := httptest.NewRequest("GET", url, nil)
+		w := httptest.NewRecorder()
+
+		if err := serve(w, r, ds); err != nil {
+			api.ServeError(w, r, err)
+		}
+
+		if w.Code != http.StatusOK {
+			t.Fatalf("page %d: status = %d, want 200", i+1, w.Code)
+		}
+
+		var got api.PaginatedResponse[T]
+		if err := json.Unmarshal(w.Body.Bytes(), &got); err != nil {
+			t.Fatalf("page %d: json.Unmarshal: %v", i+1, err)
+		}
+
+		if len(got.Items) != page.wantCount {
+			t.Errorf("page %d: count = %d, want %d", i+1, len(got.Items), page.wantCount)
+		}
+		if got.Total != page.wantTotal {
+			t.Errorf("page %d: total = %d, want %d", i+1, got.Total, page.wantTotal)
+		}
+
+		if page.wantNext {
+			if got.NextPageToken == "" {
+				t.Errorf("page %d: expected next page token, got empty", i+1)
+			}
+		} else {
+			if got.NextPageToken != "" {
+				t.Errorf("page %d: expected empty next page token, got %q", i+1, got.NextPageToken)
+			}
+		}
+
+		token = got.NextPageToken
+	}
+}
+
 func testServeSearchPagination(t *testing.T, ds internal.TestingDataSource) {
 	doc := sample.Documentation("linux", "amd64", sample.DocContents)
 	for i := range 10 {
@@ -840,63 +889,12 @@ func testServeSearchPagination(t *testing.T, ds internal.TestingDataSource) {
 		ds.MustInsertModule(t, module(t, modinfo(modPath, "v1.0.0"), unit("pkg", doc)))
 	}
 
-	for _, test := range []struct {
-		name          string
-		url           string
-		wantCount     int
-		wantTotal     int
-		wantNextToken string
-	}{
-		{
-			name:          "first page",
-			url:           "/v1/search?q=synopsis&limit=3",
-			wantCount:     3,
-			wantTotal:     10,
-			wantNextToken: "3",
-		},
-		{
-			name:          "second page",
-			url:           "/v1/search?q=synopsis&limit=3&token=3",
-			wantCount:     3,
-			wantTotal:     10,
-			wantNextToken: "6",
-		},
-		{
-			name:          "last page",
-			url:           "/v1/search?q=synopsis&limit=3&token=9",
-			wantCount:     1,
-			wantTotal:     10,
-			wantNextToken: "",
-		},
-	} {
-		t.Run(test.name, func(t *testing.T) {
-			r := httptest.NewRequest("GET", test.url, nil)
-			w := httptest.NewRecorder()
-
-			if err := api.ServeSearch(w, r, ds); err != nil {
-				api.ServeError(w, r, err)
-			}
-
-			if w.Code != http.StatusOK {
-				t.Fatalf("status = %d, want 200", w.Code)
-			}
-
-			var got api.PaginatedResponse[api.SearchResult]
-			if err := json.Unmarshal(w.Body.Bytes(), &got); err != nil {
-				t.Fatalf("json.Unmarshal: %v", err)
-			}
-
-			if len(got.Items) != test.wantCount {
-				t.Errorf("count = %d, want %d", len(got.Items), test.wantCount)
-			}
-			if got.Total != test.wantTotal {
-				t.Errorf("total = %d, want %d", got.Total, test.wantTotal)
-			}
-			if got.NextPageToken != test.wantNextToken {
-				t.Errorf("nextToken = %q, want %q", got.NextPageToken, test.wantNextToken)
-			}
-		})
-	}
+	testPagination[api.SearchResult](t, ds, "/v1/search?q=synopsis&limit=3", api.ServeSearch, []wantPage{
+		{wantCount: 3, wantTotal: 10, wantNext: true},
+		{wantCount: 3, wantTotal: 10, wantNext: true},
+		{wantCount: 3, wantTotal: 10, wantNext: true},
+		{wantCount: 1, wantTotal: 10, wantNext: false},
+	})
 }
 
 func testServePackageSymbols(t *testing.T, ds internal.TestingDataSource) {

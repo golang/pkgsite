@@ -15,7 +15,6 @@ import (
 	"fmt"
 	"net/http"
 	"slices"
-	"strconv"
 	"strings"
 	"time"
 
@@ -673,7 +672,7 @@ func ServeError(w http.ResponseWriter, r *http.Request, err error) error {
 func paginate[T any](all []T, lp ListParams, defaultLimit int) (PaginatedResponse[T], error) {
 	limit, offset, err := lp.pageParams(defaultLimit)
 	if err != nil {
-		return PaginatedResponse[T]{}, fmt.Errorf("%w: %s", derrors.InvalidArgument, err.Error())
+		return PaginatedResponse[T]{}, fmt.Errorf("%w: %s", derrors.InvalidArgument, err)
 	}
 
 	offset = min(offset, len(all))
@@ -681,7 +680,11 @@ func paginate[T any](all []T, lp ListParams, defaultLimit int) (PaginatedRespons
 
 	var nextToken string
 	if end < len(all) {
-		nextToken = strconv.Itoa(end)
+		var err error
+		nextToken, err = encodePageToken(end)
+		if err != nil {
+			return PaginatedResponse[T]{}, fmt.Errorf("encoding token: %w", err)
+		}
 	}
 
 	return PaginatedResponse[T]{

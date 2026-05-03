@@ -228,9 +228,9 @@ func (lp ListParams) pageParams(defaultLimit int) (limit, offset int, err error)
 		limit = defaultLimit
 	}
 	if lp.Token != "" {
-		offset, err = strconv.Atoi(lp.Token)
-		if err != nil || offset < 0 {
-			return 0, 0, fmt.Errorf("invalid token")
+		offset, err = decodePageToken(lp.Token)
+		if err != nil {
+			return 0, 0, fmt.Errorf("invalid next-page token: %v", err)
 		}
 	}
 	return limit, offset, nil
