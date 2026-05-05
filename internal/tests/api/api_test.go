@@ -641,9 +641,7 @@ func testServeModuleVersions(t *testing.T, ds internal.TestingDataSource) {
 
 			if test.wantStatus == http.StatusOK {
 				var got api.PaginatedResponse[api.ModuleVersion]
-				if err := json.Unmarshal(w.Body.Bytes(), &got); err != nil {
-					t.Fatalf("json.Unmarshal: %v", err)
-				}
+				unmarshalJSON(t, w.Body.Bytes(), &got)
 				if len(got.Items) != test.wantCount {
 					t.Errorf("count = %d, want %d", len(got.Items), test.wantCount)
 				}
@@ -730,9 +728,7 @@ func testServeModulePackages(t *testing.T, ds internal.TestingDataSource) {
 
 			if test.wantStatus == http.StatusOK {
 				var got api.PaginatedResponse[api.Package]
-				if err := json.Unmarshal(w.Body.Bytes(), &got); err != nil {
-					t.Fatalf("json.Unmarshal: %v", err)
-				}
+				unmarshalJSON(t, w.Body.Bytes(), &got)
 				if len(got.Items) != test.wantCount {
 					t.Errorf("count = %d, want %d", len(got.Items), test.wantCount)
 				}
@@ -807,9 +803,7 @@ func testServeSearch(t *testing.T, ds internal.TestingDataSource) {
 
 			if test.wantStatus == http.StatusOK {
 				var got api.PaginatedResponse[api.SearchResult]
-				if err := json.Unmarshal(w.Body.Bytes(), &got); err != nil {
-					t.Fatalf("%s: json.Unmarshal: %v", test.name, err)
-				}
+				unmarshalJSON(t, w.Body.Bytes(), &got)
 				if len(got.Items) != test.wantCount {
 					t.Errorf("%s: count = %d, want %d", test.name, len(got.Items), test.wantCount)
 				}
@@ -857,10 +851,7 @@ func testPagination[T any](t *testing.T, ds internal.TestingDataSource, baseURL 
 		}
 
 		var got api.PaginatedResponse[T]
-		if err := json.Unmarshal(w.Body.Bytes(), &got); err != nil {
-			t.Fatalf("page %d: json.Unmarshal: %v", i+1, err)
-		}
-
+		unmarshalJSON(t, w.Body.Bytes(), &got)
 		if len(got.Items) != page.wantCount {
 			t.Errorf("page %d: count = %d, want %d", i+1, len(got.Items), page.wantCount)
 		}
@@ -995,9 +986,7 @@ func testServePackageSymbols(t *testing.T, ds internal.TestingDataSource) {
 			if test.want != nil {
 				if want, ok := test.want.(*api.Error); ok {
 					var got api.Error
-					if err := json.Unmarshal(w.Body.Bytes(), &got); err != nil {
-						t.Fatalf("json.Unmarshal: %v", err)
-					}
+					unmarshalJSON(t, w.Body.Bytes(), &got)
 					if diff := cmp.Diff(want, &got, cmpopts.IgnoreUnexported(api.Error{})); diff != "" {
 						t.Errorf("mismatch (-want +got):\n%s", diff)
 					}
@@ -1006,9 +995,7 @@ func testServePackageSymbols(t *testing.T, ds internal.TestingDataSource) {
 
 			if test.wantStatus == http.StatusOK {
 				var got api.PackageSymbols
-				if err := json.Unmarshal(w.Body.Bytes(), &got); err != nil {
-					t.Fatalf("json.Unmarshal: %v", err)
-				}
+				unmarshalJSON(t, w.Body.Bytes(), &got)
 				var gotNames []string
 				for _, it := range got.Symbols.Items {
 					gotNames = append(gotNames, it.Name)
@@ -1067,14 +1054,23 @@ func testServePackageImportedBy(t *testing.T, ds internal.TestingDataSource) {
 
 			if test.wantStatus == http.StatusOK {
 				var got api.PackageImportedBy
-				if err := json.Unmarshal(w.Body.Bytes(), &got); err != nil {
-					t.Fatalf("json.Unmarshal: %v", err)
-				}
+				unmarshalJSON(t, w.Body.Bytes(), &got)
 				if len(got.ImportedBy.Items) != test.wantCount {
 					t.Errorf("count = %d, want %d", len(got.ImportedBy.Items), test.wantCount)
 				}
 			}
 		})
+	}
+}
+
+// unmarshalJSON is like json.Unmarshal, but checks for unknown
+// fields.
+func unmarshalJSON(t *testing.T, data []byte, ptr any) {
+	t.Helper()
+	d := json.NewDecoder(bytes.NewReader(data))
+	d.DisallowUnknownFields()
+	if err := d.Decode(ptr); err != nil {
+		t.Fatalf("unmarshalling JSON into %T: %v", ptr, err)
 	}
 }
 
