@@ -215,8 +215,10 @@ func testServePackage(t *testing.T, ds internal.TestingDataSource) {
 			wantStatus: http.StatusOK,
 			want: &api.Package{
 				PackageInfo: api.PackageInfo{
-					Path:     "example.com/pkg",
-					Synopsis: "This is a package synopsis for GOOS=linux, GOARCH=amd64",
+					Path:              "example.com/pkg",
+					Name:              "pkg",
+					IsRedistributable: true,
+					Synopsis:          "This is a package synopsis for GOOS=linux, GOARCH=amd64",
 				},
 				ModulePath: "example.com",
 				Version:    "v1.2.3",
@@ -244,8 +246,10 @@ func testServePackage(t *testing.T, ds internal.TestingDataSource) {
 			wantStatus: http.StatusOK,
 			want: &api.Package{
 				PackageInfo: api.PackageInfo{
-					Path:     "example.com/a/b",
-					Synopsis: "This is a package synopsis for GOOS=linux, GOARCH=amd64",
+					Path:              "example.com/a/b",
+					Name:              "b",
+					IsRedistributable: true,
+					Synopsis:          "This is a package synopsis for GOOS=linux, GOARCH=amd64",
 				},
 				ModulePath: "example.com/a",
 				Version:    "v1.2.3",
@@ -260,8 +264,10 @@ func testServePackage(t *testing.T, ds internal.TestingDataSource) {
 			wantStatus: http.StatusOK,
 			want: &api.Package{
 				PackageInfo: api.PackageInfo{
-					Synopsis: "This is a package synopsis for GOOS=linux, GOARCH=amd64",
-					Path:     "example.com/pkg",
+					Path:              "example.com/pkg",
+					Name:              "pkg",
+					IsRedistributable: true,
+					Synopsis:          "This is a package synopsis for GOOS=linux, GOARCH=amd64",
 				},
 				ModulePath: "example.com",
 				Version:    "v1.2.3",
@@ -276,8 +282,10 @@ func testServePackage(t *testing.T, ds internal.TestingDataSource) {
 			wantStatus: http.StatusOK,
 			want: &api.Package{
 				PackageInfo: api.PackageInfo{
-					Synopsis: "This is a package synopsis for GOOS=linux, GOARCH=amd64",
-					Path:     "example.com/pkg",
+					Name:              "pkg",
+					IsRedistributable: true,
+					Synopsis:          "This is a package synopsis for GOOS=linux, GOARCH=amd64",
+					Path:              "example.com/pkg",
 				},
 				ModulePath: "example.com",
 				Version:    "v1.2.4",
@@ -292,8 +300,10 @@ func testServePackage(t *testing.T, ds internal.TestingDataSource) {
 			wantStatus: http.StatusOK,
 			want: &api.Package{
 				PackageInfo: api.PackageInfo{
-					Synopsis: "This is a package synopsis for GOOS=linux, GOARCH=amd64",
-					Path:     "example.com/pkg",
+					Name:              "pkg",
+					IsRedistributable: true,
+					Synopsis:          "This is a package synopsis for GOOS=linux, GOARCH=amd64",
+					Path:              "example.com/pkg",
 				},
 				ModulePath: "example.com",
 				Version:    "v1.2.3",
@@ -308,8 +318,10 @@ func testServePackage(t *testing.T, ds internal.TestingDataSource) {
 			wantStatus: http.StatusOK,
 			want: &api.Package{
 				PackageInfo: api.PackageInfo{
-					Synopsis: "This is a package synopsis for GOOS=linux, GOARCH=amd64",
-					Path:     "example.com/pkg",
+					Name:              "pkg",
+					IsRedistributable: true,
+					Synopsis:          "This is a package synopsis for GOOS=linux, GOARCH=amd64",
+					Path:              "example.com/pkg",
 				},
 				ModulePath: "example.com",
 				Version:    "v1.2.4",
@@ -340,8 +352,10 @@ func testServePackage(t *testing.T, ds internal.TestingDataSource) {
 			wantStatus: http.StatusOK,
 			want: &api.Package{
 				PackageInfo: api.PackageInfo{
-					Synopsis: "This is a package synopsis for GOOS=linux, GOARCH=amd64",
-					Path:     "example.com/pkg",
+					Path:              "example.com/pkg",
+					Name:              "pkg",
+					IsRedistributable: true,
+					Synopsis:          "This is a package synopsis for GOOS=linux, GOARCH=amd64",
 				},
 				ModulePath: "example.com",
 				Version:    "v1.2.4",
@@ -366,8 +380,10 @@ func testServePackage(t *testing.T, ds internal.TestingDataSource) {
 			wantStatus: http.StatusOK,
 			want: &api.Package{
 				PackageInfo: api.PackageInfo{
-					Synopsis: "This is a package synopsis for GOOS=linux, GOARCH=amd64",
-					Path:     "example.com/pkg",
+					Path:              "example.com/pkg",
+					Name:              "pkg",
+					IsRedistributable: true,
+					Synopsis:          "This is a package synopsis for GOOS=linux, GOARCH=amd64",
 				},
 				ModulePath: "example.com",
 				Version:    "v1.2.3",
@@ -382,8 +398,10 @@ func testServePackage(t *testing.T, ds internal.TestingDataSource) {
 			wantStatus: http.StatusOK,
 			want: &api.Package{
 				PackageInfo: api.PackageInfo{
-					Synopsis: "This is a package synopsis for GOOS=linux, GOARCH=amd64",
-					Path:     "example.com/pkg",
+					Path:              "example.com/pkg",
+					Name:              "pkg",
+					IsRedistributable: true,
+					Synopsis:          "This is a package synopsis for GOOS=linux, GOARCH=amd64",
 				},
 				ModulePath: "example.com",
 				Version:    "v1.2.3",
@@ -405,8 +423,10 @@ func testServePackage(t *testing.T, ds internal.TestingDataSource) {
 			wantStatus: http.StatusOK,
 			want: &api.Package{
 				PackageInfo: api.PackageInfo{
-					Synopsis: "This is a package synopsis for GOOS=linux, GOARCH=amd64",
-					Path:     "example.com/pkg",
+					Path:              "example.com/pkg",
+					Name:              "pkg",
+					IsRedistributable: true,
+					Synopsis:          "This is a package synopsis for GOOS=linux, GOARCH=amd64",
 				},
 				ModulePath: "example.com",
 				Version:    "v1.2.3",
@@ -441,7 +461,9 @@ func testServePackage(t *testing.T, ds internal.TestingDataSource) {
 			wantStatus: http.StatusOK,
 			want: &api.Package{
 				PackageInfo: api.PackageInfo{
-					Path: "example.com/d/e",
+					Path:              "example.com/d/e",
+					Name:              "e",
+					IsRedistributable: true,
 				},
 				ModulePath: "example.com/d", // picked because example.com/d/e is deprecated
 				Version:    "v1.2.3",
@@ -682,60 +704,71 @@ func testServeModulePackages(t *testing.T, ds internal.TestingDataSource) {
 	// TODO(jba): check actual response values, not just
 	// pagination.
 	d := sample.Documentation("linux", "amd64", sample.DocContents)
-	d.Synopsis = "api.Synopsis for name pkg2, path sub"
+	d.Synopsis = "api.Synopsis for sub"
 	ds.MustInsertModule(t,
 		module(t, modinfo("example.com", "v1.2.3"),
 			unit("", sample.Documentation("linux", "amd64", sample.DocContents)),
 			unit("sub", d)))
 
+	info1 := api.PackageInfo{
+		Path:              "example.com",
+		Name:              "example.com",
+		IsRedistributable: true,
+		Synopsis:          "This is a package synopsis for GOOS=linux, GOARCH=amd64",
+	}
+	info2 := api.PackageInfo{
+		Path:              "example.com/sub",
+		Name:              "sub",
+		IsRedistributable: true,
+		Synopsis:          "api.Synopsis for sub",
+	}
+
+	response := func(infos ...api.PackageInfo) *api.PackagesResponse {
+		return &api.PackagesResponse{
+			ModulePath: "example.com",
+			Version:    "v1.2.3",
+			Packages: api.PaginatedResponse[api.PackageInfo]{
+				Total: len(infos),
+				Items: infos,
+			},
+		}
+
+	}
+
 	for _, test := range []struct {
-		name       string
-		url        string
-		wantStatus int
-		wantCount  int
-		wantTotal  int
-		wantToken  string
-		want       any
+		name string
+		url  string
+		want any
 	}{
 		{
-			name:       "all packages",
-			url:        "/v1/packages/example.com?version=v1.2.3",
-			wantStatus: http.StatusOK,
-			wantCount:  2,
-			wantTotal:  2,
+			name: "all packages",
+			url:  "/v1/packages/example.com?version=v1.2.3",
+			want: response(info1, info2),
 		},
 		{
-			name:       "latest",
-			url:        "/v1/packages/example.com",
-			wantStatus: http.StatusOK,
-			wantCount:  2,
-			wantTotal:  2,
+			name: "latest",
+			url:  "/v1/packages/example.com",
+			want: response(info1, info2),
 		},
 		{
-			name:       "module not found",
-			url:        "/v1/packages/nonexistent.com?version=v1.2.3",
-			wantStatus: http.StatusNotFound,
-			want:       &api.Error{Code: 404, Message: "not found"},
+			name: "module not found",
+			url:  "/v1/packages/nonexistent.com?version=v1.2.3",
+			want: &api.Error{Code: 404, Message: "not found"},
 		},
 		{
-			name:       "missing module path",
-			url:        "/v1/packages/",
-			wantStatus: http.StatusBadRequest,
-			want:       &api.Error{Code: 400, Message: "missing module path"},
+			name: "missing module path",
+			url:  "/v1/packages/",
+			want: &api.Error{Code: 400, Message: "missing module path"},
 		},
 		{
-			name:       "filtering",
-			url:        "/v1/packages/example.com?version=v1.2.3&filter=sub",
-			wantStatus: http.StatusOK,
-			wantCount:  1,
-			wantTotal:  1,
+			name: "filter on path",
+			url:  "/v1/packages/example.com?version=v1.2.3&filter=sub",
+			want: response(info2),
 		},
 		{
-			name:       "filtering synopsis",
-			url:        "/v1/packages/example.com?version=v1.2.3&filter=pkg2",
-			wantStatus: http.StatusOK,
-			wantCount:  1,
-			wantTotal:  1,
+			name: "filter on synopsis",
+			url:  "/v1/packages/example.com?version=v1.2.3&filter=GOOS",
+			want: response(info1),
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
@@ -745,23 +778,17 @@ func testServeModulePackages(t *testing.T, ds internal.TestingDataSource) {
 			if err := api.ServeModulePackages(w, r, ds); err != nil {
 				api.ServeError(w, r, err)
 			}
-
-			if w.Code != test.wantStatus {
-				t.Errorf("status = %d, want %d", w.Code, test.wantStatus)
+			got, err := unmarshalResponse[api.PackagesResponse](w.Body.Bytes())
+			if err != nil {
+				t.Fatal(err)
 			}
-
-			if test.wantStatus == http.StatusOK {
-				var got api.PackagesResponse
-				unmarshalJSON(t, w.Body.Bytes(), &got)
-				if len(got.Packages.Items) != test.wantCount {
-					t.Errorf("count = %d, want %d", len(got.Packages.Items), test.wantCount)
-				}
-				if g, w := got.Packages.Total, test.wantTotal; g != w {
-					t.Errorf("total = %d, want %d", g, w)
-				}
+			if diff := cmp.Diff(test.want, got, cmpopts.IgnoreUnexported(api.Error{})); diff != "" {
+				t.Errorf("mismatch (-want +got):\n%s", diff)
 			}
 		})
 	}
+
+	// TODO(jba): test pagination
 }
 
 func testServeSearch(t *testing.T, ds internal.TestingDataSource) {
@@ -1023,6 +1050,8 @@ func testServePackageSymbols(t *testing.T, ds internal.TestingDataSource) {
 			}
 		})
 	}
+
+	// TODO(jba): test pagination
 }
 
 func testServePackageImportedBy(t *testing.T, ds internal.TestingDataSource) {
@@ -1077,6 +1106,7 @@ func testServePackageImportedBy(t *testing.T, ds internal.TestingDataSource) {
 			}
 		})
 	}
+	// TODO(jba): test pagination
 }
 
 // unmarshalJSON is like json.Unmarshal, but checks for unknown

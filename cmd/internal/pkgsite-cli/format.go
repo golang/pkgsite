@@ -35,6 +35,7 @@ func formatPackage(w io.Writer, r packageResult) {
 	} else {
 		fmt.Fprintf(w, "%s\n", p.Path)
 	}
+	fmt.Fprintf(w, "  Name:     %s\n", p.Name)
 	fmt.Fprintf(w, "  Module:   %s\n", p.ModulePath)
 	version := p.Version
 	if p.IsLatest {

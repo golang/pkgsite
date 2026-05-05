@@ -248,7 +248,13 @@ func ServeModulePackages(w http.ResponseWriter, r *http.Request, ds internal.Dat
 		requestedVersion = version.Latest
 	}
 
-	metas, err := ds.GetModulePackages(r.Context(), modulePath, requestedVersion)
+	// Resolve latest version, and check if specific version exists.
+	um, err := ds.GetUnitMeta(r.Context(), modulePath, modulePath, requestedVersion)
+	if err != nil {
+		return err
+	}
+
+	metas, err := ds.GetModulePackages(r.Context(), um.ModulePath, um.Version)
 	if err != nil {
 		return err
 	}
@@ -260,15 +266,17 @@ func ServeModulePackages(w http.ResponseWriter, r *http.Request, ds internal.Dat
 	}
 	// api:response PackagesResponse
 	resp := PackagesResponse{
-		ModulePath:        modulePath,
-		Version:           requestedVersion,
+		ModulePath:        um.ModulePath,
+		Version:           um.Version,
 		IsStandardLibrary: stdlib.Contains(modulePath),
 	}
 	var pinfos []PackageInfo
 	for _, m := range metas {
 		pinfos = append(pinfos, PackageInfo{
-			Path:     m.Path,
-			Synopsis: m.Synopsis,
+			Path:              m.Path,
+			Name:              m.Name,
+			Synopsis:          m.Synopsis,
+			IsRedistributable: m.IsRedistributable,
 		})
 	}
 
@@ -751,8 +759,10 @@ func unitToPackage(unit *internal.Unit, params PackageParams) (*Package, error) 
 		Imports:           unit.Imports,
 		Licenses:          licenses,
 		PackageInfo: PackageInfo{
-			Path:     unit.Path,
-			Synopsis: synopsis,
+			Path:              unit.Path,
+			Name:              unit.Name,
+			IsRedistributable: unit.IsRedistributable,
+			Synopsis:          synopsis,
 		},
 	}, nil
 }

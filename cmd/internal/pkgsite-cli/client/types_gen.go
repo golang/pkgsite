@@ -25,8 +25,10 @@ type Package struct {
 }
 
 type PackageInfo struct {
-	Path     string `json:"path"`
-	Synopsis string `json:"synopsis"`
+	Path              string `json:"path"`
+	Name              string `json:"name"`
+	Synopsis          string `json:"synopsis"`
+	IsRedistributable bool   `json:"isRedistributable"` // license allows distribution?
 }
 
 type PackagesResponse struct {
