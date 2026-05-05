@@ -699,9 +699,9 @@ func testServeModuleVersions(t *testing.T, ds internal.TestingDataSource) {
 			return len(r.Items), r.Total, r.NextPageToken
 		},
 		[]wantPage{
-			{wantCount: 1, wantTotal: 3, wantNext: true},
-			{wantCount: 1, wantTotal: 3, wantNext: true},
-			{wantCount: 1, wantTotal: 3, wantNext: false},
+			{wantCount: 1, wantTotal: 3},
+			{wantCount: 1, wantTotal: 3},
+			{wantCount: 1, wantTotal: 3},
 		})
 }
 
@@ -797,8 +797,8 @@ func testServeModulePackages(t *testing.T, ds internal.TestingDataSource) {
 			return len(r.Packages.Items), r.Packages.Total, r.Packages.NextPageToken
 		},
 		[]wantPage{
-			{wantCount: 1, wantTotal: 2, wantNext: true},
-			{wantCount: 1, wantTotal: 2, wantNext: false},
+			{wantCount: 1, wantTotal: 2},
+			{wantCount: 1, wantTotal: 2},
 		},
 	)
 }
@@ -870,7 +870,6 @@ func testServeSearch(t *testing.T, ds internal.TestingDataSource) {
 type wantPage struct {
 	wantCount int
 	wantTotal int
-	wantNext  bool
 }
 
 // testPagination is a generic helper for testing paginated API endpoints.
@@ -921,13 +920,13 @@ func testPagination[T any](
 			t.Errorf("page %d: total = %d, want %d", i+1, total, page.wantTotal)
 		}
 
-		if page.wantNext {
-			if nextToken == "" {
-				t.Errorf("page %d: expected next page token, got empty", i+1)
-			}
-		} else {
+		if i == len(pages)-1 {
 			if nextToken != "" {
 				t.Errorf("page %d: expected empty next page token, got %q", i+1, nextToken)
+			}
+		} else {
+			if nextToken == "" {
+				t.Errorf("page %d: expected next page token, got empty", i+1)
 			}
 		}
 
@@ -948,10 +947,10 @@ func testServeSearchPagination(t *testing.T, ds internal.TestingDataSource) {
 			return len(r.Items), r.Total, r.NextPageToken
 		},
 		[]wantPage{
-			{wantCount: 3, wantTotal: 10, wantNext: true},
-			{wantCount: 3, wantTotal: 10, wantNext: true},
-			{wantCount: 3, wantTotal: 10, wantNext: true},
-			{wantCount: 1, wantTotal: 10, wantNext: false},
+			{wantCount: 3, wantTotal: 10},
+			{wantCount: 3, wantTotal: 10},
+			{wantCount: 3, wantTotal: 10},
+			{wantCount: 1, wantTotal: 10},
 		})
 }
 
@@ -1081,8 +1080,8 @@ func testServePackageSymbols(t *testing.T, ds internal.TestingDataSource) {
 			return len(ps.Symbols.Items), ps.Symbols.Total, ps.Symbols.NextPageToken
 		},
 		[]wantPage{
-			{wantCount: 1, wantTotal: 2, wantNext: true},
-			{wantCount: 1, wantTotal: 2, wantNext: false},
+			{wantCount: 1, wantTotal: 2},
+			{wantCount: 1, wantTotal: 2},
 		})
 
 }
@@ -1149,8 +1148,8 @@ func testServePackageImportedBy(t *testing.T, ds internal.TestingDataSource) {
 			return len(pib.ImportedBy.Items), pib.ImportedBy.Total, pib.ImportedBy.NextPageToken
 		},
 		[]wantPage{
-			{wantCount: 1, wantTotal: 2, wantNext: true},
-			{wantCount: 1, wantTotal: 2, wantNext: false},
+			{wantCount: 1, wantTotal: 2},
+			{wantCount: 1, wantTotal: 2},
 		})
 }
 
