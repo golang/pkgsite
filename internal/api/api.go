@@ -34,6 +34,8 @@ const (
 	maxSearchResults = 1000
 	// defaultLimit is the default number of results to return per page for paginated results.
 	defaultLimit = 100
+	// defaultSearchLimit is the default number of results to return per page for search.
+	defaultSearchLimit = 25
 )
 
 // OpenAPISpec contains the raw bytes of the OpenAPI 3.0 specification for the API.
@@ -327,7 +329,7 @@ func ServeSearch(w http.ResponseWriter, r *http.Request, ds internal.DataSource)
 	// Filtering is done in memory after fetching results, so we need a large
 	// candidate set to avoid returning empty pages when matches exist further down.
 	if params.Filter == "" {
-		limit, offset, err := params.ListParams.pageParams(defaultLimit)
+		limit, offset, err := params.ListParams.pageParams(defaultSearchLimit)
 		if err != nil {
 			return fmt.Errorf("%w: %s", derrors.InvalidArgument, err.Error())
 		}
