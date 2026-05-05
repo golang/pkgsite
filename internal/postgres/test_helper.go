@@ -176,6 +176,13 @@ func mustInsertModule(t *testing.T, db *DB, m *internal.Module, goMod string) {
 	if _, err := db.InsertModule(ctx, m, lmv); err != nil {
 		t.Fatal(err)
 	}
+	// Updated imported-by counts on every new module.
+	// It should be very cheap if there are only a handful of modules in
+	// the DB.
+	// This causes GetImportedByCount to return the right value.
+	if _, err := db.UpdateSearchDocumentsImportedByCount(t.Context(), 1e6); err != nil {
+		t.Fatal(err)
+	}
 }
 
 func addLatest(ctx context.Context, t *testing.T, db *DB, modulePath, version, modFile string) *internal.LatestModuleVersions {

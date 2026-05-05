@@ -693,16 +693,19 @@ func testServeModuleVersions(t *testing.T, ds internal.TestingDataSource) {
 		})
 	}
 
-	testPagination[api.ModuleVersion](t, ds, "/v1/versions/example.com?limit=1", api.ServeModuleVersions, []wantPage{
-		{wantCount: 1, wantTotal: 3, wantNext: true},
-		{wantCount: 1, wantTotal: 3, wantNext: true},
-		{wantCount: 1, wantTotal: 3, wantNext: false},
-	})
+	testPagination[api.PaginatedResponse[api.ModuleVersion]](t, ds, "/v1/versions/example.com?limit=1",
+		api.ServeModuleVersions,
+		func(r *api.PaginatedResponse[api.ModuleVersion]) (int, int, string) {
+			return len(r.Items), r.Total, r.NextPageToken
+		},
+		[]wantPage{
+			{wantCount: 1, wantTotal: 3, wantNext: true},
+			{wantCount: 1, wantTotal: 3, wantNext: true},
+			{wantCount: 1, wantTotal: 3, wantNext: false},
+		})
 }
 
 func testServeModulePackages(t *testing.T, ds internal.TestingDataSource) {
-	// TODO(jba): check actual response values, not just
-	// pagination.
 	d := sample.Documentation("linux", "amd64", sample.DocContents)
 	d.Synopsis = "api.Synopsis for sub"
 	ds.MustInsertModule(t,
@@ -788,7 +791,16 @@ func testServeModulePackages(t *testing.T, ds internal.TestingDataSource) {
 		})
 	}
 
-	// TODO(jba): test pagination
+	testPagination(t, ds, "/v1/packages/example.com?limit=1",
+		api.ServeModulePackages,
+		func(r *api.PackagesResponse) (int, int, string) {
+			return len(r.Packages.Items), r.Packages.Total, r.Packages.NextPageToken
+		},
+		[]wantPage{
+			{wantCount: 1, wantTotal: 2, wantNext: true},
+			{wantCount: 1, wantTotal: 2, wantNext: false},
+		},
+	)
 }
 
 func testServeSearch(t *testing.T, ds internal.TestingDataSource) {
@@ -861,14 +873,20 @@ type wantPage struct {
 	wantNext  bool
 }
 
-// TODO(jba): Add pagination tests to all testXXX functions in internal/tests/api where the response is paginated.
-//
 // testPagination is a generic helper for testing paginated API endpoints.
 // It performs a sequential crawl of pages starting from baseURL.
 // For each page request, it asserts that the response has the expected number
 // of items and total results. It verifies the presence or absence of NextPageToken,
 // and automatically uses the returned token to fetch the subsequent page.
-func testPagination[T any](t *testing.T, ds internal.TestingDataSource, baseURL string, serve func(http.ResponseWriter, *http.Request, internal.DataSource) error, pages []wantPage) {
+func testPagination[T any](
+	t *testing.T,
+	ds internal.TestingDataSource,
+	baseURL string,
+	// serves request
+	serve func(http.ResponseWriter, *http.Request, internal.DataSource) error,
+	// extracts pagination info from response
+	extract func(*T) (count, total int, next string),
+	pages []wantPage) {
 	t.Helper()
 	token := ""
 
@@ -893,26 +911,27 @@ func testPagination[T any](t *testing.T, ds internal.TestingDataSource, baseURL 
 			t.Fatalf("page %d: status = %d, want 200", i+1, w.Code)
 		}
 
-		var got api.PaginatedResponse[T]
+		var got T
 		unmarshalJSON(t, w.Body.Bytes(), &got)
-		if len(got.Items) != page.wantCount {
-			t.Errorf("page %d: count = %d, want %d", i+1, len(got.Items), page.wantCount)
+		count, total, nextToken := extract(&got)
+		if count != page.wantCount {
+			t.Errorf("page %d: count = %d, want %d", i+1, count, page.wantCount)
 		}
-		if got.Total != page.wantTotal {
-			t.Errorf("page %d: total = %d, want %d", i+1, got.Total, page.wantTotal)
+		if total != page.wantTotal {
+			t.Errorf("page %d: total = %d, want %d", i+1, total, page.wantTotal)
 		}
 
 		if page.wantNext {
-			if got.NextPageToken == "" {
+			if nextToken == "" {
 				t.Errorf("page %d: expected next page token, got empty", i+1)
 			}
 		} else {
-			if got.NextPageToken != "" {
-				t.Errorf("page %d: expected empty next page token, got %q", i+1, got.NextPageToken)
+			if nextToken != "" {
+				t.Errorf("page %d: expected empty next page token, got %q", i+1, nextToken)
 			}
 		}
 
-		token = got.NextPageToken
+		token = nextToken
 	}
 }
 
@@ -923,12 +942,17 @@ func testServeSearchPagination(t *testing.T, ds internal.TestingDataSource) {
 		ds.MustInsertModule(t, module(t, modinfo(modPath, "v1.0.0"), unit("pkg", doc)))
 	}
 
-	testPagination[api.SearchResult](t, ds, "/v1/search?q=synopsis&limit=3", api.ServeSearch, []wantPage{
-		{wantCount: 3, wantTotal: 10, wantNext: true},
-		{wantCount: 3, wantTotal: 10, wantNext: true},
-		{wantCount: 3, wantTotal: 10, wantNext: true},
-		{wantCount: 1, wantTotal: 10, wantNext: false},
-	})
+	testPagination[api.PaginatedResponse[api.SearchResult]](t, ds, "/v1/search?q=synopsis&limit=3",
+		api.ServeSearch,
+		func(r *api.PaginatedResponse[api.SearchResult]) (int, int, string) {
+			return len(r.Items), r.Total, r.NextPageToken
+		},
+		[]wantPage{
+			{wantCount: 3, wantTotal: 10, wantNext: true},
+			{wantCount: 3, wantTotal: 10, wantNext: true},
+			{wantCount: 3, wantTotal: 10, wantNext: true},
+			{wantCount: 1, wantTotal: 10, wantNext: false},
+		})
 }
 
 func testServePackageSymbols(t *testing.T, ds internal.TestingDataSource) {
@@ -1051,7 +1075,16 @@ func testServePackageSymbols(t *testing.T, ds internal.TestingDataSource) {
 		})
 	}
 
-	// TODO(jba): test pagination
+	testPagination[api.PackageSymbols](t, ds, "/v1/symbols/example.com/pkg?version=v1.0.0&limit=1",
+		api.ServePackageSymbols,
+		func(ps *api.PackageSymbols) (int, int, string) {
+			return len(ps.Symbols.Items), ps.Symbols.Total, ps.Symbols.NextPageToken
+		},
+		[]wantPage{
+			{wantCount: 1, wantTotal: 2, wantNext: true},
+			{wantCount: 1, wantTotal: 2, wantNext: false},
+		})
+
 }
 
 func testServePackageImportedBy(t *testing.T, ds internal.TestingDataSource) {
@@ -1061,6 +1094,10 @@ func testServePackageImportedBy(t *testing.T, ds internal.TestingDataSource) {
 	u := unit("pkg")
 	u.Imports = []string{"example.com/pkg"}
 	ds.MustInsertModule(t, module(t, modinfo("example.com/mod", "v1.2.3"), u))
+
+	u2 := unit("pkg")
+	u2.Imports = []string{"example.com/pkg"}
+	ds.MustInsertModule(t, module(t, modinfo("example.com/mod2", "v1.2.3"), u2))
 
 	for _, test := range []struct {
 		name       string
@@ -1082,7 +1119,7 @@ func testServePackageImportedBy(t *testing.T, ds internal.TestingDataSource) {
 			name:       "all imported by",
 			url:        "/v1/imported-by/example.com/pkg?version=v1.2.3",
 			wantStatus: http.StatusOK,
-			wantCount:  1,
+			wantCount:  2,
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
@@ -1106,7 +1143,15 @@ func testServePackageImportedBy(t *testing.T, ds internal.TestingDataSource) {
 			}
 		})
 	}
-	// TODO(jba): test pagination
+	testPagination[api.PackageImportedBy](t, ds, "/v1/imported-by/example.com/pkg?version=v1.2.3&limit=1",
+		api.ServePackageImportedBy,
+		func(pib *api.PackageImportedBy) (int, int, string) {
+			return len(pib.ImportedBy.Items), pib.ImportedBy.Total, pib.ImportedBy.NextPageToken
+		},
+		[]wantPage{
+			{wantCount: 1, wantTotal: 2, wantNext: true},
+			{wantCount: 1, wantTotal: 2, wantNext: false},
+		})
 }
 
 // unmarshalJSON is like json.Unmarshal, but checks for unknown
