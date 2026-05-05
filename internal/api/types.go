@@ -13,17 +13,28 @@ import (
 
 // Package is the response for /v1/package/{packagePath}.
 type Package struct {
-	Path              string    `json:"path"`
 	ModulePath        string    `json:"modulePath"`
-	ModuleVersion     string    `json:"moduleVersion"`
-	Synopsis          string    `json:"synopsis"`
-	IsStandardLibrary bool      `json:"isStandardLibrary"`
+	Version           string    `json:"version"`
 	IsLatest          bool      `json:"isLatest"`
+	IsStandardLibrary bool      `json:"isStandardLibrary"`
 	GOOS              string    `json:"goos"`
 	GOARCH            string    `json:"goarch"`
 	Docs              string    `json:"docs,omitempty"`
 	Imports           []string  `json:"imports,omitempty"`
 	Licenses          []License `json:"licenses,omitempty"`
+	PackageInfo
+}
+
+type PackageInfo struct {
+	Path     string `json:"path"`
+	Synopsis string `json:"synopsis"`
+}
+
+type PackagesResponse struct {
+	ModulePath        string                         `json:"modulePath"`
+	Version           string                         `json:"version"`
+	IsStandardLibrary bool                           `json:"isStandardLibrary"`
+	Packages          PaginatedResponse[PackageInfo] `json:"packages"`
 }
 
 // License is license information in API responses.

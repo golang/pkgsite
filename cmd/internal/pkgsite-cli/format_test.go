@@ -16,10 +16,12 @@ func TestFormatPackage(t *testing.T) {
 	var buf bytes.Buffer
 	formatPackage(&buf, packageResult{
 		Package: &client.Package{
-			Path:              "encoding/json",
+			PackageInfo: client.PackageInfo{
+				Path:     "encoding/json",
+				Synopsis: "Package json implements encoding and decoding of JSON.",
+			},
 			ModulePath:        "std",
-			ModuleVersion:     "go1.22.0",
-			Synopsis:          "Package json implements encoding and decoding of JSON.",
+			Version:           "go1.22.0",
 			IsStandardLibrary: true,
 			IsLatest:          true,
 		},
@@ -41,11 +43,13 @@ func TestFormatPackageWithExtras(t *testing.T) {
 	var buf bytes.Buffer
 	formatPackage(&buf, packageResult{
 		Package: &client.Package{
-			Path:          "github.com/foo/bar",
-			ModulePath:    "github.com/foo/bar",
-			ModuleVersion: "v1.0.0",
-			Imports:       []string{"fmt", "strings"},
-			Licenses:      []client.License{{Types: []string{"MIT"}, FilePath: "LICENSE"}},
+			PackageInfo: client.PackageInfo{
+				Path: "github.com/foo/bar",
+			},
+			ModulePath: "github.com/foo/bar",
+			Version:    "v1.0.0",
+			Imports:    []string{"fmt", "strings"},
+			Licenses:   []client.License{{Types: []string{"MIT"}, FilePath: "LICENSE"}},
 		},
 		Symbols: &client.PaginatedResponse[client.Symbol]{
 			Items: []client.Symbol{

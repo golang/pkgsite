@@ -258,19 +258,21 @@ func ServeModulePackages(w http.ResponseWriter, r *http.Request, ds internal.Dat
 			return strings.Contains(m.Path, params.Filter) || strings.Contains(m.Synopsis, params.Filter)
 		})
 	}
-	var results []Package
+	// api:response PackagesResponse
+	resp := PackagesResponse{
+		ModulePath:        modulePath,
+		Version:           requestedVersion,
+		IsStandardLibrary: stdlib.Contains(modulePath),
+	}
+	var pinfos []PackageInfo
 	for _, m := range metas {
-		results = append(results, Package{
-			Path:              m.Path,
-			ModulePath:        modulePath,
-			ModuleVersion:     requestedVersion,
-			Synopsis:          m.Synopsis,
-			IsStandardLibrary: stdlib.Contains(modulePath),
+		pinfos = append(pinfos, PackageInfo{
+			Path:     m.Path,
+			Synopsis: m.Synopsis,
 		})
 	}
 
-	// api:response PaginatedResponse[Package]
-	resp, err := paginate(results, params.ListParams, defaultLimit)
+	resp.Packages, err = paginate(pinfos, params.ListParams, defaultLimit)
 	if err != nil {
 		return err
 	}
@@ -739,10 +741,8 @@ func unitToPackage(unit *internal.Unit, params PackageParams) (*Package, error) 
 	}
 
 	return &Package{
-		Path:              unit.Path,
 		ModulePath:        unit.ModulePath,
-		ModuleVersion:     unit.Version,
-		Synopsis:          synopsis,
+		Version:           unit.Version,
 		IsStandardLibrary: stdlib.Contains(unit.ModulePath),
 		IsLatest:          unit.Version == unit.LatestVersion,
 		GOOS:              goos,
@@ -750,6 +750,10 @@ func unitToPackage(unit *internal.Unit, params PackageParams) (*Package, error) 
 		Docs:              docs,
 		Imports:           unit.Imports,
 		Licenses:          licenses,
+		PackageInfo: PackageInfo{
+			Path:     unit.Path,
+			Synopsis: synopsis,
+		},
 	}, nil
 }
 

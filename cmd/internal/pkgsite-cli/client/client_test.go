@@ -26,10 +26,12 @@ func TestGetPackage(t *testing.T) {
 			t.Errorf("version = %q, want go1.26.0", got)
 		}
 		json.NewEncoder(w).Encode(Package{
-			Path:              "encoding/json",
+			PackageInfo: PackageInfo{
+				Path:     "encoding/json",
+				Synopsis: "Package json implements encoding and decoding of JSON.",
+			},
 			ModulePath:        "std",
-			ModuleVersion:     "go1.26.0",
-			Synopsis:          "Package json implements encoding and decoding of JSON.",
+			Version:           "go1.26.0",
 			IsStandardLibrary: true,
 		})
 	}))
@@ -67,7 +69,9 @@ func TestGetPackageWithFlags(t *testing.T) {
 			t.Errorf("module = %q, want github.com/foo/bar", got)
 		}
 		json.NewEncoder(w).Encode(Package{
-			Path:    "github.com/foo/bar/pkg",
+			PackageInfo: PackageInfo{
+				Path: "github.com/foo/bar/pkg",
+			},
 			Docs:    "# package pkg",
 			Imports: []string{"fmt", "strings"},
 		})

@@ -72,10 +72,12 @@ func TestRunSubcommandHelp(t *testing.T) {
 func TestRunPackage(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(client.Package{
-			Path:              "encoding/json",
+			PackageInfo: client.PackageInfo{
+				Path:     "encoding/json",
+				Synopsis: "Package json implements encoding and decoding of JSON.",
+			},
 			ModulePath:        "std",
-			ModuleVersion:     "go1.22.0",
-			Synopsis:          "Package json implements encoding and decoding of JSON.",
+			Version:           "go1.22.0",
 			IsStandardLibrary: true,
 			IsLatest:          true,
 		})
@@ -110,7 +112,9 @@ func TestRunPackageGOOSGOARCH(t *testing.T) {
 			t.Errorf("query param goarch = %q, want %q", goarch, "386")
 		}
 		json.NewEncoder(w).Encode(client.Package{
-			Path:       "encoding/json",
+			PackageInfo: client.PackageInfo{
+				Path: "encoding/json",
+			},
 			ModulePath: "std",
 		})
 	}))
@@ -126,7 +130,9 @@ func TestRunPackageGOOSGOARCH(t *testing.T) {
 func TestRunPackageJSON(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(client.Package{
-			Path:       "encoding/json",
+			PackageInfo: client.PackageInfo{
+				Path: "encoding/json",
+			},
 			ModulePath: "std",
 		})
 	}))
