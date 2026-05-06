@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"os"
 	"path"
 	"slices"
@@ -124,6 +125,7 @@ var diffOptions = []cmp.Option{
 }
 
 func TestAPI(t *testing.T) {
+	// TODO(jba): test filters for invalid regex, case sensisitivty and multi-field matching
 	t.Setenv("K_SERVICE", "test")
 	t.Run("fake", func(t *testing.T) {
 		testAPI(t, func(t *testing.T) internal.TestingDataSource {
@@ -770,12 +772,12 @@ func testServeModulePackages(t *testing.T, ds internal.TestingDataSource) {
 		},
 		{
 			name: "filter on path",
-			url:  "/v1/packages/example.com?version=v1.2.3&filter=sub",
+			url:  "/v1/packages/example.com?version=v1.2.3&filter=" + url.QueryEscape("s[xu]."),
 			want: response(info2),
 		},
 		{
 			name: "filter on synopsis",
-			url:  "/v1/packages/example.com?version=v1.2.3&filter=GOOS",
+			url:  "/v1/packages/example.com?version=v1.2.3&filter=" + url.QueryEscape("GO+S"),
 			want: response(info1),
 		},
 	} {
@@ -837,7 +839,7 @@ func testServeSearch(t *testing.T, ds internal.TestingDataSource) {
 		},
 		{
 			name:       "search with filter",
-			url:        "/v1/search?q=synopsis&filter=example.com",
+			url:        `/v1/search?q=synopsis&filter=example\.[com]*`,
 			wantStatus: http.StatusOK,
 			wantCount:  1,
 		},

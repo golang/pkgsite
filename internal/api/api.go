@@ -14,6 +14,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"regexp"
 	"slices"
 	"strings"
 	"time"
@@ -169,8 +170,8 @@ func ServeModule(w http.ResponseWriter, r *http.Request, ds internal.DataSource)
 // api:desc If there are tagged versions, they are returned.
 // api:desc Otherwise, the 10 most recent pseudo-versions are returned.
 // api:desc The versions are in descending order.
-// api:desc Only results whose version
-// api:desc contains the filter query parameter as a substring are returned.
+// api:desc Only results whose version matches the regexp in the
+// api:desc filter query parameter are returned.
 func ServeModuleVersions(w http.ResponseWriter, r *http.Request, ds internal.DataSource) (err error) {
 	defer derrors.Wrap(&err, "ServeModuleVersions")
 
@@ -195,10 +196,9 @@ func ServeModuleVersions(w http.ResponseWriter, r *http.Request, ds internal.Dat
 		return fmt.Errorf("module %q: %w", path, derrors.NotFound)
 	}
 
-	if params.Filter != "" {
-		infos = filter(infos, func(info *internal.ModuleInfo) bool {
-			return strings.Contains(info.Version, params.Filter)
-		})
+	infos, err = filter(infos, params.Filter, func(info *internal.ModuleInfo) []string { return []string{info.Version} })
+	if err != nil {
+		return err
 	}
 
 	var mvs []ModuleVersion
@@ -231,7 +231,7 @@ func ServeModuleVersions(w http.ResponseWriter, r *http.Request, ds internal.Dat
 // api:route /v1/packages/{path}
 // api:desc Information about packages of the module at {path}.
 // api:desc Only results whose path or synopsis
-// api:desc contains the filter query parameter as a substring are returned.
+// api:desc matches the regexp in the filter query parameter are returned.
 func ServeModulePackages(w http.ResponseWriter, r *http.Request, ds internal.DataSource) (err error) {
 	defer derrors.Wrap(&err, "ServeModulePackages")
 
@@ -263,11 +263,13 @@ func ServeModulePackages(w http.ResponseWriter, r *http.Request, ds internal.Dat
 		return err
 	}
 
-	if params.Filter != "" {
-		metas = filter(metas, func(m *internal.PackageMeta) bool {
-			return strings.Contains(m.Path, params.Filter) || strings.Contains(m.Synopsis, params.Filter)
-		})
+	metas, err = filter(metas, params.Filter, func(m *internal.PackageMeta) []string {
+		return []string{m.Path, m.Synopsis}
+	})
+	if err != nil {
+		return err
 	}
+
 	// api:response PackagesResponse
 	resp := PackagesResponse{
 		ModulePath:        um.ModulePath,
@@ -294,9 +296,8 @@ func ServeModulePackages(w http.ResponseWriter, r *http.Request, ds internal.Dat
 
 // ServeSearch handles requests for the v1 search endpoint.
 // api:route /v1/search
-// api:desc Search results. Only results whose package path
-// api:desc or synopsis contains the filter query parameter
-// api:desc as a substring are returned.
+// api:desc Search results. Only results whose package path or synopsis
+// api:desc matches the regexp in the filter query parameter are returned.
 func ServeSearch(w http.ResponseWriter, r *http.Request, ds internal.DataSource) (err error) {
 	defer derrors.Wrap(&err, "ServeSearch")
 
@@ -332,11 +333,13 @@ func ServeSearch(w http.ResponseWriter, r *http.Request, ds internal.DataSource)
 		return err
 	}
 
-	if params.Filter != "" {
-		dbresults = filter(dbresults, func(r *internal.SearchResult) bool {
-			return strings.Contains(r.Synopsis, params.Filter) || strings.Contains(r.PackagePath, params.Filter)
-		})
+	dbresults, err = filter(dbresults, params.Filter, func(r *internal.SearchResult) []string {
+		return []string{r.Synopsis, r.PackagePath}
+	})
+	if err != nil {
+		return err
 	}
+
 	var results []SearchResult
 	for _, r := range dbresults {
 		results = append(results, SearchResult{
@@ -367,7 +370,7 @@ func ServeSearch(w http.ResponseWriter, r *http.Request, ds internal.DataSource)
 // api:route /v1/symbols/{path}
 // api:desc List of symbols for the package at {path}.
 // api:desc Only results whose name or synopsis
-// api:desc contains the filter query parameter as a substring are returned.
+// api:desc matches the regexp in the filter query parameter are returned.
 func ServePackageSymbols(w http.ResponseWriter, r *http.Request, ds internal.DataSource) (err error) {
 	defer derrors.Wrap(&err, "ServePackageSymbols")
 
@@ -394,11 +397,13 @@ func ServePackageSymbols(w http.ResponseWriter, r *http.Request, ds internal.Dat
 		return err
 	}
 
-	if params.Filter != "" {
-		syms = filter(syms, func(s *internal.Symbol) bool {
-			return strings.Contains(s.Name, params.Filter) || strings.Contains(s.Synopsis, params.Filter)
-		})
+	syms, err = filter(syms, params.Filter, func(s *internal.Symbol) []string {
+		return []string{s.Name, s.Synopsis}
+	})
+	if err != nil {
+		return err
 	}
+
 	var items []Symbol
 	for _, s := range syms {
 		items = append(items, Symbol{
@@ -428,7 +433,7 @@ func ServePackageSymbols(w http.ResponseWriter, r *http.Request, ds internal.Dat
 // api:desc Paths of packages importing the package at {path},
 // api:desc not including packages in the same module.
 // api:desc Only results whose path
-// api:desc contains the filter query parameter as a substring are returned.
+// api:desc matches the regexp in the filter query parameter are returned.
 func ServePackageImportedBy(w http.ResponseWriter, r *http.Request, ds internal.DataSource) (err error) {
 	defer derrors.Wrap(&err, "ServePackageImportedBy")
 
@@ -465,10 +470,9 @@ func ServePackageImportedBy(w http.ResponseWriter, r *http.Request, ds internal.
 		return err
 	}
 
-	if params.Filter != "" {
-		importedBy = filter(importedBy, func(p string) bool {
-			return strings.Contains(p, params.Filter)
-		})
+	importedBy, err = filter(importedBy, params.Filter, func(p string) []string { return []string{p} })
+	if err != nil {
+		return err
 	}
 
 	// api:response PaginatedResponse[string]
@@ -496,7 +500,7 @@ func ServePackageImportedBy(w http.ResponseWriter, r *http.Request, ds internal.
 // api:desc Vulnerabilities of the module at {path}, from
 // api:desc the Go vulnerability database (https://vuln.go.dev).
 // api:desc Only results whose ID or details
-// api:desc contains the filter query parameter as a substring are returned.
+// api:desc matches the regexp in the filter query parameter are returned.
 func ServeVulnerabilities(vc *vuln.Client) func(w http.ResponseWriter, r *http.Request, _ internal.DataSource) error {
 	return func(w http.ResponseWriter, r *http.Request, ds internal.DataSource) (err error) {
 		defer derrors.Wrap(&err, "ServeVulnerabilities")
@@ -526,11 +530,13 @@ func ServeVulnerabilities(vc *vuln.Client) func(w http.ResponseWriter, r *http.R
 		// Passing an empty packagePath gets all vulns for the module.
 		vulns := vuln.VulnsForPackage(r.Context(), modulePath, requestedVersion, "", vc)
 
-		if params.Filter != "" {
-			vulns = filter(vulns, func(v vuln.Vuln) bool {
-				return strings.Contains(v.ID, params.Filter) || strings.Contains(v.Details, params.Filter)
-			})
+		vulns, err = filter(vulns, params.Filter, func(v vuln.Vuln) []string {
+			return []string{v.ID, v.Details}
+		})
+		if err != nil {
+			return err
 		}
+
 		var items []Vulnerability
 		for _, v := range vulns {
 			items = append(items, Vulnerability{
@@ -818,13 +824,24 @@ func versionCacheDur(v string) time.Duration {
 	return shortCacheDur
 }
 
-// filter returns a new slice containing all elements in list for which pred is true.
-func filter[T any](list []T, pred func(T) bool) []T {
+// filter returns a new slice containing all elements in list which match
+// the regular expression denoted by filterRegexp. The values function
+// returns the parts of the element to match against.
+func filter[T any](list []T, filterRegexp string, values func(T) []string) ([]T, error) {
+	if filterRegexp == "" {
+		return list, nil
+	}
+	re, err := regexp.Compile(filterRegexp)
+	if err != nil {
+		return nil, BadRequest(err.Error(),
+			"the 'filter' query parameter must be a valid regular expression",
+			"try escaping the parameter using Go's url.QueryEscape or similar")
+	}
 	var out []T
 	for _, e := range list {
-		if pred(e) {
+		if slices.ContainsFunc(values(e), re.MatchString) {
 			out = append(out, e)
 		}
 	}
-	return out
+	return out, nil
 }

@@ -89,9 +89,19 @@
       typically <code>linux/amd64</code>.
       </p>
 
-      <p>Some routes accept a <code>filter</code>, which selects only
-      the items whose fields contain the filter as a substring. The
-      documentation for each route specifies the filter behavior.
+      <p>Some routes accept a <code>filter</code>, specifying
+      a regular expression.
+      Only items that match the filter are returned.
+      The documentation for each route specifies what constitutes
+      a match for that route's items.
+      </p>
+      <p>
+      Most regular expression metacharacters will need to be
+      percent-encoded. For example, to filter with the regular
+      expression <code>^abc.*</code>, write
+      <code>filter=%5Eabc.%2A</code>. Go programs should call
+      <code>url.QueryEscape</code> to encode filters (and all
+      other query parameter values as well).
       </p>
 
       <h2>Responses</h2>
