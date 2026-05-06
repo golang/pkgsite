@@ -111,6 +111,23 @@
         Errors are also returned as a JSON object, whose <code>message</code> field
         contains the error message.
       </p>
+
+      <h2>Pagination</h2>
+      <p>
+      Some responses are paginated. Each response page has a
+      <code>nextPageToken</code>, which is non-empty if there is
+      another page of items. To retrieve the next page, repeat
+      the original request verbatim, adding a <code>token</code>
+      query parameter whose value is the next-page token from the
+      response. Changing the request in any way other than providing
+      a token may result in an error.
+      </p>
+      <p>
+      As long as <code>nextPageToken</code> is non-empty,
+      there is another page, even if the current page has no items.
+      </p>
+      <p>
+
       <h2>Routes</h2>
       <ul class="Api-list">
         {{range .Routes}}
