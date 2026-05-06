@@ -42,7 +42,8 @@ func ServePackage(w http.ResponseWriter, r *http.Request, ds internal.DataSource
 
 	pkgPath := trimPath(r, "/v1/package/")
 	if pkgPath == "" {
-		return BadRequest("missing package path")
+		return BadRequest("missing package path",
+			"the package path must be provided after '/package/'")
 	}
 
 	// api:params PackageParams
@@ -90,7 +91,8 @@ func ServeModule(w http.ResponseWriter, r *http.Request, ds internal.DataSource)
 
 	modulePath := trimPath(r, "/v1/module/")
 	if modulePath == "" {
-		return BadRequest("missing module path")
+		return BadRequest("missing module path",
+			"the module path must be provided after '/module/'")
 	}
 
 	// api:params ModuleParams
@@ -174,7 +176,8 @@ func ServeModuleVersions(w http.ResponseWriter, r *http.Request, ds internal.Dat
 
 	path := trimPath(r, "/v1/versions/")
 	if path == "" {
-		return BadRequest("missing path")
+		return BadRequest("missing module path",
+			"the module path must be provided after '/versions/'")
 	}
 
 	// api:params VersionsParams
@@ -234,7 +237,8 @@ func ServeModulePackages(w http.ResponseWriter, r *http.Request, ds internal.Dat
 
 	modulePath := trimPath(r, "/v1/packages/")
 	if modulePath == "" {
-		return BadRequest("missing module path")
+		return BadRequest("missing module path",
+			"the module path must be provided after '/packages/'")
 	}
 
 	// api:params PackagesParams
@@ -303,7 +307,7 @@ func ServeSearch(w http.ResponseWriter, r *http.Request, ds internal.DataSource)
 	}
 
 	if params.Query == "" {
-		return BadRequest("missing query")
+		return BadRequest("missing query", "provide the query by using the query parameter 'q'")
 	}
 
 	dbLimit := maxSearchResults
@@ -369,7 +373,8 @@ func ServePackageSymbols(w http.ResponseWriter, r *http.Request, ds internal.Dat
 
 	pkgPath := trimPath(r, "/v1/symbols/")
 	if pkgPath == "" {
-		return BadRequest("missing package path")
+		return BadRequest("missing package path",
+			"the package path must be provided after '/symbols/'")
 	}
 
 	// api:params SymbolsParams
@@ -429,7 +434,8 @@ func ServePackageImportedBy(w http.ResponseWriter, r *http.Request, ds internal.
 
 	pkgPath := trimPath(r, "/v1/imported-by/")
 	if pkgPath == "" {
-		return BadRequest("missing package path")
+		return BadRequest("missing package path",
+			"the package path must be provided after '/imported-by/'")
 	}
 
 	// api:params ImportedByParams
@@ -497,7 +503,8 @@ func ServeVulnerabilities(vc *vuln.Client) func(w http.ResponseWriter, r *http.R
 
 		modulePath := trimPath(r, "/v1/vulns/")
 		if modulePath == "" {
-			return BadRequest("missing module path")
+			return BadRequest("missing module path",
+				"the module path must be provided after '/vulns/'")
 		}
 
 		// api:params VulnParams
@@ -611,6 +618,7 @@ func resolveModulePath(r *http.Request, ds internal.DataSource, pkgPath, moduleP
 		return nil, &Error{
 			Code:       http.StatusBadRequest,
 			Message:    "ambiguous package path",
+			Fixes:      []string{"retry the call with a 'module' query parameter specifying the desired module"},
 			Candidates: makeCandidates(goodCandidates),
 		}
 	}

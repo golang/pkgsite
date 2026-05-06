@@ -126,14 +126,15 @@ type Vulnerability struct {
 
 // Error contains detailed information about an error.
 type Error struct {
-	Code       int         `json:"code"`
+	Code       int         `json:"code"` // HTTP status code
 	Message    string      `json:"message"`
+	Fixes      []string    `json:"fixes"` // suggestions for how to fix
 	Candidates []Candidate `json:"candidates,omitempty"`
 
 	err error // Unexported field for internal tracking
 }
 
-// Candidate is a potential resolution for an ambiguous path.
+// A Candidate is a potential resolution for an ambiguous path.
 type Candidate struct {
 	ModulePath  string `json:"modulePath"`
 	PackagePath string `json:"packagePath"`

@@ -112,7 +112,7 @@ func ParseParams(v url.Values, dst any) error {
 		return InternalServerError("dst must be a pointer to a struct")
 	}
 	if err := parseValue(v, val.Elem()); err != nil {
-		return BadRequest("%v", err)
+		return BadRequest(err.Error(), "correct the query parameter and retry")
 	}
 	return nil
 }

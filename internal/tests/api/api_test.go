@@ -118,6 +118,11 @@ func unit(relativePath string, doc ...*internal.Documentation) *internal.Unit {
 	}
 }
 
+var diffOptions = []cmp.Option{
+	cmpopts.IgnoreUnexported(api.Error{}),
+	cmpopts.IgnoreFields(api.Error{}, "Fixes"),
+}
+
 func TestAPI(t *testing.T) {
 	t.Setenv("K_SERVICE", "test")
 	t.Run("fake", func(t *testing.T) {
@@ -492,7 +497,7 @@ func testServePackage(t *testing.T, ds internal.TestingDataSource) {
 				if err != nil {
 					t.Fatal(err)
 				}
-				if diff := cmp.Diff(test.want, got, cmpopts.IgnoreUnexported(api.Error{})); diff != "" {
+				if diff := cmp.Diff(test.want, got, diffOptions...); diff != "" {
 					t.Errorf("mismatch (-want +got):\n%s", diff)
 				}
 			}
@@ -627,7 +632,7 @@ func testServeModule(t *testing.T, ds internal.TestingDataSource) {
 				if err != nil {
 					t.Fatalf("unmarshaling: %v", err)
 				}
-				if diff := cmp.Diff(test.want, got, cmpopts.IgnoreUnexported(api.Error{})); diff != "" {
+				if diff := cmp.Diff(test.want, got, diffOptions...); diff != "" {
 					t.Errorf("mismatch (-want +got):\n%s", diff)
 				}
 			}
@@ -785,7 +790,7 @@ func testServeModulePackages(t *testing.T, ds internal.TestingDataSource) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			if diff := cmp.Diff(test.want, got, cmpopts.IgnoreUnexported(api.Error{})); diff != "" {
+			if diff := cmp.Diff(test.want, got, diffOptions...); diff != "" {
 				t.Errorf("mismatch (-want +got):\n%s", diff)
 			}
 		})
@@ -1053,7 +1058,7 @@ func testServePackageSymbols(t *testing.T, ds internal.TestingDataSource) {
 				if want, ok := test.want.(*api.Error); ok {
 					var got api.Error
 					unmarshalJSON(t, w.Body.Bytes(), &got)
-					if diff := cmp.Diff(want, &got, cmpopts.IgnoreUnexported(api.Error{})); diff != "" {
+					if diff := cmp.Diff(want, &got, diffOptions...); diff != "" {
 						t.Errorf("mismatch (-want +got):\n%s", diff)
 					}
 				}

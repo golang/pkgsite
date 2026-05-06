@@ -252,7 +252,8 @@ func (s *Server) Install(handle func(string, http.Handler), cacher Cacher, authV
 		http.Redirect(w, r, "/v1/api", http.StatusMovedPermanently)
 	}))
 	handle("/v1/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		api.ServeError(w, r, api.BadRequest("Unknown API endpoint. For documentation, GET /v1/api at this host and port."))
+		api.ServeError(w, r, api.BadRequest("unknown API endpoint",
+			"GET /v1/api at this host and port and read the documentation"))
 	}))
 	handle("/opensearch.xml", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		serveFileFS(w, r, s.staticFS, "shared/opensearch.xml")
