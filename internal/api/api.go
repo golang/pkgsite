@@ -41,14 +41,14 @@ const (
 //go:embed openapi.yaml
 var OpenAPISpec []byte
 
-// ServePackage handles requests for the v1 package metadata endpoint.
-// api:route /v1/package/{path}
+// ServePackage handles requests for the v1beta package metadata endpoint.
+// api:route /v1beta/package/{path}
 // api:desc Information about the package at {path}.
 // api:example /v1/package/golang.org/x/time/rate
 func ServePackage(w http.ResponseWriter, r *http.Request, ds internal.DataSource) (err error) {
 	defer derrors.Wrap(&err, "ServePackage")
 
-	pkgPath := trimPath(r, "/v1/package/")
+	pkgPath := trimPath(r, "/v1beta/package/")
 	if pkgPath == "" {
 		return BadRequest("missing package path",
 			"the package path must be provided after '/package/'")
@@ -91,14 +91,14 @@ func ServePackage(w http.ResponseWriter, r *http.Request, ds internal.DataSource
 	return serveJSON(w, http.StatusOK, resp, versionCacheDur(params.Version))
 }
 
-// ServeModule handles requests for the v1 module metadata endpoint.
-// api:route /v1/module/{path}
+// ServeModule handles requests for the v1beta module metadata endpoint.
+// api:route /v1beta/module/{path}
 // api:desc Information about the module at {path}.
 // api:example /v1/module/golang.org/x/time
 func ServeModule(w http.ResponseWriter, r *http.Request, ds internal.DataSource) (err error) {
 	defer derrors.Wrap(&err, "ServeModule")
 
-	modulePath := trimPath(r, "/v1/module/")
+	modulePath := trimPath(r, "/v1beta/module/")
 	if modulePath == "" {
 		return BadRequest("missing module path",
 			"the module path must be provided after '/module/'")
@@ -172,8 +172,8 @@ func ServeModule(w http.ResponseWriter, r *http.Request, ds internal.DataSource)
 	return serveJSON(w, http.StatusOK, resp, cacheDur)
 }
 
-// ServeModuleVersions handles requests for the v1 module versions endpoint.
-// api:route /v1/versions/{path}
+// ServeModuleVersions handles requests for the v1beta module versions endpoint.
+// api:route /v1beta/versions/{path}
 // api:desc Versions of the module at {path}.
 // api:desc If there are tagged versions, they are returned.
 // api:desc Otherwise, the 10 most recent pseudo-versions are returned.
@@ -184,7 +184,7 @@ func ServeModule(w http.ResponseWriter, r *http.Request, ds internal.DataSource)
 func ServeModuleVersions(w http.ResponseWriter, r *http.Request, ds internal.DataSource) (err error) {
 	defer derrors.Wrap(&err, "ServeModuleVersions")
 
-	path := trimPath(r, "/v1/versions/")
+	path := trimPath(r, "/v1beta/versions/")
 	if path == "" {
 		return BadRequest("missing module path",
 			"the module path must be provided after '/versions/'")
@@ -236,8 +236,8 @@ func ServeModuleVersions(w http.ResponseWriter, r *http.Request, ds internal.Dat
 	return serveJSON(w, http.StatusOK, resp, shortCacheDur)
 }
 
-// ServeModulePackages handles requests for the v1 module packages endpoint.
-// api:route /v1/packages/{path}
+// ServeModulePackages handles requests for the v1beta module packages endpoint.
+// api:route /v1beta/packages/{path}
 // api:desc Information about packages of the module at {path}.
 // api:desc Only results whose path or synopsis
 // api:desc matches the regexp in the filter query parameter are returned.
@@ -245,7 +245,7 @@ func ServeModuleVersions(w http.ResponseWriter, r *http.Request, ds internal.Dat
 func ServeModulePackages(w http.ResponseWriter, r *http.Request, ds internal.DataSource) (err error) {
 	defer derrors.Wrap(&err, "ServeModulePackages")
 
-	modulePath := trimPath(r, "/v1/packages/")
+	modulePath := trimPath(r, "/v1beta/packages/")
 	if modulePath == "" {
 		return BadRequest("missing module path",
 			"the module path must be provided after '/packages/'")
@@ -305,10 +305,10 @@ func ServeModulePackages(w http.ResponseWriter, r *http.Request, ds internal.Dat
 }
 
 // ServeSearch handles requests for the v1 search endpoint.
-// api:route /v1/search
+// api:route /v1beta/search
 // api:desc Search results. Only results whose package path or synopsis
 // api:desc matches the regexp in the filter query parameter are returned.
-// api:example /v1/search?q=xyzzy
+// api:example /v1beta/search?q=xyzzy
 func ServeSearch(w http.ResponseWriter, r *http.Request, ds internal.DataSource) (err error) {
 	defer derrors.Wrap(&err, "ServeSearch")
 
@@ -377,8 +377,8 @@ func ServeSearch(w http.ResponseWriter, r *http.Request, ds internal.DataSource)
 	return serveJSON(w, http.StatusOK, resp, shortCacheDur)
 }
 
-// ServePackageSymbols handles requests for the v1 package symbols endpoint.
-// api:route /v1/symbols/{path}
+// ServePackageSymbols handles requests for the v1beta package symbols endpoint.
+// api:route /v1beta/symbols/{path}
 // api:desc List of symbols for the package at {path}.
 // api:desc Only results whose name or synopsis
 // api:desc matches the regexp in the filter query parameter are returned.
@@ -386,7 +386,7 @@ func ServeSearch(w http.ResponseWriter, r *http.Request, ds internal.DataSource)
 func ServePackageSymbols(w http.ResponseWriter, r *http.Request, ds internal.DataSource) (err error) {
 	defer derrors.Wrap(&err, "ServePackageSymbols")
 
-	pkgPath := trimPath(r, "/v1/symbols/")
+	pkgPath := trimPath(r, "/v1beta/symbols/")
 	if pkgPath == "" {
 		return BadRequest("missing package path",
 			"the package path must be provided after '/symbols/'")
@@ -440,8 +440,8 @@ func ServePackageSymbols(w http.ResponseWriter, r *http.Request, ds internal.Dat
 	return serveJSON(w, http.StatusOK, resp, versionCacheDur(params.Version))
 }
 
-// ServePackageImportedBy handles requests for the v1 package imported-by endpoint.
-// api:route /v1/imported-by/{path}
+// ServePackageImportedBy handles requests for the v1beta package imported-by endpoint.
+// api:route /v1beta/imported-by/{path}
 // api:desc Paths of packages importing the package at {path},
 // api:desc not including packages in the same module.
 // api:desc Only results whose path
@@ -450,7 +450,7 @@ func ServePackageSymbols(w http.ResponseWriter, r *http.Request, ds internal.Dat
 func ServePackageImportedBy(w http.ResponseWriter, r *http.Request, ds internal.DataSource) (err error) {
 	defer derrors.Wrap(&err, "ServePackageImportedBy")
 
-	pkgPath := trimPath(r, "/v1/imported-by/")
+	pkgPath := trimPath(r, "/v1beta/imported-by/")
 	if pkgPath == "" {
 		return BadRequest("missing package path",
 			"the package path must be provided after '/imported-by/'")
@@ -508,8 +508,8 @@ func ServePackageImportedBy(w http.ResponseWriter, r *http.Request, ds internal.
 	return serveJSON(w, http.StatusOK, resp, shortCacheDur)
 }
 
-// ServeVulnerabilities handles requests for the v1 module vulnerabilities endpoint.
-// api:route /v1/vulns/{path}
+// ServeVulnerabilities handles requests for the v1beta module vulnerabilities endpoint.
+// api:route /v1beta/vulns/{path}
 // api:desc Vulnerabilities of the module at {path}, from
 // api:desc the Go vulnerability database (https://vuln.go.dev).
 // api:desc Only results whose ID or details
@@ -519,7 +519,7 @@ func ServeVulnerabilities(vc *vuln.Client) func(w http.ResponseWriter, r *http.R
 	return func(w http.ResponseWriter, r *http.Request, ds internal.DataSource) (err error) {
 		defer derrors.Wrap(&err, "ServeVulnerabilities")
 
-		modulePath := trimPath(r, "/v1/vulns/")
+		modulePath := trimPath(r, "/v1beta/vulns/")
 		if modulePath == "" {
 			return BadRequest("missing module path",
 				"the module path must be provided after '/vulns/'")

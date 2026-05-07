@@ -287,12 +287,12 @@ func TestRunAPIErrorJSON(t *testing.T) {
 func TestRunModuleWithVersions(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch {
-		case strings.HasPrefix(r.URL.Path, "/v1/versions/"):
+		case strings.HasPrefix(r.URL.Path, "/v1beta/versions/"):
 			json.NewEncoder(w).Encode(client.PaginatedResponse[client.VersionResponse]{
 				Items: []client.VersionResponse{{Version: "v0.14.0"}, {Version: "v0.13.0"}},
 				Total: 2,
 			})
-		case strings.HasPrefix(r.URL.Path, "/v1/vulns/"):
+		case strings.HasPrefix(r.URL.Path, "/v1beta/vulns/"):
 			json.NewEncoder(w).Encode(client.PaginatedResponse[client.Vulnerability]{
 				Items: []client.Vulnerability{{ID: "GO-2023-0001", Summary: "Bad thing"}},
 				Total: 1,

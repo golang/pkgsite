@@ -21,7 +21,7 @@ type ListParams struct {
 	Filter string `form:"filter"`
 }
 
-// PackageParams are query parameters for /v1/package/{path}.
+// PackageParams are query parameters for /v1beta/package/{path}.
 type PackageParams struct {
 	// module path
 	Module string `form:"module"`
@@ -42,7 +42,7 @@ type PackageParams struct {
 	Licenses bool `form:"licenses"`
 }
 
-// SymbolsParams are query parameters for /v1/symbols/{path}.
+// SymbolsParams are query parameters for /v1beta/symbols/{path}.
 type SymbolsParams struct {
 	// module path
 	Module string `form:"module"`
@@ -55,7 +55,7 @@ type SymbolsParams struct {
 	ListParams
 }
 
-// ImportedByParams are query parameters for /v1/imported-by/{path}.
+// ImportedByParams are query parameters for /v1beta/imported-by/{path}.
 type ImportedByParams struct {
 	// module path
 	Module string `form:"module"`
@@ -64,7 +64,7 @@ type ImportedByParams struct {
 	ListParams
 }
 
-// ModuleParams are query parameters for /v1/module/{path}.
+// ModuleParams are query parameters for /v1beta/module/{path}.
 type ModuleParams struct {
 	// module version (latest if empty)
 	Version string `form:"version"`
@@ -74,19 +74,19 @@ type ModuleParams struct {
 	Readme bool `form:"readme"`
 }
 
-// VersionsParams are query parameters for /v1/versions/{path}.
+// VersionsParams are query parameters for /v1beta/versions/{path}.
 type VersionsParams struct {
 	ListParams
 }
 
-// PackagesParams are query parameters for /v1/packages/{path}.
+// PackagesParams are query parameters for /v1beta/packages/{path}.
 type PackagesParams struct {
 	// module version (latest if empty)
 	Version string `form:"version"`
 	ListParams
 }
 
-// SearchParams are query parameters for /v1/search.
+// SearchParams are query parameters for /v1beta/search.
 type SearchParams struct {
 	// Find packages matching this query.
 	Query string `form:"q"`
@@ -96,7 +96,7 @@ type SearchParams struct {
 	ListParams
 }
 
-// VulnParams are query parameters for /v1/vulns/{module}.
+// VulnParams are query parameters for /v1beta/vulns/{module}.
 type VulnParams struct {
 	// module version (latest if empty)
 	Version string `form:"version"`

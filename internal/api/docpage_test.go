@@ -38,7 +38,7 @@ func TestReadRouteInfo(t *testing.T) {
 		{
 			name: "with query params",
 			data: `
-//api:route /v1/dummy
+//api:route /v1beta/dummy
 //api:desc Dummy route.
 //api:params DummyParams
 //api:response DummyResponse
@@ -51,7 +51,7 @@ func TestReadRouteInfo(t *testing.T) {
 			},
 			want: []*RouteInfo{
 				{
-					Route:    "/v1/dummy",
+					Route:    "/v1beta/dummy",
 					Desc:     "Dummy route.",
 					Params:   "DummyParams",
 					Response: "DummyResponse",
@@ -65,7 +65,7 @@ func TestReadRouteInfo(t *testing.T) {
 		{
 			name: "with complex query params",
 			data: `
-//api:route /v1/dummy-complex
+//api:route /v1beta/dummy-complex
 //api:desc Dummy complex route.
 //api:params DummyComplexParams
 //api:response DummyComplexResponse
@@ -78,7 +78,7 @@ func TestReadRouteInfo(t *testing.T) {
 			},
 			want: []*RouteInfo{
 				{
-					Route:    "/v1/dummy-complex",
+					Route:    "/v1beta/dummy-complex",
 					Desc:     "Dummy complex route.",
 					Params:   "DummyComplexParams",
 					Response: "DummyComplexResponse",
@@ -92,24 +92,24 @@ func TestReadRouteInfo(t *testing.T) {
 		{
 			name: "correct",
 			data: `
-//api:route /v1/package/{path}
+//api:route /v1beta/package/{path}
 //api:desc Get package metadata.
 //api:params path, version, module
 //api:response Package
-//api:route /v1/module/{path}
+//api:route /v1beta/module/{path}
 //api:desc Get module metadata.
 //api:params path, version
 //api:response Module
 `,
 			want: []*RouteInfo{
 				{
-					Route:    "/v1/package/{path}",
+					Route:    "/v1beta/package/{path}",
 					Desc:     "Get package metadata.",
 					Params:   "path, version, module",
 					Response: "Package",
 				},
 				{
-					Route:    "/v1/module/{path}",
+					Route:    "/v1beta/module/{path}",
 					Desc:     "Get module metadata.",
 					Params:   "path, version",
 					Response: "Module",
@@ -119,14 +119,14 @@ func TestReadRouteInfo(t *testing.T) {
 		{
 			name: "paginated",
 			data: `
-//api:route /v1/versions/{path}
+//api:route /v1beta/versions/{path}
 //api:desc All versions of the module at {path}.
 //api:params filter, limit, token
 //api:response PaginatedResponse[ModuleInfo]
 `,
 			want: []*RouteInfo{
 				{
-					Route:                 "/v1/versions/{path}",
+					Route:                 "/v1beta/versions/{path}",
 					Desc:                  "All versions of the module at {path}.",
 					Params:                "filter, limit, token",
 					Response:              "PaginatedResponse[ModuleInfo]",
@@ -138,14 +138,14 @@ func TestReadRouteInfo(t *testing.T) {
 		{
 			name: "paginated lower",
 			data: `
-//api:route /v1/strings
+//api:route /v1beta/strings
 //api:desc Some strings.
 //api:params filter
 //api:response PaginatedResponse[string]
 `,
 			want: []*RouteInfo{
 				{
-					Route:                 "/v1/strings",
+					Route:                 "/v1beta/strings",
 					Desc:                  "Some strings.",
 					Params:                "filter",
 					Response:              "PaginatedResponse[string]",
@@ -157,7 +157,7 @@ func TestReadRouteInfo(t *testing.T) {
 		{
 			name: "missing field",
 			data: `
-//api:route /v1/package/{path}
+//api:route /v1beta/package/{path}
 //api:desc Get package metadata.
 //api:response Package
 `,
@@ -171,7 +171,7 @@ func TestReadRouteInfo(t *testing.T) {
 		{
 			name: "empty value",
 			data: `
-//api:route /v1/package/{path}
+//api:route /v1beta/package/{path}
 //api:desc
 `,
 			wantErr: true,
@@ -179,7 +179,7 @@ func TestReadRouteInfo(t *testing.T) {
 		{
 			name: "unknown key",
 			data: `
-//api:route /v1/package/{path}
+//api:route /v1beta/package/{path}
 //api:unknown something
 `,
 			wantErr: true,
@@ -187,15 +187,15 @@ func TestReadRouteInfo(t *testing.T) {
 		{
 			name: "duplicate route",
 			data: `
-//api:route /v1/package/{path}
-//api:route /v1/other
+//api:route /v1beta/package/{path}
+//api:route /v1beta/other
 `,
 			wantErr: true,
 		},
 		{
 			name: "duplicate desc",
 			data: `
-//api:route /v1/package/{path}
+//api:route /v1beta/package/{path}
 //api:desc Get package metadata.
 //api:desc Something else.
 `,

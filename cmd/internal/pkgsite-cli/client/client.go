@@ -19,7 +19,7 @@ import (
 	"time"
 )
 
-// Client fetches data from the pkg.go.dev v1 API.
+// Client fetches data from the pkg.go.dev v1beta API.
 type Client struct {
 	server     *url.URL
 	httpClient *http.Client
@@ -178,7 +178,7 @@ func (c *Client) GetPackage(ctx context.Context, path, version string, opts Pack
 	if opts.GOARCH != "" {
 		q.Set("goarch", opts.GOARCH)
 	}
-	u := c.server.JoinPath("v1", "package", path)
+	u := c.server.JoinPath("v1beta", "package", path)
 	u.RawQuery = q.Encode()
 
 	var resp Package
@@ -222,7 +222,7 @@ func (c *Client) GetSymbols(ctx context.Context, path, version string, opts Symb
 	if opts.Token != "" {
 		q.Set("token", opts.Token)
 	}
-	u := c.server.JoinPath("v1", "symbols", path)
+	u := c.server.JoinPath("v1beta", "symbols", path)
 	u.RawQuery = q.Encode()
 	var resp PackageSymbols
 	if err := c.get(ctx, u.String(), &resp); err != nil {
@@ -251,7 +251,7 @@ func (c *Client) GetImportedBy(ctx context.Context, path, version string, opts I
 	if opts.Token != "" {
 		q.Set("token", opts.Token)
 	}
-	u := c.server.JoinPath("v1", "imported-by", path)
+	u := c.server.JoinPath("v1beta", "imported-by", path)
 	u.RawQuery = q.Encode()
 	var resp PackageImportedBy
 	if err := c.get(ctx, u.String(), &resp); err != nil {
@@ -277,7 +277,7 @@ func (c *Client) GetModule(ctx context.Context, path, version string, opts Modul
 	if opts.Licenses {
 		q.Set("licenses", "true")
 	}
-	u := c.server.JoinPath("v1", "module", path)
+	u := c.server.JoinPath("v1beta", "module", path)
 	u.RawQuery = q.Encode()
 	var resp Module
 	if err := c.get(ctx, u.String(), &resp); err != nil {
@@ -286,7 +286,7 @@ func (c *Client) GetModule(ctx context.Context, path, version string, opts Modul
 	return &resp, nil
 }
 
-// VersionResponse is a single version from /v1/versions/.
+// VersionResponse is a single version from /v1beta/versions/.
 type VersionResponse struct {
 	Version string `json:"version"`
 }
@@ -299,7 +299,7 @@ func (c *Client) GetVersions(ctx context.Context, path string, opts PaginationOp
 	if opts.Token != "" {
 		q.Set("token", opts.Token)
 	}
-	u := c.server.JoinPath("v1", "versions", path)
+	u := c.server.JoinPath("v1beta", "versions", path)
 	u.RawQuery = q.Encode()
 	var resp PaginatedResponse[VersionResponse]
 	if err := c.get(ctx, u.String(), &resp); err != nil {
@@ -319,7 +319,7 @@ func (c *Client) GetVulns(ctx context.Context, path, version string, opts Pagina
 	if opts.Token != "" {
 		q.Set("token", opts.Token)
 	}
-	u := c.server.JoinPath("v1", "vulns", path)
+	u := c.server.JoinPath("v1beta", "vulns", path)
 	u.RawQuery = q.Encode()
 	var resp PaginatedResponse[Vulnerability]
 	if err := c.get(ctx, u.String(), &resp); err != nil {
@@ -328,7 +328,7 @@ func (c *Client) GetVulns(ctx context.Context, path, version string, opts Pagina
 	return &resp, nil
 }
 
-// ModulePackageResponse is a single package from /v1/packages/.
+// ModulePackageResponse is a single package from /v1beta/packages/.
 type ModulePackageResponse struct {
 	Path     string `json:"path"`
 	Synopsis string `json:"synopsis"`
@@ -345,7 +345,7 @@ func (c *Client) GetPackages(ctx context.Context, modulePath, version string, op
 	if opts.Token != "" {
 		q.Set("token", opts.Token)
 	}
-	u := c.server.JoinPath("v1", "packages", modulePath)
+	u := c.server.JoinPath("v1beta", "packages", modulePath)
 	u.RawQuery = q.Encode()
 	var resp PaginatedResponse[ModulePackageResponse]
 	if err := c.get(ctx, u.String(), &resp); err != nil {
@@ -372,7 +372,7 @@ func (c *Client) Search(ctx context.Context, query string, opts SearchOptions) (
 	if opts.Token != "" {
 		q.Set("token", opts.Token)
 	}
-	u := c.server.JoinPath("v1", "search")
+	u := c.server.JoinPath("v1beta", "search")
 	u.RawQuery = q.Encode()
 	var resp PaginatedResponse[SearchResult]
 	if err := c.get(ctx, u.String(), &resp); err != nil {

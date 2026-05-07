@@ -2,6 +2,8 @@
 
 A command-line interface for querying pkg.go.dev.
 
+Currently the API is on `v1beta`, but we expect to move to `v1` soon.
+
 Related to https://go.dev/issue/76718.
 
 ## Quick start
@@ -14,7 +16,7 @@ go install golang.org/x/pkgsite/cmd/internal/pkgsite-cli@latest
 
 ## Motivation
 
-The pkg.go.dev service exposes a v1 REST API for package and module metadata.
+The pkg.go.dev service exposes a REST API for package and module metadata.
 (TODO: link to the API doc).
 `pkgsite-cli` provides a lightweight CLI that queries the API and
 prints results for both humans and automated tools.

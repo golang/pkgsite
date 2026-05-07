@@ -28,17 +28,18 @@ For more information, see the [pkgsite documentation](https://pkg.go.dev/golang.
 
 ## API
 
-`pkgsite` provides a REST API for retrieving package and module information.
+`pkgsite` provides a REST API for retrieving package and module information. Currently the API is on `v1beta`, but after a periodic of community feedback we will
+transition to `v1`.
 The API endpoints include:
 
-- `/v1/package/{path}`: Information about the package at `{path}`.
-- `/v1/module/{path}`: Information about the module at `{path}`.
-- `/v1/versions/{path}`: Versions of the module at `{path}`.
-- `/v1/packages/{path}`: Information about packages of the module at `{path}`.
-- `/v1/search`: Search results.
-- `/v1/symbols/{path}`: List of symbols for the package at `{path}`.
-- `/v1/imported-by/{path}`: Paths of packages importing the package at `{path}`.
-- `/v1/vulns/{path}`: Vulnerabilities of the module at `{path}`.
+- `/v1beta/package/{path}`: Information about the package at `{path}`.
+- `/v1beta/module/{path}`: Information about the module at `{path}`.
+- `/v1beta/versions/{path}`: Versions of the module at `{path}`.
+- `/v1beta/packages/{path}`: Information about packages of the module at `{path}`.
+- `/v1beta/search`: Search results.
+- `/v1beta/symbols/{path}`: List of symbols for the package at `{path}`.
+- `/v1beta/imported-by/{path}`: Paths of packages importing the package at `{path}`.
+- `/v1beta/vulns/{path}`: Vulnerabilities of the module at `{path}`.
 
 For detailed documentation of parameters and response schemas, see the documentation page served at `/api`, or refer directly to the annotated source code in `internal/api/api.go`.
 

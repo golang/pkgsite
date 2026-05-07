@@ -47,13 +47,13 @@ func TestServeVulnerabilities(t *testing.T) {
 	}{
 		{
 			name:       "all vulns",
-			url:        "/v1/vulns/example.com?version=v1.0.0",
+			url:        "/v1beta/vulns/example.com?version=v1.0.0",
 			wantStatus: http.StatusOK,
 			wantCount:  1,
 		},
 		{
 			name:       "no vulns",
-			url:        "/v1/vulns/example.com?version=v1.2.0",
+			url:        "/v1beta/vulns/example.com?version=v1.2.0",
 			wantStatus: http.StatusOK,
 			wantCount:  0,
 		},
@@ -116,7 +116,7 @@ func TestCacheControl(t *testing.T) {
 		{"", "public, max-age=3600"},
 	} {
 		t.Run(test.version, func(t *testing.T) {
-			url := "/v1/module/" + modulePath
+			url := "/v1beta/module/" + modulePath
 			if test.version != "" {
 				url += "?version=" + test.version
 			}

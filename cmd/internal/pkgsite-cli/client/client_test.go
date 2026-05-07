@@ -16,8 +16,8 @@ import (
 
 func TestGetPackage(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path != "/v1/package/encoding/json" {
-			t.Errorf("path = %q, want /v1/package/encoding/json", r.URL.Path)
+		if r.URL.Path != "/v1beta/package/encoding/json" {
+			t.Errorf("path = %q, want /v1beta/package/encoding/json", r.URL.Path)
 		}
 		if got := r.Header.Get("User-Agent"); got != "pkgsite-cli/v1" {
 			t.Errorf("User-Agent = %q, want pkgsite-cli/v1", got)
@@ -101,8 +101,8 @@ func TestGetPackageWithFlags(t *testing.T) {
 
 func TestGetModule(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path != "/v1/module/golang.org/x/text" {
-			t.Errorf("path = %q, want /v1/module/golang.org/x/text", r.URL.Path)
+		if r.URL.Path != "/v1beta/module/golang.org/x/text" {
+			t.Errorf("path = %q, want /v1beta/module/golang.org/x/text", r.URL.Path)
 		}
 		json.NewEncoder(w).Encode(Module{
 			Path:    "golang.org/x/text",
@@ -127,8 +127,8 @@ func TestGetModule(t *testing.T) {
 
 func TestGetVersions(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path != "/v1/versions/golang.org/x/text" {
-			t.Errorf("path = %q, want /v1/versions/golang.org/x/text", r.URL.Path)
+		if r.URL.Path != "/v1beta/versions/golang.org/x/text" {
+			t.Errorf("path = %q, want /v1beta/versions/golang.org/x/text", r.URL.Path)
 		}
 		json.NewEncoder(w).Encode(PaginatedResponse[VersionResponse]{
 			Items: []VersionResponse{{Version: "v0.14.0"}, {Version: "v0.13.0"}},

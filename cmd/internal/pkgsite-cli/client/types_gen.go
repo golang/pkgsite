@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-// Package is the response for /v1/package/{packagePath}.
+// Package is the response for /v1beta/package/{packagePath}.
 type Package struct {
 	ModulePath        string    `json:"modulePath"`
 	Version           string    `json:"version"`
@@ -52,14 +52,14 @@ type PaginatedResponse[T any] struct {
 	NextPageToken string `json:"nextPageToken,omitempty"`
 }
 
-// PackageImportedBy is the response for /v1/imported-by/{packagePath}.
+// PackageImportedBy is the response for /v1beta/imported-by/{packagePath}.
 type PackageImportedBy struct {
 	ModulePath string                    `json:"modulePath"`
 	Version    string                    `json:"version"`
 	ImportedBy PaginatedResponse[string] `json:"importedBy"`
 }
 
-// ModuleVersion is the response for /v1/versions/{path}.
+// ModuleVersion is the response for /v1beta/versions/{path}.
 type ModuleVersion struct {
 	ModulePath        string    `json:"modulePath"`
 	Version           string    `json:"version"`
@@ -73,7 +73,7 @@ type ModuleVersion struct {
 	RetractionReason  string    `json:"retractionReason"`
 }
 
-// Module is the response for /v1/module/{modulePath}.
+// Module is the response for /v1beta/module/{modulePath}.
 type Module struct {
 	Path              string    `json:"path"`
 	Version           string    `json:"version"`
@@ -93,7 +93,7 @@ type Readme struct {
 	Contents string `json:"contents"`
 }
 
-// PackageSymbols is the response for /v1/symbols/{packagePath}.
+// PackageSymbols is the response for /v1beta/symbols/{packagePath}.
 type PackageSymbols struct {
 	ModulePath string                    `json:"modulePath"`
 	Version    string                    `json:"version"`
@@ -108,7 +108,7 @@ type Symbol struct {
 	Parent   string `json:"parent,omitempty"`
 }
 
-// SearchResults is the response for /v1/search?q={query}.
+// SearchResults is the response for /v1beta/search?q={query}.
 type SearchResult struct {
 	PackagePath string `json:"packagePath"`
 	ModulePath  string `json:"modulePath"`
@@ -116,7 +116,7 @@ type SearchResult struct {
 	Synopsis    string `json:"synopsis"`
 }
 
-// Vulnerability is a vulnerability in /v1/vulnerabilities/{modulePath}.
+// Vulnerability is a vulnerability in /v1beta/vulnerabilities/{modulePath}.
 type Vulnerability struct {
 	ID           string `json:"id"`
 	Summary      string `json:"summary"`
