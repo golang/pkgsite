@@ -7,7 +7,7 @@
 {{define "title"}}<title>{{.MessageData}} - Go Packages</title>{{end}}
 
 {{define "pre-content"}}
-  <link href="/static/frontend/fetch/fetch.min.css?version={{.AppVersionLabel}}" rel="stylesheet">
+  <link href="{{abs `/static/frontend/fetch/fetch.min.css`}}?version={{.AppVersionLabel}}" rel="stylesheet">
 {{end}}
 
 {{define "main"}}
@@ -27,7 +27,7 @@
       </div>
       <p class="Fetch-messageSecondary js-fetchMessageSecondary" aria-live="polite">
         Check that you entered the URL correctly,
-        try fetching it following the <a href="/about#adding-a-package">instructions here</a>,
+        try fetching it following the <a href="{{abs `/about`}}#adding-a-package">instructions here</a>,
         or request to add “{{.MessageData}}” to pkg.go.dev.
       </p>
       <button class="go-Button Fetch-button js-fetchButton" data-test-id="fetch-button" aria-live="polite">
@@ -40,6 +40,6 @@
 
 {{define "post-content"}}
   <script>
-    loadScript("/static/frontend/fetch/fetch.js");
+    loadScript("{{abs `/static/frontend/fetch/fetch.js`}}");
   </script>
 {{end}}

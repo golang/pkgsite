@@ -13,7 +13,7 @@
 {{end}}
 
 {{define "main-styles"}}
-  <link href="/static/frontend/unit/main/main.min.css?version={{.AppVersionLabel}}" rel="stylesheet">
+  <link href="{{abs `/static/frontend/unit/main/main.min.css`}}?version={{.AppVersionLabel}}" rel="stylesheet">
 {{end}}
 
 {{define "main-banner"}}
@@ -60,9 +60,9 @@
           {{block "unit-doc" .Details}}{{end}}
         {{else}}
           <div class="UnitDetails-contentEmpty">
-            <img width="945" height="1200" src="/static/shared/gopher/airplane-1200x945.svg" alt="The Go Gopher"/>
+            <img width="945" height="1200" src="{{abs `/static/shared/gopher/airplane-1200x945.svg`}}" alt="The Go Gopher"/>
             <p>Documentation not displayed due to license restrictions.</p>
-            <p>See our <a href="/license-policy">license policy</a>.</p>
+            <p>See our <a href="{{abs `/license-policy`}}">license policy</a>.</p>
           </div>
         {{end}}
       {{end}}

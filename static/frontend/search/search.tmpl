@@ -13,7 +13,7 @@
 {{end}}
 
 {{define "pre-content"}}
-  <link href="/static/frontend/search/search.min.css?version={{.AppVersionLabel}}" rel="stylesheet">
+  <link href="{{abs `/static/frontend/search/search.min.css`}}?version={{.AppVersionLabel}}" rel="stylesheet">
 {{end}}
 
 {{define "post-content"}}
@@ -42,7 +42,7 @@
 {{define "search_symbol"}}
   <div class="SearchResults-summary" role="heading" aria-level="1">
       Showing <strong>{{len $.Results}}</strong> matching {{.SearchModeSymbol}}s.
-      <a href="/search-help">Search help</a>
+      <a href="{{abs `/search-help`}}">Search help</a>
   </div>
   {{if eq (len .Results) 0}}
     {{template "search_no_results" .}}
@@ -54,7 +54,7 @@
 {{define "search_no_results"}}
  {{template "gopher-airplane" "It looks like there are no matches for your search."}}
  <p class="SearchResults-emptyContentMessage">
-   Need help? Check out <a href="/search-help" data-gtmc="search help"> tips for searching</a> on pkg.go.dev.
+   Need help? Check out <a href="{{abs `/search-help`}}" data-gtmc="search help"> tips for searching</a> on pkg.go.dev.
  </p>
 {{end}}
 
@@ -73,7 +73,7 @@
               {{.SymbolName}}
             </a>
             <span class="SearchSnippet-header-dash">in</span>
-            <a href="/{{$r.PackagePath}}" data-gtmc="symbol search result package" data-gtmv="{{$i}}"
+            <a href="{{basepath}}/{{$r.PackagePath}}" data-gtmc="symbol search result package" data-gtmv="{{$i}}"
               class="">{{$r.PackagePath}}</a>
           </h2>
           {{with $r.ChipText}}<span class="go-Chip go-Chip--inverted">{{.}}</span>{{end}}
@@ -88,7 +88,7 @@
 
 {{define "search_package"}}
   <div class="SearchResults-summary" role="heading" aria-level="1">
-    Showing <strong>{{len .Results}}</strong> modules with matching packages. <a href="/search-help">Search help</a>
+    Showing <strong>{{len .Results}}</strong> modules with matching packages. <a href="{{abs `/search-help`}}">Search help</a>
   </div>
   {{if eq (len .Results) 0}}
     {{template "search_no_results" .}}
@@ -106,7 +106,7 @@
       <div class="SearchSnippet" {{if $moreLink}}id="more-results"{{end}}>
         <div class="SearchSnippet-headerContainer">
           <h2>
-            <a href="/{{$v.PackagePath}}" data-gtmc="search result" data-gtmv="{{$i}}"
+            <a href="{{basepath}}/{{$v.PackagePath}}" data-gtmc="search result" data-gtmv="{{$i}}"
                 data-test-id="snippet-title">
               {{$v.Name}}
               <span class="SearchSnippet-header-path">({{$v.PackagePath}})</span>
@@ -126,7 +126,7 @@
             <span class="go-textSubtle">{{.Heading}}</span>
             {{$numLinks := (len .Links)}}
             {{range $i, $v := .Links}}
-              <a href="/{{$v.Href}}" data-gtmc="search result other major">
+              <a href="{{basepath}}/{{$v.Href}}" data-gtmc="search result other major">
                 <strong>{{$v.Body}}</strong><span class="go-textSubtle">{{if lt $i (subtract $numLinks 1)}},{{end}}</span>
               </a>
             {{end}}
@@ -139,7 +139,7 @@
             {{range $i, $v := .Links}}
               {{if and (lt $i 5) (ne $v.Body "")}}
                 <a class="go-Chip go-Chip--subtle"
-                    href="/{{$v.Href}}"
+                    href="{{basepath}}/{{$v.Href}}"
                     {{if gt $i 4 }}data-hidden="true"{{end}}
                     data-gtmc="search result same module">
                   {{$v.Body}}
@@ -162,7 +162,7 @@
 
 {{define "search_metadata"}}
   <div class="SearchSnippet-infoLabel">
-    <a href="/{{$.PackagePath}}?tab=importedby" aria-label="Go to Imported By">
+    <a href="{{basepath}}/{{$.PackagePath}}?tab=importedby" aria-label="Go to Imported By">
        <span class="go-textSubtle">Imported by </span><strong>{{.NumImportedBy}}</strong>
     </a>
     <span class="go-textSubtle">|</span>
@@ -172,7 +172,7 @@
     <span class="go-textSubtle">|</span>
     <span data-test-id="snippet-license">
     {{if .Licenses}}
-      <a href="/{{$.PackagePath}}?tab=licenses" aria-label="Go to Licenses">
+      <a href="{{basepath}}/{{$.PackagePath}}?tab=licenses" aria-label="Go to Licenses">
         {{commaseparate .Licenses}}
       </a>
     {{else}}
@@ -190,7 +190,7 @@
     {{- if and (lt $p.Limit $p.MaxLimit) (eq $p.Limit (len .Results)) -}}
       <a href="{{$p.URL $p.MaxLimit $m ""}}#more-results" data-gtmc="search more results">Show more results.</a>
     {{- else -}}
-      See <a href="/search-help" data-gtmc="search help"> search help.</a>
+      See <a href="{{abs `/search-help`}}" data-gtmc="search help"> search help.</a>
     {{- end -}}
   </div>
 {{end}}
@@ -215,12 +215,12 @@
     <div class="SearchResults-headerContent">
       <a class="SearchResults-headerLogo" href="https://go.dev/" aria-hidden="true" tabindex="-1" data-gtmc="header link"
           aria-label="Link to Go Homepage">
-        <img height="78" width="207" src="/static/shared/logo/go-blue.svg" alt="Go">
+        <img height="78" width="207" src="{{abs `/static/shared/logo/go-blue.svg`}}" alt="Go">
       </a>
       <form
         class="go-InputGroup go-ShortcutKey SearchResults-search"
-        action="/search"
-        data-shortcut="/"
+        action="{{abs `/search`}}"
+        data-shortcut="{{abs `/`}}"
         data-shortcut-alt="search"
         data-gtmc="search form"
         aria-label="Search for a package"
@@ -235,7 +235,7 @@
             class="go-Icon"
             height="24"
             width="24"
-            src="/static/shared/icon/search_gm_grey_24dp.svg"
+            src="{{abs `/static/shared/icon/search_gm_grey_24dp.svg`}}"
             alt=""
           />
         </button>

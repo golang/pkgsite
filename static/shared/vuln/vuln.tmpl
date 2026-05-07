@@ -10,10 +10,10 @@
         class="go-Icon"
         height="24"
         width="24"
-        src="/static/shared/icon/alert_gm_grey_24dp.svg"
+        src="{{abs `/static/shared/icon/alert_gm_grey_24dp.svg`}}"
         alt="Alert"
     />&nbsp;
-    <a href="/vuln/{{.ID}}">{{.ID}}</a>: {{.Details}}
+    <a href="{{basepath}}/vuln/{{.ID}}">{{.ID}}</a>: {{.Details}}
   </div>
 {{end}}
 

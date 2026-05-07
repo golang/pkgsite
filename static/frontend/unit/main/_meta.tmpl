@@ -25,7 +25,7 @@
           <li>
             <a href="https://go.dev/security/policy"
                 title="Report security issues in the Go standard library and sub-repositories">
-              <img class="go-Icon" height="24" width="24" src="/static/shared/icon/security_grey_24dp.svg" alt="">
+              <img class="go-Icon" height="24" width="24" src="{{abs `/static/shared/icon/security_grey_24dp.svg`}}" alt="">
               Report a Vulnerability
             </a>
           </li>
@@ -34,7 +34,7 @@
           <li>
             <a href="{{.}}" title="View this module on Open Source Insights"
               target="_blank" rel="noopener" data-test-id="meta-link-depsdev">
-              <img class="link-Icon" src="/static/shared/icon/depsdev-logo.svg"
+              <img class="link-Icon" src="{{abs `/static/shared/icon/depsdev-logo.svg`}}"
                 alt="Open Source Insights Logo" />
               Open Source Insights
             </a>
@@ -44,7 +44,7 @@
           <li>
             <a href="{{.}}" title="View this repo on Code Wiki"
               target="_blank" rel="noopener" data-test-id="meta-link-codewiki">
-              <img class="link-Icon" src="/static/shared/icon/codewiki-logo.svg"
+              <img class="link-Icon" src="{{abs `/static/shared/icon/codewiki-logo.svg`}}"
                 alt="Code Wiki Logo" />
               Code Wiki
             </a>
@@ -72,9 +72,9 @@
     tabindex="0"
     role="button"
     {{- if . -}}
-      src="/static/shared/icon/check_circle_gm_grey_24dp.svg" alt="checked" aria-label="Valid file, toggle tooltip"
+      src="{{abs `/static/shared/icon/check_circle_gm_grey_24dp.svg`}}" alt="checked" aria-label="Valid file, toggle tooltip"
     {{- else -}}
-      src="/static/shared/icon/cancel_gm_grey_24dp.svg" alt="unchecked" aria-label="Missing or invalid file, toggle tooltip"
+      src="{{abs `/static/shared/icon/cancel_gm_grey_24dp.svg`}}" alt="unchecked" aria-label="Missing or invalid file, toggle tooltip"
     {{- end -}}
   height="24" width="24">
 {{end}}
@@ -86,7 +86,7 @@
         <summary class="go-textSubtle">
           {{template "unit-meta-details-check" .Unit.HasGoMod}}
           Valid {{if .Unit.HasGoMod}}<a href="{{.Details.ModFileURL}}" target="_blank" rel="noopener">{{end}}go.mod{{if .Unit.HasGoMod}}</a>{{end}} file
-          <img class="go-Icon" role="button" tabindex="0" src="/static/shared/icon/help_gm_grey_24dp.svg" alt="" aria-label="Toggle go.mod validity tooltip" height="24" width="24">
+          <img class="go-Icon" role="button" tabindex="0" src="{{abs `/static/shared/icon/help_gm_grey_24dp.svg`}}" alt="" aria-label="Toggle go.mod validity tooltip" height="24" width="24">
         </summary>
         <p aria-live="polite" role="tooltip">
           The Go module system was introduced in Go 1.11 and is the official dependency management
@@ -99,7 +99,7 @@
         <summary class="go-textSubtle">
           {{template "unit-meta-details-check" .Unit.IsRedistributable}}
           Redistributable license
-          <img class="go-Icon" role="button" tabindex="0" src="/static/shared/icon/help_gm_grey_24dp.svg" alt="" aria-label="Toggle redistributable help tooltip" height="24" width="24">
+          <img class="go-Icon" role="button" tabindex="0" src="{{abs `/static/shared/icon/help_gm_grey_24dp.svg`}}" alt="" aria-label="Toggle redistributable help tooltip" height="24" width="24">
         </summary>
         <p aria-live="polite" role="tooltip">
           Redistributable licenses place minimal restrictions on how software can be used,
@@ -112,7 +112,7 @@
         <summary class="go-textSubtle">
           {{template "unit-meta-details-check" .Details.IsTaggedVersion}}
           Tagged version
-          <img class="go-Icon" role="button" tabindex="0" src="/static/shared/icon/help_gm_grey_24dp.svg" alt="" aria-label="Toggle tagged version tooltip" height="24" width="24">
+          <img class="go-Icon" role="button" tabindex="0" src="{{abs `/static/shared/icon/help_gm_grey_24dp.svg`}}" alt="" aria-label="Toggle tagged version tooltip" height="24" width="24">
         </summary>
         <p aria-live="polite" role="tooltip">Modules with tagged versions give importers more predictable builds.</p>
       </details>
@@ -122,13 +122,13 @@
         <summary class="go-textSubtle">
           {{template "unit-meta-details-check"  .Details.IsStableVersion}}
           Stable version
-          <img class="go-Icon" role="button" tabindex="0" aria-label="Toggle stable version tooltip" src="/static/shared/icon/help_gm_grey_24dp.svg" alt="" height="24" width="24">
+          <img class="go-Icon" role="button" tabindex="0" aria-label="Toggle stable version tooltip" src="{{abs `/static/shared/icon/help_gm_grey_24dp.svg`}}" alt="" height="24" width="24">
         </summary>
         <p aria-live="polite" role="tooltip">When a project reaches major version v1 it is considered stable.</p>
       </details>
     </li>
     <li class="UnitMeta-detailsLearn">
-      <a href="/about#best-practices" data-gtmc="meta link">Learn more about best practices</a>
+      <a href="{{abs `/about`}}#best-practices" data-gtmc="meta link">Learn more about best practices</a>
     </li>
   </ul>
 {{end}}

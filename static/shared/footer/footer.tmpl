@@ -47,10 +47,10 @@
             data-gtmc="footer link">
           Packages
         </a>
-        <a href="/std" class="go-Footer-link" data-gtmc="footer link">
+        <a href="{{abs `/std`}}" class="go-Footer-link" data-gtmc="footer link">
           Standard Library
         </a>
-        <a href="/golang.org/x" class="go-Footer-link" data-gtmc="footer link">
+        <a href="{{abs `/golang.org/x`}}" class="go-Footer-link" data-gtmc="footer link">
           Sub-repositories
         </a>
         <a href="https://pkg.go.dev/about" class="go-Footer-link" data-gtmc="footer link">
@@ -104,7 +104,7 @@
     </div>
     <div class="go-Footer-bottom">
       <img class="go-Footer-gopher"  width="1431" height="901"
-          src="/static/shared/gopher/pilot-bust-1431x901.svg" alt="Gopher in flight goggles">
+          src="{{abs `/static/shared/gopher/pilot-bust-1431x901.svg`}}" alt="Gopher in flight goggles">
       <ul class="go-Footer-listRow">
         <li class="go-Footer-listItem">
           <a href="https://go.dev/copyright" data-gtmc="footer link">Copyright</a>
@@ -126,15 +126,15 @@
         </li>
         <li class="go-Footer-listItem">
           <button class="go-Button go-Button--text go-Footer-toggleTheme js-toggleTheme" aria-label="Theme Toggle">
-            <img data-value="auto" class="go-Icon go-Icon--inverted" height="24" width="24" src="/static/shared/icon/brightness_6_gm_grey_24dp.svg" alt="System theme">
-            <img data-value="dark" class="go-Icon go-Icon--inverted" height="24" width="24" src="/static/shared/icon/brightness_2_gm_grey_24dp.svg" alt="Dark theme">
-            <img data-value="light" class="go-Icon go-Icon--inverted" height="24" width="24" src="/static/shared/icon/light_mode_gm_grey_24dp.svg" alt="Light theme">
+            <img data-value="auto" class="go-Icon go-Icon--inverted" height="24" width="24" src="{{abs `/static/shared/icon/brightness_6_gm_grey_24dp.svg`}}" alt="System theme">
+            <img data-value="dark" class="go-Icon go-Icon--inverted" height="24" width="24" src="{{abs `/static/shared/icon/brightness_2_gm_grey_24dp.svg`}}" alt="Dark theme">
+            <img data-value="light" class="go-Icon go-Icon--inverted" height="24" width="24" src="{{abs `/static/shared/icon/light_mode_gm_grey_24dp.svg`}}" alt="Light theme">
             <p> Theme Toggle </p>
           </button>
         </li>
         <li class="go-Footer-listItem">
           <button class="go-Button go-Button--text go-Footer-keyboard js-openShortcuts" aria-label="Shorcuts Modal">
-            <img class="go-Icon go-Icon--inverted" height="24" width="24" src="/static/shared/icon/keyboard_grey_24dp.svg" alt="">
+            <img class="go-Icon go-Icon--inverted" height="24" width="24" src="{{abs `/static/shared/icon/keyboard_grey_24dp.svg`}}" alt="">
             <p> Shortcuts Modal </p>
           </button>
         </li>
@@ -142,7 +142,7 @@
       <a class="go-Footer-googleLogo" href="https://google.com" target="_blank"rel="noopener"
           data-gtmc="footer link">
         <img class="go-Footer-googleLogoImg" height="24" width="72"
-            src="/static/shared/logo/google-white.svg" alt="Google logo">
+            src="{{abs `/static/shared/logo/google-white.svg`}}" alt="Google logo">
       </a>
     </div>
   </footer>

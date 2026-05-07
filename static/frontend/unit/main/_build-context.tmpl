@@ -20,7 +20,7 @@
     {{else if not (eq .GOOS "all")}}
       <div class="UnitBuildContext-titleContext">
         <div class="UnitBuildContext-singleContext">
-          <a href="/about#build-context" class="UnitBuildContext-link">Rendered for</a> {{.GOOS}}/{{.GOARCH}}
+          <a href="{{abs `/about`}}#build-context" class="UnitBuildContext-link">Rendered for</a> {{.GOOS}}/{{.GOARCH}}
         </div>
       </div>
     {{end}}

@@ -5,7 +5,7 @@
 -->
 
 {{define "main-styles"}}
-  <link href="/static/frontend/vuln/entry/entry.min.css?version={{.AppVersionLabel}}" rel="stylesheet">
+  <link href="{{abs `/static/frontend/vuln/entry/entry.min.css`}}?version={{.AppVersionLabel}}" rel="stylesheet">
 {{end}}
 
 {{define "main-content"}}
@@ -13,10 +13,10 @@
   <nav class="go-Breadcrumb" aria-label="Breadcrumb">
     <ol>
       <li>
-        <a href="/vuln" data-gtmc="breadcrumb link">Vulnerability Database</a>
+        <a href="{{abs `/vuln`}}" data-gtmc="breadcrumb link">Vulnerability Database</a>
       </li>
       <li>
-        <a href="/vuln/list" data-gtmc="breadcrumb link">All Reports</a>
+        <a href="{{abs `/vuln/list`}}" data-gtmc="breadcrumb link">All Reports</a>
       </li>
       <li>
         <a href="#" data-gtmc="breadcrumb link" aria-current="location">{{.Entry.ID}}</a>
@@ -144,7 +144,7 @@
 {{end}}
 
 {{define "path-versions-data"}}
- <div class="VulnEntryPackages-attr" data-name="Path"><a href="/{{.Path}}">{{.Path}}</a></div>
+ <div class="VulnEntryPackages-attr" data-name="Path"><a href="{{basepath}}/{{.Path}}">{{.Path}}</a></div>
  <div class="VulnEntryPackages-attr" data-name="Go Versions">{{if .Versions}}{{.Versions}}{{else}}all versions, no known fixed{{end}}</div>
 {{end}}
 
@@ -162,9 +162,9 @@
   <div class="VulnEntryPackages-attr VulnEntryPackages-symbols" data-name="Symbols">
   {{ $vuln := . }}
   {{if .ExportedSymbols}}{{ $length := len .ExportedSymbols}}
-      {{if lt $length 5}}<ul>{{range .ExportedSymbols}}<li><a href="/{{$vuln.Path}}#{{.}}">{{.}}</a></li>{{end}}</ul>
+      {{if lt $length 5}}<ul>{{range .ExportedSymbols}}<li><a href="{{basepath}}/{{$vuln.Path}}#{{.}}">{{.}}</a></li>{{end}}</ul>
       {{else}}<details><summary>{{len .ExportedSymbols}} affected symbols</summary>
-      <ul class="VulnEntryPackages-detailsContent">{{range .ExportedSymbols}}<li><a href="/{{$vuln.Path}}#{{.}}">{{.}}</a></li>{{end}}</ul></details>
+      <ul class="VulnEntryPackages-detailsContent">{{range .ExportedSymbols}}<li><a href="{{basepath}}/{{$vuln.Path}}#{{.}}">{{.}}</a></li>{{end}}</ul></details>
       {{end}}
   {{else if .UnexportedSymbols}}
     <details><summary>{{len .UnexportedSymbols}} unexported affected symbols</summary>

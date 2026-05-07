@@ -7,7 +7,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <meta charset="utf-8">
-<link href="/static/worker/worker.css" rel="stylesheet">
+<link href="{{abs `/static/worker/worker.css`}}" rel="stylesheet">
 <title>{{.Env}} Worker</title>
 
 <body>
@@ -30,39 +30,39 @@
   </p>
 
   <p>
-    <a href="/debug/versions">Modules</a> |
-    <a href="/debug/tracez">Traces</a> |
-    <a href="/debug/rpcz">RPCs</a> |
-    <a href="/debug/statz">Metrics</a> |
-    <a href="/debug/excluded">Excluded</a>
+    <a href="{{abs `/debug/versions`}}">Modules</a> |
+    <a href="{{abs `/debug/tracez`}}">Traces</a> |
+    <a href="{{abs `/debug/rpcz`}}">RPCs</a> |
+    <a href="{{abs `/debug/statz`}}">Metrics</a> |
+    <a href="{{abs `/debug/excluded`}}">Excluded</a>
   </p>
 
   <div>
-    <form action="/poll" method="post" name="pollForm">
+    <form action="{{abs `/poll`}}" method="post" name="pollForm">
       <button title="Poll the module index for up to 2000 new versions."
         onclick="submitForm('pollForm', false); return false">Poll Module Index</button>
       <input type="number" name="limit" value="10"></input>
       <input type="text" name="since" value="" placeholder="2006-01-02T15:04:05Z07:00">
       <output name="result"></output>
     </form>
-    <form action="/enqueue" method="post" name="enqueueForm">
+    <form action="{{abs `/enqueue`}}" method="post" name="enqueueForm">
       <button title="Query the discovery database for new or failed versions, and enqueue them for processing."
         onclick="submitForm('enqueueForm', true); return false">Enqueue New and Failed Versions</button>
       <input type="number" name="limit" value="10">
       <output name="result"></output>
     </form>
-    <form action="/reprocess" method="post" name="reprocessForm">
+    <form action="{{abs `/reprocess`}}" method="post" name="reprocessForm">
       <button title="Mark all versions created before the specified app_version to be reprocessed."
         onclick="submitForm('reprocessForm', true); return false">Reprocess Versions</button>
       <input type="text" name="app_version">
       <output name="result"></output>
     </form>
-    <form action="/populate-stdlib" method="post" name="populateStdlibForm">
+    <form action="{{abs `/populate-stdlib`}}" method="post" name="populateStdlibForm">
       <button title="Populates the database with all supported versions of the Go standard library."
         onclick="submitForm('populateStdlibForm', false); return false">Populate Standard Library</button>
       <output name="result"></output>
     </form>
-    <form action="/clear-cache" method="get" name="clearCacheForm">
+    <form action="{{abs `/clear-cache`}}" method="get" name="clearCacheForm">
       <button title="Clears the Redis cache."
         onclick="submitForm('clearCacheForm', false); return false">Clear Cache</button>
       <output name="result"></output>
@@ -152,7 +152,7 @@
               <td>{{.RequestInfo.State.Load}}</td>
               {{with .RequestInfo.TraceID}}
                 <td><a href="{{logURL .}}" target="_blank" rel="noreferrer">Logs</a></td>
-                <td><a href="/cancel?trace={{.}}" target="_blank" rel="noreferrer">Cancel</a></td>
+                <td><a href="{{abs `/cancel`}}?trace={{.}}" target="_blank" rel="noreferrer">Cancel</a></td>
               {{end}}
             </tr>
           {{end}}
@@ -179,7 +179,7 @@
             <td>{{.State.Load}}</td>
             {{with .TraceID}}
               <td><a href="{{logURL .}}" target="_blank" rel="noreferrer">Logs</a></td>
-              <td><a href="/cancel?trace={{.}}" target="_blank" rel="noreferrer">Cancel</a></td>
+              <td><a href="{{abs `/cancel`}}?trace={{.}}" target="_blank" rel="noreferrer">Cancel</a></td>
             {{end}}
           </tr>
       {{end}}
@@ -224,5 +224,5 @@
       s.src = src;
       document.head.appendChild(s);
   }
-  loadScript("/static/worker/worker.js");
+  loadScript("{{abs `/static/worker/worker.js`}}");
 </script>

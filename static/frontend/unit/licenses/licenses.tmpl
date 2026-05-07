@@ -9,7 +9,7 @@
 {{end}}
 
 {{define "main-styles"}}
-  <link href="/static/frontend/unit/licenses/licenses.min.css?version={{.AppVersionLabel}}" rel="stylesheet">
+  <link href="{{abs `/static/frontend/unit/licenses/licenses.min.css`}}?version={{.AppVersionLabel}}" rel="stylesheet">
 {{end}}
 
 {{define "main-header"}}
@@ -26,7 +26,7 @@
       <h2 class="go-textTitle">
         <div id="#{{.Anchor}}">{{range $i, $e := .Types}}{{if $i}}, {{end}}{{$e}}{{end}}</div>
       </h2>
-      <p>This is not legal advice. <a href="/license-policy">Read disclaimer.</a></p>
+      <p>This is not legal advice. <a href="{{abs `/license-policy`}}">Read disclaimer.</a></p>
       <pre class="License-contents">{{printf "%s" .Contents}}</pre>
     </section>
     <div class="License-source go-textSubtle">Source: {{.Source}}</div>

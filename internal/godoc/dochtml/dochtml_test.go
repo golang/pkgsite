@@ -47,7 +47,7 @@ var testRenderOptions = RenderOptions{
 
 func TestRender(t *testing.T) {
 	ctx := context.Background()
-	LoadTemplates(templateFS)
+	LoadTemplates(templateFS, "")
 	for _, pkg := range []string{"everydecl", "comments", "order"} {
 		t.Run(pkg, func(t *testing.T) {
 			fset, d := mustLoadPackage(pkg)
@@ -108,7 +108,7 @@ func compareWithGolden(t *testing.T, parts *Parts, name string, update bool) {
 }
 
 func TestImportLink(t *testing.T) {
-	LoadTemplates(templateFS)
+	LoadTemplates(templateFS, "")
 
 	cases := []struct {
 		name string
@@ -203,7 +203,7 @@ func F(rng *rand.Rand) {}
 }
 
 func TestExampleRender(t *testing.T) {
-	LoadTemplates(templateFS)
+	LoadTemplates(templateFS, "")
 	ctx := context.Background()
 	fset, d := mustLoadPackage("example_test")
 

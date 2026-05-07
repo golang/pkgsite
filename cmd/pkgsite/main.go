@@ -75,6 +75,10 @@ var (
 	goRepoPath = flag.String("gorepo", "", "path to Go repo on local filesystem")
 	useProxy   = flag.Bool("proxy", false, "fetch from GOPROXY if not found locally")
 	openFlag   = flag.Bool("open", false, "open a browser window to the server's address")
+	// basePath：把整个站点挂在 URL 子路径下（如 -base-path=/gogodocs，
+	// 站点入口 http://host/gogodocs/）。空字符串 = 默认挂根路径，跟上游一致。
+	// fork 加入这个 flag 是为了让 pkgsite 能跟主网关共用域名（反代而非 subdomain）。
+	basePath = flag.String("base-path", "", "URL prefix to mount the site under (e.g. /gogodocs). Must start with / and not end with /.")
 	// other flags are bound to ServerConfig below
 )
 
@@ -97,10 +101,15 @@ func main() {
 	}
 	flag.Parse()
 
+	if err := validateBasePath(*basePath); err != nil {
+		dief("%v", err)
+	}
+
 	serverCfg.UseLocalStdlib = true
 	serverCfg.GoRepoPath = *goRepoPath
 	serverCfg.Paths = collectPaths(flag.Args())
 	serverCfg.RecordCodeWikiMetrics = nil
+	serverCfg.BasePath = *basePath
 
 	if serverCfg.UseCache || *useProxy {
 		fmt.Fprintf(os.Stderr, "BYPASSING LICENSE CHECKING: MAY DISPLAY NON-REDISTRIBUTABLE INFORMATION\n")
@@ -168,4 +177,19 @@ func collectPaths(args []string) []string {
 		paths = append(paths, strings.Split(arg, ",")...)
 	}
 	return paths
+}
+
+// validateBasePath 强制 base-path 形如 "/foo" 或空——空表示挂根。
+// 不允许尾部斜杠（mux pattern 拼起来会双斜杠引发匹配失败）。
+func validateBasePath(p string) error {
+	if p == "" {
+		return nil
+	}
+	if !strings.HasPrefix(p, "/") {
+		return fmt.Errorf("-base-path %q must start with /", p)
+	}
+	if strings.HasSuffix(p, "/") {
+		return fmt.Errorf("-base-path %q must not end with /", p)
+	}
+	return nil
 }

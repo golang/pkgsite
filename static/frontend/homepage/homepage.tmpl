@@ -5,16 +5,16 @@
 -->
 
 {{define "pre-content"}}
-  <link href="/static/frontend/homepage/homepage.min.css?version={{.AppVersionLabel}}" rel="stylesheet">
+  <link href="{{abs `/static/frontend/homepage/homepage.min.css`}}?version={{.AppVersionLabel}}" rel="stylesheet">
 {{end}}
 
 {{define "main"}}
   <main class="go-Container" id="main-content">
     <div class="go-Content go-Content--center">
       <img class="Homepage-logo" width="700" height="300"
-          src="/static/shared/gopher/package-search-700x300.jpeg" alt="Cartoon gopher typing">
+          src="{{abs `/static/shared/gopher/package-search-700x300.jpeg`}}" alt="Cartoon gopher typing">
       <form class="go-InputGroup Homepage-search Homepage-search--symbol"
-          action="/search" role="search" data-gtmc="homepage search form">
+          action="{{abs `/search`}}" role="search" data-gtmc="homepage search form">
         <input
           class="go-Input js-searchFocus"
           data-test-id="homepage-search"
@@ -39,10 +39,10 @@
             <li class="go-Carousel-slide" {{if not (eq $.TipIndex $i)}}aria-hidden{{end}} {{if (eq $.TipIndex $i)}}id="SearchTipContent"{{end}}>
               <p>
                 <strong>Tip:</strong> {{.Text}}
-                <a href="/search?q={{$v.Example1}}">“{{$v.Example1}}”</a> or
-                <a href="/search?q={{$v.Example2}}">“{{$v.Example2}}”</a>.
-                <a href="/search-help" target="_blank" rel="noopener" class="Homepage-helpLink">
-                  Search help <span><img width="24" height="24" src="/static/shared/icon/launch_gm_grey_24dp.svg" alt=""></span>
+                <a href="{{abs `/search`}}?q={{$v.Example1}}">“{{$v.Example1}}”</a> or
+                <a href="{{abs `/search`}}?q={{$v.Example2}}">“{{$v.Example2}}”</a>.
+                <a href="{{abs `/search-help`}}" target="_blank" rel="noopener" class="Homepage-helpLink">
+                  Search help <span><img width="24" height="24" src="{{abs `/static/shared/icon/launch_gm_grey_24dp.svg`}}" alt=""></span>
                 </a>
               </p>
             </li>
@@ -53,7 +53,7 @@
         <section class="Homepage-modules" aria-label="Local Modules">
           <div class="Homepage-modules-header">Or browse local modules:</div>
           <ul>
-            {{range .LocalModules}}<li><a href="/{{.ModulePath}}">{{.ModulePath}}</a> &ndash; {{.Dir}}</li>{{end}}
+            {{range .LocalModules}}<li><a href="{{basepath}}/{{.ModulePath}}">{{.ModulePath}}</a> &ndash; {{.Dir}}</li>{{end}}
           </ul>
         </section>
       {{end}}

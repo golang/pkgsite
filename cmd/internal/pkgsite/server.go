@@ -44,6 +44,10 @@ type ServerConfig struct {
 	GoDocMode             bool
 	RecordCodeWikiMetrics frontend.RecordClickFunc
 
+	// BasePath：URL 前缀（如 "/gogodocs"）让站点挂在子路径下。空 = 挂根。
+	// 详见 cmd/pkgsite/main.go 的 -base-path flag。
+	BasePath string
+
 	Proxy *proxy.Client // client, or nil; controlled by the -proxy flag
 }
 
@@ -115,7 +119,7 @@ func BuildServer(ctx context.Context, serverCfg ServerConfig) (*frontend.Server,
 		return allModules[i].ModulePath < allModules[j].ModulePath
 	})
 
-	return newServer(getters, allModules, cfg.proxy, serverCfg.GoDocMode, serverCfg.DevMode, serverCfg.DevModeStaticDir)
+	return newServer(getters, allModules, cfg.proxy, serverCfg.GoDocMode, serverCfg.DevMode, serverCfg.DevModeStaticDir, serverCfg.BasePath)
 }
 
 // getModuleDirs returns the set of workspace modules for each directory,
@@ -276,7 +280,7 @@ func buildGetters(ctx context.Context, cfg getterConfig) ([]fetch.ModuleGetter, 
 	return getters, nil
 }
 
-func newServer(getters []fetch.ModuleGetter, localModules []frontend.LocalModule, prox *proxy.Client, goDocMode bool, devMode bool, staticFlag string) (*frontend.Server, error) {
+func newServer(getters []fetch.ModuleGetter, localModules []frontend.LocalModule, prox *proxy.Client, goDocMode bool, devMode bool, staticFlag string, basePath string) (*frontend.Server, error) {
 	lds := fetchdatasource.Options{
 		Getters:              getters,
 		ProxyClientForLatest: prox,
@@ -307,6 +311,7 @@ func newServer(getters []fetch.ModuleGetter, localModules []frontend.LocalModule
 		LocalMode:        true,
 		LocalModules:     localModules,
 		ThirdPartyFS:     thirdparty.FS,
+		BasePath:         basePath,
 	})
 	if err != nil {
 		return nil, err

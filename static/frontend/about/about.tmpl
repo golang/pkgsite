@@ -5,7 +5,7 @@
 -->
 
 {{define "pre-content"}}
-  <link href="/static/frontend/about/about.min.css?version={{.AppVersionLabel}}" rel="stylesheet">
+  <link href="{{abs `/static/frontend/about/about.min.css`}}?version={{.AppVersionLabel}}" rel="stylesheet">
 {{end}}
 
 {{define "main"}}
@@ -42,7 +42,7 @@
             <p>
               Making a request to proxy.golang.org for the module version,
               to any endpoint specified by the
-              <a href="/cmd/go/#hdr-Module_proxy_protocol">Module proxy protocol</a>.
+              <a href="{{abs `/cmd/go/`}}#hdr-Module_proxy_protocol">Module proxy protocol</a>.
               For example:
               <br />
               <code>https://proxy.golang.org/example.com/my/module/@v/v1.0.0.info</code>
@@ -51,7 +51,7 @@
           <li>
             <p>
               Downloading the package via the
-              <a href="/cmd/go/#hdr-Add_dependencies_to_current_module_and_install_them">go command</a>.
+              <a href="{{abs `/cmd/go/`}}#hdr-Add_dependencies_to_current_module_and_install_them">go command</a>.
               For example:
               <br />
               <code>GOPROXY=https://proxy.golang.org GO111MODULE=on go get example.com/my/module@v1.0.0</code>
@@ -108,7 +108,7 @@
           You may also see the terms <code>GOOS</code> and <code>GOARCH</code> for the OS
           and architecture respectively, because those are the names of the environment
           variables that the go command uses.
-          (See the <a href="/cmd/go">go command documentation</a> for more information.)
+          (See the <a href="{{abs `/cmd/go`}}">go command documentation</a> for more information.)
         </p>
         <p>
           If a package exists at only one build context, pkg.go.dev displays that build
@@ -173,7 +173,7 @@
               and is the official dependency management solution for Go.
               A module version is defined by a tree of source files,
               with a go.mod file in its root.
-              <a href="/cmd/go/#hdr-The_go_mod_file">More information about the go.mod file</a>.
+              <a href="{{abs `/cmd/go/`}}#hdr-The_go_mod_file">More information about the go.mod file</a>.
             </p>
           </li>
           <li>

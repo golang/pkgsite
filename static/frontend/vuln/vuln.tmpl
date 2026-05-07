@@ -5,7 +5,7 @@
 -->
 
 {{define "pre-content"}}
-  <link href="/static/frontend/vuln/vuln.min.css?version={{.AppVersionLabel}}" rel="stylesheet">
+  <link href="{{abs `/static/frontend/vuln/vuln.min.css`}}?version={{.AppVersionLabel}}" rel="stylesheet">
   {{block "main-styles" .}}{{end}}
 {{end}}
 
@@ -68,7 +68,7 @@
   <h2>Search</h2>
   <form
     class="go-InputGroup VulnMain-search"
-    action="/search"
+    action="{{abs `/search`}}"
     data-gtmc="search vuln"
     aria-label="Search GO IDs"
     role="search"

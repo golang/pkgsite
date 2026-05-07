@@ -6,7 +6,7 @@
 
 {{define "gopher-airplane"}}
   <div class="go-GopherMessage">
-    <img width="1200" height="945"src="/static/shared/gopher/airplane-1200x945.svg"
+    <img width="1200" height="945"src="{{abs `/static/shared/gopher/airplane-1200x945.svg`}}"
         alt="The Go Gopher">
     {{if .}}<p data-test-id="gopher-message">{{.}}</p>{{end}}
   </div>

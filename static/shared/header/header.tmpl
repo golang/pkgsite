@@ -10,7 +10,7 @@
       <nav class="go-Header-nav">
         <a href="{{if .LocalMode}}/{{else}}https://go.dev/{{end}}" class="js-headerLogo" data-gtmc="nav link"
             data-test-id="go-header-logo-link" role="heading" aria-level="1">
-          <img class="go-Header-logo" src="/static/shared/logo/go-white.svg" alt="Go">
+          <img class="go-Header-logo" src="{{abs `/static/shared/logo/go-white.svg`}}" alt="Go">
         </a>
          <div class="skip-navigation-wrapper">
             <a class="skip-to-content-link" aria-label="Skip to main content" href="#main-content"> Skip to Main Content </a>
@@ -21,7 +21,7 @@
             <li class="go-Header-menuItem">
               <a class="js-desktop-menu-hover" href="#" data-gtmc="nav link">
                 Why Go
-                <img class="go-Icon" height="24" width="24" src="/static/shared/icon/arrow_drop_down_gm_grey_24dp.svg" alt="submenu dropdown icon">
+                <img class="go-Icon" height="24" width="24" src="{{abs `/static/shared/icon/arrow_drop_down_gm_grey_24dp.svg`}}" alt="submenu dropdown icon">
               </a>
               <ul class="go-Header-submenu go-Header-submenu--why js-desktop-submenu-hover" aria-label="submenu">
                   <li class="go-Header-submenuItem">
@@ -56,7 +56,7 @@
             <li class="go-Header-menuItem">
               <a class="js-desktop-menu-hover" href="#" data-gtmc="nav link">
                 Docs
-                <img class="go-Icon" height="24" width="24" src="/static/shared/icon/arrow_drop_down_gm_grey_24dp.svg" alt="submenu dropdown icon">
+                <img class="go-Icon" height="24" width="24" src="{{abs `/static/shared/icon/arrow_drop_down_gm_grey_24dp.svg`}}" alt="submenu dropdown icon">
               </a>
               <ul class="go-Header-submenu go-Header-submenu--docs js-desktop-submenu-hover" aria-label="submenu">
                 <li class="go-Header-submenuItem">
@@ -94,12 +94,12 @@
               </ul>
             </li>
             <li class="go-Header-menuItem go-Header-menuItem--active">
-              <a href="/" data-gtmc="nav link">Packages</a>
+              <a href="{{abs `/`}}" data-gtmc="nav link">Packages</a>
             </li>
             <li class="go-Header-menuItem">
               <a class="js-desktop-menu-hover" href="#" data-gtmc="nav link">
                 Community
-                <img class="go-Icon" height="24" width="24" src="/static/shared/icon/arrow_drop_down_gm_grey_24dp.svg" alt="submenu dropdown icon">
+                <img class="go-Icon" height="24" width="24" src="{{abs `/static/shared/icon/arrow_drop_down_gm_grey_24dp.svg`}}" alt="submenu dropdown icon">
               </a>
               <ul class="go-Header-submenu go-Header-submenu--community js-desktop-submenu-hover" aria-label="submenu">
                 <li class="go-Header-submenuItem">
@@ -116,7 +116,7 @@
                       <span>Meetups</span>
                       <i class="material-icons">
                         <img class="go-Icon" height="24" width="24"
-                            src="/static/shared/icon/launch_gm_grey_24dp.svg" alt="">
+                            src="{{abs `/static/shared/icon/launch_gm_grey_24dp.svg`}}" alt="">
                       </i>
                     </a>
                   </div>
@@ -128,7 +128,7 @@
                       <span>Conferences</span>
                       <i class="material-icons">
                         <img class="go-Icon" height="24" width="24"
-                            src="/static/shared/icon/launch_gm_grey_24dp.svg" alt="">
+                            src="{{abs `/static/shared/icon/launch_gm_grey_24dp.svg`}}" alt="">
                       </i>
                     </a>
                   </div>
@@ -161,42 +161,42 @@
                         aria-label="Get connected with google-groups (Opens in new window)"
                         title="Get connected with google-groups (Opens in new window)"
                         href="https://groups.google.com/g/golang-nuts">
-                        <img src="/static/shared/logo/social/google-groups.svg" />
+                        <img src="{{abs `/static/shared/logo/social/google-groups.svg`}}" />
                       </a>
                       <a
                         class="go-Header-socialIcon"
                         aria-label="Get connected with github (Opens in new window)"
                         title="Get connected with github (Opens in new window)"
                         href="https://github.com/golang">
-                        <img src="/static/shared/logo/social/github.svg" />
+                        <img src="{{abs `/static/shared/logo/social/github.svg`}}" />
                       </a>
                       <a
                         class="go-Header-socialIcon"
                         aria-label="Get connected with twitter (Opens in new window)"
                         title="Get connected with twitter (Opens in new window)"
                         href="https://twitter.com/golang">
-                        <img src="/static/shared/logo/social/twitter.svg" />
+                        <img src="{{abs `/static/shared/logo/social/twitter.svg`}}" />
                       </a>
                       <a
                         class="go-Header-socialIcon"
                         aria-label="Get connected with reddit (Opens in new window)"
                         title="Get connected with reddit (Opens in new window)"
                         href="https://www.reddit.com/r/golang/">
-                        <img src="/static/shared/logo/social/reddit.svg" />
+                        <img src="{{abs `/static/shared/logo/social/reddit.svg`}}" />
                       </a>
                       <a
                         class="go-Header-socialIcon"
                         aria-label="Get connected with slack (Opens in new window)"
                         title="Get connected with slack (Opens in new window)"
                         href="https://invite.slack.golangbridge.org/">
-                        <img src="/static/shared/logo/social/slack.svg" />
+                        <img src="{{abs `/static/shared/logo/social/slack.svg`}}" />
                       </a>
                       <a
                         class="go-Header-socialIcon"
                         aria-label="Get connected with stack-overflow (Opens in new window)"
                         title=""
                         href="https://stackoverflow.com/collectives/go">
-                        <img src="/static/shared/logo/social/stack-overflow.svg" />
+                        <img src="{{abs `/static/shared/logo/social/stack-overflow.svg`}}" />
                       </a>
                   </div>
                 </li>
@@ -213,7 +213,7 @@
     <nav class="go-NavigationDrawer-nav">
       <div class="go-NavigationDrawer-header">
         <a href="https://go.dev/">
-          <img class="go-NavigationDrawer-logo" src="/static/shared/logo/go-blue.svg" alt="Go.">
+          <img class="go-NavigationDrawer-logo" src="{{abs `/static/shared/logo/go-blue.svg`}}" alt="Go.">
         </a>
       </div>
       <ul class="go-NavigationDrawer-list">
@@ -222,7 +222,7 @@
               <span>Why Go</span>
               <i class="material-icons">
                 <img class="go-Icon" height="24" width="24"
-                  src="/static/shared/icon/navigate_next_gm_grey_24dp.svg" alt="">
+                  src="{{abs `/static/shared/icon/navigate_next_gm_grey_24dp.svg`}}" alt="">
               </i>
             </a>
 
@@ -232,7 +232,7 @@
                   <a href="#">
                     <i class="material-icons">
                       <img class="go-Icon" height="24" width="24"
-                        src="/static/shared/icon/navigate_before_gm_grey_24dp.svg" alt="">
+                        src="{{abs `/static/shared/icon/navigate_before_gm_grey_24dp.svg`}}" alt="">
                       </i>
                       Why Go
                   </a>
@@ -265,7 +265,7 @@
               <span>Docs</span>
               <i class="material-icons">
                 <img class="go-Icon" height="24" width="24"
-                  src="/static/shared/icon/navigate_next_gm_grey_24dp.svg" alt="">
+                  src="{{abs `/static/shared/icon/navigate_next_gm_grey_24dp.svg`}}" alt="">
               </i>
             </a>
 
@@ -274,7 +274,7 @@
                 <div class="go-NavigationDrawer-header">
                   <a href="#"><i class="material-icons">
                     <img class="go-Icon" height="24" width="24"
-                      src="/static/shared/icon/navigate_before_gm_grey_24dp.svg" alt="">
+                      src="{{abs `/static/shared/icon/navigate_before_gm_grey_24dp.svg`}}" alt="">
                     </i>
                     Docs
                   </a>
@@ -305,14 +305,14 @@
             </div>
           </li>
           <li class="go-NavigationDrawer-listItem go-NavigationDrawer-listItem--active">
-            <a href="/">Packages</a>
+            <a href="{{abs `/`}}">Packages</a>
           </li>
           <li class="go-NavigationDrawer-listItem js-mobile-subnav-trigger go-NavigationDrawer-hasSubnav">
             <a href="#">
               <span>Community</span>
               <i class="material-icons">
                 <img class="go-Icon" height="24" width="24"
-                  src="/static/shared/icon/navigate_next_gm_grey_24dp.svg" alt="">
+                  src="{{abs `/static/shared/icon/navigate_next_gm_grey_24dp.svg`}}" alt="">
               </i>
             </a>
             <div class="go-NavigationDrawer go-NavigationDrawer-submenuItem">
@@ -321,7 +321,7 @@
                   <a href="#">
                     <i class="material-icons">
                       <img class="go-Icon" height="24" width="24"
-                        src="/static/shared/icon/navigate_before_gm_grey_24dp.svg" alt="">
+                        src="{{abs `/static/shared/icon/navigate_before_gm_grey_24dp.svg`}}" alt="">
                     </i>
                     Community
                   </a>
@@ -337,7 +337,7 @@
                       Meetups
                       <i class="material-icons">
                       <img class="go-Icon" height="24" width="24"
-                          src="/static/shared/icon/launch_gm_grey_24dp.svg" alt="">
+                          src="{{abs `/static/shared/icon/launch_gm_grey_24dp.svg`}}" alt="">
                       </i>
                     </a>
                   </li>
@@ -345,7 +345,7 @@
                     <a href="https://github.com/golang/go/wiki/Conferences">
                       Conferences
                       <i class="material-icons">
-                        <img class="go-Icon" height="24" width="24" src="/static/shared/icon/launch_gm_grey_24dp.svg" alt="">
+                        <img class="go-Icon" height="24" width="24" src="{{abs `/static/shared/icon/launch_gm_grey_24dp.svg`}}" alt="">
                       </i>
                     </a>
                   </li>
@@ -362,12 +362,12 @@
                   <li class="go-NavigationDrawer-listItem">
                     <div>Get connected</div>
                     <div class="go-Header-socialIcons">
-                        <a class="go-Header-socialIcon" href="https://groups.google.com/g/golang-nuts"><img src="/static/shared/logo/social/google-groups.svg" /></a>
-                        <a class="go-Header-socialIcon" href="https://github.com/golang"><img src="/static/shared/logo/social/github.svg" /></a>
-                        <a class="go-Header-socialIcon" href="https://twitter.com/golang"><img src="/static/shared/logo/social/twitter.svg" /></a>
-                        <a class="go-Header-socialIcon" href="https://www.reddit.com/r/golang/"><img src="/static/shared/logo/social/reddit.svg" /></a>
-                        <a class="go-Header-socialIcon" href="https://invite.slack.golangbridge.org/"><img src="/static/shared/logo/social/slack.svg" /></a>
-                        <a class="go-Header-socialIcon" href="https://stackoverflow.com/collectives/go"><img src="/static/shared/logo/social/stack-overflow.svg" /></a>
+                        <a class="go-Header-socialIcon" href="https://groups.google.com/g/golang-nuts"><img src="{{abs `/static/shared/logo/social/google-groups.svg`}}" /></a>
+                        <a class="go-Header-socialIcon" href="https://github.com/golang"><img src="{{abs `/static/shared/logo/social/github.svg`}}" /></a>
+                        <a class="go-Header-socialIcon" href="https://twitter.com/golang"><img src="{{abs `/static/shared/logo/social/twitter.svg`}}" /></a>
+                        <a class="go-Header-socialIcon" href="https://www.reddit.com/r/golang/"><img src="{{abs `/static/shared/logo/social/reddit.svg`}}" /></a>
+                        <a class="go-Header-socialIcon" href="https://invite.slack.golangbridge.org/"><img src="{{abs `/static/shared/logo/social/slack.svg`}}" /></a>
+                        <a class="go-Header-socialIcon" href="https://stackoverflow.com/collectives/go"><img src="{{abs `/static/shared/logo/social/stack-overflow.svg`}}" /></a>
                     </div>
                   </li>
                 </ul>
@@ -384,8 +384,8 @@
 <div class="go-SearchForm js-searchForm">
   <form
     class="go-InputGroup go-ShortcutKey go-SearchForm-form"
-    action="/search"
-    data-shortcut="/"
+    action="{{abs `/search`}}"
+    data-shortcut="{{abs `/`}}"
     data-shortcut-alt="search"
     data-gtmc="search form"
     aria-label="Search for a package"
@@ -401,7 +401,7 @@
         class="go-Icon"
         height="24"
         width="24"
-        src="/static/shared/icon/search_gm_grey_24dp.svg"
+        src="{{abs `/static/shared/icon/search_gm_grey_24dp.svg`}}"
         alt=""
       />
     </button>
@@ -409,7 +409,7 @@
   <button class="go-SearchForm-expandSearch js-expandSearch" data-gtmc="nav button"
       aria-label="Open search" data-test-id="expand-search">
     <img class="go-Icon go-Icon--inverted" height="24" width="24"
-        src="/static/shared/icon/search_gm_grey_24dp.svg" alt="">
+        src="{{abs `/static/shared/icon/search_gm_grey_24dp.svg`}}" alt="">
 
   </button>
 </div>

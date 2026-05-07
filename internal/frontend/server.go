@@ -63,6 +63,11 @@ type Server struct {
 	instanceID            string
 	HTTPClient            *http.Client
 	recordCodeWikiMetrics RecordClickFunc
+	// basePath：URL 前缀（如 "/gogodocs"），空字符串 = 默认挂根。
+	// 由调用方通过 ServerConfig.BasePath 设置，并贯穿 mux pattern / StripPrefix /
+	// template "abs" 助手 / 内部 redirect / dochtml 链接拼接，使整站能整体迁移到子路径。
+	// 关于不变式：basePath 要么空、要么形如 "/foo"——尾部不带斜杠（拼 mux 时双斜杠会失配）。
+	basePath string
 
 	mu        sync.Mutex // Protects all fields below
 	templates map[string]*template.Template
@@ -101,16 +106,18 @@ type ServerConfig struct {
 	VulndbClient          *vuln.Client
 	HTTPClient            *http.Client
 	RecordCodeWikiMetrics RecordClickFunc
+	// BasePath：URL 子路径前缀（如 "/gogodocs"），空 = 挂根。详见 [Server.basePath]。
+	BasePath string
 }
 
 // NewServer creates a new Server for the given database and template directory.
 func NewServer(scfg ServerConfig) (_ *Server, err error) {
 	defer derrors.Wrap(&err, "NewServer(...)")
-	ts, err := templates.ParsePageTemplates(scfg.TemplateFS)
+	ts, err := templates.ParsePageTemplates(scfg.TemplateFS, scfg.BasePath)
 	if err != nil {
 		return nil, fmt.Errorf("error parsing templates: %v", err)
 	}
-	dochtml.LoadTemplates(scfg.TemplateFS)
+	dochtml.LoadTemplates(scfg.TemplateFS, scfg.BasePath)
 	s := &Server{
 		fetchServer:           scfg.FetchServer,
 		getDataSource:         scfg.DataSourceGetter,
@@ -128,6 +135,7 @@ func NewServer(scfg ServerConfig) (_ *Server, err error) {
 		vulnClient:            scfg.VulndbClient,
 		HTTPClient:            scfg.HTTPClient,
 		recordCodeWikiMetrics: scfg.RecordCodeWikiMetrics,
+		basePath:              scfg.BasePath,
 	}
 	if s.HTTPClient == nil {
 		s.HTTPClient = http.DefaultClient
@@ -177,7 +185,21 @@ type Cacher interface {
 // Install registers server routes using the given handler registration func.
 // authValues is the set of values that can be set on authHeader to bypass the
 // cache.
+//
+// fork 注：handle 入参在函数体内被 shadow 成 base-path-aware 版本——所有
+// "GET /static/"、"/v1/api" 之类的 pattern 都自动通过 [Server.prefixPattern]
+// 加上 [Server.basePath]，无需改下面任何具体路由声明。空 basePath 时 prefix
+// 是 no-op，行为与上游完全一致。internal StripPrefix 仍需手动加 s.basePath
+// 让 file server 能剥到正确的剩余 path。
 func (s *Server) Install(handle func(string, http.Handler), cacher Cacher, authValues []string) {
+	// shadow 入参 handle：所有 handle("GET /static/", ...) 自动变成
+	// realHandle("GET /gogodocs/static/", ...)，保持原代码零改动。
+	// installDebugHandlers(handle) 透传时也用包装版本——_debug/pprof 等
+	// 调试端点同样落在 base-path 下。
+	realHandle := handle
+	handle = func(pattern string, h http.Handler) {
+		realHandle(s.prefixPattern(pattern), h)
+	}
 	var (
 		detailHandler http.Handler = s.errorHandler(s.serveDetails)
 		fetchHandler  http.Handler
@@ -208,12 +230,12 @@ func (s *Server) Install(handle func(string, http.Handler), cacher Cacher, authV
 		log.Infof(r.Context(), "Request made to %q", r.URL.Path)
 	}))
 	handle("GET /static/", s.staticHandler())
-	handle("GET /third_party/", http.StripPrefix("/third_party", http.FileServer(http.FS(s.thirdPartyFS))))
+	handle("GET /third_party/", http.StripPrefix(s.basePath+"/third_party", http.FileServer(http.FS(s.thirdPartyFS))))
 	handle("GET /favicon.ico", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		serveFileFS(w, r, s.staticFS, "shared/icon/favicon.ico")
 	}))
 
-	handle("/sitemap/", http.StripPrefix("/sitemap/", http.FileServer(http.Dir("private/sitemap"))))
+	handle("/sitemap/", http.StripPrefix(s.basePath+"/sitemap/", http.FileServer(http.Dir("private/sitemap"))))
 	handle("GET /mod/", http.HandlerFunc(s.handleModuleDetailsRedirect))
 	handle("GET /pkg/", http.HandlerFunc(s.handlePackageDetailsRedirect))
 	if fetchHandler != nil {
@@ -234,7 +256,7 @@ func (s *Server) Install(handle func(string, http.Handler), cacher Cacher, authV
 	}))
 	handle("GET /codewiki", http.HandlerFunc(s.handleCodeWikiRedirect))
 	handle("GET /golang.org/x", s.staticPageHandler("subrepo", "Sub-repositories"))
-	handle("GET /files/", http.StripPrefix("/files", s.fileMux))
+	handle("GET /files/", http.StripPrefix(s.basePath+"/files", s.fileMux))
 	handle("GET /vuln/", vulnHandler)
 	handle("GET /v1/package/", s.apiHandler(api.ServePackage))
 	handle("GET /v1/symbols/", s.apiHandler(api.ServePackageSymbols))
@@ -260,9 +282,9 @@ func (s *Server) Install(handle func(string, http.Handler), cacher Cacher, authV
 	handle("/", detailHandler)
 	if s.serveStats {
 		handle("/detail-stats/",
-			stats.Stats()(http.StripPrefix("/detail-stats", s.errorHandler(s.serveDetails))))
+			stats.Stats()(http.StripPrefix(s.basePath+"/detail-stats", s.errorHandler(s.serveDetails))))
 		handle("/search-stats/",
-			stats.Stats()(http.StripPrefix("/search-stats", s.errorHandler(s.serveSearch))))
+			stats.Stats()(http.StripPrefix(s.basePath+"/search-stats", s.errorHandler(s.serveSearch))))
 	}
 	handle("/robots.txt", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
@@ -353,8 +375,36 @@ func (s *Server) installDebugHandlers(handle func(string, http.Handler)) {
 }
 
 // InstallFS adds path under the /files handler, serving the files in fsys.
+//
+// 注：fileMux 是子 mux，外层 [Server.Install] 在 /files/ 这一层已经 StripPrefix
+// 掉了 [Server.basePath]+"/files"，所以 fileMux 看到的请求 path 就是 raw path
+// （从 path 段开始）。这里的 StripPrefix(path) 不需要带 basePath。
 func (s *Server) InstallFS(path string, fsys fs.FS) {
 	s.fileMux.Handle("GET "+path+"/", http.StripPrefix(path, http.FileServer(http.FS(fsys))))
+}
+
+// prefixPattern 把 mux pattern 里的 path 部分加 [Server.basePath] 前缀。
+//
+// pattern 形式（go 1.22 ServeMux 语法）：
+//   - "GET /static/"        — 带 method
+//   - "/sitemap/"           — 不带 method
+//   - "POST /play/share"    — 任意 method
+//
+// basePath 为空时返回原 pattern（与上游零差异）；非空时把 path 段前置 basePath。
+//
+// 注：basePath 已在 [validateBasePath] 校验过形如 "/foo" 不带尾斜杠，
+// 拼上去保证不会出现双斜杠（如 basePath="/x" + pattern="/static/" = "/x/static/"）。
+func (s *Server) prefixPattern(pattern string) string {
+	if s.basePath == "" {
+		return pattern
+	}
+	// 拆 method 和 path：" " 分隔，最多一处。
+	method, p, ok := strings.Cut(pattern, " ")
+	if !ok {
+		// 没空格——pattern 整段就是 path
+		return s.basePath + pattern
+	}
+	return method + " " + s.basePath + p
 }
 
 const (
@@ -718,7 +768,7 @@ func (s *Server) findTemplate(templateName string) (*template.Template, error) {
 		s.mu.Lock()
 		defer s.mu.Unlock()
 		var err error
-		s.templates, err = templates.ParsePageTemplates(s.templateFS)
+		s.templates, err = templates.ParsePageTemplates(s.templateFS, s.basePath)
 		if err != nil {
 			return nil, fmt.Errorf("error parsing templates: %v", err)
 		}
@@ -740,7 +790,7 @@ func executeTemplate(ctx context.Context, templateName string, tmpl *template.Te
 }
 
 func (s *Server) staticHandler() http.Handler {
-	return http.StripPrefix("/static/", http.FileServer(http.FS(s.staticFS)))
+	return http.StripPrefix(s.basePath+"/static/", http.FileServer(http.FS(s.staticFS)))
 }
 
 // serveFileFS serves a file from the given filesystem.

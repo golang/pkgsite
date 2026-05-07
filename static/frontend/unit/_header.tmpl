@@ -42,7 +42,7 @@
                 class="go-Icon go-Icon--accented"
                 height="24"
                 width="24"
-                src="/static/shared/icon/content_copy_gm_grey_24dp.svg"
+                src="{{abs `/static/shared/icon/content_copy_gm_grey_24dp.svg`}}"
                 alt=""
               >
             </button>
@@ -56,7 +56,7 @@
 {{define "unit-header-title"}}
   <div class="go-Main-headerTitle js-stickyHeader">
     <a class="go-Main-headerLogo" href="{{if .LocalMode}}/{{else}}https://go.dev/{{end}}" aria-hidden="true" tabindex="-1" data-gtmc="header link" aria-label="Link to Go Homepage">
-      <img height="78" width="207" src="/static/shared/logo/go-blue.svg" alt="Go">
+      <img height="78" width="207" src="{{abs `/static/shared/logo/go-blue.svg`}}" alt="Go">
     </a>
     <h1 class="UnitHeader-titleHeading" data-test-id="UnitHeader-title">{{.Title}}</h1>
     {{range .PageLabels}}
@@ -76,7 +76,7 @@
             class="go-Icon go-Icon--accented"
             height="24"
             width="24"
-            src="/static/shared/icon/content_copy_gm_grey_24dp.svg"
+            src="{{abs `/static/shared/icon/content_copy_gm_grey_24dp.svg`}}"
             alt=""
           />
         </button>
@@ -150,14 +150,14 @@
             {{if $i}}, {{end}} {{$e.Type}}
           {{- end -}}
         </span>
-        <a href="/license-policy" class="Disclaimer-link" data-gtmc="info link"
+        <a href="{{abs `/license-policy`}}" class="Disclaimer-link" data-gtmc="info link"
         aria-describedby="license-description">
           <em>not legal advice</em>
         </a>
       {{end}}
     {{else}}
       <span>None detected</span>
-      <a href="/license-policy" class="Disclaimer-link" data-gtmc="info link" 
+      <a href="{{abs `/license-policy`}}" class="Disclaimer-link" data-gtmc="info link" 
       aria-describedby="license-description">
         <em>not legal advice</em>
       </a>
@@ -199,7 +199,7 @@
       <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
     </svg>
     <select class="UnitHeader-overflowSelect js-selectNav" tabindex="-1">
-      <option value="/">Main</option>
+      <option value="{{abs `/`}}">Main</option>
       <option value="{{$.URLPath}}?tab=versions">
         Versions
       </option>
@@ -221,7 +221,7 @@
 {{define "detail-page-nav"}}
   <span>
     <a class="UnitHeader-backLink" href="{{.URLPath}}" data-gtmc="header link">
-      <img class="go-Icon" height="24" width="24" src="/static/shared/icon/arrow_left_alt_gm_grey_24dp.svg" alt="">
+      <img class="go-Icon" height="24" width="24" src="{{abs `/static/shared/icon/arrow_left_alt_gm_grey_24dp.svg`}}" alt="">
       Go to main page
     </a>
   </span>
@@ -234,7 +234,7 @@
         class="go-Icon"
         height="24"
         width="24"
-        src="/static/shared/icon/info_gm_grey_24dp.svg"
+        src="{{abs `/static/shared/icon/info_gm_grey_24dp.svg`}}"
         alt="Notice"
       />&nbsp; Redirected from <span data-test-id="redirected-banner-text">{{.}}</span>.
     </div>
@@ -249,10 +249,10 @@
                 class="go-Icon"
                 height="24"
                 width="24"
-                src="/static/shared/icon/alert_gm_grey_24dp.svg"
+                src="{{abs `/static/shared/icon/alert_gm_grey_24dp.svg`}}"
                 alt="Alert"
             />&nbsp;
-            Affected by <a href="/vuln/{{(index $vs 0).ID}}">{{(index $vs 0).ID}}</a>
+            Affected by <a href="{{basepath}}/vuln/{{(index $vs 0).ID}}">{{(index $vs 0).ID}}</a>
             {{with $more := subtract (len $vs) 1}} and {{$more}} other vulnerabilities{{end}}
           </summary>
           <div>
@@ -267,7 +267,7 @@
         class="go-Icon"
         height="24"
         width="24"
-        src="/static/shared/icon/alert_gm_grey_24dp.svg"
+        src="{{abs `/static/shared/icon/alert_gm_grey_24dp.svg`}}"
         alt="Warning"
       />&nbsp; <strong>Deprecated</strong>
       {{- with .Unit.DeprecationComment -}}
@@ -281,7 +281,7 @@
         class="go-Icon"
         height="24"
         width="24"
-        src="/static/shared/icon/alert_gm_grey_24dp.svg"
+        src="{{abs `/static/shared/icon/alert_gm_grey_24dp.svg`}}"
         alt="Warning"
       />&nbsp; <strong>Retracted</strong>
       {{- with .Unit.RetractionRationale -}}
@@ -295,10 +295,10 @@
         class="go-Icon"
         height="24"
         width="24"
-        src="/static/shared/icon/info_gm_grey_24dp.svg"
+        src="{{abs `/static/shared/icon/info_gm_grey_24dp.svg`}}"
         alt="Notice"
       />&nbsp; The highest tagged major version is
-      <a href="/{{.LatestMajorVersionURL}}" data-gtmc="banner link" aria-label="Go to Latest Major Version">
+      <a href="{{basepath}}/{{.LatestMajorVersionURL}}" data-gtmc="banner link" aria-label="Go to Latest Major Version">
         {{- .LatestMajorVersion -}}
       </a>.
     </div>
@@ -308,7 +308,7 @@
 {{define "severity-toggletip"}}
   <details class="go-Tooltip js-tooltip" data-gtmc="tooltip">
     <summary>
-      <img class="go-Icon go-Icon--inverted" height="24" width="24" src="/static/shared/icon/alert_gm_grey_24dp.svg" alt="Warning">
+      <img class="go-Icon go-Icon--inverted" height="24" width="24" src="{{abs `/static/shared/icon/alert_gm_grey_24dp.svg`}}" alt="Warning">
     </summary>
     <p>{{.}}</p>
   </details>

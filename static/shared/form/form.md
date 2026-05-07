@@ -20,7 +20,7 @@
 ### Input w/ Shortcut Key {#form-input-shortcut}
 
 ```html
-<div class="go-ShortcutKey" data-shortcut="/" data-shortcut-alt="search">
+<div class="go-ShortcutKey" data-shortcut="{{abs `/`}}" data-shortcut-alt="search">
   <input class="go-Input" placeholder="e.g., https://pkg.go.dev/net/http" />
 </div>
 ```
@@ -55,7 +55,7 @@
       class="go-Icon"
       height="24"
       width="24"
-      src="/static/shared/icon/search_gm_grey_24dp.svg"
+      src="{{abs `/static/shared/icon/search_gm_grey_24dp.svg`}}"
       alt=""
     />
   </button>
@@ -82,7 +82,7 @@
       class="go-Icon"
       height="24"
       width="24"
-      src="/static/shared/icon/filter_list_gm_grey_24dp.svg"
+      src="{{abs `/static/shared/icon/filter_list_gm_grey_24dp.svg`}}"
       alt=""
     />
   </button>
@@ -94,7 +94,7 @@
       class="go-Icon"
       height="24"
       width="24"
-      src="/static/shared/icon/search_gm_grey_24dp.svg"
+      src="{{abs `/static/shared/icon/search_gm_grey_24dp.svg`}}"
       alt=""
     />
   </button>
@@ -110,7 +110,7 @@
         class="go-Icon"
         height="24"
         width="24"
-        src="/static/shared/icon/filter_list_gm_grey_24dp.svg"
+        src="{{abs `/static/shared/icon/filter_list_gm_grey_24dp.svg`}}"
         alt=""
       />
     </button>
@@ -119,7 +119,7 @@
         class="go-Icon"
         height="24"
         width="24"
-        src="/static/shared/icon/search_gm_grey_24dp.svg"
+        src="{{abs `/static/shared/icon/search_gm_grey_24dp.svg`}}"
         alt=""
       />
     </button>

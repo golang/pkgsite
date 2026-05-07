@@ -9,19 +9,19 @@
 {{end}}
 
 {{define "pre-content"}}
-  <link href="/static/frontend/badge/badge.min.css?version={{.AppVersionLabel}}" rel="stylesheet">
+  <link href="{{abs `/static/frontend/badge/badge.min.css`}}?version={{.AppVersionLabel}}" rel="stylesheet">
 {{end}}
 
 {{define "main"}}
   <main class="go-Container" id="main-content">
     <div class="go-Content Badge">
-      <form class="go-Form" action="/badge/" data-gtmc="badge form" aria-label="Create a Badge">
+      <form class="go-Form" action="{{abs `/badge/`}}" data-gtmc="badge form" aria-label="Create a Badge">
         <h1>Create a badge</h1>
         <p>Create a badge to link to pkg.go.dev from your project website or README file.</p>
         <label class="go-Label">
           Badge
           <a class="js-badgeExampleButton" href="https://pkg.go.dev/{{.LinkPath}}">
-            <img class="Badge-badgeIcon" src="/static/frontend/badge/badge.svg" alt="Go Reference">
+            <img class="Badge-badgeIcon" src="{{abs `/static/frontend/badge/badge.svg`}}" alt="Go Reference">
           </a>
         </label>
         <label class="go-Label">
@@ -46,7 +46,7 @@
                   class="go-Icon"
                   height="24"
                   width="24"
-                  src="/static/shared/icon/content_copy_gm_grey_24dp.svg"
+                  src="{{abs `/static/shared/icon/content_copy_gm_grey_24dp.svg`}}"
                   alt=""
                 />
               </button>
@@ -65,7 +65,7 @@
                   class="go-Icon"
                   height="24"
                   width="24"
-                  src="/static/shared/icon/content_copy_gm_grey_24dp.svg"
+                  src="{{abs `/static/shared/icon/content_copy_gm_grey_24dp.svg`}}"
                   alt=""
                 />
               </button>
@@ -73,7 +73,7 @@
           </label>
         {{else}}
           <div class="Badge-gopherLanding">
-            <img width="1200" height="945" src="/static/shared/gopher/airplane-1200x945.svg" alt="The Go Gopher"/>
+            <img width="1200" height="945" src="{{abs `/static/shared/gopher/airplane-1200x945.svg`}}" alt="The Go Gopher"/>
             <p class="go-textSubtle">Type a pkg.go.dev URL above to create a badge link.</p>
           </div>
         {{end}}

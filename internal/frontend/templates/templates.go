@@ -39,15 +39,45 @@ func stripScheme(url string) string {
 	return url
 }
 
+// funcsWithBasePath 在内置 templateFuncs 之上叠两个 base-path 助手：
+//
+//   - `{{abs "/static/foo.svg"}}` → 静态绝对路径前置 BasePath，
+//     站点挂根时输出 `/static/foo.svg`，挂 -base-path=/gogodocs 时输出
+//     `/gogodocs/static/foo.svg`。必须以 / 开头；否则原样（让作者改时一目了然）。
+//   - `{{basepath}}` → 返回 BasePath 字符串本身（不带尾斜杠），用于模板里
+//     拼动态 path 例如 `<a href="{{basepath}}/{{.Path}}">`——abs 不能拼带
+//     变量的 path（template 函数实参不能嵌套表达式）。
+//
+// templateFuncs 是个全局只读 map，本函数 copy 一份再叠 helper，
+// 避免不同 Server 实例（理论上多 BasePath 共存）相互覆盖 funcMap。
+func funcsWithBasePath(basePath string) template.FuncMap {
+	out := template.FuncMap{}
+	for k, v := range templateFuncs {
+		out[k] = v
+	}
+	out["abs"] = func(p string) string {
+		if basePath == "" || !strings.HasPrefix(p, "/") {
+			return p
+		}
+		return basePath + p
+	}
+	out["basepath"] = func() string { return basePath }
+	return out
+}
+
 // ParsePageTemplates parses html templates contained in the given filesystem in
 // order to generate a map of Name->*template.Template.
+//
+// basePath 形如 "/gogodocs" 或空字符串。空 = 站点挂根（pkg.go.dev 行为）。
+// 模板里通过 `{{abs "/static/foo.svg"}}` 输出带 prefix 的绝对 URL。
 //
 // Separate templates are used so that certain contextual functions (e.g.
 // templateName) can be bound independently for each page.
 //
 // Templates in directories prefixed with an underscore are considered helper
 // templates and parsed together with the files in each base directory.
-func ParsePageTemplates(fsys template.TrustedFS) (map[string]*template.Template, error) {
+func ParsePageTemplates(fsys template.TrustedFS, basePath string) (map[string]*template.Template, error) {
+	funcs := funcsWithBasePath(basePath)
 	templates := make(map[string]*template.Template)
 	htmlSets := [][]string{
 		{"about"},
@@ -72,7 +102,7 @@ func ParsePageTemplates(fsys template.TrustedFS) (map[string]*template.Template,
 	}
 
 	for _, set := range htmlSets {
-		t, err := template.New("frontend.tmpl").Funcs(templateFuncs).ParseFS(fsys, "frontend/*.tmpl")
+		t, err := template.New("frontend.tmpl").Funcs(funcs).ParseFS(fsys, "frontend/*.tmpl")
 		if err != nil {
 			return nil, fmt.Errorf("ParseFS: %v", err)
 		}

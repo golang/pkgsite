@@ -5,7 +5,7 @@
 -->
 
 {{define "main-styles"}}
-  <link href="/static/frontend/vuln/main/main.min.css?version={{.AppVersionLabel}}" rel="stylesheet">
+  <link href="{{abs `/static/frontend/vuln/main/main.min.css`}}?version={{.AppVersionLabel}}" rel="stylesheet">
 {{end}}
 
 {{define "main-content"}}
@@ -19,7 +19,7 @@
     <h2>Search</h2>
     <form
       class="go-InputGroup VulnMain-search"
-      action="/search"
+      action="{{abs `/search`}}"
       data-gtmc="search vuln"
       aria-label="Search by GO ID, alias, or import path"
       role="search"
@@ -34,7 +34,7 @@
       {{range .Entries}}
         <div class="VulnMain-header">
           <h3 class="VulnMain-title{{if .Withdrawn}} Vuln-titleWithdrawn{{end}}">
-            <a href="/vuln/{{.ID}}">{{.ID}}</a>
+            <a href="{{basepath}}/vuln/{{.ID}}">{{.ID}}</a>
           </h3>
           {{template "vuln-chips" .}}
         </div>
@@ -42,7 +42,7 @@
           {{template "vuln-details-short" .}}
         </div>
       {{end}}
-      <a href="/vuln/list">View all reports</a>
+      <a href="{{abs `/vuln/list`}}">View all reports</a>
       <div><br>If you don't see an existing, public Go vulnerability in a publicly importable package in our database,
         <a href="https://github.com/golang/vulndb/issues/new?assignees=&labels=Needs+Triage%2CDirect+External+Report&template=new_third_party_vuln.yml&title=x%2Fvulndb%3A+potential+Go+vuln+in+%3Cpackage%3E">
           please let us know.

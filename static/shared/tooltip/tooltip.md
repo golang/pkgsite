@@ -10,7 +10,7 @@
       class="go-Icon"
       height="24"
       width="24"
-      src="/static/shared/icon/help_gm_grey_24dp.svg"
+      src="{{abs `/static/shared/icon/help_gm_grey_24dp.svg`}}"
       alt=""
     />
   </summary>

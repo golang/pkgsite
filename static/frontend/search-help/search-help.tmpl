@@ -5,7 +5,7 @@
 -->
 
 {{define "pre-content"}}
-  <link href="/static/frontend/search-help/search-help.min.css?version={{.AppVersionLabel}}" rel="stylesheet">
+  <link href="{{abs `/static/frontend/search-help/search-help.min.css`}}?version={{.AppVersionLabel}}" rel="stylesheet">
 {{end}}
 
 {{define "main"}}
@@ -27,9 +27,9 @@
         <p>You can also search for a symbol by name across all packages. A symbol is a constant, variable, function, type, field, or method.</p>
         <p>Searching by symbol will return a list of packages containing the symbol you specify. You can search by the following:</p>
         <ul class="SearchHelp-list">
-          <li>Full symbol name, such as <a href="/search?m=symbol&q=DB">"DB"</a></li>
-          <li>Package and symbol name, separated by a dot, such as <a href="/search?m=symbol&q=sql.DB">"sql.DB"</a></li>
-          <li>Package path and symbol name (indicated by the # prefix), such as <a href="/search?m=symbol&q=x%2Ftools+package">x/tools #package</a></li>
+          <li>Full symbol name, such as <a href="{{abs `/search`}}?m=symbol&q=DB">"DB"</a></li>
+          <li>Package and symbol name, separated by a dot, such as <a href="{{abs `/search`}}?m=symbol&q=sql.DB">"sql.DB"</a></li>
+          <li>Package path and symbol name (indicated by the # prefix), such as <a href="{{abs `/search`}}?m=symbol&q=x%2Ftools+package">x/tools #package</a></li>
         </ul>
     </div>
   </main>

@@ -9,7 +9,7 @@
 {{end}}
 
 {{define "main-styles"}}
-  <link href="/static/frontend/unit/imports/imports.min.css?version={{.AppVersionLabel}}" rel="stylesheet">
+  <link href="{{abs `/static/frontend/unit/imports/imports.min.css`}}?version={{.AppVersionLabel}}" rel="stylesheet">
 {{end}}
 
 {{define "main-header"}}
@@ -27,7 +27,7 @@
         <h2 class="Imports-heading go-textTitle">Imports</h2>
         <ul class="Imports-list">
         {{range .ExternalImports}}
-          <li class="Imports-listItem"><a href="/{{.}}">{{.}}</a></li>
+          <li class="Imports-listItem"><a href="{{basepath}}/{{.}}">{{.}}</a></li>
         {{end}}
         </ul>
       {{end}}
@@ -35,7 +35,7 @@
         <h2 class="Imports-heading go-textTitle">Imports in module “{{.ModulePath}}”</h2>
         <ul class="Imports-list">
         {{range .InternalImports}}
-          <li class="Imports-listItem"><a href="/{{.}}">{{.}}</a></li>
+          <li class="Imports-listItem"><a href="{{basepath}}/{{.}}">{{.}}</a></li>
         {{end}}
         </ul>
       {{end}}
@@ -43,7 +43,7 @@
         <h2 class="Imports-heading go-textTitle">Standard library imports</h2>
         <ul class="Imports-list">
         {{range .StdLib}}
-          <li class="Imports-listItem"><a href="/{{.}}">{{.}}</a></li>
+          <li class="Imports-listItem"><a href="{{basepath}}/{{.}}">{{.}}</a></li>
         {{end}}
         </ul>
       {{end}}

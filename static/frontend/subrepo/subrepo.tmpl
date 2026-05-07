@@ -10,7 +10,7 @@
 {{end}}
 
 {{define "pre-content"}}
-  <link href="/static/frontend/subrepo/subrepo.min.css?version={{.AppVersionLabel}}" rel="stylesheet">
+  <link href="{{abs `/static/frontend/subrepo/subrepo.min.css`}}?version={{.AppVersionLabel}}" rel="stylesheet">
 {{end}}
 
 {{define "main"}}
@@ -28,91 +28,91 @@
       </p>
       <ul class="SubRepo-links">
         <li>
-          <a data-gtmc="subrepo link" href="/golang.org/x/benchmarks">benchmarks</a>
+          <a data-gtmc="subrepo link" href="{{abs `/golang.org/x/benchmarks`}}">benchmarks</a>
            — benchmarks to measure Go as it is developed.
         </li>
         <li>
-          <a data-gtmc="subrepo link" href="/golang.org/x/build">build</a>
+          <a data-gtmc="subrepo link" href="{{abs `/golang.org/x/build`}}">build</a>
            — <a href="https://build.golang.org">build.golang.org</a>'s implementation.
         </li>
         <li>
-          <a data-gtmc="subrepo link" href="/golang.org/x/crypto">crypto</a>
+          <a data-gtmc="subrepo link" href="{{abs `/golang.org/x/crypto`}}">crypto</a>
            — additional cryptography packages.
         </li>
         <li>
-          <a data-gtmc="subrepo link" href="/golang.org/x/debug">debug</a>
+          <a data-gtmc="subrepo link" href="{{abs `/golang.org/x/debug`}}">debug</a>
            — an experimental debugger for Go.
         </li>
         <li>
-          <a data-gtmc="subrepo link" href="/golang.org/x/exp">exp</a>
+          <a data-gtmc="subrepo link" href="{{abs `/golang.org/x/exp`}}">exp</a>
            — experimental and deprecated packages (handle with care; may change without warning).
         </li>
         <li>
-          <a data-gtmc="subrepo link" href="/golang.org/x/image">image</a>
+          <a data-gtmc="subrepo link" href="{{abs `/golang.org/x/image`}}">image</a>
            — additional imaging packages.
         </li>
         <li>
-          <a data-gtmc="subrepo link" href="/golang.org/x/mobile">mobile</a>
+          <a data-gtmc="subrepo link" href="{{abs `/golang.org/x/mobile`}}">mobile</a>
            — experimental support for Go on mobile platforms.
         </li>
         <li>
-          <a data-gtmc="subrepo link" href="/golang.org/x/mod">mod</a>
+          <a data-gtmc="subrepo link" href="{{abs `/golang.org/x/mod`}}">mod</a>
            — packages for writing tools that work with Go modules.
         </li>
         <li>
-          <a data-gtmc="subrepo link" href="/golang.org/x/net">net</a>
+          <a data-gtmc="subrepo link" href="{{abs `/golang.org/x/net`}}">net</a>
            — additional networking packages.
         </li>
         <li>
-          <a data-gtmc="subrepo link" href="/golang.org/x/oauth2">oauth2</a>
+          <a data-gtmc="subrepo link" href="{{abs `/golang.org/x/oauth2`}}">oauth2</a>
            — a client implementation for the OAuth 2.0 spec
         </li>
         <li>
-          <a data-gtmc="subrepo link" href="/golang.org/x/perf">perf</a>
+          <a data-gtmc="subrepo link" href="{{abs `/golang.org/x/perf`}}">perf</a>
            — packages and tools for performance measurement, storage, and analysis.
         </li>
         <li>
-          <a data-gtmc="subrepo link" href="/golang.org/x/pkgsite">pkgsite</a>
+          <a data-gtmc="subrepo link" href="{{abs `/golang.org/x/pkgsite`}}">pkgsite</a>
            — home of the pkg.go.dev website.
         </li>
         <li>
-          <a data-gtmc="subrepo link" href="/golang.org/x/review">review</a>
+          <a data-gtmc="subrepo link" href="{{abs `/golang.org/x/review`}}">review</a>
            — a tool for working with Gerrit code reviews.
         </li>
         <li>
-          <a data-gtmc="subrepo link" href="/golang.org/x/sync">sync</a>
+          <a data-gtmc="subrepo link" href="{{abs `/golang.org/x/sync`}}">sync</a>
            — additional concurrency primitives.
         </li>
         <li>
-          <a data-gtmc="subrepo link" href="/golang.org/x/sys">sys</a>
+          <a data-gtmc="subrepo link" href="{{abs `/golang.org/x/sys`}}">sys</a>
            — packages for making system calls.
         </li>
         <li>
-          <a data-gtmc="subrepo link" href="/golang.org/x/term">term</a>
+          <a data-gtmc="subrepo link" href="{{abs `/golang.org/x/term`}}">term</a>
            — Go terminal and console support packages.
         </li>
         <li>
-          <a data-gtmc="subrepo link" href="/golang.org/x/text">text</a>
+          <a data-gtmc="subrepo link" href="{{abs `/golang.org/x/text`}}">text</a>
            — packages for working with text.
         </li>
         <li>
-          <a data-gtmc="subrepo link" href="/golang.org/x/time">time</a>
+          <a data-gtmc="subrepo link" href="{{abs `/golang.org/x/time`}}">time</a>
            — additional time packages.
         </li>
         <li>
-          <a data-gtmc="subrepo link" href="/golang.org/x/tools">tools</a>
+          <a data-gtmc="subrepo link" href="{{abs `/golang.org/x/tools`}}">tools</a>
            — godoc, goimports, gorename, and other tools.
         </li>
         <li>
-          <a data-gtmc="subrepo link" href="/golang.org/x/tour">tour</a>
+          <a data-gtmc="subrepo link" href="{{abs `/golang.org/x/tour`}}">tour</a>
            — <a href="https://tour.golang.org">tour.golang.org</a>'s implementation.
         </li>
         <li>
-          <a data-gtmc="subrepo link" href="/golang.org/x/vuln">vuln</a>
+          <a data-gtmc="subrepo link" href="{{abs `/golang.org/x/vuln`}}">vuln</a>
            — packages for accessing and analyzing data from the Go Vulnerability Database.
         </li>
         <li>
-          <a data-gtmc="subrepo link" href="/golang.org/x/website">website</a>
+          <a data-gtmc="subrepo link" href="{{abs `/golang.org/x/website`}}">website</a>
            — home of the go.dev and golang.org websites.
         </li>
       </ul>

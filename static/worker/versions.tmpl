@@ -40,13 +40,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <meta charset="utf-8">
-<link href="/static/worker/worker.min.css" rel="stylesheet">
+<link href="{{abs `/static/worker/worker.min.css`}}" rel="stylesheet">
 <title>{{.Env}} Worker</title>
 
 <body>
   <h1>{{.Env}} Worker</h1>
   <p>All times in America/New_York.</p>
-  <p><a href="/">Home</a></p>
+  <p><a href="{{abs `/`}}">Home</a></p>
 
   <div>
     <h3>Statistics</h3>
