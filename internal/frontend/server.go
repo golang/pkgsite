@@ -242,7 +242,7 @@ func (s *Server) Install(handle func(string, http.Handler), cacher Cacher, authV
 	handle("GET /v1beta/module/", s.apiHandler(api.ServeModule))
 	handle("GET /v1beta/versions/", s.apiHandler(api.ServeModuleVersions))
 	handle("GET /v1beta/packages/", s.apiHandler(api.ServeModulePackages))
-	handle("GET /v1beta/search/", s.apiHandler(api.ServeSearch))
+	handle("GET /v1beta/search", s.apiHandler(api.ServeSearch))
 	handle("GET /v1beta/vulns/", s.apiHandler(api.ServeVulnerabilities(s.vulnClient)))
 	handle("GET /v1beta/api", s.apiDocHandler())
 	handle("GET /api", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
