@@ -46,7 +46,7 @@ func (s *FetchServer) ServePathNotFoundPage(w http.ResponseWriter, r *http.Reque
 			log.Error(ctx, err)
 		}
 		if path != "" {
-			http.Redirect(w, r, fmt.Sprintf("/%s", path), http.StatusFound)
+			http.Redirect(w, r, fmt.Sprintf("%s/%s", s.BasePath, path), http.StatusFound)
 			return
 		}
 
@@ -132,7 +132,7 @@ func (s *FetchServer) ServePathNotFoundPage(w http.ResponseWriter, r *http.Reque
 		// See https://golang.org/issue/43725 for context.
 		nm, err := db.GetNestedModules(ctx, fullPath)
 		if err == nil && len(nm) > 0 {
-			http.Redirect(w, r, "/search?q="+url.QueryEscape(fullPath), http.StatusFound)
+			http.Redirect(w, r, s.BasePath+"/search?q="+url.QueryEscape(fullPath), http.StatusFound)
 			return nil
 		}
 		return &serrors.ServerError{

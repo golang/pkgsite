@@ -252,7 +252,7 @@ func (s *Server) Install(handle func(string, http.Handler), cacher Cacher, authV
 	handle("GET /C", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Package "C" is a special case: redirect to /cmd/cgo.
 		// (This is what golang.org/C does.)
-		http.Redirect(w, r, "/cmd/cgo", http.StatusMovedPermanently)
+		http.Redirect(w, r, s.basePath+"/cmd/cgo", http.StatusMovedPermanently)
 	}))
 	handle("GET /codewiki", http.HandlerFunc(s.handleCodeWikiRedirect))
 	handle("GET /golang.org/x", s.staticPageHandler("subrepo", "Sub-repositories"))
@@ -268,10 +268,10 @@ func (s *Server) Install(handle func(string, http.Handler), cacher Cacher, authV
 	handle("GET /v1/vulns/", s.apiHandler(api.ServeVulnerabilities(s.vulnClient)))
 	handle("GET /v1/api", s.apiDocHandler())
 	handle("GET /api", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		http.Redirect(w, r, "/v1/api", http.StatusMovedPermanently)
+		http.Redirect(w, r, s.basePath+"/v1/api", http.StatusMovedPermanently)
 	}))
 	handle("GET /v1", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		http.Redirect(w, r, "/v1/api", http.StatusMovedPermanently)
+		http.Redirect(w, r, s.basePath+"/v1/api", http.StatusMovedPermanently)
 	}))
 	handle("/v1/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		api.ServeError(w, r, api.BadRequest("Unknown API endpoint. For documentation, GET /v1/api at this host and port."))
