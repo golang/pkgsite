@@ -5,11 +5,14 @@
  * license that can be found in the LICENSE file.
  */
 
+import { abs } from '../../shared/base-path/base-path';
+
 /**
  * Left Navigation.
  */
 export const initJumpLinks = async function () {
-  const pagesWithJumpLinks = ['/about'];
+  // pathname 在挂 -base-path=/gogodocs 时是 "/gogodocs/about"——比较列表也得带前缀
+  const pagesWithJumpLinks = [abs('/about')];
   if (!pagesWithJumpLinks.includes(window.location.pathname)) {
     // stop the file from doing anything else if the page doesn't have jumplinks
     return;
@@ -113,7 +116,7 @@ export const initJumpLinks = async function () {
               el(
                 'a',
                 { href: '#' + subnavItem.id },
-                el('img', { src: '/static/frontend/about/dot.svg', width: '5', height: '5' }),
+                el('img', { src: abs('/static/frontend/about/dot.svg'), width: '5', height: '5' }),
                 el('span', {}, subnavItem.label)
               )
             );

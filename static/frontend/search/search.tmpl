@@ -13,7 +13,7 @@
 {{end}}
 
 {{define "pre-content"}}
-  <link href="{{abs `/static/frontend/search/search.min.css`}}?version={{.AppVersionLabel}}" rel="stylesheet">
+  <link href="{{asset `/static/frontend/search/search.min.css` .AppVersionLabel}}" rel="stylesheet">
 {{end}}
 
 {{define "post-content"}}

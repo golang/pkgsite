@@ -7,7 +7,7 @@
 {{define "title"}}<title>{{.MessageData}} - Go Packages</title>{{end}}
 
 {{define "pre-content"}}
-  <link href="{{abs `/static/frontend/fetch/fetch.min.css`}}?version={{.AppVersionLabel}}" rel="stylesheet">
+  <link href="{{asset `/static/frontend/fetch/fetch.min.css` .AppVersionLabel}}" rel="stylesheet">
 {{end}}
 
 {{define "main"}}
@@ -40,6 +40,6 @@
 
 {{define "post-content"}}
   <script>
-    loadScript("{{abs `/static/frontend/fetch/fetch.js`}}");
+    loadScript((document.documentElement.dataset.basePath || "") + "/static/frontend/fetch/fetch.js");
   </script>
 {{end}}

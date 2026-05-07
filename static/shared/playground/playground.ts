@@ -11,6 +11,8 @@
 
 // The CSS is in static/frontend/unit/main/_doc.css
 
+import { abs } from '../base-path/base-path';
+
 /**
  * CSS classes used by PlaygroundExampleController
  */
@@ -232,7 +234,7 @@ require ${moduleVars.modulepath} ${moduleVars.version}
 
     this.setOutputText('Waiting for remote server…');
 
-    fetch('/play/share', {
+    fetch(abs('/play/share'), {
       method: 'POST',
       body: this.getCodeWithModFile(),
     })
@@ -255,7 +257,7 @@ require ${moduleVars.modulepath} ${moduleVars.version}
     const body = new FormData();
     body.append('body', this.inputEl?.value ?? '');
 
-    fetch('/play/fmt', {
+    fetch(abs('/play/fmt'), {
       method: 'POST',
       body: body,
     })
@@ -278,7 +280,7 @@ require ${moduleVars.modulepath} ${moduleVars.version}
   private handleRunButtonClick() {
     this.setOutputText('Waiting for remote server…');
 
-    fetch('/play/compile', {
+    fetch(abs('/play/compile'), {
       method: 'POST',
       body: JSON.stringify({ body: this.getCodeWithModFile(), version: 2 }),
     })

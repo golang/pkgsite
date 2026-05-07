@@ -5,7 +5,7 @@
 -->
 
 <!DOCTYPE html>
-<html lang="en" data-layout="{{if .UseResponsiveLayout}}responsive{{end}}" data-local="{{if .LocalMode}}true{{end}}">
+<html lang="en" data-base-path="{{basepath}}" data-layout="{{if .UseResponsiveLayout}}responsive{{end}}" data-local="{{if .LocalMode}}true{{end}}">
   <head>
     <!-- This will capture unhandled errors during page load for reporting later. -->
     <script>
@@ -29,7 +29,7 @@
     <meta class="js-gtmID" data-gtmid="{{.GoogleTagManagerID}}">
     <link rel="shortcut icon" href="{{abs `/static/shared/icon/favicon.ico`}}">
     {{block "canonical" .}}{{end}}
-    <link href="{{abs `/static/frontend/frontend.min.css`}}?version={{.AppVersionLabel}}" rel="stylesheet">
+    <link href="{{asset `/static/frontend/frontend.min.css` .AppVersionLabel}}" rel="stylesheet">
     {{if not .LocalMode}}
     <link rel="search" type="application/opensearchdescription+xml" href="{{abs `/opensearch.xml`}}" title="Go Packages">
     {{end}}
@@ -52,8 +52,12 @@
         }
         document.head.appendChild(s);
       }
-      loadScript("{{abs `/third_party/dialog-polyfill/dialog-polyfill.js`}}", false)
-      loadScript("{{abs `/static/frontend/frontend.js`}}");
+      // base path 从 <html data-base-path="..."> 读——safehtml/template 在
+      // script 上下文要求 safehtml.Script 类型，普通 template helper 通不过
+      // 校验。runtime 从 dataset 读 attr 等价。
+      var __basePath = document.documentElement.dataset.basePath || "";
+      loadScript(__basePath + "/third_party/dialog-polyfill/dialog-polyfill.js", false)
+      loadScript(__basePath + "/static/frontend/frontend.js");
     </script>
     {{template "header" .}}
     {{template "main" .}}

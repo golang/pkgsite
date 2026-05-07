@@ -224,5 +224,5 @@
       s.src = src;
       document.head.appendChild(s);
   }
-  loadScript("{{abs `/static/worker/worker.js`}}");
+  loadScript((document.documentElement.dataset.basePath || "") + "/static/worker/worker.js");
 </script>

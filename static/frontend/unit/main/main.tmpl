@@ -13,7 +13,7 @@
 {{end}}
 
 {{define "main-styles"}}
-  <link href="{{abs `/static/frontend/unit/main/main.min.css`}}?version={{.AppVersionLabel}}" rel="stylesheet">
+  <link href="{{asset `/static/frontend/unit/main/main.min.css` .AppVersionLabel}}" rel="stylesheet">
 {{end}}
 
 {{define "main-banner"}}

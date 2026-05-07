@@ -9,7 +9,7 @@
 {{end}}
 
 {{define "pre-content"}}
-  <link href="{{abs `/static/frontend/badge/badge.min.css`}}?version={{.AppVersionLabel}}" rel="stylesheet">
+  <link href="{{asset `/static/frontend/badge/badge.min.css` .AppVersionLabel}}" rel="stylesheet">
 {{end}}
 
 {{define "main"}}

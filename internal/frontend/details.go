@@ -30,10 +30,13 @@ func (s *Server) serveDetails(w http.ResponseWriter, r *http.Request, ds interna
 	if r.Method != http.MethodGet && r.Method != http.MethodHead {
 		return &serrors.ServerError{Status: http.StatusMethodNotAllowed}
 	}
-	if r.URL.Path == "/" {
+	// 站点根：原版只判 "/"，挂 -base-path 后还要判 basePath 自身（带或不带尾斜杠）。
+	if r.URL.Path == "/" || r.URL.Path == s.basePath || r.URL.Path == s.basePath+"/" {
 		s.serveHomepage(ctx, w, r)
 		return nil
 	}
+	// trailing-slash 规范化：去尾再 301，但不要把 basePath 自身的尾去掉
+	// （否则跟 mux 自动 redirect 形成 301 ↔ 307 死循环）。
 	if strings.HasSuffix(r.URL.Path, "/") {
 		url := *r.URL
 		url.Path = strings.TrimSuffix(r.URL.Path, "/")
@@ -47,7 +50,13 @@ func (s *Server) serveDetails(w http.ResponseWriter, r *http.Request, ds interna
 		ctx = setExperimentsFromQueryParam(ctx, r)
 	}
 
-	urlInfo, err := urlinfo.ExtractURLPathInfo(r.URL.Path)
+	// 给 ExtractURLPathInfo 看到的 path 剥掉 basePath——它假设挂根，
+	// path 形如 "/<module>[@<ver>]"，basePath 不属于 module path 一部分。
+	parsePath := r.URL.Path
+	if s.basePath != "" {
+		parsePath = strings.TrimPrefix(parsePath, s.basePath)
+	}
+	urlInfo, err := urlinfo.ExtractURLPathInfo(parsePath)
 	if err != nil {
 		var epage *page.ErrorPage
 		if uerr := new(urlinfo.UserError); errors.As(err, &uerr) {
@@ -63,7 +72,8 @@ func (s *Server) serveDetails(w http.ResponseWriter, r *http.Request, ds interna
 		return serrors.InvalidVersionError(urlInfo.FullPath, urlInfo.RequestedVersion)
 	}
 	if urlPath := stdlibRedirectURL(urlInfo.FullPath); urlPath != "" {
-		http.Redirect(w, r, urlPath, http.StatusMovedPermanently)
+		// stdlibRedirectURL 返回 "/std" 之类挂根 path，反代场景要补 basePath。
+		http.Redirect(w, r, s.basePath+urlPath, http.StatusMovedPermanently)
 		return
 	}
 	if err := checkExcluded(ctx, ds, urlInfo.FullPath, urlInfo.RequestedVersion); err != nil {

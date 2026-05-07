@@ -5,6 +5,8 @@
  * license that can be found in the LICENSE file.
  */
 
+import { getBasePath } from '../base-path/base-path';
+
 /**
  * Carousel Controller adds event listeners, accessibility enhancements, and
  * control elements to a carousel component.
@@ -52,15 +54,17 @@ export class CarouselController {
   private initArrows() {
     const arrows = document.createElement('ul');
     arrows.classList.add('go-Carousel-arrows');
+    // base path 通过 [getBasePath]() 注入；挂根时返空字符串，对上游零差异。
+    const bp = getBasePath();
     arrows.innerHTML = `
       <li>
         <button class="go-Carousel-prevSlide" aria-label="Go to previous slide">
-          <img class="go-Icon" height="24" width="24" src="/static/shared/icon/arrow_left_gm_grey_24dp.svg" alt="">
+          <img class="go-Icon" height="24" width="24" src="${bp}/static/shared/icon/arrow_left_gm_grey_24dp.svg" alt="">
         </button>
       </li>
       <li>
         <button class="go-Carousel-nextSlide" aria-label="Go to next slide">
-          <img class="go-Icon" height="24" width="24" src="/static/shared/icon/arrow_right_gm_grey_24dp.svg" alt="">
+          <img class="go-Icon" height="24" width="24" src="${bp}/static/shared/icon/arrow_right_gm_grey_24dp.svg" alt="">
         </button>
       </li>
     `;

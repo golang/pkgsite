@@ -5,7 +5,7 @@
 -->
 
 {{define "main-styles"}}
-  <link href="{{abs `/static/frontend/vuln/list/list.min.css`}}?version={{.AppVersionLabel}}" rel="stylesheet">
+  <link href="{{asset `/static/frontend/vuln/list/list.min.css` .AppVersionLabel}}" rel="stylesheet">
 {{end}}
 
 {{define "main-content"}}

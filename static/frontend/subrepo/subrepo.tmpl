@@ -10,7 +10,7 @@
 {{end}}
 
 {{define "pre-content"}}
-  <link href="{{abs `/static/frontend/subrepo/subrepo.min.css`}}?version={{.AppVersionLabel}}" rel="stylesheet">
+  <link href="{{asset `/static/frontend/subrepo/subrepo.min.css` .AppVersionLabel}}" rel="stylesheet">
 {{end}}
 
 {{define "main"}}

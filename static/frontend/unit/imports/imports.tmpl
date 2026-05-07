@@ -9,7 +9,7 @@
 {{end}}
 
 {{define "main-styles"}}
-  <link href="{{abs `/static/frontend/unit/imports/imports.min.css`}}?version={{.AppVersionLabel}}" rel="stylesheet">
+  <link href="{{asset `/static/frontend/unit/imports/imports.min.css` .AppVersionLabel}}" rel="stylesheet">
 {{end}}
 
 {{define "main-header"}}

@@ -11,7 +11,7 @@
 {{define "description"}}{{.MetaDescription}}{{end}}
 
 {{define "pre-content"}}
-  <link href="{{abs `/static/frontend/unit/unit.min.css`}}?version={{.AppVersionLabel}}" rel="stylesheet">
+  <link href="{{asset `/static/frontend/unit/unit.min.css` .AppVersionLabel}}" rel="stylesheet">
   {{block "main-styles".}}{{end}}
 {{end}}
 

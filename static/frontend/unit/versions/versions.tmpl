@@ -9,7 +9,7 @@
 {{end}}
 
 {{define "main-styles"}}
-  <link href="{{abs `/static/frontend/unit/versions/versions.min.css`}}?version={{.AppVersionLabel}}" rel="stylesheet">
+  <link href="{{asset `/static/frontend/unit/versions/versions.min.css` .AppVersionLabel}}" rel="stylesheet">
 {{end}}
 
 {{define "main-header"}}
@@ -22,7 +22,7 @@
 
 {{define "main-scripts"}}
   <script>
-    loadScript("{{abs `/static/frontend/unit/versions/versions.js`}}")
+    loadScript((document.documentElement.dataset.basePath || "") + "/static/frontend/unit/versions/versions.js")
   </script>
 {{end}}
 
