@@ -143,12 +143,7 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 		return s.fetchServer.ServePathNotFoundPage(w, r, db, info.FullPath, info.ModulePath, info.RequestedVersion)
 	}
 
-	makeDepsDevURL := func() string { return "" }
-	makeCodeWikiURL := func() string { return "" }
-	if !s.goDocMode {
-		makeDepsDevURL = depsDevURLGenerator(ctx, s.HTTPClient, um)
-		makeCodeWikiURL = codeWikiURLGenerator(ctx, s.HTTPClient, um, s.recordCodeWikiMetrics != nil)
-	}
+	makeDepsDevURL, makeCodeWikiURL := externalLinkGenerators(ctx, s.HTTPClient, um, s.goDocMode, s.recordCodeWikiMetrics != nil)
 
 	// Use GOOS and GOARCH query parameters to create a build context, which
 	// affects the documentation and synopsis. Omitting both results in an empty
