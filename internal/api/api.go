@@ -473,7 +473,11 @@ func ServePackageImportedBy(w http.ResponseWriter, r *http.Request, ds internal.
 	}
 	modulePath := um.ModulePath
 
-	importedBy, err := ds.GetImportedBy(r.Context(), pkgPath, modulePath, 1000)
+	limit, offset, err := params.ListParams.pageParams(defaultLimit)
+	if err != nil {
+		return err
+	}
+	importedBy, err := ds.GetImportedBy(r.Context(), pkgPath, modulePath, offset+limit+1)
 	if err != nil {
 		return err
 	}
