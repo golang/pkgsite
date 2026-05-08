@@ -347,11 +347,22 @@ func (c *Client) GetPackages(ctx context.Context, modulePath, version string, op
 	}
 	u := c.server.JoinPath("v1beta", "packages", modulePath)
 	u.RawQuery = q.Encode()
-	var resp PaginatedResponse[ModulePackageResponse]
+	var resp PackagesResponse
 	if err := c.get(ctx, u.String(), &resp); err != nil {
 		return nil, err
 	}
-	return &resp, nil
+	var items []ModulePackageResponse
+	for _, p := range resp.Packages.Items {
+		items = append(items, ModulePackageResponse{
+			Path:     p.Path,
+			Synopsis: p.Synopsis,
+		})
+	}
+	return &PaginatedResponse[ModulePackageResponse]{
+		Items:         items,
+		Total:         resp.Packages.Total,
+		NextPageToken: resp.Packages.NextPageToken,
+	}, nil
 }
 
 // SearchOptions contains options for Search.
