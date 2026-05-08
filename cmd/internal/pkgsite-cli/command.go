@@ -13,6 +13,8 @@ import (
 	"runtime/debug"
 	"slices"
 	"strings"
+
+	"golang.org/x/telemetry/counter"
 )
 
 // A command describes a subcommand of the tool.
@@ -125,6 +127,9 @@ func parseAndRun(c *command, args []string, stdout, stderr io.Writer) int {
 		}
 		return 2
 	}
+
+	counter.New("pkgsite-cli/command:" + c.name).Inc()
+
 	return c.run(c.flags, stdout, stderr)
 }
 

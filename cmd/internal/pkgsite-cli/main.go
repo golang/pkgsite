@@ -24,9 +24,15 @@ import (
 	"strings"
 
 	"golang.org/x/pkgsite/cmd/internal/pkgsite-cli/client"
+	"golang.org/x/telemetry"
 )
 
 func main() {
+	cfg := telemetry.Config{
+		ReportCrashes: true,
+	}
+	telemetry.Start(cfg)
+
 	os.Exit(run(os.Args[1:], os.Stdout, os.Stderr))
 }
 
