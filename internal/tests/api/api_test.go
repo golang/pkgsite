@@ -122,6 +122,7 @@ func unit(relativePath string, doc ...*internal.Documentation) *internal.Unit {
 var diffOptions = []cmp.Option{
 	cmpopts.IgnoreUnexported(api.Error{}),
 	cmpopts.IgnoreFields(api.Error{}, "Fixes"),
+	cmpopts.IgnoreFields(api.ModuleVersion{}, "CommitTime"),
 }
 
 func TestAPI(t *testing.T) {
@@ -653,29 +654,98 @@ func testServeModuleVersions(t *testing.T, ds internal.TestingDataSource) {
 	ds.MustInsertModule(t, newMod("example.com/v2", "v2.0.0", "v2.0.0"))
 
 	for _, test := range []struct {
-		name       string
-		url        string
-		wantStatus int
-		wantCount  int
-		want       any
+		name string
+		url  string
+		want any
 	}{
 		{
-			name:       "all versions (cross-major)",
-			url:        "/v1/versions/example.com",
-			wantStatus: http.StatusOK,
-			wantCount:  3,
+			name: "all versions (cross-major)",
+			url:  "/v1/versions/example.com",
+			want: &api.PaginatedResponse[api.ModuleVersion]{
+				Total: 3,
+				Items: []api.ModuleVersion{
+					{
+						ModulePath:        "example.com/v2",
+						Version:           "v2.0.0",
+						LatestVersion:     "v2.0.0",
+						IsRedistributable: true,
+					},
+					{
+						ModulePath:        "example.com",
+						Version:           "v1.1.0",
+						LatestVersion:     "v1.1.0",
+						IsRedistributable: true,
+					},
+					{
+						ModulePath:        "example.com",
+						Version:           "v1.0.0",
+						LatestVersion:     "v1.1.0",
+						IsRedistributable: true,
+					},
+				},
+			},
 		},
 		{
-			name:       "module not found",
-			url:        "/v1/versions/nonexistent.com",
-			wantStatus: http.StatusNotFound,
-			want:       &api.Error{Code: 404, Message: "not found"},
+			name: "module not found",
+			url:  "/v1/versions/nonexistent.com",
+			want: &api.Error{Code: 404, Message: "not found"},
 		},
 		{
-			name:       "missing module path",
-			url:        "/v1/versions/",
-			wantStatus: http.StatusBadRequest,
-			want:       &api.Error{Code: 400, Message: "missing module path"},
+			name: "missing module path",
+			url:  "/v1/versions/",
+			want: &api.Error{Code: 400, Message: "missing module path"},
+		},
+		{
+			name: "filter",
+			url:  "/v1/versions/example.com?filter=2",
+			want: &api.PaginatedResponse[api.ModuleVersion]{
+				Total: 1,
+				Items: []api.ModuleVersion{
+					{
+						ModulePath:        "example.com/v2",
+						Version:           "v2.0.0",
+						LatestVersion:     "v2.0.0",
+						IsRedistributable: true,
+					},
+				},
+			},
+		},
+		{
+			name: "invalid filter",
+			url:  "/v1/versions/example.com?filter=" + url.QueryEscape(`[`),
+			want: &api.Error{
+				Code:    400,
+				Message: "error parsing regexp: missing closing ]: `[`",
+			},
+		},
+		{
+			name: "case-sensitive filter",
+			url:  "/v1/versions/example.com?filter=V",
+			want: &api.PaginatedResponse[api.ModuleVersion]{
+				Total: 0,
+				Items: nil,
+			},
+		},
+		{
+			name: "case-insensitive filter",
+			url:  "/v1/versions/example.com?filter=[vV]1",
+			want: &api.PaginatedResponse[api.ModuleVersion]{
+				Total: 2,
+				Items: []api.ModuleVersion{
+					{
+						ModulePath:        "example.com",
+						Version:           "v1.1.0",
+						LatestVersion:     "v1.1.0",
+						IsRedistributable: true,
+					},
+					{
+						ModulePath:        "example.com",
+						Version:           "v1.0.0",
+						LatestVersion:     "v1.1.0",
+						IsRedistributable: true,
+					},
+				},
+			},
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
@@ -686,15 +756,25 @@ func testServeModuleVersions(t *testing.T, ds internal.TestingDataSource) {
 				api.ServeError(w, r, err)
 			}
 
-			if w.Code != test.wantStatus {
-				t.Errorf("status = %d, want %d", w.Code, test.wantStatus)
+			var wantStatus int
+			switch w := test.want.(type) {
+			case *api.Error:
+				wantStatus = w.Code
+			default:
+				wantStatus = http.StatusOK
 			}
 
-			if test.wantStatus == http.StatusOK {
-				var got api.PaginatedResponse[api.ModuleVersion]
-				unmarshalJSON(t, w.Body.Bytes(), &got)
-				if len(got.Items) != test.wantCount {
-					t.Errorf("count = %d, want %d", len(got.Items), test.wantCount)
+			if w.Code != wantStatus {
+				t.Errorf("status = %d, want %d. Body: %s", w.Code, wantStatus, w.Body.String())
+			}
+
+			if test.want != nil {
+				got, err := unmarshalResponse[api.PaginatedResponse[api.ModuleVersion]](w.Body.Bytes())
+				if err != nil {
+					t.Fatal(err)
+				}
+				if diff := cmp.Diff(test.want, got, diffOptions...); diff != "" {
+					t.Errorf("mismatch (-want +got):\n%s", diff)
 				}
 			}
 		})
