@@ -164,7 +164,6 @@ func TestUpsertPathsConcurrently(t *testing.T) {
 	}
 	errc := make(chan error, n)
 	for i := range n {
-		i := i
 		go func() {
 			start := (10 * i) % len(paths)
 			end := min(start+50, len(paths))

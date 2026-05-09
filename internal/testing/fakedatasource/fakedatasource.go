@@ -367,12 +367,12 @@ func (ds *FakeDataSource) Search(ctx context.Context, q string, opts internal.Se
 			if len(terms) > 0 {
 				containsAllTerms = true
 			}
-			synopsis := ""
+			var synopsis strings.Builder
 			for _, d := range u.Documentation {
-				synopsis += d.Synopsis
+				synopsis.WriteString(d.Synopsis)
 			}
 			for _, term := range terms {
-				containsAllTerms = containsAllTerms && strings.Contains(synopsis, term)
+				containsAllTerms = containsAllTerms && strings.Contains(synopsis.String(), term)
 			}
 			if containsAllTerms {
 				result := &internal.SearchResult{
@@ -380,7 +380,7 @@ func (ds *FakeDataSource) Search(ctx context.Context, q string, opts internal.Se
 					PackagePath: u.Path,
 					ModulePath:  m.ModulePath,
 					Version:     m.Version,
-					Synopsis:    synopsis,
+					Synopsis:    synopsis.String(),
 					CommitTime:  m.CommitTime,
 				}
 				for _, licence := range u.Licenses {

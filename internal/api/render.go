@@ -149,7 +149,7 @@ func (r *textRenderer) emitExample(ex *doc.Example) {
 	}
 	if ex.Output != "" {
 		r.printf("\n\tOutput:\n")
-		for _, line := range strings.Split(strings.TrimSpace(ex.Output), "\n") {
+		for line := range strings.SplitSeq(strings.TrimSpace(ex.Output), "\n") {
 			r.printf("\t%s\n", line)
 		}
 	}

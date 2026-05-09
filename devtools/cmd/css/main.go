@@ -106,30 +106,31 @@ func main() {
 		fmt.Printf("Writing these properties to %q: \n", cssFile)
 	}
 
-	contentsToWrite := `
+	var contentsToWrite strings.Builder
+	contentsToWrite.WriteString(`
 /* ---------- */
 /*
 /* The CSS classes below are generated using devtools/cmd/css/main.go
 /* If the generated CSS already exists, the file is overwritten
 /*
-/* ---------- */`
-	contentsToWrite += "\n\n"
+/* ---------- */`)
+	contentsToWrite.WriteString("\n\n")
 
 	for _, p := range properties {
-		contentsToWrite += strings.ReplaceAll(p, githubREADMEClass, discoveryREADMEClass)
+		contentsToWrite.WriteString(strings.ReplaceAll(p, githubREADMEClass, discoveryREADMEClass))
 	}
 
-	contentsToWrite += `
+	contentsToWrite.WriteString(`
 /* ---------- */
 /*
 /* End output from devtools/cmd/css/main.go
 /*
-/* ---------- */`
+/* ---------- */`)
 
-	fmt.Println(contentsToWrite)
+	fmt.Println(contentsToWrite.String())
 
-	if _, err := file.WriteString(contentsToWrite); err != nil {
-		log.Fatalf("file.WriteString(%q): %v", contentsToWrite, err)
+	if _, err := file.WriteString(contentsToWrite.String()); err != nil {
+		log.Fatalf("file.WriteString(%q): %v", contentsToWrite.String(), err)
 	}
 }
 

@@ -287,7 +287,6 @@ func (w *Walker) emitStructType(name string, typ *types.Struct) {
 	w.emitf("%s", typeStruct)
 	defer w.pushScope(typeStruct)()
 	for f := range typ.Fields() {
-		f := f
 		if f.Embedded() {
 			continue
 		}
@@ -313,7 +312,6 @@ func (w *Walker) emitIfaceType(name string, typ *types.Interface) {
 
 	var methodNames []string
 	for m := range typ.ExplicitMethods() {
-		m := m
 		if m.Exported() {
 			methodNames = append(methodNames, m.Name())
 			w.emitf("%s%s", m.Name(), w.signatureString(m.Type().(*types.Signature)))

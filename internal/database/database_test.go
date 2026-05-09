@@ -410,7 +410,6 @@ func testTransactSerializable(ctx context.Context, t *testing.T) string {
 		//   sum rows with class = 2 and insert as a row with class 1
 		errc := make(chan error, numTransactions)
 		for i := range numTransactions {
-			i := i
 			go func() {
 				errc <- testDB.Transact(ctx, sql.LevelSerializable,
 					func(tx *DB) error { return insertSum(tx, 1+i%2) })
