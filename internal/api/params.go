@@ -201,7 +201,7 @@ func setSingle(field reflect.Value, tag, val string) error {
 		}
 		iv, err := strconv.ParseInt(val, 10, field.Type().Bits())
 		if err != nil {
-			return fmt.Errorf("invalid value %q for %s: %w", val, tag, err)
+			return fmt.Errorf("invalid integer value %q for %s", val, tag)
 		}
 		field.SetInt(iv)
 	case reflect.Bool:
@@ -211,7 +211,7 @@ func setSingle(field reflect.Value, tag, val string) error {
 		}
 		bv, err := strconv.ParseBool(val)
 		if err != nil {
-			return fmt.Errorf("invalid boolean value %q for %s: %w", val, tag, err)
+			return fmt.Errorf("invalid boolean value %q for %s", val, tag)
 		}
 		field.SetBool(bv)
 	default:

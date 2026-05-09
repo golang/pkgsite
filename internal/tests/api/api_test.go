@@ -540,7 +540,7 @@ func testServeModule(t *testing.T, ds internal.TestingDataSource) {
 			wantStatus: http.StatusBadRequest,
 			want: &api.Error{
 				Code:    http.StatusBadRequest,
-				Message: `invalid boolean value "invalid" for licenses: strconv.ParseBool: parsing "invalid": invalid syntax`,
+				Message: `invalid boolean value "invalid" for licenses`,
 			},
 		},
 		{
