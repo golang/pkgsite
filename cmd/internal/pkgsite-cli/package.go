@@ -11,7 +11,6 @@ import (
 	"io"
 	"os/exec"
 	"strings"
-	"time"
 
 	"golang.org/x/pkgsite/cmd/internal/pkgsite-cli/client"
 )
@@ -32,7 +31,7 @@ func runPackage(fs *flag.FlagSet, p *packageFlags, stdout, stderr io.Writer) int
 	p.goos = goos
 	p.goarch = goarch
 
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), p.timeout)
 	defer cancel()
 
 	c, err := client.New(p.server)

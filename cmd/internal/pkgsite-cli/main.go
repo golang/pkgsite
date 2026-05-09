@@ -15,7 +15,9 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"io"
@@ -184,10 +186,18 @@ func handleErr(stdout, stderr io.Writer, err error, jsonMode bool) {
 		if !ok {
 			aerr = &client.Error{Code: 1, Message: err.Error()}
 		}
+		if errors.Is(err, context.DeadlineExceeded) {
+			aerr.Message = "request timed out"
+			aerr.Fixes = []string{"use the -timeout flag to increase the timeout", "reduce size of request by limiting items returned"}
+		}
 		writeJSON(stdout, stderr, aerr)
 		return
 	}
-	fmt.Fprintln(stderr, err)
+	if errors.Is(err, context.DeadlineExceeded) {
+		fmt.Fprintln(stderr, "Error: request timed out; use the -timeout flag to increase it")
+	} else {
+		fmt.Fprintln(stderr, err)
+	}
 }
 
 func writeJSON(stdout, stderr io.Writer, v any) int {

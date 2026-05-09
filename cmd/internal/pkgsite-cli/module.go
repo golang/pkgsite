@@ -8,7 +8,6 @@ import (
 	"context"
 	"flag"
 	"io"
-	"time"
 
 	"golang.org/x/pkgsite/cmd/internal/pkgsite-cli/client"
 	"golang.org/x/sync/errgroup"
@@ -21,7 +20,7 @@ func runModule(fs *flag.FlagSet, m *moduleFlags, stdout, stderr io.Writer) int {
 	}
 	path, version := splitPathVersion(fs.Arg(0))
 
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), m.timeout)
 	defer cancel()
 
 	c, err := client.New(m.server)

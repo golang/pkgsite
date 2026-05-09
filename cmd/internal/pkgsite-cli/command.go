@@ -13,6 +13,7 @@ import (
 	"runtime/debug"
 	"slices"
 	"strings"
+	"time"
 
 	"golang.org/x/telemetry/counter"
 )
@@ -162,12 +163,14 @@ type commonFlags struct {
 	jsonOut bool
 	limit   int
 	server  string
+	timeout time.Duration
 }
 
 func (f *commonFlags) register(fs *flag.FlagSet) {
 	fs.BoolVar(&f.jsonOut, "json", false, "output JSON")
 	fs.IntVar(&f.limit, "limit", 0, "max results (default: 25)")
 	fs.StringVar(&f.server, "server", defaultServer, "API server URL")
+	fs.DurationVar(&f.timeout, "timeout", 30*time.Second, "request timeout")
 }
 
 func (f *commonFlags) effectiveLimit() int {

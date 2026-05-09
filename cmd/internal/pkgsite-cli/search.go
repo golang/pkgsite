@@ -9,7 +9,6 @@ import (
 	"flag"
 	"io"
 	"strings"
-	"time"
 
 	"golang.org/x/pkgsite/cmd/internal/pkgsite-cli/client"
 )
@@ -21,7 +20,7 @@ func runSearch(fs *flag.FlagSet, s *searchFlags, stdout, stderr io.Writer) int {
 	}
 	query := strings.Join(fs.Args(), " ")
 
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), s.timeout)
 	defer cancel()
 
 	c, err := client.New(s.server)
