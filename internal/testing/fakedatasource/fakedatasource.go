@@ -406,12 +406,26 @@ func (ds *FakeDataSource) IsExcluded(ctx context.Context, path, version string) 
 }
 
 // GetImportedBy returns the paths of packages that import the given package.
-func (ds *FakeDataSource) GetImportedBy(ctx context.Context, pkgPath, modulePath string, limit int) ([]string, error) {
+func (ds *FakeDataSource) GetImportedBy(ctx context.Context, pkgPath, modulePath string, start string, limit int) ([]string, error) {
 	paths := ds.importedBy[pkgPath]
-	if len(paths) > limit {
-		return paths[:limit], nil
+	// Copy to avoid mutating the underlying slice in the fake DB
+	sorted := make([]string, len(paths))
+	copy(sorted, paths)
+	sort.Strings(sorted)
+
+	var filtered []string
+	for _, p := range sorted {
+		if p >= start {
+			// Deduplicate to match DB's DISTINCT behavior
+			if len(filtered) == 0 || filtered[len(filtered)-1] != p {
+				filtered = append(filtered, p)
+				if len(filtered) == limit {
+					break
+				}
+			}
+		}
 	}
-	return paths, nil
+	return filtered, nil
 }
 
 // GetImportedByCount returns the number of packages that import the given package.

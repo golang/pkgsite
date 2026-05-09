@@ -280,7 +280,7 @@ func TestGetImportedBy(t *testing.T) {
 				testDB.MustInsertModule(t, v)
 			}
 
-			gotImportedBy, err := testDB.GetImportedBy(ctx, test.path, test.modulePath, 100)
+			gotImportedBy, err := testDB.GetImportedBy(ctx, test.path, test.modulePath, "", 100)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -317,5 +317,79 @@ func TestJSONBScanner(t *testing.T) {
 	}
 	if got2 != nil {
 		t.Errorf("got %#v, want nil", got2)
+	}
+}
+
+func TestGetImportedByPagination(t *testing.T) {
+	t.Parallel()
+	testDB, release := acquire(t)
+	defer release()
+	ctx := t.Context()
+
+	m0 := sample.Module("path.to/foo", "v1.0.0", "pkg0")
+	pkg0 := m0.Packages()[0]
+	pkg0.Imports = nil
+
+	m1 := sample.Module("path.to/a", "v1.0.0", "pkg1")
+	pkg1 := m1.Packages()[0]
+	pkg1.Imports = []string{pkg0.Path}
+
+	m2 := sample.Module("path.to/b", "v1.0.0", "pkg2")
+	pkg2 := m2.Packages()[0]
+	pkg2.Imports = []string{pkg0.Path}
+
+	m3 := sample.Module("path.to/c", "v1.0.0", "pkg3")
+	pkg3 := m3.Packages()[0]
+	pkg3.Imports = []string{pkg0.Path}
+
+	m4 := sample.Module("path.to/d", "v1.0.0", "pkg4")
+	pkg4 := m4.Packages()[0]
+	pkg4.Imports = []string{pkg0.Path}
+
+	m5 := sample.Module("path.to/e", "v1.0.0", "pkg5")
+	pkg5 := m5.Packages()[0]
+	pkg5.Imports = []string{pkg0.Path}
+
+	testModules := []*internal.Module{m0, m1, m2, m3, m4, m5}
+	for _, v := range testModules {
+		testDB.MustInsertModule(t, v)
+	}
+
+	wantImporters := []string{pkg1.Path, pkg2.Path, pkg3.Path, pkg4.Path, pkg5.Path}
+
+	// Page 1: limit 2, start ""
+	page1, err := testDB.GetImportedBy(ctx, pkg0.Path, m0.ModulePath, "", 2)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(page1) != 2 {
+		t.Fatalf("expected 2 items, got %d", len(page1))
+	}
+	if diff := cmp.Diff(wantImporters[:2], page1); diff != "" {
+		t.Errorf("page 1 mismatch (-want +got):\n%s", diff)
+	}
+
+	// Page 2: limit 2, start page1[1]
+	page2, err := testDB.GetImportedBy(ctx, pkg0.Path, m0.ModulePath, page1[1]+"a", 2)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(page2) != 2 {
+		t.Fatalf("expected 2 items, got %d", len(page2))
+	}
+	if diff := cmp.Diff(wantImporters[2:4], page2); diff != "" {
+		t.Errorf("page 2 mismatch (-want +got):\n%s", diff)
+	}
+
+	// Page 3: limit 2, start page2[1]
+	page3, err := testDB.GetImportedBy(ctx, pkg0.Path, m0.ModulePath, page2[1]+"a", 2)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(page3) != 1 {
+		t.Fatalf("expected 1 item, got %d", len(page3))
+	}
+	if diff := cmp.Diff(wantImporters[4:], page3); diff != "" {
+		t.Errorf("page 3 mismatch (-want +got):\n%s", diff)
 	}
 }

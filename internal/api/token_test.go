@@ -82,3 +82,73 @@ func TestDecodePageTokenInvalid(t *testing.T) {
 		t.Errorf("decodePageToken error = %v, want %s", err, want)
 	}
 }
+
+func TestStringPageToken(t *testing.T) {
+	t.Setenv("K_SERVICE", "test-service")
+
+	tests := []string{
+		"",
+		"a",
+		"hello",
+		"github.com/google/go-cmp/cmp",
+		"golang.org/x/pkgsite/internal/postgres/details_test",
+		"a/very/long/path/that/exceeds/the/aes/block/size/and/requires/gcm/to/encrypt/properly/without/truncation/or/errors/because/it/is/long",
+	}
+
+	for _, s := range tests {
+		encoded, err := encodeStringPageToken(s)
+		if err != nil {
+			t.Fatalf("encodeStringPageToken(%q): %v", s, err)
+		}
+		t.Logf("encoded string token for %q: %s (len=%d)", s, encoded, len(encoded))
+
+		decoded, err := decodeStringPageToken(encoded)
+		if err != nil {
+			t.Fatalf("decodeStringPageToken(%s): %v", encoded, err)
+		}
+
+		if decoded != s {
+			t.Errorf("decoded = %q, want %q", decoded, s)
+		}
+	}
+}
+
+func TestDecodeStringPageTokenInvalid(t *testing.T) {
+	t.Setenv("K_SERVICE", "test-service")
+
+	invalidTokens := []string{
+		"not-hex",
+		"1234",                             // too short
+		"00000000000000000000000000000000", // garbage decrypted bytes
+	}
+
+	for _, token := range invalidTokens {
+		if _, err := decodeStringPageToken(token); err == nil {
+			t.Errorf("decodeStringPageToken(%s) succeeded, want error", token)
+		}
+	}
+
+	// Test expired token (49 hours ago).
+	expiredTime := time.Now().Add(-tokenExpiry)
+	expiredToken, err := encodeStringPageToken1("expired-test", expiredTime)
+	if err != nil {
+		t.Fatalf("encodeStringPageToken1: %v", err)
+	}
+	if _, err := decodeStringPageToken(expiredToken); err == nil {
+		t.Error("decodeStringPageToken succeeded for expired token, want error")
+	} else if want := "expired"; err.Error() != want {
+		t.Errorf("decodeStringPageToken error = %v, want %s", err, want)
+	}
+
+	// Test future token (2 minutes in the future).
+	futureTime := time.Now().Add(2 * time.Minute)
+	futureToken, err := encodeStringPageToken1("future-test", futureTime)
+	if err != nil {
+		t.Fatalf("encodeStringPageToken1: %v", err)
+	}
+	if _, err := decodeStringPageToken(futureToken); err == nil {
+		t.Error("decodeStringPageToken succeeded for future token, want error")
+	} else if want := "from the future"; err.Error() != want {
+		t.Errorf("decodeStringPageToken error = %v, want %s", err, want)
+	}
+}

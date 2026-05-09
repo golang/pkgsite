@@ -101,7 +101,7 @@ func fetchImportedByDetails(ctx context.Context, ds internal.DataSource, pkgPath
 		return nil, serrors.DatasourceNotSupportedError()
 	}
 
-	importedBy, err := db.GetImportedBy(ctx, pkgPath, modulePath, importedByLimit)
+	importedBy, err := db.GetImportedBy(ctx, pkgPath, modulePath, "", importedByLimit)
 	if err != nil {
 		return nil, err
 	}

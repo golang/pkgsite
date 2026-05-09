@@ -32,10 +32,12 @@ import (
 const (
 	// maxSearchResults is the maximum number of search results to return for a search query.
 	maxSearchResults = 1000
-	// defaultLimit is the default number of results to return per page for paginated results.
-	defaultLimit = 100
 	// defaultSearchLimit is the default number of results to return per page for search.
 	defaultSearchLimit = 25
+	// maxLimit is the maximum allowed limit for paginated results.
+	maxLimit = 1000
+	// defaultLimit is the default number of results to return per page for paginated results.
+	defaultLimit = 100
 )
 
 // OpenAPISpec contains the raw bytes of the OpenAPI 3.0 specification for the API.
@@ -476,13 +478,43 @@ func ServePackageImportedBy(w http.ResponseWriter, r *http.Request, ds internal.
 	}
 	modulePath := um.ModulePath
 
-	limit, offset, err := params.ListParams.pageParams(defaultLimit)
+	limit := params.Limit
+	// If the user doesn't provide a limit, use a default.
+	if limit <= 0 {
+		limit = defaultLimit
+	}
+	// Cap the user-supplied limit so we don't do too much work.
+	if limit > maxLimit {
+		limit = maxLimit
+	}
+
+	// Resolve start path from token
+	start := ""
+	if params.Token != "" {
+		var err error
+		start, err = decodeStringPageToken(params.Token)
+		if err != nil {
+			return BadRequest(fmt.Sprintf("invalid next-page token: %v", err), "try again from the beginning, with no token")
+		}
+	}
+
+	// Fetch an extra item so we can tell if we're done.
+	importedBy, err := ds.GetImportedBy(r.Context(), pkgPath, modulePath, start, limit+1)
 	if err != nil {
 		return err
 	}
-	importedBy, err := ds.GetImportedBy(r.Context(), pkgPath, modulePath, offset+limit+1)
-	if err != nil {
-		return err
+
+	nextToken := ""
+	if len(importedBy) > limit {
+		if len(importedBy) != limit+1 {
+			return InternalServerError("len(importedBy)=%d, expected %d", len(importedBy), limit+1)
+		}
+
+		nextToken, err = encodeStringPageToken(importedBy[limit])
+		if err != nil {
+			return err
+		}
+		importedBy = importedBy[:limit]
 	}
 
 	count, err := ds.GetImportedByCount(r.Context(), pkgPath, modulePath)
@@ -490,24 +522,23 @@ func ServePackageImportedBy(w http.ResponseWriter, r *http.Request, ds internal.
 		return err
 	}
 
-	importedBy, err = filter(importedBy, params.Filter, func(p string) []string { return []string{p} })
+	filtered, err := filter(importedBy, params.Filter, func(p string) []string { return []string{p} })
 	if err != nil {
 		return err
 	}
+	// len(filtered) may be 0. That's fine: we document that zero-length
+	// pages are OK.
+	// The alternative is to fetch rows indefinitely, which means unbounded
+	// work.
 
-	// api:response PaginatedResponse[string]
-	paged, err := paginate(importedBy, params.ListParams, defaultLimit)
-	if err != nil {
-		return err
-	}
-
+	// api:response PackageImportedBy
 	resp := PackageImportedBy{
 		ModulePath: modulePath,
 		Version:    requestedVersion,
 		ImportedBy: PaginatedResponse[string]{
-			Items:         paged.Items,
+			Items:         filtered,
 			Total:         count,
-			NextPageToken: paged.NextPageToken,
+			NextPageToken: nextToken,
 		},
 	}
 

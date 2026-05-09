@@ -7,10 +7,12 @@ package api
 import (
 	"crypto/aes"
 	"crypto/cipher"
+	"crypto/rand"
 	"crypto/sha256"
 	"encoding/binary"
 	"encoding/hex"
 	"errors"
+	"io"
 	"os"
 	"sync"
 	"time"
@@ -21,10 +23,10 @@ var tokenCipher = sync.OnceValues(func() (cipher.Block, error) {
 	// K_SERVICE is the name of the Cloud Run service. It isn't
 	// exactly a secret, but it's also not known to users. If
 	// someone does manage to guess it or break the encryption
-	// (we are using only one block and there are many easily
-	// guessable plaintexts), it's not the end of the world.
-	// And anyone who does that much work to de-obfuscate a token
-	// surely knows they are doing something wrong.
+	// (for integer tokens we are using only one block and there
+	// are many easily guessable plaintexts), it's not the end of
+	// the world. And anyone who does that much work to de-obfuscate
+	// a token surely knows they are doing something wrong.
 	service := os.Getenv("K_SERVICE")
 	if service == "" {
 		return nil, errors.New("K_SERVICE is not set")
@@ -110,4 +112,80 @@ func decodePageToken(token string) (int, error) {
 		return 0, errors.New("negative offset")
 	}
 	return in, nil
+}
+
+// encodeStringPageToken obfuscates a string page token by prepending the current
+// timestamp, encrypting it with AES-GCM using K_SERVICE as a key, and hex
+// encoding the result.
+func encodeStringPageToken(s string) (string, error) {
+	return encodeStringPageToken1(s, time.Now())
+}
+
+// encodeStringPageToken1 is like encodeStringPageToken but allows passing a specific time for testing.
+func encodeStringPageToken1(s string, t time.Time) (string, error) {
+	block, err := tokenCipher()
+	if err != nil {
+		return "", err
+	}
+	aesgcm, err := cipher.NewGCM(block)
+	if err != nil {
+		return "", err
+	}
+	nonce := make([]byte, aesgcm.NonceSize())
+	if _, err := io.ReadFull(rand.Reader, nonce); err != nil {
+		return "", err
+	}
+
+	// Pack timestamp (8 bytes) + string
+	plaintext := make([]byte, 8+len(s))
+	binary.BigEndian.PutUint64(plaintext[:8], uint64(t.Unix()))
+	copy(plaintext[8:], s)
+
+	ciphertext := aesgcm.Seal(nil, nonce, plaintext, nil)
+
+	// Result is nonce + ciphertext
+	result := append(nonce, ciphertext...)
+	return hex.EncodeToString(result), nil
+}
+
+// decodeStringPageToken reverses the obfuscation of a string page token, returning the original string.
+// It rejects tokens older than tokenExpiry.
+func decodeStringPageToken(token string) (string, error) {
+	src, err := hex.DecodeString(token)
+	if err != nil {
+		return "", err
+	}
+	block, err := tokenCipher()
+	if err != nil {
+		return "", err
+	}
+	aesgcm, err := cipher.NewGCM(block)
+	if err != nil {
+		return "", err
+	}
+	nonceSize := aesgcm.NonceSize()
+	if len(src) < nonceSize {
+		return "", errors.New("token too short")
+	}
+	nonce, ciphertext := src[:nonceSize], src[nonceSize:]
+	plaintext, err := aesgcm.Open(nil, nonce, ciphertext, nil)
+	if err != nil {
+		return "", err
+	}
+	if len(plaintext) < 8 {
+		return "", errors.New("invalid plaintext")
+	}
+	timestamp := int64(binary.BigEndian.Uint64(plaintext[:8]))
+	s := string(plaintext[8:])
+
+	// Reject expired tokens.
+	tokenTime := time.Unix(timestamp, 0)
+	if time.Since(tokenTime) > tokenExpiry {
+		return "", errors.New("expired")
+	}
+	// Reject tokens from the future.
+	if time.Since(tokenTime) < -time.Minute {
+		return "", errors.New("from the future")
+	}
+	return s, nil
 }

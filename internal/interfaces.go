@@ -13,7 +13,7 @@ type PostgresDB interface {
 	DataSource
 
 	IsExcluded(ctx context.Context, path, version string) bool
-	GetImportedBy(ctx context.Context, pkgPath, modulePath string, limit int) (paths []string, err error)
+	GetImportedBy(ctx context.Context, pkgPath, modulePath string, start string, limit int) (paths []string, err error)
 	GetImportedByCount(ctx context.Context, pkgPath, modulePath string) (_ int, err error)
 	GetLatestMajorPathForV1Path(ctx context.Context, v1path string) (_ string, _ int, err error)
 	GetStdlibPathsWithSuffix(ctx context.Context, suffix string) (paths []string, err error)

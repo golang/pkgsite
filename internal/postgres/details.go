@@ -66,13 +66,14 @@ func (db *DB) GetNestedModules(ctx context.Context, modulePath string) (_ []*int
 	return modules, nil
 }
 
-// GetImportedBy fetches and returns all of the packages that import the
+// GetImportedBy fetches and returns some of the packages that import the
 // package with path.
+// The query starts with the path at start, and returns at most
+// limit paths.
+//
 // The returned error may be checked with derrors.IsInvalidArgument to
 // determine if it resulted from an invalid package path or version.
-//
-// Instead of supporting pagination, this query runs with a limit.
-func (db *DB) GetImportedBy(ctx context.Context, pkgPath, modulePath string, limit int) (paths []string, err error) {
+func (db *DB) GetImportedBy(ctx context.Context, pkgPath, modulePath string, start string, limit int) (paths []string, err error) {
 	defer derrors.WrapStack(&err, "GetImportedBy(ctx, %q, %q)", pkgPath, modulePath)
 	defer stats.Elapsed(ctx, "GetImportedBy")()
 
@@ -88,11 +89,13 @@ func (db *DB) GetImportedBy(ctx context.Context, pkgPath, modulePath string, lim
 			to_path = $1
 		AND
 			from_module_path <> $2
+		AND
+			from_path >= $3
 		ORDER BY
 			from_path
-		LIMIT $3`
+		LIMIT $4`
 
-	return database.Collect1[string](ctx, db.db, query, pkgPath, modulePath, limit)
+	return database.Collect1[string](ctx, db.db, query, pkgPath, modulePath, start, limit)
 }
 
 // GetImportedByCount returns the number of packages that import pkgPath.
