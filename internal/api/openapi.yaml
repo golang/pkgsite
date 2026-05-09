@@ -542,6 +542,10 @@
       },
       "Module": {
         "properties": {
+          "commitTime": {
+            "format": "date-time",
+            "type": "string"
+          },
           "goModContents": {
             "type": "string"
           },
@@ -581,6 +585,7 @@
       "ModuleVersion": {
         "properties": {
           "commitTime": {
+            "format": "date-time",
             "type": "string"
           },
           "deprecated": {

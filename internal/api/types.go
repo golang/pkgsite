@@ -76,8 +76,11 @@ type ModuleVersion struct {
 
 // Module is the response for /v1beta/module/{modulePath}.
 type Module struct {
-	Path              string    `json:"path"`
-	Version           string    `json:"version"`
+	Path    string `json:"path"`
+	Version string `json:"version"`
+	// CommitTime is the timestamp returned by the module proxy's .info endpoint,
+	// representing the time the version was created.
+	CommitTime        time.Time `json:"commitTime"`
 	IsLatest          bool      `json:"isLatest"`
 	IsRedistributable bool      `json:"isRedistributable"`
 	IsStandardLibrary bool      `json:"isStandardLibrary"`

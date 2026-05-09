@@ -129,6 +129,7 @@ func ServeModule(w http.ResponseWriter, r *http.Request, ds internal.DataSource)
 	resp := Module{
 		Path:              um.ModulePath,
 		Version:           um.Version,
+		CommitTime:        um.CommitTime,
 		IsLatest:          um.Version == um.LatestVersion,
 		IsStandardLibrary: stdlib.Contains(um.ModulePath),
 		IsRedistributable: um.IsRedistributable,

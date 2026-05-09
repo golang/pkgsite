@@ -360,8 +360,10 @@ func generateSchemas(data []byte) (map[string]any, error) {
 
 func mapFieldType(t string) map[string]any {
 	switch t {
-	case "string", "time.Time":
+	case "string":
 		return map[string]any{"type": "string"}
+	case "time.Time":
+		return map[string]any{"type": "string", "format": "date-time"}
 	case "bool":
 		return map[string]any{"type": "boolean"}
 	case "int":
