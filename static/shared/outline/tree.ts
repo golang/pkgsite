@@ -67,7 +67,7 @@ export class TreeNavController {
         for (const [id, isIntersecting] of targets) {
           if (isIntersecting) {
             const active = this.treeitems.find(t =>
-              (t.el as HTMLAnchorElement)?.href.endsWith(`#${id}`)
+              (t.el as HTMLAnchorElement)?.href.endsWith(`#${id}`),
             );
             if (active) {
               for (const fn of this.observerCallbacks) {
@@ -81,7 +81,7 @@ export class TreeNavController {
       {
         threshold: 1.0,
         rootMargin: '-60px 0px 0px 0px',
-      }
+      },
     );
 
     for (const href of this.treeitems.map(t => t.el.getAttribute('href'))) {
@@ -134,11 +134,11 @@ export class TreeNavController {
   }
 
   setFocusToFirstItem(): void {
-    this.firstTreeitem && this.setFocusToItem(this.firstTreeitem);
+    if (this.firstTreeitem) this.setFocusToItem(this.firstTreeitem);
   }
 
   setFocusToLastItem(): void {
-    this.lastTreeitem && this.setFocusToItem(this.lastTreeitem);
+    if (this.lastTreeitem) this.setFocusToItem(this.lastTreeitem);
   }
 
   setSelected(currentItem: TreeItem): void {
@@ -178,13 +178,7 @@ export class TreeNavController {
   }
 
   collapseTreeitem(currentItem: TreeItem): void {
-    let groupTreeitem = null;
-
-    if (currentItem.isExpanded()) {
-      groupTreeitem = currentItem;
-    } else {
-      groupTreeitem = currentItem.groupTreeitem;
-    }
+    const groupTreeitem = currentItem.isExpanded() ? currentItem : currentItem.groupTreeitem;
 
     if (groupTreeitem) {
       groupTreeitem.el.setAttribute('aria-expanded', 'false');

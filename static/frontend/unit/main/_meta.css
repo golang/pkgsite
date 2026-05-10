@@ -28,7 +28,8 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
-@media (min-width: 50rem) {
+
+@media (width >= 50rem) {
   .UnitMeta {
     grid-template-columns: max-content auto;
   }
@@ -38,7 +39,8 @@
     flex-direction: row;
   }
 }
-@media (min-width: 112rem) {
+
+@media (width >= 112rem) {
   :root[data-layout='responsive'] .UnitMeta {
     grid-template-columns: 100%;
   }
@@ -53,7 +55,8 @@
 .UnitMeta-detailsLearn {
   width: 100%;
 }
-@media (min-width: 50rem) {
+
+@media (width >= 50rem) {
   .UnitMeta-detailsLearn {
     width: initial;
   }

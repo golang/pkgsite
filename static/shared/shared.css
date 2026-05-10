@@ -50,12 +50,14 @@
 [data-theme='dark'] {
   --box-shadow: 0 0.3125rem 0.9375rem rgb(0 0 0 / 45%);
 }
+
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) {
     --box-shadow: 0 0.3125rem 0.9375rem rgb(0 0 0 / 45%);
   }
 }
-@media (min-width: 50rem) {
+
+@media (width >= 50rem) {
   :root {
     --gap: 2rem;
     --scroll-margin: calc(

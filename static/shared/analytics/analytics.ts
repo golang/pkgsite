@@ -32,7 +32,6 @@ interface TagManagerEvent {
   'gtm.start'?: number;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 declare global {
   interface Window {
     dataLayer?: (TagManagerEvent | VoidFunction)[];
@@ -47,7 +46,7 @@ export function track(
   event: string | TagManagerEvent,
   category?: string,
   action?: string,
-  label?: string
+  label?: string,
 ): void {
   window.dataLayer ??= [];
   if (typeof event === 'string') {

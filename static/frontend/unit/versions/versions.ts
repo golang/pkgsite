@@ -49,10 +49,10 @@ export class VersionsController {
    * for the version that matches the canonical URL path.
    */
   private setCurrent() {
-    const canonicalPath = document.querySelector<HTMLElement>('.js-canonicalURLPath')?.dataset
-      ?.canonicalUrlPath;
+    const canonicalPath =
+      document.querySelector<HTMLElement>('.js-canonicalURLPath')?.dataset?.canonicalUrlPath;
     const versionLink = document.querySelector<HTMLElement>(
-      `.js-versionLink[href="${canonicalPath}"]`
+      `.js-versionLink[href="${canonicalPath}"]`,
     );
     if (versionLink) {
       versionLink.style.fontWeight = 'bold';

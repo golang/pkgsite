@@ -8,12 +8,10 @@
 let config = {
   testEnvironment: 'jsdom',
   preset: 'ts-jest',
-  globals: {
-    'ts-jest': {
-      isolatedModules: true,
-    },
-  },
   moduleFileExtensions: ['ts', 'js'],
+  transform: {
+    '^.+\\.tsx?$': ['ts-jest', {}],
+  },
 };
 
 // eslint-disable-next-line no-undef

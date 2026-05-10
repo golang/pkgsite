@@ -4,7 +4,6 @@ extends:
 plugins:
   - stylelint-order
 rules:
-  color-hex-case: lower
   declaration-property-value-allowed-list:
     '/color/':
       - "/^var\\(--/"
@@ -13,4 +12,11 @@ rules:
   unit-disallowed-list:
     - 'px'
   selector-class-pattern: null
-  # rule-empty-line-before: null
+  # The following deprecation/unknown-value warnings were introduced by
+  # stylelint-config-standard 40 and flag pre-existing CSS (clip, display: box,
+  # word-break: break-word). Left as null here to keep the eslint/stylelint
+  # upgrade focused; revisit when modernizing the CSS.
+  declaration-property-value-keyword-no-deprecated: null
+  declaration-property-value-no-unknown: null
+  property-no-deprecated: null
+  # color-hex-case was removed in stylelint 16; case is now controlled by hex-color-case if needed.

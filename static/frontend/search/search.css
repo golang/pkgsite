@@ -48,7 +48,9 @@
   display: flex;
   margin-right: -0.5rem;
   opacity: 0;
-  transition: opacity 0.25s ease-in-out, width 0.25s ease-out;
+  transition:
+    opacity 0.25s ease-in-out,
+    width 0.25s ease-out;
   visibility: hidden;
   width: 0;
 }
@@ -95,7 +97,8 @@
   flex-direction: column;
   gap: 0.3rem;
 }
-@media only screen and (min-width: 64rem) {
+
+@media only screen and (width >= 64rem) {
   .SearchResults-summary {
     align-items: baseline;
     flex-direction: row;

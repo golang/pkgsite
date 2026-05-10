@@ -145,7 +145,8 @@ th.UnitDirectories-toggleCell {
   margin-top: 0.25rem;
   word-break: keep-all;
 }
-@media only screen and (max-width: 52rem) {
+
+@media only screen and (width <= 52rem) {
   .UnitDirectories-mobileSynopsis {
     display: initial;
   }

@@ -21,7 +21,8 @@
 .go-Main-header[data-fixed] .UnitHeader-overflowContainer {
   display: block;
 }
-@media screen and (min-width: 80rem) {
+
+@media screen and (width >= 80rem) {
   .go-Main-header[data-fixed] .UnitHeader-overflowContainer {
     display: none;
   }

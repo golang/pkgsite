@@ -62,7 +62,7 @@ window.addEventListener('load', () => {
 // Pressing '/' focuses the search box
 keyboard.on('/', 'focus search', e => {
   const searchInput = Array.from(
-    document.querySelectorAll<HTMLInputElement>('.js-searchFocus')
+    document.querySelectorAll<HTMLInputElement>('.js-searchFocus'),
   ).pop();
   // Favoring the Firefox quick find feature over search input
   // focus. See: https://github.com/golang/go/issues/41093.
@@ -75,9 +75,8 @@ keyboard.on('/', 'focus search', e => {
 // Pressing 'y' changes the browser URL to the canonical URL
 // without triggering a reload.
 keyboard.on('y', 'set canonical url', () => {
-  let canonicalURLPath = document.querySelector<HTMLDivElement>('.js-canonicalURLPath')?.dataset[
-    'canonicalUrlPath'
-  ];
+  let canonicalURLPath =
+    document.querySelector<HTMLDivElement>('.js-canonicalURLPath')?.dataset['canonicalUrlPath'];
   if (canonicalURLPath && canonicalURLPath !== '') {
     const fragment = window.location.hash;
     if (fragment) {

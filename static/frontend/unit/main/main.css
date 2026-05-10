@@ -20,12 +20,14 @@
   margin: auto;
   min-height: 32rem;
 }
-@media only screen and (min-width: 64rem) {
+
+@media only screen and (width >= 64rem) {
   .UnitDetails {
     grid-template-columns: 15.5rem minmax(30.5rem, 43.125rem) minmax(10rem, 15.5rem);
   }
 }
-@media only screen and (min-width: 80rem) {
+
+@media only screen and (width >= 80rem) {
   .UnitDetails {
     grid-template-columns: 15.5rem minmax(43.125rem, 60rem) 15.5rem;
     justify-content: center;
@@ -35,7 +37,8 @@
 .UnitDetails :target {
   scroll-margin-top: calc(var(--js-sticky-header-height, 3.5rem) * 2.15);
 }
-@media only screen and (min-width: 64rem) {
+
+@media only screen and (width >= 64rem) {
   .UnitDetails :target {
     scroll-margin-top: calc(var(--js-sticky-header-height, 3.5rem) * 1.25);
   }
@@ -49,7 +52,8 @@
 .UnitDetails-meta {
   order: -1;
 }
-@media only screen and (min-width: 64rem) {
+
+@media only screen and (width >= 64rem) {
   .UnitDetails-meta {
     display: block;
     margin-top: 2rem;

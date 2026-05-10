@@ -17,7 +17,7 @@ export async function parse(file: string): Promise<string> {
         return;
       }
       resolve(data);
-    })
+    }),
   );
   return marked(f);
 }

@@ -20,7 +20,7 @@ export class MainLayoutController {
   constructor(
     private mainHeader?: Element | null,
     private mainNav?: Element | null,
-    private mainAside?: Element | null
+    private mainAside?: Element | null,
   ) {
     this.headerObserver = new IntersectionObserver(
       ([e]) => {
@@ -35,7 +35,7 @@ export class MainLayoutController {
           this.handleResize();
         }
       },
-      { threshold: 1, rootMargin: `${headerHeight * 16}px` }
+      { threshold: 1, rootMargin: `${headerHeight * 16}px` },
     );
     this.navObserver = new IntersectionObserver(
       ([e]) => {
@@ -47,7 +47,7 @@ export class MainLayoutController {
           this.mainNav?.removeAttribute('data-fixed');
         }
       },
-      { threshold: 1, rootMargin: `-${headerHeight * 16 + 10}px` }
+      { threshold: 1, rootMargin: `-${headerHeight * 16 + 10}px` },
     );
     this.asideObserver = new IntersectionObserver(
       ([e]) => {
@@ -57,7 +57,7 @@ export class MainLayoutController {
           this.mainHeader?.removeAttribute('data-raised');
         }
       },
-      { threshold: 1, rootMargin: `-${headerHeight * 16 + 20}px 0px 0px 0px` }
+      { threshold: 1, rootMargin: `-${headerHeight * 16 + 20}px 0px 0px 0px` },
     );
     this.init();
   }

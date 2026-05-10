@@ -98,7 +98,7 @@ describe('ExpandableRowsTableController', () => {
   it('sets data-aria-* and data-id attributes to regular html attributes', () => {
     expect(document.querySelector('#label-id-1')).toBeTruthy();
     expect(
-      document.querySelector('[aria-controls="hidden-row-id-1 hidden-row-id-2"]')
+      document.querySelector('[aria-controls="hidden-row-id-1 hidden-row-id-2"]'),
     ).toBeTruthy();
     expect(document.querySelector('[aria-labelledby="toggle-id-1 label-id-2"]')).toBeTruthy();
     expect(document.querySelector('#toggle-id-1')).toBeTruthy();

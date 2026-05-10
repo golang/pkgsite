@@ -9,7 +9,7 @@ const directories = document.querySelector<HTMLTableElement>('.js-expandableTabl
 if (directories) {
   const table = new ExpandableRowsTableController(
     directories,
-    document.querySelector<HTMLButtonElement>('.js-expandAllDirectories')
+    document.querySelector<HTMLButtonElement>('.js-expandAllDirectories'),
   );
   // Expand directories on page load with expand-directories query param.
   if (window.location.search.includes('expand-directories')) {
@@ -84,7 +84,7 @@ if (readme && readmeContent && readmeOutline && readmeExpand.length && readmeCol
       e.preventDefault();
       expandReadme();
       readme.scrollIntoView();
-    })
+    }),
   );
   readmeCollapse.addEventListener('click', e => {
     e.preventDefault();

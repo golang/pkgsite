@@ -84,6 +84,7 @@
   --color-code-comment: var(--green-light);
   --color-bright-text-link: var(--turq-med);
 }
+
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) {
     --color-brand-primary: var(--turq-med);

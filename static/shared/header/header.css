@@ -44,7 +44,8 @@
   text-decoration: underline;
   white-space: nowrap;
 }
-@media only screen and (min-width: 52rem) {
+
+@media only screen and (width >= 52rem) {
   .go-Banner {
     display: block;
   }
@@ -208,7 +209,8 @@
 .go-Header-submenu .go-Header-submenuItem a.go-Header-socialIcon:not(:last-child) {
   margin-right: 0.75rem;
 }
-@media only screen and (min-width: 65rem) {
+
+@media only screen and (width >= 65rem) {
   .go-Header-menuItem {
     align-items: stretch;
     display: inline-flex;
@@ -411,7 +413,7 @@
   display: none;
 }
 
-@media only screen and (min-width: 32rem) {
+@media only screen and (width >= 32rem) {
   .go-Header-rightContent {
     width: 100%;
   }
@@ -446,7 +448,8 @@
   width: 85%;
   z-index: 30;
 }
-@media only screen and (min-width: 65rem) {
+
+@media only screen and (width >= 65rem) {
   .go-NavigationDrawer {
     display: none;
   }
@@ -512,7 +515,8 @@
   text-decoration: none;
   vertical-align: sub;
 }
-@media only screen and (max-width: 57.7rem) {
+
+@media only screen and (width <= 57.7rem) {
   .go-NavigationDrawer-listItem .go-Header-socialIcons {
     padding: 0.5rem 0;
   }

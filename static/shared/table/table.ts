@@ -26,7 +26,10 @@ export class ExpandableRowsTableController {
    * Create a table controller.
    * @param table - The table element to which the controller binds.
    */
-  constructor(private table: HTMLTableElement, private toggleAll?: HTMLButtonElement | null) {
+  constructor(
+    private table: HTMLTableElement,
+    private toggleAll?: HTMLButtonElement | null,
+  ) {
     this.rows = Array.from(table.querySelectorAll<HTMLTableRowElement>('[data-aria-controls]'));
     this.toggles = Array.from(this.table.querySelectorAll('[aria-expanded]'));
     this.setAttributes();
@@ -68,7 +71,7 @@ export class ExpandableRowsTableController {
     let target = e.currentTarget as HTMLTableRowElement | null;
     if (!target?.hasAttribute('aria-expanded')) {
       target = this.table.querySelector(
-        `button[aria-controls="${target?.getAttribute('aria-controls')}"]`
+        `button[aria-controls="${target?.getAttribute('aria-controls')}"]`,
       );
     }
     const isExpanded = target?.getAttribute('aria-expanded') === 'true';

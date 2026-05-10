@@ -139,7 +139,8 @@
   color: var(--color-text-subtle);
   margin-top: -0.5rem;
 }
-@media only screen and (min-width: 64rem) {
+
+@media only screen and (width >= 64rem) {
   .Documentation-toc {
     margin-left: 2rem;
     white-space: nowrap;
@@ -210,7 +211,8 @@ h4.Documentation-typeMethodHeader {
 .Documentation-declaration pre {
   scroll-padding-top: calc(var(--js-sticky-header-height, 3.5rem) + 3.75rem);
 }
-@media only screen and (min-width: 64rem) {
+
+@media only screen and (width >= 64rem) {
   .Documentation-declaration pre {
     scroll-padding-top: calc(var(--js-sticky-header-height, 3.5rem) + 0.75rem);
   }
@@ -329,9 +331,9 @@ h4.Documentation-typeMethodHeader {
 .Documentation-function pre,
 .Documentation-typeFunc pre,
 .Documentation-typeMethod pre {
+  overflow-wrap: break-word;
   white-space: pre-wrap;
   word-break: break-all;
-  word-wrap: break-word;
 }
 
 .Documentation-indexDeprecated {

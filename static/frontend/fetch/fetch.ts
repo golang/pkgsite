@@ -16,7 +16,7 @@ if (fetchButton) {
 async function fetchPath() {
   const fetchMessageEl = document.querySelector<HTMLHeadingElement>('.js-fetchMessage');
   const fetchMessageSecondary = document.querySelector<HTMLParagraphElement>(
-    '.js-fetchMessageSecondary'
+    '.js-fetchMessageSecondary',
   );
   const fetchButton = document.querySelector<HTMLButtonElement>('.js-fetchButton');
   const fetchLoading = document.querySelector<HTMLDivElement>('.js-fetchLoading');

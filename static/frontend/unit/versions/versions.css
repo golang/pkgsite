@@ -100,7 +100,8 @@
   gap: 0 1rem;
   line-height: 2.25rem;
 }
-@media only screen and (min-width: 37.5rem) {
+
+@media only screen and (width >= 37.5rem) {
   .Versions-list {
     display: grid;
     grid-template-columns: fit-content(8rem) fit-content(20rem) min-content auto;
@@ -114,7 +115,8 @@
   margin-bottom: 1rem;
   min-width: 4rem;
 }
-@media only screen and (min-width: 37.5rem) {
+
+@media only screen and (width >= 37.5rem) {
   .Version-major {
     margin-bottom: 0;
   }
@@ -123,7 +125,8 @@
 .Version-tag {
   text-align: left;
 }
-@media only screen and (min-width: 37.5rem) {
+
+@media only screen and (width >= 37.5rem) {
   .Version-tag {
     text-align: right;
   }
@@ -143,7 +146,8 @@
 .Version-dot::before {
   content: '•';
 }
-@media only screen and (min-width: 37.5rem) {
+
+@media only screen and (width >= 37.5rem) {
   .Version-dot {
     display: flex;
   }

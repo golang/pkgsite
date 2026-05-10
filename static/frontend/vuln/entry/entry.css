@@ -26,7 +26,7 @@
 /* One column by default */
 .VulnEntryPackages-container {
   display: grid;
-  grid-gap: 0.5rem;
+  gap: 0.5rem;
   grid-template-columns: 1fr;
 }
 
@@ -53,10 +53,10 @@
 }
 
 /* Three columns for wider screen */
-@media screen and (min-width: 46rem) {
+@media screen and (width >= 46rem) {
   /* Undo what's done by default */
   .VulnEntryPackages-container {
-    grid-gap: 0;
+    gap: 0;
   }
 
   .VulnEntryPackages-item {

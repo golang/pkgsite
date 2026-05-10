@@ -28,7 +28,7 @@ const headerObserver = new IntersectionObserver(
       }
     }
   },
-  { threshold: 1, rootMargin: `${headerHeight * 16 * 3}px` }
+  { threshold: 1, rootMargin: `${headerHeight * 16 * 3}px` },
 );
 headerObserver.observe(headerSentinel);
 

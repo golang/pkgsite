@@ -6,7 +6,8 @@
  */
 
 import { PlaygroundExampleController } from './playground';
-import { mocked } from 'ts-jest/utils';
+
+const mocked = jest.mocked;
 
 const flushPromises = (ms = 0) => new Promise(fn => setTimeout(fn, ms));
 const el = <T extends HTMLElement>(selector: string) => document.querySelector<T>(selector);
@@ -169,7 +170,7 @@ require example v1
       method: 'POST',
     });
     expect(el('.Documentation-exampleOutput').textContent).toContain(
-      '// mocked message 1 // mocked message 2'
+      '// mocked message 1 // mocked message 2',
     );
   });
 

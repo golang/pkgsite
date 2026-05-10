@@ -59,7 +59,7 @@
 }
 
 /* Safari only */
-@media not all and (min-resolution: 0.001dpcm) {
+@media not all and (resolution >= 0.001dpcm) {
   @supports (-webkit-appearance: none) {
     .go-Modal {
       padding-bottom: 0;

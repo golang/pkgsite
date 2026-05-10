@@ -20,12 +20,14 @@
 [data-theme='dark'] .Homepage-logo {
   mix-blend-mode: difference;
 }
+
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) .Homepage-logo {
     mix-blend-mode: difference;
   }
 }
-@media only screen and (min-width: 52rem) {
+
+@media only screen and (width >= 52rem) {
   .Homepage {
     margin: 2rem auto;
   }
@@ -77,7 +79,8 @@
 .Homepage-search--symbol .go-Button {
   display: none;
 }
-@media only screen and (min-width: 30rem) {
+
+@media only screen and (width >= 30rem) {
   .Homepage-search--symbol .go-Input {
     border-bottom-right-radius: 0;
     border-top-right-radius: 0;
@@ -114,7 +117,8 @@ input[type='search']::-webkit-search-decoration {
   white-space: nowrap;
   width: inherit;
 }
-@media only screen and (min-width: 52rem) {
+
+@media only screen and (width >= 52rem) {
   .Homepage-examples {
     flex-direction: row;
   }

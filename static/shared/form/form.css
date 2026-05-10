@@ -119,7 +119,8 @@ input::placeholder {
   width: 1.5rem;
   z-index: 1;
 }
-@media only screen and (min-width: 52rem) {
+
+@media only screen and (width >= 52rem) {
   .go-ShortcutKey::after {
     display: initial;
   }

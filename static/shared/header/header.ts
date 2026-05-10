@@ -32,7 +32,7 @@ export function registerHeaderListeners(): void {
       const currentTarget = e.currentTarget as HTMLElement;
       if (isForced) {
         currentTarget.removeEventListener('blur', () =>
-          currentTarget.classList.remove('forced-open')
+          currentTarget.classList.remove('forced-open'),
         );
         currentTarget.classList.remove('forced-open');
         currentTarget.classList.add('forced-closed');
@@ -103,7 +103,7 @@ export function registerHeaderListeners(): void {
     headerbuttons.forEach(button => {
       button.setAttribute(
         'aria-expanded',
-        header?.classList.contains('is-active') ? 'true' : 'false'
+        header?.classList.contains('is-active') ? 'true' : 'false',
       );
     });
   });
@@ -115,8 +115,8 @@ export function registerHeaderListeners(): void {
 
     const menuItems = Array.from(
       navigationDrawer.querySelectorAll(
-        ':scope > .go-NavigationDrawer-nav > .go-NavigationDrawer-list > .go-NavigationDrawer-listItem > a, :scope > .go-NavigationDrawer-nav > .go-NavigationDrawer-list > .go-NavigationDrawer-listItem > .go-Header-socialIcons > a'
-      ) || []
+        ':scope > .go-NavigationDrawer-nav > .go-NavigationDrawer-list > .go-NavigationDrawer-listItem > a, :scope > .go-NavigationDrawer-nav > .go-NavigationDrawer-list > .go-NavigationDrawer-listItem > .go-Header-socialIcons > a',
+      ) || [],
     );
 
     const anchorEl = navigationDrawer.querySelector('.go-NavigationDrawer-header > a');
@@ -148,12 +148,12 @@ export function registerHeaderListeners(): void {
       menuItems[0].removeEventListener('keydown', handleMenuItemTabLeftFactory(navigationDrawer));
       menuItems[menuItems.length - 1].removeEventListener(
         'keydown',
-        handleMenuItemTabRightFactory(navigationDrawer)
+        handleMenuItemTabRightFactory(navigationDrawer),
       );
     }
 
     if (navigationDrawer === header) {
-      headerbuttons && (headerbuttons[0] as HTMLElement)?.focus();
+      if (headerbuttons) (headerbuttons[0] as HTMLElement)?.focus();
     }
   };
 
@@ -167,7 +167,7 @@ export function registerHeaderListeners(): void {
     menuItems[0].addEventListener('keydown', handleMenuItemTabLeftFactory(navigationDrawer));
     menuItems[menuItems.length - 1].addEventListener(
       'keydown',
-      handleMenuItemTabRightFactory(navigationDrawer)
+      handleMenuItemTabRightFactory(navigationDrawer),
     );
   };
 

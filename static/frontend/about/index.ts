@@ -76,7 +76,7 @@ export const initJumpLinks = async function () {
                 ...navItems,
                 {
                   id: title.id,
-                  label: title?.dataset?.title ? title.dataset.title : title.textContent ?? '',
+                  label: title?.dataset?.title ? title.dataset.title : (title.textContent ?? ''),
                 },
               ];
               break;
@@ -87,13 +87,13 @@ export const initJumpLinks = async function () {
                 navItems[navItems.length - 1].subnav = [
                   {
                     id: title.id,
-                    label: title?.dataset?.title ? title.dataset.title : title.textContent ?? '',
+                    label: title?.dataset?.title ? title.dataset.title : (title.textContent ?? ''),
                   },
                 ];
               } else if (navItems[navItems.length - 1].subnav) {
                 navItems[navItems.length - 1].subnav?.push({
                   id: title.id,
-                  label: title?.dataset?.title ? title.dataset.title : title.textContent ?? '',
+                  label: title?.dataset?.title ? title.dataset.title : (title.textContent ?? ''),
                 });
               }
               break;
@@ -114,8 +114,8 @@ export const initJumpLinks = async function () {
                 'a',
                 { href: '#' + subnavItem.id },
                 el('img', { src: '/static/frontend/about/dot.svg', width: '5', height: '5' }),
-                el('span', {}, subnavItem.label)
-              )
+                el('span', {}, subnavItem.label),
+              ),
             );
             subLinks = [...subLinks, subItem];
           }
