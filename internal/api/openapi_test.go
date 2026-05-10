@@ -345,7 +345,13 @@ func generateSchemas(data []byte) (map[string]any, error) {
 				}
 
 				typeStr := typeExprToString(field.Type)
-				properties[jsonName] = mapFieldType(typeStr)
+				prop := mapFieldType(typeStr)
+				if field.Doc != nil {
+					prop["description"] = strings.TrimSpace(field.Doc.Text())
+				} else if field.Comment != nil {
+					prop["description"] = strings.TrimSpace(field.Comment.Text())
+				}
+				properties[jsonName] = prop
 			}
 
 			schemas[typeName] = map[string]any{

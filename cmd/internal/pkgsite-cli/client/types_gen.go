@@ -28,7 +28,7 @@ type PackageInfo struct {
 	Path              string `json:"path"`
 	Name              string `json:"name"`
 	Synopsis          string `json:"synopsis"`
-	IsRedistributable bool   `json:"isRedistributable"` // license allows distribution?
+	IsRedistributable bool   `json:"isRedistributable"` // Whether the license allows distribution.
 }
 
 type PackagesResponse struct {
@@ -64,8 +64,8 @@ type ModuleVersion struct {
 	ModulePath        string    `json:"modulePath"`
 	Version           string    `json:"version"`
 	CommitTime        time.Time `json:"commitTime"`
-	IsRedistributable bool      `json:"isRedistributable"` // license allows distribution?
-	HasGoMod          bool      `json:"hasGoMod"`          // module has go.mod file?
+	IsRedistributable bool      `json:"isRedistributable"` // Whether the license allows distribution.
+	HasGoMod          bool      `json:"hasGoMod"`          // Whether the module has a go.mod file.
 	LatestVersion     string    `json:"latestVersion"`     // latest unretracted version
 	Deprecated        bool      `json:"deprecated"`
 	DeprecationReason string    `json:"deprecationReason"`
