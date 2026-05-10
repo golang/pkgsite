@@ -30,61 +30,61 @@ describe('KeyboardController', () => {
 
   it('fires a callback when a key is down', () => {
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'y' }));
-    expect(fn).toBeCalled();
+    expect(fn).toHaveBeenCalled();
   });
 
   it('fires a callback when a key is capitalized', () => {
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Y' }));
-    expect(fn).toBeCalled();
+    expect(fn).toHaveBeenCalled();
   });
 
   it('skips callback when a meta key is used', () => {
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'y', metaKey: true }));
-    expect(fn).not.toBeCalled();
+    expect(fn).not.toHaveBeenCalled();
   });
 
   it('fires callback when a meta key is required', () => {
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'm', metaKey: true }));
-    expect(fn).toBeCalled();
+    expect(fn).toHaveBeenCalled();
   });
 
   it('skips callback when a meta key is missing', () => {
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'm' }));
-    expect(fn).not.toBeCalled();
+    expect(fn).not.toHaveBeenCalled();
   });
 
   it('skips callback when target is an input element', () => {
     input.dispatchEvent(new KeyboardEvent('keydown', { key: 'y' }));
-    expect(fn).not.toBeCalled();
+    expect(fn).not.toHaveBeenCalled();
   });
 
   it('skips callback when target is a select element', () => {
     select.dispatchEvent(new KeyboardEvent('keydown', { key: 'y' }));
-    expect(fn).not.toBeCalled();
+    expect(fn).not.toHaveBeenCalled();
   });
 
   it('skips callback when target is a textarea element', () => {
     textarea.dispatchEvent(new KeyboardEvent('keydown', { key: 'y' }));
-    expect(fn).not.toBeCalled();
+    expect(fn).not.toHaveBeenCalled();
   });
 
   it('skips callback when target is a an editable element', () => {
     editableDiv.dispatchEvent(new KeyboardEvent('keydown', { key: 'y' }));
-    expect(fn).not.toBeCalled();
+    expect(fn).not.toHaveBeenCalled();
   });
 
   it('fires callback when event bubbles from target', () => {
     bubbleDiv.dispatchEvent(new KeyboardEvent('keydown', { key: 'y', bubbles: true }));
-    expect(fn).toBeCalled();
+    expect(fn).toHaveBeenCalled();
   });
 
   it('fires callback when event matches target', () => {
     target.dispatchEvent(new KeyboardEvent('keydown', { key: 't', bubbles: true }));
-    expect(fn).toBeCalled();
+    expect(fn).toHaveBeenCalled();
   });
 
   it('skips callback when event does not match target', () => {
     nonTargetDiv.dispatchEvent(new KeyboardEvent('keydown', { key: 't', bubbles: true }));
-    expect(fn).not.toBeCalled();
+    expect(fn).not.toHaveBeenCalled();
   });
 });
