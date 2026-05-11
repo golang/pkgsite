@@ -102,10 +102,9 @@ metaScan:
 				repoSubdir := ""
 				switch len(fields) {
 				case 3:
-					// go-import meta tag support minium 3 fields (root-path vcs repo-url).
-					break // good to proceed
+					// go-import meta tag supports a minimum of 3 fields (root-path vcs repo-url).
 				case 4:
-					// go-import meta tag support minium 3 fields (root-path vcs repo-url), and additionally "subdirectory" field since Go 1.25.
+					// go-import meta tag supports a minimum of 3 fields (root-path vcs repo-url), and additionally "subdirectory" field since Go 1.25.
 					repoSubdir = fields[3]
 				default:
 					errorMessage = "go-import meta tag content attribute does not have three or four fields"
@@ -149,7 +148,6 @@ metaScan:
 						break metaScan
 					}
 					repoURL = sm.repoURL
-					repoSubdir = sm.repoSubdir
 				}
 				sm = &sourceMeta{
 					repoRootPrefix: repoRootPrefix,
