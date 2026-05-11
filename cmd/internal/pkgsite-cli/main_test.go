@@ -14,6 +14,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -349,6 +350,66 @@ func TestNoThirdPartyImports(t *testing.T) {
 				!strings.HasPrefix(path, "golang.org/x/telemetry") {
 				t.Errorf("%s imports third-party package %q", e.Name(), path)
 			}
+		}
+	}
+}
+
+func TestHelpDocumentationSync(t *testing.T) {
+	cmds := commands()
+	var pkgCmd, modCmd, searchCmd *command
+	for _, c := range cmds {
+		switch c.name {
+		case "package":
+			pkgCmd = c
+		case "module":
+			modCmd = c
+		case "search":
+			searchCmd = c
+		}
+	}
+
+	if pkgCmd == nil {
+		t.Fatal("package command not found")
+	}
+	if modCmd == nil {
+		t.Fatal("module command not found")
+	}
+	if searchCmd == nil {
+		t.Fatal("search command not found")
+	}
+
+	t.Run("package", func(t *testing.T) {
+		checkFields(t, reflect.TypeOf(packageResult{}), pkgCmd.description)
+		checkFields(t, reflect.TypeOf(client.Package{}), pkgCmd.description)
+	})
+
+	t.Run("module", func(t *testing.T) {
+		checkFields(t, reflect.TypeOf(moduleResult{}), modCmd.description)
+		checkFields(t, reflect.TypeOf(client.Module{}), modCmd.description)
+	})
+
+	t.Run("search", func(t *testing.T) {
+		checkFields(t, reflect.TypeOf(client.PaginatedResponse[client.SearchResult]{}), searchCmd.description)
+		checkFields(t, reflect.TypeOf(client.SearchResult{}), searchCmd.description)
+	})
+}
+
+func checkFields(t *testing.T, typ reflect.Type, doc string) {
+	t.Helper()
+	if typ.Kind() == reflect.Ptr {
+		typ = typ.Elem()
+	}
+	for i := 0; i < typ.NumField(); i++ {
+		f := typ.Field(i)
+		if f.Anonymous {
+			checkFields(t, f.Type, doc)
+			continue
+		}
+		if f.PkgPath != "" {
+			continue // skip unexported fields
+		}
+		if !strings.Contains(doc, f.Name) {
+			t.Errorf("Documentation missing field %q of type %v", f.Name, typ)
 		}
 	}
 }

@@ -55,28 +55,104 @@ func commands() []*command {
 
 	pkgRun := func(fs *flag.FlagSet, stdout, stderr io.Writer) int { return runPackage(fs, &pf, stdout, stderr) }
 
+	const packageDoc = `
+When using -json, the output is a JSON object with the following structure:
+
+    type packageResult struct {
+        Package    *Package                          // package information
+        Symbols    *PaginatedResponse[Symbol]        // symbols (with -symbols)
+        ImportedBy *PackageImportedBy                // reverse dependencies (with -imported-by)
+    }
+
+    type Package struct {
+        Path              string
+        Name              string
+        Synopsis          string
+        IsRedistributable bool
+        ModulePath        string
+        Version           string
+        IsLatest          bool
+        IsStandardLibrary bool
+        GOOS              string
+        GOARCH            string
+        Docs              string    // rendered documentation (with -doc)
+        Imports           []string  // imports (with -imports)
+        Licenses          []License // licenses (with -licenses)
+    }
+
+    type License struct {
+        Types    []string
+        FilePath string
+    }
+`
+
+	const moduleDoc = `
+When using -json, the output is a JSON object with the following structure:
+
+    type moduleResult struct {
+        Module   *Module                                   // module information
+        Versions *PaginatedResponse[VersionResponse]       // versions (with -versions)
+        Vulns    *PaginatedResponse[Vulnerability]         // vulnerabilities (with -vulns)
+        Packages *PaginatedResponse[ModulePackageResponse] // packages (with -packages)
+    }
+
+    type Module struct {
+        Path              string
+        Version           string
+        CommitTime        time.Time
+        IsLatest          bool
+        IsRedistributable bool
+        IsStandardLibrary bool
+        HasGoMod          bool
+        RepoURL           string
+        GoModContents     string
+        Readme            *Readme
+        Licenses          []License
+    }
+`
+
+	const searchDoc = `
+When using -json, the output is a JSON object with the following structure:
+
+    type PaginatedResponse[SearchResult] struct {
+        Items         []SearchResult
+        Total         int
+        NextPageToken string
+    }
+
+    type SearchResult struct {
+        PackagePath string
+        ModulePath  string
+        Version     string
+        Synopsis    string
+    }
+`
+
 	var cmds []*command
 	cmds = []*command{
 		{
-			name:    "package",
-			args:    "<package>[@version]",
-			summary: "package information",
-			flags:   pkgFS,
-			run:     pkgRun,
+			name:        "package",
+			args:        "<package>[@version]",
+			summary:     "package information",
+			description: strings.TrimSpace(packageDoc),
+			flags:       pkgFS,
+			run:         pkgRun,
 		},
 		{
-			name:    "module",
-			args:    "<module>[@version]",
-			summary: "module information",
-			flags:   modFS,
-			run:     func(fs *flag.FlagSet, stdout, stderr io.Writer) int { return runModule(fs, &mf, stdout, stderr) },
+			name:        "module",
+			args:        "<module>[@version]",
+			summary:     "module information",
+			description: strings.TrimSpace(moduleDoc),
+			flags:       modFS,
+			run:         func(fs *flag.FlagSet, stdout, stderr io.Writer) int { return runModule(fs, &mf, stdout, stderr) },
 		},
 		{
-			name:    "search",
-			args:    "<query>",
-			summary: "search for packages",
-			flags:   searchFS,
-			run:     func(fs *flag.FlagSet, stdout, stderr io.Writer) int { return runSearch(fs, &sf, stdout, stderr) },
+			name:        "search",
+			args:        "<query>",
+			summary:     "search for packages",
+			description: strings.TrimSpace(searchDoc),
+			flags:       searchFS,
+			run:         func(fs *flag.FlagSet, stdout, stderr io.Writer) int { return runSearch(fs, &sf, stdout, stderr) },
 		},
 		{
 			name:    "help",

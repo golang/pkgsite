@@ -19,11 +19,12 @@ import (
 
 // A command describes a subcommand of the tool.
 type command struct {
-	name    string // subcommand name
-	args    string // e.g. "<package>[@version]"; empty for no-arg commands
-	summary string // one-line description
-	flags   *flag.FlagSet
-	run     func(fs *flag.FlagSet, stdout, stderr io.Writer) int
+	name        string // subcommand name
+	args        string // e.g. "<package>[@version]"; empty for no-arg commands
+	summary     string // one-line description
+	description string // detailed description
+	flags       *flag.FlagSet
+	run         func(fs *flag.FlagSet, stdout, stderr io.Writer) int
 }
 
 func (c *command) usageLine() string {
@@ -38,6 +39,9 @@ func (c *command) usageLine() string {
 func printCommandUsage(w io.Writer, c *command) {
 	fmt.Fprintf(w, "Usage: %s\n", c.usageLine())
 	fmt.Fprintf(w, "\n%s\n", c.summary)
+	if c.description != "" {
+		fmt.Fprintf(w, "\n%s\n", c.description)
+	}
 	if c.flags != nil {
 		fmt.Fprintln(w)
 		fmt.Fprintln(w, "Flags:")
