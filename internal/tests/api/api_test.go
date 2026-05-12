@@ -122,6 +122,7 @@ func unit(relativePath string, doc ...*internal.Documentation) *internal.Unit {
 var diffOptions = []cmp.Option{
 	cmpopts.IgnoreUnexported(api.Error{}),
 	cmpopts.IgnoreFields(api.Error{}, "Fixes"),
+	cmpopts.IgnoreFields(api.Module{}, "CommitTime"),
 	cmpopts.IgnoreFields(api.ModuleVersion{}, "CommitTime"),
 }
 
