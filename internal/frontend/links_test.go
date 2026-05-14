@@ -113,7 +113,7 @@ func TestExternalLinkGeneratorsSkipsPrivateModules(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			old := goPrivatePatterns
 			goPrivatePatterns = func() goPrivateConfig {
-				return goPrivateConfig{goprivate: tc.goprivate, gonoproxy: tc.gonoproxy, ok: true}
+				return goPrivateConfig{goprivate: tc.goprivate, gonoproxy: tc.gonoproxy}
 			}
 			t.Cleanup(func() { goPrivatePatterns = old })
 
@@ -129,26 +129,6 @@ func TestExternalLinkGeneratorsSkipsPrivateModules(t *testing.T) {
 				t.Errorf("codeWiki() = %q, want empty for private module", got)
 			}
 		})
-	}
-}
-
-func TestExternalLinkGeneratorsSkipsWhenGoEnvFails(t *testing.T) {
-	// When "go env" can't be read, treat every module as private rather than
-	// leaking the lookup to external services.
-	old := goPrivatePatterns
-	goPrivatePatterns = func() goPrivateConfig { return goPrivateConfig{} }
-	t.Cleanup(func() { goPrivatePatterns = old })
-
-	rt := &recordingTransport{t: t}
-	client := &http.Client{Transport: rt}
-
-	um := &internal.UnitMeta{ModuleInfo: internal.ModuleInfo{ModulePath: "github.com/public/repo"}}
-	depsDev, codeWiki := externalLinkGenerators(t.Context(), client, um, false, false)
-	if got := depsDev(); got != "" {
-		t.Errorf("depsDev() = %q, want empty when go env fails", got)
-	}
-	if got := codeWiki(); got != "" {
-		t.Errorf("codeWiki() = %q, want empty when go env fails", got)
 	}
 }
 
@@ -174,7 +154,7 @@ func TestExternalLinkGeneratorsCallsForPublicModules(t *testing.T) {
 
 	old := goPrivatePatterns
 	goPrivatePatterns = func() goPrivateConfig {
-		return goPrivateConfig{goprivate: "internal.example.com", ok: true}
+		return goPrivateConfig{goprivate: "internal.example.com"}
 	}
 	t.Cleanup(func() { goPrivatePatterns = old })
 

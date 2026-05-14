@@ -10,6 +10,7 @@ import (
 	"errors"
 	"net/http"
 	"net/url"
+	"os"
 	"os/exec"
 	"strings"
 	"sync"
@@ -38,13 +39,10 @@ var (
 )
 
 // goPrivateConfig holds the GOPRIVATE and GONOPROXY values as reported by
-// "go env". ok is false when the values could not be determined (e.g. "go" is
-// not on PATH); in that case pkgsite conservatively treats every module as
-// private and skips external link lookups.
+// "go env".
 type goPrivateConfig struct {
 	goprivate string
 	gonoproxy string
-	ok        bool
 }
 
 // goPrivatePatterns returns the GOPRIVATE and GONOPROXY values, reading them
@@ -55,20 +53,22 @@ type goPrivateConfig struct {
 var goPrivatePatterns = sync.OnceValue(loadGoPrivatePatterns)
 
 func loadGoPrivatePatterns() goPrivateConfig {
+	goprivate := os.Getenv("GOPRIVATE")
+	gonoproxy := os.Getenv("GONOPROXY")
 	out, err := exec.Command("go", "env", "-json", "GOPRIVATE", "GONOPROXY").Output()
 	if err != nil {
-		log.Warningf(context.Background(), "reading GOPRIVATE/GONOPROXY via 'go env': %v; external link lookups will be skipped", err)
-		return goPrivateConfig{}
+		log.Warningf(context.Background(), "executing 'go env' failed (%v); falling back to process environment variables GOPRIVATE=%q, GONOPROXY=%q", err, goprivate, gonoproxy)
+		return goPrivateConfig{goprivate: goprivate, gonoproxy: gonoproxy}
 	}
 	var v struct {
 		GOPRIVATE string
 		GONOPROXY string
 	}
 	if err := json.Unmarshal(out, &v); err != nil {
-		log.Warningf(context.Background(), "parsing 'go env' output: %v; external link lookups will be skipped", err)
-		return goPrivateConfig{}
+		log.Warningf(context.Background(), "parsing 'go env' output failed (%v); falling back to process environment variables GOPRIVATE=%q, GONOPROXY=%q", err, goprivate, gonoproxy)
+		return goPrivateConfig{goprivate: goprivate, gonoproxy: gonoproxy}
 	}
-	return goPrivateConfig{goprivate: v.GOPRIVATE, gonoproxy: v.GONOPROXY, ok: true}
+	return goPrivateConfig{goprivate: v.GOPRIVATE, gonoproxy: v.GONOPROXY}
 }
 
 // isPrivateModulePath reports whether modulePath matches either of the given
@@ -81,13 +81,12 @@ func isPrivateModulePath(modulePath, goprivate, gonoproxy string) bool {
 
 // externalLinkGenerators returns URL-generator functions for deps.dev and
 // codewiki.google for the given unit. If suppressed (because pkgsite is in
-// goDocMode, the GOPRIVATE/GONOPROXY values can't be determined, or the module
-// path is matched by GOPRIVATE/GONOPROXY), the returned generators return the
-// empty string and make no network requests.
+// goDocMode or the module path is matched by GOPRIVATE/GONOPROXY), the returned
+// generators return the empty string and make no network requests.
 func externalLinkGenerators(ctx context.Context, client *http.Client, um *internal.UnitMeta, goDocMode, recordCodeWikiClicks bool) (depsDev, codeWiki func() string) {
 	empty := func() string { return "" }
 	cfg := goPrivatePatterns()
-	if goDocMode || !cfg.ok || isPrivateModulePath(um.ModulePath, cfg.goprivate, cfg.gonoproxy) {
+	if goDocMode || isPrivateModulePath(um.ModulePath, cfg.goprivate, cfg.gonoproxy) {
 		return empty, empty
 	}
 	return depsDevURLGenerator(ctx, client, um), codeWikiURLGenerator(ctx, client, um, recordCodeWikiClicks)
