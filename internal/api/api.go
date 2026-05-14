@@ -64,6 +64,16 @@ func ServePackage(w http.ResponseWriter, r *http.Request, ds internal.DataSource
 		return err
 	}
 
+	if params.Examples && params.Doc == "" {
+		return BadRequest("examples require doc format to be specified")
+	}
+	switch params.Doc {
+	// renderDocumentation needs to be updated when the doc set changes.
+	case "", "text", "md", "markdown", "html":
+	default:
+		return BadRequest("bad doc format: need one of 'text', 'md', 'markdown' or 'html'")
+	}
+
 	um, err := resolveModulePath(r, ds, pkgPath, params.Module, params.Version)
 	if err != nil {
 		return err
@@ -772,10 +782,6 @@ func paginate[T any](all []T, lp ListParams, defaultLimit int) (PaginatedRespons
 
 // unitToPackage processes unit documentation into a Package struct.
 func unitToPackage(unit *internal.Unit, params PackageParams) (*Package, error) {
-	if params.Examples && params.Doc == "" {
-		return nil, BadRequest("examples require doc format to be specified")
-	}
-
 	// Although unit.Documentation is a slice, it will
 	// have at most one item, the documentation matching
 	// the build context.
@@ -858,6 +864,7 @@ func renderDocumentation(unit *internal.Unit, d *internal.Documentation, format 
 	case "html":
 		r = newHTMLRenderer(gpkg.Fset, &sb)
 	default:
+		// ServePackage needs to be updated when the doc set changes.
 		return "", BadRequest("bad doc format: need one of 'text', 'md', 'markdown' or 'html'")
 	}
 	if err := renderDoc(dpkg, r, examples); err != nil {

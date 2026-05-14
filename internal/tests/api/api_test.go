@@ -350,6 +350,15 @@ func testServePackage(t *testing.T, ds internal.TestingDataSource) {
 			},
 		},
 		{
+			name:       "examples without doc and nonexistent package",
+			url:        "/v1beta/package/nonexistent.com/pkg?version=v1.2.3&examples=true",
+			wantStatus: http.StatusBadRequest,
+			want: &api.Error{
+				Code:    http.StatusBadRequest,
+				Message: "examples require doc format to be specified",
+			},
+		},
+		{
 			name:       "package not found",
 			url:        "/v1beta/package/nonexistent.com/pkg",
 			wantStatus: http.StatusNotFound,
@@ -377,6 +386,15 @@ func testServePackage(t *testing.T, ds internal.TestingDataSource) {
 		{
 			name:       "invalid doc format",
 			url:        "/v1beta/package/example.com/pkg?version=v1.2.3&doc=invalid",
+			wantStatus: http.StatusBadRequest,
+			want: &api.Error{
+				Code:    http.StatusBadRequest,
+				Message: "bad doc format: need one of 'text', 'md', 'markdown' or 'html'",
+			},
+		},
+		{
+			name:       "invalid doc format and nonexistent package",
+			url:        "/v1beta/package/nonexistent.com/pkg?version=v1.2.3&doc=invalid",
 			wantStatus: http.StatusBadRequest,
 			want: &api.Error{
 				Code:    http.StatusBadRequest,
