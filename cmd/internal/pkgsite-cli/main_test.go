@@ -12,7 +12,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"reflect"
 	"strings"
@@ -96,13 +95,6 @@ func TestRunPackage(t *testing.T) {
 }
 
 func TestRunPackageGOOSGOARCH(t *testing.T) {
-	if _, err := exec.LookPath("go"); err != nil {
-		t.Skip("skipping test; 'go' command not found")
-	}
-
-	t.Setenv("GOOS", "windows")
-	t.Setenv("GOARCH", "386")
-
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		goos := r.URL.Query().Get("goos")
 		goarch := r.URL.Query().Get("goarch")
@@ -122,7 +114,7 @@ func TestRunPackageGOOSGOARCH(t *testing.T) {
 	defer srv.Close()
 
 	var stdout, stderr bytes.Buffer
-	code := run([]string{"package", "--server=" + srv.URL, "encoding/json"}, &stdout, &stderr)
+	code := run([]string{"package", "-goos=windows", "-goarch=386", "--server=" + srv.URL, "encoding/json"}, &stdout, &stderr)
 	if code != 0 {
 		t.Fatalf("exit code = %d, stderr = %s", code, stderr.String())
 	}

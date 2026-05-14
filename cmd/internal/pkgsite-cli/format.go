@@ -45,6 +45,9 @@ func formatPackage(w io.Writer, r packageResult) {
 	if p.Synopsis != "" {
 		fmt.Fprintf(w, "  Synopsis: %s\n", p.Synopsis)
 	}
+	if p.GOOS != "" && p.GOARCH != "" {
+		fmt.Fprintf(w, "  Context:  %s/%s\n", p.GOOS, p.GOARCH)
+	}
 
 	if p.Docs != "" {
 		fmt.Fprintln(w)

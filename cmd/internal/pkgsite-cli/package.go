@@ -9,8 +9,6 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"os/exec"
-	"strings"
 
 	"golang.org/x/pkgsite/cmd/internal/pkgsite-cli/client"
 )
@@ -22,14 +20,6 @@ func runPackage(fs *flag.FlagSet, p *packageFlags, stdout, stderr io.Writer) int
 		return 2
 	}
 	path, version := splitPathVersion(fs.Arg(0))
-
-	goos, goarch, err := defaultGOOSGOARCH()
-	if err != nil {
-		fmt.Fprintf(stderr, "Error: %v\n", err)
-		return 1
-	}
-	p.goos = goos
-	p.goarch = goarch
 
 	ctx, cancel := context.WithTimeout(context.Background(), p.timeout)
 	defer cancel()
@@ -136,17 +126,6 @@ func (f *packageFlags) register(fs *flag.FlagSet) {
 	fs.BoolVar(&f.symbols, "symbols", false, "list exported symbols")
 	fs.BoolVar(&f.licenses, "licenses", false, "show license information")
 	fs.StringVar(&f.module, "module", "", "disambiguate module path")
-}
-
-func defaultGOOSGOARCH() (goos, goarch string, _ error) {
-	cmd := exec.Command("go", "env", "GOOS", "GOARCH")
-	out, err := cmd.Output()
-	if err != nil {
-		return "", "", fmt.Errorf("running go env: %w", err)
-	}
-	fields := strings.Fields(string(out))
-	if len(fields) != 2 {
-		return "", "", fmt.Errorf("expected 2 fields from go env, got %d", len(fields))
-	}
-	return fields[0], fields[1], nil
+	fs.StringVar(&f.goos, "goos", "", "target GOOS")
+	fs.StringVar(&f.goarch, "goarch", "", "target GOARCH")
 }
