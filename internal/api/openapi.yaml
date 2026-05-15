@@ -68,7 +68,7 @@
             "description": "Successful response"
           }
         },
-        "summary": "Paths of packages importing the package at {path},\nnot including packages in the same module.\nOnly results whose path\nmatches the regexp in the filter query parameter are returned."
+        "summary": "Paths of packages importing the package at {path},\nnot including packages in the same module.\nFiltering is applied to the list of paths in the response.\nOnly paths that match the filter query parameter are returned.\nWithin a filter, the variable `path` is set to the import path."
       }
     },
     "/module/{path}": {
@@ -248,7 +248,7 @@
             "description": "Successful response"
           }
         },
-        "summary": "Information about packages of the module at {path}.\nOnly results whose path or synopsis\nmatches the regexp in the filter query parameter are returned."
+        "summary": "Information about packages of the module at {path}.\nFiltering is applied to the list of packages in the response.\nOnly packages that match the filter query parameter are returned."
       }
     },
     "/search": {
@@ -308,7 +308,7 @@
             "description": "Successful response"
           }
         },
-        "summary": "Search results. Only results whose package path or synopsis\nmatches the regexp in the filter query parameter are returned."
+        "summary": "Search results. Only results that match the filter query parameter are returned."
       }
     },
     "/symbols/{path}": {
@@ -384,7 +384,7 @@
             "description": "Successful response"
           }
         },
-        "summary": "List of symbols for the package at {path}.\nOnly results whose name or synopsis\nmatches the regexp in the filter query parameter are returned."
+        "summary": "List of symbols for the package at {path}.\nFiltering is applied to the list of symbols in the response.\nOnly symbols that match the filter query parameter are returned."
       }
     },
     "/versions/{path}": {
@@ -428,7 +428,7 @@
             "description": "Successful response"
           }
         },
-        "summary": "Versions of the module at {path}.\nIf there are tagged versions, they are returned.\nOtherwise, the 10 most recent pseudo-versions are returned.\nThe versions are in descending order.\nOnly results whose version matches the regexp in the\nfilter query parameter are returned."
+        "summary": "Versions of the module at {path}.\nIf there are tagged versions, they are returned.\nOtherwise, the 10 most recent pseudo-versions are returned.\nThe versions are in descending order.\nOnly results that match the filter query parameter are returned."
       }
     },
     "/vulns/{path}": {
@@ -488,7 +488,7 @@
             "description": "Successful response"
           }
         },
-        "summary": "Vulnerabilities of the module or package at {path}, from\nthe Go vulnerability database (https://vuln.go.dev).\nOnly results whose ID or details\nmatches the regexp in the filter query parameter are returned."
+        "summary": "Vulnerabilities of the module or package at {path}, from\nthe Go vulnerability database (https://vuln.go.dev).\nOnly results that match the filter query parameter are returned."
       }
     }
   },

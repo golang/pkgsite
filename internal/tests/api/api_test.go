@@ -733,7 +733,8 @@ func testServeModuleVersions(t *testing.T, ds internal.TestingDataSource) {
 		},
 		{
 			name: "filter",
-			url:  "/v1beta/versions/example.com?filter=2",
+			url: "/v1beta/versions/example.com?filter=" +
+				url.QueryEscape(`contains(version, "2")`),
 			want: &api.PaginatedResponse[api.ModuleVersion]{
 				Total: 1,
 				Items: []api.ModuleVersion{
@@ -751,12 +752,13 @@ func testServeModuleVersions(t *testing.T, ds internal.TestingDataSource) {
 			url:  "/v1beta/versions/example.com?filter=" + url.QueryEscape(`[`),
 			want: &api.Error{
 				Code:    400,
-				Message: "error parsing regexp: missing closing ]: `[`",
+				Message: `parsing filter "[": 1:2: expected operand, found 'EOF'`,
 			},
 		},
 		{
 			name: "case-sensitive filter",
-			url:  "/v1beta/versions/example.com?filter=V",
+			url: "/v1beta/versions/example.com?filter=" +
+				url.QueryEscape(`hasPrefix(version, "V")`),
 			want: &api.PaginatedResponse[api.ModuleVersion]{
 				Total: 0,
 				Items: nil,
@@ -764,7 +766,8 @@ func testServeModuleVersions(t *testing.T, ds internal.TestingDataSource) {
 		},
 		{
 			name: "case-insensitive filter",
-			url:  "/v1beta/versions/example.com?filter=[vV]1",
+			url: "/v1beta/versions/example.com?filter=" +
+				url.QueryEscape(`matches(version, "[vV]1")`),
 			want: &api.PaginatedResponse[api.ModuleVersion]{
 				Total: 2,
 				Items: []api.ModuleVersion{
@@ -896,12 +899,14 @@ func testServeModulePackages(t *testing.T, ds internal.TestingDataSource) {
 		},
 		{
 			name: "filter on path",
-			url:  "/v1beta/packages/example.com?version=v1.2.3&filter=" + url.QueryEscape("s[xu]."),
+			url: "/v1beta/packages/example.com?version=v1.2.3&filter=" +
+				url.QueryEscape(`matches(path, "s[ux].")`),
 			want: response(info2),
 		},
 		{
 			name: "filter on synopsis",
-			url:  "/v1beta/packages/example.com?version=v1.2.3&filter=" + url.QueryEscape("GO+S"),
+			url: "/v1beta/packages/example.com?version=v1.2.3&filter=" +
+				url.QueryEscape(`matches(synopsis, "GO+S")`),
 			want: response(info1),
 		},
 	} {
@@ -962,14 +967,15 @@ func testServeSearch(t *testing.T, ds internal.TestingDataSource) {
 			wantStatus: http.StatusBadRequest,
 		},
 		{
-			name:       "search with filter",
-			url:        `/v1beta/search?q=synopsis&filter=example\.[com]*`,
+			name: "search with filter",
+			url: "/v1beta/search?q=synopsis&filter=" +
+				url.QueryEscape(`contains(modulePath, "example.com")`),
 			wantStatus: http.StatusOK,
 			wantCount:  1,
 		},
 		{
 			name:       "search with non-matching filter",
-			url:        "/v1beta/search?q=great&filter=nomatch",
+			url:        "/v1beta/search?q=great&filter=" + url.QueryEscape(`hasSuffix(packagePath, "moo")`),
 			wantStatus: http.StatusOK,
 			wantCount:  0,
 		},

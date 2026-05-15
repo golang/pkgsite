@@ -14,8 +14,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"go/parser"
+	"maps"
 	"net/http"
-	"regexp"
+	"reflect"
 	"slices"
 	"strings"
 	"time"
@@ -197,8 +199,7 @@ func ServeModule(w http.ResponseWriter, r *http.Request, ds internal.DataSource)
 // api:desc If there are tagged versions, they are returned.
 // api:desc Otherwise, the 10 most recent pseudo-versions are returned.
 // api:desc The versions are in descending order.
-// api:desc Only results whose version matches the regexp in the
-// api:desc filter query parameter are returned.
+// api:desc Only results that match the filter query parameter are returned.
 // api:example /v1beta/versions/golang.org/x/time?limit=3
 func ServeModuleVersions(w http.ResponseWriter, r *http.Request, ds internal.DataSource) (err error) {
 	defer derrors.Wrap(&err, "ServeModuleVersions")
@@ -226,11 +227,6 @@ func ServeModuleVersions(w http.ResponseWriter, r *http.Request, ds internal.Dat
 	if err != nil {
 		return err
 	}
-	infos, err = filter(infos, params.Filter, func(info *internal.ModuleInfo) []string { return []string{info.Version} })
-	if err != nil {
-		return err
-	}
-
 	var mvs []ModuleVersion
 	for _, in := range infos {
 		mvs = append(mvs, ModuleVersion{
@@ -246,6 +242,10 @@ func ServeModuleVersions(w http.ResponseWriter, r *http.Request, ds internal.Dat
 			RetractionReason:  in.RetractionRationale,
 		})
 	}
+	mvs, err = filterStruct(mvs, params.Filter)
+	if err != nil {
+		return err
+	}
 
 	// api:response PaginatedResponse[ModuleVersion]
 	resp, err := paginate(mvs, params.ListParams, defaultLimit)
@@ -260,8 +260,8 @@ func ServeModuleVersions(w http.ResponseWriter, r *http.Request, ds internal.Dat
 // ServeModulePackages handles requests for the v1beta module packages endpoint.
 // api:route /v1beta/packages/{path}
 // api:desc Information about packages of the module at {path}.
-// api:desc Only results whose path or synopsis
-// api:desc matches the regexp in the filter query parameter are returned.
+// api:desc Filtering is applied to the list of packages in the response.
+// api:desc Only packages that match the filter query parameter are returned.
 // api:example /v1beta/packages/golang.org/x/time/rate
 func ServeModulePackages(w http.ResponseWriter, r *http.Request, ds internal.DataSource) (err error) {
 	defer derrors.Wrap(&err, "ServeModulePackages")
@@ -298,9 +298,16 @@ func ServeModulePackages(w http.ResponseWriter, r *http.Request, ds internal.Dat
 		return err
 	}
 
-	metas, err = filter(metas, params.Filter, func(m *internal.PackageMeta) []string {
-		return []string{m.Path, m.Synopsis}
-	})
+	var pinfos []PackageInfo
+	for _, m := range metas {
+		pinfos = append(pinfos, PackageInfo{
+			Path:              m.Path,
+			Name:              m.Name,
+			Synopsis:          m.Synopsis,
+			IsRedistributable: m.IsRedistributable,
+		})
+	}
+	pinfos, err = filterStruct(pinfos, params.Filter)
 	if err != nil {
 		return err
 	}
@@ -310,15 +317,6 @@ func ServeModulePackages(w http.ResponseWriter, r *http.Request, ds internal.Dat
 		ModulePath:        um.ModulePath,
 		Version:           um.Version,
 		IsStandardLibrary: stdlib.Contains(modulePath),
-	}
-	var pinfos []PackageInfo
-	for _, m := range metas {
-		pinfos = append(pinfos, PackageInfo{
-			Path:              m.Path,
-			Name:              m.Name,
-			Synopsis:          m.Synopsis,
-			IsRedistributable: m.IsRedistributable,
-		})
 	}
 
 	resp.Packages, err = paginate(pinfos, params.ListParams, defaultLimit)
@@ -331,8 +329,7 @@ func ServeModulePackages(w http.ResponseWriter, r *http.Request, ds internal.Dat
 
 // ServeSearch handles requests for the v1 search endpoint.
 // api:route /v1beta/search
-// api:desc Search results. Only results whose package path or synopsis
-// api:desc matches the regexp in the filter query parameter are returned.
+// api:desc Search results. Only results that match the filter query parameter are returned.
 // api:example /v1beta/search?q=xyzzy
 func ServeSearch(w http.ResponseWriter, r *http.Request, ds internal.DataSource) (err error) {
 	defer derrors.Wrap(&err, "ServeSearch")
@@ -368,14 +365,6 @@ func ServeSearch(w http.ResponseWriter, r *http.Request, ds internal.DataSource)
 	if err != nil {
 		return err
 	}
-
-	dbresults, err = filter(dbresults, params.Filter, func(r *internal.SearchResult) []string {
-		return []string{r.Synopsis, r.PackagePath}
-	})
-	if err != nil {
-		return err
-	}
-
 	var results []SearchResult
 	for _, r := range dbresults {
 		results = append(results, SearchResult{
@@ -384,6 +373,11 @@ func ServeSearch(w http.ResponseWriter, r *http.Request, ds internal.DataSource)
 			Version:     r.Version,
 			Synopsis:    r.Synopsis,
 		})
+	}
+
+	results, err = filterStruct(results, params.Filter)
+	if err != nil {
+		return err
 	}
 
 	// api:response PaginatedResponse[SearchResult]
@@ -405,8 +399,8 @@ func ServeSearch(w http.ResponseWriter, r *http.Request, ds internal.DataSource)
 // ServePackageSymbols handles requests for the v1beta package symbols endpoint.
 // api:route /v1beta/symbols/{path}
 // api:desc List of symbols for the package at {path}.
-// api:desc Only results whose name or synopsis
-// api:desc matches the regexp in the filter query parameter are returned.
+// api:desc Filtering is applied to the list of symbols in the response.
+// api:desc Only symbols that match the filter query parameter are returned.
 // api:example /v1beta/symbols/golang.org/x/time/rate
 func ServePackageSymbols(w http.ResponseWriter, r *http.Request, ds internal.DataSource) (err error) {
 	defer derrors.Wrap(&err, "ServePackageSymbols")
@@ -449,13 +443,7 @@ func ServePackageSymbols(w http.ResponseWriter, r *http.Request, ds internal.Dat
 
 	syms = slices.Clone(syms)
 
-	syms, err = filter(syms, params.Filter, func(s *internal.Symbol) []string {
-		return []string{s.Name, s.Synopsis}
-	})
-	if err != nil {
-		return err
-	}
-
+	// TODO(jba): combine this loop with the one above, if possible.
 	var items []Symbol
 	for _, s := range syms {
 		items = append(items, Symbol{
@@ -464,6 +452,11 @@ func ServePackageSymbols(w http.ResponseWriter, r *http.Request, ds internal.Dat
 			Synopsis: s.Synopsis,
 			Parent:   s.ParentName,
 		})
+	}
+
+	items, err = filterStruct(items, params.Filter)
+	if err != nil {
+		return err
 	}
 
 	paged, err := paginate(items, params.ListParams, defaultLimit)
@@ -484,8 +477,9 @@ func ServePackageSymbols(w http.ResponseWriter, r *http.Request, ds internal.Dat
 // api:route /v1beta/imported-by/{path}
 // api:desc Paths of packages importing the package at {path},
 // api:desc not including packages in the same module.
-// api:desc Only results whose path
-// api:desc matches the regexp in the filter query parameter are returned.
+// api:desc Filtering is applied to the list of paths in the response.
+// api:desc Only paths that match the filter query parameter are returned.
+// api:desc Within a filter, the variable `path` is set to the import path.
 // api:example /v1beta/imported-by/golang.org/x/time/rate?limit=10&filter=%5E.%2A%5C.io%2F
 func ServePackageImportedBy(w http.ResponseWriter, r *http.Request, ds internal.DataSource) (err error) {
 	defer derrors.Wrap(&err, "ServePackageImportedBy")
@@ -557,7 +551,7 @@ func ServePackageImportedBy(w http.ResponseWriter, r *http.Request, ds internal.
 		return err
 	}
 
-	filtered, err := filter(importedBy, params.Filter, func(p string) []string { return []string{p} })
+	filtered, err := filterString(importedBy, params.Filter, "path")
 	if err != nil {
 		return err
 	}
@@ -585,8 +579,7 @@ func ServePackageImportedBy(w http.ResponseWriter, r *http.Request, ds internal.
 // api:route /v1beta/vulns/{path}
 // api:desc Vulnerabilities of the module or package at {path}, from
 // api:desc the Go vulnerability database (https://vuln.go.dev).
-// api:desc Only results whose ID or details
-// api:desc matches the regexp in the filter query parameter are returned.
+// api:desc Only results that match the filter query parameter are returned.
 // api:example /v1beta/vulns/golang.org/x/image
 func ServeVulnerabilities(vc *vuln.Client) func(w http.ResponseWriter, r *http.Request, _ internal.DataSource) error {
 	return func(w http.ResponseWriter, r *http.Request, ds internal.DataSource) (err error) {
@@ -628,9 +621,7 @@ func ServeVulnerabilities(vc *vuln.Client) func(w http.ResponseWriter, r *http.R
 		// If pkgPath is non-empty, it filters vulnerabilities to only that package.
 		vulns := vuln.VulnsForPackage(r.Context(), um.ModulePath, um.Version, pkgPath, vc)
 
-		vulns, err = filter(vulns, params.Filter, func(v vuln.Vuln) []string {
-			return []string{v.ID, v.Details}
-		})
+		vulns, err = filterStruct(vulns, params.Filter)
 		if err != nil {
 			return err
 		}
@@ -920,21 +911,70 @@ func versionCacheDur(v string) time.Duration {
 }
 
 // filter returns a new slice containing all elements in list which match
-// the regular expression denoted by filterRegexp. The values function
-// returns the parts of the element to match against.
-func filter[T any](list []T, filterRegexp string, values func(T) []string) ([]T, error) {
-	if filterRegexp == "" {
+// the expression denoted by filter.
+// It sets each element to varName before evaluating the filter.
+func filterString(list []string, filter, varName string) ([]string, error) {
+	if varName == "" {
+		return nil, errors.New("string filter must have varName")
+	}
+	if filter == "" {
 		return list, nil
 	}
-	re, err := regexp.Compile(filterRegexp)
+	return filterInternal(list, filter, nil, varName)
+}
+
+// filter returns a new slice containing all elements in list which match
+// the expression denoted by filter.
+func filterStruct[T any](list []T, filter string) ([]T, error) {
+	if filter == "" {
+		return list, nil
+	}
+	t := reflect.TypeFor[T]()
+	for t.Kind() == reflect.Pointer {
+		t = t.Elem()
+	}
+	if t.Kind() != reflect.Struct {
+		return nil, fmt.Errorf("bad type %s for filter: need struct or pointer to struct", t)
+	}
+	return filterInternal(list, filter, jsonFields(t), "")
+}
+
+func filterInternal[T any](list []T, filter string, jfields fieldMap, varName string) ([]T, error) {
+	expr, err := parser.ParseExpr(filter)
 	if err != nil {
-		return nil, BadRequest(err.Error(),
-			"the 'filter' query parameter must be a valid regular expression",
-			"try escaping the parameter using Go's url.QueryEscape or similar")
+		return nil, BadRequest(fmt.Sprintf(`parsing filter "%s": %v`,
+			filter, err),
+			"the 'filter' query parameter must be a valid Go expression; see the documentation at /v1beta/api",
+		)
 	}
 	var out []T
 	for _, e := range list {
-		if slices.ContainsFunc(values(e), re.MatchString) {
+		env := maps.Clone(defaultEnv)
+		if jfields == nil {
+			env[varName] = e
+		} else {
+			tv := reflect.ValueOf(e)
+			if !tv.IsValid() {
+				continue
+			}
+			for tv.Kind() == reflect.Pointer {
+				tv = tv.Elem()
+			}
+			for name, field := range jfields {
+				env[name] = tv.FieldByIndex(field.Index).Interface()
+			}
+		}
+		res, err := evaluate(expr, env)
+		if err != nil {
+			return nil, BadRequest(fmt.Sprintf(`evaluating filter "%s": %v`, filter, err),
+				"the filter must be a Go expression; see the documentation at /v1beta/api")
+		}
+		b, ok := res.(bool)
+		if !ok {
+			return nil, BadRequest(fmt.Sprintf(`filter "%s" did not evaluate to bool`, filter),
+				"the filter must be a boolean Go expression; see the documentation at /v1beta/api")
+		}
+		if b {
 			out = append(out, e)
 		}
 	}

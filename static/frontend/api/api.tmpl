@@ -142,19 +142,40 @@
       typically <code>linux/amd64</code>.
       </p>
 
-      <p>Some routes accept a <code>filter</code>, specifying
-      a regular expression.
+      <p>Some routes accept a <code>filter</code>.
       Only items that match the filter are returned.
-      The documentation for each route specifies what constitutes
-      a match for that route's items.
+      The filter language is a subset of Go. The filter
+      must be an expression that returns a boolean value.
+      Filters support the following:
+      <ul>
+      <li> The values <code>true</code>, <code>false</code> and <code>nil</code>.
+      <li> <code>==</code> and <code>!=</code> on any value.
+      <li> <code>+</code>, <code>-</code>,<code>*</code>,
+           <code>/</code> and <code>%</code> on integers.
+      <li><code>+</code> on strings.
+      <li><code>&lt;</code>, <code>&lt;=</code>, <code>&gt;</code> and <code>&gt;=</code>
+           on strings and integers.
+      <li> The following functions:
+           <dl>
+             <dt><code>contains(s, sub)</code></dt>
+             <dd>String <code>s</code> contains substring <code>sub</code>.</dd>
+             <dt><code>hasPrefix(s, pre)</code></dt>
+             <dd>String <code>s</code> has the prefix <code>pre</code>.</dd>
+             <dt><code>hasSuffix(s, suf)</code></dt>
+             <dd>String <code>s</code> has the suffix <code>suf</code>.</dd>
+             <dt><code>matches(s, re)</code></dt>
+             <dd>String <code>s</code> matches the regular expression <code>re</code>.</dd>
+            </dl>
+      </ul>
+      In addition, each route adds its own variables for the list items being filtered.
+      In general, each JSON field is a variable.
       </p>
       <p>
-      Most regular expression metacharacters will need to be
-      percent-encoded. For example, to filter with the regular
-      expression <code>^abc.*</code>, write
-      <code>filter=%5Eabc.%2A</code>. Go programs should call
-      <code>url.QueryEscape</code> to encode filters (and all
-      other query parameter values as well).
+      Most filters will need to be
+      percent-encoded. Go programs should call
+      <code>url.QueryEscape</code> to encode filters and all
+      other query parameter values. Or better, put all values into a <code>url.Values</code>
+      and then call <code>Encode</code> on that.
       </p>
 
       <h2>Responses</h2>
