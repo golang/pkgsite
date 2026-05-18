@@ -429,10 +429,25 @@ func ServePackageSymbols(w http.ResponseWriter, r *http.Request, ds internal.Dat
 	}
 
 	bc := internal.BuildContext{GOOS: params.GOOS, GOARCH: params.GOARCH}
-	syms, err := ds.GetSymbols(r.Context(), pkgPath, um.ModulePath, um.Version, bc)
+	dbSyms, err := ds.GetSymbols(r.Context(), pkgPath, um.ModulePath, um.Version, bc)
 	if err != nil {
 		return fmt.Errorf("symbols for package %s: %w", pkgPath, err)
 	}
+
+	var syms []*internal.Symbol
+	for _, s := range dbSyms {
+		syms = append(syms, s)
+		for _, child := range s.Children {
+			syms = append(syms, &internal.Symbol{
+				SymbolMeta: *child,
+				GOOS:       s.GOOS,
+				GOARCH:     s.GOARCH,
+			})
+		}
+		s.Children = nil
+	}
+
+	syms = slices.Clone(syms)
 
 	syms, err = filter(syms, params.Filter, func(s *internal.Symbol) []string {
 		return []string{s.Name, s.Synopsis}

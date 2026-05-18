@@ -1087,11 +1087,11 @@ func testServeSearchPagination(t *testing.T, ds internal.TestingDataSource) {
 
 func testServePackageSymbols(t *testing.T, ds internal.TestingDataSource) {
 
-	sym := func(doc *internal.Documentation, name string) *internal.Symbol {
+	sym := func(doc *internal.Documentation, name string, kind internal.SymbolKind) *internal.Symbol {
 		return &internal.Symbol{
 			SymbolMeta: internal.SymbolMeta{
 				Name:    name,
-				Kind:    internal.SymbolKindFunction,
+				Kind:    kind,
 				Section: internal.SymbolSectionFunctions,
 			},
 			GOOS:   doc.GOOS,
@@ -1100,11 +1100,15 @@ func testServePackageSymbols(t *testing.T, ds internal.TestingDataSource) {
 	}
 
 	linuxDoc := sample.Documentation("linux", "amd64", sample.DocContents)
-	linuxDoc.API = []*internal.Symbol{sym(linuxDoc, "LinuxSym"), sym(linuxDoc, "F")}
+	linuxDoc.API = []*internal.Symbol{
+		sym(linuxDoc, "LinuxSym", internal.SymbolKindFunction),
+		sym(linuxDoc, "F", internal.SymbolKindFunction),
+		sym(linuxDoc, "LinuxType", internal.SymbolKindType),
+	}
 	winDoc := sample.Documentation("windows", "amd64", sample.DocContents)
-	winDoc.API = []*internal.Symbol{sym(winDoc, "WindowsSym")}
+	winDoc.API = []*internal.Symbol{sym(winDoc, "WindowsSym", internal.SymbolKindFunction)}
 	wasmDoc := sample.Documentation("js", "wasm", sample.DocContents)
-	wasmDoc.API = []*internal.Symbol{sym(wasmDoc, "WasmSym")}
+	wasmDoc.API = []*internal.Symbol{sym(wasmDoc, "WasmSym", internal.SymbolKindFunction)}
 	ds.MustInsertModule(t,
 		module(t, modinfo("example.com", "v1.0.0"),
 			unit("pkg", linuxDoc, winDoc, wasmDoc)))
@@ -1120,7 +1124,7 @@ func testServePackageSymbols(t *testing.T, ds internal.TestingDataSource) {
 			name:       "default best match (linux)",
 			url:        "/v1beta/symbols/example.com/pkg?version=v1.0.0",
 			wantStatus: http.StatusOK,
-			wantNames:  []string{"F", "LinuxSym"},
+			wantNames:  []string{"F", "LinuxSym", "LinuxType"},
 		},
 		{
 			name:       "package not found",
@@ -1138,13 +1142,13 @@ func testServePackageSymbols(t *testing.T, ds internal.TestingDataSource) {
 			name:       "explicit linux",
 			url:        "/v1beta/symbols/example.com/pkg?version=v1.0.0&goos=linux&goarch=amd64",
 			wantStatus: http.StatusOK,
-			wantNames:  []string{"F", "LinuxSym"},
+			wantNames:  []string{"F", "LinuxSym", "LinuxType"},
 		},
 		{
 			name:       "version latest",
 			url:        "/v1beta/symbols/example.com/pkg?version=latest",
 			wantStatus: http.StatusOK,
-			wantNames:  []string{"F", "LinuxSym"},
+			wantNames:  []string{"F", "LinuxSym", "LinuxType"},
 		},
 		{
 			name:       "explicit windows",
@@ -1205,14 +1209,15 @@ func testServePackageSymbols(t *testing.T, ds internal.TestingDataSource) {
 		})
 	}
 
-	testPagination[api.PackageSymbols](t, ds, "/v1beta/symbols/example.com/pkg?version=v1.0.0&limit=1",
+	testPagination(t, ds, "/v1beta/symbols/example.com/pkg?version=v1.0.0&limit=1",
 		api.ServePackageSymbols,
 		func(ps *api.PackageSymbols) (int, int, string) {
 			return len(ps.Symbols.Items), ps.Symbols.Total, ps.Symbols.NextPageToken
 		},
 		[]wantPage{
-			{wantCount: 1, wantTotal: 2},
-			{wantCount: 1, wantTotal: 2},
+			{wantCount: 1, wantTotal: 3},
+			{wantCount: 1, wantTotal: 3},
+			{wantCount: 1, wantTotal: 3},
 		})
 
 }
