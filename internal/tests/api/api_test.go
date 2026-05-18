@@ -540,7 +540,7 @@ func testServeModule(t *testing.T, ds internal.TestingDataSource) {
 
 	u := unit("")
 	u.Readme = &internal.Readme{Filepath: "README.md", Contents: "Hello world"}
-	ds.MustInsertModule(t, module(t, mi1, u))
+	ds.MustInsertModule(t, module(t, mi1, u, unit("pkg")))
 
 	mi2 := modinfo(modulePath, "v1.2.4")
 	mi2.HasGoMod = true
@@ -596,6 +596,15 @@ func testServeModule(t *testing.T, ds internal.TestingDataSource) {
 			url:        "/v1beta/module/nonexistent.com",
 			wantStatus: http.StatusNotFound,
 			want:       &api.Error{Code: 404, Message: "not found"},
+		},
+		{
+			name:       "package path in module endpoint",
+			url:        "/v1beta/module/example.com/pkg?version=v1.2.3",
+			wantStatus: http.StatusBadRequest,
+			want: &api.Error{
+				Code:    http.StatusBadRequest,
+				Message: "example.com/pkg is a package, not a module",
+			},
 		},
 		{
 			name:       "missing module path",
@@ -666,7 +675,7 @@ func testServeModuleVersions(t *testing.T, ds internal.TestingDataSource) {
 	newMod := func(path, version, latest string) *internal.Module {
 		mi := modinfo(path, version)
 		mi.LatestVersion = latest
-		return module(t, mi, unit(""))
+		return module(t, mi, unit(""), unit("pkg"))
 	}
 	ds.MustInsertModule(t, newMod("example.com", "v1.0.0", "v1.1.0"))
 	ds.MustInsertModule(t, newMod("example.com", "v1.1.0", "v1.1.0"))
@@ -708,6 +717,14 @@ func testServeModuleVersions(t *testing.T, ds internal.TestingDataSource) {
 			name: "module not found",
 			url:  "/v1beta/versions/nonexistent.com",
 			want: &api.Error{Code: 404, Message: "not found"},
+		},
+		{
+			name: "package path in versions endpoint",
+			url:  "/v1beta/versions/example.com/pkg",
+			want: &api.Error{
+				Code:    http.StatusBadRequest,
+				Message: "example.com/pkg is a package, not a module",
+			},
 		},
 		{
 			name: "missing module path",
@@ -863,6 +880,14 @@ func testServeModulePackages(t *testing.T, ds internal.TestingDataSource) {
 			name: "module not found",
 			url:  "/v1beta/packages/nonexistent.com?version=v1.2.3",
 			want: &api.Error{Code: 404, Message: "not found"},
+		},
+		{
+			name: "package path in packages endpoint",
+			url:  "/v1beta/packages/example.com/sub?version=v1.2.3",
+			want: &api.Error{
+				Code:    http.StatusBadRequest,
+				Message: "example.com/sub is a package, not a module",
+			},
 		},
 		{
 			name: "missing module path",

@@ -38,6 +38,38 @@ func TestServeVulnerabilities(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	ds := fakedatasource.New()
+	insertModule := func(v string) {
+		ds.MustInsertModule(t, &internal.Module{
+			ModuleInfo: internal.ModuleInfo{
+				ModulePath: "example.com",
+				Version:    v,
+			},
+			Units: []*internal.Unit{
+				{
+					UnitMeta: internal.UnitMeta{
+						Path: "example.com",
+						ModuleInfo: internal.ModuleInfo{
+							ModulePath: "example.com",
+							Version:    v,
+						},
+					},
+				},
+				{
+					UnitMeta: internal.UnitMeta{
+						Path: "example.com/pkg",
+						ModuleInfo: internal.ModuleInfo{
+							ModulePath: "example.com",
+							Version:    v,
+						},
+					},
+				},
+			},
+		})
+	}
+	insertModule("v1.0.0")
+	insertModule("v1.2.0")
+
 	for _, test := range []struct {
 		name       string
 		url        string
@@ -57,12 +89,17 @@ func TestServeVulnerabilities(t *testing.T) {
 			wantStatus: http.StatusOK,
 			wantCount:  0,
 		},
+		{
+			name:       "package path in vulns endpoint",
+			url:        "/v1beta/vulns/example.com/pkg?version=v1.0.0",
+			wantStatus: http.StatusBadRequest,
+		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			r := httptest.NewRequest("GET", test.url, nil)
 			w := httptest.NewRecorder()
 
-			if err := ServeVulnerabilities(vc)(w, r, nil); err != nil {
+			if err := ServeVulnerabilities(vc)(w, r, ds); err != nil {
 				ServeError(w, r, err)
 			}
 

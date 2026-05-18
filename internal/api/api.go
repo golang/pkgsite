@@ -132,8 +132,12 @@ func ServeModule(w http.ResponseWriter, r *http.Request, ds internal.DataSource)
 	cacheDur := versionCacheDur(requestedVersion)
 
 	// For modules, we can use GetUnitMeta on the module path.
-	um, err := ds.GetUnitMeta(r.Context(), modulePath, modulePath, requestedVersion)
+	um, err := ds.GetUnitMeta(r.Context(), modulePath, internal.UnknownModulePath, requestedVersion)
 	if err != nil {
+		return err
+	}
+
+	if err := checkModulePath(modulePath, um.ModulePath); err != nil {
 		return err
 	}
 
@@ -210,16 +214,18 @@ func ServeModuleVersions(w http.ResponseWriter, r *http.Request, ds internal.Dat
 	if err := ParseParams(r.URL.Query(), &params); err != nil {
 		return err
 	}
+	um, err := ds.GetUnitMeta(r.Context(), path, internal.UnknownModulePath, version.Latest)
+	if err != nil {
+		return fmt.Errorf("module %q: %w", path, err)
+	}
+	if err := checkModulePath(path, um.ModulePath); err != nil {
+		return err
+	}
 
 	infos, err := ds.GetVersionsForPath(r.Context(), path)
 	if err != nil {
 		return err
 	}
-	// If there are no versions for the path, then the module doesn't exist.
-	if len(infos) == 0 {
-		return fmt.Errorf("module %q: %w", path, derrors.NotFound)
-	}
-
 	infos, err = filter(infos, params.Filter, func(info *internal.ModuleInfo) []string { return []string{info.Version} })
 	if err != nil {
 		return err
@@ -278,8 +284,12 @@ func ServeModulePackages(w http.ResponseWriter, r *http.Request, ds internal.Dat
 	}
 
 	// Resolve latest version, and check if specific version exists.
-	um, err := ds.GetUnitMeta(r.Context(), modulePath, modulePath, requestedVersion)
+	um, err := ds.GetUnitMeta(r.Context(), modulePath, internal.UnknownModulePath, requestedVersion)
 	if err != nil {
+		return err
+	}
+
+	if err := checkModulePath(modulePath, um.ModulePath); err != nil {
 		return err
 	}
 
@@ -588,9 +598,19 @@ func ServeVulnerabilities(vc *vuln.Client) func(w http.ResponseWriter, r *http.R
 			requestedVersion = version.Latest
 		}
 
+		// Verify module existence and resolve version.
+		um, err := ds.GetUnitMeta(r.Context(), modulePath, internal.UnknownModulePath, requestedVersion)
+		if err != nil {
+			return err
+		}
+
+		if err := checkModulePath(modulePath, um.ModulePath); err != nil {
+			return err
+		}
+
 		// Use VulnsForPackage from internal/vuln to get vulnerabilities for the module.
 		// Passing an empty packagePath gets all vulns for the module.
-		vulns := vuln.VulnsForPackage(r.Context(), modulePath, requestedVersion, "", vc)
+		vulns := vuln.VulnsForPackage(r.Context(), um.ModulePath, um.Version, "", vc)
 
 		vulns, err = filter(vulns, params.Filter, func(v vuln.Vuln) []string {
 			return []string{v.ID, v.Details}
@@ -903,4 +923,18 @@ func filter[T any](list []T, filterRegexp string, values func(T) []string) ([]T,
 		}
 	}
 	return out, nil
+}
+
+// checkModulePath verifies that the requested module path exactly matches the resolved
+// module path. If it is a package path instead, it returns a BadRequest error with
+// containing module suggestions.
+func checkModulePath(requested, resolved string) error {
+	if requested != resolved {
+		return &Error{
+			Code:    http.StatusBadRequest,
+			Message: fmt.Sprintf("%s is a package, not a module", requested),
+			Fixes:   []string{fmt.Sprintf("retry the call with the containing module: %q", resolved)},
+		}
+	}
+	return nil
 }
