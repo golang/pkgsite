@@ -513,7 +513,11 @@ type APIPage struct {
 
 func (s *Server) apiDocHandler() http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		routes, err := api.RouteInfos(r.Context(), "http://"+r.Host)
+		scheme := "http"
+		if r.TLS != nil || r.Header.Get("X-Forwarded-Proto") == "https" || r.Header.Get("X-Appengine-Https") == "on" {
+			scheme = "https"
+		}
+		routes, err := api.RouteInfos(r.Context(), scheme+"://"+r.Host)
 		if err != nil {
 			s.serveError(w, r, err)
 			return
