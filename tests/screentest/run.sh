@@ -160,6 +160,11 @@ main() {
   fi
   local cmd="screentest -o tests/screentest/output -retrypixels 20 $concurrency $debugger_url $headers $update $run $test_server tests/screentest/testdata $testfiles"
 
+  # Pre-create output directory on the host so it is owned by the host runner user
+  # and has open permissions for docker to write to.
+  mkdir -p tests/screentest/output
+  chmod 777 tests/screentest/output
+
   if [[ "$env" = ci ]]; then
     export GO_DISCOVERY_CONFIG_DYNAMIC="tests/screentest/config.yaml"
     export GO_DISCOVERY_DATABASE_NAME="discovery_e2e_test"
@@ -171,14 +176,14 @@ main() {
     dcompose run --rm --entrypoint bash go -c "
       GODEBUG=cmdgonetlimit=3 go install golang.org/x/website/cmd/screentest@$screentest_version
       go run ./devtools/cmd/wait_available --timeout 120s frontend:$frontend_port -- \
-      $(echo $cmd)"
+      $(echo $cmd) || { chmod -R 777 tests/screentest/output; exit 1; }"
   elif [[ "$env" == local ]]; then
     run_locally "$cmd"
   else
     dcompose up --detach chromedp
     dcompose run --rm --entrypoint bash go -c "
       go install golang.org/x/website/cmd/screentest@$screentest_version
-      $(echo $cmd)"
+      $(echo $cmd) || { chmod -R 777 tests/screentest/output; exit 1; }"
   fi
 }
 

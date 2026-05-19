@@ -105,8 +105,9 @@ echo "----------------------------------------"
 if ! ./tests/screentest/run.sh -rm ci -concurrency 1; then
   if [[ -d tests/screentest/output ]] && [[ -n "${KOKORO_ARTIFACTS_DIR:-}" ]]; then
     echo "Screentest failed. Copying output to KOKORO_ARTIFACTS_DIR."
+    chmod -R a+r tests/screentest/output || true
     mkdir -p "${KOKORO_ARTIFACTS_DIR}/screentest_output"
-    cp -a tests/screentest/output/* "${KOKORO_ARTIFACTS_DIR}/screentest_output/" || true
+    cp -a tests/screentest/output/. "${KOKORO_ARTIFACTS_DIR}/screentest_output/" || true
   fi
   exit 1
 fi
