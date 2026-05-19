@@ -16,7 +16,7 @@
         "operationId": "getImported-by",
         "parameters": [
           {
-            "description": "module path",
+            "description": "Module path.",
             "in": "query",
             "name": "module",
             "schema": {
@@ -24,7 +24,7 @@
             }
           },
           {
-            "description": "module version (latest if empty)",
+            "description": "Module version: semantic version, 'latest', or default branches 'master' or 'main'.\n(Latest if empty).",
             "in": "query",
             "name": "version",
             "schema": {
@@ -32,7 +32,7 @@
             }
           },
           {
-            "description": "max number of items to return",
+            "description": "Max number of items to return.",
             "in": "query",
             "name": "limit",
             "schema": {
@@ -40,7 +40,7 @@
             }
           },
           {
-            "description": "where to resume listing",
+            "description": "Where to resume listing.",
             "in": "query",
             "name": "token",
             "schema": {
@@ -48,7 +48,7 @@
             }
           },
           {
-            "description": "include only items matching filter",
+            "description": "Include only items matching the regular expression filter.",
             "in": "query",
             "name": "filter",
             "schema": {
@@ -76,7 +76,7 @@
         "operationId": "getModule",
         "parameters": [
           {
-            "description": "module version (latest if empty)",
+            "description": "Module version: semantic version, 'latest', or default branches 'master' or 'main'.\n(Latest if empty).",
             "in": "query",
             "name": "version",
             "schema": {
@@ -120,7 +120,7 @@
         "operationId": "getPackage",
         "parameters": [
           {
-            "description": "module path",
+            "description": "Module path.",
             "in": "query",
             "name": "module",
             "schema": {
@@ -128,7 +128,7 @@
             }
           },
           {
-            "description": "module version (latest if empty)",
+            "description": "Module version: semantic version, 'latest', or default branches 'master' or 'main'.\n(Latest if empty).",
             "in": "query",
             "name": "version",
             "schema": {
@@ -136,7 +136,7 @@
             }
           },
           {
-            "description": "GOOS of documentation build context",
+            "description": "GOOS of documentation build context.",
             "in": "query",
             "name": "goos",
             "schema": {
@@ -144,7 +144,7 @@
             }
           },
           {
-            "description": "GOARCH of documentation build context",
+            "description": "GOARCH of documentation build context.",
             "in": "query",
             "name": "goarch",
             "schema": {
@@ -204,7 +204,7 @@
         "operationId": "getPackages",
         "parameters": [
           {
-            "description": "module version (latest if empty)",
+            "description": "Module version: semantic version, 'latest', or default branches 'master' or 'main'.\n(Latest if empty).",
             "in": "query",
             "name": "version",
             "schema": {
@@ -212,7 +212,7 @@
             }
           },
           {
-            "description": "max number of items to return",
+            "description": "Max number of items to return.",
             "in": "query",
             "name": "limit",
             "schema": {
@@ -220,7 +220,7 @@
             }
           },
           {
-            "description": "where to resume listing",
+            "description": "Where to resume listing.",
             "in": "query",
             "name": "token",
             "schema": {
@@ -228,7 +228,7 @@
             }
           },
           {
-            "description": "include only items matching filter",
+            "description": "Include only items matching the regular expression filter.",
             "in": "query",
             "name": "filter",
             "schema": {
@@ -272,7 +272,7 @@
             }
           },
           {
-            "description": "max number of items to return",
+            "description": "Max number of items to return.",
             "in": "query",
             "name": "limit",
             "schema": {
@@ -280,7 +280,7 @@
             }
           },
           {
-            "description": "where to resume listing",
+            "description": "Where to resume listing.",
             "in": "query",
             "name": "token",
             "schema": {
@@ -288,7 +288,7 @@
             }
           },
           {
-            "description": "include only items matching filter",
+            "description": "Include only items matching the regular expression filter.",
             "in": "query",
             "name": "filter",
             "schema": {
@@ -316,7 +316,7 @@
         "operationId": "getSymbols",
         "parameters": [
           {
-            "description": "module path",
+            "description": "Module path.",
             "in": "query",
             "name": "module",
             "schema": {
@@ -324,7 +324,7 @@
             }
           },
           {
-            "description": "module version (latest if empty)",
+            "description": "Module version: semantic version, 'latest', or default branches 'master' or 'main'.\n(Latest if empty).",
             "in": "query",
             "name": "version",
             "schema": {
@@ -332,7 +332,7 @@
             }
           },
           {
-            "description": "GOOS of documentation build context",
+            "description": "GOOS of documentation build context.",
             "in": "query",
             "name": "goos",
             "schema": {
@@ -340,7 +340,7 @@
             }
           },
           {
-            "description": "GOARCH of documentation build context",
+            "description": "GOARCH of documentation build context.",
             "in": "query",
             "name": "goarch",
             "schema": {
@@ -348,7 +348,7 @@
             }
           },
           {
-            "description": "max number of items to return",
+            "description": "Max number of items to return.",
             "in": "query",
             "name": "limit",
             "schema": {
@@ -356,7 +356,7 @@
             }
           },
           {
-            "description": "where to resume listing",
+            "description": "Where to resume listing.",
             "in": "query",
             "name": "token",
             "schema": {
@@ -364,7 +364,7 @@
             }
           },
           {
-            "description": "include only items matching filter",
+            "description": "Include only items matching the regular expression filter.",
             "in": "query",
             "name": "filter",
             "schema": {
@@ -392,7 +392,7 @@
         "operationId": "getVersions",
         "parameters": [
           {
-            "description": "max number of items to return",
+            "description": "Max number of items to return.",
             "in": "query",
             "name": "limit",
             "schema": {
@@ -400,7 +400,7 @@
             }
           },
           {
-            "description": "where to resume listing",
+            "description": "Where to resume listing.",
             "in": "query",
             "name": "token",
             "schema": {
@@ -408,7 +408,7 @@
             }
           },
           {
-            "description": "include only items matching filter",
+            "description": "Include only items matching the regular expression filter.",
             "in": "query",
             "name": "filter",
             "schema": {
@@ -436,7 +436,7 @@
         "operationId": "getVulns",
         "parameters": [
           {
-            "description": "module version (latest if empty)",
+            "description": "Module version: semantic version, 'latest', or default branches 'master' or 'main'.\n(Latest if empty).",
             "in": "query",
             "name": "version",
             "schema": {
@@ -444,7 +444,7 @@
             }
           },
           {
-            "description": "max number of items to return",
+            "description": "Max number of items to return.",
             "in": "query",
             "name": "limit",
             "schema": {
@@ -452,7 +452,7 @@
             }
           },
           {
-            "description": "where to resume listing",
+            "description": "Where to resume listing.",
             "in": "query",
             "name": "token",
             "schema": {
@@ -460,7 +460,7 @@
             }
           },
           {
-            "description": "include only items matching filter",
+            "description": "Include only items matching the regular expression filter.",
             "in": "query",
             "name": "filter",
             "schema": {

@@ -13,23 +13,24 @@ import (
 
 // ListParams are common pagination and filtering parameters.
 type ListParams struct {
-	// max number of items to return
+	// Max number of items to return.
 	Limit int `form:"limit"`
-	// where to resume listing
+	// Where to resume listing.
 	Token string `form:"token"`
-	// include only items matching filter
+	// Include only items matching the regular expression filter.
 	Filter string `form:"filter"`
 }
 
 // PackageParams are query parameters for /v1beta/package/{path}.
 type PackageParams struct {
-	// module path
+	// Module path.
 	Module string `form:"module"`
-	// module version (latest if empty)
+	// Module version: semantic version, 'latest', or default branches 'master' or 'main'.
+	// (Latest if empty).
 	Version string `form:"version"`
-	// GOOS of documentation build context
+	// GOOS of documentation build context.
 	GOOS string `form:"goos"`
-	// GOARCH of documentation build context
+	// GOARCH of documentation build context.
 	GOARCH string `form:"goarch"`
 	// Documentation format: text, html, md or markdown.
 	// If omitted, documentation is not returned.
@@ -44,29 +45,32 @@ type PackageParams struct {
 
 // SymbolsParams are query parameters for /v1beta/symbols/{path}.
 type SymbolsParams struct {
-	// module path
+	// Module path.
 	Module string `form:"module"`
-	// module version (latest if empty)
+	// Module version: semantic version, 'latest', or default branches 'master' or 'main'.
+	// (Latest if empty).
 	Version string `form:"version"`
-	// GOOS of documentation build context
+	// GOOS of documentation build context.
 	GOOS string `form:"goos"`
-	// GOARCH of documentation build context
+	// GOARCH of documentation build context.
 	GOARCH string `form:"goarch"`
 	ListParams
 }
 
 // ImportedByParams are query parameters for /v1beta/imported-by/{path}.
 type ImportedByParams struct {
-	// module path
+	// Module path.
 	Module string `form:"module"`
-	// module version (latest if empty)
+	// Module version: semantic version, 'latest', or default branches 'master' or 'main'.
+	// (Latest if empty).
 	Version string `form:"version"`
 	ListParams
 }
 
 // ModuleParams are query parameters for /v1beta/module/{path}.
 type ModuleParams struct {
-	// module version (latest if empty)
+	// Module version: semantic version, 'latest', or default branches 'master' or 'main'.
+	// (Latest if empty).
 	Version string `form:"version"`
 	// Whether to include licenses in the result.
 	Licenses bool `form:"licenses"`
@@ -81,7 +85,8 @@ type VersionsParams struct {
 
 // PackagesParams are query parameters for /v1beta/packages/{path}.
 type PackagesParams struct {
-	// module version (latest if empty)
+	// Module version: semantic version, 'latest', or default branches 'master' or 'main'.
+	// (Latest if empty).
 	Version string `form:"version"`
 	ListParams
 }
@@ -98,7 +103,8 @@ type SearchParams struct {
 
 // VulnParams are query parameters for /v1beta/vulns/{module}.
 type VulnParams struct {
-	// module version (latest if empty)
+	// Module version: semantic version, 'latest', or default branches 'master' or 'main'.
+	// (Latest if empty).
 	Version string `form:"version"`
 	ListParams
 }
