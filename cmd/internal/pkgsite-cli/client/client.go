@@ -110,7 +110,21 @@ func (e *Error) Error() string {
 		}
 		return b.String()
 	}
-	return fmt.Sprintf("%s (HTTP %d)", e.Message, e.Code)
+
+	status := ""
+	if e.Code >= 100 {
+		status = fmt.Sprintf(" (HTTP %d)", e.Code)
+	}
+
+	if len(e.Fixes) > 0 {
+		var b strings.Builder
+		fmt.Fprintf(&b, "%s%s\nTo fix:\n", e.Message, status)
+		for _, f := range e.Fixes {
+			fmt.Fprintf(&b, "  - %s\n", f)
+		}
+		return b.String()
+	}
+	return fmt.Sprintf("%s%s", e.Message, status)
 }
 
 // get fetches url and decodes the JSON response into dst.
