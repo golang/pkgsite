@@ -9,6 +9,8 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"io"
+	"strconv"
 	"strings"
 
 	"github.com/Masterminds/squirrel"
@@ -30,25 +32,43 @@ func (db *DB) GetVersionsForPath(ctx context.Context, path string) (_ []*interna
 	defer derrors.WrapStack(&err, "GetVersionsForPath(ctx, %q)", path)
 	defer stats.Elapsed(ctx, "GetVersionsForPath")()
 
-	versions, err := getPathVersions(ctx, db, path, version.TypeRelease, version.TypePrerelease)
+	// When a page shows too many versions, it can result in a Chrome CSS
+	// bug: https://bugs.chromium.org/p/chromium/issues/detail?id=688640.
+	// For example,
+	// https://pkg.go.dev/github.com/aws/aws-sdk-go/aws/signer/v4?tab=versions.
+	// It's not that useful to see that many versions on a page anyway, so
+	// just limit to 800 versions.
+	versions, lsv, err := getPathVersions(ctx, db, path, "", 800, version.TypeRelease, version.TypePrerelease)
 	if err != nil {
 		return nil, err
 	}
 	if len(versions) != 0 {
 		return versions, nil
 	}
-	versions, err = getPathVersions(ctx, db, path, version.TypePseudo)
+	versions, _, err = getPathVersions(ctx, db, path, "", 10, version.TypePseudo)
 	if err != nil {
 		return nil, err
 	}
+	// To satisfy unparam until a subsequent CL.
+	// TODO(jba); remove this.
+	fmt.Fprint(io.Discard, lsv)
 	return versions, nil
 }
 
 // getPathVersions returns a list of versions sorted in descending semver
 // order. The version types included in the list are specified by a list of
 // VersionTypes.
-func getPathVersions(ctx context.Context, db *DB, path string, versionTypes ...version.Type) (_ []*internal.ModuleInfo, err error) {
-	defer derrors.WrapStack(&err, "getPathVersions(ctx, db, %q, %v)", path, versionTypes)
+// The result can be paginated by passing pageToken, which should be either the empty
+// string or a value returned from a previous call.
+// Each subsequent page will begin with the last value of the previous page.
+func getPathVersions(ctx context.Context, db *DB, path string, startPageToken string, limit int, versionTypes ...version.Type) (_ []*internal.ModuleInfo, nextPageToken string, err error) {
+	defer derrors.WrapStack(&err, "getPathVersions(ctx, db, %q, %q, %d, %v)", path, startPageToken, limit, versionTypes)
+
+	// Get previous values from pageToken.
+	var pageTokenArgs = []any{false, "", ""}
+	if startPageToken != "" {
+		pageTokenArgs, err = parsePageToken(startPageToken)
+	}
 
 	baseQuery := `
 	SELECT
@@ -57,7 +77,10 @@ func getPathVersions(ctx context.Context, db *DB, path string, versionTypes ...v
 		m.commit_time,
 		m.redistributable,
 		m.has_go_mod,
-		m.source_info
+		m.source_info,
+		-- to construct the page token
+		m.incompatible,
+		m.sort_version
 	FROM modules m
 	INNER JOIN units u
 		ON u.module_id = m.id
@@ -71,42 +94,69 @@ func getPathVersions(ctx context.Context, db *DB, path string, versionTypes ...v
 			LIMIT 1
 		)
 		AND version_type in (%s)
+		AND ($3 = '' OR (NOT m.incompatible, m.module_path, m.sort_version) <= (NOT $2, $3, $4))
 	ORDER BY
 		m.incompatible,
 		m.module_path DESC,
 		m.sort_version DESC %s`
 
-	queryEnd := `;`
 	if len(versionTypes) == 0 {
-		return nil, fmt.Errorf("error: must specify at least one version type")
-	} else if len(versionTypes) == 1 && versionTypes[0] == version.TypePseudo {
-		queryEnd = `LIMIT 10;`
-	} else {
-		// When a page shows too many versions, it can result in a Chrome CSS
-		// bug: https://bugs.chromium.org/p/chromium/issues/detail?id=688640.
-		// For example,
-		// https://pkg.go.dev/github.com/aws/aws-sdk-go/aws/signer/v4?tab=versions.
-		// It's not that useful to see that many versions on a page anyway, so
-		// just limit to 800 versions.
-		queryEnd = `LIMIT 800;`
+		return nil, "", fmt.Errorf("error: must specify at least one version type")
+	}
+	queryEnd := ";"
+	if limit > 0 {
+		queryEnd = fmt.Sprintf("LIMIT %d;", limit)
 	}
 	query := fmt.Sprintf(baseQuery, versionTypeExpr(versionTypes), queryEnd)
-	var versions []*internal.ModuleInfo
+
+	var (
+		versions         []*internal.ModuleInfo
+		lastIncompatible bool
+		lastSortVersion  string
+	)
 	collect := func(rows *sql.Rows) error {
-		mi, err := scanModuleInfo(rows.Scan)
+		mi, err := scanModuleInfo(rows.Scan, &lastIncompatible, &lastSortVersion)
 		if err != nil {
 			return fmt.Errorf("row.Scan(): %v", err)
 		}
 		versions = append(versions, mi)
 		return nil
 	}
-	if err := db.db.RunQuery(ctx, query, collect, path); err != nil {
-		return nil, err
+	args := append([]any{path}, pageTokenArgs...)
+	if err := db.db.RunQuery(ctx, query, collect, args...); err != nil {
+		return nil, "", err
 	}
 	if err := populateLatestInfos(ctx, db, versions); err != nil {
-		return nil, err
+		return nil, "", err
 	}
-	return versions, nil
+	// Construct the page token for the next page.
+	// See the comment near the top of this function for the format.
+	if len(versions) > 0 {
+		nextPageToken = makePageToken(lastIncompatible, versions[len(versions)-1].ModulePath, lastSortVersion)
+	}
+	return versions, nextPageToken, nil
+}
+
+// parsePageToken parses a page token for getPathVersions.
+// It return a slice of query args.
+func parsePageToken(s string) (queryArgs []any, err error) {
+	// A page token has the form "I P S"
+	// where I is a bool for incompatible version, P is a module path, and S
+	// is a sort version. Spaces suffice to separate these since none can contain a space.
+	parts := strings.Fields(s)
+	if len(parts) != 3 {
+		return nil, errors.New("invalid page token (wrong # parts)")
+	}
+	startIncompatible, err := strconv.ParseBool(parts[0])
+	if err != nil {
+		return nil, fmt.Errorf("invalid page token: %v", err)
+	}
+	return []any{startIncompatible, parts[1], parts[2]}, nil
+}
+
+// makePageToken constructs a page token for getPathVersions.
+func makePageToken(inc bool, mpath, version string) string {
+	return fmt.Sprintf("%t %s %s", inc, mpath, version)
 }
 
 // versionTypeExpr returns a comma-separated list of version types,

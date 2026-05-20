@@ -178,14 +178,14 @@ func TestDeletePseudoversionsExcept(t *testing.T) {
 	if err := testDB.DeletePseudoversionsExcept(ctx, sample.ModulePath, pseudo1); err != nil {
 		t.Fatal(err)
 	}
-	mods, err := getPathVersions(ctx, testDB, sample.ModulePath, version.TypeRelease)
+	mods, _, err := getPathVersions(ctx, testDB, sample.ModulePath, "", 800, version.TypeRelease)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if len(mods) != 1 && mods[0].Version != sample.VersionString {
 		t.Errorf("module version %q was not found", sample.VersionString)
 	}
-	mods, err = getPathVersions(ctx, testDB, sample.ModulePath, version.TypePseudo)
+	mods, _, err = getPathVersions(ctx, testDB, sample.ModulePath, "", 10, version.TypePseudo)
 	if err != nil {
 		t.Fatal(err)
 	}

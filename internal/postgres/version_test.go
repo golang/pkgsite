@@ -5,16 +5,18 @@
 package postgres
 
 import (
-	"context"
 	"database/sql"
 	"fmt"
+	"slices"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"golang.org/x/mod/semver"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/testing/sample"
+	"golang.org/x/pkgsite/internal/version"
 )
 
 func TestGetVersions(t *testing.T) {
@@ -58,7 +60,6 @@ func TestGetVersions(t *testing.T) {
 
 	testDB, release := acquire(t)
 	defer release()
-	ctx := context.Background()
 
 	for _, m := range testModules {
 		goMod := "module " + m.ModulePath
@@ -68,7 +69,7 @@ func TestGetVersions(t *testing.T) {
 				retract v1.0.3 // security flaw
 			`
 		}
-		testDB.MustInsertModuleGoMod(ctx, t, m, goMod)
+		testDB.MustInsertModuleGoMod(t.Context(), t, m, goMod)
 	}
 
 	stdModuleVersions := []*internal.ModuleInfo{
@@ -252,7 +253,7 @@ func TestGetVersions(t *testing.T) {
 				w.LatestVersion = latestVersions[w.ModulePath]
 			}
 
-			got, err := testDB.GetVersionsForPath(ctx, test.path)
+			got, err := testDB.GetVersionsForPath(t.Context(), test.path)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -269,7 +270,6 @@ func TestGetLatestInfo(t *testing.T) {
 	t.Parallel()
 	testDB, release := acquire(t)
 	defer release()
-	ctx := context.Background()
 
 	for _, m := range []*internal.Module{
 		sample.Module("a.com/M", "v99.0.0+incompatible", "all", "most"),
@@ -399,7 +399,7 @@ func TestGetLatestInfo(t *testing.T) {
 		},
 	} {
 		t.Run(test.unit, func(t *testing.T) {
-			got, err := testDB.GetLatestInfo(ctx, test.unit, test.module, nil)
+			got, err := testDB.GetLatestInfo(t.Context(), test.unit, test.module, nil)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -432,7 +432,6 @@ func TestGetLatestGoodVersion(t *testing.T) {
 	t.Parallel()
 	testDB, release := acquire(t)
 	defer release()
-	ctx := context.Background()
 
 	const (
 		modulePath = "example.com/m"
@@ -482,7 +481,7 @@ func TestGetLatestGoodVersion(t *testing.T) {
 				lmv.CookedVersion = test.cooked
 				lm = lmv
 			}
-			got, err := getLatestGoodVersion(ctx, testDB.db, modulePath, lm)
+			got, err := getLatestGoodVersion(t.Context(), testDB.db, modulePath, lm)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -497,7 +496,6 @@ func TestLatestModuleVersions(t *testing.T) {
 	t.Parallel()
 	testDB, release := acquire(t)
 	defer release()
-	ctx := context.Background()
 
 	const (
 		modulePath = "example.com/m"
@@ -548,7 +546,7 @@ func TestLatestModuleVersions(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			vGot, err := testDB.UpdateLatestModuleVersions(ctx, vNew)
+			vGot, err := testDB.UpdateLatestModuleVersions(t.Context(), vNew)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -567,13 +565,12 @@ func TestLatestModuleVersionsBadStatus(t *testing.T) {
 	t.Parallel()
 	testDB, release := acquire(t)
 	defer release()
-	ctx := context.Background()
 
 	const modulePath = "example.com/m"
 
 	getStatus := func() int {
 		var s int
-		err := testDB.db.QueryRow(ctx, `
+		err := testDB.db.QueryRow(t.Context(), `
 				SELECT status
 				FROM latest_module_versions l
 				INNER JOIN paths p ON (p.id=l.module_path_id)
@@ -587,7 +584,7 @@ func TestLatestModuleVersionsBadStatus(t *testing.T) {
 
 	// Insert a failure status.
 	newStatus := 410
-	if err := testDB.UpdateLatestModuleVersionsStatus(ctx, modulePath, newStatus); err != nil {
+	if err := testDB.UpdateLatestModuleVersionsStatus(t.Context(), modulePath, newStatus); err != nil {
 		t.Fatal(err)
 	}
 	if got := getStatus(); got != newStatus {
@@ -595,7 +592,7 @@ func TestLatestModuleVersionsBadStatus(t *testing.T) {
 	}
 
 	// GetLatestModuleVersions should return nil.
-	got, err := testDB.GetLatestModuleVersions(ctx, modulePath)
+	got, err := testDB.GetLatestModuleVersions(t.Context(), modulePath)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -605,7 +602,7 @@ func TestLatestModuleVersionsBadStatus(t *testing.T) {
 
 	// A new failure status should overwrite.
 	newStatus = 404
-	if err := testDB.UpdateLatestModuleVersionsStatus(ctx, modulePath, newStatus); err != nil {
+	if err := testDB.UpdateLatestModuleVersionsStatus(t.Context(), modulePath, newStatus); err != nil {
 		t.Fatal(err)
 	}
 	if got := getStatus(); got != newStatus {
@@ -617,7 +614,7 @@ func TestLatestModuleVersionsBadStatus(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := testDB.UpdateLatestModuleVersions(ctx, lmv); err != nil {
+	if _, err := testDB.UpdateLatestModuleVersions(t.Context(), lmv); err != nil {
 		t.Fatal(err)
 	}
 	if got := getStatus(); got != 200 {
@@ -625,10 +622,10 @@ func TestLatestModuleVersionsBadStatus(t *testing.T) {
 	}
 
 	// Once we have good information, a bad status won't remove it.
-	if err := testDB.UpdateLatestModuleVersionsStatus(ctx, modulePath, 500); err != nil {
+	if err := testDB.UpdateLatestModuleVersionsStatus(t.Context(), modulePath, 500); err != nil {
 		t.Fatal(err)
 	}
-	got, err = testDB.GetLatestModuleVersions(ctx, modulePath)
+	got, err = testDB.GetLatestModuleVersions(t.Context(), modulePath)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -642,13 +639,12 @@ func TestLatestModuleVersionsGood(t *testing.T) {
 	t.Parallel()
 	testDB, release := acquire(t)
 	defer release()
-	ctx := context.Background()
 
 	const modulePath = "example.com/m"
 
 	check := func(want string) {
 		t.Helper()
-		got, err := testDB.GetLatestModuleVersions(ctx, modulePath)
+		got, err := testDB.GetLatestModuleVersions(t.Context(), modulePath)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -668,10 +664,91 @@ func TestLatestModuleVersionsGood(t *testing.T) {
 	check(v2)
 
 	// New latest-version info retracts v2 (and itself); good version should switch to v1.
-	testDB.MustInsertModuleGoMod(ctx, t, sample.Module(modulePath, "v1.3.0", "pkg"), fmt.Sprintf(`
+	testDB.MustInsertModuleGoMod(t.Context(), t, sample.Module(modulePath, "v1.3.0", "pkg"), fmt.Sprintf(`
 		module %s
 		retract v1.3.0
 		retract %s
 	`, modulePath, v2))
 	check(v1)
+}
+
+func TestGetPathVersionsPagination(t *testing.T) {
+	t.Parallel()
+	testDB, release := acquire(t)
+	defer release()
+
+	modulePath := "pagination.co/module"
+	versions := []string{
+		"v2.0.0+incompatible",
+		"v1.0.0",
+		"v1.2.0",
+		"v1.1.0",
+		"v1.1.0-20200330121822-37ff63d4418a",
+		"v2.0.0",
+		"v1.1.5",
+	}
+	for _, v := range versions {
+		testDB.MustInsertModule(t, sample.Module(modulePath, v, "pkg"))
+	}
+
+	packagePath := "pagination.co/module/pkg"
+
+	// Sort in memory DESC, with incompatibles last.
+	sortedVersions := slices.Clone(versions)
+	slices.SortFunc(sortedVersions, func(v1, v2 string) int {
+		if version.IsIncompatible(v1) != version.IsIncompatible(v2) {
+			if version.IsIncompatible(v1) {
+				return 1
+			}
+			return -1
+		}
+		// semver.Canonical removes build information, and thus +incompatible.
+		// So this works if both are incompatible, or both are compatible.
+		return -semver.Compare(semver.Canonical(v1), semver.Canonical(v2))
+	})
+	pageSize := 2
+	limit := pageSize + 1
+	start := ""
+	versionIndex := 0
+
+	for {
+		mods, nextStart, err := getPathVersions(t.Context(), testDB, packagePath, start, limit, version.TypeRelease, version.TypePrerelease, version.TypePseudo)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(mods) == 0 {
+			if versionIndex < len(sortedVersions) {
+				t.Errorf("stopped paginating early: got %d versions, want %d", versionIndex, len(sortedVersions))
+			}
+			break
+		}
+
+		consume := len(mods)
+		hasLookahead := len(mods) == limit
+		if hasLookahead {
+			consume = pageSize
+		}
+
+		// Expected sub-slice
+		end := min(versionIndex+consume, len(sortedVersions))
+		wantSubSlice := sortedVersions[versionIndex:end]
+
+		var gotSubSlice []string
+		for i := range consume {
+			gotSubSlice = append(gotSubSlice, mods[i].Version)
+		}
+		if diff := cmp.Diff(wantSubSlice, gotSubSlice); diff != "" {
+			t.Errorf("page content mismatch at index %d (-want +got):\n%s", versionIndex, diff)
+		}
+
+		versionIndex += consume
+
+		if !hasLookahead {
+			if versionIndex < len(sortedVersions) {
+				t.Errorf("stopped paginating early (no lookahead): got %d versions, want %d", versionIndex, len(sortedVersions))
+			}
+			break
+		}
+		start = nextStart
+	}
 }

@@ -188,11 +188,15 @@ func (s jsonbScanner) Scan(value any) (err error) {
 	return nil
 }
 
-// scanModuleInfo constructs an *internal.ModuleInfo from the given scanner.
-func scanModuleInfo(scan func(dest ...any) error) (*internal.ModuleInfo, error) {
+// scanModuleInfo constructs an *internal.ModuleInfo from the
+// given scanner. The extras argument holds the destinations for
+// additional columns.
+func scanModuleInfo(scan func(dest ...any) error, extras ...any) (*internal.ModuleInfo, error) {
 	var mi internal.ModuleInfo
-	if err := scan(&mi.ModulePath, &mi.Version, &mi.CommitTime,
-		&mi.IsRedistributable, &mi.HasGoMod, jsonbScanner{&mi.SourceInfo}); err != nil {
+	args := []any{&mi.ModulePath, &mi.Version, &mi.CommitTime,
+		&mi.IsRedistributable, &mi.HasGoMod, jsonbScanner{&mi.SourceInfo}}
+	args = append(args, extras...)
+	if err := scan(args...); err != nil {
 		return nil, err
 	}
 	return &mi, nil
