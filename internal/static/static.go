@@ -38,11 +38,18 @@ func Build(config Config) error {
 		Format:       api.FormatESModule,
 		OutExtension: map[string]string{".css": ".min.css"},
 		External:     []string{"*.svg"},
-		Banner: map[string]string{"css": "/*!\n" +
-			" * Copyright 2021 The Go Authors. All rights reserved.\n" +
-			" * Use of this source code is governed by a BSD-style\n" +
-			" * license that can be found in the LICENSE file.\n" +
-			" */"},
+		Banner: map[string]string{
+			"css": "/*!\n" +
+				" * Copyright 2021 The Go Authors. All rights reserved.\n" +
+				" * Use of this source code is governed by a BSD-style\n" +
+				" * license that can be found in the LICENSE file.\n" +
+				" */",
+			"js": "/*!\n" +
+				" * Copyright 2026 The Go Authors. All rights reserved.\n" +
+				" * Use of this source code is governed by a BSD-style\n" +
+				" * license that can be found in the LICENSE file.\n" +
+				" */",
+		},
 	}
 	options.MinifyIdentifiers = true
 	options.MinifySyntax = true

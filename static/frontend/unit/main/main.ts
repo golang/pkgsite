@@ -1,3 +1,10 @@
+/**
+ * @license
+ * Copyright 2026 The Go Authors. All rights reserved.
+ * Use of this source code is governed by a BSD-style
+ * license that can be found in the LICENSE file.
+ */
+
 import { initPlaygrounds } from 'static/shared/playground/playground';
 import { SelectNavController, makeSelectNav } from 'static/shared/outline/select';
 import { TreeNavController } from 'static/shared/outline/tree';

@@ -92,7 +92,7 @@ verify_header() {
 findcode() {
   find ${codedirs[@]} \
     -not -path '*/third_party/*' \
-    \( -name *.go -o -name *.sql -o -name *.tmpl -o -name *.css -o -name *.js \)
+    \( -name '*.go' -o -name '*.sql' -o -name '*.tmpl' -o -name '*.css' -o -name '*.js' -o -name '*.ts' \)
 }
 
 # ensure_go_binary verifies that a binary exists in $PATH corresponding to the
