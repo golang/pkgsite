@@ -8,6 +8,8 @@ import (
 	"context"
 	"testing"
 	"time"
+
+	"golang.org/x/pkgsite/internal/version"
 )
 
 // SearchOptions provide information used by db.Search.
@@ -98,8 +100,8 @@ type DataSource interface {
 	// GetLatestInfo gets information about the latest versions of a unit and module.
 	// See LatestInfo for documentation.
 	GetLatestInfo(ctx context.Context, unitPath, modulePath string, latestUnitMeta *UnitMeta) (LatestInfo, error)
-	// GetVersionsForPath returns a list of versions for the given path.
-	GetVersionsForPath(ctx context.Context, path string) ([]*ModuleInfo, error)
+	// GetPathVersions returns a list of versions for the given path.
+	GetPathVersions(ctx context.Context, path, start string, limit int, versionTypes ...version.Type) (_ []*ModuleInfo, next string, err error)
 	// GetModulePackages returns a list of packages in the given module version.
 	GetModulePackages(ctx context.Context, modulePath, version string) ([]*PackageMeta, error)
 	// GetSymbols returns symbols for the given unit and build context.

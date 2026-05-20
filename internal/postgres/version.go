@@ -9,7 +9,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"io"
 	"strconv"
 	"strings"
 
@@ -28,9 +27,9 @@ import (
 // GetVersionsForPath returns a list of tagged versions sorted in
 // descending semver order if any exist. If none, it returns the 10 most
 // recent from a list of pseudo-versions sorted in descending semver order.
+// TODO: move this and its test to internal/frontend, the only place it's used.
 func (db *DB) GetVersionsForPath(ctx context.Context, path string) (_ []*internal.ModuleInfo, err error) {
-	defer derrors.WrapStack(&err, "GetVersionsForPath(ctx, %q)", path)
-	defer stats.Elapsed(ctx, "GetVersionsForPath")()
+	defer derrors.WrapStack(&err, "getVersionsForPath(ctx, %q)", path)
 
 	// When a page shows too many versions, it can result in a Chrome CSS
 	// bug: https://bugs.chromium.org/p/chromium/issues/detail?id=688640.
@@ -38,31 +37,29 @@ func (db *DB) GetVersionsForPath(ctx context.Context, path string) (_ []*interna
 	// https://pkg.go.dev/github.com/aws/aws-sdk-go/aws/signer/v4?tab=versions.
 	// It's not that useful to see that many versions on a page anyway, so
 	// just limit to 800 versions.
-	versions, lsv, err := getPathVersions(ctx, db, path, "", 800, version.TypeRelease, version.TypePrerelease)
+	versions, _, err := db.GetPathVersions(ctx, path, "", 800, version.TypeRelease, version.TypePrerelease)
 	if err != nil {
 		return nil, err
 	}
 	if len(versions) != 0 {
 		return versions, nil
 	}
-	versions, _, err = getPathVersions(ctx, db, path, "", 10, version.TypePseudo)
+	versions, _, err = db.GetPathVersions(ctx, path, "", 10, version.TypePseudo)
 	if err != nil {
 		return nil, err
 	}
-	// To satisfy unparam until a subsequent CL.
-	// TODO(jba); remove this.
-	fmt.Fprint(io.Discard, lsv)
 	return versions, nil
 }
 
-// getPathVersions returns a list of versions sorted in descending semver
+// GetPathVersions returns a list of versions sorted in descending semver
 // order. The version types included in the list are specified by a list of
 // VersionTypes.
 // The result can be paginated by passing pageToken, which should be either the empty
 // string or a value returned from a previous call.
 // Each subsequent page will begin with the last value of the previous page.
-func getPathVersions(ctx context.Context, db *DB, path string, startPageToken string, limit int, versionTypes ...version.Type) (_ []*internal.ModuleInfo, nextPageToken string, err error) {
-	defer derrors.WrapStack(&err, "getPathVersions(ctx, db, %q, %q, %d, %v)", path, startPageToken, limit, versionTypes)
+func (db *DB) GetPathVersions(ctx context.Context, path string, startPageToken string, limit int, versionTypes ...version.Type) (_ []*internal.ModuleInfo, nextPageToken string, err error) {
+	defer derrors.WrapStack(&err, "DB.GetPathVersions(ctx, db, %q, %q, %d, %v)", path, startPageToken, limit, versionTypes)
+	defer stats.Elapsed(ctx, "GetPathVersions")()
 
 	// Get previous values from pageToken.
 	var pageTokenArgs = []any{false, "", ""}
@@ -78,7 +75,6 @@ func getPathVersions(ctx context.Context, db *DB, path string, startPageToken st
 		m.redistributable,
 		m.has_go_mod,
 		m.source_info,
-		-- to construct the page token
 		m.incompatible,
 		m.sort_version
 	FROM modules m
@@ -102,7 +98,7 @@ func getPathVersions(ctx context.Context, db *DB, path string, startPageToken st
 	%s`
 
 	if len(versionTypes) == 0 {
-		return nil, "", fmt.Errorf("error: must specify at least one version type")
+		return nil, "", errors.New("error: must specify at least one version type")
 	}
 	queryEnd := ";"
 	if limit > 0 {

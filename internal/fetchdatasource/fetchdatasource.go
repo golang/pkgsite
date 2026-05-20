@@ -334,9 +334,9 @@ func (ds *FetchDataSource) GetNestedModules(ctx context.Context, modulePath stri
 	return nil, nil
 }
 
-// GetVersionsForPath is not implemented.
-func (ds *FetchDataSource) GetVersionsForPath(ctx context.Context, path string) ([]*internal.ModuleInfo, error) {
-	return nil, nil
+// GetPathVersions is not implemented.
+func (ds *FetchDataSource) GetPathVersions(ctx context.Context, path, start string, limit int, versionTypes ...version.Type) (_ []*internal.ModuleInfo, next string, err error) {
+	return nil, "", nil
 }
 
 // GetModuleReadme is not implemented.

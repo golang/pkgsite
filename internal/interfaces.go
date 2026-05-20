@@ -20,7 +20,7 @@ type PostgresDB interface {
 	GetSymbolHistory(ctx context.Context, packagePath, modulePath string) (_ *SymbolHistory, err error)
 	GetVersionMap(ctx context.Context, modulePath, requestedVersion string) (_ *VersionMap, err error)
 	GetVersionMaps(ctx context.Context, paths []string, requestedVersion string) (_ []*VersionMap, err error)
-	GetVersionsForPath(ctx context.Context, path string) (_ []*ModuleInfo, err error)
 	InsertModule(ctx context.Context, m *Module, lmv *LatestModuleVersions) (isLatest bool, err error)
 	UpsertVersionMap(ctx context.Context, vm *VersionMap) (err error)
+	GetVersionsForPath(ctx context.Context, path string) ([]*ModuleInfo, error)
 }

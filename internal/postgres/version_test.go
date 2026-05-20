@@ -288,7 +288,7 @@ func TestGetPathVersionsSorting(t *testing.T) {
 	for _, m := range testModules {
 		testDB.MustInsertModule(t, m)
 	}
-	gotmods, _, err := getPathVersions(t.Context(), testDB, "m.com/a", "", 0, version.TypePrerelease, version.TypeRelease, version.TypePseudo)
+	gotmods, _, err := testDB.GetPathVersions(t.Context(), "m.com/a", "", 0, version.TypePrerelease, version.TypeRelease, version.TypePseudo)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -765,7 +765,7 @@ func TestGetPathVersionsPagination(t *testing.T) {
 	versionIndex := 0
 
 	for {
-		mods, nextStart, err := getPathVersions(t.Context(), testDB, packagePath, start, limit, version.TypeRelease, version.TypePrerelease, version.TypePseudo)
+		mods, nextStart, err := testDB.GetPathVersions(t.Context(), packagePath, start, limit, version.TypeRelease, version.TypePrerelease, version.TypePseudo)
 		if err != nil {
 			t.Fatal(err)
 		}

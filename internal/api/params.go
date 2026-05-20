@@ -81,6 +81,8 @@ type ModuleParams struct {
 // VersionsParams are query parameters for /v1beta/versions/{path}.
 type VersionsParams struct {
 	ListParams
+	// Whether to include pseudo-versions in the result.
+	PseudoVersions bool `form:"pseudo"`
 }
 
 // PackagesParams are query parameters for /v1beta/packages/{path}.

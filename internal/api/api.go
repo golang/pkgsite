@@ -198,10 +198,12 @@ func ServeModule(w http.ResponseWriter, r *http.Request, ds internal.DataSource)
 // ServeModuleVersions handles requests for the v1beta module versions endpoint.
 // api:route /v1beta/versions/{path}
 // api:desc Versions of the module at {path}.
-// api:desc If there are tagged versions, they are returned.
-// api:desc Otherwise, the 10 most recent pseudo-versions are returned.
-// api:desc The versions are in descending order.
+// api:desc The versions are returned in descending semantic version order,
+// api:desc with compatible versions listed first, followed by incompatible versions.
+// api:desc Only tagged versions are returned, unless the pseudo query parameter is true.
 // api:desc Only results that match the filter query parameter are returned.
+// api:desc The total in the response is -1 to indicate that the total number of results is unknown,
+// api:desc unless all results fit on a single page.
 // api:example /v1beta/versions/golang.org/x/time?limit=3
 func ServeModuleVersions(w http.ResponseWriter, r *http.Request, ds internal.DataSource) (err error) {
 	defer derrors.Wrap(&err, "ServeModuleVersions")
@@ -222,14 +224,51 @@ func ServeModuleVersions(w http.ResponseWriter, r *http.Request, ds internal.Dat
 	if err != nil {
 		return fmt.Errorf("module %q: %w", path, err)
 	}
+	// TODO: generalize this endpoint to packages.
+	// That is how the DB query works.
 	if err := checkModulePath(path, um.ModulePath); err != nil {
 		return err
 	}
 
-	infos, err := ds.GetVersionsForPath(r.Context(), path)
+	limit := params.Limit
+	if limit <= 0 {
+		limit = defaultLimit
+	}
+	if limit > maxLimit {
+		limit = maxLimit
+	}
+
+	start := ""
+	if params.Token != "" {
+		var err error
+		start, err = decodeStringPageToken(params.Token)
+		if err != nil {
+			return BadRequest(fmt.Sprintf("invalid next-page token: %v", err), "try again from the beginning, with no token")
+		}
+	}
+
+	// Determine version types to fetch: either just the tagged ones,
+	// or all of them.
+	vts := []version.Type{version.TypeRelease, version.TypePrerelease}
+	if params.PseudoVersions {
+		vts = append(vts, version.TypePseudo)
+	}
+	infos, next, err := ds.GetPathVersions(r.Context(), path, start, limit+1, vts...)
 	if err != nil {
 		return err
 	}
+	nextToken := ""
+	if len(infos) > limit {
+		if len(infos) != limit+1 {
+			return InternalServerError("len(infos)=%d, expected %d", len(infos), limit+1)
+		}
+		infos = infos[:limit]
+		nextToken, err = encodeStringPageToken(next)
+		if err != nil {
+			return err
+		}
+	}
+
 	var mvs []ModuleVersion
 	for _, in := range infos {
 		mvs = append(mvs, ModuleVersion{
@@ -250,10 +289,19 @@ func ServeModuleVersions(w http.ResponseWriter, r *http.Request, ds internal.Dat
 		return err
 	}
 
+	// In general, we don't know the total number of versions. The only time we can be
+	// sure is if this is the first page, and there is no next page.
+	// In that case, we count the number of filtered results.
+	total := -1
+	if start == "" && nextToken == "" {
+		total = len(mvs)
+	}
+
 	// api:response PaginatedResponse[ModuleVersion]
-	resp, err := paginate(mvs, params.ListParams, defaultLimit)
-	if err != nil {
-		return err
+	resp := PaginatedResponse[ModuleVersion]{
+		Items:         mvs,
+		Total:         total,
+		NextPageToken: nextToken,
 	}
 
 	// The response is never immutable, because a new version can arrive at any time.
@@ -519,17 +567,16 @@ func ServePackageImportedBy(w http.ResponseWriter, r *http.Request, ds internal.
 	}
 	modulePath := um.ModulePath
 
+	// TODO(jba): share limit and start code between this
+	// and versions.
 	limit := params.Limit
-	// If the user doesn't provide a limit, use a default.
 	if limit <= 0 {
 		limit = defaultLimit
 	}
-	// Cap the user-supplied limit so we don't do too much work.
 	if limit > maxLimit {
 		limit = maxLimit
 	}
 
-	// Resolve start path from token
 	start := ""
 	if params.Token != "" {
 		var err error

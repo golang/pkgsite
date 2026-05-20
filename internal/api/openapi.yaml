@@ -549,7 +549,7 @@
     },
     "/versions/{path}": {
       "get": {
-        "description": "Versions of the module at {path}.\nIf there are tagged versions, they are returned.\nOtherwise, the 10 most recent pseudo-versions are returned.\nThe versions are in descending order.\nOnly results that match the filter query parameter are returned.",
+        "description": "Versions of the module at {path}.\nThe versions are returned in descending semantic version order,\nwith compatible versions listed first, followed by incompatible versions.\nOnly tagged versions are returned, unless the pseudo query parameter is true.\nOnly results that match the filter query parameter are returned.\nThe total in the response is -1 to indicate that the total number of results is unknown,\nunless all results fit on a single page.",
         "operationId": "getVersions",
         "parameters": [
           {
@@ -583,6 +583,14 @@
             "name": "filter",
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "description": "Whether to include pseudo-versions in the result.",
+            "in": "query",
+            "name": "pseudo",
+            "schema": {
+              "type": "boolean"
             }
           }
         ],

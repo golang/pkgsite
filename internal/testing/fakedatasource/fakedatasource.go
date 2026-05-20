@@ -8,6 +8,7 @@ package fakedatasource
 import (
 	"context"
 	"fmt"
+	"slices"
 	"sort"
 	"strings"
 	"testing"
@@ -453,10 +454,15 @@ func (ds *FakeDataSource) GetVersionMaps(ctx context.Context, paths []string, re
 	return nil, errNotImplemented
 }
 
-// GetVersionsForPath returns a list of tagged versions sorted in
-// descending semver order if any exist. If none, it returns the 10 most
-// recent from a list of pseudo-versions sorted in descending semver order.
-func (ds *FakeDataSource) GetVersionsForPath(ctx context.Context, path string) ([]*internal.ModuleInfo, error) {
+// GetPathVersions returns a list of versions for the given path.
+func (ds *FakeDataSource) GetPathVersions(ctx context.Context, path, start string, limit int, versionTypes ...version.Type) (_ []*internal.ModuleInfo, next string, err error) {
+
+	// Find the v1 path for the argument path.
+	// For example, if path is example.com/foo/v2, then the
+	// v1 path is example.com/foo.
+	// If path is a package, the v1 path is the v1 path of the module
+	// followed by the relative package path.
+	// For example: example.com/foo/v2/pkg -> example.com/foo/pkg.
 	var targetV1Path string
 	for _, m := range ds.modules {
 		if findUnit(m, path) != nil {
@@ -465,9 +471,11 @@ func (ds *FakeDataSource) GetVersionsForPath(ctx context.Context, path string) (
 		}
 	}
 	if targetV1Path == "" {
-		return nil, nil
+		return nil, "", nil
 	}
 
+	// Find all modules with a package whose v1 path matches
+	// the target v1 path.
 	var infos []*internal.ModuleInfo
 	for _, m := range ds.modules {
 		for _, u := range m.Units {
@@ -478,26 +486,66 @@ func (ds *FakeDataSource) GetVersionsForPath(ctx context.Context, path string) (
 		}
 	}
 
-	// Only keep pseudoversions if we only have pseudoversions.
-	var nonPseudo []*internal.ModuleInfo
-	for _, info := range infos {
-		if !version.IsPseudo(info.Version) {
-			nonPseudo = append(nonPseudo, info)
+	// Keep only those modules whose version type is one of the
+	// requested ones.
+	var filtered []*internal.ModuleInfo
+	for _, mi := range infos {
+		t, err := version.ParseType(mi.Version)
+		if err != nil {
+			return nil, "", err
+		}
+		if slices.Contains(versionTypes, t) {
+			filtered = append(filtered, mi)
 		}
 	}
-	if len(nonPseudo) > 0 {
-		infos = nonPseudo
+
+	if len(filtered) == 0 {
+		return nil, "", nil
 	}
 
-	sort.Slice(infos, func(i, j int) bool {
-		return version.ForSorting(infos[i].Version) > version.ForSorting(infos[j].Version)
+	sort.Slice(filtered, func(i, j int) bool {
+		return semver.Compare(filtered[i].Version, filtered[j].Version) > 0
 	})
 
-	if len(nonPseudo) == 0 && len(infos) > 10 {
-		infos = infos[:10]
+	// Apply start and limit to the list.
+	if start != "" {
+		startIndex := slices.IndexFunc(filtered, func(mi *internal.ModuleInfo) bool {
+			return semver.Compare(mi.Version, start) <= 0
+		})
+		fmt.Println("sx", startIndex)
+		if startIndex == -1 {
+			return nil, "", nil
+		}
+		filtered = filtered[startIndex:]
 	}
 
-	return infos, nil
+	if limit > 0 && len(filtered) > limit {
+		filtered = filtered[:limit]
+	}
+
+	if len(filtered) == 0 {
+		return nil, "", nil
+	}
+
+	return filtered, filtered[len(filtered)-1].Version, nil
+}
+
+// GetVersionsForPath returns a list of tagged versions sorted in
+// descending semver order if any exist. If none, it returns the 10 most
+// recent from a list of pseudo-versions sorted in descending semver order.
+func (ds *FakeDataSource) GetVersionsForPath(ctx context.Context, path string) ([]*internal.ModuleInfo, error) {
+	versions, _, err := ds.GetPathVersions(ctx, path, "", 800, version.TypeRelease, version.TypePrerelease)
+	if err != nil {
+		return nil, err
+	}
+	if len(versions) != 0 {
+		return versions, nil
+	}
+	versions, _, err = ds.GetPathVersions(ctx, path, "", 10, version.TypePseudo)
+	if err != nil {
+		return nil, err
+	}
+	return versions, nil
 }
 
 // InsertModule inserts m into the FakeDataSource. It is only implemented for

@@ -680,6 +680,7 @@ func testServeModuleVersions(t *testing.T, ds internal.TestingDataSource) {
 	ds.MustInsertModule(t, newMod("example.com", "v1.0.0", "v1.1.0"))
 	ds.MustInsertModule(t, newMod("example.com", "v1.1.0", "v1.1.0"))
 	ds.MustInsertModule(t, newMod("example.com/v2", "v2.0.0", "v2.0.0"))
+	ds.MustInsertModule(t, newMod("example.com", "v0.0.0-20140414041502-3c2ca4d52544", "v1.1.0"))
 
 	for _, test := range []struct {
 		name string
@@ -707,6 +708,39 @@ func testServeModuleVersions(t *testing.T, ds internal.TestingDataSource) {
 					{
 						ModulePath:        "example.com",
 						Version:           "v1.0.0",
+						LatestVersion:     "v1.1.0",
+						IsRedistributable: true,
+					},
+				},
+			},
+		},
+		{
+			name: "pseudo=true",
+			url:  "/v1beta/versions/example.com?pseudo=true",
+			want: &api.PaginatedResponse[api.ModuleVersion]{
+				Total: 4,
+				Items: []api.ModuleVersion{
+					{
+						ModulePath:        "example.com/v2",
+						Version:           "v2.0.0",
+						LatestVersion:     "v2.0.0",
+						IsRedistributable: true,
+					},
+					{
+						ModulePath:        "example.com",
+						Version:           "v1.1.0",
+						LatestVersion:     "v1.1.0",
+						IsRedistributable: true,
+					},
+					{
+						ModulePath:        "example.com",
+						Version:           "v1.0.0",
+						LatestVersion:     "v1.1.0",
+						IsRedistributable: true,
+					},
+					{
+						ModulePath:        "example.com",
+						Version:           "v0.0.0-20140414041502-3c2ca4d52544",
 						LatestVersion:     "v1.1.0",
 						IsRedistributable: true,
 					},
@@ -819,15 +853,15 @@ func testServeModuleVersions(t *testing.T, ds internal.TestingDataSource) {
 		})
 	}
 
-	testPagination[api.PaginatedResponse[api.ModuleVersion]](t, ds, "/v1beta/versions/example.com?limit=1",
+	testPagination(t, ds, "/v1beta/versions/example.com?limit=1",
 		api.ServeModuleVersions,
 		func(r *api.PaginatedResponse[api.ModuleVersion]) (int, int, string) {
 			return len(r.Items), r.Total, r.NextPageToken
 		},
 		[]wantPage{
-			{wantCount: 1, wantTotal: 3},
-			{wantCount: 1, wantTotal: 3},
-			{wantCount: 1, wantTotal: 3},
+			{wantCount: 1, wantTotal: -1},
+			{wantCount: 1, wantTotal: -1},
+			{wantCount: 1, wantTotal: -1},
 		})
 }
 
