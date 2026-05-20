@@ -101,8 +101,10 @@ type SearchParams struct {
 	ListParams
 }
 
-// VulnParams are query parameters for /v1beta/vulns/{module}.
+// VulnParams are query parameters for /v1beta/vulns/{path}.
 type VulnParams struct {
+	// Module path.
+	Module string `form:"module"`
 	// Module version: semantic version, 'latest', or default branches 'master' or 'main'.
 	// (Latest if empty).
 	Version string `form:"version"`

@@ -33,6 +33,36 @@ func TestServeVulnerabilities(t *testing.T) {
 				},
 			},
 		},
+		{
+			ID:      "VULN-2",
+			Summary: "Vulnerability 2",
+			Affected: []osv.Affected{
+				{
+					Module: osv.Module{Path: "example.com"},
+					Ranges: []osv.Range{{Type: osv.RangeTypeSemver, Events: []osv.RangeEvent{{Introduced: "0"}, {Fixed: "1.1.0"}}}},
+					EcosystemSpecific: osv.EcosystemSpecific{
+						Packages: []osv.Package{
+							{Path: "example.com/pkg"},
+						},
+					},
+				},
+			},
+		},
+		{
+			ID:      "VULN-3",
+			Summary: "Vulnerability 3",
+			Affected: []osv.Affected{
+				{
+					Module: osv.Module{Path: "example.com"},
+					Ranges: []osv.Range{{Type: osv.RangeTypeSemver, Events: []osv.RangeEvent{{Introduced: "0"}, {Fixed: "1.1.0"}}}},
+					EcosystemSpecific: osv.EcosystemSpecific{
+						Packages: []osv.Package{
+							{Path: "example.com/other"},
+						},
+					},
+				},
+			},
+		},
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -64,6 +94,15 @@ func TestServeVulnerabilities(t *testing.T) {
 						},
 					},
 				},
+				{
+					UnitMeta: internal.UnitMeta{
+						Path: "example.com/other",
+						ModuleInfo: internal.ModuleInfo{
+							ModulePath: "example.com",
+							Version:    v,
+						},
+					},
+				},
 			},
 		})
 	}
@@ -81,7 +120,7 @@ func TestServeVulnerabilities(t *testing.T) {
 			name:       "all vulns",
 			url:        "/v1beta/vulns/example.com?version=v1.0.0",
 			wantStatus: http.StatusOK,
-			wantCount:  1,
+			wantCount:  3,
 		},
 		{
 			name:       "no vulns",
@@ -92,7 +131,14 @@ func TestServeVulnerabilities(t *testing.T) {
 		{
 			name:       "package path in vulns endpoint",
 			url:        "/v1beta/vulns/example.com/pkg?version=v1.0.0",
-			wantStatus: http.StatusBadRequest,
+			wantStatus: http.StatusOK,
+			wantCount:  2,
+		},
+		{
+			name:       "another package path",
+			url:        "/v1beta/vulns/example.com/other?version=v1.0.0",
+			wantStatus: http.StatusOK,
+			wantCount:  2,
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {

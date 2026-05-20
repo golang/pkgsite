@@ -566,9 +566,9 @@ func ServePackageImportedBy(w http.ResponseWriter, r *http.Request, ds internal.
 	return serveJSON(w, http.StatusOK, resp, shortCacheDur)
 }
 
-// ServeVulnerabilities handles requests for the v1beta module vulnerabilities endpoint.
+// ServeVulnerabilities handles requests for the v1beta vulnerabilities endpoint.
 // api:route /v1beta/vulns/{path}
-// api:desc Vulnerabilities of the module at {path}, from
+// api:desc Vulnerabilities of the module or package at {path}, from
 // api:desc the Go vulnerability database (https://vuln.go.dev).
 // api:desc Only results whose ID or details
 // api:desc matches the regexp in the filter query parameter are returned.
@@ -577,10 +577,10 @@ func ServeVulnerabilities(vc *vuln.Client) func(w http.ResponseWriter, r *http.R
 	return func(w http.ResponseWriter, r *http.Request, ds internal.DataSource) (err error) {
 		defer derrors.Wrap(&err, "ServeVulnerabilities")
 
-		modulePath := trimPath(r, "/v1beta/vulns/")
-		if modulePath == "" {
-			return BadRequest("missing module path",
-				"the module path must be provided after '/vulns/'")
+		path := trimPath(r, "/v1beta/vulns/")
+		if path == "" {
+			return BadRequest("missing path",
+				"the package or module path must be provided after '/vulns/'")
 		}
 
 		// api:params VulnParams
@@ -598,19 +598,20 @@ func ServeVulnerabilities(vc *vuln.Client) func(w http.ResponseWriter, r *http.R
 			requestedVersion = version.Latest
 		}
 
-		// Verify module existence and resolve version.
-		um, err := ds.GetUnitMeta(r.Context(), modulePath, internal.UnknownModulePath, requestedVersion)
+		// Verify package or module existence and resolve containing module.
+		um, err := resolveModulePath(r, ds, path, params.Module, requestedVersion)
 		if err != nil {
 			return err
 		}
 
-		if err := checkModulePath(modulePath, um.ModulePath); err != nil {
-			return err
+		var pkgPath string
+		if path != um.ModulePath {
+			pkgPath = path
 		}
 
-		// Use VulnsForPackage from internal/vuln to get vulnerabilities for the module.
-		// Passing an empty packagePath gets all vulns for the module.
-		vulns := vuln.VulnsForPackage(r.Context(), um.ModulePath, um.Version, "", vc)
+		// Use VulnsForPackage from internal/vuln to get vulnerabilities.
+		// If pkgPath is non-empty, it filters vulnerabilities to only that package.
+		vulns := vuln.VulnsForPackage(r.Context(), um.ModulePath, um.Version, pkgPath, vc)
 
 		vulns, err = filter(vulns, params.Filter, func(v vuln.Vuln) []string {
 			return []string{v.ID, v.Details}

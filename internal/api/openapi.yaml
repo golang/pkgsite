@@ -436,6 +436,14 @@
         "operationId": "getVulns",
         "parameters": [
           {
+            "description": "Module path.",
+            "in": "query",
+            "name": "module",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "description": "Module version: semantic version, 'latest', or default branches 'master' or 'main'.\n(Latest if empty).",
             "in": "query",
             "name": "version",
@@ -480,7 +488,7 @@
             "description": "Successful response"
           }
         },
-        "summary": "Vulnerabilities of the module at {path}, from\nthe Go vulnerability database (https://vuln.go.dev).\nOnly results whose ID or details\nmatches the regexp in the filter query parameter are returned."
+        "summary": "Vulnerabilities of the module or package at {path}, from\nthe Go vulnerability database (https://vuln.go.dev).\nOnly results whose ID or details\nmatches the regexp in the filter query parameter are returned."
       }
     }
   },
