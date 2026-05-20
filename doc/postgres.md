@@ -132,3 +132,29 @@ If you are migrating for the first time, choose the "up" command.
 
 For additional details, see
 [golang-migrate/migrate/GETTING_STARTED.md#run-migrations](https://github.com/golang-migrate/migrate/blob/master/GETTING_STARTED.md#run-migrations).
+
+### Applying migrations to Cloud SQL databases
+
+1. Create a CL with your migration, and get it approved.
+2. Submit the CL.
+3. Run the Cloud Build trigger "migrate", with _CMD=up and _ENV=dev.
+   You will need a grant for golang-discovery-deployers.
+4. Once you're sure the migration applied successfully in dev, repeat step 3
+   for staging and prod.
+5. Dump the new schema to a file (see below).
+
+### Dumping the schema
+
+The file `migrations/db-schema.sql` contains the full DB schema, as produced by the `pg_dump`
+command. Having the full schema makes it easier to see the structure of the database, which helps
+both humans and agents.
+
+Dump the schema after applying a migration. Note that you should do this _after_ the migration is in
+prod, but the dump happens from your _local_ database. That should be fine, because you migrated your
+local DB so you could test before you migrated prod, right?
+
+1. From a clean workspace, run `./devtools/dump_schema.sh`.
+   Read the comments in the script for detailed usage instructions.
+2. The file `migrations/db-schema.sql` should have changed. If it didn't, your migration wasn't
+   applied locally.
+3. Create a new CL and get the changed file submitted.

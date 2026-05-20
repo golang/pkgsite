@@ -335,7 +335,7 @@ main() {
       ;;
     lint) standard_linters ;;
     headers) check_headers ;;
-    migrations) check_migrations ;;
+    migrations) check_bad_migrations ;;
     misspell) check_misspell ;;
     staticcheck) check_staticcheck ;;
     prettier)

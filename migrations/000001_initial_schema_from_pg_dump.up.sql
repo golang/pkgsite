@@ -213,7 +213,7 @@ CREATE TABLE licenses (
 COMMENT ON TABLE licenses IS
 'TABLE licenses contains the license data for a given module version.';
 COMMENT ON COLUMN licenses.coverage IS
-'COLUMN coverage contains the JSON-serialized contents of the licensecheck.Coverage value returned from calling licencecheck.Cover.';
+'COLUMN coverage contains the JSON-serialized contents of the licensecheck.Coverage value returned from calling licensecheck.Cover.';
 
 CREATE TABLE excluded_prefixes (
     prefix text NOT NULL,
@@ -435,7 +435,7 @@ BEGIN
 			-- Insert res into top, maintaining sort order.
 			FOR i IN 1..last_idx LOOP
 				-- We want to preserve order by score desc, commit_time desc,
-				-- package_path asc, so insert res as soon as it sorted before top[i]
+				-- package_path asc, so insert res as soon as it is sorted before top[i]
 				-- according to this ordering.
 				IF top[i] IS NULL OR
 					(res.score > top[i].score) OR
@@ -575,7 +575,7 @@ BEGIN
 		WHERE package_path IS NOT NULL AND score > 0.1;
 END; $$;
 COMMENT ON FUNCTION popular_search_go_mod(rawquery text, lim integer, off integer, redist_factor real, go_mod_factor real) IS
-'FUNCTION popular_search_go_mod is identical to popular_search except for the additional multiplier for the has_go_mod filed.';
+'FUNCTION popular_search_go_mod is identical to popular_search except for the additional multiplier for the has_go_mod field.';
 
 
 SET default_tablespace = '';
