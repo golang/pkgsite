@@ -30,6 +30,8 @@ func runModule(fs *flag.FlagSet, m *moduleFlags, stdout, stderr io.Writer) int {
 		handleErr(stdout, stderr, err, m.jsonOut)
 		return 1
 	}
+	c.PrintURLs = m.printURLs
+	c.Output = stderr
 	mod, err := c.GetModule(ctx, path, version, client.ModuleOptions{
 		Readme:   m.readme,
 		Licenses: m.licenses,

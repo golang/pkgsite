@@ -161,10 +161,11 @@ const defaultServer = "https://pkg.go.dev"
 
 // commonFlags are shared across all subcommands.
 type commonFlags struct {
-	jsonOut bool
-	limit   int
-	server  string
-	timeout time.Duration
+	jsonOut   bool
+	limit     int
+	server    string
+	timeout   time.Duration
+	printURLs bool
 }
 
 func (f *commonFlags) register(fs *flag.FlagSet) {
@@ -172,6 +173,7 @@ func (f *commonFlags) register(fs *flag.FlagSet) {
 	fs.IntVar(&f.limit, "limit", 0, "max results (default: 25)")
 	fs.StringVar(&f.server, "server", defaultServer, "API server URL")
 	fs.DurationVar(&f.timeout, "timeout", 30*time.Second, "request timeout")
+	fs.BoolVar(&f.printURLs, "x", false, "print URL before fetching")
 }
 
 func (f *commonFlags) effectiveLimit() int {

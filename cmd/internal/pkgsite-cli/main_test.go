@@ -405,3 +405,47 @@ func checkFields(t *testing.T, typ reflect.Type, doc string) {
 		}
 	}
 }
+
+func TestRunXFlag(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if strings.HasPrefix(r.URL.Path, "/v1beta/package/") {
+			json.NewEncoder(w).Encode(client.Package{
+				PackageInfo: client.PackageInfo{
+					Path: "encoding/json",
+				},
+				ModulePath: "std",
+			})
+		} else if strings.HasPrefix(r.URL.Path, "/v1beta/search") {
+			json.NewEncoder(w).Encode(client.PaginatedResponse[client.SearchResult]{
+				Items: []client.SearchResult{},
+			})
+		}
+	}))
+	defer srv.Close()
+
+	t.Run("package", func(t *testing.T) {
+		var stdout, stderr bytes.Buffer
+		code := run([]string{"package", "-x", "--server=" + srv.URL, "encoding/json"}, &stdout, &stderr)
+		if code != 0 {
+			t.Fatalf("exit code = %d, stderr = %s", code, stderr.String())
+		}
+		errOut := stderr.String()
+		expectedURL := srv.URL + "/v1beta/package/encoding/json"
+		if !strings.Contains(errOut, expectedURL) {
+			t.Errorf("stderr = %q, want to contain %q", errOut, expectedURL)
+		}
+	})
+
+	t.Run("search", func(t *testing.T) {
+		var stdout, stderr bytes.Buffer
+		code := run([]string{"search", "-x", "--server=" + srv.URL, "json"}, &stdout, &stderr)
+		if code != 0 {
+			t.Fatalf("exit code = %d, stderr = %s", code, stderr.String())
+		}
+		errOut := stderr.String()
+		expectedURLPrefix := srv.URL + "/v1beta/search"
+		if !strings.Contains(errOut, expectedURLPrefix) {
+			t.Errorf("stderr = %q, want to contain %q", errOut, expectedURLPrefix)
+		}
+	})
+}

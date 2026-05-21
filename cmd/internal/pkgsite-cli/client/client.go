@@ -15,6 +15,7 @@ import (
 	"iter"
 	"net/http"
 	"net/url"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -24,6 +25,10 @@ import (
 type Client struct {
 	server     *url.URL
 	httpClient *http.Client
+	// If true, print every URL fetched to Output.
+	PrintURLs bool
+	// Where to write URLs and other debug information.
+	Output io.Writer
 }
 
 // New creates a new Client.
@@ -35,6 +40,7 @@ func New(server string) (*Client, error) {
 	return &Client{
 		server:     u,
 		httpClient: &http.Client{Timeout: 30 * time.Second},
+		Output:     os.Stderr,
 	}, nil
 }
 
@@ -135,6 +141,10 @@ func (c *Client) get(ctx context.Context, url string, dst any) error {
 		return err
 	}
 	req.Header.Set("User-Agent", "pkgsite-cli/v1")
+
+	if c.PrintURLs {
+		fmt.Fprintln(c.Output, url)
+	}
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {

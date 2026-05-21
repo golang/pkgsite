@@ -29,6 +29,8 @@ func runPackage(fs *flag.FlagSet, p *packageFlags, stdout, stderr io.Writer) int
 		handleErr(stdout, stderr, err, p.jsonOut)
 		return 1
 	}
+	c.PrintURLs = p.printURLs
+	c.Output = stderr
 	pkg, err := c.GetPackage(ctx, path, version, client.PackageOptions{
 		Module:   p.module,
 		Doc:      p.doc,

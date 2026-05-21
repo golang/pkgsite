@@ -30,6 +30,8 @@ func runSearch(fs *flag.FlagSet, s *searchFlags, stdout, stderr io.Writer) int {
 		handleErr(stdout, stderr, err, s.jsonOut)
 		return 1
 	}
+	c.PrintURLs = s.printURLs
+	c.Output = stderr
 
 	fetch := func(token string, limit int) (*client.PaginatedResponse[client.SearchResult], error) {
 		return c.Search(ctx, query, client.SearchOptions{
