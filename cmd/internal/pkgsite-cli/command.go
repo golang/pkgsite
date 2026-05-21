@@ -53,12 +53,13 @@ func printCommandUsage(w io.Writer, c *command) {
 
 // printUsage writes usage for all commands to w.
 func printUsage(w io.Writer, cmds []*command) {
+	fmt.Fprintf(w, "%s queries the pkg.go.dev API for information about Go packages and modules.\n\n", filepath.Base(os.Args[0]))
 	fmt.Fprintln(w, "Usage:")
 	for _, c := range cmds {
 		line := c.usageLine()
 		fmt.Fprintf(w, "  %-50s %s\n", line, c.summary)
 	}
-	fmt.Fprintf(w, "\nRun \"%s <command> -h\" for command-specific flags.\n", filepath.Base(os.Args[0]))
+	fmt.Fprintf(w, "\nRun \"%s <command> -h\" for details on available flags for each command.\n", filepath.Base(os.Args[0]))
 }
 
 // dispatch finds and runs the matching command. It returns the exit code.

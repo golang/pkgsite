@@ -7,6 +7,7 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 	"io"
 
 	"golang.org/x/pkgsite/cmd/internal/pkgsite-cli/client"
@@ -15,6 +16,7 @@ import (
 
 func runModule(fs *flag.FlagSet, m *moduleFlags, stdout, stderr io.Writer) int {
 	if fs.NArg() != 1 {
+		fmt.Fprintf(stderr, "Error: expected exactly 1 module argument, got %d\n", fs.NArg())
 		fs.Usage()
 		return 2
 	}

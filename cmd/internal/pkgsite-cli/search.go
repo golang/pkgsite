@@ -7,6 +7,7 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 	"io"
 	"strings"
 
@@ -15,6 +16,7 @@ import (
 
 func runSearch(fs *flag.FlagSet, s *searchFlags, stdout, stderr io.Writer) int {
 	if fs.NArg() < 1 {
+		fmt.Fprintln(stderr, "Error: expected at least 1 search query argument")
 		fs.Usage()
 		return 2
 	}

@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+// Package client provides a client for the pkg.go.dev v1beta API.
 package client
 
 //go:generate go test -run=TestTypesUpToDate -update
@@ -166,6 +167,7 @@ type PackageOptions struct {
 	GOARCH   string
 }
 
+// GetPackage fetches package information for the given path and version.
 func (c *Client) GetPackage(ctx context.Context, path, version string, opts PackageOptions) (*Package, error) {
 	q := make(url.Values)
 	if version != "" {
@@ -216,6 +218,7 @@ type SymbolsOptions struct {
 	PaginationOptions
 }
 
+// GetSymbols fetches symbols for the given package path and version.
 func (c *Client) GetSymbols(ctx context.Context, path, version string, opts SymbolsOptions) (*PaginatedResponse[Symbol], error) {
 	q := make(url.Values)
 	if version != "" {
@@ -251,6 +254,7 @@ type ImportedByOptions struct {
 	PaginationOptions
 }
 
+// GetImportedBy fetches packages that import the given package path and version.
 func (c *Client) GetImportedBy(ctx context.Context, path, version string, opts ImportedByOptions) (*PackageImportedBy, error) {
 	q := make(url.Values)
 	if version != "" {
@@ -280,6 +284,7 @@ type ModuleOptions struct {
 	Licenses bool
 }
 
+// GetModule fetches module information for the given path and version.
 func (c *Client) GetModule(ctx context.Context, path, version string, opts ModuleOptions) (*Module, error) {
 	q := make(url.Values)
 	if version != "" {
@@ -305,6 +310,7 @@ type VersionResponse struct {
 	Version string `json:"version"`
 }
 
+// GetVersions fetches a list of versions for the given module path.
 func (c *Client) GetVersions(ctx context.Context, path string, opts PaginationOptions) (*PaginatedResponse[VersionResponse], error) {
 	q := make(url.Values)
 	if opts.Limit > 0 {
@@ -322,6 +328,7 @@ func (c *Client) GetVersions(ctx context.Context, path string, opts PaginationOp
 	return &resp, nil
 }
 
+// GetVulns fetches a list of vulnerabilities for the given module path and version.
 func (c *Client) GetVulns(ctx context.Context, path, version string, opts PaginationOptions) (*PaginatedResponse[Vulnerability], error) {
 	q := make(url.Values)
 	if version != "" {
@@ -348,6 +355,7 @@ type ModulePackageResponse struct {
 	Synopsis string `json:"synopsis"`
 }
 
+// GetPackages fetches a list of packages for the given module path and version.
 func (c *Client) GetPackages(ctx context.Context, modulePath, version string, opts PaginationOptions) (*PaginatedResponse[ModulePackageResponse], error) {
 	q := make(url.Values)
 	if version != "" {
@@ -385,6 +393,7 @@ type SearchOptions struct {
 	PaginationOptions
 }
 
+// Search queries the pkg.go.dev API for packages matching the given query.
 func (c *Client) Search(ctx context.Context, query string, opts SearchOptions) (*PaginatedResponse[SearchResult], error) {
 	q := make(url.Values)
 	q.Set("q", query)

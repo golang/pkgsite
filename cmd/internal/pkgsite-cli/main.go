@@ -5,13 +5,13 @@
 // Command pkgsite-cli queries the pkg.go.dev API for information about
 // Go packages and modules.
 //
+// For more information, see https://go.dev/blog/pkgsite-api.
+//
 // Usage:
 //
-//	pkgsite-cli package <package>[@version] [flags]  package information
-//	pkgsite-cli module <module>[@version] [flags]      module information
-//	pkgsite-cli search <query> [flags]                 search for packages
-//
-// See doc/pkgsite-cli.md for the full design document.
+//	pkgsite-cli package <package>[@version] [flags]    Show package details.
+//	pkgsite-cli module <module>[@version] [flags]      Show module details.
+//	pkgsite-cli search <query> [flags]                 Search for packages.
 package main
 
 import (
@@ -57,7 +57,10 @@ func commands() []*command {
 
 	pkgRun := func(fs *flag.FlagSet, stdout, stderr io.Writer) int { return runPackage(fs, &pf, stdout, stderr) }
 
-	const packageDoc = `
+	const packageDoc = `Queries information about a specific Go package from pkg.go.dev.
+By default, this prints basic metadata. Use flags to request additional
+information such as exported symbols, reverse dependencies, or rendered documentation.
+
 When using -json, the output is a JSON object with the following structure:
 
     type packageResult struct {
@@ -88,7 +91,10 @@ When using -json, the output is a JSON object with the following structure:
     }
 `
 
-	const moduleDoc = `
+	const moduleDoc = `Queries information about a specific Go module from pkg.go.dev.
+By default, this prints basic metadata. Use flags to request additional
+information such as versions, vulnerabilities, or packages contained in the module.
+
 When using -json, the output is a JSON object with the following structure:
 
     type moduleResult struct {
@@ -113,7 +119,9 @@ When using -json, the output is a JSON object with the following structure:
     }
 `
 
-	const searchDoc = `
+	const searchDoc = `Searches for Go packages on pkg.go.dev matching the given query.
+By default, this prints a list of matching packages with their synopsis.
+
 When using -json, the output is a JSON object with the following structure:
 
     type PaginatedResponse[SearchResult] struct {
@@ -135,7 +143,7 @@ When using -json, the output is a JSON object with the following structure:
 		{
 			name:        "package",
 			args:        "<package>[@version]",
-			summary:     "package information",
+			summary:     "Show package details",
 			description: strings.TrimSpace(packageDoc),
 			flags:       pkgFS,
 			run:         pkgRun,
@@ -143,7 +151,7 @@ When using -json, the output is a JSON object with the following structure:
 		{
 			name:        "module",
 			args:        "<module>[@version]",
-			summary:     "module information",
+			summary:     "Show module details",
 			description: strings.TrimSpace(moduleDoc),
 			flags:       modFS,
 			run:         func(fs *flag.FlagSet, stdout, stderr io.Writer) int { return runModule(fs, &mf, stdout, stderr) },
@@ -151,19 +159,19 @@ When using -json, the output is a JSON object with the following structure:
 		{
 			name:        "search",
 			args:        "<query>",
-			summary:     "search for packages",
+			summary:     "Search for packages",
 			description: strings.TrimSpace(searchDoc),
 			flags:       searchFS,
 			run:         func(fs *flag.FlagSet, stdout, stderr io.Writer) int { return runSearch(fs, &sf, stdout, stderr) },
 		},
 		{
 			name:    "help",
-			summary: "show this help message",
+			summary: "Show this help message",
 			run:     func(_ *flag.FlagSet, stdout, _ io.Writer) int { printUsage(stdout, cmds); return 0 },
 		},
 		{
 			name:    "version",
-			summary: "print version information",
+			summary: "Print version information",
 			run:     func(_ *flag.FlagSet, stdout, _ io.Writer) int { fmt.Fprintln(stdout, versionInfo()); return 0 },
 		},
 	}
