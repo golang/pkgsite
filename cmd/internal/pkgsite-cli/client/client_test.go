@@ -284,10 +284,10 @@ func TestAmbiguousPackagePath(t *testing.T) {
 		t.Fatal("expected error")
 	}
 	msg := err.Error()
-	if !strings.Contains(msg, "--module=github.com/foo/bar") {
+	if !strings.Contains(msg, "-module=github.com/foo/bar") {
 		t.Errorf("error missing candidate, got:\n%s", msg)
 	}
-	if !strings.Contains(msg, "--module=github.com/foo/bar/pkg") {
+	if !strings.Contains(msg, "-module=github.com/foo/bar/pkg") {
 		t.Errorf("error missing candidate, got:\n%s", msg)
 	}
 }
@@ -316,7 +316,7 @@ func TestAPIError(t *testing.T) {
 	}
 }
 
-func TestAllItems_SinglePage(t *testing.T) {
+func TestAllItemsSinglePage(t *testing.T) {
 	fetch := func(token string, limit int) (*PaginatedResponse[string], error) {
 		return &PaginatedResponse[string]{
 			Items:         []string{"item1"},
@@ -325,7 +325,7 @@ func TestAllItems_SinglePage(t *testing.T) {
 		}, nil
 	}
 
-	items, total, err := AllItems("", 0, fetch)
+	items, total, _, err := AllItems("", 0, fetch)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -337,7 +337,7 @@ func TestAllItems_SinglePage(t *testing.T) {
 	}
 }
 
-func TestAllItems_Limit(t *testing.T) {
+func TestAllItemsLimit(t *testing.T) {
 	const totalItems = 5
 	pages := map[string]*PaginatedResponse[string]{
 		"": {
@@ -388,7 +388,7 @@ func TestAllItems_Limit(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			items, total, err := AllItems("", tt.limit, fetch)
+			items, total, _, err := AllItems("", tt.limit, fetch)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -397,6 +397,137 @@ func TestAllItems_Limit(t *testing.T) {
 			}
 			if !slices.Equal(items, tt.wantItems) {
 				t.Errorf("items = %v, want %v", items, tt.wantItems)
+			}
+		})
+	}
+}
+
+func TestAllItems429(t *testing.T) {
+	const totalItems = 5
+	pages := map[string]*PaginatedResponse[string]{
+		"": {
+			Items:         []string{"a", "b"},
+			Total:         totalItems,
+			NextPageToken: "p1",
+		},
+		"p1": {
+			Items:         []string{"c", "d"},
+			Total:         totalItems,
+			NextPageToken: "p2",
+		},
+	}
+
+	fetch := func(token string, limit int) (*PaginatedResponse[string], error) {
+		if token == "p2" {
+			return nil, &Error{Code: http.StatusTooManyRequests, Message: "Too Many Requests"}
+		}
+		return pages[token], nil
+	}
+
+	items, total, nextToken, err := AllItems("", 0, fetch)
+	if err == nil {
+		t.Fatal("expected error, got nil")
+	}
+	if !Is429(err) {
+		t.Errorf("expected 429 error, got %v", err)
+	}
+	wantItems := []string{"a", "b", "c", "d"}
+	if !slices.Equal(items, wantItems) {
+		t.Errorf("items = %v, want %v", items, wantItems)
+	}
+	if total != totalItems {
+		t.Errorf("total = %d, want %d", total, totalItems)
+	}
+	if nextToken != "p2" {
+		t.Errorf("nextToken = %q, want %q", nextToken, "p2")
+	}
+}
+
+func TestAllItemsPagination(t *testing.T) {
+	const totalItems = 5
+	pages := map[string]*PaginatedResponse[string]{
+		"": {
+			Items:         []string{"a", "b"},
+			Total:         totalItems,
+			NextPageToken: "p1",
+		},
+		"p1": {
+			Items:         []string{"c", "d"},
+			Total:         totalItems,
+			NextPageToken: "p2",
+		},
+		"p2": {
+			Items:         []string{"e"},
+			Total:         totalItems,
+			NextPageToken: "",
+		},
+	}
+	fetch := func(token string, limit int) (*PaginatedResponse[string], error) {
+		return pages[token], nil
+	}
+
+	t.Run("basic 3 pages successive", func(t *testing.T) {
+		steps := []struct {
+			limit     int
+			wantItems []string
+			wantToken string
+		}{
+			{limit: 2, wantItems: []string{"a", "b"}, wantToken: "p1"},
+			{limit: 2, wantItems: []string{"c", "d"}, wantToken: "p2"},
+			{limit: 2, wantItems: []string{"e"}, wantToken: ""},
+		}
+
+		token := ""
+		for i, step := range steps {
+			items, total, nextToken, err := AllItems(token, step.limit, fetch)
+			if err != nil {
+				t.Fatalf("step %d: %v", i, err)
+			}
+			if !slices.Equal(items, step.wantItems) {
+				t.Errorf("step %d: items = %v, want %v", i, items, step.wantItems)
+			}
+			if total != totalItems {
+				t.Errorf("step %d: total = %d, want %d", i, total, totalItems)
+			}
+			if nextToken != step.wantToken {
+				t.Errorf("step %d: nextToken = %q, want %q", i, nextToken, step.wantToken)
+			}
+			token = nextToken
+		}
+	})
+
+	for _, test := range []struct {
+		name      string
+		limit     int
+		want      []string
+		nextToken string
+	}{
+		{
+			"limit within first page",
+			1,
+			[]string{"a"},
+			"",
+		},
+		{
+			"limit within second page",
+			3,
+			[]string{"a", "b", "c"},
+			"p1",
+		},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			items, total, nextToken, err := AllItems("", test.limit, fetch)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if !slices.Equal(items, test.want) {
+				t.Errorf("items = %v, want %v", items, test.want)
+			}
+			if total != totalItems {
+				t.Errorf("total = %d, want %d", total, totalItems)
+			}
+			if nextToken != test.nextToken {
+				t.Errorf("nextToken = %q, want %q", nextToken, test.nextToken)
 			}
 		})
 	}

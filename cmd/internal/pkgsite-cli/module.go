@@ -60,8 +60,15 @@ func runModule(fs *flag.FlagSet, m *moduleFlags, stdout, stderr io.Writer) int {
 				})
 			}
 			// Pass limit to AllItems to stop fetching when limit is reached.
-			items, total, err := client.AllItems("", m.effectiveLimit(), fetch)
+			items, total, nextToken, err := client.AllItems("", m.effectiveLimit(), fetch)
 			if err != nil {
+				if client.Is429(err) {
+					vers = &client.PaginatedResponse[client.VersionResponse]{
+						Items:         items,
+						Total:         total,
+						NextPageToken: nextToken,
+					}
+				}
 				return err
 			}
 			vers = &client.PaginatedResponse[client.VersionResponse]{
@@ -81,8 +88,15 @@ func runModule(fs *flag.FlagSet, m *moduleFlags, stdout, stderr io.Writer) int {
 				})
 			}
 			// Pass limit to AllItems to stop fetching when limit is reached.
-			items, total, err := client.AllItems("", m.effectiveLimit(), fetch)
+			items, total, nextToken, err := client.AllItems("", m.effectiveLimit(), fetch)
 			if err != nil {
+				if client.Is429(err) {
+					vulns = &client.PaginatedResponse[client.Vulnerability]{
+						Items:         items,
+						Total:         total,
+						NextPageToken: nextToken,
+					}
+				}
 				return err
 			}
 			vulns = &client.PaginatedResponse[client.Vulnerability]{
@@ -102,8 +116,15 @@ func runModule(fs *flag.FlagSet, m *moduleFlags, stdout, stderr io.Writer) int {
 				})
 			}
 			// Pass limit to AllItems to stop fetching when limit is reached.
-			items, total, err := client.AllItems("", m.effectiveLimit(), fetch)
+			items, total, nextToken, err := client.AllItems("", m.effectiveLimit(), fetch)
 			if err != nil {
+				if client.Is429(err) {
+					pkgs = &client.PaginatedResponse[client.ModulePackageResponse]{
+						Items:         items,
+						Total:         total,
+						NextPageToken: nextToken,
+					}
+				}
 				return err
 			}
 			pkgs = &client.PaginatedResponse[client.ModulePackageResponse]{
@@ -115,6 +136,12 @@ func runModule(fs *flag.FlagSet, m *moduleFlags, stdout, stderr io.Writer) int {
 	}
 
 	if err := g.Wait(); err != nil {
+		if client.Is429(err) {
+			result.Versions = vers
+			result.Vulns = vulns
+			result.Packages = pkgs
+			return printPartialModuleResult(stdout, stderr, result, m.jsonOut)
+		}
 		handleErr(stdout, stderr, err, m.jsonOut)
 		return 1
 	}
@@ -147,4 +174,14 @@ func (f *moduleFlags) register(fs *flag.FlagSet) {
 	fs.BoolVar(&f.versions, "versions", false, "list versions")
 	fs.BoolVar(&f.vulns, "vulns", false, "list vulnerabilities")
 	fs.BoolVar(&f.packages, "packages", false, "list packages")
+}
+
+func printPartialModuleResult(stdout, stderr io.Writer, result moduleResult, jsonMode bool) int {
+	if jsonMode {
+		writeJSON(stdout, stderr, result)
+	} else {
+		formatModule(stdout, result)
+		fmt.Fprintln(stderr, "Warning: hit rate limit (429); results are incomplete.")
+	}
+	return 1
 }

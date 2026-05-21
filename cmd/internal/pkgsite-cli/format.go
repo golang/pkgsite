@@ -77,6 +77,9 @@ func formatPackage(w io.Writer, r packageResult) {
 				fmt.Fprintf(w, "  %s %s\n", s.Kind, s.Name)
 			}
 		}
+		if t := r.Symbols.NextPageToken; t != "" {
+			fmt.Fprintf(w, "  next page token: %s\n", t)
+		}
 		formatPaginationHint(w, len(r.Symbols.Items), r.Symbols.Total)
 	}
 
@@ -87,6 +90,9 @@ func formatPackage(w io.Writer, r packageResult) {
 			fmt.Fprintln(w, "Imported by:")
 			for _, pkg := range ib.Items {
 				fmt.Fprintf(w, "  %s\n", pkg)
+			}
+			if t := ib.NextPageToken; t != "" {
+				fmt.Fprintf(w, "  next page token: %s\n", t)
 			}
 			formatPaginationHint(w, len(ib.Items), ib.Total)
 		}
@@ -124,6 +130,9 @@ func formatModule(w io.Writer, r moduleResult) {
 		for _, v := range r.Versions.Items {
 			fmt.Fprintf(w, "  %s\n", v.Version)
 		}
+		if t := r.Versions.NextPageToken; t != "" {
+			fmt.Fprintf(w, "  next page token: %s\n", t)
+		}
 		formatPaginationHint(w, len(r.Versions.Items), r.Versions.Total)
 	}
 
@@ -141,6 +150,9 @@ func formatModule(w io.Writer, r moduleResult) {
 				fmt.Fprintf(w, "    Fixed in: %s\n", v.FixedVersion)
 			}
 		}
+		if t := r.Vulns.NextPageToken; t != "" {
+			fmt.Fprintf(w, "  next page token: %s\n", t)
+		}
 		formatPaginationHint(w, len(r.Vulns.Items), r.Vulns.Total)
 	}
 
@@ -154,6 +166,9 @@ func formatModule(w io.Writer, r moduleResult) {
 				fmt.Fprintf(w, "  %s\n", p.Path)
 			}
 		}
+		if t := r.Packages.NextPageToken; t != "" {
+			fmt.Fprintf(w, "  next page token: %s\n", t)
+		}
 		formatPaginationHint(w, len(r.Packages.Items), r.Packages.Total)
 	}
 }
@@ -165,6 +180,9 @@ func formatSearch(w io.Writer, r *client.PaginatedResponse[client.SearchResult])
 	}
 	for _, sr := range r.Items {
 		formatSearchResult(w, sr)
+	}
+	if t := r.NextPageToken; t != "" {
+		fmt.Fprintf(w, "  next page token: %s\n", t)
 	}
 	formatPaginationHint(w, len(r.Items), r.Total)
 }
@@ -187,7 +205,7 @@ func formatLicenses(w io.Writer, licenses []client.License) {
 
 func formatPaginationHint(w io.Writer, shown, total int) {
 	if total > shown {
-		fmt.Fprintf(w, "  Showing %d of %d. Use --limit=N to see more.\n", shown, total)
+		fmt.Fprintf(w, "  Showing %d of %d. Use -token NEXT_PAGE_TOKEN and/or -limit N to see more.\n", shown, total)
 	}
 }
 

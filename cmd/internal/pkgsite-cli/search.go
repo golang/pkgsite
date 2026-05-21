@@ -47,8 +47,22 @@ func runSearch(fs *flag.FlagSet, s *searchFlags, stdout, stderr io.Writer) int {
 
 	targetLimit := s.effectiveLimit()
 
-	items, total, err := client.AllItems("", targetLimit, fetch)
+	items, total, nextToken, err := client.AllItems("", targetLimit, fetch)
 	if err != nil {
+		if client.Is429(err) {
+			results = &client.PaginatedResponse[client.SearchResult]{
+				Items:         items,
+				Total:         total,
+				NextPageToken: nextToken,
+			}
+			if s.jsonOut {
+				writeJSON(stdout, stderr, results)
+			} else {
+				formatSearch(stdout, results)
+				fmt.Fprintln(stderr, "Warning: hit rate limit (429); results are incomplete.")
+			}
+			return 1
+		}
 		handleErr(stdout, stderr, err, s.jsonOut)
 		return 1
 	}

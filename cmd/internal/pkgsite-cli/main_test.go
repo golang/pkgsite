@@ -14,9 +14,11 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"regexp"
 	"strings"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"golang.org/x/pkgsite/cmd/internal/pkgsite-cli/client"
 )
 
@@ -85,7 +87,7 @@ func TestRunPackage(t *testing.T) {
 	defer srv.Close()
 
 	var stdout, stderr bytes.Buffer
-	code := run([]string{"package", "--server=" + srv.URL, "encoding/json"}, &stdout, &stderr)
+	code := run([]string{"package", "-server=" + srv.URL, "encoding/json"}, &stdout, &stderr)
 	if code != 0 {
 		t.Fatalf("exit code = %d, stderr = %s", code, stderr.String())
 	}
@@ -114,7 +116,7 @@ func TestRunPackageGOOSGOARCH(t *testing.T) {
 	defer srv.Close()
 
 	var stdout, stderr bytes.Buffer
-	code := run([]string{"package", "-goos=windows", "-goarch=386", "--server=" + srv.URL, "encoding/json"}, &stdout, &stderr)
+	code := run([]string{"package", "-goos=windows", "-goarch=386", "-server=" + srv.URL, "encoding/json"}, &stdout, &stderr)
 	if code != 0 {
 		t.Fatalf("exit code = %d, stderr = %s", code, stderr.String())
 	}
@@ -132,16 +134,24 @@ func TestRunPackageJSON(t *testing.T) {
 	defer srv.Close()
 
 	var stdout, stderr bytes.Buffer
-	code := run([]string{"package", "--json", "--server=" + srv.URL, "encoding/json"}, &stdout, &stderr)
+	code := run([]string{"package", "-json", "-server=" + srv.URL, "encoding/json"}, &stdout, &stderr)
 	if code != 0 {
 		t.Fatalf("exit code = %d, stderr = %s", code, stderr.String())
 	}
-	var result packageResult
-	if err := json.Unmarshal(stdout.Bytes(), &result); err != nil {
+	var got packageResult
+	if err := json.Unmarshal(stdout.Bytes(), &got); err != nil {
 		t.Fatalf("invalid JSON: %v\n%s", err, stdout.String())
 	}
-	if result.Package.Path != "encoding/json" {
-		t.Errorf("Path = %q, want encoding/json", result.Package.Path)
+	want := packageResult{
+		Package: &client.Package{
+			PackageInfo: client.PackageInfo{
+				Path: "encoding/json",
+			},
+			ModulePath: "std",
+		},
+	}
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("mismatch (-want +got):\n%s", diff)
 	}
 }
 
@@ -157,7 +167,7 @@ func TestRunModule(t *testing.T) {
 	defer srv.Close()
 
 	var stdout, stderr bytes.Buffer
-	code := run([]string{"--server=" + srv.URL, "module", "golang.org/x/text"}, &stdout, &stderr)
+	code := run([]string{"-server=" + srv.URL, "module", "golang.org/x/text"}, &stdout, &stderr)
 	if code != 0 {
 		t.Fatalf("exit code = %d, stderr = %s", code, stderr.String())
 	}
@@ -213,7 +223,7 @@ func TestRunSearch(t *testing.T) {
 		},
 		{
 			name:        "with limit",
-			args:        []string{"search", "--limit=1", "json"},
+			args:        []string{"search", "-limit=1", "json"},
 			wantStdout:  []string{"encoding/json"},
 			limitStdout: []string{"encoding/xml"},
 		},
@@ -222,7 +232,7 @@ func TestRunSearch(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var stdout, stderr bytes.Buffer
-			args := append([]string{"--server=" + srv.URL}, tt.args...)
+			args := append([]string{"-server=" + srv.URL}, tt.args...)
 			code := run(args, &stdout, &stderr)
 			if code != tt.wantCode {
 				t.Errorf("exit code = %d, want %d", code, tt.wantCode)
@@ -250,7 +260,7 @@ func TestRunAPIError(t *testing.T) {
 	defer srv.Close()
 
 	var stdout, stderr bytes.Buffer
-	code := run([]string{"package", "--server=" + srv.URL, "nonexistent/pkg"}, &stdout, &stderr)
+	code := run([]string{"package", "-server=" + srv.URL, "nonexistent/pkg"}, &stdout, &stderr)
 	if code != 1 {
 		t.Errorf("exit code = %d, want 1", code)
 	}
@@ -267,13 +277,18 @@ func TestRunAPIErrorJSON(t *testing.T) {
 	defer srv.Close()
 
 	var stdout, stderr bytes.Buffer
-	code := run([]string{"package", "--json", "--server=" + srv.URL, "nonexistent/pkg"}, &stdout, &stderr)
+	code := run([]string{"package", "-json", "-server=" + srv.URL, "nonexistent/pkg"}, &stdout, &stderr)
 	if code != 1 {
 		t.Errorf("exit code = %d, want 1", code)
 	}
 	// In JSON mode, error should go to stdout.
-	if !strings.Contains(stdout.String(), "not found") {
-		t.Errorf("stdout = %q, want to contain 'not found'", stdout.String())
+	var got client.Error
+	if err := json.Unmarshal(stdout.Bytes(), &got); err != nil {
+		t.Fatalf("invalid JSON: %v\n%s", err, stdout.String())
+	}
+	want := client.Error{Code: 404, Message: "not found"}
+	if diff := cmp.Diff(want, got, cmp.AllowUnexported(client.Error{})); diff != "" {
+		t.Errorf("mismatch (-want +got):\n%s", diff)
 	}
 }
 
@@ -300,7 +315,7 @@ func TestRunModuleWithVersions(t *testing.T) {
 	defer srv.Close()
 
 	var stdout, stderr bytes.Buffer
-	code := run([]string{"--server=" + srv.URL, "module", "--versions", "--vulns", "golang.org/x/text"}, &stdout, &stderr)
+	code := run([]string{"-server=" + srv.URL, "module", "-versions", "-vulns", "golang.org/x/text"}, &stdout, &stderr)
 	if code != 0 {
 		t.Fatalf("exit code = %d, stderr = %s", code, stderr.String())
 	}
@@ -425,7 +440,7 @@ func TestRunXFlag(t *testing.T) {
 
 	t.Run("package", func(t *testing.T) {
 		var stdout, stderr bytes.Buffer
-		code := run([]string{"package", "-x", "--server=" + srv.URL, "encoding/json"}, &stdout, &stderr)
+		code := run([]string{"package", "-x", "-server=" + srv.URL, "encoding/json"}, &stdout, &stderr)
 		if code != 0 {
 			t.Fatalf("exit code = %d, stderr = %s", code, stderr.String())
 		}
@@ -438,7 +453,7 @@ func TestRunXFlag(t *testing.T) {
 
 	t.Run("search", func(t *testing.T) {
 		var stdout, stderr bytes.Buffer
-		code := run([]string{"search", "-x", "--server=" + srv.URL, "json"}, &stdout, &stderr)
+		code := run([]string{"search", "-x", "-server=" + srv.URL, "json"}, &stdout, &stderr)
 		if code != 0 {
 			t.Fatalf("exit code = %d, stderr = %s", code, stderr.String())
 		}
@@ -447,5 +462,187 @@ func TestRunXFlag(t *testing.T) {
 		if !strings.Contains(errOut, expectedURLPrefix) {
 			t.Errorf("stderr = %q, want to contain %q", errOut, expectedURLPrefix)
 		}
+	})
+}
+
+func TestRun429(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		respond := func(resp any) {
+			token := r.URL.Query().Get("token")
+			if token == "" {
+				json.NewEncoder(w).Encode(resp)
+			} else if token == "token1" {
+				w.WriteHeader(http.StatusTooManyRequests)
+				json.NewEncoder(w).Encode(client.Error{Code: 429, Message: "Too Many Requests"})
+			}
+		}
+
+		if strings.HasPrefix(r.URL.Path, "/v1beta/package/") {
+			respond(client.Package{
+				PackageInfo: client.PackageInfo{
+					Path: "encoding/json",
+				},
+				ModulePath: "std",
+			})
+		} else if strings.HasPrefix(r.URL.Path, "/v1beta/symbols/") {
+			respond(client.PackageSymbols{
+				Symbols: client.PaginatedResponse[client.Symbol]{
+					Items: []client.Symbol{
+						{Name: "Sym1", Kind: "func"},
+					},
+					Total:         2,
+					NextPageToken: "token1",
+				},
+			})
+		} else if strings.HasPrefix(r.URL.Path, "/v1beta/search") {
+			respond(client.PaginatedResponse[client.SearchResult]{
+				Items: []client.SearchResult{
+					{PackagePath: "pkg1"},
+				},
+				Total:         2,
+				NextPageToken: "token1",
+			})
+		} else if strings.HasPrefix(r.URL.Path, "/v1beta/module/") {
+			json.NewEncoder(w).Encode(client.Module{
+				Path:    "golang.org/x/text",
+				Version: "v0.14.0",
+			})
+		} else if strings.HasPrefix(r.URL.Path, "/v1beta/versions/") {
+			respond(client.PaginatedResponse[client.VersionResponse]{
+				Items: []client.VersionResponse{
+					{Version: "v0.14.0"},
+				},
+				Total:         2,
+				NextPageToken: "token1",
+			})
+		}
+	}))
+	defer srv.Close()
+
+	checkMatch := func(t *testing.T, target, re string) {
+		t.Helper()
+		m, err := regexp.MatchString("(?m:"+re+")", target)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !m {
+			t.Errorf("failed to match '%s': %s", re, target)
+		}
+	}
+
+	t.Run("package json", func(t *testing.T) {
+		var stdout, stderr bytes.Buffer
+		code := run([]string{"package", "-symbols", "-json", "-server=" + srv.URL, "encoding/json"}, &stdout, &stderr)
+		if code != 1 {
+			t.Fatalf("exit code = %d, want 1", code)
+		}
+		var got packageResult
+		if err := json.Unmarshal(stdout.Bytes(), &got); err != nil {
+			t.Fatalf("invalid JSON: %v\n%s", err, stdout.String())
+		}
+		want := packageResult{
+			Package: &client.Package{
+				PackageInfo: client.PackageInfo{
+					Path: "encoding/json",
+				},
+				ModulePath: "std",
+			},
+			Symbols: &client.PaginatedResponse[client.Symbol]{
+				Items: []client.Symbol{
+					{Name: "Sym1", Kind: "func"},
+				},
+				Total:         2,
+				NextPageToken: "token1",
+			},
+		}
+		if diff := cmp.Diff(want, got); diff != "" {
+			t.Errorf("mismatch (-want +got):\n%s", diff)
+		}
+	})
+
+	t.Run("package text", func(t *testing.T) {
+		var stdout, stderr bytes.Buffer
+		code := run([]string{"package", "-symbols", "-server=" + srv.URL, "encoding/json"}, &stdout, &stderr)
+		if code != 1 {
+			t.Fatalf("exit code = %d, want 1", code)
+		}
+		out := stdout.String()
+		errOut := stderr.String()
+		checkMatch(t, out, "Sym1(.|\n)*token: token1")
+		checkMatch(t, errOut, "Warning: hit rate limit")
+	})
+
+	t.Run("search json", func(t *testing.T) {
+		var stdout, stderr bytes.Buffer
+		code := run([]string{"search", "-json", "-server=" + srv.URL, "json"}, &stdout, &stderr)
+		if code != 1 {
+			t.Fatalf("exit code = %d, want 1", code)
+		}
+		var got client.PaginatedResponse[client.SearchResult]
+		if err := json.Unmarshal(stdout.Bytes(), &got); err != nil {
+			t.Fatalf("invalid JSON: %v\n%s", err, stdout.String())
+		}
+		want := client.PaginatedResponse[client.SearchResult]{
+			Items: []client.SearchResult{
+				{PackagePath: "pkg1"},
+			},
+			Total:         2,
+			NextPageToken: "token1",
+		}
+		if diff := cmp.Diff(want, got); diff != "" {
+			t.Errorf("mismatch (-want +got):\n%s", diff)
+		}
+	})
+
+	t.Run("search text", func(t *testing.T) {
+		var stdout, stderr bytes.Buffer
+		code := run([]string{"search", "-server=" + srv.URL, "json"}, &stdout, &stderr)
+		if code != 1 {
+			t.Fatalf("exit code = %d, want 1", code)
+		}
+		out := stdout.String()
+		errOut := stderr.String()
+		checkMatch(t, out, "pkg1(.|\n)*token: token1")
+		checkMatch(t, errOut, "Warning: hit rate limit")
+	})
+
+	t.Run("module json", func(t *testing.T) {
+		var stdout, stderr bytes.Buffer
+		code := run([]string{"module", "-versions", "-json", "-server=" + srv.URL, "golang.org/x/text"}, &stdout, &stderr)
+		if code != 1 {
+			t.Fatalf("exit code = %d, want 1", code)
+		}
+		var got moduleResult
+		if err := json.Unmarshal(stdout.Bytes(), &got); err != nil {
+			t.Fatalf("invalid JSON: %v\n%s", err, stdout.String())
+		}
+		want := moduleResult{
+			Module: &client.Module{
+				Path:    "golang.org/x/text",
+				Version: "v0.14.0",
+			},
+			Versions: &client.PaginatedResponse[client.VersionResponse]{
+				Items: []client.VersionResponse{
+					{Version: "v0.14.0"},
+				},
+				Total:         2,
+				NextPageToken: "token1",
+			},
+		}
+		if diff := cmp.Diff(want, got); diff != "" {
+			t.Errorf("mismatch (-want +got):\n%s", diff)
+		}
+	})
+
+	t.Run("module text", func(t *testing.T) {
+		var stdout, stderr bytes.Buffer
+		code := run([]string{"module", "-versions", "-server=" + srv.URL, "golang.org/x/text"}, &stdout, &stderr)
+		if code != 1 {
+			t.Fatalf("exit code = %d, want 1", code)
+		}
+		out := stdout.String()
+		errOut := stderr.String()
+		checkMatch(t, out, "v0.14.0(.|\n)*token: token1")
+		checkMatch(t, errOut, "Warning: hit rate limit")
 	})
 }

@@ -10,6 +10,7 @@ package client
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"iter"
@@ -79,33 +80,72 @@ func Items[T any](startToken string, limit int, fetch func(token string, limit i
 	}
 }
 
-// AllItems fetches all pages (or up to limit) and returns the aggregated items and total.
-func AllItems[T any](startToken string, limit int, fetch func(token string, limit int) (*PaginatedResponse[T], error)) ([]T, int, error) {
-	resp, err := fetch(startToken, limit)
-	if err != nil {
-		return nil, 0, err
+// Is429 returns true if err is an HTTP 429 (Too Many Requests) error.
+func Is429(err error) bool {
+	var aerr *Error
+	if errors.As(err, &aerr) {
+		return aerr.Code == http.StatusTooManyRequests
 	}
-	allItems := resp.Items
-	total := resp.Total
+	return false
+}
 
-	if limit > 0 && len(allItems) >= limit {
-		return allItems[:limit], total, nil
-	}
+// AllItems fetches all pages (or up to limit) and returns the aggregated items, total, next page token (if interrupted), and error.
+func AllItems[T any](startToken string, limit int, fetch func(token string, limit int) (*PaginatedResponse[T], error)) (_ []T, total int, token string, _ error) {
+	token = startToken
+	var allItems []T
 
-	if resp.NextPageToken != "" {
-		rem := 0
+	for {
+		reqLimit := 0
 		if limit > 0 {
-			rem = limit - len(allItems)
-		}
-		for item, err := range Items(resp.NextPageToken, rem, fetch) {
-			if err != nil {
-				// TODO(hyangah): consider to return allItems accumulated so far instead of throwing away.
-				return nil, 0, err
+			reqLimit = limit - len(allItems)
+			if reqLimit <= 0 {
+				return allItems, total, token, nil
 			}
-			allItems = append(allItems, item)
+		}
+
+		resp, err := fetch(token, reqLimit)
+		if err != nil {
+			// No matter what went wrong, return partial results so the
+			// user can continue.
+			return allItems, total, token, err
+		}
+
+		itemsToAppend := resp.Items
+		hitLimit := false
+		if limit > 0 && len(allItems)+len(itemsToAppend) >= limit {
+			allowed := limit - len(allItems)
+			itemsToAppend = itemsToAppend[:allowed]
+			hitLimit = true
+		}
+
+		allItems = append(allItems, itemsToAppend...)
+		total = resp.Total
+
+		if hitLimit {
+			nextToken := resp.NextPageToken
+			if len(resp.Items) > len(itemsToAppend) {
+				if token != startToken {
+					// We dropped items from the current page because we hit
+					// a limit, and we've advanced at least one page since
+					// we started. That means if we restart with this page,
+					// we may get past the limit the next time.
+					// TODO: include the position in the page with the token,
+					// so we can restart exactly where we left off.
+					nextToken = token
+				} else {
+					// The page we started at: we'll never advance, so give up.
+					nextToken = ""
+				}
+			}
+			return allItems, total, nextToken, nil
+		}
+
+		token = resp.NextPageToken
+		if token == "" {
+			break
 		}
 	}
-	return allItems, total, nil
+	return allItems, total, "", nil
 }
 
 func (e *Error) Error() string {
@@ -113,7 +153,7 @@ func (e *Error) Error() string {
 		var b strings.Builder
 		fmt.Fprintf(&b, "%s; specify module path:\n", e.Message)
 		for _, c := range e.Candidates {
-			fmt.Fprintf(&b, "  --module=%s\n", c.ModulePath)
+			fmt.Fprintf(&b, "  -module=%s\n", c.ModulePath)
 		}
 		return b.String()
 	}
@@ -154,14 +194,19 @@ func (c *Client) get(ctx context.Context, url string, dst any) error {
 
 	if resp.StatusCode != http.StatusOK {
 		body, err := io.ReadAll(io.LimitReader(resp.Body, 1024*1024)) // Limit to 1MB
-		if err != nil {
-			return fmt.Errorf("reading error response: %w", err)
+		if err == nil {
+			var aerr Error
+			if json.Unmarshal(body, &aerr) == nil && aerr.Message != "" {
+				aerr.Code = resp.StatusCode
+				return &aerr
+			}
 		}
-		var aerr Error
-		if json.Unmarshal(body, &aerr) == nil && aerr.Message != "" {
-			return &aerr
+		// The body can't be read, but still return an Error
+		// with the information we have.
+		return &Error{
+			Code:    resp.StatusCode,
+			Message: fmt.Sprintf("HTTP %d: %s", resp.StatusCode, http.StatusText(resp.StatusCode)),
 		}
-		return fmt.Errorf("HTTP %d: %s", resp.StatusCode, http.StatusText(resp.StatusCode))
 	}
 	return json.NewDecoder(resp.Body).Decode(dst)
 }

@@ -58,8 +58,16 @@ func runPackage(fs *flag.FlagSet, p *packageFlags, stdout, stderr io.Writer) int
 				},
 			})
 		}
-		items, total, err := client.AllItems("", p.effectiveLimit(), fetch)
+		items, total, nextToken, err := client.AllItems("", p.effectiveLimit(), fetch)
 		if err != nil {
+			if client.Is429(err) {
+				result.Symbols = &client.PaginatedResponse[client.Symbol]{
+					Items:         items,
+					Total:         total,
+					NextPageToken: nextToken,
+				}
+				return printPartialPackageResult(stdout, stderr, result, p.jsonOut)
+			}
 			handleErr(stdout, stderr, err, p.jsonOut)
 			return 1
 		}
@@ -87,8 +95,18 @@ func runPackage(fs *flag.FlagSet, p *packageFlags, stdout, stderr io.Writer) int
 			return &r.ImportedBy, nil
 		}
 
-		items, total, err := client.AllItems("", p.effectiveLimit(), fetch)
+		items, total, nextToken, err := client.AllItems("", p.effectiveLimit(), fetch)
 		if err != nil {
+			if client.Is429(err) {
+				if initialResp == nil {
+					initialResp = &client.PackageImportedBy{}
+				}
+				result.ImportedBy = initialResp
+				result.ImportedBy.ImportedBy.Items = items
+				result.ImportedBy.ImportedBy.Total = total
+				result.ImportedBy.ImportedBy.NextPageToken = nextToken
+				return printPartialPackageResult(stdout, stderr, result, p.jsonOut)
+			}
 			handleErr(stdout, stderr, err, p.jsonOut)
 			return 1
 		}
@@ -130,4 +148,14 @@ func (f *packageFlags) register(fs *flag.FlagSet) {
 	fs.StringVar(&f.module, "module", "", "disambiguate module path")
 	fs.StringVar(&f.goos, "goos", "", "target GOOS")
 	fs.StringVar(&f.goarch, "goarch", "", "target GOARCH")
+}
+
+func printPartialPackageResult(stdout, stderr io.Writer, result packageResult, jsonMode bool) int {
+	if jsonMode {
+		writeJSON(stdout, stderr, result)
+	} else {
+		formatPackage(stdout, result)
+		fmt.Fprintln(stderr, "Warning: hit rate limit (429); results are incomplete.")
+	}
+	return 1
 }
