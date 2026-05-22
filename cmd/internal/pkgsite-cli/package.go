@@ -58,7 +58,7 @@ func runPackage(fs *flag.FlagSet, p *packageFlags, stdout, stderr io.Writer) int
 				},
 			})
 		}
-		items, total, nextToken, err := client.AllItems("", p.effectiveLimit(), fetch)
+		items, total, nextToken, err := client.AllItems(p.symbolToken, p.effectiveLimit(), fetch)
 		if err != nil {
 			if client.Is429(err) {
 				result.Symbols = &client.PaginatedResponse[client.Symbol]{
@@ -95,7 +95,7 @@ func runPackage(fs *flag.FlagSet, p *packageFlags, stdout, stderr io.Writer) int
 			return &r.ImportedBy, nil
 		}
 
-		items, total, nextToken, err := client.AllItems("", p.effectiveLimit(), fetch)
+		items, total, nextToken, err := client.AllItems(p.importedByToken, p.effectiveLimit(), fetch)
 		if err != nil {
 			if client.Is429(err) {
 				if initialResp == nil {
@@ -126,15 +126,17 @@ func runPackage(fs *flag.FlagSet, p *packageFlags, stdout, stderr io.Writer) int
 // packageFlags are flags for the package subcommand.
 type packageFlags struct {
 	commonFlags
-	doc        string
-	examples   bool
-	imports    bool
-	importedBy bool
-	symbols    bool
-	licenses   bool
-	module     string
-	goos       string
-	goarch     string
+	doc             string
+	examples        bool
+	imports         bool
+	importedBy      bool
+	symbols         bool
+	licenses        bool
+	module          string
+	goos            string
+	goarch          string
+	symbolToken     string
+	importedByToken string
 }
 
 func (f *packageFlags) register(fs *flag.FlagSet) {
@@ -148,6 +150,8 @@ func (f *packageFlags) register(fs *flag.FlagSet) {
 	fs.StringVar(&f.module, "module", "", "disambiguate module path")
 	fs.StringVar(&f.goos, "goos", "", "target GOOS")
 	fs.StringVar(&f.goarch, "goarch", "", "target GOARCH")
+	fs.StringVar(&f.symbolToken, "symbol-token", "", "page token for symbols pagination")
+	fs.StringVar(&f.importedByToken, "imported-by-token", "", "page token for imported-by pagination")
 }
 
 func printPartialPackageResult(stdout, stderr io.Writer, result packageResult, jsonMode bool) int {

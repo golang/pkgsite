@@ -80,7 +80,7 @@ func formatPackage(w io.Writer, r packageResult) {
 		if t := r.Symbols.NextPageToken; t != "" {
 			fmt.Fprintf(w, "  next page token: %s\n", t)
 		}
-		formatPaginationHint(w, len(r.Symbols.Items), r.Symbols.Total)
+		formatPaginationHint(w, len(r.Symbols.Items), r.Symbols.Total, "symbol-token")
 	}
 
 	if r.ImportedBy != nil {
@@ -94,7 +94,7 @@ func formatPackage(w io.Writer, r packageResult) {
 			if t := ib.NextPageToken; t != "" {
 				fmt.Fprintf(w, "  next page token: %s\n", t)
 			}
-			formatPaginationHint(w, len(ib.Items), ib.Total)
+			formatPaginationHint(w, len(ib.Items), ib.Total, "imported-by-token")
 		}
 	}
 }
@@ -133,7 +133,7 @@ func formatModule(w io.Writer, r moduleResult) {
 		if t := r.Versions.NextPageToken; t != "" {
 			fmt.Fprintf(w, "  next page token: %s\n", t)
 		}
-		formatPaginationHint(w, len(r.Versions.Items), r.Versions.Total)
+		formatPaginationHint(w, len(r.Versions.Items), r.Versions.Total, "versions-token")
 	}
 
 	if r.Vulns != nil && len(r.Vulns.Items) > 0 {
@@ -153,7 +153,7 @@ func formatModule(w io.Writer, r moduleResult) {
 		if t := r.Vulns.NextPageToken; t != "" {
 			fmt.Fprintf(w, "  next page token: %s\n", t)
 		}
-		formatPaginationHint(w, len(r.Vulns.Items), r.Vulns.Total)
+		formatPaginationHint(w, len(r.Vulns.Items), r.Vulns.Total, "vulns-token")
 	}
 
 	if r.Packages != nil && len(r.Packages.Items) > 0 {
@@ -169,7 +169,7 @@ func formatModule(w io.Writer, r moduleResult) {
 		if t := r.Packages.NextPageToken; t != "" {
 			fmt.Fprintf(w, "  next page token: %s\n", t)
 		}
-		formatPaginationHint(w, len(r.Packages.Items), r.Packages.Total)
+		formatPaginationHint(w, len(r.Packages.Items), r.Packages.Total, "packages-token")
 	}
 }
 
@@ -181,10 +181,8 @@ func formatSearch(w io.Writer, r *client.PaginatedResponse[client.SearchResult])
 	for _, sr := range r.Items {
 		formatSearchResult(w, sr)
 	}
-	if t := r.NextPageToken; t != "" {
-		fmt.Fprintf(w, "  next page token: %s\n", t)
-	}
-	formatPaginationHint(w, len(r.Items), r.Total)
+	// Don't display the page token: search doesn't use one.
+	formatPaginationHint(w, len(r.Items), r.Total, "")
 }
 
 func formatSearchResult(w io.Writer, sr client.SearchResult) {
@@ -203,9 +201,13 @@ func formatLicenses(w io.Writer, licenses []client.License) {
 	}
 }
 
-func formatPaginationHint(w io.Writer, shown, total int) {
+func formatPaginationHint(w io.Writer, shown, total int, flagName string) {
 	if total > shown {
-		fmt.Fprintf(w, "  Showing %d of %d. Use -token NEXT_PAGE_TOKEN and/or -limit N to see more.\n", shown, total)
+		fmt.Fprintf(w, "  Showing %d of %d.", shown, total)
+		if flagName != "" {
+			fmt.Fprintf(w, " Use -%s NEXT_PAGE_TOKEN and/or -limit N to see more.", flagName)
+		}
+		fmt.Fprintln(w)
 	}
 }
 

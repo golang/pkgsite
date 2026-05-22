@@ -602,7 +602,7 @@ func TestRun429(t *testing.T) {
 		}
 		out := stdout.String()
 		errOut := stderr.String()
-		checkMatch(t, out, "pkg1(.|\n)*token: token1")
+		checkMatch(t, out, "pkg1(.|\n)*")
 		checkMatch(t, errOut, "Warning: hit rate limit")
 	})
 
@@ -644,5 +644,234 @@ func TestRun429(t *testing.T) {
 		errOut := stderr.String()
 		checkMatch(t, out, "v0.14.0(.|\n)*token: token1")
 		checkMatch(t, errOut, "Warning: hit rate limit")
+	})
+}
+
+func TestRunPackagePagination(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if strings.HasPrefix(r.URL.Path, "/v1beta/package/") {
+			json.NewEncoder(w).Encode(client.Package{
+				PackageInfo: client.PackageInfo{
+					Path: "encoding/json",
+				},
+				ModulePath: "std",
+			})
+		} else if strings.HasPrefix(r.URL.Path, "/v1beta/symbols/") {
+			token := r.URL.Query().Get("token")
+			if token == "start-token" {
+				json.NewEncoder(w).Encode(client.PackageSymbols{
+					Symbols: client.PaginatedResponse[client.Symbol]{
+						Items: []client.Symbol{
+							{Name: "SymFromToken", Kind: "func"},
+						},
+						Total: 1,
+					},
+				})
+			} else {
+				http.Error(w, "missing or invalid token", http.StatusBadRequest)
+			}
+		} else if strings.HasPrefix(r.URL.Path, "/v1beta/imported-by/") {
+			token := r.URL.Query().Get("token")
+			if token == "ib-start-token" {
+				json.NewEncoder(w).Encode(client.PackageImportedBy{
+					ImportedBy: client.PaginatedResponse[string]{
+						Items: []string{"pkgFromToken"},
+						Total: 1,
+					},
+				})
+			} else {
+				http.Error(w, "missing or invalid token", http.StatusBadRequest)
+			}
+		}
+	}))
+	defer srv.Close()
+
+	t.Run("symbol-token", func(t *testing.T) {
+		var stdout, stderr bytes.Buffer
+		code := run([]string{"package", "-symbols", "-symbol-token=start-token", "-json", "-server=" + srv.URL, "encoding/json"}, &stdout, &stderr)
+		if code != 0 {
+			t.Fatalf("exit code = %d, stderr = %s", code, stderr.String())
+		}
+		var got packageResult
+		if err := json.Unmarshal(stdout.Bytes(), &got); err != nil {
+			t.Fatalf("invalid JSON: %v\n%s", err, stdout.String())
+		}
+		want := packageResult{
+			Package: &client.Package{
+				PackageInfo: client.PackageInfo{
+					Path: "encoding/json",
+				},
+				ModulePath: "std",
+			},
+			Symbols: &client.PaginatedResponse[client.Symbol]{
+				Items: []client.Symbol{
+					{Name: "SymFromToken", Kind: "func"},
+				},
+				Total: 1,
+			},
+		}
+		if diff := cmp.Diff(want, got); diff != "" {
+			t.Errorf("mismatch (-want +got):\n%s", diff)
+		}
+	})
+
+	t.Run("imported-by-token", func(t *testing.T) {
+		var stdout, stderr bytes.Buffer
+		code := run([]string{"package", "-imported-by", "-imported-by-token=ib-start-token", "-json", "-server=" + srv.URL, "encoding/json"}, &stdout, &stderr)
+		if code != 0 {
+			t.Fatalf("exit code = %d, stderr = %s", code, stderr.String())
+		}
+		var got packageResult
+		if err := json.Unmarshal(stdout.Bytes(), &got); err != nil {
+			t.Fatalf("invalid JSON: %v\n%s", err, stdout.String())
+		}
+		want := packageResult{
+			Package: &client.Package{
+				PackageInfo: client.PackageInfo{
+					Path: "encoding/json",
+				},
+				ModulePath: "std",
+			},
+			ImportedBy: &client.PackageImportedBy{
+				ImportedBy: client.PaginatedResponse[string]{
+					Items: []string{"pkgFromToken"},
+					Total: 1,
+				},
+			},
+		}
+		if diff := cmp.Diff(want, got); diff != "" {
+			t.Errorf("mismatch (-want +got):\n%s", diff)
+		}
+	})
+}
+
+func TestRunModulePagination(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if strings.HasPrefix(r.URL.Path, "/v1beta/module/") {
+			json.NewEncoder(w).Encode(client.Module{
+				Path:    "golang.org/x/text",
+				Version: "v0.14.0",
+			})
+		} else if strings.HasPrefix(r.URL.Path, "/v1beta/versions/") {
+			token := r.URL.Query().Get("token")
+			if token == "ver-start-token" {
+				json.NewEncoder(w).Encode(client.PaginatedResponse[client.VersionResponse]{
+					Items: []client.VersionResponse{
+						{Version: "v0.14.0"},
+					},
+					Total: 1,
+				})
+			} else {
+				http.Error(w, "missing or invalid token", http.StatusBadRequest)
+			}
+		} else if strings.HasPrefix(r.URL.Path, "/v1beta/vulns/") {
+			token := r.URL.Query().Get("token")
+			if token == "vuln-start-token" {
+				json.NewEncoder(w).Encode(client.PaginatedResponse[client.Vulnerability]{
+					Items: []client.Vulnerability{
+						{ID: "GO-2023-0001"},
+					},
+					Total: 1,
+				})
+			} else {
+				http.Error(w, "missing or invalid token", http.StatusBadRequest)
+			}
+		} else if strings.HasPrefix(r.URL.Path, "/v1beta/packages/") {
+			token := r.URL.Query().Get("token")
+			if token == "pkg-start-token" {
+				json.NewEncoder(w).Encode(map[string]any{
+					"packages": map[string]any{
+						"items": []map[string]any{
+							{"path": "golang.org/x/text/language"},
+						},
+						"total": 1,
+					},
+				})
+			} else {
+				http.Error(w, "missing or invalid token", http.StatusBadRequest)
+			}
+		}
+	}))
+	defer srv.Close()
+
+	t.Run("versions-token", func(t *testing.T) {
+		var stdout, stderr bytes.Buffer
+		code := run([]string{"module", "-versions", "-versions-token=ver-start-token", "-json", "-server=" + srv.URL, "golang.org/x/text"}, &stdout, &stderr)
+		if code != 0 {
+			t.Fatalf("exit code = %d, stderr = %s", code, stderr.String())
+		}
+		var got moduleResult
+		if err := json.Unmarshal(stdout.Bytes(), &got); err != nil {
+			t.Fatalf("invalid JSON: %v\n%s", err, stdout.String())
+		}
+		want := moduleResult{
+			Module: &client.Module{
+				Path:    "golang.org/x/text",
+				Version: "v0.14.0",
+			},
+			Versions: &client.PaginatedResponse[client.VersionResponse]{
+				Items: []client.VersionResponse{
+					{Version: "v0.14.0"},
+				},
+				Total: 1,
+			},
+		}
+		if diff := cmp.Diff(want, got); diff != "" {
+			t.Errorf("mismatch (-want +got):\n%s", diff)
+		}
+	})
+
+	t.Run("vulns-token", func(t *testing.T) {
+		var stdout, stderr bytes.Buffer
+		code := run([]string{"module", "-vulns", "-vulns-token=vuln-start-token", "-json", "-server=" + srv.URL, "golang.org/x/text"}, &stdout, &stderr)
+		if code != 0 {
+			t.Fatalf("exit code = %d, stderr = %s", code, stderr.String())
+		}
+		var got moduleResult
+		if err := json.Unmarshal(stdout.Bytes(), &got); err != nil {
+			t.Fatalf("invalid JSON: %v\n%s", err, stdout.String())
+		}
+		want := moduleResult{
+			Module: &client.Module{
+				Path:    "golang.org/x/text",
+				Version: "v0.14.0",
+			},
+			Vulns: &client.PaginatedResponse[client.Vulnerability]{
+				Items: []client.Vulnerability{
+					{ID: "GO-2023-0001"},
+				},
+				Total: 1,
+			},
+		}
+		if diff := cmp.Diff(want, got); diff != "" {
+			t.Errorf("mismatch (-want +got):\n%s", diff)
+		}
+	})
+
+	t.Run("packages-token", func(t *testing.T) {
+		var stdout, stderr bytes.Buffer
+		code := run([]string{"module", "-packages", "-packages-token=pkg-start-token", "-json", "-server=" + srv.URL, "golang.org/x/text"}, &stdout, &stderr)
+		if code != 0 {
+			t.Fatalf("exit code = %d, stderr = %s", code, stderr.String())
+		}
+		var got moduleResult
+		if err := json.Unmarshal(stdout.Bytes(), &got); err != nil {
+			t.Fatalf("invalid JSON: %v\n%s", err, stdout.String())
+		}
+		want := moduleResult{
+			Module: &client.Module{
+				Path:    "golang.org/x/text",
+				Version: "v0.14.0",
+			},
+			Packages: &client.PaginatedResponse[client.ModulePackageResponse]{
+				Items: []client.ModulePackageResponse{
+					{Path: "golang.org/x/text/language"},
+				},
+				Total: 1,
+			},
+		}
+		if diff := cmp.Diff(want, got); diff != "" {
+			t.Errorf("mismatch (-want +got):\n%s", diff)
+		}
 	})
 }

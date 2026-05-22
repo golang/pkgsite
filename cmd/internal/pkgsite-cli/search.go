@@ -47,7 +47,7 @@ func runSearch(fs *flag.FlagSet, s *searchFlags, stdout, stderr io.Writer) int {
 
 	targetLimit := s.effectiveLimit()
 
-	items, total, nextToken, err := client.AllItems("", targetLimit, fetch)
+	items, total, nextToken, err := client.AllItems(s.token, targetLimit, fetch)
 	if err != nil {
 		if client.Is429(err) {
 			results = &client.PaginatedResponse[client.SearchResult]{
@@ -82,9 +82,11 @@ func runSearch(fs *flag.FlagSet, s *searchFlags, stdout, stderr io.Writer) int {
 type searchFlags struct {
 	commonFlags
 	symbol string
+	token  string
 }
 
 func (f *searchFlags) register(fs *flag.FlagSet) {
 	f.commonFlags.register(fs)
 	fs.StringVar(&f.symbol, "symbol", "", "search for a symbol")
+	fs.StringVar(&f.token, "token", "", "page token for pagination")
 }

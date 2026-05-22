@@ -60,7 +60,7 @@ func runModule(fs *flag.FlagSet, m *moduleFlags, stdout, stderr io.Writer) int {
 				})
 			}
 			// Pass limit to AllItems to stop fetching when limit is reached.
-			items, total, nextToken, err := client.AllItems("", m.effectiveLimit(), fetch)
+			items, total, nextToken, err := client.AllItems(m.versionsToken, m.effectiveLimit(), fetch)
 			if err != nil {
 				if client.Is429(err) {
 					vers = &client.PaginatedResponse[client.VersionResponse]{
@@ -88,7 +88,7 @@ func runModule(fs *flag.FlagSet, m *moduleFlags, stdout, stderr io.Writer) int {
 				})
 			}
 			// Pass limit to AllItems to stop fetching when limit is reached.
-			items, total, nextToken, err := client.AllItems("", m.effectiveLimit(), fetch)
+			items, total, nextToken, err := client.AllItems(m.vulnsToken, m.effectiveLimit(), fetch)
 			if err != nil {
 				if client.Is429(err) {
 					vulns = &client.PaginatedResponse[client.Vulnerability]{
@@ -116,7 +116,7 @@ func runModule(fs *flag.FlagSet, m *moduleFlags, stdout, stderr io.Writer) int {
 				})
 			}
 			// Pass limit to AllItems to stop fetching when limit is reached.
-			items, total, nextToken, err := client.AllItems("", m.effectiveLimit(), fetch)
+			items, total, nextToken, err := client.AllItems(m.packagesToken, m.effectiveLimit(), fetch)
 			if err != nil {
 				if client.Is429(err) {
 					pkgs = &client.PaginatedResponse[client.ModulePackageResponse]{
@@ -160,11 +160,14 @@ func runModule(fs *flag.FlagSet, m *moduleFlags, stdout, stderr io.Writer) int {
 // moduleFlags are flags for the module subcommand.
 type moduleFlags struct {
 	commonFlags
-	readme   bool
-	licenses bool
-	versions bool
-	vulns    bool
-	packages bool
+	readme        bool
+	licenses      bool
+	versions      bool
+	vulns         bool
+	packages      bool
+	versionsToken string
+	vulnsToken    string
+	packagesToken string
 }
 
 func (f *moduleFlags) register(fs *flag.FlagSet) {
@@ -174,6 +177,9 @@ func (f *moduleFlags) register(fs *flag.FlagSet) {
 	fs.BoolVar(&f.versions, "versions", false, "list versions")
 	fs.BoolVar(&f.vulns, "vulns", false, "list vulnerabilities")
 	fs.BoolVar(&f.packages, "packages", false, "list packages")
+	fs.StringVar(&f.versionsToken, "versions-token", "", "page token for versions pagination")
+	fs.StringVar(&f.vulnsToken, "vulns-token", "", "page token for vulns pagination")
+	fs.StringVar(&f.packagesToken, "packages-token", "", "page token for packages pagination")
 }
 
 func printPartialModuleResult(stdout, stderr io.Writer, result moduleResult, jsonMode bool) int {
