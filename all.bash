@@ -257,6 +257,8 @@ Available subcommands:
   unparam        - (lint) run unparam on source files
   prettier       - (lint, nonstandard) run prettier on .js and .css files.
   templates      - (lint, nonstandard) run go-template-lint on templates
+  vet            - (lint) run vet on source files
+
 EOUSAGE
 }
 
@@ -358,6 +360,7 @@ main() {
       ;;
     templates) check_templates ;;
     unparam) check_unparam ;;
+    vet) check_vet ;;
     script_hashes) check_script_hashes ;;
     build_static) run_build_static ;;
     npm) run_npm ${@:2} ;;
