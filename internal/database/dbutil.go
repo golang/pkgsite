@@ -52,7 +52,8 @@ func (m MultiErr) Error() string {
 			sep = "|"
 		}
 		if err != nil {
-			sb.WriteString(sep + err.Error())
+			sb.WriteString(sep)
+			sb.WriteString(err.Error())
 		}
 	}
 	return sb.String()

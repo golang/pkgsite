@@ -21,7 +21,7 @@ import (
 // For use in tests only: not concurrency-safe.
 var QueryLoggingDisabled bool
 
-var queryCounter int64 // atomic: per-process counter for unique query IDs
+var queryCounter atomic.Int64 // atomic: per-process counter for unique query IDs
 
 type queryEndLogEntry struct {
 	ID              string
@@ -144,6 +144,6 @@ func generateLoggingID(instanceID string) string {
 		// something unique.
 		instanceID = instanceID[len(instanceID)-4:]
 	}
-	n := atomic.AddInt64(&queryCounter, 1)
+	n := queryCounter.Add(1)
 	return fmt.Sprintf("%s-%d", instanceID, n)
 }

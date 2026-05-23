@@ -386,24 +386,24 @@ func TestHelpDocumentationSync(t *testing.T) {
 	}
 
 	t.Run("package", func(t *testing.T) {
-		checkFields(t, reflect.TypeOf(packageResult{}), pkgCmd.description)
-		checkFields(t, reflect.TypeOf(client.Package{}), pkgCmd.description)
+		checkFields(t, reflect.TypeFor[packageResult](), pkgCmd.description)
+		checkFields(t, reflect.TypeFor[client.Package](), pkgCmd.description)
 	})
 
 	t.Run("module", func(t *testing.T) {
-		checkFields(t, reflect.TypeOf(moduleResult{}), modCmd.description)
-		checkFields(t, reflect.TypeOf(client.Module{}), modCmd.description)
+		checkFields(t, reflect.TypeFor[moduleResult](), modCmd.description)
+		checkFields(t, reflect.TypeFor[client.Module](), modCmd.description)
 	})
 
 	t.Run("search", func(t *testing.T) {
-		checkFields(t, reflect.TypeOf(client.PaginatedResponse[client.SearchResult]{}), searchCmd.description)
-		checkFields(t, reflect.TypeOf(client.SearchResult{}), searchCmd.description)
+		checkFields(t, reflect.TypeFor[client.PaginatedResponse[client.SearchResult]](), searchCmd.description)
+		checkFields(t, reflect.TypeFor[client.SearchResult](), searchCmd.description)
 	})
 }
 
 func checkFields(t *testing.T, typ reflect.Type, doc string) {
 	t.Helper()
-	if typ.Kind() == reflect.Ptr {
+	if typ.Kind() == reflect.Pointer {
 		typ = typ.Elem()
 	}
 	for i := 0; i < typ.NumField(); i++ {

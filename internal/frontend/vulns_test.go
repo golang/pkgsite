@@ -7,6 +7,7 @@ package frontend
 import (
 	"context"
 	"net/url"
+	"slices"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -65,10 +66,8 @@ func TestNewVulnPage(t *testing.T) {
 	}
 
 	// testEntries is already sorted by ID, but it should be reversed.
-	var wantEntries []*osv.Entry
-	for i := len(testEntries) - 1; i >= 0; i-- {
-		wantEntries = append(wantEntries, testEntries[i])
-	}
+	wantEntries := slices.Clone(testEntries)
+	slices.Reverse(wantEntries)
 
 	tcs := []struct {
 		name string
