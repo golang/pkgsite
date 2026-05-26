@@ -8,6 +8,7 @@
   <style>
     .go-Content {
       max-width: 95rem;
+      ul, dl dt, dd { all: revert }
     }
     .Api-list {
       list-style: none;
@@ -144,9 +145,8 @@
 
       <p>Some routes accept a <code>filter</code>.
       Only items that match the filter are returned.
-      The filter language is a subset of Go. The filter
-      must be an expression that returns a boolean value.
-      Filters support the following:
+      The filter must be a Go expression that returns a boolean value.
+      Filters support the following subset of Go:
       <ul>
       <li> The values <code>true</code>, <code>false</code> and <code>nil</code>.
       <li> <code>==</code> and <code>!=</code> on any value.
