@@ -132,13 +132,19 @@ func (g *localGoRepo) clone(ctx context.Context, v, directory string) (hash stri
 type testGoRepo struct {
 }
 
+func testGitCommand(ctx context.Context, dir string, args ...string) *exec.Cmd {
+	cmd := exec.CommandContext(ctx, "git", args...)
+	cmd.Dir = dir
+	cmd.Env = append(cmd.Environ(), "GIT_CONFIG_GLOBAL="+os.DevNull, "GIT_CONFIG_NOSYSTEM=1")
+	return cmd
+}
+
 func (t *testGoRepo) clone(ctx context.Context, v, directory string) (hash string, err error) {
 	defer derrors.Wrap(&err, "testGoRepo.clone(%q)", v)
 	if v == TestMasterVersion {
 		v = version.Master
 	}
-	cmd := exec.CommandContext(ctx, "git", "init")
-	cmd.Dir = directory
+	cmd := testGitCommand(ctx, directory, "init")
 	if err := cmd.Run(); err != nil {
 		return "", err
 	}
@@ -161,8 +167,7 @@ func (t *testGoRepo) clone(ctx context.Context, v, directory string) (hash strin
 			return fmt.Errorf("reading %q: %v", path, err)
 		}
 		os.WriteFile(dstpath, b, 0666)
-		cmd := exec.CommandContext(ctx, "git", "add", "--", dstpath)
-		cmd.Dir = directory
+		cmd := testGitCommand(ctx, directory, "add", "--", dstpath)
 		if err := cmd.Run(); err != nil {
 			return fmt.Errorf("running git add: %v", err)
 		}
@@ -171,9 +176,8 @@ func (t *testGoRepo) clone(ctx context.Context, v, directory string) (hash strin
 	if err != nil {
 		return "", err
 	}
-	cmd = exec.CommandContext(ctx, "git", "commit", "--allow-empty-message", "--author=Joe Random <joe@example.com>",
+	cmd = testGitCommand(ctx, directory, "commit", "--allow-empty-message", "--author=Joe Random <joe@example.com>",
 		"--message=")
-	cmd.Dir = directory
 	commitTime := fmt.Sprintf("%v +0000", TestCommitTime.Unix())
 	name := "Joe Random"
 	email := "joe@example.com"
@@ -187,8 +191,7 @@ func (t *testGoRepo) clone(ctx context.Context, v, directory string) (hash strin
 		}
 		return "", fmt.Errorf("running git commit: %v", err)
 	}
-	cmd = exec.CommandContext(ctx, "git", "rev-parse", "HEAD")
-	cmd.Dir = directory
+	cmd = testGitCommand(ctx, directory, "rev-parse", "HEAD")
 	b, err := cmd.Output()
 	if err != nil {
 		if ee, ok := err.(*exec.ExitError); ok {
