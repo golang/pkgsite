@@ -308,7 +308,7 @@
             "description": "Successful response"
           }
         },
-        "summary": "Search results. Only results that match the filter query parameter are returned."
+        "summary": "Search results. Only results that match the filter query parameter are returned.\nResults are sorted by how well the match the query, with the best match first."
       }
     },
     "/symbols/{path}": {

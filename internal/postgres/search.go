@@ -149,10 +149,6 @@ func (db *DB) Search(ctx context.Context, q string, opts SearchOptions) (_ []*Se
 	return db.search(ctx, q, opts, opts.MaxResults)
 }
 
-// GroupSearchResults determines whether to group the results of a search.
-// It is exported for testing and experimentation.
-var GroupSearchResults = true
-
 func (db *DB) search(ctx context.Context, q string, opts SearchOptions, limit int) (_ []*SearchResult, err error) {
 	defer derrors.WrapStack(&err, "search(limit=%d)", limit)
 
@@ -173,7 +169,7 @@ func (db *DB) search(ctx context.Context, q string, opts SearchOptions, limit in
 			results = append(results, r)
 		}
 	}
-	if GroupSearchResults && !opts.SearchSymbols {
+	if opts.GroupResults && !opts.SearchSymbols {
 		results = groupSearchResults(results)
 	}
 	if len(results) > opts.MaxResults {

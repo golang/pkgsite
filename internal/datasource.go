@@ -26,6 +26,12 @@ type SearchOptions struct {
 
 	// SymbolFilter is the word in a search query with a # prefix.
 	SymbolFilter string
+
+	// GroupResults groups search results in two ways: packages in the same
+	// module with lower scores are collected in [SearchResult.SameModule],
+	// and modules with different major versions are counted in [SearchResult.OtherMajor]
+	// but not kept.
+	GroupResults bool
 }
 
 // SearchResult represents a single search result from SearchDocuments.

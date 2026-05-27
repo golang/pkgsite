@@ -250,6 +250,7 @@ func fetchSearchPage(ctx context.Context, ds internal.DataSource, cq, symbol str
 		MaxResultCount: maxResultCount,
 		SearchSymbols:  searchSymbols,
 		SymbolFilter:   symbol,
+		GroupResults:   true,
 	})
 	if err != nil {
 		return nil, err

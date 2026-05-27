@@ -942,6 +942,9 @@ func testServeModulePackages(t *testing.T, ds internal.TestingDataSource) {
 func testServeSearch(t *testing.T, ds internal.TestingDataSource) {
 	ds.MustInsertModule(t, module(t, modinfo("example.com", "v1.0.0"),
 		unit("pkg", sample.Documentation("linux", "amd64", sample.DocContents))))
+	ds.MustInsertModule(t, module(t, modinfo("example.com/z", "v1.0.0"),
+		unit("pkg", sample.Documentation("linux", "amd64", sample.DocContents)),
+		unit("pkg2", sample.Documentation("linux", "amd64", sample.DocContents))))
 
 	for _, test := range []struct {
 		name       string
@@ -953,7 +956,11 @@ func testServeSearch(t *testing.T, ds internal.TestingDataSource) {
 			name:       "basic search",
 			url:        "/v1beta/search?q=synopsis",
 			wantStatus: http.StatusOK,
-			wantCount:  1,
+			// All packages match, because sample.Documentation creates a synopsis beginning
+			// "This is a package synopsis...".
+			// There is no grouping, so all packages are part of the list.
+			// See https://go.dev/issues/79697 for more on grouping.
+			wantCount: 3,
 		},
 		{
 			name:       "no results",
@@ -969,9 +976,9 @@ func testServeSearch(t *testing.T, ds internal.TestingDataSource) {
 		{
 			name: "search with filter",
 			url: "/v1beta/search?q=synopsis&filter=" +
-				url.QueryEscape(`contains(modulePath, "example.com")`),
+				url.QueryEscape(`contains(modulePath, "z")`),
 			wantStatus: http.StatusOK,
-			wantCount:  1,
+			wantCount:  2,
 		},
 		{
 			name:       "search with non-matching filter",

@@ -260,7 +260,7 @@ func (s *Server) Install(handle func(string, http.Handler), cacher Cacher, authV
 	}))
 	handle("/v1beta/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		api.ServeError(w, r, api.BadRequest("unknown API endpoint",
-			"GET /v1/api at this host and port and read the documentation"))
+			"GET /v1beta/api at this host and port and read the documentation"))
 	}))
 	handle("GET /v1beta/openapi.yaml", s.openAPISpecHandler())
 	handle("/opensearch.xml", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

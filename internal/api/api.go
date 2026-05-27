@@ -330,6 +330,7 @@ func ServeModulePackages(w http.ResponseWriter, r *http.Request, ds internal.Dat
 // ServeSearch handles requests for the v1 search endpoint.
 // api:route /v1beta/search
 // api:desc Search results. Only results that match the filter query parameter are returned.
+// api:desc Results are sorted by how well the match the query, with the best match first.
 // api:example /v1beta/search?q=xyzzy
 func ServeSearch(w http.ResponseWriter, r *http.Request, ds internal.DataSource) (err error) {
 	defer derrors.Wrap(&err, "ServeSearch")
@@ -361,10 +362,15 @@ func ServeSearch(w http.ResponseWriter, r *http.Request, ds internal.DataSource)
 		MaxResultCount: maxSearchResults,
 		SearchSymbols:  params.Symbol != "",
 		SymbolFilter:   params.Symbol,
+		// Don't group search results: packages in the same module and
+		// in modules with different major versions will all appear in
+		// the same flat list, sorted by score.
+		GroupResults: false,
 	})
 	if err != nil {
 		return err
 	}
+
 	var results []SearchResult
 	for _, r := range dbresults {
 		results = append(results, SearchResult{

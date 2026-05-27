@@ -49,7 +49,11 @@ func BenchmarkSearch(b *testing.B) {
 		for _, query := range testQueries {
 			b.Run(name+":"+query, func(b *testing.B) {
 				for i := 0; i < b.N; i++ {
-					if _, err := search(ctx, query, SearchOptions{MaxResults: 10, MaxResultCount: 100}); err != nil {
+					if _, err := search(ctx, query, SearchOptions{
+						MaxResults:     10,
+						MaxResultCount: 100,
+						GroupResults:   true,
+					}); err != nil {
 						b.Fatal(err)
 					}
 				}
