@@ -143,32 +143,47 @@
       typically <code>linux/amd64</code>.
       </p>
 
-      <p>Some routes accept a <code>filter</code>.
+      <h3>Filters</h3>
+      <p>Some routes accept a <code>filter</code> query parameter.
       Only items that match the filter are returned.
       The filter must be a Go expression that returns a boolean value.
       Filters support the following subset of Go:
+      </p>
       <ul>
-      <li> The values <code>true</code>, <code>false</code> and <code>nil</code>.
-      <li> <code>==</code> and <code>!=</code> on any value.
-      <li> <code>+</code>, <code>-</code>,<code>*</code>,
-           <code>/</code> and <code>%</code> on integers.
-      <li><code>+</code> on strings.
-      <li><code>&lt;</code>, <code>&lt;=</code>, <code>&gt;</code> and <code>&gt;=</code>
-           on strings and integers.
-      <li> The following functions:
-           <dl>
-             <dt><code>contains(s, sub)</code></dt>
-             <dd>String <code>s</code> contains substring <code>sub</code>.</dd>
-             <dt><code>hasPrefix(s, pre)</code></dt>
-             <dd>String <code>s</code> has the prefix <code>pre</code>.</dd>
-             <dt><code>hasSuffix(s, suf)</code></dt>
-             <dd>String <code>s</code> has the suffix <code>suf</code>.</dd>
-             <dt><code>matches(s, re)</code></dt>
-             <dd>String <code>s</code> matches the regular expression <code>re</code>.</dd>
-            </dl>
+        <li> The values <code>true</code>, <code>false</code> and <code>nil</code>.
+        <li> <code>==</code> and <code>!=</code> on any value.
+        <li> <code>+</code>, <code>-</code>,<code>*</code>,
+             <code>/</code> and <code>%</code> on integers.
+        <li><code>+</code> on strings.
+        <li><code>&lt;</code>, <code>&lt;=</code>, <code>&gt;</code> and <code>&gt;=</code>
+             on strings and integers.
+        <li> Parenthesized expressions.
       </ul>
+      <p>The following functions are also defined:</p>
+      <dl>
+        <dt><code>contains(s, sub)</code></dt>
+        <dd>String <code>s</code> contains substring <code>sub</code>.</dd>
+        <dt><code>hasPrefix(s, pre)</code></dt>
+        <dd>String <code>s</code> has the prefix <code>pre</code>.</dd>
+        <dt><code>hasSuffix(s, suf)</code></dt>
+        <dd>String <code>s</code> has the suffix <code>suf</code>.</dd>
+        <dt><code>matches(s, re)</code></dt>
+        <dd>String <code>s</code> matches the regular expression <code>re</code>.</dd>
+      </dl>
+      <p>
       In addition, each route adds its own variables for the list items being filtered.
       In general, each JSON field is a variable.
+      </p>
+      <p>
+      Some examples of filters:
+      <ul>
+      <li>To list only the main packages in a module, use the <code>packages</code> route with the filter
+      <code>name == "main"</code>.
+      <li>To list only symbols that are types, use the <code>symbols</code> route with the filter
+      <code>kind == "Type"</code>.
+      <li>To list only module versions for major version v2, use the <code>versions</code> route with the filter
+      <code>hasPrefix(version, "v2.")</code>.
+      </ul>
       </p>
       <p>
       Most filters will need to be

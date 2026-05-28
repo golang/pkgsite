@@ -197,11 +197,10 @@ func ServeModule(w http.ResponseWriter, r *http.Request, ds internal.DataSource)
 
 // ServeModuleVersions handles requests for the v1beta module versions endpoint.
 // api:route /v1beta/versions/{path}
-// api:desc Versions of the module at {path}.
-// api:desc The versions are returned in descending semantic version order,
-// api:desc with compatible versions listed first, followed by incompatible versions.
+// api:desc All versions of the module at {path}, including all major versions.
+// api:desc Versions are listed in descending order, with incompatible versions last.
 // api:desc Only tagged versions are returned, unless the pseudo query parameter is true.
-// api:desc Only results that match the filter query parameter are returned.
+// api:desc In addition, only results that match the filter query parameter are returned.
 // api:desc The total in the response is -1 to indicate that the total number of results is unknown,
 // api:desc unless all results fit on a single page.
 // api:example /v1beta/versions/golang.org/x/time?limit=3

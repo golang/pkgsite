@@ -110,7 +110,8 @@ type PackageSymbols struct {
 
 // Symbol is a symbol in a package.
 type Symbol struct {
-	Name     string `json:"name"`
+	Name string `json:"name"`
+	// Kind is one of "Constant", "Variable", "Function", "Type", "Field", or "Method".
 	Kind     string `json:"kind"`
 	Synopsis string `json:"synopsis"`
 	Parent   string `json:"parent,omitempty"`

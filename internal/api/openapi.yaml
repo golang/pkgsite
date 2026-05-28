@@ -549,7 +549,7 @@
     },
     "/versions/{path}": {
       "get": {
-        "description": "Versions of the module at {path}.\nThe versions are returned in descending semantic version order,\nwith compatible versions listed first, followed by incompatible versions.\nOnly tagged versions are returned, unless the pseudo query parameter is true.\nOnly results that match the filter query parameter are returned.\nThe total in the response is -1 to indicate that the total number of results is unknown,\nunless all results fit on a single page.",
+        "description": "All versions of the module at {path}, including all major versions.\nVersions are listed in descending order, with incompatible versions last.\nOnly tagged versions are returned, unless the pseudo query parameter is true.\nIn addition, only results that match the filter query parameter are returned.\nThe total in the response is -1 to indicate that the total number of results is unknown,\nunless all results fit on a single page.",
         "operationId": "getVersions",
         "parameters": [
           {
@@ -616,7 +616,7 @@
             "description": "Error response"
           }
         },
-        "summary": "Versions of the module at {path}",
+        "summary": "All versions of the module at {path}, including all major versions",
         "tags": [
           "versions"
         ]
@@ -1090,6 +1090,7 @@
       "Symbol": {
         "properties": {
           "kind": {
+            "description": "Kind is one of \"Constant\", \"Variable\", \"Function\", \"Type\", \"Field\", or \"Method\".",
             "type": "string"
           },
           "name": {
