@@ -94,11 +94,12 @@ func getPathVersions(ctx context.Context, db *DB, path string, startPageToken st
 			LIMIT 1
 		)
 		AND version_type in (%s)
-		AND ($3 = '' OR (NOT m.incompatible, m.module_path, m.sort_version) <= (NOT $2, $3, $4))
+		AND ($3 = '' OR (NOT m.incompatible, m.sort_version, m.module_path) <= (NOT $2, $3, $4))
 	ORDER BY
 		m.incompatible,
-		m.module_path DESC,
-		m.sort_version DESC %s`
+		m.sort_version DESC,
+		m.module_path DESC
+	%s`
 
 	if len(versionTypes) == 0 {
 		return nil, "", fmt.Errorf("error: must specify at least one version type")
@@ -132,7 +133,7 @@ func getPathVersions(ctx context.Context, db *DB, path string, startPageToken st
 	// Construct the page token for the next page.
 	// See the comment near the top of this function for the format.
 	if len(versions) > 0 {
-		nextPageToken = makePageToken(lastIncompatible, versions[len(versions)-1].ModulePath, lastSortVersion)
+		nextPageToken = makePageToken(lastIncompatible, lastSortVersion, versions[len(versions)-1].ModulePath)
 	}
 	return versions, nextPageToken, nil
 }
@@ -140,9 +141,10 @@ func getPathVersions(ctx context.Context, db *DB, path string, startPageToken st
 // parsePageToken parses a page token for getPathVersions.
 // It return a slice of query args.
 func parsePageToken(s string) (queryArgs []any, err error) {
-	// A page token has the form "I P S"
-	// where I is a bool for incompatible version, P is a module path, and S
-	// is a sort version. Spaces suffice to separate these since none can contain a space.
+	// A page token has the form "I S P"
+	// where I is a bool for incompatible version, S
+	// is a sort version and P is a module path.
+	// Spaces suffice to separate these since none can contain a space.
 	parts := strings.Fields(s)
 	if len(parts) != 3 {
 		return nil, errors.New("invalid page token (wrong # parts)")
@@ -155,8 +157,8 @@ func parsePageToken(s string) (queryArgs []any, err error) {
 }
 
 // makePageToken constructs a page token for getPathVersions.
-func makePageToken(inc bool, mpath, version string) string {
-	return fmt.Sprintf("%t %s %s", inc, mpath, version)
+func makePageToken(inc bool, version, mpath string) string {
+	return fmt.Sprintf("%t %s %s", inc, version, mpath)
 }
 
 // versionTypeExpr returns a comma-separated list of version types,

@@ -19,7 +19,7 @@ import (
 	"golang.org/x/pkgsite/internal/version"
 )
 
-func TestGetVersions(t *testing.T) {
+func TestGetVersionsForPath(t *testing.T) {
 	t.Parallel()
 	var (
 		taggedAndPseudoModule = "path.to/foo"
@@ -263,6 +263,59 @@ func TestGetVersions(t *testing.T) {
 				t.Errorf("testDB.GetVersionsForPath(%q) mismatch (-want +got):\n%s", test.path, diff)
 			}
 		})
+	}
+}
+
+func TestGetPathVersionsSorting(t *testing.T) {
+	// Validate that getPathVersions sorts by version,
+	// then by module path, with incompatible versions last.
+	testDB, release := acquire(t)
+	defer release()
+	testModules := []*internal.Module{
+		sample.Module("m.com/a", "v1.0.0", "pkg"),
+		sample.Module("m.com/a", "v1.2.3", "pkg"),
+		sample.Module("m.com/a", "v1.2.3-pre", "pkg"),
+		sample.Module("m.com/a", "v2.1.1+incompatible", "pkg"),
+		sample.Module("m.com/a", "v2.2.2+incompatible", "pkg"),
+		sample.Module("m.com/a", "v0.0.0-20200101120012-000000000000", "pkg"),
+		sample.Module("m.com/a/v2", "v2.2.2", "pkg"),
+		sample.Module("m.com/a/v2", "v2.1.1", "pkg"),
+		sample.Module("m.com/a/v11", "v11.0.0", "pkg"),
+		// same package path, different module
+		sample.Module("m.com", "v1.2.3", "a/pkg"),
+		sample.Module("m.com", "v1.3.0", "a/pkg"),
+	}
+	for _, m := range testModules {
+		testDB.MustInsertModule(t, m)
+	}
+	gotmods, _, err := getPathVersions(t.Context(), testDB, "m.com/a", "", 0, version.TypePrerelease, version.TypeRelease, version.TypePseudo)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	type modver struct {
+		ModulePath, Version string
+	}
+	want := []modver{
+		{"m.com/a/v11", "v11.0.0"},
+		{"m.com/a/v2", "v2.2.2"},
+		{"m.com/a/v2", "v2.1.1"},
+		{"m.com", "v1.3.0"},
+		// version ties are broken by module path
+		{"m.com/a", "v1.2.3"},
+		{"m.com", "v1.2.3"},
+		{"m.com/a", "v1.2.3-pre"},
+		{"m.com/a", "v1.0.0"},
+		{"m.com/a", "v0.0.0-20200101120012-000000000000"},
+		{"m.com/a", "v2.2.2+incompatible"},
+		{"m.com/a", "v2.1.1+incompatible"},
+	}
+	var got []modver
+	for _, mi := range gotmods {
+		got = append(got, modver{mi.ModulePath, mi.Version})
+	}
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("mismatch (-want, +got):\n%s", diff)
 	}
 }
 
