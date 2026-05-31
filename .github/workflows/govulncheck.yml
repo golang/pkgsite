@@ -1,5 +1,9 @@
 name: Run govulncheck
 on: [push]
+
+permissions:
+  contents: read
+
 jobs:
   govulncheck:
     runs-on: ubuntu-latest
