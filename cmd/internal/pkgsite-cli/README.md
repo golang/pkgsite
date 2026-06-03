@@ -110,4 +110,3 @@ pkgsite-cli module -packages -versions github.com/google/go-cmp
   directly. This keeps the tool self-contained. However, if this tool remains
   in this repository, we can eliminate this duplication by using the internal
   package.
-
