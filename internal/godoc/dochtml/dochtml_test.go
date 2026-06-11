@@ -238,7 +238,7 @@ func TestExampleRender(t *testing.T) {
 			name:   "Executable examples (with play buttons)",
 			htmlID: "example-package-StringsCompare",
 			want: `<details tabindex="-1" id="example-package-StringsCompare" class="Documentation-exampleDetails js-exampleContainer">
-<summary class="Documentation-exampleDetailsHeader">Example (StringsCompare) <a href="#example-package-StringsCompare" title="Go to Example (StringsCompare)" aria-label="Go to Example (StringsCompare)">¶</a></summary>
+<summary class="Documentation-exampleDetailsHeader">Example (StringsCompare) <a aria-label="Go to Example (StringsCompare)" href="#example-package-StringsCompare" title="Go to Example (StringsCompare)">¶</a></summary>
 <div class="Documentation-exampleDetailsBody">
 <p>executable example
 </p>
@@ -276,7 +276,7 @@ func main() {
 			name:   "Example without output",
 			htmlID: "example-package-NoOutput",
 			want: `<details tabindex="-1" id="example-package-NoOutput" class="Documentation-exampleDetails js-exampleContainer">
-<summary class="Documentation-exampleDetailsHeader">Example (NoOutput) <a href="#example-package-NoOutput" title="Go to Example (NoOutput)" aria-label="Go to Example (NoOutput)">¶</a></summary>
+<summary class="Documentation-exampleDetailsHeader">Example (NoOutput) <a aria-label="Go to Example (NoOutput)" href="#example-package-NoOutput" title="Go to Example (NoOutput)">¶</a></summary>
 <div class="Documentation-exampleDetailsBody">
 
 <pre class="Documentation-exampleCode">package main
