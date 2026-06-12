@@ -161,8 +161,8 @@ func newDeclIDs(decl ast.Decl) *declIDs {
 			}
 		}
 
-		// Add mapping of variable names to types names for parameters and results.
-		for _, flist := range []*ast.FieldList{decl.Type.Params, decl.Type.Results} {
+		// Add mapping of variable names to type names for type parameters, parameters, and results.
+		for _, flist := range []*ast.FieldList{decl.Type.TypeParams, decl.Type.Params, decl.Type.Results} {
 			if flist == nil {
 				continue
 			}
