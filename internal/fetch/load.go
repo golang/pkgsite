@@ -21,6 +21,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"slices"
 	"sort"
 	"strings"
 
@@ -432,6 +433,7 @@ func matchingFiles(goos, goarch string, importPath string, allFiles map[string][
 		CgoEnabled:  true,
 		Compiler:    build.Default.Compiler,
 		ReleaseTags: build.Default.ReleaseTags,
+		ToolTags:    slices.Clone(build.Default.ToolTags),
 
 		JoinPath: path.Join,
 		OpenFile: func(name string) (io.ReadCloser, error) {
@@ -450,12 +452,12 @@ func matchingFiles(goos, goarch string, importPath string, allFiles map[string][
 	}
 
 	switch importPath {
-	case "encoding/json/v2", "encoding/json/jsontext":
-		bctx.BuildTags = append(bctx.BuildTags, "goexperiment.jsonv2")
+	case "encoding/json", "encoding/json/v2", "encoding/json/jsontext":
+		bctx.ToolTags = append(bctx.ToolTags, "goexperiment.jsonv2")
 	case "runtime/secret":
-		bctx.BuildTags = append(bctx.BuildTags, "goexperiment.runtimesecret")
+		bctx.ToolTags = append(bctx.ToolTags, "goexperiment.runtimesecret")
 	case "simd", "simd/archsimd":
-		bctx.BuildTags = append(bctx.BuildTags, "goexperiment.simd")
+		bctx.ToolTags = append(bctx.ToolTags, "goexperiment.simd")
 	}
 
 	// Copy the input map so we don't modify it.

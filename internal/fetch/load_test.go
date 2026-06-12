@@ -5,6 +5,8 @@
 package fetch
 
 import (
+	"go/build"
+	"slices"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -43,6 +45,27 @@ func TestMatchingFiles(t *testing.T) {
 	jsonv2Contents := map[string]string{
 		"plain.go": plainGoBody,
 		"json.go":  jsonv2Body,
+	}
+
+	// For testing that the goexperiment.jsonv2 tag is NOT enabled for generic packages.
+	otherGoBody := `
+		package other
+		type Value int`
+	otherJSONv2Body := `
+		//go:build goexperiment.jsonv2
+
+		package other
+		var X int
+	`
+	otherContents := map[string]string{
+		"other.go":        otherGoBody,
+		"other_jsonv2.go": otherJSONv2Body,
+	}
+	otherWant := map[string][]byte{
+		"other.go": []byte(otherGoBody),
+	}
+	if slices.Contains(build.Default.ToolTags, "goexperiment.jsonv2") {
+		otherWant["other_jsonv2.go"] = []byte(otherJSONv2Body)
 	}
 
 	for _, test := range []struct {
@@ -94,6 +117,7 @@ func TestMatchingFiles(t *testing.T) {
 			contents:   jsonv2Contents,
 			want: map[string][]byte{
 				"plain.go": []byte(plainGoBody),
+				"json.go":  []byte(jsonv2Body),
 			},
 		},
 		{
@@ -106,6 +130,14 @@ func TestMatchingFiles(t *testing.T) {
 				"plain.go": []byte(plainGoBody),
 				"json.go":  []byte(jsonv2Body),
 			},
+		},
+		{
+			name:       "jsonv2-disabled-for-other-packages",
+			goos:       "linux",
+			goarch:     "amd64",
+			importPath: "example.com/other",
+			contents:   otherContents,
+			want:       otherWant,
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
