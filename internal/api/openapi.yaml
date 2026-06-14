@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Go Pkgsite API",
-    "version": "v0.1.0",
+    "version": "v0.1.1",
     "description": "API for accessing information about Go packages and modules on pkg.go.dev."
   },
   "servers": [
@@ -653,6 +653,10 @@
           "isLatest": {
             "type": "boolean"
           },
+          "isRedistributable": {
+            "description": "Whether the license allows distribution.",
+            "type": "boolean"
+          },
           "isStandardLibrary": {
             "type": "boolean"
           },
@@ -663,6 +667,15 @@
             "type": "array"
           },
           "modulePath": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "synopsis": {
             "type": "string"
           },
           "version": {

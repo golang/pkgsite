@@ -100,6 +100,34 @@ type PaginatedResponse[T any] struct {
 }`,
 		},
 		{
+			name: "embedded struct",
+			data: `
+package api
+type Package struct {
+	Version string ` + "`" + `json:"version"` + "`" + `
+	PackageInfo
+}
+type PackageInfo struct {
+	Path     string ` + "`" + `json:"path"` + "`" + `
+	Synopsis string ` + "`" + `json:"synopsis"` + "`" + `
+}
+`,
+			want: `"Package": {
+    "properties": {
+      "path": {
+        "type": "string"
+      },
+      "synopsis": {
+        "type": "string"
+      },
+      "version": {
+        "type": "string"
+      }
+    },
+    "type": "object"
+  }`,
+		},
+		{
 			name: "instantiated generic",
 			data: `
 package api
@@ -209,7 +237,7 @@ type openAPIComponents struct {
 func GenerateOpenAPI() (string, error) {
 	const (
 		openAPISpecVersion = "3.0.3"
-		apiVersion         = "v0.1.0"
+		apiVersion         = "v0.1.1"
 		apiPathPrefix      = "/v1beta"
 	)
 
@@ -309,8 +337,7 @@ func generateSchemas(data []byte) (map[string]any, error) {
 		return nil, err
 	}
 
-	schemas := make(map[string]any)
-
+	structs := make(map[string]*ast.StructType)
 	for _, decl := range file.Decls {
 		genDecl, ok := decl.(*ast.GenDecl)
 		if !ok || genDecl.Tok != token.TYPE {
@@ -321,47 +348,55 @@ func generateSchemas(data []byte) (map[string]any, error) {
 			if !ok {
 				continue
 			}
-			structType, ok := typeSpec.Type.(*ast.StructType)
-			if !ok {
-				continue
-			}
-
 			typeName := typeSpec.Name.Name
-			properties := make(map[string]any)
-
-			for _, field := range structType.Fields.List {
-				if field.Names == nil {
-					continue
-				}
-
-				fieldName := field.Names[0].Name
-				tag := ""
-				if field.Tag != nil {
-					tag = field.Tag.Value
-				}
-				jsonName := extractJSONName(tag)
-				if jsonName == "" {
-					jsonName = fieldName
-				}
-
-				typeStr := typeExprToString(field.Type)
-				prop := mapFieldType(typeStr)
-				if field.Doc != nil {
-					prop["description"] = strings.TrimSpace(field.Doc.Text())
-				} else if field.Comment != nil {
-					prop["description"] = strings.TrimSpace(field.Comment.Text())
-				}
-				properties[jsonName] = prop
-			}
-
-			schemas[typeName] = map[string]any{
-				"type":       "object",
-				"properties": properties,
+			if structType, ok := typeSpec.Type.(*ast.StructType); ok {
+				structs[typeName] = structType
 			}
 		}
 	}
 
+	schemas := make(map[string]any)
+	for name, structType := range structs {
+		properties := make(map[string]any)
+		collectProperties(structType, structs, properties)
+		schemas[name] = map[string]any{
+			"type":       "object",
+			"properties": properties,
+		}
+	}
+
 	return schemas, nil
+}
+
+// collectProperties adds the schema property for each field of st to properties,
+// recursing into embedded structs so their fields are promoted to the parent.
+func collectProperties(st *ast.StructType, structs map[string]*ast.StructType, properties map[string]any) {
+	for _, field := range st.Fields.List {
+		if field.Names == nil {
+			if embedded, ok := structs[typeExprToString(field.Type)]; ok {
+				collectProperties(embedded, structs, properties)
+			}
+			continue
+		}
+
+		fieldName := field.Names[0].Name
+		tag := ""
+		if field.Tag != nil {
+			tag = field.Tag.Value
+		}
+		jsonName := extractJSONName(tag)
+		if jsonName == "" {
+			jsonName = fieldName
+		}
+
+		prop := mapFieldType(typeExprToString(field.Type))
+		if field.Doc != nil {
+			prop["description"] = strings.TrimSpace(field.Doc.Text())
+		} else if field.Comment != nil {
+			prop["description"] = strings.TrimSpace(field.Comment.Text())
+		}
+		properties[jsonName] = prop
+	}
 }
 
 func mapFieldType(t string) map[string]any {
