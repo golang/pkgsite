@@ -185,7 +185,7 @@ func TestGenerateOpenAPI(t *testing.T) {
 			normNew := normalizeSpec(got)
 
 			if normOld != normNew && oldVersion == newVersion {
-				t.Errorf("API spec changed but version was not bumped from %s. Please update apiVersion in openapi.go or run with -update to bypass.", oldVersion)
+				t.Errorf("API spec changed but version was not bumped from %s. Please update apiVersion in openapi_test.go or run with -update to bypass.", oldVersion)
 			}
 		}
 	}
@@ -271,18 +271,30 @@ func GenerateOpenAPI() (string, error) {
 			"operationId": generateOperationID(path),
 		}
 
-		if len(r.QueryParams) > 0 {
-			params := []map[string]any{}
-			for _, p := range r.QueryParams {
-				params = append(params, map[string]any{
-					"name":        p.Name,
-					"in":          "query",
-					"description": p.Doc,
-					"schema": map[string]any{
-						"type": mapType(p.Type),
-					},
-				})
-			}
+		params := []map[string]any{}
+		for _, p := range r.PathParams {
+			params = append(params, map[string]any{
+				"name":        p.Name,
+				"in":          "path",
+				"required":    true,
+				"description": p.Doc,
+				"schema": map[string]any{
+					"type": "string",
+				},
+			})
+		}
+
+		for _, p := range r.QueryParams {
+			params = append(params, map[string]any{
+				"name":        p.Name,
+				"in":          "query",
+				"description": p.Doc,
+				"schema": map[string]any{
+					"type": mapType(p.Type),
+				},
+			})
+		}
+		if len(params) > 0 {
 			operation["parameters"] = params
 		}
 
@@ -379,6 +391,9 @@ func collectProperties(st *ast.StructType, structs map[string]*ast.StructType, p
 			continue
 		}
 
+		if !field.Names[0].IsExported() {
+			continue
+		}
 		fieldName := field.Names[0].Name
 		tag := ""
 		if field.Tag != nil {

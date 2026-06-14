@@ -16,6 +16,15 @@
         "operationId": "getImported-by",
         "parameters": [
           {
+            "description": "Package path.",
+            "in": "path",
+            "name": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "description": "Module path.",
             "in": "query",
             "name": "module",
@@ -76,6 +85,15 @@
         "operationId": "getModule",
         "parameters": [
           {
+            "description": "Module path.",
+            "in": "path",
+            "name": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "description": "Module version: semantic version, 'latest', or default branches 'master' or 'main'.\n(Latest if empty).",
             "in": "query",
             "name": "version",
@@ -119,6 +137,15 @@
       "get": {
         "operationId": "getPackage",
         "parameters": [
+          {
+            "description": "Package path.",
+            "in": "path",
+            "name": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
           {
             "description": "Module path.",
             "in": "query",
@@ -203,6 +230,15 @@
       "get": {
         "operationId": "getPackages",
         "parameters": [
+          {
+            "description": "Module path.",
+            "in": "path",
+            "name": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
           {
             "description": "Module version: semantic version, 'latest', or default branches 'master' or 'main'.\n(Latest if empty).",
             "in": "query",
@@ -316,6 +352,15 @@
         "operationId": "getSymbols",
         "parameters": [
           {
+            "description": "Package path.",
+            "in": "path",
+            "name": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "description": "Module path.",
             "in": "query",
             "name": "module",
@@ -392,6 +437,15 @@
         "operationId": "getVersions",
         "parameters": [
           {
+            "description": "Module path.",
+            "in": "path",
+            "name": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "description": "Max number of items to return.",
             "in": "query",
             "name": "limit",
@@ -435,6 +489,15 @@
       "get": {
         "operationId": "getVulns",
         "parameters": [
+          {
+            "description": "Module or package path.",
+            "in": "path",
+            "name": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
           {
             "description": "Module path.",
             "in": "query",
@@ -516,10 +579,6 @@
           "code": {
             "description": "HTTP status code",
             "type": "integer"
-          },
-          "err": {
-            "$ref": "#/components/schemas/error",
-            "description": "Unexported field for internal tracking"
           },
           "fixes": {
             "description": "suggestions for how to fix",

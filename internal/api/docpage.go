@@ -35,6 +35,12 @@ type QueryParam struct {
 	Doc  string
 }
 
+// PathParam contains information about a path parameter.
+type PathParam struct {
+	Name string
+	Doc  string
+}
+
 // Example contains an API request example (URL path) and its expected response.
 type Example struct {
 	Request  string
@@ -49,6 +55,7 @@ type RouteInfo struct {
 	Response              string
 	ResponsePaginatedType string
 	LinkPaginatedType     bool
+	PathParams            []PathParam
 	QueryParams           []QueryParam
 	Examples              []*Example
 }
@@ -204,6 +211,9 @@ func calculateRoutes(ctx context.Context, baseURL string) ([]*RouteInfo, error) 
 
 var apiRE = regexp.MustCompile(`//\s*api:(\S+)\s+(.*)`)
 
+// routePlaceholderRE matches path placeholders in a route, e.g. {path} in /v1beta/module/{path}.
+var routePlaceholderRE = regexp.MustCompile(`\{([^}]+)\}`)
+
 // readRouteInfo reads the provided Go source data and returns documentation information for all routes.
 func readRouteInfo(data []byte, paramsMap map[string][]QueryParam) ([]*RouteInfo, error) {
 	var routes []*RouteInfo
@@ -225,6 +235,24 @@ func readRouteInfo(data []byte, paramsMap map[string][]QueryParam) ([]*RouteInfo
 		if r.Response == "" {
 			return fmt.Errorf("missing api:response field in route %q", r.Route)
 		}
+
+		placeholders := map[string]bool{}
+		for _, m := range routePlaceholderRE.FindAllStringSubmatch(r.Route, -1) {
+			placeholders[m[1]] = true
+		}
+		declared := map[string]bool{}
+		for _, p := range r.PathParams {
+			if !placeholders[p.Name] {
+				return fmt.Errorf("api:pathparam %q is not a placeholder in route %q", p.Name, r.Route)
+			}
+			declared[p.Name] = true
+		}
+		for name := range placeholders {
+			if !declared[name] {
+				return fmt.Errorf("route %q has placeholder %q with no api:pathparam", r.Route, name)
+			}
+		}
+
 		routes = append(routes, r)
 		return nil
 	}
@@ -256,6 +284,16 @@ func readRouteInfo(data []byte, paramsMap map[string][]QueryParam) ([]*RouteInfo
 			} else {
 				current.Desc += "\n" + val
 			}
+		case "pathparam":
+			if current == nil {
+				return nil, fmt.Errorf("saw api:pathparam before api:route")
+			}
+			name, doc, _ := strings.Cut(val, " ")
+			doc = strings.TrimSpace(doc)
+			if doc == "" {
+				return nil, fmt.Errorf("missing description for api:pathparam %q in route %q", name, current.Route)
+			}
+			current.PathParams = append(current.PathParams, PathParam{Name: name, Doc: doc})
 		case "params":
 			if current == nil {
 				return nil, fmt.Errorf("saw api:params before api:route")

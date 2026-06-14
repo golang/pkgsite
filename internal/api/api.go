@@ -54,6 +54,7 @@ var OpenAPISpec []byte
 func ServePackage(w http.ResponseWriter, r *http.Request, ds internal.DataSource) (err error) {
 	defer derrors.Wrap(&err, "ServePackage")
 
+	// api:pathparam path Package path.
 	pkgPath := trimPath(r, "/v1beta/package/")
 	if pkgPath == "" {
 		return BadRequest("missing package path",
@@ -114,6 +115,7 @@ func ServePackage(w http.ResponseWriter, r *http.Request, ds internal.DataSource
 func ServeModule(w http.ResponseWriter, r *http.Request, ds internal.DataSource) (err error) {
 	defer derrors.Wrap(&err, "ServeModule")
 
+	// api:pathparam path Module path.
 	modulePath := trimPath(r, "/v1beta/module/")
 	if modulePath == "" {
 		return BadRequest("missing module path",
@@ -204,6 +206,7 @@ func ServeModule(w http.ResponseWriter, r *http.Request, ds internal.DataSource)
 func ServeModuleVersions(w http.ResponseWriter, r *http.Request, ds internal.DataSource) (err error) {
 	defer derrors.Wrap(&err, "ServeModuleVersions")
 
+	// api:pathparam path Module path.
 	path := trimPath(r, "/v1beta/versions/")
 	if path == "" {
 		return BadRequest("missing module path",
@@ -266,6 +269,7 @@ func ServeModuleVersions(w http.ResponseWriter, r *http.Request, ds internal.Dat
 func ServeModulePackages(w http.ResponseWriter, r *http.Request, ds internal.DataSource) (err error) {
 	defer derrors.Wrap(&err, "ServeModulePackages")
 
+	// api:pathparam path Module path.
 	modulePath := trimPath(r, "/v1beta/packages/")
 	if modulePath == "" {
 		return BadRequest("missing module path",
@@ -411,6 +415,7 @@ func ServeSearch(w http.ResponseWriter, r *http.Request, ds internal.DataSource)
 func ServePackageSymbols(w http.ResponseWriter, r *http.Request, ds internal.DataSource) (err error) {
 	defer derrors.Wrap(&err, "ServePackageSymbols")
 
+	// api:pathparam path Package path.
 	pkgPath := trimPath(r, "/v1beta/symbols/")
 	if pkgPath == "" {
 		return BadRequest("missing package path",
@@ -490,6 +495,7 @@ func ServePackageSymbols(w http.ResponseWriter, r *http.Request, ds internal.Dat
 func ServePackageImportedBy(w http.ResponseWriter, r *http.Request, ds internal.DataSource) (err error) {
 	defer derrors.Wrap(&err, "ServePackageImportedBy")
 
+	// api:pathparam path Package path.
 	pkgPath := trimPath(r, "/v1beta/imported-by/")
 	if pkgPath == "" {
 		return BadRequest("missing package path",
@@ -591,6 +597,7 @@ func ServeVulnerabilities(vc *vuln.Client) func(w http.ResponseWriter, r *http.R
 	return func(w http.ResponseWriter, r *http.Request, ds internal.DataSource) (err error) {
 		defer derrors.Wrap(&err, "ServeVulnerabilities")
 
+		// api:pathparam path Module or package path.
 		path := trimPath(r, "/v1beta/vulns/")
 		if path == "" {
 			return BadRequest("missing path",

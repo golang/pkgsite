@@ -93,26 +93,30 @@ func TestReadRouteInfo(t *testing.T) {
 			name: "correct",
 			data: `
 //api:route /v1beta/package/{path}
+//api:pathparam path Module or package path.
 //api:desc Get package metadata.
 //api:params path, version, module
 //api:response Package
 //api:route /v1beta/module/{path}
+//api:pathparam path Module or package path.
 //api:desc Get module metadata.
 //api:params path, version
 //api:response Module
 `,
 			want: []*RouteInfo{
 				{
-					Route:    "/v1beta/package/{path}",
-					Desc:     "Get package metadata.",
-					Params:   "path, version, module",
-					Response: "Package",
+					Route:      "/v1beta/package/{path}",
+					Desc:       "Get package metadata.",
+					Params:     "path, version, module",
+					Response:   "Package",
+					PathParams: []PathParam{{Name: "path", Doc: "Module or package path."}},
 				},
 				{
-					Route:    "/v1beta/module/{path}",
-					Desc:     "Get module metadata.",
-					Params:   "path, version",
-					Response: "Module",
+					Route:      "/v1beta/module/{path}",
+					Desc:       "Get module metadata.",
+					Params:     "path, version",
+					Response:   "Module",
+					PathParams: []PathParam{{Name: "path", Doc: "Module or package path."}},
 				},
 			},
 		},
@@ -120,6 +124,7 @@ func TestReadRouteInfo(t *testing.T) {
 			name: "paginated",
 			data: `
 //api:route /v1beta/versions/{path}
+//api:pathparam path Module or package path.
 //api:desc All versions of the module at {path}.
 //api:params filter, limit, token
 //api:response PaginatedResponse[ModuleInfo]
@@ -132,6 +137,7 @@ func TestReadRouteInfo(t *testing.T) {
 					Response:              "PaginatedResponse[ModuleInfo]",
 					ResponsePaginatedType: "ModuleInfo",
 					LinkPaginatedType:     true,
+					PathParams:            []PathParam{{Name: "path", Doc: "Module or package path."}},
 				},
 			},
 		},
@@ -159,6 +165,7 @@ func TestReadRouteInfo(t *testing.T) {
 			data: `
 //api:route /v1beta/package/{path}
 //api:desc Get package metadata.
+//api:pathparam path Module or package path.
 //api:response Package
 `,
 			wantErr: true,
@@ -173,6 +180,7 @@ func TestReadRouteInfo(t *testing.T) {
 			data: `
 //api:route /v1beta/package/{path}
 //api:desc
+//api:pathparam path Module or package path.
 `,
 			wantErr: true,
 		},
@@ -180,6 +188,7 @@ func TestReadRouteInfo(t *testing.T) {
 			name: "unknown key",
 			data: `
 //api:route /v1beta/package/{path}
+//api:pathparam path Module or package path.
 //api:unknown something
 `,
 			wantErr: true,
@@ -189,6 +198,7 @@ func TestReadRouteInfo(t *testing.T) {
 			data: `
 //api:route /v1beta/package/{path}
 //api:route /v1beta/other
+//api:pathparam path Module or package path.
 `,
 			wantErr: true,
 		},
@@ -198,6 +208,47 @@ func TestReadRouteInfo(t *testing.T) {
 //api:route /v1beta/package/{path}
 //api:desc Get package metadata.
 //api:desc Something else.
+//api:pathparam path Module or package path.
+`,
+			wantErr: true,
+		},
+		{
+			name: "pathparam before route",
+			data: `
+//api:pathparam path Module or package path.
+//api:route /v1beta/package/{path}
+`,
+			wantErr: true,
+		},
+		{
+			name: "pathparam missing description",
+			data: `
+//api:route /v1beta/package/{path}
+//api:pathparam path
+//api:desc Get package metadata.
+//api:params DummyParams
+//api:response Package
+`,
+			wantErr: true,
+		},
+		{
+			name: "placeholder without pathparam",
+			data: `
+//api:route /v1beta/package/{path}
+//api:desc Get package metadata.
+//api:params DummyParams
+//api:response Package
+`,
+			wantErr: true,
+		},
+		{
+			name: "pathparam name mismatch",
+			data: `
+//api:route /v1beta/package/{path}
+//api:pathparam pth Module or package path.
+//api:desc Get package metadata.
+//api:params DummyParams
+//api:response Package
 `,
 			wantErr: true,
 		},
