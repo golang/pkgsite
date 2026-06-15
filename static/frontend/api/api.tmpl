@@ -189,6 +189,20 @@
         You can access the machine-readable <a href="/v1beta/openapi.yaml">OpenAPI Specification</a>.
       </p>
 
+      <h2>Rate Limiting</h2>
+      <p>
+        Requests to the API are rate-limited to 40 queries per second (QPS) per IP block.
+        Successful API requests return rate limit status headers:
+      </p>
+      <ul>
+        <li><code>X-RateLimit-Limit</code>: The QPS rate limit (e.g. <code>40</code>).</li>
+        <li><code>X-RateLimit-Remaining</code>: The number of requests remaining in the current window.</li>
+        <li><code>X-RateLimit-Reset</code>: The Unix epoch timestamp (seconds) when the rate limit resets.</li>
+      </ul>
+      <p>
+        Exceeding the rate limit returns an HTTP status code <code>429 Too Many Requests</code>.
+      </p>
+
       <h2>Pagination</h2>
       <p>
       Some responses are paginated. Each response page has a
