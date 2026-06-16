@@ -9,7 +9,7 @@ steps:
     args:
       - $PROJECT_ID
   - id: Build
-    name: golang:1.25.5
+    name: golang:1.26.4
     entrypoint: bash
     dir: private
     args:
