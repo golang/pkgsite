@@ -179,30 +179,46 @@ const TaskIDChangeIntervalFrontend = 30 * time.Minute
 
 // DBConnInfo returns a PostgreSQL connection string constructed from
 // environment variables, using the primary database host.
+// If a secondary host is configured, both are included in the connection
+// string to allow automatic connection-level failover.
 func (c *Config) DBConnInfo() string {
+	if c.DBSecondaryHost != "" {
+		return c.dbConnInfo(c.DBHost + "," + c.DBSecondaryHost)
+	}
 	return c.dbConnInfo(c.DBHost)
 }
 
 // DBSecondaryConnInfo returns a PostgreSQL connection string constructed from
 // environment variables, using the backup database host. It returns the
 // empty string if no backup is configured.
+// If a secondary host is configured, both are included in the connection
+// string to allow automatic connection-level failover, with the backup host tried first.
 func (c *Config) DBSecondaryConnInfo() string {
 	if c.DBSecondaryHost == "" {
 		return ""
 	}
-	return c.dbConnInfo(c.DBSecondaryHost)
+	return c.dbConnInfo(c.DBSecondaryHost + "," + c.DBHost)
 }
+
+// dbConnInfoFormat is the format of a PostgreSQL connection string. The host
+// argument may name several hosts, separated by commas, in which case they are
+// tried in order until one accepts the connection.
+// For the connection string syntax, see
+// https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING.
+const dbConnInfoFormat = "user='%s' password='%s' host='%s' port=%s dbname='%s' sslmode='%s' connect_timeout=%d options='%s'"
+
+// dbConnectTimeout is the time to wait for a connection to a single host
+// before trying the next one. It is short so that failover is quick.
+const dbConnectTimeout = 5 * time.Second
 
 // dbConnInfo returns a PostgreSQL connection string for the given host.
 func (c *Config) dbConnInfo(host string) string {
-	// For the connection string syntax, see
-	// https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING.
 	// Set the statement_timeout config parameter for this session.
 	// See https://www.postgresql.org/docs/current/runtime-config-client.html.
 	timeoutOption := fmt.Sprintf("-c statement_timeout=%d", StatementTimeout/time.Millisecond)
-	return fmt.Sprintf(
-		"user='%s' password='%s' host='%s' port=%s dbname='%s' sslmode='%s' options='%s'",
-		c.DBUser, c.DBPassword, host, c.DBPort, c.DBName, c.DBSSL, timeoutOption,
+	return fmt.Sprintf(dbConnInfoFormat,
+		c.DBUser, c.DBPassword, host, c.DBPort, c.DBName, c.DBSSL,
+		dbConnectTimeout/time.Second, timeoutOption,
 	)
 }
 
