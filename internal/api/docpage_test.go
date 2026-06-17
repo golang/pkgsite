@@ -52,6 +52,8 @@ func TestReadRouteInfo(t *testing.T) {
 			want: []*RouteInfo{
 				{
 					Route:    "/v1beta/dummy",
+					Tags:     []string{"dummy"},
+					Summary:  "Dummy route",
 					Desc:     "Dummy route.",
 					Params:   "DummyParams",
 					Response: "DummyResponse",
@@ -79,6 +81,8 @@ func TestReadRouteInfo(t *testing.T) {
 			want: []*RouteInfo{
 				{
 					Route:    "/v1beta/dummy-complex",
+					Tags:     []string{"dummy-complex"},
+					Summary:  "Dummy complex route",
 					Desc:     "Dummy complex route.",
 					Params:   "DummyComplexParams",
 					Response: "DummyComplexResponse",
@@ -106,6 +110,8 @@ func TestReadRouteInfo(t *testing.T) {
 			want: []*RouteInfo{
 				{
 					Route:      "/v1beta/package/{path}",
+					Tags:       []string{"package"},
+					Summary:    "Get package metadata",
 					Desc:       "Get package metadata.",
 					Params:     "path, version, module",
 					Response:   "Package",
@@ -113,6 +119,8 @@ func TestReadRouteInfo(t *testing.T) {
 				},
 				{
 					Route:      "/v1beta/module/{path}",
+					Tags:       []string{"module"},
+					Summary:    "Get module metadata",
 					Desc:       "Get module metadata.",
 					Params:     "path, version",
 					Response:   "Module",
@@ -132,6 +140,8 @@ func TestReadRouteInfo(t *testing.T) {
 			want: []*RouteInfo{
 				{
 					Route:                 "/v1beta/versions/{path}",
+					Tags:                  []string{"versions"},
+					Summary:               "All versions of the module at {path}",
 					Desc:                  "All versions of the module at {path}.",
 					Params:                "filter, limit, token",
 					Response:              "PaginatedResponse[ModuleInfo]",
@@ -152,11 +162,59 @@ func TestReadRouteInfo(t *testing.T) {
 			want: []*RouteInfo{
 				{
 					Route:                 "/v1beta/strings",
+					Tags:                  []string{"strings"},
+					Summary:               "Some strings",
 					Desc:                  "Some strings.",
 					Params:                "filter",
 					Response:              "PaginatedResponse[string]",
 					ResponsePaginatedType: "string",
 					LinkPaginatedType:     false,
+				},
+			},
+		},
+		{
+			name: "multi-sentence description",
+			data: `
+//api:route /v1beta/vulns/{path}
+//api:pathparam path Module or package path.
+//api:desc Vulnerabilities of the module or package at {path}.
+//api:desc Data comes from the Go vulnerability database.
+//api:desc Only results that match the filter query parameter are returned.
+//api:params filter
+//api:response PaginatedResponse[Vulnerability]
+`,
+			want: []*RouteInfo{
+				{
+					Route:                 "/v1beta/vulns/{path}",
+					Tags:                  []string{"vulns"},
+					Summary:               "Vulnerabilities of the module or package at {path}",
+					Desc:                  "Vulnerabilities of the module or package at {path}.\nData comes from the Go vulnerability database.\nOnly results that match the filter query parameter are returned.",
+					Params:                "filter",
+					Response:              "PaginatedResponse[Vulnerability]",
+					ResponsePaginatedType: "Vulnerability",
+					LinkPaginatedType:     true,
+					PathParams:            []PathParam{{Name: "path", Doc: "Module or package path."}},
+				},
+			},
+		},
+		{
+			name: "multiple sentences on first line",
+			data: `
+//api:route /v1beta/search
+//api:desc Search results. Only matching results are returned.
+//api:params filter
+//api:response PaginatedResponse[SearchResult]
+`,
+			want: []*RouteInfo{
+				{
+					Route:                 "/v1beta/search",
+					Tags:                  []string{"search"},
+					Summary:               "Search results",
+					Desc:                  "Search results. Only matching results are returned.",
+					Params:                "filter",
+					Response:              "PaginatedResponse[SearchResult]",
+					ResponsePaginatedType: "SearchResult",
+					LinkPaginatedType:     true,
 				},
 			},
 		},
@@ -197,18 +255,15 @@ func TestReadRouteInfo(t *testing.T) {
 			name: "duplicate route",
 			data: `
 //api:route /v1beta/package/{path}
-//api:route /v1beta/other
 //api:pathparam path Module or package path.
-`,
-			wantErr: true,
-		},
-		{
-			name: "duplicate desc",
-			data: `
-//api:route /v1beta/package/{path}
 //api:desc Get package metadata.
-//api:desc Something else.
+//api:params DummyParams
+//api:response Package
+//api:route /v1beta/package/{path}
 //api:pathparam path Module or package path.
+//api:desc Get package metadata.
+//api:params DummyParams
+//api:response Package
 `,
 			wantErr: true,
 		},

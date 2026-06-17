@@ -589,8 +589,8 @@ func ServePackageImportedBy(w http.ResponseWriter, r *http.Request, ds internal.
 
 // ServeVulnerabilities handles requests for the v1beta vulnerabilities endpoint.
 // api:route /v1beta/vulns/{path}
-// api:desc Vulnerabilities of the module or package at {path}, from
-// api:desc the Go vulnerability database (https://vuln.go.dev).
+// api:desc Vulnerabilities of the module or package at {path}.
+// api:desc Data comes from the Go vulnerability database (https://vuln.go.dev).
 // api:desc Only results that match the filter query parameter are returned.
 // api:example /v1beta/vulns/golang.org/x/image
 func ServeVulnerabilities(vc *vuln.Client) func(w http.ResponseWriter, r *http.Request, _ internal.DataSource) error {

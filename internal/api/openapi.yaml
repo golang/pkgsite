@@ -3,16 +3,48 @@
   "info": {
     "title": "Go Pkgsite API",
     "version": "v0.1.1",
-    "description": "API for accessing information about Go packages and modules on pkg.go.dev."
+    "description": "API for accessing information about Go packages and modules on pkg.go.dev.",
+    "contact": {
+      "name": "The Go team at Google",
+      "url": "https://go.dev/s/discovery-feedback",
+      "email": "golang-dev@googlegroups.com"
+    }
   },
   "servers": [
     {
       "url": "https://pkg.go.dev/v1beta"
     }
   ],
+  "tags": [
+    {
+      "name": "imported-by"
+    },
+    {
+      "name": "module"
+    },
+    {
+      "name": "package"
+    },
+    {
+      "name": "packages"
+    },
+    {
+      "name": "search"
+    },
+    {
+      "name": "symbols"
+    },
+    {
+      "name": "versions"
+    },
+    {
+      "name": "vulns"
+    }
+  ],
   "paths": {
     "/imported-by/{path}": {
       "get": {
+        "description": "Paths of packages importing the package at {path},\nnot including packages in the same module.\nFiltering is applied to the list of paths in the response.\nOnly paths that match the filter query parameter are returned.\nWithin a filter, the variable `path` is set to the import path.",
         "operationId": "getImported-by",
         "parameters": [
           {
@@ -75,13 +107,27 @@
               }
             },
             "description": "Successful response"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Error response"
           }
         },
-        "summary": "Paths of packages importing the package at {path},\nnot including packages in the same module.\nFiltering is applied to the list of paths in the response.\nOnly paths that match the filter query parameter are returned.\nWithin a filter, the variable `path` is set to the import path."
+        "summary": "Paths of packages importing the package at {path},\nnot including packages in the same module",
+        "tags": [
+          "imported-by"
+        ]
       }
     },
     "/module/{path}": {
       "get": {
+        "description": "Information about the module at {path}.",
         "operationId": "getModule",
         "parameters": [
           {
@@ -128,13 +174,27 @@
               }
             },
             "description": "Successful response"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Error response"
           }
         },
-        "summary": "Information about the module at {path}."
+        "summary": "Information about the module at {path}",
+        "tags": [
+          "module"
+        ]
       }
     },
     "/package/{path}": {
       "get": {
+        "description": "Information about the package at {path}.",
         "operationId": "getPackage",
         "parameters": [
           {
@@ -221,13 +281,27 @@
               }
             },
             "description": "Successful response"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Error response"
           }
         },
-        "summary": "Information about the package at {path}."
+        "summary": "Information about the package at {path}",
+        "tags": [
+          "package"
+        ]
       }
     },
     "/packages/{path}": {
       "get": {
+        "description": "Information about packages of the module at {path}.\nFiltering is applied to the list of packages in the response.\nOnly packages that match the filter query parameter are returned.",
         "operationId": "getPackages",
         "parameters": [
           {
@@ -282,13 +356,27 @@
               }
             },
             "description": "Successful response"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Error response"
           }
         },
-        "summary": "Information about packages of the module at {path}.\nFiltering is applied to the list of packages in the response.\nOnly packages that match the filter query parameter are returned."
+        "summary": "Information about packages of the module at {path}",
+        "tags": [
+          "packages"
+        ]
       }
     },
     "/search": {
       "get": {
+        "description": "Search results. Only results that match the filter query parameter are returned.\nResults are sorted by how well the match the query, with the best match first.",
         "operationId": "getSearch",
         "parameters": [
           {
@@ -337,18 +425,32 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PaginatedResponse"
+                  "$ref": "#/components/schemas/PaginatedResponse_SearchResult"
                 }
               }
             },
             "description": "Successful response"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Error response"
           }
         },
-        "summary": "Search results. Only results that match the filter query parameter are returned.\nResults are sorted by how well the match the query, with the best match first."
+        "summary": "Search results",
+        "tags": [
+          "search"
+        ]
       }
     },
     "/symbols/{path}": {
       "get": {
+        "description": "List of symbols for the package at {path}.\nFiltering is applied to the list of symbols in the response.\nOnly symbols that match the filter query parameter are returned.",
         "operationId": "getSymbols",
         "parameters": [
           {
@@ -427,13 +529,27 @@
               }
             },
             "description": "Successful response"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Error response"
           }
         },
-        "summary": "List of symbols for the package at {path}.\nFiltering is applied to the list of symbols in the response.\nOnly symbols that match the filter query parameter are returned."
+        "summary": "List of symbols for the package at {path}",
+        "tags": [
+          "symbols"
+        ]
       }
     },
     "/versions/{path}": {
       "get": {
+        "description": "Versions of the module at {path}.\nIf there are tagged versions, they are returned.\nOtherwise, the 10 most recent pseudo-versions are returned.\nThe versions are in descending order.\nOnly results that match the filter query parameter are returned.",
         "operationId": "getVersions",
         "parameters": [
           {
@@ -475,18 +591,32 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PaginatedResponse"
+                  "$ref": "#/components/schemas/PaginatedResponse_ModuleVersion"
                 }
               }
             },
             "description": "Successful response"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Error response"
           }
         },
-        "summary": "Versions of the module at {path}.\nIf there are tagged versions, they are returned.\nOtherwise, the 10 most recent pseudo-versions are returned.\nThe versions are in descending order.\nOnly results that match the filter query parameter are returned."
+        "summary": "Versions of the module at {path}",
+        "tags": [
+          "versions"
+        ]
       }
     },
     "/vulns/{path}": {
       "get": {
+        "description": "Vulnerabilities of the module or package at {path}.\nData comes from the Go vulnerability database (https://vuln.go.dev).\nOnly results that match the filter query parameter are returned.",
         "operationId": "getVulns",
         "parameters": [
           {
@@ -544,14 +674,27 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PaginatedResponse"
+                  "$ref": "#/components/schemas/PaginatedResponse_Vulnerability"
                 }
               }
             },
             "description": "Successful response"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Error response"
           }
         },
-        "summary": "Vulnerabilities of the module or package at {path}, from\nthe Go vulnerability database (https://vuln.go.dev).\nOnly results that match the filter query parameter are returned."
+        "summary": "Vulnerabilities of the module or package at {path}",
+        "tags": [
+          "vulns"
+        ]
       }
     }
   },
@@ -746,7 +889,7 @@
       "PackageImportedBy": {
         "properties": {
           "importedBy": {
-            "$ref": "#/components/schemas/PaginatedResponse"
+            "$ref": "#/components/schemas/PaginatedResponse_string"
           },
           "modulePath": {
             "type": "string"
@@ -781,7 +924,7 @@
             "type": "string"
           },
           "symbols": {
-            "$ref": "#/components/schemas/PaginatedResponse"
+            "$ref": "#/components/schemas/PaginatedResponse_Symbol"
           },
           "version": {
             "type": "string"
@@ -798,7 +941,7 @@
             "type": "string"
           },
           "packages": {
-            "$ref": "#/components/schemas/PaginatedResponse"
+            "$ref": "#/components/schemas/PaginatedResponse_PackageInfo"
           },
           "version": {
             "type": "string"
@@ -806,11 +949,96 @@
         },
         "type": "object"
       },
-      "PaginatedResponse": {
+      "PaginatedResponse_ModuleVersion": {
         "properties": {
           "items": {
             "items": {
-              "type": "object"
+              "$ref": "#/components/schemas/ModuleVersion"
+            },
+            "type": "array"
+          },
+          "nextPageToken": {
+            "type": "string"
+          },
+          "total": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "PaginatedResponse_PackageInfo": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PackageInfo"
+            },
+            "type": "array"
+          },
+          "nextPageToken": {
+            "type": "string"
+          },
+          "total": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "PaginatedResponse_SearchResult": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/SearchResult"
+            },
+            "type": "array"
+          },
+          "nextPageToken": {
+            "type": "string"
+          },
+          "total": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "PaginatedResponse_Symbol": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/Symbol"
+            },
+            "type": "array"
+          },
+          "nextPageToken": {
+            "type": "string"
+          },
+          "total": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "PaginatedResponse_Vulnerability": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/Vulnerability"
+            },
+            "type": "array"
+          },
+          "nextPageToken": {
+            "type": "string"
+          },
+          "total": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "PaginatedResponse_string": {
+        "properties": {
+          "items": {
+            "items": {
+              "type": "string"
             },
             "type": "array"
           },

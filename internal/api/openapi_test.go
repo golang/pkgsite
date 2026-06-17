@@ -13,9 +13,11 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
+	"maps"
 	"os"
 	"reflect"
 	"regexp"
+	"slices"
 	"strings"
 	"testing"
 
@@ -78,21 +80,47 @@ type Complex struct {
 }`,
 		},
 		{
-			name: "generics elision",
+			name: "paginated concrete variant",
 			data: `
 package api
 type PaginatedResponse[T any] struct {
-	Items []T ` + "`" + `json:"items"` + "`" + `
+	Items         []T    ` + "`" + `json:"items"` + "`" + `
+	NextPageToken string ` + "`" + `json:"nextPageToken,omitempty"` + "`" + `
+}
+type Holder struct {
+	List PaginatedResponse[Symbol] ` + "`" + `json:"list"` + "`" + `
+}
+type Symbol struct {
+	Name string ` + "`" + `json:"name"` + "`" + `
 }
 `,
 			want: `{
-  "PaginatedResponse": {
+  "Holder": {
+    "properties": {
+      "list": {
+        "$ref": "#/components/schemas/PaginatedResponse_Symbol"
+      }
+    },
+    "type": "object"
+  },
+  "PaginatedResponse_Symbol": {
     "properties": {
       "items": {
         "items": {
-          "type": "object"
+          "$ref": "#/components/schemas/Symbol"
         },
         "type": "array"
+      },
+      "nextPageToken": {
+        "type": "string"
+      }
+    },
+    "type": "object"
+  },
+  "Symbol": {
+    "properties": {
+      "name": {
+        "type": "string"
       }
     },
     "type": "object"
@@ -112,7 +140,8 @@ type PackageInfo struct {
 	Synopsis string ` + "`" + `json:"synopsis"` + "`" + `
 }
 `,
-			want: `"Package": {
+			want: `{
+  "Package": {
     "properties": {
       "path": {
         "type": "string"
@@ -125,7 +154,19 @@ type PackageInfo struct {
       }
     },
     "type": "object"
-  }`,
+  },
+  "PackageInfo": {
+    "properties": {
+      "path": {
+        "type": "string"
+      },
+      "synopsis": {
+        "type": "string"
+      }
+    },
+    "type": "object"
+  }
+}`,
 		},
 		{
 			name: "instantiated generic",
@@ -134,12 +175,30 @@ package api
 type PackageImportedBy struct {
 	ImportedBy PaginatedResponse[string] ` + "`" + `json:"importedBy"` + "`" + `
 }
+type PaginatedResponse[T any] struct {
+	Items         []T    ` + "`" + `json:"items"` + "`" + `
+	NextPageToken string ` + "`" + `json:"nextPageToken,omitempty"` + "`" + `
+}
 `,
 			want: `{
   "PackageImportedBy": {
     "properties": {
       "importedBy": {
-        "$ref": "#/components/schemas/PaginatedResponse"
+        "$ref": "#/components/schemas/PaginatedResponse_string"
+      }
+    },
+    "type": "object"
+  },
+  "PaginatedResponse_string": {
+    "properties": {
+      "items": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array"
+      },
+      "nextPageToken": {
+        "type": "string"
       }
     },
     "type": "object"
@@ -150,7 +209,7 @@ type PackageImportedBy struct {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := generateSchemas([]byte(tt.data))
+			got, err := generateSchemas([]byte(tt.data), nil)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -158,12 +217,47 @@ type PackageImportedBy struct {
 			if err != nil {
 				t.Fatal(err)
 			}
-			gotStr := string(data)
-			if !strings.Contains(gotStr, tt.want) {
-				t.Errorf("generateSchemas output does not contain expected schema.\nWant:\n%s\nGot:\n%s", tt.want, gotStr)
+			if got := string(data); got != tt.want {
+				t.Errorf("generateSchemas() =\n%s\nwant:\n%s", got, tt.want)
 			}
 		})
 	}
+}
+
+func TestCollectTags(t *testing.T) {
+	got := collectTags([]*RouteInfo{
+		{Route: "/a", Tags: []string{"packages"}},
+		{Route: "/b", Tags: []string{"module", "packages"}},
+	})
+	want := []openAPITag{
+		{Name: "module"},
+		{Name: "packages"},
+	}
+	if !slices.Equal(got, want) {
+		t.Errorf("collectTags() = %v, want %v", got, want)
+	}
+}
+
+func TestValidateRefs(t *testing.T) {
+	schemas := map[string]any{"Known": map[string]any{}}
+
+	t.Run("resolved", func(t *testing.T) {
+		doc := map[string]any{
+			"a": []any{map[string]any{"$ref": "#/components/schemas/Known"}},
+		}
+		if err := validateRefs(doc, schemas); err != nil {
+			t.Errorf("validateRefs() = %v, want nil", err)
+		}
+	})
+
+	t.Run("dangling", func(t *testing.T) {
+		doc := map[string]any{
+			"a": []any{map[string]any{"$ref": "#/components/schemas/Missing"}},
+		}
+		if err := validateRefs(doc, schemas); err == nil {
+			t.Error("validateRefs() = nil, want error for dangling reference")
+		}
+	})
 }
 
 var update = flag.Bool("update", false, "update goldens instead of checking against them")
@@ -214,14 +308,26 @@ type openAPISpec struct {
 	OpenAPI    string            `json:"openapi"`
 	Info       openAPIInfo       `json:"info"`
 	Servers    []openAPIServer   `json:"servers"`
+	Tags       []openAPITag      `json:"tags"`
 	Paths      map[string]any    `json:"paths"`
 	Components openAPIComponents `json:"components"`
 }
 
+type openAPITag struct {
+	Name string `json:"name"`
+}
+
 type openAPIInfo struct {
-	Title       string `json:"title"`
-	Version     string `json:"version"`
-	Description string `json:"description"`
+	Title       string         `json:"title"`
+	Version     string         `json:"version"`
+	Description string         `json:"description"`
+	Contact     openAPIContact `json:"contact"`
+}
+
+type openAPIContact struct {
+	Name  string `json:"name"`
+	URL   string `json:"url"`
+	Email string `json:"email"`
 }
 
 type openAPIServer struct {
@@ -246,16 +352,24 @@ func GenerateOpenAPI() (string, error) {
 		return "", err
 	}
 
+	tags := collectTags(routes)
+
 	spec := openAPISpec{
 		OpenAPI: openAPISpecVersion,
 		Info: openAPIInfo{
 			Title:       "Go Pkgsite API",
 			Version:     apiVersion,
 			Description: "API for accessing information about Go packages and modules on pkg.go.dev.",
+			Contact: openAPIContact{
+				Name:  "The Go team at Google",
+				URL:   "https://go.dev/s/discovery-feedback",
+				Email: "golang-dev@googlegroups.com",
+			},
 		},
 		Servers: []openAPIServer{
 			{URL: "https://pkg.go.dev" + apiPathPrefix},
 		},
+		Tags:  tags,
 		Paths: make(map[string]any),
 	}
 
@@ -267,8 +381,10 @@ func GenerateOpenAPI() (string, error) {
 		}
 
 		operation := map[string]any{
-			"summary":     r.Desc,
+			"summary":     r.Summary,
+			"description": r.Desc,
 			"operationId": generateOperationID(path),
+			"tags":        r.Tags,
 		}
 
 		params := []map[string]any{}
@@ -302,13 +418,23 @@ func GenerateOpenAPI() (string, error) {
 			"200": map[string]any{
 				"description": "Successful response",
 			},
+			"default": map[string]any{
+				"description": "Error response",
+				"content": map[string]any{
+					"application/json": map[string]any{
+						"schema": map[string]any{
+							"$ref": "#/components/schemas/Error",
+						},
+					},
+				},
+			},
 		}
 
 		if r.ResponsePaginatedType != "" {
 			responses["200"].(map[string]any)["content"] = map[string]any{
 				"application/json": map[string]any{
 					"schema": map[string]any{
-						"$ref": "#/components/schemas/PaginatedResponse",
+						"$ref": "#/components/schemas/" + paginatedSchemaName(r.ResponsePaginatedType),
 					},
 				},
 			}
@@ -328,7 +454,14 @@ func GenerateOpenAPI() (string, error) {
 		}
 	}
 
-	schemas, err := generateSchemas(typesGo)
+	var paginatedElems []string
+	for _, r := range routes {
+		if r.ResponsePaginatedType != "" {
+			paginatedElems = append(paginatedElems, r.ResponsePaginatedType)
+		}
+	}
+
+	schemas, err := generateSchemas(typesGo, paginatedElems)
 	if err != nil {
 		return "", err
 	}
@@ -339,10 +472,54 @@ func GenerateOpenAPI() (string, error) {
 		return "", err
 	}
 
+	var doc any
+	if err := json.Unmarshal(data, &doc); err != nil {
+		return "", err
+	}
+	if err := validateRefs(doc, schemas); err != nil {
+		return "", err
+	}
+
 	return string(data), nil
 }
 
-func generateSchemas(data []byte) (map[string]any, error) {
+// validateRefs walks the decoded spec and returns an error for any
+// "#/components/schemas/..." reference that has no matching schema, so that a
+// dangling $ref (e.g. a paginated element type or response type with no struct)
+// fails generation instead of producing an invalid spec.
+func validateRefs(v any, schemas map[string]any) error {
+	switch v := v.(type) {
+	case map[string]any:
+		for key, val := range v {
+			if key == "$ref" {
+				ref, ok := val.(string)
+				if !ok {
+					continue
+				}
+				name, ok := strings.CutPrefix(ref, "#/components/schemas/")
+				if !ok {
+					continue
+				}
+				if _, ok := schemas[name]; !ok {
+					return fmt.Errorf("unresolved schema reference %q", ref)
+				}
+				continue
+			}
+			if err := validateRefs(val, schemas); err != nil {
+				return err
+			}
+		}
+	case []any:
+		for _, item := range v {
+			if err := validateRefs(item, schemas); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func generateSchemas(data []byte, paginatedElems []string) (map[string]any, error) {
 	fset := token.NewFileSet()
 	file, err := parser.ParseFile(fset, "", data, parser.ParseComments)
 	if err != nil {
@@ -369,6 +546,11 @@ func generateSchemas(data []byte) (map[string]any, error) {
 
 	schemas := make(map[string]any)
 	for name, structType := range structs {
+		// PaginatedResponse is generic; concrete variants are emitted by
+		// addPaginatedSchemas, so skip the generic base here.
+		if name == "PaginatedResponse" {
+			continue
+		}
 		properties := make(map[string]any)
 		collectProperties(structType, structs, properties)
 		schemas[name] = map[string]any{
@@ -377,7 +559,72 @@ func generateSchemas(data []byte) (map[string]any, error) {
 		}
 	}
 
+	addPaginatedSchemas(schemas, structs, paginatedElems)
+
 	return schemas, nil
+}
+
+// addPaginatedSchemas adds a concrete schema for each PaginatedResponse[T]
+// instantiation, so that "items" references the actual element type instead of
+// the generic object. Element types come both from struct fields and from the
+// paginated response types declared by routes.
+func addPaginatedSchemas(schemas map[string]any, structs map[string]*ast.StructType, paginatedElems []string) {
+	base, ok := structs["PaginatedResponse"]
+	if !ok {
+		return
+	}
+
+	elems := map[string]bool{}
+	for _, elem := range paginatedElems {
+		elems[elem] = true
+	}
+	for _, st := range structs {
+		for _, field := range st.Fields.List {
+			if elem, ok := paginatedElem(typeExprToString(field.Type)); ok {
+				elems[elem] = true
+			}
+		}
+	}
+
+	for elem := range elems {
+		properties := make(map[string]any)
+		collectProperties(base, structs, properties)
+		properties["items"] = map[string]any{
+			"type":  "array",
+			"items": elemSchema(elem),
+		}
+		schemas[paginatedSchemaName(elem)] = map[string]any{
+			"type":       "object",
+			"properties": properties,
+		}
+	}
+}
+
+// paginatedElem reports whether t is a PaginatedResponse[E] type and returns E.
+func paginatedElem(t string) (string, bool) {
+	rest, ok := strings.CutPrefix(t, "PaginatedResponse[")
+	if !ok || !strings.HasSuffix(rest, "]") {
+		return "", false
+	}
+	return strings.TrimSuffix(rest, "]"), true
+}
+
+// paginatedSchemaName returns the component schema name for PaginatedResponse[elem].
+func paginatedSchemaName(elem string) string {
+	return "PaginatedResponse_" + elem
+}
+
+// elemSchema returns the OpenAPI schema for a single element of an array or
+// paginated response with the given element type.
+func elemSchema(elem string) map[string]any {
+	switch elem {
+	case "string", "bool", "int":
+		return map[string]any{"type": mapType(elem)}
+	case "T":
+		return map[string]any{"type": "object"}
+	default:
+		return map[string]any{"$ref": "#/components/schemas/" + elem}
+	}
 }
 
 // collectProperties adds the schema property for each field of st to properties,
@@ -426,25 +673,15 @@ func mapFieldType(t string) map[string]any {
 		return map[string]any{"type": "integer"}
 	default:
 		if strings.HasPrefix(t, "[]") {
-			elem := t[2:]
-			items := map[string]any{}
-			switch elem {
-			case "string", "bool", "int":
-				items["type"] = mapType(elem)
-			case "T":
-				items["type"] = "object"
-			default:
-				items["$ref"] = "#/components/schemas/" + elem
-			}
 			return map[string]any{
 				"type":  "array",
-				"items": items,
+				"items": elemSchema(t[2:]),
 			}
 		} else if strings.HasPrefix(t, "*") {
 			elem := t[1:]
 			return map[string]any{"$ref": "#/components/schemas/" + elem}
-		} else if strings.HasPrefix(t, "PaginatedResponse[") {
-			return map[string]any{"$ref": "#/components/schemas/PaginatedResponse"}
+		} else if elem, ok := paginatedElem(t); ok {
+			return map[string]any{"$ref": "#/components/schemas/" + paginatedSchemaName(elem)}
 		} else {
 			return map[string]any{"$ref": "#/components/schemas/" + t}
 		}
@@ -493,6 +730,20 @@ func generateOperationID(path string) string {
 		}
 	}
 	return sb.String()
+}
+
+// collectTags returns the global tags definition for all tags used by routes,
+// sorted by name. Descriptions are left empty.
+func collectTags(routes []*RouteInfo) []openAPITag {
+	tags := make(map[string]openAPITag)
+	for _, r := range routes {
+		for _, name := range r.Tags {
+			tags[name] = openAPITag{Name: name}
+		}
+	}
+	return slices.SortedFunc(maps.Values(tags), func(a, b openAPITag) int {
+		return strings.Compare(a.Name, b.Name)
+	})
 }
 
 func mapType(t string) string {

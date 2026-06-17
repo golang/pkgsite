@@ -20,6 +20,7 @@ import (
 	"net/url"
 	"reflect"
 	"regexp"
+	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -50,6 +51,8 @@ type Example struct {
 // RouteInfo contains documentation information for an API route.
 type RouteInfo struct {
 	Route                 string
+	Tags                  []string
+	Summary               string
 	Desc                  string
 	Params                string
 	Response              string
@@ -214,6 +217,17 @@ var apiRE = regexp.MustCompile(`//\s*api:(\S+)\s+(.*)`)
 // routePlaceholderRE matches path placeholders in a route, e.g. {path} in /v1beta/module/{path}.
 var routePlaceholderRE = regexp.MustCompile(`\{([^}]+)\}`)
 
+// routeTag returns the tag for a route: the path element after the first.
+// For example, the tag for "/v1beta/package/{path}" is "package".
+// It returns "default" when the route has no such element.
+func routeTag(route string) string {
+	parts := strings.Split(strings.Trim(route, "/"), "/")
+	if len(parts) < 2 {
+		return "default"
+	}
+	return parts[1]
+}
+
 // readRouteInfo reads the provided Go source data and returns documentation information for all routes.
 func readRouteInfo(data []byte, paramsMap map[string][]QueryParam) ([]*RouteInfo, error) {
 	var routes []*RouteInfo
@@ -226,9 +240,14 @@ func readRouteInfo(data []byte, paramsMap map[string][]QueryParam) ([]*RouteInfo
 		if r.Route == "" {
 			return errors.New("missing api:route")
 		}
+		if slices.ContainsFunc(routes, func(ex *RouteInfo) bool { return ex.Route == r.Route }) {
+			return fmt.Errorf("duplicate api:route %q", r.Route)
+		}
 		if r.Desc == "" {
 			return fmt.Errorf("missing api:desc field in route %q", r.Route)
 		}
+		r.Tags = []string{routeTag(r.Route)}
+		r.Summary, _, _ = strings.Cut(r.Desc, ".")
 		if r.Params == "" {
 			return fmt.Errorf("missing api:params field in route %q", r.Route)
 		}
