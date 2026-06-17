@@ -158,14 +158,19 @@ func (ds *FetchDataSource) fetch(ctx context.Context, modulePath, version string
 	return nil, nil, fmt.Errorf("%s@%s: %w", modulePath, version, derrors.NotFound)
 }
 
-func (ds *FetchDataSource) populateUnitSubdirectories(u *internal.Unit, m *fetch.LazyModule) {
+func (ds *FetchDataSource) populateUnitSubdirectories(ctx context.Context, u *internal.Unit, m *fetch.LazyModule) {
 	p := u.Path + "/"
 	for _, u2 := range m.UnitMetas {
 		if strings.HasPrefix(u2.Path, p) || u.Path == "std" {
+			var synopsis string
+			if sub, err := m.Unit(ctx, u2.Path); err == nil && len(sub.Documentation) > 0 {
+				synopsis = sub.Documentation[0].Synopsis
+			}
 			u.Subdirectories = append(u.Subdirectories, &internal.PackageMeta{
 				Path: u2.Path,
 				Name: u2.Name,
-				// Syn, IsRedistributable, and Licences are not populated from FetchDataSource.
+				// IsRedistributable, and Licences are not populated from FetchDataSource.
+				Synopsis: synopsis,
 			})
 		}
 	}
@@ -234,7 +239,7 @@ func (ds *FetchDataSource) findUnit(ctx context.Context, m *fetch.LazyModule, pa
 	if err != nil {
 		return nil, err
 	}
-	ds.populateUnitSubdirectories(unit, m)
+	ds.populateUnitSubdirectories(ctx, unit, m)
 	if ds.opts.BypassLicenseCheck {
 		unit.IsRedistributable = true
 	} else {
