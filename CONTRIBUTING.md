@@ -37,8 +37,9 @@ We accept contributions through
 
 2. Download the source code for x/pkgsite:
    `git clone https://go.googlesource.com/pkgsite`
-   NOTE: You will need Go 1.19 to
-   develop pkgsite.
+   NOTE: While recent Go versions (1.21+) will automatically upgrade to the
+   version specified in go.mod, it is recommended to use the latest stable Go
+   version for development.
 
 3. Review the [design document](doc/design.md).
 

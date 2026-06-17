@@ -4,6 +4,9 @@
 
 # Library of useful docker functions and variables.
 
+export GO_VERSION=${GO_VERSION:-1.26.4}
+
+
 docker_cleanup() {
   if [ "$GO_DISCOVERY_DOCKER_SKIP_CLEANUP" = "true" ]; then
     echo "Skipping docker cleanup because GO_DISCOVERY_DOCKER_SKIP_CLEANUP=true."

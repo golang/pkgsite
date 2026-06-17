@@ -7,12 +7,14 @@
 set -e
 
 source devtools/lib.sh || { echo "Are you at repo root?"; exit 1; }
+source devtools/docker.sh || { echo "Are you at repo root?"; exit 1; }
+
 
 # Do not truncate commands when displaying them (see runcmd in devtools/lib.sh).
 MAXWIDTH=0
 
 screentest_version=latest
- 
+
 # This should match the version we are using in devtools/docker/compose.yaml.
 chromedp_version=131.0.6778.33
 

@@ -18,7 +18,7 @@ steps:
     args:
       - $PROJECT_ID
   - id: Migrate
-    name: golang:1.26.4
+    name: golang:$_GO_VERSION
     entrypoint: bash
     dir: private
     args:
@@ -39,3 +39,7 @@ availableSecrets:
   secretManager:
   - versionName: projects/$PROJECT_ID/secrets/cloudbuild-database-password/versions/latest
     env: 'PASSWORD'
+
+substitutions:
+  _GO_VERSION: 1.26.4
+

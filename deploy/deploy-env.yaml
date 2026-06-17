@@ -16,19 +16,22 @@ steps:
       - run
       - allbash
       - ci
+    env:
+      # Pass the Cloud Build Go version parameter down to Docker Compose to ensure consistency.
+      - GO_VERSION=$_GO_VERSION
   - id: Prepare
     name: gcr.io/cloud-builders/gcloud
     entrypoint: deploy/prepare.sh
     args:
       - $PROJECT_ID
   - id: Tidy private
-    name: golang:1.26.4
+    name: golang:$_GO_VERSION
     entrypoint: sh
     args:
       - -c
       - cd private && go mod tidy
   - id: Check redistributable
-    name: golang:1.26.4
+    name: golang:$_GO_VERSION
     entrypoint: private/devtools/check_redist.sh
   - id: Build
     name: gcr.io/cloud-builders/docker
@@ -56,7 +59,11 @@ steps:
       - -c
       - deploy/frontend.sh $_ENV gcr.io/$PROJECT_ID/frontend:$(cat _BUILD_TAG)
   - id: Pagecheck
-    name: golang:1.26.4
+    name: golang:$_GO_VERSION
     entrypoint: deploy/pagecheck.sh
     args:
       - $_ENV
+
+substitutions:
+  _GO_VERSION: 1.26.4
+
