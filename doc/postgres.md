@@ -36,7 +36,6 @@ For additional information on our architecture, see the
    at port 5432.
 
 2. Set the following environment variables:
-
    - `GO_DISCOVERY_DATABASE_USER` (default: postgres)
    - `GO_DISCOVERY_DATABASE_PASSWORD` (default: '')
    - `GO_DISCOVERY_DATABASE_HOST` (default: localhost)

@@ -45,9 +45,10 @@ discovery and metadata lookup.
 Run `pkgsite-cli <command> -h` for details on available flags for each command.
 
 Available commands:
- * `package`
- * `module`
- * `search`
+
+- `package`
+- `module`
+- `search`
 
 Additional commands will be added in the future.
 
@@ -90,6 +91,7 @@ pkgsite-cli module -packages -versions github.com/google/go-cmp
 ```
 
 ## Details
+
 - **Ambiguous paths**: Unlike `go mod tidy` or the
   [pkg.go.dev](https://pkg.go.dev) web interface, which use the "longest
   module path" rule to resolve ambiguous package paths, the API requires the
@@ -98,8 +100,8 @@ pkgsite-cli module -packages -versions github.com/google/go-cmp
   and reports an error. Use the `-module` flag to specify the correct
   module path.
 
-
 ## Status and Implementation
+
 - **Experimental**: This tool is currently a prototype.
 - **Minimal Dependencies**: To facilitate potential migration to other
   repositories (e.g., `x/tools`), the tool depends only on the Go standard
