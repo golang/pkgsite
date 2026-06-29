@@ -23,7 +23,7 @@ The Go image version is parameterized in all Cloud Build files
 
 ```yaml
 substitutions:
-  _GO_VERSION: 1.26.4
+  _GO_VERSION: 1.27rc1
 ```
 
 This version is used by all Go build steps via `golang:$_GO_VERSION`.

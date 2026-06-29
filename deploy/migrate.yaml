@@ -41,5 +41,5 @@ availableSecrets:
     env: 'PASSWORD'
 
 substitutions:
-  _GO_VERSION: 1.26.4
+  _GO_VERSION: 1.27rc1
 
