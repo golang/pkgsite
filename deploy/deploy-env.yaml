@@ -38,7 +38,7 @@ steps:
     entrypoint: sh
     args:
       - -c
-      - deploy/build.sh $PROJECT_ID $(cat _BUILD_TAG)
+      - deploy/build.sh $PROJECT_ID $(cat _BUILD_TAG) $_GO_VERSION
   - id: Config
     name: gcr.io/cloud-builders/gcloud
     entrypoint: deploy/config.sh

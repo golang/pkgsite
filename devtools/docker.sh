@@ -4,7 +4,15 @@
 
 # Library of useful docker functions and variables.
 
-export GO_VERSION=${GO_VERSION:-1.26.4}
+source devtools/lib.sh || { echo "Are you at repo root?"; exit 1; }
+
+if [[ -z $GO_VERSION ]]; then
+  GO_VERSION=$(get_go_version) || true
+  if [[ -z $GO_VERSION ]]; then
+    die "Failed to detect GO_VERSION from deploy/deploy-env.yaml. Please set GO_VERSION explicitly."
+  fi
+fi
+export GO_VERSION
 
 
 docker_cleanup() {

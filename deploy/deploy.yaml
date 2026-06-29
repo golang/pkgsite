@@ -38,7 +38,7 @@ steps:
     entrypoint: sh
     args:
       - -c
-      - deploy/build.sh $PROJECT_ID $(cat _BUILD_TAG)
+      - deploy/build.sh $PROJECT_ID $(cat _BUILD_TAG) $_GO_VERSION
   - id: Config - staging
     name: gcr.io/cloud-builders/gcloud
     entrypoint: deploy/config.sh
@@ -70,6 +70,7 @@ steps:
       - staging
     env:
       - QUOTA_BYPASS=$_QUOTA_BYPASS
+      - GO_VERSION=$_GO_VERSION
   - id: Config - prod
     name: gcr.io/cloud-builders/gcloud
     entrypoint: deploy/config.sh

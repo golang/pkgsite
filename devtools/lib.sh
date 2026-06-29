@@ -40,3 +40,20 @@ runcmd() {
   info "\$ $msg"
   $@ || err "command failed"
 }
+
+find_deploy_config() {
+  for path in deploy/deploy-env.yaml ../deploy/deploy-env.yaml ../../deploy/deploy-env.yaml; do
+    if [[ -f $path ]]; then
+      echo $path
+      return 0
+    fi
+  done
+  return 1
+}
+
+get_go_version() {
+  local config_file=$(find_deploy_config)
+  if [[ -n $config_file ]]; then
+    grep '_GO_VERSION:' "$config_file" | head -n 1 | awk '{print $2}'
+  fi
+}
