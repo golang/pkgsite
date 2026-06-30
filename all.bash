@@ -95,18 +95,6 @@ findcode() {
     \( -name '*.go' -o -name '*.sql' -o -name '*.tmpl' -o -name '*.css' -o -name '*.js' -o -name '*.ts' \)
 }
 
-# ensure_go_binary verifies that a binary exists in $PATH corresponding to the
-# given go-gettable URI. If no such binary exists, it is fetched via `go install`.
-ensure_go_binary() {
-  local binary=$(basename $1)
-  if ! [ -x "$(command -v $binary)" ]; then
-    info "Installing: $1"
-    # Run in a subshell for convenience, so that we don't have to worry about
-    # our PWD.
-    (set -x; cd && $GO install $1@latest)
-  fi
-}
-
 # check_headers checks that all source files that have been staged in this
 # commit, and all other non-third-party files in the repo, have a license
 # header.
@@ -140,8 +128,7 @@ check_bad_migrations() {
 
 # check_unparam runs unparam on source files.
 check_unparam() {
-  ensure_go_binary mvdan.cc/unparam
-  runcmd unparam ./...
+  runcmd $GO tool unparam ./...
 }
 
 # check_vet runs go vet on source files.
@@ -151,22 +138,19 @@ check_vet() {
 
 # check_staticcheck runs staticcheck on source files.
 check_staticcheck() {
-  ensure_go_binary honnef.co/go/tools/cmd/staticcheck
-  runcmd staticcheck $(go list ./... | grep -v third_party | grep -v internal/doc | grep -v internal/render)
+  runcmd $GO tool staticcheck $(go list ./... | grep -v third_party | grep -v internal/doc | grep -v internal/render)
 }
 
 # check_misspell runs misspell on source files.
 check_misspell() {
-  ensure_go_binary github.com/client9/misspell/cmd/misspell
-  runcmd misspell cmd/**/*.{go,sh} internal/**/* README.md
+  runcmd $GO tool misspell cmd/**/*.{go,sh} internal/**/* README.md
 }
 
 # check_templates runs go-template-lint on template files. Unfortunately it
 # doesn't handler the /helpers/ fileglob correctly, so it is too noisy to be
 # included in standard checks.
 check_templates() {
-  ensure_go_binary sourcegraph.com/sourcegraph/go-template-lint
-  runcmd go-template-lint \
+  runcmd $GO tool go-template-lint \
     -f=internal/frontend/server.go \
     -t=internal/frontend/server.go \
     -td=static | warnout

@@ -151,8 +151,8 @@ func (db *DB) QueryRow(ctx context.Context, query string, args ...any) *sql.Row 
 	return db.db.QueryRowContext(ctx, query, args...)
 }
 
-func (db *DB) Prepare(ctx context.Context, query string) (*sql.Stmt, error) {
-	defer logQuery(ctx, "preparing "+query, nil, db.instanceID, db.IsRetryable())
+func (db *DB) Prepare(ctx context.Context, query string) (stmt *sql.Stmt, err error) {
+	defer logQuery(ctx, "preparing "+query, nil, db.instanceID, db.IsRetryable())(&err)
 	if db.tx != nil {
 		return db.tx.PrepareContext(ctx, query)
 	}

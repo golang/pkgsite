@@ -31,13 +31,12 @@ func (s *Server) proxyPlayground(w http.ResponseWriter, r *http.Request) {
 // The prefix /play is removed from the URL path.
 func makePlaygroundProxy(pgURL *url.URL) *httputil.ReverseProxy {
 	return &httputil.ReverseProxy{
-		Director: func(req *http.Request) {
-			req.Header.Add("X-Forwarded-Host", req.Host)
-			req.Header.Add("X-Origin-Host", pgURL.Host)
-			req.Host = pgURL.Host
-			req.URL.Scheme = pgURL.Scheme
-			req.URL.Host = pgURL.Host
-			req.URL.Path = strings.TrimPrefix(req.URL.Path, "/play")
+		Rewrite: func(pr *httputil.ProxyRequest) {
+			pr.SetURL(pgURL)
+			pr.Out.Header.Add("X-Forwarded-Host", pr.In.Host)
+			pr.Out.Header.Add("X-Origin-Host", pgURL.Host)
+			pr.Out.Host = pgURL.Host
+			pr.Out.URL.Path = strings.TrimPrefix(pr.In.URL.Path, "/play")
 		},
 		ErrorHandler: func(w http.ResponseWriter, r *http.Request, err error) {
 			log.Errorf(r.Context(), "ERROR playground proxy error: %v", err)
