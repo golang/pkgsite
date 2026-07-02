@@ -884,18 +884,20 @@ func TestSearchLicenseDedup(t *testing.T) {
 }
 
 type searchDocument struct {
-	packagePath              string
-	modulePath               string
-	version                  string
-	commitTime               time.Time
-	name                     string
-	synopsis                 string
-	licenseTypes             []string
-	importedByCount          int
-	redistributable          bool
-	hasGoMod                 bool
-	versionUpdatedAt         time.Time
-	importedByCountUpdatedAt time.Time
+	packagePath                    string
+	modulePath                     string
+	version                        string
+	commitTime                     time.Time
+	name                           string
+	synopsis                       string
+	licenseTypes                   []string
+	importedByCount                int
+	importedByModuleCount          int
+	redistributable                bool
+	hasGoMod                       bool
+	versionUpdatedAt               time.Time
+	importedByCountUpdatedAt       time.Time
+	importedByModuleCountUpdatedAt time.Time
 }
 
 // getSearchDocument returns the search_document for the package with the given
@@ -911,25 +913,30 @@ func getSearchDocument(ctx context.Context, db *DB, path string) (*searchDocumen
 			synopsis,
 			license_types,
 			imported_by_count,
+			imported_by_module_count,
 			redistributable,
 			has_go_mod,
 			version_updated_at,
-			imported_by_count_updated_at
+			imported_by_count_updated_at,
+			imported_by_module_count_updated_at
 		FROM
 			search_documents
 		WHERE package_path=$1`
 	row := db.db.QueryRow(ctx, query, path)
 	var (
-		sd searchDocument
-		t  sql.NullTime
+		sd     searchDocument
+		t1, t2 sql.NullTime
 	)
 	if err := row.Scan(&sd.packagePath, &sd.modulePath, &sd.version, &sd.commitTime,
-		&sd.name, &sd.synopsis, pq.Array(&sd.licenseTypes), &sd.importedByCount,
-		&sd.redistributable, &sd.hasGoMod, &sd.versionUpdatedAt, &t); err != nil {
+		&sd.name, &sd.synopsis, pq.Array(&sd.licenseTypes), &sd.importedByCount, &sd.importedByModuleCount,
+		&sd.redistributable, &sd.hasGoMod, &sd.versionUpdatedAt, &t1, &t2); err != nil {
 		return nil, fmt.Errorf("row.Scan(): %v", err)
 	}
-	if t.Valid {
-		sd.importedByCountUpdatedAt = t.Time
+	if t1.Valid {
+		sd.importedByCountUpdatedAt = t1.Time
+	}
+	if t2.Valid {
+		sd.importedByModuleCountUpdatedAt = t2.Time
 	}
 	return &sd, nil
 }
@@ -1218,6 +1225,55 @@ func TestUpdateSearchDocumentsImportedByCount(t *testing.T) {
 		updateImportedByCount(testDB, 1)
 		_ = validateImportedByCountAndGetSearchDocument(t, testDB, pkgPath(mA), 2)
 		_ = validateImportedByCountAndGetSearchDocument(t, testDB, pkgPath(mB), 1)
+	})
+	t.Run("module_sharing", func(t *testing.T) {
+		testDB, release := acquire(t)
+		defer release()
+
+		mA := insertPackageVersion(t, testDB, "A", "v1.0.0", nil)
+
+		// Module C has two packages, C1 and C2, both importing A.
+		mC := sample.Module("mod.com/C", "v1.0.0", "C1", "C2")
+		for _, u := range mC.Units {
+			if u.Path != "mod.com/C" {
+				u.Imports = []string{pkgPath(mA)}
+			}
+		}
+		testDB.MustInsertModule(t, mC)
+
+		updateImportedByCount(testDB, 100)
+		sdA := validateImportedByCountAndGetSearchDocument(t, testDB, pkgPath(mA), 2)
+		if sdA.importedByModuleCount != 1 {
+			t.Errorf("importedByModuleCount for A = %d, want 1", sdA.importedByModuleCount)
+		}
+		if sdA.importedByModuleCountUpdatedAt.IsZero() {
+			t.Error("importedByModuleCountUpdatedAt for A is zero, want non-zero")
+		}
+	})
+	t.Run("same_module", func(t *testing.T) {
+		testDB, release := acquire(t)
+		defer release()
+
+		// Module A has two packages, pkg1 and pkg2.
+		// pkg1 imports pkg2 within the same module.
+		mA := sample.Module("mod.com/A", "v1.0.0", "pkg1", "pkg2")
+		for _, u := range mA.Units {
+			if u.Path == "mod.com/A/pkg1" {
+				u.Imports = []string{"mod.com/A/pkg2"}
+			} else if u.IsPackage() {
+				u.Imports = nil
+			}
+		}
+		testDB.MustInsertModule(t, mA)
+
+		updateImportedByCount(testDB, 100)
+		sdPkg2 := validateImportedByCountAndGetSearchDocument(t, testDB, "mod.com/A/pkg2", 0)
+		if sdPkg2.importedByModuleCount != 1 {
+			t.Errorf("importedByModuleCount for pkg2 = %d, want 1", sdPkg2.importedByModuleCount)
+		}
+		if sdPkg2.importedByModuleCountUpdatedAt.IsZero() {
+			t.Error("importedByModuleCountUpdatedAt for pkg2 is zero, want non-zero")
+		}
 	})
 }
 
