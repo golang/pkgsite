@@ -190,6 +190,7 @@ func Init(ctx context.Context) (_ *config.Config, err error) {
 		LogLevel:              os.Getenv("GO_DISCOVERY_LOG_LEVEL"),
 		ServeStats:            os.Getenv("GO_DISCOVERY_SERVE_STATS") == "true",
 		DisableErrorReporting: os.Getenv("GO_DISCOVERY_DISABLE_ERROR_REPORTING") == "true",
+		EnableVectorSearch:    os.Getenv("GO_DISCOVERY_ENABLE_VECTOR_SEARCH") == "true",
 		VulnDB:                GetEnv("GO_DISCOVERY_VULN_DB", "https://storage.googleapis.com/go-vulndb"),
 	}
 	log.SetLevel(cfg.LogLevel)

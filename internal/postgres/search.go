@@ -698,6 +698,87 @@ func UpsertSearchDocument(ctx context.Context, ddb *database.DB, args UpsertSear
 	return err
 }
 
+// PackageToEmbed contains the package path, synopsis, and top symbols needed to generate an embedding.
+type PackageToEmbed struct {
+	PackagePath   string
+	PackagePathID int
+	Synopsis      string
+	TopSymbols    string // space-separated list of top symbol names for the package
+}
+
+// GetPackagesToEmbed fetches packages with imported_by_count >= 1 that do not have an embedding yet,
+// returning the package information (synopsis and top symbols) required to generate their embeddings.
+func (db *DB) GetPackagesToEmbed(ctx context.Context, limit int) (pkgs []PackageToEmbed, err error) {
+	defer derrors.WrapStack(&err, "GetPackagesToEmbed(ctx, %d)", limit)
+
+	// Top symbols are ordered by:
+	// 1. Top-level symbols first (where symbol_name_id == parent_symbol_name_id) rather than methods/fields.
+	// 2. Section priority: Types, Functions, Variables, Constants.
+	// 3. Alphabetical order by symbol name.
+	// TODO: add a test for this query.
+	query := `
+		SELECT sd.package_path, sd.package_path_id, COALESCE(sd.synopsis, ''),
+		       (SELECT string_agg(s.name, ' ')
+		        FROM (
+		            SELECT s.name
+		            FROM package_symbols ps
+		            INNER JOIN symbol_names s ON ps.symbol_name_id = s.id
+		            WHERE ps.package_path_id = sd.package_path_id
+		            ORDER BY
+		                (ps.symbol_name_id = ps.parent_symbol_name_id) DESC,
+		                CASE ps.section
+		                    WHEN 'Types' THEN 1
+		                    WHEN 'Functions' THEN 2
+		                    WHEN 'Variables' THEN 3
+		                    WHEN 'Constants' THEN 4
+		                    ELSE 5
+		                END,
+		                s.name
+		            LIMIT 50
+		        ) s
+		       ) AS top_symbols
+		FROM search_documents sd
+		WHERE sd.imported_by_count >= 1 AND sd.embedding IS NULL
+		LIMIT $1;`
+
+	collect := func(rows *sql.Rows) error {
+		var p PackageToEmbed
+		if err := rows.Scan(&p.PackagePath, &p.PackagePathID, &p.Synopsis, database.NullIsEmpty(&p.TopSymbols)); err != nil {
+			return err
+		}
+		pkgs = append(pkgs, p)
+		return nil
+	}
+
+	if err := db.db.RunQuery(ctx, query, collect, limit); err != nil {
+		return nil, err
+	}
+	return pkgs, nil
+}
+
+// UpdateSearchDocumentEmbedding updates the embedding vector for the package.
+func (db *DB) UpdateSearchDocumentEmbedding(ctx context.Context, packagePath string, embedding []float32) (err error) {
+	defer derrors.WrapStack(&err, "UpdateSearchDocumentEmbedding(ctx, %q)", packagePath)
+
+	vecStr := formatVector(embedding)
+	query := `UPDATE search_documents SET embedding = $1::halfvec WHERE package_path = $2;`
+	_, err = db.db.Exec(ctx, query, vecStr, packagePath)
+	return err
+}
+
+func formatVector(vec []float32) string {
+	var sb strings.Builder
+	sb.WriteByte('[')
+	for i, v := range vec {
+		if i > 0 {
+			sb.WriteByte(',')
+		}
+		fmt.Fprintf(&sb, "%g", v)
+	}
+	sb.WriteByte(']')
+	return sb.String()
+}
+
 // GetPackagesForSearchDocumentUpsert fetches search information for packages in search_documents
 // whose update time is before the given time.
 func (db *DB) GetPackagesForSearchDocumentUpsert(ctx context.Context, before time.Time, limit int) (argsList []UpsertSearchDocumentArgs, err error) {

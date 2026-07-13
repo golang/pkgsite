@@ -117,6 +117,9 @@ type Config struct {
 	// DisableErrorReporting disables sending errors to the GCP ErrorReporting system.
 	DisableErrorReporting bool
 
+	// EnableVectorSearch gates the vector search / embeddings sync database queries.
+	EnableVectorSearch bool
+
 	// VulnDB is the URL of the Go vulnerability DB.
 	VulnDB string
 }
