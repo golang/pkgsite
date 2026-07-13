@@ -23,6 +23,7 @@ import (
 	"golang.org/x/pkgsite/internal/config"
 	"golang.org/x/pkgsite/internal/config/serverconfig"
 	"golang.org/x/pkgsite/internal/dcensus"
+	"golang.org/x/pkgsite/internal/embeddings"
 	"golang.org/x/pkgsite/internal/index"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/middleware"
@@ -145,6 +146,15 @@ func main() {
 	trace.SetTraceFunction(func(ctx context.Context, name string) (context.Context, trace.Span) {
 		return octrace.StartSpan(ctx, name)
 	})
+	var embeddingsClient *embeddings.Client
+	if cfg.EnableVectorSearch {
+		var err error
+		embeddingsClient, err = embeddings.NewClient(ctx, cfg.LocationID)
+		if err != nil {
+			log.Fatalf(ctx, "failed to initialize embeddings client: %v", err)
+		}
+	}
+
 	redisCacheClient := getCacheRedis(ctx, cfg)
 	experimenter := cmdconfig.Experimenter(ctx, cfg, expg, reporter)
 	server, err := worker.NewServer(cfg, worker.ServerConfig{
@@ -157,6 +167,7 @@ func main() {
 		Reporter:         reporter,
 		StaticPath:       template.TrustedSourceFromFlag(flag.Lookup("static").Value),
 		GetExperiments:   experimenter.Experiments,
+		EmbeddingsClient: embeddingsClient,
 	})
 	if err != nil {
 		log.Fatal(ctx, err)

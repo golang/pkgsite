@@ -6,10 +6,12 @@ package worker
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -20,6 +22,7 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/config"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/embeddings"
 	"golang.org/x/pkgsite/internal/godoc/dochtml"
 	"golang.org/x/pkgsite/internal/index"
 	"golang.org/x/pkgsite/internal/postgres"
@@ -345,4 +348,99 @@ type fakeTransport struct{}
 
 func (fakeTransport) RoundTrip(*http.Request) (*http.Response, error) {
 	return nil, errors.New("bad")
+}
+
+func TestSyncEmbeddings(t *testing.T) {
+	ctx := context.Background()
+	defer postgres.ResetTestDB(testDB, t)
+
+	pkgPath := "foo.com/foo"
+	version := "v1.0.0"
+	testDB.MustInsertModule(t, sample.Module(pkgPath, version, ""))
+
+	cfg := &config.Config{
+		EnableVectorSearch: true,
+	}
+
+	var generatedPrompts []string
+	embeddingsServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var reqBody struct {
+			Instances []struct {
+				Content string `json:"content"`
+			} `json:"instances"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		for _, inst := range reqBody.Instances {
+			generatedPrompts = append(generatedPrompts, inst.Content)
+		}
+
+		type respPrediction struct {
+			Embeddings struct {
+				Values []float32 `json:"values"`
+			} `json:"embeddings"`
+		}
+		type respStruct struct {
+			Predictions []respPrediction `json:"predictions"`
+		}
+		var resp respStruct
+		for range reqBody.Instances {
+			v := make([]float32, 256)
+			v[0] = 0.5
+			var pred respPrediction
+			pred.Embeddings.Values = v
+			resp.Predictions = append(resp.Predictions, pred)
+		}
+		json.NewEncoder(w).Encode(resp)
+	}))
+	defer embeddingsServer.Close()
+
+	mockClient := &embeddings.Client{
+		HTTPClient: embeddingsServer.Client(),
+		BaseURL:    embeddingsServer.URL,
+	}
+
+	s, err := NewServer(cfg, ServerConfig{
+		DB:               testDB,
+		EmbeddingsClient: mockClient,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	mux := http.NewServeMux()
+	s.Install(mux.Handle)
+
+	// Set imported_by_count >= 1 so it requires embeddings
+	if _, err := testDB.Underlying().Exec(ctx, "UPDATE search_documents SET imported_by_count = 1 WHERE package_path = $1", pkgPath); err != nil {
+		t.Fatalf("failed to update imported_by_count: %v", err)
+	}
+
+	syncReq := httptest.NewRequest("POST", "/sync-embeddings", nil)
+	syncW := httptest.NewRecorder()
+	mux.ServeHTTP(syncW, syncReq)
+	if syncW.Code != http.StatusOK {
+		t.Fatalf("sync-embeddings code = %d, want %d, body = %q", syncW.Code, http.StatusOK, syncW.Body.String())
+	}
+
+	if len(generatedPrompts) != 1 {
+		t.Errorf("GenerateEmbeddings called %d times, want 1", len(generatedPrompts))
+	} else {
+		if !strings.Contains(generatedPrompts[0], "Package: foo.com/foo") {
+			t.Errorf("prompt = %q, want to contain %q", generatedPrompts[0], "Package: foo.com/foo")
+		}
+	}
+
+	// Query DB to check if embedding vector is set
+	var vecStr string
+	err = testDB.Underlying().QueryRow(ctx, "SELECT embedding::text FROM search_documents WHERE package_path = $1", pkgPath).Scan(&vecStr)
+	if err != nil {
+		t.Fatalf("failed to query embedding: %v", err)
+	}
+
+	if !strings.HasPrefix(vecStr, "[0.5,") {
+		t.Errorf("embedding vector = %q, want prefix [0.5,", vecStr)
+	}
 }

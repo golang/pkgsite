@@ -28,6 +28,10 @@ const (
 
 	// defaultTimeout is the HTTP request timeout for Vertex AI prediction.
 	defaultTimeout = 10 * time.Second
+
+	// defaultModel is the embedding model name.
+	// WARNING: Changing this requires re-embedding all documents in the database.
+	defaultModel = "text-embedding-004"
 )
 
 // TaskType specifies the Vertex AI embedding task type.
@@ -54,8 +58,7 @@ type Client struct {
 
 // NewClient creates a new Client.
 // location is the GCP region (e.g., "us-central1").
-// model is the embedding model name (e.g., "text-embedding-004").
-func NewClient(ctx context.Context, location, model string) (*Client, error) {
+func NewClient(ctx context.Context, location string) (*Client, error) {
 	creds, err := google.FindDefaultCredentials(ctx, cloudPlatformScope)
 	if err != nil {
 		return nil, fmt.Errorf("google.FindDefaultCredentials: %w", err)
@@ -76,7 +79,7 @@ func NewClient(ctx context.Context, location, model string) (*Client, error) {
 		HTTPClient: httpClient,
 		projectID:  projectID,
 		location:   location,
-		model:      model,
+		model:      defaultModel,
 	}, nil
 }
 

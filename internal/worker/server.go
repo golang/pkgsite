@@ -16,6 +16,7 @@ import (
 	"net/http"
 	"net/url"
 	"reflect"
+	"slices"
 	"strconv"
 	"strings"
 	"sync"
@@ -161,6 +162,10 @@ func (s *Server) Install(handle func(string, http.Handler)) {
 	// This endpoint is intended to be invoked periodically by a scheduler.
 	handle("/update-imported-by-count", rmw(s.errorHandler(s.handleUpdateImportedByCount)))
 
+	// scheduled: sync-embeddings generates embeddings for packages that need them.
+	// This endpoint is intended to be invoked periodically by a scheduler.
+	handle("/sync-embeddings", rmw(s.errorHandler(s.handleSyncEmbeddings)))
+
 	// task-queue: fetch fetches a module version from the Module Mirror, and
 	// processes the contents, and inserts it into the database. If a fetch
 	// request fails for any reason other than an http.StatusInternalServerError,
@@ -274,6 +279,81 @@ func (s *Server) handleUpdateImportedByCount(w http.ResponseWriter, r *http.Requ
 	}
 	fmt.Fprintf(w, "updated %d packages", n)
 	return nil
+}
+
+// handleSyncEmbeddings generates embeddings for packages that need them.
+func (s *Server) handleSyncEmbeddings(w http.ResponseWriter, r *http.Request) error {
+	ctx := r.Context()
+	if !s.cfg.EnableVectorSearch {
+		fmt.Fprint(w, "vector search / embeddings sync is disabled")
+		return nil
+	}
+
+	if s.embeddingsClient == nil {
+		return &serverError{
+			http.StatusInternalServerError,
+			errors.New("embeddings client is not initialized"),
+		}
+	}
+
+	limit := parseIntParam(r, "limit", 100)
+	if limit <= 0 || limit > 1000 {
+		limit = 100
+	}
+
+	targets, err := s.db.GetPackagesToEmbed(ctx, limit)
+	if err != nil {
+		return err
+	}
+
+	if len(targets) == 0 {
+		fmt.Fprint(w, "no packages need embeddings")
+		return nil
+	}
+
+	log.Infof(ctx, "generating embeddings for %d packages", len(targets))
+
+	// Generate and update embeddings in batches to prevent hitting API size/request limits.
+	batchSize := 20
+	processed := 0
+	for batch := range slices.Chunk(targets, batchSize) {
+		var prompts []string
+		for _, t := range batch {
+			prompts = append(prompts, constructEmbeddingPrompt(t.PackagePath, t.Synopsis, t.TopSymbols))
+		}
+
+		vectors, err := s.embeddingsClient.GenerateEmbeddings(ctx, prompts, embeddings.TaskTypeDocument)
+		if err != nil {
+			return fmt.Errorf("GenerateEmbeddings failed: %w", err)
+		}
+
+		if len(vectors) != len(batch) {
+			return fmt.Errorf("GenerateEmbeddings returned %d embeddings, expected %d", len(vectors), len(batch))
+		}
+
+		for j, t := range batch {
+			if err := s.db.UpdateSearchDocumentEmbedding(ctx, t.PackagePath, vectors[j]); err != nil {
+				return err
+			}
+		}
+		processed += len(batch)
+		log.Infof(ctx, "embedded packages %d/%d", processed, len(targets))
+	}
+
+	fmt.Fprintf(w, "successfully synchronized %d embeddings", len(targets))
+	return nil
+}
+
+func constructEmbeddingPrompt(path, synopsis, symbols string) string {
+	var sb strings.Builder
+	fmt.Fprintf(&sb, "Package: %s\n", path)
+	if synopsis != "" {
+		fmt.Fprintf(&sb, "Synopsis: %s\n", synopsis)
+	}
+	if symbols != "" {
+		fmt.Fprintf(&sb, "Symbols: %s\n", symbols)
+	}
+	return sb.String()
 }
 
 // handleRepopulateSearchDocuments repopulates every row in the search_documents table
