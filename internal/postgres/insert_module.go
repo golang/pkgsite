@@ -65,13 +65,19 @@ func (db *DB) InsertModule(ctx context.Context, m *internal.Module, lmv *interna
 // If a module is removed from this list, consider backfilling the symbols for all
 // existing versions of that module.
 var skipSymbols = map[string]bool{
-	"github.com/citusdata/azure-sdk-for-go":                  true,
-	"github.com/seveas/azure-sdk-for-go":                     true,
-	"github.com/cdktf/cdktf-provider-azurerm-go/azurerm/v14": true,
-	"github.com/gardener/gardener":                           true,
-	"github.com/gyliu513/okd-origin":                         true,
-	"github.com/tombuildsstuff/azure-sdk-for-go":             true,
-	"github.com/cdktf/cdktf-provider-google-go/google/v16":   true,
+	"github.com/citusdata/azure-sdk-for-go":                                      true,
+	"github.com/seveas/azure-sdk-for-go":                                         true,
+	"github.com/cdktf/cdktf-provider-azurerm-go/azurerm/v14":                     true,
+	"github.com/gardener/gardener":                                               true,
+	"github.com/gyliu513/okd-origin":                                             true,
+	"github.com/tombuildsstuff/azure-sdk-for-go":                                 true,
+	"github.com/cdktf/cdktf-provider-google-go/google/v16":                       true,
+	"github.com/AZure/azure-sdk-for-go/@v/v63.0.0+incompatible":                  true,
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/@v/v0.20260212.1143955":   true,
+	"github.com/cdktn-io/cdktn-provider-googlebeta-go/googlebeta/v19/@v/v19.7.0": true,
+	"github.com/cdktn-io/cdktn-provider-aws-go/aws/v24":                          true,
+	"github.com/cdktn-io/cdktn-provider-google-go/google/v19":                    true,
+	"github.com/sourcegraph/controller-cdktf/gen/google_beta":                    true,
 }
 
 // saveModule inserts a Module into the database along with its packages,
