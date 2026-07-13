@@ -218,7 +218,7 @@ run_locally() {
       -e LANG=C \
       -p $postgres_port:$postgres_port \
       --rm \
-      postgres:14
+      pgvector/pgvector:pg14
     wait_for $postgres_port
     # Postgres can take some time to start up even after it is listening to the port.
     runcmd sleep 4
