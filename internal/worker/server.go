@@ -31,6 +31,7 @@ import (
 	"golang.org/x/pkgsite/internal/config/serverconfig"
 	"golang.org/x/pkgsite/internal/dcensus"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/embeddings"
 	"golang.org/x/pkgsite/internal/godoc/dochtml"
 	"golang.org/x/pkgsite/internal/index"
 	"golang.org/x/pkgsite/internal/log"
@@ -46,19 +47,20 @@ import (
 
 // Server can be installed to serve the go discovery worker.
 type Server struct {
-	cfg            *config.Config
-	indexClient    *index.Client
-	proxyClient    *proxy.Client
-	sourceClient   *source.Client
-	cache          *cache.Cache
-	db             *postgres.DB
-	queue          queue.Queue
-	reporter       derrors.Reporter
-	templates      map[string]*template.Template
-	staticPath     template.TrustedSource
-	getExperiments func() []*internal.Experiment
-	workerDBInfo   func() *postgres.UserInfo
-	loadShedder    *loadShedder
+	cfg              *config.Config
+	indexClient      *index.Client
+	proxyClient      *proxy.Client
+	sourceClient     *source.Client
+	cache            *cache.Cache
+	db               *postgres.DB
+	queue            queue.Queue
+	reporter         derrors.Reporter
+	templates        map[string]*template.Template
+	staticPath       template.TrustedSource
+	getExperiments   func() []*internal.Experiment
+	workerDBInfo     func() *postgres.UserInfo
+	loadShedder      *loadShedder
+	embeddingsClient *embeddings.Client
 }
 
 // ServerConfig contains everything needed by a Server.
@@ -72,6 +74,7 @@ type ServerConfig struct {
 	Reporter         derrors.Reporter
 	StaticPath       template.TrustedSource
 	GetExperiments   func() []*internal.Experiment
+	EmbeddingsClient *embeddings.Client
 }
 
 const (
@@ -106,18 +109,19 @@ func NewServer(cfg *config.Config, scfg ServerConfig) (_ *Server, err error) {
 	p.Start(context.Background(), 10*time.Second)
 
 	s := &Server{
-		cfg:            cfg,
-		db:             scfg.DB,
-		indexClient:    scfg.IndexClient,
-		proxyClient:    scfg.ProxyClient,
-		sourceClient:   scfg.SourceClient,
-		cache:          c,
-		queue:          scfg.Queue,
-		reporter:       scfg.Reporter,
-		templates:      templates,
-		staticPath:     scfg.StaticPath,
-		getExperiments: scfg.GetExperiments,
-		workerDBInfo:   func() *postgres.UserInfo { return p.Current().(*postgres.UserInfo) },
+		cfg:              cfg,
+		db:               scfg.DB,
+		indexClient:      scfg.IndexClient,
+		proxyClient:      scfg.ProxyClient,
+		sourceClient:     scfg.SourceClient,
+		cache:            c,
+		queue:            scfg.Queue,
+		reporter:         scfg.Reporter,
+		templates:        templates,
+		staticPath:       scfg.StaticPath,
+		getExperiments:   scfg.GetExperiments,
+		workerDBInfo:     func() *postgres.UserInfo { return p.Current().(*postgres.UserInfo) },
+		embeddingsClient: scfg.EmbeddingsClient,
 	}
 	s.setLoadShedder(context.Background())
 	return s, nil
