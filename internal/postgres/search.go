@@ -777,16 +777,19 @@ func (db *DB) UpdateSearchDocumentsImportedByCount(ctx context.Context, batchSiz
 }
 
 func computeChangedCounts(ctx context.Context, prefix string, curCounts, newCounts map[string]int) map[string]int {
+	// Find all counts that have changed, including those that have changed to zero
+	// because there are no longer any importers in imports_unique.
 	changedCounts := map[string]int{}
-	for p, nc := range newCounts {
-		cc, present := curCounts[p]
-		if present && cc != nc {
+	for p, cc := range curCounts {
+		nc := newCounts[p] // nc is 0 if not present in newCounts
+		if cc != nc {
 			changedCounts[p] = nc
 		}
 	}
+
 	pct := 0
-	if len(newCounts) > 0 {
-		pct = len(changedCounts) * 100 / len(newCounts)
+	if len(curCounts) > 0 {
+		pct = len(changedCounts) * 100 / len(curCounts)
 	}
 	log.Debugf(ctx, "update-imported-by-counts: %s: %d changed (%d%%)", prefix, len(changedCounts), pct)
 	return changedCounts
