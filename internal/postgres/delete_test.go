@@ -66,13 +66,16 @@ func TestDeleteFromSearch(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
 
-	const modulePath = "deleteme.com"
+	const (
+		modulePath1 = "deleteme.com"
+		modulePath2 = "example.com"
+	)
 
 	initial := []searchDocumentRow{
-		{modulePath + "/p1", modulePath, "v0.0.9", 0}, // oldest version of same module
-		{modulePath + "/p2", modulePath, "v1.1.0", 0}, // older version of same module
-		{modulePath + "/p4", modulePath, "v1.9.0", 0}, // newer version of same module
-		{"other.org/p2", "other.org", "v1.1.0", 0},    // older version of a different module
+		{modulePath1 + "/p1", modulePath1, "v0.0.9", 0}, // oldest version of same module
+		{modulePath1 + "/p2", modulePath1, "v1.1.0", 0}, // older version of same module
+		{modulePath1 + "/p4", modulePath1, "v1.9.0", 0}, // newer version of same module
+		{"other.org/p2", "other.org", "v1.1.0", 0},      // older version of a different module
 	}
 
 	insertInitial := func(db *DB) {
@@ -91,7 +94,7 @@ func TestDeleteFromSearch(t *testing.T) {
 		defer release()
 		insertInitial(testDB)
 
-		if err := deleteModuleFromSearchDocuments(ctx, testDB.db, modulePath); err != nil {
+		if err := deleteModuleFromSearchDocuments(ctx, testDB.db, modulePath1); err != nil {
 			t.Fatal(err)
 		}
 		checkSearchDocuments(ctx, t, testDB, []searchDocumentRow{
@@ -103,22 +106,25 @@ func TestDeleteFromSearch(t *testing.T) {
 		defer release()
 
 		// Insert a module with two packages.
-		m0 := sample.Module(modulePath, "v1.0.0", "p1", "p2")
+		m0 := sample.Module(modulePath1, "v1.0.0", "p1", "p2")
 		testDB.MustInsertModule(t, m0)
-		// Set the imported-by count to a non-zero value so we can tell which
-		// rows were deleted.
-		if _, err := testDB.db.Exec(ctx, `UPDATE search_documents SET imported_by_count = 1`); err != nil {
-			t.Fatal(err)
-		}
+		// Insert another module that imports p2.
+		mref := sample.Module(modulePath2, "v1.0.0")
+		u := sample.UnitForPackage(modulePath2+"/ref", modulePath2, mref.Version, "ref", true)
+		u.Imports = []string{modulePath1 + "/p2"}
+		sample.AddUnit(mref, u)
+		testDB.MustInsertModule(t, mref)
+
 		// Later version of module does not have p1.
-		m1 := sample.Module(modulePath, "v1.1.0", "p2", "p3")
+		m1 := sample.Module(modulePath1, "v1.1.0", "p2", "p3")
 		testDB.MustInsertModule(t, m1)
 
 		// p1 should be gone, p2 should be there with the same
 		// imported_by_count, and p3 should be there with a zero count.
 		want := []searchDocumentRow{
-			{modulePath + "/p2", modulePath, "v1.1.0", 1},
-			{modulePath + "/p3", modulePath, "v1.1.0", 0},
+			{modulePath1 + "/p2", modulePath1, "v1.1.0", 1},
+			{modulePath1 + "/p3", modulePath1, "v1.1.0", 0},
+			{modulePath2 + "/ref", modulePath2, "v1.0.0", 0},
 		}
 		checkSearchDocuments(ctx, t, testDB, want)
 	})
