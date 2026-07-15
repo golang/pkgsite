@@ -1149,17 +1149,3 @@ func GeneratePathTokens(packagePath string) []string {
 func isInternalPackage(path string) bool {
 	return slices.Contains(strings.Split(path, "/"), "internal")
 }
-
-// UpsertSearchDocumentWithImportedByCount is the same as UpsertSearchDocument,
-// except it also updates the imported by count. This is only used for testing.
-func (db *DB) UpsertSearchDocumentWithImportedByCount(ctx context.Context, args UpsertSearchDocumentArgs, importedByCount int) (err error) {
-	defer derrors.WrapStack(&err, "DB.UpsertSearchDocumentWithImportedByCount(ctx, ddb, %q, %q)", args.PackagePath, args.ModulePath)
-
-	if err := UpsertSearchDocument(ctx, db.db, args); err != nil {
-		return err
-	}
-	_, err = db.db.Exec(ctx,
-		`UPDATE search_documents SET imported_by_count=$1 WHERE package_path=$2;`,
-		importedByCount, args.PackagePath)
-	return err
-}
