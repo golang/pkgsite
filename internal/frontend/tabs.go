@@ -41,6 +41,7 @@ const (
 	tabImports    = "imports"
 	tabImportedBy = "importedby"
 	tabLicenses   = "licenses"
+	tabEvals      = "evals"
 )
 
 var (
@@ -64,6 +65,10 @@ var (
 		{
 			Name:         tabLicenses,
 			TemplateName: "unit/licenses",
+		},
+		{
+			Name:         tabEvals,
+			TemplateName: "unit/evals",
 		},
 	}
 	unitTabLookup = make(map[string]TabSettings, len(unitTabs))
@@ -93,6 +98,8 @@ func fetchDetailsForUnit(ctx context.Context, r *http.Request, tab string, ds in
 		return fetchImportedByDetails(ctx, ds, um.Path, um.ModulePath)
 	case tabLicenses:
 		return fetchLicensesDetails(ctx, ds, um)
+	case tabEvals:
+		return fetchEvalsDetails(ctx, ds, um)
 	}
 	return nil, fmt.Errorf("BUG: unable to fetch details: unknown tab %q", tab)
 }

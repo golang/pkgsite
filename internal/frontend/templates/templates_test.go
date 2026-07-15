@@ -23,3 +23,28 @@ func TestStripScheme(t *testing.T) {
 		}
 	}
 }
+
+func TestScoreBoxClasses(t *testing.T) {
+	for _, test := range []struct {
+		score, maxScore int
+		want            []string
+	}{
+		{score: 2, maxScore: 5, want: []string{scoreBoxMarked, scoreBoxMarked, scoreBoxUnmarked, scoreBoxUnmarked, scoreBoxUnmarked}},
+		{score: 0, maxScore: 3, want: []string{scoreBoxUnmarked, scoreBoxUnmarked, scoreBoxUnmarked}},
+		{score: 3, maxScore: 3, want: []string{scoreBoxMarked, scoreBoxMarked, scoreBoxMarked}},
+		{score: 5, maxScore: 3, want: []string{scoreBoxMarked, scoreBoxMarked, scoreBoxMarked}},
+		{score: -1, maxScore: 3, want: []string{scoreBoxUnmarked, scoreBoxUnmarked, scoreBoxUnmarked}},
+		{score: 2, maxScore: 0, want: nil},
+	} {
+		got := scoreBoxClasses(test.score, test.maxScore)
+		if len(got) != len(test.want) {
+			t.Errorf("scoreBoxClasses(%d, %d) len = %d, want %d", test.score, test.maxScore, len(got), len(test.want))
+			continue
+		}
+		for i := range got {
+			if got[i] != test.want[i] {
+				t.Errorf("scoreBoxClasses(%d, %d)[%d] = %q, want %q", test.score, test.maxScore, i, got[i], test.want[i])
+			}
+		}
+	}
+}

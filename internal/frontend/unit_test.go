@@ -77,6 +77,7 @@ func TestIsValidTab(t *testing.T) {
 		tabImports,
 		tabImportedBy,
 		tabLicenses,
+		tabEvals,
 	}
 	for _, test := range []struct {
 		name     string
@@ -87,31 +88,31 @@ func TestIsValidTab(t *testing.T) {
 		{
 			name:     "module",
 			um:       sample.UnitMeta(sample.ModulePath, sample.ModulePath, sample.VersionString, "", true),
-			wantTabs: []string{tabMain, tabVersions, tabLicenses},
+			wantTabs: []string{tabMain, tabVersions, tabLicenses, tabEvals},
 			details:  &LicensesDetails{IsRedistributable: true},
 		},
 		{
 			name:     "directory",
 			um:       sample.UnitMeta(sample.ModulePath+"/go", sample.ModulePath, sample.VersionString, "", true),
-			wantTabs: []string{tabMain, tabVersions, tabLicenses},
+			wantTabs: []string{tabMain, tabVersions, tabLicenses, tabEvals},
 			details:  &LicensesDetails{IsRedistributable: true},
 		},
 		{
 			name:     "package",
 			um:       sample.UnitMeta(sample.ModulePath+"/go/packages", sample.ModulePath, sample.VersionString, "packages", true),
-			wantTabs: []string{tabMain, tabVersions, tabImports, tabImportedBy, tabLicenses},
+			wantTabs: []string{tabMain, tabVersions, tabImports, tabImportedBy, tabLicenses, tabEvals},
 			details:  &LicensesDetails{IsRedistributable: true},
 		},
 		{
 			name:     "command",
 			um:       sample.UnitMeta(sample.ModulePath+"/cmd", sample.ModulePath, sample.VersionString, "main", true),
-			wantTabs: []string{tabMain, tabVersions, tabImports, tabImportedBy, tabLicenses},
+			wantTabs: []string{tabMain, tabVersions, tabImports, tabImportedBy, tabLicenses, tabEvals},
 			details:  &LicensesDetails{IsRedistributable: true},
 		},
 		{
 			name:     "non-redist pkg",
 			um:       sample.UnitMeta(sample.ModulePath+"/go/packages", sample.ModulePath, sample.VersionString, "packages", false),
-			wantTabs: []string{tabMain, tabVersions, tabImports, tabImportedBy},
+			wantTabs: []string{tabMain, tabVersions, tabImports, tabImportedBy, tabEvals},
 			details:  &LicensesDetails{IsRedistributable: false},
 		},
 	} {

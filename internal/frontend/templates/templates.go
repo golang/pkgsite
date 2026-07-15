@@ -27,9 +27,33 @@ var templateFuncs = template.FuncMap{
 	"commaseparate": func(s []string) string {
 		return strings.Join(s, ", ")
 	},
-	"stripscheme": stripScheme,
-	"capitalize":  cases.Title(language.Und).String,
-	"queryescape": url.QueryEscape,
+	"stripscheme":     stripScheme,
+	"capitalize":      cases.Title(language.Und).String,
+	"queryescape":     url.QueryEscape,
+	"scoreBoxClasses": scoreBoxClasses,
+}
+
+const (
+	scoreBoxMarked   = "score-box-marked"
+	scoreBoxUnmarked = "score-box-unmarked"
+)
+
+// scoreBoxClasses returns a list of maxScore CSS classes
+// for evaluation score boxes. The first score boxes
+// will have a different class from the rest.
+func scoreBoxClasses(score, maxScore int) []string {
+	if maxScore <= 0 {
+		return nil
+	}
+	score = min(maxScore, max(0, score))
+	var classes []string
+	for range score {
+		classes = append(classes, scoreBoxMarked)
+	}
+	for range maxScore - score {
+		classes = append(classes, scoreBoxUnmarked)
+	}
+	return classes
 }
 
 func stripScheme(url string) string {
@@ -64,6 +88,7 @@ func ParsePageTemplates(fsys template.TrustedFS) (map[string]*template.Template,
 		{"unit/licenses", "unit"},
 		{"unit/main", "unit"},
 		{"unit/versions", "unit"},
+		{"unit/evals", "unit"},
 		{"vuln"},
 		{"vuln/main", "vuln"},
 		{"vuln/list", "vuln"},
