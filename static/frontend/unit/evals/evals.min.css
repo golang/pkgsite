@@ -1,0 +1,5 @@
+/*! Copyright 2026 The Go Authors. All rights reserved.
+   Use of this source code is governed by a BSD-style
+   license that can be found in the LICENSE file. */
+.EvalTable{background:var(--color-background);border-collapse:collapse;border-radius:var(--border-radius);box-shadow:var(--box-shadow);overflow:visible}.EvalTable td{border-bottom:var(--border);padding:1rem 1.25rem;text-align:left;vertical-align:middle}.EvalTable tr:last-child td{border-bottom:none}.EvalTable-value{color:var(--color-text-subtle);text-align:right}.score-container{display:flex;gap:.2rem;width:6rem}.score-box-marked{background-color:var(--color-brand-primary, #007d9c);height:.5rem;width:1rem}.score-box-unmarked{background-color:var(--color-border, #e0e0e0);height:.5rem;width:1rem}.EvalTable .go-Tooltip p{white-space:pre-line;width:max-width}
+/*# sourceMappingURL=evals.min.css.map */

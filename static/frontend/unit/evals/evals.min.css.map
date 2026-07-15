@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["evals.css"],
+  "sourcesContent": ["/* Copyright 2026 The Go Authors. All rights reserved.\n   Use of this source code is governed by a BSD-style\n   license that can be found in the LICENSE file. */\n\n.EvalTable {\n  background: var(--color-background);\n  border-collapse: collapse;\n  border-radius: var(--border-radius);\n  box-shadow: var(--box-shadow);\n  overflow: visible;\n}\n\n.EvalTable td {\n  border-bottom: var(--border);\n  padding: 1rem 1.25rem;\n  text-align: left;\n  vertical-align: middle;\n}\n\n.EvalTable tr:last-child td {\n  border-bottom: none;\n}\n\n.EvalTable-value {\n  color: var(--color-text-subtle);\n  text-align: right;\n}\n\n.score-container {\n  display: flex;\n  gap: 0.2rem;\n  width: 6rem;\n}\n\n.score-box-marked {\n  background-color: var(--color-brand-primary, #007d9c);\n  height: 0.5rem;\n  width: 1rem;\n}\n\n.score-box-unmarked {\n  background-color: var(--color-border, #e0e0e0);\n  height: 0.5rem;\n  width: 1rem;\n}\n\n.EvalTable .go-Tooltip p {\n  white-space: pre-line;\n  width: max-width;\n}\n"],
+  "mappings": ";;;AAIA,WACE,mCACA,yBACA,mCACA,6BACA,iBAGF,cACE,4BAbF,qBAeE,gBACA,sBAGF,4BACE,mBAGF,iBACE,+BACA,iBAGF,iBACE,aACA,UACA,WAGF,kBACE,qDACA,aACA,WAGF,oBACE,8CACA,aACA,WAGF,yBACE,qBACA",
+  "names": []
+}

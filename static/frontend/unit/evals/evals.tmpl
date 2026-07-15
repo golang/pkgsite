@@ -9,6 +9,7 @@
 {{end}}
 
 {{define "main-styles"}}
+  <link href="/static/frontend/unit/evals/evals.min.css?version={{.AppVersionLabel}}" rel="stylesheet">
 {{end}}
 
 {{define "main-header"}}
@@ -16,7 +17,38 @@
 {{end}}
 
 {{define "main-content"}}
-TODO
+  {{block "evals" .Details}}{{end}}
+{{end}}
+
+{{define "evals"}}
+  <div class="Evals">
+    <h1 class="go-textTitle">Evaluations</h1>
+    <table class="EvalTable">
+      <tbody>
+        {{range .Evals}}
+          <tr>
+            <td class="label">
+              <details class="go-Tooltip js-tooltip" data-gtmc="tooltip">
+                <summary class="go-textSubtle">
+                  {{.Type.Label}}
+                  <img class="go-Icon" role="button" tabindex="0" src="/static/shared/icon/help_gm_grey_24dp.svg" alt="" aria-label="Toggle {{.Type.Label}} tooltip" height="24" width="24">
+                </summary>
+                <p aria-live="polite" role="tooltip">{{.Type.Description}}</p>
+              </details>
+            </td>
+            <td class="EvalTable-value">{{.Value}}</td>
+            <td class="score-visual">
+              <div class="score-container">
+                {{range scoreBoxClasses .Score .Type.MaxScore}}
+                  <div class="{{.}}"></div>
+                {{end}}
+              </div>
+            </td>
+          </tr>
+        {{end}}
+      </tbody>
+    </table>
+  </div>
 {{end}}
 
 {{define "main-scripts"}}
