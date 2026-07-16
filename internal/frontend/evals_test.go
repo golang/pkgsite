@@ -6,11 +6,14 @@ package frontend
 
 import (
 	"context"
+	"go/parser"
+	"go/token"
 	"testing"
 	"time"
 
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/godoc"
 	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/testing/fakedatasource"
 	"golang.org/x/pkgsite/internal/testing/sample"
@@ -170,4 +173,93 @@ func TestAgeString(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestSummarizeDocumentation(t *testing.T) {
+	testCases := []struct {
+		name  string
+		files map[string]string
+		want  docSummary
+	}{
+		{
+			name:  "nil or empty",
+			files: nil,
+			want:  docSummary{},
+		},
+		{
+			name: "only test files ignored",
+			files: map[string]string{
+				"foo_test.go": `package foo
+// TestSomething tests something.
+func TestSomething(t *testing.T) {}`,
+			},
+			want: docSummary{},
+		},
+		{
+			name: "main package ignored",
+			files: map[string]string{
+				"main.go": `package main
+// Package main is executable.
+func main() {}`,
+			},
+			want: docSummary{},
+		},
+		{
+			name: "package has doc",
+			files: map[string]string{
+				"doc.go": `// Package mypkg provides utility routines.
+package mypkg`,
+			},
+			want: docSummary{
+				packageHasDoc: true,
+			},
+		},
+		{
+			name: "package doesn't have doc",
+			files: map[string]string{
+				"doc.go": `package mypkg`,
+			},
+			want: docSummary{
+				packageHasDoc: false,
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			var pkg *godoc.Package
+			if tc.files != nil {
+				pkg = parseTestPackage(t, tc.files)
+			}
+			got := summarizeDocumentation(pkg)
+			if diff := cmp.Diff(tc.want, got, cmp.AllowUnexported(docSummary{})); diff != "" {
+				t.Errorf("summarizeDocumentation() mismatch (-want +got):\n%s", diff)
+			}
+		})
+	}
+}
+
+// parseTestPackage creates a godoc.Package with the given files. It removes the
+// bodies of functions, encodes and then decodes the package, to simulate what the
+// frontend actually observes. It returns the decoded package.
+func parseTestPackage(t *testing.T, files map[string]string) *godoc.Package {
+	t.Helper()
+	fset := token.NewFileSet()
+	docPkg := godoc.NewPackage(fset, nil)
+	for name, src := range files {
+		f, err := parser.ParseFile(fset, name, src, parser.ParseComments)
+		if err != nil {
+			t.Fatalf("parser.ParseFile(%q): %v", name, err)
+		}
+		docPkg.AddFile(f, true)
+	}
+	bytes, err := docPkg.Encode(context.Background())
+	if err != nil {
+		t.Fatalf("docPkg.Encode: %v", err)
+	}
+	decodedPkg, err := godoc.DecodePackage(bytes)
+	if err != nil {
+		t.Fatalf("godoc.DecodePackage: %v", err)
+	}
+	return decodedPkg
 }

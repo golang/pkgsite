@@ -10,10 +10,13 @@ package frontend
 import (
 	"context"
 	"fmt"
+	"go/ast"
+	"strings"
 	"time"
 
 	"golang.org/x/mod/semver"
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/godoc"
 	"golang.org/x/pkgsite/internal/version"
 )
 
@@ -130,4 +133,55 @@ func ageString(dur time.Duration) string {
 		return yearStr
 	}
 	return yearStr + ", " + pluralize(months, "month")
+}
+
+// docSummary is a summary of a package's documentation, intended
+// for creating an evaluation.
+type docSummary struct {
+	packageHasDoc bool
+}
+
+// summarizeDocumentation produces a docSummary for the given package.
+func summarizeDocumentation(docPkg *godoc.Package) docSummary {
+	var summary docSummary
+
+	// Empty package? Nothing to do.
+	if docPkg == nil || len(docPkg.Files) == 0 {
+		return summary
+	}
+
+	// Collect non-test files.
+	var files []*ast.File
+	for _, f := range docPkg.Files {
+		if f == nil || f.AST == nil {
+			continue
+		}
+		if strings.HasSuffix(f.Name, "_test.go") {
+			continue
+		}
+		files = append(files, f.AST)
+	}
+
+	// No non-test files? Nothing to do.
+	if len(files) == 0 {
+		return summary
+	}
+
+	// Main package? Nothing to do (we don't insist
+	// that mains have doc.)
+	pkgName := files[0].Name.Name
+	if pkgName == "main" {
+		return summary
+	}
+
+	// Is there a package-level doc string?
+	for _, file := range files {
+		if file.Doc != nil {
+			summary.packageHasDoc = true
+		}
+	}
+
+	// TODO: count symbols with doc.
+
+	return summary
 }
