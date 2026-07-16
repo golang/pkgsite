@@ -8,6 +8,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"math"
 	"slices"
 	"sort"
 	"strings"
@@ -96,6 +97,7 @@ var symbolSearchers = map[string]searcher{
 }
 
 type SearchOptions = internal.SearchOptions
+type SearchScoringParams = internal.SearchScoringParams
 type SearchResult = internal.SearchResult
 
 // SearchSupport implements the DataSource interface, supporting all search
@@ -155,6 +157,10 @@ func (db *DB) search(ctx context.Context, q string, opts SearchOptions, limit in
 	var searchers map[string]searcher
 	if opts.SearchSymbols {
 		searchers = symbolSearchers
+	} else if len(opts.Vector) > 0 || opts.ScoringParams != (SearchScoringParams{}) {
+		// Vector search and custom scoring parameters are only supported in deepSearch.
+		// Bypass popularSearch to prevent fast text searches from prematurely cancelling deepSearch.
+		searchers = map[string]searcher{"deep": (*DB).deepSearch}
 	} else {
 		searchers = pkgSearchers
 	}
@@ -196,7 +202,16 @@ const (
 	normalization = 0
 )
 
-// scoreExpr is the expression that computes the search score.
+func sanitizeFloat(f float64, fallback float64) float64 {
+	if math.IsNaN(f) || math.IsInf(f, 0) {
+		return fallback
+	}
+	return f
+}
+
+// scoreExpr returns the SQL expression that computes search document relevance scores,
+// customized according to the provided SearchScoringParams.
+//
 // It is the product of:
 //   - The Postgres ts_rank score, based the relevance of the document to the query.
 //   - The log of the module's popularity, estimated by the number of importing packages.
@@ -213,12 +228,19 @@ const (
 // in the order D, C, B, A.
 // The weights below match the defaults except for B.
 // TODO(golang/go#80242): s/imported_by_count/imported_by_module_count/ when all rows are populated.
-var scoreExpr = fmt.Sprintf(`
-		ts_rank('{0.1, 0.2, 1.0, 1.0}', tsv_search_tokens, websearch_to_tsquery($1), %d) *
-		ln(exp(1)+imported_by_count) *
+func scoreExpr(p SearchScoringParams) string {
+	w := p.TextWeights
+	weights := fmt.Sprintf("{%f, %f, %f, %f}",
+		sanitizeFloat(w[0], 0.1), sanitizeFloat(w[1], 0.2),
+		sanitizeFloat(w[2], 1.0), sanitizeFloat(w[3], 1.0))
+	popWeight := sanitizeFloat(p.PopularityWeight, 1.0)
+	return fmt.Sprintf(`
+		ts_rank('%s', tsv_search_tokens, websearch_to_tsquery($1), %d) *
+		pow(ln(exp(1)+imported_by_count), %f) *
 		CASE WHEN redistributable THEN 1 ELSE %f END *
 		CASE WHEN COALESCE(has_go_mod, true) THEN 1 ELSE %f END
-	`, normalization, nonRedistributablePenalty, noGoModPenalty)
+	`, weights, normalization, popWeight, nonRedistributablePenalty, noGoModPenalty)
+}
 
 // hedgedSearch executes multiple search methods and returns the first
 // available result.
@@ -280,9 +302,67 @@ func (db *DB) hedgedSearch(ctx context.Context, q string, limit int, opts Search
 
 const hllRegisterCount = 128
 
-// deepSearch searches all packages for the query. It is slower, but results
-// are always valid.
-func (db *DB) deepSearch(ctx context.Context, q string, limit int, opts SearchOptions) searchResponse {
+// buildVectorSearchQuery constructs a hybrid search SQL query combining full-text keyword search
+// and semantic vector similarity using Reciprocal Rank Fusion (RRF).
+//
+// The query uses three Common Table Expressions (CTEs):
+//  1. text_search: Retrieves top packages matching full-text query $1, ordered by ts_rank score (rank_text).
+//  2. vector_search: Retrieves top packages closest to query embedding $2 using pgvector cosine distance (<=>)
+//     for packages with imported_by_count >= 1 (rank_vec).
+//  3. combined: Performs a FULL OUTER JOIN between text and vector candidate sets, calculating fused RRF score:
+//     Score = 1 / (60 + rank_text) + VectorWeight * (1 / (60 + rank_vec))
+//     (where 60 is the standard RRF smoothing constant k=60).
+func buildVectorSearchQuery(opts SearchOptions, scoreExprStr string, q string, limit int) (string, []any) {
+	candidateLimit := max(100, opts.Offset+limit)
+	vectorWeight := sanitizeFloat(opts.ScoringParams.VectorWeight, 1.0)
+
+	query := fmt.Sprintf(`
+		WITH text_search AS (
+			SELECT package_path, version, module_path, commit_time, imported_by_count,
+				ROW_NUMBER() OVER (ORDER BY (%s) DESC, commit_time DESC, package_path) AS rank_text,
+				COUNT(*) OVER() AS total_text_matches
+			FROM search_documents
+			WHERE tsv_search_tokens @@ websearch_to_tsquery($1)
+			LIMIT %d
+		),
+		vector_search AS (
+			SELECT package_path, version, module_path, commit_time, imported_by_count,
+				ROW_NUMBER() OVER (ORDER BY embedding <=> $2::halfvec, imported_by_count DESC) AS rank_vec
+			FROM search_documents
+			WHERE imported_by_count >= 1 AND embedding IS NOT NULL
+			ORDER BY embedding <=> $2::halfvec
+			LIMIT %d
+		),
+		combined AS (
+			SELECT
+				COALESCE(t.package_path, v.package_path) AS package_path,
+				COALESCE(t.version, v.version) AS version,
+				COALESCE(t.module_path, v.module_path) AS module_path,
+				COALESCE(t.commit_time, v.commit_time) AS commit_time,
+				COALESCE(t.imported_by_count, v.imported_by_count) AS imported_by_count,
+				(COALESCE(1.0 / (60 + t.rank_text), 0.0) + %f * COALESCE(1.0 / (60 + v.rank_vec), 0.0)) AS score,
+				COALESCE(MAX(t.total_text_matches) OVER(), COUNT(*) OVER()) AS total
+			FROM text_search t
+			FULL OUTER JOIN vector_search v ON t.package_path = v.package_path
+		)
+		SELECT package_path, version, module_path, commit_time, imported_by_count, score, total
+		FROM combined
+		ORDER BY score DESC, commit_time DESC, package_path
+		LIMIT $3
+		OFFSET $4`, scoreExprStr, candidateLimit, candidateLimit, vectorWeight)
+	args := []any{q, formatVector(opts.Vector), limit, opts.Offset}
+	return query, args
+}
+
+// buildTextSearchQuery constructs a standard full-text search SQL query.
+//
+// The query:
+//  1. Filters search_documents matching full-text query $1 via websearch_to_tsquery.
+//  2. Computes relevance score via scoreExprStr, combining ts_rank section weights, popularity boost,
+//     and non-redistributable / no-go-mod penalties.
+//  3. Excludes low-relevance matches with score <= 0.1.
+//  4. Orders results by score DESC, commit_time DESC, package_path, and computes windowed total match count.
+func buildTextSearchQuery(opts SearchOptions, scoreExprStr string, q string, limit int) (string, []any) {
 	query := fmt.Sprintf(`
 		SELECT *, COUNT(*) OVER() AS total
 		FROM (
@@ -303,7 +383,24 @@ func (db *DB) deepSearch(ctx context.Context, q string, limit int, opts SearchOp
 		) r
 		WHERE r.score > 0.1
 		LIMIT $2
-		OFFSET $3`, scoreExpr)
+		OFFSET $3`, scoreExprStr)
+	args := []any{q, limit, opts.Offset}
+	return query, args
+}
+
+// deepSearch searches all packages for the query. It is slower, but results
+// are always valid. If opts.Vector is set, it performs a hybrid search using
+// Reciprocal Rank Fusion (RRF) between text search and pgvector similarity.
+func (db *DB) deepSearch(ctx context.Context, q string, limit int, opts SearchOptions) searchResponse {
+	opts.ScoringParams = opts.ScoringParams.WithDefaults()
+	scoreExprStr := scoreExpr(opts.ScoringParams)
+	var query string
+	var args []any
+	if len(opts.Vector) > 0 {
+		query, args = buildVectorSearchQuery(opts, scoreExprStr, q, limit)
+	} else {
+		query, args = buildTextSearchQuery(opts, scoreExprStr, q, limit)
+	}
 
 	var results []*SearchResult
 	collect := func(rows *sql.Rows) error {
@@ -315,7 +412,7 @@ func (db *DB) deepSearch(ctx context.Context, q string, limit int, opts SearchOp
 		results = append(results, &r)
 		return nil
 	}
-	err := db.db.RunQuery(ctx, query, collect, q, limit, opts.Offset)
+	err := db.db.RunQuery(ctx, query, collect, args...)
 	if err != nil {
 		results = nil
 	}

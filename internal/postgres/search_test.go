@@ -1597,3 +1597,57 @@ func TestGroupAndMajorVersion(t *testing.T) {
 		}
 	}
 }
+
+func TestSearchScoringParamsWithDefaults(t *testing.T) {
+	t.Parallel()
+	wantDefaults := internal.SearchScoringParams{
+		TextWeights:      [4]float64{0.1, 0.2, 1.0, 1.0},
+		PopularityWeight: 1.0,
+		VectorWeight:     1.0,
+	}
+
+	// Zero params should yield defaults
+	zeroParams := internal.SearchScoringParams{}.WithDefaults()
+	if diff := cmp.Diff(wantDefaults, zeroParams); diff != "" {
+		t.Errorf("zeroParams.WithDefaults() mismatch (-want, +got):\n%s", diff)
+	}
+
+	// Partial params should preserve set fields while defaulting zeros
+	customParams := internal.SearchScoringParams{VectorWeight: 2.5}.WithDefaults()
+	if customParams.VectorWeight != 2.5 {
+		t.Errorf("expected VectorWeight 2.5, got %f", customParams.VectorWeight)
+	}
+	if customParams.TextWeights != wantDefaults.TextWeights {
+		t.Errorf("expected default TextWeights, got %v", customParams.TextWeights)
+	}
+}
+
+func TestBuildVectorSearchQuery(t *testing.T) {
+	t.Parallel()
+	opts := SearchOptions{
+		Vector: []float32{0.1, 0.2, 0.3},
+		ScoringParams: internal.SearchScoringParams{
+			VectorWeight: 1.5,
+		},
+		Offset: 10,
+	}
+	scoreExprStr := scoreExpr(opts.ScoringParams.WithDefaults())
+
+	// Default minimum candidate limit (100) when offset+limit <= 100.
+	queryDefault, args := buildVectorSearchQuery(opts, scoreExprStr, "http", 20)
+	if !strings.Contains(queryDefault, "halfvec") {
+		t.Errorf("expected vector query to contain halfvec typecast")
+	}
+	if !strings.Contains(queryDefault, "LIMIT 100") {
+		t.Errorf("expected default candidate limit 100, query was:\n%s", queryDefault)
+	}
+	if len(args) != 4 {
+		t.Errorf("expected 4 query args, got %d", len(args))
+	}
+
+	// Candidate limit scales to offset+limit when offset+limit > 100.
+	queryScaled, _ := buildVectorSearchQuery(opts, scoreExprStr, "http", 100)
+	if !strings.Contains(queryScaled, "LIMIT 110") {
+		t.Errorf("expected candidate limit to scale to offset+limit (110), query was:\n%s", queryScaled)
+	}
+}

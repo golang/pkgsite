@@ -5,6 +5,7 @@
 package internal
 
 import (
+	"cmp"
 	"context"
 	"testing"
 	"time"
@@ -34,6 +35,34 @@ type SearchOptions struct {
 	// and modules with different major versions are counted in [SearchResult.OtherMajor]
 	// but not kept.
 	GroupResults bool
+
+	// Vector is an optional query embedding vector for semantic vector search.
+	Vector []float32
+
+	// ScoringParams configures dynamic weights and multipliers for search ranking.
+	ScoringParams SearchScoringParams
+}
+
+// SearchScoringParams defines configurable hyperparameter weights for search ranking algorithms.
+type SearchScoringParams struct {
+	// Weights for ts_rank text sections D, C, B, A (default: {0.1, 0.2, 1.0, 1.0}).
+	TextWeights [4]float64
+
+	// Exponent/multiplier for popularity factor ln(e + imports) (default: 1.0).
+	PopularityWeight float64
+
+	// Multiplier for RRF vector search similarity score (default: 1.0).
+	VectorWeight float64
+}
+
+// WithDefaults returns a copy of SearchScoringParams with uninitialized zero fields populated with default values.
+func (p SearchScoringParams) WithDefaults() SearchScoringParams {
+	if p.TextWeights == [4]float64{} {
+		p.TextWeights = [4]float64{0.1, 0.2, 1.0, 1.0}
+	}
+	p.PopularityWeight = cmp.Or(p.PopularityWeight, 1.0)
+	p.VectorWeight = cmp.Or(p.VectorWeight, 1.0)
+	return p
 }
 
 // SearchResult represents a single search result from SearchDocuments.
