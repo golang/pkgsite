@@ -76,9 +76,17 @@ func TestFormatDocHTML(t *testing.T) {
 						wantLinks = getContent("links")
 					}
 					if diff := cmp.Diff(want, got); diff != "" {
-						t.Errorf("doc mismatch (-want +got)\n%s", diff)
-						t.Logf("want: %s", want)
-						t.Logf("got: %s", got)
+						// As of 16-July-2026, tip replaces smart quotes with ASCII.
+						// We must try both variants so tests pass on old and new Go versions.
+						// TODO(golang/go#80432): remove after builders no longer run old code (circa July 2027).
+						want2 := strings.NewReplacer("“", "``", "”", "&#39;&#39;").Replace(want)
+						if diff2 := cmp.Diff(want2, got); diff2 != "" {
+							t.Errorf("doc mismatch (old) (-want +got)\n%s", diff)
+							t.Errorf("doc mismatch (new) (-want +got)\n%s", diff2)
+							t.Logf("want (old): %s", want)
+							t.Logf("want (new): %s", want2)
+							t.Logf("got: %s", got)
+						}
 					}
 					var b strings.Builder
 					for _, l := range r.Links() {
