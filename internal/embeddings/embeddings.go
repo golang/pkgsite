@@ -16,6 +16,7 @@ import (
 
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
+	"golang.org/x/pkgsite/internal/config"
 )
 
 const (
@@ -36,7 +37,7 @@ const (
 
 // TaskType specifies the Vertex AI embedding task type.
 // See https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/embeddings/task-types
-type TaskType string
+type TaskType = string
 
 const (
 	// TaskTypeDocument is used for indexing static document content.
@@ -56,9 +57,12 @@ type Client struct {
 	model     string
 }
 
-// NewClient creates a new Client.
-// location is the GCP region (e.g., "us-central1").
-func NewClient(ctx context.Context, location string) (*Client, error) {
+// NewClient creates a new Client if cfg.EnableVectorSearch is true.
+// If cfg is nil or cfg.EnableVectorSearch is false, it returns (nil, nil).
+func NewClient(ctx context.Context, cfg *config.Config) (*Client, error) {
+	if cfg == nil || !cfg.EnableVectorSearch {
+		return nil, nil
+	}
 	creds, err := google.FindDefaultCredentials(ctx, cloudPlatformScope)
 	if err != nil {
 		return nil, fmt.Errorf("google.FindDefaultCredentials: %w", err)
@@ -78,7 +82,7 @@ func NewClient(ctx context.Context, location string) (*Client, error) {
 	return &Client{
 		HTTPClient: httpClient,
 		projectID:  projectID,
-		location:   location,
+		location:   cfg.LocationID,
 		model:      defaultModel,
 	}, nil
 }
@@ -105,7 +109,7 @@ type predictResponse struct {
 
 // GenerateEmbeddings gets 256-dimensional embeddings for the given texts using the Vertex AI API.
 func (c *Client) GenerateEmbeddings(ctx context.Context, texts []string, taskType TaskType) ([][]float32, error) {
-	if len(texts) == 0 {
+	if c == nil || len(texts) == 0 {
 		return nil, nil
 	}
 

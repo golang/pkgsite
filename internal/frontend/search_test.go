@@ -145,7 +145,7 @@ func TestDetermineSearchAction(t *testing.T) {
 			if test.ds != nil {
 				ds = test.ds
 			}
-			gotAction, err := determineSearchAction(req, ds, vc)
+			gotAction, err := determineSearchAction(req, ds, vc, nil)
 			if err != nil {
 				var serr *serrors.ServerError
 				if !errors.As(err, &serr) {
@@ -394,7 +394,7 @@ func TestFetchSearchPage(t *testing.T) {
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			got, err := fetchSearchPage(ctx, fds, test.query, "", paginationParams{limit: 20, page: 1}, false, vc)
+			got, err := fetchSearchPage(ctx, fds, test.query, "", paginationParams{limit: 20, page: 1}, false, vc, nil)
 			if err != nil {
 				t.Fatalf("fetchSearchPage(db, %q): %v", test.query, err)
 			}
@@ -842,6 +842,79 @@ func TestShouldDefaultToSymbolSearch(t *testing.T) {
 			got := shouldDefaultToSymbolSearch(test.q)
 			if diff := cmp.Diff(test.want, got); diff != "" {
 				t.Errorf("mismatch (-want +got):\n%s", diff)
+			}
+		})
+	}
+}
+
+// spyDataSource wraps fakedatasource.FakeDataSource to record the options passed to Search.
+type spyDataSource struct {
+	*fakedatasource.FakeDataSource
+	lastSearchOpts internal.SearchOptions
+}
+
+func (s *spyDataSource) Search(ctx context.Context, q string, opts internal.SearchOptions) ([]*internal.SearchResult, error) {
+	s.lastSearchOpts = opts
+	return s.FakeDataSource.Search(ctx, q, opts)
+}
+
+type stubEmbedder struct {
+	vec []float32
+	err error
+}
+
+func (e *stubEmbedder) GenerateEmbeddings(ctx context.Context, texts []string, taskType string) ([][]float32, error) {
+	if e == nil {
+		return nil, nil
+	}
+	if e.err != nil {
+		return nil, e.err
+	}
+	return [][]float32{e.vec}, nil
+}
+
+func TestFetchSearchPageWithVector(t *testing.T) {
+	ctx := context.Background()
+
+	tests := []struct {
+		name       string
+		embedder   VectorEmbedder
+		wantVector []float32
+	}{
+		{
+			name:       "embedding success",
+			embedder:   &stubEmbedder{vec: []float32{0.1, 0.2, 0.3}},
+			wantVector: []float32{0.1, 0.2, 0.3},
+		},
+		{
+			name:       "embedding fail",
+			embedder:   &stubEmbedder{err: errors.New("embedding error")},
+			wantVector: nil,
+		},
+		{
+			name:       "nil embedder interface",
+			embedder:   nil,
+			wantVector: nil,
+		},
+		{
+			name:       "typed nil embedder interface",
+			embedder:   (*stubEmbedder)(nil),
+			wantVector: nil,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			ds := &spyDataSource{FakeDataSource: fakedatasource.New()}
+			_, err := fetchSearchPage(ctx, ds, "http router", "", paginationParams{limit: 10, page: 1}, false, nil, test.embedder)
+			if err != nil {
+				t.Fatalf("fetchSearchPage failed: %v", err)
+			}
+
+			if diff := cmp.Diff(test.wantVector, ds.lastSearchOpts.Vector); diff != "" {
+				t.Errorf("ds.lastSearchOpts.Vector mismatch (-want +got):\n%s", diff)
 			}
 		})
 	}

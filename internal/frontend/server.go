@@ -39,6 +39,13 @@ import (
 	"golang.org/x/pkgsite/internal/vuln"
 )
 
+// VectorEmbedder generates embeddings for text instances.
+// It is defined as an interface in frontend to avoid importing internal/embeddings
+// (and its GCP/OAuth2 dependencies) into cmd/pkgsite.
+type VectorEmbedder interface {
+	GenerateEmbeddings(ctx context.Context, texts []string, taskType string) ([][]float32, error)
+}
+
 // Server can be installed to serve the go discovery frontend.
 type Server struct {
 	fetchServer FetchServerInterface
@@ -62,6 +69,7 @@ type Server struct {
 	versionID             string
 	instanceID            string
 	HTTPClient            *http.Client
+	embeddingsClient      VectorEmbedder
 	recordCodeWikiMetrics RecordClickFunc
 
 	mu        sync.Mutex // Protects all fields below
@@ -100,6 +108,7 @@ type ServerConfig struct {
 	Reporter              derrors.Reporter
 	VulndbClient          *vuln.Client
 	HTTPClient            *http.Client
+	EmbeddingsClient      VectorEmbedder
 	RecordCodeWikiMetrics RecordClickFunc
 }
 
@@ -127,6 +136,7 @@ func NewServer(scfg ServerConfig) (_ *Server, err error) {
 		fileMux:               http.NewServeMux(),
 		vulnClient:            scfg.VulndbClient,
 		HTTPClient:            scfg.HTTPClient,
+		embeddingsClient:      scfg.EmbeddingsClient,
 		recordCodeWikiMetrics: scfg.RecordCodeWikiMetrics,
 	}
 	if s.HTTPClient == nil {

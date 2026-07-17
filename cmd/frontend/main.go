@@ -22,6 +22,7 @@ import (
 	"golang.org/x/pkgsite/internal/config"
 	"golang.org/x/pkgsite/internal/config/serverconfig"
 	"golang.org/x/pkgsite/internal/dcensus"
+	"golang.org/x/pkgsite/internal/embeddings"
 	"golang.org/x/pkgsite/internal/fetch"
 	"golang.org/x/pkgsite/internal/fetchdatasource"
 	"golang.org/x/pkgsite/internal/frontend"
@@ -164,6 +165,10 @@ func main() {
 	if err != nil {
 		log.Fatalf(ctx, "vuln.NewClient: %v", err)
 	}
+	embeddingsClient, err := embeddings.NewClient(ctx, cfg)
+	if err != nil {
+		log.Fatalf(ctx, "failed to initialize embeddings client: %v", err)
+	}
 	staticSource := template.TrustedSourceFromFlag(flag.Lookup("static").Value)
 	if *devMode {
 		// In dev mode compile TypeScript files into minified JavaScript files
@@ -200,6 +205,7 @@ func main() {
 		Reporter:              reporter,
 		VulndbClient:          vc,
 		HTTPClient:            &http.Client{Transport: new(ochttp.Transport)},
+		EmbeddingsClient:      embeddingsClient,
 		RecordCodeWikiMetrics: dcensus.RecordClick,
 	})
 	if err != nil {

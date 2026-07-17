@@ -145,13 +145,9 @@ func main() {
 	trace.SetTraceFunction(func(ctx context.Context, name string) (context.Context, trace.Span) {
 		return octrace.StartSpan(ctx, name)
 	})
-	var embeddingsClient *embeddings.Client
-	if cfg.EnableVectorSearch {
-		var err error
-		embeddingsClient, err = embeddings.NewClient(ctx, cfg.LocationID)
-		if err != nil {
-			log.Fatalf(ctx, "failed to initialize embeddings client: %v", err)
-		}
+	embeddingsClient, err := embeddings.NewClient(ctx, cfg)
+	if err != nil {
+		log.Fatalf(ctx, "failed to initialize embeddings client: %v", err)
 	}
 
 	redisCacheClient := getCacheRedis(ctx, cfg)

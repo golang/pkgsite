@@ -137,3 +137,14 @@ func TestGenerateEmbeddingsError(t *testing.T) {
 		t.Errorf("unexpected error message: %v", err)
 	}
 }
+
+func TestGenerateEmbeddingsNilClient(t *testing.T) {
+	var client *Client
+	got, err := client.GenerateEmbeddings(context.Background(), []string{"hello"}, TaskTypeDocument)
+	if err != nil {
+		t.Fatalf("expected no error from nil client, got: %v", err)
+	}
+	if got != nil {
+		t.Errorf("expected nil result from nil client, got: %v", got)
+	}
+}

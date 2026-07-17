@@ -36,7 +36,7 @@ import (
 // /search?q=<query>. If <query> is an exact match for a package path, the user
 // will be redirected to the details page.
 func (s *Server) serveSearch(w http.ResponseWriter, r *http.Request, ds internal.DataSource) error {
-	action, err := determineSearchAction(r, ds, s.vulnClient)
+	action, err := determineSearchAction(r, ds, s.vulnClient, s.embeddingsClient)
 	if err != nil {
 		return err
 	}
@@ -59,7 +59,7 @@ type searchAction struct {
 	page        interface{ SetBasePage(pagepkg.BasePage) }
 }
 
-func determineSearchAction(r *http.Request, ds internal.DataSource, vulnClient *vuln.Client) (*searchAction, error) {
+func determineSearchAction(r *http.Request, ds internal.DataSource, vulnClient *vuln.Client, embeddingsClient VectorEmbedder) (*searchAction, error) {
 	if r.Method != http.MethodGet && r.Method != http.MethodHead {
 		return nil, &serrors.ServerError{Status: http.StatusMethodNotAllowed}
 	}
@@ -136,7 +136,7 @@ func determineSearchAction(r *http.Request, ds internal.DataSource, vulnClient *
 	if len(filters) > 0 {
 		symbol = filters[0]
 	}
-	page, err := fetchSearchPage(ctx, ds, cq, symbol, pageParams, mode == searchModeSymbol, vulnClient)
+	page, err := fetchSearchPage(ctx, ds, cq, symbol, pageParams, mode == searchModeSymbol, vulnClient, embeddingsClient)
 	if err != nil {
 		// Instead of returning a 500, return a 408, since symbol searches may time
 		// out for very popular symbols, and package searches can also time out.
@@ -236,11 +236,27 @@ type subResult struct {
 	Links   []link
 }
 
+// searchEmbeddingTimeout is the maximum time allowed to generate a query embedding vector.
+// If the embedding API takes longer, search gracefully falls back to standard text search.
+const searchEmbeddingTimeout = 500 * time.Millisecond
+
 // fetchSearchPage fetches data matching the search query from the database and
 // returns a SearchPage.
 func fetchSearchPage(ctx context.Context, ds internal.DataSource, cq, symbol string,
-	pageParams paginationParams, searchSymbols bool, vulnClient *vuln.Client) (*SearchPage, error) {
+	pageParams paginationParams, searchSymbols bool, vulnClient *vuln.Client, embeddingsClient VectorEmbedder) (*SearchPage, error) {
 	maxResultCount := maxSearchOffset + pageParams.limit
+
+	var vec []float32
+	if embeddingsClient != nil && !searchSymbols && strings.TrimSpace(cq) != "" {
+		embedCtx, cancel := context.WithTimeout(ctx, searchEmbeddingTimeout)
+		defer cancel()
+		vecs, err := embeddingsClient.GenerateEmbeddings(embedCtx, []string{cq}, "RETRIEVAL_QUERY")
+		if err != nil {
+			log.Errorf(ctx, "failed to generate query vector for %q: %v", cq, err)
+		} else if len(vecs) > 0 {
+			vec = vecs[0]
+		}
+	}
 
 	// Pageless search: always start from the beginning.
 	offset := 0
@@ -251,6 +267,7 @@ func fetchSearchPage(ctx context.Context, ds internal.DataSource, cq, symbol str
 		SearchSymbols:  searchSymbols,
 		SymbolFilter:   symbol,
 		GroupResults:   true,
+		Vector:         vec,
 	})
 	if err != nil {
 		return nil, err
