@@ -13,7 +13,10 @@ source devtools/docker.sh || { echo "Are you at repo root?"; exit 1; }
 # Do not truncate commands when displaying them (see runcmd in devtools/lib.sh).
 MAXWIDTH=0
 
-screentest_version=latest
+# Use the commit containing per-test retrypixels.
+# TODO: Change back to latest when this commit is under a tag
+# in x/website.
+screentest_version=1137bfaf
 
 # This should match the version we are using in devtools/docker/compose.yaml.
 chromedp_version=131.0.6778.33

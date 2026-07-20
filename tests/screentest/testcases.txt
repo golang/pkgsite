@@ -161,6 +161,7 @@ capture viewport 540x1080
 # So do a viewport capture instead.
 test package with deprecated symbols index
 path /database/sql/driver@go1.16.3#pkg-index
+retrypixels 50
 wait {{$ready}}
 eval {{$hideElements}}
 sleep 2s
@@ -172,6 +173,7 @@ capture viewport
 # Same as the above, but for symbol doc.
 test package with deprecated symbols symbol
 path /database/sql/driver@go1.16.3#ColumnConverter
+retrypixels 50
 wait {{$ready}}
 eval {{$hideElements}}
 sleep 1s
