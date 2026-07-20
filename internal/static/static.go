@@ -27,7 +27,7 @@ import (
 // when cmd/frontend is run in dev mode and in
 // devtools/cmd/static/main.go with Watch=false for building
 // productionized assets.
-func Build(config Config) (err error) {
+func Build(config Config) error {
 	files, err := getFiles(config.EntryPoint, config.Bundle)
 	if err != nil {
 		return err
