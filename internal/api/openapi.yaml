@@ -728,11 +728,11 @@
             "type": "array"
           },
           "code": {
-            "description": "HTTP status code",
+            "description": "Code is the HTTP status code.",
             "type": "integer"
           },
           "fixes": {
-            "description": "suggestions for how to fix",
+            "description": "Fixes are suggestions for how to fix.",
             "items": {
               "type": "string"
             },
@@ -817,15 +817,15 @@
             "type": "string"
           },
           "hasGoMod": {
-            "description": "Whether the module has a go.mod file.",
+            "description": "HasGoMod is whether the module has a go.mod file.",
             "type": "boolean"
           },
           "isRedistributable": {
-            "description": "Whether the license allows distribution.",
+            "description": "IsRedistributable is whether the license allows distribution.",
             "type": "boolean"
           },
           "latestVersion": {
-            "description": "latest unretracted version",
+            "description": "LatestVersion is the latest unretracted version.",
             "type": "string"
           },
           "modulePath": {
@@ -864,7 +864,7 @@
             "type": "boolean"
           },
           "isRedistributable": {
-            "description": "Whether the license allows distribution.",
+            "description": "IsRedistributable is whether the license allows distribution.",
             "type": "boolean"
           },
           "isStandardLibrary": {
@@ -911,7 +911,7 @@
       "PackageInfo": {
         "properties": {
           "isRedistributable": {
-            "description": "Whether the license allows distribution.",
+            "description": "IsRedistributable is whether the license allows distribution.",
             "type": "boolean"
           },
           "name": {

@@ -26,10 +26,11 @@ type Package struct {
 }
 
 type PackageInfo struct {
-	Path              string `json:"path"`
-	Name              string `json:"name"`
-	Synopsis          string `json:"synopsis"`
-	IsRedistributable bool   `json:"isRedistributable"` // Whether the license allows distribution.
+	Path     string `json:"path"`
+	Name     string `json:"name"`
+	Synopsis string `json:"synopsis"`
+	// IsRedistributable is whether the license allows distribution.
+	IsRedistributable bool `json:"isRedistributable"`
 }
 
 type PackagesResponse struct {
@@ -62,16 +63,19 @@ type PackageImportedBy struct {
 
 // ModuleVersion is the response for /v1beta/versions/{path}.
 type ModuleVersion struct {
-	ModulePath        string    `json:"modulePath"`
-	Version           string    `json:"version"`
-	CommitTime        time.Time `json:"commitTime"`
-	IsRedistributable bool      `json:"isRedistributable"` // Whether the license allows distribution.
-	HasGoMod          bool      `json:"hasGoMod"`          // Whether the module has a go.mod file.
-	LatestVersion     string    `json:"latestVersion"`     // latest unretracted version
-	Deprecated        bool      `json:"deprecated"`
-	DeprecationReason string    `json:"deprecationReason"`
-	Retracted         bool      `json:"retracted"`
-	RetractionReason  string    `json:"retractionReason"`
+	ModulePath string    `json:"modulePath"`
+	Version    string    `json:"version"`
+	CommitTime time.Time `json:"commitTime"`
+	// IsRedistributable is whether the license allows distribution.
+	IsRedistributable bool `json:"isRedistributable"`
+	// HasGoMod is whether the module has a go.mod file.
+	HasGoMod bool `json:"hasGoMod"`
+	// LatestVersion is the latest unretracted version.
+	LatestVersion     string `json:"latestVersion"`
+	Deprecated        bool   `json:"deprecated"`
+	DeprecationReason string `json:"deprecationReason"`
+	Retracted         bool   `json:"retracted"`
+	RetractionReason  string `json:"retractionReason"`
 }
 
 // Module is the response for /v1beta/module/{modulePath}.
@@ -130,12 +134,15 @@ type Vulnerability struct {
 
 // Error contains detailed information about an error.
 type Error struct {
-	Code       int         `json:"code"` // HTTP status code
-	Message    string      `json:"message"`
-	Fixes      []string    `json:"fixes"` // suggestions for how to fix
+	// Code is the HTTP status code.
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+	// Fixes are suggestions for how to fix.
+	Fixes      []string    `json:"fixes"`
 	Candidates []Candidate `json:"candidates,omitempty"`
 
-	err error // Unexported field for internal tracking
+	// err is an unexported field for internal tracking.
+	err error
 }
 
 func (e *Error) Error() string {
