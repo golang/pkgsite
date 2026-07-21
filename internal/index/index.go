@@ -43,7 +43,7 @@ func New(rawurl string) (_ *Client, err error) {
 
 func (c *Client) pollURL(since time.Time, limit int) string {
 	values := url.Values{}
-	values.Set("since", since.Format(time.RFC3339))
+	values.Set("since", since.Format(time.RFC3339Nano))
 	if limit > 0 {
 		values.Set("limit", strconv.Itoa(limit))
 	}
