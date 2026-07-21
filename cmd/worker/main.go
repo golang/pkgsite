@@ -50,9 +50,8 @@ var (
 	// Ordinarily, index polling is initiated by a separate scheduler that calls
 	// /poll. But for convenience, you can instead have the worker periodically
 	// do the same.
-	pollIndexPeriod  = flag.Duration("poll_index_period", 0, "when set >0, schedules an index poll at this period")
-	pollIndexLimit   = flag.Int("poll_index_limit", 10, "the amount of modules to fetch from the index when periodically polling")
-	pollIndexHorizon = flag.Duration("poll_index_horizon", time.Hour, "the amount of time ago to request modules each iteration when periodically polling")
+	pollIndexPeriod = flag.Duration("poll_index_period", 0, "when set >0, schedules an index poll at this period")
+	pollIndexLimit  = flag.Int("poll_index_limit", 10, "the amount of modules to fetch from the index when periodically polling")
 
 	// Ordinarily, module version process enqueueing is initiated by a separate
 	// scheduler that calls /enqueue. But for convenience, you can instead have
@@ -175,7 +174,7 @@ func main() {
 
 	if *pollIndexPeriod != 0 {
 		go func() {
-			log.Infof(ctx, "starting periodic index polling. period=%v, limit=%v, horizon=%v", *pollIndexPeriod, *pollIndexLimit, *pollIndexHorizon)
+			log.Infof(ctx, "starting periodic index polling. period=%v, limit=%v", *pollIndexPeriod, *pollIndexLimit)
 			ticker := time.NewTicker(*pollIndexPeriod)
 			for {
 				select {
@@ -183,7 +182,11 @@ func main() {
 					log.Warningf(ctx, "cancelling periodic index polling: %v", ctx.Err())
 					return
 				case <-ticker.C:
-					since := time.Now().Add(-1 * *pollIndexHorizon)
+					since, err := db.LatestIndexTimestamp(ctx)
+					if err != nil {
+						log.Warningf(ctx, "error getting latest index timestamp: %v", err)
+						continue
+					}
 					if err := server.PollIndex(ctx, since, *pollIndexLimit); err != nil {
 						log.Warningf(ctx, "error during periodic index polling: %v", err)
 					}
