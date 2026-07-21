@@ -452,7 +452,7 @@ func matchingFiles(goos, goarch string, importPath string, allFiles map[string][
 	}
 
 	switch importPath {
-	case "encoding/json", "encoding/json/v2", "encoding/json/jsontext":
+	case "encoding/json/v2", "encoding/json/jsontext":
 		bctx.ToolTags = append(bctx.ToolTags, "goexperiment.jsonv2")
 	case "runtime/secret":
 		bctx.ToolTags = append(bctx.ToolTags, "goexperiment.runtimesecret")

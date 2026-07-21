@@ -68,6 +68,13 @@ func TestMatchingFiles(t *testing.T) {
 		otherWant["other_jsonv2.go"] = []byte(otherJSONv2Body)
 	}
 
+	jsonWant := map[string][]byte{
+		"plain.go": []byte(plainGoBody),
+	}
+	if slices.Contains(build.Default.ToolTags, "goexperiment.jsonv2") {
+		jsonWant["json.go"] = []byte(jsonv2Body)
+	}
+
 	for _, test := range []struct {
 		name         string
 		goos, goarch string
@@ -115,10 +122,7 @@ func TestMatchingFiles(t *testing.T) {
 			goarch:     "amd64",
 			importPath: "encoding/json",
 			contents:   jsonv2Contents,
-			want: map[string][]byte{
-				"plain.go": []byte(plainGoBody),
-				"json.go":  []byte(jsonv2Body),
-			},
+			want:       jsonWant,
 		},
 		{
 			name:       "jsonv2",
