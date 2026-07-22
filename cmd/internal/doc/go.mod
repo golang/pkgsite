@@ -1,8 +1,8 @@
 module golang.org/x/pkgsite/cmd/internal/doc
 
-go 1.25.5
+go 1.26.0
 
-require golang.org/x/pkgsite v0.2.0
+require golang.org/x/pkgsite v0.3.0
 
 require (
 	github.com/google/licensecheck v0.3.1 // indirect
