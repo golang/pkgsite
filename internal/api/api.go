@@ -802,8 +802,10 @@ const (
 	longCacheDur = 3 * time.Hour
 	// The information on some pages can change relatively quickly.
 	shortCacheDur = 1 * time.Hour
-	// Errors should not be cached.
+	// Server errors (5xx) and transient errors should not be cached.
 	noCache = time.Duration(0)
+	// 4xx Client errors (such as 404 Not Found or 400 Bad Request) are cached for a short period.
+	clientErrorCacheDur = 10 * time.Minute
 )
 
 func serveJSON(w http.ResponseWriter, status int, data any, cacheDur time.Duration) error {
@@ -835,7 +837,14 @@ func ServeError(w http.ResponseWriter, r *http.Request, err error) error {
 		}
 	}
 	log.Errorf(r.Context(), "API error %d: %v", aerr.Code, aerr)
-	return serveJSON(w, aerr.Code, aerr, noCache)
+	cacheDur := noCache
+	// Cache deterministic 4xx client errors (e.g. 404 Not Found, 400 Bad Request) for a short duration.
+	// Exclude transient 4xx errors like 429 Too Many Requests (which would lock out rate-limited users after quota reset)
+	// and 5xx server errors (which should recover instantly as soon as backend issues resolve).
+	if aerr.Code >= 400 && aerr.Code < 500 && aerr.Code != http.StatusTooManyRequests && aerr.Code != http.StatusRequestTimeout {
+		cacheDur = clientErrorCacheDur
+	}
+	return serveJSON(w, aerr.Code, aerr, cacheDur)
 }
 
 // paginate returns a paginated response for the given list of items and pagination parameters.

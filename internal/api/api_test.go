@@ -6,11 +6,14 @@ package api
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/osv"
 	"golang.org/x/pkgsite/internal/testing/fakedatasource"
 	"golang.org/x/pkgsite/internal/vuln"
@@ -217,6 +220,48 @@ func TestCacheControl(t *testing.T) {
 			got := w.Header().Get("Cache-Control")
 			if got != test.want {
 				t.Errorf("Cache-Control = %q, want %q", got, test.want)
+			}
+		})
+	}
+}
+
+func TestServeErrorCacheControl(t *testing.T) {
+	for _, test := range []struct {
+		name       string
+		err        error
+		wantStatus int
+		wantCC     string
+	}{
+		{
+			name:       "404 not found is cached for 10 min",
+			err:        fmt.Errorf("module not found: %w", derrors.NotFound),
+			wantStatus: http.StatusNotFound,
+			wantCC:     "public, max-age=600",
+		},
+		{
+			name:       "400 bad request is cached for 10 min",
+			err:        BadRequest("invalid query", "details"),
+			wantStatus: http.StatusBadRequest,
+			wantCC:     "public, max-age=600",
+		},
+		{
+			name:       "500 internal error is not cached",
+			err:        errors.New("db failure"),
+			wantStatus: http.StatusInternalServerError,
+			wantCC:     "no-store",
+		},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			r := httptest.NewRequest("GET", "/v1beta/module/nonexistent", nil)
+			w := httptest.NewRecorder()
+			if err := ServeError(w, r, test.err); err != nil {
+				t.Fatal(err)
+			}
+			if w.Code != test.wantStatus {
+				t.Errorf("status = %d, want %d", w.Code, test.wantStatus)
+			}
+			if got := w.Header().Get("Cache-Control"); got != test.wantCC {
+				t.Errorf("Cache-Control = %q, want %q", got, test.wantCC)
 			}
 		})
 	}
