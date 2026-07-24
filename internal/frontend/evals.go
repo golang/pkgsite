@@ -215,14 +215,17 @@ func summarizeDocumentation(docPkg *godoc.Package) docSummary {
 func collectSymbols(files []*ast.File, add func(name string, has bool)) {
 
 	// specDoc finds the doc comment for a spec. Typically this will be doc itself,
-	// but if absent and this is a single-spec declaration (e.g. `type T struct{}`),
-	// d.Doc is the doc comment on the enclosing GenDecl. If both are absent, comment
-	// is a trailing line comment on the same line, which we generously accept.
+	// but if absent:
+	// - for consts and vars, we use the comment on the enclosing GenDecl (d.Doc)
+	// - for types, we only use the GenDecl comment if this is a single-spec declaration
+	//   (e.g. `type T struct{}`),
+	// If both comments are absent, comment is a trailing line comment on the same
+	// line, which we generously accept.
 	specDoc := func(doc, comment *ast.CommentGroup, d *ast.GenDecl) *ast.CommentGroup {
 		if doc != nil {
 			return doc
 		}
-		if len(d.Specs) == 1 {
+		if d.Doc != nil && (d.Tok != token.TYPE || len(d.Specs) == 1) {
 			return d.Doc
 		}
 		return comment

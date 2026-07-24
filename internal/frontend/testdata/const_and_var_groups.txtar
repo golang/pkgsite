@@ -1,0 +1,35 @@
+This case checks that consts and vars that are
+part of a group don't need their own documentation if
+the group (GenDecl) is documented.
+
+-- p.go --
+package p
+
+// The consts below are not documented. (Note blank line just below.)
+
+const (
+	U1 = 1
+	U2 = 2
+)
+
+// These are all considered documented.
+const (
+	D1 = 1
+	D2 = 2
+)
+
+// The vars below the next blank line aren't documented.
+
+var (
+	Vu1 int
+	Vu2 int
+)
+
+// These are.
+var (
+	Vd1 int
+	Vd2 int
+)
+
+// So are these.
+var Vs1, Vs2, Vs3 int

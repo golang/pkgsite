@@ -279,6 +279,22 @@ func TestCollectSymbols(t *testing.T) {
 				"(Config).Less":                     false,
 			},
 		},
+		{
+			name: "const and var groups",
+			want: map[string]bool{
+				"U1":  false,
+				"U2":  false,
+				"D1":  true,
+				"D2":  true,
+				"Vu1": false,
+				"Vu2": false,
+				"Vd1": true,
+				"Vd2": true,
+				"Vs1": true,
+				"Vs2": true,
+				"Vs3": true,
+			},
+		},
 	}
 
 	for _, tc := range testCases {
