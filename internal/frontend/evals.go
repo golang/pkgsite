@@ -138,7 +138,9 @@ func ageString(dur time.Duration) string {
 // docSummary is a summary of a package's documentation, intended
 // for creating an evaluation.
 type docSummary struct {
-	packageHasDoc bool
+	packageHasDoc      bool
+	numExportedSymbols int // that need documentation
+	numHaveDoc         int // number of exported symbols that need doc and have it
 }
 
 // summarizeDocumentation produces a docSummary for the given package.
@@ -169,6 +171,10 @@ func summarizeDocumentation(docPkg *godoc.Package) docSummary {
 
 	// Main package? Nothing to do (we don't insist
 	// that mains have doc.)
+	// TODO(jba): consider checking the documentation of main packages.
+	// They should at least have a package doc.
+	// On the other hand, many main packages have an extensive README.md but
+	// no package doc.
 	pkgName := files[0].Name.Name
 	if pkgName == "main" {
 		return summary
@@ -181,7 +187,13 @@ func summarizeDocumentation(docPkg *godoc.Package) docSummary {
 		}
 	}
 
-	// TODO: count symbols with doc.
+	// Count exported symbols with/without doc.
+	collectSymbols(files, func(_ string, has bool) {
+		summary.numExportedSymbols++
+		if has {
+			summary.numHaveDoc++
+		}
+	})
 
 	return summary
 }

@@ -223,6 +223,90 @@ package mypkg`,
 				packageHasDoc: false,
 			},
 		},
+		{
+			name: "all exported symbols documented",
+			files: map[string]string{
+				"mypkg.go": `// Package mypkg provides utilities.
+package mypkg
+
+// F is a function.
+func F() {}
+
+// T is a type.
+type T int
+`,
+			},
+			want: docSummary{
+				packageHasDoc:      true,
+				numExportedSymbols: 2,
+				numHaveDoc:         2,
+			},
+		},
+		{
+			name: "no exported symbols documented",
+			files: map[string]string{
+				"mypkg.go": `package mypkg
+
+func F() {}
+
+type T int
+`,
+			},
+			want: docSummary{
+				packageHasDoc:      false,
+				numExportedSymbols: 2,
+				numHaveDoc:         0,
+			},
+		},
+		{
+			name: "mixed documented and undocumented exported symbols",
+			files: map[string]string{
+				"mypkg.go": `// Package mypkg provides utilities.
+package mypkg
+
+// ExportedWithDoc has doc comment.
+func ExportedWithDoc() {}
+
+func ExportedNoDoc() {}
+
+// ExportedType has doc.
+type ExportedType struct{}
+
+func (ExportedType) UndocumentedMethod() {}
+
+type unexportedType struct{}
+
+func (unexportedType) MethodOnUnexported() {}
+`,
+			},
+			want: docSummary{
+				packageHasDoc:      true,
+				numExportedSymbols: 4,
+				numHaveDoc:         2,
+			},
+		},
+		{
+			name: "symbols across multiple files",
+			files: map[string]string{
+				"doc.go": `// Package mypkg provides utilities.
+package mypkg
+
+// Helper function.
+func Helper() {}
+`,
+				"types.go": `package mypkg
+
+type Config struct{}
+
+const DefaultTimeout = 10
+`,
+			},
+			want: docSummary{
+				packageHasDoc:      true,
+				numExportedSymbols: 3,
+				numHaveDoc:         1,
+			},
+		},
 	}
 
 	for _, tc := range testCases {
