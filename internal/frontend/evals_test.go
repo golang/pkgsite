@@ -6,6 +6,7 @@ package frontend
 
 import (
 	"context"
+	"go/ast"
 	"go/parser"
 	"go/token"
 	"testing"
@@ -346,4 +347,73 @@ func parseTestPackage(t *testing.T, files map[string]string) *godoc.Package {
 		t.Fatalf("godoc.DecodePackage: %v", err)
 	}
 	return decodedPkg
+}
+
+func TestCollectSymbols(t *testing.T) {
+	src := `package mypkg
+
+// ExportedFunc has doc.
+func ExportedFunc() {}
+
+func unexportedFunc() {}
+
+// ExportedType has doc.
+type ExportedType struct{}
+
+type unexportedType struct{}
+
+// ExportedMethod has doc.
+func (e ExportedType) ExportedMethod() {}
+
+func (e ExportedType) UndocumentedMethod() {}
+
+// MethodOnUnexportedType should be ignored.
+func (u unexportedType) MethodOnUnexportedType() {}
+
+// ExportedConst has doc.
+const ExportedConst = 1
+
+const UndocumentedConst = 2
+
+// SingleGroupedType applies doc to single spec.
+type SingleGroupedType int
+
+var (
+	// ExportedVar has doc.
+	ExportedVar = "a"
+	UndocumentedVar = "b" // UndocumentedVar has line doc
+	NoDocVar = "c"
+	unexportedVar = "d"
+)
+`
+
+	pkg := parseTestPackage(t, map[string]string{"mypkg.go": src})
+	var files []*ast.File
+	for _, f := range pkg.Files {
+		if f != nil && f.AST != nil {
+			files = append(files, f.AST)
+		}
+	}
+
+	got := make(map[string]bool)
+	collectSymbols(files, func(name string, has bool) {
+		got[name] = has
+	})
+
+	want := map[string]bool{
+		"ExportedFunc":                      true,
+		"ExportedType":                      true,
+		"(ExportedType).ExportedMethod":     true,
+		"(ExportedType).UndocumentedMethod": false,
+		"ExportedConst":                     true,
+		"UndocumentedConst":                 false,
+		"SingleGroupedType":                 true,
+		"ExportedVar":                       true,
+		"UndocumentedVar":                   true,
+		"NoDocVar":                          false,
+	}
+
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("collectSymbols() mismatch (-want +got):\n%s", diff)
+	}
 }

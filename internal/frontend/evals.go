@@ -11,6 +11,7 @@ import (
 	"context"
 	"fmt"
 	"go/ast"
+	"go/token"
 	"strings"
 	"time"
 
@@ -196,4 +197,104 @@ func summarizeDocumentation(docPkg *godoc.Package) docSummary {
 	})
 
 	return summary
+}
+
+// collectSymbols visits files looking for exported symbols that need
+// documentation. It calls add(name, true) for a symbol if it has documentation,
+// and add(name, false) if it does not.
+//
+// This signature is overkill for production use, where we just want to count.
+// But it's useful for tests, to compare sets of symbols.
+//
+// This function accepts various forms of documentation, such as trailing line
+// comments or group-level comments, to capture a broad signal of documented
+// API surface. It does not enforce standard Go documentation formatting
+// (e.g., "Name does...").
+func collectSymbols(files []*ast.File, add func(name string, has bool)) {
+
+	// specDoc finds the doc comment for a spec. Typically this will be doc itself,
+	// but if absent and this is a single-spec declaration (e.g. `type T struct{}`),
+	// d.Doc is the doc comment on the enclosing GenDecl. If both are absent, comment
+	// is a trailing line comment on the same line, which we generously accept.
+	specDoc := func(doc, comment *ast.CommentGroup, d *ast.GenDecl) *ast.CommentGroup {
+		if doc != nil {
+			return doc
+		}
+		if len(d.Specs) == 1 {
+			return d.Doc
+		}
+		return comment
+	}
+
+	// Walk the top-level declarations of every file.
+	for _, file := range files {
+		for _, decl := range file.Decls {
+			switch d := decl.(type) {
+			case *ast.FuncDecl:
+				// If a method, both the method and the receiver must be exported.
+				if d.Name.IsExported() {
+					name := d.Name.Name
+					if d.Recv != nil {
+						recvName := recvTypeName(d.Recv)
+						if !ast.IsExported(recvName) {
+							continue
+						}
+						name = fmt.Sprintf("(%s).%s", recvName, name)
+					}
+					add(name, hasComment(d.Doc))
+				}
+			case *ast.GenDecl:
+				if d.Tok == token.IMPORT {
+					continue
+				}
+				for _, spec := range d.Specs {
+					switch s := spec.(type) {
+					case *ast.TypeSpec:
+						if s.Name.IsExported() {
+							doc := specDoc(s.Doc, s.Comment, d)
+							add(s.Name.Name, hasComment(doc))
+						}
+					case *ast.ValueSpec:
+						for _, name := range s.Names {
+							if name.IsExported() {
+								doc := specDoc(s.Doc, s.Comment, d)
+								add(name.Name, hasComment(doc))
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+// recvTypeName extracts the type name of the receiver from a receiver field list,
+// handling pointer receivers and generic type instantiations (e.g., *T or T[P]).
+// The receiver type is the first one in the list.
+// It returns "" if it cannot find a receiver type.
+func recvTypeName(recv *ast.FieldList) string {
+	if recv == nil || len(recv.List) == 0 {
+		return ""
+	}
+	t := recv.List[0].Type
+	// Handle pointers.
+	if ptr, ok := t.(*ast.StarExpr); ok {
+		t = ptr.X
+	}
+	// Handle generics.
+	switch x := t.(type) {
+	case *ast.IndexExpr:
+		t = x.X
+	case *ast.IndexListExpr:
+		t = x.X
+	}
+	if ident, ok := t.(*ast.Ident); ok {
+		return ident.Name
+	}
+	return ""
+}
+
+// hasComment reports whether the comment group actually contains a non-empty comment.
+func hasComment(doc *ast.CommentGroup) bool {
+	return doc != nil && strings.TrimSpace(doc.Text()) != ""
 }
