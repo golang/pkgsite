@@ -235,18 +235,8 @@ func main() {}`,
 		t.Run(tc.name, func(t *testing.T) {
 			files := tc.files
 			if files == nil {
-				txtarPath := filepath.Join("testdata", strings.ReplaceAll(tc.name, " ", "_")+".txtar")
-				data, err := os.ReadFile(txtarPath)
-				if err != nil {
-					t.Fatalf("os.ReadFile(%q): %v", txtarPath, err)
-				}
-				archive := txtar.Parse(data)
-				files = make(map[string]string)
-				for _, f := range archive.Files {
-					files[f.Name] = string(f.Data)
-				}
+				files = readTxtar(t, strings.ReplaceAll(tc.name, " ", "_"))
 			}
-
 			pkg := parseTestPackage(t, files)
 			got := summarizeDocumentation(pkg)
 			if diff := cmp.Diff(tc.want, got, cmp.AllowUnexported(docSummary{})); diff != "" {
@@ -256,100 +246,57 @@ func main() {}`,
 	}
 }
 
-// parseTestPackage creates a godoc.Package with the given files. It removes the
-// bodies of functions, encodes and then decodes the package, to simulate what the
-// frontend actually observes. It returns the decoded package.
-func parseTestPackage(t *testing.T, files map[string]string) *godoc.Package {
-	if len(files) == 0 {
-		return nil
-	}
-	t.Helper()
-	fset := token.NewFileSet()
-	docPkg := godoc.NewPackage(fset, nil)
-	for name, src := range files {
-		f, err := parser.ParseFile(fset, name, src, parser.ParseComments)
-		if err != nil {
-			t.Fatalf("parser.ParseFile(%q): %v", name, err)
-		}
-		docPkg.AddFile(f, true)
-	}
-	bytes, err := docPkg.Encode(context.Background())
-	if err != nil {
-		t.Fatalf("docPkg.Encode: %v", err)
-	}
-	decodedPkg, err := godoc.DecodePackage(bytes)
-	if err != nil {
-		t.Fatalf("godoc.DecodePackage: %v", err)
-	}
-	return decodedPkg
-}
-
 func TestCollectSymbols(t *testing.T) {
-	src := `package mypkg
-
-// ExportedFunc has doc.
-func ExportedFunc() {}
-
-func unexportedFunc() {}
-
-// ExportedType has doc.
-type ExportedType struct{}
-
-type unexportedType struct{}
-
-// ExportedMethod has doc.
-func (e ExportedType) ExportedMethod() {}
-
-func (e ExportedType) UndocumentedMethod() {}
-
-// MethodOnUnexportedType should be ignored.
-func (u unexportedType) MethodOnUnexportedType() {}
-
-// ExportedConst has doc.
-const ExportedConst = 1
-
-const UndocumentedConst = 2
-
-// SingleGroupedType applies doc to single spec.
-type SingleGroupedType int
-
-var (
-	// ExportedVar has doc.
-	ExportedVar = "a"
-	UndocumentedVar = "b" // UndocumentedVar has line doc
-	NoDocVar = "c"
-	unexportedVar = "d"
-)
-`
-
-	pkg := parseTestPackage(t, map[string]string{"mypkg.go": src})
-	var files []*ast.File
-	for _, f := range pkg.Files {
-		if f != nil && f.AST != nil {
-			files = append(files, f.AST)
-		}
+	testCases := []struct {
+		name string          // txtar filename
+		want map[string]bool // exported symbol -> has doc
+	}{
+		{
+			name: "exported and unexported",
+			want: map[string]bool{
+				"ExportedFunc":                      true,
+				"ExportedType":                      true,
+				"(ExportedType).ExportedMethod":     true,
+				"(ExportedType).UndocumentedMethod": false,
+				"ExportedConst":                     true,
+				"UndocumentedConst":                 false,
+				"SingleGroupedType":                 true,
+				"ExportedVar":                       true,
+				"UndocumentedVar":                   true,
+				"NoDocVar":                          false,
+			},
+		},
+		{
+			name: "mixed doc and undoc",
+			want: map[string]bool{
+				"ExportedWithDoc":                   true,
+				"ExportedNoDoc":                     false,
+				"ExportedType":                      true,
+				"(ExportedType).UndocumentedMethod": false,
+				"Config":                            false,
+				"DefaultTimeout":                    false,
+				"Helper":                            true,
+				"(Config).Less":                     false,
+			},
+		},
 	}
 
-	got := make(map[string]bool)
-	collectSymbols(files, func(name string, has bool) {
-		got[name] = has
-	})
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			pkg := parseTestPackage(t, readTxtar(t, strings.ReplaceAll(tc.name, " ", "_")))
+			var files []*ast.File
+			for _, f := range pkg.Files {
+				files = append(files, f.AST)
+			}
 
-	want := map[string]bool{
-		"ExportedFunc":                      true,
-		"ExportedType":                      true,
-		"(ExportedType).ExportedMethod":     true,
-		"(ExportedType).UndocumentedMethod": false,
-		"ExportedConst":                     true,
-		"UndocumentedConst":                 false,
-		"SingleGroupedType":                 true,
-		"ExportedVar":                       true,
-		"UndocumentedVar":                   true,
-		"NoDocVar":                          false,
-	}
-
-	if diff := cmp.Diff(want, got); diff != "" {
-		t.Errorf("collectSymbols() mismatch (-want +got):\n%s", diff)
+			got := make(map[string]bool)
+			collectSymbols(files, func(name string, has bool) {
+				got[name] = has
+			})
+			if diff := cmp.Diff(tc.want, got); diff != "" {
+				t.Errorf("collectSymbols() mismatch (-want +got):\n%s", diff)
+			}
+		})
 	}
 }
 func TestSigString(t *testing.T) {
@@ -432,4 +379,48 @@ func TestRecvTypeName(t *testing.T) {
 			}
 		})
 	}
+}
+
+// readTxtar reads a txtar file into a map from internal txtar filename to contents.
+// It assumes the file lives in testdata and has a ".txtar" extension.
+func readTxtar(t *testing.T, txtarName string) map[string]string {
+	filename := filepath.Join("testdata", txtarName+".txtar")
+	data, err := os.ReadFile(filename)
+	if err != nil {
+		t.Fatalf("os.ReadFile(%q): %v", filename, err)
+	}
+	archive := txtar.Parse(data)
+	files := make(map[string]string)
+	for _, f := range archive.Files {
+		files[f.Name] = string(f.Data)
+	}
+	return files
+}
+
+// parseTestPackage creates a godoc.Package with the given files. It removes the
+// bodies of functions, encodes and then decodes the package, to simulate what the
+// frontend actually observes. It returns the decoded package.
+func parseTestPackage(t *testing.T, files map[string]string) *godoc.Package {
+	if len(files) == 0 {
+		return nil
+	}
+	t.Helper()
+	fset := token.NewFileSet()
+	docPkg := godoc.NewPackage(fset, nil)
+	for name, src := range files {
+		f, err := parser.ParseFile(fset, name, src, parser.ParseComments)
+		if err != nil {
+			t.Fatalf("parser.ParseFile(%q): %v", name, err)
+		}
+		docPkg.AddFile(f, true)
+	}
+	bytes, err := docPkg.Encode(context.Background())
+	if err != nil {
+		t.Fatalf("docPkg.Encode: %v", err)
+	}
+	decodedPkg, err := godoc.DecodePackage(bytes)
+	if err != nil {
+		t.Fatalf("godoc.DecodePackage: %v", err)
+	}
+	return decodedPkg
 }

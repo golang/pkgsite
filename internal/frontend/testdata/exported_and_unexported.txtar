@@ -1,0 +1,36 @@
+-- p.go --
+package p
+
+// ExportedFunc has doc.
+func ExportedFunc() {}
+
+func unexportedFunc() {}
+
+// ExportedType has doc.
+type ExportedType struct{}
+
+type unexportedType struct{}
+
+// ExportedMethod has doc.
+func (e ExportedType) ExportedMethod() {}
+
+func (e ExportedType) UndocumentedMethod() {}
+
+// MethodOnUnexportedType should be ignored.
+func (u unexportedType) MethodOnUnexportedType() {}
+
+// ExportedConst has doc.
+const ExportedConst = 1
+
+const UndocumentedConst = 2
+
+// SingleGroupedType applies doc to single spec.
+type SingleGroupedType int
+
+var (
+	// ExportedVar has doc.
+	ExportedVar = "a"
+	UndocumentedVar = "b" // UndocumentedVar has line doc
+	NoDocVar = "c"
+	unexportedVar = "d"
+)
