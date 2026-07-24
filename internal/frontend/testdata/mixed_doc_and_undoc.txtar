@@ -1,0 +1,46 @@
+-- doc.go --
+// Package p provides utilities.
+package p
+
+-- a.go --
+package p
+
+// 4 exported symbols, 2 with doc.
+
+// ExportedWithDoc has doc comment.
+func ExportedWithDoc() {}
+
+func ExportedNoDoc() {}
+
+// ExportedType has doc.
+type ExportedType struct{}
+
+func (ExportedType) UndocumentedMethod() {}
+
+type unexportedType struct{}
+
+func (unexportedType) MethodOnUnexported() {}
+
+-- b.go --
+package p
+
+// 4 exported symbols (that need doc), 1 with doc.
+
+type Config struct{}
+
+const DefaultTimeout = 10
+
+// Helper function.
+func Helper() {}
+
+// These conventional methods don't count.
+
+func (Config) String() string { return "" }
+
+func (Config) Len() int { return 0 }
+
+// This one has a conventional name but a different signature
+// (the "Less" on sort.Interface returns a bool) so it does
+// count--it should have doc but doesn't.
+
+func (*Config) Less(int, int) string {return "" }

@@ -9,6 +9,9 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
+	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -18,6 +21,7 @@ import (
 	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/testing/fakedatasource"
 	"golang.org/x/pkgsite/internal/testing/sample"
+	"golang.org/x/tools/txtar"
 )
 
 func TestFetchEvalsDetails(t *testing.T) {
@@ -178,13 +182,15 @@ func TestAgeString(t *testing.T) {
 
 func TestSummarizeDocumentation(t *testing.T) {
 	testCases := []struct {
-		name  string
+		name string
+		// The files of the package. If nil, read the txtar from from testdata whose name
+		// is the test case name, replacing spaces with underscores.
 		files map[string]string
 		want  docSummary
 	}{
 		{
-			name:  "nil or empty",
-			files: nil,
+			name:  "empty",
+			files: map[string]string{},
 			want:  docSummary{},
 		},
 		{
@@ -206,17 +212,7 @@ func main() {}`,
 			want: docSummary{},
 		},
 		{
-			name: "package has doc",
-			files: map[string]string{
-				"doc.go": `// Package mypkg provides utility routines.
-package mypkg`,
-			},
-			want: docSummary{
-				packageHasDoc: true,
-			},
-		},
-		{
-			name: "package doesn't have doc",
+			name: "package does not have doc",
 			files: map[string]string{
 				"doc.go": `package mypkg`,
 			},
@@ -225,97 +221,33 @@ package mypkg`,
 			},
 		},
 		{
-			name: "all exported symbols documented",
-			files: map[string]string{
-				"mypkg.go": `// Package mypkg provides utilities.
-package mypkg
-
-// F is a function.
-func F() {}
-
-// T is a type.
-type T int
-`,
-			},
+			name:  "mixed doc and undoc",
+			files: nil,
 			want: docSummary{
 				packageHasDoc:      true,
-				numExportedSymbols: 2,
-				numHaveDoc:         2,
-			},
-		},
-		{
-			name: "no exported symbols documented",
-			files: map[string]string{
-				"mypkg.go": `package mypkg
-
-func F() {}
-
-type T int
-`,
-			},
-			want: docSummary{
-				packageHasDoc:      false,
-				numExportedSymbols: 2,
-				numHaveDoc:         0,
-			},
-		},
-		{
-			name: "mixed documented and undocumented exported symbols",
-			files: map[string]string{
-				"mypkg.go": `// Package mypkg provides utilities.
-package mypkg
-
-// ExportedWithDoc has doc comment.
-func ExportedWithDoc() {}
-
-func ExportedNoDoc() {}
-
-// ExportedType has doc.
-type ExportedType struct{}
-
-func (ExportedType) UndocumentedMethod() {}
-
-type unexportedType struct{}
-
-func (unexportedType) MethodOnUnexported() {}
-`,
-			},
-			want: docSummary{
-				packageHasDoc:      true,
-				numExportedSymbols: 4,
-				numHaveDoc:         2,
-			},
-		},
-		{
-			name: "symbols across multiple files",
-			files: map[string]string{
-				"doc.go": `// Package mypkg provides utilities.
-package mypkg
-
-// Helper function.
-func Helper() {}
-`,
-				"types.go": `package mypkg
-
-type Config struct{}
-
-const DefaultTimeout = 10
-`,
-			},
-			want: docSummary{
-				packageHasDoc:      true,
-				numExportedSymbols: 3,
-				numHaveDoc:         1,
+				numExportedSymbols: 8,
+				numHaveDoc:         3,
 			},
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			var pkg *godoc.Package
-			if tc.files != nil {
-				pkg = parseTestPackage(t, tc.files)
+			files := tc.files
+			if files == nil {
+				txtarPath := filepath.Join("testdata", strings.ReplaceAll(tc.name, " ", "_")+".txtar")
+				data, err := os.ReadFile(txtarPath)
+				if err != nil {
+					t.Fatalf("os.ReadFile(%q): %v", txtarPath, err)
+				}
+				archive := txtar.Parse(data)
+				files = make(map[string]string)
+				for _, f := range archive.Files {
+					files[f.Name] = string(f.Data)
+				}
 			}
+
+			pkg := parseTestPackage(t, files)
 			got := summarizeDocumentation(pkg)
 			if diff := cmp.Diff(tc.want, got, cmp.AllowUnexported(docSummary{})); diff != "" {
 				t.Errorf("summarizeDocumentation() mismatch (-want +got):\n%s", diff)
@@ -328,6 +260,9 @@ const DefaultTimeout = 10
 // bodies of functions, encodes and then decodes the package, to simulate what the
 // frontend actually observes. It returns the decoded package.
 func parseTestPackage(t *testing.T, files map[string]string) *godoc.Package {
+	if len(files) == 0 {
+		return nil
+	}
 	t.Helper()
 	fset := token.NewFileSet()
 	docPkg := godoc.NewPackage(fset, nil)
@@ -417,7 +352,6 @@ var (
 		t.Errorf("collectSymbols() mismatch (-want +got):\n%s", diff)
 	}
 }
-
 func TestSigString(t *testing.T) {
 	testCases := []struct {
 		src  string
@@ -441,6 +375,60 @@ func TestSigString(t *testing.T) {
 			got := sigString(fd.Type)
 			if got != tc.want {
 				t.Errorf("sigString(%q) = %q, want %q", tc.src, got, tc.want)
+			}
+		})
+	}
+}
+
+func TestRecvTypeName(t *testing.T) {
+	testCases := []struct {
+		name string
+		src  string
+		want string
+	}{
+		{
+			name: "value receiver",
+			src:  "package p; func (t MyType) M() {}",
+			want: "MyType",
+		},
+		{
+			name: "pointer receiver",
+			src:  "package p; func (t *MyType) M() {}",
+			want: "MyType",
+		},
+		{
+			name: "generic value receiver with single type parameter",
+			src:  "package p; func (t MyType[P]) M() {}",
+			want: "MyType",
+		},
+		{
+			name: "generic pointer receiver with single type parameter",
+			src:  "package p; func (t *MyType[P]) M() {}",
+			want: "MyType",
+		},
+		{
+			name: "generic value receiver with multiple type parameters",
+			src:  "package p; func (t MyType[P1, P2]) M() {}",
+			want: "MyType",
+		},
+		{
+			name: "generic pointer receiver with multiple type parameters",
+			src:  "package p; func (t *MyType[P1, P2]) M() {}",
+			want: "MyType",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			fset := token.NewFileSet()
+			f, err := parser.ParseFile(fset, "p.go", tc.src, 0)
+			if err != nil {
+				t.Fatalf("parser.ParseFile: %v", err)
+			}
+			decl := f.Decls[0].(*ast.FuncDecl)
+			got := recvTypeName(decl.Recv)
+			if got != tc.want {
+				t.Errorf("recvTypeName(%s) = %q, want %q", tc.src, got, tc.want)
 			}
 		})
 	}

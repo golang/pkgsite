@@ -1,0 +1,9 @@
+-- mypkg.go --
+// Package mypkg provides utilities.
+package mypkg
+
+// F is a function.
+func F() {}
+
+// T is a type.
+type T int
