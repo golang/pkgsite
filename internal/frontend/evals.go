@@ -8,9 +8,11 @@
 package frontend
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"go/ast"
+	"go/printer"
 	"go/token"
 	"strings"
 	"time"
@@ -232,17 +234,21 @@ func collectSymbols(files []*ast.File, add func(name string, has bool)) {
 			switch d := decl.(type) {
 			case *ast.FuncDecl:
 				// If a method, both the method and the receiver must be exported.
-				if d.Name.IsExported() {
-					name := d.Name.Name
-					if d.Recv != nil {
-						recvName := recvTypeName(d.Recv)
-						if !ast.IsExported(recvName) {
-							continue
-						}
-						name = fmt.Sprintf("(%s).%s", recvName, name)
-					}
-					add(name, hasComment(d.Doc))
+				if !d.Name.IsExported() {
+					continue
 				}
+				name := d.Name.Name
+				if d.Recv != nil {
+					recvName := recvTypeName(d.Recv)
+					if !ast.IsExported(recvName) {
+						continue
+					}
+					if isConventionalMethod(name, d.Type) {
+						continue
+					}
+					name = fmt.Sprintf("(%s).%s", recvName, name)
+				}
+				add(name, hasComment(d.Doc))
 			case *ast.GenDecl:
 				if d.Tok == token.IMPORT {
 					continue
@@ -297,4 +303,77 @@ func recvTypeName(recv *ast.FieldList) string {
 // hasComment reports whether the comment group actually contains a non-empty comment.
 func hasComment(doc *ast.CommentGroup) bool {
 	return doc != nil && strings.TrimSpace(doc.Text()) != ""
+}
+
+// conventionalMethods maps common, standard method names like String and Error
+// to their signatures. These methods are often undocumented, and that's fine.
+var conventionalMethods = map[string]string{
+	"String":        "() string",             // fmt.Stringer
+	"Error":         "() string",             // error
+	"Unwrap":        "() error",              // for errors.Unwrap
+	"Len":           "() int",                // sort.Interface
+	"Less":          "(int, int) bool",       // sort.Interface
+	"Swap":          "(int, int)",            // sort.Interface
+	"Read":          "([]byte) (int, error)", // io.Reader
+	"Close":         "() error",              // io.ReadCloser
+	"Write":         "([]byte) (int, error)", // io.Writer
+	"MarshalJSON":   "() ([]byte, error)",    // json.Marshaler
+	"UnmarshalJSON": "([]byte) error",        // json.Unmarshaler
+}
+
+// isConventionalMethod reports whether a method with the given name and type (signature)
+// is conventional, according to the above map.
+func isConventionalMethod(name string, typ *ast.FuncType) bool {
+	sig, ok := conventionalMethods[name]
+	return ok && sigString(typ) == sig
+}
+
+// nodeString returns a string for node.
+func nodeString(node ast.Node) string {
+	var buf bytes.Buffer
+	printer.Fprint(&buf, token.NewFileSet(), node)
+	return buf.String()
+}
+
+// sigString returns a string representation of a function signature
+// without parameter or return names (e.g., "(int, int) bool").
+func sigString(ft *ast.FuncType) string {
+	if ft == nil {
+		return ""
+	}
+	paramTypes := fieldListTypes(ft.Params)
+	resTypes := fieldListTypes(ft.Results)
+
+	var buf strings.Builder
+	buf.WriteString("(")
+	buf.WriteString(strings.Join(paramTypes, ", "))
+	buf.WriteString(")")
+
+	if len(resTypes) == 1 {
+		buf.WriteString(" ")
+		buf.WriteString(resTypes[0])
+	} else if len(resTypes) > 1 {
+		buf.WriteString(" (")
+		buf.WriteString(strings.Join(resTypes, ", "))
+		buf.WriteString(")")
+	}
+	return buf.String()
+}
+
+func fieldListTypes(fl *ast.FieldList) []string {
+	if fl == nil {
+		return nil
+	}
+	var types []string
+	for _, field := range fl.List {
+		n := len(field.Names)
+		if n == 0 {
+			n = 1
+		}
+		tstr := nodeString(field.Type)
+		for i := 0; i < n; i++ {
+			types = append(types, tstr)
+		}
+	}
+	return types
 }

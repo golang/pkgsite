@@ -417,3 +417,31 @@ var (
 		t.Errorf("collectSymbols() mismatch (-want +got):\n%s", diff)
 	}
 }
+
+func TestSigString(t *testing.T) {
+	testCases := []struct {
+		src  string
+		want string
+	}{
+		{"package p; func Foo(int, int) bool", "(int, int) bool"},
+		{"package p; func Foo(x, y int) (z bool)", "(int, int) bool"},
+		{"package p; func Foo()", "()"},
+		{"package p; func Foo(a string, b, c int, d ...byte) (error, int)", "(string, int, int, ...byte) (error, int)"},
+		{"package p; func Foo() (x, y int)", "() (int, int)"},
+		{"package p; func Foo() (bool)", "() bool"},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.src, func(t *testing.T) {
+			fset := token.NewFileSet()
+			f, err := parser.ParseFile(fset, "p.go", tc.src, 0)
+			if err != nil {
+				t.Fatalf("parser.ParseFile(%q): %v", tc.src, err)
+			}
+			fd := f.Decls[0].(*ast.FuncDecl)
+			got := sigString(fd.Type)
+			if got != tc.want {
+				t.Errorf("sigString(%q) = %q, want %q", tc.src, got, tc.want)
+			}
+		})
+	}
+}
