@@ -153,7 +153,7 @@ type TestingDataSource interface {
 	// It calls t.Fatal if there is an error.
 	MustInsertModule(t *testing.T, m *Module)
 
-	// MustInsertModule inserts m into the DataSource
+	// MustInsertModuleGoMod inserts m into the DataSource
 	// with a go.mod file.
 	// It calls t.Fatal if there is an error.
 	// TODO(jba); remove context arg.
