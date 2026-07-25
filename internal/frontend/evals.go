@@ -201,6 +201,87 @@ func summarizeDocumentation(docPkg *godoc.Package) docSummary {
 	return summary
 }
 
+// collectInterfaceMethods walks files looking for top-level exported interface
+// declarations. For every exported method in those interfaces (including methods
+// embedded from other interfaces) that has documentation, it records a mapping
+// from the method's name to its signature (e.g., "func() string").
+// This map is formatted identically to conventionalMethods.
+func collectInterfaceMethods(files []*ast.File) map[interfaceMethod]bool {
+	// First pass: index all top-level interface declarations in the package by their
+	// type name (both exported and unexported). We need to index unexported interfaces
+	// as well because an exported interface may embed an unexported interface from the
+	// same package, and we must be able to look up its AST to collect those embedded methods.
+	ifaceMap := make(map[string]*ast.InterfaceType)
+	for _, file := range files {
+		for _, decl := range file.Decls {
+			gd, ok := decl.(*ast.GenDecl)
+			if !ok || gd.Tok != token.TYPE {
+				continue
+			}
+			for _, spec := range gd.Specs {
+				ts, ok := spec.(*ast.TypeSpec)
+				if !ok {
+					continue
+				}
+				if t, ok := ts.Type.(*ast.InterfaceType); ok {
+					ifaceMap[ts.Name.Name] = t
+				}
+			}
+		}
+	}
+
+	methods := make(map[interfaceMethod]bool)
+
+	// collect visits all methods defined in itype and adds any exported,
+	// documented methods to the methods map. When it encounters an embedded interface
+	// (or type constraint), it resolves the interface name in ifaceMap and recursively
+	// collects from the embedded interface. The visited map tracks interfaces currently
+	// being traversed to prevent infinite recursion in case of cyclic or repeated embedding.
+	var collect func(itype *ast.InterfaceType, visited map[string]bool)
+	collect = func(itype *ast.InterfaceType, visited map[string]bool) {
+		if itype == nil || itype.Methods == nil {
+			return
+		}
+		for _, field := range itype.Methods.List {
+			if len(field.Names) == 0 { // embedded interface or union
+				embeddedName := identName(field.Type)
+				if embeddedName != "" && !visited[embeddedName] {
+					if ei, ok := ifaceMap[embeddedName]; ok {
+						visited[embeddedName] = true
+						collect(ei, visited)
+					}
+				}
+				continue
+			}
+			ftype, ok := field.Type.(*ast.FuncType)
+			if !ok {
+				continue
+			}
+			if !hasComment(field.Doc) && !hasComment(field.Comment) {
+				continue
+			}
+			// There should only be one name, but just to play it safe, loop.
+			for _, name := range field.Names {
+				if name.IsExported() {
+					methods[interfaceMethod{name.Name, nodeString(ftype)}] = true
+				}
+			}
+		}
+	}
+
+	// Second pass: iterate over all collected interfaces and initiate method collection
+	// only for top-level exported interfaces. Methods from unexported interfaces will
+	// only be included if they were embedded within one of these exported interfaces.
+	visited := make(map[string]bool)
+	for name, itype := range ifaceMap {
+		if ast.IsExported(name) && !visited[name] {
+			visited[name] = true
+			collect(itype, visited)
+		}
+	}
+	return methods
+}
+
 // collectSymbols visits files looking for exported symbols that need
 // documentation. It calls add(name, true) for a symbol if it has documentation,
 // and add(name, false) if it does not.
@@ -213,6 +294,7 @@ func summarizeDocumentation(docPkg *godoc.Package) docSummary {
 // API surface. It does not enforce standard Go documentation formatting
 // (e.g., "Name does...").
 func collectSymbols(files []*ast.File, add func(name string, has bool)) {
+	ifaceMethods := collectInterfaceMethods(files)
 
 	// specDoc finds the doc comment for a spec. Typically this will be doc itself,
 	// but if absent:
@@ -246,7 +328,8 @@ func collectSymbols(files []*ast.File, add func(name string, has bool)) {
 					if !ast.IsExported(recvName) {
 						continue
 					}
-					if isConventionalMethod(name, d.Type) {
+					m := interfaceMethod{name: name, signature: nodeString(d.Type)}
+					if conventionalMethods[m] || ifaceMethods[m] {
 						continue
 					}
 					name = fmt.Sprintf("(%s).%s", recvName, name)
@@ -285,19 +368,22 @@ func recvTypeName(recv *ast.FieldList) string {
 	if recv == nil || len(recv.List) == 0 {
 		return ""
 	}
-	t := recv.List[0].Type
-	// Handle pointers.
-	if ptr, ok := t.(*ast.StarExpr); ok {
-		t = ptr.X
+	return identName(recv.List[0].Type)
+}
+
+// identName extracts the name of an identifier from an expression,
+// handling pointer expressions (*T) and generic type instantiations (T[P] or T[P1, P2]).
+func identName(expr ast.Expr) string {
+	if ptr, ok := expr.(*ast.StarExpr); ok {
+		expr = ptr.X
 	}
-	// Handle generics.
-	switch x := t.(type) {
+	switch x := expr.(type) {
 	case *ast.IndexExpr:
-		t = x.X
+		expr = x.X
 	case *ast.IndexListExpr:
-		t = x.X
+		expr = x.X
 	}
-	if ident, ok := t.(*ast.Ident); ok {
+	if ident, ok := expr.(*ast.Ident); ok {
 		return ident.Name
 	}
 	return ""
@@ -308,27 +394,26 @@ func hasComment(doc *ast.CommentGroup) bool {
 	return doc != nil && strings.TrimSpace(doc.Text()) != ""
 }
 
-// conventionalMethods maps common, standard method names like String and Error
-// to their signatures. These methods are often undocumented, and that's fine.
-var conventionalMethods = map[string]string{
-	"String":        "() string",             // fmt.Stringer
-	"Error":         "() string",             // error
-	"Unwrap":        "() error",              // for errors.Unwrap
-	"Len":           "() int",                // sort.Interface
-	"Less":          "(int, int) bool",       // sort.Interface
-	"Swap":          "(int, int)",            // sort.Interface
-	"Read":          "([]byte) (int, error)", // io.Reader
-	"Close":         "() error",              // io.ReadCloser
-	"Write":         "([]byte) (int, error)", // io.Writer
-	"MarshalJSON":   "() ([]byte, error)",    // json.Marshaler
-	"UnmarshalJSON": "([]byte) error",        // json.Unmarshaler
+// An interfaceMethod is a method from an interface.
+type interfaceMethod struct {
+	name      string
+	signature string
 }
 
-// isConventionalMethod reports whether a method with the given name and type (signature)
-// is conventional, according to the above map.
-func isConventionalMethod(name string, typ *ast.FuncType) bool {
-	sig, ok := conventionalMethods[name]
-	return ok && sigString(typ) == sig
+// conventionalMethods maps common, standard method names like String and Error
+// to their signatures. These methods are often undocumented, and that's fine.
+var conventionalMethods = map[interfaceMethod]bool{
+	{"String", "func() string"}:               true, // fmt.Stringer
+	{"Error", "func() string"}:                true, // error
+	{"Unwrap", "func() error"}:                true, // for errors.Unwrap
+	{"Len", "func() int"}:                     true, // sort.Interface
+	{"Less", "func(int, int) bool"}:           true, // sort.Interface
+	{"Swap", "func(int, int)"}:                true, // sort.Interface
+	{"Read", "func([]byte) (int, error)"}:     true, // io.Reader
+	{"Close", "func() error"}:                 true, // io.ReadCloser
+	{"Write", "func([]byte) (int, error)"}:    true, // io.Writer
+	{"MarshalJSON", "func() ([]byte, error)"}: true, // json.Marshaler
+	{"UnmarshalJSON", "func([]byte) error"}:   true, // json.Unmarshaler
 }
 
 // nodeString returns a string for node.

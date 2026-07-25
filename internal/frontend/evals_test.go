@@ -295,6 +295,18 @@ func TestCollectSymbols(t *testing.T) {
 				"Vs3": true,
 			},
 		},
+		{
+			name: "collect interface methods",
+			want: map[string]bool{
+				"TopLevelFunc":                  true,
+				"TopLevelVar":                   true,
+				"EmptyInterface":                true,
+				"ExportedInterface":             true,
+				"MyConcreteType":                true,
+				"(MyConcreteType).NoDocMethod":  true,
+				"(MyConcreteType).NoDocMethod2": false,
+			},
+		},
 	}
 
 	for _, tc := range testCases {
@@ -439,4 +451,23 @@ func parseTestPackage(t *testing.T, files map[string]string) *godoc.Package {
 		t.Fatalf("godoc.DecodePackage: %v", err)
 	}
 	return decodedPkg
+}
+
+func TestCollectInterfaceMethods(t *testing.T) {
+	pkg := parseTestPackage(t, readTxtar(t, "collect_interface_methods"))
+	var files []*ast.File
+	for _, f := range pkg.Files {
+		files = append(files, f.AST)
+	}
+
+	got := collectInterfaceMethods(files)
+	want := map[interfaceMethod]bool{
+		{"DocumentedMethod", "func(x int) string"}:         true,
+		{"UndocumentedMethod", "func() error"}:             true,
+		{"MethodInUnexportedInterface2", "func(int) bool"}: true,
+	}
+
+	if diff := cmp.Diff(want, got, cmp.AllowUnexported(interfaceMethod{})); diff != "" {
+		t.Errorf("collectInterfaceMethods() mismatch (-want +got):\n%s", diff)
+	}
 }

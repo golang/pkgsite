@@ -1,0 +1,51 @@
+-- mypkg.go --
+package mypkg
+
+// TopLevelFunc is a non-type top-level declaration.
+func TopLevelFunc() {}
+
+// TopLevelVar is another non-type declaration.
+var TopLevelVar = 1
+
+// EmptyInterface is an empty interface without methods.
+type EmptyInterface interface{}
+
+// ExportedInterface has documented methods.
+type ExportedInterface interface {
+	// DocumentedMethod is documented.
+	DocumentedMethod(x int) string
+
+	UndocumentedMethod() error // UndocumentedMethod has trailing line comment
+
+	NoDocMethod() bool
+
+	NoDocMethod2(s string) int
+
+	unexportedMethod()
+
+	unexportedInterface2
+
+	int | bool
+}
+
+type unexportedInterface interface {
+	// MethodInUnexportedInterface is in an unexported interface.
+	MethodInUnexportedInterface()
+}
+
+type unexportedInterface2 interface {
+	// MethodInUnexportedInterface2 is in an unexported interface.
+	MethodInUnexportedInterface2(int) bool
+}
+
+// MyConcreteType is a concrete type.
+type MyConcreteType struct{}
+
+// DocumentedMethod implements ExportedInterface.DocumentedMethod (without doc).
+
+func (MyConcreteType) DocumentedMethod(x int) string { return "" }
+
+// NoDocMethod implements ExportedInterface.NoDocMethod (without doc).
+func (MyConcreteType) NoDocMethod() bool { return false }
+
+func (MyConcreteType) NoDocMethod2(s string) int { return 0 }
