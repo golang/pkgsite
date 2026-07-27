@@ -150,12 +150,10 @@ type docSummary struct {
 func summarizeDocumentation(docPkg *godoc.Package) docSummary {
 	var summary docSummary
 
-	// Empty package? Nothing to do.
 	if docPkg == nil || len(docPkg.Files) == 0 {
 		return summary
 	}
 
-	// Collect non-test files.
 	var files []*ast.File
 	for _, f := range docPkg.Files {
 		if f == nil || f.AST == nil {
@@ -167,13 +165,11 @@ func summarizeDocumentation(docPkg *godoc.Package) docSummary {
 		files = append(files, f.AST)
 	}
 
-	// No non-test files? Nothing to do.
 	if len(files) == 0 {
 		return summary
 	}
 
-	// Main package? Nothing to do (we don't insist
-	// that mains have doc.)
+	// We don't insist that main packages have doc.
 	// TODO(jba): consider checking the documentation of main packages.
 	// They should at least have a package doc.
 	// On the other hand, many main packages have an extensive README.md but
@@ -183,14 +179,12 @@ func summarizeDocumentation(docPkg *godoc.Package) docSummary {
 		return summary
 	}
 
-	// Is there a package-level doc string?
 	for _, file := range files {
 		if file.Doc != nil {
 			summary.packageHasDoc = true
 		}
 	}
 
-	// Count exported symbols with/without doc.
 	collectSymbols(files, func(_ string, has bool) {
 		summary.numExportedSymbols++
 		if has {
