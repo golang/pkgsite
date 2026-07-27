@@ -7,12 +7,14 @@ package internal
 
 const (
 	ExperimentEnableStdFrontendFetch = "enable-std-frontend-fetch"
+	ExperimentVectorSearch           = "vector-search"
 )
 
 // Experiments represents all of the active experiments in the codebase and
 // a description of each experiment.
 var Experiments = map[string]string{
 	ExperimentEnableStdFrontendFetch: "Enable frontend fetching for module std.",
+	ExperimentVectorSearch:           "Enable hybrid vector search for package queries.",
 }
 
 // Experiment holds data associated with an experimental feature for frontend

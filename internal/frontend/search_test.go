@@ -19,6 +19,7 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/google/safehtml"
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/fetchdatasource"
 	"golang.org/x/pkgsite/internal/frontend/page"
 	"golang.org/x/pkgsite/internal/frontend/serrors"
@@ -874,7 +875,7 @@ func (e *stubEmbedder) GenerateEmbeddings(ctx context.Context, texts []string, t
 }
 
 func TestFetchSearchPageWithVector(t *testing.T) {
-	ctx := context.Background()
+	ctx := experiment.NewContext(context.Background(), internal.ExperimentVectorSearch)
 
 	tests := []struct {
 		name       string

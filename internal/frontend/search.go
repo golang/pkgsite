@@ -21,6 +21,7 @@ import (
 	"golang.org/x/mod/semver"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/experiment"
 	pagepkg "golang.org/x/pkgsite/internal/frontend/page"
 	"golang.org/x/pkgsite/internal/frontend/serrors"
 	"golang.org/x/pkgsite/internal/frontend/versions"
@@ -247,7 +248,7 @@ func fetchSearchPage(ctx context.Context, ds internal.DataSource, cq, symbol str
 	maxResultCount := maxSearchOffset + pageParams.limit
 
 	var vec []float32
-	if embeddingsClient != nil && !searchSymbols && strings.TrimSpace(cq) != "" {
+	if embeddingsClient != nil && !searchSymbols && strings.TrimSpace(cq) != "" && experiment.IsActive(ctx, internal.ExperimentVectorSearch) {
 		embedCtx, cancel := context.WithTimeout(ctx, searchEmbeddingTimeout)
 		defer cancel()
 		vecs, err := embeddingsClient.GenerateEmbeddings(embedCtx, []string{cq}, "RETRIEVAL_QUERY")
