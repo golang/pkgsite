@@ -233,6 +233,7 @@ func (s *Server) Install(handle func(string, http.Handler), cacher Cacher, authV
 	handle("POST /play/fmt", http.HandlerFunc(s.handleFmt))
 	handle("/play/share", http.HandlerFunc(s.proxyPlayground))
 	handle("GET /search", searchHandler)
+	handle("POST /search-click", http.HandlerFunc(s.handleSearchClick))
 	handle("GET /search-help", s.staticPageHandler("search-help", "Search Help"))
 	handle("GET /license-policy", s.licensePolicyHandler())
 	handle("GET /about", s.staticPageHandler("about", "About"))

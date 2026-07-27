@@ -920,3 +920,60 @@ func TestFetchSearchPageWithVector(t *testing.T) {
 		})
 	}
 }
+
+func TestHandleSearchClick(t *testing.T) {
+	s := &Server{}
+
+	tests := []struct {
+		name       string
+		method     string
+		payload    string
+		wantStatus int
+	}{
+		{
+			name:       "valid click treatment",
+			method:     http.MethodPost,
+			payload:    `{"query":"http router","clicked_package":"net/http","rank":0,"cohort":"treatment","timestamp":"2026-07-27T17:00:00Z"}`,
+			wantStatus: http.StatusNoContent,
+		},
+		{
+			name:       "valid click control",
+			method:     http.MethodPost,
+			payload:    `{"query":"http router","clicked_package":"net/http","rank":0,"cohort":"control","timestamp":"2026-07-27T17:00:00Z"}`,
+			wantStatus: http.StatusNoContent,
+		},
+		{
+			name:       "invalid method GET",
+			method:     http.MethodGet,
+			payload:    "",
+			wantStatus: http.StatusMethodNotAllowed,
+		},
+		{
+			name:       "invalid payload empty query",
+			method:     http.MethodPost,
+			payload:    `{"query":"","clicked_package":"net/http","rank":0,"cohort":"treatment"}`,
+			wantStatus: http.StatusBadRequest,
+		},
+		{
+			name:       "invalid cohort",
+			method:     http.MethodPost,
+			payload:    `{"query":"http router","clicked_package":"net/http","rank":0,"cohort":"unknown"}`,
+			wantStatus: http.StatusBadRequest,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			req := httptest.NewRequest(test.method, "/search-click", strings.NewReader(test.payload))
+			req.Header.Set("Content-Type", "application/json")
+			w := httptest.NewRecorder()
+
+			s.handleSearchClick(w, req)
+
+			if w.Code != test.wantStatus {
+				t.Errorf("got status %d, want %d", w.Code, test.wantStatus)
+			}
+		})
+	}
+}

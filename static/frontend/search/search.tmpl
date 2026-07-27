@@ -107,7 +107,11 @@
         <div class="SearchSnippet-headerContainer">
           <h2>
             <a href="/{{$v.PackagePath}}" data-gtmc="search result" data-gtmv="{{$i}}"
-                data-test-id="snippet-title">
+                data-test-id="snippet-title"
+                data-search-query="{{$query}}"
+                data-clicked-package="{{$v.PackagePath}}"
+                data-rank="{{$i}}"
+                data-experiment-cohort="{{if $.Experiments.IsActive "vector-search"}}treatment{{else}}control{{end}}">
               {{$v.Name}}
               <span class="SearchSnippet-header-path">({{$v.PackagePath}})</span>
             </a>

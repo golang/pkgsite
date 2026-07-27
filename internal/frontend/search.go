@@ -6,6 +6,7 @@ package frontend
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -247,11 +248,17 @@ func fetchSearchPage(ctx context.Context, ds internal.DataSource, cq, symbol str
 	pageParams paginationParams, searchSymbols bool, vulnClient *vuln.Client, embeddingsClient VectorEmbedder) (*SearchPage, error) {
 	maxResultCount := maxSearchOffset + pageParams.limit
 
-	var vec []float32
+	var (
+		vec              []float32
+		embeddingLatency time.Duration
+		searchLatency    time.Duration
+	)
 	if embeddingsClient != nil && !searchSymbols && strings.TrimSpace(cq) != "" && experiment.IsActive(ctx, internal.ExperimentVectorSearch) {
 		embedCtx, cancel := context.WithTimeout(ctx, searchEmbeddingTimeout)
 		defer cancel()
+		startEmbed := time.Now()
 		vecs, err := embeddingsClient.GenerateEmbeddings(embedCtx, []string{cq}, "RETRIEVAL_QUERY")
+		embeddingLatency = time.Since(startEmbed)
 		if err != nil {
 			log.Errorf(ctx, "failed to generate query vector for %q: %v", cq, err)
 		} else if len(vecs) > 0 {
@@ -261,6 +268,7 @@ func fetchSearchPage(ctx context.Context, ds internal.DataSource, cq, symbol str
 
 	// Pageless search: always start from the beginning.
 	offset := 0
+	startSearch := time.Now()
 	dbresults, err := ds.Search(ctx, cq, internal.SearchOptions{
 		MaxResults:     pageParams.limit,
 		Offset:         offset,
@@ -270,6 +278,7 @@ func fetchSearchPage(ctx context.Context, ds internal.DataSource, cq, symbol str
 		GroupResults:   true,
 		Vector:         vec,
 	})
+	searchLatency = time.Since(startSearch)
 	if err != nil {
 		return nil, err
 	}
@@ -298,6 +307,19 @@ func fetchSearchPage(ctx context.Context, ds internal.DataSource, cq, symbol str
 		// so we don't add them up.
 		numPageResults += 1 + len(r.SameModule)
 	}
+
+	cohort := "control"
+	if len(vec) > 0 {
+		cohort = "treatment"
+	}
+	log.Info(ctx, map[string]any{
+		"log_type":             "search_query_execution",
+		"query":                cq,
+		"cohort":               cohort,
+		"embedding_latency_ms": embeddingLatency.Milliseconds(),
+		"search_latency_ms":    searchLatency.Milliseconds(),
+		"num_results":          numResults,
+	})
 
 	pgs := newPagination(pageParams, numPageResults, numResults)
 	sp := &SearchPage{
@@ -604,5 +626,47 @@ func addVulns(ctx context.Context, rs []*SearchResult, vc *vuln.Client) {
 		})
 	}
 	wg.Wait()
+}
 
+type searchClickPayload struct {
+	Query          string `json:"query"`
+	ClickedPackage string `json:"clicked_package"`
+	Rank           int    `json:"rank"`
+	Cohort         string `json:"cohort"`
+	Timestamp      string `json:"timestamp"`
+}
+
+func (s *Server) handleSearchClick(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	r.Body = http.MaxBytesReader(w, r.Body, 10<<10)
+
+	var payload searchClickPayload
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		http.Error(w, "bad request", http.StatusBadRequest)
+		return
+	}
+
+	// Input validation: require non-empty fields & valid cohort.
+	if strings.TrimSpace(payload.Query) == "" || strings.TrimSpace(payload.ClickedPackage) == "" || payload.Rank < 0 {
+		http.Error(w, "missing or invalid required fields", http.StatusBadRequest)
+		return
+	}
+	if payload.Cohort != "control" && payload.Cohort != "treatment" {
+		http.Error(w, "invalid cohort", http.StatusBadRequest)
+		return
+	}
+
+	log.Info(r.Context(), map[string]any{
+		"log_type":        "search_click_telemetry",
+		"query":           payload.Query,
+		"clicked_package": payload.ClickedPackage,
+		"rank":            payload.Rank,
+		"cohort":          payload.Cohort,
+		"timestamp":       payload.Timestamp,
+	})
+	w.WriteHeader(http.StatusNoContent)
 }

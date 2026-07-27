@@ -43,4 +43,29 @@ searchHeader?.addEventListener('dblclick', e => {
   }
 });
 
+// Send non-blocking search result click telemetry via navigator.sendBeacon
+document.addEventListener('click', e => {
+  const target = e.target as HTMLElement | null;
+  const link = target?.closest<HTMLAnchorElement>('a[data-search-query]');
+  if (!link) return;
+
+  const query = link.getAttribute('data-search-query');
+  const clickedPackage = link.getAttribute('data-clicked-package');
+  const rankStr = link.getAttribute('data-rank');
+  const cohort = link.getAttribute('data-experiment-cohort');
+
+  if (query && clickedPackage && rankStr && cohort) {
+    const payload = {
+      query: query,
+      clicked_package: clickedPackage,
+      rank: parseInt(rankStr, 10),
+      cohort: cohort,
+      timestamp: new Date().toISOString(),
+    };
+    if (navigator.sendBeacon) {
+      navigator.sendBeacon('/search-click', JSON.stringify(payload));
+    }
+  }
+});
+
 export {};
