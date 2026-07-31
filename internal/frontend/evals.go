@@ -198,7 +198,7 @@ func summarizeDocumentation(docPkg *godoc.Package) docSummary {
 // collectInterfaceMethods walks files looking for top-level exported interface
 // declarations. For every exported method in those interfaces (including methods
 // embedded from other interfaces) that has documentation, it records a mapping
-// from the method's name to its signature (e.g., "func() string").
+// from the method's name to its signature (e.g., "() string").
 // This map is formatted identically to conventionalMethods.
 func collectInterfaceMethods(files []*ast.File) map[interfaceMethod]bool {
 	// First pass: index all top-level interface declarations in the package by their
@@ -257,7 +257,7 @@ func collectInterfaceMethods(files []*ast.File) map[interfaceMethod]bool {
 			// There should only be one name, but just to play it safe, loop.
 			for _, name := range field.Names {
 				if name.IsExported() {
-					methods[interfaceMethod{name.Name, nodeString(ftype)}] = true
+					methods[interfaceMethod{name.Name, sigString(ftype)}] = true
 				}
 			}
 		}
@@ -322,7 +322,7 @@ func collectSymbols(files []*ast.File, add func(name string, has bool)) {
 					if !ast.IsExported(recvName) {
 						continue
 					}
-					m := interfaceMethod{name: name, signature: nodeString(d.Type)}
+					m := interfaceMethod{name: name, signature: sigString(d.Type)}
 					if conventionalMethods[m] || ifaceMethods[m] {
 						continue
 					}
@@ -397,24 +397,17 @@ type interfaceMethod struct {
 // conventionalMethods maps common, standard method names like String and Error
 // to their signatures. These methods are often undocumented, and that's fine.
 var conventionalMethods = map[interfaceMethod]bool{
-	{"String", "func() string"}:               true, // fmt.Stringer
-	{"Error", "func() string"}:                true, // error
-	{"Unwrap", "func() error"}:                true, // for errors.Unwrap
-	{"Len", "func() int"}:                     true, // sort.Interface
-	{"Less", "func(int, int) bool"}:           true, // sort.Interface
-	{"Swap", "func(int, int)"}:                true, // sort.Interface
-	{"Read", "func([]byte) (int, error)"}:     true, // io.Reader
-	{"Close", "func() error"}:                 true, // io.ReadCloser
-	{"Write", "func([]byte) (int, error)"}:    true, // io.Writer
-	{"MarshalJSON", "func() ([]byte, error)"}: true, // json.Marshaler
-	{"UnmarshalJSON", "func([]byte) error"}:   true, // json.Unmarshaler
-}
-
-// nodeString returns a string for node.
-func nodeString(node ast.Node) string {
-	var buf bytes.Buffer
-	printer.Fprint(&buf, token.NewFileSet(), node)
-	return buf.String()
+	{"String", "() string"}:               true, // fmt.Stringer
+	{"Error", "() string"}:                true, // error
+	{"Unwrap", "() error"}:                true, // for errors.Unwrap
+	{"Len", "() int"}:                     true, // sort.Interface
+	{"Less", "(int, int) bool"}:           true, // sort.Interface
+	{"Swap", "(int, int)"}:                true, // sort.Interface
+	{"Read", "([]byte) (int, error)"}:     true, // io.Reader
+	{"Close", "() error"}:                 true, // io.ReadCloser
+	{"Write", "([]byte) (int, error)"}:    true, // io.Writer
+	{"MarshalJSON", "() ([]byte, error)"}: true, // json.Marshaler
+	{"UnmarshalJSON", "([]byte) error"}:   true, // json.Unmarshaler
 }
 
 // sigString returns a string representation of a function signature
@@ -458,4 +451,11 @@ func fieldListTypes(fl *ast.FieldList) []string {
 		}
 	}
 	return types
+}
+
+// nodeString returns a string for node.
+func nodeString(node ast.Node) string {
+	var buf bytes.Buffer
+	printer.Fprint(&buf, token.NewFileSet(), node)
+	return buf.String()
 }

@@ -39,6 +39,8 @@ func (Config) String() string { return "" }
 
 func (Config) Len() int { return 0 }
 
+func (Config) UnmarshalJSON(data []byte) error { return nil }
+
 // This one has a conventional name but a different signature
 // (the "Less" on sort.Interface returns a bool) so it does
 // count--it should have doc but doesn't.
