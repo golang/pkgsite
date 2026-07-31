@@ -327,6 +327,56 @@ func TestCollectSymbols(t *testing.T) {
 		})
 	}
 }
+
+func TestCollectSymbolsDeprecatedPackage(t *testing.T) {
+	testCases := []struct {
+		name string
+		src  string
+		want map[string]bool
+	}{
+		{
+			name: "deprecated package",
+			src: `// Deprecated: use another package.
+package foo
+
+// Foo does something.
+func Foo() {}
+`,
+			want: map[string]bool{},
+		},
+		{
+			name: "deprecated not at start of paragraph",
+			src: `// Package foo is active.
+// Deprecated: this is not a new paragraph.
+package foo
+
+// Foo does something.
+func Foo() {}
+`,
+			want: map[string]bool{"Foo": true},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			fset := token.NewFileSet()
+			f, err := parser.ParseFile(fset, "foo.go", tc.src, parser.ParseComments)
+			if err != nil {
+				t.Fatalf("parser.ParseFile: %v", err)
+			}
+
+			got := make(map[string]bool)
+			collectSymbols([]*ast.File{f}, func(name string, has bool) {
+				got[name] = has
+			})
+
+			if diff := cmp.Diff(tc.want, got); diff != "" {
+				t.Errorf("collectSymbols() mismatch (-want +got):\n%s", diff)
+			}
+		})
+	}
+}
+
 func TestSigString(t *testing.T) {
 	testCases := []struct {
 		src  string

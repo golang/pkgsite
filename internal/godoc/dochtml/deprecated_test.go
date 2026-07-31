@@ -19,7 +19,7 @@ func TestIsDeprecated(t *testing.T) {
 		{"line 1\nDeprecated:\nline 2\n", false},
 		{"line 1\n\nDeprecated:\nline 2\n", true},
 	} {
-		got := isDeprecated(test.text)
+		got := IsDeprecated(test.text)
 		if got != test.want {
 			t.Errorf("%q: got %t, want %t", test.text, got, test.want)
 		}

@@ -20,6 +20,7 @@ import (
 	"golang.org/x/mod/semver"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/godoc"
+	"golang.org/x/pkgsite/internal/godoc/dochtml"
 	"golang.org/x/pkgsite/internal/version"
 )
 
@@ -288,6 +289,12 @@ func collectInterfaceMethods(files []*ast.File) map[interfaceMethod]bool {
 // API surface. It does not enforce standard Go documentation formatting
 // (e.g., "Name does...").
 func collectSymbols(files []*ast.File, add func(name string, has bool)) {
+	for _, file := range files {
+		if file != nil && file.Doc != nil && dochtml.IsDeprecated(file.Doc.Text()) {
+			return
+		}
+	}
+
 	ifaceMethods := collectInterfaceMethods(files)
 
 	// specDoc finds the doc comment for a spec. Typically this will be doc itself,
