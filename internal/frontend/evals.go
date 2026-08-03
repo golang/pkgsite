@@ -14,6 +14,7 @@ import (
 	"go/ast"
 	"go/printer"
 	"go/token"
+	"math"
 	"strings"
 	"time"
 
@@ -48,6 +49,20 @@ var (
 2: tagged, stable (v1 or higher)`,
 		MaxScore: 2,
 	}
+
+	docCoverageEval = &evalType{
+		Label: "Documentation coverage",
+		Description: `Score for documentation on package and exported symbols.
+The score is 10% whether the package has a comment, 90% the fraction of exported
+symbols that are commented. The format of the comments doesn't matter.
+0: no comments
+1: 1% - 20%
+2: 21% - 40%
+3: 41% - 60%
+4: 61% - 80%
+5: 81% - 100%`,
+		MaxScore: 5,
+	}
 )
 
 type eval struct {
@@ -61,7 +76,7 @@ type evalsDetails struct {
 }
 
 func fetchEvalsDetails(ctx context.Context, ds internal.DataSource, um *internal.UnitMeta) (*evalsDetails, error) {
-	u, err := ds.GetUnit(ctx, um, internal.WithLicenses, internal.BuildContext{})
+	u, err := ds.GetUnit(ctx, um, internal.WithLicenses|internal.WithDocsSource, internal.BuildContext{})
 	if err != nil {
 		return nil, err
 	}
@@ -96,9 +111,68 @@ func fetchEvalsDetails(ctx context.Context, ds internal.DataSource, um *internal
 		modEval.Value = "tagged, stable"
 	}
 
+	var docPkg *godoc.Package
+	if len(u.Documentation) > 0 && len(u.Documentation[0].Source) > 0 {
+		var err error
+		docPkg, err = godoc.DecodePackage(u.Documentation[0].Source)
+		if err != nil {
+			return nil, fmt.Errorf("decoding package: %w", err)
+		}
+	}
+	docEval := evalDocCoverage(summarizeDocumentation(docPkg))
+
 	return &evalsDetails{
-		Evals: []eval{licEval, modEval},
+		Evals: []eval{licEval, modEval, docEval},
 	}, nil
+}
+
+// evalDocCoverage converts a docSummary into an evaluation.
+// The fraction of exported symbols documented is combined
+// with the presence of a package comment to produce a raw Score out of 100.
+// The number of bars (docEval.Score) divides this range into groups of 20.
+// Thus a 5% score is 1 bar, an 82% score is 5 bars, and so on.
+//
+// The presence of a package doc is worth packageDocFraction, and the fraction
+// of documented symbols counts for the rest. For example, if packageDocFraction = 10%,
+// then the raw score is:
+//
+//	10% * (1 if package doc else 0) + 90% * (fraction of doc symbols)
+func evalDocCoverage(summary docSummary) eval {
+	const packageDocFraction = 0.10
+
+	docEval := eval{Type: docCoverageEval}
+	if !summary.packageHasDoc && summary.numHaveDoc == 0 {
+		docEval.Score = 0
+		docEval.Value = "no comments"
+		return docEval
+	}
+
+	var rawScore float64
+	if summary.packageHasDoc {
+		rawScore += packageDocFraction
+	}
+	f := 1.0
+	if summary.numExportedSymbols > 0 {
+		f = float64(summary.numHaveDoc) / float64(summary.numExportedSymbols)
+	}
+	rawScore += (1 - packageDocFraction) * f
+
+	// The score (number of bars) is basically the percentage divided by 20.
+	pct := int(math.Round(rawScore * 100))
+	if pct == 0 {
+		// We know rawScore > 0, so don't use a zero here. Reserve that for
+		// when there is really no documentation at all.
+		docEval.Score = 1
+		// Show percentage to one decimal; "0%" would be confusing.
+		// (Although we might still get "0.0%" sometimes.)
+		docEval.Value = fmt.Sprintf("%.1f%%", rawScore*100)
+	} else {
+		// Map a percentage from 1 to 100 to a score from 1 to 5,
+		// with 1-20 => 1, 21-40 => 2, etc.
+		docEval.Score = (pct-1)/20 + 1
+		docEval.Value = fmt.Sprintf("%d%%", pct)
+	}
+	return docEval
 }
 
 const (

@@ -38,6 +38,7 @@ func TestFetchEvalsDetails(t *testing.T) {
 		version           string
 		isRedistributable bool
 		licenses          []*licenses.License
+		docFiles          map[string]string
 		want              []eval
 	}{
 		{
@@ -55,6 +56,11 @@ func TestFetchEvalsDetails(t *testing.T) {
 					Type:  moduleVersionEval,
 					Score: 0,
 					Value: "untagged",
+				},
+				{
+					Type:  docCoverageEval,
+					Score: 1,
+					Value: "10%",
 				},
 			},
 		},
@@ -74,6 +80,11 @@ func TestFetchEvalsDetails(t *testing.T) {
 					Score: 1,
 					Value: "tagged, unstable",
 				},
+				{
+					Type:  docCoverageEval,
+					Score: 1,
+					Value: "10%",
+				},
 			},
 		},
 		{
@@ -91,6 +102,11 @@ func TestFetchEvalsDetails(t *testing.T) {
 					Type:  moduleVersionEval,
 					Score: 1,
 					Value: "tagged, unstable",
+				},
+				{
+					Type:  docCoverageEval,
+					Score: 1,
+					Value: "10%",
 				},
 			},
 		},
@@ -110,6 +126,72 @@ func TestFetchEvalsDetails(t *testing.T) {
 					Score: 2,
 					Value: "tagged, stable",
 				},
+				{
+					Type:  docCoverageEval,
+					Score: 1,
+					Value: "10%",
+				},
+			},
+		},
+		{
+			name:              "no documentation comments",
+			version:           "v1.2.3",
+			isRedistributable: true,
+			licenses:          []*licenses.License{mitLicense},
+			docFiles: map[string]string{
+				"foo.go": `package foo
+func Bar() {}
+`,
+			},
+			want: []eval{
+				{
+					Type:  licenseEval,
+					Score: 2,
+					Value: "redistributable license",
+				},
+				{
+					Type:  moduleVersionEval,
+					Score: 2,
+					Value: "tagged, stable",
+				},
+				{
+					Type:  docCoverageEval,
+					Score: 0,
+					Value: "no comments",
+				},
+			},
+		},
+		{
+			name:              "redistributable license, stable version, documentation",
+			version:           "v1.2.3",
+			isRedistributable: true,
+			licenses:          []*licenses.License{mitLicense},
+			docFiles: map[string]string{
+				"foo.go": `// Package foo provides foo.
+package foo
+
+// Bar does bar.
+func Bar() {}
+
+func Baz() {}
+`,
+			},
+			want: []eval{
+				{
+					Type:  licenseEval,
+					Score: 2,
+					Value: "redistributable license",
+				},
+				{
+					Type:  moduleVersionEval,
+					Score: 2,
+					Value: "tagged, stable",
+				},
+				{
+					Type:  docCoverageEval,
+					Score: 3,
+					Value: "55%",
+				},
 			},
 		},
 	}
@@ -123,6 +205,21 @@ func TestFetchEvalsDetails(t *testing.T) {
 			for _, u := range mod.Units {
 				u.IsRedistributable = tt.isRedistributable
 				u.LicenseContents = tt.licenses
+				if tt.docFiles != nil {
+					docPkg := parseTestPackage(t, tt.docFiles)
+					src, err := docPkg.Encode(ctx)
+					if err != nil {
+						t.Fatal(err)
+					}
+					u.Documentation = []*internal.Documentation{
+						{
+							GOOS:     internal.All,
+							GOARCH:   internal.All,
+							Synopsis: "synopsis",
+							Source:   src,
+						},
+					}
+				}
 			}
 			fds.MustInsertModule(t, mod)
 
@@ -137,6 +234,84 @@ func TestFetchEvalsDetails(t *testing.T) {
 			}
 			if diff := cmp.Diff(tt.want, got.Evals, cmp.AllowUnexported(eval{}, evalType{})); diff != "" {
 				t.Errorf("fetchEvalsDetails() mismatch (-want +got):\n%s", diff)
+			}
+		})
+	}
+}
+
+func TestEvalDocCoverage(t *testing.T) {
+	testCases := []struct {
+		name    string
+		summary docSummary
+		want    eval
+	}{
+		{
+			name:    "no comments at all",
+			summary: docSummary{packageHasDoc: false, numExportedSymbols: 10, numHaveDoc: 0},
+			want:    eval{Type: docCoverageEval, Score: 0, Value: "no comments"},
+		},
+		{
+			name:    "raw score non-zero but rounds to 0%",
+			summary: docSummary{packageHasDoc: false, numExportedSymbols: 1000, numHaveDoc: 1},
+			want:    eval{Type: docCoverageEval, Score: 1, Value: "0.1%"},
+		},
+		{
+			name:    "raw score non-zero rounds to 1%",
+			summary: docSummary{packageHasDoc: false, numExportedSymbols: 180, numHaveDoc: 2},
+			want:    eval{Type: docCoverageEval, Score: 1, Value: "1%"},
+		},
+		{
+			name:    "package doc only, no exported symbols documented",
+			summary: docSummary{packageHasDoc: true, numExportedSymbols: 9, numHaveDoc: 0},
+			want:    eval{Type: docCoverageEval, Score: 1, Value: "10%"},
+		},
+		{
+			name:    "raw score 20.0%",
+			summary: docSummary{packageHasDoc: true, numExportedSymbols: 90, numHaveDoc: 10},
+			want:    eval{Type: docCoverageEval, Score: 1, Value: "20%"},
+		},
+		{
+			name:    "raw score 40.0%",
+			summary: docSummary{packageHasDoc: true, numExportedSymbols: 30, numHaveDoc: 10},
+			want:    eval{Type: docCoverageEval, Score: 2, Value: "40%"},
+		},
+		{
+			name:    "raw score 60.0%",
+			summary: docSummary{packageHasDoc: true, numExportedSymbols: 18, numHaveDoc: 10},
+			want:    eval{Type: docCoverageEval, Score: 3, Value: "60%"},
+		},
+		{
+			name:    "raw score 60.1%",
+			summary: docSummary{packageHasDoc: true, numExportedSymbols: 900, numHaveDoc: 501},
+			want:    eval{Type: docCoverageEval, Score: 3, Value: "60%"},
+		},
+		{
+			name:    "raw score 80.0%",
+			summary: docSummary{packageHasDoc: true, numExportedSymbols: 9, numHaveDoc: 7},
+			want:    eval{Type: docCoverageEval, Score: 4, Value: "80%"},
+		},
+		{
+			name:    "100.0% coverage",
+			summary: docSummary{packageHasDoc: true, numExportedSymbols: 5, numHaveDoc: 5},
+			want:    eval{Type: docCoverageEval, Score: 5, Value: "100%"},
+		},
+		{
+			name:    "no exported symbols, with package doc",
+			summary: docSummary{packageHasDoc: true, numExportedSymbols: 0, numHaveDoc: 0},
+			want:    eval{Type: docCoverageEval, Score: 5, Value: "100%"},
+		},
+		{
+			name:    "no exported symbols, without package doc",
+			summary: docSummary{packageHasDoc: false, numExportedSymbols: 0, numHaveDoc: 0},
+			want:    eval{Type: docCoverageEval, Score: 0, Value: "no comments"},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := evalDocCoverage(tc.summary)
+			if diff := cmp.Diff(tc.want, got, cmp.AllowUnexported(eval{}, evalType{})); diff != "" {
+				t.Errorf("evalDocCoverage(%+v) mismatch (-want +got):\n%s", tc.summary, diff)
 			}
 		})
 	}
