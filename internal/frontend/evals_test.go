@@ -249,34 +249,34 @@ func main() {}`,
 func TestCollectSymbols(t *testing.T) {
 	testCases := []struct {
 		name string          // txtar filename
-		want map[string]bool // exported symbol -> has doc
+		want map[string]bool // exported symbol name -> has doc
 	}{
 		{
 			name: "exported and unexported",
 			want: map[string]bool{
-				"ExportedFunc":                      true,
-				"ExportedType":                      true,
-				"(ExportedType).ExportedMethod":     true,
-				"(ExportedType).UndocumentedMethod": false,
-				"ExportedConst":                     true,
-				"UndocumentedConst":                 false,
-				"SingleGroupedType":                 true,
-				"ExportedVar":                       true,
-				"UndocumentedVar":                   true,
-				"NoDocVar":                          false,
+				"ExportedFunc":       true,
+				"ExportedType":       true,
+				"ExportedMethod":     true,
+				"UndocumentedMethod": false,
+				"ExportedConst":      true,
+				"UndocumentedConst":  false,
+				"SingleGroupedType":  true,
+				"ExportedVar":        true,
+				"UndocumentedVar":    true,
+				"NoDocVar":           false,
 			},
 		},
 		{
 			name: "mixed doc and undoc",
 			want: map[string]bool{
-				"ExportedWithDoc":                   true,
-				"ExportedNoDoc":                     false,
-				"ExportedType":                      true,
-				"(ExportedType).UndocumentedMethod": false,
-				"Config":                            false,
-				"DefaultTimeout":                    false,
-				"Helper":                            true,
-				"(Config).Less":                     false,
+				"ExportedWithDoc":    true,
+				"ExportedNoDoc":      false,
+				"ExportedType":       true,
+				"UndocumentedMethod": false,
+				"Config":             false,
+				"DefaultTimeout":     false,
+				"Helper":             true,
+				"Less":               false,
 			},
 		},
 		{
@@ -298,13 +298,13 @@ func TestCollectSymbols(t *testing.T) {
 		{
 			name: "collect interface methods",
 			want: map[string]bool{
-				"TopLevelFunc":                  true,
-				"TopLevelVar":                   true,
-				"EmptyInterface":                true,
-				"ExportedInterface":             true,
-				"MyConcreteType":                true,
-				"(MyConcreteType).NoDocMethod":  true,
-				"(MyConcreteType).NoDocMethod2": false,
+				"TopLevelFunc":      true,
+				"TopLevelVar":       true,
+				"EmptyInterface":    true,
+				"ExportedInterface": true,
+				"MyConcreteType":    true,
+				"NoDocMethod":       true,
+				"NoDocMethod2":      false,
 			},
 		},
 	}
@@ -318,8 +318,12 @@ func TestCollectSymbols(t *testing.T) {
 			}
 
 			got := make(map[string]bool)
-			collectSymbols(files, func(name string, has bool) {
-				got[name] = has
+			CollectSymbols(files, func(id *ast.Ident, has bool) {
+				if id == nil {
+					t.Errorf("CollectSymbols passed nil id")
+				} else {
+					got[id.Name] = has
+				}
 			})
 			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Errorf("collectSymbols() mismatch (-want +got):\n%s", diff)
@@ -366,8 +370,8 @@ func Foo() {}
 			}
 
 			got := make(map[string]bool)
-			collectSymbols([]*ast.File{f}, func(name string, has bool) {
-				got[name] = has
+			CollectSymbols([]*ast.File{f}, func(id *ast.Ident, has bool) {
+				got[id.Name] = has
 			})
 
 			if diff := cmp.Diff(tc.want, got); diff != "" {

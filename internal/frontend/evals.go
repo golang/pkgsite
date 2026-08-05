@@ -186,7 +186,7 @@ func summarizeDocumentation(docPkg *godoc.Package) docSummary {
 		}
 	}
 
-	collectSymbols(files, func(_ string, has bool) {
+	CollectSymbols(files, func(_ *ast.Ident, has bool) {
 		summary.numExportedSymbols++
 		if has {
 			summary.numHaveDoc++
@@ -277,9 +277,9 @@ func collectInterfaceMethods(files []*ast.File) map[interfaceMethod]bool {
 	return methods
 }
 
-// collectSymbols visits files looking for exported symbols that need
-// documentation. It calls add(name, true) for a symbol if it has documentation,
-// and add(name, false) if it does not.
+// CollectSymbols visits files looking for exported symbols that need
+// documentation. It calls add(id, true) for a symbol if it has documentation,
+// and add(id, false) if it does not, where id is the *ast.Ident of the symbol.
 //
 // This signature is overkill for production use, where we just want to count.
 // But it's useful for tests, to compare sets of symbols.
@@ -288,7 +288,7 @@ func collectInterfaceMethods(files []*ast.File) map[interfaceMethod]bool {
 // comments or group-level comments, to capture a broad signal of documented
 // API surface. It does not enforce standard Go documentation formatting
 // (e.g., "Name does...").
-func collectSymbols(files []*ast.File, add func(name string, has bool)) {
+func CollectSymbols(files []*ast.File, add func(id *ast.Ident, has bool)) {
 	for _, file := range files {
 		if file != nil && file.Doc != nil && dochtml.IsDeprecated(file.Doc.Text()) {
 			return
@@ -323,19 +323,17 @@ func collectSymbols(files []*ast.File, add func(name string, has bool)) {
 				if !d.Name.IsExported() {
 					continue
 				}
-				name := d.Name.Name
 				if d.Recv != nil {
 					recvName := recvTypeName(d.Recv)
 					if !ast.IsExported(recvName) {
 						continue
 					}
-					m := interfaceMethod{name: name, signature: sigString(d.Type)}
+					m := interfaceMethod{name: d.Name.Name, signature: sigString(d.Type)}
 					if conventionalMethods[m] || ifaceMethods[m] {
 						continue
 					}
-					name = fmt.Sprintf("(%s).%s", recvName, name)
 				}
-				add(name, hasComment(d.Doc))
+				add(d.Name, hasComment(d.Doc))
 			case *ast.GenDecl:
 				if d.Tok == token.IMPORT {
 					continue
@@ -345,13 +343,13 @@ func collectSymbols(files []*ast.File, add func(name string, has bool)) {
 					case *ast.TypeSpec:
 						if s.Name.IsExported() {
 							doc := specDoc(s.Doc, s.Comment, d)
-							add(s.Name.Name, hasComment(doc))
+							add(s.Name, hasComment(doc))
 						}
 					case *ast.ValueSpec:
 						for _, name := range s.Names {
 							if name.IsExported() {
 								doc := specDoc(s.Doc, s.Comment, d)
-								add(name.Name, hasComment(doc))
+								add(name, hasComment(doc))
 							}
 						}
 					}
