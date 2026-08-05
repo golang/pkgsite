@@ -2,8 +2,9 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// The evaldoc command takes a local directory path, loads the module,
-// and prints symbols and whether they have documentation to standard output.
+// The evaldoc command takes a module_path@version or a local directory
+// path, loads the module, and prints symbols and whether they have
+// documentation to standard output.
 //
 // It can be used to better understand the "documentation coverage" score
 // on a package's evaluations page (pkg.go.dev/IMPORT/PATH?tab=evals).
@@ -12,6 +13,7 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"flag"
 	"fmt"
@@ -20,6 +22,7 @@ import (
 	"go/token"
 	"io/fs"
 	"log"
+	"net/http"
 	"os"
 	"path"
 	"path/filepath"
@@ -27,11 +30,17 @@ import (
 
 	"golang.org/x/mod/modfile"
 	"golang.org/x/pkgsite/internal/frontend"
+	"golang.org/x/pkgsite/internal/proxy"
+)
+
+var (
+	proxyURL = flag.String("proxy", "", "module proxy URL (defaults to GOPROXY or https://proxy.golang.org)")
 )
 
 func main() {
 	flag.Usage = func() {
-		fmt.Fprintf(flag.CommandLine.Output(), "usage: %s local_dir_path\n", os.Args[0])
+		fmt.Fprintf(flag.CommandLine.Output(), "usage: %s [flags] (module_path@version | local_dir_path)\n", os.Args[0])
+		fmt.Fprintln(flag.CommandLine.Output(), "local_dir_path must start with one of: / . ~")
 		flag.PrintDefaults()
 	}
 	flag.Parse()
@@ -65,29 +74,79 @@ func resolveLocalPath(arg string) (string, error) {
 	return filepath.Abs(arg)
 }
 
-// getContentDir uses arg to find a module at localPath, and returns an fs.FS whose root is the
+// getContentDir uses arg to find a module, and returns an fs.FS whose root is the
 // content directory of that module (the directory containing the go.mod file).
+// It also returns the module path.
 func getContentDir(arg string) (modulePath string, contentDir fs.FS, err error) {
 	if len(arg) == 0 {
 		return "", nil, errors.New("empty argument")
 	}
-	localPath, err := resolveLocalPath(arg)
+	if arg[0] == '/' || arg[0] == '.' || arg[0] == '~' {
+		localPath, err := resolveLocalPath(arg)
+		if err != nil {
+			return "", nil, fmt.Errorf("failed to resolve path %s: %w", arg, err)
+		}
+		fi, err := os.Stat(localPath)
+		if err != nil || !fi.IsDir() {
+			return "", nil, fmt.Errorf("%s is not a directory", localPath)
+		}
+		modBytes, err := os.ReadFile(filepath.Join(localPath, "go.mod"))
+		if err != nil {
+			return "", nil, fmt.Errorf("failed to read go.mod in %s: %w", localPath, err)
+		}
+		modulePath = modfile.ModulePath(modBytes)
+		if modulePath == "" {
+			return "", nil, fmt.Errorf("go.mod in %s contains no module path", localPath)
+		}
+		return modulePath, os.DirFS(localPath), nil
+	}
+
+	var reqVer string
+	var found bool
+	modulePath, reqVer, found = strings.Cut(arg, "@")
+	if !found || reqVer == "" {
+		reqVer = "latest"
+	}
+
+	pURL := *proxyURL
+	if pURL == "" {
+		pURL = os.Getenv("GOPROXY")
+	}
+	if pURL == "off" {
+		return "", nil, errors.New("GOPROXY is off")
+	}
+	if pURL == "" {
+		pURL = "https://proxy.golang.org"
+	}
+	// Take the first URL from the GOPROXY list.
+	if idx := strings.IndexAny(pURL, ",|"); idx != -1 {
+		pURL = pURL[:idx]
+	}
+
+	ctx := context.Background()
+	proxyClient, err := proxy.New(pURL, http.DefaultTransport)
 	if err != nil {
-		return "", nil, fmt.Errorf("failed to resolve path %s: %w", arg, err)
+		return "", nil, fmt.Errorf("proxy.New(%q): %w", pURL, err)
 	}
-	fi, err := os.Stat(localPath)
-	if err != nil || !fi.IsDir() {
-		return "", nil, fmt.Errorf("%s is not a directory", localPath)
-	}
-	modBytes, err := os.ReadFile(filepath.Join(localPath, "go.mod"))
+	proxyClient = proxyClient.WithFetchDisabled()
+
+	verInfo, err := proxyClient.Info(ctx, modulePath, reqVer)
 	if err != nil {
-		return "", nil, fmt.Errorf("failed to read go.mod in %s: %w", localPath, err)
+		return "", nil, fmt.Errorf("proxyClient.Info(%q, %q): %w", modulePath, reqVer, err)
 	}
-	modulePath = modfile.ModulePath(modBytes)
-	if modulePath == "" {
-		return "", nil, fmt.Errorf("go.mod in %s contains no module path", localPath)
+	resolvedVersion := verInfo.Version
+
+	zipReader, err := proxyClient.Zip(ctx, modulePath, resolvedVersion)
+	if err != nil {
+		return "", nil, fmt.Errorf("proxyClient.Zip(%q, %q): %w", modulePath, resolvedVersion, err)
 	}
-	return modulePath, os.DirFS(localPath), nil
+
+	contentDir, err = fs.Sub(zipReader, modulePath+"@"+resolvedVersion)
+	if err != nil {
+		return "", nil, fmt.Errorf("fs.Sub: %w", err)
+	}
+
+	return modulePath, contentDir, nil
 }
 
 // packageDirs walks contentDir to find directories corresponding to valid import paths,
