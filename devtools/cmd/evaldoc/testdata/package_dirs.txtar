@@ -1,0 +1,25 @@
+-- go.mod --
+module example.com/testmod
+
+go 1.22
+
+-- root.go --
+package testmod
+
+-- foo/foo.go --
+package foo
+
+-- foo/internal/internal.go --
+package internal
+
+-- internal/secret/secret.go --
+package secret
+
+-- vendor/bar/bar.go --
+package bar
+
+-- .ignored/ignored.go --
+package ignored
+
+-- .ignored/more/more.go --
+package more
