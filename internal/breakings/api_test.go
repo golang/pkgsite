@@ -5,7 +5,9 @@
 package api
 
 import (
+	"go/ast"
 	"go/parser"
+	"go/token"
 	"testing"
 )
 
@@ -39,6 +41,43 @@ func TestTypeString(t *testing.T) {
 			}
 		})
 	}
+
+	t.Run("generic func", func(t *testing.T) {
+		testCases := []struct {
+			decl string
+			want string
+		}{
+			{
+				"func _[T any, U ~int](x int, y U, z T) bool",
+				"func[any, ~int](int, #1, #0) bool",
+			},
+			{
+				"func _[T any, U any](m map[T][]U, ch <-chan T, f func(*T) U) (T, *U, error)",
+				"func[any, any](map[#0][]#1, <-chan #0, func(*#0) #1) (#0, *#1, error)",
+			},
+			{
+				"func _[T any](s struct{ a T })",
+				"func[any](struct{ a #0 })",
+			},
+			{
+				"func _[T any](s struct{ T })",
+				"func[any](struct{ #0 })",
+			},
+		}
+		for _, tc := range testCases {
+			prog := "package p\n" + tc.decl
+			fset := token.NewFileSet()
+			f, err := parser.ParseFile(fset, "p.go", prog, 0)
+			if err != nil {
+				t.Fatalf("parser.ParseFile(%q): %v", tc.decl, err)
+			}
+			fnType := f.Decls[0].(*ast.FuncDecl).Type
+			got := typeString(fnType)
+			if got != tc.want {
+				t.Errorf("typeString() for %q = %q, want %q", tc.decl, got, tc.want)
+			}
+		}
+	})
 
 	if got, want := typeString(nil), "?"; got != want {
 		t.Errorf("typeString(nil) = %q, want %q", got, want)
