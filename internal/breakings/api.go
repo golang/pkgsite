@@ -27,9 +27,35 @@ func typeString(typeExpr ast.Expr) string {
 		return "?"
 	case *ast.FuncType:
 		return "func" + sigString(t)
+	case *ast.StructType:
+		return structString(t)
 	default:
 		return nodeString(t)
 	}
+}
+
+// structString returns a string representation of a struct type
+// with expanded field lists and canonical formatting (e.g., "struct{X T; Y T}").
+func structString(st *ast.StructType) string {
+	if st == nil || st.Fields == nil || len(st.Fields.List) == 0 {
+		return "struct{}"
+	}
+	var fields []string
+	for _, f := range st.Fields.List {
+		tstr := typeString(f.Type)
+		tag := ""
+		if f.Tag != nil {
+			tag = " " + f.Tag.Value
+		}
+		if len(f.Names) == 0 {
+			fields = append(fields, tstr+tag)
+		} else {
+			for _, name := range f.Names {
+				fields = append(fields, name.Name+" "+tstr+tag)
+			}
+		}
+	}
+	return "struct{" + strings.Join(fields, "; ") + "}"
 }
 
 // sigString returns a string representation of a function signature

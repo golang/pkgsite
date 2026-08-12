@@ -27,6 +27,12 @@ func TestTypeString(t *testing.T) {
 		{"func()", "func()"},
 		{"func(int, int) bool", "func(int, int) bool"},
 		{"func(a, b int) (c bool, _ int)", "func(int, int) (bool, int)"},
+		{"struct{}", "struct{}"},
+		{"struct{ X int }", "struct{X int}"},
+		{"struct{ X, Y int }", "struct{X int; Y int}"},
+		{"struct{ X, Y int; Z string }", "struct{X int; Y int; Z string}"},
+		{"struct{ X int `json:\"x\"`; Y string }", "struct{X int `json:\"x\"`; Y string}"},
+		{"struct{ T; U }", "struct{T; U}"},
 	}
 
 	for _, tc := range testCases {
@@ -56,12 +62,12 @@ func TestTypeString(t *testing.T) {
 				"func[any, any](map[#0][]#1, <-chan #0, func(*#0) #1) (#0, *#1, error)",
 			},
 			{
-				"func _[T any](s struct{ a T })",
-				"func[any](struct{ a #0 })",
+				"func _[T any](s struct{ a, b T })",
+				"func[any](struct{a #0; b #0})",
 			},
 			{
 				"func _[T any](s struct{ T })",
-				"func[any](struct{ #0 })",
+				"func[any](struct{#0})",
 			},
 		}
 		for _, tc := range testCases {
