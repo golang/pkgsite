@@ -24,8 +24,7 @@ func TestTypeString(t *testing.T) {
 		{"<-chan int", "<-chan int"},
 		{"func()", "func()"},
 		{"func(int, int) bool", "func(int, int) bool"},
-		// FIX: remove argument names
-		// {"func(a, b int) (c bool)", "func(int, int) bool"},
+		{"func(a, b int) (c bool, _ int)", "func(int, int) (bool, int)"},
 	}
 
 	for _, tc := range testCases {
