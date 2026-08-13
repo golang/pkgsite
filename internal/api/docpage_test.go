@@ -38,7 +38,7 @@ func TestReadRouteInfo(t *testing.T) {
 		{
 			name: "with query params",
 			data: `
-//api:route /v1beta/dummy
+//api:route /v1/dummy
 //api:desc Dummy route.
 //api:params DummyParams
 //api:response DummyResponse
@@ -51,7 +51,7 @@ func TestReadRouteInfo(t *testing.T) {
 			},
 			want: []*RouteInfo{
 				{
-					Route:    "/v1beta/dummy",
+					Route:    "/v1/dummy",
 					Tags:     []string{"dummy"},
 					Summary:  "Dummy route",
 					Desc:     "Dummy route.",
@@ -67,7 +67,7 @@ func TestReadRouteInfo(t *testing.T) {
 		{
 			name: "with complex query params",
 			data: `
-//api:route /v1beta/dummy-complex
+//api:route /v1/dummy-complex
 //api:desc Dummy complex route.
 //api:params DummyComplexParams
 //api:response DummyComplexResponse
@@ -80,7 +80,7 @@ func TestReadRouteInfo(t *testing.T) {
 			},
 			want: []*RouteInfo{
 				{
-					Route:    "/v1beta/dummy-complex",
+					Route:    "/v1/dummy-complex",
 					Tags:     []string{"dummy-complex"},
 					Summary:  "Dummy complex route",
 					Desc:     "Dummy complex route.",
@@ -96,12 +96,12 @@ func TestReadRouteInfo(t *testing.T) {
 		{
 			name: "correct",
 			data: `
-//api:route /v1beta/package/{path}
+//api:route /v1/package/{path}
 //api:pathparam path Module or package path.
 //api:desc Get package metadata.
 //api:params path, version, module
 //api:response Package
-//api:route /v1beta/module/{path}
+//api:route /v1/module/{path}
 //api:pathparam path Module or package path.
 //api:desc Get module metadata.
 //api:params path, version
@@ -109,7 +109,7 @@ func TestReadRouteInfo(t *testing.T) {
 `,
 			want: []*RouteInfo{
 				{
-					Route:      "/v1beta/package/{path}",
+					Route:      "/v1/package/{path}",
 					Tags:       []string{"package"},
 					Summary:    "Get package metadata",
 					Desc:       "Get package metadata.",
@@ -118,7 +118,7 @@ func TestReadRouteInfo(t *testing.T) {
 					PathParams: []PathParam{{Name: "path", Doc: "Module or package path."}},
 				},
 				{
-					Route:      "/v1beta/module/{path}",
+					Route:      "/v1/module/{path}",
 					Tags:       []string{"module"},
 					Summary:    "Get module metadata",
 					Desc:       "Get module metadata.",
@@ -131,7 +131,7 @@ func TestReadRouteInfo(t *testing.T) {
 		{
 			name: "paginated",
 			data: `
-//api:route /v1beta/versions/{path}
+//api:route /v1/versions/{path}
 //api:pathparam path Module or package path.
 //api:desc All versions of the module at {path}.
 //api:params filter, limit, token
@@ -139,7 +139,7 @@ func TestReadRouteInfo(t *testing.T) {
 `,
 			want: []*RouteInfo{
 				{
-					Route:                 "/v1beta/versions/{path}",
+					Route:                 "/v1/versions/{path}",
 					Tags:                  []string{"versions"},
 					Summary:               "All versions of the module at {path}",
 					Desc:                  "All versions of the module at {path}.",
@@ -154,14 +154,14 @@ func TestReadRouteInfo(t *testing.T) {
 		{
 			name: "paginated lower",
 			data: `
-//api:route /v1beta/strings
+//api:route /v1/strings
 //api:desc Some strings.
 //api:params filter
 //api:response PaginatedResponse[string]
 `,
 			want: []*RouteInfo{
 				{
-					Route:                 "/v1beta/strings",
+					Route:                 "/v1/strings",
 					Tags:                  []string{"strings"},
 					Summary:               "Some strings",
 					Desc:                  "Some strings.",
@@ -175,7 +175,7 @@ func TestReadRouteInfo(t *testing.T) {
 		{
 			name: "multi-sentence description",
 			data: `
-//api:route /v1beta/vulns/{path}
+//api:route /v1/vulns/{path}
 //api:pathparam path Module or package path.
 //api:desc Vulnerabilities of the module or package at {path}.
 //api:desc Data comes from the Go vulnerability database.
@@ -185,7 +185,7 @@ func TestReadRouteInfo(t *testing.T) {
 `,
 			want: []*RouteInfo{
 				{
-					Route:                 "/v1beta/vulns/{path}",
+					Route:                 "/v1/vulns/{path}",
 					Tags:                  []string{"vulns"},
 					Summary:               "Vulnerabilities of the module or package at {path}",
 					Desc:                  "Vulnerabilities of the module or package at {path}.\nData comes from the Go vulnerability database.\nOnly results that match the filter query parameter are returned.",
@@ -200,14 +200,14 @@ func TestReadRouteInfo(t *testing.T) {
 		{
 			name: "multiple sentences on first line",
 			data: `
-//api:route /v1beta/search
+//api:route /v1/search
 //api:desc Search results. Only matching results are returned.
 //api:params filter
 //api:response PaginatedResponse[SearchResult]
 `,
 			want: []*RouteInfo{
 				{
-					Route:                 "/v1beta/search",
+					Route:                 "/v1/search",
 					Tags:                  []string{"search"},
 					Summary:               "Search results",
 					Desc:                  "Search results. Only matching results are returned.",
@@ -221,7 +221,7 @@ func TestReadRouteInfo(t *testing.T) {
 		{
 			name: "missing field",
 			data: `
-//api:route /v1beta/package/{path}
+//api:route /v1/package/{path}
 //api:desc Get package metadata.
 //api:pathparam path Module or package path.
 //api:response Package
@@ -236,7 +236,7 @@ func TestReadRouteInfo(t *testing.T) {
 		{
 			name: "empty value",
 			data: `
-//api:route /v1beta/package/{path}
+//api:route /v1/package/{path}
 //api:desc
 //api:pathparam path Module or package path.
 `,
@@ -245,7 +245,7 @@ func TestReadRouteInfo(t *testing.T) {
 		{
 			name: "unknown key",
 			data: `
-//api:route /v1beta/package/{path}
+//api:route /v1/package/{path}
 //api:pathparam path Module or package path.
 //api:unknown something
 `,
@@ -254,12 +254,12 @@ func TestReadRouteInfo(t *testing.T) {
 		{
 			name: "duplicate route",
 			data: `
-//api:route /v1beta/package/{path}
+//api:route /v1/package/{path}
 //api:pathparam path Module or package path.
 //api:desc Get package metadata.
 //api:params DummyParams
 //api:response Package
-//api:route /v1beta/package/{path}
+//api:route /v1/package/{path}
 //api:pathparam path Module or package path.
 //api:desc Get package metadata.
 //api:params DummyParams
@@ -271,14 +271,14 @@ func TestReadRouteInfo(t *testing.T) {
 			name: "pathparam before route",
 			data: `
 //api:pathparam path Module or package path.
-//api:route /v1beta/package/{path}
+//api:route /v1/package/{path}
 `,
 			wantErr: true,
 		},
 		{
 			name: "pathparam missing description",
 			data: `
-//api:route /v1beta/package/{path}
+//api:route /v1/package/{path}
 //api:pathparam path
 //api:desc Get package metadata.
 //api:params DummyParams
@@ -289,7 +289,7 @@ func TestReadRouteInfo(t *testing.T) {
 		{
 			name: "placeholder without pathparam",
 			data: `
-//api:route /v1beta/package/{path}
+//api:route /v1/package/{path}
 //api:desc Get package metadata.
 //api:params DummyParams
 //api:response Package
@@ -299,7 +299,7 @@ func TestReadRouteInfo(t *testing.T) {
 		{
 			name: "pathparam name mismatch",
 			data: `
-//api:route /v1beta/package/{path}
+//api:route /v1/package/{path}
 //api:pathparam pth Module or package path.
 //api:desc Get package metadata.
 //api:params DummyParams

@@ -2,8 +2,6 @@
 
 A command-line interface for querying [pkg.go.dev](https://pkg.go.dev/).
 
-Currently, the API is on `v1beta`, but we expect to move to `v1` soon.
-
 Related to issue [76718](https://go.dev/issue/76718).
 
 ## Quick start
@@ -23,7 +21,7 @@ for stability and efficient caching. `pkgsite-cli` is a lightweight CLI that
 uses this API. There is no official SDK for the API, but this tool serves as a
 reference client implementation that developers can use in other projects. See
 the [API spec](https://pkg.go.dev/api) and the
-[OpenAPI specification](https://pkg.go.dev/v1beta/openapi.yaml).
+[OpenAPI specification](https://pkg.go.dev/v1/openapi.yaml).
 
 ## Relationship to existing tools
 

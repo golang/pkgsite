@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Go Pkgsite API",
-    "version": "v0.1.1",
+    "version": "v1.0.0",
     "description": "API for accessing information about Go packages and modules on pkg.go.dev.",
     "contact": {
       "name": "The Go team at Google",
@@ -12,7 +12,7 @@
   },
   "servers": [
     {
-      "url": "https://pkg.go.dev/v1beta"
+      "url": "https://pkg.go.dev/v1"
     }
   ],
   "tags": [

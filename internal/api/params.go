@@ -21,7 +21,7 @@ type ListParams struct {
 	Filter string `form:"filter"`
 }
 
-// PackageParams are query parameters for /v1beta/package/{path}.
+// PackageParams are query parameters for /v1/package/{path}.
 type PackageParams struct {
 	// Module path.
 	Module string `form:"module"`
@@ -43,7 +43,7 @@ type PackageParams struct {
 	Licenses bool `form:"licenses"`
 }
 
-// SymbolsParams are query parameters for /v1beta/symbols/{path}.
+// SymbolsParams are query parameters for /v1/symbols/{path}.
 type SymbolsParams struct {
 	// Module path.
 	Module string `form:"module"`
@@ -57,7 +57,7 @@ type SymbolsParams struct {
 	ListParams
 }
 
-// ImportedByParams are query parameters for /v1beta/imported-by/{path}.
+// ImportedByParams are query parameters for /v1/imported-by/{path}.
 type ImportedByParams struct {
 	// Module path.
 	Module string `form:"module"`
@@ -67,7 +67,7 @@ type ImportedByParams struct {
 	ListParams
 }
 
-// ModuleParams are query parameters for /v1beta/module/{path}.
+// ModuleParams are query parameters for /v1/module/{path}.
 type ModuleParams struct {
 	// Module version: semantic version, 'latest', or default branches 'master' or 'main'.
 	// (Latest if empty).
@@ -78,14 +78,14 @@ type ModuleParams struct {
 	Readme bool `form:"readme"`
 }
 
-// VersionsParams are query parameters for /v1beta/versions/{path}.
+// VersionsParams are query parameters for /v1/versions/{path}.
 type VersionsParams struct {
 	ListParams
 	// Whether to include pseudo-versions in the result.
 	PseudoVersions bool `form:"pseudo"`
 }
 
-// PackagesParams are query parameters for /v1beta/packages/{path}.
+// PackagesParams are query parameters for /v1/packages/{path}.
 type PackagesParams struct {
 	// Module version: semantic version, 'latest', or default branches 'master' or 'main'.
 	// (Latest if empty).
@@ -93,7 +93,7 @@ type PackagesParams struct {
 	ListParams
 }
 
-// SearchParams are query parameters for /v1beta/search.
+// SearchParams are query parameters for /v1/search.
 type SearchParams struct {
 	// Find packages matching this query.
 	Query string `form:"q"`
@@ -103,7 +103,7 @@ type SearchParams struct {
 	ListParams
 }
 
-// VulnParams are query parameters for /v1beta/vulns/{path}.
+// VulnParams are query parameters for /v1/vulns/{path}.
 type VulnParams struct {
 	// Module path.
 	Module string `form:"module"`

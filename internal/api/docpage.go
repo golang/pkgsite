@@ -214,11 +214,11 @@ func calculateRoutes(ctx context.Context, baseURL string) ([]*RouteInfo, error) 
 
 var apiRE = regexp.MustCompile(`//\s*api:(\S+)\s+(.*)`)
 
-// routePlaceholderRE matches path placeholders in a route, e.g. {path} in /v1beta/module/{path}.
+// routePlaceholderRE matches path placeholders in a route, e.g. {path} in /v1/module/{path}.
 var routePlaceholderRE = regexp.MustCompile(`\{([^}]+)\}`)
 
 // routeTag returns the tag for a route: the path element after the first.
-// For example, the tag for "/v1beta/package/{path}" is "package".
+// For example, the tag for "/v1/package/{path}" is "package".
 // It returns "default" when the route has no such element.
 func routeTag(route string) string {
 	parts := strings.Split(strings.Trim(route, "/"), "/")

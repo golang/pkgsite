@@ -295,12 +295,12 @@ func TestRunAPIErrorJSON(t *testing.T) {
 func TestRunModuleWithVersions(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch {
-		case strings.HasPrefix(r.URL.Path, "/v1beta/versions/"):
+		case strings.HasPrefix(r.URL.Path, "/v1/versions/"):
 			json.NewEncoder(w).Encode(client.PaginatedResponse[client.VersionResponse]{
 				Items: []client.VersionResponse{{Version: "v0.14.0"}, {Version: "v0.13.0"}},
 				Total: 2,
 			})
-		case strings.HasPrefix(r.URL.Path, "/v1beta/vulns/"):
+		case strings.HasPrefix(r.URL.Path, "/v1/vulns/"):
 			json.NewEncoder(w).Encode(client.PaginatedResponse[client.Vulnerability]{
 				Items: []client.Vulnerability{{ID: "GO-2023-0001", Summary: "Bad thing"}},
 				Total: 1,
@@ -423,14 +423,14 @@ func checkFields(t *testing.T, typ reflect.Type, doc string) {
 
 func TestRunXFlag(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if strings.HasPrefix(r.URL.Path, "/v1beta/package/") {
+		if strings.HasPrefix(r.URL.Path, "/v1/package/") {
 			json.NewEncoder(w).Encode(client.Package{
 				PackageInfo: client.PackageInfo{
 					Path: "encoding/json",
 				},
 				ModulePath: "std",
 			})
-		} else if strings.HasPrefix(r.URL.Path, "/v1beta/search") {
+		} else if strings.HasPrefix(r.URL.Path, "/v1/search") {
 			json.NewEncoder(w).Encode(client.PaginatedResponse[client.SearchResult]{
 				Items: []client.SearchResult{},
 			})
@@ -445,7 +445,7 @@ func TestRunXFlag(t *testing.T) {
 			t.Fatalf("exit code = %d, stderr = %s", code, stderr.String())
 		}
 		errOut := stderr.String()
-		expectedURL := srv.URL + "/v1beta/package/encoding/json"
+		expectedURL := srv.URL + "/v1/package/encoding/json"
 		if !strings.Contains(errOut, expectedURL) {
 			t.Errorf("stderr = %q, want to contain %q", errOut, expectedURL)
 		}
@@ -458,7 +458,7 @@ func TestRunXFlag(t *testing.T) {
 			t.Fatalf("exit code = %d, stderr = %s", code, stderr.String())
 		}
 		errOut := stderr.String()
-		expectedURLPrefix := srv.URL + "/v1beta/search"
+		expectedURLPrefix := srv.URL + "/v1/search"
 		if !strings.Contains(errOut, expectedURLPrefix) {
 			t.Errorf("stderr = %q, want to contain %q", errOut, expectedURLPrefix)
 		}
@@ -477,14 +477,14 @@ func TestRun429(t *testing.T) {
 			}
 		}
 
-		if strings.HasPrefix(r.URL.Path, "/v1beta/package/") {
+		if strings.HasPrefix(r.URL.Path, "/v1/package/") {
 			respond(client.Package{
 				PackageInfo: client.PackageInfo{
 					Path: "encoding/json",
 				},
 				ModulePath: "std",
 			})
-		} else if strings.HasPrefix(r.URL.Path, "/v1beta/symbols/") {
+		} else if strings.HasPrefix(r.URL.Path, "/v1/symbols/") {
 			respond(client.PackageSymbols{
 				Symbols: client.PaginatedResponse[client.Symbol]{
 					Items: []client.Symbol{
@@ -494,7 +494,7 @@ func TestRun429(t *testing.T) {
 					NextPageToken: "token1",
 				},
 			})
-		} else if strings.HasPrefix(r.URL.Path, "/v1beta/search") {
+		} else if strings.HasPrefix(r.URL.Path, "/v1/search") {
 			respond(client.PaginatedResponse[client.SearchResult]{
 				Items: []client.SearchResult{
 					{PackagePath: "pkg1"},
@@ -502,12 +502,12 @@ func TestRun429(t *testing.T) {
 				Total:         2,
 				NextPageToken: "token1",
 			})
-		} else if strings.HasPrefix(r.URL.Path, "/v1beta/module/") {
+		} else if strings.HasPrefix(r.URL.Path, "/v1/module/") {
 			json.NewEncoder(w).Encode(client.Module{
 				Path:    "golang.org/x/text",
 				Version: "v0.14.0",
 			})
-		} else if strings.HasPrefix(r.URL.Path, "/v1beta/versions/") {
+		} else if strings.HasPrefix(r.URL.Path, "/v1/versions/") {
 			respond(client.PaginatedResponse[client.VersionResponse]{
 				Items: []client.VersionResponse{
 					{Version: "v0.14.0"},
@@ -649,14 +649,14 @@ func TestRun429(t *testing.T) {
 
 func TestRunPackagePagination(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if strings.HasPrefix(r.URL.Path, "/v1beta/package/") {
+		if strings.HasPrefix(r.URL.Path, "/v1/package/") {
 			json.NewEncoder(w).Encode(client.Package{
 				PackageInfo: client.PackageInfo{
 					Path: "encoding/json",
 				},
 				ModulePath: "std",
 			})
-		} else if strings.HasPrefix(r.URL.Path, "/v1beta/symbols/") {
+		} else if strings.HasPrefix(r.URL.Path, "/v1/symbols/") {
 			token := r.URL.Query().Get("token")
 			if token == "start-token" {
 				json.NewEncoder(w).Encode(client.PackageSymbols{
@@ -670,7 +670,7 @@ func TestRunPackagePagination(t *testing.T) {
 			} else {
 				http.Error(w, "missing or invalid token", http.StatusBadRequest)
 			}
-		} else if strings.HasPrefix(r.URL.Path, "/v1beta/imported-by/") {
+		} else if strings.HasPrefix(r.URL.Path, "/v1/imported-by/") {
 			token := r.URL.Query().Get("token")
 			if token == "ib-start-token" {
 				json.NewEncoder(w).Encode(client.PackageImportedBy{
@@ -747,12 +747,12 @@ func TestRunPackagePagination(t *testing.T) {
 
 func TestRunModulePagination(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if strings.HasPrefix(r.URL.Path, "/v1beta/module/") {
+		if strings.HasPrefix(r.URL.Path, "/v1/module/") {
 			json.NewEncoder(w).Encode(client.Module{
 				Path:    "golang.org/x/text",
 				Version: "v0.14.0",
 			})
-		} else if strings.HasPrefix(r.URL.Path, "/v1beta/versions/") {
+		} else if strings.HasPrefix(r.URL.Path, "/v1/versions/") {
 			token := r.URL.Query().Get("token")
 			if token == "ver-start-token" {
 				json.NewEncoder(w).Encode(client.PaginatedResponse[client.VersionResponse]{
@@ -764,7 +764,7 @@ func TestRunModulePagination(t *testing.T) {
 			} else {
 				http.Error(w, "missing or invalid token", http.StatusBadRequest)
 			}
-		} else if strings.HasPrefix(r.URL.Path, "/v1beta/vulns/") {
+		} else if strings.HasPrefix(r.URL.Path, "/v1/vulns/") {
 			token := r.URL.Query().Get("token")
 			if token == "vuln-start-token" {
 				json.NewEncoder(w).Encode(client.PaginatedResponse[client.Vulnerability]{
@@ -776,7 +776,7 @@ func TestRunModulePagination(t *testing.T) {
 			} else {
 				http.Error(w, "missing or invalid token", http.StatusBadRequest)
 			}
-		} else if strings.HasPrefix(r.URL.Path, "/v1beta/packages/") {
+		} else if strings.HasPrefix(r.URL.Path, "/v1/packages/") {
 			token := r.URL.Query().Get("token")
 			if token == "pkg-start-token" {
 				json.NewEncoder(w).Encode(map[string]any{

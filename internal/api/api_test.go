@@ -121,25 +121,25 @@ func TestServeVulnerabilities(t *testing.T) {
 	}{
 		{
 			name:       "all vulns",
-			url:        "/v1beta/vulns/example.com?version=v1.0.0",
+			url:        "/v1/vulns/example.com?version=v1.0.0",
 			wantStatus: http.StatusOK,
 			wantCount:  3,
 		},
 		{
 			name:       "no vulns",
-			url:        "/v1beta/vulns/example.com?version=v1.2.0",
+			url:        "/v1/vulns/example.com?version=v1.2.0",
 			wantStatus: http.StatusOK,
 			wantCount:  0,
 		},
 		{
 			name:       "package path in vulns endpoint",
-			url:        "/v1beta/vulns/example.com/pkg?version=v1.0.0",
+			url:        "/v1/vulns/example.com/pkg?version=v1.0.0",
 			wantStatus: http.StatusOK,
 			wantCount:  2,
 		},
 		{
 			name:       "another package path",
-			url:        "/v1beta/vulns/example.com/other?version=v1.0.0",
+			url:        "/v1/vulns/example.com/other?version=v1.0.0",
 			wantStatus: http.StatusOK,
 			wantCount:  2,
 		},
@@ -202,7 +202,7 @@ func TestCacheControl(t *testing.T) {
 		{"", "public, max-age=3600"},
 	} {
 		t.Run(test.version, func(t *testing.T) {
-			url := "/v1beta/module/" + modulePath
+			url := "/v1/module/" + modulePath
 			if test.version != "" {
 				url += "?version=" + test.version
 			}
@@ -252,7 +252,7 @@ func TestServeErrorCacheControl(t *testing.T) {
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			r := httptest.NewRequest("GET", "/v1beta/module/nonexistent", nil)
+			r := httptest.NewRequest("GET", "/v1/module/nonexistent", nil)
 			w := httptest.NewRecorder()
 			if err := ServeError(w, r, test.err); err != nil {
 				t.Fatal(err)

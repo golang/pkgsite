@@ -47,15 +47,15 @@ const (
 //go:embed openapi.yaml
 var OpenAPISpec []byte
 
-// ServePackage handles requests for the v1beta package metadata endpoint.
-// api:route /v1beta/package/{path}
+// ServePackage handles requests for the v1 package metadata endpoint.
+// api:route /v1/package/{path}
 // api:desc Information about the package at {path}.
-// api:example /v1beta/package/golang.org/x/time/rate
+// api:example /v1/package/golang.org/x/time/rate
 func ServePackage(w http.ResponseWriter, r *http.Request, ds internal.DataSource) (err error) {
 	defer derrors.Wrap(&err, "ServePackage")
 
 	// api:pathparam path Package path.
-	pkgPath := trimPath(r, "/v1beta/package/")
+	pkgPath := trimPath(r, "/v1/package/")
 	if pkgPath == "" {
 		return BadRequest("missing package path",
 			"the package path must be provided after '/package/'")
@@ -108,15 +108,15 @@ func ServePackage(w http.ResponseWriter, r *http.Request, ds internal.DataSource
 	return serveJSON(w, http.StatusOK, resp, versionCacheDur(params.Version))
 }
 
-// ServeModule handles requests for the v1beta module metadata endpoint.
-// api:route /v1beta/module/{path}
+// ServeModule handles requests for the v1 module metadata endpoint.
+// api:route /v1/module/{path}
 // api:desc Information about the module at {path}.
-// api:example /v1beta/module/golang.org/x/time
+// api:example /v1/module/golang.org/x/time
 func ServeModule(w http.ResponseWriter, r *http.Request, ds internal.DataSource) (err error) {
 	defer derrors.Wrap(&err, "ServeModule")
 
 	// api:pathparam path Module path.
-	modulePath := trimPath(r, "/v1beta/module/")
+	modulePath := trimPath(r, "/v1/module/")
 	if modulePath == "" {
 		return BadRequest("missing module path",
 			"the module path must be provided after '/module/'")
@@ -195,20 +195,20 @@ func ServeModule(w http.ResponseWriter, r *http.Request, ds internal.DataSource)
 	return serveJSON(w, http.StatusOK, resp, cacheDur)
 }
 
-// ServeModuleVersions handles requests for the v1beta module versions endpoint.
-// api:route /v1beta/versions/{path}
+// ServeModuleVersions handles requests for the v1 module versions endpoint.
+// api:route /v1/versions/{path}
 // api:desc All versions of the module at {path}, including all major versions.
 // api:desc Versions are listed in descending order, with incompatible versions last.
 // api:desc Only tagged versions are returned, unless the pseudo query parameter is true.
 // api:desc In addition, only results that match the filter query parameter are returned.
 // api:desc The total in the response is -1 to indicate that the total number of results is unknown,
 // api:desc unless all results fit on a single page.
-// api:example /v1beta/versions/golang.org/x/time?limit=3
+// api:example /v1/versions/golang.org/x/time?limit=3
 func ServeModuleVersions(w http.ResponseWriter, r *http.Request, ds internal.DataSource) (err error) {
 	defer derrors.Wrap(&err, "ServeModuleVersions")
 
 	// api:pathparam path Module path.
-	path := trimPath(r, "/v1beta/versions/")
+	path := trimPath(r, "/v1/versions/")
 	if path == "" {
 		return BadRequest("missing module path",
 			"the module path must be provided after '/versions/'")
@@ -307,17 +307,17 @@ func ServeModuleVersions(w http.ResponseWriter, r *http.Request, ds internal.Dat
 	return serveJSON(w, http.StatusOK, resp, shortCacheDur)
 }
 
-// ServeModulePackages handles requests for the v1beta module packages endpoint.
-// api:route /v1beta/packages/{path}
+// ServeModulePackages handles requests for the v1 module packages endpoint.
+// api:route /v1/packages/{path}
 // api:desc Information about packages of the module at {path}.
 // api:desc Filtering is applied to the list of packages in the response.
 // api:desc Only packages that match the filter query parameter are returned.
-// api:example /v1beta/packages/golang.org/x/time/rate
+// api:example /v1/packages/golang.org/x/time/rate
 func ServeModulePackages(w http.ResponseWriter, r *http.Request, ds internal.DataSource) (err error) {
 	defer derrors.Wrap(&err, "ServeModulePackages")
 
 	// api:pathparam path Module path.
-	modulePath := trimPath(r, "/v1beta/packages/")
+	modulePath := trimPath(r, "/v1/packages/")
 	if modulePath == "" {
 		return BadRequest("missing module path",
 			"the module path must be provided after '/packages/'")
@@ -379,10 +379,10 @@ func ServeModulePackages(w http.ResponseWriter, r *http.Request, ds internal.Dat
 }
 
 // ServeSearch handles requests for the v1 search endpoint.
-// api:route /v1beta/search
+// api:route /v1/search
 // api:desc Search results. Only results that match the filter query parameter are returned.
 // api:desc Results are sorted by how well the match the query, with the best match first.
-// api:example /v1beta/search?q=xyzzy
+// api:example /v1/search?q=xyzzy
 func ServeSearch(w http.ResponseWriter, r *http.Request, ds internal.DataSource) (err error) {
 	defer derrors.Wrap(&err, "ServeSearch")
 
@@ -453,17 +453,17 @@ func ServeSearch(w http.ResponseWriter, r *http.Request, ds internal.DataSource)
 	return serveJSON(w, http.StatusOK, resp, shortCacheDur)
 }
 
-// ServePackageSymbols handles requests for the v1beta package symbols endpoint.
-// api:route /v1beta/symbols/{path}
+// ServePackageSymbols handles requests for the v1 package symbols endpoint.
+// api:route /v1/symbols/{path}
 // api:desc List of symbols for the package at {path}.
 // api:desc Filtering is applied to the list of symbols in the response.
 // api:desc Only symbols that match the filter query parameter are returned.
-// api:example /v1beta/symbols/golang.org/x/time/rate
+// api:example /v1/symbols/golang.org/x/time/rate
 func ServePackageSymbols(w http.ResponseWriter, r *http.Request, ds internal.DataSource) (err error) {
 	defer derrors.Wrap(&err, "ServePackageSymbols")
 
 	// api:pathparam path Package path.
-	pkgPath := trimPath(r, "/v1beta/symbols/")
+	pkgPath := trimPath(r, "/v1/symbols/")
 	if pkgPath == "" {
 		return BadRequest("missing package path",
 			"the package path must be provided after '/symbols/'")
@@ -531,19 +531,19 @@ func ServePackageSymbols(w http.ResponseWriter, r *http.Request, ds internal.Dat
 	return serveJSON(w, http.StatusOK, resp, versionCacheDur(params.Version))
 }
 
-// ServePackageImportedBy handles requests for the v1beta package imported-by endpoint.
-// api:route /v1beta/imported-by/{path}
+// ServePackageImportedBy handles requests for the v1 package imported-by endpoint.
+// api:route /v1/imported-by/{path}
 // api:desc Paths of packages importing the package at {path},
 // api:desc not including packages in the same module.
 // api:desc Filtering is applied to the list of paths in the response.
 // api:desc Only paths that match the filter query parameter are returned.
 // api:desc Within a filter, the variable `path` is set to the import path.
-// api:example /v1beta/imported-by/golang.org/x/time/rate?limit=10&filter=%5E.%2A%5C.io%2F
+// api:example /v1/imported-by/golang.org/x/time/rate?limit=10&filter=%5E.%2A%5C.io%2F
 func ServePackageImportedBy(w http.ResponseWriter, r *http.Request, ds internal.DataSource) (err error) {
 	defer derrors.Wrap(&err, "ServePackageImportedBy")
 
 	// api:pathparam path Package path.
-	pkgPath := trimPath(r, "/v1beta/imported-by/")
+	pkgPath := trimPath(r, "/v1/imported-by/")
 	if pkgPath == "" {
 		return BadRequest("missing package path",
 			"the package path must be provided after '/imported-by/'")
@@ -633,18 +633,18 @@ func ServePackageImportedBy(w http.ResponseWriter, r *http.Request, ds internal.
 	return serveJSON(w, http.StatusOK, resp, shortCacheDur)
 }
 
-// ServeVulnerabilities handles requests for the v1beta vulnerabilities endpoint.
-// api:route /v1beta/vulns/{path}
+// ServeVulnerabilities handles requests for the v1 vulnerabilities endpoint.
+// api:route /v1/vulns/{path}
 // api:desc Vulnerabilities of the module or package at {path}.
 // api:desc Data comes from the Go vulnerability database (https://vuln.go.dev).
 // api:desc Only results that match the filter query parameter are returned.
-// api:example /v1beta/vulns/golang.org/x/image
+// api:example /v1/vulns/golang.org/x/image
 func ServeVulnerabilities(vc *vuln.Client) func(w http.ResponseWriter, r *http.Request, _ internal.DataSource) error {
 	return func(w http.ResponseWriter, r *http.Request, ds internal.DataSource) (err error) {
 		defer derrors.Wrap(&err, "ServeVulnerabilities")
 
 		// api:pathparam path Module or package path.
-		path := trimPath(r, "/v1beta/vulns/")
+		path := trimPath(r, "/v1/vulns/")
 		if path == "" {
 			return BadRequest("missing path",
 				"the package or module path must be provided after '/vulns/'")
@@ -1012,7 +1012,7 @@ func filterInternal[T any](list []T, filter string, jfields fieldMap, varName st
 	if err != nil {
 		return nil, BadRequest(fmt.Sprintf(`parsing filter "%s": %v`,
 			filter, err),
-			"the 'filter' query parameter must be a valid Go expression; see the documentation at /v1beta/api",
+			"the 'filter' query parameter must be a valid Go expression; see the documentation at /v1/api",
 		)
 	}
 	var out []T
@@ -1035,12 +1035,12 @@ func filterInternal[T any](list []T, filter string, jfields fieldMap, varName st
 		res, err := evaluate(expr, env)
 		if err != nil {
 			return nil, BadRequest(fmt.Sprintf(`evaluating filter "%s": %v`, filter, err),
-				"the filter must be a Go expression; see the documentation at /v1beta/api")
+				"the filter must be a Go expression; see the documentation at /v1/api")
 		}
 		b, ok := res.(bool)
 		if !ok {
 			return nil, BadRequest(fmt.Sprintf(`filter "%s" did not evaluate to bool`, filter),
-				"the filter must be a boolean Go expression; see the documentation at /v1beta/api")
+				"the filter must be a boolean Go expression; see the documentation at /v1/api")
 		}
 		if b {
 			out = append(out, e)

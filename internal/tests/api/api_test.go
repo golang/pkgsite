@@ -211,7 +211,7 @@ func testServePackage(t *testing.T, ds internal.TestingDataSource) {
 	}{
 		{
 			name:       "missing package path",
-			url:        "/v1beta/package/",
+			url:        "/v1/package/",
 			wantStatus: http.StatusBadRequest,
 			want: &api.Error{
 				Code:    http.StatusBadRequest,
@@ -220,7 +220,7 @@ func testServePackage(t *testing.T, ds internal.TestingDataSource) {
 		},
 		{
 			name:       "basic metadata",
-			url:        "/v1beta/package/example.com/pkg?version=v1.2.3",
+			url:        "/v1/package/example.com/pkg?version=v1.2.3",
 			wantStatus: http.StatusOK,
 			want: &api.Package{
 				PackageInfo: api.PackageInfo{
@@ -238,7 +238,7 @@ func testServePackage(t *testing.T, ds internal.TestingDataSource) {
 		},
 		{
 			name:       "ambiguous path",
-			url:        "/v1beta/package/example.com/a/b?version=v1.2.3",
+			url:        "/v1/package/example.com/a/b?version=v1.2.3",
 			wantStatus: http.StatusBadRequest,
 			want: &api.Error{
 				Code:    http.StatusBadRequest,
@@ -251,7 +251,7 @@ func testServePackage(t *testing.T, ds internal.TestingDataSource) {
 		},
 		{
 			name:       "disambiguated path",
-			url:        "/v1beta/package/example.com/a/b?version=v1.2.3&module=example.com/a",
+			url:        "/v1/package/example.com/a/b?version=v1.2.3&module=example.com/a",
 			wantStatus: http.StatusOK,
 			want: &api.Package{
 				PackageInfo: api.PackageInfo{
@@ -269,7 +269,7 @@ func testServePackage(t *testing.T, ds internal.TestingDataSource) {
 		},
 		{
 			name:       "default build context",
-			url:        "/v1beta/package/example.com/pkg?version=v1.2.3",
+			url:        "/v1/package/example.com/pkg?version=v1.2.3",
 			wantStatus: http.StatusOK,
 			want: &api.Package{
 				PackageInfo: api.PackageInfo{
@@ -287,7 +287,7 @@ func testServePackage(t *testing.T, ds internal.TestingDataSource) {
 		},
 		{
 			name:       "latest version",
-			url:        "/v1beta/package/example.com/pkg?version=v1.2.4",
+			url:        "/v1/package/example.com/pkg?version=v1.2.4",
 			wantStatus: http.StatusOK,
 			want: &api.Package{
 				PackageInfo: api.PackageInfo{
@@ -305,7 +305,7 @@ func testServePackage(t *testing.T, ds internal.TestingDataSource) {
 		},
 		{
 			name:       "doc",
-			url:        "/v1beta/package/example.com/pkg?version=v1.2.3&doc=text",
+			url:        "/v1/package/example.com/pkg?version=v1.2.3&doc=text",
 			wantStatus: http.StatusOK,
 			want: &api.Package{
 				PackageInfo: api.PackageInfo{
@@ -323,7 +323,7 @@ func testServePackage(t *testing.T, ds internal.TestingDataSource) {
 		},
 		{
 			name:       "doc with examples",
-			url:        "/v1beta/package/example.com/pkg?version=v1.2.4&doc=text&examples=true",
+			url:        "/v1/package/example.com/pkg?version=v1.2.4&doc=text&examples=true",
 			wantStatus: http.StatusOK,
 			want: &api.Package{
 				PackageInfo: api.PackageInfo{
@@ -342,7 +342,7 @@ func testServePackage(t *testing.T, ds internal.TestingDataSource) {
 		},
 		{
 			name:       "examples without doc",
-			url:        "/v1beta/package/example.com/pkg?version=v1.2.3&examples=true",
+			url:        "/v1/package/example.com/pkg?version=v1.2.3&examples=true",
 			wantStatus: http.StatusBadRequest,
 			want: &api.Error{
 				Code:    http.StatusBadRequest,
@@ -351,7 +351,7 @@ func testServePackage(t *testing.T, ds internal.TestingDataSource) {
 		},
 		{
 			name:       "examples without doc and nonexistent package",
-			url:        "/v1beta/package/nonexistent.com/pkg?version=v1.2.3&examples=true",
+			url:        "/v1/package/nonexistent.com/pkg?version=v1.2.3&examples=true",
 			wantStatus: http.StatusBadRequest,
 			want: &api.Error{
 				Code:    http.StatusBadRequest,
@@ -360,13 +360,13 @@ func testServePackage(t *testing.T, ds internal.TestingDataSource) {
 		},
 		{
 			name:       "package not found",
-			url:        "/v1beta/package/nonexistent.com/pkg",
+			url:        "/v1/package/nonexistent.com/pkg",
 			wantStatus: http.StatusNotFound,
 			want:       &api.Error{Code: 404, Message: "not found"},
 		},
 		{
 			name:       "doc without examples",
-			url:        "/v1beta/package/example.com/pkg?version=v1.2.4&doc=text&examples=false",
+			url:        "/v1/package/example.com/pkg?version=v1.2.4&doc=text&examples=false",
 			wantStatus: http.StatusOK,
 			want: &api.Package{
 				PackageInfo: api.PackageInfo{
@@ -385,7 +385,7 @@ func testServePackage(t *testing.T, ds internal.TestingDataSource) {
 		},
 		{
 			name:       "invalid doc format",
-			url:        "/v1beta/package/example.com/pkg?version=v1.2.3&doc=invalid",
+			url:        "/v1/package/example.com/pkg?version=v1.2.3&doc=invalid",
 			wantStatus: http.StatusBadRequest,
 			want: &api.Error{
 				Code:    http.StatusBadRequest,
@@ -394,7 +394,7 @@ func testServePackage(t *testing.T, ds internal.TestingDataSource) {
 		},
 		{
 			name:       "invalid doc format and nonexistent package",
-			url:        "/v1beta/package/nonexistent.com/pkg?version=v1.2.3&doc=invalid",
+			url:        "/v1/package/nonexistent.com/pkg?version=v1.2.3&doc=invalid",
 			wantStatus: http.StatusBadRequest,
 			want: &api.Error{
 				Code:    http.StatusBadRequest,
@@ -403,7 +403,7 @@ func testServePackage(t *testing.T, ds internal.TestingDataSource) {
 		},
 		{
 			name:       "empty doc format",
-			url:        "/v1beta/package/example.com/pkg?version=v1.2.3&doc=",
+			url:        "/v1/package/example.com/pkg?version=v1.2.3&doc=",
 			wantStatus: http.StatusOK,
 			want: &api.Package{
 				PackageInfo: api.PackageInfo{
@@ -421,7 +421,7 @@ func testServePackage(t *testing.T, ds internal.TestingDataSource) {
 		},
 		{
 			name:       "licenses",
-			url:        "/v1beta/package/example.com/pkg?version=v1.2.3&licenses=true",
+			url:        "/v1/package/example.com/pkg?version=v1.2.3&licenses=true",
 			wantStatus: http.StatusOK,
 			want: &api.Package{
 				PackageInfo: api.PackageInfo{
@@ -446,7 +446,7 @@ func testServePackage(t *testing.T, ds internal.TestingDataSource) {
 		},
 		{
 			name:       "imports",
-			url:        "/v1beta/package/example.com/pkg?version=v1.2.3&imports=true",
+			url:        "/v1/package/example.com/pkg?version=v1.2.3&imports=true",
 			wantStatus: http.StatusOK,
 			want: &api.Package{
 				PackageInfo: api.PackageInfo{
@@ -465,7 +465,7 @@ func testServePackage(t *testing.T, ds internal.TestingDataSource) {
 		},
 		{
 			name:       "fallback prevention (false positive candidate)",
-			url:        "/v1beta/package/example.com/a/b?version=v1.2.3",
+			url:        "/v1/package/example.com/a/b?version=v1.2.3",
 			wantStatus: http.StatusBadRequest,
 			want: &api.Error{
 				Code:    http.StatusBadRequest,
@@ -484,7 +484,7 @@ func testServePackage(t *testing.T, ds internal.TestingDataSource) {
 		},
 		{
 			name:       "deprecation filtering",
-			url:        "/v1beta/package/example.com/d/e?version=v1.2.3",
+			url:        "/v1/package/example.com/d/e?version=v1.2.3",
 			wantStatus: http.StatusOK,
 			want: &api.Package{
 				PackageInfo: api.PackageInfo{
@@ -555,7 +555,7 @@ func testServeModule(t *testing.T, ds internal.TestingDataSource) {
 	}{
 		{
 			name:       "invalid query parameter",
-			url:        "/v1beta/module/example.com?licenses=invalid",
+			url:        "/v1/module/example.com?licenses=invalid",
 			wantStatus: http.StatusBadRequest,
 			want: &api.Error{
 				Code:    http.StatusBadRequest,
@@ -564,7 +564,7 @@ func testServeModule(t *testing.T, ds internal.TestingDataSource) {
 		},
 		{
 			name:       "basic module metadata",
-			url:        "/v1beta/module/example.com?version=v1.2.3",
+			url:        "/v1/module/example.com?version=v1.2.3",
 			wantStatus: http.StatusOK,
 			want: &api.Module{
 				Path:              modulePath,
@@ -575,7 +575,7 @@ func testServeModule(t *testing.T, ds internal.TestingDataSource) {
 		},
 		{
 			name:       "latest module metadata",
-			url:        "/v1beta/module/example.com?version=v1.2.4",
+			url:        "/v1/module/example.com?version=v1.2.4",
 			wantStatus: http.StatusOK,
 			want: &api.Module{
 				Path:              modulePath,
@@ -587,19 +587,19 @@ func testServeModule(t *testing.T, ds internal.TestingDataSource) {
 		},
 		{
 			name:       "bad version",
-			url:        "/v1beta/module/example.com?version=nope",
+			url:        "/v1/module/example.com?version=nope",
 			wantStatus: http.StatusNotFound,
 			want:       &api.Error{Code: 404, Message: "not found"},
 		},
 		{
 			name:       "module not found",
-			url:        "/v1beta/module/nonexistent.com",
+			url:        "/v1/module/nonexistent.com",
 			wantStatus: http.StatusNotFound,
 			want:       &api.Error{Code: 404, Message: "not found"},
 		},
 		{
 			name:       "package path in module endpoint",
-			url:        "/v1beta/module/example.com/pkg?version=v1.2.3",
+			url:        "/v1/module/example.com/pkg?version=v1.2.3",
 			wantStatus: http.StatusBadRequest,
 			want: &api.Error{
 				Code:    http.StatusBadRequest,
@@ -608,13 +608,13 @@ func testServeModule(t *testing.T, ds internal.TestingDataSource) {
 		},
 		{
 			name:       "missing module path",
-			url:        "/v1beta/module/",
+			url:        "/v1/module/",
 			wantStatus: http.StatusBadRequest,
 			want:       &api.Error{Code: 400, Message: "missing module path"},
 		},
 		{
 			name:       "module with readme",
-			url:        "/v1beta/module/example.com?version=v1.2.3&readme=true",
+			url:        "/v1/module/example.com?version=v1.2.3&readme=true",
 			wantStatus: http.StatusOK,
 			want: &api.Module{
 				Path:              modulePath,
@@ -629,7 +629,7 @@ func testServeModule(t *testing.T, ds internal.TestingDataSource) {
 		},
 		{
 			name:       "module with licenses",
-			url:        "/v1beta/module/example.com?version=v1.2.3&licenses=true",
+			url:        "/v1/module/example.com?version=v1.2.3&licenses=true",
 			wantStatus: http.StatusOK,
 			want: &api.Module{
 				Path:              modulePath,
@@ -689,7 +689,7 @@ func testServeModuleVersions(t *testing.T, ds internal.TestingDataSource) {
 	}{
 		{
 			name: "all versions (cross-major)",
-			url:  "/v1beta/versions/example.com",
+			url:  "/v1/versions/example.com",
 			want: &api.PaginatedResponse[api.ModuleVersion]{
 				Total: 3,
 				Items: []api.ModuleVersion{
@@ -716,7 +716,7 @@ func testServeModuleVersions(t *testing.T, ds internal.TestingDataSource) {
 		},
 		{
 			name: "pseudo=true",
-			url:  "/v1beta/versions/example.com?pseudo=true",
+			url:  "/v1/versions/example.com?pseudo=true",
 			want: &api.PaginatedResponse[api.ModuleVersion]{
 				Total: 4,
 				Items: []api.ModuleVersion{
@@ -749,12 +749,12 @@ func testServeModuleVersions(t *testing.T, ds internal.TestingDataSource) {
 		},
 		{
 			name: "module not found",
-			url:  "/v1beta/versions/nonexistent.com",
+			url:  "/v1/versions/nonexistent.com",
 			want: &api.Error{Code: 404, Message: "not found"},
 		},
 		{
 			name: "package path in versions endpoint",
-			url:  "/v1beta/versions/example.com/pkg",
+			url:  "/v1/versions/example.com/pkg",
 			want: &api.Error{
 				Code:    http.StatusBadRequest,
 				Message: "example.com/pkg is a package, not a module",
@@ -762,12 +762,12 @@ func testServeModuleVersions(t *testing.T, ds internal.TestingDataSource) {
 		},
 		{
 			name: "missing module path",
-			url:  "/v1beta/versions/",
+			url:  "/v1/versions/",
 			want: &api.Error{Code: 400, Message: "missing module path"},
 		},
 		{
 			name: "filter",
-			url: "/v1beta/versions/example.com?filter=" +
+			url: "/v1/versions/example.com?filter=" +
 				url.QueryEscape(`contains(version, "2")`),
 			want: &api.PaginatedResponse[api.ModuleVersion]{
 				Total: 1,
@@ -783,7 +783,7 @@ func testServeModuleVersions(t *testing.T, ds internal.TestingDataSource) {
 		},
 		{
 			name: "invalid filter",
-			url:  "/v1beta/versions/example.com?filter=" + url.QueryEscape(`[`),
+			url:  "/v1/versions/example.com?filter=" + url.QueryEscape(`[`),
 			want: &api.Error{
 				Code:    400,
 				Message: `parsing filter "[": 1:2: expected operand, found 'EOF'`,
@@ -791,7 +791,7 @@ func testServeModuleVersions(t *testing.T, ds internal.TestingDataSource) {
 		},
 		{
 			name: "case-sensitive filter",
-			url: "/v1beta/versions/example.com?filter=" +
+			url: "/v1/versions/example.com?filter=" +
 				url.QueryEscape(`hasPrefix(version, "V")`),
 			want: &api.PaginatedResponse[api.ModuleVersion]{
 				Total: 0,
@@ -800,7 +800,7 @@ func testServeModuleVersions(t *testing.T, ds internal.TestingDataSource) {
 		},
 		{
 			name: "case-insensitive filter",
-			url: "/v1beta/versions/example.com?filter=" +
+			url: "/v1/versions/example.com?filter=" +
 				url.QueryEscape(`matches(version, "[vV]1")`),
 			want: &api.PaginatedResponse[api.ModuleVersion]{
 				Total: 2,
@@ -853,7 +853,7 @@ func testServeModuleVersions(t *testing.T, ds internal.TestingDataSource) {
 		})
 	}
 
-	testPagination(t, ds, "/v1beta/versions/example.com?limit=1",
+	testPagination(t, ds, "/v1/versions/example.com?limit=1",
 		api.ServeModuleVersions,
 		func(r *api.PaginatedResponse[api.ModuleVersion]) (int, int, string) {
 			return len(r.Items), r.Total, r.NextPageToken
@@ -905,22 +905,22 @@ func testServeModulePackages(t *testing.T, ds internal.TestingDataSource) {
 	}{
 		{
 			name: "all packages",
-			url:  "/v1beta/packages/example.com?version=v1.2.3",
+			url:  "/v1/packages/example.com?version=v1.2.3",
 			want: response(info1, info2),
 		},
 		{
 			name: "latest",
-			url:  "/v1beta/packages/example.com",
+			url:  "/v1/packages/example.com",
 			want: response(info1, info2),
 		},
 		{
 			name: "module not found",
-			url:  "/v1beta/packages/nonexistent.com?version=v1.2.3",
+			url:  "/v1/packages/nonexistent.com?version=v1.2.3",
 			want: &api.Error{Code: 404, Message: "not found"},
 		},
 		{
 			name: "package path in packages endpoint",
-			url:  "/v1beta/packages/example.com/sub?version=v1.2.3",
+			url:  "/v1/packages/example.com/sub?version=v1.2.3",
 			want: &api.Error{
 				Code:    http.StatusBadRequest,
 				Message: "example.com/sub is a package, not a module",
@@ -928,18 +928,18 @@ func testServeModulePackages(t *testing.T, ds internal.TestingDataSource) {
 		},
 		{
 			name: "missing module path",
-			url:  "/v1beta/packages/",
+			url:  "/v1/packages/",
 			want: &api.Error{Code: 400, Message: "missing module path"},
 		},
 		{
 			name: "filter on path",
-			url: "/v1beta/packages/example.com?version=v1.2.3&filter=" +
+			url: "/v1/packages/example.com?version=v1.2.3&filter=" +
 				url.QueryEscape(`matches(path, "s[ux].")`),
 			want: response(info2),
 		},
 		{
 			name: "filter on synopsis",
-			url: "/v1beta/packages/example.com?version=v1.2.3&filter=" +
+			url: "/v1/packages/example.com?version=v1.2.3&filter=" +
 				url.QueryEscape(`matches(synopsis, "GO+S")`),
 			want: response(info1),
 		},
@@ -961,7 +961,7 @@ func testServeModulePackages(t *testing.T, ds internal.TestingDataSource) {
 		})
 	}
 
-	testPagination(t, ds, "/v1beta/packages/example.com?limit=1",
+	testPagination(t, ds, "/v1/packages/example.com?limit=1",
 		api.ServeModulePackages,
 		func(r *api.PackagesResponse) (int, int, string) {
 			return len(r.Packages.Items), r.Packages.Total, r.Packages.NextPageToken
@@ -988,7 +988,7 @@ func testServeSearch(t *testing.T, ds internal.TestingDataSource) {
 	}{
 		{
 			name:       "basic search",
-			url:        "/v1beta/search?q=synopsis",
+			url:        "/v1/search?q=synopsis",
 			wantStatus: http.StatusOK,
 			// All packages match, because sample.Documentation creates a synopsis beginning
 			// "This is a package synopsis...".
@@ -998,25 +998,25 @@ func testServeSearch(t *testing.T, ds internal.TestingDataSource) {
 		},
 		{
 			name:       "no results",
-			url:        "/v1beta/search?q=nonexistent",
+			url:        "/v1/search?q=nonexistent",
 			wantStatus: http.StatusOK,
 			wantCount:  0,
 		},
 		{
 			name:       "missing query",
-			url:        "/v1beta/search",
+			url:        "/v1/search",
 			wantStatus: http.StatusBadRequest,
 		},
 		{
 			name: "search with filter",
-			url: "/v1beta/search?q=synopsis&filter=" +
+			url: "/v1/search?q=synopsis&filter=" +
 				url.QueryEscape(`contains(modulePath, "z")`),
 			wantStatus: http.StatusOK,
 			wantCount:  2,
 		},
 		{
 			name:       "search with non-matching filter",
-			url:        "/v1beta/search?q=great&filter=" + url.QueryEscape(`hasSuffix(packagePath, "moo")`),
+			url:        "/v1/search?q=great&filter=" + url.QueryEscape(`hasSuffix(packagePath, "moo")`),
 			wantStatus: http.StatusOK,
 			wantCount:  0,
 		},
@@ -1119,7 +1119,7 @@ func testServeSearchPagination(t *testing.T, ds internal.TestingDataSource) {
 		ds.MustInsertModule(t, module(t, modinfo(modPath, "v1.0.0"), unit("pkg", doc)))
 	}
 
-	testPagination[api.PaginatedResponse[api.SearchResult]](t, ds, "/v1beta/search?q=synopsis&limit=3",
+	testPagination[api.PaginatedResponse[api.SearchResult]](t, ds, "/v1/search?q=synopsis&limit=3",
 		api.ServeSearch,
 		func(r *api.PaginatedResponse[api.SearchResult]) (int, int, string) {
 			return len(r.Items), r.Total, r.NextPageToken
@@ -1169,49 +1169,49 @@ func testServePackageSymbols(t *testing.T, ds internal.TestingDataSource) {
 	}{
 		{
 			name:       "default best match (linux)",
-			url:        "/v1beta/symbols/example.com/pkg?version=v1.0.0",
+			url:        "/v1/symbols/example.com/pkg?version=v1.0.0",
 			wantStatus: http.StatusOK,
 			wantNames:  []string{"F", "LinuxSym", "LinuxType"},
 		},
 		{
 			name:       "package not found",
-			url:        "/v1beta/symbols/nonexistent.com/pkg?version=v1.0.0",
+			url:        "/v1/symbols/nonexistent.com/pkg?version=v1.0.0",
 			wantStatus: http.StatusNotFound,
 			want:       &api.Error{Code: 404, Message: "not found"},
 		},
 		{
 			name:       "missing package path",
-			url:        "/v1beta/symbols/",
+			url:        "/v1/symbols/",
 			wantStatus: http.StatusBadRequest,
 			want:       &api.Error{Code: 400, Message: "missing package path"},
 		},
 		{
 			name:       "explicit linux",
-			url:        "/v1beta/symbols/example.com/pkg?version=v1.0.0&goos=linux&goarch=amd64",
+			url:        "/v1/symbols/example.com/pkg?version=v1.0.0&goos=linux&goarch=amd64",
 			wantStatus: http.StatusOK,
 			wantNames:  []string{"F", "LinuxSym", "LinuxType"},
 		},
 		{
 			name:       "version latest",
-			url:        "/v1beta/symbols/example.com/pkg?version=latest",
+			url:        "/v1/symbols/example.com/pkg?version=latest",
 			wantStatus: http.StatusOK,
 			wantNames:  []string{"F", "LinuxSym", "LinuxType"},
 		},
 		{
 			name:       "explicit windows",
-			url:        "/v1beta/symbols/example.com/pkg?version=v1.0.0&goos=windows&goarch=amd64",
+			url:        "/v1/symbols/example.com/pkg?version=v1.0.0&goos=windows&goarch=amd64",
 			wantStatus: http.StatusOK,
 			wantNames:  []string{"WindowsSym"},
 		},
 		{
 			name:       "explicit wasm",
-			url:        "/v1beta/symbols/example.com/pkg?version=v1.0.0&goos=js&goarch=wasm",
+			url:        "/v1/symbols/example.com/pkg?version=v1.0.0&goos=js&goarch=wasm",
 			wantStatus: http.StatusOK,
 			wantNames:  []string{"WasmSym"},
 		},
 		{
 			name:       "not found build context",
-			url:        "/v1beta/symbols/example.com/pkg?version=v1.0.0&goos=darwin&goarch=amd64",
+			url:        "/v1/symbols/example.com/pkg?version=v1.0.0&goos=darwin&goarch=amd64",
 			wantStatus: http.StatusNotFound,
 			want: &api.Error{
 				Code:    http.StatusNotFound,
@@ -1256,7 +1256,7 @@ func testServePackageSymbols(t *testing.T, ds internal.TestingDataSource) {
 		})
 	}
 
-	testPagination(t, ds, "/v1beta/symbols/example.com/pkg?version=v1.0.0&limit=1",
+	testPagination(t, ds, "/v1/symbols/example.com/pkg?version=v1.0.0&limit=1",
 		api.ServePackageSymbols,
 		func(ps *api.PackageSymbols) (int, int, string) {
 			return len(ps.Symbols.Items), ps.Symbols.Total, ps.Symbols.NextPageToken
@@ -1290,7 +1290,7 @@ func testServePackageImportedBy(t *testing.T, ds internal.TestingDataSource) {
 	}{
 		{
 			name:       "missing package path",
-			url:        "/v1beta/imported-by/",
+			url:        "/v1/imported-by/",
 			wantStatus: http.StatusBadRequest,
 			want: &api.Error{
 				Code:    http.StatusBadRequest,
@@ -1299,7 +1299,7 @@ func testServePackageImportedBy(t *testing.T, ds internal.TestingDataSource) {
 		},
 		{
 			name:       "all imported by",
-			url:        "/v1beta/imported-by/example.com/pkg?version=v1.2.3",
+			url:        "/v1/imported-by/example.com/pkg?version=v1.2.3",
 			wantStatus: http.StatusOK,
 			wantCount:  2,
 		},
@@ -1325,7 +1325,7 @@ func testServePackageImportedBy(t *testing.T, ds internal.TestingDataSource) {
 			}
 		})
 	}
-	testPagination[api.PackageImportedBy](t, ds, "/v1beta/imported-by/example.com/pkg?version=v1.2.3&limit=1",
+	testPagination[api.PackageImportedBy](t, ds, "/v1/imported-by/example.com/pkg?version=v1.2.3&limit=1",
 		api.ServePackageImportedBy,
 		func(pib *api.PackageImportedBy) (int, int, string) {
 			return len(pib.ImportedBy.Items), pib.ImportedBy.Total, pib.ImportedBy.NextPageToken
