@@ -315,6 +315,7 @@ const hllRegisterCount = 128
 func buildVectorSearchQuery(opts SearchOptions, scoreExprStr string, q string, limit int) (string, []any) {
 	candidateLimit := max(100, opts.Offset+limit)
 	vectorWeight := sanitizeFloat(opts.ScoringParams.VectorWeight, 1.0)
+	popWeight := sanitizeFloat(opts.ScoringParams.PopularityWeight, 1.0)
 
 	query := fmt.Sprintf(`
 		WITH text_search AS (
@@ -327,11 +328,19 @@ func buildVectorSearchQuery(opts SearchOptions, scoreExprStr string, q string, l
 		),
 		vector_search AS (
 			SELECT package_path, version, module_path, commit_time, imported_by_count,
-				ROW_NUMBER() OVER (ORDER BY embedding <=> $2::halfvec, imported_by_count DESC) AS rank_vec
-			FROM search_documents
-			WHERE imported_by_count >= 1 AND embedding IS NOT NULL
-			ORDER BY embedding <=> $2::halfvec
-			LIMIT %d
+				ROW_NUMBER() OVER (
+					ORDER BY ((1.0 - (embedding <=> $2::halfvec)) * pow(ln(exp(1)+imported_by_count), %f) *
+					         CASE WHEN redistributable THEN 1 ELSE %f END *
+					         CASE WHEN COALESCE(has_go_mod, true) THEN 1 ELSE %f END) DESC,
+					         commit_time DESC, package_path
+				) AS rank_vec
+			FROM (
+				SELECT package_path, version, module_path, commit_time, imported_by_count, redistributable, has_go_mod, embedding
+				FROM search_documents
+				WHERE imported_by_count >= 1 AND embedding IS NOT NULL
+				ORDER BY embedding <=> $2::halfvec
+				LIMIT %d
+			) nn
 		),
 		combined AS (
 			SELECT
@@ -349,7 +358,7 @@ func buildVectorSearchQuery(opts SearchOptions, scoreExprStr string, q string, l
 		FROM combined
 		ORDER BY score DESC, commit_time DESC, package_path
 		LIMIT $3
-		OFFSET $4`, scoreExprStr, candidateLimit, candidateLimit, vectorWeight)
+		OFFSET $4`, scoreExprStr, candidateLimit, popWeight, nonRedistributablePenalty, noGoModPenalty, candidateLimit, vectorWeight)
 	args := []any{q, formatVector(opts.Vector), limit, opts.Offset}
 	return query, args
 }

@@ -1641,6 +1641,12 @@ func TestBuildVectorSearchQuery(t *testing.T) {
 	if !strings.Contains(queryDefault, "LIMIT 100") {
 		t.Errorf("expected default candidate limit 100, query was:\n%s", queryDefault)
 	}
+	if !strings.Contains(queryDefault, fmt.Sprintf("CASE WHEN redistributable THEN 1 ELSE %f END", nonRedistributablePenalty)) {
+		t.Errorf("expected query to contain redistributable penalty (%f)", nonRedistributablePenalty)
+	}
+	if !strings.Contains(queryDefault, fmt.Sprintf("CASE WHEN COALESCE(has_go_mod, true) THEN 1 ELSE %f END", noGoModPenalty)) {
+		t.Errorf("expected query to contain no-go-mod penalty (%f)", noGoModPenalty)
+	}
 	if len(args) != 4 {
 		t.Errorf("expected 4 query args, got %d", len(args))
 	}
