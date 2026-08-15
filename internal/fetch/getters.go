@@ -22,6 +22,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"slices"
 	"sort"
 	"strings"
 	"time"
@@ -74,6 +75,14 @@ type SearchableModuleGetter interface {
 	// Search searches for packages matching the given query, returning at most
 	// limit results.
 	Search(ctx context.Context, q string, limit int) ([]*internal.SearchResult, error)
+}
+
+// ListableModuleGetter is an additional interface that may be implemented by
+// ModuleGetters to support listing available versions.
+type ListableModuleGetter interface {
+	// Versions lists the available versions for the given module module,
+	// filtered by versionTypes if it's non empty.
+	Versions(ctx context.Context, modulePath string, versionTypes ...version.Type) ([]*internal.ModuleInfo, error)
 }
 
 // VolatileModuleGetter is an additional interface that may be implemented by
@@ -747,25 +756,81 @@ func (g *modCacheModuleGetter) SourceFS() (string, fs.FS) {
 	return filepath.ToSlash(g.dir), os.DirFS(g.dir)
 }
 
+func (g *modCacheModuleGetter) Versions(ctx context.Context, modulePath string, versionTypes ...version.Type) (_ []*internal.ModuleInfo, err error) {
+	defer derrors.Wrap(&err, "modCacheModuleGetter.Versions(%q)", modulePath)
+
+	versions, err := g.versions(modulePath)
+	if err != nil {
+		return nil, err
+	}
+
+	var moduleInfos []*internal.ModuleInfo
+	for _, ver := range versions {
+		if len(versionTypes) > 0 {
+			vt, err := version.ParseType(ver)
+			if err != nil {
+				return nil, err
+			}
+			if !slices.Contains(versionTypes, vt) {
+				continue
+			}
+		}
+
+		sourceInfo, err := g.SourceInfo(ctx, modulePath, ver)
+		if err != nil {
+			return nil, err
+		}
+		proxyInfo, err := g.Info(ctx, modulePath, ver)
+		if err != nil {
+			return nil, err
+		}
+		fsys, err := g.ContentDir(ctx, modulePath, ver)
+		if err != nil {
+			return nil, err
+		}
+
+		moduleInfos = append(moduleInfos, &internal.ModuleInfo{
+			ModulePath: modulePath,
+			Version:    ver,
+			CommitTime: proxyInfo.Time,
+			HasGoMod:   hasGoModFile(fsys),
+			SourceInfo: sourceInfo,
+		})
+	}
+
+	return moduleInfos, nil
+}
+
 // latestVersion gets the latest version that is in the directory.
-func (g *modCacheModuleGetter) latestVersion(modulePath string) (_ string, err error) {
-	defer derrors.Wrap(&err, "modCacheModuleGetter.latestVersion(%q)", modulePath)
+func (g *modCacheModuleGetter) versions(modulePath string) (_ []string, err error) {
+	defer derrors.Wrap(&err, "modCacheModuleGetter.versions(%q)", modulePath)
 
 	dir, err := g.moduleDir(modulePath)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	zips, err := filepath.Glob(filepath.Join(dir, "*.zip"))
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	if len(zips) == 0 {
-		return "", fmt.Errorf("no zips in %q for module %q: %w", g.dir, modulePath, derrors.NotFound)
+		return nil, fmt.Errorf("no zips in %q for module %q: %w", g.dir, modulePath, derrors.NotFound)
 	}
 	var versions []string
 	for _, z := range zips {
 		vers := strings.TrimSuffix(filepath.Base(z), ".zip")
 		versions = append(versions, vers)
+	}
+	return versions, nil
+}
+
+// latestVersion gets the latest version that is in the directory.
+func (g *modCacheModuleGetter) latestVersion(modulePath string) (_ string, err error) {
+	defer derrors.Wrap(&err, "modCacheModuleGetter.latestVersion(%q)", modulePath)
+
+	versions, err := g.versions(modulePath)
+	if err != nil {
+		return "", err
 	}
 	return version.LatestOf(versions), nil
 }

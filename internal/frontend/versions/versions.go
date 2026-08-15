@@ -88,18 +88,25 @@ type VersionSummary struct {
 }
 
 func FetchVersionsDetails(ctx context.Context, ds internal.DataSource, um *internal.UnitMeta, vc *vuln.Client) (*VersionsDetails, error) {
+	var versions []*internal.ModuleInfo
+	var err error
 	db, ok := ds.(internal.PostgresDB)
-	if !ok {
-		// The proxydatasource does not support the imported by page.
-		return nil, serrors.DatasourceNotSupportedError()
-	}
-	versions, err := db.GetVersionsForPath(ctx, um.Path)
-	if err != nil {
-		return nil, err
+	if ok {
+		versions, err = db.GetVersionsForPath(ctx, um.Path)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		versions, _, err = ds.GetPathVersions(ctx, um.Path, "", -1)
+		if err != nil || versions == nil {
+
+			// The proxydatasource does not support the imported by page.
+			return nil, serrors.DatasourceNotSupportedError()
+		}
 	}
 
 	sh := internal.NewSymbolHistory()
-	if !um.IsCommand() {
+	if !um.IsCommand() && ok {
 		sh, err = db.GetSymbolHistory(ctx, um.Path, um.ModulePath)
 		if err != nil {
 			return nil, err

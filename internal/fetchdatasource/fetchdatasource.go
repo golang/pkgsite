@@ -11,6 +11,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -334,9 +335,27 @@ func (ds *FetchDataSource) GetNestedModules(ctx context.Context, modulePath stri
 	return nil, nil
 }
 
-// GetPathVersions is not implemented.
+// GetPathVersions lists the available module versions for module path,
+// for getters that implement [fetch.ListableModuleGetter]
 func (ds *FetchDataSource) GetPathVersions(ctx context.Context, path, start string, limit int, versionTypes ...version.Type) (_ []*internal.ModuleInfo, next string, err error) {
-	return nil, "", nil
+	var infos []*internal.ModuleInfo
+	for _, g := range ds.opts.Getters {
+		if gl, ok := g.(fetch.ListableModuleGetter); ok {
+			fetchedInfos, err := gl.Versions(ctx, path, versionTypes...)
+			if err != nil {
+				return nil, "", err
+			}
+
+			infos = append(infos, fetchedInfos...)
+		}
+	}
+	slices.SortStableFunc(infos, func(a, b *internal.ModuleInfo) int {
+		return strings.Compare(version.ForSorting(a.Version), version.ForSorting(b.Version))
+	})
+	infos = slices.CompactFunc(infos, func(a, b *internal.ModuleInfo) bool {
+		return a.Version == b.Version
+	})
+	return infos, "", nil
 }
 
 // GetModuleReadme is not implemented.
