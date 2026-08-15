@@ -47,6 +47,7 @@ func main() {
 	ctx := context.Background()
 	server, err := pkgsite.BuildServer(ctx, pkgsite.ServerConfig{
 		GoDocMode:      true,
+		UseCache:       true,
 		UseListedMods:  true,
 		UseLocalStdlib: true,
 		GoRepoPath:     *goRepoPath,
