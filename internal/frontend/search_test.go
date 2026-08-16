@@ -80,6 +80,16 @@ func TestDetermineSearchAction(t *testing.T) {
 			wantStatus: http.StatusBadRequest,
 		},
 		{
+			name:         "unicode query at maximum length",
+			query:        "q=" + url.QueryEscape(strings.Repeat("中", maxSearchQueryLength)),
+			wantTemplate: "search",
+		},
+		{
+			name:       "unicode query too long",
+			query:      "q=" + url.QueryEscape(strings.Repeat("中", maxSearchQueryLength+1)),
+			wantStatus: http.StatusBadRequest,
+		},
+		{
 			name:         "empty query",
 			wantRedirect: "/",
 		},

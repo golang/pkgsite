@@ -86,7 +86,10 @@ func determineSearchAction(r *http.Request, ds internal.DataSource, vulnClient *
 			},
 		}
 	}
-	if len(cq) > maxSearchQueryLength {
+	// Use RuneCountInString because the search query limit is intended to be a
+	// character limit, rather than a byte limit. This ensures that multi-byte
+	// Unicode characters are counted as single characters.
+	if utf8.RuneCountInString(cq) > maxSearchQueryLength {
 		return nil, &serrors.ServerError{
 			Status: http.StatusBadRequest,
 			Epage: &pagepkg.ErrorPage{
