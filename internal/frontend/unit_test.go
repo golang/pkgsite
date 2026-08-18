@@ -155,3 +155,12 @@ func TestMetaDescription(t *testing.T) {
 		}
 	}
 }
+
+func TestLatestMajorVersion(t *testing.T) {
+	// A deprecated major version is not the latest major module path, so it can
+	// be lower than the module being viewed. No banner in that case.
+	const latestMajorModulePath, modulePath = "github.com/containers/podman/v4", "github.com/containers/podman/v6"
+	if got := latestMajorVersion(latestMajorModulePath, modulePath); got != "" {
+		t.Errorf("latestMajorVersion(%q, %q) = %q, want %q", latestMajorModulePath, modulePath, got, "")
+	}
+}

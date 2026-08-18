@@ -242,12 +242,7 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 		page.CodeWikiURL = makeCodeWikiURL()
 	}
 
-	// Show the banner if there was no error getting the latest major version,
-	// and it is different from the major version of the current module path.
-	latestMajor := internal.MajorVersionForModule(latestInfo.MajorModulePath)
-	if latestMajor != "" && latestMajor != internal.MajorVersionForModule(um.ModulePath) {
-		page.LatestMajorVersion = latestMajor
-	}
+	page.LatestMajorVersion = latestMajorVersion(latestInfo.MajorModulePath, um.ModulePath)
 
 	page.Details = d
 	main, ok := d.(*MainDetails)
@@ -281,6 +276,20 @@ func (s *Server) serveJSONPage(w http.ResponseWriter, r *http.Request, d any) (e
 		return fmt.Errorf("w.Write: %v", err)
 	}
 	return nil
+}
+
+// latestMajorVersion returns the latest major version if it is newer than modulePath.
+func latestMajorVersion(latestMajorModulePath, modulePath string) string {
+	v := internal.MajorVersionForModule(latestMajorModulePath)
+	if v == "" {
+		return ""
+	}
+	_, latest := internal.SeriesPathAndMajorVersion(latestMajorModulePath)
+	_, cur := internal.SeriesPathAndMajorVersion(modulePath)
+	if latest <= cur {
+		return ""
+	}
+	return v
 }
 
 func latestMinorClass(version string, latest internal.LatestInfo) string {
