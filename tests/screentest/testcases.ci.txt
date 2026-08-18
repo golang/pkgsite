@@ -63,6 +63,11 @@ path /golang.org/x/crypto?tab=versions
 capture viewport
 capture viewport 540x1080
 
+test vuln withdrawn module
+path /github.com/gorilla/sessions@v1.2.1
+capture viewport
+capture viewport 540x1080
+
 test vuln search
 path /search?q=github.com%2Fbeego&m=vuln
 capture viewport

@@ -74,8 +74,25 @@ func TestVulnsForPackage(t *testing.T) {
 			},
 		}},
 	}
+	withdrawn := osv.Entry{
+		ID:        "GO-2020-0004",
+		Published: jan1999,
+		Withdrawn: &jan2000,
+		Affected: []osv.Affected{{
+			Module: osv.Module{Path: "bad.com"},
+			Ranges: []osv.Range{{
+				Type:   osv.RangeTypeSemver,
+				Events: []osv.RangeEvent{{Introduced: "0"}},
+			}},
+			EcosystemSpecific: osv.EcosystemSpecific{
+				Packages: []osv.Package{{
+					Path: "bad.com/withdrawn",
+				}},
+			},
+		}},
+	}
 
-	client, err := NewInMemoryClient([]*osv.Entry{&e, &e2, &stdlib})
+	client, err := NewInMemoryClient([]*osv.Entry{&e, &e2, &stdlib, &withdrawn})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -114,6 +131,11 @@ func TestVulnsForPackage(t *testing.T) {
 		{
 			name: "match - pkg with no fix",
 			mod:  "unfixable.com", pkg: "unfixable.com", version: "v1.999.999", want: []Vuln{{ID: "GO-1999-0001"}},
+		},
+		{
+			name: "no match - withdrawn",
+			mod:  "bad.com", pkg: "bad.com/withdrawn", version: "v1.0.0",
+			want: nil,
 		},
 		// Vulnerabilities for a module (package == "")
 		{

@@ -126,6 +126,9 @@ func (c *Client) modulesFilter(ctx context.Context, filter func(*ModuleMeta) boo
 }
 
 func isAffected(e *osv.Entry, req *PackageRequest) bool {
+	if e.Withdrawn != nil {
+		return false
+	}
 	for _, a := range e.Affected {
 		if a.Module.Path != req.Module || !osv.AffectsSemver(a.Ranges, req.Version) {
 			continue
