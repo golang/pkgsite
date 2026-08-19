@@ -643,9 +643,6 @@ func (g *stdlibZipModuleGetter) String() string {
 // is organized like the module cache, with a cache/download directory that has
 // paths that correspond to proxy URLs. An example of such a directory is $(go
 // env GOMODCACHE).
-//
-// TODO(rfindley): it would be easy and useful to add support for Search to
-// this getter.
 type modCacheModuleGetter struct {
 	dir string
 }
@@ -819,4 +816,80 @@ func (g *modCacheModuleGetter) moduleDir(modulePath string) (string, error) {
 // For testing.
 func (g *modCacheModuleGetter) String() string {
 	return fmt.Sprintf("FSProxy(%s)", g.dir)
+}
+
+// Search implements SearchableModuleGetter for the module cache.
+// It performs a fast, shallow search by matching the query against cached module paths.
+func (g *modCacheModuleGetter) Search(ctx context.Context, query string, limit int) ([]*internal.SearchResult, error) {
+	downloadDir := filepath.Join(g.dir, "cache", "download")
+	matcher := fuzzy.NewSymbolMatcher(query)
+
+	type scoredModule struct {
+		path  string
+		score float64
+	}
+	var matches []scoredModule
+
+	err := filepath.WalkDir(downloadDir, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return nil // skip unreadable directories
+		}
+		if ctx.Err() != nil {
+			return ctx.Err()
+		}
+
+		// A cached module is identified by the presence of an "@v" directory.
+		if d.IsDir() && d.Name() == "@v" {
+			// Verify that the module cache actually contains the source code zip.
+			// go mod often downloads just .mod/.info files for graph resolution.
+			zips, err := filepath.Glob(filepath.Join(path, "*.zip"))
+			if err != nil || len(zips) == 0 {
+				return filepath.SkipDir // Skip ghost modules
+			}
+
+			rel, err := filepath.Rel(downloadDir, filepath.Dir(path))
+			if err != nil {
+				return nil
+			}
+			modPath, err := module.UnescapePath(filepath.ToSlash(rel))
+			if err != nil {
+				return nil
+			}
+
+			i, score := matcher.Match([]string{modPath})
+			if i >= 0 { // Match found
+				matches = append(matches, scoredModule{path: modPath, score: score})
+			}
+			return filepath.SkipDir // No need to traverse inside the @v directory
+		}
+		return nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Sort results by highest score
+	sort.Slice(matches, func(i, j int) bool {
+		return matches[i].score > matches[j].score
+	})
+
+	if len(matches) > limit {
+		matches = matches[:limit]
+	}
+
+	var results []*internal.SearchResult
+	for i, m := range matches {
+		vers, _ := g.latestVersion(m.path)
+		results = append(results, &internal.SearchResult{
+			Name:        filepath.Base(m.path),
+			PackagePath: m.path, // Shallow search: treating module root as the package
+			ModulePath:  m.path,
+			Version:     vers,
+			Score:       m.score,
+			Offset:      i,
+			Synopsis:    "Cached module (offline search)",
+		})
+	}
+	return results, nil
 }
