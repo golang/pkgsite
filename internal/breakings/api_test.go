@@ -40,6 +40,23 @@ func TestTypeString(t *testing.T) {
 		{"interface{ B(x, y int) bool; A() }", "interface{A(); B(int, int) bool}"},
 		{"interface{ Close() error; interface{ Read([]byte) (int, error) } }", "interface{Close() error; Read([]byte) (int, error)}"},
 		{"interface{ Close() error; interface{ Close() error } }", "interface{Close() error}"},
+		{"*struct{ X, Y int }", "*struct{X int; Y int}"},
+		{"[]struct{ X, Y int }", "[]struct{X int; Y int}"},
+		{"[5]*struct{ X, Y int }", "[5]*struct{X int; Y int}"},
+		{"map[string]struct{ X, Y int }", "map[string]struct{X int; Y int}"},
+		{"chan struct{ X, Y int }", "chan struct{X int; Y int}"},
+		{"<-chan func(a, b int) bool", "<-chan func(int, int) bool"},
+		{"chan<- interface{ Read([]byte) (int, error); Close() error }", "chan<- interface{Close() error; Read([]byte) (int, error)}"},
+		{"chan (<-chan int)", "chan (<-chan int)"},
+		{"(int)", "(int)"},
+		{"chan<- int", "chan<- int"},
+		{"T[int]", "T[int]"},
+		{"T[int, string]", "T[int, string]"},
+		{"~int", "~int"},
+		{"int | string", "int | string"},
+		{"~int | ~string | ~float64", "~int | ~string | ~float64"},
+		{"~struct{ X, Y int }", "~struct{X int; Y int}"},
+		{"~struct{ X, Y int } | ~[]byte", "~struct{X int; Y int} | ~[]byte"},
 	}
 
 	for _, tc := range testCases {
@@ -89,6 +106,24 @@ func TestTypeString(t *testing.T) {
 			if got != tc.want {
 				t.Errorf("typeString() for %q = %q, want %q", tc.decl, got, tc.want)
 			}
+		}
+	})
+
+	t.Run("ast nodes", func(t *testing.T) {
+		ellipsis := &ast.Ellipsis{Elt: &ast.Ident{Name: "int"}}
+		if got, want := typeString(ellipsis), "...int"; got != want {
+			t.Errorf("typeString(ellipsis) = %q, want %q", got, want)
+		}
+
+		chanRecv := &ast.ChanType{
+			Dir: ast.SEND | ast.RECV,
+			Value: &ast.ChanType{
+				Dir:   ast.RECV,
+				Value: &ast.Ident{Name: "int"},
+			},
+		}
+		if got, want := typeString(chanRecv), "chan (<-chan int)"; got != want {
+			t.Errorf("typeString(chanRecv) = %q, want %q", got, want)
 		}
 	})
 

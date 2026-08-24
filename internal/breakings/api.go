@@ -26,6 +26,47 @@ func typeString(typeExpr ast.Expr) string {
 	switch t := typeExpr.(type) {
 	case nil:
 		return "?"
+	case *ast.StarExpr:
+		return "*" + typeString(t.X)
+	case *ast.ArrayType:
+		if t.Len == nil {
+			return "[]" + typeString(t.Elt)
+		}
+		return "[" + nodeString(t.Len) + "]" + typeString(t.Elt)
+	case *ast.MapType:
+		return "map[" + typeString(t.Key) + "]" + typeString(t.Value)
+	case *ast.ChanType:
+		switch t.Dir {
+		case ast.RECV:
+			return "<-chan " + typeString(t.Value)
+		case ast.SEND:
+			return "chan<- " + typeString(t.Value)
+		default:
+			s := typeString(t.Value)
+			if strings.HasPrefix(s, "(") && strings.HasSuffix(s, ")") {
+				return "chan " + s
+			}
+			if strings.HasPrefix(s, "<-chan") {
+				return "chan (" + s + ")"
+			}
+			return "chan " + s
+		}
+	case *ast.ParenExpr:
+		return "(" + typeString(t.X) + ")"
+	case *ast.Ellipsis:
+		return "..." + typeString(t.Elt)
+	case *ast.IndexExpr:
+		return typeString(t.X) + "[" + typeString(t.Index) + "]"
+	case *ast.IndexListExpr:
+		indices := make([]string, 0, len(t.Indices))
+		for _, idx := range t.Indices {
+			indices = append(indices, typeString(idx))
+		}
+		return typeString(t.X) + commaList(indices, "[", "]")
+	case *ast.UnaryExpr:
+		return t.Op.String() + typeString(t.X)
+	case *ast.BinaryExpr:
+		return typeString(t.X) + " " + t.Op.String() + " " + typeString(t.Y)
 	case *ast.FuncType:
 		return "func" + sigString(t)
 	case *ast.StructType:
