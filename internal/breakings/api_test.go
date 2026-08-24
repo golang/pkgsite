@@ -33,6 +33,13 @@ func TestTypeString(t *testing.T) {
 		{"struct{ X, Y int; Z string }", "struct{X int; Y int; Z string}"},
 		{"struct{ X int `json:\"x\"`; Y string }", "struct{X int `json:\"x\"`; Y string}"},
 		{"struct{ T; U }", "struct{T; U}"},
+		{"interface{}", "interface{}"},
+		{"interface{ Close() error; Read([]byte) (int, error) }", "interface{Close() error; Read([]byte) (int, error)}"},
+		{"interface{ Read([]byte) (int, error); Close() error }", "interface{Close() error; Read([]byte) (int, error)}"},
+		{"interface{ io.Reader; Close() error }", "interface{Close() error; io.Reader}"},
+		{"interface{ B(x, y int) bool; A() }", "interface{A(); B(int, int) bool}"},
+		{"interface{ Close() error; interface{ Read([]byte) (int, error) } }", "interface{Close() error; Read([]byte) (int, error)}"},
+		{"interface{ Close() error; interface{ Close() error } }", "interface{Close() error}"},
 	}
 
 	for _, tc := range testCases {

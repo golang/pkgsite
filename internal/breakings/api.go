@@ -13,6 +13,7 @@ import (
 	"go/printer"
 	"go/token"
 	"reflect"
+	"slices"
 	"strings"
 
 	"golang.org/x/tools/go/ast/astutil"
@@ -29,9 +30,50 @@ func typeString(typeExpr ast.Expr) string {
 		return "func" + sigString(t)
 	case *ast.StructType:
 		return structString(t)
+	case *ast.InterfaceType:
+		return interfaceString(t)
 	default:
 		return nodeString(t)
 	}
+}
+
+// interfaceString returns a string representation of an interface type
+// with sorted methods and canonical formatting (e.g., "interface{Close() error; Read([]byte) (int, error)}").
+// Embedded interfaces should be expanded to their methods, but that would require
+// access to other packages; their names are included instead.
+func interfaceString(it *ast.InterfaceType) string {
+	methods := interfaceMethods(it)
+	if len(methods) == 0 {
+		return "interface{}"
+	}
+	slices.Sort(methods)
+	methods = slices.Compact(methods)
+	return "interface{" + strings.Join(methods, "; ") + "}"
+}
+
+func interfaceMethods(it *ast.InterfaceType) []string {
+	if it == nil || it.Methods == nil {
+		return nil
+	}
+	var methods []string
+	for _, m := range it.Methods.List {
+		if len(m.Names) > 0 {
+			if ft, ok := m.Type.(*ast.FuncType); ok {
+				for _, name := range m.Names {
+					methods = append(methods, name.Name+sigString(ft))
+				}
+			}
+			continue
+		}
+
+		// Handle embedded types.
+		if embedded, ok := m.Type.(*ast.InterfaceType); ok {
+			methods = append(methods, interfaceMethods(embedded)...)
+		} else {
+			methods = append(methods, typeString(m.Type))
+		}
+	}
+	return methods
 }
 
 // structString returns a string representation of a struct type
