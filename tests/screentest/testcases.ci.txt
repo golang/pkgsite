@@ -1,6 +1,6 @@
 windowsize 1536x960
-# Prevent dynamic readme bages from rendering
-block https://codecov.io/* https://travis-ci.com/*
+# Prevent dynamic readme badges from rendering
+block https://codecov.io/* https://travis-ci.com/* https://travis-ci.org/* https://sourcegraph.com/*
 
 {{$ready := "[role='treeitem'][aria-selected='true']"}}
 {{$hideElements := "const s=document.createElement('style');s.innerHTML='*{transition:none!important;animation:none!important;caret-color:transparent!important}';document.head.appendChild(s);document.querySelector(\"[data-test-id='UnitHeader-importedby']\")?.remove();document.querySelector(\"[data-test-id='meta-link-depsdev']\")?.remove();document.querySelector(\"[data-test-id='meta-link-codewiki']\")?.remove();"}}
@@ -65,6 +65,7 @@ capture viewport 540x1080
 
 test vuln withdrawn module
 path /github.com/gorilla/sessions@v1.2.1
+eval {{$hideElements}}
 capture viewport
 capture viewport 540x1080
 

@@ -6,7 +6,7 @@ windowsize 1536x960
 {{with .QuotaBypass}}header X-Go-Discovery-Auth-Bypass-Quota: {{.}}{{end}}
 
 # Prevent dynamic readme badges from rendering
-block https://codecov.io/* https://travis-ci.com/*
+block https://codecov.io/* https://travis-ci.com/* https://travis-ci.org/* https://sourcegraph.com/*
 
 # The aria-selected attribute is added by the last piece of JS to run.
 {{$ready := "[role='treeitem'][aria-selected='true']"}}
