@@ -169,6 +169,17 @@ func TestAPIRedirect(t *testing.T) {
 			t.Errorf("got Location = %q, want %q", got, "/v1/moo")
 		}
 	})
+
+	t.Run("redirect /v1beta/ path with query", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		handler.ServeHTTP(w, httptest.NewRequest("GET", "/v1beta/search?q=uuid&limit=25", nil))
+		if w.Code != http.StatusMovedPermanently {
+			t.Errorf("got status code = %d, want %d", w.Code, http.StatusMovedPermanently)
+		}
+		if got, want := w.Header().Get("Location"), "/v1/search?q=uuid&limit=25"; got != want {
+			t.Errorf("got Location = %q, want %q", got, want)
+		}
+	})
 }
 
 func TestAPIUnknownEndpoint(t *testing.T) {

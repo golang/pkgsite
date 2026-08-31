@@ -266,8 +266,12 @@ func (s *Server) Install(handle func(string, http.Handler), cacher Cacher, authV
 		http.Redirect(w, r, "/v1/api", http.StatusMovedPermanently)
 	}))
 	handle("/v1beta/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		path := strings.Replace(r.URL.Path, "/v1beta/", "/v1/", 1)
-		http.Redirect(w, r, path, http.StatusMovedPermanently)
+		u := *r.URL
+		u.Path = strings.Replace(u.Path, "/v1beta/", "/v1/", 1)
+		if u.RawPath != "" {
+			u.RawPath = strings.Replace(u.RawPath, "/v1beta/", "/v1/", 1)
+		}
+		http.Redirect(w, r, u.String(), http.StatusMovedPermanently)
 	}))
 	handle("/v1/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		api.ServeError(w, r, api.BadRequest("unknown API endpoint",
