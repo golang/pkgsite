@@ -65,19 +65,35 @@ func (db *DB) InsertModule(ctx context.Context, m *internal.Module, lmv *interna
 // If a module is removed from this list, consider backfilling the symbols for all
 // existing versions of that module.
 var skipSymbols = map[string]bool{
-	"github.com/citusdata/azure-sdk-for-go":                                      true,
-	"github.com/seveas/azure-sdk-for-go":                                         true,
-	"github.com/cdktf/cdktf-provider-azurerm-go/azurerm/v14":                     true,
-	"github.com/gardener/gardener":                                               true,
-	"github.com/gyliu513/okd-origin":                                             true,
-	"github.com/tombuildsstuff/azure-sdk-for-go":                                 true,
-	"github.com/cdktf/cdktf-provider-google-go/google/v16":                       true,
-	"github.com/AZure/azure-sdk-for-go/@v/v63.0.0+incompatible":                  true,
-	"github.com/hashicorp/go-azure-sdk/microsoft-graph/@v/v0.20260212.1143955":   true,
-	"github.com/cdktn-io/cdktn-provider-googlebeta-go/googlebeta/v19/@v/v19.7.0": true,
-	"github.com/cdktn-io/cdktn-provider-aws-go/aws/v24":                          true,
-	"github.com/cdktn-io/cdktn-provider-google-go/google/v19":                    true,
-	"github.com/sourcegraph/controller-cdktf/gen/google_beta":                    true,
+	"github.com/azure/azure-sdk-for-go":                       true,
+	"github.com/citusdata/azure-sdk-for-go":                   true,
+	"github.com/fengyunpan/kubernetes":                        true,
+	"github.com/gardener/gardener":                            true,
+	"github.com/gyliu513/okd-origin":                          true,
+	"github.com/openshift/origin":                             true,
+	"github.com/plantonhq/planton":                            true,
+	"github.com/seveas/azure-sdk-for-go":                      true,
+	"github.com/sourcegraph/controller-cdktf/gen/google_beta": true,
+	"github.com/tombuildsstuff/azure-sdk-for-go":              true,
+}
+
+// skipSymbolPrefixes contains module path prefixes for modules whose symbol
+// insertion should be skipped across all subpaths and major versions.
+var skipSymbolPrefixes = []string{
+	"github.com/azure/azure-sdk-for-go/",
+	"github.com/cdktf/cdktf-provider-",
+	"github.com/cdktn-io/cdktn-provider-",
+	"github.com/hashicorp/go-azure-sdk/",
+}
+
+// shouldSkipSymbols reports whether symbol insertion should be skipped for modulePath.
+// Module paths are compared case-insensitively against skipSymbols and skipSymbolPrefixes.
+func shouldSkipSymbols(modulePath string) bool {
+	lower := strings.ToLower(modulePath)
+	return skipSymbols[modulePath] || skipSymbols[lower] ||
+		slices.ContainsFunc(skipSymbolPrefixes, func(p string) bool {
+			return strings.HasPrefix(lower, p)
+		})
 }
 
 // saveModule inserts a Module into the database along with its packages,
@@ -155,7 +171,7 @@ func (db *DB) saveModule(ctx context.Context, m *internal.Module, lmv *internal.
 			return err
 		}
 		isLatest = m.Version == latest
-		if !skipSymbols[m.ModulePath] {
+		if !shouldSkipSymbols(m.ModulePath) {
 			if err := insertSymbols(ctx, tx, m.ModulePath, m.Version, isLatest, pathToID, pathToUnitID, pathToDocs); err != nil {
 				return err
 			}

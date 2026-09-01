@@ -814,8 +814,18 @@ func TestInsertModuleSkipSymbols(t *testing.T) {
 		wantInserted bool
 	}{
 		{
-			name:         "skipped",
+			name:         "skipped gardener",
 			modulePath:   "github.com/gardener/gardener",
+			wantInserted: false,
+		},
+		{
+			name:         "skipped azure-sdk-for-go mixed casing",
+			modulePath:   "github.com/Azure/azure-Sdk-For-Go",
+			wantInserted: false,
+		},
+		{
+			name:         "skipped prefix match cdktn",
+			modulePath:   "github.com/cdktn-io/cdktn-provider-aws-go/aws/v22",
 			wantInserted: false,
 		},
 		{
