@@ -811,6 +811,7 @@ func TestInsertModuleSkipSymbols(t *testing.T) {
 	for _, test := range []struct {
 		name         string
 		modulePath   string
+		numSymbols   int
 		wantInserted bool
 	}{
 		{
@@ -829,6 +830,24 @@ func TestInsertModuleSkipSymbols(t *testing.T) {
 			wantInserted: false,
 		},
 		{
+			name:         "skipped symbol threshold",
+			modulePath:   "example.com/large-module",
+			numSymbols:   maxSymbols + 1,
+			wantInserted: false,
+		},
+		{
+			name:         "not skipped stdlib",
+			modulePath:   stdlib.ModulePath,
+			numSymbols:   maxSymbols + 1,
+			wantInserted: true,
+		},
+		{
+			name:         "not skipped golang.org/x",
+			modulePath:   "golang.org/x/arch",
+			numSymbols:   maxSymbols + 1,
+			wantInserted: true,
+		},
+		{
 			name:         "not skipped",
 			modulePath:   "example.com/test-module",
 			wantInserted: true,
@@ -839,7 +858,7 @@ func TestInsertModuleSkipSymbols(t *testing.T) {
 			defer release()
 
 			m := sample.Module(test.modulePath, "v1.2.3", "pkg")
-			m.Units[1].Documentation[0].API = []*internal.Symbol{
+			m.Units[1].Documentation[0].API = slices.Repeat([]*internal.Symbol{
 				{
 					SymbolMeta: internal.SymbolMeta{
 						Name:    "Foo",
@@ -847,7 +866,7 @@ func TestInsertModuleSkipSymbols(t *testing.T) {
 						Kind:    internal.SymbolKindVariable,
 					},
 				},
-			}
+			}, max(test.numSymbols, 1))
 			testDB.MustInsertModule(t, m)
 
 			if got := checkSymbolsInserted(t, testDB, m); got != test.wantInserted {

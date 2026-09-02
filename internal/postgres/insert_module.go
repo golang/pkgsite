@@ -86,14 +86,42 @@ var skipSymbolPrefixes = []string{
 	"github.com/hashicorp/go-azure-sdk/",
 }
 
-// shouldSkipSymbols reports whether symbol insertion should be skipped for modulePath.
+// TODO(b/555703857): Consider refactoring symbol insertion.
+// maxSymbols is the maximum number of symbols in a module version before
+// symbol insertion is skipped to prevent database statement timeouts.
+const maxSymbols = 30000
+
+// shouldSkipSymbols reports whether symbol insertion should be skipped for m.
 // Module paths are compared case-insensitively against skipSymbols and skipSymbolPrefixes.
-func shouldSkipSymbols(modulePath string) bool {
-	lower := strings.ToLower(modulePath)
-	return skipSymbols[modulePath] || skipSymbols[lower] ||
+// Modules with more than maxSymbols symbols are also skipped, with the exception of
+// the standard library and golang.org/x packages.
+func shouldSkipSymbols(m *internal.Module) bool {
+	lower := strings.ToLower(m.ModulePath)
+	if lower == stdlib.ModulePath || strings.HasPrefix(lower, "golang.org/x/") {
+		return false
+	}
+	return skipSymbols[m.ModulePath] || skipSymbols[lower] ||
 		slices.ContainsFunc(skipSymbolPrefixes, func(p string) bool {
 			return strings.HasPrefix(lower, p)
-		})
+		}) || exceedsMaxSymbols(m)
+}
+
+func exceedsMaxSymbols(m *internal.Module) bool {
+	n := 0
+	for _, u := range m.Units {
+		for _, doc := range u.Documentation {
+			n += len(doc.API)
+			for _, s := range doc.API {
+				if s != nil {
+					n += len(s.Children)
+				}
+			}
+			if n > maxSymbols {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 // saveModule inserts a Module into the database along with its packages,
@@ -171,7 +199,7 @@ func (db *DB) saveModule(ctx context.Context, m *internal.Module, lmv *internal.
 			return err
 		}
 		isLatest = m.Version == latest
-		if !shouldSkipSymbols(m.ModulePath) {
+		if !shouldSkipSymbols(m) {
 			if err := insertSymbols(ctx, tx, m.ModulePath, m.Version, isLatest, pathToID, pathToUnitID, pathToDocs); err != nil {
 				return err
 			}
