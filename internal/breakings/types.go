@@ -9,6 +9,7 @@ package api
 import (
 	"fmt"
 	"go/ast"
+	"slices"
 )
 
 // changeKind is the kind of change between two API elements.
@@ -61,5 +62,62 @@ func (old *simpleType) change(newType syntaxType) changeKind {
 	if n, ok := newType.(*simpleType); ok && old.typeString == n.typeString {
 		return changeOther
 	}
+	return changeBreaking
+}
+
+// funcType is the type of a function.
+type funcType struct {
+	typeParams []string
+	params     []string
+	results    []string
+	variadic   bool // shorthand for the last param having a "..."
+}
+
+// newFuncType constructs a funcType from an ast.FuncType.
+func newFuncType(ft *ast.FuncType) *funcType {
+	var variadic bool
+	if params := ft.Params; params != nil && len(params.List) > 0 {
+		last := params.List[len(params.List)-1]
+		_, variadic = last.Type.(*ast.Ellipsis)
+	}
+	tpm := typeParamMap(ft.TypeParams)
+	return &funcType{
+		typeParams: fieldListTypes(ft.TypeParams, nil),
+		params:     fieldListTypes(ft.Params, tpm),
+		results:    fieldListTypes(ft.Results, tpm),
+		variadic:   variadic,
+	}
+}
+
+// equal reports whether f and other have equal typeParams, params and results.
+func (f *funcType) equal(other syntaxType) bool {
+	o, ok := other.(*funcType)
+	if !ok {
+		return false
+	}
+	// We don't need to check variadic here. That is just a convenience for the change method.
+	// All the param information is in params.
+	return slices.Equal(f.typeParams, o.typeParams) && slices.Equal(f.params, o.params) && slices.Equal(f.results, o.results)
+}
+
+// change returns the kind of change from old to new.
+func (old *funcType) change(newType syntaxType) changeKind {
+	newf, ok := newType.(*funcType)
+	if !ok {
+		return changeBreaking
+	}
+	if old.equal(newf) {
+		return changeOther
+	}
+	// There are many kinds of call-compatible changes, but just look for
+	// adding a variadic argument. That's the most common.
+	if !old.variadic && newf.variadic &&
+		slices.Equal(old.typeParams, newf.typeParams) &&
+		slices.Equal(old.results, newf.results) &&
+		len(newf.params) == len(old.params)+1 &&
+		slices.Equal(old.params, newf.params[:len(old.params)]) {
+		return changeCallCompatible
+	}
+	// Any other difference in a function signature is a breaking change.
 	return changeBreaking
 }

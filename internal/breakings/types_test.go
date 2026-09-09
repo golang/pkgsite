@@ -5,13 +5,12 @@
 package api
 
 import (
+	"go/ast"
 	"go/parser"
+	"go/token"
+	"slices"
 	"testing"
 )
-
-type otherType struct{}
-
-func (otherType) change(syntaxType) changeKind { return changeOther }
 
 func TestSimpleType(t *testing.T) {
 	parse := func(src string) *simpleType {
@@ -60,10 +59,196 @@ func TestSimpleType(t *testing.T) {
 		}
 
 		// non-*simpleType should return changeBreaking
-		ot := &otherType{}
+		ft := &funcType{}
 		s := parse("int")
-		if got := s.change(ot); got != changeBreaking {
-			t.Errorf("expected s.change(otherType) to be changeBreaking, got %v", got)
+		if got := s.change(ft); got != changeBreaking {
+			t.Errorf("expected s.change(funcType) to be changeBreaking, got %v", got)
+		}
+	})
+}
+
+func TestFuncType(t *testing.T) {
+	parseFuncType := func(src string) *ast.FuncType {
+		fset := token.NewFileSet()
+		f, err := parser.ParseFile(fset, "p.go", "package p\n"+src, 0)
+		if err != nil {
+			t.Fatalf("parser.ParseFile(%q): %v", src, err)
+		}
+		return f.Decls[0].(*ast.FuncDecl).Type
+	}
+
+	testCases := []struct {
+		name           string
+		decl           string
+		wantTypeParams []string
+		wantParams     []string
+		wantResults    []string
+		wantVariadic   bool
+	}{
+		{
+			name:           "empty",
+			decl:           "func f()",
+			wantTypeParams: nil,
+			wantParams:     nil,
+			wantResults:    nil,
+			wantVariadic:   false,
+		},
+		{
+			name:           "basic",
+			decl:           "func f(a, b int) (bool, error)",
+			wantTypeParams: nil,
+			wantParams:     []string{"int", "int"},
+			wantResults:    []string{"bool", "error"},
+			wantVariadic:   false,
+		},
+		{
+			name:           "variadic",
+			decl:           "func f(a int, b ...string)",
+			wantTypeParams: nil,
+			wantParams:     []string{"int", "...string"},
+			wantResults:    nil,
+			wantVariadic:   true,
+		},
+		{
+			name:           "generic",
+			decl:           "func f[T any, U ~int](x T, y ...U) T",
+			wantTypeParams: []string{"any", "~int"},
+			wantParams:     []string{"#0", "...#1"},
+			wantResults:    []string{"#0"},
+			wantVariadic:   true,
+		},
+		{
+			name:           "blank and named",
+			decl:           "func f(_, _ int) (err error)",
+			wantTypeParams: nil,
+			wantParams:     []string{"int", "int"},
+			wantResults:    []string{"error"},
+			wantVariadic:   false,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			ft := newFuncType(parseFuncType(tc.decl))
+			if !slices.Equal(ft.typeParams, tc.wantTypeParams) {
+				t.Errorf("newFuncType(%q).typeParams = %v, want %v", tc.decl, ft.typeParams, tc.wantTypeParams)
+			}
+			if !slices.Equal(ft.params, tc.wantParams) {
+				t.Errorf("newFuncType(%q).params = %v, want %v", tc.decl, ft.params, tc.wantParams)
+			}
+			if !slices.Equal(ft.results, tc.wantResults) {
+				t.Errorf("newFuncType(%q).results = %v, want %v", tc.decl, ft.results, tc.wantResults)
+			}
+			if ft.variadic != tc.wantVariadic {
+				t.Errorf("newFuncType(%q).variadic = %v, want %v", tc.decl, ft.variadic, tc.wantVariadic)
+			}
+		})
+	}
+
+	t.Run("equal", func(t *testing.T) {
+		ft1 := newFuncType(parseFuncType("func f(a, b int) bool"))
+		ft2 := newFuncType(parseFuncType("func g(x, y int) bool"))
+		ft3 := newFuncType(parseFuncType("func h(x int, y string) bool"))
+
+		if !ft1.equal(ft2) {
+			t.Errorf("expected ft1 (%+v) and ft2 (%+v) to be equal", ft1, ft2)
+		}
+		if ft1.equal(ft3) {
+			t.Errorf("expected ft1 (%+v) and ft3 (%+v) to NOT be equal", ft1, ft3)
+		}
+
+		// different typeParams should not be equal
+		ftDiffTypeParams := &funcType{typeParams: []string{"any"}, params: ft1.params, results: ft1.results}
+		if ft1.equal(ftDiffTypeParams) {
+			t.Errorf("expected ft1 (%+v) and ftDiffTypeParams (%+v) to NOT be equal", ft1, ftDiffTypeParams)
+		}
+
+		// non-*funcType should return false
+		st := &simpleType{}
+		if ft1.equal(st) {
+			t.Errorf("expected ft1.equal(simpleType) to be false")
+		}
+	})
+
+	t.Run("change", func(t *testing.T) {
+		testCases := []struct {
+			name    string
+			oldDecl string
+			newDecl string
+			want    changeKind
+		}{
+			{
+				name:    "same",
+				oldDecl: "func f(a int, b string) bool",
+				newDecl: "func f(a int, b string) bool",
+				want:    changeOther,
+			},
+			{
+				name:    "same variadic",
+				oldDecl: "func f(a int, b ...string) bool",
+				newDecl: "func f(a int, b ...string) bool",
+				want:    changeOther,
+			},
+			{
+				name:    "add variadic",
+				oldDecl: "func f(a int, b string) bool",
+				newDecl: "func f(a int, b string, c ...bool) bool",
+				want:    changeCallCompatible,
+			},
+			{
+				name:    "empty to variadic",
+				oldDecl: "func f()",
+				newDecl: "func f(x ...int)",
+				want:    changeCallCompatible,
+			},
+			{
+				name:    "generic add variadic",
+				oldDecl: "func f[T any](x T)",
+				newDecl: "func f[T any](x T, y ...int)",
+				want:    changeCallCompatible,
+			},
+			{
+				name:    "change to variadic",
+				oldDecl: "func f(a int, b string) bool",
+				newDecl: "func f(a int, b ...string) bool",
+				want:    changeBreaking,
+			},
+			{
+				name:    "change from variadic",
+				oldDecl: "func f(a int, b ...string) bool",
+				newDecl: "func f(a int, b string) bool",
+				want:    changeBreaking,
+			},
+			{
+				name:    "add param",
+				oldDecl: "func f(a int) bool",
+				newDecl: "func f(a int, b int) bool",
+				want:    changeBreaking,
+			},
+			{
+				name:    "change result",
+				oldDecl: "func f(a int) bool",
+				newDecl: "func f(a int) string",
+				want:    changeBreaking,
+			},
+		}
+
+		for _, tc := range testCases {
+			t.Run(tc.name, func(t *testing.T) {
+				oldFT := newFuncType(parseFuncType(tc.oldDecl))
+				newFT := newFuncType(parseFuncType(tc.newDecl))
+				got := oldFT.change(newFT)
+				if got != tc.want {
+					t.Errorf("(%q).change(%q) = %v, want %v", tc.oldDecl, tc.newDecl, got, tc.want)
+				}
+			})
+		}
+
+		// non-*funcType should return changeBreaking
+		st := &simpleType{}
+		oldFT := newFuncType(parseFuncType("func f()"))
+		if got := oldFT.change(st); got != changeBreaking {
+			t.Errorf("expected oldFT.change(simpleType) to be changeBreaking, got %v", got)
 		}
 	})
 }

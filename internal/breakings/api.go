@@ -147,21 +147,10 @@ func sigString(ft *ast.FuncType) string {
 	if ft == nil {
 		return ""
 	}
-	var typeParamMap map[string]string
-	if ft.TypeParams != nil {
-		typeParamMap = make(map[string]string)
-		i := 0
-		for _, f := range ft.TypeParams.List {
-			for _, name := range f.Names {
-				typeParamMap[name.Name] = fmt.Sprintf("#%d", i)
-				i++
-			}
-		}
-	}
-
+	tpm := typeParamMap(ft.TypeParams)
 	typeParamTypes := fieldListTypes(ft.TypeParams, nil)
-	paramTypes := fieldListTypes(ft.Params, typeParamMap)
-	resTypes := fieldListTypes(ft.Results, typeParamMap)
+	paramTypes := fieldListTypes(ft.Params, tpm)
+	resTypes := fieldListTypes(ft.Results, tpm)
 
 	var buf strings.Builder
 
@@ -203,6 +192,24 @@ func fieldListTypes(fl *ast.FieldList, typeParams map[string]string) []string {
 		}
 	}
 	return typeStrings
+}
+
+// typeParamMap returns a map from type parameter names to their #N representation.
+func typeParamMap(fl *ast.FieldList) map[string]string {
+	if fl == nil {
+		return nil
+	}
+	m := make(map[string]string)
+	i := 0
+	for _, f := range fl.List {
+		for _, name := range f.Names {
+			if name.Name != "_" {
+				m[name.Name] = fmt.Sprintf("#%d", i)
+			}
+			i++
+		}
+	}
+	return m
 }
 
 // substTypeParams returns a copy of expr with type parameter names replaced by their #N representation.
