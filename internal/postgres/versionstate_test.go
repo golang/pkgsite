@@ -79,6 +79,79 @@ func TestInsertIndexVersions(t *testing.T) {
 	}
 }
 
+func TestInsertIndexVersionsExcluded(t *testing.T) {
+	t.Parallel()
+	testDB, release := acquire(t)
+	defer release()
+	ctx := context.Background()
+	const v1 = "v1.0.0"
+
+	must(t, testDB.InsertExcludedPattern(ctx, "excluded.com", "admin", "because"))
+
+	must(t, testDB.InsertIndexVersions(ctx, []*internal.IndexVersion{
+		{Path: "allowed.com/mod", Version: v1},
+		{Path: "excluded.com/mod", Version: v1},
+	}))
+
+	type row struct {
+		Path   string
+		Status int
+		Error  string
+	}
+	want := []row{
+		{Path: "allowed.com/mod", Status: 0, Error: ""},
+		{Path: "excluded.com/mod", Status: derrors.ToStatus(derrors.Excluded), Error: "filtered from index insertion"},
+	}
+	got, err := database.CollectStructs[row](ctx, testDB.db, `
+		SELECT module_path, status, error FROM module_version_states ORDER BY module_path
+	`)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Fatalf("mismatch (-want, +got):\n%s", diff)
+	}
+
+	// Insert again to verify status and error are not updated on conflict.
+	must(t, testDB.InsertIndexVersions(ctx, []*internal.IndexVersion{
+		{Path: "allowed.com/mod", Version: v1},
+		{Path: "excluded.com/mod", Version: v1},
+	}))
+	got, err = database.CollectStructs[row](ctx, testDB.db, `
+		SELECT module_path, status, error FROM module_version_states ORDER BY module_path
+	`)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Fatalf("mismatch (-want, +got):\n%s", diff)
+	}
+}
+
+func TestExcludedModulesNeverEnqueued(t *testing.T) {
+	t.Parallel()
+	testDB, release := acquire(t)
+	defer release()
+	ctx := context.Background()
+
+	must(t, testDB.InsertExcludedPattern(ctx, "excluded.com", "admin", "test"))
+	must(t, testDB.InsertIndexVersions(ctx, []*internal.IndexVersion{
+		{Path: "allowed.com/mod", Version: "v1.0.0"},
+		{Path: "excluded.com/mod", Version: "v1.0.0"},
+	}))
+
+	next, err := testDB.GetNextModulesToFetch(ctx, 100)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(next) != 1 {
+		t.Fatalf("got %d modules, want 1", len(next))
+	}
+	if got, want := next[0].ModulePath, "allowed.com/mod"; got != want {
+		t.Fatalf("got %q, want %q", got, want)
+	}
+}
+
 func TestModuleVersionState(t *testing.T) {
 	t.Parallel()
 	testDB, release := acquire(t)

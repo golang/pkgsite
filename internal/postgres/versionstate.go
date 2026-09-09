@@ -29,7 +29,7 @@ func (db *DB) InsertIndexVersions(ctx context.Context, versions []*internal.Inde
 		DO UPDATE SET
 			index_timestamp=excluded.index_timestamp,
 			next_processed_after=CURRENT_TIMESTAMP`
-	return insertIndexVersions(ctx, db.db, versions, conflictAction)
+	return db.insertIndexVersions(ctx, versions, conflictAction)
 }
 
 // InsertNewModuleVersionFromFrontendFetch inserts a new module version into
@@ -38,18 +38,19 @@ func (db *DB) InsertIndexVersions(ctx context.Context, versions []*internal.Inde
 func (db *DB) InsertNewModuleVersionFromFrontendFetch(ctx context.Context, modulePath, resolvedVersion string) (err error) {
 	defer derrors.WrapStack(&err, "InsertIndexVersion(ctx, %v)", resolvedVersion)
 	conflictAction := `ON CONFLICT (module_path, version) DO NOTHING`
-	return insertIndexVersions(ctx, db.db, []*internal.IndexVersion{{Path: modulePath, Version: resolvedVersion}}, conflictAction)
+	return db.insertIndexVersions(ctx, []*internal.IndexVersion{{Path: modulePath, Version: resolvedVersion}}, conflictAction)
 }
 
-func insertIndexVersions(ctx context.Context, ddb *database.DB, versions []*internal.IndexVersion, conflictAction string) (err error) {
+func (db *DB) insertIndexVersions(ctx context.Context, versions []*internal.IndexVersion, conflictAction string) (err error) {
 	var vals []any
 	for _, v := range versions {
+		status, reason := db.initialStatusAndReason(ctx, v.Path, v.Version)
 		vals = append(vals,
 			v.Path,
 			v.Version,
 			version.ForSorting(v.Version),
-			0,
-			"",
+			status,
+			reason,
 			"",
 			version.IsIncompatible(v.Version),
 			v.Timestamp,
@@ -65,7 +66,7 @@ func insertIndexVersions(ctx context.Context, ddb *database.DB, versions []*inte
 		"incompatible",
 		"index_timestamp",
 	}
-	return ddb.Transact(ctx, sql.LevelDefault, func(tx *database.DB) error {
+	return db.db.Transact(ctx, sql.LevelDefault, func(tx *database.DB) error {
 		var updates [][2]string // (module_path, version) to update status
 		err := tx.BulkInsertReturning(ctx, "module_version_states", cols, vals, conflictAction,
 			[]string{"module_path", "version", "status"},
@@ -102,6 +103,16 @@ func insertIndexVersions(ctx context.Context, ddb *database.DB, versions []*inte
 		}
 		return nil
 	})
+}
+
+// initialStatusAndReason determines the initial value of the status for a module, and the
+// reason for that value. It can be used, for example, to ignore modules that we
+// know that we don't want to process, just based on the path and version.
+func (db *DB) initialStatusAndReason(ctx context.Context, path, version string) (int, string) {
+	if db.IsExcluded(ctx, path, version) {
+		return derrors.ToStatus(derrors.Excluded), "filtered from index insertion"
+	}
+	return 0, ""
 }
 
 type ModuleVersionStateForUpdate struct {

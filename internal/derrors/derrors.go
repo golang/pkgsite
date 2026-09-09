@@ -127,6 +127,8 @@ var codes = []struct {
 	{SheddingLoad, http.StatusServiceUnavailable},
 
 	// Since the following aren't HTTP statuses, pick unused codes.
+	// Though in fact, 492 and 493 are now (2026) valid codes
+	// (see https://http.dev/status#4xx-client-error.)
 	{HasIncompletePackages, 290},
 	{DBModuleInsertInvalid, 480},
 	{NotFetched, 481},
