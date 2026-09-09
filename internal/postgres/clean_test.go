@@ -26,12 +26,14 @@ func TestCleanBulk(t *testing.T) {
 
 	want := []string{
 		"a.c@v0.0.0-20190101000000-abcdef012345",
+		"buf.build/gen/go/a@v1.0.0",
 	}
 	for _, mv := range append(want,
 		// These should not be cleaned.
 		"a.c@v1.0.0",                             // tagged
 		"b.c@v0.0.0-20190101000000-abcdef012345", // latest version
 		"b.c@v0.0.0-20180101000000-abcdef012345", // 'main' in version_map (see UpsertVersionMap below)
+		"buf.build/gen/a@v1.0.0",                 // non-gen buf.build module
 	) {
 		mod, ver, pkg := parseModuleVersionPackage(mv)
 		m := sample.Module(mod, ver, pkg)

@@ -14,6 +14,11 @@ import (
 	"golang.org/x/pkgsite/internal/derrors"
 )
 
+// These modules appear in the proxy as a side effect of some
+// third-party process, and no one is interested in their
+// documentation.
+const bufBuildPrefix = "buf.build/gen/go"
+
 // GetModuleVersionsToClean returns module versions that can be removed from the database.
 // Only module versions that were updated more than daysOld days ago will be considered.
 // At most limit module versions will be returned.
@@ -47,11 +52,13 @@ func (db *DB) GetModuleVersionsToClean(ctx context.Context, daysOld, limit int) 
 				WHERE requested_version IN ('master', 'main', 'dev.fuzz')
 			) vm_filtered ON m.module_path = vm_filtered.module_path AND m.version = vm_filtered.resolved_version
 		WHERE
+		(
 			m.version_type = 'pseudo'
 			AND CURRENT_TIMESTAMP - m.updated_at > make_interval(days => $1)
 			AND latest.path IS NULL
 			AND sd.module_path IS NULL
 			AND vm_filtered.module_path IS NULL
+		) OR m.module_path LIKE '` + bufBuildPrefix + `%'
 		LIMIT $2
 	`
 
