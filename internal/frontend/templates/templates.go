@@ -10,6 +10,7 @@ import (
 	"path"
 	"strings"
 
+	"github.com/google/safehtml"
 	"github.com/google/safehtml/template"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
@@ -31,6 +32,21 @@ var templateFuncs = template.FuncMap{
 	"capitalize":      cases.Title(language.Und).String,
 	"queryescape":     url.QueryEscape,
 	"scoreBoxClasses": scoreBoxClasses,
+	"routeID":         routeID,
+}
+
+func routeID(val string) safehtml.Identifier {
+	val = strings.Map(func(r rune) rune {
+		if (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') || r == '-' || r == '_' {
+			return r
+		}
+		return '-'
+	}, val)
+	val = strings.Trim(val, "-")
+	if val == "" {
+		val = "endpoint"
+	}
+	return safehtml.IdentifierFromConstantPrefix("route", val)
 }
 
 const (

@@ -1012,7 +1012,7 @@ func filterInternal[T any](list []T, filter string, jfields fieldMap, varName st
 	if err != nil {
 		return nil, BadRequest(fmt.Sprintf(`parsing filter "%s": %v`,
 			filter, err),
-			"the 'filter' query parameter must be a valid Go expression; see the documentation at /v1/api",
+			"the 'filter' query parameter must be a valid Go expression; see the documentation at /v1/api#filters",
 		)
 	}
 	var out []T
@@ -1035,12 +1035,12 @@ func filterInternal[T any](list []T, filter string, jfields fieldMap, varName st
 		res, err := evaluate(expr, env)
 		if err != nil {
 			return nil, BadRequest(fmt.Sprintf(`evaluating filter "%s": %v`, filter, err),
-				"the filter must be a Go expression; see the documentation at /v1/api")
+				"the filter must be a Go expression; see the documentation at /v1/api#filters")
 		}
 		b, ok := res.(bool)
 		if !ok {
 			return nil, BadRequest(fmt.Sprintf(`filter "%s" did not evaluate to bool`, filter),
-				"the filter must be a boolean Go expression; see the documentation at /v1/api")
+				"the filter must be a boolean Go expression; see the documentation at /v1/api#filters")
 		}
 		if b {
 			out = append(out, e)

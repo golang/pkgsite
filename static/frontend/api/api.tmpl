@@ -107,6 +107,15 @@
       line-height: 1.4;
       white-space: pre;
     }
+    .Api-idLink {
+      opacity: 0;
+    }
+    h2:hover .Api-idLink,
+    h3:hover .Api-idLink,
+    .Api-route:hover .Api-idLink,
+    .Api-idLink:focus {
+      opacity: 1;
+    }
   </style>
   <main class="go-Container" id="main-content">
     <div class="go-Content">
@@ -116,7 +125,7 @@
         Go packages and modules.
       </p>
 
-      <h2>Requests</h2>
+      <h2 id="requests">Requests <a class="Api-idLink" href="#requests" title="Go to Requests" aria-label="Go to Requests">¶</a></h2>
       <p>
       All requests are GET requests whose first URL segment selects the request
       type.
@@ -143,7 +152,7 @@
       typically <code>linux/amd64</code>.
       </p>
 
-      <h3>Filters</h3>
+      <h3 id="filters">Filters <a class="Api-idLink" href="#filters" title="Go to Filters" aria-label="Go to Filters">¶</a></h3>
       <p>Some routes accept a <code>filter</code> query parameter.
       Only items that match the filter are returned.
       The filter must be a Go expression that returns a boolean value.
@@ -193,7 +202,7 @@
       and then call <code>Encode</code> on that.
       </p>
 
-      <h2>Responses</h2>
+      <h2 id="responses">Responses <a class="Api-idLink" href="#responses" title="Go to Responses" aria-label="Go to Responses">¶</a></h2>
       <p>
         All routes return a JSON response.
         You can find a link to the corresponding Go type for a route in the documentation below.
@@ -204,13 +213,13 @@
         You can access the machine-readable <a href="/v1/openapi.yaml">OpenAPI Specification</a>.
       </p>
 
-      <h2>Rate Limiting</h2>
+      <h2 id="rate-limiting">Rate Limiting <a class="Api-idLink" href="#rate-limiting" title="Go to Rate Limiting" aria-label="Go to Rate Limiting">¶</a></h2>
       <p>
         Requests to the API are rate-limited to 45 queries per second (QPS) per IP block.
         Exceeding the rate limit returns an HTTP status code <code>429 Too Many Requests</code>.
       </p>
 
-      <h2>Pagination</h2>
+      <h2 id="pagination">Pagination <a class="Api-idLink" href="#pagination" title="Go to Pagination" aria-label="Go to Pagination">¶</a></h2>
       <p>
       Some responses are paginated. Each response page has a
       <code>nextPageToken</code>, which is non-empty if there is
@@ -226,13 +235,16 @@
       </p>
       <p>
 
-      <h2>Routes</h2>
+      <h2 id="routes">Routes <a class="Api-idLink" href="#routes" title="Go to Routes" aria-label="Go to Routes">¶</a></h2>
       <ul class="Api-list">
         {{range .Routes}}
-          <li class="Api-item">
+          {{$id := routeID (index .Tags 0)}}
+          <li class="Api-item" id="{{$id}}">
             <div class="Api-itemRow">
               <div class="Api-itemLeft">
-                <div class="Api-route"><code>{{.Route}}</code></div>
+                <div class="Api-route">
+                  <code>{{.Route}}</code> <a class="Api-idLink" href="#{{$id}}" title="Go to {{.Route}}" aria-label="Go to {{.Route}}">¶</a>
+                </div>
                 <p>{{.Desc}}</p>
                 <div class="Api-details">
                   {{if .QueryParams}}
