@@ -8,6 +8,7 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
+	"maps"
 	"slices"
 	"testing"
 )
@@ -261,5 +262,47 @@ func TestNewSimpleType(t *testing.T) {
 	st := newSimpleType(expr)
 	if got, want := st.typeString, "int"; got != want {
 		t.Errorf("newSimpleType: got %q, want %q", got, want)
+	}
+}
+
+func TestSymbolSetChange(t *testing.T) {
+	parseFunc := func(decl string) *funcType {
+		fset := token.NewFileSet()
+		f, err := parser.ParseFile(fset, "p.go", "package p\n"+decl, 0)
+		if err != nil {
+			t.Fatalf("parser.ParseFile(%q): %v", decl, err)
+		}
+		return newFuncType(f.Decls[0].(*ast.FuncDecl).Type)
+	}
+
+	oldSet := &symbolSet{
+		parentName: "T",
+		symbols: map[string]syntaxType{
+			"Removed":           &simpleType{typeString: "int"},
+			"Unchanged":         &simpleType{typeString: "string"},
+			"ChangedBreaking":   &simpleType{typeString: "int"},
+			"ChangedCompatible": parseFunc("func ChangedCompatible(x int)"),
+		},
+	}
+
+	newSet := &symbolSet{
+		parentName: "T",
+		symbols: map[string]syntaxType{
+			"Unchanged":         &simpleType{typeString: "string"},
+			"ChangedBreaking":   &simpleType{typeString: "bool"},
+			"ChangedCompatible": parseFunc("func ChangedCompatible(x int, y ...string)"),
+			"Added":             &simpleType{typeString: "float64"},
+		},
+	}
+
+	want := map[string]changeKind{
+		"T.Removed":           changeBreaking,
+		"T.ChangedBreaking":   changeBreaking,
+		"T.ChangedCompatible": changeCallCompatible,
+	}
+
+	got := oldSet.changes(newSet)
+	if !maps.Equal(got, want) {
+		t.Errorf("oldSet.change(newSet) = %v, want %v", got, want)
 	}
 }

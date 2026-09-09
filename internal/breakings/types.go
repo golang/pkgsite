@@ -121,3 +121,26 @@ func (old *funcType) change(newType syntaxType) changeKind {
 	// Any other difference in a function signature is a breaking change.
 	return changeBreaking
 }
+
+// symbolSet is a set of symbols and their types.
+type symbolSet struct {
+	symbols map[string]syntaxType
+	// name of enclosing package, interface or struct
+	parentName string
+}
+
+// changes returns the map of breaking changes from old to new.
+// It assumes that all the symbols in both sets are exported.
+func (old *symbolSet) changes(newSet *symbolSet) map[string]changeKind {
+	res := make(map[string]changeKind)
+	for name, oldType := range old.symbols {
+		newType, ok := newSet.symbols[name]
+		if !ok {
+			// It's a breaking change to remove a symbol.
+			res[old.parentName+"."+name] = changeBreaking
+		} else if c := oldType.change(newType); c != changeOther {
+			res[old.parentName+"."+name] = c
+		}
+	}
+	return res
+}
