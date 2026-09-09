@@ -134,7 +134,7 @@ func parseAndRun(c *command, args []string, stdout, stderr io.Writer) int {
 		return 2
 	}
 
-	counter.New("pkgsite-cli/command:" + c.name).Inc()
+	counter.Inc("pkgsite-cli/command:" + c.name)
 
 	return c.run(c.flags, stdout, stderr)
 }

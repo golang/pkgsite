@@ -12,6 +12,9 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"golang.org/x/telemetry/counter"
+	"golang.org/x/telemetry/counter/countertest"
 )
 
 func TestUsageLine(t *testing.T) {
@@ -123,5 +126,40 @@ func TestVersionInfo(t *testing.T) {
 	binName := filepath.Base(os.Args[0])
 	if !strings.HasPrefix(v, binName) {
 		t.Errorf("versionInfo() = %q, want to start with %q", v, binName)
+	}
+}
+
+func TestMain(m *testing.M) {
+	if countertest.SupportedPlatform {
+		tmp, err := os.MkdirTemp("", "pkgsite-cli-telemetry-test")
+		if err != nil {
+			panic(err)
+		}
+		countertest.Open(tmp)
+		defer os.RemoveAll(tmp) // ignore error (cleanup fails on Windows; golang/go#68243)
+	}
+	m.Run()
+}
+
+func TestTelemetryCounters(t *testing.T) {
+	if !countertest.SupportedPlatform {
+		t.Skip("skipping on unsupported platform")
+	}
+
+	c := counter.New("pkgsite-cli/command:dummy")
+	before, _ := countertest.ReadCounter(c)
+
+	cmd := &command{
+		name:  "dummy",
+		flags: flag.NewFlagSet("dummy", flag.ContinueOnError),
+		run:   func(*flag.FlagSet, io.Writer, io.Writer) int { return 0 },
+	}
+	if exit := parseAndRun(cmd, nil, io.Discard, io.Discard); exit != 0 {
+		t.Fatalf("parseAndRun = %d, want 0", exit)
+	}
+	if count, err := countertest.ReadCounter(c); err != nil {
+		t.Fatal(err)
+	} else if got := count - before; got != 1 {
+		t.Errorf("count delta for %q = %d, want 1", c.Name(), got)
 	}
 }
