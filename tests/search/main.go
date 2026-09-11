@@ -40,7 +40,7 @@ func main() {
 	}
 	log.SetLevel(cfg.LogLevel)
 
-	if err := runImportedByUpdates(ctx, cfg.DBConnInfo(), cfg.DBHost); err != nil {
+	if err := runImportedByUpdates(ctx, cfg.DBConnInfo(), strings.Join(cfg.DBHosts, ", ")); err != nil {
 		log.Fatal(ctx, err)
 	}
 	if err := run(*frontendHost); err != nil {
@@ -57,10 +57,10 @@ var testFiles = []string{
 	"tests/search/scripts/symbolsearch.txt",
 }
 
-func runImportedByUpdates(ctx context.Context, dbConnInfo, dbHost string) error {
+func runImportedByUpdates(ctx context.Context, dbConnInfo, dbHosts string) error {
 	ddb, err := database.Open("pgx", dbConnInfo, "seeddb")
 	if err != nil {
-		log.Fatalf(ctx, "database.Open for host %s failed with %v", dbHost, err)
+		log.Fatalf(ctx, "database.Open for hosts %s failed with %v", dbHosts, err)
 	}
 	db := postgres.New(ddb)
 	defer db.Close()

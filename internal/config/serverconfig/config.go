@@ -120,10 +120,11 @@ func OnGCP() bool {
 
 // configOverride holds selected config settings that can be dynamically overridden.
 type configOverride struct {
-	DBHost          string               `yaml:"DBHost"`
-	DBSecondaryHost string               `yaml:"DBSecondaryHost"`
-	DBName          string               `yaml:"DBName"`
-	Quota           config.QuotaSettings `yaml:"Quota"`
+	// DBHost is a whitespace-separated list of hosts, like the
+	// GO_DISCOVERY_DATABASE_HOST env var. It replaces the entire list.
+	DBHost string               `yaml:"DBHost"`
+	DBName string               `yaml:"DBName"`
+	Quota  config.QuotaSettings `yaml:"Quota"`
 }
 
 // Init resolves all configuration values provided by the config package. It
@@ -131,8 +132,10 @@ type configOverride struct {
 func Init(ctx context.Context) (_ *config.Config, err error) {
 	defer derrors.Add(&err, "config.Init(ctx)")
 
-	dbs := chooseN(GetEnv("GO_DISCOVERY_DATABASE_HOST", "localhost"), 2)
-	primaryDB, secondaryDB := dbs[0], dbs[1]
+	dbHosts := chooseN(GetEnv("GO_DISCOVERY_DATABASE_HOST", "localhost"), 2)
+	if len(dbHosts) == 0 {
+		return nil, errors.New("GO_DISCOVERY_DATABASE_HOST names no hosts; want one or more, separated by whitespace")
+	}
 
 	// Build a Config from the execution environment, loading some values
 	// from envvars and others from remote services.
@@ -160,10 +163,9 @@ func Init(ctx context.Context) (_ *config.Config, err error) {
 		LocationID: GetEnv("GO_DISCOVERY_GAE_LOCATION_ID", "us-central1"),
 		// This fallback should only be used when developing locally.
 		FallbackVersionLabel: time.Now().Format(config.AppVersionFormat),
-		DBHost:               primaryDB,
+		DBHosts:              dbHosts,
 		DBUser:               GetEnv("GO_DISCOVERY_DATABASE_USER", "postgres"),
 		DBPassword:           os.Getenv("GO_DISCOVERY_DATABASE_PASSWORD"),
-		DBSecondaryHost:      secondaryDB,
 		DBPort:               GetEnv("GO_DISCOVERY_DATABASE_PORT", "5432"),
 		DBName:               GetEnv("GO_DISCOVERY_DATABASE_NAME", "discovery-db"),
 		DBSecret:             os.Getenv("GO_DISCOVERY_DATABASE_SECRET"),
@@ -273,9 +275,6 @@ func Init(ctx context.Context) (_ *config.Config, err error) {
 			Labels: map[string]string{"project_id": cfg.ProjectID},
 		}
 	}
-	if cfg.DBHost == "" {
-		panic("DBHost is empty; impossible")
-	}
 	if cfg.DBSecret != "" {
 		var err error
 		cfg.DBPassword, err = secrets.Get(ctx, cfg.DBSecret)
@@ -340,8 +339,11 @@ func processOverrides(ctx context.Context, cfg *config.Config, bytes []byte) {
 		log.Errorf(ctx, "processOverrides: yaml.Unmarshal: %v", err)
 		return
 	}
-	override(ctx, "DBHost", &cfg.DBHost, ov.DBHost)
-	override(ctx, "DBSecondaryHost", &cfg.DBSecondaryHost, ov.DBSecondaryHost)
+	var dbHost string
+	override(ctx, "DBHost", &dbHost, ov.DBHost)
+	if dbHost != "" {
+		cfg.DBHosts = strings.Fields(dbHost)
+	}
 	override(ctx, "DBName", &cfg.DBName, ov.DBName)
 	override(ctx, "Quota.QPS", &cfg.Quota.QPS, ov.Quota.QPS)
 	override(ctx, "Quota.Burst", &cfg.Quota.Burst, ov.Quota.Burst)
@@ -357,11 +359,8 @@ func override[T comparable](ctx context.Context, name string, field *T, val T) {
 	}
 }
 
-// chooseN selects N entries at random from a whitespace-separated string, and
-// returns them as a slice of size N.
-//
-// If the input string contains fewer than N entries, the returned slice is
-// padded with empty strings at the end.
+// chooseN selects up to n entries at random from a whitespace-separated
+// string. It returns fewer than n entries if the string holds fewer.
 func chooseN(configVar string, n int) []string {
 	fields := strings.Fields(configVar)
 
@@ -370,11 +369,7 @@ func chooseN(configVar string, n int) []string {
 		fields[i], fields[j] = fields[j], fields[i]
 	})
 
-	if len(fields) <= n {
-		return append(fields, make([]string, n-len(fields))...)
-	} else {
-		return fields[:n]
-	}
+	return fields[:min(len(fields), n)]
 }
 
 // gceMetadata reads a metadata value from GCE.

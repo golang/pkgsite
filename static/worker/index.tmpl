@@ -74,7 +74,7 @@
     <table>
       <tr><td>App Version</td><td>{{.Config.VersionID}}</td></tr>
       <tr><td>Zone</td><td>{{.Config.ZoneID}}</td></tr>
-      <tr><td>DB Host</td><td>{{.Config.DBHost}}</td></tr>
+      <tr><td>DB Hosts</td><td>{{range $i, $h := .Config.DBHosts}}{{if $i}}, {{end}}{{$h}}{{end}}</td></tr>
       <tr><td>Redis Cache Host</td><td>{{.Config.RedisCacheHost}}</td></tr>
       <tr><td>Hostname (Pod)</td><td>{{.Hostname}}</td></tr>
       <tr><td>Age</td><td>{{timeSince .StartTime}}</td></tr>

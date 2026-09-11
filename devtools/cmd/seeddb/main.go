@@ -62,7 +62,7 @@ func main() {
 	connInfo := cfg.DBConnInfo()
 	db, err := database.Open("pgx", connInfo, "seeddb")
 	if err != nil {
-		log.Fatalf("database.Open for host %s failed with %v", cfg.DBHost, err)
+		log.Fatalf("database.Open for hosts %s failed with %v", strings.Join(cfg.DBHosts, ", "), err)
 	}
 	defer db.Close()
 	log.Printf("connected to %s", redactPassword(connInfo))

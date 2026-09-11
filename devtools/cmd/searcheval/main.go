@@ -29,14 +29,7 @@ func openDB(cfg *config.Config) (*postgres.DB, error) {
 	}
 	ddb, err := database.Open(ocDriver, cfg.DBConnInfo(), cfg.InstanceID)
 	if err != nil {
-		ci := cfg.DBSecondaryConnInfo()
-		if ci == "" {
-			return nil, err
-		}
-		ddb, err = database.Open(ocDriver, ci, cfg.InstanceID)
-		if err != nil {
-			return nil, err
-		}
+		return nil, err
 	}
 	ddb.SetPoolSettings(cfg.DBMaxOpenConns, cfg.DBMaxIdleConns, cfg.DBConnMaxLifetime, cfg.DBConnMaxIdleTime)
 	return postgres.NewBypassingLicenseCheck(ddb), nil

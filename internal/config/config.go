@@ -81,13 +81,15 @@ type Config struct {
 	// AppEngine.
 	FallbackVersionLabel string
 
-	DBSecret, DBUser, DBHost, DBPort, DBName, DBSSL string
-	DBSecondaryHost                                 string // DB host to use if first one is down
-	DBPassword                                      string `json:"-" yaml:"-"`
-	DBMaxOpenConns                                  int
-	DBMaxIdleConns                                  int
-	DBConnMaxLifetime                               time.Duration
-	DBConnMaxIdleTime                               time.Duration
+	DBSecret, DBUser, DBPort, DBName, DBSSL string
+	// DBHosts are the candidate database hosts, tried in order until one
+	// accepts a connection.
+	DBHosts           []string
+	DBPassword        string `json:"-" yaml:"-"`
+	DBMaxOpenConns    int
+	DBMaxIdleConns    int
+	DBConnMaxLifetime time.Duration
+	DBConnMaxIdleTime time.Duration
 
 	// Configuration for redis page cache.
 	RedisCacheHost, RedisCachePort string
@@ -178,26 +180,10 @@ const SourceTimeout = 1 * time.Minute
 const TaskIDChangeIntervalFrontend = 30 * time.Minute
 
 // DBConnInfo returns a PostgreSQL connection string constructed from
-// environment variables, using the primary database host.
-// If a secondary host is configured, both are included in the connection
-// string to allow automatic connection-level failover.
+// environment variables. If multiple hosts are configured, they are included
+// in the connection string to allow automatic connection-level failover.
 func (c *Config) DBConnInfo() string {
-	if c.DBSecondaryHost != "" {
-		return c.dbConnInfo(c.DBHost + "," + c.DBSecondaryHost)
-	}
-	return c.dbConnInfo(c.DBHost)
-}
-
-// DBSecondaryConnInfo returns a PostgreSQL connection string constructed from
-// environment variables, using the backup database host. It returns the
-// empty string if no backup is configured.
-// If a secondary host is configured, both are included in the connection
-// string to allow automatic connection-level failover, with the backup host tried first.
-func (c *Config) DBSecondaryConnInfo() string {
-	if c.DBSecondaryHost == "" {
-		return ""
-	}
-	return c.dbConnInfo(c.DBSecondaryHost + "," + c.DBHost)
+	return c.dbConnInfo(strings.Join(c.DBHosts, ","))
 }
 
 // dbConnInfoFormat is the format of a PostgreSQL connection string. The host

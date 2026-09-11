@@ -125,8 +125,6 @@ func ExperimentGetter(ctx context.Context, cfg *config.Config) middleware.Experi
 }
 
 // OpenDB opens the postgres database specified by the config.
-// It first tries the main connection info (DBConnInfo), and if that fails, it uses backup
-// connection info it if exists (DBSecondaryConnInfo).
 func OpenDB(ctx context.Context, cfg *config.Config, bypassLicenseCheck bool) (_ *postgres.DB, err error) {
 	defer derrors.Wrap(&err, "cmdconfig.OpenDB(ctx, cfg)")
 
@@ -135,24 +133,13 @@ func OpenDB(ctx context.Context, cfg *config.Config, bypassLicenseCheck bool) (_
 	if err != nil {
 		return nil, fmt.Errorf("unable to register the ocsql driver: %v", err)
 	}
-	log.Infof(ctx, "opening database on host %s", cfg.DBHost)
+	hosts := strings.Join(cfg.DBHosts, ", ")
+	log.Infof(ctx, "opening database on hosts: %s", hosts)
 	ddb, err := database.Open(ocDriver, cfg.DBConnInfo(), cfg.InstanceID)
-	if err == nil {
-		log.Infof(ctx, "connected to primary host: %s", cfg.DBHost)
-	} else {
-		ci := cfg.DBSecondaryConnInfo()
-		if ci == "" {
-			log.Infof(ctx, "no secondary DB host")
-			return nil, err
-		}
-		log.Errorf(ctx, "database.Open for primary host %s failed with %v; trying secondary host %s ",
-			cfg.DBHost, err, cfg.DBSecondaryHost)
-		ddb, err = database.Open(ocDriver, ci, cfg.InstanceID)
-		if err != nil {
-			return nil, err
-		}
-		log.Infof(ctx, "connected to secondary host %s", cfg.DBSecondaryHost)
+	if err != nil {
+		return nil, err
 	}
+	log.Infof(ctx, "connected to database (candidate hosts: %s)", hosts)
 	ddb.SetPoolSettings(cfg.DBMaxOpenConns, cfg.DBMaxIdleConns, cfg.DBConnMaxLifetime, cfg.DBConnMaxIdleTime)
 	log.Infof(ctx, "database open finished")
 	if bypassLicenseCheck {

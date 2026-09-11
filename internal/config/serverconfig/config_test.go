@@ -37,45 +37,36 @@ func TestChooseN(t *testing.T) {
 	tests := []struct {
 		configVar string
 		n         int
-		wantMatch []string
+		wantLen   int
+		wantMatch string
 	}{
-		{"foo", 2, []string{"foo", ""}},
-		{"foo1 \n foo2", 1, []string{"^foo[12]$"}},
-		{"foo1 \n foo2", 2, []string{"^foo[12]$", "^foo[12]$"}},
-		{"foo1 foo2", 4, []string{"^foo[12]$", "^foo[12]$", "", ""}},
-		{"foo1\nfoo2\nfoo3", 5, []string{"^foo[123]$", "^foo[123]$", "^foo[123]$", "", ""}},
+		{"foo", 2, 1, "^foo$"},
+		{"foo1 \n foo2", 1, 1, "^foo[12]$"},
+		{"foo1 \n foo2", 2, 2, "^foo[12]$"},
+		{"foo1 foo2", 4, 2, "^foo[12]$"},
+		{"foo1\nfoo2\nfoo3", 5, 3, "^foo[123]$"},
+		{"", 2, 0, ""},
 	}
 	for _, test := range tests {
 		gots := chooseN(test.configVar, test.n)
 
-		if len(gots) != test.n {
-			t.Errorf("chooseN must return a slice of n(%v), got %v", test.n, len(gots))
+		if len(gots) != test.wantLen {
+			t.Errorf("chooseN(%q, %v) returned %d entries, want %d", test.configVar, test.n, len(gots), test.wantLen)
+			continue
 		}
-		seen := make(map[string]struct{}, test.n)
-
-		allMatch := true
-		allUnique := true
-		for i, got := range gots {
-			if got != "" {
-				_, ok := seen[got]
-				allUnique = allUnique && !ok
-
-				seen[got] = struct{}{}
-			}
-
-			matched, err := regexp.MatchString(test.wantMatch[i], got)
+		seen := make(map[string]struct{}, len(gots))
+		for _, got := range gots {
+			matched, err := regexp.MatchString(test.wantMatch, got)
 			if err != nil {
 				t.Fatal(err)
 			}
-			allMatch = allMatch && matched
-
+			if !matched {
+				t.Errorf("chooseN(%q, %v) = %v, want each to match %v", test.configVar, test.n, gots, test.wantMatch)
+			}
+			if _, ok := seen[got]; ok {
+				t.Errorf("chooseN(%q, %v) = %v, want all unique", test.configVar, test.n, gots)
+			}
 			seen[got] = struct{}{}
-		}
-		if !allMatch {
-			t.Errorf("chooseN(%q, %v) = %v, want matches %v", test.configVar, test.n, gots, test.wantMatch)
-		}
-		if !allUnique {
-			t.Errorf("chooseN(%q, %v) = %v, want all unique", test.configVar, test.n, gots)
 		}
 	}
 }
@@ -84,12 +75,12 @@ func TestProcessOverrides(t *testing.T) {
 	tr := true
 	f := false
 	cfg := config.Config{
-		DBHost: "origHost",
-		DBName: "origName",
-		Quota:  config.QuotaSettings{QPS: 1, Burst: 2, MaxEntries: 3, RecordOnly: &tr},
+		DBHosts: []string{"origHost1", "origHost2"},
+		DBName:  "origName",
+		Quota:   config.QuotaSettings{QPS: 1, Burst: 2, MaxEntries: 3, RecordOnly: &tr},
 	}
 	ov := `
-        DBHost: newHost
+        DBHost: newHost1 newHost2
         Quota:
            MaxEntries: 17
            RecordOnly: false
@@ -97,9 +88,9 @@ func TestProcessOverrides(t *testing.T) {
 	processOverrides(context.Background(), &cfg, []byte(ov))
 	got := cfg
 	want := config.Config{
-		DBHost: "newHost",
-		DBName: "origName",
-		Quota:  config.QuotaSettings{QPS: 1, Burst: 2, MaxEntries: 17, RecordOnly: &f},
+		DBHosts: []string{"newHost1", "newHost2"},
+		DBName:  "origName",
+		Quota:   config.QuotaSettings{QPS: 1, Burst: 2, MaxEntries: 17, RecordOnly: &f},
 	}
 	if diff := cmp.Diff(want, got, cmp.AllowUnexported(config.Config{})); diff != "" {
 		t.Errorf("mismatch (-want, +got):\n%s", diff)
