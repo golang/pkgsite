@@ -68,6 +68,15 @@ func (d *defs) typeFor(name string) *ast.TypeSpec {
 	return d.types[name]
 }
 
+// methodsFor returns the exported method declarations for the type with the given name,
+// or nil if there are none.
+func (d *defs) methodsFor(name string) []*ast.FuncDecl {
+	if d == nil {
+		return nil
+	}
+	return d.methods[name]
+}
+
 // baseTypeName returns the base type name of an expression (e.g. an embedded field or receiver).
 // It returns the empty string if there is no base name.
 // It also reports whether there was a selector expression.

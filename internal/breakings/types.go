@@ -403,3 +403,111 @@ func (old *structType) changes(newType syntaxType) iter.Seq2[string, changeKind]
 		}
 	}
 }
+
+// namedType is the type of a named type.
+type namedType struct {
+	underlying       syntaxType      // the underlying type
+	methods          *symbolSet      // all methods
+	valueMethodNames map[string]bool // names of methods with value receiver
+}
+
+// newNamedType constructs a namedType from an ast.TypeSpec.
+func newNamedType(ts *ast.TypeSpec, defs *defs) *namedType {
+	name := ts.Name.Name
+	methods := newSymbolSet()
+	valueMethodNames := map[string]bool{}
+	for _, m := range defs.methodsFor(name) {
+		methods.symbols[m.Name.Name] = newType(m.Type, defs)
+		if !isPointerReceiver(m.Recv) {
+			valueMethodNames[m.Name.Name] = true
+		}
+	}
+	return &namedType{
+		underlying:       newType(ts.Type, defs),
+		methods:          methods,
+		valueMethodNames: valueMethodNames,
+	}
+}
+
+func isPointerReceiver(recv *ast.FieldList) bool {
+	_, ok := ast.Unparen(recv.List[0].Type).(*ast.StarExpr)
+	return ok
+}
+
+// changes returns all breaking and call-compatible changes between old and new.
+// A named type can change if its underlying type changes, or if its methods change.
+func (old *namedType) changes(newType syntaxType) iter.Seq2[string, changeKind] {
+	return func(yield func(string, changeKind) bool) {
+		newn, ok := newType.(*namedType)
+		if !ok {
+			yield("", changeBreaking)
+			return
+		}
+
+		for k, v := range changeUnderlying(old.underlying, newn.underlying) {
+			if !yield(k, v) {
+				return
+			}
+		}
+		for k, v := range old.methods.changes(newn.methods) {
+			if !yield(k, v) {
+				return
+			}
+		}
+		// Checking the combined method set handles most cases. We also have to ensure
+		// that a value method wasn't changed to a pointer method. It's enough to
+		// show that no value method was removed from the value method set. Given
+		// that the combined method set check showed no breaking changes, the only
+		// other way to remove a value method would be to swap it with a pointer
+		// method, and this check will catch that.
+		for name := range old.valueMethodNames {
+			if !newn.valueMethodNames[name] {
+				if !yield(name, changeBreaking) {
+					return
+				}
+			}
+		}
+	}
+}
+
+// changeUnderlying returns the breaking and call-compatible changes between the
+// underlying types of two named types.
+//
+// Any changes to methods on an underlying named type are ignored.
+// For example, in
+//
+//	type T U
+//
+// The type U might have methods that change, but we don't report them as breaking changes on T.
+// We report them as breaking changes on U.
+//
+// If the underlying type is a function, a call-compatible change becomes a breaking change.
+// For example, if someone declares
+//
+//	type T func(int)
+//
+// then they presumably intend that variables are declared to be of this type, and one typically
+// assigns to variables as well as calls them.
+func changeUnderlying(oldType, newType syntaxType) iter.Seq2[string, changeKind] {
+	return func(yield func(string, changeKind) bool) {
+		_, oldIsNamed := oldType.(*namedType)
+		_, newIsNamed := newType.(*namedType)
+		if oldIsNamed != newIsNamed {
+			yield("", changeBreaking)
+			return
+		}
+		if oldIsNamed { // and new is too
+			// ignore changes on underlying named types
+			return
+		}
+		_, isFuncType := oldType.(*funcType)
+		for k, kind := range oldType.changes(newType) {
+			if kind == changeCallCompatible && isFuncType {
+				kind = changeBreaking
+			}
+			if !yield(k, kind) {
+				return
+			}
+		}
+	}
+}

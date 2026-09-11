@@ -183,6 +183,16 @@ func TestDefs(t *testing.T) {
 	if ts := nilDefs.typeFor("A"); ts != nil {
 		t.Errorf("nilDefs.typeFor(\"A\") = %v, want nil", ts)
 	}
+
+	if ms := d.methodsFor("A"); len(ms) != 2 {
+		t.Errorf("methodsFor(\"A\") returned %d methods, want 2", len(ms))
+	}
+	if ms := d.methodsFor("NonExistent"); ms != nil {
+		t.Errorf("methodsFor(\"NonExistent\") = %v, want nil", ms)
+	}
+	if ms := nilDefs.methodsFor("A"); ms != nil {
+		t.Errorf("nilDefs.methodsFor(\"A\") = %v, want nil", ms)
+	}
 }
 
 // parseDefsTxtar parses a txtar archive for TestDefs.

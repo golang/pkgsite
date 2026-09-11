@@ -29,7 +29,8 @@ func parseType(t *testing.T, src string) syntaxType {
 	case *ast.FuncDecl:
 		return newType(d.Type, nil)
 	case *ast.GenDecl:
-		return newType(d.Specs[0].(*ast.TypeSpec).Type, nil)
+		spec := d.Specs[0].(*ast.TypeSpec)
+		return newType(spec.Type, nil)
 	default:
 		t.Fatalf("unknown decl %T", d)
 		panic("unreachable")
@@ -875,4 +876,165 @@ func TestBaseTypeName(t *testing.T) {
 			t.Errorf("baseTypeName(nil) = (%q, %t), want (\"\", false)", got, gotSel)
 		}
 	})
+}
+
+func parseNamedType(t *testing.T, src, typeName string) *namedType {
+	t.Helper()
+	fset := token.NewFileSet()
+	f, err := parser.ParseFile(fset, "p.go", "package p\n"+src, 0)
+	if err != nil {
+		t.Fatalf("parser.ParseFile(%q): %v", src, err)
+	}
+	defs, err := newDefs([]*ast.File{f})
+	if err != nil {
+		t.Fatalf("newDefs: %v", err)
+	}
+	spec := defs.typeFor(typeName)
+	if spec == nil {
+		t.Fatalf("type %s not found", typeName)
+	}
+	return newNamedType(spec, defs)
+}
+
+func TestNamedType(t *testing.T) {
+	t.Run("newNamedType", func(t *testing.T) {
+		src := `
+type T struct { A int }
+func (t T) ValueMethod() {}
+func (t *T) PointerMethod() {}
+func (t T) unexportedMethod() {}
+`
+		nt := parseNamedType(t, src, "T")
+		if got := symbolNames(nt.methods); !slices.Equal(got, []string{"PointerMethod", "ValueMethod"}) {
+			t.Errorf("methods = %v, want [PointerMethod, ValueMethod]", got)
+		}
+		if !nt.valueMethodNames["ValueMethod"] {
+			t.Errorf("expected ValueMethod in valueMethodNames")
+		}
+		if nt.valueMethodNames["PointerMethod"] {
+			t.Errorf("did not expect PointerMethod in valueMethodNames")
+		}
+		if nt.valueMethodNames["unexportedMethod"] {
+			t.Errorf("did not expect unexportedMethod in valueMethodNames")
+		}
+	})
+
+	testCases := []struct {
+		name string
+		old  *namedType
+		new  syntaxType
+		want map[string]changeKind
+	}{
+		{
+			name: "identical basic underlying",
+			old:  parseNamedType(t, "type T int", "T"),
+			new:  parseNamedType(t, "type T int", "T"),
+			want: nil,
+		},
+		{
+			name: "different basic underlying",
+			old:  parseNamedType(t, "type T int", "T"),
+			new:  parseNamedType(t, "type T string", "T"),
+			want: map[string]changeKind{"": changeBreaking},
+		},
+		{
+			name: "identical struct underlying",
+			old:  parseNamedType(t, "type T struct { A int }", "T"),
+			new:  parseNamedType(t, "type T struct { A int }", "T"),
+			want: nil,
+		},
+		{
+			name: "struct field added",
+			old:  parseNamedType(t, "type T struct { A int }", "T"),
+			new:  parseNamedType(t, "type T struct { A int; B string }", "T"),
+			want: nil,
+		},
+		{
+			name: "struct field removed",
+			old:  parseNamedType(t, "type T struct { A int; B string }", "T"),
+			new:  parseNamedType(t, "type T struct { A int }", "T"),
+			want: map[string]changeKind{"B": changeBreaking},
+		},
+		{
+			name: "identical func underlying",
+			old:  parseNamedType(t, "type T func(int)", "T"),
+			new:  parseNamedType(t, "type T func(int)", "T"),
+			want: nil,
+		},
+		{
+			name: "func underlying call-compatible change is breaking",
+			old:  parseNamedType(t, "type T func(int)", "T"),
+			new:  parseNamedType(t, "type T func(int, ...string)", "T"),
+			want: map[string]changeKind{"": changeBreaking},
+		},
+		{
+			name: "method unchanged",
+			old:  parseNamedType(t, "type T int\nfunc (*T) M() {}", "T"),
+			new:  parseNamedType(t, "type T int\nfunc (*T) M() {}", "T"),
+			want: nil,
+		},
+		{
+			name: "method added",
+			old:  parseNamedType(t, "type T int", "T"),
+			new:  parseNamedType(t, "type T int\nfunc (*T) M() {}", "T"),
+			want: nil,
+		},
+		{
+			name: "pointer method removed",
+			old:  parseNamedType(t, "type T int\nfunc (*T) M() {}", "T"),
+			new:  parseNamedType(t, "type T int", "T"),
+			want: map[string]changeKind{"M": changeBreaking},
+		},
+		{
+			name: "value method removed",
+			old:  parseNamedType(t, "type T int\nfunc (T) M() {}", "T"),
+			new:  parseNamedType(t, "type T int", "T"),
+			want: map[string]changeKind{"M": changeBreaking},
+		},
+		{
+			name: "method signature breaking change",
+			old:  parseNamedType(t, "type T int\nfunc (*T) M(int) {}", "T"),
+			new:  parseNamedType(t, "type T int\nfunc (*T) M(string) {}", "T"),
+			want: map[string]changeKind{"M": changeBreaking},
+		},
+		{
+			name: "method signature call-compatible change",
+			old:  parseNamedType(t, "type T int\nfunc (*T) M(int) {}", "T"),
+			new:  parseNamedType(t, "type T int\nfunc (*T) M(int, ...string) {}", "T"),
+			want: map[string]changeKind{"M": changeCallCompatible},
+		},
+		{
+			name: "value method to pointer method",
+			old:  parseNamedType(t, "type T int\nfunc (T) M() {}", "T"),
+			new:  parseNamedType(t, "type T int\nfunc (*T) M() {}", "T"),
+			want: map[string]changeKind{"M": changeBreaking},
+		},
+		{
+			name: "pointer method to value method",
+			old:  parseNamedType(t, "type T int\nfunc (*T) M() {}", "T"),
+			new:  parseNamedType(t, "type T int\nfunc (T) M() {}", "T"),
+			want: nil,
+		},
+		{
+			name: "swap pointer and value methods",
+			old:  parseNamedType(t, "type T int\nfunc (T) M() {}\nfunc (*T) N() {}", "T"),
+			new:  parseNamedType(t, "type T int\nfunc (*T) M() {}\nfunc (T) N() {}", "T"),
+			want: map[string]changeKind{"M": changeBreaking},
+		},
+		{
+			name: "non-*namedType is breaking",
+			old:  parseNamedType(t, "type T int", "T"),
+			new:  newSimpleType(ast.NewIdent("int")),
+			want: map[string]changeKind{"": changeBreaking},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := maps.Collect(tc.old.changes(tc.new))
+			if !maps.Equal(got, tc.want) {
+				t.Errorf("%s: changes = %v, want %v", tc.name, got, tc.want)
+			}
+		})
+	}
 }
