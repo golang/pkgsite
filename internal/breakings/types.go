@@ -50,6 +50,8 @@ func newType(e ast.Expr) syntaxType {
 		return newFuncType(e)
 	case *ast.InterfaceType:
 		return newInterfaceType(e)
+	case *ast.StructType:
+		return newStructType(e)
 	default:
 		return newSimpleType(e)
 	}
@@ -226,4 +228,89 @@ func (old *interfaceType) change(newType syntaxType) changeKind {
 		}
 	}
 	return res
+}
+
+// structType is the type of a struct.
+type structType struct {
+	fields *symbolSet // top-level exported fields
+}
+
+// newStructType constructs a structType from an ast.StructType.
+func newStructType(st *ast.StructType) *structType {
+	fields := newSymbolSet("")
+	for _, f := range st.Fields.List {
+		if len(f.Names) == 0 { // embedded field
+			name := embeddedFieldName(f.Type)
+			if ast.IsExported(name) {
+				fields.symbols[name] = newType(f.Type)
+			}
+		} else {
+			for _, name := range f.Names {
+				if name.IsExported() {
+					fields.symbols[name.Name] = newType(f.Type)
+				}
+			}
+		}
+	}
+	return &structType{fields: fields}
+}
+
+// change returns the kind of change from old to new.
+func (old *structType) change(newType syntaxType) changeKind {
+	// A struct has a breaking change if one of three things occurs:
+	//   - One of its top-level fields has a breaking change. That includes anonymous
+	//     (embedded) fields.
+	//   - One of its selectable fields has a breaking change. A field F is selectable if you can
+	//     write S.F. That includes the top-level fields, but also the fields of an embedded struct
+	//     that aren't hidden by a field at a higher depth.
+	//     TODO: handle this case as best we can (we only know about types declared in this package).
+	//   - The old struct was comparable, but the new one isn't. This can happen if a slice, map, func
+	//     chan, or non-comparable struct field was added.
+	//     TODO: consider handling this case (although it's rare).
+	news, ok := newType.(*structType)
+	if !ok {
+		return changeBreaking
+	}
+	// A struct type changes if one of its fields changes.
+	// The order of the fields doesn't matter. We're not comparing two struct types
+	// for identity, we're comparing a struct type across two versions of a package.
+	// The two different types can't exist in the same program at the same time,
+	// so there is no way to compare them.
+	changes := old.fields.changes(news.fields)
+	// Any breaking change in the fields is a breaking change for the entire struct.
+	// A call-compatible change could happen if a field has function type, and that function
+	// type was changed call-compatibly. But that is really a breaking change, because users
+	// are likely to assign to the field as well as call it.
+	// Since symbolSet.changes reports only breaking or call-compatible changes, then if
+	// it reports anything at all, we have a breaking change.
+	if len(changes) > 0 {
+		return changeBreaking
+	}
+	return changeOther
+}
+
+// embeddedFieldName returns the name of an embedded struct field given its type expression.
+// It returns the empty string if typeExpr cannot be an embedded field.
+func embeddedFieldName(typeExpr ast.Expr) string {
+	for {
+		switch t := typeExpr.(type) {
+		case *ast.ParenExpr:
+			typeExpr = t.X
+		case *ast.StarExpr:
+			typeExpr = t.X
+		case *ast.IndexExpr:
+			typeExpr = t.X
+		case *ast.IndexListExpr:
+			typeExpr = t.X
+		case *ast.SelectorExpr:
+			if t.Sel != nil {
+				return t.Sel.Name
+			}
+			return ""
+		case *ast.Ident:
+			return t.Name
+		default:
+			return ""
+		}
+	}
 }

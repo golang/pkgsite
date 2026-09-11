@@ -390,3 +390,197 @@ func TestInterfaceType(t *testing.T) {
 		}
 	})
 }
+
+func TestStructType(t *testing.T) {
+	testCases := []struct {
+		name string
+		old  string
+		new  string
+		want changeKind
+	}{
+		{
+			name: "equal",
+			old:  "struct{ A int }",
+			new:  "struct{ A int }",
+			want: changeOther,
+		},
+		{
+			name: "empty to empty",
+			old:  "struct{}",
+			new:  "struct{}",
+			want: changeOther,
+		},
+		{
+			name: "field added (empty to A)",
+			old:  "struct{}",
+			new:  "struct{ A int }",
+			want: changeOther,
+		},
+		{
+			name: "field added (A to AB)",
+			old:  "struct{ A int }",
+			new:  "struct{ A int; B string }",
+			want: changeOther,
+		},
+		{
+			name: "field removed (AB to A)",
+			old:  "struct{ A int; B string }",
+			new:  "struct{ A int }",
+			want: changeBreaking,
+		},
+		{
+			name: "field removed (A to empty)",
+			old:  "struct{ A int }",
+			new:  "struct{}",
+			want: changeBreaking,
+		},
+		{
+			name: "field type changed (A int to A string)",
+			old:  "struct{ A int }",
+			new:  "struct{ A string }",
+			want: changeBreaking,
+		},
+		{
+			name: "field renamed / replaced (A to B)",
+			old:  "struct{ A int }",
+			new:  "struct{ B string }",
+			want: changeBreaking,
+		},
+		{
+			name: "field call-compatible changed",
+			old:  "struct{ F func(x int) }",
+			new:  "struct{ F func(x int, y ...string) }",
+			want: changeBreaking,
+		},
+		{
+			name: "field call-compatible and breaking changed",
+			old:  "struct{ F func(x int); A int }",
+			new:  "struct{ F func(x int, y ...string); A string }",
+			want: changeBreaking,
+		},
+		{
+			name: "unexported fields ignored",
+			old:  "struct{ a int }",
+			new:  "struct{ a string }",
+			want: changeOther,
+		},
+		{
+			name: "embedded field unchanged",
+			old:  "struct{ T }",
+			new:  "struct{ T }",
+			want: changeOther,
+		},
+		{
+			name: "embedded field added",
+			old:  "struct{}",
+			new:  "struct{ T }",
+			want: changeOther,
+		},
+		{
+			name: "embedded field removed",
+			old:  "struct{ T }",
+			new:  "struct{}",
+			want: changeBreaking,
+		},
+		{
+			name: "non-*structType",
+			old:  "struct{ A int }",
+			new:  "int",
+			want: changeBreaking,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := parseType(t, tc.old).change(parseType(t, tc.new))
+			if got != tc.want {
+				t.Errorf("%s: change = %v, want %v", tc.name, got, tc.want)
+			}
+		})
+	}
+}
+
+func TestEmbeddedFieldName(t *testing.T) {
+	testCases := []struct {
+		expr string
+		want string
+	}{
+		// Identifiers
+		{"T", "T"},
+		{"t", "t"},
+		{"_", "_"},
+
+		// Qualified identifiers
+		{"pkg.T", "T"},
+		{"pkg.t", "t"},
+
+		// Pointer types
+		{"*T", "T"},
+		{"*pkg.T", "T"},
+		{"**T", "T"},
+
+		// Generic types with single type argument
+		{"T[int]", "T"},
+		{"pkg.T[int]", "T"},
+		{"*T[int]", "T"},
+		{"*pkg.T[int]", "T"},
+		{"T[pkg.U]", "T"},
+		{"T[[]int]", "T"},
+		{"T[*int]", "T"},
+		{"T[map[string]int]", "T"},
+
+		// Generic types with multiple type arguments
+		{"T[int, string]", "T"},
+		{"pkg.T[int, string]", "T"},
+		{"*T[int, string]", "T"},
+		{"*pkg.T[int, string]", "T"},
+		{"T[K, V, any]", "T"},
+
+		// Parenthesized types
+		{"(T)", "T"},
+		{"*(T)", "T"},
+		{"(*T)", "T"},
+		{"(pkg.T)", "T"},
+		{"*(pkg.T)", "T"},
+		{"(*pkg.T)", "T"},
+		{"(T[int])", "T"},
+		{"*(T[int])", "T"},
+		{"(*T[int])", "T"},
+		{"*(pkg.T[int, string])", "T"},
+		{"(*pkg.T[int, string])", "T"},
+
+		// Non-embedded types (should return "")
+		{"[]int", ""},
+		{"[10]int", ""},
+		{"map[string]int", ""},
+		{"chan int", ""},
+		{"<-chan int", ""},
+		{"chan<- int", ""},
+		{"func()", ""},
+		{"func(int) bool", ""},
+		{"interface{}", ""},
+		{"struct{}", ""},
+		{"*[]int", ""},
+		{"*[10]int", ""},
+		{"123", ""},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.expr, func(t *testing.T) {
+			expr, err := parser.ParseExpr(tc.expr)
+			if err != nil {
+				t.Fatalf("parser.ParseExpr(%q): %v", tc.expr, err)
+			}
+			got := embeddedFieldName(expr)
+			if got != tc.want {
+				t.Errorf("embeddedFieldName(%s) = %q, want %q", tc.expr, got, tc.want)
+			}
+		})
+	}
+
+	t.Run("nil", func(t *testing.T) {
+		if got := embeddedFieldName(nil); got != "" {
+			t.Errorf("embeddedFieldName(nil) = %q, want \"\"", got)
+		}
+	})
+}
