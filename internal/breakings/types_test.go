@@ -306,3 +306,100 @@ func TestSymbolSetChange(t *testing.T) {
 		t.Errorf("oldSet.change(newSet) = %v, want %v", got, want)
 	}
 }
+
+func TestInterfaceType(t *testing.T) {
+	parseInterface := func(src string) *interfaceType {
+		fset := token.NewFileSet()
+		f, err := parser.ParseFile(fset, "p.go", "package p\ntype I "+src, 0)
+		if err != nil {
+			t.Fatalf("parser.ParseFile(%q): %v", src, err)
+		}
+		ts := f.Decls[0].(*ast.GenDecl).Specs[0].(*ast.TypeSpec)
+		return newInterfaceType(ts.Type.(*ast.InterfaceType))
+	}
+
+	testCases := []struct {
+		name string
+		old  *interfaceType
+		new  *interfaceType
+		want changeKind
+	}{
+		{
+			name: "empty to empty",
+			old:  parseInterface("interface{}"),
+			new:  parseInterface("interface{}"),
+			want: changeOther,
+		},
+		{
+			name: "same method",
+			old:  parseInterface("interface{ M() }"),
+			new:  parseInterface("interface{ M() }"),
+			want: changeOther,
+		},
+		{
+			name: "add exported method to interface without unexported method",
+			old:  parseInterface("interface{ M() }"),
+			new:  parseInterface("interface{ M(); Added() }"),
+			want: changeBreaking,
+		},
+		{
+			name: "add exported method to interface with unexported method",
+			old:  parseInterface("interface{ M(); m() }"),
+			new:  parseInterface("interface{ M(); Added(); m() }"),
+			want: changeOther,
+		},
+		{
+			name: "add unexported method to interface without unexported method",
+			old:  parseInterface("interface{ A() }"),
+			new:  parseInterface("interface{ A(); m() }"),
+			want: changeBreaking,
+		},
+		{
+			name: "add unexported method to interface with unexported method",
+			old:  parseInterface("interface{ A(); m() }"),
+			new:  parseInterface("interface{ A(); m(); m2() }"),
+			want: changeOther,
+		},
+		{
+			name: "call-compatible change to interface without unexported method",
+			old:  parseInterface("interface{ ChangedCompatible(x int) }"),
+			new:  parseInterface("interface{ ChangedCompatible(x int, y ...string) }"),
+			want: changeBreaking,
+		},
+		{
+			name: "call-compatible change to interface with unexported method",
+			old:  parseInterface("interface{ ChangedCompatible(x int); m() }"),
+			new:  parseInterface("interface{ ChangedCompatible(x int, y ...string); m() }"),
+			want: changeCallCompatible,
+		},
+		{
+			name: "remove method",
+			old:  parseInterface("interface{ M(); Removed() }"),
+			new:  parseInterface("interface{ M() }"),
+			want: changeBreaking,
+		},
+		{
+			name: "change method signature breaking",
+			old:  parseInterface("interface{ M(x int) }"),
+			new:  parseInterface("interface{ M(x string) }"),
+			want: changeBreaking,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := tc.old.change(tc.new)
+			if got != tc.want {
+				t.Errorf("%s: change = %v, want %v", tc.name, got, tc.want)
+			}
+		})
+	}
+
+	t.Run("non-*interfaceType returns changeBreaking", func(t *testing.T) {
+		it := parseInterface("interface{ M() }")
+		st := &simpleType{typeString: "int"}
+		if got := it.change(st); got != changeBreaking {
+			t.Errorf("it.change(simpleType) = %v, want %v", got, changeBreaking)
+		}
+	})
+}

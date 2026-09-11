@@ -43,6 +43,18 @@ type syntaxType interface {
 	change(newType syntaxType) changeKind
 }
 
+// newType constructs a syntaxType from an ast.Expr.
+func newType(e ast.Expr) syntaxType {
+	switch e := ast.Unparen(e).(type) {
+	case *ast.FuncType:
+		return newFuncType(e)
+	case *ast.InterfaceType:
+		return newInterfaceType(e)
+	default:
+		return newSimpleType(e)
+	}
+}
+
 // simpleType is a type represented only by a type string.
 // The key property of a simpleType is that any change is a breaking
 // one. It is used not only for basic types like int and string, but
@@ -140,6 +152,70 @@ func (old *symbolSet) changes(newSet *symbolSet) map[string]changeKind {
 			res[old.parentName+"."+name] = changeBreaking
 		} else if c := oldType.change(newType); c != changeOther {
 			res[old.parentName+"."+name] = c
+		}
+	}
+	return res
+}
+
+// interfaceType is the type of an interface.
+type interfaceType struct {
+	methods          *symbolSet // exported methods only
+	unexportedMethod string     // any unexported method name, or "" if none
+}
+
+// newInterfaceType constructs an interfaceType from an ast.InterfaceType.
+func newInterfaceType(it *ast.InterfaceType) *interfaceType {
+	res := &interfaceType{methods: &symbolSet{symbols: map[string]syntaxType{}}}
+	if it.Methods != nil {
+		for _, m := range it.Methods.List {
+			if len(m.Names) == 0 {
+				// TODO: handle embedded interfaces.
+				continue
+			}
+			// There is only one name
+			name := m.Names[0]
+			if name.IsExported() {
+				res.methods.symbols[name.Name] = newType(m.Type)
+			} else {
+				res.unexportedMethod = name.Name
+			}
+		}
+	}
+	return res
+}
+
+// change returns the kind of change from old to new.
+func (old *interfaceType) change(newType syntaxType) changeKind {
+	newi, ok := newType.(*interfaceType)
+	if !ok {
+		return changeBreaking
+	}
+	changes := old.methods.changes(newi.methods)
+	res := changeOther
+	for _, kind := range changes {
+		if kind == changeBreaking {
+			return changeBreaking
+		}
+		if kind == changeCallCompatible {
+			// If the interface doesn't have an unexported method, then other packages
+			// can implement its methods, not just call them. Thus even if a method signature
+			// changes call-compatibly, that's still a breaking change.
+			if old.unexportedMethod == "" {
+				return changeBreaking
+			}
+			res = changeCallCompatible
+		}
+	}
+	if old.unexportedMethod == "" {
+		// Adding any method, exported or not, to an interface without an unexported
+		// method is a breaking change.
+		if newi.unexportedMethod != "" {
+			return changeBreaking
+		}
+		for nm := range newi.methods.symbols {
+			if _, ok := old.methods.symbols[nm]; !ok {
+				return changeBreaking
+			}
 		}
 	}
 	return res
