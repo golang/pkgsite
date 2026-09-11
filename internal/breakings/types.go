@@ -4,7 +4,7 @@
 
 // This file contains syntax-only representations of types.
 
-package api
+package breakings
 
 import (
 	"fmt"
@@ -141,6 +141,13 @@ type symbolSet struct {
 	parentName string
 }
 
+func newSymbolSet(parentName string) *symbolSet {
+	return &symbolSet{
+		parentName: parentName,
+		symbols:    make(map[string]syntaxType),
+	}
+}
+
 // changes returns the map of breaking changes from old to new.
 // It assumes that all the symbols in both sets are exported.
 func (old *symbolSet) changes(newSet *symbolSet) map[string]changeKind {
@@ -165,7 +172,7 @@ type interfaceType struct {
 
 // newInterfaceType constructs an interfaceType from an ast.InterfaceType.
 func newInterfaceType(it *ast.InterfaceType) *interfaceType {
-	res := &interfaceType{methods: &symbolSet{symbols: map[string]syntaxType{}}}
+	res := &interfaceType{methods: newSymbolSet("")}
 	if it.Methods != nil {
 		for _, m := range it.Methods.List {
 			if len(m.Names) == 0 {

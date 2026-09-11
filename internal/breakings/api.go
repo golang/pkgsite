@@ -2,9 +2,9 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// Package api finds the API of a package: the set of exported
+// Package breakings finds the API of a package: the set of exported
 // symbols and their types.
-package api
+package breakings
 
 import (
 	"bytes"

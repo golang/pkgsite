@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-package api
+package breakings
 
 import (
 	"go/ast"
@@ -13,38 +13,52 @@ import (
 	"testing"
 )
 
-func TestSimpleType(t *testing.T) {
-	parse := func(src string) *simpleType {
-		t.Helper()
-		expr, err := parser.ParseExpr(src)
-		if err != nil {
-			t.Fatalf("parser.ParseExpr(%q): %v", src, err)
-		}
-		return newSimpleType(expr)
+// parseType parses src as a Go type or declaration and returns its syntaxType.
+func parseType(t *testing.T, src string) syntaxType {
+	t.Helper()
+	expr, err := parser.ParseExpr(src)
+	if err == nil {
+		return newType(expr)
 	}
+	fset := token.NewFileSet()
+	f, err := parser.ParseFile(fset, "p.go", "package p\n"+src, 0)
+	if err != nil {
+		t.Fatalf("parsing %s: %v", src, err)
+	}
+	switch d := f.Decls[0].(type) {
+	case *ast.FuncDecl:
+		return newType(d.Type)
+	case *ast.GenDecl:
+		return newType(d.Specs[0].(*ast.TypeSpec).Type)
+	default:
+		t.Fatalf("unknown decl %T", d)
+		panic("unreachable")
+	}
+}
 
+func TestSimpleType(t *testing.T) {
 	testCases := []struct {
 		name string
-		old  *simpleType
-		new  *simpleType
+		old  syntaxType
+		new  syntaxType
 		want changeKind
 	}{
 		{
 			name: "same",
-			old:  parse("int"),
-			new:  parse("int"),
+			old:  parseType(t, "int"),
+			new:  parseType(t, "int"),
 			want: changeOther,
 		},
 		{
 			name: "different",
-			old:  parse("int"),
-			new:  parse("string"),
+			old:  parseType(t, "int"),
+			new:  parseType(t, "string"),
 			want: changeBreaking,
 		},
 		{
 			name: "both empty",
-			old:  &simpleType{},
-			new:  &simpleType{},
+			old:  newSimpleType(nil),
+			new:  newSimpleType(nil),
 			want: changeOther,
 		},
 	}
@@ -61,7 +75,7 @@ func TestSimpleType(t *testing.T) {
 
 		// non-*simpleType should return changeBreaking
 		ft := &funcType{}
-		s := parse("int")
+		s := parseType(t, "int")
 		if got := s.change(ft); got != changeBreaking {
 			t.Errorf("expected s.change(funcType) to be changeBreaking, got %v", got)
 		}
@@ -165,7 +179,7 @@ func TestFuncType(t *testing.T) {
 		}
 
 		// non-*funcType should return false
-		st := &simpleType{}
+		st := newSimpleType(nil)
 		if ft1.equal(st) {
 			t.Errorf("expected ft1.equal(simpleType) to be false")
 		}
@@ -246,7 +260,7 @@ func TestFuncType(t *testing.T) {
 		}
 
 		// non-*funcType should return changeBreaking
-		st := &simpleType{}
+		st := newSimpleType(nil)
 		oldFT := newFuncType(parseFuncType("func f()"))
 		if got := oldFT.change(st); got != changeBreaking {
 			t.Errorf("expected oldFT.change(simpleType) to be changeBreaking, got %v", got)
@@ -266,34 +280,17 @@ func TestNewSimpleType(t *testing.T) {
 }
 
 func TestSymbolSetChange(t *testing.T) {
-	parseFunc := func(decl string) *funcType {
-		fset := token.NewFileSet()
-		f, err := parser.ParseFile(fset, "p.go", "package p\n"+decl, 0)
-		if err != nil {
-			t.Fatalf("parser.ParseFile(%q): %v", decl, err)
-		}
-		return newFuncType(f.Decls[0].(*ast.FuncDecl).Type)
-	}
+	oldSet := newSymbolSet("T")
+	oldSet.symbols["Removed"] = newSimpleType(ast.NewIdent("int"))
+	oldSet.symbols["Unchanged"] = newSimpleType(ast.NewIdent("string"))
+	oldSet.symbols["ChangedBreaking"] = newSimpleType(ast.NewIdent("int"))
+	oldSet.symbols["ChangedCompatible"] = parseType(t, "func ChangedCompatible(x int)")
 
-	oldSet := &symbolSet{
-		parentName: "T",
-		symbols: map[string]syntaxType{
-			"Removed":           &simpleType{typeString: "int"},
-			"Unchanged":         &simpleType{typeString: "string"},
-			"ChangedBreaking":   &simpleType{typeString: "int"},
-			"ChangedCompatible": parseFunc("func ChangedCompatible(x int)"),
-		},
-	}
-
-	newSet := &symbolSet{
-		parentName: "T",
-		symbols: map[string]syntaxType{
-			"Unchanged":         &simpleType{typeString: "string"},
-			"ChangedBreaking":   &simpleType{typeString: "bool"},
-			"ChangedCompatible": parseFunc("func ChangedCompatible(x int, y ...string)"),
-			"Added":             &simpleType{typeString: "float64"},
-		},
-	}
+	newSet := newSymbolSet("T")
+	newSet.symbols["Unchanged"] = newSimpleType(ast.NewIdent("string"))
+	newSet.symbols["ChangedBreaking"] = newSimpleType(ast.NewIdent("bool"))
+	newSet.symbols["ChangedCompatible"] = parseType(t, "func ChangedCompatible(x int, y ...string)")
+	newSet.symbols["Added"] = newSimpleType(ast.NewIdent("float64"))
 
 	want := map[string]changeKind{
 		"T.Removed":           changeBreaking,
@@ -308,80 +305,70 @@ func TestSymbolSetChange(t *testing.T) {
 }
 
 func TestInterfaceType(t *testing.T) {
-	parseInterface := func(src string) *interfaceType {
-		fset := token.NewFileSet()
-		f, err := parser.ParseFile(fset, "p.go", "package p\ntype I "+src, 0)
-		if err != nil {
-			t.Fatalf("parser.ParseFile(%q): %v", src, err)
-		}
-		ts := f.Decls[0].(*ast.GenDecl).Specs[0].(*ast.TypeSpec)
-		return newInterfaceType(ts.Type.(*ast.InterfaceType))
-	}
-
 	testCases := []struct {
 		name string
-		old  *interfaceType
-		new  *interfaceType
+		old  syntaxType
+		new  syntaxType
 		want changeKind
 	}{
 		{
 			name: "empty to empty",
-			old:  parseInterface("interface{}"),
-			new:  parseInterface("interface{}"),
+			old:  parseType(t, "interface{}"),
+			new:  parseType(t, "interface{}"),
 			want: changeOther,
 		},
 		{
 			name: "same method",
-			old:  parseInterface("interface{ M() }"),
-			new:  parseInterface("interface{ M() }"),
+			old:  parseType(t, "interface{ M() }"),
+			new:  parseType(t, "interface{ M() }"),
 			want: changeOther,
 		},
 		{
 			name: "add exported method to interface without unexported method",
-			old:  parseInterface("interface{ M() }"),
-			new:  parseInterface("interface{ M(); Added() }"),
+			old:  parseType(t, "interface{ M() }"),
+			new:  parseType(t, "interface{ M(); Added() }"),
 			want: changeBreaking,
 		},
 		{
 			name: "add exported method to interface with unexported method",
-			old:  parseInterface("interface{ M(); m() }"),
-			new:  parseInterface("interface{ M(); Added(); m() }"),
+			old:  parseType(t, "interface{ M(); m() }"),
+			new:  parseType(t, "interface{ M(); Added(); m() }"),
 			want: changeOther,
 		},
 		{
 			name: "add unexported method to interface without unexported method",
-			old:  parseInterface("interface{ A() }"),
-			new:  parseInterface("interface{ A(); m() }"),
+			old:  parseType(t, "interface{ A() }"),
+			new:  parseType(t, "interface{ A(); m() }"),
 			want: changeBreaking,
 		},
 		{
 			name: "add unexported method to interface with unexported method",
-			old:  parseInterface("interface{ A(); m() }"),
-			new:  parseInterface("interface{ A(); m(); m2() }"),
+			old:  parseType(t, "interface{ A(); m() }"),
+			new:  parseType(t, "interface{ A(); m(); m2() }"),
 			want: changeOther,
 		},
 		{
 			name: "call-compatible change to interface without unexported method",
-			old:  parseInterface("interface{ ChangedCompatible(x int) }"),
-			new:  parseInterface("interface{ ChangedCompatible(x int, y ...string) }"),
+			old:  parseType(t, "interface{ ChangedCompatible(x int) }"),
+			new:  parseType(t, "interface{ ChangedCompatible(x int, y ...string) }"),
 			want: changeBreaking,
 		},
 		{
 			name: "call-compatible change to interface with unexported method",
-			old:  parseInterface("interface{ ChangedCompatible(x int); m() }"),
-			new:  parseInterface("interface{ ChangedCompatible(x int, y ...string); m() }"),
+			old:  parseType(t, "interface{ ChangedCompatible(x int); m() }"),
+			new:  parseType(t, "interface{ ChangedCompatible(x int, y ...string); m() }"),
 			want: changeCallCompatible,
 		},
 		{
 			name: "remove method",
-			old:  parseInterface("interface{ M(); Removed() }"),
-			new:  parseInterface("interface{ M() }"),
+			old:  parseType(t, "interface{ M(); Removed() }"),
+			new:  parseType(t, "interface{ M() }"),
 			want: changeBreaking,
 		},
 		{
 			name: "change method signature breaking",
-			old:  parseInterface("interface{ M(x int) }"),
-			new:  parseInterface("interface{ M(x string) }"),
+			old:  parseType(t, "interface{ M(x int) }"),
+			new:  parseType(t, "interface{ M(x string) }"),
 			want: changeBreaking,
 		},
 	}
@@ -396,8 +383,8 @@ func TestInterfaceType(t *testing.T) {
 	}
 
 	t.Run("non-*interfaceType returns changeBreaking", func(t *testing.T) {
-		it := parseInterface("interface{ M() }")
-		st := &simpleType{typeString: "int"}
+		it := parseType(t, "interface{ M() }")
+		st := newSimpleType(ast.NewIdent("int"))
 		if got := it.change(st); got != changeBreaking {
 			t.Errorf("it.change(simpleType) = %v, want %v", got, changeBreaking)
 		}
