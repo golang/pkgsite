@@ -45,12 +45,7 @@ func main() {
 	stdlib.SetGoRepoPath(*goRepoPath)
 
 	ctx := context.Background()
-	server, err := pkgsite.BuildServer(ctx, pkgsite.ServerConfig{
-		GoDocMode:      true,
-		UseListedMods:  true,
-		UseLocalStdlib: true,
-		GoRepoPath:     *goRepoPath,
-	})
+	server, err := pkgsite.BuildServer(ctx, serverConfig(*goRepoPath))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -74,6 +69,22 @@ func main() {
 	mw := timeout.Timeout(54 * time.Second)
 	srv := &http.Server{Addr: *addr, Handler: mw(router)}
 	log.Fatal(srv.Serve(ln))
+}
+
+// serverConfig returns the configuration of the documentation server.
+// goRepoPath is the GOROOT whose standard library the server serves.
+func serverConfig(goRepoPath string) pkgsite.ServerConfig {
+	// Do not add UseCache or Proxy here without reading BuildServer first.
+	// Either one cancels the default that serves the module in the current
+	// directory, which is the module the user is editing, and either one adds a
+	// getter that cannot serve the module path "std" ahead of the getter that
+	// can.
+	return pkgsite.ServerConfig{
+		GoDocMode:      true,
+		UseListedMods:  true,
+		UseLocalStdlib: true,
+		GoRepoPath:     goRepoPath,
+	}
 }
 
 // docLogger is a simple logger that prints the payload
