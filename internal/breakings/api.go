@@ -19,6 +19,79 @@ import (
 	"golang.org/x/tools/go/ast/astutil"
 )
 
+// defs holds all the top-level type and method definitions in a package.
+type defs struct {
+	types   map[string]*ast.TypeSpec   // all top-level types by name
+	methods map[string][]*ast.FuncDecl // exported methods by type name
+}
+
+func newDefs(files []*ast.File) (*defs, error) {
+	defs := &defs{
+		types:   map[string]*ast.TypeSpec{},
+		methods: map[string][]*ast.FuncDecl{},
+	}
+	for _, file := range files {
+		for _, decl := range file.Decls {
+			switch decl := decl.(type) {
+			case *ast.FuncDecl:
+				// We only want exported methods.
+				if decl.Recv != nil && decl.Name.IsExported() {
+					name, _ := baseTypeName(decl.Recv.List[0].Type)
+					if name == "" {
+						return nil, fmt.Errorf("bad receiver: %+v", decl.Recv)
+					}
+					defs.methods[name] = append(defs.methods[name], decl)
+				}
+			case *ast.GenDecl:
+				if decl.Tok != token.TYPE {
+					continue
+				}
+				for _, spec := range decl.Specs {
+					spec := spec.(*ast.TypeSpec)
+					if spec.Assign.IsValid() {
+						return nil, fmt.Errorf("type aliases are not implemented")
+					}
+					defs.types[spec.Name.Name] = spec
+				}
+			}
+		}
+	}
+	return defs, nil
+}
+
+// typeFor returns the TypeSpec for the type with the given name,
+// or nil if there is none.
+func (d *defs) typeFor(name string) *ast.TypeSpec {
+	if d == nil {
+		return nil
+	}
+	return d.types[name]
+}
+
+// baseTypeName returns the base type name of an expression (e.g. an embedded field or receiver).
+// It returns the empty string if there is no base name.
+// It also reports whether there was a selector expression.
+func baseTypeName(typeExpr ast.Expr) (string, bool) {
+	for {
+		switch t := typeExpr.(type) {
+		case *ast.ParenExpr:
+			typeExpr = t.X
+		case *ast.StarExpr:
+			typeExpr = t.X
+		case *ast.IndexExpr:
+			typeExpr = t.X
+		case *ast.IndexListExpr:
+			typeExpr = t.X
+		case *ast.SelectorExpr:
+			return t.Sel.Name, true
+		case *ast.Ident:
+			return t.Name, false
+		default:
+			return "", false
+		}
+	}
+}
+
 // typeString returns a string for the given type expression that represents the type.
 // If two such strings are equal, then the corresponding types are equal.
 // typeString returns "?" if typeExpr is nil.

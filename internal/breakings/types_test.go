@@ -18,7 +18,7 @@ func parseType(t *testing.T, src string) syntaxType {
 	t.Helper()
 	expr, err := parser.ParseExpr(src)
 	if err == nil {
-		return newType(expr)
+		return newType(expr, nil)
 	}
 	fset := token.NewFileSet()
 	f, err := parser.ParseFile(fset, "p.go", "package p\n"+src, 0)
@@ -27,9 +27,9 @@ func parseType(t *testing.T, src string) syntaxType {
 	}
 	switch d := f.Decls[0].(type) {
 	case *ast.FuncDecl:
-		return newType(d.Type)
+		return newType(d.Type, nil)
 	case *ast.GenDecl:
-		return newType(d.Specs[0].(*ast.TypeSpec).Type)
+		return newType(d.Specs[0].(*ast.TypeSpec).Type, nil)
 	default:
 		t.Fatalf("unknown decl %T", d)
 		panic("unreachable")
@@ -393,6 +393,189 @@ func TestInterfaceType(t *testing.T) {
 
 func TestStructType(t *testing.T) {
 	testCases := []struct {
+		name    string
+		src     string
+		wantTop []string
+		wantSel []string
+	}{
+		{
+			name:    "empty",
+			src:     `type S struct{}`,
+			wantTop: nil,
+			wantSel: nil,
+		},
+		{
+			name:    "top-level exported fields",
+			src:     `type S struct { A int; B string }`,
+			wantTop: []string{"A", "B"},
+			wantSel: []string{"A", "B"},
+		},
+		{
+			name:    "unexported fields ignored",
+			src:     `type S struct { a int; B string; c bool }`,
+			wantTop: []string{"B"},
+			wantSel: []string{"B"},
+		},
+		{
+			name:    "multiple names in single field",
+			src:     `type S struct { A, B int; c, D string }`,
+			wantTop: []string{"A", "B", "D"},
+			wantSel: []string{"A", "B", "D"},
+		},
+		{
+			name: "simple embedded struct",
+			src: `
+type E struct { X int; y bool }
+type S struct { E; A string }`,
+			wantTop: []string{"A", "E"},
+			wantSel: []string{"A", "E", "X"},
+		},
+		{
+			name: "embedded unexported struct with exported fields",
+			src: `
+type e struct { X int }
+type S struct { e; A string }`,
+			wantTop: []string{"A"},
+			wantSel: []string{"A", "X"},
+		},
+		{
+			name: "embedded non-struct type",
+			src: `
+type MyInt int
+type S struct { MyInt; A string }`,
+			wantTop: []string{"A", "MyInt"},
+			wantSel: []string{"A", "MyInt"},
+		},
+		{
+			name:    "embedded external package type",
+			src:     `type S struct { pkg.T; A string }`,
+			wantTop: []string{"A", "T"},
+			wantSel: []string{"A", "T"},
+		},
+		{
+			name: "shadowing depth 0 over depth 1",
+			src: `
+type E struct { A int; B int }
+type S struct { A string; E }`,
+			wantTop: []string{"A", "E"},
+			wantSel: []string{"A", "B", "E"},
+		},
+		{
+			name: "shadowing depth 1 over depth 2",
+			src: `
+type Inner struct { X int; Y int }
+type Mid struct { Inner; X string }
+type S struct { Mid }`,
+			wantTop: []string{"Mid"},
+			wantSel: []string{"Inner", "Mid", "X", "Y"},
+		},
+		{
+			name: "duplicate at depth 1",
+			src: `
+type E1 struct { A int; B int }
+type E2 struct { B int; C int }
+type S struct { E1; E2 }`,
+			wantTop: []string{"E1", "E2"},
+			wantSel: []string{"A", "C", "E1", "E2"},
+		},
+		{
+			name: "duplicate at depth 1 invalidates unique at depth 2",
+			src: `
+type E1 struct { X int }
+type E2 struct { X int }
+type Inner struct { X int; Y int }
+type Mid struct { Inner }
+type S struct { E1; E2; Mid }`,
+			wantTop: []string{"E1", "E2", "Mid"},
+			wantSel: []string{"E1", "E2", "Inner", "Mid", "Y"},
+		},
+		{
+			name: "duplicate at depth 1 does not invalidate depth 0",
+			src: `
+type E1 struct { A int }
+type E2 struct { A int }
+type S struct { A string; E1; E2 }`,
+			wantTop: []string{"A", "E1", "E2"},
+			wantSel: []string{"A", "E1", "E2"},
+		},
+		{
+			name: "duplicate at depth 2",
+			src: `
+type Inner1 struct { X int }
+type Inner2 struct { X int }
+type Mid1 struct { Inner1 }
+type Mid2 struct { Inner2 }
+type S struct { Mid1; Mid2 }`,
+			wantTop: []string{"Mid1", "Mid2"},
+			wantSel: []string{"Inner1", "Inner2", "Mid1", "Mid2"},
+		},
+		{
+			name: "diamond embedding",
+			src: `
+type Base struct { A int; B int }
+type D1 struct { Base; C int }
+type D2 struct { Base; D int }
+type S struct { D1; D2 }`,
+			wantTop: []string{"D1", "D2"},
+			wantSel: []string{"C", "D", "D1", "D2"},
+		},
+		{
+			name: "cycle",
+			src: `
+type A struct { *B }
+type B struct { *A }
+type S struct { A }`,
+			wantTop: []string{"A"},
+			wantSel: []string{"A", "B"},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			fset := token.NewFileSet()
+			f, err := parser.ParseFile(fset, "p.go", "package p\n"+tc.src, 0)
+			if err != nil {
+				t.Fatalf("parser.ParseFile: %v", err)
+			}
+			defs, err := newDefs([]*ast.File{f})
+			if err != nil {
+				t.Fatalf("newDefs: %v", err)
+			}
+			spec, ok := defs.types["S"]
+			if !ok {
+				t.Fatalf("type S not found")
+			}
+			st, ok := spec.Type.(*ast.StructType)
+			if !ok {
+				t.Fatalf("type S is not a struct: %T", spec.Type)
+			}
+			got := newStructType(st, defs)
+			gotTop := symbolNames(got.topLevelFields)
+			gotSel := symbolNames(got.selectableFields)
+			if !slices.Equal(gotTop, tc.wantTop) {
+				t.Errorf("topLevelFields = %v, want %v", gotTop, tc.wantTop)
+			}
+			if !slices.Equal(gotSel, tc.wantSel) {
+				t.Errorf("selectableFields = %v, want %v", gotSel, tc.wantSel)
+			}
+		})
+	}
+}
+
+func symbolNames(s *symbolSet) []string {
+	if s == nil || len(s.symbols) == 0 {
+		return nil
+	}
+	var names []string
+	for name := range s.symbols {
+		names = append(names, name)
+	}
+	slices.Sort(names)
+	return names
+}
+
+func TestStructTypeChange(t *testing.T) {
+	testCases := []struct {
 		name string
 		old  string
 		new  string
@@ -500,69 +683,70 @@ func TestStructType(t *testing.T) {
 	}
 }
 
-func TestEmbeddedFieldName(t *testing.T) {
+func TestBaseTypeName(t *testing.T) {
 	testCases := []struct {
-		expr string
-		want string
+		expr    string
+		want    string
+		wantSel bool
 	}{
 		// Identifiers
-		{"T", "T"},
-		{"t", "t"},
-		{"_", "_"},
+		{"T", "T", false},
+		{"t", "t", false},
+		{"_", "_", false},
 
 		// Qualified identifiers
-		{"pkg.T", "T"},
-		{"pkg.t", "t"},
+		{"pkg.T", "T", true},
+		{"pkg.t", "t", true},
 
 		// Pointer types
-		{"*T", "T"},
-		{"*pkg.T", "T"},
-		{"**T", "T"},
+		{"*T", "T", false},
+		{"*pkg.T", "T", true},
+		{"**T", "T", false},
 
 		// Generic types with single type argument
-		{"T[int]", "T"},
-		{"pkg.T[int]", "T"},
-		{"*T[int]", "T"},
-		{"*pkg.T[int]", "T"},
-		{"T[pkg.U]", "T"},
-		{"T[[]int]", "T"},
-		{"T[*int]", "T"},
-		{"T[map[string]int]", "T"},
+		{"T[int]", "T", false},
+		{"pkg.T[int]", "T", true},
+		{"*T[int]", "T", false},
+		{"*pkg.T[int]", "T", true},
+		{"T[pkg.U]", "T", false},
+		{"T[[]int]", "T", false},
+		{"T[*int]", "T", false},
+		{"T[map[string]int]", "T", false},
 
 		// Generic types with multiple type arguments
-		{"T[int, string]", "T"},
-		{"pkg.T[int, string]", "T"},
-		{"*T[int, string]", "T"},
-		{"*pkg.T[int, string]", "T"},
-		{"T[K, V, any]", "T"},
+		{"T[int, string]", "T", false},
+		{"pkg.T[int, string]", "T", true},
+		{"*T[int, string]", "T", false},
+		{"*pkg.T[int, string]", "T", true},
+		{"T[K, V, any]", "T", false},
 
 		// Parenthesized types
-		{"(T)", "T"},
-		{"*(T)", "T"},
-		{"(*T)", "T"},
-		{"(pkg.T)", "T"},
-		{"*(pkg.T)", "T"},
-		{"(*pkg.T)", "T"},
-		{"(T[int])", "T"},
-		{"*(T[int])", "T"},
-		{"(*T[int])", "T"},
-		{"*(pkg.T[int, string])", "T"},
-		{"(*pkg.T[int, string])", "T"},
+		{"(T)", "T", false},
+		{"*(T)", "T", false},
+		{"(*T)", "T", false},
+		{"(pkg.T)", "T", true},
+		{"*(pkg.T)", "T", true},
+		{"(*pkg.T)", "T", true},
+		{"(T[int])", "T", false},
+		{"*(T[int])", "T", false},
+		{"(*T[int])", "T", false},
+		{"*(pkg.T[int, string])", "T", true},
+		{"(*pkg.T[int, string])", "T", true},
 
 		// Non-embedded types (should return "")
-		{"[]int", ""},
-		{"[10]int", ""},
-		{"map[string]int", ""},
-		{"chan int", ""},
-		{"<-chan int", ""},
-		{"chan<- int", ""},
-		{"func()", ""},
-		{"func(int) bool", ""},
-		{"interface{}", ""},
-		{"struct{}", ""},
-		{"*[]int", ""},
-		{"*[10]int", ""},
-		{"123", ""},
+		{"[]int", "", false},
+		{"[10]int", "", false},
+		{"map[string]int", "", false},
+		{"chan int", "", false},
+		{"<-chan int", "", false},
+		{"chan<- int", "", false},
+		{"func()", "", false},
+		{"func(int) bool", "", false},
+		{"interface{}", "", false},
+		{"struct{}", "", false},
+		{"*[]int", "", false},
+		{"*[10]int", "", false},
+		{"123", "", false},
 	}
 
 	for _, tc := range testCases {
@@ -571,16 +755,16 @@ func TestEmbeddedFieldName(t *testing.T) {
 			if err != nil {
 				t.Fatalf("parser.ParseExpr(%q): %v", tc.expr, err)
 			}
-			got := embeddedFieldName(expr)
-			if got != tc.want {
-				t.Errorf("embeddedFieldName(%s) = %q, want %q", tc.expr, got, tc.want)
+			got, gotSel := baseTypeName(expr)
+			if got != tc.want || gotSel != tc.wantSel {
+				t.Errorf("baseTypeName(%s) = (%q, %t), want (%q, %t)", tc.expr, got, gotSel, tc.want, tc.wantSel)
 			}
 		})
 	}
 
 	t.Run("nil", func(t *testing.T) {
-		if got := embeddedFieldName(nil); got != "" {
-			t.Errorf("embeddedFieldName(nil) = %q, want \"\"", got)
+		if got, gotSel := baseTypeName(nil); got != "" || gotSel {
+			t.Errorf("baseTypeName(nil) = (%q, %t), want (\"\", false)", got, gotSel)
 		}
 	})
 }

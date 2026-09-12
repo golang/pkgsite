@@ -5,10 +5,17 @@
 package breakings
 
 import (
+	"fmt"
 	"go/ast"
 	"go/parser"
 	"go/token"
+	"path/filepath"
+	"slices"
+	"strings"
 	"testing"
+
+	"github.com/google/go-cmp/cmp"
+	"golang.org/x/tools/txtar"
 )
 
 func TestTypeString(t *testing.T) {
@@ -130,4 +137,83 @@ func TestTypeString(t *testing.T) {
 	if got, want := typeString(nil), "?"; got != want {
 		t.Errorf("typeString(nil) = %q, want %q", got, want)
 	}
+}
+
+func TestDefs(t *testing.T) {
+	ar, err := txtar.ParseFile(filepath.Join("testdata", "defs.txtar"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	want, files := parseDefsTxtar(t, ar)
+
+	d, err := newDefs(files)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var gotTypes []string
+	for name := range d.types {
+		gotTypes = append(gotTypes, name)
+	}
+	slices.Sort(gotTypes)
+
+	var gotMethods []string
+	for typeName, fns := range d.methods {
+		for _, fn := range fns {
+			gotMethods = append(gotMethods, typeName+"."+fn.Name.Name)
+		}
+	}
+	slices.Sort(gotMethods)
+
+	got := fmt.Sprintf("types: %s\nmethods: %s\n", strings.Join(gotTypes, " "), strings.Join(gotMethods, " "))
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("mismatch (-want +got):\n%s", diff)
+	}
+
+	for _, name := range gotTypes {
+		if ts := d.typeFor(name); ts == nil {
+			t.Errorf("typeFor(%q) = nil, want non-nil", name)
+		}
+	}
+	if ts := d.typeFor("NonExistent"); ts != nil {
+		t.Errorf("typeFor(\"NonExistent\") = %v, want nil", ts)
+	}
+	var nilDefs *defs
+	if ts := nilDefs.typeFor("A"); ts != nil {
+		t.Errorf("nilDefs.typeFor(\"A\") = %v, want nil", ts)
+	}
+}
+
+// parseDefsTxtar parses a txtar archive for TestDefs.
+//
+// The archive is expected to have the following file organization:
+//   - A "want" file containing the expected types and methods:
+//     types: <space-separated list of expected type names>
+//     methods: <space-separated list of expected methods in Type.Method format>
+//   - One or more Go source files (with names ending in ".go") representing
+//     the package files to be parsed into ASTs.
+func parseDefsTxtar(t *testing.T, ar *txtar.Archive) (string, []*ast.File) {
+	t.Helper()
+	var (
+		want  string
+		files []*ast.File
+		fset  = token.NewFileSet()
+	)
+	for _, f := range ar.Files {
+		switch {
+		case f.Name == "want":
+			want = string(f.Data)
+		case strings.HasSuffix(f.Name, ".go"):
+			file, err := parser.ParseFile(fset, f.Name, f.Data, 0)
+			if err != nil {
+				t.Fatalf("parsing %s: %v", f.Name, err)
+			}
+			files = append(files, file)
+		}
+	}
+	if want == "" {
+		t.Fatal("archive missing \"want\" file")
+	}
+	return want, files
 }

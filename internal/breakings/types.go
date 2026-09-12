@@ -7,6 +7,7 @@
 package breakings
 
 import (
+	"cmp"
 	"fmt"
 	"go/ast"
 	"slices"
@@ -44,14 +45,14 @@ type syntaxType interface {
 }
 
 // newType constructs a syntaxType from an ast.Expr.
-func newType(e ast.Expr) syntaxType {
+func newType(e ast.Expr, defs *defs) syntaxType {
 	switch e := ast.Unparen(e).(type) {
 	case *ast.FuncType:
 		return newFuncType(e)
 	case *ast.InterfaceType:
-		return newInterfaceType(e)
+		return newInterfaceType(e, defs)
 	case *ast.StructType:
-		return newStructType(e)
+		return newStructType(e, defs)
 	default:
 		return newSimpleType(e)
 	}
@@ -173,7 +174,7 @@ type interfaceType struct {
 }
 
 // newInterfaceType constructs an interfaceType from an ast.InterfaceType.
-func newInterfaceType(it *ast.InterfaceType) *interfaceType {
+func newInterfaceType(it *ast.InterfaceType, defs *defs) *interfaceType {
 	res := &interfaceType{methods: newSymbolSet("")}
 	if it.Methods != nil {
 		for _, m := range it.Methods.List {
@@ -184,7 +185,7 @@ func newInterfaceType(it *ast.InterfaceType) *interfaceType {
 			// There is only one name
 			name := m.Names[0]
 			if name.IsExported() {
-				res.methods.symbols[name.Name] = newType(m.Type)
+				res.methods.symbols[name.Name] = newType(m.Type, defs)
 			} else {
 				res.unexportedMethod = name.Name
 			}
@@ -232,27 +233,93 @@ func (old *interfaceType) change(newType syntaxType) changeKind {
 
 // structType is the type of a struct.
 type structType struct {
-	fields *symbolSet // top-level exported fields
+	topLevelFields   *symbolSet // top-level exported fields
+	selectableFields *symbolSet // fields that can be selected, at any depth
 }
 
 // newStructType constructs a structType from an ast.StructType.
-func newStructType(st *ast.StructType) *structType {
-	fields := newSymbolSet("")
+func newStructType(st *ast.StructType, defs *defs) *structType {
+	topFields := newSymbolSet("")
+	selFields := newSymbolSet("")
+
+	// Get the selectable exported fields.
+	// This algorithm is the clearest one I can think of, but not the most efficient.
+	// That's OK: structs rarely have lots of embedding.
+	//
+	// Get all the exported fields.
+	fields := appendExportedFields(st, defs, 0, nil, map[*ast.StructType]bool{st: true})
+	// Sort by depth and name.
+	slices.SortFunc(fields, func(f1, f2 *field) int {
+		if f1.depth != f2.depth {
+			return cmp.Compare(f1.depth, f2.depth)
+		}
+		return cmp.Compare(f1.name, f2.name)
+	})
+	// Keep each field if it is unique at its highest level.
+	// We can't use slices.CompactFunc, because a duplicate at level N invalidates
+	// the field for level N+1 and higher, even if those occurrences are unique.
+	dups := map[string]bool{}
+	for i, f := range fields {
+		if _, ok := selFields.symbols[f.name]; ok {
+			continue
+		}
+		if dups[f.name] {
+			continue
+		}
+		if i+1 < len(fields) && fields[i+1].depth == f.depth && fields[i+1].name == f.name {
+			dups[f.name] = true
+			continue
+		}
+		// We haven't seen this name before and it's not a duplicate, so it's a selectable field.
+		stype := newType(f.typeExpr, defs)
+		selFields.symbols[f.name] = stype
+		if f.depth == 0 {
+			topFields.symbols[f.name] = stype
+		}
+	}
+	return &structType{topLevelFields: topFields, selectableFields: selFields}
+}
+
+type field struct {
+	name     string
+	typeExpr ast.Expr
+	depth    int
+}
+
+// appendExportedFields appends all the exported fields of st to fields.
+// It descends into embedded structs.
+func appendExportedFields(st *ast.StructType, defs *defs, depth int, fields []*field, seen map[*ast.StructType]bool) []*field {
 	for _, f := range st.Fields.List {
 		if len(f.Names) == 0 { // embedded field
-			name := embeddedFieldName(f.Type)
+			name, hasSel := baseTypeName(f.Type)
 			if ast.IsExported(name) {
-				fields.symbols[name] = newType(f.Type)
+				fields = append(fields, &field{name, f.Type, depth})
 			}
+			// Exported or not, an embedded struct's exported fields may be visible.
+			if ts := defs.typeFor(name); ts == nil {
+				// We don't know this type: another package or a file we were't given.
+				// This can result in wrong answers: selectable fields that we miss,
+				// or ones we include but that would have been cancelled out by same-named
+				// fields at the same depth. We'll live with all that.
+			} else if embeddedSt, ok := ts.Type.(*ast.StructType); ok && !hasSel {
+				// A struct type from this package. We know it's from this package because there was no selector modifying the base name: we didn't see something like
+				//    struct { pkg.T ... }
+				if !seen[embeddedSt] {
+					seen[embeddedSt] = true
+					fields = appendExportedFields(embeddedSt, defs, depth+1, fields, seen)
+					delete(seen, embeddedSt)
+				}
+			}
+			// An embedded non-struct. Ignore it.
 		} else {
 			for _, name := range f.Names {
 				if name.IsExported() {
-					fields.symbols[name.Name] = newType(f.Type)
+					fields = append(fields, &field{name.Name, f.Type, depth})
 				}
 			}
 		}
 	}
-	return &structType{fields: fields}
+	return fields
 }
 
 // change returns the kind of change from old to new.
@@ -276,7 +343,7 @@ func (old *structType) change(newType syntaxType) changeKind {
 	// for identity, we're comparing a struct type across two versions of a package.
 	// The two different types can't exist in the same program at the same time,
 	// so there is no way to compare them.
-	changes := old.fields.changes(news.fields)
+	changes := old.topLevelFields.changes(news.topLevelFields)
 	// Any breaking change in the fields is a breaking change for the entire struct.
 	// A call-compatible change could happen if a field has function type, and that function
 	// type was changed call-compatibly. But that is really a breaking change, because users
@@ -287,30 +354,4 @@ func (old *structType) change(newType syntaxType) changeKind {
 		return changeBreaking
 	}
 	return changeOther
-}
-
-// embeddedFieldName returns the name of an embedded struct field given its type expression.
-// It returns the empty string if typeExpr cannot be an embedded field.
-func embeddedFieldName(typeExpr ast.Expr) string {
-	for {
-		switch t := typeExpr.(type) {
-		case *ast.ParenExpr:
-			typeExpr = t.X
-		case *ast.StarExpr:
-			typeExpr = t.X
-		case *ast.IndexExpr:
-			typeExpr = t.X
-		case *ast.IndexListExpr:
-			typeExpr = t.X
-		case *ast.SelectorExpr:
-			if t.Sel != nil {
-				return t.Sel.Name
-			}
-			return ""
-		case *ast.Ident:
-			return t.Name
-		default:
-			return ""
-		}
-	}
 }
