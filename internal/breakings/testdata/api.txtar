@@ -1,0 +1,96 @@
+Copyright 2026 The Go Authors. All rights reserved.
+Use of this source code is governed by a BSD-style
+license that can be found in the LICENSE file.
+
+Test file for API.symbols. We just want to verify
+that NewAPI gets all the exported symbols.
+-- want --
+A
+C
+C1
+C3
+C4
+D
+F
+G1
+G2
+GF1
+GF2
+I
+S
+V1
+V3
+V4
+-- a.go --
+package p
+
+type A int
+
+type (
+	b int
+	C int
+)
+
+const C = 1
+
+var D = 2
+
+func F() {
+	type T int
+}
+
+func (A) M() {}
+func (*A) N() {}
+func (A) u() {}
+
+func (b) M() {}
+func (*b) N() {}
+func (*b) u() {}
+
+const (
+	C1 = 1
+	c2 = 2
+	C3, C4 = 3, 4
+)
+
+var (
+	V1 = 1
+	v2 = 2
+	V3, V4 int
+)
+
+type G1[T any] struct {
+	X T
+}
+
+type (
+	G2[T any, U comparable] []T
+	g3[T any] map[T]string
+)
+
+type S struct {
+	X int
+}
+
+type I interface {
+	M()
+}
+
+type sUnexported struct{}
+type iUnexported interface{}
+
+func GF1[T any](x T) T { return x }
+func GF2[T any, U comparable](x T, y U) {}
+func gf3[T any](x T) {}
+
+func (G1[T]) M() {}
+func (*G1[T]) N() {}
+func (G1[T]) u() {}
+
+func f() {}
+func init() {}
+
+const _ = 0
+var _ = 0
+type _ int
+func _() {}

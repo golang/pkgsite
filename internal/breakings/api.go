@@ -12,12 +12,77 @@ import (
 	"go/ast"
 	"go/printer"
 	"go/token"
+	"iter"
 	"reflect"
 	"slices"
 	"strings"
 
 	"golang.org/x/tools/go/ast/astutil"
 )
+
+// An API contains the exported symbols for a package.
+type API struct {
+	packageName string
+	version     string
+	symbols     *symbolSet
+}
+
+// NewAPI constructs an API from the AST of a package.
+func NewAPI(packageName, version string, files []*ast.File) (*API, error) {
+	defs, err := newDefs(files)
+	if err != nil {
+		return nil, err
+	}
+	syms := newSymbolSet()
+	for _, file := range files {
+		for _, decl := range file.Decls {
+			switch decl := decl.(type) {
+			case *ast.FuncDecl:
+				// Exported functions only.
+				if decl.Recv != nil || !decl.Name.IsExported() {
+					continue
+				}
+				syms.symbols[decl.Name.Name] = newFuncType(decl.Type)
+			case *ast.GenDecl:
+				switch decl.Tok {
+				case token.CONST, token.VAR:
+					for _, spec := range decl.Specs {
+						spec := spec.(*ast.ValueSpec)
+						for _, name := range spec.Names {
+							if name.IsExported() {
+								syms.symbols[name.Name] = newType(spec.Type, defs)
+							}
+						}
+					}
+				case token.TYPE:
+					// Top-level named type.
+					for _, spec := range decl.Specs {
+						spec := spec.(*ast.TypeSpec)
+						if spec.Assign.IsValid() {
+							return nil, fmt.Errorf("type aliases are not implemented")
+						}
+						if spec.Name.IsExported() {
+							syms.symbols[spec.Name.Name] = newNamedType(spec, defs)
+						}
+					}
+				}
+			}
+		}
+	}
+	return &API{
+		packageName: packageName,
+		version:     version,
+		symbols:     syms,
+	}, nil
+}
+
+// Changes returns an iterator over the breaking and call-compatible changes between
+// two APIs (which should be two versions of the same package). The first value of
+// each item is the name of the top-level exported symbol, or the dotted name of
+// one of its fields or methods.
+func (old *API) Changes(newa *API) iter.Seq2[string, changeKind] {
+	return old.symbols.changes(newa.symbols)
+}
 
 // defs holds all the top-level type and method definitions in a package.
 type defs struct {

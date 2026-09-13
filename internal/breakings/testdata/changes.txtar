@@ -1,0 +1,255 @@
+Copyright 2026 The Go Authors. All rights reserved.
+Use of this source code is governed by a BSD-style
+license that can be found in the LICENSE file.
+
+Test file for API.Changes.
+
+Comments with no blank before the first word are significant:
+//old				following lines are in the old API
+//new				following lines are in the new API
+//both				following lines are in both APIs
+//breaking SYM ...	there should be a breaking change associated with each SYM
+//cc SYM ...		there should be a call-compatible change associated with each SYM
+
+-- p.go --
+//both
+package p
+
+//new
+import "imp"
+
+//old
+const C int
+//new
+const C bool
+//breaking C
+
+//old
+var V []int
+var V2 []string
+//new
+var V, V2 []string
+//breaking V
+
+//old
+func F(float32) {}
+//new
+func F(float64) {}
+//breaking F
+
+//old
+func CC(float32) {}
+//new
+func CC(float32, ...int) {}
+//cc CC
+
+//old
+type S struct {
+	F int
+	I int
+	H rune // removed
+}
+
+//new
+type S struct {
+	F int
+	I any //  changed
+	G bool // added
+}
+
+//breaking S.H S.I
+
+//old
+type I1 interface {
+	M1()
+	M2(int)
+	M3(int)
+	M4() // breaking: removed
+}
+
+//new
+type I1 interface {
+	M1() // same
+	M2(bool) // change signature
+	M3(int, ...int) // breaking, not cc because users implement interfaces
+	M5() // added: breaking
+}
+
+//breaking I1.M2 I1.M3 I1.M4 I1.M5
+
+//old
+type I2 interface {
+	u() // unexported method, so changes are OK
+	M1()
+	M2(int)
+	M3(int)
+	M4() // breaking: removed
+}
+
+//new
+type I2 interface {
+	u()
+	M1() // same
+	M2(bool) // change signature
+	M3(int, ...int) // cc: users can't implement this interface
+	M5() // added: OK
+}
+
+//breaking I2.M2 I2.M4
+//cc I2.M3
+
+//// methods on named types
+
+//both
+func (S) M1()    {}
+
+//old
+func (*S) M2()   {}
+func (S) M3()    {}
+func (S) M4(int) {}
+
+//new
+func (S) M2()  {} // from pointer to value: OK
+func (*S) M3() {} // from value to pointer: breaking change
+func (S) M4()  {} // signature change
+
+//breaking S.M3 S.M4
+
+//old
+func H(*int) {}
+//new
+func H(imp.X)
+//breaking H
+
+// TODO: handle generic types
+// //old
+// type GT1[T any] []T
+// //new
+// type GT1[E any] []E
+// // OK: just different names for the type param.
+
+// // Type parameter constraint change 
+// //old
+// type GTParamChange[T any] int
+// //new
+// type GTParamChange[T comparable] int
+// //breaking GTParamChange
+
+//old
+type GT2[A, B any] map[A]B
+//new
+type GT2[A, B any] map[B]A
+//breaking GT2
+
+//both
+type GT3[T any] GT1[T]
+//old
+type GT4[T any] GT1[T]
+//new
+type GT4[T any] GT3[T]
+//breaking GT4 
+// GT1 and GT3 are not the same type.
+
+//old
+func GF1[T any](x T) {}
+//new
+func GF1[X any](x X) {}
+// OK: name of type param is different.
+
+//old
+func GF2[A, B any](x A, y B) {}
+
+//new
+func GF2[A, B any](x B, y A) {}
+
+//breaking GF2
+// type params used in opposite order.
+
+
+//old
+func (GT1[T]) M(T) {}
+//new
+func (GT1[U]) M(U) {}
+// OK: renaming
+
+//old
+func (GT2[P, Q]) M(P, Q) {}
+//new
+func (GT2[P, Q]) M(Q, P) {}
+//breaking GT2.M
+
+// TODO: substitute type params in other constraints.
+// //old
+// func GF3[S ~[]T, T comparable](S) {}
+// //new
+// func GF3[S ~[]U, U comparable](S) {}
+// // OK: renaming
+
+//both
+type T2 []GT1[T]
+
+//old
+type T3 []GT1[S]
+//new
+type T3 []GT1[int]
+//breaking T3
+
+//// channels
+
+//both
+type Ch1 chan int
+//old
+type  Ch2 chan int
+//new
+type Ch2 chan []int
+//breaking Ch2
+
+//// symbol removal
+//old
+var RemovedVar int
+//breaking RemovedVar
+
+//// Kind transitions
+//old
+func FuncToVar() {}
+const ConstToVar = 1
+type TypeToVar int
+//new
+var FuncToVar func()
+var ConstToVar = 1
+var TypeToVar int
+//breaking TypeToVar
+// TODO: include type kind with simple types
+
+//old
+type StructToInterface struct{}
+//new
+type StructToInterface interface{}
+//breaking StructToInterface
+
+
+//both
+// Constant value change
+
+//old
+const ConstValChange = 1
+
+//new
+const ConstValChange = 2
+
+//// TODO: Alias transitions
+// //old
+// type AliasToDef = int
+// type DefToAlias int
+
+// //new
+// type AliasToDef int
+// type DefToAlias = int
+
+// //old
+// func G(S) {}
+
+// //new
+// func G(A) {}
+
+// type A = S

@@ -13,6 +13,7 @@ import (
 	"slices"
 	"strings"
 	"testing"
+	"unicode"
 
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/tools/txtar"
@@ -226,4 +227,129 @@ func parseDefsTxtar(t *testing.T, ar *txtar.Archive) (string, []*ast.File) {
 		t.Fatal("archive missing \"want\" file")
 	}
 	return want, files
+}
+
+func TestAPI(t *testing.T) {
+	ar, err := txtar.ParseFile(filepath.Join("testdata", "api.txtar"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var (
+		wantNames []string
+		files     []*ast.File
+		fset      = token.NewFileSet()
+	)
+
+	for _, f := range ar.Files {
+		switch {
+		case f.Name == "want":
+			wantNames = strings.Fields(string(f.Data))
+		case strings.HasSuffix(f.Name, ".go"):
+			file, err := parser.ParseFile(fset, f.Name, f.Data, 0)
+			if err != nil {
+				t.Fatalf("parsing %s: %v", f.Name, err)
+			}
+			files = append(files, file)
+		}
+	}
+
+	api, err := NewAPI("p", "v1.0.0", files)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	gotNames := symbolNames(api.symbols)
+	slices.Sort(wantNames)
+	if !slices.Equal(gotNames, wantNames) {
+		t.Errorf("API.symbols: got %v, want %v", gotNames, wantNames)
+	}
+}
+func TestAPIChanges(t *testing.T) {
+	oldFiles, newFiles, want := parseCombinedTxtar(t, filepath.Join("testdata", "changes.txtar"))
+
+	oldSet, err := NewAPI("p", "v1.0.0", oldFiles)
+	if err != nil {
+		t.Fatalf("newAPI(old): %v", err)
+	}
+	newSet, err := NewAPI("p", "v1.1.0", newFiles)
+	if err != nil {
+		t.Fatalf("newAPI(new): %v", err)
+	}
+	changes := oldSet.Changes(newSet)
+	var got []string
+	for k, v := range changes {
+		got = append(got, fmt.Sprintf("%s: %v", k, v))
+	}
+	slices.Sort(got)
+
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("mismatch (-want, +got):\n%s", diff)
+	}
+}
+
+func parseCombinedTxtar(t *testing.T, filename string) (oldFiles, newFiles []*ast.File, want []string) {
+	t.Helper()
+	ar, err := txtar.ParseFile(filename)
+	if err != nil {
+		t.Fatalf("txtar.ParseFile(%q): %v", filename, err)
+	}
+	fset := token.NewFileSet()
+	for _, f := range ar.Files {
+		if !strings.HasSuffix(f.Name, ".go") {
+			continue
+		}
+		var oldLines, newLines []string
+		mode := "both"
+		for line := range strings.SplitSeq(string(f.Data), "\n") {
+			fields := strings.Fields(line)
+			if len(fields) == 0 {
+				continue
+			}
+			// Directive lines begin "//LETTER".
+			if strings.HasPrefix(fields[0], "//") && len(fields[0]) > 2 && unicode.IsLetter(rune(fields[0][2])) {
+				switch fields[0] {
+				case "//old":
+					mode = "old"
+				case "//new":
+					mode = "new"
+				case "//both":
+					mode = "both"
+				case "//breaking":
+					for _, sym := range fields[1:] {
+						want = append(want, fmt.Sprintf("%s: %v", sym, changeBreaking))
+					}
+				case "//cc":
+					for _, sym := range fields[1:] {
+						want = append(want, fmt.Sprintf("%s: %v", sym, changeCallCompatible))
+					}
+				default:
+					t.Fatalf("unrecognized directive: %q", line)
+				}
+				continue
+			}
+
+			switch mode {
+			case "old":
+				oldLines = append(oldLines, line)
+			case "new":
+				newLines = append(newLines, line)
+			case "both":
+				oldLines = append(oldLines, line)
+				newLines = append(newLines, line)
+			}
+		}
+		oldFile, err := parser.ParseFile(fset, f.Name, strings.Join(oldLines, "\n"), 0)
+		if err != nil {
+			t.Fatalf("parser.ParseFile(%q) (old): %v", f.Name, err)
+		}
+		newFile, err := parser.ParseFile(fset, f.Name, strings.Join(newLines, "\n"), 0)
+		if err != nil {
+			t.Fatalf("parser.ParseFile(%q) (new): %v", f.Name, err)
+		}
+		oldFiles = append(oldFiles, oldFile)
+		newFiles = append(newFiles, newFile)
+	}
+	slices.Sort(want)
+	return oldFiles, newFiles, want
 }

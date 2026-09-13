@@ -22,6 +22,8 @@ const E = 1
 
 var D = 2
 
+func F() {}
+
 func (A) M() {}
 func (*A) N() {}
 func (A) u() {}
