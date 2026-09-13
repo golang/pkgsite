@@ -8,6 +8,12 @@ steps:
     entrypoint: deploy/prepare.sh
     args:
       - $PROJECT_ID
+  - id: Tidy private
+    name: golang:$_GO_VERSION
+    entrypoint: sh
+    args:
+      - -c
+      - cd private && go mod tidy
   - id: Build
     name: golang:$_GO_VERSION
     entrypoint: bash
