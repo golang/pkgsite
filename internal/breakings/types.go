@@ -10,6 +10,7 @@ import (
 	"cmp"
 	"fmt"
 	"go/ast"
+	"iter"
 	"slices"
 )
 
@@ -37,11 +38,11 @@ func (c changeKind) String() string {
 
 // syntaxType is a Go type extracted from syntax.
 type syntaxType interface {
-	// change reports the most significant change between the receiver,
-	// which is the older version, and the argument. A breaking change
-	// is considered more significant than a call-compatible change, which
-	// is more significant than an "other" change.
-	change(newType syntaxType) changeKind
+	// changes returns an iterator over all breaking and call-compatible changes
+	// between the receiver, which is the older version, and the argument. Each change's
+	// first value is a struct field or interface method. For other types, there
+	// is only one result, with first value "".
+	changes(newType syntaxType) iter.Seq2[string, changeKind]
 }
 
 // newType constructs a syntaxType from an ast.Expr.
@@ -72,12 +73,14 @@ func newSimpleType(e ast.Expr) *simpleType {
 	return &simpleType{typeString: typeString(e)}
 }
 
-// change returns the kind of change from old to new.
-func (old *simpleType) change(newType syntaxType) changeKind {
-	if n, ok := newType.(*simpleType); ok && old.typeString == n.typeString {
-		return changeOther
+// changes returns all breaking and call-compatible changes between old and new.
+func (old *simpleType) changes(newType syntaxType) iter.Seq2[string, changeKind] {
+	return func(yield func(string, changeKind) bool) {
+		if n, ok := newType.(*simpleType); ok && old.typeString == n.typeString {
+			return
+		}
+		yield("", changeBreaking)
 	}
-	return changeBreaking
 }
 
 // funcType is the type of a function.
@@ -115,56 +118,65 @@ func (f *funcType) equal(other syntaxType) bool {
 	return slices.Equal(f.typeParams, o.typeParams) && slices.Equal(f.params, o.params) && slices.Equal(f.results, o.results)
 }
 
-// change returns the kind of change from old to new.
-func (old *funcType) change(newType syntaxType) changeKind {
-	newf, ok := newType.(*funcType)
-	if !ok {
-		return changeBreaking
+// changes returns all breaking and call-compatible changes between old and new.
+func (old *funcType) changes(newType syntaxType) iter.Seq2[string, changeKind] {
+	return func(yield func(string, changeKind) bool) {
+		newf, ok := newType.(*funcType)
+		if !ok {
+			yield("", changeBreaking)
+			return
+		}
+		if old.equal(newf) {
+			return
+		}
+		// There are many kinds of call-compatible changes, but just look for
+		// adding a variadic argument. That's the most common.
+		if !old.variadic && newf.variadic &&
+			slices.Equal(old.typeParams, newf.typeParams) &&
+			slices.Equal(old.results, newf.results) &&
+			len(newf.params) == len(old.params)+1 &&
+			slices.Equal(old.params, newf.params[:len(old.params)]) {
+			yield("", changeCallCompatible)
+			return
+		}
+		// Any other difference in a function signature is a breaking change.
+		yield("", changeBreaking)
 	}
-	if old.equal(newf) {
-		return changeOther
-	}
-	// There are many kinds of call-compatible changes, but just look for
-	// adding a variadic argument. That's the most common.
-	if !old.variadic && newf.variadic &&
-		slices.Equal(old.typeParams, newf.typeParams) &&
-		slices.Equal(old.results, newf.results) &&
-		len(newf.params) == len(old.params)+1 &&
-		slices.Equal(old.params, newf.params[:len(old.params)]) {
-		return changeCallCompatible
-	}
-	// Any other difference in a function signature is a breaking change.
-	return changeBreaking
 }
 
 // symbolSet is a set of symbols and their types.
 type symbolSet struct {
 	symbols map[string]syntaxType
-	// name of enclosing package, interface or struct
-	parentName string
 }
 
-func newSymbolSet(parentName string) *symbolSet {
-	return &symbolSet{
-		parentName: parentName,
-		symbols:    make(map[string]syntaxType),
-	}
+func newSymbolSet() *symbolSet {
+	return &symbolSet{symbols: make(map[string]syntaxType)}
 }
 
-// changes returns the map of breaking changes from old to new.
+// changes returns an iterator of breaking changes from old to new.
 // It assumes that all the symbols in both sets are exported.
-func (old *symbolSet) changes(newSet *symbolSet) map[string]changeKind {
-	res := make(map[string]changeKind)
-	for name, oldType := range old.symbols {
-		newType, ok := newSet.symbols[name]
-		if !ok {
-			// It's a breaking change to remove a symbol.
-			res[old.parentName+"."+name] = changeBreaking
-		} else if c := oldType.change(newType); c != changeOther {
-			res[old.parentName+"."+name] = c
+func (old *symbolSet) changes(newSet *symbolSet) iter.Seq2[string, changeKind] {
+	return func(yield func(string, changeKind) bool) {
+		for name, oldType := range old.symbols {
+			newType, ok := newSet.symbols[name]
+			if !ok {
+				// It's a breaking change to remove a symbol.
+				if !yield(name, changeBreaking) {
+					return
+				}
+			} else {
+				for name2, c := range oldType.changes(newType) {
+					n := name
+					if name2 != "" {
+						n += "." + name2
+					}
+					if !yield(n, c) {
+						return
+					}
+				}
+			}
 		}
 	}
-	return res
 }
 
 // interfaceType is the type of an interface.
@@ -175,7 +187,7 @@ type interfaceType struct {
 
 // newInterfaceType constructs an interfaceType from an ast.InterfaceType.
 func newInterfaceType(it *ast.InterfaceType, defs *defs) *interfaceType {
-	res := &interfaceType{methods: newSymbolSet("")}
+	res := &interfaceType{methods: newSymbolSet()}
 	if it.Methods != nil {
 		for _, m := range it.Methods.List {
 			if len(m.Names) == 0 {
@@ -194,41 +206,42 @@ func newInterfaceType(it *ast.InterfaceType, defs *defs) *interfaceType {
 	return res
 }
 
-// change returns the kind of change from old to new.
-func (old *interfaceType) change(newType syntaxType) changeKind {
-	newi, ok := newType.(*interfaceType)
-	if !ok {
-		return changeBreaking
-	}
-	changes := old.methods.changes(newi.methods)
-	res := changeOther
-	for _, kind := range changes {
-		if kind == changeBreaking {
-			return changeBreaking
+// changes returns all breaking and call-compatible changes between old and new.
+func (old *interfaceType) changes(newType syntaxType) iter.Seq2[string, changeKind] {
+	return func(yield func(string, changeKind) bool) {
+		newi, ok := newType.(*interfaceType)
+		if !ok {
+			yield("", changeBreaking)
+			return
 		}
-		if kind == changeCallCompatible {
-			// If the interface doesn't have an unexported method, then other packages
-			// can implement its methods, not just call them. Thus even if a method signature
-			// changes call-compatibly, that's still a breaking change.
-			if old.unexportedMethod == "" {
-				return changeBreaking
+		for nm, kind := range old.methods.changes(newi.methods) {
+			if old.unexportedMethod == "" && kind == changeCallCompatible {
+				// If the interface doesn't have an unexported method, then other packages
+				// can implement its methods, not just call them. Thus even if a method signature
+				// changes call-compatibly, that's still a breaking change.
+				kind = changeBreaking
 			}
-			res = changeCallCompatible
-		}
-	}
-	if old.unexportedMethod == "" {
-		// Adding any method, exported or not, to an interface without an unexported
-		// method is a breaking change.
-		if newi.unexportedMethod != "" {
-			return changeBreaking
-		}
-		for nm := range newi.methods.symbols {
-			if _, ok := old.methods.symbols[nm]; !ok {
-				return changeBreaking
+			if !yield(nm, kind) {
+				return
 			}
 		}
+		if old.unexportedMethod == "" {
+			// Adding any method, exported or not, to an interface without an unexported
+			// method is a breaking change.
+			if newi.unexportedMethod != "" {
+				if !yield(newi.unexportedMethod, changeBreaking) {
+					return
+				}
+			}
+			for nm := range newi.methods.symbols {
+				if _, ok := old.methods.symbols[nm]; !ok {
+					if !yield(nm, changeBreaking) {
+						return
+					}
+				}
+			}
+		}
 	}
-	return res
 }
 
 // structType is the type of a struct.
@@ -239,8 +252,8 @@ type structType struct {
 
 // newStructType constructs a structType from an ast.StructType.
 func newStructType(st *ast.StructType, defs *defs) *structType {
-	topFields := newSymbolSet("")
-	selFields := newSymbolSet("")
+	topFields := newSymbolSet()
+	selFields := newSymbolSet()
 
 	// Get the selectable exported fields.
 	// This algorithm is the clearest one I can think of, but not the most efficient.
@@ -322,36 +335,40 @@ func appendExportedFields(st *ast.StructType, defs *defs, depth int, fields []*f
 	return fields
 }
 
-// change returns the kind of change from old to new.
-func (old *structType) change(newType syntaxType) changeKind {
-	// A struct has a breaking change if one of three things occurs:
-	//   - One of its top-level fields has a breaking change. That includes anonymous
-	//     (embedded) fields.
-	//   - One of its selectable fields has a breaking change. A field F is selectable if you can
-	//     write S.F. That includes the top-level fields, but also the fields of an embedded struct
-	//     that aren't hidden by a field at a higher depth.
-	//     TODO: handle this case as best we can (we only know about types declared in this package).
-	//   - The old struct was comparable, but the new one isn't. This can happen if a slice, map, func
-	//     chan, or non-comparable struct field was added.
-	//     TODO: consider handling this case (although it's rare).
-	news, ok := newType.(*structType)
-	if !ok {
-		return changeBreaking
+// changes returns all breaking and call-compatible changes between old and new.
+func (old *structType) changes(newType syntaxType) iter.Seq2[string, changeKind] {
+	return func(yield func(string, changeKind) bool) {
+		// A struct has a breaking change if one of three things occurs:
+		//   - One of its top-level fields has a breaking change. That includes anonymous
+		//     (embedded) fields.
+		//   - One of its selectable fields has a breaking change. A field F is selectable if you can
+		//     write S.F. That includes the top-level fields, but also the fields of an embedded struct
+		//     that aren't hidden by a field at a higher depth.
+		//     TODO: handle this case as best we can (we only know about types declared in this package).
+		//   - The old struct was comparable, but the new one isn't. This can happen if a slice, map, func
+		//     chan, or non-comparable struct field was added.
+		//     TODO: consider handling this case (although it's rare).
+		news, ok := newType.(*structType)
+		if !ok {
+			yield("", changeBreaking)
+			return
+		}
+		// A struct type changes if one of its fields changes.
+		// The order of the fields doesn't matter. We're not comparing two struct types
+		// for identity, we're comparing a struct type across two versions of a package.
+		// The two different types can't exist in the same program at the same time,
+		// so there is no way to compare them.
+		// Any breaking change in the fields is a breaking change for the entire struct.
+		// A call-compatible change could happen if a field has function type, and that function
+		// type was changed call-compatibly. But that is really a breaking change, because users
+		// are likely to assign to the field as well as call it.
+		for nm, kind := range old.topLevelFields.changes(news.topLevelFields) {
+			if kind == changeCallCompatible {
+				kind = changeBreaking
+			}
+			if !yield(nm, kind) {
+				return
+			}
+		}
 	}
-	// A struct type changes if one of its fields changes.
-	// The order of the fields doesn't matter. We're not comparing two struct types
-	// for identity, we're comparing a struct type across two versions of a package.
-	// The two different types can't exist in the same program at the same time,
-	// so there is no way to compare them.
-	changes := old.topLevelFields.changes(news.topLevelFields)
-	// Any breaking change in the fields is a breaking change for the entire struct.
-	// A call-compatible change could happen if a field has function type, and that function
-	// type was changed call-compatibly. But that is really a breaking change, because users
-	// are likely to assign to the field as well as call it.
-	// Since symbolSet.changes reports only breaking or call-compatible changes, then if
-	// it reports anything at all, we have a breaking change.
-	if len(changes) > 0 {
-		return changeBreaking
-	}
-	return changeOther
 }

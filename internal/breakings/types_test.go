@@ -36,6 +36,20 @@ func parseType(t *testing.T, src string) syntaxType {
 	}
 }
 
+// maxChange returns the maximal change between two syntaxTypes.
+func maxChange(old, new syntaxType) changeKind {
+	res := changeOther
+	for _, kind := range old.changes(new) {
+		if kind == changeBreaking {
+			return changeBreaking
+		}
+		if kind == changeCallCompatible {
+			res = changeCallCompatible
+		}
+	}
+	return res
+}
+
 func TestSimpleType(t *testing.T) {
 	testCases := []struct {
 		name string
@@ -66,7 +80,7 @@ func TestSimpleType(t *testing.T) {
 	t.Run("change", func(t *testing.T) {
 		for _, tc := range testCases {
 			t.Run(tc.name, func(t *testing.T) {
-				got := tc.old.change(tc.new)
+				got := maxChange(tc.old, tc.new)
 				if got != tc.want {
 					t.Errorf("%s: change = %v, want %v", tc.name, got, tc.want)
 				}
@@ -76,8 +90,8 @@ func TestSimpleType(t *testing.T) {
 		// non-*simpleType should return changeBreaking
 		ft := &funcType{}
 		s := parseType(t, "int")
-		if got := s.change(ft); got != changeBreaking {
-			t.Errorf("expected s.change(funcType) to be changeBreaking, got %v", got)
+		if got := maxChange(s, ft); got != changeBreaking {
+			t.Errorf("expected change(s, funcType) to be changeBreaking, got %v", got)
 		}
 	})
 }
@@ -252,7 +266,7 @@ func TestFuncType(t *testing.T) {
 			t.Run(tc.name, func(t *testing.T) {
 				oldFT := newFuncType(parseFuncType(tc.oldDecl))
 				newFT := newFuncType(parseFuncType(tc.newDecl))
-				got := oldFT.change(newFT)
+				got := maxChange(oldFT, newFT)
 				if got != tc.want {
 					t.Errorf("(%q).change(%q) = %v, want %v", tc.oldDecl, tc.newDecl, got, tc.want)
 				}
@@ -262,8 +276,8 @@ func TestFuncType(t *testing.T) {
 		// non-*funcType should return changeBreaking
 		st := newSimpleType(nil)
 		oldFT := newFuncType(parseFuncType("func f()"))
-		if got := oldFT.change(st); got != changeBreaking {
-			t.Errorf("expected oldFT.change(simpleType) to be changeBreaking, got %v", got)
+		if got := maxChange(oldFT, st); got != changeBreaking {
+			t.Errorf("expected change(oldFT, simpleType) to be changeBreaking, got %v", got)
 		}
 	})
 }
@@ -280,27 +294,27 @@ func TestNewSimpleType(t *testing.T) {
 }
 
 func TestSymbolSetChange(t *testing.T) {
-	oldSet := newSymbolSet("T")
+	oldSet := newSymbolSet()
 	oldSet.symbols["Removed"] = newSimpleType(ast.NewIdent("int"))
 	oldSet.symbols["Unchanged"] = newSimpleType(ast.NewIdent("string"))
 	oldSet.symbols["ChangedBreaking"] = newSimpleType(ast.NewIdent("int"))
 	oldSet.symbols["ChangedCompatible"] = parseType(t, "func ChangedCompatible(x int)")
 
-	newSet := newSymbolSet("T")
+	newSet := newSymbolSet()
 	newSet.symbols["Unchanged"] = newSimpleType(ast.NewIdent("string"))
 	newSet.symbols["ChangedBreaking"] = newSimpleType(ast.NewIdent("bool"))
 	newSet.symbols["ChangedCompatible"] = parseType(t, "func ChangedCompatible(x int, y ...string)")
 	newSet.symbols["Added"] = newSimpleType(ast.NewIdent("float64"))
 
 	want := map[string]changeKind{
-		"T.Removed":           changeBreaking,
-		"T.ChangedBreaking":   changeBreaking,
-		"T.ChangedCompatible": changeCallCompatible,
+		"Removed":           changeBreaking,
+		"ChangedBreaking":   changeBreaking,
+		"ChangedCompatible": changeCallCompatible,
 	}
 
-	got := oldSet.changes(newSet)
+	got := maps.Collect(oldSet.changes(newSet))
 	if !maps.Equal(got, want) {
-		t.Errorf("oldSet.change(newSet) = %v, want %v", got, want)
+		t.Errorf("oldSet.changes(newSet) = %v, want %v", got, want)
 	}
 }
 
@@ -309,75 +323,75 @@ func TestInterfaceType(t *testing.T) {
 		name string
 		old  syntaxType
 		new  syntaxType
-		want changeKind
+		want map[string]changeKind
 	}{
 		{
 			name: "empty to empty",
 			old:  parseType(t, "interface{}"),
 			new:  parseType(t, "interface{}"),
-			want: changeOther,
+			want: nil,
 		},
 		{
 			name: "same method",
 			old:  parseType(t, "interface{ M() }"),
 			new:  parseType(t, "interface{ M() }"),
-			want: changeOther,
+			want: nil,
 		},
 		{
 			name: "add exported method to interface without unexported method",
 			old:  parseType(t, "interface{ M() }"),
 			new:  parseType(t, "interface{ M(); Added() }"),
-			want: changeBreaking,
+			want: map[string]changeKind{"Added": changeBreaking},
 		},
 		{
 			name: "add exported method to interface with unexported method",
 			old:  parseType(t, "interface{ M(); m() }"),
 			new:  parseType(t, "interface{ M(); Added(); m() }"),
-			want: changeOther,
+			want: nil,
 		},
 		{
 			name: "add unexported method to interface without unexported method",
 			old:  parseType(t, "interface{ A() }"),
 			new:  parseType(t, "interface{ A(); m() }"),
-			want: changeBreaking,
+			want: map[string]changeKind{"m": changeBreaking},
 		},
 		{
 			name: "add unexported method to interface with unexported method",
 			old:  parseType(t, "interface{ A(); m() }"),
 			new:  parseType(t, "interface{ A(); m(); m2() }"),
-			want: changeOther,
+			want: nil,
 		},
 		{
 			name: "call-compatible change to interface without unexported method",
 			old:  parseType(t, "interface{ ChangedCompatible(x int) }"),
 			new:  parseType(t, "interface{ ChangedCompatible(x int, y ...string) }"),
-			want: changeBreaking,
+			want: map[string]changeKind{"ChangedCompatible": changeBreaking},
 		},
 		{
 			name: "call-compatible change to interface with unexported method",
 			old:  parseType(t, "interface{ ChangedCompatible(x int); m() }"),
 			new:  parseType(t, "interface{ ChangedCompatible(x int, y ...string); m() }"),
-			want: changeCallCompatible,
+			want: map[string]changeKind{"ChangedCompatible": changeCallCompatible},
 		},
 		{
 			name: "remove method",
 			old:  parseType(t, "interface{ M(); Removed() }"),
 			new:  parseType(t, "interface{ M() }"),
-			want: changeBreaking,
+			want: map[string]changeKind{"Removed": changeBreaking},
 		},
 		{
 			name: "change method signature breaking",
 			old:  parseType(t, "interface{ M(x int) }"),
 			new:  parseType(t, "interface{ M(x string) }"),
-			want: changeBreaking,
+			want: map[string]changeKind{"M": changeBreaking},
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			got := tc.old.change(tc.new)
-			if got != tc.want {
-				t.Errorf("%s: change = %v, want %v", tc.name, got, tc.want)
+			got := maps.Collect(tc.old.changes(tc.new))
+			if !maps.Equal(got, tc.want) {
+				t.Errorf("%s: changes = %v, want %v", tc.name, got, tc.want)
 			}
 		})
 	}
@@ -385,8 +399,10 @@ func TestInterfaceType(t *testing.T) {
 	t.Run("non-*interfaceType returns changeBreaking", func(t *testing.T) {
 		it := parseType(t, "interface{ M() }")
 		st := newSimpleType(ast.NewIdent("int"))
-		if got := it.change(st); got != changeBreaking {
-			t.Errorf("it.change(simpleType) = %v, want %v", got, changeBreaking)
+		got := maps.Collect(it.changes(st))
+		want := map[string]changeKind{"": changeBreaking}
+		if !maps.Equal(got, want) {
+			t.Errorf("changes(it, simpleType) = %v, want %v", got, want)
 		}
 	})
 }
@@ -579,105 +595,105 @@ func TestStructTypeChange(t *testing.T) {
 		name string
 		old  string
 		new  string
-		want changeKind
+		want map[string]changeKind
 	}{
 		{
 			name: "equal",
 			old:  "struct{ A int }",
 			new:  "struct{ A int }",
-			want: changeOther,
+			want: nil,
 		},
 		{
 			name: "empty to empty",
 			old:  "struct{}",
 			new:  "struct{}",
-			want: changeOther,
+			want: nil,
 		},
 		{
 			name: "field added (empty to A)",
 			old:  "struct{}",
 			new:  "struct{ A int }",
-			want: changeOther,
+			want: nil,
 		},
 		{
 			name: "field added (A to AB)",
 			old:  "struct{ A int }",
 			new:  "struct{ A int; B string }",
-			want: changeOther,
+			want: nil,
 		},
 		{
 			name: "field removed (AB to A)",
 			old:  "struct{ A int; B string }",
 			new:  "struct{ A int }",
-			want: changeBreaking,
+			want: map[string]changeKind{"B": changeBreaking},
 		},
 		{
 			name: "field removed (A to empty)",
 			old:  "struct{ A int }",
 			new:  "struct{}",
-			want: changeBreaking,
+			want: map[string]changeKind{"A": changeBreaking},
 		},
 		{
 			name: "field type changed (A int to A string)",
 			old:  "struct{ A int }",
 			new:  "struct{ A string }",
-			want: changeBreaking,
+			want: map[string]changeKind{"A": changeBreaking},
 		},
 		{
 			name: "field renamed / replaced (A to B)",
 			old:  "struct{ A int }",
 			new:  "struct{ B string }",
-			want: changeBreaking,
+			want: map[string]changeKind{"A": changeBreaking},
 		},
 		{
 			name: "field call-compatible changed",
 			old:  "struct{ F func(x int) }",
 			new:  "struct{ F func(x int, y ...string) }",
-			want: changeBreaking,
+			want: map[string]changeKind{"F": changeBreaking},
 		},
 		{
 			name: "field call-compatible and breaking changed",
 			old:  "struct{ F func(x int); A int }",
 			new:  "struct{ F func(x int, y ...string); A string }",
-			want: changeBreaking,
+			want: map[string]changeKind{"A": changeBreaking, "F": changeBreaking},
 		},
 		{
 			name: "unexported fields ignored",
 			old:  "struct{ a int }",
 			new:  "struct{ a string }",
-			want: changeOther,
+			want: nil,
 		},
 		{
 			name: "embedded field unchanged",
 			old:  "struct{ T }",
 			new:  "struct{ T }",
-			want: changeOther,
+			want: nil,
 		},
 		{
 			name: "embedded field added",
 			old:  "struct{}",
 			new:  "struct{ T }",
-			want: changeOther,
+			want: nil,
 		},
 		{
 			name: "embedded field removed",
 			old:  "struct{ T }",
 			new:  "struct{}",
-			want: changeBreaking,
+			want: map[string]changeKind{"T": changeBreaking},
 		},
 		{
 			name: "non-*structType",
 			old:  "struct{ A int }",
 			new:  "int",
-			want: changeBreaking,
+			want: map[string]changeKind{"": changeBreaking},
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			got := parseType(t, tc.old).change(parseType(t, tc.new))
-			if got != tc.want {
-				t.Errorf("%s: change = %v, want %v", tc.name, got, tc.want)
+			got := maps.Collect(parseType(t, tc.old).changes(parseType(t, tc.new)))
+			if !maps.Equal(got, tc.want) {
+				t.Errorf("%s: changes = %v, want %v", tc.name, got, tc.want)
 			}
 		})
 	}
