@@ -273,19 +273,20 @@ const (
 //breaking CInt CBool CInt2 CBool2
 
 
-//// TODO: Alias transitions
-// //old
-// type AliasToDef = int
-// type DefToAlias int
+//old
+type AliasToDef = int
+type DefToAlias int
 
-// //new
-// type AliasToDef int
-// type DefToAlias = int
+//new
+type AliasToDef int
+type DefToAlias = int
 
-// //old
-// func G(S) {}
+//breaking AliasToDef DefToAlias
 
-// //new
-// func G(A) {}
-
-// type A = S
+//both
+type A = S
+//old
+func G(S) {}
+//new
+func G(A) {}
+// OK: same type

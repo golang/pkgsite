@@ -8,6 +8,7 @@ package breakings
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"go/ast"
 	"go/printer"
@@ -30,6 +31,7 @@ type API struct {
 
 // NewAPI constructs an API from the AST of a package.
 func NewAPI(packageName, version string, files []*ast.File) (*API, error) {
+	files = cloneFiles(files)
 	defs, err := newDefs(files)
 	if err != nil {
 		return nil, err
@@ -63,14 +65,15 @@ func NewAPI(packageName, version string, files []*ast.File) (*API, error) {
 						}
 					}
 				case token.TYPE:
-					// Top-level named type.
+					// Top-level named type or alias.
 					for _, spec := range decl.Specs {
 						spec := spec.(*ast.TypeSpec)
-						if spec.Assign.IsValid() {
-							return nil, fmt.Errorf("type aliases are not implemented")
-						}
 						if spec.Name.IsExported() {
-							syms.symbols[spec.Name.Name] = newNamedType(spec, defs)
+							if spec.Assign.IsValid() {
+								syms.symbols[spec.Name.Name] = newAliasType(spec, defs)
+							} else {
+								syms.symbols[spec.Name.Name] = newNamedType(spec, defs)
+							}
 							kinds[spec.Name.Name] = token.TYPE
 						}
 					}
@@ -202,6 +205,26 @@ type defs struct {
 }
 
 func newDefs(files []*ast.File) (*defs, error) {
+	aliases := map[string]ast.Expr{}
+	for _, file := range files {
+		for _, decl := range file.Decls {
+			gd, ok := decl.(*ast.GenDecl)
+			if !ok || gd.Tok != token.TYPE {
+				continue
+			}
+			for _, spec := range gd.Specs {
+				spec := spec.(*ast.TypeSpec)
+				if spec.Assign.IsValid() {
+					aliases[spec.Name.Name] = spec.Type
+				}
+			}
+		}
+	}
+
+	if err := substituteAliases(files, aliases); err != nil {
+		return nil, err
+	}
+
 	defs := &defs{
 		types:   map[string]*ast.TypeSpec{},
 		methods: map[string][]*ast.FuncDecl{},
@@ -224,15 +247,77 @@ func newDefs(files []*ast.File) (*defs, error) {
 				}
 				for _, spec := range decl.Specs {
 					spec := spec.(*ast.TypeSpec)
-					if spec.Assign.IsValid() {
-						return nil, fmt.Errorf("type aliases are not implemented")
-					}
 					defs.types[spec.Name.Name] = spec
 				}
 			}
 		}
 	}
 	return defs, nil
+}
+
+func cloneFiles(files []*ast.File) []*ast.File {
+	res := make([]*ast.File, len(files))
+	for i, f := range files {
+		res[i] = cloneNode(f)
+	}
+	return res
+}
+
+func substituteAliases(files []*ast.File, aliases map[string]ast.Expr) error {
+	if len(aliases) == 0 {
+		return nil
+	}
+	// The alias dependency graph is a DAG (cycles are illegal in Go), so the
+	// maximum chain length is len(aliases). Each pass resolves at least one level
+	// of alias indirection, so at most len(aliases) passes are needed to resolve
+	// all aliases, plus one pass to detect that no further changes occurred.
+	// The bound also guarantees termination in case of malformed code with cycles.
+	for range len(aliases) + 1 {
+		changed := false
+		for _, file := range files {
+			astutil.Apply(file, func(c *astutil.Cursor) bool {
+				// Don't substitute identifiers that declare a name (such as the alias
+				// itself or function/variable/field names) or selector fields.
+				if isDeclarationOrSelectorName(c) {
+					return true
+				}
+				if id, ok := c.Node().(*ast.Ident); ok {
+					if target, ok := aliases[id.Name]; ok {
+						c.Replace(cloneNode(target))
+						changed = true
+						return false
+					}
+				}
+				return true
+			}, nil)
+		}
+		if !changed {
+			return nil
+		}
+	}
+	return errors.New("substituteAliases: alias cycle")
+}
+
+func isDeclarationOrSelectorName(c *astutil.Cursor) bool {
+	switch c.Parent().(type) {
+	case *ast.TypeSpec:
+		return c.Name() == "Name"
+	case *ast.FuncDecl:
+		return c.Name() == "Name"
+	case *ast.ValueSpec:
+		return c.Name() == "Names"
+	case *ast.Field:
+		return c.Name() == "Names"
+	case *ast.SelectorExpr:
+		return c.Name() == "Sel"
+	case *ast.ImportSpec:
+		return c.Name() == "Name"
+	case *ast.File:
+		return c.Name() == "Name"
+	case *ast.BranchStmt, *ast.LabeledStmt:
+		return c.Name() == "Label"
+	}
+	return false
 }
 
 // typeFor returns the TypeSpec for the type with the given name,
@@ -470,12 +555,12 @@ func typeParamMap(fl *ast.FieldList) map[string]string {
 	return m
 }
 
-// substTypeParams returns a copy of expr with type parameter names replaced by their #N representation.
+// substTypeParams returns expr with type parameter names replaced by their #N representation.
+// It assumes the expr has already been copied from the original.
 func substTypeParams(expr ast.Expr, typeParams map[string]string) ast.Expr {
 	if expr == nil || len(typeParams) == 0 {
 		return expr
 	}
-	expr = cloneNode(expr)
 	return astutil.Apply(expr, func(c *astutil.Cursor) bool {
 		if _, ok := c.Node().(*ast.SelectorExpr); ok {
 			return false

@@ -1086,3 +1086,57 @@ func (t T) unexportedMethod() {}
 		})
 	}
 }
+
+func TestAliasType(t *testing.T) {
+	parseAliasType := func(src string) *aliasType {
+		fset := token.NewFileSet()
+		f, err := parser.ParseFile(fset, "p.go", "package p\n"+src, 0)
+		if err != nil {
+			t.Fatalf("parser.ParseFile(%q): %v", src, err)
+		}
+		gd := f.Decls[0].(*ast.GenDecl)
+		ts := gd.Specs[0].(*ast.TypeSpec)
+		return newAliasType(ts, nil)
+	}
+
+	testCases := []struct {
+		name string
+		old  syntaxType
+		new  syntaxType
+		want changeKind
+	}{
+		{
+			name: "identical alias",
+			old:  parseAliasType("type A = int"),
+			new:  parseAliasType("type A = int"),
+			want: changeOther,
+		},
+		{
+			name: "alias target changed",
+			old:  parseAliasType("type A = int"),
+			new:  parseAliasType("type A = string"),
+			want: changeBreaking,
+		},
+		{
+			name: "alias to defined type is breaking",
+			old:  parseAliasType("type A = int"),
+			new:  parseNamedType(t, "type A int", "A"),
+			want: changeBreaking,
+		},
+		{
+			name: "defined type to alias is breaking",
+			old:  parseNamedType(t, "type A int", "A"),
+			new:  parseAliasType("type A = int"),
+			want: changeBreaking,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := maxChange(tc.old, tc.new)
+			if got != tc.want {
+				t.Errorf("%s: change = %v, want %v", tc.name, got, tc.want)
+			}
+		})
+	}
+}

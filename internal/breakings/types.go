@@ -579,3 +579,28 @@ func changeUnderlying(oldType, newType syntaxType) iter.Seq2[string, changeKind]
 		}
 	}
 }
+
+// aliasType is the type of a type alias.
+type aliasType struct {
+	target syntaxType
+}
+
+func newAliasType(ts *ast.TypeSpec, defs *defs) *aliasType {
+	return &aliasType{target: newType(ts.Type, defs)}
+}
+
+// changes returns all breaking and call-compatible changes between old and new.
+func (old *aliasType) changes(newType syntaxType) iter.Seq2[string, changeKind] {
+	return func(yield func(string, changeKind) bool) {
+		newa, ok := newType.(*aliasType)
+		if !ok {
+			yield("", changeBreaking)
+			return
+		}
+		for k, kind := range old.target.changes(newa.target) {
+			if !yield(k, kind) {
+				return
+			}
+		}
+	}
+}
