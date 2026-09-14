@@ -32,7 +32,6 @@ import (
 	"strconv"
 	"strings"
 
-	"golang.org/x/net/context/ctxhttp"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/stdlib"
@@ -226,11 +225,11 @@ func (c *Client) doURL(ctx context.Context, method, url string, only200 bool) (_
 	if c == nil || c.httpClient == nil {
 		return nil, fmt.Errorf("c.httpClient cannot be nil")
 	}
-	req, err := http.NewRequest(method, url, nil)
+	req, err := http.NewRequestWithContext(ctx, method, url, nil)
 	if err != nil {
 		return nil, err
 	}
-	resp, err := ctxhttp.Do(ctx, c.httpClient, req)
+	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return nil, err
 	}

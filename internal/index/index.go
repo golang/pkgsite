@@ -16,7 +16,6 @@ import (
 	"time"
 
 	"go.opencensus.io/plugin/ochttp"
-	"golang.org/x/net/context/ctxhttp"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 )
@@ -55,9 +54,13 @@ func (c *Client) GetVersions(ctx context.Context, since time.Time, limit int) (_
 	defer derrors.Wrap(&err, "index.Client.GetVersions(ctx, %s, %d)", since, limit)
 
 	u := c.pollURL(since, limit)
-	r, err := ctxhttp.Get(ctx, c.httpClient, u)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u, nil)
 	if err != nil {
-		return nil, fmt.Errorf("ctxhttp.Get(ctx, nil, %q): %v", u, err)
+		return nil, err
+	}
+	r, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, err
 	}
 	defer r.Body.Close()
 

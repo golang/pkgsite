@@ -20,7 +20,6 @@ import (
 	"time"
 
 	"cloud.google.com/go/storage"
-	"golang.org/x/net/context/ctxhttp"
 	"golang.org/x/pkgsite/internal/config"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/log"
@@ -387,14 +386,14 @@ func gceMetadata(ctx context.Context, name string) (_ string, err error) {
 	defer derrors.Wrap(&err, "gceMetadata(ctx, %q)", name)
 
 	const metadataURL = "http://metadata.google.internal/computeMetadata/v1/"
-	req, err := http.NewRequest("GET", metadataURL+name, nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, metadataURL+name, nil)
 	if err != nil {
-		return "", fmt.Errorf("http.NewRequest: %v", err)
+		return "", fmt.Errorf("http.NewRequestWithContext: %v", err)
 	}
 	req.Header.Set("Metadata-Flavor", "Google")
-	resp, err := ctxhttp.Do(ctx, nil, req)
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return "", fmt.Errorf("ctxhttp.Do: %v", err)
+		return "", fmt.Errorf("http.DefaultClient.Do: %v", err)
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {

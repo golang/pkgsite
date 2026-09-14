@@ -19,7 +19,6 @@ import (
 	"time"
 
 	"golang.org/x/mod/module"
-	"golang.org/x/net/context/ctxhttp"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/version"
 )
@@ -160,9 +159,13 @@ func (c *Client) ZipSize(ctx context.Context, modulePath, resolvedVersion string
 	if err != nil {
 		return 0, err
 	}
-	res, err := ctxhttp.Head(ctx, c.HTTPClient, url)
+	req, err := http.NewRequestWithContext(ctx, http.MethodHead, url, nil)
 	if err != nil {
-		return 0, fmt.Errorf("ctxhttp.Head(ctx, client, %q): %v", url, err)
+		return 0, err
+	}
+	res, err := c.HTTPClient.Do(req)
+	if err != nil {
+		return 0, err
 	}
 	defer res.Body.Close()
 	if err := responseError(res, false); err != nil {
@@ -249,16 +252,16 @@ func (c *Client) executeRequest(ctx context.Context, u string, bodyFunc func(bod
 		derrors.WrapStack(&err, "executeRequest(ctx, %q)", u)
 	}()
 
-	req, err := http.NewRequest("GET", u, nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u, nil)
 	if err != nil {
 		return err
 	}
 	if c.disableFetch {
 		req.Header.Set(DisableFetchHeader, "true")
 	}
-	r, err := ctxhttp.Do(ctx, c.HTTPClient, req)
+	r, err := c.HTTPClient.Do(req)
 	if err != nil {
-		return fmt.Errorf("ctxhttp.Do(ctx, client, %q): %v", u, err)
+		return err
 	}
 	defer r.Body.Close()
 	if err := responseError(r, c.disableFetch); err != nil {
