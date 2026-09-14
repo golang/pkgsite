@@ -25,6 +25,7 @@ type API struct {
 	packageName string
 	version     string
 	symbols     *symbolSet
+	kinds       map[string]token.Token // CONST, VAR, FUNC or TYPE
 }
 
 // NewAPI constructs an API from the AST of a package.
@@ -34,6 +35,7 @@ func NewAPI(packageName, version string, files []*ast.File) (*API, error) {
 		return nil, err
 	}
 	syms := newSymbolSet()
+	kinds := make(map[string]token.Token)
 	for _, file := range files {
 		for _, decl := range file.Decls {
 			switch decl := decl.(type) {
@@ -43,6 +45,7 @@ func NewAPI(packageName, version string, files []*ast.File) (*API, error) {
 					continue
 				}
 				syms.symbols[decl.Name.Name] = newFuncType(decl.Type)
+				kinds[decl.Name.Name] = token.FUNC
 			case *ast.GenDecl:
 				switch decl.Tok {
 				case token.CONST, token.VAR:
@@ -51,6 +54,7 @@ func NewAPI(packageName, version string, files []*ast.File) (*API, error) {
 						for _, name := range spec.Names {
 							if name.IsExported() {
 								syms.symbols[name.Name] = newType(spec.Type, defs)
+								kinds[name.Name] = decl.Tok
 							}
 						}
 					}
@@ -63,6 +67,7 @@ func NewAPI(packageName, version string, files []*ast.File) (*API, error) {
 						}
 						if spec.Name.IsExported() {
 							syms.symbols[spec.Name.Name] = newNamedType(spec, defs)
+							kinds[spec.Name.Name] = token.TYPE
 						}
 					}
 				}
@@ -73,6 +78,7 @@ func NewAPI(packageName, version string, files []*ast.File) (*API, error) {
 		packageName: packageName,
 		version:     version,
 		symbols:     syms,
+		kinds:       kinds,
 	}, nil
 }
 
@@ -81,7 +87,43 @@ func NewAPI(packageName, version string, files []*ast.File) (*API, error) {
 // each item is the name of the top-level exported symbol, or the dotted name of
 // one of its fields or methods.
 func (old *API) Changes(newa *API) iter.Seq2[string, changeKind] {
-	return old.symbols.changes(newa.symbols)
+	return func(yield func(string, changeKind) bool) {
+		seen := map[string]bool{}
+
+		yld := func(name string, kind changeKind) bool {
+			if seen[name] {
+				return true
+			}
+			seen[name] = true
+			return yield(name, kind)
+		}
+
+		// Check for kind mismatches. With one exception (see below),
+		// a change between kinds (var to const, func to type, etc.) is
+		// a breaking change.
+		for name, oldKind := range old.kinds {
+			newKind, ok := newa.kinds[name]
+			if !ok || oldKind == newKind {
+				continue
+			}
+			if oldKind == token.FUNC && newKind == token.VAR {
+				// It's okay to change a function to a variable of the same type.
+				// (If there is a type mismatch, we'll catch it below.)
+				// The reverse (variable to function) is breaking because there
+				// might be assignments to the variable.
+				continue
+			}
+			if !yld(name, changeBreaking) {
+				return
+			}
+		}
+
+		for name, kind := range old.symbols.changes(newa.symbols) {
+			if !yld(name, kind) {
+				return
+			}
+		}
+	}
 }
 
 // defs holds all the top-level type and method definitions in a package.

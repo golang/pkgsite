@@ -5,22 +5,22 @@ license that can be found in the LICENSE file.
 Test file for API.symbols. We just want to verify
 that NewAPI gets all the exported symbols.
 -- want --
-A
-C
-C1
-C3
-C4
-D
-F
-G1
-G2
-GF1
-GF2
-I
-S
-V1
-V3
-V4
+type A
+type C
+const C1
+const C3
+const C4
+var D
+func F
+type G1
+type G2
+func GF1
+func GF2
+type I
+type S
+var V1
+var V3
+var V4
 -- a.go --
 package p
 
@@ -30,8 +30,6 @@ type (
 	b int
 	C int
 )
-
-const C = 1
 
 var D = 2
 

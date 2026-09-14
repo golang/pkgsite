@@ -214,12 +214,24 @@ var RemovedVar int
 func FuncToVar() {}
 const ConstToVar = 1
 type TypeToVar int
+var (
+	VarToFunc func()
+	VarToConst int
+	VarToType int
+)
+
 //new
-var FuncToVar func()
-var ConstToVar = 1
-var TypeToVar int
-//breaking TypeToVar
-// TODO: include type kind with simple types
+var (
+	FuncToVar func() // this is OK
+	ConstToVar = 1
+	TypeToVar int
+)
+func VarToFunc()
+const VarToConst = 1
+type VarToType int
+
+//breaking ConstToVar TypeToVar
+//breaking VarToFunc VarToConst VarToType
 
 //old
 type StructToInterface struct{}

@@ -9,6 +9,7 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
+	"maps"
 	"path/filepath"
 	"slices"
 	"strings"
@@ -236,15 +237,22 @@ func TestAPI(t *testing.T) {
 	}
 
 	var (
-		wantNames []string
-		files     []*ast.File
-		fset      = token.NewFileSet()
+		want  = map[string]string{} // symbol name to kind
+		files []*ast.File
+		fset  = token.NewFileSet()
 	)
 
 	for _, f := range ar.Files {
 		switch {
 		case f.Name == "want":
-			wantNames = strings.Fields(string(f.Data))
+			f.Data = f.Data[:len(f.Data)-1] // drop final newline
+			for line := range strings.SplitSeq(string(f.Data), "\n") {
+				fields := strings.Fields(line)
+				if len(fields) != 2 {
+					t.Fatalf("bad want line %q: got %d fields, want 2", line, len(fields))
+				}
+				want[fields[1]] = fields[0]
+			}
 		case strings.HasSuffix(f.Name, ".go"):
 			file, err := parser.ParseFile(fset, f.Name, f.Data, 0)
 			if err != nil {
@@ -260,9 +268,16 @@ func TestAPI(t *testing.T) {
 	}
 
 	gotNames := symbolNames(api.symbols)
+	wantNames := slices.Collect(maps.Keys(want))
 	slices.Sort(wantNames)
 	if !slices.Equal(gotNames, wantNames) {
 		t.Errorf("API.symbols: got %v, want %v", gotNames, wantNames)
+	}
+
+	for name, wantKind := range want {
+		if got := api.kinds[name].String(); got != wantKind {
+			t.Errorf("API.kinds[%q] = %v, want %v", name, got, wantKind)
+		}
 	}
 }
 func TestAPIChanges(t *testing.T) {
