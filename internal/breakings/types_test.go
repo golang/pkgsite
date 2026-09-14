@@ -1027,6 +1027,54 @@ func (t T) unexportedMethod() {}
 			new:  newSimpleType(ast.NewIdent("int")),
 			want: map[string]changeKind{"": changeBreaking},
 		},
+		{
+			name: "generic named type renaming type param",
+			old:  parseNamedType(t, "type T[A any] []A", "T"),
+			new:  parseNamedType(t, "type T[B any] []B", "T"),
+			want: nil,
+		},
+		{
+			name: "generic named type constraint change",
+			old:  parseNamedType(t, "type T[A any] []A", "T"),
+			new:  parseNamedType(t, "type T[A comparable] []A", "T"),
+			want: map[string]changeKind{"": changeBreaking},
+		},
+		{
+			name: "generic named type add type param",
+			old:  parseNamedType(t, "type T[A any] []A", "T"),
+			new:  parseNamedType(t, "type T[A, B any] []A", "T"),
+			want: map[string]changeKind{"": changeBreaking},
+		},
+		{
+			name: "generic named type swap underlying type params",
+			old:  parseNamedType(t, "type T[A, B any] map[A]B", "T"),
+			new:  parseNamedType(t, "type T[A, B any] map[B]A", "T"),
+			want: map[string]changeKind{"": changeBreaking},
+		},
+		{
+			name: "generic method renaming receiver param",
+			old:  parseNamedType(t, "type T[A any] []A\nfunc (T[A]) M(A) {}", "T"),
+			new:  parseNamedType(t, "type T[B any] []B\nfunc (T[B]) M(B) {}", "T"),
+			want: nil,
+		},
+		{
+			name: "generic pointer method renaming receiver param",
+			old:  parseNamedType(t, "type T[A any] []A\nfunc (*T[A]) M(A) {}", "T"),
+			new:  parseNamedType(t, "type T[B any] []B\nfunc (*T[B]) M(B) {}", "T"),
+			want: nil,
+		},
+		{
+			name: "generic method with blank receiver param",
+			old:  parseNamedType(t, "type T[A, B any] []A\nfunc (T[A, B]) M(B) {}", "T"),
+			new:  parseNamedType(t, "type T[A, B any] []A\nfunc (T[_, B]) M(B) {}", "T"),
+			want: nil,
+		},
+		{
+			name: "generic method param type mismatch",
+			old:  parseNamedType(t, "type T[A, B any] []A\nfunc (T[A, B]) M(A, B) {}", "T"),
+			new:  parseNamedType(t, "type T[A, B any] []A\nfunc (T[A, B]) M(B, A) {}", "T"),
+			want: map[string]changeKind{"M": changeBreaking},
+		},
 	}
 
 	for _, tc := range testCases {

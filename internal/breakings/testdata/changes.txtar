@@ -123,20 +123,18 @@ func H(imp.X)
 
 //// Generic types
 
-// TODO(jba): fix these tests
+//old
+type GT1[T any] []T
+//new
+type GT1[E any] []E
+// OK: just different names for the type param.
 
-// //old
-// type GT1[T any] []T
-// //new
-// type GT1[E any] []E
-// // OK: just different names for the type param.
-
-// // Type parameter constraint change 
-// //old
-// type GTParamChange[T any] int
-// //new
-// type GTParamChange[T comparable] int
-// //breaking GTParamChange
+// Type parameter constraint change 
+//old
+type GTParamChange[T any] int
+//new
+type GTParamChange[T comparable] int
+//breaking GTParamChange
 
 //old
 type GT2[A, B any] map[A]B

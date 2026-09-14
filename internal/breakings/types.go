@@ -406,6 +406,7 @@ func (old *structType) changes(newType syntaxType) iter.Seq2[string, changeKind]
 
 // namedType is the type of a named type.
 type namedType struct {
+	typeParams       []string        // type parameters
 	underlying       syntaxType      // the underlying type
 	methods          *symbolSet      // all methods
 	valueMethodNames map[string]bool // names of methods with value receiver
@@ -417,16 +418,77 @@ func newNamedType(ts *ast.TypeSpec, defs *defs) *namedType {
 	methods := newSymbolSet()
 	valueMethodNames := map[string]bool{}
 	for _, m := range defs.methodsFor(name) {
-		methods.symbols[m.Name.Name] = newType(m.Type, defs)
+		methods.symbols[m.Name.Name] = newMethodType(m)
 		if !isPointerReceiver(m.Recv) {
 			valueMethodNames[m.Name.Name] = true
 		}
 	}
+	tpm := typeParamMap(ts.TypeParams)
 	return &namedType{
-		underlying:       newType(ts.Type, defs),
+		typeParams:       fieldListTypes(ts.TypeParams, tpm),
+		underlying:       newType(substTypeParams(ts.Type, tpm), defs),
 		methods:          methods,
 		valueMethodNames: valueMethodNames,
 	}
+}
+
+// newMethodType constructs a funcType for a method declaration, mapping receiver type parameters to #N.
+func newMethodType(m *ast.FuncDecl) *funcType {
+	ft := m.Type
+	var variadic bool
+	if params := ft.Params; params != nil && len(params.List) > 0 {
+		last := params.List[len(params.List)-1]
+		_, variadic = last.Type.(*ast.Ellipsis)
+	}
+	tpm := receiverTypeParamMap(m.Recv)
+	return &funcType{
+		typeParams: fieldListTypes(ft.TypeParams, tpm),
+		params:     fieldListTypes(ft.Params, tpm),
+		results:    fieldListTypes(ft.Results, tpm),
+		variadic:   variadic,
+	}
+}
+
+// receiverTypeParamMap returns a map from receiver type parameter names to their #N representation.
+func receiverTypeParamMap(recv *ast.FieldList) map[string]string {
+	if len(recv.List) == 0 {
+		return nil
+	}
+	typeExpr := recv.List[0].Type
+loop:
+	for {
+		switch t := typeExpr.(type) {
+		case *ast.ParenExpr:
+			typeExpr = t.X
+		case *ast.StarExpr:
+			typeExpr = t.X
+		default:
+			break loop
+		}
+	}
+	var idents []*ast.Ident
+	switch t := typeExpr.(type) {
+	case *ast.IndexExpr:
+		if id, ok := ast.Unparen(t.Index).(*ast.Ident); ok {
+			idents = append(idents, id)
+		}
+	case *ast.IndexListExpr:
+		for _, idx := range t.Indices {
+			if id, ok := ast.Unparen(idx).(*ast.Ident); ok {
+				idents = append(idents, id)
+			}
+		}
+	}
+	if len(idents) == 0 {
+		return nil
+	}
+	m := make(map[string]string, len(idents))
+	for i, id := range idents {
+		if id.Name != "_" {
+			m[id.Name] = fmt.Sprintf("#%d", i)
+		}
+	}
+	return m
 }
 
 func isPointerReceiver(recv *ast.FieldList) bool {
@@ -442,6 +504,12 @@ func (old *namedType) changes(newType syntaxType) iter.Seq2[string, changeKind] 
 		if !ok {
 			yield("", changeBreaking)
 			return
+		}
+
+		if !slices.Equal(old.typeParams, newn.typeParams) {
+			if !yield("", changeBreaking) {
+				return
+			}
 		}
 
 		for k, v := range changeUnderlying(old.underlying, newn.underlying) {
