@@ -337,7 +337,7 @@ func sigString(ft *ast.FuncType) string {
 		return ""
 	}
 	tpm := typeParamMap(ft.TypeParams)
-	typeParamTypes := fieldListTypes(ft.TypeParams, nil)
+	typeParamTypes := fieldListTypes(ft.TypeParams, tpm)
 	paramTypes := fieldListTypes(ft.Params, tpm)
 	resTypes := fieldListTypes(ft.Results, tpm)
 

@@ -100,7 +100,7 @@ func newFuncType(ft *ast.FuncType) *funcType {
 	}
 	tpm := typeParamMap(ft.TypeParams)
 	return &funcType{
-		typeParams: fieldListTypes(ft.TypeParams, nil),
+		typeParams: fieldListTypes(ft.TypeParams, tpm),
 		params:     fieldListTypes(ft.Params, tpm),
 		results:    fieldListTypes(ft.Results, tpm),
 		variadic:   variadic,

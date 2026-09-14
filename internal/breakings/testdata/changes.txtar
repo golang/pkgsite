@@ -178,12 +178,13 @@ func (GT2[P, Q]) M(P, Q) {}
 func (GT2[P, Q]) M(Q, P) {}
 //breaking GT2.M
 
-// TODO: substitute type params in other constraints.
-// //old
-// func GF3[S ~[]T, T comparable](S) {}
-// //new
-// func GF3[S ~[]U, U comparable](S) {}
-// // OK: renaming
+//old
+func GF3[S ~[]T, T comparable](S) {}
+func GF4[S ~[]T, T comparable](S, T) {}
+//new
+func GF3[S ~[]U, U comparable](S) {} // OK: renaming
+func GF4[S ~[]U, U comparable](U, S) {}
+//breaking GF4
 
 //both
 type T2 []GT1[T]

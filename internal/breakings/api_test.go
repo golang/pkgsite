@@ -102,6 +102,10 @@ func TestTypeString(t *testing.T) {
 				"func _[T any](s struct{ T })",
 				"func[any](struct{#0})",
 			},
+			{
+				"func _[S ~[]E, E any](s S, e E)",
+				"func[~[]#1, any](#0, #1)",
+			},
 		}
 		for _, tc := range testCases {
 			prog := "package p\n" + tc.decl
