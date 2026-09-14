@@ -23,7 +23,7 @@ The Go image version is parameterized in all Cloud Build files
 
 ```yaml
 substitutions:
-  _GO_VERSION: 1.27rc1
+  _GO_VERSION: 1.27.1
 ```
 
 This version is used by all Go build steps via `golang:$_GO_VERSION`.
@@ -53,11 +53,12 @@ in the private repository's Dockerfiles
 ### Docker Compose
 
 For local development and testing under docker,
-the Go version is defined in `devtools/docker.sh`:
-
-```bash
-export GO_VERSION=${GO_VERSION:-$(get_go_version || echo 1.26.4)}
-```
+`devtools/docker.sh` sets `GO_VERSION`.
+It reads the value from `_GO_VERSION` in `deploy/deploy-env.yaml`,
+so docker runs use the same Go version as Cloud Build.
+To use a different version, set `GO_VERSION` in the environment.
+If `GO_VERSION` is not set and the script cannot read the value,
+the script stops with an error.
 
 Docker Compose configuration (`devtools/docker/compose.yaml`)
 references the `${GO_VERSION}` environment variable.
