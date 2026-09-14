@@ -344,10 +344,26 @@ func (old *structType) changes(newType syntaxType) iter.Seq2[string, changeKind]
 		//   - One of its selectable fields has a breaking change. A field F is selectable if you can
 		//     write S.F. That includes the top-level fields, but also the fields of an embedded struct
 		//     that aren't hidden by a field at a higher depth.
-		//     TODO: handle this case as best we can (we only know about types declared in this package).
 		//   - The old struct was comparable, but the new one isn't. This can happen if a slice, map, func
 		//     chan, or non-comparable struct field was added.
 		//     TODO: consider handling this case (although it's rare).
+		//
+		// If we are comparing the selectable fields, and they are a superset of
+		// the top-level fields, then why bother with the top-level fields? Because
+		// the latter is what you use in struct literals. Consider:
+		//
+		//     // old version
+		//     type S struct { A, B int }
+		//
+		//     // new version
+		//     type e struct { A int }
+		//     type S struct { e; B int }
+		//
+		// The top-level fields have changed but the selectable fields haven't. You
+		// can write `var s S; s.A; s.B` in both the old and new versions.
+		// But this is a breaking change: you used to be able to write
+		//     S{A: 1, B: 2}
+		// but that no longer compiles.
 		news, ok := newType.(*structType)
 		if !ok {
 			yield("", changeBreaking)
@@ -362,11 +378,26 @@ func (old *structType) changes(newType syntaxType) iter.Seq2[string, changeKind]
 		// A call-compatible change could happen if a field has function type, and that function
 		// type was changed call-compatibly. But that is really a breaking change, because users
 		// are likely to assign to the field as well as call it.
-		for nm, kind := range old.topLevelFields.changes(news.topLevelFields) {
+		seen := map[string]bool{} // to avoid repeating a field
+
+		yld := func(name string, kind changeKind) bool {
+			if seen[name] {
+				return true
+			}
+			seen[name] = true
 			if kind == changeCallCompatible {
 				kind = changeBreaking
 			}
-			if !yield(nm, kind) {
+			return yield(name, kind)
+		}
+
+		for name, kind := range old.topLevelFields.changes(news.topLevelFields) {
+			if !yld(name, kind) {
+				return
+			}
+		}
+		for name, kind := range old.selectableFields.changes(news.selectableFields) {
+			if !yld(name, kind) {
 				return
 			}
 		}

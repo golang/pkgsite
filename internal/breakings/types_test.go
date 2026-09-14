@@ -697,6 +697,98 @@ func TestStructTypeChange(t *testing.T) {
 			}
 		})
 	}
+
+	t.Run("selectable fields", func(t *testing.T) {
+		testCases := []struct {
+			name string
+			old  string
+			new  string
+			want map[string]changeKind
+		}{
+			{
+				name: "embedded struct field removed",
+				old: `
+type E struct { X int }
+type S struct { E }
+`,
+				new: `
+type E struct {}
+type S struct { E }
+`,
+				want: map[string]changeKind{"X": changeBreaking},
+			},
+			{
+				name: "embedded struct field type changed",
+				old: `
+type E struct { X int }
+type S struct { E }
+`,
+				new: `
+type E struct { X string }
+type S struct { E }
+`,
+				want: map[string]changeKind{"X": changeBreaking},
+			},
+			{
+				name: "unexported embedded struct field removed",
+				old: `
+type e struct { X int }
+type S struct { e }
+`,
+				new: `
+type e struct {}
+type S struct { e }
+`,
+				want: map[string]changeKind{"X": changeBreaking},
+			},
+			{
+				name: "embedded struct field becomes ambiguous",
+				old: `
+type E1 struct { X int }
+type S struct { E1 }
+`,
+				new: `
+type E1 struct { X int }
+type E2 struct { X int }
+type S struct { E1; E2 }
+`,
+				want: map[string]changeKind{"X": changeBreaking},
+			},
+		}
+
+		for _, tc := range testCases {
+			t.Run(tc.name, func(t *testing.T) {
+				oldST := parseStructType(t, tc.old, "S")
+				newST := parseStructType(t, tc.new, "S")
+				got := maps.Collect(oldST.changes(newST))
+				if !maps.Equal(got, tc.want) {
+					t.Errorf("%s: changes = %v, want %v", tc.name, got, tc.want)
+				}
+			})
+		}
+	})
+}
+
+func parseStructType(t *testing.T, src, typeName string) *structType {
+	t.Helper()
+	fset := token.NewFileSet()
+	f, err := parser.ParseFile(fset, "p.go", "package p\n"+src, 0)
+	if err != nil {
+		t.Fatalf("parser.ParseFile: %v", err)
+	}
+	defs, err := newDefs([]*ast.File{f})
+	if err != nil {
+		t.Fatalf("newDefs: %v", err)
+	}
+	spec, ok := defs.types[typeName]
+	if !ok {
+		t.Fatalf("type %s not found", typeName)
+	}
+	st, ok := spec.Type.(*ast.StructType)
+	if !ok {
+		t.Fatalf("type %s is not a struct: %T", typeName, spec.Type)
+	}
+	return newStructType(st, defs)
 }
 
 func TestBaseTypeName(t *testing.T) {
