@@ -372,3 +372,101 @@ func parseCombinedTxtar(t *testing.T, filename string) (oldFiles, newFiles []*as
 	slices.Sort(want)
 	return oldFiles, newFiles, want
 }
+
+func TestNewValueSpecType(t *testing.T) {
+	parseSpec := func(src string) (token.Token, *ast.ValueSpec) {
+		fset := token.NewFileSet()
+		f, err := parser.ParseFile(fset, "p.go", "package p\n"+src, 0)
+		if err != nil {
+			t.Fatalf("parser.ParseFile(%q): %v", src, err)
+		}
+		gd := f.Decls[0].(*ast.GenDecl)
+		return gd.Tok, gd.Specs[0].(*ast.ValueSpec)
+	}
+
+	testCases := []struct {
+		decl string
+		idx  int
+		want string
+	}{
+		// Const with explicit type
+		{decl: "const C int = 1", want: "int"},
+		// Const with no type
+		{decl: "const C = 1", want: "untyped int"},
+		{decl: "const C = -1", want: "untyped int"},
+		{decl: "const C = +1", want: "untyped int"},
+		{decl: "const C = 1.5", want: "untyped float"},
+		{decl: "const C = -1.5", want: "untyped float"},
+		{decl: "const C = 1i", want: "untyped imag"},
+		{decl: "const C = 'a'", want: "untyped char"},
+		{decl: "const C = \"hello\"", want: "untyped string"},
+		{decl: "const C = true", want: "untyped bool"},
+		{decl: "const C = false", want: "untyped bool"},
+		{decl: "const C = 1 + 2", want: "?"},
+		{decl: "const C = (1)", want: "untyped int"},
+		// Var with explicit type
+		{decl: "var V int = 1", want: "int"},
+		{decl: "var V string", want: "string"},
+		// Var with no type
+		{decl: "var V = 1", want: "int"},
+		{decl: "var V = -1", want: "int"},
+		{decl: "var V = +1", want: "int"},
+		{decl: "var V = 1.5", want: "float64"},
+		{decl: "var V = -1.5", want: "float64"},
+		{decl: "var V = 1i", want: "complex128"},
+		{decl: "var V = 'a'", want: "rune"},
+		{decl: "var V = \"hello\"", want: "string"},
+		{decl: "var V = true", want: "bool"},
+		{decl: "var V = false", want: "bool"},
+		{decl: "var V = !true", want: "bool"},
+		{decl: "var V = (1)", want: "int"},
+		{decl: "var V = []int{1, 2}", want: "[]int"},
+		{decl: "var V = f()", want: "?"},
+		// Multi-value specs
+		{decl: "var A, B = 1, \"hello\"", idx: 0, want: "int"},
+		{decl: "var A, B = 1, \"hello\"", idx: 1, want: "string"},
+		{decl: "const A, B = 1, \"hello\"", idx: 0, want: "untyped int"},
+		{decl: "const A, B = 1, \"hello\"", idx: 1, want: "untyped string"},
+		// Multi-name with single value
+		{decl: "var A, B = f()", idx: 0, want: "?"},
+		{decl: "var A, B = f()", idx: 1, want: "?"},
+	}
+
+	for _, tc := range testCases {
+		testName := tc.decl
+		if tc.idx > 0 {
+			testName = fmt.Sprintf("%s[%d]", tc.decl, tc.idx)
+		}
+		t.Run(testName, func(t *testing.T) {
+			tok, spec := parseSpec(tc.decl)
+			var val ast.Expr
+			if tc.idx < len(spec.Values) {
+				val = spec.Values[tc.idx]
+			}
+			st := newValueSpecType(tok, spec.Type, val, nil)
+			s, ok := st.(*simpleType)
+			if !ok {
+				t.Fatalf("expected *simpleType, got %T", st)
+			}
+			if s.typeString != tc.want {
+				t.Errorf("newValueSpecType(%q, idx=%d) = %q, want %q", tc.decl, tc.idx, s.typeString, tc.want)
+			}
+		})
+	}
+
+	t.Run("composite literal struct", func(t *testing.T) {
+		tok, spec := parseSpec("var V = struct{ X int }{}")
+		st := newValueSpecType(tok, spec.Type, spec.Values[0], nil)
+		if _, ok := st.(*structType); !ok {
+			t.Fatalf("expected *structType, got %T", st)
+		}
+	})
+
+	t.Run("func literal", func(t *testing.T) {
+		tok, spec := parseSpec("var V = func(int) bool { return true }")
+		st := newValueSpecType(tok, spec.Type, spec.Values[0], nil)
+		if _, ok := st.(*funcType); !ok {
+			t.Fatalf("expected *funcType, got %T", st)
+		}
+	})
+}

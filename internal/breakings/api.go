@@ -51,9 +51,13 @@ func NewAPI(packageName, version string, files []*ast.File) (*API, error) {
 				case token.CONST, token.VAR:
 					for _, spec := range decl.Specs {
 						spec := spec.(*ast.ValueSpec)
-						for _, name := range spec.Names {
+						for i, name := range spec.Names {
 							if name.IsExported() {
-								syms.symbols[name.Name] = newType(spec.Type, defs)
+								var val ast.Expr
+								if i < len(spec.Values) {
+									val = spec.Values[i]
+								}
+								syms.symbols[name.Name] = newValueSpecType(decl.Tok, spec.Type, val, defs)
 								kinds[name.Name] = decl.Tok
 							}
 						}
@@ -80,6 +84,71 @@ func NewAPI(packageName, version string, files []*ast.File) (*API, error) {
 		symbols:     syms,
 		kinds:       kinds,
 	}, nil
+}
+
+// newValueSpecType determines the syntaxType for a const or var spec.
+// If there is an explicit type, this is easy. If not, we have to do some work.
+//
+// Constants can only be a handful of types, but untyped constants behave specially,
+// so prefix "untyped" to the type name because any change from typed to untyped or vice versa
+// is breaking.
+//
+// Variables can be assigned many values without a type. Don't try to figure them all out, just
+// do common ones.
+func newValueSpecType(tok token.Token, typ, value ast.Expr, defs *defs) syntaxType {
+	if typ != nil {
+		return newType(typ, defs)
+	}
+	if value == nil {
+		return &simpleType{typeString: "?"}
+	}
+	val := ast.Unparen(value)
+	if u, ok := val.(*ast.UnaryExpr); ok {
+		switch u.Op {
+		case token.ADD, token.SUB:
+			val = ast.Unparen(u.X)
+		case token.NOT:
+			if id, ok := ast.Unparen(u.X).(*ast.Ident); ok && (id.Name == "true" || id.Name == "false") {
+				val = id
+			}
+		}
+	}
+	switch tok {
+	case token.CONST:
+		if lit, ok := val.(*ast.BasicLit); ok {
+			return &simpleType{typeString: "untyped " + strings.ToLower(lit.Kind.String())}
+		}
+		if id, ok := val.(*ast.Ident); ok && (id.Name == "true" || id.Name == "false") {
+			return &simpleType{typeString: "untyped bool"}
+		}
+	case token.VAR:
+		switch val := val.(type) {
+		case *ast.BasicLit:
+			switch val.Kind {
+			case token.INT:
+				return &simpleType{typeString: "int"}
+			case token.FLOAT:
+				return &simpleType{typeString: "float64"}
+			case token.IMAG:
+				return &simpleType{typeString: "complex128"}
+			case token.CHAR:
+				return &simpleType{typeString: "rune"}
+			case token.STRING:
+				return &simpleType{typeString: "string"}
+			}
+		case *ast.Ident:
+			if val.Name == "true" || val.Name == "false" {
+				return &simpleType{typeString: "bool"}
+			}
+		case *ast.CompositeLit:
+			if val.Type != nil {
+				return newType(val.Type, defs)
+			}
+		case *ast.FuncLit:
+			return newFuncType(val.Type)
+		}
+	}
+	return &simpleType{typeString: "?"}
 }
 
 // Changes returns an iterator over the breaking and call-compatible changes between

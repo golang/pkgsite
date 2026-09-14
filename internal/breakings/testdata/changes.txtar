@@ -121,7 +121,10 @@ func H(*int) {}
 func H(imp.X)
 //breaking H
 
-// TODO: handle generic types
+//// Generic types
+
+// TODO(jba): fix these tests
+
 // //old
 // type GT1[T any] []T
 // //new
@@ -149,6 +152,9 @@ type GT4[T any] GT1[T]
 type GT4[T any] GT3[T]
 //breaking GT4 
 // GT1 and GT3 are not the same type.
+
+
+//// generic functions
 
 //old
 func GF1[T any](x T) {}
@@ -240,15 +246,34 @@ type StructToInterface struct{}
 type StructToInterface interface{}
 //breaking StructToInterface
 
+//// const changes
 
-//both
-// Constant value change
+// don't break on value changes, but do on typed <-> untyped.
 
 //old
 const ConstValChange = 1
-
 //new
 const ConstValChange = 2
+// OK
+
+//old
+const (
+	CInt = 1
+	CBool = true
+	CInt2 int = 2
+	CBool2 bool = false
+)
+
+//new
+const (
+	CInt int = 1
+	CBool bool = true
+	CInt2 = 2
+	CBool2 = false
+)
+
+//breaking CInt CBool CInt2 CBool2
+
 
 //// TODO: Alias transitions
 // //old
