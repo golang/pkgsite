@@ -1,0 +1,75 @@
+[
+  {
+    "query": "http router",
+    "expected_packages": [
+      {"package_path": "github.com/go-chi/chi/v5"},
+      {"package_path": "github.com/gorilla/mux"}
+    ]
+  },
+  {
+    "query": "structured logger",
+    "expected_packages": [
+      {"package_path": "go.uber.org/zap"}
+    ]
+  },
+  {
+    "query": "web framework",
+    "expected_packages": [
+      {"package_path": "github.com/gin-gonic/gin"}
+    ]
+  },
+  {
+    "query": "mysql driver",
+    "expected_packages": [
+      {"package_path": "github.com/go-sql-driver/mysql"}
+    ]
+  },
+  {
+    "query": "command line parser",
+    "expected_packages": [
+      {"package_path": "github.com/spf13/cobra"}
+    ]
+  },
+  {
+    "query": "config manager",
+    "expected_packages": [
+      {"package_path": "github.com/spf13/viper"}
+    ]
+  },
+  {
+    "query": "json encoder",
+    "expected_packages": [
+      {"package_path": "github.com/json-iterator/go"}
+    ]
+  },
+  {
+    "query": "websocket library",
+    "expected_packages": [
+      {"package_path": "github.com/gorilla/websocket"}
+    ]
+  },
+  {
+    "query": "orm",
+    "expected_packages": [
+      {"package_path": "gorm.io/gorm"}
+    ]
+  },
+  {
+    "query": "redis client",
+    "expected_packages": [
+      {"package_path": "github.com/redis/go-redis/v9"}
+    ]
+  },
+  {
+    "query": "http client",
+    "expected_packages": [
+      {"package_path": "github.com/go-resty/resty/v2"}
+    ]
+  },
+  {
+    "query": "jwt token",
+    "expected_packages": [
+      {"package_path": "github.com/golang-jwt/jwt/v5"}
+    ]
+  }
+]
