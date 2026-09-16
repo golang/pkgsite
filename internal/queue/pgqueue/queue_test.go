@@ -150,31 +150,35 @@ func TestPollDeletesTaskOnError(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	done := make(chan struct{})
+	processed := make(chan struct{})
+	polled := make(chan struct{})
 	go func() {
+		defer close(polled)
 		q.Poll(ctx, 1, func(ctx context.Context, modulePath, version string) (int, error) {
-			close(done)
+			close(processed)
 			return 500, errors.New("something went wrong")
 		})
 	}()
 
 	select {
-	case <-done:
+	case <-processed:
 	case <-time.After(30 * time.Second):
 		t.Fatal("timed out waiting for task to be processed")
 	}
+
+	// processed is closed at the start of processFunc, but the task is deleted
+	// only after processFunc returns, so the delete may still be in flight.
+	// Poll returns once its workers have, and a worker returns only from
+	// between calls to claimAndProcess, which does not return until the delete
+	// has completed. Waiting for Poll therefore orders the delete before the
+	// count below, rather than waiting a fixed duration that a loaded builder
+	// can exceed.
 	cancel()
+	<-polled
 
 	// Verify the task was deleted despite the error.
 	var count int
-	err := testDB.QueryRow(context.Background(), `SELECT count(*) FROM queue_tasks`).Scan(&count)
-	if err != nil {
-		t.Fatal(err)
-	}
-	// Allow a brief moment for the delete to complete.
-	time.Sleep(100 * time.Millisecond)
-	err = testDB.QueryRow(context.Background(), `SELECT count(*) FROM queue_tasks`).Scan(&count)
-	if err != nil {
+	if err := testDB.QueryRow(context.Background(), `SELECT count(*) FROM queue_tasks`).Scan(&count); err != nil {
 		t.Fatal(err)
 	}
 	if count != 0 {
