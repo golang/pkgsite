@@ -107,6 +107,8 @@ func TestIntegration(t *testing.T) {
 	}
 
 	t.Run("NPM", func(t *testing.T) {
+		t.Setenv("CI", "true")
+
 		if !runStage(t, "Install", "./devtools/nodejs.sh", "npm", "ci") {
 			return
 		}
