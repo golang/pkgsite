@@ -29,58 +29,51 @@ func (db *DB) UpdateSearchDocumentsImportedByCount(ctx context.Context, batchSiz
 
 	log.Infof(ctx, "updating imported-by counts, batch size = %d", batchSize)
 
-	curCounts, curModCounts, err := db.getSearchPackages(ctx)
+	curCounts, err := db.getSearchPackages(ctx)
 	if err != nil {
 		return 0, err
 	}
-	newCounts, newModCounts, err := db.computeImportedByCounts(ctx, curCounts)
+	newCounts, err := db.computeImportedByCounts(ctx, curCounts)
 	if err != nil {
 		return 0, err
 	}
 
 	// Include only changed counts for packages that are in search_documents.
-	changedCounts := computeChangedCounts(ctx, "packages", curCounts, newCounts)
-	changedModCounts := computeChangedCounts(ctx, "modules", curModCounts, newModCounts)
-	return db.UpdateSearchDocumentsImportedByCountWithCounts(ctx, changedCounts, changedModCounts, batchSize)
+	changedCounts := computeChangedCounts(ctx, curCounts, newCounts)
+	return db.UpdateSearchDocumentsImportedByCountWithCounts(ctx, changedCounts, batchSize)
 }
 
 // getSearchPackages returns the set of package paths that are in the search_documents table,
-// along with their current imported-by count and imported-by-module count.
-func (db *DB) getSearchPackages(ctx context.Context) (counts, modcounts map[string]int, err error) {
+// along with their current imported-by count.
+func (db *DB) getSearchPackages(ctx context.Context) (counts map[string]int, err error) {
 	defer derrors.WrapStack(&err, "DB.getSearchPackages(ctx)")
 	defer internal.RequestState(ctx, "reading search_packages table")()
 	counts = map[string]int{}
-	modcounts = map[string]int{}
 	err = db.db.RunQuery(ctx, `
-		SELECT package_path, imported_by_count, imported_by_module_count
+		SELECT package_path, imported_by_count
 		FROM search_documents
 	`, func(rows *sql.Rows) error {
 		var (
-			p     string
-			c, mc int
+			p string
+			c int
 		)
-		if err := rows.Scan(&p, &c, &mc); err != nil {
+		if err := rows.Scan(&p, &c); err != nil {
 			return err
 		}
 		counts[p] = c
-		modcounts[p] = mc
 		return nil
 	})
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
-	return counts, modcounts, nil
+	return counts, nil
 }
 
-func (db *DB) computeImportedByCounts(ctx context.Context, curCounts map[string]int) (newCounts, newModCounts map[string]int, err error) {
+func (db *DB) computeImportedByCounts(ctx context.Context, curCounts map[string]int) (newCounts map[string]int, err error) {
 	defer derrors.WrapStack(&err, "db.computeImportedByCounts(ctx)")
 	defer internal.RequestState(ctx, "computing counts")()
 
 	newCounts = map[string]int{}
-
-	// We don't want to double-count modules. so keep a set
-	// from to_path to from_module_path.
-	modSets := map[string]map[string]struct{}{}
 	// Get all (from_path, to_path) pairs, deduped.
 	// Also get the from_path's module path.
 	err = db.db.RunQuery(ctx, `
@@ -95,18 +88,7 @@ func (db *DB) computeImportedByCounts(ctx context.Context, curCounts map[string]
 		if _, ok := curCounts[from]; !ok {
 			return nil
 		}
-
-		// Count an importing module even if it's the same module as the package itself.
-		// This lets us distinguish packages that are truly unused from those that are only used
-		// within their module.
-		m := modSets[to]
-		if m == nil {
-			m = map[string]struct{}{}
-			modSets[to] = m
-		}
-		m[fromMod] = struct{}{}
-		// Don't count an importing package if it's in the same module as what it's importing.
-		// Unlike with modules, there is too much opportunity to inflate the count.
+		// Don't count an importer if it's in the same module as what it's importing.
 		// Approximate that check by seeing if from_module_path is a prefix of to_path.
 		// (In some cases, e.g. when to_path is in a nested module, that is not correct.)
 		if (fromMod == stdlib.ModulePath && stdlib.Contains(to)) || strings.HasPrefix(to+"/", fromMod+"/") {
@@ -116,16 +98,12 @@ func (db *DB) computeImportedByCounts(ctx context.Context, curCounts map[string]
 		return nil
 	})
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
-	newModCounts = map[string]int{}
-	for to, modSet := range modSets {
-		newModCounts[to] = len(modSet)
-	}
-	return newCounts, newModCounts, nil
+	return newCounts, nil
 }
 
-func computeChangedCounts(ctx context.Context, prefix string, curCounts, newCounts map[string]int) map[string]int {
+func computeChangedCounts(ctx context.Context, curCounts, newCounts map[string]int) map[string]int {
 	// Find all counts that have changed, including those that have changed to zero
 	// because there are no longer any importers in imports_unique.
 	changedCounts := map[string]int{}
@@ -140,36 +118,21 @@ func computeChangedCounts(ctx context.Context, prefix string, curCounts, newCoun
 	if len(curCounts) > 0 {
 		pct = len(changedCounts) * 100 / len(curCounts)
 	}
-	log.Debugf(ctx, "update-imported-by-counts: %s: %d changed (%d%%)", prefix, len(changedCounts), pct)
+	log.Debugf(ctx, "update-imported-by-counts: %d changed (%d%%)", len(changedCounts), pct)
 	return changedCounts
 }
 
-func (db *DB) UpdateSearchDocumentsImportedByCountWithCounts(ctx context.Context, pkgCounts, modCounts map[string]int, batchSize int) (nUpdated int64, err error) {
+func (db *DB) UpdateSearchDocumentsImportedByCountWithCounts(ctx context.Context, counts map[string]int, batchSize int) (nUpdated int64, err error) {
 	defer derrors.WrapStack(&err, "UpdateSearchDocumentsImportedByCountWithCounts")
 	defer internal.RequestState(ctx, "updating search_documents")()
-	total := len(pkgCounts) + len(modCounts)
-	for len(pkgCounts) > 0 {
+	total := len(counts)
+	for len(counts) > 0 {
 		var nu int64
 		err := db.db.Transact(ctx, sql.LevelDefault, func(tx *database.DB) error {
-			if err := insertImportedByCounts(ctx, tx, "package", pkgCounts, batchSize); err != nil {
+			if err := insertImportedByCounts(ctx, tx, counts, batchSize); err != nil {
 				return err
 			}
-			nu, err = updateImportedByCounts(ctx, tx, "package")
-			return err
-		})
-		if err != nil {
-			return nUpdated, err
-		}
-		nUpdated += nu
-		internal.RequestState(ctx, fmt.Sprintf("updating search_documents: %d/%d", nUpdated, total))
-	}
-	for len(modCounts) > 0 {
-		var nu int64
-		err := db.db.Transact(ctx, sql.LevelDefault, func(tx *database.DB) error {
-			if err := insertImportedByCounts(ctx, tx, "module", modCounts, batchSize); err != nil {
-				return err
-			}
-			nu, err = updateImportedByCounts(ctx, tx, "module")
+			nu, err = updateImportedByCounts(ctx, tx)
 			return err
 		})
 		if err != nil {
@@ -184,12 +147,11 @@ func (db *DB) UpdateSearchDocumentsImportedByCountWithCounts(ctx context.Context
 // insertImportedByCounts creates a temporary table and inserts at most limit
 // rows into it, where each row is a key and value from the counts map. The
 // inserted keys are deleted from counts.
-func insertImportedByCounts(ctx context.Context, db *database.DB, kind string, counts map[string]int, limit int) (err error) {
+func insertImportedByCounts(ctx context.Context, db *database.DB, counts map[string]int, limit int) (err error) {
 	defer derrors.WrapStack(&err, "insertImportedByCounts(ctx, db, counts)")
 
-	tableName := "computed_" + kind + "_counts"
-	createTableQuery := `
-		CREATE TEMPORARY TABLE ` + tableName + ` (
+	const createTableQuery = `
+		CREATE TEMPORARY TABLE computed_imported_by_counts (
 			package_path      TEXT NOT NULL,
 			imported_by_count INTEGER NOT NULL
 		) ON COMMIT DROP;
@@ -208,17 +170,17 @@ func insertImportedByCounts(ctx context.Context, db *database.DB, kind string, c
 		i++
 	}
 	columns := []string{"package_path", "imported_by_count"}
-	return db.BulkInsert(ctx, tableName, columns, values, "")
+	return db.BulkInsert(ctx, "computed_imported_by_counts", columns, values, "")
 }
 
-// updateImportedByCounts updates the imported_by_count or imported_by_module_count
-// column in search_documents for every package in computed_[kind]_counts.
+// updateImportedByCounts updates the imported_by_count column in search_documents
+// for every package in computed_imported_by_counts.
 //
 // Rows that don't change aren't updated.
 //
 // Note that if a package is never imported, its imported_by_count column will
 // be the default (0) and its imported_by_count_updated_at column will never be set.
-func updateImportedByCounts(ctx context.Context, db *database.DB, kind string) (int64, error) {
+func updateImportedByCounts(ctx context.Context, db *database.DB) (int64, error) {
 	// Lock the entire table to avoid deadlock. Without the lock, the update can
 	// fail because module inserts are concurrently modifying rows of
 	// search_documents.
@@ -226,32 +188,19 @@ func updateImportedByCounts(ctx context.Context, db *database.DB, kind string) (
 	// See https://www.postgresql.org/docs/11/sql-lock.html for the LOCK
 	// statement, notably the paragraph beginning "If a transaction of this sort
 	// is going to change the data...".
-
-	var setStmt string
-	switch kind {
-	case "package":
-		setStmt = `
-			imported_by_count = c.imported_by_count,
-			imported_by_count_updated_at = CURRENT_TIMESTAMP`
-	case "module":
-		setStmt = `
-			imported_by_module_count = c.imported_by_count,
-			imported_by_module_count_updated_at = CURRENT_TIMESTAMP`
-	default:
-		return 0, fmt.Errorf("unknown kind %q", kind)
-	}
-
-	updateStmt := fmt.Sprintf(`
+	const updateStmt = `
 		LOCK TABLE search_documents IN SHARE ROW EXCLUSIVE MODE;
 		UPDATE search_documents s
-		SET %s
-		FROM computed_%s_counts c
+		SET
+			imported_by_count = c.imported_by_count,
+			imported_by_count_updated_at = CURRENT_TIMESTAMP
+		FROM computed_imported_by_counts c
 		INNER JOIN paths p ON p.path = c.package_path
-		WHERE s.package_path_id = p.id;`, setStmt, kind)
+		WHERE s.package_path_id = p.id;`
 
 	n, err := db.Exec(ctx, updateStmt)
 	if err != nil {
-		return 0, fmt.Errorf("error updating imported-by counts (%s) for search documents: %v", kind, err)
+		return 0, fmt.Errorf("error updating imported_by_count and imported_by_count_updated_at for search documents: %v", err)
 	}
 	return n, nil
 }

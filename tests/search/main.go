@@ -68,8 +68,7 @@ func runImportedByUpdates(ctx context.Context, dbConnInfo, dbHost string) error 
 	if err != nil {
 		return err
 	}
-	// TODO(golang/go#80242): use mod counts after using module counts in search.
-	_, err = db.UpdateSearchDocumentsImportedByCountWithCounts(ctx, counts, counts, 1000)
+	_, err = db.UpdateSearchDocumentsImportedByCountWithCounts(ctx, counts, 1000)
 	return err
 }
 

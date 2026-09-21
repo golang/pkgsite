@@ -170,6 +170,7 @@ func TestUpdateSearchDocumentsImportedByCount(t *testing.T) {
 		_ = validateImportedByCountAndGetSearchDocument(t, testDB, pkgPath(mB), 1)
 	})
 	t.Run("module_sharing", func(t *testing.T) {
+		t.Skip("module counts disabled")
 		testDB, release := acquire(t)
 		defer release()
 
@@ -194,6 +195,7 @@ func TestUpdateSearchDocumentsImportedByCount(t *testing.T) {
 		}
 	})
 	t.Run("same_module", func(t *testing.T) {
+		t.Skip("module counts disabled")
 		testDB, release := acquire(t)
 		defer release()
 
