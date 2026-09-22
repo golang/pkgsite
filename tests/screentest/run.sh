@@ -135,6 +135,12 @@ main() {
   fi
 
   env=$1
+  # The loop above stops at the first argument that does not begin with '-', so
+  # anything after the environment was never parsed.
+  if [[ $# -gt 1 ]]; then
+    die "flags must come before the environment; unparsed arguments after '$env': ${*:2}"
+  fi
+
   local debugger_url="-d ws://localhost:$chromedp_port"
   local test_server headers
   case $env in

@@ -120,7 +120,7 @@ func TestIntegration(t *testing.T) {
 					return nil
 				})
 			})
-			runCmd(t, "./tests/screentest/run.sh", "-rm", "ci", "-concurrency", "1")
+			runCmd(t, "./tests/screentest/run.sh", "-rm", "-concurrency", "1", "ci")
 		})
 		return
 	}
