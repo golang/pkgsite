@@ -273,11 +273,11 @@ func (s *Server) DebugHandler() (http.Handler, error) {
 // handleUpdateImportedByCount updates imported_by_count for all packages.
 func (s *Server) handleUpdateImportedByCount(w http.ResponseWriter, r *http.Request) error {
 	batchSize := parseIntParam(r, "batch", 1000)
-	n, err := s.db.UpdateSearchDocumentsImportedByCount(r.Context(), batchSize)
+	np, nm, err := s.db.UpdateSearchDocumentsImportedByCount(r.Context(), batchSize)
 	if err != nil {
 		return err
 	}
-	fmt.Fprintf(w, "updated %d packages", n)
+	fmt.Fprintf(w, "updated %d packages, %d modules", np, nm)
 	return nil
 }
 

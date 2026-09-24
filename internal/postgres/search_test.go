@@ -442,7 +442,7 @@ func TestSearch(t *testing.T) {
 			for _, m := range test.modules {
 				testDB.MustInsertModule(t, m)
 			}
-			if _, err := testDB.UpdateSearchDocumentsImportedByCount(ctx, 100); err != nil {
+			if _, _, err := testDB.UpdateSearchDocumentsImportedByCount(ctx, 100); err != nil {
 				t.Fatal(err)
 			}
 			guardTestResult := resultGuard(t, test.resultOrder)
@@ -534,7 +534,7 @@ func TestSearchErrors(t *testing.T) {
 			for _, v := range modules {
 				testDB.MustInsertModule(t, v)
 			}
-			if _, err := testDB.UpdateSearchDocumentsImportedByCount(ctx, 100); err != nil {
+			if _, _, err := testDB.UpdateSearchDocumentsImportedByCount(ctx, 100); err != nil {
 				t.Fatal(err)
 			}
 			guardTestResult := resultGuard(t, test.resultOrder)
