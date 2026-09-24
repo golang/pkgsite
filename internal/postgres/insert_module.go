@@ -209,9 +209,6 @@ func (db *DB) saveModule(ctx context.Context, m *internal.Module, lmv *internal.
 		}
 
 		// Here, this module is the latest good version.
-		if err := insertImportsUnique(ctx, tx, m); err != nil {
-			return err
-		}
 
 		var pkgPaths []string
 		for _, u := range m.Packages() {
@@ -240,18 +237,22 @@ func (db *DB) saveModule(ctx context.Context, m *internal.Module, lmv *internal.
 		//
 		// Note that we end up here only if we first saw the alternative version
 		// (github.com/Sirupsen/logrus@v1.1.0 in the example) and then see the valid
-		// one. The "if code == 491" section of internal/worker.fetchAndUpdateState
+		// one. [DB.ReconcileSearch], called from [worker.Fetcher.FetchAndUpdateState],
 		// handles the case where we fetch the versions in the other order.
 		alt, err := isAlternativeModulePath(ctx, tx, m.ModulePath)
 		if err != nil {
 			return err
 		}
 		if alt {
-			log.Infof(ctx, "%s@%s: not inserting into search documents", m.ModulePath, m.Version)
+			log.Infof(ctx, "%s@%s: not inserting into search documents or imports_unique", m.ModulePath, m.Version)
 			return nil
 		}
 		// Insert the module's packages into search_documents.
 		if err := upsertSearchDocuments(ctx, tx, m); err != nil {
+			return err
+		}
+		// Insert the module's packages into imports_unique.
+		if err := insertImportsUnique(ctx, tx, m); err != nil {
 			return err
 		}
 		return upsertSymbolSearchDocuments(ctx, tx, m.ModulePath, m.Version)

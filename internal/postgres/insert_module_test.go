@@ -447,8 +447,8 @@ func TestInsertModuleLatest(t *testing.T) {
 
 func TestPostgres_NewerAlternative(t *testing.T) {
 	t.Parallel()
-	// Verify that packages are not added to search_documents if the module has a newer
-	// alternative version.
+	// Verify that packages are not added to search_documents or imports_unique
+	// if the module has a newer alternative version.
 	testDB, release := acquire(t)
 	defer release()
 	ctx := context.Background()
@@ -483,7 +483,14 @@ func TestPostgres_NewerAlternative(t *testing.T) {
 	m := sample.Module(mvs.ModulePath, okVersion, "p")
 	testDB.MustInsertModule(t, m)
 	if _, _, found := GetFromSearchDocuments(ctx, t, testDB, m.Packages()[0].Path); found {
-		t.Fatal("found package after inserting")
+		t.Fatal("found package in search_documents after inserting")
+	}
+	var n int
+	if err := testDB.db.QueryRow(ctx, `SELECT COUNT(*) FROM imports_unique WHERE from_module_path = $1`, m.ModulePath).Scan(&n); err != nil {
+		t.Fatal(err)
+	}
+	if n > 0 {
+		t.Fatalf("got %d rows in imports_unique for %s, want 0", n, m.ModulePath)
 	}
 }
 
