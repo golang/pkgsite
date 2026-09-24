@@ -58,7 +58,7 @@ func Header(ctx context.Context, jsonCreds []byte, useExp bool) (_ string, err e
 func idtokenArgs(jsonCreds []byte, useExp bool) (string, []idtoken.ClientOption) {
 	var opts []idtoken.ClientOption
 	if len(jsonCreds) > 0 {
-		opts = append(opts, idtoken.WithCredentialsJSON(jsonCreds))
+		opts = append(opts, idtoken.WithAuthCredentialsJSON(idtoken.ServiceAccount, jsonCreds))
 	}
 	audience := mainClientID
 	if useExp {
