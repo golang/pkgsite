@@ -48,13 +48,14 @@ capture fullscreen 540x1080
 
 test vuln stdlib module
 path /archive/zip@go1.16.4
+wait {{$ready}}
 eval {{$hideElements}}
-sleep 3s
 capture viewport
 capture viewport 540x1080
 
 test vuln toolchain module
 path /cmd/go@go1.15.0
+wait {{$ready}}
 capture viewport
 capture viewport 540x1080
 
@@ -65,6 +66,7 @@ capture viewport 540x1080
 
 test vuln withdrawn module
 path /github.com/gorilla/sessions@v1.2.1
+wait {{$ready}}
 eval {{$hideElements}}
 capture viewport
 capture viewport 540x1080

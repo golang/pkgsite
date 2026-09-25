@@ -169,7 +169,11 @@ main() {
   if [[ "$env" == ci || "$env" == local ]]; then
     testfiles=tests/screentest/testcases.*
   fi
-  local cmd="screentest -o tests/screentest/output -retrypixels 20 $concurrency $debugger_url $headers $update $run $test_server tests/screentest/testdata $testfiles"
+  # TODO: Remove -retrypixels once cmd/screentest in golang.org/x/website supports
+  # retrying failed testcases unconditionally without a pixel difference threshold.
+  # A high threshold is currently required so screentest's 3-attempt retry loop is
+  # not aborted prematurely when transient rendering glitches exceed 20px.
+  local cmd="screentest -o tests/screentest/output -retrypixels 2000000 $concurrency $debugger_url $headers $update $run $test_server tests/screentest/testdata $testfiles"
 
   # Pre-create output directory on the host so it is owned by the host runner user
   # and has open permissions for docker to write to.
