@@ -15,8 +15,10 @@ package pkgsite
 import (
 	"context"
 	"fmt"
+	"io/fs"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"runtime"
 	"strings"
 	"testing"
@@ -100,6 +102,23 @@ func TestIntegration(t *testing.T) {
 				if err := os.CopyFS(t.ArtifactDir(), os.DirFS(outDir)); err != nil {
 					t.Logf("copy screentest output: %v", err)
 				}
+				// LUCI Milo's interactive image diff viewer renders automatically
+				// when a test result has artifacts named actual_image, expected_image,
+				// and image_diff. Find the first failing diff and copy its images to the root
+				// of t.ArtifactDir() with those names.
+				_ = filepath.WalkDir(outDir, func(p string, d fs.DirEntry, err error) error {
+					b, ok := strings.CutSuffix(p, ".diff.png")
+					if err != nil || !ok || d.IsDir() {
+						return nil
+					}
+					artDir := t.ArtifactDir()
+					if copyFile(filepath.Join(artDir, "actual_image"), b+".got.png") == nil &&
+						copyFile(filepath.Join(artDir, "expected_image"), b+".want.png") == nil &&
+						copyFile(filepath.Join(artDir, "image_diff"), p) == nil {
+						return filepath.SkipAll
+					}
+					return nil
+				})
 			})
 			runCmd(t, "./tests/screentest/run.sh", "-rm", "ci", "-concurrency", "1")
 		})
@@ -176,4 +195,12 @@ func runCmd(t *testing.T, name string, args ...string) {
 	if err := cmd.Run(); err != nil {
 		t.Fatalf("%s: %v", name, err)
 	}
+}
+
+func copyFile(dst, src string) error {
+	data, err := os.ReadFile(src)
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(dst, data, 0644)
 }
