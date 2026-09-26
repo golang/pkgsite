@@ -8,14 +8,12 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"strings"
 	"time"
 
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/log"
-	"golang.org/x/pkgsite/internal/stdlib"
 )
 
 // UpdateSearchDocumentsImportedByCount updates imported_by_count and
@@ -41,7 +39,7 @@ func (db *DB) UpdateSearchDocumentsImportedByCount(ctx context.Context, batchSiz
 	if err != nil {
 		return 0, nModuleUpdated, err
 	}
-	newCounts, err := db.computeImportedByCounts(ctx, curCounts)
+	newCounts, err := db.computeImportedByCounts(ctx)
 	if err != nil {
 		return 0, nModuleUpdated, err
 	}
@@ -78,32 +76,28 @@ func (db *DB) getSearchPackages(ctx context.Context) (counts map[string]int, err
 	return counts, nil
 }
 
-func (db *DB) computeImportedByCounts(ctx context.Context, curCounts map[string]int) (newCounts map[string]int, err error) {
+func (db *DB) computeImportedByCounts(ctx context.Context) (newCounts map[string]int, err error) {
 	defer derrors.WrapStack(&err, "db.computeImportedByCounts(ctx)")
 	defer internal.RequestState(ctx, "computing counts")()
 
 	newCounts = map[string]int{}
-	// Get all (from_path, to_path) pairs, deduped.
-	// Also get the from_path's module path.
 	err = db.db.RunQuery(ctx, `
-		SELECT DISTINCT from_path, from_module_path, to_path
-		FROM imports_unique
+		SELECT u.to_path, COUNT(DISTINCT u.from_path)
+		FROM imports_unique u
+		INNER JOIN search_documents s_from ON s_from.package_path = u.from_path AND s_from.module_path = u.from_module_path
+		INNER JOIN search_documents s_to ON s_to.package_path = u.to_path
+		WHERE NOT (
+			(u.from_module_path = 'std' AND strpos(split_part(u.to_path, '/', 1), '.') = 0)
+			OR starts_with(u.to_path || '/', u.from_module_path || '/')
+		)
+		GROUP BY u.to_path
 	`, func(rows *sql.Rows) error {
-		var from, fromMod, to string
-		if err := rows.Scan(&from, &fromMod, &to); err != nil {
+		var to string
+		var count int
+		if err := rows.Scan(&to, &count); err != nil {
 			return err
 		}
-		// Don't count an importer if it's not in search_documents.
-		if _, ok := curCounts[from]; !ok {
-			return nil
-		}
-		// Don't count an importer if it's in the same module as what it's importing.
-		// Approximate that check by seeing if from_module_path is a prefix of to_path.
-		// (In some cases, e.g. when to_path is in a nested module, that is not correct.)
-		if (fromMod == stdlib.ModulePath && stdlib.Contains(to)) || strings.HasPrefix(to+"/", fromMod+"/") {
-			return nil
-		}
-		newCounts[to]++
+		newCounts[to] = count
 		return nil
 	})
 	if err != nil {

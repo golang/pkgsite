@@ -13,6 +13,7 @@ import (
 
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/testing/sample"
 )
 
@@ -206,19 +207,55 @@ func TestUpdateSearchDocumentsImportedByCount(t *testing.T) {
 		testDB, release := acquire(t)
 		defer release()
 
-		// Module A has two packages, pkg1 and pkg2.
-		// pkg1 imports pkg2 within the same module.
-		mA := sample.Module("mod.com/A", "v1.0.0", "pkg1", "pkg2")
+		// Module A has a root package ("mod.com/A") and two subpackages, pkg1 and pkg2.
+		// Module AB ("mod.com/AB") has a module path that has "mod.com/A" as a string
+		// prefix, but is a distinct module.
+		// pkg1 imports the root package mod.com/A, sibling mod.com/A/pkg2, and mod.com/AB/pkg.
+		mA := sample.Module("mod.com/A", "v1.0.0", "", "pkg1", "pkg2")
 		for _, u := range mA.Units {
 			if u.Path == "mod.com/A/pkg1" {
-				u.Imports = []string{"mod.com/A/pkg2"}
+				u.Imports = []string{"mod.com/A", "mod.com/A/pkg2", "mod.com/AB/pkg"}
 			} else if u.IsPackage() {
 				u.Imports = nil
 			}
 		}
 		testDB.MustInsertModule(t, mA)
 
+		mAB := sample.Module("mod.com/AB", "v1.0.0", "pkg")
+		mAB.Packages()[0].Imports = nil
+		testDB.MustInsertModule(t, mAB)
+
 		updateImportedByCount(testDB, 100)
+		_ = validateImportedByCountAndGetSearchDocument(t, testDB, "mod.com/A", 0, 1)
 		_ = validateImportedByCountAndGetSearchDocument(t, testDB, "mod.com/A/pkg2", 0, 1)
+		_ = validateImportedByCountAndGetSearchDocument(t, testDB, "mod.com/AB/pkg", 1, 1)
+	})
+	t.Run("stdlib", func(t *testing.T) {
+		testDB, release := acquire(t)
+		defer release()
+
+		// Standard library package net/http imports fmt (both in module "std").
+		// External package mod.com/A/A also imports fmt.
+		mStd := sample.Module(stdlib.ModulePath, "v1.12.5", "fmt", "net/http")
+		for _, u := range mStd.Units {
+			switch u.Path {
+			case "net/http":
+				u.Imports = []string{"fmt"}
+			case "fmt":
+				u.Imports = nil
+			}
+		}
+		testDB.MustInsertModule(t, mStd)
+
+		mA := sample.Module("mod.com/A", "v1.0.0", "A")
+		mA.Packages()[0].Imports = []string{"fmt"}
+		testDB.MustInsertModule(t, mA)
+
+		updateImportedByCount(testDB, 100)
+		_ = validateImportedByCountAndGetSearchDocument(t, testDB, "net/http", 0, 0)
+		// For fmt, net/http is excluded from package count (same module "std"),
+		// while mod.com/A/A is counted. Both modules ("std" and "mod.com/A") are
+		// counted in imported_by_module_count.
+		_ = validateImportedByCountAndGetSearchDocument(t, testDB, "fmt", 1, 2)
 	})
 }
