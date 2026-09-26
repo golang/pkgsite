@@ -17,6 +17,7 @@ import (
 	"unicode"
 
 	"github.com/google/go-cmp/cmp"
+	"golang.org/x/pkgsite/internal/godoc"
 	"golang.org/x/tools/txtar"
 )
 
@@ -266,23 +267,76 @@ func TestAPI(t *testing.T) {
 		}
 	}
 
+	check := func(t *testing.T, api *API) {
+		t.Helper()
+		gotNames := symbolNames(api.symbols)
+		wantNames := slices.Collect(maps.Keys(want))
+		slices.Sort(wantNames)
+		if !slices.Equal(gotNames, wantNames) {
+			t.Errorf("API.symbols: got %v, want %v", gotNames, wantNames)
+		}
+
+		for name, wantKind := range want {
+			if got := api.kinds[name].String(); got != wantKind {
+				t.Errorf("API.kinds[%q] = %v, want %v", name, got, wantKind)
+			}
+		}
+	}
+
 	api, err := NewAPI("p", "v1.0.0", files)
 	if err != nil {
 		t.Fatal(err)
 	}
+	check(t, api)
 
-	gotNames := symbolNames(api.symbols)
-	wantNames := slices.Collect(maps.Keys(want))
-	slices.Sort(wantNames)
-	if !slices.Equal(gotNames, wantNames) {
-		t.Errorf("API.symbols: got %v, want %v", gotNames, wantNames)
+	pkg := godoc.NewPackage(fset, nil)
+	for _, f := range files {
+		pkg.AddFile(f, true)
 	}
+	testFile, err := parser.ParseFile(fset, "a_test.go", "package p\nfunc ExportedTestFunc() {}\n", 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	pkg.AddFile(testFile, true)
 
-	for name, wantKind := range want {
-		if got := api.kinds[name].String(); got != wantKind {
-			t.Errorf("API.kinds[%q] = %v, want %v", name, got, wantKind)
+	apiFromPkg, err := NewAPIFromPackage("p", "v1.0.0", pkg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	check(t, apiFromPkg)
+
+	t.Run("NewAPIFromPackage sorts files by name", func(t *testing.T) {
+		f1, err := parser.ParseFile(fset, "b.go", "package p\nfunc Dup(int) {}\n", 0)
+		if err != nil {
+			t.Fatal(err)
 		}
-	}
+		f2, err := parser.ParseFile(fset, "a.go", "package p\nfunc Dup(string) {}\n", 0)
+		if err != nil {
+			t.Fatal(err)
+		}
+		pkg1 := godoc.NewPackage(fset, nil)
+		pkg1.AddFile(f1, true)
+		pkg1.AddFile(f2, true)
+
+		pkg2 := godoc.NewPackage(fset, nil)
+		pkg2.AddFile(f2, true)
+		pkg2.AddFile(f1, true)
+
+		api1, err := NewAPIFromPackage("p", "v1.0.0", pkg1)
+		if err != nil {
+			t.Fatal(err)
+		}
+		api2, err := NewAPIFromPackage("p", "v1.0.0", pkg2)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got, want := api1.Definition("Dup"), "func Dup(int)"; got != want {
+			t.Errorf("api1.Definition(\"Dup\") = %q, want %q", got, want)
+		}
+		if got, want := api2.Definition("Dup"), "func Dup(int)"; got != want {
+			t.Errorf("api2.Definition(\"Dup\") = %q, want %q", got, want)
+		}
+	})
 }
 func TestAPIChanges(t *testing.T) {
 	oldFiles, newFiles, want := parseCombinedTxtar(t, filepath.Join("testdata", "changes.txtar"))
@@ -336,11 +390,11 @@ func parseCombinedTxtar(t *testing.T, filename string) (oldFiles, newFiles []*as
 					mode = "both"
 				case "//breaking":
 					for _, sym := range fields[1:] {
-						want = append(want, fmt.Sprintf("%s: %v", sym, changeBreaking))
+						want = append(want, fmt.Sprintf("%s: %v", sym, ChangeBreaking))
 					}
 				case "//cc":
 					for _, sym := range fields[1:] {
-						want = append(want, fmt.Sprintf("%s: %v", sym, changeCallCompatible))
+						want = append(want, fmt.Sprintf("%s: %v", sym, ChangeCallCompatible))
 					}
 				default:
 					t.Fatalf("unrecognized directive: %q", line)
@@ -469,4 +523,47 @@ func TestNewValueSpecType(t *testing.T) {
 			t.Fatalf("expected *funcType, got %T", st)
 		}
 	})
+}
+
+func TestAPIDefinition(t *testing.T) {
+	oldFiles, newFiles, _ := parseCombinedTxtar(t, filepath.Join("testdata", "changes.txtar"))
+	oldAPI, err := NewAPI("p", "v1.0.0", oldFiles)
+	if err != nil {
+		t.Fatalf("NewAPI(old): %v", err)
+	}
+	newAPI, err := NewAPI("p", "v1.1.0", newFiles)
+	if err != nil {
+		t.Fatalf("NewAPI(new): %v", err)
+	}
+
+	testCases := []struct {
+		sym     string
+		wantOld string
+		wantNew string
+	}{
+		{"C", "const C int", "const C bool"},
+		{"V", "var V []int", "var V []string"},
+		{"F", "func F(float32)", "func F(float64)"},
+		{"S.I", "S.I int", "S.I any"},
+		{"S.H", "S.H rune", ""},
+		{"I1.M2", "I1.M2(int)", "I1.M2(bool)"},
+		{"I1.M4", "I1.M4()", ""},
+		{"I1.M5", "", "I1.M5()"},
+		{"S.M3", "func (S) M3()", "func (*S) M3()"},
+		{"S.M4", "func (S) M4(int)", "func (S) M4()"},
+		{"AliasToDef", "type AliasToDef = int", "type AliasToDef int"},
+		{"DefToAlias", "type DefToAlias int", "type DefToAlias = int"},
+		{"NoSuchSymbol", "", ""},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.sym, func(t *testing.T) {
+			if got := oldAPI.Definition(tc.sym); got != tc.wantOld {
+				t.Errorf("oldAPI.Definition(%q) = %q, want %q", tc.sym, got, tc.wantOld)
+			}
+			if got := newAPI.Definition(tc.sym); got != tc.wantNew {
+				t.Errorf("newAPI.Definition(%q) = %q, want %q", tc.sym, got, tc.wantNew)
+			}
+		})
+	}
 }

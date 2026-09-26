@@ -11,28 +11,30 @@ import (
 	"fmt"
 	"go/ast"
 	"iter"
+	"maps"
 	"slices"
+	"strings"
 )
 
-// changeKind is the kind of change between two API elements.
-type changeKind int
+// ChangeKind is the kind of change between two API elements.
+type ChangeKind int
 
 const (
-	changeOther          changeKind = iota // no change or compatible change
-	changeCallCompatible                   // technically a breaking change, but calls will compile
-	changeBreaking
+	ChangeOther          ChangeKind = iota // no change or compatible change
+	ChangeCallCompatible                   // technically a breaking change, but calls will compile
+	ChangeBreaking
 )
 
-func (c changeKind) String() string {
+func (c ChangeKind) String() string {
 	switch c {
-	case changeOther:
+	case ChangeOther:
 		return "other"
-	case changeCallCompatible:
+	case ChangeCallCompatible:
 		return "call-compatible"
-	case changeBreaking:
+	case ChangeBreaking:
 		return "breaking"
 	default:
-		return fmt.Sprintf("changeKind(%d)", c)
+		return fmt.Sprintf("ChangeKind(%d)", c)
 	}
 }
 
@@ -42,7 +44,8 @@ type syntaxType interface {
 	// between the receiver, which is the older version, and the argument. Each change's
 	// first value is a struct field or interface method. For other types, there
 	// is only one result, with first value "".
-	changes(newType syntaxType) iter.Seq2[string, changeKind]
+	changes(newType syntaxType) iter.Seq2[string, ChangeKind]
+	String() string
 }
 
 // newType constructs a syntaxType from an ast.Expr.
@@ -74,13 +77,20 @@ func newSimpleType(e ast.Expr) *simpleType {
 }
 
 // changes returns all breaking and call-compatible changes between old and new.
-func (old *simpleType) changes(newType syntaxType) iter.Seq2[string, changeKind] {
-	return func(yield func(string, changeKind) bool) {
+func (old *simpleType) changes(newType syntaxType) iter.Seq2[string, ChangeKind] {
+	return func(yield func(string, ChangeKind) bool) {
 		if n, ok := newType.(*simpleType); ok && old.typeString == n.typeString {
 			return
 		}
-		yield("", changeBreaking)
+		yield("", ChangeBreaking)
 	}
+}
+
+func (s *simpleType) String() string {
+	if s == nil {
+		return ""
+	}
+	return s.typeString
 }
 
 // funcType is the type of a function.
@@ -119,11 +129,11 @@ func (f *funcType) equal(other syntaxType) bool {
 }
 
 // changes returns all breaking and call-compatible changes between old and new.
-func (old *funcType) changes(newType syntaxType) iter.Seq2[string, changeKind] {
-	return func(yield func(string, changeKind) bool) {
+func (old *funcType) changes(newType syntaxType) iter.Seq2[string, ChangeKind] {
+	return func(yield func(string, ChangeKind) bool) {
 		newf, ok := newType.(*funcType)
 		if !ok {
-			yield("", changeBreaking)
+			yield("", ChangeBreaking)
 			return
 		}
 		if old.equal(newf) {
@@ -136,12 +146,34 @@ func (old *funcType) changes(newType syntaxType) iter.Seq2[string, changeKind] {
 			slices.Equal(old.results, newf.results) &&
 			len(newf.params) == len(old.params)+1 &&
 			slices.Equal(old.params, newf.params[:len(old.params)]) {
-			yield("", changeCallCompatible)
+			yield("", ChangeCallCompatible)
 			return
 		}
 		// Any other difference in a function signature is a breaking change.
-		yield("", changeBreaking)
+		yield("", ChangeBreaking)
 	}
+}
+
+func (f *funcType) sigString() string {
+	if f == nil {
+		return ""
+	}
+	var buf strings.Builder
+	if len(f.typeParams) > 0 {
+		buf.WriteString("[" + strings.Join(f.typeParams, ", ") + "]")
+	}
+	buf.WriteString("(" + strings.Join(f.params, ", ") + ")")
+	if len(f.results) == 1 {
+		buf.WriteString(" ")
+		buf.WriteString(f.results[0])
+	} else if len(f.results) > 1 {
+		buf.WriteString(" (" + strings.Join(f.results, ", ") + ")")
+	}
+	return buf.String()
+}
+
+func (f *funcType) String() string {
+	return "func" + f.sigString()
 }
 
 // symbolSet is a set of symbols and their types.
@@ -155,13 +187,13 @@ func newSymbolSet() *symbolSet {
 
 // changes returns an iterator of breaking changes from old to new.
 // It assumes that all the symbols in both sets are exported.
-func (old *symbolSet) changes(newSet *symbolSet) iter.Seq2[string, changeKind] {
-	return func(yield func(string, changeKind) bool) {
+func (old *symbolSet) changes(newSet *symbolSet) iter.Seq2[string, ChangeKind] {
+	return func(yield func(string, ChangeKind) bool) {
 		for name, oldType := range old.symbols {
 			newType, ok := newSet.symbols[name]
 			if !ok {
 				// It's a breaking change to remove a symbol.
-				if !yield(name, changeBreaking) {
+				if !yield(name, ChangeBreaking) {
 					return
 				}
 			} else {
@@ -207,19 +239,19 @@ func newInterfaceType(it *ast.InterfaceType, defs *defs) *interfaceType {
 }
 
 // changes returns all breaking and call-compatible changes between old and new.
-func (old *interfaceType) changes(newType syntaxType) iter.Seq2[string, changeKind] {
-	return func(yield func(string, changeKind) bool) {
+func (old *interfaceType) changes(newType syntaxType) iter.Seq2[string, ChangeKind] {
+	return func(yield func(string, ChangeKind) bool) {
 		newi, ok := newType.(*interfaceType)
 		if !ok {
-			yield("", changeBreaking)
+			yield("", ChangeBreaking)
 			return
 		}
 		for nm, kind := range old.methods.changes(newi.methods) {
-			if old.unexportedMethod == "" && kind == changeCallCompatible {
+			if old.unexportedMethod == "" && kind == ChangeCallCompatible {
 				// If the interface doesn't have an unexported method, then other packages
 				// can implement its methods, not just call them. Thus even if a method signature
 				// changes call-compatibly, that's still a breaking change.
-				kind = changeBreaking
+				kind = ChangeBreaking
 			}
 			if !yield(nm, kind) {
 				return
@@ -229,19 +261,43 @@ func (old *interfaceType) changes(newType syntaxType) iter.Seq2[string, changeKi
 			// Adding any method, exported or not, to an interface without an unexported
 			// method is a breaking change.
 			if newi.unexportedMethod != "" {
-				if !yield(newi.unexportedMethod, changeBreaking) {
+				if !yield(newi.unexportedMethod, ChangeBreaking) {
 					return
 				}
 			}
 			for nm := range newi.methods.symbols {
 				if _, ok := old.methods.symbols[nm]; !ok {
-					if !yield(nm, changeBreaking) {
+					if !yield(nm, ChangeBreaking) {
 						return
 					}
 				}
 			}
 		}
 	}
+}
+
+func (it *interfaceType) String() string {
+	if it == nil {
+		return "interface{}"
+	}
+	var methods []string
+	if it.methods != nil {
+		for _, name := range slices.Sorted(maps.Keys(it.methods.symbols)) {
+			m := it.methods.symbols[name]
+			if ft, ok := m.(*funcType); ok {
+				methods = append(methods, name+ft.sigString())
+			} else {
+				methods = append(methods, name+" "+m.String())
+			}
+		}
+	}
+	if it.unexportedMethod != "" {
+		methods = append(methods, it.unexportedMethod+"(...)")
+	}
+	if len(methods) == 0 {
+		return "interface{}"
+	}
+	return "interface{" + strings.Join(methods, "; ") + "}"
 }
 
 // structType is the type of a struct.
@@ -336,8 +392,8 @@ func appendExportedFields(st *ast.StructType, defs *defs, depth int, fields []*f
 }
 
 // changes returns all breaking and call-compatible changes between old and new.
-func (old *structType) changes(newType syntaxType) iter.Seq2[string, changeKind] {
-	return func(yield func(string, changeKind) bool) {
+func (old *structType) changes(newType syntaxType) iter.Seq2[string, ChangeKind] {
+	return func(yield func(string, ChangeKind) bool) {
 		// A struct has a breaking change if one of three things occurs:
 		//   - One of its top-level fields has a breaking change. That includes anonymous
 		//     (embedded) fields.
@@ -366,7 +422,7 @@ func (old *structType) changes(newType syntaxType) iter.Seq2[string, changeKind]
 		// but that no longer compiles.
 		news, ok := newType.(*structType)
 		if !ok {
-			yield("", changeBreaking)
+			yield("", ChangeBreaking)
 			return
 		}
 		// A struct type changes if one of its fields changes.
@@ -380,13 +436,13 @@ func (old *structType) changes(newType syntaxType) iter.Seq2[string, changeKind]
 		// are likely to assign to the field as well as call it.
 		seen := map[string]bool{} // to avoid repeating a field
 
-		yld := func(name string, kind changeKind) bool {
+		yld := func(name string, kind ChangeKind) bool {
 			if seen[name] {
 				return true
 			}
 			seen[name] = true
-			if kind == changeCallCompatible {
-				kind = changeBreaking
+			if kind == ChangeCallCompatible {
+				kind = ChangeBreaking
 			}
 			return yield(name, kind)
 		}
@@ -402,6 +458,17 @@ func (old *structType) changes(newType syntaxType) iter.Seq2[string, changeKind]
 			}
 		}
 	}
+}
+
+func (s *structType) String() string {
+	if s == nil || s.topLevelFields == nil || len(s.topLevelFields.symbols) == 0 {
+		return "struct{}"
+	}
+	var fields []string
+	for _, name := range slices.Sorted(maps.Keys(s.topLevelFields.symbols)) {
+		fields = append(fields, name+" "+s.topLevelFields.symbols[name].String())
+	}
+	return "struct{" + strings.Join(fields, "; ") + "}"
 }
 
 // namedType is the type of a named type.
@@ -498,16 +565,16 @@ func isPointerReceiver(recv *ast.FieldList) bool {
 
 // changes returns all breaking and call-compatible changes between old and new.
 // A named type can change if its underlying type changes, or if its methods change.
-func (old *namedType) changes(newType syntaxType) iter.Seq2[string, changeKind] {
-	return func(yield func(string, changeKind) bool) {
+func (old *namedType) changes(newType syntaxType) iter.Seq2[string, ChangeKind] {
+	return func(yield func(string, ChangeKind) bool) {
 		newn, ok := newType.(*namedType)
 		if !ok {
-			yield("", changeBreaking)
+			yield("", ChangeBreaking)
 			return
 		}
 
 		if !slices.Equal(old.typeParams, newn.typeParams) {
-			if !yield("", changeBreaking) {
+			if !yield("", ChangeBreaking) {
 				return
 			}
 		}
@@ -530,12 +597,26 @@ func (old *namedType) changes(newType syntaxType) iter.Seq2[string, changeKind] 
 		// method, and this check will catch that.
 		for name := range old.valueMethodNames {
 			if !newn.valueMethodNames[name] {
-				if !yield(name, changeBreaking) {
+				if !yield(name, ChangeBreaking) {
 					return
 				}
 			}
 		}
 	}
+}
+
+func (n *namedType) String() string {
+	if n == nil {
+		return ""
+	}
+	var buf strings.Builder
+	if len(n.typeParams) > 0 {
+		buf.WriteString("[" + strings.Join(n.typeParams, ", ") + "] ")
+	}
+	if n.underlying != nil {
+		buf.WriteString(n.underlying.String())
+	}
+	return buf.String()
 }
 
 // changeUnderlying returns the breaking and call-compatible changes between the
@@ -556,12 +637,12 @@ func (old *namedType) changes(newType syntaxType) iter.Seq2[string, changeKind] 
 //
 // then they presumably intend that variables are declared to be of this type, and one typically
 // assigns to variables as well as calls them.
-func changeUnderlying(oldType, newType syntaxType) iter.Seq2[string, changeKind] {
-	return func(yield func(string, changeKind) bool) {
+func changeUnderlying(oldType, newType syntaxType) iter.Seq2[string, ChangeKind] {
+	return func(yield func(string, ChangeKind) bool) {
 		_, oldIsNamed := oldType.(*namedType)
 		_, newIsNamed := newType.(*namedType)
 		if oldIsNamed != newIsNamed {
-			yield("", changeBreaking)
+			yield("", ChangeBreaking)
 			return
 		}
 		if oldIsNamed { // and new is too
@@ -570,8 +651,8 @@ func changeUnderlying(oldType, newType syntaxType) iter.Seq2[string, changeKind]
 		}
 		_, isFuncType := oldType.(*funcType)
 		for k, kind := range oldType.changes(newType) {
-			if kind == changeCallCompatible && isFuncType {
-				kind = changeBreaking
+			if kind == ChangeCallCompatible && isFuncType {
+				kind = ChangeBreaking
 			}
 			if !yield(k, kind) {
 				return
@@ -590,11 +671,11 @@ func newAliasType(ts *ast.TypeSpec, defs *defs) *aliasType {
 }
 
 // changes returns all breaking and call-compatible changes between old and new.
-func (old *aliasType) changes(newType syntaxType) iter.Seq2[string, changeKind] {
-	return func(yield func(string, changeKind) bool) {
+func (old *aliasType) changes(newType syntaxType) iter.Seq2[string, ChangeKind] {
+	return func(yield func(string, ChangeKind) bool) {
 		newa, ok := newType.(*aliasType)
 		if !ok {
-			yield("", changeBreaking)
+			yield("", ChangeBreaking)
 			return
 		}
 		for k, kind := range old.target.changes(newa.target) {
@@ -603,4 +684,11 @@ func (old *aliasType) changes(newType syntaxType) iter.Seq2[string, changeKind] 
 			}
 		}
 	}
+}
+
+func (a *aliasType) String() string {
+	if a == nil || a.target == nil {
+		return ""
+	}
+	return "= " + a.target.String()
 }

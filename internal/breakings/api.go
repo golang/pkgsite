@@ -8,6 +8,7 @@ package breakings
 
 import (
 	"bytes"
+	"cmp"
 	"errors"
 	"fmt"
 	"go/ast"
@@ -18,19 +19,35 @@ import (
 	"slices"
 	"strings"
 
+	"golang.org/x/pkgsite/internal/godoc"
 	"golang.org/x/tools/go/ast/astutil"
 )
 
 // An API contains the exported symbols for a package.
 type API struct {
-	packageName string
+	packagePath string
 	version     string
 	symbols     *symbolSet
 	kinds       map[string]token.Token // CONST, VAR, FUNC or TYPE
 }
 
+// NewAPIFromPackage constructs an API from a [godoc.Package].
+func NewAPIFromPackage(packagePath, version string, pkg *godoc.Package) (*API, error) {
+	pfiles := slices.Clone(pkg.Files)
+	slices.SortFunc(pfiles, func(a, b *godoc.File) int {
+		return cmp.Compare(a.Name, b.Name)
+	})
+	var files []*ast.File
+	for _, f := range pfiles {
+		if !strings.HasSuffix(f.Name, "_test.go") {
+			files = append(files, f.AST)
+		}
+	}
+	return NewAPI(packagePath, version, files)
+}
+
 // NewAPI constructs an API from the AST of a package.
-func NewAPI(packageName, version string, files []*ast.File) (*API, error) {
+func NewAPI(packagePath, version string, files []*ast.File) (*API, error) {
 	files = cloneFiles(files)
 	defs, err := newDefs(files)
 	if err != nil {
@@ -82,7 +99,7 @@ func NewAPI(packageName, version string, files []*ast.File) (*API, error) {
 		}
 	}
 	return &API{
-		packageName: packageName,
+		packagePath: packagePath,
 		version:     version,
 		symbols:     syms,
 		kinds:       kinds,
@@ -158,11 +175,11 @@ func newValueSpecType(tok token.Token, typ, value ast.Expr, defs *defs) syntaxTy
 // two APIs (which should be two versions of the same package). The first value of
 // each item is the name of the top-level exported symbol, or the dotted name of
 // one of its fields or methods.
-func (old *API) Changes(newa *API) iter.Seq2[string, changeKind] {
-	return func(yield func(string, changeKind) bool) {
+func (old *API) Changes(newa *API) iter.Seq2[string, ChangeKind] {
+	return func(yield func(string, ChangeKind) bool) {
 		seen := map[string]bool{}
 
-		yld := func(name string, kind changeKind) bool {
+		yld := func(name string, kind ChangeKind) bool {
 			if seen[name] {
 				return true
 			}
@@ -185,7 +202,7 @@ func (old *API) Changes(newa *API) iter.Seq2[string, changeKind] {
 				// might be assignments to the variable.
 				continue
 			}
-			if !yld(name, changeBreaking) {
+			if !yld(name, ChangeBreaking) {
 				return
 			}
 		}
@@ -196,6 +213,121 @@ func (old *API) Changes(newa *API) iter.Seq2[string, changeKind] {
 			}
 		}
 	}
+}
+
+// Definition returns a string representing the definition of the symbol,
+// or the empty string if the symbol is not defined in the API.
+// The symbol name may be a top-level symbol (e.g. "Foo") or a member
+// (e.g. "MyStruct.Field" or "MyType.Method").
+func (a *API) Definition(name string) string {
+	top, member, hasMember := strings.Cut(name, ".")
+	if !hasMember {
+		st, ok := a.symbols.symbols[top]
+		if !ok || st == nil {
+			return ""
+		}
+		tok, ok := a.kinds[top]
+		if !ok {
+			return st.String()
+		}
+		switch tok {
+		case token.FUNC:
+			if ft, ok := st.(*funcType); ok {
+				return fmt.Sprintf("func %s%s", top, ft.sigString())
+			}
+			return fmt.Sprintf("func %s %s", top, st.String())
+		case token.VAR:
+			return fmt.Sprintf("var %s %s", top, st.String())
+		case token.CONST:
+			return fmt.Sprintf("const %s %s", top, st.String())
+		case token.TYPE:
+			if alias, ok := st.(*aliasType); ok {
+				return fmt.Sprintf("type %s %s", top, alias.String())
+			}
+			if named, ok := st.(*namedType); ok {
+				tp := ""
+				if len(named.typeParams) > 0 {
+					tp = "[" + strings.Join(named.typeParams, ", ") + "]"
+				}
+				if named.underlying != nil {
+					return fmt.Sprintf("type %s%s %s", top, tp, named.underlying.String())
+				}
+			}
+			return fmt.Sprintf("type %s %s", top, st.String())
+		default:
+			return st.String()
+		}
+	}
+
+	topType, ok := a.symbols.symbols[top]
+	if !ok || topType == nil {
+		return ""
+	}
+	return memberDefinition(top, member, topType)
+}
+
+func memberDefinition(top, member string, st syntaxType) string {
+	switch t := st.(type) {
+	case *namedType:
+		if t.methods != nil {
+			if mType, ok := t.methods.symbols[member]; ok && mType != nil {
+				recv := top
+				if !t.valueMethodNames[member] {
+					recv = "*" + top
+				}
+				if ft, ok := mType.(*funcType); ok {
+					return fmt.Sprintf("func (%s) %s%s", recv, member, ft.sigString())
+				}
+				return fmt.Sprintf("func (%s) %s %s", recv, member, mType.String())
+			}
+		}
+		if t.underlying != nil {
+			return memberDefinition(top, member, t.underlying)
+		}
+
+	case *structType:
+		if t.topLevelFields != nil {
+			if fType, ok := t.topLevelFields.symbols[member]; ok && fType != nil {
+				return fmt.Sprintf("%s.%s %s", top, member, fType.String())
+			}
+		}
+		if t.selectableFields != nil {
+			if fType, ok := t.selectableFields.symbols[member]; ok && fType != nil {
+				return fmt.Sprintf("%s.%s %s (promoted)", top, member, fType.String())
+			}
+		}
+		if first, rest, ok := strings.Cut(member, "."); ok {
+			if t.topLevelFields != nil {
+				if fType, ok := t.topLevelFields.symbols[first]; ok && fType != nil {
+					return memberDefinition(top+"."+first, rest, fType)
+				}
+			}
+			if t.selectableFields != nil {
+				if fType, ok := t.selectableFields.symbols[first]; ok && fType != nil {
+					return memberDefinition(top+"."+first, rest, fType)
+				}
+			}
+		}
+
+	case *interfaceType:
+		if t.methods != nil {
+			if mType, ok := t.methods.symbols[member]; ok && mType != nil {
+				if ft, ok := mType.(*funcType); ok {
+					return fmt.Sprintf("%s.%s%s", top, member, ft.sigString())
+				}
+				return fmt.Sprintf("%s.%s %s", top, member, mType.String())
+			}
+		}
+		if member == t.unexportedMethod {
+			return fmt.Sprintf("%s.%s(...)", top, member)
+		}
+
+	case *aliasType:
+		if t.target != nil {
+			return memberDefinition(top, member, t.target)
+		}
+	}
+	return ""
 }
 
 // defs holds all the top-level type and method definitions in a package.
