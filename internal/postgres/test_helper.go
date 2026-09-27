@@ -176,6 +176,10 @@ func mustInsertModule(t *testing.T, db *DB, m *internal.Module, goMod string) {
 	if _, err := db.InsertModule(ctx, m, lmv); err != nil {
 		t.Fatal(err)
 	}
+
+	defer func(old time.Duration) { countUpdateDuration = old }(countUpdateDuration)
+	countUpdateDuration = 0 // Always update counts.
+
 	// Updated imported-by counts on every new module.
 	// It should be very cheap if there are only a handful of modules in
 	// the DB.

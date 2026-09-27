@@ -63,8 +63,12 @@ func TestDeleteModule(t *testing.T) {
 }
 
 func TestDeleteFromSearch(t *testing.T) {
-	t.Parallel()
+	// Don't run in parallel because it changes countUpdateDuration.
 	ctx := context.Background()
+
+	old := countUpdateDuration
+	defer func() { countUpdateDuration = old }()
+	countUpdateDuration = 0
 
 	const (
 		modulePath1 = "deleteme.com"

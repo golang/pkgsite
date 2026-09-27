@@ -18,11 +18,11 @@ import (
 )
 
 func TestUpdateSearchDocumentsImportedByCount(t *testing.T) {
-	// Dont' run in parallel because it changes countBatchSize.
+	// Don't run in parallel because it changes countUpdateDuration.
 	ctx := context.Background()
 
-	defer func(old time.Duration) { moduleCountUpdateDuration = old }(moduleCountUpdateDuration)
-	moduleCountUpdateDuration = 0 // Always update module counts.
+	defer func(old time.Duration) { countUpdateDuration = old }(countUpdateDuration)
+	countUpdateDuration = 0 // Always update counts.
 
 	pkgPath := func(m *internal.Module) string { return m.Packages()[0].Path }
 
@@ -90,18 +90,19 @@ func TestUpdateSearchDocumentsImportedByCount(t *testing.T) {
 		sdA := validateImportedByCountAndGetSearchDocument(t, testDB, pkgPath(mA), 2, 2)
 		sdC := validateImportedByCountAndGetSearchDocument(t, testDB, pkgPath(mC), 0, 0)
 
-		// Nothing imports C, so it has never been updated.
-		if !sdC.importedByCountUpdatedAt.IsZero() {
-			t.Fatalf("pkgC imported_by_count_updated_at should be zero, but is %v", sdC.importedByCountUpdatedAt)
+		// Nothing imports C, but it is updated nonetheless.
+		if sdC.importedByCountUpdatedAt.IsZero() {
+			t.Fatal("pkgC imported_by_count_updated_at should be non-zero, but is zero")
 		}
 		if sdA.importedByCountUpdatedAt.IsZero() {
 			t.Fatal("pkgA imported_by_count_updated_at should be non-zero, but is zero")
 		}
 
-		// Test imported_by_count_updated_at for B has not changed.
+		// Test imported_by_count for B has not changed,
+		// but its update time has.
 		sdB = validateImportedByCountAndGetSearchDocument(t, testDB, pkgPath(mB), 0, 0)
-		if sdB.importedByCountUpdatedAt != wantSearchDocBUpdatedAt {
-			t.Fatalf("expected imported_by_count_updated_at for pkgB not to have changed; old = %v, new = %v",
+		if sdB.importedByCountUpdatedAt.Equal(wantSearchDocBUpdatedAt) {
+			t.Fatalf("expected imported_by_count_updated_at for pkgB to have changed; old = %v, new = %v",
 				wantSearchDocBUpdatedAt, sdB.importedByCountUpdatedAt)
 		}
 

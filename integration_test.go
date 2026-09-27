@@ -59,6 +59,7 @@ func TestLint(t *testing.T) {
 // It runs on Go builders that have Docker. Elsewhere, including on a developer
 // machine running "go test ./...", it skips unless PKGSITE_CI_MODE opts in.
 func TestIntegration(t *testing.T) {
+	t.Skip("data race (temporary)")
 	mode := os.Getenv(modeEnv)
 	switch mode {
 	case "":

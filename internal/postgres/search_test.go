@@ -351,6 +351,10 @@ func TestSearch(t *testing.T) {
 	// Cannot be run in parallel with other search tests, because it reads
 	// metrics before and after (see responseDelta below).
 	ctx := context.Background()
+
+	old := countUpdateDuration
+	defer func() { countUpdateDuration = old }()
+	countUpdateDuration = 0
 	tests := []struct {
 		label       string
 		modules     []*internal.Module
@@ -983,10 +987,17 @@ func TestUpsertSearchDocument(t *testing.T) {
 		t.Fatalf("got %s, want %s", sdInc.version, vInc)
 	}
 
-	// Inserting an older module doesn't change anything.
+	// Inserting an older module doesn't change anything
+	// except the update times (since all import counts
+	// are recomputed in this test).
 	insertModule("v0.5.0", true, vInc)
 	sdOlder := getSearchDocument()
-	if diff := cmp.Diff(sdInc, sdOlder, cmp.AllowUnexported(searchDocument{})); diff != "" {
+	diffOpts := []cmp.Option{
+		cmp.AllowUnexported(searchDocument{}),
+		cmpopts.IgnoreFields(searchDocument{}, "importedByCountUpdatedAt", "importedByModuleCountUpdatedAt"),
+	}
+
+	if diff := cmp.Diff(sdInc, sdOlder, diffOpts...); diff != "" {
 		t.Fatalf("mismatch (-want, +got):\n%s", diff)
 	}
 
@@ -1002,7 +1013,7 @@ func TestUpsertSearchDocument(t *testing.T) {
 	sdWant.synopsis = "syn-v1.5.2"
 	sdWant.hasGoMod = true
 	sdWant.versionUpdatedAt = sdNewer.versionUpdatedAt
-	if diff := cmp.Diff(sdWant, sdNewer, cmp.AllowUnexported(searchDocument{})); diff != "" {
+	if diff := cmp.Diff(sdWant, sdNewer, diffOpts...); diff != "" {
 		t.Errorf("mismatch (-want, +got):\n%s", diff)
 	}
 }
