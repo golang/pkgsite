@@ -270,10 +270,24 @@ func (s *Server) DebugHandler() (http.Handler, error) {
 	return mux, nil
 }
 
+// Defaults for computing importer counts.
+const (
+	defaultBatchSize = 1000
+	// Update anything older than a week.
+	defaultStaleness = 7 * 24 * time.Hour
+	// The Cloud Scheduler max timeout is 30 minutes.
+	// Default to less for wiggle room.
+	defaultMaxTime = 26 * time.Minute
+)
+
 // handleUpdateImportedByCount updates imported_by_count for all packages.
 func (s *Server) handleUpdateImportedByCount(w http.ResponseWriter, r *http.Request) error {
-	batchSize := parseIntParam(r, "batch", 1000)
-	np, nm, err := s.db.UpdateSearchDocumentsImportedByCount(r.Context(), batchSize)
+	batchSize := parseIntParam(r, "batch", defaultBatchSize)
+	np, nm, err := s.db.UpdateSearchDocumentsImportedByCount(r.Context(), &postgres.ImporterCountOptions{
+		BatchSize: batchSize,
+		Staleness: defaultStaleness,
+		MaxTime:   defaultMaxTime,
+	})
 	if err != nil {
 		return err
 	}

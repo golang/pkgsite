@@ -177,14 +177,11 @@ func mustInsertModule(t *testing.T, db *DB, m *internal.Module, goMod string) {
 		t.Fatal(err)
 	}
 
-	defer func(old time.Duration) { countUpdateDuration = old }(countUpdateDuration)
-	countUpdateDuration = 0 // Always update counts.
-
 	// Updated imported-by counts on every new module.
 	// It should be very cheap if there are only a handful of modules in
 	// the DB.
 	// This causes GetImportedByCount to return the right value.
-	if _, _, err := db.UpdateSearchDocumentsImportedByCount(t.Context(), 1e6); err != nil {
+	if _, _, err := db.UpdateSearchDocumentsImportedByCount(t.Context(), nil); err != nil {
 		t.Fatal(err)
 	}
 }

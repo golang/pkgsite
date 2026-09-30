@@ -16,6 +16,19 @@ import (
 	"golang.org/x/pkgsite/internal/log"
 )
 
+// ImporterCountOptions are parameters for UpdateSearchDocumentsImportedByCount.
+type ImporterCountOptions struct {
+	// Number of rows to update in search_documents at once
+	// (with the table lock held).
+	// If zero, a reasonable default is used.
+	BatchSize int
+	// Maximum time to spend updating. If zero, then no max.
+	MaxTime time.Duration
+	// How old a count has to be before updating it.
+	// If zero, update everything.
+	Staleness time.Duration
+}
+
 // UpdateSearchDocumentsImportedByCount updates imported_by_count and
 // imported_by_count_updated_at.
 // It also updates imported_by_module_count and imported_by_module_count_updated_at.
@@ -24,18 +37,33 @@ import (
 // from the imports_unique table.
 //
 // UpdateSearchDocumentsImportedByCount returns the number of rows updated.
-func (db *DB) UpdateSearchDocumentsImportedByCount(ctx context.Context, batchSize int) (nPackageUpdated, nModuleUpdated int64, err error) {
-	defer derrors.WrapStack(&err, "UpdateSearchDocumentsImportedByCount(ctx)")
+func (db *DB) UpdateSearchDocumentsImportedByCount(ctx context.Context, opts *ImporterCountOptions) (nPackageUpdated, nModuleUpdated int64, err error) {
+	defer derrors.WrapStack(&err, "UpdateSearchDocumentsImportedByCount(ctx, %+v)", opts)
 
-	log.Infof(ctx, "updating imported-by module counts, batch size = %d", batchSize)
-	nModuleUpdated, err = db.updateImportedByModuleCounts(ctx, batchSize)
+	var o ImporterCountOptions
+	if opts != nil {
+		o = *opts
+	}
+	if o.BatchSize == 0 {
+		o.BatchSize = 1000
+	}
+	// As per the doc, a zero MaxTime means (effectively) no max.
+	if o.MaxTime == 0 {
+		o.MaxTime = 24 * 365 * 10 * time.Hour
+	}
+	// Adjust the total time to give each part (modules, packages) half
+	// the time.
+	o.MaxTime /= 2
+
+	log.Infof(ctx, "updating imported-by module counts, opts = %+v", o)
+	nModuleUpdated, err = db.updateImportedByModuleCounts(ctx, o)
 	if err != nil {
 		return 0, 0, err
 	}
 	log.Infof(ctx, "updated %d imported-by module counts", nModuleUpdated)
 
-	log.Infof(ctx, "updating imported-by package counts, batch size = %d", batchSize)
-	nPackageUpdated, err = db.updateImportedByPackageCounts(ctx, batchSize)
+	log.Infof(ctx, "updating imported-by package counts, opts = %+v", o)
+	nPackageUpdated, err = db.updateImportedByPackageCounts(ctx, o)
 	if err != nil {
 		return 0, nModuleUpdated, err
 	}
@@ -123,8 +151,8 @@ func updateImportedByCounts(ctx context.Context, db *database.DB, column string)
 	return nUpdated, nil
 }
 
-func (db *DB) updateImportedByPackageCounts(ctx context.Context, batchSize int) (nUpdated int64, err error) {
-	defer derrors.WrapStack(&err, "updateImportedByPackageCounts(ctx, %d)", batchSize)
+func (db *DB) updateImportedByPackageCounts(ctx context.Context, opts ImporterCountOptions) (nUpdated int64, err error) {
+	defer derrors.WrapStack(&err, "updateImportedByPackageCounts(ctx, %+v)", opts)
 
 	// See the comment on the query in updateImportedByModuleCounts for an explanation of this query.
 	// The important difference is the exclusion of packages in the same module, approximated by
@@ -158,7 +186,7 @@ func (db *DB) updateImportedByPackageCounts(ctx context.Context, batchSize int) 
 	)
 	GROUP BY 1;
 	`
-	return db.updateImporterCounts(ctx, query, "imported_by_count", batchSize)
+	return db.updateImporterCounts(ctx, query, "imported_by_count", opts)
 }
 
 // Update the number of importing modules for packages in search_documents.
@@ -169,14 +197,11 @@ func (db *DB) updateImportedByPackageCounts(ctx context.Context, batchSize int) 
 // be 1. This includes P's module as well, so we can distinguish packages that have
 // at least one importer from those that have zero. (Though note that since we don't
 // track test packages, a package with zero importers might still be used in tests.)
-//
-// The number of packages we process is limited by maxTime, declared above. During
-// that time, we process as many as we can in batches of batchSize.
-func (db *DB) updateImportedByModuleCounts(ctx context.Context, batchSize int) (nUpdated int64, err error) {
-	defer derrors.WrapStack(&err, "updateImportedByModuleCounts(ctx, %d)", batchSize)
+func (db *DB) updateImportedByModuleCounts(ctx context.Context, opts ImporterCountOptions) (nUpdated int64, err error) {
+	defer derrors.WrapStack(&err, "updateImportedByModuleCounts(ctx, %+v)", opts)
 	// This query is (mostly) efficient because the primary key on imports_unique is (to_path, from_path, from_module_path),
 	// so finding a package path is fast and its importers are contiguous, making
-	// the COUNT fast. But the NULLS FIRST means we can't use the index on the XXX_updated_at
+	// the COUNT fast. But the NULLS FIRST means we can't use the index on the X_updated_at
 	// column. TODO: if this query is slow, use a UNION to write the two conditions
 	// as separate queries.
 	//
@@ -207,38 +232,30 @@ func (db *DB) updateImportedByModuleCounts(ctx context.Context, batchSize int) (
 	)
 	GROUP BY 1;
 	`
-	return db.updateImporterCounts(ctx, query, "imported_by_module_count", batchSize)
+	return db.updateImporterCounts(ctx, query, "imported_by_module_count", opts)
 }
 
-// How stale a count has to be before we consider updating it.
-// This is a var so it can be changed in tests.
-var countUpdateDuration = 7 * 24 * time.Hour
-
-// How long we'll run each count (package, module) for. The Cloud Scheduler max timeout is 30 minutes.
-// This is less than half of that, for wiggle room.
-const maxTime = 12 * time.Minute
-
-// Update all rows in search_documents that haven't been updated in a few
-// days. A row is updated even if it hasn't changed, in order to set its
+// Update all rows in search_documents that haven't been updated in opts.Staleness.
+// A row is updated even if it hasn't changed, in order to set its
 // update time for future runs.
 //
-// Run the query to update importer counts repeatedly within maxTime.
+// Run the query to update importer counts repeatedly within opts.MaxTime.
 // countCol is the column in search_documents to update.
 //
 // The query must have two parameters.
-// $1 is the cutoff time, the current time minus countUpdateDuration.
+// $1 is the cutoff time, the current time minus opts.Staleness.
 // Computing the cutoff date outside the query, instead of using an expression like
 // "age(X) < Y", ensures that Postgres uses the index on the updated_at column.
 //
-// $2 is batchSize, the maximum number of rows it should process.
-func (db *DB) updateImporterCounts(ctx context.Context, query, countCol string, batchSize int) (nUpdated int64, err error) {
-	defer derrors.WrapStack(&err, "updateImporterCounts(ctx, %d)", batchSize)
-	cutoff := time.Now().Add(-countUpdateDuration)
-	deadline := time.Now().Add(maxTime)
+// $2 is opts.BatchSize, the maximum number of rows it should process.
+func (db *DB) updateImporterCounts(ctx context.Context, query, countCol string, opts ImporterCountOptions) (nUpdated int64, err error) {
+	defer derrors.WrapStack(&err, "updateImporterCounts(ctx, %+v)", opts)
+	cutoff := time.Now().Add(-opts.Staleness)
+	deadline := time.Now().Add(opts.MaxTime)
 	for time.Now().Before(deadline) {
 		var nu int64
 		err = db.db.Transact(ctx, sql.LevelDefault, func(tx *database.DB) error {
-			if _, err := tx.Exec(ctx, query, cutoff, batchSize); err != nil {
+			if _, err := tx.Exec(ctx, query, cutoff, opts.BatchSize); err != nil {
 				return fmt.Errorf("creating temp table: %w", err)
 			}
 			nu, err = updateImportedByCounts(ctx, tx, countCol)

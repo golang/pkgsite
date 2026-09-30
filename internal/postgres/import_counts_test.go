@@ -18,11 +18,8 @@ import (
 )
 
 func TestUpdateSearchDocumentsImportedByCount(t *testing.T) {
-	// Don't run in parallel because it changes countUpdateDuration.
+	t.Parallel()
 	ctx := context.Background()
-
-	defer func(old time.Duration) { countUpdateDuration = old }(countUpdateDuration)
-	countUpdateDuration = 0 // Always update counts.
 
 	pkgPath := func(m *internal.Module) string { return m.Packages()[0].Path }
 
@@ -40,9 +37,9 @@ func TestUpdateSearchDocumentsImportedByCount(t *testing.T) {
 		return m
 	}
 
-	updateImportedByCount := func(db *DB, batchSize int) {
+	updateImportedByCount := func(db *DB) {
 		t.Helper()
-		if _, _, err := db.UpdateSearchDocumentsImportedByCount(ctx, batchSize); err != nil {
+		if _, _, err := db.UpdateSearchDocumentsImportedByCount(ctx, nil); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -74,19 +71,19 @@ func TestUpdateSearchDocumentsImportedByCount(t *testing.T) {
 
 		// Test imported_by_count = 0 when only pkgA is added.
 		mA := insertPackageVersion(t, testDB, "A", "v1.0.0", nil)
-		updateImportedByCount(testDB, 100)
+		updateImportedByCount(testDB)
 		_ = validateImportedByCountAndGetSearchDocument(t, testDB, pkgPath(mA), 0, 0)
 
 		// Test imported_by_count = 1 for pkgA when pkgB is added.
 		mB := insertPackageVersion(t, testDB, "B", "v1.0.0", []string{"A"})
-		updateImportedByCount(testDB, 100)
+		updateImportedByCount(testDB)
 		_ = validateImportedByCountAndGetSearchDocument(t, testDB, pkgPath(mA), 1, 1)
 		sdB := validateImportedByCountAndGetSearchDocument(t, testDB, pkgPath(mB), 0, 0)
 		wantSearchDocBUpdatedAt := sdB.importedByCountUpdatedAt
 
 		// Test imported_by_count = 2 for pkgA, when C is added.
 		mC := insertPackageVersion(t, testDB, "C", "v1.0.0", []string{"A"})
-		updateImportedByCount(testDB, 100)
+		updateImportedByCount(testDB)
 		sdA := validateImportedByCountAndGetSearchDocument(t, testDB, pkgPath(mA), 2, 2)
 		sdC := validateImportedByCountAndGetSearchDocument(t, testDB, pkgPath(mC), 0, 0)
 
@@ -110,13 +107,13 @@ func TestUpdateSearchDocumentsImportedByCount(t *testing.T) {
 		// because imports_unique only records the latest version of each package.
 		mD := insertPackageVersion(t, testDB, "D", "v1.0.0", nil)
 		insertPackageVersion(t, testDB, "A", "v0.9.0", []string{"D"})
-		updateImportedByCount(testDB, 100)
+		updateImportedByCount(testDB)
 		_ = validateImportedByCountAndGetSearchDocument(t, testDB, pkgPath(mA), 2, 2)
 		_ = validateImportedByCountAndGetSearchDocument(t, testDB, pkgPath(mD), 0, 0)
 
 		// When a newer version of A imports D, however, the counts do change.
 		insertPackageVersion(t, testDB, "A", "v1.1.0", []string{"D"})
-		updateImportedByCount(testDB, 100)
+		updateImportedByCount(testDB)
 		_ = validateImportedByCountAndGetSearchDocument(t, testDB, pkgPath(mA), 2, 2)
 		_ = validateImportedByCountAndGetSearchDocument(t, testDB, pkgPath(mD), 1, 1)
 	})
@@ -127,7 +124,7 @@ func TestUpdateSearchDocumentsImportedByCount(t *testing.T) {
 		defer release()
 
 		insertPackageVersion(t, testDB, "B", "v1.0.0", nil) // mod.com/B with package mod.com/B/B
-		insertPackageVersion(t, testDB, "C", "v1.0.0", nil) // mod.com/C wwith package mod.com/C/C
+		insertPackageVersion(t, testDB, "C", "v1.0.0", nil) // mod.com/C with package mod.com/C/C
 
 		// Insert a package with the canonical module path.
 		canonicalModule := insertPackageVersion(t, testDB, "A", "v1.0.0", []string{"B"})
@@ -167,7 +164,7 @@ func TestUpdateSearchDocumentsImportedByCount(t *testing.T) {
 		// Although B is in imports_unique as imported by both mod.com/A and mod.com/a,
 		// only mod.com/A is in search_documents, so both its imported-by counts are 1.
 		// C is only imported by mod.com/a, so both its imported-by counts are 0.
-		updateImportedByCount(testDB, 100)
+		updateImportedByCount(testDB)
 		validateImportedByCountAndGetSearchDocument(t, testDB, "mod.com/B/B", 1, 1)
 		validateImportedByCountAndGetSearchDocument(t, testDB, "mod.com/C/C", 0, 0)
 	})
@@ -182,7 +179,7 @@ func TestUpdateSearchDocumentsImportedByCount(t *testing.T) {
 		insertPackageVersion(t, testDB, "D", "v1.0.0", []string{"A"})
 		insertPackageVersion(t, testDB, "E", "v1.0.0", []string{"B"})
 
-		updateImportedByCount(testDB, 1)
+		updateImportedByCount(testDB)
 		_ = validateImportedByCountAndGetSearchDocument(t, testDB, pkgPath(mA), 2, 2)
 		_ = validateImportedByCountAndGetSearchDocument(t, testDB, pkgPath(mB), 1, 1)
 	})
@@ -201,7 +198,7 @@ func TestUpdateSearchDocumentsImportedByCount(t *testing.T) {
 		}
 		testDB.MustInsertModule(t, mC)
 
-		updateImportedByCount(testDB, 100)
+		updateImportedByCount(testDB)
 		_ = validateImportedByCountAndGetSearchDocument(t, testDB, pkgPath(mA), 2, 1)
 	})
 	t.Run("same_module", func(t *testing.T) {
@@ -226,7 +223,7 @@ func TestUpdateSearchDocumentsImportedByCount(t *testing.T) {
 		mAB.Packages()[0].Imports = nil
 		testDB.MustInsertModule(t, mAB)
 
-		updateImportedByCount(testDB, 100)
+		updateImportedByCount(testDB)
 		_ = validateImportedByCountAndGetSearchDocument(t, testDB, "mod.com/A", 0, 1)
 		_ = validateImportedByCountAndGetSearchDocument(t, testDB, "mod.com/A/pkg2", 0, 1)
 		_ = validateImportedByCountAndGetSearchDocument(t, testDB, "mod.com/AB/pkg", 1, 1)
@@ -252,7 +249,7 @@ func TestUpdateSearchDocumentsImportedByCount(t *testing.T) {
 		mA.Packages()[0].Imports = []string{"fmt"}
 		testDB.MustInsertModule(t, mA)
 
-		updateImportedByCount(testDB, 100)
+		updateImportedByCount(testDB)
 		_ = validateImportedByCountAndGetSearchDocument(t, testDB, "net/http", 0, 0)
 		// For fmt, net/http is excluded from package count (same module "std"),
 		// while mod.com/A/A is counted. Both modules ("std" and "mod.com/A") are

@@ -351,10 +351,6 @@ func TestSearch(t *testing.T) {
 	// Cannot be run in parallel with other search tests, because it reads
 	// metrics before and after (see responseDelta below).
 	ctx := context.Background()
-
-	old := countUpdateDuration
-	defer func() { countUpdateDuration = old }()
-	countUpdateDuration = 0
 	tests := []struct {
 		label       string
 		modules     []*internal.Module
@@ -446,7 +442,7 @@ func TestSearch(t *testing.T) {
 			for _, m := range test.modules {
 				testDB.MustInsertModule(t, m)
 			}
-			if _, _, err := testDB.UpdateSearchDocumentsImportedByCount(ctx, 100); err != nil {
+			if _, _, err := testDB.UpdateSearchDocumentsImportedByCount(ctx, nil); err != nil {
 				t.Fatal(err)
 			}
 			guardTestResult := resultGuard(t, test.resultOrder)
@@ -538,7 +534,7 @@ func TestSearchErrors(t *testing.T) {
 			for _, v := range modules {
 				testDB.MustInsertModule(t, v)
 			}
-			if _, _, err := testDB.UpdateSearchDocumentsImportedByCount(ctx, 100); err != nil {
+			if _, _, err := testDB.UpdateSearchDocumentsImportedByCount(ctx, nil); err != nil {
 				t.Fatal(err)
 			}
 			guardTestResult := resultGuard(t, test.resultOrder)
