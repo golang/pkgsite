@@ -68,8 +68,7 @@ func runImportedByUpdates(ctx context.Context, dbConnInfo, dbHosts string) error
 	if err != nil {
 		return err
 	}
-	_, err = db.UpdateSearchDocumentsImportedByCountWithCounts(ctx, counts, 1000)
-	return err
+	return db.UpdateSearchDocumentsImportedByCountWithCounts(ctx, counts)
 }
 
 func run(frontendHost string) error {

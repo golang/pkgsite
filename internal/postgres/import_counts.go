@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"time"
 
-	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/log"
@@ -69,58 +68,6 @@ func (db *DB) UpdateSearchDocumentsImportedByCount(ctx context.Context, opts *Im
 	}
 	log.Infof(ctx, "updated %d imported-by package counts", nPackageUpdated)
 	return nPackageUpdated, nModuleUpdated, nil
-}
-
-// TODO(jba): remove this after rewriting the call in tests/search/main.go.
-func (db *DB) UpdateSearchDocumentsImportedByCountWithCounts(ctx context.Context, counts map[string]int, batchSize int) (nUpdated int64, err error) {
-	defer derrors.WrapStack(&err, "UpdateSearchDocumentsImportedByCountWithCounts")
-	defer internal.RequestState(ctx, "updating search_documents")()
-	total := len(counts)
-	for len(counts) > 0 {
-		var nu int64
-		err := db.db.Transact(ctx, sql.LevelDefault, func(tx *database.DB) error {
-			if err := insertImportedByCounts(ctx, tx, counts, batchSize); err != nil {
-				return err
-			}
-			nu, err = updateImportedByCounts(ctx, tx, "imported_by_count")
-			return err
-		})
-		if err != nil {
-			return nUpdated, err
-		}
-		nUpdated += nu
-		internal.RequestState(ctx, fmt.Sprintf("updating search_documents: %d/%d", nUpdated, total))
-	}
-	return nUpdated, nil
-}
-
-// insertImportedByCounts creates a temporary table and inserts at most limit
-// rows into it, where each row is a key and value from the counts map. The
-// inserted keys are deleted from counts.
-func insertImportedByCounts(ctx context.Context, db *database.DB, counts map[string]int, limit int) (err error) {
-	defer derrors.WrapStack(&err, "insertImportedByCounts(ctx, db, counts)")
-
-	const createTableQuery = `
-		CREATE TEMPORARY TABLE computed_imported_by_counts (
-			package_path TEXT NOT NULL,
-			count        INTEGER NOT NULL
-		) ON COMMIT DROP;
-    `
-	if _, err := db.Exec(ctx, createTableQuery); err != nil {
-		return fmt.Errorf("CREATE TABLE: %v", err)
-	}
-	var values []any
-	i := 0
-	for p, c := range counts {
-		if i >= limit {
-			break
-		}
-		values = append(values, p, c)
-		delete(counts, p)
-		i++
-	}
-	columns := []string{"package_path", "count"}
-	return db.BulkInsert(ctx, "computed_imported_by_counts", columns, values, "")
 }
 
 // updateImportedByCounts updates the given count column (e.g. imported_by_count
@@ -270,4 +217,33 @@ func (db *DB) updateImporterCounts(ctx context.Context, query, countCol string, 
 		nUpdated += nu
 	}
 	return nUpdated, nil
+}
+
+// UpdateSearchDocumentsImportedByCountWithCounts inserts the given package import
+// counts into search_documents, bypassing the logic that computes the counts. (Thus
+// the counts may bear no relationship to the rest of the database.)
+// It is for testing only (see tests/search).
+func (db *DB) UpdateSearchDocumentsImportedByCountWithCounts(ctx context.Context, counts map[string]int) (err error) {
+	defer derrors.WrapStack(&err, "UpdateSearchDocumentsImportedByCountWithCounts")
+	const createTableQuery = `
+		CREATE TEMPORARY TABLE computed_imported_by_counts (
+			package_path TEXT NOT NULL,
+			count        INTEGER NOT NULL
+		) ON COMMIT DROP;
+    `
+	return db.db.Transact(ctx, sql.LevelDefault, func(tx *database.DB) error {
+		if _, err := tx.Exec(ctx, createTableQuery); err != nil {
+			return fmt.Errorf("CREATE TABLE: %v", err)
+		}
+		var values []any
+		for p, c := range counts {
+			values = append(values, p, c)
+		}
+		columns := []string{"package_path", "count"}
+		if err := tx.BulkInsert(ctx, "computed_imported_by_counts", columns, values, ""); err != nil {
+			return err
+		}
+		_, err = updateImportedByCounts(ctx, tx, "imported_by_count")
+		return err
+	})
 }

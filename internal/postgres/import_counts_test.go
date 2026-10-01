@@ -44,27 +44,6 @@ func TestUpdateSearchDocumentsImportedByCount(t *testing.T) {
 		}
 	}
 
-	validateImportedByCountAndGetSearchDocument := func(t *testing.T, db *DB, path string, pcount, mcount int) *searchDocument {
-		t.Helper()
-		sd, err := getSearchDocument(ctx, db, path)
-		if err != nil {
-			t.Fatalf("testDB.getSearchDocument(ctx, %q): %v", path, err)
-		}
-		if sd.importedByCount > 0 && sd.importedByCountUpdatedAt.IsZero() {
-			t.Fatalf("importedByCountUpdatedAt for package %q should not be empty if count > 0", path)
-		}
-		if pcount != sd.importedByCount {
-			t.Fatalf("importedByCount for package %q = %d; want = %d", path, sd.importedByCount, pcount)
-		}
-		if sd.importedByModuleCountUpdatedAt.IsZero() {
-			t.Fatalf("importedByModuleCountUpdatedAt for package %q should not be zero", path)
-		}
-		if mcount != sd.importedByModuleCount {
-			t.Fatalf("importedByModuleCount for package %q = %d; want = %d", path, sd.importedByModuleCount, mcount)
-		}
-		return sd
-	}
-
 	t.Run("basic", func(t *testing.T) {
 		testDB, release := acquire(t)
 		defer release()
@@ -257,3 +236,47 @@ func TestUpdateSearchDocumentsImportedByCount(t *testing.T) {
 		_ = validateImportedByCountAndGetSearchDocument(t, testDB, "fmt", 1, 2)
 	})
 }
+
+func TestUpdateSearchDocumentsImportedByCountWithCounts(t *testing.T) {
+	t.Parallel()
+	testDB, release := acquire(t)
+	defer release()
+
+	m := sample.Module("mod.com/A", "v1.0.0", "p1", "p2", "p3")
+	testDB.MustInsertModule(t, m)
+
+	counts := map[string]int{
+		"mod.com/A/p1":        10,
+		"mod.com/A/p2":        25,
+		"mod.com/nonexistent": 99,
+	}
+	if err := testDB.UpdateSearchDocumentsImportedByCountWithCounts(t.Context(), counts); err != nil {
+		t.Fatal(err)
+	}
+
+	validateImportedByCountAndGetSearchDocument(t, testDB, "mod.com/A/p1", 10, 0)
+	validateImportedByCountAndGetSearchDocument(t, testDB, "mod.com/A/p2", 25, 0)
+	validateImportedByCountAndGetSearchDocument(t, testDB, "mod.com/A/p3", 0, 0)
+}
+
+func validateImportedByCountAndGetSearchDocument(t *testing.T, db *DB, path string, pcount, mcount int) *searchDocument {
+	t.Helper()
+	sd, err := getSearchDocument(t.Context(), db, path)
+	if err != nil {
+		t.Fatalf("testDB.getSearchDocument(ctx, %q): %v", path, err)
+	}
+	if sd.importedByCount > 0 && sd.importedByCountUpdatedAt.IsZero() {
+		t.Fatalf("importedByCountUpdatedAt for package %q should not be empty if count > 0", path)
+	}
+	if pcount != sd.importedByCount {
+		t.Fatalf("importedByCount for package %q = %d; want = %d", path, sd.importedByCount, pcount)
+	}
+	if sd.importedByModuleCountUpdatedAt.IsZero() {
+		t.Fatalf("importedByModuleCountUpdatedAt for package %q should not be zero", path)
+	}
+	if mcount != sd.importedByModuleCount {
+		t.Fatalf("importedByModuleCount for package %q = %d; want = %d", path, sd.importedByModuleCount, mcount)
+	}
+	return sd
+}
+
