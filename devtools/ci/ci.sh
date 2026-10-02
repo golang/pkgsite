@@ -102,15 +102,10 @@ print_duration_and_reset
 echo "----------------------------------------"
 echo "Running screentest"
 echo "----------------------------------------"
-if ! ./tests/screentest/run.sh -rm -concurrency 1 ci; then
-  if [[ -d tests/screentest/output ]] && [[ -n "${KOKORO_ARTIFACTS_DIR:-}" ]]; then
-    echo "Screentest failed. Copying output to KOKORO_ARTIFACTS_DIR."
-    chmod -R a+r tests/screentest/output || true
-    mkdir -p "${KOKORO_ARTIFACTS_DIR}/screentest_output"
-    cp -a tests/screentest/output/. "${KOKORO_ARTIFACTS_DIR}/screentest_output/" || true
-  fi
-  exit 1
-fi
+# On failure, diff images are written to tests/screentest/output.
+# In LUCI (via TestIntegration in integration_test.go), they are uploaded as
+# test artifacts and viewable under the Test Results tab of the build page.
+./tests/screentest/run.sh -rm -concurrency 1 ci
 print_duration_and_reset
 
 echo "----------------------------------------"

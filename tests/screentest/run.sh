@@ -30,8 +30,8 @@ usage() {
 Usage: $0 [OPTIONS] [ci|local|exp|dev|staging|prod]
 
   [ci]
-    Run tests against a local server with a seeded database. This is what runs in
-    CI/kokoro and should always pass on master.
+    Run tests against a local server with a seeded database. This is what runs on
+    LUCI in post-submit and should always pass on master.
 
   [local]
     Run ci tests without using 'docker compose'.
