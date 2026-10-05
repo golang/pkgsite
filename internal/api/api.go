@@ -538,6 +538,8 @@ func ServePackageSymbols(w http.ResponseWriter, r *http.Request, ds internal.Dat
 // api:desc Filtering is applied to the list of paths in the response.
 // api:desc Only paths that match the filter query parameter are returned.
 // api:desc Within a filter, the variable `path` is set to the import path.
+// api:desc The total in the response is -1 to indicate that the total number of results is unknown. This can occur if the
+// api:desc count of importers has not been calculated yet.
 // api:example /v1/imported-by/golang.org/x/time/rate?limit=10&filter=%5E.%2A%5C.io%2F
 func ServePackageImportedBy(w http.ResponseWriter, r *http.Request, ds internal.DataSource) (err error) {
 	defer derrors.Wrap(&err, "ServePackageImportedBy")
@@ -604,11 +606,6 @@ func ServePackageImportedBy(w http.ResponseWriter, r *http.Request, ds internal.
 		importedBy = importedBy[:limit]
 	}
 
-	counts, err := ds.GetImportedByCounts(r.Context(), pkgPath, modulePath)
-	if err != nil {
-		return err
-	}
-
 	filtered, err := filterString(importedBy, params.Filter, "path")
 	if err != nil {
 		return err
@@ -618,13 +615,33 @@ func ServePackageImportedBy(w http.ResponseWriter, r *http.Request, ds internal.
 	// The alternative is to fetch rows indefinitely, which means unbounded
 	// work.
 
+	var total int
+	// If this is the first page and there is no next page,
+	// the total is the number of filtered results.
+	if start == "" && nextToken == "" {
+		total = len(filtered)
+	} else {
+		// Query the DB for the count.
+		counts, err := ds.GetImportedByCounts(r.Context(), pkgPath, modulePath)
+		if err != nil {
+			return err
+		}
+		// The count may not have been computed yet.
+		if counts.PackagesUpdatedAt.IsZero() {
+			total = -1
+		} else {
+			// The count may be an overestimate due to filtering, and may be stale, but it's a reasonable approximation.
+			total = counts.Packages
+		}
+	}
+
 	// api:response PackageImportedBy
 	resp := PackageImportedBy{
 		ModulePath: modulePath,
 		Version:    requestedVersion,
 		ImportedBy: PaginatedResponse[string]{
 			Items:         filtered,
-			Total:         counts.Packages,
+			Total:         total,
 			NextPageToken: nextToken,
 		},
 	}

@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Go Pkgsite API",
-    "version": "v1.0.0",
+    "version": "v1.1.0",
     "description": "API for accessing information about Go packages and modules on pkg.go.dev.",
     "contact": {
       "name": "The Go team at Google",
@@ -44,7 +44,7 @@
   "paths": {
     "/imported-by/{path}": {
       "get": {
-        "description": "Paths of packages importing the package at {path},\nnot including packages in the same module.\nFiltering is applied to the list of paths in the response.\nOnly paths that match the filter query parameter are returned.\nWithin a filter, the variable `path` is set to the import path.",
+        "description": "Paths of packages importing the package at {path},\nnot including packages in the same module.\nFiltering is applied to the list of paths in the response.\nOnly paths that match the filter query parameter are returned.\nWithin a filter, the variable `path` is set to the import path.\nThe total in the response is -1 to indicate that the total number of results is unknown. This can occur if the\ncount of importers has not been calculated yet.",
         "operationId": "getImported-by",
         "parameters": [
           {

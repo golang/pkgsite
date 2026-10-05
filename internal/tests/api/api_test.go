@@ -1269,6 +1269,14 @@ func testServePackageSymbols(t *testing.T, ds internal.TestingDataSource) {
 
 }
 
+type unknownCountDataSource struct {
+	internal.TestingDataSource
+}
+
+func (unknownCountDataSource) GetImportedByCounts(ctx context.Context, pkgPath, modulePath string) (internal.ImportedByCounts, error) {
+	return internal.ImportedByCounts{}, nil
+}
+
 func testServePackageImportedBy(t *testing.T, ds internal.TestingDataSource) {
 
 	ds.MustInsertModule(t, module(t, modinfo("example.com", "v1.2.3"), unit("pkg")))
@@ -1281,11 +1289,15 @@ func testServePackageImportedBy(t *testing.T, ds internal.TestingDataSource) {
 	u2.Imports = []string{"example.com/pkg"}
 	ds.MustInsertModule(t, module(t, modinfo("example.com/mod2", "v1.2.3"), u2))
 
+	unknownDS := unknownCountDataSource{ds}
+
 	for _, test := range []struct {
 		name       string
 		url        string
+		overrideDS internal.DataSource
 		wantStatus int
 		wantCount  int
+		wantTotal  int
 		want       any
 	}{
 		{
@@ -1302,13 +1314,34 @@ func testServePackageImportedBy(t *testing.T, ds internal.TestingDataSource) {
 			url:        "/v1/imported-by/example.com/pkg?version=v1.2.3",
 			wantStatus: http.StatusOK,
 			wantCount:  2,
+			wantTotal:  2,
+		},
+		{
+			name: "filtered single page",
+			url: "/v1/imported-by/example.com/pkg?version=v1.2.3&filter=" +
+				url.QueryEscape(`contains(path, "mod2")`),
+			wantStatus: http.StatusOK,
+			wantCount:  1,
+			wantTotal:  1,
+		},
+		{
+			name:       "unknown count single page",
+			url:        "/v1/imported-by/example.com/pkg?version=v1.2.3",
+			overrideDS: unknownDS,
+			wantStatus: http.StatusOK,
+			wantCount:  2,
+			wantTotal:  2,
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			r := httptest.NewRequest("GET", test.url, nil)
 			w := httptest.NewRecorder()
 
-			if err := api.ServePackageImportedBy(w, r, ds); err != nil {
+			useDS := internal.DataSource(ds)
+			if test.overrideDS != nil {
+				useDS = test.overrideDS
+			}
+			if err := api.ServePackageImportedBy(w, r, useDS); err != nil {
 				api.ServeError(w, r, err)
 			}
 
@@ -1322,17 +1355,36 @@ func testServePackageImportedBy(t *testing.T, ds internal.TestingDataSource) {
 				if len(got.ImportedBy.Items) != test.wantCount {
 					t.Errorf("count = %d, want %d", len(got.ImportedBy.Items), test.wantCount)
 				}
+				if got.ImportedBy.Total != test.wantTotal {
+					t.Errorf("total = %d, want %d", got.ImportedBy.Total, test.wantTotal)
+				}
 			}
 		})
 	}
+	extract := func(pib *api.PackageImportedBy) (int, int, string) {
+		return len(pib.ImportedBy.Items), pib.ImportedBy.Total, pib.ImportedBy.NextPageToken
+	}
 	testPagination[api.PackageImportedBy](t, ds, "/v1/imported-by/example.com/pkg?version=v1.2.3&limit=1",
 		api.ServePackageImportedBy,
-		func(pib *api.PackageImportedBy) (int, int, string) {
-			return len(pib.ImportedBy.Items), pib.ImportedBy.Total, pib.ImportedBy.NextPageToken
-		},
+		extract,
 		[]wantPage{
 			{wantCount: 1, wantTotal: 2},
 			{wantCount: 1, wantTotal: 2},
+		})
+	testPagination[api.PackageImportedBy](t, ds, "/v1/imported-by/example.com/pkg?version=v1.2.3&limit=1&filter="+
+		url.QueryEscape(`contains(path, "mod2")`),
+		api.ServePackageImportedBy,
+		extract,
+		[]wantPage{
+			{wantCount: 0, wantTotal: 2},
+			{wantCount: 1, wantTotal: 2},
+		})
+	testPagination[api.PackageImportedBy](t, unknownDS, "/v1/imported-by/example.com/pkg?version=v1.2.3&limit=1",
+		api.ServePackageImportedBy,
+		extract,
+		[]wantPage{
+			{wantCount: 1, wantTotal: -1},
+			{wantCount: 1, wantTotal: -1},
 		})
 }
 
