@@ -119,6 +119,12 @@ type Config struct {
 	// DisableErrorReporting disables sending errors to the GCP ErrorReporting system.
 	DisableErrorReporting bool
 
+	// DisableTemporaryBanner hides temporary promotional banners (such as the
+	// Go Developer Survey banner) regardless of their scheduled time window.
+	// It is used as an emergency switch in production and to keep screentest
+	// captures deterministic.
+	DisableTemporaryBanner bool
+
 	// EnableVectorSearch gates the vector search / embeddings sync database queries.
 	EnableVectorSearch bool
 

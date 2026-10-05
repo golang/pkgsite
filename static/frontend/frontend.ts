@@ -5,17 +5,26 @@
  * license that can be found in the LICENSE file.
  */
 
-import { registerHeaderListeners, registerSearchFormListeners } from 'static/shared/header/header';
 import { CarouselController } from 'static/shared/carousel/carousel';
 import { ClipboardController } from 'static/shared/clipboard/clipboard';
-import { ToolTipController } from 'static/shared/tooltip/tooltip';
-import { SelectNavController } from 'static/shared/outline/select';
-import { ModalController } from 'static/shared/modal/modal';
+import { registerHeaderListeners, registerSearchFormListeners } from 'static/shared/header/header';
 import { initModals } from 'static/shared/jump/jump';
+import { ModalController } from 'static/shared/modal/modal';
+import { SelectNavController } from 'static/shared/outline/select';
+import { ToolTipController } from 'static/shared/tooltip/tooltip';
 
-import { keyboard } from 'static/shared/keyboard/keyboard';
 import * as analytics from 'static/shared/analytics/analytics';
+import { keyboard } from 'static/shared/keyboard/keyboard';
+import { registerSurveyBanner } from 'static/shared/survey/survey';
 import { initJumpLinks } from './about/index';
+
+// The survey banner sits at the top of the page, so show it as early as
+// possible (on DOMContentLoaded rather than load) to limit layout shift.
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', registerSurveyBanner);
+} else {
+  registerSurveyBanner();
+}
 
 window.addEventListener('load', () => {
   for (const el of document.querySelectorAll<HTMLButtonElement>('.js-clipboard')) {

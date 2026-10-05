@@ -221,6 +221,10 @@ run_locally() {
   export GO_DISCOVERY_DATABASE_PASSWORD=postgres
   export GO_DISCOVERY_LOG_LEVEL=warning
   export GO_DISCOVERY_VULN_DB=file:///$PWD/tests/screentest/testdata/vulndb-v1
+  # Temporary promotional banners (such as the Go Developer Survey banner) are
+  # date-dependent; keep them out of the screenshots that are compared against
+  # stored goldens.
+  export GO_DISCOVERY_DISABLE_TEMPORARY_BANNER=true
 
   if ! listening $postgres_port; then
     info setting up postgres DB

@@ -8,6 +8,7 @@ package frontend
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -50,27 +51,30 @@ type VectorEmbedder interface {
 type Server struct {
 	fetchServer FetchServerInterface
 	// getDataSource should never be called from a handler. It is called only in Server.errorHandler.
-	getDataSource         func(context.Context) internal.DataSource
-	queue                 queue.Queue
-	templateFS            template.TrustedFS
-	staticFS              fs.FS
-	thirdPartyFS          fs.FS
-	devMode               bool
-	goDocMode             bool          // running to serve documentation for 'go doc'
-	localMode             bool          // running locally (i.e. ./cmd/pkgsite)
-	localModules          []LocalModule // locally hosted modules; empty in production
-	errorPage             []byte
-	appVersionLabel       string
-	googleTagManagerID    string
-	serveStats            bool
-	reporter              derrors.Reporter
-	fileMux               *http.ServeMux
-	vulnClient            *vuln.Client
-	versionID             string
-	instanceID            string
-	HTTPClient            *http.Client
-	embeddingsClient      VectorEmbedder
-	recordCodeWikiMetrics RecordClickFunc
+	getDataSource          func(context.Context) internal.DataSource
+	queue                  queue.Queue
+	templateFS             template.TrustedFS
+	staticFS               fs.FS
+	thirdPartyFS           fs.FS
+	devMode                bool
+	goDocMode              bool          // running to serve documentation for 'go doc'
+	localMode              bool          // running locally (i.e. ./cmd/pkgsite)
+	localModules           []LocalModule // locally hosted modules; empty in production
+	errorPage              []byte
+	appVersionLabel        string
+	googleTagManagerID     string
+	serveStats             bool
+	disableTemporaryBanner bool                 // from Config.DisableTemporaryBanner
+	survey                 pagepkg.SurveyBanner // parsed from survey.json
+	deploymentEnvironment  string               // from Config.DeploymentEnvironment ("local", "exp", "dev", "staging", "prod")
+	reporter               derrors.Reporter
+	fileMux                *http.ServeMux
+	vulnClient             *vuln.Client
+	versionID              string
+	instanceID             string
+	HTTPClient             *http.Client
+	embeddingsClient       VectorEmbedder
+	recordCodeWikiMetrics  RecordClickFunc
 
 	mu        sync.Mutex // Protects all fields below
 	templates map[string]*template.Template
@@ -146,8 +150,20 @@ func NewServer(scfg ServerConfig) (_ *Server, err error) {
 		s.appVersionLabel = scfg.Config.AppVersionLabel()
 		s.googleTagManagerID = scfg.Config.GoogleTagManagerID
 		s.serveStats = scfg.Config.ServeStats
+		s.disableTemporaryBanner = scfg.Config.DisableTemporaryBanner
+		s.deploymentEnvironment = scfg.Config.DeploymentEnvironment()
 		s.versionID = scfg.Config.VersionID
 		s.instanceID = scfg.Config.InstanceID
+	}
+	if len(bytes.TrimSpace(surveyJSON)) == 0 || s.localMode {
+		s.disableTemporaryBanner = true
+	} else if !s.disableTemporaryBanner {
+		if err := json.Unmarshal(surveyJSON, &s.survey); err != nil {
+			return nil, fmt.Errorf("parsing survey.json: %v", err)
+		}
+		if time.Now().After(s.survey.End) {
+			s.disableTemporaryBanner = true
+		}
 	}
 	errorPageBytes, err := s.renderErrorPage(context.Background(), http.StatusInternalServerError, "error", nil)
 	if err != nil {
@@ -575,6 +591,7 @@ func (s *Server) newBasePage(r *http.Request, title string) pagepkg.BasePage {
 		SearchPrompt:       searchPrompt,
 		SearchModePackage:  searchModePackage,
 		SearchModeSymbol:   searchModeSymbol,
+		SurveyBanner:       s.surveyBanner(time.Now()),
 		// By default, the SearchMode is set to the empty string, which
 		// indicates that we should use heuristics to determine whether the
 		// user wants to search for symbols or packages.

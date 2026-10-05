@@ -6,6 +6,8 @@
 package page
 
 import (
+	"time"
+
 	"github.com/google/safehtml"
 	"github.com/google/safehtml/template"
 	"golang.org/x/pkgsite/internal/experiment"
@@ -57,6 +59,26 @@ type BasePage struct {
 	// SearchModeSymbol is the value of const searchModeSymbol. It is used in
 	// the search bar dropdown.
 	SearchModeSymbol string
+
+	// SurveyBanner describes the Go Developer Survey banner to show on the
+	// page, or is nil when no banner should be shown.
+	SurveyBanner *SurveyBanner
+}
+
+// SurveyBanner describes a Go Developer Survey promotion shown on the page.
+type SurveyBanner struct {
+	// ID uniquely identifies the survey (e.g., "go-survey-2026"). It is placed
+	// in the banner element's data-survey-id attribute and used as the
+	// localStorage key to persist the banner's minimized state in the browser.
+	ID string
+	// Name is the human-readable title of the survey (e.g., "2026 Go Developer
+	// Survey"), used in the banner link text ("Take the <Name>") and aria-label.
+	Name string
+	// URL is the target address of the survey link.
+	URL string
+	// Start and End define the time window [Start, End] during which the banner
+	// is displayed in production.
+	Start, End time.Time
 }
 
 func (p *BasePage) SetBasePage(bp BasePage) {

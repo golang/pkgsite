@@ -187,12 +187,13 @@ func Init(ctx context.Context) (_ *config.Config, err error) {
 			}(),
 			AuthValues: parseCommaList(os.Getenv("GO_DISCOVERY_AUTH_VALUES")),
 		},
-		UseProfiler:           os.Getenv("GO_DISCOVERY_USE_PROFILER") == "true",
-		LogLevel:              os.Getenv("GO_DISCOVERY_LOG_LEVEL"),
-		ServeStats:            os.Getenv("GO_DISCOVERY_SERVE_STATS") == "true",
-		DisableErrorReporting: os.Getenv("GO_DISCOVERY_DISABLE_ERROR_REPORTING") == "true",
-		EnableVectorSearch:    os.Getenv("GO_DISCOVERY_ENABLE_VECTOR_SEARCH") == "true",
-		VulnDB:                GetEnv("GO_DISCOVERY_VULN_DB", "https://storage.googleapis.com/go-vulndb"),
+		UseProfiler:            os.Getenv("GO_DISCOVERY_USE_PROFILER") == "true",
+		LogLevel:               os.Getenv("GO_DISCOVERY_LOG_LEVEL"),
+		ServeStats:             os.Getenv("GO_DISCOVERY_SERVE_STATS") == "true",
+		DisableErrorReporting:  os.Getenv("GO_DISCOVERY_DISABLE_ERROR_REPORTING") == "true",
+		DisableTemporaryBanner: os.Getenv("GO_DISCOVERY_DISABLE_TEMPORARY_BANNER") == "true",
+		EnableVectorSearch:     os.Getenv("GO_DISCOVERY_ENABLE_VECTOR_SEARCH") == "true",
+		VulnDB:                 GetEnv("GO_DISCOVERY_VULN_DB", "https://storage.googleapis.com/go-vulndb"),
 	}
 	log.SetLevel(cfg.LogLevel)
 

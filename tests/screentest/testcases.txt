@@ -11,7 +11,11 @@ block https://codecov.io/* https://travis-ci.com/* https://travis-ci.org/* https
 # The aria-selected attribute is added by the last piece of JS to run.
 {{$ready := "[role='treeitem'][aria-selected='true']"}}
 
-{{$hideElements := "const s=document.createElement('style');s.innerHTML='*{transition:none!important;animation:none!important;caret-color:transparent!important} .js-cookieNotice { display: none !important; }';document.head.appendChild(s);document.querySelector(\"[data-test-id='UnitHeader-importedby']\")?.remove();document.querySelector(\"[data-test-id='meta-link-depsdev']\")?.remove();document.querySelector(\"[data-test-id='meta-link-codewiki']\")?.remove();"}}
+{{$hideElements := "const s=document.createElement('style');s.innerHTML='*{transition:none!important;animation:none!important;caret-color:transparent!important} .js-cookieNotice { display: none !important; } .js-surveyBanner { display: none !important; }';document.head.appendChild(s);document.querySelector(\"[data-test-id='UnitHeader-importedby']\")?.remove();document.querySelector(\"[data-test-id='meta-link-depsdev']\")?.remove();document.querySelector(\"[data-test-id='meta-link-codewiki']\")?.remove();"}}
+
+# The Go Developer Survey banner depends on the date and the server environment,
+# so remove it from tests that do not already use $hideElements.
+{{$hideSurveyBanner := "document.querySelector('.js-surveyBanner')?.remove();"}}
 
 # JS for hiding the "Links" heading. We are already hiding the deps.dev link because
 # its presence depends on a timeout, but for some modules, if the link isn't
@@ -184,17 +188,20 @@ capture viewport
 
 test about
 path /about
+eval {{$hideSurveyBanner}}
 capture fullscreen
 capture fullscreen 540x1080
 
 test badge
 path /badge/
+eval {{$hideSurveyBanner}}
 capture fullscreen
 capture fullscreen 540x1080
 
 test error
 status 400
 path /bad.package@v1.0-badversion
+eval {{$hideSurveyBanner}}
 capture fullscreen
 capture fullscreen 540x1080
 
@@ -202,32 +209,38 @@ test 404 with fetch button
 status 404
 path /github.com/package/does/not/exist
 sleep 1s
+eval {{$hideSurveyBanner}}
 capture fullscreen
 capture fullscreen 540x1080
 
 test home
 path /
 click .go-Carousel-dot
+eval {{$hideSurveyBanner}}
 capture fullscreen
 capture fullscreen 540x1080
 
 test license policy
 path /license-policy
+eval {{$hideSurveyBanner}}
 capture fullscreen
 capture fullscreen 540x1080
 
 test search help
 path /search-help
+eval {{$hideSurveyBanner}}
 capture fullscreen
 capture fullscreen 540x1080
 
 test search no results
 path /search?q=aoeuidhtns
+eval {{$hideSurveyBanner}}
 capture fullscreen
 capture fullscreen 540x1080
 
 test sub-repositories
 path /golang.org/x
+eval {{$hideSurveyBanner}}
 capture fullscreen
 capture fullscreen 540x1080
 

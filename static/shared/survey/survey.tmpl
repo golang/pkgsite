@@ -1,0 +1,25 @@
+<!--
+  Copyright 2026 The Go Authors. All rights reserved.
+  Use of this source code is governed by a BSD-style
+  license that can be found in the LICENSE file.
+-->
+
+{{/* survey_banner renders the Go Developer Survey notification. On mobile it
+     is a top banner above the header; on desktop it is a floating card at the
+     bottom-right that minimizes into a sticky pill. */}}
+{{define "survey_banner"}}
+  {{with .SurveyBanner}}
+    <section class="go-SurveyBanner js-surveyBanner" role="region" aria-label="{{.Name}}" data-survey-id="{{.ID}}">
+      <img class="go-SurveyBanner-gopher" src="/static/shared/survey/gopher-announcement.png" width="108" height="80" alt="" aria-hidden="true">
+      <img class="go-SurveyBanner-bullhornMobile" src="/static/shared/survey/bullhorn-mobile.svg" width="22" height="23" alt="" aria-hidden="true">
+      <img class="go-SurveyBanner-bullhornDesktop" src="/static/shared/survey/bullhorn-desktop.svg" width="28" height="28" alt="" aria-hidden="true">
+      <div class="go-SurveyBanner-content">
+        <span class="go-SurveyBanner-lead">Help us shape the future of Go!</span>
+        <a class="go-SurveyBanner-link js-surveyBannerLink" href="{{.URL}}" target="_blank" rel="noopener"><span class="go-SurveyBanner-linkPrefix">Take the </span>{{.Name}}</a>
+      </div>
+      <button class="go-SurveyBanner-close js-surveyBannerClose" type="button" aria-label="Minimize the survey banner">
+        <img class="go-SurveyBanner-minimizeIcon" src="/static/shared/survey/minimize.svg" width="20" height="20" alt="" aria-hidden="true">
+      </button>
+    </section>
+  {{end}}
+{{end}}
