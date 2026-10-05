@@ -277,6 +277,14 @@ func validateImportedByCountAndGetSearchDocument(t *testing.T, db *DB, path stri
 	if mcount != sd.importedByModuleCount {
 		t.Fatalf("importedByModuleCount for package %q = %d; want = %d", path, sd.importedByModuleCount, mcount)
 	}
+	counts, err := db.GetImportedByCounts(t.Context(), path, "")
+	if err != nil {
+		t.Fatalf("testDB.GetImportedByCounts(ctx, %q): %v", path, err)
+	}
+	if counts.Packages != sd.importedByCount || !counts.PackagesUpdatedAt.Equal(sd.importedByCountUpdatedAt) ||
+		counts.Modules != sd.importedByModuleCount || !counts.ModulesUpdatedAt.Equal(sd.importedByModuleCountUpdatedAt) {
+		t.Fatalf("GetImportedByCounts(%q) = %+v, does not match search_documents row", path, counts)
+	}
 	return sd
 }
 

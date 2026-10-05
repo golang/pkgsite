@@ -87,3 +87,41 @@ func TestGetLatestInfo_MajorPath(t *testing.T) {
 		}
 	}
 }
+
+func TestGetImportedByCounts(t *testing.T) {
+	ctx := context.Background()
+	fds := New()
+
+	// m1.com has the target package and an internal importer.
+	m1 := sample.Module("m1.com", "v1.0.0", "target", "internal")
+	m1.Packages()[1].Imports = []string{"m1.com/target"}
+	fds.MustInsertModule(t, m1)
+
+	// m2.com has two packages that both import m1.com/target.
+	m2 := sample.Module("m2.com", "v1.0.0", "p1", "p2")
+	m2.Packages()[0].Imports = []string{"m1.com/target"}
+	m2.Packages()[1].Imports = []string{"m1.com/target"}
+	fds.MustInsertModule(t, m2)
+
+	// m3.com imported m1.com/target at v1.0.0, but not at latest v1.1.0.
+	m3Old := sample.Module("m3.com", "v1.0.0", "p1")
+	m3Old.Packages()[0].Imports = []string{"m1.com/target"}
+	fds.MustInsertModule(t, m3Old)
+	m3New := sample.Module("m3.com", "v1.1.0", "p1")
+	fds.MustInsertModule(t, m3New)
+
+	got, err := fds.GetImportedByCounts(ctx, "m1.com/target", "m1.com")
+	if err != nil {
+		t.Fatal(err)
+	}
+	// Packages excludes internal imports (m1.com/internal) and non-latest versions (m3.com@v1.0.0),
+	// so only m2.com/p1 and m2.com/p2 count.
+	if got.Packages != 2 {
+		t.Errorf("Packages = %d, want 2", got.Packages)
+	}
+	// Modules includes self-imports (m1.com) and deduplicates packages in m2.com.
+	if got.Modules != 2 {
+		t.Errorf("Modules = %d, want 2", got.Modules)
+	}
+}
+

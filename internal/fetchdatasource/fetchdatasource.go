@@ -462,7 +462,7 @@ func (ds *FetchDataSource) GetImportedBy(ctx context.Context, pkgPath, modulePat
 	return nil, nil
 }
 
-// GetImportedByCount is not implemented.
-func (ds *FetchDataSource) GetImportedByCount(ctx context.Context, pkgPath, modulePath string) (int, error) {
-	return 0, nil
+// GetImportedByCounts is not implemented.
+func (ds *FetchDataSource) GetImportedByCounts(ctx context.Context, pkgPath, modulePath string) (internal.ImportedByCounts, error) {
+	return internal.ImportedByCounts{}, nil
 }

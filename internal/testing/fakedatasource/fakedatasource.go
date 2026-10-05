@@ -12,6 +12,7 @@ import (
 	"sort"
 	"strings"
 	"testing"
+	"time"
 
 	"golang.org/x/mod/module"
 	"golang.org/x/mod/semver"
@@ -429,9 +430,30 @@ func (ds *FakeDataSource) GetImportedBy(ctx context.Context, pkgPath, modulePath
 	return filtered, nil
 }
 
-// GetImportedByCount returns the number of packages that import the given package.
-func (ds *FakeDataSource) GetImportedByCount(ctx context.Context, pkgPath, modulePath string) (int, error) {
-	return len(ds.importedBy[pkgPath]), nil
+// GetImportedByCounts returns the counts of packages and modules that import the given package.
+func (ds *FakeDataSource) GetImportedByCounts(ctx context.Context, pkgPath, modulePath string) (internal.ImportedByCounts, error) {
+	pkgs := make(map[string]bool)
+	mods := make(map[string]bool)
+	for _, m := range ds.modules {
+		if ds.getLatestModule(m.ModulePath) != m {
+			continue
+		}
+		for _, u := range m.Units {
+			if slices.Contains(u.Imports, pkgPath) {
+				if m.ModulePath != modulePath {
+					pkgs[u.Path] = true
+				}
+				mods[m.ModulePath] = true
+			}
+		}
+	}
+	now := time.Now()
+	return internal.ImportedByCounts{
+		Packages:          len(pkgs),
+		PackagesUpdatedAt: now,
+		Modules:           len(mods),
+		ModulesUpdatedAt:  now,
+	}, nil
 }
 
 func (ds *FakeDataSource) GetLatestMajorPathForV1Path(ctx context.Context, v1path string) (string, int, error) {

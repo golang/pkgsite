@@ -180,7 +180,7 @@ func mustInsertModule(t *testing.T, db *DB, m *internal.Module, goMod string) {
 	// Updated imported-by counts on every new module.
 	// It should be very cheap if there are only a handful of modules in
 	// the DB.
-	// This causes GetImportedByCount to return the right value.
+	// This causes GetImportedByCounts to return the right value.
 	if _, _, err := db.UpdateSearchDocumentsImportedByCount(t.Context(), nil); err != nil {
 		t.Fatal(err)
 	}

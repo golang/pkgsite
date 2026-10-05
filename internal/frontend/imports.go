@@ -106,10 +106,11 @@ func fetchImportedByDetails(ctx context.Context, ds internal.DataSource, pkgPath
 		return nil, err
 	}
 	numImportedBy := len(importedBy)
-	numImportedBySearch, err := db.GetImportedByCount(ctx, pkgPath, modulePath)
+	counts, err := db.GetImportedByCounts(ctx, pkgPath, modulePath)
 	if err != nil {
 		return nil, err
 	}
+	numImportedBySearch := counts.Packages
 	if numImportedBy < importedByLimit && numImportedBySearch > numImportedBy {
 		// Unless we hit the limit, numImportedBySearch should never be greater
 		// than numImportedBy. If that happens, log an error so that we can

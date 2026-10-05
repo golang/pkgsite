@@ -604,7 +604,7 @@ func ServePackageImportedBy(w http.ResponseWriter, r *http.Request, ds internal.
 		importedBy = importedBy[:limit]
 	}
 
-	count, err := ds.GetImportedByCount(r.Context(), pkgPath, modulePath)
+	counts, err := ds.GetImportedByCounts(r.Context(), pkgPath, modulePath)
 	if err != nil {
 		return err
 	}
@@ -624,7 +624,7 @@ func ServePackageImportedBy(w http.ResponseWriter, r *http.Request, ds internal.
 		Version:    requestedVersion,
 		ImportedBy: PaginatedResponse[string]{
 			Items:         filtered,
-			Total:         count,
+			Total:         counts.Packages,
 			NextPageToken: nextToken,
 		},
 	}

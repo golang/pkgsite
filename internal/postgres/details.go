@@ -11,6 +11,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"time"
 
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/database"
@@ -98,30 +99,37 @@ func (db *DB) GetImportedBy(ctx context.Context, pkgPath, modulePath string, sta
 	return database.Collect1[string](ctx, db.db, query, pkgPath, modulePath, start, limit)
 }
 
-// GetImportedByCount returns the number of packages that import pkgPath.
-func (db *DB) GetImportedByCount(ctx context.Context, pkgPath, modulePath string) (_ int, err error) {
-	defer derrors.WrapStack(&err, "GetImportedByCount(ctx, %q, %q)", pkgPath, modulePath)
-	defer stats.Elapsed(ctx, "GetImportedByCount")()
+// GetImportedByCounts returns the counts of packages and modules that import pkgPath,
+// along with the times they were last updated.
+func (db *DB) GetImportedByCounts(ctx context.Context, pkgPath, modulePath string) (counts internal.ImportedByCounts, err error) {
+	defer derrors.WrapStack(&err, "GetImportedByCounts(ctx, %q, %q)", pkgPath, modulePath)
+	defer stats.Elapsed(ctx, "GetImportedByCounts")()
 
 	if pkgPath == "" {
-		return 0, fmt.Errorf("pkgPath cannot be empty: %w", derrors.InvalidArgument)
+		return internal.ImportedByCounts{}, fmt.Errorf("pkgPath cannot be empty: %w", derrors.InvalidArgument)
 	}
 	query := `
-		SELECT imported_by_count
+		SELECT
+			imported_by_count,
+			imported_by_count_updated_at,
+			imported_by_module_count,
+			imported_by_module_count_updated_at
 		FROM
 			search_documents
 		WHERE
 			package_path = $1
 	`
-	var n int
-	err = db.db.QueryRow(ctx, query, pkgPath).Scan(&n)
+	var pTime, mTime sql.Null[time.Time]
+	err = db.db.QueryRow(ctx, query, pkgPath).Scan(&counts.Packages, &pTime, &counts.Modules, &mTime)
 	switch err {
 	case sql.ErrNoRows:
-		return 0, nil
+		return internal.ImportedByCounts{}, nil
 	case nil:
-		return n, nil
+		counts.PackagesUpdatedAt = pTime.V
+		counts.ModulesUpdatedAt = mTime.V
+		return counts, nil
 	default:
-		return 0, err
+		return internal.ImportedByCounts{}, err
 	}
 }
 
