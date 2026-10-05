@@ -77,12 +77,19 @@ type ImportedByDetails struct {
 	// They are organized into a tree of sections by prefix.
 	ImportedBy []*Section
 
-	// NumImportedByDisplay is the display text at the top of the imported by
-	// tab section, which shows the imported by count and package limit.
-	NumImportedByDisplay string
+	// PackageNumImportedByDisplay is the display text at the top of the imported by
+	// tab section, which shows the imported by package count and package limit.
+	PackageNumImportedByDisplay string
 
-	// Total is the total number of importers.
-	Total int
+	// ModuleNumImportedByDisplay is the display text at the top of the imported by
+	// tab section for the count of importing modules.
+	ModuleNumImportedByDisplay string
+
+	// The total number of importing packages.
+	PackageTotal int
+
+	// The total number of importing modules.
+	ModuleTotal int
 }
 
 var (
@@ -155,10 +162,20 @@ func fetchImportedByDetails(ctx context.Context, ds internal.DataSource, pkgPath
 	default:
 		display = pr.Sprint(numImportedBy)
 	}
+
+	var mdisplay string
+	if counts.ModulesUpdatedAt.IsZero() {
+		mdisplay = "not yet determined"
+	} else {
+		mdisplay = pr.Sprint(counts.Modules)
+	}
+
 	return &ImportedByDetails{
-		ModulePath:           modulePath,
-		ImportedBy:           sections,
-		NumImportedByDisplay: display,
-		Total:                numImportedBy,
+		ModulePath:                  modulePath,
+		ImportedBy:                  sections,
+		PackageNumImportedByDisplay: display,
+		PackageTotal:                numImportedBy,
+		ModuleTotal:                 counts.Modules,
+		ModuleNumImportedByDisplay:  mdisplay,
 	}, nil
 }

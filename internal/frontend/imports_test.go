@@ -5,14 +5,20 @@
 package frontend
 
 import (
+	"bytes"
 	"context"
 	"path"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/safehtml/template"
 	"golang.org/x/pkgsite/internal"
+	"golang.org/x/pkgsite/internal/frontend/templates"
 	"golang.org/x/pkgsite/internal/testing/fakedatasource"
 	"golang.org/x/pkgsite/internal/testing/sample"
+	"golang.org/x/pkgsite/static"
 )
 
 func TestFetchImportsDetails(t *testing.T) {
@@ -105,15 +111,18 @@ func TestFetchImportedByDetails(t *testing.T) {
 		{
 			pkg: pkg3,
 			wantDetails: &ImportedByDetails{
-				NumImportedByDisplay: "0",
+				PackageNumImportedByDisplay: "0",
+				ModuleNumImportedByDisplay:  "0",
 			},
 		},
 		{
 			pkg: pkg2,
 			wantDetails: &ImportedByDetails{
-				ImportedBy:           []*Section{{Prefix: pkg3.Path, NumLines: 0}},
-				NumImportedByDisplay: "1",
-				Total:                1,
+				ImportedBy:                  []*Section{{Prefix: pkg3.Path, NumLines: 0}},
+				PackageNumImportedByDisplay: "1",
+				PackageTotal:                1,
+				ModuleNumImportedByDisplay:  "1",
+				ModuleTotal:                 1,
 			},
 		},
 		{
@@ -123,8 +132,10 @@ func TestFetchImportedByDetails(t *testing.T) {
 					{Prefix: pkg2.Path, NumLines: 0},
 					{Prefix: pkg3.Path, NumLines: 0},
 				},
-				NumImportedByDisplay: "2",
-				Total:                2,
+				PackageNumImportedByDisplay: "2",
+				PackageTotal:                2,
+				ModuleNumImportedByDisplay:  "2",
+				ModuleTotal:                 2,
 			},
 		},
 	}
@@ -137,6 +148,30 @@ func TestFetchImportedByDetails(t *testing.T) {
 			checkFetchImportedByDetails(ctx, fds, t, pkg, test.wantDetails)
 		})
 	}
+
+	t.Run("unknown module count", func(t *testing.T) {
+		checkFetchImportedByDetails(ctx, unknownModuleCountDB{fds}, t, pkg2, &ImportedByDetails{
+			ImportedBy:                  []*Section{{Prefix: pkg3.Path, NumLines: 0}},
+			PackageNumImportedByDisplay: "1",
+			PackageTotal:                1,
+			ModuleNumImportedByDisplay:  "not yet determined",
+			ModuleTotal:                 0,
+		})
+	})
+}
+
+type unknownModuleCountDB struct {
+	*fakedatasource.FakeDataSource
+}
+
+func (db unknownModuleCountDB) GetImportedByCounts(ctx context.Context, pkgPath, modulePath string) (internal.ImportedByCounts, error) {
+	c, err := db.FakeDataSource.GetImportedByCounts(ctx, pkgPath, modulePath)
+	if err != nil {
+		return c, err
+	}
+	c.ModulesUpdatedAt = time.Time{}
+	c.Modules = 0
+	return c, nil
 }
 
 func TestFetchImportedByDetails_ExceedsLimit(t *testing.T) {
@@ -161,8 +196,10 @@ func TestFetchImportedByDetails_ExceedsLimit(t *testing.T) {
 			{Prefix: "m2.com/a/p"},
 		},
 
-		NumImportedByDisplay: "3 (displaying more than 2 packages, including internal and invalid packages)",
-		Total:                3,
+		PackageNumImportedByDisplay: "3 (displaying more than 2 packages, including internal and invalid packages)",
+		PackageTotal:                3,
+		ModuleNumImportedByDisplay:  "3",
+		ModuleTotal:                 3,
 	}
 	checkFetchImportedByDetails(ctx, fds, t, m.Packages()[0], wantDetails)
 }
@@ -176,5 +213,113 @@ func checkFetchImportedByDetails(ctx context.Context, ds internal.DataSource, t 
 	wantDetails.ModulePath = pkg.ModulePath
 	if diff := cmp.Diff(wantDetails, got); diff != "" {
 		t.Errorf("fetchImportedByDetails(ctx, db, %q) mismatch (-want +got):\n%s", pkg.Path, diff)
+	}
+}
+
+func TestImportedByTemplate(t *testing.T) {
+	ts, err := templates.ParsePageTemplates(template.TrustedFSFromEmbed(static.FS))
+	if err != nil {
+		t.Fatal(err)
+	}
+	tmpl := ts["unit/importedby"].Lookup("importedby")
+	if tmpl == nil {
+		t.Fatal("missing importedby template")
+	}
+
+	for _, test := range []struct {
+		name        string
+		details     ImportedByDetails
+		wantStrings []string
+		wantMissing []string
+	}{
+		{
+			name: "no importers",
+			details: ImportedByDetails{
+				PackageNumImportedByDisplay: "0",
+				ModuleNumImportedByDisplay:  "0",
+			},
+			wantStrings: []string{"No known importers for this package!"},
+			wantMissing: []string{"Known importing", "ImportedBy-list"},
+		},
+		{
+			name: "internal importer only (1 module, 0 external packages)",
+			details: ImportedByDetails{
+				PackageTotal:                0,
+				PackageNumImportedByDisplay: "0",
+				ModuleTotal:                 1,
+				ModuleNumImportedByDisplay:  "1",
+			},
+			wantStrings: []string{
+				"<strong>Known importing modules:</strong> 1",
+				"<strong>Known importing packages:</strong> 0",
+			},
+			wantMissing: []string{"No known importers", "ImportedBy-list"},
+		},
+		{
+			name: "1 module and 1 package",
+			details: ImportedByDetails{
+				ImportedBy:                  []*Section{{Prefix: "a.com/p"}},
+				PackageTotal:                1,
+				PackageNumImportedByDisplay: "1",
+				ModuleTotal:                 1,
+				ModuleNumImportedByDisplay:  "1",
+			},
+			wantStrings: []string{
+				"<strong>Known importing modules:</strong> 1",
+				"<strong>Known importing packages:</strong> 1",
+				"a.com/p",
+			},
+		},
+		{
+			name: "multiple modules and packages",
+			details: ImportedByDetails{
+				ImportedBy: []*Section{
+					{Prefix: "a.com/p"},
+					{Prefix: "b.com/p"},
+				},
+				PackageTotal:                2,
+				PackageNumImportedByDisplay: "2",
+				ModuleTotal:                 2,
+				ModuleNumImportedByDisplay:  "2",
+			},
+			wantStrings: []string{
+				"<strong>Known importing modules:</strong> 2",
+				"<strong>Known importing packages:</strong> 2",
+				"a.com/p",
+				"b.com/p",
+			},
+		},
+		{
+			name: "unknown module count with external package",
+			details: ImportedByDetails{
+				ImportedBy:                  []*Section{{Prefix: "a.com/p"}},
+				PackageTotal:                1,
+				PackageNumImportedByDisplay: "1",
+				ModuleTotal:                 0,
+				ModuleNumImportedByDisplay:  "not yet determined",
+			},
+			wantStrings: []string{
+				"<strong>Known importing modules:</strong> not yet determined",
+				"<strong>Known importing packages:</strong> 1",
+			},
+		},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			var buf bytes.Buffer
+			if err := tmpl.Execute(&buf, test.details); err != nil {
+				t.Fatal(err)
+			}
+			got := buf.String()
+			for _, w := range test.wantStrings {
+				if !strings.Contains(got, w) {
+					t.Errorf("got:\n%s\ndid not contain %q", got, w)
+				}
+			}
+			for _, m := range test.wantMissing {
+				if strings.Contains(got, m) {
+					t.Errorf("got:\n%s\nunexpectedly contained %q", got, m)
+				}
+			}
+		})
 	}
 }

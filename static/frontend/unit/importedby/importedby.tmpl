@@ -22,11 +22,16 @@
 
 {{define "importedby"}}
   <div class="ImportedBy">
-    {{if .ImportedBy}}
+    {{if or .ImportedBy .ModuleTotal}}
       <div class="ImportedBy-heading">
-        <strong>Known {{pluralize .Total "importer"}}:</strong> {{.NumImportedByDisplay}}
+        <strong>Known importing modules:</strong> {{.ModuleNumImportedByDisplay}}<br/>
+        <strong>Known importing packages:</strong> {{.PackageNumImportedByDisplay}}
       </div>
-      {{template "sections" .ImportedBy}}
+      {{if .ImportedBy}}
+        {{template "sections" .ImportedBy}}
+      {{else}}
+        <p>Note: This package is only imported internally by its own module.</p>
+      {{end}}
     {{else}}
       {{template "gopher-airplane" "No known importers for this package!"}}
     {{end}}
