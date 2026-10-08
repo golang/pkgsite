@@ -7,6 +7,8 @@
 
 const MINIMIZED = 'minimized';
 
+let onHashChange: (() => void) | null = null;
+
 /**
  * registerSurveyBanner shows the Go Developer Survey banner. On desktop,
  * clicking the minimize button or the survey link collapses the floating card
@@ -18,6 +20,10 @@ const MINIMIZED = 'minimized';
  * is per origin, so state on pkg.go.dev does not carry over to go.dev.
  */
 export function registerSurveyBanner(): void {
+  if (onHashChange) {
+    window.removeEventListener('hashchange', onHashChange);
+    onHashChange = null;
+  }
   const banner = document.querySelector<HTMLElement>('.js-surveyBanner');
   if (!banner) {
     return;
@@ -27,6 +33,14 @@ export function registerSurveyBanner(): void {
     banner.remove();
     return;
   }
+  const checkReset = (): boolean => {
+    if (window.location.pathname === '/' && window.location.hash === '#survey-reset') {
+      clearState(key);
+      window.history.replaceState(null, '', window.location.pathname + window.location.search);
+      return true;
+    }
+    return false;
+  };
   const cookieNotice = document.querySelector('.js-cookieNotice');
   if (cookieNotice && !document.cookie.match(/cookie-consent=true/)) {
     banner.classList.add('go-SurveyBanner--aboveCookie');
@@ -41,9 +55,19 @@ export function registerSurveyBanner(): void {
   };
   banner.querySelector('.js-surveyBannerLink')?.addEventListener('click', minimize);
   banner.querySelector('.js-surveyBannerClose')?.addEventListener('click', minimize);
-  const state = getState(key);
-  banner.classList.toggle('go-SurveyBanner--minimized', state === MINIMIZED);
-  banner.classList.toggle('go-SurveyBanner--visible', state !== MINIMIZED);
+  const update = () => {
+    const state = getState(key);
+    banner.classList.toggle('go-SurveyBanner--minimized', state === MINIMIZED);
+    banner.classList.toggle('go-SurveyBanner--visible', state !== MINIMIZED);
+  };
+  onHashChange = () => {
+    if (checkReset()) {
+      update();
+    }
+  };
+  window.addEventListener('hashchange', onHashChange);
+  checkReset();
+  update();
 }
 
 function getState(key: string): string | null {
@@ -60,5 +84,13 @@ function setState(key: string, state: string): void {
     localStorage.setItem(key, state);
   } catch {
     // Storage is unavailable; the banner shows again on the next page.
+  }
+}
+
+function clearState(key: string): void {
+  try {
+    localStorage.removeItem(key);
+  } catch {
+    // Storage is unavailable.
   }
 }

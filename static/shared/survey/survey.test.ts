@@ -23,6 +23,7 @@ describe('registerSurveyBanner', () => {
     localStorage.clear();
     document.cookie = 'cookie-consent=; expires=Thu, 01 Jan 1970 00:00:00 GMT';
     document.body.innerHTML = '';
+    window.history.replaceState(null, '', '/');
   });
 
   it('shows the banner when not minimized', () => {
@@ -39,6 +40,39 @@ describe('registerSurveyBanner', () => {
     registerSurveyBanner();
     expect(banner.isConnected).toBe(true);
     expect(banner.classList.contains('go-SurveyBanner--visible')).toBe(false);
+    expect(banner.classList.contains('go-SurveyBanner--minimized')).toBe(true);
+  });
+
+  it('resets state and shows the banner when visiting /#survey-reset', () => {
+    localStorage.setItem(KEY, 'minimized');
+    window.history.replaceState(null, '', '/#survey-reset');
+    const banner = render();
+    registerSurveyBanner();
+    expect(localStorage.getItem(KEY)).toBeNull();
+    expect(window.location.hash).toBe('');
+    expect(banner.classList.contains('go-SurveyBanner--visible')).toBe(true);
+    expect(banner.classList.contains('go-SurveyBanner--minimized')).toBe(false);
+  });
+
+  it('resets state and restores the banner when hash changes to #survey-reset on /', () => {
+    localStorage.setItem(KEY, 'minimized');
+    const banner = render();
+    registerSurveyBanner();
+    expect(banner.classList.contains('go-SurveyBanner--minimized')).toBe(true);
+    window.history.replaceState(null, '', '/#survey-reset');
+    window.dispatchEvent(new HashChangeEvent('hashchange'));
+    expect(localStorage.getItem(KEY)).toBeNull();
+    expect(window.location.hash).toBe('');
+    expect(banner.classList.contains('go-SurveyBanner--visible')).toBe(true);
+    expect(banner.classList.contains('go-SurveyBanner--minimized')).toBe(false);
+  });
+
+  it('ignores #survey-reset on non-root paths', () => {
+    localStorage.setItem(KEY, 'minimized');
+    window.history.replaceState(null, '', '/net/http#survey-reset');
+    const banner = render();
+    registerSurveyBanner();
+    expect(localStorage.getItem(KEY)).toBe('minimized');
     expect(banner.classList.contains('go-SurveyBanner--minimized')).toBe(true);
   });
 
