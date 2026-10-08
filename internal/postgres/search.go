@@ -319,7 +319,9 @@ func buildVectorSearchQuery(opts SearchOptions, scoreExprStr string, q string, l
 
 	query := fmt.Sprintf(`
 		WITH text_search AS (
-			SELECT package_path, version, module_path, commit_time, imported_by_count,
+			SELECT package_path, version, module_path, commit_time,
+				imported_by_count, imported_by_count_updated_at,
+				imported_by_module_count, imported_by_module_count_updated_at,
 				ROW_NUMBER() OVER (ORDER BY (%s) DESC, commit_time DESC, package_path) AS rank_text,
 				COUNT(*) OVER() AS total_text_matches
 			FROM search_documents
@@ -327,7 +329,9 @@ func buildVectorSearchQuery(opts SearchOptions, scoreExprStr string, q string, l
 			LIMIT %d
 		),
 		vector_search AS (
-			SELECT package_path, version, module_path, commit_time, imported_by_count,
+			SELECT package_path, version, module_path, commit_time,
+				imported_by_count, imported_by_count_updated_at,
+				imported_by_module_count, imported_by_module_count_updated_at,
 				ROW_NUMBER() OVER (
 					ORDER BY ((1.0 - (embedding <=> $2::halfvec)) * pow(ln(exp(1)+imported_by_count), %f) *
 					         CASE WHEN redistributable THEN 1 ELSE %f END *
@@ -335,7 +339,10 @@ func buildVectorSearchQuery(opts SearchOptions, scoreExprStr string, q string, l
 					         commit_time DESC, package_path
 				) AS rank_vec
 			FROM (
-				SELECT package_path, version, module_path, commit_time, imported_by_count, redistributable, has_go_mod, embedding
+				SELECT package_path, version, module_path, commit_time,
+					imported_by_count, imported_by_count_updated_at,
+					imported_by_module_count, imported_by_module_count_updated_at,
+					redistributable, has_go_mod, embedding
 				FROM search_documents
 				WHERE imported_by_count >= 1 AND embedding IS NOT NULL
 				ORDER BY embedding <=> $2::halfvec
@@ -349,12 +356,18 @@ func buildVectorSearchQuery(opts SearchOptions, scoreExprStr string, q string, l
 				COALESCE(t.module_path, v.module_path) AS module_path,
 				COALESCE(t.commit_time, v.commit_time) AS commit_time,
 				COALESCE(t.imported_by_count, v.imported_by_count) AS imported_by_count,
+				COALESCE(t.imported_by_count_updated_at, v.imported_by_count_updated_at) AS imported_by_count_updated_at,
+				COALESCE(t.imported_by_module_count, v.imported_by_module_count) AS imported_by_module_count,
+				COALESCE(t.imported_by_module_count_updated_at, v.imported_by_module_count_updated_at) AS imported_by_module_count_updated_at,
 				(COALESCE(1.0 / (60 + t.rank_text), 0.0) + %f * COALESCE(1.0 / (60 + v.rank_vec), 0.0)) AS score,
 				COALESCE(MAX(t.total_text_matches) OVER(), COUNT(*) OVER()) AS total
 			FROM text_search t
 			FULL OUTER JOIN vector_search v ON t.package_path = v.package_path
 		)
-		SELECT package_path, version, module_path, commit_time, imported_by_count, score, total
+		SELECT package_path, version, module_path, commit_time,
+			imported_by_count, imported_by_count_updated_at,
+			imported_by_module_count, imported_by_module_count_updated_at,
+			score, total
 		FROM combined
 		ORDER BY score DESC, commit_time DESC, package_path
 		LIMIT $3
@@ -381,6 +394,9 @@ func buildTextSearchQuery(opts SearchOptions, scoreExprStr string, q string, lim
 				module_path,
 				commit_time,
 				imported_by_count,
+				imported_by_count_updated_at,
+				imported_by_module_count,
+				imported_by_module_count_updated_at,
 				(%s) AS score
 				FROM
 					search_documents
@@ -413,11 +429,18 @@ func (db *DB) deepSearch(ctx context.Context, q string, limit int, opts SearchOp
 
 	var results []*SearchResult
 	collect := func(rows *sql.Rows) error {
-		var r SearchResult
+		var (
+			r            SearchResult
+			pTime, mTime sql.Null[time.Time]
+		)
 		if err := rows.Scan(&r.PackagePath, &r.Version, &r.ModulePath, &r.CommitTime,
-			&r.NumImportedBy, &r.Score, &r.NumResults); err != nil {
+			&r.ImportedByCounts.Packages, &pTime,
+			&r.ImportedByCounts.Modules, &mTime,
+			&r.Score, &r.NumResults); err != nil {
 			return fmt.Errorf("rows.Scan(): %v", err)
 		}
+		r.ImportedByCounts.PackagesUpdatedAt = pTime.V
+		r.ImportedByCounts.ModulesUpdatedAt = mTime.V
 		results = append(results, &r)
 		return nil
 	}
@@ -441,22 +464,38 @@ func (db *DB) deepSearch(ctx context.Context, q string, limit int, opts SearchOp
 }
 
 func (db *DB) popularSearch(ctx context.Context, searchQuery string, limit int, opts SearchOptions) searchResponse {
+	// The popular_search stored procedure doesn't return all the columns we want, so join
+	// with the search documents table. This is efficient because search_documents has an index
+	// on package_path.
+	// TODO: consider changing the stored procedure and doing a migration.
 	query := `
 		SELECT
-			package_path,
-			version,
-			module_path,
-			commit_time,
-			imported_by_count,
-			score
-		FROM popular_search($1, $2, $3, $4, $5)`
+			p.package_path,
+			p.version,
+			p.module_path,
+			p.commit_time,
+			p.imported_by_count,
+			sd.imported_by_count_updated_at,
+			sd.imported_by_module_count,
+			sd.imported_by_module_count_updated_at,
+			p.score
+		FROM popular_search($1, $2, $3, $4, $5) p
+		INNER JOIN search_documents sd ON sd.package_path = p.package_path
+		ORDER BY p.score DESC, p.commit_time DESC, p.package_path`
 	var results []*SearchResult
 	collect := func(rows *sql.Rows) error {
-		var r SearchResult
+		var (
+			r            SearchResult
+			pTime, mTime sql.Null[time.Time]
+		)
 		if err := rows.Scan(&r.PackagePath, &r.Version, &r.ModulePath, &r.CommitTime,
-			&r.NumImportedBy, &r.Score); err != nil {
+			&r.ImportedByCounts.Packages, &pTime,
+			&r.ImportedByCounts.Modules, &mTime,
+			&r.Score); err != nil {
 			return fmt.Errorf("rows.Scan(): %v", err)
 		}
+		r.ImportedByCounts.PackagesUpdatedAt = pTime.V
+		r.ImportedByCounts.ModulesUpdatedAt = mTime.V
 		results = append(results, &r)
 		return nil
 	}

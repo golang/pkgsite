@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/testing/sample"
 )
@@ -116,7 +117,8 @@ func TestSymbolSearch(t *testing.T) {
 			if len(resp.results) == 0 && test.want != nil {
 				t.Fatalf("expected results")
 			}
-			if diff := cmp.Diff(test.want, resp.results); diff != "" {
+			opt := cmpopts.IgnoreFields(internal.ImportedByCounts{}, "PackagesUpdatedAt", "ModulesUpdatedAt")
+			if diff := cmp.Diff(test.want, resp.results, opt); diff != "" {
 				t.Errorf("mismatch (-want +got):\n%s", diff)
 			}
 		})

@@ -356,7 +356,7 @@ func newSearchResult(r *internal.SearchResult, searchSymbols bool, pr *message.P
 		DisplayVersion: versions.DisplayVersion(r.ModulePath, r.Version, r.Version),
 		Licenses:       r.Licenses,
 		CommitTime:     elapsedTime(r.CommitTime),
-		NumImportedBy:  pr.Sprint(r.NumImportedBy),
+		NumImportedBy:  pr.Sprint(r.ImportedByCounts.Packages),
 		SameModule:     packagePaths(moduleDesc+":", r.SameModule),
 		// Say "other" instead of "lower" because at some point we may
 		// prefer to show a tagged, lower major version over an untagged

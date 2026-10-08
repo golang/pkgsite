@@ -377,13 +377,18 @@ func (ds *FakeDataSource) Search(ctx context.Context, q string, opts internal.Se
 				containsAllTerms = containsAllTerms && strings.Contains(synopsis.String(), term)
 			}
 			if containsAllTerms {
+				counts, err := ds.GetImportedByCounts(ctx, u.Path, m.ModulePath)
+				if err != nil {
+					return nil, err
+				}
 				result := &internal.SearchResult{
-					Name:        u.Name,
-					PackagePath: u.Path,
-					ModulePath:  m.ModulePath,
-					Version:     m.Version,
-					Synopsis:    synopsis.String(),
-					CommitTime:  m.CommitTime,
+					Name:             u.Name,
+					PackagePath:      u.Path,
+					ModulePath:       m.ModulePath,
+					Version:          m.Version,
+					Synopsis:         synopsis.String(),
+					CommitTime:       m.CommitTime,
+					ImportedByCounts: counts,
 				}
 				for _, licence := range u.Licenses {
 					result.Licenses = append(result.Licenses, licence.Types...)

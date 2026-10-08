@@ -79,8 +79,8 @@ type SearchResult struct {
 	// Score is used to sort items in an array of SearchResult.
 	Score float64
 
-	// NumImportedBy is the number of packages that import PackagePath.
-	NumImportedBy uint64
+	// ImportedByCounts are the counts of packages and modules importing this package.
+	ImportedByCounts ImportedByCounts
 
 	// SameModule is a list of SearchResults from the same module as this one,
 	// with lower scores.

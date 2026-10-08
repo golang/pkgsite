@@ -729,8 +729,11 @@ func TestInsertSearchDocumentAndSearch(t *testing.T) {
 					t.Errorf("testDB.Search(%v, %d, %d) mismatch: len(got) = %d, want = %d\n", test.searchQuery, test.limit, test.offset, len(got.results), len(test.want))
 				}
 
-				// The searchers differ in these two fields.
-				opt := cmpopts.IgnoreFields(SearchResult{}, "NumResults")
+				// The searchers differ in NumResults, and timestamps depend on insertion time.
+				opt := cmp.Options{
+					cmpopts.IgnoreFields(SearchResult{}, "NumResults"),
+					cmpopts.IgnoreFields(internal.ImportedByCounts{}, "PackagesUpdatedAt", "ModulesUpdatedAt"),
+				}
 				if diff := cmp.Diff(test.want, got.results, opt); diff != "" {
 					t.Errorf("testDB.Search(%v, %d, %d) mismatch (-want +got):\n%s", test.searchQuery, test.limit, test.offset, diff)
 				}

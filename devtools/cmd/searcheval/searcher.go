@@ -103,7 +103,7 @@ func mapDBSearchResults(dbresults []*postgres.SearchResult) []searcheval.SearchR
 		results = append(results, searcheval.SearchResult{
 			PackagePath:     r.PackagePath,
 			Score:           r.Score,
-			ImportedByCount: int(r.NumImportedBy),
+			ImportedByCount: r.ImportedByCounts.Packages,
 		})
 	}
 	return results

@@ -12,6 +12,7 @@ import (
 	"slices"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/lib/pq"
 	"golang.org/x/pkgsite/internal"
@@ -126,8 +127,8 @@ func (db *DB) symbolSearch(ctx context.Context, q string, limit int, opts Search
 		return sr
 	}
 	sort.Slice(results, func(i, j int) bool {
-		if results[i].NumImportedBy != results[j].NumImportedBy {
-			return results[i].NumImportedBy > results[j].NumImportedBy
+		if results[i].ImportedByCounts.Packages != results[j].ImportedByCounts.Packages {
+			return results[i].ImportedByCounts.Packages > results[j].ImportedByCounts.Packages
 		}
 
 		// If two packages have the same imported by count, return them in
@@ -201,7 +202,7 @@ func mergedResults(resultsArray [][]*SearchResult, limit int) []*SearchResult {
 			}
 		}
 	}
-	sort.Slice(results, func(i, j int) bool { return results[i].NumImportedBy > results[j].NumImportedBy })
+	sort.Slice(results, func(i, j int) bool { return results[i].ImportedByCounts.Packages > results[j].ImportedByCounts.Packages })
 	if len(results) > limit {
 		results = results[0:limit]
 	}
@@ -314,7 +315,10 @@ func runSymbolSearch(ctx context.Context, ddb *database.DB,
 	defer stats.Elapsed(ctx, fmt.Sprintf("%s-runSymbolSearch", st))()
 
 	collect := func(rows *sql.Rows) error {
-		var r SearchResult
+		var (
+			r            SearchResult
+			pTime, mTime sql.Null[time.Time]
+		)
 		if err := rows.Scan(
 			&r.SymbolName,
 			&r.PackagePath,
@@ -324,13 +328,18 @@ func runSymbolSearch(ctx context.Context, ddb *database.DB,
 			&r.Synopsis,
 			pq.Array(&r.Licenses),
 			&r.CommitTime,
-			&r.NumImportedBy,
+			&r.ImportedByCounts.Packages,
+			&pTime,
+			&r.ImportedByCounts.Modules,
+			&mTime,
 			&r.SymbolGOOS,
 			&r.SymbolGOARCH,
 			&r.SymbolKind,
 			&r.SymbolSynopsis); err != nil {
 			return fmt.Errorf("symbolSearch: rows.Scan(): %v", err)
 		}
+		r.ImportedByCounts.PackagesUpdatedAt = pTime.V
+		r.ImportedByCounts.ModulesUpdatedAt = mTime.V
 		results = append(results, &r)
 		return nil
 	}
