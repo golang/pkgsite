@@ -55,6 +55,8 @@ func eval(expr ast.Expr, env map[string]any) any {
 		return evalBasicLit(e)
 	case *ast.Ident:
 		return evalIdent(e, env)
+	case *ast.SelectorExpr:
+		return evalSelector(e, env)
 	case *ast.CallExpr:
 		return evalCall(e, env)
 	case *ast.UnaryExpr:
@@ -108,6 +110,32 @@ func evalIdent(e *ast.Ident, env map[string]any) any {
 		failf("undefined identifier: %s", e.Name)
 	}
 	return val
+}
+
+func evalSelector(e *ast.SelectorExpr, env map[string]any) any {
+	// A selector is of the form EXPR.IDENT.
+	// e.X is the expression and e.Sel is the identifier.
+
+	// Get the value of the expression, which must be a struct.
+	x := eval(e.X, env)
+	v := reflect.ValueOf(x)
+	for v.Kind() == reflect.Pointer {
+		if v.IsNil() {
+			failf("cannot select field %s of nil %s", e.Sel.Name, v.Type())
+		}
+		v = v.Elem()
+	}
+	if !v.IsValid() || v.Kind() != reflect.Struct {
+		failf("cannot select field %s from %T", e.Sel.Name, x)
+	}
+
+	// The name of the selector must be a struct field, written
+	// with its JSON name.
+	field, ok := jsonFields(v.Type())[e.Sel.Name]
+	if !ok {
+		failf("unknown field: %s", e.Sel.Name)
+	}
+	return v.FieldByIndex(field.Index).Interface()
 }
 
 func evalUnary(e *ast.UnaryExpr, env map[string]any) any {
@@ -195,6 +223,7 @@ func evalBinary(e *ast.BinaryExpr, env map[string]any) any {
 }
 
 func evalCall(e *ast.CallExpr, env map[string]any) any {
+	// Get the function. It may be an expression.
 	fnVal := eval(e.Fun, env)
 
 	v := reflect.ValueOf(fnVal)
@@ -202,12 +231,13 @@ func evalCall(e *ast.CallExpr, env map[string]any) any {
 		failf("not a function: %v (type %T)", fnVal, fnVal)
 	}
 
+	// The function must return one or two values.
 	t := v.Type()
 	if t.NumOut() > 2 {
 		failf("function has too many return values: %d", t.NumOut())
 	}
 
-	// Check argument count first
+	// Check argument count first.
 	if t.IsVariadic() {
 		failf("variadic functions are not supported")
 	}
@@ -215,6 +245,7 @@ func evalCall(e *ast.CallExpr, env map[string]any) any {
 		failf("argument count mismatch: got %d, expected %d", len(e.Args), t.NumIn())
 	}
 
+	// Evaluate the arguments.
 	args := make([]reflect.Value, len(e.Args))
 	for i, argExpr := range e.Args {
 		val := eval(argExpr, env)

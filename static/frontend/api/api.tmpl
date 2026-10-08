@@ -167,6 +167,7 @@
         <li><code>&lt;</code>, <code>&lt;=</code>, <code>&gt;</code> and <code>&gt;=</code>
              on strings and integers.
         <li> Parenthesized expressions.
+        <li> Field selection on nested objects, as in <code>importedByCounts.packages</code>.
       </ul>
       <p>The following functions are also defined:</p>
       <dl>
@@ -192,6 +193,8 @@
       <code>kind == "Type"</code>.
       <li>To list only module versions for major version v2, use the <code>versions</code> route with the filter
       <code>hasPrefix(version, "v2.")</code>.
+      <li>To list only search results imported by more than 100 packages, use the <code>search</code> route with the filter
+      <code>importedByCounts.packages &gt; 100</code>.
       </ul>
       </p>
       <p>

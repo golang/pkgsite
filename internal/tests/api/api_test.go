@@ -1076,6 +1076,13 @@ func testServeSearch(t *testing.T, ds internal.TestingDataSource) {
 			wantCount:  2,
 		},
 		{
+			name: "search with importedByCounts filter",
+			url: "/v1/search?q=synopsis&filter=" +
+				url.QueryEscape(`importedByCounts.packages > 0`),
+			wantStatus: http.StatusOK,
+			wantCount:  1,
+		},
+		{
 			name:       "search with non-matching filter",
 			url:        "/v1/search?q=great&filter=" + url.QueryEscape(`hasSuffix(packagePath, "moo")`),
 			wantStatus: http.StatusOK,

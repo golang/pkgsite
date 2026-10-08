@@ -25,8 +25,11 @@ func parseExpr(t *testing.T, s string) ast.Expr {
 
 func TestEvalBase(t *testing.T) {
 	env := map[string]any{
-		"x": 10,
-		"s": "hello",
+		"x":       10,
+		"s":       "hello",
+		"counts":  ImportedByCounts{Packages: 5, Modules: 3},
+		"pcounts": &ImportedByCounts{Packages: 7, Modules: 2},
+		"nilptr":  (*ImportedByCounts)(nil),
 		"identity": func(v any) any {
 			return v
 		},
@@ -56,10 +59,17 @@ func TestEvalBase(t *testing.T) {
 		{expr: `false`, want: false},
 		{expr: `nil`, want: nil},
 
-		// Variables
+		// Variables and selectors
 		{expr: `x`, want: 10},
 		{expr: `s`, want: "hello"},
 		{expr: `y`, wantErr: true}, // undefined
+		{expr: `counts.packages`, want: 5},
+		{expr: `counts.modules`, want: 3},
+		{expr: `pcounts.packages`, want: 7},
+		{expr: `counts.unknown`, wantErr: true},
+		{expr: `nilptr.packages`, wantErr: true},
+		{expr: `nil.packages`, wantErr: true},
+		{expr: `x.packages`, wantErr: true},
 
 		// Arithmetic operators
 		{expr: `1 + 2`, want: 3},
