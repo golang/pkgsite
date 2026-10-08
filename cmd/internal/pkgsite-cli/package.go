@@ -32,13 +32,14 @@ func runPackage(fs *flag.FlagSet, p *packageFlags, stdout, stderr io.Writer) int
 	c.PrintURLs = p.printURLs
 	c.Output = stderr
 	pkg, err := c.GetPackage(ctx, path, version, client.PackageOptions{
-		Module:   p.module,
-		Doc:      p.doc,
-		Examples: p.examples,
-		Imports:  p.imports,
-		Licenses: p.licenses,
-		GOOS:     p.goos,
-		GOARCH:   p.goarch,
+		Module:           p.module,
+		Doc:              p.doc,
+		Examples:         p.examples,
+		Imports:          p.imports,
+		Licenses:         p.licenses,
+		GOOS:             p.goos,
+		GOARCH:           p.goarch,
+		ImportedByCounts: p.importedByCounts,
 	})
 	if err != nil {
 		handleErr(stdout, stderr, err, p.jsonOut)
@@ -126,17 +127,18 @@ func runPackage(fs *flag.FlagSet, p *packageFlags, stdout, stderr io.Writer) int
 // packageFlags are flags for the package subcommand.
 type packageFlags struct {
 	commonFlags
-	doc             string
-	examples        bool
-	imports         bool
-	importedBy      bool
-	symbols         bool
-	licenses        bool
-	module          string
-	goos            string
-	goarch          string
-	symbolToken     string
-	importedByToken string
+	doc              string
+	examples         bool
+	imports          bool
+	importedByCounts bool
+	importedBy       bool
+	symbols          bool
+	licenses         bool
+	module           string
+	goos             string
+	goarch           string
+	symbolToken      string
+	importedByToken  string
 }
 
 func (f *packageFlags) register(fs *flag.FlagSet) {
@@ -144,6 +146,7 @@ func (f *packageFlags) register(fs *flag.FlagSet) {
 	fs.StringVar(&f.doc, "doc", "", "render docs in format: text, md, html")
 	fs.BoolVar(&f.examples, "examples", false, "include examples (requires -doc)")
 	fs.BoolVar(&f.imports, "imports", false, "list imported packages")
+	fs.BoolVar(&f.importedByCounts, "imported-by-counts", false, "include counts for importers")
 	fs.BoolVar(&f.importedBy, "imported-by", false, "list reverse dependencies")
 	fs.BoolVar(&f.symbols, "symbols", false, "list exported symbols")
 	fs.BoolVar(&f.licenses, "licenses", false, "show license information")

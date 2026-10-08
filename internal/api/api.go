@@ -29,6 +29,7 @@ import (
 	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/version"
 	"golang.org/x/pkgsite/internal/vuln"
+	"golang.org/x/sync/errgroup"
 )
 
 const (
@@ -92,10 +93,24 @@ func ServePackage(w http.ResponseWriter, r *http.Request, ds internal.DataSource
 	if params.Doc != "" || params.Examples {
 		fs |= internal.WithDocsSource
 	}
-
 	bc := internal.BuildContext{GOOS: params.GOOS, GOARCH: params.GOARCH}
-	unit, err := ds.GetUnit(r.Context(), um, fs, bc)
-	if err != nil {
+
+	var (
+		unit   *internal.Unit
+		counts internal.ImportedByCounts
+	)
+	g, ctx := errgroup.WithContext(r.Context())
+	g.Go(func() (err error) {
+		unit, err = ds.GetUnit(ctx, um, fs, bc)
+		return err
+	})
+	if params.ImportedByCounts {
+		g.Go(func() (err error) {
+			counts, err = ds.GetImportedByCounts(ctx, pkgPath, um.ModulePath)
+			return err
+		})
+	}
+	if err := g.Wait(); err != nil {
 		return err
 	}
 
@@ -103,6 +118,20 @@ func ServePackage(w http.ResponseWriter, r *http.Request, ds internal.DataSource
 	resp, err := unitToPackage(unit, params)
 	if err != nil {
 		return err
+	}
+	if params.ImportedByCounts {
+		packages := counts.Packages
+		if counts.PackagesUpdatedAt.IsZero() {
+			packages = -1
+		}
+		modules := counts.Modules
+		if counts.ModulesUpdatedAt.IsZero() {
+			modules = -1
+		}
+		resp.ImportedByCounts = &ImportedByCounts{
+			Packages: packages,
+			Modules:  modules,
+		}
 	}
 
 	return serveJSON(w, http.StatusOK, resp, versionCacheDur(params.Version))

@@ -80,9 +80,15 @@ When using -json, the output is a JSON object with the following structure:
         IsStandardLibrary bool
         GOOS              string
         GOARCH            string
-        Docs              string    // rendered documentation (with -doc)
-        Imports           []string  // imports (with -imports)
-        Licenses          []License // licenses (with -licenses)
+        Docs              string            // rendered documentation (with -doc)
+        Imports           []string          // imports (with -imports)
+        Licenses          []License         // licenses (with -licenses)
+        ImportedByCounts  *ImportedByCounts // number of importers (with -imported-by-counts)
+    }
+
+    type ImportedByCounts struct {
+        Packages int
+        Modules  int
     }
 
     type License struct {

@@ -13,16 +13,24 @@ import (
 
 // Package is the response for /v1/package/{packagePath}.
 type Package struct {
-	ModulePath        string    `json:"modulePath"`
-	Version           string    `json:"version"`
-	IsLatest          bool      `json:"isLatest"`
-	IsStandardLibrary bool      `json:"isStandardLibrary"`
-	GOOS              string    `json:"goos"`
-	GOARCH            string    `json:"goarch"`
-	Docs              string    `json:"docs,omitempty"`
-	Imports           []string  `json:"imports,omitempty"`
-	Licenses          []License `json:"licenses,omitempty"`
+	ModulePath        string            `json:"modulePath"`
+	Version           string            `json:"version"`
+	IsLatest          bool              `json:"isLatest"`
+	IsStandardLibrary bool              `json:"isStandardLibrary"`
+	GOOS              string            `json:"goos"`
+	GOARCH            string            `json:"goarch"`
+	Docs              string            `json:"docs,omitempty"`
+	Imports           []string          `json:"imports,omitempty"`
+	Licenses          []License         `json:"licenses,omitempty"`
+	ImportedByCounts  *ImportedByCounts `json:"importedByCounts,omitempty"`
 	PackageInfo
+}
+
+// ImportedByCounts holds the number of packages and modules importing some package.
+// A value is -1 if the count is unavailable, for example if it hasn't been calculated yet.
+type ImportedByCounts struct {
+	Packages int `json:"packages"`
+	Modules  int `json:"modules"`
 }
 
 type PackageInfo struct {

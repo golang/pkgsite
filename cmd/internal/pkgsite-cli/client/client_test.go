@@ -68,12 +68,16 @@ func TestGetPackageWithFlags(t *testing.T) {
 		if got := q.Get("module"); got != "github.com/foo/bar" {
 			t.Errorf("module = %q, want github.com/foo/bar", got)
 		}
+		if got := q.Get("imported-by-counts"); got != "true" {
+			t.Errorf("imported-by-counts = %q, want true", got)
+		}
 		json.NewEncoder(w).Encode(Package{
 			PackageInfo: PackageInfo{
 				Path: "github.com/foo/bar/pkg",
 			},
-			Docs:    "# package pkg",
-			Imports: []string{"fmt", "strings"},
+			Docs:             "# package pkg",
+			Imports:          []string{"fmt", "strings"},
+			ImportedByCounts: &ImportedByCounts{Packages: 5, Modules: 2},
 		})
 	}))
 	defer srv.Close()
@@ -83,10 +87,11 @@ func TestGetPackageWithFlags(t *testing.T) {
 		t.Fatal(err)
 	}
 	resp, err := c.GetPackage(context.Background(), "github.com/foo/bar/pkg", "", PackageOptions{
-		Doc:      "md",
-		Imports:  true,
-		Licenses: true,
-		Module:   "github.com/foo/bar",
+		Doc:              "md",
+		Imports:          true,
+		Licenses:         true,
+		Module:           "github.com/foo/bar",
+		ImportedByCounts: true,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -96,6 +101,10 @@ func TestGetPackageWithFlags(t *testing.T) {
 	}
 	if len(resp.Imports) != 2 {
 		t.Errorf("len(Imports) = %d, want 2", len(resp.Imports))
+	}
+	wantCounts := ImportedByCounts{Packages: 5, Modules: 2}
+	if resp.ImportedByCounts == nil || *resp.ImportedByCounts != wantCounts {
+		t.Errorf("ImportedByCounts = %v, want %v", resp.ImportedByCounts, wantCounts)
 	}
 }
 

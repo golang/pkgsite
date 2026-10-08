@@ -41,6 +41,8 @@ type PackageParams struct {
 	Imports bool `form:"imports"`
 	// Whether to include licenses in the result.
 	Licenses bool `form:"licenses"`
+	// Whether to include counts of packages and modules that are importers of this one.
+	ImportedByCounts bool `form:"imported-by-counts"`
 }
 
 // SymbolsParams are query parameters for /v1/symbols/{path}.

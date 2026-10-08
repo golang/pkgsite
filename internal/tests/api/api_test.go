@@ -177,8 +177,16 @@ func testServePackage(t *testing.T, ds internal.TestingDataSource) {
 	mi.LatestVersion = latestVersion
 	ds.MustInsertModule(t, module(t, mi, u))
 
-	ds.MustInsertModule(t, module(t, modinfo("example.com/a", version), unit("b", sample.Documentation("linux", "amd64", sample.DocContents))))
-	ds.MustInsertModule(t, module(t, modinfo("example.com/a/b", version), unit("")))
+	ub1 := unit("b", sample.Documentation("linux", "amd64", sample.DocContents))
+	ub1.Imports = []string{"example.com/pkg"}
+	uc1 := unit("c")
+	uc1.Imports = []string{"example.com/pkg"}
+	ds.MustInsertModule(t, module(t, modinfo("example.com/a", version), ub1, uc1))
+	ub2 := unit("")
+	ub2.Imports = []string{"example.com/pkg"}
+	ud2 := unit("d")
+	ud2.Imports = []string{"example.com/pkg"}
+	ds.MustInsertModule(t, module(t, modinfo("example.com/a/b", version), ub2, ud2))
 	ds.MustInsertModule(t, module(t, modinfo("example.com", latestVersion),
 		unit("pkg", sample.DocumentationWithTest("linux", "amd64", `
 		// Package p is a package.
@@ -495,6 +503,51 @@ func testServePackage(t *testing.T, ds internal.TestingDataSource) {
 				ModulePath: "example.com/d", // picked because example.com/d/e is deprecated
 				Version:    "v1.2.3",
 				IsLatest:   true,
+			},
+		},
+		{
+			name:       "imported-by-counts",
+			url:        "/v1/package/example.com/pkg?version=v1.2.3&imported-by-counts=true",
+			wantStatus: http.StatusOK,
+			want: &api.Package{
+				PackageInfo: api.PackageInfo{
+					Path:              "example.com/pkg",
+					Name:              "pkg",
+					IsRedistributable: true,
+					Synopsis:          "This is a package synopsis for GOOS=linux, GOARCH=amd64",
+				},
+				ModulePath: "example.com",
+				Version:    "v1.2.3",
+				IsLatest:   false,
+				GOOS:       "linux",
+				GOARCH:     "amd64",
+				ImportedByCounts: &api.ImportedByCounts{
+					Packages: 3,
+					Modules:  2,
+				},
+			},
+		},
+		{
+			name:       "imported-by-counts unknown",
+			url:        "/v1/package/example.com/pkg?version=v1.2.3&imported-by-counts=true",
+			overrideDS: unknownCountDataSource{ds},
+			wantStatus: http.StatusOK,
+			want: &api.Package{
+				PackageInfo: api.PackageInfo{
+					Path:              "example.com/pkg",
+					Name:              "pkg",
+					IsRedistributable: true,
+					Synopsis:          "This is a package synopsis for GOOS=linux, GOARCH=amd64",
+				},
+				ModulePath: "example.com",
+				Version:    "v1.2.3",
+				IsLatest:   false,
+				GOOS:       "linux",
+				GOARCH:     "amd64",
+				ImportedByCounts: &api.ImportedByCounts{
+					Packages: -1,
+					Modules:  -1,
+				},
 			},
 		},
 	} {

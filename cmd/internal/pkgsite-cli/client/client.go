@@ -213,13 +213,14 @@ func (c *Client) get(ctx context.Context, url string, dst any) error {
 
 // PackageOptions contains options for GetPackage.
 type PackageOptions struct {
-	Module   string
-	Doc      string
-	Examples bool
-	Imports  bool
-	Licenses bool
-	GOOS     string
-	GOARCH   string
+	Module           string
+	Doc              string
+	Examples         bool
+	Imports          bool
+	Licenses         bool
+	GOOS             string
+	GOARCH           string
+	ImportedByCounts bool
 }
 
 // GetPackage fetches package information for the given path and version.
@@ -248,6 +249,9 @@ func (c *Client) GetPackage(ctx context.Context, path, version string, opts Pack
 	}
 	if opts.GOARCH != "" {
 		q.Set("goarch", opts.GOARCH)
+	}
+	if opts.ImportedByCounts {
+		q.Set("imported-by-counts", "true")
 	}
 	u := c.server.JoinPath("v1", "package", path)
 	u.RawQuery = q.Encode()

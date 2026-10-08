@@ -46,10 +46,11 @@ func TestFormatPackageWithExtras(t *testing.T) {
 			PackageInfo: client.PackageInfo{
 				Path: "github.com/foo/bar",
 			},
-			ModulePath: "github.com/foo/bar",
-			Version:    "v1.0.0",
-			Imports:    []string{"fmt", "strings"},
-			Licenses:   []client.License{{Types: []string{"MIT"}, FilePath: "LICENSE"}},
+			ModulePath:       "github.com/foo/bar",
+			Version:          "v1.0.0",
+			Imports:          []string{"fmt", "strings"},
+			Licenses:         []client.License{{Types: []string{"MIT"}, FilePath: "LICENSE"}},
+			ImportedByCounts: &client.ImportedByCounts{Packages: 5, Modules: 2},
 		},
 		Symbols: &client.PaginatedResponse[client.Symbol]{
 			Items: []client.Symbol{
@@ -66,6 +67,7 @@ func TestFormatPackageWithExtras(t *testing.T) {
 	})
 	out := buf.String()
 	for _, want := range []string{
+		"Imported by: 5 packages, 2 modules",
 		"Imports:",
 		"  fmt",
 		"Licenses:",

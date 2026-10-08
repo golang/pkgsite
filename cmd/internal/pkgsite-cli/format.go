@@ -7,6 +7,7 @@ package main
 import (
 	"fmt"
 	"io"
+	"strconv"
 	"strings"
 
 	"golang.org/x/pkgsite/cmd/internal/pkgsite-cli/client"
@@ -47,6 +48,9 @@ func formatPackage(w io.Writer, r packageResult) {
 	}
 	if p.GOOS != "" && p.GOARCH != "" {
 		fmt.Fprintf(w, "  Context:  %s/%s\n", p.GOOS, p.GOARCH)
+	}
+	if c := p.ImportedByCounts; c != nil {
+		fmt.Fprintf(w, "  Imported by: %s packages, %s modules\n", formatCount(c.Packages), formatCount(c.Modules))
 	}
 
 	if p.Docs != "" {
@@ -223,4 +227,11 @@ func firstLine(s string) string {
 		return before
 	}
 	return s
+}
+
+func formatCount(n int) string {
+	if n < 0 {
+		return "unknown"
+	}
+	return strconv.Itoa(n)
 }
