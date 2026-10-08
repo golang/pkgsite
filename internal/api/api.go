@@ -120,21 +120,25 @@ func ServePackage(w http.ResponseWriter, r *http.Request, ds internal.DataSource
 		return err
 	}
 	if params.ImportedByCounts {
-		packages := counts.Packages
-		if counts.PackagesUpdatedAt.IsZero() {
-			packages = -1
-		}
-		modules := counts.Modules
-		if counts.ModulesUpdatedAt.IsZero() {
-			modules = -1
-		}
-		resp.ImportedByCounts = &ImportedByCounts{
-			Packages: packages,
-			Modules:  modules,
-		}
+		ic := toImportedByCounts(counts)
+		resp.ImportedByCounts = &ic
 	}
 
 	return serveJSON(w, http.StatusOK, resp, versionCacheDur(params.Version))
+}
+
+func toImportedByCounts(c internal.ImportedByCounts) ImportedByCounts {
+	res := ImportedByCounts{
+		Packages: c.Packages,
+		Modules:  c.Modules,
+	}
+	if c.PackagesUpdatedAt.IsZero() {
+		res.Packages = -1
+	}
+	if c.ModulesUpdatedAt.IsZero() {
+		res.Modules = -1
+	}
+	return res
 }
 
 // ServeModule handles requests for the v1 module metadata endpoint.
@@ -454,10 +458,11 @@ func ServeSearch(w http.ResponseWriter, r *http.Request, ds internal.DataSource)
 	var results []SearchResult
 	for _, r := range dbresults {
 		results = append(results, SearchResult{
-			PackagePath: r.PackagePath,
-			ModulePath:  r.ModulePath,
-			Version:     r.Version,
-			Synopsis:    r.Synopsis,
+			PackagePath:      r.PackagePath,
+			ModulePath:       r.ModulePath,
+			Version:          r.Version,
+			Synopsis:         r.Synopsis,
+			ImportedByCounts: toImportedByCounts(r.ImportedByCounts),
 		})
 	}
 

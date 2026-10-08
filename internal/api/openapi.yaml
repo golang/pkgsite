@@ -1094,6 +1094,9 @@
       },
       "SearchResult": {
         "properties": {
+          "importedByCounts": {
+            "$ref": "#/components/schemas/ImportedByCounts"
+          },
           "modulePath": {
             "type": "string"
           },

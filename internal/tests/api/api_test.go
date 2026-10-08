@@ -1029,9 +1029,17 @@ func testServeModulePackages(t *testing.T, ds internal.TestingDataSource) {
 func testServeSearch(t *testing.T, ds internal.TestingDataSource) {
 	ds.MustInsertModule(t, module(t, modinfo("example.com", "v1.0.0"),
 		unit("pkg", sample.Documentation("linux", "amd64", sample.DocContents))))
-	ds.MustInsertModule(t, module(t, modinfo("example.com/z", "v1.0.0"),
-		unit("pkg", sample.Documentation("linux", "amd64", sample.DocContents)),
-		unit("pkg2", sample.Documentation("linux", "amd64", sample.DocContents))))
+	uz1 := unit("pkg", sample.Documentation("linux", "amd64", sample.DocContents))
+	uz1.Imports = []string{"example.com/pkg"}
+	uz2 := unit("pkg2", sample.Documentation("linux", "amd64", sample.DocContents))
+	uz2.Imports = []string{"example.com/pkg"}
+	ds.MustInsertModule(t, module(t, modinfo("example.com/z", "v1.0.0"), uz1, uz2))
+
+	wantCounts := map[string]api.ImportedByCounts{
+		"example.com/pkg":    {Packages: 2, Modules: 1},
+		"example.com/z/pkg":  {Packages: 0, Modules: 0},
+		"example.com/z/pkg2": {Packages: 0, Modules: 0},
+	}
 
 	for _, test := range []struct {
 		name       string
@@ -1092,6 +1100,11 @@ func testServeSearch(t *testing.T, ds internal.TestingDataSource) {
 				unmarshalJSON(t, w.Body.Bytes(), &got)
 				if len(got.Items) != test.wantCount {
 					t.Errorf("%s: count = %d, want %d", test.name, len(got.Items), test.wantCount)
+				}
+				for _, item := range got.Items {
+					if want, ok := wantCounts[item.PackagePath]; ok && item.ImportedByCounts != want {
+						t.Errorf("%s: %s ImportedByCounts = %+v, want %+v", test.name, item.PackagePath, item.ImportedByCounts, want)
+					}
 				}
 			}
 		})

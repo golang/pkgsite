@@ -127,10 +127,11 @@ type Symbol struct {
 
 // SearchResults is the response for /v1/search?q={query}.
 type SearchResult struct {
-	PackagePath string `json:"packagePath"`
-	ModulePath  string `json:"modulePath"`
-	Version     string `json:"version"`
-	Synopsis    string `json:"synopsis"`
+	PackagePath      string           `json:"packagePath"`
+	ModulePath       string           `json:"modulePath"`
+	Version          string           `json:"version"`
+	Synopsis         string           `json:"synopsis"`
+	ImportedByCounts ImportedByCounts `json:"importedByCounts"`
 }
 
 // Vulnerability is a vulnerability in /v1/vulns/{modulePath}.

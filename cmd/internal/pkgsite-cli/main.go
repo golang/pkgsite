@@ -137,10 +137,16 @@ When using -json, the output is a JSON object with the following structure:
     }
 
     type SearchResult struct {
-        PackagePath string
-        ModulePath  string
-        Version     string
-        Synopsis    string
+        PackagePath      string
+        ModulePath       string
+        Version          string
+        Synopsis         string
+        ImportedByCounts ImportedByCounts
+    }
+
+    type ImportedByCounts struct {
+        Packages int // -1 if unknown
+        Modules  int // -1 if unknown
     }
 `
 
