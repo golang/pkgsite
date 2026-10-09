@@ -50,19 +50,24 @@ func (db *DB) UpdateSearchDocumentsImportedByCount(ctx context.Context, opts *Im
 	if o.MaxTime == 0 {
 		o.MaxTime = 24 * 365 * 10 * time.Hour
 	}
-	// Adjust the total time to give each part (modules, packages) half
-	// the time.
-	o.MaxTime /= 2
+	// Give modules up to 3/4 of the time, since they have many more uncomputed counts.
+	// Packages get whatever time remains.
+	// TODO(jba): restore to 1/2 when modules have caught up.
+	start := time.Now()
+	om := o
+	om.MaxTime = 3 * o.MaxTime / 4
 
-	log.Infof(ctx, "updating imported-by module counts, opts = %+v", o)
-	nModuleUpdated, err = db.updateImportedByModuleCounts(ctx, o)
+	log.Infof(ctx, "updating imported-by module counts, opts = %+v", om)
+	nModuleUpdated, err = db.updateImportedByModuleCounts(ctx, om)
 	if err != nil {
 		return 0, 0, err
 	}
 	log.Infof(ctx, "updated %d imported-by module counts", nModuleUpdated)
 
-	log.Infof(ctx, "updating imported-by package counts, opts = %+v", o)
-	nPackageUpdated, err = db.updateImportedByPackageCounts(ctx, o)
+	op := o
+	op.MaxTime = o.MaxTime - time.Since(start)
+	log.Infof(ctx, "updating imported-by package counts, opts = %+v", op)
+	nPackageUpdated, err = db.updateImportedByPackageCounts(ctx, op)
 	if err != nil {
 		return 0, nModuleUpdated, err
 	}
