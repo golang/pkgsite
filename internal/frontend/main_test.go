@@ -11,6 +11,8 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/testing/fakedatasource"
 	"golang.org/x/pkgsite/internal/testing/sample"
+	"golang.org/x/text/language"
+	"golang.org/x/text/message"
 )
 
 func TestGetImportedByCount(t *testing.T) {
@@ -57,5 +59,23 @@ func TestGetImportedByCount(t *testing.T) {
 				t.Errorf("getImportedByCount(ctx, db, %q) mismatch (-want +got):\n%s", pkg.Path, diff)
 			}
 		})
+	}
+}
+
+func TestImportedByDisplay(t *testing.T) {
+	pr := message.NewPrinter(language.English)
+	for _, test := range []struct {
+		n    int
+		want string
+	}{
+		{-1, "? modules"},
+		{0, "0 modules"},
+		{1, "1 module"},
+		{2, "2 modules"},
+		{15833, "15,833 modules"},
+	} {
+		if got := importedByDisplay(pr, "module", test.n); got != test.want {
+			t.Errorf("importedByDisplay(%d) = %q, want %q", test.n, got, test.want)
+		}
 	}
 }

@@ -101,7 +101,7 @@ func UnitHeader(p *Page, versionedURL bool, isPackage bool) htmlcheck.Checker {
 		in(`[data-test-id="UnitHeader-importedby"]`,
 			in("a",
 				href(urlPath+"?tab=importedby"),
-				text(`Imported by: [0-9]+\+?`))))
+				text(`Imported by: [0-9,]+ modules, [0-9,]+ packages`))))
 	if !isPackage {
 		importsDetails = nil
 	}

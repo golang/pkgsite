@@ -549,6 +549,8 @@ func (db *DB) getUnitWithAllFields(ctx context.Context, um *internal.UnitMeta, f
 		docSelect = "d.source,"
 	}
 
+	// TODO(jba): the imported-by counts should return -1 instead of
+	// 0 if the unit is not in search_documents.
 	query := fmt.Sprintf(`
         SELECT
 			r.file_path,
@@ -567,7 +569,15 @@ func (db *DB) getUnitWithAllFields(ctx context.Context, um *internal.UnitMeta, f
 				-- Only package_path_id is needed b/c it is the PK for
 				-- search_documents.
 				WHERE package_path_id = $1
-				), 0) AS num_imported_by
+				), 0) AS num_imported_by,
+			COALESCE((
+				SELECT CASE
+					WHEN imported_by_module_count_updated_at IS NULL THEN -1
+					ELSE imported_by_module_count
+				END
+				FROM search_documents
+				WHERE package_path_id = $1
+				), 0) AS num_imported_by_modules
 		FROM units u
 		LEFT JOIN readmes r
 		ON r.unit_id = u.id
@@ -594,6 +604,7 @@ func (db *DB) getUnitWithAllFields(ctx context.Context, um *internal.UnitMeta, f
 		&doc.Source,
 		&u.NumImports,
 		&u.NumImportedBy,
+		&u.NumImportedByModules,
 	)
 	switch err {
 	case sql.ErrNoRows:

@@ -182,10 +182,22 @@
 
 {{define "detail-item-importedby"}}
   <span class="go-Main-headerDetailItem" data-test-id="UnitHeader-importedby">
-    <a href="{{$.URLPath}}?tab=importedby" aria-label="Imported By: {{.Details.ImportedByCount}}"
+    <a href="{{$.URLPath}}?tab=importedby" aria-label="Imported By {{.Details.ImportedByModules}}, {{.Details.ImportedByPackages}}"
         data-gtmc="header link" aria-describedby="importedby-description">
-       <span class="go-textSubtle">Imported by: </span>{{.Details.ImportedByCount}}
+       <span class="go-textSubtle">Imported by: </span>{{.Details.ImportedByModules}}, {{.Details.ImportedByPackages}}
     </a>
+    <details class="go-Tooltip js-tooltip" data-gtmc="tooltip">
+      <summary class="go-textSubtle">
+        <img class="go-Icon" role="button" tabindex="0" src="/static/shared/icon/help_gm_grey_24dp.svg" alt="" aria-label="Toggle imported-by help tooltip" height="24" width="24">
+      </summary>
+      <p aria-live="polite" role="tooltip">
+      The first number is the count of modules that contain a package that imports this one.
+      The module count is a better indicator of popularity than the package count.
+      A module with 100 importing packages is counted only once instead of 100 times,
+      reflecting the fact that the choice to use the package was likely made only once,
+      not 100 times. <br/>
+      A '?' means that the value hasn't been computed yet.</p>
+    </details>
   </span>
   <div class="screen-reader-only" id="importedby-description" hidden>
     Opens a new window with list of known importers.

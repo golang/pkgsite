@@ -59,10 +59,15 @@ type MainDetails struct {
 	// See https://golang.org/issue/42968.
 	ModuleReadmeLinks []link
 
-	// ImportedByCount is the number of packages that import this path.
-	// When the count is > limit it will read as 'limit+'. This field
-	// is not supported when using a datasource proxy.
-	ImportedByCount string
+	// ImportedByPackages describes the number of packages that import this path,
+	// for example "1,234 packages". It is "? packages" if the count hasn't been
+	// computed. This field is not supported when using a datasource proxy.
+	ImportedByPackages string
+
+	// ImportedByModules describes the number of modules that import this path,
+	// for example "1,234 modules". It is "? modules" if the count hasn't been
+	// computed. This field is not supported when using a datasource proxy.
+	ImportedByModules string
 
 	DocBody       safehtml.HTML
 	DocOutline    safehtml.HTML
@@ -202,33 +207,47 @@ func fetchMainDetails(ctx context.Context, ds internal.DataSource, um *internal.
 	isStableVersion := semver.Major(um.Version) != "v0" && versionType == version.TypeRelease
 	pr := message.NewPrinter(language.English)
 	return &MainDetails{
-		ExpandReadme:      expandReadme,
-		Directories:       unitDirectories(append(subdirectories, nestedModules...)),
-		Licenses:          transformLicenseMetadata(unit.Licenses),
-		CommitTime:        absoluteTime(um.CommitTime),
-		Readme:            readme.HTML,
-		ReadmeOutline:     readme.Outline,
-		ReadmeLinks:       readme.Links,
-		DocLinks:          docLinks,
-		ModuleReadmeLinks: modLinks,
-		DocOutline:        docParts.Outline,
-		DocBody:           docParts.Body,
-		DocSynopsis:       synopsis,
-		GOOS:              goos,
-		GOARCH:            goarch,
-		BuildContexts:     buildContexts,
-		SourceFiles:       files,
-		RepositoryURL:     um.SourceInfo.RepoURL(),
-		SourceURL:         um.SourceInfo.DirectoryURL(internal.Suffix(um.Path, um.ModulePath)),
-		MobileOutline:     docParts.MobileOutline,
-		NumImports:        pr.Sprint(unit.NumImports),
-		ImportedByCount:   pr.Sprint(unit.NumImportedBy),
-		IsPackage:         unit.IsPackage(),
-		ModFileURL:        um.SourceInfo.ModuleURL() + "/go.mod",
-		IsTaggedVersion:   isTaggedVersion,
-		IsStableVersion:   isStableVersion,
-		IsRedistributable: unit.IsRedistributable,
+		ExpandReadme:       expandReadme,
+		Directories:        unitDirectories(append(subdirectories, nestedModules...)),
+		Licenses:           transformLicenseMetadata(unit.Licenses),
+		CommitTime:         absoluteTime(um.CommitTime),
+		Readme:             readme.HTML,
+		ReadmeOutline:      readme.Outline,
+		ReadmeLinks:        readme.Links,
+		DocLinks:           docLinks,
+		ModuleReadmeLinks:  modLinks,
+		DocOutline:         docParts.Outline,
+		DocBody:            docParts.Body,
+		DocSynopsis:        synopsis,
+		GOOS:               goos,
+		GOARCH:             goarch,
+		BuildContexts:      buildContexts,
+		SourceFiles:        files,
+		RepositoryURL:      um.SourceInfo.RepoURL(),
+		SourceURL:          um.SourceInfo.DirectoryURL(internal.Suffix(um.Path, um.ModulePath)),
+		MobileOutline:      docParts.MobileOutline,
+		NumImports:         pr.Sprint(unit.NumImports),
+		ImportedByPackages: importedByDisplay(pr, "package", unit.NumImportedBy),
+		ImportedByModules:  importedByDisplay(pr, "module", unit.NumImportedByModules),
+		IsPackage:          unit.IsPackage(),
+		ModFileURL:         um.SourceInfo.ModuleURL() + "/go.mod",
+		IsTaggedVersion:    isTaggedVersion,
+		IsStableVersion:    isStableVersion,
+		IsRedistributable:  unit.IsRedistributable,
 	}, nil
+}
+
+// importedByDisplay returns the text describing n importing modules,
+// or "? WORD" if n is negative (meaning the count hasn't been computed).
+func importedByDisplay(pr *message.Printer, word string, n int) string {
+	switch {
+	case n < 0:
+		return pr.Sprintf("? %ss", word)
+	case n == 1:
+		return pr.Sprintf("1 %s", word)
+	default:
+		return pr.Sprintf("%d %ss", n, word)
+	}
 }
 
 func cleanDocumentation(docs []*internal.Documentation) []*internal.Documentation {

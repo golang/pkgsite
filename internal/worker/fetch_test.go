@@ -76,6 +76,7 @@ func TestFetchAndUpdateState(t *testing.T) {
 			Filepath: "bar/README",
 			Contents: "Another README file for testing.",
 		},
+		NumImportedByModules: -1,
 	}
 
 	testCases := []struct {
@@ -130,6 +131,7 @@ func TestFetchAndUpdateState(t *testing.T) {
 					GOOS:     "linux",
 					GOARCH:   "amd64",
 				}},
+				NumImportedByModules: -1,
 			},
 			wantDoc: []string{"Baz returns the string &#34;baz&#34;."},
 		}, {
@@ -154,8 +156,9 @@ func TestFetchAndUpdateState(t *testing.T) {
 					{Types: []string{"0BSD"}, FilePath: "LICENSE"},
 					{Types: []string{"UNKNOWN"}, FilePath: "unk/LICENSE.md"},
 				},
-				IsRedistributable: false,
-				NumImports:        2,
+				IsRedistributable:    false,
+				NumImports:           2,
+				NumImportedByModules: -1,
 			},
 		}, {
 			modulePath: buildConstraintsModulePath,
@@ -184,6 +187,7 @@ func TestFetchAndUpdateState(t *testing.T) {
 					GOOS:     "linux",
 					GOARCH:   "amd64",
 				}},
+				NumImportedByModules: -1,
 			},
 			wantDoc: []string{"const CacheLinePadSize = 3"},
 			dontWantDoc: []string{

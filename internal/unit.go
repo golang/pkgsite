@@ -49,7 +49,10 @@ type Unit struct {
 	LicenseContents []*licenses.License
 	NumImports      int
 	NumImportedBy   int
-	Licenses        []*licenses.Metadata
+	// NumImportedByModules is the number of modules that import this unit,
+	// or -1 if it has not been computed.
+	NumImportedByModules int
+	Licenses             []*licenses.Metadata
 	// Note: IsRedistributable applies to the unit;
 	// UnitMeta.ModuleInfo.IsRedistributable applies to the module.
 	IsRedistributable bool
