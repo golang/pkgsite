@@ -255,7 +255,6 @@ func main() {
 	fmt.Println(strings.Compare(&#34;a&#34;, &#34;b&#34;))
 	fmt.Println(strings.Compare(&#34;a&#34;, &#34;a&#34;))
 	fmt.Println(strings.Compare(&#34;b&#34;, &#34;a&#34;))
-
 }
 </pre>
 
@@ -302,7 +301,11 @@ func main() {
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			if diff := cmp.Diff(test.want, got[test.htmlID]); diff != "" {
+			// Go 1.28 (CL 655115, golang/go#72098) fixed go/doc so playable examples
+			// no longer include a trailing blank line before the closing brace of main.
+			// Normalize the older output so tests pass on both Go <=1.27 and tip.
+			gotHTML := strings.Replace(got[test.htmlID], "\n\n}\n</pre>", "\n}\n</pre>", 1)
+			if diff := cmp.Diff(test.want, gotHTML); diff != "" {
 				t.Errorf("mismatch (-want, +got):\n%s", diff)
 			}
 		})
