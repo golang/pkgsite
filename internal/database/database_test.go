@@ -448,6 +448,63 @@ func testTransactSerializable(ctx context.Context, t *testing.T) string {
 	return ""
 }
 
+func TestIsDeadlock(t *testing.T) {
+	// Cause a deadlock between two transactions and check that the
+	// resulting error is recognized.
+	ctx := context.Background()
+	t.Cleanup(func() {
+		testDB.Exec(ctx, `DROP TABLE IF EXISTS deadlock`)
+	})
+	for _, stmt := range []string{
+		`DROP TABLE IF EXISTS deadlock`,
+		`CREATE TABLE deadlock (id INTEGER PRIMARY KEY, value INTEGER)`,
+		`INSERT INTO deadlock (id, value) VALUES (1, 0), (2, 0)`,
+	} {
+		if _, err := testDB.Exec(ctx, stmt); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	// Each transaction locks one row, waits until the other has locked
+	// its row, then tries to lock the other row.
+	var ready [2]chan struct{}
+	for i := range ready {
+		ready[i] = make(chan struct{})
+	}
+	update := func(tx *DB, id int) error {
+		_, err := tx.Exec(ctx, `UPDATE deadlock SET value = value + 1 WHERE id = $1`, id)
+		return err
+	}
+	errc := make(chan error, 2)
+	for i := range 2 {
+		go func() {
+			errc <- testDB.Transact(ctx, sql.LevelDefault, func(tx *DB) error {
+				if err := update(tx, i+1); err != nil {
+					return err
+				}
+				close(ready[i])
+				<-ready[1-i]
+				return update(tx, 2-i)
+			})
+		}()
+	}
+	var errs []error
+	for range 2 {
+		if err := <-errc; err != nil {
+			errs = append(errs, err)
+		}
+	}
+	// Postgres aborts exactly one of the transactions.
+	if len(errs) != 1 {
+		t.Fatalf("got %d errors, want 1: %v", len(errs), errs)
+	}
+	if !IsDeadlock(errs[0]) {
+		t.Errorf("IsDeadlock(%v) = false, want true", errs[0])
+	}
+	if IsDeadlock(errors.New("40P01")) {
+		t.Error("IsDeadlock of non-Postgres error = true, want false")
+	}
+}
 func TestCopyDoesNotUpsert(t *testing.T) {
 	// This test verifies that copying rows into a table will not overwrite existing rows.
 	ctx := context.Background()

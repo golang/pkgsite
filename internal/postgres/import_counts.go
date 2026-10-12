@@ -18,7 +18,7 @@ import (
 // ImporterCountOptions are parameters for UpdateSearchDocumentsImportedByCount.
 type ImporterCountOptions struct {
 	// Number of rows to update in search_documents at once
-	// (with the table lock held).
+	// (in a single transaction, with the rows locked).
 	// If zero, a reasonable default is used.
 	BatchSize int
 	// Maximum time to spend updating. If zero, then no max.
@@ -79,15 +79,10 @@ func (db *DB) UpdateSearchDocumentsImportedByCount(ctx context.Context, opts *Im
 // or imported_by_module_count) and its corresponding _updated_at column in
 // search_documents for every package in computed_imported_by_counts.
 func updateImportedByCounts(ctx context.Context, db *database.DB, column string) (int64, error) {
-	// Lock the entire table to avoid deadlock. Without the lock, the update can
-	// fail because module inserts are concurrently modifying rows of
-	// search_documents.
-	// See https://www.postgresql.org/docs/11/explicit-locking.html for what locks mean.
-	// See https://www.postgresql.org/docs/11/sql-lock.html for the LOCK
-	// statement, notably the paragraph beginning "If a transaction of this sort
-	// is going to change the data...".
+	// This statement does not lock search_documents itself. Callers that run
+	// concurrently with module inserts must have already locked the rows that
+	// will be updated, or deadlock can result. See updateImporterCounts.
 	updateStmt := fmt.Sprintf(`
-		LOCK TABLE search_documents IN SHARE ROW EXCLUSIVE MODE;
 		UPDATE search_documents s
 		SET
 			%[1]s = c.count,
@@ -121,6 +116,7 @@ func (db *DB) updateImportedByPackageCounts(ctx context.Context, opts ImporterCo
 		OR imported_by_count_updated_at IS NULL
 		ORDER BY imported_by_count_updated_at NULLS FIRST
 		LIMIT $2
+		FOR NO KEY UPDATE SKIP LOCKED
 	)
 	SELECT stale.package_path, COUNT(DISTINCT u.from_path)
 	FROM imports_unique u
@@ -171,6 +167,7 @@ func (db *DB) updateImportedByModuleCounts(ctx context.Context, opts ImporterCou
 		OR imported_by_module_count_updated_at IS NULL
 		ORDER BY imported_by_module_count_updated_at NULLS FIRST
 		LIMIT $2
+		FOR NO KEY UPDATE SKIP LOCKED
 	)
 	SELECT stale.package_path, COUNT(DISTINCT u.from_module_path)
 	FROM imports_unique u
@@ -200,8 +197,27 @@ func (db *DB) updateImportedByModuleCounts(ctx context.Context, opts ImporterCou
 // "age(X) < Y", ensures that Postgres uses the index on the updated_at column.
 //
 // $2 is opts.BatchSize, the maximum number of rows it should process.
+//
+// To avoid deadlock with concurrent module inserts, which modify rows of
+// search_documents in an order we can't easily match, the query must select
+// the rows to update with FOR NO KEY UPDATE SKIP LOCKED. That locks the rows
+// for the rest of the transaction, so the subsequent UPDATE never waits on
+// another transaction for search_documents rows. Rows that are skipped remain
+// stale and are picked up in a later batch or run. If every remaining stale row
+// is locked, the loop ends early; a later run will pick them up.
+// See https://www.postgresql.org/docs/current/sql-select.html#SQL-FOR-UPDATE-SHARE.
+//
+// Deadlock is still possible, though rare: when imported_by_count changes, a
+// trigger updates symbol_search_documents, whose rows a concurrent module insert
+// may have locked before it tries to lock the search_documents row we hold.
+// If Postgres aborts our transaction to break such a deadlock, we just try
+// again; the rows of the failed batch are still stale.
 func (db *DB) updateImporterCounts(ctx context.Context, query, countCol string, opts ImporterCountOptions) (nUpdated int64, err error) {
 	defer derrors.WrapStack(&err, "updateImporterCounts(ctx, %+v)", opts)
+	// Give up after this many consecutive deadlocks, in case something
+	// other than the rare race described above is going on.
+	const maxDeadlocks = 3
+	nDeadlocks := 0
 	cutoff := time.Now().Add(-opts.Staleness)
 	deadline := time.Now().Add(opts.MaxTime)
 	for time.Now().Before(deadline) {
@@ -210,12 +226,20 @@ func (db *DB) updateImporterCounts(ctx context.Context, query, countCol string, 
 			if _, err := tx.Exec(ctx, query, cutoff, opts.BatchSize); err != nil {
 				return fmt.Errorf("creating temp table: %w", err)
 			}
+			var err error
 			nu, err = updateImportedByCounts(ctx, tx, countCol)
 			return err
 		})
+		if database.IsDeadlock(err) && nDeadlocks < maxDeadlocks {
+			nDeadlocks++
+			log.Warningf(ctx, "updating %s: deadlock (%d in a row); retrying: %v", countCol, nDeadlocks, err)
+			time.Sleep(100 * time.Millisecond)
+			continue
+		}
 		if err != nil {
 			return nUpdated, err
 		}
+		nDeadlocks = 0
 		if nu == 0 {
 			break
 		}

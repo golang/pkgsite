@@ -277,13 +277,28 @@ func (db *DB) transactWithRetry(ctx context.Context, opts *sql.TxOptions, txFunc
 }
 
 func isSerializationFailure(err error) bool {
+	return hasErrorCode(err, serializationFailureCode)
+}
+
+// deadlockDetectedCode is the Postgres error code returned when a transaction
+// is aborted because it was part of a deadlock.
+// See https://www.postgresql.org/docs/current/errcodes-appendix.html.
+const deadlockDetectedCode = "40P01"
+
+// IsDeadlock reports whether err is a Postgres "deadlock detected" error.
+func IsDeadlock(err error) bool {
+	return hasErrorCode(err, deadlockDetectedCode)
+}
+
+// hasErrorCode reports whether err is a Postgres error with the given code.
+func hasErrorCode(err error, code string) bool {
 	// The underlying error type depends on the driver. Try both pq and pgx types.
 	var perr *pq.Error
-	if errors.As(err, &perr) && perr.Code == serializationFailureCode {
+	if errors.As(err, &perr) && string(perr.Code) == code {
 		return true
 	}
 	var gerr *pgconn.PgError
-	if errors.As(err, &gerr) && gerr.Code == serializationFailureCode {
+	if errors.As(err, &gerr) && gerr.Code == code {
 		return true
 	}
 	return false
