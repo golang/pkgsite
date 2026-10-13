@@ -39,6 +39,7 @@ services:
     entrypoint: go run ./devtools/cmd/wait_available --timeout 300s db:5432 -- ./all.bash
     volumes:
       - ../../:/pkgsite
+      - gomodcache:/gomodcache
     working_dir: /pkgsite
   searchtest:
     image: golang:${GO_VERSION}
@@ -112,7 +113,7 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
     ports:
-      - 127.0.0.1:5432:5432
+      - 127.0.0.1:${GO_DISCOVERY_DATABASE_PORT:-5432}:5432
   nodejs:
     image: node:20
     environment:
