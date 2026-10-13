@@ -33,7 +33,7 @@ func setupWorker(ctx context.Context, t *testing.T, proxyClient *proxy.Client, i
 
 	fetcher := &worker.Fetcher{
 		ProxyClient:  proxyClient,
-		SourceClient: source.NewClient(http.DefaultClient),
+		SourceClient: source.NewClientForTesting(),
 		DB:           testDB,
 		Cache:        cache.New(redisCacheClient),
 	}
@@ -48,7 +48,7 @@ func setupWorker(ctx context.Context, t *testing.T, proxyClient *proxy.Client, i
 		DB:               testDB,
 		IndexClient:      indexClient,
 		ProxyClient:      proxyClient,
-		SourceClient:     source.NewClient(http.DefaultClient),
+		SourceClient:     source.NewClientForTesting(),
 		RedisCacheClient: redisCacheClient,
 		Queue:            queue,
 		StaticPath:       template.TrustedSourceFromConstant("../../../static"),
