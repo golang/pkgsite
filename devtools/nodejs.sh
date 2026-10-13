@@ -12,4 +12,4 @@ set -e
 # It passes env variables for e2e tests,
 # mounts the pwd into a volume in the container at /pkgsite,
 # and sets the working directory in the container to /pkgsite.
-dockercompose run --rm nodejs $@
+dockercompose run --rm -e CI="${CI:-true}" nodejs $@

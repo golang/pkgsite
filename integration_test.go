@@ -126,7 +126,7 @@ func TestIntegration(t *testing.T) {
 	}
 
 	t.Run("NPM", func(t *testing.T) {
-		t.Setenv("CI", "true")
+		t.Parallel()
 
 		if !runStage(t, "Install", "./devtools/nodejs.sh", "npm", "ci") {
 			return
@@ -134,8 +134,12 @@ func TestIntegration(t *testing.T) {
 		runStage(t, "Lint", "./devtools/nodejs.sh", "npm", "run", "lint")
 		runStage(t, "Test", "./devtools/nodejs.sh", "npm", "run", "test")
 	})
-	runStage(t, "AllBash", "./devtools/docker/compose.sh", "run", "--rm", "allbash", "ci")
-	runStage(t, "SearchTest", "./tests/search/run.sh")
+	t.Run("Services", func(t *testing.T) {
+		t.Parallel()
+
+		runStage(t, "AllBash", "./devtools/docker/compose.sh", "run", "--rm", "allbash", "ci")
+		runStage(t, "SearchTest", "./tests/search/run.sh")
+	})
 }
 
 // composeDownTimeout bounds teardown, which must not hang a build.
