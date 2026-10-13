@@ -14,6 +14,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"time"
 
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/version"
@@ -45,10 +46,8 @@ func (remoteGoRepo) clone(ctx context.Context, v, directory string) (hash string
 	if err := cmd.Run(); err != nil {
 		return "", err
 	}
-	cmd = exec.CommandContext(ctx, "git", "fetch", "-f", "--depth=1", "--", GoRepoURL, refName)
-	cmd.Dir = directory
-	if b, err := cmd.CombinedOutput(); err != nil {
-		return "", fmt.Errorf("running git fetch: %v: %s", err, b)
+	if _, err := runGitWithRetry(ctx, directory, "fetch", "-f", "--depth=1", "--", GoRepoURL, refName); err != nil {
+		return "", err
 	}
 	cmd = exec.CommandContext(ctx, "git", "rev-parse", "FETCH_HEAD")
 	cmd.Dir = directory
@@ -76,15 +75,40 @@ type ref struct {
 }
 
 func (remoteGoRepo) refs(ctx context.Context) ([]ref, error) {
-	cmd := exec.CommandContext(ctx, "git", "ls-remote", "--", GoRepoURL)
-	b, err := cmd.Output()
+	b, err := runGitWithRetry(ctx, "", "ls-remote", "--", GoRepoURL)
 	if err != nil {
-		if ee, ok := err.(*exec.ExitError); ok {
-			return nil, fmt.Errorf("running git ls-remote: %v: %s", err, ee.Stderr)
-		}
-		return nil, fmt.Errorf("running git ls-remote: %v", err)
+		return nil, err
 	}
 	return gitOutputToRefs(b)
+}
+
+func runGitWithRetry(ctx context.Context, dir string, args ...string) ([]byte, error) {
+	const maxAttempts = 3
+	var (
+		b   []byte
+		err error
+	)
+	backoff := 1 * time.Second
+	for attempt := range maxAttempts {
+		if attempt > 0 {
+			select {
+			case <-ctx.Done():
+				return nil, ctx.Err()
+			case <-time.After(backoff):
+				backoff *= 2
+			}
+		}
+		cmd := exec.CommandContext(ctx, "git", args...)
+		cmd.Dir = dir
+		b, err = cmd.Output()
+		if err == nil {
+			return b, nil
+		}
+	}
+	if ee, ok := err.(*exec.ExitError); ok {
+		return nil, fmt.Errorf("running git %s: %v: %s", args[0], err, ee.Stderr)
+	}
+	return nil, fmt.Errorf("running git %s: %v", args[0], err)
 }
 
 func gitOutputToRefs(b []byte) ([]ref, error) {
