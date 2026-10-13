@@ -199,9 +199,19 @@ func (c *cache) get(ctx context.Context, key string) (io.Reader, bool) {
 	return zr, true
 }
 
+// maxCachePayloadBytes is the maximum response size (in compressed bytes) to write
+// to Redis. Responses larger than this exceed Redis client query/output buffer limits
+// (~1MB in Cloud Memorystore Redis 4.0), which causes Redis to forcibly close the
+// connection and triggers cascading timeouts in the connection pool.
+const maxCachePayloadBytes = 1000 * 1024 // 1 MB
+
 func (c *cache) put(ctx context.Context, key string, rec *cacheRecorder, ttl time.Duration) {
 	if err := rec.zipWriter.Close(); err != nil {
 		log.Errorf(ctx, "cache: error closing zip for %q: %v", key, err)
+		return
+	}
+	if rec.buf.Len() > maxCachePayloadBytes {
+		log.Infof(ctx, "skipping cache for %s: payload length %d exceeds max %d", key, rec.buf.Len(), maxCachePayloadBytes)
 		return
 	}
 	log.Infof(ctx, "caching response of length %d for %s", rec.buf.Len(), key)

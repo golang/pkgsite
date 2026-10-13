@@ -10,6 +10,8 @@
 package middleware
 
 import (
+	"bytes"
+	"crypto/rand"
 	"fmt"
 	"io"
 	"net/http"
@@ -181,5 +183,42 @@ func TestCache(t *testing.T) {
 		if diff := cmp.Diff(test.wantHitCounts, hitCounts); diff != "" {
 			t.Errorf("[%s] CacheResultCount diff (-want +got):\n%s", test.label, diff)
 		}
+	}
+}
+
+func TestCache_PayloadTooLarge(t *testing.T) {
+	TestMode = true
+	defer func() { TestMode = false }()
+
+	s, err := miniredis.Run()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer s.Close()
+
+	c := redis.NewClient(&redis.Options{Addr: s.Addr()})
+
+	// 1.2MB of random bytes will not compress below 1MB.
+	payload := make([]byte, 1200*1024)
+	if _, err := rand.Read(payload); err != nil {
+		t.Fatal(err)
+	}
+
+	handler := NewCacher(c).Cache("test", ttl(time.Minute), nil)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Write(payload)
+	}))
+
+	rec := httptest.NewRecorder()
+	req := httptest.NewRequest("GET", "/large", nil)
+	handler.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("got status %d, want 200", rec.Code)
+	}
+	if !bytes.Equal(rec.Body.Bytes(), payload) {
+		t.Errorf("got body length %d, want %d", rec.Body.Len(), len(payload))
+	}
+	if s.Exists("/large") {
+		t.Errorf("expected /large not to be cached in Redis, but it was found")
 	}
 }
