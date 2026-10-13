@@ -230,6 +230,7 @@ Available subcommands:
   help           - display this help message
   (empty)        - run all standard checks and tests
   ci             - run checks and tests suitable for continuous integration
+  test           - (ci) run tests with race detector and test database
   cl             - run checks and tests on the current CL, suitable for a commit or pre-push hook
   lint           - run all standard linters below:
   headers        - (lint) check source files for the license disclaimer
@@ -256,6 +257,37 @@ no_race=(
   [golang.org/x/pkgsite/internal/worker]=1
   [golang.org/x/pkgsite/internal/testing/integration]=1
 )
+
+# ci_tests runs the Go test suite for continuous integration.
+#
+# Note: when invoked in CI via TestIntegration ("allbash test"), TestLint in
+# integration_test.go will be skipped by "go test" because GO_DISCOVERY_TESTDB
+# is set. (TestLint already ran linters on the host runner before TestIntegration.)
+ci_tests() {
+  # Explicitly mark the working directory as safe in CI.
+  # https://github.com/docker-library/golang/issues/452
+  local wd=$(pwd)
+  runcmd git config --system --add safe.directory ${wd}
+
+  local pkgs=$*
+  if [[ $pkgs == '' ]]; then
+    pkgs=$($GO list ./... | grep -v node_modules)
+  fi
+
+  for pkg in $pkgs; do
+    if [[ ${no_race[$pkg]} = '' ]]; then
+      race="$race $pkg"
+    else
+      norace="$norace $pkg"
+    fi
+  done
+  if [[ $race != '' ]]; then
+    runcmd env GO_DISCOVERY_TESTDB=true $GO test -race -count=1 $race
+  fi
+  if [[ $norace != '' ]]; then
+    runcmd env GO_DISCOVERY_TESTDB=true $GO test -count=1 $norace
+  fi
+}
 
 main() {
   case "$1" in
@@ -313,11 +345,6 @@ main() {
       # Also, run the race detector on most tests.
       local start=`date +%s`
 
-      # Explicitly mark the working directory as safe in CI.
-      # https://github.com/docker-library/golang/issues/452
-      local wd=$(pwd)
-      runcmd git config --system --add safe.directory ${wd}
-
       standard_linters
       # Print how long it takes to download dependencies and run the standard
       # linters in CI.
@@ -327,13 +354,15 @@ main() {
       echo "DONE: $((end-start)) seconds"
       echo "--------------------"
 
-      for pkg in $($GO list ./...); do
-        if [[ ${no_race[$pkg]} = '' ]]; then
-          race="$race $pkg"
-        fi
-      done
-      runcmd env GO_DISCOVERY_TESTDB=true $GO test -race -count=1 $race
-      runcmd env GO_DISCOVERY_TESTDB=true $GO test -count=1 ${!no_race[*]}
+      shift
+      ci_tests $*
+      ;;
+    test)
+      # Run only the Go tests for continuous integration (without linters).
+      # Used by TestIntegration in Docker, where linters have already been run
+      # on the host by TestLint (which skips itself when GO_DISCOVERY_TESTDB is set).
+      shift
+      ci_tests $*
       ;;
     lint) standard_linters ;;
     headers) check_headers ;;

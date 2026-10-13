@@ -137,7 +137,7 @@ func TestIntegration(t *testing.T) {
 	t.Run("Services", func(t *testing.T) {
 		t.Parallel()
 
-		runStage(t, "AllBash", "./devtools/docker/compose.sh", "run", "--rm", "allbash", "ci")
+		runStage(t, "AllBash", "./devtools/docker/compose.sh", "run", "--rm", "allbash", "test")
 		runStage(t, "SearchTest", "./tests/search/run.sh")
 	})
 }
