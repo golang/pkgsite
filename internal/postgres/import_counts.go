@@ -165,7 +165,10 @@ func (db *DB) updateImportedByModuleCounts(ctx context.Context, opts ImporterCou
 		FROM search_documents
 		WHERE imported_by_module_count_updated_at < $1
 		OR imported_by_module_count_updated_at IS NULL
-		ORDER BY imported_by_module_count_updated_at NULLS FIRST
+		-- Prefer unprocessed packages with more importers.
+		ORDER BY
+			imported_by_module_count_updated_at NULLS FIRST,
+			imported_by_count DESC NULLS LAST
 		LIMIT $2
 		FOR NO KEY UPDATE SKIP LOCKED
 	)
@@ -181,6 +184,7 @@ func (db *DB) updateImportedByModuleCounts(ctx context.Context, opts ImporterCou
 	)
 	GROUP BY 1;
 	`
+	// TODO(golang/go#80242): remove the ORDER BY clause on imported_by_count above once backfill is done.
 	return db.updateImporterCounts(ctx, query, "imported_by_module_count", opts)
 }
 
