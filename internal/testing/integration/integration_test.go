@@ -45,13 +45,13 @@ func TestEndToEndProcessing(t *testing.T) {
 
 	middleware.TestMode = true
 
-	proxyClient, proxyServer, indexClient, teardownClients := setupProxyAndIndex(t)
+	proxyClient, _, indexClient, teardownClients := setupProxyAndIndex(t)
 	defer teardownClients()
 
 	redisCacheClient, td := newRedisClient(t)
 	defer td()
 
-	workerHTTP, fetcher, queue := setupWorker(ctx, t, proxyClient, indexClient, redisCacheClient)
+	workerHTTP, queue := setupWorker(ctx, t, proxyClient, indexClient, redisCacheClient)
 	frontendHTTP := setupFrontend(ctx, t, queue, redisCacheClient)
 	if _, err := doGet(workerHTTP.URL + "/poll?limit=1000"); err != nil {
 		t.Fatal(err)
@@ -92,36 +92,19 @@ func TestEndToEndProcessing(t *testing.T) {
 		})
 	}
 
-	// Test cache invalidation.
+	// Verify that visited pages are cached.
 	keys := cacheKeys(t, redisCacheClient)
 	sort.Strings(wantKeys)
 	if !cmp.Equal(keys, wantKeys) {
 		t.Errorf("cache keys: got %v, want %v", keys, wantKeys)
 	}
 
-	// Process a newer version of a module, and verify that the cache has been invalidated.
-	modulePath := "example.com/single"
-	version := "v1.2.3"
-	proxyServer.AddModule(proxytest.FindModule(testModules, modulePath, "v1.0.0").ChangeVersion(version))
-	_, _, err := fetcher.FetchAndUpdateState(ctx, modulePath, version, "test")
-	if err != nil {
+	// Verify that /clear-cache flushes the Redis cache.
+	if _, err := doGet(workerHTTP.URL + "/clear-cache"); err != nil {
 		t.Fatal(err)
 	}
-
-	// All the keys with modulePath should be gone, but the others should remain.
-	wantKeys = nil
-	// Remove modulePath from the previous keys.
-	for _, k := range keys {
-		if !strings.Contains(k, modulePath) {
-			wantKeys = append(wantKeys, k)
-		}
-	}
-	keys = cacheKeys(t, redisCacheClient)
-	if len(keys) == 0 {
-		keys = nil
-	}
-	if !cmp.Equal(keys, wantKeys) {
-		t.Errorf("cache keys: got %+v, want %+v", keys, wantKeys)
+	if keys := cacheKeys(t, redisCacheClient); len(keys) != 0 {
+		t.Errorf("cache keys after /clear-cache: got %v, want empty", keys)
 	}
 }
 
