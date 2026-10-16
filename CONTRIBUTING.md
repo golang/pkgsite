@@ -73,6 +73,13 @@ By default, logs for all levels will be printed.
    pre-commit hook.
 2. Ensure your commit message is formatted according to
    [Go conventions](http://golang.org/wiki/CommitMessage).
+3. If your change affects the frontend, templates, static assets, or Docker
+   configuration, include the screentest trybot in your commit message footer so
+   LUCI runs visual regression tests during presubmit:
+
+   ```
+   Cq-Include-Trybots: luci.golang.try:x_pkgsite-gotip-linux-amd64_docker-screentest
+   ```
 
 ## Tips for Code Review
 
