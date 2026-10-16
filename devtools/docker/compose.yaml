@@ -79,7 +79,7 @@ services:
       # Temporary promotional banners (such as the Go Developer Survey banner)
       # are date-dependent; keep them out of screentest captures that are
       # compared against stored goldens.
-      GO_DISCOVERY_DISABLE_TEMPORARY_BANNER: ${GO_DISCOVERY_DISABLE_TEMPORARY_BANNER:-"true"}
+      GO_DISCOVERY_DISABLE_TEMPORARY_BANNER: ${GO_DISCOVERY_DISABLE_TEMPORARY_BANNER:-true}
     volumes:
       - ../../:/pkgsite
       - gomodcache:/gomodcache
