@@ -12,7 +12,6 @@ import (
 	"net/url"
 	"os"
 	"os/exec"
-	"strings"
 	"sync"
 	"time"
 
@@ -27,15 +26,6 @@ const (
 	depsDevBase = "https://deps.dev"
 	// depsDevTimeout is the time budget for making requests to deps.dev.
 	depsDevTimeout = 250 * time.Millisecond
-
-	codeWikiPrefix    = "/codewiki?"
-	attributionParams = "?utm_source=first_party_link&utm_medium=go_pkg_web&utm_campaign="
-)
-
-var (
-	codeWikiURLBase   = "https://codewiki.google/"
-	codeWikiExistsURL = "https://codewiki.google/_/exists/"
-	codeWikiTimeout   = 1 * time.Second
 )
 
 // goPrivateConfig holds the GOPRIVATE and GONOPROXY values as reported by
@@ -79,17 +69,16 @@ func isPrivateModulePath(modulePath, goprivate, gonoproxy string) bool {
 		module.MatchPrefixPatterns(gonoproxy, modulePath)
 }
 
-// externalLinkGenerators returns URL-generator functions for deps.dev and
-// codewiki.google for the given unit. If suppressed (because pkgsite is in
-// goDocMode or the module path is matched by GOPRIVATE/GONOPROXY), the returned
-// generators return the empty string and make no network requests.
-func externalLinkGenerators(ctx context.Context, client *http.Client, um *internal.UnitMeta, goDocMode, recordCodeWikiClicks bool) (depsDev, codeWiki func() string) {
-	empty := func() string { return "" }
+// externalLinkGenerator returns a URL-generator function for deps.dev for the
+// given unit. If suppressed (because pkgsite is in goDocMode or the module path
+// is matched by GOPRIVATE/GONOPROXY), the returned generator returns the empty
+// string and makes no network requests.
+func externalLinkGenerator(ctx context.Context, client *http.Client, um *internal.UnitMeta, goDocMode bool) func() string {
 	cfg := goPrivatePatterns()
 	if goDocMode || isPrivateModulePath(um.ModulePath, cfg.goprivate, cfg.gonoproxy) {
-		return empty, empty
+		return func() string { return "" }
 	}
-	return depsDevURLGenerator(ctx, client, um), codeWikiURLGenerator(ctx, client, um, recordCodeWikiClicks)
+	return depsDevURLGenerator(ctx, client, um)
 }
 
 type fetcher func(context.Context, *http.Client) (string, error)
@@ -162,52 +151,4 @@ func fetchDepsDevURL(ctx context.Context, client *http.Client, modulePath, versi
 		return "", errors.New("name or version unset in response")
 	}
 	return depsDevBase + "/go/" + url.PathEscape(r.Name) + "/" + url.PathEscape(r.Version), nil
-}
-
-// codeWikiURLGenerator returns a function that will return a URL for the given
-// module version on codewiki. If the URL can't be generated within
-// codeWikiTimeout then the empty string is returned instead.
-func codeWikiURLGenerator(ctx context.Context, client *http.Client, um *internal.UnitMeta, recordClick bool) func() string {
-	fetch := func(ctx context.Context, client *http.Client) (string, error) {
-		return fetchCodeWikiURL(ctx, client, um, recordClick)
-	}
-	return newURLGenerator(ctx, client, "codewiki.google", codeWikiTimeout, fetch)
-}
-
-// fetchCodeWikiURL makes a request to codewiki to check whether the given
-// path is known there, and if so it returns the link to that page.
-func fetchCodeWikiURL(ctx context.Context, client *http.Client, um *internal.UnitMeta, recordClick bool) (string, error) {
-	path := um.ModulePath
-	if strings.HasPrefix(path, "golang.org/x/") {
-		path = strings.Replace(path, "golang.org/x/", "github.com/golang/", 1)
-	}
-	// TODO: Add support for other hosts as needed.
-	if !strings.HasPrefix(path, "github.com/") {
-		return "", nil
-	}
-	req, err := http.NewRequestWithContext(ctx, "GET", codeWikiExistsURL+path, nil)
-	if err != nil {
-		return "", err
-	}
-	resp, err := client.Do(req)
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-	// Handle 404 as a successful "not found" state rather than an error.
-	if resp.StatusCode == http.StatusNotFound {
-		return "", nil
-	}
-	if resp.StatusCode != http.StatusOK {
-		return "", errors.New(resp.Status)
-	}
-	res := codeWikiURLBase + path + attributionParams + path
-	if recordClick {
-		v := url.Values{}
-		v.Set("url", res)
-		v.Set("module", um.ModulePath)
-		v.Set("package", um.Path)
-		res = codeWikiPrefix + v.Encode()
-	}
-	return res, nil
 }
