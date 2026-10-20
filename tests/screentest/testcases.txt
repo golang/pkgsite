@@ -57,9 +57,9 @@ capture viewport
 test x/net directories expanded
 path /golang.org/x/net@v0.31.0
 wait {{$ready}}
+eval {{$hideElements}}
 click [data-test-id="directories-toggle"]
 eval {{$scrollTop}}
-eval {{$hideElements}}
 sleep 3s
 capture fullscreen
 capture fullscreen 540x1620
@@ -68,8 +68,8 @@ capture fullscreen 540x1620
 test empty jump to modal
 path /golang.org/x/tools@v0.1.1
 wait {{$ready}}
-click [data-test-id="jump-to-button"]
 eval {{$hideElements}}
+click [data-test-id="jump-to-button"]
 capture viewport
 
 test standard library package
@@ -215,8 +215,8 @@ capture fullscreen 540x1080
 
 test home
 path /
-click .go-Carousel-dot
 eval {{$hideSurveyBanner}}
+click .go-Carousel-dot
 capture fullscreen
 capture fullscreen 540x1080
 
