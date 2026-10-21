@@ -5,7 +5,7 @@
 -->
 
 <!DOCTYPE html>
-<html lang="en" data-layout="{{if .UseResponsiveLayout}}responsive{{end}}" data-local="{{if .LocalMode}}true{{end}}">
+<html lang="en" data-layout="{{if .UseResponsiveLayout}}responsive{{end}}" data-local="{{if .LocalMode}}true{{end}}" data-version="{{.AppVersionLabel}}">
   <head>
     <!-- This will capture unhandled errors during page load for reporting later. -->
     <script>
@@ -44,6 +44,10 @@
     <script>
       function loadScript(src, mod = true) {
         let s = document.createElement('script');
+        let v = document.documentElement.dataset.version;
+        if (v && src.startsWith('/static/')) {
+          src += '?version=' + encodeURIComponent(v);
+        }
         s.src = src;
         if (mod) {
           s.type = 'module';
