@@ -18,6 +18,7 @@ import (
 	"github.com/alicebob/miniredis/v2"
 	"github.com/go-redis/redis/v8"
 	"github.com/google/safehtml/template"
+	"golang.org/x/pkgsite/internal/cache"
 	"golang.org/x/pkgsite/internal/config"
 	"golang.org/x/pkgsite/internal/index"
 	"golang.org/x/pkgsite/internal/proxy"
@@ -27,13 +28,14 @@ import (
 )
 
 func setupWorker(ctx context.Context, t *testing.T, proxyClient *proxy.Client, indexClient *index.Client,
-	redisCacheClient *redis.Client) (*httptest.Server, *inmemqueue.InMemory) {
+	redisCacheClient *redis.Client) (*httptest.Server, *worker.Fetcher, *inmemqueue.InMemory) {
 	t.Helper()
 
 	fetcher := &worker.Fetcher{
 		ProxyClient:  proxyClient,
 		SourceClient: source.NewClientForTesting(),
 		DB:           testDB,
+		Cache:        cache.New(redisCacheClient),
 	}
 	// TODO: it would be better if InMemory made http requests
 	// back to worker, rather than calling fetch itself.
@@ -56,7 +58,7 @@ func setupWorker(ctx context.Context, t *testing.T, proxyClient *proxy.Client, i
 	}
 	workerMux := http.NewServeMux()
 	workerServer.Install(workerMux.Handle)
-	return httptest.NewServer(workerMux), queue
+	return httptest.NewServer(workerMux), fetcher, queue
 }
 
 func newRedisClient(t *testing.T) (*redis.Client, func()) {

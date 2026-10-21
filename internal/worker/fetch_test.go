@@ -202,6 +202,7 @@ func TestFetchAndUpdateState(t *testing.T) {
 				ProxyClient:  proxyClient.WithCache(),
 				SourceClient: sourceClient,
 				DB:           testDB,
+				Cache:        nil,
 				loadShedder:  &loadShedder{maxSizeInFlight: 100 * mib},
 			}
 			if _, _, err := f.FetchAndUpdateState(ctx, test.modulePath, test.version, testAppVersion); err != nil {
@@ -298,7 +299,7 @@ func TestFetchAndUpdateStateCacheZip(t *testing.T) {
 	defer teardownProxy()
 
 	// With a plain proxy, we download the zip twice.
-	f := &Fetcher{proxyClient, source.NewClient(http.DefaultClient), testDB, nil, ""}
+	f := &Fetcher{proxyClient, source.NewClient(http.DefaultClient), testDB, nil, nil, ""}
 	if _, _, err := f.FetchAndUpdateState(ctx, "m.com", "v1.0.0", testAppVersion); err != nil {
 		t.Fatal(err)
 	}
@@ -368,7 +369,7 @@ func TestFetchGo121(t *testing.T) {
 	defer teardownProxy()
 
 	sourceClient := source.NewClient(http.DefaultClient)
-	f := &Fetcher{proxyClient, sourceClient, testDB, nil, ""}
+	f := &Fetcher{proxyClient, sourceClient, testDB, nil, nil, ""}
 	got, _, err := f.FetchAndUpdateState(context.Background(), modulePath, version, testAppVersion)
 	if err != nil {
 		t.Fatalf("FetchAndUpdateState(%q, %q): %v", sample.ModulePath, version, err)
