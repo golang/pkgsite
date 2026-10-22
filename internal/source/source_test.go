@@ -61,6 +61,22 @@ func TestModuleInfoDynamic(t *testing.T) {
 		want       *Info // if nil, then want error
 	}{
 		{
+			"runxiyu.org/furgit",
+			&Info{
+				repoURL:   "https://git.runxiyu.org/furgit.git//",
+				moduleDir: "",
+				commit:    "v1.2.3",
+			},
+		},
+		{
+			"runxiyu.org/furgit-single",
+			&Info{
+				repoURL:   "https://git.runxiyu.org/furgit.git/",
+				moduleDir: "",
+				commit:    "v1.2.3",
+			},
+		},
+		{
 			"alice.org/pkg",
 			&Info{
 				repoURL:   "https://github.com/alice/pkg",
@@ -415,6 +431,9 @@ func (t testTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 }
 
 var testWeb = map[string]string{
+	// Repository URLs with trailing slashes must be preserved.
+	"https://runxiyu.org/furgit":        `<head> <meta name="go-import" content="runxiyu.org/furgit git https://git.runxiyu.org/furgit.git//"></head>`,
+	"https://runxiyu.org/furgit-single": `<head> <meta name="go-import" content="runxiyu.org/furgit-single git https://git.runxiyu.org/furgit.git/"></head>`,
 	// Package at root of a GitHub repo.
 	"https://alice.org/pkg": `<head> <meta name="go-import" content="alice.org/pkg git https://github.com/alice/pkg"></head>`,
 	// Package in sub-directory.

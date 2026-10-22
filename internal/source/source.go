@@ -497,8 +497,11 @@ func moduleInfoDynamic(ctx context.Context, client *Client, modulePath, version 
 	if transformCommit != nil {
 		commit = transformCommit(commit, isHash)
 	}
+	if templates != (urlTemplates{}) {
+		repoURL = strings.TrimSuffix(repoURL, "/")
+	}
 	return &Info{
-		repoURL:   strings.TrimSuffix(repoURL, "/"),
+		repoURL:   repoURL,
 		moduleDir: dir,
 		commit:    commit,
 		templates: templates,
