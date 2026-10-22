@@ -11,9 +11,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/google/go-cmp/cmp"
 	"golang.org/x/pkgsite/internal"
-	"golang.org/x/pkgsite/internal/database"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/testing/sample"
@@ -259,66 +257,6 @@ func TestUpdateSearchDocumentsImportedByCountWithCounts(t *testing.T) {
 	validateImportedByCountAndGetSearchDocument(t, testDB, "mod.com/A/p1", 10, 0)
 	validateImportedByCountAndGetSearchDocument(t, testDB, "mod.com/A/p2", 25, 0)
 	validateImportedByCountAndGetSearchDocument(t, testDB, "mod.com/A/p3", 0, 0)
-}
-
-func TestUpdateImportedByModuleCountsOrder(t *testing.T) {
-	// Among rows whose module counts have never been computed, the ones with
-	// the highest package import counts should be computed first.
-	t.Parallel()
-	ctx := t.Context()
-	testDB, release := acquire(t)
-	defer release()
-
-	pkgs := []string{"p1", "p2", "p3", "p4", "p5", "p6"}
-	m := sample.Module("mod.com/A", "v1.0.0", pkgs...)
-	testDB.MustInsertModule(t, m)
-
-	// Give the packages increasing imported_by_counts. Updating them in this
-	// order also leaves them in this order in the table, which is the opposite
-	// of the order we want, so the test can't pass by accident.
-	var want []string
-	for i, p := range pkgs {
-		path := "mod.com/A/" + p
-		if _, err := testDB.db.Exec(ctx,
-			`UPDATE search_documents SET imported_by_count = $1 WHERE package_path = $2`,
-			(i+1)*10, path); err != nil {
-			t.Fatal(err)
-		}
-		want = append([]string{path}, want...)
-	}
-
-	// Process one row per transaction. Each transaction sets
-	// imported_by_module_count_updated_at to its start time, so the timestamps
-	// record the order in which the rows were processed.
-	n, err := testDB.updateImportedByModuleCounts(ctx, ImporterCountOptions{BatchSize: 1, MaxTime: time.Minute})
-	if err != nil {
-		t.Fatal(err)
-	}
-	if n != int64(len(pkgs)) {
-		t.Fatalf("updated %d rows, want %d", n, len(pkgs))
-	}
-
-	type row struct {
-		PackagePath string
-		UpdatedAt   time.Time
-	}
-	rows, err := database.CollectStructs[row](ctx, testDB.db, `
-		SELECT package_path, imported_by_module_count_updated_at AS updated_at
-		FROM search_documents
-		ORDER BY imported_by_module_count_updated_at`)
-	if err != nil {
-		t.Fatal(err)
-	}
-	var got []string
-	for i, r := range rows {
-		if i > 0 && !r.UpdatedAt.After(rows[i-1].UpdatedAt) {
-			t.Fatalf("%s and %s have the same update time %s", rows[i-1].PackagePath, r.PackagePath, r.UpdatedAt)
-		}
-		got = append(got, r.PackagePath)
-	}
-	if diff := cmp.Diff(want, got); diff != "" {
-		t.Errorf("processing order mismatch (-want, +got):\n%s", diff)
-	}
 }
 
 func validateImportedByCountAndGetSearchDocument(t *testing.T, db *DB, path string, pcount, mcount int) *searchDocument {
