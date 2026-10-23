@@ -290,3 +290,29 @@ func G(S) {}
 //new
 func G(A) {}
 // OK: same type
+
+//// built-in aliases
+//both
+func AnyPkg(any.T) {}
+type AnyT = string
+func AnyPkgAlias(any.AnyT) {}
+//old
+func AnyPkgAliasChange(any.AnyT) {}
+//new
+func AnyPkgAliasChange(any.string) {}
+//breaking AnyPkgAliasChange
+//old
+func BuiltinAliases[T any](b byte, r rune, a any) {}
+type BuiltinStruct struct {
+	B byte
+	R rune
+	A any
+}
+//new
+func BuiltinAliases[T interface{}](b uint8, r int32, a interface{}) {}
+type BuiltinStruct struct {
+	B uint8
+	R int32
+	A interface{}
+}
+// OK: byte=uint8, rune=int32, any=interface{}

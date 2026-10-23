@@ -468,7 +468,7 @@ func TestNewValueSpecType(t *testing.T) {
 		{decl: "var V = 1.5", want: "float64"},
 		{decl: "var V = -1.5", want: "float64"},
 		{decl: "var V = 1i", want: "complex128"},
-		{decl: "var V = 'a'", want: "rune"},
+		{decl: "var V = 'a'", want: "int32"},
 		{decl: "var V = \"hello\"", want: "string"},
 		{decl: "var V = true", want: "bool"},
 		{decl: "var V = false", want: "bool"},
@@ -544,8 +544,8 @@ func TestAPIDefinition(t *testing.T) {
 		{"C", "const C int", "const C bool"},
 		{"V", "var V []int", "var V []string"},
 		{"F", "func F(float32)", "func F(float64)"},
-		{"S.I", "S.I int", "S.I any"},
-		{"S.H", "S.H rune", ""},
+		{"S.I", "S.I int", "S.I interface{}"},
+		{"S.H", "S.H int32", ""},
 		{"I1.M2", "I1.M2(int)", "I1.M2(bool)"},
 		{"I1.M4", "I1.M4()", ""},
 		{"I1.M5", "", "I1.M5()"},
@@ -553,6 +553,8 @@ func TestAPIDefinition(t *testing.T) {
 		{"S.M4", "func (S) M4(int)", "func (S) M4()"},
 		{"AliasToDef", "type AliasToDef = int", "type AliasToDef int"},
 		{"DefToAlias", "type DefToAlias int", "type DefToAlias = int"},
+		{"AnyPkg", "func AnyPkg(any.T)", "func AnyPkg(any.T)"},
+		{"AnyPkgAlias", "func AnyPkgAlias(any.AnyT)", "func AnyPkgAlias(any.AnyT)"},
 		{"NoSuchSymbol", "", ""},
 	}
 
@@ -563,6 +565,90 @@ func TestAPIDefinition(t *testing.T) {
 			}
 			if got := newAPI.Definition(tc.sym); got != tc.wantNew {
 				t.Errorf("newAPI.Definition(%q) = %q, want %q", tc.sym, got, tc.wantNew)
+			}
+		})
+	}
+}
+
+func TestBuiltinAliasShadowing(t *testing.T) {
+	newAPI := func(t *testing.T, version, src string) *API {
+		t.Helper()
+		fset := token.NewFileSet()
+		f, err := parser.ParseFile(fset, "p.go", src, 0)
+		if err != nil {
+			t.Fatalf("ParseFile: %v", err)
+		}
+		api, err := NewAPI("p", version, []*ast.File{f})
+		if err != nil {
+			t.Fatalf("NewAPI: %v", err)
+		}
+		return api
+	}
+
+	testCases := []struct {
+		name        string
+		oldSrc      string
+		newSrc      string
+		sym         string
+		wantDefOld  string
+		wantChanges []string
+	}{
+		{
+			name:        "shadow byte with defined type",
+			oldSrc:      "package p\ntype byte int\nfunc F(byte) {}\n",
+			newSrc:      "package p\ntype byte int\nfunc F(uint8) {}\n",
+			sym:         "F",
+			wantDefOld:  "func F(byte)",
+			wantChanges: []string{"F: breaking"},
+		},
+		{
+			name:        "shadow rune with defined type",
+			oldSrc:      "package p\ntype rune int\nfunc F(rune) {}\n",
+			newSrc:      "package p\ntype rune int\nfunc F(int32) {}\n",
+			sym:         "F",
+			wantDefOld:  "func F(rune)",
+			wantChanges: []string{"F: breaking"},
+		},
+		{
+			name:        "shadow any with defined type",
+			oldSrc:      "package p\ntype any int\nfunc F(any) {}\n",
+			newSrc:      "package p\ntype any int\nfunc F(interface{}) {}\n",
+			sym:         "F",
+			wantDefOld:  "func F(any)",
+			wantChanges: []string{"F: breaking"},
+		},
+		{
+			name:        "shadow byte with local alias",
+			oldSrc:      "package p\ntype byte = string\nfunc F(byte) {}\nfunc G(byte) {}\n",
+			newSrc:      "package p\ntype byte = string\nfunc F(string) {}\nfunc G(uint8) {}\n",
+			sym:         "F",
+			wantDefOld:  "func F(string)",
+			wantChanges: []string{"G: breaking"},
+		},
+		{
+			name:        "colliding local alias with selector any.T",
+			oldSrc:      "package p\ntype T = string\nfunc AnyPkg(any.T) {}\nfunc F(any.T) {}\nfunc G(T) {}\n",
+			newSrc:      "package p\ntype T = string\nfunc AnyPkg(any.T) {}\nfunc F(any.string) {}\nfunc G(string) {}\n",
+			sym:         "AnyPkg",
+			wantDefOld:  "func AnyPkg(any.T)",
+			wantChanges: []string{"F: breaking"},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			oldAPI := newAPI(t, "v1.0.0", tc.oldSrc)
+			newAPI := newAPI(t, "v1.1.0", tc.newSrc)
+			if got := oldAPI.Definition(tc.sym); got != tc.wantDefOld {
+				t.Errorf("oldAPI.Definition(%q) = %q, want %q", tc.sym, got, tc.wantDefOld)
+			}
+			var gotChanges []string
+			for k, v := range oldAPI.Changes(newAPI) {
+				gotChanges = append(gotChanges, fmt.Sprintf("%s: %v", k, v))
+			}
+			slices.Sort(gotChanges)
+			if diff := cmp.Diff(tc.wantChanges, gotChanges); diff != "" {
+				t.Errorf("changes mismatch (-want, +got):\n%s", diff)
 			}
 		})
 	}

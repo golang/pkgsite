@@ -152,7 +152,7 @@ func newValueSpecType(tok token.Token, typ, value ast.Expr, defs *defs) syntaxTy
 			case token.IMAG:
 				return &simpleType{typeString: "complex128"}
 			case token.CHAR:
-				return &simpleType{typeString: "rune"}
+				return &simpleType{typeString: "int32"}
 			case token.STRING:
 				return &simpleType{typeString: "string"}
 			}
@@ -337,7 +337,11 @@ type defs struct {
 }
 
 func newDefs(files []*ast.File) (*defs, error) {
-	aliases := map[string]ast.Expr{}
+	aliases := map[string]ast.Expr{
+		"byte": &ast.Ident{Name: "uint8"},
+		"rune": &ast.Ident{Name: "int32"},
+		"any":  &ast.InterfaceType{Methods: &ast.FieldList{}},
+	}
 	for _, file := range files {
 		for _, decl := range file.Decls {
 			gd, ok := decl.(*ast.GenDecl)
@@ -348,6 +352,8 @@ func newDefs(files []*ast.File) (*defs, error) {
 				spec := spec.(*ast.TypeSpec)
 				if spec.Assign.IsValid() {
 					aliases[spec.Name.Name] = spec.Type
+				} else {
+					delete(aliases, spec.Name.Name)
 				}
 			}
 		}
@@ -430,6 +436,10 @@ func substituteAliases(files []*ast.File, aliases map[string]ast.Expr) error {
 	return errors.New("substituteAliases: alias cycle")
 }
 
+// isDeclarationOrSelectorName reports whether c points to an identifier that
+// declares a name (such as a type, function, variable, field, parameter,
+// import, package, or label) or is part of a selector expression (such as
+// pkg.Type), and therefore should not be replaced during alias substitution.
 func isDeclarationOrSelectorName(c *astutil.Cursor) bool {
 	switch c.Parent().(type) {
 	case *ast.TypeSpec:
@@ -441,7 +451,7 @@ func isDeclarationOrSelectorName(c *astutil.Cursor) bool {
 	case *ast.Field:
 		return c.Name() == "Names"
 	case *ast.SelectorExpr:
-		return c.Name() == "Sel"
+		return true
 	case *ast.ImportSpec:
 		return c.Name() == "Name"
 	case *ast.File:
