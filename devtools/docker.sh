@@ -46,5 +46,30 @@ docker_error() {
 }
 
 dockercompose() {
-  docker compose -f devtools/docker/compose.yaml $@
+  docker compose -f "$PWD/devtools/docker/compose.yaml" "$@"
 }
+
+if ! command -v docker > /dev/null && command -v podman > /dev/null; then
+  docker() {
+    if [[ "$1" == "compose" ]]; then
+      shift
+      podman-compose "$@"
+    else
+      podman "$@"
+    fi
+  }
+  # Work around bugs in podman-compose < 1.0.6 (Debian 12 ships 1.0.3):
+  # 'down' lacks --remove-orphans, and 'run' without --no-deps starts all
+  # services in compose.yaml when the target service has no dependencies.
+  if ! command podman-compose down --help 2>&1 | grep -q -- --remove-orphans; then
+    podman-compose() {
+      local args=()
+      for arg in "$@"; do
+        [[ "$arg" == "--remove-orphans" ]] && continue
+        args+=("$arg")
+        [[ "$arg" == "run" && " $* " =~ \ (go|nodejs)\  ]] && args+=("--no-deps")
+      done
+      command podman-compose "${args[@]}"
+    }
+  fi
+fi

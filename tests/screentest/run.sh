@@ -235,7 +235,7 @@ run_locally() {
       -e LANG=C \
       -p $postgres_port:$postgres_port \
       --rm \
-      pgvector/pgvector:pg14
+      docker.io/pgvector/pgvector:pg14
     wait_for $postgres_port
     # Postgres can take some time to start up even after it is listening to the port.
     runcmd sleep 4
@@ -257,7 +257,7 @@ run_locally() {
     info starting chromedp
     runcmd docker run --detach --rm --network host --shm-size 8G \
           --name headless-shell \
-          chromedp/headless-shell:$chromedp_version --remote-debugging-port $chromedp_port
+          docker.io/chromedp/headless-shell:$chromedp_version --remote-debugging-port $chromedp_port
     wait_for $chromedp_port
     # Give some extra time after listening.
     runcmd sleep 2

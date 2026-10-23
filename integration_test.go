@@ -23,6 +23,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"golang.org/x/pkgsite/internal/testenv"
 )
 
 // modeEnv names the environment variable that selects which [TestIntegration]
@@ -62,8 +64,14 @@ func TestIntegration(t *testing.T) {
 	mode := os.Getenv(modeEnv)
 	switch mode {
 	case "":
-		if os.Getenv("GO_BUILDER_NAME") == "" {
+		builder := os.Getenv("GO_BUILDER_NAME")
+		if builder == "" {
 			t.Skipf("neither %s nor GO_BUILDER_NAME is set", modeEnv)
+		}
+		// TODO(matloob): remove the check for the docker builder name once the docker
+		// builders are turned down.
+		if !strings.Contains(builder, "docker") {
+			testenv.MustHaveExternalNetwork(t)
 		}
 		mode = modeCore
 	case modeCore, modeScreentest:
@@ -71,11 +79,15 @@ func TestIntegration(t *testing.T) {
 	default:
 		t.Fatalf("unknown %s=%q, want %q or %q", modeEnv, mode, modeCore, modeScreentest)
 	}
-	if _, err := exec.LookPath("docker"); err != nil {
+	_, errDocker := exec.LookPath("docker")
+	_, errPodman := exec.LookPath("podman")
+	if errDocker != nil && errPodman != nil {
+		// TODO(matloob): remove the check for the docker builder name once the docker
+		// builders are turned down.
 		if os.Getenv(modeEnv) != "" || strings.Contains(os.Getenv("GO_BUILDER_NAME"), "docker") {
-			t.Fatalf("docker is not installed: %v", err)
+			t.Fatalf("neither docker nor podman is installed: %v, %v", errDocker, errPodman)
 		}
-		t.Skipf("docker is not installed: %v", err)
+		t.Skipf("neither docker nor podman is installed: %v, %v", errDocker, errPodman)
 	}
 
 	// Tear the compose project down on the way in as well as the way out. A
@@ -163,6 +175,11 @@ func composeDown(t *testing.T) {
 // (such as node_modules) back to the host user so Swarming can delete the workdir.
 func chownRepo(t *testing.T) {
 	if runtime.GOOS != "linux" {
+		return
+	}
+	if _, err := exec.LookPath("docker"); err != nil {
+		// If we're running on rootless podman, we're not running as root
+		// so the files already are not owned by root.
 		return
 	}
 	t.Helper()
